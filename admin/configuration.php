@@ -18,7 +18,7 @@ if (!defined('PHPWG_ROOT_PATH')) {
 }
 
 if (!is_webmaster()) {
-    $page['warnings'][] = str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.'));
+    \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
 }
 
 include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
@@ -169,7 +169,7 @@ if (isset($_POST['submit'])) {
                             }
                         }
                         if (!count($_POST['order_by'])) {
-                            $page['errors'][] = l10n('No order field selected');
+                            \Piwigo\Core\PageState::current()->addError(l10n('No order field selected'));
                         } else {
                             // limit to the number of available parameters
                             $order_by = $order_by_inside_category = array_slice($_POST['order_by'], 0, (int) ceil(count($sort_fields) / 2));
@@ -188,7 +188,7 @@ if (isset($_POST['submit'])) {
                             $_POST['order_by_inside_category'] = 'ORDER BY '.implode(', ', $order_by_inside_category);
                         }
                     } else {
-                        $page['errors'][] = l10n('No order field selected');
+                        \Piwigo\Core\PageState::current()->addError(l10n('No order field selected'));
                     }
                 }
 
@@ -226,7 +226,7 @@ if (isset($_POST['submit'])) {
                 if (!preg_match($int_pattern, (string) $_POST['nb_comment_page'])
                      or $_POST['nb_comment_page'] < 5
                      or $_POST['nb_comment_page'] > 50) {
-                    $page['errors'][] = l10n('The number of comments a page must be between 5 and 50 included.');
+                    \Piwigo\Core\PageState::current()->addError(l10n('The number of comments a page must be between 5 and 50 included.'));
                 }
                 foreach ($comments_checkboxes as $checkbox) {
                     $_POST[$checkbox] = empty($_POST[$checkbox]) ? 'false' : 'true';
@@ -242,7 +242,7 @@ if (isset($_POST['submit'])) {
             {
                 if (!preg_match($int_pattern, (string) $_POST['nb_categories_page'])
                       or $_POST['nb_categories_page'] < 4) {
-                    $page['errors'][] = l10n('The number of albums a page must be above 4.');
+                    \Piwigo\Core\PageState::current()->addError(l10n('The number of albums a page must be above 4.'));
                 }
                 foreach ($display_checkboxes as $checkbox) {
                     $_POST[$checkbox] = empty($_POST[$checkbox]) ? 'false' : 'true';
@@ -360,7 +360,7 @@ switch ($page['section']) {
             }
 
             if (order_by_is_local()) {
-                $page['warnings'][] = l10n('You have specified <i>$conf[\'order_by\']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf[\'order_by_custom\']</i> !');
+                \Piwigo\Core\PageState::current()->addWarning(l10n('You have specified <i>$conf[\'order_by\']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf[\'order_by_custom\']</i> !'));
             }
 
             if (isset($conf['order_by_custom']) or isset($conf['order_by_inside_category_custom'])) {
@@ -451,7 +451,7 @@ switch ($page['section']) {
             if (save_profile_from_post($edit_user, $errors)) {
                 // Reload user
                 $edit_user = build_user($conf['guest_id'], false);
-                $page['infos'][] = l10n('Information data registered in database');
+                \Piwigo\Core\PageState::current()->addInfo(l10n('Information data registered in database'));
             }
             $page['errors'] = array_merge($page['errors'], $errors);
 

@@ -88,7 +88,7 @@ SELECT id, date_creation
         $datas
     );
 
-    $page['infos'][] = l10n('Photo informations updated');
+    \Piwigo\Core\PageState::current()->addInfo(l10n('Photo informations updated'));
     invalidate_user_cache();
 }
 

@@ -188,7 +188,7 @@ DELETE
     case 'check_upgrade':
         {
             if (!fetchRemote(PHPWG_URL.'/download/latest_version', $result)) {
-                $page['errors'][] = l10n('Unable to check for upgrade.');
+                \Piwigo\Core\PageState::current()->addError(l10n('Unable to check for upgrade.'));
             } else {
                 $versions = ['current' => PHPWG_VERSION];
                 $lines = @explode("\r\n", $result);
@@ -209,19 +209,19 @@ DELETE
                 }
 
                 if ('' == $versions['latest']) {
-                    $page['errors'][] = l10n('Check for upgrade failed for unknown reasons.');
+                    \Piwigo\Core\PageState::current()->addError(l10n('Check for upgrade failed for unknown reasons.'));
                 }
                 // concatenation needed to avoid automatic transformation by release
                 // script generator
                 elseif ('%'.'PWGVERSION'.'%' == $versions['current']) {
-                    $page['infos'][] = l10n('You are running on development sources, no check possible.');
+                    \Piwigo\Core\PageState::current()->addInfo(l10n('You are running on development sources, no check possible.'));
                 } elseif (version_compare($versions['current'], $versions['latest']) < 0) {
-                    $page['infos'][] = l10n('A new version of Piwigo is available.');
+                    \Piwigo\Core\PageState::current()->addInfo(l10n('A new version of Piwigo is available.'));
 
                     $update_url = PHPWG_ROOT_PATH.'admin.php?page=updates';
-                    $page['infos'][] = '<a href="'. $update_url . '">' . l10n('Update to Piwigo %s', $versions['latest']) . '</a>';
+                    \Piwigo\Core\PageState::current()->addInfo('<a href="'. $update_url . '">' . l10n('Update to Piwigo %s', $versions['latest']) . '</a>');
                 } else {
-                    $page['infos'][] = l10n('You are running the latest version of Piwigo.');
+                    \Piwigo\Core\PageState::current()->addInfo(l10n('You are running the latest version of Piwigo.'));
                 }
             }
         }

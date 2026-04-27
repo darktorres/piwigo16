@@ -255,7 +255,7 @@ function inc_mail_sent_success(array $nbm_user): void
     global $page, $env_nbm;
 
     $env_nbm['sent_mail_count'] += 1;
-    $page['infos'][] = sprintf($env_nbm['msg_info'], stripslashes((string) $nbm_user['username']), $nbm_user['mail_address']);
+    \Piwigo\Core\PageState::current()->addInfo(sprintf($env_nbm['msg_info'], stripslashes((string) $nbm_user['username']), $nbm_user['mail_address']));
 }
 
 /*
@@ -268,7 +268,7 @@ function inc_mail_sent_failed(array $nbm_user): void
     global $page, $env_nbm;
 
     $env_nbm['error_on_mail_count'] += 1;
-    $page['errors'][] = sprintf($env_nbm['msg_error'], stripslashes((string) $nbm_user['username']), $nbm_user['mail_address']);
+    \Piwigo\Core\PageState::current()->addError(sprintf($env_nbm['msg_error'], stripslashes((string) $nbm_user['username']), $nbm_user['mail_address']));
 }
 
 /*
@@ -281,28 +281,28 @@ function display_counter_info(): void
     global $page, $env_nbm;
 
     if ($env_nbm['error_on_mail_count'] != 0) {
-        $page['errors'][] = l10n_dec(
+        \Piwigo\Core\PageState::current()->addError(l10n_dec(
             '%d mail was not sent.',
             '%d mails were not sent.',
             $env_nbm['error_on_mail_count']
-        );
+        ));
 
         if ($env_nbm['sent_mail_count'] != 0) {
-            $page['infos'][] = l10n_dec(
+            \Piwigo\Core\PageState::current()->addInfo(l10n_dec(
                 '%d mail was sent.',
                 '%d mails were sent.',
                 $env_nbm['sent_mail_count']
-            );
+            ));
         }
     } else {
         if ($env_nbm['sent_mail_count'] == 0) {
-            $page['infos'][] = l10n('No mail to send.');
+            \Piwigo\Core\PageState::current()->addInfo(l10n('No mail to send.'));
         } else {
-            $page['infos'][] = l10n_dec(
+            \Piwigo\Core\PageState::current()->addInfo(l10n_dec(
                 '%d mail was sent.',
                 '%d mails were sent.',
                 $env_nbm['sent_mail_count']
-            );
+            ));
         }
     }
 }
@@ -371,7 +371,7 @@ function do_subscribe_unsubscribe_notification_by_mail($is_admin_request, $is_su
         foreach ($data_users as $nbm_user) {
             if (check_sendmail_timeout()) {
                 // Stop fill list on 'send', if the quota is override
-                $page['errors'][] = $msg_break_timeout;
+                \Piwigo\Core\PageState::current()->addError($msg_break_timeout);
                 break;
             }
 
@@ -430,10 +430,10 @@ function do_subscribe_unsubscribe_notification_by_mail($is_admin_request, $is_su
                   'enabled' => $enabled_value,
                   ];
                 $updated_data_count += 1;
-                $page['infos'][] = sprintf($msg_info, stripslashes((string) $nbm_user['username']), $nbm_user['mail_address']);
+                \Piwigo\Core\PageState::current()->addInfo(sprintf($msg_info, stripslashes((string) $nbm_user['username']), $nbm_user['mail_address']));
             } else {
                 $error_on_updated_data_count += 1;
-                $page['errors'][] = sprintf($msg_error, stripslashes((string) $nbm_user['username']), $nbm_user['mail_address']);
+                \Piwigo\Core\PageState::current()->addError(sprintf($msg_error, stripslashes((string) $nbm_user['username']), $nbm_user['mail_address']));
             }
 
         }
@@ -454,18 +454,18 @@ function do_subscribe_unsubscribe_notification_by_mail($is_admin_request, $is_su
 
     }
 
-    $page['infos'][] = l10n_dec(
+    \Piwigo\Core\PageState::current()->addInfo(l10n_dec(
         '%d user was updated.',
         '%d users were updated.',
         $updated_data_count
-    );
+    ));
 
     if ($error_on_updated_data_count != 0) {
-        $page['errors'][] = l10n_dec(
+        \Piwigo\Core\PageState::current()->addError(l10n_dec(
             '%d user was not updated.',
             '%d users were not updated.',
             $error_on_updated_data_count
-        );
+        ));
     }
 
     unset_make_full_url();

@@ -68,12 +68,13 @@ SELECT permalink
     if ($save) {
         $old_cat_id = get_cat_id_from_old_permalink($permalink);
         if (isset($old_cat_id) and $old_cat_id != $cat_id) {
-            $page['errors'][] =
-              sprintf(
-                  l10n('Permalink %s has been previously used by album %s. Delete from the permalink history first'),
-                  $permalink,
-                  $old_cat_id
-              );
+            \Piwigo\Core\PageState::current()->addError(
+                sprintf(
+                    l10n('Permalink %s has been previously used by album %s. Delete from the permalink history first'),
+                    $permalink,
+                    $old_cat_id
+                )
+            );
             return false;
         }
     }
@@ -119,7 +120,7 @@ function set_cat_permalink(string $cat_id, string $permalink, $save): bool
     $sanitized_permalink = str_replace('//', '/', $sanitized_permalink);
     if ($sanitized_permalink != $permalink
         or preg_match('#^(\d)+(-.*)?$#', (string) $permalink)) {
-        $page['errors'][] = '{'.$permalink.'} '.l10n('The permalink name must be composed of a-z, A-Z, 0-9, "-", "_" or "/". It must not be numeric or start with number followed by "-"');
+        \Piwigo\Core\PageState::current()->addError('{'.$permalink.'} '.l10n('The permalink name must be composed of a-z, A-Z, 0-9, "-", "_" or "/". It must not be numeric or start with number followed by "-"'));
         return false;
     }
 
@@ -129,12 +130,13 @@ function set_cat_permalink(string $cat_id, string $permalink, $save): bool
         if ($existing_cat_id == $cat_id) {// no change required
             return true;
         } else {
-            $page['errors'][] =
-              sprintf(
-                  l10n('Permalink %s is already used by album %s'),
-                  $permalink,
-                  $existing_cat_id
-              );
+            \Piwigo\Core\PageState::current()->addError(
+                sprintf(
+                    l10n('Permalink %s is already used by album %s'),
+                    $permalink,
+                    $existing_cat_id
+                )
+            );
             return false;
         }
     }
@@ -142,12 +144,13 @@ function set_cat_permalink(string $cat_id, string $permalink, $save): bool
     // check if the new permalink was historically used
     $old_cat_id = get_cat_id_from_old_permalink($permalink);
     if (isset($old_cat_id) and $old_cat_id != $cat_id) {
-        $page['errors'][] =
-          sprintf(
-              l10n('Permalink %s has been previously used by album %s. Delete from the permalink history first'),
-              $permalink,
-              $old_cat_id
-          );
+        \Piwigo\Core\PageState::current()->addError(
+            sprintf(
+                l10n('Permalink %s has been previously used by album %s. Delete from the permalink history first'),
+                $permalink,
+                $old_cat_id
+            )
+        );
         return false;
     }
 

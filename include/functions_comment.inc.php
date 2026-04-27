@@ -322,7 +322,7 @@ function update_user_comment(array $comment, $post_key)
             $comment['website_url'] = 'http://'.$comment['website_url'];
         }
         if (!url_check_format($comment['website_url'])) {
-            $page['errors'][] = l10n('Your website URL is invalid');
+            \Piwigo\Core\PageState::current()->addError(l10n('Your website URL is invalid'));
             $comment_action = 'reject';
         }
     }

@@ -289,8 +289,8 @@ function reset_password(): bool
 
     pwg_activity('user', $user_id, 'reset_password_success');
 
-    $page['infos'][] = l10n('Your password has been reset');
-    $page['infos'][] = '<a href="'.get_root_url().'identification.php">'.l10n('Login').'</a>';
+    \Piwigo\Core\PageState::current()->addInfo(l10n('Your password has been reset'));
+    \Piwigo\Core\PageState::current()->addInfo('<a href="'.get_root_url().'identification.php">'.l10n('Login').'</a>');
 
     return true;
 }
@@ -332,14 +332,14 @@ if (input_string('submit', null, $_POST) !== null) {
 
     if ('lost' == $get_action) {
         if (process_verification_code()) {
-            $page['infos'][] = l10n('If your account exists, a verification code has been sent to your email address.');
+            \Piwigo\Core\PageState::current()->addInfo(l10n('If your account exists, a verification code has been sent to your email address.'));
             $page['action'] = 'lost_code';
         }
     }
 
     if ('lost_code' == $get_action) {
         if (process_password_request()) {
-            $page['infos'][] = l10n('Verification successful! You can now choose a new password.');
+            \Piwigo\Core\PageState::current()->addInfo(l10n('Verification successful! You can now choose a new password.'));
             $page['action'] = 'reset';
         }
     }

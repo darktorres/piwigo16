@@ -20,7 +20,7 @@ if (!$conf['enable_extensions_install']) {
 }
 
 if (!is_webmaster()) {
-    $page['warnings'][] = str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.'));
+    \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
 }
 
 $conf['updates_ignored'] = unserialize($conf['updates_ignored'] ?? '');
@@ -29,7 +29,7 @@ $autoupdate = new updates($page['page']);
 
 $show_reset = false;
 if (!$autoupdate->get_server_extensions()) {
-    $page['errors'][] = l10n('Can\'t connect to server.');
+    \Piwigo\Core\PageState::current()->addError(l10n('Can\'t connect to server.'));
     return; // TODO: remove this return and add a proper "page killer"
 }
 

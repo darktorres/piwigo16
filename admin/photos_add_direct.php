@@ -126,7 +126,7 @@ SELECT *
 
         $have_formats_original = true;
     } else {
-        $page['errors'][] = l10n('The original picture selected dosen\'t exists.');
+        \Piwigo\Core\PageState::current()->addError(l10n('The original picture selected dosen\'t exists.'));
     }
 
 }

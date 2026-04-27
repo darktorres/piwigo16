@@ -91,7 +91,7 @@ DELETE FROM '.OLD_PERMALINKS_TABLE.'
   LIMIT 1';
     $result = pwg_query($query);
     if (pwg_db_changes() == 0) {
-        $page['errors'][] = l10n('Cannot delete the old permalink !');
+        \Piwigo\Core\PageState::current()->addError(l10n('Cannot delete the old permalink !'));
     }
 }
 

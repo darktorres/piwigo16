@@ -91,8 +91,8 @@ WHERE id IN (\'' . implode('\',\'', $plugins) . '\')
 ;';
         pwg_query($query);
 
-        $page['infos'][] = l10n('As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:')
-                            .'<p><i>'.implode(', ', $plugins).'</i></p>';
+        \Piwigo\Core\PageState::current()->addInfo(l10n('As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:')
+                            .'<p><i>'.implode(', ', $plugins).'</i></p>');
     }
 }
 
@@ -130,8 +130,8 @@ DELETE
 ;';
         pwg_query($query);
 
-        $page['infos'][] = l10n('As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:')
-                            .'<p><i>'.implode(', ', $theme_names).'</i></p>';
+        \Piwigo\Core\PageState::current()->addInfo(l10n('As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:')
+                            .'<p><i>'.implode(', ', $theme_names).'</i></p>');
 
         // what is the default theme?
         $query = '
@@ -232,9 +232,9 @@ WHERE '.$conf['user_fields']['username'].'=\''.$username.'\'
     $row = pwg_db_fetch_assoc(pwg_query($query));
 
     if (!$conf['password_verify']($password, $row['password'])) {
-        $page['errors'][] = l10n('Invalid password!');
+        \Piwigo\Core\PageState::current()->addError(l10n('Invalid password!'));
     } elseif ($row['status'] != 'admin' and $row['status'] != 'webmaster') {
-        $page['errors'][] = l10n('You do not have access rights to run upgrade');
+        \Piwigo\Core\PageState::current()->addError(l10n('You do not have access rights to run upgrade'));
     } else {
         define('PHPWG_IN_UPGRADE', true);
     }

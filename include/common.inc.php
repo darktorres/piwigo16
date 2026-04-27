@@ -54,120 +54,120 @@ if (!empty($_SERVER['PATH_INFO'])) {
 // include or a test that bootstraps via Kernel directly instead of this file).
 if (!\Piwigo\Core\Kernel::isBooted()) :
 
-//
-// Define some basic configuration arrays this also prevents malicious
-// rewriting of language and otherarray values via URI params
-//
-$conf = [];
-$page = [
-  'infos' => [],
-  'errors' => [],
-  'warnings' => [],
-  'messages' => [],
-  'body_classes' => [],
-  'body_data' => [],
-  ];
-$user = [];
-$lang = [];
-$header_msgs = [];
-$header_notes = [];
-$filter = [];
+    //
+    // Define some basic configuration arrays this also prevents malicious
+    // rewriting of language and otherarray values via URI params
+    //
+    $conf = [];
+    $page = [
+      'infos' => [],
+      'errors' => [],
+      'warnings' => [],
+      'messages' => [],
+      'body_classes' => [],
+      'body_data' => [],
+      ];
+    $user = [];
+    $lang = [];
+    $header_msgs = [];
+    $header_notes = [];
+    $filter = [];
 
-foreach (
-    [
-      'gzopen',
-      'str_starts_with',
-      ] as $func) {
-    if (!function_exists($func)) {
-        include_once(PHPWG_ROOT_PATH . 'include/php_compat/'.$func.'.php');
+    foreach (
+        [
+          'gzopen',
+          'str_starts_with',
+          ] as $func) {
+        if (!function_exists($func)) {
+            include_once(PHPWG_ROOT_PATH . 'include/php_compat/'.$func.'.php');
+        }
     }
-}
 
-include(PHPWG_ROOT_PATH . 'include/config_default.inc.php');
-@include(PHPWG_ROOT_PATH. 'local/config/config.inc.php');
+    include(PHPWG_ROOT_PATH . 'include/config_default.inc.php');
+    @include(PHPWG_ROOT_PATH. 'local/config/config.inc.php');
 
-defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
+    defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
 
-@include(PHPWG_ROOT_PATH.PWG_LOCAL_DIR .'config/database.inc.php');
-if (!defined('PHPWG_INSTALLED')) {
-    header('Location: install.php');
-    exit;
-}
-// Self-heal: pre-fork installs may have $conf['dblayer'] = 'mysql' (removed extension).
-if (($conf['dblayer'] ?? 'mysqli') === 'mysql') {
-    $conf['dblayer'] = 'mysqli';
-}
-include(PHPWG_ROOT_PATH .'include/dblayer/functions_'.$conf['dblayer'].'.inc.php');
-
-if (isset($conf['show_php_errors']) && !empty($conf['show_php_errors'])) {
-    @ini_set('error_reporting', $conf['show_php_errors']);
-    if ($conf['show_php_errors_on_frontend']) {
-        @ini_set('display_errors', true);
+    @include(PHPWG_ROOT_PATH.PWG_LOCAL_DIR .'config/database.inc.php');
+    if (!defined('PHPWG_INSTALLED')) {
+        header('Location: install.php');
+        exit;
     }
-}
-
-if ($conf['session_gc_probability'] > 0) {
-    @ini_set('session.gc_divisor', 100);
-    @ini_set('session.gc_probability', min((int)$conf['session_gc_probability'], 100));
-}
-
-include(PHPWG_ROOT_PATH . 'include/constants.php');
-include(PHPWG_ROOT_PATH . 'include/functions.inc.php');
-
-$page['execution_uuid'] = generate_key(10);
-
-$persistent_cache = new PersistentFileCache();
-
-// Database connection
-try {
-    pwg_db_connect(
-        $conf['db_host'],
-        $conf['db_user'],
-        $conf['db_password'],
-        $conf['db_base']
-    );
-} catch (Exception $e) {
-    my_error(l10n($e->getMessage()), true);
-}
-
-pwg_db_check_charset();
-
-// in Piwigo 15, configuration setting webmaster_id is moved from config files
-// to database. It may be undefined at some point, with Piwigo 15+ scripts and
-// a Piwigo 14 database schema not upgraded yet. Let's avoid any problem.
-$conf['webmaster_id'] ??= 1;
-
-load_conf_from_db();
-
-$logger = new Logger([
-  'directory' => PHPWG_ROOT_PATH . $conf['data_location'] . $conf['log_dir'],
-  'severity' => $conf['log_level'],
-  // we use an hashed filename to prevent direct file access, and we salt with
-  // the db_password instead of secret_key because the log must be usable in i.php
-  // (secret_key is in the database)
-  'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . $conf['db_password']) . '.txt',
-  'globPattern' => 'log_*.txt',
-  'archiveDays' => $conf['log_archive_days'],
-  ]);
-
-if (!$conf['check_upgrade_feed']) {
-    if (!isset($conf['piwigo_db_version']) or $conf['piwigo_db_version'] != get_branch_from_version(PHPWG_VERSION)) {
-        redirect(get_root_url().'upgrade.php');
+    // Self-heal: pre-fork installs may have $conf['dblayer'] = 'mysql' (removed extension).
+    if (($conf['dblayer'] ?? 'mysqli') === 'mysql') {
+        $conf['dblayer'] = 'mysqli';
     }
-}
+    include(PHPWG_ROOT_PATH .'include/dblayer/functions_'.$conf['dblayer'].'.inc.php');
 
-ImageStdParams::load_from_db();
+    if (isset($conf['show_php_errors']) && !empty($conf['show_php_errors'])) {
+        @ini_set('error_reporting', $conf['show_php_errors']);
+        if ($conf['show_php_errors_on_frontend']) {
+            @ini_set('display_errors', true);
+        }
+    }
 
-session_start();
-load_plugins();
+    if ($conf['session_gc_probability'] > 0) {
+        @ini_set('session.gc_divisor', 100);
+        @ini_set('session.gc_probability', min((int)$conf['session_gc_probability'], 100));
+    }
 
-if (!isset($conf['piwigo_installed_version'])) {
-    conf_update_param('piwigo_installed_version', PHPWG_VERSION);
-} elseif ($conf['piwigo_installed_version'] != PHPWG_VERSION) {
-    // Piwigo has been updated "from filesystem" and not "from the administration UI". We mark it as an autoupdate in the system activities log
-    pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'autoupdate', ['from_version' => $conf['piwigo_installed_version'], 'to_version' => PHPWG_VERSION]);
-    conf_update_param('piwigo_installed_version', PHPWG_VERSION);
-}
+    include(PHPWG_ROOT_PATH . 'include/constants.php');
+    include(PHPWG_ROOT_PATH . 'include/functions.inc.php');
+
+    $page['execution_uuid'] = generate_key(10);
+
+    $persistent_cache = new PersistentFileCache();
+
+    // Database connection
+    try {
+        pwg_db_connect(
+            $conf['db_host'],
+            $conf['db_user'],
+            $conf['db_password'],
+            $conf['db_base']
+        );
+    } catch (Exception $e) {
+        my_error(l10n($e->getMessage()), true);
+    }
+
+    pwg_db_check_charset();
+
+    // in Piwigo 15, configuration setting webmaster_id is moved from config files
+    // to database. It may be undefined at some point, with Piwigo 15+ scripts and
+    // a Piwigo 14 database schema not upgraded yet. Let's avoid any problem.
+    $conf['webmaster_id'] ??= 1;
+
+    load_conf_from_db();
+
+    $logger = new Logger([
+      'directory' => PHPWG_ROOT_PATH . $conf['data_location'] . $conf['log_dir'],
+      'severity' => $conf['log_level'],
+      // we use an hashed filename to prevent direct file access, and we salt with
+      // the db_password instead of secret_key because the log must be usable in i.php
+      // (secret_key is in the database)
+      'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . $conf['db_password']) . '.txt',
+      'globPattern' => 'log_*.txt',
+      'archiveDays' => $conf['log_archive_days'],
+      ]);
+
+    if (!$conf['check_upgrade_feed']) {
+        if (!isset($conf['piwigo_db_version']) or $conf['piwigo_db_version'] != get_branch_from_version(PHPWG_VERSION)) {
+            redirect(get_root_url().'upgrade.php');
+        }
+    }
+
+    ImageStdParams::load_from_db();
+
+    session_start();
+    load_plugins();
+
+    if (!isset($conf['piwigo_installed_version'])) {
+        conf_update_param('piwigo_installed_version', PHPWG_VERSION);
+    } elseif ($conf['piwigo_installed_version'] != PHPWG_VERSION) {
+        // Piwigo has been updated "from filesystem" and not "from the administration UI". We mark it as an autoupdate in the system activities log
+        pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'autoupdate', ['from_version' => $conf['piwigo_installed_version'], 'to_version' => PHPWG_VERSION]);
+        conf_update_param('piwigo_installed_version', PHPWG_VERSION);
+    }
 
 //Check if last major update conf is set if not set it
 if (!isset($conf['last_major_update'])) {
@@ -234,10 +234,10 @@ if (is_a_guest()) {
 // in case an auth key was provided and is no longer valid, we must wait to
 // be here, with language loaded, to prepare the message
 if (isset($page['auth_key_invalid']) and $page['auth_key_invalid']) {
-    $page['errors'][] =
-      l10n('Your authentication key is no longer valid.')
+    \Piwigo\Core\PageState::current()->addError(
+        l10n('Your authentication key is no longer valid.')
       .sprintf(' <a href="%s">%s</a>', get_root_url().'identification.php', l10n('Login'))
-    ;
+    );
 }
 
 // check if we need to notified user about api_key expiration

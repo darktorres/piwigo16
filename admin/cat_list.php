@@ -152,10 +152,10 @@ elseif (isset($_POST['submitAdd'])) {
 
     invalidate_user_cache();
     if (isset($output_create['error'])) {
-        $page['errors'][] = $output_create['error'];
+        \Piwigo\Core\PageState::current()->addError($output_create['error']);
     } else {
         $edit_url = get_root_url().'admin.php?page=album-'.$output_create['id'];
-        $page['infos'][] = $output_create['info'].' <a class="icon-pencil" href="'.$edit_url.'">'.l10n('Edit album').'</a>';
+        \Piwigo\Core\PageState::current()->addInfo($output_create['info'].' <a class="icon-pencil" href="'.$edit_url.'">'.l10n('Edit album').'</a>');
     }
 }
 // +-----------------------------------------------------------------------+

@@ -28,7 +28,7 @@ $plugins = new plugins();
 //------------------------------------------------------automatic installation
 if (isset($_GET['revision']) and isset($_GET['extension'])) {
     if (!is_webmaster()) {
-        $page['errors'][] = l10n('Webmaster status is required.');
+        \Piwigo\Core\PageState::current()->addError(l10n('Webmaster status is required.'));
     } else {
         check_pwg_token();
 
@@ -48,8 +48,8 @@ if (isset($_GET['installstatus'])) {
             // installed plugin and click on the activation switch.
             $activate_url = get_root_url().'admin.php?page=plugins&amp;filter=deactivated';
 
-            $page['infos'][] = l10n('Plugin has been successfully copied');
-            $page['infos'][] = '<a href="'. $activate_url . '">' . l10n('Activate it now') . '</a>';
+            \Piwigo\Core\PageState::current()->addInfo(l10n('Plugin has been successfully copied'));
+            \Piwigo\Core\PageState::current()->addInfo('<a href="'. $activate_url . '">' . l10n('Activate it now') . '</a>');
 
             if (isset($plugins->fs_plugins[$_GET['plugin_id']])) {
                 pwg_activity(
@@ -65,20 +65,20 @@ if (isset($_GET['installstatus'])) {
             break;
 
         case 'temp_path_error':
-            $page['errors'][] = l10n('Can\'t create temporary file.');
+            \Piwigo\Core\PageState::current()->addError(l10n('Can\'t create temporary file.'));
             break;
 
         case 'dl_archive_error':
-            $page['errors'][] = l10n('Can\'t download archive.');
+            \Piwigo\Core\PageState::current()->addError(l10n('Can\'t download archive.'));
             break;
 
         case 'archive_error':
-            $page['errors'][] = l10n('Can\'t read or extract archive.');
+            \Piwigo\Core\PageState::current()->addError(l10n('Can\'t read or extract archive.'));
             break;
 
         default:
-            $page['errors'][] = l10n('An error occured during extraction (%s).', htmlspecialchars((string) $_GET['installstatus']));
-            $page['errors'][] = l10n('Please check "plugins" folder and sub-folders permissions (CHMOD).');
+            \Piwigo\Core\PageState::current()->addError(l10n('An error occured during extraction (%s).', htmlspecialchars((string) $_GET['installstatus'])));
+            \Piwigo\Core\PageState::current()->addError(l10n('Please check "plugins" folder and sub-folders permissions (CHMOD).'));
     }
 }
 
@@ -176,7 +176,7 @@ if ($plugins->get_server_plugins(true, $beta_test)) {
 
 
 } else {
-    $page['errors'][] = l10n('Can\'t connect to server.');
+    \Piwigo\Core\PageState::current()->addError(l10n('Can\'t connect to server.'));
 }
 
 if (!$beta_test and preg_match('/(beta|RC)/', PHPWG_VERSION)) {

@@ -65,11 +65,11 @@ function do_timeout_treatment($post_keyname, $check_key_treated = []): void
             $_POST[$post_keyname] = array_diff($_POST[$post_keyname], $check_key_treated);
 
             $must_repost = true;
-            $page['errors'][] = l10n_dec(
+            \Piwigo\Core\PageState::current()->addError(l10n_dec(
                 'Execution time is out, treatment must be continue [Estimated time: %d second].',
                 'Execution time is out, treatment must be continue [Estimated time: %d seconds].',
                 $time_refresh
-            );
+            ));
         }
     }
 
@@ -141,11 +141,11 @@ order by
               'enabled' => 'false', // By default if false, set to true with specific functions
               ];
 
-            $page['infos'][] = l10n(
+            \Piwigo\Core\PageState::current()->addInfo(l10n(
                 'User %s [%s] added.',
                 stripslashes((string) $nbm_user['username']),
                 $nbm_user['mail_address']
-            );
+            ));
         }
 
         // Insert new nbm_users
@@ -237,12 +237,12 @@ function do_action_send_mail_notification($action = 'list_to_send', $check_key_l
                 foreach ($data_users as $nbm_user) {
                     if ((!$is_action_send) and check_sendmail_timeout()) {
                         // Stop fill list on 'list_to_send', if the quota is override
-                        $page['infos'][] = $msg_break_timeout;
+                        \Piwigo\Core\PageState::current()->addInfo($msg_break_timeout);
                         break;
                     }
                     if (($is_action_send) and check_sendmail_timeout()) {
                         // Stop fill list on 'send', if the quota is override
-                        $page['errors'][] = $msg_break_timeout;
+                        \Piwigo\Core\PageState::current()->addError($msg_break_timeout);
                         break;
                     }
 
@@ -390,7 +390,7 @@ function do_action_send_mail_notification($action = 'list_to_send', $check_key_l
                 }
             } else {
                 if ($is_action_send) {
-                    $page['errors'][] = l10n('No user to send notifications by mail.');
+                    \Piwigo\Core\PageState::current()->addError(l10n('No user to send notifications by mail.'));
                 }
             }
         } else {

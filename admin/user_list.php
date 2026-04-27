@@ -250,7 +250,7 @@ function webmaster_id_is_local()
 }
 
 if (webmaster_id_is_local()) {
-    $page['warnings'][] = l10n('You have specified <i>$conf[\'webmaster_id\']</i> in your local configuration file, this parameter in deprecated, please remove it!');
+    \Piwigo\Core\PageState::current()->addWarning(l10n('You have specified <i>$conf[\'webmaster_id\']</i> in your local configuration file, this parameter in deprecated, please remove it!'));
 }
 // +-----------------------------------------------------------------------+
 // | html code display                                                     |

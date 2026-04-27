@@ -763,7 +763,7 @@ function ws_history_search(array $param, &$service): array
         //   PHPWG_ROOT_PATH.'admin.php?page=history&search_id='.$search_id
         //   );
     } else {
-        $page['errors'][] = l10n('Empty query. No criteria has been entered.');
+        \Piwigo\Core\PageState::current()->addError(l10n('Empty query. No criteria has been entered.'));
     }
 
     // what are the lines to display in reality ?

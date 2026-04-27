@@ -1282,7 +1282,7 @@ SELECT uppercats
             // technically, you can't move a category with uppercats 12,125,13,14
             // into a new parent category with uppercats 12,125,13,14,24
             if (preg_match('/^'.$category['uppercats'].'(,|$)/', $new_parent_uppercats)) {
-                $page['errors'][] = l10n('You cannot move an album in its own sub album');
+                \Piwigo\Core\PageState::current()->addError(l10n('You cannot move an album in its own sub album'));
                 return;
             }
         }
@@ -1319,11 +1319,11 @@ SELECT status
         set_cat_status(array_keys($categories), 'private');
     }
 
-    $page['infos'][] = l10n_dec(
+    \Piwigo\Core\PageState::current()->addInfo(l10n_dec(
         '%d album moved',
         '%d albums moved',
         count($categories)
-    );
+    ));
 
     pwg_activity('album', $category_ids, 'move', ['parent' => $new_parent]);
 }

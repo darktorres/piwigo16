@@ -42,14 +42,14 @@ if ($page['show_comments'] and isset($_POST['content'])) {
 
     switch ($comment_action) {
         case 'moderate':
-            $page['infos'][] = l10n('An administrator must authorize your comment before it is visible.');
+            \Piwigo\Core\PageState::current()->addInfo(l10n('An administrator must authorize your comment before it is visible.'));
             // no break
         case 'validate':
-            $page['infos'][] = l10n('Your comment has been registered');
+            \Piwigo\Core\PageState::current()->addInfo(l10n('Your comment has been registered'));
             break;
         case 'reject':
             set_status_header(403);
-            $page['errors'][] = l10n('Your comment has NOT been registered because it did not pass the validation rules');
+            \Piwigo\Core\PageState::current()->addError(l10n('Your comment has NOT been registered because it did not pass the validation rules'));
             break;
         default:
             trigger_error('Invalid comment action '.$comment_action, E_USER_WARNING);

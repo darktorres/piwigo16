@@ -73,7 +73,7 @@ if (isset($_GET['delete'])) {
 
 if (isset($_GET['sync_metadata'])) {
     sync_metadata([ intval($_GET['image_id'])]);
-    $page['infos'][] = l10n('Metadata synchronized from file');
+    \Piwigo\Core\PageState::current()->addInfo(l10n('Metadata synchronized from file'));
 }
 
 //--------------------------------------------------------- update informations

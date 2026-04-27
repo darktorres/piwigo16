@@ -229,7 +229,7 @@ function save_profile_from_post(array $userdata, &$errors): bool
             // username is updated only if allowed
             if (!empty($_POST['username'])) {
                 if ($_POST['username'] != $userdata['username'] and get_userid($_POST['username'])) {
-                    $page['errors'][] = l10n('this login is already used');
+                    \Piwigo\Core\PageState::current()->addError(l10n('this login is already used'));
                     unset($_POST['redirect']);
                 } else {
                     $fields[] = $conf['user_fields']['username'];

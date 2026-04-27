@@ -23,7 +23,7 @@ function get_admin_plugin_menu_link($file): string
         $file = str_replace('\\', '/', $file);//Windows
         $url .= '&amp;section='.urlencode($file);
     } elseif (isset($page['errors'])) {
-        $page['errors'][] = 'PLUGIN ERROR: "'.$file.'" is not a valid file';
+        \Piwigo\Core\PageState::current()->addError('PLUGIN ERROR: "'.$file.'" is not a valid file');
     }
     return $url;
 }

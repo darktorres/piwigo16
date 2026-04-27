@@ -49,15 +49,15 @@ $template->assign(
 
 $language_prefix = substr((string) $user['language'], 0, 3);
 if ('en_' == $language_prefix) {
-    $page['messages'][] = sprintf(
+    \Piwigo\Core\PageState::current()->addMessage(sprintf(
         'Need help to use Piwigo? <a href="%s" target="_blank">Check the online documentation</a> !',
         'https://doc.piwigo.org/'
-    );
+    ));
 } elseif ('fr_' == $language_prefix) {
-    $page['messages'][] = sprintf(
+    \Piwigo\Core\PageState::current()->addMessage(sprintf(
         'Besoin d\'aide pour utiliser Piwigo ? Consultez la <a href="%s" target="_blank">documentation en ligne</a> !',
         'https://doc-fr.piwigo.org/'
-    );
+    ));
 }
 
 // +-----------------------------------------------------------------------+

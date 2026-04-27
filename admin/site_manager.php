@@ -69,11 +69,11 @@ SELECT COUNT(id) AS count
 ;';
     $row = pwg_db_fetch_assoc(pwg_query($query));
     if ($row['count'] > 0) {
-        $page['errors'][] = l10n('This site already exists').' ['.$url.']';
+        \Piwigo\Core\PageState::current()->addError(l10n('This site already exists').' ['.$url.']');
     }
     if (count($page['errors']) == 0) {
         if (! file_exists($url)) {
-            $page['errors'][] = l10n('Directory does not exist').' ['.$url.']';
+            \Piwigo\Core\PageState::current()->addError(l10n('Directory does not exist').' ['.$url.']');
         }
     }
 
@@ -85,7 +85,7 @@ INSERT INTO '.SITES_TABLE.'
   (\''.$url.'\')
 ;';
         pwg_query($query);
-        $page['infos'][] = $url.' '.l10n('created');
+        \Piwigo\Core\PageState::current()->addInfo($url.' '.l10n('created'));
     }
 }
 
@@ -106,7 +106,7 @@ SELECT galleries_url
         case 'delete':
             {
                 delete_site($page['site']);
-                $page['infos'][] = $galleries_url.' '.l10n('deleted');
+                \Piwigo\Core\PageState::current()->addInfo($galleries_url.' '.l10n('deleted'));
                 break;
             }
     }

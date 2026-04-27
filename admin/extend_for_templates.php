@@ -138,7 +138,7 @@ UPDATE '.CONFIG_TABLE.'
   SET value = \''. $conf['extents_for_templates'] .'\'
 WHERE param = \'extents_for_templates\';';
     if (pwg_query($query)) {
-        $page['infos'][] = l10n('Templates configuration has been recorded.');
+        \Piwigo\Core\PageState::current()->addInfo(l10n('Templates configuration has been recorded.'));
     }
 }
 

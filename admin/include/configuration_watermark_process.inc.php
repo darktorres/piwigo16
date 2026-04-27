@@ -65,10 +65,10 @@ if (isset($_FILES['watermarkImage']) and !empty($_FILES['watermarkImage']['tmp_n
             if (move_uploaded_file($_FILES['watermarkImage']['tmp_name'], $file_path)) {
                 $pwatermark['file'] = substr($file_path, strlen(PHPWG_ROOT_PATH));
             } else {
-                $page['errors'][] = $errors['watermarkImage'] = "$file_path " .l10n('no write access');
+                \Piwigo\Core\PageState::current()->addError($errors['watermarkImage'] = "$file_path " .l10n('no write access'));
             }
         } else {
-            $page['errors'][] = $errors['watermarkImage'] = sprintf(l10n('Add write access to the "%s" directory'), $upload_dir);
+            \Piwigo\Core\PageState::current()->addError($errors['watermarkImage'] = sprintf(l10n('Add write access to the "%s" directory'), $upload_dir));
         }
     }
 }

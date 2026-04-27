@@ -584,9 +584,9 @@ function do_maintenance_all_tables(): void
     $query = 'OPTIMIZE TABLE '.implode(', ', $all_tables);
     $mysqli_rc = $mysqli_rc && pwg_query($query);
     if ($mysqli_rc) {
-        $page['infos'][] = l10n('All optimizations have been successfully completed.');
+        \Piwigo\Core\PageState::current()->addInfo(l10n('All optimizations have been successfully completed.'));
     } else {
-        $page['errors'][] = l10n('Optimizations have been completed with some errors.');
+        \Piwigo\Core\PageState::current()->addError(l10n('Optimizations have been completed with some errors.'));
     }
 }
 

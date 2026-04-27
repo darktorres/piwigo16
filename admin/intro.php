@@ -51,7 +51,7 @@ if (isset($page['nb_pending_comments'])) {
     $message .= l10n('%d waiting for validation', $page['nb_pending_comments']);
     $message .= ' <i class="icon-right"></i></a>';
 
-    $page['messages'][] = $message;
+    \Piwigo\Core\PageState::current()->addMessage($message);
 }
 
 // any orphan photo?
@@ -68,7 +68,7 @@ if ($nb_orphans > 0) {
     $message .= l10n('Orphans').'</a>';
     $message .= '<span class="adminMenubarCounter">'.$nb_orphans.'</span>';
 
-    $page['warnings'][] = $message;
+    \Piwigo\Core\PageState::current()->addWarning($message);
 }
 
 // locked album ?
@@ -85,7 +85,7 @@ if ($locked_album > 0) {
     $message .= l10n('Locked album').'</a>';
     $message .= '<span class="adminMenubarCounter">'.$locked_album.'</span>';
 
-    $page['warnings'][] = $message;
+    \Piwigo\Core\PageState::current()->addWarning($message);
 }
 
 fs_quick_check();
@@ -175,13 +175,13 @@ if ($conf['show_piwigo_latest_news']) {
     $latest_news = get_piwigo_news();
 
     if (isset($latest_news['id']) and $latest_news['posted_on'] > time() - 60 * 60 * 24 * 30) {
-        $page['messages'][] = sprintf(
+        \Piwigo\Core\PageState::current()->addMessage(sprintf(
             '%s <a href="%s" title="%s" target="_blank"><i class="icon-bell"></i> %s</a>',
             l10n('Latest Piwigo news'),
             $latest_news['url'],
             time_since($latest_news['posted_on'], 'year').' ('.$latest_news['posted'].')',
             $latest_news['subject']
-        );
+        ));
     }
 }
 

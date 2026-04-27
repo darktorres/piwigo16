@@ -52,7 +52,7 @@ switch ($action) {
             update_category('all');
             update_global_rank();
             invalidate_user_cache(true);
-            $page['infos'][] = sprintf('%s : %s', l10n('Update albums informations'), l10n('action successfully performed.'));
+            \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', l10n('Update albums informations'), l10n('action successfully performed.')));
             break;
         }
     case 'images':
@@ -62,19 +62,19 @@ switch ($action) {
             include_once(PHPWG_ROOT_PATH.'include/functions_rate.inc.php');
             update_rating_score();
             invalidate_user_cache();
-            $page['infos'][] = sprintf('%s : %s', l10n('Update photos information'), l10n('action successfully performed.'));
+            \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', l10n('Update photos information'), l10n('action successfully performed.')));
             break;
         }
     case 'delete_orphan_tags':
         {
             delete_orphan_tags();
-            $page['infos'][] = sprintf('%s : %s', l10n('Delete orphan tags'), l10n('action successfully performed.'));
+            \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', l10n('Delete orphan tags'), l10n('action successfully performed.')));
             break;
         }
     case 'user_cache':
         {
             invalidate_user_cache();
-            $page['infos'][] = sprintf('%s : %s', l10n('Purge user cache'), l10n('action successfully performed.'));
+            \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', l10n('Purge user cache'), l10n('action successfully performed.')));
             break;
         }
     case 'history_detail':
@@ -84,7 +84,7 @@ DELETE
   FROM '.HISTORY_TABLE.'
 ;';
             pwg_query($query);
-            $page['infos'][] = sprintf('%s : %s', l10n('Purge history detail'), l10n('action successfully performed.'));
+            \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', l10n('Purge history detail'), l10n('action successfully performed.')));
             break;
         }
     case 'history_summary':
@@ -94,7 +94,7 @@ DELETE
   FROM '.HISTORY_SUMMARY_TABLE.'
 ;';
             pwg_query($query);
-            $page['infos'][] = sprintf('%s : %s', l10n('Purge history summary'), l10n('action successfully performed.'));
+            \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', l10n('Purge history summary'), l10n('action successfully performed.')));
             break;
         }
     case 'sessions':
@@ -135,7 +135,7 @@ DELETE
 ;';
                 pwg_query($query);
             }
-            $page['infos'][] = sprintf('%s : %s', l10n('Purge sessions'), l10n('action successfully performed.'));
+            \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', l10n('Purge sessions'), l10n('action successfully performed.')));
             break;
         }
     case 'feeds':
@@ -146,7 +146,7 @@ DELETE
   WHERE last_check IS NULL
 ;';
             pwg_query($query);
-            $page['infos'][] = sprintf('%s : %s', l10n('Purge never used notification feeds'), l10n('action successfully performed.'));
+            \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', l10n('Purge never used notification feeds'), l10n('action successfully performed.')));
             break;
         }
     case 'database':
@@ -158,13 +158,13 @@ DELETE
         {
             $c13y = new check_integrity();
             $c13y->maintenance();
-            $page['infos'][] = sprintf('%s : %s', l10n('Reinitialize check integrity'), l10n('action successfully performed.'));
+            \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', l10n('Reinitialize check integrity'), l10n('action successfully performed.')));
             break;
         }
     case 'empty_lounge':
         {
             $rows = empty_lounge();
-            $page['infos'][] = sprintf('%d photos were moved from the upload lounge to their albums', count($rows));
+            \Piwigo\Core\PageState::current()->addInfo(sprintf('%d photos were moved from the upload lounge to their albums', count($rows)));
             break;
         }
     case 'search':
@@ -182,7 +182,7 @@ DELETE
             $template->delete_compiled_templates();
             FileCombiner::clear_combined_files();
             $persistent_cache->purge(true);
-            $page['infos'][] = sprintf('%s : %s', l10n('Purge compiled templates'), l10n('action successfully performed.'));
+            \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', l10n('Purge compiled templates'), l10n('action successfully performed.')));
             break;
         }
     case 'derivatives':
@@ -196,14 +196,14 @@ DELETE
                     clear_derivative_cache($type_to_clear);
                 }
             }
-            $page['infos'][] = l10n('action successfully performed.');
+            \Piwigo\Core\PageState::current()->addInfo(l10n('action successfully performed.'));
             break;
         }
 
     case 'check_upgrade':
         {
             if (!fetchRemote(PHPWG_URL.'/download/latest_version', $result)) {
-                $page['errors'][] = l10n('Unable to check for upgrade.');
+                \Piwigo\Core\PageState::current()->addError(l10n('Unable to check for upgrade.'));
             } else {
                 $versions = ['current' => PHPWG_VERSION];
                 $lines = @explode("\r\n", $result);
@@ -224,19 +224,19 @@ DELETE
                 }
 
                 if ('' == $versions['latest']) {
-                    $page['errors'][] = l10n('Check for upgrade failed for unknown reasons.');
+                    \Piwigo\Core\PageState::current()->addError(l10n('Check for upgrade failed for unknown reasons.'));
                 }
                 // concatenation needed to avoid automatic transformation by release
                 // script generator
                 elseif ('%'.'PWGVERSION'.'%' == $versions['current']) {
-                    $page['infos'][] = l10n('You are running on development sources, no check possible.');
+                    \Piwigo\Core\PageState::current()->addInfo(l10n('You are running on development sources, no check possible.'));
                 } elseif (version_compare($versions['current'], $versions['latest']) < 0) {
-                    $page['infos'][] = l10n('A new version of Piwigo is available.');
+                    \Piwigo\Core\PageState::current()->addInfo(l10n('A new version of Piwigo is available.'));
                 } else {
-                    $page['infos'][] = l10n('You are running the latest version of Piwigo.');
+                    \Piwigo\Core\PageState::current()->addInfo(l10n('You are running the latest version of Piwigo.'));
                 }
             }
-            $page['infos'][] = l10n('action successfully performed.');
+            \Piwigo\Core\PageState::current()->addInfo(l10n('action successfully performed.'));
         }
 
     default:
@@ -259,7 +259,7 @@ $pwg_token = get_pwg_token();
 $url_format = get_root_url().'admin.php?page=maintenance&amp;action=%s&amp;pwg_token='.get_pwg_token();
 
 if (!is_webmaster()) {
-    $page['warnings'][] = str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.'));
+    \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
 }
 
 $purge_urls[l10n('All')] = 'all';

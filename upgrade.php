@@ -324,7 +324,7 @@ $mysql_changes = [];
 // check php version
 if (version_compare(PHP_VERSION, REQUIRED_PHP_VERSION, '<')) {
     // include(PHPWG_ROOT_PATH.'install/php5_apache_configuration.php'); // to remove, with all its related content
-    $page['errors'][] = l10n('PHP version %s required (you are running on PHP %s)', REQUIRED_PHP_VERSION, PHP_VERSION);
+    \Piwigo\Core\PageState::current()->addError(l10n('PHP version %s required (you are running on PHP %s)', REQUIRED_PHP_VERSION, PHP_VERSION));
 }
 
 check_upgrade_access_rights();
@@ -353,12 +353,12 @@ if ((input_string('submit', null, $_POST) !== null or input_string('now', null, 
               . substr($config_file_contents, $php_end_tag);
 
             if (!@file_put_contents($config_file, $config_file_contents)) {
-                $page['infos'][] = l10n(
+                \Piwigo\Core\PageState::current()->addInfo(l10n(
                     'In <i>%s</i>, before <b>?></b>, insert:',
                     PWG_LOCAL_DIR.'config/database.inc.php'
                 )
                 .'<p><textarea rows="4" cols="40">'
-                .implode("\r\n", $mysql_changes).'</textarea></p>';
+                .implode("\r\n", $mysql_changes).'</textarea></p>');
             }
         }
 
@@ -387,7 +387,7 @@ if ((input_string('submit', null, $_POST) !== null or input_string('now', null, 
             ]
         );
 
-        $page['infos'][] = l10n('Perform a maintenance check in [Administration>Tools>Maintenance] if you encounter any problem.');
+        \Piwigo\Core\PageState::current()->addInfo(l10n('Perform a maintenance check in [Administration>Tools>Maintenance] if you encounter any problem.'));
 
         // Save $page['infos'] in order to restore after maintenance actions
         $page['infos_sav'] = $page['infos'];

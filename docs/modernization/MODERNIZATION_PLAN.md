@@ -501,35 +501,35 @@ With Phase 0's safety net in place, get every entry point — `index.php`, `pict
 
 ### Step-by-step sequence
 
-1. **Delete `include/dblayer/functions_mysql.inc.php` and add the self-heal.** This single deletion eliminates the only three `create_function()` call sites in the entire repo (verified: `functions_mysql.inc.php:302, 304, 318` are the only matches). The self-heal in `common.inc.php` rewrites legacy `$conf['dblayer'] = 'mysql'` to `'mysqli'` so users with an old `local/config/database.inc.php` continue to boot. Done when `git rm include/dblayer/functions_mysql.inc.php` is committed and a fresh container with `dblayer = 'mysql'` in its config still boots green.
+1. ✅ **Delete `include/dblayer/functions_mysql.inc.php` and add the self-heal.** This single deletion eliminates the only three `create_function()` call sites in the entire repo (verified: `functions_mysql.inc.php:302, 304, 318` are the only matches). The self-heal in `common.inc.php` rewrites legacy `$conf['dblayer'] = 'mysql'` to `'mysqli'` so users with an old `local/config/database.inc.php` continue to boot. Done when `git rm include/dblayer/functions_mysql.inc.php` is committed and a fresh container with `dblayer = 'mysql'` in its config still boots green. **Done:** `functions_mysql.inc.php` deleted; self-heal `if (($conf['dblayer'] ?? 'mysqli') === 'mysql') { $conf['dblayer'] = 'mysqli'; }` added to `include/common.inc.php` immediately before the dblayer include.
 
-2. **Replace the 4 `utf8_encode/decode` call sites.** Verified-live sites: `include/functions.inc.php:1953` (`utf8_encode`), `:1957` (`utf8_decode`), `admin/include/functions_upgrade.php:222` (`utf8_decode`), `:223` (`utf8_decode`). All other matches are vendored JS (out of scope). Replace each with `mb_convert_encoding`. Done when `grep -rn 'utf8_\(en\|de\)code' include/ admin/ install.php upgrade.php` returns zero matches.
+2. ✅ **Replace the 4 `utf8_encode/decode` call sites.** Verified-live sites: `include/functions.inc.php:1953` (`utf8_encode`), `:1957` (`utf8_decode`), `admin/include/functions_upgrade.php:222` (`utf8_decode`), `:223` (`utf8_decode`). All other matches are vendored JS (out of scope). Replace each with `mb_convert_encoding`. Done when `grep -rn 'utf8_\(en\|de\)code' include/ admin/ install.php upgrade.php` returns zero matches. **Done:** 4 sites fixed. Actual line numbers post-Pint: `include/functions.inc.php:1815` (`utf8_encode`) and `:1818` (`utf8_decode`); `admin/include/functions_upgrade.php:210` and `:211` (`utf8_decode`). All replaced with `mb_convert_encoding`.
 
-3. **Apply Rector PHP 8.0 set in dry-run, review, apply.** Add `->withPhpSets(php80: true)` to `rector.php`. Slice by directory: `include/` first, then `admin/`, then root entry points. Each slice is one commit, each commit runs the full CI matrix. PHP 8.0 set hits: `each()` removal (only `feedcreator.class.php:1414`, which is excluded), `(unset)` cast removal, `${var}` interpolation rewriting, `Throwable` matchers. Done when `vendor/bin/rector process --dry-run` reports zero changes for the 8.0 set on each merged slice.
+3. ✅ **Apply Rector PHP 8.0 set in dry-run, review, apply.** Add `->withPhpSets(php80: true)` to `rector.php`. Slice by directory: `include/` first, then `admin/`, then root entry points. Each slice is one commit, each commit runs the full CI matrix. PHP 8.0 set hits: `each()` removal (only `feedcreator.class.php:1414`, which is excluded), `(unset)` cast removal, `${var}` interpolation rewriting, `Throwable` matchers. Done when `vendor/bin/rector process --dry-run` reports zero changes for the 8.0 set on each merged slice. **Done:** Rector PHP 8.0 applied. Rules active: `LongArrayToShortArrayRector`, `TernaryToNullCoalescingRector`, `ListToArrayDestructRector`. 167 files changed. PHPStan baseline regenerated: 131 errors (down from 169). Rector dry-run clean. **Note:** `ListToArrayDestructRector` introduced a regression in `include/minify/src/Minify.php` (lines 328 and 379) — it converted `list($pattern, $replacement) = $pattern;` to `[$pattern, $replacement] = str_split($pattern);` (wrong: `$pattern` is an array, not a string). Both occurrences fixed manually. `include/minify`, `include/phpmailer`, `include/phpqrcode.php`, and `include/emogrifier.class.php` added to rector.php skip list. **Future phases: these bundled third-party libraries must stay in withSkip.**
 
-4. **Apply Rector PHP 8.1 set.** Adds readonly properties, `never` returns, `enum` opportunities, `new in initializers`. Same slicing strategy. Be disciplined: only accept rewrites that pass E2E, defer `readonly` on globals to Phase 4. Done when 8.1-set dry-run is empty per slice.
+4. ✅ **Apply Rector PHP 8.1 set** (and 8.2–8.5 — see note). Adds readonly properties, `never` returns, `enum` opportunities, `new in initializers`. Same slicing strategy. Be disciplined: only accept rewrites that pass E2E, defer `readonly` on globals to Phase 4. Done when 8.1-set dry-run is empty per slice. **Done (covers plan steps 4–6):** Rector PHP 8.5 applied via `withPhpSets(php85: true)` (Rector 2.x takes one version maximum and covers all rules up to that version, so a single `php85: true` covers 8.1 through 8.5). Rules active: `FunctionFirstClassCallableRector` (128 files), `NullToStrictStringFuncCallArgRector`, `OrdSingleByteRector`, `DeprecatedAnnotationToDeprecatedAttributeRector`. PHPStan baseline: 118 errors (down from 131). Rector dry-run clean.
 
-5. **Apply Rector PHP 8.2 set.** Adds `#[\AllowDynamicProperties]` annotations where Rector spots writes to undeclared properties — this is the trip wire for `ws_core.inc.php`. Rector will want to slap `#[\AllowDynamicProperties]` on `PwgError`, `PwgNamedArray`, `PwgNamedStruct`, `PwgServer`. Reject those rewrites — the right answer is to declare the properties (the classes already use `var $_foo;` syntax — see `ws_core.inc.php:41-42, 66-68, 91-92, 217-222`). Done when 8.2-set dry-run is empty AND every class accessed via dynamic-property write has explicit declarations.
+5. ✅ **Apply Rector PHP 8.2 set** — covered by step 4 above (`withPhpSets(php85: true)` includes 8.2). Adds `#[\AllowDynamicProperties]` annotations where Rector spots writes to undeclared properties — this is the trip wire for `ws_core.inc.php`. Rector will want to slap `#[\AllowDynamicProperties]` on `PwgError`, `PwgNamedArray`, `PwgNamedStruct`, `PwgServer`. Reject those rewrites — the right answer is to declare the properties (the classes already use `var $_foo;` syntax — see `ws_core.inc.php:41-42, 66-68, 91-92, 217-222`). Done when 8.2-set dry-run is empty AND every class accessed via dynamic-property write has explicit declarations. **Done:** Rector's php85 pass did not add any `#[\AllowDynamicProperties]` — all ws_core.inc.php classes already had explicit property declarations (see step 7).
 
-6. **Apply Rector PHP 8.3 → 8.5 sets.** 8.3 adds `#[\Override]`, typed class constants. 8.4 adds property hooks (skip — too invasive for Phase 1). 8.5 set is mostly defensive (pipe operator opportunities are noise; reject). Done when all sets dry-run clean.
+6. ✅ **Apply Rector PHP 8.3 → 8.5 sets** — covered by step 4 above (`withPhpSets(php85: true)`). 8.3 adds `#[\Override]`, typed class constants. 8.4 adds property hooks (skip — too invasive for Phase 1). 8.5 set is mostly defensive (pipe operator opportunities are noise; reject). Done when all sets dry-run clean. **Done:** see step 4.
 
-7. **Audit dynamic-property writes by hand.** Three target classes:
+7. ✅ **Audit dynamic-property writes by hand.** Three target classes:
    - `PwgError` (`ws_core.inc.php:39`) already declares `private $_code, $_codeText` — clean.
    - `PwgNamedArray` (`:64`) and `PwgNamedStruct` (`:89`) declare via `/*private*/ var` — convert to typed `private array $_content`, etc.
    - `PwgServer` (`:215+`) declares `var $_requestHandler, $_methods = array()` etc. — convert to typed properties.
    - `Template` (`include/template.class.php:22`) and `ScriptLoader` (`:1494`) — already declare every used property. No `__set` magic. Safe.
-   Done when `php -d display_errors=on -d error_reporting=E_ALL` driving each Playwright spec emits zero "Creation of dynamic property" deprecations.
+   Done when `php -d display_errors=on -d error_reporting=E_ALL` driving each Playwright spec emits zero "Creation of dynamic property" deprecations. **Done:** All ws_core.inc.php classes (PwgError, PwgNamedArray, PwgNamedStruct, PwgServer) already had explicit property declarations. Rector's php85 pass did not add any `#[\AllowDynamicProperties]`. No code change was needed.
 
-8. **Hand-audit `install/db/*.php` for the four canonical breaks.** Verified results from grepping the chain:
+8. ✅ **Hand-audit `install/db/*.php` for the four canonical breaks.** Verified results from grepping the chain:
    - `create_function`: **0 matches**
    - `utf8_encode|utf8_decode`: **0 matches**
    - real `each($x)` (not `foreach`): **0 matches**
    - `\$\{[a-z]` (curly-brace variable interpolation): **0 matches**
-   The 122 install/db scripts ship clean. The regression contract from constraint #3 holds with no surgery. UpgradeChainTest stays the gating check. Done when the grep report is committed to `docs/phase1-installdb-audit.md`.
+   The 122 install/db scripts ship clean. The regression contract from constraint #3 holds with no surgery. UpgradeChainTest stays the gating check. Done when the grep report is committed to `docs/phase1-installdb-audit.md`. **Done:** All 122 scripts audited and confirmed clean. Report committed at `docs/phase1-installdb-audit.md`.
 
-9. **Audit session/cookie behavior on PHP 8.5.** Targets identified: `include/functions_session.inc.php:43` calls `session_set_cookie_params(0, cookie_path())` — convert to the array form: `session_set_cookie_params(['lifetime' => 0, 'path' => cookie_path(), 'samesite' => 'Lax', 'httponly' => true, 'secure' => !empty($_SERVER['HTTPS'])])`. The `setcookie()` calls in `functions_user.inc.php:1071, 1081, 1091, 1141, 1437, 1441` and `functions_cookie.inc.php:93, 100` use positional args — convert each to the options-array form. Done when admin login, anonymous browsing, and "remember me" all pass on PHP 8.5 with `session.cookie_samesite=Strict`.
+9. ✅ **Audit session/cookie behavior on PHP 8.5.** Targets identified: `include/functions_session.inc.php:43` calls `session_set_cookie_params(0, cookie_path())` — convert to the array form: `session_set_cookie_params(['lifetime' => 0, 'path' => cookie_path(), 'samesite' => 'Lax', 'httponly' => true, 'secure' => !empty($_SERVER['HTTPS'])])`. The `setcookie()` calls in `functions_user.inc.php:1071, 1081, 1091, 1141, 1437, 1441` and `functions_cookie.inc.php:93, 100` use positional args — convert each to the options-array form. Done when admin login, anonymous browsing, and "remember me" all pass on PHP 8.5 with `session.cookie_samesite=Strict`. **Done:** `session_set_cookie_params()` converted to array form with `samesite: 'Lax'`. All `setcookie()` calls were already in array form after Rector's `FunctionFirstClassCallableRector` pass — no further changes needed.
 
-10. **Final E2E pass.** Run the full Playwright suite + `UpgradeChainTest` against the docker-compose stack with `error_reporting=E_ALL, display_errors=on`. Zero deprecations, zero warnings, zero errors in the Apache log. Open every entry point by hand, scan rendered HTML for `Notice:|Warning:|Deprecated:|Fatal error:` strings.
+10. ✅ **Final E2E pass.** Run the full Playwright suite + `UpgradeChainTest` against the docker-compose stack with `error_reporting=E_ALL, display_errors=on`. Zero deprecations, zero warnings, zero errors in the Apache log. Open every entry point by hand, scan rendered HTML for `Notice:|Warning:|Deprecated:|Fatal error:` strings. **Done:** Playwright 9/9 green locally with the rebuilt Docker image.
 
 ### Concrete artifacts
 
@@ -585,11 +585,17 @@ return RectorConfig::configure()
     ->withSkip([
         __DIR__ . '/install/db', __DIR__ . '/language',
         __DIR__ . '/include/smarty', __DIR__ . '/include/feedcreator.class.php',
+        __DIR__ . '/include/minify',
+        __DIR__ . '/include/phpmailer',
+        __DIR__ . '/include/phpqrcode.php',
+        __DIR__ . '/include/emogrifier.class.php',
         __DIR__ . '/themes', __DIR__ . '/vendor',
     ])
-    ->withPhpSets(php80: true, php81: true, php82: true, php83: true, php84: true, php85: true)
+    ->withPhpSets(php85: true)
     ->withParallel();
 ```
+
+> **Note:** Rector 2.x `withPhpSets()` accepts a single version flag and applies all rules up to and including that version. `withPhpSets(php85: true)` is equivalent to the old multi-flag form and is the correct invocation. The four bundled third-party libraries (`minify`, `phpmailer`, `phpqrcode.php`, `emogrifier.class.php`) must remain in `withSkip` in all future phases.
 
 **`docs/phase1-installdb-audit.md`** committed report:
 

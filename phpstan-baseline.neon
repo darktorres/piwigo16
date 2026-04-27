@@ -100,6 +100,12 @@ parameters:
 			path: admin/batch_manager.php
 
 		-
+			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
+			identifier: function.resultUnused
+			count: 3
+			path: admin/batch_manager_global.php
+
+		-
 			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
 			identifier: arguments.count
 			count: 2
@@ -136,6 +142,12 @@ parameters:
 			'''
 			identifier: function.deprecated
 			count: 1
+			path: admin/batch_manager_unit.php
+
+		-
+			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
+			identifier: function.resultUnused
+			count: 2
 			path: admin/batch_manager_unit.php
 
 		-
@@ -184,6 +196,12 @@ parameters:
 			path: admin/cat_list.php
 
 		-
+			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
+			identifier: function.resultUnused
+			count: 2
+			path: admin/cat_list.php
+
+		-
 			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
 			identifier: arguments.count
 			count: 2
@@ -200,6 +218,12 @@ parameters:
 			identifier: variable.undefined
 			count: 6
 			path: admin/cat_list.php
+
+		-
+			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
+			identifier: function.resultUnused
+			count: 2
+			path: admin/cat_modify.php
 
 		-
 			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
@@ -292,6 +316,30 @@ parameters:
 			path: admin/comments.php
 
 		-
+			message: '#^Offset ''local_dir_site'' on array\{\} in isset\(\) does not exist\.$#'
+			identifier: isset.offset
+			count: 1
+			path: admin/configuration.php
+
+		-
+			message: '#^Offset ''order_by'' on array\{\} in isset\(\) does not exist\.$#'
+			identifier: isset.offset
+			count: 1
+			path: admin/configuration.php
+
+		-
+			message: '#^Offset ''order_by_inside…'' on array\{\} in isset\(\) does not exist\.$#'
+			identifier: isset.offset
+			count: 1
+			path: admin/configuration.php
+
+		-
+			message: '#^Result of or is always false\.$#'
+			identifier: logicalOr.alwaysFalse
+			count: 1
+			path: admin/configuration.php
+
+		-
 			message: '#^Variable \$conf might not be defined\.$#'
 			identifier: variable.undefined
 			count: 27
@@ -347,6 +395,12 @@ parameters:
 			identifier: variable.undefined
 			count: 5
 			path: admin/group_perm.php
+
+		-
+			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
+			identifier: function.resultUnused
+			count: 1
+			path: admin/help.php
 
 		-
 			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
@@ -481,6 +535,24 @@ parameters:
 			path: admin/include/check_integrity.class.php
 
 		-
+			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
+			identifier: function.resultUnused
+			count: 1
+			path: admin/include/check_integrity.class.php
+
+		-
+			message: '#^Comparison operation "\>" between 0 and 0 is always false\.$#'
+			identifier: greater.alwaysFalse
+			count: 3
+			path: admin/include/check_integrity.class.php
+
+		-
+			message: '#^Empty array passed to foreach\.$#'
+			identifier: foreach.emptyArray
+			count: 2
+			path: admin/include/check_integrity.class.php
+
+		-
 			message: '#^Function trigger_notify invoked with 2 parameters, 0 required\.$#'
 			identifier: arguments.count
 			count: 1
@@ -574,6 +646,18 @@ parameters:
 			path: admin/include/functions.php
 
 		-
+			message: '#^Call to function is_array\(\) with array\<mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: admin/include/functions.php
+
+		-
+			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
+			identifier: function.resultUnused
+			count: 9
+			path: admin/include/functions.php
+
+		-
 			message: '#^Constant DB_CHARSET not found\.$#'
 			identifier: constant.notFound
 			count: 1
@@ -619,6 +703,12 @@ parameters:
 			message: '#^Function trigger_notify invoked with 2 parameters, 0 required\.$#'
 			identifier: arguments.count
 			count: 9
+			path: admin/include/functions.php
+
+		-
+			message: '#^Loose comparison using \!\= between ''DB_CHARSET'' and '''' will always evaluate to true\.$#'
+			identifier: notEqual.alwaysTrue
+			count: 1
 			path: admin/include/functions.php
 
 		-
@@ -694,11 +784,23 @@ parameters:
 			path: admin/include/functions.php
 
 		-
+			message: '#^Unused result of "or" operator\.$#'
+			identifier: logicalOr.resultUnused
+			count: 1
+			path: admin/include/functions.php
+
+		-
 			message: '''
 				#^Call to deprecated function array_from_query\(\)\:
 				2\.6$#
 			'''
 			identifier: function.deprecated
+			count: 1
+			path: admin/include/functions_history.inc.php
+
+		-
+			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
+			identifier: function.resultUnused
 			count: 1
 			path: admin/include/functions_history.inc.php
 
@@ -740,6 +842,12 @@ parameters:
 			identifier: isset.variable
 			count: 2
 			path: admin/include/functions_metadata.php
+
+		-
+			message: '#^Offset ''sendmail_timeout'' on array\{start_time\: float, sendmail_timeout\: \(float\|int\), is_sendmail_timeout\: false\} in isset\(\) always exists and is not nullable\.$#'
+			identifier: isset.offset
+			count: 1
+			path: admin/include/functions_notification_by_mail.inc.php
 
 		-
 			message: '#^Variable \$conf might not be defined\.$#'
@@ -844,6 +952,12 @@ parameters:
 			path: admin/include/functions_upload.inc.php
 
 		-
+			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
+			identifier: function.resultUnused
+			count: 2
+			path: admin/include/functions_upload.inc.php
+
+		-
 			message: '#^Function trigger_notify invoked with 2 parameters, 0 required\.$#'
 			identifier: arguments.count
 			count: 2
@@ -854,6 +968,18 @@ parameters:
 			identifier: phpDoc.parseError
 			count: 1
 			path: admin/include/functions_upload.inc.php
+
+		-
+			message: '#^Call to function is_array\(\) with list\<string\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 4
+			path: admin/include/image.class.php
+
+		-
+			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
+			identifier: function.resultUnused
+			count: 1
+			path: admin/include/image.class.php
 
 		-
 			message: '#^Function trigger_notify invoked with 2 parameters, 0 required\.$#'
@@ -877,6 +1003,12 @@ parameters:
 			message: '#^Property image_ext_imagick\:\:\$width \(string\) does not accept int\<0, max\>\.$#'
 			identifier: assign.propertyType
 			count: 1
+			path: admin/include/image.class.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between true and false will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 2
 			path: admin/include/image.class.php
 
 		-
@@ -976,6 +1108,36 @@ parameters:
 			path: admin/include/pclzip.lib.php
 
 		-
+			message: '#^If condition is always false\.$#'
+			identifier: if.alwaysFalse
+			count: 2
+			path: admin/include/pclzip.lib.php
+
+		-
+			message: '#^If condition is always true\.$#'
+			identifier: if.alwaysTrue
+			count: 1
+			path: admin/include/pclzip.lib.php
+
+		-
+			message: '#^Loose comparison using \!\= between non\-empty\-string and '''' will always evaluate to true\.$#'
+			identifier: notEqual.alwaysTrue
+			count: 2
+			path: admin/include/pclzip.lib.php
+
+		-
+			message: '#^Loose comparison using \=\= between 0 and 1 will always evaluate to false\.$#'
+			identifier: equal.alwaysFalse
+			count: 4
+			path: admin/include/pclzip.lib.php
+
+		-
+			message: '#^Loose comparison using \=\= between false and 1 will always evaluate to false\.$#'
+			identifier: equal.alwaysFalse
+			count: 1
+			path: admin/include/pclzip.lib.php
+
+		-
 			message: '#^Offset ''comment'' does not exist on array\{\}\.$#'
 			identifier: offsetAccess.notFound
 			count: 1
@@ -1022,6 +1184,30 @@ parameters:
 			identifier: variable.undefined
 			count: 12
 			path: admin/include/photos_add_direct_prepare.inc.php
+
+		-
+			message: '#^Call to function is_callable\(\) with ''plugin_activate'' will always evaluate to false\.$#'
+			identifier: function.impossibleType
+			count: 1
+			path: admin/include/plugins.class.php
+
+		-
+			message: '#^Call to function is_callable\(\) with ''plugin_deactivate'' will always evaluate to false\.$#'
+			identifier: function.impossibleType
+			count: 1
+			path: admin/include/plugins.class.php
+
+		-
+			message: '#^Call to function is_callable\(\) with ''plugin_install'' will always evaluate to false\.$#'
+			identifier: function.impossibleType
+			count: 1
+			path: admin/include/plugins.class.php
+
+		-
+			message: '#^Call to function is_callable\(\) with ''plugin_uninstall'' will always evaluate to false\.$#'
+			identifier: function.impossibleType
+			count: 1
+			path: admin/include/plugins.class.php
 
 		-
 			message: '#^Function plugin_activate not found\.$#'
@@ -1120,11 +1306,35 @@ parameters:
 			path: admin/include/plugins.class.php
 
 		-
+			message: '#^Property tabsheet\:\:\$selected \(string\) in empty\(\) is always falsy\.$#'
+			identifier: empty.property
+			count: 1
+			path: admin/include/tabsheet.class.php
+
+		-
 			message: '''
 				#^Call to deprecated function array_from_query\(\)\:
 				2\.6$#
 			'''
 			identifier: function.deprecated
+			count: 1
+			path: admin/include/themes.class.php
+
+		-
+			message: '#^Call to function is_callable\(\) with ''theme_activate'' will always evaluate to false\.$#'
+			identifier: function.impossibleType
+			count: 1
+			path: admin/include/themes.class.php
+
+		-
+			message: '#^Call to function is_callable\(\) with ''theme_deactivate'' will always evaluate to false\.$#'
+			identifier: function.impossibleType
+			count: 1
+			path: admin/include/themes.class.php
+
+		-
+			message: '#^Call to function is_callable\(\) with ''theme_delete'' will always evaluate to false\.$#'
+			identifier: function.impossibleType
 			count: 1
 			path: admin/include/themes.class.php
 
@@ -1207,6 +1417,12 @@ parameters:
 			path: admin/include/themes.class.php
 
 		-
+			message: '#^Call to function is_array\(\) with non\-empty\-list\<string\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: admin/include/updates.class.php
+
+		-
 			message: '#^Property updates\:\:\$default_plugins \(array\{''AdminTools'', ''TakeATour'', ''language_switch'', ''LocalFilesEditor''\}\) does not accept default value of type array\{\}\.$#'
 			identifier: property.defaultValue
 			count: 1
@@ -1235,6 +1451,12 @@ parameters:
 			identifier: variable.undefined
 			count: 1
 			path: admin/include/user_tabs.inc.php
+
+		-
+			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
+			identifier: function.resultUnused
+			count: 1
+			path: admin/intro.php
 
 		-
 			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
@@ -1405,8 +1627,38 @@ parameters:
 			path: admin/menubar.php
 
 		-
+			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
+			identifier: function.resultUnused
+			count: 1
+			path: admin/notification_by_mail.php
+
+		-
 			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
 			identifier: arguments.count
+			count: 1
+			path: admin/notification_by_mail.php
+
+		-
+			message: '#^If condition is always false\.$#'
+			identifier: if.alwaysFalse
+			count: 1
+			path: admin/notification_by_mail.php
+
+		-
+			message: '#^If condition is always true\.$#'
+			identifier: if.alwaysTrue
+			count: 1
+			path: admin/notification_by_mail.php
+
+		-
+			message: '#^Negated boolean expression is always true\.$#'
+			identifier: booleanNot.alwaysTrue
+			count: 1
+			path: admin/notification_by_mail.php
+
+		-
+			message: '#^Result of or is always true\.$#'
+			identifier: logicalOr.alwaysTrue
 			count: 1
 			path: admin/notification_by_mail.php
 
@@ -1471,6 +1723,12 @@ parameters:
 			path: admin/photos_add_applications.php
 
 		-
+			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
+			identifier: function.resultUnused
+			count: 1
+			path: admin/photos_add_direct.php
+
+		-
 			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
 			identifier: arguments.count
 			count: 1
@@ -1518,6 +1776,12 @@ parameters:
 				2\.6$#
 			'''
 			identifier: function.deprecated
+			count: 1
+			path: admin/picture_modify.php
+
+		-
+			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
+			identifier: function.resultUnused
 			count: 1
 			path: admin/picture_modify.php
 
@@ -1636,6 +1900,12 @@ parameters:
 			'''
 			identifier: function.deprecated
 			count: 1
+			path: admin/rating_user.php
+
+		-
+			message: '#^Empty array passed to foreach\.$#'
+			identifier: foreach.emptyArray
+			count: 2
 			path: admin/rating_user.php
 
 		-
@@ -1825,6 +2095,12 @@ parameters:
 			path: admin/themes.php
 
 		-
+			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
+			identifier: function.resultUnused
+			count: 1
+			path: admin/themes_installed.php
+
+		-
 			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
 			identifier: arguments.count
 			count: 1
@@ -1933,6 +2209,18 @@ parameters:
 			path: admin/user_activity.php
 
 		-
+			message: '#^Offset ''local_dir_site'' on array\{\} in isset\(\) does not exist\.$#'
+			identifier: isset.offset
+			count: 1
+			path: admin/user_list.php
+
+		-
+			message: '#^Offset ''webmaster_id'' on array\{\} on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: admin/user_list.php
+
+		-
 			message: '#^Variable \$conf might not be defined\.$#'
 			identifier: variable.undefined
 			count: 15
@@ -1973,6 +2261,12 @@ parameters:
 			identifier: variable.undefined
 			count: 6
 			path: admin/user_perm.php
+
+		-
+			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
+			identifier: function.resultUnused
+			count: 2
+			path: comments.php
 
 		-
 			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
@@ -2257,6 +2551,12 @@ parameters:
 			path: i.php
 
 		-
+			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
+			identifier: function.resultUnused
+			count: 2
+			path: identification.php
+
+		-
 			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
 			identifier: arguments.count
 			count: 2
@@ -2299,6 +2599,12 @@ parameters:
 			path: include/Logger.class.php
 
 		-
+			message: '#^Unreachable statement \- code above always terminates\.$#'
+			identifier: deadCode.unreachable
+			count: 1
+			path: include/Logger.class.php
+
+		-
 			message: '#^Method PwgBase32\:\:encode\(\) has invalid return type base32\.$#'
 			identifier: class.notFound
 			count: 1
@@ -2311,6 +2617,12 @@ parameters:
 			path: include/base32.class.php
 
 		-
+			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
+			identifier: function.resultUnused
+			count: 3
+			path: include/block.class.php
+
+		-
 			message: '#^Function trigger_notify invoked with 2 parameters, 0 required\.$#'
 			identifier: arguments.count
 			count: 3
@@ -2319,6 +2631,12 @@ parameters:
 		-
 			message: '#^PHPDoc tag @param has invalid value \(string\)\: Unexpected token "\\n     ", expected variable at offset 24 on line 2$#'
 			identifier: phpDoc.parseError
+			count: 1
+			path: include/block.class.php
+
+		-
+			message: '#^Property DisplayBlock\:\:\$_title \(string\) in isset\(\) is not nullable\.$#'
+			identifier: isset.property
 			count: 1
 			path: include/block.class.php
 
@@ -2359,6 +2677,12 @@ parameters:
 			path: include/cache.class.php
 
 		-
+			message: '#^Strict comparison using \=\=\= between false and false will always evaluate to true\.$#'
+			identifier: identical.alwaysTrue
+			count: 1
+			path: include/cache.class.php
+
+		-
 			message: '#^Method CalendarBase\:\:get_nav_bar_from_items\(\) should return string but returns list\<array\<string, mixed\>\>\.$#'
 			identifier: return.type
 			count: 1
@@ -2375,6 +2699,12 @@ parameters:
 			identifier: variable.undefined
 			count: 1
 			path: include/calendar_monthly.class.php
+
+		-
+			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
+			identifier: function.resultUnused
+			count: 1
+			path: include/category_cats.inc.php
 
 		-
 			message: '#^Function trigger_notify invoked with 2 parameters, 0 required\.$#'
@@ -2413,6 +2743,12 @@ parameters:
 			path: include/category_cats.inc.php
 
 		-
+			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
+			identifier: function.resultUnused
+			count: 1
+			path: include/category_default.inc.php
+
+		-
 			message: '#^Function trigger_notify invoked with 2 parameters, 0 required\.$#'
 			identifier: arguments.count
 			count: 1
@@ -2443,9 +2779,51 @@ parameters:
 			path: include/category_default.inc.php
 
 		-
+			message: '#^Call to function function_exists\(\) with ''gzopen''\|''str_starts_with'' will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: include/common.inc.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\<mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 3
+			path: include/common.inc.php
+
+		-
+			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
+			identifier: function.resultUnused
+			count: 2
+			path: include/common.inc.php
+
+		-
 			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
 			identifier: arguments.count
 			count: 2
+			path: include/common.inc.php
+
+		-
+			message: '#^If condition is always false\.$#'
+			identifier: if.alwaysFalse
+			count: 5
+			path: include/common.inc.php
+
+		-
+			message: '#^If condition is always true\.$#'
+			identifier: if.alwaysTrue
+			count: 1
+			path: include/common.inc.php
+
+		-
+			message: '#^Offset ''alternative_pem_url'' on array\{\} in isset\(\) does not exist\.$#'
+			identifier: isset.offset
+			count: 1
+			path: include/common.inc.php
+
+		-
+			message: '#^Offset ''auth_key_invalid'' on array\{infos\: array\{\}, errors\: array\{\}, warnings\: array\{\}, messages\: array\{\}, body_classes\: array\{\}, body_data\: array\{\}, execution_uuid\: string\} in isset\(\) does not exist\.$#'
+			identifier: isset.offset
+			count: 1
 			path: include/common.inc.php
 
 		-
@@ -2455,8 +2833,26 @@ parameters:
 			path: include/common.inc.php
 
 		-
+			message: '#^Offset ''dblayer'' on array\{\} on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: include/common.inc.php
+
+		-
 			message: '#^Offset ''email'' does not exist on array\{\}\|array\{username\: string\}\.$#'
 			identifier: offsetAccess.notFound
+			count: 1
+			path: include/common.inc.php
+
+		-
+			message: '#^Offset ''filter_pages'' on array\{\} in empty\(\) does not exist\.$#'
+			identifier: empty.offset
+			count: 1
+			path: include/common.inc.php
+
+		-
+			message: '#^Offset ''header_notes'' on array\{\} in isset\(\) does not exist\.$#'
+			identifier: isset.offset
 			count: 1
 			path: include/common.inc.php
 
@@ -2479,8 +2875,62 @@ parameters:
 			path: include/common.inc.php
 
 		-
+			message: '#^Offset ''last_major_update'' on array\{\} in isset\(\) does not exist\.$#'
+			identifier: isset.offset
+			count: 1
+			path: include/common.inc.php
+
+		-
+			message: '#^Offset ''no_photo_yet'' on array\{\} in isset\(\) does not exist\.$#'
+			identifier: isset.offset
+			count: 1
+			path: include/common.inc.php
+
+		-
+			message: '#^Offset ''notify_api_key…'' on array\{infos\: array\{\}, errors\: array\{\}, warnings\: array\{\}, messages\: array\{\}, body_classes\: array\{\}, body_data\: array\{\}, execution_uuid\: string\} in isset\(\) does not exist\.$#'
+			identifier: isset.offset
+			count: 1
+			path: include/common.inc.php
+
+		-
+			message: '#^Offset ''order_by_custom'' on array\{\} in isset\(\) does not exist\.$#'
+			identifier: isset.offset
+			count: 1
+			path: include/common.inc.php
+
+		-
+			message: '#^Offset ''order_by_inside…'' on array\{\} in isset\(\) does not exist\.$#'
+			identifier: isset.offset
+			count: 1
+			path: include/common.inc.php
+
+		-
+			message: '#^Offset ''original_url…'' on array\{\} in empty\(\) does not exist\.$#'
+			identifier: empty.offset
+			count: 1
+			path: include/common.inc.php
+
+		-
+			message: '#^Offset ''piwigo_db_version'' on array\{\} in isset\(\) does not exist\.$#'
+			identifier: isset.offset
+			count: 1
+			path: include/common.inc.php
+
+		-
+			message: '#^Offset ''piwigo_installed…'' on array\{\} in isset\(\) does not exist\.$#'
+			identifier: isset.offset
+			count: 1
+			path: include/common.inc.php
+
+		-
 			message: '#^Offset ''session_gc_probability'' does not exist on array\{\}\.$#'
 			identifier: offsetAccess.notFound
+			count: 1
+			path: include/common.inc.php
+
+		-
+			message: '#^Offset ''show_php_errors'' on array\{\} in isset\(\) does not exist\.$#'
+			identifier: isset.offset
 			count: 1
 			path: include/common.inc.php
 
@@ -2491,8 +2941,44 @@ parameters:
 			path: include/common.inc.php
 
 		-
+			message: '#^Offset ''webmaster_id'' on array\{\} on left side of \?\?\= does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: include/common.inc.php
+
+		-
 			message: '#^Path in include\(\) "\./local/config/database\.inc\.php" is not a file or it does not exist\.$#'
 			identifier: include.fileNotFound
+			count: 1
+			path: include/common.inc.php
+
+		-
+			message: '#^Result of && is always false\.$#'
+			identifier: booleanAnd.alwaysFalse
+			count: 1
+			path: include/common.inc.php
+
+		-
+			message: '#^Result of and is always false\.$#'
+			identifier: logicalAnd.alwaysFalse
+			count: 5
+			path: include/common.inc.php
+
+		-
+			message: '#^Result of or is always true\.$#'
+			identifier: logicalOr.alwaysTrue
+			count: 1
+			path: include/common.inc.php
+
+		-
+			message: '#^Right side of and is always true\.$#'
+			identifier: logicalAnd.rightAlwaysTrue
+			count: 2
+			path: include/common.inc.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between ''mysqli'' and ''mysql'' will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
 			count: 1
 			path: include/common.inc.php
 
@@ -2665,6 +3151,12 @@ parameters:
 			path: include/emogrifier.class.php
 
 		-
+			message: '#^Call to function is_callable\(\) with Closure\(\)\: mixed will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: include/emogrifier.class.php
+
+		-
 			message: '#^PHPDoc tag @var has invalid value \(\$node \\DOMNode\)\: Unexpected token "\$node", expected type at offset 9 on line 1$#'
 			identifier: phpDoc.parseError
 			count: 2
@@ -2710,8 +3202,26 @@ parameters:
 			path: include/functions.inc.php
 
 		-
+			message: '#^Call to function is_numeric\(\) with float\|int\|numeric\-string will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: include/functions.inc.php
+
+		-
+			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
+			identifier: function.resultUnused
+			count: 2
+			path: include/functions.inc.php
+
+		-
 			message: '#^Default value of the parameter \#2 \$fieldname \(false\) of function array_from_query\(\) is incompatible with type string\.$#'
 			identifier: parameter.defaultValue
+			count: 1
+			path: include/functions.inc.php
+
+		-
+			message: '#^Function str2url\(\) never returns array so it can be removed from the return type\.$#'
+			identifier: return.unusedType
 			count: 1
 			path: include/functions.inc.php
 
@@ -2728,8 +3238,20 @@ parameters:
 			path: include/functions.inc.php
 
 		-
+			message: '#^Instanceof between string and DateTime will always evaluate to false\.$#'
+			identifier: instanceof.alwaysFalse
+			count: 1
+			path: include/functions.inc.php
+
+		-
 			message: '#^Invalid array key type float\.$#'
 			identifier: offsetAccess.invalidOffset
+			count: 1
+			path: include/functions.inc.php
+
+		-
+			message: '#^Loose comparison using \=\= between ''active'' and ''active'' will always evaluate to true\.$#'
+			identifier: equal.alwaysTrue
 			count: 1
 			path: include/functions.inc.php
 
@@ -2869,6 +3391,12 @@ parameters:
 			path: include/functions_category.inc.php
 
 		-
+			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
+			identifier: function.resultUnused
+			count: 2
+			path: include/functions_comment.inc.php
+
+		-
 			message: '#^Function get_comment_author_id\(\) should return int but returns false\.$#'
 			identifier: return.type
 			count: 1
@@ -2893,8 +3421,26 @@ parameters:
 			path: include/functions_cookie.inc.php
 
 		-
+			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
+			identifier: function.resultUnused
+			count: 1
+			path: include/functions_html.inc.php
+
+		-
+			message: '#^Function render_comment_content\(\) never returns array so it can be removed from the return type\.$#'
+			identifier: return.unusedType
+			count: 1
+			path: include/functions_html.inc.php
+
+		-
 			message: '#^Function trigger_notify invoked with 3 parameters, 0 required\.$#'
 			identifier: arguments.count
+			count: 1
+			path: include/functions_html.inc.php
+
+		-
+			message: '#^Unreachable statement \- code above always terminates\.$#'
+			identifier: deadCode.unreachable
 			count: 1
 			path: include/functions_html.inc.php
 
@@ -2904,6 +3450,12 @@ parameters:
 				2\.6$#
 			'''
 			identifier: function.deprecated
+			count: 3
+			path: include/functions_mail.inc.php
+
+		-
+			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
+			identifier: function.resultUnused
 			count: 3
 			path: include/functions_mail.inc.php
 
@@ -2954,6 +3506,18 @@ parameters:
 			identifier: variable.undefined
 			count: 2
 			path: include/functions_notification.inc.php
+
+		-
+			message: '#^Unreachable statement \- code above always terminates\.$#'
+			identifier: deadCode.unreachable
+			count: 2
+			path: include/functions_notification.inc.php
+
+		-
+			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
+			identifier: function.resultUnused
+			count: 4
+			path: include/functions_plugins.inc.php
 
 		-
 			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
@@ -3010,6 +3574,18 @@ parameters:
 			path: include/functions_search.inc.php
 
 		-
+			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
+			identifier: function.resultUnused
+			count: 2
+			path: include/functions_search.inc.php
+
+		-
+			message: '#^Comparison operation "\>" between int\<1, max\> and 0 is always true\.$#'
+			identifier: greater.alwaysTrue
+			count: 1
+			path: include/functions_search.inc.php
+
+		-
 			message: '#^Function get_items_for_filter\(\) should return array but returns false\.$#'
 			identifier: return.type
 			count: 1
@@ -3024,6 +3600,24 @@ parameters:
 		-
 			message: '#^Function trigger_notify invoked with 3 parameters, 0 required\.$#'
 			identifier: arguments.count
+			count: 1
+			path: include/functions_search.inc.php
+
+		-
+			message: '#^Loose comparison using \!\= between ''custom'' and ''12m''\|''30d''\|''3m''\|''6m''\|''7d'' will always evaluate to true\.$#'
+			identifier: notEqual.alwaysTrue
+			count: 1
+			path: include/functions_search.inc.php
+
+		-
+			message: '#^Loose comparison using \!\= between ''custom'' and ''24h''\|''30d''\|''3m''\|''6m''\|''7d'' will always evaluate to true\.$#'
+			identifier: notEqual.alwaysTrue
+			count: 1
+			path: include/functions_search.inc.php
+
+		-
+			message: '#^Loose comparison using \=\= between 17 and 17 will always evaluate to true\.$#'
+			identifier: equal.alwaysTrue
 			count: 1
 			path: include/functions_search.inc.php
 
@@ -3104,6 +3698,12 @@ parameters:
 			identifier: variable.undefined
 			count: 1
 			path: include/functions_tag.inc.php
+
+		-
+			message: '#^Negated boolean expression is always true\.$#'
+			identifier: booleanNot.alwaysTrue
+			count: 2
+			path: include/functions_url.inc.php
 
 		-
 			message: '#^PHPDoc tag @param has invalid value \(array of url tokens to parse\)\: Unexpected token "of", expected variable at offset 223 on line 7$#'
@@ -3235,6 +3835,12 @@ parameters:
 			path: include/functions_user.inc.php
 
 		-
+			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
+			identifier: function.resultUnused
+			count: 8
+			path: include/functions_user.inc.php
+
+		-
 			message: '#^Function create_user_auth_key\(\) should return array but returns false\.$#'
 			identifier: return.type
 			count: 3
@@ -3301,10 +3907,22 @@ parameters:
 			path: include/functions_user.inc.php
 
 		-
+			message: '#^Unreachable statement \- code above always terminates\.$#'
+			identifier: deadCode.unreachable
+			count: 1
+			path: include/functions_user.inc.php
+
+		-
 			message: '#^Variable \$expiration might not be defined\.$#'
 			identifier: variable.undefined
 			count: 1
 			path: include/functions_user.inc.php
+
+		-
+			message: '#^Method Inflector_en\:\:run\(\) never returns array so it can be removed from the return type\.$#'
+			identifier: return.unusedType
+			count: 1
+			path: include/inflectors/en.php
 
 		-
 			message: '#^Cannot unset property JShrink\\Minifier\:\:\$c because it might have hooks in a subclass\.$#'
@@ -3349,6 +3967,12 @@ parameters:
 			path: include/jshrink.class.php
 
 		-
+			message: '#^Property JShrink\\Minifier\:\:\$c \(string\) in isset\(\) is not nullable\.$#'
+			identifier: isset.property
+			count: 1
+			path: include/jshrink.class.php
+
+		-
 			message: '#^Variable \$jshrink in isset\(\) always exists and is not nullable\.$#'
 			identifier: isset.variable
 			count: 1
@@ -3377,6 +4001,12 @@ parameters:
 			identifier: class.extendsDeprecatedClass
 			count: 1
 			path: include/minify/src/Exceptions/BasicException.php
+
+		-
+			message: '#^Comparison operation "\>\=" between 8 and 8 is always true\.$#'
+			identifier: greaterOrEqual.alwaysTrue
+			count: 1
+			path: include/minify/src/Exceptions/PatternMatchException.php
 
 		-
 			message: '#^PHPDoc tag @param for parameter \$path contains unresolvable type\.$#'
@@ -3433,8 +4063,20 @@ parameters:
 			path: include/minify/src/Minify.php
 
 		-
+			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
+			identifier: function.resultUnused
+			count: 1
+			path: include/no_photo_yet.inc.php
+
+		-
 			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
 			identifier: arguments.count
+			count: 1
+			path: include/no_photo_yet.inc.php
+
+		-
+			message: '#^Right side of and is always true\.$#'
+			identifier: logicalAnd.rightAlwaysTrue
 			count: 1
 			path: include/no_photo_yet.inc.php
 
@@ -3451,9 +4093,21 @@ parameters:
 			path: include/no_photo_yet.inc.php
 
 		-
+			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
+			identifier: function.resultUnused
+			count: 3
+			path: include/page_header.php
+
+		-
 			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
 			identifier: arguments.count
 			count: 3
+			path: include/page_header.php
+
+		-
+			message: '#^Right side of and is always true\.$#'
+			identifier: logicalAnd.rightAlwaysTrue
+			count: 1
 			path: include/page_header.php
 
 		-
@@ -3479,6 +4133,12 @@ parameters:
 			identifier: variable.undefined
 			count: 1
 			path: include/page_header.php
+
+		-
+			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
+			identifier: function.resultUnused
+			count: 2
+			path: include/page_tail.php
 
 		-
 			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
@@ -3511,10 +4171,34 @@ parameters:
 			path: include/page_tail.php
 
 		-
+			message: '#^Loose comparison using \=\= between 1 and 1 will always evaluate to true\.$#'
+			identifier: equal.alwaysTrue
+			count: 2
+			path: include/passwordhash.class.php
+
+		-
 			message: '#^Function gzopen64 not found\.$#'
 			identifier: function.notFound
 			count: 1
 			path: include/php_compat/gzopen.php
+
+		-
+			message: '#^Comparison operation "\>\=" between int\<80500, 80599\> and 50600 is always true\.$#'
+			identifier: greaterOrEqual.alwaysTrue
+			count: 1
+			path: include/phpmailer/DSNConfigurator.php
+
+		-
+			message: '#^Result of \|\| is always true\.$#'
+			identifier: booleanOr.alwaysTrue
+			count: 1
+			path: include/phpmailer/DSNConfigurator.php
+
+		-
+			message: '#^Unreachable statement \- code above always terminates\.$#'
+			identifier: deadCode.unreachable
+			count: 1
+			path: include/phpmailer/DSNConfigurator.php
 
 		-
 			message: '#^Call to method getAccessToken\(\) on an unknown class League\\OAuth2\\Client\\Provider\\AbstractProvider\.$#'
@@ -3580,6 +4264,36 @@ parameters:
 			path: include/phpmailer/PHPMailer.php
 
 		-
+			message: '#^Call to function array_key_exists\(\) with 1 and array\{0\: non\-falsy\-string, 1\: string, 2\: non\-falsy\-string, 3\: string, 4\: string, 5\?\: non\-empty\-string\} will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: include/phpmailer/PHPMailer.php
+
+		-
+			message: '#^Call to function array_key_exists\(\) with 2 and array\{0\: non\-falsy\-string, 1\: string, 2\: non\-falsy\-string, 3\: string, 4\: string, 5\?\: non\-empty\-string\} will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: include/phpmailer/PHPMailer.php
+
+		-
+			message: '#^Call to function array_key_exists\(\) with 2 and array\{list\<string\>, list\<non\-falsy\-string\>, list\<string\>\} will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: include/phpmailer/PHPMailer.php
+
+		-
+			message: '#^Call to function array_key_exists\(\) with 3 and array\{0\: non\-falsy\-string, 1\: string, 2\: non\-falsy\-string, 3\: string, 4\: string, 5\?\: non\-empty\-string\} will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: include/phpmailer/PHPMailer.php
+
+		-
+			message: '#^Call to function is_numeric\(\) with numeric\-string will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: include/phpmailer/PHPMailer.php
+
+		-
 			message: '#^Call to method debug\(\) on an unknown class Psr\\Log\\LoggerInterface\.$#'
 			identifier: class.notFound
 			count: 1
@@ -3592,8 +4306,62 @@ parameters:
 			path: include/phpmailer/PHPMailer.php
 
 		-
+			message: '#^Comparison operation "\<" between 8 and 8 is always false\.$#'
+			identifier: smaller.alwaysFalse
+			count: 2
+			path: include/phpmailer/PHPMailer.php
+
+		-
+			message: '#^Comparison operation "\<" between int\<80500, 80599\> and 70017 is always false\.$#'
+			identifier: smaller.alwaysFalse
+			count: 1
+			path: include/phpmailer/PHPMailer.php
+
+		-
+			message: '#^Comparison operation "\<" between int\<80500, 80599\> and 70103 is always false\.$#'
+			identifier: smaller.alwaysFalse
+			count: 1
+			path: include/phpmailer/PHPMailer.php
+
+		-
+			message: '#^Comparison operation "\>\=" between int\<80500, 80599\> and 70000 is always true\.$#'
+			identifier: greaterOrEqual.alwaysTrue
+			count: 1
+			path: include/phpmailer/PHPMailer.php
+
+		-
+			message: '#^Comparison operation "\>\=" between int\<80500, 80599\> and 70100 is always true\.$#'
+			identifier: greaterOrEqual.alwaysTrue
+			count: 1
+			path: include/phpmailer/PHPMailer.php
+
+		-
+			message: '#^Comparison operation "\>\=" between int\<80500, 80599\> and 80000 is always true\.$#'
+			identifier: greaterOrEqual.alwaysTrue
+			count: 1
+			path: include/phpmailer/PHPMailer.php
+
+		-
 			message: '#^Property PHPMailer\\PHPMailer\\PHPMailer\:\:\$Debugoutput has unknown class Psr\\Log\\LoggerInterface as its type\.$#'
 			identifier: class.notFound
+			count: 1
+			path: include/phpmailer/PHPMailer.php
+
+		-
+			message: '#^Result of && is always false\.$#'
+			identifier: booleanAnd.alwaysFalse
+			count: 5
+			path: include/phpmailer/PHPMailer.php
+
+		-
+			message: '#^Result of \|\| is always false\.$#'
+			identifier: booleanOr.alwaysFalse
+			count: 1
+			path: include/phpmailer/PHPMailer.php
+
+		-
+			message: '#^Result of \|\| is always true\.$#'
+			identifier: booleanOr.alwaysTrue
 			count: 1
 			path: include/phpmailer/PHPMailer.php
 
@@ -3608,6 +4376,12 @@ parameters:
 			identifier: assign.propertyType
 			count: 1
 			path: include/phpmailer/POP3.php
+
+		-
+			message: '#^Call to function is_array\(\) with list\<string\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: include/phpmailer/SMTP.php
 
 		-
 			message: '#^Call to method debug\(\) on an unknown class Psr\\Log\\LoggerInterface\.$#'
@@ -3630,6 +4404,24 @@ parameters:
 		-
 			message: '#^Access to an undefined static property QRtools\:\:\$frames\.$#'
 			identifier: staticProperty.notFound
+			count: 1
+			path: include/phpqrcode.php
+
+		-
+			message: '#^Call to QRtools\:\:log\(\) on a separate line has no effect\.$#'
+			identifier: staticMethod.resultUnused
+			count: 2
+			path: include/phpqrcode.php
+
+		-
+			message: '#^Call to function is_null\(\) with FrameFiller will always evaluate to false\.$#'
+			identifier: function.impossibleType
+			count: 1
+			path: include/phpqrcode.php
+
+		-
+			message: '#^Call to function is_null\(\) with QRbitstream will always evaluate to false\.$#'
+			identifier: function.impossibleType
 			count: 1
 			path: include/phpqrcode.php
 
@@ -3661,6 +4453,24 @@ parameters:
 			message: '#^Constant STRING not found\.$#'
 			identifier: constant.notFound
 			count: 1
+			path: include/phpqrcode.php
+
+		-
+			message: '#^Expression "\$ret" on a separate line does not do anything\.$#'
+			identifier: expr.resultUnused
+			count: 1
+			path: include/phpqrcode.php
+
+		-
+			message: '#^If condition is always false\.$#'
+			identifier: if.alwaysFalse
+			count: 2
+			path: include/phpqrcode.php
+
+		-
+			message: '#^If condition is always true\.$#'
+			identifier: if.alwaysTrue
+			count: 2
 			path: include/phpqrcode.php
 
 		-
@@ -3706,6 +4516,18 @@ parameters:
 			path: include/phpqrcode.php
 
 		-
+			message: '#^Strict comparison using \!\=\= between 2 and false will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: include/phpqrcode.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between false and false will always evaluate to false\.$#'
+			identifier: notIdentical.alwaysFalse
+			count: 1
+			path: include/phpqrcode.php
+
+		-
 			message: '#^Undefined variable\: \$ret$#'
 			identifier: variable.undefined
 			count: 1
@@ -3718,10 +4540,22 @@ parameters:
 			path: include/phpqrcode.php
 
 		-
+			message: '#^Unreachable statement \- code above always terminates\.$#'
+			identifier: deadCode.unreachable
+			count: 13
+			path: include/phpqrcode.php
+
+		-
 			message: '#^Variable \$hint might not be defined\.$#'
 			identifier: variable.undefined
 			count: 1
 			path: include/phpqrcode.php
+
+		-
+			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
+			identifier: function.resultUnused
+			count: 1
+			path: include/picture_comment.inc.php
 
 		-
 			message: '#^Function trigger_notify invoked with 2 parameters, 0 required\.$#'
@@ -3892,6 +4726,12 @@ parameters:
 			path: include/search_filters.inc.php
 
 		-
+			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
+			identifier: function.resultUnused
+			count: 1
+			path: include/section_init.inc.php
+
+		-
 			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
 			identifier: arguments.count
 			count: 1
@@ -3979,6 +4819,12 @@ parameters:
 			message: '#^Argument of an invalid type Combinable supplied for foreach, only iterables are supported\.$#'
 			identifier: foreach.nonIterable
 			count: 2
+			path: include/template.class.php
+
+		-
+			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
+			identifier: function.resultUnused
+			count: 1
 			path: include/template.class.php
 
 		-
@@ -4276,8 +5122,20 @@ parameters:
 			path: include/totp.class.php
 
 		-
+			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
+			identifier: function.resultUnused
+			count: 1
+			path: include/user.inc.php
+
+		-
 			message: '#^Function trigger_notify invoked with 2 parameters, 0 required\.$#'
 			identifier: arguments.count
+			count: 1
+			path: include/user.inc.php
+
+		-
+			message: '#^Right side of and is always true\.$#'
+			identifier: logicalAnd.rightAlwaysTrue
 			count: 1
 			path: include/user.inc.php
 
@@ -4294,9 +5152,21 @@ parameters:
 			path: include/user.inc.php
 
 		-
+			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
+			identifier: function.resultUnused
+			count: 2
+			path: include/ws_core.inc.php
+
+		-
 			message: '#^Function trigger_notify invoked with 2 parameters, 0 required\.$#'
 			identifier: arguments.count
 			count: 2
+			path: include/ws_core.inc.php
+
+		-
+			message: '#^Negated boolean expression is always false\.$#'
+			identifier: booleanNot.alwaysFalse
+			count: 1
 			path: include/ws_core.inc.php
 
 		-
@@ -4403,6 +5273,12 @@ parameters:
 			path: include/ws_core.inc.php
 
 		-
+			message: '#^Unused result of "or" operator\.$#'
+			identifier: logicalOr.resultUnused
+			count: 1
+			path: include/ws_functions.inc.php
+
+		-
 			message: '''
 				#^Call to deprecated function array_from_query\(\)\:
 				2\.6$#
@@ -4445,6 +5321,12 @@ parameters:
 			path: include/ws_functions/pwg.groups.php
 
 		-
+			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
+			identifier: function.resultUnused
+			count: 1
+			path: include/ws_functions/pwg.images.php
+
+		-
 			message: '#^Function mkgetdir invoked with 2 parameters, 1 required\.$#'
 			identifier: arguments.count
 			count: 3
@@ -4453,6 +5335,12 @@ parameters:
 		-
 			message: '#^Function trigger_notify invoked with 2 parameters, 0 required\.$#'
 			identifier: arguments.count
+			count: 1
+			path: include/ws_functions/pwg.images.php
+
+		-
+			message: '#^Left side of and is always true\.$#'
+			identifier: logicalAnd.leftAlwaysTrue
 			count: 1
 			path: include/ws_functions/pwg.images.php
 
@@ -4496,6 +5384,12 @@ parameters:
 			'''
 			identifier: function.deprecated
 			count: 1
+			path: include/ws_functions/pwg.php
+
+		-
+			message: '#^Call to function is_array\(\) with list\<string\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 2
 			path: include/ws_functions/pwg.php
 
 		-
@@ -4556,10 +5450,22 @@ parameters:
 			path: include/ws_functions/pwg.tags.php
 
 		-
+			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
+			identifier: function.resultUnused
+			count: 1
+			path: include/ws_functions/pwg.tags.php
+
+		-
 			message: '#^Function trigger_notify invoked with 3 parameters, 0 required\.$#'
 			identifier: arguments.count
 			count: 1
 			path: include/ws_functions/pwg.tags.php
+
+		-
+			message: '#^Negated boolean expression is always true\.$#'
+			identifier: booleanNot.alwaysTrue
+			count: 1
+			path: include/ws_functions/pwg.users.php
 
 		-
 			message: '#^Variable \$api_keys on left side of \?\? always exists and is not nullable\.$#'
@@ -4568,10 +5474,22 @@ parameters:
 			path: include/ws_functions/pwg.users.php
 
 		-
+			message: '#^Call to function is_null\(\) with ''rest'' will always evaluate to false\.$#'
+			identifier: function.impossibleType
+			count: 1
+			path: include/ws_init.inc.php
+
+		-
 			message: '#^Variable \$requestFormat in isset\(\) always exists and is not nullable\.$#'
 			identifier: isset.variable
 			count: 1
 			path: include/ws_init.inc.php
+
+		-
+			message: '#^Property PwgXmlWriter\:\:\$_elementStack \(array\) in empty\(\) is always falsy\.$#'
+			identifier: empty.property
+			count: 1
+			path: include/ws_protocols/rest_encoder.php
 
 		-
 			message: '#^Property PwgXmlWriter\:\:\$_elementStack \(array\{\}\) does not accept array\{mixed\}\.$#'
@@ -4584,6 +5502,12 @@ parameters:
 			identifier: assign.propertyType
 			count: 1
 			path: include/ws_protocols/rest_encoder.php
+
+		-
+			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
+			identifier: function.resultUnused
+			count: 2
+			path: index.php
 
 		-
 			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
@@ -4610,6 +5534,12 @@ parameters:
 			path: index.php
 
 		-
+			message: '#^Call to function is_array\(\) with array\<mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 3
+			path: install.php
+
+		-
 			message: '#^Path in include\(\) "\./include/dblayer/functions_mysql\.inc\.php" is not a file or it does not exist\.$#'
 			identifier: include.fileNotFound
 			count: 1
@@ -4634,6 +5564,12 @@ parameters:
 			path: install.php
 
 		-
+			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
+			identifier: function.resultUnused
+			count: 2
+			path: notification.php
+
+		-
 			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
 			identifier: arguments.count
 			count: 2
@@ -4652,9 +5588,21 @@ parameters:
 			path: notification.php
 
 		-
+			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
+			identifier: function.resultUnused
+			count: 2
+			path: password.php
+
+		-
 			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
 			identifier: arguments.count
 			count: 2
+			path: password.php
+
+		-
+			message: '#^Unused result of "or" operator\.$#'
+			identifier: logicalOr.resultUnused
+			count: 1
 			path: password.php
 
 		-
@@ -4700,6 +5648,12 @@ parameters:
 			path: picture.php
 
 		-
+			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
+			identifier: function.resultUnused
+			count: 2
+			path: picture.php
+
+		-
 			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
 			identifier: arguments.count
 			count: 2
@@ -4728,6 +5682,12 @@ parameters:
 			identifier: variable.undefined
 			count: 6
 			path: picture.php
+
+		-
+			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
+			identifier: function.resultUnused
+			count: 4
+			path: profile.php
 
 		-
 			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
@@ -4766,6 +5726,12 @@ parameters:
 			path: profile.php
 
 		-
+			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
+			identifier: function.resultUnused
+			count: 2
+			path: register.php
+
+		-
 			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
 			identifier: arguments.count
 			count: 2
@@ -4796,6 +5762,12 @@ parameters:
 			path: register.php
 
 		-
+			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
+			identifier: function.resultUnused
+			count: 1
+			path: search.php
+
+		-
 			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
 			identifier: arguments.count
 			count: 1
@@ -4812,6 +5784,12 @@ parameters:
 			identifier: variable.undefined
 			count: 1
 			path: search.php
+
+		-
+			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
+			identifier: function.resultUnused
+			count: 2
+			path: tags.php
 
 		-
 			message: '#^Cannot unset offset ''CHANGE_COLUMN'' on array\{tags\: non\-empty\-list\<non\-empty\-array\>, TITLE\?\: string\}\.$#'

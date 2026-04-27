@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Rector\Config\RectorConfig;
+use Rector\Set\ValueObject\SetList;
 
 return RectorConfig::configure()
     ->withPaths([
@@ -11,6 +12,7 @@ return RectorConfig::configure()
         __DIR__ . '/index.php', __DIR__ . '/ws.php', __DIR__ . '/picture.php',
         __DIR__ . '/identification.php', __DIR__ . '/profile.php',
         __DIR__ . '/register.php', __DIR__ . '/password.php',
+        __DIR__ . '/themes/default',
     ])
     ->withSkip([
         __DIR__ . '/install/db', __DIR__ . '/language',
@@ -19,8 +21,13 @@ return RectorConfig::configure()
         __DIR__ . '/include/phpmailer',
         __DIR__ . '/include/phpqrcode.php',
         __DIR__ . '/include/emogrifier.class.php',
+        __DIR__ . '/include/jshrink.class.php',
+        __DIR__ . '/include/passwordhash.class.php',
+        __DIR__ . '/include/mdetect.php',
+        __DIR__ . '/admin/include/pclzip.lib.php',
         __DIR__ . '/themes', __DIR__ . '/vendor',
     ])
     ->withPhpSets(php85: true)
+    ->withSets([SetList::TYPE_DECLARATION])
     ->withImportNames(importShortClasses: false, removeUnusedImports: false)
     ->withParallel();

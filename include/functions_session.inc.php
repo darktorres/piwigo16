@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -54,7 +55,7 @@ if (isset($conf['session_save_handler'])
  * @param int $size
  * @return string
  */
-function generate_key($size)
+function generate_key($size): string
 {
     $bytes = random_bytes($size + 10);
 
@@ -76,7 +77,7 @@ function generate_key($size)
  * @param sring $name
  * @return true
  */
-function pwg_session_open($path, $name)
+function pwg_session_open($path, $name): bool
 {
     return true;
 }
@@ -86,7 +87,7 @@ function pwg_session_open($path, $name)
  *
  * @return true
  */
-function pwg_session_close()
+function pwg_session_close(): bool
 {
     return true;
 }
@@ -96,7 +97,7 @@ function pwg_session_close()
  *
  * @return string
  */
-function get_remote_addr_session_hash()
+function get_remote_addr_session_hash(): string
 {
     global $conf;
 
@@ -119,7 +120,7 @@ function get_remote_addr_session_hash()
  * @param string $session_id
  * @return string
  */
-function pwg_session_read($session_id)
+function pwg_session_read(string $session_id)
 {
     $query = '
 SELECT data
@@ -140,7 +141,7 @@ SELECT data
  * @param sring $data
  * @return true
  */
-function pwg_session_write($session_id, $data)
+function pwg_session_write(string $session_id, $data): bool
 {
     // when the request is authenticated via api_key (PWG_API_KEY_REQUEST),
     // you do not want the session to be written to the database (no user session persistence)
@@ -163,7 +164,7 @@ REPLACE INTO '.SESSIONS_TABLE.'
  * @param string $session_id
  * @return true
  */
-function pwg_session_destroy($session_id)
+function pwg_session_destroy(string $session_id): bool
 {
     $query = '
 DELETE
@@ -179,7 +180,7 @@ DELETE
  *
  * @return true
  */
-function pwg_session_gc()
+function pwg_session_gc(): bool
 {
     global $conf;
 
@@ -200,7 +201,7 @@ DELETE
  * @param mixed $value
  * @return bool
  */
-function pwg_set_session_var($var, $value)
+function pwg_set_session_var(string $var, $value): bool
 {
     if (!isset($_SESSION)) {
         return false;
@@ -216,7 +217,7 @@ function pwg_set_session_var($var, $value)
  * @param mixed $default
  * @return mixed
  */
-function pwg_get_session_var($var, $default = null)
+function pwg_get_session_var(string $var, $default = null)
 {
     return $_SESSION['pwg_'.$var] ?? $default;
 }
@@ -227,7 +228,7 @@ function pwg_get_session_var($var, $default = null)
  * @param string $var
  * @return bool
  */
-function pwg_unset_session_var($var)
+function pwg_unset_session_var(string $var): bool
 {
     if (!isset($_SESSION)) {
         return false;
@@ -243,7 +244,7 @@ function pwg_unset_session_var($var)
  * @param int $user_id
  * @return null
  */
-function delete_user_sessions($user_id)
+function delete_user_sessions($user_id): void
 {
     $query = '
 DELETE

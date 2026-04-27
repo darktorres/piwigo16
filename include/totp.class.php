@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 defined('PHPWG_ROOT_PATH') or die('Hacking attempt!');
 
 require_once(PHPWG_ROOT_PATH . 'include/base32.class.php');
@@ -14,7 +15,7 @@ class PwgTOTP
      * @param int $timestamp 30s intervasl since 1970
      * @return string TOTP Code
      */
-    private static function generateCodeFromTimestamp($secret, $timestamp)
+    private static function generateCodeFromTimestamp($secret, float $timestamp): string
     {
         $key = PwgBase32::decode($secret);
 
@@ -36,7 +37,7 @@ class PwgTOTP
      * @param int $length Length in bytes (default: 20)
      * @return string Base32-encoded secret
      */
-    public static function generateSecret($length = 20)
+    public static function generateSecret($length = 20): string
     {
         $random = random_bytes($length);
         return PwgBase32::encode($random, false);
@@ -48,7 +49,7 @@ class PwgTOTP
      * @param string $secret Encoded base32 secret
      * @return string otpauth://totp/ url
      */
-    public static function getOtpAuthUrl($secret)
+    public static function getOtpAuthUrl(string $secret): string
     {
         global $user;
         $url = substr((string) get_absolute_root_url(), 0, -1);
@@ -61,7 +62,7 @@ class PwgTOTP
      * @param string $secret Encoded base32 secret
      * @return string data:image/png;base64..
      */
-    public static function getQrCode($secret)
+    public static function getQrCode($secret): string
     {
         $otp_url = self::getOtpAuthUrl($secret);
 
@@ -94,7 +95,7 @@ class PwgTOTP
      * @param int $check_interval Number of 30s steps to check before/after current (default: 1)
      * @return bool
      */
-    public static function verifyCode($code, $secret, $timestamp = 30, $check_interval = 1)
+    public static function verifyCode($code, $secret, $timestamp = 30, $check_interval = 1): bool
     {
         $timestamp = floor(time() / $timestamp);
 

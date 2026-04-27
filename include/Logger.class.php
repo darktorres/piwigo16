@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -49,9 +50,8 @@ class Logger
 
     /**
      * Standard messages produced by the class.
-     * @var array
      */
-    private static $_messages = [
+    private static array $_messages = [
       'writefail'   => 'The file could not be written to. Check that appropriate permissions have been set.',
       'opensuccess' => 'The log file was opened successfully.',
       'openfail'  => 'The file could not be opened. Check permissions.',
@@ -59,9 +59,8 @@ class Logger
 
     /**
      * Instance options.
-     * @var array
      */
-    private $options = [
+    private array $options = [
       'directory' => null, // Log files directory
       'filename' => null, // Path to the log file
       'globPattern' => 'log_*.txt', // Pattern to select all log files with glob()
@@ -72,9 +71,8 @@ class Logger
 
     /**
      * Current status of the logger.
-     * @var integer
      */
-    private $_logStatus = self::STATUS_LOG_CLOSED;
+    private int $_logStatus = self::STATUS_LOG_CLOSED;
     /**
      * File handle for this instance's log file.
      * @var resource
@@ -116,7 +114,7 @@ class Logger
     /**
      * Open the log file if not already oppenned
      */
-    private function open()
+    private function open(): void
     {
         if ($this->status() == self::STATUS_LOG_CLOSED) {
             if (!file_exists($this->options['directory'])) {
@@ -175,7 +173,7 @@ class Logger
      * @param string $cat
      * @param array $args
      */
-    public function debug($line, $cat = null, $args = [])
+    public function debug($line, $cat = null, $args = []): void
     {
         $this->log(self::DEBUG, $line, $cat, $args);
     }
@@ -187,7 +185,7 @@ class Logger
      * @param string $cat
      * @param array $args
      */
-    public function info($line, $cat = null, $args = [])
+    public function info($line, $cat = null, $args = []): void
     {
         $this->log(self::INFO, $line, $cat, $args);
     }
@@ -199,7 +197,7 @@ class Logger
      * @param string $cat
      * @param array $args
      */
-    public function notice($line, $cat = null, $args = [])
+    public function notice($line, $cat = null, $args = []): void
     {
         $this->log(self::NOTICE, $line, $cat, $args);
     }
@@ -211,7 +209,7 @@ class Logger
      * @param string $cat
      * @param array $args
      */
-    public function warn($line, $cat = null, $args = [])
+    public function warn($line, $cat = null, $args = []): void
     {
         $this->log(self::WARNING, $line, $cat, $args);
     }
@@ -223,7 +221,7 @@ class Logger
      * @param string $cat
      * @param array $args
      */
-    public function error($line, $cat = null, $args = [])
+    public function error($line, $cat = null, $args = []): void
     {
         $this->log(self::ERROR, $line, $cat, $args);
     }
@@ -235,7 +233,7 @@ class Logger
      * @param string $cat
      * @param array $args
      */
-    public function alert($line, $cat = null, $args = [])
+    public function alert($line, $cat = null, $args = []): void
     {
         $this->log(self::ALERT, $line, $cat, $args);
     }
@@ -247,7 +245,7 @@ class Logger
      * @param string $cat
      * @param array $args
      */
-    public function critical($line, $cat = null, $args = [])
+    public function critical($line, $cat = null, $args = []): void
     {
         $this->log(self::CRITICAL, $line, $cat, $args);
     }
@@ -259,7 +257,7 @@ class Logger
      * @param string $cat
      * @param array $args
      */
-    public function emergency($line, $cat = null, $args = [])
+    public function emergency($line, $cat = null, $args = []): void
     {
         $this->log(self::EMERGENCY, $line, $cat, $args);
     }
@@ -272,7 +270,7 @@ class Logger
      * @param string $cat
      * @param array $args
      */
-    public function log($severity, $message, $cat = null, $args = [])
+    public function log($severity, $message, $cat = null, $args = []): void
     {
         if ($this->severity() >= $severity) {
             if (is_array($cat)) {
@@ -289,7 +287,7 @@ class Logger
      *
      * @param string $line
      */
-    public function write($line)
+    public function write($line): void
     {
         $this->open();
         if ($this->status() == self::STATUS_LOG_OPEN) {
@@ -302,7 +300,7 @@ class Logger
     /**
      * Purges files matching 'globPattern' older than 'archiveDays'.
      */
-    public function purge()
+    public function purge(): void
     {
         $files = glob($this->options['directory'] . $this->options['globPattern']);
         $limit = time() - $this->options['archiveDays'] * 86400;
@@ -322,7 +320,7 @@ class Logger
      * @param  array  $context
      * @return string
      */
-    private function formatMessage($level, $message, $cat, $context)
+    private function formatMessage($level, string $message, ?string $cat, $context): string
     {
         global $page;
 
@@ -344,7 +342,7 @@ class Logger
      *
      * @return string
      */
-    private function getTimestamp()
+    private function getTimestamp(): string
     {
         $originalTime = microtime(true);
         $micro = sprintf('%06d', ($originalTime - floor($originalTime)) * 1000000);
@@ -358,7 +356,7 @@ class Logger
      * @param  array $context
      * @return string
      */
-    private function contextToString($context)
+    private function contextToString($context): string
     {
         $export = '';
         foreach ($context as $key => $value) {
@@ -388,7 +386,7 @@ class Logger
      * @param  string $indent What to use as the indent.
      * @return string
      */
-    private function indent($string, $indent = '  ')
+    private function indent($string, string $indent = '  ')
     {
         return $indent . str_replace("\n", "\n" . $indent, $string);
     }
@@ -399,7 +397,7 @@ class Logger
      * @param int $level
      * @return string
      */
-    public static function levelToCode($level)
+    public static function levelToCode($level): string
     {
         return match ($level) {
             self::EMERGENCY => 'EMERGENCY',
@@ -420,7 +418,7 @@ class Logger
      * @param string $code
      * @return int
      */
-    public static function codeToLevel($code)
+    public static function codeToLevel(string $code): int
     {
         return match (strtoupper($code)) {
             'EMERGENCY' => self::EMERGENCY,

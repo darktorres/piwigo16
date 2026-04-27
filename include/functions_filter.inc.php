@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -17,7 +18,7 @@
  *
  * @param array &$cats
  */
-function update_cats_with_filtered_data(&$cats)
+function update_cats_with_filtered_data(array &$cats): void
 {
     global $filter;
 

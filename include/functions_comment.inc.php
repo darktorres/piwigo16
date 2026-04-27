@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -22,7 +23,7 @@ add_event_handler('user_comment_check', 'user_comment_check');
  * @param array $comment
  * @return string validate, moderate, reject
  */
-function user_comment_check($action, $comment)
+function user_comment_check($action, array $comment)
 {
     global $conf,$user;
 
@@ -246,7 +247,7 @@ INSERT INTO '.COMMENTS_TABLE.'
  * @param int|int[] $comment_id
  * @return bool false if nothing deleted
  */
-function delete_user_comment($comment_id)
+function delete_user_comment($comment_id): bool
 {
     $user_where_clause = '';
     if (!is_admin()) {
@@ -292,7 +293,7 @@ $user_where_clause.'
  * @return string validate, moderate, reject
  */
 
-function update_user_comment($comment, $post_key)
+function update_user_comment(array $comment, $post_key)
 {
     global $conf, $page;
 
@@ -383,7 +384,7 @@ $user_where_clause.'
  * @param string $action edit, delete
  * @param array $comment
  */
-function email_admin($action, $comment)
+function email_admin($action, array $comment): void
 {
     global $conf;
 
@@ -446,7 +447,7 @@ SELECT
  *
  * @param int|int[] $comment_id
  */
-function validate_user_comment($comment_id)
+function validate_user_comment($comment_id): void
 {
     if (is_array($comment_id)) {
         $where_clause = 'id IN('.implode(',', $comment_id).')';
@@ -469,7 +470,7 @@ UPDATE '.COMMENTS_TABLE.'
 /**
  * Clears cache of nb comments for all users
  */
-function invalidate_user_cache_nb_comments()
+function invalidate_user_cache_nb_comments(): void
 {
     global $user;
 

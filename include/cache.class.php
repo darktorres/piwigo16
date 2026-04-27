@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -57,7 +58,7 @@ abstract class PersistentCache
 */
 class PersistentFileCache extends PersistentCache
 {
-    private $dir;
+    private readonly string $dir;
 
     public function __construct()
     {
@@ -65,7 +66,7 @@ class PersistentFileCache extends PersistentCache
         $this->dir = PHPWG_ROOT_PATH.$conf['data_location'].'cache/';
     }
 
-    public function get($key, &$value)
+    public function get($key, &$value): bool
     {
         $loaded = @file_get_contents($this->dir.$key.'.cache');
         if ($loaded !== false && ($loaded = unserialize($loaded)) !== false) {
@@ -77,7 +78,7 @@ class PersistentFileCache extends PersistentCache
         return false;
     }
 
-    public function set($key, $value, $lifetime = null)
+    public function set($key, $value, $lifetime = null): bool
     {
         if ($lifetime === null) {
             $lifetime = $this->default_lifetime;
@@ -101,7 +102,7 @@ class PersistentFileCache extends PersistentCache
         return true;
     }
 
-    public function purge($all)
+    public function purge($all): void
     {
         $files = glob($this->dir.'*.cache');
         if (empty($files)) {

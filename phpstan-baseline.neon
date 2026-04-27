@@ -415,12 +415,6 @@ parameters:
 			path: include/functions_user.inc.php
 
 		-
-			message: '#^Function check_status\(\) should return int but return statement is missing\.$#'
-			identifier: return.missing
-			count: 2
-			path: include/functions_user.inc.php
-
-		-
 			message: '#^Cannot unset property JShrink\\Minifier\:\:\$c because it might have hooks in a subclass\.$#'
 			identifier: unset.possiblyHookedProperty
 			count: 3

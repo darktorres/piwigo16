@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 defined('PHPWG_ROOT_PATH') or die('Hacking attempt!');
 
 /**
@@ -12,7 +13,7 @@ defined('PHPWG_ROOT_PATH') or die('Hacking attempt!');
  **/
 class PwgBase32
 {
-    private static $map = [
+    private static array $map = [
       'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', //  7
       'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', // 15
       'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', // 23
@@ -20,7 +21,7 @@ class PwgBase32
       '=',  // padding char
     ];
 
-    private static $flippedMap = [
+    private static array $flippedMap = [
       'A' => '0', 'B' => '1', 'C' => '2', 'D' => '3', 'E' => '4', 'F' => '5', 'G' => '6', 'H' => '7',
       'I' => '8', 'J' => '9', 'K' => '10', 'L' => '11', 'M' => '12', 'N' => '13', 'O' => '14', 'P' => '15',
       'Q' => '16', 'R' => '17', 'S' => '18', 'T' => '19', 'U' => '20', 'V' => '21', 'W' => '22', 'X' => '23',
@@ -32,7 +33,7 @@ class PwgBase32
      *
      * @return base32 encoded string
      **/
-    public static function encode($input, $padding = true)
+    public static function encode($input, $padding = true): string
     {
         if (empty($input)) {
             return '';

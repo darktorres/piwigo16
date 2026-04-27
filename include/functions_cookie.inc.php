@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -20,7 +21,7 @@
  *
  * @return string
  */
-function cookie_path()
+function cookie_path(): ?string
 {
     if (isset($_SERVER['REDIRECT_SCRIPT_NAME']) and
          !empty($_SERVER['REDIRECT_SCRIPT_NAME'])) {
@@ -75,7 +76,7 @@ function cookie_path()
  * @param int|null $expire
  * @return bool
  */
-function pwg_set_cookie_var($var, $value, $expire = null)
+function pwg_set_cookie_var(string $var, $value, $expire = null): bool
 {
     if ($value == null or $expire === 0) {
         unset($_COOKIE['pwg_'.$var]);
@@ -96,7 +97,7 @@ function pwg_set_cookie_var($var, $value, $expire = null)
  * @param mixed $default
  * @return mixed
  */
-function pwg_get_cookie_var($var, $default = null)
+function pwg_get_cookie_var(string $var, $default = null)
 {
     if (isset($_COOKIE['pwg_'.$var])) {
         return $_COOKIE['pwg_'.$var];

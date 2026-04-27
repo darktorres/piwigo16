@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -9,7 +10,7 @@
 
 class PwgSerialPhpEncoder extends PwgResponseEncoder
 {
-    public function encodeResponse($response)
+    public function encodeResponse($response): string
     {
         if ($response instanceof PwgError) {
             return serialize(
@@ -29,7 +30,7 @@ class PwgSerialPhpEncoder extends PwgResponseEncoder
         );
     }
 
-    public function getContentType()
+    public function getContentType(): string
     {
         return 'text/plain';
     }

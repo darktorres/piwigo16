@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -19,7 +20,7 @@
  * @param string $mail_address
  * @return string|void error message or nothing
  */
-function validate_mail_address($user_id, $mail_address)
+function validate_mail_address($user_id, ?string $mail_address)
 {
     global $conf;
 
@@ -275,7 +276,7 @@ SELECT id
  * @param boolean $user_cache
  * @return array
  */
-function build_user($user_id, $use_cache = true)
+function build_user($user_id, $use_cache = true): array
 {
     global $conf;
 
@@ -532,7 +533,7 @@ INSERT IGNORE INTO '.USER_CACHE_TABLE.'
 /**
  * Deletes favorites of the current user if he's not allowed to see them.
  */
-function check_user_favorites()
+function check_user_favorites(): void
 {
     global $user;
 
@@ -588,7 +589,7 @@ DELETE FROM '.FAVORITES_TABLE.'
  * @param string $user_status
  * @return string comma separated ids
  */
-function calculate_permissions($user_id, $user_status)
+function calculate_permissions($user_id, $user_status): string
 {
     $query = '
 SELECT id
@@ -798,7 +799,7 @@ function get_default_language()
  *
  * @return string
  */
-function get_browser_language()
+function get_browser_language(): false|int|string
 {
     $language_header = @$_SERVER['HTTP_ACCEPT_LANGUAGE'];
     if ($language_header == '') {
@@ -871,7 +872,7 @@ function get_browser_language()
  * @param int|int[] $user_ids
  * @param array $override_values values used to override default user values
  */
-function create_user_infos($user_ids, $override_values = null)
+function create_user_infos($user_ids, $override_values = null): void
 {
     global $conf;
 
@@ -930,7 +931,7 @@ function create_user_infos($user_ids, $override_values = null)
  * @param string &$username fille with corresponding username
  * @return string|false
  */
-function calculate_auto_login_key($user_id, $time, &$username)
+function calculate_auto_login_key($user_id, $time, &$username): string|false
 {
     global $conf;
     $query = '
@@ -955,7 +956,7 @@ WHERE '.$conf['user_fields']['id'].' = '.$user_id;
  * @param int $user_id
  * @param bool $remember_me
  */
-function log_user($user_id, $remember_me)
+function log_user($user_id, $remember_me): void
 {
     global $conf, $user;
 
@@ -1012,7 +1013,7 @@ function log_user($user_id, $remember_me)
  *
  * @return bool
  */
-function auto_login()
+function auto_login(): bool
 {
     global $conf;
 
@@ -1138,7 +1139,7 @@ add_event_handler('try_log_user', 'pwg_login');
  * @param bool $remember_me
  * @return bool
  */
-function pwg_login($success, $username, $password, $remember_me)
+function pwg_login($success, $username, $password, $remember_me): bool
 {
     if ($success === true) {
         return true;
@@ -1298,7 +1299,7 @@ function generate_fake_user()
  * @since 16
  * @return void
  */
-function clear_fake_user_cache()
+function clear_fake_user_cache(): void
 {
     unset($_SESSION['fake_user_cache']);
 }
@@ -1306,7 +1307,7 @@ function clear_fake_user_cache()
 /**
  * Performs all the cleanup on user logout.
  */
-function logout_user()
+function logout_user(): void
 {
     global $conf;
 
@@ -1351,7 +1352,7 @@ function get_user_status($user_status = '')
  * @param string $user_status used if $user not initialized
  * @return int one of ACCESS_* constants
  */
-function get_access_type_status($user_status = '')
+function get_access_type_status($user_status = ''): int
 {
     global $conf;
 
@@ -1399,7 +1400,7 @@ function get_access_type_status($user_status = '')
  * @param string $user_status used if $user not initialized
  * @return bool
  */
-function is_autorize_status($access_type, $user_status = '')
+function is_autorize_status($access_type, $user_status = ''): bool
 {
     return (get_access_type_status($user_status) >= $access_type);
 }
@@ -1410,7 +1411,7 @@ function is_autorize_status($access_type, $user_status = '')
  * @return int $access_type one of ACCESS_* constants
  * @param string $user_status used if $user not initialized
  */
-function check_status($access_type, $user_status = '')
+function check_status($access_type, $user_status = ''): void
 {
     if (!is_autorize_status($access_type, $user_status)) {
         access_denied();
@@ -1423,7 +1424,7 @@ function check_status($access_type, $user_status = '')
  * @param string $user_status used if $user not initialized
  * @return bool
  */
-function is_generic($user_status = '')
+function is_generic($user_status = ''): bool
 {
     return get_user_status($user_status) == 'generic';
 }
@@ -1434,7 +1435,7 @@ function is_generic($user_status = '')
  * @param string $user_status used if $user not initialized
  * @return bool
  */
-function is_a_guest($user_status = '')
+function is_a_guest($user_status = ''): bool
 {
     return get_user_status($user_status) == 'guest';
 }
@@ -1479,7 +1480,7 @@ function is_webmaster($user_status = '')
  * @param int $comment_author_id
  * @return bool
  */
-function can_manage_comment($action, $comment_author_id)
+function can_manage_comment($action, $comment_author_id): bool
 {
     global $user, $conf;
 
@@ -1527,7 +1528,7 @@ function get_sql_condition_FandF(
     $condition_fields,
     $prefix_condition = null,
     $force_one_condition = false
-) {
+): string {
     global $user, $filter;
 
     $sql_list = [];
@@ -1603,7 +1604,7 @@ function get_sql_condition_FandF(
  * @param string $db_field
  * @return string
  */
-function get_recent_photos_sql($db_field)
+function get_recent_photos_sql(string $db_field): string
 {
     global $user;
     if (!isset($user['last_photo_date'])) {
@@ -1621,7 +1622,7 @@ function get_recent_photos_sql($db_field)
  *
  * @return bool
  */
-function auth_key_login($auth_key, $connection_by_header = false)
+function auth_key_login($auth_key, $connection_by_header = false): bool
 {
     global $conf, $user, $page;
 
@@ -1807,7 +1808,7 @@ SELECT
  * @param int $user_id
  * @return null
  */
-function deactivate_user_auth_keys($user_id)
+function deactivate_user_auth_keys($user_id): void
 {
     $query = '
 UPDATE '.USER_AUTH_KEYS_TABLE.'
@@ -1826,7 +1827,7 @@ UPDATE '.USER_AUTH_KEYS_TABLE.'
  * @param int $user_id
  * @return null
  */
-function deactivate_password_reset_key($user_id)
+function deactivate_password_reset_key($user_id): void
 {
     single_update(
         USER_INFOS_TABLE,
@@ -1846,7 +1847,7 @@ function deactivate_password_reset_key($user_id)
  * @param boolean $first_login
  * @return array time_validation and password link
  */
-function generate_password_link($user_id, $first_login = false)
+function generate_password_link($user_id, $first_login = false): array
 {
     global $conf;
 
@@ -1929,7 +1930,7 @@ UPDATE '.USER_INFOS_TABLE.'
  * Save user preferences in database
  * @since 13
  */
-function userprefs_save()
+function userprefs_save(): void
 {
     global $user;
 
@@ -1951,7 +1952,7 @@ UPDATE '.USER_INFOS_TABLE.'
  * @param string $value
  * @param boolean $updateGlobal update global *$conf* variable
  */
-function userprefs_update_param($param, $value)
+function userprefs_update_param($param, $value): void
 {
     global $user;
 
@@ -1973,7 +1974,7 @@ function userprefs_update_param($param, $value)
  *
  * @param string|string[] $params
  */
-function userprefs_delete_param($params)
+function userprefs_delete_param($params): void
 {
     global $user;
 
@@ -2016,7 +2017,7 @@ function userprefs_get_param($param, $default_value = null)
  * @param int $user_id
  * @return bool true if first connexion else false
  */
-function has_already_logged_in($user_id)
+function has_already_logged_in($user_id): bool
 {
     $query = '
 SELECT COUNT(*)
@@ -2048,8 +2049,9 @@ SELECT COUNT(*)
  *    @option bool show_nb_comments (optional)
  *    @option bool show_nb_hits (optional)
  *    @option bool enabled_high (optional)
+ * @return mixed[]
  */
-function check_and_save_user_infos($params)
+function check_and_save_user_infos(array $params): array
 {
     if (isset($params['username']) and strlen(str_replace(' ', '', $params['username'])) == 0) {
         // return new PwgError(WS_ERR_INVALID_PARAM, 'Name field must not be empty');
@@ -2360,7 +2362,7 @@ SELECT
  * @return array auth_key / apikey_secret / apikey_name /
  * user_id / created_on / duration / expired_on / key_type
  */
-function create_api_key($user_id, $duration, $key_name)
+function create_api_key($user_id, $duration, $key_name): array
 {
     $key_id = 'pkid-'.date('Ymd').'-'.generate_key(20);
     $key_secret = generate_key(40);
@@ -2400,7 +2402,7 @@ SELECT
  * @param string $pkid
  * @return string|bool
  */
-function revoke_api_key($user_id, $pkid)
+function revoke_api_key($user_id, string $pkid)
 {
     $query = '
 SELECT 
@@ -2436,7 +2438,7 @@ SELECT
  * @param string $pkid
  * @return string|bool
  */
-function edit_api_key($user_id, $pkid, $api_name)
+function edit_api_key($user_id, string $pkid, $api_name)
 {
     $query = '
 SELECT 
@@ -2470,7 +2472,7 @@ SELECT
  * @param string $user_id
  * @return array|false
  */
-function get_api_key($user_id)
+function get_api_key(string $user_id)
 {
     $query = '
 SELECT *
@@ -2569,7 +2571,7 @@ function get_available_api_key($user_id)
  * @since 16
  * @return bool
  */
-function connected_with_pwg_ui()
+function connected_with_pwg_ui(): bool
 {
     // You can manage your api key only if you are connected via identification.php
     if (isset($_SESSION['connected_with']) and 'pwg_ui' === $_SESSION['connected_with']) {
@@ -2616,7 +2618,7 @@ function notification_api_key_expiration($username, $email, $days_left)
  * @since 16
  * @return array [$secret, $code]
  */
-function generate_user_code()
+function generate_user_code(): array
 {
     global $conf;
 
@@ -2651,7 +2653,7 @@ function verify_user_code($secret, $code)
  *
  * @since 16
  */
-function save_edit_context()
+function save_edit_context(): void
 {
     global $page;
 
@@ -2683,7 +2685,7 @@ function save_edit_context()
  * @param int $image_id
  * @return string|bool
  */
-function get_edit_context($image_id)
+function get_edit_context($image_id): false|string|null
 {
     if (!isset($_SESSION['edit_context'][$image_id])) {
         return false;

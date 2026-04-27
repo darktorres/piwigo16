@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -29,7 +30,7 @@ class PwgJsonEncoder extends PwgResponseEncoder
         );
     }
 
-    public function getContentType()
+    public function getContentType(): string
     {
         return 'text/plain';
     }

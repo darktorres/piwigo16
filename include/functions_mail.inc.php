@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -52,7 +53,7 @@ function get_mail_sender_email()
  *
  * @return array
  */
-function get_mail_configuration()
+function get_mail_configuration(): array
 {
     global $conf;
 
@@ -82,7 +83,7 @@ function get_mail_configuration()
  * @param string $email
  * @return string
  */
-function format_email($name, $email)
+function format_email($name, $email): string
 {
     $cvt_email = trim((string) preg_replace('#[\n\r]+#s', '', $email));
     $cvt_name = trim((string) preg_replace('#[\n\r]+#s', '', $name));
@@ -105,7 +106,7 @@ function format_email($name, $email)
  * @param string|string[] $input - if is an array must contain email[, name]
  * @return array email, name
  */
-function unformat_email($input)
+function unformat_email($input): array
 {
     if (is_array($input)) {
         if (!isset($input['name'])) {
@@ -139,7 +140,7 @@ function unformat_email($input)
  * @param mixed $data
  * @return string[][]
  */
-function get_clean_recipients_list($data)
+function get_clean_recipients_list($data): array
 {
     if (empty($data)) {
         return [];
@@ -185,7 +186,7 @@ function get_clean_recipients_list($data)
  * @return string
  */
 #[\Deprecated(message: '2.6')]
-function get_strict_email_list($email_list)
+function get_strict_email_list($email_list): string
 {
     $result = [];
     $list = explode(',', $email_list);
@@ -206,7 +207,7 @@ function get_strict_email_list($email_list)
  * @param string $email_format - text/html or text/plain
  * @return Template
  */
-function &get_mail_template($email_format)
+function &get_mail_template(string $email_format): \Template
 {
     $template = new Template(PHPWG_ROOT_PATH.'themes', 'default', 'template/mail/'.$email_format);
     return $template;
@@ -218,7 +219,7 @@ function &get_mail_template($email_format)
  * @param bool $is_html
  * @return string
  */
-function get_str_email_format($is_html)
+function get_str_email_format($is_html): string
 {
     return ($is_html ? 'text/html' : 'text/plain');
 }
@@ -229,7 +230,7 @@ function get_str_email_format($is_html)
  *
  * @param string $language
  */
-function switch_lang_to($language)
+function switch_lang_to($language): void
 {
     global $switch_lang, $user, $lang, $lang_info, $language_files;
 
@@ -292,7 +293,7 @@ function switch_lang_to($language)
  * @see switch_lang_to()
  * Language files are not reloaded
  */
-function switch_lang_back()
+function switch_lang_back(): void
 {
     global $switch_lang, $user, $lang, $lang_info;
 
@@ -376,7 +377,7 @@ function pwg_mail_notification_admins($subject, $content, $send_technical_detail
  * @param array $tpl - as in pwg_mail()
  * @return boolean
  */
-function pwg_mail_admins($args = [], $tpl = [], $exclude_current_user = true, $only_webmasters = false, $group_id = null)
+function pwg_mail_admins(array $args = [], $tpl = [], $exclude_current_user = true, $only_webmasters = false, $group_id = null)
 {
     if (empty($args['content']) and empty($tpl)) {
         return false;
@@ -448,7 +449,7 @@ SELECT
  * @param array $tpl - as in pwg_mail()
  * @return boolean
  */
-function pwg_mail_group($group_id, $args = [], $tpl = [])
+function pwg_mail_group($group_id, array $args = [], $tpl = []): bool|int
 {
     if (empty($group_id) or (empty($args['content']) and empty($tpl))) {
         return false;
@@ -560,7 +561,7 @@ SELECT
  *
  * @return boolean
  */
-function pwg_mail($to, $args = [], $tpl = [])
+function pwg_mail($to, array $args = [], array $tpl = [])
 {
     global $conf, $conf_mail, $lang_info, $page;
 
@@ -866,7 +867,7 @@ function move_css_to_body($content)
  * @param PHPMailer $mail
  * @param array $args
  */
-function pwg_send_mail_test($success, $mail, $args)
+function pwg_send_mail_test($success, $mail, array $args): void
 {
     global $conf, $user, $lang_info;
 
@@ -899,7 +900,7 @@ function pwg_send_mail_test($success, $mail, $args)
  * @param string $remaining_time
  * @return array mail content
  */
-function pwg_generate_reset_password_mail($username, $password_link, $gallery_title, $remaining_time)
+function pwg_generate_reset_password_mail(string $username, string $password_link, string $gallery_title, $remaining_time): array
 {
     set_make_full_url();
 
@@ -935,7 +936,7 @@ function pwg_generate_reset_password_mail($username, $password_link, $gallery_ti
  * @param string $remaining_time
  * @return array mail content
  */
-function pwg_generate_set_password_mail($username, $set_password_link, $gallery_title, $remaining_time)
+function pwg_generate_set_password_mail(string $username, string $set_password_link, $gallery_title, $remaining_time): array
 {
     set_make_full_url();
 
@@ -969,7 +970,7 @@ function pwg_generate_set_password_mail($username, $set_password_link, $gallery_
  * @param string $code
  * @return array mail content
  */
-function pwg_generate_code_verification_mail($code)
+function pwg_generate_code_verification_mail(string $code): array
 {
     global $conf;
     set_make_full_url();
@@ -996,7 +997,7 @@ function pwg_generate_code_verification_mail($code)
  * @param string $code
  * @return array mail content
  */
-function pwg_generate_success_reset_password_mail($username, $nb_of_apikeys)
+function pwg_generate_success_reset_password_mail($username, $nb_of_apikeys): array
 {
     global $conf;
     set_make_full_url();

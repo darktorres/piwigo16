@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -9,9 +10,9 @@
 
 class Inflector_fr
 {
-    private $exceptions;
-    private $pluralizers;
-    private $singularizers;
+    private array $exceptions;
+    private readonly array $pluralizers;
+    private readonly array $singularizers;
 
     public function __construct()
     {
@@ -43,7 +44,10 @@ class Inflector_fr
         ]);
     }
 
-    public function get_variants($word)
+    /**
+     * @return mixed[]
+     */
+    public function get_variants($word): array
     {
         $res = [];
 

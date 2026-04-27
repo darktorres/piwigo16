@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -30,14 +31,13 @@ final class SrcImage
     /** @var int */
     public $rotation = 0;
     /** @var int[] */
-    private $size = null;
-    /** @var int */
-    private $flags = 0;
+    private ?array $size = null;
+    private int $flags = 0;
 
     /**
      * @param array $infos assoc array of data from images table
      */
-    public function __construct($infos)
+    public function __construct(array $infos)
     {
         global $conf;
 
@@ -87,7 +87,7 @@ final class SrcImage
     /**
      * @return bool
      */
-    public function is_original()
+    public function is_original(): int
     {
         return $this->flags & self::IS_ORIGINAL;
     }
@@ -95,7 +95,7 @@ final class SrcImage
     /**
      * @return bool
      */
-    public function is_mimetype()
+    public function is_mimetype(): int
     {
         return $this->flags & self::IS_MIMETYPE;
     }
@@ -103,7 +103,7 @@ final class SrcImage
     /**
      * @return string
      */
-    public function get_path()
+    public function get_path(): string
     {
         return PHPWG_ROOT_PATH.$this->rel_path;
     }
@@ -123,7 +123,7 @@ final class SrcImage
     /**
      * @return bool
      */
-    public function has_size()
+    public function has_size(): bool
     {
         return $this->size != null;
     }
@@ -161,8 +161,7 @@ final class DerivativeImage
     private $rel_path;
     /** @var string */
     private $rel_url;
-    /** @var bool */
-    private $is_cached = true;
+    private bool $is_cached = true;
 
     /**
      * @param string|DerivativeParams $type standard derivative param type (e.g. IMG_*)
@@ -228,7 +227,7 @@ final class DerivativeImage
      * @param array|SrcImage $src_image array of info from db or SrcImage
      * @return DerivativeImage[]
      */
-    public static function get_all($src_image)
+    public static function get_all($src_image): array
     {
         if (!is_object($src_image)) {
             $src_image = new SrcImage($src_image);
@@ -256,7 +255,7 @@ final class DerivativeImage
      * @param array|SrcImage $src_image array of info from db or SrcImage
      * @return DerivativeImage|null null if $type not found
      */
-    public static function get_one($type, $src_image)
+    public static function get_one($type, $src_image): ?\DerivativeImage
     {
         if (!is_object($src_image)) {
             $src_image = new SrcImage($src_image);
@@ -278,7 +277,7 @@ final class DerivativeImage
     /**
      * @todo : documentation of DerivativeImage::build
      */
-    private static function build($src, &$params, &$rel_path, &$rel_url, &$is_cached = null)
+    private static function build($src, &$params, &$rel_path, &$rel_url, &$is_cached = null): void
     {
         if ($src->has_size() && $params->is_identity($src->get_size())) {// the source image is smaller than what we should do - we do not upsample
             if (!$params->will_watermark($src->get_size()) && !$src->rotation) {// no watermark, no rotation required -> we will use the source image
@@ -348,7 +347,7 @@ final class DerivativeImage
     /**
      * @return string
      */
-    public function get_path()
+    public function get_path(): string
     {
         return PHPWG_ROOT_PATH.$this->rel_path;
     }
@@ -375,7 +374,7 @@ final class DerivativeImage
     /**
      * @return bool
      */
-    public function same_as_source()
+    public function same_as_source(): bool
     {
         return $this->params == null;
     }

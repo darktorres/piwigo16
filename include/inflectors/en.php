@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -9,11 +10,11 @@
 
 class Inflector_en
 {
-    private $exceptions;
-    private $pluralizers;
-    private $singularizers;
-    private $er2ing;
-    private $ing2er;
+    private array $exceptions;
+    private readonly array $pluralizers;
+    private readonly array $singularizers;
+    private readonly array $er2ing;
+    private readonly array $ing2er;
 
     public function __construct()
     {
@@ -123,7 +124,7 @@ class Inflector_en
         return $res;
     }
 
-    private static function run($rules, $word, &$res)
+    private static function run($rules, $word, &$res): string|array|null|false
     {
         foreach ($rules as $rule => $replacement) {
             $rc = preg_replace($rule.'i', (string) $replacement, (string) $word, -1, $count);

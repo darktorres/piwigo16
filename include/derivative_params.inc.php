@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -18,7 +19,7 @@
  * @param string $t one of IMG_*
  * @return string
  */
-function derivative_to_url($t)
+function derivative_to_url($t): string
 {
     return substr($t, 0, 2);
 }
@@ -29,7 +30,7 @@ function derivative_to_url($t)
  * @param int[] $s
  * @return string
  */
-function size_to_url($s)
+function size_to_url(array $s): int|string
 {
     if ($s[0] == $s[1]) {
         return $s[0];
@@ -42,7 +43,7 @@ function size_to_url($s)
  * @param int[] $s2
  * @return bool
  */
-function size_equals($s1, $s2)
+function size_equals(array $s1, array $s2): bool
 {
     return ($s1[0] == $s2[0] && $s1[1] == $s2[1]);
 }
@@ -53,7 +54,7 @@ function size_equals($s1, $s2)
  * @param string
  * @return float
  */
-function char_to_fraction($c)
+function char_to_fraction($c): float|int
 {
     return (ord($c) - ord('a')) / 25;
 }
@@ -64,7 +65,7 @@ function char_to_fraction($c)
  * @param float
  * @return string
  */
-function fraction_to_char($f)
+function fraction_to_char($f): string
 {
     return chr(ord('a') + round($f * 25));
 }
@@ -89,7 +90,7 @@ final class ImageRect
     /**
      * @param int[] $l width and height
      */
-    public function __construct($l)
+    public function __construct(array $l)
     {
         $this->l = $this->t = 0;
         $this->r = $l[0];
@@ -99,7 +100,7 @@ final class ImageRect
     /**
      * @return int
      */
-    public function width()
+    public function width(): int|float
     {
         return $this->r - $this->l;
     }
@@ -107,7 +108,7 @@ final class ImageRect
     /**
      * @return int
      */
-    public function height()
+    public function height(): int|float
     {
         return $this->b - $this->t;
     }
@@ -118,7 +119,7 @@ final class ImageRect
      * @param int $pixels - the amount to substract from the width
      * @param stirng $coi - a 4 character string (or null) containing the center of interest
      */
-    public function crop_h($pixels, $coi)
+    public function crop_h($pixels, $coi): void
     {
         if ($this->width() <= $pixels) {
             return;
@@ -148,7 +149,7 @@ final class ImageRect
      * @param int $pixels - the amount to substract from the height
      * @param string $coi - a 4 character string (or null) containing the center of interest
      */
-    public function crop_v($pixels, $coi)
+    public function crop_v($pixels, $coi): void
     {
         if ($this->height() <= $pixels) {
             return;
@@ -197,7 +198,7 @@ final class SizingParams
      * @param int $h
      * @return SizingParams
      */
-    public static function classic($w, $h)
+    public static function classic($w, $h): \SizingParams
     {
         return new SizingParams([$w,$h]);
     }
@@ -208,7 +209,7 @@ final class SizingParams
      * @param int $x
      * @return SizingParams
      */
-    public static function square($w)
+    public static function square($w): \SizingParams
     {
         return new SizingParams([$w,$w], 1, [$w,$w]);
     }
@@ -218,7 +219,7 @@ final class SizingParams
      *
      * @param array &$tokens
      */
-    public function add_url_tokens(&$tokens)
+    public function add_url_tokens(&$tokens): void
     {
         if ($this->max_crop == 0) {
             $tokens[] = 's'.size_to_url($this->ideal_size);
@@ -239,7 +240,7 @@ final class SizingParams
      * @param ImageRect &$crop_rect - ImageRect containing the cropping rectangle or null if cropping is not required
      * @param int[] &$scale_size - two element array containing width and height of the scaled image
      */
-    public function compute($in_size, $coi, &$crop_rect, &$scale_size)
+    public function compute(array $in_size, $coi, &$crop_rect, &$scale_size): void
     {
         $destCrop = new ImageRect($in_size);
 
@@ -323,7 +324,7 @@ final class DerivativeParams
      *
      * @param array &$tokens
      */
-    public function add_url_tokens(&$tokens)
+    public function add_url_tokens(&$tokens): void
     {
         $this->sizing->add_url_tokens($tokens);
     }
@@ -358,7 +359,7 @@ final class DerivativeParams
      *
      * @return bool
      */
-    public function is_identity($in_size)
+    public function is_identity($in_size): bool
     {
         if ($in_size[0] > $this->sizing->ideal_size[0] or
             $in_size[1] > $this->sizing->ideal_size[1]) {

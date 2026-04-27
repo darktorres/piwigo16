@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -9,7 +10,7 @@
 
 class PwgRestRequestHandler extends PwgRequestHandler
 {
-    public function handleRequest(&$service)
+    public function handleRequest(&$service): void
     {
         $params = [];
 

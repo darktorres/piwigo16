@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -14,7 +15,7 @@
  * @param mixed[] $params
  *
  */
-function ws_userComments_getList($params, &$service)
+function ws_userComments_getList(array $params, &$service): \PwgError|array
 {
     global $conf;
 
@@ -195,7 +196,7 @@ GROUP BY author_id
  * @param mixed[] $params
  *
  */
-function ws_userComments_delete($params, &$service)
+function ws_userComments_delete(array $params, &$service): \PwgError|string
 {
     include_once(PHPWG_ROOT_PATH.'include/functions_comment.inc.php');
 
@@ -215,7 +216,7 @@ function ws_userComments_delete($params, &$service)
  * @param mixed[] $params
  *
  */
-function ws_userComments_validate($params, &$service)
+function ws_userComments_validate(array $params, &$service): \PwgError|string
 {
     include_once(PHPWG_ROOT_PATH.'include/functions_comment.inc.php');
 

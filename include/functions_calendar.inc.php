@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -20,7 +21,7 @@ define('CAL_VIEW_CALENDAR', 'calendar');
 /**
  * Initialize _$page_ and _$template_ vars for calendar view.
  */
-function initialize_calendar()
+function initialize_calendar(): void
 {
     global $page, $conf, $user, $template, $persistent_cache, $filter;
 

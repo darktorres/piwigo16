@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -15,7 +16,7 @@
 /**
  * Callback used for sorting by global_rank
  */
-function global_rank_compare($a, $b)
+function global_rank_compare(array $a, array $b): int
 {
     return strnatcasecmp((string) $a['global_rank'], (string) $b['global_rank']);
 }
@@ -23,7 +24,7 @@ function global_rank_compare($a, $b)
 /**
  * Callback used for sorting by rank
  */
-function rank_compare($a, $b)
+function rank_compare(array $a, array $b): int|float
 {
     return $a['rank'] - $b['rank'];
 }
@@ -34,7 +35,7 @@ function rank_compare($a, $b)
  *
  * @param int $category_id
  */
-function check_restrictions($category_id)
+function check_restrictions($category_id): void
 {
     global $user;
 
@@ -50,7 +51,7 @@ function check_restrictions($category_id)
  *
  * @return array[]
  */
-function get_categories_menu()
+function get_categories_menu(): array
 {
     global $page, $user, $filter, $conf;
 
@@ -234,9 +235,9 @@ function get_category_preferred_image_orders()
 function display_select_categories(
     $categories,
     $selecteds,
-    $blockname,
+    string $blockname,
     $fullname = true
-) {
+): void {
     global $template;
 
     $tpl_cats = [];
@@ -278,7 +279,7 @@ function display_select_cat_wrapper(
     $selecteds,
     $blockname,
     $fullname = true
-) {
+): void {
     $categories = query2array($query);
     usort($categories, global_rank_compare(...));
     display_select_categories($categories, $selecteds, $blockname, $fullname);
@@ -320,7 +321,7 @@ SELECT DISTINCT(id)
  * @param int &$idx filled with the index in $permalinks that matches
  * @return int|null
  */
-function get_cat_id_from_permalinks($permalinks, &$idx)
+function get_cat_id_from_permalinks(array $permalinks, &$idx)
 {
     $in = '';
     foreach ($permalinks as $permalink) {
@@ -370,7 +371,7 @@ UPDATE '.OLD_PERMALINKS_TABLE.' SET last_hit=NOW(), hit=hit+1
  * @param string $separator
  * @return string
  */
-function get_display_images_count($cat_nb_images, $cat_count_images, $cat_count_categories, $short_message = true, $separator = '\n')
+function get_display_images_count($cat_nb_images, $cat_count_images, $cat_count_categories, $short_message = true, string $separator = '\n'): string
 {
     $display_text = '';
 
@@ -404,7 +405,7 @@ function get_display_images_count($cat_nb_images, $cat_count_images, $cat_count_
  * @param bool $recursive
  * @return int|null
  */
-function get_random_image_in_category($category, $recursive = true)
+function get_random_image_in_category(array $category, $recursive = true)
 {
     $image_id = null;
     if ($category['count_images'] > 0) {
@@ -449,7 +450,7 @@ SELECT image_id
  * @param int $filter_days number of recent days to filter on or null
  * @return array
  */
-function get_computed_categories(&$userdata, $filter_days = null)
+function get_computed_categories(array &$userdata, $filter_days = null): array
 {
     $query = 'SELECT c.id AS cat_id, id_uppercat';
     $query .= ', global_rank';
@@ -547,7 +548,7 @@ FROM '.CATEGORIES_TABLE.' as c
  * @param array &$cats
  * @param array $cat category to remove
  */
-function remove_computed_category(&$cats, $cat)
+function remove_computed_category(array &$cats, array $cat): void
 {
     if (isset($cats[$cat['id_uppercat']])) {
         $parent = &$cats[ $cat['id_uppercat'] ];
@@ -578,7 +579,7 @@ function remove_computed_category(&$cats, $cat)
  * @param bool $user_permissions
  * @return array
  */
-function get_image_ids_for_categories($cat_ids, $mode = 'AND', $extra_images_where_sql = '', $order_by = '', $use_permissions = true)
+function get_image_ids_for_categories($cat_ids, $mode = 'AND', ?string $extra_images_where_sql = '', $order_by = '', $use_permissions = true)
 {
     global $conf;
 
@@ -623,7 +624,7 @@ SELECT id
  * @param int[] $excluded_cat_ids
  * @return array [id, name, counter, url_name]
  */
-function get_common_categories($items, $max = null, $excluded_cat_ids = [], $use_permissions = true)
+function get_common_categories($items, $max = null, $excluded_cat_ids = [], $use_permissions = true): array
 {
     if (empty($items)) {
         return [];

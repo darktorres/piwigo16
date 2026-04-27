@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -20,7 +21,7 @@
  *
  * @return array
  */
-function get_default_slideshow_params()
+function get_default_slideshow_params(): array
 {
     global $conf;
 
@@ -37,7 +38,7 @@ function get_default_slideshow_params()
  * @param array $params
  * @return array
  */
-function correct_slideshow_params($params = [])
+function correct_slideshow_params(array $params = []): array
 {
     global $conf;
 
@@ -90,7 +91,7 @@ function decode_slideshow_params($encode_params = null)
  * @param array $decode_params
  * @return string
  */
-function encode_slideshow_params($decode_params = [])
+function encode_slideshow_params($decode_params = []): string
 {
     global $conf;
 
@@ -113,7 +114,7 @@ function encode_slideshow_params($decode_params = [])
  * @since 14
  * @param int $image_id
  */
-function increase_image_visit_counter($image_id)
+function increase_image_visit_counter($image_id): void
 {
     // avoiding auto update of "lastmodified" field
     $query = '
@@ -131,7 +132,7 @@ UPDATE
  * @param string $pdfPath
  * @return int
  */
-function count_pdf_pages($pdfPath)
+function count_pdf_pages($pdfPath): int|false
 {
     $pdftext = file_get_contents($pdfPath);
     $num = preg_match_all("/\/Page\W/", $pdftext, $dummy);

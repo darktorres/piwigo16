@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -19,7 +20,7 @@
  * @param array $map
  * @return array
  */
-function get_iptc_data($filename, $map, $array_sep = ',')
+function get_iptc_data($filename, $map, $array_sep = ','): array
 {
     global $conf;
 
@@ -109,7 +110,7 @@ function clean_iptc_value($value)
  * @param array $map
  * @return array
  */
-function get_exif_data($filename, $map)
+function get_exif_data(string $filename, $map): array
 {
     global $conf, $logger;
 
@@ -176,7 +177,7 @@ function get_exif_data($filename, $map)
     return $result;
 }
 
-function strip_html_in_metadata(&$v, $k)
+function strip_html_in_metadata(&$v, $k): void
 {
     $v = strip_tags((string) $v);
 }
@@ -192,7 +193,7 @@ function strip_html_in_metadata(&$v, $k)
  * @param string $ref 'S', 'N', 'E', 'W'. eg: 'N'
  * @return float eg: 41.905468
  */
-function parse_exif_gps_data($raw, $ref)
+function parse_exif_gps_data(array $raw, $ref): float|int
 {
     foreach ($raw as &$i) {
         $i = explode('/', $i);

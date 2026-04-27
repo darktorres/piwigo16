@@ -6700,6 +6700,12 @@ parameters:
 			path: include/functions_calendar.inc.php
 
 		-
+			message: '#^Dynamic ''new \$classname\(\)'' detected — use a \:\:class FQN string dispatch table or a typed factory\.$#'
+			identifier: piwigo.noDynamicNew
+			count: 1
+			path: include/functions_calendar.inc.php
+
+		-
 			message: '#^Function display_select_cat_wrapper\(\) has parameter \$fullname with no type specified\.$#'
 			identifier: missingType.parameter
 			count: 1
@@ -7549,6 +7555,12 @@ parameters:
 			path: include/functions_plugins.inc.php
 
 		-
+			message: '#^Dynamic ''new \$classname\(\)'' detected — use a \:\:class FQN string dispatch table or a typed factory\.$#'
+			identifier: piwigo.noDynamicNew
+			count: 1
+			path: include/functions_plugins.inc.php
+
+		-
 			message: '#^Function autoupdate_plugin\(\) has parameter \$plugin with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -7767,6 +7779,12 @@ parameters:
 		-
 			message: '#^Comparison operation "\>" between int\<1, max\> and 0 is always true\.$#'
 			identifier: greater.alwaysTrue
+			count: 1
+			path: include/functions_search.inc.php
+
+		-
+			message: '#^Dynamic ''new \$class_name\(\)'' detected — use a \:\:class FQN string dispatch table or a typed factory\.$#'
+			identifier: piwigo.noDynamicNew
 			count: 1
 			path: include/functions_search.inc.php
 
@@ -15857,6 +15875,12 @@ parameters:
 			path: include/ws_functions/pwg.extensions.php
 
 		-
+			message: '#^Dynamic ''new \$type\(\)'' detected — use a \:\:class FQN string dispatch table or a typed factory\.$#'
+			identifier: piwigo.noDynamicNew
+			count: 1
+			path: include/ws_functions/pwg.extensions.php
+
+		-
 			message: '#^Function ws_extensions_checkupdates\(\) has parameter \$service with no type specified\.$#'
 			identifier: missingType.parameter
 			count: 1
@@ -18515,6 +18539,12 @@ parameters:
 			path: src/Piwigo/Admin/Image/pwg_image.php
 
 		-
+			message: '#^Dynamic ''new \$class\(\)'' detected — use a \:\:class FQN string dispatch table or a typed factory\.$#'
+			identifier: piwigo.noDynamicNew
+			count: 1
+			path: src/Piwigo/Admin/Image/pwg_image.php
+
+		-
 			message: '#^Function trigger_notify invoked with 2 parameters, 0 required\.$#'
 			identifier: arguments.count
 			count: 1
@@ -19223,6 +19253,12 @@ parameters:
 			path: src/Piwigo/Admin/languages.php
 
 		-
+			message: '#^Dynamic ''new \$classname\(\)'' detected — use a \:\:class FQN string dispatch table or a typed factory\.$#'
+			identifier: piwigo.noDynamicNew
+			count: 2
+			path: src/Piwigo/Admin/plugins.php
+
+		-
 			message: '#^Method Piwigo\\Admin\\plugins\:\:build_maintain_class\(\) has no return type specified\.$#'
 			identifier: missingType.return
 			count: 1
@@ -19634,6 +19670,12 @@ parameters:
 			path: src/Piwigo/Admin/themes.php
 
 		-
+			message: '#^Dynamic ''new \$classname\(\)'' detected — use a \:\:class FQN string dispatch table or a typed factory\.$#'
+			identifier: piwigo.noDynamicNew
+			count: 1
+			path: src/Piwigo/Admin/themes.php
+
+		-
 			message: '#^Method Piwigo\\Admin\\themes\:\:build_maintain_class\(\) has no return type specified\.$#'
 			identifier: missingType.return
 			count: 1
@@ -19900,6 +19942,12 @@ parameters:
 		-
 			message: '#^Call to function is_array\(\) with non\-empty\-list\<string\> will always evaluate to true\.$#'
 			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Piwigo/Admin/updates.php
+
+		-
+			message: '#^Dynamic ''new \$type\(\)'' detected — use a \:\:class FQN string dispatch table or a typed factory\.$#'
+			identifier: piwigo.noDynamicNew
 			count: 1
 			path: src/Piwigo/Admin/updates.php
 

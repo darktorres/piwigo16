@@ -13,6 +13,16 @@ jobs:
       - run: composer install --no-progress --prefer-dist
       - run: vendor/bin/pint --test
       - run: vendor/bin/phpstan analyse --no-progress
+      - name: release tarball excludes dev deps
+        run: |
+          git archive --format=tar.gz HEAD -o /tmp/piwigo-tarball.tgz
+          BAD=$(tar -tzf /tmp/piwigo-tarball.tgz | grep -E '^vendor/(phpstan|rector|phpunit|laravel|symfony)/' || true)
+          rm -f /tmp/piwigo-tarball.tgz
+          if [ -n "$BAD" ]; then
+            echo "Tarball contains dev dependencies:"
+            echo "$BAD"
+            exit 1
+          fi
       - name: strict_types coverage check
         run: |
           MISSING=$(find include admin install -name "*.php" \

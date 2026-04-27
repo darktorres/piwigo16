@@ -39,6 +39,8 @@ parameters:
           reportUnmatched: false
         - message: '#^Path in include\(\) "\./local/config/database\.inc\.php" is not a file or it does not exist\.$#'
           reportUnmatched: false
+rules:
+    - Piwigo\Tools\PhpStan\NoDynamicNewRule
 includes:
     - phpstan-baseline.neon
     - vendor/phpstan/phpstan-deprecation-rules/rules.neon

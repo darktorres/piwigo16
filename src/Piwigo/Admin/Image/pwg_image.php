@@ -172,7 +172,7 @@ class pwg_image
 
         $fp = fopen($source_filepath, 'rb');
         if (!$fp) {
-            throw new Exception("webp_info(): fopen($f): Failed");
+            throw new xception("webp_info(): fopen($f): Failed");
         }
         $buf = fread($fp, 25);
         fclose($fp);
@@ -183,7 +183,7 @@ class pwg_image
             case !str_starts_with($buf, 'RIFF'):
             case substr($buf, 8, 4) != 'WEBP':
             case substr($buf, 12, 3) != 'VP8':
-                throw new Exception('webp_info(): not a valid webp image');
+                throw new xception('webp_info(): not a valid webp image');
 
             case $buf[15] == ' ':
                 // Simple File Format (Lossy)
@@ -211,7 +211,7 @@ class pwg_image
                 ];
 
             default:
-                throw new Exception('webp_info(): could not detect webp type');
+                throw new xception('webp_info(): could not detect webp type');
         }
     }
 

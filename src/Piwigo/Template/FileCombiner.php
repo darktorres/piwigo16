@@ -187,7 +187,7 @@ final class FileCombiner
             require_once(PHPWG_ROOT_PATH.'include/jshrink.class.php');
             try {
                 $js = Minifier::minify($js);
-            } catch (Exception) {
+            } catch (\Exception) {
             }
         }
         return trim($js, " \t\r\n;").";\n";

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Calendar;
 
+use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\SrcImage;
+
 /**
  * @package functions\calendar
  */

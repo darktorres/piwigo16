@@ -119,7 +119,7 @@ class Logger
 
             if (file_exists($this->options['filePath']) && !is_writable($this->options['filePath'])) {
                 $this->_logStatus = self::STATUS_OPEN_FAILED;
-                throw new RuntimeException(self::$_messages['writefail']);
+                throw new \RuntimeException(self::$_messages['writefail']);
                 return;
             }
 
@@ -127,7 +127,7 @@ class Logger
                 $this->_logStatus = self::STATUS_LOG_OPEN;
             } else {
                 $this->_logStatus = self::STATUS_OPEN_FAILED;
-                throw new RuntimeException(self::$_messages['openfail']);
+                throw new \RuntimeException(self::$_messages['openfail']);
             }
         }
     }
@@ -278,7 +278,7 @@ class Logger
         $this->open();
         if ($this->status() == self::STATUS_LOG_OPEN) {
             if (fwrite($this->_fileHandle, $line) === false) {
-                throw new RuntimeException(self::$_messages['writefail']);
+                throw new \RuntimeException(self::$_messages['writefail']);
             }
         }
     }
@@ -328,7 +328,7 @@ class Logger
     {
         $originalTime = microtime(true);
         $micro = sprintf('%06d', ($originalTime - floor($originalTime)) * 1000000);
-        $date = new DateTime(date('Y-m-d H:i:s.'.$micro, intval($originalTime)));
+        $date = new \DateTime(date('Y-m-d H:i:s.'.$micro, intval($originalTime)));
         return $date->format($this->options['dateFormat']);
     }
 
@@ -388,7 +388,7 @@ class Logger
             self::WARNING => 'WARNING',
             self::DEBUG => 'DEBUG',
             self::ERROR => 'ERROR',
-            default => throw new RuntimeException('Unknown severity level ' . $level),
+            default => throw new \RuntimeException('Unknown severity level ' . $level),
         };
     }
 
@@ -406,7 +406,7 @@ class Logger
             'WARNING' => self::WARNING,
             'DEBUG' => self::DEBUG,
             'ERROR' => self::ERROR,
-            default => throw new RuntimeException('Unknown severity code ' . $code),
+            default => throw new \RuntimeException('Unknown severity code ' . $code),
         };
     }
 }

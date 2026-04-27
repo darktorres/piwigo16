@@ -14,7 +14,7 @@ class image_imagick implements imageInterface
     public function __construct($source_filepath)
     {
         // A bug cause that Imagick class can not be extended
-        $this->image = new Imagick($source_filepath);
+        $this->image = new \Imagick($source_filepath);
     }
 
     public function get_width(): int
@@ -44,7 +44,7 @@ class image_imagick implements imageInterface
 
     public function rotate($rotation): bool
     {
-        $this->image->rotateImage(new ImagickPixel(), -$rotation);
+        $this->image->rotateImage(new \ImagickPixel(), -$rotation);
         $this->image->setImageOrientation(Imagick::ORIENTATION_TOPLEFT);
         return true;
     }

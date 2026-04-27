@@ -18359,18 +18359,6 @@ parameters:
 			path: src/Piwigo/Admin/Image/image_imagick.php
 
 		-
-			message: '#^Instantiated class Piwigo\\Admin\\Image\\Imagick not found\.$#'
-			identifier: class.notFound
-			count: 1
-			path: src/Piwigo/Admin/Image/image_imagick.php
-
-		-
-			message: '#^Instantiated class Piwigo\\Admin\\Image\\ImagickPixel not found\.$#'
-			identifier: class.notFound
-			count: 1
-			path: src/Piwigo/Admin/Image/image_imagick.php
-
-		-
 			message: '#^Method Piwigo\\Admin\\Image\\image_imagick\:\:__construct\(\) has parameter \$source_filepath with no type specified\.$#'
 			identifier: missingType.parameter
 			count: 1
@@ -18461,12 +18449,6 @@ parameters:
 			path: src/Piwigo/Admin/Image/image_imagick.php
 
 		-
-			message: '#^Property Piwigo\\Admin\\Image\\image_imagick\:\:\$image \(Imagick\) does not accept Piwigo\\Admin\\Image\\Imagick\.$#'
-			identifier: assign.propertyType
-			count: 1
-			path: src/Piwigo/Admin/Image/image_imagick.php
-
-		-
 			message: '#^Call to an undefined method object\:\:crop\(\)\.$#'
 			identifier: method.notFound
 			count: 1
@@ -18539,7 +18521,7 @@ parameters:
 			path: src/Piwigo/Admin/Image/pwg_image.php
 
 		-
-			message: '#^Instantiated class Piwigo\\Admin\\Image\\Exception not found\.$#'
+			message: '#^Instantiated class Piwigo\\Admin\\Image\\xception not found\.$#'
 			identifier: class.notFound
 			count: 3
 			path: src/Piwigo/Admin/Image/pwg_image.php
@@ -18815,7 +18797,7 @@ parameters:
 			path: src/Piwigo/Admin/Image/pwg_image.php
 
 		-
-			message: '#^Throwing object of an unknown class Piwigo\\Admin\\Image\\Exception\.$#'
+			message: '#^Throwing object of an unknown class Piwigo\\Admin\\Image\\xception\.$#'
 			identifier: class.notFound
 			count: 3
 			path: src/Piwigo/Admin/Image/pwg_image.php
@@ -19067,24 +19049,6 @@ parameters:
 			path: src/Piwigo/Admin/ThemeMaintain.php
 
 		-
-			message: '#^Call to method extract\(\) on an unknown class Piwigo\\Admin\\PclZip\.$#'
-			identifier: class.notFound
-			count: 1
-			path: src/Piwigo/Admin/languages.php
-
-		-
-			message: '#^Call to method listContent\(\) on an unknown class Piwigo\\Admin\\PclZip\.$#'
-			identifier: class.notFound
-			count: 1
-			path: src/Piwigo/Admin/languages.php
-
-		-
-			message: '#^Instantiated class Piwigo\\Admin\\PclZip not found\.$#'
-			identifier: class.notFound
-			count: 1
-			path: src/Piwigo/Admin/languages.php
-
-		-
 			message: '#^Method Piwigo\\Admin\\languages\:\:__construct\(\) has parameter \$target_charset with no type specified\.$#'
 			identifier: missingType.parameter
 			count: 1
@@ -19257,24 +19221,6 @@ parameters:
 			identifier: variable.undefined
 			count: 2
 			path: src/Piwigo/Admin/languages.php
-
-		-
-			message: '#^Call to method extract\(\) on an unknown class Piwigo\\Admin\\PclZip\.$#'
-			identifier: class.notFound
-			count: 1
-			path: src/Piwigo/Admin/plugins.php
-
-		-
-			message: '#^Call to method listContent\(\) on an unknown class Piwigo\\Admin\\PclZip\.$#'
-			identifier: class.notFound
-			count: 1
-			path: src/Piwigo/Admin/plugins.php
-
-		-
-			message: '#^Instantiated class Piwigo\\Admin\\PclZip not found\.$#'
-			identifier: class.notFound
-			count: 1
-			path: src/Piwigo/Admin/plugins.php
 
 		-
 			message: '#^Method Piwigo\\Admin\\plugins\:\:build_maintain_class\(\) has no return type specified\.$#'
@@ -19688,24 +19634,6 @@ parameters:
 			path: src/Piwigo/Admin/themes.php
 
 		-
-			message: '#^Call to method extract\(\) on an unknown class Piwigo\\Admin\\PclZip\.$#'
-			identifier: class.notFound
-			count: 1
-			path: src/Piwigo/Admin/themes.php
-
-		-
-			message: '#^Call to method listContent\(\) on an unknown class Piwigo\\Admin\\PclZip\.$#'
-			identifier: class.notFound
-			count: 1
-			path: src/Piwigo/Admin/themes.php
-
-		-
-			message: '#^Instantiated class Piwigo\\Admin\\PclZip not found\.$#'
-			identifier: class.notFound
-			count: 1
-			path: src/Piwigo/Admin/themes.php
-
-		-
 			message: '#^Method Piwigo\\Admin\\themes\:\:build_maintain_class\(\) has no return type specified\.$#'
 			identifier: missingType.return
 			count: 1
@@ -19972,18 +19900,6 @@ parameters:
 		-
 			message: '#^Call to function is_array\(\) with non\-empty\-list\<string\> will always evaluate to true\.$#'
 			identifier: function.alreadyNarrowedType
-			count: 1
-			path: src/Piwigo/Admin/updates.php
-
-		-
-			message: '#^Call to method extract\(\) on an unknown class Piwigo\\Admin\\PclZip\.$#'
-			identifier: class.notFound
-			count: 2
-			path: src/Piwigo/Admin/updates.php
-
-		-
-			message: '#^Instantiated class Piwigo\\Admin\\PclZip not found\.$#'
-			identifier: class.notFound
 			count: 1
 			path: src/Piwigo/Admin/updates.php
 
@@ -20390,12 +20306,6 @@ parameters:
 			path: src/Piwigo/Calendar/CalendarBase.php
 
 		-
-			message: '#^Call to method get_url\(\) on an unknown class Piwigo\\Calendar\\DerivativeImage\.$#'
-			identifier: class.notFound
-			count: 1
-			path: src/Piwigo/Calendar/CalendarMonthly.php
-
-		-
 			message: '#^Call to static method get_by_type\(\) on an unknown class Piwigo\\Calendar\\ImageStdParams\.$#'
 			identifier: class.notFound
 			count: 1
@@ -20423,18 +20333,6 @@ parameters:
 			message: '#^Constant CYEAR not found\.$#'
 			identifier: constant.notFound
 			count: 12
-			path: src/Piwigo/Calendar/CalendarMonthly.php
-
-		-
-			message: '#^Instantiated class Piwigo\\Calendar\\DerivativeImage not found\.$#'
-			identifier: class.notFound
-			count: 1
-			path: src/Piwigo/Calendar/CalendarMonthly.php
-
-		-
-			message: '#^Instantiated class Piwigo\\Calendar\\SrcImage not found\.$#'
-			identifier: class.notFound
-			count: 1
 			path: src/Piwigo/Calendar/CalendarMonthly.php
 
 		-
@@ -20498,27 +20396,9 @@ parameters:
 			path: src/Piwigo/Core/Logger.php
 
 		-
-			message: '#^Call to method format\(\) on an unknown class Piwigo\\Core\\DateTime\.$#'
-			identifier: class.notFound
-			count: 1
-			path: src/Piwigo/Core/Logger.php
-
-		-
 			message: '#^Function mkgetdir invoked with 2 parameters, 1 required\.$#'
 			identifier: arguments.count
 			count: 1
-			path: src/Piwigo/Core/Logger.php
-
-		-
-			message: '#^Instantiated class Piwigo\\Core\\DateTime not found\.$#'
-			identifier: class.notFound
-			count: 1
-			path: src/Piwigo/Core/Logger.php
-
-		-
-			message: '#^Instantiated class Piwigo\\Core\\RuntimeException not found\.$#'
-			identifier: class.notFound
-			count: 5
 			path: src/Piwigo/Core/Logger.php
 
 		-
@@ -20627,12 +20507,6 @@ parameters:
 			message: '#^Property Piwigo\\Core\\Logger\:\:\$options type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
-			path: src/Piwigo/Core/Logger.php
-
-		-
-			message: '#^Throwing object of an unknown class Piwigo\\Core\\RuntimeException\.$#'
-			identifier: class.notFound
-			count: 5
 			path: src/Piwigo/Core/Logger.php
 
 		-
@@ -21410,12 +21284,6 @@ parameters:
 			path: src/Piwigo/Template/FileCombiner.php
 
 		-
-			message: '#^Caught class Piwigo\\Template\\Exception not found\.$#'
-			identifier: class.notFound
-			count: 1
-			path: src/Piwigo/Template/FileCombiner.php
-
-		-
 			message: '#^Function trigger_notify invoked with 4 parameters, 0 required\.$#'
 			identifier: arguments.count
 			count: 1
@@ -21992,24 +21860,6 @@ parameters:
 			path: src/Piwigo/Ws/Encoder/PwgResponseEncoder.php
 
 		-
-			message: '#^Call to method code\(\) on an unknown class Piwigo\\Ws\\Protocol\\PwgError\.$#'
-			identifier: class.notFound
-			count: 1
-			path: src/Piwigo/Ws/Protocol/PwgJsonEncoder.php
-
-		-
-			message: '#^Call to method message\(\) on an unknown class Piwigo\\Ws\\Protocol\\PwgError\.$#'
-			identifier: class.notFound
-			count: 1
-			path: src/Piwigo/Ws/Protocol/PwgJsonEncoder.php
-
-		-
-			message: '#^Class Piwigo\\Ws\\Protocol\\PwgError not found\.$#'
-			identifier: class.notFound
-			count: 1
-			path: src/Piwigo/Ws/Protocol/PwgJsonEncoder.php
-
-		-
 			message: '#^Method Piwigo\\Ws\\Protocol\\PwgJsonEncoder\:\:encodeResponse\(\) has no return type specified\.$#'
 			identifier: missingType.return
 			count: 1
@@ -22040,18 +21890,6 @@ parameters:
 			path: src/Piwigo/Ws/Protocol/PwgRestEncoder.php
 
 		-
-			message: '#^Call to method code\(\) on an unknown class Piwigo\\Ws\\Protocol\\PwgError\.$#'
-			identifier: class.notFound
-			count: 1
-			path: src/Piwigo/Ws/Protocol/PwgRestEncoder.php
-
-		-
-			message: '#^Call to method message\(\) on an unknown class Piwigo\\Ws\\Protocol\\PwgError\.$#'
-			identifier: class.notFound
-			count: 1
-			path: src/Piwigo/Ws/Protocol/PwgRestEncoder.php
-
-		-
 			message: '#^Cannot call method end_element\(\) on Piwigo\\Ws\\Protocol\\PwgXmlWriter\|null\.$#'
 			identifier: method.nonObject
 			count: 2
@@ -22079,12 +21917,6 @@ parameters:
 			message: '#^Cannot call method write_content\(\) on Piwigo\\Ws\\Protocol\\PwgXmlWriter\|null\.$#'
 			identifier: method.nonObject
 			count: 4
-			path: src/Piwigo/Ws/Protocol/PwgRestEncoder.php
-
-		-
-			message: '#^Class Piwigo\\Ws\\Protocol\\PwgError not found\.$#'
-			identifier: class.notFound
-			count: 1
 			path: src/Piwigo/Ws/Protocol/PwgRestEncoder.php
 
 		-
@@ -22142,58 +21974,16 @@ parameters:
 			path: src/Piwigo/Ws/Protocol/PwgRestEncoder.php
 
 		-
-			message: '#^Instantiated class Piwigo\\Ws\\Protocol\\PwgError not found\.$#'
-			identifier: class.notFound
-			count: 1
-			path: src/Piwigo/Ws/Protocol/PwgRestRequestHandler.php
-
-		-
 			message: '#^Method Piwigo\\Ws\\Protocol\\PwgRestRequestHandler\:\:handleRequest\(\) has parameter \$service with no type specified\.$#'
 			identifier: missingType.parameter
 			count: 1
 			path: src/Piwigo/Ws/Protocol/PwgRestRequestHandler.php
 
 		-
-			message: '#^Call to method code\(\) on an unknown class Piwigo\\Ws\\Protocol\\PwgError\.$#'
-			identifier: class.notFound
-			count: 1
-			path: src/Piwigo/Ws/Protocol/PwgSerialPhpEncoder.php
-
-		-
-			message: '#^Call to method message\(\) on an unknown class Piwigo\\Ws\\Protocol\\PwgError\.$#'
-			identifier: class.notFound
-			count: 1
-			path: src/Piwigo/Ws/Protocol/PwgSerialPhpEncoder.php
-
-		-
-			message: '#^Class Piwigo\\Ws\\Protocol\\PwgError not found\.$#'
-			identifier: class.notFound
-			count: 1
-			path: src/Piwigo/Ws/Protocol/PwgSerialPhpEncoder.php
-
-		-
 			message: '#^Method Piwigo\\Ws\\Protocol\\PwgSerialPhpEncoder\:\:encodeResponse\(\) has parameter \$response with no type specified\.$#'
 			identifier: missingType.parameter
 			count: 1
 			path: src/Piwigo/Ws/Protocol/PwgSerialPhpEncoder.php
-
-		-
-			message: '#^Call to method code\(\) on an unknown class Piwigo\\Ws\\Protocol\\PwgError\.$#'
-			identifier: class.notFound
-			count: 1
-			path: src/Piwigo/Ws/Protocol/PwgXmlRpcEncoder.php
-
-		-
-			message: '#^Call to method message\(\) on an unknown class Piwigo\\Ws\\Protocol\\PwgError\.$#'
-			identifier: class.notFound
-			count: 1
-			path: src/Piwigo/Ws/Protocol/PwgXmlRpcEncoder.php
-
-		-
-			message: '#^Class Piwigo\\Ws\\Protocol\\PwgError not found\.$#'
-			identifier: class.notFound
-			count: 1
-			path: src/Piwigo/Ws/Protocol/PwgXmlRpcEncoder.php
 
 		-
 			message: '#^Method Piwigo\\Ws\\Protocol\\PwgXmlRpcEncoder\:\:encodeResponse\(\) has parameter \$response with no type specified\.$#'

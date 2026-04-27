@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Protocol;
 
 use Piwigo\Ws\Encoder\PwgResponseEncoder;
+use Piwigo\Ws\PwgError;
 
 class PwgXmlRpcEncoder extends PwgResponseEncoder
 {

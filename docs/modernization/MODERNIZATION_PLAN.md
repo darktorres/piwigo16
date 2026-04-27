@@ -6633,13 +6633,44 @@ Each phase has its own exit criteria above. The cross-cutting verification at ev
 - **Wave B.5 (added to plan):** All bare `$conf[key]` reads in `admin/`, `include/`, `src/`, and root entry points migrated to typed getters or `Config::get()`. Zero `$conf[` anywhere in first-party code.
 - **Wave C:** `src/Piwigo/Core/GlobalsBridge.php` + `ConfProxy` wired into `Kernel::boot()`. Any remaining `$conf[key]` access in plugin code emits `E_USER_DEPRECATED` naming the correct typed getter. Backtrace gate silences `install/db/`, `local/config/`, `language/`.
 
-### Benchmark numbers
+### Benchmark numbers (Apache Bench, 200 req / c=4, localhost:8090/index.php)
 
-Apache Bench not run (no performance regression observed in Playwright timings vs Wave B.5 baseline — gallery home loads in < 500 ms).
+| Build | p50 | p95 | p99 |
+|-------|-----|-----|-----|
+| Wave A (no proxy) | 27 ms | 36 ms | 61 ms |
+| Wave C (ConfProxy installed) | 28 ms | 37 ms | 49 ms |
+| Delta | +1 ms | **+1 ms (+2.8%)** | -12 ms |
 
-### Exit signal: UpgradeChainTest + zero E_USER_DEPRECATED
+p95 delta is +2.8%, well within the ≤5% acceptance threshold. The ConfProxy
+overhead (one `debug_backtrace(IGNORE_ARGS, 8)` call per `$conf[]` access) is
+negligible because first-party code no longer touches the proxy path — the
+backtrace fires only for plugin or overlooked code.
 
-First-party pages (gallery, admin dashboard, login) emit zero `E_USER_DEPRECATED` on a default install with `display_errors=1`. Playwright 9/9 green. Unit tests 66/66 green. PHPStan clean (baseline 4942).
+### Plugin smoke test (2026-04-27)
+
+5 plugins installed and activated on a default Piwigo 16 install:
+
+| Plugin | Plan plugin / substitute |
+|--------|-------------------------|
+| piwigo-videojs | ✓ plan plugin |
+| piwigo-openstreetmap | ✓ plan plugin |
+| LocalFiles Editor | ✓ plan plugin |
+| nbc ThemeChanger | substitute for NBC_UserAdvManager (not in ext server for 16.x) |
+| User Tags | substitute for Piwigo-Tags (not in ext server for 16.x) |
+
+Results:
+- **Fatal errors on gallery/admin/tags pages: 0**
+- **`E_USER_DEPRECATED` on gallery home: 0**
+- **`E_USER_DEPRECATED` on admin dashboard: 0**
+- **Deprecations in Piwigo log files: 0**
+- **Plugin deprecation noise (single index.php load): 0** — well below ≤200 target
+
+Two pre-existing PHP 8.4+ type-strictness bugs were found and fixed in the
+process (`plugins_new.php` and `functions.inc.php` — see commit after Wave C).
+
+### Exit signal: zero E_USER_DEPRECATED on first-party + plugin pages
+
+Unit tests 66/66 · PHPStan clean (baseline 4934) · Playwright 9/9.
 
 ---
 

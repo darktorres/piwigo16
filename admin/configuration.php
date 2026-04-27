@@ -113,7 +113,7 @@ $display_info_checkboxes = [
   ];
 
 if (!isset($conf['filters_views'])) {
-    conf_update_param('filters_views', $conf['default_filters_views'], true);
+    \Piwigo\Core\Config::persist('filters_views', $conf['default_filters_views']);
 }
 
 $filters_names_checkboxes = array_values(array_diff(array_keys(safe_unserialize($conf['filters_views'])), ['last_filters_conf']));

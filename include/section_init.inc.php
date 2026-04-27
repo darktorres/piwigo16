@@ -148,7 +148,7 @@ $page['nb_image_page'] = $user['nb_image_page'];
 // and not as a category set because we can't use the #image_category.rank :
 // displayed images are not directly linked to the displayed category
 if ('categories' == $page['section'] and !isset($page['flat'])) {
-    $conf['order_by'] = $conf['order_by_inside_category'];
+    \Piwigo\Core\Config::override('order_by', $conf['order_by_inside_category']);
 }
 
 if (pwg_get_session_var('image_order', 0) > 0) {
@@ -162,11 +162,11 @@ if (pwg_get_session_var('image_order', 0) > 0) {
     //
     // In case of incompatibility, the session stored image_order is removed.
     if ($orders[$image_order_id][2]) {
-        $conf['order_by'] = str_replace(
+        \Piwigo\Core\Config::override('order_by', str_replace(
             'ORDER BY ',
             'ORDER BY '.$orders[$image_order_id][1].',',
-            $conf['order_by']
-        );
+            \Piwigo\Core\Config::get('order_by')
+        ));
         $page['super_order_by'] = true;
     } else {
         pwg_unset_session_var('image_order');
@@ -222,7 +222,7 @@ if ('categories' == $page['section']) {
         )
     ) {
         if (!empty($page['category']['image_order']) and !isset($page['super_order_by'])) {
-            $conf[ 'order_by' ] = ' ORDER BY '.$page['category']['image_order'];
+            \Piwigo\Core\Config::override('order_by', ' ORDER BY '.$page['category']['image_order']);
         }
 
         // flat categories mode
@@ -394,11 +394,11 @@ SELECT image_id
     // +-----------------------------------------------------------------------+
     elseif ($page['section'] == 'recent_pics') {
         if (!isset($page['super_order_by'])) {
-            $conf['order_by'] = str_replace(
+            \Piwigo\Core\Config::override('order_by', str_replace(
                 'ORDER BY ',
                 'ORDER BY date_available DESC,',
-                $conf['order_by']
-            );
+                \Piwigo\Core\Config::get('order_by')
+            ));
         }
 
         $query = '
@@ -437,7 +437,7 @@ SELECT DISTINCT(id)
     // +-----------------------------------------------------------------------+
     elseif ($page['section'] == 'most_visited') {
         $page['super_order_by'] = true;
-        $conf['order_by'] = ' ORDER BY hit DESC, id DESC';
+        \Piwigo\Core\Config::override('order_by', ' ORDER BY hit DESC, id DESC');
 
         $query = '
 SELECT DISTINCT(id)
@@ -463,7 +463,7 @@ SELECT DISTINCT(id)
     // +-----------------------------------------------------------------------+
     elseif ($page['section'] == 'best_rated') {
         $page['super_order_by'] = true;
-        $conf['order_by'] = ' ORDER BY rating_score DESC, id DESC';
+        \Piwigo\Core\Config::override('order_by', ' ORDER BY rating_score DESC, id DESC');
 
         $query = '
 SELECT DISTINCT(id)

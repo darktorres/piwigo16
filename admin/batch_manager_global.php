@@ -455,7 +455,7 @@ if (count($page['cat_elements_id']) > 0) {
         and isset($duplicates_on_fields)) {
         // The $duplicates_on_fields variable is defined in ./batch_manager.php
         $order_by_fields = array_merge($duplicates_on_fields, [ 'id' ]);
-        $conf['order_by'] = ' ORDER BY '.join(', ', $order_by_fields);
+        \Piwigo\Core\Config::override('order_by', ' ORDER BY '.join(', ', $order_by_fields));
     }
 
     $query = '
@@ -465,9 +465,9 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
     if ($is_category) {
         $category_info = get_cat_info($_SESSION['bulk_manager_filter']['category']);
 
-        $conf['order_by'] = $conf['order_by_inside_category'];
+        \Piwigo\Core\Config::override('order_by', $conf['order_by_inside_category']);
         if (!empty($category_info['image_order'])) {
-            $conf['order_by'] = ' ORDER BY '.$category_info['image_order'];
+            \Piwigo\Core\Config::override('order_by', ' ORDER BY '.$category_info['image_order']);
         }
 
         $query .= '

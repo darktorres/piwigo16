@@ -424,12 +424,6 @@ parameters:
 			path: admin/configuration.php
 
 		-
-			message: '#^Parameter \#3 \$length of function array_slice expects int\|null, float given\.$#'
-			identifier: argument.type
-			count: 1
-			path: admin/configuration.php
-
-		-
 			message: '#^Result of or is always false\.$#'
 			identifier: logicalOr.alwaysFalse
 			count: 1

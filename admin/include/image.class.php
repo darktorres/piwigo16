@@ -80,7 +80,10 @@ class pwg_image
     }
 
     // Piwigo resize function
-    public function pwg_resize($destination_filepath, $max_width, $max_height, $quality, $automatic_rotation = true, $strip_metadata = false, $crop = false, $follow_orientation = true)
+    /**
+     * @return mixed[]
+     */
+    public function pwg_resize($destination_filepath, $max_width, $max_height, $quality, $automatic_rotation = true, $strip_metadata = false, $crop = false, $follow_orientation = true): array
     {
         $starttime = get_moment();
 
@@ -441,27 +444,27 @@ class image_imagick implements imageInterface
         $this->image = new Imagick($source_filepath);
     }
 
-    public function get_width()
+    public function get_width(): int
     {
         return $this->image->getImageWidth();
     }
 
-    public function get_height()
+    public function get_height(): int
     {
         return $this->image->getImageHeight();
     }
 
-    public function set_compression_quality($quality)
+    public function set_compression_quality($quality): bool
     {
         return $this->image->setImageCompressionQuality($quality);
     }
 
-    public function crop($width, $height, $x, $y)
+    public function crop($width, $height, $x, $y): bool
     {
         return $this->image->cropImage($width, $height, $x, $y);
     }
 
-    public function strip()
+    public function strip(): bool
     {
         return $this->image->stripImage();
     }
@@ -473,7 +476,7 @@ class image_imagick implements imageInterface
         return true;
     }
 
-    public function resize($width, $height)
+    public function resize($width, $height): bool
     {
         $this->image->setInterlaceScheme(Imagick::INTERLACE_LINE);
 
@@ -487,13 +490,13 @@ class image_imagick implements imageInterface
         return $this->image->resizeImage($width, $height, Imagick::FILTER_LANCZOS, 0.9);
     }
 
-    public function sharpen($amount)
+    public function sharpen($amount): bool
     {
         $m = pwg_image::get_sharpen_matrix($amount);
         return  $this->image->convolveImage($m);
     }
 
-    public function compose($overlay, $x, $y, $opacity)
+    public function compose($overlay, $x, $y, $opacity): bool
     {
         $ioverlay = $overlay->image->image;
         /*if ($ioverlay->getImageAlphaChannel() !== Imagick::ALPHACHANNEL_OPAQUE)
@@ -511,7 +514,7 @@ class image_imagick implements imageInterface
         return $this->image->compositeImage($ioverlay, Imagick::COMPOSITE_DISSOLVE, $x, $y);
     }
 
-    public function write($destination_filepath)
+    public function write($destination_filepath): bool
     {
         // use 4:2:2 chroma subsampling (reduce file size by 20-30% with "almost" no human perception)
         $this->image->setSamplingFactors([2,1]);

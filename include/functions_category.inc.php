@@ -277,7 +277,7 @@ function display_select_categories(
 function display_select_cat_wrapper(
     $query,
     $selecteds,
-    $blockname,
+    string $blockname,
     $fullname = true
 ): void {
     $categories = query2array($query);
@@ -291,7 +291,7 @@ function display_select_cat_wrapper(
  * @param int[] $ids
  * @return int[]
  */
-function get_subcat_ids($ids)
+function get_subcat_ids($ids): array
 {
     $query = '
 SELECT DISTINCT(id)
@@ -579,7 +579,7 @@ function remove_computed_category(array &$cats, array $cat): void
  * @param bool $user_permissions
  * @return array
  */
-function get_image_ids_for_categories($cat_ids, $mode = 'AND', ?string $extra_images_where_sql = '', $order_by = '', $use_permissions = true)
+function get_image_ids_for_categories($cat_ids, $mode = 'AND', ?string $extra_images_where_sql = '', $order_by = '', $use_permissions = true): array
 {
     global $conf;
 
@@ -673,7 +673,10 @@ SELECT
     return $cats;
 }
 
-function get_related_categories_menu($items, $excluded_cat_ids = [])
+/**
+ * @return mixed[]
+ */
+function get_related_categories_menu($items, $excluded_cat_ids = []): array
 {
     global $page, $conf;
 

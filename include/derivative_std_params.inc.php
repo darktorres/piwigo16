@@ -79,7 +79,7 @@ final class ImageStdParams
     /**
      * @return string[]
      */
-    public static function get_all_types()
+    public static function get_all_types(): array
     {
         return self::$all_types;
     }
@@ -289,7 +289,7 @@ final class ImageStdParams
     /**
      * @return DerivativeParams[]
      */
-    public static function get_enabled_default_sizes()
+    public static function get_enabled_default_sizes(): array
     {
         $default_sizes = self::get_default_sizes();
         foreach (self::$disabled_types_by_default as $type) {

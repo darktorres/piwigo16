@@ -162,7 +162,7 @@ SELECT id, name, permalink
  * @param string|null $url
  * @return string
  */
-function get_cat_display_name_from_id($cat_id, $url = '')
+function get_cat_display_name_from_id($cat_id, $url = ''): string
 {
     $cat_info = get_cat_info($cat_id);
     return get_cat_display_name($cat_info['upper_names'], $url);

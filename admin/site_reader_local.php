@@ -44,7 +44,10 @@ class LocalSiteReader
     }
 
     // retrieve file system sub-directories fulldirs
-    public function get_full_directories($basedir)
+    /**
+     * @return mixed[]
+     */
+    public function get_full_directories($basedir): array
     {
         $fs_fulldirs = get_fs_directories($basedir);
         return $fs_fulldirs;
@@ -131,7 +134,7 @@ class LocalSiteReader
 
     // returns the name of the attributes that are supported for
     // metadata update/synchronization according to configuration
-    public function get_metadata_attributes()
+    public function get_metadata_attributes(): array
     {
         return get_sync_metadata_attributes();
     }

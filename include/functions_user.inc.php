@@ -1446,7 +1446,7 @@ function is_a_guest($user_status = ''): bool
  * @param string $user_status used if $user not initialized
  * @return bool
  */
-function is_classic_user($user_status = '')
+function is_classic_user($user_status = ''): bool
 {
     return is_autorize_status(ACCESS_CLASSIC, $user_status);
 }
@@ -1457,7 +1457,7 @@ function is_classic_user($user_status = '')
  * @param string $user_status used if $user not initialized
  * @return bool
  */
-function is_admin($user_status = '')
+function is_admin($user_status = ''): bool
 {
     return is_autorize_status(ACCESS_ADMINISTRATOR, $user_status);
 }
@@ -1468,7 +1468,7 @@ function is_admin($user_status = '')
  * @param string $user_status used if $user not initialized
  * @return bool
  */
-function is_webmaster($user_status = '')
+function is_webmaster($user_status = ''): bool
 {
     return is_autorize_status(ACCESS_WEBMASTER, $user_status);
 }
@@ -2472,7 +2472,7 @@ SELECT
  * @param string $user_id
  * @return array|false
  */
-function get_api_key(string $user_id)
+function get_api_key(string $user_id): false|array
 {
     $query = '
 SELECT *
@@ -2547,7 +2547,7 @@ SELECT
  * @param string $user_id
  * @return array|false
  */
-function get_available_api_key($user_id)
+function get_available_api_key(string $user_id)
 {
     $api_keys = get_api_key($user_id);
 
@@ -2640,7 +2640,7 @@ function generate_user_code(): array
  * @param string $code
  * @return bool
  */
-function verify_user_code($secret, $code)
+function verify_user_code($secret, $code): bool
 {
     global $conf;
 

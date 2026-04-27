@@ -63,7 +63,7 @@ class Template
      * @var string $theme
      * @var string $path
      */
-    public function __construct($root = '.', $theme = '', $path = 'template')
+    public function __construct($root = '.', $theme = '', string $path = 'template')
     {
         global $conf, $lang_info;
 
@@ -293,7 +293,7 @@ class Template
      * @param string $filename
      * @return bool
      */
-    public function set_filename($handle, $filename)
+    public function set_filename($handle, $filename): bool
     {
         return $this->set_filenames([$handle => $filename]);
     }
@@ -330,7 +330,7 @@ class Template
      * @param string $theme
      * @return bool
      */
-    public function set_extent($filename, $param, $dir = '', $overwrite = true, $theme = 'N/A')
+    public function set_extent($filename, $param, string $dir = '', $overwrite = true, $theme = 'N/A'): bool
     {
         return $this->set_extents([$filename => $param], $dir, $overwrite);
     }
@@ -875,7 +875,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      * @param Combinable $script
      * @return string
      */
-    private static function make_script_src($script)
+    private static function make_script_src($script): string|array
     {
         $ret = '';
         if ($script->is_remote()) {
@@ -1204,13 +1204,13 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
 class PwgTemplateAdapter
 {
     #[\Deprecated(message: 'use "translate" modifier')]
-    public function l10n($text)
+    public function l10n(?string $text)
     {
         return l10n($text);
     }
 
     #[\Deprecated(message: 'use "translate_dec" modifier')]
-    public function l10n_dec($s, $p, $v)
+    public function l10n_dec($s, $p, $v): string
     {
         return l10n_dec($s, $p, $v);
     }
@@ -1354,7 +1354,7 @@ class CssLoader
     /**
      * @return Combinable[] array of combined CSS.
      */
-    public function get_css()
+    public function get_css(): array
     {
         uasort($this->registered_css, ['CssLoader', 'cmp_by_order']);
         $combiner = new FileCombiner('css', $this->registered_css);
@@ -1443,7 +1443,7 @@ class ScriptLoader
     /**
      * @return bool
      */
-    public function did_head()
+    public function did_head(): bool
     {
         return $this->did_head;
     }
@@ -1451,7 +1451,7 @@ class ScriptLoader
     /**
      * @return Script[]
      */
-    public function get_all()
+    public function get_all(): array
     {
         return $this->registered_scripts;
     }
@@ -1591,7 +1591,7 @@ class ScriptLoader
      * @param int $load_mode
      * @return Combinable[]
      */
-    private static function do_combine($scripts, int $load_mode)
+    private static function do_combine(array $scripts, int $load_mode): array
     {
         $combiner = new FileCombiner('js', $scripts);
         return $combiner->combine();

@@ -62,7 +62,7 @@ class PwgTOTP
      * @param string $secret Encoded base32 secret
      * @return string data:image/png;base64..
      */
-    public static function getQrCode($secret): string
+    public static function getQrCode(string $secret): string
     {
         $otp_url = self::getOtpAuthUrl($secret);
 
@@ -80,7 +80,7 @@ class PwgTOTP
      * @param int $timestamp timestamp used in second (default: 30)
      * @return string 6 digits TOTP code
      */
-    public static function generateCode($secret, $timestamp = 30)
+    public static function generateCode($secret, $timestamp = 30): string
     {
         $timestamp = floor(time() / $timestamp); // e.g 58338889 > 30-second intervals since 1970 at the moment T
         return self::generateCodeFromTimestamp($secret, $timestamp);

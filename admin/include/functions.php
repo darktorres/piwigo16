@@ -403,7 +403,7 @@ function delete_orphan_tags(): void
 /**
  * Get all tags (id + name) linked to no photo
  */
-function get_orphan_tags()
+function get_orphan_tags(): array
 {
     $query = '
 SELECT
@@ -2203,7 +2203,7 @@ function get_extents($start = ''): array
  * @param string $tag_name
  * @return array ('id', info') or ('error')
  */
-function create_tag($tag_name)
+function create_tag($tag_name): array
 {
     // clean the tag, no html/js allowed in tag name
     $tag_name = strip_tags($tag_name);
@@ -2436,7 +2436,7 @@ SELECT name
     return $groupname;
 }
 
-function delete_groups($group_ids)
+function delete_groups($group_ids): false|array
 {
 
     if (count($group_ids) == 0) {
@@ -2610,7 +2610,7 @@ function get_active_menu($menu_page)
  *    multilingual tags (if ExtendedDescription plugin is active)
  * @return array[] ('id', 'name')
  */
-function get_taglist($query, $only_user_language = true): array
+function get_taglist(string $query, $only_user_language = true): array
 {
     $result = pwg_query($query);
 
@@ -2759,7 +2759,7 @@ SELECT id
  * @param boolean $include_webmaster
  * @return int[]
  */
-function get_admins($include_webmaster = true)
+function get_admins($include_webmaster = true): array
 {
     $status_list = ['admin'];
 
@@ -3006,7 +3006,7 @@ SELECT CONCAT(
  *
  * @return int[] image_ids
  */
-function get_photos_no_md5sum()
+function get_photos_no_md5sum(): array
 {
     $query = '
 SELECT id
@@ -3084,7 +3084,7 @@ SELECT
  *
  * @return int[] $image_ids
  */
-function get_orphans()
+function get_orphans(): array
 {
     // exclude images in the lounge
     $query = '

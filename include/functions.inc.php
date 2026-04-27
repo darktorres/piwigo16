@@ -762,7 +762,7 @@ function str2DateTime(?string $original, $format = null)
  * @param string $format input format respecting date() syntax
  * @return string
  */
-function format_date_legacy($original, $show = null, $format = null)
+function format_date_legacy(?string $original, $show = null, $format = null)
 {
     global $lang;
 
@@ -884,7 +884,7 @@ function format_fromto($from, $to, $full = false)
  * @param bool $with_weeks
  * @return string
  */
-function time_since($original, $stop = 'minute', $format = null, $with_text = true, $with_week = true, $only_last_unit = false)
+function time_since(?string $original, $stop = 'minute', $format = null, $with_text = true, $with_week = true, $only_last_unit = false)
 {
     $date = str2DateTime($original, $format);
 
@@ -1550,7 +1550,7 @@ function prepend_append_array_items($array, $prepend_str, $append_str)
  * @return array
  */
 #[\Deprecated(message: '2.6')]
-function simple_hash_from_query($query, $keyname, $valuename)
+function simple_hash_from_query($query, $keyname, $valuename): array
 {
     return query2array($query, $keyname, $valuename);
 }
@@ -1564,7 +1564,7 @@ function simple_hash_from_query($query, $keyname, $valuename)
  * @return array
  */
 #[\Deprecated(message: '2.6')]
-function hash_from_query($query, $keyname)
+function hash_from_query($query, $keyname): array
 {
     return query2array($query, $keyname);
 }
@@ -1579,7 +1579,7 @@ function hash_from_query($query, $keyname)
  * @return array
  */
 #[\Deprecated(message: '2.6')]
-function array_from_query($query, $fieldname = false)
+function array_from_query($query, $fieldname = false): array
 {
     if (false === $fieldname) {
         return query2array($query);
@@ -1638,7 +1638,7 @@ function get_filter_page_value($value_name)
  * return the character set used by Piwigo
  * @return string
  */
-function get_pwg_charset()
+function get_pwg_charset(): string
 {
     $pwg_charset = 'utf-8';
     if (defined('PWG_CHARSET')) {

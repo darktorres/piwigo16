@@ -658,7 +658,7 @@ SELECT
         return strcmp(strtolower((string) $a['extension_name']), strtolower((string) $b['extension_name']));
     }
 
-    public function extension_author_compare(array $a, array $b)
+    public function extension_author_compare(array $a, array $b): int
     {
         $r = strcasecmp((string) $a['author_name'], (string) $b['author_name']);
         if ($r == 0) {
@@ -668,7 +668,7 @@ SELECT
         }
     }
 
-    public function theme_author_compare(array $a, array $b)
+    public function theme_author_compare(array $a, array $b): int
     {
         $r = strcasecmp((string) $a['author'], (string) $b['author']);
         if ($r == 0) {

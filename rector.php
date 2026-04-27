@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Rector\Config\RectorConfig;
+use Rector\TypeDeclaration\Rector\StmtsAwareInterface\DeclareStrictTypesRector;
 use Rector\Set\ValueObject\SetList;
 
 return RectorConfig::configure()
@@ -29,5 +30,6 @@ return RectorConfig::configure()
     ])
     ->withPhpSets(php85: true)
     ->withSets([SetList::TYPE_DECLARATION])
+    ->withRules([DeclareStrictTypesRector::class])
     ->withImportNames(importShortClasses: false, removeUnusedImports: false)
     ->withParallel();

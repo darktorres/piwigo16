@@ -23,7 +23,7 @@ include_once(PHPWG_ROOT_PATH.'/include/functions_metadata.inc.php');
  * @param string $file
  * @return array
  */
-function get_sync_iptc_data($file)
+function get_sync_iptc_data($file): array
 {
     global $conf;
 
@@ -66,7 +66,7 @@ function get_sync_iptc_data($file)
  * @param string $file
  * @return array
  */
-function get_sync_exif_data($file)
+function get_sync_exif_data(string $file): array
 {
     global $conf;
 

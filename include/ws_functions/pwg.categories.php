@@ -670,7 +670,7 @@ SELECT
  *    @option string status (optional)
  *    @option bool commentable
  */
-function ws_categories_add(array $params, &$service)
+function ws_categories_add(array $params, &$service): \PwgError|array
 {
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
@@ -977,7 +977,7 @@ UPDATE '.CATEGORIES_TABLE.'
  * @param mixed[] $params
  *    @option int category_id
  */
-function ws_categories_refreshRepresentative(array $params, &$service)
+function ws_categories_refreshRepresentative(array $params, &$service): \PwgError|array
 {
     global $conf;
 

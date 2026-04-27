@@ -26,7 +26,7 @@ function get_std_sql_where_restrict_filter(
     $prefix_condition,
     $img_field = 'ic.image_id',
     $force_one_condition = false
-) {
+): string {
     return get_sql_condition_FandF(
         [
         'forbidden_categories' => 'ic.category_id',
@@ -583,7 +583,7 @@ function get_html_description_recent_post_date(array $date_detail, $auth_key = n
  * @param array $date_detail returned value of get_recent_post_dates()
  * @return string
  */
-function get_title_recent_post_date(array $date_detail)
+function get_title_recent_post_date(array $date_detail): string
 {
     global $lang;
 

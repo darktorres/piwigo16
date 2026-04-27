@@ -116,7 +116,7 @@ function add_url_params($url, $params, $arg_separator = '&amp;')
  * @param array
  * @return string
  */
-function make_index_url($params = [])
+function make_index_url(array $params = []): string
 {
     global $conf;
     $url = get_root_url().'index';
@@ -205,7 +205,7 @@ function duplicate_picture_url($redefined = [], $removed = [])
  * @param array
  * @return string
  */
-function make_picture_url(array $params)
+function make_picture_url(array $params): string
 {
     global $conf;
 
@@ -791,7 +791,7 @@ function url_is_remote($url): bool
  * List favorite image_ids of the current user.
  * @since 13
  */
-function get_user_favorites()
+function get_user_favorites(): array
 {
     global $user;
 

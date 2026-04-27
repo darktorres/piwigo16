@@ -675,7 +675,7 @@ function pwg_db_get_recent_period_expression(string $period, $date = 'CURRENT_DA
     return 'SUBDATE('.$date.',INTERVAL '.$period.' DAY)';
 }
 
-function pwg_db_get_recent_period($period, $date = 'CURRENT_DATE')
+function pwg_db_get_recent_period(string $period, $date = 'CURRENT_DATE')
 {
     $query = '
 SELECT '.pwg_db_get_recent_period_expression($period);
@@ -797,7 +797,7 @@ function my_error(string $header, $die): void
  * @param string $value_name
  * @return array
  */
-function query2array($query, $key_name = null, $value_name = null): array
+function query2array(string $query, $key_name = null, $value_name = null): array
 {
     $result = pwg_query($query);
     $data = [];

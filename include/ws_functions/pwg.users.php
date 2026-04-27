@@ -417,7 +417,7 @@ function ws_users_getAuthKey(array $params, &$service)
  *    @option int[] user_id
  *    @option string pwg_token
  */
-function ws_users_delete(array $params, &$service)
+function ws_users_delete(array $params, &$service): \PwgError|string
 {
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');

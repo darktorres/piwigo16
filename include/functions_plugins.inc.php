@@ -304,7 +304,7 @@ function &get_plugin_data($plugin_id)
  * @param string $id returns only data about given plugin
  * @return array
  */
-function get_db_plugins(?string $state = '', ?string $id = '')
+function get_db_plugins(?string $state = '', ?string $id = ''): array
 {
     $query = '
 SELECT * FROM '.PLUGINS_TABLE;
@@ -329,7 +329,7 @@ SELECT * FROM '.PLUGINS_TABLE;
  *
  * @param string $plugin
  */
-function load_plugin($plugin): void
+function load_plugin(array $plugin): void
 {
     $file_name = PHPWG_PLUGINS_PATH.$plugin['id'].'/main.inc.php';
     if (file_exists($file_name)) {

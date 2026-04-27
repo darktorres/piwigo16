@@ -229,7 +229,7 @@ class PwgRestEncoder extends PwgResponseEncoder
         }
     }
 
-    public function encode($data, $xml_attributes = []): void
+    public function encode($data, array $xml_attributes = []): void
     {
         switch (gettype($data)) {
             case 'null':

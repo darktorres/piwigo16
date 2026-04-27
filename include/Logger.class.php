@@ -151,7 +151,7 @@ class Logger
      *
      * @return int
      */
-    public function status()
+    public function status(): int
     {
         return $this->_logStatus;
     }
@@ -270,7 +270,7 @@ class Logger
      * @param string $cat
      * @param array $args
      */
-    public function log($severity, $message, $cat = null, $args = []): void
+    public function log($severity, string $message, $cat = null, $args = []): void
     {
         if ($this->severity() >= $severity) {
             if (is_array($cat)) {
@@ -386,7 +386,7 @@ class Logger
      * @param  string $indent What to use as the indent.
      * @return string
      */
-    private function indent($string, string $indent = '  ')
+    private function indent(string $string, string $indent = '  ')
     {
         return $indent . str_replace("\n", "\n" . $indent, $string);
     }

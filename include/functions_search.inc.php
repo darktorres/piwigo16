@@ -1873,7 +1873,7 @@ SELECT DISTINCT(id) FROM '.IMAGES_TABLE.' i';
  * @param string $images_where optional aditional restriction on images table
  * @return array
  */
-function get_search_results($search_id, $super_order_by, $images_where = '')
+function get_search_results($search_id, $super_order_by, ?string $images_where = '')
 {
     $search = get_search_array($search_id);
     if (!isset($search['q'])) {

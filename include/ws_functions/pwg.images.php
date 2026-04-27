@@ -2439,7 +2439,7 @@ SELECT *
  *    @option int|int[] image_id
  *    @option string pwg_token
  */
-function ws_images_delete(array $params, $service)
+function ws_images_delete(array $params, $service): \PwgError|int
 {
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');

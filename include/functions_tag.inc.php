@@ -197,7 +197,7 @@ function add_level_to_tags($tags)
  * @param bool $user_permissions
  * @return array
  */
-function get_image_ids_for_tags($tag_ids, $mode = 'AND', ?string $extra_images_where_sql = '', $order_by = '', $use_permissions = true)
+function get_image_ids_for_tags($tag_ids, $mode = 'AND', ?string $extra_images_where_sql = '', $order_by = '', $use_permissions = true): array
 {
     global $conf;
     if (empty($tag_ids)) {
@@ -290,7 +290,7 @@ SELECT t.*, count(*) AS counter
  * @param string[] $names
  * @return array [id, name, url_name]
  */
-function find_tags($ids = [], $url_names = [], $names = [])
+function find_tags($ids = [], $url_names = [], $names = []): array
 {
     $where_clauses = [];
     if (!empty($ids)) {
@@ -322,7 +322,7 @@ function tags_id_compare(array $a, array $b): int
     return ($a['id'] < $b['id']) ? -1 : 1;
 }
 
-function tags_counter_compare(array $a, array $b)
+function tags_counter_compare(array $a, array $b): int
 {
     if ($a['counter'] == $b['counter']) {
         return tags_id_compare($a, $b);

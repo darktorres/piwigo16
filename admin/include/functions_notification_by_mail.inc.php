@@ -30,7 +30,7 @@ if (
  *
  * @return string nbm identifier
  */
-function find_available_check_key()
+function find_available_check_key(): string
 {
     while (true) {
         $key = generate_key(16);
@@ -480,7 +480,7 @@ function do_subscribe_unsubscribe_notification_by_mail($is_admin_request, $is_su
  *
  * @return check_key list treated
  */
-function unsubscribe_notification_by_mail($is_admin_request, $check_key_list = [])
+function unsubscribe_notification_by_mail($is_admin_request, $check_key_list = []): array
 {
     return do_subscribe_unsubscribe_notification_by_mail($is_admin_request, false, $check_key_list);
 }
@@ -492,7 +492,7 @@ function unsubscribe_notification_by_mail($is_admin_request, $check_key_list = [
  *
  * @return check_key list treated
  */
-function subscribe_notification_by_mail($is_admin_request, $check_key_list = [])
+function subscribe_notification_by_mail($is_admin_request, $check_key_list = []): array
 {
     return do_subscribe_unsubscribe_notification_by_mail($is_admin_request, true, $check_key_list);
 }

@@ -57,7 +57,7 @@ function correct_slideshow_params(array $params = []): array
  * @param string $encode_params
  * @return array
  */
-function decode_slideshow_params($encode_params = null)
+function decode_slideshow_params($encode_params = null): array
 {
     global $conf;
 
@@ -91,7 +91,7 @@ function decode_slideshow_params($encode_params = null)
  * @param array $decode_params
  * @return string
  */
-function encode_slideshow_params($decode_params = []): string
+function encode_slideshow_params(array $decode_params = []): string
 {
     global $conf;
 

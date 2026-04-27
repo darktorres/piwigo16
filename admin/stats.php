@@ -88,7 +88,7 @@ SELECT
     return $output;
 }
 
-function get_month_of_last_years($last = 'all')
+function get_month_of_last_years($last = 'all'): array
 {
 
     $query = '

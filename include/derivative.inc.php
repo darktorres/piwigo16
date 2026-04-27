@@ -111,7 +111,7 @@ final class SrcImage
     /**
      * @return string
      */
-    public function get_url()
+    public function get_url(): string|array
     {
         $url = get_root_url().$this->rel_path;
         if (!($this->flags & self::IS_MIMETYPE)) {
@@ -131,7 +131,7 @@ final class SrcImage
     /**
      * @return int[]|null 0=width, 1=height or null if fail to compute size
      */
-    public function get_size()
+    public function get_size(): ?array
     {
         if ($this->size == null) {
             if ($this->flags & self::DIM_NOT_GIVEN) {
@@ -482,7 +482,7 @@ final class DerivativeImage
     /**
      * @return bool
      */
-    public function is_cached()
+    public function is_cached(): bool
     {
         return $this->is_cached;
     }

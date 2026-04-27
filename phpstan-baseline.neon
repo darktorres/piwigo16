@@ -25,6 +25,12 @@ parameters:
 			path: admin/album_notification.php
 
 		-
+			message: '#^Parameter \#1 \$original of function time_since expects string\|null, int\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/album_notification.php
+
+		-
 			message: '#^Variable \$admin_album_base_url might not be defined\.$#'
 			identifier: variable.undefined
 			count: 2
@@ -74,6 +80,18 @@ parameters:
 			identifier: variable.undefined
 			count: 1
 			path: admin/albums.php
+
+		-
+			message: '#^Parameter \#1 \$period of function pwg_db_get_recent_period_expression expects string, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/batch_manager.php
+
+		-
+			message: '#^Parameter \#4 \$order_by of function get_image_ids_for_tags expects string, null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/batch_manager.php
 
 		-
 			message: '#^Variable \$conf might not be defined\.$#'
@@ -330,6 +348,18 @@ parameters:
 		-
 			message: '#^Offset ''order_by_inside…'' on array\{\} in isset\(\) does not exist\.$#'
 			identifier: isset.offset
+			count: 1
+			path: admin/configuration.php
+
+		-
+			message: '#^Parameter \#2 \$replace of function str_replace expects array\<string\>\|string, false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/configuration.php
+
+		-
+			message: '#^Parameter \#3 \$length of function array_slice expects int\|null, float given\.$#'
+			identifier: argument.type
 			count: 1
 			path: admin/configuration.php
 
@@ -778,6 +808,30 @@ parameters:
 			path: admin/include/functions.php
 
 		-
+			message: '#^Parameter \#1 \$prefix of function uniqid expects string, int\<0, max\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/functions.php
+
+		-
+			message: '#^Parameter \#2 \$callback of function preg_replace_callback expects callable\(array\<string\>\)\: string, Closure\(mixed\)\: int\<1, max\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/functions.php
+
+		-
+			message: '#^Parameter \#2 \$value of function conf_update_param expects string, \(float\|int\) given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/functions.php
+
+		-
+			message: '#^Parameter \#3 \$value of function curl_setopt expects bool, int given\.$#'
+			identifier: argument.type
+			count: 4
+			path: admin/include/functions.php
+
+		-
 			message: '#^Parameter \$dest of function fetchRemote\(\) has invalid type Ressource\.$#'
 			identifier: class.notFound
 			count: 1
@@ -817,6 +871,12 @@ parameters:
 			path: admin/include/functions_history.inc.php
 
 		-
+			message: '#^Parameter \#2 \$value of function conf_update_param expects string, true given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/functions_history.inc.php
+
+		-
 			message: '''
 				#^Call to deprecated function hash_from_query\(\)\:
 				2\.6$#
@@ -834,6 +894,30 @@ parameters:
 		-
 			message: '#^Function get_sync_metadata\(\) should return array but returns false\.$#'
 			identifier: return.type
+			count: 1
+			path: admin/include/functions_metadata.php
+
+		-
+			message: '#^Parameter \#1 \$month of function checkdate expects int, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/functions_metadata.php
+
+		-
+			message: '#^Parameter \#1 \$num of function round expects float\|int, string given\.$#'
+			identifier: argument.type
+			count: 2
+			path: admin/include/functions_metadata.php
+
+		-
+			message: '#^Parameter \#2 \$day of function checkdate expects int, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/functions_metadata.php
+
+		-
+			message: '#^Parameter \#3 \$year of function checkdate expects int, string given\.$#'
+			identifier: argument.type
 			count: 1
 			path: admin/include/functions_metadata.php
 
@@ -940,6 +1024,12 @@ parameters:
 			path: admin/include/functions_upgrade.php
 
 		-
+			message: '#^Parameter \#2 \$value of function conf_update_param expects string, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/functions_upgrade.php
+
+		-
 			message: '#^Binary operation "\*" between non\-falsy\-string and 10 results in an error\.$#'
 			identifier: binaryOp.invalid
 			count: 1
@@ -966,6 +1056,24 @@ parameters:
 		-
 			message: '#^PHPDoc tag @return has invalid value \(array\(width, height\)\)\: Unexpected token "\(", expected TOKEN_HORIZONTAL_WS at offset 236 on line 7$#'
 			identifier: phpDoc.parseError
+			count: 1
+			path: admin/include/functions_upload.inc.php
+
+		-
+			message: '#^Parameter \#2 \$func of function add_event_handler expects callable\(\)\: mixed, ''pwg_image_resize'' given\.$#'
+			identifier: argument.type
+			count: 2
+			path: admin/include/functions_upload.inc.php
+
+		-
+			message: '#^Parameter \#2 \$value of function conf_update_param expects string, false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/functions_upload.inc.php
+
+		-
+			message: '#^Parameter \#2 \$value of function conf_update_param expects string, true given\.$#'
+			identifier: argument.type
 			count: 1
 			path: admin/include/functions_upload.inc.php
 
@@ -1050,6 +1158,18 @@ parameters:
 		-
 			message: '#^PHPDoc tag @param has invalid value \(string \- remote revision identifier \(numeric\)\)\: Unexpected token "\-", expected variable at offset 117 on line 5$#'
 			identifier: phpDoc.parseError
+			count: 1
+			path: admin/include/languages.class.php
+
+		-
+			message: '#^Parameter \#1 \$stream of function fclose expects resource, Ressource\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/languages.class.php
+
+		-
+			message: '#^Parameter \#2 \$dest of function fetchRemote expects Ressource\|string, resource given\.$#'
+			identifier: argument.type
 			count: 1
 			path: admin/include/languages.class.php
 
@@ -1270,6 +1390,18 @@ parameters:
 			path: admin/include/plugins.class.php
 
 		-
+			message: '#^Parameter \#1 \$stream of function fclose expects resource, Ressource\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/plugins.class.php
+
+		-
+			message: '#^Parameter \#2 \$dest of function fetchRemote expects Ressource\|string, resource given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/plugins.class.php
+
+		-
 			message: '#^Variable \$errors in empty\(\) always exists and is always falsy\.$#'
 			identifier: empty.variable
 			count: 1
@@ -1393,6 +1525,18 @@ parameters:
 			path: admin/include/themes.class.php
 
 		-
+			message: '#^Parameter \#1 \$stream of function fclose expects resource, Ressource\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/themes.class.php
+
+		-
+			message: '#^Parameter \#2 \$dest of function fetchRemote expects Ressource\|string, resource given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/themes.class.php
+
+		-
 			message: '#^Variable \$errors in empty\(\) always exists and is always falsy\.$#'
 			identifier: empty.variable
 			count: 1
@@ -1419,6 +1563,18 @@ parameters:
 		-
 			message: '#^Call to function is_array\(\) with non\-empty\-list\<string\> will always evaluate to true\.$#'
 			identifier: function.alreadyNarrowedType
+			count: 1
+			path: admin/include/updates.class.php
+
+		-
+			message: '#^Parameter \#1 \$prefix of function uniqid expects string, int\<0, max\> given\.$#'
+			identifier: argument.type
+			count: 2
+			path: admin/include/updates.class.php
+
+		-
+			message: '#^Parameter \#2 \$value of function conf_update_param expects string, array\<string, string\> given\.$#'
+			identifier: argument.type
 			count: 1
 			path: admin/include/updates.class.php
 
@@ -1561,6 +1717,12 @@ parameters:
 			path: admin/maintenance.php
 
 		-
+			message: '#^Parameter \#1 \$value of function count expects array\|Countable, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/maintenance_actions.php
+
+		-
 			message: '#^Variable \$conf might not be defined\.$#'
 			identifier: variable.undefined
 			count: 3
@@ -1653,6 +1815,12 @@ parameters:
 		-
 			message: '#^Negated boolean expression is always true\.$#'
 			identifier: booleanNot.alwaysTrue
+			count: 1
+			path: admin/notification_by_mail.php
+
+		-
+			message: '#^Parameter \#1 \$original of function time_since expects string\|null, int\|false given\.$#'
+			identifier: argument.type
 			count: 1
 			path: admin/notification_by_mail.php
 
@@ -1759,6 +1927,12 @@ parameters:
 			path: admin/photos_add_ftp.php
 
 		-
+			message: '#^Parameter \#2 \$type of function delete_element_derivatives expects ''all''\|int, ''custom'' given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/picture_coi.php
+
+		-
 			message: '#^Variable \$template might not be defined\.$#'
 			identifier: variable.undefined
 			count: 4
@@ -1844,6 +2018,12 @@ parameters:
 			identifier: variable.undefined
 			count: 7
 			path: admin/plugins_installed.php
+
+		-
+			message: '#^Parameter \#3 \$subject of function preg_replace expects array\<float\|int\|string\>\|string, int\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/plugins_new.php
 
 		-
 			message: '#^Variable \$conf might not be defined\.$#'
@@ -2149,6 +2329,12 @@ parameters:
 			path: admin/themes_standard_pages.php
 
 		-
+			message: '#^Parameter \#2 \$value of function conf_update_param expects string, bool given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/themes_standard_pages.php
+
+		-
 			message: '#^Variable \$_POST in empty\(\) always exists and is not falsy\.$#'
 			identifier: empty.variable
 			count: 1
@@ -2257,6 +2443,12 @@ parameters:
 			path: admin/user_list.php
 
 		-
+			message: '#^Parameter \#2 \$user_ids of function add_permission_on_category expects array\<int\>, float\|int\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/user_perm.php
+
+		-
 			message: '#^Variable \$template might not be defined\.$#'
 			identifier: variable.undefined
 			count: 6
@@ -2272,6 +2464,24 @@ parameters:
 			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
 			identifier: arguments.count
 			count: 2
+			path: comments.php
+
+		-
+			message: '#^Parameter \#1 \$msg of function page_not_found expects string, null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: comments.php
+
+		-
+			message: '#^Parameter \#1 \$period of function pwg_db_get_recent_period_expression expects string, int given\.$#'
+			identifier: argument.type
+			count: 3
+			path: comments.php
+
+		-
+			message: '#^Parameter \#5 \$clean_url of function create_navigation_bar expects bool, string given\.$#'
+			identifier: argument.type
+			count: 1
 			path: comments.php
 
 		-
@@ -2379,6 +2589,12 @@ parameters:
 		-
 			message: '#^PHPDoc tag @param has invalid value \(string mysql datetime format\)\: Unexpected token "mysql", expected variable at offset 156 on line 5$#'
 			identifier: phpDoc.parseError
+			count: 1
+			path: feed.php
+
+		-
+			message: '#^Parameter \#1 \$period of function pwg_db_get_recent_period_expression expects string, int given\.$#'
+			identifier: argument.type
 			count: 1
 			path: feed.php
 
@@ -2521,6 +2737,12 @@ parameters:
 			path: i.php
 
 		-
+			message: '#^Parameter \#2 \$coi of method SizingParams\:\:compute\(\) expects string, null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: i.php
+
+		-
 			message: '#^Path in include\(\) "\./local/config/database\.inc\.php" is not a file or it does not exist\.$#'
 			identifier: include.fileNotFound
 			count: 1
@@ -2599,6 +2821,18 @@ parameters:
 			path: include/Logger.class.php
 
 		-
+			message: '#^Parameter \#1 \$level of method Logger\:\:formatMessage\(\) expects string, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/Logger.class.php
+
+		-
+			message: '#^Parameter \#1 \$level of static method Logger\:\:levelToCode\(\) expects int, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/Logger.class.php
+
+		-
 			message: '#^Unreachable statement \- code above always terminates\.$#'
 			identifier: deadCode.unreachable
 			count: 1
@@ -2613,6 +2847,18 @@ parameters:
 		-
 			message: '#^PHPDoc tag @return with type base32 is incompatible with native type string\.$#'
 			identifier: return.phpDocType
+			count: 1
+			path: include/base32.class.php
+
+		-
+			message: '#^Parameter \#1 \$codepoint of function chr expects int\<0, 255\>, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/base32.class.php
+
+		-
+			message: '#^Parameter \#1 \$num of function base_convert expects string, int\<0, 255\> given\.$#'
+			identifier: argument.type
 			count: 1
 			path: include/base32.class.php
 
@@ -3001,6 +3247,12 @@ parameters:
 			path: include/dblayer/functions_mysqli.inc.php
 
 		-
+			message: '#^Parameter \#5 \$port of class mysqli constructor expects int\|null, string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/dblayer/functions_mysqli.inc.php
+
+		-
 			message: '#^Variable \$options might not be defined\.$#'
 			identifier: variable.undefined
 			count: 1
@@ -3097,6 +3349,36 @@ parameters:
 			path: include/derivative_params.inc.php
 
 		-
+			message: '#^Parameter \#1 \$codepoint of function chr expects int\<0, 255\>, float given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/derivative_params.inc.php
+
+		-
+			message: '#^Parameter \#1 \$pixels of method ImageRect\:\:crop_h\(\) expects int, float given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/derivative_params.inc.php
+
+		-
+			message: '#^Parameter \#1 \$pixels of method ImageRect\:\:crop_v\(\) expects int, float given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/derivative_params.inc.php
+
+		-
+			message: '#^Parameter \#2 \$coi of method ImageRect\:\:crop_h\(\) expects stirng, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/derivative_params.inc.php
+
+		-
+			message: '#^Parameter \#2 \$coi of method SizingParams\:\:compute\(\) expects string, null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/derivative_params.inc.php
+
+		-
 			message: '#^Parameter \$coi of method ImageRect\:\:crop_h\(\) has invalid type stirng\.$#'
 			identifier: class.notFound
 			count: 1
@@ -3177,6 +3459,12 @@ parameters:
 		-
 			message: '#^PHPDoc tag @var has invalid value \(array\<array\>\<string\>\)\: Unexpected token "\<", expected TOKEN_HORIZONTAL_WS at offset 207 on line 5$#'
 			identifier: phpDoc.parseError
+			count: 1
+			path: include/emogrifier.class.php
+
+		-
+			message: '#^Parameter \#1 \$string of function trim expects string, bool given\.$#'
+			identifier: argument.type
 			count: 1
 			path: include/emogrifier.class.php
 
@@ -3334,6 +3622,36 @@ parameters:
 			path: include/functions.inc.php
 
 		-
+			message: '#^Parameter \#2 \$callback of function preg_replace_callback expects callable\(array\<string\>\)\: string, Closure\(mixed\)\: int\<0, 255\> given\.$#'
+			identifier: argument.type
+			count: 2
+			path: include/functions.inc.php
+
+		-
+			message: '#^Parameter \#2 \$month of method DateTime\:\:setDate\(\) expects int, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/functions.inc.php
+
+		-
+			message: '#^Parameter \#2 \$string of function explode expects string, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/functions.inc.php
+
+		-
+			message: '#^Parameter \#2 \$value of function conf_update_param expects string, array\<string\> given\.$#'
+			identifier: argument.type
+			count: 2
+			path: include/functions.inc.php
+
+		-
+			message: '#^Parameter \#3 \$day of method DateTime\:\:setDate\(\) expects int, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/functions.inc.php
+
+		-
 			message: '#^Variable \$eid in empty\(\) always exists and is not falsy\.$#'
 			identifier: empty.variable
 			count: 2
@@ -3391,6 +3709,12 @@ parameters:
 			path: include/functions_category.inc.php
 
 		-
+			message: '#^Parameter \#1 \$period of function pwg_db_get_recent_period_expression expects string, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/functions_category.inc.php
+
+		-
 			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
 			identifier: function.resultUnused
 			count: 2
@@ -3409,6 +3733,12 @@ parameters:
 			path: include/functions_comment.inc.php
 
 		-
+			message: '#^Parameter \#1 \$key of function verify_ephemeral_key expects array, string given\.$#'
+			identifier: argument.type
+			count: 2
+			path: include/functions_comment.inc.php
+
+		-
 			message: '#^Undefined variable\: \$comm$#'
 			identifier: variable.undefined
 			count: 1
@@ -3417,6 +3747,12 @@ parameters:
 		-
 			message: '#^PHPDoc tag @param references unknown parameter\: \$car$#'
 			identifier: parameter.notFound
+			count: 1
+			path: include/functions_cookie.inc.php
+
+		-
+			message: '#^Parameter \#2 \$value of function setcookie expects string, false given\.$#'
+			identifier: argument.type
 			count: 1
 			path: include/functions_cookie.inc.php
 
@@ -3559,6 +3895,12 @@ parameters:
 			path: include/functions_rate.inc.php
 
 		-
+			message: '#^Parameter \#2 \$subject of function preg_match expects string, float given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/functions_rate.inc.php
+
+		-
 			message: '#^Binary operation "/" between non\-empty\-string and non\-empty\-string results in an error\.$#'
 			identifier: binaryOp.invalid
 			count: 1
@@ -3630,6 +3972,18 @@ parameters:
 		-
 			message: '#^PHPDoc tag @param references unknown parameter\: \$super_order_by$#'
 			identifier: parameter.notFound
+			count: 1
+			path: include/functions_search.inc.php
+
+		-
+			message: '#^Parameter \#1 \$string of function htmlspecialchars expects string, QExpression given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/functions_search.inc.php
+
+		-
+			message: '#^Parameter \#2 \$value of function userprefs_update_param expects string, list\<int\|string\> given\.$#'
+			identifier: argument.type
 			count: 1
 			path: include/functions_search.inc.php
 
@@ -3826,6 +4180,12 @@ parameters:
 			path: include/functions_url.inc.php
 
 		-
+			message: '#^Parameter \#1 \$ids of function find_tags expects array\<int\>, list\<string\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/functions_url.inc.php
+
+		-
 			message: '''
 				#^Call to deprecated function array_from_query\(\)\:
 				2\.6$#
@@ -3907,6 +4267,42 @@ parameters:
 			path: include/functions_user.inc.php
 
 		-
+			message: '#^Parameter \#1 \$original of function time_since expects string\|null, int\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/functions_user.inc.php
+
+		-
+			message: '#^Parameter \#1 \$period of function pwg_db_get_recent_period_expression expects string, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/functions_user.inc.php
+
+		-
+			message: '#^Parameter \#1 \$user_id of function calculate_auto_login_key expects int, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/functions_user.inc.php
+
+		-
+			message: '#^Parameter \#1 \$user_id of function log_user expects int, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/functions_user.inc.php
+
+		-
+			message: '#^Parameter \#1 \$user_id of function validate_mail_address expects int, null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/functions_user.inc.php
+
+		-
+			message: '#^Parameter \#2 \$time of function calculate_auto_login_key expects int, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/functions_user.inc.php
+
+		-
 			message: '#^Unreachable statement \- code above always terminates\.$#'
 			identifier: deadCode.unreachable
 			count: 1
@@ -3967,6 +4363,18 @@ parameters:
 			path: include/jshrink.class.php
 
 		-
+			message: '#^Parameter \#1 \$js of method JShrink\\Minifier\:\:minifyDirectToOutput\(\) expects string, bool given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/jshrink.class.php
+
+		-
+			message: '#^Parameter \#1 \$string of function crc32 expects string, int\<1, max\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/jshrink.class.php
+
+		-
 			message: '#^Property JShrink\\Minifier\:\:\$c \(string\) in isset\(\) is not nullable\.$#'
 			identifier: isset.property
 			count: 1
@@ -4011,6 +4419,12 @@ parameters:
 		-
 			message: '#^PHPDoc tag @param for parameter \$path contains unresolvable type\.$#'
 			identifier: parameter.unresolvableType
+			count: 1
+			path: include/minify/src/JS.php
+
+		-
+			message: '#^Parameter \#1 \$callback of function call_user_func_array expects callable\(\)\: mixed, array\{''MatthiasMullie\\\\Minify\\\\Minify'', ''__construct''\} given\.$#'
+			identifier: argument.type
 			count: 1
 			path: include/minify/src/JS.php
 
@@ -4174,6 +4588,12 @@ parameters:
 			message: '#^Loose comparison using \=\= between 1 and 1 will always evaluate to true\.$#'
 			identifier: equal.alwaysTrue
 			count: 2
+			path: include/passwordhash.class.php
+
+		-
+			message: '#^Parameter \#1 \$prefix of function uniqid expects string, int\<0, max\> given\.$#'
+			identifier: argument.type
+			count: 1
 			path: include/passwordhash.class.php
 
 		-
@@ -4342,6 +4762,12 @@ parameters:
 			path: include/phpmailer/PHPMailer.php
 
 		-
+			message: '#^Parameter \#3 \$length of function mb_substr expects int\|null, float given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/phpmailer/PHPMailer.php
+
+		-
 			message: '#^Property PHPMailer\\PHPMailer\\PHPMailer\:\:\$Debugoutput has unknown class Psr\\Log\\LoggerInterface as its type\.$#'
 			identifier: class.notFound
 			count: 1
@@ -4392,6 +4818,12 @@ parameters:
 		-
 			message: '#^Class Psr\\Log\\LoggerInterface not found\.$#'
 			identifier: class.notFound
+			count: 1
+			path: include/phpmailer/SMTP.php
+
+		-
+			message: '#^Parameter \#3 \$smtp_code of method PHPMailer\\PHPMailer\\SMTP\:\:setError\(\) expects string, int given\.$#'
+			identifier: argument.type
 			count: 1
 			path: include/phpmailer/SMTP.php
 
@@ -4650,6 +5082,18 @@ parameters:
 		-
 			message: '#^Method PwgSession\:\:gc\(\) should return int but returns true\.$#'
 			identifier: return.type
+			count: 1
+			path: include/pwgsession.class.php
+
+		-
+			message: '#^Parameter \#2 \$data of function pwg_session_write expects sring, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/pwgsession.class.php
+
+		-
+			message: '#^Parameter \#2 \$name of function pwg_session_open expects sring, string given\.$#'
+			identifier: argument.type
 			count: 1
 			path: include/pwgsession.class.php
 
@@ -5062,6 +5506,48 @@ parameters:
 			path: include/template.class.php
 
 		-
+			message: '#^Parameter \#1 \$value of function count expects array\|Countable, Combinable given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^Parameter \#1 \$value of function count expects array\|Countable, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^Parameter \#2 \$src_image of class DerivativeImage constructor expects SrcImage, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^Parameter \#2 \$value of function conf_update_param expects string, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^Parameter \#3 \$version of class Combinable constructor expects string, false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^Parameter \#4 \$path of method ScriptLoader\:\:add\(\) expects string, null given\.$#'
+			identifier: argument.type
+			count: 2
+			path: include/template.class.php
+
+		-
 			message: '#^Parameter \$smarty of method Template\:\:func_define_derivative\(\) has invalid type Smarty\\Smarty\.$#'
 			identifier: class.notFound
 			count: 1
@@ -5288,6 +5774,12 @@ parameters:
 			path: include/ws_functions/pwg.categories.php
 
 		-
+			message: '#^Parameter \#1 \$ids of function get_subcat_ids expects array\<int\>, array\<int, string\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/ws_functions/pwg.categories.php
+
+		-
 			message: '#^Variable \$cat_display_name might not be defined\.$#'
 			identifier: variable.undefined
 			count: 1
@@ -5342,6 +5834,24 @@ parameters:
 			message: '#^Left side of and is always true\.$#'
 			identifier: logicalAnd.leftAlwaysTrue
 			count: 1
+			path: include/ws_functions/pwg.images.php
+
+		-
+			message: '#^Parameter \#1 \$ids of function update_category expects ''all''\|array\<int\>\|int, non\-empty\-array\<int\<0, max\>, string\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/ws_functions/pwg.images.php
+
+		-
+			message: '#^Parameter \#1 \$tags of function add_tags expects array\<int\>, list\<string\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/ws_functions/pwg.images.php
+
+		-
+			message: '#^Parameter \#1 \$tags of function set_tags expects array\<int\>, list\<string\> given\.$#'
+			identifier: argument.type
+			count: 3
 			path: include/ws_functions/pwg.images.php
 
 		-
@@ -5480,6 +5990,12 @@ parameters:
 			path: include/ws_init.inc.php
 
 		-
+			message: '#^Parameter \#4 \$include_path of function add_event_handler expects string\|null, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/ws_init.inc.php
+
+		-
 			message: '#^Variable \$requestFormat in isset\(\) always exists and is not nullable\.$#'
 			identifier: isset.variable
 			count: 1
@@ -5537,6 +6053,18 @@ parameters:
 			message: '#^Call to function is_array\(\) with array\<mixed\> will always evaluate to true\.$#'
 			identifier: function.alreadyNarrowedType
 			count: 3
+			path: install.php
+
+		-
+			message: '#^Parameter \#1 \$prefix of function uniqid expects string, int\<1, max\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: install.php
+
+		-
+			message: '#^Parameter \#1 \$user_id of function validate_mail_address expects int, null given\.$#'
+			identifier: argument.type
+			count: 1
 			path: install.php
 
 		-
@@ -5600,6 +6128,12 @@ parameters:
 			path: password.php
 
 		-
+			message: '#^Parameter \#2 \$value of function userprefs_update_param expects string, int\<3601, max\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: password.php
+
+		-
 			message: '#^Unused result of "or" operator\.$#'
 			identifier: logicalOr.resultUnused
 			count: 1
@@ -5657,6 +6191,12 @@ parameters:
 			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
 			identifier: arguments.count
 			count: 2
+			path: picture.php
+
+		-
+			message: '#^Parameter \#2 \$value of function setcookie expects string, false given\.$#'
+			identifier: argument.type
+			count: 1
 			path: picture.php
 
 		-

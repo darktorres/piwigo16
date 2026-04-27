@@ -29,20 +29,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Cache Docker layers
-        uses: actions/cache@v4
-        with:
-          path: /tmp/.docker-cache
-          key: docker-${{ hashFiles('docker/Dockerfile') }}
-          restore-keys: docker-
       - name: Build web image
-        run: |
-          docker build \
-            --cache-from type=local,src=/tmp/.docker-cache \
-            --cache-to   type=local,dest=/tmp/.docker-cache,mode=max \
-            -t piwigo16-web:ci \
-            -f docker/Dockerfile \
-            .
+        run: docker compose build web
       - run: docker compose up -d --wait db web
       - uses: actions/setup-node@v4
         with:

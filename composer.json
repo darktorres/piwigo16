@@ -35,6 +35,7 @@
     },
     "config": {
         "optimize-autoloader": true,
+        "classmap-authoritative": true,
         "sort-packages": true,
         "allow-plugins": {}
     }

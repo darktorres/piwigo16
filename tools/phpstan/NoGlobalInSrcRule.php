@@ -1,0 +1,65 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Piwigo\Tools\PhpStan;
+
+use PhpParser\Node;
+use PhpParser\Node\Expr\Variable;
+use PhpParser\Node\Stmt\Global_;
+use PHPStan\Analyser\Scope;
+use PHPStan\Rules\Rule;
+use PHPStan\Rules\RuleErrorBuilder;
+
+/**
+ * Flags new `global $conf`, `global $page`, `global $user`, `global $lang`
+ * declarations inside src/ — Phase 4 Wave A enforcement.
+ *
+ * Legacy code in include/ and admin/ is allowed to keep using globals; this
+ * rule only prevents NEW typed-service code from pulling in the raw globals
+ * instead of calling Config::get(), PageState::current(), etc.
+ *
+ * @implements Rule<Global_>
+ */
+final class NoGlobalInSrcRule implements Rule
+{
+    private const GUARDED = ['conf', 'page', 'user', 'lang'];
+
+    private const REPLACEMENTS = [
+        'conf' => 'Config::get()',
+        'page' => 'PageState::current()',
+        'user' => 'CurrentUser::get()',
+        'lang' => 'Lang::t()',
+    ];
+
+    public function getNodeType(): string
+    {
+        return Global_::class;
+    }
+
+    public function processNode(Node $node, Scope $scope): array
+    {
+        $file = $scope->getFile();
+        if (
+            !str_contains($file, DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR)
+            && !str_contains($file, '/src/')
+        ) {
+            return [];
+        }
+
+        $errors = [];
+        foreach ($node->vars as $var) {
+            if (!($var instanceof Variable) || !is_string($var->name)) {
+                continue;
+            }
+            if (!in_array($var->name, self::GUARDED, true)) {
+                continue;
+            }
+            $replacement = self::REPLACEMENTS[$var->name];
+            $errors[] = RuleErrorBuilder::message(
+                "Avoid 'global \${$var->name}' in src/ — use {$replacement} instead."
+            )->identifier('piwigo.noGlobalInSrc')->build();
+        }
+        return $errors;
+    }
+}

@@ -16,6 +16,7 @@ declare(strict_types=1);
 if (!defined('PHPWG_ROOT_PATH')) {//direct script access
     define('PHPWG_ROOT_PATH', './');
     include_once(PHPWG_ROOT_PATH.'include/common.inc.php');
+    \Piwigo\Core\Kernel::boot();
 
     // +-----------------------------------------------------------------------+
     // | Check Access and exit when user status is not ok                      |

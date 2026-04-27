@@ -14,6 +14,7 @@ use Piwigo\Image\ImageStdParams;
 //--------------------------------------------------------------------- include
 define('PHPWG_ROOT_PATH', './');
 include_once(PHPWG_ROOT_PATH.'include/common.inc.php');
+\Piwigo\Core\Kernel::boot();
 include(PHPWG_ROOT_PATH.'include/section_init.inc.php');
 
 // Check Access and exit when user status is not ok

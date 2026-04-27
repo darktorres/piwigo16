@@ -14,6 +14,7 @@
 define('PHPWG_ROOT_PATH', './');
 define('PWG_HELP', true);
 include_once(PHPWG_ROOT_PATH.'include/common.inc.php');
+\Piwigo\Core\Kernel::boot();
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |

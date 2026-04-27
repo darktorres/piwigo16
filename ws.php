@@ -15,6 +15,7 @@ define('PHPWG_ROOT_PATH', './');
 define('IN_WS', true);
 
 include_once(PHPWG_ROOT_PATH.'include/common.inc.php');
+\Piwigo\Core\Kernel::boot();
 check_status(ACCESS_FREE);
 
 if (!$conf['allow_web_services']) {

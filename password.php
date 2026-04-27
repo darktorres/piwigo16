@@ -14,6 +14,7 @@ declare(strict_types=1);
 
 define('PHPWG_ROOT_PATH', './');
 include_once(PHPWG_ROOT_PATH.'include/common.inc.php');
+\Piwigo\Core\Kernel::boot();
 include_once(PHPWG_ROOT_PATH.'include/functions_mail.inc.php');
 
 // +-----------------------------------------------------------------------+

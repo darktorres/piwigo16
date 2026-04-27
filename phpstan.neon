@@ -41,6 +41,7 @@ parameters:
           reportUnmatched: false
 rules:
     - Piwigo\Tools\PhpStan\NoDynamicNewRule
+    - Piwigo\Tools\PhpStan\NoGlobalInSrcRule
 includes:
     - phpstan-baseline.neon
     - vendor/phpstan/phpstan-deprecation-rules/rules.neon

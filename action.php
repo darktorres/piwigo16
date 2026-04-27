@@ -10,6 +10,7 @@
 define('PHPWG_ROOT_PATH', './');
 session_cache_limiter('public');
 include_once(PHPWG_ROOT_PATH.'include/common.inc.php');
+\Piwigo\Core\Kernel::boot();
 
 // Check Access and exit when user status is not ok
 check_status(ACCESS_GUEST);

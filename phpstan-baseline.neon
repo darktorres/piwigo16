@@ -1,6 +1,12 @@
 parameters:
 	ignoreErrors:
 		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/album.php
+
+		-
 			message: '''
 				#^Call to deprecated function array_from_query\(\)\:
 				2\.6$#
@@ -19,6 +25,30 @@ parameters:
 			path: admin/album_notification.php
 
 		-
+			message: '#^Variable \$admin_album_base_url might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: admin/album_notification.php
+
+		-
+			message: '#^Variable \$category might not be defined\.$#'
+			identifier: variable.undefined
+			count: 10
+			path: admin/album_notification.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 8
+			path: admin/album_notification.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 10
+			path: admin/album_notification.php
+
+		-
 			message: '''
 				#^Call to deprecated function array_from_query\(\)\:
 				2\.6$#
@@ -26,6 +56,78 @@ parameters:
 			identifier: function.deprecated
 			count: 1
 			path: admin/albums.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: admin/albums.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 7
+			path: admin/albums.php
+
+		-
+			message: '#^Variable \$user might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/albums.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: admin/batch_manager.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: admin/batch_manager.php
+
+		-
+			message: '#^Variable \$user might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: admin/batch_manager.php
+
+		-
+			message: '#^Variable \$where_clause might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: admin/batch_manager.php
+
+		-
+			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
+			identifier: arguments.count
+			count: 2
+			path: admin/batch_manager_global.php
+
+		-
+			message: '#^Function trigger_notify invoked with 3 parameters, 0 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: admin/batch_manager_global.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: admin/batch_manager_global.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 12
+			path: admin/batch_manager_global.php
+
+		-
+			message: '#^Variable \$user might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/batch_manager_global.php
 
 		-
 			message: '''
@@ -37,6 +139,42 @@ parameters:
 			path: admin/batch_manager_unit.php
 
 		-
+			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
+			identifier: arguments.count
+			count: 2
+			path: admin/batch_manager_unit.php
+
+		-
+			message: '#^Variable \$cache might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: admin/batch_manager_unit.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 8
+			path: admin/batch_manager_unit.php
+
+		-
+			message: '#^Variable \$pwg_loaded_plugins might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/batch_manager_unit.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 10
+			path: admin/batch_manager_unit.php
+
+		-
+			message: '#^Variable \$user might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: admin/batch_manager_unit.php
+
+		-
 			message: '''
 				#^Call to deprecated function hash_from_query\(\)\:
 				2\.6$#
@@ -44,6 +182,66 @@ parameters:
 			identifier: function.deprecated
 			count: 1
 			path: admin/cat_list.php
+
+		-
+			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
+			identifier: arguments.count
+			count: 2
+			path: admin/cat_list.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: admin/cat_list.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: admin/cat_list.php
+
+		-
+			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
+			identifier: arguments.count
+			count: 2
+			path: admin/cat_modify.php
+
+		-
+			message: '#^Variable \$admin_album_base_url might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/cat_modify.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: admin/cat_modify.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 17
+			path: admin/cat_modify.php
+
+		-
+			message: '#^Variable \$query_false might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/cat_options.php
+
+		-
+			message: '#^Variable \$query_true might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/cat_options.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 10
+			path: admin/cat_options.php
 
 		-
 			message: '''
@@ -64,6 +262,60 @@ parameters:
 			path: admin/cat_perm.php
 
 		-
+			message: '#^Variable \$admin_album_base_url might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/cat_perm.php
+
+		-
+			message: '#^Variable \$category might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: admin/cat_perm.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: admin/cat_perm.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 11
+			path: admin/cat_perm.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: admin/comments.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 27
+			path: admin/configuration.php
+
+		-
+			message: '#^Variable \$lang might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: admin/configuration.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 27
+			path: admin/configuration.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 9
+			path: admin/element_set_ranks.php
+
+		-
 			message: '''
 				#^Call to deprecated function array_from_query\(\)\:
 				2\.6$#
@@ -73,10 +325,148 @@ parameters:
 			path: admin/extend_for_templates.php
 
 		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 5
+			path: admin/extend_for_templates.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: admin/group_list.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 5
+			path: admin/group_list.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 5
+			path: admin/group_perm.php
+
+		-
+			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: admin/help.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: admin/help.php
+
+		-
+			message: '#^Variable \$user might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/help.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: admin/history.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 9
+			path: admin/history.php
+
+		-
+			message: '#^Variable \$page might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/include/albums_tab.inc.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/include/albums_tab.inc.php
+
+		-
+			message: '#^Variable \$base_url might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: admin/include/batch_manager_filters.inc.php
+
+		-
+			message: '#^Variable \$collection might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/include/batch_manager_filters.inc.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: admin/include/batch_manager_filters.inc.php
+
+		-
+			message: '#^Variable \$level_options might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/include/batch_manager_filters.inc.php
+
+		-
+			message: '#^Variable \$page might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: admin/include/batch_manager_filters.inc.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 8
+			path: admin/include/batch_manager_filters.inc.php
+
+		-
+			message: '#^Variable \$password might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: admin/include/c13y_internal.class.php
+
+		-
 			message: '#^Array has 2 duplicate keys with value ''correction_error_fct'' \(''correction_error_fct'', ''correction_error_fct''\)\.$#'
 			identifier: array.duplicateKey
 			count: 1
 			path: admin/include/check_integrity.class.php
+
+		-
+			message: '#^Function trigger_notify invoked with 2 parameters, 0 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: admin/include/check_integrity.class.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/include/configuration_sizes_process.inc.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 5
+			path: admin/include/configuration_sizes_process.inc.php
+
+		-
+			message: '#^Function mkgetdir invoked with 2 parameters, 1 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: admin/include/configuration_watermark_process.inc.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: admin/include/configuration_watermark_process.inc.php
 
 		-
 			message: '''
@@ -94,11 +484,41 @@ parameters:
 			path: admin/include/functions.php
 
 		-
+			message: '#^Constant DB_CHARSET not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: admin/include/functions.php
+
+		-
+			message: '#^Constant DB_COLLATE not found\.$#'
+			identifier: constant.notFound
+			count: 2
+			path: admin/include/functions.php
+
+		-
+			message: '#^Function mkgetdir invoked with 2 parameters, 1 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: admin/include/functions.php
+
+		-
+			message: '#^Function trigger_notify invoked with 2 parameters, 0 required\.$#'
+			identifier: arguments.count
+			count: 9
+			path: admin/include/functions.php
+
+		-
 			message: '''
 				#^Call to deprecated function array_from_query\(\)\:
 				2\.6$#
 			'''
 			identifier: function.deprecated
+			count: 1
+			path: admin/include/functions_history.inc.php
+
+		-
+			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
+			identifier: arguments.count
 			count: 1
 			path: admin/include/functions_history.inc.php
 
@@ -110,6 +530,18 @@ parameters:
 			identifier: function.deprecated
 			count: 1
 			path: admin/include/functions_metadata.php
+
+		-
+			message: '#^Variable \$vb in isset\(\) always exists and is not nullable\.$#'
+			identifier: isset.variable
+			count: 2
+			path: admin/include/functions_metadata.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: admin/include/functions_notification_by_mail.inc.php
 
 		-
 			message: '''
@@ -130,10 +562,46 @@ parameters:
 			path: admin/include/functions_upgrade.php
 
 		-
+			message: '#^Constant PREFIX_TABLE not found\.$#'
+			identifier: constant.notFound
+			count: 7
+			path: admin/include/functions_upgrade.php
+
+		-
+			message: '#^Function trigger_notify invoked with 2 parameters, 0 required\.$#'
+			identifier: arguments.count
+			count: 2
+			path: admin/include/functions_upload.inc.php
+
+		-
+			message: '#^Function trigger_notify invoked with 2 parameters, 0 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: admin/include/image.class.php
+
+		-
 			message: '#^Undefined variable\: \$f$#'
 			identifier: variable.undefined
 			count: 1
 			path: admin/include/image.class.php
+
+		-
+			message: '#^Variable \$main_filepath might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/include/languages.class.php
+
+		-
+			message: '#^Variable \$old_files in empty\(\) always exists and is not falsy\.$#'
+			identifier: empty.variable
+			count: 1
+			path: admin/include/languages.class.php
+
+		-
+			message: '#^Variable \$status might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: admin/include/languages.class.php
 
 		-
 			message: '#^Call to deprecated function get_magic_quotes_runtime\(\)\.$#'
@@ -178,6 +646,24 @@ parameters:
 			path: admin/include/pclzip.lib.php
 
 		-
+			message: '#^Variable \$v_pos might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/include/pclzip.lib.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 11
+			path: admin/include/photos_add_direct_prepare.inc.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 12
+			path: admin/include/photos_add_direct_prepare.inc.php
+
+		-
 			message: '#^Function plugin_activate not found\.$#'
 			identifier: function.notFound
 			count: 1
@@ -198,6 +684,42 @@ parameters:
 		-
 			message: '#^Function plugin_uninstall not found\.$#'
 			identifier: function.notFound
+			count: 1
+			path: admin/include/plugins.class.php
+
+		-
+			message: '#^Variable \$errors in empty\(\) always exists and is always falsy\.$#'
+			identifier: empty.variable
+			count: 1
+			path: admin/include/plugins.class.php
+
+		-
+			message: '#^Variable \$main_filepath might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/include/plugins.class.php
+
+		-
+			message: '#^Variable \$obsolete_ext in empty\(\) always exists and is not falsy\.$#'
+			identifier: empty.variable
+			count: 1
+			path: admin/include/plugins.class.php
+
+		-
+			message: '#^Variable \$old_files in empty\(\) always exists and is not falsy\.$#'
+			identifier: empty.variable
+			count: 1
+			path: admin/include/plugins.class.php
+
+		-
+			message: '#^Variable \$plugin_maintain might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: admin/include/plugins.class.php
+
+		-
+			message: '#^Variable \$status might not be defined\.$#'
+			identifier: variable.undefined
 			count: 1
 			path: admin/include/plugins.class.php
 
@@ -229,10 +751,316 @@ parameters:
 			path: admin/include/themes.class.php
 
 		-
+			message: '#^Variable \$errors in empty\(\) always exists and is always falsy\.$#'
+			identifier: empty.variable
+			count: 1
+			path: admin/include/themes.class.php
+
+		-
+			message: '#^Variable \$main_filepath might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/include/themes.class.php
+
+		-
+			message: '#^Variable \$old_files in empty\(\) always exists and is not falsy\.$#'
+			identifier: empty.variable
+			count: 1
+			path: admin/include/themes.class.php
+
+		-
+			message: '#^Variable \$status might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/include/themes.class.php
+
+		-
+			message: '#^Variable \$old_files in empty\(\) always exists and is not falsy\.$#'
+			identifier: empty.variable
+			count: 1
+			path: admin/include/updates.class.php
+
+		-
+			message: '#^Variable \$page might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/include/user_tabs.inc.php
+
+		-
+			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: admin/intro.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 7
+			path: admin/intro.php
+
+		-
+			message: '#^Variable \$lang might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/intro.php
+
+		-
+			message: '#^Variable \$link_start might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/intro.php
+
+		-
+			message: '#^Variable \$logger might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/intro.php
+
+		-
+			message: '#^Variable \$page might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: admin/intro.php
+
+		-
+			message: '#^Variable \$pwg_loaded_plugins might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/intro.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 13
+			path: admin/intro.php
+
+		-
+			message: '#^Variable \$user might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: admin/intro.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/languages.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/languages_installed.php
+
+		-
+			message: '#^Variable \$page might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/languages_installed.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 8
+			path: admin/languages_installed.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/languages_new.php
+
+		-
+			message: '#^Variable \$page might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: admin/languages_new.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 5
+			path: admin/languages_new.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/maintenance.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: admin/maintenance_actions.php
+
+		-
+			message: '#^Variable \$maint_actions might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/maintenance_actions.php
+
+		-
+			message: '#^Variable \$persistent_cache might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/maintenance_actions.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 12
+			path: admin/maintenance_actions.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: admin/maintenance_env.php
+
+		-
+			message: '#^Variable \$persistent_cache might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/maintenance_env.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 9
+			path: admin/maintenance_env.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: admin/maintenance_sys.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: admin/maintenance_sys.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/menubar.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 7
+			path: admin/menubar.php
+
+		-
+			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: admin/notification_by_mail.php
+
+		-
 			message: '#^Undefined variable\: \$base_url$#'
 			identifier: variable.undefined
 			count: 1
 			path: admin/notification_by_mail.php
+
+		-
+			message: '#^Variable \$_POST in isset\(\) always exists and is not nullable\.$#'
+			identifier: isset.variable
+			count: 1
+			path: admin/notification_by_mail.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 8
+			path: admin/notification_by_mail.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 13
+			path: admin/notification_by_mail.php
+
+		-
+			message: '#^Variable \$default_field in isset\(\) always exists and is not nullable\.$#'
+			identifier: isset.variable
+			count: 1
+			path: admin/permalinks.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: admin/permalinks.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/photo.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/photo.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/photos_add.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: admin/photos_add_applications.php
+
+		-
+			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: admin/photos_add_direct.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: admin/photos_add_direct.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 5
+			path: admin/photos_add_direct.php
+
+		-
+			message: '#^Variable \$user might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: admin/photos_add_direct.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: admin/photos_add_ftp.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: admin/picture_coi.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: admin/picture_formats.php
 
 		-
 			message: '''
@@ -244,6 +1072,114 @@ parameters:
 			path: admin/picture_modify.php
 
 		-
+			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: admin/picture_modify.php
+
+		-
+			message: '#^Variable \$admin_photo_base_url might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/picture_modify.php
+
+		-
+			message: '#^Variable \$cache might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/picture_modify.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 5
+			path: admin/picture_modify.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 13
+			path: admin/picture_modify.php
+
+		-
+			message: '#^Variable \$user might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: admin/picture_modify.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/plugins.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/plugins_installed.php
+
+		-
+			message: '#^Variable \$page might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/plugins_installed.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 7
+			path: admin/plugins_installed.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/plugins_new.php
+
+		-
+			message: '#^Variable \$page might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: admin/plugins_new.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 9
+			path: admin/plugins_new.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: admin/popuphelp.php
+
+		-
+			message: '#^Variable \$page might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/profile.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: admin/profile.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: admin/rating.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 10
+			path: admin/rating.php
+
+		-
 			message: '''
 				#^Call to deprecated function array_from_query\(\)\:
 				2\.6$#
@@ -253,12 +1189,42 @@ parameters:
 			path: admin/rating_user.php
 
 		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/rating_user.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 5
+			path: admin/rating_user.php
+
+		-
 			message: '''
 				#^Call to deprecated function hash_from_query\(\)\:
 				2\.6$#
 			'''
 			identifier: function.deprecated
 			count: 1
+			path: admin/site_manager.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/site_manager.php
+
+		-
+			message: '#^Variable \$page might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: admin/site_manager.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
 			path: admin/site_manager.php
 
 		-
@@ -280,6 +1246,108 @@ parameters:
 			path: admin/site_update.php
 
 		-
+			message: '#^Variable \$basedir might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/site_update.php
+
+		-
+			message: '#^Variable \$caddiables might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: admin/site_update.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 9
+			path: admin/site_update.php
+
+		-
+			message: '#^Variable \$counts might not be defined\.$#'
+			identifier: variable.undefined
+			count: 5
+			path: admin/site_update.php
+
+		-
+			message: '#^Variable \$db_categories might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/site_update.php
+
+		-
+			message: '#^Variable \$logger might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: admin/site_update.php
+
+		-
+			message: '#^Variable \$simulate might not be defined\.$#'
+			identifier: variable.undefined
+			count: 5
+			path: admin/site_update.php
+
+		-
+			message: '#^Variable \$site_reader might not be defined\.$#'
+			identifier: variable.undefined
+			count: 8
+			path: admin/site_update.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 19
+			path: admin/site_update.php
+
+		-
+			message: '#^Variable \$to_delete might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/site_update.php
+
+		-
+			message: '#^Variable \$user might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/site_update.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/stats.php
+
+		-
+			message: '#^Variable \$date_add might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/stats.php
+
+		-
+			message: '#^Variable \$date_format might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: admin/stats.php
+
+		-
+			message: '#^Variable \$lang might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/stats.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: admin/stats.php
+
+		-
+			message: '#^Variable \$user might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/stats.php
+
+		-
 			message: '''
 				#^Call to deprecated function simple_hash_from_query\(\)\:
 				2\.6$#
@@ -287,6 +1355,186 @@ parameters:
 			identifier: function.deprecated
 			count: 1
 			path: admin/tags.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: admin/tags.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/themes.php
+
+		-
+			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: admin/themes_installed.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/themes_installed.php
+
+		-
+			message: '#^Variable \$page might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/themes_installed.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 7
+			path: admin/themes_installed.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/themes_new.php
+
+		-
+			message: '#^Variable \$page might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: admin/themes_new.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 5
+			path: admin/themes_new.php
+
+		-
+			message: '#^Function mkgetdir invoked with 2 parameters, 1 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: admin/themes_standard_pages.php
+
+		-
+			message: '#^Variable \$_POST in empty\(\) always exists and is not falsy\.$#'
+			identifier: empty.variable
+			count: 1
+			path: admin/themes_standard_pages.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 8
+			path: admin/themes_standard_pages.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: admin/updates.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: admin/updates_ext.php
+
+		-
+			message: '#^Variable \$page might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: admin/updates_ext.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 8
+			path: admin/updates_ext.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/updates_pwg.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 12
+			path: admin/updates_pwg.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: admin/user_activity.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 9
+			path: admin/user_activity.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 15
+			path: admin/user_list.php
+
+		-
+			message: '#^Variable \$label_of_status might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: admin/user_list.php
+
+		-
+			message: '#^Variable \$level_options might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: admin/user_list.php
+
+		-
+			message: '#^Variable \$nb_users_by_status might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/user_list.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 20
+			path: admin/user_list.php
+
+		-
+			message: '#^Variable \$user might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: admin/user_list.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: admin/user_perm.php
+
+		-
+			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
+			identifier: arguments.count
+			count: 2
+			path: comments.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 8
+			path: comments.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 16
+			path: comments.php
 
 		-
 			message: '#^Instantiated class FeedItem not found\.$#'
@@ -301,16 +1549,208 @@ parameters:
 			path: feed.php
 
 		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 7
+			path: feed.php
+
+		-
+			message: '#^Variable \$feed_row might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: feed.php
+
+		-
+			message: '#^Variable \$user might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: feed.php
+
+		-
 			message: '#^Path in include\(\) "\./local/config/database\.inc\.php" is not a file or it does not exist\.$#'
 			identifier: include.fileNotFound
 			count: 1
 			path: i.php
 
 		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 11
+			path: i.php
+
+		-
+			message: '#^Variable \$crop_rect might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: i.php
+
+		-
+			message: '#^Variable \$prefixeTable might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: i.php
+
+		-
+			message: '#^Variable \$scaled_size might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: i.php
+
+		-
+			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
+			identifier: arguments.count
+			count: 2
+			path: identification.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 7
+			path: identification.php
+
+		-
+			message: '#^Variable \$language_options might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: identification.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 8
+			path: identification.php
+
+		-
+			message: '#^Variable \$user might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: identification.php
+
+		-
+			message: '#^Function mkgetdir invoked with 2 parameters, 1 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: include/Logger.class.php
+
+		-
+			message: '#^Function trigger_notify invoked with 2 parameters, 0 required\.$#'
+			identifier: arguments.count
+			count: 3
+			path: include/block.class.php
+
+		-
+			message: '#^Function mkgetdir invoked with 2 parameters, 1 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: include/cache.class.php
+
+		-
+			message: '#^Variable \$dow might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/calendar_monthly.class.php
+
+		-
+			message: '#^Function trigger_notify invoked with 2 parameters, 0 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: include/category_cats.inc.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 10
+			path: include/category_cats.inc.php
+
+		-
+			message: '#^Variable \$logger might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/category_cats.inc.php
+
+		-
+			message: '#^Variable \$page might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: include/category_cats.inc.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: include/category_cats.inc.php
+
+		-
+			message: '#^Variable \$user might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: include/category_cats.inc.php
+
+		-
+			message: '#^Function trigger_notify invoked with 2 parameters, 0 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: include/category_default.inc.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: include/category_default.inc.php
+
+		-
+			message: '#^Variable \$page might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: include/category_default.inc.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 5
+			path: include/category_default.inc.php
+
+		-
+			message: '#^Variable \$user might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: include/category_default.inc.php
+
+		-
+			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
+			identifier: arguments.count
+			count: 2
+			path: include/common.inc.php
+
+		-
+			message: '#^Offset ''internal_status'' on array\{\}\|array\{username\: mixed\} in isset\(\) does not exist\.$#'
+			identifier: isset.offset
+			count: 1
+			path: include/common.inc.php
+
+		-
 			message: '#^Path in include\(\) "\./local/config/database\.inc\.php" is not a file or it does not exist\.$#'
 			identifier: include.fileNotFound
 			count: 1
 			path: include/common.inc.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: include/constants.php
+
+		-
+			message: '#^Variable \$prefixeTable might not be defined\.$#'
+			identifier: variable.undefined
+			count: 34
+			path: include/constants.php
+
+		-
+			message: '#^Variable \$options might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/dblayer/functions_mysqli.inc.php
 
 		-
 			message: '#^Method DerivativeImage\:\:get_scaled_size_htm\(\) should return string but return statement is missing\.$#'
@@ -346,6 +1786,48 @@ parameters:
 			path: include/filter.inc.php
 
 		-
+			message: '#^Variable \$user might not be defined\.$#'
+			identifier: variable.undefined
+			count: 5
+			path: include/filter.inc.php
+
+		-
+			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: include/functions.inc.php
+
+		-
+			message: '#^Function trigger_notify invoked with 2 parameters, 0 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: include/functions.inc.php
+
+		-
+			message: '#^Variable \$eid in empty\(\) always exists and is not falsy\.$#'
+			identifier: empty.variable
+			count: 2
+			path: include/functions.inc.php
+
+		-
+			message: '#^Variable \$lang might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/functions.inc.php
+
+		-
+			message: '#^Variable \$lang_info might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/functions.inc.php
+
+		-
+			message: '#^Variable \$result might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/functions.inc.php
+
+		-
 			message: '''
 				#^Call to deprecated function array_from_query\(\)\:
 				2\.6$#
@@ -355,10 +1837,22 @@ parameters:
 			path: include/functions_calendar.inc.php
 
 		-
+			message: '#^Function trigger_notify invoked with 2 parameters, 0 required\.$#'
+			identifier: arguments.count
+			count: 2
+			path: include/functions_comment.inc.php
+
+		-
 			message: '#^Undefined variable\: \$comm$#'
 			identifier: variable.undefined
 			count: 1
 			path: include/functions_comment.inc.php
+
+		-
+			message: '#^Function trigger_notify invoked with 3 parameters, 0 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: include/functions_html.inc.php
 
 		-
 			message: '''
@@ -370,10 +1864,40 @@ parameters:
 			path: include/functions_mail.inc.php
 
 		-
+			message: '#^Function mkgetdir invoked with 2 parameters, 1 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: include/functions_mail.inc.php
+
+		-
+			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
+			identifier: arguments.count
+			count: 2
+			path: include/functions_mail.inc.php
+
+		-
+			message: '#^Function trigger_notify invoked with 3 parameters, 0 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: include/functions_mail.inc.php
+
+		-
 			message: '#^Undefined variable\: \$cached$#'
 			identifier: variable.undefined
 			count: 2
 			path: include/functions_notification.inc.php
+
+		-
+			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: include/functions_plugins.inc.php
+
+		-
+			message: '#^Function trigger_notify invoked with 2 parameters, 0 required\.$#'
+			identifier: arguments.count
+			count: 3
+			path: include/functions_plugins.inc.php
 
 		-
 			message: '''
@@ -394,13 +1918,49 @@ parameters:
 			path: include/functions_search.inc.php
 
 		-
+			message: '#^Function trigger_notify invoked with 2 parameters, 0 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: include/functions_search.inc.php
+
+		-
+			message: '#^Function trigger_notify invoked with 3 parameters, 0 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: include/functions_search.inc.php
+
+		-
 			message: '#^Undefined variable\: \$res$#'
 			identifier: variable.undefined
 			count: 2
 			path: include/functions_search.inc.php
 
 		-
+			message: '#^Variable \$crt_prio might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/functions_search.inc.php
+
+		-
+			message: '#^Variable \$date_created_clause might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/functions_search.inc.php
+
+		-
+			message: '#^Variable \$date_posted_clause might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/functions_search.inc.php
+
+		-
 			message: '#^Undefined variable\: \$tag_counters$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/functions_tag.inc.php
+
+		-
+			message: '#^Variable \$threshold_of_level might not be defined\.$#'
 			identifier: variable.undefined
 			count: 1
 			path: include/functions_tag.inc.php
@@ -411,6 +1971,18 @@ parameters:
 				2\.6$#
 			'''
 			identifier: function.deprecated
+			count: 1
+			path: include/functions_user.inc.php
+
+		-
+			message: '#^Function trigger_notify invoked with 2 parameters, 0 required\.$#'
+			identifier: arguments.count
+			count: 8
+			path: include/functions_user.inc.php
+
+		-
+			message: '#^Variable \$expiration might not be defined\.$#'
+			identifier: variable.undefined
 			count: 1
 			path: include/functions_user.inc.php
 
@@ -433,6 +2005,12 @@ parameters:
 			path: include/jshrink.class.php
 
 		-
+			message: '#^Variable \$jshrink in isset\(\) always exists and is not nullable\.$#'
+			identifier: isset.variable
+			count: 1
+			path: include/jshrink.class.php
+
+		-
 			message: '''
 				#^Class MatthiasMullie\\Minify\\Exceptions\\BasicException extends deprecated class MatthiasMullie\\Minify\\Exception\:
 				Use Exceptions\\BasicException instead$#
@@ -446,6 +2024,84 @@ parameters:
 			identifier: class.notFound
 			count: 1
 			path: include/minify/src/Minify.php
+
+		-
+			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: include/no_photo_yet.inc.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/no_photo_yet.inc.php
+
+		-
+			message: '#^Variable \$user might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: include/no_photo_yet.inc.php
+
+		-
+			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
+			identifier: arguments.count
+			count: 3
+			path: include/page_header.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 5
+			path: include/page_header.php
+
+		-
+			message: '#^Variable \$page might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: include/page_header.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 7
+			path: include/page_header.php
+
+		-
+			message: '#^Variable \$title might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/page_header.php
+
+		-
+			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
+			identifier: arguments.count
+			count: 2
+			path: include/page_tail.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: include/page_tail.php
+
+		-
+			message: '#^Variable \$debug might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/page_tail.php
+
+		-
+			message: '#^Variable \$t2 might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/page_tail.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 7
+			path: include/page_tail.php
 
 		-
 			message: '#^Function gzopen64 not found\.$#'
@@ -487,6 +2143,12 @@ parameters:
 			path: include/phpmailer/PHPMailer.php
 
 		-
+			message: '#^Variable \$_SERVER in isset\(\) always exists and is not nullable\.$#'
+			identifier: isset.variable
+			count: 1
+			path: include/phpmailer/PHPMailer.php
+
+		-
 			message: '#^Class Psr\\Log\\LoggerInterface not found\.$#'
 			identifier: class.notFound
 			count: 1
@@ -511,6 +2173,18 @@ parameters:
 			path: include/phpqrcode.php
 
 		-
+			message: '#^Constant BUF not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: include/phpqrcode.php
+
+		-
+			message: '#^Constant STRING not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: include/phpqrcode.php
+
+		-
 			message: '#^Instantiated class QRbitrtream not found\.$#'
 			identifier: class.notFound
 			count: 1
@@ -529,8 +2203,236 @@ parameters:
 			path: include/phpqrcode.php
 
 		-
+			message: '#^Variable \$hint might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/phpqrcode.php
+
+		-
+			message: '#^Function trigger_notify invoked with 2 parameters, 0 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: include/picture_comment.inc.php
+
+		-
+			message: '#^Variable \$comment_action might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/picture_comment.inc.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 10
+			path: include/picture_comment.inc.php
+
+		-
+			message: '#^Variable \$related_categories might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/picture_comment.inc.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: include/picture_comment.inc.php
+
+		-
+			message: '#^Variable \$url_self might not be defined\.$#'
+			identifier: variable.undefined
+			count: 5
+			path: include/picture_comment.inc.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 5
+			path: include/picture_metadata.inc.php
+
+		-
+			message: '#^Variable \$picture might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: include/picture_metadata.inc.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: include/picture_metadata.inc.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: include/picture_rate.inc.php
+
+		-
+			message: '#^Variable \$page might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/picture_rate.inc.php
+
+		-
+			message: '#^Variable \$picture might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: include/picture_rate.inc.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: include/picture_rate.inc.php
+
+		-
+			message: '#^Variable \$url_self might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/picture_rate.inc.php
+
+		-
+			message: '#^Variable \$user might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/picture_rate.inc.php
+
+		-
+			message: '#^Variable \$all_exts might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: include/search_filters.inc.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 5
+			path: include/search_filters.inc.php
+
+		-
+			message: '#^Variable \$date_created might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/search_filters.inc.php
+
+		-
+			message: '#^Variable \$date_posted might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/search_filters.inc.php
+
+		-
+			message: '#^Variable \$filter_rows might not be defined\.$#'
+			identifier: variable.undefined
+			count: 8
+			path: include/search_filters.inc.php
+
+		-
+			message: '#^Variable \$lang might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: include/search_filters.inc.php
+
+		-
+			message: '#^Variable \$page might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/search_filters.inc.php
+
+		-
+			message: '#^Variable \$persistent_cache might not be defined\.$#'
+			identifier: variable.undefined
+			count: 27
+			path: include/search_filters.inc.php
+
+		-
+			message: '#^Variable \$ratings might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/search_filters.inc.php
+
+		-
+			message: '#^Variable \$ratios might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/search_filters.inc.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 21
+			path: include/search_filters.inc.php
+
+		-
+			message: '#^Variable \$user might not be defined\.$#'
+			identifier: variable.undefined
+			count: 20
+			path: include/search_filters.inc.php
+
+		-
+			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: include/section_init.inc.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 11
+			path: include/section_init.inc.php
+
+		-
+			message: '#^Variable \$filter might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/section_init.inc.php
+
+		-
+			message: '#^Variable \$logger might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/section_init.inc.php
+
+		-
+			message: '#^Variable \$persistent_cache might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: include/section_init.inc.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/section_init.inc.php
+
+		-
+			message: '#^Variable \$user might not be defined\.$#'
+			identifier: variable.undefined
+			count: 5
+			path: include/section_init.inc.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: include/selected_tags.inc.php
+
+		-
 			message: '#^Call to static method display_debug\(\) on an unknown class Smarty_Internal_Debug\.$#'
 			identifier: class.notFound
+			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^Function mkgetdir invoked with 2 parameters, 1 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^Function trigger_notify invoked with 4 parameters, 0 required\.$#'
+			identifier: arguments.count
 			count: 1
 			path: include/template.class.php
 
@@ -547,6 +2449,36 @@ parameters:
 			path: include/template.class.php
 
 		-
+			message: '#^Function trigger_notify invoked with 2 parameters, 0 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: include/user.inc.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: include/user.inc.php
+
+		-
+			message: '#^Variable \$service might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/user.inc.php
+
+		-
+			message: '#^Function trigger_notify invoked with 2 parameters, 0 required\.$#'
+			identifier: arguments.count
+			count: 2
+			path: include/ws_core.inc.php
+
+		-
+			message: '#^Variable \$HTTP_RAW_POST_DATA in isset\(\) is never defined\.$#'
+			identifier: isset.variable
+			count: 1
+			path: include/ws_core.inc.php
+
+		-
 			message: '''
 				#^Call to deprecated function array_from_query\(\)\:
 				2\.6$#
@@ -554,6 +2486,30 @@ parameters:
 			identifier: function.deprecated
 			count: 1
 			path: include/ws_functions/pwg.categories.php
+
+		-
+			message: '#^Variable \$cat_display_name might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/ws_functions/pwg.categories.php
+
+		-
+			message: '#^Variable \$details_for_category might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: include/ws_functions/pwg.categories.php
+
+		-
+			message: '#^Variable \$extension_name might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/ws_functions/pwg.extensions.php
+
+		-
+			message: '#^Variable \$upgrade_status might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/ws_functions/pwg.extensions.php
 
 		-
 			message: '''
@@ -565,7 +2521,37 @@ parameters:
 			path: include/ws_functions/pwg.groups.php
 
 		-
+			message: '#^Function mkgetdir invoked with 2 parameters, 1 required\.$#'
+			identifier: arguments.count
+			count: 3
+			path: include/ws_functions/pwg.images.php
+
+		-
+			message: '#^Function trigger_notify invoked with 2 parameters, 0 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: include/ws_functions/pwg.images.php
+
+		-
 			message: '#^Undefined variable\: \$type$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/ws_functions/pwg.images.php
+
+		-
+			message: '#^Variable \$format_ext might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/ws_functions/pwg.images.php
+
+		-
+			message: '#^Variable \$rank in isset\(\) always exists and is not nullable\.$#'
+			identifier: isset.variable
+			count: 1
+			path: include/ws_functions/pwg.images.php
+
+		-
+			message: '#^Variable \$where_clause might not be defined\.$#'
 			identifier: variable.undefined
 			count: 1
 			path: include/ws_functions/pwg.images.php
@@ -589,6 +2575,54 @@ parameters:
 			path: include/ws_functions/pwg.php
 
 		-
+			message: '#^Variable \$detailsType might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/ws_functions/pwg.php
+
+		-
+			message: '#^Variable \$element might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/ws_functions/pwg.php
+
+		-
+			message: '#^Variable \$image_infos might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/ws_functions/pwg.php
+
+		-
+			message: '#^Variable \$max might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/ws_functions/pwg.php
+
+		-
+			message: '#^Variable \$min might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/ws_functions/pwg.php
+
+		-
+			message: '#^Variable \$name_of_category might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/ws_functions/pwg.php
+
+		-
+			message: '#^Variable \$name_of_tag might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/ws_functions/pwg.php
+
+		-
+			message: '#^Variable \$search in empty\(\) always exists and is not falsy\.$#'
+			identifier: empty.variable
+			count: 1
+			path: include/ws_functions/pwg.php
+
+		-
 			message: '''
 				#^Call to deprecated function array_from_query\(\)\:
 				2\.6$#
@@ -596,6 +2630,48 @@ parameters:
 			identifier: function.deprecated
 			count: 2
 			path: include/ws_functions/pwg.tags.php
+
+		-
+			message: '#^Function trigger_notify invoked with 3 parameters, 0 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: include/ws_functions/pwg.tags.php
+
+		-
+			message: '#^Variable \$api_keys on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: include/ws_functions/pwg.users.php
+
+		-
+			message: '#^Variable \$requestFormat in isset\(\) always exists and is not nullable\.$#'
+			identifier: isset.variable
+			count: 1
+			path: include/ws_init.inc.php
+
+		-
+			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
+			identifier: arguments.count
+			count: 2
+			path: index.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 17
+			path: index.php
+
+		-
+			message: '#^Variable \$page might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: index.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 29
+			path: index.php
 
 		-
 			message: '#^Path in include\(\) "\./include/dblayer/functions_mysql\.inc\.php" is not a file or it does not exist\.$#'
@@ -608,6 +2684,66 @@ parameters:
 			identifier: include.fileNotFound
 			count: 1
 			path: install.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 8
+			path: install.php
+
+		-
+			message: '#^Variable \$languages_options might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: install.php
+
+		-
+			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
+			identifier: arguments.count
+			count: 2
+			path: notification.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: notification.php
+
+		-
+			message: '#^Variable \$user might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: notification.php
+
+		-
+			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
+			identifier: arguments.count
+			count: 2
+			path: password.php
+
+		-
+			message: '#^Variable \$language_options might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: password.php
+
+		-
+			message: '#^Variable \$page might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: password.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 9
+			path: password.php
+
+		-
+			message: '#^Variable \$user might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: password.php
 
 		-
 			message: '''
@@ -628,9 +2764,141 @@ parameters:
 			path: picture.php
 
 		-
+			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
+			identifier: arguments.count
+			count: 2
+			path: picture.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 21
+			path: picture.php
+
+		-
+			message: '#^Variable \$page might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: picture.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 29
+			path: picture.php
+
+		-
+			message: '#^Variable \$user might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: picture.php
+
+		-
+			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
+			identifier: arguments.count
+			count: 2
+			path: profile.php
+
+		-
+			message: '#^Function trigger_notify invoked with 2 parameters, 0 required\.$#'
+			identifier: arguments.count
+			count: 2
+			path: profile.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: profile.php
+
+		-
+			message: '#^Variable \$language_options might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: profile.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 8
+			path: profile.php
+
+		-
+			message: '#^Variable \$user might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: profile.php
+
+		-
+			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
+			identifier: arguments.count
+			count: 2
+			path: register.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: register.php
+
+		-
+			message: '#^Variable \$language_options might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: register.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: register.php
+
+		-
+			message: '#^Variable \$user might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: register.php
+
+		-
+			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: search.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: search.php
+
+		-
+			message: '#^Variable \$user might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: search.php
+
+		-
 			message: '#^Cannot unset offset ''CHANGE_COLUMN'' on array\{tags\: non\-empty\-list\<non\-empty\-array\>, TITLE\?\: string\}\.$#'
 			identifier: unset.offset
 			count: 1
+			path: tags.php
+
+		-
+			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
+			identifier: arguments.count
+			count: 2
+			path: tags.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 5
+			path: tags.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 8
 			path: tags.php
 
 		-
@@ -647,3 +2915,39 @@ parameters:
 			identifier: include.fileNotFound
 			count: 1
 			path: upgrade.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: upgrade.php
+
+		-
+			message: '#^Variable \$languages_options might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: upgrade.php
+
+		-
+			message: '#^Variable \$mysql_changes in empty\(\) always exists and is always falsy\.$#'
+			identifier: empty.variable
+			count: 1
+			path: upgrade.php
+
+		-
+			message: '#^Variable \$prefixeTable might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: upgrade.php
+
+		-
+			message: '#^Variable \$conf might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: ws.php
+
+		-
+			message: '#^Variable \$service might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: ws.php

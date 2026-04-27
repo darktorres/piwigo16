@@ -237,6 +237,7 @@ services:
       MARIADB_DATABASE: piwigo
       MARIADB_USER: piwigo
       MARIADB_PASSWORD: piwigo
+    volumes: ["./docker/init:/docker-entrypoint-initdb.d"]
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 5s
@@ -298,6 +299,14 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npx playwright test
+        env:
+          BASE_URL: http://localhost:8090
+          PIWIGO_DB_HOST: 127.0.0.1
+          PIWIGO_DB_PORT: "3307"
+          PIWIGO_DB_USER: piwigo
+          PIWIGO_DB_PASSWORD: piwigo
+          PIWIGO_DB_BASE: piwigo
+          PIWIGO_INSTALL_DB_HOST: db
       - uses: shivammathur/setup-php@v2
         with: { php-version: '8.5', tools: composer:v2 }
       - run: composer install --no-progress --prefer-dist
@@ -461,7 +470,7 @@ test('fresh install completes end-to-end', async ({ page }) => {
 - **The 16.x fixture grows stale.** `dev/fixtures/README.md` documents how to regenerate it; Phase 6's pre-floor cleanup also bumps the fixture.
 - **Playwright selectors are brittle against the legacy templates.** Biased toward `getByRole`/`getByText` over CSS; accept that 1-2 specs will need touch-ups in Phase 1 when Rector touches templates. The `install.spec.ts` form field names (`dbhost`, `dbuser`, `dbpasswd`, `dbname`) differ from the PHP variable names — verified against `admin/themes/default/template/install.tpl`.
 - **UpgradeChainTest `database.inc.php` format is strict.** ✅ Upgrade.php does `strrpos($contents, '?>')` at line 31 and dies if the closing tag is missing. The written config must also use `$prefixeTable` (not `$conf['db_table_prefix']`) and define `PHPWG_INSTALLED`/charset constants — matching what install.php generates. `get_branch_from_version('16.3.0')` returns `'16'`, not `'16.3'` — the assertion must match.
-- **UpgradeChainTest needs `GRANT ALL ON piwigo_test.*` for the `piwigo` DB user.** ✅ The Docker MariaDB only grants `piwigo` user access to the `piwigo` database by default. Run once: `GRANT ALL PRIVILEGES ON \`piwigo_test\`.* TO 'piwigo'@'%'; FLUSH PRIVILEGES;` via root. In CI the MariaDB init can include this grant.
+- **UpgradeChainTest needs `GRANT ALL ON piwigo_test.*` for the `piwigo` DB user.** ✅ Handled via `docker/init/01-grant-piwigo-test.sql` mounted at `/docker-entrypoint-initdb.d/` — runs automatically on first container start in CI and on any fresh local `docker compose up`.
 
 ### Verification
 

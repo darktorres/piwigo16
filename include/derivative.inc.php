@@ -1,3 +1,5 @@
 <?php
 
-// Classes moved to src/Piwigo/ — autoloaded by Composer.
+declare(strict_types=1);
+
+// Class moved to src/Piwigo/ — autoloaded by Composer.

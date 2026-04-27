@@ -21,7 +21,8 @@ jobs:
             -not -name "mdetect.php" -not -name "emogrifier.class.php" \
             -not -name "feedcreator.class.php" -not -name "phpqrcode.php" \
             -not -name "pclzip.lib.php" \
-            -not -path "*/install/db/*" -not -path "*/language/*" -not -path "*/vendor/*" \
+            -not -path "*/install/db/*" -not -path "install/db/*" \
+            -not -path "*/language/*" -not -path "*/vendor/*" \
             | xargs grep -rL "declare(strict_types" 2>/dev/null || true)
           if [ -n "$MISSING" ]; then
             echo "Files missing declare(strict_types=1):"

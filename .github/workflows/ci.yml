@@ -29,6 +29,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile
+          load: true
+          tags: piwigo16-web:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
       - run: docker compose up -d --wait db web
       - uses: actions/setup-node@v4
         with:

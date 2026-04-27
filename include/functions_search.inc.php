@@ -1358,7 +1358,7 @@ function qsearch_get_text_token_search_sql($token, $fields)
         if ($token->modifier & QST_WILDCARD_BEGIN) {
             $use_ft = false;
         }
-        if ($token->modifier & (QST_QUOTED | QST_WILDCARD_END) == (QST_QUOTED|QST_WILDCARD_END)) {
+        if ($token->modifier & (QST_QUOTED | QST_WILDCARD_END) == (QST_QUOTED | QST_WILDCARD_END)) {
             $use_ft = false;
         }
 
@@ -1527,7 +1527,7 @@ SELECT image_id FROM '.IMAGE_TAG_TABLE.'
   WHERE tag_id IN ('.implode(',', $tag_ids).')
   GROUP BY image_id';
             $qsr->tag_iids[$i] = query2array($query, null, 'image_id');
-            if ($expr->stoken_modifiers[$i]&QST_NOT) {
+            if ($expr->stoken_modifiers[$i] & QST_NOT) {
                 $not_ids = array_merge($not_ids, $tag_ids);
             } else {
                 if (strlen($token->term) > 2 || count($expr->stokens) == 1 || isset($token->scope) || ($token->modifier & (QST_WILDCARD | QST_QUOTED))) {// add tag ids to list only if the word is not too short (such as de / la /les ...)
@@ -1617,7 +1617,7 @@ SELECT image_id FROM '.IMAGE_CATEGORY_TABLE.'
   WHERE category_id IN ('.implode(',', $cat_ids).')
   GROUP BY image_id';
             $qsr->cat_iids[$i] = query2array($query, null, 'image_id');
-            if ($expr->stoken_modifiers[$i]&QST_NOT) {
+            if ($expr->stoken_modifiers[$i] & QST_NOT) {
                 $not_ids = array_merge($not_ids, $cat_ids);
             } else {
                 if (strlen($token->term) > 2 || count($expr->stokens) == 1 || isset($token->scope) || ($token->modifier & (QST_WILDCARD | QST_QUOTED))) {// add cat ids to list only if the word is not too short (such as de / la /les ...)

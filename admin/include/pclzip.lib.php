@@ -5624,7 +5624,7 @@ function PclZipUtilTranslateWinPath($p_path, $p_remove_disk_letter = true)
             $p_path = substr($p_path, $v_position + 1);
         }
         // ----- Change potential windows directory separator
-        if ((strpos($p_path, '\\') > 0) || (substr($p_path, 0,1) == '\\')) {
+        if ((strpos($p_path, '\\') > 0) || (substr($p_path, 0, 1) == '\\')) {
             $p_path = strtr($p_path, '\\', '/');
         }
     }

@@ -1,0 +1,10 @@
+FROM php:8.5-rc-apache
+
+RUN apt-get update -qq \
+ && apt-get install -y --no-install-recommends \
+        libpng-dev libjpeg-dev zlib1g-dev libwebp-dev libfreetype6-dev \
+        curl \
+ && docker-php-ext-configure gd --with-jpeg --with-freetype --with-webp \
+ && docker-php-ext-install mysqli gd exif \
+ && a2enmod rewrite \
+ && apt-get clean && rm -rf /var/lib/apt/lists/*

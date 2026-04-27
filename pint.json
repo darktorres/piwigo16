@@ -1,10 +1,12 @@
 {
     "preset": "psr12",
     "exclude": [
+        "_data",
         "install/db",
         "language",
         "include/smarty",
         "include/feedcreator.class.php",
+        "local",
         "themes",
         "vendor"
     ],

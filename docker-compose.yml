@@ -15,7 +15,10 @@ services:
     ports: ["3307:3306"]
 
   web:
-    image: php:8.5-rc-apache
+    image: piwigo16-web:ci
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
     depends_on:
       db:
         condition: service_healthy
@@ -25,14 +28,8 @@ services:
       test: ["CMD", "curl", "-fs", "http://localhost/install.php"]
       interval: 10s
       timeout: 5s
-      retries: 30
-      start_period: 180s
-    command: >
-      bash -c "apt-get update -qq &&
-               apt-get install -y --no-install-recommends libpng-dev libjpeg-dev zlib1g-dev libwebp-dev libfreetype6-dev &&
-               docker-php-ext-configure gd --with-jpeg --with-freetype --with-webp &&
-               docker-php-ext-install mysqli gd exif &&
-               a2enmod rewrite && apache2-foreground"
+      retries: 18
+      start_period: 30s
 
   e2e:
     image: mcr.microsoft.com/playwright:v1.48.0-jammy

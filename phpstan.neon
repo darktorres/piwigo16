@@ -29,6 +29,12 @@ parameters:
     bootstrapFiles:
         - tools/phpstan-bootstrap.php
     treatPhpDocTypesAsCertain: false
+    ignoreErrors:
+        # local/config/config.inc.php is a gitignored optional override (graceful @include).
+        # Linux resolvers flag it as missing; Windows resolvers do not — use reportUnmatched: false
+        # so this entry is silently skipped on platforms where the error is not produced.
+        - message: '#^Path in include\(\) "\./local/config/config\.inc\.php" is not a file or it does not exist\.$#'
+          reportUnmatched: false
 includes:
     - phpstan-baseline.neon
     - vendor/phpstan/phpstan-deprecation-rules/rules.neon

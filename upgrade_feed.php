@@ -19,7 +19,7 @@ include(PHPWG_ROOT_PATH . 'include/config_default.inc.php');
 defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
 
 include(PHPWG_ROOT_PATH.PWG_LOCAL_DIR .'config/database.inc.php');
-include(PHPWG_ROOT_PATH .'include/dblayer/functions_'.$conf['dblayer'].'.inc.php');
+include(PHPWG_ROOT_PATH .'include/dblayer/functions_'.\Piwigo\Core\Config::dbLayer().'.inc.php');
 
 include_once(PHPWG_ROOT_PATH.'include/functions.inc.php');
 include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
@@ -30,7 +30,7 @@ include_once(PHPWG_ROOT_PATH.'admin/include/functions_upgrade.php');
 // | Check Access and exit when it is not ok                               |
 // +-----------------------------------------------------------------------+
 
-if (!$conf['check_upgrade_feed']) {
+if (!\Piwigo\Core\Config::checkUpgradeFeed()) {
     die('upgrade feed is not active');
 }
 
@@ -44,10 +44,10 @@ define('UPGRADES_PATH', PHPWG_ROOT_PATH.'install/db');
 // +-----------------------------------------------------------------------+
 try {
     pwg_db_connect(
-        $conf['db_host'],
-        $conf['db_user'],
-        $conf['db_password'],
-        $conf['db_base']
+        \Piwigo\Core\Config::get('db_host'),
+        \Piwigo\Core\Config::get('db_user'),
+        \Piwigo\Core\Config::get('db_password'),
+        \Piwigo\Core\Config::get('db_base')
     );
 } catch (Exception $e) {
     my_error(l10n($e->getMessage(), true));

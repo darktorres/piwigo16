@@ -31,7 +31,7 @@ $search = array(
 );
 
 // list of filters in user preferences
-$filters_views = safe_unserialize(conf_get_param('filters_views', $conf['default_filters_views']));
+$filters_views = safe_unserialize(conf_get_param('filters_views', \Piwigo\Core\Config::defaultFiltersViews()));
 
 //change the name of the keys so that they can be used with this part of the program
 $filter_rename_for = array(

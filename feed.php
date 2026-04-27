@@ -72,7 +72,7 @@ SELECT user_id,
 } else {
     $image_only = true;
     if (!is_a_guest()) {// auto session was created - so switch to guest
-        $user = build_user($conf['guest_id'], true);
+        $user = build_user(\Piwigo\Core\Config::guestId(), true);
     }
 }
 
@@ -87,7 +87,7 @@ set_make_full_url();
 
 $rss = new UniversalFeedCreator();
 $rss->encoding = get_pwg_charset();
-$rss->title = $conf['gallery_title'];
+$rss->title = \Piwigo\Core\Config::galleryTitle();
 $rss->title .= ' (as '.stripslashes($user['username']).')';
 
 $rss->link = get_gallery_home_url();
@@ -114,7 +114,7 @@ if (!$image_only) {
         $item->descriptionHtmlSyndicated = true;
 
         $item->date = ts_to_iso8601(datetime_to_ts($dbnow));
-        $item->author = $conf['rss_feed_author'];
+        $item->author = \Piwigo\Core\Config::rssReedAuthor();
         $item->guid = sprintf('%s', $dbnow);
         ;
 
@@ -141,7 +141,7 @@ UPDATE '.USER_FEED_TABLE.'
     }
 }
 
-$dates = get_recent_post_dates_array($conf['recent_post_dates']['RSS']);
+$dates = get_recent_post_dates_array(\Piwigo\Core\Config::get('recent_post_dates')['RSS']);
 
 foreach ($dates as $date_detail) { // for each recent post date we create a feed item
     $item = new FeedItem();
@@ -157,21 +157,21 @@ foreach ($dates as $date_detail) { // for each recent post date we create a feed
     );
 
     $item->description .=
-      '<a href="'.make_index_url().'">'.$conf['gallery_title'].'</a><br> ';
+      '<a href="'.make_index_url().'">'.\Piwigo\Core\Config::galleryTitle().'</a><br> ';
 
     $item->description .= get_html_description_recent_post_date($date_detail);
 
     $item->descriptionHtmlSyndicated = true;
 
     $item->date = ts_to_iso8601(datetime_to_ts($date));
-    $item->author = $conf['rss_feed_author'];
+    $item->author = \Piwigo\Core\Config::rssReedAuthor();
     $item->guid = sprintf('%s', 'pics-'.$date);
     ;
 
     $rss->addItem($item);
 }
 
-$fileName = PHPWG_ROOT_PATH.$conf['data_location'].'tmp';
+$fileName = PHPWG_ROOT_PATH.\Piwigo\Core\Config::dataLocation().'tmp';
 mkgetdir($fileName); // just in case
 $fileName .= '/feed.xml';
 // send XML feed

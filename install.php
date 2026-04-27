@@ -85,8 +85,8 @@ require_once PHPWG_ROOT_PATH . 'vendor/autoload.php';
 // download database config file if exists
 check_input_parameter('dl', $_GET, false, '/^[a-f0-9]{32}$/');
 
-if (!empty($_GET['dl']) && file_exists(PHPWG_ROOT_PATH.$conf['data_location'].'pwg_'.$_GET['dl'])) {
-    $filename = PHPWG_ROOT_PATH.$conf['data_location'].'pwg_'.$_GET['dl'];
+if (!empty($_GET['dl']) && file_exists(PHPWG_ROOT_PATH.\Piwigo\Core\Config::dataLocation().'pwg_'.$_GET['dl'])) {
+    $filename = PHPWG_ROOT_PATH.\Piwigo\Core\Config::dataLocation().'pwg_'.$_GET['dl'];
     header('Cache-Control: no-cache, must-revalidate');
     header('Pragma: no-cache');
     header('Content-Disposition: attachment; filename="database.inc.php"');
@@ -248,12 +248,13 @@ if (isset($_POST['install'])) {
 
     if (count($errors) == 0) {
         $step = 2;
+        $dollar = '$';
         $file_content = '<?php
-$conf[\'dblayer\'] = \''.$dblayer.'\';
-$conf[\'db_base\'] = \''.$dbname.'\';
-$conf[\'db_user\'] = \''.$dbuser.'\';
-$conf[\'db_password\'] = \''.$dbpasswd.'\';
-$conf[\'db_host\'] = \''.$dbhost.'\';
+'.$dollar.'conf[\'dblayer\'] = \''.$dblayer.'\';
+'.$dollar.'conf[\'db_base\'] = \''.$dbname.'\';
+'.$dollar.'conf[\'db_user\'] = \''.$dbuser.'\';
+'.$dollar.'conf[\'db_password\'] = \''.$dbpasswd.'\';
+'.$dollar.'conf[\'db_host\'] = \''.$dbhost.'\';
 
 $prefixeTable = \''.$prefixeTable.'\';
 
@@ -268,10 +269,10 @@ define(\'DB_COLLATE\', \'\');
         // writing the configuration file
         if (!($fp = @fopen($config_file, 'w'))) {
             // make sure nobody can list files of _data directory
-            secure_directory(PHPWG_ROOT_PATH.$conf['data_location']);
+            secure_directory(PHPWG_ROOT_PATH.\Piwigo\Core\Config::dataLocation());
 
             $tmp_filename = md5(uniqid(time()));
-            $fh = @fopen(PHPWG_ROOT_PATH.$conf['data_location'] . 'pwg_' . $tmp_filename, 'w');
+            $fh = @fopen(PHPWG_ROOT_PATH.\Piwigo\Core\Config::dataLocation() . 'pwg_' . $tmp_filename, 'w');
             @fputs($fh, $file_content, strlen($file_content));
             @fclose($fh);
 
@@ -412,12 +413,12 @@ if ($step == 1) {
         // See include/functions_session.inc.php
         session_set_save_handler(new PwgSession());
         if (function_exists('ini_set')) {
-            ini_set('session.use_cookies', $conf['session_use_cookies']);
-            ini_set('session.use_only_cookies', $conf['session_use_only_cookies']);
-            ini_set('session.use_trans_sid', intval($conf['session_use_trans_sid']));
+            ini_set('session.use_cookies', \Piwigo\Core\Config::sessionUseCookies());
+            ini_set('session.use_only_cookies', \Piwigo\Core\Config::sessionUseOnlyCookies());
+            ini_set('session.use_trans_sid', intval(\Piwigo\Core\Config::sessionUseTransSid()));
             ini_set('session.cookie_httponly', 1);
         }
-        session_name($conf['session_name']);
+        session_name(\Piwigo\Core\Config::sessionName());
         session_set_cookie_params(0, cookie_path());
         register_shutdown_function(session_write_close(...));
 

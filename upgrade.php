@@ -183,7 +183,7 @@ load_language('upgrade.lang', '', ['language' => $language, 'target_charset' => 
 // |                          database connection                          |
 // +-----------------------------------------------------------------------+
 include_once(PHPWG_ROOT_PATH.'admin/include/functions_upgrade.php');
-include(PHPWG_ROOT_PATH .'include/dblayer/functions_'.$conf['dblayer'].'.inc.php');
+include(PHPWG_ROOT_PATH .'include/dblayer/functions_'.\Piwigo\Core\Config::dbLayer().'.inc.php');
 
 upgrade_db_connect();
 pwg_db_check_charset();
@@ -338,7 +338,7 @@ if ((input_string('submit', null, $_POST) !== null or input_string('now', null, 
         $page['count_queries'] = 0;
 
         $page['upgrade_start'] = get_moment();
-        $conf['die_on_sql_error'] = false;
+        \Piwigo\Core\Config::override('die_on_sql_error', false);
         include($upgrade_file);
         conf_update_param('piwigo_db_version', get_branch_from_version(PHPWG_VERSION));
 

@@ -4396,12 +4396,6 @@ parameters:
 			path: comments.php
 
 		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 8
-			path: comments.php
-
-		-
 			message: '#^Variable \$template might not be defined\.$#'
 			identifier: variable.undefined
 			count: 16
@@ -4519,12 +4513,6 @@ parameters:
 			message: '#^Parameter \#1 \$period of function pwg_db_get_recent_period_expression expects string, int given\.$#'
 			identifier: argument.type
 			count: 1
-			path: feed.php
-
-		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 7
 			path: feed.php
 
 		-
@@ -4852,12 +4840,6 @@ parameters:
 			path: i.php
 
 		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 11
-			path: i.php
-
-		-
 			message: '#^Variable \$crop_rect might not be defined\.$#'
 			identifier: variable.undefined
 			count: 2
@@ -4885,12 +4867,6 @@ parameters:
 			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
 			identifier: arguments.count
 			count: 2
-			path: identification.php
-
-		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 7
 			path: identification.php
 
 		-
@@ -16973,12 +16949,6 @@ parameters:
 			path: index.php
 
 		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 17
-			path: index.php
-
-		-
 			message: '#^Variable \$page might not be defined\.$#'
 			identifier: variable.undefined
 			count: 3
@@ -17024,12 +16994,6 @@ parameters:
 			message: '#^Path in include\(\) "\./include/dblayer/functions_mysql\.inc\.php" is not a file or it does not exist\.$#'
 			identifier: include.fileNotFound
 			count: 1
-			path: install.php
-
-		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 8
 			path: install.php
 
 		-
@@ -17107,7 +17071,7 @@ parameters:
 		-
 			message: '#^Parameter \#1 \$user_id of function getuserdata expects int, float\|int\|string given\.$#'
 			identifier: argument.type
-			count: 1
+			count: 2
 			path: password.php
 
 		-
@@ -17119,6 +17083,12 @@ parameters:
 		-
 			message: '#^Parameter \#2 \$value of function userprefs_update_param expects string, int\<3601, max\> given\.$#'
 			identifier: argument.type
+			count: 1
+			path: password.php
+
+		-
+			message: '#^Trying to invoke string but it might not be a callable\.$#'
+			identifier: callable.nonCallable
 			count: 1
 			path: password.php
 
@@ -17237,12 +17207,6 @@ parameters:
 			path: picture.php
 
 		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 21
-			path: picture.php
-
-		-
 			message: '#^Variable \$page might not be defined\.$#'
 			identifier: variable.undefined
 			count: 1
@@ -17303,9 +17267,9 @@ parameters:
 			path: profile.php
 
 		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
+			message: '#^Trying to invoke string but it might not be a callable\.$#'
+			identifier: callable.nonCallable
+			count: 2
 			path: profile.php
 
 		-
@@ -17345,12 +17309,6 @@ parameters:
 			path: register.php
 
 		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 2
-			path: register.php
-
-		-
 			message: '#^Variable \$language_options might not be defined\.$#'
 			identifier: variable.undefined
 			count: 1
@@ -17383,12 +17341,6 @@ parameters:
 		-
 			message: '#^Parameter \#1 \$value of function count expects array\|Countable, array\|null given\.$#'
 			identifier: argument.type
-			count: 1
-			path: search.php
-
-		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
 			count: 1
 			path: search.php
 
@@ -22317,12 +22269,6 @@ parameters:
 			path: tags.php
 
 		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 5
-			path: tags.php
-
-		-
 			message: '#^Variable \$template might not be defined\.$#'
 			identifier: variable.undefined
 			count: 8
@@ -22356,12 +22302,6 @@ parameters:
 			path: upgrade.php
 
 		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: upgrade.php
-
-		-
 			message: '#^Variable \$languages_options might not be defined\.$#'
 			identifier: variable.undefined
 			count: 1
@@ -22386,9 +22326,9 @@ parameters:
 			path: ws.php
 
 		-
-			message: '#^Variable \$conf might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
+			message: '#^Parameter \#1 \.\.\.\$arg1 of function max expects non\-empty\-array, list\<int\> given\.$#'
+			identifier: argument.type
+			count: 8
 			path: ws.php
 
 		-

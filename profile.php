@@ -40,7 +40,7 @@ if (!defined('PHPWG_ROOT_PATH')) {//direct script access
     $query = '
 SELECT '.implode(',', $fields).'
   FROM '.USER_INFOS_TABLE.'
-  WHERE user_id = '.$conf['default_user_id'].'
+  WHERE user_id = '.\Piwigo\Core\Config::defaultUserId().'
 ;';
     $result = pwg_query($query);
     $default_user = pwg_db_fetch_assoc($result);
@@ -126,14 +126,14 @@ SELECT '.implode(',', $fields).'
 //------------------------------------------------------ update & customization
 function save_profile_from_post(array $userdata, &$errors): bool
 {
-    global $conf, $page;
+    global $page;
     $errors = [];
 
     if (!isset($_POST['validate'])) {
         return false;
     }
 
-    $special_user = in_array($userdata['id'], [$conf['guest_id'], $conf['default_user_id']]);
+    $special_user = in_array($userdata['id'], [\Piwigo\Core\Config::guestId(), \Piwigo\Core\Config::defaultUserId()]);
     if ($special_user) {
         unset(
             $_POST['username'],
@@ -152,7 +152,7 @@ function save_profile_from_post(array $userdata, &$errors): bool
         unset($_POST['username']);
     }
 
-    if ($conf['allow_user_customization'] or defined('IN_ADMIN')) {
+    if (\Piwigo\Core\Config::allowUserCustomization() or defined('IN_ADMIN')) {
         $int_pattern = '/^\d+$/';
         if (empty($_POST['nb_image_page'])
             or (!preg_match($int_pattern, (string) $_POST['nb_image_page']))) {
@@ -191,13 +191,13 @@ function save_profile_from_post(array $userdata, &$errors): bool
 
         if (!defined('IN_ADMIN')) {// changing password requires old password
             $query = '
-  SELECT '.$conf['user_fields']['password'].' AS password
+  SELECT '.\Piwigo\Core\Config::userFields()['password'].' AS password
     FROM '.USERS_TABLE.'
-    WHERE '.$conf['user_fields']['id'].' = \''.$userdata['id'].'\'
+    WHERE '.\Piwigo\Core\Config::userFields()['id'].' = \''.$userdata['id'].'\'
   ;';
             [$current_password] = pwg_db_fetch_row(pwg_query($query));
 
-            if (!$conf['password_verify']($_POST['password'], $current_password)) {
+            if (!\Piwigo\Core\Config::passwordVerify()($_POST['password'], $current_password)) {
                 $errors[] = l10n('Current password is wrong');
             }
         }
@@ -211,17 +211,17 @@ function save_profile_from_post(array $userdata, &$errors): bool
 
         if (isset($_POST['mail_address'])) {
             // update common user informations
-            $fields = [$conf['user_fields']['email']];
+            $fields = [\Piwigo\Core\Config::userFields()['email']];
 
             $data = [];
-            $data[ $conf['user_fields']['id'] ] = $userdata['id'];
-            $data[ $conf['user_fields']['email'] ] = $_POST['mail_address'];
+            $data[ \Piwigo\Core\Config::userFields()['id'] ] = $userdata['id'];
+            $data[ \Piwigo\Core\Config::userFields()['email'] ] = $_POST['mail_address'];
 
             // password is updated only if filled
             if (!empty($_POST['use_new_pwd'])) {
-                $fields[] = $conf['user_fields']['password'];
-                // password is hashed with function $conf['password_hash']
-                $data[ $conf['user_fields']['password'] ] = $conf['password_hash']($_POST['use_new_pwd']);
+                $fields[] = \Piwigo\Core\Config::userFields()['password'];
+                // password is hashed with function \Piwigo\Core\Config::passwordHash()
+                $data[ \Piwigo\Core\Config::userFields()['password'] ] = \Piwigo\Core\Config::passwordHash()($_POST['use_new_pwd']);
 
                 deactivate_user_auth_keys($userdata['id']);
             }
@@ -232,8 +232,8 @@ function save_profile_from_post(array $userdata, &$errors): bool
                     \Piwigo\Core\PageState::current()->addError(l10n('this login is already used'));
                     unset($_POST['redirect']);
                 } else {
-                    $fields[] = $conf['user_fields']['username'];
-                    $data[ $conf['user_fields']['username'] ] = $_POST['username'];
+                    $fields[] = \Piwigo\Core\Config::userFields()['username'];
+                    $data[ \Piwigo\Core\Config::userFields()['username'] ] = $_POST['username'];
 
                     // send email to the user
                     if ($_POST['username'] != $userdata['username']) {
@@ -248,7 +248,7 @@ function save_profile_from_post(array $userdata, &$errors): bool
                         pwg_mail(
                             $_POST['mail_address'],
                             [
-                            'subject' => '['.$conf['gallery_title'].'] '.l10n('Username modification'),
+                            'subject' => '['.\Piwigo\Core\Config::galleryTitle().'] '.l10n('Username modification'),
                             'content' => l10n_args($keyargs_content),
                             'content_format' => 'text/plain',
                             ]
@@ -262,7 +262,7 @@ function save_profile_from_post(array $userdata, &$errors): bool
             mass_updates(
                 USERS_TABLE,
                 [
-                          'primary' => [$conf['user_fields']['id']],
+                          'primary' => [\Piwigo\Core\Config::userFields()['id']],
                           'update' => $fields,
                           ],
                 [$data]
@@ -275,14 +275,14 @@ function save_profile_from_post(array $userdata, &$errors): bool
             $activity_details_tables[] = 'users';
         }
 
-        if ($conf['allow_user_customization'] or defined('IN_ADMIN')) {
+        if (\Piwigo\Core\Config::allowUserCustomization() or defined('IN_ADMIN')) {
             // update user "additional" informations (specific to Piwigo)
             $fields = [
               'nb_image_page', 'language',
               'expand', 'show_nb_hits', 'recent_period', 'theme',
               ];
 
-            if ($conf['activate_comments']) {
+            if (\Piwigo\Core\Config::activateComments()) {
                 $fields[] = 'show_nb_comments';
             }
 
@@ -321,7 +321,7 @@ function save_profile_from_post(array $userdata, &$errors): bool
  */
 function load_profile_in_template($url_action, $url_redirect, array $userdata, $template_prefixe = null): void
 {
-    global $template, $conf, $user;
+    global $template, $user;
 
     $template->assign(
         'radio_options',
@@ -334,8 +334,8 @@ function load_profile_in_template($url_action, $url_redirect, array $userdata, $
         [
         $template_prefixe.'USERNAME' => stripslashes((string) $userdata['username']),
         $template_prefixe.'EMAIL' => @$userdata['email'],
-        $template_prefixe.'ALLOW_USER_CUSTOMIZATION' => $conf['allow_user_customization'],
-        $template_prefixe.'ACTIVATE_COMMENTS' => $conf['activate_comments'],
+        $template_prefixe.'ALLOW_USER_CUSTOMIZATION' => \Piwigo\Core\Config::allowUserCustomization(),
+        $template_prefixe.'ACTIVATE_COMMENTS' => \Piwigo\Core\Config::activateComments(),
         $template_prefixe.'NB_IMAGE_PAGE' => $userdata['nb_image_page'],
         $template_prefixe.'RECENT_PERIOD' => $userdata['recent_period'],
         $template_prefixe.'EXPAND' => $userdata['expand'] ? 'true' : 'false',
@@ -358,7 +358,7 @@ function load_profile_in_template($url_action, $url_redirect, array $userdata, $
 
     $template->assign('language_options', $language_options);
 
-    $special_user = in_array($userdata['id'], [$conf['guest_id'], $conf['default_user_id']]);
+    $special_user = in_array($userdata['id'], [\Piwigo\Core\Config::guestId(), \Piwigo\Core\Config::defaultUserId()]);
     $template->assign('SPECIAL_USER', $special_user);
     $template->assign('IN_ADMIN', defined('IN_ADMIN'));
 
@@ -369,7 +369,7 @@ function load_profile_in_template($url_action, $url_redirect, array $userdata, $
     $duration = [];
     $display_duration = [];
     $has_custom = false;
-    foreach ($conf['api_key_duration'] as $day) {
+    foreach (\Piwigo\Core\Config::apiKeyDuration() as $day) {
         if ('custom' === $day) {
             $has_custom = true;
             continue;

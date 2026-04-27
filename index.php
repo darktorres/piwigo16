@@ -117,7 +117,7 @@ if (empty($page['is_external'])) {
         );
     }
 
-    if ($conf['index_flat_icon'] and !isset($page['flat']) and 'categories' == $page['section']) {
+    if (\Piwigo\Core\Config::get('index_flat_icon') and !isset($page['flat']) and 'categories' == $page['section']) {
         $template->assign(
             'U_MODE_FLAT',
             duplicate_index_url(['flat' => ''], ['start', 'chronology_field'])
@@ -130,13 +130,13 @@ if (empty($page['is_external'])) {
           'chronology_style' => 'monthly',
           'chronology_view' => 'list',
           ];
-        if ($conf['index_created_date_icon']) {
+        if (\Piwigo\Core\Config::get('index_created_date_icon')) {
             $template->assign(
                 'U_MODE_CREATED',
                 duplicate_index_url($chronology_params, ['start', 'flat'])
             );
         }
-        if ($conf['index_posted_date_icon']) {
+        if (\Piwigo\Core\Config::get('index_posted_date_icon')) {
             $chronology_params['chronology_field'] = 'posted';
             $template->assign(
                 'U_MODE_POSTED',
@@ -149,7 +149,7 @@ if (empty($page['is_external'])) {
         } else {
             $chronology_field = 'created';
         }
-        if ($conf['index_'.$chronology_field.'_date_icon']) {
+        if (\Piwigo\Core\Config::get('index_'.$chronology_field.'_date_icon')) {
             $url = duplicate_index_url(
                 ['chronology_field' => $chronology_field ],
                 ['chronology_date', 'start', 'flat']
@@ -166,8 +166,8 @@ if (empty($page['is_external'])) {
     if ('categories' == $page['section'] and isset($page['category']) and !isset($page['combined_categories'])) {
         $template->assign(
             [
-            'SEARCH_IN_SET_BUTTON' => $conf['index_search_in_set_button'],
-            'SEARCH_IN_SET_ACTION' => $conf['index_search_in_set_action'],
+            'SEARCH_IN_SET_BUTTON' => \Piwigo\Core\Config::get('index_search_in_set_button'),
+            'SEARCH_IN_SET_ACTION' => \Piwigo\Core\Config::get('index_search_in_set_action'),
             'SEARCH_IN_SET_URL' => get_root_url().'search.php?cat_id='.$page['category']['id'],
       ]
         );
@@ -177,7 +177,7 @@ if (empty($page['is_external'])) {
         //get tags for related tags "button", with the possibility to combine them
         $tags = get_common_tags(
             $page['items'],
-            $conf['menubar_tag_cloud_items_number'],
+            \Piwigo\Core\Config::menubarTagCloudItemsNumber(),
             $page['tag_ids']
         );
 
@@ -212,22 +212,22 @@ if (empty($page['is_external'])) {
 
         $template->assign(
             [
-            'SEARCH_IN_SET_BUTTON' => $conf['index_search_in_set_button'],
-            'SEARCH_IN_SET_ACTION' => $conf['index_search_in_set_action'],
+            'SEARCH_IN_SET_BUTTON' => \Piwigo\Core\Config::get('index_search_in_set_button'),
+            'SEARCH_IN_SET_ACTION' => \Piwigo\Core\Config::get('index_search_in_set_action'),
             'SEARCH_IN_SET_URL' => get_root_url().'search.php?tag_id='.implode(',', $page['body_data']['tag_ids']),
             'COMBINABLE_TAGS' => $related_tags,
       ]
         );
     }
 
-    if (isset($page['category']) and is_admin() and $conf['index_edit_icon']) {
+    if (isset($page['category']) and is_admin() and \Piwigo\Core\Config::get('index_edit_icon')) {
         $template->assign(
             'U_EDIT',
             get_root_url().'admin.php?page=album-'.$page['category']['id']
         );
     }
 
-    if (is_admin() and !empty($page['items']) and $conf['index_caddie_icon']) {
+    if (is_admin() and !empty($page['items']) and \Piwigo\Core\Config::get('index_caddie_icon')) {
         $template->assign(
             'U_CADDIE',
             add_url_params(duplicate_index_url(), ['caddie' => 1])
@@ -263,7 +263,7 @@ if (empty($page['is_external'])) {
     }
 
     // image order
-    if ($conf['index_sort_order_input']
+    if (\Piwigo\Core\Config::get('index_sort_order_input')
         and count($page['items']) > 0
         and $page['section'] != 'most_visited'
         and $page['section'] != 'best_rated') {
@@ -271,7 +271,7 @@ if (empty($page['is_external'])) {
         $order_idx = pwg_get_session_var('image_order', 0);
 
         // get first order field and direction
-        $first_order = substr((string) $conf['order_by'], 9);
+        $first_order = substr((string) \Piwigo\Core\Config::orderBy(), 9);
         if (($pos = strpos($first_order, ',')) !== false) {
             $first_order = substr($first_order, 0, $pos);
         }
@@ -305,7 +305,7 @@ if (empty($page['is_external'])) {
     }
 
     // category comment
-    if (($page['start'] == 0 or $conf['album_description_on_all_pages']) and !isset($page['chronology_field']) and !empty($page['comment'])) {
+    if (($page['start'] == 0 or \Piwigo\Core\Config::albumDescriptionOnAllPages()) and !isset($page['chronology_field']) and !empty($page['comment'])) {
         $template->assign('CONTENT_DESCRIPTION', $page['comment']);
     }
 
@@ -326,7 +326,7 @@ if (empty($page['is_external'])) {
     if (!empty($page['items'])) {
         include(PHPWG_ROOT_PATH.'include/category_default.inc.php');
 
-        if ($conf['index_sizes_icon']) {
+        if (\Piwigo\Core\Config::get('index_sizes_icon')) {
             $url = add_url_params(
                 duplicate_index_url(),
                 ['display' => '']
@@ -355,7 +355,7 @@ if (empty($page['is_external'])) {
     if (!empty($page['cat_slideshow_url'])) {
         if (input_string('slideshow', null, $_GET) !== null) {
             redirect($page['cat_slideshow_url']);
-        } elseif ($conf['index_slideshow_icon']) {
+        } elseif (\Piwigo\Core\Config::get('index_slideshow_icon')) {
             $template->assign('U_SLIDESHOW', $page['cat_slideshow_url']);
         }
     }
@@ -364,7 +364,7 @@ if (empty($page['is_external'])) {
     //Fill related tags action
     if (!empty($page['items']) and 'tags' != $page['body_data']['section']) {
         $selection = array_slice($page['items'], $page['start'], $page['nb_image_page']);
-        $tags = add_level_to_tags(get_common_tags($selection, $conf['content_tag_cloud_items_number']));
+        $tags = add_level_to_tags(get_common_tags($selection, \Piwigo\Core\Config::contentTagCloudItemsNumber()));
         $related_tags = [];
         foreach ($tags as $tag) {
             $related_tags[] =

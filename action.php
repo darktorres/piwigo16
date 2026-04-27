@@ -55,7 +55,7 @@ function do_error($code, $str)
     exit();
 }
 
-if ($conf['enable_formats'] and input_string('format', null, $_GET) !== null) {
+if (\Piwigo\Core\Config::isFormatsEnabled() and input_string('format', null, $_GET) !== null) {
     check_input_parameter('format', $_GET, false, PATTERN_ID);
     $get_format = input_int('format', null, $_GET);
 

@@ -42,7 +42,7 @@ $redirect_to = '';
 $get_redirect = input_string('redirect', null, $_GET);
 if (!empty($get_redirect)) {
     $redirect_to = urldecode($get_redirect);
-    if ($conf['guest_access'] and input_string('hide_redirect_error', null, $_GET) === null) {
+    if (\Piwigo\Core\Config::guestAccess() and input_string('hide_redirect_error', null, $_GET) === null) {
         $page['errors']['login_page_error'] = l10n('You are not authorized to access the requested page');
     }
 }
@@ -52,7 +52,7 @@ if (input_string('login', null, $_POST) !== null) {
         $page['errors']['login_page_error'] = l10n('Cookies are blocked or not supported by your browser. You must enable cookies to connect.');
     } else {
         $username = input_string('username', null, $_POST) ?? '';
-        if ($conf['insensitive_case_logon'] == true) {
+        if (\Piwigo\Core\Config::insensitiveCaseLogon() == true) {
             $username = search_case_username($username);
         }
 
@@ -100,21 +100,21 @@ $template->assign(
     'U_REDIRECT' => $redirect_to,
 
     'F_LOGIN_ACTION' => get_root_url().'identification.php',
-    'authorize_remembering' => $conf['authorize_remembering'],
+    'authorize_remembering' => \Piwigo\Core\Config::authorizeRemembering(),
     ]
 );
 
-if (!$conf['gallery_locked'] && $conf['allow_user_registration']) {
+if (!\Piwigo\Core\Config::get('gallery_locked') && \Piwigo\Core\Config::allowUserRegistration()) {
     $template->assign('U_REGISTER', get_root_url().'register.php');
 }
 
-if (!$conf['gallery_locked']) {
+if (!\Piwigo\Core\Config::get('gallery_locked')) {
     $template->assign('U_LOST_PASSWORD', get_root_url().'password.php');
 }
 
 // include menubar
 $themeconf = $template->get_template_vars('themeconf');
-if (!$conf['gallery_locked'] && (!isset($themeconf['hide_menu_on']) or !in_array('theIdentificationPage', $themeconf['hide_menu_on']))) {
+if (!\Piwigo\Core\Config::get('gallery_locked') && (!isset($themeconf['hide_menu_on']) or !in_array('theIdentificationPage', $themeconf['hide_menu_on']))) {
     include(PHPWG_ROOT_PATH.'include/menubar.inc.php');
 }
 

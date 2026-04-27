@@ -95,8 +95,9 @@ final class UpgradeChainTest extends TestCase
             mkdir($dir, 0755, true);
         }
         // Uses webDbHost (the in-container service name) so upgrade.php can reach the DB.
+        $d = '$';
         $cfg = sprintf(
-            "<?php\n\$conf['dblayer'] = 'mysqli';\n\$conf['db_host'] = '%s';\n\$conf['db_user'] = '%s';\n\$conf['db_password'] = '%s';\n\$conf['db_base'] = '%s';\n\$prefixeTable = 'piwigo_';\ndefine('PHPWG_INSTALLED', true);\ndefine('PWG_CHARSET', 'utf-8');\ndefine('DB_CHARSET', 'utf8');\ndefine('DB_COLLATE', '');\n?>",
+            "<?php\n{$d}conf['dblayer'] = 'mysqli';\n{$d}conf['db_host'] = '%s';\n{$d}conf['db_user'] = '%s';\n{$d}conf['db_password'] = '%s';\n{$d}conf['db_base'] = '%s';\n{$d}prefixeTable = 'piwigo_';\ndefine('PHPWG_INSTALLED', true);\ndefine('PWG_CHARSET', 'utf-8');\ndefine('DB_CHARSET', 'utf8');\ndefine('DB_COLLATE', '');\n?>",
             addslashes($this->webDbHost),
             addslashes($this->dbUser),
             addslashes($this->dbPass),

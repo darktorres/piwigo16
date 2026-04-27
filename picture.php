@@ -121,8 +121,6 @@ trigger_notify('loc_begin_picture');
 // this is the default handler that generates the display for the element
 function default_picture_content($content, array $element_info)
 {
-    global $conf;
-
     if (!empty($content)) {// someone hooked us - so we skip;
         return $content;
     }
@@ -134,7 +132,7 @@ function default_picture_content($content, array $element_info)
         }
         setcookie('picture_deriv', false, ['expires' => 0, 'path' => cookie_path()]);
     }
-    $deriv_type = pwg_get_session_var('picture_deriv', $conf['derivative_default_size']);
+    $deriv_type = pwg_get_session_var('picture_deriv', \Piwigo\Core\Config::derivativeDefaultSize());
     $selected_derivative = $element_info['derivatives'][$deriv_type];
 
     $unique_derivatives = [];
@@ -155,7 +153,7 @@ function default_picture_content($content, array $element_info)
         $show_original &= !($derivative->same_as_source());
 
         // in case we do not display the sizes icon, we only add the selected size to unique_derivatives
-        if ($conf['picture_sizes_icon'] or $type == $deriv_type) {
+        if (\Piwigo\Core\Config::get('picture_sizes_icon') or $type == $deriv_type) {
             $unique_derivatives[$type] = $derivative;
         }
     }
@@ -530,7 +528,7 @@ if ($get_slideshow !== null) {
 } else {
     $page['slideshow'] = false;
 }
-if ($page['slideshow'] and $conf['light_slideshow']) {
+if ($page['slideshow'] and \Piwigo\Core\Config::lightSlideshow()) {
     $template->set_filenames(['slideshow' => 'slideshow.tpl']);
 } else {
     $template->set_filenames(['picture' => 'picture.tpl']);
@@ -548,7 +546,7 @@ $url_metadata = add_url_params($url_metadata, ['metadata' => null]);
 $metadata_showable = trigger_change(
     'get_element_metadata_available',
     (
-        ($conf['show_exif'] or $conf['show_iptc'])
+        (\Piwigo\Core\Config::showExif() or \Piwigo\Core\Config::showIptc())
     and !$picture['current']['src_image']->is_mimetype()
     ),
     $picture['current']
@@ -583,10 +581,10 @@ foreach (['first','previous','next','last', 'current'] as $which_image) {
         );
     }
 }
-if ($conf['picture_download_icon'] and !empty($picture['current']['download_url']) and $user['enabled_high'] == 'true') {
+if (\Piwigo\Core\Config::get('picture_download_icon') and !empty($picture['current']['download_url']) and $user['enabled_high'] == 'true') {
     $template->append('current', ['U_DOWNLOAD' => $picture['current']['download_url']], true);
 
-    if ($conf['enable_formats']) {
+    if (\Piwigo\Core\Config::isFormatsEnabled()) {
         $query = '
 SELECT *
   FROM '.IMAGE_FORMAT_TABLE.'
@@ -653,7 +651,7 @@ if ($page['slideshow']) {
     }
 
     foreach (['dec', 'inc'] as $op) {
-        $new_period = $slideshow_params['period'] + ((($op == 'dec') ? -1 : 1) * $conf['slideshow_period_step']);
+        $new_period = $slideshow_params['period'] + ((($op == 'dec') ? -1 : 1) * \Piwigo\Core\Config::slideshowPeriodStep());
         $new_slideshow_params =
           correct_slideshow_params(
               array_merge(
@@ -673,7 +671,7 @@ if ($page['slideshow']) {
         }
     }
     $template->assign('slideshow', $tpl_slideshow);
-} elseif ($conf['picture_slideshow_icon']) {
+} elseif (\Piwigo\Core\Config::get('picture_slideshow_icon')) {
     $template->assign(
         [
         'U_SLIDESHOW_START' =>
@@ -691,15 +689,15 @@ $template->assign(
     'PHOTO' => $title_nb,
     'IS_HOME' => ('categories' == $page['section'] and !isset($page['category'])),
 
-    'LEVEL_SEPARATOR' => $conf['level_separator'],
+    'LEVEL_SEPARATOR' => \Piwigo\Core\Config::levelSeparator(),
 
     'U_UP' => $url_up,
-    'DISPLAY_NAV_BUTTONS' => $conf['picture_navigation_icons'],
-    'DISPLAY_NAV_THUMB' => $conf['picture_navigation_thumb'],
+    'DISPLAY_NAV_BUTTONS' => \Piwigo\Core\Config::get('picture_navigation_icons'),
+    'DISPLAY_NAV_THUMB' => \Piwigo\Core\Config::get('picture_navigation_thumb'),
     ]
 );
 
-if ($conf['picture_metadata_icon']) {
+if (\Piwigo\Core\Config::get('picture_metadata_icon')) {
     $template->assign('U_METADATA', $url_metadata);
 }
 
@@ -708,7 +706,7 @@ if ($conf['picture_metadata_icon']) {
 
 // admin links
 if (is_admin()) {
-    if (isset($page['category']) and $conf['picture_representative_icon']) {
+    if (isset($page['category']) and \Piwigo\Core\Config::get('picture_representative_icon')) {
         $template->assign(
             [
             'U_SET_AS_REPRESENTATIVE' => add_url_params(
@@ -719,11 +717,11 @@ if (is_admin()) {
         );
     }
 
-    if ($conf['picture_edit_icon']) {
+    if (\Piwigo\Core\Config::get('picture_edit_icon')) {
         $template->assign('U_PHOTO_ADMIN', get_root_url().'admin.php?page=photo-'.$page['image_id']);
     }
 
-    if ($conf['picture_caddie_icon']) {
+    if (\Piwigo\Core\Config::get('picture_caddie_icon')) {
         $template->assign(
             'U_CADDIE',
             add_url_params($url_self, ['action' => 'add_to_caddie'])
@@ -733,7 +731,7 @@ if (is_admin()) {
 }
 
 // favorite manipulation
-if (!is_a_guest() and $conf['picture_favorite_icon']) {
+if (!is_a_guest() and \Piwigo\Core\Config::get('picture_favorite_icon')) {
     // verify if the picture is already in the favorite of the user
     $query = '
 SELECT COUNT(*) AS nb_fav
@@ -823,7 +821,7 @@ $infos['INFO_VISITS'] = $picture['current']['hit'];
 $infos['INFO_FILE'] = $picture['current']['file'];
 
 $template->assign($infos);
-$template->assign('display_info', unserialize($conf['picture_informations']));
+$template->assign('display_info', unserialize(\Piwigo\Core\Config::get('picture_informations')));
 
 // related tags
 $tags = get_common_tags([$page['image_id']], -1);
@@ -882,7 +880,7 @@ SELECT id, name, permalink
 if (in_array(strtolower(get_extension($picture['current']['file'])), ['pdf'])) {
     $template->assign(
         [
-        'PDF_VIEWER_FILESIZE_THRESHOLD' => $conf['pdf_viewer_filesize_threshold'] * 1024,
+        'PDF_VIEWER_FILESIZE_THRESHOLD' => \Piwigo\Core\Config::pdfViewerFilesizeThreshold() * 1024,
         'PDF_NB_PAGES' => count_pdf_pages($picture['current']['path']),
     ]
     );
@@ -903,7 +901,7 @@ if (isset($picture['next'])
     and !str_contains((string) @$_SERVER['HTTP_USER_AGENT'], 'Chrome/')) {
     $template->assign(
         'U_PREFETCH',
-        $picture['next']['derivatives'][pwg_get_session_var('picture_deriv', $conf['derivative_default_size'])]->get_url()
+        $picture['next']['derivatives'][pwg_get_session_var('picture_deriv', \Piwigo\Core\Config::derivativeDefaultSize())]->get_url()
     );
 }
 
@@ -921,7 +919,7 @@ $template->assign(
 // +-----------------------------------------------------------------------+
 
 include(PHPWG_ROOT_PATH.'include/picture_rate.inc.php');
-if ($conf['activate_comments']) {
+if (\Piwigo\Core\Config::activateComments()) {
     include(PHPWG_ROOT_PATH.'include/picture_comment.inc.php');
 }
 if ($metadata_showable and pwg_get_session_var('show_metadata') <> null) {
@@ -930,7 +928,7 @@ if ($metadata_showable and pwg_get_session_var('show_metadata') <> null) {
 
 // include menubar
 $themeconf = $template->get_template_vars('themeconf');
-if ($conf['picture_menu'] and (!isset($themeconf['hide_menu_on']) or !in_array('thePicturePage', $themeconf['hide_menu_on']))) {
+if (\Piwigo\Core\Config::get('picture_menu') and (!isset($themeconf['hide_menu_on']) or !in_array('thePicturePage', $themeconf['hide_menu_on']))) {
     if (!isset($page['start'])) {
         $page['start'] = 0;
     }
@@ -940,7 +938,7 @@ if ($conf['picture_menu'] and (!isset($themeconf['hide_menu_on']) or !in_array('
 include(PHPWG_ROOT_PATH.'include/page_header.php');
 trigger_notify('loc_end_picture');
 flush_page_messages();
-if ($page['slideshow'] and $conf['light_slideshow']) {
+if ($page['slideshow'] and \Piwigo\Core\Config::lightSlideshow()) {
     $template->pparse('slideshow');
 } else {
     $template->parse_picture_buttons();

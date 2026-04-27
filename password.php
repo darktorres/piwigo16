@@ -36,7 +36,7 @@ check_input_parameter('action', $_GET, false, '/^(lost|reset|lost_code|reset_end
  */
 function process_verification_code(): bool
 {
-    global $page, $conf, $logger;
+    global $page, $logger;
 
     if (isset($_SESSION['reset_password_code'])) {
         return true;
@@ -61,7 +61,7 @@ function process_verification_code(): bool
     // preventing username/email enumeration through timing or responses.
     $is_user_found = is_numeric($user_id);
     if (!$is_user_found) {
-        $user_id = $conf['guest_id'];
+        $user_id = \Piwigo\Core\Config::guestId();
     }
 
     $userdata = getuserdata($user_id, false);
@@ -104,7 +104,7 @@ function process_verification_code(): bool
         'attempts' => 0,
         'user_id' => $is_user_found ? $user_id : null,
         'created_at' => time(),
-        'ttl' => min($conf['password_reset_code_duration'], 900), // max 15 min
+        'ttl' => min(\Piwigo\Core\Config::passwordResetCodeDuration(), 900), // max 15 min
       ];
 
     return true;
@@ -208,7 +208,7 @@ function process_password_request(): bool
  */
 function check_password_reset_key($reset_key)
 {
-    global $page, $conf;
+    global $page;
 
     $key = $reset_key;
     if (!preg_match('/^[a-z0-9]{20}$/i', (string) $key)) {
@@ -254,7 +254,7 @@ SELECT
  */
 function reset_password(): bool
 {
-    global $page, $conf;
+    global $page;
 
     if ($_POST['use_new_pwd'] != $_POST['passwordConf']) {
         $page['errors']['password_form_error'] = l10n('The passwords do not match');
@@ -270,8 +270,8 @@ function reset_password(): bool
 
     single_update(
         USERS_TABLE,
-        [$conf['user_fields']['password'] => $conf['password_hash']($_POST['use_new_pwd'])],
-        [$conf['user_fields']['id'] => $user_id]
+        [\Piwigo\Core\Config::userFields()['password'] => \Piwigo\Core\Config::passwordHash()($_POST['use_new_pwd'])],
+        [\Piwigo\Core\Config::userFields()['id'] => $user_id]
     );
 
     if (isset($_SESSION['valid_reset_password_code']) and !empty($_SESSION['valid_reset_password_code']['email'])) {

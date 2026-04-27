@@ -37,7 +37,7 @@ SELECT id
     'WHERE'
 ).'
   ORDER BY '.DB_RANDOM_FUNCTION.'()
-  LIMIT '.min(50, $conf['top_number'], $user['nb_image_page']).'
+  LIMIT '.min(50, \Piwigo\Core\Config::topNumber(), $user['nb_image_page']).'
 ;';
 
 // +-----------------------------------------------------------------------+

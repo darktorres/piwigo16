@@ -19,17 +19,17 @@ include(PHPWG_ROOT_PATH . 'include/config_default.inc.php');
 @include(PHPWG_ROOT_PATH. 'local/config/config.inc.php');
 
 defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
-defined('PWG_DERIVATIVE_DIR') or define('PWG_DERIVATIVE_DIR', $conf['data_location'].'i/');
+defined('PWG_DERIVATIVE_DIR') or define('PWG_DERIVATIVE_DIR', \Piwigo\Core\Config::dataLocation().'i/');
 
 @include(PHPWG_ROOT_PATH.PWG_LOCAL_DIR .'config/database.inc.php');
 
 $logger = new Logger(array(
-  'directory' => PHPWG_ROOT_PATH . $conf['data_location'] . $conf['log_dir'],
-  'severity' => $conf['log_level'],
+  'directory' => PHPWG_ROOT_PATH . \Piwigo\Core\Config::dataLocation() . \Piwigo\Core\Config::logDir(),
+  'severity' => \Piwigo\Core\Config::logLevel(),
   // we use an hashed filename to prevent direct file access, and we salt with
   // the db_password instead of secret_key because the log must be usable in i.php
   // (secret_key is in the database)
-  'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . $conf['db_password']) . '.txt',
+  'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . \Piwigo\Core\Config::get('db_password')) . '.txt',
   ));
 
 
@@ -44,12 +44,11 @@ function get_extension($filename)
 function mkgetdir($dir)
 {
     if (!is_dir($dir)) {
-        global $conf;
         if (substr(PHP_OS, 0, 3) == 'WIN') {
             $dir = str_replace('/', DIRECTORY_SEPARATOR, $dir);
         }
         $umask = umask(0);
-        $mkd = @mkdir($dir, $conf['chmod_value'], true);
+        $mkd = @mkdir($dir, \Piwigo\Core\Config::chmodValue(), true);
         umask($umask);
         if ($mkd == false && !is_dir($dir) /* retest existence because of potential concurrent i.php with slow file systems*/) {
             return false;
@@ -147,9 +146,9 @@ function parse_custom_params($tokens)
 
 function parse_request()
 {
-    global $conf, $page;
+    global $page;
 
-    if ($conf['question_mark_in_urls'] == false and
+    if (\Piwigo\Core\Config::questionMarkInUrls() == false and
          isset($_SERVER['PATH_INFO']) and !empty($_SERVER['PATH_INFO'])) {
         $req = $_SERVER['PATH_INFO'];
         $req = str_replace('//', '/', $req);
@@ -172,7 +171,7 @@ function parse_request()
     $req = ltrim($req, '/');
 
     foreach (preg_split('#/+#', $req) as $token) {
-        preg_match($conf['sync_chars_regex'], $token) or ierror('Invalid chars in request', 400);
+        preg_match(\Piwigo\Core\Config::syncCharsRegex(), $token) or ierror('Invalid chars in request', 400);
     }
 
     $page['derivative_path'] = PHPWG_ROOT_PATH.PWG_DERIVATIVE_DIR.$req;
@@ -362,16 +361,16 @@ foreach (explode(',', 'load,rotate,crop,scale,sharpen,watermark,save,send') as $
     $timing[$k] = '';
 }
 
-include_once(PHPWG_ROOT_PATH .'include/dblayer/functions_'.$conf['dblayer'].'.inc.php');
+include_once(PHPWG_ROOT_PATH .'include/dblayer/functions_'.\Piwigo\Core\Config::dbLayer().'.inc.php');
 include_once(PHPWG_ROOT_PATH .'/include/derivative_params.inc.php');
 include_once(PHPWG_ROOT_PATH .'/include/derivative_std_params.inc.php');
 
 try {
     pwg_db_connect(
-        $conf['db_host'],
-        $conf['db_user'],
-        $conf['db_password'],
-        $conf['db_base']
+        \Piwigo\Core\Config::get('db_host'),
+        \Piwigo\Core\Config::get('db_user'),
+        \Piwigo\Core\Config::get('db_password'),
+        \Piwigo\Core\Config::get('db_base')
     );
 } catch (Exception $e) {
     $logger->error($e->getMessage(), 'i.php');
@@ -386,7 +385,7 @@ SELECT param, value
 
 $result = pwg_query($query);
 while ($row = pwg_db_fetch_assoc($result)) {
-    $conf[ $row['param'] ] = $row['value'];
+    $GLOBALS['conf'][$row['param']] = $row['value'];
 }
 ImageStdParams::load_from_db();
 
@@ -562,7 +561,7 @@ if (!$changes) {
     ierror($page['src_url'], 301);
 }
 
-if ($d_size[0] * $d_size[1] < $conf['derivatives_strip_metadata_threshold']) {// strip metadata for small images
+if ($d_size[0] * $d_size[1] < \Piwigo\Core\Config::derivativesStripMetadataThreshold()) {// strip metadata for small images
     $image->strip();
 }
 

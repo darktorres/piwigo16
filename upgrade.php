@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -52,7 +53,7 @@ include_once(PHPWG_ROOT_PATH . 'include/template.class.php');
  *
  * @return array
  */
-function get_tables()
+function get_tables(): array
 {
     $tables = [];
 
@@ -75,7 +76,7 @@ SHOW TABLES
  *
  * @return array of array
  */
-function get_columns_of($tables)
+function get_columns_of($tables): array
 {
     $columns_of = [];
 
@@ -97,7 +98,7 @@ DESC `'.$table.'`
 
 /**
  */
-function print_time($message)
+function print_time(string $message): void
 {
     global $last_time;
 

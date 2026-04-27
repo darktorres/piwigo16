@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -35,7 +36,7 @@ check_input_parameter('action', $_GET, false, '/^(lost|reset|lost_code|reset_end
  *
  * @return bool
  */
-function process_verification_code()
+function process_verification_code(): bool
 {
     global $page, $conf, $logger;
 
@@ -117,7 +118,7 @@ function process_verification_code()
  *
  * @return bool (true if valid, false otherwise)
  */
-function process_password_request()
+function process_password_request(): bool
 {
     global $page, $user;
 
@@ -253,7 +254,7 @@ SELECT
  *
  * @return bool (true if password was reset, false otherwise)
  */
-function reset_password()
+function reset_password(): bool
 {
     global $page, $conf;
 

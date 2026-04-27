@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -112,7 +113,7 @@ add_event_handler('render_element_description', 'pwg_nl2br');
 trigger_notify('loc_begin_picture');
 
 // this is the default handler that generates the display for the element
-function default_picture_content($content, $element_info)
+function default_picture_content($content, array $element_info)
 {
     global $conf;
 

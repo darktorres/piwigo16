@@ -1636,6 +1636,12 @@ parameters:
 			path: admin/include/functions_metadata.php
 
 		-
+			message: '#^Parameter \#3 \$subject of function str_replace expects array\<string\>\|string, string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/functions_metadata.php
+
+		-
 			message: '#^Parameter \#3 \$year of function checkdate expects int, string given\.$#'
 			identifier: argument.type
 			count: 1
@@ -2212,7 +2218,25 @@ parameters:
 			path: admin/include/functions_upload.inc.php
 
 		-
+			message: '#^Parameter \#1 \$filename of function file_exists expects string, string\|null given\.$#'
+			identifier: argument.type
+			count: 2
+			path: admin/include/functions_upload.inc.php
+
+		-
 			message: '#^Parameter \#1 \$finfo of function finfo_file expects finfo, finfo\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/functions_upload.inc.php
+
+		-
+			message: '#^Parameter \#1 \$from of function rename expects string, string\|null given\.$#'
+			identifier: argument.type
+			count: 2
+			path: admin/include/functions_upload.inc.php
+
+		-
+			message: '#^Parameter \#1 \$src of function fetchRemote expects string, string\|null given\.$#'
 			identifier: argument.type
 			count: 1
 			path: admin/include/functions_upload.inc.php
@@ -5587,6 +5611,12 @@ parameters:
 			path: admin/maintenance_actions.php
 
 		-
+			message: '#^Parameter \#1 \$version1 of function version_compare expects string, string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/maintenance_actions.php
+
+		-
 			message: '#^Parameter \#2 \$string of function explode expects string, Ressource\|string given\.$#'
 			identifier: argument.type
 			count: 1
@@ -5615,6 +5645,12 @@ parameters:
 			identifier: variable.undefined
 			count: 12
 			path: admin/maintenance_actions.php
+
+		-
+			message: '#^Parameter \#1 \$version1 of function version_compare expects string, string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/maintenance_env.php
 
 		-
 			message: '#^Parameter \#2 \$string of function explode expects string, Ressource\|string given\.$#'
@@ -8353,7 +8389,7 @@ parameters:
 			path: include/dblayer/functions_mysqli.inc.php
 
 		-
-			message: '#^Possibly invalid array key type float\|int\|string\.$#'
+			message: '#^Possibly invalid array key type float\|int\|string\|null\.$#'
 			identifier: offsetAccess.invalidOffset
 			count: 2
 			path: include/dblayer/functions_mysqli.inc.php
@@ -8451,6 +8487,12 @@ parameters:
 		-
 			message: '#^Method DerivativeImage\:\:get_scaled_size_htm\(\) should return string but return statement is missing\.$#'
 			identifier: return.missing
+			count: 1
+			path: include/derivative.inc.php
+
+		-
+			message: '#^Method DerivativeImage\:\:get_size\(\) should return array\<int\> but returns array\<int\>\|null\.$#'
+			identifier: return.type
 			count: 1
 			path: include/derivative.inc.php
 
@@ -8719,6 +8761,12 @@ parameters:
 			path: include/derivative_std_params.inc.php
 
 		-
+			message: '#^Parameter \#3 \$min_size of class SizingParams constructor expects array\<int\>\|null, array\<int, int\|null\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/derivative_std_params.inc.php
+
+		-
 			message: '#^Property ImageStdParams\:\:\$custom type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -8781,6 +8829,12 @@ parameters:
 		-
 			message: '#^Cannot access property \$length on DOMNodeList\<DOMNameSpaceNode\|DOMNode\>\|false\.$#'
 			identifier: property.nonObject
+			count: 1
+			path: include/emogrifier.class.php
+
+		-
+			message: '#^Cannot call method removeChild\(\) on DOMNode\|null\.$#'
+			identifier: method.nonObject
 			count: 1
 			path: include/emogrifier.class.php
 
@@ -8871,7 +8925,13 @@ parameters:
 		-
 			message: '#^Parameter \#1 \$child of method DOMNode\:\:removeChild\(\) expects DOMNode, DOMNameSpaceNode\|DOMNode given\.$#'
 			identifier: argument.type
-			count: 2
+			count: 1
+			path: include/emogrifier.class.php
+
+		-
+			message: '#^Parameter \#1 \$cssDeclarationBlock of method Emogrifier\:\:parseCssDeclarationBlock\(\) expects string, string\|null given\.$#'
+			identifier: argument.type
+			count: 1
 			path: include/emogrifier.class.php
 
 		-
@@ -8881,8 +8941,20 @@ parameters:
 			path: include/emogrifier.class.php
 
 		-
+			message: '#^Parameter \#1 \$string of function mb_convert_encoding expects array\|string, string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/emogrifier.class.php
+
+		-
 			message: '#^Parameter \#1 \$string of function trim expects string, bool given\.$#'
 			identifier: argument.type
+			count: 1
+			path: include/emogrifier.class.php
+
+		-
+			message: '#^Possibly invalid array key type string\|null\.$#'
+			identifier: offsetAccess.invalidOffset
 			count: 1
 			path: include/emogrifier.class.php
 
@@ -9208,6 +9280,12 @@ parameters:
 			path: include/functions.inc.php
 
 		-
+			message: '#^Function transform_date\(\) should return string but returns string\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: include/functions.inc.php
+
+		-
 			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
 			identifier: arguments.count
 			count: 1
@@ -9340,6 +9418,12 @@ parameters:
 			path: include/functions.inc.php
 
 		-
+			message: '#^Parameter \#1 \$version1 of function version_compare expects string, string\|null given\.$#'
+			identifier: argument.type
+			count: 2
+			path: include/functions.inc.php
+
+		-
 			message: '#^Parameter \#1 \$year of method DateTime\:\:setDate\(\) expects int, int\|string given\.$#'
 			identifier: argument.type
 			count: 1
@@ -9382,6 +9466,12 @@ parameters:
 			path: include/functions.inc.php
 
 		-
+			message: '#^Parameter \#2 \$version2 of function version_compare expects string, string\|null given\.$#'
+			identifier: argument.type
+			count: 2
+			path: include/functions.inc.php
+
+		-
 			message: '#^Parameter \#3 \$day of method DateTime\:\:setDate\(\) expects int, string given\.$#'
 			identifier: argument.type
 			count: 1
@@ -9395,6 +9485,12 @@ parameters:
 
 		-
 			message: '#^Parameter \#3 \$second of method DateTime\:\:setTime\(\) expects int, int\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/functions.inc.php
+
+		-
+			message: '#^Parameter \#3 \$subject of function str_replace expects array\<string\>\|string, string\|null given\.$#'
 			identifier: argument.type
 			count: 1
 			path: include/functions.inc.php
@@ -9691,7 +9787,19 @@ parameters:
 			path: include/functions_cookie.inc.php
 
 		-
+			message: '#^Parameter \#3 \$expires\|options of function setcookie expects array\{expires\?\: int, path\?\: string, domain\?\: string, secure\?\: bool, httponly\?\: bool, samesite\?\: ''Lax''\|''lax''\|''None''\|''none''\|''Strict''\|''strict''\}\|int, array\{expires\: 0, path\: string\|null\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/functions_cookie.inc.php
+
+		-
 			message: '#^Parameter \#3 \$length of function substr expects int\|null, int\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/functions_cookie.inc.php
+
+		-
+			message: '#^Parameter \#3 \$options of function setcookie expects array\{expires\?\: int, path\?\: string, domain\?\: string, secure\?\: bool, httponly\?\: bool, samesite\?\: ''Lax''\|''lax''\|''None''\|''none''\|''Strict''\|''strict''\}, array\{expires\: int\<min, \-1\>\|int\<1, max\>, path\: string\|null\} given\.$#'
 			identifier: argument.type
 			count: 1
 			path: include/functions_cookie.inc.php
@@ -11659,6 +11767,12 @@ parameters:
 			path: include/functions_user.inc.php
 
 		-
+			message: '#^Function get_user_last_visit_from_history\(\) should return string but returns string\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: include/functions_user.inc.php
+
+		-
 			message: '#^Function get_userid\(\) has no return type specified\.$#'
 			identifier: missingType.return
 			count: 1
@@ -11780,6 +11894,12 @@ parameters:
 
 		-
 			message: '#^Parameter \#1 \$date1 of function dateDiff expects DateTime, DateTime\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/functions_user.inc.php
+
+		-
+			message: '#^Parameter \#1 \$mail_address of function email_check_format expects string, string\|null given\.$#'
 			identifier: argument.type
 			count: 1
 			path: include/functions_user.inc.php
@@ -13123,10 +13243,40 @@ parameters:
 			path: include/mdetect.php
 
 		-
+			message: '#^Method MatthiasMullie\\PathConverter\\Converter\:\:normalize\(\) should return string but returns string\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: include/minify/path-converter/src/Converter.php
+
+		-
+			message: '#^Parameter \#1 \$path of function realpath expects string, string\|null given\.$#'
+			identifier: argument.type
+			count: 2
+			path: include/minify/path-converter/src/Converter.php
+
+		-
+			message: '#^Parameter \#1 \$path of method MatthiasMullie\\PathConverter\\Converter\:\:dirname\(\) expects string, string\|null given\.$#'
+			identifier: argument.type
+			count: 2
+			path: include/minify/path-converter/src/Converter.php
+
+		-
 			message: '#^Parameter \#2 \$needle of function str_starts_with expects string, string\|false given\.$#'
 			identifier: argument.type
 			count: 2
 			path: include/minify/path-converter/src/Converter.php
+
+		-
+			message: '#^Method MatthiasMullie\\Minify\\CSS\:\:cleanupModernColors\(\) should return string but returns string\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: include/minify/src/CSS.php
+
+		-
+			message: '#^Method MatthiasMullie\\Minify\\CSS\:\:convertLegacyColors\(\) should return string but returns string\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: include/minify/src/CSS.php
 
 		-
 			message: '#^Method MatthiasMullie\\Minify\\CSS\:\:execute\(\) has parameter \$path with no type specified\.$#'
@@ -13159,8 +13309,32 @@ parameters:
 			path: include/minify/src/CSS.php
 
 		-
+			message: '#^Method MatthiasMullie\\Minify\\CSS\:\:shortenFontWeights\(\) should return string but returns string\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: include/minify/src/CSS.php
+
+		-
+			message: '#^Method MatthiasMullie\\Minify\\CSS\:\:shortenHexColors\(\) should return string but returns string\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: include/minify/src/CSS.php
+
+		-
+			message: '#^Method MatthiasMullie\\Minify\\CSS\:\:shortenZeroes\(\) should return string but returns string\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: include/minify/src/CSS.php
+
+		-
 			message: '#^Method MatthiasMullie\\Minify\\CSS\:\:stripComments\(\) has no return type specified\.$#'
 			identifier: missingType.return
+			count: 1
+			path: include/minify/src/CSS.php
+
+		-
+			message: '#^Method MatthiasMullie\\Minify\\CSS\:\:stripEmptyTags\(\) should return string but returns string\|null\.$#'
+			identifier: return.type
 			count: 1
 			path: include/minify/src/CSS.php
 
@@ -13219,6 +13393,18 @@ parameters:
 			path: include/minify/src/JS.php
 
 		-
+			message: '#^Method MatthiasMullie\\Minify\\JS\:\:propertyNotation\(\) should return string but returns string\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: include/minify/src/JS.php
+
+		-
+			message: '#^Method MatthiasMullie\\Minify\\JS\:\:shortenBools\(\) should return string but returns string\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: include/minify/src/JS.php
+
+		-
 			message: '#^Method MatthiasMullie\\Minify\\JS\:\:stripComments\(\) has no return type specified\.$#'
 			identifier: missingType.return
 			count: 1
@@ -13238,6 +13424,18 @@ parameters:
 
 		-
 			message: '#^Parameter \#1 \$callback of function call_user_func_array expects callable\(\)\: mixed, array\{''MatthiasMullie\\\\Minify\\\\Minify'', ''__construct''\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/minify/src/JS.php
+
+		-
+			message: '#^Parameter \#1 \$string of function substr_replace expects array\|string, string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/minify/src/JS.php
+
+		-
+			message: '#^Parameter \#3 \$subject of function str_replace expects array\<string\>\|string, string\|null given\.$#'
 			identifier: argument.type
 			count: 1
 			path: include/minify/src/JS.php
@@ -14278,6 +14476,12 @@ parameters:
 			path: include/phpmailer/PHPMailer.php
 
 		-
+			message: '#^Parameter \#1 \$html of method PHPMailer\\PHPMailer\\PHPMailer\:\:html2text\(\) expects string, string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/phpmailer/PHPMailer.php
+
+		-
 			message: '#^Parameter \#1 \$key of function openssl_pkey_free expects OpenSSLAsymmetricKey, OpenSSLAsymmetricKey\|false given\.$#'
 			identifier: argument.type
 			count: 2
@@ -14303,6 +14507,12 @@ parameters:
 
 		-
 			message: '#^Parameter \#1 \$separator of function explode expects non\-empty\-string, string given\.$#'
+			identifier: argument.type
+			count: 2
+			path: include/phpmailer/PHPMailer.php
+
+		-
+			message: '#^Parameter \#1 \$text of static method PHPMailer\\PHPMailer\\PHPMailer\:\:normalizeBreaks\(\) expects string, string\|null given\.$#'
 			identifier: argument.type
 			count: 2
 			path: include/phpmailer/PHPMailer.php
@@ -14339,6 +14549,12 @@ parameters:
 
 		-
 			message: '#^Parameter \#3 \$private_key of function openssl_sign expects array\|OpenSSLAsymmetricKey\|OpenSSLCertificate\|string, OpenSSLAsymmetricKey\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/phpmailer/PHPMailer.php
+
+		-
+			message: '#^Parameter \#3 \$subject of function str_replace expects array\<string\>\|string, string\|null given\.$#'
 			identifier: argument.type
 			count: 1
 			path: include/phpmailer/PHPMailer.php
@@ -14650,7 +14866,31 @@ parameters:
 			path: include/phpmailer/SMTP.php
 
 		-
+			message: '#^Parameter \#1 \$stream of function fwrite expects resource, resource\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/phpmailer/SMTP.php
+
+		-
+			message: '#^Parameter \#1 \$stream of function stream_socket_enable_crypto expects resource, resource\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/phpmailer/SMTP.php
+
+		-
 			message: '#^Parameter \#1 \$string of function trim expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/phpmailer/SMTP.php
+
+		-
+			message: '#^Parameter \#2 \$detail of method PHPMailer\\PHPMailer\\SMTP\:\:setError\(\) expects string, string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/phpmailer/SMTP.php
+
+		-
+			message: '#^Parameter \#2 \$port of function fsockopen expects int, int\|null given\.$#'
 			identifier: argument.type
 			count: 1
 			path: include/phpmailer/SMTP.php
@@ -14665,6 +14905,12 @@ parameters:
 			message: '#^Parameter \#3 \$smtp_code of method PHPMailer\\PHPMailer\\SMTP\:\:setError\(\) expects string, int given\.$#'
 			identifier: argument.type
 			count: 1
+			path: include/phpmailer/SMTP.php
+
+		-
+			message: '#^Parameter \#4 \$smtp_code_ex of method PHPMailer\\PHPMailer\\SMTP\:\:setError\(\) expects string, string\|null given\.$#'
+			identifier: argument.type
+			count: 2
 			path: include/phpmailer/SMTP.php
 
 		-
@@ -19124,6 +19370,12 @@ parameters:
 			path: include/ws_functions/pwg.categories.php
 
 		-
+			message: '#^Cannot call method get_url\(\) on DerivativeImage\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: include/ws_functions/pwg.comments.php
+
+		-
 			message: '#^Function ws_userComments_delete\(\) has parameter \$service with no type specified\.$#'
 			identifier: missingType.parameter
 			count: 1
@@ -19710,6 +19962,12 @@ parameters:
 
 		-
 			message: '#^Parameter \#1 \$ids of function update_category expects ''all''\|array\<int\>\|int, non\-empty\-array\<int\<0, max\>, string\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/ws_functions/pwg.images.php
+
+		-
+			message: '#^Parameter \#1 \$tag_name of function tag_id_from_tag_name expects string, string\|null given\.$#'
 			identifier: argument.type
 			count: 1
 			path: include/ws_functions/pwg.images.php
@@ -20438,6 +20696,36 @@ parameters:
 			path: include/ws_protocols/rest_encoder.php
 
 		-
+			message: '#^Cannot call method end_element\(\) on PwgXmlWriter\|null\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: include/ws_protocols/rest_encoder.php
+
+		-
+			message: '#^Cannot call method getOutput\(\) on PwgXmlWriter\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: include/ws_protocols/rest_encoder.php
+
+		-
+			message: '#^Cannot call method start_element\(\) on PwgXmlWriter\|null\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: include/ws_protocols/rest_encoder.php
+
+		-
+			message: '#^Cannot call method write_attribute\(\) on PwgXmlWriter\|null\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: include/ws_protocols/rest_encoder.php
+
+		-
+			message: '#^Cannot call method write_content\(\) on PwgXmlWriter\|null\.$#'
+			identifier: method.nonObject
+			count: 4
+			path: include/ws_protocols/rest_encoder.php
+
+		-
 			message: '#^Method PwgRestEncoder\:\:encode\(\) has parameter \$data with no type specified\.$#'
 			identifier: missingType.parameter
 			count: 1
@@ -20864,6 +21152,12 @@ parameters:
 			path: picture.php
 
 		-
+			message: '#^Parameter \#3 \$expires\|options of function setcookie expects array\{expires\?\: int, path\?\: string, domain\?\: string, secure\?\: bool, httponly\?\: bool, samesite\?\: ''Lax''\|''lax''\|''None''\|''none''\|''Strict''\|''strict''\}\|int, array\{expires\: 0, path\: string\|null\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: picture.php
+
+		-
 			message: '#^Variable \$conf might not be defined\.$#'
 			identifier: variable.undefined
 			count: 21
@@ -20998,6 +21292,12 @@ parameters:
 		-
 			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
 			identifier: arguments.count
+			count: 1
+			path: search.php
+
+		-
+			message: '#^Parameter \#1 \$value of function count expects array\|Countable, array\|null given\.$#'
+			identifier: argument.type
 			count: 1
 			path: search.php
 

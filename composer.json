@@ -17,11 +17,20 @@
         "rector/rector": "^2.0",
         "symfony/process": "^7.1"
     },
-    "autoload": {},
+    "autoload": {
+        "psr-4": {
+            "Piwigo\\": "src/Piwigo/",
+            "Smarty\\": "include/smarty/src/"
+        },
+        "files": [
+            "src/Piwigo/Compat/aliases.php"
+        ]
+    },
     "autoload-dev": {
         "psr-4": { "Piwigo\\Tests\\": "tests/" }
     },
     "config": {
+        "optimize-autoloader": true,
         "sort-packages": true,
         "allow-plugins": {}
     }

@@ -20,7 +20,7 @@ if (!is_webmaster()) {
     $page['warnings'][] = str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.'));
 }
 
-$conf['updates_ignored'] = unserialize($conf['updates_ignored']);
+$conf['updates_ignored'] = unserialize($conf['updates_ignored'] ?? '');
 
 include_once(PHPWG_ROOT_PATH.'admin/include/updates.class.php');
 $autoupdate = new updates($page['page']);

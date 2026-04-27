@@ -474,7 +474,7 @@ switch ($page['section']) {
             $template->append(
                 'display',
                 [
-                  'picture_informations' => unserialize($conf['picture_informations']),
+                  'picture_informations' => unserialize($conf['picture_informations'] ?? ''),
                   'NB_CATEGORIES_PAGE' => $conf['nb_categories_page'],
                   ],
                 true

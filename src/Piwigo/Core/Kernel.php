@@ -34,6 +34,7 @@ final class Kernel
         Lang::attachGlobals();
         CurrentUser::attachGlobals();
 
+        ServiceLocator::register(Config::class, Config::instance());
         ServiceLocator::register(PageState::class, PageState::current());
     }
 

@@ -124,6 +124,15 @@ final class KernelBootTest extends TestCase
         self::assertInstanceOf(PageState::class, ServiceLocator::get(PageState::class));
     }
 
+    public function test_ServiceLocator_Config_instance_is_same_as_Config_instance(): void
+    {
+        $this->simulateGlobals();
+        Kernel::boot();
+
+        self::assertTrue(ServiceLocator::has(Config::class));
+        self::assertSame(Config::instance(), ServiceLocator::get(Config::class));
+    }
+
     public function test_reset_clears_booted_flag(): void
     {
         $this->simulateGlobals();

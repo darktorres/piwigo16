@@ -50,6 +50,10 @@ if (!empty($_SERVER['PATH_INFO'])) {
     $_SERVER['PATH_INFO'] = addslashes((string) $_SERVER['PATH_INFO']);
 }
 
+// Skip the bootstrap dance when Kernel::boot() has already run (e.g. a nested
+// include or a test that bootstraps via Kernel directly instead of this file).
+if (!\Piwigo\Core\Kernel::isBooted()) :
+
 //
 // Define some basic configuration arrays this also prevents malicious
 // rewriting of language and otherarray values via URI params
@@ -329,3 +333,5 @@ if (!empty($conf['original_url_protection'])) {
     add_event_handler('get_src_image_url', 'get_src_image_url_protection_handler');
 }
 trigger_notify('init');
+
+endif; // !Kernel::isBooted()

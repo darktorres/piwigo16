@@ -16,6 +16,18 @@ final class Config
     /** @var array<string,mixed> */
     private static array $data = [];
 
+    private static ?self $singleton = null;
+
+    private function __construct()
+    {
+    }
+
+    /** Singleton handle — used by ServiceLocator; all data methods are static. */
+    public static function instance(): self
+    {
+        return self::$singleton ??= new self();
+    }
+
     /**
      * Called by Kernel::boot() after common.inc.php has fully populated $GLOBALS['conf'].
      * Copies conf data into self::$data, then rebinds $GLOBALS['conf'] to reference it,
@@ -192,5 +204,6 @@ final class Config
     public static function reset(): void
     {
         self::$data = [];
+        self::$singleton = null;
     }
 }

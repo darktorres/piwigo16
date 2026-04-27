@@ -355,6 +355,12 @@ parameters:
 			path: admin/help.php
 
 		-
+			message: '#^Offset '''' does not exist on array\{\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: admin/help.php
+
+		-
 			message: '#^Variable \$template might not be defined\.$#'
 			identifier: variable.undefined
 			count: 3
@@ -365,6 +371,24 @@ parameters:
 			identifier: variable.undefined
 			count: 1
 			path: admin/help.php
+
+		-
+			message: '#^Offset ''filename'' does not exist on array\{\}\|array\{end\: non\-falsy\-string, start\: string, types\: non\-empty\-array\<string\>, display_thumbnail\: mixed\}\|array\{start\?\: mixed, end\?\: mixed\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: admin/history.php
+
+		-
+			message: '#^Offset ''image_id'' does not exist on array\{\}\|array\{end\: non\-falsy\-string, start\: non\-falsy\-string, types\: non\-empty\-array\<string\>, display_thumbnail\: mixed\}\|array\{start\?\: mixed, end\?\: mixed\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: admin/history.php
+
+		-
+			message: '#^Offset ''ip'' does not exist on array\{\}\|array\{end\: non\-falsy\-string, start\: non\-falsy\-string, types\: non\-empty\-array\<string\>, display_thumbnail\: mixed\}\|array\{start\?\: mixed, end\?\: mixed\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: admin/history.php
 
 		-
 			message: '#^Variable \$conf might not be defined\.$#'
@@ -562,8 +586,26 @@ parameters:
 			path: admin/include/functions.php
 
 		-
+			message: '#^Function empty_lounge\(\) should return int but empty return statement found\.$#'
+			identifier: return.empty
+			count: 1
+			path: admin/include/functions.php
+
+		-
+			message: '#^Function empty_lounge\(\) should return int but returns array\.$#'
+			identifier: return.type
+			count: 1
+			path: admin/include/functions.php
+
+		-
 			message: '#^Function get_image_tag_ids\(\) has invalid return type associative\.$#'
 			identifier: class.notFound
+			count: 1
+			path: admin/include/functions.php
+
+		-
+			message: '#^Function get_uppercat_ids\(\) should return array\<int\> but returns array\<int\<0, max\>, string\>\.$#'
+			identifier: return.type
 			count: 1
 			path: admin/include/functions.php
 
@@ -684,6 +726,12 @@ parameters:
 		-
 			message: '#^Default value of the parameter \#1 \$category_id \(string\) of function get_filelist\(\) is incompatible with type int\.$#'
 			identifier: parameter.defaultValue
+			count: 1
+			path: admin/include/functions_metadata.php
+
+		-
+			message: '#^Function get_sync_metadata\(\) should return array but returns false\.$#'
+			identifier: return.type
 			count: 1
 			path: admin/include/functions_metadata.php
 
@@ -814,6 +862,24 @@ parameters:
 			path: admin/include/image.class.php
 
 		-
+			message: '#^Property image_ext_imagick\:\:\$height \(string\) does not accept int\<0, max\>\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: admin/include/image.class.php
+
+		-
+			message: '#^Property image_ext_imagick\:\:\$is_animated_webp \(true\) does not accept default value of type false\.$#'
+			identifier: property.defaultValue
+			count: 1
+			path: admin/include/image.class.php
+
+		-
+			message: '#^Property image_ext_imagick\:\:\$width \(string\) does not accept int\<0, max\>\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: admin/include/image.class.php
+
+		-
 			message: '#^Undefined variable\: \$f$#'
 			identifier: variable.undefined
 			count: 1
@@ -906,6 +972,30 @@ parameters:
 		-
 			message: '#^Function PclErrorString not found\.$#'
 			identifier: function.notFound
+			count: 1
+			path: admin/include/pclzip.lib.php
+
+		-
+			message: '#^Offset ''comment'' does not exist on array\{\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: admin/include/pclzip.lib.php
+
+		-
+			message: '#^Offset ''entries'' does not exist on array\{\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: admin/include/pclzip.lib.php
+
+		-
+			message: '#^Offset ''offset'' does not exist on array\{\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: admin/include/pclzip.lib.php
+
+		-
+			message: '#^Offset ''size'' does not exist on array\{\}\.$#'
+			identifier: offsetAccess.notFound
 			count: 1
 			path: admin/include/pclzip.lib.php
 
@@ -1115,6 +1205,24 @@ parameters:
 			identifier: variable.undefined
 			count: 1
 			path: admin/include/themes.class.php
+
+		-
+			message: '#^Property updates\:\:\$default_plugins \(array\{''AdminTools'', ''TakeATour'', ''language_switch'', ''LocalFilesEditor''\}\) does not accept default value of type array\{\}\.$#'
+			identifier: property.defaultValue
+			count: 1
+			path: admin/include/updates.class.php
+
+		-
+			message: '#^Property updates\:\:\$default_themes \(array\{''modus'', ''elegant'', ''smartpocket''\}\) does not accept default value of type array\{\}\.$#'
+			identifier: property.defaultValue
+			count: 1
+			path: admin/include/updates.class.php
+
+		-
+			message: '#^Property updates\:\:\$types \(array\{class\-string\<plugins\>, class\-string\<themes\>, class\-string\<languages\>\}\|array\{mixed\}\) does not accept default value of type array\{\}\.$#'
+			identifier: property.defaultValue
+			count: 1
+			path: admin/include/updates.class.php
 
 		-
 			message: '#^Variable \$old_files in empty\(\) always exists and is not falsy\.$#'
@@ -1568,6 +1676,12 @@ parameters:
 			identifier: variable.undefined
 			count: 4
 			path: admin/site_manager.php
+
+		-
+			message: '#^Method LocalSiteReader\:\:open\(\) should return true but returns false\.$#'
+			identifier: return.type
+			count: 1
+			path: admin/site_reader_local.php
 
 		-
 			message: '''
@@ -2047,6 +2161,72 @@ parameters:
 			path: i.php
 
 		-
+			message: '#^Offset ''derivative_params'' does not exist on array\{\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: i.php
+
+		-
+			message: '#^Offset ''derivative_path'' does not exist on array\{coi\: mixed, original_size\?\: array\{mixed, mixed\}, rotation_angle\: mixed\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 3
+			path: i.php
+
+		-
+			message: '#^Offset ''derivative_path'' does not exist on array\{coi\: mixed, original_size\?\: array\{mixed, mixed\}, rotation_angle\?\: mixed\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: i.php
+
+		-
+			message: '#^Offset ''derivative_path'' does not exist on array\{\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: i.php
+
+		-
+			message: '#^Offset ''derivative_type'' does not exist on array\{coi\: mixed, original_size\?\: array\{mixed, mixed\}, rotation_angle\: mixed\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: i.php
+
+		-
+			message: '#^Offset ''src_location'' does not exist on array\{coi\: null\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 4
+			path: i.php
+
+		-
+			message: '#^Offset ''src_path'' does not exist on array\{coi\: mixed, original_size\?\: array\{mixed, mixed\}, rotation_angle\: mixed\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: i.php
+
+		-
+			message: '#^Offset ''src_path'' does not exist on array\{coi\: mixed, original_size\?\: array\{mixed, mixed\}, rotation_angle\?\: mixed\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: i.php
+
+		-
+			message: '#^Offset ''src_path'' does not exist on array\{coi\: mixed, original_size\?\: array\{mixed, mixed\}\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: i.php
+
+		-
+			message: '#^Offset ''src_path'' does not exist on array\{\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: i.php
+
+		-
+			message: '#^Offset ''src_url'' does not exist on array\{coi\: mixed, original_size\?\: array\{mixed, mixed\}, rotation_angle\: mixed\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: i.php
+
+		-
 			message: '#^Path in include\(\) "\./local/config/database\.inc\.php" is not a file or it does not exist\.$#'
 			identifier: include.fileNotFound
 			count: 1
@@ -2155,10 +2335,34 @@ parameters:
 			path: include/cache.class.php
 
 		-
+			message: '#^Method PersistentCache\:\:make_key\(\) should return a but returns string\.$#'
+			identifier: return.type
+			count: 1
+			path: include/cache.class.php
+
+		-
+			message: '#^Method PersistentFileCache\:\:get\(\) should return false but returns true\.$#'
+			identifier: return.type
+			count: 1
+			path: include/cache.class.php
+
+		-
+			message: '#^Method PersistentFileCache\:\:set\(\) should return false but returns true\.$#'
+			identifier: return.type
+			count: 1
+			path: include/cache.class.php
+
+		-
 			message: '#^PHPDoc tag @param has invalid value \(out mixed \$value\)\: Unexpected token "mixed", expected variable at offset 120 on line 4$#'
 			identifier: phpDoc.parseError
 			count: 1
 			path: include/cache.class.php
+
+		-
+			message: '#^Method CalendarBase\:\:get_nav_bar_from_items\(\) should return string but returns list\<array\<string, mixed\>\>\.$#'
+			identifier: return.type
+			count: 1
+			path: include/calendar_base.class.php
 
 		-
 			message: '#^PHPDoc tag @return with type array\<int\> is incompatible with native type int\.$#'
@@ -2245,8 +2449,44 @@ parameters:
 			path: include/common.inc.php
 
 		-
+			message: '#^Offset ''dblayer'' does not exist on array\{\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: include/common.inc.php
+
+		-
+			message: '#^Offset ''email'' does not exist on array\{\}\|array\{username\: string\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: include/common.inc.php
+
+		-
+			message: '#^Offset ''id'' does not exist on array\{\}\|array\{username\: string\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: include/common.inc.php
+
+		-
 			message: '#^Offset ''internal_status'' on array\{\}\|array\{username\: mixed\} in isset\(\) does not exist\.$#'
 			identifier: isset.offset
+			count: 1
+			path: include/common.inc.php
+
+		-
+			message: '#^Offset ''language'' does not exist on array\{\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 4
+			path: include/common.inc.php
+
+		-
+			message: '#^Offset ''session_gc_probability'' does not exist on array\{\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: include/common.inc.php
+
+		-
+			message: '#^Offset ''theme'' does not exist on array\{\}\|array\{username\: string\}\.$#'
+			identifier: offsetAccess.notFound
 			count: 1
 			path: include/common.inc.php
 
@@ -2293,6 +2533,12 @@ parameters:
 			path: include/derivative.inc.php
 
 		-
+			message: '#^Invalid array key type DerivativeParams\.$#'
+			identifier: offsetAccess.invalidOffset
+			count: 2
+			path: include/derivative.inc.php
+
+		-
 			message: '#^Method DerivativeImage\:\:get_scaled_size_htm\(\) should return string but return statement is missing\.$#'
 			identifier: return.missing
 			count: 1
@@ -2329,6 +2575,24 @@ parameters:
 			path: include/derivative.inc.php
 
 		-
+			message: '#^Property DerivativeImage\:\:\$params \(array\) does not accept DerivativeParams\.$#'
+			identifier: assign.propertyType
+			count: 2
+			path: include/derivative.inc.php
+
+		-
+			message: '#^Access to offset 0 on an unknown class stirng\.$#'
+			identifier: class.notFound
+			count: 1
+			path: include/derivative_params.inc.php
+
+		-
+			message: '#^Access to offset 2 on an unknown class stirng\.$#'
+			identifier: class.notFound
+			count: 1
+			path: include/derivative_params.inc.php
+
+		-
 			message: '#^PHPDoc tag @param has invalid value \(float\)\: Unexpected token "\\n \* ", expected variable at offset 59 on line 4$#'
 			identifier: phpDoc.parseError
 			count: 1
@@ -2349,6 +2613,24 @@ parameters:
 		-
 			message: '#^Parameter \$coi of method ImageRect\:\:crop_h\(\) has invalid type stirng\.$#'
 			identifier: class.notFound
+			count: 1
+			path: include/derivative_params.inc.php
+
+		-
+			message: '#^Parameter &\$crop_rect by\-ref type of method SizingParams\:\:compute\(\) expects ImageRect, null given\.$#'
+			identifier: parameterByRef.type
+			count: 1
+			path: include/derivative_params.inc.php
+
+		-
+			message: '#^Parameter &\$scale_size by\-ref type of method SizingParams\:\:compute\(\) expects array\<int\>, array\<int, float\|int\> given\.$#'
+			identifier: parameterByRef.type
+			count: 5
+			path: include/derivative_params.inc.php
+
+		-
+			message: '#^Parameter &\$scale_size by\-ref type of method SizingParams\:\:compute\(\) expects array\<int\>, null given\.$#'
+			identifier: parameterByRef.type
 			count: 1
 			path: include/derivative_params.inc.php
 
@@ -2442,6 +2724,12 @@ parameters:
 		-
 			message: '#^Function trigger_notify invoked with 2 parameters, 0 required\.$#'
 			identifier: arguments.count
+			count: 1
+			path: include/functions.inc.php
+
+		-
+			message: '#^Invalid array key type float\.$#'
+			identifier: offsetAccess.invalidOffset
 			count: 1
 			path: include/functions.inc.php
 
@@ -2557,6 +2845,12 @@ parameters:
 			path: include/functions_calendar.inc.php
 
 		-
+			message: '#^Function get_cat_info\(\) should return array but returns null\.$#'
+			identifier: return.type
+			count: 1
+			path: include/functions_category.inc.php
+
+		-
 			message: '#^PHPDoc tag @param has invalid value \(string mode\)\: Unexpected token "mode", expected variable at offset 144 on line 6$#'
 			identifier: phpDoc.parseError
 			count: 1
@@ -2573,6 +2867,12 @@ parameters:
 			identifier: parameter.notFound
 			count: 1
 			path: include/functions_category.inc.php
+
+		-
+			message: '#^Function get_comment_author_id\(\) should return int but returns false\.$#'
+			identifier: return.type
+			count: 1
+			path: include/functions_comment.inc.php
 
 		-
 			message: '#^Function trigger_notify invoked with 2 parameters, 0 required\.$#'
@@ -2644,6 +2944,12 @@ parameters:
 			path: include/functions_metadata.inc.php
 
 		-
+			message: '#^Function custom_notification_query\(\) should return array\|int but returns null\.$#'
+			identifier: return.type
+			count: 2
+			path: include/functions_notification.inc.php
+
+		-
 			message: '#^Undefined variable\: \$cached$#'
 			identifier: variable.undefined
 			count: 2
@@ -2683,6 +2989,12 @@ parameters:
 			path: include/functions_rate.inc.php
 
 		-
+			message: '#^Function rate_picture\(\) should return array but returns false\.$#'
+			identifier: return.type
+			count: 2
+			path: include/functions_rate.inc.php
+
+		-
 			message: '#^Binary operation "/" between non\-empty\-string and non\-empty\-string results in an error\.$#'
 			identifier: binaryOp.invalid
 			count: 1
@@ -2694,6 +3006,12 @@ parameters:
 				2\.6$#
 			'''
 			identifier: function.deprecated
+			count: 1
+			path: include/functions_search.inc.php
+
+		-
+			message: '#^Function get_items_for_filter\(\) should return array but returns false\.$#'
+			identifier: return.type
 			count: 1
 			path: include/functions_search.inc.php
 
@@ -2917,6 +3235,12 @@ parameters:
 			path: include/functions_user.inc.php
 
 		-
+			message: '#^Function create_user_auth_key\(\) should return array but returns false\.$#'
+			identifier: return.type
+			count: 3
+			path: include/functions_user.inc.php
+
+		-
 			message: '#^Function trigger_notify invoked with 2 parameters, 0 required\.$#'
 			identifier: arguments.count
 			count: 8
@@ -3001,6 +3325,30 @@ parameters:
 			path: include/jshrink.class.php
 
 		-
+			message: '#^Method JShrink\\Minifier\:\:getChar\(\) should return string but returns false\.$#'
+			identifier: return.type
+			count: 1
+			path: include/jshrink.class.php
+
+		-
+			message: '#^Method JShrink\\Minifier\:\:lock\(\) should return bool but returns string\.$#'
+			identifier: return.type
+			count: 1
+			path: include/jshrink.class.php
+
+		-
+			message: '#^Method JShrink\\Minifier\:\:lock\(\) should return bool but returns string\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: include/jshrink.class.php
+
+		-
+			message: '#^Method JShrink\\Minifier\:\:unlock\(\) should return bool but returns string\.$#'
+			identifier: return.type
+			count: 2
+			path: include/jshrink.class.php
+
+		-
 			message: '#^Variable \$jshrink in isset\(\) always exists and is not nullable\.$#'
 			identifier: isset.variable
 			count: 1
@@ -3040,6 +3388,12 @@ parameters:
 			message: '#^Call to method set\(\) on an unknown class Psr\\Cache\\CacheItemInterface\.$#'
 			identifier: class.notFound
 			count: 1
+			path: include/minify/src/Minify.php
+
+		-
+			message: '#^Cannot use array destructuring on string\.$#'
+			identifier: offsetAccess.nonArray
+			count: 2
 			path: include/minify/src/Minify.php
 
 		-
@@ -3250,6 +3604,12 @@ parameters:
 			path: include/phpmailer/PHPMailer.php
 
 		-
+			message: '#^Property PHPMailer\\PHPMailer\\POP3\:\:\$pop_conn \(resource\) does not accept false\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: include/phpmailer/POP3.php
+
+		-
 			message: '#^Call to method debug\(\) on an unknown class Psr\\Log\\LoggerInterface\.$#'
 			identifier: class.notFound
 			count: 1
@@ -3454,6 +3814,12 @@ parameters:
 			path: include/picture_rate.inc.php
 
 		-
+			message: '#^Method PwgSession\:\:gc\(\) should return int but returns true\.$#'
+			identifier: return.type
+			count: 1
+			path: include/pwgsession.class.php
+
+		-
 			message: '#^Variable \$all_exts might not be defined\.$#'
 			identifier: variable.undefined
 			count: 3
@@ -3610,6 +3976,12 @@ parameters:
 			path: include/template.class.php
 
 		-
+			message: '#^Argument of an invalid type Combinable supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 2
+			path: include/template.class.php
+
+		-
 			message: '#^Call to method addTemplateDir\(\) on an unknown class Smarty\\Smarty\.$#'
 			identifier: class.notFound
 			count: 1
@@ -3712,6 +4084,12 @@ parameters:
 			path: include/template.class.php
 
 		-
+			message: '#^Cannot assign new offset to string\.$#'
+			identifier: offsetAssign.dimType
+			count: 1
+			path: include/template.class.php
+
+		-
 			message: '#^Default value of the parameter \#3 \$version \(int\) of method Combinable\:\:__construct\(\) is incompatible with type string\.$#'
 			identifier: parameter.defaultValue
 			count: 1
@@ -3760,14 +4138,32 @@ parameters:
 			path: include/template.class.php
 
 		-
+			message: '#^Method FileCombiner\:\:process_combinable\(\) should return string\|null but empty return statement found\.$#'
+			identifier: return.empty
+			count: 1
+			path: include/template.class.php
+
+		-
 			message: '#^Method FileCombiner\:\:process_combinable\(\) should return string\|null but return statement is missing\.$#'
 			identifier: return.missing
 			count: 2
 			path: include/template.class.php
 
 		-
+			message: '#^Method ScriptLoader\:\:get_footer_scripts\(\) should return array\<Combinable\> but returns array\<int, array\<Combinable\>\>\.$#'
+			identifier: return.type
+			count: 1
+			path: include/template.class.php
+
+		-
 			message: '#^Method Template\:\:parse\(\) should return string\|null but return statement is missing\.$#'
 			identifier: return.missing
+			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^Method Template\:\:set_filenames\(\) should return true but returns false\.$#'
+			identifier: return.type
 			count: 1
 			path: include/template.class.php
 
@@ -3840,6 +4236,24 @@ parameters:
 		-
 			message: '#^Parameter \$smarty of method Template\:\:prefilter_white_space\(\) has invalid type Smarty\\Smarty\.$#'
 			identifier: class.notFound
+			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^Property Combinable\:\:\$version \(string\) does not accept false\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^Property Template\:\:\$html_head_elements \(string\) does not accept array\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^Property Template\:\:\$html_head_elements \(string\) does not accept default value of type array\.$#'
+			identifier: property.defaultValue
 			count: 1
 			path: include/template.class.php
 
@@ -4158,6 +4572,18 @@ parameters:
 			identifier: isset.variable
 			count: 1
 			path: include/ws_init.inc.php
+
+		-
+			message: '#^Property PwgXmlWriter\:\:\$_elementStack \(array\{\}\) does not accept array\{mixed\}\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: include/ws_protocols/rest_encoder.php
+
+		-
+			message: '#^Property PwgXmlWriter\:\:\$_lastTagOpen \(false\) does not accept true\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: include/ws_protocols/rest_encoder.php
 
 		-
 			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'

@@ -28,6 +28,7 @@ parameters:
             - vendor/*
     bootstrapFiles:
         - tools/phpstan-bootstrap.php
+        - tools/phpstan-types.php
     treatPhpDocTypesAsCertain: false
     ignoreErrors:
         # local/config/config.inc.php is a gitignored optional override (graceful @include).

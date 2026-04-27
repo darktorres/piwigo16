@@ -36,7 +36,13 @@ if (isset($conf['session_save_handler'])
     }
 
     session_name($conf['session_name']);
-    session_set_cookie_params(0, cookie_path());
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path' => cookie_path(),
+        'samesite' => 'Lax',
+        'httponly' => true,
+        'secure' => !empty($_SERVER['HTTPS']),
+    ]);
     register_shutdown_function(session_write_close(...));
 }
 

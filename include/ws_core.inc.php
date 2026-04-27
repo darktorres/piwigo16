@@ -251,7 +251,7 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
         }
 
         if (is_null($this->_requestHandler)) {
-            $this->sendResponse(new PwgError(400, 'Unknown request format'));
+            $this->sendResponse(new \Piwigo\Ws\PwgError(400, 'Unknown request format'));
             return;
         }
 
@@ -381,7 +381,7 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
         }
     }
 
-    public static function checkType(&$param, $type, string $name): ?\PwgError
+    public static function checkType(&$param, $type, string $name): ?\Piwigo\Ws\PwgError
     {
         $opts = [];
         $msg = '';
@@ -397,14 +397,14 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
             if (self::hasFlag($type, WS_TYPE_BOOL)) {
                 foreach ($param as &$value) {
                     if (($value = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE)) === null) {
-                        return new PwgError(WS_ERR_INVALID_PARAM, $name.' must only contain booleans');
+                        return new \Piwigo\Ws\PwgError(WS_ERR_INVALID_PARAM, $name.' must only contain booleans');
                     }
                 }
                 unset($value);
             } elseif (self::hasFlag($type, WS_TYPE_INT)) {
                 foreach ($param as &$value) {
                     if (($value = filter_var($value, FILTER_VALIDATE_INT, $opts)) === false) {
-                        return new PwgError(WS_ERR_INVALID_PARAM, $name.' must only contain'.$msg.' integers');
+                        return new \Piwigo\Ws\PwgError(WS_ERR_INVALID_PARAM, $name.' must only contain'.$msg.' integers');
                     }
                 }
                 unset($value);
@@ -414,7 +414,7 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
                         ($value = filter_var($value, FILTER_VALIDATE_FLOAT)) === false
                         or (isset($opts['options']['min_range']) and $value < $opts['options']['min_range'])
                     ) {
-                        return new PwgError(WS_ERR_INVALID_PARAM, $name.' must only contain'.$msg.' floats');
+                        return new \Piwigo\Ws\PwgError(WS_ERR_INVALID_PARAM, $name.' must only contain'.$msg.' floats');
                     }
                 }
                 unset($value);
@@ -422,18 +422,18 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
         } elseif ($param !== '') {
             if (self::hasFlag($type, WS_TYPE_BOOL)) {
                 if (($param = filter_var($param, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE)) === null) {
-                    return new PwgError(WS_ERR_INVALID_PARAM, $name.' must be a boolean');
+                    return new \Piwigo\Ws\PwgError(WS_ERR_INVALID_PARAM, $name.' must be a boolean');
                 }
             } elseif (self::hasFlag($type, WS_TYPE_INT)) {
                 if (($param = filter_var($param, FILTER_VALIDATE_INT, $opts)) === false) {
-                    return new PwgError(WS_ERR_INVALID_PARAM, $name.' must be an'.$msg.' integer');
+                    return new \Piwigo\Ws\PwgError(WS_ERR_INVALID_PARAM, $name.' must be an'.$msg.' integer');
                 }
             } elseif (self::hasFlag($type, WS_TYPE_FLOAT)) {
                 if (
                     ($param = filter_var($param, FILTER_VALIDATE_FLOAT)) === false
                     or (isset($opts['options']['min_range']) and $param < $opts['options']['min_range'])
                 ) {
-                    return new PwgError(WS_ERR_INVALID_PARAM, $name.' must be a'.$msg.' float');
+                    return new \Piwigo\Ws\PwgError(WS_ERR_INVALID_PARAM, $name.' must be a'.$msg.' float');
                 }
             }
         }
@@ -457,19 +457,19 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
         $method = @$this->_methods[$methodName];
 
         if ($method == null) {
-            return new PwgError(WS_ERR_INVALID_METHOD, 'Method name is not valid');
+            return new \Piwigo\Ws\PwgError(WS_ERR_INVALID_METHOD, 'Method name is not valid');
         }
 
         if (isset($method['options']['post_only']) and $method['options']['post_only'] and !self::isPost()) {
-            return new PwgError(405, 'This method requires HTTP POST');
+            return new \Piwigo\Ws\PwgError(405, 'This method requires HTTP POST');
         }
 
         if (isset($method['options']['admin_only']) and $method['options']['admin_only'] and !is_admin()) {
-            return new PwgError(401, 'Access denied');
+            return new \Piwigo\Ws\PwgError(401, 'Access denied');
         }
 
         if (!$this->isAuthorizedMethodForAPIKEY()) {
-            return new PwgError(401, 'Access denied');
+            return new \Piwigo\Ws\PwgError(401, 'Access denied');
         }
 
         // parameter check and data correction
@@ -499,7 +499,7 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
                 $the_param = $params[$name];
 
                 if (is_array($the_param) and !self::hasFlag($flags, WS_PARAM_ACCEPT_ARRAY)) {
-                    return new PwgError(WS_ERR_INVALID_PARAM, $name.' must be scalar');
+                    return new \Piwigo\Ws\PwgError(WS_ERR_INVALID_PARAM, $name.' must be scalar');
                 }
 
                 if (self::hasFlag($flags, WS_PARAM_FORCE_ARRAY)) {
@@ -521,13 +521,13 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
         }
 
         if (count($missing_params)) {
-            return new PwgError(WS_ERR_MISSING_PARAM, 'Missing parameters: '.implode(',', $missing_params));
+            return new \Piwigo\Ws\PwgError(WS_ERR_MISSING_PARAM, 'Missing parameters: '.implode(',', $missing_params));
         }
 
         $result = trigger_change('ws_invoke_allowed', true, $methodName, $params);
 
         $is_error = false;
-        if ($result instanceof PwgError) {
+        if ($result instanceof \Piwigo\Ws\PwgError) {
             $is_error = true;
         }
 
@@ -550,18 +550,18 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
             $service->_methods,
             fn (array $m): bool => empty($m['options']['hidden']) || !$m['options']['hidden']
         );
-        return ['methods' => new PwgNamedArray(array_keys($methods), 'method') ];
+        return ['methods' => new \Piwigo\Ws\PwgNamedArray(array_keys($methods), 'method') ];
     }
 
     /**
      * WS reflection method implementation: gets information about a given method
      */
-    public static function ws_getMethodDetails(array $params, &$service): \PwgError|array
+    public static function ws_getMethodDetails(array $params, &$service): \Piwigo\Ws\PwgError|array
     {
         $methodName = $params['methodName'];
 
         if (!$service->hasMethod($methodName)) {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'Requested method does not exist');
+            return new \Piwigo\Ws\PwgError(WS_ERR_INVALID_PARAM, 'Requested method does not exist');
         }
 
         $res = [

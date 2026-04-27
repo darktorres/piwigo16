@@ -19,8 +19,6 @@ if (!defined('PHPWG_ROOT_PATH')) {
 /**
  * replace old style #images.keywords by #tags. Requires a big data
  * migration.
- *
- * @return void
  */
 function tag_replace_keywords(): void
 {

@@ -1,6 +1,11 @@
 <?php
 
 declare(strict_types=1);
+
+use Piwigo\Admin\languages;
+use Piwigo\Session\PwgSession;
+use Piwigo\Template\Template;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -75,7 +80,7 @@ include(PHPWG_ROOT_PATH . 'include/config_default.inc.php');
 defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
 
 include(PHPWG_ROOT_PATH . 'include/functions.inc.php');
-include(PHPWG_ROOT_PATH . 'include/template.class.php');
+require_once PHPWG_ROOT_PATH . 'vendor/autoload.php';
 
 // download database config file if exists
 check_input_parameter('dl', $_GET, false, '/^[a-f0-9]{32}$/');
@@ -138,7 +143,6 @@ if (@file_exists($config_file)) {
 include(PHPWG_ROOT_PATH . 'include/constants.php');
 include(PHPWG_ROOT_PATH . 'admin/include/functions.php');
 
-include(PHPWG_ROOT_PATH . 'admin/include/languages.class.php');
 $languages = new languages('utf-8');
 
 if (isset($_GET['language'])) {

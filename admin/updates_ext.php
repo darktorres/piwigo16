@@ -1,6 +1,9 @@
 <?php
 
 declare(strict_types=1);
+
+use Piwigo\Admin\updates;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |

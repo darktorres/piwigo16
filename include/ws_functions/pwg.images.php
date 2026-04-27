@@ -1,6 +1,13 @@
 <?php
 
 declare(strict_types=1);
+
+use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\ImageStdParams;
+use Piwigo\Ws\PwgError;
+use Piwigo\Ws\PwgNamedArray;
+use Piwigo\Ws\PwgNamedStruct;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -18,7 +25,7 @@ declare(strict_types=1);
  * @param string $categories_string - "cat_id[,rank];cat_id[,rank]"
  * @param bool $replace_mode - removes old associations
  */
-function ws_add_image_category_relations($image_id, $categories_string, $replace_mode = false): true|\PwgError
+function ws_add_image_category_relations($image_id, $categories_string, $replace_mode = false): true|PwgError
 {
     // let's add links between the image and the categories
     //
@@ -273,7 +280,7 @@ function remove_chunks(string $original_sum, string $type): void
  *    @option string content
  *    @option string key
  */
-function ws_images_addComment(array $params, $service): \PwgError|array
+function ws_images_addComment(array $params, $service): PwgError|array
 {
     global $conf;
 
@@ -337,7 +344,7 @@ SELECT DISTINCT image_id
  *    @option int comments_page
  *    @option int comments_per_page
  */
-function ws_images_getInfo(array $params, $service): \PwgError|array
+function ws_images_getInfo(array $params, $service): PwgError|array
 {
     global $user, $conf;
 
@@ -696,7 +703,7 @@ SELECT *
  * @param mixed[] $params
  *    @option string query
  */
-function ws_images_filteredSearch_create(array $params, $service): \PwgError|array
+function ws_images_filteredSearch_create(array $params, $service): PwgError|array
 {
     global $user, $conf;
 
@@ -996,7 +1003,7 @@ UPDATE '. IMAGES_TABLE .'
  *    @option int category_id
  *    @option int rank
  */
-function ws_images_setRank(array $params, $service): array|\PwgError
+function ws_images_setRank(array $params, $service): array|PwgError
 {
     if (count($params['image_id']) > 1) {
         include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
@@ -1243,7 +1250,7 @@ SELECT
  *    @option bool check_uniqueness
  *    @option int image_id (optional)
  */
-function ws_images_add(array $params, $service): \PwgError|array
+function ws_images_add(array $params, $service): PwgError|array
 {
     global $conf, $user, $logger;
 
@@ -1388,7 +1395,7 @@ SELECT id, name, permalink
  *    @option string|string[] tags
  *    @option int image_id (optional)
  */
-function ws_images_addSimple(array $params, $service): \PwgError|array
+function ws_images_addSimple(array $params, $service): PwgError|array
 {
     global $conf, $logger;
 
@@ -2114,7 +2121,7 @@ SELECT
  *    @option int format_id
  *    @option string pwg_token
  */
-function ws_images_formats_delete(array $params, $service): \PwgError|bool
+function ws_images_formats_delete(array $params, $service): PwgError|bool
 {
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
@@ -2219,7 +2226,7 @@ DELETE FROM '.IMAGE_FORMAT_TABLE.'
  *    @option int image_id
  *    @option string file_sum
  */
-function ws_images_checkFiles(array $params, $service): \PwgError|array
+function ws_images_checkFiles(array $params, $service): PwgError|array
 {
     global $logger;
 
@@ -2435,7 +2442,7 @@ SELECT *
  *    @option int|int[] image_id
  *    @option string pwg_token
  */
-function ws_images_delete(array $params, $service): \PwgError|int
+function ws_images_delete(array $params, $service): PwgError|int
 {
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
@@ -2504,7 +2511,7 @@ function ws_images_emptyLounge($params, $service): array
  * @since 12
  * @param mixed[] $params
  */
-function ws_images_uploadCompleted(array $params, $service): \PwgError|array
+function ws_images_uploadCompleted(array $params, $service): PwgError|array
 {
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
@@ -2567,7 +2574,7 @@ SELECT
  * @param mixed[] $params
  *    @option int block_size
  */
-function ws_images_setMd5sum(array $params, $service): \PwgError|array
+function ws_images_setMd5sum(array $params, $service): PwgError|array
 {
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
@@ -2595,7 +2602,7 @@ function ws_images_setMd5sum(array $params, $service): \PwgError|array
  * @param mixed[] $params
  *    @option int image_id
  */
-function ws_images_syncMetadata(array $params, $service): \PwgError|array
+function ws_images_syncMetadata(array $params, $service): PwgError|array
 {
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
@@ -2651,7 +2658,7 @@ SELECT id
  * @param mixed[] $params
  *    @option int block_size
  */
-function ws_images_deleteOrphans(array $params, $service): \PwgError|array
+function ws_images_deleteOrphans(array $params, $service): PwgError|array
 {
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');

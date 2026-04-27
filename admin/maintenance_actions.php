@@ -1,6 +1,12 @@
 <?php
 
 declare(strict_types=1);
+
+use Piwigo\Admin\Image\pwg_image;
+use Piwigo\Admin\Integrity\check_integrity;
+use Piwigo\Image\ImageStdParams;
+use Piwigo\Template\FileCombiner;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |

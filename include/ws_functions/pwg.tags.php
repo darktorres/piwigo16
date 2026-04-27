@@ -1,6 +1,11 @@
 <?php
 
 declare(strict_types=1);
+
+use Piwigo\Ws\PwgError;
+use Piwigo\Ws\PwgNamedArray;
+use Piwigo\Ws\PwgNamedStruct;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -209,7 +214,7 @@ SELECT *
  * @param mixed[] $params
  *    @option string name
  */
-function ws_tags_add(array $params, &$service): \PwgError|array
+function ws_tags_add(array $params, &$service): PwgError|array
 {
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
@@ -236,7 +241,7 @@ WHERE id = '.$creation_output['id'].';';
     ];
 }
 
-function ws_tags_delete(array $params, &$service): \PwgError|array
+function ws_tags_delete(array $params, &$service): PwgError|array
 {
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
@@ -331,7 +336,7 @@ SELECT
 }
 
 
-function ws_tags_duplicate(array $params, &$service): \PwgError|array
+function ws_tags_duplicate(array $params, &$service): PwgError|array
 {
 
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
@@ -409,7 +414,7 @@ SELECT image_id
     ];
 }
 
-function ws_tags_merge(array $params, &$service): \PwgError|array
+function ws_tags_merge(array $params, &$service): PwgError|array
 {
 
     if (get_pwg_token() != $params['pwg_token']) {

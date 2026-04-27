@@ -1,6 +1,10 @@
 <?php
 
 declare(strict_types=1);
+
+use Piwigo\Image\ImageStdParams;
+use Piwigo\Image\WatermarkParams;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |

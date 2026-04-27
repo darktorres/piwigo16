@@ -1,6 +1,10 @@
 <?php
 
 declare(strict_types=1);
+
+use Piwigo\Image\DerivativeImage;
+use Piwigo\Ws\PwgError;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -15,7 +19,7 @@ declare(strict_types=1);
  * @param mixed[] $params
  *
  */
-function ws_userComments_getList(array $params, &$service): \PwgError|array
+function ws_userComments_getList(array $params, &$service): PwgError|array
 {
     global $conf;
 
@@ -196,7 +200,7 @@ GROUP BY author_id
  * @param mixed[] $params
  *
  */
-function ws_userComments_delete(array $params, &$service): \PwgError|string
+function ws_userComments_delete(array $params, &$service): PwgError|string
 {
     include_once(PHPWG_ROOT_PATH.'include/functions_comment.inc.php');
 
@@ -216,7 +220,7 @@ function ws_userComments_delete(array $params, &$service): \PwgError|string
  * @param mixed[] $params
  *
  */
-function ws_userComments_validate(array $params, &$service): \PwgError|string
+function ws_userComments_validate(array $params, &$service): PwgError|string
 {
     include_once(PHPWG_ROOT_PATH.'include/functions_comment.inc.php');
 

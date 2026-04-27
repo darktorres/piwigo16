@@ -1,6 +1,9 @@
 <?php
 
 declare(strict_types=1);
+
+use Piwigo\Image\ImageStdParams;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -191,9 +194,9 @@ final class SizingParams
      * @param int $w
      * @param int $h
      */
-    public static function classic($w, $h): \SizingParams
+    public static function classic($w, $h): \Piwigo\Image\SizingParams
     {
-        return new SizingParams([$w,$h]);
+        return new \Piwigo\Image\SizingParams([$w,$h]);
     }
 
     /**
@@ -201,9 +204,9 @@ final class SizingParams
      *
      * @param int $x
      */
-    public static function square($w): \SizingParams
+    public static function square($w): \Piwigo\Image\SizingParams
     {
-        return new SizingParams([$w,$w], 1, [$w,$w]);
+        return new \Piwigo\Image\SizingParams([$w,$w], 1, [$w,$w]);
     }
 
     /**
@@ -229,12 +232,12 @@ final class SizingParams
      *
      * @param int[] $in_size - two element array of input dimensions (width, height)
      * @param string $coi - four character encoded string containing the center of interest (unused if max_crop=0)
-     * @param ImageRect &$crop_rect - ImageRect containing the cropping rectangle or null if cropping is not required
+     * @param \Piwigo\Image\ImageRect &$crop_rect - ImageRect containing the cropping rectangle or null if cropping is not required
      * @param int[] &$scale_size - two element array containing width and height of the scaled image
      */
     public function compute(array $in_size, $coi, &$crop_rect, &$scale_size): void
     {
-        $destCrop = new ImageRect($in_size);
+        $destCrop = new \Piwigo\Image\ImageRect($in_size);
 
         if ($this->max_crop > 0) {
             $ratio_w = $destCrop->width() / $this->ideal_size[0];
@@ -297,7 +300,7 @@ final class DerivativeParams
     public $sharpen = 0;
 
     /**
-     * @param SizingParams $sizing
+     * @param \Piwigo\Image\SizingParams $sizing
      */
     public function __construct(public $sizing)
     {

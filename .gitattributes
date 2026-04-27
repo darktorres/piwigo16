@@ -12,6 +12,24 @@ vendor/bin/phpunit      text eol=lf
 vendor/bin/pint         text eol=lf
 vendor/bin/rector       text eol=lf
 
+# Release tarball: exclude dev tooling and docs from git archive exports.
+/tests                  export-ignore
+/docs                   export-ignore
+/tools                  export-ignore
+/.github                export-ignore
+/phpunit.xml.dist       export-ignore
+/phpstan.neon           export-ignore
+/phpstan-baseline.neon  export-ignore
+/rector.php             export-ignore
+/pint.json              export-ignore
+/composer.lock          export-ignore
+/vendor/phpstan         export-ignore
+/vendor/rector          export-ignore
+/vendor/phpunit         export-ignore
+/vendor/laravel         export-ignore
+/vendor/symfony         export-ignore
+/vendor/bin             export-ignore
+
 # Binary assets — no line-ending conversion.
 *.png binary
 *.jpg binary

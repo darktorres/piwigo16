@@ -1,6 +1,9 @@
 <?php
 
 declare(strict_types=1);
+
+use Piwigo\Menu\BlockManager;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |

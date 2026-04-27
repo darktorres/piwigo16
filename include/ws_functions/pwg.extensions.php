@@ -1,6 +1,12 @@
 <?php
 
 declare(strict_types=1);
+
+use Piwigo\Admin\plugins;
+use Piwigo\Admin\themes;
+use Piwigo\Admin\updates;
+use Piwigo\Ws\PwgError;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -48,7 +54,7 @@ function ws_plugins_getList($params, $service): array
  *    @option string plugin
  *    @option string pwg_token
  */
-function ws_plugins_performAction(array $params, $service): \PwgError|true
+function ws_plugins_performAction(array $params, $service): PwgError|true
 {
     global $template, $conf;
 
@@ -88,7 +94,7 @@ function ws_plugins_performAction(array $params, $service): \PwgError|true
  *    @option string theme
  *    @option string pwg_token
  */
-function ws_themes_performAction(array $params, $service): \PwgError|true
+function ws_themes_performAction(array $params, $service): PwgError|true
 {
     global $template, $conf;
 
@@ -221,7 +227,7 @@ function ws_extensions_update(array $params, $service)
  *    @option bool reset
  *    @option string pwg_token
  */
-function ws_extensions_ignoreupdate(array $params, $service): \PwgError|true
+function ws_extensions_ignoreupdate(array $params, $service): PwgError|true
 {
     global $conf;
 

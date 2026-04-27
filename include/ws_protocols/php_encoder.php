@@ -1,6 +1,10 @@
 <?php
 
 declare(strict_types=1);
+
+use Piwigo\Ws\Encoder\PwgResponseEncoder;
+use Piwigo\Ws\PwgError;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |

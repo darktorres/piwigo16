@@ -27,7 +27,7 @@ foreach ($globs as $g) {
     }
 }
 
-$parser = (new ParserFactory)->createForHostVersion();
+$parser = (new ParserFactory())->createForHostVersion();
 
 final class ClassCollector extends NodeVisitorAbstract
 {
@@ -48,7 +48,7 @@ final class ClassCollector extends NodeVisitorAbstract
         if ($node instanceof Node\Stmt\Interface_ && $node->name !== null) {
             $this->classes[] = [
                 'name'      => $node->name->toString(),
-                'extends'   => implode(',', array_map(fn($e) => $e->toString(), $node->extends)),
+                'extends'   => implode(',', array_map(fn ($e) => $e->toString(), $node->extends)),
                 'abstract'  => false,
                 'final'     => false,
                 'interface' => true,
@@ -150,7 +150,7 @@ foreach ($entries as $row) {
         $cls['abstract'] ? '1' : '0',
         $cls['final'] ? '1' : '0',
         $cls['interface'] ? '1' : '0',
-        implode('|', array_map(fn($p) => str_replace($root . DIRECTORY_SEPARATOR, '', $p), $row['refs'])),
+        implode('|', array_map(fn ($p) => str_replace($root . DIRECTORY_SEPARATOR, '', $p), $row['refs'])),
     ], escape: '\\');
 }
 fclose($out);

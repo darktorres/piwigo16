@@ -1,6 +1,11 @@
 <?php
 
 declare(strict_types=1);
+
+use Piwigo\Ws\PwgError;
+use Piwigo\Ws\PwgNamedArray;
+use Piwigo\Ws\PwgNamedStruct;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -27,7 +32,7 @@ declare(strict_types=1);
  *    @option string min_register
  *    @option string max_register
  */
-function ws_users_getList(array $params, &$service): \PwgError|array
+function ws_users_getList(array $params, &$service): PwgError|array
 {
     global $conf;
 
@@ -417,7 +422,7 @@ function ws_users_getAuthKey(array $params, &$service)
  *    @option int[] user_id
  *    @option string pwg_token
  */
-function ws_users_delete(array $params, &$service): \PwgError|string
+function ws_users_delete(array $params, &$service): PwgError|string
 {
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
@@ -629,7 +634,7 @@ function ws_users_preferences_set(array $params, &$service)
  * @param mixed[] $params
  *    @option int image_id
  */
-function ws_users_favorites_add(array $params, &$service): \PwgError|true
+function ws_users_favorites_add(array $params, &$service): PwgError|true
 {
     global $user;
 
@@ -666,7 +671,7 @@ SELECT COUNT(*)
  * @param mixed[] $params
  *    @option int image_id
  */
-function ws_users_favorites_remove(array $params, &$service): \PwgError|true
+function ws_users_favorites_remove(array $params, &$service): PwgError|true
 {
     global $user;
 
@@ -778,7 +783,7 @@ SELECT
  *    @option string pwg_token
  *    @option boolean send_by_mail
  */
-function ws_users_generate_password_link(array $params, &$service): \PwgError|array
+function ws_users_generate_password_link(array $params, &$service): PwgError|array
 {
     global $user, $conf;
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
@@ -842,7 +847,7 @@ function ws_users_generate_password_link(array $params, &$service): \PwgError|ar
  *    @option int user_id
  *    @option string pwg_token
  */
-function ws_set_main_user(array $params, &$service): \PwgError|string
+function ws_set_main_user(array $params, &$service): PwgError|string
 {
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
@@ -878,7 +883,7 @@ function ws_set_main_user(array $params, &$service): \PwgError|string
  * @since 15
  * @param mixed[] $params
  */
-function ws_create_api_key(array $params, &$service): \PwgError|array
+function ws_create_api_key(array $params, &$service): PwgError|array
 {
     global $user, $logger;
 
@@ -985,7 +990,7 @@ function ws_edit_api_key(array $params, &$service)
  * @since 15
  * @param mixed[] $params
  */
-function ws_get_api_key(array $params, &$service): \PwgError|array|false
+function ws_get_api_key(array $params, &$service): PwgError|array|false
 {
     global $user;
 

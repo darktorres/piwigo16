@@ -1,6 +1,10 @@
 <?php
 
 declare(strict_types=1);
+
+use Piwigo\Ws\PwgError;
+use Piwigo\Ws\PwgNamedArray;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -16,7 +20,7 @@ declare(strict_types=1);
  *    @option int[] group_id (optional)
  *    @option int[] user_id (optional)
  */
-function ws_permissions_getList(array $params, &$service): \PwgError|array
+function ws_permissions_getList(array $params, &$service): PwgError|array
 {
     $my_params = array_intersect(array_keys($params), ['cat_id','group_id','user_id']);
     if (count($my_params) > 1) {

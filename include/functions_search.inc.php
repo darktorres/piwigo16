@@ -785,7 +785,7 @@ class QSearchScope
     }
 }
 
-class QNumericRangeScope extends QSearchScope
+class QNumericRangeScope extends \Piwigo\Search\QSearchScope
 {
     public function __construct($id, $aliases, $nullable = false, private $epsilon = 0)
     {
@@ -879,7 +879,7 @@ class QNumericRangeScope extends QSearchScope
 }
 
 
-class QDateRangeScope extends QSearchScope
+class QDateRangeScope extends \Piwigo\Search\QSearchScope
 {
     public function __construct($id, $aliases, $nullable = false)
     {
@@ -1037,7 +1037,7 @@ class QMultiToken implements \Stringable
             if (isset($scope)) {
                 $modifier |= QST_BREAK;
             }
-            $this->tokens[] = new QSingleToken($token, $modifier, $scope);
+            $this->tokens[] = new \Piwigo\Search\QSingleToken($token, $modifier, $scope);
         }
         $token = '';
         $modifier = 0;
@@ -1065,7 +1065,7 @@ class QMultiToken implements \Stringable
                         if (strlen((string) $crt_token)) {
                             $this->push($crt_token, $crt_modifier, $crt_scope);
                         }
-                        $sub = new QMultiToken();
+                        $sub = new \Piwigo\Search\QMultiToken();
                         $qi++;
                         $sub->parse_expression($q, $qi, $level + 1, $root);
                         $sub->modifier = $crt_modifier;
@@ -1207,7 +1207,7 @@ class QMultiToken implements \Stringable
     * Applies recursively a search scope to all sub single tokens. We allow 'tag:(John Bill)' but we cannot evaluate
     * scopes on expressions so we rewrite as '(tag:John tag:Bill)'
     */
-    private function apply_scope(QSearchScope $scope): void
+    private function apply_scope(\Piwigo\Search\QSearchScope $scope): void
     {
         for ($i = 0; $i < count($this->tokens); $i++) {
             if ($this->tokens[$i]->is_single) {
@@ -1252,7 +1252,7 @@ class QMultiToken implements \Stringable
 
                 $i--; // move pointer to b
                 // crate sub expression (b c d)
-                $sub = new QMultiToken();
+                $sub = new \Piwigo\Search\QMultiToken();
                 $sub->tokens = array_splice($this->tokens, $i, $term_count);
 
                 // rewrite ourseleves as a (b c d)
@@ -1268,7 +1268,7 @@ class QMultiToken implements \Stringable
     }
 }
 
-class QExpression extends QMultiToken
+class QExpression extends \Piwigo\Search\QMultiToken
 {
     public $scopes = [];
     public $stokens = [];
@@ -1289,7 +1289,7 @@ class QExpression extends QMultiToken
         $this->build_single_tokens($this, 0);
     }
 
-    private function build_single_tokens(QMultiToken $expr, int $this_is_not): void
+    private function build_single_tokens(\Piwigo\Search\QMultiToken $expr, int $this_is_not): void
     {
         for ($i = 0; $i < count($expr->tokens); $i++) {
             $token = $expr->tokens[$i];
@@ -1391,7 +1391,7 @@ function qsearch_get_text_token_search_sql($token, $fields): array
     return $clauses;
 }
 
-function qsearch_get_images(QExpression $expr, QResults $qsr): void
+function qsearch_get_images(\Piwigo\Search\QExpression $expr, \Piwigo\Search\QResults $qsr): void
 {
     $qsr->images_iids = array_fill(0, count($expr->stokens), []);
 
@@ -1464,7 +1464,7 @@ function qsearch_get_images(QExpression $expr, QResults $qsr): void
     }
 }
 
-function qsearch_get_tags(QExpression $expr, QResults $qsr): void
+function qsearch_get_tags(\Piwigo\Search\QExpression $expr, \Piwigo\Search\QResults $qsr): void
 {
     $token_tag_ids = $qsr->tag_iids = array_fill(0, count($expr->stokens), []);
     $all_tags = [];
@@ -1537,7 +1537,7 @@ SELECT image_id FROM '.IMAGE_TAG_TABLE.'
     $qsr->tag_ids = $token_tag_ids;
 }
 
-function qsearch_get_categories(QExpression $expr, QResults $qsr): void
+function qsearch_get_categories(\Piwigo\Search\QExpression $expr, \Piwigo\Search\QResults $qsr): void
 {
     global $user, $conf;
 
@@ -1628,7 +1628,7 @@ SELECT image_id FROM '.IMAGE_CATEGORY_TABLE.'
 }
 
 
-function qsearch_eval(QMultiToken $expr, QResults $qsr, &$qualifies, &$ignored_terms)
+function qsearch_eval(\Piwigo\Search\QMultiToken $expr, \Piwigo\Search\QResults $qsr, &$qualifies, &$ignored_terms)
 {
     $qualifies = false; // until we find at least one positive term
     $ignored_terms = [];
@@ -1736,18 +1736,18 @@ function get_quick_search_results_no_cache($q, array $options)
     $q = trigger_change('qsearch_pre', $q);
 
     $scopes = [];
-    $scopes[] = new QSearchScope('tag', ['tags']);
-    $scopes[] = new QSearchScope('photo', ['photos']);
-    $scopes[] = new QSearchScope('file', ['filename']);
-    $scopes[] = new QSearchScope('author', [], true);
-    $scopes[] = new QNumericRangeScope('width', []);
-    $scopes[] = new QNumericRangeScope('height', []);
-    $scopes[] = new QNumericRangeScope('ratio', [], false, 0.001);
-    $scopes[] = new QNumericRangeScope('size', []);
-    $scopes[] = new QNumericRangeScope('filesize', []);
-    $scopes[] = new QNumericRangeScope('hits', ['hit', 'visit', 'visits']);
-    $scopes[] = new QNumericRangeScope('score', ['rating'], true);
-    $scopes[] = new QNumericRangeScope('id', []);
+    $scopes[] = new \Piwigo\Search\QSearchScope('tag', ['tags']);
+    $scopes[] = new \Piwigo\Search\QSearchScope('photo', ['photos']);
+    $scopes[] = new \Piwigo\Search\QSearchScope('file', ['filename']);
+    $scopes[] = new \Piwigo\Search\QSearchScope('author', [], true);
+    $scopes[] = new \Piwigo\Search\QNumericRangeScope('width', []);
+    $scopes[] = new \Piwigo\Search\QNumericRangeScope('height', []);
+    $scopes[] = new \Piwigo\Search\QNumericRangeScope('ratio', [], false, 0.001);
+    $scopes[] = new \Piwigo\Search\QNumericRangeScope('size', []);
+    $scopes[] = new \Piwigo\Search\QNumericRangeScope('filesize', []);
+    $scopes[] = new \Piwigo\Search\QNumericRangeScope('hits', ['hit', 'visit', 'visits']);
+    $scopes[] = new \Piwigo\Search\QNumericRangeScope('score', ['rating'], true);
+    $scopes[] = new \Piwigo\Search\QNumericRangeScope('id', []);
 
     $createdDateAliases = ['taken', 'shot'];
     $postedDateAliases = ['added'];
@@ -1756,12 +1756,12 @@ function get_quick_search_results_no_cache($q, array $options)
     } else {
         $postedDateAliases[] = 'date';
     }
-    $scopes[] = new QDateRangeScope('created', $createdDateAliases, true);
-    $scopes[] = new QDateRangeScope('posted', $postedDateAliases);
+    $scopes[] = new \Piwigo\Search\QDateRangeScope('created', $createdDateAliases, true);
+    $scopes[] = new \Piwigo\Search\QDateRangeScope('posted', $postedDateAliases);
 
     // allow plugins to add their own scopes
     $scopes = trigger_change('qsearch_get_scopes', $scopes);
-    $expression = new QExpression($q, $scopes);
+    $expression = new \Piwigo\Search\QExpression($q, $scopes);
 
     // get inflections for terms
     $inflector = null;
@@ -1789,7 +1789,7 @@ function get_quick_search_results_no_cache($q, array $options)
     if (count($expression->stokens) == 0) {
         return $search_results;
     }
-    $qsr = new QResults();
+    $qsr = new \Piwigo\Search\QResults();
     qsearch_get_tags($expression, $qsr);
     qsearch_get_categories($expression, $qsr);
     qsearch_get_images($expression, $qsr);

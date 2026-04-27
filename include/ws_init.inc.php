@@ -1,6 +1,14 @@
 <?php
 
 declare(strict_types=1);
+
+use Piwigo\Ws\Protocol\PwgJsonEncoder;
+use Piwigo\Ws\Protocol\PwgRestEncoder;
+use Piwigo\Ws\Protocol\PwgRestRequestHandler;
+use Piwigo\Ws\Protocol\PwgSerialPhpEncoder;
+use Piwigo\Ws\Protocol\PwgXmlRpcEncoder;
+use Piwigo\Ws\PwgServer;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |

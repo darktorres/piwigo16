@@ -1,6 +1,10 @@
 <?php
 
 declare(strict_types=1);
+
+use Piwigo\Ws\Encoder\PwgResponseEncoder;
+use Piwigo\Ws\PwgError;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -154,7 +158,7 @@ class PwgXmlWriter
 
 class PwgRestEncoder extends PwgResponseEncoder
 {
-    private ?\PwgXmlWriter $_writer = null;
+    private ?\Piwigo\Ws\Protocol\PwgXmlWriter $_writer = null;
     public function encodeResponse($response): string
     {
         if ($response instanceof PwgError) {
@@ -165,7 +169,7 @@ class PwgRestEncoder extends PwgResponseEncoder
             return $ret;
         }
 
-        $this->_writer = new PwgXmlWriter();
+        $this->_writer = new \Piwigo\Ws\Protocol\PwgXmlWriter();
         $this->encode($response);
         $ret = $this->_writer->getOutput();
         $ret = '<?xml version="1.0" encoding="'.get_pwg_charset().'" ?>

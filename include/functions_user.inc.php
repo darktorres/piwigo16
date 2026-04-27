@@ -1,6 +1,9 @@
 <?php
 
 declare(strict_types=1);
+
+use Piwigo\Auth\PwgTOTP;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -2598,7 +2601,6 @@ function generate_user_code(): array
 {
     global $conf;
 
-    require_once(PHPWG_ROOT_PATH . 'include/totp.class.php');
     $secret = PwgTOTP::generateSecret();
     $code = PwgTOTP::generateCode($secret, min($conf['password_reset_code_duration'], 900)); // max 15 minutes
 
@@ -2619,7 +2621,6 @@ function verify_user_code($secret, $code): bool
 {
     global $conf;
 
-    require_once(PHPWG_ROOT_PATH . 'include/totp.class.php');
     return PwgTOTP::verifyCode($code, $secret, min($conf['password_reset_code_duration'], 900), 1);
 }
 

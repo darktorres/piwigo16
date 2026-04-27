@@ -1,6 +1,11 @@
 <?php
 
 declare(strict_types=1);
+
+use Piwigo\Image\SrcImage;
+use Piwigo\Menu\BlockManager;
+use Piwigo\Menu\RegisteredBlock;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |

@@ -1,6 +1,11 @@
 <?php
 
 declare(strict_types=1);
+
+use Piwigo\Admin\Image\pwg_image;
+use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\ImageStdParams;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |

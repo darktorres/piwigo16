@@ -1,18 +1,18 @@
 <?php
 
 declare(strict_types=1);
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
 // | For copyright and license information, please view the COPYING.txt    |
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
-
 /**
  * @package functions\mail
  */
-
 use PHPMailer\PHPMailer\PHPMailer;
+use Piwigo\Template\Template;
 
 /**
  * Returns the name of the mail sender
@@ -202,7 +202,7 @@ function get_strict_email_list($email_list): string
  *
  * @param string $email_format - text/html or text/plain
  */
-function &get_mail_template(string $email_format): \Template
+function &get_mail_template(string $email_format): Template
 {
     $template = new Template(PHPWG_ROOT_PATH.'themes', 'default', 'template/mail/'.$email_format);
     return $template;

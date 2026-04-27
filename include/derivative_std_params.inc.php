@@ -1,6 +1,10 @@
 <?php
 
 declare(strict_types=1);
+
+use Piwigo\Image\DerivativeParams;
+use Piwigo\Image\SizingParams;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -69,7 +73,7 @@ final class ImageStdParams
     private static $disabled_type_map = [];
     /** @var DerivativeParams[] */
     private static $undefined_type_map = [];
-    /** @var WatermarkParams */
+    /** @var \Piwigo\Image\WatermarkParams */
     private static $watermark;
     /** @var array */
     public static $custom = [];
@@ -136,7 +140,7 @@ final class ImageStdParams
      * @param int $minw
      * @param int $minh
      */
-    public static function get_custom($w, $h, $crop = 0, $minw = null, $minh = null): \DerivativeParams
+    public static function get_custom($w, $h, $crop = 0, $minw = null, $minh = null): DerivativeParams
     {
         $params = new DerivativeParams(new SizingParams([$w,$h], $crop, [$minw,$minh]));
         self::apply_global($params);
@@ -152,7 +156,7 @@ final class ImageStdParams
     }
 
     /**
-     * @return WatermarkParams
+     * @return \Piwigo\Image\WatermarkParams
      */
     public static function get_watermark()
     {
@@ -170,7 +174,7 @@ final class ImageStdParams
             self::$type_map = $arr['d'];
             self::$watermark = @$arr['w'];
             if (!self::$watermark) {
-                self::$watermark = new WatermarkParams();
+                self::$watermark = new \Piwigo\Image\WatermarkParams();
             }
             self::$custom = @$arr['c'];
             if (!self::$custom) {
@@ -180,7 +184,7 @@ final class ImageStdParams
                 self::$quality = $arr['q'];
             }
         } else {
-            self::$watermark = new WatermarkParams();
+            self::$watermark = new \Piwigo\Image\WatermarkParams();
             self::$type_map = self::get_enabled_default_sizes();
             self::save(false);
         }
@@ -195,7 +199,7 @@ final class ImageStdParams
     }
 
     /**
-     * @param WatermarkParams $watermark
+     * @param \Piwigo\Image\WatermarkParams $watermark
      */
     public static function set_watermark($watermark): void
     {

@@ -1,6 +1,9 @@
 <?php
 
 declare(strict_types=1);
+
+use Piwigo\Core\Logger;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -9,6 +12,7 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 define('PHPWG_ROOT_PATH', './');
+require_once PHPWG_ROOT_PATH . 'vendor/autoload.php';
 
 // fast bootstrap - no db connection
 include(PHPWG_ROOT_PATH . 'include/config_default.inc.php');
@@ -18,8 +22,6 @@ defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
 defined('PWG_DERIVATIVE_DIR') or define('PWG_DERIVATIVE_DIR', $conf['data_location'].'i/');
 
 @include(PHPWG_ROOT_PATH.PWG_LOCAL_DIR .'config/database.inc.php');
-
-include(PHPWG_ROOT_PATH . 'include/Logger.class.php');
 
 $logger = new Logger(array(
   'directory' => PHPWG_ROOT_PATH . $conf['data_location'] . $conf['log_dir'],
@@ -427,7 +429,6 @@ if (!$need_generate) {
     exit;
 }
 
-include_once(PHPWG_ROOT_PATH . 'admin/include/image.class.php');
 $page['coi'] = null;
 if (strpos($page['src_location'], '/pwg_representative/') === false
     && strpos($page['src_location'], 'themes/') === false

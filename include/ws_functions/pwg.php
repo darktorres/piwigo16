@@ -1,6 +1,13 @@
 <?php
 
 declare(strict_types=1);
+
+use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\ImageStdParams;
+use Piwigo\Image\SrcImage;
+use Piwigo\Ws\PwgError;
+use Piwigo\Ws\PwgNamedArray;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -17,7 +24,7 @@ declare(strict_types=1);
  *    @option int max_urls
  *    @option int prev_page (optional)
  */
-function ws_getMissingDerivatives(array $params, &$service): \PwgError|array
+function ws_getMissingDerivatives(array $params, &$service): PwgError|array
 {
     global $conf;
 
@@ -317,7 +324,7 @@ DELETE FROM '. RATE_TABLE .'
  *    @option string username
  *    @option string password
  */
-function ws_session_login(array $params, &$service): \PwgError|true
+function ws_session_login(array $params, &$service): PwgError|true
 {
     if (defined('PWG_API_KEY_REQUEST')) {
         return new PwgError(401, 'Cannot use this method with an api key');
@@ -343,7 +350,7 @@ function ws_session_login(array $params, &$service): \PwgError|true
  * Performs a logout
  * @param mixed[] $params
  */
-function ws_session_logout($params, &$service): \PwgError|true
+function ws_session_logout($params, &$service): PwgError|true
 {
     if (defined('PWG_API_KEY_REQUEST')) {
         return new PwgError(401, 'Cannot use this method with an api key');
@@ -411,7 +418,7 @@ function ws_session_getStatus($params, &$service)
  * Returns lines of users activity
  *  @since 12
  */
-function ws_getActivityList(array $param, &$service): \PwgError|array
+function ws_getActivityList(array $param, &$service): PwgError|array
 {
     global $conf;
 

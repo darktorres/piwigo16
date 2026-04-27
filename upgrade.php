@@ -1,6 +1,12 @@
 <?php
 
 declare(strict_types=1);
+
+use Piwigo\Admin\languages;
+use Piwigo\Admin\updates;
+use Piwigo\Cache\PersistentFileCache;
+use Piwigo\Template\Template;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -42,7 +48,7 @@ define('UPGRADES_PATH', PHPWG_ROOT_PATH.'install/db');
 
 include_once(PHPWG_ROOT_PATH.'include/functions.inc.php');
 include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
-include_once(PHPWG_ROOT_PATH . 'include/template.class.php');
+require_once PHPWG_ROOT_PATH . 'vendor/autoload.php';
 
 // +-----------------------------------------------------------------------+
 // |                              functions                                |
@@ -122,7 +128,6 @@ function print_time(string $message): void
 // +-----------------------------------------------------------------------+
 // |                             language                                  |
 // +-----------------------------------------------------------------------+
-include(PHPWG_ROOT_PATH . 'admin/include/languages.class.php');
 $languages = new languages('utf-8');
 if (isset($_GET['language'])) {
     $language = strip_tags((string) $_GET['language']);
@@ -213,7 +218,6 @@ while ($row = pwg_db_fetch_assoc($result)) {
 }
 
 if ($has_remote_site) {
-    include_once(PHPWG_ROOT_PATH.'admin/include/updates.class.php');
     include_once(PHPWG_ROOT_PATH.'admin/include/pclzip.lib.php');
 
     $page['errors'] = [];
@@ -424,8 +428,6 @@ REPLACE INTO '.PLUGINS_TABLE.'
         }
 
         // Delete cache data
-        include(PHPWG_ROOT_PATH . 'include/cache.class.php');
-
         // invalidate_user_cache will purge persistent_cache so it needs to be instantiated first
         $persistent_cache = new PersistentFileCache();
 
@@ -447,7 +449,6 @@ else {
         define('PWG_CHARSET', 'utf-8');
     }
 
-    include_once(PHPWG_ROOT_PATH.'admin/include/languages.class.php');
     $languages = new languages();
 
     foreach ($languages->fs_languages as $language_code => $fs_language) {

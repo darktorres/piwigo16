@@ -1,6 +1,11 @@
 <?php
 
 declare(strict_types=1);
+
+use Piwigo\Admin\Integrity\c13y_internal;
+use Piwigo\Admin\Integrity\check_integrity;
+use Piwigo\Admin\tabsheet;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |

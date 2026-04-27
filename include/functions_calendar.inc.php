@@ -89,15 +89,13 @@ WHERE id IN (' . implode(',', $page['items']) .')';
     $styles = [
       // Monthly style
       'monthly' => [
-        'include'        => 'calendar_monthly.class.php',
         'view_calendar'  => true,
-        'classname'      => 'CalendarMonthly',
+        'classname'      => \Piwigo\Calendar\CalendarMonthly::class,
         ],
       // Weekly style
       'weekly' => [
-        'include'        => 'calendar_weekly.class.php',
         'view_calendar'  => false,
-        'classname'      => 'CalendarWeekly',
+        'classname'      => \Piwigo\Calendar\CalendarWeekly::class,
         ],
       ];
 
@@ -113,7 +111,6 @@ WHERE id IN (' . implode(',', $page['items']) .')';
     $cal_style = $page['chronology_style'];
     $classname = $styles[$cal_style]['classname'];
 
-    include(PHPWG_ROOT_PATH.'include/'. $styles[$cal_style]['include']);
     $calendar = new $classname();
 
     // Retrieve view

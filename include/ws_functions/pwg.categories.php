@@ -1,6 +1,13 @@
 <?php
 
 declare(strict_types=1);
+
+use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\ImageStdParams;
+use Piwigo\Ws\PwgError;
+use Piwigo\Ws\PwgNamedArray;
+use Piwigo\Ws\PwgNamedStruct;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -18,7 +25,7 @@ declare(strict_types=1);
  *    @option int page
  *    @option string order (optional)
  */
-function ws_categories_getImages(array $params, &$service): \PwgError|array
+function ws_categories_getImages(array $params, &$service): PwgError|array
 {
     global $user, $conf;
 
@@ -227,7 +234,7 @@ SELECT
  *    @option bool tree_output
  *    @option bool fullname
  */
-function ws_categories_getList(array $params, &$service): \PwgError|array
+function ws_categories_getList(array $params, &$service): PwgError|array
 {
     global $user, $conf;
 
@@ -670,7 +677,7 @@ SELECT
  *    @option string status (optional)
  *    @option bool commentable
  */
-function ws_categories_add(array $params, &$service): \PwgError|array
+function ws_categories_add(array $params, &$service): PwgError|array
 {
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
@@ -977,7 +984,7 @@ UPDATE '.CATEGORIES_TABLE.'
  * @param mixed[] $params
  *    @option int category_id
  */
-function ws_categories_refreshRepresentative(array $params, &$service): \PwgError|array
+function ws_categories_refreshRepresentative(array $params, &$service): PwgError|array
 {
     global $conf;
 
@@ -1093,7 +1100,7 @@ SELECT id
  *    @option int parent
  *    @option string pwg_token
  */
-function ws_categories_move(array $params, &$service): \PwgError|array
+function ws_categories_move(array $params, &$service): PwgError|array
 {
     global $page;
 

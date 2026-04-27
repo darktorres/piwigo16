@@ -3,6 +3,7 @@ parameters:
     paths:
         - include
         - admin
+        - src
         - install.php
         - upgrade.php
         - index.php

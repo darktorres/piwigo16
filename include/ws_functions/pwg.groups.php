@@ -1,6 +1,11 @@
 <?php
 
 declare(strict_types=1);
+
+use Piwigo\Ws\PwgError;
+use Piwigo\Ws\PwgNamedArray;
+use Piwigo\Ws\PwgNamedStruct;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -15,7 +20,7 @@ declare(strict_types=1);
  *    @option int[] group_id (optional)
  *    @option string name (optional)
  */
-function ws_groups_getList(array $params, &$service): \PwgError|array
+function ws_groups_getList(array $params, &$service): PwgError|array
 {
     if (!preg_match(PATTERN_ORDER, (string) $params['order'])) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid input parameter order');
@@ -104,7 +109,7 @@ SELECT COUNT(*)
  *    @option int[] group_id
  *    @option string pwg_token
  */
-function ws_groups_delete(array $params, &$service): \PwgError|\PwgNamedArray
+function ws_groups_delete(array $params, &$service): PwgError|PwgNamedArray
 {
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
@@ -237,7 +242,7 @@ SELECT COUNT(*)
  *    @option int destination_group_id
  *    @option int[] merge_group_id
  */
-function ws_groups_merge(array $params, &$service): \PwgError|array
+function ws_groups_merge(array $params, &$service): PwgError|array
 {
 
     if (get_pwg_token() != $params['pwg_token']) {

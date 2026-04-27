@@ -1,6 +1,12 @@
 <?php
 
 declare(strict_types=1);
+
+use Piwigo\Cache\PersistentFileCache;
+use Piwigo\Core\Logger;
+use Piwigo\Image\ImageStdParams;
+use Piwigo\Template\Template;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -103,9 +109,6 @@ if ($conf['session_gc_probability'] > 0) {
 
 include(PHPWG_ROOT_PATH . 'include/constants.php');
 include(PHPWG_ROOT_PATH . 'include/functions.inc.php');
-include(PHPWG_ROOT_PATH . 'include/template.class.php');
-include(PHPWG_ROOT_PATH . 'include/cache.class.php');
-include(PHPWG_ROOT_PATH . 'include/Logger.class.php');
 
 $page['execution_uuid'] = generate_key(10);
 

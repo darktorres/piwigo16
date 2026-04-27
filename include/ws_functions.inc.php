@@ -1,6 +1,12 @@
 <?php
 
 declare(strict_types=1);
+
+use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\SrcImage;
+use Piwigo\Ws\PwgError;
+use Piwigo\Ws\PwgNamedArray;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |

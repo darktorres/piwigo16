@@ -1,6 +1,12 @@
 <?php
 
 declare(strict_types=1);
+
+use Piwigo\Admin\plugins;
+use Piwigo\Admin\themes;
+use Piwigo\Image\ImageStdParams;
+use Piwigo\Template\Template;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -2424,7 +2430,6 @@ SELECT
         return;
     }
 
-    include_once(PHPWG_ROOT_PATH.'admin/include/plugins.class.php');
     $plugins = new plugins();
     $piwigo_infos['general_stats']['nb_private_plugins'] = 0;
     $piwigo_infos['plugins'] = [];
@@ -2463,7 +2468,6 @@ SELECT
 
     $piwigo_infos['general_stats']['nb_plugins'] = $piwigo_infos['general_stats']['nb_private_plugins'] + count($piwigo_infos['plugins']);
 
-    include_once(PHPWG_ROOT_PATH.'admin/include/themes.class.php');
     $themes = new themes();
     $piwigo_infos['general_stats']['nb_private_themes'] = 0;
     $piwigo_infos['themes'] = [];

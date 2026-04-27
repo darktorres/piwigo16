@@ -106,6 +106,12 @@ parameters:
 			path: admin/albums.php
 
 		-
+			message: '#^Cannot assign offset ''max_height''\|''max_ratio''\|''max_width''\|''min_height''\|''min_ratio''\|''min_width'' to array\<string, mixed\>\|string\.$#'
+			identifier: offsetAssign.dimType
+			count: 1
+			path: admin/batch_manager.php
+
+		-
 			message: '#^Parameter \#1 \$period of function pwg_db_get_recent_period_expression expects string, int given\.$#'
 			identifier: argument.type
 			count: 1
@@ -256,6 +262,12 @@ parameters:
 			path: admin/cat_list.php
 
 		-
+			message: '#^Parameter \#1 \$ids of function delete_categories expects array\<int\>, array\<int, float\|int\|string\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/cat_list.php
+
+		-
 			message: '#^Variable \$conf might not be defined\.$#'
 			identifier: variable.undefined
 			count: 2
@@ -295,6 +307,12 @@ parameters:
 			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
 			identifier: arguments.count
 			count: 2
+			path: admin/cat_modify.php
+
+		-
+			message: '#^Parameter \#1 \$category_id of function get_complete_dir expects string, float\|int\|string given\.$#'
+			identifier: argument.type
+			count: 1
 			path: admin/cat_modify.php
 
 		-
@@ -382,6 +400,12 @@ parameters:
 			path: admin/comments.php
 
 		-
+			message: '#^Argument of an invalid type list\<string\>\|false supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 1
+			path: admin/configuration.php
+
+		-
 			message: '#^Offset ''local_dir_site'' on array\{\} in isset\(\) does not exist\.$#'
 			identifier: isset.offset
 			count: 1
@@ -434,6 +458,12 @@ parameters:
 			identifier: variable.undefined
 			count: 27
 			path: admin/configuration.php
+
+		-
+			message: '#^Parameter \#1 \$id of function get_cat_info expects int, float\|int\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/element_set_ranks.php
 
 		-
 			message: '#^Variable \$template might not be defined\.$#'
@@ -505,6 +535,18 @@ parameters:
 			path: admin/help.php
 
 		-
+			message: '#^Offset ''display_thumbnail'' might not exist on array\{\}\|array\{end\: non\-falsy\-string, start\: string, types\: non\-empty\-array\<string\>, display_thumbnail\: mixed\}\|array\{start\?\: mixed, end\?\: mixed\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: admin/history.php
+
+		-
+			message: '#^Offset ''end'' might not exist on array\{\}\|array\{end\: non\-falsy\-string, start\: string, types\: non\-empty\-array\<string\>, display_thumbnail\: mixed\}\|array\{start\?\: mixed, end\?\: mixed\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: admin/history.php
+
+		-
 			message: '#^Offset ''filename'' does not exist on array\{\}\|array\{end\: non\-falsy\-string, start\: string, types\: non\-empty\-array\<string\>, display_thumbnail\: mixed\}\|array\{start\?\: mixed, end\?\: mixed\}\.$#'
 			identifier: offsetAccess.notFound
 			count: 1
@@ -518,6 +560,12 @@ parameters:
 
 		-
 			message: '#^Offset ''ip'' does not exist on array\{\}\|array\{end\: non\-falsy\-string, start\: non\-falsy\-string, types\: non\-empty\-array\<string\>, display_thumbnail\: mixed\}\|array\{start\?\: mixed, end\?\: mixed\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: admin/history.php
+
+		-
+			message: '#^Offset ''start'' might not exist on array\{\}\|array\{end\: non\-falsy\-string, start\: string, types\: non\-empty\-array\<string\>, display_thumbnail\: mixed\}\|array\{start\?\: mixed, end\?\: mixed\}\.$#'
 			identifier: offsetAccess.notFound
 			count: 1
 			path: admin/history.php
@@ -793,6 +841,12 @@ parameters:
 			path: admin/include/configuration_sizes_process.inc.php
 
 		-
+			message: '#^Cannot use array destructuring on array\<int\|string, int\|string\>\|false\.$#'
+			identifier: offsetAccess.nonArray
+			count: 1
+			path: admin/include/configuration_watermark_process.inc.php
+
+		-
 			message: '#^Function get_watermark_filename\(\) has no return type specified\.$#'
 			identifier: missingType.return
 			count: 1
@@ -835,6 +889,12 @@ parameters:
 			path: admin/include/functions.php
 
 		-
+			message: '#^Call to an undefined method object\:\:info\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: admin/include/functions.php
+
+		-
 			message: '''
 				#^Call to deprecated function array_from_query\(\)\:
 				2\.6$#
@@ -859,6 +919,12 @@ parameters:
 			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
 			identifier: function.resultUnused
 			count: 9
+			path: admin/include/functions.php
+
+		-
+			message: '#^Cannot access offset ''host'' on array\{scheme\?\: string, host\?\: string, port\?\: int\<0, 65535\>, user\?\: string, pass\?\: string, path\?\: string, query\?\: string, fragment\?\: string\}\|false\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
 			path: admin/include/functions.php
 
 		-
@@ -1108,6 +1174,12 @@ parameters:
 			path: admin/include/functions.php
 
 		-
+			message: '#^Function get_tag_ids\(\) should return array\<int\> but returns list\<int\|string\>\.$#'
+			identifier: return.type
+			count: 1
+			path: admin/include/functions.php
+
+		-
 			message: '#^Function get_taglist\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -1276,7 +1348,61 @@ parameters:
 			path: admin/include/functions.php
 
 		-
+			message: '#^Parameter \#1 \$data of function unserialize expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/functions.php
+
+		-
+			message: '#^Parameter \#1 \$dir_handle of function closedir expects resource\|null, resource\|false given\.$#'
+			identifier: argument.type
+			count: 3
+			path: admin/include/functions.php
+
+		-
+			message: '#^Parameter \#1 \$dir_handle of function readdir expects resource\|null, resource\|false given\.$#'
+			identifier: argument.type
+			count: 2
+			path: admin/include/functions.php
+
+		-
+			message: '#^Parameter \#1 \$json of function json_decode expects string, Ressource\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/functions.php
+
+		-
 			message: '#^Parameter \#1 \$prefix of function uniqid expects string, int\<0, max\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/functions.php
+
+		-
+			message: '#^Parameter \#1 \$string of function rtrim expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 3
+			path: admin/include/functions.php
+
+		-
+			message: '#^Parameter \#1 \$string of function substr expects string, string\|true given\.$#'
+			identifier: argument.type
+			count: 2
+			path: admin/include/functions.php
+
+		-
+			message: '#^Parameter \#1 \$t of function derivative_to_url expects string, int\|string given\.$#'
+			identifier: argument.type
+			count: 3
+			path: admin/include/functions.php
+
+		-
+			message: '#^Parameter \#1 \$value of function count expects array\|Countable, array\<int\>\|int given\.$#'
+			identifier: argument.type
+			count: 2
+			path: admin/include/functions.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array, array\<int\>\|int given\.$#'
 			identifier: argument.type
 			count: 1
 			path: admin/include/functions.php
@@ -1288,7 +1414,19 @@ parameters:
 			path: admin/include/functions.php
 
 		-
+			message: '#^Parameter \#2 \$data of function fwrite expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/functions.php
+
+		-
 			message: '#^Parameter \#2 \$value of function conf_update_param expects string, \(float\|int\) given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/functions.php
+
+		-
+			message: '#^Parameter \#3 \$offset of function substr_replace expects array\|int, int\|false given\.$#'
 			identifier: argument.type
 			count: 1
 			path: admin/include/functions.php
@@ -1297,6 +1435,12 @@ parameters:
 			message: '#^Parameter \#3 \$value of function curl_setopt expects bool, int given\.$#'
 			identifier: argument.type
 			count: 4
+			path: admin/include/functions.php
+
+		-
+			message: '#^Parameter \#3 \$value of function curl_setopt expects non\-empty\-string, string given\.$#'
+			identifier: argument.type
+			count: 2
 			path: admin/include/functions.php
 
 		-
@@ -1375,6 +1519,12 @@ parameters:
 			path: admin/include/functions_history.inc.php
 
 		-
+			message: '#^Argument of an invalid type list\<string\>\|false supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 1
+			path: admin/include/functions_install.inc.php
+
+		-
 			message: '#^Function execute_sqlfile\(\) has parameter \$dblayer with no type specified\.$#'
 			identifier: missingType.parameter
 			count: 1
@@ -1398,6 +1548,12 @@ parameters:
 				2\.6$#
 			'''
 			identifier: function.deprecated
+			count: 1
+			path: admin/include/functions_metadata.php
+
+		-
+			message: '#^Cannot call method attributes\(\) on SimpleXMLElement\|false\.$#'
+			identifier: method.nonObject
 			count: 1
 			path: admin/include/functions_metadata.php
 
@@ -1440,6 +1596,24 @@ parameters:
 		-
 			message: '#^Function get_sync_metadata\(\) should return array but returns false\.$#'
 			identifier: return.type
+			count: 1
+			path: admin/include/functions_metadata.php
+
+		-
+			message: '#^Function get_sync_metadata_attributes\(\) should return array\<string\> but returns array\<int, int\|string\>\.$#'
+			identifier: return.type
+			count: 1
+			path: admin/include/functions_metadata.php
+
+		-
+			message: '#^Parameter \#1 \$data of function simplexml_load_string expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/functions_metadata.php
+
+		-
+			message: '#^Parameter \#1 \$haystack of function str_starts_with expects string, string\|false given\.$#'
+			identifier: argument.type
 			count: 1
 			path: admin/include/functions_metadata.php
 
@@ -1711,6 +1885,12 @@ parameters:
 			path: admin/include/functions_plugins.inc.php
 
 		-
+			message: '#^Parameter \#1 \$string of function rtrim expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/functions_plugins.inc.php
+
+		-
 			message: '''
 				#^Call to deprecated function array_from_query\(\)\:
 				2\.6$#
@@ -1759,6 +1939,18 @@ parameters:
 			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
 			identifier: function.resultUnused
 			count: 2
+			path: admin/include/functions_upload.inc.php
+
+		-
+			message: '#^Cannot use array destructuring on array\<int\|string, int\|string\>\|false\.$#'
+			identifier: offsetAccess.nonArray
+			count: 3
+			path: admin/include/functions_upload.inc.php
+
+		-
+			message: '#^Cannot use array destructuring on list\<string\>\|false\.$#'
+			identifier: offsetAccess.nonArray
+			count: 1
 			path: admin/include/functions_upload.inc.php
 
 		-
@@ -2020,6 +2212,12 @@ parameters:
 			path: admin/include/functions_upload.inc.php
 
 		-
+			message: '#^Parameter \#1 \$finfo of function finfo_file expects finfo, finfo\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/functions_upload.inc.php
+
+		-
 			message: '#^Parameter \#2 \$func of function add_event_handler expects callable\(\)\: mixed, ''pwg_image_resize'' given\.$#'
 			identifier: argument.type
 			count: 2
@@ -2038,6 +2236,54 @@ parameters:
 			path: admin/include/functions_upload.inc.php
 
 		-
+			message: '#^Call to an undefined method object\:\:crop\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: admin/include/image.class.php
+
+		-
+			message: '#^Call to an undefined method object\:\:get_height\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: admin/include/image.class.php
+
+		-
+			message: '#^Call to an undefined method object\:\:get_width\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: admin/include/image.class.php
+
+		-
+			message: '#^Call to an undefined method object\:\:resize\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: admin/include/image.class.php
+
+		-
+			message: '#^Call to an undefined method object\:\:rotate\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: admin/include/image.class.php
+
+		-
+			message: '#^Call to an undefined method object\:\:set_compression_quality\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: admin/include/image.class.php
+
+		-
+			message: '#^Call to an undefined method object\:\:strip\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: admin/include/image.class.php
+
+		-
+			message: '#^Call to an undefined method object\:\:write\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: admin/include/image.class.php
+
+		-
 			message: '#^Call to function is_array\(\) with list\<string\> will always evaluate to true\.$#'
 			identifier: function.alreadyNarrowedType
 			count: 4
@@ -2047,6 +2293,12 @@ parameters:
 			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
 			identifier: function.resultUnused
 			count: 1
+			path: admin/include/image.class.php
+
+		-
+			message: '#^Cannot use array destructuring on array\<int\|string, int\|string\>\|false\.$#'
+			identifier: offsetAccess.nonArray
+			count: 2
 			path: admin/include/image.class.php
 
 		-
@@ -2746,6 +2998,42 @@ parameters:
 			path: admin/include/image.class.php
 
 		-
+			message: '#^Offset ''dirname'' might not exist on array\{dirname\?\: string, basename\: string, extension\?\: string, filename\: string\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: admin/include/image.class.php
+
+		-
+			message: '#^Parameter \#1 \$arg of function escapeshellarg expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/image.class.php
+
+		-
+			message: '#^Parameter \#1 \$callback of function call_user_func_array expects callable\(\)\: mixed, array\{object, string\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/image.class.php
+
+		-
+			message: '#^Parameter \#1 \$haystack of function str_starts_with expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/image.class.php
+
+		-
+			message: '#^Parameter \#1 \$string of function strlen expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/image.class.php
+
+		-
+			message: '#^Parameter \#1 \$string of function substr expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 2
+			path: admin/include/image.class.php
+
+		-
 			message: '#^Property image_ext_imagick\:\:\$commands has no type specified\.$#'
 			identifier: missingType.property
 			count: 1
@@ -2902,13 +3190,49 @@ parameters:
 			path: admin/include/languages.class.php
 
 		-
+			message: '#^Parameter \#1 \$data of function unserialize expects string, Ressource\|string given\.$#'
+			identifier: argument.type
+			count: 2
+			path: admin/include/languages.class.php
+
+		-
+			message: '#^Parameter \#1 \$dir_handle of function closedir expects resource\|null, resource\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/languages.class.php
+
+		-
+			message: '#^Parameter \#1 \$dir_handle of function readdir expects resource\|null, resource\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/languages.class.php
+
+		-
+			message: '#^Parameter \#1 \$filename of function unlink expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/languages.class.php
+
+		-
 			message: '#^Parameter \#1 \$stream of function fclose expects resource, Ressource\|string given\.$#'
 			identifier: argument.type
 			count: 1
 			path: admin/include/languages.class.php
 
 		-
+			message: '#^Parameter \#2 \$array of function implode expects array, list\<string\>\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/languages.class.php
+
+		-
 			message: '#^Parameter \#2 \$dest of function fetchRemote expects Ressource\|string, resource given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/languages.class.php
+
+		-
+			message: '#^Parameter \#2 \$needle of function str_starts_with expects string, string\|false given\.$#'
 			identifier: argument.type
 			count: 1
 			path: admin/include/languages.class.php
@@ -2950,6 +3274,12 @@ parameters:
 			path: admin/include/languages.class.php
 
 		-
+			message: '#^Access to an undefined property object\:\:\$zipname\.$#'
+			identifier: property.notFound
+			count: 1
+			path: admin/include/pclzip.lib.php
+
+		-
 			message: '#^Call to deprecated function get_magic_quotes_runtime\(\)\.$#'
 			identifier: function.deprecated
 			count: 1
@@ -2959,6 +3289,48 @@ parameters:
 			message: '#^Call to function unset\(\) contains undefined variable \$v_header_list\.$#'
 			identifier: unset.variable
 			count: 1
+			path: admin/include/pclzip.lib.php
+
+		-
+			message: '#^Cannot access offset ''comment_size'' on array\|false\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: admin/include/pclzip.lib.php
+
+		-
+			message: '#^Cannot access offset ''crc'' on array\|false\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: admin/include/pclzip.lib.php
+
+		-
+			message: '#^Cannot access offset ''extra_len'' on array\|false\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: admin/include/pclzip.lib.php
+
+		-
+			message: '#^Cannot access offset ''filename_len'' on array\|false\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: admin/include/pclzip.lib.php
+
+		-
+			message: '#^Cannot access offset ''id'' on array\|false\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: admin/include/pclzip.lib.php
+
+		-
+			message: '#^Cannot access offset ''os'' on array\|false\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: admin/include/pclzip.lib.php
+
+		-
+			message: '#^Cannot use \+\+ on int\|false\.$#'
+			identifier: postInc.type
+			count: 2
 			path: admin/include/pclzip.lib.php
 
 		-
@@ -3910,6 +4282,12 @@ parameters:
 			path: admin/include/pclzip.lib.php
 
 		-
+			message: '#^Offset ''dirname'' might not exist on array\{dirname\?\: string, basename\: string, extension\?\: string, filename\: string\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: admin/include/pclzip.lib.php
+
+		-
 			message: '#^Offset ''entries'' does not exist on array\{\}\.$#'
 			identifier: offsetAccess.notFound
 			count: 1
@@ -3924,6 +4302,90 @@ parameters:
 		-
 			message: '#^Offset ''size'' does not exist on array\{\}\.$#'
 			identifier: offsetAccess.notFound
+			count: 1
+			path: admin/include/pclzip.lib.php
+
+		-
+			message: '#^Parameter \#1 \$character of function ord expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/pclzip.lib.php
+
+		-
+			message: '#^Parameter \#1 \$data of function gzdeflate expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/pclzip.lib.php
+
+		-
+			message: '#^Parameter \#1 \$data of function gzinflate expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 3
+			path: admin/include/pclzip.lib.php
+
+		-
+			message: '#^Parameter \#1 \$haystack of function str_ends_with expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/pclzip.lib.php
+
+		-
+			message: '#^Parameter \#1 \$string of function strlen expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 8
+			path: admin/include/pclzip.lib.php
+
+		-
+			message: '#^Parameter \#2 \$data of function fwrite expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 14
+			path: admin/include/pclzip.lib.php
+
+		-
+			message: '#^Parameter \#2 \$data of function gzputs expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/pclzip.lib.php
+
+		-
+			message: '#^Parameter \#2 \$data of function gzwrite expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 2
+			path: admin/include/pclzip.lib.php
+
+		-
+			message: '#^Parameter \#2 \$data of function hash expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/pclzip.lib.php
+
+		-
+			message: '#^Parameter \#2 \$length of function fread expects int\<1, max\>, int\<min, \-1\>\|int\<1, 2048\> given\.$#'
+			identifier: argument.type
+			count: 2
+			path: admin/include/pclzip.lib.php
+
+		-
+			message: '#^Parameter \#2 \$offset of function fseek expects int, int\<0, max\>\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/pclzip.lib.php
+
+		-
+			message: '#^Parameter \#2 \$string of function unpack expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 8
+			path: admin/include/pclzip.lib.php
+
+		-
+			message: '#^Parameter \#3 \$length of function fwrite expects int\<0, max\>\|null, int\<min, \-1\>\|int\<1, 2048\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/pclzip.lib.php
+
+		-
+			message: '#^Possibly invalid array key type float\|int\|string\|false\.$#'
+			identifier: offsetAccess.invalidOffset
 			count: 1
 			path: admin/include/pclzip.lib.php
 
@@ -4270,7 +4732,43 @@ parameters:
 			path: admin/include/plugins.class.php
 
 		-
+			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(bool\|string\)\: mixed\)\|null, Closure\(string, int\=, string\|null\=, bool\=\)\: string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/plugins.class.php
+
+		-
+			message: '#^Parameter \#1 \$data of function unserialize expects string, Ressource\|string given\.$#'
+			identifier: argument.type
+			count: 3
+			path: admin/include/plugins.class.php
+
+		-
+			message: '#^Parameter \#1 \$dir_handle of function closedir expects resource\|null, resource\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/plugins.class.php
+
+		-
+			message: '#^Parameter \#1 \$dir_handle of function readdir expects resource\|null, resource\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/plugins.class.php
+
+		-
+			message: '#^Parameter \#1 \$filename of function unlink expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/plugins.class.php
+
+		-
 			message: '#^Parameter \#1 \$stream of function fclose expects resource, Ressource\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/plugins.class.php
+
+		-
+			message: '#^Parameter \#1 \$string of function trim expects string, string\|true given\.$#'
 			identifier: argument.type
 			count: 1
 			path: admin/include/plugins.class.php
@@ -4279,6 +4777,18 @@ parameters:
 			message: '#^Parameter \#2 \$dest of function fetchRemote expects Ressource\|string, resource given\.$#'
 			identifier: argument.type
 			count: 1
+			path: admin/include/plugins.class.php
+
+		-
+			message: '#^Parameter \#2 \$needle of function str_starts_with expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/plugins.class.php
+
+		-
+			message: '#^Parameter \#2 \$subject of function preg_match expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 7
 			path: admin/include/plugins.class.php
 
 		-
@@ -4657,13 +5167,61 @@ parameters:
 			path: admin/include/themes.class.php
 
 		-
+			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(bool\|string\)\: mixed\)\|null, Closure\(string, int\=, string\|null\=, bool\=\)\: string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/themes.class.php
+
+		-
+			message: '#^Parameter \#1 \$data of function unserialize expects string, Ressource\|string given\.$#'
+			identifier: argument.type
+			count: 2
+			path: admin/include/themes.class.php
+
+		-
+			message: '#^Parameter \#1 \$dir_handle of function closedir expects resource\|null, resource\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/themes.class.php
+
+		-
+			message: '#^Parameter \#1 \$dir_handle of function readdir expects resource\|null, resource\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/themes.class.php
+
+		-
+			message: '#^Parameter \#1 \$filename of function unlink expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/themes.class.php
+
+		-
 			message: '#^Parameter \#1 \$stream of function fclose expects resource, Ressource\|string given\.$#'
 			identifier: argument.type
 			count: 1
 			path: admin/include/themes.class.php
 
 		-
+			message: '#^Parameter \#1 \$string of function trim expects string, string\|true given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/themes.class.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array, list\<string\>\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/themes.class.php
+
+		-
 			message: '#^Parameter \#2 \$dest of function fetchRemote expects Ressource\|string, resource given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/themes.class.php
+
+		-
+			message: '#^Parameter \#2 \$needle of function str_starts_with expects string, string\|false given\.$#'
 			identifier: argument.type
 			count: 1
 			path: admin/include/themes.class.php
@@ -4777,9 +5335,33 @@ parameters:
 			path: admin/include/updates.class.php
 
 		-
+			message: '#^Parameter \#1 \$data of function unserialize expects string, Ressource\|string given\.$#'
+			identifier: argument.type
+			count: 3
+			path: admin/include/updates.class.php
+
+		-
 			message: '#^Parameter \#1 \$prefix of function uniqid expects string, int\<0, max\> given\.$#'
 			identifier: argument.type
 			count: 2
+			path: admin/include/updates.class.php
+
+		-
+			message: '#^Parameter \#1 \$stream of function fclose expects resource, resource\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/updates.class.php
+
+		-
+			message: '#^Parameter \#1 \$stream of function fwrite expects resource, resource\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/updates.class.php
+
+		-
+			message: '#^Parameter \#2 \$string of function explode expects string, Ressource\|string given\.$#'
+			identifier: argument.type
+			count: 3
 			path: admin/include/updates.class.php
 
 		-
@@ -4885,6 +5467,18 @@ parameters:
 			path: admin/intro.php
 
 		-
+			message: '#^Offset ''nb_files'' might not exist on array\{filesize\: \(array\|float\|int\), nb_files\?\: \(array\|float\|int\)\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 2
+			path: admin/intro.php
+
+		-
+			message: '#^Offset ''number'' might not exist on array\{details\: non\-empty\-array\<string, non\-empty\-array\<string, mixed\>\>, number\: \(array\|float\|int\), date\: string\}\|array\{details\: non\-empty\-array\<string, non\-empty\-array\<string, mixed\>\>\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: admin/intro.php
+
+		-
 			message: '#^Variable \$conf might not be defined\.$#'
 			identifier: variable.undefined
 			count: 7
@@ -4981,7 +5575,19 @@ parameters:
 			path: admin/maintenance.php
 
 		-
+			message: '#^Parameter \#1 \$types of function clear_derivative_cache expects ''all''\|array\<int\>, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/maintenance_actions.php
+
+		-
 			message: '#^Parameter \#1 \$value of function count expects array\|Countable, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/maintenance_actions.php
+
+		-
+			message: '#^Parameter \#2 \$string of function explode expects string, Ressource\|string given\.$#'
 			identifier: argument.type
 			count: 1
 			path: admin/maintenance_actions.php
@@ -5009,6 +5615,12 @@ parameters:
 			identifier: variable.undefined
 			count: 12
 			path: admin/maintenance_actions.php
+
+		-
+			message: '#^Parameter \#2 \$string of function explode expects string, Ressource\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/maintenance_env.php
 
 		-
 			message: '#^Variable \$conf might not be defined\.$#'
@@ -5061,6 +5673,12 @@ parameters:
 		-
 			message: '#^Function make_consecutive\(\) has parameter \$step with no type specified\.$#'
 			identifier: missingType.parameter
+			count: 1
+			path: admin/menubar.php
+
+		-
+			message: '#^Parameter \#2 \$callback of function uasort expects callable\(mixed, mixed\)\: int, Closure\(mixed, mixed\)\: \(float\|int\) given\.$#'
+			identifier: argument.type
 			count: 1
 			path: admin/menubar.php
 
@@ -5161,6 +5779,12 @@ parameters:
 			path: admin/notification_by_mail.php
 
 		-
+			message: '#^Parameter \#3 \$decimal of function l10n_dec expects int, float\|int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/notification_by_mail.php
+
+		-
 			message: '#^Result of or is always true\.$#'
 			identifier: logicalOr.alwaysTrue
 			count: 1
@@ -5191,6 +5815,18 @@ parameters:
 			path: admin/notification_by_mail.php
 
 		-
+			message: '#^Cannot access offset ''path'' on array\{scheme\?\: string, host\?\: string, port\?\: int\<0, 65535\>, user\?\: string, pass\?\: string, path\?\: string, query\?\: string, fragment\?\: string\}\|false\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: admin/permalinks.php
+
+		-
+			message: '#^Cannot access offset ''query'' on array\{scheme\?\: string, host\?\: string, port\?\: int\<0, 65535\>, user\?\: string, pass\?\: string, path\?\: string, query\?\: string, fragment\?\: string\}\|false\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: admin/permalinks.php
+
+		-
 			message: '#^Function parse_sort_variables\(\) has parameter \$default_field with no type specified\.$#'
 			identifier: missingType.parameter
 			count: 1
@@ -5211,6 +5847,12 @@ parameters:
 		-
 			message: '#^Function parse_sort_variables\(\) has parameter \$sortable_by with no type specified\.$#'
 			identifier: missingType.parameter
+			count: 1
+			path: admin/permalinks.php
+
+		-
+			message: '#^Parameter \#1 \$string of function urlencode expects string, array\<mixed\>\|string given\.$#'
+			identifier: argument.type
 			count: 1
 			path: admin/permalinks.php
 
@@ -5288,6 +5930,12 @@ parameters:
 
 		-
 			message: '#^Parameter \#2 \$type of function delete_element_derivatives expects ''all''\|int, ''custom'' given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/picture_coi.php
+
+		-
+			message: '#^Parameter \#2 \$type of function delete_element_derivatives expects ''all''\|int, string given\.$#'
 			identifier: argument.type
 			count: 1
 			path: admin/picture_coi.php
@@ -5392,6 +6040,18 @@ parameters:
 			path: admin/plugins_installed.php
 
 		-
+			message: '#^Parameter \#1 \$baseObject of function date_diff expects DateTimeInterface, DateTime\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/plugins_new.php
+
+		-
+			message: '#^Parameter \#2 \$targetObject of function date_diff expects DateTimeInterface, DateTime\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/plugins_new.php
+
+		-
 			message: '#^Parameter \#3 \$subject of function preg_replace expects array\<float\|int\|string\>\|string, int\|false given\.$#'
 			identifier: argument.type
 			count: 1
@@ -5432,6 +6092,30 @@ parameters:
 			identifier: variable.undefined
 			count: 2
 			path: admin/profile.php
+
+		-
+			message: '#^Parameter \#1 \$ids of function get_subcat_ids expects array\<int\>, array\<int, float\|int\|string\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/rating.php
+
+		-
+			message: '#^Parameter \#3 \$start of function create_navigation_bar expects int, float\|int\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/rating.php
+
+		-
+			message: '#^Parameter \#4 \$nb_element_page of function create_navigation_bar expects int, float\|int\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/rating.php
+
+		-
+			message: '#^Possibly invalid array key type float\|int\|string\.$#'
+			identifier: offsetAccess.invalidOffset
+			count: 1
+			path: admin/rating.php
 
 		-
 			message: '#^Variable \$conf might not be defined\.$#'
@@ -5521,6 +6205,12 @@ parameters:
 			path: admin/rating_user.php
 
 		-
+			message: '#^Possibly invalid array key type float\|int\|string\.$#'
+			identifier: offsetAccess.invalidOffset
+			count: 1
+			path: admin/rating_user.php
+
+		-
 			message: '#^Variable \$conf might not be defined\.$#'
 			identifier: variable.undefined
 			count: 1
@@ -5538,6 +6228,12 @@ parameters:
 				2\.6$#
 			'''
 			identifier: function.deprecated
+			count: 1
+			path: admin/site_manager.php
+
+		-
+			message: '#^Cannot access an offset on array\|Countable\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: admin/site_manager.php
 
@@ -5640,6 +6336,24 @@ parameters:
 				2\.6$#
 			'''
 			identifier: function.deprecated
+			count: 1
+			path: admin/site_update.php
+
+		-
+			message: '#^Parameter \#1 \$ids of function delete_elements expects array\<int\>, list\<int\|string\|false\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/site_update.php
+
+		-
+			message: '#^Parameter \#2 \$site_id of function get_filelist expects int, float\|int\|string given\.$#'
+			identifier: argument.type
+			count: 2
+			path: admin/site_update.php
+
+		-
+			message: '#^Possibly invalid array key type float\|int\|string\.$#'
+			identifier: offsetAccess.invalidOffset
 			count: 1
 			path: admin/site_update.php
 
@@ -5887,8 +6601,26 @@ parameters:
 			path: admin/themes_new.php
 
 		-
+			message: '#^Binary operation "\." between ''\./local/logo/'' and array\|string results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: admin/themes_standard_pages.php
+
+		-
 			message: '#^Function mkgetdir invoked with 2 parameters, 1 required\.$#'
 			identifier: arguments.count
+			count: 1
+			path: admin/themes_standard_pages.php
+
+		-
+			message: '#^Offset string\|false might not exist on array\{''image/png''\: ''png'', ''image/jpeg''\: ''jpg'', ''image/svg\+xml''\: ''svg'', ''image/svg''\: ''svg'', ''image/webp''\: ''webp''\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: admin/themes_standard_pages.php
+
+		-
+			message: '#^Parameter \#1 \$finfo of function finfo_file expects finfo, finfo\|false given\.$#'
+			identifier: argument.type
 			count: 1
 			path: admin/themes_standard_pages.php
 
@@ -5945,6 +6677,24 @@ parameters:
 			identifier: variable.undefined
 			count: 12
 			path: admin/updates_pwg.php
+
+		-
+			message: '#^Parameter \#1 \$stream of function fclose expects resource, resource\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/user_activity.php
+
+		-
+			message: '#^Parameter \#1 \$stream of function fputcsv expects resource, resource\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/user_activity.php
+
+		-
+			message: '#^Parameter \#2 \$fields of function fputcsv expects array\<int\|string, bool\|float\|int\|string\|null\>, array\<int\|string, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/user_activity.php
 
 		-
 			message: '#^Variable \$conf might not be defined\.$#'
@@ -6013,6 +6763,12 @@ parameters:
 			path: admin/user_list.php
 
 		-
+			message: '#^Parameter \#1 \$user_id of function get_username expects int, float\|int\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/user_perm.php
+
+		-
 			message: '#^Parameter \#2 \$user_ids of function add_permission_on_category expects array\<int\>, float\|int\|string given\.$#'
 			identifier: argument.type
 			count: 1
@@ -6046,6 +6802,12 @@ parameters:
 			message: '#^Parameter \#1 \$period of function pwg_db_get_recent_period_expression expects string, int given\.$#'
 			identifier: argument.type
 			count: 3
+			path: comments.php
+
+		-
+			message: '#^Parameter \#2 \$array of function array_map expects array, list\<string\>\|false given\.$#'
+			identifier: argument.type
+			count: 1
 			path: comments.php
 
 		-
@@ -6199,6 +6961,12 @@ parameters:
 			path: feed.php
 
 		-
+			message: '#^Argument of an invalid type list\<string\>\|false supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 1
+			path: i.php
+
+		-
 			message: '#^Call to an undefined method pwg_image\:\:compose\(\)\.$#'
 			identifier: method.notFound
 			count: 2
@@ -6249,6 +7017,12 @@ parameters:
 		-
 			message: '#^Call to an undefined method pwg_image\:\:write\(\)\.$#'
 			identifier: method.notFound
+			count: 1
+			path: i.php
+
+		-
+			message: '#^Cannot access offset ''mtime'' on array\{0\: int, 1\: int, 2\: int, 3\: int, 4\: int, 5\: int, 6\: int, 7\: int, \.\.\.\}\|false\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: i.php
 
@@ -6409,6 +7183,12 @@ parameters:
 			path: i.php
 
 		-
+			message: '#^Offset ''rotation_angle'' might not exist on array\{coi\: mixed, original_size\?\: array\{mixed, mixed\}, rotation_angle\?\: mixed\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: i.php
+
+		-
 			message: '#^Offset ''src_location'' does not exist on array\{coi\: null\}\.$#'
 			identifier: offsetAccess.notFound
 			count: 4
@@ -6445,9 +7225,51 @@ parameters:
 			path: i.php
 
 		-
+			message: '#^Parameter \#1 \$stream of function fclose expects resource, resource\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: i.php
+
+		-
+			message: '#^Parameter \#1 \$stream of function fpassthru expects resource, resource\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: i.php
+
+		-
+			message: '#^Parameter \#1 \$stream of function fstat expects resource, resource\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: i.php
+
+		-
+			message: '#^Parameter \#1 \$string of function substr expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: i.php
+
+		-
 			message: '#^Parameter \#2 \$coi of method SizingParams\:\:compute\(\) expects string, null given\.$#'
 			identifier: argument.type
 			count: 1
+			path: i.php
+
+		-
+			message: '#^Parameter \#2 \$offset of function substr expects int, int\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: i.php
+
+		-
+			message: '#^Parameter \#2 \$timestamp of function gmdate expects int\|null, int\<0, max\>\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: i.php
+
+		-
+			message: '#^Parameter \#3 \$length of function substr expects int\|null, int\|false given\.$#'
+			identifier: argument.type
+			count: 2
 			path: i.php
 
 		-
@@ -6515,6 +7337,12 @@ parameters:
 			identifier: variable.undefined
 			count: 3
 			path: identification.php
+
+		-
+			message: '#^Argument of an invalid type list\<string\>\|false supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 1
+			path: include/Logger.class.php
 
 		-
 			message: '#^Function mkgetdir invoked with 2 parameters, 1 required\.$#'
@@ -6609,6 +7437,12 @@ parameters:
 		-
 			message: '#^Parameter \#1 \$level of static method Logger\:\:levelToCode\(\) expects int, string given\.$#'
 			identifier: argument.type
+			count: 1
+			path: include/Logger.class.php
+
+		-
+			message: '#^Property Logger\:\:\$_fileHandle \(resource\) does not accept resource\|false\.$#'
+			identifier: assign.propertyType
 			count: 1
 			path: include/Logger.class.php
 
@@ -6877,6 +7711,12 @@ parameters:
 			path: include/calendar_base.class.php
 
 		-
+			message: '#^Parameter \#2 \$callback of function usort expects callable\(mixed, mixed\)\: int, \(Closure\(string, string, string\|null\)\: \(bool\|null\)\)\|\(Closure\(string, string, string\|null\=\)\: \(bool\|int\)\) given\.$#'
+			identifier: argument.type
+			count: 2
+			path: include/calendar_base.class.php
+
+		-
 			message: '#^Property CalendarBase\:\:\$calendar_levels has no type specified\.$#'
 			identifier: missingType.property
 			count: 1
@@ -6893,6 +7733,12 @@ parameters:
 			identifier: missingType.property
 			count: 1
 			path: include/calendar_base.class.php
+
+		-
+			message: '#^Cannot access offset 0 on array\{\}\|Countable\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: include/calendar_monthly.class.php
 
 		-
 			message: '#^Method CalendarMonthly\:\:build_global_calendar\(\) has parameter \$tpl_var with no value type specified in iterable type array\.$#'
@@ -6975,6 +7821,12 @@ parameters:
 		-
 			message: '#^Function trigger_notify invoked with 2 parameters, 0 required\.$#'
 			identifier: arguments.count
+			count: 1
+			path: include/category_default.inc.php
+
+		-
+			message: '#^Parameter \#2 \$callback of function usort expects callable\(mixed, mixed\)\: int, Closure\(array, array\)\: \(float\|int\) given\.$#'
+			identifier: argument.type
 			count: 1
 			path: include/category_default.inc.php
 
@@ -7177,6 +8029,12 @@ parameters:
 			path: include/common.inc.php
 
 		-
+			message: '#^Offset ''username'' might not exist on array\{\}\|array\{username\: string\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: include/common.inc.php
+
+		-
 			message: '#^Offset ''webmaster_id'' on array\{\} on left side of \?\?\= does not exist\.$#'
 			identifier: nullCoalesce.offset
 			count: 1
@@ -7229,6 +8087,12 @@ parameters:
 			identifier: variable.undefined
 			count: 34
 			path: include/constants.php
+
+		-
+			message: '#^Cannot call method fetch_assoc\(\) on bool\|mysqli_result\.$#'
+			identifier: method.nonObject
+			count: 4
+			path: include/dblayer/functions_mysqli.inc.php
 
 		-
 			message: '#^Function mass_inserts\(\) has parameter \$datas with no value type specified in iterable type array\.$#'
@@ -7489,10 +8353,28 @@ parameters:
 			path: include/dblayer/functions_mysqli.inc.php
 
 		-
+			message: '#^Possibly invalid array key type float\|int\|string\.$#'
+			identifier: offsetAccess.invalidOffset
+			count: 2
+			path: include/dblayer/functions_mysqli.inc.php
+
+		-
 			message: '#^Variable \$options might not be defined\.$#'
 			identifier: variable.undefined
 			count: 1
 			path: include/dblayer/functions_mysqli.inc.php
+
+		-
+			message: '#^Cannot access offset 0 on array\{0\: int\<0, max\>, 1\: int\<0, max\>, 2\: int, 3\: string, mime\: string, channels\?\: int, bits\?\: int\}\|false\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: include/derivative.inc.php
+
+		-
+			message: '#^Cannot access offset 1 on array\{0\: int\<0, max\>, 1\: int\<0, max\>, 2\: int, 3\: string, mime\: string, channels\?\: int, bits\?\: int\}\|false\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: include/derivative.inc.php
 
 		-
 			message: '#^Cannot access property \$type on array\.$#'
@@ -7591,6 +8473,12 @@ parameters:
 			path: include/derivative.inc.php
 
 		-
+			message: '#^Method DerivativeImage\:\:get_url\(\) should return string but returns array\|string\.$#'
+			identifier: return.type
+			count: 2
+			path: include/derivative.inc.php
+
+		-
 			message: '#^Method DerivativeImage\:\:thumb_url\(\) has parameter \$infos with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -7600,6 +8488,12 @@ parameters:
 			message: '#^Method DerivativeImage\:\:url\(\) has parameter \$infos with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
+			path: include/derivative.inc.php
+
+		-
+			message: '#^Method DerivativeImage\:\:url\(\) should return string but returns array\|string\.$#'
+			identifier: return.type
+			count: 2
 			path: include/derivative.inc.php
 
 		-
@@ -7624,6 +8518,12 @@ parameters:
 			message: '#^PHPDoc tag @return with type bool is incompatible with native type int\.$#'
 			identifier: return.phpDocType
 			count: 2
+			path: include/derivative.inc.php
+
+		-
+			message: '#^Parameter \#3 \$offset of function substr_replace expects array\|int, int\|false given\.$#'
+			identifier: argument.type
+			count: 1
 			path: include/derivative.inc.php
 
 		-
@@ -7783,6 +8683,12 @@ parameters:
 			path: include/derivative_params.inc.php
 
 		-
+			message: '#^Property ImageRect\:\:\$l \(int\) does not accept float\|int\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: include/derivative_params.inc.php
+
+		-
 			message: '#^Property ImageRect\:\:\$r has no type specified\.$#'
 			identifier: missingType.property
 			count: 1
@@ -7819,9 +8725,27 @@ parameters:
 			path: include/derivative_std_params.inc.php
 
 		-
+			message: '#^Static property ImageStdParams\:\:\$undefined_type_map \(array\<DerivativeParams\>\) does not accept array\<DerivativeParams\|string\>\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: include/derivative_std_params.inc.php
+
+		-
+			message: '#^Argument of an invalid type DOMNodeList\<DOMNameSpaceNode\|DOMNode\>\|false supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 2
+			path: include/emogrifier.class.php
+
+		-
 			message: '#^Call to an undefined method DOMNameSpaceNode\|DOMNode\:\:getAttribute\(\)\.$#'
 			identifier: method.notFound
 			count: 2
+			path: include/emogrifier.class.php
+
+		-
+			message: '#^Call to an undefined method DOMNameSpaceNode\|DOMNode\:\:getNodePath\(\)\.$#'
+			identifier: method.notFound
+			count: 1
 			path: include/emogrifier.class.php
 
 		-
@@ -7851,6 +8775,18 @@ parameters:
 		-
 			message: '#^Call to function is_callable\(\) with Closure\(\)\: mixed will always evaluate to true\.$#'
 			identifier: function.alreadyNarrowedType
+			count: 1
+			path: include/emogrifier.class.php
+
+		-
+			message: '#^Cannot access property \$length on DOMNodeList\<DOMNameSpaceNode\|DOMNode\>\|false\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: include/emogrifier.class.php
+
+		-
+			message: '#^Method Emogrifier\:\:emogrify\(\) should return string but returns string\|false\.$#'
+			identifier: return.type
 			count: 1
 			path: include/emogrifier.class.php
 
@@ -7933,6 +8869,18 @@ parameters:
 			path: include/emogrifier.class.php
 
 		-
+			message: '#^Parameter \#1 \$child of method DOMNode\:\:removeChild\(\) expects DOMNode, DOMNameSpaceNode\|DOMNode given\.$#'
+			identifier: argument.type
+			count: 2
+			path: include/emogrifier.class.php
+
+		-
+			message: '#^Parameter \#1 \$string of function mb_convert_encoding expects array\|string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/emogrifier.class.php
+
+		-
 			message: '#^Parameter \#1 \$string of function trim expects string, bool given\.$#'
 			identifier: argument.type
 			count: 1
@@ -7947,6 +8895,12 @@ parameters:
 		-
 			message: '#^Property Emogrifier\:\:\$styleAttributesForNodes has no type specified\.$#'
 			identifier: missingType.property
+			count: 1
+			path: include/emogrifier.class.php
+
+		-
+			message: '#^Property Emogrifier\:\:\$visitedNodes \(array\<DOMNode\>\) does not accept array\<DOMNameSpaceNode\|DOMNode\>\.$#'
+			identifier: assign.propertyType
 			count: 1
 			path: include/emogrifier.class.php
 
@@ -7981,6 +8935,12 @@ parameters:
 			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
 			identifier: function.resultUnused
 			count: 2
+			path: include/functions.inc.php
+
+		-
+			message: '#^Cannot call method format\(\) on DateTime\|false\.$#'
+			identifier: method.nonObject
+			count: 7
 			path: include/functions.inc.php
 
 		-
@@ -8052,6 +9012,12 @@ parameters:
 		-
 			message: '#^Function format_date\(\) has parameter \$show with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
+			count: 1
+			path: include/functions.inc.php
+
+		-
+			message: '#^Function format_date\(\) should return string but returns string\|false\.$#'
+			identifier: return.type
 			count: 1
 			path: include/functions.inc.php
 
@@ -8356,9 +9322,45 @@ parameters:
 			path: include/functions.inc.php
 
 		-
+			message: '#^Parameter \#1 \$data of function unserialize expects string, Ressource\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/functions.inc.php
+
+		-
+			message: '#^Parameter \#1 \$hour of method DateTime\:\:setTime\(\) expects int, int\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/functions.inc.php
+
+		-
+			message: '#^Parameter \#1 \$string of function substr expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/functions.inc.php
+
+		-
+			message: '#^Parameter \#1 \$year of method DateTime\:\:setDate\(\) expects int, int\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/functions.inc.php
+
+		-
 			message: '#^Parameter \#2 \$callback of function preg_replace_callback expects callable\(array\<string\>\)\: string, Closure\(mixed\)\: int\<0, 255\> given\.$#'
 			identifier: argument.type
 			count: 2
+			path: include/functions.inc.php
+
+		-
+			message: '#^Parameter \#2 \$data of function hash_hmac expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/functions.inc.php
+
+		-
+			message: '#^Parameter \#2 \$minute of method DateTime\:\:setTime\(\) expects int, int\|string given\.$#'
+			identifier: argument.type
+			count: 1
 			path: include/functions.inc.php
 
 		-
@@ -8382,6 +9384,24 @@ parameters:
 		-
 			message: '#^Parameter \#3 \$day of method DateTime\:\:setDate\(\) expects int, string given\.$#'
 			identifier: argument.type
+			count: 1
+			path: include/functions.inc.php
+
+		-
+			message: '#^Parameter \#3 \$length of function substr expects int\|null, int\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/functions.inc.php
+
+		-
+			message: '#^Parameter \#3 \$second of method DateTime\:\:setTime\(\) expects int, int\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/functions.inc.php
+
+		-
+			message: '#^Possibly invalid array key type float\|int\<2, max\>\.$#'
+			identifier: offsetAccess.invalidOffset
 			count: 1
 			path: include/functions.inc.php
 
@@ -8599,6 +9619,12 @@ parameters:
 			path: include/functions_comment.inc.php
 
 		-
+			message: '#^Cannot use \+\+ on int\<0, max\>\|false\.$#'
+			identifier: postInc.type
+			count: 1
+			path: include/functions_comment.inc.php
+
+		-
 			message: '#^Function email_admin\(\) has parameter \$comment with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -8660,6 +9686,12 @@ parameters:
 
 		-
 			message: '#^Parameter \#2 \$value of function setcookie expects string, false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/functions_cookie.inc.php
+
+		-
+			message: '#^Parameter \#3 \$length of function substr expects int\|null, int\|false given\.$#'
 			identifier: argument.type
 			count: 1
 			path: include/functions_cookie.inc.php
@@ -8763,6 +9795,18 @@ parameters:
 		-
 			message: '#^Function trigger_notify invoked with 3 parameters, 0 required\.$#'
 			identifier: arguments.count
+			count: 1
+			path: include/functions_html.inc.php
+
+		-
+			message: '#^Offset ''file'' might not exist on array\{function\: string, line\?\: int, file\?\: string, class\?\: class\-string, type\?\: ''\-\>''\|''\:\:'', args\?\: list\<mixed\>, object\?\: object\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: include/functions_html.inc.php
+
+		-
+			message: '#^Offset ''line'' might not exist on array\{function\: string, line\?\: int, file\?\: string, class\?\: class\-string, type\?\: ''\-\>''\|''\:\:'', args\?\: list\<mixed\>, object\?\: object\}\.$#'
+			identifier: offsetAccess.notFound
 			count: 1
 			path: include/functions_html.inc.php
 
@@ -8986,6 +10030,24 @@ parameters:
 			path: include/functions_mail.inc.php
 
 		-
+			message: '#^Parameter \#1 \$stream of function fclose expects resource, resource\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/functions_mail.inc.php
+
+		-
+			message: '#^Parameter \#1 \$stream of function fwrite expects resource, resource\|false given\.$#'
+			identifier: argument.type
+			count: 2
+			path: include/functions_mail.inc.php
+
+		-
+			message: '#^Property PHPMailer\\PHPMailer\\PHPMailer\:\:\$Port \(int\) does not accept int\|string\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: include/functions_mail.inc.php
+
+		-
 			message: '#^Binary operation "/" between string and string results in an error\.$#'
 			identifier: binaryOp.invalid
 			count: 1
@@ -9088,6 +10150,54 @@ parameters:
 			path: include/functions_notification.inc.php
 
 		-
+			message: '#^Function nb_new_comments\(\) should return int but returns array\|int\.$#'
+			identifier: return.type
+			count: 1
+			path: include/functions_notification.inc.php
+
+		-
+			message: '#^Function nb_new_elements\(\) should return int but returns array\|int\.$#'
+			identifier: return.type
+			count: 1
+			path: include/functions_notification.inc.php
+
+		-
+			message: '#^Function nb_new_users\(\) should return int but returns array\|int\.$#'
+			identifier: return.type
+			count: 1
+			path: include/functions_notification.inc.php
+
+		-
+			message: '#^Function nb_unvalidated_comments\(\) should return int but returns array\|int\.$#'
+			identifier: return.type
+			count: 1
+			path: include/functions_notification.inc.php
+
+		-
+			message: '#^Function nb_updated_categories\(\) should return int but returns array\|int\.$#'
+			identifier: return.type
+			count: 1
+			path: include/functions_notification.inc.php
+
+		-
+			message: '#^Function new_comments\(\) should return array\<int\> but returns array\|int\.$#'
+			identifier: return.type
+			count: 1
+			path: include/functions_notification.inc.php
+
+		-
+			message: '#^Function new_elements\(\) should return array\<int\> but returns array\|int\.$#'
+			identifier: return.type
+			count: 1
+			path: include/functions_notification.inc.php
+
+		-
+			message: '#^Function new_users\(\) should return array\<int\> but returns array\|int\.$#'
+			identifier: return.type
+			count: 1
+			path: include/functions_notification.inc.php
+
+		-
 			message: '#^Function news\(\) has parameter \$auth_key with no type specified\.$#'
 			identifier: missingType.parameter
 			count: 1
@@ -9096,6 +10206,12 @@ parameters:
 		-
 			message: '#^Function news\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
+			count: 1
+			path: include/functions_notification.inc.php
+
+		-
+			message: '#^Function updated_categories\(\) should return array\<int\> but returns array\|int\.$#'
+			identifier: return.type
 			count: 1
 			path: include/functions_notification.inc.php
 
@@ -9140,6 +10256,18 @@ parameters:
 			identifier: missingType.iterableValue
 			count: 1
 			path: include/functions_picture.inc.php
+
+		-
+			message: '#^Parameter \#2 \$subject of function preg_match_all expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/functions_picture.inc.php
+
+		-
+			message: '#^Call to an undefined method object\:\:update\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: include/functions_plugins.inc.php
 
 		-
 			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
@@ -9262,6 +10390,18 @@ parameters:
 			path: include/functions_plugins.inc.php
 
 		-
+			message: '#^Parameter \#1 \$stream of function fclose expects resource, resource\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/functions_plugins.inc.php
+
+		-
+			message: '#^Parameter \#1 \$stream of function fgets expects resource, resource\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/functions_plugins.inc.php
+
+		-
 			message: '''
 				#^Call to deprecated function array_from_query\(\)\:
 				2\.6$#
@@ -9295,8 +10435,26 @@ parameters:
 			path: include/functions_rate.inc.php
 
 		-
+			message: '#^Access to an undefined property object\:\:\$modifier\.$#'
+			identifier: property.notFound
+			count: 2
+			path: include/functions_search.inc.php
+
+		-
+			message: '#^Access to an undefined property object\:\:\$term\.$#'
+			identifier: property.notFound
+			count: 2
+			path: include/functions_search.inc.php
+
+		-
 			message: '#^Binary operation "/" between non\-empty\-string and non\-empty\-string results in an error\.$#'
 			identifier: binaryOp.invalid
+			count: 1
+			path: include/functions_search.inc.php
+
+		-
+			message: '#^Call to an undefined method object\:\:get_variants\(\)\.$#'
+			identifier: method.notFound
 			count: 1
 			path: include/functions_search.inc.php
 
@@ -9694,7 +10852,25 @@ parameters:
 			path: include/functions_search.inc.php
 
 		-
+			message: '#^Parameter \#1 \$array of function array_unique expects array, list\<string\>\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/functions_search.inc.php
+
+		-
 			message: '#^Parameter \#1 \$string of function htmlspecialchars expects string, QExpression given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/functions_search.inc.php
+
+		-
+			message: '#^Parameter \#1 \.\.\.\$arg1 of function max expects non\-empty\-array, array\<int\<0, max\>\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/functions_search.inc.php
+
+		-
+			message: '#^Parameter \#2 \$array of function array_map expects array, list\<string\>\|false given\.$#'
 			identifier: argument.type
 			count: 1
 			path: include/functions_search.inc.php
@@ -9844,6 +11020,12 @@ parameters:
 			path: include/functions_session.inc.php
 
 		-
+			message: '#^Parameter \#1 \$length of function random_bytes expects int\<1, max\>, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/functions_session.inc.php
+
+		-
 			message: '#^Parameter \$data of function pwg_session_write\(\) has invalid type sring\.$#'
 			identifier: class.notFound
 			count: 1
@@ -9962,6 +11144,42 @@ parameters:
 			identifier: variable.undefined
 			count: 1
 			path: include/functions_tag.inc.php
+
+		-
+			message: '#^Argument of an invalid type array\|int\|string supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 1
+			path: include/functions_url.inc.php
+
+		-
+			message: '#^Binary operation "\." between ''\-'' and array\|string results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 3
+			path: include/functions_url.inc.php
+
+		-
+			message: '#^Cannot access an offset on array\<string, string\>\|int\|string\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: include/functions_url.inc.php
+
+		-
+			message: '#^Cannot access an offset on int\|string\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: include/functions_url.inc.php
+
+		-
+			message: '#^Cannot access offset ''cat_permalink'' on ''categories''\|int\|numeric\-string\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: include/functions_url.inc.php
+
+		-
+			message: '#^Cannot access offset ''cat_url_name'' on ''categories''\|int\|numeric\-string\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: include/functions_url.inc.php
 
 		-
 			message: '#^Function add_url_params\(\) has parameter \$arg_separator with no type specified\.$#'
@@ -10150,6 +11368,12 @@ parameters:
 			path: include/functions_url.inc.php
 
 		-
+			message: '#^Offset 1 might not exist on array\{\}\|array\{non\-empty\-string, non\-falsy\-string\|numeric\-string\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: include/functions_url.inc.php
+
+		-
 			message: '#^PHPDoc tag @param has invalid value \(array of url tokens to parse\)\: Unexpected token "of", expected variable at offset 223 on line 7$#'
 			identifier: phpDoc.parseError
 			count: 1
@@ -10270,7 +11494,31 @@ parameters:
 			path: include/functions_url.inc.php
 
 		-
+			message: '#^Parameter \#1 \$haystack of function strpos expects string, array\<string\>\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/functions_url.inc.php
+
+		-
+			message: '#^Parameter \#1 \$haystack of function strrpos expects string, array\<string\>\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/functions_url.inc.php
+
+		-
+			message: '#^Parameter \#1 \$id of function get_cat_info expects int, array\<int\|string, mixed\>\|int\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/functions_url.inc.php
+
+		-
 			message: '#^Parameter \#1 \$ids of function find_tags expects array\<int\>, list\<string\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/functions_url.inc.php
+
+		-
+			message: '#^Parameter \#1 \$string of function strlen expects string, array\<string\>\|string given\.$#'
 			identifier: argument.type
 			count: 1
 			path: include/functions_url.inc.php
@@ -10531,6 +11779,18 @@ parameters:
 			path: include/functions_user.inc.php
 
 		-
+			message: '#^Parameter \#1 \$date1 of function dateDiff expects DateTime, DateTime\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/functions_user.inc.php
+
+		-
+			message: '#^Parameter \#1 \$name of function setcookie expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/functions_user.inc.php
+
+		-
 			message: '#^Parameter \#1 \$original of function time_since expects string\|null, int\|false given\.$#'
 			identifier: argument.type
 			count: 1
@@ -10561,9 +11821,33 @@ parameters:
 			path: include/functions_user.inc.php
 
 		-
+			message: '#^Parameter \#2 \$date2 of function dateDiff expects DateTime, DateTime\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/functions_user.inc.php
+
+		-
 			message: '#^Parameter \#2 \$time of function calculate_auto_login_key expects int, string given\.$#'
 			identifier: argument.type
 			count: 1
+			path: include/functions_user.inc.php
+
+		-
+			message: '#^Parameter \#3 \$options of function setcookie expects array\{expires\?\: int, path\?\: string, domain\?\: string, secure\?\: bool, httponly\?\: bool, samesite\?\: ''Lax''\|''lax''\|''None''\|''none''\|''Strict''\|''strict''\}, array\{expires\: \(float\|int\), path\: string\|null, domain\: string\|false, secure\: string\|false, httponly\: string\|false\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/functions_user.inc.php
+
+		-
+			message: '#^Parameter \#3 \$options of function setcookie expects array\{expires\?\: int, path\?\: string, domain\?\: string, secure\?\: bool, httponly\?\: bool, samesite\?\: ''Lax''\|''lax''\|''None''\|''none''\|''Strict''\|''strict''\}, array\{expires\: 0, path\: string\|false, domain\: string\|false\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/functions_user.inc.php
+
+		-
+			message: '#^Parameter \#3 \$options of function setcookie expects array\{expires\?\: int, path\?\: string, domain\?\: string, secure\?\: bool, httponly\?\: bool, samesite\?\: ''Lax''\|''lax''\|''None''\|''none''\|''Strict''\|''strict''\}, array\{expires\: 0, path\: string\|null, domain\: string\|false\} given\.$#'
+			identifier: argument.type
+			count: 3
 			path: include/functions_user.inc.php
 
 		-
@@ -10778,6 +12062,12 @@ parameters:
 
 		-
 			message: '#^Parameter \#1 \$string of function crc32 expects string, int\<1, max\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/jshrink.class.php
+
+		-
+			message: '#^Parameter \#1 \$string of function ltrim expects string, string\|false given\.$#'
 			identifier: argument.type
 			count: 1
 			path: include/jshrink.class.php
@@ -11833,6 +13123,12 @@ parameters:
 			path: include/mdetect.php
 
 		-
+			message: '#^Parameter \#2 \$needle of function str_starts_with expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 2
+			path: include/minify/path-converter/src/Converter.php
+
+		-
 			message: '#^Method MatthiasMullie\\Minify\\CSS\:\:execute\(\) has parameter \$path with no type specified\.$#'
 			identifier: missingType.parameter
 			count: 1
@@ -11884,6 +13180,12 @@ parameters:
 			path: include/minify/src/CSS.php
 
 		-
+			message: '#^Parameter \#1 \$string of function substr expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/minify/src/CSS.php
+
+		-
 			message: '''
 				#^Class MatthiasMullie\\Minify\\Exceptions\\BasicException extends deprecated class MatthiasMullie\\Minify\\Exception\:
 				Use Exceptions\\BasicException instead$#
@@ -11923,6 +13225,12 @@ parameters:
 			path: include/minify/src/JS.php
 
 		-
+			message: '#^Offset 1 might not exist on array\{\}\|array\{non\-falsy\-string, non\-falsy\-string\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: include/minify/src/JS.php
+
+		-
 			message: '#^PHPDoc tag @param for parameter \$path contains unresolvable type\.$#'
 			identifier: parameter.unresolvableType
 			count: 1
@@ -11931,6 +13239,42 @@ parameters:
 		-
 			message: '#^Parameter \#1 \$callback of function call_user_func_array expects callable\(\)\: mixed, array\{''MatthiasMullie\\\\Minify\\\\Minify'', ''__construct''\} given\.$#'
 			identifier: argument.type
+			count: 1
+			path: include/minify/src/JS.php
+
+		-
+			message: '#^Property MatthiasMullie\\Minify\\JS\:\:\$keywordsAfter \(array\<string\>\) does not accept list\<string\>\|false\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: include/minify/src/JS.php
+
+		-
+			message: '#^Property MatthiasMullie\\Minify\\JS\:\:\$keywordsBefore \(array\<string\>\) does not accept list\<string\>\|false\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: include/minify/src/JS.php
+
+		-
+			message: '#^Property MatthiasMullie\\Minify\\JS\:\:\$keywordsReserved \(array\<string\>\) does not accept list\<string\>\|false\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: include/minify/src/JS.php
+
+		-
+			message: '#^Property MatthiasMullie\\Minify\\JS\:\:\$operators \(array\<string\>\) does not accept list\<string\>\|false\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: include/minify/src/JS.php
+
+		-
+			message: '#^Property MatthiasMullie\\Minify\\JS\:\:\$operatorsAfter \(array\<string\>\) does not accept list\<string\>\|false\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: include/minify/src/JS.php
+
+		-
+			message: '#^Property MatthiasMullie\\Minify\\JS\:\:\$operatorsBefore \(array\<string\>\) does not accept list\<string\>\|false\.$#'
+			identifier: assign.propertyType
 			count: 1
 			path: include/minify/src/JS.php
 
@@ -11991,6 +13335,18 @@ parameters:
 		-
 			message: '#^Method MatthiasMullie\\Minify\\Minify\:\:gzip\(\) has parameter \$path with no type specified\.$#'
 			identifier: missingType.parameter
+			count: 1
+			path: include/minify/src/Minify.php
+
+		-
+			message: '#^Method MatthiasMullie\\Minify\\Minify\:\:gzip\(\) should return string but returns string\|false\.$#'
+			identifier: return.type
+			count: 1
+			path: include/minify/src/Minify.php
+
+		-
+			message: '#^Method MatthiasMullie\\Minify\\Minify\:\:load\(\) should return string but returns string\|false\.$#'
+			identifier: return.type
 			count: 1
 			path: include/minify/src/Minify.php
 
@@ -12073,9 +13429,39 @@ parameters:
 			path: include/minify/src/Minify.php
 
 		-
+			message: '#^Parameter \#1 \$content of method MatthiasMullie\\Minify\\Minify\:\:save\(\) expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/minify/src/Minify.php
+
+		-
+			message: '#^Parameter \#1 \$haystack of function str_starts_with expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/minify/src/Minify.php
+
+		-
+			message: '#^Parameter \#1 \$string of function substr expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/minify/src/Minify.php
+
+		-
+			message: '#^Parameter \#1 \.\.\.\$arg1 of function min expects non\-empty\-array, array\<int\<0, max\>, int\<\-1, max\>\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/minify/src/Minify.php
+
+		-
 			message: '#^Parameter \$item of method MatthiasMullie\\Minify\\Minify\:\:cache\(\) has invalid type Psr\\Cache\\CacheItemInterface\.$#'
 			identifier: class.notFound
 			count: 2
+			path: include/minify/src/Minify.php
+
+		-
+			message: '#^Property MatthiasMullie\\Minify\\Minify\:\:\$patterns \(array\<string\>\) does not accept array\<list\<\(callable\)\|string\>\|string\>\.$#'
+			identifier: assign.propertyType
+			count: 1
 			path: include/minify/src/Minify.php
 
 		-
@@ -12337,7 +13723,25 @@ parameters:
 			path: include/passwordhash.class.php
 
 		-
+			message: '#^Parameter \#1 \$codepoint of function chr expects int\<0, 255\>, \(float\|int\) given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/passwordhash.class.php
+
+		-
+			message: '#^Parameter \#1 \$codepoint of function chr expects int\<0, 255\>, int\<\-9, 264\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/passwordhash.class.php
+
+		-
 			message: '#^Parameter \#1 \$prefix of function uniqid expects string, int\<0, max\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/passwordhash.class.php
+
+		-
+			message: '#^Parameter \#1 \$string of function strlen expects string, string\|false given\.$#'
 			identifier: argument.type
 			count: 1
 			path: include/passwordhash.class.php
@@ -12502,6 +13906,18 @@ parameters:
 			path: include/phpmailer/PHPMailer.php
 
 		-
+			message: '#^Argument of an invalid type list\<string\>\|false supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 1
+			path: include/phpmailer/PHPMailer.php
+
+		-
+			message: '#^Binary operation "\." between non\-falsy\-string and array\|string results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: include/phpmailer/PHPMailer.php
+
+		-
 			message: '#^Call to deprecated function openssl_pkey_free\(\)\.$#'
 			identifier: function.deprecated
 			count: 2
@@ -12541,6 +13957,12 @@ parameters:
 			message: '#^Call to method debug\(\) on an unknown class Psr\\Log\\LoggerInterface\.$#'
 			identifier: class.notFound
 			count: 1
+			path: include/phpmailer/PHPMailer.php
+
+		-
+			message: '#^Cannot cast array\|string to string\.$#'
+			identifier: cast.string
+			count: 3
 			path: include/phpmailer/PHPMailer.php
 
 		-
@@ -12826,7 +14248,97 @@ parameters:
 			path: include/phpmailer/PHPMailer.php
 
 		-
+			message: '#^Offset ''lang'' might not exist on array\{\}\|array\{0\: non\-falsy\-string, lang\: non\-falsy\-string, 1\: non\-falsy\-string, script\?\: string, 2\?\: string, country\?\: non\-falsy\-string, 3\?\: non\-falsy\-string\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: include/phpmailer/PHPMailer.php
+
+		-
+			message: '#^Offset 3 might not exist on array\{0\: non\-falsy\-string, 1\: ''authenticate''\|''buggy_php''\|''connect_host''\|''data_not_accepted''\|''empty_message''\|''encoding''\|''execute''\|''extension_missing''\|''file_access''\|''file_open''\|''from_failed''\|''instantiate''\|''invalid_address''\|''invalid_header''\|''invalid_host''\|''invalid_hostentry''\|''mailer_not_supported''\|''provide_address''\|''recipients_failed''\|''signing''\|''smtp_code''\|''smtp_code_ex''\|''smtp_connect_failed''\|''smtp_detail''\|''smtp_error''\|''variable_set'', 2\: ''"''\|''\\'''', 3\?\: non\-empty\-string\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: include/phpmailer/PHPMailer.php
+
+		-
+			message: '#^Parameter \#1 \$domain of function idn_to_ascii expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 3
+			path: include/phpmailer/PHPMailer.php
+
+		-
+			message: '#^Parameter \#1 \$ext of static method PHPMailer\\PHPMailer\\PHPMailer\:\:_mime_types\(\) expects string, array\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/phpmailer/PHPMailer.php
+
+		-
+			message: '#^Parameter \#1 \$haystack of function stripos expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 2
+			path: include/phpmailer/PHPMailer.php
+
+		-
+			message: '#^Parameter \#1 \$key of function openssl_pkey_free expects OpenSSLAsymmetricKey, OpenSSLAsymmetricKey\|false given\.$#'
+			identifier: argument.type
+			count: 2
+			path: include/phpmailer/PHPMailer.php
+
+		-
+			message: '#^Parameter \#1 \$method of method PHPMailer\\PHPMailer\\SMTP\:\:setDebugOutput\(\) expects \(callable\(\)\: mixed\)\|string, \(callable\(\)\: mixed\)\|Psr\\Log\\LoggerInterface\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/phpmailer/PHPMailer.php
+
+		-
+			message: '#^Parameter \#1 \$path of static method PHPMailer\\PHPMailer\\PHPMailer\:\:mb_pathinfo\(\) expects string, array\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/phpmailer/PHPMailer.php
+
+		-
+			message: '#^Parameter \#1 \$private_key of function openssl_pkey_get_private expects array\|OpenSSLAsymmetricKey\|OpenSSLCertificate\|string, string\|false given\.$#'
+			identifier: argument.type
+			count: 2
+			path: include/phpmailer/PHPMailer.php
+
+		-
+			message: '#^Parameter \#1 \$separator of function explode expects non\-empty\-string, string given\.$#'
+			identifier: argument.type
+			count: 2
+			path: include/phpmailer/PHPMailer.php
+
+		-
+			message: '#^Parameter \#2 \$length of function chunk_split expects int\<1, max\>, int given\.$#'
+			identifier: argument.type
+			count: 2
+			path: include/phpmailer/PHPMailer.php
+
+		-
+			message: '#^Parameter \#2 \$start of function mb_substr expects int, float\|int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/phpmailer/PHPMailer.php
+
+		-
+			message: '#^Parameter \#2 \$string of function explode expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/phpmailer/PHPMailer.php
+
+		-
 			message: '#^Parameter \#3 \$length of function mb_substr expects int\|null, float given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/phpmailer/PHPMailer.php
+
+		-
+			message: '#^Parameter \#3 \$name of method PHPMailer\\PHPMailer\\PHPMailer\:\:addEmbeddedImage\(\) expects string, array\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/phpmailer/PHPMailer.php
+
+		-
+			message: '#^Parameter \#3 \$private_key of function openssl_sign expects array\|OpenSSLAsymmetricKey\|OpenSSLCertificate\|string, OpenSSLAsymmetricKey\|false given\.$#'
 			identifier: argument.type
 			count: 1
 			path: include/phpmailer/PHPMailer.php
@@ -12871,6 +14383,12 @@ parameters:
 			message: '#^Property PHPMailer\\PHPMailer\\PHPMailer\:\:\$SMTPOptions type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
+			path: include/phpmailer/PHPMailer.php
+
+		-
+			message: '#^Property PHPMailer\\PHPMailer\\PHPMailer\:\:\$Sendmail \(string\) does not accept string\|false\.$#'
+			identifier: assign.propertyType
+			count: 2
 			path: include/phpmailer/PHPMailer.php
 
 		-
@@ -12970,8 +14488,32 @@ parameters:
 			path: include/phpmailer/POP3.php
 
 		-
+			message: '#^Method PHPMailer\\PHPMailer\\POP3\:\:getResponse\(\) should return string but returns string\|false\.$#'
+			identifier: return.type
+			count: 1
+			path: include/phpmailer/POP3.php
+
+		-
+			message: '#^Method PHPMailer\\PHPMailer\\POP3\:\:sendString\(\) should return int but returns int\<0, max\>\|false\.$#'
+			identifier: return.type
+			count: 1
+			path: include/phpmailer/POP3.php
+
+		-
 			message: '#^Method PHPMailer\\PHPMailer\\POP3\:\:setError\(\) has no return type specified\.$#'
 			identifier: missingType.return
+			count: 1
+			path: include/phpmailer/POP3.php
+
+		-
+			message: '#^Parameter \#2 \$length of function fgets expects int\<0, max\>\|null, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/phpmailer/POP3.php
+
+		-
+			message: '#^Parameter \#2 \$port of function fsockopen expects int, int\|true given\.$#'
+			identifier: argument.type
 			count: 1
 			path: include/phpmailer/POP3.php
 
@@ -12983,6 +14525,12 @@ parameters:
 
 		-
 			message: '#^Property PHPMailer\\PHPMailer\\POP3\:\:\$pop_conn \(resource\) does not accept false\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: include/phpmailer/POP3.php
+
+		-
+			message: '#^Property PHPMailer\\PHPMailer\\POP3\:\:\$pop_conn \(resource\) does not accept resource\|false\.$#'
 			identifier: assign.propertyType
 			count: 1
 			path: include/phpmailer/POP3.php
@@ -13026,6 +14574,12 @@ parameters:
 		-
 			message: '#^Method PHPMailer\\PHPMailer\\SMTP\:\:errorHandler\(\) has no return type specified\.$#'
 			identifier: missingType.return
+			count: 1
+			path: include/phpmailer/SMTP.php
+
+		-
+			message: '#^Method PHPMailer\\PHPMailer\\SMTP\:\:getDebugOutput\(\) should return string but returns \(callable\)\|Psr\\Log\\LoggerInterface\|string\.$#'
+			identifier: return.type
 			count: 1
 			path: include/phpmailer/SMTP.php
 
@@ -13090,6 +14644,24 @@ parameters:
 			path: include/phpmailer/SMTP.php
 
 		-
+			message: '#^Parameter \#1 \$haystack of function str_contains expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/phpmailer/SMTP.php
+
+		-
+			message: '#^Parameter \#1 \$string of function trim expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/phpmailer/SMTP.php
+
+		-
+			message: '#^Parameter \#3 \$length of function substr expects int\|null, int\<0, max\>\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/phpmailer/SMTP.php
+
+		-
 			message: '#^Parameter \#3 \$smtp_code of method PHPMailer\\PHPMailer\\SMTP\:\:setError\(\) expects string, int given\.$#'
 			identifier: argument.type
 			count: 1
@@ -13110,6 +14682,12 @@ parameters:
 		-
 			message: '#^Property PHPMailer\\PHPMailer\\SMTP\:\:\$server_caps type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
+			count: 1
+			path: include/phpmailer/SMTP.php
+
+		-
+			message: '#^Property PHPMailer\\PHPMailer\\SMTP\:\:\$smtp_conn \(resource\|null\) does not accept resource\|false\.$#'
+			identifier: assign.propertyType
 			count: 1
 			path: include/phpmailer/SMTP.php
 
@@ -13146,6 +14724,12 @@ parameters:
 		-
 			message: '#^Cannot unset property QRinputItem\:\:\$bstream because it might have hooks in a subclass\.$#'
 			identifier: unset.possiblyHookedProperty
+			count: 1
+			path: include/phpqrcode.php
+
+		-
+			message: '#^Cannot use \+\+ on 0\|0\.0\|string\|false\|null\.$#'
+			identifier: postInc.type
 			count: 1
 			path: include/phpqrcode.php
 
@@ -15352,6 +16936,60 @@ parameters:
 			path: include/phpqrcode.php
 
 		-
+			message: '#^Parameter \#1 \$callback of function call_user_func expects callable\(\)\: mixed, array\{\$this\(QRmask\), non\-falsy\-string\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/phpqrcode.php
+
+		-
+			message: '#^Parameter \#1 \$codepoint of function chr expects int\<0, 255\>, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/phpqrcode.php
+
+		-
+			message: '#^Parameter \#1 \$codepoint of function chr expects int\<0, 255\>, int\<\-32, 223\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/phpqrcode.php
+
+		-
+			message: '#^Parameter \#1 \$min \(0\) of function random_int expects lower number than parameter \#2 \$max \(int\<\-1, 7\>\)\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/phpqrcode.php
+
+		-
+			message: '#^Parameter \#1 \$width of function imagecreate expects int\<1, max\>, \(float\|int\) given\.$#'
+			identifier: argument.type
+			count: 2
+			path: include/phpqrcode.php
+
+		-
+			message: '#^Parameter \#2 \$height of function imagecreate expects int\<1, max\>, \(float\|int\) given\.$#'
+			identifier: argument.type
+			count: 2
+			path: include/phpqrcode.php
+
+		-
+			message: '#^Parameter \#2 \$string of function explode expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 2
+			path: include/phpqrcode.php
+
+		-
+			message: '#^Parameter \#4 \$color of function imagefill expects int, int\<0, max\>\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/phpqrcode.php
+
+		-
+			message: '#^Parameter \#4 \$color of function imagesetpixel expects int, int\<0, max\>\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/phpqrcode.php
+
+		-
 			message: '#^Property FrameFiller\:\:\$bit has no type specified\.$#'
 			identifier: missingType.property
 			count: 1
@@ -15826,6 +17464,18 @@ parameters:
 			path: include/pwgsession.class.php
 
 		-
+			message: '#^Offset ''count'' might not exist on array\{days\: non\-empty\-array\<string, array\{count\: \(float\|int\)\}\>, count\?\: \(float\|int\)\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 2
+			path: include/search_filters.inc.php
+
+		-
+			message: '#^Offset ''count'' might not exist on array\{months\: non\-empty\-array\<non\-falsy\-string, array\{days\: non\-empty\-array\<string, array\{count\: \(float\|int\)\}\>, count\: \(float\|int\)\}\>, count\?\: \(float\|int\)\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 2
+			path: include/search_filters.inc.php
+
+		-
 			message: '#^Variable \$all_exts might not be defined\.$#'
 			identifier: variable.undefined
 			count: 3
@@ -15991,6 +17641,30 @@ parameters:
 			message: '#^Argument of an invalid type Combinable supplied for foreach, only iterables are supported\.$#'
 			identifier: foreach.nonIterable
 			count: 2
+			path: include/template.class.php
+
+		-
+			message: '#^Binary operation "\." between ''\<script type\="text…'' and array\|string results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 2
+			path: include/template.class.php
+
+		-
+			message: '#^Binary operation "\." between ''s\=document…'' and array\|string results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^Binary operation "\." between ''url\('' and array\|string results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^Binary operation "\.\=" between array\|string and non\-falsy\-string results in an error\.$#'
+			identifier: assignOp.invalid
+			count: 1
 			path: include/template.class.php
 
 		-
@@ -16444,6 +18118,48 @@ parameters:
 			path: include/template.class.php
 
 		-
+			message: '#^Parameter \#1 \$css of static method FileCombiner\:\:process_css\(\) expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^Parameter \#1 \$css of static method FileCombiner\:\:process_css_rec\(\) expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^Parameter \#1 \$dir_handle of function closedir expects resource\|null, resource\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^Parameter \#1 \$dir_handle of function readdir expects resource\|null, resource\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^Parameter \#1 \$js of static method FileCombiner\:\:process_js\(\) expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^Parameter \#1 \$separator of function explode expects non\-empty\-string, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^Parameter \#1 \$string of function trim expects string, bool\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/template.class.php
+
+		-
 			message: '#^Parameter \#1 \$value of function count expects array\|Countable, Combinable given\.$#'
 			identifier: argument.type
 			count: 1
@@ -16471,6 +18187,12 @@ parameters:
 			message: '#^Parameter \#2 \$value of function conf_update_param expects string, int given\.$#'
 			identifier: argument.type
 			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^Parameter \#3 \$key of method FileCombiner\:\:flush_pending\(\) expects array\<string\>, list\<int\<0, max\>\|string\|false\> given\.$#'
+			identifier: argument.type
+			count: 3
 			path: include/template.class.php
 
 		-
@@ -16546,6 +18268,12 @@ parameters:
 			path: include/template.class.php
 
 		-
+			message: '#^Property Template\:\:\$extents \(array\<string\>\) does not accept array\<bool\|string\>\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: include/template.class.php
+
+		-
 			message: '#^Property Template\:\:\$external_filters type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -16588,8 +18316,26 @@ parameters:
 			path: include/template.class.php
 
 		-
+			message: '#^Cannot access offset 1 on array\|false\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: include/totp.class.php
+
+		-
 			message: '#^PHPDoc tag @param for parameter \$timestamp with type int is incompatible with native type float\.$#'
 			identifier: parameter.phpDocType
+			count: 1
+			path: include/totp.class.php
+
+		-
+			message: '#^Parameter \#1 \$length of function random_bytes expects int\<1, max\>, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/totp.class.php
+
+		-
+			message: '#^Parameter \#1 \$string of function base64_encode expects string, string\|false given\.$#'
+			identifier: argument.type
 			count: 1
 			path: include/totp.class.php
 
@@ -16622,6 +18368,12 @@ parameters:
 			identifier: variable.undefined
 			count: 1
 			path: include/user.inc.php
+
+		-
+			message: '#^Access to an undefined property object\:\:\$_content\.$#'
+			identifier: property.notFound
+			count: 1
+			path: include/ws_core.inc.php
 
 		-
 			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
@@ -17336,9 +19088,27 @@ parameters:
 			path: include/ws_functions/pwg.categories.php
 
 		-
+			message: '#^Offset ''comment'' might not exist on array\{is_favorite\: bool, id\?\: int, width\?\: int, height\?\: int, hit\?\: int, file\?\: mixed, name\: string, comment\?\: mixed, \.\.\.\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: include/ws_functions/pwg.categories.php
+
+		-
+			message: '#^Offset ''name'' might not exist on array\{is_favorite\: bool, id\?\: int, width\?\: int, height\?\: int, hit\?\: int, file\?\: mixed, name\?\: mixed, comment\?\: mixed, \.\.\.\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: include/ws_functions/pwg.categories.php
+
+		-
 			message: '#^Parameter \#1 \$ids of function get_subcat_ids expects array\<int\>, array\<int, string\> given\.$#'
 			identifier: argument.type
 			count: 1
+			path: include/ws_functions/pwg.categories.php
+
+		-
+			message: '#^Parameter \#2 \$array of function array_map expects array, array\<mixed\>\|false given\.$#'
+			identifier: argument.type
+			count: 2
 			path: include/ws_functions/pwg.categories.php
 
 		-
@@ -17376,6 +19146,54 @@ parameters:
 			identifier: missingType.parameter
 			count: 1
 			path: include/ws_functions/pwg.comments.php
+
+		-
+			message: '#^Parameter \#1 \$object of function date_format expects DateTimeInterface, DateTime\|false given\.$#'
+			identifier: argument.type
+			count: 2
+			path: include/ws_functions/pwg.comments.php
+
+		-
+			message: '#^Access to an undefined property object\:\:\$fs_languages\.$#'
+			identifier: property.notFound
+			count: 1
+			path: include/ws_functions/pwg.extensions.php
+
+		-
+			message: '#^Access to an undefined property object\:\:\$fs_plugins\.$#'
+			identifier: property.notFound
+			count: 1
+			path: include/ws_functions/pwg.extensions.php
+
+		-
+			message: '#^Access to an undefined property object\:\:\$fs_themes\.$#'
+			identifier: property.notFound
+			count: 3
+			path: include/ws_functions/pwg.extensions.php
+
+		-
+			message: '#^Call to an undefined method object\:\:extract_language_files\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: include/ws_functions/pwg.extensions.php
+
+		-
+			message: '#^Call to an undefined method object\:\:extract_theme_files\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: include/ws_functions/pwg.extensions.php
+
+		-
+			message: '#^Call to an undefined method object\:\:get_fs_themes\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: include/ws_functions/pwg.extensions.php
+
+		-
+			message: '#^Call to an undefined method object\:\:perform_action\(\)\.$#'
+			identifier: method.notFound
+			count: 3
+			path: include/ws_functions/pwg.extensions.php
 
 		-
 			message: '#^Function ws_extensions_checkupdates\(\) has parameter \$service with no type specified\.$#'
@@ -17535,6 +19353,24 @@ parameters:
 			identifier: missingType.parameter
 			count: 1
 			path: include/ws_functions/pwg.groups.php
+
+		-
+			message: '#^Parameter \#1 \$array of function array_values expects array, array\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/ws_functions/pwg.groups.php
+
+		-
+			message: '#^Argument of an invalid type array\<mixed\>\|false supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 1
+			path: include/ws_functions/pwg.images.php
+
+		-
+			message: '#^Argument of an invalid type list\<string\>\|false supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 5
+			path: include/ws_functions/pwg.images.php
 
 		-
 			message: '#^Call to function trigger_notify\(\) on a separate line has no effect\.$#'
@@ -17861,6 +19697,18 @@ parameters:
 			path: include/ws_functions/pwg.images.php
 
 		-
+			message: '#^Offset ''comment'' might not exist on array\{is_favorite\: bool, id\?\: int, width\?\: int, height\?\: int, hit\?\: int, file\?\: mixed, name\: string, comment\?\: mixed, \.\.\.\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: include/ws_functions/pwg.images.php
+
+		-
+			message: '#^Offset ''name'' might not exist on array\{is_favorite\: bool, id\?\: int, width\?\: int, height\?\: int, hit\?\: int, file\?\: mixed, name\?\: mixed, comment\?\: mixed, \.\.\.\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: include/ws_functions/pwg.images.php
+
+		-
 			message: '#^Parameter \#1 \$ids of function update_category expects ''all''\|array\<int\>\|int, non\-empty\-array\<int\<0, max\>, string\> given\.$#'
 			identifier: argument.type
 			count: 1
@@ -17876,6 +19724,24 @@ parameters:
 			message: '#^Parameter \#1 \$tags of function set_tags expects array\<int\>, list\<string\> given\.$#'
 			identifier: argument.type
 			count: 3
+			path: include/ws_functions/pwg.images.php
+
+		-
+			message: '#^Parameter \#2 \$array of function array_map expects array, array\<mixed\>\|false given\.$#'
+			identifier: argument.type
+			count: 3
+			path: include/ws_functions/pwg.images.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array, list\<string\>\|false given\.$#'
+			identifier: argument.type
+			count: 2
+			path: include/ws_functions/pwg.images.php
+
+		-
+			message: '#^Parameter \#2 \$data of function fwrite expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
 			path: include/ws_functions/pwg.images.php
 
 		-
@@ -18095,6 +19961,30 @@ parameters:
 			path: include/ws_functions/pwg.php
 
 		-
+			message: '#^Offset ''object'' might not exist on array\{counter\: int\<1, max\>, object_id\: non\-empty\-list, id\?\: int\<0, max\>, object\?\: mixed, action\?\: mixed, ip_address\?\: mixed, date\?\: string, hour\?\: string, \.\.\.\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: include/ws_functions/pwg.php
+
+		-
+			message: '#^Offset ''user_id'' might not exist on array\{counter\: int\<1, max\>, object_id\: non\-empty\-list, id\?\: int\<0, max\>, object\?\: mixed, action\?\: mixed, ip_address\?\: mixed, date\?\: string, hour\?\: string, \.\.\.\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 2
+			path: include/ws_functions/pwg.php
+
+		-
+			message: '#^Parameter \#1 \$data of function unserialize expects string, array\<string\>\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/ws_functions/pwg.php
+
+		-
+			message: '#^Parameter \#1 \$object of function date_format expects DateTimeInterface, DateTime\|false given\.$#'
+			identifier: argument.type
+			count: 3
+			path: include/ws_functions/pwg.php
+
+		-
 			message: '#^Variable \$detailsType might not be defined\.$#'
 			identifier: variable.undefined
 			count: 1
@@ -18284,6 +20174,30 @@ parameters:
 			path: include/ws_functions/pwg.tags.php
 
 		-
+			message: '#^Offset ''comment'' might not exist on array\{rank\: \(int\|string\), is_favorite\: bool, id\?\: int, width\?\: int, height\?\: int, hit\?\: int, file\?\: mixed, name\: string, \.\.\.\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: include/ws_functions/pwg.tags.php
+
+		-
+			message: '#^Offset ''name'' might not exist on array\{rank\: \(int\|string\), is_favorite\: bool, id\?\: int, width\?\: int, height\?\: int, hit\?\: int, file\?\: mixed, name\?\: mixed, \.\.\.\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: include/ws_functions/pwg.tags.php
+
+		-
+			message: '#^Parameter \#2 \$callback of function usort expects callable\(non\-empty\-array, non\-empty\-array\)\: int, Closure\(array, array\)\: \(float\|int\) given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/ws_functions/pwg.tags.php
+
+		-
+			message: '#^Parameter \#3 \$extra_images_where_sql of function get_image_ids_for_tags expects string\|null, array\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/ws_functions/pwg.tags.php
+
+		-
 			message: '#^Function ws_create_api_key\(\) has parameter \$service with no type specified\.$#'
 			identifier: missingType.parameter
 			count: 1
@@ -18458,6 +20372,12 @@ parameters:
 			path: include/ws_functions/pwg.users.php
 
 		-
+			message: '#^Parameter \#2 \$timestamp of function date expects int\|null, int\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/ws_functions/pwg.users.php
+
+		-
 			message: '#^Variable \$api_keys on left side of \?\? always exists and is not nullable\.$#'
 			identifier: nullCoalesce.variable
 			count: 1
@@ -18498,6 +20418,24 @@ parameters:
 			identifier: missingType.parameter
 			count: 1
 			path: include/ws_protocols/php_encoder.php
+
+		-
+			message: '#^Access to an undefined property object\:\:\$_content\.$#'
+			identifier: property.notFound
+			count: 2
+			path: include/ws_protocols/rest_encoder.php
+
+		-
+			message: '#^Access to an undefined property object\:\:\$_itemName\.$#'
+			identifier: property.notFound
+			count: 1
+			path: include/ws_protocols/rest_encoder.php
+
+		-
+			message: '#^Access to an undefined property object\:\:\$_xmlAttributes\.$#'
+			identifier: property.notFound
+			count: 2
+			path: include/ws_protocols/rest_encoder.php
 
 		-
 			message: '#^Method PwgRestEncoder\:\:encode\(\) has parameter \$data with no type specified\.$#'
@@ -18620,6 +20558,12 @@ parameters:
 			path: include/ws_protocols/rest_encoder.php
 
 		-
+			message: '#^Property PwgXmlWriter\:\:\$_encodedXml \(''''\) does not accept string\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: include/ws_protocols/rest_encoder.php
+
+		-
 			message: '#^Property PwgXmlWriter\:\:\$_lastTagOpen \(false\) does not accept true\.$#'
 			identifier: assign.propertyType
 			count: 1
@@ -18630,6 +20574,12 @@ parameters:
 			identifier: missingType.parameter
 			count: 1
 			path: include/ws_protocols/rest_handler.php
+
+		-
+			message: '#^Argument of an invalid type array\|object supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 2
+			path: include/ws_protocols/xmlrpc_encoder.php
 
 		-
 			message: '#^Function xmlrpc_encode\(\) has no return type specified\.$#'
@@ -18646,6 +20596,18 @@ parameters:
 		-
 			message: '#^Method PwgXmlRpcEncoder\:\:encodeResponse\(\) has parameter \$response with no type specified\.$#'
 			identifier: missingType.parameter
+			count: 1
+			path: include/ws_protocols/xmlrpc_encoder.php
+
+		-
+			message: '#^Parameter \#1 \$array of function array_keys expects array, array\|object given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/ws_protocols/xmlrpc_encoder.php
+
+		-
+			message: '#^Parameter \#1 \$value of function count expects array\|Countable, array\|object given\.$#'
+			identifier: argument.type
 			count: 1
 			path: include/ws_protocols/xmlrpc_encoder.php
 
@@ -18689,6 +20651,18 @@ parameters:
 			message: '#^Parameter \#1 \$prefix of function uniqid expects string, int\<1, max\> given\.$#'
 			identifier: argument.type
 			count: 1
+			path: install.php
+
+		-
+			message: '#^Parameter \#1 \$stream of function fclose expects resource, resource\|false given\.$#'
+			identifier: argument.type
+			count: 2
+			path: install.php
+
+		-
+			message: '#^Parameter \#1 \$stream of function fputs expects resource, resource\|false given\.$#'
+			identifier: argument.type
+			count: 2
 			path: install.php
 
 		-
@@ -18773,6 +20747,30 @@ parameters:
 			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
 			identifier: arguments.count
 			count: 2
+			path: password.php
+
+		-
+			message: '#^Parameter \#1 \$user_id of function deactivate_password_reset_key expects int, float\|int\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: password.php
+
+		-
+			message: '#^Parameter \#1 \$user_id of function deactivate_user_auth_keys expects int, float\|int\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: password.php
+
+		-
+			message: '#^Parameter \#1 \$user_id of function getuserdata expects int, float\|int\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: password.php
+
+		-
+			message: '#^Parameter \#1 \$user_id of function has_already_logged_in expects int, float\|int\|string given\.$#'
+			identifier: argument.type
+			count: 1
 			path: password.php
 
 		-

@@ -5344,7 +5344,7 @@ parameters:
 			path: include/common.inc.php
 
 		-
-			message: '#^Offset ''internal_status'' on array\{\}\|array\{username\: mixed\} in isset\(\) does not exist\.$#'
+			message: '#^Offset ''internal_status'' on array\{\}\|array\{username\: string\} in isset\(\) does not exist\.$#'
 			identifier: isset.offset
 			count: 1
 			path: include/common.inc.php

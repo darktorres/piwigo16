@@ -178,6 +178,226 @@ final class Config
         return self::getInt('log_archive_days', 30);
     }
 
+    // Security / passwords
+    public static function passwordHash(): string
+    {
+        return self::getString('password_hash', 'pwg_password_hash');
+    }
+    public static function passwordVerify(): string
+    {
+        return self::getString('password_verify', 'pwg_password_verify');
+    }
+
+    // Mail cluster
+    public static function smtpHost(): string
+    {
+        return self::getString('smtp_host', '');
+    }
+    public static function smtpUser(): string
+    {
+        return self::getString('smtp_user', '');
+    }
+    public static function smtpPassword(): string
+    {
+        return self::getString('smtp_password', '');
+    }
+    public static function smtpSecure(): ?string
+    {
+        $v = self::$data['smtp_secure'] ?? null;
+        return $v !== null ? (string) $v : null;
+    }
+    public static function mailSenderName(): string
+    {
+        return self::getString('mail_sender_name', '');
+    }
+    public static function mailSenderEmail(): string
+    {
+        return self::getString('mail_sender_email', '');
+    }
+    public static function mailAllowHtml(): bool
+    {
+        return self::getBool('mail_allow_html', true);
+    }
+    public static function sendBccMailWebmaster(): bool
+    {
+        return self::getBool('send_bcc_mail_webmaster', false);
+    }
+
+    // Debug cluster
+    public static function showPhpErrors(): int
+    {
+        return self::getInt('show_php_errors', E_ALL);
+    }
+    public static function showPhpErrorsOnFrontend(): bool
+    {
+        return self::getBool('show_php_errors_on_frontend', true);
+    }
+    public static function showQueries(): bool
+    {
+        return self::getBool('show_queries', false);
+    }
+    public static function debugL10n(): bool
+    {
+        return self::getBool('debug_l10n', false);
+    }
+    public static function debugTemplate(): bool
+    {
+        return self::getBool('debug_template', false);
+    }
+    public static function debugMail(): bool
+    {
+        return self::getBool('debug_mail', false);
+    }
+    public static function dieOnSqlError(): bool
+    {
+        return self::getBool('die_on_sql_error', false);
+    }
+    public static function templateForceCompile(): bool
+    {
+        return self::getBool('template_force_compile', false);
+    }
+
+    // Session cluster
+    public static function sessionUseCookies(): bool
+    {
+        return self::getBool('session_use_cookies', true);
+    }
+    public static function sessionUseOnlyCookies(): bool
+    {
+        return self::getBool('session_use_only_cookies', true);
+    }
+    public static function sessionUseTransSid(): bool
+    {
+        return self::getBool('session_use_trans_sid', false);
+    }
+    public static function sessionName(): string
+    {
+        return self::getString('session_name', 'pwg_id');
+    }
+    public static function sessionSaveHandler(): string
+    {
+        return self::getString('session_save_handler', 'db');
+    }
+    public static function sessionLength(): int
+    {
+        return self::getInt('session_length', 3600);
+    }
+    public static function authorizeRemembering(): bool
+    {
+        return self::getBool('authorize_remembering', true);
+    }
+    public static function rememberMeName(): string
+    {
+        return self::getString('remember_me_name', 'pwg_remember');
+    }
+    public static function rememberMeLength(): int
+    {
+        return self::getInt('remember_me_length', 5184000);
+    }
+    public static function sessionUseIpAddress(): bool
+    {
+        return self::getBool('session_use_ip_address', true);
+    }
+    public static function sessionGcProbability(): int
+    {
+        return self::getInt('session_gc_probability', 1);
+    }
+
+    // Derivatives cluster
+    public static function derivativeDefaultSize(): string
+    {
+        return self::getString('derivative_default_size', 'medium');
+    }
+    public static function derivativesStripMetadataThreshold(): int
+    {
+        return self::getInt('derivatives_strip_metadata_threshold', 256000);
+    }
+    public static function chmodValue(): int
+    {
+        return self::getInt('chmod_value', 0755);
+    }
+    public static function tiffRepresentativeExt(): string
+    {
+        return self::getString('tiff_representative_ext', 'png');
+    }
+    /** @return list<string> */
+    public static function formatExtensions(): array
+    {
+        $v = self::$data['format_ext'] ?? ['cr2', 'tif', 'tiff', 'nef', 'dng', 'ai', 'psd'];
+        return is_array($v) ? array_values($v) : [];
+    }
+
+    // Tags cluster
+    public static function fullTagCloudItemsNumber(): int
+    {
+        return self::getInt('full_tag_cloud_items_number', 200);
+    }
+    public static function menubarTagCloudItemsNumber(): int
+    {
+        return self::getInt('menubar_tag_cloud_items_number', 20);
+    }
+    public static function menubarTagCloudContent(): string
+    {
+        return self::getString('menubar_tag_cloud_content', 'all_or_current');
+    }
+    public static function contentTagCloudItemsNumber(): int
+    {
+        return self::getInt('content_tag_cloud_items_number', 12);
+    }
+    public static function tagsLevels(): int
+    {
+        return self::getInt('tags_levels', 5);
+    }
+    public static function tagsDefaultDisplayMode(): string
+    {
+        return self::getString('tags_default_display_mode', 'cloud');
+    }
+    public static function tagLettersColumnNumber(): int
+    {
+        return self::getInt('tag_letters_column_number', 4);
+    }
+
+    // Uploads cluster
+    public static function uploadFormAutomaticRotation(): bool
+    {
+        return self::getBool('upload_form_automatic_rotation', true);
+    }
+    public static function uploadFormAllTypes(): bool
+    {
+        return self::getBool('upload_form_all_types', false);
+    }
+    public static function uploadFormChunkSize(): int
+    {
+        return self::getInt('upload_form_chunk_size', 500);
+    }
+    public static function uploadFormMaxFileSize(): int
+    {
+        return self::getInt('upload_form_max_file_size', 1000);
+    }
+    public static function enableSynchronization(): bool
+    {
+        return self::getBool('enable_synchronization', true);
+    }
+
+    // Notification cluster (nbm)
+    public static function nbmDefaultValueUserEnabled(): bool
+    {
+        return self::getBool('nbm_default_value_user_enabled', false);
+    }
+    public static function nbmListAllEnabledUsersToSend(): bool
+    {
+        return self::getBool('nbm_list_all_enabled_users_to_send', false);
+    }
+    public static function nbmMaxTreatmentTimeoutPercent(): float
+    {
+        $v = self::$data['nbm_max_treatment_timeout_percent'] ?? 0.8;
+        return (float) $v;
+    }
+    public static function nbmTreatmentTimeoutDefault(): int
+    {
+        return self::getInt('nbm_treatment_timeout_default', 20);
+    }
+
     // ---- Writers ---------------------------------------------------------
 
     /** Transient runtime override (per-album, etc). Does not persist to DB. */

@@ -28,7 +28,14 @@ final class Lang
 
     public static function t(string $key, mixed ...$args): string
     {
-        $val = self::$data[$key] ?? $key;
+        if (!isset(self::$data[$key])) {
+            if (!empty($key) && Config::debugL10n()) {
+                trigger_error('[l10n] language key "' . $key . '" not defined', E_USER_WARNING);
+            }
+            $val = $key;
+        } else {
+            $val = self::$data[$key];
+        }
         if (!empty($args)) {
             $val = vsprintf($val, $args);
         }

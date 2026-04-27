@@ -1254,23 +1254,10 @@ function get_name_from_file($filename): string
  * @param mixed $args,... optional arguments
  * @return string
  */
-function l10n(?string $key)
+function l10n(?string $key): string
 {
-    global $lang, $conf;
-
-    if (($val = @$lang[$key]) === null) {
-        if ($conf['debug_l10n'] and !isset($lang[$key]) and !empty($key)) {
-            trigger_error('[l10n] language key "'. $key .'" not defined', E_USER_WARNING);
-        }
-        $val = $key;
-    }
-
-    if (func_num_args() > 1) {
-        $args = func_get_args();
-        $val = vsprintf($val, array_slice($args, 1));
-    }
-
-    return $val;
+    $args = func_num_args() > 1 ? array_slice(func_get_args(), 1) : [];
+    return \Piwigo\Core\Lang::t($key ?? '', ...$args);
 }
 
 /**

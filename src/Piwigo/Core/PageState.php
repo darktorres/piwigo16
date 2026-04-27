@@ -31,6 +31,14 @@ final class PageState
     public array $bodyData = [];
     public string $executionUuid = '';
 
+    // Runtime-attached keys (optional; bridged in attachGlobals)
+    public bool $authKeyInvalid = false;
+    /** @var array<string,mixed>|null */
+    public ?array $notifyApiKeyExpiration = null;
+    public int $countQueries = 0;
+    public float $queriesTime = 0.0;
+    public float $upgradeStart = 0.0;
+
     private function __construct()
     {
     }
@@ -61,6 +69,19 @@ final class PageState
         $p['body_classes'] = &$inst->bodyClasses;
         $p['body_data'] = &$inst->bodyData;
         $p['execution_uuid'] = &$inst->executionUuid;
+
+        // Runtime-attached keys: preserve pre-boot values then bridge.
+        $inst->authKeyInvalid = (bool) ($p['auth_key_invalid'] ?? false);
+        $inst->notifyApiKeyExpiration = is_array($p['notify_api_key_expiration'] ?? null) ? $p['notify_api_key_expiration'] : null;
+        $inst->countQueries = (int) ($p['count_queries'] ?? 0);
+        $inst->queriesTime = (float) ($p['queries_time'] ?? 0.0);
+        $inst->upgradeStart = (float) ($p['upgrade_start'] ?? 0.0);
+
+        $p['auth_key_invalid'] = &$inst->authKeyInvalid;
+        $p['notify_api_key_expiration'] = &$inst->notifyApiKeyExpiration;
+        $p['count_queries'] = &$inst->countQueries;
+        $p['queries_time'] = &$inst->queriesTime;
+        $p['upgrade_start'] = &$inst->upgradeStart;
     }
 
     /** Returns the current singleton, creating an empty one if boot hasn't run yet. */
@@ -92,6 +113,19 @@ final class PageState
     public function hasErrors(): bool
     {
         return $this->errors !== [];
+    }
+
+    /**
+     * Merges $conf['header_notes'] (informational strings set by plugins or config)
+     * into the infos bucket so they appear in the page output.
+     *
+     * @param list<string> $headerNotes
+     */
+    public function mergeFromConf(array $headerNotes): void
+    {
+        foreach ($headerNotes as $note) {
+            $this->infos[] = $note;
+        }
     }
 
     // ---- Test helpers ----------------------------------------------------

@@ -85,6 +85,7 @@ final class ConfigTest extends TestCase
         self::assertTrue(Config::allowHtmlDescriptions());
         self::assertTrue(Config::activateComments());
         self::assertSame(['jpg', 'jpeg', 'png', 'gif', 'webp'], Config::pictureExtensions());
+        self::assertSame([], Config::fileExtensions()); // populated at runtime from picture_ext + more
     }
 
     public function test_security_cluster_defaults(): void

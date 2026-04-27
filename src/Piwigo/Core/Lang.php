@@ -28,13 +28,19 @@ final class Lang
 
     public static function t(string $key, mixed ...$args): string
     {
-        if (!isset(self::$data[$key])) {
+        // Before attachGlobals() self::$data is empty; fall back to the raw global
+        // so l10n() calls during common.inc.php bootstrap still return translations.
+        // After attachGlobals() $GLOBALS['lang'] IS self::$data via reference, so
+        // the result is identical either way.
+        $src = self::$data !== [] ? self::$data : ($GLOBALS['lang'] ?? []);
+
+        if (!isset($src[$key])) {
             if (!empty($key) && Config::debugL10n()) {
                 trigger_error('[l10n] language key "' . $key . '" not defined', E_USER_WARNING);
             }
             $val = $key;
         } else {
-            $val = self::$data[$key];
+            $val = $src[$key];
         }
         if (!empty($args)) {
             $val = vsprintf($val, $args);

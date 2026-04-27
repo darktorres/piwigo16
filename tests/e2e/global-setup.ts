@@ -18,7 +18,7 @@ async function globalSetup(): Promise<void> {
     }
 
     await execAsync(
-        `mysql -h${host} -P${port} -u${user} -p${pass} -e "DROP DATABASE IF EXISTS \`${db}\`; CREATE DATABASE \`${db}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"`
+        `mysql -h${host} -P${port} -u${user} -p${pass} -e "DROP DATABASE IF EXISTS ${db}; CREATE DATABASE ${db} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"`
     );
 }
 

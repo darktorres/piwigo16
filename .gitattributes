@@ -1,0 +1,7 @@
+# Ensure vendor Unix binaries stay executable on Linux CI regardless of commit OS.
+vendor/bin/php-parse    eol=lf
+vendor/bin/phpstan      eol=lf
+vendor/bin/phpstan.phar eol=lf
+vendor/bin/phpunit      eol=lf
+vendor/bin/pint         eol=lf
+vendor/bin/rector       eol=lf

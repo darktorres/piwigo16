@@ -148,7 +148,7 @@ class Template
         if (!empty($theme)) {
             $this->set_theme($root, $theme, $path);
             if (!defined('IN_ADMIN')) {
-                $this->set_prefilter('header', self::prefilter_local_css(...));
+                $this->set_prefilter('header', [self::class, 'prefilter_local_css']);
             }
         } else {
             $this->set_template_dir($root);
@@ -977,7 +977,14 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
             foreach ($this->external_filters[$handle] as $filters) {
                 foreach ($filters as $filter) {
                     [$type, $callback] = $filter;
-                    $compile_id .= $type.(is_array($callback) ? implode('', $callback) : $callback);
+                    if (is_array($callback)) {
+                        $compile_id .= $type.implode('', $callback);
+                    } elseif ($callback instanceof \Closure) {
+                        // Reflect the closure's function name for a stable compile_id contribution.
+                        $compile_id .= $type.new \ReflectionFunction($callback)->getName();
+                    } else {
+                        $compile_id .= $type.$callback;
+                    }
                     $this->smarty->registerFilter($type, $callback);
                 }
             }

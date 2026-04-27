@@ -31,6 +31,11 @@ return RectorConfig::configure()
         __DIR__ . '/include/mdetect.php',
         __DIR__ . '/admin/include/pclzip.lib.php',
         __DIR__ . '/themes', __DIR__ . '/vendor',
+        // load_external_filters() uses implode('', $callback) for compile_id — array callbacks only.
+        // Skip ArrayToFirstClassCallableRector on Template so set_prefilter callbacks stay as arrays.
+        \Rector\Php81\Rector\Array_\ArrayToFirstClassCallableRector::class => [
+            __DIR__ . '/src/Piwigo/Template/Template.php',
+        ],
     ])
     ->withPhpSets(php85: true)
     ->withSets([SetList::TYPE_DECLARATION])

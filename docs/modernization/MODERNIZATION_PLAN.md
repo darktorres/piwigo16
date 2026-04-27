@@ -635,24 +635,30 @@ remains the gating regression check.
 
 ### Risks specific to this phase
 
-- **Rector occasionally rewrites incorrectly.** Specific known traps: `each()` rewrites that reach into `foreach` semantics (false positive — only one real `each` exists, in excluded `feedcreator.class.php`); `final class` annotations on classes that themes might extend. Mitigation: every Rector application is dry-run + human review.
+- **Rector occasionally rewrites incorrectly.** ✅ Confirmed: `ListToArrayDestructRector` (PHP 8.0 rule) introduced a regression in `include/minify/src/Minify.php` — two self-referential `list($x, $y) = $x;` assignments were incorrectly transformed to `[$x, $y] = str_split($x);`, causing a PHP 8.5 TypeError on the install success page. Fixed manually. `include/minify`, `include/phpmailer`, `include/phpqrcode.php`, and `include/emogrifier.class.php` added to `rector.php` withSkip.
 - **The Smarty layer in `include/smarty/` is excluded from Rector and PHPStan, but is loaded by `Template`.** Pin to the current vendored version; do not upgrade Smarty in Phase 1.
 - **mysqli connection bootstrapping is buried inside `common.inc.php:118-126`.** Self-heal at line 90 must run *before* the dblayer include — the diff above places it correctly. An extra E2E spec, `tests/e2e/legacy-config-self-heal.spec.ts`, sets `$conf['dblayer'] = 'mysql'` in a fixture and asserts boot succeeds.
 - **Session SameSite changes break `remember me` cookie reads on first deploy.** Keep `samesite => 'Lax'` (not `Strict`) for all of Phase 1; tightening is a Phase 6 cleanup.
 - **PHPStan level 0 will not catch most PHP-8 deprecations.** Add a separate `lint-syntax` CI job that runs `php -l` and greps Apache error logs for `Deprecated:` strings — fail if any appear.
+- **PHPStan `include.fileNotFound` behaves differently across platforms.** ✅ Windows PHPStan does not produce `include.fileNotFound` for `@include('./local/config/config.inc.php')` (gitignored optional override); Linux CI does. Resolved by adding a global `ignoreErrors` entry with `reportUnmatched: false` in `phpstan.neon` so the pattern silently absorbs the error on Linux without causing `ignore.unmatched` on Windows.
 
 ### Verification
 
 ```bash
+# ✅ all passing locally and in CI (run 24973241079 — lint ✓ unit ✓ e2e ✓)
 test ! -f include/dblayer/functions_mysql.inc.php
 grep -rn 'utf8_encode\|utf8_decode' include admin install.php upgrade.php --include='*.php' --exclude-dir=smarty
 # expect: zero output
 grep -rn 'create_function' include admin install.php upgrade.php
 # expect: zero output
-vendor/bin/rector process --dry-run
-# expect: "0 files would be changed"
-curl -fsS http://localhost:8080/ | grep -E 'Deprecated|Notice|Warning' && exit 1 || echo "clean"
-npx playwright test                                 # all passing
+vendor/bin/rector process --dry-run --no-progress-bar
+# expect: "Rector is done!" (0 files)
+vendor/bin/pint --test                              # exit 0
+vendor/bin/phpstan analyse --memory-limit=1G --no-progress  # exit 0 (118 errors baselined)
+curl -fsS http://localhost:8090/ | grep -E 'Deprecated|Notice|Warning' && exit 1 || echo "clean"
+PIWIGO_DB_HOST=127.0.0.1 PIWIGO_DB_PORT=3307 PIWIGO_DB_USER=piwigo \
+  PIWIGO_DB_PASSWORD=piwigo PIWIGO_DB_BASE=piwigo PIWIGO_INSTALL_DB_HOST=db \
+  BASE_URL=http://localhost:8090 node_modules/.bin/playwright test   # 9/9 passing
 vendor/bin/phpunit --testsuite Integration          # UpgradeChainTest green
 ```
 

@@ -32,17 +32,17 @@ if ('search' == $page['section'] and isset($page['search_details'])) {
     $my_search = get_search_array($page['search']);
 
     $page['search_details']['forbidden'] = get_sql_condition_FandF(
-        array(
+        [
         'forbidden_categories' => 'category_id',
         'visible_categories' => 'category_id',
         'visible_images' => 'id',
-    ),
+    ],
         "\n  AND"
     );
 
     // we want filters to be filled with values related to current items ONLY IF we have some filters filled
     if ($page['search_details']['has_filters_filled']) {
-        $search_items = array(-1);
+        $search_items = [-1];
         if (!empty($page['items'])) {
             $search_items = $page['items'];
         }
@@ -57,7 +57,7 @@ if ('search' == $page['section'] and isset($page['search_details'])) {
     }
 
     if (isset($my_search['fields']['tags']) and $display_filters['tags']['access']) {
-        $filter_tags = array();
+        $filter_tags = [];
 
         // TODO calling get_available_tags(), with lots of photos/albums/tags may cost time,
         // we should reuse the result if already executed (for building the menu for example)
@@ -82,7 +82,7 @@ if ('search' == $page['section'] and isset($page['search_details'])) {
 
         $template->assign('TAGS', $filter_tags);
 
-        $filter_tag_ids = count($filter_tags) > 0 ? array_column($filter_tags, 'id') : array();
+        $filter_tag_ids = count($filter_tags) > 0 ? array_column($filter_tags, 'id') : [];
 
         // in case the search has forbidden tags for current user, we need to filter the search rule
         $my_search['fields']['tags']['words'] = array_intersect($my_search['fields']['tags']['words'], $filter_tag_ids);
@@ -123,7 +123,7 @@ SELECT
             $filter_rows = query2array($query);
         }
 
-        $author_names = array();
+        $author_names = [];
         foreach ($filter_rows as $author) {
             $author_names[] = $author['author'];
         }
@@ -160,8 +160,8 @@ SELECT
   WHERE '.$filter_clause.'
 ;';
 
-            $list_of_dates = array();
-            $pre_counters = array();
+            $list_of_dates = [];
+            $pre_counters = [];
 
             $result = pwg_query($query);
             while ($row = pwg_db_fetch_assoc($result)) {
@@ -171,18 +171,18 @@ SELECT
                     }
                 }
 
-                list($date_without_time) = explode(' ', $row['date']);
-                list($y, $m) = explode('-', $date_without_time);
+                [$date_without_time] = explode(' ', $row['date']);
+                [$y, $m] = explode('-', $date_without_time);
 
                 @$list_of_dates[$y]['months'][$y.'-'.$m]['days'][$date_without_time]['count']++;
                 @$list_of_dates[$y]['months'][$y.'-'.$m]['count']++;
                 @$list_of_dates[$y]['count']++;
             }
 
-            $date_posted = array(
+            $date_posted = [
               'pre_counters' => $pre_counters,
               'list_of_dates' => $list_of_dates,
-            );
+            ];
 
             if ($set_persistent_cache) {
                 // for this filter, we do not store in cache the $filter_rows : for a big gallery it may
@@ -192,20 +192,20 @@ SELECT
             }
         }
 
-        $label_for_threshold = array(
+        $label_for_threshold = [
           '24h' => l10n('last 24 hours'),
           '7d' => l10n('last 7 days'),
           '30d' => l10n('last 30 days'),
           '3m' => l10n('last 3 months'),
           '6m' => l10n('last 6 months'),
-        );
+        ];
 
-        $counters = array();
+        $counters = [];
         foreach (array_keys($label_for_threshold) as $threshold) {
-            $counters[$threshold] = array(
+            $counters[$threshold] = [
               'label' => $label_for_threshold[$threshold],
               'counter' => $date_posted['pre_counters'][$threshold] ?? 0,
-            );
+            ];
         }
 
         foreach (array_keys($date_posted['list_of_dates']) as $y) {
@@ -254,8 +254,8 @@ SELECT
   WHERE '.$filter_clause.'
 ;';
 
-            $list_of_dates = array();
-            $pre_counters = array();
+            $list_of_dates = [];
+            $pre_counters = [];
 
             $result = pwg_query($query);
             while ($row = pwg_db_fetch_assoc($result)) {
@@ -266,8 +266,8 @@ SELECT
                         }
                     }
 
-                    list($date_without_time) = explode(' ', $row['date']);
-                    list($y, $m) = explode('-', $date_without_time);
+                    [$date_without_time] = explode(' ', $row['date']);
+                    [$y, $m] = explode('-', $date_without_time);
 
                     @$list_of_dates[$y]['months'][$y.'-'.$m]['days'][$date_without_time]['count']++;
                     @$list_of_dates[$y]['months'][$y.'-'.$m]['count']++;
@@ -275,10 +275,10 @@ SELECT
                 }
             }
 
-            $date_created = array(
+            $date_created = [
               'pre_counters' => $pre_counters,
               'list_of_dates' => $list_of_dates,
-            );
+            ];
 
             if ($set_persistent_cache) {
                 // for this filter, we do not store in cache the $filter_rows : for a big gallery it may
@@ -288,20 +288,20 @@ SELECT
             }
         }
 
-        $label_for_threshold = array(
+        $label_for_threshold = [
           '7d' => l10n('last 7 days'),
           '30d' => l10n('last 30 days'),
           '3m' => l10n('last 3 months'),
           '6m' => l10n('last 6 months'),
           '12m' => l10n('last 12 months'),
-        );
+        ];
 
-        $counters = array();
+        $counters = [];
         foreach (array_keys($label_for_threshold) as $threshold) {
-            $counters[$threshold] = array(
+            $counters[$threshold] = [
               'label' => $label_for_threshold[$threshold],
               'counter' => $date_created['pre_counters'][$threshold] ?? 0,
-            );
+            ];
         }
 
         foreach (array_keys($date_created['list_of_dates']) as $y) {
@@ -351,7 +351,7 @@ SELECT
         }
 
         $added_by = $filter_rows;
-        $user_ids = array();
+        $user_ids = [];
 
         if (count($added_by) > 0) {
             // now let's find the usernames of added_by users
@@ -384,7 +384,7 @@ SELECT
 
     if (isset($my_search['fields']['cat']) and $display_filters['album']['access']) {
         if (!empty($my_search['fields']['cat']['words'])) {
-            $fullname_of = array();
+            $fullname_of = [];
 
             $query = '
 SELECT
@@ -448,7 +448,7 @@ SELECT
 ;';
             $filtered_exts = query2array($query, 'ext', 'counter');
 
-            $exts = array();
+            $exts = [];
             foreach ($all_exts as $ext => $counter) {
                 $exts[$ext] = $filtered_exts[$ext] ?? 0;
             }
@@ -524,8 +524,8 @@ SELECT
     if (isset($my_search['fields']['filesize_min']) && isset($my_search['fields']['filesize_max']) and $display_filters['file_size']['access']) {
         $filter_clause = get_clause_for_filter('filesize');
 
-        $filesizes = array();
-        $filesize = array();
+        $filesizes = [];
+        $filesize = [];
 
         $query = '
 SELECT
@@ -541,7 +541,7 @@ SELECT
         }
 
         if (empty($filesizes)) { // arbitrary values, only used when no photos on the gallery
-            $filesizes = array(0, 1, 2, 5, 8, 15);
+            $filesizes = [0, 1, 2, 5, 8, 15];
         }
 
         $unique_filesizes = array_keys($filesizes);
@@ -549,18 +549,18 @@ SELECT
 
         $filesize['list'] = implode(',', $unique_filesizes);
 
-        $filesize['bounds'] = array(
+        $filesize['bounds'] = [
           'min' => $unique_filesizes[0],
           'max' => end($unique_filesizes),
-        );
+        ];
 
         // warning: we will (hopefully) have smarter values for filters. The min/max of the
         // current search won't always be the first/last values found. It's going to be a
         // problem with this way to select selected values
-        $filesize['selected'] = array(
+        $filesize['selected'] = [
           'min' => !empty($my_search['fields']['filesize_min']) ? sprintf('%.1f', $my_search['fields']['filesize_min'] / 1024) : $unique_filesizes[0],
           'max' => !empty($my_search['fields']['filesize_max']) ? sprintf('%.1f', $my_search['fields']['filesize_max'] / 1024) : end($unique_filesizes),
-        );
+        ];
 
         $template->assign('FILESIZE', $filesize);
     } elseif (isset($my_search['fields']['filesize_min']) && isset($my_search['fields']['filesize_max']) and !($display_filters['file_size']['access'])) {
@@ -590,12 +590,12 @@ SELECT
 
             $filter_rows = query2array($query);
 
-            $ratios = array(
+            $ratios = [
               'Portrait' => 0,
               'square' => 0,
               'Landscape' => 0,
               'Panorama' => 0,
-            );
+            ];
 
             foreach ($filter_rows as $row) {
                 if ($row['width'] <= 0 and $row['height'] <= 0) {
@@ -653,17 +653,17 @@ SELECT
 
         $heights = $filter_rows;
 
-        $height = array(
+        $height = [
           'list' => implode(',', $heights),
-          'bounds' => array(
+          'bounds' => [
             'min' => $heights[0],
             'max' => end($heights),
-          ),
-          'selected' => array(
+          ],
+          'selected' => [
             'min' => !empty($my_search['fields']['height_min']) ? $my_search['fields']['height_min'] : $heights[0],
             'max' => !empty($my_search['fields']['height_max']) ? $my_search['fields']['height_max'] : end($heights),
-          ),
-        );
+          ],
+        ];
 
         $template->assign('HEIGHT', $height);
     } elseif (isset($my_search['fields']['height_min']) && isset($my_search['fields']['height_max']) and !($display_filters['height']['access'])) {
@@ -698,17 +698,17 @@ SELECT
 
         $widths = $filter_rows;
 
-        $width = array(
+        $width = [
           'list' => implode(',', $widths),
-          'bounds' => array(
+          'bounds' => [
             'min' => $widths[0],
             'max' => end($widths),
-          ),
-          'selected' => array(
+          ],
+          'selected' => [
             'min' => !empty($my_search['fields']['width_min']) ? $my_search['fields']['width_min'] : $widths[0],
             'max' => !empty($my_search['fields']['width_max']) ? $my_search['fields']['width_max'] : end($widths),
-          ),
-        );
+          ],
+        ];
 
         $template->assign('WIDTH', $width);
     } elseif (isset($my_search['fields']['width_min']) && isset($my_search['fields']['width_max']) and !($display_filters['width']['access'])) {
@@ -717,10 +717,10 @@ SELECT
     }
 
     $template->assign(
-        array(
+        [
         'GP' => json_encode($my_search),
         'SEARCH_ID' => $page['search'],
-    )
+    ]
     );
 
     if (0 == $page['start'] and !isset($page['chronology_field']) and isset($page['search_details'])) {
@@ -736,7 +736,7 @@ SELECT
 ;';
                 $cats = query2array($query);
                 usort($cats, 'name_compare');
-                $albums_found = array();
+                $albums_found = [];
                 foreach ($cats as $cat) {
                     $single_link = false;
                     $albums_found[] = get_cat_display_name_cache(
@@ -757,12 +757,12 @@ SELECT
             if (count($tag_ids) > 0) {
                 $tags = get_available_tags($tag_ids);
                 usort($tags, 'tag_alpha_compare');
-                $tags_found = array();
+                $tags_found = [];
                 foreach ($tags as $tag) {
                     $url = make_index_url(
-                        array(
-                        'tags' => array($tag),
-            )
+                        [
+                        'tags' => [$tag],
+            ]
                     );
                     $tags_found[] = sprintf('<a href="%s">%s</a>', $url, $tag['name']);
                 }

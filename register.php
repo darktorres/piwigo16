@@ -73,15 +73,15 @@ $email = !empty($_POST['mail_address']) ? htmlspecialchars(stripslashes($_POST['
 $title = l10n('Registration');
 $page['body_id'] = 'theRegisterPage';
 
-$template->set_filenames(array('register' => 'register.tpl'));
-$template->assign(array(
+$template->set_filenames(['register' => 'register.tpl']);
+$template->assign([
   'U_HOME' => make_index_url(),
     'F_KEY' => $registration_post_key,
   'F_ACTION' => 'register.php',
   'F_LOGIN' => $login,
   'F_EMAIL' => $email,
   'obligatory_user_mail_address' => $conf['obligatory_user_mail_address'],
-));
+]);
 
 // include menubar
 $themeconf = $template->get_template_vars('themeconf');
@@ -96,7 +96,7 @@ if (isset($_COOKIE['lang']) and $user['language'] != $_COOKIE['lang']) {
     }
 
     $user['language'] = $_COOKIE['lang'];
-    load_language('common.lang', '', array('language' => $user['language']));
+    load_language('common.lang', '', ['language' => $user['language']]);
 }
 
 //Get list of languages
@@ -104,13 +104,13 @@ foreach (get_languages() as $language_code => $language_name) {
     $language_options[$language_code] = $language_name;
 }
 
-$template->assign(array(
+$template->assign([
   'language_options' => $language_options,
   'current_language' => $user['language'],
-));
+]);
 
 //Get link to doc
-if ('fr' == substr($user['language'], 0, 2)) {
+if (str_starts_with($user['language'], 'fr')) {
     $help_link = 'https://doc-fr.piwigo.org/les-utilisateurs/se-connecter-a-piwigo';
 } else {
     $help_link = 'https://doc.piwigo.org/managing-users/log-in-to-piwigo';

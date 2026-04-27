@@ -61,14 +61,14 @@ DELETE FROM '.USER_ACCESS_TABLE.'
 // +-----------------------------------------------------------------------+
 
 $template->set_filenames(
-    array(
+    [
     'user_perm' => 'user_perm.tpl',
     'double_select' => 'double_select.tpl',
-    )
+    ]
 );
 
 $template->assign(
-    array(
+    [
     'TITLE' =>
       l10n(
           'Manage permissions for user "%s"',
@@ -81,12 +81,12 @@ $template->assign(
         PHPWG_ROOT_PATH.
         'admin.php?page=user_perm'.
         '&amp;user_id='.$page['user'],
-    )
+    ]
 );
 
 
 // retrieve category ids authorized to the groups the user belongs to
-$group_authorized = array();
+$group_authorized = [];
 
 $query = '
 SELECT DISTINCT cat_id, c.uppercats, c.global_rank
@@ -100,7 +100,7 @@ SELECT DISTINCT cat_id, c.uppercats, c.global_rank
 $result = pwg_query($query);
 
 if (pwg_db_num_rows($result) > 0) {
-    $cats = array();
+    $cats = [];
     while ($row = pwg_db_fetch_assoc($result)) {
         $cats[] = $row;
         $group_authorized[] = $row['cat_id'];
@@ -127,10 +127,10 @@ if (count($group_authorized) > 0) {
 }
 $query_true .= '
 ;';
-display_select_cat_wrapper($query_true, array(), 'category_option_true');
+display_select_cat_wrapper($query_true, [], 'category_option_true');
 
 $result = pwg_query($query_true);
-$authorized_ids = array();
+$authorized_ids = [];
 while ($row = pwg_db_fetch_assoc($result)) {
     $authorized_ids[] = $row['id'];
 }
@@ -149,7 +149,7 @@ if (count($group_authorized) > 0) {
 }
 $query_false .= '
 ;';
-display_select_cat_wrapper($query_false, array(), 'category_option_false');
+display_select_cat_wrapper($query_false, [], 'category_option_false');
 
 $template->assign('PWG_TOKEN', get_pwg_token());
 

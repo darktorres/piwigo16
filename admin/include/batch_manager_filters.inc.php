@@ -11,19 +11,19 @@ if (!defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
 
-$prefilters = array(
-  array('ID' => 'caddie', 'NAME' => l10n('Caddie')),
-  array('ID' => 'favorites', 'NAME' => l10n('Your favorites')),
-  array('ID' => 'last_import', 'NAME' => l10n('Last import')),
-  array('ID' => 'no_album', 'NAME' => l10n('With no album') . ' (' . l10n('Orphans') . ')'),
-  array('ID' => 'no_tag', 'NAME' => l10n('With no tag')),
-  array('ID' => 'duplicates', 'NAME' => l10n('Duplicates')),
-  array('ID' => 'all_photos', 'NAME' => l10n('All')),
-);
+$prefilters = [
+  ['ID' => 'caddie', 'NAME' => l10n('Caddie')],
+  ['ID' => 'favorites', 'NAME' => l10n('Your favorites')],
+  ['ID' => 'last_import', 'NAME' => l10n('Last import')],
+  ['ID' => 'no_album', 'NAME' => l10n('With no album') . ' (' . l10n('Orphans') . ')'],
+  ['ID' => 'no_tag', 'NAME' => l10n('With no tag')],
+  ['ID' => 'duplicates', 'NAME' => l10n('Duplicates')],
+  ['ID' => 'all_photos', 'NAME' => l10n('All')],
+];
 
 if ($conf['enable_synchronization']) {
-    $prefilters[] = array('ID' => 'no_virtual_album', 'NAME' => l10n('With no virtual album'));
-    $prefilters[] = array('ID' => 'no_sync_md5sum', 'NAME' => l10n('With no checksum'));
+    $prefilters[] = ['ID' => 'no_virtual_album', 'NAME' => l10n('With no virtual album')];
+    $prefilters[] = ['ID' => 'no_sync_md5sum', 'NAME' => l10n('With no checksum')];
 }
 
 function UC_name_compare($a, $b)
@@ -34,12 +34,10 @@ function UC_name_compare($a, $b)
 $prefilters = trigger_change('get_batch_manager_prefilters', $prefilters);
 
 // Sort prefilters by localized name.
-usort($prefilters, function ($a, $b) {
-    return strcmp(strtolower($a['NAME']), strtolower($b['NAME']));
-});
+usort($prefilters, fn ($a, $b) => strcmp(strtolower($a['NAME']), strtolower($b['NAME'])));
 
 $template->assign(
-    array(
+    [
     'conf_checksum_compute_blocksize' => $conf['checksum_compute_blocksize'],
     'prefilters' => $prefilters,
     'filter' => $_SESSION['bulk_manager_filter'],
@@ -47,17 +45,17 @@ $template->assign(
     'all_elements' => $page['cat_elements_id'],
     'START' => $page['start'],
     'PWG_TOKEN' => get_pwg_token(),
-    'U_DISPLAY' => $base_url . get_query_string_diff(array('display')),
-    'F_ACTION' => $base_url . get_query_string_diff(array('cat', 'start', 'tag', 'filter')),
+    'U_DISPLAY' => $base_url . get_query_string_diff(['display']),
+    'F_ACTION' => $base_url . get_query_string_diff(['cat', 'start', 'tag', 'filter']),
     'ADMIN_PAGE_TITLE' => l10n('Batch Manager'),
-  )
+  ]
 );
 
 if (isset($page['no_md5sum_number'])) {
     $template->assign(
-        array(
+        [
         'NB_NO_MD5SUM' => $page['no_md5sum_number'],
-    )
+    ]
     );
 } else {
     $template->assign('NB_NO_MD5SUM', '');
@@ -72,16 +70,14 @@ foreach ($conf['available_permission_levels'] as $level) {
     }
 }
 $template->assign(
-    array(
+    [
     'filter_level_options' => $level_options,
-    'filter_level_options_selected' => isset($_SESSION['bulk_manager_filter']['level'])
-      ? $_SESSION['bulk_manager_filter']['level']
-      : 0,
-  )
+    'filter_level_options_selected' => $_SESSION['bulk_manager_filter']['level'] ?? 0,
+  ]
 );
 
 // tags
-$filter_tags = array();
+$filter_tags = [];
 
 if (!empty($_SESSION['bulk_manager_filter']['tags'])) {
     $query = '
@@ -112,7 +108,7 @@ $template->assign('filter_category_selected', $selected_category);
 // Dissociate from a category : categories listed for dissociation can only
 // represent virtual links. We can't create orphans. Links to physical
 // categories can't be broken.
-$associated_categories = array();
+$associated_categories = [];
 
 if (count($page['cat_elements_id']) > 0) {
     $query = '

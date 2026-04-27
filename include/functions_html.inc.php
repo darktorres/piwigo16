@@ -54,9 +54,9 @@ function get_cat_display_name($cat_informations, $url = '')
         } elseif ($url == '') {
             $output .= '<a href="'
                   .make_index_url(
-                      array(
+                      [
                         'category' => $cat,
-                        )
+                        ]
                   )
                   .'">';
             $output .= $cat['name'].'</a>';
@@ -87,7 +87,7 @@ function get_cat_display_name_cache(
 ) {
     global $cache, $conf;
 
-    $add_url_params = array();
+    $add_url_params = [];
     if (isset($auth_key)) {
         $add_url_params['auth'] = $auth_key;
     }
@@ -133,9 +133,9 @@ SELECT id, name, permalink
 <a href="'
             .add_url_params(
                 make_index_url(
-                    array(
+                    [
             'category' => $cat,
-            )
+            ]
                 ),
                 $add_url_params
             )
@@ -223,7 +223,7 @@ function tag_alpha_compare($a, $b)
 {
     global $cache;
 
-    foreach (array($a, $b) as $tag) {
+    foreach ([$a, $b] as $tag) {
         if (!isset($cache[__FUNCTION__][ $tag['name'] ])) {
             $cache[__FUNCTION__][ $tag['name'] ] = pwg_transliterate($tag['name']);
         }
@@ -394,20 +394,20 @@ function get_combined_categories_content_title()
     $title = l10n('Albums').' ';
 
     $is_first = true;
-    $all_categories = array_merge(array($page['category']), $page['combined_categories']);
+    $all_categories = array_merge([$page['category']], $page['combined_categories']);
     foreach ($all_categories as $idx => $category) {
         $title .= $is_first ? '' : ' + ';
         $is_first = false;
 
-        $title .= get_cat_display_name(array($category));
+        $title .= get_cat_display_name([$category]);
 
         if (count($all_categories) > 1) { // should be always the case
             $other_cats = $all_categories;
             unset($other_cats[$idx]);
 
-            $params = array(
+            $params = [
               'category' => array_shift($other_cats),
-              );
+              ];
 
             if (count($other_cats) > 0) {
                 $params['combined_categories'] = $other_cats;
@@ -551,7 +551,7 @@ function get_thumbnail_title($info, $title, $comment = '')
 {
     global $conf, $user;
 
-    $details = array();
+    $details = [];
 
     if (!empty($info['hit'])) {
         $details[] = l10n('%d visits', $info['hit']);
@@ -618,7 +618,7 @@ function flush_page_messages()
 {
     global $template, $page;
     if ($template->get_template_vars('page_refresh') === null) {
-        foreach (array('errors','infos','warnings', 'messages') as $mode) {
+        foreach (['errors','infos','warnings', 'messages'] as $mode) {
             if (isset($_SESSION['page_'.$mode])) {
                 $page[$mode] = array_merge($page[$mode], $_SESSION['page_'.$mode]);
                 unset($_SESSION['page_'.$mode]);

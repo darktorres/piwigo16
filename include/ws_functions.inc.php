@@ -15,12 +15,12 @@ function ws_isInvokeAllowed($res, $methodName, $params)
 {
     global $conf;
 
-    if (strpos($methodName, 'reflection.') === 0) { // OK for reflection
+    if (str_starts_with($methodName, 'reflection.')) { // OK for reflection
         return $res;
     }
 
     if (!is_autorize_status(ACCESS_GUEST) and
-        strpos($methodName, 'pwg.session.') !== 0) {
+        !str_starts_with($methodName, 'pwg.session.')) {
         return new PwgError(401, 'Access denied');
     }
 
@@ -33,7 +33,7 @@ function ws_isInvokeAllowed($res, $methodName, $params)
  */
 function ws_std_image_sql_filter($params, $tbl_name = '')
 {
-    foreach (array('f_min_date_available', 'f_max_date_available', 'f_min_date_created', 'f_max_date_created') as $datefield) {
+    foreach (['f_min_date_available', 'f_max_date_available', 'f_min_date_created', 'f_max_date_created'] as $datefield) {
         if (isset($params[$datefield]) and !is_valid_mysql_datetime($params[$datefield])) {
             global $service;
             $service->sendResponse(new PwgError(WS_ERR_INVALID_PARAM, 'Invalid '.$datefield));
@@ -41,7 +41,7 @@ function ws_std_image_sql_filter($params, $tbl_name = '')
         }
     }
 
-    $clauses = array();
+    $clauses = [];
     if (is_numeric($params['f_min_rate'])) {
         $clauses[] = $tbl_name.'rating_score>='.$params['f_min_rate'];
     }
@@ -87,7 +87,7 @@ function ws_std_image_sql_order($params, $tbl_name = '')
     if (empty($params['order'])) {
         return $ret;
     }
-    $matches = array();
+    $matches = [];
     preg_match_all(
         '/([a-z_]+) *(?:(asc|desc)(?:ending)?)? *(?:, *|$)/i',
         $params['order'],
@@ -105,8 +105,8 @@ function ws_std_image_sql_order($params, $tbl_name = '')
                 $matches[1][$i] = DB_RANDOM_FUNCTION.'()';
                 break;
         }
-        $sortable_fields = array('id', 'file', 'name', 'hit', 'rating_score',
-          'date_creation', 'date_available', DB_RANDOM_FUNCTION.'()' );
+        $sortable_fields = ['id', 'file', 'name', 'hit', 'rating_score',
+          'date_creation', 'date_available', DB_RANDOM_FUNCTION.'()' ];
         if (in_array($matches[1][$i], $sortable_fields)) {
             if (!empty($ret)) {
                 $ret .= ', ';
@@ -127,13 +127,13 @@ function ws_std_image_sql_order($params, $tbl_name = '')
  */
 function ws_std_get_urls($image_row)
 {
-    $ret = array();
+    $ret = [];
 
     $ret['page_url'] = make_picture_url(
-        array(
+        [
               'image_id' => $image_row['id'],
               'image_file' => $image_row['file'],
-            )
+            ]
     );
 
     $src_image = new SrcImage($image_row);
@@ -157,11 +157,11 @@ function ws_std_get_urls($image_row)
     }
 
     $derivatives = DerivativeImage::get_all($src_image);
-    $derivatives_arr = array();
+    $derivatives_arr = [];
     foreach ($derivatives as $type => $derivative) {
         $size = $derivative->get_size();
-        $size != null or $size = array(null,null);
-        $derivatives_arr[$type] = array('url' => $derivative->get_url(), 'width' => (int)$size[0], 'height' => (int)$size[1] );
+        $size != null or $size = [null,null];
+        $derivatives_arr[$type] = ['url' => $derivative->get_url(), 'width' => (int)$size[0], 'height' => (int)$size[1] ];
     }
     $ret['derivatives'] = $derivatives_arr;
     ;
@@ -174,23 +174,23 @@ function ws_std_get_urls($image_row)
  */
 function ws_std_get_image_xml_attributes()
 {
-    return array(
+    return [
       'id','element_url', 'page_url', 'file','width','height','hit','date_available','date_creation',
-      );
+      ];
 }
 
 function ws_std_get_category_xml_attributes()
 {
-    return array(
+    return [
       'id', 'url', 'nb_images', 'total_nb_images', 'nb_categories', 'date_last', 'max_date_last', 'status',
-      );
+      ];
 }
 
 function ws_std_get_tag_xml_attributes()
 {
-    return array(
+    return [
       'id', 'name', 'url_name', 'counter', 'url', 'page_url',
-      );
+      ];
 }
 
 /**
@@ -198,8 +198,8 @@ function ws_std_get_tag_xml_attributes()
  */
 function categories_flatlist_to_tree($categories)
 {
-    $tree = array();
-    $key_of_cat = array();
+    $tree = [];
+    $key_of_cat = [];
 
     foreach ($categories as $key => &$node) {
         $key_of_cat[$node['id']] = $key;
@@ -209,7 +209,7 @@ function categories_flatlist_to_tree($categories)
         } else {
             if (!isset($categories[ $key_of_cat[ $node['id_uppercat'] ] ]['sub_categories'])) {
                 $categories[ $key_of_cat[ $node['id_uppercat'] ] ]['sub_categories'] =
-                  new PwgNamedArray(array(), 'category', ws_std_get_category_xml_attributes());
+                  new PwgNamedArray([], 'category', ws_std_get_category_xml_attributes());
             }
 
             $categories[ $key_of_cat[ $node['id_uppercat'] ] ]['sub_categories']->_content[] = &$node;

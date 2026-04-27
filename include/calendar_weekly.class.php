@@ -26,26 +26,26 @@ class CalendarWeekly extends CalendarBase
     {
         parent::initialize($inner_sql);
         global $lang, $conf;
-        $week_no_labels = array();
+        $week_no_labels = [];
         for ($i = 1; $i <= 53; $i++) {
             $week_no_labels[$i] = l10n('Week %d', $i);
             //$week_no_labels[$i] = $i;
         }
 
-        $this->calendar_levels = array(
-          array(
+        $this->calendar_levels = [
+          [
               'sql' => pwg_db_get_year($this->date_field),
               'labels' => null,
-            ),
-          array(
+            ],
+          [
               'sql' => pwg_db_get_week($this->date_field).'+1',
               'labels' => $week_no_labels,
-            ),
-          array(
+            ],
+          [
               'sql' => pwg_db_get_dayofweek($this->date_field).'-1',
               'labels' => $lang['day'],
-            ),
-         );
+            ],
+         ];
         //Comment next lines for week starting on Sunday or if MySQL version<4.0.17
         //WEEK(date,5) = "0-53 - Week 1=the first week with a Monday in this year"
         if ('monday' == $conf['week_starts_on']) {
@@ -68,7 +68,7 @@ class CalendarWeekly extends CalendarBase
             $this->build_nav_bar(CYEAR); // years
         }
         if (count($page['chronology_date']) == 1) {
-            $this->build_nav_bar(CWEEK, array()); // week nav bar 1-53
+            $this->build_nav_bar(CWEEK, []); // week nav bar 1-53
         }
         if (count($page['chronology_date']) == 2) {
             $this->build_nav_bar(CDAY); // days nav bar Mon-Sun

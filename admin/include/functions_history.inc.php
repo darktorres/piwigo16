@@ -59,7 +59,7 @@ SELECT
 
     // echo '<pre>'; print_r($search); echo '</pre>';
 
-    $clauses = array();
+    $clauses = [];
 
     if (isset($search['fields']['date-after'])) {
         $clauses[] = "date >= '".$search['fields']['date-after']."'";
@@ -70,7 +70,7 @@ SELECT
     }
 
     if (isset($search['fields']['types'])) {
-        $local_clauses = array();
+        $local_clauses = [];
 
         foreach ($types as $type) {
             if (in_array($type, $search['fields']['types'])) {
@@ -209,13 +209,13 @@ SELECT
 ;';
     $result = pwg_query($query);
 
-    $need_update = array();
+    $need_update = [];
 
     $is_first = true;
     $first_time_key = null;
 
     while ($row = pwg_db_fetch_assoc($result)) {
-        $time_keys = array(
+        $time_keys = [
           substr($row['date'], 0, 4), //yyyy
           substr($row['date'], 0, 7), //yyyy-mm
           substr($row['date'], 0, 10),//yyyy-mm-dd
@@ -224,15 +224,15 @@ SELECT
               $row['date'],
               $row['hour']
           ),
-          );
+          ];
 
         foreach ($time_keys as $time_key) {
             if (!isset($need_update[$time_key])) {
-                $need_update[$time_key] = array(
+                $need_update[$time_key] = [
                   'nb_pages' => 0,
                   'history_id_from' => $row['min_id'],
                   'history_id_to' => $row['max_id'],
-                  );
+                  ];
             }
             $need_update[$time_key]['nb_pages'] += $row['nb_pages'];
 
@@ -266,11 +266,11 @@ SELECT
     // | 2005-08-25-21 |      151 |
     // +---------------+----------+
 
-    $updates = array();
-    $inserts = array();
+    $updates = [];
+    $inserts = [];
 
     if (isset($first_time_key)) {
-        list($year, $month, $day, $hour) = explode('-', $first_time_key);
+        [$year, $month, $day, $hour] = explode('-', $first_time_key);
 
         $query = '
 SELECT *
@@ -311,7 +311,7 @@ SELECT *
     foreach ($need_update as $time_key => $summary) {
         $time_tokens = explode('-', $time_key);
 
-        $inserts[] = array(
+        $inserts[] = [
           'year'     => $time_tokens[0],
           'month'    => @$time_tokens[1],
           'day'      => @$time_tokens[2],
@@ -319,16 +319,16 @@ SELECT *
           'nb_pages' => $summary['nb_pages'],
           'history_id_from' => $summary['history_id_from'],
           'history_id_to' => $summary['history_id_to'],
-          );
+          ];
     }
 
     if (count($updates) > 0) {
         mass_updates(
             HISTORY_SUMMARY_TABLE,
-            array(
-            'primary' => array('year','month','day','hour'),
-            'update'  => array('nb_pages','history_id_to'),
-            ),
+            [
+            'primary' => ['year','month','day','hour'],
+            'update'  => ['nb_pages','history_id_to'],
+            ],
             $updates
         );
     }
@@ -362,7 +362,7 @@ SELECT
     COUNT(*)
   FROM '.HISTORY_TABLE.'
 ;';
-    list($count) = pwg_db_fetch_row(pwg_query($query));
+    [$count] = pwg_db_fetch_row(pwg_query($query));
 
     if ($count <= $conf['history_autopurge_keep_lines']) {
         history_remove_summarized_column();
@@ -411,11 +411,11 @@ SELECT
     $history_lines = query2array($query);
     $history_id_oldest = $history_lines[0]['id'];
 
-    $search_min = array(
+    $search_min = [
       $history_id_last_summarized,
       $history_id_latest - $conf['history_autopurge_keep_lines'],
       $history_id_oldest + $conf['history_autopurge_blocksize'],
-      );
+      ];
 
     $history_id_delete_before = min($search_min);
 
@@ -444,7 +444,7 @@ SELECT
     COUNT(*)
   FROM '.HISTORY_TABLE.'
 ;';
-    list($count) = pwg_db_fetch_row(pwg_query($query));
+    [$count] = pwg_db_fetch_row(pwg_query($query));
 
     if ($count > $conf['history_autopurge_keep_lines'] + $conf['history_autopurge_blocksize']) {
         // it's not yet time to remove history.summarized

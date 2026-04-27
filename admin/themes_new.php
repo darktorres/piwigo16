@@ -65,10 +65,10 @@ if (isset($_GET['installstatus'])) {
                     'system',
                     ACTIVITY_SYSTEM_THEME,
                     'install',
-                    array(
+                    [
                     'theme_id' => $_GET['theme_id'],
                     'version' => $themes->fs_themes[$_GET['theme_id']]['version'],
-          )
+          ]
                 );
             }
             break;
@@ -97,7 +97,7 @@ if (isset($_GET['installstatus'])) {
 // |                          template output                              |
 // +-----------------------------------------------------------------------+
 
-$template->set_filenames(array('themes' => 'themes_new.tpl'));
+$template->set_filenames(['themes' => 'themes_new.tpl']);
 
 if ($themes->get_server_themes(true)) { // only new themes
     foreach ($themes->server_themes as $theme) {
@@ -109,12 +109,12 @@ if ($themes->get_server_themes(true)) { // only new themes
 
         $template->append(
             'new_themes',
-            array(
+            [
             'name' => $theme['extension_name'],
             'thumbnail' => (key_exists('thumbnail_src', $theme)) ? $theme['thumbnail_src'] : '',
             'screenshot' => (key_exists('screenshot_url', $theme)) ? $theme['screenshot_url'] : '',
             'install_url' => $url_auto_install,
-            )
+            ]
         );
     }
 } else {

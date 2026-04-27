@@ -43,13 +43,13 @@ if (isset($_GET['action']) and 'delete_orphans' == $_GET['action']) {
 // |                             template init                             |
 // +-----------------------------------------------------------------------+
 
-$template->set_filenames(array('tags' => 'tags.tpl'));
+$template->set_filenames(['tags' => 'tags.tpl']);
 
 $template->assign(
-    array(
+    [
     'F_ACTION' => PHPWG_ROOT_PATH.'admin.php?page=tags',
     'PWG_TOKEN' => get_pwg_token(),
-    )
+    ]
 );
 
 // +-----------------------------------------------------------------------+
@@ -61,7 +61,7 @@ $warning_tags = '';
 $orphan_tags = get_orphan_tags();
 
 $orphan_tag_names_array = '[]';
-$orphan_tag_names = array();
+$orphan_tag_names = [];
 foreach ($orphan_tags as $tag) {
     $orphan_tag_names[] = trigger_change('render_tag_name', $tag['name'], $tag);
 }
@@ -89,10 +89,10 @@ if (count($orphan_tag_names) > 0) {
 }
 
 $template->assign(
-    array(
+    [
     'orphan_tag_names_array' => $orphan_tag_names_array,
     'warning_tags' => $warning_tags,
-    )
+    ]
 );
 
 $message_tags = '';
@@ -120,7 +120,7 @@ SELECT name, id, url_name
   FROM '.TAGS_TABLE.'
 ;';
 $result = pwg_query($query);
-$all_tags = array();
+$all_tags = [];
 while ($tag = pwg_db_fetch_assoc($result)) {
     $raw_name = $tag['name'];
     $tag['raw_name'] = $raw_name;
@@ -130,8 +130,8 @@ while ($tag = pwg_db_fetch_assoc($result)) {
         $tag['counter'] = intval(@$tag_counters[ $tag['id'] ]);
     }
 
-    $alt_names = trigger_change('get_tag_alt_names', array(), $raw_name);
-    $alt_names = array_diff(array_unique($alt_names), array($tag['name']));
+    $alt_names = trigger_change('get_tag_alt_names', [], $raw_name);
+    $alt_names = array_diff(array_unique($alt_names), [$tag['name']]);
     if (count($alt_names)) {
         $tag['alt_names'] = implode(', ', $alt_names);
     }
@@ -140,13 +140,13 @@ while ($tag = pwg_db_fetch_assoc($result)) {
 usort($all_tags, 'tag_alpha_compare');
 
 $template->assign(
-    array(
+    [
     'first_tags' => array_slice($all_tags, 0, $per_page),
     'data' => $all_tags,
     'total' => count($all_tags),
     'per_page' => $per_page,
     'ADMIN_PAGE_TITLE' => l10n('Tags'),
-    )
+    ]
 );
 
 // +-----------------------------------------------------------------------+

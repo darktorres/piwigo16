@@ -23,13 +23,13 @@ check_status(ACCESS_ADMINISTRATOR);
 // |                             template init                             |
 // +-----------------------------------------------------------------------+
 
-$template->set_filenames(array('comments' => 'comments.tpl'));
+$template->set_filenames(['comments' => 'comments.tpl']);
 
 $template->assign(
-    array(
+    [
     'F_ACTION' => get_root_url().'admin.php?page=comments',
     'PWG_TOKEN' => get_pwg_token(),
-    )
+    ]
 );
 
 // +-----------------------------------------------------------------------+

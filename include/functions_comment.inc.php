@@ -47,7 +47,7 @@ function user_comment_check($action, $comment)
         $matches
     );
 
-    if (strpos($comment['author'], 'http://') !== false) {
+    if (str_contains($comment['author'], 'http://')) {
         $link_count++;
     }
 
@@ -72,13 +72,13 @@ function insert_user_comment(&$comm, $key, &$infos)
 
     $comm = array_merge(
         $comm,
-        array(
+        [
         'ip' => $_SERVER['REMOTE_ADDR'],
         'agent' => $_SERVER['HTTP_USER_AGENT'],
-    )
+    ]
     );
 
-    $infos = array();
+    $infos = [];
     if (!$conf['comments_validation'] or is_admin()) {
         $comment_action = 'validate'; //one of validate, moderate, reject
     } else {
@@ -173,7 +173,7 @@ SELECT count(1) FROM '.COMMENTS_TABLE.'
         $query .= '
 ;';
 
-        list($counter) = pwg_db_fetch_row(pwg_query($query));
+        [$counter] = pwg_db_fetch_row(pwg_query($query));
         if ($counter > 0) {
             $infos[] = l10n('Anti-flood system : please wait for a moment before trying to post another comment');
             $comment_action = 'reject';
@@ -206,7 +206,7 @@ INSERT INTO '.COMMENTS_TABLE.'
   )
 ';
         pwg_query($query);
-        $comm['id'] = pwg_db_insert_id(COMMENTS_TABLE);
+        $comm['id'] = pwg_db_insert_id();
 
         invalidate_user_cache_nb_comments();
 
@@ -216,13 +216,13 @@ INSERT INTO '.COMMENTS_TABLE.'
 
             $comment_url = get_absolute_root_url().'comments.php?comment_id='.$comm['id'];
 
-            $keyargs_content = array(
+            $keyargs_content = [
               get_l10n_args('Author: %s', stripslashes($comm['author'])),
               get_l10n_args('Email: %s', stripslashes($comm['email'])),
               get_l10n_args('Comment: %s', stripslashes($comm['content'])),
               get_l10n_args(''),
               get_l10n_args('Manage this user comment: %s', $comment_url),
-            );
+            ];
 
             if ('moderate' == $comment_action) {
                 $keyargs_content[] = get_l10n_args('(!) This comment requires validation');
@@ -265,14 +265,14 @@ DELETE FROM '.COMMENTS_TABLE.'
 $user_where_clause.'
 ;';
 
-    if (pwg_db_changes(pwg_query($query))) {
+    if (pwg_db_changes()) {
         invalidate_user_cache_nb_comments();
 
         email_admin(
             'delete',
-            array('author' => $GLOBALS['user']['username'],
+            ['author' => $GLOBALS['user']['username'],
                           'comment_id' => $comment_id,
-                      )
+                      ]
         );
         trigger_notify('user_comment_deletion', $comment_id);
 
@@ -313,7 +313,7 @@ function update_user_comment($comment, $post_key)
           $comment_action,
           array_merge(
               $comment,
-              array('author' => $GLOBALS['user']['username'])
+              ['author' => $GLOBALS['user']['username']]
           )
       );
 
@@ -353,13 +353,13 @@ $user_where_clause.'
 
             $comment_url = get_absolute_root_url().'comments.php?comment_id='.$comment['comment_id'];
 
-            $keyargs_content = array(
+            $keyargs_content = [
               get_l10n_args('Author: %s', stripslashes($GLOBALS['user']['username'])),
               get_l10n_args('Comment: %s', stripslashes($comment['content'])),
               get_l10n_args(''),
               get_l10n_args('Manage this user comment: %s', $comment_url),
               get_l10n_args('(!) This comment requires validation'),
-            );
+            ];
 
             pwg_mail_notification_admins(
                 get_l10n_args('Comment by %s', stripslashes($GLOBALS['user']['username'])),
@@ -368,8 +368,8 @@ $user_where_clause.'
         }
         // just mail admin
         elseif ($result) {
-            email_admin('edit', array('author' => $GLOBALS['user']['username'],
-                      'content' => stripslashes($comment['content'])));
+            email_admin('edit', ['author' => $GLOBALS['user']['username'],
+                      'content' => stripslashes($comment['content'])]);
         }
     }
 
@@ -387,7 +387,7 @@ function email_admin($action, $comment)
 {
     global $conf;
 
-    if (!in_array($action, array('edit', 'delete'))
+    if (!in_array($action, ['edit', 'delete'])
         or (($action == 'edit') and !$conf['email_admin_on_comment_edition'])
         or (($action == 'delete') and !$conf['email_admin_on_comment_deletion'])) {
         return;
@@ -395,9 +395,9 @@ function email_admin($action, $comment)
 
     include_once(PHPWG_ROOT_PATH.'include/functions_mail.inc.php');
 
-    $keyargs_content = array(
+    $keyargs_content = [
       get_l10n_args('Author: %s', $comment['author']),
-      );
+      ];
 
     if ($action == 'delete') {
         $keyargs_content[] = get_l10n_args('This author removed the comment with id %d', $comment['comment_id']);
@@ -436,7 +436,7 @@ SELECT
         }
     }
 
-    list($author_id) = pwg_db_fetch_row($result);
+    [$author_id] = pwg_db_fetch_row($result);
 
     return $author_id;
 }

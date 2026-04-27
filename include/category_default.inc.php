@@ -13,7 +13,7 @@
  *
  */
 
-$pictures = array();
+$pictures = [];
 
 $selection = array_slice(
     $page['items'],
@@ -47,15 +47,14 @@ if (count($pictures) > 0) {
     $page['cat_slideshow_url'] =
       add_url_params(
           duplicate_picture_url(
-              array(
+              [
           'image_id' => $row['id'],
           'image_file' => $row['file'],
-        ),
-              array('start')
+        ],
+              ['start']
           ),
-          array('slideshow' =>
-          (isset($_GET['slideshow']) ? $_GET['slideshow']
-                                     : ''))
+          ['slideshow' =>
+          ($_GET['slideshow'] ?? '')]
       );
 
     if ($conf['activate_comments'] and $user['show_nb_comments']) {
@@ -71,19 +70,19 @@ SELECT image_id, COUNT(*) AS nb_comments
 }
 
 // template thumbnail initialization
-$template->set_filenames(array( 'index_thumbnails' => 'thumbnails.tpl',));
+$template->set_filenames([ 'index_thumbnails' => 'thumbnails.tpl',]);
 
 trigger_notify('loc_begin_index_thumbnails', $pictures);
-$tpl_thumbnails_var = array();
+$tpl_thumbnails_var = [];
 
 foreach ($pictures as $row) {
     // link on picture.php page
     $url = duplicate_picture_url(
-        array(
+        [
             'image_id' => $row['id'],
             'image_file' => $row['file'],
-          ),
-        array('start')
+          ],
+        ['start']
     );
 
     if (isset($nb_comments_of)) {
@@ -93,7 +92,7 @@ foreach ($pictures as $row) {
     $name = render_element_name($row);
     $desc = render_element_description($row, 'main_page_element_description');
 
-    $tpl_var = array_merge($row, array(
+    $tpl_var = array_merge($row, [
       'TN_ALT' => htmlspecialchars(strip_tags($name)),
       'TN_TITLE' => get_thumbnail_title($row, $name, $desc),
       'URL' => $url,
@@ -101,7 +100,7 @@ foreach ($pictures as $row) {
       'src_image' => new SrcImage($row),
       'path_ext' => strtolower(get_extension($row['path'])),
       'file_ext' => strtolower(get_extension($row['file'])),
-      ));
+      ]);
 
     if ($conf['index_new_icon']) {
         $tpl_var['icon_ts'] = get_icon($row['date_available']);
@@ -129,11 +128,11 @@ foreach ($pictures as $row) {
     $tpl_thumbnails_var[] = $tpl_var;
 }
 
-$template->assign(array(
+$template->assign([
   'derivative_params' => trigger_change('get_index_derivative_params', ImageStdParams::get_by_type(pwg_get_session_var('index_deriv', IMG_THUMB))),
   'maxRequests' => $conf['max_requests'],
   'SHOW_THUMBNAIL_CAPTION' => $conf['show_thumbnail_caption'],
-    ));
+    ]);
 $tpl_thumbnails_var = trigger_change('loc_end_index_thumbnails', $tpl_thumbnails_var, $pictures);
 $template->assign('thumbnails', $tpl_thumbnails_var);
 

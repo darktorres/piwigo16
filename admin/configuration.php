@@ -34,7 +34,7 @@ if (!isset($_GET['section'])) {
     $page['section'] = $_GET['section'];
 }
 
-$main_checkboxes = array(
+$main_checkboxes = [
     'allow_user_registration',
     'obligatory_user_mail_address',
     'rate',
@@ -46,13 +46,13 @@ $main_checkboxes = array(
     'show_mobile_app_banner_in_gallery',
     'show_mobile_app_banner_in_admin',
     'upload_detect_duplicate',
-   );
+   ];
 
-$sizes_checkboxes = array(
+$sizes_checkboxes = [
     'original_resize',
-  );
+  ];
 
-$comments_checkboxes = array(
+$comments_checkboxes = [
     'activate_comments',
     'comments_forall',
     'comments_validation',
@@ -65,9 +65,9 @@ $comments_checkboxes = array(
     'comments_author_mandatory',
     'comments_email_mandatory',
     'comments_enable_website',
-  );
+  ];
 
-$display_checkboxes = array(
+$display_checkboxes = [
     'menubar_filter_icon',
     'index_search_in_set_button',
     'index_search_in_set_action',
@@ -92,9 +92,9 @@ $display_checkboxes = array(
     'picture_navigation_icons',
     'picture_navigation_thumb',
     'picture_menu',
-  );
+  ];
 
-$display_info_checkboxes = array(
+$display_info_checkboxes = [
     'author',
     'created_on',
     'posted_on',
@@ -105,16 +105,16 @@ $display_info_checkboxes = array(
     'categories',
     'visits',
     'rating_score',
-  );
+  ];
 
 if (!isset($conf['filters_views'])) {
     conf_update_param('filters_views', $conf['default_filters_views'], true);
 }
 
-$filters_names_checkboxes = array_values(array_diff(array_keys(safe_unserialize($conf['filters_views'])), array('last_filters_conf')));
+$filters_names_checkboxes = array_values(array_diff(array_keys(safe_unserialize($conf['filters_views'])), ['last_filters_conf']));
 
 // image order management
-$sort_fields = array(
+$sort_fields = [
   ''                    => '',
   'file ASC'            => l10n('File name, A &rarr; Z'),
   'file DESC'           => l10n('File name, Z &rarr; A'),
@@ -131,17 +131,17 @@ $sort_fields = array(
   'id ASC'              => l10n('Numeric identifier, 1 &rarr; 9'),
   'id DESC'             => l10n('Numeric identifier, 9 &rarr; 1'),
   '`rank` ASC'          => l10n('Manual sort order'),
-  );
+  ];
 
-$comments_order = array(
+$comments_order = [
   'ASC' => l10n('Show oldest comments first'),
   'DESC' => l10n('Show latest comments first'),
-  );
+  ];
 
-$mail_themes = array(
+$mail_themes = [
   'clear' => 'Clear',
   'dark' => 'Dark',
-  );
+  ];
 
 //------------------------------ verification and registration of modifications
 if (isset($_POST['submit'])) {
@@ -155,7 +155,7 @@ if (isset($_POST['submit'])) {
                     if (!empty($_POST['order_by'])) {
                         check_input_parameter('order_by', $_POST, true, '/^('.implode('|', array_keys($sort_fields)).')$/');
 
-                        $used = array();
+                        $used = [];
                         foreach ($_POST['order_by'] as $i => $val) {
                             if (empty($val) or isset($used[$val])) {
                                 unset($_POST['order_by'][$i]);
@@ -176,7 +176,7 @@ if (isset($_POST['submit'])) {
 
                             // must define a default order_by if user want to order by rank only
                             if (count($order_by) == 0) {
-                                $order_by = array('id ASC');
+                                $order_by = ['id ASC'];
                             }
 
                             $_POST['order_by'] = 'ORDER BY '.implode(', ', $order_by);
@@ -267,7 +267,7 @@ if (isset($_POST['submit'])) {
     }
 
     // updating configuration if no error found
-    if (!in_array($page['section'], array('sizes', 'watermark')) and count($page['errors']) == 0 and is_webmaster()) {
+    if (!in_array($page['section'], ['sizes', 'watermark']) and count($page['errors']) == 0 and is_webmaster()) {
         //echo '<pre>'; print_r($_POST); echo '</pre>';
         $result = pwg_query('SELECT param FROM '.CONFIG_TABLE);
         while ($row = pwg_db_fetch_assoc($result)) {
@@ -289,12 +289,12 @@ WHERE param = \''.$row['param'].'\'
             }
         }
         $template->assign(
-            array(
+            [
             'save_success' => l10n('Your configuration settings are saved'),
-      )
+      ]
         );
 
-        pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'config', array('config_section' => $page['section']));
+        pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'config', ['config_section' => $page['section']]);
     }
 
     //------------------------------------------------------ $conf reinitialization
@@ -310,12 +310,12 @@ if ('sizes' == $page['section'] and isset($_GET['action']) and 'restore_settings
     load_conf_from_db();
 
     $template->assign(
-        array(
+        [
         'save_success' => l10n('Your configuration settings are saved'),
-    )
+    ]
     );
 
-    pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'config', array('config_section' => $page['section'],'config_action' => $_GET['action']));
+    pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'config', ['config_section' => $page['section'],'config_action' => $_GET['action']]);
 }
 
 //----------------------------------------------------- template initialization
@@ -331,11 +331,11 @@ $action = get_root_url().'admin.php?page=configuration';
 $action .= '&amp;section='.$page['section'];
 
 $template->assign(
-    array(
+    [
     'U_HELP' => get_root_url().'admin/popuphelp.php?page=configuration',
     'PWG_TOKEN' => get_pwg_token(),
     'F_ACTION' => $action,
-    )
+    ]
 );
 
 switch ($page['section']) {
@@ -344,7 +344,7 @@ switch ($page['section']) {
 
             function order_by_is_local()
             {
-                $conf = array();
+                $conf = [];
                 include(PHPWG_ROOT_PATH . 'include/config_default.inc.php');
                 @include(PHPWG_ROOT_PATH. 'local/config/config.inc.php');
                 if (isset($conf['local_dir_site'])) {
@@ -359,10 +359,10 @@ switch ($page['section']) {
             }
 
             if (isset($conf['order_by_custom']) or isset($conf['order_by_inside_category_custom'])) {
-                $order_by = array('');
+                $order_by = [''];
                 $template->assign('ORDER_BY_IS_CUSTOM', true);
             } else {
-                $out = array();
+                $out = [];
                 $order_by = trim($conf['order_by_inside_category']);
                 $order_by = str_replace('ORDER BY ', false, $order_by);
                 $order_by = explode(', ', $order_by);
@@ -370,22 +370,22 @@ switch ($page['section']) {
 
             $template->assign(
                 'main',
-                array(
+                [
                 'CONF_GALLERY_TITLE' => htmlspecialchars($conf['gallery_title']),
                 'CONF_PAGE_BANNER' => htmlspecialchars($conf['page_banner']),
-                'week_starts_on_options' => array(
+                'week_starts_on_options' => [
                   'sunday' => $lang['day'][0],
                   'monday' => $lang['day'][1],
-                  ),
+                  ],
                 'week_starts_on_options_selected' => $conf['week_starts_on'],
                 'mail_theme' => $conf['mail_theme'],
                 'mail_theme_options' => $mail_themes,
                 'order_by' => $order_by,
                 'order_by_options' => $sort_fields,
                 'email_admin_on_new_user' => 'none' != $conf['email_admin_on_new_user'],
-                'email_admin_on_new_user_filter' => in_array($conf['email_admin_on_new_user'], array('none', 'all')) ? 'all' : 'group',
+                'email_admin_on_new_user_filter' => in_array($conf['email_admin_on_new_user'], ['none', 'all']) ? 'all' : 'group',
                 'email_admin_on_new_user_filter_group' => preg_match('/^group:(\d+)$/', $conf['email_admin_on_new_user'], $matches) ? $matches[1] : -1,
-                )
+                ]
             );
 
             // list of groups
@@ -399,17 +399,17 @@ switch ($page['section']) {
             natcasesort($groups);
 
             $template->assign(
-                array(
+                [
                 'group_options' => $groups,
-                )
+                ]
             );
 
             foreach ($main_checkboxes as $checkbox) {
                 $template->append(
                     'main',
-                    array(
+                    [
                       $checkbox => $conf[$checkbox],
-                      ),
+                      ],
                     true
                 );
             }
@@ -419,19 +419,19 @@ switch ($page['section']) {
         {
             $template->assign(
                 'comments',
-                array(
+                [
                 'NB_COMMENTS_PAGE' => $conf['nb_comment_page'],
                 'comments_order' => $conf['comments_order'],
                 'comments_order_options' => $comments_order,
-                )
+                ]
             );
 
             foreach ($comments_checkboxes as $checkbox) {
                 $template->append(
                     'comments',
-                    array(
+                    [
                       $checkbox => $conf[$checkbox],
-                      ),
+                      ],
                     true
                 );
             }
@@ -442,7 +442,7 @@ switch ($page['section']) {
             $edit_user = build_user($conf['guest_id'], false);
             include_once(PHPWG_ROOT_PATH.'profile.php');
 
-            $errors = array();
+            $errors = [];
             if (save_profile_from_post($edit_user, $errors)) {
                 // Reload user
                 $edit_user = build_user($conf['guest_id'], false);
@@ -456,7 +456,7 @@ switch ($page['section']) {
                 $edit_user,
                 'GUEST_'
             );
-            $template->assign('default', array());
+            $template->assign('default', []);
             break;
         }
     case 'display':
@@ -464,18 +464,18 @@ switch ($page['section']) {
             foreach ($display_checkboxes as $checkbox) {
                 $template->append(
                     'display',
-                    array(
+                    [
                       $checkbox => $conf[$checkbox],
-                      ),
+                      ],
                     true
                 );
             }
             $template->append(
                 'display',
-                array(
+                [
                   'picture_informations' => unserialize($conf['picture_informations']),
                   'NB_CATEGORIES_PAGE' => $conf['nb_categories_page'],
-                  ),
+                  ],
                 true
             );
             break;
@@ -489,19 +489,19 @@ switch ($page['section']) {
                 $template->assign('is_gd', $is_gd);
                 $template->assign(
                     'sizes',
-                    array(
+                    [
                     'original_resize_maxwidth' => $conf['original_resize_maxwidth'],
                     'original_resize_maxheight' => $conf['original_resize_maxheight'],
                     'original_resize_quality' => $conf['original_resize_quality'],
-                    )
+                    ]
                 );
 
                 foreach ($sizes_checkboxes as $checkbox) {
                     $template->append(
                         'sizes',
-                        array(
+                        [
                         $checkbox => $conf[$checkbox],
-                        ),
+                        ],
                         true
                     );
                 }
@@ -510,12 +510,12 @@ switch ($page['section']) {
                 $enabled = ImageStdParams::get_defined_type_map();
                 $disabled = safe_unserialize(ImageStdParams::get_disabled_type_map());
                 if ($disabled === false) {
-                    $disabled = array();
+                    $disabled = [];
                 }
 
-                $tpl_vars = array();
+                $tpl_vars = [];
                 foreach (ImageStdParams::get_all_types() as $type) {
-                    $tpl_var = array();
+                    $tpl_var = [];
 
                     $tpl_var['must_square'] = ($type == IMG_SQUARE ? true : false);
                     $tpl_var['must_enable'] = ($type == IMG_SQUARE || $type == IMG_THUMB || $type == $conf['derivative_default_size']) ? true : false;
@@ -528,9 +528,9 @@ switch ($page['section']) {
                     }
 
                     if ($params) {
-                        list($tpl_var['w'], $tpl_var['h']) = $params->sizing->ideal_size;
+                        [$tpl_var['w'], $tpl_var['h']] = $params->sizing->ideal_size;
                         if (($tpl_var['crop'] = round(100 * $params->sizing->max_crop)) > 0) {
-                            list($tpl_var['minw'], $tpl_var['minh']) = $params->sizing->min_size;
+                            [$tpl_var['minw'], $tpl_var['minh']] = $params->sizing->min_size;
                         } else {
                             $tpl_var['minw'] = $tpl_var['minh'] = '';
                         }
@@ -541,7 +541,7 @@ switch ($page['section']) {
                 $template->assign('derivatives', $tpl_vars);
                 $template->assign('resize_quality', ImageStdParams::$quality);
 
-                $tpl_vars = array();
+                $tpl_vars = [];
                 $now = time();
                 foreach (ImageStdParams::$custom as $custom => $time) {
                     $tpl_vars[$custom] = ($now - $time <= 24 * 3600) ? l10n('today') : time_since($time, 'day');
@@ -553,7 +553,7 @@ switch ($page['section']) {
         }
     case 'watermark':
         {
-            $watermark_files = array();
+            $watermark_files = [];
             foreach (glob(PHPWG_ROOT_PATH.'themes/default/watermarks/*.png') as $file) {
                 $watermark_files[] = substr($file, strlen(PHPWG_ROOT_PATH));
             }
@@ -562,7 +562,7 @@ switch ($page['section']) {
                     $watermark_files[] = substr($file, strlen(PHPWG_ROOT_PATH));
                 }
             }
-            $watermark_filemap = array( '' => '---' );
+            $watermark_filemap = [ '' => '---' ];
             foreach ($watermark_files as $file) {
                 $display = basename($file);
                 $watermark_filemap[$file] = $display;
@@ -595,7 +595,7 @@ switch ($page['section']) {
 
                 $template->assign(
                     'watermark',
-                    array(
+                    [
                     'file' => $wm->file,
                     'minw' => $wm->min_size[0],
                     'minh' => $wm->min_size[1],
@@ -605,7 +605,7 @@ switch ($page['section']) {
                     'yrepeat' => $wm->yrepeat,
                     'opacity' => $wm->opacity,
                     'position' => $position,
-                    )
+                    ]
                 );
             }
 
@@ -615,10 +615,10 @@ switch ($page['section']) {
         {
             $template->assign(
                 'search',
-                array(
+                [
                   'filters_views' => safe_unserialize($conf['filters_views']),
                   'filters_names' => $filters_names_checkboxes,
-                ),
+                ],
             );
             $template->assign('SHOW_FILTER_RATINGS', $conf['rate']);
         }

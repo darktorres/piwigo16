@@ -144,7 +144,7 @@ DELETE FROM '.USER_CACHE_CATEGORIES_TABLE.'
     pwg_query($query);
 
     trigger_notify('delete_categories', $ids);
-    pwg_activity('album', $ids, 'delete', array('photo_deletion_mode' => $photo_deletion_mode));
+    pwg_activity('album', $ids, 'delete', ['photo_deletion_mode' => $photo_deletion_mode]);
 }
 
 /**
@@ -160,8 +160,8 @@ function delete_element_files($ids)
         return 0;
     }
 
-    $new_ids = array();
-    $formats_of = array();
+    $new_ids = [];
+    $formats_of = [];
 
     $query = '
 SELECT
@@ -173,7 +173,7 @@ SELECT
     $result = pwg_query($query);
     while ($row = pwg_db_fetch_assoc($result)) {
         if (!isset($formats_of[ $row['image_id'] ])) {
-            $formats_of[ $row['image_id'] ] = array();
+            $formats_of[ $row['image_id'] ] = [];
         }
 
         $formats_of[ $row['image_id'] ][] = $row['ext'];
@@ -193,7 +193,7 @@ SELECT
             continue;
         }
 
-        $files = array();
+        $files = [];
         $files[] = get_element_path($row);
 
         if (!empty($row['representative_ext'])) {
@@ -338,7 +338,7 @@ SELECT
 function delete_user($user_id)
 {
     global $conf;
-    $tables = array(
+    $tables = [
       // destruction of the access linked to the user
       USER_ACCESS_TABLE,
       // destruction of data notification by mail for this user
@@ -358,7 +358,7 @@ function delete_user($user_id)
       // deletion of piwigo specific informations
       USER_INFOS_TABLE,
       USER_AUTH_KEYS_TABLE,
-      );
+      ];
 
     foreach ($tables as $table) {
         $query = '
@@ -390,7 +390,7 @@ function delete_orphan_tags()
     $orphan_tags = get_orphan_tags();
 
     if (count($orphan_tags) > 0) {
-        $orphan_tag_ids = array();
+        $orphan_tag_ids = [];
         foreach ($orphan_tags as $tag) {
             $orphan_tag_ids[] = $tag['id'];
         }
@@ -508,16 +508,16 @@ DELETE
  */
 function categories_integrity()
 {
-    $related_columns = array(
+    $related_columns = [
       IMAGE_CATEGORY_TABLE.'.category_id',
       USER_ACCESS_TABLE.'.cat_id',
       GROUP_ACCESS_TABLE.'.cat_id',
       OLD_PERMALINKS_TABLE.'.cat_id',
       USER_CACHE_CATEGORIES_TABLE.'.cat_id',
-      );
+      ];
 
     foreach ($related_columns as $fullcol) {
-        list($table, $column) = explode('.', $fullcol);
+        [$table, $column] = explode('.', $fullcol);
 
         $query = '
 SELECT
@@ -552,17 +552,17 @@ function get_fs_directories($path, $recursive = true)
 {
     global $conf;
 
-    $dirs = array();
+    $dirs = [];
     $path = rtrim($path, '/');
 
     $exclude_folders = array_merge(
         $conf['sync_exclude_folders'],
-        array(
+        [
         '.', '..', '.svn',
         'thumbnail', 'pwg_high',
         'pwg_representative',
         'pwg_format',
-        )
+        ]
     );
     $exclude_folders = array_flip($exclude_folders);
 
@@ -594,10 +594,10 @@ function get_fs_directories($path, $recursive = true)
  */
 function save_categories_order($categories)
 {
-    $current_rank_for_id_uppercat = array();
+    $current_rank_for_id_uppercat = [];
     $current_rank = 0;
 
-    $datas = array();
+    $datas = [];
     foreach ($categories as $category) {
         if (is_array($category)) {
             $id = $category['id'];
@@ -612,9 +612,9 @@ function save_categories_order($categories)
             $current_rank++;
         }
 
-        $datas[] = array('id' => $id, 'rank' => $current_rank);
+        $datas[] = ['id' => $id, 'rank' => $current_rank];
     }
-    $fields = array('primary' => array('id'), 'update' => array('rank'));
+    $fields = ['primary' => ['id'], 'update' => ['rank']];
     mass_updates(CATEGORIES_TABLE, $fields, $datas);
 
     update_global_rank();
@@ -632,7 +632,7 @@ SELECT id, id_uppercat, uppercats, `rank`, global_rank
   ORDER BY id_uppercat, `rank`, name';
 
     global $cat_map; // used in preg_replace callback
-    $cat_map = array();
+    $cat_map = [];
 
     $current_rank = 0;
     $current_uppercat = '';
@@ -645,20 +645,18 @@ SELECT id, id_uppercat, uppercats, `rank`, global_rank
         }
         ++$current_rank;
         $cat =
-          array(
+          [
             'rank' =>        $current_rank,
             'rank_changed' => $current_rank != $row['rank'],
             'global_rank' => $row['global_rank'],
             'uppercats' =>   $row['uppercats'],
-            );
+            ];
         $cat_map[ $row['id'] ] = $cat;
     }
 
-    $datas = array();
+    $datas = [];
 
-    $cat_map_callback = function ($m) use ($cat_map) {
-        return $cat_map[$m[1]]['rank'];
-    };
+    $cat_map_callback = (fn ($m) => $cat_map[$m[1]]['rank']);
 
     foreach ($cat_map as $id => $cat) {
         $new_global_rank = preg_replace_callback(
@@ -668,11 +666,11 @@ SELECT id, id_uppercat, uppercats, `rank`, global_rank
         );
 
         if ($cat['rank_changed'] or $new_global_rank !== $cat['global_rank']) {
-            $datas[] = array(
+            $datas[] = [
                 'id' => $id,
                 'rank' => $cat['rank'],
                 'global_rank' => $new_global_rank,
-              );
+              ];
         }
     }
 
@@ -680,10 +678,10 @@ SELECT id, id_uppercat, uppercats, `rank`, global_rank
 
     mass_updates(
         CATEGORIES_TABLE,
-        array(
-        'primary' => array('id'),
-        'update'  => array('rank', 'global_rank'),
-        ),
+        [
+        'primary' => ['id'],
+        'update'  => ['rank', 'global_rank'],
+        ],
         $datas
     );
     return count($datas);
@@ -734,7 +732,7 @@ UPDATE '.CATEGORIES_TABLE.'
  */
 function set_cat_status($categories, $value)
 {
-    if (!in_array($value, array('public', 'private'))) {
+    if (!in_array($value, ['public', 'private'])) {
         trigger_error("set_cat_status invalid param $value", E_USER_WARNING);
         return false;
     }
@@ -793,8 +791,8 @@ UPDATE '.CATEGORIES_TABLE.'
         // 3) remove all inconsistant permissions from sub-albums of each top-album
 
         // step 1, search top albums
-        $top_categories = array();
-        $parent_ids = array();
+        $top_categories = [];
+        $parent_ids = [];
 
         $query = '
 SELECT
@@ -833,7 +831,7 @@ SELECT
         // step 2, search the reference album for permissions
         //
         // to find the reference of each top album, we will need the parent albums
-        $parent_cats = array();
+        $parent_cats = [];
 
         if (count($parent_ids) > 0) {
             $query = '
@@ -846,10 +844,10 @@ SELECT
             $parent_cats = query2array($query, 'id');
         }
 
-        $tables = array(
+        $tables = [
           USER_ACCESS_TABLE => 'user_id',
           GROUP_ACCESS_TABLE => 'group_id',
-          );
+          ];
 
         foreach ($top_categories as $top_category) {
             // what is the "reference" for list of permissions? The parent album
@@ -862,7 +860,7 @@ SELECT
                 $ref_cat_id = $top_category['id_uppercat'];
             }
 
-            $subcats = get_subcat_ids(array($top_category['id']));
+            $subcats = get_subcat_ids([$top_category['id']]);
 
             foreach ($tables as $table => $field) {
                 // what are the permissions user/group of the reference album
@@ -899,10 +897,10 @@ DELETE
 function get_uppercat_ids($cat_ids)
 {
     if (!is_array($cat_ids) or count($cat_ids) < 1) {
-        return array();
+        return [];
     }
 
-    $uppercats = array();
+    $uppercats = [];
 
     $query = '
 SELECT uppercats
@@ -939,10 +937,10 @@ SELECT id,representative_ext,path
     }
     $url = get_root_url().'admin.php?page=photo-'.$image_id;
 
-    return array(
+    return [
       'src' => $src,
       'url' => $url,
-      );
+      ];
 }
 
 /**
@@ -952,7 +950,7 @@ SELECT id,representative_ext,path
  */
 function set_random_representant($categories)
 {
-    $datas = array();
+    $datas = [];
     foreach ($categories as $category_id) {
         $query = '
 SELECT image_id
@@ -961,20 +959,20 @@ SELECT image_id
   ORDER BY '.DB_RANDOM_FUNCTION.'()
   LIMIT 1
 ;';
-        list($representative) = pwg_db_fetch_row(pwg_query($query));
+        [$representative] = pwg_db_fetch_row(pwg_query($query));
 
-        $datas[] = array(
+        $datas[] = [
           'id' => $category_id,
           'representative_picture_id' => $representative,
-          );
+          ];
     }
 
     mass_updates(
         CATEGORIES_TABLE,
-        array(
-        'primary' => array('id'),
-        'update' => array('representative_picture_id'),
-        ),
+        [
+        'primary' => ['id'],
+        'update' => ['representative_picture_id'],
+        ],
         $datas
     );
 }
@@ -988,7 +986,7 @@ SELECT image_id
 function get_fulldirs($cat_ids)
 {
     if (count($cat_ids) == 0) {
-        return array();
+        return [];
     }
 
     // caching directories of existing categories
@@ -1018,11 +1016,9 @@ SELECT id, uppercats, site_id
     $categories = query2array($query);
 
     // filling $cat_fulldirs
-    $cat_dirs_callback = function ($m) use ($cat_dirs) {
-        return $cat_dirs[$m[1]];
-    };
+    $cat_dirs_callback = (fn ($m) => $cat_dirs[$m[1]]);
 
-    $cat_fulldirs = array();
+    $cat_fulldirs = [];
     foreach ($categories as $category) {
         $uppercats = str_replace(',', '/', $category['uppercats']);
         $cat_fulldirs[$category['id']] = $galleries_url[$category['site_id']];
@@ -1059,10 +1055,10 @@ function get_fs($path, $recursive = true)
         $conf['flip_file_ext'] = array_flip($conf['file_ext']);
     }
 
-    $fs['elements'] = array();
-    $fs['thumbnails'] = array();
-    $fs['representatives'] = array();
-    $subdirs = array();
+    $fs['elements'] = [];
+    $fs['thumbnails'] = [];
+    $fs['representatives'] = [];
+    $subdirs = [];
 
     if (is_dir($path)) {
         if ($contents = opendir($path)) {
@@ -1147,7 +1143,7 @@ SELECT user_id
 
     // users present in user related tables must be present in the base user
     // table
-    $tables = array(
+    $tables = [
       USER_MAIL_NOTIFICATION_TABLE,
       USER_FEED_TABLE,
       USER_INFOS_TABLE,
@@ -1155,7 +1151,7 @@ SELECT user_id
       USER_CACHE_TABLE,
       USER_CACHE_CATEGORIES_TABLE,
       USER_GROUP_TABLE,
-      );
+      ];
 
     foreach ($tables as $table) {
         $query = '
@@ -1189,9 +1185,9 @@ SELECT id, id_uppercat, uppercats
 ;';
     $cat_map = query2array($query, 'id');
 
-    $datas = array();
+    $datas = [];
     foreach ($cat_map as $id => $cat) {
-        $upper_list = array();
+        $upper_list = [];
 
         $uppercat = $id;
         while ($uppercat) {
@@ -1201,13 +1197,13 @@ SELECT id, id_uppercat, uppercats
 
         $new_uppercats = implode(',', array_reverse($upper_list));
         if ($new_uppercats != $cat['uppercats']) {
-            $datas[] = array(
+            $datas[] = [
               'id' => $id,
               'uppercats' => $new_uppercats,
-              );
+              ];
         }
     }
-    $fields = array('primary' => array('id'), 'update' => array('uppercats'));
+    $fields = ['primary' => ['id'], 'update' => ['uppercats']];
     mass_updates(CATEGORIES_TABLE, $fields, $datas);
 }
 
@@ -1227,7 +1223,7 @@ SELECT DISTINCT(storage_category_id)
     foreach ($cat_ids as $cat_id) {
         $query = '
 UPDATE '.IMAGES_TABLE.'
-  SET path = '.pwg_db_concat(array("'".$fulldirs[$cat_id]."/'",'file')).'
+  SET path = '.pwg_db_concat(["'".$fulldirs[$cat_id]."/'",'file']).'
   WHERE storage_category_id = '.$cat_id.'
 ;';
         pwg_query($query);
@@ -1251,7 +1247,7 @@ function move_categories($category_ids, $new_parent = -1)
 
     $new_parent = $new_parent < 1 ? 'NULL' : $new_parent;
 
-    $categories = array();
+    $categories = [];
 
     $query = '
 SELECT id, id_uppercat, status, uppercats
@@ -1261,11 +1257,11 @@ SELECT id, id_uppercat, status, uppercats
     $result = pwg_query($query);
     while ($row = pwg_db_fetch_assoc($result)) {
         $categories[$row['id']] =
-          array(
+          [
             'parent' => empty($row['id_uppercat']) ? 'NULL' : $row['id_uppercat'],
             'status' => $row['status'],
             'uppercats' => $row['uppercats'],
-            );
+            ];
     }
 
     // is the movement possible? The movement is impossible if you try to move
@@ -1276,7 +1272,7 @@ SELECT uppercats
   FROM '.CATEGORIES_TABLE.'
   WHERE id = '.$new_parent.'
 ;';
-        list($new_parent_uppercats) = pwg_db_fetch_row(pwg_query($query));
+        [$new_parent_uppercats] = pwg_db_fetch_row(pwg_query($query));
 
         foreach ($categories as $category) {
             // technically, you can't move a category with uppercats 12,125,13,14
@@ -1288,10 +1284,10 @@ SELECT uppercats
         }
     }
 
-    $tables = array(
+    $tables = [
       USER_ACCESS_TABLE => 'user_id',
       GROUP_ACCESS_TABLE => 'group_id',
-      );
+      ];
 
     $query = '
 UPDATE '.CATEGORIES_TABLE.'
@@ -1312,7 +1308,7 @@ SELECT status
   FROM '.CATEGORIES_TABLE.'
   WHERE id = '.$new_parent.'
 ;';
-        list($parent_status) = pwg_db_fetch_row(pwg_query($query));
+        [$parent_status] = pwg_db_fetch_row(pwg_query($query));
     }
 
     if ('private' == $parent_status) {
@@ -1325,7 +1321,7 @@ SELECT status
         count($categories)
     );
 
-    pwg_activity('album', $category_ids, 'move', array('parent' => $new_parent));
+    pwg_activity('album', $category_ids, 'move', ['parent' => $new_parent]);
 }
 
 /**
@@ -1341,13 +1337,13 @@ SELECT status
  *    - boolean inherit
  * @return array ('info', 'id') or ('error')
  */
-function create_virtual_category($category_name, $parent_id = null, $options = array())
+function create_virtual_category($category_name, $parent_id = null, $options = [])
 {
     global $conf, $user;
 
     // is the given category name only containing blank spaces ?
     if (preg_match('/^\s*$/', $category_name)) {
-        return array('error' => l10n('The name of an album must not be empty'));
+        return ['error' => l10n('The name of an album must not be empty')];
     }
 
     $rank = 0;
@@ -1365,11 +1361,11 @@ SELECT MAX(`rank`) AS max_rank
         }
     }
 
-    $insert = array(
+    $insert = [
       'name' => $category_name,
       'rank' => $rank,
       'global_rank' => 0,
-      );
+      ];
 
     // is the album commentable?
     if (isset($options['commentable']) and is_bool($options['commentable'])) {
@@ -1433,12 +1429,12 @@ SELECT id, uppercats, global_rank, visible, status
 
     // we have then to add the virtual category
     single_insert(CATEGORIES_TABLE, $insert);
-    $inserted_id = pwg_db_insert_id(CATEGORIES_TABLE);
+    $inserted_id = pwg_db_insert_id();
 
     single_update(
         CATEGORIES_TABLE,
-        array('uppercats' => $uppercats_prefix.$inserted_id),
-        array('id' => $inserted_id)
+        ['uppercats' => $uppercats_prefix.$inserted_id],
+        ['id' => $inserted_id]
     );
 
     update_global_rank();
@@ -1450,14 +1446,14 @@ SELECT id, uppercats, global_rank, visible, status
       WHERE cat_id = '.$insert['id_uppercat'].'
     ;';
         $granted_grps =  query2array($query, null, 'group_id');
-        $inserts = array();
+        $inserts = [];
         foreach ($granted_grps as $granted_grp) {
-            $inserts[] = array(
+            $inserts[] = [
               'group_id' => $granted_grp,
               'cat_id' => $inserted_id,
-              );
+              ];
         }
-        mass_inserts(GROUP_ACCESS_TABLE, array('group_id','cat_id'), $inserts);
+        mass_inserts(GROUP_ACCESS_TABLE, ['group_id','cat_id'], $inserts);
 
         $query = '
       SELECT user_id
@@ -1467,16 +1463,16 @@ SELECT id, uppercats, global_rank, visible, status
         $granted_users =  query2array($query, null, 'user_id');
         add_permission_on_category($inserted_id, $granted_users);
     } elseif ('private' == $insert['status']) {
-        add_permission_on_category($inserted_id, array_unique(array_merge(get_admins(), array($user['id']))));
+        add_permission_on_category($inserted_id, array_unique(array_merge(get_admins(), [$user['id']])));
     }
 
-    trigger_notify('create_virtual_category', array_merge(array('id' => $inserted_id), $insert));
+    trigger_notify('create_virtual_category', array_merge(['id' => $inserted_id], $insert));
     pwg_activity('album', $inserted_id, 'add');
 
-    return array(
+    return [
       'info' => l10n('Album added'),
       'id'   => $inserted_id,
-      );
+      ];
 }
 
 /**
@@ -1488,7 +1484,7 @@ SELECT id, uppercats, global_rank, visible, status
  */
 function set_tags($tags, $image_id)
 {
-    set_tags_of(array($image_id => $tags));
+    set_tags_of([$image_id => $tags]);
 }
 
 /**
@@ -1515,13 +1511,13 @@ DELETE
 ;';
     pwg_query($query);
 
-    $inserts = array();
+    $inserts = [];
     foreach ($images as $image_id) {
         foreach (array_unique($tags) as $tag_id) {
-            $inserts[] = array(
+            $inserts[] = [
                 'image_id' => $image_id,
                 'tag_id' => $tag_id,
-              );
+              ];
         }
     }
     mass_inserts(
@@ -1545,7 +1541,7 @@ DELETE
 function delete_tags($tag_ids)
 {
     if (is_numeric($tag_ids)) {
-        $tag_ids = array($tag_ids);
+        $tag_ids = [$tag_ids];
     }
 
     if (!is_array($tag_ids)) {
@@ -1613,7 +1609,7 @@ SELECT id
 ;';
         if (count($existing_tags = query2array($query, null, 'id')) == 0) {
             // search by extended description (plugin sub name)
-            $sub_name_where = trigger_change('get_tag_name_like_where', array(), $tag_name);
+            $sub_name_where = trigger_change('get_tag_name_like_where', [], $tag_name);
             if (count($sub_name_where)) {
                 $query = '
 SELECT id
@@ -1626,16 +1622,16 @@ SELECT id
             if (count($existing_tags) == 0) {// finally create the tag
                 mass_inserts(
                     TAGS_TABLE,
-                    array('name', 'url_name'),
-                    array(
-                    array(
+                    ['name', 'url_name'],
+                    [
+                    [
                       'name' => $tag_name,
                       'url_name' => $url_name,
-                      ),
-                    )
+                      ],
+                    ]
                 );
 
-                $page['tag_id_from_tag_name_cache'][$tag_name] = pwg_db_insert_id(TAGS_TABLE);
+                $page['tag_id_from_tag_name_cache'][$tag_name] = pwg_db_insert_id();
 
                 invalidate_user_cache_nb_tags();
 
@@ -1667,14 +1663,14 @@ DELETE
 ;';
         pwg_query($query);
 
-        $inserts = array();
+        $inserts = [];
 
         foreach ($tags_of as $image_id => $tag_ids) {
             foreach (array_unique($tag_ids) as $tag_id) {
-                $inserts[] = array(
+                $inserts[] = [
                     'image_id' => $image_id,
                     'tag_id' => $tag_id,
-                  );
+                  ];
             }
         }
 
@@ -1709,11 +1705,11 @@ DELETE
 function get_image_tag_ids($image_ids)
 {
     if (!is_array($image_ids) and is_int($image_ids)) {
-        $images_ids = array($image_ids);
+        $images_ids = [$image_ids];
     }
 
     if (count($image_ids) == 0) {
-        return array();
+        return [];
     }
 
     $query = '
@@ -1724,7 +1720,7 @@ SELECT
   WHERE image_id IN ('.implode(',', $image_ids).')
 ;';
 
-    $tags_of = array_fill_keys($image_ids, array());
+    $tags_of = array_fill_keys($image_ids, []);
     $image_tags = query2array($query);
     foreach ($image_tags as $image_tag) {
         $tags_of[ $image_tag['image_id'] ][] = $image_tag['tag_id'];
@@ -1743,12 +1739,12 @@ SELECT
  */
 function compare_image_tag_lists($taglist_before, $taglist_after)
 {
-    $images_to_update = array();
+    $images_to_update = [];
 
     foreach ($taglist_after as $image_id => $list_after) {
         sort($list_after);
 
-        $list_before = isset($taglist_before[$image_id]) ? $taglist_before[$image_id] : array();
+        $list_before = $taglist_before[$image_id] ?? [];
         sort($list_before);
 
         if ($list_after != $list_before) {
@@ -1768,13 +1764,13 @@ function compare_image_tag_lists($taglist_before, $taglist_after)
  */
 function fill_lounge($images, $categories)
 {
-    $inserts = array();
+    $inserts = [];
     foreach ($categories as $category_id) {
         foreach ($images as $image_id) {
-            $inserts[] = array(
+            $inserts[] = [
               'image_id' => $image_id,
               'category_id' => $category_id,
-            );
+            ];
         }
     }
 
@@ -1783,7 +1779,7 @@ function fill_lounge($images, $categories)
             LOUNGE_TABLE,
             array_keys($inserts[0]),
             $inserts,
-            array('ignore' => true)
+            ['ignore' => true]
         );
     }
 }
@@ -1800,7 +1796,7 @@ function empty_lounge($invalidate_user_cache = true)
     global $logger, $conf;
 
     if (isset($conf['empty_lounge_running'])) {
-        list($running_exec_id, $running_exec_start_time) = explode('-', $conf['empty_lounge_running']);
+        [$running_exec_id, $running_exec_start_time] = explode('-', $conf['empty_lounge_running']);
         if (time() - $running_exec_start_time > 60) {
             $logger->debug(__FUNCTION__.', exec='.$running_exec_id.', timeout stopped by another call to the function');
             conf_delete_param('empty_lounge_running');
@@ -1819,7 +1815,7 @@ INSERT IGNORE
 ;';
     pwg_query($query);
 
-    list($empty_lounge_running) = pwg_db_fetch_row(pwg_query('SELECT value FROM '.CONFIG_TABLE.' WHERE param = "empty_lounge_running"'));
+    [$empty_lounge_running] = pwg_db_fetch_row(pwg_query('SELECT value FROM '.CONFIG_TABLE.' WHERE param = "empty_lounge_running"'));
     list($running_exec_id, ) = explode('-', $empty_lounge_running);
 
     if ($running_exec_id != $exec_id) {
@@ -1840,7 +1836,7 @@ SELECT
 
     $rows = query2array($query);
 
-    $images = array();
+    $images = [];
     foreach ($rows as $idx => $row) {
         if ($row['image_id'] > $max_image_id) {
             $max_image_id = $row['image_id'];
@@ -1850,8 +1846,8 @@ SELECT
 
         if (!isset($rows[$idx + 1]) or $rows[$idx + 1]['category_id'] != $row['category_id']) {
             // if we're at the end of the loop OR if category changes
-            associate_images_to_categories($images, array($row['category_id']));
-            $images = array();
+            associate_images_to_categories($images, [$row['category_id']]);
+            $images = [];
         }
     }
 
@@ -1900,7 +1896,7 @@ SELECT
 ;';
     $result = pwg_query($query);
 
-    $existing = array();
+    $existing = [];
     while ($row = pwg_db_fetch_assoc($result)) {
         $existing[ $row['category_id'] ][] = $row['image_id'];
     }
@@ -1923,24 +1919,24 @@ SELECT
     );
 
     // associate only not already associated images
-    $inserts = array();
+    $inserts = [];
     foreach ($categories as $category_id) {
         if (!isset($current_rank_of[$category_id])) {
             $current_rank_of[$category_id] = 0;
         }
         if (!isset($existing[$category_id])) {
-            $existing[$category_id] = array();
+            $existing[$category_id] = [];
         }
 
         foreach ($images as $image_id) {
             if (!in_array($image_id, $existing[$category_id])) {
                 $rank = ++$current_rank_of[$category_id];
 
-                $inserts[] = array(
+                $inserts[] = [
                   'image_id' => $image_id,
                   'category_id' => $category_id,
                   'rank' => $rank,
-                  );
+                  ];
             }
         }
     }
@@ -2060,14 +2056,14 @@ SELECT image_id
  */
 function pwg_URL()
 {
-    $urls = array(
+    $urls = [
       'HOME'       => PHPWG_URL,
       'WIKI'       => PHPWG_URL.'/doc',
       'DEMO'       => PHPWG_URL.'/demo',
       'FORUM'      => PHPWG_URL.'/forum',
       'BUGS'       => PHPWG_URL.'/bugs',
       'EXTENSIONS' => PHPWG_URL.'/ext',
-      );
+      ];
     return $urls;
 }
 
@@ -2078,7 +2074,7 @@ function invalidate_user_cache($full = true)
 {
     global $persistent_cache, $logger;
 
-    if (isset($logger) and gettype($logger) == 'object' and get_class($logger) == 'Logger') {
+    if (isset($logger) and gettype($logger) == 'object' and $logger::class == 'Logger') {
         $logger->info(__FUNCTION__.' called');
     }
 
@@ -2163,7 +2159,7 @@ function create_table_add_character_set($query)
  */
 function get_user_access_level_html_options($MinLevelAccess = ACCESS_FREE, $MaxLevelAccess = ACCESS_CLOSED)
 {
-    $tpl_options = array();
+    $tpl_options = [];
     for ($level = $MinLevelAccess; $level <= $MaxLevelAccess; $level++) {
         $tpl_options[$level] = l10n(sprintf('ACCESS_%d', $level));
     }
@@ -2183,7 +2179,7 @@ function get_extents($start = '')
         $start = './template-extension';
     }
     $dir = opendir($start);
-    $extents = array();
+    $extents = [];
 
     while (($file = readdir($dir)) !== false) {
         if ($file == '.' or $file == '..' or $file == '.svn') {
@@ -2222,22 +2218,22 @@ SELECT id
     if (count($existing_tags) == 0) {
         single_insert(
             TAGS_TABLE,
-            array(
+            [
             'name' => $tag_name,
             'url_name' => trigger_change('render_tag_url', $tag_name),
-            )
+            ]
         );
 
-        $inserted_id = pwg_db_insert_id(TAGS_TABLE);
+        $inserted_id = pwg_db_insert_id();
 
-        return array(
+        return [
           'info' => l10n('Tag "%s" was added', stripslashes($tag_name)),
           'id' => $inserted_id,
-          );
+          ];
     } else {
-        return array(
+        return [
           'error' => l10n('Tag "%s" already exists', stripslashes($tag_name)),
-          );
+          ];
     }
 }
 
@@ -2272,7 +2268,7 @@ function cat_admin_access($category_id)
  * @param int $step (internal use)
  * @return bool
  */
-function fetchRemote($src, &$dest, $get_data = array(), $post_data = array(), $user_agent = 'Piwigo', $step = 0)
+function fetchRemote($src, &$dest, $get_data = [], $post_data = [], $user_agent = 'Piwigo', $step = 0)
 {
     global $conf;
 
@@ -2296,7 +2292,7 @@ function fetchRemote($src, &$dest, $get_data = array(), $post_data = array(), $u
     $method  = empty($post_data) ? 'GET' : 'POST';
     $request = empty($post_data) ? '' : http_build_query($post_data, '', '&');
     if (!empty($get_data)) {
-        $src .= strpos($src, '?') === false ? '?' : '&';
+        $src .= !str_contains($src, '?') ? '?' : '&';
         $src .= http_build_query($get_data, '', '&');
     }
 
@@ -2330,7 +2326,7 @@ function fetchRemote($src, &$dest, $get_data = array(), $post_data = array(), $u
         @curl_close($ch);
         if ($content !== false and $status >= 200 and $status < 400) {
             if (preg_match('/Location:\s+?(.+)/', substr($content, 0, $header_length), $m)) {
-                return fetchRemote($m[1], $dest, array(), array(), $user_agent, $step + 1);
+                return fetchRemote($m[1], $dest, [], [], $user_agent, $step + 1);
             }
             $content = substr($content, $header_length);
             is_resource($dest) ? @fwrite($dest, $content) : $dest = $content;
@@ -2340,12 +2336,12 @@ function fetchRemote($src, &$dest, $get_data = array(), $post_data = array(), $u
 
     // Try file_get_contents to read remote file
     if (ini_get('allow_url_fopen')) {
-        $opts = array(
-          'http' => array(
+        $opts = [
+          'http' => [
             'method' => $method,
             'user_agent' => $user_agent,
-          ),
-        );
+          ],
+        ];
         if ($method == 'POST') {
             $opts['http']['content'] = $request;
         }
@@ -2360,7 +2356,7 @@ function fetchRemote($src, &$dest, $get_data = array(), $post_data = array(), $u
     // Try fsockopen to read remote file
     $src = parse_url($src);
     $host = $src['host'];
-    $path = isset($src['path']) ? $src['path'] : '/';
+    $path = $src['path'] ?? '/';
     $path .= isset($src['query']) ? '?'.$src['query'] : '';
 
     if (($s = @fsockopen($host, 80, $errno, $errstr, 5)) === false) {
@@ -2404,7 +2400,7 @@ function fetchRemote($src, &$dest, $get_data = array(), $post_data = array(), $u
         if (!$in_content) {
             if (preg_match('/Location:\s+?(.+)$/', rtrim($line, "\r\n"), $m)) {
                 fclose($s);
-                return fetchRemote(trim($m[1]), $dest, array(), array(), $user_agent, $step + 1);
+                return fetchRemote(trim($m[1]), $dest, [], [], $user_agent, $step + 1);
             }
             $i++;
             continue;
@@ -2431,7 +2427,7 @@ SELECT name
 ;';
     $result = pwg_query($query);
     if (pwg_db_num_rows($result) > 0) {
-        list($groupname) = pwg_db_fetch_row($result);
+        [$groupname] = pwg_db_fetch_row($result);
     } else {
         return false;
     }
@@ -2514,7 +2510,7 @@ SELECT '.$conf['user_fields']['username'].'
 ;';
     $result = pwg_query($query);
     if (pwg_db_num_rows($result) > 0) {
-        list($username) = pwg_db_fetch_row($result);
+        [$username] = pwg_db_fetch_row($result);
     } else {
         return false;
     }
@@ -2617,25 +2613,25 @@ function get_taglist($query, $only_user_language = true)
 {
     $result = pwg_query($query);
 
-    $taglist = array();
-    $altlist = array();
+    $taglist = [];
+    $altlist = [];
     while ($row = pwg_db_fetch_assoc($result)) {
         $raw_name = $row['name'];
         $name = trigger_change('render_tag_name', $raw_name, $row);
 
-        $taglist[] =  array(
+        $taglist[] =  [
             'name' => $name,
             'id' => '~~'.$row['id'].'~~',
-          );
+          ];
 
         if (!$only_user_language) {
-            $alt_names = trigger_change('get_tag_alt_names', array(), $raw_name);
+            $alt_names = trigger_change('get_tag_alt_names', [], $raw_name);
 
-            foreach (array_diff(array_unique($alt_names), array($name)) as $alt) {
-                $altlist[] =  array(
+            foreach (array_diff(array_unique($alt_names), [$name]) as $alt) {
+                $altlist[] =  [
                     'name' => $alt,
                     'id' => '~~'.$row['id'].'~~',
-                  );
+                  ];
             }
         }
     }
@@ -2663,7 +2659,7 @@ function get_taglist($query, $only_user_language = true)
  */
 function get_tag_ids($raw_tags, $allow_create = true)
 {
-    $tag_ids = array();
+    $tag_ids = [];
     if (!is_array($raw_tags)) {
         $raw_tags = explode(',', $raw_tags);
     }
@@ -2691,7 +2687,7 @@ function get_tag_ids($raw_tags, $allow_create = true)
  */
 function order_by_name($element_ids, $name)
 {
-    $ordered_element_ids = array();
+    $ordered_element_ids = [];
     foreach ($element_ids as $k_id => $element_id) {
         $key = strtolower($name[$element_id]) .'-'. $name[$element_id] .'-'. $k_id;
         $ordered_element_ids[$key] = $element_id;
@@ -2709,10 +2705,10 @@ function order_by_name($element_ids, $name)
 function add_permission_on_category($category_ids, $user_ids)
 {
     if (!is_array($category_ids)) {
-        $category_ids = array($category_ids);
+        $category_ids = [$category_ids];
     }
     if (!is_array($user_ids)) {
-        $user_ids = array($user_ids);
+        $user_ids = [$user_ids];
     }
 
     // check for emptiness
@@ -2738,21 +2734,21 @@ SELECT id
         return;
     }
 
-    $inserts = array();
+    $inserts = [];
     foreach ($private_cats as $cat_id) {
         foreach ($user_ids as $user_id) {
-            $inserts[] = array(
+            $inserts[] = [
               'user_id' => $user_id,
               'cat_id' => $cat_id,
-              );
+              ];
         }
     }
 
     mass_inserts(
         USER_ACCESS_TABLE,
-        array('user_id','cat_id'),
+        ['user_id','cat_id'],
         $inserts,
-        array('ignore' => true)
+        ['ignore' => true]
     );
 }
 
@@ -2764,7 +2760,7 @@ SELECT id
  */
 function get_admins($include_webmaster = true)
 {
-    $status_list = array('admin');
+    $status_list = ['admin'];
 
     if ($include_webmaster) {
         $status_list[] = 'webmaster';
@@ -2791,7 +2787,7 @@ function clear_derivative_cache($types = 'all')
         $types = ImageStdParams::get_all_types();
         $types[] = IMG_CUSTOM;
     } elseif (!is_array($types)) {
-        $types = array($types);
+        $types = [$types];
     }
 
     for ($i = 0; $i < count($types); $i++) {
@@ -2902,7 +2898,7 @@ function delete_element_derivatives($infos, $type = 'all')
  */
 function get_dirs($directory)
 {
-    $sub_dirs = array();
+    $sub_dirs = [];
     if ($opendir = opendir($directory)) {
         while ($file = readdir($opendir)) {
             if ($file != '.'
@@ -2945,7 +2941,7 @@ function deltree($path, $trash_path = null)
             if (!is_dir($trash_path)) {
                 @mkgetdir($trash_path, MKGETDIR_RECURSIVE | MKGETDIR_DIE_ON_ERROR | MKGETDIR_PROTECT_HTACCESS);
             }
-            while ($r = $trash_path . '/' . md5(uniqid(rand(), true))) {
+            while ($r = $trash_path . '/' . md5(uniqid(random_int(0, mt_getrandmax()), true))) {
                 if (!is_dir($r)) {
                     @rename($path, $r);
                     break;
@@ -2966,18 +2962,18 @@ function deltree($path, $trash_path = null)
  * @param string|string[] list of keys to retrieve (categories,groups,images,tags,users)
  * @return string[]
  */
-function get_admin_client_cache_keys($requested = array())
+function get_admin_client_cache_keys($requested = [])
 {
-    $tables = array(
+    $tables = [
       'categories' => CATEGORIES_TABLE,
       'groups' => GROUPS_TABLE,
       'images' => IMAGES_TABLE,
       'tags' => TAGS_TABLE,
       'users' => USER_INFOS_TABLE,
-      );
+      ];
 
     if (!is_array($requested)) {
-        $requested = array($requested);
+        $requested = [$requested];
     }
     if (empty($requested)) {
         $requested = array_keys($tables);
@@ -2985,9 +2981,9 @@ function get_admin_client_cache_keys($requested = array())
         $requested = array_intersect($requested, array_keys($tables));
     }
 
-    $keys = array(
+    $keys = [
       '_hash' => md5(get_absolute_root_url()),
-      );
+      ];
 
     foreach ($requested as $item) {
         $query = '
@@ -2998,7 +2994,7 @@ SELECT CONCAT(
   )
   FROM `'. $tables[$item] .'`
 ;';
-        list($keys[$item]) = pwg_db_fetch_row(pwg_query($query));
+        [$keys[$item]] = pwg_db_fetch_row(pwg_query($query));
     }
 
     return $keys;
@@ -3035,21 +3031,21 @@ SELECT
 ;';
     $path_for_id = query2array($query, 'id', 'path');
 
-    $updates = array();
+    $updates = [];
 
     foreach ($path_for_id as $id => $path) {
-        $updates[] = array(
+        $updates[] = [
           'id' => $id,
           'md5sum' => md5_file(PHPWG_ROOT_PATH.$path),
-        );
+        ];
     }
 
     mass_updates(
         IMAGES_TABLE,
-        array(
-        'primary' => array('id'),
-        'update' => array('md5sum'),
-        ),
+        [
+        'primary' => ['id'],
+        'update' => ['md5sum'],
+        ],
         $updates
     );
 
@@ -3066,14 +3062,14 @@ SELECT
     COUNT(*)
   FROM '.IMAGES_TABLE.'
 ;';
-        list($image_counter_all) = pwg_db_fetch_row(pwg_query($query));
+        [$image_counter_all] = pwg_db_fetch_row(pwg_query($query));
 
         $query = '
 SELECT
     COUNT(DISTINCT(image_id))
   FROM '.IMAGE_CATEGORY_TABLE.'
 ;';
-        list($image_counter_in_categories) = pwg_db_fetch_row(pwg_query($query));
+        [$image_counter_in_categories] = pwg_db_fetch_row(pwg_query($query));
 
         $counter = $image_counter_all - $image_counter_in_categories;
         conf_update_param('count_orphans', $counter, true);
@@ -3129,18 +3125,18 @@ SELECT
 function save_images_order($category_id, $images)
 {
     $current_rank = 0;
-    $datas = array();
+    $datas = [];
     foreach ($images as $id) {
-        $datas[] = array(
+        $datas[] = [
           'category_id' => $category_id,
           'image_id' => $id,
           'rank' => ++$current_rank,
-          );
+          ];
     }
-    $fields = array(
-      'primary' => array('image_id', 'category_id'),
-      'update' => array('rank'),
-      );
+    $fields = [
+      'primary' => ['image_id', 'category_id'],
+      'update' => ['rank'],
+      ];
     mass_updates(IMAGE_CATEGORY_TABLE, $fields, $datas);
 }
 
@@ -3154,7 +3150,7 @@ function save_images_order($category_id, $images)
 function update_images_lastmodified($image_ids)
 {
     if (!is_array($image_ids) and is_int($image_ids)) {
-        $images_ids = array($image_ids);
+        $images_ids = [$image_ids];
     }
 
     if (count($image_ids) == 0) {
@@ -3177,7 +3173,7 @@ UPDATE '.IMAGES_TABLE.'
  */
 function number_format_human_readable($numbers)
 {
-    $readable = array('',  'k', 'M');
+    $readable = ['',  'k', 'M'];
     $index = 0;
     $numbers = empty($numbers) ? 0 : $numbers;
 
@@ -3238,8 +3234,8 @@ SELECT *
  */
 function get_cache_size_derivatives($path)
 {
-    $msizes = array(); //final res
-    $subdirs = array(); //sous-rep
+    $msizes = []; //final res
+    $subdirs = []; //sous-rep
 
     if (is_dir($path)) {
         if ($contents = opendir($path)) {
@@ -3329,9 +3325,9 @@ SELECT
 
             $template->assign(
                 'header_msgs',
-                array(
+                [
                 l10n('Some photos are missing from your file system. Details provided by plugin Check Uploads'),
-        )
+        ]
             );
 
             return;
@@ -3353,9 +3349,9 @@ SELECT
 
         $template->assign(
             'header_msgs',
-            array(
+            [
             l10n('We have found %d duplicate paths. Details provided by plugin Check Uploads', count($duplicate_paths)),
-      )
+      ]
         );
 
         return;
@@ -3378,27 +3374,27 @@ function get_piwigo_news()
         $url = PHPWG_URL.'/ws.php?method=porg.news.getLatest&format=json';
 
         if (fetchRemote($url, $content)) {
-            $all_news = array();
+            $all_news = [];
 
             $porg_news_getLatest = json_decode($content, true);
 
             if (isset($porg_news_getLatest['result'])) {
                 $topic = $porg_news_getLatest['result'];
 
-                $news = array(
+                $news = [
                   'id' => $topic['topic_id'],
                   'subject' => $topic['subject'],
                   'posted_on' => $topic['posted_on'],
                   'posted' => format_date($topic['posted_on']),
                   'url' => $topic['url'],
-                );
+                ];
             }
 
             if (mkgetdir(dirname($cache_path))) {
                 file_put_contents($cache_path, serialize($news));
             }
         } else {
-            return array();
+            return [];
         }
     }
 
@@ -3444,50 +3440,50 @@ function get_graphics_library()
 
 function get_graphics_library_label()
 {
-    list($library_code, $library_version) = explode('/', get_graphics_library());
+    [$library_code, $library_version] = explode('/', get_graphics_library());
 
-    $label_for_lib = array(
+    $label_for_lib = [
       'imagick' => 'ImageMagick',
       'ext_imagick' => 'External ImageMagick',
       'gd' => 'GD',
-    );
+    ];
 
     return $label_for_lib[$library_code].' '.$library_version;
 }
 
 function get_pwg_general_statitics()
 {
-    $stats = array();
+    $stats = [];
 
     $query = '
 SELECT COUNT(*)
   FROM '.IMAGES_TABLE.'
 ;';
-    list($stats['nb_photos']) = pwg_db_fetch_row(pwg_query($query));
+    [$stats['nb_photos']] = pwg_db_fetch_row(pwg_query($query));
 
     $query = '
 SELECT COUNT(*)
   FROM '.CATEGORIES_TABLE.'
 ;';
-    list($stats['nb_categories']) = pwg_db_fetch_row(pwg_query($query));
+    [$stats['nb_categories']] = pwg_db_fetch_row(pwg_query($query));
 
     $query = '
 SELECT COUNT(*)
   FROM '.TAGS_TABLE.'
 ;';
-    list($stats['nb_tags']) = pwg_db_fetch_row(pwg_query($query));
+    [$stats['nb_tags']] = pwg_db_fetch_row(pwg_query($query));
 
     $query = '
 SELECT COUNT(*)
   FROM '.IMAGE_TAG_TABLE.'
 ;';
-    list($stats['nb_image_tag']) = pwg_db_fetch_row(pwg_query($query));
+    [$stats['nb_image_tag']] = pwg_db_fetch_row(pwg_query($query));
 
     $query = '
 SELECT COUNT(*)
   FROM '.USERS_TABLE.'
 ;';
-    list($stats['nb_users']) = pwg_db_fetch_row(pwg_query($query));
+    [$stats['nb_users']] = pwg_db_fetch_row(pwg_query($query));
 
     $query = '
 SELECT
@@ -3495,19 +3491,19 @@ SELECT
   FROM '.USER_INFOS_TABLE.'
   WHERE status IN (\'webmaster\', \'admin\')
 ;';
-    list($stats['nb_admins']) = pwg_db_fetch_row(pwg_query($query));
+    [$stats['nb_admins']] = pwg_db_fetch_row(pwg_query($query));
 
     $query = '
 SELECT COUNT(*)
   FROM `'.GROUPS_TABLE.'`
 ;';
-    list($stats['nb_groups']) = pwg_db_fetch_row(pwg_query($query));
+    [$stats['nb_groups']] = pwg_db_fetch_row(pwg_query($query));
 
     $query = '
 SELECT COUNT(*)
   FROM '.RATE_TABLE.'
 ;';
-    list($stats['nb_rates']) = pwg_db_fetch_row(pwg_query($query));
+    [$stats['nb_rates']] = pwg_db_fetch_row(pwg_query($query));
 
     $query = '
 SELECT
@@ -3515,14 +3511,14 @@ SELECT
   FROM '.HISTORY_SUMMARY_TABLE.'
   WHERE month IS NULL
 ;';
-    list($stats['nb_views']) = pwg_db_fetch_row(pwg_query($query));
+    [$stats['nb_views']] = pwg_db_fetch_row(pwg_query($query));
 
     $query = '
 SELECT
     SUM(filesize)
   FROM '.IMAGES_TABLE.'
 ;';
-    list($stats['disk_usage']) = pwg_db_fetch_row(pwg_query($query));
+    [$stats['disk_usage']] = pwg_db_fetch_row(pwg_query($query));
 
     $query = '
 SELECT
@@ -3530,7 +3526,7 @@ SELECT
     SUM(filesize)
   FROM '.IMAGE_FORMAT_TABLE.'
 ;';
-    list($stats['nb_formats'], $stats['formats_disk_usage']) = pwg_db_fetch_row(pwg_query($query));
+    [$stats['nb_formats'], $stats['formats_disk_usage']] = pwg_db_fetch_row(pwg_query($query));
 
     $stats['disk_usage'] += $stats['formats_disk_usage'];
 

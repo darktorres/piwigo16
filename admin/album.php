@@ -58,10 +58,10 @@ $category_name = trigger_change(
     $category['name'],
     'get_cat_display_name_cache'
 );
-$template->assign(array(
+$template->assign([
   'ADMIN_PAGE_TITLE' => l10n('Edit album').' <strong>'.$category_name.'</strong>',
   'ADMIN_PAGE_OBJECT_ID' => '#'.$category['id'],
-));
+]);
 
 if ('properties' == $page['tab']) {
     include(PHPWG_ROOT_PATH.'admin/cat_modify.php');

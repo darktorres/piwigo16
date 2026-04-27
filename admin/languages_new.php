@@ -17,7 +17,7 @@ if (!$conf['enable_extensions_install']) {
 
 include_once(PHPWG_ROOT_PATH.'admin/include/languages.class.php');
 
-$template->set_filenames(array('languages' => 'languages_new.tpl'));
+$template->set_filenames(['languages' => 'languages_new.tpl']);
 
 $base_url = get_root_url().'admin.php?page='.$page['page'].'&tab='.$page['tab'];
 
@@ -87,7 +87,7 @@ if ($languages->get_server_languages(true)) {
           . '&amp;pwg_token='.get_pwg_token()
         ;
 
-        $template->append('languages', array(
+        $template->append('languages', [
           'EXT_NAME' => $language['extension_name'],
           'EXT_DESC' => $language['extension_description'],
           'EXT_URL' => PEM_URL.'/extension_view.php?eid='.$language['extension_id'],
@@ -96,7 +96,7 @@ if ($languages->get_server_languages(true)) {
           'DATE' => $date,
           'AUTHOR' => $language['author_name'],
           'URL_INSTALL' => $url_auto_install,
-          'URL_DOWNLOAD' => $language['download_url'] . '&amp;origin=piwigo_download'));
+          'URL_DOWNLOAD' => $language['download_url'] . '&amp;origin=piwigo_download']);
     }
 } else {
     $page['errors'][] = l10n('Can\'t connect to server.');

@@ -1,5 +1,7 @@
 <?php
 
+use JShrink\Minifier;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -28,14 +30,14 @@ class Template
     public $output = '';
 
     /** @var string[] - Hash of filenames for each template handle. */
-    public $files = array();
+    public $files = [];
     /** @var string[] - Template extents filenames for each template handle. */
-    public $extents = array();
+    public $extents = [];
     /** @var array - Templates prefilter from external sources (plugins) */
-    public $external_filters = array();
+    public $external_filters = [];
 
     /** @var string - Content to add before </head> tag */
-    public $html_head_elements = array();
+    public $html_head_elements = [];
     /** @var string - Runtime CSS rules */
     private $html_style = '';
 
@@ -50,9 +52,9 @@ class Template
     public $cssLoader;
 
     /** @var array - Runtime buttons on picture page */
-    public $picture_buttons = array();
+    public $picture_buttons = [];
     /** @var array - Runtime buttons on index page */
-    public $index_buttons = array();
+    public $index_buttons = [];
 
 
     /**
@@ -102,8 +104,8 @@ class Template
         $this->smarty->setCompileDir($compile_dir);
 
         $this->smarty->assign('pwg', new PwgTemplateAdapter());
-        $this->smarty->registerPlugin('modifiercompiler', 'translate', array('Template', 'modcompiler_translate'));
-        $this->smarty->registerPlugin('modifiercompiler', 'translate_dec', array('Template', 'modcompiler_translate_dec'));
+        $this->smarty->registerPlugin('modifiercompiler', 'translate', ['Template', 'modcompiler_translate']);
+        $this->smarty->registerPlugin('modifiercompiler', 'translate_dec', ['Template', 'modcompiler_translate_dec']);
         $this->smarty->registerPlugin('modifier', 'sprintf', 'sprintf');
         $this->smarty->registerPlugin('modifier', 'urlencode', 'urlencode');
         $this->smarty->registerPlugin('modifier', 'intval', 'intval');
@@ -122,18 +124,18 @@ class Template
         $this->smarty->registerPlugin('modifier', 'md5', 'md5');
         $this->smarty->registerPlugin('modifier', 'strtolower', 'strtolower');
         $this->smarty->registerPlugin('modifier', 'str_ireplace', 'str_ireplace');
-        $this->smarty->registerPlugin('modifier', 'explode', array('Template', 'mod_explode'));
-        $this->smarty->registerPlugin('modifier', 'ternary', array('Template', 'mod_ternary'));
-        $this->smarty->registerPlugin('modifier', 'get_extent', array($this, 'get_extent'));
-        $this->smarty->registerPlugin('block', 'html_head', array($this, 'block_html_head'));
-        $this->smarty->registerPlugin('block', 'html_style', array($this, 'block_html_style'));
-        $this->smarty->registerPlugin('function', 'combine_script', array($this, 'func_combine_script'));
-        $this->smarty->registerPlugin('function', 'get_combined_scripts', array($this, 'func_get_combined_scripts'));
-        $this->smarty->registerPlugin('function', 'combine_css', array($this, 'func_combine_css'));
-        $this->smarty->registerPlugin('function', 'define_derivative', array($this, 'func_define_derivative'));
-        $this->smarty->registerPlugin('compiler', 'get_combined_css', array($this, 'func_get_combined_css'));
-        $this->smarty->registerPlugin('block', 'footer_script', array($this, 'block_footer_script'));
-        $this->smarty->registerFilter('pre', array('Template', 'prefilter_white_space'));
+        $this->smarty->registerPlugin('modifier', 'explode', ['Template', 'mod_explode']);
+        $this->smarty->registerPlugin('modifier', 'ternary', ['Template', 'mod_ternary']);
+        $this->smarty->registerPlugin('modifier', 'get_extent', [$this, 'get_extent']);
+        $this->smarty->registerPlugin('block', 'html_head', [$this, 'block_html_head']);
+        $this->smarty->registerPlugin('block', 'html_style', [$this, 'block_html_style']);
+        $this->smarty->registerPlugin('function', 'combine_script', [$this, 'func_combine_script']);
+        $this->smarty->registerPlugin('function', 'get_combined_scripts', [$this, 'func_get_combined_scripts']);
+        $this->smarty->registerPlugin('function', 'combine_css', [$this, 'func_combine_css']);
+        $this->smarty->registerPlugin('function', 'define_derivative', [$this, 'func_define_derivative']);
+        $this->smarty->registerPlugin('compiler', 'get_combined_css', [$this, 'func_get_combined_css']);
+        $this->smarty->registerPlugin('block', 'footer_script', [$this, 'block_footer_script']);
+        $this->smarty->registerFilter('pre', ['Template', 'prefilter_white_space']);
         $this->smarty->registerPlugin('modifier', 'url_is_remote', 'url_is_remote');
         $this->smarty->registerPlugin('modifier', 'is_null', 'is_null');
         $this->smarty->registerPlugin('modifier', 'l10n', 'l10n');
@@ -149,14 +151,14 @@ class Template
         $this->smarty->registerPlugin('modifier', 'array_key_exists', 'array_key_exists');
 
         if ($conf['compiled_template_cache_language']) {
-            $this->smarty->registerFilter('post', array('Template', 'postfilter_language'));
+            $this->smarty->registerFilter('post', ['Template', 'postfilter_language']);
         }
 
-        $this->smarty->setTemplateDir(array());
+        $this->smarty->setTemplateDir([]);
         if (!empty($theme)) {
             $this->set_theme($root, $theme, $path);
             if (!defined('IN_ADMIN')) {
-                $this->set_prefilter('header', array('Template', 'prefilter_local_css'));
+                $this->set_prefilter('header', ['Template', 'prefilter_local_css']);
             }
         } else {
             $this->set_template_dir($root);
@@ -196,7 +198,7 @@ class Template
         // standard pages can't get the header to load the html header
         if (
             'default' != $theme
-            and in_array(script_basename(), array('identification', 'register', 'password', 'profile'))
+            and in_array(script_basename(), ['identification', 'register', 'password', 'profile'])
             and (($themeconf['use_standard_pages'] ?? false) or conf_get_param('use_standard_pages', false))
         ) {
             $theme = 'standard_pages';
@@ -210,15 +212,15 @@ class Template
                 $root,
                 $themeconf['parent'],
                 $path,
-                isset($themeconf['load_parent_css']) ? $themeconf['load_parent_css'] : $load_css,
-                isset($themeconf['load_parent_local_head']) ? $themeconf['load_parent_local_head'] : $load_local_head
+                $themeconf['load_parent_css'] ?? $load_css,
+                $themeconf['load_parent_local_head'] ?? $load_local_head
             );
         }
 
-        $tpl_var = array(
+        $tpl_var = [
           'id' => $theme,
           'load_css' => $load_css,
-        );
+        ];
         if (!empty($themeconf['local_head']) and $load_local_head) {
             $tpl_var['local_head'] = realpath($root.'/'.$theme.'/'.$themeconf['local_head']);
         }
@@ -280,7 +282,7 @@ class Template
     public function get_themeconf($val)
     {
         $tc = $this->smarty->getTemplateVars('themeconf');
-        return isset($tc[$val]) ? $tc[$val] : '';
+        return $tc[$val] ?? '';
     }
 
     /**
@@ -292,7 +294,7 @@ class Template
      */
     public function set_filename($handle, $filename)
     {
-        return $this->set_filenames(array($handle => $filename));
+        return $this->set_filenames([$handle => $filename]);
     }
 
     /**
@@ -329,7 +331,7 @@ class Template
      */
     public function set_extent($filename, $param, $dir = '', $overwrite = true, $theme = 'N/A')
     {
-        return $this->set_extents(array($filename => $param), $dir, $overwrite);
+        return $this->set_extents([$filename => $param], $dir, $overwrite);
     }
 
     /**
@@ -517,7 +519,7 @@ class Template
             $pos = strpos($this->output, self::COMBINED_SCRIPTS_TAG);
             if ($pos !== false) {
                 $scripts = $this->scriptLoader->get_head_scripts();
-                $content = array();
+                $content = [];
                 foreach ($scripts as $script) {
                     $content[] =
                         '<script type="text/javascript" src="'
@@ -531,11 +533,11 @@ class Template
 
         $css = $this->cssLoader->get_css();
 
-        $content = array();
+        $content = [];
         foreach ($css as $combi) {
             $href = embellish_url(get_root_url().$combi->path);
             if ($combi->version !== false) {
-                $href .= '?v' . ($combi->version ? $combi->version : PHPWG_VERSION);
+                $href .= '?v' . ($combi->version ?: PHPWG_VERSION);
             }
             // trigger the event for eventual use of a cdn
             $href = trigger_change('combined_css', $href, $combi);
@@ -558,7 +560,7 @@ class Template
                 }
                 $this->output = substr_replace($this->output, $rep, $pos, 0);
             } //else maybe error or warning ?
-            $this->html_head_elements = array();
+            $this->html_head_elements = [];
             $this->html_style = '';
         }
 
@@ -577,9 +579,9 @@ class Template
         if ($this->smarty->debugging) {
             global $t2;
             $this->smarty->assign(
-                array(
+                [
         'AAAA_DEBUG_TOTAL_TIME__' => get_elapsed_time($t2, get_moment()),
-        )
+        ]
             );
             Smarty_Internal_Debug::display_debug($this->smarty);
         }
@@ -630,7 +632,7 @@ class Template
             default:
                 if ($conf['compiled_template_cache_language']) {
                     $ret = 'sprintf(';
-                    $ret .= self::modcompiler_translate(array($params[0]));
+                    $ret .= self::modcompiler_translate([$params[0]]);
                     $ret .= ','. implode(',', array_slice($params, 1));
                     $ret .= ')';
                     return $ret;
@@ -659,9 +661,9 @@ class Template
                 $ret .= '($tmp=('.$params[0].'))>1';
             }
             $ret .= '?';
-            $ret .= self::modcompiler_translate(array($params[2]));
+            $ret .= self::modcompiler_translate([$params[2]]);
             $ret .= ':';
-            $ret .= self::modcompiler_translate(array($params[1]));
+            $ret .= self::modcompiler_translate([$params[1]]);
             $ret .= ',$tmp';
             $ret .= ')';
             return $ret;
@@ -809,9 +811,9 @@ class Template
         $this->scriptLoader->add(
             $params['id'],
             $load,
-            empty($params['require']) ? array() : explode(',', $params['require']),
+            empty($params['require']) ? [] : explode(',', $params['require']),
             @$params['path'],
-            isset($params['version']) ? $params['version'] : 0,
+            $params['version'] ?? 0,
             @$params['template']
         );
     }
@@ -829,7 +831,7 @@ class Template
             trigger_error("get_combined_scripts: missing 'load' parameter", E_USER_ERROR);
         }
         $load = $params['load'] == 'header' ? 0 : 1;
-        $content = array();
+        $content = [];
 
         if ($load == 0) {
             return self::COMBINED_SCRIPTS_TAG;
@@ -880,7 +882,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
         } else {
             $ret = get_root_url().$script->path;
             if ($script->version !== false) {
-                $ret .= '?v'. ($script->version ? $script->version : PHPWG_VERSION);
+                $ret .= '?v'. ($script->version ?: PHPWG_VERSION);
             }
         }
         // trigger the event for eventual use of a cdn
@@ -902,7 +904,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
 
             $this->scriptLoader->add_inline(
                 $content,
-                empty($params['require']) ? array() : explode(',', $params['require'])
+                empty($params['require']) ? [] : explode(',', $params['require'])
             );
         }
     }
@@ -928,7 +930,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
             $params['id'] = md5($params['path']);
         }
 
-        $this->cssLoader->add($params['id'], $params['path'], isset($params['version']) ? $params['version'] : 0, (int)@$params['order'], (bool)@$params['template']);
+        $this->cssLoader->add($params['id'], $params['path'], $params['version'] ?? 0, (int)@$params['order'], (bool)@$params['template']);
     }
 
     /**
@@ -954,7 +956,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      */
     public function set_prefilter($handle, $callback, $weight = 50)
     {
-        $this->external_filters[$handle][$weight][] = array('pre', $callback);
+        $this->external_filters[$handle][$weight][] = ['pre', $callback];
         ksort($this->external_filters[$handle]);
     }
 
@@ -969,7 +971,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      */
     public function set_postfilter($handle, $callback, $weight = 50)
     {
-        $this->external_filters[$handle][$weight][] = array('post', $callback);
+        $this->external_filters[$handle][$weight][] = ['post', $callback];
         ksort($this->external_filters[$handle]);
     }
 
@@ -984,7 +986,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      */
     public function set_outputfilter($handle, $callback, $weight = 50)
     {
-        $this->external_filters[$handle][$weight][] = array('output', $callback);
+        $this->external_filters[$handle][$weight][] = ['output', $callback];
         ksort($this->external_filters[$handle]);
     }
 
@@ -999,7 +1001,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
             $compile_id = '';
             foreach ($this->external_filters[$handle] as $filters) {
                 foreach ($filters as $filter) {
-                    list($type, $callback) = $filter;
+                    [$type, $callback] = $filter;
                     $compile_id .= $type.(is_array($callback) ? implode('', $callback) : $callback);
                     $this->smarty->registerFilter($type, $callback);
                 }
@@ -1018,7 +1020,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
         if (isset($this->external_filters[$handle])) {
             foreach ($this->external_filters[$handle] as $filters) {
                 foreach ($filters as $filter) {
-                    list($type, $callback) = $filter;
+                    [$type, $callback] = $filter;
                     $this->smarty->unregisterFilter($type, $callback);
                 }
             }
@@ -1041,13 +1043,13 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
         $ldq = preg_quote($ld, '#');
         $rdq = preg_quote($rd, '#');
 
-        $regex = array();
-        $tags = array('if','foreach','section','footer_script');
+        $regex = [];
+        $tags = ['if','foreach','section','footer_script'];
         foreach ($tags as $tag) {
             $regex[] = "#^[ \t]+($ldq$tag"."[^$ld$rd]*$rdq)\s*$#m";
             $regex[] = "#^[ \t]+($ldq/$tag$rdq)\s*$#m";
         }
-        $tags = array('include','else','combine_script','html_head');
+        $tags = ['include','else','combine_script','html_head'];
         foreach ($tags as $tag) {
             $regex[] = "#^[ \t]+($ldq$tag"."[^$ld$rd]*$rdq)\s*$#m";
         }
@@ -1085,7 +1087,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      */
     public static function prefilter_local_css($source, $smarty)
     {
-        $css = array();
+        $css = [];
         foreach ($smarty->getTemplateVars('themes') as $theme) {
             $f = PWG_LOCAL_DIR.'css/'.$theme['id'].'-rules.css';
             if (file_exists(PHPWG_ROOT_PATH.$f)) {
@@ -1116,7 +1118,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
 
         $dir = realpath($dir);
         if (!isset($themeconfs[$dir])) {
-            $themeconf = array();
+            $themeconf = [];
             include($dir.'/themeconf.inc.php');
             // Put themeconf in cache
             $themeconfs[$dir] = $themeconf;
@@ -1153,7 +1155,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
     {
         if (!empty($this->picture_buttons)) {
             ksort($this->picture_buttons);
-            $buttons = array();
+            $buttons = [];
             foreach ($this->picture_buttons as $k => $row) {
                 $buttons = array_merge($buttons, $row);
             }
@@ -1176,7 +1178,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
     {
         if (!empty($this->index_buttons)) {
             ksort($this->index_buttons);
-            $buttons = array();
+            $buttons = [];
             foreach ($this->index_buttons as $k => $row) {
                 $buttons = array_merge($buttons, $row);
             }
@@ -1253,11 +1255,7 @@ class PwgTemplateAdapter
 class Combinable
 {
     /** @var string */
-    public $id;
-    /** @var string */
     public $path;
-    /** @var string */
-    public $version;
     /** @var bool */
     public $is_template;
 
@@ -1266,11 +1264,9 @@ class Combinable
      * @param string $path
      * @param string $version
      */
-    public function __construct($id, $path, $version = 0)
+    public function __construct(public $id, $path, public $version = 0)
     {
-        $this->id = $id;
         $this->set_path($path);
-        $this->version = $version;
         $this->is_template = false;
     }
 
@@ -1289,7 +1285,7 @@ class Combinable
      */
     public function is_remote()
     {
-        return url_is_remote($this->path) || strncmp($this->path, '//', 2) == 0;
+        return url_is_remote($this->path) || str_starts_with($this->path, '//');
     }
 }
 
@@ -1298,10 +1294,6 @@ class Combinable
  */
 final class Script extends Combinable
 {
-    /** @var int 0,1,2 */
-    public $load_mode;
-    /** @var array */
-    public $precedents;
     /** @var array */
     public $extra;
 
@@ -1311,13 +1303,17 @@ final class Script extends Combinable
      * @param string $path
      * @param string $version
      * @param array $precedents
+     * @param int $load_mode
      */
-    public function __construct($load_mode, $id, $path, $version = 0, $precedents = array())
-    {
+    public function __construct(/** @var int 0,1,2 */
+        public $load_mode,
+        $id,
+        $path,
+        $version = 0,
+        public $precedents = []
+    ) {
         parent::__construct($id, $path, $version);
-        $this->load_mode = $load_mode;
-        $this->precedents = $precedents;
-        $this->extra = array();
+        $this->extra = [];
     }
 }
 
@@ -1326,19 +1322,15 @@ final class Script extends Combinable
  */
 final class Css extends Combinable
 {
-    /** @var int */
-    public $order;
-
     /**
      * @param string $id
      * @param string $path
      * @param string $version
      * @param int $order
      */
-    public function __construct($id, $path, $version = 0, $order = 0)
+    public function __construct($id, $path, $version = 0, public $order = 0)
     {
         parent::__construct($id, $path, $version);
-        $this->order = $order;
     }
 }
 
@@ -1360,7 +1352,7 @@ class CssLoader
 
     public function clear()
     {
-        $this->registered_css = array();
+        $this->registered_css = [];
         $this->counter = 0;
     }
 
@@ -1369,7 +1361,7 @@ class CssLoader
      */
     public function get_css()
     {
-        uasort($this->registered_css, array('CssLoader', 'cmp_by_order'));
+        uasort($this->registered_css, ['CssLoader', 'cmp_by_order']);
         $combiner = new FileCombiner('css', $this->registered_css);
         return $combiner->combine();
     }
@@ -1429,18 +1421,18 @@ class ScriptLoader
     /** @var bool */
     private $did_footer;
 
-    private static $known_paths = array(
+    private static $known_paths = [
         'core.scripts' => 'themes/default/js/scripts.js',
         'jquery' => 'themes/default/js/jquery.min.js',
         'jquery.ui' => 'themes/default/js/ui/minified/jquery.ui.core.min.js',
         'jquery.ui.effect' => 'themes/default/js/ui/minified/jquery.ui.effect.min.js',
-      );
+      ];
 
-    private static $ui_core_dependencies = array(
-        'jquery.ui.widget' => array('jquery'),
-        'jquery.ui.position' => array('jquery'),
-        'jquery.ui.mouse' => array('jquery', 'jquery.ui', 'jquery.ui.widget'),
-      );
+    private static $ui_core_dependencies = [
+        'jquery.ui.widget' => ['jquery'],
+        'jquery.ui.position' => ['jquery'],
+        'jquery.ui.mouse' => ['jquery', 'jquery.ui', 'jquery.ui.widget'],
+      ];
 
     public function __construct()
     {
@@ -1449,9 +1441,9 @@ class ScriptLoader
 
     public function clear()
     {
-        $this->registered_scripts = array();
-        $this->inline_scripts = array();
-        $this->head_done_scripts = array();
+        $this->registered_scripts = [];
+        $this->inline_scripts = [];
+        $this->head_done_scripts = [];
         $this->did_head = $this->did_footer = false;
     }
 
@@ -1552,7 +1544,7 @@ class ScriptLoader
             $this->compute_script_topological_order($id);
         }
 
-        uasort($this->registered_scripts, array('ScriptLoader', 'cmp_by_mode_and_order'));
+        uasort($this->registered_scripts, ['ScriptLoader', 'cmp_by_mode_and_order']);
 
         foreach ($this->registered_scripts as $id => $script) {
             if ($script->load_mode > 0) {
@@ -1579,7 +1571,7 @@ class ScriptLoader
             self::check_load_dep($this->registered_scripts);
         }
         $this->did_footer = true;
-        $todo = array();
+        $todo = [];
         foreach ($this->registered_scripts as $id => $script) {
             if (!isset($this->head_done_scripts[$id])) {
                 $todo[$id] = $script;
@@ -1590,15 +1582,15 @@ class ScriptLoader
             $this->compute_script_topological_order($id);
         }
 
-        uasort($todo, array('ScriptLoader', 'cmp_by_mode_and_order'));
+        uasort($todo, ['ScriptLoader', 'cmp_by_mode_and_order']);
 
-        $result = array( array(), array() );
+        $result = [ [], [] ];
         foreach ($todo as $id => $script) {
             if (!is_string($script->load_mode)) {
                 $result[$script->load_mode - 1][$id] = $script;
             }
         }
-        return array( self::do_combine($result[0], 1), self::do_combine($result[1], 2) );
+        return [ self::do_combine($result[0], 1), self::do_combine($result[1], 2) ];
     }
 
     /**
@@ -1653,18 +1645,18 @@ class ScriptLoader
         if (empty($script->path) && isset(self::$known_paths[$id])) {
             $script->path = self::$known_paths[$id];
         }
-        if (strncmp($id, 'jquery.', 7) == 0) {
-            $required_ids = array('jquery');
+        if (str_starts_with($id, 'jquery.')) {
+            $required_ids = ['jquery'];
 
-            if (strncmp($id, 'jquery.ui.effect-', 17) == 0) {
-                $required_ids = array('jquery', 'jquery.ui.effect');
+            if (str_starts_with($id, 'jquery.ui.effect-')) {
+                $required_ids = ['jquery', 'jquery.ui.effect'];
 
                 if (empty($script->path)) {
                     $script->path = dirname(self::$known_paths['jquery.ui.effect'])."/$id.min.js";
                 }
-            } elseif (strncmp($id, 'jquery.ui.', 10) == 0) {
+            } elseif (str_starts_with($id, 'jquery.ui.')) {
                 if (!isset(self::$ui_core_dependencies[$id])) {
-                    $required_ids = array_merge(array('jquery', 'jquery.ui'), array_keys(self::$ui_core_dependencies));
+                    $required_ids = array_merge(['jquery', 'jquery.ui'], array_keys(self::$ui_core_dependencies));
                 }
 
                 if (empty($script->path)) {
@@ -1689,8 +1681,8 @@ class ScriptLoader
      */
     private function load_known_required_script($id, $load_mode)
     {
-        if (isset(self::$known_paths[$id]) or strncmp($id, 'jquery.ui.', 10) == 0) {
-            $this->add($id, $load_mode, array(), null);
+        if (isset(self::$known_paths[$id]) or str_starts_with($id, 'jquery.ui.')) {
+            $this->add($id, $load_mode, [], null);
             return true;
         }
         return false;
@@ -1754,22 +1746,16 @@ class ScriptLoader
  */
 final class FileCombiner
 {
-    /** @var string 'js' or 'css' */
-    private $type;
     /** @var bool */
     private $is_css;
-    /** @var Combinable[] */
-    private $combinables;
 
     /**
      * @param string $type 'js' or 'css'
      * @param Combinable[] $combinables
      */
-    public function __construct($type, $combinables = array())
+    public function __construct(private $type, private $combinables = [])
     {
-        $this->type = $type;
-        $this->is_css = $type == 'css';
-        $this->combinables = $combinables;
+        $this->is_css = $this->type == 'css';
     }
 
     /**
@@ -1806,13 +1792,13 @@ final class FileCombiner
         global $conf;
         $force = false;
         if (is_admin() && ($this->is_css || !$conf['template_compile_check'])) {
-            $force = (isset($_SERVER['HTTP_CACHE_CONTROL']) && strpos($_SERVER['HTTP_CACHE_CONTROL'], 'max-age=0') !== false)
+            $force = (isset($_SERVER['HTTP_CACHE_CONTROL']) && str_contains($_SERVER['HTTP_CACHE_CONTROL'], 'max-age=0'))
               || (isset($_SERVER['HTTP_PRAGMA']) && strpos($_SERVER['HTTP_PRAGMA'], 'no-cache'));
         }
 
-        $result = array();
-        $pending = array();
-        $ini_key = $this->is_css ? array(get_absolute_root_url(false)) : array(); //because for css we modify bg url;
+        $result = [];
+        $pending = [];
+        $ini_key = $this->is_css ? [get_absolute_root_url(false)] : []; //because for css we modify bg url;
         $key = $ini_key;
 
         foreach ($this->combinables as $combinable) {
@@ -1869,8 +1855,8 @@ final class FileCombiner
             $this->process_combinable($pending[0], false, $force, $header);
             $result[] = $pending[0];
         }
-        $key = array();
-        $pending = array();
+        $key = [];
+        $pending = [];
     }
 
     /**
@@ -1889,7 +1875,7 @@ final class FileCombiner
         global $conf;
         if ($combinable->is_template) {
             if (!$return_content) {
-                $key = array($combinable->path, $combinable->version);
+                $key = [$combinable->path, $combinable->version];
                 if ($conf['template_compile_check']) {
                     $key[] = filemtime(PHPWG_ROOT_PATH . $combinable->path);
                 }
@@ -1938,11 +1924,11 @@ final class FileCombiner
      */
     private static function process_js($js, $file)
     {
-        if (strpos($file, '.min') === false and strpos($file, '.packed') === false) {
+        if (!str_contains($file, '.min') and !str_contains($file, '.packed')) {
             require_once(PHPWG_ROOT_PATH.'include/jshrink.class.php');
             try {
-                $js = JShrink\Minifier::minify($js);
-            } catch (Exception $e) {
+                $js = Minifier::minify($js);
+            } catch (Exception) {
             }
         }
         return trim($js, " \t\r\n;").";\n";
@@ -1960,7 +1946,7 @@ final class FileCombiner
     private static function process_css($css, $file, &$header)
     {
         $css = self::process_css_rec($css, dirname($file), $header);
-        if (strpos($file, '.min') === false) {
+        if (!str_contains($file, '.min')) {
             require_once(PHPWG_ROOT_PATH.'include/minify/src/Minify.php');
             require_once(PHPWG_ROOT_PATH.'include/minify/src/CSS.php');
             require_once(PHPWG_ROOT_PATH.'include/minify/path-converter/src/ConverterInterface.php');
@@ -1988,9 +1974,9 @@ final class FileCombiner
         static $PATTERN_IMPORT = "#@import\s*['|\"]{0,1}(.*?)['|\"]{0,1};#";
 
         if (preg_match_all($PATTERN_URL, $css, $matches, PREG_SET_ORDER)) {
-            $search = $replace = array();
+            $search = $replace = [];
             foreach ($matches as $match) {
-                if (!url_is_remote($match[1]) && $match[1][0] != '/' && strpos($match[1], 'data:image/') === false) {
+                if (!url_is_remote($match[1]) && $match[1][0] != '/' && !str_contains($match[1], 'data:image/')) {
                     $relative = $dir . "/$match[1]";
                     $search[] = $match[0];
                     $replace[] = 'url('.embellish_url(get_absolute_root_url(false).$relative).')';
@@ -2000,14 +1986,14 @@ final class FileCombiner
         }
 
         if (preg_match_all($PATTERN_IMPORT, $css, $matches, PREG_SET_ORDER)) {
-            $search = $replace = array();
+            $search = $replace = [];
 
             foreach ($matches as $match) {
                 $search[] = $match[0];
 
                 if (
-                    strpos($match[1], '..') !== false // Possible attempt to get out of Piwigo's dir
-                    or strpos($match[1], '://') !== false // Remote URL
+                    str_contains($match[1], '..') // Possible attempt to get out of Piwigo's dir
+                    or str_contains($match[1], '://') // Remote URL
                     or !is_readable(PHPWG_ROOT_PATH . $dir . '/' . $match[1])
                 ) {
                     // If anything is suspicious, don't try to process the

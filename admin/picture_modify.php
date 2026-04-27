@@ -44,7 +44,7 @@ $represented_albums = query2array($query, null, 'id');
 if (isset($_GET['delete'])) {
     check_pwg_token();
 
-    delete_elements(array($_GET['image_id']), true);
+    delete_elements([$_GET['image_id']], true);
     invalidate_user_cache();
 
     // where to redirect the user now?
@@ -56,7 +56,7 @@ if (isset($_GET['delete'])) {
     if ($custom_context = get_edit_context($_GET['image_id'])) {
         // considering we have a context available, we fake one to build the url
         // and we replace it with the context found in the session for this image_id
-        redirect(str_replace('list/1,2', $custom_context, make_index_url(array('list' => array(1,2)))));
+        redirect(str_replace('list/1,2', $custom_context, make_index_url(['list' => [1,2]])));
     }
 
     redirect(make_index_url());
@@ -67,7 +67,7 @@ if (isset($_GET['delete'])) {
 // +-----------------------------------------------------------------------+
 
 if (isset($_GET['sync_metadata'])) {
-    sync_metadata(array( intval($_GET['image_id'])));
+    sync_metadata([ intval($_GET['image_id'])]);
     $page['infos'][] = l10n('Metadata synchronized from file');
 }
 
@@ -75,11 +75,11 @@ if (isset($_GET['sync_metadata'])) {
 if (isset($_POST['submit'])) {
     check_pwg_token();
 
-    $data = array();
+    $data = [];
     $data['id'] = $_GET['image_id'];
     $data['level'] = $_POST['level'];
 
-    $to_sanitize_fields = array('name', 'author', 'comment');
+    $to_sanitize_fields = ['name', 'author', 'comment'];
     foreach ($to_sanitize_fields as $field) {
         $data[$field] = $conf['allow_html_descriptions'] ? @$_POST[$field] : strip_tags(@$_POST[$field]);
     }
@@ -95,11 +95,11 @@ if (isset($_POST['submit'])) {
     single_update(
         IMAGES_TABLE,
         $data,
-        array('id' => $data['id'])
+        ['id' => $data['id']]
     );
 
     // time to deal with tags
-    $tag_ids = array();
+    $tag_ids = [];
     if (!empty($_POST['tags'])) {
         $tag_ids = get_tag_ids($_POST['tags']);
     }
@@ -107,16 +107,16 @@ if (isset($_POST['submit'])) {
 
     // association to albums
     if (!isset($_POST['associate'])) {
-        $_POST['associate'] = array();
+        $_POST['associate'] = [];
     }
     check_input_parameter('associate', $_POST, true, PATTERN_ID);
-    move_images_to_categories(array($_GET['image_id']), $_POST['associate']);
+    move_images_to_categories([$_GET['image_id']], $_POST['associate']);
 
     invalidate_user_cache();
 
     // thumbnail for albums
     if (!isset($_POST['represent'])) {
-        $_POST['represent'] = array();
+        $_POST['represent'] = [];
     }
     check_input_parameter('represent', $_POST, true, PATTERN_ID);
 
@@ -138,9 +138,9 @@ UPDATE '.CATEGORIES_TABLE.'
     $represented_albums = $_POST['represent'];
 
     $template->assign(
-        array(
+        [
         'save_success' => l10n('Photo informations updated'),
-    )
+    ]
     );
 
     pwg_activity('photo', $_GET['image_id'], 'edit');
@@ -178,9 +178,9 @@ $image_file = $row['file'];
 // +-----------------------------------------------------------------------+
 
 $template->set_filenames(
-    array(
+    [
     'picture_modify' => 'picture_modify.tpl',
-    )
+    ]
 );
 
 $admin_url_start = $admin_photo_base_url.'-properties';
@@ -188,12 +188,12 @@ $admin_url_start = $admin_photo_base_url.'-properties';
 $src_image = new SrcImage($row);
 
 // in case the photo needs a rotation of 90 degrees (clockwise or counterclockwise), we switch width and height
-if (in_array($row['rotation'], array(1, 3))) {
-    list($row['width'], $row['height']) = array($row['height'], $row['width']);
+if (in_array($row['rotation'], [1, 3])) {
+    [$row['width'], $row['height']] = [$row['height'], $row['width']];
 }
 
 $template->assign(
-    array(
+    [
     'tag_selection' => $tag_selection,
     'U_DOWNLOAD' => 'action.php?id='.$_GET['image_id'].'&amp;part=e&amp;pwg_token='.get_pwg_token().'&amp;download',
     'U_SYNC' => $admin_url_start.'&amp;sync_metadata=1',
@@ -234,8 +234,8 @@ $template->assign(
 
     'F_ACTION' =>
         get_root_url().'admin.php'
-        .get_query_string_diff(array('sync_metadata')),
-    )
+        .get_query_string_diff(['sync_metadata']),
+    ]
 );
 
 $added_by = 'N/A';
@@ -251,9 +251,9 @@ while ($user_row = pwg_db_fetch_assoc($result)) {
 
 $extTab = explode('.', $row['file']);
 
-$intro_vars = array(
+$intro_vars = [
   'file' => l10n('%s', $row['file']),
-  'date' => l10n('Posted the %s', format_date($row['date_available'], array('day', 'month', 'year'))),
+  'date' => l10n('Posted the %s', format_date($row['date_available'], ['day', 'month', 'year'])),
   'age' => l10n(ucfirst(time_since($row['date_available'], 'year'))),
   'added_by' => l10n('Added by %s', $row['added_by']),
   'size' => l10n('%s pixels, %.2f MB', $row['width'].'&times;'.$row['height'], $row['filesize'] / 1024),
@@ -261,7 +261,7 @@ $intro_vars = array(
   'id' => l10n($row['id']),
   'ext' => l10n('%s file type', strtoupper(end($extTab))),
   'is_svg' => (strtoupper(end($extTab)) == 'SVG'),
-  );
+  ];
 
 if ($conf['rate'] and !empty($row['rating_score'])) {
     $query = '
@@ -270,7 +270,7 @@ SELECT
   FROM '.RATE_TABLE.'
   WHERE element_id = '.$_GET['image_id'].'
 ;';
-    list($row['nb_rates']) = pwg_db_fetch_row(pwg_query($query));
+    [$row['nb_rates']] = pwg_db_fetch_row(pwg_query($query));
 
     $intro_vars['stats'] .= ', '.sprintf(l10n('Rated %d times, score : %.2f'), $row['nb_rates'], $row['rating_score']);
 }
@@ -283,7 +283,7 @@ SELECT *
 $formats = query2array($query);
 
 if (!empty($formats)) {
-    $format_strings = array();
+    $format_strings = [];
 
     foreach ($formats as $format) {
         $format_strings[] = sprintf('%s (%.2fMB)', $format['ext'], $format['filesize'] / 1024);
@@ -300,12 +300,12 @@ if (in_array(get_extension($row['path']), $conf['picture_ext'])) {
 }
 
 // image level options
-$selected_level = isset($_POST['level']) ? $_POST['level'] : $row['level'];
+$selected_level = $_POST['level'] ?? $row['level'];
 $template->assign(
-    array(
+    [
       'level_options' => get_privacy_level_options(),
-      'level_options_selected' => array($selected_level),
-    )
+      'level_options_selected' => [$selected_level],
+    ]
 );
 
 // categories
@@ -318,8 +318,8 @@ SELECT category_id, uppercats, dir
 ;';
 $result = pwg_query($query);
 
-$related_categories = array();
-$related_categories_ids = array();
+$related_categories = [];
+$related_categories_ids = [];
 
 while ($row = pwg_db_fetch_assoc($result)) {
     $name =
@@ -332,7 +332,7 @@ while ($row = pwg_db_fetch_assoc($result)) {
         $template->assign('STORAGE_CATEGORY', $name);
     }
 
-    $related_categories[$row['category_id']] = array('name' => $name, 'unlinkable' => $row['category_id'] != $storage_category_id);
+    $related_categories[$row['category_id']] = ['name' => $name, 'unlinkable' => $row['category_id'] != $storage_category_id];
     $related_categories_ids[] = $row['category_id'];
 }
 
@@ -346,7 +346,7 @@ $template->assign('related_categories_ids', $related_categories_ids);
 // 3. else no jumpto link
 
 if ($custom_context = get_edit_context($_GET['image_id'])) {
-    $template->assign('U_JUMPTO', make_picture_url(array('image_id' => $_GET['image_id'])).'/'.$custom_context);
+    $template->assign('U_JUMPTO', make_picture_url(['image_id' => $_GET['image_id']]).'/'.$custom_context);
 } elseif ($user['level'] >= $page['image']['level']) {
     $query = '
 SELECT category_id
@@ -366,11 +366,11 @@ SELECT category_id
         $category = $authorizeds[array_rand($authorizeds)];
 
         $url_img = make_picture_url(
-            array(
+            [
             'image_id' => $_GET['image_id'],
             'image_file' => $image_file,
             'category' => $cache['cat_names'][ $category ],
-            )
+            ]
         );
 
         $template->assign('U_JUMPTO', $url_img);
@@ -386,13 +386,13 @@ SELECT id
 ;';
 $associated_albums = query2array($query, null, 'id');
 
-$template->assign(array(
+$template->assign([
   'associated_albums' => $associated_albums,
   'represented_albums' => $represented_albums,
   'STORAGE_ALBUM' => $storage_category_id,
-  'CACHE_KEYS' => get_admin_client_cache_keys(array('tags', 'categories')),
+  'CACHE_KEYS' => get_admin_client_cache_keys(['tags', 'categories']),
   'PWG_TOKEN' => get_pwg_token(),
-  ));
+  ]);
 
 trigger_notify('loc_end_picture_modify');
 

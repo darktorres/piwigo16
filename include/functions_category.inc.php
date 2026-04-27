@@ -79,9 +79,9 @@ FROM '.CATEGORIES_TABLE.' INNER JOIN '.USER_CACHE_CATEGORIES_TABLE.'
     } else {
         $where = '
   '.get_sql_condition_FandF(
-            array(
+            [
               'visible_categories' => 'id',
-            ),
+            ],
             null,
             true
         );
@@ -99,13 +99,13 @@ WHERE '.$where.'
 ;';
 
     $result = pwg_query($query);
-    $cats = array();
-    $selected_category = isset($page['category']) ? $page['category'] : null;
+    $cats = [];
+    $selected_category = $page['category'] ?? null;
     while ($row = pwg_db_fetch_assoc($result)) {
         $child_date_last = @$row['max_date_last'] > @$row['date_last'];
         $row = array_merge(
             $row,
-            array(
+            [
             'NAME' => trigger_change(
                 'render_category_name',
                 $row['name'],
@@ -118,11 +118,11 @@ WHERE '.$where.'
                 false,
                 ' / '
             ),
-            'URL' => make_index_url(array('category' => $row)),
+            'URL' => make_index_url(['category' => $row]),
             'LEVEL' => substr_count($row['global_rank'], '.') + 1,
             'SELECTED' => ($selected_category !== null && $selected_category['id'] == $row['id']) ? true : false,
             'IS_UPPERCAT' => ($selected_category !== null && $selected_category['id_uppercat'] == $row['id']) ? true : false,
-            )
+            ]
         );
         if ($conf['index_new_icon']) {
             $row['icon_ts'] = get_icon($row['max_date_last'], $child_date_last);
@@ -170,13 +170,13 @@ SELECT *
 
     $upper_ids = explode(',', $cat['uppercats']);
     if (count($upper_ids) == 1) {// no need to make a query for level 1
-        $cat['upper_names'] = array(
-            array(
+        $cat['upper_names'] = [
+            [
               'id' => $cat['id'],
               'name' => $cat['name'],
               'permalink' => $cat['permalink'],
-              ),
-          );
+              ],
+          ];
     } else {
         $query = '
   SELECT id, name, permalink
@@ -186,7 +186,7 @@ SELECT *
         $names = query2array($query, 'id');
 
         // category names must be in the same order than uppercats list
-        $cat['upper_names'] = array();
+        $cat['upper_names'] = [];
         foreach ($upper_ids as $cat_id) {
             $cat['upper_names'][] = $names[$cat_id];
         }
@@ -207,20 +207,20 @@ function get_category_preferred_image_orders()
 {
     global $conf, $page;
 
-    return trigger_change('get_category_preferred_image_orders', array(
-      array(l10n('Default'),                        '',                     true),
-      array(l10n('Photo title, A &rarr; Z'),        'name ASC',             true),
-      array(l10n('Photo title, Z &rarr; A'),        'name DESC',            true),
-      array(l10n('Date created, new &rarr; old'),   'date_creation DESC',   true),
-      array(l10n('Date created, old &rarr; new'),   'date_creation ASC',    true),
-      array(l10n('Date posted, new &rarr; old'),    'date_available DESC',  true),
-      array(l10n('Date posted, old &rarr; new'),    'date_available ASC',   true),
-      array(l10n('Rating score, high &rarr; low'),  'rating_score DESC',    $conf['rate']),
-      array(l10n('Rating score, low &rarr; high'),  'rating_score ASC',     $conf['rate']),
-      array(l10n('Visits, high &rarr; low'),        'hit DESC',             true),
-      array(l10n('Visits, low &rarr; high'),        'hit ASC',              true),
-      array(l10n('Permissions'),                    'level DESC',           is_admin()),
-      ));
+    return trigger_change('get_category_preferred_image_orders', [
+      [l10n('Default'),                        '',                     true],
+      [l10n('Photo title, A &rarr; Z'),        'name ASC',             true],
+      [l10n('Photo title, Z &rarr; A'),        'name DESC',            true],
+      [l10n('Date created, new &rarr; old'),   'date_creation DESC',   true],
+      [l10n('Date created, old &rarr; new'),   'date_creation ASC',    true],
+      [l10n('Date posted, new &rarr; old'),    'date_available DESC',  true],
+      [l10n('Date posted, old &rarr; new'),    'date_available ASC',   true],
+      [l10n('Rating score, high &rarr; low'),  'rating_score DESC',    $conf['rate']],
+      [l10n('Rating score, low &rarr; high'),  'rating_score ASC',     $conf['rate']],
+      [l10n('Visits, high &rarr; low'),        'hit DESC',             true],
+      [l10n('Visits, low &rarr; high'),        'hit ASC',              true],
+      [l10n('Permissions'),                    'level DESC',           is_admin()],
+      ]);
 }
 
 /**
@@ -239,7 +239,7 @@ function display_select_categories(
 ) {
     global $template;
 
-    $tpl_cats = array();
+    $tpl_cats = [];
     foreach ($categories as $category) {
         if ($fullname) {
             $option = strip_tags(
@@ -422,11 +422,11 @@ SELECT image_id
         }
         $query .= '
     '.get_sql_condition_FandF(
-            array(
+            [
               'forbidden_categories' => 'c.id',
               'visible_categories' => 'c.id',
               'visible_images' => 'image_id',
-            ),
+            ],
             "\n  AND"
         ).'
   ORDER BY '.DB_RANDOM_FUNCTION.'()
@@ -434,7 +434,7 @@ SELECT image_id
 ;';
         $result = pwg_query($query);
         if (pwg_db_num_rows($result) > 0) {
-            list($image_id) = pwg_db_fetch_row($result);
+            [$image_id] = pwg_db_fetch_row($result);
         }
     }
 
@@ -477,7 +477,7 @@ FROM '.CATEGORIES_TABLE.' as c
     $result = pwg_query($query);
 
     $userdata['last_photo_date'] = null;
-    $cats = array();
+    $cats = [];
     while ($row = pwg_db_fetch_assoc($result)) {
         $row['user_id'] = $userdata['id'];
         $row['nb_categories'] = 0;
@@ -583,7 +583,7 @@ function get_image_ids_for_categories($cat_ids, $mode = 'AND', $extra_images_whe
     global $conf;
 
     if (empty($cat_ids)) {
-        return array();
+        return [];
     }
 
     $query = '
@@ -594,11 +594,11 @@ SELECT id
 
     if ($use_permissions) {
         $query .= get_sql_condition_FandF(
-            array(
+            [
             'forbidden_categories' => 'category_id',
             'visible_categories' => 'category_id',
             'visible_images' => 'id',
-            ),
+            ],
             "\n  AND"
         );
     }
@@ -623,10 +623,10 @@ SELECT id
  * @param int[] $excluded_cat_ids
  * @return array [id, name, counter, url_name]
  */
-function get_common_categories($items, $max = null, $excluded_cat_ids = array(), $use_permissions = true)
+function get_common_categories($items, $max = null, $excluded_cat_ids = [], $use_permissions = true)
 {
     if (empty($items)) {
-        return array();
+        return [];
     }
 
     $query = '
@@ -640,10 +640,10 @@ SELECT
 
     if ($use_permissions) {
         $query .= get_sql_condition_FandF(
-            array(
+            [
             'forbidden_categories' => 'category_id',
             'visible_categories' => 'category_id',
-            ),
+            ],
             "\n    AND"
         );
     }
@@ -664,7 +664,7 @@ SELECT
     }
 
     $result = pwg_query($query);
-    $cats = array();
+    $cats = [];
     while ($row = pwg_db_fetch_assoc($result)) {
         $cats[ $row['id'] ] = $row;
     }
@@ -672,7 +672,7 @@ SELECT
     return $cats;
 }
 
-function get_related_categories_menu($items, $excluded_cat_ids = array())
+function get_related_categories_menu($items, $excluded_cat_ids = [])
 {
     global $page, $conf;
 
@@ -680,10 +680,10 @@ function get_related_categories_menu($items, $excluded_cat_ids = array())
     // echo '<pre>'; print_r($common_cats); echo '</pre>';
 
     if (count($common_cats) == 0) {
-        return array();
+        return [];
     }
 
-    $cat_ids = array();
+    $cat_ids = [];
     // now we add the upper categories and useful values such as depth level and url
     foreach ($common_cats as $cat) {
         foreach (explode(',', $cat['uppercats']) as $uppercat) {
@@ -705,7 +705,7 @@ SELECT
     $cats = query2array($query);
     usort($cats, 'global_rank_compare');
 
-    $index_of_cat = array();
+    $index_of_cat = [];
 
     foreach ($cats as $idx => $cat) {
         $index_of_cat[ $cat['id'] ] = $idx;
@@ -716,13 +716,13 @@ SELECT
         if (isset($common_cats[ $cat['id'] ])) {
             $cats[$idx]['count_images'] = $common_cats[ $cat['id'] ]['counter'];
 
-            $url_params = array();
+            $url_params = [];
             if (isset($page['category'])) {
                 $url_params['category'] = $page['category'];
 
-                $url_params['combined_categories'] = array($cat);
+                $url_params['combined_categories'] = [$cat];
                 if (isset($page['combined_categories'])) {
-                    $url_params['combined_categories'] = array_merge($page['combined_categories'], array($cat));
+                    $url_params['combined_categories'] = array_merge($page['combined_categories'], [$cat]);
                 }
             } else {
                 $url_params['category'] = $cat;

@@ -59,12 +59,12 @@ function deactivate_non_standard_plugins()
 {
     global $page;
 
-    $standard_plugins = array(
+    $standard_plugins = [
       'AdminTools',
       'TakeATour',
       'language_switch',
       'LocalFilesEditor',
-      );
+      ];
 
     $query = '
 SELECT id
@@ -74,7 +74,7 @@ AND id NOT IN (\'' . implode('\',\'', $standard_plugins) . '\')
 ;';
 
     $result = pwg_query($query);
-    $plugins = array();
+    $plugins = [];
     while ($row = pwg_db_fetch_assoc($result)) {
         $plugins[] = $row['id'];
     }
@@ -97,11 +97,11 @@ function deactivate_non_standard_themes()
 {
     global $page, $conf;
 
-    $standard_themes = array(
+    $standard_themes = [
       'modus',
       'elegant',
       'smartpocket',
-      );
+      ];
 
     $query = '
 SELECT
@@ -111,8 +111,8 @@ SELECT
   WHERE id NOT IN (\''.implode("','", $standard_themes).'\')
 ;';
     $result = pwg_query($query);
-    $theme_ids = array();
-    $theme_names = array();
+    $theme_ids = [];
+    $theme_names = [];
     while ($row = pwg_db_fetch_assoc($result)) {
         $theme_ids[] = $row['id'];
         $theme_names[] = $row['name'];
@@ -135,7 +135,7 @@ SELECT theme
   FROM '.PREFIX_TABLE.'user_infos
   WHERE user_id = '.$conf['default_user_id'].'
 ;';
-        list($default_theme) = pwg_db_fetch_row(pwg_query($query));
+        [$default_theme] = pwg_db_fetch_row(pwg_query($query));
 
         // if the default theme has just been deactivated, let's set another core theme as default
         if (in_array($default_theme, $theme_ids)) {
@@ -146,7 +146,7 @@ SELECT
   FROM '.PREFIX_TABLE.'themes
   WHERE id = \''.PHPWG_DEFAULT_TEMPLATE.'\'
 ;';
-            list($counter) = pwg_db_fetch_row(pwg_query($query));
+            [$counter] = pwg_db_fetch_row(pwg_query($query));
             if ($counter < 1) {
                 // we need to activate theme first
                 include_once(PHPWG_ROOT_PATH.'admin/include/themes.class.php');
@@ -168,7 +168,7 @@ UPDATE '.PREFIX_TABLE.'user_infos
 // Deactivate all templates
 function deactivate_templates()
 {
-    conf_update_param('extents_for_templates', array());
+    conf_update_param('extents_for_templates', []);
 }
 
 // Check access rights
@@ -246,7 +246,7 @@ function get_available_upgrade_ids()
 {
     $upgrades_path = PHPWG_ROOT_PATH.'install/db';
 
-    $available_upgrade_ids = array();
+    $available_upgrade_ids = [];
 
     if ($contents = opendir($upgrades_path)) {
         while (($node = readdir($contents)) !== false) {

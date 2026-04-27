@@ -38,13 +38,12 @@ class PasswordHash
 {
     public $itoa64;
     public $iteration_count_log2;
-    public $portable_hashes;
     public $random_state;
 
     /**
      * PHP5 constructor.
      */
-    public function __construct($iteration_count_log2, $portable_hashes)
+    public function __construct($iteration_count_log2, public $portable_hashes)
     {
         $this->itoa64 = './0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 
@@ -53,9 +52,7 @@ class PasswordHash
         }
         $this->iteration_count_log2 = $iteration_count_log2;
 
-        $this->portable_hashes = $portable_hashes;
-
-        $this->random_state = microtime() . uniqid(rand(), true); // removed getmypid() for compatibility reasons
+        $this->random_state = microtime() . uniqid(random_int(0, mt_getrandmax()), true); // removed getmypid() for compatibility reasons
     }
 
     /**
@@ -139,7 +136,7 @@ class PasswordHash
             return $output;
         }
 
-        $count_log2 = strpos($this->itoa64, $setting[3]);
+        $count_log2 = strpos($this->itoa64, (string) $setting[3]);
         if ($count_log2 < 7 || $count_log2 > 30) {
             return $output;
         }

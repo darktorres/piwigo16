@@ -25,7 +25,7 @@ function validate_mail_address($user_id, $mail_address)
 
     if (empty($mail_address) and
         !($conf['obligatory_user_mail_address'] and
-        in_array(script_basename(), array('register', 'profile')))) {
+        in_array(script_basename(), ['register', 'profile']))) {
         return '';
     }
 
@@ -40,7 +40,7 @@ FROM '.USERS_TABLE.'
 WHERE upper('.$conf['user_fields']['email'].') = upper(\''.$mail_address.'\')
 '.(is_numeric($user_id) ? 'AND '.$conf['user_fields']['id'].' != \''.$user_id.'\'' : '').'
 ;';
-        list($count) = pwg_db_fetch_row(pwg_query($query));
+        [$count] = pwg_db_fetch_row(pwg_query($query));
         if ($count != 0) {
             return l10n('this email address is already in use');
         }
@@ -84,7 +84,7 @@ function search_case_username($username)
 
     $username_lo = strtolower($username);
 
-    $SCU_users = array();
+    $SCU_users = [];
 
     $q = pwg_query('
     SELECT '.$conf['user_fields']['username'].' AS username
@@ -118,7 +118,7 @@ function search_case_username($username)
  * @param bool $notify_user
  * @return int|false user id or false
  */
-function register_user($login, $password, $mail_address, $notify_admin = true, &$errors = array(), $notify_user = false)
+function register_user($login, $password, $mail_address, $notify_admin = true, &$errors = [], $notify_user = false)
 {
     global $conf;
 
@@ -152,20 +152,20 @@ function register_user($login, $password, $mail_address, $notify_admin = true, &
     $errors = trigger_change(
         'register_user_check',
         $errors,
-        array(
+        [
         'username' => $login,
         'password' => $password,
         'email' => $mail_address,
-        )
+        ]
     );
 
     // if no error until here, registration of the user
     if (empty($errors)) {
-        $insert = array(
+        $insert = [
           $conf['user_fields']['username'] => $login,
           $conf['user_fields']['password'] => $conf['password_hash']($password),
           $conf['user_fields']['email'] => $mail_address,
-          );
+          ];
 
         single_insert(USERS_TABLE, $insert);
         $user_id = pwg_db_insert_id();
@@ -179,19 +179,19 @@ SELECT id
 ;';
         $result = pwg_query($query);
 
-        $inserts = array();
+        $inserts = [];
         while ($row = pwg_db_fetch_assoc($result)) {
-            $inserts[] = array(
+            $inserts[] = [
               'user_id' => $user_id,
               'group_id' => $row['id'],
-              );
+              ];
         }
 
         if (count($inserts) != 0) {
-            mass_inserts(USER_GROUP_TABLE, array('user_id', 'group_id'), $inserts);
+            mass_inserts(USER_GROUP_TABLE, ['user_id', 'group_id'], $inserts);
         }
 
-        $override = array();
+        $override = [];
         if ($conf['browser_language'] and $language = get_browser_language()) {
             $override['language'] = $language;
         }
@@ -202,12 +202,12 @@ SELECT id
             include_once(PHPWG_ROOT_PATH.'include/functions_mail.inc.php');
             $admin_url = get_absolute_root_url().'admin.php?page=user_list&user_id='.$user_id;
 
-            $keyargs_content = array(
+            $keyargs_content = [
               get_l10n_args('User: %s', stripslashes($login)),
               get_l10n_args('Email: %s', $mail_address),
               get_l10n_args(''),
               get_l10n_args('Admin: %s', $admin_url),
-              );
+              ];
 
             $group_id = null;
             if (preg_match('/^group:(\d+)$/', $conf['email_admin_on_new_user'], $matches)) {
@@ -225,8 +225,8 @@ SELECT id
         if ($notify_user and email_check_format($mail_address)) {
             include_once(PHPWG_ROOT_PATH.'include/functions_mail.inc.php');
 
-            $length = rand(10, 15);
-            $keyargs_content = array(
+            $length = random_int(10, 15);
+            $keyargs_content = [
               get_l10n_args('Hello %s,', stripslashes($login)),
               get_l10n_args('Thank you for registering at %s!', $conf['gallery_title']),
               get_l10n_args('', ''),
@@ -238,25 +238,25 @@ SELECT id
               get_l10n_args('Email: %s', $mail_address),
               get_l10n_args('', ''),
               get_l10n_args('If you think you\'ve received this email in error, please contact us at %s', get_webmaster_mail_address()),
-              );
+              ];
 
             pwg_mail(
                 $mail_address,
-                array(
+                [
                 'subject' => '['.$conf['gallery_title'].'] '.l10n('Registration'),
                 'content' => l10n_args($keyargs_content),
                 'content_format' => 'text/plain',
-                )
+                ]
             );
         }
 
         trigger_notify(
             'register_user',
-            array(
+            [
             'id' => $user_id,
             'username' => $login,
             'email' => $mail_address,
-            )
+            ]
         );
 
         pwg_activity('user', $user_id, 'add');
@@ -339,7 +339,7 @@ SELECT
   WHERE ui.user_id = '.$user_id.'
   GROUP BY ui.user_id
 ;';
-        list($counter) = pwg_db_fetch_row(pwg_query($query));
+        [$counter] = pwg_db_fetch_row(pwg_query($query));
         if ($counter != 1) {
             create_user_infos($user_id);
         }
@@ -373,7 +373,7 @@ SELECT
     }
     unset($value);
 
-    $userdata['preferences'] = empty($userdata['preferences']) ? array() : unserialize($userdata['preferences']);
+    $userdata['preferences'] = empty($userdata['preferences']) ? [] : unserialize($userdata['preferences']);
 
     if ($use_cache) {
         $generate_user_cache = false;
@@ -399,7 +399,7 @@ SELECT
   FROM '.USER_CACHE_TABLE.'
   WHERE user_id='.$userdata['id'].'
 ;';
-                    list($nb_cache_lines) = pwg_db_fetch_row(pwg_query($query));
+                    [$nb_cache_lines] = pwg_db_fetch_row(pwg_query($query));
 
                     $logger_msg = $logger_msg_prefix.'user_cache generation waiting k='.$k.' ';
                     $waiting_time = get_elapsed_time($user_cache_waiting_start_time, get_moment());
@@ -458,13 +458,13 @@ SELECT COUNT(DISTINCT(image_id)) as total
   FROM '.IMAGE_CATEGORY_TABLE.'
   WHERE category_id NOT IN ('.$userdata['forbidden_categories'].')
     AND image_id '.$userdata['image_access_type'].' ('.$userdata['image_access_list'].')';
-            list($userdata['nb_total_images']) = pwg_db_fetch_row(pwg_query($query));
+            [$userdata['nb_total_images']] = pwg_db_fetch_row(pwg_query($query));
 
 
             // now we update user cache categories
             $user_cache_cats = get_computed_categories($userdata, null);
             if (!is_admin($userdata['status'])) { // for non admins we forbid categories with no image (feature 1053)
-                $forbidden_ids = array();
+                $forbidden_ids = [];
                 foreach ($user_cache_cats as $cat) {
                     if ($cat['count_images'] == 0) {
                         $forbidden_ids[] = $cat['cat_id'];
@@ -491,12 +491,12 @@ DELETE FROM '.USER_CACHE_CATEGORIES_TABLE.'
             // called "very simultaneously".
             mass_inserts(
                 USER_CACHE_CATEGORIES_TABLE,
-                array(
+                [
                 'user_id', 'cat_id',
                 'date_last', 'max_date_last', 'nb_images', 'count_images', 'nb_categories', 'count_categories',
-                ),
+                ],
                 $user_cache_cats,
-                array('ignore' => true)
+                ['ignore' => true]
             );
 
 
@@ -550,9 +550,9 @@ SELECT DISTINCT f.image_id
     ON f.image_id = ic.image_id
   WHERE f.user_id = '.$user['id'].'
   '.get_sql_condition_FandF(
-        array(
+        [
           'forbidden_categories' => 'ic.category_id',
-          ),
+          ],
         'AND'
     ).'
 ;';
@@ -667,7 +667,7 @@ SELECT '.$conf['user_fields']['id'].'
     if (pwg_db_num_rows($result) == 0) {
         return false;
     } else {
-        list($user_id) = pwg_db_fetch_row($result);
+        [$user_id] = pwg_db_fetch_row($result);
         return $user_id;
     }
 }
@@ -695,7 +695,7 @@ SELECT
     if (pwg_db_num_rows($result) == 0) {
         return false;
     } else {
-        list($user_id) = pwg_db_fetch_row($result);
+        [$user_id] = pwg_db_fetch_row($result);
         return $user_id;
     }
 }
@@ -780,7 +780,7 @@ function get_default_theme()
 
     // let's find the first available theme
     $active_themes = array_keys(get_pwg_themes());
-    return isset($active_themes[0]) ? $active_themes[0] : 'default';
+    return $active_themes[0] ?? 'default';
 }
 
 /**
@@ -839,7 +839,7 @@ function get_browser_language()
 
     // list all enabled language codes in the Piwigo installation
     // in both full and short forms, and case insensitive
-    $languages_available = array();
+    $languages_available = [];
     foreach (get_languages() as $language_code => $language_name) {
         $lowercase_full = strtolower($language_code);
         $lowercase_parts = explode('_', $lowercase_full, 2);
@@ -876,17 +876,17 @@ function create_user_infos($user_ids, $override_values = null)
     global $conf;
 
     if (!is_array($user_ids)) {
-        $user_ids = array($user_ids);
+        $user_ids = [$user_ids];
     }
 
     if (!empty($user_ids)) {
-        $inserts = array();
-        list($dbnow) = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
+        $inserts = [];
+        [$dbnow] = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
 
         $default_user = get_default_user_info(false);
         if ($default_user === false) {
             // Default on structure are used
-            $default_user = array();
+            $default_user = [];
         }
 
         if (!is_null($override_values)) {
@@ -894,7 +894,7 @@ function create_user_infos($user_ids, $override_values = null)
         }
 
         foreach ($user_ids as $user_id) {
-            $level = isset($default_user['level']) ? $default_user['level'] : 0;
+            $level = $default_user['level'] ?? 0;
             if ($user_id == $conf['webmaster_id']) {
                 $status = 'webmaster';
                 $level = max($conf['available_permission_levels']);
@@ -907,12 +907,12 @@ function create_user_infos($user_ids, $override_values = null)
 
             $insert = array_merge(
                 array_map('pwg_db_real_escape_string', $default_user),
-                array(
+                [
                 'user_id' => $user_id,
                 'status' => $status,
                 'registration_date' => $dbnow,
                 'level' => $level,
-                )
+                ]
             );
 
             $inserts[] = $insert;
@@ -971,13 +971,13 @@ function log_user($user_id, $remember_me)
 
         single_update(
             USER_INFOS_TABLE,
-            array('language' => $_COOKIE['lang']),
-            array('user_id' => $user_id)
+            ['language' => $_COOKIE['lang']],
+            ['user_id' => $user_id]
         );
 
         // We unset the lang cookie, if user has changed their language using interface we don't want to keep setting it back
         // to what was chosen using standard pages lang switch
-        setcookie('lang', '', time() - 3600);
+        setcookie('lang', '', ['expires' => time() - 3600]);
     }
 
     if ($remember_me and $conf['authorize_remembering']) {
@@ -988,15 +988,11 @@ function log_user($user_id, $remember_me)
             setcookie(
                 $conf['remember_me_name'],
                 $cookie,
-                time() + $conf['remember_me_length'],
-                cookie_path(),
-                ini_get('session.cookie_domain'),
-                ini_get('session.cookie_secure'),
-                ini_get('session.cookie_httponly')
+                ['expires' => time() + $conf['remember_me_length'], 'path' => cookie_path(), 'domain' => ini_get('session.cookie_domain'), 'secure' => ini_get('session.cookie_secure'), 'httponly' => ini_get('session.cookie_httponly')]
             );
         }
     } else { // make sure we clean any remember me ...
-        setcookie($conf['remember_me_name'], '', 0, cookie_path(), ini_get('session.cookie_domain'));
+        setcookie($conf['remember_me_name'], '', ['expires' => 0, 'path' => cookie_path(), 'domain' => ini_get('session.cookie_domain')]);
     }
     if (session_id() != '') { // we regenerate the session for security reasons
         // see http://www.acros.si/papers/session_fixation.pdf
@@ -1039,7 +1035,7 @@ function auto_login()
                 return true;
             }
         }
-        setcookie($conf['remember_me_name'], '', 0, cookie_path(), ini_get('session.cookie_domain'));
+        setcookie($conf['remember_me_name'], '', ['expires' => 0, 'path' => cookie_path(), 'domain' => ini_get('session.cookie_domain')]);
     }
     return false;
 }
@@ -1083,7 +1079,7 @@ function pwg_password_verify($password, $hash, $user_id = null)
     global $conf, $pwg_hasher;
 
     // If the password has not been hashed with the current algorithm.
-    if (strpos($hash, '$P') !== 0) {
+    if (!str_starts_with($hash, '$P')) {
         if (!empty($conf['pass_convert'])) {
             $check = ($hash == $conf['pass_convert']($password));
         } else {
@@ -1100,8 +1096,8 @@ function pwg_password_verify($password, $hash, $user_id = null)
 
             single_update(
                 USERS_TABLE,
-                array('password' => $hash),
-                array('id' => $user_id)
+                ['password' => $hash],
+                ['id' => $user_id]
             );
         }
     }
@@ -1200,11 +1196,11 @@ function pwg_login($success, $username, $password, $remember_me)
     //     }
     //     return $state;
     //   }
-    $state = array(
+    $state = [
       'can_login' => true,
       'reason' => null,
       'authenticated' => false,
-    );
+    ];
     $state = trigger_change('finalize_login', $state, $user_found, $remember_me);
 
     if (!$state['can_login']) {
@@ -1258,7 +1254,7 @@ FROM '.USERS_TABLE.' AS u
 
     if (!empty($user)) {
         // The user may not exist in the user_infos table, so we consider it's a "normal" user by default
-        $user['status'] = $user['status'] ?? 'normal';
+        $user['status'] ??= 'normal';
         return $user;
     }
 
@@ -1287,10 +1283,10 @@ function generate_fake_user()
     // Uses current password_hash algorithm to match real user verification costs.
     if (!isset($_SESSION['fake_user_cache']) || $is_verify_hash_changed) {
         $fake_password = bin2hex(random_bytes(10));
-        $_SESSION['fake_user_cache'] = array(
+        $_SESSION['fake_user_cache'] = [
           'id' => null,
           'password' => $conf['password_hash']($fake_password),
-        );
+        ];
     }
 
     return $_SESSION['fake_user_cache'];
@@ -1317,17 +1313,15 @@ function logout_user()
     trigger_notify('user_logout', @$_SESSION['pwg_uid']);
     pwg_activity('user', @$_SESSION['pwg_uid'], 'logout');
 
-    $_SESSION = array();
+    $_SESSION = [];
     session_unset();
     session_destroy();
     setcookie(
         session_name(),
         '',
-        0,
-        ini_get('session.cookie_path'),
-        ini_get('session.cookie_domain')
+        ['expires' => 0, 'path' => ini_get('session.cookie_path'), 'domain' => ini_get('session.cookie_domain')]
     );
-    setcookie($conf['remember_me_name'], '', 0, cookie_path(), ini_get('session.cookie_domain'));
+    setcookie($conf['remember_me_name'], '', ['expires' => 0, 'path' => cookie_path(), 'domain' => ini_get('session.cookie_domain')]);
 }
 
 /**
@@ -1493,7 +1487,7 @@ function can_manage_comment($action, $comment_author_id)
         return false;
     }
 
-    if (!in_array($action, array('delete','edit', 'validate'))) {
+    if (!in_array($action, ['delete','edit', 'validate'])) {
         return false;
     }
 
@@ -1536,7 +1530,7 @@ function get_sql_condition_FandF(
 ) {
     global $user, $filter;
 
-    $sql_list = array();
+    $sql_list = [];
 
     foreach ($condition_fields as $condition => $field_name) {
         switch ($condition) {
@@ -1674,7 +1668,7 @@ SELECT
     }
 
     // admin/webmaster/guest can't get connected with authentication keys
-    if ('auth_key' === $valid_key and !in_array($key['status'], array('normal','generic'))) {
+    if ('auth_key' === $valid_key and !in_array($key['status'], ['normal','generic'])) {
         return false;
     }
 
@@ -1700,11 +1694,11 @@ SELECT
                 or strtotime($key['last_notified_on']) < strtotime($key['48h_ago']) // OR when the last email was sent more than 48 hours ago
             )
         ) {
-            $page['notify_api_key_expiration'] = array(
+            $page['notify_api_key_expiration'] = [
               'days_left' => $days_left,
               'dbnow' => $key['dbnow'],
               'auth_key' => $key['auth_key'],
-            );
+            ];
         }
     }
 
@@ -1713,11 +1707,11 @@ SELECT
     // update last used key
     single_update(
         USER_AUTH_KEYS_TABLE,
-        array('last_used_on' => $key['dbnow']),
-        array(
+        ['last_used_on' => $key['dbnow']],
+        [
         'user_id' => $user['id'],
         'auth_key' => $key['auth_key'],
-    ),
+    ],
     );
 
     // set the type of connection
@@ -1771,7 +1765,7 @@ SELECT
         $user_status = $user_infos[0]['status'];
     }
 
-    if (!in_array($user_status, array('normal','generic'))) {
+    if (!in_array($user_status, ['normal','generic'])) {
         return false;
     }
 
@@ -1785,16 +1779,16 @@ SELECT
   FROM '.USER_AUTH_KEYS_TABLE.'
   WHERE auth_key = \''.$candidate.'\'
 ;';
-    list($counter, $now, $expiration) = pwg_db_fetch_row(pwg_query($query));
+    [$counter, $now, $expiration] = pwg_db_fetch_row(pwg_query($query));
     if (0 == $counter) {
-        $key = array(
+        $key = [
           'auth_key' => $candidate,
           'user_id' => $user_id,
           'created_on' => $now,
           'duration' => $conf['auth_key_duration'],
           'expired_on' => $expiration,
           'key_type' => 'auth_key',
-          );
+          ];
 
         single_insert(USER_AUTH_KEYS_TABLE, $key);
 
@@ -1836,11 +1830,11 @@ function deactivate_password_reset_key($user_id)
 {
     single_update(
         USER_INFOS_TABLE,
-        array(
+        [
         'activation_key' => null,
         'activation_key_expire' => null,
-        ),
-        array('user_id' => $user_id)
+        ],
+        ['user_id' => $user_id]
     );
 }
 
@@ -1861,15 +1855,15 @@ function generate_password_link($user_id, $first_login = false)
     $duration = $first_login
     ? $conf['password_activation_duration']
     : $conf['password_reset_duration'];
-    list($expire) = pwg_db_fetch_row(pwg_query('SELECT ADDDATE(NOW(), INTERVAL '. $duration .' SECOND)'));
+    [$expire] = pwg_db_fetch_row(pwg_query('SELECT ADDDATE(NOW(), INTERVAL '. $duration .' SECOND)'));
 
     single_update(
         USER_INFOS_TABLE,
-        array(
+        [
         'activation_key' => pwg_password_hash($activation_key),
         'activation_key_expire' => $expire,
-        ),
-        array('user_id' => $user_id)
+        ],
+        ['user_id' => $user_id]
     );
 
     set_make_full_url();
@@ -1885,10 +1879,10 @@ function generate_password_link($user_id, $first_login = false)
         false
     );
 
-    return array(
+    return [
       'time_validation' => $time_validation,
       'password_link' => $password_link,
-    );
+    ];
 }
 
 /**
@@ -1984,7 +1978,7 @@ function userprefs_delete_param($params)
     global $user;
 
     if (!is_array($params)) {
-        $params = array($params);
+        $params = [$params];
     }
     if (empty($params)) {
         return;
@@ -2012,11 +2006,7 @@ function userprefs_get_param($param, $default_value = null)
 {
     global $user;
 
-    if (isset($user['preferences'][$param])) {
-        return $user['preferences'][$param];
-    }
-
-    return $default_value;
+    return $user['preferences'][$param] ?? $default_value;
 }
 
 /**
@@ -2033,7 +2023,7 @@ SELECT COUNT(*)
   FROM '.ACTIVITY_TABLE.'
   WHERE action = \'login\' and performed_by = '.$user_id.'';
 
-    list($logged_in) = pwg_db_fetch_row(pwg_query($query));
+    [$logged_in] = pwg_db_fetch_row(pwg_query($query));
     if ($logged_in > 0) {
         return false;
     }
@@ -2063,51 +2053,51 @@ function check_and_save_user_infos($params)
 {
     if (isset($params['username']) and strlen(str_replace(' ', '', $params['username'])) == 0) {
         // return new PwgError(WS_ERR_INVALID_PARAM, 'Name field must not be empty');
-        return array(
-          'error' => array(
+        return [
+          'error' => [
             'code' => WS_ERR_INVALID_PARAM,
             'message' => 'Name field must not be empty',
-          ),
-        );
+          ],
+        ];
     }
 
     global $conf, $user, $service;
 
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
-    $updates = $updates_infos = array();
+    $updates = $updates_infos = [];
     $update_status = null;
 
     if (count($params['user_id']) == 1) {
         if (get_username($params['user_id'][0]) === false) {
             // return new PwgError(WS_ERR_INVALID_PARAM, 'This user does not exist.');
-            return array(
-              'error' => array(
+            return [
+              'error' => [
                 'code' => WS_ERR_INVALID_PARAM,
                 'message' => 'This user does not exist.',
-              ),
-            );
+              ],
+            ];
         }
 
         if (!empty($params['username'])) {
             $user_id = get_userid($params['username']);
             if ($user_id and $user_id != $params['user_id'][0]) {
                 // return new PwgError(WS_ERR_INVALID_PARAM, l10n('this login is already used'));
-                return array(
-                  'error' => array(
+                return [
+                  'error' => [
                     'code' => WS_ERR_INVALID_PARAM,
                     'message' => l10n('this login is already used'),
-                  ),
-                );
+                  ],
+                ];
             }
             if ($params['username'] != strip_tags($params['username'])) {
                 // return new PwgError(WS_ERR_INVALID_PARAM, l10n('html tags are not allowed in login'));
-                return array(
-                  'error' => array(
+                return [
+                  'error' => [
                     'code' => WS_ERR_INVALID_PARAM,
                     'message' => l10n('html tags are not allowed in login'),
-                  ),
-                );
+                  ],
+                ];
             }
             $updates[ $conf['user_fields']['username'] ] = $params['username'];
         }
@@ -2115,19 +2105,19 @@ function check_and_save_user_infos($params)
         if (!empty($params['email'])) {
             if (($error = validate_mail_address($params['user_id'][0], $params['email'])) != '') {
                 // return new PwgError(WS_ERR_INVALID_PARAM, $error);
-                return array(
-                  'error' => array(
+                return [
+                  'error' => [
                     'code' => WS_ERR_INVALID_PARAM,
                     'message' => $error,
-                  ),
-                );
+                  ],
+                ];
             }
             $updates[ $conf['user_fields']['email'] ] = $params['email'];
         }
 
         if (!empty($params['password'])) {
             if (!is_webmaster()) {
-                $password_protected_users = array($conf['guest_id']);
+                $password_protected_users = [$conf['guest_id']];
 
                 $query = '
 SELECT
@@ -2138,16 +2128,16 @@ SELECT
                 $admin_ids = query2array($query, null, 'user_id');
 
                 // we add all admin+webmaster users BUT the user herself
-                $password_protected_users = array_merge($password_protected_users, array_diff($admin_ids, array($user['id'])));
+                $password_protected_users = array_merge($password_protected_users, array_diff($admin_ids, [$user['id']]));
 
                 if (in_array($params['user_id'][0], $password_protected_users)) {
                     // return new PwgError(403, 'Only webmasters can change password of other "webmaster/admin" users');
-                    return array(
-                      'error' => array(
+                    return [
+                      'error' => [
                         'code' => 403,
                         'message' => 'Only webmasters can change password of other "webmaster/admin" users',
-                      ),
-                    );
+                      ],
+                    ];
                 }
             }
 
@@ -2156,31 +2146,31 @@ SELECT
     }
 
     if (!empty($params['status'])) {
-        if (in_array($params['status'], array('webmaster', 'admin')) and !is_webmaster()) {
+        if (in_array($params['status'], ['webmaster', 'admin']) and !is_webmaster()) {
             // return new PwgError(403, 'Only webmasters can grant "webmaster/admin" status');
-            return array(
-              'error' => array(
+            return [
+              'error' => [
                 'code ' => 403,
                 'message' => 'Only webmasters can grant "webmaster/admin" status',
-              ),
-            );
+              ],
+            ];
         }
 
-        if (!in_array($params['status'], array('guest','generic','normal','admin','webmaster'))) {
+        if (!in_array($params['status'], ['guest','generic','normal','admin','webmaster'])) {
             // return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid status');
-            return array(
-              'error' => array(
+            return [
+              'error' => [
                 'code' => WS_ERR_INVALID_PARAM,
                 'message' => 'Invalid status',
-              ),
-            );
+              ],
+            ];
         }
 
-        $protected_users = array(
+        $protected_users = [
           $user['id'],
           $conf['guest_id'],
           $conf['webmaster_id'],
-          );
+          ];
 
         // an admin can't change status of other admin/webmaster
         if ('admin' == $user['status']) {
@@ -2203,12 +2193,12 @@ SELECT
     if (!empty($params['level']) or @$params['level'] === 0) {
         if (!in_array($params['level'], $conf['available_permission_levels'])) {
             // return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid level');
-            return array(
-              'error' => array(
+            return [
+              'error' => [
                 'code' => WS_ERR_INVALID_PARAM,
                 'message' => 'Invalid level',
-              ),
-            );
+              ],
+            ];
         }
         $updates_infos['level'] = $params['level'];
     }
@@ -2216,12 +2206,12 @@ SELECT
     if (!empty($params['language'])) {
         if (!in_array($params['language'], array_keys(get_languages()))) {
             // return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid language');
-            return array(
-              'error' => array(
+            return [
+              'error' => [
                 'code' => WS_ERR_INVALID_PARAM,
                 'message' => 'Invalid language',
-              ),
-            );
+              ],
+            ];
         }
         $updates_infos['language'] = $params['language'];
     }
@@ -2229,12 +2219,12 @@ SELECT
     if (!empty($params['theme'])) {
         if (!in_array($params['theme'], array_keys(get_pwg_themes()))) {
             // return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid theme');
-            return array(
-              'error' => array(
+            return [
+              'error' => [
                 'code' => WS_ERR_INVALID_PARAM,
                 'message' => 'Invalid theme',
-              ),
-            );
+              ],
+            ];
         }
         $updates_infos['theme'] = $params['theme'];
     }
@@ -2267,7 +2257,7 @@ SELECT
     single_update(
         USERS_TABLE,
         $updates,
-        array($conf['user_fields']['id'] => $params['user_id'][0])
+        [$conf['user_fields']['id'] => $params['user_id'][0]]
     );
 
     if (isset($updates[ $conf['user_fields']['password'] ])) {
@@ -2337,11 +2327,11 @@ SELECT
         // group is associated
 
         if (count($group_ids) > 0) {
-            $inserts = array();
+            $inserts = [];
 
             foreach ($group_ids as $group_id) {
                 foreach ($params['user_id'] as $user_id) {
-                    $inserts[] = array('user_id' => $user_id, 'group_id' => $group_id);
+                    $inserts[] = ['user_id' => $user_id, 'group_id' => $group_id];
                 }
             }
 
@@ -2353,11 +2343,11 @@ SELECT
 
     pwg_activity('user', $params['user_id'], 'edit');
 
-    return array(
+    return [
       'user_id' => $params['user_id'],
       'infos' => $updates_infos,
       'account' => $updates,
-    );
+    ];
 }
 
 /**
@@ -2375,23 +2365,23 @@ function create_api_key($user_id, $duration, $key_name)
     $key_id = 'pkid-'.date('Ymd').'-'.generate_key(20);
     $key_secret = generate_key(40);
 
-    list($dbnow) = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
+    [$dbnow] = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
 
-    $key = array(
+    $key = [
       'auth_key' => $key_id,
       'apikey_secret' => pwg_password_hash($key_secret),
       'apikey_name' => $key_name,
       'user_id' => $user_id,
       'created_on' => $dbnow,
       'key_type' => 'api_key',
-    );
+    ];
 
     if (!empty($duration)) {
         $query = '
 SELECT
   ADDDATE(NOW(), INTERVAL '.($duration * 60 * 60 * 24).' SECOND)
 ;';
-        list($expiration) = pwg_db_fetch_row(pwg_query($query));
+        [$expiration] = pwg_db_fetch_row(pwg_query($query));
         $key['duration'] = $duration;
     }
     $key['expired_on'] = $expiration;
@@ -2421,18 +2411,18 @@ SELECT
   AND user_id = '.$user_id.'
 ;';
 
-    list($key, $now) = pwg_db_fetch_row(pwg_query($query));
+    [$key, $now] = pwg_db_fetch_row(pwg_query($query));
     if ($key == 0) {
         return l10n('API Key not found');
     }
 
     single_update(
         USER_AUTH_KEYS_TABLE,
-        array('revoked_on' => $now),
-        array(
+        ['revoked_on' => $now],
+        [
         'auth_key' => $pkid,
         'user_id' => $user_id,
-    )
+    ]
     );
 
     return true;
@@ -2456,18 +2446,18 @@ SELECT
   AND user_id = '.$user_id.'
 ;';
 
-    list($key) = pwg_db_fetch_row(pwg_query($query));
+    [$key] = pwg_db_fetch_row(pwg_query($query));
     if ($key == 0) {
         return l10n('API Key not found');
     }
 
     single_update(
         USER_AUTH_KEYS_TABLE,
-        array('apikey_name' => $api_name),
-        array(
+        ['apikey_name' => $api_name],
+        [
         'auth_key' => $pkid,
         'user_id' => $user_id,
-    )
+    ]
     );
 
     return true;
@@ -2498,7 +2488,7 @@ SELECT *
 SELECT
   NOW()
 ;';
-    list($now) = pwg_db_fetch_row(pwg_query($query));
+    [$now] = pwg_db_fetch_row(pwg_query($query));
 
     foreach ($api_keys as $i => $api_key) {
         $api_key['apikey_secret'] = str_repeat('*', 40);
@@ -2506,8 +2496,8 @@ SELECT
 
         $api_key['apikey_name'] = stripslashes($api_key['apikey_name']);
 
-        $api_key['created_on_format'] = format_date($api_key['created_on'], array('day', 'month', 'year'));
-        $api_key['expired_on_format'] = format_date($api_key['expired_on'], array('day', 'month', 'year'));
+        $api_key['created_on_format'] = format_date($api_key['created_on'], ['day', 'month', 'year']);
+        $api_key['expired_on_format'] = format_date($api_key['expired_on'], ['day', 'month', 'year']);
         $api_key['last_used_on_since'] =
           $api_key['last_used_on']
           ? time_since($api_key['last_used_on'], 'day')
@@ -2539,7 +2529,7 @@ SELECT
 
         $api_key['revoked_on_message'] =
           $api_key['revoked_on']
-          ? l10n('This API key was manually revoked on %s', format_date($api_key['revoked_on'], array('day', 'month', 'year')))
+          ? l10n('This API key was manually revoked on %s', format_date($api_key['revoked_on'], ['day', 'month', 'year']))
           : null;
 
         $api_keys[$i] = $api_key;
@@ -2563,7 +2553,7 @@ function get_available_api_key($user_id)
         return false;
     }
 
-    $available = array();
+    $available = [];
     foreach ($api_keys as $api_key) {
         if (!$api_key['is_expired'] && empty($api_key['revoked_on'])) {
             $available[] = $api_key;
@@ -2610,11 +2600,11 @@ function notification_api_key_expiration($username, $email, $days_left)
 
     $result = @pwg_mail(
         $email,
-        array(
+        [
         'subject' => '[' . $conf['gallery_title'] . '] ' . l10n('Your API key will expire soon'),
         'content' => $message,
         'content_format' => 'text/html',
-    )
+    ]
     );
 
     return $result;
@@ -2634,10 +2624,10 @@ function generate_user_code()
     $secret = PwgTOTP::generateSecret();
     $code = PwgTOTP::generateCode($secret, min($conf['password_reset_code_duration'], 900)); // max 15 minutes
 
-    return array(
+    return [
       'secret' => $secret,
       'code' => $code,
-    );
+    ];
 }
 
 /**
@@ -2683,7 +2673,7 @@ function save_edit_context()
     // return page on the photo edit page in the administration.
 
     // let's add the item on top of previous registered values and keep only the last 10 values
-    $_SESSION['edit_context'] = array_slice(array($page['image_id'] => $page['section_url']) + $_SESSION['edit_context'], 0, 10, true);
+    $_SESSION['edit_context'] = array_slice([$page['image_id'] => $page['section_url']] + $_SESSION['edit_context'], 0, 10, true);
 }
 
 /**

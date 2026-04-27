@@ -17,19 +17,16 @@
  */
 class BlockManager
 {
-    /** @var string */
-    protected $id;
     /** @var RegisteredBlock[] */
-    protected $registered_blocks = array();
+    protected $registered_blocks = [];
     /** @var DisplayBlock[] */
-    protected $display_blocks = array();
+    protected $display_blocks = [];
 
     /**
      * @param string $id
      */
-    public function __construct($id)
+    public function __construct(protected $id)
     {
-        $this->id = $id;
     }
 
     /**
@@ -37,7 +34,7 @@ class BlockManager
      */
     public function load_registered_blocks()
     {
-        trigger_notify('blockmanager_register_blocks', array($this));
+        trigger_notify('blockmanager_register_blocks', [$this]);
     }
 
     /**
@@ -79,14 +76,14 @@ class BlockManager
     {
         global $conf;
         $conf_id = 'blk_'.$this->id;
-        $mb_conf = isset($conf[$conf_id]) ? $conf[$conf_id] : array();
+        $mb_conf = $conf[$conf_id] ?? [];
         if (!is_array($mb_conf)) {
             $mb_conf = @unserialize($mb_conf);
         }
 
         $idx = 1;
         foreach ($this->registered_blocks as $id => $block) {
-            $pos = isset($mb_conf[$id]) ? $mb_conf[$id] : $idx * 50;
+            $pos = $mb_conf[$id] ?? $idx * 50;
             if ($pos > 0) {
                 $this->display_blocks[$id] = new DisplayBlock($block);
                 $this->display_blocks[$id]->set_position($pos);
@@ -94,7 +91,7 @@ class BlockManager
             $idx++;
         }
         $this->sort_blocks();
-        trigger_notify('blockmanager_prepare_display', array($this));
+        trigger_notify('blockmanager_prepare_display', [$this]);
         $this->sort_blocks();
     }
 
@@ -127,10 +124,7 @@ class BlockManager
      */
     public function get_block($block_id)
     {
-        if (isset($this->display_blocks[$block_id])) {
-            return $this->display_blocks[$block_id];
-        }
-        return null;
+        return $this->display_blocks[$block_id] ?? null;
     }
 
     /**
@@ -151,7 +145,7 @@ class BlockManager
      */
     protected function sort_blocks()
     {
-        uasort($this->display_blocks, array('BlockManager', 'cmp_by_position'));
+        uasort($this->display_blocks, ['BlockManager', 'cmp_by_position']);
     }
 
     /**
@@ -173,7 +167,7 @@ class BlockManager
         global $template;
 
         $template->set_filename('menubar', $file);
-        trigger_notify('blockmanager_apply', array($this));
+        trigger_notify('blockmanager_apply', [$this]);
 
         foreach ($this->display_blocks as $id => $block) {
             if (empty($block->raw_content) and empty($block->template)) {
@@ -192,23 +186,13 @@ class BlockManager
  */
 class RegisteredBlock
 {
-    /** @var string */
-    protected $id;
-    /** @var string */
-    protected $name;
-    /** @var string */
-    protected $owner;
-
     /**
      * @param string $id
      * @param string $name
      * @param string $owner
      */
-    public function __construct($id, $name, $owner)
+    public function __construct(protected $id, protected $name, protected $owner)
     {
-        $this->id = $id;
-        $this->name = $name;
-        $this->owner = $owner;
     }
 
     /**
@@ -242,8 +226,6 @@ class RegisteredBlock
  */
 class DisplayBlock
 {
-    /** @var RegisteredBlock */
-    protected $_registeredBlock;
     /** @var int */
     protected $_position;
     /** @var string */
@@ -259,11 +241,10 @@ class DisplayBlock
     public $id;
 
     /**
-     * @param RegisteredBlock $block
+     * @param RegisteredBlock $_registeredBlock
      */
-    public function __construct($block)
+    public function __construct(protected $_registeredBlock)
     {
-        $this->_registeredBlock = $block;
     }
 
     /**

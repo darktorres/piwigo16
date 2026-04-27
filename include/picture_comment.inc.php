@@ -27,13 +27,13 @@ if ($page['show_comments'] and isset($_POST['content'])) {
         die('Session expired');
     }
 
-    $comm = array(
+    $comm = [
       'author' => empty(@$_POST['author']) ? '' : trim(@$_POST['author']),
       'content' => empty(@$_POST['content']) ? '' : trim($_POST['content']),
       'website_url' => empty(@$_POST['website_url']) ? '' : trim(@$_POST['website_url']),
       'email' => empty(@$_POST['email']) ? '' : trim(@$_POST['email']),
       'image_id' => $page['image_id'],
-     );
+     ];
 
     include_once(PHPWG_ROOT_PATH.'include/functions_comment.inc.php');
 
@@ -57,7 +57,7 @@ if ($page['show_comments'] and isset($_POST['content'])) {
     // allow plugins to notify what's going on
     trigger_notify(
         'user_comment_insertion',
-        array_merge($comm, array('action' => $comment_action))
+        array_merge($comm, ['action' => $comment_action])
     );
 } elseif (isset($_POST['content'])) {
     set_status_header(403);
@@ -87,7 +87,7 @@ SELECT
     }
 
     $navigation_bar = create_navigation_bar(
-        duplicate_picture_url(array(), array('start')),
+        duplicate_picture_url([], ['start']),
         $row['nb_comments'],
         $page['start'],
         $conf['nb_comment_page'],
@@ -95,24 +95,24 @@ SELECT
     );
 
     $template->assign(
-        array(
+        [
         'COMMENT_COUNT' => $row['nb_comments'],
         'navbar' => $navigation_bar,
-        'comments' => array(),
-        )
+        'comments' => [],
+        ]
     );
 
     if ($row['nb_comments'] > 0) {
         // comments order (get, session, conf)
-        if (!empty($_GET['comments_order']) && in_array(strtoupper($_GET['comments_order']), array('ASC', 'DESC'))) {
+        if (!empty($_GET['comments_order']) && in_array(strtoupper($_GET['comments_order']), ['ASC', 'DESC'])) {
             pwg_set_session_var('comments_order', $_GET['comments_order']);
         }
         $comments_order = pwg_get_session_var('comments_order', $conf['comments_order']);
 
-        $template->assign(array(
-          'COMMENTS_ORDER_URL' => add_url_params(duplicate_picture_url(), array('comments_order' => ($comments_order == 'ASC' ? 'DESC' : 'ASC') )),
+        $template->assign([
+          'COMMENTS_ORDER_URL' => add_url_params(duplicate_picture_url(), ['comments_order' => ($comments_order == 'ASC' ? 'DESC' : 'ASC') ]),
           'COMMENTS_ORDER_TITLE' => $comments_order == 'ASC' ? l10n('Show latest comments first') : l10n('Show oldest comments first'),
-          ));
+          ]);
 
         $query = '
 SELECT
@@ -149,31 +149,31 @@ SELECT
             }
 
             $tpl_comment =
-              array(
+              [
                 'ID' => $row['id'],
                 'AUTHOR' => trigger_change('render_comment_author', $row['author']),
-                'DATE' => format_date($row['date'], array('day_name','day','month','year','time')),
+                'DATE' => format_date($row['date'], ['day_name','day','month','year','time']),
                 'CONTENT' => trigger_change('render_comment_content', $row['content']),
                 'WEBSITE_URL' => $row['website_url'],
-              );
+              ];
 
             if (can_manage_comment('delete', $row['author_id'])) {
                 $tpl_comment['U_DELETE'] = add_url_params(
                     $url_self,
-                    array(
+                    [
                     'action' => 'delete_comment',
                     'comment_to_delete' => $row['id'],
                     'pwg_token' => get_pwg_token(),
-                    )
+                    ]
                 );
             }
             if (can_manage_comment('edit', $row['author_id'])) {
                 $tpl_comment['U_EDIT'] = add_url_params(
                     $url_self,
-                    array(
+                    [
                     'action' => 'edit_comment',
                     'comment_to_edit' => $row['id'],
-                    )
+                    ]
                 );
                 if (isset($edit_comment) and ($row['id'] == $edit_comment)) {
                     $tpl_comment['IN_EDIT'] = true;
@@ -190,11 +190,11 @@ SELECT
                 if ($row['validated'] != 'true') {
                     $tpl_comment['U_VALIDATE'] = add_url_params(
                         $url_self,
-                        array(
+                        [
                               'action' => 'validate_comment',
                               'comment_to_validate' => $row['id'],
                               'pwg_token' => get_pwg_token(),
-                              )
+                              ]
                     );
                 }
             }
@@ -213,7 +213,7 @@ SELECT
     if ($show_add_comment_form) {
         $key = get_ephemeral_key(3, $page['image_id']);
 
-        $tpl_var =  array(
+        $tpl_var =  [
             'F_ACTION' =>         $url_self,
             'KEY' =>              $key,
             'CONTENT' =>          '',
@@ -225,15 +225,15 @@ SELECT
             'EMAIL_MANDATORY' =>  $conf['comments_email_mandatory'],
             'EMAIL' =>            '',
             'SHOW_WEBSITE' =>     $conf['comments_enable_website'],
-          );
+          ];
 
         if ('reject' == @$comment_action) {
-            foreach (array('content', 'author', 'website_url', 'email') as $k) {
+            foreach (['content', 'author', 'website_url', 'email'] as $k) {
                 $tpl_var[strtoupper($k)] = isset($_POST[$k]) ? htmlspecialchars(stripslashes(@$_POST[$k])) : '';
             }
         }
         $template->assign('comment_add', $tpl_var);
     }
-    $template->set_filenames(array('comment_list' => 'comment_list.tpl'));
+    $template->set_filenames(['comment_list' => 'comment_list.tpl']);
     $template->assign_var_from_handle('COMMENT_LIST', 'comment_list');
 }

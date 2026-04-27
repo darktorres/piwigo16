@@ -32,11 +32,11 @@ include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 check_status(ACCESS_ADMINISTRATOR);
 
 $tpl_extension = isset($conf['extents_for_templates']) ?
-      unserialize($conf['extents_for_templates']) : array();
+      unserialize($conf['extents_for_templates']) : [];
 $new_extensions = get_extents();
 
 /* Selective URLs keyword */
-$relevant_parameters = array(
+$relevant_parameters = [
     '----------',
     'category',
     'favorites',
@@ -50,7 +50,7 @@ $relevant_parameters = array(
     'flat',
     'list', /* <=> Random */
     'tags',
-    );
+    ];
 $query = '
 SELECT permalink
   FROM '.CATEGORIES_TABLE.'
@@ -62,7 +62,7 @@ $permalinks = array_from_query($query, 'permalink');
 $relevant_parameters = array_merge($relevant_parameters, $permalinks);
 
 /* Link all supported templates to their respective handle */
-$eligible_templates = array(
+$eligible_templates = [
     '----------'                 => 'N/A',
     'about.tpl'                  => 'about',
     'comments.tpl'               => 'comments',
@@ -96,12 +96,12 @@ $eligible_templates = array(
     'slideshow.tpl'              => 'slideshow',
     'tags.tpl'                   => 'tags',
     'thumbnails.tpl'             => 'index_thumbnails',
-);
+];
 
 $flip_templates = array_flip($eligible_templates);
 
 $available_templates = array_merge(
-    array('N/A' => '----------'),
+    ['N/A' => '----------'],
     get_dirs(PHPWG_ROOT_PATH.'themes')
 );
 
@@ -110,7 +110,7 @@ $available_templates = array_merge(
 // +-----------------------------------------------------------------------+
 
 if (isset($_POST['submit'])) {
-    $replacements = array();
+    $replacements = [];
     $i = 0;
     while (isset($_POST['reptpl'][$i])) {
         $newtpl = $_POST['reptpl'][$i];
@@ -125,7 +125,7 @@ if (isset($_POST['submit'])) {
             $bound_tpl = 'N/A';
         }
         if ($handle != 'N/A') {
-            $replacements[$newtpl] = array($handle, $url_keyword, $bound_tpl);
+            $replacements[$newtpl] = [$handle, $url_keyword, $bound_tpl];
         }
         $i++;
     }
@@ -150,22 +150,22 @@ foreach ($tpl_extension as $file => $conditions) {
     if (!in_array($file, $new_extensions)) {
         unset($tpl_extension[$file]);
     } else {
-        $new_extensions = array_diff($new_extensions, array($file));
+        $new_extensions = array_diff($new_extensions, [$file]);
     }
 }
 foreach ($new_extensions as $file) {
-    $tpl_extension[$file] = array('N/A', 'N/A', 'N/A');
+    $tpl_extension[$file] = ['N/A', 'N/A', 'N/A'];
 }
 
-$template->set_filenames(array('extend_for_templates'
-     => 'extend_for_templates.tpl'));
+$template->set_filenames(['extend_for_templates'
+     => 'extend_for_templates.tpl']);
 
 $base_url = PHPWG_ROOT_PATH.'admin.php?page=extend_for_templates';
 
 $template->assign(
-    array(
+    [
     'U_HELP' => get_root_url().'admin/popuphelp.php?page=extend_for_templates',
-    )
+    ]
 );
 ksort($tpl_extension);
 foreach ($tpl_extension as $file => $conditions) {
@@ -175,14 +175,14 @@ foreach ($tpl_extension as $file => $conditions) {
     {
         $template->append(
             'extents',
-            array(
+            [
             'replacer'       => $file,
             'url_parameter'  => $relevant_parameters,
             'original_tpl'   => array_keys($eligible_templates),
             'bound_tpl'          => $available_templates,
             'selected_tpl'   => $flip_templates[$handle],
             'selected_url'   => $url_keyword,
-            'selected_bound' => $bound_tpl,)
+            'selected_bound' => $bound_tpl,]
         );
     }
 }

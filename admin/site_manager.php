@@ -30,7 +30,7 @@ if (!empty($_POST) or isset($_GET['action'])) {
 // +-----------------------------------------------------------------------+
 // |                             template init                             |
 // +-----------------------------------------------------------------------+
-$template->set_filenames(array('site_manager' => 'site_manager.tpl'));
+$template->set_filenames(['site_manager' => 'site_manager.tpl']);
 
 // +-----------------------------------------------------------------------+
 // | tabs                                                                  |
@@ -54,7 +54,7 @@ if (isset($_POST['submit']) and !empty($_POST['galleries_url'])) {
     }
     $url = preg_replace('/[\/]*$/', '', $_POST['galleries_url']);
     $url .= '/';
-    if (! (strpos($url, '.') === 0)) {
+    if (! (str_starts_with($url, '.'))) {
         $url = './' . $url;
     }
 
@@ -98,7 +98,7 @@ SELECT galleries_url
   FROM '.SITES_TABLE.'
   WHERE id = '.$page['site'].'
 ;';
-    list($galleries_url) = pwg_db_fetch_row(pwg_query($query));
+    [$galleries_url] = pwg_db_fetch_row(pwg_query($query));
     switch ($_GET['action']) {
         case 'delete':
             {
@@ -110,11 +110,11 @@ SELECT galleries_url
 }
 
 $template->assign(
-    array(
-    'F_ACTION'  => get_root_url().'admin.php'.get_query_string_diff(array('action','site','pwg_token')),
+    [
+    'F_ACTION'  => get_root_url().'admin.php'.get_query_string_diff(['action','site','pwg_token']),
     'PWG_TOKEN' => get_pwg_token(),
     'ADMIN_PAGE_TITLE' => l10n('Synchronize'),
-    )
+    ]
 );
 
 $query = '
@@ -145,19 +145,19 @@ while ($row = pwg_db_fetch_assoc($result)) {
     $update_url .= '&amp;site='.$row['id'];
 
     $tpl_var =
-      array(
+      [
         'NAME' => $row['galleries_url'],
         'TYPE' => l10n($is_remote ? 'Remote' : 'Local'),
         'CATEGORIES' => (int)@$sites_detail[$row['id']]['nb_categories'],
         'IMAGES' => (int)@$sites_detail[$row['id']]['nb_images'],
         'U_SYNCHRONIZE' => $update_url,
-       );
+       ];
 
     if ($row['id'] != 1) {
         $tpl_var['U_DELETE'] = $base_url.'delete';
     }
 
-    $plugin_links = array();
+    $plugin_links = [];
     //$plugin_links is array of array composed of U_HREF, U_HINT & U_CAPTION
     $plugin_links =
       trigger_change(

@@ -69,8 +69,6 @@ class PwgError
  */
 class PwgNamedArray
 {
-    /*private*/ public $_content;
-    /*private*/ public $_itemName;
     /*private*/ public $_xmlAttributes;
 
     /**
@@ -80,10 +78,8 @@ class PwgNamedArray
      * @param xmlAttributes array of sub-item attributes that will be encoded as
      *      xml attributes instead of xml child elements
      */
-    public function __construct($arr, $itemName, $xmlAttributes = array())
+    public function __construct(public $_content, public $_itemName, $xmlAttributes = [])
     {
-        $this->_content = $arr;
-        $this->_itemName = $itemName;
         $this->_xmlAttributes = array_flip($xmlAttributes);
     }
 }
@@ -94,7 +90,6 @@ class PwgNamedArray
  */
 class PwgNamedStruct
 {
-    /*private*/ public $_content;
     /*private*/ public $_xmlAttributes;
 
     /**
@@ -106,13 +101,12 @@ class PwgNamedStruct
      *    encoded as xml attributes (if null - automatically prefer xml attributes
      *    whenever possible)
      */
-    public function __construct($content, $xmlAttributes = null, $xmlElements = null)
+    public function __construct(public $_content, $xmlAttributes = null, $xmlElements = null)
     {
-        $this->_content = $content;
         if (isset($xmlAttributes)) {
             $this->_xmlAttributes = array_flip($xmlAttributes);
         } else {
-            $this->_xmlAttributes = array();
+            $this->_xmlAttributes = [];
             foreach ($this->_content as $key => $value) {
                 if (!empty($key) and (is_scalar($value) or is_null($value))) {
                     if (empty($xmlElements) or !in_array($key, $xmlElements)) {
@@ -177,7 +171,7 @@ abstract class PwgResponseEncoder
     private static function flatten(&$value)
     {
         if (is_object($value)) {
-            $class = strtolower(@get_class($value));
+            $class = strtolower(@$value::class);
             if ($class == 'pwgnamedarray') {
                 $value = $value->_content;
             }
@@ -212,7 +206,7 @@ class PwgServer
     public $_responseEncoder;
     public $_responseFormat;
 
-    public $_methods = array();
+    public $_methods = [];
 
     public function __construct()
     {
@@ -259,15 +253,15 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
         // add reflection methods
         $this->addMethod(
             'reflection.getMethodList',
-            array('PwgServer', 'ws_getMethodList')
+            ['PwgServer', 'ws_getMethodList']
         );
         $this->addMethod(
             'reflection.getMethodDetails',
-            array('PwgServer', 'ws_getMethodDetails'),
-            array('methodName')
+            ['PwgServer', 'ws_getMethodDetails'],
+            ['methodName']
         );
 
-        trigger_notify('ws_add_methods', array(&$this));
+        trigger_notify('ws_add_methods', [&$this]);
         uksort($this->_methods, 'strnatcmp');
         $this->_requestHandler->handleRequest($this);
     }
@@ -304,10 +298,10 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
      *    @option bool admin_only (optional)
      *    @option bool post_only (optional)
      */
-    public function addMethod($methodName, $callback, $params = array(), $description = '', $include_file = '', $options = array())
+    public function addMethod($methodName, $callback, $params = [], $description = '', $include_file = '', $options = [])
     {
         if (!is_array($params)) {
-            $params = array();
+            $params = [];
         }
 
         if (range(0, count($params) - 1) === array_keys($params)) {
@@ -316,7 +310,7 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
 
         foreach ($params as $param => $data) {
             if (!is_array($data)) {
-                $params[$param] = array('flags' => 0,'type' => 0);
+                $params[$param] = ['flags' => 0,'type' => 0];
             } else {
                 if (!isset($data['flags'])) {
                     $data['flags'] = 0;
@@ -331,13 +325,13 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
             }
         }
 
-        $this->_methods[$methodName] = array(
+        $this->_methods[$methodName] = [
           'callback'    => $callback,
           'description' => $description,
           'signature'   => $params,
           'include'     => $include_file,
           'options'     => $options,
-          );
+          ];
     }
 
     public function hasMethod($methodName)
@@ -348,13 +342,13 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
     public function getMethodDescription($methodName)
     {
         $desc = @$this->_methods[$methodName]['description'];
-        return isset($desc) ? $desc : '';
+        return $desc ?? '';
     }
 
     public function getMethodSignature($methodName)
     {
         $signature = @$this->_methods[$methodName]['signature'];
-        return isset($signature) ? $signature : array();
+        return $signature ?? [];
     }
 
     /**
@@ -363,7 +357,7 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
     public function getMethodOptions($methodName)
     {
         $options = @$this->_methods[$methodName]['options'];
-        return isset($options) ? $options : array();
+        return $options ?? [];
     }
 
     public static function isPost()
@@ -374,17 +368,17 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
     public static function makeArrayParam(&$param)
     {
         if ($param == null) {
-            $param = array();
+            $param = [];
         } else {
             if (!is_array($param)) {
-                $param = array($param);
+                $param = [$param];
             }
         }
     }
 
     public static function checkType(&$param, $type, $name)
     {
-        $opts = array();
+        $opts = [];
         $msg = '';
         if (self::hasFlag($type, WS_TYPE_POSITIVE | WS_TYPE_NOTNULL)) {
             $opts['options']['min_range'] = 1;
@@ -475,7 +469,7 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
 
         // parameter check and data correction
         $signature = $method['signature'];
-        $missing_params = array();
+        $missing_params = [];
 
         foreach ($signature as $name => $options) {
             $flags = $options['flags'];
@@ -536,7 +530,7 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
             if (!empty($method['include'])) {
                 include_once($method['include']);
             }
-            $result = call_user_func_array($method['callback'], array($params, &$this));
+            $result = call_user_func_array($method['callback'], [$params, &$this]);
         }
 
         return $result;
@@ -549,11 +543,9 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
     {
         $methods = array_filter(
             $service->_methods,
-            function ($m) {
-                return empty($m['options']['hidden']) || !$m['options']['hidden'];
-            }
+            fn ($m) => empty($m['options']['hidden']) || !$m['options']['hidden']
         );
-        return array('methods' => new PwgNamedArray(array_keys($methods), 'method') );
+        return ['methods' => new PwgNamedArray(array_keys($methods), 'method') ];
     }
 
     /**
@@ -567,20 +559,20 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
             return new PwgError(WS_ERR_INVALID_PARAM, 'Requested method does not exist');
         }
 
-        $res = array(
+        $res = [
           'name' => $methodName,
           'description' => $service->getMethodDescription($methodName),
-          'params' => array(),
+          'params' => [],
           'options' => $service->getMethodOptions($methodName),
-        );
+        ];
 
         foreach ($service->getMethodSignature($methodName) as $name => $options) {
-            $param_data = array(
+            $param_data = [
               'name' => $name,
               'optional' => self::hasFlag($options['flags'], WS_PARAM_OPTIONAL),
               'acceptArray' => self::hasFlag($options['flags'], WS_PARAM_ACCEPT_ARRAY),
               'type' => 'mixed',
-              );
+              ];
 
             if (isset($options['default'])) {
                 $param_data['defaultValue'] = $options['default'];

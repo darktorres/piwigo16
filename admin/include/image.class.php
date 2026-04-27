@@ -43,21 +43,19 @@ class pwg_image
 {
     public $image;
     public $library = '';
-    public $source_filepath = '';
     public static $ext_imagick_version = '';
 
-    public function __construct($source_filepath, $library = null)
+    public function __construct(public $source_filepath, $library = null)
     {
         global $conf;
-        $this->source_filepath = $source_filepath;
 
-        trigger_notify('load_image_library', array(&$this));
+        trigger_notify('load_image_library', [&$this]);
 
         if (is_object($this->image)) {
             return; // A plugin may have load its own library
         }
 
-        $extension = strtolower(get_extension($source_filepath));
+        $extension = strtolower(get_extension($this->source_filepath));
 
         if (!in_array($extension, $conf['picture_ext'])) {
             die('[Image] unsupported file extension');
@@ -68,13 +66,13 @@ class pwg_image
         }
 
         $class = 'image_'.$this->library;
-        $this->image = new $class($source_filepath);
+        $this->image = new $class($this->source_filepath);
     }
 
     // Unknow methods will be redirected to image object
     public function __call($method, $arguments)
     {
-        return call_user_func_array(array($this->image, $method), $arguments);
+        return call_user_func_array([$this->image, $method], $arguments);
     }
 
     // Piwigo resize function
@@ -126,12 +124,12 @@ class pwg_image
     public static function get_resize_dimensions($width, $height, $max_width, $max_height, $rotation = null, $crop = false, $follow_orientation = true)
     {
         $rotate_for_dimensions = false;
-        if (isset($rotation) and in_array(abs($rotation), array(90, 270))) {
+        if (isset($rotation) and in_array(abs($rotation), [90, 270])) {
             $rotate_for_dimensions = true;
         }
 
         if ($rotate_for_dimensions) {
-            list($width, $height) = array($height, $width);
+            [$width, $height] = [$height, $width];
         }
 
         if ($crop) {
@@ -139,7 +137,7 @@ class pwg_image
             $y = 0;
 
             if ($width < $height and $follow_orientation) {
-                list($max_width, $max_height) = array($max_height, $max_width);
+                [$max_width, $max_height] = [$max_height, $max_width];
             }
 
             $img_ratio = $width / $height;
@@ -173,21 +171,21 @@ class pwg_image
         }
 
         if ($rotate_for_dimensions) {
-            list($destination_width, $destination_height) = array($destination_height, $destination_width);
+            [$destination_width, $destination_height] = [$destination_height, $destination_width];
         }
 
-        $result = array(
+        $result = [
           'width' => $destination_width,
           'height' => $destination_height,
-          );
+          ];
 
         if ($crop and ($x or $y)) {
-            $result['crop'] = array(
+            $result['crop'] = [
               'width' => $width,
               'height' => $height,
               'x' => $x,
               'y' => $y,
-              );
+              ];
         }
         return $result;
     }
@@ -211,35 +209,35 @@ class pwg_image
         switch (true) {
             case !is_string($buf):
             case strlen($buf) < 25:
-            case substr($buf, 0, 4) != 'RIFF':
+            case !str_starts_with($buf, 'RIFF'):
             case substr($buf, 8, 4) != 'WEBP':
             case substr($buf, 12, 3) != 'VP8':
                 throw new Exception('webp_info(): not a valid webp image');
 
             case $buf[15] == ' ':
                 // Simple File Format (Lossy)
-                return array(
+                return [
                   'type'            => 'VP8',
                   'has-animation'   => false,
                   'has-transparent' => false,
-                );
+                ];
 
 
             case $buf[15] == 'L':
                 // Simple File Format (Lossless)
-                return array(
+                return [
                   'type'            => 'VP8L',
                   'has-animation'   => false,
                   'has-transparent' => (bool) (!!(ord($buf[24]) & 0x00000010)),
-                );
+                ];
 
             case $buf[15] == 'X':
                 // Extended File Format
-                return array(
+                return [
                   'type'            => 'VP8X',
                   'has-animation'   => (bool) (!!(ord($buf[20]) & 0x00000002)),
                   'has-transparent' => (bool) (!!(ord($buf[20]) & 0x00000010)),
-                );
+                ];
 
             default:
                 throw new Exception('webp_info(): could not detect webp type');
@@ -248,7 +246,7 @@ class pwg_image
 
     public static function get_rotation_angle($source_filepath)
     {
-        list($width, $height, $type) = getimagesize($source_filepath);
+        [$width, $height, $type] = getimagesize($source_filepath);
         if (IMAGETYPE_JPEG != $type) {
             return null;
         }
@@ -263,11 +261,11 @@ class pwg_image
 
         if (isset($exif['Orientation']) and preg_match('/^\s*(\d)/', $exif['Orientation'], $matches)) {
             $orientation = $matches[1];
-            if (in_array($orientation, array(3, 4))) {
+            if (in_array($orientation, [3, 4])) {
                 $rotation = 180;
-            } elseif (in_array($orientation, array(5, 6))) {
+            } elseif (in_array($orientation, [5, 6])) {
                 $rotation = 270;
-            } elseif (in_array($orientation, array(7, 8))) {
+            } elseif (in_array($orientation, [7, 8])) {
                 $rotation = 90;
             }
         }
@@ -301,11 +299,11 @@ class pwg_image
         // Amount should be in the range of 48-10
         $amount = round(abs(-48 + ($amount * 0.38)), 2);
 
-        $matrix = array(
-          array(-1,   -1,    -1),
-          array(-1, $amount, -1),
-          array(-1,   -1,    -1),
-          );
+        $matrix = [
+          [-1,   -1,    -1],
+          [-1, $amount, -1],
+          [-1,   -1,    -1],
+          ];
 
         $norm = array_sum(array_map('array_sum', $matrix));
 
@@ -320,7 +318,7 @@ class pwg_image
 
     protected function get_resize_result($destination_filepath, $width, $height, $time = null)
     {
-        return array(
+        return [
           'source'      => $this->source_filepath,
           'destination' => $destination_filepath,
           'width'       => $width,
@@ -328,7 +326,7 @@ class pwg_image
           'size'        => floor(filesize($destination_filepath) / 1024).' KB',
           'time'        => $time ? number_format((get_moment() - $time) * 1000, 2, '.', ' ').' ms' : null,
           'library'     => $this->library,
-        );
+        ];
     }
 
     public static function is_imagick()
@@ -509,7 +507,7 @@ class image_imagick implements imageInterface
     public function write($destination_filepath)
     {
         // use 4:2:2 chroma subsampling (reduce file size by 20-30% with "almost" no human perception)
-        $this->image->setSamplingFactors(array(2,1));
+        $this->image->setSamplingFactors([2,1]);
         return $this->image->writeImage($destination_filepath);
     }
 }
@@ -521,24 +519,22 @@ class image_imagick implements imageInterface
 class image_ext_imagick implements imageInterface
 {
     public $imagickdir = '';
-    public $source_filepath = '';
     public $width = '';
     public $height = '';
     public $is_animated_webp = false;
-    public $commands = array();
+    public $commands = [];
 
-    public function __construct($source_filepath)
+    public function __construct(public $source_filepath)
     {
         global $conf;
-        $this->source_filepath = $source_filepath;
         $this->imagickdir = $conf['ext_imagick_dir'];
 
-        if (strpos(@$_SERVER['SCRIPT_FILENAME'], '/kunden/') === 0) {  // 1and1
+        if (str_starts_with(@$_SERVER['SCRIPT_FILENAME'], '/kunden/')) {  // 1and1
             @putenv('MAGICK_THREAD_LIMIT=1');
         }
 
-        if ('webp' == strtolower(get_extension($source_filepath))) {
-            $webp_info = pwg_image::webp_info($source_filepath);
+        if ('webp' == strtolower(get_extension($this->source_filepath))) {
+            $webp_info = pwg_image::webp_info($this->source_filepath);
 
             if ($webp_info['has-animation']) {
                 $this->is_animated_webp = true;
@@ -547,12 +543,12 @@ class image_ext_imagick implements imageInterface
                 // frame, such as "400x300400x300400x300" (3 frames of 400x300), as a big
                 // string, impossible to parse :-/ So let's use the PHP embedded function
                 // getimagesize here.
-                list($this->width, $this->height) = getimagesize($source_filepath);
+                [$this->width, $this->height] = getimagesize($this->source_filepath);
                 return;
             }
         }
 
-        $command = $this->imagickdir.'identify -format "%wx%h" "'.realpath($source_filepath).'"';
+        $command = $this->imagickdir.'identify -format "%wx%h" "'.realpath($this->source_filepath).'"';
         @exec($command, $returnarray);
         if (!is_array($returnarray) or empty($returnarray[0]) or !preg_match('/^(\d+)x(\d+)$/', $returnarray[0], $match)) {
             die("[External ImageMagick] Corrupt image\n" . var_export($returnarray, true));
@@ -717,7 +713,7 @@ class image_gd implements imageInterface
         $gd_info = gd_info();
         $extension = strtolower(get_extension($source_filepath));
 
-        if (in_array($extension, array('jpg', 'jpeg'))) {
+        if (in_array($extension, ['jpg', 'jpeg'])) {
             $this->image = imagecreatefromjpeg($source_filepath);
         } elseif ($extension == 'png') {
             $this->image = imagecreatefrompng($source_filepath);

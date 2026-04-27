@@ -21,7 +21,7 @@ if (isset($page['category'])) {
     check_restrictions($page['category']['id']);
 }
 if ($page['start'] > 0 && $page['start'] >= count($page['items'])) {
-    page_not_found('', duplicate_index_url(array('start' => 0)));
+    page_not_found('', duplicate_index_url(['start' => 0]));
 }
 
 trigger_notify('loc_begin_index');
@@ -35,8 +35,8 @@ if (isset($_GET['image_order'])) {
     }
     redirect(
         duplicate_index_url(
-            array(),        // nothing to redefine
-            array('start')  // changing display order goes back to section first page
+            [],        // nothing to redefine
+            ['start']  // changing display order goes back to section first page
         )
     );
 }
@@ -49,10 +49,10 @@ if (isset($_GET['display'])) {
 
 //-------------------------------------------------------------- initialization
 // navigation bar
-$page['navigation_bar'] = array();
+$page['navigation_bar'] = [];
 if (count($page['items']) > $page['nb_image_page']) {
     $page['navigation_bar'] = create_navigation_bar(
-        duplicate_index_url(array(), array('start')),
+        duplicate_index_url([], ['start']),
         count($page['items']),
         $page['start'],
         $page['nb_image_page'],
@@ -76,7 +76,7 @@ if (isset($page['is_homepage']) and $page['is_homepage']) {
     if ($start > 0 && $start >= count($page['items'])) {
         $start -= $page['nb_image_page'];
     }
-    $canonical_url = duplicate_index_url(array('start' => $start));
+    $canonical_url = duplicate_index_url(['start' => $start]);
 }
 $template->assign('U_CANONICAL', $canonical_url);
 
@@ -106,34 +106,34 @@ if (empty($page['is_external'])) {
     if (isset($page['flat']) or isset($page['chronology_field'])) {
         $template->assign(
             'U_MODE_NORMAL',
-            duplicate_index_url(array(), array('chronology_field', 'start', 'flat'))
+            duplicate_index_url([], ['chronology_field', 'start', 'flat'])
         );
     }
 
     if ($conf['index_flat_icon'] and !isset($page['flat']) and 'categories' == $page['section']) {
         $template->assign(
             'U_MODE_FLAT',
-            duplicate_index_url(array('flat' => ''), array('start', 'chronology_field'))
+            duplicate_index_url(['flat' => ''], ['start', 'chronology_field'])
         );
     }
 
     if (!isset($page['chronology_field'])) {
-        $chronology_params = array(
+        $chronology_params = [
           'chronology_field' => 'created',
           'chronology_style' => 'monthly',
           'chronology_view' => 'list',
-          );
+          ];
         if ($conf['index_created_date_icon']) {
             $template->assign(
                 'U_MODE_CREATED',
-                duplicate_index_url($chronology_params, array('start', 'flat'))
+                duplicate_index_url($chronology_params, ['start', 'flat'])
             );
         }
         if ($conf['index_posted_date_icon']) {
             $chronology_params['chronology_field'] = 'posted';
             $template->assign(
                 'U_MODE_POSTED',
-                duplicate_index_url($chronology_params, array('start', 'flat'))
+                duplicate_index_url($chronology_params, ['start', 'flat'])
             );
         }
     } else {
@@ -144,8 +144,8 @@ if (empty($page['is_external'])) {
         }
         if ($conf['index_'.$chronology_field.'_date_icon']) {
             $url = duplicate_index_url(
-                array('chronology_field' => $chronology_field ),
-                array('chronology_date', 'start', 'flat')
+                ['chronology_field' => $chronology_field ],
+                ['chronology_date', 'start', 'flat']
             );
             $template->assign(
                 'U_MODE_'.strtoupper($chronology_field),
@@ -158,11 +158,11 @@ if (empty($page['is_external'])) {
 
     if ('categories' == $page['section'] and isset($page['category']) and !isset($page['combined_categories'])) {
         $template->assign(
-            array(
+            [
             'SEARCH_IN_SET_BUTTON' => $conf['index_search_in_set_button'],
             'SEARCH_IN_SET_ACTION' => $conf['index_search_in_set_action'],
             'SEARCH_IN_SET_URL' => get_root_url().'search.php?cat_id='.$page['category']['id'],
-      )
+      ]
         );
     }
 
@@ -176,42 +176,40 @@ if (empty($page['is_external'])) {
 
         $tags = add_level_to_tags($tags);
 
-        $related_tags = array();
+        $related_tags = [];
 
         foreach ($tags as $tag) {
             $related_tags[] = array_merge(
                 $tag,
-                array(
+                [
                 'U_ADD' => make_index_url(
-                    array(
+                    [
                     'tags' => array_merge(
                         $page['tags'],
-                        array($tag)
+                        [$tag]
                     ),
-                    )
+                    ]
                 ),
                 'URL' => make_index_url(
-                    array( 'tags' => array($tag) )
+                    [ 'tags' => [$tag] ]
                 ),
-                )
+                ]
             );
         }
 
         //We sort the array here because we want them sorted by counter and not alphabetically like before.
-        usort($related_tags, function ($a, $b) {
-            return $b['counter'] <=> $a['counter'];
-        });
+        usort($related_tags, fn ($a, $b) => $b['counter'] <=> $a['counter']);
 
 
         include_once(PHPWG_ROOT_PATH.'include/selected_tags.inc.php');
 
         $template->assign(
-            array(
+            [
             'SEARCH_IN_SET_BUTTON' => $conf['index_search_in_set_button'],
             'SEARCH_IN_SET_ACTION' => $conf['index_search_in_set_action'],
             'SEARCH_IN_SET_URL' => get_root_url().'search.php?tag_id='.implode(',', $page['body_data']['tag_ids']),
             'COMBINABLE_TAGS' => $related_tags,
-      )
+      ]
         );
     }
 
@@ -225,7 +223,7 @@ if (empty($page['is_external'])) {
     if (is_admin() and !empty($page['items']) and $conf['index_caddie_icon']) {
         $template->assign(
             'U_CADDIE',
-            add_url_params(duplicate_index_url(), array('caddie' => 1))
+            add_url_params(duplicate_index_url(), ['caddie' => 1])
         );
     }
 
@@ -237,16 +235,16 @@ if (empty($page['is_external'])) {
         );
         if (count($cats)) {
             usort($cats, 'name_compare');
-            $hints = array();
+            $hints = [];
             foreach ($cats as $cat) {
-                $hints[] = get_cat_display_name(array($cat), '');
+                $hints[] = get_cat_display_name([$cat], '');
             }
             $template->assign('category_search_results', $hints);
         }
 
         $tags = (array)@$page['qsearch_details']['matching_tags'];
         foreach ($tags as $tag) {
-            $tag['URL'] = make_index_url(array('tags' => array($tag)));
+            $tag['URL'] = make_index_url(['tags' => [$tag]]);
             $template->append('tag_search_results', $tag);
         }
 
@@ -274,9 +272,9 @@ if (empty($page['is_external'])) {
 
         $url = add_url_params(
             duplicate_index_url(),
-            array('image_order' => '')
+            ['image_order' => '']
         );
-        $tpl_orders = array();
+        $tpl_orders = [];
         $order_selected = false;
 
         foreach ($preferred_image_orders as $order_id => $order) {
@@ -287,11 +285,11 @@ if (empty($page['is_external'])) {
                     $order_selected = true;
                 }
 
-                $tpl_orders[ $order_id ] = array(
+                $tpl_orders[ $order_id ] = [
                   'DISPLAY' => $order[0],
                   'URL' => $url.$order_id,
                   'SELECTED' => $order_idx == $order_id,
-                  );
+                  ];
             }
         }
 
@@ -324,7 +322,7 @@ if (empty($page['is_external'])) {
         if ($conf['index_sizes_icon']) {
             $url = add_url_params(
                 duplicate_index_url(),
-                array('display' => '')
+                ['display' => '']
             );
 
             $selected_type = $template->get_template_vars('derivative_params')->type;
@@ -335,11 +333,11 @@ if (empty($page['is_external'])) {
             foreach ($type_map as $params) {
                 $template->append(
                     'image_derivatives',
-                    array(
+                    [
                     'DISPLAY' => l10n($params->type),
                     'URL' => $url.$params->type,
                     'SELECTED' => ($params->type == $selected_type ? true : false),
-                    )
+                    ]
                 );
             }
         }
@@ -360,22 +358,22 @@ if (empty($page['is_external'])) {
     if (!empty($page['items']) and 'tags' != $page['body_data']['section']) {
         $selection = array_slice($page['items'], $page['start'], $page['nb_image_page']);
         $tags = add_level_to_tags(get_common_tags($selection, $conf['content_tag_cloud_items_number']));
-        $related_tags = array();
+        $related_tags = [];
         foreach ($tags as $tag) {
             $related_tags[] =
             array_merge(
                 $tag,
-                array(
-                'URL' => make_index_url(array( 'tags' => array($tag) )),
-        )
+                [
+                'URL' => make_index_url([ 'tags' => [$tag] ]),
+        ]
             );
         }
 
         $template->assign(
-            array(
+            [
       'RELATED_TAGS_ACTION' => !empty($related_tags) ? true : false,
       'RELATED_TAGS' => $related_tags,
-      )
+      ]
         );
     }
 }

@@ -17,7 +17,7 @@ if (!is_webmaster()) {
 
 include_once(PHPWG_ROOT_PATH.'admin/include/languages.class.php');
 
-$template->set_filenames(array('languages' => 'languages_installed.tpl'));
+$template->set_filenames(['languages' => 'languages_installed.tpl']);
 
 $base_url = get_root_url().'admin.php?page='.$page['page'];
 
@@ -41,10 +41,10 @@ if (isset($_GET['action']) and isset($_GET['language']) and is_webmaster()) {
 // +-----------------------------------------------------------------------+
 $default_language = get_default_language();
 
-$tpl_languages = array();
+$tpl_languages = [];
 
 foreach ($languages->fs_languages as $language_id => $language) {
-    $language['u_action'] = add_url_params($base_url, array('language' => $language_id));
+    $language['u_action'] = add_url_params($base_url, ['language' => $language_id]);
 
     if (in_array($language_id, array_keys($languages->db_languages))) {
         $language['state'] = 'active';
@@ -73,9 +73,9 @@ foreach ($languages->fs_languages as $language_id => $language) {
 }
 
 $template->assign(
-    array(
+    [
     'languages' => $tpl_languages,
-    )
+    ]
 );
 $template->append('language_states', 'active');
 $template->append('language_states', 'inactive');

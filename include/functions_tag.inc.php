@@ -24,8 +24,8 @@ function get_nb_available_tags()
         $user['nb_available_tags'] = count(get_available_tags());
         single_update(
             USER_CACHE_TABLE,
-            array('nb_available_tags' => $user['nb_available_tags']),
-            array('user_id' => $user['id'])
+            ['nb_available_tags' => $user['nb_available_tags']],
+            ['user_id' => $user['id']]
         );
     }
     return $user['nb_available_tags'];
@@ -38,7 +38,7 @@ function get_nb_available_tags()
  *
  * @return array [id, name, counter, url_name]
  */
-function get_available_tags($tag_ids = array())
+function get_available_tags($tag_ids = [])
 {
     global $persistent_cache, $user;
 
@@ -52,11 +52,11 @@ SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter
     ON ic.image_id=it.image_id
   WHERE 1=1
   '.get_sql_condition_FandF(
-        array(
+        [
         'forbidden_categories' => 'category_id',
         'visible_categories' => 'category_id',
         'visible_images' => 'ic.image_id',
-        ),
+        ],
         ' AND '
     );
 
@@ -83,7 +83,7 @@ SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter
     }
 
     if (empty($tag_counters)) {
-        return array();
+        return [];
     }
 
     $query = '
@@ -97,7 +97,7 @@ SELECT *
     }
     $result = pwg_query($query);
 
-    $tags = array();
+    $tags = [];
     while ($row = pwg_db_fetch_assoc($result)) {
         if (isset($tag_counters[ $row['id'] ])) {
             $row['counter'] = intval($tag_counters[ $row['id'] ]);
@@ -121,7 +121,7 @@ SELECT *
   FROM '.TAGS_TABLE.'
 ;';
     $result = pwg_query($query);
-    $tags = array();
+    $tags = [];
     while ($row = pwg_db_fetch_assoc($result)) {
         $row['name_raw'] = $row['name'];
         $row['name'] = trigger_change('render_tag_name', $row['name'], $row);
@@ -200,7 +200,7 @@ function get_image_ids_for_tags($tag_ids, $mode = 'AND', $extra_images_where_sql
 {
     global $conf;
     if (empty($tag_ids)) {
-        return array();
+        return [];
     }
 
     $query = '
@@ -218,11 +218,11 @@ SELECT id
 
     if ($use_permissions) {
         $query .= get_sql_condition_FandF(
-            array(
+            [
             'forbidden_categories' => 'category_id',
             'visible_categories' => 'category_id',
             'visible_images' => 'id',
-            ),
+            ],
             "\n  AND"
         );
     }
@@ -247,10 +247,10 @@ SELECT id
  * @param int[] $excluded_tag_ids
  * @return array [id, name, counter, url_name]
  */
-function get_common_tags($items, $max_tags, $excluded_tag_ids = array())
+function get_common_tags($items, $max_tags, $excluded_tag_ids = [])
 {
     if (empty($items)) {
-        return array();
+        return [];
     }
     $query = '
 SELECT t.*, count(*) AS counter
@@ -272,7 +272,7 @@ SELECT t.*, count(*) AS counter
     }
 
     $result = pwg_query($query);
-    $tags = array();
+    $tags = [];
     while ($row = pwg_db_fetch_assoc($result)) {
         $row['name'] = trigger_change('render_tag_name', $row['name'], $row);
         $tags[] = $row;
@@ -289,9 +289,9 @@ SELECT t.*, count(*) AS counter
  * @param string[] $names
  * @return array [id, name, url_name]
  */
-function find_tags($ids = array(), $url_names = array(), $names = array())
+function find_tags($ids = [], $url_names = [], $names = [])
 {
-    $where_clauses = array();
+    $where_clauses = [];
     if (!empty($ids)) {
         $where_clauses[] = 'id IN ('.implode(',', $ids).')';
     }
@@ -304,7 +304,7 @@ function find_tags($ids = array(), $url_names = array(), $names = array())
           'name IN (\''. implode('\', \'', $names) .'\')';
     }
     if (empty($where_clauses)) {
-        return array();
+        return [];
     }
 
     $query = '

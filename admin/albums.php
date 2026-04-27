@@ -18,7 +18,7 @@ SELECT
     COUNT(*)
   FROM '.CATEGORIES_TABLE.'
 ;';
-list($albums_counter) = pwg_db_fetch_row(pwg_query($query));
+[$albums_counter] = pwg_db_fetch_row(pwg_query($query));
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
@@ -40,7 +40,7 @@ include(PHPWG_ROOT_PATH.'admin/include/albums_tab.inc.php');
 
 $open_cat = $_GET['parent_id'] ?? -1;
 
-$sort_orders = array(
+$sort_orders = [
   'name ASC',
   'name DESC',
   'date_creation DESC',
@@ -49,7 +49,7 @@ $sort_orders = array(
   'date_available ASC',
   'natural_order DESC',
   'natural_order ASC',
-);
+];
 
 if (isset($_POST['simpleAutoOrder']) || isset($_POST['recursiveAutoOrder'])) {
 
@@ -70,13 +70,13 @@ SELECT id
         $category_ids = get_subcat_ids($category_ids);
     }
 
-    $categories = array();
-    $sort = array();
+    $categories = [];
+    $sort = [];
 
-    list($order_by_field, $order_by_asc) = explode(' ', $_POST['order']);
+    [$order_by_field, $order_by_asc] = explode(' ', $_POST['order']);
 
     $order_by_date = false;
-    if (strpos($order_by_field, 'date_') === 0) {
+    if (str_starts_with($order_by_field, 'date_')) {
         $order_by_date = true;
 
         $ref_dates = get_categories_ref_date(
@@ -101,10 +101,10 @@ SELECT id, name, id_uppercat
             $sort[] = remove_accents($row['name']);
         }
 
-        $categories[] = array(
+        $categories[] = [
           'id' => $row['id'],
           'id_uppercat' => $row['id_uppercat'],
-          );
+          ];
     }
 
     array_multisort(
@@ -127,9 +127,9 @@ $template->assign('open_cat', $open_cat);
 $template->set_filename('albums', 'albums.tpl');
 
 $template->assign(
-    array(
+    [
     'F_ACTION' => get_root_url().'admin.php?page=albums',
-    )
+    ]
 );
 
 $template->assign('delay_before_autoOpen', $conf['album_move_delay_before_auto_opening']);
@@ -149,7 +149,7 @@ SELECT id,name,`rank`,status, visible, uppercats, lastmodified
 $allAlbum = query2array($query);
 
 //Make an id tree
-$associatedTree = array();
+$associatedTree = [];
 
 foreach ($allAlbum as $album) {
     $album['name'] = trigger_change('render_category_name', $album['name'], 'admin_cat_list');
@@ -173,30 +173,27 @@ $is_forbidden = array_fill_keys(@explode(',', $user['forbidden_categories']), 1)
 //Make an ordered tree
 function cmpCat($a, $b)
 {
-    if ($a['rank'] == $b['rank']) {
-        return 0;
-    }
-    return ($a['rank'] < $b['rank']) ? -1 : 1;
+    return $a['rank'] <=> $b['rank'];
 }
 
 function assocToOrderedTree($assocT)
 {
     global $nb_photos_in, $nb_sub_photos, $is_forbidden;
 
-    $orderedTree = array();
+    $orderedTree = [];
 
     foreach ($assocT as $cat) {
-        $orderedCat = array();
+        $orderedCat = [];
         $orderedCat['rank'] = $cat['cat']['rank'];
         $orderedCat['name'] = $cat['cat']['name'];
         $orderedCat['status'] = $cat['cat']['status'];
         $orderedCat['id'] = $cat['cat']['id'];
         $orderedCat['visible'] = $cat['cat']['visible'];
         $orderedCat['uppercats'] = $cat['cat']['uppercats'];
-        $orderedCat['nb_images'] = isset($nb_photos_in[$cat['cat']['id']]) ? $nb_photos_in[$cat['cat']['id']] : 0;
+        $orderedCat['nb_images'] = $nb_photos_in[$cat['cat']['id']] ?? 0;
         $orderedCat['last_updates'] = $cat['cat']['lastmodified'];
         $orderedCat['has_not_access'] = isset($is_forbidden[$cat['cat']['id']]);
-        $orderedCat['nb_sub_photos'] = isset($nb_sub_photos[$cat['cat']['id']]) ? $nb_sub_photos[$cat['cat']['id']] : 0;
+        $orderedCat['nb_sub_photos'] = $nb_sub_photos[$cat['cat']['id']] ?? 0;
         if (isset($cat['children'])) {
             //Does not update when moving a node
             $orderedCat['nb_subcats'] = count($cat['children']);
@@ -226,7 +223,7 @@ SELECT
 ;';
 $all_categories = query2array($query, 'id', 'uppercats');
 
-$subcats_of = array();
+$subcats_of = [];
 
 foreach ($all_categories as $id => $uppercats) {
     foreach (array_slice(explode(',', $uppercats), 0, -1) as $uppercat_id) {
@@ -234,7 +231,7 @@ foreach ($all_categories as $id => $uppercats) {
     }
 }
 
-$nb_sub_photos = array();
+$nb_sub_photos = [];
 foreach ($subcats_of as $cat_id => $subcat_ids) {
     $nb_photos = 0;
     foreach ($subcat_ids as $id) {
@@ -247,13 +244,13 @@ foreach ($subcats_of as $cat_id => $subcat_ids) {
 }
 
 $template->assign(
-    array(
+    [
     'album_data' => assocToOrderedTree($associatedTree),
     'PWG_TOKEN' => get_pwg_token(),
     'nb_albums' => count($allAlbum),
     'ADMIN_PAGE_TITLE' => l10n('Albums'),
     'light_album_manager' => ($albums_counter > $conf['light_album_manager_threshold']) ? 1 : 0,
-  )
+  ]
 );
 
 // +-----------------------------------------------------------------------+
@@ -296,7 +293,7 @@ SELECT
 
     foreach (array_keys($uppercats_of) as $cat_id) {
         // find the subcats
-        $subcat_ids = array();
+        $subcat_ids = [];
 
         foreach ($uppercats_of as $id => $uppercats) {
             if (preg_match('/(^|,)'.$cat_id.'(,|$)/', $uppercats)) {
@@ -304,7 +301,7 @@ SELECT
             }
         }
 
-        $to_compare = array();
+        $to_compare = [];
         foreach ($subcat_ids as $id) {
             if (isset($ref_dates[$id])) {
                 $to_compare[] = $ref_dates[$id];
@@ -319,7 +316,7 @@ SELECT
     }
 
     // only return the list of $ids, not the sub-categories
-    $return = array();
+    $return = [];
     foreach ($ids as $id) {
         $return[$id] = $ref_dates[$id];
     }

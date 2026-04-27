@@ -34,7 +34,7 @@ final class WatermarkParams
     /** @var string */
     public $file = '';
     /** @var int[] */
-    public $min_size = array(500,500);
+    public $min_size = [500,500];
     /** @var int */
     public $xpos = 50;
     /** @var int */
@@ -54,24 +54,24 @@ final class WatermarkParams
 final class ImageStdParams
 {
     /** @var string[] */
-    private static $all_types = array(
+    private static $all_types = [
       IMG_SQUARE, IMG_THUMB, IMG_XXSMALL, IMG_XSMALL, IMG_SMALL,
       IMG_MEDIUM, IMG_LARGE, IMG_XLARGE, IMG_XXLARGE, IMG_3XLARGE, IMG_4XLARGE,
-      );
+      ];
     /** @var string[] */
-    private static $disabled_types_by_default = array(IMG_3XLARGE, IMG_4XLARGE);
+    private static $disabled_types_by_default = [IMG_3XLARGE, IMG_4XLARGE];
     /** @var DerivativeParams[] */
-    private static $all_type_map = array();
+    private static $all_type_map = [];
     /** @var DerivativeParams[] */
-    private static $type_map = array();
+    private static $type_map = [];
     /** @var DerivativeParams[] */
-    private static $disabled_type_map = array();
+    private static $disabled_type_map = [];
     /** @var DerivativeParams[] */
-    private static $undefined_type_map = array();
+    private static $undefined_type_map = [];
     /** @var WatermarkParams */
     private static $watermark;
     /** @var array */
-    public static $custom = array();
+    public static $custom = [];
     /** @var int */
     public static $quality = 95;
 
@@ -109,7 +109,7 @@ final class ImageStdParams
         if (count(self::$disabled_type_map)) {
             return self::$disabled_type_map;
         }
-        return $conf['disabled_derivatives'] ?? array();
+        return $conf['disabled_derivatives'] ?? [];
     }
 
     /**
@@ -138,10 +138,10 @@ final class ImageStdParams
      */
     public static function get_custom($w, $h, $crop = 0, $minw = null, $minh = null)
     {
-        $params = new DerivativeParams(new SizingParams(array($w,$h), $crop, array($minw,$minh)));
+        $params = new DerivativeParams(new SizingParams([$w,$h], $crop, [$minw,$minh]));
         self::apply_global($params);
 
-        $key = array();
+        $key = [];
         $params->add_url_tokens($key);
         $key = implode('_', $key);
         if (@self::$custom[$key] < time() - 24 * 3600) {
@@ -174,7 +174,7 @@ final class ImageStdParams
             }
             self::$custom = @$arr['c'];
             if (!self::$custom) {
-                self::$custom = array();
+                self::$custom = [];
             }
             if (isset($arr['q'])) {
                 self::$quality = $arr['q'];
@@ -219,12 +219,12 @@ final class ImageStdParams
      */
     public static function save($save_disabled = true)
     {
-        $ser = serialize(array(
+        $ser = serialize([
           'd' => self::$type_map,
           'q' => self::$quality,
           'w' => self::$watermark,
           'c' => self::$custom,
-          ));
+          ]);
         conf_update_param('derivatives', addslashes($ser));
 
         if ($save_disabled) {
@@ -265,8 +265,8 @@ final class ImageStdParams
      */
     public static function get_default_sizes()
     {
-        $arr = array(
-          IMG_SQUARE => new DerivativeParams(SizingParams::square(120, 120)),
+        $arr = [
+          IMG_SQUARE => new DerivativeParams(SizingParams::square(120)),
           IMG_THUMB => new DerivativeParams(SizingParams::classic(144, 144)),
           IMG_XXSMALL => new DerivativeParams(SizingParams::classic(240, 240)),
           IMG_XSMALL => new DerivativeParams(SizingParams::classic(432, 324)),
@@ -277,7 +277,7 @@ final class ImageStdParams
           IMG_XXLARGE => new DerivativeParams(SizingParams::classic(1656, 1242)),
           IMG_3XLARGE => new DerivativeParams(SizingParams::classic(2232, 1674)),
           IMG_4XLARGE => new DerivativeParams(SizingParams::classic(3000, 2250)),
-        );
+        ];
         $now = time();
         foreach ($arr as $params) {
             $params->last_mod_time = $now;

@@ -9,9 +9,9 @@
 
 class languages
 {
-    public $fs_languages = array();
-    public $db_languages = array();
-    public $server_languages = array();
+    public $fs_languages = [];
+    public $db_languages = [];
+    public $server_languages = [];
 
     /**
      * Initialize $fs_languages and $db_languages
@@ -39,7 +39,7 @@ class languages
             $crt_db_language = $this->db_languages[$language_id];
         }
 
-        $errors = array();
+        $errors = [];
 
         switch ($action) {
             case 'activate':
@@ -128,13 +128,13 @@ UPDATE '.USER_INFOS_TABLE.'
                     and preg_match('/^[a-zA-Z0-9-_]+$/', $file)
                     and file_exists($path.'/common.lang.php')
                 ) {
-                    $language = array(
+                    $language = [
                         'name' => $file,
                         'code' => $file,
                         'version' => '0',
                         'uri' => '',
                         'author' => '',
-                      );
+                      ];
                     $plg_data = implode('', file($path.'/common.lang.php'));
 
                     if (preg_match('|Language Name:\\s*(.+)|', $plg_data, $val)) {
@@ -191,14 +191,14 @@ UPDATE '.USER_INFOS_TABLE.'
     {
         global $user, $conf;
 
-        $get_data = array(
+        $get_data = [
           'category_id' => $conf['pem_languages_category'],
           'format' => 'php',
-        );
+        ];
 
         // Retrieve PEM versions
         $version = PHPWG_VERSION;
-        $versions_to_check = array();
+        $versions_to_check = [];
         $url = PEM_URL . '/api/get_version_list.php';
         if (fetchRemote($url, $result, $get_data) and $pem_versions = @unserialize($result)) {
             if (!preg_match('/^\d+\.\d+\.\d+$/', $version)) {
@@ -206,7 +206,7 @@ UPDATE '.USER_INFOS_TABLE.'
             }
             $branch = get_branch_from_version($version);
             foreach ($pem_versions as $pem_version) {
-                if (strpos($pem_version['name'], $branch) === 0) {
+                if (str_starts_with($pem_version['name'], $branch)) {
                     $versions_to_check[] = $pem_version['id'];
                 }
             }
@@ -216,7 +216,7 @@ UPDATE '.USER_INFOS_TABLE.'
         }
 
         // Languages to check
-        $languages_to_check = array();
+        $languages_to_check = [];
         foreach ($this->fs_languages as $fs_language) {
             if (isset($fs_language['extension'])) {
                 $languages_to_check[] = $fs_language['extension'];
@@ -227,12 +227,12 @@ UPDATE '.USER_INFOS_TABLE.'
         $url = PEM_URL . '/api/get_revision_list.php';
         $get_data = array_merge(
             $get_data,
-            array(
+            [
       'last_revision_only' => 'true',
       'version' => implode(',', $versions_to_check),
       'lang' => $user['language'],
       'get_nb_downloads' => 'true',
-      )
+      ]
         );
         if (!empty($languages_to_check)) {
             if ($new) {
@@ -252,7 +252,7 @@ UPDATE '.USER_INFOS_TABLE.'
                     $this->server_languages[$language['extension_id']] = $language;
                 }
             }
-            @uasort($this->server_languages, array($this, 'extension_name_compare'));
+            @uasort($this->server_languages, [$this, 'extension_name_compare']);
             return true;
         }
         return false;
@@ -271,10 +271,10 @@ UPDATE '.USER_INFOS_TABLE.'
 
         if ($archive = tempnam(PHPWG_ROOT_PATH.'language', 'zip')) {
             $url = PEM_URL . '/download.php';
-            $get_data = array(
+            $get_data = [
               'rid' => $revision,
               'origin' => 'piwigo_'.$action,
-            );
+            ];
 
             if ($handle = @fopen($archive, 'wb') and fetchRemote($url, $handle, $get_data)) {
                 fclose($handle);
@@ -343,7 +343,7 @@ UPDATE '.USER_INFOS_TABLE.'
 
                                         // make sure the obsolete file is withing the extension directory, prevent traversal path
                                         $realpath = realpath($path);
-                                        if ($realpath === false or strpos($realpath, $extract_path_realpath) !== 0) {
+                                        if ($realpath === false or !str_starts_with($realpath, $extract_path_realpath)) {
                                             continue;
                                         }
 

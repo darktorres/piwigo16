@@ -21,7 +21,7 @@ if (!empty($_POST)) {
 
 include_once(PHPWG_ROOT_PATH.'profile.php');
 
-$errors = array();
+$errors = [];
 save_profile_from_post($edit_user, $errors);
 
 load_profile_in_template(

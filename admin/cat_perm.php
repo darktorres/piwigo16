@@ -32,9 +32,9 @@ if (!empty($_POST)) {
     check_pwg_token();
 
     if ($category['status'] != $_POST['status'] or ($category['status'] != 'public' and isset($_POST['apply_on_sub']))) {
-        $cat_ids = array($page['cat']);
+        $cat_ids = [$page['cat']];
         if (isset($_POST['apply_on_sub'])) {
-            $cat_ids = array_merge($cat_ids, get_subcat_ids(array($page['cat'])));
+            $cat_ids = array_merge($cat_ids, get_subcat_ids([$page['cat']]));
         }
         set_cat_status($cat_ids, $_POST['status']);
         $category['status'] = $_POST['status'];
@@ -52,7 +52,7 @@ SELECT group_id
         $groups_granted = array_from_query($query, 'group_id');
 
         if (!isset($_POST['groups'])) {
-            $_POST['groups'] = array();
+            $_POST['groups'] = [];
         }
 
         //
@@ -66,7 +66,7 @@ SELECT group_id
 DELETE
   FROM '.GROUP_ACCESS_TABLE.'
   WHERE group_id IN ('.implode(',', $deny_groups).')
-    AND cat_id IN ('.implode(',', get_subcat_ids(array($page['cat']))).')
+    AND cat_id IN ('.implode(',', get_subcat_ids([$page['cat']])).')
 ;';
             pwg_query($query);
         }
@@ -76,9 +76,9 @@ DELETE
         //
         $grant_groups = $_POST['groups'];
         if (count($grant_groups) > 0) {
-            $cat_ids = get_uppercat_ids(array($page['cat']));
+            $cat_ids = get_uppercat_ids([$page['cat']]);
             if (isset($_POST['apply_on_sub'])) {
-                $cat_ids = array_merge($cat_ids, get_subcat_ids(array($page['cat'])));
+                $cat_ids = array_merge($cat_ids, get_subcat_ids([$page['cat']]));
             }
 
             $query = '
@@ -89,21 +89,21 @@ SELECT id
 ;';
             $private_cats = array_from_query($query, 'id');
 
-            $inserts = array();
+            $inserts = [];
             foreach ($private_cats as $cat_id) {
                 foreach ($grant_groups as $group_id) {
-                    $inserts[] = array(
+                    $inserts[] = [
                       'group_id' => $group_id,
                       'cat_id' => $cat_id,
-                      );
+                      ];
                 }
             }
 
             mass_inserts(
                 GROUP_ACCESS_TABLE,
-                array('group_id','cat_id'),
+                ['group_id','cat_id'],
                 $inserts,
-                array('ignore' => true)
+                ['ignore' => true]
             );
         }
 
@@ -118,7 +118,7 @@ SELECT user_id
         $users_granted = array_from_query($query, 'user_id');
 
         if (!isset($_POST['users'])) {
-            $_POST['users'] = array();
+            $_POST['users'] = [];
         }
 
         //
@@ -132,7 +132,7 @@ SELECT user_id
 DELETE
   FROM '.USER_ACCESS_TABLE.'
   WHERE user_id IN ('.implode(',', $deny_users).')
-    AND cat_id IN ('.implode(',', get_subcat_ids(array($page['cat']))).')
+    AND cat_id IN ('.implode(',', get_subcat_ids([$page['cat']])).')
 ;';
             pwg_query($query);
         }
@@ -147,9 +147,9 @@ DELETE
     }
 
     $template->assign(
-        array(
+        [
         'save_success' => l10n('Album updated successfully'),
-    )
+    ]
     );
 
 }
@@ -161,7 +161,7 @@ DELETE
 $template->set_filename('cat_perm', 'cat_perm.tpl');
 
 $template->assign(
-    array(
+    [
     'CATEGORIES_NAV' =>
       get_cat_display_name_from_id(
           $page['cat'],
@@ -170,7 +170,7 @@ $template->assign(
     'U_HELP' => get_root_url().'admin/popuphelp.php?page=cat_perm',
     'F_ACTION' => $admin_album_base_url.'-permissions',
     'private' => ('private' == $category['status']),
-    )
+    ]
 );
 
 // +-----------------------------------------------------------------------+
@@ -180,7 +180,7 @@ $template->assign(
 // groups denied are the groups not granted. So we need to find all groups
 // minus groups granted to find groups denied.
 
-$groups = array();
+$groups = [];
 
 $query = '
 SELECT id, name
@@ -200,7 +200,7 @@ $group_granted_ids = array_from_query($query, 'group_id');
 $template->assign('groups_selected', $group_granted_ids);
 
 // users...
-$users = array();
+$users = [];
 
 $query = '
 SELECT '.$conf['user_fields']['id'].' AS id,
@@ -220,9 +220,9 @@ $user_granted_direct_ids = array_from_query($query, 'user_id');
 $template->assign('users_selected', $user_granted_direct_ids);
 
 
-$user_granted_indirect_ids = array();
+$user_granted_indirect_ids = [];
 if (count($group_granted_ids) > 0) {
-    $granted_groups = array();
+    $granted_groups = [];
 
     $query = '
 SELECT user_id, group_id
@@ -232,12 +232,12 @@ SELECT user_id, group_id
     $result = pwg_query($query);
     while ($row = pwg_db_fetch_assoc($result)) {
         if (!isset($granted_groups[ $row['group_id'] ])) {
-            $granted_groups[ $row['group_id'] ] = array();
+            $granted_groups[ $row['group_id'] ] = [];
         }
         $granted_groups[ $row['group_id'] ][] = $row['user_id'];
     }
 
-    $user_granted_by_group_ids = array();
+    $user_granted_by_group_ids = [];
 
     foreach ($granted_groups as $group_users) {
         $user_granted_by_group_ids = array_merge($user_granted_by_group_ids, $group_users);
@@ -253,7 +253,7 @@ SELECT user_id, group_id
     $template->assign('nb_users_granted_indirect', count($user_granted_indirect_ids));
 
     foreach ($granted_groups as $group_id => $group_users) {
-        $group_usernames = array();
+        $group_usernames = [];
         foreach ($group_users as $user_id) {
             if (in_array($user_id, $user_granted_indirect_ids)) {
                 $group_usernames[] = $users[$user_id];
@@ -262,10 +262,10 @@ SELECT user_id, group_id
 
         $template->append(
             'user_granted_indirect_groups',
-            array(
+            [
             'group_name' => $groups[$group_id],
             'group_users' => implode(', ', $group_usernames),
-            )
+            ]
         );
     }
 }
@@ -273,10 +273,10 @@ SELECT user_id, group_id
 // +-----------------------------------------------------------------------+
 // |                           sending html code                           |
 // +-----------------------------------------------------------------------+
-$template->assign(array(
+$template->assign([
   'PWG_TOKEN' => get_pwg_token(),
   'INHERIT' => $conf['inheritance_by_default'],
-  'CACHE_KEYS' => get_admin_client_cache_keys(array('groups', 'users')),
-  ));
+  'CACHE_KEYS' => get_admin_client_cache_keys(['groups', 'users']),
+  ]);
 
 $template->assign_var_from_handle('ADMIN_CONTENT', 'cat_perm');

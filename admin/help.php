@@ -31,17 +31,17 @@ $tabsheet->assign();
 
 trigger_notify('loc_end_help');
 
-$template->set_filenames(array('help' => 'help.tpl'));
+$template->set_filenames(['help' => 'help.tpl']);
 
 $template->assign(
-    array(
+    [
     'HELP_CONTENT' => load_language(
         'help/help_'.$tabsheet->selected.'.html',
         '',
-        array('return' => true)
+        ['return' => true]
     ),
     'HELP_SECTION_TITLE' => $tabsheet->sheets[ $tabsheet->selected ]['caption'],
-    )
+    ]
 );
 
 $language_prefix = substr($user['language'], 0, 3);

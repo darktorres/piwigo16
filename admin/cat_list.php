@@ -24,14 +24,14 @@ if (!empty($_POST) or isset($_GET['delete'])) {
     check_pwg_token();
 }
 
-$sort_orders = array(
+$sort_orders = [
   'name ASC' => l10n('Album name, A &rarr; Z'),
   'name DESC' => l10n('Album name, Z &rarr; A'),
   'date_creation DESC' => l10n('Date created, new &rarr; old').' '.l10n('(determined from photos)'),
   'date_creation ASC' => l10n('Date created, old &rarr; new').' '.l10n('(determined from photos)'),
   'date_available DESC' => l10n('Date posted, new &rarr; old').' '.l10n('(determined from photos)'),
   'date_available ASC' => l10n('Date posted, old &rarr; new').' '.l10n('(determined from photos)'),
-  );
+  ];
 
 // +-----------------------------------------------------------------------+
 // |                               functions                               |
@@ -70,7 +70,7 @@ SELECT
 
     foreach (array_keys($uppercats_of) as $cat_id) {
         // find the subcats
-        $subcat_ids = array();
+        $subcat_ids = [];
 
         foreach ($uppercats_of as $id => $uppercats) {
             if (preg_match('/(^|,)'.$cat_id.'(,|$)/', $uppercats)) {
@@ -78,7 +78,7 @@ SELECT
             }
         }
 
-        $to_compare = array();
+        $to_compare = [];
         foreach ($subcat_ids as $id) {
             if (isset($ref_dates[$id])) {
                 $to_compare[] = $ref_dates[$id];
@@ -93,7 +93,7 @@ SELECT
     }
 
     // only return the list of $ids, not the sub-categories
-    $return = array();
+    $return = [];
     foreach ($ids as $id) {
         $return[$id] = $ref_dates[$id];
     }
@@ -107,7 +107,7 @@ SELECT
 
 check_input_parameter('parent_id', $_GET, false, PATTERN_ID);
 
-$categories = array();
+$categories = [];
 
 $base_url = get_root_url().'admin.php?page=cat_list';
 $navigation = '<a href="'.$base_url.'">';
@@ -130,9 +130,9 @@ if (isset($_GET['delete']) and is_numeric($_GET['delete'])) {
     if (isset($_GET['photo_deletion_mode'])) {
         $photo_deletion_mode = $_GET['photo_deletion_mode'];
     }
-    delete_categories(array($_GET['delete']), $photo_deletion_mode);
+    delete_categories([$_GET['delete']], $photo_deletion_mode);
 
-    $_SESSION['page_infos'] = array(l10n('Virtual album deleted'));
+    $_SESSION['page_infos'] = [l10n('Virtual album deleted')];
     update_global_rank();
     invalidate_user_cache();
 
@@ -180,20 +180,20 @@ if (isset($_GET['parent_id'])) {
 }
 $sort_orders_checked = array_keys($sort_orders);
 
-$template->assign(array(
+$template->assign([
   'ADMIN_PAGE_TITLE' => l10n('Album list management'),
   'CATEGORIES_NAV' => preg_replace('# {2,}#', ' ', preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $navigation)),
   'F_ACTION' => $form_action,
   'PWG_TOKEN' => get_pwg_token(),
   'sort_orders' => $sort_orders,
   'sort_order_checked' => array_shift($sort_orders_checked),
- ));
+ ]);
 
 // +-----------------------------------------------------------------------+
 // |                          Categories display                           |
 // +-----------------------------------------------------------------------+
 
-$categories = array();
+$categories = [];
 
 $query = '
 SELECT id, name, permalink, dir, `rank`, status
@@ -211,7 +211,7 @@ $query .= '
 $categories = hash_from_query($query, 'id');
 
 // get the categories containing images directly
-$categories_with_images = array();
+$categories_with_images = [];
 if (count($categories)) {
     $query = '
 SELECT
@@ -231,7 +231,7 @@ SELECT
   FROM '.CATEGORIES_TABLE.'
 ;';
     $all_categories = query2array($query, 'id', 'uppercats');
-    $subcats_of = array();
+    $subcats_of = [];
 
     foreach ($all_categories as $id => $uppercats) {
         foreach (array_slice(explode(',', $uppercats), 0, -1) as $uppercat_id) {
@@ -239,7 +239,7 @@ SELECT
         }
     }
 
-    $nb_sub_photos = array();
+    $nb_sub_photos = [];
     foreach ($subcats_of as $cat_id => $subcat_ids) {
         $nb_photos = 0;
         foreach ($subcat_ids as $id) {
@@ -252,7 +252,7 @@ SELECT
     }
 }
 
-$template->assign('categories', array());
+$template->assign('categories', []);
 $base_url = get_root_url().'admin.php?page=';
 
 if (isset($_GET['parent_id'])) {
@@ -271,23 +271,23 @@ foreach ($categories as $category) {
     }
 
     $tpl_cat =
-      array(
+      [
         'NAME'       =>
           trigger_change(
               'render_category_name',
               $category['name'],
               'admin_cat_list'
           ),
-        'NB_PHOTOS' => isset($nb_photos_in[$category['id']]) ? $nb_photos_in[$category['id']] : 0,
-        'NB_SUB_PHOTOS' => isset($nb_sub_photos[$category['id']]) ? $nb_sub_photos[$category['id']] : 0,
+        'NB_PHOTOS' => $nb_photos_in[$category['id']] ?? 0,
+        'NB_SUB_PHOTOS' => $nb_sub_photos[$category['id']] ?? 0,
         'NB_SUB_ALBUMS' => isset($subcats_of[$category['id']]) ? count($subcats_of[$category['id']]) : 0,
         'ID'         => $category['id'],
         'RANK'       => $category['rank'] * 10,
 
         'U_JUMPTO'   => make_index_url(
-            array(
+            [
             'category' => $category,
-            )
+            ]
         ),
 
         'U_CHILDREN' => $cat_list_url.'&amp;parent_id='.$category['id'],
@@ -297,7 +297,7 @@ foreach ($categories as $category) {
 
         'IS_VIRTUAL' => empty($category['dir']),
         'CAT_ADMIN_ACCESS' => cat_admin_access($category['id']),
-      );
+      ];
 
     if (empty($category['dir'])) {
         $tpl_cat['U_DELETE'] = $self_url.'&amp;delete='.$category['id'];

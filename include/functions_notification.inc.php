@@ -27,11 +27,11 @@ function get_std_sql_where_restrict_filter(
     $force_one_condition = false
 ) {
     return get_sql_condition_FandF(
-        array(
+        [
         'forbidden_categories' => 'ic.category_id',
         'visible_categories' => 'ic.category_id',
         'visible_images' => $img_field,
-        ),
+        ],
         $prefix_condition,
         $force_one_condition
     );
@@ -165,7 +165,7 @@ function custom_notification_query($action, $type, $start = null, $end = null)
                         break;
                 }
                 $query = 'SELECT COUNT(DISTINCT '.$field_id.') '.$query.';';
-                list($count) = pwg_db_fetch_row(pwg_query($query));
+                [$count] = pwg_db_fetch_row(pwg_query($query));
                 return $count;
                 break;
             }
@@ -368,9 +368,9 @@ function add_news_line(&$news, $count, $singular_key, $plural_key, $url = '', $a
  */
 function news($start = null, $end = null, $exclude_img_cats = false, $add_url = false, $auth_key = null)
 {
-    $news = array();
+    $news = [];
 
-    $add_url_params = array();
+    $add_url_params = [];
     if (isset($auth_key)) {
         $add_url_params['auth'] = $auth_key;
     }
@@ -381,7 +381,7 @@ function news($start = null, $end = null, $exclude_img_cats = false, $add_url = 
             nb_new_elements($start, $end),
             '%d new photo',
             '%d new photos',
-            add_url_params(make_index_url(array('section' => 'recent_pics')), $add_url_params),
+            add_url_params(make_index_url(['section' => 'recent_pics']), $add_url_params),
             $add_url
         );
 
@@ -390,7 +390,7 @@ function news($start = null, $end = null, $exclude_img_cats = false, $add_url = 
             nb_updated_categories($start, $end),
             '%d album updated',
             '%d albums updated',
-            add_url_params(make_index_url(array('section' => 'recent_cats')), $add_url_params),
+            add_url_params(make_index_url(['section' => 'recent_cats']), $add_url_params),
             $add_url
         );
     }
@@ -523,7 +523,7 @@ function get_html_description_recent_post_date($date_detail, $auth_key = null)
 {
     global $conf;
 
-    $add_url_params = array();
+    $add_url_params = [];
     if (isset($auth_key)) {
         $add_url_params['auth'] = $auth_key;
     }
@@ -534,7 +534,7 @@ function get_html_description_recent_post_date($date_detail, $auth_key = null)
           '<li>'
           .l10n_dec('%d new photo', '%d new photos', $date_detail['nb_elements'])
           .' ('
-          .'<a href="'.add_url_params(make_index_url(array('section' => 'recent_pics')), $add_url_params).'">'
+          .'<a href="'.add_url_params(make_index_url(['section' => 'recent_pics']), $add_url_params).'">'
             .l10n('Recent photos').'</a>'
           .')'
           .'</li><br>';
@@ -544,10 +544,10 @@ function get_html_description_recent_post_date($date_detail, $auth_key = null)
         $description .= '<a href="'.
           add_url_params(
               make_picture_url(
-                  array(
+                  [
             'image_id' => $element['id'],
             'image_file' => $element['file'],
-            )
+            ]
               ),
               $add_url_params
           )

@@ -26,8 +26,8 @@ function ws_add_image_category_relations($image_id, $categories_string, $replace
     // 1. associate with category 123 on rank 12
     // 2. associate with category 456 on automatic rank
     // 3. associate with category 789 on automatic rank
-    $cat_ids = array();
-    $rank_on_category = array();
+    $cat_ids = [];
+    $rank_on_category = [];
     $search_current_ranks = false;
 
     if (empty($categories_string)) {
@@ -44,7 +44,7 @@ DELETE
     }
     $tokens = explode(';', $categories_string);
     foreach ($tokens as $token) {
-        @list($cat_id, $rank) = explode(',', $token);
+        @[$cat_id, $rank] = explode(',', $token);
 
         if (!preg_match('/^\d+$/', $cat_id)) {
             continue;
@@ -92,7 +92,7 @@ SELECT id
         );
     }
 
-    $to_update_cat_ids = array();
+    $to_update_cat_ids = [];
 
     // in case of replace mode, we first check the existing associations
     $query = '
@@ -146,14 +146,14 @@ SELECT category_id, MAX(`rank`) AS max_rank
         }
     }
 
-    $inserts = array();
+    $inserts = [];
 
     foreach ($new_cat_ids as $cat_id) {
-        $inserts[] = array(
+        $inserts[] = [
           'image_id' => $image_id,
           'category_id' => $cat_id,
           'rank' => $rank_on_category[$cat_id],
-          );
+          ];
     }
 
     mass_inserts(
@@ -189,7 +189,7 @@ function merge_chunks($output_filepath, $original_sum, $type)
 
     $upload_dir = $conf['upload_dir'].'/buffer';
     $pattern = '/'.$original_sum.'-'.$type.'/';
-    $chunks = array();
+    $chunks = [];
 
     if ($handle = opendir($upload_dir)) {
         while (false !== ($file = readdir($handle))) {
@@ -246,7 +246,7 @@ function remove_chunks($original_sum, $type)
 
     $upload_dir = $conf['upload_dir'].'/buffer';
     $pattern = '/'.$original_sum.'-'.$type.'/';
-    $chunks = array();
+    $chunks = [];
 
     if ($handle = opendir($upload_dir)) {
         while (false !== ($file = readdir($handle))) {
@@ -291,11 +291,11 @@ SELECT DISTINCT image_id
   WHERE commentable="true"
     AND image_id='.$params['image_id'].
       get_sql_condition_FandF(
-          array(
+          [
           'forbidden_categories' => 'id',
           'visible_categories' => 'id',
           'visible_images' => 'image_id',
-          ),
+          ],
           ' AND'
       ).'
 ;';
@@ -304,11 +304,11 @@ SELECT DISTINCT image_id
         return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid image_id');
     }
 
-    $comm = array(
+    $comm = [
       'author' => trim($params['author']),
       'content' => trim($params['content']),
       'image_id' => $params['image_id'],
-     );
+     ];
 
     include_once(PHPWG_ROOT_PATH.'include/functions_comment.inc.php');
 
@@ -321,11 +321,11 @@ SELECT DISTINCT image_id
 
         case 'validate':
         case 'moderate':
-            $ret = array(
+            $ret = [
               'id' => $comm['id'],
               'validation' => $comment_action == 'validate',
-              );
-            return array('comment' => new PwgNamedStruct($ret));
+              ];
+            return ['comment' => new PwgNamedStruct($ret)];
 
         default:
             return new PwgError(500, 'Unknown comment action '.$comment_action);
@@ -349,7 +349,7 @@ SELECT *
   FROM '. IMAGES_TABLE .'
   WHERE id='. $params['image_id'] .
       get_sql_condition_FandF(
-          array('visible_images' => 'id'),
+          ['visible_images' => 'id'],
           ' AND'
       ).'
 LIMIT 1
@@ -386,14 +386,14 @@ SELECT id, name, permalink, uppercats, global_rank, commentable
     INNER JOIN '. CATEGORIES_TABLE .' ON category_id = id
   WHERE image_id = '. $image_row['id'] .
       get_sql_condition_FandF(
-          array('forbidden_categories' => 'category_id'),
+          ['forbidden_categories' => 'category_id'],
           ' AND'
       ).'
 ;';
     $result = pwg_query($query);
 
     $is_commentable = false;
-    $related_categories = array();
+    $related_categories = [];
     while ($row = pwg_db_fetch_assoc($result)) {
         if ($row['commentable'] == 'true') {
             $is_commentable = true;
@@ -401,17 +401,17 @@ SELECT id, name, permalink, uppercats, global_rank, commentable
         unset($row['commentable']);
 
         $row['url'] = make_index_url(
-            array(
+            [
             'category' => $row,
-            )
+            ]
         );
 
         $row['page_url'] = make_picture_url(
-            array(
+            [
             'image_id' => $image_row['id'],
             'image_file' => $image_row['file'],
             'category' => $row,
-            )
+            ]
         );
 
         $row['id'] = (int)$row['id'];
@@ -435,19 +435,19 @@ SELECT id, name, permalink, uppercats, global_rank, commentable
     }
 
     //-------------------------------------------------------------- related tags
-    $related_tags = get_common_tags(array($image_row['id']), -1);
+    $related_tags = get_common_tags([$image_row['id']], -1);
     foreach ($related_tags as $i => $tag) {
         $tag['url'] = make_index_url(
-            array(
-            'tags' => array($tag),
-            )
+            [
+            'tags' => [$tag],
+            ]
         );
         $tag['page_url'] = make_picture_url(
-            array(
+            [
             'image_id' => $image_row['id'],
             'image_file' => $image_row['file'],
-            'tags' => array($tag),
-            )
+            'tags' => [$tag],
+            ]
         );
 
         unset($tag['counter']);
@@ -456,11 +456,11 @@ SELECT id, name, permalink, uppercats, global_rank, commentable
     }
 
     //------------------------------------------------------------- related rates
-    $rating = array(
+    $rating = [
     'score' => $image_row['rating_score'],
     'count' => 0,
     'average' => null,
-    );
+    ];
     if (isset($rating['score'])) {
         $query = '
 SELECT COUNT(rate) AS count, ROUND(AVG(rate),2) AS average
@@ -475,7 +475,7 @@ SELECT COUNT(rate) AS count, ROUND(AVG(rate),2) AS average
     }
 
     //---------------------------------------------------------- related comments
-    $related_comments = array();
+    $related_comments = [];
 
     $where_comments = 'image_id = '.$image_row['id'];
     if (!is_admin()) {
@@ -487,7 +487,7 @@ SELECT COUNT(id) AS nb_comments
   FROM '. COMMENTS_TABLE .'
   WHERE '. $where_comments .'
 ;';
-    list($nb_comments) = query2array($query, null, 'nb_comments');
+    [$nb_comments] = query2array($query, null, 'nb_comments');
     $nb_comments = (int)$nb_comments;
 
     if ($nb_comments > 0 and $params['comments_per_page'] > 0) {
@@ -519,22 +519,22 @@ SELECT id, date, author, content
     }
 
     $ret = $image_row;
-    foreach (array('id','width','height','hit','filesize') as $k) {
+    foreach (['id','width','height','hit','filesize'] as $k) {
         if (isset($ret[$k])) {
             $ret[$k] = (int)$ret[$k];
         }
     }
-    foreach (array('path', 'storage_category_id') as $k) {
+    foreach (['path', 'storage_category_id'] as $k) {
         unset($ret[$k]);
     }
 
-    $ret['rates'] = array(
+    $ret['rates'] = [
       WS_XML_ATTRIBUTES => $rating,
-      );
+      ];
     $ret['categories'] = new PwgNamedArray(
         $related_categories,
         'category',
-        array('id','url', 'page_url')
+        ['id','url', 'page_url']
     );
     $ret['tags'] = new PwgNamedArray(
         $related_tags,
@@ -542,30 +542,30 @@ SELECT id, date, author, content
         ws_std_get_tag_xml_attributes()
     );
     if (isset($comment_post_data)) {
-        $ret['comment_post'] = array(
+        $ret['comment_post'] = [
           WS_XML_ATTRIBUTES => $comment_post_data,
-          );
+          ];
     }
     $ret['comments_paging'] = new PwgNamedStruct(
-        array(
+        [
         'page' => $params['comments_page'],
         'per_page' => $params['comments_per_page'],
         'count' => count($related_comments),
         'total_count' => $nb_comments,
-        )
+        ]
     );
     $ret['comments'] = new PwgNamedArray(
         $related_comments,
         'comment',
-        array('id','date')
+        ['id','date']
     );
 
     if ($service->_responseFormat != 'rest') {
         return $ret; // for backward compatibility only
     } else {
-        return array(
-          'image' => new PwgNamedStruct($ret, null, array('name','comment')),
-          );
+        return [
+          'image' => new PwgNamedStruct($ret, null, ['name','comment']),
+          ];
     }
 }
 
@@ -584,10 +584,10 @@ SELECT DISTINCT id
     INNER JOIN '. IMAGE_CATEGORY_TABLE .' ON id=image_id
   WHERE id='. $params['image_id']
       .get_sql_condition_FandF(
-          array(
+          [
           'forbidden_categories' => 'category_id',
           'forbidden_images' => 'id',
-          ),
+          ],
           '    AND'
       ).'
   LIMIT 1
@@ -619,7 +619,7 @@ function ws_images_search($params, $service)
 {
     include_once(PHPWG_ROOT_PATH .'include/functions_search.inc.php');
 
-    $images = array();
+    $images = [];
     $where_clauses = ws_std_image_sql_filter($params, 'i.');
     $order_by = ws_std_image_sql_order($params, 'i.');
 
@@ -632,10 +632,10 @@ function ws_images_search($params, $service)
 
     $search_result = get_quick_search_results(
         $params['query'],
-        array(
+        [
         'super_order_by' => $super_order_by,
         'images_where' => implode(' AND ', $where_clauses),
-    )
+    ]
     );
 
     $image_ids = array_slice(
@@ -655,14 +655,14 @@ SELECT *
         $favorite_ids = get_user_favorites();
 
         while ($row = pwg_db_fetch_assoc($result)) {
-            $image = array();
+            $image = [];
             $image['is_favorite'] = isset($favorite_ids[ $row['id'] ]);
-            foreach (array('id', 'width', 'height', 'hit') as $k) {
+            foreach (['id', 'width', 'height', 'hit'] as $k) {
                 if (isset($row[$k])) {
                     $image[$k] = (int)$row[$k];
                 }
             }
-            foreach (array('file', 'name', 'comment', 'date_creation', 'date_available') as $k) {
+            foreach (['file', 'name', 'comment', 'date_creation', 'date_available'] as $k) {
                 $image[$k] = $row[$k];
             }
 
@@ -676,21 +676,21 @@ SELECT *
         $images = array_values($images);
     }
 
-    return array(
+    return [
       'paging' => new PwgNamedStruct(
-          array(
+          [
           'page' => $params['page'],
           'per_page' => $params['per_page'],
           'count' => count($images),
           'total_count' => count($search_result['items']),
-          )
+          ]
       ),
       'images' => new PwgNamedArray(
           $images,
           'image',
           ws_std_get_image_xml_attributes()
       ),
-      );
+      ];
 }
 
 /**
@@ -717,11 +717,11 @@ function ws_images_filteredSearch_create($params, $service)
         }
     }
 
-    $search = array('mode' => 'AND');
+    $search = ['mode' => 'AND'];
 
     // * check all parameters
     if (isset($params['allwords'])) {
-        $search['fields']['allwords'] = array();
+        $search['fields']['allwords'] = [];
 
         if (!isset($params['allwords_mode'])) {
             $params['allwords_mode'] = 'AND';
@@ -731,7 +731,7 @@ function ws_images_filteredSearch_create($params, $service)
         }
         $search['fields']['allwords']['mode'] = $params['allwords_mode'];
 
-        $allwords_fields_available = array('name', 'comment', 'file', 'author', 'tags', 'cat-title', 'cat-desc');
+        $allwords_fields_available = ['name', 'comment', 'file', 'author', 'tags', 'cat-title', 'cat-desc'];
         if (!isset($params['allwords_fields'])) {
             $params['allwords_fields'] = $allwords_fields_available;
         }
@@ -759,10 +759,10 @@ function ws_images_filteredSearch_create($params, $service)
             return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter tags_mode');
         }
 
-        $search['fields']['tags'] = array(
+        $search['fields']['tags'] = [
           'words' => $params['tags'],
           'mode'  => $params['tags_mode'],
-        );
+        ];
     }
 
     if (isset($params['categories'])) {
@@ -772,23 +772,23 @@ function ws_images_filteredSearch_create($params, $service)
             }
         }
 
-        $search['fields']['cat'] = array(
+        $search['fields']['cat'] = [
           'words'   => $params['categories'],
           'sub_inc' => $params['categories_withsubs'] ?? false,
-        );
+        ];
     }
 
     if (isset($params['authors'])) {
-        $authors = array();
+        $authors = [];
 
         foreach ($params['authors'] as $author) {
             $authors[] = strip_tags($author);
         }
 
-        $search['fields']['author'] = array(
+        $search['fields']['author'] = [
           'words' => $authors,
           'mode' => 'OR',
-        );
+        ];
     }
 
     if (isset($params['filetypes'])) {
@@ -838,14 +838,14 @@ function ws_images_filteredSearch_create($params, $service)
                 }
             } elseif ('m' == $ymd) {
                 if (preg_match('/^m(\d{4}-\d{2})$/', $date, $matches)) {
-                    list($year, $month) = explode('-', $matches[1]);
+                    [$year, $month] = explode('-', $matches[1]);
                     if ($month >= 1 and $month <= 12) {
                         $correct_format = true;
                     }
                 }
             } elseif ('d' == $ymd) {
                 if (preg_match('/^d(\d{4}-\d{2}-\d{2})$/', $date, $matches)) {
-                    list($year, $month, $day) = explode('-', $matches[1]);
+                    [$year, $month, $day] = explode('-', $matches[1]);
                     if ($month >= 1 and $month <= 12 and $day >= 1 and $day <= cal_days_in_month(CAL_GREGORIAN, (int)$month, (int)$year)) {
                         $correct_format = true;
                     }
@@ -887,14 +887,14 @@ function ws_images_filteredSearch_create($params, $service)
                 }
             } elseif ('m' == $ymd) {
                 if (preg_match('/^m(\d{4}-\d{2})$/', $date, $matches)) {
-                    list($year, $month) = explode('-', $matches[1]);
+                    [$year, $month] = explode('-', $matches[1]);
                     if ($month >= 1 and $month <= 12) {
                         $correct_format = true;
                     }
                 }
             } elseif ('d' == $ymd) {
                 if (preg_match('/^d(\d{4}-\d{2}-\d{2})$/', $date, $matches)) {
-                    list($year, $month, $day) = explode('-', $matches[1]);
+                    [$year, $month, $day] = explode('-', $matches[1]);
                     if ($month >= 1 and $month <= 12 and $day >= 1 and $day <= cal_days_in_month(CAL_GREGORIAN, (int)$month, (int)$year)) {
                         $correct_format = true;
                     }
@@ -920,7 +920,7 @@ function ws_images_filteredSearch_create($params, $service)
     }
 
     if (isset($params['expert'])) {
-        $search['fields']['expert'] = array('string' => $params['expert']);
+        $search['fields']['expert'] = ['string' => $params['expert']];
     }
 
     if ($conf['rate'] and isset($params['ratings'])) {
@@ -951,12 +951,12 @@ function ws_images_filteredSearch_create($params, $service)
         $search['fields']['height_max'] = $params['height_max'];
     }
 
-    list($search_uuid, $search_url) = save_search($search, $search_info['id'] ?? null);
+    [$search_uuid, $search_url] = save_search($search, $search_info['id'] ?? null);
 
-    return array(
+    return [
       'search_id' => $search_uuid,
       'search_url' => $search_url,
-    );
+    ];
 }
 
 /**
@@ -983,7 +983,7 @@ UPDATE '. IMAGES_TABLE .'
 
     pwg_activity('photo', $params['image_id'], 'edit');
 
-    $affected_rows = pwg_db_changes($result);
+    $affected_rows = pwg_db_changes();
     if ($affected_rows) {
         include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
         invalidate_user_cache();
@@ -1019,10 +1019,10 @@ SELECT
         $image_ids = query2array($query, null, 'image_id');
 
         // return data for client
-        return array(
+        return [
           'image_id' => $image_ids,
           'category_id' => $params['category_id'],
-          );
+          ];
     }
 
     // turns image_id into a simple int instead of array
@@ -1038,7 +1038,7 @@ SELECT COUNT(*)
   FROM '. IMAGES_TABLE .'
   WHERE id = '. $params['image_id'] .'
 ;';
-    list($count) = pwg_db_fetch_row(pwg_query($query));
+    [$count] = pwg_db_fetch_row(pwg_query($query));
     if ($count == 0) {
         return new PwgError(404, 'image_id not found');
     }
@@ -1050,7 +1050,7 @@ SELECT COUNT(*)
   WHERE image_id = '. $params['image_id'] .'
     AND category_id = '. $params['category_id'] .'
 ;';
-    list($count) = pwg_db_fetch_row(pwg_query($query));
+    [$count] = pwg_db_fetch_row(pwg_query($query));
     if ($count == 0) {
         return new PwgError(404, 'This image is not associated to this category');
     }
@@ -1091,11 +1091,11 @@ UPDATE '. IMAGE_CATEGORY_TABLE .'
     pwg_query($query);
 
     // return data for client
-    return array(
+    return [
       'image_id' => $params['image_id'],
       'category_id' => $params['category_id'],
       'rank' => $params['rank'],
-      );
+      ];
 }
 
 /**
@@ -1119,7 +1119,7 @@ function ws_images_add_chunk($params, $service)
         $logger->debug(sprintf(
             '[ws_images_add_chunk] input param "%s" : "%s"',
             $param_key,
-            is_null($param_value) ? 'NULL' : $param_value
+            $param_value ?? 'NULL'
         ), 'WS');
     }
 
@@ -1208,7 +1208,7 @@ SELECT
 
         $infos = pwg_image_infos($file_path);
 
-        foreach (array('width', 'height', 'filesize') as $image_info) {
+        foreach (['width', 'height', 'filesize'] as $image_info) {
             if ($infos[$image_info] > $image[$image_info]) {
                 $do_update = true;
             }
@@ -1254,7 +1254,7 @@ function ws_images_add($params, $service)
         $logger->debug(sprintf(
             '[pwg.images.add] input param "%s" : "%s"',
             $param_key,
-            is_null($param_value) ? 'NULL' : $param_value
+            $param_value ?? 'NULL'
         ), 'WS');
     }
 
@@ -1264,7 +1264,7 @@ SELECT COUNT(*)
   FROM '. IMAGES_TABLE .'
   WHERE id = '. $params['image_id'] .'
 ;';
-        list($count) = pwg_db_fetch_row(pwg_query($query));
+        [$count] = pwg_db_fetch_row(pwg_query($query));
         if ($count == 0) {
             return new PwgError(404, 'image_id not found');
         }
@@ -1284,7 +1284,7 @@ SELECT COUNT(*)
   FROM '. IMAGES_TABLE .'
   WHERE '. $where_clause .'
 ;';
-        list($counter) = pwg_db_fetch_row(pwg_query($query));
+        [$counter] = pwg_db_fetch_row(pwg_query($query));
         if ($counter != 0) {
             return new PwgError(500, 'file already exists');
         }
@@ -1314,19 +1314,19 @@ SELECT COUNT(*)
         $file_path,
         $params['original_filename'],
         null, // categories
-        isset($params['level']) ? $params['level'] : null,
+        $params['level'] ?? null,
         $params['image_id'] > 0 ? $params['image_id'] : null,
         $params['original_sum']
     );
 
-    $info_columns = array(
+    $info_columns = [
       'name',
       'author',
       'comment',
       'date_creation',
-      );
+      ];
 
-    $update = array();
+    $update = [];
     foreach ($info_columns as $key) {
         if (isset($params[$key])) {
             $update[$key] = $params[$key];
@@ -1337,11 +1337,11 @@ SELECT COUNT(*)
         single_update(
             IMAGES_TABLE,
             $update,
-            array('id' => $image_id)
+            ['id' => $image_id]
         );
     }
 
-    $url_params = array('image_id' => $image_id);
+    $url_params = ['image_id' => $image_id];
 
     // let's add links between the image and the categories
     if (isset($params['categories'])) {
@@ -1373,10 +1373,10 @@ SELECT id, name, permalink
 
     invalidate_user_cache();
 
-    return array(
+    return [
       'image_id' => $image_id,
       'url' => make_picture_url($url_params),
-      );
+      ];
 }
 
 /**
@@ -1400,33 +1400,18 @@ function ws_images_addSimple($params, $service)
     }
 
     if (isset($_FILES['image']['error']) && $_FILES['image']['error'] != 0) {
-        switch ($_FILES['image']['error']) {
-            case UPLOAD_ERR_INI_SIZE:
-                $message = 'The uploaded file exceeds the upload_max_filesize directive in php.ini.';
-                break;
-            case UPLOAD_ERR_FORM_SIZE:
-                $message = 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form.';
-                break;
-            case UPLOAD_ERR_PARTIAL:
-                $message = 'The uploaded file was only partially uploaded.';
-                break;
-            case UPLOAD_ERR_NO_FILE:
-                $message = 'No file was uploaded.';
-                break;
-            case UPLOAD_ERR_NO_TMP_DIR:
-                $message = 'Missing a temporary folder.';
-                break;
-            case UPLOAD_ERR_CANT_WRITE:
-                $message = 'Failed to write file to disk.';
-                break;
-            case UPLOAD_ERR_EXTENSION:
-                $message = 'A PHP extension stopped the file upload. ' .
-                'PHP does not provide a way to ascertain which extension caused the file ' .
-                'upload to stop; examining the list of loaded extensions with phpinfo() may help.';
-                break;
-            default:
-                $message = "Error number {$_FILES['image']['error']} occurred while uploading a file.";
-        }
+        $message = match ($_FILES['image']['error']) {
+            UPLOAD_ERR_INI_SIZE => 'The uploaded file exceeds the upload_max_filesize directive in php.ini.',
+            UPLOAD_ERR_FORM_SIZE => 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form.',
+            UPLOAD_ERR_PARTIAL => 'The uploaded file was only partially uploaded.',
+            UPLOAD_ERR_NO_FILE => 'No file was uploaded.',
+            UPLOAD_ERR_NO_TMP_DIR => 'Missing a temporary folder.',
+            UPLOAD_ERR_CANT_WRITE => 'Failed to write file to disk.',
+            UPLOAD_ERR_EXTENSION => 'A PHP extension stopped the file upload. ' .
+            'PHP does not provide a way to ascertain which extension caused the file ' .
+            'upload to stop; examining the list of loaded extensions with phpinfo() may help.',
+            default => "Error number {$_FILES['image']['error']} occurred while uploading a file.",
+        };
 
         $logger->error(__FUNCTION__ . ' ' . $message);
         return new PwgError(500, $message);
@@ -1438,7 +1423,7 @@ SELECT COUNT(*)
   FROM '. IMAGES_TABLE .'
   WHERE id = '. $params['image_id'] .'
 ;';
-        list($count) = pwg_db_fetch_row(pwg_query($query));
+        [$count] = pwg_db_fetch_row(pwg_query($query));
         if ($count == 0) {
             return new PwgError(404, 'image_id not found');
         }
@@ -1454,15 +1439,15 @@ SELECT COUNT(*)
         $params['image_id'] > 0 ? $params['image_id'] : null
     );
 
-    $info_columns = array(
+    $info_columns = [
       'name',
       'author',
       'comment',
       'level',
       'date_creation',
-      );
+      ];
 
-    $update = array();
+    $update = [];
     foreach ($info_columns as $key) {
         if (isset($params[$key])) {
             $update[$key] = $params[$key];
@@ -1472,13 +1457,13 @@ SELECT COUNT(*)
     single_update(
         IMAGES_TABLE,
         $update,
-        array('id' => $image_id)
+        ['id' => $image_id]
     );
 
     if (isset($params['tags']) and !empty($params['tags'])) {
         include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
-        $tag_ids = array();
+        $tag_ids = [];
         if (is_array($params['tags'])) {
             foreach ($params['tags'] as $tag_name) {
                 $tag_ids[] = tag_id_from_tag_name($tag_name);
@@ -1490,10 +1475,10 @@ SELECT COUNT(*)
             }
         }
 
-        add_tags($tag_ids, array($image_id));
+        add_tags($tag_ids, [$image_id]);
     }
 
-    $url_params = array('image_id' => $image_id);
+    $url_params = ['image_id' => $image_id];
 
     if (!empty($params['category'])) {
         $query = '
@@ -1511,12 +1496,12 @@ SELECT id, name, permalink
     // update metadata from the uploaded file (exif/iptc), even if the sync
     // was already performed by add_uploaded_file().
     require_once(PHPWG_ROOT_PATH.'admin/include/functions_metadata.php');
-    sync_metadata(array($image_id));
+    sync_metadata([$image_id]);
 
-    return array(
+    return [
       'image_id' => $image_id,
       'url' => make_picture_url($url_params),
-      );
+      ];
 }
 
 /**
@@ -1646,13 +1631,13 @@ SELECT *
 
             $add_status = add_format($filePath, $format_ext, $image['id']);
 
-            return array(
+            return [
               'image_id' => $image['id'],
               'src' => DerivativeImage::thumb_url($image),
               'square_src' => DerivativeImage::url(ImageStdParams::get_by_type(IMG_SQUARE), $image),
               'name' => $image['name'],
               'add_status' => $add_status,
-            );
+            ];
         }
 
         $name = pwg_db_real_escape_string(stripslashes($params['name']));
@@ -1708,22 +1693,22 @@ SELECT
   WHERE category_id = '.$params['category'][0].'
   AND image_id NOT IN (Select image_id from '.IMAGE_CATEGORY_TABLE.')
 ;';
-        list($nb_photos_lounge) = pwg_db_fetch_row(pwg_query($query));
+        [$nb_photos_lounge] = pwg_db_fetch_row(pwg_query($query));
 
         $category_name = get_cat_display_name_from_id($params['category'][0], null);
 
-        return array(
+        return [
           'image_id' => $image_id,
           'src' => DerivativeImage::thumb_url($image_infos),
           'square_src' => DerivativeImage::url(ImageStdParams::get_by_type(IMG_SQUARE), $image_infos),
           'name' => $image_infos['name'],
-          'category' => array(
+          'category' => [
             'id' => $params['category'][0],
             'nb_photos' => $category_infos['nb_photos'] + $nb_photos_lounge,
             'label' => $category_name,
-          ),
+          ],
           'add_status' => $add_status,
-          );
+          ];
     }
 }
 
@@ -1766,7 +1751,7 @@ SELECT COUNT(*)
   FROM '. IMAGES_TABLE .'
   WHERE id = '. $params['image_id'] .'
 ;';
-        list($count) = pwg_db_fetch_row(pwg_query($query));
+        [$count] = pwg_db_fetch_row(pwg_query($query));
         if ($count == 0) {
             return new PwgError(404, __FUNCTION__.' : image_id not found');
         }
@@ -1799,7 +1784,7 @@ SELECT COUNT(*)
     }
 
     // are all chunks uploaded?
-    $chunk_ids_uploaded = array();
+    $chunk_ids_uploaded = [];
     for ($i = 1; $i <= $params['chunks']; $i++) {
         $chunkfile = sprintf($chunkfile_path_pattern, $i, $params['chunks']);
         if (file_exists($chunkfile) && ($fp = fopen($chunkfile, 'rb')) !== false) {
@@ -1811,7 +1796,7 @@ SELECT COUNT(*)
     if ($params['chunks'] != count($chunk_ids_uploaded)) {
         // all chunks are not yet available
         $logger->debug(__FUNCTION__.' all chunks are not uploaded yet, maybe on next chunk, exit for now');
-        return array('message' => 'chunks uploaded = '.implode(',', $chunk_ids_uploaded));
+        return ['message' => 'chunks uploaded = '.implode(',', $chunk_ids_uploaded)];
     }
 
     // all chunks available
@@ -1823,7 +1808,7 @@ SELECT COUNT(*)
         // merge file already exists
         fclose($fp);
         $logger->error(__FUNCTION__.' '.$output_filepath.' already exists, another merge is under process');
-        return array('message' => 'chunks uploaded = '.implode(',', $chunk_ids_uploaded));
+        return ['message' => 'chunks uploaded = '.implode(',', $chunk_ids_uploaded)];
     }
 
     // create merged and open it for writing only
@@ -1855,7 +1840,7 @@ SELECT COUNT(*)
             $logger->error(__FUNCTION__.' '.$chunkfile_path.' already merged');
             flock($fp, LOCK_UN);
             fclose($fp);
-            return array('message' => 'chunks uploaded = '.implode(',', $chunk_ids_uploaded));
+            return ['message' => 'chunks uploaded = '.implode(',', $chunk_ids_uploaded)];
         }
 
         if (!fwrite($fp, file_get_contents($chunkfile_path))) {
@@ -1915,14 +1900,14 @@ SELECT COUNT(*)
     }
 
     // time to set other infos
-    $info_columns = array(
+    $info_columns = [
       'name',
       'author',
       'comment',
       'date_creation',
-    );
+    ];
 
-    $update = array();
+    $update = [];
     foreach ($info_columns as $key) {
         if (isset($params[$key])) {
             $update[$key] = $params[$key];
@@ -1933,7 +1918,7 @@ SELECT COUNT(*)
         single_update(
             IMAGES_TABLE,
             $update,
-            array('id' => $image_id)
+            ['id' => $image_id]
         );
     }
 
@@ -1971,7 +1956,7 @@ SELECT COUNT(*)
         }
     }
 
-    return $service->invoke('pwg.images.getInfo', array('image_id' => $image_id));
+    return $service->invoke('pwg.images.getInfo', ['image_id' => $image_id]);
 }
 
 /**
@@ -1988,7 +1973,7 @@ function ws_images_exist($params, $service)
     $logger->debug(__FUNCTION__, 'WS', $params);
 
     $split_pattern = '/[\s,;\|]/';
-    $result = array();
+    $result = [];
 
     if ('md5sum' == $conf['uniqueness_mode']) {
         // search among photos the list of photos already added, based on md5sum list
@@ -2056,7 +2041,7 @@ function ws_images_formats_searchImage($params, $service)
 
     $candidates = json_decode(stripslashes($params['filename_list']), true);
 
-    $unique_filenames_db = array();
+    $unique_filenames_db = [];
 
     $query = '
 SELECT
@@ -2071,9 +2056,7 @@ SELECT
     }
 
     // we want "long" format extensions first to match "cmyk.jpg" before "jpg" for example
-    usort($conf['format_ext'], function ($a, $b) {
-        return strlen($b) - strlen($a);
-    });
+    usort($conf['format_ext'], fn ($a, $b) => strlen($b) - strlen($a));
 
     $query = '
 SELECT
@@ -2087,7 +2070,7 @@ SELECT
         @$format_db[ $format_image_id ][] = $row['ext'];
     }
 
-    $result = array();
+    $result = [];
 
     foreach ($candidates as $format_external_id => $format_filename) {
         $candidate_filename_wo_ext = null;
@@ -2097,13 +2080,13 @@ SELECT
         }
 
         if (empty($candidate_filename_wo_ext)) {
-            $result[$format_external_id] = array('status' => 'not found');
+            $result[$format_external_id] = ['status' => 'not found'];
             continue;
         }
 
         if (isset($unique_filenames_db[$candidate_filename_wo_ext])) {
             if (count($unique_filenames_db[$candidate_filename_wo_ext]) > 1) {
-                $result[$format_external_id] = array('status' => 'multiple');
+                $result[$format_external_id] = ['status' => 'multiple'];
                 continue;
             }
             $img_id = $unique_filenames_db[$candidate_filename_wo_ext][0];
@@ -2114,11 +2097,11 @@ SELECT
                     $mult_form = true;
                 }
             }
-            $result[$format_external_id] = array('status' => 'found', 'image_id' => $img_id, 'format_exist' => $mult_form);
+            $result[$format_external_id] = ['status' => 'found', 'image_id' => $img_id, 'format_exist' => $mult_form];
             continue;
         }
 
-        $result[$format_external_id] = array('status' => 'not found');
+        $result[$format_external_id] = ['status' => 'not found'];
     }
 
     return $result;
@@ -2149,7 +2132,7 @@ function ws_images_formats_delete($params, $service)
     }
     $params['format_id'] = array_map('intval', $params['format_id']);
 
-    $format_ids = array();
+    $format_ids = [];
     foreach ($params['format_id'] as $format_id) {
         if ($format_id >= 0) {
             $format_ids[] = $format_id;
@@ -2158,8 +2141,8 @@ function ws_images_formats_delete($params, $service)
 
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
-    $image_ids = array();
-    $formats_of = array();
+    $image_ids = [];
+    $formats_of = [];
 
     //Delete physical file
     $ok = true;
@@ -2176,7 +2159,7 @@ SELECT
 
         if (!isset($formats_of[ $row['image_id'] ])) {
             $image_ids[] = $row['image_id'];
-            $formats_of[ $row['image_id'] ] = array();
+            $formats_of[ $row['image_id'] ] = [];
         }
 
         $formats_of[ $row['image_id'] ][] = $row['ext'];
@@ -2200,7 +2183,7 @@ SELECT
             continue;
         }
 
-        $files = array();
+        $files = [];
         $image_path = get_element_path($row);
 
         if (isset($formats_of[ $row['id'] ])) {
@@ -2255,9 +2238,9 @@ SELECT path
         return new PwgError(404, 'image_id not found');
     }
 
-    list($path) = pwg_db_fetch_row($result);
+    [$path] = pwg_db_fetch_row($result);
 
-    $ret = array();
+    $ret = [];
 
     if (isset($params['thumbnail_sum'])) {
         // We always say the thumbnail is equal to create no reaction on the
@@ -2327,15 +2310,15 @@ SELECT *
     $image_row = pwg_db_fetch_assoc($result);
 
     // database registration
-    $update = array();
+    $update = [];
 
-    $info_columns = array(
+    $info_columns = [
       'name',
       'author',
       'comment',
       'level',
       'date_creation',
-      );
+      ];
 
     foreach ($info_columns as $key) {
         if (isset($params[$key])) {
@@ -2381,7 +2364,7 @@ SELECT *
         single_update(
             IMAGES_TABLE,
             $update,
-            array('id' => $update['id'])
+            ['id' => $update['id']]
         );
 
         pwg_activity('photo', $update['id'], 'edit');
@@ -2397,7 +2380,7 @@ SELECT *
 
     // and now, let's create tag associations
     if (isset($params['tag_ids'])) {
-        $tag_ids = array();
+        $tag_ids = [];
 
         foreach (explode(',', $params['tag_ids']) as $candidate) {
             $candidate = trim($candidate);
@@ -2415,7 +2398,7 @@ SELECT *
         } elseif ('append' == $params['multiple_value_mode']) {
             add_tags(
                 $tag_ids,
-                array($params['image_id'])
+                [$params['image_id']]
             );
         } else {
             return new PwgError(
@@ -2470,7 +2453,7 @@ function ws_images_delete($params, $service)
     }
     $params['image_id'] = array_map('intval', $params['image_id']);
 
-    $image_ids = array();
+    $image_ids = [];
     foreach ($params['image_id'] as $image_id) {
         if ($image_id > 0) {
             $image_ids[] = $image_id;
@@ -2512,7 +2495,7 @@ function ws_images_emptyLounge($params, $service)
 {
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
-    $ret = array('rows' => empty_lounge());
+    $ret = ['rows' => empty_lounge()];
 
     return $ret;
 }
@@ -2541,7 +2524,7 @@ function ws_images_uploadCompleted($params, $service)
     }
     $params['image_id'] = array_map('intval', $params['image_id']);
 
-    $image_ids = array();
+    $image_ids = [];
     foreach ($params['image_id'] as $image_id) {
         if ($image_id > 0) {
             $image_ids[] = $image_id;
@@ -2563,21 +2546,21 @@ SELECT
 
     trigger_notify(
         'ws_images_uploadCompleted',
-        array(
+        [
         'image_ids' => $image_ids,
         'category_id' => $params['category_id'],
         'moved_from_lounge' => $moved_from_lounge,
-    )
+    ]
     );
 
-    return array(
+    return [
       'moved_from_lounge' => $moved_from_lounge,
-      'category' => array(
+      'category' => [
         'id' => $params['category_id'],
         'nb_photos' => $category_infos['nb_photos'],
         'label' => $category_name,
-      ),
-    );
+      ],
+    ];
 }
 
 /**
@@ -2602,10 +2585,10 @@ function ws_images_setMd5sum($params, $service)
         $added_count = add_md5sum($md5sum_ids_to_add);
     }
 
-    return array(
+    return [
       'nb_added' => $added_count,
       'nb_no_md5sum' => count(get_photos_no_md5sum()),
-      );
+      ];
 }
 
 /**
@@ -2629,7 +2612,7 @@ function ws_images_syncMetadata($params, $service)
         );
     }
 
-    $image_ids = array();
+    $image_ids = [];
     foreach ($params['image_id'] as $image_id) {
         $image_id = trim($image_id);
 
@@ -2659,9 +2642,9 @@ SELECT id
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
     sync_metadata($image_ids);
 
-    return array(
+    return [
       'nb_synchronized' => count($image_ids),
-    );
+    ];
 }
 
 /**
@@ -2682,10 +2665,10 @@ function ws_images_deleteOrphans($params, $service)
     $deleted_count = delete_elements($orphan_ids_to_delete, true);
     invalidate_user_cache();
 
-    return array(
+    return [
       'nb_deleted' => $deleted_count,
       'nb_orphans' => count(get_orphans()),
-      );
+      ];
 }
 
 /**
@@ -2721,11 +2704,11 @@ SELECT
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
     if ('associate' == $params['action']) {
-        associate_images_to_categories($params['image_id'], array($params['category_id']));
+        associate_images_to_categories($params['image_id'], [$params['category_id']]);
     } elseif ('dissociate' == $params['action']) {
         dissociate_images_from_category($params['image_id'], $params['category_id']);
     } elseif ('move' == $params['action']) {
-        move_images_to_categories($params['image_id'], array($params['category_id']));
+        move_images_to_categories($params['image_id'], [$params['category_id']]);
     }
 
     invalidate_user_cache();

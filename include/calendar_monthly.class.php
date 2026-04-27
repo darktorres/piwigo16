@@ -26,20 +26,20 @@ class CalendarMonthly extends CalendarBase
     {
         parent::initialize($inner_sql);
         global $lang;
-        $this->calendar_levels = array(
-          array(
+        $this->calendar_levels = [
+          [
               'sql' => pwg_db_get_year($this->date_field),
               'labels' => null,
-            ),
-          array(
+            ],
+          [
           'sql' => pwg_db_get_month($this->date_field),
           'labels' => $lang['month'],
-            ),
-          array(
+            ],
+          [
               'sql' => pwg_db_get_dayofmonth($this->date_field),
               'labels' => null,
-            ),
-         );
+            ],
+         ];
     }
 
     /**
@@ -54,7 +54,7 @@ class CalendarMonthly extends CalendarBase
         $view_type = $page['chronology_view'];
         if ($view_type == CAL_VIEW_CALENDAR) {
             global $template;
-            $tpl_var = array();
+            $tpl_var = [];
             if (count($page['chronology_date']) == 0) {//case A: no year given - display all years+months
                 if ($this->build_global_calendar($tpl_var)) {
                     $template->assign('chronology_calendar', $tpl_var);
@@ -160,7 +160,7 @@ class CalendarMonthly extends CalendarBase
      */
     protected function get_all_days_in_month($year, $month)
     {
-        $md = array(1 => 31,28,31,30,31,30,31,31,30,31,30,31);
+        $md = [1 => 31,28,31,30,31,30,31,31,30,31,30,31];
 
         if (is_numeric($year) and $month == 2) {
             $nb_days = $md[2];
@@ -196,27 +196,27 @@ class CalendarMonthly extends CalendarBase
     ORDER BY '.pwg_db_get_year($this->date_field).' DESC, '.pwg_db_get_month($this->date_field).' ASC';
 
         $result = pwg_query($query);
-        $items = array();
+        $items = [];
         while ($row = pwg_db_fetch_assoc($result)) {
             $y = substr($row['period'], 0, 4);
             $m = (int)substr($row['period'], 4, 2);
             if (! isset($items[$y])) {
-                $items[$y] = array('nb_images' => 0, 'children' => array() );
+                $items[$y] = ['nb_images' => 0, 'children' => [] ];
             }
             $items[$y]['children'][$m] = $row['count'];
             $items[$y]['nb_images'] += $row['count'];
         }
         //echo ('<pre>'. var_export($items, true) . '</pre>');
         if (count($items) == 1) {// only one year exists so bail out to year view
-            list($y) = array_keys($items);
+            [$y] = array_keys($items);
             $page['chronology_date'][CYEAR] = $y;
             return false;
         }
 
         global $lang;
         foreach ($items as $year => $year_data) {
-            $chronology_date = array( $year );
-            $url = duplicate_index_url(array('chronology_date' => $chronology_date));
+            $chronology_date = [ $year ];
+            $url = duplicate_index_url(['chronology_date' => $chronology_date]);
 
             $nav_bar = $this->get_nav_bar_from_items(
                 $chronology_date,
@@ -227,12 +227,12 @@ class CalendarMonthly extends CalendarBase
             );
 
             $tpl_var['calendar_bars'][] =
-              array(
+              [
                 'U_HEAD'  => $url,
                 'NB_IMAGES' => $year_data['nb_images'],
                 'HEAD_LABEL' => $year,
                 'items' => $nav_bar,
-              );
+              ];
         }
 
         return true;
@@ -258,25 +258,25 @@ class CalendarMonthly extends CalendarBase
     ORDER BY period ASC';
 
         $result = pwg_query($query);
-        $items = array();
+        $items = [];
         while ($row = pwg_db_fetch_assoc($result)) {
             $m = (int)substr($row['period'], 0, 2);
             $d = substr($row['period'], 2, 2);
             if (! isset($items[$m])) {
-                $items[$m] = array('nb_images' => 0, 'children' => array() );
+                $items[$m] = ['nb_images' => 0, 'children' => [] ];
             }
             $items[$m]['children'][$d] = $row['count'];
             $items[$m]['nb_images'] += $row['count'];
         }
         if (count($items) == 1) { // only one month exists so bail out to month view
-            list($m) = array_keys($items);
+            [$m] = array_keys($items);
             $page['chronology_date'][CMONTH] = $m;
             return false;
         }
         global $lang;
         foreach ($items as $month => $month_data) {
-            $chronology_date = array( $page['chronology_date'][CYEAR], $month );
-            $url = duplicate_index_url(array('chronology_date' => $chronology_date));
+            $chronology_date = [ $page['chronology_date'][CYEAR], $month ];
+            $url = duplicate_index_url(['chronology_date' => $chronology_date]);
 
             $nav_bar = $this->get_nav_bar_from_items(
                 $chronology_date,
@@ -285,12 +285,12 @@ class CalendarMonthly extends CalendarBase
             );
 
             $tpl_var['calendar_bars'][] =
-              array(
+              [
                 'U_HEAD'  => $url,
                 'NB_IMAGES' => $month_data['nb_images'],
                 'HEAD_LABEL' => $lang['month'][$month],
                 'items' => $nav_bar,
-              );
+              ];
         }
 
         return true;
@@ -314,11 +314,11 @@ class CalendarMonthly extends CalendarBase
     GROUP BY period
     ORDER BY period ASC';
 
-        $items = array();
+        $items = [];
         $result = pwg_query($query);
         while ($row = pwg_db_fetch_assoc($result)) {
             $d = (int)$row['period'];
-            $items[$d] = array('nb_images' => $row['count']);
+            $items[$d] = ['nb_images' => $row['count']];
         }
 
         foreach ($items as $day => $data) {
@@ -340,7 +340,7 @@ class CalendarMonthly extends CalendarBase
         }
 
         if (!empty($items)) {
-            list($known_day) = array_keys($items);
+            [$known_day] = array_keys($items);
             $known_dow = $items[$known_day]['dow'];
             $first_day_dow = ($known_dow - ($known_day - 1)) % 7;
             if ($first_day_dow < 0) {
@@ -359,14 +359,14 @@ class CalendarMonthly extends CalendarBase
                 $wday_labels[] = array_shift($wday_labels);
             }
 
-            list($cell_width, $cell_height) = ImageStdParams::get_by_type(IMG_SQUARE)->sizing->ideal_size;
+            [$cell_width, $cell_height] = ImageStdParams::get_by_type(IMG_SQUARE)->sizing->ideal_size;
 
-            $tpl_weeks    = array();
-            $tpl_crt_week = array();
+            $tpl_weeks    = [];
+            $tpl_crt_week = [];
 
             //fill the empty days in the week before first day of this month
             for ($i = 0; $i < $first_day_dow; $i++) {
-                $tpl_crt_week[] = array();
+                $tpl_crt_week[] = [];
             }
 
             for ($day = 1;
@@ -378,51 +378,51 @@ class CalendarMonthly extends CalendarBase
                 $dow = ($first_day_dow + $day - 1) % 7;
                 if ($dow == 0 and $day != 1) {
                     $tpl_weeks[]    = $tpl_crt_week; // add finished week to week list
-                    $tpl_crt_week   = array(); // start new week
+                    $tpl_crt_week   = []; // start new week
                 }
 
                 if (!isset($items[$day])) {// empty day
                     $tpl_crt_week[]   =
-                      array(
+                      [
                           'DAY' => $day,
-                        );
+                        ];
                 } else {
                     $url = duplicate_index_url(
-                        array(
+                        [
                           'chronology_date' =>
-                            array(
+                            [
                               $page['chronology_date'][CYEAR],
                               $page['chronology_date'][CMONTH],
                               $day,
-                            ),
-                        )
+                            ],
+                        ]
                     );
 
                     $tpl_crt_week[]   =
-                      array(
+                      [
                           'DAY'         => $day,
                           'DOW'         => $dow,
                           'NB_ELEMENTS' => $items[$day]['nb_images'],
                           'IMAGE'       => $items[$day]['derivative']->get_url(),
                           'U_IMG_LINK'  => $url,
                           'IMAGE_ALT'   => $items[$day]['file'],
-                        );
+                        ];
                 }
             }
             //fill the empty days in the week after the last day of this month
             while ($dow < 6) {
-                $tpl_crt_week[] = array();
+                $tpl_crt_week[] = [];
                 $dow++;
             }
             $tpl_weeks[]    = $tpl_crt_week;
 
             $tpl_var['month_view'] =
-                array(
+                [
                    'CELL_WIDTH'   => $cell_width,
                    'CELL_HEIGHT' => $cell_height,
                    'wday_labels' => $wday_labels,
                    'weeks' => $tpl_weeks,
-                  );
+                  ];
         }
 
         return true;

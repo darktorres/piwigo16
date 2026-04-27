@@ -18,7 +18,7 @@ function get_root_url()
     global $page;
     if (($root_url = @$page['root_path']) == null) {// TODO - add HERE the possibility to call PWG functions from external scripts
         $root_url = PHPWG_ROOT_PATH;
-        if (strncmp($root_url, './', 2) == 0) {
+        if (str_starts_with($root_url, './')) {
             return substr($root_url, 2);
         }
     }
@@ -96,7 +96,7 @@ function add_url_params($url, $params, $arg_separator = '&amp;')
         foreach ($params as $param => $val) {
             if ($is_first) {
                 $is_first = false;
-                $url .= (strpos($url, '?') === false) ? '?' : $arg_separator;
+                $url .= (!str_contains($url, '?')) ? '?' : $arg_separator;
             } else {
                 $url .= $arg_separator;
             }
@@ -115,7 +115,7 @@ function add_url_params($url, $params, $arg_separator = '&amp;')
  * @param array
  * @return string
  */
-function make_index_url($params = array())
+function make_index_url($params = [])
 {
     global $conf;
     $url = get_root_url().'index';
@@ -152,7 +152,7 @@ function make_index_url($params = array())
  * @param array removed keys
  * @return string
  */
-function duplicate_index_url($redefined = array(), $removed = array())
+function duplicate_index_url($redefined = [], $removed = [])
 {
     return make_index_url(
         params_for_duplication($redefined, $removed)
@@ -191,7 +191,7 @@ function params_for_duplication($redefined, $removed)
  * @param array removed keys
  * @return string
  */
-function duplicate_picture_url($redefined = array(), $removed = array())
+function duplicate_picture_url($redefined = [], $removed = [])
 {
     return make_picture_url(
         params_for_duplication($redefined, $removed)
@@ -284,12 +284,12 @@ function make_section_in_url($params)
     $section_string = '';
     $section = @$params['section'];
     if (!isset($section)) {
-        $section_of = array(
+        $section_of = [
           'category' => 'categories',
           'tags'     => 'tags',
           'list'     => 'list',
           'search'   => 'search',
-          );
+          ];
 
         foreach ($section_of as $param => $s) {
             if (isset($params[$param])) {
@@ -406,8 +406,8 @@ function make_section_in_url($params)
  */
 function parse_section_url($tokens, &$next_token)
 {
-    $page = array();
-    if (isset($tokens[$next_token]) and strncmp($tokens[$next_token], 'categor', 7) == 0) {
+    $page = [];
+    if (isset($tokens[$next_token]) and str_starts_with($tokens[$next_token], 'categor')) {
         $page['section'] = 'categories';
         $next_token++;
 
@@ -420,10 +420,10 @@ function parse_section_url($tokens, &$next_token)
             }
 
             if (
-                strpos($tokens[$next_token], 'created-') === 0
-                or strpos($tokens[$next_token], 'posted-') === 0
-                or strpos($tokens[$next_token], 'start-') === 0
-                or strpos($tokens[$next_token], 'startcat-') === 0
+                str_starts_with($tokens[$next_token], 'created-')
+                or str_starts_with($tokens[$next_token], 'posted-')
+                or str_starts_with($tokens[$next_token], 'start-')
+                or str_starts_with($tokens[$next_token], 'startcat-')
                 or 'flat' == $tokens[$next_token]
             ) {
                 break;
@@ -441,13 +441,13 @@ function parse_section_url($tokens, &$next_token)
                 }
                 $next_token++;
             } else {// try a permalink
-                $maybe_permalinks = array();
+                $maybe_permalinks = [];
                 $current_token = $next_token;
                 while (isset($tokens[$current_token])
-                    and strpos($tokens[$current_token], 'created-') !== 0
-                    and strpos($tokens[$current_token], 'posted-') !== 0
-                    and strpos($tokens[$next_token], 'start-') !== 0
-                    and strpos($tokens[$next_token], 'startcat-') !== 0
+                    and !str_starts_with($tokens[$current_token], 'created-')
+                    and !str_starts_with($tokens[$current_token], 'posted-')
+                    and !str_starts_with($tokens[$next_token], 'start-')
+                    and !str_starts_with($tokens[$next_token], 'startcat-')
                     and $tokens[$current_token] != 'flat') {
                     if (empty($maybe_permalinks)) {
                         $maybe_permalinks[] = $tokens[$current_token];
@@ -486,7 +486,7 @@ function parse_section_url($tokens, &$next_token)
         }
 
         if (isset($page['combined_categories'])) {
-            $combined_categories = array();
+            $combined_categories = [];
 
             foreach ($page['combined_categories'] as $cat_id) {
                 $result = get_cat_info($cat_id);
@@ -503,18 +503,18 @@ function parse_section_url($tokens, &$next_token)
         global $conf;
 
         $page['section'] = 'tags';
-        $page['tags'] = array();
+        $page['tags'] = [];
 
         $next_token++;
         $i = $next_token;
 
-        $requested_tag_ids = array();
-        $requested_tag_url_names = array();
+        $requested_tag_ids = [];
+        $requested_tag_url_names = [];
 
         while (isset($tokens[$i])) {
-            if (strpos($tokens[$i], 'created-') === 0
-                 or strpos($tokens[$i], 'posted-') === 0
-                 or strpos($tokens[$i], 'start-') === 0) {
+            if (str_starts_with($tokens[$i], 'created-')
+                 or str_starts_with($tokens[$i], 'posted-')
+                 or str_starts_with($tokens[$i], 'start-')) {
                 break;
             }
 
@@ -567,7 +567,7 @@ function parse_section_url($tokens, &$next_token)
         $page['section'] = 'list';
         $next_token++;
 
-        $page['list'] = array();
+        $page['list'] = [];
 
         // No pictures
         if (empty($tokens[$next_token])) {
@@ -594,12 +594,12 @@ function parse_section_url($tokens, &$next_token)
 */
 function parse_well_known_params_url($tokens, &$i)
 {
-    $page = array();
+    $page = [];
     while (isset($tokens[$i])) {
         if ('flat' == $tokens[$i]) {
             // indicate a special list of images
             $page['flat'] = true;
-        } elseif (strpos($tokens[$i], 'created-') === 0 or strpos($tokens[$i], 'posted-') === 0) {
+        } elseif (str_starts_with($tokens[$i], 'created-') or str_starts_with($tokens[$i], 'posted-')) {
             $chronology_tokens = explode('-', $tokens[$i]);
 
             $page['chronology_field'] = $chronology_tokens[0];
@@ -607,7 +607,7 @@ function parse_well_known_params_url($tokens, &$i)
             array_shift($chronology_tokens);
             $page['chronology_style'] = $chronology_tokens[0];
 
-            if (!in_array($page['chronology_style'], array('monthly', 'weekly'))) {
+            if (!in_array($page['chronology_style'], ['monthly', 'weekly'])) {
                 fatal_error('bad chronology field (style)');
             }
 
@@ -644,10 +644,10 @@ function parse_well_known_params_url($tokens, &$i)
  */
 function get_action_url($id, $what_part, $download)
 {
-    $params = array(
+    $params = [
           'id' => $id,
           'part' => $what_part,
-        );
+        ];
     if ($download) {
         $params['download'] = null;
     }
@@ -757,7 +757,7 @@ function get_gallery_home_url()
  * @param boolean $escape escape *&* to *&amp;*
  * @returns string
  */
-function get_query_string_diff($rejects = array(), $escape = true)
+function get_query_string_diff($rejects = [], $escape = true)
 {
     if (empty($_SERVER['QUERY_STRING'])) {
         return '';
@@ -778,8 +778,8 @@ function get_query_string_diff($rejects = array(), $escape = true)
  */
 function url_is_remote($url)
 {
-    if (strncmp($url, 'http://', 7) == 0
-      or strncmp($url, 'https://', 8) == 0) {
+    if (str_starts_with($url, 'http://')
+      or str_starts_with($url, 'https://')) {
         return true;
     }
     return false;
@@ -794,7 +794,7 @@ function get_user_favorites()
     global $user;
 
     if (is_a_guest()) {
-        return array();
+        return [];
     }
 
     $query = '

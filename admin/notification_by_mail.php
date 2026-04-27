@@ -46,7 +46,7 @@ $must_repost = false;
  * @param check_key_treated: array of check_key treated
  * @return none
  */
-function do_timeout_treatment($post_keyname, $check_key_treated = array())
+function do_timeout_treatment($post_keyname, $check_key_treated = [])
 {
     global $env_nbm, $base_url, $page, $must_repost;
 
@@ -79,18 +79,11 @@ function do_timeout_treatment($post_keyname, $check_key_treated = array())
 function get_tab_status($mode)
 {
     $result = ACCESS_WEBMASTER;
-    switch ($mode) {
-        case 'param':
-        case 'subscribe':
-            $result = ACCESS_WEBMASTER;
-            break;
-        case 'send':
-            $result = ACCESS_ADMINISTRATOR;
-            break;
-        default:
-            $result = ACCESS_WEBMASTER;
-            break;
-    }
+    $result = match ($mode) {
+        'param', 'subscribe' => ACCESS_WEBMASTER,
+        'send' => ACCESS_ADMINISTRATOR,
+        default => ACCESS_WEBMASTER,
+    };
     return $result;
 }
 
@@ -128,8 +121,8 @@ order by
     $result = pwg_query($query);
 
     if (pwg_db_num_rows($result) > 0) {
-        $inserts = array();
-        $check_key_list = array();
+        $inserts = [];
+        $check_key_list = [];
 
         while ($nbm_user = pwg_db_fetch_assoc($result)) {
             // Calculate key
@@ -139,11 +132,11 @@ order by
             $check_key_list[] = $nbm_user['check_key'];
 
             // Insert new nbm_users
-            $inserts[] = array(
+            $inserts[] = [
               'user_id' => $nbm_user['user_id'],
               'check_key' => $nbm_user['check_key'],
               'enabled' => 'false', // By default if false, set to true with specific functions
-              );
+              ];
 
             $page['infos'][] = l10n(
                 'User %s [%s] added.',
@@ -153,7 +146,7 @@ order by
         }
 
         // Insert new nbm_users
-        mass_inserts(USER_MAIL_NOTIFICATION_TABLE, array('user_id', 'check_key', 'enabled'), $inserts);
+        mass_inserts(USER_MAIL_NOTIFICATION_TABLE, ['user_id', 'check_key', 'enabled'], $inserts);
         // Update field enabled with specific function
         $check_key_treated = do_subscribe_unsubscribe_notification_by_mail(
             true,
@@ -168,7 +161,7 @@ order by
                 $query = 'delete from '.USER_MAIL_NOTIFICATION_TABLE.' where check_key in ('.implode(',', $quoted_check_key_list).');';
                 $result = pwg_query($query);
 
-                redirect($base_url.get_query_string_diff(array(), false), l10n('Operation in progress')."\n".l10n('Please wait...'));
+                redirect($base_url.get_query_string_diff([], false), l10n('Operation in progress')."\n".l10n('Please wait...'));
             }
         }
     }
@@ -182,7 +175,7 @@ function render_global_customize_mail_content($customize_mail_content)
 {
     global $conf;
 
-    if ($conf['nbm_send_html_mail'] and !(strpos($customize_mail_content, '<') === 0)) {
+    if ($conf['nbm_send_html_mail'] and !(str_starts_with($customize_mail_content, '<'))) {
         // On HTML mail, detects if the content are HTML format.
         // If it's plain text format, convert content to readable HTML
         return nl2br(htmlspecialchars($customize_mail_content));
@@ -196,13 +189,13 @@ function render_global_customize_mail_content($customize_mail_content)
  * Return list of "selected" users for 'list_to_send'
  * Return list of "treated" check_key for 'send'
  */
-function do_action_send_mail_notification($action = 'list_to_send', $check_key_list = array(), $customize_mail_content = '')
+function do_action_send_mail_notification($action = 'list_to_send', $check_key_list = [], $customize_mail_content = '')
 {
     global $conf, $page, $user, $lang_info, $lang, $env_nbm;
-    $return_list = array();
+    $return_list = [];
 
-    if (in_array($action, array('list_to_send', 'send'))) {
-        list($dbnow) = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
+    if (in_array($action, ['list_to_send', 'send'])) {
+        [$dbnow] = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
 
         $is_action_send = ($action == 'send');
 
@@ -215,7 +208,7 @@ function do_action_send_mail_notification($action = 'list_to_send', $check_key_l
         // Check if exist news to list user or send mails
         if ((!$is_list_all_without_test) or ($is_action_send)) {
             if (count($data_users) > 0) {
-                $datas = array();
+                $datas = [];
 
                 if (!isset($customize_mail_content)) {
                     $customize_mail_content = $conf['nbm_complementary_mail_content'];
@@ -252,7 +245,7 @@ function do_action_send_mail_notification($action = 'list_to_send', $check_key_l
 
                     if ($is_action_send) {
                         $auth = null;
-                        $add_url_params = array();
+                        $add_url_params = [];
 
                         $auth_key = create_user_auth_key($nbm_user['user_id'], $nbm_user['status']);
 
@@ -281,17 +274,17 @@ function do_action_send_mail_notification($action = 'list_to_send', $check_key_l
                             if (!is_null($nbm_user['last_send'])) {
                                 $env_nbm['mail_template']->assign(
                                     'content_new_elements_between',
-                                    array(
+                                    [
                                     'DATE_BETWEEN_1' => $nbm_user['last_send'],
                                     'DATE_BETWEEN_2' => $dbnow,
-                  )
+                  ]
                                 );
                             } else {
                                 $env_nbm['mail_template']->assign(
                                     'content_new_elements_single',
-                                    array(
+                                    [
                                     'DATE_SINGLE' => $dbnow,
-                  )
+                  ]
                                 );
                             }
 
@@ -319,44 +312,44 @@ function do_action_send_mail_notification($action = 'list_to_send', $check_key_l
                                 foreach ($recent_post_dates as $date_detail) {
                                     $env_nbm['mail_template']->append(
                                         'recent_posts',
-                                        array(
+                                        [
                                         'TITLE' => get_title_recent_post_date($date_detail),
                                         'HTML_DATA' => get_html_description_recent_post_date($date_detail, $auth),
-                    )
+                    ]
                                     );
                                 }
                             }
 
                             $env_nbm['mail_template']->assign(
-                                array(
+                                [
                                 'GOTO_GALLERY_TITLE' => $conf['gallery_title'],
                                 'GOTO_GALLERY_URL' => add_url_params(get_gallery_home_url(), $add_url_params),
                                 'SEND_AS_NAME'      => $env_nbm['send_as_name'],
-                )
+                ]
                             );
 
                             $ret = pwg_mail(
-                                array(
+                                [
                                 'name' => stripslashes($nbm_user['username']),
                                 'email' => $nbm_user['mail_address'],
-                                ),
-                                array(
+                                ],
+                                [
                                 'from' => $env_nbm['send_as_mail_formated'],
                                 'subject' => $subject,
                                 'email_format' => $env_nbm['email_format'],
                                 'content' => $env_nbm['mail_template']->parse('notification_by_mail', true),
                                 'content_format' => $env_nbm['email_format'],
                                 'auth_key' => $auth,
-                                )
+                                ]
                             );
 
                             if ($ret) {
                                 inc_mail_sent_success($nbm_user);
 
-                                $datas[] = array(
+                                $datas[] = [
                                   'user_id' => $nbm_user['user_id'],
                                   'last_send' => $dbnow,
-                                  );
+                                  ];
                             } else {
                                 inc_mail_sent_failed($nbm_user);
                             }
@@ -380,10 +373,10 @@ function do_action_send_mail_notification($action = 'list_to_send', $check_key_l
                 if ($is_action_send) {
                     mass_updates(
                         USER_MAIL_NOTIFICATION_TABLE,
-                        array(
-                        'primary' => array('user_id'),
-                        'update' => array('last_send'),
-             ),
+                        [
+                        'primary' => ['user_id'],
+                        'update' => ['last_send'],
+             ],
                         $datas
                     );
 
@@ -465,13 +458,13 @@ switch ($page['mode']) {
                 }
 
                 $template->assign(
-                    array(
+                    [
                     'save_success' => l10n_dec(
                         '%d parameter was updated.',
                         '%d parameters were updated.',
                         $updated_param_count
                     ),
-        )
+        ]
                 );
             }
         }
@@ -500,18 +493,18 @@ switch ($page['mode']) {
 // | template initialization                                               |
 // +-----------------------------------------------------------------------+
 $template->set_filenames(
-    array(
+    [
     'double_select' => 'double_select.tpl',
     'notification_by_mail' => 'notification_by_mail.tpl',
-  )
+  ]
 );
 
 $template->assign(
-    array(
+    [
     'PWG_TOKEN' => get_pwg_token(),
     'U_HELP' => get_root_url().'admin/popuphelp.php?page=notification_by_mail',
-    'F_ACTION' => $base_url.get_query_string_diff(array()),
-  )
+    'F_ACTION' => $base_url.get_query_string_diff([]),
+  ]
 );
 
 if (is_autorize_status(ACCESS_WEBMASTER)) {
@@ -541,13 +534,13 @@ switch ($page['mode']) {
         {
             $template->assign(
                 $page['mode'],
-                array(
+                [
                 'SEND_HTML_MAIL' => $conf['nbm_send_html_mail'],
                 'SEND_MAIL_AS' => $conf['nbm_send_mail_as'],
                 'SEND_DETAILED_CONTENT' => $conf['nbm_send_detailed_content'],
                 'COMPLEMENTARY_MAIL_CONTENT' => $conf['nbm_complementary_mail_content'],
                 'SEND_RECENT_POST_DATES' => $conf['nbm_send_recent_post_dates'],
-                )
+                ]
             );
             break;
         }
@@ -557,18 +550,18 @@ switch ($page['mode']) {
             $template->assign($page['mode'], true);
 
             $template->assign(
-                array(
+                [
                 'L_CAT_OPTIONS_TRUE' => l10n('Subscribed'),
                 'L_CAT_OPTIONS_FALSE' => l10n('Unsubscribed'),
-                )
+                ]
             );
 
             $data_users = get_user_notifications('subscribe');
 
-            $opt_true = array();
-            $opt_true_selected = array();
-            $opt_false = array();
-            $opt_false_selected = array();
+            $opt_true = [];
+            $opt_true_selected = [];
+            $opt_false = [];
+            $opt_false_selected = [];
             foreach ($data_users as $nbm_user) {
                 if (get_boolean($nbm_user['enabled'])) {
                     $opt_true[ $nbm_user['check_key'] ] = stripslashes($nbm_user['username']).'['.$nbm_user['mail_address'].']';
@@ -583,12 +576,12 @@ switch ($page['mode']) {
                 }
             }
             $template->assign(
-                array(
+                [
                 'category_option_true'          => $opt_true,
                 'category_option_true_selected' => $opt_true_selected,
                 'category_option_false'         => $opt_false,
                 'category_option_false_selected' => $opt_false_selected,
-                )
+                ]
             );
             $template->assign_var_from_handle('DOUBLE_SELECT', 'double_select');
             break;
@@ -596,7 +589,7 @@ switch ($page['mode']) {
 
     case 'send':
         {
-            $tpl_var = array('users' => array() );
+            $tpl_var = ['users' => [] ];
 
             $data_users = do_action_send_mail_notification('list_to_send');
 
@@ -612,7 +605,7 @@ switch ($page['mode']) {
                         (($must_repost) and in_array($nbm_user['check_key'], $_POST['send_selection']))  // Must be repost, show only user to send
                     ) {
                         $tpl_var['users'][] =
-                          array(
+                          [
                             'ID' => $nbm_user['check_key'],
                             'CHECKED' =>  ( // not check if not selected,  on init select<all
                                 isset($_POST['send_selection']) and // not init
@@ -621,7 +614,7 @@ switch ($page['mode']) {
                             'USERNAME' => stripslashes($nbm_user['username']),
                             'EMAIL' => $nbm_user['mail_address'],
                             'LAST_SEND' => $nbm_user['last_send'],
-                            );
+                            ];
                     }
                 }
             }

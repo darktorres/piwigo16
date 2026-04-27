@@ -24,14 +24,14 @@ if (!is_webmaster()) {
 // | Update standard pages configuration                                   |
 // +-----------------------------------------------------------------------+
 
-$std_pgs_logo_options = array(
+$std_pgs_logo_options = [
   'piwigo_logo',
   'custom_logo',
   'gallery_title',
   'none',
-);
+];
 
-$std_pgs_skin_options = array(
+$std_pgs_skin_options = [
   'default',
   'cadmium',
   'cobalt',
@@ -43,7 +43,7 @@ $std_pgs_skin_options = array(
   'sienna',
   'silver',
   'teal',
-);
+];
 
 if (isset($_POST['submit']) and !empty($_POST) and is_webmaster()) {
     check_pwg_token();
@@ -69,19 +69,19 @@ if (isset($_FILES['std_pgs_logo']) and !empty($_FILES['std_pgs_logo']['tmp_name'
     finfo_close($finfo);
 
     // Allowed MIME types
-    $allowed_mimes = array(
+    $allowed_mimes = [
       'image/png' => 'png',
       'image/jpeg' => 'jpg',
       'image/svg+xml' => 'svg',
       'image/svg' => 'svg',
       'image/webp' => 'webp',
-    );
+    ];
 
     if (!in_array($mime_type, array_keys($allowed_mimes))) {
         $template->assign(
-            array(
+            [
             'save_error' => 'Invalid image file.',
-      )
+      ]
         );
     } else {
         $upload_dir = PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'logo';
@@ -96,19 +96,19 @@ if (isset($_FILES['std_pgs_logo']) and !empty($_FILES['std_pgs_logo']['tmp_name'
                 $logo['file'] = substr($file_path, strlen(PHPWG_ROOT_PATH));
             } else {
                 $template->assign(
-                    array(
+                    [
                     'save_error' => "$file_path " . l10n('no write access'),
-          )
+          ]
                 );
             }
         } else {
             $template->assign(
-                array(
+                [
                 'save_error' => sprintf(
                     l10n('Add write access to the "%s" directory'),
                     $upload_dir
                 ),
-        )
+        ]
             );
         }
     }
@@ -120,7 +120,7 @@ $themes = new themes();
 $themes->get_fs_themes();
 
 $is_standard_pages_used = false;
-$standard_pages_used_by = array();
+$standard_pages_used_by = [];
 
 foreach ($themes->fs_themes as $theme) {
     if (isset($theme['use_standard_pages']) and $theme['use_standard_pages']) {
@@ -135,7 +135,7 @@ foreach ($themes->fs_themes as $theme) {
 
 //Send all info to template
 $template->assign(
-    array(
+    [
     'use_standard_pages' => conf_get_param('use_standard_pages', true),
     'std_pgs_selected_logo' => conf_get_param('standard_pages_selected_logo', 'piwigo_logo'),
     'std_pgs_logo_options' => $std_pgs_logo_options,
@@ -145,12 +145,12 @@ $template->assign(
     'standard_pages_used_by' => $standard_pages_used_by,
     'std_pgs_selected_logo_path' => conf_get_param('standard_pages_selected_logo_path', null),
     'PWG_TOKEN' => get_pwg_token(),
-  )
+  ]
 );
 
 $template->assign('isWebmaster', (is_webmaster()) ? 1 : 0);
 
-$template->set_filenames(array('themes' => 'themes_standard_pages.tpl'));
+$template->set_filenames(['themes' => 'themes_standard_pages.tpl']);
 
 $template->assign('ADMIN_PAGE_TITLE', l10n('Themes'));
 

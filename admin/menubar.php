@@ -55,7 +55,7 @@ if (is_string($mb_conf)) {
     $mb_conf = unserialize($mb_conf);
 }
 if (!is_array($mb_conf)) {
-    $mb_conf = array();
+    $mb_conf = [];
 }
 
 foreach ($mb_conf as $id => $pos) {
@@ -136,9 +136,9 @@ UPDATE '.CONFIG_TABLE.'
     pwg_query($query);
 
     $template->assign(
-        array(
+        [
         'save_success' => l10n('Order of menubar items has been updated successfully.'),
-    )
+    ]
     );
 
 }
@@ -148,15 +148,15 @@ make_consecutive($mb_conf);
 foreach ($mb_conf as $id => $pos) {
     $template->append(
         'blocks',
-        array(
+        [
           'pos' => $pos / 5,
           'reg' => $reg_blocks[$id],
-        )
+        ]
     );
 }
 
 $action = get_root_url().'admin.php?page=menubar';
-$template->assign(array('F_ACTION' => $action));
+$template->assign(['F_ACTION' => $action]);
 
 $template->assign('isWebmaster', (is_webmaster()) ? 1 : 0);
 $template->assign('ADMIN_PAGE_TITLE', l10n('Menu Management'));

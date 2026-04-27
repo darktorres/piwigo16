@@ -32,14 +32,14 @@ abstract class Minify
      *
      * @var string[]
      */
-    protected $data = array();
+    protected $data = [];
 
     /**
      * Array of patterns to match.
      *
      * @var string[]
      */
-    protected $patterns = array();
+    protected $patterns = [];
 
     /**
      * This array will hold content of strings and regular expressions that have
@@ -50,7 +50,7 @@ abstract class Minify
      *
      * @var string[]
      */
-    public $extracted = array();
+    public $extracted = [];
 
     /**
      * Init the minify class - optionally, code may be passed along already.
@@ -59,7 +59,7 @@ abstract class Minify
     {
         // it's possible to add the source through the constructor as well ;)
         if (func_num_args()) {
-            call_user_func_array(array($this, 'add'), func_get_args());
+            call_user_func_array([$this, 'add'], func_get_args());
         }
     }
 
@@ -76,12 +76,12 @@ abstract class Minify
         // not used (we're using func_get_args instead to support overloading),
         // but it still needs to be defined because it makes no sense to have
         // this function without argument :)
-        $args = array($data) + func_get_args();
+        $args = [$data] + func_get_args();
 
         // this method can be overloaded
         foreach ($args as $data) {
             if (is_array($data)) {
-                call_user_func_array(array($this, 'add'), $data);
+                call_user_func_array([$this, 'add'], $data);
                 continue;
             }
 
@@ -94,7 +94,7 @@ abstract class Minify
 
             // replace CR linefeeds etc.
             // @see https://github.com/matthiasmullie/minify/pull/139
-            $value = str_replace(array("\r\n", "\r"), "\n", $value);
+            $value = str_replace(["\r\n", "\r"], "\n", $value);
 
             // store data
             $this->data[$key] = $value;
@@ -118,12 +118,12 @@ abstract class Minify
         // not used (we're using func_get_args instead to support overloading),
         // but it still needs to be defined because it makes no sense to have
         // this function without argument :)
-        $args = array($data) + func_get_args();
+        $args = [$data] + func_get_args();
 
         // this method can be overloaded
         foreach ($args as $path) {
             if (is_array($path)) {
-                call_user_func_array(array($this, 'addFile'), $path);
+                call_user_func_array([$this, 'addFile'], $path);
                 continue;
             }
 
@@ -219,7 +219,7 @@ abstract class Minify
             $data = file_get_contents($data);
 
             // strip BOM, if any
-            if (substr($data, 0, 3) == "\xef\xbb\xbf") {
+            if (str_starts_with($data, "\xef\xbb\xbf")) {
                 $data = substr($data, 3);
             }
         }
@@ -258,7 +258,7 @@ abstract class Minify
         // study the pattern, we'll execute it more than once
         $pattern .= 'S';
 
-        $this->patterns[] = array($pattern, $replacement);
+        $this->patterns[] = [$pattern, $replacement];
     }
 
     /**
@@ -289,7 +289,7 @@ abstract class Minify
                 $minifier->extracted[$placeholder] = $match[0];
             } else {
                 // Discard the comment but keep any single line feed
-                $placeholder = strncmp($match[0], "\n", 1) === 0 || substr($match[0], -1) === "\n"
+                $placeholder = str_starts_with($match[0], "\n") || str_ends_with($match[0], "\n")
                     ? "\n"
                     : '';
             }
@@ -320,12 +320,12 @@ abstract class Minify
         $output = '';
         $processedOffset = 0;
         $positions = array_fill(0, count($this->patterns), -1);
-        $matches = array();
+        $matches = [];
 
         while ($processedOffset < $contentLength) {
             // find first match for all patterns
             foreach ($this->patterns as $i => $pattern) {
-                list($pattern, $replacement) = $pattern;
+                [$pattern, $replacement] = str_split($pattern);
 
                 // we can safely ignore patterns for positions we've unset earlier,
                 // because we know these won't show up anymore
@@ -376,7 +376,7 @@ abstract class Minify
             $match = $matches[$firstPattern];
 
             // execute the pattern that matches earliest in the content string
-            list(, $replacement) = $this->patterns[$firstPattern];
+            list(, $replacement) = str_split($this->patterns[$firstPattern]);
 
             // add the part of the input between $processedOffset and the first match;
             // that content wasn't matched by anything
@@ -488,7 +488,7 @@ abstract class Minify
 
         $content = strtr($content, $this->extracted);
 
-        $this->extracted = array();
+        $this->extracted = [];
 
         return $content;
     }
@@ -516,7 +516,7 @@ abstract class Minify
             return strlen($path) < PHP_MAXPATHLEN && @is_file($path) && is_readable($path);
         }
         // catch openbasedir exceptions which are not caught by @ on is_file()
-        catch (\Exception $e) {
+        catch (\Exception) {
             return false;
         }
     }
@@ -561,7 +561,7 @@ abstract class Minify
 
     protected static function str_replace_first($search, $replace, $subject)
     {
-        $pos = strpos($subject, $search);
+        $pos = strpos($subject, (string) $search);
         if ($pos !== false) {
             return substr_replace($subject, $replace, $pos, strlen($search));
         }

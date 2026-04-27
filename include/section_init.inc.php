@@ -28,7 +28,7 @@
 //   );
 
 
-$page['items'] = array();
+$page['items'] = [];
 $page['start'] = $page['startcat'] = 0;
 
 // some ISPs set PATH_INFO to empty string or to SCRIPT_FILENAME while in the
@@ -51,7 +51,7 @@ if ($conf['question_mark_in_urls'] == false and
     $page['root_path'] = PHPWG_ROOT_PATH;
 }
 
-if (strncmp($page['root_path'], './', 2) == 0) {
+if (str_starts_with($page['root_path'], './')) {
     $page['root_path'] = substr($page['root_path'], 2);
 }
 
@@ -110,7 +110,7 @@ if (!isset($page['section'])) {
             {
                 // No section defined, go to random url
                 if (!empty($conf['random_index_redirect']) and empty($tokens[$next_token])) {
-                    $random_index_redirect = array();
+                    $random_index_redirect = [];
                     foreach ($conf['random_index_redirect'] as $random_url => $random_url_condition) {
                         if (empty($random_url_condition) or eval($random_url_condition)) {
                             $random_index_redirect[] = $random_url;
@@ -174,11 +174,11 @@ if (pwg_get_session_var('image_order', 0) > 0) {
 }
 
 $forbidden = get_sql_condition_FandF(
-    array(
+    [
         'forbidden_categories' => 'category_id',
         'visible_categories' => 'category_id',
         'visible_images' => 'id',
-        ),
+        ],
     'AND'
 );
 
@@ -191,14 +191,14 @@ if ('categories' == $page['section']) {
     } elseif (isset($page['category'])) {
         $page = array_merge(
             $page,
-            array(
+            [
             'comment' => trigger_change(
                 'render_category_description',
                 $page['category']['comment'],
                 'main_page_category_description'
             ),
-            'title'   => get_cat_display_name($page['category']['upper_names'], '', false),
-            )
+            'title'   => get_cat_display_name($page['category']['upper_names'], ''),
+            ]
         );
     } else {
         $page['title'] = ''; // will be set later
@@ -206,7 +206,7 @@ if ('categories' == $page['section']) {
 
     // GET IMAGES LIST
     if (isset($page['combined_categories'])) {
-        $cat_ids = array($page['category']['id']);
+        $cat_ids = [$page['category']['id']];
         foreach ($page['combined_categories'] as $category) {
             $cat_ids[] = $category['id'];
         }
@@ -234,10 +234,10 @@ SELECT id
   WHERE
     uppercats LIKE \''.$page['category']['uppercats'].',%\' '
     .get_sql_condition_FandF(
-        array(
+        [
           'forbidden_categories' => 'id',
           'visible_categories' => 'id',
-          ),
+          ],
         "\n  AND"
     );
 
@@ -246,7 +246,7 @@ SELECT id
                 $where_sql = 'category_id IN ('.implode(',', $subcat_ids).')';
                 // remove categories from forbidden because just checked above
                 $forbidden = get_sql_condition_FandF(
-                    array( 'visible_images' => 'id' ),
+                    [ 'visible_images' => 'id' ],
                     'AND'
                 );
             } else {
@@ -286,7 +286,7 @@ else {
     // |                            tags section                               |
     // +-----------------------------------------------------------------------+
     if ($page['section'] == 'tags') {
-        $page['tag_ids'] = array();
+        $page['tag_ids'] = [];
         foreach ($page['tags'] as $tag) {
             $page['tag_ids'][] = $tag['id'];
         }
@@ -303,10 +303,10 @@ else {
 
         $page = array_merge(
             $page,
-            array(
+            [
             'title' => get_tags_content_title(),
             'items' => $items,
-            )
+            ]
         );
     }
     // +-----------------------------------------------------------------------+
@@ -326,11 +326,11 @@ else {
 
         $page = array_merge(
             $page,
-            array(
+            [
             'items' => $search_result['items'],
-            'title' => '<a href="'.duplicate_index_url(array('start' => 0)).'">'
+            'title' => '<a href="'.duplicate_index_url(['start' => 0]).'">'
                         .l10n('Search results').'</a>',
-            )
+            ]
         );
     }
     // +-----------------------------------------------------------------------+
@@ -341,10 +341,10 @@ else {
 
         $page = array_merge(
             $page,
-            array(
-            'title' => '<a href="'.duplicate_index_url(array('start' => 0)).'">'
+            [
+            'title' => '<a href="'.duplicate_index_url(['start' => 0]).'">'
                         .l10n('Favorites').'</a>',
-      )
+      ]
         );
 
         if (!empty($_GET['action']) && ($_GET['action'] == 'remove_all_from_favorites')) {
@@ -353,7 +353,7 @@ DELETE FROM '.FAVORITES_TABLE.'
   WHERE user_id = '.$user['id'].'
 ;';
             pwg_query($query);
-            redirect(make_index_url(array('section' => 'favorites')));
+            redirect(make_index_url(['section' => 'favorites']));
         } else {
             $query = '
 SELECT image_id
@@ -361,29 +361,29 @@ SELECT image_id
     INNER JOIN '.IMAGES_TABLE.' ON image_id = id
   WHERE user_id = '.$user['id'].'
 '.get_sql_condition_FandF(
-                array(
+                [
         'visible_images' => 'id',
-        ),
+        ],
                 'AND'
             ).'
   '.$conf['order_by'].'
 ;';
             $page = array_merge(
                 $page,
-                array(
+                [
                 'items' => query2array($query, null, 'image_id'),
-                )
+                ]
             );
 
             if (count($page['items']) > 0) {
                 $template->assign(
                     'favorite',
-                    array(
+                    [
                       'U_FAVORITE' => add_url_params(
-                          make_index_url(array('section' => 'favorites')),
-                          array('action' => 'remove_all_from_favorites')
+                          make_index_url(['section' => 'favorites']),
+                          ['action' => 'remove_all_from_favorites']
                       ),
-                      )
+                      ]
                 );
             }
         }
@@ -412,11 +412,11 @@ SELECT DISTINCT(id)
 
         $page = array_merge(
             $page,
-            array(
-            'title' => '<a href="'.duplicate_index_url(array('start' => 0)).'">'
+            [
+            'title' => '<a href="'.duplicate_index_url(['start' => 0]).'">'
                         .l10n('Recent photos').'</a>',
             'items' => query2array($query, null, 'id'),
-            )
+            ]
         );
     }
     // +-----------------------------------------------------------------------+
@@ -425,10 +425,10 @@ SELECT DISTINCT(id)
     elseif ($page['section'] == 'recent_cats') {
         $page = array_merge(
             $page,
-            array(
-            'title' => '<a href="'.duplicate_index_url(array('start' => 0)).'">'
+            [
+            'title' => '<a href="'.duplicate_index_url(['start' => 0]).'">'
                         .l10n('Recent albums').'</a>',
-            )
+            ]
         );
     }
     // +-----------------------------------------------------------------------+
@@ -450,11 +450,11 @@ SELECT DISTINCT(id)
 
         $page = array_merge(
             $page,
-            array(
-            'title' => '<a href="'.duplicate_index_url(array('start' => 0)).'">'
+            [
+            'title' => '<a href="'.duplicate_index_url(['start' => 0]).'">'
                         .$conf['top_number'].' '.l10n('Most visited').'</a>',
             'items' => query2array($query, null, 'id'),
-            )
+            ]
         );
     }
     // +-----------------------------------------------------------------------+
@@ -475,11 +475,11 @@ SELECT DISTINCT(id)
 ;';
         $page = array_merge(
             $page,
-            array(
-            'title' => '<a href="'.duplicate_index_url(array('start' => 0)).'">'
+            [
+            'title' => '<a href="'.duplicate_index_url(['start' => 0]).'">'
                         .$conf['top_number'].' '.l10n('Best rated').'</a>',
             'items' => query2array($query, null, 'id'),
-            )
+            ]
         );
     }
     // +-----------------------------------------------------------------------+
@@ -497,11 +497,11 @@ SELECT DISTINCT(id)
 
         $page = array_merge(
             $page,
-            array(
-            'title' => '<a href="'.duplicate_index_url(array('start' => 0)).'">'
+            [
+            'title' => '<a href="'.duplicate_index_url(['start' => 0]).'">'
                         .l10n('Random photos').'</a>',
             'items' => query2array($query, null, 'id'),
-            )
+            ]
         );
     }
 }
@@ -526,22 +526,22 @@ if (isset($page['title'])) {
 }
 
 // add meta robots noindex, nofollow to avoid unnecesary robot crawls
-$page['meta_robots'] = array();
+$page['meta_robots'] = [];
 if (isset($page['chronology_field'])
       or (isset($page['flat']) and isset($page['category']))
       or 'list' == $page['section'] or 'recent_pics' == $page['section']) {
-    $page['meta_robots'] = array('noindex' => 1, 'nofollow' => 1);
+    $page['meta_robots'] = ['noindex' => 1, 'nofollow' => 1];
 } elseif ('tags' == $page['section']) {
     if (count($page['tag_ids']) > 1) {
-        $page['meta_robots'] = array('noindex' => 1, 'nofollow' => 1);
+        $page['meta_robots'] = ['noindex' => 1, 'nofollow' => 1];
     }
 } elseif ('recent_cats' == $page['section']) {
     $page['meta_robots']['noindex'] = 1;
 } elseif ('search' == $page['section']) {
-    $page['meta_robots'] = array('noindex' => 1, 'nofollow' => 1);
+    $page['meta_robots'] = ['noindex' => 1, 'nofollow' => 1];
 } elseif ('categories' == $page['section']) {
     if (isset($page['combined_categories'])) {
-        $page['meta_robots'] = array('noindex' => 1, 'nofollow' => 1);
+        $page['meta_robots'] = ['noindex' => 1, 'nofollow' => 1];
     }
 }
 
@@ -585,14 +585,14 @@ if ('categories' == $page['section'] && isset($page['category'])) {
     $page['body_data']['category_id'] = $page['category']['id'];
 
     if (isset($page['combined_categories'])) {
-        $page['body_data']['combined_category_ids'] = array();
+        $page['body_data']['combined_category_ids'] = [];
         foreach ($page['combined_categories'] as $combined_categories) {
             array_push($page['body_classes'], 'category-'.$combined_categories['id']);
             array_push($page['body_data']['combined_category_ids'], $combined_categories['id']);
         }
     }
 } elseif (isset($page['tags'])) {
-    $page['body_data']['tag_ids'] = array();
+    $page['body_data']['tag_ids'] = [];
     foreach ($page['tags'] as $tag) {
         array_push($page['body_classes'], 'tag-'.$tag['id']);
         array_push($page['body_data']['tag_ids'], $tag['id']);

@@ -101,15 +101,15 @@ function get_regular_search_results($search, $images_where = '')
     $has_filters_filled = false;
 
     $forbidden = get_sql_condition_FandF(
-        array(
+        [
               'forbidden_categories' => 'category_id',
               'visible_categories' => 'category_id',
               'visible_images' => 'id',
-            ),
+            ],
         "\n  AND"
     );
 
-    $image_ids_for_filter = array();
+    $image_ids_for_filter = [];
 
     $display_filters = safe_unserialize(conf_get_param('filters_views', $conf['default_filters_views']));
 
@@ -129,7 +129,7 @@ function get_regular_search_results($search, $images_where = '')
     if (isset($search['fields']['expert']) and !empty($search['fields']['expert']['string']) and $display_filters['expert']['access']) {
         $has_filters_filled = true;
 
-        $image_ids_for_filter['expert'] = get_quick_search_results($search['fields']['expert']['string'], array())['items'];
+        $image_ids_for_filter['expert'] = get_quick_search_results($search['fields']['expert']['string'], [])['items'];
     }
 
     //
@@ -139,16 +139,16 @@ function get_regular_search_results($search, $images_where = '')
         $has_filters_filled = true;
 
         // 1) we search in regular fields (ie, the ones in the piwigo_images table)
-        $fields = array('file', 'name', 'comment', 'author');
+        $fields = ['file', 'name', 'comment', 'author'];
 
         if (isset($search['fields']['allwords']['fields']) and count($search['fields']['allwords']['fields']) > 0) {
             $fields = array_intersect($fields, $search['fields']['allwords']['fields']);
         }
 
-        $cat_fields_dictionnary = array(
+        $cat_fields_dictionnary = [
           'cat-title' => 'name',
           'cat-desc' => 'comment',
-        );
+        ];
         $cat_fields = array_intersect(array_keys($cat_fields_dictionnary), $search['fields']['allwords']['fields']);
 
         // in the OR mode, request must be :
@@ -158,17 +158,17 @@ function get_regular_search_results($search, $images_where = '')
         // in the AND mode :
         // ((field1 LIKE '%word1%' OR field2 LIKE '%word1%')
         // AND (field1 LIKE '%word2%' OR field2 LIKE '%word2%'))
-        $word_clauses = array();
-        $cat_ids_by_word = $tag_ids_by_word = array();
+        $word_clauses = [];
+        $cat_ids_by_word = $tag_ids_by_word = [];
         foreach ($search['fields']['allwords']['words'] as $word) {
-            $field_clauses = array();
+            $field_clauses = [];
             foreach ($fields as $field) {
                 $field_clauses[] = $field." LIKE '%".$word."%'";
             }
 
             if (count($cat_fields) > 0) {
-                $cat_word_clauses = array();
-                $cat_field_clauses = array();
+                $cat_word_clauses = [];
+                $cat_field_clauses = [];
                 foreach ($cat_fields as $cat_field) {
                     $cat_field_clauses[] = $cat_fields_dictionnary[$cat_field]." LIKE '%".$word."%'";
                 }
@@ -243,7 +243,7 @@ SELECT
         }
 
         // make sure the "mode" is either OR or AND
-        if (!in_array($search['fields']['allwords']['mode'], array('OR', 'AND'))) {
+        if (!in_array($search['fields']['allwords']['mode'], ['OR', 'AND'])) {
             $search['fields']['allwords']['mode'] = 'AND';
         }
 
@@ -297,7 +297,7 @@ SELECT
     if (isset($search['fields']['author']) and count($search['fields']['author']['words']) > 0 and $display_filters['author']['access']) {
         $has_filters_filled = true;
 
-        $author_clauses = array();
+        $author_clauses = [];
         foreach ($search['fields']['author']['words'] as $word) {
             $author_clauses[] = "author = '".$word."'";
         }
@@ -319,7 +319,7 @@ SELECT
     if (!empty($search['fields']['filetypes']) and $display_filters['file_type']['access']) {
         $has_filters_filled = true;
 
-        $filetypes_clauses = array();
+        $filetypes_clauses = [];
         foreach ($search['fields']['filetypes'] as $ext) {
             $filetypes_clauses[] = 'path LIKE \'%.'.$ext.'\'';
         }
@@ -388,18 +388,18 @@ SELECT
 
         $has_filters_filled = true;
 
-        $options = array(
+        $options = [
           '24h' => '24 HOUR',
           '7d' => '7 DAY',
           '30d' => '30 DAY',
           '3m' => '3 MONTH',
           '6m' => '6 MONTH',
-        );
+        ];
 
         if (isset($options[ $search['fields']['date_posted']['preset'] ]) and 'custom' != $search['fields']['date_posted']['preset']) {
             $date_posted_clause = 'date_available > SUBDATE(NOW(), INTERVAL '.$options[ $search['fields']['date_posted']['preset'] ].')';
         } elseif ('custom' == $search['fields']['date_posted']['preset'] and isset($search['fields']['date_posted']['custom'])) {
-            $date_posted_subclauses = array();
+            $date_posted_subclauses = [];
             $custom_dates = array_flip($search['fields']['date_posted']['custom']);
 
             foreach (array_keys($custom_dates) as $custom_date) {
@@ -415,14 +415,14 @@ SELECT
                     $begin = $year.'-01-01 00:00:00';
                     $end = $year.'-12-31 23:59:59';
                 } elseif ('m' == $ymd) {
-                    list($year, $month) = explode('-', substr($custom_date, 1));
+                    [$year, $month] = explode('-', substr($custom_date, 1));
 
                     if (!isset($custom_dates['y'.$year])) {
                         $begin = $year.'-'.$month.'-01 00:00:00';
                         $end = $year.'-'.$month.'-'.cal_days_in_month(CAL_GREGORIAN, (int)$month, (int)$year).' 23:59:59';
                     }
                 } elseif ('d' == $ymd) {
-                    list($year, $month, $day) = explode('-', substr($custom_date, 1));
+                    [$year, $month, $day] = explode('-', substr($custom_date, 1));
 
                     if (!isset($custom_dates['y'.$year]) and !isset($custom_dates['m'.$year.'-'.$month])) {
                         $begin = $year.'-'.$month.'-'.$day.' 00:00:00';
@@ -457,18 +457,18 @@ SELECT
 
         $has_filters_filled = true;
 
-        $options = array(
+        $options = [
           '7d' => '7 DAY',
           '30d' => '30 DAY',
           '3m' => '3 MONTH',
           '6m' => '6 MONTH',
           '12m' => '12 MONTH',
-        );
+        ];
 
         if (isset($options[ $search['fields']['date_created']['preset'] ]) and 'custom' != $search['fields']['date_created']['preset']) {
             $date_created_clause = 'date_creation > SUBDATE(NOW(), INTERVAL '.$options[ $search['fields']['date_created']['preset'] ].')';
         } elseif ('custom' == $search['fields']['date_created']['preset'] and isset($search['fields']['date_created']['custom'])) {
-            $date_created_subclauses = array();
+            $date_created_subclauses = [];
             $custom_dates = array_flip($search['fields']['date_created']['custom']);
 
             foreach (array_keys($custom_dates) as $custom_date) {
@@ -484,14 +484,14 @@ SELECT
                     $begin = $year.'-01-01 00:00:00';
                     $end = $year.'-12-31 23:59:59';
                 } elseif ('m' == $ymd) {
-                    list($year, $month) = explode('-', substr($custom_date, 1));
+                    [$year, $month] = explode('-', substr($custom_date, 1));
 
                     if (!isset($custom_dates['y'.$year])) {
                         $begin = $year.'-'.$month.'-01 00:00:00';
                         $end = $year.'-'.$month.'-'.cal_days_in_month(CAL_GREGORIAN, (int)$month, (int)$year).' 23:59:59';
                     }
                 } elseif ('d' == $ymd) {
-                    list($year, $month, $day) = explode('-', substr($custom_date, 1));
+                    [$year, $month, $day] = explode('-', substr($custom_date, 1));
 
                     if (!isset($custom_dates['y'.$year]) and !isset($custom_dates['m'.$year.'-'.$month])) {
                         $begin = $year.'-'.$month.'-'.$day.' 00:00:00';
@@ -525,14 +525,14 @@ SELECT
     if (!empty($search['fields']['ratios']) and $display_filters['ratio']['access']) {
         $has_filters_filled = true;
 
-        $clause_for_ratio = array(
+        $clause_for_ratio = [
           'Portrait'  => 'width/height < 0.95',
           'square'    => 'width/height BETWEEN 0.95 AND 1.05',
           'Landscape' => '(width/height > 1.05 AND width/height < 2)',
           'Panorama'  => 'width/height >= 2',
-        );
+        ];
 
-        $ratios_clauses = array();
+        $ratios_clauses = [];
         foreach ($search['fields']['ratios'] as $r) {
             $ratios_clauses[] = $clause_for_ratio[$r];
         }
@@ -554,7 +554,7 @@ SELECT
     if ($conf['rate'] and !empty($search['fields']['ratings']) and $display_filters['rating']['access']) {
         $has_filters_filled = true;
 
-        $filter_clauses = array();
+        $filter_clauses = [];
         foreach ($search['fields']['ratings'] as $r) {
             if (0 == $r) {
                 $filter_clauses[] = 'rating_score IS NULL';
@@ -654,7 +654,7 @@ SELECT
         $image_ids_for_filter['custom'] = query2array($query, null, 'id');
     }
 
-    $items = array();
+    $items = [];
     if (!empty($image_ids_for_filter)) {
         if (count($image_ids_for_filter) > 1) {
             $items = array_values(array_unique(array_intersect(...array_values($image_ids_for_filter))));
@@ -676,15 +676,15 @@ SELECT
         $items = array_from_query($query, 'id');
     }
 
-    return array(
+    return [
       'items' => $items,
-      'search_details' => array(
+      'search_details' => [
         'matching_cat_ids' => isset($matching_cat_ids) ? array_values($matching_cat_ids) : null,
         'matching_tag_ids' => isset($matching_tag_ids) ? array_values($matching_tag_ids) : null,
         'has_filters_filled' => $has_filters_filled,
         'image_ids_for_filter' => $image_ids_for_filter,
-      ),
-    );
+      ],
+    ];
 }
 
 /**
@@ -723,7 +723,7 @@ function get_items_for_filter($filter_name)
 {
     global $page, $logger;
 
-    $other_filters = array_diff(array_keys($page['search_details']['image_ids_for_filter']), array($filter_name));
+    $other_filters = array_diff(array_keys($page['search_details']['image_ids_for_filter']), [$filter_name]);
 
     if (empty($other_filters)) {
         return false;
@@ -747,7 +747,7 @@ function get_items_for_filter($filter_name)
         $logger->debug($debug_msg);
 
         if (empty($other_filters_items)) {
-            $other_filters_items = array(-1);
+            $other_filters_items = [-1];
         }
 
         @$page['search_details'][__FUNCTION__][$cache_key] = $other_filters_items;
@@ -770,17 +770,8 @@ define('QST_BREAK', 0x20);
  */
 class QSearchScope
 {
-    public $id;
-    public $aliases;
-    public $is_text;
-    public $nullable;
-
-    public function __construct($id, $aliases, $nullable = false, $is_text = true)
+    public function __construct(public $id, public $aliases, public $nullable = false, public $is_text = true)
     {
-        $this->id = $id;
-        $this->aliases = $aliases;
-        $this->is_text = $is_text;
-        $this->nullable = $nullable;
     }
 
     public function parse($token)
@@ -799,32 +790,30 @@ class QSearchScope
 
 class QNumericRangeScope extends QSearchScope
 {
-    private $epsilon;
-    public function __construct($id, $aliases, $nullable = false, $epsilon = 0)
+    public function __construct($id, $aliases, $nullable = false, private $epsilon = 0)
     {
         parent::__construct($id, $aliases, $nullable, false);
-        $this->epsilon = $epsilon;
     }
 
     public function parse($token)
     {
         $str = $token->term;
-        $strict = array(0,0);
+        $strict = [0,0];
         $range_requested = true;
         if (($pos = strpos($str, '..')) !== false) {
-            $range = array( substr($str, 0, $pos), substr($str, $pos + 2));
+            $range = [ substr($str, 0, $pos), substr($str, $pos + 2)];
         } elseif ('>' == @$str[0]) {// ratio:>1
-            $range = array( substr($str, 1), '');
+            $range = [ substr($str, 1), ''];
             $strict[0] = 1;
         } elseif ('<' == @$str[0]) { // size:<5mp
-            $range = array('', substr($str, 1));
+            $range = ['', substr($str, 1)];
             $strict[1] = 1;
         } elseif (($token->modifier & QST_WILDCARD_BEGIN)) {
-            $range = array('', $str);
+            $range = ['', $str];
         } elseif (($token->modifier & QST_WILDCARD_END)) {
-            $range = array($str, '');
+            $range = [$str, ''];
         } else {
-            $range = array($str, $str);
+            $range = [$str, $str];
             $range_requested = false;
         }
 
@@ -844,7 +833,7 @@ class QNumericRangeScope extends QSearchScope
                     if ($i && !$range_requested) {// round up the upper limit if possible - e.g 6k goes up to 6999, but 6.12k goes only up to 6129
                         if (($dot_pos = strpos($matches[1], '.')) !== false) {
                             $requested_precision = strlen($matches[1]) - $dot_pos - 1;
-                            $mult /= pow(10, $requested_precision);
+                            $mult /= 10 ** $requested_precision;
                         }
                         if ($mult > 1) {
                             $val += $mult - 1;
@@ -866,13 +855,13 @@ class QNumericRangeScope extends QSearchScope
         if (!$this->nullable && $range[0] === '' && $range[1] === '') {
             return false;
         }
-        $token->scope_data = array( 'range' => $range, 'strict' => $strict );
+        $token->scope_data = [ 'range' => $range, 'strict' => $strict ];
         return true;
     }
 
     public function get_sql($field, $token)
     {
-        $clauses = array();
+        $clauses = [];
         if ($token->scope_data['range'][0] !== '') {
             $clauses[] = $field.' >'.($token->scope_data['strict'][0] ? '' : '=').$token->scope_data['range'][0].' ';
         }
@@ -902,21 +891,21 @@ class QDateRangeScope extends QSearchScope
     public function parse($token)
     {
         $str = $token->term;
-        $strict = array(0,0);
+        $strict = [0,0];
         if (($pos = strpos($str, '..')) !== false) {
-            $range = array( substr($str, 0, $pos), substr($str, $pos + 2));
+            $range = [ substr($str, 0, $pos), substr($str, $pos + 2)];
         } elseif ('>' == @$str[0]) {
-            $range = array( substr($str, 1), '');
+            $range = [ substr($str, 1), ''];
             $strict[0] = 1;
         } elseif ('<' == @$str[0]) {
-            $range = array('', substr($str, 1));
+            $range = ['', substr($str, 1)];
             $strict[1] = 1;
         } elseif (($token->modifier & QST_WILDCARD_BEGIN)) {
-            $range = array('', $str);
+            $range = ['', $str];
         } elseif (($token->modifier & QST_WILDCARD_END)) {
-            $range = array($str, '');
+            $range = [$str, ''];
         } else {
-            $range = array($str, $str);
+            $range = [$str, $str];
         }
 
         foreach ($range as $i => &$val) {
@@ -947,7 +936,7 @@ class QDateRangeScope extends QSearchScope
 
     public function get_sql($field, $token)
     {
-        $clauses = array();
+        $clauses = [];
         if ($token->scope_data[0] != '') {
             $clauses[] = $field.' >= \'' . $token->scope_data[0].'\'';
         }
@@ -976,25 +965,19 @@ class QDateRangeScope extends QSearchScope
  */
 
 /** Represents a single word or quoted phrase to be searched.*/
-class QSingleToken
+class QSingleToken implements \Stringable
 {
-    public $is_single = true;
-    public $modifier;
-    public $term; /* the actual word/phrase string*/
-    public $variants = array();
-    public $scope;
+    public $is_single = true; /* the actual word/phrase string*/
+    public $variants = [];
 
     public $scope_data;
     public $idx;
 
-    public function __construct($term, $modifier, $scope)
+    public function __construct(public $term, public $modifier, public $scope)
     {
-        $this->term = $term;
-        $this->modifier = $modifier;
-        $this->scope = $scope;
     }
 
-    public function __toString()
+    public function __toString(): string
     {
         $s = '';
         if (isset($this->scope)) {
@@ -1018,13 +1001,13 @@ class QSingleToken
 }
 
 /** Represents an expression of several words or sub expressions to be searched.*/
-class QMultiToken
+class QMultiToken implements \Stringable
 {
     public $is_single = false;
     public $modifier;
-    public $tokens = array(); // the actual array of QSingleToken or QMultiToken
+    public $tokens = []; // the actual array of QSingleToken or QMultiToken
 
-    public function __toString()
+    public function __toString(): string
     {
         $s = '';
         for ($i = 0; $i < count($this->tokens); $i++) {
@@ -1143,7 +1126,7 @@ class QMultiToken
                         // no break
                     default:
                         if (!$crt_scope || !$crt_scope->process_char($ch, $crt_token)) {
-                            if (strpos(' ,.;!?', $ch) !== false) { // white space
+                            if (str_contains(' ,.;!?', $ch)) { // white space
                                 $this->push($crt_token, $crt_modifier, $crt_scope);
                             } else {
                                 $crt_token .= $ch;
@@ -1171,7 +1154,7 @@ class QMultiToken
             $remove = false;
             if ($token->is_single) {
                 if (($token->modifier & QST_QUOTED) == 0
-                  && substr($token->term, -1) == '*') {
+                  && str_ends_with($token->term, '*')) {
                     $token->term = rtrim($token->term, '*');
                     $token->modifier |= QST_WILDCARD_END;
                 }
@@ -1274,7 +1257,7 @@ class QMultiToken
                 $sub->tokens = array_splice($this->tokens, $i, $term_count);
 
                 // rewrite ourseleves as a (b c d)
-                array_splice($this->tokens, $i, 0, array($sub));
+                array_splice($this->tokens, $i, 0, [$sub]);
                 $sub->modifier = $sub->tokens[0]->modifier & QST_OR;
                 $sub->tokens[0]->modifier &= ~QST_OR;
 
@@ -1288,9 +1271,9 @@ class QMultiToken
 
 class QExpression extends QMultiToken
 {
-    public $scopes = array();
-    public $stokens = array();
-    public $stoken_modifiers = array();
+    public $scopes = [];
+    public $stokens = [];
+    public $stoken_modifiers = [];
 
     public function __construct($q, $scopes)
     {
@@ -1350,9 +1333,9 @@ function qsearch_get_text_token_search_sql($token, $fields)
 {
     global $page;
 
-    $clauses = array();
-    $variants = array_merge(array($token->term), $token->variants);
-    $fts = array();
+    $clauses = [];
+    $variants = array_merge([$token->term], $token->variants);
+    $fts = [];
     foreach ($variants as $variant) {
         $use_ft = mb_strlen($variant) > 3;
         if ($token->modifier & QST_WILDCARD_BEGIN) {
@@ -1408,23 +1391,23 @@ function qsearch_get_text_token_search_sql($token, $fields)
 
 function qsearch_get_images(QExpression $expr, QResults $qsr)
 {
-    $qsr->images_iids = array_fill(0, count($expr->stokens), array());
+    $qsr->images_iids = array_fill(0, count($expr->stokens), []);
 
     $query_base = 'SELECT id from '.IMAGES_TABLE.' i WHERE
 ';
     for ($i = 0; $i < count($expr->stokens); $i++) {
         $token = $expr->stokens[$i];
         $scope_id = isset($token->scope) ? $token->scope->id : 'photo';
-        $clauses = array();
+        $clauses = [];
 
         $like = addslashes($token->term);
-        $like = str_replace(array('%','_'), array('\\%','\\_'), $like); // escape LIKE specials %_
+        $like = str_replace(['%','_'], ['\\%','\\_'], $like); // escape LIKE specials %_
         $file_like = 'CONVERT(file, CHAR) LIKE \'%'.$like.'%\'';
 
         switch ($scope_id) {
             case 'photo':
                 $clauses[] = $file_like;
-                $clauses = array_merge($clauses, qsearch_get_text_token_search_sql($token, array('name','comment')));
+                $clauses = array_merge($clauses, qsearch_get_text_token_search_sql($token, ['name','comment']));
                 break;
 
             case 'file':
@@ -1432,7 +1415,7 @@ function qsearch_get_images(QExpression $expr, QResults $qsr)
                 break;
             case 'author':
                 if (strlen($token->term)) {
-                    $clauses = array_merge($clauses, qsearch_get_text_token_search_sql($token, array('author')));
+                    $clauses = array_merge($clauses, qsearch_get_text_token_search_sql($token, ['author']));
                 } elseif ($token->modifier & QST_WILDCARD) {
                     $clauses[] = 'author IS NOT NULL';
                 } else {
@@ -1481,8 +1464,8 @@ function qsearch_get_images(QExpression $expr, QResults $qsr)
 
 function qsearch_get_tags(QExpression $expr, QResults $qsr)
 {
-    $token_tag_ids = $qsr->tag_iids = array_fill(0, count($expr->stokens), array());
-    $all_tags = array();
+    $token_tag_ids = $qsr->tag_iids = array_fill(0, count($expr->stokens), []);
+    $all_tags = [];
 
     for ($i = 0; $i < count($expr->stokens); $i++) {
         $token = $expr->stokens[$i];
@@ -1493,7 +1476,7 @@ function qsearch_get_tags(QExpression $expr, QResults $qsr)
             continue;
         }
 
-        $clauses = qsearch_get_text_token_search_sql($token, array('name'));
+        $clauses = qsearch_get_text_token_search_sql($token, ['name']);
         $query = 'SELECT * FROM '.TAGS_TABLE.'
 WHERE ('. implode("\n OR ", $clauses) .')';
         $result = pwg_query($query);
@@ -1516,7 +1499,7 @@ WHERE ('. implode("\n OR ", $clauses) .')';
     }
 
     // get images
-    $positive_ids = $not_ids = array();
+    $positive_ids = $not_ids = [];
     for ($i = 0; $i < count($expr->stokens); $i++) {
         $tag_ids = $token_tag_ids[$i];
         $token = $expr->stokens[$i];
@@ -1556,8 +1539,8 @@ function qsearch_get_categories(QExpression $expr, QResults $qsr)
 {
     global $user, $conf;
 
-    $token_cat_ids = $qsr->cat_iids = array_fill(0, count($expr->stokens), array());
-    $all_cats = array();
+    $token_cat_ids = $qsr->cat_iids = array_fill(0, count($expr->stokens), []);
+    $all_cats = [];
 
     for ($i = 0; $i < count($expr->stokens); $i++) {
         $token = $expr->stokens[$i];
@@ -1568,7 +1551,7 @@ function qsearch_get_categories(QExpression $expr, QResults $qsr)
             continue;
         }
 
-        $clauses = qsearch_get_text_token_search_sql($token, array('name', 'comment'));
+        $clauses = qsearch_get_text_token_search_sql($token, ['name', 'comment']);
         $query = '
 SELECT
     *
@@ -1595,7 +1578,7 @@ SELECT
     }
 
     // get images
-    $positive_ids = $not_ids = array();
+    $positive_ids = $not_ids = [];
     for ($i = 0; $i < count($expr->stokens); $i++) {
         $cat_ids = $token_cat_ids[$i];
         $token = $expr->stokens[$i];
@@ -1646,9 +1629,9 @@ SELECT image_id FROM '.IMAGE_CATEGORY_TABLE.'
 function qsearch_eval(QMultiToken $expr, QResults $qsr, &$qualifies, &$ignored_terms)
 {
     $qualifies = false; // until we find at least one positive term
-    $ignored_terms = array();
+    $ignored_terms = [];
 
-    $ids = $not_ids = array();
+    $ids = $not_ids = [];
 
     for ($i = 0; $i < count($expr->tokens); $i++) {
         $crt = $expr->tokens[$i];
@@ -1661,7 +1644,7 @@ function qsearch_eval(QMultiToken $expr, QResults $qsr, &$qualifies, &$ignored_t
                 )
             );
             $crt_qualifies = count($crt_ids) > 0 || count($qsr->tag_ids[$crt->idx]) > 0;
-            $crt_ignored_terms = $crt_qualifies ? array() : array((string)$crt);
+            $crt_ignored_terms = $crt_qualifies ? [] : [(string)$crt];
         } else {
             $crt_ids = qsearch_eval($crt, $qsr, $crt_qualifies, $crt_ignored_terms);
         }
@@ -1715,13 +1698,13 @@ function get_quick_search_results($q, $options)
 {
     global $persistent_cache, $conf, $user;
 
-    $cache_key = $persistent_cache->make_key(array(
+    $cache_key = $persistent_cache->make_key([
       strtolower($q),
       $conf['order_by'],
       $user['id'],$user['cache_update_time'],
       isset($options['permissions']) ? (bool)$options['permissions'] : true,
-      isset($options['images_where']) ? $options['images_where'] : '',
-      ));
+      $options['images_where'] ?? '',
+      ]);
     if ($persistent_cache->get($cache_key, $res)) {
         return $res;
     }
@@ -1743,29 +1726,29 @@ function get_quick_search_results_no_cache($q, $options)
 
     $q = trim(stripslashes($q));
     $search_results =
-      array(
-        'items' => array(),
-        'qs' => array('q' => $q),
-      );
+      [
+        'items' => [],
+        'qs' => ['q' => $q],
+      ];
 
     $q = trigger_change('qsearch_pre', $q);
 
-    $scopes = array();
-    $scopes[] = new QSearchScope('tag', array('tags'));
-    $scopes[] = new QSearchScope('photo', array('photos'));
-    $scopes[] = new QSearchScope('file', array('filename'));
-    $scopes[] = new QSearchScope('author', array(), true);
-    $scopes[] = new QNumericRangeScope('width', array());
-    $scopes[] = new QNumericRangeScope('height', array());
-    $scopes[] = new QNumericRangeScope('ratio', array(), false, 0.001);
-    $scopes[] = new QNumericRangeScope('size', array());
-    $scopes[] = new QNumericRangeScope('filesize', array());
-    $scopes[] = new QNumericRangeScope('hits', array('hit', 'visit', 'visits'));
-    $scopes[] = new QNumericRangeScope('score', array('rating'), true);
-    $scopes[] = new QNumericRangeScope('id', array());
+    $scopes = [];
+    $scopes[] = new QSearchScope('tag', ['tags']);
+    $scopes[] = new QSearchScope('photo', ['photos']);
+    $scopes[] = new QSearchScope('file', ['filename']);
+    $scopes[] = new QSearchScope('author', [], true);
+    $scopes[] = new QNumericRangeScope('width', []);
+    $scopes[] = new QNumericRangeScope('height', []);
+    $scopes[] = new QNumericRangeScope('ratio', [], false, 0.001);
+    $scopes[] = new QNumericRangeScope('size', []);
+    $scopes[] = new QNumericRangeScope('filesize', []);
+    $scopes[] = new QNumericRangeScope('hits', ['hit', 'visit', 'visits']);
+    $scopes[] = new QNumericRangeScope('score', ['rating'], true);
+    $scopes[] = new QNumericRangeScope('id', []);
 
-    $createdDateAliases = array('taken', 'shot');
-    $postedDateAliases = array('added');
+    $createdDateAliases = ['taken', 'shot'];
+    $postedDateAliases = ['added'];
     if ($conf['calendar_datefield'] == 'date_creation') {
         $createdDateAliases[] = 'date';
     } else {
@@ -1792,7 +1775,7 @@ function get_quick_search_results_no_cache($q, $options)
             if (strlen($token->term) > 2
               && ($token->modifier & (QST_QUOTED | QST_WILDCARD)) == 0
               && strcspn($token->term, '\'0123456789') == strlen($token->term)) {
-                $token->variants = array_unique(array_diff($inflector->get_variants($token->term), array($token->term)));
+                $token->variants = array_unique(array_diff($inflector->get_variants($token->term), [$token->term]));
             }
         }
     }
@@ -1840,17 +1823,17 @@ function get_quick_search_results_no_cache($q, $options)
 
     $permissions = !isset($options['permissions']) ? true : $options['permissions'];
 
-    $where_clauses = array();
+    $where_clauses = [];
     $where_clauses[] = 'i.id IN ('. implode(',', $ids) . ')';
     if (!empty($options['images_where'])) {
         $where_clauses[] = '('.$options['images_where'].')';
     }
     if ($permissions) {
         $where_clauses[] = get_sql_condition_FandF(
-            array(
+            [
                 'forbidden_categories' => 'category_id',
                 'forbidden_images' => 'i.id',
-              ),
+              ],
             null,
             true
         );
@@ -1890,7 +1873,7 @@ function get_search_results($search_id, $super_order_by, $images_where = '')
     if (!isset($search['q'])) {
         return get_regular_search_results($search, $images_where);
     } else {
-        return get_quick_search_results($search['q'], array('super_order_by' => $super_order_by, 'images_where' => $images_where));
+        return get_quick_search_results($search['q'], ['super_order_by' => $super_order_by, 'images_where' => $images_where]);
     }
 }
 
@@ -1903,8 +1886,8 @@ function split_allwords($raw_allwords)
     $raw_allwords = trim($raw_allwords, " \n\r\t\v\x00.");
 
     if (!preg_match('/^\s*$/', $raw_allwords)) {
-        $drop_char_match   = array(';','&','(',')','<','>','`','\'','"','|',',','@','?','%','. ','[',']','{','}',':','\\','/','=','\'','!','*');
-        $drop_char_replace = array(' ',' ',' ',' ',' ',' ', '', '', ' ',' ',' ',' ',' ',' ',' ' ,' ',' ',' ',' ',' ','' , ' ',' ',' ', ' ',' ');
+        $drop_char_match   = [';','&','(',')','<','>','`','\'','"','|',',','@','?','%','. ','[',']','{','}',':','\\','/','=','\'','!','*'];
+        $drop_char_replace = [' ',' ',' ',' ',' ',' ', '', '', ' ',' ',' ',' ',' ',' ',' ' ,' ',' ',' ',' ',' ','' , ' ',' ',' ', ' ',' '];
 
         // Split words
         $words = array_unique(
@@ -1932,7 +1915,7 @@ SELECT
   FROM '.SEARCH_TABLE.'
   WHERE search_uuid = \''.$candidate.'\'
 ;';
-    list($counter) = pwg_db_fetch_row(pwg_query($query));
+    [$counter] = pwg_db_fetch_row(pwg_query($query));
     if (0 == $counter) {
         return $candidate;
     } else {
@@ -1944,30 +1927,30 @@ function save_search($rules, $forked_from = null)
 {
     global $user;
 
-    list($dbnow) = pwg_db_fetch_row(pwg_query('SELECT NOW()'));
+    [$dbnow] = pwg_db_fetch_row(pwg_query('SELECT NOW()'));
     $search_uuid = get_available_search_uuid();
 
     single_insert(
         SEARCH_TABLE,
-        array(
+        [
         'rules' => pwg_db_real_escape_string(serialize($rules)),
         'created_on' => $dbnow,
         'created_by' => $user['user_id'],
         'search_uuid' => $search_uuid,
         'forked_from' => $forked_from,
-    )
+    ]
     );
 
     if (!is_a_guest() and !is_generic()) {
-        userprefs_update_param('gallery_search_filters', array_keys($rules['fields'] ?? array()));
+        userprefs_update_param('gallery_search_filters', array_keys($rules['fields'] ?? []));
     }
 
     $url = make_index_url(
-        array(
+        [
         'section' => 'search',
         'search'  => $search_uuid,
-    )
+    ]
     );
 
-    return array($search_uuid, $url);
+    return [$search_uuid, $url];
 }

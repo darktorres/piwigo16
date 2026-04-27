@@ -28,7 +28,7 @@ function parse_sort_variables(
             $base_url .= $is_first ? '?' : '&amp;';
             $is_first = false;
 
-            if (!in_array($key, array('page', 'psf', 'dpsf', 'pwg_token'))) {
+            if (!in_array($key, ['page', 'psf', 'dpsf', 'pwg_token'])) {
                 fatal_error('unexpected URL get key');
             }
 
@@ -36,14 +36,14 @@ function parse_sort_variables(
         }
     }
 
-    $ret = array();
+    $ret = [];
     foreach ($sortable_by as $field) {
         $url = $base_url;
         $disp = '↓'; // TODO: an small image is better
 
         if ($field !== @$_GET[$get_param]) {
             if (!isset($default_field) or $default_field != $field) { // the first should be the default
-                $url = add_url_params($url, array($get_param => $field));
+                $url = add_url_params($url, [$get_param => $field]);
             } elseif (isset($default_field) and !isset($_GET[$get_param])) {
                 $ret[] = $field;
                 $disp = '<em>'.$disp.'</em>';
@@ -70,7 +70,7 @@ include_once(PHPWG_ROOT_PATH.'admin/include/functions_permalinks.php');
 
 check_input_parameter('cat_id', $_POST, false, PATTERN_ID);
 
-$selected_cat = array();
+$selected_cat = [];
 if (isset($_POST['set_permalink']) and $_POST['cat_id'] > 0) {
     check_pwg_token();
     $permalink = $_POST['permalink'];
@@ -79,7 +79,7 @@ if (isset($_POST['set_permalink']) and $_POST['cat_id'] > 0) {
     } else {
         set_cat_permalink($_POST['cat_id'], $permalink, isset($_POST['save']));
     }
-    $selected_cat = array( $_POST['cat_id'] );
+    $selected_cat = [ $_POST['cat_id'] ];
 } elseif (isset($_GET['delete_permanent'])) {
     check_pwg_token();
     $query = '
@@ -87,7 +87,7 @@ DELETE FROM '.OLD_PERMALINKS_TABLE.'
   WHERE permalink=\''.pwg_db_real_escape_string($_GET['delete_permanent']).'\'
   LIMIT 1';
     $result = pwg_query($query);
-    if (pwg_db_changes($result) == 0) {
+    if (pwg_db_changes() == 0) {
         $page['errors'][] = l10n('Cannot delete the old permalink !');
     }
 }
@@ -116,10 +116,10 @@ $pwg_token = get_pwg_token();
 
 // --- generate display of active permalinks -----------------------------------
 $sort_by = parse_sort_variables(
-    array('id', 'name', 'permalink'),
+    ['id', 'name', 'permalink'],
     'name',
     'psf',
-    array('delete_permanent'),
+    ['delete_permanent'],
     'SORT_'
 );
 
@@ -131,7 +131,7 @@ SELECT id, permalink, uppercats, global_rank
 if ($sort_by[0] == 'id' or $sort_by[0] == 'permalink') {
     $query .= ' ORDER BY '.$sort_by[0];
 }
-$categories = array();
+$categories = [];
 $result = pwg_query($query);
 while ($row = pwg_db_fetch_assoc($result)) {
     $row['name'] = get_cat_display_name_cache($row['uppercats']);
@@ -146,10 +146,10 @@ $template->assign('permalinks', $categories);
 // --- generate display of old permalinks --------------------------------------
 
 $sort_by = parse_sort_variables(
-    array('cat_id','permalink','date_deleted','last_hit','hit'),
+    ['cat_id','permalink','date_deleted','last_hit','hit'],
     null,
     'dpsf',
-    array('delete_permanent'),
+    ['delete_permanent'],
     'SORT_OLD_',
     '#old_permalinks'
 );
@@ -160,22 +160,22 @@ if (count($sort_by)) {
     $query .= ' ORDER BY '.$sort_by[0];
 }
 $result = pwg_query($query);
-$deleted_permalinks = array();
+$deleted_permalinks = [];
 while ($row = pwg_db_fetch_assoc($result)) {
     $row['name'] = get_cat_display_name_cache($row['cat_id']);
     $row['U_DELETE'] =
         add_url_params(
             $url_del_base,
-            array('delete_permanent' => $row['permalink'],'pwg_token' => $pwg_token)
+            ['delete_permanent' => $row['permalink'],'pwg_token' => $pwg_token]
         );
     $deleted_permalinks[] = $row;
 }
 
-$template->assign(array(
+$template->assign([
   'PWG_TOKEN' => $pwg_token,
   'U_HELP' => get_root_url().'admin/popuphelp.php?page=permalinks',
   'deleted_permalinks' => $deleted_permalinks,
   'ADMIN_PAGE_TITLE' => l10n('Albums'),
-  ));
+  ]);
 
 $template->assign_var_from_handle('ADMIN_CONTENT', 'permalinks');

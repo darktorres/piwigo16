@@ -17,7 +17,7 @@ class Inflector_en
 
     public function __construct()
     {
-        $tmp = 	array('octopus' => 'octopuses',
+        $tmp = 	['octopus' => 'octopuses',
           'virus' => 'viruses',
           'person' => 'people',
           'man' => 'men',
@@ -29,7 +29,7 @@ class Inflector_en
           'zombie' => 'zombies', // pl->sg exc.
                 'serie' => 'series', // pl->sg exc.
                 'movie' => 'movies', // pl->sg exc.
-        );
+        ];
 
         $this->exceptions = $tmp;
         foreach ($tmp as $k => $v) {
@@ -40,7 +40,7 @@ class Inflector_en
             $this->exceptions[$v] = 0;
         }
 
-        $this->pluralizers = array_reverse(array( '/$/' => 's',
+        $this->pluralizers = array_reverse([ '/$/' => 's',
           '/s$/' => 's',
           '/^(ax|test)is$/' => '\1es',
           '/(alias|status)$/' => '\1es',
@@ -55,9 +55,9 @@ class Inflector_en
           '/(x|ch|ss|sh)$/' => '\1es',
           '/(matr|vert|ind)(?:ix|ex)$/' => '\1ices',
           '/(quiz)$/' => '\1zes',
-          ));
+          ]);
 
-        $this->singularizers = array_reverse(array(
+        $this->singularizers = array_reverse([
           '/s$/' => '',
           '/(ss)$/' => '\1',
           '/([ti])a$/' => '\1um',
@@ -79,25 +79,25 @@ class Inflector_en
           '/(matr)ices$/' => '\1ix',
           '/(quiz)zes$/' => '\1',
           '/(database)s$/' => '\1',
-          ));
+          ]);
 
-        $this->er2ing = array_reverse(array(
+        $this->er2ing = array_reverse([
           '/ers?$/' => 'ing',
           '/(be|draw|liv)ers?$/' => '\0',
-        ));
+        ]);
 
-        $this->ing2er = array_reverse(array(
+        $this->ing2er = array_reverse([
           '/ing$/' => 'er',
           '/(snow|rain)ing$/' => '\1',
           '/(th|hous|dur|spr|wedd)ing$/' => '\0',
           '/(liv|draw)ing$/' => '\0',
-        ));
+        ]);
 
     }
 
     public function get_variants($word)
     {
-        $res = array();
+        $res = [];
 
         $lword = strtolower($word);
 

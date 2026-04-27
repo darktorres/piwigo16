@@ -122,8 +122,8 @@ if (isset($_POST['install'])) {
     $is_newsletter_subscribe = isset($_POST['newsletter_subscribe']);
 }
 
-$infos = array();
-$errors = array();
+$infos = [];
+$errors = [];
 
 $config_file = PHPWG_ROOT_PATH.PWG_LOCAL_DIR .'config/database.inc.php';
 if (@file_exists($config_file)) {
@@ -184,9 +184,9 @@ if ('fr_FR' == $language) {
 }
 define('PHPWG_URL', 'https://'.PHPWG_DOMAIN);
 
-load_language('common.lang', '', array('language' => $language, 'target_charset' => 'utf-8'));
-load_language('admin.lang', '', array('language' => $language, 'target_charset' => 'utf-8'));
-load_language('install.lang', '', array('language' => $language, 'target_charset' => 'utf-8'));
+load_language('common.lang', '', ['language' => $language, 'target_charset' => 'utf-8']);
+load_language('admin.lang', '', ['language' => $language, 'target_charset' => 'utf-8']);
+load_language('install.lang', '', ['language' => $language, 'target_charset' => 'utf-8']);
 
 header('Content-Type: text/html; charset=UTF-8');
 //------------------------------------------------- check php version
@@ -197,7 +197,7 @@ if (version_compare(PHP_VERSION, REQUIRED_PHP_VERSION, '<')) {
 
 //----------------------------------------------------- template initialization
 $template = new Template(PHPWG_ROOT_PATH.'admin/themes', 'clear');
-$template->set_filenames(array('install' => 'install.tpl'));
+$template->set_filenames(['install' => 'install.tpl']);
 if (!isset($step)) {
     $step = 1;
 }
@@ -271,11 +271,11 @@ define(\'DB_COLLATE\', \'\');
             @fclose($fh);
 
             $template->assign(
-                array(
+                [
                 'config_creation_failed' => true,
                 'config_url' => 'install.php?dl='.$tmp_filename,
                 'config_file_content' => $file_content,
-                )
+                ]
             );
         }
         @fputs($fp, $file_content, strlen($file_content));
@@ -324,41 +324,41 @@ INSERT INTO '.$prefixeTable.'config (param,value,comment)
         activate_core_themes();
         activate_core_plugins();
 
-        $insert = array(
+        $insert = [
           'id' => 1,
           'galleries_url' => PHPWG_ROOT_PATH.'galleries/',
-          );
-        mass_inserts(SITES_TABLE, array_keys($insert), array($insert));
+          ];
+        mass_inserts(SITES_TABLE, array_keys($insert), [$insert]);
 
         // webmaster admin user
-        $inserts = array(
-          array(
+        $inserts = [
+          [
             'id'           => 1, // must be the same value as webmaster_id in config.sql
             'username'     => $admin_name,
             'password'     => md5($admin_pass1),
             'mail_address' => $admin_mail,
-            ),
-          array(
+            ],
+          [
             'id'           => 2,
             'username'     => 'guest',
-            ),
-          );
+            ],
+          ];
         mass_inserts(USERS_TABLE, array_keys($inserts[0]), $inserts);
 
-        create_user_infos(array(1,2), array('language' => $language));
+        create_user_infos([1,2], ['language' => $language]);
 
         // Available upgrades must be ignored after a fresh installation. To
         // make PWG avoid upgrading, we must tell it upgrades have already been
         // made.
-        list($dbnow) = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
+        [$dbnow] = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
         define('CURRENT_DATE', $dbnow);
-        $datas = array();
+        $datas = [];
         foreach (get_available_upgrade_ids() as $upgrade_id) {
-            $datas[] = array(
+            $datas[] = [
               'id'          => $upgrade_id,
               'applied'     => CURRENT_DATE,
               'description' => 'upgrade included in installation',
-              );
+              ];
         }
         mass_inserts(
             UPGRADE_TABLE,
@@ -378,7 +378,7 @@ foreach ($languages->fs_languages as $language_code => $fs_language) {
 $template->assign('language_options', $languages_options);
 
 $template->assign(
-    array(
+    [
     'T_CONTENT_ENCODING' => 'utf-8',
     'RELEASE' => PHPWG_VERSION,
     'F_ACTION' => 'install.php?language=' . $language,
@@ -391,14 +391,14 @@ $template->assign(
     'EMAIL' => '<span class="adminEmail">'.$admin_mail.'</span>',
     'F_NEWSLETTER_SUBSCRIBE' => $is_newsletter_subscribe,
     'L_INSTALL_HELP' => l10n('Need help ? Ask your question on <a href="%s">Piwigo message board</a>.', PHPWG_URL.'/forum'),
-    )
+    ]
 );
 
 //------------------------------------------------------ errors & infos display
 if ($step == 1) {
     $template->assign('install', true);
 } else {
-    pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'install', array('version' => PHPWG_VERSION));
+    pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'install', ['version' => PHPWG_VERSION]);
     $infos[] = l10n('Congratulations, Piwigo installation is completed');
 
     if (isset($error_copy)) {
@@ -429,8 +429,8 @@ if ($step == 1) {
             fetchRemote(
                 get_newsletter_subscribe_base_url($language).$admin_mail,
                 $result,
-                array(),
-                array('origin' => 'installation')
+                [],
+                ['origin' => 'installation']
             );
 
             $user['preferences']['show_newsletter_subscription'] = false;
@@ -442,7 +442,7 @@ if ($step == 1) {
         if (isset($_POST['send_credentials_by_mail'])) {
             include_once(PHPWG_ROOT_PATH.'include/functions_mail.inc.php');
 
-            $keyargs_content = array(
+            $keyargs_content = [
               get_l10n_args('Hello %s,', $admin_name),
               get_l10n_args('Welcome to your new installation of Piwigo!', ''),
               get_l10n_args('', ''),
@@ -454,15 +454,15 @@ if ($step == 1) {
               get_l10n_args('Email: %s', $admin_mail),
               get_l10n_args('', ''),
               get_l10n_args('Don\'t hesitate to consult our forums for any help: %s', PHPWG_URL),
-              );
+              ];
 
             pwg_mail(
                 $admin_mail,
-                array(
+                [
                 'subject' => l10n('Just another Piwigo gallery'),
                 'content' => l10n_args($keyargs_content),
                 'content_format' => 'text/plain',
-                )
+                ]
             );
         }
     }

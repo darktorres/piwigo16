@@ -35,7 +35,7 @@ if (isset($_POST['submitEmail'])) {
     check_pwg_token();
     set_make_full_url();
 
-    $img = array();
+    $img = [];
 
     /* TODO: if $category['representative_picture_id']
       is empty find child representative_picture_id */
@@ -50,42 +50,42 @@ SELECT id, file, path, representative_ext
         if (pwg_db_num_rows($result) > 0) {
             $element = pwg_db_fetch_assoc($result);
 
-            $img = array(
+            $img = [
               'link' => make_picture_url(
-                  array(
+                  [
                   'image_id' => $element['id'],
                   'image_file' => $element['file'],
                   'category' => $category,
-                  )
+                  ]
               ),
               'src' => DerivativeImage::url(IMG_THUMB, $element),
-              );
+              ];
         }
     }
 
-    $args = array(
+    $args = [
       'subject' => l10n('[%s] Visit album %s', $conf['gallery_title'], trigger_change('render_category_name', $category['name'], 'admin_cat_list')),
       // TODO : change this language variable to 'Visit album %s'
       // TODO : 'language_selected' => ....
-      );
+      ];
 
-    $tpl = array(
+    $tpl = [
       'filename' => 'cat_group_info',
-      'assign' => array(
+      'assign' => [
         'IMG' => $img,
         'CAT_NAME' => trigger_change('render_category_name', $category['name'], 'admin_cat_list'),
         'LINK' => make_index_url(
-            array(
-            'category' => array(
+            [
+            'category' => [
               'id' => $category['id'],
               'name' => trigger_change('render_category_name', $category['name'], 'admin_cat_list'),
               'permalink' => $category['permalink'],
-              ),
-            )
+              ],
+            ]
         ),
         'CPL_CONTENT' => empty($_POST['mail_content']) ? '' : stripslashes($_POST['mail_content']),
-        ),
-      );
+        ],
+      ];
 
     if ('users' == $_POST['who'] and isset($_POST['users']) and count($_POST['users']) > 0) {
         check_input_parameter('users', $_POST, true, PATTERN_ID);
@@ -110,7 +110,7 @@ SELECT
   WHERE ui.user_id IN ('.implode(',', $_POST['users']).')
 ;';
         $users = query2array($query);
-        $usernames = array();
+        $usernames = [];
 
         foreach ($users as $u) {
             $usernames[] = $u['username'];
@@ -120,12 +120,12 @@ SELECT
             $user_tpl = $tpl;
 
             if ($authkey !== false) {
-                $user_tpl['assign']['LINK'] = add_url_params($tpl['assign']['LINK'], array('auth' => $authkey['auth_key']));
+                $user_tpl['assign']['LINK'] = add_url_params($tpl['assign']['LINK'], ['auth' => $authkey['auth_key']]);
 
                 if (isset($user_tpl['assign']['IMG']['link'])) {
                     $user_tpl['assign']['IMG']['link'] = add_url_params(
                         $user_tpl['assign']['IMG']['link'],
-                        array('auth' => $authkey['auth_key'])
+                        ['auth' => $authkey['auth_key']]
                     );
                 }
             }
@@ -144,9 +144,9 @@ SELECT
         $message .= ' ('.implode(', ', $usernames).')';
 
         $template->assign(
-            array(
+            [
             'save_success' => $message,
-      )
+      ]
         );
     } elseif ('group' == $_POST['who'] and !empty($_POST['group'])) {
         check_input_parameter('group', $_POST, false, PATTERN_ID);
@@ -159,12 +159,12 @@ SELECT
   FROM `'.GROUPS_TABLE.'`
   WHERE id = '.$_POST['group'].'
 ;';
-        list($group_name) = pwg_db_fetch_row(pwg_query($query));
+        [$group_name] = pwg_db_fetch_row(pwg_query($query));
 
         $template->assign(
-            array(
+            [
             'save_success' => l10n('An information email was sent to group "%s"', $group_name),
-      )
+      ]
         );
     }
 
@@ -178,7 +178,7 @@ SELECT
 $template->set_filename('album_notification', 'album_notification.tpl');
 
 $template->assign(
-    array(
+    [
     'CATEGORIES_NAV' =>
       trim(
           get_cat_display_name_from_id(
@@ -188,7 +188,7 @@ $template->assign(
       ),
     'F_ACTION' => $admin_album_base_url.'-notification',
     'PWG_TOKEN' => get_pwg_token(),
-    )
+    ]
 );
 
 if ($conf['auth_key_duration'] > 0) {
@@ -259,7 +259,7 @@ SELECT
 $all_user_ids = query2array($query, null, 'user_id');
 
 if ('private' == $category['status']) {
-    $user_ids_access_indirect = array();
+    $user_ids_access_indirect = [];
 
     if (isset($group_ids) and count($group_ids) > 0) {
         $query = '

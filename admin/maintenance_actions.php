@@ -13,7 +13,7 @@ fs_quick_check();
 // |                                actions                                |
 // +-----------------------------------------------------------------------+
 
-$action = isset($_GET['action']) ? $_GET['action'] : '';
+$action = $_GET['action'] ?? '';
 $register_activity = true;
 
 switch ($action) {
@@ -25,15 +25,15 @@ switch ($action) {
     case 'lock_gallery':
         {
             conf_update_param('gallery_locked', 'true');
-            pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'maintenance', array('maintenance_action' => $action));
+            pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'maintenance', ['maintenance_action' => $action]);
             redirect(get_root_url().'admin.php?page=maintenance');
             break;
         }
     case 'unlock_gallery':
         {
             conf_update_param('gallery_locked', 'false');
-            $_SESSION['page_infos'] = array(l10n('Gallery unlocked'));
-            pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'maintenance', array('maintenance_action' => $action));
+            $_SESSION['page_infos'] = [l10n('Gallery unlocked')];
+            pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'maintenance', ['maintenance_action' => $action]);
             redirect(get_root_url().'admin.php?page=maintenance');
             break;
         }
@@ -110,7 +110,7 @@ SELECT
 ;';
             $all_user_ids = query2array($query, 'id', null);
 
-            $sessions_to_delete = array();
+            $sessions_to_delete = [];
 
             foreach ($sessions as $session) {
                 if (preg_match('/pwg_uid\|i:(\d+);/', $session['data'], $matches)) {
@@ -199,7 +199,7 @@ DELETE
             if (!fetchRemote(PHPWG_URL.'/download/latest_version', $result)) {
                 $page['errors'][] = l10n('Unable to check for upgrade.');
             } else {
-                $versions = array('current' => PHPWG_VERSION);
+                $versions = ['current' => PHPWG_VERSION];
                 $lines = @explode("\r\n", $result);
 
                 // if the current version is a BSF (development branch) build, we check
@@ -241,14 +241,14 @@ DELETE
 }
 
 if ($register_activity) {
-    pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'maintenance', array('maintenance_action' => $action));
+    pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'maintenance', ['maintenance_action' => $action]);
 }
 
 // +-----------------------------------------------------------------------+
 // |                             template init                             |
 // +-----------------------------------------------------------------------+
 
-$template->set_filenames(array('maintenance' => 'maintenance_actions.tpl'));
+$template->set_filenames(['maintenance' => 'maintenance_actions.tpl']);
 $pwg_token = get_pwg_token();
 $url_format = get_root_url().'admin.php?page=maintenance&amp;action=%s&amp;pwg_token='.get_pwg_token();
 
@@ -264,10 +264,10 @@ $purge_urls[ l10n(IMG_CUSTOM) ] = IMG_CUSTOM;
 
 $php_current_timestamp = date('Y-m-d H:i:s');
 $db_version = pwg_get_db_version();
-list($db_current_date) = pwg_db_fetch_row(pwg_query('SELECT now();'));
+[$db_current_date] = pwg_db_fetch_row(pwg_query('SELECT now();'));
 
 $template->assign(
-    array(
+    [
     'maint_actions' => $maint_actions,
     'U_MAINT_CATEGORIES' => sprintf($url_format, 'categories'),
     'U_MAINT_IMAGES' => sprintf($url_format, 'images'),
@@ -298,7 +298,7 @@ $template->assign(
     'pwg_token' => $pwg_token,
     'cache_sizes' => (isset($conf['cache_sizes'])) ? unserialize($conf['cache_sizes']) : null,
     'time_elapsed_since_last_calc' => (isset($conf['cache_sizes'])) ? time_since(unserialize($conf['cache_sizes'])[3]['value'], 'year') : null,
-    )
+    ]
 );
 
 // graphics library
@@ -330,15 +330,15 @@ switch (pwg_image::get_library()) {
 
 if ($conf['gallery_locked']) {
     $template->assign(
-        array(
+        [
         'U_MAINT_UNLOCK_GALLERY' => sprintf($url_format, 'unlock_gallery'),
-        )
+        ]
     );
 } else {
     $template->assign(
-        array(
+        [
         'U_MAINT_LOCK_GALLERY' => sprintf($url_format, 'lock_gallery'),
-        )
+        ]
     );
 }
 
@@ -347,14 +347,14 @@ SELECT
     COUNT(*)
   FROM '.LOUNGE_TABLE.'
 ;';
-list($nb_lounge) = pwg_db_fetch_row(pwg_query($query));
+[$nb_lounge] = pwg_db_fetch_row(pwg_query($query));
 
 if ($nb_lounge > 0) {
     $template->assign(
-        array(
+        [
         'U_EMPTY_LOUNGE' => sprintf($url_format, 'empty_lounge'),
         'LOUNGE_COUNTER' => $nb_lounge,
-    )
+    ]
     );
 }
 
@@ -364,7 +364,7 @@ $template->assign('isWebmaster', (is_webmaster()) ? 1 : 0);
 // | Define advanced features                                              |
 // +-----------------------------------------------------------------------+
 
-$advanced_features = array();
+$advanced_features = [];
 
 //$advanced_features is array of array composed of CAPTION & URL
 $advanced_features = trigger_change(

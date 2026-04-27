@@ -37,7 +37,7 @@ class CSS extends Minify
     /**
      * @var string[] valid import extensions
      */
-    protected $importExtensions = array(
+    protected $importExtensions = [
         'gif' => 'data:image/gif',
         'png' => 'data:image/png',
         'jpe' => 'data:image/jpeg',
@@ -52,7 +52,7 @@ class CSS extends Minify
         'tif' => 'image/tiff',
         'tiff' => 'image/tiff',
         'xbm' => 'image/x-xbitmap',
-    );
+    ];
 
     /**
      * Set the maximum size if files to be imported.
@@ -120,7 +120,7 @@ class CSS extends Minify
      */
     protected function combineImports($source, $content, $parents)
     {
-        $importRegexes = array(
+        $importRegexes = [
             // @import url(xxx)
             '/
             # import statement
@@ -189,18 +189,18 @@ class CSS extends Minify
             ;?
 
             /ix',
-        );
+        ];
 
         // find all relative imports in css
-        $matches = array();
+        $matches = [];
         foreach ($importRegexes as $importRegex) {
             if (preg_match_all($importRegex, $content, $regexMatches, PREG_SET_ORDER)) {
                 $matches = array_merge($matches, $regexMatches);
             }
         }
 
-        $search = array();
-        $replace = array();
+        $search = [];
+        $replace = [];
 
         // loop the matches
         foreach ($matches as $match) {
@@ -255,8 +255,8 @@ class CSS extends Minify
     {
         $regex = '/url\((["\']?)(.+?)\\1\)/i';
         if ($this->importExtensions && preg_match_all($regex, $content, $matches, PREG_SET_ORDER)) {
-            $search = array();
-            $replace = array();
+            $search = [];
+            $replace = [];
 
             // loop the matches
             foreach ($matches as $match) {
@@ -300,7 +300,7 @@ class CSS extends Minify
      *
      * @throws PatternMatchException
      */
-    public function execute($path = null, $parents = array())
+    public function execute($path = null, $parents = [])
     {
         $content = '';
 
@@ -330,7 +330,7 @@ class CSS extends Minify
             $css = $this->restoreExtractedData($css);
 
             $source = is_int($source) ? '' : $source;
-            $parents = $source ? array_merge($parents, array($source)) : $parents;
+            $parents = $source ? array_merge($parents, [$source]) : $parents;
             $css = $this->combineImports($source, $css, $parents);
             $css = $this->importFiles($source, $css);
 
@@ -377,7 +377,7 @@ class CSS extends Minify
          * recent PCRE version. That's why I'm doing 2 separate regular
          * expressions & combining the matches after executing of both.
          */
-        $relativeRegexes = array(
+        $relativeRegexes = [
             // url(xxx)
             '/
             # open url()
@@ -422,23 +422,23 @@ class CSS extends Minify
                 (?P=quotes)
 
             /ix',
-        );
+        ];
 
         // find all relative urls in css
-        $matches = array();
+        $matches = [];
         foreach ($relativeRegexes as $relativeRegex) {
             if (preg_match_all($relativeRegex, $content, $regexMatches, PREG_SET_ORDER)) {
                 $matches = array_merge($matches, $regexMatches);
             }
         }
 
-        $search = array();
-        $replace = array();
+        $search = [];
+        $replace = [];
 
         // loop all urls
         foreach ($matches as $match) {
             // determine if it's a url() or an @import match
-            $type = (strpos($match[0], '@import') === 0 ? 'import' : 'url');
+            $type = (str_starts_with($match[0], '@import') ? 'import' : 'url');
 
             $url = $match['path'];
             if ($this->canImportByPath($url)) {
@@ -505,7 +505,7 @@ class CSS extends Minify
         // replace `transparent` with shortcut ..
         $content = preg_replace('/(?<=[: ])#[0-9a-f]{6}00(?=[; }])/i', '#fff0', $content);
 
-        $colors = array(
+        $colors = [
             // make these more readable
             '#00f' => 'blue',
             '#dc143c' => 'crimson',
@@ -557,13 +557,11 @@ class CSS extends Minify
             'yellow' => '#ff0',
             // and also `transparent`
             'transparent' => '#fff0',
-        );
+        ];
 
         return preg_replace_callback(
             '/(?<=[: ])(' . implode('|', array_keys($colors)) . ')(?=[; }])/i',
-            function ($match) use ($colors) {
-                return $colors[strtolower($match[0])];
-            },
+            fn ($match) => $colors[strtolower($match[0])],
             $content
         );
     }
@@ -596,9 +594,7 @@ class CSS extends Minify
 
         return preg_replace_callback(
             "/rgb\($dec $dec $dec\)/i",
-            function ($match) {
-                return sprintf('#%02x%02x%02x', $match[1], $match[2], $match[3]);
-            },
+            fn ($match) => sprintf('#%02x%02x%02x', $match[1], $match[2], $match[3]),
             $content
         );
     }
@@ -642,14 +638,12 @@ class CSS extends Minify
      */
     protected function shortenFontWeights($content)
     {
-        $weights = array(
+        $weights = [
             'normal' => 400,
             'bold' => 700,
-        );
+        ];
 
-        $callback = function ($match) use ($weights) {
-            return $match[1] . $weights[$match[2]];
-        };
+        $callback = (fn ($match) => $match[1] . $weights[$match[2]]);
 
         return preg_replace_callback('/(font-weight\s*:\s*)(' . implode('|', array_keys($weights)) . ')(?=[;}])/', $callback, $content);
     }
@@ -759,7 +753,7 @@ class CSS extends Minify
         // classes, like `:nth-child(3+2n)`
         // not in things like `calc(3px + 2px)`, shorthands like `3px -2px`, or
         // selectors like `div.weird- p`
-        $pseudos = array('nth-child', 'nth-last-child', 'nth-last-of-type', 'nth-of-type');
+        $pseudos = ['nth-child', 'nth-last-child', 'nth-last-of-type', 'nth-of-type'];
         $content = $this->pregReplace('/:(' . implode('|', $pseudos) . ')\(\s*([+-]?)\s*(.+?)\s*([+-]?)\s*(.*?)\s*\)/', ':$1($2$3$4$5)', $content);
 
         // remove semicolon/whitespace followed by closing bracket
@@ -795,7 +789,7 @@ class CSS extends Minify
      */
     protected function extractMath()
     {
-        $functions = array('calc', 'clamp', 'min', 'max');
+        $functions = ['calc', 'clamp', 'min', 'max'];
         $pattern = '/\b(' . implode('|', $functions) . ')(\(.+?)(?=$|;|})/m';
 
         // PHP only supports $this inside anonymous functions since 5.4

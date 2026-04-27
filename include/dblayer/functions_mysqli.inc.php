@@ -38,11 +38,11 @@ function pwg_db_connect($host, $user, $password, $database)
     $port = null;
     $socket = null;
 
-    if (strpos($host, '/') === 0) {
+    if (str_starts_with($host, '/')) {
         $socket = $host;
         $host = null;
-    } elseif (strpos($host, ':') !== false) {
-        list($host, $port) = explode(':', $host);
+    } elseif (str_contains($host, ':')) {
+        [$host, $port] = explode(':', $host);
     }
 
     $dbname = '';
@@ -58,10 +58,10 @@ function pwg_db_connect($host, $user, $password, $database)
     // MySQL 5.7 default settings forbid to select a colum that is not in the
     // group by. We've used that in Piwigo, for years. As an immediate solution
     // we can remove this constraint in the current MySQL session.
-    list($sql_mode_current) = pwg_db_fetch_row(pwg_query('SELECT @@SESSION.sql_mode'));
+    [$sql_mode_current] = pwg_db_fetch_row(pwg_query('SELECT @@SESSION.sql_mode'));
 
     // remove ONLY_FULL_GROUP_BY from the list
-    $sql_mode_altered = implode(',', array_diff(explode(',', $sql_mode_current), array('ONLY_FULL_GROUP_BY')));
+    $sql_mode_altered = implode(',', array_diff(explode(',', $sql_mode_current), ['ONLY_FULL_GROUP_BY']));
 
     if ($sql_mode_altered != $sql_mode_current) {
         pwg_query("SET SESSION sql_mode='".$sql_mode_altered."'");
@@ -172,7 +172,7 @@ function pwg_db_nextval($column, $table)
     $query = '
 SELECT IF(MAX('.$column.')+1 IS NULL, 1, MAX('.$column.')+1)
   FROM '.$table;
-    list($next) = pwg_db_fetch_row(pwg_query($query));
+    [$next] = pwg_db_fetch_row(pwg_query($query));
 
     return $next;
 }
@@ -313,7 +313,7 @@ UPDATE '.protect_column_name($tablename).'
     else {
         // creation of the temporary table
         $result = pwg_query('SHOW FULL COLUMNS FROM '.protect_column_name($tablename));
-        $columns = array();
+        $columns = [];
         $all_fields = array_merge($dbfields['primary'], $dbfields['update']);
 
         while ($row = pwg_db_fetch_assoc($result)) {
@@ -351,13 +351,9 @@ CREATE TABLE '.$temporary_tablename.'
         mass_inserts($temporary_tablename, $all_fields, $datas);
 
         if ($flags & MASS_UPDATES_SKIP_EMPTY) {
-            $func_set = function ($s) {
-                return "t1.$s = IFNULL(t2.$s, t1.$s)";
-            };
+            $func_set = (fn ($s) => "t1.$s = IFNULL(t2.$s, t1.$s)");
         } else {
-            $func_set = function ($s) {
-                return "t1.$s = t2.$s";
-            };
+            $func_set = (fn ($s) => "t1.$s = t2.$s");
         }
 
         // update of table by joining with temporary table
@@ -372,9 +368,7 @@ UPDATE '.protect_column_name($tablename).' AS t1, '.$temporary_tablename.' AS t2
           implode(
               "\n    AND ",
               array_map(
-                  function ($s) {
-                      return "t1.$s = t2.$s";
-                  },
+                  fn ($s) => "t1.$s = t2.$s",
                   $dbfields['primary']
               )
           );
@@ -449,7 +443,7 @@ UPDATE '.protect_column_name($tablename).'
  * @param array $options
  *    - boolean ignore - use "INSERT IGNORE"
  */
-function mass_inserts($table_name, $dbfields, $datas, $options = array())
+function mass_inserts($table_name, $dbfields, $datas, $options = [])
 {
     $ignore = '';
     if (isset($options['ignore']) and $options['ignore']) {
@@ -508,7 +502,7 @@ INSERT '.$ignore.' INTO '.protect_column_name($table_name).'
  * @param array $options
  *    - boolean ignore - use "INSERT IGNORE"
  */
-function single_insert($table_name, $data, $options = array())
+function single_insert($table_name, $data, $options = [])
 {
     $ignore = '';
     if (isset($options['ignore']) and $options['ignore']) {
@@ -558,7 +552,7 @@ function do_maintenance_all_tables()
 {
     global $prefixeTable, $page;
 
-    $all_tables = array();
+    $all_tables = [];
 
     // List all tables
     $query = 'SHOW TABLES LIKE \''.$prefixeTable.'%\'';
@@ -573,7 +567,7 @@ function do_maintenance_all_tables()
 
     // Re-Order all tables
     foreach ($all_tables as $table_name) {
-        $all_primary_key = array();
+        $all_primary_key = [];
 
         $query = 'DESC '.$table_name.';';
         $result = pwg_query($query);
@@ -684,7 +678,7 @@ function pwg_db_get_recent_period($period, $date = 'CURRENT_DATE')
 {
     $query = '
 SELECT '.pwg_db_get_recent_period_expression($period);
-    list($d) = pwg_db_fetch_row(pwg_query($query));
+    [$d] = pwg_db_fetch_row(pwg_query($query));
 
     return $d;
 }
@@ -805,7 +799,7 @@ function my_error($header, $die)
 function query2array($query, $key_name = null, $value_name = null)
 {
     $result = pwg_query($query);
-    $data = array();
+    $data = [];
 
     if (isset($key_name)) {
         if (isset($value_name)) {

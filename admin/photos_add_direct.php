@@ -24,12 +24,12 @@ DELETE FROM '.CADDIE_TABLE.'
 ;';
     pwg_query($query);
 
-    $inserts = array();
+    $inserts = [];
     foreach (array_unique(explode(',', $_GET['batch'])) as $image_id) {
-        $inserts[] = array(
+        $inserts[] = [
           'user_id' => $user['id'],
           'element_id' => $image_id,
-          );
+          ];
     }
     mass_inserts(
         CADDIE_TABLE,
@@ -48,19 +48,19 @@ SELECT registration_date
   ORDER BY user_id ASC
   LIMIT 1
 ;';
-    list($register_date) = pwg_db_fetch_row(pwg_query($query));
+    [$register_date] = pwg_db_fetch_row(pwg_query($query));
 
     $query = '
 SELECT COUNT(*)
   FROM '.CATEGORIES_TABLE.'
 ;';
-    list($nb_cats) = pwg_db_fetch_row(pwg_query($query));
+    [$nb_cats] = pwg_db_fetch_row(pwg_query($query));
 
     $query = '
 SELECT COUNT(*)
   FROM '.IMAGES_TABLE.'
 ;';
-    list($nb_images) = pwg_db_fetch_row(pwg_query($query));
+    [$nb_images] = pwg_db_fetch_row(pwg_query($query));
 
     include_once(PHPWG_ROOT_PATH.'include/mdetect.php');
     $uagent_obj = new uagent_info();
@@ -79,7 +79,7 @@ $template->assign('PHPWG_URL', PHPWG_URL);
 $display_formats = $conf['enable_formats'] && isset($_GET['formats']);
 
 $have_formats_original = false;
-$formats_original_info = array();
+$formats_original_info = [];
 $formats_ext_info = null;
 
 // If URL parameter isn't empty
@@ -101,8 +101,8 @@ SELECT *
         $formats = query2array($query);
 
         if (!empty($formats)) {
-            $format_strings = array();
-            $formats_exts = array();
+            $format_strings = [];
+            $formats_exts = [];
 
             foreach ($formats as $format) {
                 $format_strings[] = sprintf('%s (%.2fMB)', $format['ext'], $format['filesize'] / 1024);
@@ -138,7 +138,7 @@ include_once(PHPWG_ROOT_PATH.'admin/include/photos_add_direct_prepare.inc.php');
 
 trigger_notify('loc_end_photo_add_direct');
 
-$template->assign(array(
+$template->assign([
   'ENABLE_FORMATS' => $conf['enable_formats'],
   'DISPLAY_FORMATS' => $display_formats,
   'HAVE_FORMATS_ORIGINAL' => $have_formats_original,
@@ -147,6 +147,6 @@ $template->assign(array(
   'SWITCH_FORMAT_MODE_URL' => get_root_url().'admin.php?page=photos_add'.($display_formats ? '' : '&formats'),
   'format_ext' =>  implode(',', $conf['format_ext']),
   'str_format_ext' =>  implode(', ', $conf['format_ext']),
-));
+]);
 
 $template->assign_var_from_handle('ADMIN_CONTENT', 'photos_add');

@@ -36,7 +36,7 @@ SELECT id, file, level
     } else {// url given by file name
         assert(!empty($page['image_file']));
         $query .= 'file LIKE \'' .
-          str_replace(array('_','%'), array('/_','/%'), $page['image_file']).
+          str_replace(['_','%'], ['/_','/%'], $page['image_file']).
           '.%\' ESCAPE \'/\' LIMIT 1';
     }
     if (! ($row = pwg_db_fetch_assoc(pwg_query($query)))) {// element does not exist
@@ -68,7 +68,7 @@ SELECT id
   FROM '.IMAGES_TABLE.' INNER JOIN '.IMAGE_CATEGORY_TABLE.' ON id=image_id
   WHERE id='.$page['image_id']
               . get_sql_condition_FandF(
-                  array('forbidden_categories' => 'category_id'),
+                  ['forbidden_categories' => 'category_id'],
                   ' AND'
               ).'
   LIMIT 1';
@@ -80,12 +80,12 @@ SELECT id
                     $page['items'][] = $page['image_id'];
                 } else {
                     $url = make_picture_url(
-                        array(
+                        [
                           'image_id' => $page['image_id'],
                           'image_file' => $page['image_file'],
                           'section' => 'categories',
                           'flat' => true,
-                        )
+                        ]
                     );
                     set_status_header('recent_pics' == $page['section'] ? 301 : 302);
                     redirect_http($url);
@@ -124,14 +124,14 @@ function default_picture_content($content, $element_info)
         if (array_key_exists($_COOKIE['picture_deriv'], ImageStdParams::get_defined_type_map())) {
             pwg_set_session_var('picture_deriv', $_COOKIE['picture_deriv']);
         }
-        setcookie('picture_deriv', false, 0, cookie_path());
+        setcookie('picture_deriv', false, ['expires' => 0, 'path' => cookie_path()]);
     }
     $deriv_type = pwg_get_session_var('picture_deriv', $conf['derivative_default_size']);
     $selected_derivative = $element_info['derivatives'][$deriv_type];
 
-    $unique_derivatives = array();
+    $unique_derivatives = [];
     $show_original = isset($element_info['element_url']);
-    $added = array();
+    $added = [];
     foreach ($element_info['derivatives'] as $type => $derivative) {
         if ($type == IMG_SQUARE || $type == IMG_THUMB) {
             continue;
@@ -158,21 +158,21 @@ function default_picture_content($content, $element_info)
         $template->assign('U_ORIGINAL', $element_info['element_url']);
     }
 
-    $template->append('current', array(
+    $template->append('current', [
         'selected_derivative' => $selected_derivative,
         'unique_derivatives' => $unique_derivatives,
-      ), true);
+      ], true);
 
 
     $template->set_filenames(
-        array('default_content' => 'picture_content.tpl')
+        ['default_content' => 'picture_content.tpl']
     );
 
     $template->assign(
-        array(
+        [
         'ALT_IMG' => $element_info['file'],
         'COOKIE_PATH' => cookie_path(),
-        )
+        ]
     );
     return $template->parse('default_content', true);
 }
@@ -203,14 +203,14 @@ if ($page['current_rank'] != $page['last_rank']) {
 }
 
 $url_up = duplicate_index_url(
-    array(
+    [
     'start' =>
       floor($page['current_rank'] / $page['nb_image_page'])
       * $page['nb_image_page'],
-    ),
-    array(
+    ],
+    [
     'start',
-    )
+    ]
 );
 
 $url_self = duplicate_picture_url();
@@ -268,7 +268,7 @@ UPDATE '.CATEGORIES_TABLE.'
   WHERE id = '.$page['category']['id'].'
 ;';
                     pwg_query($query);
-                    pwg_activity('album', $page['category']['id'], 'edit', array('action' => $_GET['action'], 'image_id' => $page['image_id']));
+                    pwg_activity('album', $page['category']['id'], 'edit', ['action' => $_GET['action'], 'image_id' => $page['image_id']]);
 
                     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
                     invalidate_user_cache();
@@ -280,7 +280,7 @@ UPDATE '.CATEGORIES_TABLE.'
             }
         case 'add_to_caddie':
             {
-                fill_caddie(array($page['image_id']));
+                fill_caddie([$page['image_id']]);
                 redirect($url_self);
                 break;
             }
@@ -300,12 +300,12 @@ UPDATE '.CATEGORIES_TABLE.'
                     if (!empty($_POST['content'])) {
                         check_pwg_token();
                         $comment_action = update_user_comment(
-                            array(
+                            [
                             'comment_id' => $_GET['comment_to_edit'],
                             'image_id' => $page['image_id'],
                             'content' => $_POST['content'],
                             'website_url' => @$_POST['website_url'],
-                            ),
+                            ],
                             $_POST['key']
                         );
 
@@ -397,19 +397,19 @@ SELECT id,uppercats,commentable,visible,status,global_rank
     INNER JOIN '.CATEGORIES_TABLE.' ON category_id = id
   WHERE image_id = '.$page['image_id'].'
 '.get_sql_condition_FandF(
-    array(
+    [
       'forbidden_categories' => 'id',
       'visible_categories' => 'id',
-    ),
+    ],
     'AND'
 ).'
 ;';
 $related_categories = array_from_query($query);
 usort($related_categories, 'global_rank_compare');
 //-------------------------first, prev, current, next & last picture management
-$picture = array();
+$picture = [];
 
-$ids = array($page['image_id']);
+$ids = [$page['image_id']];
 if (isset($page['previous_item'])) {
     $ids[] = $page['previous_item'];
     $ids[] = $page['first_item'];
@@ -462,13 +462,13 @@ while ($row = pwg_db_fetch_assoc($result)) {
     }
 
     $row['url'] = duplicate_picture_url(
-        array(
+        [
         'image_id' => $row['id'],
         'image_file' => $row['file'],
-        ),
-        array(
+        ],
+        [
         'start',
-        )
+        ]
     );
 
     $picture[$i] = $row;
@@ -483,12 +483,12 @@ while ($row = pwg_db_fetch_assoc($result)) {
     }
 }
 
-$slideshow_params = array();
-$slideshow_url_params = array();
+$slideshow_params = [];
+$slideshow_url_params = [];
 
 if (isset($_GET['slideshow'])) {
     $page['slideshow'] = true;
-    $page['meta_robots'] = array('noindex' => 1, 'nofollow' => 1);
+    $page['meta_robots'] = ['noindex' => 1, 'nofollow' => 1];
 
     $slideshow_params = decode_slideshow_params($_GET['slideshow']);
     $slideshow_url_params['slideshow'] = encode_slideshow_params($slideshow_params);
@@ -517,9 +517,9 @@ if (isset($_GET['slideshow'])) {
     $page['slideshow'] = false;
 }
 if ($page['slideshow'] and $conf['light_slideshow']) {
-    $template->set_filenames(array('slideshow' => 'slideshow.tpl'));
+    $template->set_filenames(['slideshow' => 'slideshow.tpl']);
 } else {
-    $template->set_filenames(array('picture' => 'picture.tpl'));
+    $template->set_filenames(['picture' => 'picture.tpl']);
 }
 
 $title =  $picture['current']['TITLE'];
@@ -527,7 +527,7 @@ $title_nb = ($page['current_rank'] + 1).'/'.count($page['items']);
 
 // metadata
 $url_metadata = duplicate_picture_url();
-$url_metadata = add_url_params($url_metadata, array('metadata' => null));
+$url_metadata = add_url_params($url_metadata, ['metadata' => null]);
 
 
 // do we have a plugin that can show metadata for something else than images?
@@ -541,7 +541,7 @@ $metadata_showable = trigger_change(
 );
 
 if (isset($_GET['metadata'])) {
-    $page['meta_robots'] = array('noindex' => 1, 'nofollow' => 1);
+    $page['meta_robots'] = ['noindex' => 1, 'nofollow' => 1];
 }
 
 
@@ -551,26 +551,26 @@ $page['body_id'] = 'thePicturePage';
 $picture = trigger_change('picture_pictures_data', $picture);
 
 //------------------------------------------------------- navigation management
-foreach (array('first','previous','next','last', 'current') as $which_image) {
+foreach (['first','previous','next','last', 'current'] as $which_image) {
     if (isset($picture[$which_image])) {
         $template->assign(
             $which_image,
             array_merge(
                 $picture[$which_image],
-                array(
+                [
           // Params slideshow was transmit to navigation buttons
           'U_IMG' =>
                 add_url_params(
                     $picture[$which_image]['url'],
                     $slideshow_url_params
                 ),
-          )
+          ]
             )
         );
     }
 }
 if ($conf['picture_download_icon'] and !empty($picture['current']['download_url']) and $user['enabled_high'] == 'true') {
-    $template->append('current', array('U_DOWNLOAD' => $picture['current']['download_url']), true);
+    $template->append('current', ['U_DOWNLOAD' => $picture['current']['download_url']], true);
 
     if ($conf['enable_formats']) {
         $query = '
@@ -584,11 +584,11 @@ SELECT *
         // specific download URL
         array_unshift(
             $formats,
-            array(
+            [
             'download_url' => $picture['current']['download_url'],
             'ext' => get_extension($picture['current']['file']),
             'filesize' => $picture['current']['filesize'],
-            )
+            ]
         );
 
         foreach ($formats as &$format) {
@@ -604,21 +604,21 @@ SELECT *
 
             $format['filesize'] = sprintf('%.1fMB', $format['filesize'] / 1024);
         }
-        $template->append('current', array('formats' => $formats), true);
+        $template->append('current', ['formats' => $formats], true);
     }
 }
 
 if ($page['slideshow']) {
-    $tpl_slideshow = array();
+    $tpl_slideshow = [];
 
     //slideshow end
     $template->assign(
-        array(
+        [
         'U_SLIDESHOW_STOP' => $picture['current']['url'],
-        )
+        ]
     );
 
-    foreach (array('repeat', 'play') as $p) {
+    foreach (['repeat', 'play'] as $p) {
         $var_name =
           'U_'
           .($slideshow_params[$p] ? 'STOP_' : 'START_')
@@ -627,24 +627,24 @@ if ($page['slideshow']) {
         $tpl_slideshow[$var_name] =
               add_url_params(
                   $picture['current']['url'],
-                  array('slideshow' =>
+                  ['slideshow' =>
                   encode_slideshow_params(
                       array_merge(
                           $slideshow_params,
-                          array($p => ! $slideshow_params[$p])
+                          [$p => ! $slideshow_params[$p]]
                       )
                   ),
-                  )
+                  ]
               );
     }
 
-    foreach (array('dec', 'inc') as $op) {
+    foreach (['dec', 'inc'] as $op) {
         $new_period = $slideshow_params['period'] + ((($op == 'dec') ? -1 : 1) * $conf['slideshow_period_step']);
         $new_slideshow_params =
           correct_slideshow_params(
               array_merge(
                   $slideshow_params,
-                  array('period' => $new_period)
+                  ['period' => $new_period]
               )
           );
 
@@ -653,26 +653,26 @@ if ($page['slideshow']) {
             $tpl_slideshow[$var_name] =
                   add_url_params(
                       $picture['current']['url'],
-                      array('slideshow' => encode_slideshow_params($new_slideshow_params),
-                        )
+                      ['slideshow' => encode_slideshow_params($new_slideshow_params),
+                        ]
                   );
         }
     }
     $template->assign('slideshow', $tpl_slideshow);
 } elseif ($conf['picture_slideshow_icon']) {
     $template->assign(
-        array(
+        [
         'U_SLIDESHOW_START' =>
           add_url_params(
               $picture['current']['url'],
-              array( 'slideshow' => '')
+              [ 'slideshow' => '']
           ),
-        )
+        ]
     );
 }
 
 $template->assign(
-    array(
+    [
     'SECTION_TITLE' => $page['section_title'],
     'PHOTO' => $title_nb,
     'IS_HOME' => ('categories' == $page['section'] and !isset($page['category'])),
@@ -682,7 +682,7 @@ $template->assign(
     'U_UP' => $url_up,
     'DISPLAY_NAV_BUTTONS' => $conf['picture_navigation_icons'],
     'DISPLAY_NAV_THUMB' => $conf['picture_navigation_thumb'],
-    )
+    ]
 );
 
 if ($conf['picture_metadata_icon']) {
@@ -696,12 +696,12 @@ if ($conf['picture_metadata_icon']) {
 if (is_admin()) {
     if (isset($page['category']) and $conf['picture_representative_icon']) {
         $template->assign(
-            array(
+            [
             'U_SET_AS_REPRESENTATIVE' => add_url_params(
                 $url_self,
-                array('action' => 'set_as_representative')
+                ['action' => 'set_as_representative']
             ),
-            )
+            ]
         );
     }
 
@@ -712,7 +712,7 @@ if (is_admin()) {
     if ($conf['picture_caddie_icon']) {
         $template->assign(
             'U_CADDIE',
-            add_url_params($url_self, array('action' => 'add_to_caddie'))
+            add_url_params($url_self, ['action' => 'add_to_caddie'])
         );
     }
 
@@ -732,13 +732,13 @@ SELECT COUNT(*) AS nb_fav
 
     $template->assign(
         'favorite',
-        array(
+        [
               'IS_FAVORITE' => $is_favorite,
         'U_FAVORITE'    => add_url_params(
             $url_self,
-            array('action' => !$is_favorite ? 'add_to_favorites' : 'remove_from_favorites' )
+            ['action' => !$is_favorite ? 'add_to_favorites' : 'remove_from_favorites' ]
         ),
-        )
+        ]
     );
 }
 
@@ -765,12 +765,12 @@ if (!empty($picture['current']['author'])) {
 if (!empty($picture['current']['date_creation'])) {
     $val = format_date($picture['current']['date_creation']);
     $url = make_index_url(
-        array(
+        [
         'chronology_field' => 'created',
         'chronology_style' => 'monthly',
         'chronology_view' => 'list',
         'chronology_date' => explode('-', substr($picture['current']['date_creation'], 0, 10)),
-        )
+        ]
     );
     $infos['INFO_CREATION_DATE'] =
       '<a href="'.$url.'" rel="nofollow">'.$val.'</a>';
@@ -779,7 +779,7 @@ if (!empty($picture['current']['date_creation'])) {
 // date of availability
 $val = format_date($picture['current']['date_available']);
 $url = make_index_url(
-    array(
+    [
     'chronology_field' => 'posted',
     'chronology_style' => 'monthly',
     'chronology_view' => 'list',
@@ -787,7 +787,7 @@ $url = make_index_url(
         '-',
         substr($picture['current']['date_available'], 0, 10)
     ),
-    )
+    ]
 );
 $infos['INFO_POSTED_DATE'] = '<a href="'.$url.'" rel="nofollow">'.$val.'</a>';
 
@@ -812,26 +812,26 @@ $template->assign($infos);
 $template->assign('display_info', unserialize($conf['picture_informations']));
 
 // related tags
-$tags = get_common_tags(array($page['image_id']), -1);
+$tags = get_common_tags([$page['image_id']], -1);
 if (count($tags)) {
     foreach ($tags as $tag) {
         $template->append(
             'related_tags',
             array_merge(
                 $tag,
-                array(
+                [
                 'URL' => make_index_url(
-                    array(
-                            'tags' => array($tag),
-                            )
+                    [
+                            'tags' => [$tag],
+                            ]
                 ),
                 'U_TAG_IMAGE' => duplicate_picture_url(
-                    array(
+                    [
                             'section' => 'tags',
-                            'tags' => array($tag),
-                            )
+                            'tags' => [$tag],
+                            ]
                 ),
-          )
+          ]
             )
         );
     }
@@ -846,7 +846,7 @@ if (count($related_categories) == 1 and
         get_cat_display_name($page['category']['upper_names'])
     );
 } else { // use only 1 sql query to get names for all related categories
-    $ids = array();
+    $ids = [];
     foreach ($related_categories as $category) {// add all uppercats to $ids
         $ids = array_merge($ids, explode(',', $category['uppercats']));
     }
@@ -857,7 +857,7 @@ SELECT id, name, permalink
   WHERE id IN ('.implode(',', $ids).')';
     $cat_map = hash_from_query($query, 'id');
     foreach ($related_categories as $category) {
-        $cats = array();
+        $cats = [];
         foreach (explode(',', $category['uppercats']) as $id) {
             $cats[] = $cat_map[$id];
         }
@@ -865,12 +865,12 @@ SELECT id, name, permalink
     }
 }
 
-if (in_array(strtolower(get_extension($picture['current']['file'])), array('pdf'))) {
+if (in_array(strtolower(get_extension($picture['current']['file'])), ['pdf'])) {
     $template->assign(
-        array(
+        [
         'PDF_VIEWER_FILESIZE_THRESHOLD' => $conf['pdf_viewer_filesize_threshold'] * 1024,
         'PDF_NB_PAGES' => count_pdf_pages($picture['current']['path']),
-    )
+    ]
     );
 }
 
@@ -886,7 +886,7 @@ $template->assign('ELEMENT_CONTENT', $element_content);
 if (isset($picture['next'])
     and $picture['next']['src_image']->is_original()
     and $template->get_template_vars('U_PREFETCH') == null
-    and strpos(@$_SERVER['HTTP_USER_AGENT'], 'Chrome/') === false) {
+    and !str_contains(@$_SERVER['HTTP_USER_AGENT'], 'Chrome/')) {
     $template->assign(
         'U_PREFETCH',
         $picture['next']['derivatives'][pwg_get_session_var('picture_deriv', $conf['derivative_default_size'])]->get_url()
@@ -896,9 +896,9 @@ if (isset($picture['next'])
 $template->assign(
     'U_CANONICAL',
     make_picture_url(
-        array(
+        [
       'image_id' => $picture['current']['id'],
-      'image_file' => $picture['current']['file'])
+      'image_file' => $picture['current']['file']]
     )
 );
 

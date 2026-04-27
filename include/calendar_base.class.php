@@ -78,8 +78,8 @@ abstract class CalendarBase
             if (isset($page['chronology_date'][$i + 1])) {
                 $chronology_date = array_slice($page['chronology_date'], 0, $i + 1);
                 $url = duplicate_index_url(
-                    array( 'chronology_date' => $chronology_date ),
-                    array( 'start' )
+                    [ 'chronology_date' => $chronology_date ],
+                    [ 'start' ]
                 );
                 $res .=
                   '<a href="'.$url.'">'
@@ -152,7 +152,7 @@ abstract class CalendarBase
     ) {
         global $conf, $page, $template;
 
-        $nav_bar_datas = array();
+        $nav_bar_datas = [];
 
         if ($conf['calendar_show_empty'] and $show_empty and !empty($labels)) {
             foreach ($labels as $item => $label) {
@@ -169,18 +169,18 @@ abstract class CalendarBase
                 $label = $labels[$item];
             }
             if ($nb_images == -1) {
-                $tmp_datas = array(
+                $tmp_datas = [
                   'LABEL' => $label,
-                );
+                ];
             } else {
                 $url = duplicate_index_url(
-                    array('chronology_date' => array_merge($date_components, array($item))),
-                    array( 'start' )
+                    ['chronology_date' => array_merge($date_components, [$item])],
+                    [ 'start' ]
                 );
-                $tmp_datas = array(
+                $tmp_datas = [
                   'LABEL' => $label,
                   'URL' => $url,
-                );
+                ];
             }
             if ($nb_images > 0) {
                 $tmp_datas['NB_IMAGES'] = $nb_images;
@@ -192,13 +192,13 @@ abstract class CalendarBase
         if ($conf['calendar_show_any'] and $show_any and count($items) > 1 and
               count($date_components) < count($this->calendar_levels) - 1) {
             $url = duplicate_index_url(
-                array('chronology_date' => array_merge($date_components, array('any'))),
-                array( 'start' )
+                ['chronology_date' => array_merge($date_components, ['any'])],
+                [ 'start' ]
             );
-            $nav_bar_datas[] = array(
+            $nav_bar_datas[] = [
               'LABEL' => l10n('All'),
               'URL' => $url,
-            );
+            ];
         }
 
         return $nav_bar_datas;
@@ -225,7 +225,7 @@ $this->get_date_where($level).'
         if (count($level_items) == 1 and
              count($page['chronology_date']) < count($this->calendar_levels) - 1) {
             if (! isset($page['chronology_date'][$level])) {
-                list($key) = array_keys($level_items);
+                [$key] = array_keys($level_items);
                 $page['chronology_date'][$level] = (int)$key;
 
                 if ($level < count($page['chronology_date']) and
@@ -245,14 +245,14 @@ $this->get_date_where($level).'
             $level_items,
             true,
             true,
-            isset($labels) ? $labels : $this->calendar_levels[$level]['labels']
+            $labels ?? $this->calendar_levels[$level]['labels']
         );
 
         $template->append(
             'chronology_navigation_bars',
-            array(
+            [
             'items' => $nav_bar,
-            )
+            ]
         );
     }
 
@@ -269,7 +269,7 @@ $this->get_date_where($level).'
             return;
         }
 
-        $sub_queries = array();
+        $sub_queries = [];
         $nb_elements = count($page['chronology_date']);
         for ($i = 0; $i < $nb_elements; $i++) {
             if ('any' === $page['chronology_date'][$i]) {
@@ -295,32 +295,32 @@ GROUP BY period';
         }
         $current_rank = $upper_items_rank[$current];
 
-        $tpl_var = array();
+        $tpl_var = [];
 
         if ($current_rank > 0) { // has previous
             $prev = $upper_items[$current_rank - 1];
             $chronology_date = explode('-', $prev);
             $tpl_var['previous'] =
-              array(
+              [
                 'LABEL' => $this->get_date_nice_name($prev),
                 'URL' => duplicate_index_url(
-                    array('chronology_date' => $chronology_date),
-                    array('start')
+                    ['chronology_date' => $chronology_date],
+                    ['start']
                 ),
-              );
+              ];
         }
 
         if ($current_rank < count($upper_items) - 1) { // has next
             $next = $upper_items[$current_rank + 1];
             $chronology_date = explode('-', $next);
             $tpl_var['next'] =
-              array(
+              [
                 'LABEL' => $this->get_date_nice_name($next),
                 'URL' => duplicate_index_url(
-                    array('chronology_date' => $chronology_date),
-                    array('start')
+                    ['chronology_date' => $chronology_date],
+                    ['start']
                 ),
-              );
+              ];
         }
 
         if (!empty($tpl_var)) {

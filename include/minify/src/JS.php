@@ -44,7 +44,7 @@ class JS extends Minify
      *
      * @var string[]
      */
-    protected $keywordsReserved = array();
+    protected $keywordsReserved = [];
 
     /**
      * List of JavaScript reserved words that accept a <variable, value, ...>
@@ -59,7 +59,7 @@ class JS extends Minify
      *
      * @var string[]
      */
-    protected $keywordsBefore = array();
+    protected $keywordsBefore = [];
 
     /**
      * List of JavaScript reserved words that accept a <variable, value, ...>
@@ -74,7 +74,7 @@ class JS extends Minify
      *
      * @var string[]
      */
-    protected $keywordsAfter = array();
+    protected $keywordsAfter = [];
 
     /**
      * List of all JavaScript operators.
@@ -85,7 +85,7 @@ class JS extends Minify
      *
      * @var string[]
      */
-    protected $operators = array();
+    protected $operators = [];
 
     /**
      * List of JavaScript operators that accept a <variable, value, ...> after
@@ -101,7 +101,7 @@ class JS extends Minify
      *
      * @var string[]
      */
-    protected $operatorsBefore = array();
+    protected $operatorsBefore = [];
 
     /**
      * List of JavaScript operators that accept a <variable, value, ...> before
@@ -120,11 +120,11 @@ class JS extends Minify
      *
      * @var string[]
      */
-    protected $operatorsAfter = array();
+    protected $operatorsAfter = [];
 
     public function __construct()
     {
-        call_user_func_array(array('\\MatthiasMullie\Minify\\Minify', '__construct'), func_get_args());
+        call_user_func_array([Minify::class, '__construct'], func_get_args());
 
         $dataDir = __DIR__ . '/../data/js/';
         $options = FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES;
@@ -242,9 +242,9 @@ class JS extends Minify
         // a regular expression can only be followed by a few operators or some
         // of the RegExp methods (a `\` followed by a variable or value is
         // likely part of a division, not a regex)
-        $keywords = array('do', 'in', 'new', 'else', 'throw', 'yield', 'delete', 'return',  'typeof');
+        $keywords = ['do', 'in', 'new', 'else', 'throw', 'yield', 'delete', 'return',  'typeof'];
         $before = '(^|[=:,;\+\-\*\?\/\}\(\{\[&\|!]|' . implode('|', $keywords) . ')\s*';
-        $propertiesAndMethods = array(
+        $propertiesAndMethods = [
             // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp#Properties_2
             'constructor',
             'flags',
@@ -260,7 +260,7 @@ class JS extends Minify
             'test(',
             'toSource(',
             'toString(',
-        );
+        ];
         $delimiters = array_fill(0, count($propertiesAndMethods), '/');
         $propertiesAndMethods = array_map('preg_quote', $propertiesAndMethods, $delimiters);
         $after = '(?=\s*([\.,;:\)\}&\|+]|\/\/|$|\.(' . implode('|', $propertiesAndMethods) . ')))';
@@ -310,13 +310,13 @@ class JS extends Minify
     protected function stripWhitespace($content)
     {
         // uniform line endings, make them all line feed
-        $content = str_replace(array("\r\n", "\r"), "\n", $content);
+        $content = str_replace(["\r\n", "\r"], "\n", $content);
 
         // collapse all non-line feed whitespace into a single space
         $content = preg_replace('/[^\S\n]+/', ' ', $content);
 
         // strip leading & trailing whitespace
-        $content = str_replace(array(" \n", "\n "), "\n", $content);
+        $content = str_replace([" \n", "\n "], "\n", $content);
 
         // collapse consecutive line feeds into just 1
         $content = preg_replace('/\n+/', "\n", $content);
@@ -331,20 +331,20 @@ class JS extends Minify
         // that allows statements to be broken up over multiple lines
         unset($operatorsBefore['+'], $operatorsBefore['-'], $operatorsAfter['+'], $operatorsAfter['-']);
         $content = preg_replace(
-            array(
+            [
                 '/(' . implode('|', $operatorsBefore) . ')\s+/',
                 '/\s+(' . implode('|', $operatorsAfter) . ')/',
-            ),
+            ],
             '\\1',
             $content
         );
 
         // make sure + and - can't be mistaken for, or joined into ++ and --
         $content = preg_replace(
-            array(
+            [
                 '/(?<![\+\-])\s*([\+\-])(?![\+\-])/',
                 '/(?<![\+\-])([\+\-])\s*(?![\+\-])/',
-            ),
+            ],
             '\\1',
             $content
         );
@@ -492,9 +492,7 @@ class JS extends Minify
         $escaped = array_map('preg_quote', $keywords, $delimiter);
 
         // add word boundaries
-        array_walk($keywords, function ($value) {
-            return '\b' . $value . '\b';
-        });
+        array_walk($keywords, fn ($value) => '\b' . $value . '\b');
 
         $keywords = array_combine($keywords, $escaped);
 

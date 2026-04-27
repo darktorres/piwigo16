@@ -51,24 +51,24 @@ class Logger
      * Standard messages produced by the class.
      * @var array
      */
-    private static $_messages = array(
+    private static $_messages = [
       'writefail'   => 'The file could not be written to. Check that appropriate permissions have been set.',
       'opensuccess' => 'The log file was opened successfully.',
       'openfail'  => 'The file could not be opened. Check permissions.',
-    );
+    ];
 
     /**
      * Instance options.
      * @var array
      */
-    private $options = array(
+    private $options = [
       'directory' => null, // Log files directory
       'filename' => null, // Path to the log file
       'globPattern' => 'log_*.txt', // Pattern to select all log files with glob()
       'severity' => self::DEBUG, // Current minimum logging threshold
       'dateFormat' => 'Y-m-d G:i:s', // Date format
       'archiveDays' => self::ARCHIVE_NO_PURGE, // Number of files to keep
-      );
+      ];
 
     /**
      * Current status of the logger.
@@ -108,7 +108,7 @@ class Logger
 
         $this->options['filePath'] = $this->options['directory'] . $this->options['filename'];
 
-        if ($this->options['archiveDays'] != self::ARCHIVE_NO_PURGE && rand() % 97 == 0) {
+        if ($this->options['archiveDays'] != self::ARCHIVE_NO_PURGE && random_int(0, mt_getrandmax()) % 97 == 0) {
             $this->purge();
         }
     }
@@ -175,7 +175,7 @@ class Logger
      * @param string $cat
      * @param array $args
      */
-    public function debug($line, $cat = null, $args = array())
+    public function debug($line, $cat = null, $args = [])
     {
         $this->log(self::DEBUG, $line, $cat, $args);
     }
@@ -187,7 +187,7 @@ class Logger
      * @param string $cat
      * @param array $args
      */
-    public function info($line, $cat = null, $args = array())
+    public function info($line, $cat = null, $args = [])
     {
         $this->log(self::INFO, $line, $cat, $args);
     }
@@ -199,7 +199,7 @@ class Logger
      * @param string $cat
      * @param array $args
      */
-    public function notice($line, $cat = null, $args = array())
+    public function notice($line, $cat = null, $args = [])
     {
         $this->log(self::NOTICE, $line, $cat, $args);
     }
@@ -211,7 +211,7 @@ class Logger
      * @param string $cat
      * @param array $args
      */
-    public function warn($line, $cat = null, $args = array())
+    public function warn($line, $cat = null, $args = [])
     {
         $this->log(self::WARNING, $line, $cat, $args);
     }
@@ -223,7 +223,7 @@ class Logger
      * @param string $cat
      * @param array $args
      */
-    public function error($line, $cat = null, $args = array())
+    public function error($line, $cat = null, $args = [])
     {
         $this->log(self::ERROR, $line, $cat, $args);
     }
@@ -235,7 +235,7 @@ class Logger
      * @param string $cat
      * @param array $args
      */
-    public function alert($line, $cat = null, $args = array())
+    public function alert($line, $cat = null, $args = [])
     {
         $this->log(self::ALERT, $line, $cat, $args);
     }
@@ -247,7 +247,7 @@ class Logger
      * @param string $cat
      * @param array $args
      */
-    public function critical($line, $cat = null, $args = array())
+    public function critical($line, $cat = null, $args = [])
     {
         $this->log(self::CRITICAL, $line, $cat, $args);
     }
@@ -259,7 +259,7 @@ class Logger
      * @param string $cat
      * @param array $args
      */
-    public function emergency($line, $cat = null, $args = array())
+    public function emergency($line, $cat = null, $args = [])
     {
         $this->log(self::EMERGENCY, $line, $cat, $args);
     }
@@ -272,7 +272,7 @@ class Logger
      * @param string $cat
      * @param array $args
      */
-    public function log($severity, $message, $cat = null, $args = array())
+    public function log($severity, $message, $cat = null, $args = [])
     {
         if ($this->severity() >= $severity) {
             if (is_array($cat)) {
@@ -364,21 +364,21 @@ class Logger
         foreach ($context as $key => $value) {
             $export .= $key . ': ';
             $export .= preg_replace(
-                array(
+                [
         '/=>\s+([a-zA-Z])/im',
         '/array\(\s+\)/im',
         '/^  |\G  /m',
-        ),
-                array(
+        ],
+                [
         '=> $1',
         'array()',
         '  ',
-        ),
+        ],
                 str_replace('array (', 'array(', var_export($value, true))
             );
             $export .= PHP_EOL;
         }
-        return str_replace(array('\\\\', '\\\''), array('\\', '\''), rtrim($export));
+        return str_replace(['\\\\', '\\\''], ['\\', '\''], rtrim($export));
     }
 
     /**
@@ -401,26 +401,17 @@ class Logger
      */
     public static function levelToCode($level)
     {
-        switch ($level) {
-            case self::EMERGENCY:
-                return 'EMERGENCY';
-            case self::ALERT:
-                return 'ALERT';
-            case self::CRITICAL:
-                return 'CRITICAL';
-            case self::NOTICE:
-                return 'NOTICE';
-            case self::INFO:
-                return 'INFO';
-            case self::WARNING:
-                return 'WARNING';
-            case self::DEBUG:
-                return 'DEBUG';
-            case self::ERROR:
-                return 'ERROR';
-            default:
-                throw new RuntimeException('Unknown severity level ' . $level);
-        }
+        return match ($level) {
+            self::EMERGENCY => 'EMERGENCY',
+            self::ALERT => 'ALERT',
+            self::CRITICAL => 'CRITICAL',
+            self::NOTICE => 'NOTICE',
+            self::INFO => 'INFO',
+            self::WARNING => 'WARNING',
+            self::DEBUG => 'DEBUG',
+            self::ERROR => 'ERROR',
+            default => throw new RuntimeException('Unknown severity level ' . $level),
+        };
     }
 
     /**
@@ -431,25 +422,16 @@ class Logger
      */
     public static function codeToLevel($code)
     {
-        switch (strtoupper($code)) {
-            case 'EMERGENCY':
-                return self::EMERGENCY;
-            case 'ALERT':
-                return self::ALERT;
-            case 'CRITICAL':
-                return self::CRITICAL;
-            case 'NOTICE':
-                return self::NOTICE;
-            case 'INFO':
-                return self::INFO;
-            case 'WARNING':
-                return self::WARNING;
-            case 'DEBUG':
-                return self::DEBUG;
-            case 'ERROR':
-                return self::ERROR;
-            default:
-                throw new RuntimeException('Unknown severity code ' . $code);
-        }
+        return match (strtoupper($code)) {
+            'EMERGENCY' => self::EMERGENCY,
+            'ALERT' => self::ALERT,
+            'CRITICAL' => self::CRITICAL,
+            'NOTICE' => self::NOTICE,
+            'INFO' => self::INFO,
+            'WARNING' => self::WARNING,
+            'DEBUG' => self::DEBUG,
+            'ERROR' => self::ERROR,
+            default => throw new RuntimeException('Unknown severity code ' . $code),
+        };
     }
 }

@@ -87,15 +87,15 @@ if (isset($_POST['login'])) {
 $title = l10n('Identification');
 $page['body_id'] = 'theIdentificationPage';
 
-$template->set_filenames(array('identification' => 'identification.tpl'));
+$template->set_filenames(['identification' => 'identification.tpl']);
 
 $template->assign(
-    array(
+    [
     'U_REDIRECT' => $redirect_to,
 
     'F_LOGIN_ACTION' => get_root_url().'identification.php',
     'authorize_remembering' => $conf['authorize_remembering'],
-    )
+    ]
 );
 
 if (!$conf['gallery_locked'] && $conf['allow_user_registration']) {
@@ -119,7 +119,7 @@ if (isset($_COOKIE['lang']) and $user['language'] != $_COOKIE['lang']) {
     }
 
     $user['language'] = $_COOKIE['lang'];
-    load_language('common.lang', '', array('language' => $user['language']));
+    load_language('common.lang', '', ['language' => $user['language']]);
 }
 
 //Get list of languages
@@ -127,13 +127,13 @@ foreach (get_languages() as $language_code => $language_name) {
     $language_options[$language_code] = $language_name;
 }
 
-$template->assign(array(
+$template->assign([
   'language_options' => $language_options,
   'current_language' => $user['language'],
-));
+]);
 
 //Get link to doc
-if ('fr' == substr($user['language'], 0, 2)) {
+if (str_starts_with($user['language'], 'fr')) {
     $help_link = 'https://doc-fr.piwigo.org/les-utilisateurs/se-connecter-a-piwigo';
 } else {
     $help_link = 'https://doc.piwigo.org/managing-users/log-in-to-piwigo';

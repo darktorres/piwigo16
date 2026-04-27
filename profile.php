@@ -29,10 +29,10 @@ if (!defined('PHPWG_ROOT_PATH')) {//direct script access
 
     trigger_notify('loc_begin_profile');
 
-    $fields = array(
+    $fields = [
       'nb_image_page', 'expand',
       'show_nb_comments', 'show_nb_hits', 'recent_period', 'show_nb_hits',
-      );
+      ];
 
     // Get the Guest custom settings
     $query = '
@@ -84,15 +84,15 @@ SELECT '.implode(',', $fields).'
         $user['language'] = $_COOKIE['lang'];
         single_update(
             USER_INFOS_TABLE,
-            array(
+            [
             'language' => $_COOKIE['lang'],
-      ),
-            array(
+      ],
+            [
             'user_id' => $user['id'],
-      )
+      ]
         );
 
-        load_language('common.lang', '', array('language' => $user['language']));
+        load_language('common.lang', '', ['language' => $user['language']]);
     }
 
     //Get list of languages
@@ -100,13 +100,13 @@ SELECT '.implode(',', $fields).'
         $language_options[$language_code] = $language_name;
     }
 
-    $template->assign(array(
+    $template->assign([
       'language_options' => $language_options,
       'language_selection' => $user['language'],
-    ));
+    ]);
 
     //Get link to doc
-    if ('fr' == substr($user['language'], 0, 2)) {
+    if (str_starts_with($user['language'], 'fr')) {
         $help_link = 'https://doc-fr.piwigo.org/les-utilisateurs/se-connecter-a-piwigo';
     } else {
         $help_link = 'https://doc.piwigo.org/managing-users/log-in-to-piwigo';
@@ -124,13 +124,13 @@ SELECT '.implode(',', $fields).'
 function save_profile_from_post($userdata, &$errors)
 {
     global $conf, $page;
-    $errors = array();
+    $errors = [];
 
     if (!isset($_POST['validate'])) {
         return false;
     }
 
-    $special_user = in_array($userdata['id'], array($conf['guest_id'], $conf['default_user_id']));
+    $special_user = in_array($userdata['id'], [$conf['guest_id'], $conf['default_user_id']]);
     if ($special_user) {
         unset(
             $_POST['username'],
@@ -192,7 +192,7 @@ function save_profile_from_post($userdata, &$errors)
     FROM '.USERS_TABLE.'
     WHERE '.$conf['user_fields']['id'].' = \''.$userdata['id'].'\'
   ;';
-            list($current_password) = pwg_db_fetch_row(pwg_query($query));
+            [$current_password] = pwg_db_fetch_row(pwg_query($query));
 
             if (!$conf['password_verify']($_POST['password'], $current_password)) {
                 $errors[] = l10n('Current password is wrong');
@@ -204,13 +204,13 @@ function save_profile_from_post($userdata, &$errors)
         // mass_updates function
         include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
-        $activity_details_tables = array();
+        $activity_details_tables = [];
 
         if (isset($_POST['mail_address'])) {
             // update common user informations
-            $fields = array($conf['user_fields']['email']);
+            $fields = [$conf['user_fields']['email']];
 
-            $data = array();
+            $data = [];
             $data[ $conf['user_fields']['id'] ] = $userdata['id'];
             $data[ $conf['user_fields']['email'] ] = $_POST['mail_address'];
 
@@ -237,18 +237,18 @@ function save_profile_from_post($userdata, &$errors)
                         include_once(PHPWG_ROOT_PATH.'include/functions_mail.inc.php');
                         switch_lang_to($userdata['language']);
 
-                        $keyargs_content = array(
+                        $keyargs_content = [
                           get_l10n_args('Hello', ''),
                           get_l10n_args('Your username has been successfully changed to : %s', $_POST['username']),
-                          );
+                          ];
 
                         pwg_mail(
                             $_POST['mail_address'],
-                            array(
+                            [
                             'subject' => '['.$conf['gallery_title'].'] '.l10n('Username modification'),
                             'content' => l10n_args($keyargs_content),
                             'content_format' => 'text/plain',
-                            )
+                            ]
                         );
 
                         switch_lang_back();
@@ -258,11 +258,11 @@ function save_profile_from_post($userdata, &$errors)
 
             mass_updates(
                 USERS_TABLE,
-                array(
-                          'primary' => array($conf['user_fields']['id']),
+                [
+                          'primary' => [$conf['user_fields']['id']],
                           'update' => $fields,
-                          ),
-                array($data)
+                          ],
+                [$data]
             );
 
             if ($_POST['mail_address'] != $userdata['email']) {
@@ -274,16 +274,16 @@ function save_profile_from_post($userdata, &$errors)
 
         if ($conf['allow_user_customization'] or defined('IN_ADMIN')) {
             // update user "additional" informations (specific to Piwigo)
-            $fields = array(
+            $fields = [
               'nb_image_page', 'language',
               'expand', 'show_nb_hits', 'recent_period', 'theme',
-              );
+              ];
 
             if ($conf['activate_comments']) {
                 $fields[] = 'show_nb_comments';
             }
 
-            $data = array();
+            $data = [];
             $data['user_id'] = $userdata['id'];
 
             foreach ($fields as $field) {
@@ -293,14 +293,14 @@ function save_profile_from_post($userdata, &$errors)
             }
             mass_updates(
                 USER_INFOS_TABLE,
-                array('primary' => array('user_id'), 'update' => $fields),
-                array($data)
+                ['primary' => ['user_id'], 'update' => $fields],
+                [$data]
             );
 
             $activity_details_tables[] = 'user_infos';
         }
         trigger_notify('save_profile_from_post', $userdata['id']);
-        pwg_activity('user', $userdata['id'], 'edit', array('function' => __FUNCTION__, 'tables' => implode(',', $activity_details_tables)));
+        pwg_activity('user', $userdata['id'], 'edit', ['function' => __FUNCTION__, 'tables' => implode(',', $activity_details_tables)]);
 
         if (!empty($_POST['redirect'])) {
             redirect($_POST['redirect']);
@@ -323,13 +323,13 @@ function load_profile_in_template($url_action, $url_redirect, $userdata, $templa
 
     $template->assign(
         'radio_options',
-        array(
+        [
         'true' => l10n('Yes'),
-        'false' => l10n('No'))
+        'false' => l10n('No')]
     );
 
     $template->assign(
-        array(
+        [
         $template_prefixe.'USERNAME' => stripslashes($userdata['username']),
         $template_prefixe.'EMAIL' => @$userdata['email'],
         $template_prefixe.'ALLOW_USER_CUSTOMIZATION' => $conf['allow_user_customization'],
@@ -341,7 +341,7 @@ function load_profile_in_template($url_action, $url_redirect, $userdata, $templa
         $template_prefixe.'NB_HITS' => $userdata['show_nb_hits'] ? 'true' : 'false',
         $template_prefixe.'REDIRECT' => $url_redirect,
         $template_prefixe.'F_ACTION' => $url_action,
-        )
+        ]
     );
 
     $template->assign('template_selection', $userdata['theme']);
@@ -356,16 +356,16 @@ function load_profile_in_template($url_action, $url_redirect, $userdata, $templa
 
     $template->assign('language_options', $language_options);
 
-    $special_user = in_array($userdata['id'], array($conf['guest_id'], $conf['default_user_id']));
+    $special_user = in_array($userdata['id'], [$conf['guest_id'], $conf['default_user_id']]);
     $template->assign('SPECIAL_USER', $special_user);
     $template->assign('IN_ADMIN', defined('IN_ADMIN'));
 
     // api key expiration choice
-    list($dbnow) = pwg_db_fetch_row(pwg_query('SELECT ADDDATE(NOW(), INTERVAL 1 DAY);'));
+    [$dbnow] = pwg_db_fetch_row(pwg_query('SELECT ADDDATE(NOW(), INTERVAL 1 DAY);'));
     $template->assign('API_CURRENT_DATE', explode(' ', $dbnow)[0]);
 
-    $duration = array();
-    $display_duration = array();
+    $duration = [];
+    $display_duration = [];
     $has_custom = false;
     foreach ($conf['api_key_duration'] as $day) {
         if ('custom' === $day) {
@@ -381,7 +381,7 @@ SELECT
 ;';
     $result = query2array($query)[0];
     foreach ($result as $day => $date) {
-        $display_duration[ $day ] = l10n('%d days', $day) . ' (' . format_date($date, array('day', 'month', 'year')) . ')';
+        $display_duration[ $day ] = l10n('%d days', $day) . ' (' . format_date($date, ['day', 'month', 'year']) . ')';
     }
 
     if ($has_custom) {

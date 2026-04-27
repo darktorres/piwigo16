@@ -6,15 +6,15 @@
 // | For copyright and license information, please view the COPYING.txt    |
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
-$template->set_filenames(array('tail' => 'footer.tpl'));
+$template->set_filenames(['tail' => 'footer.tpl']);
 
 trigger_notify('loc_begin_page_tail');
 
 $template->assign(
-    array(
+    [
     'VERSION' => $conf['show_version'] ? PHPWG_VERSION : '',
     'PHPWG_URL' => defined('PHPWG_URL') ? str_replace('http:', 'https:', PHPWG_URL) : '',
-    )
+    ]
 );
 
 //--------------------------------------------------------------------- contact
@@ -45,7 +45,7 @@ if ($conf['update_notify_check_period'] > 0) {
             $updates = new updates();
             $updates->notify_piwigo_new_versions();
 
-            pwg_unique_exec_ends('check_for_updates', $exec_id);
+            pwg_unique_exec_ends('check_for_updates');
         }
     }
 }
@@ -53,10 +53,10 @@ if ($conf['update_notify_check_period'] > 0) {
 send_piwigo_infos();
 
 //------------------------------------------------------------- generation time
-$debug_vars = array();
+$debug_vars = [];
 
 if ($conf['show_queries']) {
-    $debug_vars = array_merge($debug_vars, array('QUERIES_LIST' => $debug));
+    $debug_vars = array_merge($debug_vars, ['QUERIES_LIST' => $debug]);
 }
 
 if ($conf['show_gt']) {
@@ -68,9 +68,9 @@ if ($conf['show_gt']) {
 
     $debug_vars = array_merge(
         $debug_vars,
-        array('TIME' => $time,
+        ['TIME' => $time,
             'NB_QUERIES' => $page['count_queries'],
-            'SQL_TIME' => number_format($page['queries_time'], 3, '.', ' ').' s')
+            'SQL_TIME' => number_format($page['queries_time'], 3, '.', ' ').' s']
     );
 }
 
@@ -82,7 +82,7 @@ if (!empty($conf['mobile_theme']) && (get_device() != 'desktop' || mobile_theme(
         'TOGGLE_MOBILE_THEME_URL',
         add_url_params(
             htmlspecialchars($_SERVER['REQUEST_URI']),
-            array('mobile' => mobile_theme() ? 'false' : 'true')
+            ['mobile' => mobile_theme() ? 'false' : 'true']
         )
     );
 }

@@ -48,12 +48,12 @@ foreach ($formats as &$format) {
     $format['filesize'] = round($format['filesize'] / 1024, 2);
 }
 
-$template->assign(array(
+$template->assign([
   'ADD_FORMATS_URL' => get_root_url().'admin.php?page=photos_add&formats='.$_GET['image_id'],
   'IMG_SQUARE_SRC' => DerivativeImage::url(ImageStdParams::get_by_type(IMG_SQUARE), $image),
   'FORMATS' => $formats,
   'PWG_TOKEN' => get_pwg_token(),
-));
+]);
 
 $template->set_filename('picture_formats', 'picture_formats.tpl');
 

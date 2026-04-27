@@ -56,14 +56,14 @@ if (isset($_GET['users'])) {
 
 $page['cat_filter'] = '';
 if (isset($_GET['cat']) and is_numeric($_GET['cat'])) {
-    $cat_ids = get_subcat_ids(array($_GET['cat']));
+    $cat_ids = get_subcat_ids([$_GET['cat']]);
 
     if (count($cat_ids) > 0) {
         $page['cat_filter'] = ' AND ic.category_id IN ('.implode(',', $cat_ids).')';
     }
 }
 
-$users = array();
+$users = [];
 $query = '
 SELECT '.$conf['user_fields']['username'].' as username, '.$conf['user_fields']['id'].' as id
   FROM '.USERS_TABLE.'
@@ -87,14 +87,14 @@ if (!empty($page['cat_filter'])) {
 
 $query .= '
 WHERE 1=1'. $page['user_filter'];
-list($nb_images) = pwg_db_fetch_row(pwg_query($query));
+[$nb_images] = pwg_db_fetch_row(pwg_query($query));
 
 $query = '
 SELECT
     COUNT(*)
   FROM '.RATE_TABLE.
 ';';
-list($nb_elements) = pwg_db_fetch_row(pwg_query($query));
+[$nb_elements] = pwg_db_fetch_row(pwg_query($query));
 
 // +-----------------------------------------------------------------------+
 // |                             template init                             |
@@ -103,9 +103,9 @@ list($nb_elements) = pwg_db_fetch_row(pwg_query($query));
 $template->set_filename('rating', 'rating.tpl');
 
 $template->assign(
-    array(
+    [
     'navbar' => create_navigation_bar(
-        PHPWG_ROOT_PATH.'admin.php'.get_query_string_diff(array('start','del')),
+        PHPWG_ROOT_PATH.'admin.php'.get_query_string_diff(['start','del']),
         $nb_images,
         $start,
         $elements_per_page
@@ -113,23 +113,23 @@ $template->assign(
     'F_ACTION' => PHPWG_ROOT_PATH.'admin.php',
     'DISPLAY' => $elements_per_page,
     'NB_ELEMENTS' => $nb_elements,
-    'category' => (isset($_GET['cat']) ? array($_GET['cat']) : array()),
-    'CACHE_KEYS' => get_admin_client_cache_keys(array('categories')),
-    )
+    'category' => (isset($_GET['cat']) ? [$_GET['cat']] : []),
+    'CACHE_KEYS' => get_admin_client_cache_keys(['categories']),
+    ]
 );
 
 
 
-$available_order_by = array(
-    array(l10n('Rate date'), 'recently_rated DESC'),
-    array(l10n('Rating score'), 'score DESC'),
-    array(l10n('Average rate'), 'avg_rates DESC'),
-    array(l10n('Number of rates'), 'nb_rates DESC'),
-    array(l10n('Sum of rates'), 'sum_rates DESC'),
-    array(l10n('File name'), 'file DESC'),
-    array(l10n('Creation date'), 'date_creation DESC'),
-    array(l10n('Post date'), 'date_available DESC'),
-  );
+$available_order_by = [
+    [l10n('Rate date'), 'recently_rated DESC'],
+    [l10n('Rating score'), 'score DESC'],
+    [l10n('Average rate'), 'avg_rates DESC'],
+    [l10n('Number of rates'), 'nb_rates DESC'],
+    [l10n('Sum of rates'), 'sum_rates DESC'],
+    [l10n('File name'), 'file DESC'],
+    [l10n('Creation date'), 'date_creation DESC'],
+    [l10n('Post date'), 'date_available DESC'],
+  ];
 
 for ($i = 0; $i < count($available_order_by); $i++) {
     $template->append(
@@ -137,17 +137,17 @@ for ($i = 0; $i < count($available_order_by); $i++) {
         $available_order_by[$i][0]
     );
 }
-$template->assign('order_by_options_selected', array($order_by_index));
+$template->assign('order_by_options_selected', [$order_by_index]);
 
 
-$user_options = array(
+$user_options = [
   'all'   => l10n('all'),
   'user'  => l10n('Users'),
   'guest' => l10n('Guests'),
-  );
+  ];
 
 $template->assign('user_options', $user_options);
-$template->assign('user_options_selected', array(@$_GET['users']));
+$template->assign('user_options_selected', [@$_GET['users']]);
 $template->assign('ADMIN_PAGE_TITLE', l10n('Rating'));
 
 $query = '
@@ -180,13 +180,13 @@ $query .= '
   LIMIT '.$elements_per_page.' OFFSET '.$start.'
 ;';
 
-$images = array();
+$images = [];
 $result = pwg_query($query);
 while ($row = pwg_db_fetch_assoc($result)) {
     $images[] = $row;
 }
 
-$template->assign('images', array());
+$template->assign('images', []);
 foreach ($images as $image) {
     $thumbnail_src = DerivativeImage::thumb_url($image);
 
@@ -200,7 +200,7 @@ ORDER BY date DESC;';
     $nb_rates = pwg_db_num_rows($result);
 
     $tpl_image =
-      array(
+      [
         'id' => $image['id'],
         'U_THUMB' => $thumbnail_src,
         'U_URL' => $image_url,
@@ -210,8 +210,8 @@ ORDER BY date DESC;';
          'NB_RATES' => (int)$image['nb_rates'],
          'NB_RATES_TOTAL' => (int)$nb_rates,
          'FILE' => $image['file'],
-         'rates'  => array(),
-     );
+         'rates'  => [],
+     ];
 
     while ($row = pwg_db_fetch_assoc($result)) {
         if (isset($users[$row['user_id']])) {

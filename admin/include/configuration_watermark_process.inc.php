@@ -28,12 +28,12 @@ function get_watermark_filename($list, $candidate, $step = 0)
     return $change_name.'.png';
 }
 
-$errors = array();
+$errors = [];
 $pwatermark = $_POST['w'];
 
 // step 0 - manage upload if any
 if (isset($_FILES['watermarkImage']) and !empty($_FILES['watermarkImage']['tmp_name'])) {
-    list($width, $height, $type) = getimagesize($_FILES['watermarkImage']['tmp_name']);
+    [$width, $height, $type] = getimagesize($_FILES['watermarkImage']['tmp_name']);
     if (IMAGETYPE_PNG != $type) {
         $errors['watermarkImage'] = sprintf(
             l10n('Allowed file types: %s.'),
@@ -46,7 +46,7 @@ if (isset($_FILES['watermarkImage']) and !empty($_FILES['watermarkImage']['tmp_n
             $new_name = str2url(get_filename_wo_extension($_FILES['watermarkImage']['name']));
 
             // we need existing watermarks to avoid overwritting one
-            $watermark_files = array();
+            $watermark_files = [];
             if (($glob = glob(PHPWG_ROOT_PATH.PWG_LOCAL_DIR.'watermarks/*.png')) !== false) {
                 foreach ($glob as $file) {
                     $watermark_files[] = get_filename_wo_extension(
@@ -127,7 +127,7 @@ if (count($errors) == 0) {
     $watermark->xrepeat = intval($pwatermark['xrepeat']);
     $watermark->yrepeat = intval($pwatermark['yrepeat']);
     $watermark->opacity = intval($pwatermark['opacity']);
-    $watermark->min_size = array(intval($pwatermark['minw']),intval($pwatermark['minh']));
+    $watermark->min_size = [intval($pwatermark['minw']),intval($pwatermark['minh'])];
 
     $old_watermark = ImageStdParams::get_watermark();
     $watermark_changed =
@@ -142,7 +142,7 @@ if (count($errors) == 0) {
     ImageStdParams::set_watermark($watermark);
 
     // do we have to regenerate the derivatives (and which types)?
-    $changed_types = array();
+    $changed_types = [];
 
     foreach (ImageStdParams::get_defined_type_map() as $type => $params) {
         $old_use_watermark = $params->use_watermark;
@@ -171,12 +171,12 @@ if (count($errors) == 0) {
     }
 
     $template->assign(
-        array(
+        [
         'save_success' => l10n('Your configuration settings are saved'),
-    )
+    ]
     );
 
-    pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'config', array('config_section' => 'watermark'));
+    pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'config', ['config_section' => 'watermark']);
 } else {
     $template->assign('watermark', $pwatermark);
     $template->assign('ferrors', $errors);

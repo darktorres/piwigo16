@@ -23,22 +23,10 @@ define('EVENT_HANDLER_PRIORITY_NEUTRAL', 50);
  */
 class PluginMaintain
 {
-    /** @var string $plugin_id */
-    protected $plugin_id;
-
     /**
-     * @param string $id
+     * @param string $plugin_id
      */
-    public function __construct($id)
-    {
-        $this->plugin_id = $id;
-    }
-
-    /**
-     * @param string $plugin_version
-     * @param array &$errors - used to return error messages
-     */
-    public function install($plugin_version, &$errors = array())
+    public function __construct(protected $plugin_id)
     {
     }
 
@@ -46,7 +34,15 @@ class PluginMaintain
      * @param string $plugin_version
      * @param array &$errors - used to return error messages
      */
-    public function activate($plugin_version, &$errors = array())
+    public function install($plugin_version, &$errors = [])
+    {
+    }
+
+    /**
+     * @param string $plugin_version
+     * @param array &$errors - used to return error messages
+     */
+    public function activate($plugin_version, &$errors = [])
     {
     }
 
@@ -63,7 +59,7 @@ class PluginMaintain
      * @param string $new_version
      * @param array &$errors - used to return error messages
      */
-    public function update($old_version, $new_version, &$errors = array())
+    public function update($old_version, $new_version, &$errors = [])
     {
     }
 
@@ -83,22 +79,18 @@ class PluginMaintain
  */
 class ThemeMaintain
 {
-    /** @var string $theme_id */
-    protected $theme_id;
-
     /**
-     * @param string $id
+     * @param string $theme_id
      */
-    public function __construct($id)
+    public function __construct(protected $theme_id)
     {
-        $this->theme_id = $id;
     }
 
     /**
      * @param string $theme_version
      * @param array &$errors - used to return error messages
      */
-    public function activate($theme_version, &$errors = array())
+    public function activate($theme_version, &$errors = [])
     {
     }
 
@@ -137,10 +129,10 @@ function add_event_handler(
         }
     }
 
-    $pwg_event_handlers[$event][$priority][] = array(
+    $pwg_event_handlers[$event][$priority][] = [
       'function' => $func,
       'include_path' => is_string($include_path) ? $include_path : null,
-      );
+      ];
 
     ksort($pwg_event_handlers[$event]);
     return true;
@@ -202,7 +194,7 @@ function trigger_change($event, $data = null)
     if (isset($pwg_event_handlers['trigger'])) {// debugging
         trigger_notify(
             'trigger',
-            array('type' => 'event', 'event' => $event, 'data' => $data)
+            ['type' => 'event', 'event' => $event, 'data' => $data]
         );
     }
 
@@ -227,7 +219,7 @@ function trigger_change($event, $data = null)
     if (isset($pwg_event_handlers['trigger'])) {// debugging
         trigger_notify(
             'trigger',
-            array('type' => 'post_event', 'event' => $event, 'data' => $data)
+            ['type' => 'post_event', 'event' => $event, 'data' => $data]
         );
     }
 
@@ -250,7 +242,7 @@ function trigger_notify($event)
     if (isset($pwg_event_handlers['trigger']) and $event != 'trigger') {// debugging - avoid recursive calls
         trigger_notify(
             'trigger',
-            array('type' => 'action', 'event' => $event, 'data' => null)
+            ['type' => 'action', 'event' => $event, 'data' => null]
         );
     }
 
@@ -301,10 +293,7 @@ function set_plugin_data($plugin_id, &$data)
 function &get_plugin_data($plugin_id)
 {
     global $pwg_loaded_plugins;
-    if (isset($pwg_loaded_plugins[$plugin_id]['plugin_data'])) {
-        return $pwg_loaded_plugins[$plugin_id]['plugin_data'];
-    }
-    return null;
+    return $pwg_loaded_plugins[$plugin_id]['plugin_data'] ?? null;
 }
 
 /**
@@ -318,7 +307,7 @@ function get_db_plugins($state = '', $id = '')
 {
     $query = '
 SELECT * FROM '.PLUGINS_TABLE;
-    $clauses = array();
+    $clauses = [];
     if (!empty($state)) {
         $clauses[] = 'state=\''.$state.'\'';
     }
@@ -418,7 +407,7 @@ UPDATE '. PLUGINS_TABLE .'
 ;';
             pwg_query($query);
 
-            pwg_activity('system', ACTIVITY_SYSTEM_PLUGIN, 'autoupdate', array('plugin_id' => $plugin['id'], 'from_version' => $old_version, 'to_version' => $new_version));
+            pwg_activity('system', ACTIVITY_SYSTEM_PLUGIN, 'autoupdate', ['plugin_id' => $plugin['id'], 'from_version' => $old_version, 'to_version' => $new_version]);
         }
     }
 }
@@ -429,7 +418,7 @@ UPDATE '. PLUGINS_TABLE .'
 function load_plugins()
 {
     global $conf, $pwg_loaded_plugins;
-    $pwg_loaded_plugins = array();
+    $pwg_loaded_plugins = [];
     if ($conf['enable_plugins']) {
         $plugins = get_db_plugins('active');
         foreach ($plugins as $plugin) {// include main from a function to avoid using same function context

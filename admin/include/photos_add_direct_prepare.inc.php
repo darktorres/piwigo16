@@ -12,12 +12,12 @@
 // +-----------------------------------------------------------------------+
 
 $template->assign(
-    array(
+    [
       'F_ADD_ACTION' => PHOTOS_ADD_BASE_URL,
       'chunk_size' => $conf['upload_form_chunk_size'],
       'max_file_size' => $conf['upload_form_max_file_size'],
       'ADMIN_PAGE_TITLE' => l10n('Upload Photos'),
-    )
+    ]
 );
 
 // what is the maximum number of pixels permitted by the memory_limit?
@@ -36,11 +36,11 @@ if (pwg_image::get_library() == 'gd') {
     // no need to display a limitation warning if the limitation is huge like 20MP
     if ($max_upload_resolution < 25) {
         $template->assign(
-            array(
+            [
             'max_upload_width' => $max_upload_width,
             'max_upload_height' => $max_upload_height,
             'max_upload_resolution' => $max_upload_resolution,
-            )
+            ]
         );
     }
 }
@@ -48,19 +48,19 @@ if (pwg_image::get_library() == 'gd') {
 //warn the user if the picture will be resized after upload
 if ($conf['original_resize']) {
     $template->assign(
-        array(
+        [
           'original_resize_maxwidth' => $conf['original_resize_maxwidth'],
           'original_resize_maxheight' => $conf['original_resize_maxheight'],
-        )
+        ]
     );
 }
 
 
 $template->assign(
-    array(
+    [
       'form_action' => PHOTOS_ADD_BASE_URL,
       'pwg_token' => get_pwg_token(),
-    )
+    ]
 );
 
 $unique_exts = array_unique(
@@ -71,10 +71,10 @@ $unique_exts = array_unique(
 );
 
 $template->assign(
-    array(
+    [
     'upload_file_types' => implode(', ', $unique_exts),
     'file_exts' => implode(',', $unique_exts),
-    )
+    ]
 );
 
 // +-----------------------------------------------------------------------+
@@ -82,7 +82,7 @@ $template->assign(
 // +-----------------------------------------------------------------------+
 
 // we need to know the category in which the last photo was added
-$selected_category = array();
+$selected_category = [];
 
 if (isset($_GET['album'])) {
     // set the category from get url or ...
@@ -96,7 +96,7 @@ SELECT id, uppercats
 ;';
     $result = pwg_query($query);
     if (pwg_db_num_rows($result) == 1) {
-        $selected_category = array($_GET['album']);
+        $selected_category = [$_GET['album']];
 
         $cat = pwg_db_fetch_assoc($result);
         $template->assign('ADD_TO_ALBUM', get_cat_display_name_cache($cat['uppercats'], null));
@@ -117,7 +117,7 @@ SELECT category_id, c.uppercats
     $result = pwg_query($query);
     if (pwg_db_num_rows($result) > 0) {
         $row = pwg_db_fetch_assoc($result);
-        $selected_category = array($row['category_id']);
+        $selected_category = [$row['category_id']];
         $selected_category_name = get_cat_display_name_cache($row['uppercats'], null);
         $template->assign('selected_category_name', $selected_category_name);
     }
@@ -132,17 +132,17 @@ SELECT
     COUNT(*)
   FROM '.CATEGORIES_TABLE.'
 ;';
-list($nb_albums) = pwg_db_fetch_row(pwg_query($query));
+[$nb_albums] = pwg_db_fetch_row(pwg_query($query));
 // $nb_albums = 0;
 $template->assign('NB_ALBUMS', $nb_albums);
 
 // image level options
-$selected_level = isset($_POST['level']) ? $_POST['level'] : 0;
+$selected_level = $_POST['level'] ?? 0;
 $template->assign(
-    array(
+    [
       'level_options' => get_privacy_level_options(),
-      'level_options_selected' => array($selected_level),
-    )
+      'level_options_selected' => [$selected_level],
+    ]
 );
 
 // +-----------------------------------------------------------------------+
@@ -150,7 +150,7 @@ $template->assign(
 // +-----------------------------------------------------------------------+
 
 // Errors
-$setup_errors = array();
+$setup_errors = [];
 
 $error_message = ready_for_upload_message();
 if (!empty($error_message)) {
@@ -161,10 +161,10 @@ if (!function_exists('gd_info')) {
     $setup_errors[] = l10n('GD library is missing');
 }
 
-$template->assign(array(
+$template->assign([
   'setup_errors' => $setup_errors,
-  'CACHE_KEYS' => get_admin_client_cache_keys(array('categories')),
-  ));
+  'CACHE_KEYS' => get_admin_client_cache_keys(['categories']),
+  ]);
 
 // Warnings
 if (isset($_GET['hide_warnings'])) {
@@ -172,7 +172,7 @@ if (isset($_GET['hide_warnings'])) {
 }
 
 if (!isset($_SESSION['upload_hide_warnings'])) {
-    $setup_warnings = array();
+    $setup_warnings = [];
 
     if ($conf['use_exif'] and !function_exists('exif_read_data')) {
         $setup_warnings[] = l10n('Exif extension not available, admin should disable exif use');
@@ -195,9 +195,9 @@ if (!isset($_SESSION['upload_hide_warnings'])) {
     }
 
     $template->assign(
-        array(
+        [
         'setup_warnings' => $setup_warnings,
         'hide_warnings_link' => PHOTOS_ADD_BASE_URL.'&amp;hide_warnings=1',
-        )
+        ]
     );
 }

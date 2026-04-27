@@ -230,7 +230,7 @@ class Minifier
                 default:
                     switch ($this->b) {
                         case "\n":
-                            if (strpos('}])+-"\'', $this->a) !== false) {
+                            if (str_contains('}])+-"\'', $this->a)) {
                                 echo $this->a;
                                 $this->saveString();
                                 break;
@@ -264,7 +264,7 @@ class Minifier
             // do reg check of doom
             $this->b = $this->getReal();
 
-            if (($this->b == '/' && strpos('(,=:[!&|?', $this->a) !== false)) {
+            if (($this->b == '/' && str_contains('(,=:[!&|?', $this->a))) {
                 $this->saveRegex();
             }
         }

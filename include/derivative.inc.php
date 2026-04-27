@@ -61,7 +61,7 @@ final class SrcImage
                 }
                 $size = getimagesize(PHPWG_ROOT_PATH.$this->rel_path);
             }
-            $this->size = @array($size[0],$size[1]);
+            $this->size = @[$size[0],$size[1]];
         }
 
         if (!$this->size) {
@@ -77,7 +77,7 @@ final class SrcImage
                     $height = $infos['width'];
                 }
 
-                $this->size = array($width, $height);
+                $this->size = [$width, $height];
             } elseif (!array_key_exists('width', $infos)) {
                 $this->flags |= self::DIM_NOT_GIVEN;
             }
@@ -139,7 +139,7 @@ final class SrcImage
             }
             // probably not metadata synced
             if (($size = getimagesize($this->get_path())) !== false) {
-                $this->size = array($size[0],$size[1]);
+                $this->size = [$size[0],$size[1]];
                 pwg_query('UPDATE '.IMAGES_TABLE.' SET width='.$size[0].', height='.$size[1].' WHERE id='.$this->id);
             }
         }
@@ -155,8 +155,6 @@ final class SrcImage
  */
 final class DerivativeImage
 {
-    /** @var SrcImage */
-    public $src_image;
     /** @var array */
     private $params;
     /** @var string */
@@ -171,16 +169,15 @@ final class DerivativeImage
      *    or a DerivativeParams object
      * @param SrcImage $src_image the source image of this derivative
      */
-    public function __construct($type, SrcImage $src_image)
+    public function __construct($type, public SrcImage $src_image)
     {
-        $this->src_image = $src_image;
         if (is_string($type)) {
             $this->params = ImageStdParams::get_by_type($type);
         } else {
             $this->params = $type;
         }
 
-        self::build($src_image, $this->params, $this->rel_path, $this->rel_url, $this->is_cached);
+        self::build($this->src_image, $this->params, $this->rel_path, $this->rel_url, $this->is_cached);
     }
 
     /**
@@ -237,7 +234,7 @@ final class DerivativeImage
             $src_image = new SrcImage($src_image);
         }
 
-        $ret = array();
+        $ret = [];
         // build enabled types
         foreach (ImageStdParams::get_defined_type_map() as $type => $params) {
             $derivative = new DerivativeImage($params, $src_image);
@@ -305,7 +302,7 @@ final class DerivativeImage
             }
         }
 
-        $tokens = array();
+        $tokens = [];
         $tokens[] = substr($params->type, 0, 2);
 
         if ($params->type == IMG_CUSTOM) {

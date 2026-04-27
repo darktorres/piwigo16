@@ -13,7 +13,7 @@
  */
 class DummyTheme_maintain extends ThemeMaintain
 {
-    public function activate($theme_version, &$errors = array())
+    public function activate($theme_version, &$errors = [])
     {
         if (is_callable('theme_activate')) {
             return theme_activate($this->theme_id, $theme_version, $errors);
@@ -36,9 +36,9 @@ class DummyTheme_maintain extends ThemeMaintain
 
 class themes
 {
-    public $fs_themes = array();
-    public $db_themes_by_id = array();
-    public $server_themes = array();
+    public $fs_themes = [];
+    public $db_themes_by_id = [];
+    public $server_themes = [];
 
     /**
      * Initialize $fs_themes and $db_themes_by_id
@@ -93,8 +93,8 @@ class themes
 
         $theme_maintain = self::build_maintain_class($theme_id);
 
-        $errors = array();
-        $activity_details = array('theme_id' => $theme_id);
+        $errors = [];
+        $activity_details = ['theme_id' => $theme_id];
 
         switch ($action) {
             case 'activate':
@@ -170,7 +170,7 @@ SELECT id
                     if (pwg_db_num_rows($result) == 0) {
                         $new_theme = 'default';
                     } else {
-                        list($new_theme) = pwg_db_fetch_row($result);
+                        [$new_theme] = pwg_db_fetch_row($result);
                     }
 
                     $this->set_default_theme($new_theme);
@@ -247,7 +247,7 @@ DELETE
 
     public function get_children_themes($theme_id)
     {
-        $children = array();
+        $children = [];
 
         foreach ($this->fs_themes as $test_child) {
             if (isset($test_child['parent']) and $test_child['parent'] == $theme_id) {
@@ -274,7 +274,7 @@ SELECT
         $user_ids = array_unique(
             array_merge(
                 array_from_query($query, 'user_id'),
-                array($conf['guest_id'], $conf['default_user_id'])
+                [$conf['guest_id'], $conf['default_user_id']]
             )
         );
 
@@ -296,7 +296,7 @@ SELECT
     *
   FROM '.THEMES_TABLE;
 
-        $clauses = array();
+        $clauses = [];
         if (!empty($id)) {
             $clauses[] = 'id = \''.$id.'\'';
         }
@@ -306,7 +306,7 @@ SELECT
         }
 
         $result = pwg_query($query);
-        $themes = array();
+        $themes = [];
         while ($row = pwg_db_fetch_assoc($result)) {
             $themes[] = $row;
         }
@@ -328,7 +328,7 @@ SELECT
                     and preg_match('/^[a-zA-Z0-9-_]+$/', $file)
                     and file_exists($path.'/themeconf.inc.php')
                 ) {
-                    $theme = array(
+                    $theme = [
                       'id' => $file,
                       'name' => $file,
                       'version' => '0',
@@ -336,7 +336,7 @@ SELECT
                       'description' => '',
                       'author' => '',
                       'mobile' => false,
-                      );
+                      ];
                     $theme_data = implode('', file($path.'/themeconf.inc.php'));
                     if (preg_match('|Theme Name:\\s*(.+)|', $theme_data, $val)) {
                         $theme['name'] = trim($val[1]);
@@ -347,7 +347,7 @@ SELECT
                     if (preg_match('|Theme URI:\\s*(https?:\\/\\/.+)|', $theme_data, $val)) {
                         $theme['uri'] = trim($val[1]);
                     }
-                    if ($desc = load_language('description.txt', $path.'/', array('return' => true))) {
+                    if ($desc = load_language('description.txt', $path.'/', ['return' => true])) {
                         $theme['description'] = trim($desc);
                     } elseif (preg_match('|Description:\\s*(.+)|', $theme_data, $val)) {
                         $theme['description'] = trim($val[1]);
@@ -417,7 +417,7 @@ SELECT
                 $this->sort_themes_by_state();
                 break;
             case 'author':
-                uasort($this->fs_themes, array($this, 'theme_author_compare'));
+                uasort($this->fs_themes, [$this, 'theme_author_compare']);
                 break;
             case 'id':
                 uksort($this->fs_themes, 'strcasecmp');
@@ -432,14 +432,14 @@ SELECT
     {
         global $user, $conf;
 
-        $get_data = array(
+        $get_data = [
           'category_id' => $conf['pem_themes_category'],
           'format' => 'php',
-        );
+        ];
 
         // Retrieve PEM versions
         $version = PHPWG_VERSION;
-        $versions_to_check = array();
+        $versions_to_check = [];
         $url = PEM_URL . '/api/get_version_list.php';
         if (fetchRemote($url, $result, $get_data) and $pem_versions = @unserialize($result)) {
             if (!preg_match('/^\d+\.\d+\.\d+$/', $version)) {
@@ -447,7 +447,7 @@ SELECT
             }
             $branch = get_branch_from_version($version);
             foreach ($pem_versions as $pem_version) {
-                if (strpos($pem_version['name'], $branch) === 0) {
+                if (str_starts_with($pem_version['name'], $branch)) {
                     $versions_to_check[] = $pem_version['id'];
                 }
             }
@@ -457,7 +457,7 @@ SELECT
         }
 
         // Themes to check
-        $themes_to_check = array();
+        $themes_to_check = [];
         foreach ($this->fs_themes as $fs_theme) {
             if (isset($fs_theme['extension'])) {
                 $themes_to_check[] = $fs_theme['extension'];
@@ -468,12 +468,12 @@ SELECT
         $url = PEM_URL . '/api/get_revision_list-next.php';
         $get_data = array_merge(
             $get_data,
-            array(
+            [
       'last_revision_only' => 'true',
       'version' => implode(',', $versions_to_check),
       'lang' => substr($user['language'], 0, 2),
       'get_nb_downloads' => 'true',
-      )
+      ]
         );
 
         if (!empty($themes_to_check)) {
@@ -506,16 +506,16 @@ SELECT
                 krsort($this->server_themes);
                 break;
             case 'revision':
-                usort($this->server_themes, array($this, 'extension_revision_compare'));
+                usort($this->server_themes, [$this, 'extension_revision_compare']);
                 break;
             case 'name':
-                uasort($this->server_themes, array($this, 'extension_name_compare'));
+                uasort($this->server_themes, [$this, 'extension_name_compare']);
                 break;
             case 'author':
-                uasort($this->server_themes, array($this, 'extension_author_compare'));
+                uasort($this->server_themes, [$this, 'extension_author_compare']);
                 break;
             case 'downloads':
-                usort($this->server_themes, array($this, 'extension_downloads_compare'));
+                usort($this->server_themes, [$this, 'extension_downloads_compare']);
                 break;
         }
     }
@@ -533,10 +533,10 @@ SELECT
 
         if ($archive = tempnam(PHPWG_THEMES_PATH, 'zip')) {
             $url = PEM_URL . '/download.php';
-            $get_data = array(
+            $get_data = [
               'rid' => $revision,
               'origin' => 'piwigo_'.$action,
-            );
+            ];
 
             if ($handle = @fopen($archive, 'wb') and fetchRemote($url, $handle, $get_data)) {
                 fclose($handle);
@@ -600,7 +600,7 @@ SELECT
 
                                     // make sure the obsolete file is withing the extension directory, prevent traversal path
                                     $realpath = realpath($path);
-                                    if ($realpath === false or strpos($realpath, $extract_path_realpath) !== 0) {
+                                    if ($realpath === false or !str_starts_with($realpath, $extract_path_realpath)) {
                                         continue;
                                     }
 
@@ -683,9 +683,9 @@ SELECT
     {
         uasort($this->fs_themes, 'name_compare');
 
-        $active_themes = array();
-        $inactive_themes = array();
-        $not_installed = array();
+        $active_themes = [];
+        $inactive_themes = [];
+        $not_installed = [];
 
         foreach ($this->fs_themes as $theme_id => $theme) {
             if (isset($this->db_themes_by_id[$theme_id])) {

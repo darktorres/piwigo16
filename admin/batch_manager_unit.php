@@ -35,7 +35,7 @@ if (isset($_POST['submit'])) {
     check_input_parameter('element_ids', $_POST, false, '/^\d+(,\d+)*$/');
     $collection = explode(',', $_POST['element_ids']);
 
-    $datas = array();
+    $datas = [];
 
     $query = '
 SELECT id, date_creation
@@ -45,7 +45,7 @@ SELECT id, date_creation
     $result = pwg_query($query);
 
     while ($row = pwg_db_fetch_assoc($result)) {
-        $data = array();
+        $data = [];
 
         $data['id'] = $row['id'];
         $data['name'] = $_POST['name-'.$row['id']];
@@ -67,7 +67,7 @@ SELECT id, date_creation
         $datas[] = $data;
 
         // tags management
-        $tag_ids = array();
+        $tag_ids = [];
         if (!empty($_POST[ 'tags-'.$row['id'] ])) {
             $tag_ids = get_tag_ids($_POST[ 'tags-'.$row['id'] ]);
         }
@@ -76,10 +76,10 @@ SELECT id, date_creation
 
     mass_updates(
         IMAGES_TABLE,
-        array(
-        'primary' => array('id'),
-        'update' => array('name','author','level','comment','date_creation'),
-        ),
+        [
+        'primary' => ['id'],
+        'update' => ['name','author','level','comment','date_creation'],
+        ],
         $datas
     );
 
@@ -88,7 +88,7 @@ SELECT id, date_creation
 }
 
 //collection
-$collection = array();
+$collection = [];
 if (isset($_POST['nb_photos_deleted'])) {
     check_input_parameter('nb_photos_deleted', $_POST, false, '/^\d+$/');
 
@@ -119,20 +119,20 @@ if (isset($_POST['nb_photos_deleted'])) {
 // +-----------------------------------------------------------------------+
 
 $template->set_filenames(
-    array('batch_manager_unit' => 'batch_manager_unit.tpl')
+    ['batch_manager_unit' => 'batch_manager_unit.tpl']
 );
 
 $base_url = PHPWG_ROOT_PATH.'admin.php';
 
 
 $template->assign(
-    array(
+    [
 
-    'U_ELEMENTS_PAGE' => $base_url.get_query_string_diff(array('display','start')),
+    'U_ELEMENTS_PAGE' => $base_url.get_query_string_diff(['display','start']),
     'level_options' => get_privacy_level_options(),
     'ADMIN_PAGE_TITLE' => l10n('Batch Manager'),
     'PWG_TOKEN' => get_pwg_token(),
-    )
+    ]
 );
 include(PHPWG_ROOT_PATH.'admin/include/batch_manager_filters.inc.php');
 // +-----------------------------------------------------------------------+
@@ -146,7 +146,7 @@ if (!empty($_GET['display'])) {
     // conf_update_param('batch_manager_images_per_page_unit' , intval($_GET['display']));
     // $page['nb_images'] = $conf['batch_manager_images_per_page_unit'];
     $page['nb_images'] = intval($_GET['display']);
-} elseif (in_array($conf['batch_manager_images_per_page_unit'], array(5, 10, 50))) {
+} elseif (in_array($conf['batch_manager_images_per_page_unit'], [5, 10, 50])) {
     $page['nb_images'] = $conf['batch_manager_images_per_page_unit'];
 } else {
     $page['nb_images'] = 5;
@@ -155,14 +155,14 @@ $template->assign('per_page', $page['nb_images']);
 
 if (count($page['cat_elements_id']) > 0) {
     $nav_bar = create_navigation_bar(
-        $base_url.get_query_string_diff(array('start')),
+        $base_url.get_query_string_diff(['start']),
         count($page['cat_elements_id']),
         $page['start'],
         $page['nb_images']
     );
-    $template->assign(array('navbar' => $nav_bar));
+    $template->assign(['navbar' => $nav_bar]);
 
-    $element_ids = array();
+    $element_ids = [];
 
     $is_category = false;
     if (isset($_SESSION['bulk_manager_filter']['category'])
@@ -264,8 +264,8 @@ SELECT
     ;';
 
         $sub_result = pwg_query($query);
-        $related_categories = array();
-        $related_category_ids = array();
+        $related_categories = [];
+        $related_category_ids = [];
         $media['image'] = get_image_infos($row['id'], true);
 
         while ($item = pwg_db_fetch_assoc($sub_result)) {
@@ -279,7 +279,7 @@ SELECT
                 $template->assign('STORAGE_CATEGORY', $name);
             }
 
-            $related_categories[$item['category_id']] = array('name' => $name, 'unlinkable' => $item['category_id'] != $storage_category_id);
+            $related_categories[$item['category_id']] = ['name' => $name, 'unlinkable' => $item['category_id'] != $storage_category_id];
             $related_category_ids[] = $item['category_id'];
         }
 
@@ -302,20 +302,20 @@ SELECT
         if (isset($row['cat_id'])
         and in_array($row['cat_id'], $authorizeds)) {
             $url_img = make_picture_url(
-                array(
+                [
                 'image_id' => $row['id'],
                 'image_file' => $image_file,
                 'category' => $cache['cat_names'][ $row['cat_id'] ],
-                )
+                ]
             );
         } else {
             foreach ($authorizeds as $category) {
                 $url_img = make_picture_url(
-                    array(
+                    [
                     'image_id' => $row['id'], //utile ?
                     'image_file' => $image_file,
                     'category' => $cache['cat_names'][ $category ],
-                    )
+                    ]
                 );
                 break;
             }
@@ -323,23 +323,23 @@ SELECT
         $admin_photo_base_url = get_root_url().'admin.php?page=photo-'.$row['id'];
         $admin_url_start = $admin_photo_base_url.'-properties';
         $admin_url_start .= isset($row['cat_id']) ? '&amp;cat_id='.$row['cat_id'] : '';
-        $selected_level = isset($row['level']) ? $row['level'] : $row['level'];
+        $selected_level = $row['level'] ?? $row['level'];
 
 
         $template->append(
             'elements',
             array_merge(
                 $row,
-                array(
+                [
         'ID' => $row['id'],
         'TN_SRC' => DerivativeImage::url(IMG_MEDIUM, $src_image),
         'FILE_SRC' => DerivativeImage::url(IMG_LARGE, $src_image),
         'LEGEND' => $legend,
         'U_EDIT' => get_root_url().'admin.php?page=photo-'.$row['id'],
-        'NAME' => htmlspecialchars(isset($row['name']) ? $row['name'] : ''),
-        'AUTHOR' => htmlspecialchars(isset($row['author']) ? $row['author'] : ''),
+        'NAME' => htmlspecialchars($row['name'] ?? ''),
+        'AUTHOR' => htmlspecialchars($row['author'] ?? ''),
         'LEVEL' => !empty($row['level']) ? $row['level'] : '0',
-        'DESCRIPTION' => htmlspecialchars(isset($row['comment']) ? $row['comment'] : ''),
+        'DESCRIPTION' => htmlspecialchars($row['comment'] ?? ''),
         'DATE_CREATION' => $row['date_creation'],
         'TAGS' => $tag_selection,
         'is_svg' => (strtoupper(end($extTab)) == 'SVG'),
@@ -349,7 +349,7 @@ SELECT
         'FILESIZE' => l10n('%.2f MB', $row['filesize'] / 1024),
         'REGISTRATION_DATE' => format_date($row['date_available']),
         'EXT' => l10n('%s file type', end($extTab)),
-        'POST_DATE' => l10n('Added on %s', format_date($row['date_available'], array('day', 'month', 'year'))),
+        'POST_DATE' => l10n('Added on %s', format_date($row['date_available'], ['day', 'month', 'year'])),
         'AGE' => l10n(ucfirst(time_since($row['date_available'], 'year'))),
         'ADDED_BY' => l10n('Added by %s', $added_by_username_of[ $row['added_by'] ] ?? l10n('N/A')),
         'STATS' => l10n('Visited %d times', $row['hit']),
@@ -364,22 +364,22 @@ SELECT
         'U_DELETE' => $admin_url_start.'&amp;delete=1&amp;pwg_token='.get_pwg_token(),
         'U_SYNC' => $admin_url_start.'&amp;sync_metadata=1',
         'PATH' => $row['path'],
-        'level_options_selected' => array($selected_level),
+        'level_options_selected' => [$selected_level],
 
 
-        )
+        ]
             )
         );
     }
 
-    $template->assign(array(
+    $template->assign([
       'ELEMENT_IDS' => implode(',', $element_ids),
-    ));
+    ]);
 }
 
-$template->assign(array(
-  'CACHE_KEYS' => get_admin_client_cache_keys(array('tags', 'categories')),
-));
+$template->assign([
+  'CACHE_KEYS' => get_admin_client_cache_keys(['tags', 'categories']),
+]);
 
 trigger_notify('loc_end_element_set_unit');
 

@@ -40,7 +40,7 @@ check_input_parameter('dissociate', $_POST, false, PATTERN_ID);
 // |                            current selection                          |
 // +-----------------------------------------------------------------------+
 
-$collection = array();
+$collection = [];
 if (isset($_POST['nb_photos_deleted'])) {
     check_input_parameter('nb_photos_deleted', $_POST, false, '/^\d+$/');
 
@@ -145,9 +145,9 @@ DELETE
                 $_POST['associate']
             );
 
-            $_SESSION['page_infos'] = array(
+            $_SESSION['page_infos'] = [
               l10n('Information data registered in database'),
-              );
+              ];
 
             // let's refresh the page because we the current set might be modified
             if ('no_album' == $page['prefilter']) {
@@ -160,11 +160,11 @@ DELETE
             }
         }
     } elseif ('move' == $action) {
-        move_images_to_categories($collection, array($_POST['move']));
+        move_images_to_categories($collection, [$_POST['move']]);
 
-        $_SESSION['page_infos'] = array(
+        $_SESSION['page_infos'] = [
           l10n('Information data registered in database'),
-          );
+          ];
 
         // let's refresh the page because we the current set might be modified
         if ('no_album' == $page['prefilter']) {
@@ -182,9 +182,9 @@ DELETE
         $nb_dissociated = dissociate_images_from_category($collection, $_POST['dissociate']);
 
         if ($nb_dissociated > 0) {
-            $_SESSION['page_infos'] = array(
+            $_SESSION['page_infos'] = [
               l10n('Information data registered in database'),
-              );
+              ];
 
             // let's refresh the page because the current set might be modified
             $redirect = true;
@@ -197,21 +197,21 @@ DELETE
             $_POST['author'] = null;
         }
 
-        $datas = array();
+        $datas = [];
         foreach ($collection as $image_id) {
-            $datas[] = array(
+            $datas[] = [
               'id' => $image_id,
               'author' => $_POST['author'],
-              );
+              ];
         }
 
         mass_updates(
             IMAGES_TABLE,
-            array('primary' => array('id'), 'update' => array('author')),
+            ['primary' => ['id'], 'update' => ['author']],
             $datas
         );
 
-        pwg_activity('photo', $collection, 'edit', array('action' => 'author'));
+        pwg_activity('photo', $collection, 'edit', ['action' => 'author']);
     }
 
     // title
@@ -220,21 +220,21 @@ DELETE
             $_POST['title'] = null;
         }
 
-        $datas = array();
+        $datas = [];
         foreach ($collection as $image_id) {
-            $datas[] = array(
+            $datas[] = [
               'id' => $image_id,
               'name' => $_POST['title'],
-              );
+              ];
         }
 
         mass_updates(
             IMAGES_TABLE,
-            array('primary' => array('id'), 'update' => array('name')),
+            ['primary' => ['id'], 'update' => ['name']],
             $datas
         );
 
-        pwg_activity('photo', $collection, 'edit', array('action' => 'title'));
+        pwg_activity('photo', $collection, 'edit', ['action' => 'title']);
     }
 
     // date_creation
@@ -245,40 +245,40 @@ DELETE
             $date_creation = $_POST['date_creation'];
         }
 
-        $datas = array();
+        $datas = [];
         foreach ($collection as $image_id) {
-            $datas[] = array(
+            $datas[] = [
               'id' => $image_id,
               'date_creation' => $date_creation,
-              );
+              ];
         }
 
         mass_updates(
             IMAGES_TABLE,
-            array('primary' => array('id'), 'update' => array('date_creation')),
+            ['primary' => ['id'], 'update' => ['date_creation']],
             $datas
         );
 
-        pwg_activity('photo', $collection, 'edit', array('action' => 'date_creation'));
+        pwg_activity('photo', $collection, 'edit', ['action' => 'date_creation']);
     }
 
     // privacy_level
     elseif ('level' == $action) {
-        $datas = array();
+        $datas = [];
         foreach ($collection as $image_id) {
-            $datas[] = array(
+            $datas[] = [
               'id' => $image_id,
               'level' => $_POST['level'],
-              );
+              ];
         }
 
         mass_updates(
             IMAGES_TABLE,
-            array('primary' => array('id'), 'update' => array('level')),
+            ['primary' => ['id'], 'update' => ['level']],
             $datas
         );
 
-        pwg_activity('photo', $collection, 'edit', array('action' => 'privacy_level'));
+        pwg_activity('photo', $collection, 'edit', ['action' => 'privacy_level']);
 
         if (isset($_SESSION['bulk_manager_filter']['level'])) {
             if ($_POST['level'] < $_SESSION['bulk_manager_filter']['level']) {
@@ -335,7 +335,7 @@ DELETE
         }
     }
 
-    if (!in_array($action, array('remove_from_caddie','add_to_caddie','delete_derivatives','generate_derivatives'))) {
+    if (!in_array($action, ['remove_from_caddie','add_to_caddie','delete_derivatives','generate_derivatives'])) {
         invalidate_user_cache();
     }
 
@@ -349,7 +349,7 @@ DELETE
 // +-----------------------------------------------------------------------+
 // |                             template init                             |
 // +-----------------------------------------------------------------------+
-$template->set_filenames(array('batch_manager_global' => 'batch_manager_global.tpl'));
+$template->set_filenames(['batch_manager_global' => 'batch_manager_global.tpl']);
 
 $base_url = get_root_url().'admin.php';
 
@@ -377,10 +377,10 @@ $template->assign(
 
 // image level options
 $template->assign(
-    array(
+    [
       'level_options' => get_privacy_level_options(),
       'level_options_selected' => 0,
-    )
+    ]
 );
 
 // metadata
@@ -389,23 +389,23 @@ $site_reader = new LocalSiteReader('./');
 $used_metadata = implode(', ', $site_reader->get_metadata_attributes());
 
 $template->assign(
-    array(
+    [
       'used_metadata' => $used_metadata,
-    )
+    ]
 );
 
 //derivatives
-$del_deriv_map = array();
+$del_deriv_map = [];
 foreach (ImageStdParams::get_defined_type_map() as $params) {
     $del_deriv_map[$params->type] = l10n($params->type);
 }
 $gen_deriv_map = $del_deriv_map;
 $del_deriv_map[IMG_CUSTOM] = l10n(IMG_CUSTOM);
 $template->assign(
-    array(
+    [
       'del_derivatives_types' => $del_deriv_map,
       'generate_derivatives_types' => $gen_deriv_map,
-    )
+    ]
 );
 
 // +-----------------------------------------------------------------------+
@@ -419,7 +419,7 @@ if (!empty($_GET['display'])) {
     } else {
         $page['nb_images'] = intval($_GET['display']);
     }
-} elseif (in_array($conf['batch_manager_images_per_page_global'], array(20, 50, 100))) {
+} elseif (in_array($conf['batch_manager_images_per_page_global'], [20, 50, 100])) {
     $page['nb_images'] = $conf['batch_manager_images_per_page_global'];
 } else {
     $page['nb_images'] = 20;
@@ -429,7 +429,7 @@ $nb_thumbs_page = 0;
 
 if (count($page['cat_elements_id']) > 0) {
     $nav_bar = create_navigation_bar(
-        $base_url.get_query_string_diff(array('start')),
+        $base_url.get_query_string_diff(['start']),
         count($page['cat_elements_id']),
         $page['start'],
         $page['nb_images']
@@ -448,7 +448,7 @@ if (count($page['cat_elements_id']) > 0) {
         and 'duplicates' === $_SESSION['bulk_manager_filter']['prefilter']
         and isset($duplicates_on_fields)) {
         // The $duplicates_on_fields variable is defined in ./batch_manager.php
-        $order_by_fields = array_merge($duplicates_on_fields, array( 'id' ));
+        $order_by_fields = array_merge($duplicates_on_fields, [ 'id' ]);
         $conf['order_by'] = ' ORDER BY '.join(', ', $order_by_fields);
     }
 
@@ -499,23 +499,23 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
             'thumbnails',
             array_merge(
                 $row,
-                array(
+                [
         'thumb' => new DerivativeImage($thumb_params, $src_image),
         'TITLE' => $ttitle,
         'FILE_SRC' => DerivativeImage::url(IMG_LARGE, $src_image),
         'U_EDIT' => get_root_url().'admin.php?page=photo-'.$row['id'],
-        )
+        ]
             )
         );
     }
     $template->assign('thumb_params', $thumb_params);
 }
 
-$template->assign(array(
+$template->assign([
   'nb_thumbs_page' => $nb_thumbs_page,
   'nb_thumbs_set' => count($page['cat_elements_id']),
-  'CACHE_KEYS' => get_admin_client_cache_keys(array('tags', 'categories')),
-  ));
+  'CACHE_KEYS' => get_admin_client_cache_keys(['tags', 'categories']),
+  ]);
 
 trigger_notify('loc_end_element_set_global');
 

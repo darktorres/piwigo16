@@ -57,7 +57,7 @@ DELETE
          and isset($_POST['cat_false'])
          and count($_POST['cat_false']) > 0) {
     $uppercats = get_uppercat_ids($_POST['cat_false']);
-    $private_uppercats = array();
+    $private_uppercats = [];
 
     $query = '
 SELECT id
@@ -73,7 +73,7 @@ SELECT id
     // retrying to authorize a category which is already authorized may cause
     // an error (in SQL statement), so we need to know which categories are
     // accesible
-    $authorized_ids = array();
+    $authorized_ids = [];
 
     $query = '
 SELECT cat_id
@@ -86,16 +86,16 @@ SELECT cat_id
         $authorized_ids[] = $row['cat_id'];
     }
 
-    $inserts = array();
+    $inserts = [];
     $to_autorize_ids = array_diff($private_uppercats, $authorized_ids);
     foreach ($to_autorize_ids as $to_autorize_id) {
-        $inserts[] = array(
+        $inserts[] = [
           'group_id' => $page['group'],
           'cat_id' => $to_autorize_id,
-          );
+          ];
     }
 
-    mass_inserts(GROUP_ACCESS_TABLE, array('group_id','cat_id'), $inserts);
+    mass_inserts(GROUP_ACCESS_TABLE, ['group_id','cat_id'], $inserts);
     invalidate_user_cache();
 }
 
@@ -104,14 +104,14 @@ SELECT cat_id
 // +-----------------------------------------------------------------------+
 
 $template->set_filenames(
-    array(
+    [
     'group_perm' => 'group_perm.tpl',
     'double_select' => 'double_select.tpl',
-    )
+    ]
 );
 
 $template->assign(
-    array(
+    [
     'TITLE' =>
       l10n(
           'Manage permissions for group "%s"',
@@ -124,7 +124,7 @@ $template->assign(
         get_root_url().
         'admin.php?page=group_perm&amp;group_id='.
         $page['group'],
-    )
+    ]
 );
 
 // only private categories are listed
@@ -134,10 +134,10 @@ SELECT id,name,uppercats,global_rank
   WHERE status = \'private\'
     AND group_id = '.$page['group'].'
 ;';
-display_select_cat_wrapper($query_true, array(), 'category_option_true');
+display_select_cat_wrapper($query_true, [], 'category_option_true');
 
 $result = pwg_query($query_true);
-$authorized_ids = array();
+$authorized_ids = [];
 while ($row = pwg_db_fetch_assoc($result)) {
     $authorized_ids[] = $row['id'];
 }
@@ -152,7 +152,7 @@ if (count($authorized_ids) > 0) {
 }
 $query_false .= '
 ;';
-display_select_cat_wrapper($query_false, array(), 'category_option_false');
+display_select_cat_wrapper($query_false, [], 'category_option_false');
 
 $template->assign('PWG_TOKEN', get_pwg_token());
 

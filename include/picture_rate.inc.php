@@ -13,7 +13,7 @@
  */
 
 if ($conf['rate']) {
-    $rate_summary = array( 'count' => 0, 'score' => $picture['current']['rating_score'], 'average' => null );
+    $rate_summary = [ 'count' => 0, 'score' => $picture['current']['rating_score'], 'average' => null ];
     if (null != $rate_summary['score']) {
         $query = '
 SELECT COUNT(rate) AS count
@@ -21,7 +21,7 @@ SELECT COUNT(rate) AS count
   FROM '.RATE_TABLE.'
   WHERE element_id = '.$picture['current']['id'].'
 ;';
-        list($rate_summary['count'], $rate_summary['average']) = pwg_db_fetch_row(pwg_query($query));
+        [$rate_summary['count'], $rate_summary['average']] = pwg_db_fetch_row(pwg_query($query));
     }
     $template->assign('rate_summary', $rate_summary);
 
@@ -51,14 +51,14 @@ SELECT COUNT(rate) AS count
 
         $template->assign(
             'rating',
-            array(
+            [
               'F_ACTION' => add_url_params(
                   $url_self,
-                  array('action' => 'rate')
+                  ['action' => 'rate']
               ),
               'USER_RATE' => $user_rate,
               'marks'    => $conf['rate_items'],
-            )
+            ]
         );
     }
 }

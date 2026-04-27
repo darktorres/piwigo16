@@ -25,7 +25,7 @@ SELECT
     COUNT(*)
   FROM '.IMAGES_TABLE.'
 ;';
-    list($nb_photos) = pwg_db_fetch_row(pwg_query($query));
+    [$nb_photos] = pwg_db_fetch_row(pwg_query($query));
     if (0 == $nb_photos) {
         // make sure we don't use the mobile theme, which is not compatible with
         // the "no photo yet" feature
@@ -46,16 +46,16 @@ SELECT
         }
 
         header('Content-Type: text/html; charset='.get_pwg_charset());
-        $template->set_filenames(array('no_photo_yet' => 'no_photo_yet.tpl'));
+        $template->set_filenames(['no_photo_yet' => 'no_photo_yet.tpl']);
 
         if (is_admin()) {
             $url = $conf['no_photo_yet_url'];
-            if (substr($url, 0, 4) != 'http') {
+            if (!str_starts_with($url, 'http')) {
                 $url = get_root_url().$url;
             }
 
             $template->assign(
-                array(
+                [
                 'step' => 2,
                 'intro' => l10n(
                     'Hello %s, your Piwigo photo gallery is empty!',
@@ -63,16 +63,16 @@ SELECT
                 ),
                 'next_step_url' => $url,
                 'deactivate_url' => get_root_url().'?no_photo_yet=deactivate',
-                )
+                ]
             );
         } else {
 
             $template->assign(
-                array(
+                [
                 'step' => 1,
                 'U_LOGIN' => 'identification.php',
                 'deactivate_url' => get_root_url().'?no_photo_yet=browse',
-                )
+                ]
             );
         }
 

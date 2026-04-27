@@ -15,17 +15,17 @@ if (!is_webmaster()) {
     return;
 }
 
-$errors = array();
+$errors = [];
 
 // original resize
-$original_fields = array(
+$original_fields = [
   'original_resize',
   'original_resize_maxwidth',
   'original_resize_maxheight',
   'original_resize_quality',
-  );
+  ];
 
-$updates = array();
+$updates = [];
 
 foreach ($original_fields as $field) {
     $value = !empty($_POST[$field]) ? $_POST[$field] : null;
@@ -115,9 +115,9 @@ if (count($errors) == 0) {
     $enabled = ImageStdParams::get_defined_type_map();
     $disabled = safe_unserialize(ImageStdParams::get_disabled_type_map());
     if ($disabled === false) {
-        $disabled = array();
+        $disabled = [];
     }
-    $changed_types = array();
+    $changed_types = [];
 
     foreach (ImageStdParams::get_all_types() as $type) {
         $pderivative = $pderivatives[$type];
@@ -125,9 +125,9 @@ if (count($errors) == 0) {
         if ($pderivative['enabled']) {
             $new_params = new DerivativeParams(
                 new SizingParams(
-                    array(intval($pderivative['w']), intval($pderivative['h'])),
+                    [intval($pderivative['w']), intval($pderivative['h'])],
                     round($pderivative['crop'] / 100, 2),
-                    array(intval($pderivative['minw']), intval($pderivative['minh']))
+                    [intval($pderivative['minw']), intval($pderivative['minh'])]
                 )
             );
             $new_params->sharpen = intval($pderivative['sharpen']);
@@ -173,7 +173,7 @@ if (count($errors) == 0) {
         }
     }
 
-    $enabled_by = array(); // keys ordered by all types
+    $enabled_by = []; // keys ordered by all types
     foreach (ImageStdParams::get_all_types() as $type) {
         if (isset($enabled[$type])) {
             $enabled_by[$type] = $enabled[$type];
@@ -195,20 +195,20 @@ if (count($errors) == 0) {
     }
 
     $template->assign(
-        array(
+        [
         'save_success' => l10n('Your configuration settings are saved'),
-    )
+    ]
     );
 
-    pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'config', array('config_section' => 'sizes'));
+    pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'config', ['config_section' => 'sizes']);
 } else {
     foreach ($original_fields as $field) {
         if (isset($_POST[$field])) {
             $template->append(
                 'sizes',
-                array(
+                [
                 $field => strip_tags($_POST[$field]), // strip_tags prevents from XSS attempt
-                ),
+                ],
                 true
             );
         }

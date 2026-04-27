@@ -23,9 +23,9 @@ function get_iptc_data($filename, $map, $array_sep = ',')
 {
     global $conf;
 
-    $result = array();
+    $result = [];
 
-    $imginfo = array();
+    $imginfo = [];
     if (false == @getimagesize($filename, $imginfo)) {
         return $result;
     }
@@ -113,7 +113,7 @@ function get_exif_data($filename, $map)
 {
     global $conf, $logger;
 
-    $result = array();
+    $result = [];
 
     if (!function_exists('exif_read_data')) {
         die('Exif extension not available, admin should disable exif use');
@@ -129,7 +129,7 @@ function get_exif_data($filename, $map)
 
         // configured fields
         foreach ($map as $key => $field) {
-            if (strpos($field, ';') === false) {
+            if (!str_contains($field, ';')) {
                 if (isset($exif[$field])) {
                     $result[$key] = $exif[$field];
                 }
@@ -142,11 +142,11 @@ function get_exif_data($filename, $map)
         }
 
         // GPS data
-        $gps_exif = array_intersect_key($exif, array_flip(array('GPSLatitudeRef', 'GPSLatitude', 'GPSLongitudeRef', 'GPSLongitude')));
+        $gps_exif = array_intersect_key($exif, array_flip(['GPSLatitudeRef', 'GPSLatitude', 'GPSLongitudeRef', 'GPSLongitude']));
         if (count($gps_exif) == 4) {
             if (
-                is_array($gps_exif['GPSLatitude'])  and in_array($gps_exif['GPSLatitudeRef'], array('S', 'N')) and
-                is_array($gps_exif['GPSLongitude']) and in_array($gps_exif['GPSLongitudeRef'], array('W', 'E'))
+                is_array($gps_exif['GPSLatitude'])  and in_array($gps_exif['GPSLatitudeRef'], ['S', 'N']) and
+                is_array($gps_exif['GPSLongitude']) and in_array($gps_exif['GPSLongitudeRef'], ['W', 'E'])
             ) {
                 $latitude = parse_exif_gps_data($gps_exif['GPSLatitude'], $gps_exif['GPSLatitudeRef']);
                 $longitude = parse_exif_gps_data($gps_exif['GPSLongitude'], $gps_exif['GPSLongitudeRef']);

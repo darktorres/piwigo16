@@ -27,7 +27,7 @@ if ($user['id'] == $conf['guest_id']) {
 // using Apache authentication override the above user search
 if ($conf['apache_authentication']) {
     $remote_user = null;
-    foreach (array('REMOTE_USER', 'REDIRECT_REMOTE_USER') as $server_key) {
+    foreach (['REMOTE_USER', 'REDIRECT_REMOTE_USER'] as $server_key) {
         if (isset($_SERVER[$server_key])) {
             $remote_user = $_SERVER[$server_key];
             break;
@@ -83,10 +83,10 @@ if (
     include_once(PHPWG_ROOT_PATH.'include/ws_init.inc.php');
     include_once(PHPWG_ROOT_PATH.'include/ws_functions/pwg.php');
 
-    $credentials = array(
+    $credentials = [
       'username' => $_POST['username'],
       'password' => $_POST['password'],
-    );
+    ];
 
     $login = ws_session_login($credentials, $service);
 

@@ -54,7 +54,7 @@ include_once(PHPWG_ROOT_PATH . 'include/template.class.php');
  */
 function get_tables()
 {
-    $tables = array();
+    $tables = [];
 
     $query = '
 SHOW TABLES
@@ -77,7 +77,7 @@ SHOW TABLES
  */
 function get_columns_of($tables)
 {
-    $columns_of = array();
+    $columns_of = [];
 
     foreach ($tables as $table) {
         $query = '
@@ -85,7 +85,7 @@ DESC `'.$table.'`
 ;';
         $result = pwg_query($query);
 
-        $columns_of[$table] = array();
+        $columns_of[$table] = [];
 
         while ($row = pwg_db_fetch_row($result)) {
             $columns_of[$table][] = $row[0];
@@ -170,10 +170,10 @@ if ('fr_FR' == $language) {
 }
 define('PHPWG_URL', 'https://'.PHPWG_DOMAIN);
 
-load_language('common.lang', '', array('language' => $language, 'target_charset' => 'utf-8', 'no_fallback' => true));
-load_language('admin.lang', '', array('language' => $language, 'target_charset' => 'utf-8', 'no_fallback' => true));
-load_language('install.lang', '', array('language' => $language, 'target_charset' => 'utf-8', 'no_fallback' => true));
-load_language('upgrade.lang', '', array('language' => $language, 'target_charset' => 'utf-8', 'no_fallback' => true));
+load_language('common.lang', '', ['language' => $language, 'target_charset' => 'utf-8', 'no_fallback' => true]);
+load_language('admin.lang', '', ['language' => $language, 'target_charset' => 'utf-8', 'no_fallback' => true]);
+load_language('install.lang', '', ['language' => $language, 'target_charset' => 'utf-8', 'no_fallback' => true]);
+load_language('upgrade.lang', '', ['language' => $language, 'target_charset' => 'utf-8', 'no_fallback' => true]);
 
 // +-----------------------------------------------------------------------+
 // |                          database connection                          |
@@ -184,7 +184,7 @@ include(PHPWG_ROOT_PATH .'include/dblayer/functions_'.$conf['dblayer'].'.inc.php
 upgrade_db_connect();
 pwg_db_check_charset();
 
-list($dbnow) = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
+[$dbnow] = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
 define('CURRENT_DATE', $dbnow);
 
 // +-----------------------------------------------------------------------+
@@ -192,12 +192,12 @@ define('CURRENT_DATE', $dbnow);
 // +-----------------------------------------------------------------------+
 
 $template = new Template(PHPWG_ROOT_PATH.'admin/themes', 'clear');
-$template->set_filenames(array('upgrade' => 'upgrade.tpl'));
+$template->set_filenames(['upgrade' => 'upgrade.tpl']);
 $template->assign(
-    array(
+    [
   'RELEASE' => PHPWG_VERSION,
   'L_UPGRADE_HELP' => l10n('Need help ? Ask your question on <a href="%s">Piwigo message board</a>.', PHPWG_URL.'/forum'),
-  )
+  ]
 );
 
 // +-----------------------------------------------------------------------+
@@ -218,7 +218,7 @@ if ($has_remote_site) {
     include_once(PHPWG_ROOT_PATH.'admin/include/updates.class.php');
     include_once(PHPWG_ROOT_PATH.'admin/include/pclzip.lib.php');
 
-    $page['errors'] = array();
+    $page['errors'] = [];
     $step = 3;
     updates::upgrade_to('2.3.4', $step, false);
 
@@ -314,9 +314,9 @@ SELECT id
 // +-----------------------------------------------------------------------+
 // |                            upgrade launch                             |
 // +-----------------------------------------------------------------------+
-$page['infos'] = array();
-$page['errors'] = array();
-$mysql_changes = array();
+$page['infos'] = [];
+$page['errors'] = [];
+$mysql_changes = [];
 
 // check php version
 if (version_compare(PHP_VERSION, REQUIRED_PHP_VERSION, '<')) {
@@ -368,7 +368,7 @@ if ((isset($_POST['submit']) or isset($_GET['now']))
 
         $template->assign(
             'upgrade',
-            array(
+            [
             'VERSION' => $current_release,
             'TOTAL_TIME' => get_elapsed_time(
                 $page['upgrade_start'],
@@ -381,20 +381,20 @@ if ((isset($_POST['submit']) or isset($_GET['now']))
                 ' '
             ).' s',
             'NB_QUERIES' => $page['count_queries'],
-            )
+            ]
         );
 
         $page['infos'][] = l10n('Perform a maintenance check in [Administration>Tools>Maintenance] if you encounter any problem.');
 
         // Save $page['infos'] in order to restore after maintenance actions
         $page['infos_sav'] = $page['infos'];
-        $page['infos'] = array();
+        $page['infos'] = [];
 
         $template->assign(
-            array(
+            [
             'button_label' => l10n('Home'),
             'button_link' => 'index.php',
-            )
+            ]
         );
 
         // if the webmaster has a session, let's give a link to discover new features
@@ -413,10 +413,10 @@ REPLACE INTO '.PLUGINS_TABLE.'
                 load_conf_from_db();
 
                 $template->assign(
-                    array(
+                    [
                     'button_label' => l10n('Discover what\'s new in Piwigo %s', get_branch_from_version(PHPWG_VERSION)),
                     'button_link' => 'admin.php?submited_tour_path=tours/'.$version_.'&amp;pwg_token='.get_pwg_token(),
-                    )
+                    ]
                 );
             }
         }
@@ -460,9 +460,9 @@ else {
     }
     $template->assign('language_options', $languages_options);
 
-    $template->assign('introduction', array(
+    $template->assign('introduction', [
       'CURRENT_RELEASE' => $current_release,
-      'F_ACTION' => 'upgrade.php?language=' . $language));
+      'F_ACTION' => 'upgrade.php?language=' . $language]);
 
     if (!check_upgrade()) {
         $template->assign('login', true);

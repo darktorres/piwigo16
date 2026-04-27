@@ -31,7 +31,7 @@ function get_sync_iptc_data($file)
     $iptc = get_iptc_data($file, $map);
 
     foreach ($iptc as $pwg_key => $value) {
-        if (in_array($pwg_key, array('date_creation', 'date_available'))) {
+        if (in_array($pwg_key, ['date_creation', 'date_available'])) {
             if (preg_match('/(\d{4})(\d{2})(\d{2})/', $value, $matches)) {
                 $year = $matches[1];
                 $month = $matches[2];
@@ -72,7 +72,7 @@ function get_sync_exif_data($file)
     $exif = get_exif_data($file, $conf['use_exif_mapping']);
 
     foreach ($exif as $pwg_key => $value) {
-        if (in_array($pwg_key, array('date_creation', 'date_available'))) {
+        if (in_array($pwg_key, ['date_creation', 'date_available'])) {
             if (preg_match('/^(\d{4}).(\d{2}).(\d{2}) (\d{2}).(\d{2}).(\d{2})/', $value, $matches)) {
                 $exif[$pwg_key] = $matches[1].'-'.$matches[2].'-'.$matches[3].' '.$matches[4].':'.$matches[5].':'.$matches[6];
                 if ($exif[$pwg_key] == '0000-00-00 00:00:00') {
@@ -86,7 +86,7 @@ function get_sync_exif_data($file)
             }
         }
 
-        if (in_array($pwg_key, array('keywords', 'tags'))) {
+        if (in_array($pwg_key, ['keywords', 'tags'])) {
             $exif[$pwg_key] = metadata_normalize_keywords_string($exif[$pwg_key]);
         }
 
@@ -110,14 +110,14 @@ function get_sync_metadata_attributes()
 {
     global $conf;
 
-    $update_fields = array('filesize', 'width', 'height');
+    $update_fields = ['filesize', 'width', 'height'];
 
     if ($conf['use_exif']) {
         $update_fields =
           array_merge(
               $update_fields,
               array_keys($conf['use_exif_mapping']),
-              array('latitude', 'longitude')
+              ['latitude', 'longitude']
           );
     }
 
@@ -171,7 +171,7 @@ function get_sync_metadata($infos)
         $mime_type = mime_content_type($file);
 
         if (str_starts_with($mime_type, 'image/')) {
-            if (in_array($mime_type, array('image/svg+xml', 'image/svg'))) {
+            if (in_array($mime_type, ['image/svg+xml', 'image/svg'])) {
                 $xml = file_get_contents($file);
 
                 $xmlget = simplexml_load_string($xml);
@@ -214,9 +214,9 @@ function get_sync_metadata($infos)
         $infos = array_merge($infos, $iptc);
     }
 
-    foreach (array('name', 'author') as $single_line_field) {
+    foreach (['name', 'author'] as $single_line_field) {
         if (isset($infos[$single_line_field])) {
-            foreach (array("\r\n", "\n", "\r") as $to_replace_string) {
+            foreach (["\r\n", "\n", "\r"] as $to_replace_string) {
                 $infos[$single_line_field] = str_replace($to_replace_string, ' ', $infos[$single_line_field]);
             }
         }
@@ -239,8 +239,8 @@ function sync_metadata($ids)
         define('CURRENT_DATE', date('Y-m-d'));
     }
 
-    $datas = array();
-    $tags_of = array();
+    $datas = [];
+    $tags_of = [];
 
     $query = '
 SELECT id, path, representative_ext
@@ -258,10 +258,10 @@ SELECT id, path, representative_ext
         }
         // print_r($data);
         $id = $data['id'];
-        foreach (array('keywords', 'tags') as $key) {
+        foreach (['keywords', 'tags'] as $key) {
             if (isset($data[$key])) {
                 if (!isset($tags_of[$id])) {
-                    $tags_of[$id] = array();
+                    $tags_of[$id] = [];
                 }
 
                 foreach (explode(',', $data[$key]) as $tag_name) {
@@ -281,15 +281,15 @@ SELECT id, path, representative_ext
 
         $update_fields = array_diff(
             $update_fields,
-            array('tags', 'keywords')
+            ['tags', 'keywords']
         );
 
         mass_updates(
             IMAGES_TABLE,
-            array(
-            'primary' => array('id'),
+            [
+            'primary' => ['id'],
             'update'  => $update_fields,
-            ),
+            ],
             $datas,
             MASS_UPDATES_SKIP_EMPTY
         );
@@ -315,7 +315,7 @@ function get_filelist(
     $only_new = false
 ) {
     // filling $cat_ids : all categories required
-    $cat_ids = array();
+    $cat_ids = [];
 
     $query = '
 SELECT id
@@ -341,7 +341,7 @@ SELECT id
     }
 
     if (count($cat_ids) == 0) {
-        return array();
+        return [];
     }
 
     $query = '
@@ -371,7 +371,7 @@ function metadata_normalize_keywords_string($keywords_string)
 
     $keywords_string = preg_replace($conf['metadata_keyword_separator_regex'], ',', $keywords_string);
     // new lines are always considered as keyword separators
-    $keywords_string = str_replace(array("\r\n", "\n", "\r"), ',', $keywords_string);
+    $keywords_string = str_replace(["\r\n", "\n", "\r"], ',', $keywords_string);
     $keywords_string = preg_replace('/,+/', ',', $keywords_string);
     $keywords_string = preg_replace('/^,+|,+$/', '', $keywords_string);
 

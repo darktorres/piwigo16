@@ -20,7 +20,7 @@ $template->assign(
     load_language(
         'help/photos_add_ftp.html',
         '',
-        array('return' => true)
+        ['return' => true]
     )
 );
 

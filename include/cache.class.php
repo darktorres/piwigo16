@@ -83,14 +83,14 @@ class PersistentFileCache extends PersistentCache
             $lifetime = $this->default_lifetime;
         }
 
-        if (rand() % 97 == 0) {
+        if (random_int(0, mt_getrandmax()) % 97 == 0) {
             $this->purge(false);
         }
 
-        $serialized = serialize(array(
+        $serialized = serialize([
             'expire' => time() + $lifetime,
             'data' => $value,
-          ));
+          ]);
 
         if (false === @file_put_contents($this->dir.$key.'.cache', $serialized)) {
             mkgetdir($this->dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR);

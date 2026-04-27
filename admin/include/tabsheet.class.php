@@ -11,20 +11,16 @@ class tabsheet
 {
     public $sheets;
     public $uniqid;
-    public $name;
-    public $titlename;
     public $selected;
 
     /*
       $name is the tabsheet's name inside the template .tpl file
       $titlename in the template is affected by $titlename value
     */
-    public function __construct($name = 'TABSHEET', $titlename = 'TABSHEET_TITLE')
+    public function __construct(public $name = 'TABSHEET', public $titlename = 'TABSHEET_TITLE')
     {
-        $this->sheets = array();
+        $this->sheets = [];
         $this->uniqid = null;
-        $this->name = $name;
-        $this->titlename = $titlename;
         $this->selected = '';
     }
 
@@ -39,8 +35,8 @@ class tabsheet
     public function add($name, $caption, $url, $selected = false)
     {
         if (!isset($this->sheets[$name])) {
-            $this->sheets[$name] = array('caption' => $caption,
-                                         'url' => $url);
+            $this->sheets[$name] = ['caption' => $caption,
+                                         'url' => $url];
             if ($selected) {
                 $this->selected = $name;
             }
@@ -125,7 +121,7 @@ class tabsheet
 
         if (isset($selected_tab)) {
             $template->assign(
-                array($this->titlename => '['.$selected_tab['caption'].']')
+                [$this->titlename => '['.$selected_tab['caption'].']']
             );
         }
 

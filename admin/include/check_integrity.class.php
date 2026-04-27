@@ -15,9 +15,9 @@ class check_integrity
 
     public function __construct()
     {
-        $this->ignore_list = array();
-        $this->retrieve_list = array();
-        $this->build_ignore_list = array();
+        $this->ignore_list = [];
+        $this->retrieve_list = [];
+        $this->build_ignore_list = [];
     }
 
     /**
@@ -42,12 +42,12 @@ class check_integrity
             $this->ignore_list = $conf_c13y_ignore['list'];
         } else {
             $ignore_list_changed = true;
-            $this->ignore_list = array();
+            $this->ignore_list = [];
         }
 
         // Retrieve list
-        $this->retrieve_list = array();
-        $this->build_ignore_list = array();
+        $this->retrieve_list = [];
+        $this->build_ignore_list = [];
 
         trigger_notify('list_check_integrity', $this);
 
@@ -72,9 +72,9 @@ class check_integrity
                     if (is_array($c13y['correction_fct_args'])) {
                         $args = $c13y['correction_fct_args'];
                     } elseif (!is_null($c13y['correction_fct_args'])) {
-                        $args = array($c13y['correction_fct_args']);
+                        $args = [$c13y['correction_fct_args']];
                     } else {
-                        $args = array();
+                        $args = [];
                     }
                     $this->retrieve_list[$i]['corrected'] = call_user_func_array($c13y['correction_fct'], $args);
 
@@ -149,11 +149,11 @@ class check_integrity
         $submit_ignore = false;
 
         if (isset($this->retrieve_list) and count($this->retrieve_list) > 0) {
-            $template->set_filenames(array('check_integrity' => 'check_integrity.tpl'));
+            $template->set_filenames(['check_integrity' => 'check_integrity.tpl']);
 
             foreach ($this->retrieve_list as $i => $c13y) {
                 $can_select = false;
-                $c13y_display = array(
+                $c13y_display = [
                    'id' => $c13y['id'],
                    'anomaly' => $c13y['anomaly'],
                    'show_ignore_msg' => false,
@@ -163,7 +163,7 @@ class check_integrity
                    'correction_error_fct' => '',
                    'show_correction_bad_fct' => false,
                    'correction_msg' => '',
-                  );
+                  ];
 
                 if (isset($c13y['ignored'])) {
                     if ($c13y['ignored']) {
@@ -227,13 +227,13 @@ class check_integrity
             $this->build_ignore_list[] = $id;
         } else {
             $this->retrieve_list[] =
-              array(
+              [
                 'id' => $id,
                 'anomaly' => $anomaly,
                 'correction_fct' => $correction_fct,
                 'correction_fct_args' => $correction_fct_args,
                 'correction_msg' => $correction_msg,
-                'is_callable' => is_callable($correction_fct));
+                'is_callable' => is_callable($correction_fct)];
         }
     }
 
@@ -243,9 +243,9 @@ class check_integrity
      * @param ignore list array
      * @return void
      */
-    public function update_conf($conf_ignore_list = array())
+    public function update_conf($conf_ignore_list = [])
     {
-        $conf_c13y_ignore =  array();
+        $conf_c13y_ignore =  [];
         $conf_c13y_ignore['version'] = PHPWG_VERSION;
         $conf_c13y_ignore['list'] = $conf_ignore_list;
         $query = 'update '.CONFIG_TABLE.' set value =\''.serialize($conf_c13y_ignore).'\'where param = \'c13y_ignore\';';

@@ -75,7 +75,7 @@ SELECT COUNT(*)
   FROM '.CATEGORIES_TABLE.'
   WHERE visible =\'false\'
 ;';
-list($locked_album) = pwg_db_fetch_row(pwg_query($query));
+[$locked_album] = pwg_db_fetch_row(pwg_query($query));
 if ($locked_album > 0) {
     $locked_album_url = PHPWG_ROOT_PATH.'admin.php?page=cat_options&section=visible';
 
@@ -92,7 +92,7 @@ fs_quick_check();
 // |                             template init                             |
 // +-----------------------------------------------------------------------+
 
-$template->set_filenames(array('intro' => 'intro.tpl'));
+$template->set_filenames(['intro' => 'intro.tpl']);
 
 if ($conf['show_newsletter_subscription'] and userprefs_get_param('show_newsletter_subscription', true)) {
     $query = '
@@ -102,19 +102,19 @@ if ($conf['show_newsletter_subscription'] and userprefs_get_param('show_newslett
     ORDER BY user_id ASC
     LIMIT 1
   ;';
-    list($register_date) = pwg_db_fetch_row(pwg_query($query));
+    [$register_date] = pwg_db_fetch_row(pwg_query($query));
 
     $query = '
   SELECT COUNT(*)
     FROM '.CATEGORIES_TABLE.'
   ;';
-    list($nb_cats) = pwg_db_fetch_row(pwg_query($query));
+    [$nb_cats] = pwg_db_fetch_row(pwg_query($query));
 
     $query = '
   SELECT COUNT(*)
     FROM '.IMAGES_TABLE.'
   ;';
-    list($nb_images) = pwg_db_fetch_row(pwg_query($query));
+    [$nb_images] = pwg_db_fetch_row(pwg_query($query));
 
     include_once(PHPWG_ROOT_PATH.'include/mdetect.php');
     $uagent_obj = new uagent_info();
@@ -122,11 +122,11 @@ if ($conf['show_newsletter_subscription'] and userprefs_get_param('show_newslett
 
     if (!$uagent_obj->DetectIos() and strtotime($register_date) < strtotime('2 weeks ago') and $nb_cats >= 3 and $nb_images >= 30) {
         $template->assign(
-            array(
+            [
         'EMAIL' => $user['email'],
         'SUBSCRIBE_BASE_URL' => get_newsletter_subscribe_base_url($user['language']),
         'OLD_NEWSLETTERS_URL' => get_old_newsletters_base_url($user['language']),
-        )
+        ]
         );
     }
 
@@ -142,7 +142,7 @@ if ($du_gb > 100) {
 }
 
 $template->assign(
-    array(
+    [
     'NB_PHOTOS' => $stats['nb_photos'],
     'NB_ALBUMS' => $stats['nb_categories'],
     'NB_TAGS' => $stats['nb_tags'],
@@ -155,7 +155,7 @@ $template->assign(
     'STORAGE_USED' => str_replace(' ', '&nbsp;', l10n('%sGB', number_format($du_gb, $du_decimals))),
     'U_QUICK_SYNC' => PHPWG_ROOT_PATH.'admin.php?page=site_update&amp;site=1&amp;quick_sync=1&amp;pwg_token='.get_pwg_token(),
     'CHECK_FOR_UPDATES' => $conf['dashboard_check_for_updates'],
-    )
+    ]
 );
 
 if ($conf['activate_comments']) {
@@ -163,7 +163,7 @@ if ($conf['activate_comments']) {
 SELECT COUNT(*)
   FROM '.COMMENTS_TABLE.'
 ;';
-    list($nb_comments) = pwg_db_fetch_row(pwg_query($query));
+    [$nb_comments] = pwg_db_fetch_row(pwg_query($query));
     $template->assign('NB_COMMENTS', $nb_comments);
 } else {
     $template->assign('NB_COMMENTS', 0);
@@ -194,11 +194,11 @@ $nb_weeks = $conf['dashboard_activity_nb_weeks'];
 //Count mondays
 $mondays = 0;
 //Get mondays number for the chart legend
-$week_number = array();
+$week_number = [];
 //Array for sorting days in circle size
-$temp_data = array();
+$temp_data = [];
 
-$activity_last_weeks = array();
+$activity_last_weeks = [];
 $date = new DateTime();
 
 //Get data from $nb_weeks last weeks
@@ -248,10 +248,10 @@ if (!isset($_SESSION['cache_activity_last_weeks']) or $_SESSION['cache_activity_
 
     $logger->debug('[admin/intro::'.__LINE__.'] recent activity calculated in '.get_elapsed_time($start_time, get_moment()));
 
-    $_SESSION['cache_activity_last_weeks'] = array(
+    $_SESSION['cache_activity_last_weeks'] = [
       'calculated_on' => time(),
       'data' => $activity_last_weeks,
-    );
+    ];
 }
 
 $activity_last_weeks = $_SESSION['cache_activity_last_weeks']['data'];
@@ -263,7 +263,7 @@ foreach ($activity_last_weeks as $week => $i) {
         ksort($details);
         $activity_last_weeks[$week][$day]['details'] = $details;
         if ($j['number'] > 0) {
-            $temp_data[] = array('x' => $j['number'], 'd' => $day, 'w' => $week);
+            $temp_data[] = ['x' => $j['number'], 'd' => $day, 'w' => $week];
         }
     }
 }
@@ -276,16 +276,13 @@ foreach ($activity_last_weeks as $week => $i) {
 //Function to sort days by number of activity
 function cmp_day($a, $b)
 {
-    if ($a['x'] == $b['x']) {
-        return 0;
-    }
-    return ($a['x'] < $b['x']) ? -1 : 1;
+    return $a['x'] <=> $b['x'];
 }
 
 usort($temp_data, 'cmp_day');
 
 //Get the percent difference
-$diff_x = array();
+$diff_x = [];
 
 for ($i = 1; $i < count($temp_data); $i++) {
     $diff_x[] = $temp_data[$i]['x'] / $temp_data[$i - 1]['x'] * 100;
@@ -301,7 +298,7 @@ if (count($diff_x) > 0) {
 }
 
 //Fill empty chart data for the template
-$chart_data = array();
+$chart_data = [];
 for ($i = 0; $i < $nb_weeks; $i++) {
     for ($j = 1; $j <= 7; $j++) {
         $chart_data[$i][$j] = 0;
@@ -328,7 +325,7 @@ $template->assign('ACTIVITY_LAST_WEEKS', $activity_last_weeks);
 $template->assign('ACTIVITY_CHART_DATA', $chart_data);
 $template->assign('ACTIVITY_CHART_NUMBER_SIZES', $size);
 
-$day_labels = array();
+$day_labels = [];
 for ($i = 0; $i <= 6; $i++) {
     // first 3 letters of day name
     $day_labels[] = mb_substr($lang['day'][($i + 1) % 7], 0, 3);
@@ -339,8 +336,8 @@ $template->assign('DAY_LABELS', $day_labels);
 // |                           get storage data                            |
 // +-----------------------------------------------------------------------+
 
-$video_format = array('webm','webmv','ogg','ogv','mp4','m4v', 'mov');
-$data_storage = array();
+$video_format = ['webm','webmv','ogg','ogv','mp4','m4v', 'mov'];
+$data_storage = [];
 
 //Select files in Image_Table
 $query = '
@@ -367,10 +364,10 @@ foreach ($file_extensions as $ext => $ext_details) {
     @$data_storage[$type]['total']['filesize'] += $ext_details['filesize'];
     @$data_storage[$type]['total']['nb_files'] += $ext_details['ext_counter'];
 
-    @$data_storage[$type]['details'][strtoupper($ext)] = array(
+    @$data_storage[$type]['details'][strtoupper($ext)] = [
       'filesize' => $ext_details['filesize'],
       'nb_files' => $ext_details['ext_counter'],
-    );
+    ];
 }
 
 //Select files from format table
@@ -390,10 +387,10 @@ foreach ($file_extensions as $ext => $ext_details) {
     @$data_storage[$type]['total']['filesize'] += $ext_details['filesize'];
     @$data_storage[$type]['total']['nb_files'] += $ext_details['ext_counter'];
 
-    @$data_storage[$type]['details'][strtoupper($ext)] = array(
+    @$data_storage[$type]['details'][strtoupper($ext)] = [
       'filesize' => $ext_details['filesize'],
       'nb_files' => $ext_details['ext_counter'],
-    );
+    ];
 }
 
 // Add cache size if requested and known.

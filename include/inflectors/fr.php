@@ -15,37 +15,37 @@ class Inflector_fr
 
     public function __construct()
     {
-        $tmp = 	array('monsieur' => 'messieurs',
+        $tmp = 	['monsieur' => 'messieurs',
           'madame' => 'mesdames',
           'mademoiselle' => 'mesdemoiselles',
-        );
+        ];
 
         $this->exceptions = $tmp;
         foreach ($tmp as $k => $v) {
             $this->exceptions[$v] = $k;
         }
 
-        $this->pluralizers = array_reverse(array( '/$/' => 's',
+        $this->pluralizers = array_reverse([ '/$/' => 's',
           '/(bijou|caillou|chou|genou|hibou|joujou|pou|au|eu|eau)$/' => '\1x',
           '/(bleu|émeu|landau|lieu|pneu|sarrau)$/' => '\1s',
           '/al$/' => 'aux',
           '/ail$/' => 'ails',
           '/(b|cor|ém|gemm|soupir|trav|vant|vitr)ail$/' => '\1aux',
           '/(s|x|z)$/' => '\1',
-        ));
+        ]);
 
-        $this->singularizers = array_reverse(array(
+        $this->singularizers = array_reverse([
           '/s$/' => '',
           '/(bijou|caillou|chou|genou|hibou|joujou|pou|au|eu|eau)x$/' => '\1',
           '/(journ|chev)aux$/' => '\1al',
           '/ails$/' => 'ail',
           '/(b|cor|ém|gemm|soupir|trav|vant|vitr)aux$/' => '\1ail',
-        ));
+        ]);
     }
 
     public function get_variants($word)
     {
-        $res = array();
+        $res = [];
 
         $word = strtolower($word);
 

@@ -21,6 +21,8 @@
 
 namespace PHPMailer\PHPMailer;
 
+use Psr\Log\LoggerInterface;
+
 /**
  * PHPMailer RFC821 SMTP email transport class.
  * Implements RFC 821 SMTP commands and provides some utility methods for sending mail to an SMTP server.
@@ -267,7 +269,7 @@ class SMTP
             return;
         }
         //Is this a PSR-3 logger?
-        if ($this->Debugoutput instanceof \Psr\Log\LoggerInterface) {
+        if ($this->Debugoutput instanceof LoggerInterface) {
             $this->Debugoutput->debug($str);
 
             return;
@@ -437,10 +439,10 @@ class SMTP
 
         //SMTP server can take longer to respond, give longer timeout for first read
         //Windows does not have support for this timeout function
-        if (strpos(PHP_OS, 'WIN') !== 0) {
+        if (!str_starts_with(PHP_OS, 'WIN')) {
             $max = (int)ini_get('max_execution_time');
             //Don't bother if unlimited, or if set_time_limit is disabled
-            if (0 !== $max && $timeout > $max && strpos(ini_get('disable_functions'), 'set_time_limit') === false) {
+            if (0 !== $max && $timeout > $max && !str_contains(ini_get('disable_functions'), 'set_time_limit')) {
                 @set_time_limit($timeout);
             }
             stream_set_timeout($connection, $timeout, 0);
@@ -738,7 +740,7 @@ class SMTP
 
         $field = substr($lines[0], 0, strpos($lines[0], ':'));
         $in_headers = false;
-        if (!empty($field) && strpos($field, ' ') === false) {
+        if (!empty($field) && !str_contains($field, ' ')) {
             $in_headers = true;
         }
 
@@ -814,7 +816,7 @@ class SMTP
         }
 
         //Some servers shut down the SMTP service here (RFC 5321)
-        if (substr($this->helo_rply, 0, 3) == '421') {
+        if (str_starts_with($this->helo_rply, '421')) {
             return false;
         }
 
@@ -951,11 +953,11 @@ class SMTP
             $dsn = strtoupper($dsn);
             $notify = [];
 
-            if (strpos($dsn, 'NEVER') !== false) {
+            if (str_contains($dsn, 'NEVER')) {
                 $notify[] = 'NEVER';
             } else {
                 foreach (['SUCCESS', 'FAILURE', 'DELAY'] as $value) {
-                    if (strpos($dsn, $value) !== false) {
+                    if (str_contains($dsn, $value)) {
                         $notify[] = $value;
                     }
                 }
@@ -1000,7 +1002,7 @@ class SMTP
             return false;
         }
         //Reject line breaks in all commands
-        if ((strpos($commandstring, "\n") !== false) || (strpos($commandstring, "\r") !== false)) {
+        if ((str_contains($commandstring, "\n")) || (str_contains($commandstring, "\r"))) {
             $this->setError("Command '$command' contained line breaks");
 
             return false;

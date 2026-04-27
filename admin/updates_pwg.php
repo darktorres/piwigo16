@@ -26,7 +26,7 @@ STEP:
 2 = upgrade on same branch
 3 = upgrade on different branch
 */
-$step = isset($_GET['step']) ? $_GET['step'] : 0;
+$step = $_GET['step'] ?? 0;
 
 [$ct_env, $ct_build_version] = get_container_info();
 
@@ -41,7 +41,7 @@ if ('Official' === $ct_env) {
     $upgrade_to = isset($_GET['to']) ? preg_replace('/[a-z]$/', '', $_GET['to']) : '';
 } else {
     check_input_parameter('to', $_GET, false, '/^\d+\.\d+\.\d+$/');
-    $upgrade_to = isset($_GET['to']) ? $_GET['to'] : '';
+    $upgrade_to = $_GET['to'] ?? '';
 }
 
 $updates = new updates();
@@ -116,35 +116,35 @@ if (!is_webmaster()) {
 }
 
 $template->assign(
-    array(
+    [
   'STEP'          => $step,
-  'PIWIGO_CURRENT_VERSION' => isset($page['updated_version']) ? $page['updated_version'] : PHPWG_VERSION,
+  'PIWIGO_CURRENT_VERSION' => $page['updated_version'] ?? PHPWG_VERSION,
   'UPGRADE_TO'    => $upgrade_to,
-  )
+  ]
 );
 
 if (isset($new_versions['minor'])) {
     $template->assign(
-        array(
+        [
         'MINOR_VERSION' => $new_versions['minor'],
         'MINOR_RELEASE_URL' => (
             ('Official' === $ct_env)
         ? 'https://github.com/Piwigo/piwigo-docker/wiki/Changelog#' . preg_replace('/\./', '', $new_versions['minor'])
         : PHPWG_URL . '/releases/' . $new_versions['minor']
         ),
-    )
+    ]
     );
 }
 
 if (isset($new_versions['major'])) {
     $template->assign(
-        array(
+        [
         'MAJOR_VERSION' => $new_versions['major'],
         'MAJOR_RELEASE_URL' =>   PHPWG_URL . '/releases/' .
           (('Official' === $ct_env) ? substr($new_versions['major'], 0, -1) : $new_versions['major']),
         'MAJOR_DOCKER_RELEASE_URL' => 'https://github.com/Piwigo/piwigo-docker/wiki/Changelog#' . preg_replace('/\./', '', $new_versions['major']),
         'MAJOR_VERSION_PWG' => preg_replace('/[a-z]$/', '', $new_versions['major']), // Remove container build ver
-  )
+  ]
     );
 }
 

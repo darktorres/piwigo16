@@ -10,7 +10,7 @@
 //
 // Start output of page
 //
-$template->set_filenames(array('header' => 'header.tpl'));
+$template->set_filenames(['header' => 'header.tpl']);
 
 trigger_notify('loc_begin_page_header');
 
@@ -20,10 +20,9 @@ if (defined('IN_ADMIN') and IN_ADMIN) {
 }
 
 $template->assign(
-    array(
+    [
     'GALLERY_TITLE' =>
-      isset($page['gallery_title']) ?
-        $page['gallery_title'] : $conf['gallery_title'],
+      $page['gallery_title'] ?? $conf['gallery_title'],
 
     'PAGE_BANNER' =>
       trigger_change(
@@ -31,13 +30,12 @@ $template->assign(
           str_replace(
               '%gallery_title%',
               $conf['gallery_title'],
-              isset($page['page_banner']) ? $page['page_banner'] : $conf['page_banner']
+              $page['page_banner'] ?? $conf['page_banner']
           )
       ),
 
     'BODY_ID' =>
-      isset($page['body_id']) ?
-        $page['body_id'] : '',
+      $page['body_id'] ?? '',
 
     'CONTENT_ENCODING' => get_pwg_charset(),
     'PAGE_TITLE' => strip_tags($title),
@@ -51,7 +49,7 @@ $template->assign(
     'BODY_CLASSES' => $page['body_classes'],
 
     'BODY_DATA' => json_encode($page['body_data']),
-  )
+  ]
 );
 
 
@@ -82,12 +80,12 @@ if (!isset($page['meta_robots']['noindex'])) {
 if (isset($refresh) and intval($refresh) >= 0
     and isset($url_link)) {
     $template->assign(
-        array(
-        'page_refresh' => array(
+        [
+        'page_refresh' => [
               'TIME' => $refresh,
               'U_REFRESH' => $url_link,
-            ),
-        )
+            ],
+        ]
     );
 }
 

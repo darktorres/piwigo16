@@ -10,11 +10,8 @@
 // provides data for site synchronization from the local file system
 class LocalSiteReader
 {
-    public $site_url;
-
-    public function __construct($url)
+    public function __construct(public $site_url)
     {
-        $this->site_url = $url;
         global $conf;
         if (!isset($conf['flip_file_ext'])) {
             $conf['flip_file_ext'] = array_flip($conf['file_ext']);
@@ -34,10 +31,10 @@ class LocalSiteReader
         global $errors;
 
         if (!is_dir($this->site_url)) {
-            $errors[] = array(
+            $errors[] = [
               'path' => $this->site_url,
               'type' => 'PWG-ERROR-NO-FS',
-              );
+              ];
 
             return false;
         }
@@ -62,8 +59,8 @@ class LocalSiteReader
     {
         global $conf;
 
-        $subdirs = array();
-        $fs = array();
+        $subdirs = [];
+        $fs = [];
         if (is_dir($path) && $contents = opendir($path)) {
             while (($node = readdir($contents)) !== false) {
                 if ($node == '.' or $node == '..') {
@@ -80,7 +77,7 @@ class LocalSiteReader
                             $representative_ext = $this->get_representative_ext($path, $filename_wo_ext);
                         }
 
-                        $fs[ $path.'/'.$node ] = array('representative_ext' => $representative_ext);
+                        $fs[ $path.'/'.$node ] = ['representative_ext' => $representative_ext];
 
                         if ($conf['enable_formats']) {
                             $fs[ $path.'/'.$node ]['formats'] = $this->get_formats($path, $filename_wo_ext);
@@ -109,13 +106,13 @@ class LocalSiteReader
     // files update/synchronization
     public function get_update_attributes()
     {
-        return array('representative_ext');
+        return ['representative_ext'];
     }
 
     public function get_element_update_attributes($file)
     {
         global $conf;
-        $data = array();
+        $data = [];
 
         $filename = basename($file);
         $extension = get_extension($filename);
@@ -163,7 +160,7 @@ class LocalSiteReader
     {
         global $conf;
 
-        $formats = array();
+        $formats = [];
 
         $base_test = $path.'/pwg_format/'.$filename_wo_ext.'.';
 

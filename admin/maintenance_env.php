@@ -28,7 +28,7 @@ if (isset($_GET['action'])) {
 // |                                actions                                |
 // +-----------------------------------------------------------------------+
 
-$action = isset($_GET['action']) ? $_GET['action'] : '';
+$action = $_GET['action'] ?? '';
 
 switch ($action) {
     case 'phpinfo':
@@ -45,7 +45,7 @@ switch ($action) {
     case 'unlock_gallery':
         {
             conf_update_param('gallery_locked', 'false');
-            $_SESSION['page_infos'] = array(l10n('Gallery unlocked'));
+            $_SESSION['page_infos'] = [l10n('Gallery unlocked')];
             redirect(get_root_url().'admin.php?page=maintenance');
             break;
         }
@@ -116,7 +116,7 @@ SELECT
 ;';
             $all_user_ids = query2array($query, 'id', null);
 
-            $sessions_to_delete = array();
+            $sessions_to_delete = [];
 
             foreach ($sessions as $session) {
                 if (preg_match('/pwg_uid\|i:(\d+);/', $session['data'], $matches)) {
@@ -186,7 +186,7 @@ DELETE
             if (!fetchRemote(PHPWG_URL.'/download/latest_version', $result)) {
                 $page['errors'][] = l10n('Unable to check for upgrade.');
             } else {
-                $versions = array('current' => PHPWG_VERSION);
+                $versions = ['current' => PHPWG_VERSION];
                 $lines = @explode("\r\n", $result);
 
                 // if the current version is a BSF (development branch) build, we check
@@ -233,7 +233,7 @@ DELETE
 // |                             template init                             |
 // +-----------------------------------------------------------------------+
 
-$template->set_filenames(array('maintenance' => 'maintenance_env.tpl'));
+$template->set_filenames(['maintenance' => 'maintenance_env.tpl']);
 
 $url_format = get_root_url().'admin.php?page=maintenance&amp;action=%s&amp;pwg_token='.get_pwg_token();
 
@@ -245,16 +245,16 @@ $purge_urls[ l10n(IMG_CUSTOM) ] = sprintf($url_format, 'derivatives').'&amp;type
 
 $php_current_timestamp = date('Y-m-d H:i:s');
 $db_version = pwg_get_db_version();
-list($db_current_date) = pwg_db_fetch_row(pwg_query('SELECT now();'));
+[$db_current_date] = pwg_db_fetch_row(pwg_query('SELECT now();'));
 
-list($container_name, $container_version) = get_container_info();
+[$container_name, $container_version] = get_container_info();
 
 if (!in_array($container_name, ['Official','none'])) {
     $container_name = '(unofficial) '.$container_name;
 }
 
 $template->assign(
-    array(
+    [
     'U_MAINT_CATEGORIES' => sprintf($url_format, 'categories'),
     'U_MAINT_IMAGES' => sprintf($url_format, 'images'),
     'U_MAINT_ORPHAN_TAGS' => sprintf($url_format, 'delete_orphan_tags'),
@@ -284,7 +284,7 @@ $template->assign(
     'DB_DATATIME' => $db_current_date,
     'cache_sizes' => (isset($conf['cache_sizes'])) ? unserialize($conf['cache_sizes']) : null,
     'time_elapsed_since_last_calc' => (isset($conf['cache_sizes'])) ? time_since(unserialize($conf['cache_sizes'])[3]['value'], 'year') : null,
-    )
+    ]
 );
 
 // graphics library
@@ -295,25 +295,25 @@ if (!empty($graphics_library)) {
 
 if ($conf['gallery_locked']) {
     $template->assign(
-        array(
+        [
         'U_MAINT_UNLOCK_GALLERY' => sprintf($url_format, 'unlock_gallery'),
-        )
+        ]
     );
 } else {
     $template->assign(
-        array(
+        [
         'U_MAINT_LOCK_GALLERY' => sprintf($url_format, 'lock_gallery'),
-        )
+        ]
     );
 }
 
 $installed_on = get_installation_date();
 if (!empty($installed_on)) {
     $template->assign(
-        array(
-        'INSTALLED_ON' => format_date($installed_on, array('day', 'month', 'year')),
+        [
+        'INSTALLED_ON' => format_date($installed_on, ['day', 'month', 'year']),
         'INSTALLED_SINCE' => time_since($installed_on, 'day'),
-    )
+    ]
     );
 }
 
@@ -321,7 +321,7 @@ if (!empty($installed_on)) {
 // | Define advanced features                                              |
 // +-----------------------------------------------------------------------+
 
-$advanced_features = array();
+$advanced_features = [];
 
 //$advanced_features is array of array composed of CAPTION & URL
 $advanced_features = trigger_change(

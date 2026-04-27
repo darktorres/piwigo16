@@ -59,7 +59,7 @@ foreach ($autoupdate->types as $type) {
         if (!safe_version_compare($fs_ext['version'], $ext_info['revision_name'], '>=')) {
             array_push(
                 $updates_extension[$type],
-                array(
+                [
         'ID' => $ext_info['extension_id'],
         'REVISION_ID' => $ext_info['revision_id'],
         'EXT_ID' => $ext_id,
@@ -70,7 +70,7 @@ foreach ($autoupdate->types as $type) {
         'NEW_VERSION' => $ext_info['revision_name'],
         'URL_DOWNLOAD' => $ext_info['download_url'] . '&amp;origin=piwigo_download',
         'IGNORED' => in_array($ext_id, $conf['updates_ignored'][$type]),
-        )
+        ]
             );
         }
     }

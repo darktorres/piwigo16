@@ -11,7 +11,7 @@ class PwgRestRequestHandler extends PwgRequestHandler
 {
     public function handleRequest(&$service)
     {
-        $params = array();
+        $params = [];
 
         $param_array = $service->isPost() ? $_POST : $_GET;
         foreach ($param_array as $name => $value) {

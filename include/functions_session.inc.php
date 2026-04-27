@@ -54,7 +54,7 @@ function generate_key($size)
 
     return substr(
         str_replace(
-            array('+', '/'),
+            ['+', '/'],
             '',
             base64_encode($bytes)
         ),
@@ -98,7 +98,7 @@ function get_remote_addr_session_hash()
         return '';
     }
 
-    if (strpos($_SERVER['REMOTE_ADDR'], ':') === false) {//ipv4
+    if (!str_contains($_SERVER['REMOTE_ADDR'], ':')) {//ipv4
         return vsprintf(
             '%02X%02X',
             explode('.', $_SERVER['REMOTE_ADDR'])
@@ -212,10 +212,7 @@ function pwg_set_session_var($var, $value)
  */
 function pwg_get_session_var($var, $default = null)
 {
-    if (isset($_SESSION['pwg_'.$var])) {
-        return $_SESSION['pwg_'.$var];
-    }
-    return $default;
+    return $_SESSION['pwg_'.$var] ?? $default;
 }
 
 /**

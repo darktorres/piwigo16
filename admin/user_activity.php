@@ -32,7 +32,7 @@ include(PHPWG_ROOT_PATH.'admin/include/user_tabs.inc.php');
 
 
 if (isset($_GET['type']) && 'download_logs' == $_GET['type']) {
-    $output_lines = array();
+    $output_lines = [];
 
     $query = '
 SELECT
@@ -57,9 +57,9 @@ SELECT
         $row['details'] = str_replace('`groups`', 'groups', $row['details']);
         $row['details'] = str_replace('`rank`', 'rank', $row['details']);
 
-        list($date, $hour) = explode(' ', $row['occured_on']);
+        [$date, $hour] = explode(' ', $row['occured_on']);
 
-        $output_lines[] = array(
+        $output_lines[] = [
           'username' => $row['username'],
           'user_id' => $row['performed_by'],
           'object' => $row['object'],
@@ -69,7 +69,7 @@ SELECT
           'hour' => $hour,
           'ip_address' => $row['ip_address'],
           'details' => $row['details'],
-        );
+        ];
     }
 
     header('Content-type: application/csv');
@@ -94,11 +94,11 @@ $template->assign('ADMIN_PAGE_TITLE', l10n('Users'));
 // +-----------------------------------------------------------------------+
 // |                          sending html code                            |
 // +-----------------------------------------------------------------------+
-$template->assign(array(
+$template->assign([
   'PWG_TOKEN' => get_pwg_token(),
   'INHERIT' => $conf['inheritance_by_default'],
-  'CACHE_KEYS' => get_admin_client_cache_keys(array('users')),
-  ));
+  'CACHE_KEYS' => get_admin_client_cache_keys(['users']),
+  ]);
 
 $query = '
 SELECT 
@@ -122,16 +122,16 @@ if (count($nb_lines_for_user) > 0) {
 
 $username_of = query2array($query, 'id', 'username');
 
-$filterable_users = array();
+$filterable_users = [];
 
 foreach ($nb_lines_for_user as $id => $nb_line) {
     array_push(
         $filterable_users,
-        array(
+        [
         'id' => $id,
-        'username' => isset($username_of[$id]) ? $username_of[$id] : 'user#'.$id,
+        'username' => $username_of[$id] ?? 'user#' . $id,
         'nb_lines' => $nb_line,
-    )
+    ]
     );
 }
 $template->assign('ulist', $filterable_users);
@@ -141,7 +141,7 @@ SELECT COUNT(*)
   FROM '.USERS_TABLE.'
 ;';
 
-list($nb_users) = pwg_db_fetch_row(pwg_query($query));
+[$nb_users] = pwg_db_fetch_row(pwg_query($query));
 $template->assign('nb_users', $nb_users);
 
 $query = '
@@ -151,7 +151,7 @@ SELECT
   ORDER BY activity_id ASC
   LIMIT 1
 ;';
-list($min_date) = pwg_db_fetch_row(pwg_query($query));
+[$min_date] = pwg_db_fetch_row(pwg_query($query));
 
 $query = '
 SELECT
@@ -160,25 +160,25 @@ SELECT
   ORDER BY activity_id DESC
   LIMIT 1
 ;';
-list($max_date) = pwg_db_fetch_row(pwg_query($query));
+[$max_date] = pwg_db_fetch_row(pwg_query($query));
 
 $template->assign(
     'ACTIVITY_DATES',
-    array(
+    [
     'min' => empty($min_date) ? '' : substr($min_date, 0, 10),
     'max' => empty($max_date) ? '' : substr($max_date, 0, 10),
-  )
+  ]
 );
 
 $additional_filt_type = false;
 $additional_filt_name = null;
 $additional_filt_value = null;
 
-$additional_filters = array(
+$additional_filters = [
   'photo' => IMAGES_TABLE,
   'album' => CATEGORIES_TABLE,
   'group' => GROUPS_TABLE,
-);
+];
 
 foreach ($additional_filters as $filter_key => $filter_table) {
     if (isset($_GET[$filter_key])) {
@@ -202,11 +202,11 @@ SELECT
     }
 }
 
-$template->assign('ADDITIONAL_FILT', array(
+$template->assign('ADDITIONAL_FILT', [
   'type' => $additional_filt_type,
   'name' => $additional_filt_name,
   'value' => $additional_filt_value,
-));
+]);
 
 $query = '
 SELECT

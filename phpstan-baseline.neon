@@ -64,12 +64,6 @@ parameters:
 			path: admin/cat_perm.php
 
 		-
-			message: '#^Path in include\(\) "\./local/config/config\.inc\.php" is not a file or it does not exist\.$#'
-			identifier: include.fileNotFound
-			count: 2
-			path: admin/configuration.php
-
-		-
 			message: '''
 				#^Call to deprecated function array_from_query\(\)\:
 				2\.6$#
@@ -133,12 +127,6 @@ parameters:
 			'''
 			identifier: function.deprecated
 			count: 1
-			path: admin/include/functions_upgrade.php
-
-		-
-			message: '#^Call to deprecated function utf8_decode\(\)\.$#'
-			identifier: function.deprecated
-			count: 2
 			path: admin/include/functions_upgrade.php
 
 		-
@@ -319,12 +307,6 @@ parameters:
 			path: admin/themes_standard_pages.php
 
 		-
-			message: '#^Path in include\(\) "\./local/config/config\.inc\.php" is not a file or it does not exist\.$#'
-			identifier: include.fileNotFound
-			count: 2
-			path: admin/user_list.php
-
-		-
 			message: '#^Instantiated class FeedItem not found\.$#'
 			identifier: class.notFound
 			count: 2
@@ -337,7 +319,7 @@ parameters:
 			path: feed.php
 
 		-
-			message: '#^Path in include\(\) "\./local/config/config\.inc\.php" is not a file or it does not exist\.$#'
+			message: '#^Path in include\(\) "\./local/config/database\.inc\.php" is not a file or it does not exist\.$#'
 			identifier: include.fileNotFound
 			count: 1
 			path: i.php
@@ -346,133 +328,7 @@ parameters:
 			message: '#^Path in include\(\) "\./local/config/database\.inc\.php" is not a file or it does not exist\.$#'
 			identifier: include.fileNotFound
 			count: 1
-			path: i.php
-
-		-
-			message: '#^Path in include\(\) "\./local/config/config\.inc\.php" is not a file or it does not exist\.$#'
-			identifier: include.fileNotFound
-			count: 1
 			path: include/common.inc.php
-
-		-
-			message: '#^Path in include\(\) "\./local/config/database\.inc\.php" is not a file or it does not exist\.$#'
-			identifier: include.fileNotFound
-			count: 1
-			path: include/common.inc.php
-
-		-
-			message: '#^Function create_function not found\.$#'
-			identifier: function.notFound
-			count: 3
-			path: include/dblayer/functions_mysql.inc.php
-
-		-
-			message: '#^Function do_maintenance_all_tables\(\) should return none but return statement is missing\.$#'
-			identifier: return.missing
-			count: 2
-			path: include/dblayer/functions_mysql.inc.php
-
-		-
-			message: '#^Function mysql_affected_rows not found\.$#'
-			identifier: function.notFound
-			count: 2
-			path: include/dblayer/functions_mysql.inc.php
-
-		-
-			message: '#^Function mysql_close not found\.$#'
-			identifier: function.notFound
-			count: 1
-			path: include/dblayer/functions_mysql.inc.php
-
-		-
-			message: '#^Function mysql_connect not found\.$#'
-			identifier: function.notFound
-			count: 1
-			path: include/dblayer/functions_mysql.inc.php
-
-		-
-			message: '#^Function mysql_errno not found\.$#'
-			identifier: function.notFound
-			count: 2
-			path: include/dblayer/functions_mysql.inc.php
-
-		-
-			message: '#^Function mysql_error not found\.$#'
-			identifier: function.notFound
-			count: 2
-			path: include/dblayer/functions_mysql.inc.php
-
-		-
-			message: '#^Function mysql_fetch_array not found\.$#'
-			identifier: function.notFound
-			count: 1
-			path: include/dblayer/functions_mysql.inc.php
-
-		-
-			message: '#^Function mysql_fetch_assoc not found\.$#'
-			identifier: function.notFound
-			count: 1
-			path: include/dblayer/functions_mysql.inc.php
-
-		-
-			message: '#^Function mysql_fetch_object not found\.$#'
-			identifier: function.notFound
-			count: 1
-			path: include/dblayer/functions_mysql.inc.php
-
-		-
-			message: '#^Function mysql_fetch_row not found\.$#'
-			identifier: function.notFound
-			count: 1
-			path: include/dblayer/functions_mysql.inc.php
-
-		-
-			message: '#^Function mysql_free_result not found\.$#'
-			identifier: function.notFound
-			count: 1
-			path: include/dblayer/functions_mysql.inc.php
-
-		-
-			message: '#^Function mysql_get_server_info not found\.$#'
-			identifier: function.notFound
-			count: 1
-			path: include/dblayer/functions_mysql.inc.php
-
-		-
-			message: '#^Function mysql_insert_id not found\.$#'
-			identifier: function.notFound
-			count: 1
-			path: include/dblayer/functions_mysql.inc.php
-
-		-
-			message: '#^Function mysql_num_rows not found\.$#'
-			identifier: function.notFound
-			count: 2
-			path: include/dblayer/functions_mysql.inc.php
-
-		-
-			message: '#^Function mysql_query not found\.$#'
-			identifier: function.notFound
-			count: 1
-			path: include/dblayer/functions_mysql.inc.php
-
-		-
-			message: '#^Function mysql_real_escape_string not found\.$#'
-			identifier: function.notFound
-			count: 1
-			path: include/dblayer/functions_mysql.inc.php
-
-		-
-			message: '#^Function mysql_select_db not found\.$#'
-			identifier: function.notFound
-			count: 1
-			path: include/dblayer/functions_mysql.inc.php
-
-		-
-			message: '#^Function mysql_set_charset not found\.$#'
-			identifier: function.notFound
-			count: 1
-			path: include/dblayer/functions_mysql.inc.php
 
 		-
 			message: '#^Method DerivativeImage\:\:get_scaled_size_htm\(\) should return string but return statement is missing\.$#'
@@ -506,18 +362,6 @@ parameters:
 			identifier: function.deprecated
 			count: 1
 			path: include/filter.inc.php
-
-		-
-			message: '#^Call to deprecated function utf8_decode\(\)\.$#'
-			identifier: function.deprecated
-			count: 1
-			path: include/functions.inc.php
-
-		-
-			message: '#^Call to deprecated function utf8_encode\(\)\.$#'
-			identifier: function.deprecated
-			count: 1
-			path: include/functions.inc.php
 
 		-
 			message: '''
@@ -709,12 +553,6 @@ parameters:
 			path: include/phpqrcode.php
 
 		-
-			message: '#^Static call to instance method QRinput\:\:estimateBitsModeKanji\(\)\.$#'
-			identifier: method.staticCall
-			count: 1
-			path: include/phpqrcode.php
-
-		-
 			message: '#^Undefined variable\: \$ret$#'
 			identifier: variable.undefined
 			count: 1
@@ -796,7 +634,7 @@ parameters:
 			path: include/ws_functions/pwg.tags.php
 
 		-
-			message: '#^Path in include\(\) "\./local/config/config\.inc\.php" is not a file or it does not exist\.$#'
+			message: '#^Path in include\(\) "\./include/dblayer/functions_mysql\.inc\.php" is not a file or it does not exist\.$#'
 			identifier: include.fileNotFound
 			count: 1
 			path: install.php
@@ -837,12 +675,6 @@ parameters:
 				2\.6$#
 			'''
 			identifier: function.deprecated
-			count: 1
-			path: upgrade.php
-
-		-
-			message: '#^Path in include\(\) "\./local/config/config\.inc\.php" is not a file or it does not exist\.$#'
-			identifier: include.fileNotFound
 			count: 1
 			path: upgrade.php
 

@@ -59,7 +59,7 @@ function activate_core_themes()
     include_once(PHPWG_ROOT_PATH.'admin/include/themes.class.php');
     $themes = new themes();
     foreach ($themes->fs_themes as $theme_id => $fs_theme) {
-        if (in_array($theme_id, array('modus'))) {
+        if (in_array($theme_id, ['modus'])) {
             $themes->perform_action('activate', $theme_id);
         }
     }
@@ -75,7 +75,7 @@ function activate_core_plugins()
     $plugins = new plugins();
 
     foreach ($plugins->fs_plugins as $plugin_id => $fs_plugin) {
-        if (in_array($plugin_id, array())) {
+        if (in_array($plugin_id, [])) {
             $plugins->perform_action('activate', $plugin_id);
         }
     }

@@ -17,9 +17,7 @@ function ws_tags_getList($params, &$service)
 {
     $tags = get_available_tags();
     if ($params['sort_by_counter']) {
-        usort($tags, function ($a, $b) {
-            return -$a['counter'] + $b['counter'];
-        });
+        usort($tags, fn ($a, $b) => -$a['counter'] + $b['counter']);
     } else {
         usort($tags, 'tag_alpha_compare');
     }
@@ -28,20 +26,20 @@ function ws_tags_getList($params, &$service)
         $tags[$i]['id'] = (int)$tags[$i]['id'];
         $tags[$i]['counter'] = (int)$tags[$i]['counter'];
         $tags[$i]['url'] = make_index_url(
-            array(
+            [
             'section' => 'tags',
-            'tags' => array($tags[$i]),
-            )
+            'tags' => [$tags[$i]],
+            ]
         );
     }
 
-    return array(
+    return [
       'tags' => new PwgNamedArray(
           $tags,
           'tag',
           ws_std_get_tag_xml_attributes()
       ),
-      );
+      ];
 }
 
 /**
@@ -54,13 +52,13 @@ function ws_tags_getList($params, &$service)
  */
 function ws_tags_getAdminList($params, &$service)
 {
-    return array(
+    return [
       'tags' => new PwgNamedArray(
           get_all_tags(),
           'tag',
           ws_std_get_tag_xml_attributes()
       ),
-      );
+      ];
 }
 
 /**
@@ -79,7 +77,7 @@ function ws_tags_getImages($params, &$service)
 {
     // first build all the tag_ids we are interested in
     $tags = find_tags($params['tag_id'], $params['tag_url_name'], $params['tag_name']);
-    $tags_by_id = array();
+    $tags_by_id = [];
     foreach ($tags as $tag) {
         $tags['id'] = (int)$tag['id'];
         $tags_by_id[ $tag['id'] ] = $tag;
@@ -106,7 +104,7 @@ function ws_tags_getImages($params, &$service)
     $count_set = count($image_ids);
     $image_ids = array_slice($image_ids, $params['per_page'] * $params['page'], $params['per_page']);
 
-    $image_tag_map = array();
+    $image_tag_map = [];
     // build list of image ids with associated tags per image
     if (!empty($image_ids) and !$params['tag_mode_and']) {
         $query = '
@@ -124,7 +122,7 @@ SELECT image_id, GROUP_CONCAT(tag_id) AS tag_ids
         }
     }
 
-    $images = array();
+    $images = [];
     if (!empty($image_ids)) {
         $rank_of = array_flip($image_ids);
         $favorite_ids = get_user_favorites();
@@ -137,16 +135,16 @@ SELECT *
         $result = pwg_query($query);
 
         while ($row = pwg_db_fetch_assoc($result)) {
-            $image = array();
+            $image = [];
             $image['rank'] = $rank_of[ $row['id'] ];
             $image['is_favorite'] = isset($favorite_ids[ $row['id'] ]);
 
-            foreach (array('id', 'width', 'height', 'hit') as $k) {
+            foreach (['id', 'width', 'height', 'hit'] as $k) {
                 if (isset($row[$k])) {
                     $image[$k] = (int)$row[$k];
                 }
             }
-            foreach (array('file', 'name', 'comment', 'date_creation', 'date_available') as $k) {
+            foreach (['file', 'name', 'comment', 'date_creation', 'date_available'] as $k) {
                 $image[$k] = $row[$k];
             }
 
@@ -156,27 +154,27 @@ SELECT *
             $image = array_merge($image, ws_std_get_urls($row));
 
             $image_tag_ids = ($params['tag_mode_and']) ? $tag_ids : $image_tag_map[$image['id']];
-            $image_tags = array();
+            $image_tags = [];
             foreach ($image_tag_ids as $tag_id) {
                 $url = make_index_url(
-                    array(
+                    [
                     'section' => 'tags',
-                    'tags' => array($tags_by_id[$tag_id]),
-                    )
+                    'tags' => [$tags_by_id[$tag_id]],
+                    ]
                 );
                 $page_url = make_picture_url(
-                    array(
+                    [
                     'section' => 'tags',
-                    'tags' => array($tags_by_id[$tag_id]),
+                    'tags' => [$tags_by_id[$tag_id]],
                     'image_id' => $row['id'],
                     'image_file' => $row['file'],
-                    )
+                    ]
                 );
-                $image_tags[] = array(
+                $image_tags[] = [
                   'id' => (int)$tag_id,
                   'url' => $url,
                   'page_url' => $page_url,
-                  );
+                  ];
             }
 
             $image['tags'] = new PwgNamedArray($image_tags, 'tag', ws_std_get_tag_xml_attributes());
@@ -187,21 +185,21 @@ SELECT *
         unset($rank_of);
     }
 
-    return array(
+    return [
       'paging' => new PwgNamedStruct(
-          array(
+          [
           'page' => $params['page'],
           'per_page' => $params['per_page'],
           'count' => count($images),
           'total_count' => $count_set,
-          )
+          ]
       ),
       'images' => new PwgNamedArray(
           $images,
           'image',
           ws_std_get_image_xml_attributes()
       ),
-      );
+      ];
 }
 
 /**
@@ -229,12 +227,12 @@ WHERE id = '.$creation_output['id'].';';
 
     $new_tag = query2array($query);
 
-    return array(
+    return [
       'info' => $creation_output['info'],
       'id' => $creation_output['id'],
       'name' => $new_tag[0]['name'],
       'url_name' => $new_tag[0]['url_name'],
-    );
+    ];
 }
 
 function ws_tags_delete($params, &$service)
@@ -250,7 +248,7 @@ SELECT COUNT(*)
   FROM `'. TAGS_TABLE .'`
   WHERE id in ('.implode(',', $params['tag_id']) .')
 ;';
-    list($count) = pwg_db_fetch_row(pwg_query($query));
+    [$count] = pwg_db_fetch_row(pwg_query($query));
     if ($count != count($params['tag_id'])) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'All tags does not exist.');
     }
@@ -260,9 +258,9 @@ SELECT COUNT(*)
 
     if (count($tag_ids) > 0) {
         delete_tags($params['tag_id']);
-        return array('id' => $tag_ids);
+        return ['id' => $tag_ids];
     } else {
-        return array('id' => array());
+        return ['id' => []];
     }
 }
 
@@ -283,7 +281,7 @@ SELECT COUNT(*)
   FROM `'. TAGS_TABLE .'`
   WHERE id = '. $tag_id .'
 ;';
-    list($count) = pwg_db_fetch_row(pwg_query($query));
+    [$count] = pwg_db_fetch_row(pwg_query($query));
     if ($count == 0) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'This tag does not exist.');
     }
@@ -295,15 +293,15 @@ SELECT name
 ;';
     $existing_names = array_from_query($query, 'name');
 
-    $update = array();
+    $update = [];
 
     if (in_array($tag_name, $existing_names)) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'This name is already token');
     } elseif (!empty($tag_name)) {
-        $update = array(
+        $update = [
           'name' => pwg_db_real_escape_string($tag_name),
           'url_name' => trigger_change('render_tag_url', $tag_name),
-        );
+        ];
 
     }
 
@@ -312,7 +310,7 @@ SELECT name
     single_update(
         TAGS_TABLE,
         $update,
-        array('id' => $tag_id)
+        ['id' => $tag_id]
     );
 
     $query = '
@@ -327,7 +325,7 @@ SELECT
     $tag = query2array($query)[0];
     $tag['raw_name'] = $tag['name'];
     $tag['name'] = trigger_change('render_tag_name', $tag['raw_name'], $tag);
-    $tag['alt_names'] = trigger_change('get_tag_alt_names', array(), $tag['raw_name']);
+    $tag['alt_names'] = trigger_change('get_tag_alt_names', [], $tag['raw_name']);
     return $tag;
 }
 
@@ -350,7 +348,7 @@ SELECT COUNT(*)
   FROM `'. TAGS_TABLE .'`
   WHERE id = '. $tag_id .'
 ;';
-    list($count) = pwg_db_fetch_row(pwg_query($query));
+    [$count] = pwg_db_fetch_row(pwg_query($query));
     if ($count == 0) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'This tag does not exist.');
     }
@@ -360,7 +358,7 @@ SELECT COUNT(*)
   FROM `'. TAGS_TABLE .'`
   WHERE name = "'. $copy_name .'"
 ;';
-    list($count) = pwg_db_fetch_row(pwg_query($query));
+    [$count] = pwg_db_fetch_row(pwg_query($query));
     if ($count != 0) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'This name is already taken.');
     }
@@ -368,14 +366,14 @@ SELECT COUNT(*)
 
     single_insert(
         TAGS_TABLE,
-        array(
+        [
         'name' => $copy_name,
         'url_name' => trigger_change('render_tag_url', $copy_name),
-    )
+    ]
     );
-    $destination_tag_id = pwg_db_insert_id(TAGS_TABLE);
+    $destination_tag_id = pwg_db_insert_id();
 
-    pwg_activity('tag', $destination_tag_id, 'add', array('action' => 'duplicate', 'source_tag' => $tag_id));
+    pwg_activity('tag', $destination_tag_id, 'add', ['action' => 'duplicate', 'source_tag' => $tag_id]);
 
     $query = '
 SELECT image_id
@@ -384,14 +382,14 @@ SELECT image_id
 ;';
     $destination_tag_image_ids = array_from_query($query, 'image_id');
 
-    $inserts = array();
+    $inserts = [];
 
     foreach ($destination_tag_image_ids as $image_id) {
-        $inserts[] = array(
+        $inserts[] = [
           'tag_id' => $destination_tag_id,
           'image_id' => $image_id,
-        );
-        pwg_activity('photo', $image_id, 'edit', array('add-tag' => $destination_tag_id));
+        ];
+        pwg_activity('photo', $image_id, 'edit', ['add-tag' => $destination_tag_id]);
     }
 
     if (count($inserts) > 0) {
@@ -402,12 +400,12 @@ SELECT image_id
         );
     }
 
-    return array(
+    return [
       'id' => $destination_tag_id,
       'name' => $copy_name,
       'url_name' => trigger_change('render_tag_url', $copy_name),
       'count' => count($inserts),
-    );
+    ];
 }
 
 function ws_tags_merge($params, &$service)
@@ -421,21 +419,21 @@ function ws_tags_merge($params, &$service)
     array_push($all_tags, $params['destination_tag_id']);
 
     $all_tags = array_unique($all_tags);
-    $merge_tag = array_diff($params['merge_tag_id'], array($params['destination_tag_id']));
+    $merge_tag = array_diff($params['merge_tag_id'], [$params['destination_tag_id']]);
 
     $query = '
 SELECT COUNT(*)
   FROM `'. TAGS_TABLE .'`
   WHERE id in ('.implode(',', $all_tags) .')
 ;';
-    list($count) = pwg_db_fetch_row(pwg_query($query));
+    [$count] = pwg_db_fetch_row(pwg_query($query));
     if ($count != count($all_tags)) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'All tags does not exist.');
     }
 
-    $image_in_merge_tags = array();
-    $image_in_dest = array();
-    $image_to_add = array();
+    $image_in_merge_tags = [];
+    $image_in_dest = [];
+    $image_to_add = [];
 
     $query = '
 SELECT DISTINCT(image_id) 
@@ -457,24 +455,24 @@ SELECT image_id
 
     $image_to_add = array_diff($image_in_merge_tags, $image_in_dest);
 
-    $inserts = array();
+    $inserts = [];
     foreach ($image_to_add as $image) {
-        $inserts[] = array(
+        $inserts[] = [
           'tag_id' => $params['destination_tag_id'],
           'image_id' => $image,
-          );
+          ];
     }
 
     mass_inserts(
         IMAGE_TAG_TABLE,
-        array('tag_id', 'image_id'),
+        ['tag_id', 'image_id'],
         $inserts,
-        array('ignore' => true)
+        ['ignore' => true]
     );
 
     pwg_activity('tag', $params['destination_tag_id'], 'edit');
     foreach ($image_to_add as $image_id) {
-        pwg_activity('photo', $image_id, 'edit', array('tag-add' => $params['destination_tag_id']));
+        pwg_activity('photo', $image_id, 'edit', ['tag-add' => $params['destination_tag_id']]);
     }
 
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
@@ -484,9 +482,9 @@ SELECT image_id
 
     $image_in_merged = array_merge($image_in_dest, $image_to_add);
 
-    return array(
+    return [
       'destination_tag' => $params['destination_tag_id'],
       'deleted_tag' => $params['merge_tag_id'],
       'images_in_merged_tag' => $image_in_merged,
-    );
+    ];
 }

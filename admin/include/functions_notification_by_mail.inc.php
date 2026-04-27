@@ -8,11 +8,11 @@
 // +-----------------------------------------------------------------------+
 
 /* nbm_global_var */
-$env_nbm = array(
+$env_nbm = [
             'start_time' => get_moment(),
             'sendmail_timeout' => (intval(ini_get('max_execution_time')) * $conf['nbm_max_treatment_timeout_percent']),
             'is_sendmail_timeout' => false,
-          );
+          ];
 
 if (
     (!isset($env_nbm['sendmail_timeout'])) or
@@ -41,7 +41,7 @@ from
 where
   check_key = \''.$key.'\';';
 
-        list($count) = pwg_db_fetch_row(pwg_query($query));
+        [$count] = pwg_db_fetch_row(pwg_query($query));
         if ($count == 0) {
             return $key;
         }
@@ -68,11 +68,9 @@ function check_sendmail_timeout()
  *
  * @return quoted check key list
  */
-function quote_check_key_list($check_key_list = array())
+function quote_check_key_list($check_key_list = [])
 {
-    return array_map(function ($s) {
-        return  '\''.$s.'\'';
-    }, $check_key_list);
+    return array_map(fn ($s) => '\''.$s.'\'', $check_key_list);
 }
 
 /*
@@ -82,13 +80,13 @@ function quote_check_key_list($check_key_list = array())
  *
  * return array of users
  */
-function get_user_notifications($action, $check_key_list = array(), $enabled_filter_value = '')
+function get_user_notifications($action, $check_key_list = [], $enabled_filter_value = '')
 {
     global $conf;
 
-    $data_users = array();
+    $data_users = [];
 
-    if (in_array($action, array('subscribe', 'send'))) {
+    if (in_array($action, ['subscribe', 'send'])) {
         $quoted_check_key_list = quote_check_key_list($check_key_list);
         if (count($quoted_check_key_list) != 0) {
             $query_and_check_key = ' and
@@ -312,15 +310,15 @@ function assign_vars_nbm_mail_content($nbm_user)
     set_make_full_url();
 
     $env_nbm['mail_template']->assign(
-        array(
+        [
         'USERNAME' => stripslashes($nbm_user['username']),
 
         'SEND_AS_NAME' => $env_nbm['send_as_name'],
 
-        'UNSUBSCRIBE_LINK' => add_url_params(get_gallery_home_url().'/nbm.php', array('unsubscribe' => $nbm_user['check_key'])),
-        'SUBSCRIBE_LINK' => add_url_params(get_gallery_home_url().'/nbm.php', array('subscribe' => $nbm_user['check_key'])),
+        'UNSUBSCRIBE_LINK' => add_url_params(get_gallery_home_url().'/nbm.php', ['unsubscribe' => $nbm_user['check_key']]),
+        'SUBSCRIBE_LINK' => add_url_params(get_gallery_home_url().'/nbm.php', ['subscribe' => $nbm_user['check_key']]),
         'CONTACT_EMAIL' => $env_nbm['send_as_mail_address'],
-    )
+    ]
     );
 
     unset_make_full_url();
@@ -334,13 +332,13 @@ function assign_vars_nbm_mail_content($nbm_user)
  *
  * @return check_key list treated
  */
-function do_subscribe_unsubscribe_notification_by_mail($is_admin_request, $is_subscribe = false, $check_key_list = array())
+function do_subscribe_unsubscribe_notification_by_mail($is_admin_request, $is_subscribe = false, $check_key_list = [])
 {
     global $conf, $page, $env_nbm, $conf;
 
     set_make_full_url();
 
-    $check_key_treated = array();
+    $check_key_treated = [];
     $updated_data_count = 0;
     $error_on_updated_data_count = 0;
 
@@ -353,7 +351,7 @@ function do_subscribe_unsubscribe_notification_by_mail($is_admin_request, $is_su
     }
 
     if (count($check_key_list) != 0) {
-        $updates = array();
+        $updates = [];
         $enabled_value = boolean_to_string($is_subscribe);
         $data_users = get_user_notifications('subscribe', $check_key_list, !$is_subscribe);
 
@@ -386,25 +384,25 @@ function do_subscribe_unsubscribe_notification_by_mail($is_admin_request, $is_su
                 $section_action_by = ($is_subscribe ? 'subscribe_by_' : 'unsubscribe_by_');
                 $section_action_by .= ($is_admin_request ? 'admin' : 'himself');
                 $env_nbm['mail_template']->assign(
-                    array(
+                    [
                     $section_action_by => true,
                     'GOTO_GALLERY_TITLE' => $conf['gallery_title'],
                     'GOTO_GALLERY_URL' => get_gallery_home_url(),
-          )
+          ]
                 );
 
                 $ret = pwg_mail(
-                    array(
+                    [
                     'name' => stripslashes($nbm_user['username']),
                     'email' => $nbm_user['mail_address'],
-                    ),
-                    array(
+                    ],
+                    [
                     'from' => $env_nbm['send_as_mail_formated'],
                     'subject' => $subject,
                     'email_format' => $env_nbm['email_format'],
                     'content' => $env_nbm['mail_template']->parse('notification_by_mail', true),
                     'content_format' => $env_nbm['email_format'],
-                    )
+                    ]
                 );
 
                 if ($ret) {
@@ -420,10 +418,10 @@ function do_subscribe_unsubscribe_notification_by_mail($is_admin_request, $is_su
             }
 
             if ($do_update) {
-                $updates[] = array(
+                $updates[] = [
                   'check_key' => $nbm_user['check_key'],
                   'enabled' => $enabled_value,
-                  );
+                  ];
                 $updated_data_count += 1;
                 $page['infos'][] = sprintf($msg_info, stripslashes($nbm_user['username']), $nbm_user['mail_address']);
             } else {
@@ -440,10 +438,10 @@ function do_subscribe_unsubscribe_notification_by_mail($is_admin_request, $is_su
 
         mass_updates(
             USER_MAIL_NOTIFICATION_TABLE,
-            array(
-            'primary' => array('check_key'),
-            'update' => array('enabled'),
-      ),
+            [
+            'primary' => ['check_key'],
+            'update' => ['enabled'],
+      ],
             $updates
         );
 
@@ -475,7 +473,7 @@ function do_subscribe_unsubscribe_notification_by_mail($is_admin_request, $is_su
  *
  * @return check_key list treated
  */
-function unsubscribe_notification_by_mail($is_admin_request, $check_key_list = array())
+function unsubscribe_notification_by_mail($is_admin_request, $check_key_list = [])
 {
     return do_subscribe_unsubscribe_notification_by_mail($is_admin_request, false, $check_key_list);
 }
@@ -487,7 +485,7 @@ function unsubscribe_notification_by_mail($is_admin_request, $check_key_list = a
  *
  * @return check_key list treated
  */
-function subscribe_notification_by_mail($is_admin_request, $check_key_list = array())
+function subscribe_notification_by_mail($is_admin_request, $check_key_list = [])
 {
     return do_subscribe_unsubscribe_notification_by_mail($is_admin_request, true, $check_key_list);
 }

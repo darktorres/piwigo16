@@ -52,28 +52,28 @@ if (isset($_POST['submit'])) {
     $uid = '';
 }
 
-$tpl_var = array(
+$tpl_var = [
   'TITLE' => render_element_name($row),
   'ALT' => $row['file'],
   'U_IMG' => DerivativeImage::url(IMG_LARGE, $row),
-  );
+  ];
 
 if (!empty($row['coi'])) {
-    $tpl_var['coi'] = array(
+    $tpl_var['coi'] = [
       'l' => char_to_fraction($row['coi'][0]),
       't' => char_to_fraction($row['coi'][1]),
       'r' => char_to_fraction($row['coi'][2]),
       'b' => char_to_fraction($row['coi'][3]),
-    );
+    ];
 }
 
 foreach (ImageStdParams::get_defined_type_map() as $params) {
     if ($params->sizing->max_crop != 0) {
         $derivative = new DerivativeImage($params, new SrcImage($row));
-        $template->append('cropped_derivatives', array(
+        $template->append('cropped_derivatives', [
           'U_IMG' => $derivative->get_url().$uid,
           'HTM_SIZE' => $derivative->get_size_htm(),
-        ));
+        ]);
     }
 }
 

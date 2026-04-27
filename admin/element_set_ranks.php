@@ -18,7 +18,7 @@ if (!defined('PHPWG_ROOT_PATH')) {
 
 include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
-$sort_fields = array(
+$sort_fields = [
   ''                    => '',
   'file ASC'            => l10n('File name, A &rarr; Z'),
   'file DESC'           => l10n('File name, Z &rarr; A'),
@@ -35,7 +35,7 @@ $sort_fields = array(
   'id ASC'              => l10n('Numeric identifier, 1 &rarr; 9'),
   'id DESC'             => l10n('Numeric identifier, 9 &rarr; 1'),
   'rank ASC'            => l10n('Manual sort order'),
-  );
+  ];
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
@@ -52,7 +52,7 @@ $page['category_id'] = $_GET['cat_id'];
 // |                       global mode form submission                     |
 // +-----------------------------------------------------------------------+
 
-$image_order_choices = array('default', 'rank', 'user_define');
+$image_order_choices = ['default', 'rank', 'user_define'];
 $image_order_choice = 'default';
 
 if (isset($_POST['submit'])) {
@@ -104,9 +104,9 @@ UPDATE '.CATEGORIES_TABLE.'
     }
 
     $template->assign(
-        array(
+        [
         'save_success' => $message,
-    )
+    ]
     );
 }
 
@@ -114,7 +114,7 @@ UPDATE '.CATEGORIES_TABLE.'
 // |                             template init                             |
 // +-----------------------------------------------------------------------+
 $template->set_filenames(
-    array('element_set_ranks' => 'element_set_ranks.tpl')
+    ['element_set_ranks' => 'element_set_ranks.tpl']
 );
 
 $base_url = get_root_url().'admin.php';
@@ -139,10 +139,10 @@ $navigation = get_cat_display_name_cache(
 );
 
 $template->assign(
-    array(
+    [
     'CATEGORIES_NAV' => preg_replace('# {2,}#', ' ', preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $navigation)),
-    'F_ACTION' => $base_url.get_query_string_diff(array()),
-   )
+    'F_ACTION' => $base_url.get_query_string_diff([]),
+   ]
 );
 
 // +-----------------------------------------------------------------------+
@@ -180,20 +180,20 @@ if (pwg_db_num_rows($result) > 0) {
         $current_rank++;
         $template->append(
             'thumbnails',
-            array(
+            [
                 'ID' => $row['id'],
                 'NAME' => $thumbnail_name,
                 'TN_SRC' => $derivative->get_url(),
                 'RANK' => $current_rank * 10,
                 'SIZE' => $derivative->get_size(),
-                )
+                ]
         );
     }
 }
 // image order management
 $template->assign('image_order_options', $sort_fields);
 
-$image_order = explode(',', isset($category['image_order']) ? $category['image_order'] : '');
+$image_order = explode(',', $category['image_order'] ?? '');
 
 for ($i = 0; $i < 3; $i++) { // 3 fields
     if (isset($image_order[$i])) {

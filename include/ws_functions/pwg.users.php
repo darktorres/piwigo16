@@ -36,12 +36,12 @@ function ws_users_getList($params, &$service)
 
     // Insensitive case sort order
     if (isset($params['order'])) {
-        if (strpos($params['order'], 'username') !== false) {
+        if (str_contains($params['order'], 'username')) {
             $params['order'] = str_ireplace('username', 'LOWER(username)', $params['order']);
         }
     }
 
-    $where_clauses = array('1=1');
+    $where_clauses = ['1=1'];
 
     if (!empty($params['user_id'])) {
         $where_clauses[] = 'u.'.$conf['user_fields']['id'].' IN('. implode(',', $params['user_id']) .')';
@@ -51,7 +51,7 @@ function ws_users_getList($params, &$service)
         $where_clauses[] = 'u.'.$conf['user_fields']['username'].' LIKE \''.pwg_db_real_escape_string($params['username']).'\'';
     }
 
-    $filtered_groups = array();
+    $filtered_groups = [];
     if (!empty($params['filter'])) {
         $filter_query = 'SELECT id FROM `'. GROUPS_TABLE .'` WHERE name LIKE \'%'. pwg_db_real_escape_string($params['filter']) . '%\';';
         $filtered_groups_res = pwg_query($filter_query);
@@ -126,25 +126,25 @@ function ws_users_getList($params, &$service)
         $where_clauses[] = 'u.'.$conf['user_fields']['id'].' NOT IN('. implode(',', $params['exclude']) .')';
     }
 
-    $display = array('u.'.$conf['user_fields']['id'] => 'id');
+    $display = ['u.'.$conf['user_fields']['id'] => 'id'];
 
     if ($params['display'] != 'none') {
         $params['display'] = array_map('trim', explode(',', $params['display']));
 
         if (in_array('all', $params['display'])) {
-            $params['display'] = array(
+            $params['display'] = [
               'username','email','status','level','groups','language','theme',
               'nb_image_page','recent_period','expand','show_nb_comments','show_nb_hits',
               'enabled_high','registration_date','registration_date_string',
               'registration_date_since', 'last_visit', 'last_visit_string',
               'last_visit_since', 'total_count',
-              );
+              ];
         } elseif (in_array('basics', $params['display'])) {
-            $params['display'] = array_merge($params['display'], array(
+            $params['display'] = array_merge($params['display'], [
               'username','email','status','level','groups',
-              ));
+              ]);
         } elseif (in_array('only_id', $params['display'])) {
-            $params['display'] = array();
+            $params['display'] = [];
         }
         $params['display'] = array_flip($params['display']);
 
@@ -167,18 +167,18 @@ function ws_users_getList($params, &$service)
             $display['u.'.$conf['user_fields']['email']] = 'email';
         }
 
-        $ui_fields = array(
+        $ui_fields = [
           'status','level','language','theme','nb_image_page','recent_period','expand',
           'show_nb_comments','show_nb_hits','enabled_high','registration_date',
           'last_visit',
-          );
+          ];
         foreach ($ui_fields as $field) {
             if (isset($params['display'][$field])) {
                 $display['ui.'.$field] = $field;
             }
         }
     } else {
-        $params['display'] = array();
+        $params['display'] = [];
     }
 
     $query = '
@@ -219,25 +219,25 @@ SELECT DISTINCT ';
     OFFSET '. ($params['per_page'] * $params['page']) .';
     ;';
     }
-    $users = array();
+    $users = [];
     $result = pwg_query($query);
     $total_count = 0;
 
     /* GET THE RESULT OF SQL_CALC_FOUND_ROWS if display total_count is requested*/
     if (isset($params['display']['total_count'])) {
         $total_count_query_result = pwg_query('SELECT FOUND_ROWS();');
-        list($total_count) = pwg_db_fetch_row($total_count_query_result);
+        [$total_count] = pwg_db_fetch_row($total_count_query_result);
         $total_count = (int)$total_count;
     }
     while ($row = pwg_db_fetch_assoc($result)) {
         $row['id'] = intval($row['id']);
         if (isset($params['display']['groups'])) {
-            $row['groups'] = array(); // will be filled later
+            $row['groups'] = []; // will be filled later
         }
         $users[ $row['id'] ] = $row;
     }
 
-    $users_id_arr = array();
+    $users_id_arr = [];
     if (count($users) > 0) {
         if (isset($params['display']['groups'])) {
             $query = '
@@ -253,7 +253,7 @@ SELECT DISTINCT ';
         foreach ($users as $cur_user) {
             $users_id_arr[] = $cur_user['id'];
             if (isset($params['display']['registration_date_string'])) {
-                $users[$cur_user['id']]['registration_date_string'] = format_date($cur_user['registration_date'], array('day', 'month', 'year'));
+                $users[$cur_user['id']]['registration_date_string'] = format_date($cur_user['registration_date'], ['day', 'month', 'year']);
             }
             if (isset($params['display']['registration_date_since'])) {
                 $users[ $cur_user['id'] ]['registration_date_since'] = time_since($cur_user['registration_date'], 'month');
@@ -268,7 +268,7 @@ SELECT DISTINCT ';
                 }
 
                 if (isset($params['display']['last_visit_string'])) {
-                    $users[ $cur_user['id'] ]['last_visit_string'] = format_date($last_visit, array('day', 'month', 'year'));
+                    $users[ $cur_user['id'] ]['last_visit_string'] = format_date($last_visit, ['day', 'month', 'year']);
                 }
 
                 if (isset($params['display']['last_visit_since'])) {
@@ -322,17 +322,17 @@ SELECT DISTINCT ';
     if ($params['per_page'] == 0 && empty($params['display'])) {
         $method_result = $users_id_arr;
     } else {
-        $method_result = array(
+        $method_result = [
           'paging' => new PwgNamedStruct(
-              array(
+              [
               'page' => $params['page'],
               'per_page' => $params['per_page'],
               'count' => count($users),
               'total_count' => $total_count,
-              )
+              ]
           ),
           'users' => new PwgNamedArray(array_values($users), 'user'),
-        );
+        ];
     }
     // deprecated: kept for retrocompatibility
     if (isset($params['display']['total_count'])) {
@@ -368,7 +368,7 @@ function ws_users_add($params, &$service)
     }
 
     if ($params['auto_password']) {
-        $params['password'] = generate_key(rand(15, 20));
+        $params['password'] = generate_key(random_int(15, 20));
     }
 
     $user_id = register_user(
@@ -384,7 +384,7 @@ function ws_users_add($params, &$service)
         return new PwgError(WS_ERR_INVALID_PARAM, $errors[0]);
     }
 
-    return $service->invoke('pwg.users.getList', array('user_id' => $user_id));
+    return $service->invoke('pwg.users.getList', ['user_id' => $user_id]);
 }
 
 /**
@@ -426,12 +426,12 @@ function ws_users_delete($params, &$service)
 
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
-    $protected_users = array(
+    $protected_users = [
       $user['id'],
       $conf['guest_id'],
       $conf['default_user_id'],
       $conf['webmaster_id'],
-      );
+      ];
 
     // an admin can't delete other admin/webmaster
     if ('admin' == $user['status']) {
@@ -492,10 +492,10 @@ function ws_users_setInfo($params, &$service)
         return new PwgError($updated_users[ 'error' ][ 'code' ], $updated_users[ 'error' ][ 'message' ]);
     }
 
-    return $service->invoke('pwg.users.getList', array(
+    return $service->invoke('pwg.users.getList', [
       'user_id' => $updated_users['user_id'],
       'display' => 'basics,'.implode(',', array_keys($updated_users['infos'])),
-    ));
+    ]);
 }
 
 /**
@@ -546,7 +546,7 @@ function ws_users_setMyInfo($params, &$service)
     }
 
     // SPECIAL_USER
-    $special_user = in_array($user['id'], array($conf['guest_id'], $conf['default_user_id']));
+    $special_user = in_array($user['id'], [$conf['guest_id'], $conf['default_user_id']]);
     if ($special_user) {
         unset(
             $params['password'],
@@ -565,7 +565,7 @@ SELECT '.$conf['user_fields']['password'].' AS password
   FROM '.USERS_TABLE.'
   WHERE '.$conf['user_fields']['id'].' = \''.$user['id'].'\'
 ;';
-        list($current_password) = pwg_db_fetch_row(pwg_query($query));
+        [$current_password] = pwg_db_fetch_row(pwg_query($query));
 
         if (!$conf['password_verify']($params['password'], $current_password)) {
             return new PwgError(403, l10n('Current password is wrong'));
@@ -617,7 +617,7 @@ function ws_users_preferences_set($params, &$service)
         $value = json_decode($value, true);
     }
 
-    userprefs_update_param($params['param'], $value, true);
+    userprefs_update_param($params['param'], $value);
 
     return $user['preferences'];
 }
@@ -642,18 +642,18 @@ SELECT COUNT(*)
   FROM '. IMAGES_TABLE .'
   WHERE id = '. $params['image_id'] .'
 ;';
-    list($count) = pwg_db_fetch_row(pwg_query($query));
+    [$count] = pwg_db_fetch_row(pwg_query($query));
     if ($count == 0) {
         return new PwgError(404, 'image_id not found');
     }
 
     single_insert(
         FAVORITES_TABLE,
-        array(
+        [
         'image_id' => $params['image_id'],
         'user_id' => $user['id'],
-    ),
-        array('ignore' => true)
+    ],
+        ['ignore' => true]
     );
 
     return true;
@@ -679,7 +679,7 @@ SELECT COUNT(*)
   FROM '. IMAGES_TABLE .'
   WHERE id = '. $params['image_id'] .'
 ;';
-    list($count) = pwg_db_fetch_row(pwg_query($query));
+    [$count] = pwg_db_fetch_row(pwg_query($query));
     if ($count == 0) {
         return new PwgError(404, 'image_id not found');
     }
@@ -724,25 +724,25 @@ SELECT
     INNER JOIN '.IMAGES_TABLE.' i ON image_id = i.id
   WHERE user_id = '.$user['id'].'
 '.get_sql_condition_FandF(
-        array(
+        [
           'visible_images' => 'id',
-          ),
+          ],
         'AND'
     ).'
     '.$order_by.'
 ;';
-    $images = array();
+    $images = [];
     $result = pwg_query($query);
     while ($row = pwg_db_fetch_assoc($result)) {
-        $image = array();
+        $image = [];
 
-        foreach (array('id', 'width', 'height', 'hit') as $k) {
+        foreach (['id', 'width', 'height', 'hit'] as $k) {
             if (isset($row[$k])) {
                 $image[$k] = (int)$row[$k];
             }
         }
 
-        foreach (array('file', 'name', 'comment', 'date_creation', 'date_available') as $k) {
+        foreach (['file', 'name', 'comment', 'date_creation', 'date_available'] as $k) {
             $image[$k] = $row[$k];
         }
 
@@ -752,20 +752,20 @@ SELECT
     $count = count($images);
     $images = array_slice($images, $params['per_page'] * $params['page'], $params['per_page']);
 
-    return array(
+    return [
       'paging' => new PwgNamedStruct(
-          array(
+          [
           'page' => $params['page'],
           'per_page' => $params['per_page'],
           'count' => $count,
-      )
+      ]
       ),
       'images' => new PwgNamedArray(
           $images,
           'image',
           ws_std_get_image_xml_attributes()
       ),
-     );
+     ];
 }
 
 /**
@@ -826,11 +826,11 @@ function ws_users_generate_password_link($params, &$service)
     }
     switch_lang_back();
 
-    return array(
+    return [
       'generated_link' => $generate_link['password_link'],
       'send_by_mail' => $send_by_mail_response,
       'time_validation' => $generate_link['time_validation'],
-    );
+    ];
 }
 
 /**

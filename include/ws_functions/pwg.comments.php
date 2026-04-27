@@ -23,18 +23,18 @@ function ws_userComments_getList($params, &$service)
     }
 
     // accepted status values
-    $accepted_status = array('all', 'pending', 'validated');
+    $accepted_status = ['all', 'pending', 'validated'];
     if (!in_array($params['status'], $accepted_status)) {
         return new PwgError(401, 'Status must be: all, pending or validated');
     }
 
     // accepted values must match pagination options (5,10,25,50)
-    $items_number = array(5, 10, 25, 50);
+    $items_number = [5, 10, 25, 50];
     if (!in_array($params['per_page'], $items_number)) {
         return new PwgError(401, 'Per page must be: 5, 10, 25 or 50');
     }
 
-    $where_clauses = array('1=1');
+    $where_clauses = ['1=1'];
 
     if (isset($params['author_id']) and !empty($params['author_id'])) {
         $where_clauses['author_id'] = 'author_id = \''. pwg_db_real_escape_string($params['author_id']) .'\'';
@@ -56,7 +56,7 @@ function ws_userComments_getList($params, &$service)
 
     // reset all filters during search
     if (!empty($params['search'])) {
-        $where_clauses = array('1=1');
+        $where_clauses = ['1=1'];
         $where_clauses[] = 'content LIKE "%'. pwg_db_real_escape_string($params['search']) .'%"';
     }
 
@@ -115,16 +115,16 @@ SELECT
 ;';
     $result = pwg_query($query);
 
-    $list = array();
+    $list = [];
     while ($row = pwg_db_fetch_assoc($result)) {
 
         $medium = DerivativeImage::get_one(
             IMG_MEDIUM,
-            array(
+            [
             'id' => $row['image_id'],
             'path' => $row['path'],
             'representative_ext' => $row['representative_ext'],
-      )
+      ]
         )->get_url();
 
         if (empty($row['author_id']) or $row['author_id'] == $conf['guest_id']) {
@@ -133,19 +133,19 @@ SELECT
             $author_name = stripslashes($row['username'] ?? $row['author'] ?? l10n('guest'));
         }
 
-        $list[] = array(
+        $list[] = [
           'id' => $row['id'],
           'admin_link' => get_root_url().'admin.php?page=photo-'.$row['image_id'],
           'medium_url' => $medium,
           'file' => $row['file'],
-          'image_date_available' => format_date($row['date_available'], array('day_name','day','month','year','time')),
+          'image_date_available' => format_date($row['date_available'], ['day_name','day','month','year','time']),
           'author' => trigger_change('render_comment_author', $author_name),
           'author_status' => $conf['webmaster_id'] == $row['author_id'] ? 'main_user' : $row['status'],
-          'date' => format_date($row['date'], array('day_name','day','month','year','time')),
+          'date' => format_date($row['date'], ['day_name','day','month','year','time']),
           'content' => trigger_change('render_comment_content', $row['content']),
           'raw_content' => $row['content'],
           'is_pending' => ('false' == $row['validated']),
-        );
+        ];
     }
 
     // filters
@@ -172,20 +172,20 @@ GROUP BY author_id
 
     $nb_authors_in = query2array($query);
 
-    return array(
+    return [
       'summary' => $summary,
       'comments' => $list,
-      'filters' => array(
+      'filters' => [
         'nb_authors' => $nb_authors_in,
         'started_at' => $dates['started_at'],
         'ended_at' => $dates['ended_at'],
-      ),
-      'paging' => array(
+      ],
+      'paging' => [
         'page' => $params['page'],
         'per_page' => $params['per_page'],
         'total_pages' => max(0, ceil($total_comments / $params['per_page']) - 1),
-      ),
-    );
+      ],
+    ];
 }
 
 /**

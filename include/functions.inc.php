@@ -110,7 +110,7 @@ function mkgetdir($dir, $flags = MKGETDIR_DEFAULT)
 {
     if (!is_dir($dir)) {
         global $conf;
-        if (substr(PHP_OS, 0, 3) == 'WIN') {
+        if (str_starts_with(PHP_OS, 'WIN')) {
             $dir = str_replace('/', DIRECTORY_SEPARATOR, $dir);
         }
         $umask = umask(0);
@@ -191,7 +191,7 @@ function remove_accents($string)
     }
 
     if ($utf > 0) {
-        $chars = array(
+        $chars = [
         // Decompositions for Latin-1 Supplement
         "\xc3\x80" => 'A', "\xc3\x81" => 'A',
         "\xc3\x82" => 'A', "\xc3\x83" => 'A',
@@ -291,7 +291,7 @@ function remove_accents($string)
         // Euro Sign
         "\xe2\x82\xac" => 'E',
         // GBP (Pound) Sign
-        "\xc2\xa3" => '');
+        "\xc2\xa3" => ''];
 
         $string = strtr($string, $chars);
     } else {
@@ -310,8 +310,8 @@ function remove_accents($string)
         $chars['out'] = 'EfSZszYcYuAAAAAACEEEEIIIINOOOOOOUUUUYaaaaaaceeeeiiiinoooooouuuuyy';
 
         $string = strtr($string, $chars['in'], $chars['out']);
-        $double_chars['in'] = array(chr(140), chr(156), chr(198), chr(208), chr(222), chr(223), chr(230), chr(240), chr(254));
-        $double_chars['out'] = array('OE', 'oe', 'AE', 'DH', 'TH', 'ss', 'ae', 'dh', 'th');
+        $double_chars['in'] = [chr(140), chr(156), chr(198), chr(208), chr(222), chr(223), chr(230), chr(240), chr(254)];
+        $double_chars['out'] = ['OE', 'oe', 'AE', 'DH', 'TH', 'ss', 'ae', 'dh', 'th'];
         $string = str_replace($double_chars['in'], $double_chars['out'], $string);
     }
 
@@ -373,7 +373,7 @@ SELECT id, name
 ;';
     $result = pwg_query($query);
 
-    $languages = array();
+    $languages = [];
     while ($row = pwg_db_fetch_assoc($result)) {
         if (is_dir(PHPWG_ROOT_PATH.'language/'.$row['id'])) {
             $languages[ $row['id'] ] = $row['name'];
@@ -511,18 +511,18 @@ INSERT INTO '.HISTORY_TABLE.'
     '.$user['id'].',
     \''.$ip.'\',
     '.(isset($section) ? "'".$section."'" : 'NULL').',
-    '.(isset($page['category']['id']) ? $page['category']['id'] : 'NULL').',
-    '.(isset($page['search_id']) ? $page['search_id'] : 'NULL').',
-    '.(isset($image_id) ? $image_id : 'NULL').',
+    '.($page['category']['id'] ?? 'NULL').',
+    '.($page['search_id'] ?? 'NULL').',
+    '.($image_id ?? 'NULL').',
     '.(isset($image_type) ? "'".$image_type."'" : 'NULL').',
-    '.(isset($format_id) ? $format_id : 'NULL').',
-    '.(isset($page['auth_key_id']) ? $page['auth_key_id'] : 'NULL').',
+    '.($format_id ?? 'NULL').',
+    '.($page['auth_key_id'] ?? 'NULL').',
     '.(isset($tags_string) ? "'".$tags_string."'" : 'NULL').'
   )
 ;';
     pwg_query($query);
 
-    $history_id = pwg_db_insert_id(HISTORY_TABLE);
+    $history_id = pwg_db_insert_id();
     if ($history_id % 1000 == 0) {
         include_once(PHPWG_ROOT_PATH.'admin/include/functions_history.inc.php');
         history_summarize(50000);
@@ -536,7 +536,7 @@ INSERT INTO '.HISTORY_TABLE.'
     return true;
 }
 
-function pwg_activity($object, $object_id, $action, $details = array())
+function pwg_activity($object, $object_id, $action, $details = [])
 {
     global $user;
 
@@ -553,7 +553,7 @@ function pwg_activity($object, $object_id, $action, $details = array())
 
     $object_ids = $object_id;
     if (!is_array($object_id)) {
-        $object_ids = array($object_id);
+        $object_ids = [$object_id];
     }
 
     if (isset($_REQUEST['method'])) {
@@ -587,7 +587,7 @@ function pwg_activity($object, $object_id, $action, $details = array())
     if ('user' == $object and 'login' == $action) {
         if (function_exists('debug_backtrace')) {
             $called_functions = array_flip(array_column(debug_backtrace(), 'function'));
-            foreach (array('auto_login', 'auth_key_login') as $auth_function) {
+            foreach (['auto_login', 'auth_key_login'] as $auth_function) {
                 if (isset($called_functions[$auth_function])) {
                     $details['auth_function'] = $auth_function;
                 }
@@ -602,7 +602,7 @@ function pwg_activity($object, $object_id, $action, $details = array())
         }
     }
 
-    if (in_array($object, array('album', 'photo')) and 'delete' == $action and isset($_GET['page']) and 'site_update' == $_GET['page']) {
+    if (in_array($object, ['album', 'photo']) and 'delete' == $action and isset($_GET['page']) and 'site_update' == $_GET['page']) {
         $details['sync'] = true;
     }
 
@@ -611,9 +611,9 @@ function pwg_activity($object, $object_id, $action, $details = array())
         $details['destination_tag'] = $_POST['destination_tag'];
     }
 
-    $inserts = array();
+    $inserts = [];
     $details_insert = pwg_db_real_escape_string(serialize($details));
-    $ip_address = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : null;
+    $ip_address = $_SERVER['REMOTE_ADDR'] ?? null;
     $session_id = !empty(session_id()) ? session_id() : 'none';
 
     foreach ($object_ids as $loop_object_id) {
@@ -623,7 +623,7 @@ function pwg_activity($object, $object_id, $action, $details = array())
             $performed_by = $loop_object_id;
         }
 
-        $inserts[] = array(
+        $inserts[] = [
           'object' => $object,
           'object_id' => $loop_object_id,
           'action' => $action,
@@ -632,7 +632,7 @@ function pwg_activity($object, $object_id, $action, $details = array())
           'ip_address' => $ip_address,
           'details' => $details_insert,
           'user_agent' => pwg_db_real_escape_string($user_agent),
-        );
+        ];
     }
 
     mass_inserts(ACTIVITY_TABLE, array_keys($inserts[0]), $inserts);
@@ -658,7 +658,7 @@ function dateDiff($date1, $date2)
     //Make sure $date1 is ealier
     $diff->invert = $date2 < $date1;
     if ($diff->invert) {
-        list($date1, $date2) = array($date2, $date1);
+        [$date1, $date2] = [$date2, $date1];
     }
 
     //Calculate R values
@@ -675,7 +675,7 @@ function dateDiff($date1, $date2)
     }
 
     //Years, months, days, hours
-    $periods = array('years' => -1, 'months' => -1, 'days' => -1, 'hours' => -1);
+    $periods = ['years' => -1, 'months' => -1, 'days' => -1, 'hours' => -1];
 
     foreach ($periods as $period => &$i) {
         if ($period == 'days' && $leap_year) {
@@ -691,7 +691,7 @@ function dateDiff($date1, $date2)
         $date1->modify('-1 '.$period);
     }
 
-    list($diff->y, $diff->m, $diff->d, $diff->h) = array_values($periods);
+    [$diff->y, $diff->m, $diff->d, $diff->h] = array_values($periods);
 
     //Minutes, seconds
     $diff->s = round(abs($date1->format('U') - $date2->format('U')));
@@ -725,7 +725,7 @@ function str2DateTime($original, $format = null)
         if (empty($t)) { // from timestamp
             return new DateTime('@'.$original);
         } else { // from unknown date format (assuming something like Y-m-d H:i:s)
-            $ymdhms = array();
+            $ymdhms = [];
             $tok = strtok($original, '- :/');
             while ($tok !== false) {
                 $ymdhms[] = $tok;
@@ -772,7 +772,7 @@ function format_date_legacy($original, $show = null, $format = null)
     }
 
     if ($show === null || $show === true) {
-        $show = array('day_name', 'day', 'month', 'year');
+        $show = ['day_name', 'day', 'month', 'year'];
     }
 
     $print = '';
@@ -823,7 +823,7 @@ function format_date($original, $show = null, $format = null)
     }
 
     if ($show === null || $show === true) {
-        $show = array('day_name', 'day', 'month', 'year');
+        $show = ['day_name', 'day', 'month', 'year'];
     }
 
     // use IntlDateFormatter for proper i18n need pkg php-intl
@@ -863,9 +863,9 @@ function format_fromto($from, $to, $full = false)
         if ($full || $from->format('Y') != $to->format('Y')) {
             $from_str = format_date($from);
         } elseif ($from->format('m') != $to->format('m')) {
-            $from_str = format_date($from, array('day_name', 'day', 'month'));
+            $from_str = format_date($from, ['day_name', 'day', 'month']);
         } else {
-            $from_str = format_date($from, array('day_name', 'day'));
+            $from_str = format_date($from, ['day_name', 'day']);
         }
         $to_str = format_date($to);
 
@@ -894,7 +894,7 @@ function time_since($original, $stop = 'minute', $format = null, $with_text = tr
     $now = new DateTime();
     $diff = dateDiff($now, $date);
 
-    $chunks = array(
+    $chunks = [
       'year' => $diff->y,
       'month' => $diff->m,
       'week' => 0,
@@ -902,7 +902,7 @@ function time_since($original, $stop = 'minute', $format = null, $with_text = tr
       'hour' => $diff->h,
       'minute' => $diff->i,
       'second' => $diff->s,
-    );
+    ];
 
     // DateInterval does not contain the number of weeks
     if ($with_week) {
@@ -1029,7 +1029,7 @@ function redirect_html($url, $msg = '', $refresh_time = 0)
         $user = build_user($conf['guest_id'], true);
         load_language('common.lang');
         trigger_notify('loading_lang');
-        load_language('lang', PHPWG_ROOT_PATH.PWG_LOCAL_DIR, array('no_fallback' => true, 'local' => true));
+        load_language('lang', PHPWG_ROOT_PATH.PWG_LOCAL_DIR, ['no_fallback' => true, 'local' => true]);
         $template = new Template(PHPWG_ROOT_PATH.'themes', get_default_theme());
     } elseif (defined('IN_ADMIN') and IN_ADMIN) {
         $template = new Template(PHPWG_ROOT_PATH.'themes', get_default_theme());
@@ -1043,11 +1043,11 @@ function redirect_html($url, $msg = '', $refresh_time = 0)
     $url_link = $url;
     $title = 'redirection';
 
-    $template->set_filenames(array( 'redirect' => 'redirect.tpl' ));
+    $template->set_filenames([ 'redirect' => 'redirect.tpl' ]);
 
     include(PHPWG_ROOT_PATH.'include/page_header.php');
 
-    $template->set_filenames(array( 'redirect' => 'redirect.tpl' ));
+    $template->set_filenames([ 'redirect' => 'redirect.tpl' ]);
     $template->assign('REDIRECT_MSG', $msg);
 
     $template->parse('redirect');
@@ -1092,7 +1092,7 @@ function get_pwg_themes($show_mobile = false)
 {
     global $conf;
 
-    $themes = array();
+    $themes = [];
 
     $query = '
 SELECT
@@ -1197,17 +1197,17 @@ SELECT element_id
 
     $caddiables = array_diff($elements_id, $in_caddie);
 
-    $datas = array();
+    $datas = [];
 
     foreach ($caddiables as $caddiable) {
-        $datas[] = array(
+        $datas[] = [
           'element_id' => $caddiable,
           'user_id' => $user['id'],
-          );
+          ];
     }
 
     if (count($caddiables) > 0) {
-        mass_inserts(CADDIE_TABLE, array('element_id','user_id'), $datas);
+        mass_inserts(CADDIE_TABLE, ['element_id','user_id'], $datas);
     }
 }
 
@@ -1286,11 +1286,11 @@ function l10n_dec($singular_key, $plural_key, $decimal)
 function get_l10n_args($key, $args = '')
 {
     if (is_array($args)) {
-        $key_arg = array_merge(array($key), $args);
+        $key_arg = array_merge([$key], $args);
     } else {
-        $key_arg = array($key,  $args);
+        $key_arg = [$key,  $args];
     }
-    return array('key_args' => $key_arg);
+    return ['key_args' => $key_arg];
 }
 
 /**
@@ -1351,7 +1351,7 @@ SELECT '.$conf['user_fields']['email'].'
   FROM '.USERS_TABLE.'
   WHERE '.$conf['user_fields']['id'].' = '.$conf['webmaster_id'].'
 ;';
-    list($email) = pwg_db_fetch_row(pwg_query($query));
+    [$email] = pwg_db_fetch_row(pwg_query($query));
 
     $email = trigger_change('get_webmaster_mail_address', $email);
 
@@ -1380,7 +1380,7 @@ SELECT param, value
     }
 
     while ($row = pwg_db_fetch_assoc($result)) {
-        $val = isset($row['value']) ? $row['value'] : '';
+        $val = $row['value'] ?? '';
         // If the field is true or false, the variable is transformed into a boolean value.
         if ($val == 'true') {
             $val = true;
@@ -1402,10 +1402,10 @@ SELECT param, value
  */
 function pwg_is_dbconf_writeable()
 {
-    list($param, $value) = array('pwg_is_dbconf_writeable_'.generate_key(12), date('c').' '.generate_key(20));
+    [$param, $value] = ['pwg_is_dbconf_writeable_'.generate_key(12), date('c').' '.generate_key(20)];
 
     conf_update_param($param, $value);
-    list($dbvalue) = pwg_db_fetch_row(pwg_query('SELECT value FROM '.CONFIG_TABLE.' WHERE param = \''.$param.'\''));
+    [$dbvalue] = pwg_db_fetch_row(pwg_query('SELECT value FROM '.CONFIG_TABLE.' WHERE param = \''.$param.'\''));
 
     if ($dbvalue != $value) {
         return false;
@@ -1460,7 +1460,7 @@ function conf_delete_param($params)
     global $conf;
 
     if (!is_array($params)) {
-        $params = array($params);
+        $params = [$params];
     }
     if (empty($params)) {
         return;
@@ -1489,11 +1489,7 @@ DELETE FROM '.CONFIG_TABLE.'
 function conf_get_param($param, $default_value = null)
 {
     global $conf;
-
-    if (isset($conf[$param])) {
-        return $conf[$param];
-    }
-    return $default_value;
+    return $conf[$param] ?? $default_value;
 }
 
 
@@ -1601,7 +1597,7 @@ function script_basename()
 {
     global $conf;
 
-    foreach (array('SCRIPT_NAME', 'SCRIPT_FILENAME', 'PHP_SELF') as $value) {
+    foreach (['SCRIPT_NAME', 'SCRIPT_FILENAME', 'PHP_SELF'] as $value) {
         if (!empty($_SERVER[$value])) {
             $filename = strtolower($_SERVER[$value]);
             if ($conf['php_extension_in_urls'] and get_extension($filename) !== 'php') {
@@ -1690,7 +1686,7 @@ function get_parent_language($lang_id = null)
  *     @option bool local - if true load file from local directory
  * @return boolean|string
  */
-function load_language($filename, $dirname = '', $options = array())
+function load_language($filename, $dirname = '', $options = [])
 {
     global $user, $language_files;
 
@@ -1712,7 +1708,7 @@ function load_language($filename, $dirname = '', $options = array())
         get_default_language() : PHPWG_DEFAULT_LANGUAGE;
 
     // construct list of potential languages
-    $languages = array();
+    $languages = [];
     if (!empty($options['language'])) { // explicit language
         $languages[] = $options['language'];
     }
@@ -1766,10 +1762,10 @@ function load_language($filename, $dirname = '', $options = array())
             // access already existing values
             global $lang, $lang_info;
             if (!isset($lang)) {
-                $lang = array();
+                $lang = [];
             }
             if (!isset($lang_info)) {
-                $lang_info = array();
+                $lang_info = [];
             }
 
             // load parent language content directly in global
@@ -1899,9 +1895,9 @@ function create_navigation_bar($url, $nb_element, $start, $nb_element_page, $cle
 {
     global $conf;
 
-    $navbar = array();
+    $navbar = [];
     $pages_around = $conf['paginate_pages_around'];
-    $start_str = $clean_url ? '/'.$param_name.'-' : (strpos($url, '?') === false ? '?' : '&amp;').$param_name.'=';
+    $start_str = $clean_url ? '/'.$param_name.'-' : (!str_contains($url, '?') ? '?' : '&amp;').$param_name.'=';
 
     if (!isset($start) or !is_numeric($start) or (is_numeric($start) and $start < 0)) {
         $start = 0;
@@ -1931,7 +1927,7 @@ function create_navigation_bar($url, $nb_element, $start, $nb_element_page, $cle
         }
 
         // pages to display
-        $navbar['pages'] = array();
+        $navbar['pages'] = [];
         $navbar['pages'][1] = $url;
         for ($i = max(floor($cur_page) - $pages_around, 2), $stop = min(ceil($cur_page) + $pages_around + 1, $maximum);
             $i < $stop; $i++) {
@@ -1965,13 +1961,13 @@ function get_icon($date, $is_child_date = false)
         );
     }
 
-    $icon = array(
+    $icon = [
       'TITLE' => $cache['get_icon']['title'],
       'IS_CHILD_DATE' => $is_child_date,
-      );
+      ];
 
     if (isset($cache['get_icon'][$date])) {
-        return $cache['get_icon'][$date] ? $icon : array();
+        return $cache['get_icon'][$date] ? $icon : [];
     }
 
     if (!isset($cache['get_icon']['sql_recent_date'])) {
@@ -1981,7 +1977,7 @@ function get_icon($date, $is_child_date = false)
 
     $cache['get_icon'][$date] = $date > $cache['get_icon']['sql_recent_date'];
 
-    return $cache['get_icon'][$date] ? $icon : array();
+    return $cache['get_icon'][$date] ? $icon : [];
 }
 
 /**
@@ -2065,7 +2061,7 @@ function get_privacy_level_options()
 {
     global $conf;
 
-    $options = array();
+    $options = [];
     $label = '';
     foreach (array_reverse($conf['available_permission_levels']) as $level) {
         if (0 == $level) {
@@ -2157,11 +2153,11 @@ function mobile_theme()
  */
 function url_check_format($url)
 {
-    if (strpos($url, '"') !== false) {
+    if (str_contains($url, '"')) {
         return false;
     }
 
-    if (strncmp($url, 'http://', 7) !== 0 and strncmp($url, 'https://', 8) !== 0) {
+    if (!str_starts_with($url, 'http://') and !str_starts_with($url, 'https://')) {
         return false;
     }
 
@@ -2188,15 +2184,15 @@ function get_nb_available_comments()
 {
     global $user;
     if (!isset($user['nb_available_comments'])) {
-        $where = array();
+        $where = [];
         if (!is_admin()) {
             $where[] = 'validated=\'true\'';
         }
         $where[] = get_sql_condition_FandF(
-            array(
+            [
               'forbidden_categories' => 'category_id',
               'forbidden_images' => 'ic.image_id',
-            ),
+            ],
             '',
             true
         );
@@ -2208,12 +2204,12 @@ SELECT COUNT(DISTINCT(com.id))
     ON ic.image_id = com.image_id
   WHERE '.implode('
     AND ', $where);
-        list($user['nb_available_comments']) = pwg_db_fetch_row(pwg_query($query));
+        [$user['nb_available_comments']] = pwg_db_fetch_row(pwg_query($query));
 
         single_update(
             USER_CACHE_TABLE,
-            array('nb_available_comments' => $user['nb_available_comments']),
-            array('user_id' => $user['id'])
+            ['nb_available_comments' => $user['nb_available_comments']],
+            ['user_id' => $user['id']]
         );
     }
     return $user['nb_available_comments'];
@@ -2231,9 +2227,7 @@ SELECT COUNT(DISTINCT(com.id))
  */
 function safe_version_compare($a, $b, $op = null)
 {
-    $replace_chars   = function ($m) {
-        return ord(strtolower($m[1]));
-    };
+    $replace_chars   = (fn ($m) => ord(strtolower($m[1])));
 
     // add dot before groups of letters (version_compare does the same thing)
     $a = preg_replace('#([0-9]+)([a-z]+)#i', '$1.$2', $a);
@@ -2263,7 +2257,7 @@ function check_lounge()
         return;
     }
 
-    if (isset($_REQUEST['method']) and in_array($_REQUEST['method'], array('pwg.images.upload', 'pwg.images.uploadAsync'))) {
+    if (isset($_REQUEST['method']) and in_array($_REQUEST['method'], ['pwg.images.upload', 'pwg.images.uploadAsync'])) {
         return;
     }
 
@@ -2340,17 +2334,17 @@ function send_piwigo_infos()
 
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
-    list($db_current_date) = pwg_db_fetch_row(pwg_query('SELECT now();'));
+    [$db_current_date] = pwg_db_fetch_row(pwg_query('SELECT now();'));
 
     if (!isset($conf['send_piwigo_infos_origin_hash'])) {
         conf_update_param('send_piwigo_infos_origin_hash', sha1(random_bytes(1000)), true);
     }
 
-    list($container_type, $container_version) = get_container_info();
+    [$container_type, $container_version] = get_container_info();
 
-    $piwigo_infos = array(
+    $piwigo_infos = [
       'origin_hash' => $conf['send_piwigo_infos_origin_hash'],
-      'technical' => array(
+      'technical' => [
         'php_version' => PHP_VERSION,
         'piwigo_version' => PHPWG_VERSION,
         'os_version' => PHP_OS,
@@ -2360,9 +2354,9 @@ function send_piwigo_infos()
         'php_datetime' => date('Y-m-d H:i:s'),
         'db_datetime' => $db_current_date,
         'graphics_library' => get_graphics_library(),
-      ),
+      ],
       'general_stats' => get_pwg_general_statitics(),
-    );
+    ];
 
 
     // convert disk_usage from kB to mB
@@ -2430,7 +2424,7 @@ SELECT
     // $conf['pem_themes_category'] = 10;
     $url = PEM_URL . '/api/get_extension_list.php';
     if (fetchRemote($url, $result) and $pem_extensions = @unserialize($result)) {
-        $official_exts = array();
+        $official_exts = [];
         foreach ($pem_extensions as $eid => $ext) {
             if (!empty($ext['archive_root_dir'])) {
                 @$official_exts[ $ext['idx_category'] ][ $ext['archive_root_dir'] ] = $eid;
@@ -2447,7 +2441,7 @@ SELECT
     include_once(PHPWG_ROOT_PATH.'admin/include/plugins.class.php');
     $plugins = new plugins();
     $piwigo_infos['general_stats']['nb_private_plugins'] = 0;
-    $piwigo_infos['plugins'] = array();
+    $piwigo_infos['plugins'] = [];
     foreach ($plugins->db_plugins_by_id as $plugin) {
         if ('active' == $plugin['state']) {
             $eid = null;
@@ -2486,8 +2480,8 @@ SELECT
     include_once(PHPWG_ROOT_PATH.'admin/include/themes.class.php');
     $themes = new themes();
     $piwigo_infos['general_stats']['nb_private_themes'] = 0;
-    $piwigo_infos['themes'] = array();
-    $private_themes = array();
+    $piwigo_infos['themes'] = [];
+    $private_themes = [];
     foreach ($themes->db_themes_by_id as $theme) {
         $theme['state'] = 'active';
         if ('active' == $theme['state']) {
@@ -2531,7 +2525,7 @@ SELECT
     }
     $piwigo_infos['general_stats']['default_theme'] = $default_theme;
 
-    $piwigo_infos['themes_usage'] = array();
+    $piwigo_infos['themes_usage'] = [];
     $query = '
 SELECT
     theme,
@@ -2561,7 +2555,7 @@ SELECT
 ;';
     $piwigo_infos['languages_usage'] = query2array($query, 'language', 'language_counter');
 
-    $piwigo_infos['activities'] = array();
+    $piwigo_infos['activities'] = [];
     $piwigo_infos['general_stats']['nb_activities'] = 0;
 
     $query = '
@@ -2579,11 +2573,11 @@ SELECT
         @$piwigo_infos['activities'][ $activity['object'] ][ $activity['action'] ] = $activity['counter'];
     }
 
-    $label_for_system_object_id = array(
+    $label_for_system_object_id = [
       1 => 'core',
       2 => 'plugin',
       3 => 'theme',
-    );
+    ];
 
     $query = '
 SELECT
@@ -2615,20 +2609,20 @@ SELECT
     foreach ($updates as $update) {
         $details = safe_unserialize($update['details']);
         if (isset($details['from_version']) and isset($details['to_version'])) {
-            @$piwigo_infos['updates'][] = array(
+            @$piwigo_infos['updates'][] = [
               'action' => $update['action'],
               'occured_on' => $update['occured_on'],
               'from_version' => $details['from_version'],
               'to_version' => $details['to_version'],
-            );
+            ];
         }
     }
 
     $watermark = ImageStdParams::get_watermark();
 
-    $piwigo_infos['features'] = array(
+    $piwigo_infos['features'] = [
       'use_watermark' => !empty($watermark->file) ? 'yes' : 'no',
-    );
+    ];
 
     // which remote apps have been used?
     $remote_apps_start_time = get_moment();
@@ -2644,9 +2638,9 @@ SELECT
   GROUP BY user_agent
 ;';
     $activities = query2array($query);
-    $apps = array();
+    $apps = [];
 
-    $apps_pattern = array(
+    $apps_pattern = [
       'Piwigo iOS' => '/^Piwigo\/\d+ CFNetwork/',
       'Piwigo NG' => '/^Dart\/[\d\.]+ \(dart:io\)$/',
       'Piwigo Android' => '/^Piwigo-Android/',
@@ -2658,7 +2652,7 @@ SELECT
       'MacShare' => '/MacShareToPiwigo/',
       'WordPress' => '/WordPress/',
       'pLoader' => '/pLoader/',
-    );
+    ];
 
     foreach ($activities as $activity) {
         foreach ($apps_pattern as $app_name => $pattern) {
@@ -2678,13 +2672,13 @@ SELECT
 
     $piwigo_infos['apps'] = $apps;
 
-    $features = array(
+    $features = [
       'activate_comments',
       'rate',
       'log',
       'history_guest',
       'history_admin',
-    );
+    ];
 
     foreach ($features as $feature) {
         $piwigo_infos['features'][$feature] = $conf[$feature] ? 'yes' : 'no';
@@ -2692,15 +2686,15 @@ SELECT
 
     $url = conf_get_param('send_piwigo_infos_update_url', PHPWG_URL).'/ws.php';
 
-    $get_data = array(
+    $get_data = [
       'format' => 'php',
       'method' => 'porg.installs.update',
       'origin_hash' => $piwigo_infos['origin_hash'],
-      );
+      ];
 
-    $post_data = array(
+    $post_data = [
       'data' => json_encode($piwigo_infos),
-      );
+      ];
 
     if (!fetchRemote($url, $result, $get_data, $post_data)) {
         $logger->info('['.__FUNCTION__.'][exec='.$exec_id.'] fetchRemote on '.$url.' method=porg.installs.update has failed');
@@ -2735,7 +2729,7 @@ function pwg_unique_exec_begins($token_name, $timeout = 60)
     $logger->info('['.$token_name.'][exec='.$exec_id.'] starts now');
 
     if (isset($conf[$token_name.'_running'])) {
-        list($running_exec_id, $running_exec_start_time) = explode('-', $conf[$token_name.'_running']);
+        [$running_exec_id, $running_exec_start_time] = explode('-', $conf[$token_name.'_running']);
         if (time() - $running_exec_start_time > $timeout) {
             $logger->info('['.$token_name.'][exec='.$exec_id.'] exec='.$running_exec_id.', timeout stopped by another call to the function');
             pwg_unique_exec_ends($token_name);
@@ -2750,7 +2744,7 @@ INSERT IGNORE
 ;';
     pwg_query($query);
 
-    list($running_exec) = pwg_db_fetch_row(pwg_query('SELECT value FROM '.CONFIG_TABLE.' WHERE param = "'.$token_name.'_running"'));
+    [$running_exec] = pwg_db_fetch_row(pwg_query('SELECT value FROM '.CONFIG_TABLE.' WHERE param = "'.$token_name.'_running"'));
     list($running_exec_id, ) = explode('-', $running_exec);
 
     if ($running_exec_id != $exec_id) {
@@ -2770,7 +2764,7 @@ SELECT
   FROM '.CONFIG_TABLE.'
   WHERE param = "'.$token_name.'_running"
 ;';
-    list($counter) = pwg_db_fetch_row(pwg_query($query));
+    [$counter] = pwg_db_fetch_row(pwg_query($query));
 
     return $counter > 0;
 }
@@ -2805,8 +2799,8 @@ function get_container_info()
     if ((strtoupper(substr(PHP_OS, 0, 5)) === 'LINUX' and empty(ini_get('open_basedir')))) {
         if (file_exists('/proc/2/sched')) { // Check if PID2 exist
             $file = file_get_contents('/proc/2/sched'); // Read PID2 name
-            if ($file and 'kthreadd' === substr($file, 0, 8)) { // If PID 2 is kthreadd PHP is not running in a container
-                return array('none', null);
+            if ($file and str_starts_with($file, 'kthreadd')) { // If PID 2 is kthreadd PHP is not running in a container
+                return ['none', null];
             }
         }
 
@@ -2823,25 +2817,25 @@ function get_container_info()
                 if (preg_match('/^Build Version (.*)$/', $file_lines[count($file_lines) - 1], $matches)) {
                     $container_version = $matches[1];
                 }
-                return array('Official', $container_version);
+                return ['Official', $container_version];
             }
         }
         // Check for LinuxServer tagfile
         elseif (is_readable($info_file_linuxserver)) {
             $file_lines = file($info_file_linuxserver);
-            if (is_array($file_lines) and 'Linuxserver.io' === substr($file_lines[0], 0, 14)) {
+            if (is_array($file_lines) and str_starts_with($file_lines[0], 'Linuxserver.io')) {
                 $container_version = null;
                 if (preg_match('/version:\s*(.*)$/', $file_lines[0], $matches)) {
                     $container_version = $matches[1];
                 }
-                return array('LinuxServer.io', $container_version);
+                return ['LinuxServer.io', $container_version];
             }
         }
         // If no tagfile are found, default to unkown
-        return array('Unknown', null);
+        return ['Unknown', null];
     } else {
         // If the OS is not Linux or PHP basedir are enforced, assume PHP is not in a container
-        return array('none', null);
+        return ['none', null];
     }
 }
 

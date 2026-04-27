@@ -15,26 +15,26 @@ include_once(PHPWG_ROOT_PATH.'include/functions.inc.php');
 
 class updates
 {
-    public $types = array();
+    public $types = [];
     public $plugins;
     public $themes;
     public $languages;
-    public $missing = array();
-    public $default_plugins = array();
-    public $default_themes = array();
-    public $default_languages = array();
-    public $merged_extensions = array();
+    public $missing = [];
+    public $default_plugins = [];
+    public $default_themes = [];
+    public $default_languages = [];
+    public $merged_extensions = [];
     public $merged_extension_url = 'http://piwigo.org/download/merged_extensions.txt';
 
     public function __construct($page = 'updates')
     {
-        $this->types = array('plugins', 'themes', 'languages');
+        $this->types = ['plugins', 'themes', 'languages'];
 
         if (in_array($page, $this->types)) {
-            $this->types = array($page);
+            $this->types = [$page];
         }
-        $this->default_themes = array('modus', 'elegant', 'smartpocket');
-        $this->default_plugins = array('AdminTools', 'TakeATour', 'language_switch', 'LocalFilesEditor');
+        $this->default_themes = ['modus', 'elegant', 'smartpocket'];
+        $this->default_plugins = ['AdminTools', 'TakeATour', 'language_switch', 'LocalFilesEditor'];
 
         foreach ($this->types as $type) {
             include_once(PHPWG_ROOT_PATH.'admin/include/'.$type.'.class.php');
@@ -47,7 +47,7 @@ class updates
         $_SESSION['need_update'.PHPWG_VERSION] = null;
 
         if (preg_match('/(\d+\.\d+)\.(\d+)/', PHPWG_VERSION, $matches)
-          and @fetchRemote(PHPWG_URL.'/download/all_versions.php?rand='.md5(uniqid(rand(), true)), $result)) {
+          and @fetchRemote(PHPWG_URL.'/download/all_versions.php?rand='.md5(uniqid(random_int(0, mt_getrandmax()), true)), $result)) {
             $all_versions = @explode("\n", $result);
             $new_version = trim($all_versions[0]);
             $_SESSION['need_update'.PHPWG_VERSION] = version_compare(PHPWG_VERSION, $new_version, '<');
@@ -69,12 +69,12 @@ class updates
     {
         global $conf;
 
-        $new_versions = array(
+        $new_versions = [
           'piwigo.org-checked' => false,
           'is_dev' => true,
-          );
+          ];
 
-        list($env, $build_version) = get_container_info();
+        [$env, $build_version] = get_container_info();
         if (preg_match('/^(\d+\.\d+)\.(\d+)$/', PHPWG_VERSION)) {
             $new_versions['is_dev'] = false;
             $actual_branch = get_branch_from_version(
@@ -84,7 +84,7 @@ class updates
             );
 
             $url = PHPWG_URL.'/download/all_versions.php';
-            $url .= '?rand='.md5(uniqid(rand(), true)); // Avoid server cache
+            $url .= '?rand='.md5(uniqid(random_int(0, mt_getrandmax()), true)); // Avoid server cache
             $url .= ('Official' === $env) ? '&docker' : '&show_requirements'; // Check docker version if in container
             $url .= '&origin_hash='.sha1($conf['secret_key'].get_absolute_root_url());
 
@@ -113,7 +113,7 @@ class updates
                         }
                     }
                 } else {
-                    list($last_version_number, $last_version_php) = explode('/', trim($all_versions[0]));
+                    [$last_version_number, $last_version_php] = explode('/', trim($all_versions[0]));
 
                     if (version_compare(PHPWG_VERSION, $last_version_number, '<')) {
                         $last_branch = get_branch_from_version($last_version_number);
@@ -127,7 +127,7 @@ class updates
 
                             // Check if new version exists in same branch
                             foreach ($all_versions as $version) {
-                                list($version_number, $version_php) = explode('/', trim($version));
+                                [$version_number, $version_php] = explode('/', trim($version));
                                 $branch = get_branch_from_version($version_number);
 
                                 if ($branch == $actual_branch) {
@@ -171,7 +171,7 @@ class updates
             ' & ',
             array_intersect_key(
                 $new_versions,
-                array_fill_keys(array('minor', 'major'), 1)
+                array_fill_keys(['minor', 'major'], 1)
             )
         );
 
@@ -217,14 +217,14 @@ class updates
             $content .= "\n\n".l10n('Running on an up-to-date Piwigo is important for security.');
 
             pwg_mail_admins(
-                array(
+                [
                 'subject' => l10n('Piwigo %s is available, please update', $new_versions_string),
                 'content' => $content,
                 'content_format' => 'text/plain',
-                ),
-                array(
+                ],
+                [
                 'filename' => 'notification_admin',
-                ),
+                ],
                 false, // do not exclude current user
                 true // only webmasters
             );
@@ -234,10 +234,10 @@ class updates
             // save notify
             conf_update_param(
                 'update_notify_last_notification',
-                array(
+                [
                 'version' => $new_versions_string,
                 'notified_on' => date('c'),
-                )
+                ]
             );
         }
     }
@@ -246,12 +246,12 @@ class updates
     {
         global $user;
 
-        $get_data = array(
+        $get_data = [
           'format' => 'php',
-        );
+        ];
 
         // Retrieve PEM versions
-        $versions_to_check = array();
+        $versions_to_check = [];
         $url = PEM_URL . '/api/get_version_list.php';
         if (fetchRemote($url, $result, $get_data) and $pem_versions = @unserialize($result)) {
             if (!preg_match('/^\d+\.\d+\.\d+$/', $version)) {
@@ -259,7 +259,7 @@ class updates
             }
             $branch = get_branch_from_version($version);
             foreach ($pem_versions as $pem_version) {
-                if (strpos($pem_version['name'], $branch) === 0) {
+                if (str_starts_with($pem_version['name'], $branch)) {
                     $versions_to_check[] = $pem_version['id'];
                 }
             }
@@ -269,7 +269,7 @@ class updates
         }
 
         // Extensions to check
-        $ext_to_check = array();
+        $ext_to_check = [];
         foreach ($this->types as $type) {
             $fs = 'fs_'.$type;
             foreach ($this->$type->$fs as $ext) {
@@ -283,15 +283,15 @@ class updates
         $url = PEM_URL . '/api/get_revision_list.php';
         $get_data = array_merge(
             $get_data,
-            array(
+            [
       'last_revision_only' => 'true',
       'version' => implode(',', $versions_to_check),
       'lang' => substr($user['language'], 0, 2),
       'get_nb_downloads' => 'true',
-      )
+      ]
         );
 
-        $post_data = array();
+        $post_data = [];
         if (!empty($ext_to_check)) {
             $post_data['extension_include'] = implode(',', array_keys($ext_to_check));
         }
@@ -302,14 +302,14 @@ class updates
                 return false;
             }
 
-            $servers = array();
+            $servers = [];
 
             foreach ($pem_exts as $ext) {
                 if (isset($ext_to_check[$ext['extension_id']])) {
                     $type = $ext_to_check[$ext['extension_id']];
 
                     if (!isset($servers[$type])) {
-                        $servers[$type] = array();
+                        $servers[$type] = [];
                     }
 
                     $servers[$type][ $ext['extension_id'] ] = $ext;
@@ -339,7 +339,7 @@ class updates
             return false;
         }
 
-        $_SESSION['extensions_need_update'] = array();
+        $_SESSION['extensions_need_update'] = [];
 
         foreach ($this->types as $type) {
             $fs = 'fs_'.$type;
@@ -347,8 +347,8 @@ class updates
             $server_ext = $this->$type->$server;
             $fs_ext = $this->$type->$fs;
 
-            $ignore_list = array();
-            $need_upgrade = array();
+            $ignore_list = [];
+            $need_upgrade = [];
 
             foreach ($fs_ext as $ext_id => $fs_ext) {
                 if (isset($fs_ext['extension']) and isset($server_ext[$fs_ext['extension']])) {
@@ -441,14 +441,14 @@ class updates
         if ($check_current_version and !version_compare($upgrade_to, PHPWG_VERSION, '>')) {
             // TODO why redirect to a plugin page? maybe a remaining code from when
             // the update system was provided as a plugin?
-            redirect(get_root_url().'admin.php?page=plugin-'.basename(dirname(__FILE__)));
+            redirect(get_root_url().'admin.php?page=plugin-'.basename(__DIR__));
         }
 
         $obsolete_list = null;
 
         if ($step == 2) {
             $code = get_branch_from_version(PHPWG_VERSION).'.x_to_'.$upgrade_to;
-            $dl_code = str_replace(array('.', '_'), '', $code);
+            $dl_code = str_replace(['.', '_'], '', $code);
             $remove_path = $code;
             // no longer try to delete files on a minor upgrade
             // $obsolete_list = 'obsolete.list';
@@ -496,7 +496,7 @@ class updates
                     //Check if all files were extracted
                     $error = '';
                     foreach ($result as $extract) {
-                        if (!in_array($extract['status'], array('ok', 'filtered', 'already_a_directory'))) {
+                        if (!in_array($extract['status'], ['ok', 'filtered', 'already_a_directory'])) {
                             // Try to change chmod and extract
                             if (@chmod(PHPWG_ROOT_PATH.$extract['filename'], 0777)
                               and ($res = $zip->extract(
@@ -527,7 +527,7 @@ class updates
                         deltree(PHPWG_ROOT_PATH.$conf['data_location'].'update');
                         invalidate_user_cache(true);
                         conf_update_param('piwigo_installed_version', $upgrade_to);
-                        pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'update', array('from_version' => PHPWG_VERSION, 'to_version' => $upgrade_to));
+                        pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'update', ['from_version' => PHPWG_VERSION, 'to_version' => $upgrade_to]);
 
                         if ($step == 2) {
                             // only delete compiled templates on minor update. Doing this on

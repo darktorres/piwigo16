@@ -26,17 +26,17 @@ if (!isset($_GET['output']) or 'content_only' != $_GET['output']) {
     $page['body_id'] = 'thePopuphelpPage';
     $title = l10n('Piwigo Help');
     $page['page_banner'] = '<h1>'.$title.'</h1>';
-    $page['meta_robots'] = array('noindex' => 1, 'nofollow' => 1);
+    $page['meta_robots'] = ['noindex' => 1, 'nofollow' => 1];
 
     // set required template variables to avoid "Undefined array key" with PHP 8
     $template->assign(
-        array(
+        [
         'U_RETURN' => '',
         'USERNAME' => '',
         'U_FAQ' => '',
         'U_CHANGE_THEME' => '',
         'U_LOGOUT' => '',
-    )
+    ]
     );
 
     include(PHPWG_ROOT_PATH.'include/page_header.php');
@@ -49,10 +49,10 @@ if (
     $help_content = load_language(
         'help/'.$_GET['page'].'.html',
         '',
-        array(
+        [
         'force_fallback' => 'en_UK',
         'return' => true,
-        )
+        ]
     );
 
     if ($help_content == false) {
@@ -67,9 +67,9 @@ if (
 $template->set_filename('popuphelp', 'popuphelp.tpl');
 
 $template->assign(
-    array(
+    [
     'HELP_CONTENT' => $help_content,
-  )
+  ]
 );
 
 if (isset($_GET['output']) and 'content_only' == $_GET['output']) {

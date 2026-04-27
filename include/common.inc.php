@@ -45,26 +45,26 @@ if (!empty($_SERVER['PATH_INFO'])) {
 // Define some basic configuration arrays this also prevents malicious
 // rewriting of language and otherarray values via URI params
 //
-$conf = array();
-$page = array(
-  'infos' => array(),
-  'errors' => array(),
-  'warnings' => array(),
-  'messages' => array(),
-  'body_classes' => array(),
-  'body_data' => array(),
-  );
-$user = array();
-$lang = array();
-$header_msgs = array();
-$header_notes = array();
-$filter = array();
+$conf = [];
+$page = [
+  'infos' => [],
+  'errors' => [],
+  'warnings' => [],
+  'messages' => [],
+  'body_classes' => [],
+  'body_data' => [],
+  ];
+$user = [];
+$lang = [];
+$header_msgs = [];
+$header_notes = [];
+$filter = [];
 
 foreach (
-    array(
+    [
       'gzopen',
       'str_starts_with',
-      ) as $func) {
+      ] as $func) {
     if (!function_exists($func)) {
         include_once(PHPWG_ROOT_PATH . 'include/php_compat/'.$func.'.php');
     }
@@ -125,11 +125,11 @@ pwg_db_check_charset();
 // in Piwigo 15, configuration setting webmaster_id is moved from config files
 // to database. It may be undefined at some point, with Piwigo 15+ scripts and
 // a Piwigo 14 database schema not upgraded yet. Let's avoid any problem.
-$conf['webmaster_id'] = $conf['webmaster_id'] ?? 1;
+$conf['webmaster_id'] ??= 1;
 
 load_conf_from_db();
 
-$logger = new Logger(array(
+$logger = new Logger([
   'directory' => PHPWG_ROOT_PATH . $conf['data_location'] . $conf['log_dir'],
   'severity' => $conf['log_level'],
   // we use an hashed filename to prevent direct file access, and we salt with
@@ -138,7 +138,7 @@ $logger = new Logger(array(
   'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . $conf['db_password']) . '.txt',
   'globPattern' => 'log_*.txt',
   'archiveDays' => $conf['log_archive_days'],
-  ));
+  ]);
 
 if (!$conf['check_upgrade_feed']) {
     if (!isset($conf['piwigo_db_version']) or $conf['piwigo_db_version'] != get_branch_from_version(PHPWG_VERSION)) {
@@ -155,13 +155,13 @@ if (!isset($conf['piwigo_installed_version'])) {
     conf_update_param('piwigo_installed_version', PHPWG_VERSION);
 } elseif ($conf['piwigo_installed_version'] != PHPWG_VERSION) {
     // Piwigo has been updated "from filesystem" and not "from the administration UI". We mark it as an autoupdate in the system activities log
-    pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'autoupdate', array('from_version' => $conf['piwigo_installed_version'], 'to_version' => PHPWG_VERSION));
+    pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'autoupdate', ['from_version' => $conf['piwigo_installed_version'], 'to_version' => PHPWG_VERSION]);
     conf_update_param('piwigo_installed_version', PHPWG_VERSION);
 }
 
 //Check if last major update conf is set if not set it
 if (!isset($conf['last_major_update'])) {
-    list($dbnow) = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
+    [$dbnow] = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
     conf_update_param('last_major_update', $dbnow, true);
 }
 
@@ -188,7 +188,7 @@ check_lounge();
 
 include(PHPWG_ROOT_PATH.'include/user.inc.php');
 
-if (in_array(substr($user['language'], 0, 2), array('fr','it','de','es','pl','ru','nl','tr','da'))) {
+if (in_array(substr($user['language'], 0, 2), ['fr','it','de','es','pl','ru','nl','tr','da'])) {
     define('PHPWG_DOMAIN', substr($user['language'], 0, 2).'.piwigo.org');
 } elseif ('zh_CN' == $user['language']) {
     define('PHPWG_DOMAIN', 'cn.piwigo.org');
@@ -213,7 +213,7 @@ if (is_admin() || (defined('IN_ADMIN') and IN_ADMIN)) {
     load_language('whats_new_'.get_branch_from_version(PHPWG_VERSION).'.lang');
 }
 trigger_notify('loading_lang');
-load_language('lang', PHPWG_ROOT_PATH.PWG_LOCAL_DIR, array('no_fallback' => true, 'local' => true));
+load_language('lang', PHPWG_ROOT_PATH.PWG_LOCAL_DIR, ['no_fallback' => true, 'local' => true]);
 
 // only now we can set the localized username of the guest user (and not in
 // include/user.inc.php)
@@ -241,11 +241,11 @@ if (isset($page['notify_api_key_expiration']) and is_array($page['notify_api_key
     if ($is_mail_send) {
         single_update(
             USER_AUTH_KEYS_TABLE,
-            array('last_notified_on' => $page['notify_api_key_expiration']['dbnow']),
-            array(
+            ['last_notified_on' => $page['notify_api_key_expiration']['dbnow']],
+            [
             'user_id' => $user['id'],
             'auth_key' => $page['notify_api_key_expiration']['auth_key'],
-      ),
+      ],
         );
     }
 
@@ -296,7 +296,7 @@ if ($conf['check_upgrade_feed']) {
 
 if (count($header_msgs) > 0) {
     $template->assign('header_msgs', $header_msgs);
-    $header_msgs = array();
+    $header_msgs = [];
 }
 
 if (!empty($conf['filter_pages']) and get_filter_page_value('used')) {

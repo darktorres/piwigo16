@@ -18,8 +18,8 @@ if (!defined('PHPWG_ROOT_PATH')) {
 if (is_webmaster()) {
     // Get system activities data
     if (isset($_GET['method']) && 'pwg.activity_sys.getList' == $_GET['method']) {
-        $response = array();
-        $data = array();
+        $response = [];
+        $data = [];
 
         $query = '
   SELECT
@@ -48,9 +48,9 @@ if (is_webmaster()) {
             $date = '';
             $hour = '';
             $details = unserialize($rows['details']);
-            $detail = array(
+            $detail = [
               'type' => 'empty',
-            );
+            ];
 
             // For each categories (Core, Plugin and Theme) we need to format theirs actions
             switch ($rows['object_id']) {
@@ -89,10 +89,10 @@ if (is_webmaster()) {
                                         $c_text = l10n('Photo sizes');
                                         // sizes have 2 params always Photo sizes and sometimes config_action
                                         if (isset($details['config_action']) && 'restore_settings' == $details['config_action']) {
-                                            $detail[] = array(
+                                            $detail[] = [
                                               'icon' => 'icon-back-in-time',
                                               'text' => l10n('Set as default'),
-                                            );
+                                            ];
                                         }
                                         break;
 
@@ -113,10 +113,10 @@ if (is_webmaster()) {
                                 }
 
                                 $detail['type'] = 'config_section';
-                                $detail[] = array(
+                                $detail[] = [
                                   'icon' => $c_icon,
                                   'text' => $c_text,
-                                );
+                                ];
                             }
                             break;
 
@@ -127,11 +127,11 @@ if (is_webmaster()) {
                             // for maintenance we need to specific format details
                             if (isset($details['maintenance_action'])) {
                                 $action_detail = $details['maintenance_action'];
-                                $detail = array(
+                                $detail = [
                                   'type' => 'maintenance_action',
                                   'icon' => $maint_actions[$action_detail]['icon'] ?? 'icon-cone',
                                   'text' => $maint_actions[$action_detail]['label'] ?? $action_detail,
-                                );
+                                ];
                             }
                             break;
 
@@ -206,17 +206,17 @@ if (is_webmaster()) {
                             // for delete we need to specific format details
                             if (isset($details['db_version'])) {
                                 $detail['type'] = 'db_fs_version';
-                                $detail[] = array(
+                                $detail[] = [
                                   'icon' => 'icon-flow-branch',
                                   'text' => 'database : ' . $details['db_version'],
-                                );
+                                ];
                             }
                             if (isset($details['fs_version'])) {
                                 $detail['type'] = 'db_fs_version';
-                                $detail[] = array(
+                                $detail[] = [
                                   'icon' => 'icon-flow-branch',
                                   'text' => 'filesystem : ' . $details['fs_version'],
-                                );
+                                ];
                             }
                             break;
 
@@ -290,35 +290,35 @@ if (is_webmaster()) {
 
             // For each lines we need to format theirs details (general details)
             if (isset($details['from_version'])) {
-                $detail = array(
+                $detail = [
                   'type' => 'from_to',
-                  array(
+                  [
                     'icon' => 'icon-flow-branch',
                     'text' => $details['from_version'],
-                  ),
-                  array(
+                  ],
+                  [
                     'icon' => isset($details['to_version']) ? 'icon-flow-branch' : 'icon-block',
-                    'text' => isset($details['to_version']) ? $details['to_version'] : ($details['result'] ?? ''),
-                  ),
-                );
+                    'text' => $details['to_version'] ?? ($details['result'] ?? ''),
+                  ],
+                ];
             } elseif (isset($details['version'])) {
-                $detail = array(
+                $detail = [
                   'type' => 'version',
                   'icon' => 'icon-flow-branch',
                   'text' => $details['version'],
-                );
+                ];
             } elseif (isset($details['result'])) {
-                $detail = array(
+                $detail = [
                   'type' => 'error',
                   'icon' => 'icon-block',
                   'text' => $details['result'],
-                );
+                ];
             }
 
             // Format our data before send
             // This data will be manipulate by maintenance_sys.js
-            list($date, $hour) = explode(' ', $rows['occured_on']);
-            $data[] = array(
+            [$date, $hour] = explode(' ', $rows['occured_on']);
+            $data[] = [
               'major_infos' => $major_infos,
               'id' => $rows['activity_id'],
               'object_icon' => $object_icon,
@@ -331,13 +331,13 @@ if (is_webmaster()) {
               'date' => format_date($date),
               'hour' => $hour,
               'detail' => $detail,
-            );
+            ];
         }
 
         // Now we good to send our response data
-        $response = array(
+        $response = [
           'data' => $data,
-        );
+        ];
         echo json_encode($response);
         exit;
     }
@@ -350,7 +350,7 @@ if (is_webmaster()) {
 // +-----------------------------------------------------------------------+
 
 $template->assign('isWebmaster', (is_webmaster()) ? 1 : 0);
-$template->set_filenames(array('maintenance' => 'maintenance_sys.tpl'));
+$template->set_filenames(['maintenance' => 'maintenance_sys.tpl']);
 
 // +-----------------------------------------------------------------------+
 // |                           sending html code                           |

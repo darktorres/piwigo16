@@ -77,7 +77,7 @@ SELECT
 
     $result = pwg_query($query);
 
-    $output = array();
+    $output = [];
     while ($row = pwg_db_fetch_assoc($result)) {
         $output[] = $row;
     }
@@ -127,11 +127,11 @@ ORDER BY
 
 function get_month_stats()
 {
-    $result = array();
+    $result = [];
     $date = new DateTime();
     $date_last_month = clone $date;
     $date_last_year = clone $date;
-    $months = array();
+    $months = [];
 
     $date_last_month->sub(new DateInterval('P1M'));
     $date_last_year->sub(new DateInterval('P1Y'));
@@ -163,13 +163,13 @@ ORDER BY
 
     $actual_date = new DateTime();
     if (!isset($months[$actual_date->format('Y/m/1')])) {
-        @$months[$actual_date->format('Y/m/1')][] = array(
+        @$months[$actual_date->format('Y/m/1')][] = [
           'year' => $actual_date->format('Y'),
           'month' => $actual_date->format('n'),
           'day' => null,
           'hour' => null,
           'nb_pages' => 0,
-        );
+        ];
     }
 
     foreach ($months as $key => $val) {
@@ -198,7 +198,7 @@ ORDER BY
   month DESC
 ;';
 
-    list($result['avg']) = pwg_db_fetch_row(pwg_query($query));
+    [$result['avg']] = pwg_db_fetch_row(pwg_query($query));
 
     return $result;
 }
@@ -227,10 +227,10 @@ history_tabsheet();
 $base_url = get_root_url().'admin.php?page=history';
 
 $template->assign(
-    array(
+    [
     'U_HELP' => get_root_url().'admin/popuphelp.php?page=history',
     'F_ACTION' => $base_url,
-    )
+    ]
 );
 
 // +-----------------------------------------------------------------------+
@@ -240,7 +240,7 @@ $template->assign(
 function set_missing_values($unit, $data, $firstDate = null, $lastDate = null)
 {
     $limit = count($data);
-    $result = array();
+    $result = [];
 
     if ($firstDate == null) {
         $date = get_date_object($data[count($data) - 1]);
@@ -352,7 +352,7 @@ if (count(get_last(60, 'year')) > 1) {
 
 ksort($lang['month']);
 
-$template->assign(array(
+$template->assign([
   'compareYears' => get_month_of_last_years($conf['stat_compare_year_displayed']),
   'monthStats' => get_month_stats(),
   'lastHours' => $last_hours,
@@ -362,6 +362,6 @@ $template->assign(array(
   'langCode' => strval($user['language']),
   'month_labels' => join('~', $lang['month']),
   'ADMIN_PAGE_TITLE' => l10n('History'),
-));
+]);
 
 $template->assign_var_from_handle('ADMIN_CONTENT', 'stats');

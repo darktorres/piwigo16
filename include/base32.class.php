@@ -12,20 +12,20 @@ defined('PHPWG_ROOT_PATH') or die('Hacking attempt!');
  **/
 class PwgBase32
 {
-    private static $map = array(
+    private static $map = [
       'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', //  7
       'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', // 15
       'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', // 23
       'Y', 'Z', '2', '3', '4', '5', '6', '7', // 31
       '=',  // padding char
-    );
+    ];
 
-    private static $flippedMap = array(
+    private static $flippedMap = [
       'A' => '0', 'B' => '1', 'C' => '2', 'D' => '3', 'E' => '4', 'F' => '5', 'G' => '6', 'H' => '7',
       'I' => '8', 'J' => '9', 'K' => '10', 'L' => '11', 'M' => '12', 'N' => '13', 'O' => '14', 'P' => '15',
       'Q' => '16', 'R' => '17', 'S' => '18', 'T' => '19', 'U' => '20', 'V' => '21', 'W' => '22', 'X' => '23',
       'Y' => '24', 'Z' => '25', '2' => '26', '3' => '27', '4' => '28', '5' => '29', '6' => '30', '7' => '31',
-    );
+    ];
 
     /**
      *    Use padding false when encoding for urls
@@ -69,7 +69,7 @@ class PwgBase32
             return;
         }
         $paddingCharCount = substr_count($input, self::$map[32]);
-        $allowedValues = array(6, 4, 3, 1, 0);
+        $allowedValues = [6, 4, 3, 1, 0];
         if (!in_array($paddingCharCount, $allowedValues)) {
             return false;
         }

@@ -44,7 +44,7 @@
 //
 // Specific note for SVG support: do not add 'svg' in picture_ext, have it only
 // in file_ext
-$conf['picture_ext'] = array('jpg','jpeg','png','gif','webp');
+$conf['picture_ext'] = ['jpg','jpeg','png','gif','webp'];
 
 // file_ext : file extensions (case sensitive) authorized
 //
@@ -54,7 +54,7 @@ $conf['picture_ext'] = array('jpg','jpeg','png','gif','webp');
 //   to permit upload of file_ext files
 $conf['file_ext'] = array_merge(
     $conf['picture_ext'],
-    array('tiff', 'tif', 'mpg','zip','avi','mp3','ogg','pdf','svg', 'heic')
+    ['tiff', 'tif', 'mpg','zip','avi','mp3','ogg','pdf','svg', 'heic']
 );
 
 // enable_formats: should Piwigo search for multiple formats?
@@ -62,7 +62,7 @@ $conf['enable_formats'] = false;
 
 // format_ext : file extensions for formats, ie additional versions of a
 // photo (or nay other file). Formats are in sub-directory pwg_format.
-$conf['format_ext'] = array('cr2', 'tif', 'tiff', 'nef', 'dng', 'ai', 'psd');
+$conf['format_ext'] = ['cr2', 'tif', 'tiff', 'nef', 'dng', 'ai', 'psd'];
 
 // top_number : number of element to display for "best rated" and "most
 // visited" categories
@@ -174,7 +174,7 @@ $conf['meta_ref'] = true;
 //
 // If the array is empty, the "Links" box won't be displayed on the main
 // page.
-$conf['links'] = array();
+$conf['links'] = [];
 
 // random_index_redirect: list of 'internal' links to use when no section is defined on index.php.
 // An example is the best than a long explanation :
@@ -187,11 +187,11 @@ $conf['links'] = array();
 //    PHPWG_ROOT_PATH.'random.php' => '',
 //    PHPWG_ROOT_PATH.'index.php?/categories' => '',
 //    );
-$conf['random_index_redirect'] = array();
+$conf['random_index_redirect'] = [];
 
 // List of notes to display on all header page
 // example $conf['header_notes']  = array('Test', 'Hello');
-$conf['header_notes']  = array();
+$conf['header_notes']  = [];
 
 // show_thumbnail_caption : on thumbnails page, show thumbnail captions ?
 $conf['show_thumbnail_caption'] = true;
@@ -226,7 +226,7 @@ $conf['representative_cache_on_subcats'] = true;
 $conf['allow_html_descriptions'] = true;
 
 // image level permissions available in the admin interface
-$conf['available_permission_levels'] = array(0,1,2,4,8);
+$conf['available_permission_levels'] = [0,1,2,4,8];
 
 // check_upgrade_feed: check if there are database upgrade required. Set to
 // true, a message will strongly encourage you to upgrade your database if
@@ -237,7 +237,7 @@ $conf['available_permission_levels'] = array(0,1,2,4,8);
 $conf['check_upgrade_feed'] = false;
 
 // rate_items: available rates for a picture
-$conf['rate_items'] = array(0,1,2,3,4,5);
+$conf['rate_items'] = [0,1,2,3,4,5];
 
 // Define default method to use ('http' or 'html' in order to do redirect)
 $conf['default_redirect_method'] = 'http';
@@ -352,12 +352,12 @@ $conf['show_iptc'] = false;
 //
 // To know how to associated iptc_field with their meaning, use
 // tools/metadata.php
-$conf['show_iptc_mapping'] = array(
+$conf['show_iptc_mapping'] = [
   'iptc_keywords'        => '2#025',
   'iptc_caption_writer'  => '2#122',
   'iptc_byline_title'    => '2#085',
   'iptc_caption'         => '2#120',
-  );
+  ];
 
 // use_iptc: Use IPTC data during database synchronization with files
 // metadata
@@ -366,13 +366,13 @@ $conf['use_iptc'] = false;
 // use_iptc_mapping : in which IPTC fields will Piwigo find image
 // information ? This setting is used during metadata synchronisation. It
 // associates a piwigo_images column name to a IPTC key
-$conf['use_iptc_mapping'] = array(
+$conf['use_iptc_mapping'] = [
   'keywords'        => '2#025',
   'date_creation'   => '2#055',
   'author'          => '2#122',
   'name'            => '2#005',
   'comment'         => '2#120',
-  );
+  ];
 
 // show_exif: Show EXIF metadata on picture.php (table or line presentation
 // available)
@@ -390,21 +390,21 @@ $conf['show_exif'] = true;
 // for PHP version newer than 4.1.2 :
 // $conf['show_exif_fields'] = array('CameraMake','CameraModel','DateTime');
 //
-$conf['show_exif_fields'] = array(
+$conf['show_exif_fields'] = [
   'Make',
   'Model',
   'DateTimeOriginal',
   'COMPUTED;ApertureFNumber',
-  );
+  ];
 
 // use_exif: Use EXIF data during database synchronization with files
 // metadata
 $conf['use_exif'] = true;
 
 // use_exif_mapping: same behaviour as use_iptc_mapping
-$conf['use_exif_mapping'] = array(
+$conf['use_exif_mapping'] = [
   'date_creation' => 'DateTimeOriginal',
-  );
+  ];
 
 // allow_html_in_metadata: in case the origin of the photo is unsecure (user
 // upload), we remove HTML tags to avoid XSS (malicious execution of
@@ -474,7 +474,7 @@ $conf['api_key_duration'] = ['30', '90', '180', '365', 'custom'];
 // The following API methods are prohibited when making requests with an API key.
 // These restrictions are in place for security reasons and to prevent unauthorized
 // access to sensitive operations that require higher-level authentication.
-$conf['api_key_forbidden_methods'] = array(
+$conf['api_key_forbidden_methods'] = [
   // users
   'pwg.users.generatePasswordLink',
   'pwg.users.getAuthKey',
@@ -487,7 +487,7 @@ $conf['api_key_forbidden_methods'] = array(
   // extensions
   'pwg.extensions.ignoreUpdate',
   'pwg.extensions.update',
-);
+];
 
 // +-----------------------------------------------------------------------+
 // |                            debug/performance                          |
@@ -595,12 +595,12 @@ $conf['external_authentification'] = false;
 // user_fields : mapping between generic field names and table specific
 // field names. For example, in PWG, the mail address is names
 // "mail_address" and in punbb, it's called "email".
-$conf['user_fields'] = array(
+$conf['user_fields'] = [
   'id' => 'id',
   'username' => 'username',
   'password' => 'password',
   'email' => 'mail_address',
-  );
+  ];
 
 // password_hash: function hash the clear user password to store it in the
 // database. The function takes only one parameter: the clear password.
@@ -770,10 +770,10 @@ $conf['nbm_max_treatment_timeout_percent'] = 0.8;
 $conf['nbm_treatment_timeout_default'] = 20;
 
 // Parameters used in get_recent_post_dates for the 2 kind of notification
-$conf['recent_post_dates'] = array(
-  'RSS' => array('max_dates' => 5, 'max_elements' => 6, 'max_cats' => 6),
-  'NBM' => array('max_dates' => 7, 'max_elements' => 3, 'max_cats' => 9),
-  );
+$conf['recent_post_dates'] = [
+  'RSS' => ['max_dates' => 5, 'max_elements' => 6, 'max_cats' => 6],
+  'NBM' => ['max_dates' => 7, 'max_elements' => 3, 'max_cats' => 9],
+  ];
 
 // the author shown in the RSS feed <author> element
 $conf['rss_feed_author'] = 'Piwigo notifier';
@@ -845,27 +845,27 @@ $conf['add_cache_to_storage_chart'] = true;
 //   o Empty configuration in order to disable completely filter functions
 //     No filter, No icon,...
 //     $conf['filter_pages'] = array();
-$conf['filter_pages'] = array(
+$conf['filter_pages'] = [
     // Default page
-    'default' => array(
-      'used' => true, 'cancel' => false, 'add_notes' => false),
+    'default' => [
+      'used' => true, 'cancel' => false, 'add_notes' => false],
     // Real pages
-    'index' => array('add_notes' => true),
-    'tags' => array('add_notes' => true),
-    'search' => array('add_notes' => true),
-    'comments' => array('add_notes' => true),
-    'admin' => array('used' => false),
-    'feed' => array('used' => false),
-    'notification' => array('used' => false),
-    'nbm' => array('used' => false),
-    'popuphelp' => array('used' => false),
-    'profile' => array('used' => false),
-    'ws' => array('used' => false),
-    'identification' => array('cancel' => true),
-    'install' => array('cancel' => true),
-    'password' => array('cancel' => true),
-    'register' => array('cancel' => true),
-  );
+    'index' => ['add_notes' => true],
+    'tags' => ['add_notes' => true],
+    'search' => ['add_notes' => true],
+    'comments' => ['add_notes' => true],
+    'admin' => ['used' => false],
+    'feed' => ['used' => false],
+    'notification' => ['used' => false],
+    'nbm' => ['used' => false],
+    'popuphelp' => ['used' => false],
+    'profile' => ['used' => false],
+    'ws' => ['used' => false],
+    'identification' => ['cancel' => true],
+    'install' => ['cancel' => true],
+    'password' => ['cancel' => true],
+    'register' => ['cancel' => true],
+  ];
 
 // +-----------------------------------------------------------------------+
 // | Slideshow                                                             |
@@ -952,7 +952,7 @@ $conf['enable_extensions_install'] = true;
 $conf['sync_chars_regex'] = '/^[a-zA-Z0-9-_.]+$/';
 
 // folders name excluded during synchronization
-$conf['sync_exclude_folders'] = array();
+$conf['sync_exclude_folders'] = [];
 
 // PEM url (default is http://piwigo.org/ext)
 $conf['alternative_pem_url'] = '';
@@ -1040,7 +1040,7 @@ $conf['quick_search_include_sub_albums'] = false;
 // default configuration for search filters. It will then be configurable
 // with the configuration page. Having this setting in this file avoids to
 // duplicate it in several files
-$conf['default_filters_views'] = array(
+$conf['default_filters_views'] = [
   'words'          => ['access' => 'everybody', 'default' => true],
   'tags'           => ['access' => 'everybody', 'default' => false],
   'post_date'      => ['access' => 'everybody', 'default' => false],
@@ -1057,7 +1057,7 @@ $conf['default_filters_views'] = array(
   'expert'         => ['access' => 'everybody', 'default' => false],
 
   'last_filters_conf' => true,
-);
+];
 
 // +-----------------------------------------------------------------------+
 // |                                 log                                   |

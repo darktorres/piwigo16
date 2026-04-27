@@ -40,15 +40,15 @@ if (!empty($_POST) or isset($_GET['delete']) or isset($_GET['toggle_is_default']
 // |                             template init                             |
 // +-----------------------------------------------------------------------+
 
-$template->set_filenames(array('group_list' => 'group_list.tpl'));
+$template->set_filenames(['group_list' => 'group_list.tpl']);
 
 $template->assign(
-    array(
+    [
     'F_ADD_ACTION' => get_root_url().'admin.php?page=group_list',
     // 'U_HELP' => get_root_url().'admin/popuphelp.php?page=group_list',
     'PWG_TOKEN' => get_pwg_token(),
-    'CACHE_KEYS' => get_admin_client_cache_keys(array('groups', 'users')),
-    )
+    'CACHE_KEYS' => get_admin_client_cache_keys(['groups', 'users']),
+    ]
 );
 
 // +-----------------------------------------------------------------------+
@@ -78,14 +78,14 @@ SELECT u.'. $conf['user_fields']['username'].' AS username
     ON u.'.$conf['user_fields']['id'].' = ug.user_id
   WHERE ug.group_id = '.$row['id'].'
 ;';
-    $members = array();
+    $members = [];
     $res = pwg_query($query);
     while ($us = pwg_db_fetch_assoc($res)) {
         $members[] = $us['username'];
     }
     $template->append(
         'groups',
-        array(
+        [
         'NAME' => $row['name'],
         'ID' => $row['id'],
         'IS_DEFAULT' => (get_boolean($row['is_default']) ? ' ['.l10n('default').']' : ''),
@@ -96,7 +96,7 @@ SELECT u.'. $conf['user_fields']['username'].' AS username
         'U_PERM' => $perm_url.$row['id'],
         'U_USERS' => $users_url.$row['id'],
         'U_ISDEFAULT' => $toggle_is_default_url.$row['id'].'&amp;pwg_token='.get_pwg_token(),
-        )
+        ]
     );
 
     $group_counter++;

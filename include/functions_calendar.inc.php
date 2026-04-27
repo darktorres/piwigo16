@@ -28,13 +28,13 @@ function initialize_calendar()
     $inner_sql = ' FROM ' . IMAGES_TABLE;
 
     if ($page['section'] == 'categories') { // we will regenerate the items by including subcats elements
-        $page['items'] = array();
+        $page['items'] = [];
         $inner_sql .= '
 INNER JOIN '.IMAGE_CATEGORY_TABLE.' ON id = image_id';
 
         if (isset($page['category'])) {
             $sub_ids = array_diff(
-                get_subcat_ids(array($page['category']['id'])),
+                get_subcat_ids([$page['category']['id']]),
                 explode(',', $user['forbidden_categories'])
             );
 
@@ -45,20 +45,20 @@ INNER JOIN '.IMAGE_CATEGORY_TABLE.' ON id = image_id';
 WHERE category_id IN ('.implode(',', $sub_ids).')';
             $inner_sql .= '
     '.get_sql_condition_FandF(
-                array(
+                [
                   'visible_images' => 'id',
-                ),
+                ],
                 'AND',
                 false
             );
         } else {
             $inner_sql .= '
     '.get_sql_condition_FandF(
-                array(
+                [
                   'forbidden_categories' => 'category_id',
                   'visible_categories' => 'category_id',
                   'visible_images' => 'id',
-                ),
+                ],
                 'WHERE',
                 true
             );
@@ -74,33 +74,33 @@ WHERE id IN (' . implode(',', $page['items']) .')';
     //-------------------------------------- initialize the calendar parameters ---
     pwg_debug('start initialize_calendar');
 
-    $fields = array(
+    $fields = [
       // Created
-      'created' => array(
+      'created' => [
         'label'          => l10n('Creation date'),
-        ),
+        ],
       // Posted
-      'posted' => array(
+      'posted' => [
         'label'          => l10n('Post date'),
-        ),
-      );
+        ],
+      ];
 
-    $styles = array(
+    $styles = [
       // Monthly style
-      'monthly' => array(
+      'monthly' => [
         'include'        => 'calendar_monthly.class.php',
         'view_calendar'  => true,
         'classname'      => 'CalendarMonthly',
-        ),
+        ],
       // Weekly style
-      'weekly' => array(
+      'weekly' => [
         'include'        => 'calendar_weekly.class.php',
         'view_calendar'  => false,
         'classname'      => 'CalendarWeekly',
-        ),
-      );
+        ],
+      ];
 
-    $views = array(CAL_VIEW_LIST,CAL_VIEW_CALENDAR);
+    $views = [CAL_VIEW_LIST,CAL_VIEW_CALENDAR];
 
     // Retrieve calendar field
     isset($fields[ $page['chronology_field'] ]) or fatal_error('bad chronology field');
@@ -130,7 +130,7 @@ WHERE id IN (' . implode(',', $page['items']) .')';
 
     // perform a sanity check on $requested
     if (!isset($page['chronology_date'])) {
-        $page['chronology_date'] = array();
+        $page['chronology_date'] = [];
     }
     while (count($page['chronology_date']) > 3) {
         array_pop($page['chronology_date']);
@@ -165,7 +165,7 @@ WHERE id IN (' . implode(',', $page['items']) .')';
     $must_show_list = true; // true until calendar generates its own display
     if (script_basename() != 'picture') { // basename without file extention
         if ($calendar->generate_category_content()) {
-            $page['items'] = array();
+            $page['items'] = [];
             $must_show_list = false;
         }
 
@@ -178,7 +178,7 @@ WHERE id IN (' . implode(',', $page['items']) .')';
                     $selected = false;
 
                     if ($style != $cal_style) {
-                        $chronology_date = array();
+                        $chronology_date = [];
                         if (isset($page['chronology_date'][0])) {
                             $chronology_date[] = $page['chronology_date'][0];
                         }
@@ -186,11 +186,11 @@ WHERE id IN (' . implode(',', $page['items']) .')';
                         $chronology_date = $page['chronology_date'];
                     }
                     $url = duplicate_index_url(
-                        array(
+                        [
                           'chronology_style' => $style,
                           'chronology_view' => $view,
                           'chronology_date' => $chronology_date,
-                          )
+                          ]
                     );
 
                     if ($style == $cal_style and $view == $page['chronology_view']) {
@@ -199,27 +199,27 @@ WHERE id IN (' . implode(',', $page['items']) .')';
 
                     $template->append(
                         'chronology_views',
-                        array(
+                        [
                         'VALUE' => $url,
                         'CONTENT' => l10n('chronology_'.$style.'_'.$view),
                         'SELECTED' => $selected,
-                        )
+                        ]
                     );
                 }
             }
         }
         $url = duplicate_index_url(
-            array(),
-            array('start', 'chronology_date')
+            [],
+            ['start', 'chronology_date']
         );
         $calendar_title = '<a href="'.$url.'">'
             .$fields[$page['chronology_field']]['label'].'</a>';
         $calendar_title .= $calendar->get_display_name();
         $template->assign(
             'chronology',
-            array(
+            [
               'TITLE' => $calendar_title,
-            )
+            ]
         );
     } // end category calling
 

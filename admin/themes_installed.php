@@ -45,19 +45,19 @@ $themes->sort_fs_themes();
 $default_theme = get_default_theme();
 
 $db_themes = $themes->get_db_themes();
-$db_theme_ids = array();
+$db_theme_ids = [];
 foreach ($db_themes as $db_theme) {
     $db_theme_ids[] = $db_theme['id'];
 }
 
-$tpl_themes = array();
+$tpl_themes = [];
 
 foreach ($themes->fs_themes as $theme_id => $fs_theme) {
     if ($theme_id == 'default' or $theme_id == 'standard_pages') {
         continue;
     }
 
-    $tpl_theme = array(
+    $tpl_theme = [
       'ID' => $theme_id,
       'NAME' => $fs_theme['name'],
       'VISIT_URL' => $fs_theme['uri'],
@@ -69,7 +69,7 @@ foreach ($themes->fs_themes as $theme_id => $fs_theme) {
       'SCREENSHOT' => $fs_theme['screenshot'],
       'IS_MOBILE' => $fs_theme['mobile'],
       'ADMIN_URI' => @$fs_theme['admin_uri'],
-      );
+      ];
 
     if (in_array($theme_id, $db_theme_ids)) {
         $tpl_theme['STATE'] = 'active';
@@ -126,7 +126,7 @@ foreach ($themes->fs_themes as $theme_id => $fs_theme) {
 // sort themes by state then by name
 function cmp($a, $b)
 {
-    $s = array('active' => 0, 'inactive' => 1);
+    $s = ['active' => 0, 'inactive' => 1];
 
     if (@$a['IS_DEFAULT']) {
         return -1;
@@ -144,14 +144,14 @@ function cmp($a, $b)
 usort($tpl_themes, 'cmp');
 
 $template->assign(
-    array(
+    [
       'activate_baseurl' => $base_url.'&amp;action=activate&amp;theme=',
       'deactivate_baseurl' => $base_url.'&amp;action=deactivate&amp;theme=',
       'set_default_baseurl' => $base_url.'&amp;action=set_default&amp;theme=',
       'delete_baseurl' => $base_url.'&amp;action=delete&amp;theme=',
 
       'tpl_themes' => $tpl_themes,
-    )
+    ]
 );
 
 trigger_notify('loc_end_themes_installed');
@@ -160,5 +160,5 @@ $template->assign('isWebmaster', (is_webmaster()) ? 1 : 0);
 $template->assign('ADMIN_PAGE_TITLE', l10n('Themes'));
 $template->assign('CONF_ENABLE_EXTENSIONS_INSTALL', $conf['enable_extensions_install']);
 
-$template->set_filenames(array('themes' => 'themes_installed.tpl'));
+$template->set_filenames(['themes' => 'themes_installed.tpl']);
 $template->assign_var_from_handle('ADMIN_CONTENT', 'themes');

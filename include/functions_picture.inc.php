@@ -24,11 +24,11 @@ function get_default_slideshow_params()
 {
     global $conf;
 
-    return array(
+    return [
       'period' => $conf['slideshow_period'],
       'repeat' => $conf['slideshow_repeat'],
       'play' => true,
-      );
+      ];
 }
 
 /**
@@ -37,7 +37,7 @@ function get_default_slideshow_params()
  * @param array $params
  * @return array
  */
-function correct_slideshow_params($params = array())
+function correct_slideshow_params($params = [])
 {
     global $conf;
 
@@ -65,7 +65,7 @@ function decode_slideshow_params($encode_params = null)
     if (is_numeric($encode_params)) {
         $result['period'] = $encode_params;
     } else {
-        $matches = array();
+        $matches = [];
         if (preg_match_all('/([a-z]+)-(\d+)/', $encode_params, $matches)) {
             $matchcount = count($matches[1]);
             for ($i = 0; $i < $matchcount; $i++) {
@@ -90,7 +90,7 @@ function decode_slideshow_params($encode_params = null)
  * @param array $decode_params
  * @return string
  */
-function encode_slideshow_params($decode_params = array())
+function encode_slideshow_params($decode_params = [])
 {
     global $conf;
 

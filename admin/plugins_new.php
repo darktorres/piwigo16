@@ -17,7 +17,7 @@ if (!$conf['enable_extensions_install']) {
 
 include_once(PHPWG_ROOT_PATH.'admin/include/plugins.class.php');
 
-$template->set_filenames(array('plugins' => 'plugins_new.tpl'));
+$template->set_filenames(['plugins' => 'plugins_new.tpl']);
 
 $base_url = get_root_url().'admin.php?page='.$page['page'].'&tab='.$page['tab'];
 
@@ -54,10 +54,10 @@ if (isset($_GET['installstatus'])) {
                     'system',
                     ACTIVITY_SYSTEM_PLUGIN,
                     'install',
-                    array(
+                    [
                     'plugin_id' => $_GET['plugin_id'],
                     'version' => $plugins->fs_plugins[$_GET['plugin_id']]['version'],
-          )
+          ]
                 );
             }
             break;
@@ -83,12 +83,12 @@ if (isset($_GET['installstatus'])) {
 //---------------------------------------------------------------Order options
 $template->assign(
     'order_options',
-    array(
+    [
     'date' => l10n('Post date'),
     'revision' => l10n('Last revisions'),
     'name' => l10n('Name'),
     'author' => l10n('Author'),
-    'downloads' => l10n('Number of downloads'))
+    'downloads' => l10n('Number of downloads')]
 );
 
 // +-----------------------------------------------------------------------+
@@ -116,7 +116,7 @@ if ($plugins->get_server_plugins(true, $beta_test)) {
 
     foreach ($plugins->server_plugins as $plugin) {
         $ext_desc = trim($plugin['extension_description'], " \n\r");
-        list($small_desc) = explode("\n", wordwrap($ext_desc, 200));
+        [$small_desc] = explode("\n", wordwrap($ext_desc, 200));
 
         $url_auto_install = htmlentities($base_url)
           . '&amp;revision=' . $plugin['revision_id']
@@ -152,7 +152,7 @@ if ($plugins->get_server_plugins(true, $beta_test)) {
         }
         // Between 6 month and 3 years : certification = 1
 
-        $template->append('plugins', array(
+        $template->append('plugins', [
           'ID' => $plugin['extension_id'],
           'EXT_NAME' => $plugin['extension_name'],
           'EXT_URL' => PEM_URL.'/extension_view.php?eid='.$plugin['extension_id'],
@@ -160,7 +160,7 @@ if ($plugins->get_server_plugins(true, $beta_test)) {
           'BIG_DESC' => $ext_desc,
           'VERSION' => $plugin['revision_name'],
           'REVISION_DATE' => preg_replace('/[^0-9]/', '', strtotime($plugin['revision_date'])),
-          'REVISION_FORMATED_DATE' => format_date($plugin['revision_date'], array('day','month','year')).', '.time_since($plugin['revision_date'], 'day'),
+          'REVISION_FORMATED_DATE' => format_date($plugin['revision_date'], ['day','month','year']).', '.time_since($plugin['revision_date'], 'day'),
           'AUTHOR' => $plugin['author_name'],
           'DOWNLOADS' => $plugin['extension_nb_downloads'],
           'URL_INSTALL' => $url_auto_install,
@@ -169,7 +169,7 @@ if ($plugins->get_server_plugins(true, $beta_test)) {
           'NB_RATINGS' => $plugin['nb_ratings'],
           'SCREENSHOT' => (key_exists('screenshot_url', $plugin)) ? $plugin['screenshot_url'] : '',
           'TAGS' => $plugin['tags'],
-        ));
+        ]);
     }
 
 

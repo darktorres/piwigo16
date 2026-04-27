@@ -67,7 +67,7 @@ UPDATE '.CATEGORIES_TABLE.'
             }
     }
 
-    pwg_activity('album', $_POST['cat_true'], 'edit', array('section' => $_GET['section'], 'action' => 'falsify'));
+    pwg_activity('album', $_POST['cat_true'], 'edit', ['section' => $_GET['section'], 'action' => 'falsify']);
 } elseif (isset($_POST['trueify'])
          and isset($_POST['cat_false'])
          and count($_POST['cat_false']) > 0) {
@@ -101,7 +101,7 @@ UPDATE '.CATEGORIES_TABLE.'
             }
     }
 
-    pwg_activity('album', $_POST['cat_false'], 'edit', array('section' => $_GET['section'], 'action' => 'trueify'));
+    pwg_activity('album', $_POST['cat_false'], 'edit', ['section' => $_GET['section'], 'action' => 'trueify']);
 }
 
 // +-----------------------------------------------------------------------+
@@ -109,20 +109,20 @@ UPDATE '.CATEGORIES_TABLE.'
 // +-----------------------------------------------------------------------+
 
 $template->set_filenames(
-    array(
+    [
     'cat_options' => 'cat_options.tpl',
     'double_select' => 'double_select.tpl',
-    )
+    ]
 );
 
-$page['section'] = isset($_GET['section']) ? $_GET['section'] : 'status';
+$page['section'] = $_GET['section'] ?? 'status';
 $base_url = PHPWG_ROOT_PATH.'admin.php?page=cat_options&amp;section=';
 
 $template->assign(
-    array(
+    [
     'U_HELP' => get_root_url().'admin/popuphelp.php?page=cat_options',
     'F_ACTION' => $base_url.$page['section'],
-   )
+   ]
 );
 
 // TabSheet
@@ -144,8 +144,8 @@ $tabsheet->assign();
 // for true and false status, we associates an array of category ids,
 // function display_select_categories will use the given CSS class for each
 // option
-$cats_true = array();
-$cats_false = array();
+$cats_true = [];
+$cats_false = [];
 switch ($page['section']) {
     case 'comments':
         {
@@ -160,11 +160,11 @@ SELECT id,name,uppercats,global_rank
   WHERE commentable = \'false\'
 ;';
             $template->assign(
-                array(
+                [
                 'L_SECTION' => l10n('Authorize users to add comments on selected albums'),
                 'L_CAT_OPTIONS_TRUE' => l10n('Authorized'),
                 'L_CAT_OPTIONS_FALSE' => l10n('Forbidden'),
-                )
+                ]
             );
             break;
         }
@@ -181,11 +181,11 @@ SELECT id,name,uppercats,global_rank
   WHERE visible = \'false\'
 ;';
             $template->assign(
-                array(
+                [
                 'L_SECTION' => l10n('Lock albums'),
                 'L_CAT_OPTIONS_TRUE' => l10n('Unlocked'),
                 'L_CAT_OPTIONS_FALSE' => l10n('Locked'),
-                )
+                ]
             );
             break;
         }
@@ -202,11 +202,11 @@ SELECT id,name,uppercats,global_rank
   WHERE status = \'private\'
 ;';
             $template->assign(
-                array(
+                [
                 'L_SECTION' => l10n('Manage authorizations for selected albums'),
                 'L_CAT_OPTIONS_TRUE' => l10n('Public'),
                 'L_CAT_OPTIONS_FALSE' => l10n('Private'),
-                )
+                ]
             );
             break;
         }
@@ -223,17 +223,17 @@ SELECT DISTINCT id,name,uppercats,global_rank
   WHERE representative_picture_id IS NULL
 ;';
             $template->assign(
-                array(
+                [
                 'L_SECTION' => l10n('Representative'),
                 'L_CAT_OPTIONS_TRUE' => l10n('singly represented'),
                 'L_CAT_OPTIONS_FALSE' => l10n('randomly represented'),
-                )
+                ]
             );
             break;
         }
 }
-display_select_cat_wrapper($query_true, array(), 'category_option_true');
-display_select_cat_wrapper($query_false, array(), 'category_option_false');
+display_select_cat_wrapper($query_true, [], 'category_option_true');
+display_select_cat_wrapper($query_false, [], 'category_option_false');
 $template->assign('PWG_TOKEN', get_pwg_token());
 $template->assign('ADMIN_PAGE_TITLE', l10n('Properties of abums'));
 

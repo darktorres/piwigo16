@@ -17,7 +17,7 @@
  */
 function ws_permissions_getList($params, &$service)
 {
-    $my_params = array_intersect(array_keys($params), array('cat_id','group_id','user_id'));
+    $my_params = array_intersect(array_keys($params), ['cat_id','group_id','user_id']);
     if (count($my_params) > 1) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'Too many parameters, provide cat_id OR user_id OR group_id');
     }
@@ -27,7 +27,7 @@ function ws_permissions_getList($params, &$service)
         $cat_filter = 'WHERE cat_id IN('. implode(',', $params['cat_id']) .')';
     }
 
-    $perms = array();
+    $perms = [];
 
     // direct users
     $query = '
@@ -94,19 +94,19 @@ SELECT group_id, cat_id
             }
         }
 
-        $cat['groups'] = !empty($cat['groups']) ? array_values(array_unique($cat['groups'])) : array();
-        $cat['users'] = !empty($cat['users']) ? array_values(array_unique($cat['users'])) : array();
-        $cat['users_indirect'] = !empty($cat['users_indirect']) ? array_values(array_unique($cat['users_indirect'])) : array();
+        $cat['groups'] = !empty($cat['groups']) ? array_values(array_unique($cat['groups'])) : [];
+        $cat['users'] = !empty($cat['users']) ? array_values(array_unique($cat['users'])) : [];
+        $cat['users_indirect'] = !empty($cat['users_indirect']) ? array_values(array_unique($cat['users_indirect'])) : [];
     }
     unset($cat);
 
-    return array(
+    return [
       'categories' => new PwgNamedArray(
           array_values($perms),
           'category',
-          array('id')
+          ['id']
       ),
-      );
+      ];
 }
 
 /**
@@ -140,21 +140,21 @@ SELECT id
 ;';
         $private_cats = array_from_query($query, 'id');
 
-        $inserts = array();
+        $inserts = [];
         foreach ($private_cats as $cat_id) {
             foreach ($params['group_id'] as $group_id) {
-                $inserts[] = array(
+                $inserts[] = [
                   'group_id' => $group_id,
                   'cat_id' => $cat_id,
-                  );
+                  ];
             }
         }
 
         mass_inserts(
             GROUP_ACCESS_TABLE,
-            array('group_id','cat_id'),
+            ['group_id','cat_id'],
             $inserts,
-            array('ignore' => true)
+            ['ignore' => true]
         );
     }
 
@@ -165,7 +165,7 @@ SELECT id
         add_permission_on_category($params['cat_id'], $params['user_id']);
     }
 
-    return $service->invoke('pwg.permissions.getList', array('cat_id' => $params['cat_id']));
+    return $service->invoke('pwg.permissions.getList', ['cat_id' => $params['cat_id']]);
 }
 
 /**
@@ -206,5 +206,5 @@ DELETE
         pwg_query($query);
     }
 
-    return $service->invoke('pwg.permissions.getList', array('cat_id' => $params['cat_id']));
+    return $service->invoke('pwg.permissions.getList', ['cat_id' => $params['cat_id']]);
 }

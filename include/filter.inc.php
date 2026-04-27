@@ -16,7 +16,7 @@
 
 if (!get_filter_page_value('cancel')) {
     if (isset($_GET['filter'])) {
-        $filter['matches'] = array();
+        $filter['matches'] = [];
         $filter['enabled'] =
           preg_match('/^start-recent-(\d+)$/', $_GET['filter'], $filter['matches']) === 1;
     } else {
@@ -27,7 +27,7 @@ if (!get_filter_page_value('cancel')) {
 }
 
 if ($filter['enabled']) {
-    $filter_key = pwg_get_session_var('filter_check_key', array('user' => 0,'recent_period' => -1, 'time' => 0, 'date' => ''));
+    $filter_key = pwg_get_session_var('filter_check_key', ['user' => 0,'recent_period' => -1, 'time' => 0, 'date' => '']);
 
     if (isset($filter['matches'])) {
         $filter['recent_period'] = $filter['matches'][1];
@@ -46,9 +46,9 @@ if ($filter['enabled']) {
         $filter_key['date'] != date('Ymd')
     ) {
         // Need to compute dats
-        $filter_key = array(
+        $filter_key = [
           'user' => (int)$user['id'],'recent_period' => (int)$filter['recent_period'], 'time' => time(), 'date' => date('Ymd'),
-         );
+         ];
 
         $filter['categories'] = get_computed_categories($user, (int)$filter['recent_period']);
 
@@ -86,7 +86,7 @@ WHERE ';
         pwg_set_session_var('filter_visible_images', $filter['visible_images']);
     } else {
         // Read only data
-        $filter['categories'] = unserialize(pwg_get_session_var('filter_categories', serialize(array())));
+        $filter['categories'] = unserialize(pwg_get_session_var('filter_categories', serialize([])));
         $filter['visible_categories'] = pwg_get_session_var('filter_visible_categories', '');
         $filter['visible_images'] = pwg_get_session_var('filter_visible_images', '');
     }

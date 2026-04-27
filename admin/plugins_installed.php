@@ -13,7 +13,7 @@ if (!defined('PHPWG_ROOT_PATH')) {
 
 include_once(PHPWG_ROOT_PATH.'admin/include/plugins.class.php');
 
-$template->set_filenames(array('plugins' => 'plugins_installed.tpl'));
+$template->set_filenames(['plugins' => 'plugins_installed.tpl']);
 
 // should we display details on plugins?
 if (isset($_GET['show_details'])) {
@@ -41,11 +41,11 @@ if (isset($_GET['incompatible_plugins'])) {
     $incompatible_plugins_raw = $plugins->get_incompatible_plugins();
 
     if (false === $incompatible_plugins_raw) {
-        echo json_encode(array());
+        echo json_encode([]);
         exit;
     }
 
-    $incompatible_plugins = array();
+    $incompatible_plugins = [];
 
     foreach ($incompatible_plugins_raw as $plugin => $version) {
         if ($plugin == '~~expire~~') {
@@ -60,9 +60,9 @@ if (isset($_GET['incompatible_plugins'])) {
 
 //--------------------------------------------------------Get the menu with the depreciated version
 
-$plugin_menu_links_deprec = trigger_change('get_admin_plugin_menu_links', array());
+$plugin_menu_links_deprec = trigger_change('get_admin_plugin_menu_links', []);
 
-$settings_url_for_plugin_deprec = array();
+$settings_url_for_plugin_deprec = [];
 
 foreach ($plugin_menu_links_deprec as $value) {
     if (preg_match('/^admin\.php\?page=plugin-(.*)$/', $value['URL'], $matches)) {
@@ -79,8 +79,8 @@ foreach ($plugin_menu_links_deprec as $value) {
 $plugins->sort_fs_plugins('name');
 $merged_extensions = $plugins->get_merged_extensions();
 $merged_plugins = false;
-$tpl_plugins = array();
-$count_types_plugins = array('active' => 0, 'inactive' => 0, 'missing' => 0, 'merged' => 0);
+$tpl_plugins = [];
+$count_types_plugins = ['active' => 0, 'inactive' => 0, 'missing' => 0, 'merged' => 0];
 
 foreach ($plugins->fs_plugins as $plugin_id => $fs_plugin) {
     if (isset($_SESSION['incompatible_plugins'][$plugin_id])
@@ -100,13 +100,13 @@ foreach ($plugins->fs_plugins as $plugin_id => $fs_plugin) {
         }
     }
 
-    $url_to_replace = array(
+    $url_to_replace = [
       'http://piwigo.org/ext',
       'https://piwigo.org/ext',
-    );
+    ];
     $visit_url = str_replace($url_to_replace, PEM_URL, $fs_plugin['uri']);
 
-    $tpl_plugin = array(
+    $tpl_plugin = [
       'ID' => $plugin_id,
       'NAME' => $fs_plugin['name'],
       'VISIT_URL' => $visit_url,
@@ -116,7 +116,7 @@ foreach ($plugins->fs_plugins as $plugin_id => $fs_plugin) {
       'AUTHOR_URL' => @$fs_plugin['author uri'],
       'U_ACTION' => sprintf($action_url, $plugin_id),
       'SETTINGS_URL' => $setting_url,
-      );
+      ];
 
     if (isset($plugins->db_plugins_by_id[$plugin_id])) {
         $tpl_plugin['STATE'] = $plugins->db_plugins_by_id[$plugin_id]['state'];
@@ -153,14 +153,14 @@ $missing_plugin_ids = array_diff(
 
 if (count($missing_plugin_ids) > 0) {
     foreach ($missing_plugin_ids as $plugin_id) {
-        $tpl_plugins[] = array(
+        $tpl_plugins[] = [
           'NAME' => $plugin_id,
           'ID' => $plugin_id,
           'VERSION' => $plugins->db_plugins_by_id[$plugin_id]['version'],
           'DESC' => l10n('ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW.'),
           'U_ACTION' => sprintf($action_url, $plugin_id),
           'STATE' => 'missing',
-          );
+          ];
         $count_types_plugins['missing']++;
     }
     $template->append('plugin_states', 'missing');
@@ -169,7 +169,7 @@ if (count($missing_plugin_ids) > 0) {
 // sort plugins by state then by name
 function cmp($a, $b)
 {
-    $s = array('merged' => 0, 'missing' => 1, 'active' => 2, 'inactive' => 3);
+    $s = ['merged' => 0, 'missing' => 1, 'active' => 2, 'inactive' => 3];
 
     if ($a['STATE'] == $b['STATE']) {
         return strcasecmp($a['NAME'], $b['NAME']);
@@ -182,7 +182,7 @@ function cmp($a, $b)
 // usort($tpl_plugins, 'cmp');
 
 $template->assign(
-    array(
+    [
     'plugins' => $tpl_plugins,
     'count_types_plugins' => $count_types_plugins,
     'PWG_TOKEN' => $pwg_token,
@@ -193,7 +193,7 @@ $template->assign(
     'ADMIN_PAGE_TITLE' => l10n('Plugins'),
     'view_selector' => userprefs_get_param('plugin-manager-view', 'classic'),
     'CONF_ENABLE_EXTENSIONS_INSTALL' => $conf['enable_extensions_install'],
-    )
+    ]
 );
 
 $template->assign_var_from_handle('ADMIN_CONTENT', 'plugins');

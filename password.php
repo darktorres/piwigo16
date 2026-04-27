@@ -181,12 +181,12 @@ function process_password_request()
     $user = build_user($user_id, false);
     userprefs_delete_param('reset_password_forbidden_until');
 
-    $_SESSION['valid_reset_password_code'] = array(
+    $_SESSION['valid_reset_password_code'] = [
       'user_id' => $user_id,
       'username' => $user['username'],
       'email' => $user['email'],
       'language' => $user['language'],
-    );
+    ];
     $status = $user['status'] ?? null;
     $has_no_email = empty($user['email']);
     $page['username'] = $user['username'];
@@ -271,8 +271,8 @@ function reset_password()
 
     single_update(
         USERS_TABLE,
-        array($conf['user_fields']['password'] => $conf['password_hash']($_POST['use_new_pwd'])),
-        array($conf['user_fields']['id'] => $user_id)
+        [$conf['user_fields']['password'] => $conf['password_hash']($_POST['use_new_pwd'])],
+        [$conf['user_fields']['id'] => $user_id]
     );
 
     if (isset($_SESSION['valid_reset_password_code']) and !empty($_SESSION['valid_reset_password_code']['email'])) {
@@ -378,7 +378,7 @@ if (isset($_GET['key']) and !isset($_POST['submit'])) {
 if (!isset($page['action'])) {
     if (!isset($_GET['action'])) {
         $page['action'] = 'lost';
-    } elseif (in_array($_GET['action'], array('lost', 'lost_code', 'reset', 'none'))) {
+    } elseif (in_array($_GET['action'], ['lost', 'lost_code', 'reset', 'none'])) {
         $page['action'] = $_GET['action'];
     }
 }
@@ -418,15 +418,15 @@ if ('lost' == $page['action']) {
 
 $page['body_id'] = 'thePasswordPage';
 
-$template->set_filenames(array('password' => 'password.tpl'));
+$template->set_filenames(['password' => 'password.tpl']);
 $template->assign(
-    array(
+    [
     'title' => $title,
     'form_action' => get_root_url().'password.php',
     'action' => $page['action'],
-    'username' => isset($page['username']) ? $page['username'] : $user['username'],
+    'username' => $page['username'] ?? $user['username'],
     'PWG_TOKEN' => get_pwg_token(),
-    )
+    ]
 );
 
 // include menubar
@@ -442,7 +442,7 @@ if (isset($_COOKIE['lang']) and $user['language'] != $_COOKIE['lang']) {
     }
 
     $user['language'] = $_COOKIE['lang'];
-    load_language('common.lang', '', array('language' => $user['language']));
+    load_language('common.lang', '', ['language' => $user['language']]);
 }
 
 //Get list of languages
@@ -450,13 +450,13 @@ foreach (get_languages() as $language_code => $language_name) {
     $language_options[$language_code] = $language_name;
 }
 
-$template->assign(array(
+$template->assign([
   'language_options' => $language_options,
   'current_language' => $user['language'],
-));
+]);
 
 //Get link to doc
-if ('fr' == substr($user['language'], 0, 2)) {
+if (str_starts_with($user['language'], 'fr')) {
     $help_link = 'https://doc-fr.piwigo.org/les-utilisateurs/se-connecter-a-piwigo';
 } else {
     $help_link = 'https://doc.piwigo.org/managing-users/log-in-to-piwigo';

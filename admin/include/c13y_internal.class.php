@@ -11,9 +11,9 @@ class c13y_internal
 {
     public function __construct()
     {
-        add_event_handler('list_check_integrity', array(&$this, 'c13y_version'));
-        add_event_handler('list_check_integrity', array(&$this, 'c13y_exif'));
-        add_event_handler('list_check_integrity', array(&$this, 'c13y_user'));
+        add_event_handler('list_check_integrity', [&$this, 'c13y_version']);
+        add_event_handler('list_check_integrity', [&$this, 'c13y_exif']);
+        add_event_handler('list_check_integrity', [&$this, 'c13y_user']);
     }
 
     /**
@@ -26,19 +26,19 @@ class c13y_internal
     {
         global $conf;
 
-        $check_list = array();
+        $check_list = [];
 
-        $check_list[] = array(
+        $check_list[] = [
             'type' => 'PHP',
             'current' => phpversion(),
             'required' => REQUIRED_PHP_VERSION,
-            );
+            ];
 
-        $check_list[] = array(
+        $check_list[] = [
             'type' => 'MySQL',
             'current' => pwg_get_db_version(),
             'required' => REQUIRED_MYSQL_VERSION,
-            );
+            ];
 
         foreach ($check_list as $elem) {
             if (version_compare($elem['current'], $elem['required'], '<')) {
@@ -64,7 +64,7 @@ class c13y_internal
     {
         global $conf;
 
-        foreach (array('show_exif', 'use_exif') as $value) {
+        foreach (['show_exif', 'use_exif'] as $value) {
             if (($conf[$value]) and (!function_exists('exif_read_data'))) {
                 $c13y->add_anomaly(
                     sprintf(l10n('%s value is not correct file because exif are not supported'), '$conf[\''.$value.'\']'),
@@ -88,22 +88,22 @@ class c13y_internal
     {
         global $conf;
 
-        $c13y_users = array();
-        $c13y_users[$conf['guest_id']] = array(
+        $c13y_users = [];
+        $c13y_users[$conf['guest_id']] = [
           'status' => 'guest',
           'l10n_non_existent' => 'Main "guest" user does not exist',
-          'l10n_bad_status' => 'Main "guest" user status is incorrect');
+          'l10n_bad_status' => 'Main "guest" user status is incorrect'];
 
         if ($conf['guest_id'] != $conf['default_user_id']) {
-            $c13y_users[$conf['default_user_id']] = array(
+            $c13y_users[$conf['default_user_id']] = [
               'password' => null,
-              'l10n_non_existent' => 'Default user does not exist');
+              'l10n_non_existent' => 'Default user does not exist'];
         }
 
-        $c13y_users[$conf['webmaster_id']] = array(
+        $c13y_users[$conf['webmaster_id']] = [
           'status' => 'webmaster',
           'l10n_non_existent' => 'Main "webmaster" user does not exist',
-          'l10n_bad_status' => 'Main "webmaster" user status is incorrect');
+          'l10n_bad_status' => 'Main "webmaster" user status is incorrect'];
 
         $query = '
   select u.'.$conf['user_fields']['id'].' as id, ui.status
@@ -115,7 +115,7 @@ class c13y_internal
   ;';
 
 
-        $status = array();
+        $status = [];
 
         $result = pwg_query($query);
         while ($row = pwg_db_fetch_assoc($result)) {
@@ -127,13 +127,13 @@ class c13y_internal
                 $c13y->add_anomaly(
                     l10n($data['l10n_non_existent']),
                     'c13y_correction_user',
-                    array('id' => $id, 'action' => 'creation')
+                    ['id' => $id, 'action' => 'creation']
                 );
             } elseif (!empty($data['status']) and $status[$id] != $data['status']) {
                 $c13y->add_anomaly(
                     l10n($data['l10n_bad_status']),
                     'c13y_correction_user',
-                    array('id' => $id, 'action' => 'status')
+                    ['id' => $id, 'action' => 'status']
                 );
             }
         }
@@ -174,13 +174,13 @@ class c13y_internal
                             }
                         }
 
-                        $inserts = array(
-                          array(
+                        $inserts = [
+                          [
                             'id'       => $id,
                             'username' => addslashes($name),
                             'password' => $password,
-                            ),
-                          );
+                            ],
+                          ];
                         mass_inserts(USERS_TABLE, array_keys($inserts[0]), $inserts);
 
                         create_user_infos($id);
@@ -200,15 +200,15 @@ class c13y_internal
                     }
 
                     if (isset($status)) {
-                        $updates = array(
-                          array(
+                        $updates = [
+                          [
                             'user_id' => $id,
                             'status'  => $status,
-                            ),
-                          );
+                            ],
+                          ];
                         mass_updates(
                             USER_INFOS_TABLE,
-                            array('primary' => array('user_id'),'update' => array('status')),
+                            ['primary' => ['user_id'],'update' => ['status']],
                             $updates
                         );
 

@@ -27,72 +27,72 @@ if (isset($_GET['action'])) {
 // | Commons parameters                                                    |
 // +-----------------------------------------------------------------------+
 
-$maint_actions = array(
-  'derivatives' => array(
+$maint_actions = [
+  'derivatives' => [
     'icon' => 'icon-trash-1',
     'label' => l10n('Delete multiple size images'),
-  ),
-  'lock_gallery' => array(
+  ],
+  'lock_gallery' => [
     'icon' => 'icon-lock',
     'label' => l10n('Lock gallery'),
-  ),
-  'unlock_gallery' => array(
+  ],
+  'unlock_gallery' => [
     'icon' => 'icon-lock',
     'label' => l10n('Unlock gallery'),
-  ),
-  'categories' => array(
+  ],
+  'categories' => [
     'icon' => 'icon-folder-open',
     'label' => l10n('Update albums informations'),
-  ),
-  'images' => array(
+  ],
+  'images' => [
     'icon' => 'icon-info-circled-1',
     'label' => l10n('Update photos information'),
-  ),
-  'empty_lounge' => array(
+  ],
+  'empty_lounge' => [
     'icon' => 'icon-thumbs-up',
     'label' => l10n('Empty lounge'),
-  ),
-  'delete_orphan_tags' => array(
+  ],
+  'delete_orphan_tags' => [
     'icon' => 'icon-tags',
     'label' => l10n('Delete orphan tags'),
-  ),
-  'user_cache' => array(
+  ],
+  'user_cache' => [
     'icon' => 'icon-user-1',
     'label' => l10n('Purge user cache'),
-  ),
-  'history_detail' => array(
+  ],
+  'history_detail' => [
     'icon' => 'icon-back-in-time',
     'label' => l10n('Purge history detail'),
-  ),
-  'history_summary' => array(
+  ],
+  'history_summary' => [
     'icon' => 'icon-back-in-time',
     'label' => l10n('Purge history summary'),
-  ),
-  'sessions' => array(
+  ],
+  'sessions' => [
     'icon' => 'icon-th-list',
     'label' => l10n('Purge sessions'),
-  ),
-  'feeds' => array(
+  ],
+  'feeds' => [
     'icon' => 'icon-bell',
     'label' => l10n('Purge never used notification feeds'),
-  ),
-  'database' => array(
+  ],
+  'database' => [
     'icon' => 'icon-database',
     'label' => l10n('Repair and optimize database'),
-  ),
-  'c13y' => array(
+  ],
+  'c13y' => [
     'icon' => 'icon-ok',
     'label' => l10n('Reinitialize check integrity'),
-  ),
-  'search' => array(
+  ],
+  'search' => [
     'icon' => 'icon-search',
     'label' => l10n('Purge search history'),
-  ),
-  'compiled-templates' => array(
+  ],
+  'compiled-templates' => [
     'icon' => 'icon-file-code',
     'label' => l10n('Purge compiled templates'),
-  ),
-);
+  ],
+];
 
 // +-----------------------------------------------------------------------+
 // | tabs                                                                  |
@@ -117,5 +117,5 @@ $tabsheet->assign();
 include(PHPWG_ROOT_PATH.'admin/maintenance_'.$page['tab'].'.php');
 
 $template->assign(
-    array('ADMIN_PAGE_TITLE' => l10n('Maintenance'))
+    ['ADMIN_PAGE_TITLE' => l10n('Maintenance')]
 );

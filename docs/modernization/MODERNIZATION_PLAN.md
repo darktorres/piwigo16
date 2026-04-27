@@ -67,7 +67,7 @@ Establish the entire toolchain — composer, PHPStan, Rector, Pint, PHPUnit, Doc
 
 8. ✅ **Author the CI workflow.** `.github/workflows/ci.yml` runs three jobs in parallel: `lint` (Pint test mode + PHPStan), `unit` (PHPUnit `Unit` suite — placeholder, returns 0), `e2e` (boots `docker compose up -d --wait db web`, drives all six Playwright specs, then runs `UpgradeChainTest` against the fixture). Matrix on `php-version: ['8.5']` only. Done when a push with no source changes goes green. **Blocked on step 7** (fixture not yet committed; `e2e` job will fail until `dev/fixtures/piwigo-16.x.sql` exists).
 
-9. ✅ **Scaffold `tests/Integration/UpgradeChainTest.php`.** This test loads the 16.x fixture into a throwaway DB, writes `local/config/database.inc.php` pointing at it, then makes an HTTP request to `/upgrade.php` with `username=fixture_admin&password=fixture_admin`, then asserts the post-upgrade `piwigo_config.version` matches `'16.3'`. Uses `curl_init` for the HTTP call (no Guzzle dependency) and `Symfony\Component\Process\Process` to shell out to `mysql` CLI for fixture loading. Cleans up `local/config/database.inc.php` in `tearDown`. Done when the test runs green against an unmodified codebase — **green once the fixture exists**.
+9. ✅ **Scaffold `tests/Integration/UpgradeChainTest.php`.** This test loads the 16.x fixture into a throwaway DB (`piwigo_test`), writes `local/config/database.inc.php` pointing at it, then makes an HTTP request to `/upgrade.php`, then asserts `piwigo_config.piwigo_db_version` matches `'16'` (not `'16.3'` — `get_branch_from_version('16.3.0')` returns only the first segment, per Piwigo ≥11 convention). Uses `curl_init` for the HTTP call (no Guzzle) and `Symfony\Component\Process\Process` to shell out to `mysql` CLI for fixture loading. Cleans up `local/config/database.inc.php` in `tearDown`. Two env vars separate host-side from container-side concerns: `PIWIGO_DB_PORT` (default `3306`, set to `3307` locally) for mysqli/mysql CLI on the host; `PIWIGO_WEB_DB_HOST` (default `db`) written into `database.inc.php` so upgrade.php inside the web container reaches the DB by service name. The written `database.inc.php` must match install.php's format exactly: `$prefixeTable`, `PHPWG_INSTALLED`, charset constants, and a closing `?>` tag — upgrade.php dies at line 31 (`strrpos` for `?>` returns false) without it. The `piwigo` MariaDB user needs `GRANT ALL ON piwigo_test.*` (one-time: `GRANT ALL PRIVILEGES ON \`piwigo_test\`.* TO 'piwigo'@'%'; FLUSH PRIVILEGES;`). **Green: 1/1 passing.**
 
 10. ✅ **Author the Playwright bootstrap and the six initial specs.** `package.json` adds `@playwright/test ^1.48`, `typescript ^5.6` (resolves to 1.59.1). `playwright.config.ts` points `baseURL` at `http://localhost:8090` (or `$BASE_URL` for CI), uses `globalSetup: './tests/e2e/global-setup.js'` (CJS, not TS — Playwright's runtime requires CJS for globalSetup on Windows). The global-setup deletes `local/config/database.inc.php` before the install spec runs (that file defines `PHPWG_INSTALLED` which makes install.php bail) then drops/recreates the DB via `mysql` CLI. Six specs under `tests/e2e/`, **prefixed 01–06 to enforce run order** (alphabetical would run change-setting before install): `01-install.spec.ts`, `02-smoke-gallery.spec.ts`, `03-smoke-admin.spec.ts`, `04-create-album.spec.ts`, `05-upload-photo.spec.ts`, `06-change-setting.spec.ts`. Admin login shared via `tests/e2e/helpers/admin-login.ts`. Key learnings: all admin pages go through `admin.php?page=X` not direct `admin/X.php` paths (which require `PHPWG_ROOT_PATH` defined by admin.php); `PIWIGO_INSTALL_DB_HOST` (default `db`) is the in-Docker hostname for the install form, separate from `PIWIGO_DB_HOST` used by global-setup's host-side mysql CLI. Do NOT restore the abandoned `ceb1390e6` suite — written from scratch.
 
@@ -216,10 +216,12 @@ return RectorConfig::configure()
     </testsuites>
     <php>
         <env name="PIWIGO_DB_HOST" value="127.0.0.1"/>
+        <env name="PIWIGO_DB_PORT" value="3307"/>
         <env name="PIWIGO_DB_USER" value="piwigo"/>
         <env name="PIWIGO_DB_PASSWORD" value="piwigo"/>
         <env name="PIWIGO_DB_BASE" value="piwigo_test"/>
-        <env name="PIWIGO_BASE_URL" value="http://localhost:8080"/>
+        <env name="PIWIGO_WEB_DB_HOST" value="db"/>
+        <env name="PIWIGO_BASE_URL" value="http://localhost:8090"/>
     </php>
 </phpunit>
 ```
@@ -315,15 +317,20 @@ final class UpgradeChainTest extends TestCase
 {
     private const FIXTURE = __DIR__ . '/../../dev/fixtures/piwigo-16.x.sql';
 
-    private string $dbHost, $dbUser, $dbPass, $dbName, $baseUrl;
+    private string $dbHost;
+    private int $dbPort;
+    private string $dbUser, $dbPass, $dbName, $webDbHost, $baseUrl;
 
     protected function setUp(): void
     {
-        $this->dbHost = (string) (getenv('PIWIGO_DB_HOST') ?: '127.0.0.1');
-        $this->dbUser = (string) (getenv('PIWIGO_DB_USER') ?: 'piwigo');
-        $this->dbPass = (string) (getenv('PIWIGO_DB_PASSWORD') ?: 'piwigo');
-        $this->dbName = (string) (getenv('PIWIGO_DB_BASE') ?: 'piwigo_test');
-        $this->baseUrl = rtrim((string) (getenv('PIWIGO_BASE_URL') ?: 'http://localhost:8080'), '/');
+        $this->dbHost    = (string) (getenv('PIWIGO_DB_HOST') ?: '127.0.0.1');
+        $this->dbPort    = (int)    (getenv('PIWIGO_DB_PORT') ?: 3306);
+        $this->dbUser    = (string) (getenv('PIWIGO_DB_USER') ?: 'piwigo');
+        $this->dbPass    = (string) (getenv('PIWIGO_DB_PASSWORD') ?: 'piwigo');
+        $this->dbName    = (string) (getenv('PIWIGO_DB_BASE') ?: 'piwigo_test');
+        // In-container hostname for upgrade.php — Docker service name, not host-side IP.
+        $this->webDbHost = (string) (getenv('PIWIGO_WEB_DB_HOST') ?: 'db');
+        $this->baseUrl   = rtrim((string) (getenv('PIWIGO_BASE_URL') ?: 'http://localhost:8090'), '/');
         $this->resetDatabase();
         $this->loadFixture(self::FIXTURE);
         $this->writeDatabaseConfig();
@@ -351,7 +358,7 @@ final class UpgradeChainTest extends TestCase
 
     private function resetDatabase(): void
     {
-        $db = new \mysqli($this->dbHost, $this->dbUser, $this->dbPass);
+        $db = new \mysqli($this->dbHost, $this->dbUser, $this->dbPass, '', $this->dbPort);
         $db->query("DROP DATABASE IF EXISTS `{$this->dbName}`");
         $db->query("CREATE DATABASE `{$this->dbName}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
         $db->close();
@@ -360,7 +367,7 @@ final class UpgradeChainTest extends TestCase
     private function loadFixture(string $path): void
     {
         self::assertFileExists($path, 'Fixture missing — see dev/fixtures/README.md');
-        $proc = new Process(["mysql", "-h{$this->dbHost}", "-u{$this->dbUser}", "-p{$this->dbPass}", $this->dbName]);
+        $proc = new Process(["mysql", "-h{$this->dbHost}", "-P{$this->dbPort}", "-u{$this->dbUser}", "-p{$this->dbPass}", $this->dbName]);
         $proc->setInput(file_get_contents($path));
         $proc->mustRun();
     }
@@ -369,9 +376,12 @@ final class UpgradeChainTest extends TestCase
     {
         $dir = __DIR__ . '/../../local/config';
         if (!is_dir($dir)) { mkdir($dir, 0755, true); }
+        // Must match install.php's format exactly: $prefixeTable, PHPWG_INSTALLED,
+        // charset constants, and closing ?> — upgrade.php dies if ?> is missing.
+        // Uses $webDbHost (service name 'db') so upgrade.php inside Docker can reach the DB.
         file_put_contents($dir . '/database.inc.php', sprintf(
-            "<?php\n\$conf['dblayer']='mysqli';\$conf['db_host']='%s';\$conf['db_user']='%s';\$conf['db_password']='%s';\$conf['db_base']='%s';\$conf['db_table_prefix']='piwigo_';\n",
-            addslashes($this->dbHost), addslashes($this->dbUser), addslashes($this->dbPass), addslashes($this->dbName)
+            "<?php\n\$conf['dblayer']='mysqli';\n\$conf['db_host']='%s';\n\$conf['db_user']='%s';\n\$conf['db_password']='%s';\n\$conf['db_base']='%s';\n\$prefixeTable='piwigo_';\ndefine('PHPWG_INSTALLED',true);\ndefine('PWG_CHARSET','utf-8');\ndefine('DB_CHARSET','utf8');\ndefine('DB_COLLATE','');\n?>",
+            addslashes($this->webDbHost), addslashes($this->dbUser), addslashes($this->dbPass), addslashes($this->dbName)
         ));
     }
 
@@ -383,7 +393,7 @@ final class UpgradeChainTest extends TestCase
 
     private function queryScalar(string $sql): string
     {
-        $db = new \mysqli($this->dbHost, $this->dbUser, $this->dbPass, $this->dbName);
+        $db = new \mysqli($this->dbHost, $this->dbUser, $this->dbPass, $this->dbName, $this->dbPort);
         $result = $db->query($sql);
         self::assertInstanceOf(\mysqli_result::class, $result);
         $row = $result->fetch_row();
@@ -450,6 +460,8 @@ test('fresh install completes end-to-end', async ({ page }) => {
 - **Non-ignorable PHPStan errors can't go in the baseline.** ✅ `pwgsession_php7.class.php` had 6 `method.tentativeReturnType` errors that PHPStan refused to baseline. Resolved by excluding the file (dead code for PHP 8.5+). If other non-ignorable errors appear in later phases, fix the code rather than excluding.
 - **The 16.x fixture grows stale.** `dev/fixtures/README.md` documents how to regenerate it; Phase 6's pre-floor cleanup also bumps the fixture.
 - **Playwright selectors are brittle against the legacy templates.** Biased toward `getByRole`/`getByText` over CSS; accept that 1-2 specs will need touch-ups in Phase 1 when Rector touches templates. The `install.spec.ts` form field names (`dbhost`, `dbuser`, `dbpasswd`, `dbname`) differ from the PHP variable names — verified against `admin/themes/default/template/install.tpl`.
+- **UpgradeChainTest `database.inc.php` format is strict.** ✅ Upgrade.php does `strrpos($contents, '?>')` at line 31 and dies if the closing tag is missing. The written config must also use `$prefixeTable` (not `$conf['db_table_prefix']`) and define `PHPWG_INSTALLED`/charset constants — matching what install.php generates. `get_branch_from_version('16.3.0')` returns `'16'`, not `'16.3'` — the assertion must match.
+- **UpgradeChainTest needs `GRANT ALL ON piwigo_test.*` for the `piwigo` DB user.** ✅ The Docker MariaDB only grants `piwigo` user access to the `piwigo` database by default. Run once: `GRANT ALL PRIVILEGES ON \`piwigo_test\`.* TO 'piwigo'@'%'; FLUSH PRIVILEGES;` via root. In CI the MariaDB init can include this grant.
 
 ### Verification
 

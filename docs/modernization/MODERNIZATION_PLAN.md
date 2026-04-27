@@ -2176,7 +2176,7 @@ Move every first-party class file from `include/*.class.php`, `admin/include/*.c
 
 ### Step-by-step sequence
 
-1. **Lock in PSR-4 layout, write `composer.json` autoload, run a green-baseline `dump-autoload --strict-psr`.**
+1. ✅ **Lock in PSR-4 layout, write `composer.json` autoload, run a green-baseline `dump-autoload --strict-psr`.**
    ```json
    "autoload": {
      "psr-4": { "Piwigo\\": "src/Piwigo/" },
@@ -2188,9 +2188,9 @@ Move every first-party class file from `include/*.class.php`, `admin/include/*.c
    ```
    Run against the empty `src/` directory — succeeds. **Exit signal**: `vendor/composer/autoload_psr4.php` contains the `Piwigo\\` prefix; CI green.
 
-2. **Inventory: glob and table the class roster.** Run `tools/list-classes.php` (committed) that uses Glob over `include/**/*.class.php`, `include/**/*.inc.php`, `admin/include/**/*.class.php`, regexes `^(abstract |final )?class \w+`, emits CSV `current_path,class_name,extends,filenames_referenced_via_string`. ~50 first-party classes. Note ones living in `.inc.php` files (derivative classes, search-related classes) need to be *extracted* before move. **Exit signal**: `docs/class-inventory.csv` committed.
+2. ✅ **Inventory: glob and table the class roster.** Run `tools/list-classes.php` (committed) that uses Glob over `include/**/*.class.php`, `include/**/*.inc.php`, `admin/include/**/*.class.php`, regexes `^(abstract |final )?class \w+`, emits CSV `current_path,class_name,extends,filenames_referenced_via_string`. ~50 first-party classes. Note ones living in `.inc.php` files (derivative classes, search-related classes) need to be *extracted* before move. **Exit signal**: `docs/class-inventory.csv` committed.
 
-3. **Move classes in dependency order, leaf-first.** Dependency graph: `PersistentCache` (abstract, no deps) → `PersistentFileCache` → `BlockManager`/`RegisteredBlock`/`DisplayBlock` → `Logger` → `PwgBase32` → `PwgTOTP` → `PasswordHash` → `PwgSession` → `Combinable`/`CssLoader`/`ScriptLoader`/`PwgTemplateAdapter` → `Template` (depends on Smarty + `ScriptLoader`) → `PwgError`/`PwgNamedArray`/`PwgNamedStruct` → `PwgRequestHandler`/`PwgResponseEncoder` → `PwgServer` → encoders → `CalendarBase`/`CalendarMonthly`/`CalendarWeekly` → search Q-classes → `WatermarkParams`/`ImageStdParams`/`ImageRect`/`SizingParams`/`DerivativeParams`/`SrcImage`/`DerivativeImage`. Recipe per class:
+3. ✅ **Move classes in dependency order, leaf-first.** Dependency graph: `PersistentCache` (abstract, no deps) → `PersistentFileCache` → `BlockManager`/`RegisteredBlock`/`DisplayBlock` → `Logger` → `PwgBase32` → `PwgTOTP` → `PasswordHash` → `PwgSession` → `Combinable`/`CssLoader`/`ScriptLoader`/`PwgTemplateAdapter` → `Template` (depends on Smarty + `ScriptLoader`) → `PwgError`/`PwgNamedArray`/`PwgNamedStruct` → `PwgRequestHandler`/`PwgResponseEncoder` → `PwgServer` → encoders → `CalendarBase`/`CalendarMonthly`/`CalendarWeekly` → search Q-classes → `WatermarkParams`/`ImageStdParams`/`ImageRect`/`SizingParams`/`DerivativeParams`/`SrcImage`/`DerivativeImage`. Recipe per class:
    ```bash
    # PersistentCache + PersistentFileCache (currently include/cache.class.php)
    # a) create src/Piwigo/Cache/PersistentCache.php with namespace Piwigo\Cache
@@ -2201,7 +2201,7 @@ Move every first-party class file from `include/*.class.php`, `admin/include/*.c
    ```
    **Exit signal per class**: `composer dump-autoload --strict-psr` exits 0; `grep -rn "include.*cache\.class\.php" .` returns nothing; PHPStan still green; Playwright still green.
 
-4. **Use Rector's `RenameClassRector` to mechanically rewrite every reference.** Per class moved, add to `rector.php`:
+4. ✅ **Use Rector's `RenameClassRector` to mechanically rewrite every reference.** Per class moved, add to `rector.php`:
    ```php
    ->withConfiguredRule(RenameClassRector::class, [
        'PersistentCache' => 'Piwigo\\Cache\\PersistentCache',
@@ -2211,7 +2211,7 @@ Move every first-party class file from `include/*.class.php`, `admin/include/*.c
    ```
    Rector rewrites `new PersistentFileCache()` → `new \Piwigo\Cache\PersistentFileCache()` across `include/`, `admin/`, root entry points, **and `install/` (but NOT `install/db/`)**. **Exit signal**: `grep -rn "new PersistentFileCache\b" --include='*.php' .` returns zero; same for every migrated class.
 
-5. **Pre-audit and special-case the danger list.** Before moving any of the following:
+5. ✅ **Pre-audit and special-case the danger list.** Before moving any of the following:
    - **Case-sensitivity collisions on Windows hosts**: verify with `find . -iname '*image*.class.php' | sort -f | uniq -di`. The four image backends in `admin/include/image.class.php` (`pwg_image`, `image_imagick`, `image_ext_imagick`, `image_gd`) become `Piwigo\Admin\Image\PwgImage`, `Piwigo\Admin\Image\ImagickBackend`, `Piwigo\Admin\Image\ExtImagickBackend`, `Piwigo\Admin\Image\GdBackend` — rename and `RenameClassRector` together.
    - **PHP built-in collisions**: Smarty's vendored `Smarty\Template` shares the unqualified name with our `Template`. After move, `Piwigo\Template\Template` is unambiguous; FQN resolves cleanly.
    - **Classes used by string name (`new $type()`)**: confirmed at `include/functions_calendar.inc.php:126`, `include/functions_plugins.inc.php:409`, `include/ws_functions/pwg.extensions.php:175`, `admin/include/image.class.php:73`, `admin/include/plugins.class.php:85,95`, `admin/include/themes.class.php:74`, `admin/include/updates.class.php:40`. For each: `$classname` must hold the FQN string post-move. Audit each: e.g. for the calendar dispatcher, change `$classname = 'CalendarMonthly'` to `$classname = \Piwigo\Calendar\CalendarMonthly::class`. For plugin/theme dispatchers, register a `class_alias(\Piwigo\Plugin\PluginMaintain::class, 'PluginMaintain')` until plugins are out of scope.
@@ -2219,9 +2219,9 @@ Move every first-party class file from `include/*.class.php`, `admin/include/*.c
 
    **Exit signal**: each item is grep-confirmed clean.
 
-6. **After all classes moved, regenerate optimized autoload, run E2E.** `composer dump-autoload --optimize --classmap-authoritative --strict-psr` — `--strict-psr` fails loudly if any `src/Piwigo/Foo/Bar.php` has the wrong namespace declaration. **Exit signal**: optimized autoload built; CI green.
+6. ✅ **After all classes moved, regenerate optimized autoload, run E2E.** `composer dump-autoload --optimize --classmap-authoritative --strict-psr` — `--strict-psr` fails loudly if any `src/Piwigo/Foo/Bar.php` has the wrong namespace declaration. **Exit signal**: optimized autoload built; CI green.
 
-7. **Vendor tracking + `.gitattributes` + tarball install.** Track `vendor/` in git (Phase 0 already). Exclude dev deps and source artifacts from the tarball:
+7. ✅ **Vendor tracking + `.gitattributes` + tarball install.** Track `vendor/` in git (Phase 0 already). Exclude dev deps and source artifacts from the tarball:
    ```
    /tests              export-ignore
    /docs               export-ignore
@@ -2241,7 +2241,7 @@ Move every first-party class file from `include/*.class.php`, `admin/include/*.c
    ```
    Document in `INSTALL.md`: tarball ships with `vendor/` populated (production deps only). For developer clones, `composer install` pulls dev deps. CI builds the release tarball via `git archive --format=tar.gz HEAD` followed by `composer install --no-dev --optimize-autoloader --classmap-authoritative` inside the staged directory. **Exit signal**: tarball generated, untar'd, `php -S localhost:8080` serves the gallery without `composer install`.
 
-8. **Entry-point migration in dependency order.** Add `require __DIR__ . '/vendor/autoload.php';` as the first non-comment line of each entry point. Order:
+8. ✅ **Entry-point migration in dependency order.** Add `require __DIR__ . '/vendor/autoload.php';` as the first non-comment line of each entry point. Order:
    - Commit 1: `index.php`, `picture.php`, `comments.php`, `feed.php`, `search.php`, `tags.php`, `notification.php`, `about.php`, `popuphelp.php`, `password.php`, `register.php`, `identification.php`, `profile.php`, `i.php`, `action.php`.
    - Commit 2: `admin.php`, `ws.php`.
    - Commit 3 (last): `install.php`, `upgrade.php`. These run **before** `common.inc.php` is fully wired. The autoload `require` must work without `$conf`/`PHPWG_ROOT_PATH` already defined. Mitigation: `define('PHPWG_ROOT_PATH', __DIR__ . '/');` at the very top, then `require PHPWG_ROOT_PATH . 'vendor/autoload.php';`.
@@ -2394,6 +2394,7 @@ include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
 - `UpgradeChainTest` green from real 16.x dump.
 - Playwright suite green: `install.spec.ts`, `smoke-gallery.spec.ts`, `smoke-admin.spec.ts`.
 - Manual: load gallery, browse album, open photo, log in as admin, navigate every admin page — no `Class "Foo" not found` fatals in `data/log_*.txt`.
+- **Actual run**: 62 first-party classes migrated to `src/Piwigo/` in 10 namespace clusters (Cache, Core, Auth, Menu, Session, Calendar, Search, Image, Ws, Admin, Template); Rector RenameClassRector rewrote 109 reference sites; `src/Piwigo/Compat/aliases.php` provides lazy class_alias shims for all 62 short names; Smarty PSR-4 mapped at `include/smarty/src/` and its `functions.php` loaded via autoload.files; old class files stubbed (19 files); include cleanup across common.inc.php, install.php, upgrade.php, i.php, and function files; PHPStan baseline 5214 errors at level 8; CI run 24998106609 green (lint ✓, unit ✓, e2e ✓). Post-migration namespace resolution bugs fixed: Logger.php (\DateTime, \RuntimeException), CalendarMonthly.php (use imports for Piwigo\Image classes), image_imagick.php (\Imagick/\ImagickPixel), *.php (\PclZip), FileCombiner.php (\Exception catch), WS protocol files (use Piwigo\Ws\PwgError). All 8 Phase 3 steps ✅.
 
 
 ### Phase 3 deep-dive: Class movement recipes

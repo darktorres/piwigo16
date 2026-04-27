@@ -2942,7 +2942,7 @@ function deltree(string $path, $trash_path = null)
             if (!is_dir($trash_path)) {
                 @mkgetdir($trash_path, MKGETDIR_RECURSIVE | MKGETDIR_DIE_ON_ERROR | MKGETDIR_PROTECT_HTACCESS);
             }
-            while ($r = $trash_path . '/' . md5(uniqid(random_int(0, mt_getrandmax()), true))) {
+            while ($r = $trash_path . '/' . md5(uniqid((string) random_int(0, mt_getrandmax()), true))) {
                 if (!is_dir($r)) {
                     @rename($path, $r);
                     break;

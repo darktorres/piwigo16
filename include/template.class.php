@@ -1389,7 +1389,7 @@ class CssLoader
             $this->counter++;
         } else {
             $css = $this->registered_css[$id];
-            if ($css->order < $order * 1000 || version_compare($css->version, $version) < 0) {
+            if ($css->order < $order * 1000 || version_compare((string) $css->version, (string) $version) < 0) {
                 unset($this->registered_css[$id]);
                 $this->add($id, $path, $version, $order, $is_template);
             }
@@ -1516,7 +1516,7 @@ class ScriptLoader
                 $script->precedents = array_unique(array_merge($script->precedents, $require));
             }
             $script->set_path($path);
-            if ($version && version_compare($script->version, $version) < 0) {
+            if ($version && version_compare((string) $script->version, (string) $version) < 0) {
                 $script->version = $version;
             }
             if ($load_mode < $script->load_mode) {

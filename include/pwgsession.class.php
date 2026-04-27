@@ -29,8 +29,8 @@ class PwgSession implements SessionHandlerInterface
         return pwg_session_destroy($id);
     }
 
-    public function gc(int $max_lifetime): int
+    public function gc(int $max_lifetime): int|false
     {
-        return pwg_session_gc();
+        return pwg_session_gc() ? 1 : false;
     }
 }

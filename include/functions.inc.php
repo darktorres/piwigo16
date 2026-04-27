@@ -742,7 +742,7 @@ function dateDiff($date1, $date2): \DateInterval|\stdClass
  * @param string $format input format respecting date() syntax
  * @return DateTime|false
  */
-function str2DateTime(?string $original, $format = null)
+function str2DateTime(int|string|null $original, $format = null)
 {
     if (empty($original)) {
         return false;
@@ -795,7 +795,7 @@ function str2DateTime(?string $original, $format = null)
  * @param string $format input format respecting date() syntax
  * @return string
  */
-function format_date_legacy(?string $original, $show = null, $format = null)
+function format_date_legacy(int|string|null $original, $show = null, $format = null)
 {
     global $lang;
 

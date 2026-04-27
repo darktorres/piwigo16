@@ -129,8 +129,9 @@ function print_time(string $message): void
 // |                             language                                  |
 // +-----------------------------------------------------------------------+
 $languages = new languages('utf-8');
-if (isset($_GET['language'])) {
-    $language = strip_tags((string) $_GET['language']);
+$get_language = input_string('language', null, $_GET);
+if ($get_language !== null) {
+    $language = strip_tags($get_language);
 
     if (!in_array($language, array_keys($languages->fs_languages))) {
         $language = PHPWG_DEFAULT_LANGUAGE;
@@ -328,7 +329,7 @@ if (version_compare(PHP_VERSION, REQUIRED_PHP_VERSION, '<')) {
 
 check_upgrade_access_rights();
 
-if ((isset($_POST['submit']) or isset($_GET['now']))
+if ((input_string('submit', null, $_POST) !== null or input_string('now', null, $_GET) !== null)
   and check_upgrade()) {
     $upgrade_file = PHPWG_ROOT_PATH.'install/upgrade_'.$current_release.'.php';
     if (is_file($upgrade_file)) {

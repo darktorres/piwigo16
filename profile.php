@@ -46,7 +46,7 @@ SELECT '.implode(',', $fields).'
     $template->assign('DEFAULT_USER_VALUES', $default_user);
 
     // Reset to default (Guest) custom settings
-    if (isset($_POST['reset_to_default'])) {
+    if (input_string('reset_to_default', null, $_POST) !== null) {
         $userdata = array_merge($userdata, $default_user);
     }
 
@@ -77,16 +77,17 @@ SELECT '.implode(',', $fields).'
     include(PHPWG_ROOT_PATH.'include/page_header.php');
 
     //Load language if cookie is set from login/register/password pages
-    if (isset($_COOKIE['lang']) and $user['language'] != $_COOKIE['lang']) {
-        if (!array_key_exists((string) $_COOKIE['lang'], get_languages())) {
-            fatal_error('[Hacking attempt] the input parameter "'.$_COOKIE['lang'].'" is not valid');
+    $cookie_lang = input_string('lang', null, $_COOKIE);
+    if ($cookie_lang !== null && $user['language'] != $cookie_lang) {
+        if (!array_key_exists($cookie_lang, get_languages())) {
+            fatal_error('[Hacking attempt] the input parameter "'.$cookie_lang.'" is not valid');
         }
 
-        $user['language'] = $_COOKIE['lang'];
+        $user['language'] = $cookie_lang;
         single_update(
             USER_INFOS_TABLE,
             [
-            'language' => $_COOKIE['lang'],
+            'language' => $cookie_lang,
       ],
             [
             'user_id' => $user['id'],

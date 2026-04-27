@@ -74,8 +74,9 @@ $since_options = array(
 
 trigger_notify('loc_begin_comments');
 
-if (!empty($_GET['since'])) {
-    $page['since'] = intval($_GET['since']);
+$get_since = input_int('since', null, $_GET);
+if (!empty($get_since)) {
+    $page['since'] = $get_since;
 } else {
     $page['since'] = 4;
 }
@@ -84,23 +85,26 @@ if (!empty($_GET['since'])) {
 //
 $page['sort_by'] = 'date';
 // if the form was submitted, it overloads default behaviour
-if (isset($_GET['sort_by']) and isset($sort_by[$_GET['sort_by']])) {
-    $page['sort_by'] = $_GET['sort_by'];
+$get_sort_by = input_string('sort_by', null, $_GET);
+if ($get_sort_by !== null && isset($sort_by[$get_sort_by])) {
+    $page['sort_by'] = $get_sort_by;
 }
 
 // order to sort
 //
 $page['sort_order'] = 'DESC';
 // if the form was submitted, it overloads default behaviour
-if (isset($_GET['sort_order']) and isset($sort_order[$_GET['sort_order']])) {
-    $page['sort_order'] = $_GET['sort_order'];
+$get_sort_order = input_string('sort_order', null, $_GET);
+if ($get_sort_order !== null && isset($sort_order[$get_sort_order])) {
+    $page['sort_order'] = $get_sort_order;
 }
 
 // number of items to display
 //
 $page['items_number'] = $conf['comments_page_nb_comments'];
-if (isset($_GET['items_number'])) {
-    $page['items_number'] = $_GET['items_number'];
+$get_items_number = input_string('items_number', null, $_GET);
+if ($get_items_number !== null) {
+    $page['items_number'] = $get_items_number;
 }
 if (!is_numeric($page['items_number']) and $page['items_number'] != 'all') {
     $page['items_number'] = 10;
@@ -109,10 +113,11 @@ if (!is_numeric($page['items_number']) and $page['items_number'] != 'all') {
 $page['where_clauses'] = array();
 
 // which category to filter on ?
-if (isset($_GET['cat']) and 0 != $_GET['cat']) {
+$get_cat = input_int('cat', null, $_GET);
+if ($get_cat !== null && 0 != $get_cat) {
     check_input_parameter('cat', $_GET, false, PATTERN_ID);
 
-    $category_ids = get_subcat_ids(array($_GET['cat']));
+    $category_ids = get_subcat_ids(array($get_cat));
     if (empty($category_ids)) {
         $category_ids = array(-1);
     }
@@ -122,17 +127,19 @@ if (isset($_GET['cat']) and 0 != $_GET['cat']) {
 }
 
 // search a particular author
-if (!empty($_GET['author'])) {
+$get_author = input_string('author', null, $_GET);
+if (!empty($get_author)) {
     $page['where_clauses'][] =
-      '(u.'.$conf['user_fields']['username'].' = \''.$_GET['author'].'\' OR author = \''.$_GET['author'].'\')';
+      '(u.'.$conf['user_fields']['username'].' = \''.$get_author.'\' OR author = \''.$get_author.'\')';
 }
 
 // search a specific comment (if you're coming directly from an admin
 // notification email)
-if (!empty($_GET['comment_id'])) {
+$get_comment_id_filter = input_int('comment_id', null, $_GET);
+if (!empty($get_comment_id_filter)) {
     check_input_parameter('comment_id', $_GET, false, PATTERN_ID);
 
-    // currently, the $_GET['comment_id'] is only used by admins from email
+    // currently, the comment_id is only used by admins from email
     // for management purpose (validate/delete)
     if (!is_admin()) {
         $login_url =
@@ -142,11 +149,12 @@ if (!empty($_GET['comment_id'])) {
         redirect($login_url);
     }
 
-    $page['where_clauses'][] = 'com.id = '.$_GET['comment_id'];
+    $page['where_clauses'][] = 'com.id = '.$get_comment_id_filter;
 }
 
 // search a substring among comments content
-if (!empty($_GET['keyword'])) {
+$get_keyword = input_string('keyword', null, $_GET);
+if (!empty($get_keyword)) {
     $page['where_clauses'][] =
       '('.
       implode(
@@ -155,7 +163,7 @@ if (!empty($_GET['keyword'])) {
               function ($s) {
                   return "content LIKE '%$s%'";
               },
-              preg_split('/[\s,;]+/', $_GET['keyword'])
+              preg_split('/[\s,;]+/', $get_keyword)
           )
       ).
       ')';
@@ -214,16 +222,17 @@ if (isset($action)) {
         }
 
         if ('edit' == $action) {
-            if (!empty($_POST['content'])) {
+            $post_content = input_string('content', null, $_POST);
+            if (!empty($post_content)) {
                 check_pwg_token();
                 $comment_action = update_user_comment(
                     array(
-                    'comment_id' => $_GET['edit'],
-                    'image_id' => $_POST['image_id'],
-                    'content' => $_POST['content'],
-                    'website_url' => @$_POST['website_url'],
+                    'comment_id' => $comment_id,
+                    'image_id' => input_int('image_id', null, $_POST),
+                    'content' => $post_content,
+                    'website_url' => input_string('website_url', null, $_POST),
                     ),
-                    $_POST['key']
+                    input_string('key', null, $_POST) ?? ''
                 );
 
                 switch ($comment_action) {
@@ -242,7 +251,7 @@ if (isset($action)) {
                 }
             }
 
-            $edit_comment = $_GET['edit'];
+            $edit_comment = $comment_id;
         }
 
         if ($perform_redirect) {
@@ -262,8 +271,8 @@ $template->set_filenames(array('comments' => 'comments.tpl', 'comment_list' => '
 $template->assign(
     array(
     'F_ACTION' => PHPWG_ROOT_PATH.'comments.php',
-    'F_KEYWORD' => isset($_GET['keyword']) ? htmlspecialchars(stripslashes($_GET['keyword'])) : '',
-    'F_AUTHOR' => isset($_GET['author']) ? htmlspecialchars(stripslashes($_GET['author'])) : '',
+    'F_KEYWORD' => !empty($get_keyword) ? htmlspecialchars(stripslashes($get_keyword)) : '',
+    'F_AUTHOR' => !empty($get_author) ? htmlspecialchars(stripslashes($get_author)) : '',
     )
 );
 
@@ -285,7 +294,7 @@ SELECT id, name, uppercats, global_rank
     'WHERE'
 ).'
 ;';
-display_select_cat_wrapper($query, array(@$_GET['cat']), $blockname, true);
+display_select_cat_wrapper($query, array($get_cat), $blockname, true);
 
 // Filter on recent comments...
 $tpl_var = array();
@@ -318,11 +327,7 @@ $template->assign('item_number_options_selected', $page['items_number']);
 // |                            navigation bar                             |
 // +-----------------------------------------------------------------------+
 
-if (isset($_GET['start'])) {
-    $start = intval($_GET['start']);
-} else {
-    $start = 0;
-}
+$start = input_int('start', 0, $_GET);
 
 // +-----------------------------------------------------------------------+
 // |                        last comments display                          |

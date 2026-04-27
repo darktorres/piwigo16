@@ -54,13 +54,14 @@ if ($conf['fs_quick_check_period'] > 0) {
 // +-----------------------------------------------------------------------+
 
 // save plugins_new display order (AJAX action)
-if (isset($_GET['plugins_new_order'])) {
-    pwg_set_session_var('plugins_new_order', $_GET['plugins_new_order']);
+$plugins_new_order = input_string('plugins_new_order', null, $_GET);
+if ($plugins_new_order !== null) {
+    pwg_set_session_var('plugins_new_order', $plugins_new_order);
     exit;
 }
 
 // theme changer
-if (isset($_GET['change_theme'])) {
+if (input_string('change_theme', null, $_GET) !== null) {
     $admin_themes = array('roma', 'clear');
     $admin_theme_array = array(userprefs_get_param('admin_theme', 'clear'));
     $result = array_diff(

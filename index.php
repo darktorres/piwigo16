@@ -31,9 +31,10 @@ if ($page['start'] > 0 && $page['start'] >= count($page['items'])) {
 trigger_notify('loc_begin_index');
 
 //---------------------------------------------- change of image display order
-if (isset($_GET['image_order'])) {
-    if ((int)$_GET['image_order'] > 0) {
-        pwg_set_session_var('image_order', (int)$_GET['image_order']);
+$image_order = input_int('image_order', null, $_GET);
+if ($image_order !== null) {
+    if ($image_order > 0) {
+        pwg_set_session_var('image_order', $image_order);
     } else {
         pwg_unset_session_var('image_order');
     }
@@ -44,10 +45,11 @@ if (isset($_GET['image_order'])) {
         )
     );
 }
-if (isset($_GET['display'])) {
+$display = input_string('display', null, $_GET);
+if ($display !== null) {
     $page['meta_robots']['noindex'] = 1;
-    if (array_key_exists((string) $_GET['display'], ImageStdParams::get_defined_type_map())) {
-        pwg_set_session_var('index_deriv', $_GET['display']);
+    if (array_key_exists($display, ImageStdParams::get_defined_type_map())) {
+        pwg_set_session_var('index_deriv', $display);
     }
 }
 
@@ -68,7 +70,7 @@ if (count($page['items']) > $page['nb_image_page']) {
 $template->assign('thumb_navbar', $page['navigation_bar']);
 
 // caddie filling :-)
-if (isset($_GET['caddie'])) {
+if (input_string('caddie', null, $_GET) !== null) {
     fill_caddie($page['items']);
     redirect(duplicate_index_url());
 }
@@ -350,7 +352,7 @@ if (empty($page['is_external'])) {
     // slideshow
     // execute after init thumbs in order to have all picture informations
     if (!empty($page['cat_slideshow_url'])) {
-        if (isset($_GET['slideshow'])) {
+        if (input_string('slideshow', null, $_GET) !== null) {
             redirect($page['cat_slideshow_url']);
         } elseif ($conf['index_slideshow_icon']) {
             $template->assign('U_SLIDESHOW', $page['cat_slideshow_url']);

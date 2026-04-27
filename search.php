@@ -68,8 +68,9 @@ if (is_a_guest() or is_generic() or $filters_conf['last_filters_conf'] == false)
 }
 
 $words = array();
-if (!empty($_GET['q'])) {
-    $words = split_allwords($_GET['q']);
+$q = input_string('q', null, $_GET);
+if (!empty($q)) {
+    $words = split_allwords($q);
 }
 
 if (count($words) > 0 or in_array('allwords', $fields)) {
@@ -81,14 +82,15 @@ if (count($words) > 0 or in_array('allwords', $fields)) {
 }
 
 $cat_ids = array();
-if (isset($_GET['cat_id'])) {
+$cat_id = input_int('cat_id', null, $_GET);
+if ($cat_id !== null) {
     check_input_parameter('cat_id', $_GET, false, PATTERN_ID);
 
     $query = '
 SELECT
     *
   FROM '.USER_CACHE_CATEGORIES_TABLE.'
-  WHERE cat_id = '.$_GET['cat_id'].'
+  WHERE cat_id = '.$cat_id.'
     AND user_id = '.$user['id'].'
 ;';
     $found_categories = query2array($query);
@@ -96,7 +98,7 @@ SELECT
         page_not_found(l10n('Requested album does not exist'));
     }
 
-    $cat_ids = array($_GET['cat_id']);
+    $cat_ids = array($cat_id);
 }
 
 if (count($cat_ids) > 0 or in_array('cat', $fields)) {
@@ -108,9 +110,10 @@ if (count($cat_ids) > 0 or in_array('cat', $fields)) {
 
 if (count(get_available_tags()) > 0) {
     $tag_ids = array();
-    if (isset($_GET['tag_id'])) {
+    $tag_id = input_string('tag_id', null, $_GET);
+    if ($tag_id !== null) {
         check_input_parameter('tag_id', $_GET, false, '/^\d+(,\d+)*$/');
-        $tag_ids = explode(',', $_GET['tag_id']);
+        $tag_ids = explode(',', $tag_id);
     }
 
     if (count($tag_ids) > 0 or in_array('tags', $fields)) {

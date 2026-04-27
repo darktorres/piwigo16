@@ -42,7 +42,7 @@ function process_verification_code(): bool
     }
 
     // empty param
-    $username_or_email = trim($_POST['username_or_email'] ?? '');
+    $username_or_email = input_string('username_or_email', '', $_POST);
     if (empty($username_or_email)) {
         $page['errors']['password_form_error'] = l10n('Invalid username or email');
         return false;
@@ -134,7 +134,7 @@ function process_password_request(): bool
     $_SESSION['reset_password_code']['attempts']++;
 
     $is_valid = true;
-    $user_code = trim($_POST['user_code'] ?? '');
+    $user_code = input_string('user_code', '', $_POST);
 
     if (
         empty($user_code) // empty user code
@@ -296,11 +296,12 @@ function reset_password(): bool
 
 function reset_password_key()
 {
-    if (!isset($_GET['key'])) {
+    $key = input_string('key', null, $_GET);
+    if ($key === null) {
         return false;
     }
 
-    $user_id = check_password_reset_key($_GET['key']);
+    $user_id = check_password_reset_key($key);
 
     if (!is_numeric($user_id)) {
         return false;
@@ -323,24 +324,26 @@ function reset_password_code()
 // +-----------------------------------------------------------------------+
 // | Process form                                                          |
 // +-----------------------------------------------------------------------+
-if (isset($_POST['submit'])) {
+$get_action = input_string('action', null, $_GET);
+
+if (input_string('submit', null, $_POST) !== null) {
     check_pwg_token();
 
-    if ('lost' == $_GET['action']) {
+    if ('lost' == $get_action) {
         if (process_verification_code()) {
             $page['infos'][] = l10n('If your account exists, a verification code has been sent to your email address.');
             $page['action'] = 'lost_code';
         }
     }
 
-    if ('lost_code' == $_GET['action']) {
+    if ('lost_code' == $get_action) {
         if (process_password_request()) {
             $page['infos'][] = l10n('Verification successful! You can now choose a new password.');
             $page['action'] = 'reset';
         }
     }
 
-    if ('reset' == $_GET['action']) {
+    if ('reset' == $get_action) {
         if (reset_password()) {
             $page['action'] = 'reset_end';
         }
@@ -352,17 +355,19 @@ if (isset($_POST['submit'])) {
 // +-----------------------------------------------------------------------+
 
 // a connected user can't reset the password from a mail
-if (isset($_GET['key']) and !is_a_guest()) {
+if (input_string('key', null, $_GET) !== null && !is_a_guest()) {
     unset($_GET['key']);
 }
 
-if (isset($_GET['key']) and !isset($_POST['submit'])) {
+// read key after potential unset above (input_string reads $_GET live)
+$get_key = input_string('key', null, $_GET);
+if ($get_key !== null && input_string('submit', null, $_POST) === null) {
     $first_login = false;
-    $user_id = check_password_reset_key($_GET['key']);
+    $user_id = check_password_reset_key($get_key);
     if (is_numeric($user_id)) {
         $userdata = getuserdata($user_id, false);
         $page['username'] = $userdata['username'];
-        $template->assign('key', $_GET['key']);
+        $template->assign('key', $get_key);
         $first_login = has_already_logged_in($user_id);
 
         if (!isset($page['action'])) {
@@ -374,15 +379,15 @@ if (isset($_GET['key']) and !isset($_POST['submit'])) {
 }
 
 if (!isset($page['action'])) {
-    if (!isset($_GET['action'])) {
+    if ($get_action === null) {
         $page['action'] = 'lost';
-    } elseif (in_array($_GET['action'], ['lost', 'lost_code', 'reset', 'none'])) {
-        $page['action'] = $_GET['action'];
+    } elseif (in_array($get_action, ['lost', 'lost_code', 'reset', 'none'])) {
+        $page['action'] = $get_action;
     }
 }
 
 if ('reset' == $page['action']) {
-    if ((!isset($_GET['key']) and (is_a_guest() or is_generic())) and !isset($_SESSION['valid_reset_password_code'])) {
+    if (($get_key === null and (is_a_guest() or is_generic())) and !isset($_SESSION['valid_reset_password_code'])) {
         redirect(get_gallery_home_url());
     }
 }
@@ -406,8 +411,9 @@ $title = l10n('Password Reset');
 if ('lost' == $page['action']) {
     $title = l10n('Forgot your password?');
 
-    if (isset($_POST['username_or_email'])) {
-        $template->assign('username_or_email', htmlspecialchars(stripslashes((string) $_POST['username_or_email'])));
+    $post_uoe = input_string('username_or_email', null, $_POST);
+    if ($post_uoe !== null) {
+        $template->assign('username_or_email', htmlspecialchars(stripslashes($post_uoe)));
     }
 } elseif ('reset' == $page['action'] and isset($first_login) and $first_login) {
     $title = l10n('Welcome');
@@ -434,12 +440,13 @@ if (!isset($themeconf['hide_menu_on']) or !in_array('thePasswordPage', $themecon
 }
 
 //Load language if cookie is set from login/register/password pages
-if (isset($_COOKIE['lang']) and $user['language'] != $_COOKIE['lang']) {
-    if (!array_key_exists((string) $_COOKIE['lang'], get_languages())) {
-        fatal_error('[Hacking attempt] the input parameter "'.$_COOKIE['lang'].'" is not valid');
+$cookie_lang = input_string('lang', null, $_COOKIE);
+if ($cookie_lang !== null && $user['language'] != $cookie_lang) {
+    if (!array_key_exists($cookie_lang, get_languages())) {
+        fatal_error('[Hacking attempt] the input parameter "'.$cookie_lang.'" is not valid');
     }
 
-    $user['language'] = $_COOKIE['lang'];
+    $user['language'] = $cookie_lang;
     load_language('common.lang', '', ['language' => $user['language']]);
 }
 

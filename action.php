@@ -54,14 +54,15 @@ function do_error($code, $str)
     exit();
 }
 
-if ($conf['enable_formats'] and isset($_GET['format'])) {
+if ($conf['enable_formats'] and input_string('format', null, $_GET) !== null) {
     check_input_parameter('format', $_GET, false, PATTERN_ID);
+    $get_format = input_int('format', null, $_GET);
 
     $query = '
 SELECT
     *
   FROM '.IMAGE_FORMAT_TABLE.'
-  WHERE format_id = '.$_GET['format'].'
+  WHERE format_id = '.$get_format.'
 ;';
     $formats = query2array($query);
 
@@ -76,16 +77,18 @@ SELECT
 }
 
 
-if (!isset($_GET['id'])
-    or !is_numeric($_GET['id'])
-    or !isset($_GET['part'])
-    or !in_array($_GET['part'], array('e','r','f'))) {
+$get_id = input_int('id', null, $_GET);
+$get_part = input_string('part', null, $_GET);
+if ($get_id === null
+    or !is_numeric($get_id)
+    or $get_part === null
+    or !in_array($get_part, array('e','r','f'))) {
     do_error(400, 'Invalid request - id/part');
 }
 
 $query = '
 SELECT * FROM '. IMAGES_TABLE.'
-  WHERE id='.$_GET['id'].'
+  WHERE id='.$get_id.'
 ;';
 
 $element_info = pwg_db_fetch_assoc(pwg_query($query));
@@ -95,7 +98,8 @@ if (empty($element_info)) {
 
 // special download action for admins
 $is_admin_download = false;
-if (is_admin() and isset($_GET['pwg_token']) and get_pwg_token() == $_GET['pwg_token']) {
+$get_pwg_token = input_string('pwg_token', null, $_GET);
+if (is_admin() and $get_pwg_token !== null and get_pwg_token() == $get_pwg_token) {
     $is_admin_download = true;
     $user['enabled_high'] = true;
 }
@@ -108,7 +112,7 @@ $query = '
 SELECT id
   FROM '.CATEGORIES_TABLE.'
     INNER JOIN '.IMAGE_CATEGORY_TABLE.' ON category_id = id
-  WHERE image_id = '.$_GET['id'].'
+  WHERE image_id = '.$get_id.'
 '.get_sql_condition_FandF(
     array(
       'forbidden_categories' => 'category_id',
@@ -124,7 +128,7 @@ if (!$is_admin_download and pwg_db_num_rows(pwg_query($query)) < 1) {
 
 include_once(PHPWG_ROOT_PATH.'include/functions_picture.inc.php');
 $file = '';
-switch ($_GET['part']) {
+switch ($get_part) {
     case 'e':
         if ($src_image->is_original() and !$user['enabled_high']) {// we have a photo and the user has no access to HD
             $deriv = new DerivativeImage(IMG_XXLARGE, $src_image);
@@ -147,12 +151,12 @@ if (empty($file)) {
     do_error(404, 'Requested file not found');
 }
 
-if ($_GET['part'] == 'e') {
-    pwg_log($_GET['id'], 'high');
-} elseif ($_GET['part'] == 'e') {
-    pwg_log($_GET['id'], 'other');
-} elseif ($_GET['part'] == 'f') {
-    pwg_log($_GET['id'], 'high', $format['format_id']);
+if ($get_part == 'e') {
+    pwg_log($get_id, 'high');
+} elseif ($get_part == 'e') {
+    pwg_log($get_id, 'other');
+} elseif ($get_part == 'f') {
+    pwg_log($get_id, 'high', $format['format_id']);
 }
 
 trigger_notify('loc_action_before_http_headers');
@@ -178,7 +182,7 @@ if (!url_is_remote($file)) {
     // HTTP/1.1 only
     $http_headers[] = 'Cache-Control: private, must-revalidate, max-age='.$max_age;*/
 
-    if ('f' != $_GET['part'] and isset($_SERVER['HTTP_IF_MODIFIED_SINCE'])) {
+    if ('f' != $get_part and isset($_SERVER['HTTP_IF_MODIFIED_SINCE'])) {
         set_status_header(304);
         foreach ($http_headers as $header) {
             header($header);
@@ -193,7 +197,7 @@ if (!isset($ctype)) { // give it a guess
 
 $http_headers[] = 'Content-Type: '.$ctype;
 
-if (isset($_GET['download'])) {
+if (input_string('download', null, $_GET) !== null) {
     $http_headers[] = 'Content-Disposition: attachment; filename="'.htmlspecialchars_decode($element_info['file']).'";';
     $http_headers[] = 'Content-Transfer-Encoding: binary';
 } else {

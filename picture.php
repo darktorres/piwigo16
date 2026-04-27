@@ -102,7 +102,7 @@ SELECT id
 }
 
 // There is cookie, so we must handle it at the beginning
-if (isset($_GET['metadata'])) {
+if (input_string('metadata', null, $_GET) !== null) {
     if (pwg_get_session_var('show_metadata') == null) {
         pwg_set_session_var('show_metadata', 1);
     } else {
@@ -126,9 +126,10 @@ function default_picture_content($content, array $element_info)
         return $content;
     }
 
-    if (isset($_COOKIE['picture_deriv'])) {
-        if (array_key_exists((string) $_COOKIE['picture_deriv'], ImageStdParams::get_defined_type_map())) {
-            pwg_set_session_var('picture_deriv', $_COOKIE['picture_deriv']);
+    $cookie_picture_deriv = input_string('picture_deriv', null, $_COOKIE);
+    if ($cookie_picture_deriv !== null) {
+        if (array_key_exists($cookie_picture_deriv, ImageStdParams::get_defined_type_map())) {
+            pwg_set_session_var('picture_deriv', $cookie_picture_deriv);
         }
         setcookie('picture_deriv', false, ['expires' => 0, 'path' => cookie_path()]);
     }
@@ -232,8 +233,9 @@ $url_self = duplicate_picture_url();
  * Actions finish by a redirection
  */
 
-if (isset($_GET['action'])) {
-    switch ($_GET['action']) {
+$get_action = input_string('action', null, $_GET);
+if ($get_action !== null) {
+    switch ($get_action) {
         case 'add_to_favorites':
             {
                 $query = '
@@ -274,7 +276,7 @@ UPDATE '.CATEGORIES_TABLE.'
   WHERE id = '.$page['category']['id'].'
 ;';
                     pwg_query($query);
-                    pwg_activity('album', $page['category']['id'], 'edit', ['action' => $_GET['action'], 'image_id' => $page['image_id']]);
+                    pwg_activity('album', $page['category']['id'], 'edit', ['action' => $get_action, 'image_id' => $page['image_id']]);
 
                     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
                     invalidate_user_cache();
@@ -293,26 +295,28 @@ UPDATE '.CATEGORIES_TABLE.'
         case 'rate':
             {
                 include_once(PHPWG_ROOT_PATH.'include/functions_rate.inc.php');
-                rate_picture($page['image_id'], $_POST['rate']);
+                rate_picture($page['image_id'], input_int('rate', 0, $_POST));
                 redirect($url_self);
             }
         case 'edit_comment':
             {
                 include_once(PHPWG_ROOT_PATH.'include/functions_comment.inc.php');
                 check_input_parameter('comment_to_edit', $_GET, false, PATTERN_ID);
-                $author_id = get_comment_author_id($_GET['comment_to_edit']);
+                $comment_to_edit = input_int('comment_to_edit', null, $_GET);
+                $author_id = get_comment_author_id($comment_to_edit);
 
                 if (can_manage_comment('edit', $author_id)) {
-                    if (!empty($_POST['content'])) {
+                    $post_content = input_string('content', null, $_POST);
+                    if (!empty($post_content)) {
                         check_pwg_token();
                         $comment_action = update_user_comment(
                             [
-                            'comment_id' => $_GET['comment_to_edit'],
+                            'comment_id' => $comment_to_edit,
                             'image_id' => $page['image_id'],
-                            'content' => $_POST['content'],
-                            'website_url' => @$_POST['website_url'],
+                            'content' => $post_content,
+                            'website_url' => input_string('website_url', null, $_POST),
                             ],
-                            $_POST['key']
+                            input_string('key', null, $_POST) ?? ''
                         );
 
                         $perform_redirect = false;
@@ -337,7 +341,7 @@ UPDATE '.CATEGORIES_TABLE.'
                         unset($_POST['content']);
                     }
 
-                    $edit_comment = $_GET['comment_to_edit'];
+                    $edit_comment = $comment_to_edit;
                 }
                 break;
             }
@@ -348,11 +352,12 @@ UPDATE '.CATEGORIES_TABLE.'
                 include_once(PHPWG_ROOT_PATH.'include/functions_comment.inc.php');
 
                 check_input_parameter('comment_to_delete', $_GET, false, PATTERN_ID);
+                $comment_to_delete = input_int('comment_to_delete', null, $_GET);
 
-                $author_id = get_comment_author_id($_GET['comment_to_delete']);
+                $author_id = get_comment_author_id($comment_to_delete);
 
                 if (can_manage_comment('delete', $author_id)) {
-                    delete_user_comment($_GET['comment_to_delete']);
+                    delete_user_comment($comment_to_delete);
                 }
 
                 redirect($url_self);
@@ -364,11 +369,12 @@ UPDATE '.CATEGORIES_TABLE.'
                 include_once(PHPWG_ROOT_PATH.'include/functions_comment.inc.php');
 
                 check_input_parameter('comment_to_validate', $_GET, false, PATTERN_ID);
+                $comment_to_validate = input_int('comment_to_validate', null, $_GET);
 
-                $author_id = get_comment_author_id($_GET['comment_to_validate']);
+                $author_id = get_comment_author_id($comment_to_validate);
 
                 if (can_manage_comment('validate', $author_id)) {
-                    validate_user_comment($_GET['comment_to_validate']);
+                    validate_user_comment($comment_to_validate);
                 }
 
                 redirect($url_self);
@@ -379,7 +385,7 @@ UPDATE '.CATEGORIES_TABLE.'
 
 
 //---------- incrementation of the number of hits
-$inc_hit_count = !isset($_POST['content']);
+$inc_hit_count = input_string('content', null, $_POST) === null;
 // don't increment counter if in the Mozilla Firefox prefetch
 if (isset($_SERVER['HTTP_X_MOZ']) and $_SERVER['HTTP_X_MOZ'] == 'prefetch') {
     $inc_hit_count = false;
@@ -492,11 +498,12 @@ while ($row = pwg_db_fetch_assoc($result)) {
 $slideshow_params = [];
 $slideshow_url_params = [];
 
-if (isset($_GET['slideshow'])) {
+$get_slideshow = input_string('slideshow', null, $_GET);
+if ($get_slideshow !== null) {
     $page['slideshow'] = true;
     $page['meta_robots'] = ['noindex' => 1, 'nofollow' => 1];
 
-    $slideshow_params = decode_slideshow_params($_GET['slideshow']);
+    $slideshow_params = decode_slideshow_params($get_slideshow);
     $slideshow_url_params['slideshow'] = encode_slideshow_params($slideshow_params);
 
     if ($slideshow_params['play']) {
@@ -546,7 +553,7 @@ $metadata_showable = trigger_change(
     $picture['current']
 );
 
-if (isset($_GET['metadata'])) {
+if (input_string('metadata', null, $_GET) !== null) {
     $page['meta_robots'] = ['noindex' => 1, 'nofollow' => 1];
 }
 

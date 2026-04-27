@@ -50,8 +50,8 @@ function ts_to_iso8601($ts)
 
 check_input_parameter('feed', $_GET, false, '/^[0-9a-z]{50}$/i');
 
-$feed_id = isset($_GET['feed']) ? $_GET['feed'] : '';
-$image_only = isset($_GET['image_only']);
+$feed_id = input_string('feed', '', $_GET);
+$image_only = input_string('image_only', null, $_GET) !== null;
 
 // echo '<pre>'.generate_key(50).'</pre>';
 if (!empty($feed_id)) {

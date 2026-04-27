@@ -29,10 +29,9 @@ $page['body_id'] = 'theTagsPage';
 $template->set_filenames(array('tags' => 'tags.tpl'));
 
 $page['display_mode'] = $conf['tags_default_display_mode'];
-if (isset($_GET['display_mode'])) {
-    if (in_array($_GET['display_mode'], array('cloud', 'letters'))) {
-        $page['display_mode'] = $_GET['display_mode'];
-    }
+$display_mode = input_string('display_mode', null, $_GET);
+if ($display_mode !== null && in_array($display_mode, ['cloud', 'letters'])) {
+    $page['display_mode'] = $display_mode;
 }
 
 foreach (array('cloud', 'letters') as $mode) {

@@ -80,6 +80,10 @@ if (!defined('PHPWG_INSTALLED')) {
     header('Location: install.php');
     exit;
 }
+// Self-heal: pre-fork installs may have $conf['dblayer'] = 'mysql' (removed extension).
+if (($conf['dblayer'] ?? 'mysqli') === 'mysql') {
+    $conf['dblayer'] = 'mysqli';
+}
 include(PHPWG_ROOT_PATH .'include/dblayer/functions_'.$conf['dblayer'].'.inc.php');
 
 if (isset($conf['show_php_errors']) && !empty($conf['show_php_errors'])) {

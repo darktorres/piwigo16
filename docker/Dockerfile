@@ -1,4 +1,4 @@
-FROM php:8.5-rc-apache
+FROM php:8.5-apache
 
 RUN apt-get update -qq \
  && apt-get install -y --no-install-recommends \

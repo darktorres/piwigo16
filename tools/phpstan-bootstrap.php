@@ -16,9 +16,9 @@ $user = [];
 $page = ['infos' => [], 'errors' => [], 'warnings' => [], 'messages' => [], 'body_classes' => [], 'body_data' => []];
 /** @var array<string,string> $lang */
 $lang = [];
-/** @var \Template|null $template */
+/** @var \Piwigo\Template\Template|null $template */
 $template = null;
-/** @var \Logger|null $logger */
+/** @var \Piwigo\Core\Logger|null $logger */
 $logger = null;
 /** @var \mysqli|null $mysqli */
 $mysqli = null;

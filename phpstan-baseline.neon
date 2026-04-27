@@ -427,6 +427,24 @@ parameters:
 			path: admin/include/batch_manager_filters.inc.php
 
 		-
+			message: '#^PHPDoc tag @param has invalid value \(c13y object\)\: Unexpected token "object", expected variable at offset 48 on line 4$#'
+			identifier: phpDoc.parseError
+			count: 2
+			path: admin/include/c13y_internal.class.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(c13y object\)\: Unexpected token "object", expected variable at offset 51 on line 4$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: admin/include/c13y_internal.class.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(user_id, action\)\: Unexpected token ",", expected variable at offset 58 on line 4$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: admin/include/c13y_internal.class.php
+
+		-
 			message: '#^Variable \$password might not be defined\.$#'
 			identifier: variable.undefined
 			count: 2
@@ -441,6 +459,48 @@ parameters:
 		-
 			message: '#^Function trigger_notify invoked with 2 parameters, 0 required\.$#'
 			identifier: arguments.count
+			count: 1
+			path: admin/include/check_integrity.class.php
+
+		-
+			message: '#^Method check_integrity\:\:get_htlm_links_more_info\(\) has invalid return type html\.$#'
+			identifier: class.notFound
+			count: 1
+			path: admin/include/check_integrity.class.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(anomaly arguments\)\: Unexpected token "arguments", expected variable at offset 57 on line 4$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: admin/include/check_integrity.class.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(ignore list array\)\: Unexpected token "list", expected variable at offset 59 on line 4$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: admin/include/check_integrity.class.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(void\)\: Unexpected token "\\n     \* ", expected variable at offset 54 on line 4$#'
+			identifier: phpDoc.parseError
+			count: 2
+			path: admin/include/check_integrity.class.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(void\)\: Unexpected token "\\n     \* ", expected variable at offset 59 on line 4$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: admin/include/check_integrity.class.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(void\)\: Unexpected token "\\n     \* ", expected variable at offset 68 on line 4$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: admin/include/check_integrity.class.php
+
+		-
+			message: '#^PHPDoc tag @return with type html is incompatible with native type string\.$#'
+			identifier: return.phpDocType
 			count: 1
 			path: admin/include/check_integrity.class.php
 
@@ -467,6 +527,12 @@ parameters:
 			identifier: variable.undefined
 			count: 3
 			path: admin/include/configuration_watermark_process.inc.php
+
+		-
+			message: '#^Binary operation "\-" between int\<1, max\> and string results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: admin/include/functions.php
 
 		-
 			message: '''
@@ -496,6 +562,12 @@ parameters:
 			path: admin/include/functions.php
 
 		-
+			message: '#^Function get_image_tag_ids\(\) has invalid return type associative\.$#'
+			identifier: class.notFound
+			count: 1
+			path: admin/include/functions.php
+
+		-
 			message: '#^Function mkgetdir invoked with 2 parameters, 1 required\.$#'
 			identifier: arguments.count
 			count: 1
@@ -505,6 +577,78 @@ parameters:
 			message: '#^Function trigger_notify invoked with 2 parameters, 0 required\.$#'
 			identifier: arguments.count
 			count: 9
+			path: admin/include/functions.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(array categories\)\: Unexpected token "categories", expected variable at offset 165 on line 7$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: admin/include/functions.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(int category_id\)\: Unexpected token "category_id", expected variable at offset 155 on line 7$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: admin/include/functions.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(int\[\] images\)\: Unexpected token "images", expected variable at offset 183 on line 8$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: admin/include/functions.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(int\[\] intcat_ids\)\: Unexpected token "intcat_ids", expected variable at offset 74 on line 4$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: admin/include/functions.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(int\[\] list of image ids and there paths\)\: Unexpected token "list", expected variable at offset 86 on line 3$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: admin/include/functions.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(string\|string\[\] list of keys to retrieve \(categories,groups,images,tags,users\)\)\: Unexpected token "list", expected variable at offset 287 on line 7$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: admin/include/functions.php
+
+		-
+			message: '#^PHPDoc tag @param references unknown parameter\: \$basedir$#'
+			identifier: parameter.notFound
+			count: 1
+			path: admin/include/functions.php
+
+		-
+			message: '#^PHPDoc tag @param references unknown parameter\: \$categories$#'
+			identifier: parameter.notFound
+			count: 1
+			path: admin/include/functions.php
+
+		-
+			message: '#^PHPDoc tag @param references unknown parameter\: \$elements_ids$#'
+			identifier: parameter.notFound
+			count: 1
+			path: admin/include/functions.php
+
+		-
+			message: '#^PHPDoc tag @param references unknown parameter\: \$path_to_file$#'
+			identifier: parameter.notFound
+			count: 1
+			path: admin/include/functions.php
+
+		-
+			message: '#^PHPDoc tag @return with type associative is incompatible with native type array\.$#'
+			identifier: return.phpDocType
+			count: 1
+			path: admin/include/functions.php
+
+		-
+			message: '#^Parameter \$dest of function fetchRemote\(\) has invalid type Ressource\.$#'
+			identifier: class.notFound
+			count: 1
 			path: admin/include/functions.php
 
 		-
@@ -523,11 +667,23 @@ parameters:
 			path: admin/include/functions_history.inc.php
 
 		-
+			message: '#^PHPDoc tag @param has invalid value \(array\)\: Unexpected token "\\n ", expected variable at offset 147 on line 7$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: admin/include/functions_history.inc.php
+
+		-
 			message: '''
 				#^Call to deprecated function hash_from_query\(\)\:
 				2\.6$#
 			'''
 			identifier: function.deprecated
+			count: 1
+			path: admin/include/functions_metadata.php
+
+		-
+			message: '#^Default value of the parameter \#1 \$category_id \(string\) of function get_filelist\(\) is incompatible with type int\.$#'
+			identifier: parameter.defaultValue
 			count: 1
 			path: admin/include/functions_metadata.php
 
@@ -553,6 +709,66 @@ parameters:
 			path: admin/include/functions_permalinks.php
 
 		-
+			message: '#^PHPDoc tag @param has invalid value \(boolean is_hit if true update the usage counters on the old permalinks\)\: Unexpected token "is_hit", expected variable at offset 117 on line 3$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: admin/include/functions_permalinks.php
+
+		-
+			message: '''
+				#^PHPDoc tag @param has invalid value \(boolean save if true, the current category\-permalink association
+				is saved in the old permalinks table in case external links hit it\)\: Unexpected token "save", expected variable at offset 142 on line 4$#
+			'''
+			identifier: phpDoc.parseError
+			count: 1
+			path: admin/include/functions_permalinks.php
+
+		-
+			message: '''
+				#^PHPDoc tag @param has invalid value \(boolean save if true, the current category\-permalink association
+				is saved in the old permalinks table in case external links hit it\)\: Unexpected token "save", expected variable at offset 174 on line 5$#
+			'''
+			identifier: phpDoc.parseError
+			count: 1
+			path: admin/include/functions_permalinks.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(int cat_id the target category id\)\: Unexpected token "cat_id", expected variable at offset 81 on line 3$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: admin/include/functions_permalinks.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(int cat_id the target category id\)\: Unexpected token "cat_id", expected variable at offset 94 on line 3$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: admin/include/functions_permalinks.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(string permalink the new permalink\)\: Unexpected token "permalink", expected variable at offset 128 on line 4$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: admin/include/functions_permalinks.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(string permalink\)\: Unexpected token "permalink", expected variable at offset 89 on line 2$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: admin/include/functions_permalinks.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(string permalink\)\: Unexpected token "permalink", expected variable at offset 93 on line 2$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: admin/include/functions_permalinks.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(string file \- php script full name\)\: Unexpected token "file", expected variable at offset 60 on line 3$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: admin/include/functions_plugins.inc.php
+
+		-
 			message: '''
 				#^Call to deprecated function array_from_query\(\)\:
 				2\.6$#
@@ -568,9 +784,27 @@ parameters:
 			path: admin/include/functions_upgrade.php
 
 		-
+			message: '#^Binary operation "\*" between non\-falsy\-string and 10 results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: admin/include/functions_upload.inc.php
+
+		-
+			message: '#^Binary operation "\*\=" between string and 1024\|1048576\|1073741824 results in an error\.$#'
+			identifier: assignOp.invalid
+			count: 1
+			path: admin/include/functions_upload.inc.php
+
+		-
 			message: '#^Function trigger_notify invoked with 2 parameters, 0 required\.$#'
 			identifier: arguments.count
 			count: 2
+			path: admin/include/functions_upload.inc.php
+
+		-
+			message: '#^PHPDoc tag @return has invalid value \(array\(width, height\)\)\: Unexpected token "\(", expected TOKEN_HORIZONTAL_WS at offset 236 on line 7$#'
+			identifier: phpDoc.parseError
+			count: 1
 			path: admin/include/functions_upload.inc.php
 
 		-
@@ -584,6 +818,42 @@ parameters:
 			identifier: variable.undefined
 			count: 1
 			path: admin/include/image.class.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(array \- errors\)\: Unexpected token "\-", expected variable at offset 122 on line 5$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: admin/include/languages.class.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(string \- action\)\: Unexpected token "\-", expected variable at offset 58 on line 3$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: admin/include/languages.class.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(string \- install or upgrade\)\: Unexpected token "\-", expected variable at offset 75 on line 4$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: admin/include/languages.class.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(string \- language id or extension id\)\: Unexpected token "\-", expected variable at offset 177 on line 6$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: admin/include/languages.class.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(string \- language id\)\: Unexpected token "\-", expected variable at offset 88 on line 4$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: admin/include/languages.class.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(string \- remote revision identifier \(numeric\)\)\: Unexpected token "\-", expected variable at offset 117 on line 5$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: admin/include/languages.class.php
 
 		-
 			message: '#^Variable \$main_filepath might not be defined\.$#'
@@ -688,6 +958,42 @@ parameters:
 			path: admin/include/plugins.class.php
 
 		-
+			message: '#^PHPDoc tag @param has invalid value \(array \- errors\)\: Unexpected token "\-", expected variable at offset 120 on line 5$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: admin/include/plugins.class.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(string \- action\)\: Unexpected token "\-", expected variable at offset 58 on line 3$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: admin/include/plugins.class.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(string \- archive URL\)\: Unexpected token "\-", expected variable at offset 109 on line 4$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: admin/include/plugins.class.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(string \- install or upgrade\)\: Unexpected token "\-", expected variable at offset 66 on line 3$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: admin/include/plugins.class.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(string \- plugin id or extension id\)\: Unexpected token "\-", expected variable at offset 145 on line 5$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: admin/include/plugins.class.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(string \- plugin id\)\: Unexpected token "\-", expected variable at offset 88 on line 4$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: admin/include/plugins.class.php
+
+		-
 			message: '#^Variable \$errors in empty\(\) always exists and is always falsy\.$#'
 			identifier: empty.variable
 			count: 1
@@ -747,6 +1053,42 @@ parameters:
 		-
 			message: '#^Function theme_delete not found\.$#'
 			identifier: function.notFound
+			count: 1
+			path: admin/include/themes.class.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(array \- errors\)\: Unexpected token "\-", expected variable at offset 119 on line 5$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: admin/include/themes.class.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(string \- action\)\: Unexpected token "\-", expected variable at offset 58 on line 3$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: admin/include/themes.class.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(string \- install or upgrade\)\: Unexpected token "\-", expected variable at offset 72 on line 4$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: admin/include/themes.class.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(string \- remote revision identifier \(numeric\)\)\: Unexpected token "\-", expected variable at offset 114 on line 5$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: admin/include/themes.class.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(string \- theme id or extension id\)\: Unexpected token "\-", expected variable at offset 174 on line 6$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: admin/include/themes.class.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(string \- theme id\)\: Unexpected token "\-", expected variable at offset 88 on line 4$#'
+			identifier: phpDoc.parseError
 			count: 1
 			path: admin/include/themes.class.php
 
@@ -1537,6 +1879,78 @@ parameters:
 			path: comments.php
 
 		-
+			message: '#^Access to property \$author on an unknown class FeedItem\.$#'
+			identifier: class.notFound
+			count: 4
+			path: feed.php
+
+		-
+			message: '#^Access to property \$date on an unknown class FeedItem\.$#'
+			identifier: class.notFound
+			count: 4
+			path: feed.php
+
+		-
+			message: '#^Access to property \$description on an unknown class FeedItem\.$#'
+			identifier: class.notFound
+			count: 6
+			path: feed.php
+
+		-
+			message: '#^Access to property \$descriptionHtmlSyndicated on an unknown class FeedItem\.$#'
+			identifier: class.notFound
+			count: 4
+			path: feed.php
+
+		-
+			message: '#^Access to property \$encoding on an unknown class UniversalFeedCreator\.$#'
+			identifier: class.notFound
+			count: 2
+			path: feed.php
+
+		-
+			message: '#^Access to property \$guid on an unknown class FeedItem\.$#'
+			identifier: class.notFound
+			count: 4
+			path: feed.php
+
+		-
+			message: '#^Access to property \$link on an unknown class FeedItem\.$#'
+			identifier: class.notFound
+			count: 4
+			path: feed.php
+
+		-
+			message: '#^Access to property \$link on an unknown class UniversalFeedCreator\.$#'
+			identifier: class.notFound
+			count: 2
+			path: feed.php
+
+		-
+			message: '#^Access to property \$title on an unknown class FeedItem\.$#'
+			identifier: class.notFound
+			count: 4
+			path: feed.php
+
+		-
+			message: '#^Access to property \$title on an unknown class UniversalFeedCreator\.$#'
+			identifier: class.notFound
+			count: 3
+			path: feed.php
+
+		-
+			message: '#^Call to method addItem\(\) on an unknown class UniversalFeedCreator\.$#'
+			identifier: class.notFound
+			count: 2
+			path: feed.php
+
+		-
+			message: '#^Call to method saveFeed\(\) on an unknown class UniversalFeedCreator\.$#'
+			identifier: class.notFound
+			count: 1
+			path: feed.php
+
+		-
 			message: '#^Instantiated class FeedItem not found\.$#'
 			identifier: class.notFound
 			count: 2
@@ -1545,6 +1959,18 @@ parameters:
 		-
 			message: '#^Instantiated class UniversalFeedCreator not found\.$#'
 			identifier: class.notFound
+			count: 1
+			path: feed.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(int timestamp\)\: Unexpected token "timestamp", expected variable at offset 221 on line 7$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: feed.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(string mysql datetime format\)\: Unexpected token "mysql", expected variable at offset 156 on line 5$#'
+			identifier: phpDoc.parseError
 			count: 1
 			path: feed.php
 
@@ -1565,6 +1991,60 @@ parameters:
 			identifier: variable.undefined
 			count: 2
 			path: feed.php
+
+		-
+			message: '#^Call to an undefined method pwg_image\:\:compose\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: i.php
+
+		-
+			message: '#^Call to an undefined method pwg_image\:\:crop\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: i.php
+
+		-
+			message: '#^Call to an undefined method pwg_image\:\:get_height\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: i.php
+
+		-
+			message: '#^Call to an undefined method pwg_image\:\:get_width\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: i.php
+
+		-
+			message: '#^Call to an undefined method pwg_image\:\:resize\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: i.php
+
+		-
+			message: '#^Call to an undefined method pwg_image\:\:rotate\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: i.php
+
+		-
+			message: '#^Call to an undefined method pwg_image\:\:sharpen\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: i.php
+
+		-
+			message: '#^Call to an undefined method pwg_image\:\:strip\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: i.php
+
+		-
+			message: '#^Call to an undefined method pwg_image\:\:write\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: i.php
 
 		-
 			message: '#^Path in include\(\) "\./local/config/database\.inc\.php" is not a file or it does not exist\.$#'
@@ -1633,9 +2113,33 @@ parameters:
 			path: include/Logger.class.php
 
 		-
+			message: '#^PHPDoc tag @param references unknown parameter\: \$line$#'
+			identifier: parameter.notFound
+			count: 1
+			path: include/Logger.class.php
+
+		-
+			message: '#^Method PwgBase32\:\:encode\(\) has invalid return type base32\.$#'
+			identifier: class.notFound
+			count: 1
+			path: include/base32.class.php
+
+		-
+			message: '#^PHPDoc tag @return with type base32 is incompatible with native type string\.$#'
+			identifier: return.phpDocType
+			count: 1
+			path: include/base32.class.php
+
+		-
 			message: '#^Function trigger_notify invoked with 2 parameters, 0 required\.$#'
 			identifier: arguments.count
 			count: 3
+			path: include/block.class.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(string\)\: Unexpected token "\\n     ", expected variable at offset 24 on line 2$#'
+			identifier: phpDoc.parseError
+			count: 1
 			path: include/block.class.php
 
 		-
@@ -1643,6 +2147,24 @@ parameters:
 			identifier: arguments.count
 			count: 1
 			path: include/cache.class.php
+
+		-
+			message: '#^Method PersistentCache\:\:make_key\(\) has invalid return type a\.$#'
+			identifier: class.notFound
+			count: 1
+			path: include/cache.class.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(out mixed \$value\)\: Unexpected token "mixed", expected variable at offset 120 on line 4$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/cache.class.php
+
+		-
+			message: '#^PHPDoc tag @return with type array\<int\> is incompatible with native type int\.$#'
+			identifier: return.phpDocType
+			count: 1
+			path: include/calendar_monthly.class.php
 
 		-
 			message: '#^Variable \$dow might not be defined\.$#'
@@ -1747,10 +2269,28 @@ parameters:
 			path: include/constants.php
 
 		-
+			message: '#^PHPDoc tag @param has invalid value \(int\)\: Unexpected token "\\n ", expected variable at offset 119 on line 6$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/dblayer/functions_mysqli.inc.php
+
+		-
 			message: '#^Variable \$options might not be defined\.$#'
 			identifier: variable.undefined
 			count: 1
 			path: include/dblayer/functions_mysqli.inc.php
+
+		-
+			message: '#^Cannot access property \$type on array\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: include/derivative.inc.php
+
+		-
+			message: '#^Cannot call method compute_final_size\(\) on array\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: include/derivative.inc.php
 
 		-
 			message: '#^Method DerivativeImage\:\:get_scaled_size_htm\(\) should return string but return statement is missing\.$#'
@@ -1777,6 +2317,96 @@ parameters:
 			path: include/derivative.inc.php
 
 		-
+			message: '#^PHPDoc tag @param references unknown parameter\: \$mawh$#'
+			identifier: parameter.notFound
+			count: 2
+			path: include/derivative.inc.php
+
+		-
+			message: '#^PHPDoc tag @return with type bool is incompatible with native type int\.$#'
+			identifier: return.phpDocType
+			count: 2
+			path: include/derivative.inc.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(float\)\: Unexpected token "\\n \* ", expected variable at offset 59 on line 4$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/derivative_params.inc.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(string\)\: Unexpected token "\\n \* ", expected variable at offset 60 on line 4$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/derivative_params.inc.php
+
+		-
+			message: '#^PHPDoc tag @param references unknown parameter\: \$x$#'
+			identifier: parameter.notFound
+			count: 1
+			path: include/derivative_params.inc.php
+
+		-
+			message: '#^Parameter \$coi of method ImageRect\:\:crop_h\(\) has invalid type stirng\.$#'
+			identifier: class.notFound
+			count: 1
+			path: include/derivative_params.inc.php
+
+		-
+			message: '#^Call to an undefined method DOMNameSpaceNode\|DOMNode\:\:getAttribute\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: include/emogrifier.class.php
+
+		-
+			message: '#^Call to an undefined method DOMNameSpaceNode\|DOMNode\:\:hasAttribute\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: include/emogrifier.class.php
+
+		-
+			message: '#^Call to an undefined method DOMNameSpaceNode\|DOMNode\:\:setAttribute\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: include/emogrifier.class.php
+
+		-
+			message: '#^Call to an undefined method DOMNode\:\:getAttribute\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: include/emogrifier.class.php
+
+		-
+			message: '#^Call to an undefined method DOMNode\:\:setAttribute\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: include/emogrifier.class.php
+
+		-
+			message: '#^PHPDoc tag @var has invalid value \(\$node \\DOMNode\)\: Unexpected token "\$node", expected type at offset 9 on line 1$#'
+			identifier: phpDoc.parseError
+			count: 2
+			path: include/emogrifier.class.php
+
+		-
+			message: '#^PHPDoc tag @var has invalid value \(\$nodeWithStyleAttribute \\DOMNode\)\: Unexpected token "\$nodeWithStyleAttribute", expected type at offset 9 on line 1$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/emogrifier.class.php
+
+		-
+			message: '#^PHPDoc tag @var has invalid value \(\$styleNode \\DOMNode\)\: Unexpected token "\$styleNode", expected type at offset 9 on line 1$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/emogrifier.class.php
+
+		-
+			message: '#^PHPDoc tag @var has invalid value \(array\<array\>\<string\>\)\: Unexpected token "\<", expected TOKEN_HORIZONTAL_WS at offset 207 on line 5$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/emogrifier.class.php
+
+		-
 			message: '''
 				#^Call to deprecated function array_from_query\(\)\:
 				2\.6$#
@@ -1792,6 +2422,18 @@ parameters:
 			path: include/filter.inc.php
 
 		-
+			message: '#^Binary operation "\-" between int\<1, max\> and string results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: include/functions.inc.php
+
+		-
+			message: '#^Default value of the parameter \#2 \$fieldname \(false\) of function array_from_query\(\) is incompatible with type string\.$#'
+			identifier: parameter.defaultValue
+			count: 1
+			path: include/functions.inc.php
+
+		-
 			message: '#^Function trigger_notify invoked with 1 parameter, 0 required\.$#'
 			identifier: arguments.count
 			count: 1
@@ -1800,6 +2442,84 @@ parameters:
 		-
 			message: '#^Function trigger_notify invoked with 2 parameters, 0 required\.$#'
 			identifier: arguments.count
+			count: 1
+			path: include/functions.inc.php
+
+		-
+			message: '#^PHPDoc tag @param for parameter \$key with type string is incompatible with native type array\.$#'
+			identifier: parameter.phpDocType
+			count: 1
+			path: include/functions.inc.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(int\|string timestamp or datetime string\)\: Unexpected token "timestamp", expected variable at offset 107 on line 4$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/functions.inc.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(int\|string timestamp or datetime string\)\: Unexpected token "timestamp", expected variable at offset 71 on line 4$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/functions.inc.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(int\|string timestamp or datetime string\)\: Unexpected token "timestamp", expected variable at offset 72 on line 4$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/functions.inc.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(int\|string timestamp or datetime string\)\: Unexpected token "timestamp", expected variable at offset 82 on line 4$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/functions.inc.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(mixed options can contain\)\: Unexpected token "options", expected variable at offset 240 on line 9$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/functions.inc.php
+
+		-
+			message: '#^PHPDoc tag @param references unknown parameter\: \$args$#'
+			identifier: parameter.notFound
+			count: 1
+			path: include/functions.inc.php
+
+		-
+			message: '#^PHPDoc tag @param references unknown parameter\: \$nb_elements$#'
+			identifier: parameter.notFound
+			count: 1
+			path: include/functions.inc.php
+
+		-
+			message: '#^PHPDoc tag @param references unknown parameter\: \$str$#'
+			identifier: parameter.notFound
+			count: 1
+			path: include/functions.inc.php
+
+		-
+			message: '#^PHPDoc tag @param references unknown parameter\: \$with_weeks$#'
+			identifier: parameter.notFound
+			count: 1
+			path: include/functions.inc.php
+
+		-
+			message: '#^PHPDoc tag @return has invalid value \(array\(string, \?string\)\)\: Unexpected token "\(", expected TOKEN_HORIZONTAL_WS at offset 597 on line 15$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/functions.inc.php
+
+		-
+			message: '#^PHPDoc tag @return with type int is incompatible with native type string\.$#'
+			identifier: return.phpDocType
+			count: 1
+			path: include/functions.inc.php
+
+		-
+			message: '#^PHPDoc tag @return with type string is incompatible with native type array\.$#'
+			identifier: return.phpDocType
 			count: 1
 			path: include/functions.inc.php
 
@@ -1837,6 +2557,24 @@ parameters:
 			path: include/functions_calendar.inc.php
 
 		-
+			message: '#^PHPDoc tag @param has invalid value \(string mode\)\: Unexpected token "mode", expected variable at offset 144 on line 6$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/functions_category.inc.php
+
+		-
+			message: '#^PHPDoc tag @param references unknown parameter\: \$selected$#'
+			identifier: parameter.notFound
+			count: 1
+			path: include/functions_category.inc.php
+
+		-
+			message: '#^PHPDoc tag @param references unknown parameter\: \$user_permissions$#'
+			identifier: parameter.notFound
+			count: 1
+			path: include/functions_category.inc.php
+
+		-
 			message: '#^Function trigger_notify invoked with 2 parameters, 0 required\.$#'
 			identifier: arguments.count
 			count: 2
@@ -1847,6 +2585,12 @@ parameters:
 			identifier: variable.undefined
 			count: 1
 			path: include/functions_comment.inc.php
+
+		-
+			message: '#^PHPDoc tag @param references unknown parameter\: \$car$#'
+			identifier: parameter.notFound
+			count: 1
+			path: include/functions_cookie.inc.php
 
 		-
 			message: '#^Function trigger_notify invoked with 3 parameters, 0 required\.$#'
@@ -1882,6 +2626,24 @@ parameters:
 			path: include/functions_mail.inc.php
 
 		-
+			message: '#^PHPDoc tag @param references unknown parameter\: \$code$#'
+			identifier: parameter.notFound
+			count: 1
+			path: include/functions_mail.inc.php
+
+		-
+			message: '#^PHPDoc tag @param references unknown parameter\: \$password_link$#'
+			identifier: parameter.notFound
+			count: 1
+			path: include/functions_mail.inc.php
+
+		-
+			message: '#^Binary operation "/" between string and string results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: include/functions_metadata.inc.php
+
+		-
 			message: '#^Undefined variable\: \$cached$#'
 			identifier: variable.undefined
 			count: 2
@@ -1900,6 +2662,18 @@ parameters:
 			path: include/functions_plugins.inc.php
 
 		-
+			message: '#^PHPDoc tag @param for parameter \$plugin with type string is incompatible with native type array\.$#'
+			identifier: parameter.phpDocType
+			count: 1
+			path: include/functions_plugins.inc.php
+
+		-
+			message: '#^PHPDoc tag @param references unknown parameter\: \$args$#'
+			identifier: parameter.notFound
+			count: 2
+			path: include/functions_plugins.inc.php
+
+		-
 			message: '''
 				#^Call to deprecated function array_from_query\(\)\:
 				2\.6$#
@@ -1907,6 +2681,12 @@ parameters:
 			identifier: function.deprecated
 			count: 2
 			path: include/functions_rate.inc.php
+
+		-
+			message: '#^Binary operation "/" between non\-empty\-string and non\-empty\-string results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: include/functions_search.inc.php
 
 		-
 			message: '''
@@ -1926,6 +2706,18 @@ parameters:
 		-
 			message: '#^Function trigger_notify invoked with 3 parameters, 0 required\.$#'
 			identifier: arguments.count
+			count: 1
+			path: include/functions_search.inc.php
+
+		-
+			message: '#^PHPDoc tag @param references unknown parameter\: \$images_where$#'
+			identifier: parameter.notFound
+			count: 1
+			path: include/functions_search.inc.php
+
+		-
+			message: '#^PHPDoc tag @param references unknown parameter\: \$super_order_by$#'
+			identifier: parameter.notFound
 			count: 1
 			path: include/functions_search.inc.php
 
@@ -1954,6 +2746,36 @@ parameters:
 			path: include/functions_search.inc.php
 
 		-
+			message: '#^PHPDoc tag @return with type null is incompatible with native type void\.$#'
+			identifier: return.phpDocType
+			count: 1
+			path: include/functions_session.inc.php
+
+		-
+			message: '#^Parameter \$data of function pwg_session_write\(\) has invalid type sring\.$#'
+			identifier: class.notFound
+			count: 1
+			path: include/functions_session.inc.php
+
+		-
+			message: '#^Parameter \$name of function pwg_session_open\(\) has invalid type sring\.$#'
+			identifier: class.notFound
+			count: 1
+			path: include/functions_session.inc.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(string mode\)\: Unexpected token "mode", expected variable at offset 138 on line 6$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/functions_tag.inc.php
+
+		-
+			message: '#^PHPDoc tag @param references unknown parameter\: \$user_permissions$#'
+			identifier: parameter.notFound
+			count: 1
+			path: include/functions_tag.inc.php
+
+		-
 			message: '#^Undefined variable\: \$tag_counters$#'
 			identifier: variable.undefined
 			count: 1
@@ -1964,6 +2786,126 @@ parameters:
 			identifier: variable.undefined
 			count: 1
 			path: include/functions_tag.inc.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(array of url tokens to parse\)\: Unexpected token "of", expected variable at offset 223 on line 7$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/functions_url.inc.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(array params\)\: Unexpected token "params", expected variable at offset 238 on line 6$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/functions_url.inc.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(array redefined keys\)\: Unexpected token "redefined", expected variable at offset 141 on line 5$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/functions_url.inc.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(array redefined keys\)\: Unexpected token "redefined", expected variable at offset 355 on line 11$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/functions_url.inc.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(array redefined keys\)\: Unexpected token "redefined", expected variable at offset 88 on line 4$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/functions_url.inc.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(array removed keys\)\: Unexpected token "removed", expected variable at offset 119 on line 5$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/functions_url.inc.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(array removed keys\)\: Unexpected token "removed", expected variable at offset 172 on line 6$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/functions_url.inc.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(array removed keys\)\: Unexpected token "removed", expected variable at offset 386 on line 12$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/functions_url.inc.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(array\)\: Unexpected token "\\n \* ", expected variable at offset 171 on line 7$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/functions_url.inc.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(array\)\: Unexpected token "\\n \* ", expected variable at offset 67 on line 4$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/functions_url.inc.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(array\)\: Unexpected token "\\n \* ", expected variable at offset 91 on line 4$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/functions_url.inc.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(boolean with_scheme if false \- does not add http\://toto\.com\)\: Unexpected token "with_scheme", expected variable at offset 69 on line 3$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/functions_url.inc.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(id image id\)\: Unexpected token "image", expected variable at offset 17 on line 2$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/functions_url.inc.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(int the index in the array of url tokens; in/out\)\: Unexpected token "the", expected variable at offset 260 on line 8$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/functions_url.inc.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(null\)\: Unexpected token "\\n \* ", expected variable at offset 61 on line 4$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/functions_url.inc.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(null\)\: Unexpected token "\\n \* ", expected variable at offset 74 on line 4$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/functions_url.inc.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(string url\)\: Unexpected token "url", expected variable at offset 218 on line 5$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/functions_url.inc.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(what_part string one of ''e'' \(element\), ''r'' \(representative\)\)\: Unexpected token "string", expected variable at offset 46 on line 3$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/functions_url.inc.php
+
+		-
+			message: '#^PHPDoc tag @return has invalid value \(\$url embellished\)\: Unexpected token "\$url", expected type at offset 63 on line 5$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/functions_url.inc.php
+
+		-
+			message: '#^PHPDoc tag @return with type null is incompatible with native type void\.$#'
+			identifier: return.phpDocType
+			count: 2
+			path: include/functions_url.inc.php
 
 		-
 			message: '''
@@ -1978,6 +2920,60 @@ parameters:
 			message: '#^Function trigger_notify invoked with 2 parameters, 0 required\.$#'
 			identifier: arguments.count
 			count: 8
+			path: include/functions_user.inc.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(convert_str ceonferts ''true'' and ''false'' into booleans\)\: Unexpected token "ceonferts", expected variable at offset 75 on line 4$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/functions_user.inc.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(int\|false\)\: Unexpected token "\\n ", expected variable at offset 100 on line 5$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/functions_user.inc.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(int\|false\)\: Unexpected token "\\n ", expected variable at offset 98 on line 5$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/functions_user.inc.php
+
+		-
+			message: '#^PHPDoc tag @param references unknown parameter\: \$mail_adress$#'
+			identifier: parameter.notFound
+			count: 1
+			path: include/functions_user.inc.php
+
+		-
+			message: '#^PHPDoc tag @param references unknown parameter\: \$updateGlobal$#'
+			identifier: parameter.notFound
+			count: 1
+			path: include/functions_user.inc.php
+
+		-
+			message: '#^PHPDoc tag @param references unknown parameter\: \$user_cache$#'
+			identifier: parameter.notFound
+			count: 1
+			path: include/functions_user.inc.php
+
+		-
+			message: '#^PHPDoc tag @return with type bool\|string is not subtype of native type string\|false\|null\.$#'
+			identifier: return.phpDocType
+			count: 1
+			path: include/functions_user.inc.php
+
+		-
+			message: '#^PHPDoc tag @return with type int is incompatible with native type void\.$#'
+			identifier: return.phpDocType
+			count: 1
+			path: include/functions_user.inc.php
+
+		-
+			message: '#^PHPDoc tag @return with type null is incompatible with native type void\.$#'
+			identifier: return.phpDocType
+			count: 2
 			path: include/functions_user.inc.php
 
 		-
@@ -2011,6 +3007,21 @@ parameters:
 			path: include/jshrink.class.php
 
 		-
+			message: '#^PHPDoc tag @param for parameter \$path contains unresolvable type\.$#'
+			identifier: parameter.unresolvableType
+			count: 1
+			path: include/minify/src/CSS.php
+
+		-
+			message: '''
+				#^PHPDoc tag @url has invalid value \(\(image\.jpg\) images will be loaded and their content merged into the
+				original file, to save HTTP requests\.\)\: Unexpected token "\.jpg\)", expected '\)' at offset 75 on line 4$#
+			'''
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/minify/src/CSS.php
+
+		-
 			message: '''
 				#^Class MatthiasMullie\\Minify\\Exceptions\\BasicException extends deprecated class MatthiasMullie\\Minify\\Exception\:
 				Use Exceptions\\BasicException instead$#
@@ -2020,9 +3031,51 @@ parameters:
 			path: include/minify/src/Exceptions/BasicException.php
 
 		-
-			message: '#^Parameter \$item of method MatthiasMullie\\Minify\\Minify\:\:cache\(\) has invalid type Psr\\Cache\\CacheItemInterface\.$#'
+			message: '#^PHPDoc tag @param for parameter \$path contains unresolvable type\.$#'
+			identifier: parameter.unresolvableType
+			count: 1
+			path: include/minify/src/JS.php
+
+		-
+			message: '#^Call to method set\(\) on an unknown class Psr\\Cache\\CacheItemInterface\.$#'
 			identifier: class.notFound
 			count: 1
+			path: include/minify/src/Minify.php
+
+		-
+			message: '#^Method MatthiasMullie\\Minify\\Minify\:\:cache\(\) has invalid return type Psr\\Cache\\CacheItemInterface\.$#'
+			identifier: class.notFound
+			count: 1
+			path: include/minify/src/Minify.php
+
+		-
+			message: '#^PHPDoc tag @param for parameter \$chars contains unresolvable type\.$#'
+			identifier: parameter.unresolvableType
+			count: 1
+			path: include/minify/src/Minify.php
+
+		-
+			message: '#^PHPDoc tag @param for parameter \$level contains unresolvable type\.$#'
+			identifier: parameter.unresolvableType
+			count: 1
+			path: include/minify/src/Minify.php
+
+		-
+			message: '#^PHPDoc tag @param for parameter \$path contains unresolvable type\.$#'
+			identifier: parameter.unresolvableType
+			count: 3
+			path: include/minify/src/Minify.php
+
+		-
+			message: '#^PHPDoc tag @param for parameter \$placeholderPrefix contains unresolvable type\.$#'
+			identifier: parameter.unresolvableType
+			count: 1
+			path: include/minify/src/Minify.php
+
+		-
+			message: '#^Parameter \$item of method MatthiasMullie\\Minify\\Minify\:\:cache\(\) has invalid type Psr\\Cache\\CacheItemInterface\.$#'
+			identifier: class.notFound
+			count: 2
 			path: include/minify/src/Minify.php
 
 		-
@@ -2110,7 +3163,43 @@ parameters:
 			path: include/php_compat/gzopen.php
 
 		-
+			message: '#^Call to method getAccessToken\(\) on an unknown class League\\OAuth2\\Client\\Provider\\AbstractProvider\.$#'
+			identifier: class.notFound
+			count: 1
+			path: include/phpmailer/OAuth.php
+
+		-
+			message: '#^Call to method hasExpired\(\) on an unknown class League\\OAuth2\\Client\\Token\\AccessToken\.$#'
+			identifier: class.notFound
+			count: 1
+			path: include/phpmailer/OAuth.php
+
+		-
 			message: '#^Instantiated class League\\OAuth2\\Client\\Grant\\RefreshToken not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: include/phpmailer/OAuth.php
+
+		-
+			message: '#^Method PHPMailer\\PHPMailer\\OAuth\:\:getGrant\(\) has invalid return type League\\OAuth2\\Client\\Grant\\RefreshToken\.$#'
+			identifier: class.notFound
+			count: 1
+			path: include/phpmailer/OAuth.php
+
+		-
+			message: '#^Method PHPMailer\\PHPMailer\\OAuth\:\:getToken\(\) has invalid return type League\\OAuth2\\Client\\Token\\AccessToken\.$#'
+			identifier: class.notFound
+			count: 1
+			path: include/phpmailer/OAuth.php
+
+		-
+			message: '#^Property PHPMailer\\PHPMailer\\OAuth\:\:\$oauthToken has unknown class League\\OAuth2\\Client\\Token\\AccessToken as its type\.$#'
+			identifier: class.notFound
+			count: 1
+			path: include/phpmailer/OAuth.php
+
+		-
+			message: '#^Property PHPMailer\\PHPMailer\\OAuth\:\:\$provider has unknown class League\\OAuth2\\Client\\Provider\\AbstractProvider as its type\.$#'
 			identifier: class.notFound
 			count: 1
 			path: include/phpmailer/OAuth.php
@@ -2137,7 +3226,19 @@ parameters:
 			path: include/phpmailer/PHPMailer.php
 
 		-
+			message: '#^Call to method debug\(\) on an unknown class Psr\\Log\\LoggerInterface\.$#'
+			identifier: class.notFound
+			count: 1
+			path: include/phpmailer/PHPMailer.php
+
+		-
 			message: '#^Class Psr\\Log\\LoggerInterface not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: include/phpmailer/PHPMailer.php
+
+		-
+			message: '#^Property PHPMailer\\PHPMailer\\PHPMailer\:\:\$Debugoutput has unknown class Psr\\Log\\LoggerInterface as its type\.$#'
 			identifier: class.notFound
 			count: 1
 			path: include/phpmailer/PHPMailer.php
@@ -2149,7 +3250,19 @@ parameters:
 			path: include/phpmailer/PHPMailer.php
 
 		-
+			message: '#^Call to method debug\(\) on an unknown class Psr\\Log\\LoggerInterface\.$#'
+			identifier: class.notFound
+			count: 1
+			path: include/phpmailer/SMTP.php
+
+		-
 			message: '#^Class Psr\\Log\\LoggerInterface not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: include/phpmailer/SMTP.php
+
+		-
+			message: '#^Property PHPMailer\\PHPMailer\\SMTP\:\:\$Debugoutput has unknown class Psr\\Log\\LoggerInterface as its type\.$#'
 			identifier: class.notFound
 			count: 1
 			path: include/phpmailer/SMTP.php
@@ -2158,6 +3271,12 @@ parameters:
 			message: '#^Access to an undefined static property QRtools\:\:\$frames\.$#'
 			identifier: staticProperty.notFound
 			count: 1
+			path: include/phpqrcode.php
+
+		-
+			message: '#^Call to method appendNum\(\) on an unknown class QRbitrtream\.$#'
+			identifier: class.notFound
+			count: 3
 			path: include/phpqrcode.php
 
 		-
@@ -2187,6 +3306,42 @@ parameters:
 		-
 			message: '#^Instantiated class QRbitrtream not found\.$#'
 			identifier: class.notFound
+			count: 1
+			path: include/phpqrcode.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(frame\)\: Unexpected token "\\n     \* ", expected variable at offset 121 on line 3$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/phpqrcode.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(frame\)\: Unexpected token "\\n     \* ", expected variable at offset 124 on line 3$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/phpqrcode.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(ox,oy center coordinate of the pattern\)\: Unexpected token ",", expected variable at offset 161 on line 5$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/phpqrcode.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(ox,oy upper\-left coordinate of the pattern\)\: Unexpected token ",", expected variable at offset 158 on line 5$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/phpqrcode.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(width\)\: Unexpected token "\\n     \* ", expected variable at offset 141 on line 4$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/phpqrcode.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(width\)\: Unexpected token "\\n     \* ", expected variable at offset 144 on line 4$#'
+			identifier: phpDoc.parseError
 			count: 1
 			path: include/phpqrcode.php
 
@@ -2419,8 +3574,170 @@ parameters:
 			path: include/selected_tags.inc.php
 
 		-
+			message: '#^Access to property \$compile_check on an unknown class Smarty\\Smarty\.$#'
+			identifier: class.notFound
+			count: 2
+			path: include/template.class.php
+
+		-
+			message: '#^Access to property \$compile_id on an unknown class Smarty\\Smarty\.$#'
+			identifier: class.notFound
+			count: 13
+			path: include/template.class.php
+
+		-
+			message: '#^Access to property \$debugging on an unknown class Smarty\\Smarty\.$#'
+			identifier: class.notFound
+			count: 4
+			path: include/template.class.php
+
+		-
+			message: '#^Access to property \$error_reporting on an unknown class Smarty\\Smarty\.$#'
+			identifier: class.notFound
+			count: 2
+			path: include/template.class.php
+
+		-
+			message: '#^Access to property \$escape_html on an unknown class Smarty\\Smarty\.$#'
+			identifier: class.notFound
+			count: 2
+			path: include/template.class.php
+
+		-
+			message: '#^Access to property \$force_compile on an unknown class Smarty\\Smarty\.$#'
+			identifier: class.notFound
+			count: 2
+			path: include/template.class.php
+
+		-
+			message: '#^Call to method addTemplateDir\(\) on an unknown class Smarty\\Smarty\.$#'
+			identifier: class.notFound
+			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^Call to method append\(\) on an unknown class Smarty\\Smarty\.$#'
+			identifier: class.notFound
+			count: 3
+			path: include/template.class.php
+
+		-
+			message: '#^Call to method assign\(\) on an unknown class Smarty\\Smarty\.$#'
+			identifier: class.notFound
+			count: 7
+			path: include/template.class.php
+
+		-
+			message: '#^Call to method clearAssign\(\) on an unknown class Smarty\\Smarty\.$#'
+			identifier: class.notFound
+			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^Call to method clearCompiledTemplate\(\) on an unknown class Smarty\\Smarty\.$#'
+			identifier: class.notFound
+			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^Call to method fetch\(\) on an unknown class Smarty\\Smarty\.$#'
+			identifier: class.notFound
+			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^Call to method getCompileDir\(\) on an unknown class Smarty\\Smarty\.$#'
+			identifier: class.notFound
+			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^Call to method getLeftDelimiter\(\) on an unknown class Smarty\\Smarty\.$#'
+			identifier: class.notFound
+			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^Call to method getRightDelimiter\(\) on an unknown class Smarty\\Smarty\.$#'
+			identifier: class.notFound
+			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^Call to method getTemplateDir\(\) on an unknown class Smarty\\Smarty\.$#'
+			identifier: class.notFound
+			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^Call to method getTemplateVars\(\) on an unknown class Smarty\\Smarty\.$#'
+			identifier: class.notFound
+			count: 4
+			path: include/template.class.php
+
+		-
+			message: '#^Call to method registerFilter\(\) on an unknown class Smarty\\Smarty\.$#'
+			identifier: class.notFound
+			count: 3
+			path: include/template.class.php
+
+		-
+			message: '#^Call to method registerPlugin\(\) on an unknown class Smarty\\Smarty\.$#'
+			identifier: class.notFound
+			count: 44
+			path: include/template.class.php
+
+		-
+			message: '#^Call to method setCompileDir\(\) on an unknown class Smarty\\Smarty\.$#'
+			identifier: class.notFound
+			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^Call to method setTemplateDir\(\) on an unknown class Smarty\\Smarty\.$#'
+			identifier: class.notFound
+			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^Call to method unregisterFilter\(\) on an unknown class Smarty\\Smarty\.$#'
+			identifier: class.notFound
+			count: 1
+			path: include/template.class.php
+
+		-
 			message: '#^Call to static method display_debug\(\) on an unknown class Smarty_Internal_Debug\.$#'
 			identifier: class.notFound
+			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^Default value of the parameter \#3 \$version \(int\) of method Combinable\:\:__construct\(\) is incompatible with type string\.$#'
+			identifier: parameter.defaultValue
+			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^Default value of the parameter \#3 \$version \(int\) of method Css\:\:__construct\(\) is incompatible with type string\.$#'
+			identifier: parameter.defaultValue
+			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^Default value of the parameter \#3 \$version \(int\) of method CssLoader\:\:add\(\) is incompatible with type string\.$#'
+			identifier: parameter.defaultValue
+			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^Default value of the parameter \#4 \$version \(int\) of method Script\:\:__construct\(\) is incompatible with type string\.$#'
+			identifier: parameter.defaultValue
+			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^Default value of the parameter \#5 \$version \(int\) of method ScriptLoader\:\:add\(\) is incompatible with type string\.$#'
+			identifier: parameter.defaultValue
 			count: 1
 			path: include/template.class.php
 
@@ -2443,10 +3760,106 @@ parameters:
 			path: include/template.class.php
 
 		-
+			message: '#^Method FileCombiner\:\:process_combinable\(\) should return string\|null but return statement is missing\.$#'
+			identifier: return.missing
+			count: 2
+			path: include/template.class.php
+
+		-
+			message: '#^Method Template\:\:parse\(\) should return string\|null but return statement is missing\.$#'
+			identifier: return.missing
+			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(Css\[\]\)\: Unexpected token "\*/", expected variable at offset 17 on line 1$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(int 0,1,2\)\: Unexpected token "0", expected variable at offset 22 on line 2$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(int used to keep declaration order\)\: Unexpected token "used", expected variable at offset 15 on line 1$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(return string\)\: Unexpected token "string", expected variable at offset 142 on line 6$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(return string\)\: Unexpected token "string", expected variable at offset 152 on line 6$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(return string\)\: Unexpected token "string", expected variable at offset 169 on line 6$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^PHPDoc tag @var above a method has no effect\.$#'
+			identifier: varTag.misplaced
+			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^PHPDoc tag @var for property ScriptLoader\:\:\$head_done_scripts with type bool is incompatible with native type array\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^Parameter \$smarty of method Template\:\:func_define_derivative\(\) has invalid type Smarty\\Smarty\.$#'
+			identifier: class.notFound
+			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^Parameter \$smarty of method Template\:\:postfilter_language\(\) has invalid type Smarty\\Smarty\.$#'
+			identifier: class.notFound
+			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^Parameter \$smarty of method Template\:\:prefilter_local_css\(\) has invalid type Smarty\\Smarty\.$#'
+			identifier: class.notFound
+			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^Parameter \$smarty of method Template\:\:prefilter_white_space\(\) has invalid type Smarty\\Smarty\.$#'
+			identifier: class.notFound
+			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^Property Template\:\:\$smarty has unknown class Smarty\\Smarty as its type\.$#'
+			identifier: class.notFound
+			count: 1
+			path: include/template.class.php
+
+		-
 			message: '#^Undefined variable\: \$tmp$#'
 			identifier: variable.undefined
 			count: 2
 			path: include/template.class.php
+
+		-
+			message: '#^PHPDoc tag @param for parameter \$timestamp with type int is incompatible with native type float\.$#'
+			identifier: parameter.phpDocType
+			count: 1
+			path: include/totp.class.php
 
 		-
 			message: '#^Function trigger_notify invoked with 2 parameters, 0 required\.$#'
@@ -2470,6 +3883,103 @@ parameters:
 			message: '#^Function trigger_notify invoked with 2 parameters, 0 required\.$#'
 			identifier: arguments.count
 			count: 2
+			path: include/ws_core.inc.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(arr array \(keys must be consecutive integers starting at 0\)\)\: Unexpected token "array", expected variable at offset 54 on line 3$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/ws_core.inc.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(callback mixed \- php method to be invoked internally\)\: Unexpected token "mixed", expected variable at offset 142 on line 4$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/ws_core.inc.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(content array \- the actual content \(php array\)\)\: Unexpected token "array", expected variable at offset 180 on line 5$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/ws_core.inc.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(description string \- a description of the method\.\)\: Unexpected token "string", expected variable at offset 689 on line 13$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/ws_core.inc.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(include_file string \- a file to be included befaore the callback is executed\)\: Unexpected token "string", expected variable at offset 754 on line 14$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/ws_core.inc.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(itemName string xml element name for values of arr \(e\.g\. image\)\)\: Unexpected token "string", expected variable at offset 133 on line 4$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/ws_core.inc.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(methodName string \- the name of the method as seen externally\)\: Unexpected token "string", expected variable at offset 68 on line 3$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/ws_core.inc.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(methodName string the name of the method to invoke\)\: Unexpected token "string", expected variable at offset 158 on line 4$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/ws_core.inc.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(name string \- containing xml element name\)\: Unexpected token "string", expected variable at offset 121 on line 4$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/ws_core.inc.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(options array\)\: Unexpected token "array", expected variable at offset 840 on line 15$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/ws_core.inc.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(params array \- map of allowed parameter names with options\)\: Unexpected token "array", expected variable at offset 207 on line 5$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/ws_core.inc.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(params array array of parameters to pass to the invoked method\)\: Unexpected token "array", expected variable at offset 220 on line 5$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/ws_core.inc.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(response mixed the unencoded result of a service method call\)\: Unexpected token "mixed", expected variable at offset 93 on line 2$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/ws_core.inc.php
+
+		-
+			message: '''
+				#^PHPDoc tag @param has invalid value \(xmlAttributes array \- name of the keys in \$content that will be
+				   encoded as xml attributes \(if null \- automatically prefer xml attributes
+				   whenever possible\)\)\: Unexpected token "array", expected variable at offset 247 on line 6$#
+			'''
+			identifier: phpDoc.parseError
+			count: 1
+			path: include/ws_core.inc.php
+
+		-
+			message: '''
+				#^PHPDoc tag @param has invalid value \(xmlAttributes array of sub\-item attributes that will be encoded as
+				     xml attributes instead of xml child elements\)\: Unexpected token "array", expected variable at offset 216 on line 5$#
+			'''
+			identifier: phpDoc.parseError
+			count: 1
 			path: include/ws_core.inc.php
 
 		-

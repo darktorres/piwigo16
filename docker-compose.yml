@@ -16,6 +16,7 @@ services:
 
   web:
     image: piwigo16-web:ci
+    pull_policy: never
     build:
       context: .
       dockerfile: docker/Dockerfile

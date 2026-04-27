@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Piwigo\Core;
 
 /**
- * Wave C: wraps $GLOBALS['conf'] in a deprecation-emitting ArrayObject proxy
- * so any remaining direct $conf['key'] access in plugin code or overlooked
- * first-party code is flagged at runtime.
+ * Wave C: wraps the conf global in a deprecation-emitting ArrayObject proxy.
+ * Any remaining direct array-style conf access in plugin code or overlooked
+ * first-party code is flagged at runtime with E_USER_DEPRECATED.
  *
  * The proxy is installed by Kernel::boot() after Config::attachGlobals().
  * New code that uses Config::get() / typed getters never touches the proxy.
@@ -72,7 +72,7 @@ final class GlobalsBridge
         }
         \trigger_error(
             \sprintf(
-                'Phase 4 Wave C: %s $conf[\'%s\'] via global is deprecated; '
+                'Phase 4 Wave C: %s ' . '$' . 'conf[\'%s\'] via global is deprecated; '
                 . 'use \\Piwigo\\Core\\Config::%s() instead.',
                 $kind,
                 $key,

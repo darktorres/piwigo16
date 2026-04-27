@@ -53,8 +53,9 @@ final class KernelBootTest extends TestCase
         $this->simulateGlobals(['conf' => ['order_by' => 'ORDER BY id ASC']]);
         Kernel::boot();
 
-        // Simulate runtime override via global (as legacy code would do)
-        $GLOBALS['conf']['order_by'] = 'ORDER BY date_creation DESC';
+        // Wave C: writing via $GLOBALS['conf'] now goes through ConfProxy
+        // and emits E_USER_DEPRECATED — suppress it; the value must still sync.
+        @$GLOBALS['conf']['order_by'] = 'ORDER BY date_creation DESC';
 
         self::assertSame('ORDER BY date_creation DESC', Config::get('order_by'));
     }

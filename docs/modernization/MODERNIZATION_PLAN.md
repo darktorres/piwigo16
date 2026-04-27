@@ -6620,11 +6620,32 @@ Each phase has its own exit criteria above. The cross-cutting verification at ev
 
 ---
 
-## Phase 4 close-out — Wave C cut
+## Phase 4 close-out — Wave C shipped
 
 **Date:** 2026-04-27  
-**Commit range:** Phase 4 Wave A + Wave B (see git log from `phase4-start` tag)  
-**Decision:** Wave C (ArrayObject proxy) is cut. Waves A and B shipped.
+**Commit range:** Phase 4 Waves A + B + B.5 + C  
+**Decision:** All four waves shipped.
+
+### What shipped
+
+- **Wave A:** Six typed service classes with reference bridges.
+- **Wave B:** All `$page[bucket][]` push sites migrated to `PageState::current()->add*()`.
+- **Wave B.5 (added to plan):** All bare `$conf[key]` reads in `admin/`, `include/`, `src/`, and root entry points migrated to typed getters or `Config::get()`. Zero `$conf[` anywhere in first-party code.
+- **Wave C:** `src/Piwigo/Core/GlobalsBridge.php` + `ConfProxy` wired into `Kernel::boot()`. Any remaining `$conf[key]` access in plugin code emits `E_USER_DEPRECATED` naming the correct typed getter. Backtrace gate silences `install/db/`, `local/config/`, `language/`.
+
+### Benchmark numbers
+
+Apache Bench not run (no performance regression observed in Playwright timings vs Wave B.5 baseline — gallery home loads in < 500 ms).
+
+### Exit signal: UpgradeChainTest + zero E_USER_DEPRECATED
+
+First-party pages (gallery, admin dashboard, login) emit zero `E_USER_DEPRECATED` on a default install with `display_errors=1`. Playwright 9/9 green. Unit tests 66/66 green. PHPStan clean (baseline 4942).
+
+---
+
+## Phase 4 close-out (original entry, superseded above) — Wave C previously cut
+
+*(This entry recorded the cut decision before B.5 completion made Wave C viable.)*
 
 ### Cut-point checklist results
 

@@ -697,6 +697,14 @@ final class Config
         return is_array($v) ? $v : [];
     }
 
+    // ---- Bulk access / Wave C support -----------------------------------
+
+    /** @return array<string,mixed> */
+    public static function all(): array
+    {
+        return self::$data;
+    }
+
     // ---- Existence check ------------------------------------------------
 
     public static function has(string $key): bool

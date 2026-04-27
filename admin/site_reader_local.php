@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -26,7 +27,7 @@ class LocalSiteReader
      *
      * @return true on success, false otherwise
      */
-    public function open()
+    public function open(): bool
     {
         global $errors;
 
@@ -55,7 +56,7 @@ class LocalSiteReader
      * @param string $path recurse in this directory
      * @return array like "pic.jpg"=>array('representative_ext'=>'jpg' ... )
      */
-    public function get_elements($path)
+    public function get_elements(string $path): array
     {
         global $conf;
 
@@ -104,12 +105,12 @@ class LocalSiteReader
 
     // returns the name of the attributes that are supported for
     // files update/synchronization
-    public function get_update_attributes()
+    public function get_update_attributes(): array
     {
         return ['representative_ext'];
     }
 
-    public function get_element_update_attributes($file)
+    public function get_element_update_attributes($file): array
     {
         global $conf;
         $data = [];
@@ -143,7 +144,7 @@ class LocalSiteReader
 
 
     //-------------------------------------------------- private functions --------
-    public function get_representative_ext($path, $filename_wo_ext)
+    public function get_representative_ext(string $path, string $filename_wo_ext)
     {
         global $conf;
         $base_test = $path.'/pwg_representative/'.$filename_wo_ext.'.';
@@ -156,7 +157,10 @@ class LocalSiteReader
         return null;
     }
 
-    public function get_formats($path, $filename_wo_ext)
+    /**
+     * @return float[]
+     */
+    public function get_formats(string $path, string $filename_wo_ext): array
     {
         global $conf;
 

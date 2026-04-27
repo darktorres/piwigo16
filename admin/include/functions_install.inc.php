@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -22,7 +23,7 @@
  * @param string $replaced
  * @param string $replacing
  */
-function execute_sqlfile($filepath, $replaced, $replacing, $dblayer)
+function execute_sqlfile($filepath, $replaced, $replacing, $dblayer): void
 {
     $sql_lines = file($filepath);
     $query = '';
@@ -54,7 +55,7 @@ function execute_sqlfile($filepath, $replaced, $replacing, $dblayer)
 /**
  * Automatically activate all core themes in the "themes" directory.
  */
-function activate_core_themes()
+function activate_core_themes(): void
 {
     include_once(PHPWG_ROOT_PATH.'admin/include/themes.class.php');
     $themes = new themes();
@@ -68,7 +69,7 @@ function activate_core_themes()
 /**
  * Automatically activate some core plugins
  */
-function activate_core_plugins()
+function activate_core_plugins(): void
 {
     include_once(PHPWG_ROOT_PATH.'admin/include/plugins.class.php');
 
@@ -87,7 +88,7 @@ function activate_core_plugins()
  * @param array &$infos - populated with infos
  * @param array &$errors - populated with errors
  */
-function install_db_connect(&$infos, &$errors)
+function install_db_connect(&$infos, &$errors): void
 {
     try {
         pwg_db_connect(

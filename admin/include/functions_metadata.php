@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -106,7 +107,7 @@ function get_sync_exif_data($file)
  *
  * @return string[]
  */
-function get_sync_metadata_attributes()
+function get_sync_metadata_attributes(): array
 {
     global $conf;
 
@@ -231,7 +232,7 @@ function get_sync_metadata($infos)
  *
  * @param int[] $ids
  */
-function sync_metadata($ids)
+function sync_metadata($ids): void
 {
     global $conf;
 
@@ -365,7 +366,7 @@ SELECT id, path, representative_ext
  * @param string $keywords_string
  * @return string
  */
-function metadata_normalize_keywords_string($keywords_string)
+function metadata_normalize_keywords_string($keywords_string): string
 {
     global $conf;
 

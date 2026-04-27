@@ -1,20 +1,23 @@
 <?php
 
+declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
 // | For copyright and license information, please view the COPYING.txt    |
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
-
+/**
+ * @return mixed[]
+ */
 function parse_sort_variables(
     $sortable_by,
     $default_field,
     $get_param,
     $get_rejects,
-    $template_var,
-    $anchor = ''
-) {
+    ?string $template_var,
+    string $anchor = ''
+): array {
     global $template;
 
     $url_components = parse_url((string) $_SERVER['REQUEST_URI']);

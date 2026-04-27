@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -17,9 +18,11 @@ include_once(PHPWG_ROOT_PATH.'admin/include/functions_history.inc.php');
 // +-----------------------------------------------------------------------+
 // | Functions                                                             |
 // +-----------------------------------------------------------------------+
-
 //Get the last unit of time for years, months, days and hours
-function get_last($last_number = 60, $type = 'year')
+/**
+ * @return mixed[]
+ */
+function get_last($last_number = 60, $type = 'year'): array
 {
     $query = '
 SELECT
@@ -125,7 +128,7 @@ ORDER BY
     }
 }
 
-function get_month_stats()
+function get_month_stats(): array
 {
     $result = [];
     $date = new DateTime();
@@ -236,8 +239,10 @@ $template->assign(
 // +-----------------------------------------------------------------------+
 // | Set missing rows to 0                                                 |
 // +-----------------------------------------------------------------------+
-
-function set_missing_values($unit, $data, $firstDate = null, $lastDate = null)
+/**
+ * @return float[]|int[]
+ */
+function set_missing_values($unit, $data, $firstDate = null, $lastDate = null): array
 {
     $limit = count($data);
     $result = [];
@@ -286,7 +291,7 @@ function set_missing_values($unit, $data, $firstDate = null, $lastDate = null)
 }
 
 //Get a DateTime object for a database row
-function get_date_object($row)
+function get_date_object(array $row): \DateTime
 {
     $date_string = $row['year'];
     if ($row['month'] != null) {

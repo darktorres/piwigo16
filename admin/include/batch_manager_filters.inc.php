@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -26,7 +27,7 @@ if ($conf['enable_synchronization']) {
     $prefilters[] = ['ID' => 'no_sync_md5sum', 'NAME' => l10n('With no checksum')];
 }
 
-function UC_name_compare($a, $b)
+function UC_name_compare(array $a, array $b): int
 {
     return strcmp(strtolower((string) $a['NAME']), strtolower((string) $b['NAME']));
 }
@@ -34,7 +35,7 @@ function UC_name_compare($a, $b)
 $prefilters = trigger_change('get_batch_manager_prefilters', $prefilters);
 
 // Sort prefilters by localized name.
-usort($prefilters, fn ($a, $b) => strcmp(strtolower((string) $a['NAME']), strtolower((string) $b['NAME'])));
+usort($prefilters, fn (array $a, array $b): int => strcmp(strtolower((string) $a['NAME']), strtolower((string) $b['NAME'])));
 
 $template->assign(
     [

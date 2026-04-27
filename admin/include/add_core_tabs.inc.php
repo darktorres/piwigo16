@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -9,7 +10,7 @@
 
 add_event_handler('tabsheet_before_select', 'add_core_tabs', 0);
 
-function add_core_tabs($sheets, $tab_id)
+function add_core_tabs(array $sheets, $tab_id): array
 {
     global $conf;
 

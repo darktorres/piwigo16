@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -14,7 +15,7 @@ include_once(PHPWG_ROOT_PATH.'admin/include/image.class.php');
 add_event_handler('upload_image_resize', 'pwg_image_resize');
 add_event_handler('upload_thumbnail_resize', 'pwg_image_resize');
 
-function get_upload_form_config()
+function get_upload_form_config(): array
 {
     // default configuration for upload
     $upload_form_config = [
@@ -54,7 +55,7 @@ function get_upload_form_config()
     return $upload_form_config;
 }
 
-function save_upload_form_config($data, &$errors = [], &$form_errors = [])
+function save_upload_form_config($data, &$errors = [], array &$form_errors = []): bool
 {
     if (!is_array($data) or empty($data)) {
         return false;
@@ -120,7 +121,7 @@ function save_upload_form_config($data, &$errors = [], &$form_errors = [])
     return false;
 }
 
-function add_uploaded_file($source_filepath, $original_filename = null, $categories = null, $level = null, $image_id = null, $original_md5sum = null)
+function add_uploaded_file(string $source_filepath, $original_filename = null, $categories = null, $level = null, $image_id = null, $original_md5sum = null)
 {
     // 1) move uploaded file to upload/2010/01/22/20100122003814-449ada00.jpg
     //
@@ -390,7 +391,7 @@ SELECT
     return $image_id;
 }
 
-function add_uploaded_file_add_to_categories($image_id, $categories)
+function add_uploaded_file_add_to_categories($image_id, $categories): void
 {
     global $conf;
 
@@ -419,7 +420,7 @@ function add_uploaded_file_add_to_categories($image_id, $categories)
     }
 }
 
-function add_format($source_filepath, $format_ext, $format_of)
+function add_format($source_filepath, string $format_ext, string $format_of): string
 {
     // 1) find infos about the extended image
     //
@@ -507,7 +508,7 @@ SELECT
 }
 
 add_event_handler('upload_file', 'upload_file_pdf');
-function upload_file_pdf($representative_ext, $file_path)
+function upload_file_pdf($representative_ext, string $file_path)
 {
     global $logger, $conf;
 
@@ -550,7 +551,7 @@ function upload_file_pdf($representative_ext, $file_path)
 }
 
 add_event_handler('upload_file', 'upload_file_heic');
-function upload_file_heic($representative_ext, $file_path)
+function upload_file_heic($representative_ext, string $file_path)
 {
     global $logger, $conf;
 
@@ -595,7 +596,7 @@ function upload_file_heic($representative_ext, $file_path)
 }
 
 add_event_handler('upload_file', 'upload_file_tiff');
-function upload_file_tiff($representative_ext, $file_path)
+function upload_file_tiff($representative_ext, string $file_path)
 {
     global $logger, $conf;
 
@@ -654,7 +655,7 @@ function upload_file_tiff($representative_ext, $file_path)
 }
 
 add_event_handler('upload_file', 'upload_file_video');
-function upload_file_video($representative_ext, $file_path)
+function upload_file_video($representative_ext, string $file_path)
 {
     global $logger, $conf;
 
@@ -726,7 +727,7 @@ function upload_file_video($representative_ext, $file_path)
 }
 
 add_event_handler('upload_file', 'upload_file_psd');
-function upload_file_psd($representative_ext, $file_path)
+function upload_file_psd($representative_ext, string $file_path)
 {
     global $logger, $conf;
 
@@ -783,7 +784,7 @@ function upload_file_psd($representative_ext, $file_path)
 }
 
 add_event_handler('upload_file', 'upload_file_eps');
-function upload_file_eps($representative_ext, $file_path)
+function upload_file_eps($representative_ext, string $file_path)
 {
     global $logger, $conf;
 
@@ -827,7 +828,7 @@ function upload_file_eps($representative_ext, $file_path)
     return $representative_ext;
 }
 
-function prepare_directory($directory)
+function prepare_directory($directory): void
 {
     if (!is_dir($directory)) {
         if (str_starts_with(PHP_OS, 'WIN')) {
@@ -852,7 +853,7 @@ function prepare_directory($directory)
     secure_directory($directory);
 }
 
-function need_resize($image_filepath, $max_width, $max_height)
+function need_resize($image_filepath, string $max_width, string $max_height): bool
 {
     global $conf, $logger;
 
@@ -873,7 +874,7 @@ function need_resize($image_filepath, $max_width, $max_height)
     return false;
 }
 
-function pwg_image_infos($path)
+function pwg_image_infos($path): array
 {
     [$width, $height] = getimagesize($path);
     $filesize = floor(filesize($path) / 1024);
@@ -885,7 +886,7 @@ function pwg_image_infos($path)
       ];
 }
 
-function is_valid_image_extension($extension)
+function is_valid_image_extension($extension): array
 {
     global $conf;
 
@@ -947,12 +948,12 @@ function convert_shorthand_notation_to_bytes($value)
     return $value;
 }
 
-function add_upload_error($upload_id, $error_message)
+function add_upload_error($upload_id, $error_message): void
 {
     $_SESSION['uploads_error'][$upload_id][] = $error_message;
 }
 
-function ready_for_upload_message()
+function ready_for_upload_message(): ?string
 {
     global $conf;
 
@@ -989,7 +990,7 @@ function ready_for_upload_message()
  *
  * @return array(width, height)
  */
-function get_optimal_dimensions_for_representative()
+function get_optimal_dimensions_for_representative(): array
 {
     global $conf;
 

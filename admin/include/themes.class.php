@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -57,7 +58,7 @@ class themes
      * or build a new class with the procedural methods
      * @param string $theme_id
      */
-    private static function build_maintain_class($theme_id)
+    private static function build_maintain_class(string $theme_id)
     {
         $file_to_include = PHPWG_THEMES_PATH.'/'.$theme_id.'/admin/maintain.inc.php';
         $classname = $theme_id.'_maintain';
@@ -78,8 +79,9 @@ class themes
      * @param string - action
      * @param string - theme id
      * @param array - errors
+     * @return list<mixed>
      */
-    public function perform_action($action, $theme_id)
+    public function perform_action($action, string $theme_id): array
     {
         global $conf;
 
@@ -245,7 +247,10 @@ DELETE
         return $this->missing_parent_theme($parent);
     }
 
-    public function get_children_themes($theme_id)
+    /**
+     * @return mixed[]
+     */
+    public function get_children_themes($theme_id): array
     {
         $children = [];
 
@@ -258,7 +263,7 @@ DELETE
         return $children;
     }
 
-    public function set_default_theme($theme_id)
+    public function set_default_theme(string $theme_id): void
     {
         global $conf;
 
@@ -289,7 +294,10 @@ UPDATE '.USER_INFOS_TABLE.'
         pwg_query($query);
     }
 
-    public function get_db_themes($id = '')
+    /**
+     * @return mixed[]
+     */
+    public function get_db_themes(?string $id = ''): array
     {
         $query = '
 SELECT
@@ -317,7 +325,7 @@ SELECT
     /**
     *  Get themes defined in the theme directory
     */
-    public function get_fs_themes()
+    public function get_fs_themes(): void
     {
         $dir = opendir(PHPWG_THEMES_PATH);
 
@@ -407,7 +415,7 @@ SELECT
     /**
      * Sort fs_themes
      */
-    public function sort_fs_themes($order = 'name')
+    public function sort_fs_themes($order = 'name'): void
     {
         switch ($order) {
             case 'name':
@@ -428,7 +436,7 @@ SELECT
     /**
      * Retrieve PEM server datas to $server_themes
      */
-    public function get_server_themes($new = false)
+    public function get_server_themes($new = false): bool
     {
         global $user, $conf;
 
@@ -499,7 +507,7 @@ SELECT
     /**
      * Sort $server_themes
      */
-    public function sort_server_themes($order = 'date')
+    public function sort_server_themes($order = 'date'): void
     {
         switch ($order) {
             case 'date':
@@ -527,7 +535,7 @@ SELECT
      * @param string - remote revision identifier (numeric)
      * @param string - theme id or extension id
      */
-    public function extract_theme_files($action, $revision, $dest, &$theme_id = null)
+    public function extract_theme_files(string $action, $revision, string $dest, &$theme_id = null)
     {
         global $logger;
 
@@ -636,7 +644,7 @@ SELECT
     /**
      * Sort functions
      */
-    public function extension_revision_compare($a, $b)
+    public function extension_revision_compare(array $a, array $b): int
     {
         if ($a['revision_date'] < $b['revision_date']) {
             return 1;
@@ -645,12 +653,12 @@ SELECT
         }
     }
 
-    public function extension_name_compare($a, $b)
+    public function extension_name_compare(array $a, array $b): int
     {
         return strcmp(strtolower((string) $a['extension_name']), strtolower((string) $b['extension_name']));
     }
 
-    public function extension_author_compare($a, $b)
+    public function extension_author_compare(array $a, array $b)
     {
         $r = strcasecmp((string) $a['author_name'], (string) $b['author_name']);
         if ($r == 0) {
@@ -660,7 +668,7 @@ SELECT
         }
     }
 
-    public function theme_author_compare($a, $b)
+    public function theme_author_compare(array $a, array $b)
     {
         $r = strcasecmp((string) $a['author'], (string) $b['author']);
         if ($r == 0) {
@@ -670,7 +678,7 @@ SELECT
         }
     }
 
-    public function extension_downloads_compare($a, $b)
+    public function extension_downloads_compare(array $a, array $b): int
     {
         if ($a['extension_nb_downloads'] < $b['extension_nb_downloads']) {
             return 1;
@@ -679,7 +687,7 @@ SELECT
         }
     }
 
-    public function sort_themes_by_state()
+    public function sort_themes_by_state(): void
     {
         uasort($this->fs_themes, name_compare(...));
 

@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -10,7 +11,7 @@
 /** returns a category id that corresponds to the given permalink (or null)
  * @param string permalink
  */
-function get_cat_id_from_permalink($permalink)
+function get_cat_id_from_permalink(string $permalink)
 {
     $query = '
 SELECT id FROM '.CATEGORIES_TABLE.'
@@ -26,7 +27,7 @@ SELECT id FROM '.CATEGORIES_TABLE.'
  * @param string permalink
  * @param boolean is_hit if true update the usage counters on the old permalinks
  */
-function get_cat_id_from_old_permalink($permalink)
+function get_cat_id_from_old_permalink(string $permalink)
 {
     $query = '
 SELECT c.id
@@ -49,7 +50,7 @@ SELECT c.id
  * @param boolean save if true, the current category-permalink association
  * is saved in the old permalinks table in case external links hit it
  */
-function delete_cat_permalink($cat_id, $save)
+function delete_cat_permalink(string $cat_id, $save): bool
 {
     global $page, $cache;
     $query = '
@@ -109,7 +110,7 @@ VALUES
  * @param boolean save if true, the current category-permalink association
  * is saved in the old permalinks table in case external links hit it
  */
-function set_cat_permalink($cat_id, $permalink, $save)
+function set_cat_permalink(string $cat_id, string $permalink, $save): bool
 {
     global $page, $cache;
 

@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -46,7 +47,7 @@ $must_repost = false;
  * @param check_key_treated: array of check_key treated
  * @return none
  */
-function do_timeout_treatment($post_keyname, $check_key_treated = [])
+function do_timeout_treatment($post_keyname, $check_key_treated = []): void
 {
     global $env_nbm, $base_url, $page, $must_repost;
 
@@ -90,7 +91,7 @@ function get_tab_status($mode)
 /*
  * Inserting News users
  */
-function insert_new_data_user_mail_notification()
+function insert_new_data_user_mail_notification(): void
 {
     global $conf, $page, $env_nbm;
 

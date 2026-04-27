@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -11,7 +12,7 @@
  * Retrieves an url for a plugin page.
  * @param string file - php script full name
  */
-function get_admin_plugin_menu_link($file)
+function get_admin_plugin_menu_link($file): string
 {
     global $page;
     $real_file = realpath($file);

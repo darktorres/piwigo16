@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -15,7 +16,7 @@ if (!defined('PHPWG_ROOT_PATH')) {
     }
 }
 
-$queries = array(
+$queries = [
   '
 ALTER TABLE '.PREFIX_TABLE.'user_infos
   ADD auto_login_key varchar(64) NOT NULL
@@ -24,7 +25,7 @@ ALTER TABLE '.PREFIX_TABLE.'user_infos
 ALTER TABLE '.PREFIX_TABLE.'users
   CHANGE username username VARCHAR(100) binary NOT NULL
 ;',
-  );
+  ];
 
 foreach ($queries as $query) {
     pwg_query($query);

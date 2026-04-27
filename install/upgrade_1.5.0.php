@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -21,7 +22,7 @@ if (!defined('PHPWG_ROOT_PATH')) {
  *
  * @return void
  */
-function tag_replace_keywords()
+function tag_replace_keywords(): void
 {
     // code taken from upgrades 19 and 22
 
@@ -49,9 +50,9 @@ CREATE TABLE '.PREFIX_TABLE.'image_tag (
     //
 
     // each tag label is associated to a numeric identifier
-    $tag_id = array();
+    $tag_id = [];
     // to each tag id (key) a list of image ids (value) is associated
-    $tag_images = array();
+    $tag_images = [];
 
     $current_id = 1;
 
@@ -62,13 +63,13 @@ SELECT id, keywords
 ;';
     $result = pwg_query($query);
     while ($row = pwg_db_fetch_assoc($result)) {
-        foreach (preg_split('/[,]+/', $row['keywords']) as $keyword) {
+        foreach (preg_split('/[,]+/', (string) $row['keywords']) as $keyword) {
             if (!isset($tag_id[$keyword])) {
                 $tag_id[$keyword] = $current_id++;
             }
 
             if (!isset($tag_images[ $tag_id[$keyword] ])) {
-                $tag_images[ $tag_id[$keyword] ] = array();
+                $tag_images[ $tag_id[$keyword] ] = [];
             }
 
             array_push(
@@ -78,15 +79,15 @@ SELECT id, keywords
         }
     }
 
-    $datas = array();
+    $datas = [];
     foreach ($tag_id as $tag_name => $tag_id) {
         array_push(
             $datas,
-            array(
+            [
             'id'       => $tag_id,
             'name'     => $tag_name,
             'url_name' => str2url($tag_name),
-            )
+            ]
         );
     }
 
@@ -98,15 +99,15 @@ SELECT id, keywords
         );
     }
 
-    $datas = array();
+    $datas = [];
     foreach ($tag_images as $tag_id => $images) {
         foreach (array_unique($images) as $image_id) {
             array_push(
                 $datas,
-                array(
+                [
                 'tag_id'   => $tag_id,
                 'image_id' => $image_id,
-                )
+                ]
             );
         }
     }
@@ -148,7 +149,7 @@ ALTER TABLE '.PREFIX_TABLE.'image_tag
 
 tag_replace_keywords();
 
-$queries = array(
+$queries = [
   '
 CREATE TABLE '.PREFIX_TABLE.'search (
   id int UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -279,7 +280,7 @@ UPDATE '.PREFIX_TABLE."config
   SET value = 'yoga/clear'
   WHERE param = 'default_template'
 ;",
-  );
+  ];
 
 foreach ($queries as $query) {
     pwg_query($query);
@@ -288,20 +289,20 @@ foreach ($queries as $query) {
 //
 // Move rate, rate_anonymous and gallery_url from config file to database
 //
-$params = array(
-  'gallery_url' => array(
+$params = [
+  'gallery_url' => [
     '',
     'Optional alternate homepage for the gallery',
-    ),
-  'rate' => array(
+    ],
+  'rate' => [
     'true',
     'Rating pictures feature is enabled',
-    ),
-  'rate_anonymous' => array(
+    ],
+  'rate_anonymous' => [
     'true',
     'Rating pictures feature is also enabled for visitors',
-    ),
-  );
+    ],
+  ];
 // Get real values from config file
 $conf_save = $conf;
 unset($conf);
@@ -348,14 +349,14 @@ SELECT value
   FROM '.PREFIX_TABLE.'config
   WHERE param=\'gallery_title\'
 ;';
-list($t) = array_from_query($query, 'value');
+[$t] = array_from_query($query, 'value');
 
 $query = '
 SELECT value
   FROM '.PREFIX_TABLE.'config
   WHERE param=\'gallery_description\'
 ;';
-list($d) = array_from_query($query, 'value');
+[$d] = array_from_query($query, 'value');
 
 $page_banner = '<h1>'.$t.'</h1><p>'.$d.'</p>';
 $page_banner = addslashes($page_banner);
@@ -411,7 +412,7 @@ ALTER TABLE '.PREFIX_TABLE.'users
 ;';
 pwg_query($query);
 
-$to_keep = array('id', 'username', 'password', 'mail_address');
+$to_keep = ['id', 'username', 'password', 'mail_address'];
 
 $query = '
 DESC '.PREFIX_TABLE.'users

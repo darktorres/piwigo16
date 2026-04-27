@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -9,7 +10,7 @@
 
 
 /* PHP5 configuration for known servers */
-$hosting = array(
+$hosting = [
 
   //1and1
     'kundenserver.de' => 'AddType x-mapp-php5 .php',
@@ -41,4 +42,4 @@ $hosting = array(
 
   //Web1.fr - NFrance
     'nfrance.com' => 'AddHandler php-fastcgi5 .php',
-);
+];

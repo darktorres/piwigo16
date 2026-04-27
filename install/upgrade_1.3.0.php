@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -20,7 +21,7 @@ if (!defined('PHPWG_ROOT_PATH')) {
     }
 }
 
-$queries = array(
+$queries = [
   "
 ALTER TABLE phpwebgallery_categories
   ADD COLUMN uppercats varchar(255) NOT NULL default ''
@@ -51,14 +52,14 @@ ALTER TABLE phpwebgallery_image_category
 ALTER TABLE phpwebgallery_image_category
   ADD INDEX image_id (image_id)
 ;',
-  );
+  ];
 
 foreach ($queries as $query) {
     $query = str_replace('phpwebgallery_', PREFIX_TABLE, $query);
     pwg_query($query);
 }
 // filling the new column categories.uppercats
-$id_uppercats = array();
+$id_uppercats = [];
 
 $query = '
 SELECT id, id_uppercat
@@ -72,12 +73,12 @@ while ($row = pwg_db_fetch_assoc($result)) {
     $id_uppercats[$row['id']] = $row['id_uppercat'];
 }
 
-$datas = array();
+$datas = [];
 
 foreach (array_keys($id_uppercats) as $id) {
-    $data = array();
+    $data = [];
     $data['id'] = $id;
-    $uppercats = array();
+    $uppercats = [];
 
     array_push($uppercats, $id);
     while (isset($id_uppercats[$id]) and $id_uppercats[$id] != 'NULL') {
@@ -91,10 +92,10 @@ foreach (array_keys($id_uppercats) as $id) {
 
 mass_updates(
     CATEGORIES_TABLE,
-    array(
-    'primary' => array('id'),
-    'update' => array('uppercats'),
-    ),
+    [
+    'primary' => ['id'],
+    'update' => ['uppercats'],
+    ],
     $datas
 );
 

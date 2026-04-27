@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -24,7 +25,7 @@ SELECT value
   FROM '.CONFIG_TABLE.'
   WHERE param = \'prefix_thumbnail\'
 ;';
-list($prefix_thumbnail) = pwg_db_fetch_row(pwg_query($query));
+[$prefix_thumbnail] = pwg_db_fetch_row(pwg_query($query));
 
 // delete obsolete configuration
 $query = '
@@ -48,7 +49,7 @@ DELETE
 ;';
 pwg_query($query);
 
-$queries = array(
+$queries = [
 
   '
 ALTER TABLE piwigo_categories
@@ -158,7 +159,7 @@ CREATE TABLE piwigo_user_infos (
   UNIQUE KEY user_infos_ui1 (user_id)
 ) ENGINE=MyISAM
 ;",
-  );
+  ];
 
 foreach ($queries as $query) {
     $query = str_replace('piwigo_', PREFIX_TABLE, $query);
@@ -171,8 +172,8 @@ SELECT *
   FROM '.USERS_TABLE.'
 ;';
 
-$datas = array();
-list($dbnow) = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
+$datas = [];
+[$dbnow] = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
 
 $result = pwg_query($query);
 while ($row = pwg_db_fetch_assoc($result)) {
@@ -184,7 +185,7 @@ while ($row = pwg_db_fetch_assoc($result)) {
 include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 mass_inserts(
     USER_INFOS_TABLE,
-    array(
+    [
     'user_id',
     'nb_image_line',
     'nb_line_page',
@@ -197,11 +198,11 @@ mass_inserts(
     'recent_period',
     'template',
     'registration_date',
-    ),
+    ],
     $datas
 );
 
-$queries = array(
+$queries = [
 
   '
 UPDATE '.USER_INFOS_TABLE."
@@ -249,7 +250,7 @@ INSERT INTO '.CONFIG_TABLE."
   )
 ;",
 
-  );
+  ];
 
 foreach ($queries as $query) {
     $query = str_replace('piwigo_', PREFIX_TABLE, $query);

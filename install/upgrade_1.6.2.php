@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -15,7 +16,7 @@ if (!defined('PHPWG_ROOT_PATH')) {
     }
 }
 
-$queries = array(
+$queries = [
 '
 ALTER TABLE `'.PREFIX_TABLE.'categories`
   ADD COLUMN `permalink` varchar(64) default NULL
@@ -249,19 +250,19 @@ UPDATE '.PREFIX_TABLE."user_cache
   SET need_update = 'true'
 ;",
 
-);
+];
 
 foreach ($queries as $query) {
     pwg_query($query);
 }
 
-$replacements = array(
-  array('&#039;', '\''),
-  array('&quot;', '"'),
-  array('&lt;',   '<'),
-  array('&gt;',   '>'),
-  array('&amp;',  '&'), // <- this must be the last one
-  );
+$replacements = [
+  ['&#039;', '\''],
+  ['&quot;', '"'],
+  ['&lt;',   '<'],
+  ['&gt;',   '>'],
+  ['&amp;',  '&'], // <- this must be the last one
+  ];
 
 foreach ($replacements as $replacement) {
     $query = '
@@ -295,8 +296,7 @@ SET
   show_nb_comments = '".boolean_to_string($conf['show_nb_comments'])."',
   show_nb_hits = '".boolean_to_string($conf['show_nb_hits'])."',
   enabled_high = '".boolean_to_string(
-      (isset($conf['newuser_default_enabled_high']) ?
-      $conf['newuser_default_enabled_high'] : true)
+      ($conf['newuser_default_enabled_high'] ?? true)
   ).
   "'
 WHERE

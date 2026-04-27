@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -31,7 +32,7 @@ $existing = get_available_upgrade_ids();
 
 // which upgrades need to be applied?
 $to_apply = array_diff($existing, $applied);
-$inserts = array();
+$inserts = [];
 foreach ($to_apply as $upgrade_id) {
     if ($upgrade_id >= 112) { // TODO change on each release
         break;
@@ -39,11 +40,11 @@ foreach ($to_apply as $upgrade_id) {
 
     array_push(
         $inserts,
-        array(
+        [
         'id' => $upgrade_id,
         'applied' => CURRENT_DATE,
         'description' => '[migration from 2.3.0 to '.PHPWG_VERSION.'] not applied',
-        )
+        ]
     );
 }
 

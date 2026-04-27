@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -26,7 +27,7 @@ SELECT prefix_thumbnail, mail_webmaster
 ;';
 $save = pwg_db_fetch_assoc(pwg_query($query));
 
-$queries = array(
+$queries = [
   '
 DROP TABLE phpwebgallery_config
 ;',
@@ -287,7 +288,7 @@ DELETE FROM phpwebgallery_user_access
 DELETE FROM phpwebgallery_group_access
 ;',
 
-  );
+  ];
 
 foreach ($queries as $query) {
     $query = str_replace('phpwebgallery_', PREFIX_TABLE, $query);
@@ -297,27 +298,27 @@ foreach ($queries as $query) {
 //
 // check indexes
 //
-$indexes_of = array(
-  'categories' => array(
-    'categories_i2' => array(
-      'columns' => array('id_uppercat'),
+$indexes_of = [
+  'categories' => [
+    'categories_i2' => [
+      'columns' => ['id_uppercat'],
       'unique' => false,
-      ),
-    ),
-  'image_category' => array(
-    'image_category_i1' => array(
-      'columns' => array('image_id'),
+      ],
+    ],
+  'image_category' => [
+    'image_category_i1' => [
+      'columns' => ['image_id'],
       'unique' => false,
-      ),
-    'image_category_i2' => array(
-      'columns' => array('category_id'),
+      ],
+    'image_category_i2' => [
+      'columns' => ['category_id'],
       'unique' => false,
-      ),
-    ),
-  );
+      ],
+    ],
+  ];
 
 foreach (array_keys($indexes_of) as $table) {
-    $existing_indexes = array();
+    $existing_indexes = [];
 
     $query = '
 SHOW INDEX
@@ -353,143 +354,143 @@ ALTER TABLE '.PREFIX_TABLE.$table.'
 //
 // insert params in new configuration table
 //
-$params = array(
-  array(
+$params = [
+  [
     'param'   => 'prefix_thumbnail',
     'value'   => $save['prefix_thumbnail'],
     'comment' => 'thumbnails filename prefix',
-    ),
-  array(
+    ],
+  [
     'param'   => 'mail_webmaster',
     'value'   => $save['mail_webmaster'],
     'comment' => 'webmaster mail',
-    ),
-  array(
+    ],
+  [
     'param'   => 'default_language',
     'value'   => 'en_UK.iso-8859-1',
     'comment' => 'Default gallery language',
-    ),
-  array(
+    ],
+  [
     'param'   => 'default_template',
     'value'   => 'default',
     'comment' => 'Default gallery style',
-    ),
-  array(
+    ],
+  [
     'param'   => 'default_maxwidth',
     'value'   => '',
     'comment' => 'maximum width authorized for displaying images',
-    ),
-  array(
+    ],
+  [
     'param'   => 'default_maxheight',
     'value'   => '',
     'comment' => 'maximum height authorized for the displaying images',
-    ),
-  array(
+    ],
+  [
     'param'   => 'nb_comment_page',
     'value'   => '10',
     'comment' => 'number of comments to display on each page',
-    ),
-  array(
+    ],
+  [
     'param'   => 'upload_maxfilesize',
     'value'   => '150',
     'comment' => 'maximum filesize for the uploaded pictures',
-    ),
-  array(
+    ],
+  [
     'param'   => 'upload_maxwidth',
     'value'   => '800',
     'comment' => 'maximum width authorized for the uploaded images',
-    ),
-  array(
+    ],
+  [
     'param'   => 'upload_maxheight',
     'value'   => '600',
     'comment' => 'maximum height authorized for the uploaded images',
-    ),
-  array(
+    ],
+  [
     'param'   => 'upload_maxwidth_thumbnail',
     'value'   => '150',
     'comment' => 'maximum width authorized for the uploaded thumbnails',
-    ),
-  array(
+    ],
+  [
     'param'   => 'upload_maxheight_thumbnail',
     'value'   => '100',
     'comment' => 'maximum height authorized for the uploaded thumbnails',
-    ),
-  array(
+    ],
+  [
     'param'   => 'log',
     'value'   => 'false',
     'comment' => 'keep an history of visits on your website',
-    ),
-  array(
+    ],
+  [
     'param'   => 'comments_validation',
     'value'   => 'false',
     'comment' => 'administrators validate users comments before becoming visible',
-    ),
-  array(
+    ],
+  [
     'param'   => 'comments_forall',
     'value'   => 'false',
     'comment' => 'even guest not registered can post comments',
-    ),
-  array(
+    ],
+  [
     'param'   => 'mail_notification',
     'value'   => 'false',
     'comment' => 'automated mail notification for adminsitrators',
-    ),
-  array(
+    ],
+  [
     'param'   => 'nb_image_line',
     'value'   => '5',
     'comment' => 'Number of images displayed per row',
-    ),
-  array(
+    ],
+  [
     'param'   => 'nb_line_page',
     'value'   => '3',
     'comment' => 'Number of rows displayed per page',
-    ),
-  array(
+    ],
+  [
     'param'   => 'recent_period',
     'value'   => '7',
     'comment' => 'Period within which pictures are displayed as new (in days)',
-    ),
-  array(
+    ],
+  [
     'param'   => 'auto_expand',
     'value'   => 'false',
     'comment' => 'Auto expand of the category tree',
-    ),
-  array(
+    ],
+  [
     'param'   => 'show_nb_comments',
     'value'   => 'false',
     'comment' => 'Show the number of comments under the thumbnails',
-    ),
-  array(
+    ],
+  [
     'param'   => 'use_iptc',
     'value'   => 'false',
     'comment' => 'Use IPTC data during database synchronization with files metadata',
-    ),
-  array(
+    ],
+  [
     'param'   => 'use_exif',
     'value'   => 'false',
     'comment' => 'Use EXIF data during database synchronization with files metadata',
-    ),
-  array(
+    ],
+  [
     'param'   => 'show_iptc',
     'value'   => 'false',
     'comment' => 'Show IPTC metadata on picture.php if asked by user',
-    ),
-  array(
+    ],
+  [
     'param'   => 'show_exif',
     'value'   => 'true',
     'comment' => 'Show EXIF metadata on picture.php if asked by user',
-    ),
-  array(
+    ],
+  [
     'param'   => 'authorize_remembering',
     'value'   => 'true',
     'comment' => 'Authorize users to be remembered, see $conf{remember_me_length}',
-    ),
-  array(
+    ],
+  [
     'param'   => 'gallery_locked',
     'value'   => 'false',
     'comment' => 'Lock your gallery temporary for non admin users',
-    ),
-  );
+    ],
+  ];
 
 mass_inserts(
     CONFIG_TABLE,
@@ -502,7 +503,7 @@ update_global_rank();
 update_category();
 
 // update calculated field "images.path"
-$cat_ids = array();
+$cat_ids = [];
 
 $query = '
 SELECT DISTINCT(storage_category_id) AS unique_storage_category_id
@@ -524,7 +525,7 @@ UPDATE '.IMAGES_TABLE.'
 }
 
 // all sub-categories of private categories become private
-$cat_ids = array();
+$cat_ids = [];
 
 $query = '
 SELECT id
@@ -567,11 +568,11 @@ array_push($mysql_changes, 'define(\'PHPWG_INSTALLED\', true);');
 // Send infos
 $page['infos'] = array_merge(
     $page['infos'],
-    array(
+    [
     l10n('All sub-albums of private albums become private'),
     l10n('User permissions and group permissions have been erased'),
     l10n('Only thumbnails prefix and webmaster mail address have been saved from previous configuration'),
-    )
+    ]
 );
 
 // now we upgrade from 1.4.0

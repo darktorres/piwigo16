@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -18,7 +19,7 @@ if (($script != 'install' and $script != 'upgrade')
     die('Nothing to do here...');
 }
 
-function initPHP5()
+function initPHP5(): bool
 {
     include(PHPWG_ROOT_PATH.'install/hosting.php');
     $htaccess = PHPWG_ROOT_PATH.'.htaccess';
@@ -29,7 +30,7 @@ function initPHP5()
     }
 
     foreach ($hosting as $hostname => $rule) {
-        if (preg_match('!'.preg_quote($hostname).'$!', $my_hostname)) {
+        if (preg_match('!'.preg_quote((string) $hostname).'$!', $my_hostname)) {
             if (false !== ($fh = @fopen($htaccess, 'ab'))) {
                 fwrite($fh, "\n".$rule);
                 fclose($fh);
@@ -40,11 +41,11 @@ function initPHP5()
     return false;
 }
 
-function openPage()
+function openPage(): void
 {
     global $script;
 
-    $title = 'Piwigo '.PHPWG_VERSION.' - '.l10n(ucwords($script));
+    $title = 'Piwigo '.PHPWG_VERSION.' - '.l10n(ucwords((string) $script));
 
     header('Content-Type: text/html; charset=UTF-8');
 
@@ -115,7 +116,7 @@ h1 { text-align: left; }
 <h2>'.$title.'</h2>';
 }
 
-function closePage()
+function closePage(): void
 {
     echo '
 </div>

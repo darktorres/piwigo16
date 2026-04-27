@@ -17,6 +17,6 @@ return RectorConfig::configure()
         __DIR__ . '/include/smarty', __DIR__ . '/include/feedcreator.class.php',
         __DIR__ . '/themes', __DIR__ . '/vendor',
     ])
-    ->withPhpSets(php80: true)
+    ->withPhpSets(php85: true)
     ->withImportNames(importShortClasses: false, removeUnusedImports: false)
     ->withParallel();

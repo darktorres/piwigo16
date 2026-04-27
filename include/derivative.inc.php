@@ -19,9 +19,9 @@
  */
 final class SrcImage
 {
-    public const IS_ORIGINAL = 0x01;
-    public const IS_MIMETYPE = 0x02;
-    public const DIM_NOT_GIVEN = 0x04;
+    public const int IS_ORIGINAL = 0x01;
+    public const int IS_MIMETYPE = 0x02;
+    public const int DIM_NOT_GIVEN = 0x04;
 
     /** @var int */
     public $id;
@@ -303,19 +303,19 @@ final class DerivativeImage
         }
 
         $tokens = [];
-        $tokens[] = substr($params->type, 0, 2);
+        $tokens[] = substr((string) $params->type, 0, 2);
 
         if ($params->type == IMG_CUSTOM) {
             $params->add_url_tokens($tokens);
         }
 
         $loc = $src->rel_path;
-        if (substr_compare($loc, './', 0, 2) == 0) {
-            $loc = substr($loc, 2);
-        } elseif (substr_compare($loc, '../', 0, 3) == 0) {
-            $loc = substr($loc, 3);
+        if (substr_compare((string) $loc, './', 0, 2) == 0) {
+            $loc = substr((string) $loc, 2);
+        } elseif (substr_compare((string) $loc, '../', 0, 3) == 0) {
+            $loc = substr((string) $loc, 3);
         }
-        $loc = substr_replace($loc, '-'.implode('_', $tokens), strrpos($loc, '.'), 0);
+        $loc = substr_replace($loc, '-'.implode('_', $tokens), strrpos((string) $loc, '.'), 0);
 
         $rel_path = PWG_DERIVATIVE_DIR.$loc;
 

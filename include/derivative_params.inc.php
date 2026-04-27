@@ -313,9 +313,9 @@ final class DerivativeParams
     /**
      * @return array
      */
-    public function __sleep()
+    public function __serialize(): array
     {
-        return ['last_mod_time', 'sizing', 'sharpen'];
+        return ['last_mod_time' => $this->last_mod_time, 'sizing' => $this->sizing, 'sharpen' => $this->sharpen];
     }
 
     /**

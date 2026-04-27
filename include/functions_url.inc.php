@@ -43,7 +43,7 @@ function get_absolute_root_url($with_scheme = true)
     if ($with_scheme) {
         $is_https = false;
         if (isset($_SERVER['HTTPS']) &&
-          ((strtolower($_SERVER['HTTPS']) == 'on') or ($_SERVER['HTTPS'] == 1))) {
+          ((strtolower((string) $_SERVER['HTTPS']) == 'on') or ($_SERVER['HTTPS'] == 1))) {
             $is_https = true;
             $url .= 'https://';
         } else {
@@ -96,7 +96,7 @@ function add_url_params($url, $params, $arg_separator = '&amp;')
         foreach ($params as $param => $val) {
             if ($is_first) {
                 $is_first = false;
-                $url .= (!str_contains($url, '?')) ? '?' : $arg_separator;
+                $url .= (!str_contains((string) $url, '?')) ? '?' : $arg_separator;
             } else {
                 $url .= $arg_separator;
             }
@@ -554,9 +554,9 @@ function parse_section_url($tokens, &$next_token)
         $page['section'] = 'search';
         $next_token++;
 
-        preg_match('/^(psk-\d{8}-[a-zA-Z0-9]{10})$/', @$tokens[$next_token], $matches);
+        preg_match('/^(psk-\d{8}-[a-zA-Z0-9]{10})$/', (string) @$tokens[$next_token], $matches);
         if (!isset($matches[1])) {
-            preg_match('/(\d+)/', @$tokens[$next_token], $matches);
+            preg_match('/(\d+)/', (string) @$tokens[$next_token], $matches);
             if (!isset($matches[1])) {
                 bad_request('search identifier is missing');
             }
@@ -576,10 +576,10 @@ function parse_section_url($tokens, &$next_token)
         }
         // With pictures list
         else {
-            if (!preg_match('/^\d+(,\d+)*$/', $tokens[$next_token])) {
+            if (!preg_match('/^\d+(,\d+)*$/', (string) $tokens[$next_token])) {
                 bad_request('wrong format on list GET parameter');
             }
-            foreach (explode(',', $tokens[$next_token]) as $image_id) {
+            foreach (explode(',', (string) $tokens[$next_token]) as $image_id) {
                 $page['list'][] = $image_id;
             }
         }
@@ -763,7 +763,7 @@ function get_query_string_diff($rejects = [], $escape = true)
         return '';
     }
 
-    parse_str($_SERVER['QUERY_STRING'], $vars);
+    parse_str((string) $_SERVER['QUERY_STRING'], $vars);
 
     $vars = array_diff_key($vars, array_flip($rejects));
 

@@ -58,7 +58,7 @@ if (str_starts_with($page['root_path'], './')) {
 $page['section_url'] = $rewritten;
 
 // deleting first "/" if displayed
-$tokens = explode('/', ltrim($rewritten, '/'));
+$tokens = explode('/', ltrim((string) $rewritten, '/'));
 // $tokens = array(
 //   0 => category,
 //   1 => 12-foo,

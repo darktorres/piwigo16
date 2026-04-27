@@ -126,15 +126,15 @@ class Template
         $this->smarty->registerPlugin('modifier', 'str_ireplace', 'str_ireplace');
         $this->smarty->registerPlugin('modifier', 'explode', ['Template', 'mod_explode']);
         $this->smarty->registerPlugin('modifier', 'ternary', ['Template', 'mod_ternary']);
-        $this->smarty->registerPlugin('modifier', 'get_extent', [$this, 'get_extent']);
-        $this->smarty->registerPlugin('block', 'html_head', [$this, 'block_html_head']);
-        $this->smarty->registerPlugin('block', 'html_style', [$this, 'block_html_style']);
-        $this->smarty->registerPlugin('function', 'combine_script', [$this, 'func_combine_script']);
-        $this->smarty->registerPlugin('function', 'get_combined_scripts', [$this, 'func_get_combined_scripts']);
-        $this->smarty->registerPlugin('function', 'combine_css', [$this, 'func_combine_css']);
-        $this->smarty->registerPlugin('function', 'define_derivative', [$this, 'func_define_derivative']);
-        $this->smarty->registerPlugin('compiler', 'get_combined_css', [$this, 'func_get_combined_css']);
-        $this->smarty->registerPlugin('block', 'footer_script', [$this, 'block_footer_script']);
+        $this->smarty->registerPlugin('modifier', 'get_extent', $this->get_extent(...));
+        $this->smarty->registerPlugin('block', 'html_head', $this->block_html_head(...));
+        $this->smarty->registerPlugin('block', 'html_style', $this->block_html_style(...));
+        $this->smarty->registerPlugin('function', 'combine_script', $this->func_combine_script(...));
+        $this->smarty->registerPlugin('function', 'get_combined_scripts', $this->func_get_combined_scripts(...));
+        $this->smarty->registerPlugin('function', 'combine_css', $this->func_combine_css(...));
+        $this->smarty->registerPlugin('function', 'define_derivative', $this->func_define_derivative(...));
+        $this->smarty->registerPlugin('compiler', 'get_combined_css', $this->func_get_combined_css(...));
+        $this->smarty->registerPlugin('block', 'footer_script', $this->block_footer_script(...));
         $this->smarty->registerFilter('pre', ['Template', 'prefilter_white_space']);
         $this->smarty->registerPlugin('modifier', 'url_is_remote', 'url_is_remote');
         $this->smarty->registerPlugin('modifier', 'is_null', 'is_null');
@@ -811,7 +811,7 @@ class Template
         $this->scriptLoader->add(
             $params['id'],
             $load,
-            empty($params['require']) ? [] : explode(',', $params['require']),
+            empty($params['require']) ? [] : explode(',', (string) $params['require']),
             @$params['path'],
             $params['version'] ?? 0,
             @$params['template']
@@ -904,7 +904,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
 
             $this->scriptLoader->add_inline(
                 $content,
-                empty($params['require']) ? [] : explode(',', $params['require'])
+                empty($params['require']) ? [] : explode(',', (string) $params['require'])
             );
         }
     }
@@ -927,7 +927,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
         }
 
         if (!isset($params['id'])) {
-            $params['id'] = md5($params['path']);
+            $params['id'] = md5((string) $params['path']);
         }
 
         $this->cssLoader->add($params['id'], $params['path'], $params['version'] ?? 0, (int)@$params['order'], (bool)@$params['template']);
@@ -1202,29 +1202,23 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
  */
 class PwgTemplateAdapter
 {
-    /**
-     * @deprecated use "translate" modifier
-     */
+    #[\Deprecated(message: 'use "translate" modifier')]
     public function l10n($text)
     {
         return l10n($text);
     }
 
-    /**
-     * @deprecated use "translate_dec" modifier
-     */
+    #[\Deprecated(message: 'use "translate_dec" modifier')]
     public function l10n_dec($s, $p, $v)
     {
         return l10n_dec($s, $p, $v);
     }
 
-    /**
-     * @deprecated use "translate" or "sprintf" modifier
-     */
+    #[\Deprecated(message: 'use "translate" or "sprintf" modifier')]
     public function sprintf()
     {
         $args = func_get_args();
-        return call_user_func_array('sprintf', $args);
+        return call_user_func_array(sprintf(...), $args);
     }
 
     /**
@@ -1652,7 +1646,7 @@ class ScriptLoader
                 $required_ids = ['jquery', 'jquery.ui.effect'];
 
                 if (empty($script->path)) {
-                    $script->path = dirname(self::$known_paths['jquery.ui.effect'])."/$id.min.js";
+                    $script->path = dirname((string) self::$known_paths['jquery.ui.effect'])."/$id.min.js";
                 }
             } elseif (str_starts_with($id, 'jquery.ui.')) {
                 if (!isset(self::$ui_core_dependencies[$id])) {
@@ -1660,7 +1654,7 @@ class ScriptLoader
                 }
 
                 if (empty($script->path)) {
-                    $script->path = dirname(self::$known_paths['jquery.ui'])."/$id.min.js";
+                    $script->path = dirname((string) self::$known_paths['jquery.ui'])."/$id.min.js";
                 }
             }
 
@@ -1736,7 +1730,7 @@ class ScriptLoader
         if ($s1->extra['order'] == 0 and ($s1->is_remote() xor $s2->is_remote())) {
             return $s1->is_remote() ? -1 : 1;
         }
-        return strcmp($s1->id, $s2->id);
+        return strcmp((string) $s1->id, (string) $s2->id);
     }
 }
 
@@ -1792,8 +1786,8 @@ final class FileCombiner
         global $conf;
         $force = false;
         if (is_admin() && ($this->is_css || !$conf['template_compile_check'])) {
-            $force = (isset($_SERVER['HTTP_CACHE_CONTROL']) && str_contains($_SERVER['HTTP_CACHE_CONTROL'], 'max-age=0'))
-              || (isset($_SERVER['HTTP_PRAGMA']) && strpos($_SERVER['HTTP_PRAGMA'], 'no-cache'));
+            $force = (isset($_SERVER['HTTP_CACHE_CONTROL']) && str_contains((string) $_SERVER['HTTP_CACHE_CONTROL'], 'max-age=0'))
+              || (isset($_SERVER['HTTP_PRAGMA']) && strpos((string) $_SERVER['HTTP_PRAGMA'], 'no-cache'));
         }
 
         $result = [];

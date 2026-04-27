@@ -262,7 +262,7 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
         );
 
         trigger_notify('ws_add_methods', [&$this]);
-        uksort($this->_methods, 'strnatcmp');
+        uksort($this->_methods, strnatcmp(...));
         $this->_requestHandler->handleRequest($this);
     }
 
@@ -475,7 +475,7 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
             $flags = $options['flags'];
 
             // parameter not provided in the request
-            if (!array_key_exists($name, $params)) {
+            if (!array_key_exists((string) $name, $params)) {
                 if (!self::hasFlag($flags, WS_PARAM_OPTIONAL)) {
                     $missing_params[] = $name;
                 } elseif (array_key_exists('default', $options)) {

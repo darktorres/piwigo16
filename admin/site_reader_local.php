@@ -114,12 +114,12 @@ class LocalSiteReader
         global $conf;
         $data = [];
 
-        $filename = basename($file);
+        $filename = basename((string) $file);
         $extension = get_extension($filename);
 
         $representative_ext = null;
         if (! isset($conf['flip_picture_ext'][$extension])) {
-            $dirname = dirname($file);
+            $dirname = dirname((string) $file);
             $filename_wo_ext = get_filename_wo_extension($filename);
             $representative_ext = $this->get_representative_ext($dirname, $filename_wo_ext);
         }

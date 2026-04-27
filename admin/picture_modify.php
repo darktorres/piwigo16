@@ -81,7 +81,7 @@ if (isset($_POST['submit'])) {
 
     $to_sanitize_fields = ['name', 'author', 'comment'];
     foreach ($to_sanitize_fields as $field) {
-        $data[$field] = $conf['allow_html_descriptions'] ? @$_POST[$field] : strip_tags(@$_POST[$field]);
+        $data[$field] = $conf['allow_html_descriptions'] ? @$_POST[$field] : strip_tags((string) @$_POST[$field]);
     }
 
     if (!empty($_POST['date_creation'])) {
@@ -208,7 +208,7 @@ $template->assign(
 
     'NAME' =>
       isset($_POST['name']) ?
-        stripslashes($_POST['name']) : @$row['name'],
+        stripslashes((string) $_POST['name']) : @$row['name'],
 
     'TITLE' => render_element_name($row),
 
@@ -221,16 +221,16 @@ $template->assign(
     'REGISTRATION_DATE' => format_date($row['date_available']),
 
     'AUTHOR' => htmlspecialchars(
-        isset($_POST['author'])
-        ? stripslashes($_POST['author'])
+        (string) isset($_POST['author'])
+        ? stripslashes((string) $_POST['author'])
         : (empty($row['author']) ? '' : $row['author'])
     ),
 
     'DATE_CREATION' => $row['date_creation'],
 
     'DESCRIPTION' =>
-      htmlspecialchars(isset($_POST['comment']) ?
-        stripslashes($_POST['comment']) : (empty($row['comment']) ? '' : $row['comment'])),
+      htmlspecialchars((string) isset($_POST['comment']) ?
+        stripslashes((string) $_POST['comment']) : (empty($row['comment']) ? '' : $row['comment'])),
 
     'F_ACTION' =>
         get_root_url().'admin.php'
@@ -249,7 +249,7 @@ while ($user_row = pwg_db_fetch_assoc($result)) {
     $row['added_by'] = $user_row['username'];
 }
 
-$extTab = explode('.', $row['file']);
+$extTab = explode('.', (string) $row['file']);
 
 $intro_vars = [
   'file' => l10n('%s', $row['file']),

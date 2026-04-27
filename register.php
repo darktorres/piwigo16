@@ -63,8 +63,8 @@ if (isset($_POST['submit'])) {
     $registration_post_key = get_ephemeral_key(6);
 }
 
-$login = !empty($_POST['login']) ? htmlspecialchars(stripslashes($_POST['login'])) : '';
-$email = !empty($_POST['mail_address']) ? htmlspecialchars(stripslashes($_POST['mail_address'])) : '';
+$login = !empty($_POST['login']) ? htmlspecialchars(stripslashes((string) $_POST['login'])) : '';
+$email = !empty($_POST['mail_address']) ? htmlspecialchars(stripslashes((string) $_POST['mail_address'])) : '';
 
 //----------------------------------------------------- template initialization
 //
@@ -91,7 +91,7 @@ if (!isset($themeconf['hide_menu_on']) or !in_array('theRegisterPage', $themecon
 
 //Load language if cookie is set from login/register/password pages
 if (isset($_COOKIE['lang']) and $user['language'] != $_COOKIE['lang']) {
-    if (!array_key_exists($_COOKIE['lang'], get_languages())) {
+    if (!array_key_exists((string) $_COOKIE['lang'], get_languages())) {
         fatal_error('[Hacking attempt] the input parameter "'.$_COOKIE['lang'].'" is not valid');
     }
 
@@ -110,7 +110,7 @@ $template->assign([
 ]);
 
 //Get link to doc
-if (str_starts_with($user['language'], 'fr')) {
+if (str_starts_with((string) $user['language'], 'fr')) {
     $help_link = 'https://doc-fr.piwigo.org/les-utilisateurs/se-connecter-a-piwigo';
 } else {
     $help_link = 'https://doc.piwigo.org/managing-users/log-in-to-piwigo';

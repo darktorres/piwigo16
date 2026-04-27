@@ -128,7 +128,7 @@ SELECT *
         $tags[] = $row;
     }
 
-    usort($tags, 'tag_alpha_compare');
+    usort($tags, tag_alpha_compare(...));
 
     return $tags;
 }
@@ -277,7 +277,7 @@ SELECT t.*, count(*) AS counter
         $row['name'] = trigger_change('render_tag_name', $row['name'], $row);
         $tags[] = $row;
     }
-    usort($tags, 'tag_alpha_compare');
+    usort($tags, tag_alpha_compare(...));
     return $tags;
 }
 

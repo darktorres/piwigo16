@@ -88,7 +88,7 @@ function save_upload_form_config($data, &$errors = [], &$form_errors = [])
             $max = $upload_form_config[$field]['max'];
             $pattern = $upload_form_config[$field]['pattern'];
 
-            if (preg_match($pattern, $value) and $value >= $min and $value <= $max) {
+            if (preg_match($pattern, (string) $value) and $value >= $min and $value <= $max) {
                 $updates[] = [
                  'param' => $field,
                  'value' => $value,
@@ -191,7 +191,7 @@ SELECT
 
         // current date
         [$dbnow] = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
-        [$year, $month, $day] = preg_split('/[^\d]/', $dbnow, 4);
+        [$year, $month, $day] = preg_split('/[^\d]/', (string) $dbnow, 4);
 
         // upload directory hierarchy
         $upload_dir = sprintf(
@@ -202,8 +202,8 @@ SELECT
         );
 
         // compute file path
-        $date_string = preg_replace('/[^\d]/', '', $dbnow);
-        $random_string = substr($md5sum, 0, 4).'%s';
+        $date_string = preg_replace('/[^\d]/', '', (string) $dbnow);
+        $random_string = substr((string) $md5sum, 0, 4).'%s';
         $filename_wo_ext = $date_string.'-'.$random_string;
         $file_path = $upload_dir.'/'.$filename_wo_ext.'.';
 
@@ -222,7 +222,6 @@ SELECT
 
             $finfo = finfo_open(FILEINFO_MIME_TYPE);
             $finfo_type = finfo_file($finfo, $source_filepath);
-            finfo_close($finfo);
 
             if (in_array($finfo_type, ['image/svg', 'image/svg+xml']) and $original_extension != 'svg') {
                 unlink($source_filepath);
@@ -448,8 +447,8 @@ SELECT
         die('['.__FUNCTION__.'] this photo does not exist in the database');
     }
 
-    $format_path = dirname($images[0]['path']).'/pwg_format/';
-    $format_path .= get_filename_wo_extension(basename($images[0]['path']));
+    $format_path = dirname((string) $images[0]['path']).'/pwg_format/';
+    $format_path .= get_filename_wo_extension(basename((string) $images[0]['path']));
     $format_path .= '.'.$format_ext;
 
     prepare_directory(dirname($format_path));
@@ -615,8 +614,8 @@ function upload_file_tiff($representative_ext, $file_path)
     }
 
     // move the uploaded file to pwg_representative sub-directory
-    $representative_file_path = dirname($file_path).'/pwg_representative/';
-    $representative_file_path .= get_filename_wo_extension(basename($file_path)).'.';
+    $representative_file_path = dirname((string) $file_path).'/pwg_representative/';
+    $representative_file_path .= get_filename_wo_extension(basename((string) $file_path)).'.';
 
     $representative_ext = $conf['tiff_representative_ext'];
     $representative_file_path .= $representative_ext;
@@ -674,8 +673,8 @@ function upload_file_video($representative_ext, $file_path)
         return $representative_ext;
     }
 
-    $representative_file_path = dirname($file_path).'/pwg_representative/';
-    $representative_file_path .= get_filename_wo_extension(basename($file_path)).'.';
+    $representative_file_path = dirname((string) $file_path).'/pwg_representative/';
+    $representative_file_path .= get_filename_wo_extension(basename((string) $file_path)).'.';
 
     $representative_ext = 'jpg';
     $representative_file_path .= $representative_ext;
@@ -746,8 +745,8 @@ function upload_file_psd($representative_ext, $file_path)
     }
 
     // move the uploaded file to pwg_representative sub-directory
-    $representative_file_path = dirname($file_path).'/pwg_representative/';
-    $representative_file_path .= get_filename_wo_extension(basename($file_path)).'.';
+    $representative_file_path = dirname((string) $file_path).'/pwg_representative/';
+    $representative_file_path .= get_filename_wo_extension(basename((string) $file_path)).'.';
 
     $representative_ext = 'png';
     $representative_file_path .= $representative_ext;
@@ -896,7 +895,7 @@ function is_valid_image_extension($extension)
         $extensions = $conf['picture_ext'];
     }
 
-    return array_unique(array_map('strtolower', $extensions));
+    return array_unique(array_map(strtolower(...), $extensions));
 }
 
 function file_upload_error_message($error_code)
@@ -929,7 +928,7 @@ function get_ini_size($ini_key, $in_bytes = true)
 
 function convert_shorthand_notation_to_bytes($value)
 {
-    $suffix = substr($value, -1);
+    $suffix = substr((string) $value, -1);
     $multiply_by = null;
 
     if ('K' == $suffix) {
@@ -941,7 +940,7 @@ function convert_shorthand_notation_to_bytes($value)
     }
 
     if (isset($multiply_by)) {
-        $value = substr($value, 0, -1);
+        $value = substr((string) $value, 0, -1);
         $value *= $multiply_by;
     }
 
@@ -957,10 +956,10 @@ function ready_for_upload_message()
 {
     global $conf;
 
-    $relative_dir = preg_replace('#^'.PHPWG_ROOT_PATH.'#', '', $conf['upload_dir']);
+    $relative_dir = preg_replace('#^'.PHPWG_ROOT_PATH.'#', '', (string) $conf['upload_dir']);
 
     if (!is_dir($conf['upload_dir'])) {
-        if (!is_writable(dirname($conf['upload_dir']))) {
+        if (!is_writable(dirname((string) $conf['upload_dir']))) {
             return sprintf(
                 l10n('Create the "%s" directory at the root of your Piwigo installation'),
                 $relative_dir

@@ -130,18 +130,6 @@ parameters:
 			path: admin/include/functions_upgrade.php
 
 		-
-			message: '#^Call to deprecated function finfo_close\(\)\.$#'
-			identifier: function.deprecated
-			count: 1
-			path: admin/include/functions_upload.inc.php
-
-		-
-			message: '#^Call to deprecated function imagedestroy\(\)\.$#'
-			identifier: function.deprecated
-			count: 7
-			path: admin/include/image.class.php
-
-		-
 			message: '#^Undefined variable\: \$f$#'
 			identifier: variable.undefined
 			count: 1
@@ -299,12 +287,6 @@ parameters:
 			identifier: function.deprecated
 			count: 1
 			path: admin/tags.php
-
-		-
-			message: '#^Call to deprecated function finfo_close\(\)\.$#'
-			identifier: function.deprecated
-			count: 1
-			path: admin/themes_standard_pages.php
 
 		-
 			message: '#^Instantiated class FeedItem not found\.$#'
@@ -472,12 +454,6 @@ parameters:
 			path: include/minify/src/Minify.php
 
 		-
-			message: '#^Deprecated in PHP 8\.4\: Parameter \#3 \$use_include_path \(int\) is implicitly nullable via default value null\.$#'
-			identifier: parameter.implicitlyNullable
-			count: 1
-			path: include/php_compat/gzopen.php
-
-		-
 			message: '#^Function gzopen64 not found\.$#'
 			identifier: function.notFound
 			count: 1
@@ -526,12 +502,6 @@ parameters:
 			message: '#^Access to an undefined static property QRtools\:\:\$frames\.$#'
 			identifier: staticProperty.notFound
 			count: 1
-			path: include/phpqrcode.php
-
-		-
-			message: '#^Call to deprecated function imagedestroy\(\)\.$#'
-			identifier: function.deprecated
-			count: 3
 			path: include/phpqrcode.php
 
 		-

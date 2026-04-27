@@ -81,7 +81,7 @@ if (!empty($conf['mobile_theme']) && (get_device() != 'desktop' || mobile_theme(
     $template->assign(
         'TOGGLE_MOBILE_THEME_URL',
         add_url_params(
-            htmlspecialchars($_SERVER['REQUEST_URI']),
+            htmlspecialchars((string) $_SERVER['REQUEST_URI']),
             ['mobile' => mobile_theme() ? 'false' : 'true']
         )
     );

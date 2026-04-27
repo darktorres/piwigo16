@@ -122,7 +122,7 @@ class PwgXmlWriter
         if ($this->_indent and
             $this->_indentLevel > count($this->_elementStack)) {
             $this->_output(
-                str_repeat($this->_indentStr, count($this->_elementStack))
+                str_repeat((string) $this->_indentStr, count($this->_elementStack))
             );
         }
     }
@@ -141,7 +141,7 @@ class PwgRestEncoder extends PwgResponseEncoder
         if ($response instanceof PwgError) {
             $ret = '<?xml version="1.0"?>
 <rsp stat="fail">
-	<err code="'.$response->code().'" msg="'.htmlspecialchars($response->message()).'" />
+	<err code="'.$response->code().'" msg="'.htmlspecialchars((string) $response->message()).'" />
 </rsp>';
             return $ret;
         }

@@ -44,7 +44,7 @@ if (!isset($_GET['output']) or 'content_only' != $_GET['output']) {
 
 if (
     isset($_GET['page'])
-    and preg_match('/^[a-z_]*$/', $_GET['page'])
+    and preg_match('/^[a-z_]*$/', (string) $_GET['page'])
 ) {
     $help_content = load_language(
         'help/'.$_GET['page'].'.html',

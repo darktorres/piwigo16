@@ -553,7 +553,7 @@ function get_fs_directories($path, $recursive = true)
     global $conf;
 
     $dirs = [];
-    $path = rtrim($path, '/');
+    $path = rtrim((string) $path, '/');
 
     $exclude_folders = array_merge(
         $conf['sync_exclude_folders'],
@@ -805,13 +805,13 @@ SELECT
   WHERE id IN ('.implode(',', $categories).')
 ;';
         $all_categories = query2array($query);
-        usort($all_categories, 'global_rank_compare');
+        usort($all_categories, global_rank_compare(...));
 
         foreach ($all_categories as $cat) {
             $is_top = true;
 
             if (!empty($cat['id_uppercat'])) {
-                foreach (explode(',', $cat['uppercats']) as $id_uppercat) {
+                foreach (explode(',', (string) $cat['uppercats']) as $id_uppercat) {
                     if (isset($top_categories[$id_uppercat])) {
                         $is_top = false;
                         break;
@@ -911,7 +911,7 @@ SELECT uppercats
     while ($row = pwg_db_fetch_assoc($result)) {
         $uppercats = array_merge(
             $uppercats,
-            explode(',', $row['uppercats'])
+            explode(',', (string) $row['uppercats'])
         );
     }
     $uppercats = array_unique($uppercats);
@@ -1037,12 +1037,12 @@ SELECT id, uppercats, site_id
 /**
  * Returns an array with all file system files according to $conf['file_ext']
  *
- * @deprecated 2.4
  *
  * @param string $path
  * @param bool $recursive
  * @return array
  */
+#[\Deprecated(message: '2.4')]
 function get_fs($path, $recursive = true)
 {
     global $conf;
@@ -1816,7 +1816,7 @@ INSERT IGNORE
     pwg_query($query);
 
     [$empty_lounge_running] = pwg_db_fetch_row(pwg_query('SELECT value FROM '.CONFIG_TABLE.' WHERE param = "empty_lounge_running"'));
-    list($running_exec_id, ) = explode('-', $empty_lounge_running);
+    list($running_exec_id, ) = explode('-', (string) $empty_lounge_running);
 
     if ($running_exec_id != $exec_id) {
         $logger->debug(__FUNCTION__.', exec='.$exec_id.', skip');
@@ -2251,7 +2251,7 @@ function cat_admin_access($category_id)
 
     // $filter['visible_categories'] and $filter['visible_images']
     // are not used because it's not necessary (filter <> restriction)
-    if (in_array($category_id, @explode(',', $user['forbidden_categories']))) {
+    if (in_array($category_id, @explode(',', (string) $user['forbidden_categories']))) {
         return false;
     }
     return true;
@@ -2443,7 +2443,7 @@ function delete_groups($group_ids)
         return false;
     }
 
-    if (preg_match('/^group:(\d+)$/', conf_get_param('email_admin_on_new_user', 'undefined'), $matches)) {
+    if (preg_match('/^group:(\d+)$/', (string) conf_get_param('email_admin_on_new_user', 'undefined'), $matches)) {
         foreach ($group_ids as $group_id) {
             if ($group_id == $matches[1]) {
                 conf_update_param('email_admin_on_new_user', 'all', true);
@@ -2515,7 +2515,7 @@ SELECT '.$conf['user_fields']['username'].'
         return false;
     }
 
-    return stripslashes($username);
+    return stripslashes((string) $username);
 }
 
 /**
@@ -2636,9 +2636,9 @@ function get_taglist($query, $only_user_language = true)
         }
     }
 
-    usort($taglist, 'tag_alpha_compare');
+    usort($taglist, tag_alpha_compare(...));
     if (count($altlist)) {
-        usort($altlist, 'tag_alpha_compare');
+        usort($altlist, tag_alpha_compare(...));
         $taglist = array_merge($taglist, $altlist);
     }
 
@@ -2873,10 +2873,10 @@ function delete_element_derivatives($infos, $type = 'all')
     if (!empty($infos['representative_ext'])) {
         $path = original_to_representative($path, $infos['representative_ext']);
     }
-    if (substr_compare($path, '../', 0, 3) == 0) {
-        $path = substr($path, 3);
+    if (substr_compare((string) $path, '../', 0, 3) == 0) {
+        $path = substr((string) $path, 3);
     }
-    $dot = strrpos($path, '.');
+    $dot = strrpos((string) $path, '.');
     if ($type == 'all') {
         $pattern = '-*';
     } else {
@@ -2982,7 +2982,7 @@ function get_admin_client_cache_keys($requested = [])
     }
 
     $keys = [
-      '_hash' => md5(get_absolute_root_url()),
+      '_hash' => md5((string) get_absolute_root_url()),
       ];
 
     foreach ($requested as $item) {
@@ -3440,7 +3440,7 @@ function get_graphics_library()
 
 function get_graphics_library_label()
 {
-    [$library_code, $library_version] = explode('/', get_graphics_library());
+    [$library_code, $library_version] = explode('/', (string) get_graphics_library());
 
     $label_for_lib = [
       'imagick' => 'ImageMagick',
@@ -3552,7 +3552,7 @@ SELECT
         $candidate = $users[0]['registration_date'];
     }
 
-    if (empty($candidate) or strtotime($candidate) < strtotime($piwigo_origins)) {
+    if (empty($candidate) or strtotime((string) $candidate) < strtotime($piwigo_origins)) {
         $query = '
 SELECT
     MIN(registration_date) AS min_registration_date
@@ -3565,7 +3565,7 @@ SELECT
         }
     }
 
-    if (empty($candidate) or strtotime($candidate) < strtotime($piwigo_origins)) {
+    if (empty($candidate) or strtotime((string) $candidate) < strtotime($piwigo_origins)) {
         // let's find another candidate
         $query = '
 SELECT

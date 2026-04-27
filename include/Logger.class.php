@@ -100,7 +100,7 @@ class Logger
             return;
         }
 
-        $this->options['directory'] = rtrim($this->options['directory'], '\\/') . DIRECTORY_SEPARATOR;
+        $this->options['directory'] = rtrim((string) $this->options['directory'], '\\/') . DIRECTORY_SEPARATOR;
 
         if ($this->options['filename'] == null) {
             $this->options['filename'] = 'log_' . date('Y-m-d') . '.txt';

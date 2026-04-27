@@ -62,7 +62,7 @@ function validate_login_case($login)
         $query = '
 SELECT '.$conf['user_fields']['username'].'
 FROM '.USERS_TABLE.'
-WHERE LOWER('.stripslashes($conf['user_fields']['username']).") = '".strtolower($login)."'
+WHERE LOWER('.stripslashes((string) $conf['user_fields']['username']).") = '".strtolower($login)."'
 ;";
 
         $count = pwg_db_num_rows(pwg_query($query));
@@ -91,7 +91,7 @@ function search_case_username($username)
     FROM `'.USERS_TABLE.'`;
   ');
     while ($r = pwg_db_fetch_assoc($q)) {
-        $SCU_users[$r['username']] = strtolower($r['username']);
+        $SCU_users[$r['username']] = strtolower((string) $r['username']);
     }
     // $SCU_users is now an associative table where the key is the account as
     // registered in the DB, and the value is this same account, in lower case
@@ -210,7 +210,7 @@ SELECT id
               ];
 
             $group_id = null;
-            if (preg_match('/^group:(\d+)$/', $conf['email_admin_on_new_user'], $matches)) {
+            if (preg_match('/^group:(\d+)$/', (string) $conf['email_admin_on_new_user'], $matches)) {
                 $group_id = $matches[1];
             }
 
@@ -841,7 +841,7 @@ function get_browser_language()
     // in both full and short forms, and case insensitive
     $languages_available = [];
     foreach (get_languages() as $language_code => $language_name) {
-        $lowercase_full = strtolower($language_code);
+        $lowercase_full = strtolower((string) $language_code);
         $lowercase_parts = explode('_', $lowercase_full, 2);
         $lowercase_prefix = $lowercase_parts[0];
         $languages_available[$lowercase_full] = $language_code;
@@ -906,7 +906,7 @@ function create_user_infos($user_ids, $override_values = null)
             }
 
             $insert = array_merge(
-                array_map('pwg_db_real_escape_string', $default_user),
+                array_map(pwg_db_real_escape_string(...), $default_user),
                 [
                 'user_id' => $user_id,
                 'status' => $status,
@@ -941,7 +941,7 @@ WHERE '.$conf['user_fields']['id'].' = '.$user_id;
     $result = pwg_query($query);
     if (pwg_db_num_rows($result) > 0) {
         $row = pwg_db_fetch_assoc($result);
-        $username = stripslashes($row['username']);
+        $username = stripslashes((string) $row['username']);
         $data = $time.$user_id.$username;
         $key = base64_encode(hash_hmac('sha1', $data, $conf['secret_key'].$row['password'], true));
         return $key;
@@ -965,7 +965,7 @@ function log_user($user_id, $remember_me)
     //TODO check value of cookie
 
     if (isset($_COOKIE['lang']) and $user['language'] != $_COOKIE['lang']) {
-        if (!array_key_exists($_COOKIE['lang'], get_languages())) {
+        if (!array_key_exists((string) $_COOKIE['lang'], get_languages())) {
             fatal_error('[Hacking attempt] the input parameter "'.$_COOKIE['lang'].'" is not valid');
         }
 
@@ -1017,7 +1017,7 @@ function auto_login()
     global $conf;
 
     if (isset($_COOKIE[$conf['remember_me_name']])) {
-        $cookie = explode('-', stripslashes($_COOKIE[$conf['remember_me_name']]));
+        $cookie = explode('-', stripslashes((string) $_COOKIE[$conf['remember_me_name']]));
         if (count($cookie) === 3
             and is_numeric(@$cookie[0]) /*user id*/
             and is_numeric(@$cookie[1]) /*time*/
@@ -1627,11 +1627,11 @@ function auth_key_login($auth_key, $connection_by_header = false)
 
     $valid_key = false;
     $secret_key = null;
-    if (preg_match('/^[a-z0-9]{30}$/i', $auth_key)) {
+    if (preg_match('/^[a-z0-9]{30}$/i', (string) $auth_key)) {
         $valid_key = 'auth_key';
-    } elseif (preg_match('/^pkid-\d{8}-[a-z0-9]{20}:[a-z0-9]{40}$/i', $auth_key)) {
+    } elseif (preg_match('/^pkid-\d{8}-[a-z0-9]{20}:[a-z0-9]{40}$/i', (string) $auth_key)) {
         $valid_key = 'api_key';
-        $tmp_key = explode(':', $auth_key);
+        $tmp_key = explode(':', (string) $auth_key);
         $auth_key = $tmp_key[0];
         $secret_key = $tmp_key[1];
     }
@@ -1662,7 +1662,7 @@ SELECT
     $key = $keys[0];
 
     // is the key still valid?
-    if (strtotime($key['expired_on']) < strtotime($key['dbnow'])) {
+    if (strtotime((string) $key['expired_on']) < strtotime((string) $key['dbnow'])) {
         $page['auth_key_invalid'] = true;
         return false;
     }
@@ -1691,7 +1691,7 @@ SELECT
             and !empty($key['email']) // the user have an email
             and (
                 null === $key['last_notified_on'] // we never send an email for this key
-                or strtotime($key['last_notified_on']) < strtotime($key['48h_ago']) // OR when the last email was sent more than 48 hours ago
+                or strtotime($key['last_notified_on']) < strtotime((string) $key['48h_ago']) // OR when the last email was sent more than 48 hours ago
             )
         ) {
             $page['notify_api_key_expiration'] = [
@@ -2090,7 +2090,7 @@ function check_and_save_user_infos($params)
                   ],
                 ];
             }
-            if ($params['username'] != strip_tags($params['username'])) {
+            if ($params['username'] != strip_tags((string) $params['username'])) {
                 // return new PwgError(WS_ERR_INVALID_PARAM, l10n('html tags are not allowed in login'));
                 return [
                   'error' => [
@@ -2494,7 +2494,7 @@ SELECT
         $api_key['apikey_secret'] = str_repeat('*', 40);
         unset($api_key['auth_key_id'], $api_key['user_id'], $api_key['key_type']);
 
-        $api_key['apikey_name'] = stripslashes($api_key['apikey_name']);
+        $api_key['apikey_name'] = stripslashes((string) $api_key['apikey_name']);
 
         $api_key['created_on_format'] = format_date($api_key['created_on'], ['day', 'month', 'year']);
         $api_key['expired_on_format'] = format_date($api_key['expired_on'], ['day', 'month', 'year']);
@@ -2689,5 +2689,5 @@ function get_edit_context($image_id)
         return false;
     }
 
-    return preg_replace('/^\/'.$image_id.'\//', '', $_SESSION['edit_context'][$image_id]);
+    return preg_replace('/^\/'.$image_id.'\//', '', (string) $_SESSION['edit_context'][$image_id]);
 }

@@ -29,7 +29,7 @@ if (($conf['show_exif']) and (function_exists('exif_read_data'))) {
           ];
 
         foreach ($conf['show_exif_fields'] as $field) {
-            if (!str_contains($field, ';')) {
+            if (!str_contains((string) $field, ';')) {
                 // template cannot deal with an array as value, we skip it
                 if (isset($exif[$field]) and !is_array($exif[$field])) {
                     $key = $field;
@@ -39,7 +39,7 @@ if (($conf['show_exif']) and (function_exists('exif_read_data'))) {
                     $tpl_meta['lines'][$key] = $exif[$field];
                 }
             } else {
-                $tokens = explode(';', $field);
+                $tokens = explode(';', (string) $field);
                 // template cannot deal with an array as value, we skip it
                 if (isset($exif[$field]) and !is_array($exif[$field])) {
                     $key = $tokens[1];

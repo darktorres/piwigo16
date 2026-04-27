@@ -145,7 +145,7 @@ function mkgetdir($dir, $flags = MKGETDIR_DEFAULT)
 function qualify_utf8($Str)
 {
     $ret = 0;
-    for ($i = 0; $i < strlen($Str); $i++) {
+    for ($i = 0; $i < strlen((string) $Str); $i++) {
         if (ord($Str[$i]) < 0x80) {
             continue;
         } # 0bbbbbbb
@@ -169,7 +169,7 @@ function qualify_utf8($Str)
             return -1;
         } # Does not match any model
         for ($j = 0; $j < $n; $j++) { # n bytes matching 10bbbbbb follow ?
-            if ((++$i == strlen($Str)) || ((ord($Str[$i]) & 0xC0) != 0x80)) {
+            if ((++$i == strlen((string) $Str)) || ((ord($Str[$i]) & 0xC0) != 0x80)) {
                 return -1;
             }
         }
@@ -335,7 +335,7 @@ if (function_exists('mb_strtolower') && defined('PWG_CHARSET')) {
      */
     function pwg_transliterate($term)
     {
-        return remove_accents(strtolower($term));
+        return remove_accents(strtolower((string) $term));
     }
 }
 
@@ -349,7 +349,7 @@ function str2url($str)
 {
     $str = $safe = pwg_transliterate($str);
     $str = preg_replace('/[^\x80-\xffa-z0-9_\s\'\:\/\[\],-]/', '', $str);
-    $str = preg_replace('/[\s\'\:\/\[\],-]+/', ' ', trim($str));
+    $str = preg_replace('/[\s\'\:\/\[\],-]+/', ' ', trim((string) $str));
     $res = str_replace(' ', '_', $str);
 
     if (empty($res)) {
@@ -422,7 +422,7 @@ function pwg_log($image_id = null, $image_type = null, $format_id = null)
     global $conf, $user, $page;
 
     $update_last_visit = false;
-    if (empty($user['last_visit']) or strtotime($user['last_visit']) < time() - $conf['session_length']) {
+    if (empty($user['last_visit']) or strtotime((string) $user['last_visit']) < time() - $conf['session_length']) {
         $update_last_visit = true;
     }
     $update_last_visit = trigger_change('pwg_log_update_last_visit', $update_last_visit);
@@ -456,8 +456,8 @@ UPDATE '.USER_INFOS_TABLE.'
     $ip = $_SERVER['REMOTE_ADDR'];
     // IPv6 should not be longer than 39 chars, and that is the maximum length of
     // the column in the database, but in case it would be longer, let's truncate it.
-    if (strlen($ip) > 39) {
-        $ip = substr($ip, 0, 39);
+    if (strlen((string) $ip) > 39) {
+        $ip = substr((string) $ip, 0, 39);
     }
 
     // If plugin developers add their own sections, Piwigo will automatically add it in the history.section enum column
@@ -471,7 +471,7 @@ UPDATE '.USER_INFOS_TABLE.'
 
         if (
             in_array($page['section'], $conf['history_sections_cache'])
-            or in_array(strtolower($page['section']), array_map('strtolower', $conf['history_sections_cache']))
+            or in_array(strtolower($page['section']), array_map(strtolower(...), $conf['history_sections_cache']))
         ) {
             $section = $page['section'];
         } elseif (preg_match('/^[a-zA-Z0-9_-]+$/', $page['section'])) {
@@ -574,12 +574,12 @@ function pwg_activity($object, $object_id, $action, $details = [])
 
     $user_agent = null;
     if ('user' == $object and 'login' == $action and isset($_SERVER['HTTP_USER_AGENT'])) {
-        $user_agent = strip_tags($_SERVER['HTTP_USER_AGENT']);
+        $user_agent = strip_tags((string) $_SERVER['HTTP_USER_AGENT']);
     }
 
     if (isset($_SESSION['connected_with']) and 'api_key' === $_SESSION['connected_with'] and isset($_SERVER['HTTP_USER_AGENT'])) {
         $details['connected_with'] = 'api_key';
-        $user_agent = strip_tags($_SERVER['HTTP_USER_AGENT']);
+        $user_agent = strip_tags((string) $_SERVER['HTTP_USER_AGENT']);
     }
 
     // we want to know if the login is automatic with remember_me (auto_login)
@@ -597,7 +597,7 @@ function pwg_activity($object, $object_id, $action, $details = [])
 
     if ('photo' == $object and 'add' == $action and !isset($details['sync'])) {
         $details['added_with'] = 'app';
-        if (isset($_SERVER['HTTP_REFERER']) and preg_match('/page=photos_add/', $_SERVER['HTTP_REFERER'])) {
+        if (isset($_SERVER['HTTP_REFERER']) and preg_match('/page=photos_add/', (string) $_SERVER['HTTP_REFERER'])) {
             $details['added_with'] = 'browser';
         }
     }
@@ -721,7 +721,7 @@ function str2DateTime($original, $format = null)
     if (!empty($format) && version_compare(PHP_VERSION, '5.3.0') >= 0) {// from known date format
         return DateTime::createFromFormat('!'.$format, $original); // ! char to reset fields to UNIX epoch
     } else {
-        $t = trim($original, '0123456789');
+        $t = trim((string) $original, '0123456789');
         if (empty($t)) { // from timestamp
             return new DateTime('@'.$original);
         } else { // from unknown date format (assuming something like Y-m-d H:i:s)
@@ -1314,7 +1314,7 @@ function l10n_args($key_args, $sep = "\n")
 
             if ($key === 'key_args') {
                 array_unshift($element, l10n(array_shift($element))); // translate the key
-                $result .= call_user_func_array('sprintf', $element);
+                $result .= call_user_func_array(sprintf(...), $element);
             } else {
                 $result .= l10n_args($element, $sep);
             }
@@ -1542,13 +1542,13 @@ function prepend_append_array_items($array, $prepend_str, $append_str)
 /**
  * creates an simple hashmap based on a SQL query.
  * choose one to be the key, another one to be the value.
- * @deprecated 2.6
  *
  * @param string $query
  * @param string $keyname
  * @param string $valuename
  * @return array
  */
+#[\Deprecated(message: '2.6')]
 function simple_hash_from_query($query, $keyname, $valuename)
 {
     return query2array($query, $keyname, $valuename);
@@ -1557,12 +1557,12 @@ function simple_hash_from_query($query, $keyname, $valuename)
 /**
  * creates an associative array based on a SQL query.
  * choose one to be the key
- * @deprecated 2.6
  *
  * @param string $query
  * @param string $keyname
  * @return array
  */
+#[\Deprecated(message: '2.6')]
 function hash_from_query($query, $keyname)
 {
     return query2array($query, $keyname);
@@ -1572,12 +1572,12 @@ function hash_from_query($query, $keyname)
  * creates a numeric array based on a SQL query.
  * if _$fieldname_ is empty the returned value will be an array of arrays
  * if _$fieldname_ is provided the returned value will be a one dimension array
- * @deprecated 2.6
  *
  * @param string $query
  * @param string $fieldname
  * @return array
  */
+#[\Deprecated(message: '2.6')]
 function array_from_query($query, $fieldname = false)
 {
     if (false === $fieldname) {
@@ -1599,7 +1599,7 @@ function script_basename()
 
     foreach (['SCRIPT_NAME', 'SCRIPT_FILENAME', 'PHP_SELF'] as $value) {
         if (!empty($_SERVER[$value])) {
-            $filename = strtolower($_SERVER[$value]);
+            $filename = strtolower((string) $_SERVER[$value]);
             if ($conf['php_extension_in_urls'] and get_extension($filename) !== 'php') {
                 continue;
             }
@@ -1849,8 +1849,8 @@ function get_ephemeral_key($valid_after_seconds, $aditionnal_data_to_hash = '')
     return $time.':'.$valid_after_seconds.':'
         .hash_hmac(
             'md5',
-            $time.substr($_SERVER['REMOTE_ADDR'], 0, 5).$valid_after_seconds.$aditionnal_data_to_hash,
-            $conf['secret_key']
+            $time.substr((string) $_SERVER['REMOTE_ADDR'], 0, 5).$valid_after_seconds.$aditionnal_data_to_hash,
+            (string) $conf['secret_key']
         );
 }
 
@@ -1871,8 +1871,8 @@ function verify_ephemeral_key($key, $aditionnal_data_to_hash = '')
         or $key[0] < $time - 3600 // 60 minutes expiration
         or hash_hmac(
             'md5',
-            $key[0].substr($_SERVER['REMOTE_ADDR'], 0, 5).$key[1].$aditionnal_data_to_hash,
-            $conf['secret_key']
+            $key[0].substr((string) $_SERVER['REMOTE_ADDR'], 0, 5).$key[1].$aditionnal_data_to_hash,
+            (string) $conf['secret_key']
         ) != $key[2]
     ) {
         return false;
@@ -2007,7 +2007,7 @@ function get_pwg_token()
 {
     global $conf;
 
-    return hash_hmac('md5', session_id(), $conf['secret_key']);
+    return hash_hmac('md5', session_id(), (string) $conf['secret_key']);
 }
 
 /*
@@ -2041,12 +2041,12 @@ function check_input_parameter($param_name, $param_array, $is_array, $pattern, $
         }
 
         foreach ($param_value as $key => $item_to_check) {
-            if (!preg_match(PATTERN_ID, $key) or !preg_match($pattern, $item_to_check)) {
+            if (!preg_match(PATTERN_ID, (string) $key) or !preg_match($pattern, (string) $item_to_check)) {
                 fatal_error('[Hacking attempt] an item is not valid in input parameter "'.$param_name.'"');
             }
         }
     } else {
-        if (!preg_match($pattern, $param_value)) {
+        if (!preg_match($pattern, (string) $param_value)) {
             fatal_error('[Hacking attempt] the input parameter "'.$param_name.'" is not valid');
         }
     }
@@ -2227,15 +2227,15 @@ SELECT COUNT(DISTINCT(com.id))
  */
 function safe_version_compare($a, $b, $op = null)
 {
-    $replace_chars   = (fn ($m) => ord(strtolower($m[1])));
+    $replace_chars   = (fn ($m) => ord(strtolower((string) $m[1])[0]));
 
     // add dot before groups of letters (version_compare does the same thing)
     $a = preg_replace('#([0-9]+)([a-z]+)#i', '$1.$2', $a);
     $b = preg_replace('#([0-9]+)([a-z]+)#i', '$1.$2', $b);
 
     // apply ord() to any single letter
-    $a = preg_replace_callback('#\b([a-z]{1})\b#i', $replace_chars, $a);
-    $b = preg_replace_callback('#\b([a-z]{1})\b#i', $replace_chars, $b);
+    $a = preg_replace_callback('#\b([a-z]{1})\b#i', $replace_chars, (string) $a);
+    $b = preg_replace_callback('#\b([a-z]{1})\b#i', $replace_chars, (string) $b);
 
     if (empty($op)) {
         return version_compare($a, $b);
@@ -2275,7 +2275,7 @@ SELECT
     $voyagers = query2array($query);
     if (count($voyagers)) {
         $voyager = $voyagers[0];
-        $age = strtotime($voyager['dbnow']) - strtotime($voyager['date_available']);
+        $age = strtotime((string) $voyager['dbnow']) - strtotime((string) $voyager['date_available']);
 
         if ($age > $conf['lounge_max_duration']) {
             include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
@@ -2390,7 +2390,7 @@ SELECT
             $piwigo_infos['general_stats']['last_photo_synced'] = $files_added_by['sync']['last_added_on'];
 
             $method_of_last_photo = 'sync';
-            if (isset($files_added_by['api']) and strtotime($files_added_by['api']['last_added_on']) > strtotime($files_added_by['sync']['last_added_on'])) {
+            if (isset($files_added_by['api']) and strtotime((string) $files_added_by['api']['last_added_on']) > strtotime((string) $files_added_by['sync']['last_added_on'])) {
                 $method_of_last_photo = 'api';
             }
             $piwigo_infos['general_stats']['last_photo'] = $files_added_by[$method_of_last_photo]['last_added_on'];
@@ -2447,7 +2447,7 @@ SELECT
             $eid = null;
             if (isset($plugins->fs_plugins[ $plugin['id'] ])) {
                 $uri = $plugins->fs_plugins[ $plugin['id'] ]['uri'];
-                if (preg_match('/eid=(\d+)/', $uri, $matches)) {
+                if (preg_match('/eid=(\d+)/', (string) $uri, $matches)) {
                     if (isset($pem_extensions[ $matches[1] ])) {
                         $eid = $matches[1];
                     }
@@ -2488,7 +2488,7 @@ SELECT
             $eid = null;
             if (isset($themes->fs_themes[ $theme['id'] ])) {
                 $uri = $themes->fs_themes[ $theme['id'] ]['uri'];
-                if (preg_match('/eid=(\d+)/', $uri, $matches)) {
+                if (preg_match('/eid=(\d+)/', (string) $uri, $matches)) {
                     if (isset($pem_extensions[ $matches[1] ])) {
                         $eid = $matches[1];
                     }
@@ -2656,14 +2656,14 @@ SELECT
 
     foreach ($activities as $activity) {
         foreach ($apps_pattern as $app_name => $pattern) {
-            if (preg_match($pattern, $activity['user_agent'])) {
+            if (preg_match($pattern, (string) $activity['user_agent'])) {
                 @$apps[$app_name]['counter'] += $activity['counter'];
 
-                if (!isset($apps[$app_name]['first_encounter']) or strtotime($apps[$app_name]['first_encounter']) > strtotime($activity['first_encounter'])) {
+                if (!isset($apps[$app_name]['first_encounter']) or strtotime($apps[$app_name]['first_encounter']) > strtotime((string) $activity['first_encounter'])) {
                     $apps[$app_name]['first_encounter'] = $activity['first_encounter'];
                 }
 
-                if (!isset($apps[$app_name]['last_encounter']) or strtotime($apps[$app_name]['last_encounter']) < strtotime($activity['last_encounter'])) {
+                if (!isset($apps[$app_name]['last_encounter']) or strtotime($apps[$app_name]['last_encounter']) < strtotime((string) $activity['last_encounter'])) {
                     $apps[$app_name]['last_encounter'] = $activity['last_encounter'];
                 }
             }
@@ -2745,7 +2745,7 @@ INSERT IGNORE
     pwg_query($query);
 
     [$running_exec] = pwg_db_fetch_row(pwg_query('SELECT value FROM '.CONFIG_TABLE.' WHERE param = "'.$token_name.'_running"'));
-    list($running_exec_id, ) = explode('-', $running_exec);
+    list($running_exec_id, ) = explode('-', (string) $running_exec);
 
     if ($running_exec_id != $exec_id) {
         $logger->info('['.$token_name.'][exec='.$exec_id.'] skip');

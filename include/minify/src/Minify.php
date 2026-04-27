@@ -59,7 +59,7 @@ abstract class Minify
     {
         // it's possible to add the source through the constructor as well ;)
         if (func_num_args()) {
-            call_user_func_array([$this, 'add'], func_get_args());
+            call_user_func_array($this->add(...), func_get_args());
         }
     }
 
@@ -81,7 +81,7 @@ abstract class Minify
         // this method can be overloaded
         foreach ($args as $data) {
             if (is_array($data)) {
-                call_user_func_array([$this, 'add'], $data);
+                call_user_func_array($this->add(...), $data);
                 continue;
             }
 
@@ -123,7 +123,7 @@ abstract class Minify
         // this method can be overloaded
         foreach ($args as $path) {
             if (is_array($path)) {
-                call_user_func_array([$this, 'addFile'], $path);
+                call_user_func_array($this->addFile(...), $path);
                 continue;
             }
 
@@ -282,14 +282,14 @@ abstract class Minify
             )
             /ixs';
         $callback = function ($match) use ($minifier, $keepPattern) {
-            if (preg_match($keepPattern, $match[1])) {
+            if (preg_match($keepPattern, (string) $match[1])) {
                 // Preserve the comment
                 $count = count($minifier->extracted);
                 $placeholder = '/*' . $count . '*/';
                 $minifier->extracted[$placeholder] = $match[0];
             } else {
                 // Discard the comment but keep any single line feed
-                $placeholder = str_starts_with($match[0], "\n") || str_ends_with($match[0], "\n")
+                $placeholder = str_starts_with((string) $match[0], "\n") || str_ends_with((string) $match[0], "\n")
                     ? "\n"
                     : '';
             }
@@ -561,9 +561,9 @@ abstract class Minify
 
     protected static function str_replace_first($search, $replace, $subject)
     {
-        $pos = strpos($subject, (string) $search);
+        $pos = strpos((string) $subject, (string) $search);
         if ($pos !== false) {
-            return substr_replace($subject, $replace, $pos, strlen($search));
+            return substr_replace($subject, $replace, $pos, strlen((string) $search));
         }
 
         return $subject;

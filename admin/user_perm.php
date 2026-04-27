@@ -105,7 +105,7 @@ if (pwg_db_num_rows($result) > 0) {
         $cats[] = $row;
         $group_authorized[] = $row['cat_id'];
     }
-    usort($cats, 'global_rank_compare');
+    usort($cats, global_rank_compare(...));
 
     foreach ($cats as $category) {
         $template->append(

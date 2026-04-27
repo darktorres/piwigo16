@@ -44,7 +44,7 @@ $template->assign(
     ]
 );
 
-$language_prefix = substr($user['language'], 0, 3);
+$language_prefix = substr((string) $user['language'], 0, 3);
 if ('en_' == $language_prefix) {
     $page['messages'][] = sprintf(
         'Need help to use Piwigo? <a href="%s" target="_blank">Check the online documentation</a> !',

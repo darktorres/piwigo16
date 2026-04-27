@@ -31,12 +31,12 @@ function cookie_path()
         if (
             isset($_SERVER['PATH_INFO']) and !empty($_SERVER['PATH_INFO']) and
             ($_SERVER['REDIRECT_URL'] !== $_SERVER['PATH_INFO']) and
-            (str_ends_with($_SERVER['REDIRECT_URL'], $_SERVER['PATH_INFO']))
+            (str_ends_with((string) $_SERVER['REDIRECT_URL'], (string) $_SERVER['PATH_INFO']))
         ) {
             $scr = substr(
-                $_SERVER['REDIRECT_URL'],
+                (string) $_SERVER['REDIRECT_URL'],
                 0,
-                strlen($_SERVER['REDIRECT_URL']) - strlen($_SERVER['PATH_INFO'])
+                strlen((string) $_SERVER['REDIRECT_URL']) - strlen((string) $_SERVER['PATH_INFO'])
             );
         } else {
             $scr = $_SERVER['REDIRECT_URL'];
@@ -45,7 +45,7 @@ function cookie_path()
         $scr = $_SERVER['SCRIPT_NAME'];
     }
 
-    $scr = substr($scr, 0, strrpos($scr, '/'));
+    $scr = substr((string) $scr, 0, strrpos((string) $scr, '/'));
 
     // add a trailing '/' if needed
     if ((strlen($scr) == 0) or ($scr[strlen($scr) - 1] !== '/')) {
@@ -56,7 +56,7 @@ function cookie_path()
         // TODO - what if it is an external script outside PWG ?
         $scr = $scr.PHPWG_ROOT_PATH;
         while (1) {
-            $new = preg_replace('#[^/]+/\.\.(/|$)#', '', $scr);
+            $new = preg_replace('#[^/]+/\.\.(/|$)#', '', (string) $scr);
             if ($new == $scr) {
                 break;
             }
@@ -84,7 +84,7 @@ function pwg_set_cookie_var($var, $value, $expire = null)
     } else {
         $_COOKIE['pwg_'.$var] = $value;
         $expire = is_numeric($expire) ? $expire : strtotime('+10 years');
-        return setcookie('pwg_'.$var, $value, ['expires' => $expire, 'path' => cookie_path()]);
+        return setcookie('pwg_'.$var, (string) $value, ['expires' => $expire, 'path' => cookie_path()]);
     }
 }
 

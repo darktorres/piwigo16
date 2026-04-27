@@ -212,7 +212,7 @@ function check_password_reset_key($reset_key)
     global $page, $conf;
 
     $key = $reset_key;
-    if (!preg_match('/^[a-z0-9]{20}$/i', $key)) {
+    if (!preg_match('/^[a-z0-9]{20}$/i', (string) $key)) {
         $page['errors']['password_page_error'] = l10n('Invalid key');
         return false;
     }
@@ -409,7 +409,7 @@ if ('lost' == $page['action']) {
     $title = l10n('Forgot your password?');
 
     if (isset($_POST['username_or_email'])) {
-        $template->assign('username_or_email', htmlspecialchars(stripslashes($_POST['username_or_email'])));
+        $template->assign('username_or_email', htmlspecialchars(stripslashes((string) $_POST['username_or_email'])));
     }
 } elseif ('reset' == $page['action'] and isset($first_login) and $first_login) {
     $title = l10n('Welcome');
@@ -437,7 +437,7 @@ if (!isset($themeconf['hide_menu_on']) or !in_array('thePasswordPage', $themecon
 
 //Load language if cookie is set from login/register/password pages
 if (isset($_COOKIE['lang']) and $user['language'] != $_COOKIE['lang']) {
-    if (!array_key_exists($_COOKIE['lang'], get_languages())) {
+    if (!array_key_exists((string) $_COOKIE['lang'], get_languages())) {
         fatal_error('[Hacking attempt] the input parameter "'.$_COOKIE['lang'].'" is not valid');
     }
 
@@ -456,7 +456,7 @@ $template->assign([
 ]);
 
 //Get link to doc
-if (str_starts_with($user['language'], 'fr')) {
+if (str_starts_with((string) $user['language'], 'fr')) {
     $help_link = 'https://doc-fr.piwigo.org/les-utilisateurs/se-connecter-a-piwigo';
 } else {
     $help_link = 'https://doc.piwigo.org/managing-users/log-in-to-piwigo';

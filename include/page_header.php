@@ -38,7 +38,7 @@ $template->assign(
       $page['body_id'] ?? '',
 
     'CONTENT_ENCODING' => get_pwg_charset(),
-    'PAGE_TITLE' => strip_tags($title),
+    'PAGE_TITLE' => strip_tags((string) $title),
 
     'U_HOME' => get_gallery_home_url(),
 

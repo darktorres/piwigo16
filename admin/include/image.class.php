@@ -305,7 +305,7 @@ class pwg_image
           [-1,   -1,    -1],
           ];
 
-        $norm = array_sum(array_map('array_sum', $matrix));
+        $norm = array_sum(array_map(array_sum(...), $matrix));
 
         for ($i = 0; $i < 3; $i++) {
             for ($j = 0; $j < 3; $j++) {
@@ -385,7 +385,7 @@ class pwg_image
         }
 
         // Choose image library
-        switch (strtolower($library)) {
+        switch (strtolower((string) $library)) {
             case 'auto':
             case 'ext_imagick':
                 if ($extension != 'gif' and self::is_ext_imagick()) {
@@ -529,7 +529,7 @@ class image_ext_imagick implements imageInterface
         global $conf;
         $this->imagickdir = $conf['ext_imagick_dir'];
 
-        if (str_starts_with(@$_SERVER['SCRIPT_FILENAME'], '/kunden/')) {  // 1and1
+        if (str_starts_with((string) @$_SERVER['SCRIPT_FILENAME'], '/kunden/')) {  // 1and1
             @putenv('MAGICK_THREAD_LIMIT=1');
         }
 
@@ -684,7 +684,7 @@ class image_ext_imagick implements imageInterface
                 $exec .= ' '.$params;
             }
         }
-        $dest = pathinfo($destination_filepath);
+        $dest = pathinfo((string) $destination_filepath);
         $exec .= ' "'.realpath($dest['dirname']).'/'.$dest['basename'].'" 2>&1';
         $logger->debug($exec, 'i.php');
         @exec($exec, $returnarray);
@@ -747,10 +747,8 @@ class image_gd implements imageInterface
         $result = imagecopymerge($dest, $this->image, 0, 0, $x, $y, $width, $height, 100);
 
         if ($result !== false) {
-            imagedestroy($this->image);
             $this->image = $dest;
         } else {
-            imagedestroy($dest);
         }
         return $result;
     }
@@ -763,7 +761,6 @@ class image_gd implements imageInterface
     public function rotate($rotation)
     {
         $dest = imagerotate($this->image, $rotation, 0);
-        imagedestroy($this->image);
         $this->image = $dest;
         return true;
     }
@@ -787,10 +784,8 @@ class image_gd implements imageInterface
         $result = imagecopyresampled($dest, $this->image, 0, 0, 0, 0, $width, $height, $this->get_width(), $this->get_height());
 
         if ($result !== false) {
-            imagedestroy($this->image);
             $this->image = $dest;
         } else {
-            imagedestroy($dest);
         }
         return $result;
     }
@@ -819,7 +814,6 @@ class image_gd implements imageInterface
         // Place the source image in the destination image
         imagecopy($cut, $ioverlay, 0, 0, 0, 0, $ow, $oh);
         imagecopymerge($this->image, $cut, $x, $y, 0, 0, $ow, $oh, $opacity);
-        imagedestroy($cut);
         return true;
     }
 
@@ -838,6 +832,5 @@ class image_gd implements imageInterface
 
     public function destroy()
     {
-        imagedestroy($this->image);
     }
 }

@@ -84,8 +84,8 @@ function get_mail_configuration()
  */
 function format_email($name, $email)
 {
-    $cvt_email = trim(preg_replace('#[\n\r]+#s', '', $email));
-    $cvt_name = trim(preg_replace('#[\n\r]+#s', '', $name));
+    $cvt_email = trim((string) preg_replace('#[\n\r]+#s', '', $email));
+    $cvt_name = trim((string) preg_replace('#[\n\r]+#s', '', $name));
 
     if ($cvt_name != '') {
         $cvt_name = '"'.addcslashes($cvt_name, '"').'"'.' ';
@@ -150,7 +150,7 @@ function get_clean_recipients_list($data)
             if (is_int($keys[0])) { // simple array of emails
                 foreach ($data as &$item) {
                     $item = [
-                      'email' => trim($item),
+                      'email' => trim((string) $item),
                       'name' => '',
                       ];
                 }
@@ -159,11 +159,11 @@ function get_clean_recipients_list($data)
                 $data = [unformat_email($data)];
             }
         } else { // array of hashmaps
-            $data = array_map('unformat_email', $data);
+            $data = array_map(unformat_email(...), $data);
         }
     } else {
-        $data = explode(',', $data);
-        $data = array_map('unformat_email', $data);
+        $data = explode(',', (string) $data);
+        $data = array_map(unformat_email(...), $data);
     }
 
     $existing = [];
@@ -180,11 +180,11 @@ function get_clean_recipients_list($data)
 
 /**
  * Returns an email address list with minimal email string.
- * @deprecated 2.6
  *
  * @param string $email_list - comma separated
  * @return string
  */
+#[\Deprecated(message: '2.6')]
 function get_strict_email_list($email_list)
 {
     $result = [];
@@ -194,7 +194,7 @@ function get_strict_email_list($email_list)
         if (str_contains($email, '<')) {
             $email = preg_replace('/.*<(.*)>.*/i', '$1', $email);
         }
-        $result[] = trim($email);
+        $result[] = trim((string) $email);
     }
 
     return implode(',', array_unique($result));
@@ -342,7 +342,7 @@ function pwg_mail_notification_admins($subject, $content, $send_technical_detail
     $tpl_vars = [];
     if ($send_technical_details) {
         $tpl_vars['TECHNICAL'] = [
-          'username' => stripslashes($user['username']),
+          'username' => stripslashes((string) $user['username']),
           'ip' => $_SERVER['REMOTE_ADDR'],
           'user_agent' => $_SERVER['HTTP_USER_AGENT'],
           ];
@@ -603,7 +603,7 @@ function pwg_mail($to, $args = [], $tpl = [])
     if (empty($args['subject'])) {
         $args['subject'] = 'Piwigo';
     }
-    $args['subject'] = trim(preg_replace('#[\n\r]+#s', '', $args['subject']));
+    $args['subject'] = trim((string) preg_replace('#[\n\r]+#s', '', (string) $args['subject']));
     $mail->Subject = $args['subject'];
 
     // Cc
@@ -729,16 +729,16 @@ function pwg_mail($to, $args = [], $tpl = [])
             $mail_content =
               '<p>'.
               nl2br(
-                  preg_replace(
+                  (string) preg_replace(
                       '/(https?:\/\/([-\w\.]+[-\w])+(:\d+)?(\/([\w\/_\.\#-]*(\?\S+)?[^\.\s])?)?)/i',
                       '<a href="$1">$1</a>',
-                      htmlspecialchars($args['content'])
+                      htmlspecialchars((string) $args['content'])
                   )
               ).
               '</p>';
         } elseif ($args['content_format'] == 'text/html' and $content_type == 'text/plain') {
             // convert html text to plain text
-            $mail_content = strip_tags($args['content']);
+            $mail_content = strip_tags((string) $args['content']);
         } else {
             $mail_content = $args['content'];
         }
@@ -784,8 +784,8 @@ function pwg_mail($to, $args = [], $tpl = [])
 
     if ($conf_mail['use_smtp']) {
         // now we need to split port number
-        if (str_contains($conf_mail['smtp_host'], ':')) {
-            [$smtp_host, $smtp_port] = explode(':', $conf_mail['smtp_host']);
+        if (str_contains((string) $conf_mail['smtp_host'], ':')) {
+            [$smtp_host, $smtp_port] = explode(':', (string) $conf_mail['smtp_host']);
         } else {
             $smtp_host = $conf_mail['smtp_host'];
             $smtp_port = 25;
@@ -826,9 +826,7 @@ function pwg_mail($to, $args = [], $tpl = [])
     return $ret;
 }
 
-/**
- * @deprecated 2.6
- */
+#[\Deprecated(message: '2.6')]
 function pwg_send_mail($result, $to, $subject, $content, $headers)
 {
     if (is_admin()) {
@@ -874,7 +872,7 @@ function pwg_send_mail_test($success, $mail, $args)
 
     $dir = PHPWG_ROOT_PATH.$conf['data_location'].'tmp';
     if (mkgetdir($dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
-        $filename = $dir.'/mail.'.stripslashes($user['username']).'.'.$lang_info['code'].'-'.date('YmdHis').($success ? '' : '.ERROR');
+        $filename = $dir.'/mail.'.stripslashes((string) $user['username']).'.'.$lang_info['code'].'-'.date('YmdHis').($success ? '' : '.ERROR');
         if ($args['content_format'] == 'text/plain') {
             $filename .= '.txt';
         } else {

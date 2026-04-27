@@ -113,11 +113,11 @@ function set_cat_permalink($cat_id, $permalink, $save)
 {
     global $page, $cache;
 
-    $sanitized_permalink = preg_replace('#[^a-zA-Z0-9_/-]#', '', $permalink);
-    $sanitized_permalink = trim($sanitized_permalink, '/');
+    $sanitized_permalink = preg_replace('#[^a-zA-Z0-9_/-]#', '', (string) $permalink);
+    $sanitized_permalink = trim((string) $sanitized_permalink, '/');
     $sanitized_permalink = str_replace('//', '/', $sanitized_permalink);
     if ($sanitized_permalink != $permalink
-        or preg_match('#^(\d)+(-.*)?$#', $permalink)) {
+        or preg_match('#^(\d)+(-.*)?$#', (string) $permalink)) {
         $page['errors'][] = '{'.$permalink.'} '.l10n('The permalink name must be composed of a-z, A-Z, 0-9, "-", "_" or "/". It must not be numeric or start with number followed by "-"');
         return false;
     }

@@ -79,7 +79,7 @@ class updates
             $new_versions['is_dev'] = false;
             $actual_branch = get_branch_from_version(
                 ('Official' === $env)
-        ? substr($build_version, 0, -1)
+        ? substr((string) $build_version, 0, -1)
         : PHPWG_VERSION
             );
 
@@ -195,7 +195,7 @@ class updates
                 $notify = true;
             } elseif (
                 $conf['update_notify_reminder_period'] > 0
-                and strtotime($last_notification) < strtotime($conf['update_notify_reminder_period'].' seconds ago')
+                and strtotime((string) $last_notification) < strtotime($conf['update_notify_reminder_period'].' seconds ago')
             ) {
                 $notify = true;
             }
@@ -254,12 +254,12 @@ class updates
         $versions_to_check = [];
         $url = PEM_URL . '/api/get_version_list.php';
         if (fetchRemote($url, $result, $get_data) and $pem_versions = @unserialize($result)) {
-            if (!preg_match('/^\d+\.\d+\.\d+$/', $version)) {
+            if (!preg_match('/^\d+\.\d+\.\d+$/', (string) $version)) {
                 $version = $pem_versions[0]['name'];
             }
             $branch = get_branch_from_version($version);
             foreach ($pem_versions as $pem_version) {
-                if (str_starts_with($pem_version['name'], $branch)) {
+                if (str_starts_with((string) $pem_version['name'], $branch)) {
                     $versions_to_check[] = $pem_version['id'];
                 }
             }
@@ -286,7 +286,7 @@ class updates
             [
       'last_revision_only' => 'true',
       'version' => implode(',', $versions_to_check),
-      'lang' => substr($user['language'], 0, 2),
+      'lang' => substr((string) $user['language'], 0, 2),
       'get_nb_downloads' => 'true',
       ]
         );
@@ -475,7 +475,7 @@ class updates
                     if (0 == $input['remaining']) {
                         $end = true;
                     }
-                    @fwrite($zip, base64_decode($input['data']));
+                    @fwrite($zip, base64_decode((string) $input['data']));
                 } else {
                     $end = true;
                 }
@@ -567,10 +567,10 @@ class updates
     public function container_version_compare($v1, $v2)
     {
         // Split 16.2.0d into "16.2.0" as semantic_ver and "d" as sub_ver
-        $v1_semantic_ver = substr($v1, 0, -1);
-        $v1_sub_ver = substr($v1, -1);
-        $v2_semantic_ver = substr($v2, 0, -1);
-        $v2_sub_ver = substr($v2, -1);
+        $v1_semantic_ver = substr((string) $v1, 0, -1);
+        $v1_sub_ver = substr((string) $v1, -1);
+        $v2_semantic_ver = substr((string) $v2, 0, -1);
+        $v2_sub_ver = substr((string) $v2, -1);
 
         $res = version_compare($v1_semantic_ver, $v2_semantic_ver);
 

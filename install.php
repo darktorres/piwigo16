@@ -20,11 +20,11 @@ if (function_exists('get_magic_quotes_gpc') && !@get_magic_quotes_gpc()) {
         foreach ($_POST as $k => $v) {
             if (is_array($_POST[$k])) {
                 foreach ($_POST[$k] as $k2 => $v2) {
-                    $_POST[$k][$k2] = addslashes($v2);
+                    $_POST[$k][$k2] = addslashes((string) $v2);
                 }
                 @reset($_POST[$k]);
             } else {
-                $_POST[$k] = addslashes($v);
+                $_POST[$k] = addslashes((string) $v);
             }
         }
         @reset($_POST);
@@ -34,11 +34,11 @@ if (function_exists('get_magic_quotes_gpc') && !@get_magic_quotes_gpc()) {
         foreach ($_GET as $k => $v) {
             if (is_array($_GET[$k])) {
                 foreach ($_GET[$k] as $k2 => $v2) {
-                    $_GET[$k][$k2] = addslashes($v2);
+                    $_GET[$k][$k2] = addslashes((string) $v2);
                 }
                 @reset($_GET[$k]);
             } else {
-                $_GET[$k] = addslashes($v);
+                $_GET[$k] = addslashes((string) $v);
             }
         }
         @reset($_GET);
@@ -48,11 +48,11 @@ if (function_exists('get_magic_quotes_gpc') && !@get_magic_quotes_gpc()) {
         foreach ($_COOKIE as $k => $v) {
             if (is_array($_COOKIE[$k])) {
                 foreach ($_COOKIE[$k] as $k2 => $v2) {
-                    $_COOKIE[$k][$k2] = addslashes($v2);
+                    $_COOKIE[$k][$k2] = addslashes((string) $v2);
                 }
                 @reset($_COOKIE[$k]);
             } else {
-                $_COOKIE[$k] = addslashes($v);
+                $_COOKIE[$k] = addslashes((string) $v);
             }
         }
         @reset($_COOKIE);
@@ -141,7 +141,7 @@ include(PHPWG_ROOT_PATH . 'admin/include/languages.class.php');
 $languages = new languages('utf-8');
 
 if (isset($_GET['language'])) {
-    $language = strip_tags($_GET['language']);
+    $language = strip_tags((string) $_GET['language']);
 
     if (!in_array($language, array_keys($languages->fs_languages))) {
         $language = PHPWG_DEFAULT_LANGUAGE;
@@ -150,7 +150,7 @@ if (isset($_GET['language'])) {
     $language = 'en_UK';
     // Try to get browser language
     foreach ($languages->fs_languages as $language_code => $fs_language) {
-        if (substr($language_code, 0, 2) == @substr($_SERVER['HTTP_ACCEPT_LANGUAGE'], 0, 2)) {
+        if (substr((string) $language_code, 0, 2) == @substr((string) $_SERVER['HTTP_ACCEPT_LANGUAGE'], 0, 2)) {
             $language = $language_code;
             break;
         }
@@ -216,14 +216,14 @@ if (isset($_POST['install'])) {
     pwg_db_check_charset();
 
     if (
-        strlen($prefixeTable) > 20
-        or preg_match('/^\d/', $prefixeTable)
-        or !preg_match('/^[a-zA-Z0-9_$]*$/u', $prefixeTable)
+        strlen((string) $prefixeTable) > 20
+        or preg_match('/^\d/', (string) $prefixeTable)
+        or !preg_match('/^[a-zA-Z0-9_$]*$/u', (string) $prefixeTable)
     ) {
         $errors[] = 'invalid table prefix';
     }
 
-    $webmaster = trim(preg_replace('/\s{2,}/', ' ', $admin_name));
+    $webmaster = trim((string) preg_replace('/\s{2,}/', ' ', (string) $admin_name));
     if (empty($webmaster)) {
         $errors[] = l10n('enter a login for webmaster');
     } elseif (preg_match('/[\'"]/', $webmaster)) {
@@ -335,7 +335,7 @@ INSERT INTO '.$prefixeTable.'config (param,value,comment)
           [
             'id'           => 1, // must be the same value as webmaster_id in config.sql
             'username'     => $admin_name,
-            'password'     => md5($admin_pass1),
+            'password'     => md5((string) $admin_pass1),
             'mail_address' => $admin_mail,
             ],
           [
@@ -414,7 +414,7 @@ if ($step == 1) {
         }
         session_name($conf['session_name']);
         session_set_cookie_params(0, cookie_path());
-        register_shutdown_function('session_write_close');
+        register_shutdown_function(session_write_close(...));
 
         // we don't load user cache because since Piwigo 15.4.0 the calculation of user
         // cache requires $logger which is not instanciated

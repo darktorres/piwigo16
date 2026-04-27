@@ -37,7 +37,7 @@ if (isset($conf['session_save_handler'])
 
     session_name($conf['session_name']);
     session_set_cookie_params(0, cookie_path());
-    register_shutdown_function('session_write_close');
+    register_shutdown_function(session_write_close(...));
 }
 
 
@@ -98,10 +98,10 @@ function get_remote_addr_session_hash()
         return '';
     }
 
-    if (!str_contains($_SERVER['REMOTE_ADDR'], ':')) {//ipv4
+    if (!str_contains((string) $_SERVER['REMOTE_ADDR'], ':')) {//ipv4
         return vsprintf(
             '%02X%02X',
-            explode('.', $_SERVER['REMOTE_ADDR'])
+            explode('.', (string) $_SERVER['REMOTE_ADDR'])
         );
     }
     return ''; //ipv6 not yet

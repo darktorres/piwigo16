@@ -71,7 +71,7 @@ if (isset($_GET['installstatus'])) {
             break;
 
         default:
-            $page['errors'][] = l10n('An error occured during extraction (%s).', htmlspecialchars($_GET['installstatus']));
+            $page['errors'][] = l10n('An error occured during extraction (%s).', htmlspecialchars((string) $_GET['installstatus']));
     }
 }
 
@@ -80,7 +80,7 @@ if (isset($_GET['installstatus'])) {
 // +-----------------------------------------------------------------------+
 if ($languages->get_server_languages(true)) {
     foreach ($languages->server_languages as $language) {
-        list($date, ) = explode(' ', $language['revision_date']);
+        list($date, ) = explode(' ', (string) $language['revision_date']);
 
         $url_auto_install = htmlentities($base_url)
           . '&amp;revision=' . $language['revision_id']

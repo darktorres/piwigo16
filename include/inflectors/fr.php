@@ -47,7 +47,7 @@ class Inflector_fr
     {
         $res = [];
 
-        $word = strtolower($word);
+        $word = strtolower((string) $word);
 
         $rc = @$this->exceptions[$word];
         if (isset($rc)) {

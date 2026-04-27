@@ -288,7 +288,7 @@ class SMTP
             case 'html':
                 //Cleans up output a bit for a better looking, HTML-safe output
                 echo gmdate('Y-m-d H:i:s'), ' ', htmlentities(
-                    preg_replace('/[\r\n]+/', '', $str),
+                    (string) preg_replace('/[\r\n]+/', '', $str),
                     ENT_QUOTES,
                     'UTF-8'
                 ), "<br>\n";
@@ -305,7 +305,7 @@ class SMTP
                     str_replace(
                         "\n",
                         "\n                   \t                  ",
-                        trim($str)
+                        trim((string) $str)
                     )
                 ),
                 "\n";
@@ -394,7 +394,7 @@ class SMTP
         $errstr = '';
         if ($streamok) {
             $socket_context = stream_context_create($options);
-            set_error_handler([$this, 'errorHandler']);
+            set_error_handler($this->errorHandler(...));
             $connection = stream_socket_client(
                 $host . ':' . $port,
                 $errno,
@@ -409,7 +409,7 @@ class SMTP
                 'Connection: stream_socket_client not available, falling back to fsockopen',
                 self::DEBUG_CONNECTION
             );
-            set_error_handler([$this, 'errorHandler']);
+            set_error_handler($this->errorHandler(...));
             $connection = fsockopen(
                 $host,
                 $port,
@@ -473,7 +473,7 @@ class SMTP
         }
 
         //Begin encrypted connection
-        set_error_handler([$this, 'errorHandler']);
+        set_error_handler($this->errorHandler(...));
         $crypto_ok = stream_socket_enable_crypto(
             $this->smtp_conn,
             true,
@@ -816,7 +816,7 @@ class SMTP
         }
 
         //Some servers shut down the SMTP service here (RFC 5321)
-        if (str_starts_with($this->helo_rply, '421')) {
+        if (str_starts_with((string) $this->helo_rply, '421')) {
             return false;
         }
 
@@ -856,7 +856,7 @@ class SMTP
     protected function parseHelloFields($type)
     {
         $this->server_caps = [];
-        $lines = explode("\n", $this->helo_rply);
+        $lines = explode("\n", (string) $this->helo_rply);
 
         foreach ($lines as $n => $s) {
             //First 4 chars contain response code followed by - or space
@@ -1133,7 +1133,7 @@ class SMTP
         } else {
             $this->edebug('CLIENT -> SERVER: ' . $data, self::DEBUG_CLIENT);
         }
-        set_error_handler([$this, 'errorHandler']);
+        set_error_handler($this->errorHandler(...));
         $result = fwrite($this->smtp_conn, $data);
         restore_error_handler();
 
@@ -1236,7 +1236,7 @@ class SMTP
         while (is_resource($this->smtp_conn) && !feof($this->smtp_conn)) {
             //Must pass vars in here as params are by reference
             //solution for signals inspired by https://github.com/symfony/symfony/pull/6540
-            set_error_handler([$this, 'errorHandler']);
+            set_error_handler($this->errorHandler(...));
             $n = stream_select($selR, $selW, $selW, $this->Timelimit);
             restore_error_handler();
 
@@ -1250,7 +1250,7 @@ class SMTP
 
                 //stream_select returns false when the `select` system call is interrupted
                 //by an incoming signal, try the select again
-                if (stripos($message, 'interrupted system call') !== false) {
+                if (stripos((string) $message, 'interrupted system call') !== false) {
                     $this->edebug(
                         'SMTP -> get_lines(): retrying stream_select',
                         self::DEBUG_LOWLEVEL

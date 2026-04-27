@@ -64,6 +64,39 @@ function get_elapsed_time($start, $end): string
 }
 
 /**
+ * Read an int from $_GET/$_POST/$_REQUEST, casting and returning null if absent.
+ *
+ * @param array<string,mixed> $source
+ */
+function input_int(string $key, ?int $default = null, array $source = []): ?int
+{
+    $src = $source ?: ($_POST + $_GET);
+    return isset($src[$key]) ? (int) $src[$key] : $default;
+}
+
+/**
+ * Read a trimmed string from $_GET/$_POST/$_REQUEST, returning null if absent.
+ *
+ * @param array<string,mixed> $source
+ */
+function input_string(string $key, ?string $default = null, array $source = []): ?string
+{
+    $src = $source ?: ($_POST + $_GET);
+    return isset($src[$key]) ? trim((string) $src[$key]) : $default;
+}
+
+/**
+ * Read a boolean from $_GET/$_POST/$_REQUEST (truthy string → true), returning null if absent.
+ *
+ * @param array<string,mixed> $source
+ */
+function input_bool(string $key, ?bool $default = null, array $source = []): ?bool
+{
+    $src = $source ?: ($_POST + $_GET);
+    return isset($src[$key]) ? (bool) $src[$key] : $default;
+}
+
+/**
  * returns the part of the string after the last "."
  *
  * @param string $filename

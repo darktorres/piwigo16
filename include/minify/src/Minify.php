@@ -325,7 +325,7 @@ abstract class Minify
         while ($processedOffset < $contentLength) {
             // find first match for all patterns
             foreach ($this->patterns as $i => $pattern) {
-                [$pattern, $replacement] = str_split($pattern);
+                [$pattern, $replacement] = $pattern;
 
                 // we can safely ignore patterns for positions we've unset earlier,
                 // because we know these won't show up anymore
@@ -376,7 +376,7 @@ abstract class Minify
             $match = $matches[$firstPattern];
 
             // execute the pattern that matches earliest in the content string
-            list(, $replacement) = str_split($this->patterns[$firstPattern]);
+            [, $replacement] = $this->patterns[$firstPattern];
 
             // add the part of the input between $processedOffset and the first match;
             // that content wasn't matched by anything

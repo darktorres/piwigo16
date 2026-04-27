@@ -15,6 +15,10 @@ return RectorConfig::configure()
     ->withSkip([
         __DIR__ . '/install/db', __DIR__ . '/language',
         __DIR__ . '/include/smarty', __DIR__ . '/include/feedcreator.class.php',
+        __DIR__ . '/include/minify',
+        __DIR__ . '/include/phpmailer',
+        __DIR__ . '/include/phpqrcode.php',
+        __DIR__ . '/include/emogrifier.class.php',
         __DIR__ . '/themes', __DIR__ . '/vendor',
     ])
     ->withPhpSets(php85: true)

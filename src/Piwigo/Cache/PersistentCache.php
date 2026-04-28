@@ -13,8 +13,8 @@ abstract class PersistentCache
     protected $instance_key = PHPWG_VERSION;
 
     /**
-    @return a key that can be safely be used with get/set methods
-    */
+     * @return string a key that can be safely be used with get/set methods
+     */
     public function make_key($key)
     {
         if (is_array($key)) {
@@ -26,9 +26,9 @@ abstract class PersistentCache
 
     /**
     Searches for a key in the persistent cache and fills corresponding value.
-    @param string $key
-    @param out mixed $value
-    @return false if the $key is not found in cache ($value is not modified in this case)
+    * @param string $key
+    * @param mixed $value
+    * @return bool false if the $key is not found in cache ($value is not modified in this case)
     */
     abstract public function get($key, &$value);
 

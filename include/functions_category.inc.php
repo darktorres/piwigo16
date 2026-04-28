@@ -227,8 +227,6 @@ function get_category_preferred_image_orders()
 /**
  * Assign a template var useable with {html_options} from a list of categories
  *
- * @param array[] $categories (at least id,name,global_rank,uppercats for each)
- * @param int[] $selected ids of selected items
  * @param string $blockname variable name in template
  * @param bool $fullname full breadcrumb or not
  */
@@ -568,10 +566,9 @@ function remove_computed_category(array &$cats, array $cat): void
  * AND & OR mode supported.
  *
  * @param int[] $cat_ids
- * @param string mode
+ * @param string $mode
  * @param string $extra_images_where_sql - optionally apply a sql where filter to retrieved images
  * @param string $order_by - optionally overwrite default photo order
- * @param bool $user_permissions
  */
 function get_image_ids_for_categories($cat_ids, $mode = 'AND', ?string $extra_images_where_sql = '', $order_by = '', $use_permissions = true): array
 {

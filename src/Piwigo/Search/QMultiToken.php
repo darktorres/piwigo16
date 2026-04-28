@@ -56,7 +56,7 @@ class QMultiToken implements \Stringable
     * @param int $qi the character index in $q where to start parsing
     * @param int $level the depth from root in the tree (number of opened and unclosed opening brackets)
     */
-    protected function parse_expression($q, &$qi, $level, $root)
+    public function parse_expression($q, &$qi, $level, $root)
     {
         $crt_token = '';
         $crt_modifier = 0;
@@ -212,7 +212,7 @@ class QMultiToken implements \Stringable
     * Applies recursively a search scope to all sub single tokens. We allow 'tag:(John Bill)' but we cannot evaluate
     * scopes on expressions so we rewrite as '(tag:John tag:Bill)'
     */
-    private function apply_scope(QSearchScope $scope): void
+    public function apply_scope(QSearchScope $scope): void
     {
         for ($i = 0; $i < count($this->tokens); $i++) {
             if ($this->tokens[$i]->is_single) {
@@ -231,7 +231,7 @@ class QMultiToken implements \Stringable
     }
 
     /* because evaluations occur left to right, we ensure that 'a OR b c d' is interpreted as 'a OR (b c d)'*/
-    protected function check_operator_priority()
+    public function check_operator_priority()
     {
         $crt_prio = 0;
         for ($i = 0; $i < count($this->tokens); $i++) {

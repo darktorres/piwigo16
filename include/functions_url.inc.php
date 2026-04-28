@@ -28,7 +28,7 @@ function get_root_url()
 
 /**
  * returns the absolute url to the root of PWG
- * @param boolean with_scheme if false - does not add http://toto.com
+ * @param boolean $with_scheme if false - does not add http://toto.com
  */
 function get_absolute_root_url($with_scheme = true): string
 {
@@ -80,8 +80,8 @@ function get_absolute_root_url($with_scheme = true): string
  * adds one or more _GET style parameters to an url
  * example: add_url_params('/x', array('a'=>'b')) returns /x?a=b
  * add_url_params('/x?cat_id=10', array('a'=>'b')) returns /x?cat_id=10&amp;a=b
- * @param string url
- * @param array params
+ * @param string $url
+ * @param array $params
  * @return string
  */
 function add_url_params($url, $params, $arg_separator = '&amp;')
@@ -112,8 +112,7 @@ function add_url_params($url, $params, $arg_separator = '&amp;')
 /**
  * build an index URL for a specific section
  *
- * @param array
- */
+ * @param array $params */
 function make_index_url(array $params = []): string
 {
     $url = get_root_url().'index';
@@ -146,8 +145,8 @@ function make_index_url(array $params = []): string
  * ) will create an index URL on the current section (categories), but on
  * a redefined category and without the start URL parameter.
  *
- * @param array redefined keys
- * @param array removed keys
+ * @param array $redefined keys
+ * @param array $removed keys
  */
 function duplicate_index_url($redefined = [], $removed = []): string
 {
@@ -159,8 +158,8 @@ function duplicate_index_url($redefined = [], $removed = []): string
 /**
  * returns $page global array with key redefined and key removed
  *
- * @param array redefined keys
- * @param array removed keys
+ * @param array $redefined keys
+ * @param array $removed keys
  * @return array
  */
 function params_for_duplication($redefined, $removed)
@@ -184,8 +183,8 @@ function params_for_duplication($redefined, $removed)
  * create a picture URL with current page parameters, but with redefinitions
  * and removes. See duplicate_index_url.
  *
- * @param array redefined keys
- * @param array removed keys
+ * @param array $redefined keys
+ * @param array $removed keys
  */
 function duplicate_picture_url($redefined = [], $removed = []): string
 {
@@ -197,8 +196,7 @@ function duplicate_picture_url($redefined = [], $removed = []): string
 /**
  * create a picture URL on a specific section for a specific picture
  *
- * @param array
- */
+ * @param array $params */
 function make_picture_url(array $params): string
 {
     $url = get_root_url().'picture';
@@ -268,8 +266,7 @@ function add_well_known_params_in_url(string $url, array $params): string
  * Depending on section, other parameters are required (see function code
  * for details)
  *
- * @param array
- */
+ * @param array $params */
 function make_section_in_url(array $params): string
 {
     $section_string = '';
@@ -391,8 +388,8 @@ function make_section_in_url(array $params): string
  *
  * Depending on section, other parameters are returned (category/tags/list/...)
  *
- * @param array of url tokens to parse
- * @param int the index in the array of url tokens; in/out
+ *  array  url tokens to parse
+ *  int  index in the array of url tokens; in/out
  */
 function parse_section_url(array $tokens, &$next_token): array
 {
@@ -628,8 +625,8 @@ function parse_well_known_params_url(array $tokens, &$i): array
 
 
 /**
- * @param id image id
- * @param what_part string one of 'e' (element), 'r' (representative)
+ *  int  image id
+ *  string  one of 'e' (element), 'r' (representative)
  */
 function get_action_url($id, $what_part, $download)
 {
@@ -645,7 +642,7 @@ function get_action_url($id, $what_part, $download)
 }
 
 /*
- * @param element_info array containing element information from db;
+ * @param element_info $array containing element information from db;
  * at least 'id', 'path' should be present
  */
 function get_element_url(array $element_info)
@@ -661,7 +658,7 @@ function get_element_url(array $element_info)
 /**
  * Indicate to build url with full path
  *
- * @param null
+
  */
 function set_make_full_url(): void
 {
@@ -681,7 +678,7 @@ function set_make_full_url(): void
 /**
  * Restore old parameter to build url with full path
  *
- * @param null
+
  */
 function unset_make_full_url(): void
 {
@@ -705,7 +702,7 @@ function unset_make_full_url(): void
  * Embellish the url argument
  *
  * @param $url
- * @return $url embellished
+ *  string
  */
 function embellish_url($url): string|array
 {

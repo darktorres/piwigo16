@@ -71,7 +71,7 @@ function cookie_path(): ?string
  * Persistently stores a variable in pwg cookie.
  * Set $value to null to delete the cookie.
  *
- * @param string $car
+ *  string 
  * @param mixed $value
  * @param int|null $expire
  */

@@ -460,7 +460,7 @@ final class Config
     public static function passwordResetDuration(): int { return self::getInt('password_reset_duration', 3600); }
     public static function passwordActivationDuration(): int { return self::getInt('password_activation_duration', 259200); }
     public static function passwordResetCodeDuration(): int { return self::getInt('password_reset_code_duration', 300); }
-    public static function passConvert(): bool { return self::getBool('pass_convert', false); }
+    public static function passConvert(): mixed { return self::get('pass_convert', false); }
 
     /** @return array<string,string> */
     public static function userFields(): array

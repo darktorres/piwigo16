@@ -89,7 +89,6 @@ function get_search_array($search_id): mixed
 /**
  * Returns the list of items corresponding to the advanced search array.
  *
- * @param string $images_where optional additional restriction on images table
  */
 function get_regular_search_results(array $search, ?string $images_where = ''): array
 {
@@ -819,7 +818,7 @@ class QNumericRangeScope extends \Piwigo\Search\QSearchScope
 
         foreach ($range as $i => &$val) {
             if (preg_match('#^(-?[0-9.]+)/([0-9.]+)$#i', (string) $val, $matches)) {
-                $val = floatval($matches[1] / $matches[2]);
+                $val = floatval((float)$matches[1] / (float)$matches[2]);
             } elseif (preg_match('/^(-?[0-9.]+)([km])?/i', (string) $val, $matches)) {
                 $val = floatval($matches[1]);
                 if (isset($matches[2])) {
@@ -1695,8 +1694,6 @@ function qsearch_eval(\Piwigo\Search\QMultiToken $expr, \Piwigo\Search\QResults 
  *    )
  *
  * @param string $q
- * @param bool $super_order_by
- * @param string $images_where optional additional restriction on images table
  * @return array
  */
 function get_quick_search_results($q, array $options)
@@ -1867,8 +1864,6 @@ SELECT DISTINCT(id) FROM '.IMAGES_TABLE.' i';
  * It can be either a quick search or a regular search.
  *
  * @param int $search_id
- * @param bool $super_order_by
- * @param string $images_where optional aditional restriction on images table
  * @return array
  */
 function get_search_results($search_id, $super_order_by, ?string $images_where = '')

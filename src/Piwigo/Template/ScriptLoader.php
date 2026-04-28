@@ -16,7 +16,7 @@ class ScriptLoader
     public $inline_scripts;
 
     private bool $did_head;
-    /** @var bool */
+    /** @var array */
     private array $head_done_scripts;
     private ?bool $did_footer = null;
 
@@ -60,7 +60,6 @@ class ScriptLoader
     }
 
     /**
-     * @param string $code
      * @param string[] $require
      */
     public function add_inline($code, $require): void
@@ -85,7 +84,7 @@ class ScriptLoader
      * @param int $load_mode
      * @param string[] $require
      * @param string $path
-     * @param string $version
+     * @param string|int $version
      */
     public function add($id, $load_mode, $require, $path, $version = 0, $is_template = false): void
     {

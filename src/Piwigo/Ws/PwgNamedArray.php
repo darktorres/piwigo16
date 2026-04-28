@@ -19,10 +19,9 @@ class PwgNamedArray
 
     /**
      * Constructs a named array
-     * @param arr array (keys must be consecutive integers starting at 0)
-     * @param itemName string xml element name for values of arr (e.g. image)
-     * @param xmlAttributes array of sub-item attributes that will be encoded as
-     *      xml attributes instead of xml child elements
+     * @param mixed $_content array (keys must be consecutive integers starting at 0)
+     * @param string $_itemName xml element name for values of arr (e.g. image)
+     * @param array $xmlAttributes sub-item attributes that will be encoded as xml attributes
      */
     public function __construct(public $_content, public $_itemName, $xmlAttributes = [])
     {

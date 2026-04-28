@@ -17,7 +17,7 @@ class Combinable
     /**
      * @param string $id
      * @param string $path
-     * @param string $version
+     * @param string|int $version
      */
     public function __construct(public $id, $path, public $version = 0)
     {

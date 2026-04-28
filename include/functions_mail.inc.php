@@ -361,7 +361,6 @@ function pwg_mail_notification_admins($subject, $content, $send_technical_detail
  * @see pwg_mail()
  * @since 2.6
  *
- * @param array $args - as in pwg_mail()
  * @param array $tpl - as in pwg_mail()
  * @return boolean
  */
@@ -432,7 +431,6 @@ SELECT
  * @see pwg_mail()
  *
  * @param int $group_id
- * @param array $args - as in pwg_mail()
  *       o language_selected: filters users of the group by language [default value empty]
  * @param array $tpl - as in pwg_mail()
  * @return boolean
@@ -527,7 +525,6 @@ SELECT
  * Sends an email, using Piwigo specific informations.
  *
  * @param string|array $to
- * @param array $args
  *       o from: sender [default value webmaster email]
  *       o reply_to_mail_address: reply-to can be different of the "from" (new 16.4.0) [default value empty]
  *       o reply_to_name: reply-to can be different of the "from" (new 16.4.0) [default value empty]
@@ -913,7 +910,6 @@ function pwg_generate_reset_password_mail(string $username, string $password_lin
  *
  * Return the content mail to send
  * @since 15
- * @param string $password_link
  * @param string $gallery_title
  * @param string $remaining_time
  * @return array mail content
@@ -974,7 +970,6 @@ function pwg_generate_code_verification_mail(string $code): array
  *
  * Return the content mail to send
  * @since 16
- * @param string $code
  * @return array mail content
  */
 function pwg_generate_success_reset_password_mail($username, $nb_of_apikeys): array

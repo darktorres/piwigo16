@@ -164,7 +164,6 @@ class Logger
      * Writes a $line to the log with a severity level of DEBUG.
      *
      * @param string $cat
-     * @param array $args
      */
     public function debug(string $line, $cat = null, $args = []): void
     {
@@ -175,7 +174,6 @@ class Logger
      * Writes a $line to the log with a severity level of INFO.
      *
      * @param string $cat
-     * @param array $args
      */
     public function info(string $line, $cat = null, $args = []): void
     {
@@ -186,7 +184,6 @@ class Logger
      * Writes a $line to the log with a severity level of NOTICE.
      *
      * @param string $cat
-     * @param array $args
      */
     public function notice(string $line, $cat = null, $args = []): void
     {
@@ -197,7 +194,6 @@ class Logger
      * Writes a $line to the log with a severity level of WARNING.
      *
      * @param string $cat
-     * @param array $args
      */
     public function warn(string $line, $cat = null, $args = []): void
     {
@@ -208,7 +204,6 @@ class Logger
      * Writes a $line to the log with a severity level of ERROR.
      *
      * @param string $cat
-     * @param array $args
      */
     public function error(string $line, $cat = null, $args = []): void
     {
@@ -219,7 +214,6 @@ class Logger
      * Writes a $line to the log with a severity level of ALERT.
      *
      * @param string $cat
-     * @param array $args
      */
     public function alert(string $line, $cat = null, $args = []): void
     {
@@ -230,7 +224,6 @@ class Logger
      * Writes a $line to the log with a severity level of CRITICAL.
      *
      * @param string $cat
-     * @param array $args
      */
     public function critical(string $line, $cat = null, $args = []): void
     {
@@ -241,7 +234,6 @@ class Logger
      * Writes a $line to the log with a severity level of EMERGENCY.
      *
      * @param string $cat
-     * @param array $args
      */
     public function emergency(string $line, $cat = null, $args = []): void
     {
@@ -252,9 +244,7 @@ class Logger
      * Writes a $line to the log with the given severity.
      *
      * @param integer $severity
-     * @param string $line
      * @param string $cat
-     * @param array $args
      */
     public function log($severity, string $message, $cat = null, $args = []): void
     {
@@ -271,7 +261,6 @@ class Logger
     /**
      * Directly writes a line to the log without adding level and time.
      *
-     * @param string $line
      */
     public function write($line): void
     {
@@ -362,7 +351,6 @@ class Logger
     /**
      * Indents the given string with the given indent.
      *
-     * @param  string $string The string to indent
      * @param  string $indent What to use as the indent.
      * @return string
      */

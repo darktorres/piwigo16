@@ -163,7 +163,7 @@ function pwg_query(string $query)
 /**
  * Get max value plus one of a particular column.
  *
- * @param int
+ * @param string $column
  */
 function pwg_db_nextval(string $column, string $table)
 {

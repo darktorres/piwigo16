@@ -9,9 +9,9 @@ namespace Piwigo\Template;
  */
 class CssLoader
 {
-    /** @param Css[] */
+    /** @var Css[] */
     private array $registered_css;
-    /** @param int used to keep declaration order */
+    /** @var int used to keep declaration order */
     private int $counter;
 
     public function __construct()
@@ -49,7 +49,7 @@ class CssLoader
      *
      * @param string $id
      * @param string $path
-     * @param string $version
+     * @param string|int $version
      * @param int $order
      * @param bool $is_template
      */

@@ -141,7 +141,7 @@ final class FileCombiner
                 if (!$force && file_exists(PHPWG_ROOT_PATH.$file)) {
                     $combinable->path = $file;
                     $combinable->version = false;
-                    return;
+                    return null;
                 }
             }
 
@@ -163,6 +163,8 @@ final class FileCombiner
             file_put_contents(PHPWG_ROOT_PATH.$file, $content);
             $combinable->path = $file;
         } elseif ($return_content) {
+            // handled below
+
             $content = file_get_contents(PHPWG_ROOT_PATH . $combinable->path);
             if ($this->is_css) {
                 $content = self::process_css($content, $combinable->path, $header);
@@ -171,6 +173,7 @@ final class FileCombiner
             }
             return $content;
         }
+        return null;
     }
 
     /**

@@ -547,7 +547,6 @@ DELETE
  * Directories named ".svn", "thumbnail", "pwg_high" or "pwg_representative"
  * are omitted.
  *
- * @param string $basedir (eg: ./galleries)
  * @return string[]
  */
 function get_fs_directories($path, $recursive = true): array
@@ -589,7 +588,7 @@ function get_fs_directories($path, $recursive = true): array
  * The list of ordered categories id is supposed to be in the same parent
  * category
  *
- * @param array categories
+ * @param array $categories
  */
 function save_categories_order($categories): void
 {
@@ -689,7 +688,6 @@ SELECT id, id_uppercat, uppercats, `rank`, global_rank
 /**
  * Change the **visible** property on a set of categories.
  *
- * @param int[] $categories
  * @param boolean|string $value
  * @param boolean $unlock_child optional   default false
  */
@@ -726,7 +724,6 @@ UPDATE '.CATEGORIES_TABLE.'
 /**
  * Change the **status** property on a set of categories : private or public.
  *
- * @param int[] $categories
  * @param string $value
  */
 function set_cat_status($categories, $value)
@@ -945,7 +942,6 @@ SELECT id,representative_ext,path
 /**
  * Set a new random representant to the categories.
  *
- * @param int[] $categories
  */
 function set_random_representant($categories): void
 {
@@ -979,7 +975,7 @@ SELECT image_id
 /**
  * Returns the fulldir for each given category id.
  *
- * @param int[] intcat_ids
+ *  int[] 
  * @return string[]
  */
 function get_fulldirs($cat_ids): array
@@ -1694,7 +1690,7 @@ DELETE
  *
  * @since 2.9
  * @param array $image_ids
- * @return associative array, image_id => list of tag ids
+ * @return array array, image_id => list of tag ids
  */
 function get_image_tag_ids($image_ids): array
 {
@@ -1754,7 +1750,6 @@ function compare_image_tag_lists(array $taglist_before, $taglist_after): array
  *
  * @since 12
  * @param array $images - list of image ids
- * @param array $categories - list of category ids
  */
 function fill_lounge($images, $categories): void
 {
@@ -1791,7 +1786,7 @@ function empty_lounge($invalidate_user_cache = true)
 
     if (\Piwigo\Core\Config::has('empty_lounge_running')) {
         [$running_exec_id, $running_exec_start_time] = explode('-', \Piwigo\Core\Config::get('empty_lounge_running'));
-        if (time() - $running_exec_start_time > 60) {
+        if (time() - (int)$running_exec_start_time > 60) {
             $logger->debug(__FUNCTION__.', exec='.$running_exec_id.', timeout stopped by another call to the function');
             conf_delete_param('empty_lounge_running');
         }
@@ -1870,7 +1865,6 @@ DELETE
  * The function will not duplicate links and will preserve ranks.
  *
  * @param int[] $images
- * @param int[] $categories
  */
 function associate_images_to_categories($images, $categories)
 {
@@ -1950,7 +1944,6 @@ SELECT
  * Dissociate a list of images from a category.
  *
  * @param int[] $images
- * @param int $categories
  */
 function dissociate_images_from_category($images, string $category): int
 {
@@ -1988,7 +1981,6 @@ DELETE
  * This function will preserve ranks.
  *
  * @param int[] $images
- * @param int[] $categories
  */
 function move_images_to_categories($images, $categories)
 {
@@ -2253,7 +2245,7 @@ function cat_admin_access($category_id): bool
  * Retrieve data from external URL.
  *
  * @param string $src
- * @param string|Ressource $dest - can be a file ressource or string
+ * @param string|resource $dest - can be a file ressource or string
  * @param array $get_data - data added to request url
  * @param array $post_data - data transmitted with POST
  * @param int $step (internal use)
@@ -2623,7 +2615,6 @@ function get_tag_ids($raw_tags, $allow_create = true): array
  * names. Sequence is not case sensitive.
  * Warning: By definition, this function breaks original keys.
  *
- * @param int[] $elements_ids
  * @param string[] $name - names of elements, indexed by ids
  * @return int[]
  */
@@ -2899,7 +2890,7 @@ function deltree(string $path, $trash_path = null)
  * Additionally returns the hash of root path.
  * Used to invalidate LocalStorage cache on admin pages.
  *
- * @param string|string[] list of keys to retrieve (categories,groups,images,tags,users)
+ *  string|string[]  list of keys to retrieve (categories,groups,images,tags,users)
  * @return string[]
  */
 function get_admin_client_cache_keys($requested = []): array
@@ -2957,7 +2948,7 @@ SELECT id
 
 /**
  * Compute and add the md5sum of image ids (where md5sum is null)
- * @param int[] list of image ids and there paths
+ *  int[]  list of image ids and their paths
  * @return int number of md5sum added
  */
 function add_md5sum($ids): int
@@ -3058,8 +3049,8 @@ SELECT
  * The list of ordered images id is supposed to be in the same parent
  * category
  *
- * @param int category_id
- * @param int[] images
+ * @param int $category_id
+ * @param int[] $images
  */
 function save_images_order($category_id, $images): void
 {
@@ -3169,7 +3160,6 @@ SELECT *
  * Return each cache image sizes.
  *
  * @since 12
- * @param string $path_to_file
  * @return mixed[][]|float[]|int[]
  */
 function get_cache_size_derivatives(string $path): array

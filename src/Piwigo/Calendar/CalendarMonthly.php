@@ -155,7 +155,7 @@ class CalendarMonthly extends CalendarBase
      *
      * @param int $year
      * @param int $month
-     * @return int[]
+     * @return int
      */
     protected function get_all_days_in_month($year, $month): int
     {

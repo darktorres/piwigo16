@@ -58,9 +58,7 @@ class plugins
 
     /**
      * Perform requested actions
-     * @param string - action
-     * @param string - plugin id
-     * @param array - errors
+     * @param string $action
      */
     public function perform_action($action, string $plugin_id, array $options = [])
     {
@@ -510,9 +508,9 @@ DELETE FROM '. PLUGINS_TABLE .'
 
     /**
      * Extract plugin files from archive
-     * @param string - install or upgrade
-     *  @param string - archive URL
-      * @param string - plugin id or extension id
+     * @param string $action install or upgrade
+     * @param mixed $revision remote revision identifier
+     * @param string $dest plugin id or extension id
      */
     public function extract_plugin_files(string $action, $revision, string $dest, &$plugin_id = null)
     {

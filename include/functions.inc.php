@@ -172,7 +172,6 @@ function mkgetdir($dir, $flags = MKGETDIR_DEFAULT): bool
 /**
  * finds out if a string is in ASCII, UTF-8 or other encoding
  *
- * @param string $str
  * @return int *0* if _$str_ is ASCII, *1* if UTF-8, *-1* otherwise
  */
 function qualify_utf8($Str): int
@@ -213,7 +212,6 @@ function qualify_utf8($Str): int
 /**
  * Remove accents from a UTF-8 or ISO-8859-1 string (from wordpress)
  *
- * @param string $string
  * @return string
  */
 function remove_accents($string)
@@ -375,7 +373,6 @@ if (function_exists('mb_strtolower') && defined('PWG_CHARSET')) {
 /**
  * simplify a string to insert it into an URL
  *
- * @param string $str
  * @return string
  */
 function str2url($str): string|array
@@ -733,7 +730,7 @@ function dateDiff($date1, $date2): \DateInterval|\stdClass
 /**
  * converts a string into a DateTime object
  *
- * @param int|string timestamp or datetime string
+ *  int|string|null  timestamp or datetime string
  * @param string $format input format respecting date() syntax
  * @return DateTime|false
  */
@@ -785,7 +782,7 @@ function str2DateTime(int|string|null $original, $format = null)
 /**
  * returns a formatted and localized date for display (LEGACY use format_date)
  *
- * @param int|string timestamp or datetime string
+ *  int|string|null  timestamp or datetime string
  * @param array $show list of components displayed, default is ['day_name', 'day', 'month', 'year']
  * @param string $format input format respecting date() syntax
  * @return string
@@ -834,7 +831,7 @@ function format_date_legacy(int|string|null $original, $show = null, $format = n
 /**
  * returns a formatted and localized date for display
  *
- * @param int|string timestamp or datetime string
+ *  int|string|null  timestamp or datetime string
  * @param array $show list of components displayed, default is ['day_name', 'day', 'month', 'year']
  *    THIS PARAMETER IS PLANNED TO CHANGE
  * @param string $format input format respecting date() syntax
@@ -905,11 +902,10 @@ function format_fromto($from, $to, $full = false)
 /**
  * Works out the time since the given date
  *
- * @param int|string timestamp or datetime string
+ *  int|string|null  timestamp or datetime string
  * @param string $stop year,month,week,day,hour,minute,second
  * @param string $format input format respecting date() syntax
  * @param bool $with_text append "ago" or "in the future"
- * @param bool $with_weeks
  * @return string
  */
 function time_since(?string $original, $stop = 'minute', $format = null, $with_text = true, $with_week = true, $only_last_unit = false)
@@ -1241,8 +1237,7 @@ function get_name_from_file($filename): string
  * returns the corresponding value from _$lang_ if existing else the key is returned
  * if more than one parameter is provided sprintf is applied
  *
- * @param string $key
- * @param mixed $args,... optional arguments
+ * @param string|null $key
  * @return string
  */
 function l10n(?string $key): string
@@ -1278,9 +1273,8 @@ function l10n_dec($singular_key, $plural_key, $decimal): string
  * returns a single element to use with l10n_args
  *
  * @param string $key translation key
- * @param mixed $args arguments to use on sprintf($key, args)
  *   if args is a array, each values are used on sprintf
- * @return string
+ * @return array
  */
 function get_l10n_args($key, $args = ''): array
 {
@@ -1326,7 +1320,7 @@ function l10n_args($key_args, string $sep = "\n"): string
 /**
  * returns the corresponding value from $themeconf if existing or an empty string
  *
- * @param string $key
+ * @param array $key
  * @return string
  */
 function get_themeconf($key)
@@ -1415,7 +1409,6 @@ function pwg_is_dbconf_writeable(): bool
 * Add or update a config parameter
 *
 * @param string $value
-* @param boolean $updateGlobal update global *$conf* variable
 * @param callable $parser function to apply to the value before save in database
      (eg: serialize, json_encode) will not be applied to *$conf* if *$parser* is *true*
 */
@@ -1517,7 +1510,6 @@ function safe_json_decode($value)
 /**
  * Prepends and appends strings at each value of the given array.
  *
- * @param array $array
  * @param string $prepend_str
  * @param string $append_str
  * @return array
@@ -1560,7 +1552,7 @@ function hash_from_query(string $query, $keyname): array
  * if _$fieldname_ is empty the returned value will be an array of arrays
  * if _$fieldname_ is provided the returned value will be a one dimension array
  *
- * @param string $fieldname
+ * @param string|false $fieldname
  */
 #[\Deprecated(message: '2.6')]
 function array_from_query(string $query, $fieldname = false): array
@@ -1654,7 +1646,7 @@ function get_parent_language($lang_id = null)
  *   param language, user language, default language
  *
  * @param string $dirname
- * @param mixed options can contain
+ *  array  can contain
  *     @option string language - language to load
  *     @option bool return - if true the file content is returned
  *     @option bool no_fallback - if true do not load default language
@@ -1776,7 +1768,6 @@ function load_language(string $filename, $dirname = '', array $options = []): st
 /**
  * converts a string from a character set to another character set
  *
- * @param string $str
  * @param string $source_charset
  */
 function convert_charset($str, $source_charset, string $dest_charset)
@@ -1829,7 +1820,7 @@ function get_ephemeral_key($valid_after_seconds, string $aditionnal_data_to_hash
 /**
  * verify a key sent back with a form
  *
- * @param string $key
+ * @param array $key
  */
 function verify_ephemeral_key(array $key, string $aditionnal_data_to_hash = ''): bool
 {
@@ -1853,7 +1844,6 @@ function verify_ephemeral_key(array $key, string $aditionnal_data_to_hash = ''):
  * return an array which will be sent to template to display navigation bar
  *
  * @param string $url base url of all links
- * @param int $nb_elements
  * @param int $start
  * @param int $nb_element_page
  * @param bool $clean_url
@@ -2681,7 +2671,7 @@ function pwg_unique_exec_begins(string $token_name, $timeout = 60): false|string
 
     if (\Piwigo\Core\Config::has($token_name . '_running')) {
         [$running_exec_id, $running_exec_start_time] = explode('-', (string) \Piwigo\Core\Config::get($token_name . '_running'));
-        if (time() - $running_exec_start_time > $timeout) {
+        if (time() - (int)$running_exec_start_time > $timeout) {
             $logger->info('['.$token_name.'][exec='.$exec_id.'] exec='.$running_exec_id.', timeout stopped by another call to the function');
             pwg_unique_exec_ends($token_name);
         }
@@ -2742,7 +2732,7 @@ function pwg_unique_exec_ends(string $token_name): void
  *
  * @since 16.3
  *
- * @return array(string, ?string)
+ * @return array
  */
 function get_container_info(): array
 {

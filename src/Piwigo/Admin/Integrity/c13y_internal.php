@@ -16,7 +16,7 @@ class c13y_internal
     /**
      * Check version
      *
-     * @param c13y object
+     *  object 
      */
     public function c13y_version($c13y): void
     {
@@ -51,7 +51,7 @@ class c13y_internal
     /**
      * Check exif
      *
-     * @param c13y object
+     *  object 
      */
     public function c13y_exif($c13y): void
     {
@@ -72,7 +72,7 @@ class c13y_internal
     /**
      * Check user
      *
-     * @param c13y object
+     *  object 
      */
     public function c13y_user($c13y): void
     {
@@ -130,7 +130,8 @@ class c13y_internal
     /**
      * Do correction user
      *
-     * @param user_id, action
+     **  mixed 
+     *  string 
      * @return boolean true if ok else false
      */
     public function c13y_correction_user($id, $action)

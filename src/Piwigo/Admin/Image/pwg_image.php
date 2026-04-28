@@ -4,6 +4,18 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Image;
 
+/**
+ * @method bool rotate(int $rotation)
+ * @method int get_width()
+ * @method int get_height()
+ * @method bool crop(int $width, int $height, int $x, int $y)
+ * @method bool resize(int $width, int $height)
+ * @method bool sharpen(int $amount)
+ * @method bool compose(self $overlay, int $x, int $y, int $opacity)
+ * @method bool strip()
+ * @method bool write(string $destination_filepath)
+ * @method bool set_compression_quality(int $quality)
+ */
 class pwg_image
 {
     /**

@@ -11,7 +11,7 @@ namespace Piwigo\Ws\Encoder;
 abstract class PwgResponseEncoder
 {
     /** encodes the web service response to the appropriate output format
-     * @param response mixed the unencoded result of a service method call
+     * @param mixed $response the unencoded result of a service method call
      */
     abstract public function encodeResponse($response);
 

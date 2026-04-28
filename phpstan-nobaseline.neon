@@ -1,5 +1,5 @@
 parameters:
-    level: 2
+    level: 3
     paths:
         - include
         - admin
@@ -35,6 +35,7 @@ parameters:
             - include/php_compat/**
             - include/phpmailer/**
             - include/phpqrcode.php
+            - include/emogrifier.class.php
             - admin/include/pclzip.lib.php (?)
     bootstrapFiles:
         - tools/phpstan-bootstrap.php

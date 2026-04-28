@@ -80,10 +80,9 @@ class PwgNamedArray
 
     /**
      * Constructs a named array
-     * @param arr array (keys must be consecutive integers starting at 0)
-     * @param itemName string xml element name for values of arr (e.g. image)
-     * @param xmlAttributes array of sub-item attributes that will be encoded as
-     *      xml attributes instead of xml child elements
+     * @param mixed $_content array (keys must be consecutive integers starting at 0)
+     * @param string $_itemName xml element name for values of arr (e.g. image)
+     * @param array $xmlAttributes sub-item attributes that will be encoded as xml attributes
      */
     public function __construct(public $_content, public $_itemName, $xmlAttributes = [])
     {
@@ -102,11 +101,9 @@ class PwgNamedStruct
     /**
      * Constructs a named struct (usually returned by web service function
      * implementation)
-     * @param name string - containing xml element name
-     * @param content array - the actual content (php array)
-     * @param xmlAttributes array - name of the keys in $content that will be
-     *    encoded as xml attributes (if null - automatically prefer xml attributes
-     *    whenever possible)
+     * @param mixed $_content the actual content (php array)
+     * @param array|null $xmlAttributes name of the keys in $content to encode as xml attributes
+     * @param array|null $xmlElements name of the keys to encode as xml elements
      */
     public function __construct(public $_content, $xmlAttributes = null, $xmlElements = null)
     {
@@ -144,7 +141,7 @@ abstract class PwgRequestHandler
 abstract class PwgResponseEncoder
 {
     /** encodes the web service response to the appropriate output format
-     * @param response mixed the unencoded result of a service method call
+     * @param mixed $response the unencoded result of a service method call
      */
     abstract public function encodeResponse($response);
 
@@ -288,22 +285,12 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
 
     /**
      * Registers a web service method.
-     * @param methodName string - the name of the method as seen externally
-     * @param callback mixed - php method to be invoked internally
-     * @param params array - map of allowed parameter names with options
-     *    @option mixed default (optional)
-     *    @option int flags (optional)
-     *      possible values: WS_PARAM_ALLOW_ARRAY, WS_PARAM_FORCE_ARRAY, WS_PARAM_OPTIONAL
-     *    @option int type (optional)
-     *      possible values: WS_TYPE_BOOL, WS_TYPE_INT, WS_TYPE_FLOAT, WS_TYPE_ID
-     *                       WS_TYPE_POSITIVE, WS_TYPE_NOTNULL
-     *    @option int|float maxValue (optional)
-     * @param description string - a description of the method.
-     * @param include_file string - a file to be included befaore the callback is executed
-     * @param options array
-     *    @option bool hidden (optional) - if true, this method won't be visible by reflection.getMethodList
-     *    @option bool admin_only (optional)
-     *    @option bool post_only (optional)
+     * @param string $methodName the name of the method as seen externally
+     * @param mixed $callback php method to be invoked internally
+     * @param array $params map of allowed parameter names with options
+     * @param string $description a description of the method
+     * @param string $include_file a file to be included before the callback is executed
+     * @param array $options hidden, admin_only, post_only flags
      */
     public function addMethod($methodName, $callback, $params = [], $description = '', $include_file = '', $options = []): void
     {
@@ -449,10 +436,10 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
     }
 
     /**
-     *  Invokes a registered method. Returns the return of the method (or
-     *  a PwgError object if the method is not found)
-     *  @param methodName string the name of the method to invoke
-     *  @param params array array of parameters to pass to the invoked method
+     * Invokes a registered method. Returns the return of the method (or
+     * a PwgError object if the method is not found)
+     * @param string $methodName the name of the method to invoke
+     * @param array $params array of parameters to pass to the invoked method
      */
     public function invoke($methodName, array $params)
     {

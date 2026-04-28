@@ -110,7 +110,6 @@ function search_case_username($username)
  *
  * @param string $login
  * @param string $password
- * @param string $mail_adress
  * @param bool $notify_admin
  * @param array &$errors populated with error messages
  * @param bool $notify_user
@@ -268,7 +267,6 @@ SELECT id
  * Same that getuserdata() but with additional tests for guest.
  *
  * @param int $user_id
- * @param boolean $user_cache
  */
 function build_user($user_id, $use_cache = true): array
 {
@@ -642,7 +640,6 @@ SELECT id
  * Returns user identifier thanks to his name.
  *
  * @param string $username
- * @param int|false
  */
 function get_userid($username)
 {
@@ -667,7 +664,6 @@ SELECT '.\Piwigo\Core\Config::userFields()['id'].'
  * Returns user identifier thanks to his email.
  *
  * @param string $email
- * @param int|false
  */
 function get_userid_by_email($email)
 {
@@ -692,7 +688,7 @@ SELECT
 /**
  * Returns a array with default user valuees.
  *
- * @param convert_str ceonferts 'true' and 'false' into booleans
+ *  bool  convert true/false strings to booleans
  * @return array
  */
 function get_default_user_info($convert_str = true)
@@ -1062,8 +1058,9 @@ function pwg_password_verify($password, $hash, $user_id = null)
 
     // If the password has not been hashed with the current algorithm.
     if (!str_starts_with($hash, '$P')) {
-        if (!empty(\Piwigo\Core\Config::passConvert())) {
-            $check = ($hash == \Piwigo\Core\Config::passConvert()($password));
+        $pass_convert = \Piwigo\Core\Config::passConvert();
+        if (!empty($pass_convert) && is_callable($pass_convert)) {
+            $check = ($hash == $pass_convert($password));
         } else {
             $check = ($hash == md5($password));
         }
@@ -1365,7 +1362,7 @@ function get_access_type_status($user_status = ''): int
 /**
  * Returns if user has access to a particular ACCESS_*
  *
- * @return int $access_type one of ACCESS_* constants
+ *  int one of ACCESS_* constants
  * @param string $user_status used if $user not initialized
  * @return bool
  */
@@ -1377,7 +1374,7 @@ function is_autorize_status($access_type, $user_status = ''): bool
 /**
  * Abord script if user has no access to a particular ACCESS_*
  *
- * @return int $access_type one of ACCESS_* constants
+ *  int one of ACCESS_* constants
  * @param string $user_status used if $user not initialized
  */
 function check_status($access_type, $user_status = ''): void
@@ -1901,7 +1898,6 @@ UPDATE '.USER_INFOS_TABLE.'
  *
  * @param string $param
  * @param string $value
- * @param boolean $updateGlobal update global *$conf* variable
  */
 function userprefs_update_param($param, $value): void
 {
@@ -2579,7 +2575,6 @@ function generate_user_code(): array
  *
  * @since 16
  * @param string $secret
- * @param string $code
  */
 function verify_user_code($secret, $code): bool
 {
@@ -2621,7 +2616,7 @@ function save_edit_context(): void
  *
  * @since 16
  * @param int $image_id
- * @return string|bool
+ * @return string|false|null
  */
 function get_edit_context($image_id): false|string|null
 {

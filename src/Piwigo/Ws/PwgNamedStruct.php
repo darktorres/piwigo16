@@ -16,11 +16,9 @@ class PwgNamedStruct
     /**
      * Constructs a named struct (usually returned by web service function
      * implementation)
-     * @param name string - containing xml element name
-     * @param content array - the actual content (php array)
-     * @param xmlAttributes array - name of the keys in $content that will be
-     *    encoded as xml attributes (if null - automatically prefer xml attributes
-     *    whenever possible)
+     * @param mixed $_content the actual content (php array)
+     * @param array|null $xmlAttributes name of the keys to encode as xml attributes
+     * @param array|null $xmlElements name of the keys to encode as xml elements
      */
     public function __construct(public $_content, $xmlAttributes = null, $xmlElements = null)
     {

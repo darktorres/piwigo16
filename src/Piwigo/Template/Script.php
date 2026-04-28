@@ -13,14 +13,13 @@ final class Script extends Combinable
     public $extra;
 
     /**
-     * @param int 0,1,2
+     * @param int $load_mode 0, 1, or 2
      * @param string $id
      * @param string $path
-     * @param string $version
+     * @param string|int $version
      * @param array $precedents
-     * @param int $load_mode
      */
-    public function __construct(/** @var int 0,1,2 */
+    public function __construct(
         public $load_mode,
         $id,
         $path,

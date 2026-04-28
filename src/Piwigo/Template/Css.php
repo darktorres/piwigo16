@@ -12,7 +12,7 @@ final class Css extends Combinable
     /**
      * @param string $id
      * @param string $path
-     * @param string $version
+     * @param string|int $version
      * @param int $order
      */
     public function __construct($id, $path, $version = 0, public $order = 0)

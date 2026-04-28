@@ -46,9 +46,7 @@ class themes
 
     /**
      * Perform requested actions
-     * @param string - action
-     * @param string - theme id
-     * @param array - errors
+     * @param string $action
      * @return list<mixed>
      */
     public function perform_action($action, string $theme_id): array
@@ -494,9 +492,6 @@ SELECT
     /**
      * Extract theme files from archive
      *
-     * @param string - install or upgrade
-     * @param string - remote revision identifier (numeric)
-     * @param string - theme id or extension id
      */
     public function extract_theme_files(string $action, $revision, string $dest, &$theme_id = null)
     {

@@ -11,7 +11,7 @@ namespace Piwigo\Image;
  */
 final class DerivativeImage
 {
-    /** @var array */
+    /** @var mixed */
     private $params;
     /** @var string */
     private $rel_path;
@@ -294,7 +294,6 @@ final class DerivativeImage
 
     /**
      * @param int $maxw
-     * @param int $mawh
      * @return int[]
      */
     public function get_scaled_size($maxw, $maxh)
@@ -320,7 +319,6 @@ final class DerivativeImage
      * Returns the scaled size as HTML attributes.
      *
      * @param int $maxw
-     * @param int $mawh
      * @return string
      */
     public function get_scaled_size_htm($maxw = 9999, $maxh = 9999)

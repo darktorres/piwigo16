@@ -49,9 +49,9 @@ class Template
 
 
     /**
-     * @var string $root
-     * @var string $theme
-     * @var string $path
+     * @param string $root
+     * @param string $theme
+     * @param string $path
      */
     public function __construct($root = '.', $theme = '', string $path = 'template')
     {
@@ -479,6 +479,7 @@ class Template
             return $v;
         }
         $this->output .= $v;
+        return null;
     }
 
     /**
@@ -573,7 +574,6 @@ class Template
     /**
      * Eval a temp string to retrieve the original PHP value.
      *
-     * @param string $str
      * @return mixed
      */
     public static function get_php_str_val($str)
@@ -1014,7 +1014,6 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      *
      * @param string $source
      * @param Smarty $smarty
-     * @param return string
      */
     public static function prefilter_white_space($source, $smarty): string|array|null
     {
@@ -1044,7 +1043,6 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      *
      * @param string $source
      * @param Smarty $smarty
-     * @param return string
      */
     public static function postfilter_language($source, $smarty): string|array|null
     {
@@ -1066,7 +1064,6 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      *
      * @param string $source
      * @param Smarty $smarty
-     * @param return string
      */
     public static function prefilter_local_css($source, $smarty)
     {

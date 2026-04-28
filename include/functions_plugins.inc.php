@@ -185,7 +185,6 @@ function remove_event_handler(
  *
  * @param string $event
  * @param mixed $data data to transmit to all handlers
- * @param mixed $args,... optional arguments
  * @return mixed $data
  */
 function trigger_change($event, $data = null)
@@ -234,7 +233,6 @@ function trigger_change($event, $data = null)
  * @since 2.6
  *
  * @param string $event
- * @param mixed $args,... optional arguments
  */
 function trigger_notify(string $event, mixed ...$args): void
 {
@@ -323,7 +321,7 @@ SELECT * FROM '.PLUGINS_TABLE;
  * Loads a plugin in memory.
  * It performs autoupdate, includes the main.inc.php file and updates *$pwg_loaded_plugins*.
  *
- * @param string $plugin
+ * @param array $plugin
  */
 function load_plugin(array $plugin): void
 {

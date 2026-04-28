@@ -34,7 +34,6 @@ final class SizingParams
     /**
      * Returns a square SizingParams object.
      *
-     * @param int $x
      */
     public static function square($w): SizingParams
     {

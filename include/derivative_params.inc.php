@@ -49,8 +49,7 @@ function size_equals(array $s1, array $s2): bool
 /**
  * Converts a char a-z into a float.
  *
- * @param string
- * @return float
+ *  string  * @return float
  */
 function char_to_fraction($c): float|int
 {
@@ -60,8 +59,7 @@ function char_to_fraction($c): float|int
 /**
  * Converts a float into a char a-z.
  *
- * @param float
- */
+ *  float  */
 function fraction_to_char($f): string
 {
     return chr(ord('a') + round($f * 25));
@@ -114,7 +112,7 @@ final class ImageRect
      * Crops horizontally this rectangle by increasing left side and/or reducing the right side.
      *
      * @param int $pixels - the amount to substract from the width
-     * @param stirng $coi - a 4 character string (or null) containing the center of interest
+     * @param string $coi - a 4 character string (or null) containing the center of interest
      */
     public function crop_h($pixels, $coi): void
     {
@@ -202,7 +200,6 @@ final class SizingParams
     /**
      * Returns a square SizingParams object.
      *
-     * @param int $x
      */
     public static function square($w): \Piwigo\Image\SizingParams
     {

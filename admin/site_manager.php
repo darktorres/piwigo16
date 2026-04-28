@@ -127,7 +127,7 @@ SELECT c.site_id, COUNT(DISTINCT c.id) AS nb_categories, COUNT(i.id) AS nb_image
   WHERE c.site_id IS NOT NULL
   GROUP BY c.site_id
 ;';
-$sites_detail = hash_from_query($query, 'site_id');
+$sites_detail = query2array($query, 'site_id');
 
 $query = '
 SELECT *

@@ -342,7 +342,7 @@ SELECT id, path, representative_ext
     }
     $query .= '
 ;';
-    return hash_from_query($query, 'id');
+    return query2array($query, 'id');
 }
 
 /**

@@ -247,7 +247,7 @@ $columns_of = get_columns_of($tables);
 // applied_upgrade id 181 marks the 15.0.0 boundary; any DB that does not
 // have it cannot safely run this upgrade path.
 $applied_upgrades = in_array(PREFIX_TABLE.'upgrade', $tables, true)
-    ? array_from_query('SELECT id FROM '.PREFIX_TABLE.'upgrade', 'id')
+    ? query2array('SELECT id FROM '.PREFIX_TABLE.'upgrade', null, 'id')
     : [];
 
 if (!in_array(181, $applied_upgrades, true)) {

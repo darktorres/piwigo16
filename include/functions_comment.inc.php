@@ -317,7 +317,7 @@ function update_user_comment(array $comment, $post_key)
 
     // website
     if (!empty($comment['website_url'])) {
-        $comm['website_url'] = strip_tags((string) $comm['website_url']);
+        $comment['website_url'] = strip_tags((string) $comment['website_url']);
         if (!preg_match('/^https?/i', (string) $comment['website_url'])) {
             $comment['website_url'] = 'http://'.$comment['website_url'];
         }

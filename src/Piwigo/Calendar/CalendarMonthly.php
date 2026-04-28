@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Calendar;
 
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 
 /**
@@ -24,7 +25,7 @@ class CalendarMonthly extends CalendarBase
     public function initialize($inner_sql): void
     {
         parent::initialize($inner_sql);
-        global $lang;
+        $lang = &$GLOBALS['lang'];
         $this->calendar_levels = [
           [
               'sql' => pwg_db_get_year($this->date_field),
@@ -48,7 +49,7 @@ class CalendarMonthly extends CalendarBase
      */
     public function generate_category_content(): bool
     {
-        global $page;
+        $page = &$GLOBALS['page'];
 
         $view_type = $page['chronology_view'];
         if ($view_type == CAL_VIEW_CALENDAR) {
@@ -106,7 +107,7 @@ class CalendarMonthly extends CalendarBase
      */
     public function get_date_where($max_levels = 3): string
     {
-        global $page;
+        $page = &$GLOBALS['page'];
 
         $date = $page['chronology_date'];
         while (count($date) > $max_levels) {
@@ -178,7 +179,7 @@ class CalendarMonthly extends CalendarBase
      */
     protected function build_global_calendar(array &$tpl_var): bool
     {
-        global $page;
+        $page = &$GLOBALS['page'];
 
         assert(count($page['chronology_date']) == 0);
         $query = '
@@ -208,7 +209,7 @@ class CalendarMonthly extends CalendarBase
             return false;
         }
 
-        global $lang;
+        $lang = &$GLOBALS['lang'];
         foreach ($items as $year => $year_data) {
             $chronology_date = [ $year ];
             $url = duplicate_index_url(['chronology_date' => $chronology_date]);
@@ -238,7 +239,7 @@ class CalendarMonthly extends CalendarBase
      */
     protected function build_year_calendar(array &$tpl_var): bool
     {
-        global $page;
+        $page = &$GLOBALS['page'];
 
         assert(count($page['chronology_date']) == 1);
         $query = 'SELECT '.pwg_db_get_date_MMDD($this->date_field).' as period,
@@ -265,7 +266,7 @@ class CalendarMonthly extends CalendarBase
             $page['chronology_date'][CMONTH] = $m;
             return false;
         }
-        global $lang;
+        $lang = &$GLOBALS['lang'];
         foreach ($items as $month => $month_data) {
             $chronology_date = [ $page['chronology_date'][CYEAR], $month ];
             $url = duplicate_index_url(['chronology_date' => $chronology_date]);
@@ -293,7 +294,8 @@ class CalendarMonthly extends CalendarBase
      */
     protected function build_month_calendar(array &$tpl_var): bool
     {
-        global $page, $lang;
+        $page = &$GLOBALS['page'];
+        $lang = &$GLOBALS['lang'];
 
         $query = 'SELECT '.pwg_db_get_dayofmonth($this->date_field).' as period,
               COUNT(DISTINCT id) as count';

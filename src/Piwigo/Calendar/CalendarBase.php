@@ -42,7 +42,7 @@ abstract class CalendarBase
      */
     public function initialize($inner_sql): void
     {
-        global $page;
+        $page = &$GLOBALS['page'];
         if ($page['chronology_field'] == 'posted') {
             $this->date_field = 'date_available';
         } else {
@@ -58,7 +58,7 @@ abstract class CalendarBase
      */
     public function get_display_name()
     {
-        global $page;
+        $page = &$GLOBALS['page'];
         $res = '';
 
         for ($i = 0; $i < count($page['chronology_date']); $i++) {
@@ -138,7 +138,8 @@ abstract class CalendarBase
         $show_empty = false,
         $labels = null
     ) {
-        global $page, $template;
+        $page = &$GLOBALS['page'];
+        global $template;
 
         $nav_bar_datas = [];
 
@@ -199,7 +200,8 @@ abstract class CalendarBase
      */
     protected function build_nav_bar($level, $labels = null)
     {
-        global $template, $page;
+        global $template;
+        $page = &$GLOBALS['page'];
 
         $query = '
 SELECT DISTINCT('.$this->calendar_levels[$level]['sql'].') as period,
@@ -250,7 +252,8 @@ $this->get_date_where($level).'
      */
     protected function build_next_prev()
     {
-        global $template, $page;
+        global $template;
+        $page = &$GLOBALS['page'];
 
         $prev = $next = null;
         if (empty($page['chronology_date'])) {

@@ -55,7 +55,7 @@ SELECT
   FROM '.IMAGES_TABLE.'
   WHERE file LIKE \''.$search['fields']['filename'].'\'
 ;';
-        $search['image_ids'] = array_from_query($query, 'id');
+        $search['image_ids'] = query2array($query, null, 'id');
     }
 
     // echo '<pre>'; print_r($search); echo '</pre>';

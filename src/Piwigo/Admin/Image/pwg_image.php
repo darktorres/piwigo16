@@ -31,8 +31,12 @@ class pwg_image
             die('No image library available on your server.');
         }
 
-        $class = 'image_'.$this->library;
-        $this->image = new $class($this->source_filepath);
+        $this->image = match($this->library) {
+            'gd'          => new image_gd($this->source_filepath),
+            'imagick'     => new image_imagick($this->source_filepath),
+            'ext_imagick' => new image_ext_imagick($this->source_filepath),
+            default       => throw new \RuntimeException("Unknown image library: {$this->library}"),
+        };
     }
 
     // Unknow methods will be redirected to image object
@@ -170,7 +174,7 @@ class pwg_image
 
         $fp = fopen($source_filepath, 'rb');
         if (!$fp) {
-            throw new xception("webp_info(): fopen($f): Failed");
+            throw new \Exception("webp_info(): fopen($source_filepath): Failed");
         }
         $buf = fread($fp, 25);
         fclose($fp);
@@ -181,7 +185,7 @@ class pwg_image
             case !str_starts_with($buf, 'RIFF'):
             case substr($buf, 8, 4) != 'WEBP':
             case substr($buf, 12, 3) != 'VP8':
-                throw new xception('webp_info(): not a valid webp image');
+                throw new \Exception('webp_info(): not a valid webp image');
 
             case $buf[15] == ' ':
                 // Simple File Format (Lossy)
@@ -209,7 +213,7 @@ class pwg_image
                 ];
 
             default:
-                throw new xception('webp_info(): could not detect webp type');
+                throw new \Exception('webp_info(): could not detect webp type');
         }
     }
 
@@ -305,7 +309,7 @@ class pwg_image
 
     public static function get_ext_imagick_command()
     {
-        global $page;
+        $page = &$GLOBALS['page'];
 
         if (!isset($page['ext_imagick_command'])) {
             $retval = null;

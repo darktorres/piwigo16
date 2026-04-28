@@ -438,6 +438,7 @@ function get_recent_post_dates($max_dates, $max_elements, $max_cats)
     global $user, $persistent_cache;
 
     $cache_key = $persistent_cache->make_key('recent_posts'.$user['id'].$user['cache_update_time'].$max_dates.$max_elements.$max_cats);
+    $cached = null;
     if ($persistent_cache->get($cache_key, $cached)) {
         return $cached;
     }

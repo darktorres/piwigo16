@@ -95,7 +95,7 @@ function get_tab_status($mode): int
  */
 function insert_new_data_user_mail_notification(): void
 {
-    global $page, $env_nbm;
+    global $page, $env_nbm, $base_url;
 
     // Set null mail_address empty
     $query = '

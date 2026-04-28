@@ -1967,7 +1967,7 @@ SELECT id
       OR storage_category_id IS NULL
     )
 ;';
-    $dissociables = array_from_query($query, 'id');
+    $dissociables = query2array($query, null, 'id');
 
     if (!empty($dissociables)) {
         $query = '
@@ -2312,7 +2312,7 @@ function fetchRemote($src, &$dest, $get_data = [], $post_data = [], string $user
         $content = @curl_exec($ch);
         $header_length = @curl_getinfo($ch, CURLINFO_HEADER_SIZE);
         $status = @curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        @curl_close($ch);
+        unset($ch);
         if ($content !== false and $status >= 200 and $status < 400) {
             if (preg_match('/Location:\s+?(.+)/', substr($content, 0, $header_length), $m)) {
                 return fetchRemote($m[1], $dest, [], [], $user_agent, $step + 1);

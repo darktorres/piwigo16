@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Users\CurrentUser;
+
 class themes
 {
     public $fs_themes = [];
@@ -35,7 +37,7 @@ class themes
             include_once($file_to_include);
 
             if (class_exists($classname)) {
-                return new $classname($theme_id);
+                return instantiate_theme_maintain($classname, $theme_id);
             }
         }
 
@@ -242,7 +244,7 @@ SELECT
 ;';
         $user_ids = array_unique(
             array_merge(
-                array_from_query($query, 'user_id'),
+                query2array($query, null, 'user_id'),
                 [\Piwigo\Core\Config::guestId(), \Piwigo\Core\Config::defaultUserId()]
             )
         );
@@ -401,8 +403,6 @@ SELECT
      */
     public function get_server_themes($new = false): bool
     {
-        global $user;
-
         $get_data = [
           'category_id' => \Piwigo\Core\Config::pemThemesCategory(),
           'format' => 'php',
@@ -442,7 +442,7 @@ SELECT
             [
       'last_revision_only' => 'true',
       'version' => implode(',', $versions_to_check),
-      'lang' => substr((string) $user['language'], 0, 2),
+      'lang' => substr(CurrentUser::get()->language, 0, 2),
       'get_nb_downloads' => 'true',
       ]
         );

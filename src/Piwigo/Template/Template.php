@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Template;
 
+use Piwigo\Image\ImageStdParams;
 use Smarty\Smarty;
 
 /** default rank for buttons */
@@ -565,7 +566,7 @@ class Template
         'AAAA_DEBUG_TOTAL_TIME__' => get_elapsed_time($t2, get_moment()),
         ]
             );
-            Smarty_Internal_Debug::display_debug($this->smarty);
+            (new \Smarty\Debug())->display_debug($this->smarty);
         }
     }
 
@@ -580,7 +581,8 @@ class Template
         if (is_string($str) && strlen($str) > 1) {
             if (($str[0] == '\'' && $str[strlen($str) - 1] == '\'')
               || ($str[0] == '"' && $str[strlen($str) - 1] == '"')) {
-                eval('$tmp='.$str.';');
+                $tmp = null;
+            eval('$tmp='.$str.';');
                 return $tmp;
             }
         }
@@ -596,15 +598,13 @@ class Template
      */
     public static function modcompiler_translate(array $params): string
     {
-        global $lang;
-
         switch (count($params)) {
             case 1:
                 if (\Piwigo\Core\Config::compiledTemplateCacheLanguage()
                   && ($key = self::get_php_str_val($params[0])) !== null
-                  && isset($lang[$key])
+                  && \Piwigo\Core\Lang::has($key)
                 ) {
-                    return var_export($lang[$key], true);
+                    return var_export(\Piwigo\Core\Lang::t($key), true);
                 }
                 return 'l10n('.$params[0].')';
 
@@ -628,7 +628,7 @@ class Template
      */
     public static function modcompiler_translate_dec(array $params): string
     {
-        global $lang, $lang_info;
+        global $lang_info;
         if (\Piwigo\Core\Config::compiledTemplateCacheLanguage()) {
             $ret = 'sprintf(';
             if ($lang_info['zero_plural']) {
@@ -1052,6 +1052,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
         $source = preg_replace_callback(
             '/\\<\\?php echo ((?:\'(?:(?:\\\\.)|[^\'])*\')|(?:"(?:(?:\\\\.)|[^"])*"));\\?\\>\\n/',
             function (array $matches) {
+                $tmp = null;
                 eval('$tmp='.$matches[1].';');
                 return $tmp;
             },

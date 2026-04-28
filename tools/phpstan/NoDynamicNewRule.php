@@ -31,6 +31,16 @@ final class NoDynamicNewRule implements Rule
 
     public function processNode(Node $node, Scope $scope): array
     {
+        // Only enforce in src/ — include/ and admin/ use dynamic dispatch legitimately
+        // for plugin/theme maintain classes loaded at runtime.
+        $file = $scope->getFile();
+        if (
+            !str_contains($file, DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR)
+            && !str_contains($file, '/src/')
+        ) {
+            return [];
+        }
+
         if (!($node->class instanceof Node\Expr\Variable)) {
             return [];
         }

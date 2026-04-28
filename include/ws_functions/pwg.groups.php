@@ -49,7 +49,7 @@ SELECT
   OFFSET '. ($params['per_page'] * $params['page']) .'
 ;';
 
-    $groups = array_from_query($query);
+    $groups = query2array($query);
 
     return [
       'paging' => new PwgNamedStruct([

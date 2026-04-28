@@ -21,7 +21,7 @@ class CalendarWeekly extends CalendarBase
     public function initialize($inner_sql): void
     {
         parent::initialize($inner_sql);
-        global $lang;
+        $lang = &$GLOBALS['lang'];
         $week_no_labels = [];
         for ($i = 1; $i <= 53; $i++) {
             $week_no_labels[$i] = l10n('Week %d', $i);
@@ -58,7 +58,7 @@ class CalendarWeekly extends CalendarBase
      */
     public function generate_category_content(): bool
     {
-        global $page;
+        $page = &$GLOBALS['page'];
 
         if (count($page['chronology_date']) == 0) {
             $this->build_nav_bar(CYEAR); // years
@@ -80,7 +80,7 @@ class CalendarWeekly extends CalendarBase
      */
     public function get_date_where($max_levels = 3): string
     {
-        global $page;
+        $page = &$GLOBALS['page'];
         $date = $page['chronology_date'];
         while (count($date) > $max_levels) {
             array_pop($date);

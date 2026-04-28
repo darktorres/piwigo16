@@ -297,7 +297,7 @@ SELECT name
   FROM '.TAGS_TABLE.'
   WHERE id != '.$tag_id.'
 ;';
-    $existing_names = array_from_query($query, 'name');
+    $existing_names = query2array($query, null, 'name');
 
     $update = [];
 
@@ -386,7 +386,7 @@ SELECT image_id
   FROM '.IMAGE_TAG_TABLE.'
   WHERE tag_id = '.$tag_id.'
 ;';
-    $destination_tag_image_ids = array_from_query($query, 'image_id');
+    $destination_tag_image_ids = query2array($query, null, 'image_id');
 
     $inserts = [];
 

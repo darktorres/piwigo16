@@ -1180,7 +1180,7 @@ SELECT
 
     // since Piwigo 2.4 and derivatives, we do not take the imported "thumb" into account
     if ('thumb' == $params['type']) {
-        remove_chunks($image['md5sum'], $type);
+        remove_chunks($image['md5sum'], $params['type']);
         return true;
     }
 

@@ -75,6 +75,7 @@ SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter
 
     if ($use_persistent_cache) {
         $cache_key = $persistent_cache->make_key(__FUNCTION__.$user['id'].$user['cache_update_time']);
+        $tag_counters = [];
         if (!$persistent_cache->get($cache_key, $tag_counters)) {
             $tag_counters = query2array($query, 'tag_id', 'counter');
             $persistent_cache->set($cache_key, $tag_counters);

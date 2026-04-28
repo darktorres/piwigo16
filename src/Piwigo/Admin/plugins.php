@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Users\CurrentUser;
+
 class plugins
 {
     public $fs_plugins = [];
@@ -39,7 +41,7 @@ class plugins
         // 2.7 pattern (OO only)
         if (file_exists($file_to_include.'.class.php')) {
             include_once($file_to_include.'.class.php');
-            return new $classname($plugin_id);
+            return instantiate_plugin_maintain($classname, $plugin_id);
         }
 
         // before 2.7 pattern (OO or procedural)
@@ -47,7 +49,7 @@ class plugins
             include_once($file_to_include.'.inc.php');
 
             if (class_exists($classname)) {
-                return new $classname($plugin_id);
+                return instantiate_plugin_maintain($classname, $plugin_id);
             }
         }
 
@@ -288,9 +290,7 @@ DELETE FROM '. PLUGINS_TABLE .'
             }
             if (preg_match('/Has Settings:\\s*([Tt]rue|[Ww]ebmaster)/', $plg_data, $val)) {
                 if (strtolower($val[1]) == 'webmaster') {
-                    global $user;
-
-                    if (isset($user) and 'webmaster' == $user['status']) {
+                    if ('webmaster' == CurrentUser::get()->status) {
                         $plugin['hasSettings'] = true;
                     }
                 } else {
@@ -381,8 +381,6 @@ DELETE FROM '. PLUGINS_TABLE .'
      */
     public function get_server_plugins($new = false, $beta_test = false): bool
     {
-        global $user;
-
         $versions_to_check = $this->get_versions_to_check($beta_test);
         if (empty($versions_to_check)) {
             return true;
@@ -403,7 +401,7 @@ DELETE FROM '. PLUGINS_TABLE .'
           'format' => 'php',
           'last_revision_only' => 'true',
           'version' => implode(',', $versions_to_check),
-          'lang' => substr((string) $user['language'], 0, 2),
+          'lang' => substr(CurrentUser::get()->language, 0, 2),
           'get_nb_downloads' => 'true',
         ];
 

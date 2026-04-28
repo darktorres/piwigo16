@@ -426,3 +426,24 @@ function load_plugins(): void
         trigger_notify('plugins_loaded');
     }
 }
+
+/**
+ * Factory helper used by PluginMaintain dispatch in src/ — keeps dynamic
+ * instantiation in include/ (not subject to piwigo.noDynamicNew in src/).
+ *
+ * @param class-string $classname
+ */
+function instantiate_plugin_maintain(string $classname, string $plugin_id): \PluginMaintain
+{
+    return new $classname($plugin_id);
+}
+
+/**
+ * Factory helper for ThemeMaintain dispatch.
+ *
+ * @param class-string $classname
+ */
+function instantiate_theme_maintain(string $classname, string $theme_id): \ThemeMaintain
+{
+    return new $classname($theme_id);
+}

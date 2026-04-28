@@ -1070,7 +1070,7 @@ SELECT id
   FROM '. CATEGORIES_TABLE .'
   WHERE id IN ('. implode(',', $category_ids) .')
 ;';
-    $category_ids = array_from_query($query, 'id');
+    $category_ids = query2array($query, null, 'id');
 
     if (count($category_ids) == 0) {
         return;

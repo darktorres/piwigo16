@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Users\CurrentUser;
+
 class updates
 {
     /**
@@ -38,7 +40,12 @@ class updates
 
         foreach ($this->types as $type) {
             include_once(PHPWG_ROOT_PATH.'admin/include/'.$type.'.class.php');
-            $this->$type = new $type();
+            $this->$type = match($type) {
+                'plugins'   => new plugins(),
+                'themes'    => new themes(),
+                'languages' => new languages(),
+                default     => throw new \RuntimeException("Unknown extension type: $type"),
+            };
         }
     }
 
@@ -240,8 +247,6 @@ class updates
 
     public function get_server_extensions($version = PHPWG_VERSION): bool
     {
-        global $user;
-
         $get_data = [
           'format' => 'php',
         ];
@@ -282,7 +287,7 @@ class updates
             [
       'last_revision_only' => 'true',
       'version' => implode(',', $versions_to_check),
-      'lang' => substr((string) $user['language'], 0, 2),
+      'lang' => substr(CurrentUser::get()->language, 0, 2),
       'get_nb_downloads' => 'true',
       ]
         );
@@ -430,7 +435,8 @@ class updates
 
     public static function upgrade_to(string $upgrade_to, &$step, $check_current_version = true): void
     {
-        global $page, $template;
+        $page = &$GLOBALS['page'];
+        global $template;
 
         if ($check_current_version and !version_compare($upgrade_to, PHPWG_VERSION, '>')) {
             // TODO why redirect to a plugin page? maybe a remaining code from when

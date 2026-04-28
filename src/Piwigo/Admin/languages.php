@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Users\CurrentUser;
+
 class languages
 {
     public $fs_languages = [];
@@ -185,8 +187,6 @@ UPDATE '.USER_INFOS_TABLE.'
      */
     public function get_server_languages($new = false): bool
     {
-        global $user;
-
         $get_data = [
           'category_id' => \Piwigo\Core\Config::pemLanguagesCategory(),
           'format' => 'php',
@@ -226,7 +226,7 @@ UPDATE '.USER_INFOS_TABLE.'
             [
       'last_revision_only' => 'true',
       'version' => implode(',', $versions_to_check),
-      'lang' => $user['language'],
+      'lang' => CurrentUser::get()->language,
       'get_nb_downloads' => 'true',
       ]
         );

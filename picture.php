@@ -415,7 +415,7 @@ SELECT id,uppercats,commentable,visible,status,global_rank
     'AND'
 ).'
 ;';
-$related_categories = array_from_query($query);
+$related_categories = query2array($query);
 usort($related_categories, global_rank_compare(...));
 //-------------------------first, prev, current, next & last picture management
 $picture = [];
@@ -867,7 +867,7 @@ if (count($related_categories) == 1 and
 SELECT id, name, permalink
   FROM '.CATEGORIES_TABLE.'
   WHERE id IN ('.implode(',', $ids).')';
-    $cat_map = hash_from_query($query, 'id');
+    $cat_map = query2array($query, 'id');
     foreach ($related_categories as $category) {
         $cats = [];
         foreach (explode(',', (string) $category['uppercats']) as $id) {

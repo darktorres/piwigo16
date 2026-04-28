@@ -273,7 +273,7 @@ function check_upgrade_feed(): bool
 SELECT id
   FROM '.UPGRADE_TABLE.'
 ;';
-    $applied = array_from_query($query, 'id');
+    $applied = query2array($query, null, 'id');
 
     // retrieve existing upgrades
     $existing = get_available_upgrade_ids();

@@ -155,7 +155,6 @@ class check_integrity
                    'show_correction_success_fct' => false,
                    'correction_error_fct' => '',
                    'show_correction_fct' => false,
-                   'correction_error_fct' => '',
                    'show_correction_bad_fct' => false,
                    'correction_msg' => '',
                   ];

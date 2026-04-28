@@ -105,7 +105,6 @@ if ($page['display_mode'] == 'letters') {
 
     // flush last letter
     if (count($letter['tags']) > 0) {
-        unset($letter['CHANGE_COLUMN']);
         $letter['TITLE'] = $current_letter;
         $template->append(
             'letters',

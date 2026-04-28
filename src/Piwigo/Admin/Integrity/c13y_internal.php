@@ -135,7 +135,7 @@ class c13y_internal
      */
     public function c13y_correction_user($id, $action)
     {
-        global $page;
+        $page = &$GLOBALS['page'];
 
         $result = false;
 

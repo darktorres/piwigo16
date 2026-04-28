@@ -672,7 +672,7 @@ SELECT
   WHERE id IN ('.implode(',', $items).')
   '.\Piwigo\Core\Config::orderBy();
 
-        $items = array_from_query($query, 'id');
+        $items = query2array($query, null, 'id');
     }
 
     return [
@@ -1707,6 +1707,7 @@ function get_quick_search_results($q, array $options)
       isset($options['permissions']) ? (bool)$options['permissions'] : true,
       $options['images_where'] ?? '',
       ]);
+    $res = null;
     if ($persistent_cache->get($cache_key, $res)) {
         return $res;
     }

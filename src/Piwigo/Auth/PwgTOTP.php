@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Auth;
 
+use Piwigo\Users\CurrentUser;
+
 class PwgTOTP
 {
     /**
@@ -49,9 +51,8 @@ class PwgTOTP
      */
     public static function getOtpAuthUrl(string $secret): string
     {
-        global $user;
         $url = substr((string) get_absolute_root_url(), 0, -1);
-        return 'otpauth://totp/'.$user['username'].':'.$url.'?secret='.$secret.'&issuer=Piwigo&algorithm=sha1&digits=6&period=30';
+        return 'otpauth://totp/'.CurrentUser::get()->username.':'.$url.'?secret='.$secret.'&issuer=Piwigo&algorithm=sha1&digits=6&period=30';
     }
 
     /**
@@ -65,7 +66,7 @@ class PwgTOTP
         $otp_url = self::getOtpAuthUrl($secret);
 
         ob_start();
-        QRcode::png($otp_url);
+        \QRcode::png($otp_url);
         $qrcode_image = ob_get_clean();
         $base64_qrcode = base64_encode($qrcode_image);
         return 'data:image/png;base64,' . $base64_qrcode;

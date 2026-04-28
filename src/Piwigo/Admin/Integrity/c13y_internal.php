@@ -18,7 +18,7 @@ class c13y_internal
      *
      *  object 
      */
-    public function c13y_version($c13y): void
+    public function c13y_version(\Piwigo\Admin\Integrity\check_integrity $c13y): void
     {
         $check_list = [];
 
@@ -53,7 +53,7 @@ class c13y_internal
      *
      *  object 
      */
-    public function c13y_exif($c13y): void
+    public function c13y_exif(\Piwigo\Admin\Integrity\check_integrity $c13y): void
     {
         foreach (['show_exif', 'use_exif'] as $value) {
             if ((\Piwigo\Core\Config::get($value)) and (!function_exists('exif_read_data'))) {
@@ -74,7 +74,7 @@ class c13y_internal
      *
      *  object 
      */
-    public function c13y_user($c13y): void
+    public function c13y_user(\Piwigo\Admin\Integrity\check_integrity $c13y): void
     {
         $c13y_users = [];
         $c13y_users[\Piwigo\Core\Config::guestId()] = [
@@ -134,7 +134,7 @@ class c13y_internal
      *  string 
      * @return boolean true if ok else false
      */
-    public function c13y_correction_user($id, $action)
+    public function c13y_correction_user(int $id, string $action): bool
     {
         $page = &$GLOBALS['page'];
 

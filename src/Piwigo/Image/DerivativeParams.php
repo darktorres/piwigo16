@@ -43,7 +43,8 @@ final class DerivativeParams
     /**
      * @return int[]
      */
-    public function compute_final_size($in_size)
+    /** @param array<int|float> $in_size @return array<int|float> */
+    public function compute_final_size(array $in_size): array
     {
         $this->sizing->compute($in_size, null, $crop_rect, $scale_size);
         return $scale_size != null ? $scale_size : $in_size;
@@ -68,7 +69,8 @@ final class DerivativeParams
     /**
      * @todo : description of DerivativeParams::is_identity
      */
-    public function is_identity($in_size): bool
+    /** @param array<int|float> $in_size */
+    public function is_identity(array $in_size): bool
     {
         if ($in_size[0] > $this->sizing->ideal_size[0] or
             $in_size[1] > $this->sizing->ideal_size[1]) {
@@ -80,7 +82,8 @@ final class DerivativeParams
     /**
      * @return bool
      */
-    public function will_watermark($out_size)
+    /** @param array<int|float> $out_size */
+    public function will_watermark(array $out_size): bool
     {
         if ($this->use_watermark) {
             $min_size = ImageStdParams::get_watermark()->min_size;

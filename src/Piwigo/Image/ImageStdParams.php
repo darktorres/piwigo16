@@ -77,7 +77,7 @@ final class ImageStdParams
     /**
      * @return DerivativeParams
      */
-    public static function get_by_type($type)
+    public static function get_by_type(string $type): DerivativeParams
     {
         return self::$all_type_map[$type];
     }

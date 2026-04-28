@@ -16,9 +16,9 @@ final class ImageRect
      * @var int $b
      */
     public $l;
-    public $t;
-    public $r;
-    public $b;
+    public int $t = 0;
+    public int $r = 0;
+    public int $b = 0;
 
     /**
      * @param int[] $l width and height
@@ -33,7 +33,7 @@ final class ImageRect
     /**
      * @return int
      */
-    public function width(): int|float
+    public function width(): int
     {
         return $this->r - $this->l;
     }
@@ -41,7 +41,7 @@ final class ImageRect
     /**
      * @return int
      */
-    public function height(): int|float
+    public function height(): int
     {
         return $this->b - $this->t;
     }

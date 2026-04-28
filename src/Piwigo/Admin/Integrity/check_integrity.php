@@ -6,9 +6,12 @@ namespace Piwigo\Admin\Integrity;
 
 class check_integrity
 {
-    public $ignore_list;
-    public $retrieve_list;
-    public $build_ignore_list;
+    /** @var array<mixed> */
+    public array $ignore_list = [];
+    /** @var array<mixed> */
+    public array $retrieve_list = [];
+    /** @var callable|array|null */
+    public mixed $build_ignore_list = null;
 
     public function __construct()
     {
@@ -143,7 +146,7 @@ class check_integrity
         $submit_automatic_correction = false;
         $submit_ignore = false;
 
-        if (isset($this->retrieve_list) and count($this->retrieve_list) > 0) {
+        if (count($this->retrieve_list) > 0) {
             $template->set_filenames(['check_integrity' => 'check_integrity.tpl']);
 
             foreach ($this->retrieve_list as $i => $c13y) {

@@ -6224,7 +6224,7 @@ The `add_combinable()` method called out in your spec — verified by inspection
 ## Phase 6 — Cleanup (M)
 
 ### Goal
-Remove the scaffolding that the earlier phases used to keep the tree runnable, raise the static-analysis floor, and lock in the modernized architecture with documentation. Specifically: drop pre-16 install/db scripts and tighten the upgrade.php guard from "soft warn" to "hard refuse"; walk PHPStan from level 8 to level 9 with the baseline file deleted; drop polyfills no longer reachable; delete the Wave C `ArrayObject` proxies if Wave C shipped (no-op otherwise); drop dead `pgsql`/`sqlite` dblayer branches; ship `docs/ARCHITECTURE.md`; absorb the 8 untracked gaps surfaced by the 2026-04-27 post-Phase-5 audit (steps 9–16).
+Remove the scaffolding that the earlier phases used to keep the tree runnable and lock in the modernized architecture with documentation. Specifically: drop pre-16 install/db scripts and tighten the upgrade.php guard from "soft warn" to "hard refuse"; drop polyfills no longer reachable; delete the Wave C `ArrayObject` proxies if Wave C shipped (no-op otherwise); drop dead `pgsql`/`sqlite` dblayer branches; ship `docs/ARCHITECTURE.md`; absorb the 8 untracked gaps surfaced by the 2026-04-27 post-Phase-5 audit (steps 9–16). PHPStan level 9 / baseline deletion is promoted to **Phase 7** (see below).
 
 ### Step-by-step sequence
 
@@ -6269,7 +6269,7 @@ Remove the scaffolding that the earlier phases used to keep the tree runnable, r
    ```
    `UpgradeChainTest` fixture continues at 16.x — regression contract for constraint #3 unchanged. Optionally add `dev/fixtures/piwigo-15.x.sql` whose only assertion is that the upgrade.php guard returns 409. **Exit signal:** `ls install/db/` shows `index.php` plus 0+ files numbered ≥ 182.
 
-4. **PHPStan baseline removal: walk level 8 → 9, address each error.** Starting state: `phpstan-baseline.neon` exists (Phase 0, shrunk through Phases 1–4). At Phase 6 entry, level 8 is no-baseline. Bump `phpstan.neon` `level` from 8 to 9 and add `treatPhpDocTypesAsCertain: true`; let PHPStan emit new errors; address them in slices (`src/Piwigo/Core` first, then `src/Piwigo/Db`, etc.). Remaining errors at level 9 are typically: unsafe `mixed` flowing through `unserialize()` returns, `array<int,mixed>` when shape is known, false-positive `treatPhpDocTypesAsCertain` triggers around `is_int($var)` checks. **Aspirational; settle for level 8 no-baseline if Phase 6 stretches.** **Exit signal:** `vendor/bin/phpstan analyse` exits zero with no `phpstan-baseline.neon` referenced.
+4. ~~**PHPStan baseline removal: walk level 8 → 9.**~~ **Promoted to Phase 7.** This step exceeded Phase 6 scope (22 279-line baseline, ~5 025 suppressions) and is tracked in full detail in the Phase 7 section below.
 
 5. **Polyfill removal: drop `symfony/polyfill-php72` if installed.** Phase 1 replaced 4 live `utf8_encode/decode` calls. `grep -rE "utf8_(en|de)code\\b" --include='*.php' .` should return zero hits in tracked code (excluding `vendor/`). Run `composer remove symfony/polyfill-php72`. **Exit signal:** `composer show symfony/polyfill-php72` reports "package not installed".
 
@@ -6417,7 +6417,7 @@ Remove the scaffolding that the earlier phases used to keep the tree runnable, r
 | Determine pre-16 cutoff and document | 1 | S |
 | `upgrade.php` guard diff + delete dead detection ladder | 2 | M |
 | Delete 121 install/db files; add 15.x rejection fixture | 3 | S |
-| PHPStan level 8 → 9 walk | 4 | L |
+| ~~PHPStan level 8 → 9 walk~~ → Phase 7 | 4 | — |
 | Polyfill removal | 5 | S |
 | ArrayObject proxy removal (conditional) | 6 | M |
 | `pgsql`/`sqlite` branch removal | 7 | M |
@@ -6431,11 +6431,10 @@ Remove the scaffolding that the earlier phases used to keep the tree runnable, r
 | Write `docs/plugin-migration-16x.md` | 15 | S |
 | Unit test stubs for 6+ uncovered namespaces | 16 | L |
 
-**Phase total: L** (driven by steps 4 and 16).
+**Phase total: M** (step 16 was the dominant effort; step 4 promoted to Phase 7).
 
 ### Risks specific to Phase 6
 
-- **Aggressive level-9 cleanup might break working code.** `treatPhpDocTypesAsCertain: true` at level 9 surfaces narrowing assumptions (`if (is_int($x))` followed by `$x + 1` — PHPStan trusts phpdoc more than the runtime check). Some "fixes" are bug-introductions. Mitigate: every level-9 fix lands in its own micro-commit with a Playwright spec exercising the touched path; if no such spec exists, write it first.
 - **Deleting `pgsql`/`sqlite` branches has unknown blast radius.** A theme or fork may rely on `$conf['dblayer'] === 'pgsql'`. Phase 1 self-heal protects only `mysql`. Mitigate: keep step 7 optional and do it only after staging logs show no `dblayer` other than `mysqli` reaches the code in question.
 - **The 15.x rejection fixture is hand-authored.** Must produce a DB that fails `in_array(181, $applied)` but is otherwise structurally valid (so table-existence checks earlier in `upgrade.php` succeed enough to reach the guard). Easiest: take the 16.x fixture and `DELETE FROM piwigo_upgrade WHERE id IN (175, 176, 177, 178, 179, 180, 181)` plus drop a table or two added between 14.x and 15.x.
 - **`check-conf-shape.php` requires the `@phpstan-type Conf` alias to be complete.** If any key in `config_default.inc.php` was added without updating `tools/phpstan-types.php`, the drift detector will emit false positives on its first run. Audit the alias before wiring CI (step 12).
@@ -6444,7 +6443,7 @@ Remove the scaffolding that the earlier phases used to keep the tree runnable, r
 
 ### Verification
 
-1. `vendor/bin/phpstan analyse` exits zero with no baseline file referenced (or settles at level 8 if level 9 stretches — document decision in `ARCHITECTURE.md`).
+1. `vendor/bin/phpstan analyse` exits zero at level 8 with baseline (level 9 / baseline deletion is Phase 7).
 2. `composer show symfony/polyfill-php72` reports not installed.
 3. `ls install/db/*.php | wc -l` reports the expected count (1 + new 16.x scripts).
 4. UpgradeChainTest green from `dev/fixtures/piwigo-16.x.sql`.
@@ -7121,7 +7120,7 @@ JavaScript correctness testing.
 | G0-1 | 0 | Duplicate `global-setup.js` alongside `.ts` | Ph6 step 9 |
 | G0-2 | 0 | Zero unit tests for 10 of 13 `src/Piwigo/` namespaces | Ph6 step 16 |
 | G1-1 | 1 | Dynamic dblayer include invisible to PHPStan | Ph6 step 7 |
-| G2-1 | 2 | PHPStan baseline 22 296 lines — effective level is not 8 | Ph6 step 4 |
+| G2-1 | 2 | PHPStan baseline 22 296 lines — effective level is not 8 | Phase 7 |
 | G2-2 | 2 | `check-baseline.sh` / `check-conf-shape.php` in CI doc but not wired | Ph6 step 12 |
 | G3-1 | 3 | `aliases.php` runs on every request; FQCNs not complete | Ph6 step 6 (indirect) |
 | G3-2 | 3 | `DummyPlugin_maintain` / `DummyTheme_maintain` serve no purpose | Ph6 step 14 (optional) |
@@ -7132,6 +7131,151 @@ JavaScript correctness testing.
 | G5-3 | 5 | E2E TypeScript files not covered by `npm run typecheck` | Ph6 step 11 |
 | G5-4 | 5 | `_data/combined/*.js` accumulate without automated cleanup | Ph6 step 10 |
 
-All 13 gaps are now assigned. 12 are addressed in Phase 6 (steps 4, 6, 7, 9–16); G5-1 (Wave-1 TS
-relaxations) is deferred to a post-Phase-6 Wave 2 TypeScript tightening pass.
+All 13 gaps are now assigned. 11 are addressed in Phase 6 (steps 6, 7, 9–16); G2-1 (PHPStan
+baseline) is addressed in Phase 7; G5-1 (Wave-1 TS relaxations) is deferred to a post-Phase-7
+Wave 2 TypeScript tightening pass.
+
+---
+
+## Phase 7 — PHPStan level 9 / baseline elimination (L)
+
+### Goal
+
+Delete `phpstan-baseline.neon` and raise PHPStan from level 8 (with a 22 279-line baseline
+suppressing ~5 025 errors) to level 9 with `treatPhpDocTypesAsCertain: true` and zero suppressed
+errors. This makes static analysis genuinely effective: every new file is fully checked, every
+type error is a CI failure, and the `phpstan-strict-rules` and `phpstan-deprecation-rules`
+packages already installed in `phpstan.neon` become load-bearing rather than silenced.
+
+**Starting state (end of Phase 6):** level 8, baseline 22 279 lines, PHPStan exits 0 because
+every error is suppressed. The baseline grew by exactly 0 lines during Phases 5–6 (verified by
+`tools/check-baseline.sh`).
+
+### Why this is its own phase
+
+The baseline covers the entire pre-modernization error backlog accumulated across ~300 first-party
+PHP files. Addressing it requires reading each suppressed error, deciding whether it is a real bug
+or a PHPStan false-positive, and fixing or narrowing. At the Phase 6 exit rate of ~22 000
+suppressions this is a multi-week effort done safely only in small slices — it cannot be safely
+bundled with other structural changes.
+
+### Step-by-step sequence
+
+**Preparation (before touching phpstan.neon):**
+
+1. **Freeze the baseline.** The CI `check-baseline.sh` guard is already wired. Confirm it passes
+   on the current branch. Any new error added during Phase 7 work is a regression, not a baseline
+   entry — fix it before proceeding.
+
+2. **Slice the baseline by namespace.** Run:
+   ```bash
+   grep "path:" phpstan-baseline.neon | sed 's/.*path: //' | sort | uniq -c | sort -rn | head -30
+   ```
+   This shows which files contribute the most suppressions. Work from highest-count files
+   downward within each namespace slice.
+
+**Namespace slices (recommended order):**
+
+3. **`src/Piwigo/Core/`** — typed services already have unit tests. Errors here are typically
+   `mixed` return types on `Config::get()` propagating into typed contexts. Fix by narrowing
+   call sites or adding `@phpstan-var` inline casts only where PHPStan cannot infer.
+
+4. **`src/Piwigo/Template/`** — Smarty adapter code. Errors are typically `mixed` from
+   Smarty's loosely-typed plugin API. Narrow `Template::assign()` callers or add method-level
+   `@param` phpdoc where the shape is knowable.
+
+5. **`src/Piwigo/Ws/`** — web service handlers. Errors are typically `mixed` flowing from
+   `$_GET`/`$_POST` through the WS parameter extraction. The `input_*` helpers from Phase 2
+   already coerce many of these; wire remaining call sites.
+
+6. **`include/functions.inc.php` and friends** — the largest single-file error contributor.
+   Work one function at a time. Common patterns:
+   - `pwg_db_fetch_assoc()` returns `array<string,mixed>|false` — add null-checks at call sites.
+   - `array_map()` / `array_filter()` return types losing specificity — use `@return` phpdoc or
+     the `list<>` / `array<int,T>` narrowing syntax.
+   - Implicit `mixed` from `unserialize()` — add a type-guard (`is_array($v) ? $v : []`).
+
+7. **`admin/`** — largest directory by file count. Batch-process: run PHPStan on one admin
+   file at a time (`--paths admin/admin.php`) and fix errors before moving on.
+
+**Level bump:**
+
+8. **Bump to level 9 and enable `treatPhpDocTypesAsCertain: true`.** Only after the baseline
+   entry count reaches zero at level 8. Do this as a single commit:
+   ```diff
+   --- a/phpstan.neon
+   +++ b/phpstan.neon
+   @@ -1,3 +1,4 @@
+    parameters:
+   -    level: 8
+   +    level: 9
+   +    treatPhpDocTypesAsCertain: true
+   ```
+   Let PHPStan emit the new level-9 errors. Expect ~200–500 new errors, mostly:
+   - `never` return type inference on unreachable branches.
+   - Phpdoc `@return` types claimed as certain that PHPStan can now disprove.
+   - Narrower `mixed` handling inside conditionals.
+   Fix each in its own commit. Do not add baseline entries.
+
+9. **Delete the baseline.** Once level 9 exits 0:
+   ```bash
+   rm phpstan-baseline.neon
+   sed -i 's/includes://' phpstan.neon  # remove the includes: block
+   sed -i '/phpstan-baseline.neon/d' phpstan.neon
+   vendor/bin/phpstan analyse --no-progress  # must exit 0
+   ```
+   Update `tools/check-baseline.sh` to be a no-op when the file is absent (it already handles
+   this — the first `if [ ! -f "$BASELINE" ]` guard exits 0).
+
+### Effort breakdown
+
+| Sub-task | Tag |
+|---|---|
+| Freeze + slice baseline by namespace | S |
+| Fix `src/Piwigo/` (Core, Template, Ws, etc.) | M |
+| Fix `include/functions.inc.php` and friends | L |
+| Fix `admin/` files | L |
+| Bump to level 9 + `treatPhpDocTypesAsCertain` | M |
+| Fix level-9 new errors | M |
+| Delete baseline file + update phpstan.neon | S |
+
+**Phase total: L.**
+
+### Risks specific to Phase 7
+
+- **`treatPhpDocTypesAsCertain: true` can surface false positives.** When phpdoc says
+  `@return string` but the function can actually return `null`, PHPStan level 9 trusts the
+  phpdoc and will flag callers that guard against null. The fix is usually to update the phpdoc,
+  not remove the null-guard. Never widen a parameter or return type just to silence the error —
+  that hides real bugs.
+- **Level-9 fixes in `include/` may silently change behaviour** if a type-narrowing assumption
+  was wrong. Mitigate: every fix in `include/functions.inc.php` or `include/functions_user.inc.php`
+  should be accompanied by a PHPUnit assertion or a Playwright spec that exercises the fixed path.
+- **The baseline shrinks slowly at first.** Each namespace slice takes a day or two; the total
+  timeline is 3–6 weeks of focused work. Don't try to fix everything in one commit — it makes
+  bisecting regressions impossible.
+- **New errors may appear during slice work.** Fixing a type in one file can expose previously
+  suppressed errors in callers. Treat them as bonus fixes, not scope creep.
+
+### Verification
+
+1. `vendor/bin/phpstan analyse --no-progress` exits 0 with `level: 9`,
+   `treatPhpDocTypesAsCertain: true`, and no `includes: [phpstan-baseline.neon]` in `phpstan.neon`.
+2. `ls phpstan-baseline.neon` returns "No such file".
+3. `bash tools/check-baseline.sh` exits 0 ("No baseline file — nothing to check.").
+4. CI lint job green end-to-end (pint + phpstan + baseline guard + conf shape + typecheck + build).
+5. Unit suite: 84+ tests, 0 failures.
+6. Playwright E2E: all specs green against the Docker stack.
+
+### Phase 7 close-out template
+
+When Phase 7 ships, append a `## Phase 7 close-out — shipped` section recording:
+
+- Final baseline line count at close (should be 0 or the file is absent).
+- Level reached (8 or 9) and whether `treatPhpDocTypesAsCertain` is on.
+- Number of real bugs found and fixed during baseline elimination.
+- CI run ID confirming green.
+
+---
+
 - **If forced to ship only three phases ever, ship 0, 1, 2.** That alone takes Piwigo from "won't run on PHP 8" to "runs on PHP 8.5, type-safe, CI-protected" — most of the user-visible upside.

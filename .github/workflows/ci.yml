@@ -13,6 +13,10 @@ jobs:
       - run: composer install --no-progress --prefer-dist
       - run: vendor/bin/pint --test
       - run: vendor/bin/phpstan analyse --no-progress
+      - name: baseline grow guard
+        run: bash tools/check-baseline.sh
+      - name: conf shape drift check
+        run: php tools/check-conf-shape.php
       - uses: actions/setup-node@v4
         with:
           node-version: '20'

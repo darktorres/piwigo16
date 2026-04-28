@@ -4971,11 +4971,6 @@ parameters:
 			count: 2
 			path: include/common.inc.php
 
-		-
-			message: '#^Expression on left side of \?\? is not nullable\.$#'
-			identifier: nullCoalesce.expr
-			count: 1
-			path: include/common.inc.php
 
 		-
 			message: '#^Function sanitize_mysql_kv\(\) has parameter \$k with no type specified\.$#'
@@ -22256,18 +22251,6 @@ parameters:
 		-
 			message: '#^Function get_tables\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
-			count: 1
-			path: upgrade.php
-
-		-
-			message: '#^Variable \$languages_options might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: upgrade.php
-
-		-
-			message: '#^Variable \$mysql_changes in empty\(\) always exists and is always falsy\.$#'
-			identifier: empty.variable
 			count: 1
 			path: upgrade.php
 

@@ -167,12 +167,6 @@ final class Config
         return is_array($v) ? array_values($v) : [];
     }
 
-    // DB / infra
-    public static function dbLayer(): string
-    {
-        return self::getString('dblayer', 'mysqli');
-    }
-
     // Logging
     public static function logLevel(): string
     {

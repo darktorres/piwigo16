@@ -30,7 +30,6 @@ final class Kernel
         self::$booted = true;
 
         Config::attachGlobals();
-        GlobalsBridge::installAsConfProxy();
         PageState::attachGlobals();
         Lang::attachGlobals();
         CurrentUser::attachGlobals();

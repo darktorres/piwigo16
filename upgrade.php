@@ -183,7 +183,7 @@ load_language('upgrade.lang', '', ['language' => $language, 'target_charset' => 
 // |                          database connection                          |
 // +-----------------------------------------------------------------------+
 include_once(PHPWG_ROOT_PATH.'admin/include/functions_upgrade.php');
-include(PHPWG_ROOT_PATH .'include/dblayer/functions_'.\Piwigo\Core\Config::dbLayer().'.inc.php');
+include(PHPWG_ROOT_PATH . 'include/dblayer/functions_mysqli.inc.php');
 
 upgrade_db_connect();
 pwg_db_check_charset();
@@ -243,242 +243,34 @@ if ($has_remote_site) {
 $tables = get_tables();
 $columns_of = get_columns_of($tables);
 
-// find the current release
-if (!in_array('param', $columns_of[PREFIX_TABLE.'config'])) {
-    // we're in branch 1.3, important upgrade, isn't it?
-    if (in_array(PREFIX_TABLE.'user_category', $tables)) {
-        $current_release = '1.3.1';
-    } else {
-        $current_release = '1.3.0';
-    }
-} elseif (!in_array(PREFIX_TABLE.'user_cache', $tables)) {
-    $current_release = '1.4.0';
-} elseif (!in_array(PREFIX_TABLE.'tags', $tables)) {
-    $current_release = '1.5.0';
-} elseif (!in_array(PREFIX_TABLE.'plugins', $tables)) {
-    if (!in_array('auto_login_key', $columns_of[PREFIX_TABLE.'user_infos'])) {
-        $current_release = '1.6.0';
-    } else {
-        $current_release = '1.6.2';
-    }
-} elseif (!in_array('md5sum', $columns_of[PREFIX_TABLE.'images'])) {
-    $current_release = '1.7.0';
-} elseif (!in_array(PREFIX_TABLE.'themes', $tables)) {
-    $current_release = '2.0.0';
-} elseif (!in_array('added_by', $columns_of[PREFIX_TABLE.'images'])) {
-    $current_release = '2.1.0';
-} elseif (!in_array('rating_score', $columns_of[PREFIX_TABLE.'images'])) {
-    $current_release = '2.2.0';
-} elseif (!in_array('rotation', $columns_of[PREFIX_TABLE.'images'])) {
-    $current_release = '2.3.0';
-} elseif (!in_array('website_url', $columns_of[PREFIX_TABLE.'comments'])) {
-    $current_release = '2.4.0';
-} elseif (!in_array('nb_available_tags', $columns_of[PREFIX_TABLE.'user_cache'])) {
-    $current_release = '2.5.0';
-} elseif (!in_array('activation_key_expire', $columns_of[PREFIX_TABLE.'user_infos'])) {
-    $current_release = '2.6.0';
-} elseif (!in_array('auth_key_id', $columns_of[PREFIX_TABLE.'history'])) {
-    $current_release = '2.7.0';
-} elseif (!in_array('history_id_to', $columns_of[PREFIX_TABLE.'history_summary'])) {
-    $current_release = '2.8.0';
-} elseif (!in_array(PREFIX_TABLE.'activity', $tables)) {
-    $current_release = '2.9.0';
-} else {
-    // retrieve already applied upgrades
-    $query = '
-SELECT id
-  FROM '.PREFIX_TABLE.'upgrade
-;';
-    $applied_upgrades = array_from_query($query, 'id');
+// Piwigo 16.x-rewrite: refuse databases older than Piwigo 15.x.
+// applied_upgrade id 181 marks the 15.0.0 boundary; any DB that does not
+// have it cannot safely run this upgrade path.
+$applied_upgrades = in_array(PREFIX_TABLE.'upgrade', $tables, true)
+    ? array_from_query('SELECT id FROM '.PREFIX_TABLE.'upgrade', 'id')
+    : [];
 
-    if (!in_array(159, $applied_upgrades)) {
-        $current_release = '2.10.0';
-    } elseif (!in_array(162, $applied_upgrades)) {
-        $current_release = '11.0.0';
-    } elseif (!in_array(164, $applied_upgrades)) {
-        $current_release = '12.0.0';
-    } elseif (!in_array(170, $applied_upgrades)) {
-        $current_release = '13.0.0';
-    } elseif (!in_array(174, $applied_upgrades)) {
-        $current_release = '14.0.0';
-    } elseif (!in_array(181, $applied_upgrades)) {
-        $current_release = '15.0.0';
-    } else {
-        // confirm that the database is in the same version as source code files
-        conf_update_param('piwigo_db_version', get_branch_from_version(PHPWG_VERSION));
-
-        header('Content-Type: text/html; charset='.get_pwg_charset());
-        echo 'No upgrade required, the database structure is up to date';
-        echo '<br><a href="index.php">← back to gallery</a>';
-        exit();
-    }
+if (!in_array(181, $applied_upgrades, true)) {
+    header('Content-Type: text/html; charset=UTF-8', true, 409);
+    echo '<h1>Upgrade refused</h1>';
+    echo '<p>This Piwigo build only upgrades from <strong>Piwigo 16.x</strong> sources. ';
+    echo 'Your database appears to be older than Piwigo 15.0.0 ';
+    echo '(applied_upgrades does not contain id 181). ';
+    echo 'Please upgrade to Piwigo 16.x through the upstream project first, ';
+    echo 'then run this upgrade.</p>';
+    exit;
 }
 
-// +-----------------------------------------------------------------------+
-// |                            upgrade launch                             |
-// +-----------------------------------------------------------------------+
-$page['infos'] = [];
-$page['errors'] = [];
-$mysql_changes = [];
-
-// check php version
-if (version_compare(PHP_VERSION, REQUIRED_PHP_VERSION, '<')) {
-    // include(PHPWG_ROOT_PATH.'install/php5_apache_configuration.php'); // to remove, with all its related content
-    \Piwigo\Core\PageState::current()->addError(l10n('PHP version %s required (you are running on PHP %s)', REQUIRED_PHP_VERSION, PHP_VERSION));
-}
-
-check_upgrade_access_rights();
-
-if ((input_string('submit', null, $_POST) !== null or input_string('now', null, $_GET) !== null)
-  and check_upgrade()) {
-    $upgrade_file = PHPWG_ROOT_PATH.'install/upgrade_'.$current_release.'.php';
-    if (is_file($upgrade_file)) {
-        // reset SQL counters
-        $page['queries_time'] = 0;
-        $page['count_queries'] = 0;
-
-        $page['upgrade_start'] = get_moment();
-        \Piwigo\Core\Config::override('die_on_sql_error', false);
-        include($upgrade_file);
-        conf_update_param('piwigo_db_version', get_branch_from_version(PHPWG_VERSION));
-
-        //Conf delete param on last major update for whats new popin to be displayed when changing major version
-        conf_delete_param('last_major_update');
-
-        // Something to add in database.inc.php?
-        if (!empty($mysql_changes)) {
-            $config_file_contents =
-              substr($config_file_contents, 0, $php_end_tag) . "\r\n"
-              . implode("\r\n", $mysql_changes) . "\r\n"
-              . substr($config_file_contents, $php_end_tag);
-
-            if (!@file_put_contents($config_file, $config_file_contents)) {
-                \Piwigo\Core\PageState::current()->addInfo(l10n(
-                    'In <i>%s</i>, before <b>?></b>, insert:',
-                    PWG_LOCAL_DIR.'config/database.inc.php'
-                )
-                .'<p><textarea rows="4" cols="40">'
-                .implode("\r\n", $mysql_changes).'</textarea></p>');
-            }
-        }
-
-        // Deactivate non standard extensions
-        deactivate_non_standard_plugins();
-        deactivate_non_standard_themes();
-        deactivate_templates();
-
-        $page['upgrade_end'] = get_moment();
-
-        $template->assign(
-            'upgrade',
-            [
-            'VERSION' => $current_release,
-            'TOTAL_TIME' => get_elapsed_time(
-                $page['upgrade_start'],
-                $page['upgrade_end']
-            ),
-            'SQL_TIME' => number_format(
-                $page['queries_time'],
-                3,
-                '.',
-                ' '
-            ).' s',
-            'NB_QUERIES' => $page['count_queries'],
-            ]
-        );
-
-        \Piwigo\Core\PageState::current()->addInfo(l10n('Perform a maintenance check in [Administration>Tools>Maintenance] if you encounter any problem.'));
-
-        // Save $page['infos'] in order to restore after maintenance actions
-        $page['infos_sav'] = $page['infos'];
-        $page['infos'] = [];
-
-        $template->assign(
-            [
-            'button_label' => l10n('Home'),
-            'button_link' => 'index.php',
-            ]
-        );
-
-        // if the webmaster has a session, let's give a link to discover new features
-        if (!empty($_SESSION['pwg_uid'])) {
-            $version_ = str_replace('.', '_', get_branch_from_version(PHPWG_VERSION).'.0');
-
-            if (file_exists(PHPWG_PLUGINS_PATH .'TakeATour/tours/'.$version_.'/config.inc.php')) {
-                $query = '
-REPLACE INTO '.PLUGINS_TABLE.'
-  (id, state)
-  VALUES (\'TakeATour\', \'active\')
-;';
-                pwg_query($query);
-
-                // we need the secret key for get_pwg_token()
-                load_conf_from_db();
-
-                $template->assign(
-                    [
-                    'button_label' => l10n('Discover what\'s new in Piwigo %s', get_branch_from_version(PHPWG_VERSION)),
-                    'button_link' => 'admin.php?submited_tour_path=tours/'.$version_.'&amp;pwg_token='.get_pwg_token(),
-                    ]
-                );
-            }
-        }
-
-        if (!isset($_SESSION['connected_with'])) {
-            $_SESSION['connected_with'] = 'pwg_ui';
-        }
-
-        // Delete cache data
-        // invalidate_user_cache will purge persistent_cache so it needs to be instantiated first
-        $persistent_cache = new PersistentFileCache();
-
-        invalidate_user_cache(true);
-        $template->delete_compiled_templates();
-
-        // Restore $page['infos'] in order to hide informations messages from functions calles
-        // errors messages are not hide
-        $page['infos'] = $page['infos_sav'];
-
-    }
-}
-
-// +-----------------------------------------------------------------------+
-// |                          start template output                        |
-// +-----------------------------------------------------------------------+
-else {
-    if (!defined('PWG_CHARSET')) {
-        define('PWG_CHARSET', 'utf-8');
-    }
-
-    $languages = new languages();
-
-    foreach ($languages->fs_languages as $language_code => $fs_language) {
-        if ($language == $language_code) {
-            $template->assign('language_selection', $language_code);
-        }
-        $languages_options[$language_code] = $fs_language['name'];
-    }
-    $template->assign('language_options', $languages_options);
-
-    $template->assign('introduction', [
-      'CURRENT_RELEASE' => $current_release,
-      'F_ACTION' => 'upgrade.php?language=' . $language]);
-
-    if (!check_upgrade()) {
-        $template->assign('login', true);
-    }
-}
-
-if (count($page['errors']) != 0) {
-    $template->assign('errors', $page['errors']);
-}
-
-if (count($page['infos']) != 0) {
-    $template->assign('infos', $page['infos']);
-}
-
-// +-----------------------------------------------------------------------+
-// |                          sending html code                            |
-// +-----------------------------------------------------------------------+
-
-$template->pparse('upgrade');
+// Database is at 16.x level. No per-release upgrade scripts exist yet for this branch.
+// When a future 16.x release introduces schema changes, add the version detection here
+// and add the corresponding install/db/<N>-database.php file.
+conf_update_param('piwigo_db_version', get_branch_from_version(PHPWG_VERSION));
+header('Content-Type: text/html; charset='.get_pwg_charset());
+echo 'No upgrade required, the database structure is up to date';
+echo '<br><a href="index.php">← back to gallery</a>';
+exit();
+// NOTE: upgrade launch machinery (check_upgrade_access_rights, template render,
+// upgrade_<release>.php include) removed in Phase 6 — no 16.x-specific upgrade
+// scripts exist yet. When the first install/db/<N>-database.php for a 16.x release
+// is authored, add 16.x version detection above and restore the upgrade launch
+// section from git history (see commit before Phase 6 step 2).

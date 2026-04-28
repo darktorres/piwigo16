@@ -361,7 +361,7 @@ foreach (explode(',', 'load,rotate,crop,scale,sharpen,watermark,save,send') as $
     $timing[$k] = '';
 }
 
-include_once(PHPWG_ROOT_PATH .'include/dblayer/functions_'.\Piwigo\Core\Config::dbLayer().'.inc.php');
+include_once(PHPWG_ROOT_PATH . 'include/dblayer/functions_mysqli.inc.php');
 include_once(PHPWG_ROOT_PATH .'/include/derivative_params.inc.php');
 include_once(PHPWG_ROOT_PATH .'/include/derivative_std_params.inc.php');
 

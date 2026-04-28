@@ -93,11 +93,9 @@ if (!\Piwigo\Core\Kernel::isBooted()) :
         header('Location: install.php');
         exit;
     }
-    // Self-heal: pre-fork installs may have \Piwigo\Core\Config::dbLayer() = 'mysql' (removed extension).
-    if ((\Piwigo\Core\Config::dbLayer() ?? 'mysqli') === 'mysql') {
-        \Piwigo\Core\Config::override('dblayer', 'mysqli');
-    }
-    include(PHPWG_ROOT_PATH .'include/dblayer/functions_'.\Piwigo\Core\Config::dbLayer().'.inc.php');
+    // Only mysqli is supported. The self-heal for old 'mysql' installs and the
+    // dynamic include are gone; functions_mysqli.inc.php is the only dblayer.
+    include(PHPWG_ROOT_PATH . 'include/dblayer/functions_mysqli.inc.php');
 
     if (\Piwigo\Core\Config::has('show_php_errors') && !empty(\Piwigo\Core\Config::showPhpErrors())) {
         @ini_set('error_reporting', \Piwigo\Core\Config::showPhpErrors());

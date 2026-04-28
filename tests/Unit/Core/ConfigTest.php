@@ -193,7 +193,6 @@ final class ConfigTest extends TestCase
     {
         Config::loadArray([]);
 
-        self::assertSame('mysqli', Config::dbLayer());
         self::assertSame('DEBUG', Config::logLevel());
         self::assertSame(30, Config::logArchiveDays());
     }

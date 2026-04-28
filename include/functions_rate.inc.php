@@ -26,7 +26,7 @@ function rate_picture($image_id, $rate)
 
     if (!isset($rate)
         or !\Piwigo\Core\Config::get('rate')
-        or !preg_match('/^[0-9]+$/', $rate)
+        or !preg_match('/^[0-9]+$/', (string)$rate)
         or !in_array($rate, \Piwigo\Core\Config::rateItems())) {
         return false;
     }

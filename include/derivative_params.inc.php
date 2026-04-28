@@ -62,7 +62,7 @@ function char_to_fraction($c): float|int
  *  float  */
 function fraction_to_char($f): string
 {
-    return chr(ord('a') + round($f * 25));
+    return chr((int)(ord('a') + round($f * 25)));
 }
 
 
@@ -114,7 +114,7 @@ final class ImageRect
      * @param int $pixels - the amount to substract from the width
      * @param string $coi - a 4 character string (or null) containing the center of interest
      */
-    public function crop_h($pixels, $coi): void
+    public function crop_h(int|float $pixels, $coi): void
     {
         if ($this->width() <= $pixels) {
             return;
@@ -144,7 +144,7 @@ final class ImageRect
      * @param int $pixels - the amount to substract from the height
      * @param string $coi - a 4 character string (or null) containing the center of interest
      */
-    public function crop_v($pixels, $coi): void
+    public function crop_v(int|float $pixels, $coi): void
     {
         if ($this->height() <= $pixels) {
             return;
@@ -232,7 +232,7 @@ final class SizingParams
      * @param \Piwigo\Image\ImageRect|null &$crop_rect - ImageRect containing the cropping rectangle or null if cropping is not required
      * @param array<int,int|float>|null &$scale_size - two element array containing width and height of the scaled image
      */
-    public function compute(array $in_size, $coi, mixed &$crop_rect, mixed &$scale_size): void
+    public function compute(array $in_size, string|null $coi, mixed &$crop_rect, mixed &$scale_size): void
     {
         $destCrop = new \Piwigo\Image\ImageRect($in_size);
 

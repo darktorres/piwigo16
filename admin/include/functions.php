@@ -424,7 +424,7 @@ SELECT
  * Verifies that the representative picture really exists in the db and
  * picks up a random representative if possible and based on config.
  *
- * @param 'all'|int|int[] $ids
+ * @param 'all'|int|int[]|string[] $ids
  */
 function update_category($ids = 'all')
 {
@@ -654,7 +654,7 @@ SELECT id, id_uppercat, uppercats, `rank`, global_rank
 
     $datas = [];
 
-    $cat_map_callback = (fn ($m): int => $cat_map[$m[1]]['rank']);
+    $cat_map_callback = (fn ($m): string => (string)$cat_map[$m[1]]['rank']);
 
     foreach ($cat_map as $id => $cat) {
         $new_global_rank = preg_replace_callback(
@@ -1469,7 +1469,7 @@ SELECT id, uppercats, global_rank, visible, status
  * Set tags to an image.
  * Warning: given tags are all tags associated to the image, not additionnal tags.
  *
- * @param int[] $tags
+ * @param int[]|string[] $tags
  * @param int $image_id
  */
 function set_tags($tags, $image_id): void
@@ -1480,7 +1480,7 @@ function set_tags($tags, $image_id): void
 /**
  * Add new tags to a set of images.
  *
- * @param int[] $tags
+ * @param int[]|string[] $tags
  * @param int[] $images
  */
 function add_tags($tags, $images): void
@@ -2287,7 +2287,7 @@ function fetchRemote($src, &$dest, $get_data = [], $post_data = [], string $user
         $ch = @curl_init();
 
         if (\Piwigo\Core\Config::has('use_proxy') && \Piwigo\Core\Config::useProxy()) {
-            @curl_setopt($ch, CURLOPT_HTTPPROXYTUNNEL, 0);
+            @curl_setopt($ch, CURLOPT_HTTPPROXYTUNNEL, false);
             @curl_setopt($ch, CURLOPT_PROXY, \Piwigo\Core\Config::proxyServer());
             if (\Piwigo\Core\Config::has('proxy_auth') && !empty(\Piwigo\Core\Config::proxyAuth())) {
                 @curl_setopt($ch, CURLOPT_PROXYUSERPWD, \Piwigo\Core\Config::proxyAuth());
@@ -2295,11 +2295,11 @@ function fetchRemote($src, &$dest, $get_data = [], $post_data = [], string $user
         }
 
         @curl_setopt($ch, CURLOPT_URL, $src);
-        @curl_setopt($ch, CURLOPT_HEADER, 1);
+        @curl_setopt($ch, CURLOPT_HEADER, true);
         @curl_setopt($ch, CURLOPT_USERAGENT, $user_agent);
-        @curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        @curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         if ($method == 'POST') {
-            @curl_setopt($ch, CURLOPT_POST, 1);
+            @curl_setopt($ch, CURLOPT_POST, true);
             @curl_setopt($ch, CURLOPT_POSTFIELDS, $request);
         }
         $content = @curl_exec($ch);
@@ -2634,7 +2634,7 @@ function order_by_name($element_ids, array $name): array
  * Grant access to a list of categories for a list of users.
  *
  * @param int[] $category_ids
- * @param int[] $user_ids
+ * @param int[]|int|string $user_ids
  */
 function add_permission_on_category($category_ids, $user_ids): void
 {
@@ -2799,7 +2799,7 @@ function clear_derivative_cache_rec(string $path, $pattern)
  * Deletes derivatives of a particular element
  *
  * @param array $infos ('path'[, 'representative_ext'])
- * @param 'all'|int $type
+ * @param 'all'|int|string $type
  */
 function delete_element_derivatives(array $infos, $type = 'all'): void
 {

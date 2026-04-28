@@ -43,7 +43,8 @@ function pwg_db_connect($host, $user, $password, $database): void
         $socket = $host;
         $host = null;
     } elseif (str_contains($host, ':')) {
-        [$host, $port] = explode(':', $host);
+        [$host, $port_str] = explode(':', $host);
+        $port = (int)$port_str;
     }
 
     $dbname = '';
@@ -659,7 +660,7 @@ function boolean_to_string($var)
     }
 }
 
-function pwg_db_get_recent_period_expression(string $period, $date = 'CURRENT_DATE'): string
+function pwg_db_get_recent_period_expression(int|string $period, $date = 'CURRENT_DATE'): string
 {
     if ($date != 'CURRENT_DATE') {
         $date = '\''.$date.'\'';
@@ -677,7 +678,7 @@ SELECT '.pwg_db_get_recent_period_expression($period);
     return $d;
 }
 
-function pwg_db_get_flood_period_expression(string $seconds): string
+function pwg_db_get_flood_period_expression(int|string $seconds): string
 {
     return 'SUBDATE(NOW(), INTERVAL '.$seconds.' SECOND)';
 }

@@ -19,11 +19,11 @@ use Piwigo\Auth\PwgTOTP;
 /**
  * Checks if an email is well formed and not already in use.
  *
- * @param int $user_id
+ * @param int|null $user_id
  * @param string $mail_address
  * @return string|void error message or nothing
  */
-function validate_mail_address($user_id, ?string $mail_address)
+function validate_mail_address(?int $user_id, ?string $mail_address)
 {
     if (empty($mail_address) and
         !(\Piwigo\Core\Config::obligatoryUserMailAddress() and
@@ -1002,14 +1002,14 @@ function auto_login(): bool
             and is_numeric(@$cookie[1]) /*time*/
             and time() - \Piwigo\Core\Config::rememberMeLength() <= @$cookie[1]
             and time() >= @$cookie[1] /*cookie generated in the past*/) {
-            $key = calculate_auto_login_key($cookie[0], $cookie[1], $username);
+            $key = calculate_auto_login_key((int)$cookie[0], (int)$cookie[1], $username);
             if ($key !== false and $key === $cookie[2]) {
                 // Since Piwigo 16, 'connected_with' in the session defines the authentication context (UI, API, etc).
                 // Auto-login via remember-me may miss this, so we set it to 'pwg_ui' for UI logins (not API).
                 if (script_basename() != 'ws') {
                     $_SESSION['connected_with'] = 'pwg_ui';
                 }
-                log_user($cookie[0], true);
+                log_user((int)$cookie[0], true);
                 trigger_notify('login_success', stripslashes($username));
                 return true;
             }
@@ -1897,7 +1897,7 @@ UPDATE '.USER_INFOS_TABLE.'
  * @since 13
  *
  * @param string $param
- * @param string $value
+ * @param mixed $value
  */
 function userprefs_update_param($param, $value): void
 {

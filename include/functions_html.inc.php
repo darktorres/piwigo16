@@ -304,7 +304,7 @@ function bad_request(string $msg, $alternate_url = null): void
  *
  * @param string|null $alternate_url redirect to this url
  */
-function page_not_found(string $msg, $alternate_url = null): void
+function page_not_found(?string $msg, $alternate_url = null): void
 {
     set_status_header(404);
     if ($alternate_url == null) {

@@ -195,7 +195,7 @@ function add_level_to_tags($tags)
  * @param string $extra_images_where_sql - optionally apply a sql where filter to retrieved images
  * @param string $order_by - optionally overwrite default photo order
  */
-function get_image_ids_for_tags($tag_ids, $mode = 'AND', ?string $extra_images_where_sql = '', $order_by = '', $use_permissions = true): array
+function get_image_ids_for_tags($tag_ids, $mode = 'AND', ?string $extra_images_where_sql = '', string|null $order_by = '', $use_permissions = true): array
 {
     if (empty($tag_ids)) {
         return [];
@@ -282,7 +282,7 @@ SELECT t.*, count(*) AS counter
 /**
  * Return a list of tags corresponding to any of ids, url_names or names.
  *
- * @param int[] $ids
+ * @param int[]|string[] $ids
  * @param string[] $url_names
  * @param string[] $names
  * @return array [id, name, url_name]

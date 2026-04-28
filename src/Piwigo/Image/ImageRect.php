@@ -52,7 +52,7 @@ final class ImageRect
      * @param int $pixels - the amount to substract from the width
      * @param string $coi - a 4 character string (or null) containing the center of interest
      */
-    public function crop_h($pixels, $coi): void
+    public function crop_h(int|float $pixels, $coi): void
     {
         if ($this->width() <= $pixels) {
             return;
@@ -82,7 +82,7 @@ final class ImageRect
      * @param int $pixels - the amount to substract from the height
      * @param string $coi - a 4 character string (or null) containing the center of interest
      */
-    public function crop_v($pixels, $coi): void
+    public function crop_v(int|float $pixels, $coi): void
     {
         if ($this->height() <= $pixels) {
             return;

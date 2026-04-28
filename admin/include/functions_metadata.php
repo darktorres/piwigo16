@@ -35,7 +35,7 @@ function get_sync_iptc_data($file): array
                 $month = $matches[2];
                 $day = $matches[3];
 
-                if (!checkdate($month, $day, $year)) {
+                if (!checkdate((int)$month, (int)$day, (int)$year)) {
                     // we suppose the year is correct
                     $month = 1;
                     $day = 1;
@@ -173,13 +173,13 @@ function get_sync_metadata($infos)
                 if (isset($width) and $width != '') {
                     $infos['width'] = (int) $width;
                 } elseif ($vb !== '') {
-                    $infos['width'] = round(explode(' ', $vb)[2]);
+                    $infos['width'] = round((float)explode(' ', $vb)[2]);
                 }
 
                 if (isset($height) and $height != '') {
                     $infos['height'] = (int) $height;
                 } elseif ($vb !== '') {
-                    $infos['height'] = round(explode(' ', $vb)[3]);
+                    $infos['height'] = round((float)explode(' ', $vb)[3]);
                 }
             }
             if ($image_size = @getimagesize($file)) {

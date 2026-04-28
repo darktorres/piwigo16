@@ -83,7 +83,7 @@ class ScriptLoader
      * @param string $id
      * @param int $load_mode
      * @param string[] $require
-     * @param string $path
+     * @param string|null $path
      * @param string|int $version
      */
     public function add($id, $load_mode, $require, $path, $version = 0, $is_template = false): void

@@ -286,7 +286,7 @@ function display_select_cat_wrapper(
 /**
  * Returns all subcategory identifiers of given category ids
  *
- * @param int[] $ids
+ * @param int[]|string[] $ids
  * @return int[]
  */
 function get_subcat_ids($ids): array

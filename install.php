@@ -217,7 +217,7 @@ define(\'DB_COLLATE\', \'\');
             // make sure nobody can list files of _data directory
             secure_directory(PHPWG_ROOT_PATH.\Piwigo\Core\Config::dataLocation());
 
-            $tmp_filename = md5(uniqid(time()));
+            $tmp_filename = md5(uniqid((string)time()));
             $fh = @fopen(PHPWG_ROOT_PATH.\Piwigo\Core\Config::dataLocation() . 'pwg_' . $tmp_filename, 'w');
             @fputs($fh, $file_content, strlen($file_content));
             @fclose($fh);

@@ -534,7 +534,7 @@ if ($scaled_size) {
 }
 
 if ($params->sharpen) {
-    $changes += $image->sharpen($params->sharpen);
+    $changes += $image->sharpen((int)$params->sharpen);
     $timing['sharpen'] = time_step($step);
 }
 
@@ -550,7 +550,7 @@ if ($params->will_watermark($d_size)) {
     }
     $x = round(($wm->xpos / 100) * ($d_size[0] - $wm_size[0]));
     $y = round(($wm->ypos / 100) * ($d_size[1] - $wm_size[1]));
-    if ($image->compose($wm_image, $x, $y, $wm->opacity)) {
+    if ($image->compose($wm_image, (int)$x, (int)$y, $wm->opacity)) {
         $changes++;
         if ($wm->xrepeat || $wm->yrepeat) {
             $xpad = $wm_size[0] + max(30, round($wm_size[0] / 4));
@@ -565,7 +565,7 @@ if ($params->will_watermark($d_size)) {
                     $y2 = $y + $j * $ypad;
                     if ($x2 >= 0 && $x2 + $wm_size[0] < $d_size[0] &&
                         $y2 >= 0 && $y2 + $wm_size[1] < $d_size[1]) {
-                        if (!$image->compose($wm_image, $x2, $y2, $wm->opacity)) {
+                        if (!$image->compose($wm_image, (int)$x2, (int)$y2, $wm->opacity)) {
                             break;
                         }
                     }

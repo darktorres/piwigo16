@@ -834,11 +834,11 @@ function format_date_legacy(int|string|null $original, $show = null, $format = n
  * @return string
  * @since 16
  */
-function format_date(int|string|null $original, $show = null, $format = null)
+function format_date(int|string|\DateTime|null $original, $show = null, $format = null)
 {
     global $user;
 
-    $date = str2DateTime($original, $format);
+    $date = ($original instanceof \DateTime) ? $original : str2DateTime($original, $format);
 
     if (!$date) {
         return l10n('N/A');
@@ -904,7 +904,7 @@ function format_fromto($from, $to, $full = false)
  * @param bool $with_text append "ago" or "in the future"
  * @return string
  */
-function time_since(?string $original, $stop = 'minute', $format = null, $with_text = true, $with_week = true, $only_last_unit = false)
+function time_since(int|string|null $original, $stop = 'minute', $format = null, $with_text = true, $with_week = true, $only_last_unit = false)
 {
     $date = str2DateTime($original, $format);
 
@@ -1316,7 +1316,7 @@ function l10n_args($key_args, string $sep = "\n"): string
 /**
  * returns the corresponding value from $themeconf if existing or an empty string
  *
- * @param array $key
+ * @param string $key
  * @return string
  */
 function get_themeconf($key)
@@ -1404,7 +1404,7 @@ function pwg_is_dbconf_writeable(): bool
 /**
 * Add or update a config parameter
 *
-* @param string $value
+* @param mixed $value the value to store (arrays/objects will be serialized)
 * @param callable $parser function to apply to the value before save in database
      (eg: serialize, json_encode) will not be applied to *$conf* if *$parser* is *true*
 */
@@ -1814,9 +1814,9 @@ function get_ephemeral_key($valid_after_seconds, string $aditionnal_data_to_hash
 /**
  * verify a key sent back with a form
  *
- * @param array $key
+ * @param string $key
  */
-function verify_ephemeral_key(array $key, string $aditionnal_data_to_hash = ''): bool
+function verify_ephemeral_key(string $key, string $aditionnal_data_to_hash = ''): bool
 {
     $time = microtime(true);
     $key = explode(':', @$key);
@@ -2166,7 +2166,7 @@ SELECT COUNT(DISTINCT(com.id))
  */
 function safe_version_compare($a, $b, $op = null): int|bool
 {
-    $replace_chars   = (fn ($m): int => ord(strtolower((string) $m[1])[0]));
+    $replace_chars   = (fn ($m): string => (string)ord(strtolower((string) $m[1])[0]));
 
     // add dot before groups of letters (version_compare does the same thing)
     $a = preg_replace('#([0-9]+)([a-z]+)#i', '$1.$2', $a);

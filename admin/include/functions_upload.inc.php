@@ -857,7 +857,7 @@ function prepare_directory($directory): void
     secure_directory($directory);
 }
 
-function need_resize($image_filepath, string $max_width, string $max_height): bool
+function need_resize($image_filepath, int|string $max_width, int|string $max_height): bool
 {
     global $logger;
 

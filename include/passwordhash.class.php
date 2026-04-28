@@ -52,7 +52,7 @@ class PasswordHash
         }
         $this->iteration_count_log2 = $iteration_count_log2;
 
-        $this->random_state = microtime() . uniqid(random_int(0, mt_getrandmax()), true); // removed getmypid() for compatibility reasons
+        $this->random_state = microtime() . uniqid((string)random_int(0, mt_getrandmax()), true); // removed getmypid() for compatibility reasons
     }
 
     /**

@@ -62,11 +62,11 @@ final class SizingParams
      * Calculates the cropping rectangle and the scaled size for an input image size.
      *
      * @param int[] $in_size - two element array of input dimensions (width, height)
-     * @param string $coi - four character encoded string containing the center of interest (unused if max_crop=0)
+     * @param string|null $coi - four character encoded string containing the center of interest (unused if max_crop=0)
      * @param ImageRect|null &$crop_rect - ImageRect containing the cropping rectangle or null if cropping is not required
      * @param array<int,int|float>|null &$scale_size - two element array containing width and height of the scaled image
      */
-    public function compute(array $in_size, $coi, mixed &$crop_rect, mixed &$scale_size): void
+    public function compute(array $in_size, string|null $coi, mixed &$crop_rect, mixed &$scale_size): void
     {
         $destCrop = new ImageRect($in_size);
 

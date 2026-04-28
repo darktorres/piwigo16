@@ -2054,7 +2054,8 @@ SELECT
     }
 
     // we want "long" format extensions first to match "cmyk.jpg" before "jpg" for example
-    usort(\Piwigo\Core\Config::formatExtensions(), fn ($a, $b): int => strlen((string) $b) - strlen((string) $a));
+    $format_extensions = \Piwigo\Core\Config::formatExtensions();
+    usort($format_extensions, fn ($a, $b): int => strlen((string) $b) - strlen((string) $a));
 
     $query = '
 SELECT

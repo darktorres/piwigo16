@@ -289,10 +289,10 @@ class Logger
     /**
      * Formats the message for logging.
      *
-     * @param  string $level
+     * @param  int $level
      * @param  array  $context
      */
-    private function formatMessage($level, string $message, ?string $cat, $context): string
+    private function formatMessage(int $level, string $message, ?string $cat, $context): string
     {
         if (!empty($context)) {
             $message .= "\n" . $this->indent($this->contextToString($context));

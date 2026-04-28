@@ -132,7 +132,7 @@ function default_picture_content($content, array $element_info)
         if (array_key_exists($cookie_picture_deriv, ImageStdParams::get_defined_type_map())) {
             pwg_set_session_var('picture_deriv', $cookie_picture_deriv);
         }
-        setcookie('picture_deriv', false, ['expires' => 0, 'path' => cookie_path()]);
+        setcookie('picture_deriv', '', ['expires' => 0, 'path' => cookie_path()]);
     }
     $deriv_type = pwg_get_session_var('picture_deriv', \Piwigo\Core\Config::derivativeDefaultSize());
     $selected_derivative = $element_info['derivatives'][$deriv_type];

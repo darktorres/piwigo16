@@ -383,7 +383,7 @@ $navbar = create_navigation_bar(
     $counter,
     $start,
     $page['items_number'],
-    ''
+    false
 );
 
 $template->assign('navbar', $navbar);

@@ -110,7 +110,7 @@ final class FileCombiner
                 file_put_contents(PHPWG_ROOT_PATH.$file, $output);
                 @chmod(PHPWG_ROOT_PATH.$file, 0644);
             }
-            $result[] = new Combinable('combi', $file, false);
+            $result[] = new Combinable('combi', $file, 0);
         } elseif (count($pending) == 1) {
             $header = '';
             $this->process_combinable($pending[0], false, $force, $header);

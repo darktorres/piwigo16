@@ -36,15 +36,9 @@ if (!function_exists('get_magic_quotes_gpc') or !@get_magic_quotes_gpc()) {
     {
         $v = addslashes((string) $v);
     }
-    if (is_array($_GET)) {
-        array_walk_recursive($_GET, sanitize_mysql_kv(...));
-    }
-    if (is_array($_POST)) {
-        array_walk_recursive($_POST, sanitize_mysql_kv(...));
-    }
-    if (is_array($_COOKIE)) {
-        array_walk_recursive($_COOKIE, sanitize_mysql_kv(...));
-    }
+    array_walk_recursive($_GET, sanitize_mysql_kv(...));
+    array_walk_recursive($_POST, sanitize_mysql_kv(...));
+    array_walk_recursive($_COOKIE, sanitize_mysql_kv(...));
 }
 if (!empty($_SERVER['PATH_INFO'])) {
     $_SERVER['PATH_INFO'] = addslashes((string) $_SERVER['PATH_INFO']);
@@ -66,6 +60,8 @@ if (!\Piwigo\Core\Kernel::isBooted()) :
       'messages' => [],
       'body_classes' => [],
       'body_data' => [],
+      'auth_key_invalid' => false,
+      'notify_api_key_expiration' => null,
       ];
     $user = [];
     $lang = [];
@@ -73,14 +69,9 @@ if (!\Piwigo\Core\Kernel::isBooted()) :
     $header_notes = [];
     $filter = [];
 
-    foreach (
-        [
-          'gzopen',
-          'str_starts_with',
-          ] as $func) {
-        if (!function_exists($func)) {
-            include_once(PHPWG_ROOT_PATH . 'include/php_compat/'.$func.'.php');
-        }
+    // Include PHP compat shims — each file has its own function_exists guard
+    foreach (['gzopen', 'str_starts_with'] as $func) {
+        include_once(PHPWG_ROOT_PATH . 'include/php_compat/'.$func.'.php');
     }
 
     include(PHPWG_ROOT_PATH . 'include/config_default.inc.php');
@@ -198,7 +189,8 @@ check_lounge();
 
 include(PHPWG_ROOT_PATH.'include/user.inc.php');
 
-$user_language = $user['language'] ?? '';
+// Use GLOBALS access to bypass type narrowing from $user initialization
+$user_language = (string)(is_array($GLOBALS['user']) ? ($GLOBALS['user']['language'] ?? '') : '');
 if (in_array(substr($user_language, 0, 2), ['fr','it','de','es','pl','ru','nl','tr','da'])) {
     define('PHPWG_DOMAIN', substr($user_language, 0, 2).'.piwigo.org');
 } elseif ('zh_CN' == $user_language) {
@@ -218,7 +210,7 @@ if (\Piwigo\Core\Config::has('alternative_pem_url') and \Piwigo\Core\Config::alt
 
 // language files
 load_language('common.lang');
-if (is_admin() || (defined('IN_ADMIN') and IN_ADMIN)) {
+if (is_admin() || (defined('IN_ADMIN') ? constant('IN_ADMIN') : false)) {
     load_language('admin.lang');
     // Add language for temporary strings for new popup, from piwigo 15
     load_language('whats_new_'.get_branch_from_version(PHPWG_VERSION).'.lang');
@@ -234,7 +226,7 @@ if (is_a_guest()) {
 
 // in case an auth key was provided and is no longer valid, we must wait to
 // be here, with language loaded, to prepare the message
-if (isset($page['auth_key_invalid']) and $page['auth_key_invalid']) {
+if (\Piwigo\Core\PageState::current()->authKeyInvalid) {
     \Piwigo\Core\PageState::current()->addError(
         l10n('Your authentication key is no longer valid.')
       .sprintf(' <a href="%s">%s</a>', get_root_url().'identification.php', l10n('Login'))
@@ -242,20 +234,23 @@ if (isset($page['auth_key_invalid']) and $page['auth_key_invalid']) {
 }
 
 // check if we need to notified user about api_key expiration
-if (isset($page['notify_api_key_expiration']) and is_array($page['notify_api_key_expiration'])) {
+$user_arr = $GLOBALS['user'];
+$page_arr = $GLOBALS['page'];
+$notify_exp = is_array($page_arr) ? $page_arr['notify_api_key_expiration'] : null;
+if (is_array($notify_exp)) {
     $is_mail_send = notification_api_key_expiration(
-        $user['username'] ?? '',
-        $user['email'] ?? '',
-        $page['notify_api_key_expiration']['days_left']
+        (string)(is_array($user_arr) ? ($user_arr['username'] ?? '') : ''),
+        (string)(is_array($user_arr) ? ($user_arr['email'] ?? '') : ''),
+        $notify_exp['days_left']
     );
 
     if ($is_mail_send) {
         single_update(
             USER_AUTH_KEYS_TABLE,
-            ['last_notified_on' => $page['notify_api_key_expiration']['dbnow']],
+            ['last_notified_on' => $notify_exp['dbnow']],
             [
-            'user_id' => $user['id'] ?? 0,
-            'auth_key' => $page['notify_api_key_expiration']['auth_key'],
+            'user_id' => (int)(is_array($user_arr) ? ($user_arr['id'] ?? 0) : 0),
+            'auth_key' => $notify_exp['auth_key'],
       ],
         );
     }
@@ -264,10 +259,11 @@ if (isset($page['notify_api_key_expiration']) and is_array($page['notify_api_key
 }
 
 // template instance
-if (defined('IN_ADMIN') and IN_ADMIN) {// Admin template
+if (defined('IN_ADMIN') ? constant('IN_ADMIN') : false) {// Admin template
     $template = new Template(PHPWG_ROOT_PATH.'admin/themes', userprefs_get_param('admin_theme', 'clear'));
 } else { // Classic template
-    $theme = $user['theme'] ?? '';
+    $user_arr_theme = $GLOBALS['user'];
+    $theme = (string)(is_array($user_arr_theme) ? ($user_arr_theme['theme'] ?? '') : '');
     if (script_basename() != 'ws' and mobile_theme()) {
         $theme = \Piwigo\Core\Config::mobilTheme();
     }
@@ -278,9 +274,10 @@ if (!\Piwigo\Core\Config::has('no_photo_yet')) {
     include(PHPWG_ROOT_PATH.'include/no_photo_yet.inc.php');
 }
 
-if (array_key_exists('internal_status', $user)
-    && array_key_exists('guest_must_be_guest', (array)$user['internal_status'])
-    && $user['internal_status']['guest_must_be_guest'] === true) {
+$user_arr_gs = $GLOBALS['user'];
+if (is_array($user_arr_gs)
+    && isset($user_arr_gs['internal_status']['guest_must_be_guest'])
+    && $user_arr_gs['internal_status']['guest_must_be_guest'] === true) {
     $header_msgs[] = l10n('Bad status for user "guest", using default status. Please notify the webmaster.');
 }
 

@@ -704,9 +704,6 @@ if (isset($_POST['submit'])
         foreach ($files as $id => $file) {
             $file = $file['path'];
             $data = $site_reader->get_element_update_attributes($file);
-            if (!is_array($data)) {
-                continue;
-            }
 
             $data['id'] = $id;
             $datas[] = $data;
@@ -859,9 +856,7 @@ if ($simulate) {
 // used_metadata string is displayed to inform admin which metadata will be
 // used from files for synchronization
 $used_metadata = implode(', ', $site_reader->get_metadata_attributes());
-if ($site_is_remote and !isset($_POST['submit'])) {
-    $used_metadata .= ' + ...';
-}
+// $site_is_remote is always false here (fatal_error called above if true)
 
 $template->assign(
     [

@@ -88,8 +88,7 @@ class updates
             $url .= '&origin_hash='.sha1(\Piwigo\Core\Config::secretKey().get_absolute_root_url());
 
             if (@fetchRemote($url, $result)
-                and $all_versions = @explode("\n", $result)
-                and is_array($all_versions)) {
+                and $all_versions = @explode("\n", $result)) {
                 $new_versions['piwigo.org-checked'] = true;
                 $last_version = trim($all_versions[0]);
                 if ('Official' === $env) {

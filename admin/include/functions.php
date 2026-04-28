@@ -2106,15 +2106,15 @@ UPDATE '.USER_CACHE_TABLE.'
 function create_table_add_character_set($query)
 {
     defined('DB_CHARSET') or fatal_error('create_table_add_character_set DB_CHARSET undefined');
-    if ('DB_CHARSET' != '') {
-        if (version_compare(pwg_get_db_version(), '4.1.0', '<')) {
-            return $query;
-        }
-        $charset_collate = ' DEFAULT CHARACTER SET '.DB_CHARSET;
-        if (DB_COLLATE != '') {
-            $charset_collate .= ' COLLATE '.DB_COLLATE;
-        }
-        if (is_array($query)) {
+    if (version_compare(pwg_get_db_version(), '4.1.0', '<')) {
+        return $query;
+    }
+    $charset_collate = ' DEFAULT CHARACTER SET '.DB_CHARSET;
+    $db_collate = defined('DB_COLLATE') ? (string)constant('DB_COLLATE') : '';
+    if ($db_collate !== '') {
+        $charset_collate .= ' COLLATE '.$db_collate;
+    }
+    if (is_array($query)) {
             foreach ($query as $id => $q) {
                 $q = trim($q);
                 $q = trim($q, ';');
@@ -2132,7 +2132,6 @@ function create_table_add_character_set($query)
             }
             $query .= ';';
         }
-    }
     return $query;
 }
 
@@ -2278,7 +2277,9 @@ function fetchRemote($src, &$dest, $get_data = [], $post_data = [], string $user
     }
 
     // Initialize $dest
-    is_resource($dest) or $dest = '';
+    if (!is_resource($dest)) {
+        $dest = '';
+    }
 
     // Try curl to read remote file
     // TODO : remove all these @

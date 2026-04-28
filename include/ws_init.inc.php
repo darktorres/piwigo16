@@ -38,20 +38,17 @@ if (!isset($responseFormat)) {
 
 $service = new PwgServer();
 
-if (!is_null($requestFormat)) {
-    $handler = null;
-    switch ($requestFormat) {
-        case 'rest':
-            include_once(PHPWG_ROOT_PATH.'include/ws_protocols/rest_handler.php');
-            $handler = new PwgRestRequestHandler();
-            break;
-    }
-    $service->setHandler($requestFormat, $handler);
+$handler = null;
+switch ($requestFormat) {
+    case 'rest':
+        include_once(PHPWG_ROOT_PATH.'include/ws_protocols/rest_handler.php');
+        $handler = new PwgRestRequestHandler();
+        break;
 }
+$service->setHandler($requestFormat, $handler);
 
-if (!is_null($responseFormat)) {
-    $encoder = null;
-    switch ($responseFormat) {
+$encoder = null;
+switch ($responseFormat) {
         case 'rest':
             include_once(PHPWG_ROOT_PATH.'include/ws_protocols/rest_encoder.php');
             $encoder = new PwgRestEncoder();
@@ -68,8 +65,7 @@ if (!is_null($responseFormat)) {
             include_once(PHPWG_ROOT_PATH.'include/ws_protocols/xmlrpc_encoder.php');
             $encoder = new PwgXmlRpcEncoder();
             break;
-    }
-    $service->setEncoder($responseFormat, $encoder);
 }
+$service->setEncoder($responseFormat, $encoder);
 
 set_make_full_url();

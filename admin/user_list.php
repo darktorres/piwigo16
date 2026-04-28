@@ -251,7 +251,7 @@ function webmaster_id_is_local()
     if (\Piwigo\Core\Config::has('local_dir_site')) {
         @include(PHPWG_ROOT_PATH.PWG_LOCAL_DIR. 'config/config.inc.php');
     }
-    return \Piwigo\Core\Config::webmasterId() ?? false;
+    return \Piwigo\Core\Config::webmasterId();
 }
 
 if (webmaster_id_is_local()) {

@@ -176,7 +176,7 @@ function get_cat_display_name_from_id($cat_id, $url = ''): string
  * @param string $content
  * @return string
  */
-function render_comment_content($content): string|array|null
+function render_comment_content($content): string|null
 {
     $content = htmlspecialchars($content);
     $pattern = '/(https?:\/\/\S*)/';
@@ -358,7 +358,6 @@ $btrace_msg
     }
     error_reporting(E_ALL);
     trigger_error(strip_tags($msg).$btrace_msg, E_USER_ERROR);
-    die(0); // just in case
 }
 
 /**

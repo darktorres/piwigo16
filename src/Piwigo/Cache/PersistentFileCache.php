@@ -45,7 +45,8 @@ class PersistentFileCache extends PersistentCache
 
         if (false === @file_put_contents($this->dir.$key.'.cache', $serialized)) {
             mkgetdir($this->dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR);
-            if (false === @file_put_contents($this->dir.$key.'.cache', $serialized)) {
+            $retried = file_put_contents($this->dir.$key.'.cache', $serialized);
+            if ($retried === false) {
                 return false;
             }
         }

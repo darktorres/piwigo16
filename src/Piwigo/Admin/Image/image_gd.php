@@ -46,11 +46,7 @@ class image_gd implements imageInterface
         }
 
         $result = imagecopymerge($dest, $this->image, 0, 0, $x, $y, $width, $height, 100);
-
-        if ($result !== false) {
-            $this->image = $dest;
-        } else {
-        }
+        $this->image = $dest;
         return $result;
     }
 
@@ -83,11 +79,7 @@ class image_gd implements imageInterface
         }
 
         $result = imagecopyresampled($dest, $this->image, 0, 0, 0, 0, $width, $height, $this->get_width(), $this->get_height());
-
-        if ($result !== false) {
-            $this->image = $dest;
-        } else {
-        }
+        $this->image = $dest;
         return $result;
     }
 

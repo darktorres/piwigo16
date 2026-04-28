@@ -40,7 +40,7 @@ class image_ext_imagick implements imageInterface
 
         $command = $this->imagickdir.'identify -format "%wx%h" "'.realpath($this->source_filepath).'"';
         @exec($command, $returnarray);
-        if (!is_array($returnarray) or empty($returnarray[0]) or !preg_match('/^(\d+)x(\d+)$/', $returnarray[0], $match)) {
+        if (empty($returnarray[0]) or !preg_match('/^(\d+)x(\d+)$/', $returnarray[0], $match)) {
             die("[External ImageMagick] Corrupt image\n" . var_export($returnarray, true));
         }
 
@@ -177,12 +177,12 @@ class image_ext_imagick implements imageInterface
         $logger->debug($exec, 'i.php');
         @exec($exec, $returnarray);
 
-        if (is_array($returnarray) && (count($returnarray) > 0)) {
+        if (count($returnarray) > 0) {
             $logger->error('', 'i.php', $returnarray);
             foreach ($returnarray as $line) {
                 trigger_error($line, E_USER_WARNING);
             }
         }
-        return is_array($returnarray);
+        return true;
     }
 }

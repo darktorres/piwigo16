@@ -167,7 +167,7 @@ function custom_notification_query($action, $type, $start = null, $end = null)
                 $query = 'SELECT COUNT(DISTINCT '.$field_id.') '.$query.';';
                 [$count] = pwg_db_fetch_row(pwg_query($query));
                 return $count;
-                break;
+
             }
 
         case 'info':
@@ -192,7 +192,6 @@ function custom_notification_query($action, $type, $start = null, $end = null)
                 $query = 'SELECT DISTINCT '.$field_id.' '.$query.';';
                 $infos = query2array($query);
                 return $infos;
-                break;
             }
 
         default:

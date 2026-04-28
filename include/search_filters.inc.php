@@ -144,9 +144,10 @@ SELECT
         $filter_clause = get_clause_for_filter('date_posted');
         $cache_key = $persistent_cache->make_key('filter_date_posted'.$user['id'].$user['cache_update_time']);
         $date_posted = null;
-        $set_persistent_cache = !preg_match('/^image_id IN/', $filter_clause) and !$persistent_cache->get($cache_key, $date_posted);
+        $cache_hit_date_posted = false;
+        $set_persistent_cache = !preg_match('/^image_id IN/', $filter_clause) and !($cache_hit_date_posted = $persistent_cache->get($cache_key, $date_posted));
 
-        if ($date_posted === null) {
+        if (!$cache_hit_date_posted) {
             $query = '
 SELECT
     SUBDATE(NOW(), INTERVAL 24 HOUR) AS 24h,
@@ -239,9 +240,10 @@ SELECT
         $filter_clause = get_clause_for_filter('date_created');
         $cache_key = $persistent_cache->make_key('filter_date_created'.$user['id'].$user['cache_update_time']);
         $date_created = null;
-        $set_persistent_cache = !preg_match('/^image_id IN/', $filter_clause) and !$persistent_cache->get($cache_key, $date_created);
+        $cache_hit_date_created = false;
+        $set_persistent_cache = !preg_match('/^image_id IN/', $filter_clause) and !($cache_hit_date_created = $persistent_cache->get($cache_key, $date_created));
 
-        if ($date_created === null) {
+        if (!$cache_hit_date_created) {
             $query = '
 SELECT
     SUBDATE(NOW(), INTERVAL 7 DAY) AS 7d,
@@ -480,9 +482,10 @@ SELECT
             $cache_key = $persistent_cache->make_key('filter_ratings'.$user['id'].$user['cache_update_time']);
 
             $ratings = null;
-            $set_persistent_cache = !preg_match('/^image_id IN/', $filter_clause) and !$persistent_cache->get($cache_key, $ratings);
+            $cache_hit_ratings = false;
+            $set_persistent_cache = !preg_match('/^image_id IN/', $filter_clause) and !($cache_hit_ratings = $persistent_cache->get($cache_key, $ratings));
 
-            if ($ratings === null) {
+            if (!$cache_hit_ratings) {
                 $query = '
 SELECT
     DISTINCT id,
@@ -584,9 +587,10 @@ SELECT
         $cache_key = $persistent_cache->make_key('filter_ratios'.$user['id'].$user['cache_update_time']);
 
         $ratios = null;
-        $set_persistent_cache = !preg_match('/^image_id IN/', $filter_clause) and !$persistent_cache->get($cache_key, $ratios);
+        $cache_hit_ratios = false;
+        $set_persistent_cache = !preg_match('/^image_id IN/', $filter_clause) and !($cache_hit_ratios = $persistent_cache->get($cache_key, $ratios));
 
-        if ($ratios === null) {
+        if (!$cache_hit_ratios) {
             $query = '
 SELECT
     DISTINCT id,

@@ -36,7 +36,7 @@ include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 check_status(ACCESS_ADMINISTRATOR);
 
 $tpl_extension = \Piwigo\Core\Config::extentsForTemplates() !== null ?
-      unserialize(\Piwigo\Core\Config::extentsForTemplates() ?? '') : [];
+      unserialize((string)\Piwigo\Core\Config::extentsForTemplates()) : [];
 $new_extensions = get_extents();
 
 /* Selective URLs keyword */

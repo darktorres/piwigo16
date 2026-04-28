@@ -102,7 +102,7 @@ class tabsheet
     */
     public function get_selected()
     {
-        if (!empty($this->selected)) {
+        if ($this->selected !== '') {
             return $this->sheets[$this->selected];
         } else {
             return null;

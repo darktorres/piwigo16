@@ -70,22 +70,21 @@ while ($row = pwg_db_fetch_assoc($result)) {
     } else {
         $user_key = $usr['name'];
     }
-    $rating = & $by_user_ratings[$user_key];
-    if (is_null($rating)) {
-        $rating = $by_user_rating_model;
-        $rating['uid'] = (int)$row['user_id'];
-        $rating['aid'] = $usr['anon'] ? $row['anonymous_id'] : '';
-        $rating['last_date'] = $rating['first_date'] = $row['date'];
+    if (!isset($by_user_ratings[$user_key])) {
+        $by_user_ratings[$user_key] = $by_user_rating_model;
+        $by_user_ratings[$user_key]['uid'] = (int)$row['user_id'];
+        $by_user_ratings[$user_key]['aid'] = $usr['anon'] ? $row['anonymous_id'] : '';
+        $by_user_ratings[$user_key]['last_date'] = $row['date'];
+        $by_user_ratings[$user_key]['first_date'] = $row['date'];
     } else {
-        $rating['first_date'] = $row['date'];
+        $by_user_ratings[$user_key]['first_date'] = $row['date'];
     }
 
-    $rating['rates'][$row['rate']][] = [
+    $by_user_ratings[$user_key]['rates'][$row['rate']][] = [
       'id' => $row['element_id'],
       'date' => $row['date'],
     ];
     $image_ids[$row['element_id']] = 1;
-    unset($rating);
 }
 
 // get image tn urls

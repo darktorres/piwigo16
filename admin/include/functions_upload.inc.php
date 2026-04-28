@@ -967,15 +967,15 @@ function ready_for_upload_message(): ?string
             );
         }
     } else {
+        $upload_dir = \Piwigo\Core\Config::uploadDir();
+        if (!is_writable($upload_dir)) {
+            @chmod($upload_dir, 0777);
+        }
         if (!is_writable(\Piwigo\Core\Config::uploadDir())) {
-            @chmod(\Piwigo\Core\Config::uploadDir(), 0777);
-
-            if (!is_writable(\Piwigo\Core\Config::uploadDir())) {
-                return sprintf(
-                    l10n('Give write access (chmod 777) to "%s" directory at the root of your Piwigo installation'),
-                    $relative_dir
-                );
-            }
+            return sprintf(
+                l10n('Give write access (chmod 777) to "%s" directory at the root of your Piwigo installation'),
+                $relative_dir
+            );
         }
     }
 

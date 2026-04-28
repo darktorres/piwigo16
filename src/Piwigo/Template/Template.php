@@ -166,7 +166,7 @@ class Template
         $this->smarty->assign('lang_info', $lang_info);
 
         if (!defined('IN_ADMIN') and \Piwigo\Core\Config::extentsForTemplates() !== null) {
-            $tpl_extents = unserialize(\Piwigo\Core\Config::extentsForTemplates() ?? '');
+            $tpl_extents = unserialize((string)\Piwigo\Core\Config::extentsForTemplates());
             $this->set_extents($tpl_extents, './template-extension/', true, $theme);
         }
     }
@@ -233,7 +233,7 @@ class Template
     {
         $this->smarty->addTemplateDir($dir);
 
-        if (!isset($this->smarty->compile_id)) {
+        if ($this->smarty->compile_id === '') {
             $compile_id = '1';
             $compile_id .= ($real_dir = realpath($dir)) === false ? $dir : $real_dir;
             $this->smarty->compile_id = base_convert(hash('crc32b', $compile_id), 16, 36);

@@ -409,7 +409,8 @@ ImageStdParams::load_from_db();
 parse_request();
 //var_export($page);
 
-$params = $page['derivative_params'];
+// parse_request() sets $page['derivative_params'] to a DerivativeParams instance
+$params = trigger_change('derivative_params_get', $page['derivative_params']);
 if (!($params instanceof \Piwigo\Image\DerivativeParams)) {
     ierror('Invalid derivative params', 400);
 }

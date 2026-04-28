@@ -375,7 +375,7 @@ if (function_exists('mb_strtolower') && defined('PWG_CHARSET')) {
  *
  * @return string
  */
-function str2url($str): string|array
+function str2url($str): string
 {
     $str = $safe = pwg_transliterate($str);
     $str = preg_replace('/[^\x80-\xffa-z0-9_\s\'\:\/\[\],-]/', '', $str);
@@ -738,10 +738,6 @@ function str2DateTime(int|string|null $original, $format = null)
 {
     if (empty($original)) {
         return false;
-    }
-
-    if ($original instanceof DateTime) {
-        return $original;
     }
 
     if (!empty($format) && version_compare(PHP_VERSION, '5.3.0') >= 0) {// from known date format
@@ -1739,9 +1735,7 @@ function load_language(string $filename, $dirname = '', array $options = []): st
             }
 
             // load parent language content directly in global
-            if (!empty($load_lang_info['parent'] ?? null)) {
-                $parent_language = $load_lang_info['parent'];
-            } elseif (!empty($lang_info['parent'])) {
+            if (!empty($lang_info['parent'])) {
                 $parent_language = $lang_info['parent'];
             } else {
                 $parent_language = null;
@@ -1854,7 +1848,7 @@ function create_navigation_bar(string $url, $nb_element, $start, $nb_element_pag
     $pages_around = \Piwigo\Core\Config::paginatePagesAround();
     $start_str = $clean_url ? '/'.$param_name.'-' : (!str_contains($url, '?') ? '?' : '&amp;').$param_name.'=';
 
-    if (!isset($start) or !is_numeric($start) or (is_numeric($start) and $start < 0)) {
+    if (!isset($start) or $start < 0) {
         $start = 0;
     }
 
@@ -2413,7 +2407,7 @@ SELECT
 
             $codename = $pem_extensions[$eid]['archive_root_dir'] ?? $plugin['id'];
 
-            $piwigo_infos['plugins'][] = ($eid === null ? 'null' : '#'.$eid).'/'.$codename.'/'.$plugin['version'];
+            $piwigo_infos['plugins'][] = '#'.$eid.'/'.$codename.'/'.$plugin['version'];
         }
     }
 
@@ -2424,37 +2418,35 @@ SELECT
     $piwigo_infos['themes'] = [];
     $private_themes = [];
     foreach ($themes->db_themes_by_id as $theme) {
-        $theme['state'] = 'active';
-        if ('active' == $theme['state']) {
-            $eid = null;
-            if (isset($themes->fs_themes[ $theme['id'] ])) {
-                $uri = $themes->fs_themes[ $theme['id'] ]['uri'];
-                if (preg_match('/eid=(\d+)/', (string) $uri, $matches)) {
-                    if (isset($pem_extensions[ $matches[1] ])) {
-                        $eid = $matches[1];
-                    }
+        $theme['state'] = 'active'; // db_themes_by_id only contains active themes
+        $eid = null;
+        if (isset($themes->fs_themes[ $theme['id'] ])) {
+            $uri = $themes->fs_themes[ $theme['id'] ]['uri'];
+            if (preg_match('/eid=(\d+)/', (string) $uri, $matches)) {
+                if (isset($pem_extensions[ $matches[1] ])) {
+                    $eid = $matches[1];
                 }
             }
-
-            if (empty($eid)) {
-                // let's search in the data fetched from PEM
-                $eid = $official_exts[ \Piwigo\Core\Config::pemThemesCategory() ][ $theme['id'] ] ?? null;
-            }
-
-            // we must exclude "private extensions". A private extension :
-            //
-            // * has no eid
-            // * OR has un unknown theme_id among all "Archive root directory" in PEM
-            if (empty($eid)) {
-                $logger->info('['.__FUNCTION__.'][exec='.$exec_id.'] '.$theme['id'].' is a private theme, not sent to piwigo.org');
-                $private_themes[ $theme['id'] ] = 1;
-                continue;
-            }
-
-            $codename = $pem_extensions[$eid]['archive_root_dir'] ?? $theme['id'];
-
-            $piwigo_infos['themes'][] = ($eid === null ? 'null' : '#'.$eid).'/'.$codename.'/'.$theme['version'];
         }
+
+        if (empty($eid)) {
+            // let's search in the data fetched from PEM
+            $eid = $official_exts[ \Piwigo\Core\Config::pemThemesCategory() ][ $theme['id'] ] ?? null;
+        }
+
+        // we must exclude "private extensions". A private extension :
+        //
+        // * has no eid
+        // * OR has un unknown theme_id among all "Archive root directory" in PEM
+        if (empty($eid)) {
+            $logger->info('['.__FUNCTION__.'][exec='.$exec_id.'] '.$theme['id'].' is a private theme, not sent to piwigo.org');
+            $private_themes[ $theme['id'] ] = 1;
+            continue;
+        }
+
+        $codename = $pem_extensions[$eid]['archive_root_dir'] ?? $theme['id'];
+
+        $piwigo_infos['themes'][] = '#'.$eid.'/'.$codename.'/'.$theme['version'];
     }
 
     $piwigo_infos['general_stats']['nb_private_themes'] = count(array_keys($private_themes));

@@ -239,7 +239,7 @@ class PasswordHash
 
         $random = '';
 
-        if (CRYPT_BLOWFISH == 1 && !$this->portable_hashes) {
+        if (!$this->portable_hashes) {
             $random = $this->get_random_bytes(16);
             $hash =
                 crypt((string) $password, (string) $this->gensalt_blowfish($random));
@@ -248,7 +248,7 @@ class PasswordHash
             }
         }
 
-        if (CRYPT_EXT_DES == 1 && !$this->portable_hashes) {
+        if (!$this->portable_hashes) {
             if (strlen((string) $random) < 3) {
                 $random = $this->get_random_bytes(3);
             }

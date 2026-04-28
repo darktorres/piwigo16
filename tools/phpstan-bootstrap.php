@@ -26,8 +26,8 @@ if (!defined('CYEAR')) {
 $prefixeTable = 'piwigo_';
 /** @var array<string,mixed> $conf */
 $conf = [];
-/** @var array<string,mixed> $user */
-$user = [];
+/** @var array{id:int,username:string,email:string,language:string,theme:string,status:string,enabled_high:bool,internal_status:array<string,mixed>,cache_update_time:int,last_visit:string,...} $user */
+$user = ['id' => 0, 'username' => '', 'email' => '', 'language' => 'en_UK', 'theme' => 'modus', 'status' => 'guest', 'enabled_high' => false, 'internal_status' => [], 'cache_update_time' => 0, 'last_visit' => ''];
 /** @var array<string,mixed> $page */
 $page = ['infos' => [], 'errors' => [], 'warnings' => [], 'messages' => [], 'body_classes' => [], 'body_data' => []];
 /** @var array<string,string> $lang */
@@ -46,8 +46,7 @@ $pwg_loaded_plugins = [];
 $mysqli = null;
 
 // Stubs for procedural plugin/theme callbacks (defined at runtime by plugin files).
-// DummyPlugin_maintain and DummyTheme_maintain delegate to these when a plugin
-// defines them as free functions instead of extending PluginMaintain/ThemeMaintain.
+// These allow PHPStan to know the functions exist without is_callable() checks.
 if (!function_exists('plugin_install')) {
     function plugin_install(string $plugin_id, string $version, array &$errors = []): mixed { return null; }
     function plugin_activate(string $plugin_id, string $version, array &$errors = []): mixed { return null; }

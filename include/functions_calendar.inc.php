@@ -121,8 +121,7 @@ WHERE id IN (' . implode(',', $page['items']) .')';
     $cal_style = $page['chronology_style'];
     $calendar = match($cal_style) {
         'monthly' => new CalendarMonthly(),
-        'weekly'  => new CalendarWeekly(),
-        default   => throw new \RuntimeException("Unknown calendar style: $cal_style"),
+        default   => new CalendarWeekly(),
     };
 
     // Retrieve view

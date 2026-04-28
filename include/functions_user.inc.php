@@ -267,6 +267,7 @@ SELECT id
  * Same that getuserdata() but with additional tests for guest.
  *
  * @param int $user_id
+ * @return array{id:int,username:string,email:string,language:string,theme:string,status:string,enabled_high:bool,internal_status:array<string,mixed>,cache_update_time:int,last_visit:string,...}
  */
 function build_user($user_id, $use_cache = true): array
 {
@@ -1539,7 +1540,6 @@ function get_sql_condition_FandF(
             default:
                 {
                     die('Unknow condition');
-                    break;
                 }
         }
     }

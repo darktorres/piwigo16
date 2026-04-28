@@ -120,7 +120,6 @@ class Logger
             if (file_exists($this->options['filePath']) && !is_writable($this->options['filePath'])) {
                 $this->_logStatus = self::STATUS_OPEN_FAILED;
                 throw new \RuntimeException(self::$_messages['writefail']);
-                return;
             }
 
             if (($this->_fileHandle = fopen($this->options['filePath'], 'a')) != false) {

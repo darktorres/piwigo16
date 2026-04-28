@@ -62,7 +62,7 @@ DELETE
 
         $cat_ids[] = $cat_id;
 
-        if ($rank === null || $rank === '') {
+        if (empty($rank)) {
             $rank = 'auto';
         }
         $rank_on_category[$cat_id] = $rank;
@@ -513,7 +513,7 @@ SELECT id, date, author, content
     if (\Piwigo\Core\Config::activateComments() and
         $is_commentable and
         (!is_a_guest()
-          or (is_a_guest() and \Piwigo\Core\Config::get('comments_forall'))
+          or \Piwigo\Core\Config::get('comments_forall')
         )
     ) {
         $comment_post_data['author'] = stripslashes((string) $user['username']);

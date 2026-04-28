@@ -200,8 +200,7 @@ function ws_getCacheSize($params, &$service): array
     if (function_exists('exec')) {
         @exec('du -sk '.$path_cache, $return_array_cache);
         if (
-            is_array($return_array_cache)
-            and !empty($return_array_cache[0])
+            !empty($return_array_cache[0])
             and preg_match('/^(\d+)\s/', $return_array_cache[0], $matches_cache)
         ) {
             $infos['cache_size'] = $matches_cache[1] * 1024;
@@ -229,8 +228,7 @@ function ws_getCacheSize($params, &$service): array
     if (function_exists('exec')) {
         @exec('du -sk '.$path_template_c, $return_array_template_c);
         if (
-            is_array($return_array_template_c)
-            and !empty($return_array_template_c[0])
+            !empty($return_array_template_c[0])
             and preg_match('/^(\d+)\s/', $return_array_template_c[0], $matches_template_c)
         ) {
             $infos['tsizes'] = $matches_template_c[1] * 1024;
@@ -742,27 +740,18 @@ function ws_history_search(array $param, &$service): array
     // $_POST['filename'] simultaneously
 
     // store seach in database
-    if ($search !== []) {
-        // register search rules in database, then they will be available on
-        // thumbnails page and picture page.
-        $query = '
+    // register search rules in database, then they will be available on
+    // thumbnails page and picture page.
+    $query = '
   INSERT INTO '.SEARCH_TABLE.'
   (rules)
   VALUES
   (\''.pwg_db_real_escape_string(serialize($search)).'\')
   ;';
 
-        pwg_query($query);
+    pwg_query($query);
 
-        $search_id = pwg_db_insert_id();
-
-        // Remove redirect for ajax //
-        // redirect(
-        //   PHPWG_ROOT_PATH.'admin.php?page=history&search_id='.$search_id
-        //   );
-    } else {
-        \Piwigo\Core\PageState::current()->addError(l10n('Empty query. No criteria has been entered.'));
-    }
+    $search_id = pwg_db_insert_id();
 
     // what are the lines to display in reality ?
     $query = '

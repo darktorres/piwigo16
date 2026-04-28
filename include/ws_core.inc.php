@@ -537,7 +537,7 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
     {
         $methods = array_filter(
             $service->_methods,
-            fn (array $m): bool => empty($m['options']['hidden']) || !$m['options']['hidden']
+            fn (array $m): bool => empty($m['options']['hidden'])
         );
         return ['methods' => new \Piwigo\Ws\PwgNamedArray(array_keys($methods), 'method') ];
     }

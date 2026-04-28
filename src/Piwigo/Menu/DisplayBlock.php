@@ -11,8 +11,8 @@ class DisplayBlock
 {
     /** @var int */
     protected $_position;
-    /** @var string */
-    protected $_title;
+    /** @var string|null */
+    protected $_title = null;
 
     /** @var mixed */
     public $data;

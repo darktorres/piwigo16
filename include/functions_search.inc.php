@@ -139,7 +139,7 @@ function get_regular_search_results(array $search, ?string $images_where = ''): 
         // 1) we search in regular fields (ie, the ones in the piwigo_images table)
         $fields = ['file', 'name', 'comment', 'author'];
 
-        if (isset($search['fields']['allwords']['fields']) and count($search['fields']['allwords']['fields']) > 0) {
+        if (isset($search['fields']['allwords']['fields'])) {
             $fields = array_intersect($fields, $search['fields']['allwords']['fields']);
         }
 
@@ -395,7 +395,7 @@ SELECT
         ];
 
         $date_posted_clause = '';
-        if (isset($options[ $search['fields']['date_posted']['preset'] ]) and 'custom' != $search['fields']['date_posted']['preset']) {
+        if (isset($options[ $search['fields']['date_posted']['preset'] ])) {
             $date_posted_clause = 'date_available > SUBDATE(NOW(), INTERVAL '.$options[ $search['fields']['date_posted']['preset'] ].')';
         } elseif ('custom' == $search['fields']['date_posted']['preset'] and isset($search['fields']['date_posted']['custom'])) {
             $date_posted_subclauses = [];
@@ -465,7 +465,7 @@ SELECT
         ];
 
         $date_created_clause = '';
-        if (isset($options[ $search['fields']['date_created']['preset'] ]) and 'custom' != $search['fields']['date_created']['preset']) {
+        if (isset($options[ $search['fields']['date_created']['preset'] ])) {
             $date_created_clause = 'date_creation > SUBDATE(NOW(), INTERVAL '.$options[ $search['fields']['date_created']['preset'] ].')';
         } elseif ('custom' == $search['fields']['date_created']['preset'] and isset($search['fields']['date_created']['custom'])) {
             $date_created_subclauses = [];
@@ -1345,7 +1345,7 @@ function qsearch_get_text_token_search_sql($token, $fields): array
         if ($token->modifier & QST_WILDCARD_BEGIN) {
             $use_ft = false;
         }
-        if ($token->modifier & (QST_QUOTED | QST_WILDCARD_END) == (QST_QUOTED | QST_WILDCARD_END)) {
+        if (($token->modifier & (QST_QUOTED | QST_WILDCARD_END)) === (QST_QUOTED | QST_WILDCARD_END)) {
             $use_ft = false;
         }
 

@@ -94,8 +94,9 @@ class themes
                 }
 
                 $theme_maintain->activate($this->fs_themes[$theme_id]['version'], $errors);
+                $errors = trigger_change('theme_activate_errors', $errors);
 
-                if ($errors === []) {
+                if (empty($errors)) {
                     $query = '
 INSERT INTO '.THEMES_TABLE.'
   (id, version, name)

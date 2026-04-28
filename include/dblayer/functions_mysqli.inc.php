@@ -76,10 +76,7 @@ function pwg_db_check_charset(): void
 {
     global $mysqli;
 
-    $db_charset = 'utf8';
-    if (defined('DB_CHARSET') and DB_CHARSET != '') {
-        $db_charset = DB_CHARSET;
-    }
+    $db_charset = defined('DB_CHARSET') ? DB_CHARSET : 'utf8';
     $mysqli->set_charset($db_charset);
 }
 

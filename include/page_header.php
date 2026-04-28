@@ -18,7 +18,7 @@ $template->set_filenames(['header' => 'header.tpl']);
 trigger_notify('loc_begin_page_header');
 
 $show_mobile_app_banner = conf_get_param('show_mobile_app_banner_in_gallery', false);
-if (defined('IN_ADMIN') and IN_ADMIN) {
+if (defined('IN_ADMIN') ? constant('IN_ADMIN') : false) {
     $show_mobile_app_banner = conf_get_param('show_mobile_app_banner_in_admin', true);
 }
 

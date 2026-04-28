@@ -87,8 +87,9 @@ class plugins
 
                 $plugin_maintain->install($this->fs_plugins[$plugin_id]['version'], $errors);
                 $activity_details['version'] = $this->fs_plugins[$plugin_id]['version'];
+                $errors = trigger_change('plugin_install_errors', $errors);
 
-                if ($errors === []) {
+                if (empty($errors)) {
                     $query = '
 INSERT INTO '. PLUGINS_TABLE .' (id,version)
   VALUES (\''. $plugin_id .'\', \''. $this->fs_plugins[$plugin_id]['version'] .'\')
@@ -136,12 +137,12 @@ UPDATE '. PLUGINS_TABLE .'
                     break;
                 }
 
-                if ($errors === []) {
+                if (empty($errors)) {
                     $plugin_maintain->activate($crt_db_plugin['version'], $errors);
                     $activity_details['version'] = $crt_db_plugin['version'];
                 }
 
-                if ($errors === []) {
+                if (empty($errors)) {
                     $query = '
 UPDATE '. PLUGINS_TABLE .'
   SET state=\'active\'

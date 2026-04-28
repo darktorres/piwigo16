@@ -104,7 +104,7 @@ if (
 }
 
 $page['user_use_cache'] = true;
-if (defined('IN_ADMIN') and IN_ADMIN) {
+if (defined('IN_ADMIN') ? constant('IN_ADMIN') : false) {
     $page['user_use_cache'] = false;
 } elseif (
     isset($_REQUEST['method'])

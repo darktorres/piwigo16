@@ -1,6 +1,8 @@
 <?php
 
 declare(strict_types=1);
+
+global $template, $user, $page, $persistent_cache, $lang;
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -99,6 +101,7 @@ SELECT '.implode(',', $fields).'
     }
 
     //Get list of languages
+    $language_options = [];
     foreach (get_languages() as $language_code => $language_name) {
         $language_options[$language_code] = $language_name;
     }
@@ -349,6 +352,7 @@ function load_profile_in_template($url_action, $url_redirect, array $userdata, $
     $template->assign('template_selection', $userdata['theme']);
     $template->assign('template_options', get_pwg_themes());
 
+    $language_options = [];
     foreach (get_languages() as $language_code => $language_name) {
         if (isset($_POST['submit']) or $userdata['language'] == $language_code) {
             $template->assign('language_selection', $language_code);

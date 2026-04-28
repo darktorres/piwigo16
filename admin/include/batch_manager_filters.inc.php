@@ -12,6 +12,9 @@ if (!defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
 
+global $template, $user, $page, $persistent_cache, $lang, $collection, $base_url;
+
+
 $prefilters = [
   ['ID' => 'caddie', 'NAME' => l10n('Caddie')],
   ['ID' => 'favorites', 'NAME' => l10n('Your favorites')],
@@ -63,6 +66,7 @@ if (isset($page['no_md5sum_number'])) {
 }
 
 // privacy level
+$level_options = [];
 foreach (\Piwigo\Core\Config::availablePermissionLevels() as $level) {
     $level_options[$level] = l10n(sprintf('Level %d', $level));
 

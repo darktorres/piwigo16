@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+global $template, $user, $page, $persistent_cache, $lang;
+
 use Piwigo\Admin\languages;
 use Piwigo\Session\PwgSession;
 use Piwigo\Template\Template;
@@ -366,6 +368,7 @@ INSERT INTO '.$prefixeTable.'config (param,value,comment)
 }
 
 //------------------------------------------------------ start template output
+$languages_options = [];
 foreach ($languages->fs_languages as $language_code => $fs_language) {
     if ($language == $language_code) {
         $template->assign('language_selection', $language_code);

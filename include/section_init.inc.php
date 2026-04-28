@@ -1,6 +1,8 @@
 <?php
 
 declare(strict_types=1);
+
+global $template, $user, $page, $persistent_cache, $lang, $logger, $filter;
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |

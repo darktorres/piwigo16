@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+global $template, $user, $page, $persistent_cache, $lang;
+
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Ws\PwgError;
@@ -159,6 +161,7 @@ SELECT
                 @$categories_of_image[ $row['image_id'] ][] = $row['category_id'];
             }
 
+            $details_for_category = [];
             if (count($category_ids) > 0) {
                 // find details (for URL generation) about each album
                 $query = '
@@ -1192,6 +1195,7 @@ SELECT id, name, dir, uppercats
     FROM '. CATEGORIES_TABLE .'
     WHERE id IN ('. implode(',', $category_ids) .')
   ;';
+    $cat_display_name = '';
     $result = pwg_query($query);
     while ($row = pwg_db_fetch_assoc($result)) {
         $cat_display_name = get_cat_display_name_cache(

@@ -13,6 +13,8 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 define('PHPWG_ROOT_PATH', '../');
+
+global $template, $user, $page, $persistent_cache, $lang;
 define('PWG_HELP', true);
 define('IN_ADMIN', true);
 include_once(PHPWG_ROOT_PATH.'include/common.inc.php');

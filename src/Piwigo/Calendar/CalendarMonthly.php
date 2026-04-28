@@ -354,6 +354,7 @@ class CalendarMonthly extends CalendarBase
 
             $tpl_weeks    = [];
             $tpl_crt_week = [];
+            $dow = 0;
 
             //fill the empty days in the week before first day of this month
             for ($i = 0; $i < $first_day_dow; $i++) {

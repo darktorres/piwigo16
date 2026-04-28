@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+global $template, $user, $page, $persistent_cache, $lang;
+
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
@@ -434,6 +436,8 @@ function ws_getActivityList(array $param, &$service): PwgError|array
 
     $line_id = 0;
 
+    $min = '';
+    $max = '';
     if (!empty($param['date_min'])) {
         $min = date_format(date_create($param['date_min']), 'Y-m-d H:i:s');
         $max = date_format(date_create($param['date_max']), 'Y-m-d 23:59:59');
@@ -529,6 +533,7 @@ SELECT
                         $details['agent'] = $row['user_agent'];
                     }
 
+                    $detailsType = '';
                     if (isset($details['method'])) {
                         $detailsType = 'method';
                     }
@@ -737,7 +742,7 @@ function ws_history_search(array $param, &$service): array
     // $_POST['filename'] simultaneously
 
     // store seach in database
-    if (!empty($search)) {
+    if ($search !== []) {
         // register search rules in database, then they will be available on
         // thumbnails page and picture page.
         $query = '
@@ -853,6 +858,8 @@ SELECT '.\Piwigo\Core\Config::userFields()['id'].' AS id
         }
     }
 
+    $name_of_category = [];
+    $image_infos = [];
     if (count($category_ids) > 0) {
         $query = '
 SELECT id, uppercats
@@ -893,6 +900,8 @@ SELECT
         $image_infos = query2array($query, 'id');
     }
 
+    global $name_of_tag; // used for preg_replace
+    $name_of_tag = [];
     if ($has_tags > 0) {
         $query = '
 SELECT
@@ -900,7 +909,6 @@ SELECT
     name, url_name
   FROM '.TAGS_TABLE;
 
-        global $name_of_tag; // used for preg_replace
         $name_of_tag = [];
         $result = pwg_query($query);
         while ($row = pwg_db_fetch_assoc($result)) {
@@ -975,6 +983,7 @@ SELECT
                 ]
             );
 
+            $element = [];
             if (isset($image_infos[$line['image_id']])) {
                 $element = [
                   'id' => $line['image_id'],

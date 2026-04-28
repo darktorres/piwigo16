@@ -15,6 +15,8 @@ use Piwigo\Image\ImageStdParams;
 
 defined('PHPWG_ROOT_PATH') or die('Hacking attempt!');
 
+global $template, $user, $page, $persistent_cache, $lang;
+
 $tabsheet = new tabsheet();
 $tabsheet->set_id('rating');
 $tabsheet->select('rating_user');

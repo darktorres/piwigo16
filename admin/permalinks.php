@@ -45,9 +45,9 @@ function parse_sort_variables(
         $disp = '↓'; // TODO: an small image is better
 
         if ($field !== @$_GET[$get_param]) {
-            if (!isset($default_field) or $default_field != $field) { // the first should be the default
+            if ($default_field != $field) { // the first should be the default
                 $url = add_url_params($url, [$get_param => $field]);
-            } elseif (isset($default_field) and !isset($_GET[$get_param])) {
+            } elseif (!isset($_GET[$get_param])) {
                 $ret[] = $field;
                 $disp = '<em>'.$disp.'</em>';
             }
@@ -68,6 +68,9 @@ function parse_sort_variables(
 if (!defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
+
+global $template, $user, $page, $persistent_cache, $lang;
+
 
 include_once(PHPWG_ROOT_PATH.'admin/include/functions_permalinks.php');
 

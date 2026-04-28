@@ -22,6 +22,8 @@ check_input_parameter('user_id', $_GET, false, PATTERN_ID);
 $page['tab'] = 'user_list';
 include(PHPWG_ROOT_PATH.'admin/include/user_tabs.inc.php');
 
+global $template, $user, $page, $persistent_cache, $lang;
+
 // +-----------------------------------------------------------------------+
 // |                              groups list                              |
 // +-----------------------------------------------------------------------+
@@ -147,6 +149,7 @@ if (isset($_GET['show_add_user'])) {
 }
 
 // Status options
+$label_of_status = [];
 foreach (get_enums(USER_INFOS_TABLE, 'status') as $status) {
     $label_of_status[$status] = l10n('user_status_'.$status);
 }
@@ -160,6 +163,7 @@ SELECT
   GROUP BY status
 ';
 
+$nb_users_by_status = [];
 $result = pwg_query($query);
 while ($row = pwg_db_fetch_assoc($result)) {
     $nb_users_by_status[$row['status']] = [
@@ -184,6 +188,7 @@ $template->assign('pref_status_selected', 'normal');
 $template->assign('nb_users_by_status', $nb_users_by_status);
 
 // user level options
+$level_options = [];
 foreach (\Piwigo\Core\Config::availablePermissionLevels() as $level) {
     $level_options[$level] = l10n(sprintf('Level %d', $level));
 }

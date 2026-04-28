@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+global $template, $user, $page, $persistent_cache, $lang;
+
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Ws\PwgError;
@@ -60,7 +62,7 @@ DELETE
 
         $cat_ids[] = $cat_id;
 
-        if (!isset($rank)) {
+        if ($rank === null || $rank === '') {
             $rank = 'auto';
         }
         $rank_on_category[$cat_id] = $rank;
@@ -1268,6 +1270,7 @@ SELECT COUNT(*)
 
     // does the image already exists ?
     if ($params['check_uniqueness']) {
+        $where_clause = '1=1';
         if ('md5sum' == \Piwigo\Core\Config::uniquenessMode()) {
             $where_clause = "md5sum = '".$params['original_sum']."'";
         }
@@ -1514,12 +1517,12 @@ SELECT id, name, permalink
  */
 function ws_images_upload(array $params, $service)
 {
+    $format_ext = null;
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
     }
 
     if (isset($params['format_of'])) {
-        $format_ext = null;
 
         // are formats enabled?
         if (!\Piwigo\Core\Config::isFormatsEnabled()) {

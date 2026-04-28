@@ -14,6 +14,8 @@ if (!defined('IN_ADMIN')) {
 
 include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
+global $template, $user, $page, $persistent_cache, $lang;
+
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+

@@ -16,6 +16,8 @@ if (!defined('PHOTOS_ADD_BASE_URL')) {
     die('Hacking attempt!');
 }
 
+global $template, $user, $page, $persistent_cache, $lang, $logger, $pwg_loaded_plugins;
+
 // +-----------------------------------------------------------------------+
 // |                        batch management request                       |
 // +-----------------------------------------------------------------------+

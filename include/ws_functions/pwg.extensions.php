@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+global $template, $user, $page, $persistent_cache, $lang;
+
 use Piwigo\Admin\plugins;
 use Piwigo\Admin\themes;
 use Piwigo\Admin\updates;
@@ -153,6 +155,8 @@ function ws_extensions_update(array $params, $service)
     $revision = $params['revision'];
 
     $extension = new $type();
+    $upgrade_status = 'ok';
+    $extension_name = '';
 
     if ($type == 'plugins') {
         if (

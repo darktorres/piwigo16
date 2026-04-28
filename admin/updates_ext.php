@@ -15,6 +15,9 @@ if (!defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
 
+global $template, $user, $page, $persistent_cache, $lang;
+
+
 if (!\Piwigo\Core\Config::enableExtensionsInstall()) {
     die('Piwigo extensions install/update system is disabled');
 }

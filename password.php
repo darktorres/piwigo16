@@ -1,6 +1,8 @@
 <?php
 
 declare(strict_types=1);
+
+global $template, $user, $page, $persistent_cache, $lang;
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -452,6 +454,7 @@ if ($cookie_lang !== null && $user['language'] != $cookie_lang) {
 }
 
 //Get list of languages
+$language_options = [];
 foreach (get_languages() as $language_code => $language_name) {
     $language_options[$language_code] = $language_name;
 }

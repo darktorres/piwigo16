@@ -21,6 +21,12 @@ define('CAL_VIEW_LIST', 'list');
 /** URL keyword for calendar view */
 define('CAL_VIEW_CALENDAR', 'calendar');
 
+/** Calendar date array indices */
+define('CYEAR',  0);
+define('CMONTH', 1);
+define('CDAY',   2);
+define('CWEEK',  1);
+
 
 /**
  * Initialize _$page_ and _$template_ vars for calendar view.

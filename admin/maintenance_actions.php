@@ -20,6 +20,8 @@ fs_quick_check();
 // |                                actions                                |
 // +-----------------------------------------------------------------------+
 
+global $template, $user, $page, $persistent_cache, $lang, $maint_actions;
+
 $action = $_GET['action'] ?? '';
 $register_activity = true;
 

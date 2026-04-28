@@ -15,6 +15,9 @@ if (!defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
 
+global $template, $user, $page, $persistent_cache, $lang;
+
+
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
@@ -49,7 +52,7 @@ $std_pgs_skin_options = [
   'teal',
 ];
 
-if (isset($_POST['submit']) and !empty($_POST) and is_webmaster()) {
+if (isset($_POST['submit']) and is_webmaster()) {
     check_pwg_token();
 
     //use_standard_pages or not

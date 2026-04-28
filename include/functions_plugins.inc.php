@@ -236,7 +236,7 @@ function trigger_change($event, $data = null)
  * @param string $event
  * @param mixed $args,... optional arguments
  */
-function trigger_notify($event): void
+function trigger_notify(string $event, mixed ...$args): void
 {
     global $pwg_event_handlers;
 
@@ -250,8 +250,6 @@ function trigger_notify($event): void
     if (!isset($pwg_event_handlers[$event])) {
         return;
     }
-    $args = func_get_args();
-    array_shift($args);
 
     foreach ($pwg_event_handlers[$event] as $priority => $handlers) {
         foreach ($handlers as $handler) {

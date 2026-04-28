@@ -29,6 +29,9 @@ declare(strict_types=1);
 if (!defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
+
+global $template, $user, $page, $persistent_cache, $lang;
+
 include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 check_status(ACCESS_ADMINISTRATOR);
 

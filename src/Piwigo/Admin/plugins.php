@@ -72,6 +72,7 @@ class plugins
             $crt_db_plugin = $this->db_plugins_by_id[$plugin_id];
         }
 
+        $plugin_maintain = null;
         if ($action !== 'update') { // wait for files to be updated
             $plugin_maintain = self::build_maintain_class($plugin_id);
         }
@@ -89,7 +90,7 @@ class plugins
                 $plugin_maintain->install($this->fs_plugins[$plugin_id]['version'], $errors);
                 $activity_details['version'] = $this->fs_plugins[$plugin_id]['version'];
 
-                if (empty($errors)) {
+                if ($errors === []) {
                     $query = '
 INSERT INTO '. PLUGINS_TABLE .' (id,version)
   VALUES (\''. $plugin_id .'\', \''. $this->fs_plugins[$plugin_id]['version'] .'\')
@@ -137,12 +138,12 @@ UPDATE '. PLUGINS_TABLE .'
                     break;
                 }
 
-                if (empty($errors)) {
+                if ($errors === []) {
                     $plugin_maintain->activate($crt_db_plugin['version'], $errors);
                     $activity_details['version'] = $crt_db_plugin['version'];
                 }
 
-                if (empty($errors)) {
+                if ($errors === []) {
                     $query = '
 UPDATE '. PLUGINS_TABLE .'
   SET state=\'active\'
@@ -529,10 +530,12 @@ DELETE FROM '. PLUGINS_TABLE .'
                 include_once(PHPWG_ROOT_PATH.'admin/include/pclzip.lib.php');
                 $zip = new \PclZip($archive);
                 if ($list = $zip->listContent()) {
+                    $main_filepath = null;
+                    $status = 'ok';
                     foreach ($list as $file) {
                         // we search main.inc.php in archive
                         if (basename((string) $file['filename']) == 'main.inc.php'
-                          and (!isset($main_filepath)
+                          and ($main_filepath === null
                           or strlen((string) $file['filename']) < strlen($main_filepath))) {
                             $main_filepath = $file['filename'];
                         }
@@ -564,8 +567,7 @@ DELETE FROM '. PLUGINS_TABLE .'
                                 }
                             }
                             if (file_exists($extract_path.'/obsolete.list')
-                              and $old_files = file($extract_path.'/obsolete.list', FILE_IGNORE_NEW_LINES)
-                              and !empty($old_files)) {
+                              and $old_files = file($extract_path.'/obsolete.list', FILE_IGNORE_NEW_LINES)) {
                                 $old_files[] = 'obsolete.list';
                                 $logger->debug(__FUNCTION__.', $old_files = {'.join('},{', $old_files).'}');
 
@@ -624,7 +626,7 @@ DELETE FROM '. PLUGINS_TABLE .'
         $file = PHPWG_ROOT_PATH.'install/obsolete_extensions.list';
         $merged_extensions = [];
 
-        if (file_exists($file) and $obsolete_ext = file($file, FILE_IGNORE_NEW_LINES) and !empty($obsolete_ext)) {
+        if (file_exists($file) and $obsolete_ext = file($file, FILE_IGNORE_NEW_LINES)) {
             foreach ($obsolete_ext as $ext) {
                 if (preg_match('/^(\d+) ?: ?(.*?)$/', $ext, $matches)) {
                     $merged_extensions[$matches[1]] = $matches[2];

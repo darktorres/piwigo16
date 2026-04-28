@@ -1,6 +1,8 @@
 <?php
 
 declare(strict_types=1);
+
+global $template, $user, $page, $persistent_cache, $lang;
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -116,6 +118,8 @@ SELECT
         if (!preg_match('/^image_id IN/', $filter_clause)) {
             // we use persistent_cache only for fetching lines filtered only by permissions
             $cache_key = $persistent_cache->make_key('filter_author_rows'.$user['id'].$user['cache_update_time']);
+            $filter_rows = [];
+            $filter_rows = [];
             if (!$persistent_cache->get($cache_key, $filter_rows)) {
                 $filter_rows = query2array($query);
                 $persistent_cache->set($cache_key, $filter_rows);
@@ -139,9 +143,10 @@ SELECT
     if (isset($my_search['fields']['date_posted']) and $display_filters['post_date']['access']) {
         $filter_clause = get_clause_for_filter('date_posted');
         $cache_key = $persistent_cache->make_key('filter_date_posted'.$user['id'].$user['cache_update_time']);
+        $date_posted = null;
         $set_persistent_cache = !preg_match('/^image_id IN/', $filter_clause) and !$persistent_cache->get($cache_key, $date_posted);
 
-        if (!isset($date_posted)) {
+        if ($date_posted === null) {
             $query = '
 SELECT
     SUBDATE(NOW(), INTERVAL 24 HOUR) AS 24h,
@@ -233,9 +238,10 @@ SELECT
     if (isset($my_search['fields']['date_created']) and $display_filters['creation_date']['access']) {
         $filter_clause = get_clause_for_filter('date_created');
         $cache_key = $persistent_cache->make_key('filter_date_created'.$user['id'].$user['cache_update_time']);
+        $date_created = null;
         $set_persistent_cache = !preg_match('/^image_id IN/', $filter_clause) and !$persistent_cache->get($cache_key, $date_created);
 
-        if (!isset($date_created)) {
+        if ($date_created === null) {
             $query = '
 SELECT
     SUBDATE(NOW(), INTERVAL 7 DAY) AS 7d,
@@ -343,6 +349,7 @@ SELECT
         if (!preg_match('/^image_id IN/', $filter_clause)) {
             // we use persistent_cache only for fetching lines filtered only by permissions
             $cache_key = $persistent_cache->make_key('filter_added_by_rows'.$user['id'].$user['cache_update_time']);
+            $filter_rows = [];
             if (!$persistent_cache->get($cache_key, $filter_rows)) {
                 $filter_rows = query2array($query);
                 $persistent_cache->set($cache_key, $filter_rows);
@@ -421,6 +428,7 @@ SELECT
 
         // get all file extensions for this user in the gallery, whatever the current filters
         $cache_key = $persistent_cache->make_key('file_exts'.$user['id'].$user['cache_update_time']);
+        $all_exts = [];
         if (!$persistent_cache->get($cache_key, $all_exts)) {
             $query = '
 SELECT
@@ -471,9 +479,10 @@ SELECT
 
             $cache_key = $persistent_cache->make_key('filter_ratings'.$user['id'].$user['cache_update_time']);
 
+            $ratings = null;
             $set_persistent_cache = !preg_match('/^image_id IN/', $filter_clause) and !$persistent_cache->get($cache_key, $ratings);
 
-            if (!isset($ratings)) {
+            if ($ratings === null) {
                 $query = '
 SELECT
     DISTINCT id,
@@ -574,9 +583,10 @@ SELECT
 
         $cache_key = $persistent_cache->make_key('filter_ratios'.$user['id'].$user['cache_update_time']);
 
+        $ratios = null;
         $set_persistent_cache = !preg_match('/^image_id IN/', $filter_clause) and !$persistent_cache->get($cache_key, $ratios);
 
-        if (!isset($ratios)) {
+        if ($ratios === null) {
             $query = '
 SELECT
     DISTINCT id,
@@ -644,6 +654,7 @@ SELECT
         if (!preg_match('/^image_id IN/', $filter_clause)) {
             // we use persistent_cache only for fetching lines filtered only by permissions
             $cache_key = $persistent_cache->make_key('filter_height_rows'.$user['id'].$user['cache_update_time']);
+            $filter_rows = [];
             if (!$persistent_cache->get($cache_key, $filter_rows)) {
                 $filter_rows = query2array($query, null, 'height');
                 $persistent_cache->set($cache_key, $filter_rows);
@@ -689,6 +700,7 @@ SELECT
         if (!preg_match('/^image_id IN/', $filter_clause)) {
             // we use persistent_cache only for fetching lines filtered only by permissions
             $cache_key = $persistent_cache->make_key('filter_width_rows'.$user['id'].$user['cache_update_time']);
+            $filter_rows = [];
             if (!$persistent_cache->get($cache_key, $filter_rows)) {
                 $filter_rows = query2array($query, null, 'width');
                 $persistent_cache->set($cache_key, $filter_rows);

@@ -21,6 +21,9 @@ if (!defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
 
+global $template, $user, $page, $persistent_cache, $lang, $logger, $pwg_loaded_plugins;
+
+
 include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
 // +-----------------------------------------------------------------------+
@@ -495,7 +498,7 @@ if (!empty($_SESSION['bulk_manager_filter']['tags'])) {
 }
 
 if (isset($_SESSION['bulk_manager_filter']['dimension'])) {
-    $where_clauses = [];
+    $where_clause = [];
     if (isset($_SESSION['bulk_manager_filter']['dimension']['min_width'])) {
         $where_clause[] = 'width >= '.$_SESSION['bulk_manager_filter']['dimension']['min_width'];
     }
@@ -526,7 +529,7 @@ SELECT id
 }
 
 if (isset($_SESSION['bulk_manager_filter']['filesize'])) {
-    $where_clauses = [];
+    $where_clause = [];
 
     if (isset($_SESSION['bulk_manager_filter']['filesize']['min'])) {
         // to counter the effect of converting kB to mB and rounding, we need to go slightly lower for the minimum value

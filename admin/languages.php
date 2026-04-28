@@ -15,6 +15,9 @@ if (!defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
 
+global $template, $user, $page, $persistent_cache, $lang;
+
+
 $my_base_url = get_root_url().'admin.php?page=languages';
 
 if (isset($_GET['tab'])) {

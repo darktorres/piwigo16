@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+global $template, $user, $page, $persistent_cache, $lang, $prefixeTable;
+
 use Piwigo\Admin\languages;
 use Piwigo\Admin\updates;
 use Piwigo\Cache\PersistentFileCache;

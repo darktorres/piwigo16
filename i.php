@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+global $template, $user, $page, $persistent_cache, $lang, $prefixeTable;
+
 use Piwigo\Core\Logger;
 
 // +-----------------------------------------------------------------------+
@@ -33,7 +35,7 @@ $logger = new Logger(array(
   ));
 
 
-function trigger_notify()
+function trigger_notify(string $event, mixed ...$args): void
 {
 }
 function get_extension($filename)
@@ -41,7 +43,7 @@ function get_extension($filename)
     return substr(strrchr($filename, '.'), 1, strlen($filename));
 }
 
-function mkgetdir($dir)
+function mkgetdir($dir, $flags = 0): bool
 {
     if (!is_dir($dir)) {
         if (substr(PHP_OS, 0, 3) == 'WIN') {
@@ -497,6 +499,8 @@ if (0 != $page['rotation_angle']) {
 
 // Crop & scale
 $o_size = $d_size = array($image->get_width(),$image->get_height());
+$crop_rect = null;
+$scaled_size = null;
 $params->sizing->compute($o_size, $page['coi'], $crop_rect, $scaled_size);
 if ($crop_rect) {
     $changes++;

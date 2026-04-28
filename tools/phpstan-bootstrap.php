@@ -8,6 +8,22 @@ define('PWG_LOCAL_DIR', 'local/');
 define('PHPWG_INSTALLED', true);
 define('IN_ADMIN', false);
 
+// Database constants defined by local/config/database.inc.php at runtime.
+define('PREFIX_TABLE', 'piwigo_');
+define('DB_CHARSET', 'utf8mb4');
+define('DB_COLLATE', 'utf8mb4_unicode_ci');
+
+// Calendar level indices — defined in include/functions_calendar.inc.php.
+// Redeclared here so analysis of src/Piwigo/Calendar/ finds them.
+if (!defined('CYEAR')) {
+    define('CYEAR',  0);
+    define('CMONTH', 1);
+    define('CDAY',   2);
+    define('CWEEK',  1);
+}
+
+/** @var string $prefixeTable */
+$prefixeTable = 'piwigo_';
 /** @var array<string,mixed> $conf */
 $conf = [];
 /** @var array<string,mixed> $user */
@@ -20,6 +36,12 @@ $lang = [];
 $template = null;
 /** @var \Piwigo\Core\Logger|null $logger */
 $logger = null;
+/** @var array<string,mixed> $filter */
+$filter = [];
+/** @var string $pwg_event_handlers */
+$pwg_event_handlers = [];
+/** @var array<string,mixed> $pwg_loaded_plugins */
+$pwg_loaded_plugins = [];
 /** @var \mysqli|null $mysqli */
 $mysqli = null;
 

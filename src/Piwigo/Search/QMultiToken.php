@@ -233,6 +233,7 @@ class QMultiToken implements \Stringable
     /* because evaluations occur left to right, we ensure that 'a OR b c d' is interpreted as 'a OR (b c d)'*/
     protected function check_operator_priority()
     {
+        $crt_prio = 0;
         for ($i = 0; $i < count($this->tokens); $i++) {
             if (!$this->tokens[$i]->is_single) {
                 $this->tokens[$i]->check_operator_priority();

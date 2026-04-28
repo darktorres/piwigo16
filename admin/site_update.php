@@ -15,6 +15,9 @@ if (!defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
 
+global $template, $user, $page, $persistent_cache, $lang, $logger, $pwg_loaded_plugins;
+
+
 include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
 // +-----------------------------------------------------------------------+
@@ -103,6 +106,12 @@ if (isset($_GET['quick_sync'])) {
 }
 
 $general_failure = true;
+$simulate = false;
+$counts = [];
+$db_categories = [];
+$basedir = '';
+$to_delete = [];
+$caddiables = [];
 if (isset($_POST['submit'])) {
 
     if ($site_reader->open()) {
@@ -843,7 +852,7 @@ if (isset($_POST['submit']) and isset($_POST['sync_meta'])
 // +-----------------------------------------------------------------------+
 $template->set_filenames(['update' => 'site_update.tpl']);
 $result_title = '';
-if (isset($simulate) and $simulate) {
+if ($simulate) {
     $result_title .= '['.l10n('Simulation').'] ';
 }
 

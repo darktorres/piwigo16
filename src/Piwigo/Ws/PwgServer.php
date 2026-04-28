@@ -167,7 +167,7 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
 
     public static function isPost(): bool
     {
-        return isset($HTTP_RAW_POST_DATA) or !empty($_POST);
+        return !empty($_POST) || (strlen(file_get_contents('php://input')) > 0);
     }
 
     public static function makeArrayParam(&$param): void

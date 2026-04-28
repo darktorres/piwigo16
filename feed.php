@@ -1,6 +1,8 @@
 <?php
 
 declare(strict_types=1);
+
+global $template, $user, $page, $persistent_cache, $lang;
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -55,6 +57,7 @@ $feed_id = input_string('feed', '', $_GET);
 $image_only = input_string('image_only', null, $_GET) !== null;
 
 // echo '<pre>'.generate_key(50).'</pre>';
+$feed_row = [];
 if (!empty($feed_id)) {
     $query = '
 SELECT user_id,

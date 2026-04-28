@@ -1303,11 +1303,10 @@ function get_l10n_args($key, $args = ''): array
 function l10n_args($key_args, string $sep = "\n"): string
 {
     if (is_array($key_args)) {
+        $result = '';
         foreach ($key_args as $key => $element) {
-            if (isset($result)) {
+            if ($result !== '') {
                 $result .= $sep;
-            } else {
-                $result = '';
             }
 
             if ($key === 'key_args') {
@@ -1732,9 +1731,11 @@ function load_language(string $filename, $dirname = '', array $options = []): st
             }
 
             // load language content
+            $lang = null;
+            $lang_info = null;
             @include($source_file);
-            $load_lang = @$lang;
-            $load_lang_info = @$lang_info;
+            $load_lang = $lang;
+            $load_lang_info = $lang_info;
 
             // access already existing values
             global $lang, $lang_info;
@@ -2422,7 +2423,7 @@ SELECT
 
             $codename = $pem_extensions[$eid]['archive_root_dir'] ?? $plugin['id'];
 
-            $piwigo_infos['plugins'][] = (empty($eid) ? 'null' : '#'.$eid).'/'.$codename.'/'.$plugin['version'];
+            $piwigo_infos['plugins'][] = ($eid === null ? 'null' : '#'.$eid).'/'.$codename.'/'.$plugin['version'];
         }
     }
 
@@ -2462,7 +2463,7 @@ SELECT
 
             $codename = $pem_extensions[$eid]['archive_root_dir'] ?? $theme['id'];
 
-            $piwigo_infos['themes'][] = (empty($eid) ? 'null' : '#'.$eid).'/'.$codename.'/'.$theme['version'];
+            $piwigo_infos['themes'][] = ($eid === null ? 'null' : '#'.$eid).'/'.$codename.'/'.$theme['version'];
         }
     }
 

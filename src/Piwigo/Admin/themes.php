@@ -97,7 +97,7 @@ class themes
 
                 $theme_maintain->activate($this->fs_themes[$theme_id]['version'], $errors);
 
-                if (empty($errors)) {
+                if ($errors === []) {
                     $query = '
 INSERT INTO '.THEMES_TABLE.'
   (id, version, name)
@@ -514,10 +514,12 @@ SELECT
                 include_once(PHPWG_ROOT_PATH.'admin/include/pclzip.lib.php');
                 $zip = new \PclZip($archive);
                 if ($list = $zip->listContent()) {
+                    $main_filepath = null;
+                    $status = 'ok';
                     foreach ($list as $file) {
                         // we search main.inc.php in archive
                         if (basename((string) $file['filename']) == 'themeconf.inc.php'
-                          and (!isset($main_filepath)
+                          and ($main_filepath === null
                           or strlen((string) $file['filename']) < strlen($main_filepath))) {
                             $main_filepath = $file['filename'];
                         }
@@ -551,8 +553,7 @@ SELECT
                                 }
                             }
                             if (file_exists($extract_path.'/obsolete.list')
-                              and $old_files = file($extract_path.'/obsolete.list', FILE_IGNORE_NEW_LINES)
-                              and !empty($old_files)) {
+                              and $old_files = file($extract_path.'/obsolete.list', FILE_IGNORE_NEW_LINES)) {
                                 $old_files[] = 'obsolete.list';
 
                                 $logger->debug(__FUNCTION__.', $old_files = {'.join('},{', $old_files).'}');

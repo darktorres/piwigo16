@@ -163,6 +163,7 @@ function add_level_to_tags($tags)
 
     // tag levels threshold calculation: a tag with an average rate must have
     // the middle level.
+    $threshold_of_level = [];
     for ($i = 1; $i < \Piwigo\Core\Config::tagsLevels(); $i++) {
         $threshold_of_level[$i] =
           2 * $i * $tag_average_count / \Piwigo\Core\Config::tagsLevels();

@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+global $template, $user, $page, $persistent_cache, $lang;
+
 use Piwigo\Ws\Protocol\PwgJsonEncoder;
 use Piwigo\Ws\Protocol\PwgRestEncoder;
 use Piwigo\Ws\Protocol\PwgRestRequestHandler;
@@ -30,7 +32,7 @@ if (isset($_GET['format'])) {
     $responseFormat = $_GET['format'];
 }
 
-if (!isset($responseFormat) and isset($requestFormat)) {
+if (!isset($responseFormat)) {
     $responseFormat = $requestFormat;
 }
 

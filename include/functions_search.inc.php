@@ -395,6 +395,7 @@ SELECT
           '6m' => '6 MONTH',
         ];
 
+        $date_posted_clause = '';
         if (isset($options[ $search['fields']['date_posted']['preset'] ]) and 'custom' != $search['fields']['date_posted']['preset']) {
             $date_posted_clause = 'date_available > SUBDATE(NOW(), INTERVAL '.$options[ $search['fields']['date_posted']['preset'] ].')';
         } elseif ('custom' == $search['fields']['date_posted']['preset'] and isset($search['fields']['date_posted']['custom'])) {
@@ -464,6 +465,7 @@ SELECT
           '12m' => '12 MONTH',
         ];
 
+        $date_created_clause = '';
         if (isset($options[ $search['fields']['date_created']['preset'] ]) and 'custom' != $search['fields']['date_created']['preset']) {
             $date_created_clause = 'date_creation > SUBDATE(NOW(), INTERVAL '.$options[ $search['fields']['date_created']['preset'] ].')';
         } elseif ('custom' == $search['fields']['date_created']['preset'] and isset($search['fields']['date_created']['custom'])) {
@@ -1228,6 +1230,7 @@ class QMultiToken implements \Stringable
     /* because evaluations occur left to right, we ensure that 'a OR b c d' is interpreted as 'a OR (b c d)'*/
     protected function check_operator_priority()
     {
+        $crt_prio = 0;
         for ($i = 0; $i < count($this->tokens); $i++) {
             if (!$this->tokens[$i]->is_single) {
                 $this->tokens[$i]->check_operator_priority();

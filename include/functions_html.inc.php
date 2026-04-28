@@ -326,7 +326,7 @@ function page_not_found(string $msg, $alternate_url = null): void
  * @param string|null $title
  * @param bool $show_trace
  */
-function fatal_error(string $msg, $title = null, $show_trace = true): void
+function fatal_error(string $msg, $title = null, $show_trace = true): never
 {
     if (empty($title)) {
         $title = l10n('Piwigo encountered a non recoverable error');

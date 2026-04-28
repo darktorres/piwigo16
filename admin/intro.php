@@ -17,6 +17,9 @@ if (!defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
 
+global $template, $user, $page, $persistent_cache, $lang, $logger, $pwg_loaded_plugins;
+
+
 include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
 // +-----------------------------------------------------------------------+
@@ -47,7 +50,7 @@ $tabsheet->assign();
 
 if (isset($page['nb_pending_comments'])) {
     $message = l10n('User comments').' <i class="icon-chat"></i> ';
-    $message .= '<a href="'.$link_start.'comments">';
+    $message .= '<a href="'.$my_base_url.'comments">';
     $message .= l10n('%d waiting for validation', $page['nb_pending_comments']);
     $message .= ' <i class="icon-right"></i></a>';
 

@@ -12,6 +12,9 @@ if (!defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
 
+global $template, $user, $page, $persistent_cache, $lang;
+
+
 include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 include_once(PHPWG_ROOT_PATH.'admin/include/functions_history.inc.php');
 
@@ -259,6 +262,8 @@ function set_missing_values($unit, $data, $firstDate = null, $lastDate = null): 
     }
 
     //Declare variable according the unit
+    $date_format = 'Y-m-d';
+    $date_add = 'P1D';
     if ($unit == 'year') {
         $date_format = 'Y';
         $date_add = 'P1Y';

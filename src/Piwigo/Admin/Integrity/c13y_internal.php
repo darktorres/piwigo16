@@ -142,12 +142,11 @@ class c13y_internal
         if (!empty($id)) {
             switch ($action) {
                 case 'creation':
+                    $password = null;
                     if ($id == \Piwigo\Core\Config::guestId()) {
                         $name = 'guest';
-                        $password = null;
                     } elseif ($id == \Piwigo\Core\Config::defaultUserId()) {
                         $name = 'guest';
-                        $password = null;
                     } elseif ($id == \Piwigo\Core\Config::webmasterId()) {
                         $name = 'webmaster';
                         $password = generate_key(6);

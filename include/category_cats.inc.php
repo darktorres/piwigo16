@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+global $template, $user, $page, $persistent_cache, $lang, $logger;
+
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 

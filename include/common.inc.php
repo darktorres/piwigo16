@@ -277,9 +277,9 @@ if (!\Piwigo\Core\Config::has('no_photo_yet')) {
     include(PHPWG_ROOT_PATH.'include/no_photo_yet.inc.php');
 }
 
-if (isset($user['internal_status']['guest_must_be_guest'])
-    and
-    $user['internal_status']['guest_must_be_guest'] === true) {
+if (array_key_exists('internal_status', $user)
+    && array_key_exists('guest_must_be_guest', (array)$user['internal_status'])
+    && $user['internal_status']['guest_must_be_guest'] === true) {
     $header_msgs[] = l10n('Bad status for user "guest", using default status. Please notify the webmaster.');
 }
 

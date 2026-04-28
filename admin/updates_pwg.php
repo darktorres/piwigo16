@@ -15,6 +15,9 @@ if (!defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
 
+global $template, $user, $page, $persistent_cache, $lang;
+
+
 if (!\Piwigo\Core\Config::enableCoreUpdate()) {
     die('Piwigo core update system is disabled');
 }

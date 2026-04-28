@@ -608,7 +608,10 @@ SELECT
     /**
      * Sort functions
      */
-    /** @param array<mixed> $a @param array<mixed> $b */
+    /**
+     * @param array<mixed> $a
+     * @param array<mixed> $b
+     */
     public function extension_revision_compare(array $a, array $b): int
     {
         if ($a['revision_date'] < $b['revision_date']) {
@@ -618,13 +621,19 @@ SELECT
         }
     }
 
-    /** @param array<mixed> $a @param array<mixed> $b */
+    /**
+     * @param array<mixed> $a
+     * @param array<mixed> $b
+     */
     public function extension_name_compare(array $a, array $b): int
     {
         return strcmp(strtolower((string) $a['extension_name']), strtolower((string) $b['extension_name']));
     }
 
-    /** @param array<mixed> $a @param array<mixed> $b */
+    /**
+     * @param array<mixed> $a
+     * @param array<mixed> $b
+     */
     public function extension_author_compare(array $a, array $b): int
     {
         $r = strcasecmp((string) $a['author_name'], (string) $b['author_name']);
@@ -635,7 +644,10 @@ SELECT
         }
     }
 
-    /** @param array<mixed> $a @param array<mixed> $b */
+    /**
+     * @param array<mixed> $a
+     * @param array<mixed> $b
+     */
     public function theme_author_compare(array $a, array $b): int
     {
         $r = strcasecmp((string) $a['author'], (string) $b['author']);
@@ -646,7 +658,10 @@ SELECT
         }
     }
 
-    /** @param array<mixed> $a @param array<mixed> $b */
+    /**
+     * @param array<mixed> $a
+     * @param array<mixed> $b
+     */
     public function extension_downloads_compare(array $a, array $b): int
     {
         if ($a['extension_nb_downloads'] < $b['extension_nb_downloads']) {

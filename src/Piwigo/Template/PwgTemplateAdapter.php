@@ -14,13 +14,13 @@ use Piwigo\Image\SrcImage;
 class PwgTemplateAdapter
 {
     #[\Deprecated(message: 'use "translate" modifier')]
-    public function l10n(?string $text)
+    public function l10n(?string $text): string
     {
         return l10n($text);
     }
 
     #[\Deprecated(message: 'use "translate_dec" modifier')]
-    public function l10n_dec($s, $p, $v): string
+    public function l10n_dec(string $s, string $p, int $v): string
     {
         return l10n_dec($s, $p, $v);
     }
@@ -36,9 +36,10 @@ class PwgTemplateAdapter
      * @param string $type
      * @param array|\Piwigo\Image\SrcImage $img
      */
-    public function derivative($type, $img): DerivativeImage
+    /** @param array<mixed>|\Piwigo\Image\SrcImage $img */
+    public function derivative(string $type, array|\Piwigo\Image\SrcImage $img): DerivativeImage
     {
-        $src_image = ($img instanceof SrcImage) ? $img : new SrcImage(is_array($img) ? $img : []);
+        $src_image = ($img instanceof SrcImage) ? $img : new SrcImage($img);
         return new DerivativeImage($type, $src_image);
     }
 
@@ -47,7 +48,8 @@ class PwgTemplateAdapter
      * @param array $img
      * @return string
      */
-    public function derivative_url($type, $img): string|array
+    /** @param array<mixed> $img @return string|array<mixed> */
+    public function derivative_url(string $type, array $img): string|array
     {
         return DerivativeImage::url($type, $img);
     }

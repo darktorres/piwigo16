@@ -47,7 +47,8 @@ function get_std_sql_where_restrict_filter(
  * @param string $end (mysql datetime format)
  * @return int|array|null
  */
-function custom_notification_query($action, $type, $start = null, $end = null)
+/** @return array<mixed>|null */
+function custom_notification_query(string $action, string $type, ?string $start = null, ?string $end = null): ?array
 {
     global $user;
 
@@ -204,9 +205,9 @@ function custom_notification_query($action, $type, $start = null, $end = null)
  *
  * @param string $start (mysql datetime format)
  * @param string $end (mysql datetime format)
- * @return int
+ * @return mixed
  */
-function nb_new_comments($start = null, $end = null)
+function nb_new_comments(?string $start = null, ?string $end = null): mixed
 {
     return custom_notification_query('count', 'new_comments', $start, $end);
 }
@@ -228,9 +229,9 @@ function new_comments($start = null, $end = null)
  *
  * @param string $start (mysql datetime format)
  * @param string $end (mysql datetime format)
- * @return int
+ * @return mixed
  */
-function nb_unvalidated_comments($start = null, $end = null)
+function nb_unvalidated_comments(?string $start = null, ?string $end = null): mixed
 {
     return custom_notification_query('count', 'unvalidated_comments', $start, $end);
 }
@@ -241,9 +242,9 @@ function nb_unvalidated_comments($start = null, $end = null)
  *
  * @param string $start (mysql datetime format)
  * @param string $end (mysql datetime format)
- * @return int
+ * @return mixed
  */
-function nb_new_elements($start = null, $end = null)
+function nb_new_elements(?string $start = null, ?string $end = null): mixed
 {
     return custom_notification_query('count', 'new_elements', $start, $end);
 }
@@ -265,9 +266,9 @@ function new_elements($start = null, $end = null)
  *
  * @param string $start (mysql datetime format)
  * @param string $end (mysql datetime format)
- * @return int
+ * @return mixed
  */
-function nb_updated_categories($start = null, $end = null)
+function nb_updated_categories(?string $start = null, ?string $end = null): mixed
 {
     return custom_notification_query('count', 'updated_categories', $start, $end);
 }
@@ -289,9 +290,9 @@ function updated_categories($start = null, $end = null)
  *
  * @param string $start (mysql datetime format)
  * @param string $end (mysql datetime format)
- * @return int
+ * @return mixed
  */
-function nb_new_users($start = null, $end = null)
+function nb_new_users(?string $start = null, ?string $end = null): mixed
 {
     return custom_notification_query('count', 'new_users', $start, $end);
 }
@@ -339,7 +340,8 @@ function news_exists($start = null, $end = null): bool
  * @param string $url
  * @param bool $add_url
  */
-function add_news_line(&$news, $count, $singular_key, $plural_key, ?string $url = '', $add_url = false): void
+/** @param array<mixed> $news */
+function add_news_line(array &$news, int $count, string $singular_key, string $plural_key, ?string $url = '', bool $add_url = false): void
 {
     if ($count > 0) {
         $line = l10n_dec($singular_key, $plural_key, $count);
@@ -363,7 +365,8 @@ function add_news_line(&$news, $count, $singular_key, $plural_key, ?string $url 
  * @param bool $exclude_img_cats if true, no info about new images/categories
  * @param bool $add_url add html link around news
  */
-function news($start = null, $end = null, $exclude_img_cats = false, $add_url = false, $auth_key = null): array
+/** @return string[] */
+function news(?string $start = null, ?string $end = null, bool $exclude_img_cats = false, bool $add_url = false, ?string $auth_key = null): array
 {
     $news = [];
 
@@ -432,7 +435,8 @@ function news($start = null, $end = null, $exclude_img_cats = false, $add_url = 
  * @param int $max_cats maximum number of categories per date
  * @return array|null
  */
-function get_recent_post_dates($max_dates, $max_elements, $max_cats)
+/** @return array<mixed>|null */
+function get_recent_post_dates(int $max_dates, int $max_elements, int $max_cats): ?array
 {
     global $user, $persistent_cache;
 
@@ -499,7 +503,8 @@ SELECT
  *
  * @return array
  */
-function get_recent_post_dates_array(array $args)
+/** @param array<mixed> $args @return array<mixed> */
+function get_recent_post_dates_array(array $args): array
 {
     return get_recent_post_dates(
         (empty($args['max_dates']) ? 3 : $args['max_dates']),
@@ -515,7 +520,8 @@ function get_recent_post_dates_array(array $args)
  *
  * @param array $date_detail returned value of get_recent_post_dates()
  */
-function get_html_description_recent_post_date(array $date_detail, $auth_key = null): string
+/** @param array<mixed> $date_detail */
+function get_html_description_recent_post_date(array $date_detail, ?string $auth_key = null): string
 {
     $add_url_params = [];
     if (isset($auth_key)) {
@@ -575,6 +581,7 @@ function get_html_description_recent_post_date(array $date_detail, $auth_key = n
  *
  * @param array $date_detail returned value of get_recent_post_dates()
  */
+/** @param array<mixed> $date_detail */
 function get_title_recent_post_date(array $date_detail): string
 {
     global $lang;

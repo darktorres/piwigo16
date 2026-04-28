@@ -22,7 +22,8 @@ add_event_handler('user_comment_check', 'user_comment_check');
  * @param string $action before check
  * @return string validate, moderate, reject
  */
-function user_comment_check($action, array $comment)
+/** @param array<string,mixed> $comment */
+function user_comment_check(string $action, array $comment)
 {
     global $user;
 
@@ -66,7 +67,8 @@ function user_comment_check($action, array $comment)
  * @param array &$infos output array of error messages
  * @return string validate, moderate, reject
  */
-function insert_user_comment(&$comm, $key, &$infos)
+/** @param array<string,mixed> $comm @param string[] $infos */
+function insert_user_comment(array &$comm, string $key, array &$infos)
 {
     global $user;
 
@@ -290,7 +292,8 @@ $user_where_clause.'
  * @param string $post_key secret key sent back to the browser
  * @return string validate, moderate, reject
  */
-function update_user_comment(array $comment, $post_key)
+/** @param array<string,mixed> $comment */
+function update_user_comment(array $comment, string $post_key)
 {
     global $page;
 
@@ -380,7 +383,8 @@ $user_where_clause.'
  *
  * @param string $action edit, delete
  */
-function email_admin($action, array $comment): void
+/** @param array<string,mixed> $comment */
+function email_admin(string $action, array $comment): void
 {
     if (!in_array($action, ['edit', 'delete'])
         or (($action == 'edit') and !\Piwigo\Core\Config::get('email_admin_on_comment_edition'))

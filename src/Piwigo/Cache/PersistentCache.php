@@ -9,13 +9,14 @@ namespace Piwigo\Cache;
 */
 abstract class PersistentCache
 {
-    public $default_lifetime = 86400;
-    protected $instance_key = PHPWG_VERSION;
+    public int $default_lifetime = 86400;
+    protected string $instance_key = PHPWG_VERSION;
 
     /**
      * @return string a key that can be safely be used with get/set methods
      */
-    public function make_key($key)
+    /** @param array<mixed>|string $key */
+    public function make_key(array|string $key): string
     {
         if (is_array($key)) {
             $key = implode('&', $key);
@@ -45,5 +46,5 @@ abstract class PersistentCache
     Purge the persistent cache.
     @param boolean $all - if false only expired items will be purged
     */
-    abstract public function purge($all);
+    abstract public function purge(bool $all): bool;
 }

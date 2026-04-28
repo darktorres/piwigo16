@@ -20,8 +20,10 @@ class ThemeMaintain
      * @param string $theme_version
      * @param array &$errors - used to return error messages
      */
-    public function activate($theme_version, &$errors = [])
+    /** @param array<mixed> $errors */
+    public function activate(string $theme_version, array &$errors = []): mixed
     {
+        return null;
     }
 
     public function deactivate()

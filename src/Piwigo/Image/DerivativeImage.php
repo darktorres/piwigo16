@@ -41,7 +41,10 @@ final class DerivativeImage
      * @param array|SrcImage $infos array of info from db or SrcImage
      * @return string
      */
-    /** @param array<mixed>|SrcImage $infos @return string|array<mixed> */
+    /**
+     * @param array<mixed>|SrcImage $infos
+     * @return string|array<mixed>
+     */
     public static function thumb_url(array|SrcImage $infos): string|array
     {
         return self::url(IMG_THUMB, $infos);
@@ -55,7 +58,10 @@ final class DerivativeImage
      * @param array|SrcImage $infos array of info from db or SrcImage
      * @return string
      */
-    /** @param array<mixed>|SrcImage $infos @return string|array<mixed> */
+    /**
+     * @param array<mixed>|SrcImage $infos
+     * @return string|array<mixed>
+     */
     public static function url(string|\Piwigo\Image\DerivativeParams $type, array|SrcImage $infos): string|array
     {
         $src_image = is_object($infos) ? $infos : new SrcImage($infos);
@@ -87,7 +93,10 @@ final class DerivativeImage
      * @param array|SrcImage $src_image array of info from db or SrcImage
      * @return DerivativeImage[]
      */
-    /** @param array<mixed>|SrcImage $src_image @return array<mixed> */
+    /**
+     * @param array<mixed>|SrcImage $src_image
+     * @return array<mixed>
+     */
     public static function get_all(array|SrcImage $src_image): array
     {
         if (!is_object($src_image)) {
@@ -213,6 +222,7 @@ final class DerivativeImage
     /**
      * @return string
      */
+    /** @return string|array<mixed> */
     public function get_url(): string|array
     {
         if ($this->params == null) {

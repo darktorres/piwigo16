@@ -127,7 +127,8 @@ SELECT '.implode(',', $fields).'
 }
 
 //------------------------------------------------------ update & customization
-function save_profile_from_post(array $userdata, &$errors): bool
+/** @param array<string,mixed> $userdata @param string[] $errors */
+function save_profile_from_post(array $userdata, array &$errors): bool
 {
     global $page;
     $errors = [];
@@ -322,7 +323,8 @@ function save_profile_from_post(array $userdata, &$errors): bool
  * @param string $url_action
  * @param string $url_redirect
  */
-function load_profile_in_template($url_action, $url_redirect, array $userdata, $template_prefixe = null): void
+/** @param array<string,mixed> $userdata */
+function load_profile_in_template(string $url_action, string $url_redirect, array $userdata, ?string $template_prefixe = null): void
 {
     global $template, $user;
 

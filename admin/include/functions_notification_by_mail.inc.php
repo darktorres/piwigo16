@@ -65,7 +65,10 @@ function check_sendmail_timeout(): bool
  *
  * @return quoted check key list
  */
-/** @param string[] $check_key_list @return string[] */
+/**
+ * @param string[] $check_key_list
+ * @return string[]
+ */
 function quote_check_key_list(array $check_key_list = []): array
 {
     return array_map(fn ($s): string => '\''.$s.'\'', $check_key_list);
@@ -340,7 +343,10 @@ function assign_vars_nbm_mail_content(array $nbm_user): void
 /**
  * @return mixed[]
  */
-/** @param string[] $check_key_list @return array<mixed> */
+/**
+ * @param string[] $check_key_list
+ * @return array<mixed>
+ */
 function do_subscribe_unsubscribe_notification_by_mail(bool $is_admin_request, bool $is_subscribe = false, array $check_key_list = []): array
 {
     global $page, $env_nbm;
@@ -482,7 +488,10 @@ function do_subscribe_unsubscribe_notification_by_mail(bool $is_admin_request, b
  *
  * @return check_key list treated
  */
-/** @param string[] $check_key_list @return array<mixed> */
+/**
+ * @param string[] $check_key_list
+ * @return array<mixed>
+ */
 function unsubscribe_notification_by_mail(bool $is_admin_request, array $check_key_list = []): array
 {
     return do_subscribe_unsubscribe_notification_by_mail($is_admin_request, false, $check_key_list);
@@ -495,7 +504,10 @@ function unsubscribe_notification_by_mail(bool $is_admin_request, array $check_k
  *
  * @return check_key list treated
  */
-/** @param string[] $check_key_list @return array<mixed> */
+/**
+ * @param string[] $check_key_list
+ * @return array<mixed>
+ */
 function subscribe_notification_by_mail(bool $is_admin_request, array $check_key_list = []): array
 {
     return do_subscribe_unsubscribe_notification_by_mail($is_admin_request, true, $check_key_list);

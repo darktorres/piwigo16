@@ -11,7 +11,7 @@ use Piwigo\Admin\themes;
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-function check_upgrade()
+function check_upgrade(): bool
 {
     if (defined('PHPWG_IN_UPGRADE')) {
         return PHPWG_IN_UPGRADE;

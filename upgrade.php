@@ -58,6 +58,7 @@ require_once PHPWG_ROOT_PATH . 'vendor/autoload.php';
 /**
  * list all tables in an array
  */
+/** @return string[] */
 function get_tables(): array
 {
     $tables = [];
@@ -81,7 +82,8 @@ SHOW TABLES
  *
  * @return array of array
  */
-function get_columns_of($tables): array
+/** @param string[] $tables @return array<string, string[]> */
+function get_columns_of(array $tables): array
 {
     $columns_of = [];
 

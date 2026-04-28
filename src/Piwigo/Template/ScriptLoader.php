@@ -15,11 +15,13 @@ class ScriptLoader
     /** @var string[] */
     public $inline_scripts;
 
-    private bool $did_head;
+    private bool $did_head = false;
     /** @var array */
-    private array $head_done_scripts;
+    /** @var array<string, Script> */
+    private array $head_done_scripts = [];
     private ?bool $did_footer = null;
 
+    /** @var array<string, string> */
     private static array $known_paths = [
         'core.scripts' => 'themes/default/js/scripts.js',
         'jquery' => 'themes/default/js/jquery.min.js',
@@ -27,6 +29,7 @@ class ScriptLoader
         'jquery.ui.effect' => 'themes/default/js/ui/minified/jquery.ui.effect.min.js',
       ];
 
+    /** @var array<string, string[]> */
     private static array $ui_core_dependencies = [
         'jquery.ui.widget' => ['jquery'],
         'jquery.ui.position' => ['jquery'],
@@ -62,7 +65,8 @@ class ScriptLoader
     /**
      * @param string[] $require
      */
-    public function add_inline($code, $require): void
+    /** @param string[] $require */
+    public function add_inline(string $code, array $require): void
     {
         !$this->did_footer || trigger_error('Attempt to add inline script but the footer has been written', E_USER_WARNING);
         if (!empty($require)) {

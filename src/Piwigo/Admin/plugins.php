@@ -647,7 +647,10 @@ DELETE FROM '. PLUGINS_TABLE .'
     /**
      * Sort functions
      */
-    /** @param array<mixed> $a @param array<mixed> $b */
+    /**
+     * @param array<mixed> $a
+     * @param array<mixed> $b
+     */
     public function extension_revision_compare(array $a, array $b): int
     {
         if ($a['revision_date'] < $b['revision_date']) {
@@ -657,13 +660,19 @@ DELETE FROM '. PLUGINS_TABLE .'
         }
     }
 
-    /** @param array<mixed> $a @param array<mixed> $b */
+    /**
+     * @param array<mixed> $a
+     * @param array<mixed> $b
+     */
     public function extension_name_compare(array $a, array $b): int
     {
         return strcmp(strtolower((string) $a['extension_name']), strtolower((string) $b['extension_name']));
     }
 
-    /** @param array<mixed> $a @param array<mixed> $b */
+    /**
+     * @param array<mixed> $a
+     * @param array<mixed> $b
+     */
     public function extension_author_compare(array $a, array $b): int
     {
         $r = strcasecmp((string) $a['author_name'], (string) $b['author_name']);
@@ -674,7 +683,10 @@ DELETE FROM '. PLUGINS_TABLE .'
         }
     }
 
-    /** @param array<mixed> $a @param array<mixed> $b */
+    /**
+     * @param array<mixed> $a
+     * @param array<mixed> $b
+     */
     public function plugin_author_compare(array $a, array $b): int
     {
         $r = strcasecmp((string) $a['author'], (string) $b['author']);
@@ -685,7 +697,10 @@ DELETE FROM '. PLUGINS_TABLE .'
         }
     }
 
-    /** @param array<mixed> $a @param array<mixed> $b */
+    /**
+     * @param array<mixed> $a
+     * @param array<mixed> $b
+     */
     public function extension_downloads_compare(array $a, array $b): int
     {
         if ($a['extension_nb_downloads'] < $b['extension_nb_downloads']) {

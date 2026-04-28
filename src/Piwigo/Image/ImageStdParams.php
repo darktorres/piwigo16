@@ -198,7 +198,8 @@ final class ImageStdParams
         }
     }
 
-    public static function set_and_save_disabled($map): void
+    /** @param array<mixed> $map */
+    public static function set_and_save_disabled(array $map): void
     {
         self::$disabled_type_map = $map;
         self::save_disabled();

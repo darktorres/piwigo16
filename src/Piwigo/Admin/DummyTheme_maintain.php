@@ -11,16 +11,17 @@ namespace Piwigo\Admin;
  */
 class DummyTheme_maintain extends ThemeMaintain
 {
-    public function activate($theme_version, &$errors = [])
+    /** @param array<mixed> $errors */
+    public function activate(string $theme_version, array &$errors = []): mixed
     {
         return theme_activate($this->theme_id, $theme_version, $errors);
     }
-    public function deactivate()
+    public function deactivate(): void
     {
-        return theme_deactivate($this->theme_id);
+        theme_deactivate($this->theme_id);
     }
-    public function delete()
+    public function delete(): void
     {
-        return theme_delete($this->theme_id);
+        theme_delete($this->theme_id);
     }
 }

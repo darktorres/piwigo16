@@ -20,7 +20,11 @@ class PwgNamedStruct
      * @param array|null $xmlAttributes name of the keys to encode as xml attributes
      * @param array|null $xmlElements name of the keys to encode as xml elements
      */
-    public function __construct(public $_content, $xmlAttributes = null, $xmlElements = null)
+    /**
+     * @param string[]|null $xmlAttributes
+     * @param string[]|null $xmlElements
+     */
+    public function __construct(public mixed $_content, ?array $xmlAttributes = null, ?array $xmlElements = null)
     {
         if (isset($xmlAttributes)) {
             $this->_xmlAttributes = array_flip($xmlAttributes);

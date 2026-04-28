@@ -53,11 +53,11 @@ class PersistentFileCache extends PersistentCache
         return true;
     }
 
-    public function purge($all): void
+    public function purge(bool $all): bool
     {
         $files = glob($this->dir.'*.cache');
         if (empty($files)) {
-            return;
+            return false;
         }
 
         $limit = time() - $this->default_lifetime;
@@ -66,6 +66,7 @@ class PersistentFileCache extends PersistentCache
                 @unlink($file);
             }
         }
+        return true;
     }
 
 }

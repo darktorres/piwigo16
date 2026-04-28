@@ -16,6 +16,7 @@ declare(strict_types=1);
  * - repeat
  * - play
  */
+/** @return array<string,mixed> */
 function get_default_slideshow_params(): array
 {
     return [
@@ -28,6 +29,7 @@ function get_default_slideshow_params(): array
 /**
  * Checks and corrects slideshow params
  */
+/** @param array<mixed> $params @return array<mixed> */
 function correct_slideshow_params(array $params = []): array
 {
     if ($params['period'] < \Piwigo\Core\Config::slideshowPeriodMin()) {
@@ -44,7 +46,8 @@ function correct_slideshow_params(array $params = []): array
  *
  * @param string $encode_params
  */
-function decode_slideshow_params($encode_params = null): array
+/** @return array<string,mixed> */
+function decode_slideshow_params(?string $encode_params = null): array
 {
     $result = get_default_slideshow_params();
 
@@ -73,6 +76,7 @@ function decode_slideshow_params($encode_params = null): array
 /**
  * Encodes slideshow array params into a string
  */
+/** @param array<mixed> $decode_params */
 function encode_slideshow_params(array $decode_params = []): string
 {
     $params = array_diff_assoc(correct_slideshow_params($decode_params), get_default_slideshow_params());

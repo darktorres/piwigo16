@@ -25,7 +25,8 @@ include_once(PHPWG_ROOT_PATH.'admin/include/functions_history.inc.php');
 /**
  * @return mixed[]
  */
-function get_last($last_number = 60, $type = 'year'): array
+/** @return array<mixed> */
+function get_last(int $last_number = 60, string $type = 'year'): array
 {
     $query = '
 SELECT
@@ -91,7 +92,8 @@ SELECT
     return $output;
 }
 
-function get_month_of_last_years($last = 'all'): array
+/** @return array<mixed> */
+function get_month_of_last_years(string|int $last = 'all'): array
 {
 
     $query = '
@@ -131,6 +133,7 @@ ORDER BY
     }
 }
 
+/** @return array<mixed> */
 function get_month_stats(): array
 {
     $result = [];
@@ -245,7 +248,8 @@ $template->assign(
 /**
  * @return float[]|int[]
  */
-function set_missing_values($unit, $data, $firstDate = null, $lastDate = null): array
+/** @param array<mixed> $data @return array<mixed> */
+function set_missing_values(string $unit, array $data, DateTime|string|null $firstDate = null, DateTime|string|null $lastDate = null): array
 {
     $limit = count($data);
     $result = [];
@@ -296,6 +300,7 @@ function set_missing_values($unit, $data, $firstDate = null, $lastDate = null): 
 }
 
 //Get a DateTime object for a database row
+/** @param array<mixed> $row */
 function get_date_object(array $row): \DateTime
 {
     $date_string = $row['year'];

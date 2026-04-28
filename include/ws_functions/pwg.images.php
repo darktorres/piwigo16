@@ -316,6 +316,7 @@ SELECT DISTINCT image_id
 
     include_once(PHPWG_ROOT_PATH.'include/functions_comment.inc.php');
 
+    $infos = [];
     $comment_action = insert_user_comment($comm, $params['key'], $infos);
 
     switch ($comment_action) {

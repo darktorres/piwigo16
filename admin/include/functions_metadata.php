@@ -22,7 +22,8 @@ include_once(PHPWG_ROOT_PATH.'/include/functions_metadata.inc.php');
  *
  * @param string $file
  */
-function get_sync_iptc_data($file): array
+/** @return array<mixed> */
+function get_sync_iptc_data(string $file): array
 {
     $map = \Piwigo\Core\Config::useIptcMapping();
 
@@ -60,6 +61,7 @@ function get_sync_iptc_data($file): array
 /**
  * Returns EXIF metadata to sync from a file, depending on EXIF mapping.
  */
+/** @return array<mixed> */
 function get_sync_exif_data(string $file): array
 {
     $exif = get_exif_data($file, \Piwigo\Core\Config::useExifMapping());
@@ -129,7 +131,8 @@ function get_sync_metadata_attributes(): array
  * @param array $infos - (path[, representative_ext])
  * @return array|false - includes data provided in $infos
  */
-function get_sync_metadata($infos)
+/** @param array<mixed> $infos @return array<mixed>|false */
+function get_sync_metadata(array $infos): array|false
 {
     $file = PHPWG_ROOT_PATH.$infos['path'];
     $fs = @filesize($file);
@@ -295,11 +298,12 @@ SELECT id, path, representative_ext
  * @param boolean $recursive
  * @param boolean $only_new
  */
+/** @return array<mixed> */
 function get_filelist(
-    $category_id = '',
-    $site_id = 1,
-    $recursive = false,
-    $only_new = false
+    int|string $category_id = '',
+    int $site_id = 1,
+    bool $recursive = false,
+    bool $only_new = false
 ): array {
     // filling $cat_ids : all categories required
     $cat_ids = [];

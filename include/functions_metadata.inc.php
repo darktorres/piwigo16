@@ -16,7 +16,8 @@ declare(strict_types=1);
  * @param string $filename
  * @param array $map
  */
-function get_iptc_data($filename, $map, $array_sep = ','): array
+/** @param array<mixed> $map @return array<mixed> */
+function get_iptc_data(string $filename, array $map, string $array_sep = ','): array
 {
     $result = [];
 
@@ -102,7 +103,8 @@ function clean_iptc_value($value)
  *
  * @param array $map
  */
-function get_exif_data(string $filename, $map): array
+/** @param array<mixed> $map @return array<mixed> */
+function get_exif_data(string $filename, array $map): array
 {
     global $logger;
 
@@ -169,7 +171,7 @@ function get_exif_data(string $filename, $map): array
     return $result;
 }
 
-function strip_html_in_metadata(&$v, $k): void
+function strip_html_in_metadata(mixed &$v, string $k): void
 {
     $v = strip_tags((string) $v);
 }

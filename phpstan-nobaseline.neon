@@ -1,5 +1,5 @@
 parameters:
-    level: 5
+    level: 6
     paths:
         - include
         - admin
@@ -36,6 +36,8 @@ parameters:
             - include/phpmailer/**
             - include/phpqrcode.php
             - include/emogrifier.class.php
+            - include/mdetect.php
+            - include/passwordhash.class.php
             - admin/include/pclzip.lib.php (?)
     bootstrapFiles:
         - tools/phpstan-bootstrap.php

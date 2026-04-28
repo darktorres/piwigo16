@@ -7,9 +7,10 @@ namespace Piwigo\Search;
 /** Represents an expression of several words or sub expressions to be searched.*/
 class QMultiToken implements \Stringable
 {
-    public $is_single = false;
-    public $modifier;
-    public $tokens = []; // the actual array of QSingleToken or QMultiToken
+    public bool $is_single = false;
+    public int $modifier = 0;
+    /** @var array<QSingleToken|QMultiToken> */
+    public array $tokens = []; // the actual array of QSingleToken or QMultiToken
 
     public function __toString(): string
     {
@@ -36,7 +37,7 @@ class QMultiToken implements \Stringable
         return $s;
     }
 
-    private function push(&$token, &$modifier, &$scope): void
+    private function push(string &$token, int &$modifier, mixed &$scope): void
     {
         if (strlen((string) $token) || (isset($scope) && $scope->nullable)) {
             if (isset($scope)) {
@@ -56,7 +57,7 @@ class QMultiToken implements \Stringable
     * @param int $qi the character index in $q where to start parsing
     * @param int $level the depth from root in the tree (number of opened and unclosed opening brackets)
     */
-    public function parse_expression($q, &$qi, $level, $root)
+    public function parse_expression(string $q, int &$qi, int $level, mixed $root): void
     {
         $crt_token = '';
         $crt_modifier = 0;
@@ -225,13 +226,13 @@ class QMultiToken implements \Stringable
         }
     }
 
-    private static function priority($modifier): int
+    private static function priority(int $modifier): int
     {
         return $modifier & QST_OR ? 0 : 1;
     }
 
     /* because evaluations occur left to right, we ensure that 'a OR b c d' is interpreted as 'a OR (b c d)'*/
-    public function check_operator_priority()
+    public function check_operator_priority(): void
     {
         $crt_prio = 0;
         for ($i = 0; $i < count($this->tokens); $i++) {

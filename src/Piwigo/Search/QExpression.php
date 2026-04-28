@@ -6,11 +6,15 @@ namespace Piwigo\Search;
 
 class QExpression extends QMultiToken
 {
-    public $scopes = [];
-    public $stokens = [];
-    public $stoken_modifiers = [];
+    /** @var array<string, QSearchScope> */
+    public array $scopes = [];
+    /** @var array<QSingleToken> */
+    public array $stokens = [];
+    /** @var int[] */
+    public array $stoken_modifiers = [];
 
-    public function __construct($q, $scopes)
+    /** @param array<QSearchScope> $scopes */
+    public function __construct(string $q, array $scopes)
     {
         foreach ($scopes as $scope) {
             $this->scopes[$scope->id] = $scope;

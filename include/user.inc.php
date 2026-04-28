@@ -59,7 +59,7 @@ if (
     and !empty($_SERVER['HTTP_X_PIWIGO_API'])
     and isset($_REQUEST['method'])
 ) {
-    $auth_header = pwg_db_real_escape_string($_SERVER['HTTP_X_PIWIGO_API']) ?? null;
+    $auth_header = pwg_db_real_escape_string($_SERVER['HTTP_X_PIWIGO_API']);
 
     if ($auth_header) {
         $authenticate = auth_key_login($auth_header, true);

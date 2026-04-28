@@ -9,11 +9,14 @@ namespace Piwigo\Search;
  */
 class QSearchScope
 {
-    public function __construct(public $id, public $aliases, public $nullable = false, public $is_text = true)
+    /**
+     * @param string[] $aliases
+     */
+    public function __construct(public string $id, public array $aliases, public bool $nullable = false, public bool $is_text = true)
     {
     }
 
-    public function parse($token): bool
+    public function parse(QSingleToken $token): bool
     {
         if (!$this->nullable && 0 == strlen((string) $token->term)) {
             return false;
@@ -21,8 +24,13 @@ class QSearchScope
         return true;
     }
 
-    public function process_char(&$ch, &$crt_token): bool
+    public function process_char(string &$ch, string &$crt_token): bool
     {
         return false;
+    }
+
+    public function get_sql(string $field, QSingleToken $token): string
+    {
+        return '';
     }
 }

@@ -9,12 +9,20 @@ namespace Piwigo\Search;
 */
 class QResults
 {
-    public $all_tags;
-    public $tag_ids;
-    public $tag_iids;
-    public $all_cats;
-    public $cat_ids;
-    public $cat_iids;
-    public $images_iids;
-    public $iids;
+    /** @var array<mixed> */
+    public array $all_tags = [];
+    /** @var array<int, int[]> */
+    public array $tag_ids = [];
+    /** @var array<int, int[]> */
+    public array $tag_iids = [];
+    /** @var array<mixed> */
+    public array $all_cats = [];
+    /** @var array<int, int[]> */
+    public array $cat_ids = [];
+    /** @var array<int, int[]> */
+    public array $cat_iids = [];
+    /** @var array<int, int[]> */
+    public array $images_iids = [];
+    /** @var array<int, int[]> */
+    public array $iids = [];
 }

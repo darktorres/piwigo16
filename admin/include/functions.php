@@ -2633,10 +2633,10 @@ function order_by_name($element_ids, array $name): array
 /**
  * Grant access to a list of categories for a list of users.
  *
- * @param int[] $category_ids
+ * @param int[]|int|string $category_ids
  * @param int[]|int|string $user_ids
  */
-function add_permission_on_category($category_ids, $user_ids): void
+function add_permission_on_category(array|int|string $category_ids, array|int|string $user_ids): void
 {
     if (!is_array($category_ids)) {
         $category_ids = [$category_ids];

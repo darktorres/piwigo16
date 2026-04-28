@@ -174,7 +174,7 @@ function mkgetdir($dir, $flags = MKGETDIR_DEFAULT): bool
  *
  * @return int *0* if _$str_ is ASCII, *1* if UTF-8, *-1* otherwise
  */
-function qualify_utf8($Str): int
+function qualify_utf8(string $Str): int
 {
     $ret = 0;
     for ($i = 0; $i < strlen((string) $Str); $i++) {
@@ -214,7 +214,7 @@ function qualify_utf8($Str): int
  *
  * @return string
  */
-function remove_accents($string)
+function remove_accents(string $string): string
 {
     $utf = qualify_utf8($string);
     if ($utf == 0) {
@@ -356,7 +356,7 @@ if (function_exists('mb_strtolower') && defined('PWG_CHARSET')) {
      * @param string $term
      * @return string
      */
-    function pwg_transliterate($term)
+    function pwg_transliterate(string $term): string
     {
         return remove_accents(mb_strtolower($term, PWG_CHARSET));
     }
@@ -364,7 +364,7 @@ if (function_exists('mb_strtolower') && defined('PWG_CHARSET')) {
     /**
      * @ignore
      */
-    function pwg_transliterate($term)
+    function pwg_transliterate(string $term): string
     {
         return remove_accents(strtolower((string) $term));
     }
@@ -375,7 +375,7 @@ if (function_exists('mb_strtolower') && defined('PWG_CHARSET')) {
  *
  * @return string
  */
-function str2url($str): string
+function str2url(string $str): string
 {
     $str = $safe = pwg_transliterate($str);
     $str = preg_replace('/[^\x80-\xffa-z0-9_\s\'\:\/\[\],-]/', '', $str);
@@ -444,7 +444,7 @@ function do_log($image_id = null, $image_type = null)
  * @param int $image_id
  * @param string $image_type
  */
-function pwg_log($image_id = null, $image_type = null, $format_id = null): bool
+function pwg_log(?int $image_id = null, ?string $image_type = null, ?string $format_id = null): bool
 {
     global $user, $page;
 
@@ -563,7 +563,8 @@ INSERT INTO '.HISTORY_TABLE.'
     return true;
 }
 
-function pwg_activity($object, $object_id, $action, array $details = []): void
+/** @param int[]|int|string $object_id @param array<mixed> $details */
+function pwg_activity(string $object, array|int|string $object_id, string $action, array $details = []): void
 {
     global $user;
 
@@ -783,7 +784,8 @@ function str2DateTime(int|string|null $original, $format = null)
  * @param string $format input format respecting date() syntax
  * @return string
  */
-function format_date_legacy(int|string|null $original, $show = null, $format = null)
+/** @param string[]|true|null $show */
+function format_date_legacy(int|string|null $original, array|bool|null $show = null, ?string $format = null): string
 {
     global $lang;
 
@@ -834,7 +836,8 @@ function format_date_legacy(int|string|null $original, $show = null, $format = n
  * @return string
  * @since 16
  */
-function format_date(int|string|\DateTime|null $original, $show = null, $format = null)
+/** @param string[]|true|null $show */
+function format_date(int|string|\DateTime|null $original, array|bool|null $show = null, ?string $format = null): string
 {
     global $user;
 
@@ -904,7 +907,7 @@ function format_fromto($from, $to, $full = false)
  * @param bool $with_text append "ago" or "in the future"
  * @return string
  */
-function time_since(int|string|null $original, $stop = 'minute', $format = null, $with_text = true, $with_week = true, $only_last_unit = false)
+function time_since(int|string|null $original, string $stop = 'minute', ?string $format = null, bool $with_text = true, bool $with_week = true, bool $only_last_unit = false): string
 {
     $date = str2DateTime($original, $format);
 
@@ -1102,7 +1105,8 @@ function redirect($url, $msg = '', $refresh_time = 0): void
  * @param bool $show_mobile
  * @return array
  */
-function get_pwg_themes($show_mobile = false)
+/** @return array<string, string> */
+function get_pwg_themes(bool $show_mobile = false): array
 {
     $themes = [];
 
@@ -1174,7 +1178,8 @@ function original_to_format($path, $format_ext): string
  * @param array $element_info element information from db (at least 'path')
  * @return string
  */
-function get_element_path(array $element_info)
+/** @param array<string,mixed> $element_info */
+function get_element_path(array $element_info): string
 {
     $path = $element_info['path'];
     if (!url_is_remote($path)) {
@@ -1270,9 +1275,9 @@ function l10n_dec($singular_key, $plural_key, $decimal): string
  *
  * @param string $key translation key
  *   if args is a array, each values are used on sprintf
- * @return array
+ * @return array<mixed>
  */
-function get_l10n_args($key, $args = ''): array
+function get_l10n_args(string $key, mixed $args = ''): array
 {
     if (is_array($args)) {
         $key_arg = array_merge([$key], $args);
@@ -1290,7 +1295,8 @@ function get_l10n_args($key, $args = ''): array
  * @param array $key_args one l10n_args element or array of l10n_args elements
  * @param string $sep used when translated elements are concatened
  */
-function l10n_args($key_args, string $sep = "\n"): string
+/** @param array<mixed>|string $key_args */
+function l10n_args(array|string $key_args, string $sep = "\n"): string
 {
     if (is_array($key_args)) {
         $result = '';
@@ -1348,7 +1354,7 @@ SELECT '.\Piwigo\Core\Config::userFields()['email'].'
  *
  * @param string $condition SQL condition
  */
-function load_conf_from_db(?string $condition = '', $die_on_condition_with_no_result = true): void
+function load_conf_from_db(?string $condition = '', bool $die_on_condition_with_no_result = true): void
 {
     $query = '
 SELECT param, value
@@ -1405,10 +1411,10 @@ function pwg_is_dbconf_writeable(): bool
 * Add or update a config parameter
 *
 * @param mixed $value the value to store (arrays/objects will be serialized)
-* @param callable $parser function to apply to the value before save in database
+* @param callable-string|null $parser function to apply to the value before save in database
      (eg: serialize, json_encode) will not be applied to *$conf* if *$parser* is *true*
 */
-function conf_update_param(string $param, $value, $updateGlobal = false, $parser = null): void
+function conf_update_param(string $param, mixed $value, bool $updateGlobal = false, ?string $parser = null): void
 {
     if ($parser != null) {
         $dbValue = call_user_func($parser, $value);
@@ -1477,10 +1483,10 @@ function conf_get_param($param, $default_value = null)
  * Apply *unserialize* on a value only if it is a string
  * @since 2.7
  *
- * @param array|string $value
- * @return array
+ * @param array<mixed>|string $value
+ * @return array<mixed>
  */
-function safe_unserialize($value)
+function safe_unserialize(array|string $value): array
 {
     if (is_string($value)) {
         return unserialize($value);
@@ -1492,10 +1498,10 @@ function safe_unserialize($value)
  * Apply *json_decode* on a value only if it is a string
  * @since 2.7
  *
- * @param array|string $value
- * @return array
+ * @param array<mixed>|string $value
+ * @return array<mixed>
  */
-function safe_json_decode($value)
+function safe_json_decode(array|string $value): array
 {
     if (is_string($value)) {
         return json_decode($value, true);
@@ -1508,9 +1514,10 @@ function safe_json_decode($value)
  *
  * @param string $prepend_str
  * @param string $append_str
- * @return array
+ * @param string[] $array
+ * @return string[]
  */
-function prepend_append_array_items($array, $prepend_str, $append_str)
+function prepend_append_array_items(array $array, string $prepend_str, string $append_str): array
 {
     array_walk($array, function (&$value, $key) use ($prepend_str, $append_str): void {
         $value = "$prepend_str$value$append_str";
@@ -1524,9 +1531,10 @@ function prepend_append_array_items($array, $prepend_str, $append_str)
  *
  * @param string $keyname
  * @param string $valuename
+ * @return array<mixed>
  */
 #[\Deprecated(message: '2.6')]
-function simple_hash_from_query(string $query, $keyname, $valuename): array
+function simple_hash_from_query(string $query, string $keyname, string $valuename): array
 {
     return query2array($query, $keyname, $valuename);
 }
@@ -1536,9 +1544,10 @@ function simple_hash_from_query(string $query, $keyname, $valuename): array
  * choose one to be the key
  *
  * @param string $keyname
+ * @return array<mixed>
  */
 #[\Deprecated(message: '2.6')]
-function hash_from_query(string $query, $keyname): array
+function hash_from_query(string $query, string $keyname): array
 {
     return query2array($query, $keyname);
 }
@@ -1549,9 +1558,10 @@ function hash_from_query(string $query, $keyname): array
  * if _$fieldname_ is provided the returned value will be a one dimension array
  *
  * @param string|false $fieldname
+ * @return array<mixed>
  */
 #[\Deprecated(message: '2.6')]
-function array_from_query(string $query, $fieldname = false): array
+function array_from_query(string $query, string|false $fieldname = false): array
 {
     if (false === $fieldname) {
         return query2array($query);
@@ -1650,7 +1660,8 @@ function get_parent_language($lang_id = null)
  *        default language if *true* or specified language
  *     @option bool local - if true load file from local directory
  */
-function load_language(string $filename, $dirname = '', array $options = []): string|bool
+/** @param array<mixed> $options */
+function load_language(string $filename, string $dirname = '', array $options = []): string|bool
 {
     global $user, $language_files;
 
@@ -1764,7 +1775,7 @@ function load_language(string $filename, $dirname = '', array $options = []): st
  *
  * @param string $source_charset
  */
-function convert_charset($str, $source_charset, string $dest_charset)
+function convert_charset(string $str, string $source_charset, string $dest_charset): string
 {
     if ($source_charset == $dest_charset) {
         return $str;
@@ -1842,13 +1853,14 @@ function verify_ephemeral_key(string $key, string $aditionnal_data_to_hash = '')
  * @param int $nb_element_page
  * @param bool $clean_url
  */
-function create_navigation_bar(string $url, $nb_element, $start, $nb_element_page, $clean_url = false, string $param_name = 'start'): array
+/** @return array<mixed> */
+function create_navigation_bar(string $url, int $nb_element, int $start, int $nb_element_page, bool $clean_url = false, string $param_name = 'start'): array
 {
     $navbar = [];
     $pages_around = \Piwigo\Core\Config::paginatePagesAround();
     $start_str = $clean_url ? '/'.$param_name.'-' : (!str_contains($url, '?') ? '?' : '&amp;').$param_name.'=';
 
-    if (!isset($start) or $start < 0) {
+    if ($start < 0) {
         $start = 0;
     }
 
@@ -1893,9 +1905,9 @@ function create_navigation_bar(string $url, $nb_element, $start, $nb_element_pag
  *
  * @param string $date
  * @param bool $is_child_date
- * @return array
+ * @return array<mixed>|false
  */
-function get_icon($date, $is_child_date = false): false|array
+function get_icon(?string $date, bool $is_child_date = false): false|array
 {
     global $cache, $user;
 
@@ -1965,7 +1977,8 @@ function get_pwg_token(): string
  * @param string $pattern
  * @param boolean $mandatory
  */
-function check_input_parameter(string $param_name, array $param_array, $is_array, $pattern, $mandatory = false)
+/** @param array<mixed> $param_array */
+function check_input_parameter(string $param_name, array $param_array, bool $is_array, ?string $pattern, bool $mandatory = false): bool
 {
     $param_value = null;
     if (isset($param_array[$param_name])) {
@@ -1990,10 +2003,12 @@ function check_input_parameter(string $param_name, array $param_array, $is_array
                 fatal_error('[Hacking attempt] an item is not valid in input parameter "'.$param_name.'"');
             }
         }
+        return true;
     } else {
         if (!preg_match($pattern, (string) $param_value)) {
             fatal_error('[Hacking attempt] the input parameter "'.$param_name.'" is not valid');
         }
+        return true;
     }
 }
 
@@ -2642,7 +2657,7 @@ SELECT
     $logger->info('['.__FUNCTION__.'][exec='.$exec_id.'] executed in '.get_elapsed_time($start_time, get_moment()));
 }
 
-function send_piwigo_infos_retry_later($wait_time): void
+function send_piwigo_infos_retry_later(int $wait_time): void
 {
     global $logger;
 
@@ -2654,7 +2669,7 @@ function send_piwigo_infos_retry_later($wait_time): void
     $logger->info('['.__FUNCTION__.'] new send_piwigo_infos_last_notice='.\Piwigo\Core\Config::get('send_piwigo_infos_last_notice'));
 }
 
-function pwg_unique_exec_begins(string $token_name, $timeout = 60): false|string
+function pwg_unique_exec_begins(string $token_name, int $timeout = 60): false|string
 {
     global $logger;
 
@@ -2724,7 +2739,7 @@ function pwg_unique_exec_ends(string $token_name): void
  *
  * @since 16.3
  *
- * @return array
+ * @return array<mixed>
  */
 function get_container_info(): array
 {

@@ -12,7 +12,7 @@ declare(strict_types=1);
  * @package functions\search
  */
 
-function get_search_id_pattern($candidate): ?string
+function get_search_id_pattern(int|string $candidate): ?string
 {
     $clause_pattern = null;
     if (preg_match('/^psk-\d{8}-[a-z0-9]{10}$/i', (string) $candidate)) {
@@ -24,7 +24,8 @@ function get_search_id_pattern($candidate): ?string
     return $clause_pattern;
 }
 
-function get_search_info($candidate)
+/** @return array<string,mixed>|null */
+function get_search_info(int|string $candidate): ?array
 {
     global $page;
 
@@ -71,7 +72,7 @@ SELECT *
  * table. Each search rules set is numericaly identified.
  *
  * @param int $search_id
- * @return array
+ * @return array<mixed>
  */
 function get_search_array($search_id): mixed
 {
@@ -89,6 +90,8 @@ function get_search_array($search_id): mixed
 /**
  * Returns the list of items corresponding to the advanced search array.
  *
+ * @param array<mixed> $search
+ * @return array<mixed>
  */
 function get_regular_search_results(array $search, ?string $images_where = ''): array
 {
@@ -715,9 +718,9 @@ function get_clause_for_filter($filter_name): string
  *
  * @param string $filter_name
  *
- * @return array|false of image_ids
+ * @return array<int>|false of image_ids
  */
-function get_items_for_filter($filter_name)
+function get_items_for_filter(string $filter_name)
 {
     global $page, $logger;
 
@@ -768,11 +771,12 @@ define('QST_BREAK', 0x20);
  */
 class QSearchScope
 {
-    public function __construct(public $id, public $aliases, public $nullable = false, public $is_text = true)
+    /** @param string[] $aliases */
+    public function __construct(public string $id, public array $aliases, public bool $nullable = false, public bool $is_text = true)
     {
     }
 
-    public function parse($token): bool
+    public function parse(QSingleToken $token): bool
     {
         if (!$this->nullable && 0 == strlen((string) $token->term)) {
             return false;
@@ -780,7 +784,7 @@ class QSearchScope
         return true;
     }
 
-    public function process_char(&$ch, &$crt_token): bool
+    public function process_char(string &$ch, string &$crt_token): bool
     {
         return false;
     }
@@ -788,13 +792,14 @@ class QSearchScope
 
 class QNumericRangeScope extends \Piwigo\Search\QSearchScope
 {
-    public function __construct($id, $aliases, $nullable = false, private $epsilon = 0)
+    /** @param string[] $aliases */
+    public function __construct(string $id, array $aliases, bool $nullable = false, private int|float $epsilon = 0)
     {
         parent::__construct($id, $aliases, $nullable, false);
     }
 
     #[\Override]
-    public function parse($token): bool
+    public function parse(\Piwigo\Search\QSingleToken $token): bool
     {
         $str = $token->term;
         $strict = [0,0];
@@ -858,7 +863,7 @@ class QNumericRangeScope extends \Piwigo\Search\QSearchScope
         return true;
     }
 
-    public function get_sql(string $field, $token): string
+    public function get_sql(string $field, \Piwigo\Search\QSingleToken $token): string
     {
         $clauses = [];
         if ($token->scope_data['range'][0] !== '') {
@@ -882,13 +887,14 @@ class QNumericRangeScope extends \Piwigo\Search\QSearchScope
 
 class QDateRangeScope extends \Piwigo\Search\QSearchScope
 {
-    public function __construct($id, $aliases, $nullable = false)
+    /** @param string[] $aliases */
+    public function __construct(string $id, array $aliases, bool $nullable = false)
     {
         parent::__construct($id, $aliases, $nullable, false);
     }
 
     #[\Override]
-    public function parse($token): bool
+    public function parse(\Piwigo\Search\QSingleToken $token): bool
     {
         $str = $token->term;
         $strict = [0,0];
@@ -934,7 +940,7 @@ class QDateRangeScope extends \Piwigo\Search\QSearchScope
         return true;
     }
 
-    public function get_sql(string $field, $token): string
+    public function get_sql(string $field, \Piwigo\Search\QSingleToken $token): string
     {
         $clauses = [];
         if ($token->scope_data[0] != '') {
@@ -967,13 +973,14 @@ class QDateRangeScope extends \Piwigo\Search\QSearchScope
 /** Represents a single word or quoted phrase to be searched.*/
 class QSingleToken implements \Stringable
 {
-    public $is_single = true; /* the actual word/phrase string*/
-    public $variants = [];
+    public bool $is_single = true; /* the actual word/phrase string*/
+    /** @var string[] */
+    public array $variants = [];
 
-    public $scope_data;
-    public $idx;
+    public mixed $scope_data = null;
+    public int $idx = 0;
 
-    public function __construct(public $term, public $modifier, public $scope)
+    public function __construct(public string $term, public int $modifier, public ?QSearchScope $scope)
     {
     }
 
@@ -1003,9 +1010,10 @@ class QSingleToken implements \Stringable
 /** Represents an expression of several words or sub expressions to be searched.*/
 class QMultiToken implements \Stringable
 {
-    public $is_single = false;
-    public $modifier;
-    public $tokens = []; // the actual array of QSingleToken or QMultiToken
+    public bool $is_single = false;
+    public int $modifier = 0;
+    /** @var array<\Piwigo\Search\QSingleToken|\Piwigo\Search\QMultiToken> */
+    public array $tokens = []; // the actual array of QSingleToken or QMultiToken
 
     public function __toString(): string
     {
@@ -1032,7 +1040,7 @@ class QMultiToken implements \Stringable
         return $s;
     }
 
-    private function push(&$token, &$modifier, &$scope): void
+    private function push(string &$token, int &$modifier, mixed &$scope): void
     {
         if (strlen((string) $token) || (isset($scope) && $scope->nullable)) {
             if (isset($scope)) {
@@ -1052,7 +1060,7 @@ class QMultiToken implements \Stringable
     * @param int $qi the character index in $q where to start parsing
     * @param int $level the depth from root in the tree (number of opened and unclosed opening brackets)
     */
-    protected function parse_expression($q, &$qi, $level, $root)
+    protected function parse_expression(string $q, int &$qi, int $level, mixed $root): void
     {
         $crt_token = '';
         $crt_modifier = 0;
@@ -1208,7 +1216,7 @@ class QMultiToken implements \Stringable
     * Applies recursively a search scope to all sub single tokens. We allow 'tag:(John Bill)' but we cannot evaluate
     * scopes on expressions so we rewrite as '(tag:John tag:Bill)'
     */
-    private function apply_scope(\Piwigo\Search\QSearchScope $scope): void
+    protected function apply_scope(\Piwigo\Search\QSearchScope $scope): void
     {
         for ($i = 0; $i < count($this->tokens); $i++) {
             if ($this->tokens[$i]->is_single) {
@@ -1221,13 +1229,13 @@ class QMultiToken implements \Stringable
         }
     }
 
-    private static function priority($modifier): int
+    private static function priority(int $modifier): int
     {
         return $modifier & QST_OR ? 0 : 1;
     }
 
     /* because evaluations occur left to right, we ensure that 'a OR b c d' is interpreted as 'a OR (b c d)'*/
-    protected function check_operator_priority()
+    protected function check_operator_priority(): void
     {
         $crt_prio = 0;
         for ($i = 0; $i < count($this->tokens); $i++) {
@@ -1272,11 +1280,15 @@ class QMultiToken implements \Stringable
 
 class QExpression extends \Piwigo\Search\QMultiToken
 {
-    public $scopes = [];
-    public $stokens = [];
-    public $stoken_modifiers = [];
+    /** @var array<string, \Piwigo\Search\QSearchScope> */
+    public array $scopes = [];
+    /** @var array<\Piwigo\Search\QSingleToken> */
+    public array $stokens = [];
+    /** @var int[] */
+    public array $stoken_modifiers = [];
 
-    public function __construct($q, $scopes)
+    /** @param array<\Piwigo\Search\QSearchScope> $scopes */
+    public function __construct(string $q, array $scopes)
     {
         foreach ($scopes as $scope) {
             $this->scopes[$scope->id] = $scope;
@@ -1320,20 +1332,29 @@ class QExpression extends \Piwigo\Search\QMultiToken
 */
 class QResults
 {
-    public $all_tags;
-    public $tag_ids;
-    public $tag_iids;
-    public $all_cats;
-    public $cat_ids;
-    public $cat_iids;
-    public $images_iids;
-    public $iids;
+    /** @var array<mixed> */
+    public array $all_tags = [];
+    /** @var array<int, int[]> */
+    public array $tag_ids = [];
+    /** @var array<int, int[]> */
+    public array $tag_iids = [];
+    /** @var array<mixed> */
+    public array $all_cats = [];
+    /** @var array<int, int[]> */
+    public array $cat_ids = [];
+    /** @var array<int, int[]> */
+    public array $cat_iids = [];
+    /** @var array<int, int[]> */
+    public array $images_iids = [];
+    /** @var array<int, int[]> */
+    public array $iids = [];
 }
 
 /**
+ * @param string[] $fields
  * @return non-falsy-string[]
  */
-function qsearch_get_text_token_search_sql($token, $fields): array
+function qsearch_get_text_token_search_sql(\Piwigo\Search\QSingleToken $token, array $fields): array
 {
     global $page;
 
@@ -1630,12 +1651,18 @@ SELECT image_id FROM '.IMAGE_CATEGORY_TABLE.'
 }
 
 
-function qsearch_eval(\Piwigo\Search\QMultiToken $expr, \Piwigo\Search\QResults $qsr, &$qualifies, &$ignored_terms)
+/**
+ * @param string[] $ignored_terms
+ * @return int[]
+ */
+function qsearch_eval(\Piwigo\Search\QMultiToken $expr, \Piwigo\Search\QResults $qsr, bool &$qualifies, array &$ignored_terms): array
 {
     $qualifies = false; // until we find at least one positive term
     $ignored_terms = [];
 
     $ids = $not_ids = [];
+    $crt_qualifies = false;
+    $crt_ignored_terms = [];
 
     for ($i = 0; $i < count($expr->tokens); $i++) {
         $crt = $expr->tokens[$i];
@@ -1660,7 +1687,7 @@ function qsearch_eval(\Piwigo\Search\QMultiToken $expr, \Piwigo\Search\QResults 
             $ignored_terms = array_merge($ignored_terms, $crt_ignored_terms);
             if ($modifier & QST_OR) {
                 $ids = array_unique(array_merge($ids, $crt_ids));
-                $qualifies |= $crt_qualifies;
+                $qualifies = $qualifies || $crt_qualifies;
             } elseif ($crt_qualifies) {
                 if ($qualifies) {
                     $ids = array_intersect($ids, $crt_ids);
@@ -1694,9 +1721,10 @@ function qsearch_eval(\Piwigo\Search\QMultiToken $expr, \Piwigo\Search\QResults 
  *    )
  *
  * @param string $q
- * @return array|null
+ * @param array<mixed> $options
+ * @return array<mixed>|null
  */
-function get_quick_search_results($q, array $options)
+function get_quick_search_results(string $q, array $options)
 {
     global $persistent_cache, $user;
 
@@ -1723,7 +1751,11 @@ function get_quick_search_results($q, array $options)
 /**
  * @see get_quick_search_results but without result caching
  */
-function get_quick_search_results_no_cache($q, array $options)
+/**
+ * @param array<mixed> $options
+ * @return array<mixed>
+ */
+function get_quick_search_results_no_cache(string $q, array $options): array
 {
     $q = trim(stripslashes((string) $q));
     $search_results =
@@ -1796,6 +1828,8 @@ function get_quick_search_results_no_cache($q, array $options)
     // allow plugins to evaluate their own scopes
     trigger_notify('qsearch_before_eval', $expression, $qsr);
 
+    $tmp = false;
+    $search_results['qs']['unmatched_terms'] = [];
     $ids = qsearch_eval($expression, $qsr, $tmp, $search_results['qs']['unmatched_terms']);
 
     $debug[] = "<!--\nparsed: ".htmlspecialchars((string)$expression);
@@ -1864,9 +1898,9 @@ SELECT DISTINCT(id) FROM '.IMAGES_TABLE.' i';
  * It can be either a quick search or a regular search.
  *
  * @param int $search_id
- * @return array
+ * @return array<mixed>
  */
-function get_search_results($search_id, $super_order_by, ?string $images_where = '')
+function get_search_results(int|string $search_id, bool $super_order_by, ?string $images_where = '')
 {
     $search = get_search_array($search_id);
     if (!isset($search['q'])) {
@@ -1876,7 +1910,8 @@ function get_search_results($search_id, $super_order_by, ?string $images_where =
     }
 }
 
-function split_allwords($raw_allwords): ?array
+/** @return string[]|null */
+function split_allwords(string $raw_allwords): ?array
 {
     $words = null;
 
@@ -1904,7 +1939,7 @@ function split_allwords($raw_allwords): ?array
     return $words;
 }
 
-function get_available_search_uuid()
+function get_available_search_uuid(): string
 {
     $candidate = 'psk-'.date('Ymd').'-'.generate_key(10);
 
@@ -1922,7 +1957,11 @@ SELECT
     }
 }
 
-function save_search(array $rules, $forked_from = null): array
+/**
+ * @param array<mixed> $rules
+ * @return array<mixed>
+ */
+function save_search(array $rules, int|string|null $forked_from = null): array
 {
     global $user;
 

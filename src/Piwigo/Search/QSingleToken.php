@@ -7,13 +7,14 @@ namespace Piwigo\Search;
 /** Represents a single word or quoted phrase to be searched.*/
 class QSingleToken implements \Stringable
 {
-    public $is_single = true; /* the actual word/phrase string*/
-    public $variants = [];
+    public bool $is_single = true; /* the actual word/phrase string*/
+    /** @var string[] */
+    public array $variants = [];
 
-    public $scope_data;
-    public $idx;
+    public mixed $scope_data = null;
+    public int $idx = 0;
 
-    public function __construct(public $term, public $modifier, public $scope)
+    public function __construct(public string $term, public int $modifier, public ?QSearchScope $scope)
     {
     }
 

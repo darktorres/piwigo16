@@ -21,6 +21,7 @@ include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 add_event_handler('upload_image_resize', 'pwg_image_resize');
 add_event_handler('upload_thumbnail_resize', 'pwg_image_resize');
 
+/** @return array<string,mixed> */
 function get_upload_form_config(): array
 {
     // default configuration for upload
@@ -61,9 +62,14 @@ function get_upload_form_config(): array
     return $upload_form_config;
 }
 
-function save_upload_form_config($data, &$errors = [], array &$form_errors = []): bool
+/**
+ * @param array<mixed> $data
+ * @param string[] $errors
+ * @param string[] $form_errors
+ */
+function save_upload_form_config(array $data, array &$errors = [], array &$form_errors = []): bool
 {
-    if (!is_array($data) or empty($data)) {
+    if (empty($data)) {
         return false;
     }
 
@@ -127,7 +133,8 @@ function save_upload_form_config($data, &$errors = [], array &$form_errors = [])
     return false;
 }
 
-function add_uploaded_file(string $source_filepath, $original_filename = null, $categories = null, $level = null, $image_id = null, $original_md5sum = null)
+/** @param int[]|null $categories */
+function add_uploaded_file(string $source_filepath, ?string $original_filename = null, ?array $categories = null, ?int $level = null, ?int $image_id = null, ?string $original_md5sum = null): int
 {
     // 1) move uploaded file to upload/2010/01/22/20100122003814-449ada00.jpg
     //
@@ -397,7 +404,8 @@ SELECT
     return $image_id;
 }
 
-function add_uploaded_file_add_to_categories($image_id, $categories): void
+/** @param int[]|null $categories */
+function add_uploaded_file_add_to_categories(int $image_id, ?array $categories): void
 {
     if (!\Piwigo\Core\Config::has('lounge_active')) {
         conf_update_param('lounge_active', false, true);
@@ -424,7 +432,7 @@ function add_uploaded_file_add_to_categories($image_id, $categories): void
     }
 }
 
-function add_format($source_filepath, string $format_ext, string $format_of): string
+function add_format(string $source_filepath, string $format_ext, string $format_of): string
 {
     // 1) find infos about the extended image
     //
@@ -512,7 +520,7 @@ SELECT
 }
 
 add_event_handler('upload_file', 'upload_file_pdf');
-function upload_file_pdf($representative_ext, string $file_path)
+function upload_file_pdf(?string $representative_ext, string $file_path): ?string
 {
     global $logger;
 
@@ -555,7 +563,7 @@ function upload_file_pdf($representative_ext, string $file_path)
 }
 
 add_event_handler('upload_file', 'upload_file_heic');
-function upload_file_heic($representative_ext, string $file_path)
+function upload_file_heic(?string $representative_ext, string $file_path): ?string
 {
     global $logger;
 
@@ -600,7 +608,7 @@ function upload_file_heic($representative_ext, string $file_path)
 }
 
 add_event_handler('upload_file', 'upload_file_tiff');
-function upload_file_tiff($representative_ext, string $file_path)
+function upload_file_tiff(?string $representative_ext, string $file_path): ?string
 {
     global $logger;
 
@@ -659,7 +667,7 @@ function upload_file_tiff($representative_ext, string $file_path)
 }
 
 add_event_handler('upload_file', 'upload_file_video');
-function upload_file_video($representative_ext, string $file_path)
+function upload_file_video(?string $representative_ext, string $file_path): ?string
 {
     global $logger;
 
@@ -731,7 +739,7 @@ function upload_file_video($representative_ext, string $file_path)
 }
 
 add_event_handler('upload_file', 'upload_file_psd');
-function upload_file_psd($representative_ext, string $file_path)
+function upload_file_psd(?string $representative_ext, string $file_path): ?string
 {
     global $logger;
 
@@ -788,7 +796,7 @@ function upload_file_psd($representative_ext, string $file_path)
 }
 
 add_event_handler('upload_file', 'upload_file_eps');
-function upload_file_eps($representative_ext, string $file_path)
+function upload_file_eps(?string $representative_ext, string $file_path): ?string
 {
     global $logger;
 
@@ -832,7 +840,7 @@ function upload_file_eps($representative_ext, string $file_path)
     return $representative_ext;
 }
 
-function prepare_directory($directory): void
+function prepare_directory(string $directory): void
 {
     if (!is_dir($directory)) {
         if (str_starts_with(PHP_OS, 'WIN')) {
@@ -848,16 +856,15 @@ function prepare_directory($directory): void
     if (!is_writable($directory)) {
         // last chance to make the directory writable
         @chmod($directory, 0777);
-
-        if (!is_writable($directory)) {
-            die('[prepare_directory] directory "'.$directory.'" has no write access');
-        }
+    }
+    if (!is_writable($directory)) {
+        die('[prepare_directory] directory "'.$directory.'" has no write access');
     }
 
     secure_directory($directory);
 }
 
-function need_resize($image_filepath, int|string $max_width, int|string $max_height): bool
+function need_resize(string $image_filepath, int|string $max_width, int|string $max_height): bool
 {
     global $logger;
 
@@ -878,7 +885,8 @@ function need_resize($image_filepath, int|string $max_width, int|string $max_hei
     return false;
 }
 
-function pwg_image_infos($path): array
+/** @return array<string,mixed> */
+function pwg_image_infos(string $path): array
 {
     [$width, $height] = getimagesize($path);
     $filesize = floor(filesize($path) / 1024);
@@ -890,7 +898,8 @@ function pwg_image_infos($path): array
       ];
 }
 
-function is_valid_image_extension($extension): array
+/** @return string[] */
+function is_valid_image_extension(string $extension): array
 {
     if (\Piwigo\Core\Config::has('upload_form_all_types') and \Piwigo\Core\Config::uploadFormAllTypes()) {
         $extensions = \Piwigo\Core\Config::fileExtensions();
@@ -901,7 +910,7 @@ function is_valid_image_extension($extension): array
     return array_unique(array_map(strtolower(...), $extensions));
 }
 
-function file_upload_error_message($error_code)
+function file_upload_error_message(int $error_code): string
 {
     return match ($error_code) {
         UPLOAD_ERR_INI_SIZE => sprintf(
@@ -918,7 +927,7 @@ function file_upload_error_message($error_code)
     };
 }
 
-function get_ini_size($ini_key, $in_bytes = true)
+function get_ini_size(string $ini_key, bool $in_bytes = true): int|string
 {
     $size = ini_get($ini_key);
 
@@ -929,7 +938,7 @@ function get_ini_size($ini_key, $in_bytes = true)
     return $size;
 }
 
-function convert_shorthand_notation_to_bytes($value)
+function convert_shorthand_notation_to_bytes(int|string $value): int
 {
     $suffix = substr((string) $value, -1);
     $multiply_by = null;
@@ -950,7 +959,7 @@ function convert_shorthand_notation_to_bytes($value)
     return $value;
 }
 
-function add_upload_error($upload_id, $error_message): void
+function add_upload_error(string $upload_id, string $error_message): void
 {
     $_SESSION['uploads_error'][$upload_id][] = $error_message;
 }
@@ -988,7 +997,7 @@ function ready_for_upload_message(): ?string
  *
  * @since 14
  *
- * @return array
+ * @return array<int, int|float>
  */
 function get_optimal_dimensions_for_representative(): array
 {

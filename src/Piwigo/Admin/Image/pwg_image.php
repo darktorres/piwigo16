@@ -22,10 +22,10 @@ class pwg_image
      * @var object
      */
     public $image;
-    public $library = '';
-    public static $ext_imagick_version = '';
+    public string $library = '';
+    public static string $ext_imagick_version = '';
 
-    public function __construct(public $source_filepath, $library = null)
+    public function __construct(public string $source_filepath, ?string $library = null)
     {
         trigger_notify('load_image_library', [&$this]);
 
@@ -52,7 +52,8 @@ class pwg_image
     }
 
     // Unknow methods will be redirected to image object
-    public function __call(string $method, array $arguments)
+    /** @param mixed[] $arguments */
+    public function __call(string $method, array $arguments): mixed
     {
         return call_user_func_array([$this->image, $method], $arguments);
     }
@@ -61,7 +62,8 @@ class pwg_image
     /**
      * @return mixed[]
      */
-    public function pwg_resize($destination_filepath, $max_width, $max_height, $quality, $automatic_rotation = true, $strip_metadata = false, $crop = false, $follow_orientation = true): array
+    /** @return array<mixed> */
+    public function pwg_resize(string $destination_filepath, int $max_width, int $max_height, int $quality, bool $automatic_rotation = true, bool $strip_metadata = false, bool $crop = false, bool $follow_orientation = true): array
     {
         $starttime = get_moment();
 
@@ -106,7 +108,8 @@ class pwg_image
         return $this->get_resize_result($destination_filepath, $resize_dimensions['width'], $resize_dimensions['height'], $starttime);
     }
 
-    public static function get_resize_dimensions($width, $height, $max_width, $max_height, $rotation = null, $crop = false, $follow_orientation = true): array
+    /** @return array<mixed> */
+    public static function get_resize_dimensions(int|float $width, int|float $height, int|float $max_width, int|float $max_height, ?int $rotation = null, bool $crop = false, bool $follow_orientation = true): array
     {
         $rotate_for_dimensions = false;
         if (isset($rotation) and in_array(abs($rotation), [90, 270])) {
@@ -175,7 +178,8 @@ class pwg_image
         return $result;
     }
 
-    public static function webp_info($source_filepath): array
+    /** @return array<string,mixed> */
+    public static function webp_info(string $source_filepath): array
     {
         // function based on https://stackoverflow.com/questions/61221874/detect-if-a-webp-image-is-transparent-in-php
         //
@@ -229,7 +233,7 @@ class pwg_image
         }
     }
 
-    public static function get_rotation_angle($source_filepath): ?int
+    public static function get_rotation_angle(string $source_filepath): ?int
     {
         [$width, $height, $type] = getimagesize($source_filepath);
         if (IMAGETYPE_JPEG != $type) {
@@ -258,28 +262,28 @@ class pwg_image
         return $rotation;
     }
 
-    public static function get_rotation_code_from_angle($rotation_angle)
+    public static function get_rotation_code_from_angle(int $rotation_angle): int
     {
-        switch ($rotation_angle) {
-            case 0:   return 0;
-            case 90:  return 1;
-            case 180: return 2;
-            case 270: return 3;
-        }
+        return match ($rotation_angle) {
+            90  => 1,
+            180 => 2,
+            270 => 3,
+            default => 0,
+        };
     }
 
-    public static function get_rotation_angle_from_code($rotation_code)
+    public static function get_rotation_angle_from_code(int $rotation_code): int
     {
-        switch ($rotation_code % 4) {
-            case 0: return 0;
-            case 1: return 90;
-            case 2: return 180;
-            case 3: return 270;
-        }
+        return match ($rotation_code % 4) {
+            1 => 90,
+            2 => 180,
+            3 => 270,
+            default => 0,
+        };
     }
 
-    /** Returns a normalized convolution kernel for sharpening*/
-    public static function get_sharpen_matrix($amount): array
+    /** Returns a normalized convolution kernel for sharpening @return array<int, array<int, float>> */
+    public static function get_sharpen_matrix(int $amount): array
     {
         // Amount should be in the range of 48-10
         $amount = round(abs(-48 + ($amount * 0.38)), 2);
@@ -301,7 +305,8 @@ class pwg_image
         return $matrix;
     }
 
-    protected function get_resize_result($destination_filepath, $width, $height, $time = null): array
+    /** @return array<string,mixed> */
+    protected function get_resize_result(string $destination_filepath, int|float $width, int|float $height, ?float $time = null): array
     {
         return [
           'source'      => $this->source_filepath,
@@ -319,7 +324,7 @@ class pwg_image
         return (extension_loaded('imagick') and class_exists('Imagick'));
     }
 
-    public static function get_ext_imagick_command()
+    public static function get_ext_imagick_command(): string
     {
         $page = &$GLOBALS['page'];
 
@@ -359,7 +364,7 @@ class pwg_image
         return function_exists('gd_info');
     }
 
-    public static function get_library($library = null, $extension = null)
+    public static function get_library(?string $library = null, ?string $extension = null): string|false
     {
         if (is_null($library)) {
             $library = \Piwigo\Core\Config::graphicsLibrary();

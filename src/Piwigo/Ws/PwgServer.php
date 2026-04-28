@@ -6,12 +6,13 @@ namespace Piwigo\Ws;
 
 class PwgServer
 {
-    public $_requestHandler;
-    public $_requestFormat;
-    public $_responseEncoder;
-    public $_responseFormat;
+    public ?PwgRequestHandler $_requestHandler = null;
+    public string $_requestFormat = '';
+    public ?\Piwigo\Ws\Encoder\PwgResponseEncoder $_responseEncoder = null;
+    public string $_responseFormat = '';
 
-    public $_methods = [];
+    /** @var array<mixed> */
+    public array $_methods = [];
 
     public function __construct()
     {
@@ -20,18 +21,18 @@ class PwgServer
     /**
      *  Initializes the request handler.
      */
-    public function setHandler($requestFormat, &$requestHandler): void
+    public function setHandler(string $requestFormat, PwgRequestHandler $requestHandler): void
     {
-        $this->_requestHandler = &$requestHandler;
+        $this->_requestHandler = $requestHandler;
         $this->_requestFormat = $requestFormat;
     }
 
     /**
      *  Initializes the request handler.
      */
-    public function setEncoder($responseFormat, &$encoder): void
+    public function setEncoder(string $responseFormat, ?\Piwigo\Ws\Encoder\PwgResponseEncoder $encoder): void
     {
-        $this->_responseEncoder = &$encoder;
+        $this->_responseEncoder = $encoder;
         $this->_responseFormat = $responseFormat;
     }
 
@@ -74,7 +75,7 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
     /**
      * Encodes a response and sends it back to the browser.
      */
-    public function sendResponse($response): void
+    public function sendResponse(mixed $response): void
     {
         $encodedResponse = $this->_responseEncoder->encodeResponse($response);
         $contentType = $this->_responseEncoder->getContentType();
@@ -91,14 +92,11 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
      * @param array $params map of allowed parameter names with options
      * @param string $description a description of the method
      * @param string $include_file a file to be included before the callback is executed
-     * @param array $options hidden, admin_only, post_only flags
+     * @param array<mixed> $params
+     * @param array<mixed> $options hidden, admin_only, post_only flags
      */
-    public function addMethod($methodName, $callback, $params = [], $description = '', $include_file = '', $options = []): void
+    public function addMethod(string $methodName, mixed $callback, array $params = [], string $description = '', string $include_file = '', array $options = []): void
     {
-        if (!is_array($params)) {
-            $params = [];
-        }
-
         if (range(0, count($params) - 1) === array_keys($params)) {
             $params = array_flip($params);
         }
@@ -129,18 +127,19 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
           ];
     }
 
-    public function hasMethod($methodName): bool
+    public function hasMethod(string $methodName): bool
     {
         return isset($this->_methods[$methodName]);
     }
 
-    public function getMethodDescription($methodName)
+    public function getMethodDescription(string $methodName): string
     {
         $desc = @$this->_methods[$methodName]['description'];
         return $desc ?? '';
     }
 
-    public function getMethodSignature($methodName)
+    /** @return array<mixed> */
+    public function getMethodSignature(string $methodName): array
     {
         $signature = @$this->_methods[$methodName]['signature'];
         return $signature ?? [];
@@ -148,8 +147,9 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
 
     /**
      * @since 2.6
+     * @return array<mixed>
      */
-    public function getMethodOptions($methodName)
+    public function getMethodOptions(string $methodName): array
     {
         $options = @$this->_methods[$methodName]['options'];
         return $options ?? [];
@@ -160,7 +160,7 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
         return !empty($_POST) || (strlen(file_get_contents('php://input')) > 0);
     }
 
-    public static function makeArrayParam(&$param): void
+    public static function makeArrayParam(mixed &$param): void
     {
         if ($param == null) {
             $param = [];
@@ -171,7 +171,7 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
         }
     }
 
-    public static function checkType(&$param, $type, string $name): ?PwgError
+    public static function checkType(mixed &$param, int $type, string $name): ?PwgError
     {
         $opts = [];
         $msg = '';
@@ -231,7 +231,7 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
         return null;
     }
 
-    public static function hasFlag($val, $flag): bool
+    public static function hasFlag(int $val, int $flag): bool
     {
         return ($val & $flag) == $flag;
     }
@@ -240,9 +240,10 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
      *  Invokes a registered method. Returns the return of the method (or
      *  a PwgError object if the method is not found)
      * @param string $methodName the name of the method to invoke
-     * @param array $params array of parameters to pass to the invoked method
+     * @param array<mixed> $params array of parameters to pass to the invoked method
+     * @return mixed
      */
-    public function invoke($methodName, array $params)
+    public function invoke(string $methodName, array $params): mixed
     {
         $method = @$this->_methods[$methodName];
 
@@ -334,7 +335,11 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
     /**
      * WS reflection method implementation: lists all available methods
      */
-    public static function ws_getMethodList($params, &$service): array
+    /**
+     * @param array<mixed> $params
+     * @return array<mixed>
+     */
+    public static function ws_getMethodList(array $params, self &$service): array
     {
         $methods = array_filter(
             $service->_methods,
@@ -346,7 +351,11 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
     /**
      * WS reflection method implementation: gets information about a given method
      */
-    public static function ws_getMethodDetails(array $params, &$service): PwgError|array
+    /**
+     * @param array<string,mixed> $params
+     * @return array<mixed>|PwgError
+     */
+    public static function ws_getMethodDetails(array $params, self &$service): PwgError|array
     {
         $methodName = $params['methodName'];
 

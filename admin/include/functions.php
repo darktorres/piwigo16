@@ -406,6 +406,7 @@ function delete_orphan_tags(): void
 /**
  * Get all tags (id + name) linked to no photo
  */
+/** @return array<mixed> */
 function get_orphan_tags(): array
 {
     $query = '
@@ -426,7 +427,8 @@ SELECT
  *
  * @param 'all'|int|int[]|string[] $ids
  */
-function update_category($ids = 'all')
+/** @param 'all'|int|int[]|string[] $ids */
+function update_category(array|string|int $ids = 'all'): void
 {
     if ($ids == 'all') {
         $where_cats = '1=1';
@@ -434,7 +436,7 @@ function update_category($ids = 'all')
         $where_cats = '%s='.$ids;
     } else {
         if (count($ids) == 0) {
-            return false;
+            return;
         }
         $where_cats = '%s IN('.wordwrap(implode(', ', $ids), 120, "\n").')';
     }
@@ -549,7 +551,8 @@ DELETE
  *
  * @return string[]
  */
-function get_fs_directories($path, $recursive = true): array
+/** @return string[] */
+function get_fs_directories(string $path, bool $recursive = true): array
 {
     $dirs = [];
     $path = rtrim((string) $path, '/');
@@ -590,7 +593,8 @@ function get_fs_directories($path, $recursive = true): array
  *
  * @param array $categories
  */
-function save_categories_order($categories): void
+/** @param array<mixed> $categories */
+function save_categories_order(array $categories): void
 {
     $current_rank_for_id_uppercat = [];
     $current_rank = 0;
@@ -691,11 +695,12 @@ SELECT id, id_uppercat, uppercats, `rank`, global_rank
  * @param boolean|string $value
  * @param boolean $unlock_child optional   default false
  */
-function set_cat_visible($categories, $value, $unlock_child = false)
+/** @param int[]|int|string $categories */
+function set_cat_visible(array|int|string $categories, bool|string $value, bool $unlock_child = false): void
 {
     if (($value = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE)) === null) {
         trigger_error("set_cat_visible invalid param $value", E_USER_WARNING);
-        return false;
+        return;
     }
 
     // unlocking a category => all its parent categories become unlocked
@@ -726,11 +731,12 @@ UPDATE '.CATEGORIES_TABLE.'
  *
  * @param string $value
  */
-function set_cat_status($categories, $value)
+/** @param int[]|int|string $categories */
+function set_cat_status(array|int|string $categories, string $value): void
 {
     if (!in_array($value, ['public', 'private'])) {
         trigger_error("set_cat_status invalid param $value", E_USER_WARNING);
-        return false;
+        return;
     }
 
     // make public a category => all its parent categories become public
@@ -917,7 +923,8 @@ SELECT uppercats
 
 /**
  */
-function get_category_representant_properties(string $image_id, $size = null): array
+/** @return array<mixed> */
+function get_category_representant_properties(string $image_id, ?string $size = null): array
 {
     $query = '
 SELECT id,representative_ext,path
@@ -943,7 +950,8 @@ SELECT id,representative_ext,path
  * Set a new random representant to the categories.
  *
  */
-function set_random_representant($categories): void
+/** @param int[]|int $categories */
+function set_random_representant(array|int $categories): void
 {
     $datas = [];
     foreach ($categories as $category_id) {
@@ -978,7 +986,8 @@ SELECT image_id
  *  int[] 
  * @return string[]
  */
-function get_fulldirs($cat_ids): array
+/** @param int[]|int|string $cat_ids @return string[] */
+function get_fulldirs(array|int|string $cat_ids): array
 {
     if (count($cat_ids) == 0) {
         return [];
@@ -1034,7 +1043,7 @@ SELECT id, uppercats, site_id
  *
  *
  * @param bool $recursive
- * @return array
+ * @return array<mixed>
  */
 #[\Deprecated(message: '2.4')]
 function get_fs(string $path, $recursive = true)
@@ -1327,7 +1336,11 @@ SELECT status
  *    - boolean inherit
  * @return array ('info', 'id') or ('error')
  */
-function create_virtual_category($category_name, $parent_id = null, array $options = []): array
+/**
+ * @param array<mixed> $options
+ * @return array<mixed>
+ */
+function create_virtual_category(string $category_name, int|string|null $parent_id = null, array $options = []): array
 {
     global $user;
 
@@ -1528,14 +1541,11 @@ DELETE
  *
  * @param int[] $tag_ids
  */
-function delete_tags($tag_ids)
+/** @param int[]|int $tag_ids */
+function delete_tags(array|int $tag_ids): void
 {
-    if (is_numeric($tag_ids)) {
+    if (is_int($tag_ids)) {
         $tag_ids = [$tag_ids];
-    }
-
-    if (!is_array($tag_ids)) {
-        return false;
     }
 
     // we need the list of impacted images, to update their lastmodified
@@ -1639,7 +1649,8 @@ SELECT id
  *
  * @param array $tags_of - keys are image ids, values are array of tag ids
  */
-function set_tags_of($tags_of): void
+/** @param array<int, int[]|string[]> $tags_of */
+function set_tags_of(array $tags_of): void
 {
     if (count($tags_of) > 0) {
         $taglist_before = get_image_tag_ids(array_keys($tags_of));
@@ -1692,12 +1703,9 @@ DELETE
  * @param array $image_ids
  * @return array array, image_id => list of tag ids
  */
-function get_image_tag_ids($image_ids): array
+/** @param int[] $image_ids @return array<mixed> */
+function get_image_tag_ids(array $image_ids): array
 {
-    if (!is_array($image_ids) and is_int($image_ids)) {
-        $images_ids = [$image_ids];
-    }
-
     if (count($image_ids) == 0) {
         return [];
     }
@@ -1727,7 +1735,12 @@ SELECT
  * @param array $taglist_after - for each image_id (key), list of tag ids
  * @return array - image_ids where the list has changed
  */
-function compare_image_tag_lists(array $taglist_before, $taglist_after): array
+/**
+ * @param array<mixed> $taglist_before
+ * @param array<mixed> $taglist_after
+ * @return array<mixed>
+ */
+function compare_image_tag_lists(array $taglist_before, array $taglist_after): array
 {
     $images_to_update = [];
 
@@ -1749,9 +1762,10 @@ function compare_image_tag_lists(array $taglist_before, $taglist_after): array
  * Instead of associating images to categories, add them in the lounge, waiting for take-off.
  *
  * @since 12
- * @param array $images - list of image ids
+ * @param int[] $images - list of image ids
+ * @param int[]|null $categories
  */
-function fill_lounge($images, $categories): void
+function fill_lounge(array $images, ?array $categories): void
 {
     $inserts = [];
     foreach ($categories as $category_id) {
@@ -1780,7 +1794,8 @@ function fill_lounge($images, $categories): void
  * @param boolean $invalidate_user_cache
  * @return array|null array of moved rows or null if another exec wins
  */
-function empty_lounge($invalidate_user_cache = true)
+/** @return array<mixed>|null */
+function empty_lounge(bool $invalidate_user_cache = true): ?array
 {
     global $logger;
 
@@ -1866,11 +1881,12 @@ DELETE
  *
  * @param int[] $images
  */
-function associate_images_to_categories($images, $categories)
+/** @param int[] $images @param int[]|int $categories */
+function associate_images_to_categories(array $images, array|int $categories): void
 {
     if (count($images) == 0
-        or count($categories) == 0) {
-        return false;
+        or (is_array($categories) and count($categories) == 0)) {
+        return;
     }
 
     // get existing associations
@@ -1982,7 +1998,8 @@ DELETE
  *
  * @param int[] $images
  */
-function move_images_to_categories($images, $categories)
+/** @param int[] $images @param int[] $categories */
+function move_images_to_categories(array $images, array $categories): bool
 {
     if (count($images) == 0) {
         return false;
@@ -1996,7 +2013,7 @@ DELETE '.IMAGE_CATEGORY_TABLE.'.*
   WHERE id IN ('.implode(',', $images).')
 ';
 
-    if (is_array($categories) and count($categories) > 0) {
+    if (count($categories) > 0) {
         $query .= '
     AND category_id NOT IN ('.implode(',', $categories).')
 ';
@@ -2007,9 +2024,10 @@ DELETE '.IMAGE_CATEGORY_TABLE.'.*
 ;';
     pwg_query($query);
 
-    if (is_array($categories) and count($categories) > 0) {
+    if (count($categories) > 0) {
         associate_images_to_categories($images, $categories);
     }
+    return true;
 }
 
 /**
@@ -2019,10 +2037,11 @@ DELETE '.IMAGE_CATEGORY_TABLE.'.*
  * @param int[] $sources
  * @param int[] $destinations
  */
-function associate_categories_to_categories($sources, $destinations)
+/** @param int[] $sources */
+function associate_categories_to_categories(array $sources, array $destinations): void
 {
     if (count($sources) == 0) {
-        return false;
+        return;
     }
 
     $query = '
@@ -2056,7 +2075,7 @@ function pwg_URL(): array
 /**
  * Invalidates cached data (permissions and category counts) for all users.
  */
-function invalidate_user_cache($full = true): void
+function invalidate_user_cache(bool $full = true): void
 {
     global $persistent_cache, $logger;
 
@@ -2141,7 +2160,8 @@ function create_table_add_character_set($query)
  * @param int $MinLevelAccess
  * @param int $MaxLevelAccess
  */
-function get_user_access_level_html_options($MinLevelAccess = ACCESS_FREE, $MaxLevelAccess = ACCESS_CLOSED): array
+/** @return array<int,string> */
+function get_user_access_level_html_options(int $MinLevelAccess = ACCESS_FREE, int $MaxLevelAccess = ACCESS_CLOSED): array
 {
     $tpl_options = [];
     for ($level = $MinLevelAccess; $level <= $MaxLevelAccess; $level++) {
@@ -2186,7 +2206,8 @@ function get_extents($start = ''): array
  * @param string $tag_name
  * @return array ('id', info') or ('error')
  */
-function create_tag($tag_name): array
+/** @return array<mixed> */
+function create_tag(string $tag_name): array
 {
     // clean the tag, no html/js allowed in tag name
     $tag_name = strip_tags($tag_name);
@@ -2250,7 +2271,11 @@ function cat_admin_access($category_id): bool
  * @param int $step (internal use)
  * @return bool
  */
-function fetchRemote($src, &$dest, $get_data = [], $post_data = [], string $user_agent = 'Piwigo', $step = 0)
+/**
+ * @param array<mixed> $get_data
+ * @param array<mixed> $post_data
+ */
+function fetchRemote(string $src, mixed &$dest, array $get_data = [], array $post_data = [], string $user_agent = 'Piwigo', int $step = 0): bool
 {
     // Try to retrieve data from local file?
     if (!url_is_remote($src)) {
@@ -2417,7 +2442,8 @@ SELECT name
     return $groupname;
 }
 
-function delete_groups($group_ids): false|array
+/** @param int[]|int $group_ids @return array<mixed>|false */
+function delete_groups(array|int $group_ids): false|array
 {
 
     if (count($group_ids) == 0) {
@@ -2544,7 +2570,8 @@ function get_active_menu($menu_page)
  *    multilingual tags (if ExtendedDescription plugin is active)
  * @return array[] ('id', 'name')
  */
-function get_taglist(string $query, $only_user_language = true): array
+/** @return array<mixed> */
+function get_taglist(string $query, bool $only_user_language = true): array
 {
     $result = pwg_query($query);
 
@@ -2619,7 +2646,8 @@ function get_tag_ids($raw_tags, $allow_create = true): array
  * @param string[] $name - names of elements, indexed by ids
  * @return int[]
  */
-function order_by_name($element_ids, array $name): array
+/** @param int[] $element_ids @param string[] $name @return int[] */
+function order_by_name(array $element_ids, array $name): array
 {
     $ordered_element_ids = [];
     foreach ($element_ids as $k_id => $element_id) {
@@ -2760,7 +2788,7 @@ function clear_derivative_cache($types = 'all'): void
  * Used by clear_derivative_cache()
  * @ignore
  */
-function clear_derivative_cache_rec(string $path, $pattern)
+function clear_derivative_cache_rec(string $path, string $pattern): bool
 {
     $rmdir = true;
     $rm_index = false;
@@ -2793,6 +2821,7 @@ function clear_derivative_cache_rec(string $path, $pattern)
         }
         return $rmdir;
     }
+    return false;
 }
 
 /**
@@ -2801,7 +2830,8 @@ function clear_derivative_cache_rec(string $path, $pattern)
  * @param array $infos ('path'[, 'representative_ext'])
  * @param 'all'|int|string $type
  */
-function delete_element_derivatives(array $infos, $type = 'all'): void
+/** @param array<mixed> $infos */
+function delete_element_derivatives(array $infos, string|int $type = 'all'): void
 {
     $path = $infos['path'];
     if (!empty($infos['representative_ext'])) {
@@ -2851,7 +2881,7 @@ function get_dirs(string $directory): array
  *
  * @param string $trash_path, try to move the directory to this path if it cannot be delete
  */
-function deltree(string $path, $trash_path = null)
+function deltree(string $path, ?string $trash_path = null): bool
 {
     if (is_dir($path)) {
         $fh = opendir($path);
@@ -2882,7 +2912,9 @@ function deltree(string $path, $trash_path = null)
         } else {
             return false;
         }
+        return true;
     }
+    return false;
 }
 
 /**
@@ -2894,7 +2926,8 @@ function deltree(string $path, $trash_path = null)
  *  string|string[]  list of keys to retrieve (categories,groups,images,tags,users)
  * @return string[]
  */
-function get_admin_client_cache_keys($requested = []): array
+/** @param string[] $requested @return array<mixed> */
+function get_admin_client_cache_keys(array $requested = []): array
 {
     $tables = [
       'categories' => CATEGORIES_TABLE,
@@ -2904,9 +2937,6 @@ function get_admin_client_cache_keys($requested = []): array
       'users' => USER_INFOS_TABLE,
       ];
 
-    if (!is_array($requested)) {
-        $requested = [$requested];
-    }
     if (empty($requested)) {
         $requested = array_keys($tables);
     } else {
@@ -2952,7 +2982,8 @@ SELECT id
  *  int[]  list of image ids and their paths
  * @return int number of md5sum added
  */
-function add_md5sum($ids): int
+/** @param int[]|string $ids */
+function add_md5sum(array|string $ids): int
 {
     $query = '
 SELECT
@@ -2984,7 +3015,7 @@ SELECT
     return count($path_for_id);
 }
 
-function count_orphans()
+function count_orphans(): int
 {
     if (is_null(conf_get_param('count_orphans'))) {
         // we don't care about the list of image_ids, we only care about the number
@@ -3078,12 +3109,9 @@ function save_images_order($category_id, $images): void
  * @since 2.9
  * @param array $image_ids
  */
-function update_images_lastmodified($image_ids): void
+/** @param int[] $image_ids */
+function update_images_lastmodified(array $image_ids): void
 {
-    if (!is_array($image_ids) and is_int($image_ids)) {
-        $images_ids = [$image_ids];
-    }
-
     if (count($image_ids) == 0) {
         return;
     }
@@ -3133,7 +3161,8 @@ function number_format_human_readable($numbers): string
  * @param int $image_id
  * @param bool $die_on_missing
  */
-function get_image_infos($image_id, $die_on_missing = false)
+/** @return array<string,mixed>|null */
+function get_image_infos(int|string $image_id, bool $die_on_missing = false): ?array
 {
     if (!is_numeric($image_id)) {
         fatal_error('['.__FUNCTION__.'] invalid image identifier '.htmlentities($image_id));
@@ -3294,7 +3323,8 @@ SELECT
  *
  * @since 13
  */
-function get_piwigo_news()
+/** @return array<mixed>|false */
+function get_piwigo_news(): array|false
 {
     global $lang_info;
 
@@ -3336,7 +3366,7 @@ function get_piwigo_news()
     return $news;
 }
 
-function get_graphics_library()
+function get_graphics_library(): string
 {
     $library = pwg_image::get_library();
 
@@ -3378,6 +3408,7 @@ function get_graphics_library_label(): string
     return $label_for_lib[$library_code].' '.$library_version;
 }
 
+/** @return array<string,mixed> */
 function get_pwg_general_statitics(): array
 {
     $stats = [];
@@ -3460,7 +3491,7 @@ SELECT
     return $stats;
 }
 
-function get_installation_date()
+function get_installation_date(): ?string
 {
     $candidate = null;
 

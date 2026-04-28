@@ -123,7 +123,6 @@ final class ScriptLoaderTest extends TestCase
     {
         $ref = new ReflectionClass(ScriptLoader::class);
         $method = $ref->getMethod('manifest');
-        $method->setAccessible(true);
         return $method->invoke(null);
     }
 
@@ -131,7 +130,6 @@ final class ScriptLoaderTest extends TestCase
     {
         $ref = new ReflectionClass($loader);
         $prop = $ref->getProperty('registered_scripts');
-        $prop->setAccessible(true);
         return $prop->getValue($loader);
     }
 
@@ -139,7 +137,6 @@ final class ScriptLoaderTest extends TestCase
     {
         $ref = new ReflectionClass(ScriptLoader::class);
         $prop = $ref->getProperty('manifest');
-        $prop->setAccessible(true);
         $prop->setValue(null, null);
     }
 

@@ -23,7 +23,8 @@ add_event_handler('user_comment_check', 'user_comment_check');
  * @return string validate, moderate, reject
  */
 /** @param array<string,mixed> $comment */
-function user_comment_check(string $action, array $comment)
+/** @param array<string,mixed> $comment */
+function user_comment_check(string $action, array $comment): string
 {
     global $user;
 
@@ -71,7 +72,7 @@ function user_comment_check(string $action, array $comment)
  * @param array<string,mixed> $comm
  * @param string[] $infos
  */
-function insert_user_comment(array &$comm, string $key, array &$infos)
+function insert_user_comment(array &$comm, string $key, array &$infos): string
 {
     global $user;
 
@@ -296,7 +297,8 @@ $user_where_clause.'
  * @return string validate, moderate, reject
  */
 /** @param array<string,mixed> $comment */
-function update_user_comment(array $comment, string $post_key)
+/** @param array<string,mixed> $comment */
+function update_user_comment(array $comment, string $post_key): string
 {
     global $page;
 

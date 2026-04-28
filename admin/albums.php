@@ -187,6 +187,10 @@ function cmpCat(array $a, array $b): int
 /**
  * @return array{rank: mixed, name: mixed, status: mixed, id: mixed, visible: mixed, uppercats: mixed, nb_images: mixed, last_updates: mixed, has_not_access: bool, nb_sub_photos: mixed}[]|array{rank: mixed, name: mixed, status: mixed, id: mixed, visible: mixed, uppercats: mixed, nb_images: mixed, last_updates: mixed, has_not_access: bool, nb_sub_photos: mixed, nb_subcats: int<0, max>, children: mixed}[]
  */
+/**
+ * @param array<mixed> $assocT
+ * @return array<mixed>
+ */
 function assocToOrderedTree(array $assocT): array
 {
     global $nb_photos_in, $nb_sub_photos, $is_forbidden;

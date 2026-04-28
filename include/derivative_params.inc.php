@@ -215,7 +215,8 @@ final class SizingParams
      *
      * @param array &$tokens
      */
-    public function add_url_tokens(&$tokens): void
+    /** @param array<int|string> $tokens */
+    public function add_url_tokens(array &$tokens): void
     {
         if ($this->max_crop == 0) {
             $tokens[] = 's'.size_to_url($this->ideal_size);

@@ -21,7 +21,7 @@ declare(strict_types=1);
  *  array|false as return by update_rating_score()
  */
 /** @return array<mixed>|false */
-function rate_picture($image_id, $rate)
+function rate_picture(int $image_id, float|int|null $rate): array|false
 {
     global $user;
 
@@ -116,7 +116,8 @@ INSERT
  * @param int|false $element_id if false applies to all
  * @return array (score, average, count) values are null if $element_id is false
 */
-function update_rating_score($element_id = false)
+/** @return array<mixed> */
+function update_rating_score(int|false $element_id = false): array
 {
     if (($alt_result = trigger_change('update_rating_score', false, $element_id)) !== false) {
         return $alt_result;

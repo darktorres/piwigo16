@@ -130,8 +130,11 @@ function ws_getVersion($params, \Piwigo\Ws\PwgServer &$service): string
  * Returns general informations about the installation
  * @param mixed[] $params
  */
-/** @return array<mixed> */
-function ws_getInfos($params, \Piwigo\Ws\PwgServer &$service): array
+/**
+ * @param array<mixed> $params
+ * @return array<mixed>
+ */
+function ws_getInfos(array $params, \Piwigo\Ws\PwgServer &$service): array
 {
     $infos['version'] = PHPWG_VERSION;
 
@@ -197,8 +200,11 @@ function ws_getInfos($params, \Piwigo\Ws\PwgServer &$service): array
  * @since 12
  * @param mixed[] $params
  */
-/** @return array<mixed> */
-function ws_getCacheSize($params, \Piwigo\Ws\PwgServer &$service): array
+/**
+ * @param array<mixed> $params
+ * @return array<mixed>
+ */
+function ws_getCacheSize(array $params, \Piwigo\Ws\PwgServer &$service): array
 {
     // Cache size
     $path_cache = \Piwigo\Core\Config::dataLocation();

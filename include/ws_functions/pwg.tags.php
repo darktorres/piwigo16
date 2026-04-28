@@ -62,8 +62,11 @@ use Piwigo\Ws\PwgNamedStruct;
  * Only admin can run this method and permissions are not taken into
  * account.
  */
-/** @return array<mixed> */
-function ws_tags_getAdminList($params, \Piwigo\Ws\PwgServer &$service): array
+/**
+ * @param array<mixed> $params
+ * @return array<mixed>
+ */
+function ws_tags_getAdminList(array $params, \Piwigo\Ws\PwgServer &$service): array
 {
     return [
       'tags' => new PwgNamedArray(

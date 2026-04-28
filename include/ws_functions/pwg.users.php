@@ -736,8 +736,9 @@ DELETE
  */
 /**
  * @param array<mixed> $params
- * @param array<mixed> $params
- */function ws_users_favorites_getList(array $params, \Piwigo\Ws\PwgServer &$service): false|array
+ * @return array<mixed>|false
+ */
+function ws_users_favorites_getList(array $params, \Piwigo\Ws\PwgServer &$service): false|array
 {
     global $user;
 

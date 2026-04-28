@@ -282,7 +282,10 @@ class pwg_image
         };
     }
 
-    /** Returns a normalized convolution kernel for sharpening @return array<int, array<int, float>> */
+    /**
+     * Returns a normalized convolution kernel for sharpening.
+     * @return array<int, array<int, float>>
+     */
     public static function get_sharpen_matrix(int $amount): array
     {
         // Amount should be in the range of 48-10
@@ -397,10 +400,10 @@ class pwg_image
         return false;
     }
 
-    public function destroy()
+    public function destroy(): bool
     {
         if (method_exists($this->image, 'destroy')) {
-            return $this->image->destroy();
+            return (bool)$this->image->destroy();
         }
         return true;
     }

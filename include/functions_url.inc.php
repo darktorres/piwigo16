@@ -730,7 +730,10 @@ function unset_make_full_url(): void
  * @param $url
  *  string
  */
-/** @return string|string[] */
+/**
+ * @param string|string[] $url
+ * @return string|string[]
+ */
 function embellish_url(string|array $url): string|array
 {
     $url = str_replace('/./', '/', $url);

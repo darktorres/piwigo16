@@ -92,6 +92,11 @@ final class FileCombiner
      *
      * @param string[] $key
      */
+    /**
+     * @param array<mixed> $result
+     * @param array<mixed> $pending
+     * @param array<mixed> $key
+     */
     private function flush_pending(array &$result, array &$pending, array $key, bool $force): void
     {
         if (count($pending) > 1) {

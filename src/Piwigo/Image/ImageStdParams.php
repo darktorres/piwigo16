@@ -27,7 +27,8 @@ final class ImageStdParams
     /** @var WatermarkParams */
     private static $watermark;
     /** @var array */
-    public static $custom = [];
+    /** @var array<mixed> */
+    public static array $custom = [];
     /** @var int */
     public static $quality = 95;
 
@@ -169,7 +170,7 @@ final class ImageStdParams
     /**
      * Saves the configuration in database.
      */
-    public static function save($save_disabled = true): void
+    public static function save(bool $save_disabled = true): void
     {
         $ser = serialize([
           'd' => self::$type_map,

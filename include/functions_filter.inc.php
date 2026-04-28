@@ -13,6 +13,7 @@ declare(strict_types=1);
 /**
  * Updates data of categories with filtered values
  */
+/** @param array<mixed> $cats */
 function update_cats_with_filtered_data(array &$cats): void
 {
     global $filter;

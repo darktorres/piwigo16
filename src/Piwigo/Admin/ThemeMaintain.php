@@ -26,11 +26,11 @@ class ThemeMaintain
         return null;
     }
 
-    public function deactivate()
+    public function deactivate(): void
     {
     }
 
-    public function delete()
+    public function delete(): void
     {
     }
 }

@@ -180,6 +180,7 @@ order by
  * Apply global functions to mail content
  * return customize mail content rendered
  */
+/** @param string|array<mixed> $customize_mail_content */
 function render_global_customize_mail_content(string|array $customize_mail_content): string
 {
     if (\Piwigo\Core\Config::nbmSendHtmlMail() and !(str_starts_with((string) $customize_mail_content, '<'))) {

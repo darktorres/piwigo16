@@ -206,9 +206,9 @@ function process_password_request(): bool
  *  checks the activation key: does it match the expected pattern? is it
  *  linked to a user? is this user allowed to reset his password?
  *
- * @return mixed (user_id if OK, false otherwise)
+ * @return int|false
  */
-function check_password_reset_key($reset_key)
+function check_password_reset_key(string $reset_key): int|false
 {
     global $page;
 
@@ -297,7 +297,7 @@ function reset_password(): bool
     return true;
 }
 
-function reset_password_key()
+function reset_password_key(): int|false
 {
     $key = input_string('key', null, $_GET);
     if ($key === null) {
@@ -310,12 +310,12 @@ function reset_password_key()
         return false;
     }
 
-    deactivate_password_reset_key($user_id);
-    deactivate_user_auth_keys($user_id);
-    return $user_id;
+    deactivate_password_reset_key((int)$user_id);
+    deactivate_user_auth_keys((int)$user_id);
+    return (int)$user_id;
 }
 
-function reset_password_code()
+function reset_password_code(): int|false
 {
     if (!isset($_SESSION['valid_reset_password_code'])) {
         return false;

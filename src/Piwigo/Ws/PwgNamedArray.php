@@ -15,7 +15,8 @@ class PwgNamedArray
     /**
      * @var mixed[]
      */
-    public $_xmlAttributes;
+    /** @var array<mixed> */
+    public array $_xmlAttributes = [];
 
     /**
      * Constructs a named array
@@ -23,7 +24,8 @@ class PwgNamedArray
      * @param string $_itemName xml element name for values of arr (e.g. image)
      * @param array $xmlAttributes sub-item attributes that will be encoded as xml attributes
      */
-    public function __construct(public $_content, public $_itemName, $xmlAttributes = [])
+    /** @param string[] $xmlAttributes */
+    public function __construct(public mixed $_content, public string $_itemName, array $xmlAttributes = [])
     {
         $this->_xmlAttributes = array_flip($xmlAttributes);
     }

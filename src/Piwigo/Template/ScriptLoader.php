@@ -90,7 +90,8 @@ class ScriptLoader
      * @param string|null $path
      * @param string|int $version
      */
-    public function add($id, $load_mode, $require, $path, $version = 0, $is_template = false): void
+    /** @param string[] $require */
+    public function add(string $id, int|string $load_mode, array $require, ?string $path, string|int $version = 0, bool $is_template = false): void
     {
         if ($this->did_head && $load_mode == 0) {
             trigger_error("Attempt to add script $id but the head has been written", E_USER_WARNING);
@@ -346,7 +347,7 @@ class ScriptLoader
     /**
      * Callback for scripts sorter.
      */
-    private static function cmp_by_mode_and_order($s1, $s2): int|float
+    private static function cmp_by_mode_and_order(mixed $s1, mixed $s2): int|float
     {
         $ret = intval($s1->load_mode) - intval($s2->load_mode);
         if ($ret) {

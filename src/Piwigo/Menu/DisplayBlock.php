@@ -21,7 +21,7 @@ class DisplayBlock
     /** @var string */
     public $raw_content;
 
-    public $id;
+    public string $id = '';
 
     /**
      * @param RegisteredBlock $_registeredBlock

@@ -16,9 +16,9 @@ final class SrcImage
     public const int DIM_NOT_GIVEN = 0x04;
 
     /** @var int */
-    public $id;
+    public int $id = 0;
     /** @var string */
-    public $rel_path;
+    public string $rel_path = '';
     /** @var int */
     public $rotation = 0;
     /** @var int[] */
@@ -28,6 +28,7 @@ final class SrcImage
     /**
      * @param array $infos assoc array of data from images table
      */
+    /** @param array<string,mixed> $infos */
     public function __construct(array $infos)
     {
         $this->id = $infos['id'];
@@ -91,6 +92,7 @@ final class SrcImage
     /**
      * @return string
      */
+    /** @return string|array<mixed> */
     public function get_url(): string|array
     {
         $url = get_root_url().$this->rel_path;

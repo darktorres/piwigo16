@@ -10,7 +10,7 @@ class check_integrity
     public array $ignore_list = [];
     /** @var array<mixed> */
     public array $retrieve_list = [];
-    /** @var callable|array|null */
+    /** @var callable|array<mixed>|null */
     public mixed $build_ignore_list = null;
 
     public function __construct()
@@ -215,8 +215,8 @@ class check_integrity
      *
      *  array 
      */
-    public     /** @param array<mixed>|null $correction_fct_args */
-    function add_anomaly(string $anomaly, ?callable $correction_fct = null, ?array $correction_fct_args = null, ?string $correction_msg = null): void
+    /** @param array<mixed>|null $correction_fct_args */
+    public function add_anomaly(string $anomaly, ?callable $correction_fct = null, ?array $correction_fct_args = null, ?string $correction_msg = null): void
     {
         $id = md5($anomaly.$correction_fct.serialize($correction_fct_args).$correction_msg);
 
@@ -239,8 +239,8 @@ class check_integrity
      *
      *  string[]  array
      */
-    public     /** @param array<mixed> $conf_ignore_list */
-    function update_conf(array $conf_ignore_list = []): void
+    /** @param array<mixed> $conf_ignore_list */
+    public function update_conf(array $conf_ignore_list = []): void
     {
         $conf_c13y_ignore =  [];
         $conf_c13y_ignore['version'] = PHPWG_VERSION;

@@ -41,7 +41,7 @@ abstract class CalendarBase
      *
      * @param string $inner_sql
      */
-    public function initialize($inner_sql): void
+    public function initialize(mixed $inner_sql): void
     {
         $page = &$GLOBALS['page'];
         if ($page['chronology_field'] == 'posted') {

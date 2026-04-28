@@ -22,7 +22,7 @@ class CalendarMonthly extends CalendarBase
      * @param string $inner_sql
      */
     #[\Override]
-    public function initialize($inner_sql): void
+    public function initialize(mixed $inner_sql): void
     {
         parent::initialize($inner_sql);
         $lang = &$GLOBALS['lang'];
@@ -177,6 +177,7 @@ class CalendarMonthly extends CalendarBase
     /**
      * Build global calendar and assign the result in _$tpl_var_
      */
+    /** @param array<mixed> $tpl_var */
     protected function build_global_calendar(array &$tpl_var): bool
     {
         $page = &$GLOBALS['page'];
@@ -237,6 +238,7 @@ class CalendarMonthly extends CalendarBase
     /**
      * Build year calendar and assign the result in _$tpl_var_
      */
+    /** @param array<mixed> $tpl_var */
     protected function build_year_calendar(array &$tpl_var): bool
     {
         $page = &$GLOBALS['page'];
@@ -292,6 +294,7 @@ class CalendarMonthly extends CalendarBase
     /**
      * Build month calendar and assign the result in _$tpl_var_
      */
+    /** @param array<mixed> $tpl_var */
     protected function build_month_calendar(array &$tpl_var): bool
     {
         $page = &$GLOBALS['page'];

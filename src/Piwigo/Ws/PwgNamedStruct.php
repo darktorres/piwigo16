@@ -11,7 +11,9 @@ namespace Piwigo\Ws;
  */
 class PwgNamedStruct
 {
-    /*private*/ public $_xmlAttributes;
+    /*private*/
+    /** @var array<mixed> */
+    public array $_xmlAttributes = [];
 
     /**
      * Constructs a named struct (usually returned by web service function

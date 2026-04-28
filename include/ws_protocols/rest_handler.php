@@ -14,7 +14,7 @@ use Piwigo\Ws\PwgRequestHandler;
 
 class PwgRestRequestHandler extends PwgRequestHandler
 {
-    public function handleRequest(&$service): void
+    public function handleRequest(mixed &$service): void
     {
         $params = [];
 

@@ -38,7 +38,7 @@ class CssLoader
     /**
      * Callback for CSS files sorting.
      */
-    private static function cmp_by_order($a, $b): int|float
+    private static function cmp_by_order(mixed $a, mixed $b): int|float
     {
         return $a->order - $b->order;
     }

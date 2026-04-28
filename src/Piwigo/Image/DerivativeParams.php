@@ -35,7 +35,8 @@ final class DerivativeParams
      *
      * @param array &$tokens
      */
-    public function add_url_tokens(&$tokens): void
+    /** @param array<int|string> $tokens */
+    public function add_url_tokens(array &$tokens): void
     {
         $this->sizing->add_url_tokens($tokens);
     }

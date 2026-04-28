@@ -14,7 +14,7 @@ class PwgTOTP
      * @param string $secret Base32-encoded secret
      * @return string TOTP Code
      */
-    private static function generateCodeFromTimestamp($secret, float $timestamp): string
+    private static function generateCodeFromTimestamp(string $secret, float $timestamp): string
     {
         $key = PwgBase32::decode($secret);
 
@@ -77,7 +77,7 @@ class PwgTOTP
      * @param string $secret Encoded base32 secret
      * @return string 6 digits TOTP code
      */
-    public static function generateCode($secret, $timestamp = 30): string
+    public static function generateCode(string $secret, int $timestamp = 30): string
     {
         $timestamp = floor(time() / $timestamp); // e.g 58338889 > 30-second intervals since 1970 at the moment T
         return self::generateCodeFromTimestamp($secret, $timestamp);
@@ -89,7 +89,7 @@ class PwgTOTP
      * @param string $secret Encoded base32 secret
      * @param int $check_interval Number of 30s steps to check before/after current (default: 1)
      */
-    public static function verifyCode($code, $secret, $timestamp = 30, $check_interval = 1): bool
+    public static function verifyCode(string $code, string $secret, int $timestamp = 30, int $check_interval = 1): bool
     {
         $timestamp = floor(time() / $timestamp);
 

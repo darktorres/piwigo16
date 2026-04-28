@@ -43,6 +43,7 @@ final class Config
     }
 
     /** Returns the array backing this facade (for pre-boot reads). */
+    /** @return array<mixed> */
     private static function src(): array
     {
         return self::$attached ? self::$data : ($GLOBALS['conf'] ?? []);
@@ -672,6 +673,7 @@ final class Config
     public static function uniquenessMode(): string { return self::getString('uniqueness_mode', 'md5sum'); }
     public static function quickSearchIncludeSubAlbums(): bool { return self::getBool('quick_search_include_sub_albums', false); }
     public static function rssReedAuthor(): string { return self::getString('rss_feed_author', 'Piwigo notifier'); }
+    /** @return array<mixed> */
     public static function apiKeyDuration(): array
     {
         $v = self::$data['api_key_duration'] ?? ['30', '90', '180', '365', 'custom'];

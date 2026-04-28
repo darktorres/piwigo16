@@ -35,7 +35,7 @@ final class SizingParams
      * Returns a square SizingParams object.
      *
      */
-    public static function square($w): SizingParams
+    public static function square(int $w): self
     {
         return new SizingParams([$w,$w], 1, [$w,$w]);
     }
@@ -45,7 +45,8 @@ final class SizingParams
      *
      * @param array &$tokens
      */
-    public function add_url_tokens(&$tokens): void
+    /** @param array<int|string> $tokens */
+    public function add_url_tokens(array &$tokens): void
     {
         if ($this->max_crop == 0) {
             $tokens[] = 's'.size_to_url($this->ideal_size);

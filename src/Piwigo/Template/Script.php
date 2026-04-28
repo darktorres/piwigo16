@@ -10,21 +10,23 @@ namespace Piwigo\Template;
 final class Script extends Combinable
 {
     /** @var array */
-    public $extra;
+    /** @var array<mixed> */
+    public array $extra = [];
 
     /**
      * @param int $load_mode 0, 1, or 2
      * @param string $id
      * @param string $path
      * @param string|int $version
-     * @param array $precedents
+     * @param string[] $precedents
      */
     public function __construct(
-        public $load_mode,
-        $id,
-        $path,
-        $version = 0,
-        public $precedents = []
+        public int $load_mode,
+        string $id,
+        ?string $path,
+        string|int $version = 0,
+        /** @var string[] */
+        public array $precedents = []
     ) {
         parent::__construct($id, $path, $version);
         $this->extra = [];

@@ -68,7 +68,7 @@ function get_local_dir(string $category_id): string
 
 // retrieving the site url : "http://domain.com/gallery/" or
 // simply "./galleries/"
-function get_site_url(string $category_id)
+function get_site_url(string $category_id): string
 {
     global $page;
 

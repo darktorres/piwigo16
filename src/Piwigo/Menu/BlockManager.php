@@ -137,7 +137,7 @@ class BlockManager
     /**
      * Sorts the blocks.
      */
-    protected function sort_blocks()
+    protected function sort_blocks(): void
     {
         uasort($this->display_blocks, ['BlockManager', 'cmp_by_position']);
     }
@@ -145,7 +145,7 @@ class BlockManager
     /**
      * Callback for blocks sorting.
      */
-    protected static function cmp_by_position($a, $b): int|float
+    protected static function cmp_by_position(mixed $a, mixed $b): int|float
     {
         return $a->get_position() - $b->get_position();
     }

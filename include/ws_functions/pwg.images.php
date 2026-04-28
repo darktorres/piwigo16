@@ -375,6 +375,9 @@ LIMIT 1
     }
 
     $image_row = pwg_db_fetch_assoc($result);
+    if ($image_row === null) {
+        return new PwgError(404, 'image_id not found');
+    }
     $image_row = array_merge($image_row, ws_std_get_urls($image_row));
 
     $image_row['name_raw'] = $image_row['name'];
@@ -484,8 +487,10 @@ SELECT COUNT(rate) AS count, ROUND(AVG(rate),2) AS average
         $row = pwg_db_fetch_assoc(pwg_query($query));
 
         $rating['score'] = (float)$rating['score'];
-        $rating['average'] = (float)$row['average'];
-        $rating['count'] = (int)$row['count'];
+        if ($row !== null) {
+            $rating['average'] = (float)$row['average'];
+            $rating['count'] = (int)$row['count'];
+        }
     }
 
     //---------------------------------------------------------- related comments
@@ -660,7 +665,7 @@ function ws_images_search(array $params, \Piwigo\Ws\PwgServer $service): array
     );
 
     $image_ids = array_slice(
-        $search_result['items'],
+        $search_result['items'] ?? [],
         $params['page'] * $params['per_page'],
         $params['per_page']
     );
@@ -703,7 +708,7 @@ SELECT *
           'page' => $params['page'],
           'per_page' => $params['per_page'],
           'count' => count($images),
-          'total_count' => count($search_result['items']),
+          'total_count' => count($search_result['items'] ?? []),
           ]
       ),
       'images' => new PwgNamedArray(
@@ -1070,7 +1075,7 @@ SELECT COUNT(*)
   FROM '. IMAGES_TABLE .'
   WHERE id = '. $params['image_id'] .'
 ;';
-    [$count] = pwg_db_fetch_row(pwg_query($query));
+    [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
     if ($count == 0) {
         return new PwgError(404, 'image_id not found');
     }
@@ -1082,7 +1087,7 @@ SELECT COUNT(*)
   WHERE image_id = '. $params['image_id'] .'
     AND category_id = '. $params['category_id'] .'
 ;';
-    [$count] = pwg_db_fetch_row(pwg_query($query));
+    [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
     if ($count == 0) {
         return new PwgError(404, 'This image is not associated to this category');
     }
@@ -1095,7 +1100,7 @@ SELECT MAX(`rank`) AS max_rank
 ;';
     $row = pwg_db_fetch_assoc(pwg_query($query));
 
-    if (is_numeric($row['max_rank'])) {
+    if ($row !== null && is_numeric($row['max_rank'])) {
         if ($params['rank'] > $row['max_rank']) {
             $params['rank'] = $row['max_rank'] + 1;
         }
@@ -1222,6 +1227,9 @@ SELECT
     }
 
     $image = pwg_db_fetch_assoc($result);
+    if ($image === null) {
+        return new PwgError(404, 'image_id not found');
+    }
 
     // since Piwigo 2.4 and derivatives, we do not take the imported "thumb" into account
     if ('thumb' == $params['type']) {
@@ -1311,7 +1319,7 @@ SELECT COUNT(*)
   FROM '. IMAGES_TABLE .'
   WHERE id = '. $params['image_id'] .'
 ;';
-        [$count] = pwg_db_fetch_row(pwg_query($query));
+        [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
         if ($count == 0) {
             return new PwgError(404, 'image_id not found');
         }
@@ -1332,7 +1340,7 @@ SELECT COUNT(*)
   FROM '. IMAGES_TABLE .'
   WHERE '. $where_clause .'
 ;';
-        [$counter] = pwg_db_fetch_row(pwg_query($query));
+        [$counter] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
         if ($counter != 0) {
             return new PwgError(500, 'file already exists');
         }
@@ -1476,7 +1484,7 @@ SELECT COUNT(*)
   FROM '. IMAGES_TABLE .'
   WHERE id = '. $params['image_id'] .'
 ;';
-        [$count] = pwg_db_fetch_row(pwg_query($query));
+        [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
         if ($count == 0) {
             return new PwgError(404, 'image_id not found');
         }
@@ -1524,7 +1532,7 @@ SELECT COUNT(*)
         } else {
             $tag_names = preg_split('~(?<!\\\),~', (string) $params['tags']) ?: [];
             foreach ($tag_names as $tag_name) {
-                $tag_ids[] = tag_id_from_tag_name(preg_replace('#\\\\*,#', ',', $tag_name));
+                $tag_ids[] = tag_id_from_tag_name(preg_replace('#\\\\*,#', ',', $tag_name) ?? '');
             }
         }
 
@@ -1684,7 +1692,7 @@ SELECT *
 
             $image = $images[0];
 
-            $add_status = add_format($filePath, $format_ext, $image['id']);
+            $add_status = add_format($filePath, $format_ext ?? '', $image['id']);
 
             return [
               'image_id' => $image['id'],
@@ -1748,9 +1756,13 @@ SELECT
   WHERE category_id = '.$params['category'][0].'
   AND image_id NOT IN (Select image_id from '.IMAGE_CATEGORY_TABLE.')
 ;';
-        [$nb_photos_lounge] = pwg_db_fetch_row(pwg_query($query));
+        [$nb_photos_lounge] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
         $category_name = get_cat_display_name_from_id($params['category'][0], null);
+
+        if ($image_infos === null) {
+            return null;
+        }
 
         return [
           'image_id' => $image_id,
@@ -1759,7 +1771,7 @@ SELECT
           'name' => $image_infos['name'],
           'category' => [
             'id' => $params['category'][0],
-            'nb_photos' => $category_infos['nb_photos'] + $nb_photos_lounge,
+            'nb_photos' => ($category_infos['nb_photos'] ?? 0) + $nb_photos_lounge,
             'label' => $category_name,
           ],
           'add_status' => $add_status,
@@ -1811,7 +1823,7 @@ SELECT COUNT(*)
   FROM '. IMAGES_TABLE .'
   WHERE id = '. $params['image_id'] .'
 ;';
-        [$count] = pwg_db_fetch_row(pwg_query($query));
+        [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
         if ($count == 0) {
             return new PwgError(404, __FUNCTION__.' : image_id not found');
         }
@@ -2319,7 +2331,7 @@ SELECT path
         return new PwgError(404, 'image_id not found');
     }
 
-    [$path] = pwg_db_fetch_row($result);
+    [$path] = pwg_db_fetch_row($result) ?? [null];
 
     $ret = [];
 
@@ -2655,7 +2667,7 @@ SELECT
       'moved_from_lounge' => $moved_from_lounge,
       'category' => [
         'id' => $params['category_id'],
-        'nb_photos' => $category_infos['nb_photos'],
+        'nb_photos' => $category_infos['nb_photos'] ?? 0,
         'label' => $category_name,
       ],
     ];

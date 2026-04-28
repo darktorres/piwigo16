@@ -944,6 +944,9 @@ SELECT id,representative_ext,path
 ;';
 
     $row = pwg_db_fetch_assoc(pwg_query($query));
+    if ($row === null) {
+        return [];
+    }
     if ($size == null) {
         $src = DerivativeImage::thumb_url($row);
     } else {
@@ -974,7 +977,7 @@ SELECT image_id
   ORDER BY '.DB_RANDOM_FUNCTION.'()
   LIMIT 1
 ;';
-        [$representative] = pwg_db_fetch_row(pwg_query($query));
+        [$representative] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
         $datas[] = [
           'id' => $category_id,
@@ -1288,7 +1291,7 @@ SELECT uppercats
   FROM '.CATEGORIES_TABLE.'
   WHERE id = '.$new_parent.'
 ;';
-        [$new_parent_uppercats] = pwg_db_fetch_row(pwg_query($query));
+        [$new_parent_uppercats] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
         foreach ($categories as $category) {
             // technically, you can't move a category with uppercats 12,125,13,14
@@ -1324,7 +1327,7 @@ SELECT status
   FROM '.CATEGORIES_TABLE.'
   WHERE id = '.$new_parent.'
 ;';
-        [$parent_status] = pwg_db_fetch_row(pwg_query($query));
+        [$parent_status] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
     }
 
     if ('private' == $parent_status) {
@@ -1376,7 +1379,7 @@ SELECT MAX(`rank`) AS max_rank
 ;';
         $row = pwg_db_fetch_assoc(pwg_query($query));
 
-        if (is_numeric($row['max_rank'])) {
+        if ($row !== null && is_numeric($row['max_rank'])) {
             $rank = $row['max_rank'] + 1;
         }
     }
@@ -1425,24 +1428,28 @@ SELECT id, uppercats, global_rank, visible, status
 ;';
         $parent = pwg_db_fetch_assoc(pwg_query($query));
 
-        $insert['id_uppercat'] = $parent['id'];
-        $insert['global_rank'] = $parent['global_rank'].'.'.$insert['rank'];
+        if ($parent !== null) {
+            $insert['id_uppercat'] = $parent['id'];
+            $insert['global_rank'] = $parent['global_rank'].'.'.$insert['rank'];
 
-        // at creation, must a category be visible or not ? Warning : if the
-        // parent category is invisible, the category is automatically create
-        // invisible. (invisible = locked)
-        if ('false' == $parent['visible']) {
-            $insert['visible'] = 'false';
+            // at creation, must a category be visible or not ? Warning : if the
+            // parent category is invisible, the category is automatically create
+            // invisible. (invisible = locked)
+            if ('false' == $parent['visible']) {
+                $insert['visible'] = 'false';
+            }
+
+            // at creation, must a category be public or private ? Warning : if the
+            // parent category is private, the category is automatically create
+            // private.
+            if ('private' == $parent['status']) {
+                $insert['status'] = 'private';
+            }
+
+            $uppercats_prefix = $parent['uppercats'].',';
+        } else {
+            $uppercats_prefix = '';
         }
-
-        // at creation, must a category be public or private ? Warning : if the
-        // parent category is private, the category is automatically create
-        // private.
-        if ('private' == $parent['status']) {
-            $insert['status'] = 'private';
-        }
-
-        $uppercats_prefix = $parent['uppercats'].',';
     } else {
         $uppercats_prefix = '';
     }
@@ -1788,7 +1795,7 @@ function compare_image_tag_lists(array $taglist_before, array $taglist_after): a
 function fill_lounge(array $images, ?array $categories): void
 {
     $inserts = [];
-    foreach ($categories as $category_id) {
+    foreach ($categories ?? [] as $category_id) {
         foreach ($images as $image_id) {
             $inserts[] = [
               'image_id' => $image_id,
@@ -1839,7 +1846,7 @@ INSERT IGNORE
 ;';
     pwg_query($query);
 
-    [$empty_lounge_running] = pwg_db_fetch_row(pwg_query('SELECT value FROM '.CONFIG_TABLE.' WHERE param = "empty_lounge_running"'));
+    [$empty_lounge_running] = pwg_db_fetch_row(pwg_query('SELECT value FROM '.CONFIG_TABLE.' WHERE param = "empty_lounge_running"')) ?? [null];
     list($running_exec_id, ) = explode('-', (string) $empty_lounge_running);
 
     if ($running_exec_id != $exec_id) {
@@ -2479,7 +2486,7 @@ SELECT name
 ;';
     $result = pwg_query($query);
     if (pwg_db_num_rows($result) > 0) {
-        [$groupname] = pwg_db_fetch_row($result);
+        [$groupname] = pwg_db_fetch_row($result) ?? [null];
     } else {
         return false;
     }
@@ -2565,7 +2572,7 @@ SELECT '.\Piwigo\Core\Config::userFields()['username'].'
 ;';
     $result = pwg_query($query);
     if (pwg_db_num_rows($result) > 0) {
-        [$username] = pwg_db_fetch_row($result);
+        [$username] = pwg_db_fetch_row($result) ?? [null];
     } else {
         return false;
     }
@@ -3015,7 +3022,7 @@ SELECT CONCAT(
   )
   FROM `'. $tables[$item] .'`
 ;';
-        [$keys[$item]] = pwg_db_fetch_row(pwg_query($query));
+        [$keys[$item]] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
     }
 
     return $keys;
@@ -3085,14 +3092,14 @@ SELECT
     COUNT(*)
   FROM '.IMAGES_TABLE.'
 ;';
-        [$image_counter_all] = pwg_db_fetch_row(pwg_query($query));
+        [$image_counter_all] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
         $query = '
 SELECT
     COUNT(DISTINCT(image_id))
   FROM '.IMAGE_CATEGORY_TABLE.'
 ;';
-        [$image_counter_in_categories] = pwg_db_fetch_row(pwg_query($query));
+        [$image_counter_in_categories] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
         $counter = $image_counter_all - $image_counter_in_categories;
         conf_update_param('count_orphans', $counter, true);
@@ -3482,31 +3489,31 @@ function get_pwg_general_statitics(): array
 SELECT COUNT(*)
   FROM '.IMAGES_TABLE.'
 ;';
-    [$stats['nb_photos']] = pwg_db_fetch_row(pwg_query($query));
+    [$stats['nb_photos']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
     $query = '
 SELECT COUNT(*)
   FROM '.CATEGORIES_TABLE.'
 ;';
-    [$stats['nb_categories']] = pwg_db_fetch_row(pwg_query($query));
+    [$stats['nb_categories']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
     $query = '
 SELECT COUNT(*)
   FROM '.TAGS_TABLE.'
 ;';
-    [$stats['nb_tags']] = pwg_db_fetch_row(pwg_query($query));
+    [$stats['nb_tags']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
     $query = '
 SELECT COUNT(*)
   FROM '.IMAGE_TAG_TABLE.'
 ;';
-    [$stats['nb_image_tag']] = pwg_db_fetch_row(pwg_query($query));
+    [$stats['nb_image_tag']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
     $query = '
 SELECT COUNT(*)
   FROM '.USERS_TABLE.'
 ;';
-    [$stats['nb_users']] = pwg_db_fetch_row(pwg_query($query));
+    [$stats['nb_users']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
     $query = '
 SELECT
@@ -3514,19 +3521,19 @@ SELECT
   FROM '.USER_INFOS_TABLE.'
   WHERE status IN (\'webmaster\', \'admin\')
 ;';
-    [$stats['nb_admins']] = pwg_db_fetch_row(pwg_query($query));
+    [$stats['nb_admins']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
     $query = '
 SELECT COUNT(*)
   FROM `'.GROUPS_TABLE.'`
 ;';
-    [$stats['nb_groups']] = pwg_db_fetch_row(pwg_query($query));
+    [$stats['nb_groups']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
     $query = '
 SELECT COUNT(*)
   FROM '.RATE_TABLE.'
 ;';
-    [$stats['nb_rates']] = pwg_db_fetch_row(pwg_query($query));
+    [$stats['nb_rates']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
     $query = '
 SELECT
@@ -3534,14 +3541,14 @@ SELECT
   FROM '.HISTORY_SUMMARY_TABLE.'
   WHERE month IS NULL
 ;';
-    [$stats['nb_views']] = pwg_db_fetch_row(pwg_query($query));
+    [$stats['nb_views']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
     $query = '
 SELECT
     SUM(filesize)
   FROM '.IMAGES_TABLE.'
 ;';
-    [$stats['disk_usage']] = pwg_db_fetch_row(pwg_query($query));
+    [$stats['disk_usage']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
     $query = '
 SELECT
@@ -3549,7 +3556,7 @@ SELECT
     SUM(filesize)
   FROM '.IMAGE_FORMAT_TABLE.'
 ;';
-    [$stats['nb_formats'], $stats['formats_disk_usage']] = pwg_db_fetch_row(pwg_query($query));
+    [$stats['nb_formats'], $stats['formats_disk_usage']] = pwg_db_fetch_row(pwg_query($query)) ?? [null, null];
 
     $stats['disk_usage'] += $stats['formats_disk_usage'];
 

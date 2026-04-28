@@ -162,7 +162,7 @@ if (!\Piwigo\Core\Kernel::isBooted()) :
 
 //Check if last major update conf is set if not set it
 if (!\Piwigo\Core\Config::has('last_major_update')) {
-    [$dbnow] = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
+    [$dbnow] = pwg_db_fetch_row(pwg_query('SELECT NOW();')) ?? [null];
     conf_update_param('last_major_update', $dbnow, true);
 }
 

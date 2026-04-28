@@ -89,9 +89,11 @@ SELECT
         $page['start'] = 0;
     }
 
+    $nb_comments = $row['nb_comments'] ?? 0;
+
     $navigation_bar = create_navigation_bar(
         duplicate_picture_url([], ['start']),
-        $row['nb_comments'],
+        $nb_comments,
         $page['start'],
         \Piwigo\Core\Config::get('nb_comment_page'),
         true // We want a clean URL
@@ -99,13 +101,13 @@ SELECT
 
     $template->assign(
         [
-        'COMMENT_COUNT' => $row['nb_comments'],
+        'COMMENT_COUNT' => $nb_comments,
         'navbar' => $navigation_bar,
         'comments' => [],
         ]
     );
 
-    if ($row['nb_comments'] > 0) {
+    if ($nb_comments > 0) {
         // comments order (get, session, conf)
         if (!empty($_GET['comments_order']) && in_array(strtoupper((string) $_GET['comments_order']), ['ASC', 'DESC'])) {
             pwg_set_session_var('comments_order', $_GET['comments_order']);

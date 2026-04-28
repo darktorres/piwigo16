@@ -147,7 +147,7 @@ SELECT COUNT(*)
   FROM '.USERS_TABLE.'
 ;';
 
-[$nb_users] = pwg_db_fetch_row(pwg_query($query));
+[$nb_users] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 $template->assign('nb_users', $nb_users);
 
 $query = '
@@ -157,7 +157,7 @@ SELECT
   ORDER BY activity_id ASC
   LIMIT 1
 ;';
-[$min_date] = pwg_db_fetch_row(pwg_query($query));
+[$min_date] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
 $query = '
 SELECT
@@ -166,7 +166,7 @@ SELECT
   ORDER BY activity_id DESC
   LIMIT 1
 ;';
-[$max_date] = pwg_db_fetch_row(pwg_query($query));
+[$max_date] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
 $template->assign(
     'ACTIVITY_DATES',

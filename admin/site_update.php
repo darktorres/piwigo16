@@ -39,13 +39,13 @@ $query = '
 SELECT galleries_url
   FROM '.SITES_TABLE.'
   WHERE id = '.$site_id;
-[$site_url] = pwg_db_fetch_row(pwg_query($query));
+[$site_url] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 if (!isset($site_url)) {
     die('site '.$site_id.' does not exist');
 }
 $site_is_remote = url_is_remote($site_url);
 
-[$dbnow] = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
+[$dbnow] = pwg_db_fetch_row(pwg_query('SELECT NOW();')) ?? [null];
 define('CURRENT_DATE', $dbnow);
 
 $error_labels = [

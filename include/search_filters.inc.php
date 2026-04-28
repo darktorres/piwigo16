@@ -211,14 +211,14 @@ SELECT
         foreach (array_keys($label_for_threshold) as $threshold) {
             $counters[$threshold] = [
               'label' => $label_for_threshold[$threshold],
-              'counter' => $date_posted['pre_counters'][$threshold] ?? 0,
+              'counter' => ($date_posted['pre_counters'] ?? [])[$threshold] ?? 0,
             ];
         }
 
-        foreach (array_keys($date_posted['list_of_dates']) as $y) {
+        foreach (array_keys($date_posted['list_of_dates'] ?? []) as $y) {
             $date_posted['list_of_dates'][$y]['label'] = l10n('year %d', $y);
 
-            foreach (array_keys($date_posted['list_of_dates'][$y]['months']) as $ym) {
+            foreach (array_keys($date_posted['list_of_dates'][$y]['months'] ?? []) as $ym) {
                 list(, $m) = explode('-', (string) $ym);
                 $date_posted['list_of_dates'][$y]['months'][$ym]['label'] = $lang['month'][(int)$m].' '.$y;
 
@@ -228,9 +228,11 @@ SELECT
                 }
             }
         }
-        krsort($date_posted['list_of_dates']);
+        if (isset($date_posted['list_of_dates'])) {
+            krsort($date_posted['list_of_dates']);
+        }
 
-        $template->assign('LIST_DATE_POSTED', $date_posted['list_of_dates']);
+        $template->assign('LIST_DATE_POSTED', $date_posted['list_of_dates'] ?? []);
         $template->assign('DATE_POSTED', $counters);
     } elseif (isset($my_search['fields']['date_posted']) and !($display_filters['post_date']['access'])) {
         unset($my_search['fields']['date_posted']);
@@ -309,14 +311,14 @@ SELECT
         foreach (array_keys($label_for_threshold) as $threshold) {
             $counters[$threshold] = [
               'label' => $label_for_threshold[$threshold],
-              'counter' => $date_created['pre_counters'][$threshold] ?? 0,
+              'counter' => ($date_created['pre_counters'] ?? [])[$threshold] ?? 0,
             ];
         }
 
-        foreach (array_keys($date_created['list_of_dates']) as $y) {
+        foreach (array_keys($date_created['list_of_dates'] ?? []) as $y) {
             $date_created['list_of_dates'][$y]['label'] = l10n('year %d', $y);
 
-            foreach (array_keys($date_created['list_of_dates'][$y]['months']) as $ym) {
+            foreach (array_keys($date_created['list_of_dates'][$y]['months'] ?? []) as $ym) {
                 list(, $m) = explode('-', (string) $ym);
                 $date_created['list_of_dates'][$y]['months'][$ym]['label'] = $lang['month'][(int)$m].' '.$y;
 
@@ -326,9 +328,11 @@ SELECT
                 }
             }
         }
-        krsort($date_created['list_of_dates']);
+        if (isset($date_created['list_of_dates'])) {
+            krsort($date_created['list_of_dates']);
+        }
 
-        $template->assign('LIST_DATE_CREATED', $date_created['list_of_dates']);
+        $template->assign('LIST_DATE_CREATED', $date_created['list_of_dates'] ?? []);
         $template->assign('DATE_CREATED', $counters);
     } elseif (isset($my_search['fields']['date_created']) and !($display_filters['creation_date']['access'])) {
         unset($my_search['fields']['date_created']);

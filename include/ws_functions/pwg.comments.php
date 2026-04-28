@@ -81,18 +81,18 @@ FROM '.COMMENTS_TABLE.'
 WHERE '.implode(' AND ', $where_clauses).'
 ;';
 
-    $summary = pwg_db_fetch_assoc(pwg_query($query));
-    $total_comments = $summary['all_comments'];
+    $summary = pwg_db_fetch_assoc(pwg_query($query)) ?? [];
+    $total_comments = $summary['all_comments'] ?? null;
 
     switch ($params['status']) {
         case 'pending':
             $where_clauses[] = 'validated = \'false\'';
-            $total_comments = $summary['pending'];
+            $total_comments = $summary['pending'] ?? null;
             break;
 
         case 'validated':
             $where_clauses[] = 'validated = \'true\'';
-            $total_comments = $summary['validated'];
+            $total_comments = $summary['validated'] ?? null;
             break;
     }
 
@@ -129,14 +129,15 @@ SELECT
     $list = [];
     while ($row = pwg_db_fetch_assoc($result)) {
 
-        $medium = DerivativeImage::get_one(
+        $medium_derivative = DerivativeImage::get_one(
             IMG_MEDIUM,
             [
             'id' => $row['image_id'],
             'path' => $row['path'],
             'representative_ext' => $row['representative_ext'],
       ]
-        )->get_url();
+        );
+        $medium = $medium_derivative !== null ? $medium_derivative->get_url() : null;
 
         if (empty($row['author_id']) or $row['author_id'] == \Piwigo\Core\Config::guestId()) {
             $author_name = $row['author'];
@@ -168,7 +169,7 @@ FROM '.COMMENTS_TABLE.'
 WHERE '.implode(' AND ', $where_clauses).'
 ;';
 
-    $dates = pwg_db_fetch_assoc(pwg_query($query));
+    $dates = pwg_db_fetch_assoc(pwg_query($query)) ?? [];
 
     unset($where_clauses['author_id']);
     $query = '
@@ -188,8 +189,8 @@ GROUP BY author_id
       'comments' => $list,
       'filters' => [
         'nb_authors' => $nb_authors_in,
-        'started_at' => $dates['started_at'],
-        'ended_at' => $dates['ended_at'],
+        'started_at' => $dates['started_at'] ?? null,
+        'ended_at' => $dates['ended_at'] ?? null,
       ],
       'paging' => [
         'page' => $params['page'],

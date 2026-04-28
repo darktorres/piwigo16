@@ -76,7 +76,7 @@ if (!empty($q)) {
     $words = split_allwords($q);
 }
 
-if (count($words) > 0 or in_array('allwords', $fields)) {
+if (count($words ?? []) > 0 or in_array('allwords', $fields)) {
     $search['fields']['allwords'] = array(
       'words' => $words,
       'mode' => 'AND',

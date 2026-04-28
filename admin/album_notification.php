@@ -57,16 +57,18 @@ SELECT id, file, path, representative_ext
         if (pwg_db_num_rows($result) > 0) {
             $element = pwg_db_fetch_assoc($result);
 
-            $img = [
-              'link' => make_picture_url(
-                  [
-                  'image_id' => $element['id'],
-                  'image_file' => $element['file'],
-                  'category' => $category,
-                  ]
-              ),
-              'src' => DerivativeImage::url(IMG_THUMB, $element),
-              ];
+            if ($element !== null) {
+                $img = [
+                  'link' => make_picture_url(
+                      [
+                      'image_id' => $element['id'],
+                      'image_file' => $element['file'],
+                      'category' => $category,
+                      ]
+                  ),
+                  'src' => DerivativeImage::url(IMG_THUMB, $element),
+                  ];
+            }
         }
     }
 
@@ -166,7 +168,7 @@ SELECT
   FROM `'.GROUPS_TABLE.'`
   WHERE id = '.$_POST['group'].'
 ;';
-        [$group_name] = pwg_db_fetch_row(pwg_query($query));
+        [$group_name] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
         $template->assign(
             [

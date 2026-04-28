@@ -125,8 +125,8 @@ $template->assign(
     [
     'U_HISTORY' => get_root_url().'admin.php?page=history&filter_user_id=',
     'PWG_TOKEN' => get_pwg_token(),
-    'NB_IMAGE_PAGE' => $default_user['nb_image_page'],
-    'RECENT_PERIOD' => $default_user['recent_period'],
+    'NB_IMAGE_PAGE' => $default_user['nb_image_page'] ?? null,
+    'RECENT_PERIOD' => $default_user['recent_period'] ?? null,
     'theme_options' => get_pwg_themes(),
     'theme_selected' => get_default_theme(),
     'language_options' => get_languages(),
@@ -212,7 +212,7 @@ while ($row = pwg_db_fetch_assoc($result)) {
 }
 
 $template->assign('level_options', $level_options);
-$template->assign('level_selected', $default_user['level']);
+$template->assign('level_selected', $default_user['level'] ?? 0);
 $template->assign('nb_users_by_level', $nb_users_by_level);
 
 $query = '

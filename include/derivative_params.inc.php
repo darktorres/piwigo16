@@ -225,7 +225,7 @@ final class SizingParams
         } else {
             $tokens[] = size_to_url($this->ideal_size);
             $tokens[] = fraction_to_char($this->max_crop);
-            $tokens[] = size_to_url($this->min_size);
+            $tokens[] = size_to_url($this->min_size ?? []);
         }
     }
 
@@ -247,17 +247,17 @@ final class SizingParams
             if ($ratio_w > 1 || $ratio_h > 1) {
                 if ($ratio_w > $ratio_h) {
                     $h = $destCrop->height() / $ratio_w;
-                    if ($h < $this->min_size[1]) {
+                    if ($this->min_size !== null && $h < $this->min_size[1]) {
                         $idealCropPx = $destCrop->width() - floor($destCrop->height() * $this->ideal_size[0] / $this->min_size[1]);
                         $maxCropPx = round($this->max_crop * $destCrop->width());
-                        $destCrop->crop_h(min($idealCropPx, $maxCropPx), $coi);
+                        $destCrop->crop_h(min($idealCropPx, $maxCropPx), $coi ?? '');
                     }
                 } else {
                     $w = $destCrop->width() / $ratio_h;
-                    if ($w < $this->min_size[0]) {
+                    if ($this->min_size !== null && $w < $this->min_size[0]) {
                         $idealCropPx = $destCrop->height() - floor($destCrop->width() * $this->ideal_size[1] / $this->min_size[0]);
                         $maxCropPx = round($this->max_crop * $destCrop->height());
-                        $destCrop->crop_v(min($idealCropPx, $maxCropPx), $coi);
+                        $destCrop->crop_v(min($idealCropPx, $maxCropPx), $coi ?? '');
                     }
                 }
             }

@@ -68,7 +68,9 @@ class Inflector_fr implements InflectorInterface
         foreach ($this->pluralizers as $rule => $replacement) {
             $rc = preg_replace($rule, $replacement, $word, -1, $count);
             if ($count) {
-                $res[] = $rc;
+                if ($rc !== null) {
+                    $res[] = $rc;
+                }
                 break;
             }
         }
@@ -76,7 +78,9 @@ class Inflector_fr implements InflectorInterface
         foreach ($this->singularizers as $rule => $replacement) {
             $rc = preg_replace($rule, $replacement, $word, -1, $count);
             if ($count) {
-                $res[] = $rc;
+                if ($rc !== null) {
+                    $res[] = $rc;
+                }
                 break;
             }
         }

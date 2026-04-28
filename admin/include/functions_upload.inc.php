@@ -204,7 +204,7 @@ SELECT
         // this photo is new
 
         // current date
-        [$dbnow] = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
+        [$dbnow] = pwg_db_fetch_row(pwg_query('SELECT NOW();')) ?? [null];
         [$year, $month, $day] = preg_split('/[^\d]/', (string) $dbnow, 4) ?: ['', '', ''];
 
         // upload directory hierarchy
@@ -233,7 +233,7 @@ SELECT
         } elseif (IMAGETYPE_WEBP == $type) {
             $file_path .= 'webp';
         } elseif (\Piwigo\Core\Config::has('upload_form_all_types') and \Piwigo\Core\Config::uploadFormAllTypes()) {
-            $original_extension = strtolower(get_extension($original_filename));
+            $original_extension = strtolower(get_extension($original_filename ?? ''));
 
             $finfo = finfo_open(FILEINFO_MIME_TYPE);
             $finfo_type = $finfo !== false ? finfo_file($finfo, $source_filepath) : false;
@@ -317,7 +317,7 @@ SELECT
     // we need to save the rotation angle in the database to compute
     // width/height of "multisizes"
     $rotation_angle = pwg_image::get_rotation_angle($file_path);
-    $rotation = pwg_image::get_rotation_code_from_angle($rotation_angle);
+    $rotation = pwg_image::get_rotation_code_from_angle($rotation_angle ?? 0);
 
     $file_infos = pwg_image_infos($file_path);
 
@@ -389,6 +389,9 @@ SELECT
   WHERE id = '.$image_id.'
 ;';
     $image_infos = pwg_db_fetch_assoc(pwg_query($query));
+    if ($image_infos === null) {
+        return (int) $image_id;
+    }
     $src_image = new SrcImage($image_infos);
 
     set_make_full_url();
@@ -415,7 +418,7 @@ function add_uploaded_file_add_to_categories(int $image_id, ?array $categories):
 
     if (!\Piwigo\Core\Config::loungeActive()) {
         // check if we need to use the lounge from now
-        [$nb_photos] = pwg_db_fetch_row(pwg_query('SELECT COUNT(*) FROM '.IMAGES_TABLE.';'));
+        [$nb_photos] = pwg_db_fetch_row(pwg_query('SELECT COUNT(*) FROM '.IMAGES_TABLE.';')) ?? [null];
         if ($nb_photos >= \Piwigo\Core\Config::loungeActivateThreshold()) {
             conf_update_param('lounge_active', true, true);
         }
@@ -658,7 +661,7 @@ function upload_file_tiff(?string $representative_ext, string $file_path): ?stri
             '/\.'.$representative_ext.'$/',
             '-0.'.$representative_ext,
             $representative_file_abspath
-        );
+        ) ?? '';
 
         if (file_exists($first_file_abspath)) {
             rename($first_file_abspath, $representative_file_abspath);
@@ -787,7 +790,7 @@ function upload_file_psd(?string $representative_ext, string $file_path): ?strin
             '/\.'.$representative_ext.'$/',
             '-0.'.$representative_ext,
             $representative_file_abspath
-        );
+        ) ?? '';
 
         if (file_exists($first_file_abspath)) {
             rename($first_file_abspath, $representative_file_abspath);

@@ -123,7 +123,7 @@ class Inflector_en implements InflectorInterface
         }
         if (strlen((string) $word) > 5) {
             $rc = self::run($this->ing2er, $word, $res);
-            if ($rc !== false) {
+            if ($rc !== null && $rc !== false) {
                 self::run($this->pluralizers, $rc, $res);
             }
         }
@@ -136,7 +136,7 @@ class Inflector_en implements InflectorInterface
  */
     /**
      * @param array<string,string> $rules
-     * @param array<string|null> $res
+     * @param array<string> $res
      */
     private static function run(array $rules, string $word, array &$res): string|null|false
     {
@@ -144,7 +144,9 @@ class Inflector_en implements InflectorInterface
             $rc = preg_replace($rule.'i', (string) $replacement, (string) $word, -1, $count);
             if ($count) {
                 if ($rc !== $word) {
-                    $res[] = $rc;
+                    if ($rc !== null) {
+                        $res[] = $rc;
+                    }
                     return $rc;
                 }
                 break;

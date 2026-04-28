@@ -35,7 +35,7 @@ function parse_sort_variables(
     parse_str($url_components['query'] ?? '', $vars);
     $is_first = true;
     foreach ($vars as $key => $value) {
-        if (!in_array($key, $get_rejects) and $key != $get_param) {
+        if (!in_array($key, $get_rejects ?? []) and $key != $get_param) {
             $base_url .= $is_first ? '?' : '&amp;';
             $is_first = false;
 

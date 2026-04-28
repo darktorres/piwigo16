@@ -46,7 +46,7 @@ function get_local_dir(string $category_id): string
         $query .= ' FROM '.CATEGORIES_TABLE.' WHERE id = '.$category_id;
         $query .= ';';
         $row = pwg_db_fetch_assoc(pwg_query($query));
-        $uppercats = $row['uppercats'];
+        $uppercats = $row['uppercats'] ?? '';
     }
 
     $upper_array = explode(',', $uppercats);
@@ -79,7 +79,7 @@ SELECT galleries_url
     AND c.id = '.$category_id.'
 ;';
     $row = pwg_db_fetch_assoc(pwg_query($query));
-    return $row['galleries_url'];
+    return $row['galleries_url'] ?? '';
 }
 
 function get_min_local_dir(string $local_dir): string
@@ -214,7 +214,7 @@ SELECT
     JOIN '.IMAGE_CATEGORY_TABLE.' ON image_id = id
   WHERE category_id = '.$category['id'].'
 ;';
-    [$image_count, $min_date, $max_date] = pwg_db_fetch_row(pwg_query($query));
+    [$image_count, $min_date, $max_date] = pwg_db_fetch_row(pwg_query($query)) ?? [null, null, null];
 
     if ($min_date == $max_date) {
         $info_title = l10n(
@@ -323,7 +323,7 @@ if (!$category['is_virtual']) {
         ]
     );
     $template->assign('CAT_DIR_NAME', basename((string) $category_full_dir));
-    $template->assign('CAT_MIN_DIR', get_min_local_dir($category_full_dir));
+    $template->assign('CAT_MIN_DIR', get_min_local_dir($category_full_dir ?? ''));
 
     if (\Piwigo\Core\Config::enableSynchronization()) {
         $template->assign(

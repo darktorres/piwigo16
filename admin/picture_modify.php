@@ -278,7 +278,7 @@ SELECT
   FROM '.RATE_TABLE.'
   WHERE element_id = '.$_GET['image_id'].'
 ;';
-    [$row['nb_rates']] = pwg_db_fetch_row(pwg_query($query));
+    [$row['nb_rates']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
     $intro_vars['stats'] .= ', '.sprintf(l10n('Rated %d times, score : %.2f'), $row['nb_rates'], $row['rating_score']);
 }

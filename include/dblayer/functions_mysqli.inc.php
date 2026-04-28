@@ -60,7 +60,7 @@ function pwg_db_connect($host, $user, $password, $database): void
     // MySQL 5.7 default settings forbid to select a colum that is not in the
     // group by. We've used that in Piwigo, for years. As an immediate solution
     // we can remove this constraint in the current MySQL session.
-    [$sql_mode_current] = pwg_db_fetch_row(pwg_query('SELECT @@SESSION.sql_mode'));
+    [$sql_mode_current] = pwg_db_fetch_row(pwg_query('SELECT @@SESSION.sql_mode')) ?? [null];
 
     // remove ONLY_FULL_GROUP_BY from the list
     $sql_mode_altered = implode(',', array_diff(explode(',', (string) $sql_mode_current), ['ONLY_FULL_GROUP_BY']));
@@ -168,7 +168,7 @@ function pwg_db_nextval(string $column, string $table): int
     $query = '
 SELECT IF(MAX('.$column.')+1 IS NULL, 1, MAX('.$column.')+1)
   FROM '.$table;
-    [$next] = pwg_db_fetch_row(pwg_query($query));
+    [$next] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
     return $next;
 }
@@ -484,7 +484,7 @@ function mass_inserts(string $table_name, array $dbfields, array $datas, array $
         $first = true;
 
         $query = 'SHOW VARIABLES LIKE \'max_allowed_packet\'';
-        list(, $packet_size) = pwg_db_fetch_row(pwg_query($query));
+        list(, $packet_size) = pwg_db_fetch_row(pwg_query($query)) ?? [null, null];
         $packet_size = $packet_size - 2000; // The last list of values MUST not exceed 2000 character*/
         $query = '';
 
@@ -714,7 +714,7 @@ function pwg_db_get_recent_period(string $period, string $date = 'CURRENT_DATE')
 {
     $query = '
 SELECT '.pwg_db_get_recent_period_expression($period);
-    [$d] = pwg_db_fetch_row(pwg_query($query));
+    [$d] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
     return $d;
 }

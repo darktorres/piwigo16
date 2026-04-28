@@ -143,7 +143,7 @@ SELECT SQL_CALC_FOUND_ROWS i.*
             $images[] = $image;
         }
 
-        [$total_images] = pwg_db_fetch_row(pwg_query('SELECT FOUND_ROWS()'));
+        [$total_images] = pwg_db_fetch_row(pwg_query('SELECT FOUND_ROWS()')) ?? [null];
         $total_images = (int)$total_images;
 
         // let's take care of adding the related albums to each photo
@@ -324,7 +324,7 @@ SELECT SQL_CALC_FOUND_ROWS
     $result = pwg_query($query);
 
     if (isset($params['limit'])) {
-        [$result_count] = pwg_db_fetch_row(pwg_query('SELECT FOUND_ROWS()'));
+        [$result_count] = pwg_db_fetch_row(pwg_query('SELECT FOUND_ROWS()')) ?? [null];
         if ($params['cat_id'] > 0) {
             $result_count = $result_count - 1;
         }
@@ -411,7 +411,7 @@ SELECT representative_picture_id
                 $subresult = pwg_query($query);
 
                 if (pwg_db_num_rows($subresult) > 0) {
-                    [$image_id] = pwg_db_fetch_row($subresult);
+                    [$image_id] = pwg_db_fetch_row($subresult) ?? [null];
                 }
             }
         }
@@ -600,7 +600,7 @@ SELECT SQL_CALC_FOUND_ROWS id, name, comment, uppercats, global_rank, dir, statu
 ;';
     $result = pwg_query($query);
 
-    [$counter] = pwg_db_fetch_row(pwg_query('SELECT FOUND_ROWS()'));
+    [$counter] = pwg_db_fetch_row(pwg_query('SELECT FOUND_ROWS()')) ?? [null];
 
     $cats = [];
     while ($row = pwg_db_fetch_assoc($result)) {
@@ -921,7 +921,7 @@ SELECT COUNT(*)
   FROM '. CATEGORIES_TABLE .'
   WHERE id = '. $params['category_id'] .'
 ;';
-    [$count] = pwg_db_fetch_row(pwg_query($query));
+    [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
     if ($count == 0) {
         return new PwgError(404, 'category_id not found');
     }
@@ -932,7 +932,7 @@ SELECT COUNT(*)
   FROM '. IMAGES_TABLE .'
   WHERE id = '. $params['image_id'] .'
 ;';
-    [$count] = pwg_db_fetch_row(pwg_query($query));
+    [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
     if ($count == 0) {
         return new PwgError(404, 'image_id not found');
     }
@@ -986,7 +986,7 @@ SELECT COUNT(*)
   FROM '.IMAGE_CATEGORY_TABLE.'
   WHERE category_id = '.$params['category_id'].'
 ;';
-    [$nb_images] = pwg_db_fetch_row(pwg_query($query));
+    [$nb_images] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
     if (!\Piwigo\Core\Config::allowRandomRepresentative() and $nb_images != 0) {
         return new PwgError(401, 'not permitted');
@@ -1056,7 +1056,7 @@ SELECT *
 ;';
     $category = pwg_db_fetch_assoc(pwg_query($query));
 
-    return get_category_representant_properties($category['representative_picture_id'], IMG_SMALL);
+    return get_category_representant_properties($category['representative_picture_id'] ?? null, IMG_SMALL);
 }
 
 /**

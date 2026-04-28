@@ -108,7 +108,7 @@ UPDATE '.CATEGORIES_TABLE.'
         $query = '
 UPDATE '.CATEGORIES_TABLE.'
   SET image_order = '.(isset($image_order) ? '\''.$image_order.'\'' : 'NULL').'
-  WHERE uppercats LIKE \''.$cat_info['uppercats'].',%\'';
+  WHERE uppercats LIKE \''.($cat_info['uppercats'] ?? '').',%\'';
         pwg_query($query);
     }
 
@@ -135,15 +135,15 @@ SELECT *
 ;';
 $category = pwg_db_fetch_assoc(pwg_query($query));
 
-if ($category['image_order'] == 'rank ASC' or $category['image_order'] == '`rank` ASC') {
+if ($category !== null && ($category['image_order'] == 'rank ASC' or $category['image_order'] == '`rank` ASC')) {
     $image_order_choice = 'rank';
-} elseif ($category['image_order'] != '') {
+} elseif ($category !== null && $category['image_order'] != '') {
     $image_order_choice = 'user_define';
 }
 
 // Navigation path
 $navigation = get_cat_display_name_cache(
-    $category['uppercats'],
+    $category['uppercats'] ?? '',
     get_root_url().'admin.php?page=album-'
 );
 

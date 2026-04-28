@@ -51,7 +51,8 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
             die(0);
         }
 
-        if (is_null($this->_requestHandler)) {
+        $handler = $this->_requestHandler;
+        if ($handler === null) {
             $this->sendResponse(new PwgError(400, 'Unknown request format'));
             return;
         }
@@ -69,7 +70,7 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
 
         trigger_notify('ws_add_methods', [&$this]);
         uksort($this->_methods, strnatcmp(...));
-        $this->_requestHandler->handleRequest($this);
+        $handler->handleRequest($this);
     }
 
     /**
@@ -77,6 +78,9 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
      */
     public function sendResponse(mixed $response): void
     {
+        if ($this->_responseEncoder === null) {
+            return;
+        }
         $encodedResponse = $this->_responseEncoder->encodeResponse($response);
         $contentType = $this->_responseEncoder->getContentType();
 

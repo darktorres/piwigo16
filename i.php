@@ -144,7 +144,7 @@ function parse_custom_params(array $tokens): \Piwigo\Image\DerivativeParams
         $crop = char_to_fraction($token);
 
         $token = array_shift($tokens);
-        $min_size = url_to_size($token);
+        $min_size = url_to_size($token ?? '');
     }
     return new DerivativeParams(new SizingParams($size, $crop, $min_size));
 }
@@ -477,7 +477,7 @@ SELECT *
 
                 single_update(
                     $prefixeTable.'images',
-                    array('rotation' => pwg_image::get_rotation_code_from_angle($page['rotation_angle'])),
+                    array('rotation' => pwg_image::get_rotation_code_from_angle($page['rotation_angle'] ?? 0)),
                     array('id' => $row['id'])
                 );
             } else {
@@ -552,8 +552,10 @@ if ($params->will_watermark($d_size)) {
     if ($d_size[0] < $wm_size[0] or $d_size[1] < $wm_size[1]) {
         $wm_scaling_params = SizingParams::classic((int) $d_size[0], (int) $d_size[1]);
         $wm_scaling_params->compute($wm_size, null, $tmp, $wm_scaled_size);
-        $wm_size = $wm_scaled_size;
-        $wm_image->resize((int) $wm_scaled_size[0], (int) $wm_scaled_size[1]);
+        if ($wm_scaled_size !== null) {
+            $wm_size = $wm_scaled_size;
+            $wm_image->resize((int) $wm_scaled_size[0], (int) $wm_scaled_size[1]);
+        }
     }
     $x = round(($wm->xpos / 100) * ($d_size[0] - $wm_size[0]));
     $y = round(($wm->ypos / 100) * ($d_size[1] - $wm_size[1]));

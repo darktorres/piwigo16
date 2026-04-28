@@ -80,7 +80,7 @@ SELECT COUNT(*)
   FROM '.CATEGORIES_TABLE.'
   WHERE visible =\'false\'
 ;';
-[$locked_album] = pwg_db_fetch_row(pwg_query($query));
+[$locked_album] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 if ($locked_album > 0) {
     $locked_album_url = PHPWG_ROOT_PATH.'admin.php?page=cat_options&section=visible';
 
@@ -107,19 +107,19 @@ if (\Piwigo\Core\Config::showNewsletterSubscription() and userprefs_get_param('s
     ORDER BY user_id ASC
     LIMIT 1
   ;';
-    [$register_date] = pwg_db_fetch_row(pwg_query($query));
+    [$register_date] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
     $query = '
   SELECT COUNT(*)
     FROM '.CATEGORIES_TABLE.'
   ;';
-    [$nb_cats] = pwg_db_fetch_row(pwg_query($query));
+    [$nb_cats] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
     $query = '
   SELECT COUNT(*)
     FROM '.IMAGES_TABLE.'
   ;';
-    [$nb_images] = pwg_db_fetch_row(pwg_query($query));
+    [$nb_images] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
     include_once(PHPWG_ROOT_PATH.'include/mdetect.php');
     $uagent_obj = new uagent_info();
@@ -168,7 +168,7 @@ if (\Piwigo\Core\Config::activateComments()) {
 SELECT COUNT(*)
   FROM '.COMMENTS_TABLE.'
 ;';
-    [$nb_comments] = pwg_db_fetch_row(pwg_query($query));
+    [$nb_comments] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
     $template->assign('NB_COMMENTS', $nb_comments);
 } else {
     $template->assign('NB_COMMENTS', 0);

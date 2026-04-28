@@ -166,7 +166,7 @@ DELETE
     case 'empty_lounge':
         {
             $rows = empty_lounge();
-            \Piwigo\Core\PageState::current()->addInfo(sprintf('%d photos were moved from the upload lounge to their albums', count($rows)));
+            \Piwigo\Core\PageState::current()->addInfo(sprintf('%d photos were moved from the upload lounge to their albums', count($rows ?? [])));
             break;
         }
     case 'search':
@@ -232,7 +232,7 @@ DELETE
                 // script generator
                 elseif ('%'.'PWGVERSION'.'%' == $versions['current']) {
                     \Piwigo\Core\PageState::current()->addInfo(l10n('You are running on development sources, no check possible.'));
-                } elseif (version_compare($versions['current'], $versions['latest']) < 0) {
+                } elseif (version_compare($versions['current'] ?? '', $versions['latest'] ?? '') < 0) {
                     \Piwigo\Core\PageState::current()->addInfo(l10n('A new version of Piwigo is available.'));
                 } else {
                     \Piwigo\Core\PageState::current()->addInfo(l10n('You are running the latest version of Piwigo.'));
@@ -272,7 +272,7 @@ $purge_urls[ l10n(IMG_CUSTOM) ] = IMG_CUSTOM;
 
 $php_current_timestamp = date('Y-m-d H:i:s');
 $db_version = pwg_get_db_version();
-[$db_current_date] = pwg_db_fetch_row(pwg_query('SELECT now();'));
+[$db_current_date] = pwg_db_fetch_row(pwg_query('SELECT now();')) ?? [null];
 
 $template->assign(
     [
@@ -355,7 +355,7 @@ SELECT
     COUNT(*)
   FROM '.LOUNGE_TABLE.'
 ;';
-[$nb_lounge] = pwg_db_fetch_row(pwg_query($query));
+[$nb_lounge] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
 if ($nb_lounge > 0) {
     $template->assign(

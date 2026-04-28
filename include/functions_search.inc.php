@@ -84,7 +84,7 @@ function get_search_array($search_id): mixed
         bad_request('this search identifier does not exist');
     }
 
-    return unserialize($search['rules']);
+    return unserialize($search['rules'] ?? '');
 }
 
 /**
@@ -130,7 +130,7 @@ function get_regular_search_results(array $search, ?string $images_where = ''): 
     if (isset($search['fields']['expert']) and !empty($search['fields']['expert']['string']) and $display_filters['expert']['access']) {
         $has_filters_filled = true;
 
-        $image_ids_for_filter['expert'] = get_quick_search_results($search['fields']['expert']['string'], [])['items'];
+        $image_ids_for_filter['expert'] = (get_quick_search_results($search['fields']['expert']['string'], []) ?? [])['items'] ?? [];
     }
 
     //
@@ -1421,6 +1421,7 @@ function qsearch_get_images(\Piwigo\Search\QExpression $expr, \Piwigo\Search\QRe
     for ($i = 0; $i < count($expr->stokens); $i++) {
         $token = $expr->stokens[$i];
         $scope_id = isset($token->scope) ? $token->scope->id : 'photo';
+        $token_scope = $token->scope;
         $clauses = [];
 
         $like = addslashes((string) $token->term);
@@ -1447,31 +1448,31 @@ function qsearch_get_images(\Piwigo\Search\QExpression $expr, \Piwigo\Search\QRe
                 break;
             case 'width':
             case 'height':
-                $clauses[] = $token->scope->get_sql($scope_id, $token);
+                if ($token_scope !== null) { $clauses[] = $token_scope->get_sql($scope_id, $token); }
                 break;
             case 'ratio':
-                $clauses[] = $token->scope->get_sql('width/height', $token);
+                if ($token_scope !== null) { $clauses[] = $token_scope->get_sql('width/height', $token); }
                 break;
             case 'size':
-                $clauses[] = $token->scope->get_sql('width*height', $token);
+                if ($token_scope !== null) { $clauses[] = $token_scope->get_sql('width*height', $token); }
                 break;
             case 'hits':
-                $clauses[] = $token->scope->get_sql('hit', $token);
+                if ($token_scope !== null) { $clauses[] = $token_scope->get_sql('hit', $token); }
                 break;
             case 'score':
-                $clauses[] = $token->scope->get_sql('rating_score', $token);
+                if ($token_scope !== null) { $clauses[] = $token_scope->get_sql('rating_score', $token); }
                 break;
             case 'filesize':
-                $clauses[] = $token->scope->get_sql('1024*filesize', $token);
+                if ($token_scope !== null) { $clauses[] = $token_scope->get_sql('1024*filesize', $token); }
                 break;
             case 'created':
-                $clauses[] = $token->scope->get_sql('date_creation', $token);
+                if ($token_scope !== null) { $clauses[] = $token_scope->get_sql('date_creation', $token); }
                 break;
             case 'posted':
-                $clauses[] = $token->scope->get_sql('date_available', $token);
+                if ($token_scope !== null) { $clauses[] = $token_scope->get_sql('date_available', $token); }
                 break;
             case 'id':
-                $clauses[] = $token->scope->get_sql($scope_id, $token);
+                if ($token_scope !== null) { $clauses[] = $token_scope->get_sql($scope_id, $token); }
                 break;
             default:
                 // allow plugins to have their own scope with columns added in db by themselves
@@ -1899,13 +1900,14 @@ SELECT DISTINCT(id) FROM '.IMAGES_TABLE.' i';
  * @param int $search_id
  * @return array<mixed>
  */
-function get_search_results(int|string $search_id, bool $super_order_by, ?string $images_where = '')
+/** @return array<mixed> */
+function get_search_results(int|string $search_id, bool $super_order_by, ?string $images_where = ''): array
 {
     $search = get_search_array($search_id);
     if (!isset($search['q'])) {
         return get_regular_search_results($search, $images_where);
     } else {
-        return get_quick_search_results($search['q'], ['super_order_by' => $super_order_by, 'images_where' => $images_where]);
+        return get_quick_search_results($search['q'], ['super_order_by' => $super_order_by, 'images_where' => $images_where]) ?? [];
     }
 }
 
@@ -1947,7 +1949,7 @@ SELECT
   FROM '.SEARCH_TABLE.'
   WHERE search_uuid = \''.$candidate.'\'
 ;';
-    [$counter] = pwg_db_fetch_row(pwg_query($query));
+    [$counter] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
     if (0 == $counter) {
         return $candidate;
     } else {
@@ -1963,7 +1965,7 @@ function save_search(array $rules, int|string|null $forked_from = null): array
 {
     global $user;
 
-    [$dbnow] = pwg_db_fetch_row(pwg_query('SELECT NOW()'));
+    [$dbnow] = pwg_db_fetch_row(pwg_query('SELECT NOW()')) ?? [null];
     $search_uuid = get_available_search_uuid();
 
     single_insert(

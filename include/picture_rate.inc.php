@@ -24,7 +24,7 @@ SELECT COUNT(rate) AS count
   FROM '.RATE_TABLE.'
   WHERE element_id = '.$picture['current']['id'].'
 ;';
-        [$rate_summary['count'], $rate_summary['average']] = pwg_db_fetch_row(pwg_query($query));
+        [$rate_summary['count'], $rate_summary['average']] = pwg_db_fetch_row(pwg_query($query)) ?? [null, null];
     }
     $template->assign('rate_summary', $rate_summary);
 
@@ -48,7 +48,7 @@ SELECT COUNT(rate) AS count
             $result = pwg_query($query);
             if (pwg_db_num_rows($result) > 0) {
                 $row = pwg_db_fetch_assoc($result);
-                $user_rate = $row['rate'];
+                $user_rate = $row['rate'] ?? null;
             }
         }
 

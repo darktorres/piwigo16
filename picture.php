@@ -48,11 +48,13 @@ SELECT id, file, level
           str_replace(['_','%'], ['/_','/%'], $page['image_file']).
           '.%\' ESCAPE \'/\' LIMIT 1';
     }
-    if (! ($row = pwg_db_fetch_assoc(pwg_query($query)))) {// element does not exist
+    $row = pwg_db_fetch_assoc(pwg_query($query));
+    if ($row === null) {// element does not exist
         page_not_found(
             'The requested image does not exist',
             duplicate_index_url()
         );
+        return;
     }
     if ($row['level'] > $user['level']) {
         access_denied();
@@ -133,7 +135,7 @@ function default_picture_content(string $content, array $element_info): string
         if (array_key_exists($cookie_picture_deriv, ImageStdParams::get_defined_type_map())) {
             pwg_set_session_var('picture_deriv', $cookie_picture_deriv);
         }
-        setcookie('picture_deriv', '', ['expires' => 0, 'path' => cookie_path()]);
+        setcookie('picture_deriv', '', ['expires' => 0, 'path' => cookie_path() ?? '']);
     }
     $deriv_type = pwg_get_session_var('picture_deriv', \Piwigo\Core\Config::derivativeDefaultSize());
     $selected_derivative = $element_info['derivatives'][$deriv_type];
@@ -305,7 +307,7 @@ UPDATE '.CATEGORIES_TABLE.'
                 include_once(PHPWG_ROOT_PATH.'include/functions_comment.inc.php');
                 check_input_parameter('comment_to_edit', $_GET, false, PATTERN_ID);
                 $comment_to_edit = input_int('comment_to_edit', null, $_GET);
-                $author_id = get_comment_author_id($comment_to_edit);
+                $author_id = get_comment_author_id($comment_to_edit ?? 0);
 
                 if (can_manage_comment('edit', (int) $author_id)) {
                     $post_content = input_string('content', null, $_POST);
@@ -356,10 +358,10 @@ UPDATE '.CATEGORIES_TABLE.'
                 check_input_parameter('comment_to_delete', $_GET, false, PATTERN_ID);
                 $comment_to_delete = input_int('comment_to_delete', null, $_GET);
 
-                $author_id = get_comment_author_id($comment_to_delete);
+                $author_id = get_comment_author_id($comment_to_delete ?? 0);
 
                 if (can_manage_comment('delete', (int) $author_id)) {
-                    delete_user_comment($comment_to_delete);
+                    delete_user_comment($comment_to_delete ?? 0);
                 }
 
                 redirect($url_self);
@@ -373,10 +375,10 @@ UPDATE '.CATEGORIES_TABLE.'
                 check_input_parameter('comment_to_validate', $_GET, false, PATTERN_ID);
                 $comment_to_validate = input_int('comment_to_validate', null, $_GET);
 
-                $author_id = get_comment_author_id($comment_to_validate);
+                $author_id = get_comment_author_id($comment_to_validate ?? 0);
 
                 if (can_manage_comment('validate', (int) $author_id)) {
-                    validate_user_comment($comment_to_validate);
+                    validate_user_comment($comment_to_validate ?? 0);
                 }
 
                 redirect($url_self);
@@ -743,7 +745,7 @@ SELECT COUNT(*) AS nb_fav
     AND user_id = '.$user['id'].'
 ;';
     $row = pwg_db_fetch_assoc(pwg_query($query));
-    $is_favorite = $row['nb_fav'] != 0;
+    $is_favorite = ($row['nb_fav'] ?? 0) != 0;
 
     $template->assign(
         'favorite',

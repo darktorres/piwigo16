@@ -233,7 +233,7 @@ SELECT DISTINCT ';
     /* GET THE RESULT OF SQL_CALC_FOUND_ROWS if display total_count is requested*/
     if (isset($params['display']['total_count'])) {
         $total_count_query_result = pwg_query('SELECT FOUND_ROWS();');
-        [$total_count] = pwg_db_fetch_row($total_count_query_result);
+        [$total_count] = pwg_db_fetch_row($total_count_query_result) ?? [null];
         $total_count = (int)$total_count;
     }
     while ($row = pwg_db_fetch_assoc($result)) {
@@ -586,7 +586,7 @@ SELECT '.\Piwigo\Core\Config::userFields()['password'].' AS password
   FROM '.USERS_TABLE.'
   WHERE '.\Piwigo\Core\Config::userFields()['id'].' = \''.$user['id'].'\'
 ;';
-        [$current_password] = pwg_db_fetch_row(pwg_query($query));
+        [$current_password] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
         if (!\Piwigo\Core\Config::passwordVerify()($params['password'], $current_password)) {
             return new PwgError(403, l10n('Current password is wrong'));
@@ -669,7 +669,7 @@ SELECT COUNT(*)
   FROM '. IMAGES_TABLE .'
   WHERE id = '. $params['image_id'] .'
 ;';
-    [$count] = pwg_db_fetch_row(pwg_query($query));
+    [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
     if ($count == 0) {
         return new PwgError(404, 'image_id not found');
     }
@@ -709,7 +709,7 @@ SELECT COUNT(*)
   FROM '. IMAGES_TABLE .'
   WHERE id = '. $params['image_id'] .'
 ;';
-    [$count] = pwg_db_fetch_row(pwg_query($query));
+    [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
     if ($count == 0) {
         return new PwgError(404, 'image_id not found');
     }

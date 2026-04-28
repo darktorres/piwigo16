@@ -218,7 +218,7 @@ DELETE
                 // script generator
                 elseif ('%'.'PWGVERSION'.'%' == $versions['current']) {
                     \Piwigo\Core\PageState::current()->addInfo(l10n('You are running on development sources, no check possible.'));
-                } elseif (version_compare($versions['current'], $versions['latest']) < 0) {
+                } elseif (version_compare($versions['current'] ?? '', $versions['latest'] ?? '') < 0) {
                     \Piwigo\Core\PageState::current()->addInfo(l10n('A new version of Piwigo is available.'));
 
                     $update_url = PHPWG_ROOT_PATH.'admin.php?page=updates';
@@ -252,7 +252,7 @@ $purge_urls[ l10n(IMG_CUSTOM) ] = sprintf($url_format, 'derivatives').'&amp;type
 
 $php_current_timestamp = date('Y-m-d H:i:s');
 $db_version = pwg_get_db_version();
-[$db_current_date] = pwg_db_fetch_row(pwg_query('SELECT now();'));
+[$db_current_date] = pwg_db_fetch_row(pwg_query('SELECT now();')) ?? [null];
 
 [$container_name, $container_version] = get_container_info();
 

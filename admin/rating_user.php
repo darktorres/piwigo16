@@ -245,7 +245,7 @@ SELECT
     COUNT(*)
   FROM '.RATE_TABLE.
 ';';
-[$nb_elements] = pwg_db_fetch_row(pwg_query($query));
+[$nb_elements] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
 $template->assign([
   'F_ACTION' => get_root_url().'admin.php',

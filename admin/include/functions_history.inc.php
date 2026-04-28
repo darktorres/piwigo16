@@ -375,7 +375,7 @@ SELECT
     COUNT(*)
   FROM '.HISTORY_TABLE.'
 ;';
-    [$count] = pwg_db_fetch_row(pwg_query($query));
+    [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
     if ($count <= \Piwigo\Core\Config::historyAutopurgeKeepLines()) {
         history_remove_summarized_column();
@@ -455,7 +455,7 @@ SELECT
     COUNT(*)
   FROM '.HISTORY_TABLE.'
 ;';
-    [$count] = pwg_db_fetch_row(pwg_query($query));
+    [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
     if ($count > \Piwigo\Core\Config::historyAutopurgeKeepLines() + \Piwigo\Core\Config::historyAutopurgeBlocksize()) {
         // it's not yet time to remove history.summarized

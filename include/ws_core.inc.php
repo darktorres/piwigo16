@@ -265,9 +265,14 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
             ['methodName']
         );
 
+        $requestHandler = $this->_requestHandler;
+        if ($requestHandler === null) {
+            return;
+        }
+
         trigger_notify('ws_add_methods', [&$this]);
         uksort($this->_methods, strnatcmp(...));
-        $this->_requestHandler->handleRequest($this);
+        $requestHandler->handleRequest($this);
     }
 
     /**
@@ -275,6 +280,10 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
      */
     public function sendResponse(mixed $response): void
     {
+        if ($this->_responseEncoder === null) {
+            return;
+        }
+
         $encodedResponse = $this->_responseEncoder->encodeResponse($response);
         $contentType = $this->_responseEncoder->getContentType();
 

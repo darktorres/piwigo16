@@ -43,7 +43,7 @@ use Piwigo\Ws\PwgNamedArray;
 
     $max_urls = $params['max_urls'];
     $query = 'SELECT MAX(id)+1, COUNT(*) FROM '. IMAGES_TABLE .';';
-    [$max_id, $image_count] = pwg_db_fetch_row(pwg_query($query));
+    [$max_id, $image_count] = pwg_db_fetch_row(pwg_query($query)) ?? [null, null];
 
     if (0 == $image_count) {
         return [];
@@ -140,45 +140,45 @@ function ws_getInfos(array $params, \Piwigo\Ws\PwgServer &$service): array
     $infos['version'] = PHPWG_VERSION;
 
     $query = 'SELECT COUNT(*) FROM '.IMAGES_TABLE.';';
-    [$infos['nb_elements']] = pwg_db_fetch_row(pwg_query($query));
+    [$infos['nb_elements']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
     $query = 'SELECT COUNT(*) FROM '.CATEGORIES_TABLE.';';
-    [$infos['nb_categories']] = pwg_db_fetch_row(pwg_query($query));
+    [$infos['nb_categories']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
     $query = 'SELECT COUNT(*) FROM '.CATEGORIES_TABLE.' WHERE dir IS NULL;';
-    [$infos['nb_virtual']] = pwg_db_fetch_row(pwg_query($query));
+    [$infos['nb_virtual']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
     $query = 'SELECT COUNT(*) FROM '.CATEGORIES_TABLE.' WHERE dir IS NOT NULL;';
-    [$infos['nb_physical']] = pwg_db_fetch_row(pwg_query($query));
+    [$infos['nb_physical']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
     $query = 'SELECT COUNT(*) FROM '.IMAGE_CATEGORY_TABLE.';';
-    [$infos['nb_image_category']] = pwg_db_fetch_row(pwg_query($query));
+    [$infos['nb_image_category']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
     $query = 'SELECT COUNT(*) FROM '.TAGS_TABLE.';';
-    [$infos['nb_tags']] = pwg_db_fetch_row(pwg_query($query));
+    [$infos['nb_tags']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
     $query = 'SELECT COUNT(*) FROM '.IMAGE_TAG_TABLE.';';
-    [$infos['nb_image_tag']] = pwg_db_fetch_row(pwg_query($query));
+    [$infos['nb_image_tag']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
     $query = 'SELECT COUNT(*) FROM '.USERS_TABLE.';';
-    [$infos['nb_users']] = pwg_db_fetch_row(pwg_query($query));
+    [$infos['nb_users']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
     $query = 'SELECT COUNT(*) FROM `'.GROUPS_TABLE.'`;';
-    [$infos['nb_groups']] = pwg_db_fetch_row(pwg_query($query));
+    [$infos['nb_groups']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
     $query = 'SELECT COUNT(*) FROM '.COMMENTS_TABLE.';';
-    [$infos['nb_comments']] = pwg_db_fetch_row(pwg_query($query));
+    [$infos['nb_comments']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
     // first element
     if ($infos['nb_elements'] > 0) {
         $query = 'SELECT MIN(date_available) FROM '.IMAGES_TABLE.';';
-        [$infos['first_date']] = pwg_db_fetch_row(pwg_query($query));
+        [$infos['first_date']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
     }
 
     // unvalidated comments
     if ($infos['nb_comments'] > 0) {
         $query = 'SELECT COUNT(*) FROM '.COMMENTS_TABLE.' WHERE validated=\'false\';';
-        [$infos['nb_unvalidated_comments']] = pwg_db_fetch_row(pwg_query($query));
+        [$infos['nb_unvalidated_comments']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
     }
 
     // Cache size
@@ -397,7 +397,7 @@ function ws_session_getStatus($params, \Piwigo\Ws\PwgServer &$service): mixed
     $res['pwg_token'] = get_pwg_token();
     $res['charset'] = get_pwg_charset();
 
-    [$dbnow] = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
+    [$dbnow] = pwg_db_fetch_row(pwg_query('SELECT NOW();')) ?? [null];
     $res['current_datetime'] = $dbnow;
     $res['version'] = PHPWG_VERSION;
     $res['save_visits'] = do_log();
@@ -795,7 +795,7 @@ SELECT rules
   FROM '.SEARCH_TABLE.'
   WHERE id = '.$search_id.'
 ;';
-    [$serialized_rules] = pwg_db_fetch_row(pwg_query($query));
+    [$serialized_rules] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
     $page['search'] = unserialize($serialized_rules);
 

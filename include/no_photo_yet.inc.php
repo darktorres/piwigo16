@@ -31,7 +31,7 @@ SELECT
     COUNT(*)
   FROM '.IMAGES_TABLE.'
 ;';
-    [$nb_photos] = pwg_db_fetch_row(pwg_query($query));
+    [$nb_photos] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
     if (0 == $nb_photos) {
         // make sure we don't use the mobile theme, which is not compatible with
         // the "no photo yet" feature

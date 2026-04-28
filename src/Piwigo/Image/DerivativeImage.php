@@ -17,7 +17,7 @@ final class DerivativeImage
     private $rel_path;
     /** @var string */
     private $rel_url;
-    private bool $is_cached = true;
+    private ?bool $is_cached = true;
 
     /**
      * @param string|DerivativeParams $type standard derivative param type (e.g. IMG_*)
@@ -333,7 +333,7 @@ final class DerivativeImage
                 }
             }
         }
-        return $size;
+        return $size ?? [];
     }
 
     /**
@@ -353,6 +353,6 @@ final class DerivativeImage
 
     public function is_cached(): bool
     {
-        return $this->is_cached;
+        return $this->is_cached ?? true;
     }
 }

@@ -16,19 +16,19 @@ class Combinable
 
     /**
      * @param string $id
-     * @param string $path
+     * @param string|null $path
      * @param string|int $version
      */
-    public function __construct(public $id, $path, public $version = 0)
+    public function __construct(public $id, ?string $path, public $version = 0)
     {
         $this->set_path($path);
         $this->is_template = false;
     }
 
     /**
-     * @param string $path
+     * @param string|null $path
      */
-    public function set_path($path): void
+    public function set_path(?string $path): void
     {
         if (!empty($path)) {
             $this->path = $path;

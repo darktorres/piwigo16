@@ -22,7 +22,7 @@ SELECT
     COUNT(*)
   FROM '.CATEGORIES_TABLE.'
 ;';
-[$albums_counter] = pwg_db_fetch_row(pwg_query($query));
+[$albums_counter] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |

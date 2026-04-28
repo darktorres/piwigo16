@@ -71,7 +71,7 @@ SELECT COUNT(id) AS count
   WHERE galleries_url = \''.$url.'\'
 ;';
     $row = pwg_db_fetch_assoc(pwg_query($query));
-    if ($row['count'] > 0) {
+    if (($row['count'] ?? 0) > 0) {
         \Piwigo\Core\PageState::current()->addError(l10n('This site already exists').' ['.$url.']');
     }
     if (count($page['errors']) == 0) {
@@ -104,7 +104,7 @@ SELECT galleries_url
   FROM '.SITES_TABLE.'
   WHERE id = '.$page['site'].'
 ;';
-    [$galleries_url] = pwg_db_fetch_row(pwg_query($query));
+    [$galleries_url] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
     switch ($_GET['action']) {
         case 'delete':
             {

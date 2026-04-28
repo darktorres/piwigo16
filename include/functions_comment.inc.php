@@ -109,7 +109,7 @@ SELECT COUNT(*) AS user_exists
   FROM '.USERS_TABLE.'
   WHERE '.\Piwigo\Core\Config::userFields()['username']." = '".addslashes((string) $comm['author'])."'";
             $row = pwg_db_fetch_assoc(pwg_query($query));
-            if ($row['user_exists'] == 1) {
+            if (($row['user_exists'] ?? 0) == 1) {
                 $infos[] = l10n('This login is already used by another user');
                 $comment_action = 'reject';
             }
@@ -179,7 +179,7 @@ SELECT count(1) FROM '.COMMENTS_TABLE.'
         $query .= '
 ;';
 
-        [$counter] = pwg_db_fetch_row(pwg_query($query));
+        [$counter] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
         if ($counter > 0) {
             $infos[] = l10n('Anti-flood system : please wait for a moment before trying to post another comment');
             $comment_action = 'reject';
@@ -440,7 +440,7 @@ SELECT
         }
     }
 
-    [$author_id] = pwg_db_fetch_row($result);
+    [$author_id] = pwg_db_fetch_row($result) ?? [null];
 
     return $author_id;
 }

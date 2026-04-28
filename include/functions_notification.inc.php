@@ -166,7 +166,7 @@ function custom_notification_query(string $action, string $type, ?string $start 
                         break;
                 }
                 $query = 'SELECT COUNT(DISTINCT '.$field_id.') '.$query.';';
-                [$count] = pwg_db_fetch_row(pwg_query($query));
+                [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
                 return $count;
 
             }
@@ -219,9 +219,9 @@ function nb_new_comments(?string $start = null, ?string $end = null): mixed
  * @param string $end (mysql datetime format)
  * @return int[] comment ids
  */
-function new_comments($start = null, $end = null)
+function new_comments($start = null, $end = null): array
 {
-    return custom_notification_query('info', 'new_comments', $start, $end);
+    return custom_notification_query('info', 'new_comments', $start, $end) ?? [];
 }
 
 /**
@@ -256,9 +256,9 @@ function nb_new_elements(?string $start = null, ?string $end = null): mixed
  * @param string $end (mysql datetime format)
  * @return int[] photos ids
  */
-function new_elements($start = null, $end = null)
+function new_elements($start = null, $end = null): array
 {
-    return custom_notification_query('info', 'new_elements', $start, $end);
+    return custom_notification_query('info', 'new_elements', $start, $end) ?? [];
 }
 
 /**
@@ -280,9 +280,9 @@ function nb_updated_categories(?string $start = null, ?string $end = null): mixe
  * @param string $end (mysql datetime format)
  * @return int[] categories ids
  */
-function updated_categories($start = null, $end = null)
+function updated_categories($start = null, $end = null): array
 {
-    return custom_notification_query('info', 'updated_categories', $start, $end);
+    return custom_notification_query('info', 'updated_categories', $start, $end) ?? [];
 }
 
 /**
@@ -304,9 +304,9 @@ function nb_new_users(?string $start = null, ?string $end = null): mixed
  * @param string $end (mysql datetime format)
  * @return int[] user ids
  */
-function new_users($start = null, $end = null)
+function new_users($start = null, $end = null): array
 {
-    return custom_notification_query('info', 'new_users', $start, $end);
+    return custom_notification_query('info', 'new_users', $start, $end) ?? [];
 }
 
 /**
@@ -513,7 +513,7 @@ function get_recent_post_dates_array(array $args): array
         (empty($args['max_dates']) ? 3 : $args['max_dates']),
         (empty($args['max_elements']) ? 3 : $args['max_elements']),
         (empty($args['max_cats']) ? 3 : $args['max_cats'])
-    );
+    ) ?? [];
 }
 
 

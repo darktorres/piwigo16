@@ -142,7 +142,7 @@ SELECT id
                     if (pwg_db_num_rows($result) == 0) {
                         $new_theme = 'default';
                     } else {
-                        [$new_theme] = pwg_db_fetch_row($result);
+                        [$new_theme] = pwg_db_fetch_row($result) ?? [null];
                     }
 
                     $this->set_default_theme($new_theme);

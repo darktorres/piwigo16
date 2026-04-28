@@ -50,7 +50,7 @@ SELECT '.implode(',', $fields).'
 
     // Reset to default (Guest) custom settings
     if (input_string('reset_to_default', null, $_POST) !== null) {
-        $userdata = array_merge($userdata, $default_user);
+        $userdata = array_merge($userdata, $default_user ?? []);
     }
 
     save_profile_from_post($userdata, $page['errors']);
@@ -202,7 +202,7 @@ function save_profile_from_post(array $userdata, array &$errors): bool
     FROM '.USERS_TABLE.'
     WHERE '.\Piwigo\Core\Config::userFields()['id'].' = \''.$userdata['id'].'\'
   ;';
-            [$current_password] = pwg_db_fetch_row(pwg_query($query));
+            [$current_password] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
             if (!\Piwigo\Core\Config::passwordVerify()($_POST['password'], $current_password)) {
                 $errors[] = l10n('Current password is wrong');
@@ -372,7 +372,7 @@ function load_profile_in_template(string $url_action, string $url_redirect, arra
     $template->assign('IN_ADMIN', defined('IN_ADMIN'));
 
     // api key expiration choice
-    [$dbnow] = pwg_db_fetch_row(pwg_query('SELECT ADDDATE(NOW(), INTERVAL 1 DAY);'));
+    [$dbnow] = pwg_db_fetch_row(pwg_query('SELECT ADDDATE(NOW(), INTERVAL 1 DAY);')) ?? [null];
     $template->assign('API_CURRENT_DATE', explode(' ', (string) $dbnow)[0]);
 
     $duration = [];

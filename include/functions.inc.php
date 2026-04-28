@@ -381,7 +381,7 @@ function str2url(string $str): string
     $str = $safe = pwg_transliterate($str);
     $str = preg_replace('/[^\x80-\xffa-z0-9_\s\'\:\/\[\],-]/', '', $str);
     $str = preg_replace('/[\s\'\:\/\[\],-]+/', ' ', trim((string) $str));
-    $res = str_replace(' ', '_', $str);
+    $res = str_replace(' ', '_', $str ?? '');
 
     if (empty($res)) {
         $res = str_replace(' ', '_', $safe);
@@ -663,7 +663,7 @@ function pwg_activity(string $object, array|int|string $object_id, string $actio
           'session_idx' => $session_id,
           'ip_address' => $ip_address,
           'details' => $details_insert,
-          'user_agent' => pwg_db_real_escape_string($user_agent),
+          'user_agent' => pwg_db_real_escape_string($user_agent ?? ''),
         ];
     }
 
@@ -995,7 +995,7 @@ function time_since(int|string|null $original, string $stop = 'minute', ?string 
  * @param string $default if _$original_ is empty
  * @return string
  */
-function transform_date($original, $format_in, $format_out, $default = null)
+function transform_date($original, $format_in, $format_out, $default = null): ?string
 {
     if (empty($original)) {
         return $default;
@@ -1354,7 +1354,7 @@ SELECT '.\Piwigo\Core\Config::userFields()['email'].'
   FROM '.USERS_TABLE.'
   WHERE '.\Piwigo\Core\Config::userFields()['id'].' = '.\Piwigo\Core\Config::webmasterId().'
 ;';
-    [$email] = pwg_db_fetch_row(pwg_query($query));
+    [$email] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
     $email = trigger_change('get_webmaster_mail_address', $email);
 
@@ -1409,7 +1409,7 @@ function pwg_is_dbconf_writeable(): bool
     [$param, $value] = ['pwg_is_dbconf_writeable_'.generate_key(12), date('c').' '.generate_key(20)];
 
     conf_update_param($param, $value);
-    [$dbvalue] = pwg_db_fetch_row(pwg_query('SELECT value FROM '.CONFIG_TABLE.' WHERE param = \''.$param.'\''));
+    [$dbvalue] = pwg_db_fetch_row(pwg_query('SELECT value FROM '.CONFIG_TABLE.' WHERE param = \''.$param.'\'')) ?? [null];
 
     if ($dbvalue != $value) {
         return false;
@@ -2013,13 +2013,13 @@ function check_input_parameter(string $param_name, array $param_array, bool $is_
         }
 
         foreach ($param_value as $key => $item_to_check) {
-            if (!preg_match(PATTERN_ID, (string) $key) or !preg_match($pattern, (string) $item_to_check)) {
+            if (!preg_match(PATTERN_ID, (string) $key) or !preg_match($pattern ?? '', (string) $item_to_check)) {
                 fatal_error('[Hacking attempt] an item is not valid in input parameter "'.$param_name.'"');
             }
         }
         return true;
     } else {
-        if (!preg_match($pattern, (string) $param_value)) {
+        if (!preg_match($pattern ?? '', (string) $param_value)) {
             fatal_error('[Hacking attempt] the input parameter "'.$param_name.'" is not valid');
         }
         return true;
@@ -2172,7 +2172,7 @@ SELECT COUNT(DISTINCT(com.id))
     ON ic.image_id = com.image_id
   WHERE '.implode('
     AND ', $where);
-        [$user['nb_available_comments']] = pwg_db_fetch_row(pwg_query($query));
+        [$user['nb_available_comments']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
         single_update(
             USER_CACHE_TABLE,
@@ -2206,9 +2206,9 @@ function safe_version_compare($a, $b, $op = null): int|bool
     $b = preg_replace_callback('#\b([a-z]{1})\b#i', $replace_chars, (string) $b);
 
     if (empty($op)) {
-        return version_compare($a, $b);
+        return version_compare((string) $a, (string) $b);
     } else {
-        return version_compare($a, $b, $op);
+        return version_compare((string) $a, (string) $b, $op);
     }
 }
 
@@ -2300,7 +2300,7 @@ function send_piwigo_infos(): void
 
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
-    [$db_current_date] = pwg_db_fetch_row(pwg_query('SELECT now();'));
+    [$db_current_date] = pwg_db_fetch_row(pwg_query('SELECT now();')) ?? [null];
 
     if (!\Piwigo\Core\Config::has('send_piwigo_infos_origin_hash')) {
         conf_update_param('send_piwigo_infos_origin_hash', sha1(random_bytes(1000)), true);
@@ -2706,7 +2706,7 @@ INSERT IGNORE
 ;';
     pwg_query($query);
 
-    [$running_exec] = pwg_db_fetch_row(pwg_query('SELECT value FROM '.CONFIG_TABLE.' WHERE param = "'.$token_name.'_running"'));
+    [$running_exec] = pwg_db_fetch_row(pwg_query('SELECT value FROM '.CONFIG_TABLE.' WHERE param = "'.$token_name.'_running"')) ?? [null];
     list($running_exec_id, ) = explode('-', (string) $running_exec);
 
     if ($running_exec_id != $exec_id) {
@@ -2726,7 +2726,7 @@ SELECT
   FROM '.CONFIG_TABLE.'
   WHERE param = "'.$token_name.'_running"
 ;';
-    [$counter] = pwg_db_fetch_row(pwg_query($query));
+    [$counter] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
     return $counter > 0;
 }

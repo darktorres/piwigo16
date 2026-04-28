@@ -81,12 +81,12 @@ function pwg_set_cookie_var(string $var, $value, $expire = null): bool
 {
     if ($value == null or $expire === 0) {
         unset($_COOKIE['pwg_'.$var]);
-        return setcookie('pwg_'.$var, '', ['expires' => 0, 'path' => cookie_path()]);
+        return setcookie('pwg_'.$var, '', ['expires' => 0, 'path' => cookie_path() ?? '/']);
 
     } else {
         $_COOKIE['pwg_'.$var] = $value;
         $expire = is_numeric($expire) ? $expire : strtotime('+10 years');
-        return setcookie('pwg_'.$var, (string) $value, ['expires' => $expire, 'path' => cookie_path()]);
+        return setcookie('pwg_'.$var, (string) $value, ['expires' => $expire, 'path' => cookie_path() ?? '/']);
     }
 }
 

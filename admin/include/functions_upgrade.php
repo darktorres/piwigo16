@@ -139,7 +139,7 @@ SELECT theme
   FROM '.PREFIX_TABLE.'user_infos
   WHERE user_id = '.\Piwigo\Core\Config::defaultUserId().'
 ;';
-        [$default_theme] = pwg_db_fetch_row(pwg_query($query));
+        [$default_theme] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
         // if the default theme has just been deactivated, let's set another core theme as default
         if (in_array($default_theme, $theme_ids)) {
@@ -150,7 +150,7 @@ SELECT
   FROM '.PREFIX_TABLE.'themes
   WHERE id = \''.PHPWG_DEFAULT_TEMPLATE.'\'
 ;';
-            [$counter] = pwg_db_fetch_row(pwg_query($query));
+            [$counter] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
             if ($counter < 1) {
                 // we need to activate theme first
                 $themes = new themes();
@@ -231,7 +231,7 @@ WHERE '.\Piwigo\Core\Config::userFields()['username'].'=\''.$username.'\'
     }
     $row = pwg_db_fetch_assoc(pwg_query($query));
 
-    if (!\Piwigo\Core\Config::passwordVerify()($password, $row['password'])) {
+    if ($row === null || !\Piwigo\Core\Config::passwordVerify()($password, $row['password'])) {
         \Piwigo\Core\PageState::current()->addError(l10n('Invalid password!'));
     } elseif ($row['status'] != 'admin' and $row['status'] != 'webmaster') {
         \Piwigo\Core\PageState::current()->addError(l10n('You do not have access rights to run upgrade'));

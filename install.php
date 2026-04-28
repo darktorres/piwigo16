@@ -306,7 +306,7 @@ INSERT INTO '.$prefixeTable.'config (param,value,comment)
         // Available upgrades must be ignored after a fresh installation. To
         // make PWG avoid upgrading, we must tell it upgrades have already been
         // made.
-        [$dbnow] = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
+        [$dbnow] = pwg_db_fetch_row(pwg_query('SELECT NOW();')) ?? [null];
         define('CURRENT_DATE', $dbnow);
         $datas = [];
         foreach (get_available_upgrade_ids() as $upgrade_id) {

@@ -38,7 +38,7 @@ from
 where
   check_key = \''.$key.'\';';
 
-        [$count] = pwg_db_fetch_row(pwg_query($query));
+        [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
         if ($count == 0) {
             return $key;
         }

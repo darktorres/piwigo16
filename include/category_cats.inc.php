@@ -70,7 +70,7 @@ $query .= '
 $query = trigger_change('loc_begin_index_category_thumbnails_query', $query);
 
 $result = pwg_query($query);
-[$page['total_categories']] = pwg_db_fetch_row(pwg_query('SELECT FOUND_ROWS()'));
+[$page['total_categories']] = pwg_db_fetch_row(pwg_query('SELECT FOUND_ROWS()')) ?? [null];
 
 $categories = [];
 $category_ids = [];
@@ -105,7 +105,7 @@ SELECT representative_picture_id
 ;';
         $subresult = pwg_query($query);
         if (pwg_db_num_rows($subresult) > 0) {
-            [$image_id] = pwg_db_fetch_row($subresult);
+            [$image_id] = pwg_db_fetch_row($subresult) ?? [null];
         }
     }
 

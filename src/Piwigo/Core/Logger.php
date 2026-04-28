@@ -274,8 +274,9 @@ class Logger
     public function write(string $line): void
     {
         $this->open();
-        if ($this->status() == self::STATUS_LOG_OPEN) {
-            if (fwrite($this->_fileHandle, $line) === false) {
+        $fh = $this->_fileHandle;
+        if ($this->status() == self::STATUS_LOG_OPEN && $fh !== null) {
+            if (fwrite($fh, $line) === false) {
                 throw new \RuntimeException(self::$_messages['writefail']);
             }
         }

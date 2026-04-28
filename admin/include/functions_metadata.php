@@ -368,7 +368,7 @@ function metadata_normalize_keywords_string($keywords_string): string
 {
     $keywords_string = preg_replace(\Piwigo\Core\Config::metadataKeywordSeparatorRegex(), ',', $keywords_string);
     // new lines are always considered as keyword separators
-    $keywords_string = str_replace(["\r\n", "\n", "\r"], ',', $keywords_string);
+    $keywords_string = str_replace(["\r\n", "\n", "\r"], ',', $keywords_string ?? '');
     $keywords_string = preg_replace('/,+/', ',', $keywords_string);
     $keywords_string = preg_replace('/^,+|,+$/', '', (string) $keywords_string);
 

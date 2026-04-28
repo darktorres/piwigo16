@@ -37,7 +37,7 @@ SELECT c.id
     $result = pwg_query($query);
     $cat_id = null;
     if (pwg_db_num_rows($result)) {
-        [$cat_id] = pwg_db_fetch_row($result);
+        [$cat_id] = pwg_db_fetch_row($result) ?? [null];
     }
     return $cat_id;
 }
@@ -59,7 +59,7 @@ SELECT permalink
 ;';
     $result = pwg_query($query);
     if (pwg_db_num_rows($result)) {
-        [$permalink] = pwg_db_fetch_row($result);
+        [$permalink] = pwg_db_fetch_row($result) ?? [null];
     }
     if (!isset($permalink)) {// no permalink; nothing to do
         return true;

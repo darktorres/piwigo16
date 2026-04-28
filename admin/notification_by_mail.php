@@ -213,7 +213,7 @@ function do_action_send_mail_notification(string $action = 'list_to_send', array
     $return_list = [];
 
     if (in_array($action, ['list_to_send', 'send'])) {
-        [$dbnow] = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
+        [$dbnow] = pwg_db_fetch_row(pwg_query('SELECT NOW();')) ?? [null];
 
         $is_action_send = ($action == 'send');
 

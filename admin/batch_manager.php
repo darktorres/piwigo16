@@ -452,7 +452,7 @@ SELECT COUNT(*)
   FROM '.CATEGORIES_TABLE.'
   WHERE id = '.$_SESSION['bulk_manager_filter']['category'].'
 ;';
-    [$counter] = pwg_db_fetch_row(pwg_query($query));
+    [$counter] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
     if (0 == $counter) {
         unset($_SESSION['bulk_manager_filter']);
         redirect(get_root_url().'admin.php?page='.$_GET['page']);

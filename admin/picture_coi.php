@@ -43,7 +43,14 @@ if (isset($_POST['submit'])) {
 }
 
 $query = 'SELECT * FROM '.IMAGES_TABLE.' WHERE id='.$_GET['image_id'];
-$row = pwg_db_fetch_assoc(pwg_query($query));
+$image_infos = pwg_db_fetch_assoc(pwg_query($query));
+
+if ($image_infos === null) {
+    page_not_found('The requested image does not exist');
+    return;
+}
+
+$row = $image_infos;
 
 if (isset($_POST['submit'])) {
     foreach (ImageStdParams::get_defined_type_map() as $params) {

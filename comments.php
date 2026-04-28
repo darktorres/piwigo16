@@ -297,7 +297,7 @@ SELECT id, name, uppercats, global_rank
     'WHERE'
 ).'
 ;';
-display_select_cat_wrapper($query, array($get_cat), $blockname, true);
+display_select_cat_wrapper($query, array_filter([$get_cat], fn($v) => $v !== null), $blockname, true);
 
 // Filter on recent comments...
 $tpl_var = array();
@@ -373,7 +373,7 @@ while ($row = pwg_db_fetch_assoc($result)) {
     $element_ids[] = $row['image_id'];
     $category_ids[] = $row['category_id'];
 }
-list($counter) = pwg_db_fetch_row(pwg_query('SELECT FOUND_ROWS()'));
+list($counter) = pwg_db_fetch_row(pwg_query('SELECT FOUND_ROWS()')) ?? [null];
 
 $url = PHPWG_ROOT_PATH.'comments.php'
   .get_query_string_diff(array('start','edit','delete','validate','pwg_token'));
@@ -381,7 +381,7 @@ $url = PHPWG_ROOT_PATH.'comments.php'
 $navbar = create_navigation_bar(
     $url,
     $counter,
-    $start,
+    $start ?? 0,
     $page['items_number'],
     false
 );

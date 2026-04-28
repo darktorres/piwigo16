@@ -10,6 +10,13 @@ use Piwigo\Ws\PwgError;
 class PwgRestEncoder extends PwgResponseEncoder
 {
     private ?PwgXmlWriter $_writer = null;
+
+    private function writer(): PwgXmlWriter
+    {
+        assert($this->_writer !== null);
+        return $this->_writer;
+    }
+
     public function encodeResponse(mixed $response): string
     {
         if ($response instanceof PwgError) {
@@ -22,7 +29,7 @@ class PwgRestEncoder extends PwgResponseEncoder
 
         $this->_writer = new PwgXmlWriter();
         $this->encode($response);
-        $ret = $this->_writer->getOutput();
+        $ret = $this->writer()->getOutput();
         $ret = '<?xml version="1.0" encoding="'.get_pwg_charset().'" ?>
 <rsp stat="ok">
 '.$ret.'
@@ -40,9 +47,9 @@ class PwgRestEncoder extends PwgResponseEncoder
     public function encode_array(mixed $data, string $itemName, array $xml_attributes = []): void
     {
         foreach ($data as $item) {
-            $this->_writer->start_element($itemName);
+            $this->writer()->start_element($itemName);
             $this->encode($item, $xml_attributes);
-            $this->_writer->end_element($itemName);
+            $this->writer()->end_element($itemName);
         }
     }
 
@@ -64,11 +71,11 @@ class PwgRestEncoder extends PwgResponseEncoder
             } // null means we dont put it
             if ($name == WS_XML_ATTRIBUTES) {
                 foreach ($value as $attr_name => $attr_value) {
-                    $this->_writer->write_attribute($attr_name, $attr_value);
+                    $this->writer()->write_attribute($attr_name, $attr_value);
                 }
                 unset($data[$name]);
             } elseif (isset($xml_attributes[$name])) {
-                $this->_writer->write_attribute($name, $value);
+                $this->writer()->write_attribute($name, $value);
                 unset($data[$name]);
             }
         }
@@ -83,9 +90,9 @@ class PwgRestEncoder extends PwgResponseEncoder
             if (is_null($value)) {
                 continue;
             } // null means we dont put it
-            $this->_writer->start_element($name);
+            $this->writer()->start_element($name);
             $this->encode($value);
-            $this->_writer->end_element($name);
+            $this->writer()->end_element($name);
         }
     }
 
@@ -95,17 +102,17 @@ class PwgRestEncoder extends PwgResponseEncoder
         switch (gettype($data)) {
             case 'null':
             case 'NULL':
-                $this->_writer->write_content('');
+                $this->writer()->write_content('');
                 break;
             case 'boolean':
-                $this->_writer->write_content($data ? '1' : '0');
+                $this->writer()->write_content($data ? '1' : '0');
                 break;
             case 'integer':
             case 'double':
-                $this->_writer->write_content($data);
+                $this->writer()->write_content($data);
                 break;
             case 'string':
-                $this->_writer->write_content($data);
+                $this->writer()->write_content($data);
                 break;
             case 'array':
                 $is_array = range(0, count($data) - 1) === array_keys($data);

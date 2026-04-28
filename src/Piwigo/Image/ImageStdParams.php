@@ -92,7 +92,7 @@ final class ImageStdParams
      */
     public static function get_custom($w, $h, $crop = 0, $minw = null, $minh = null): DerivativeParams
     {
-        $params = new DerivativeParams(new SizingParams([$w,$h], $crop, [$minw,$minh]));
+        $params = new DerivativeParams(new SizingParams([$w,$h], $crop, ($minw !== null && $minh !== null) ? [$minw,$minh] : null));
         self::apply_global($params);
 
         $key = [];

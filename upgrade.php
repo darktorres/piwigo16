@@ -195,7 +195,7 @@ include(PHPWG_ROOT_PATH . 'include/dblayer/functions_mysqli.inc.php');
 upgrade_db_connect();
 pwg_db_check_charset();
 
-[$dbnow] = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
+[$dbnow] = pwg_db_fetch_row(pwg_query('SELECT NOW();')) ?? [null];
 define('CURRENT_DATE', $dbnow);
 
 // +-----------------------------------------------------------------------+

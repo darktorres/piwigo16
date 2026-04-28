@@ -312,14 +312,15 @@ class CalendarMonthly extends CalendarBase
     GROUP BY period
     ORDER BY period ASC';
 
-        $items = [];
+        $day_counts = [];
         $result = pwg_query($query);
         while ($row = pwg_db_fetch_assoc($result)) {
             $d = (int)$row['period'];
-            $items[$d] = ['nb_images' => $row['count']];
+            $day_counts[$d] = $row['count'];
         }
 
-        foreach ($items as $day => $data) {
+        $items = [];
+        foreach ($day_counts as $day => $nb_images) {
             $page['chronology_date'][CDAY] = $day;
             $query = '
   SELECT id, file,representative_ext,path,width,height,rotation, '.pwg_db_get_dayofweek($this->date_field).'-1 as dow';
@@ -331,10 +332,16 @@ class CalendarMonthly extends CalendarBase
             unset($page['chronology_date'][CDAY]);
 
             $row = pwg_db_fetch_assoc(pwg_query($query));
+            if ($row === null) {
+                continue;
+            }
             $derivative = new DerivativeImage(IMG_SQUARE, new SrcImage($row));
-            $items[$day]['derivative'] = $derivative;
-            $items[$day]['file'] = $row['file'];
-            $items[$day]['dow'] = $row['dow'];
+            $items[$day] = [
+                'nb_images' => $nb_images,
+                'derivative' => $derivative,
+                'file' => $row['file'],
+                'dow' => $row['dow'],
+            ];
         }
 
         if (!empty($items)) {

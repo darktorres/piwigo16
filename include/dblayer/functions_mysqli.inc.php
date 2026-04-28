@@ -185,35 +185,51 @@ function pwg_db_num_rows(bool|mysqli_result $result): int
     if (!($result instanceof mysqli_result)) {
         return 0;
     }
-    return $result->num_rows ?? 0;
+    return (int) $result->num_rows;
 }
 
 /** @return array<mixed>|false */
 function pwg_db_fetch_array(bool|mysqli_result $result): array|false
 {
-    return $result->fetch_array();
+    if (!($result instanceof mysqli_result)) {
+        return false;
+    }
+    return $result->fetch_array() ?? false;
 }
 
 /** @return array<string,mixed>|null */
 function pwg_db_fetch_assoc(bool|mysqli_result $result): ?array
 {
-    return $result->fetch_assoc();
+    if (!($result instanceof mysqli_result)) {
+        return null;
+    }
+    $row = $result->fetch_assoc();
+    return $row !== false ? $row : null;
 }
 
 /** @return array<int,mixed>|null */
 function pwg_db_fetch_row(bool|mysqli_result $result): ?array
 {
+    if (!($result instanceof mysqli_result)) {
+        return null;
+    }
     return $result->fetch_row();
 }
 
 function pwg_db_fetch_object(bool|mysqli_result $result): ?stdClass
 {
-    return $result->fetch_object();
+    if (!($result instanceof mysqli_result)) {
+        return null;
+    }
+    $obj = $result->fetch_object();
+    return $obj !== false ? $obj : null;
 }
 
 function pwg_db_free_result(bool|mysqli_result $result): void
 {
-    $result->free_result();
+    if ($result instanceof mysqli_result) {
+        $result->free_result();
+    }
 }
 
 function pwg_db_real_escape_string(string $s): string
@@ -819,15 +835,18 @@ function query2array(string $query, ?string $key_name = null, ?string $value_nam
 {
     $result = pwg_query($query);
     $data = [];
+    if (!($result instanceof mysqli_result)) {
+        return $data;
+    }
 
     if (isset($key_name)) {
         if (isset($value_name)) {
             while ($row = $result->fetch_assoc()) {
-                $data[ $row[$key_name] ] = $row[$value_name];
+                $data[(string) $row[$key_name]] = $row[$value_name];
             }
         } else {
             while ($row = $result->fetch_assoc()) {
-                $data[ $row[$key_name] ] = $row;
+                $data[(string) $row[$key_name]] = $row;
             }
         }
     } else {

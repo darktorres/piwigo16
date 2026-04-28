@@ -122,7 +122,7 @@ function ws_groups_delete(array $params, \Piwigo\Ws\PwgServer &$service): PwgErr
     }
 
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
-    $groupnames = array_values(delete_groups($params['group_id']));
+    $groupnames = array_values(delete_groups($params['group_id']) ?: []);
 
     invalidate_user_cache();
 

@@ -72,7 +72,7 @@ function do_timeout_treatment(string $post_keyname, array $check_key_treated = [
             \Piwigo\Core\PageState::current()->addError(l10n_dec(
                 'Execution time is out, treatment must be continue [Estimated time: %d second].',
                 'Execution time is out, treatment must be continue [Estimated time: %d seconds].',
-                $time_refresh
+                (int) $time_refresh
             ));
             return true;
         }
@@ -183,10 +183,13 @@ order by
 /** @param string|array<mixed> $customize_mail_content */
 function render_global_customize_mail_content(string|array $customize_mail_content): string
 {
-    if (\Piwigo\Core\Config::nbmSendHtmlMail() and !(str_starts_with((string) $customize_mail_content, '<'))) {
+    if (is_array($customize_mail_content)) {
+        return '';
+    }
+    if (\Piwigo\Core\Config::nbmSendHtmlMail() and !(str_starts_with($customize_mail_content, '<'))) {
         // On HTML mail, detects if the content are HTML format.
         // If it's plain text format, convert content to readable HTML
-        return nl2br(htmlspecialchars((string) $customize_mail_content));
+        return nl2br(htmlspecialchars($customize_mail_content));
     } else {
         return $customize_mail_content;
     }
@@ -639,7 +642,7 @@ switch ($page['mode']) {
                 $template->assign(
                     'auth_key_duration',
                     time_since(
-                        strtotime('now -'.\Piwigo\Core\Config::authKeyDuration().' second'),
+                        strtotime('now -'.\Piwigo\Core\Config::authKeyDuration().' second') ?: null,
                         'second',
                         null,
                         false

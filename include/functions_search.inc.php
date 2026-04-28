@@ -71,7 +71,7 @@ SELECT *
  * Returns search rules stored into a serialized array in "search"
  * table. Each search rules set is numericaly identified.
  *
- * @param int $search_id
+ * @param int|string $search_id
  * @return array<mixed>
  */
 function get_search_array($search_id): mixed
@@ -1160,7 +1160,7 @@ class QMultiToken implements \Stringable
         for ($i = 0; $i < count($this->tokens); $i++) {
             $token = $this->tokens[$i];
             $remove = false;
-            if ($token->is_single) {
+            if ($token instanceof \Piwigo\Search\QSingleToken) {
                 if (($token->modifier & QST_QUOTED) == 0
                   && str_ends_with((string) $token->term, '*')) {
                     $token->term = rtrim((string) $token->term, '*');
@@ -1195,19 +1195,19 @@ class QMultiToken implements \Stringable
                   && !$token->scope->parse($token)) {
                     $remove = true;
                 }
-            } elseif (!count($token->tokens)) {
+            } elseif ($token instanceof \Piwigo\Search\QMultiToken && !count($token->tokens)) {
                 $remove = true;
             }
             if ($remove) {
                 array_splice($this->tokens, $i, 1);
-                if ($i < count($this->tokens) && $this->tokens[$i]->is_single) {
+                if ($i < count($this->tokens) && $this->tokens[$i] instanceof \Piwigo\Search\QSingleToken) {
                     $this->tokens[$i]->modifier |= QST_BREAK;
                 }
                 $i--;
             }
         }
 
-        if ($level > 0 && count($this->tokens) && $this->tokens[0]->is_single) {
+        if ($level > 0 && count($this->tokens) && $this->tokens[0] instanceof \Piwigo\Search\QSingleToken) {
             $this->tokens[0]->modifier |= QST_BREAK;
         }
     }
@@ -1219,11 +1219,11 @@ class QMultiToken implements \Stringable
     protected function apply_scope(\Piwigo\Search\QSearchScope $scope): void
     {
         for ($i = 0; $i < count($this->tokens); $i++) {
-            if ($this->tokens[$i]->is_single) {
+            if ($this->tokens[$i] instanceof \Piwigo\Search\QSingleToken) {
                 if (!isset($this->tokens[$i]->scope)) {
                     $this->tokens[$i]->scope = $scope;
                 }
-            } else {
+            } elseif ($this->tokens[$i] instanceof \Piwigo\Search\QMultiToken) {
                 $this->tokens[$i]->apply_scope($scope);
             }
         }
@@ -1239,7 +1239,7 @@ class QMultiToken implements \Stringable
     {
         $crt_prio = 0;
         for ($i = 0; $i < count($this->tokens); $i++) {
-            if (!$this->tokens[$i]->is_single) {
+            if ($this->tokens[$i] instanceof \Piwigo\Search\QMultiToken) {
                 $this->tokens[$i]->check_operator_priority();
             }
             if ($i == 1) {
@@ -1309,7 +1309,7 @@ class QExpression extends \Piwigo\Search\QMultiToken
             $token = $expr->tokens[$i];
             $crt_is_not = ($token->modifier ^ $this_is_not) & QST_NOT; // no negation OR double negation -> no negation;
 
-            if ($token->is_single) {
+            if ($token instanceof \Piwigo\Search\QSingleToken) {
                 $token->idx = count($this->stokens);
                 $this->stokens[] = $token;
 
@@ -1320,7 +1320,7 @@ class QExpression extends \Piwigo\Search\QMultiToken
                     $modifier &= ~QST_NOT;
                 }
                 $this->stoken_modifiers[] = $modifier;
-            } else {
+            } elseif ($token instanceof \Piwigo\Search\QMultiToken) {
                 $this->build_single_tokens($token, $crt_is_not);
             }
         }
@@ -1371,10 +1371,8 @@ function qsearch_get_text_token_search_sql(\Piwigo\Search\QSingleToken $token, a
         }
 
         if ($use_ft) {
-            $max = max(array_map(
-                mb_strlen(...),
-                preg_split('/['.preg_quote('-\'!"#$%&()*+,./:;<=>?@[\]^`{|}~', '/').']+/', (string) $variant)
-            ));
+            $parts = preg_split('/['.preg_quote('-\'!"#$%&()*+,./:;<=>?@[\]^`{|}~', '/').']+/', (string) $variant);
+            $max = ($parts !== false && count($parts) > 0) ? max(array_map(mb_strlen(...), $parts)) : 0;
             if ($max < 4) {
                 $use_ft = false;
             }
@@ -1666,7 +1664,8 @@ function qsearch_eval(\Piwigo\Search\QMultiToken $expr, \Piwigo\Search\QResults 
 
     for ($i = 0; $i < count($expr->tokens); $i++) {
         $crt = $expr->tokens[$i];
-        if ($crt->is_single) {
+        $crt_ids = [];
+        if ($crt instanceof \Piwigo\Search\QSingleToken) {
             $crt_ids = $qsr->iids[$crt->idx] = array_unique(
                 array_merge(
                     $qsr->images_iids[$crt->idx],
@@ -1676,7 +1675,7 @@ function qsearch_eval(\Piwigo\Search\QMultiToken $expr, \Piwigo\Search\QResults 
             );
             $crt_qualifies = count($crt_ids) > 0 || count($qsr->tag_ids[$crt->idx]) > 0;
             $crt_ignored_terms = $crt_qualifies ? [] : [(string)$crt];
-        } else {
+        } elseif ($crt instanceof \Piwigo\Search\QMultiToken) {
             $crt_ids = qsearch_eval($crt, $qsr, $crt_qualifies, $crt_ignored_terms);
         }
 
@@ -1795,11 +1794,11 @@ function get_quick_search_results_no_cache(string $q, array $options): array
     $expression = new \Piwigo\Search\QExpression($q, $scopes);
 
     // get inflections for terms
-    $inflector = null;
     $lang_code = substr(get_default_language(), 0, 2);
+    @include_once(PHPWG_ROOT_PATH.'include/inflectors/InflectorInterface.php');
     @include_once(PHPWG_ROOT_PATH.'include/inflectors/'.$lang_code.'.php');
     $class_name = 'Inflector_'.$lang_code;
-    if (class_exists($class_name)) {
+    if (class_exists($class_name) && is_a($class_name, InflectorInterface::class, true)) {
         $inflector = new $class_name();
         foreach ($expression->stokens as $token) {
             if (isset($token->scope) && !$token->scope->is_text) {
@@ -1924,16 +1923,15 @@ function split_allwords(string $raw_allwords): ?array
         $drop_char_replace = [' ',' ',' ',' ',' ',' ', '', '', ' ',' ',' ',' ',' ',' ',' ' ,' ',' ',' ',' ',' ','' , ' ',' ',' ', ' ',' '];
 
         // Split words
-        $words = array_unique(
-            preg_split(
-                '/\s+/',
-                str_replace(
-                    $drop_char_match,
-                    $drop_char_replace,
-                    $raw_allwords
-                )
+        $split = preg_split(
+            '/\s+/',
+            str_replace(
+                $drop_char_match,
+                $drop_char_replace,
+                $raw_allwords
             )
         );
+        $words = $split !== false ? array_unique($split) : [];
     }
 
     return $words;

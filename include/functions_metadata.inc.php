@@ -193,7 +193,7 @@ function strip_html_in_metadata(mixed &$v, string $k): void
  * @param string $ref 'S', 'N', 'E', 'W'. eg: 'N'
  * @return float eg: 41.905468
  */
-function parse_exif_gps_data(array $raw, $ref): float|int
+function parse_exif_gps_data(array $raw, $ref): float
 {
     foreach ($raw as &$i) {
         $i = explode('/', $i);
@@ -201,7 +201,7 @@ function parse_exif_gps_data(array $raw, $ref): float|int
     }
     unset($i);
 
-    $v = $raw[0] + $raw[1] / 60 + $raw[2] / 3600;
+    $v = (float) $raw[0] + (float) $raw[1] / 60 + (float) $raw[2] / 3600;
 
     $ref = strtoupper($ref);
     if ($ref == 'S' or $ref == 'W') {

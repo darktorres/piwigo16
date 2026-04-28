@@ -243,9 +243,9 @@ class Template
     /**
      * Gets the template root directory for this Template object.
      *
-     * @return string
+     * @return string|array<string>
      */
-    public function get_template_dir()
+    public function get_template_dir(): string|array
     {
         return $this->smarty->getTemplateDir();
     }
@@ -349,7 +349,10 @@ class Template
               and ($thm == $theme or $thm == 'N/A')
               and (!isset($this->extents[$handle]) or $overwrite)
               and file_exists($dir . $filename)) {
-                $this->extents[$handle] = realpath($dir . $filename);
+                $rp = realpath($dir . $filename);
+                if ($rp !== false) {
+                    $this->extents[$handle] = $rp;
+                }
             }
         }
         return true;
@@ -507,9 +510,10 @@ public function get_template_vars(?string $tpl_var = null): mixed
                 $scripts = $this->scriptLoader->get_head_scripts();
                 $content = [];
                 foreach ($scripts as $script) {
+                    $src = self::make_script_src($script);
                     $content[] =
                         '<script type="text/javascript" src="'
-                        . self::make_script_src($script)
+                        . (is_string($src) ? $src : '')
                         .'"></script>';
                 }
 
@@ -522,6 +526,9 @@ public function get_template_vars(?string $tpl_var = null): mixed
         $content = [];
         foreach ($css as $combi) {
             $href = embellish_url(get_root_url().$combi->path);
+            if (!is_string($href)) {
+                $href = get_root_url().$combi->path;
+            }
             if ($combi->version !== false) {
                 $href .= '?v' . ($combi->version ?: PHPWG_VERSION);
             }
@@ -662,7 +669,7 @@ public static function modcompiler_translate_dec(array $params): string
     /** @return string[] */
 public static function mod_explode(string $text, string $delimiter = ','): array
     {
-        return explode($delimiter, $text);
+        return explode($delimiter ?: ',', $text);
     }
 
     /**
@@ -823,9 +830,10 @@ public function func_get_combined_scripts(array $params): string
         } else {
             $scripts = $this->scriptLoader->get_footer_scripts();
             foreach ($scripts[0] as $script) {
+                $src0 = self::make_script_src($script);
                 $content[] =
                   '<script type="text/javascript" src="'
-                  . self::make_script_src($script)
+                  . (is_string($src0) ? $src0 : '')
                   .'"></script>';
             }
             if (count($this->scriptLoader->inline_scripts)) {
@@ -840,9 +848,10 @@ public function func_get_combined_scripts(array $params): string
                 $content[] = '(function() {
 var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTagName(\'script\').length-1];';
                 foreach ($scripts[1] as $id => $script) {
+                    $src1 = self::make_script_src($script);
                     $content[] =
                       's=document.createElement(\'script\'); s.type=\'text/javascript\'; s.async=true; s.src=\''
-                      . self::make_script_src($script)
+                      . (is_string($src1) ? $src1 : '')
                       .'\';';
                     $content[] = 'after = after.parentNode.insertBefore(s, after);';
                 }

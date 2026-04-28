@@ -20,10 +20,7 @@ class PwgXmlWriter
      */
     public $_indentLevel;
 
-    /**
-     * @var ''
-     */
-    public $_encodedXml;
+    public string $_encodedXml = '';
 
     public function __construct()
     {

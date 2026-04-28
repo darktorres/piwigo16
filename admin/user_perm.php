@@ -56,7 +56,7 @@ DELETE FROM '.USER_ACCESS_TABLE.'
 } elseif (isset($_POST['trueify'])
     and isset($_POST['cat_false'])
     and count($_POST['cat_false']) > 0) {
-    add_permission_on_category($_POST['cat_false'], $page['user']);
+    add_permission_on_category($_POST['cat_false'], (int) $page['user']);
 }
 
 // +-----------------------------------------------------------------------+
@@ -75,7 +75,7 @@ $template->assign(
     'TITLE' =>
       l10n(
           'Manage permissions for user "%s"',
-          get_username($page['user'])
+          get_username((int) $page['user'])
       ),
     'L_CAT_OPTIONS_TRUE' => l10n('Authorized'),
     'L_CAT_OPTIONS_FALSE' => l10n('Forbidden'),

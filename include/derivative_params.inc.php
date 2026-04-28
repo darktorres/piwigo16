@@ -26,24 +26,24 @@ function derivative_to_url($t): string
 /**
  * Formats a size array into a identifier usable in filename.
  *
- * @param int[] $s
- * @return string
+ * @param array<int|float> $s
+ * @return int|string
  */
 function size_to_url(array $s): int|string
 {
     if ($s[0] == $s[1]) {
-        return $s[0];
+        return (int) $s[0];
     }
     return $s[0].'x'.$s[1];
 }
 
 /**
- * @param int[] $s1
- * @param int[] $s2
+ * @param array<int|float> $s1
+ * @param array<int|float>|null $s2
  */
-function size_equals(array $s1, array $s2): bool
+function size_equals(array $s1, ?array $s2): bool
 {
-    return ($s1[0] == $s2[0] && $s1[1] == $s2[1]);
+    return $s2 !== null && ($s1[0] == $s2[0] && $s1[1] == $s2[1]);
 }
 
 /**
@@ -62,7 +62,7 @@ function char_to_fraction(string $c): float|int
  *  float  */
 function fraction_to_char(float|int $f): string
 {
-    return chr((int)(ord('a') + round($f * 25)));
+    return chr(min(255, max(0, (int)(ord('a') + round($f * 25)))));
 }
 
 
@@ -134,8 +134,8 @@ final class ImageRect
                 }
             }
         }
-        $this->l += $tlcrop;
-        $this->r -= $pixels - $tlcrop;
+        $this->l += (int) $tlcrop;
+        $this->r -= (int) ($pixels - $tlcrop);
     }
 
     /**
@@ -164,8 +164,8 @@ final class ImageRect
                 }
             }
         }
-        $this->t += $tlcrop;
-        $this->b -= $pixels - $tlcrop;
+        $this->t += (int) $tlcrop;
+        $this->b -= (int) ($pixels - $tlcrop);
     }
 }
 
@@ -232,7 +232,7 @@ final class SizingParams
     /**
      * Calculates the cropping rectangle and the scaled size for an input image size.
      *
-     * @param int[] $in_size - two element array of input dimensions (width, height)
+     * @param array<int|float> $in_size - two element array of input dimensions (width, height)
      * @param string $coi - four character encoded string containing the center of interest (unused if max_crop=0)
      * @param \Piwigo\Image\ImageRect|null &$crop_rect - ImageRect containing the cropping rectangle or null if cropping is not required
      * @param array<int,int|float>|null &$scale_size - two element array containing width and height of the scaled image

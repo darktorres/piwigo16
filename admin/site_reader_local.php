@@ -120,13 +120,16 @@ class LocalSiteReader
     public function get_element_update_attributes(mixed $file): array
     {
         $data = [];
+        if (!is_string($file)) {
+            return $data;
+        }
 
-        $filename = basename((string) $file);
+        $filename = basename($file);
         $extension = get_extension($filename);
 
         $representative_ext = null;
         if (! isset(\Piwigo\Core\Config::get('flip_picture_ext')[$extension])) {
-            $dirname = dirname((string) $file);
+            $dirname = dirname($file);
             $filename_wo_ext = get_filename_wo_extension($filename);
             $representative_ext = $this->get_representative_ext($dirname, $filename_wo_ext);
         }

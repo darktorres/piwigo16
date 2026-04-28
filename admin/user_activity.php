@@ -81,10 +81,12 @@ SELECT
     header('Content-Transfer-Encoding: UTF-8');
 
     $f = fopen('php://output', 'w');
-    foreach ($output_lines as $line) {
-        fputcsv($f, $line, ';', '"', '\\');
+    if ($f !== false) {
+        foreach ($output_lines as $line) {
+            fputcsv($f, array_map('strval', $line), ';', '"', '\\');
+        }
+        fclose($f);
     }
-    fclose($f);
 
     exit();
 }

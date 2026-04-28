@@ -18,9 +18,7 @@ namespace Piwigo\Admin\Image;
  */
 class pwg_image
 {
-    /**
-     * @var object
-     */
+    /** @var imageInterface */
     public $image;
     public string $library = '';
     public static string $ext_imagick_version = '';
@@ -39,9 +37,11 @@ class pwg_image
             die('[Image] unsupported file extension');
         }
 
-        if (!($this->library = self::get_library($library, $extension))) {
+        $lib = self::get_library($library, $extension);
+        if (!$lib) {
             die('No image library available on your server.');
         }
+        $this->library = $lib;
 
         $this->image = match($this->library) {
             'gd'          => new image_gd($this->source_filepath),
@@ -55,7 +55,11 @@ class pwg_image
     /** @param mixed[] $arguments */
     public function __call(string $method, array $arguments): mixed
     {
-        return call_user_func_array([$this->image, $method], $arguments);
+        $callable = [$this->image, $method];
+        if (!is_callable($callable)) {
+            throw new \BadMethodCallException("Method $method does not exist on image library");
+        }
+        return $callable(...$arguments);
     }
 
     // Piwigo resize function
@@ -194,9 +198,11 @@ class pwg_image
         }
         $buf = fread($fp, 25);
         fclose($fp);
+        if ($buf === false) {
+            throw new \Exception("webp_info(): fread($source_filepath): Failed");
+        }
 
         switch (true) {
-            case !is_string($buf):
             case strlen($buf) < 25:
             case !str_starts_with($buf, 'RIFF'):
             case substr($buf, 8, 4) != 'WEBP':
@@ -235,7 +241,11 @@ class pwg_image
 
     public static function get_rotation_angle(string $source_filepath): ?int
     {
-        [$width, $height, $type] = getimagesize($source_filepath);
+        $imgsize = getimagesize($source_filepath);
+        if ($imgsize === false) {
+            return null;
+        }
+        [$width, $height, $type] = $imgsize;
         if (IMAGETYPE_JPEG != $type) {
             return null;
         }

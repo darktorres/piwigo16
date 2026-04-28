@@ -286,6 +286,9 @@ $template->assign_var_from_handle('ADMIN_CONTENT', 'albums');
  */
 function get_categories_ref_date(array|int|string $ids, string $field = 'date_available', string $minmax = 'max'): array
 {
+    if (!is_array($ids)) {
+        $ids = [$ids];
+    }
     // we need to work on the whole tree under each category, even if we don't
     // want to sort sub categories
     $category_ids = get_subcat_ids($ids);

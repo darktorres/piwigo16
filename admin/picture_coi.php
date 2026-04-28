@@ -81,7 +81,7 @@ foreach (ImageStdParams::get_defined_type_map() as $params) {
     if ($params->sizing->max_crop != 0) {
         $derivative = new DerivativeImage($params, new SrcImage($row));
         $template->append('cropped_derivatives', [
-          'U_IMG' => $derivative->get_url().$uid,
+          'U_IMG' => (is_string($u = $derivative->get_url()) ? $u : '').$uid,
           'HTM_SIZE' => $derivative->get_size_htm(),
         ]);
     }

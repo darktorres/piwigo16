@@ -414,7 +414,7 @@ function make_section_in_url(array $params): string
  */
 function parse_section_url(array $tokens, int &$next_token): array
 {
-    $page = [];
+    $page = ['hit_by' => [], 'combined_categories' => null];
     if (isset($tokens[$next_token]) and str_starts_with($tokens[$next_token], 'categor')) {
         $page['section'] = 'categories';
         $next_token++;
@@ -445,6 +445,9 @@ function parse_section_url(array $tokens, int &$next_token): array
                 if (!isset($page['category'])) {
                     $page['category'] = $matches[1];
                 } else {
+                    if (!is_array($page['combined_categories'])) {
+                        $page['combined_categories'] = [];
+                    }
                     $page['combined_categories'][] = $matches[1];
                 }
                 $next_token++;
@@ -476,6 +479,9 @@ function parse_section_url(array $tokens, int &$next_token): array
                             $page['category'] = $cat_id;
                             $page['hit_by']['cat_permalink'] = $maybe_permalinks[$perma_index];
                         } else {
+                            if (!is_array($page['combined_categories'])) {
+                                $page['combined_categories'] = [];
+                            }
                             $page['combined_categories'][] = $cat_id;
                         }
                     } else {
@@ -485,7 +491,7 @@ function parse_section_url(array $tokens, int &$next_token): array
             }
         }
 
-        if (isset($page['category'])) {
+        if (isset($page['category']) && !is_array($page['category'])) {
             $result = get_cat_info($page['category']);
             if (empty($result)) {
                 page_not_found(l10n('Requested album does not exist'));
@@ -493,7 +499,7 @@ function parse_section_url(array $tokens, int &$next_token): array
             $page['category'] = $result;
         }
 
-        if (isset($page['combined_categories'])) {
+        if (isset($page['combined_categories']) && is_array($page['combined_categories'])) {
             $combined_categories = [];
 
             foreach ($page['combined_categories'] as $cat_id) {
@@ -565,6 +571,7 @@ function parse_section_url(array $tokens, int &$next_token): array
             preg_match('/(\d+)/', (string) @$tokens[$next_token], $matches);
             if (!isset($matches[1])) {
                 bad_request('search identifier is missing');
+                return $page;
             }
         }
         $page['search'] = $matches[1];
@@ -736,6 +743,9 @@ function unset_make_full_url(): void
  */
 function embellish_url(string|array $url): string|array
 {
+    if (is_array($url)) {
+        return array_map(fn(string $u): string => is_string($r = embellish_url($u)) ? $r : $u, $url);
+    }
     $url = str_replace('/./', '/', $url);
     while (($dotdot = strpos($url, '/../', 1)) !== false) {
         $before = strrpos($url, '/', -(strlen($url) - $dotdot + 1));

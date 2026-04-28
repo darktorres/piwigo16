@@ -177,14 +177,10 @@ abstract class PwgResponseEncoder
 
     private static function flatten(mixed &$value): void
     {
-        if (is_object($value)) {
-            $class = strtolower(@$value::class);
-            if ($class == 'pwgnamedarray') {
-                $value = $value->_content;
-            }
-            if ($class == 'pwgnamedstruct') {
-                $value = $value->_content;
-            }
+        if ($value instanceof PwgNamedArray) {
+            $value = $value->_content;
+        } elseif ($value instanceof PwgNamedStruct) {
+            $value = $value->_content;
         }
 
         if (!is_array($value)) {
@@ -364,7 +360,8 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
 
     public static function isPost(): bool
     {
-        return !empty($_POST) || (strlen(file_get_contents('php://input')) > 0);
+        $input = file_get_contents('php://input');
+        return !empty($_POST) || ($input !== false && strlen($input) > 0);
     }
 
     public static function makeArrayParam(mixed &$param): void

@@ -307,7 +307,7 @@ UPDATE '.CATEGORIES_TABLE.'
                 $comment_to_edit = input_int('comment_to_edit', null, $_GET);
                 $author_id = get_comment_author_id($comment_to_edit);
 
-                if (can_manage_comment('edit', $author_id)) {
+                if (can_manage_comment('edit', (int) $author_id)) {
                     $post_content = input_string('content', null, $_POST);
                     if (!empty($post_content)) {
                         check_pwg_token();
@@ -358,7 +358,7 @@ UPDATE '.CATEGORIES_TABLE.'
 
                 $author_id = get_comment_author_id($comment_to_delete);
 
-                if (can_manage_comment('delete', $author_id)) {
+                if (can_manage_comment('delete', (int) $author_id)) {
                     delete_user_comment($comment_to_delete);
                 }
 
@@ -375,7 +375,7 @@ UPDATE '.CATEGORIES_TABLE.'
 
                 $author_id = get_comment_author_id($comment_to_validate);
 
-                if (can_manage_comment('validate', $author_id)) {
+                if (can_manage_comment('validate', (int) $author_id)) {
                     validate_user_comment($comment_to_validate);
                 }
 

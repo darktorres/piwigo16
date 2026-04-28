@@ -45,14 +45,16 @@ class plugins
         // 2.7 pattern (OO only)
         if (file_exists($file_to_include.'.class.php')) {
             include_once($file_to_include.'.class.php');
-            return instantiate_plugin_maintain($classname, $plugin_id);
+            if (class_exists($classname) && is_a($classname, \Piwigo\Admin\PluginMaintain::class, true)) {
+                return instantiate_plugin_maintain($classname, $plugin_id);
+            }
         }
 
         // before 2.7 pattern (OO or procedural)
         if (file_exists($file_to_include.'.inc.php')) {
             include_once($file_to_include.'.inc.php');
 
-            if (class_exists($classname)) {
+            if (class_exists($classname) && is_a($classname, \Piwigo\Admin\PluginMaintain::class, true)) {
                 return instantiate_plugin_maintain($classname, $plugin_id);
             }
         }
@@ -243,6 +245,9 @@ DELETE FROM '. PLUGINS_TABLE .'
     public function get_fs_plugins(): void
     {
         $dir = opendir(PHPWG_PLUGINS_PATH);
+        if ($dir === false) {
+            return;
+        }
         while ($file = readdir($dir)) {
             if ($file != '.' and $file != '..') {
                 if (preg_match('/^[a-zA-Z0-9-_]+$/', $file)) {
@@ -276,6 +281,9 @@ DELETE FROM '. PLUGINS_TABLE .'
                 'hasSettings' => false,
               ];
             $plg_data = file_get_contents($path.'/main.inc.php', false, null, 0, 2048);
+            if ($plg_data === false) {
+                return false;
+            }
 
             if (preg_match('|Plugin Name:\\s*(.+)|', $plg_data, $val)) {
                 $plugin['name'] = trim($val[1]);
@@ -286,7 +294,7 @@ DELETE FROM '. PLUGINS_TABLE .'
             if (preg_match('|Plugin URI:\\s*(https?:\\/\\/.+)|', $plg_data, $val)) {
                 $plugin['uri'] = trim($val[1]);
             }
-            if ($desc = load_language('description.txt', $path.'/', ['return' => true])) {
+            if (is_string($desc = load_language('description.txt', $path.'/', ['return' => true]))) {
                 $plugin['description'] = trim($desc);
             } elseif (preg_match('|Description:\\s*(.+)|', $plg_data, $val)) {
                 $plugin['description'] = trim($val[1]);
@@ -314,7 +322,7 @@ DELETE FROM '. PLUGINS_TABLE .'
             }
 
             // IMPORTANT SECURITY !
-            $plugin = array_map(htmlspecialchars(...), $plugin);
+            $plugin = array_map(fn($v) => is_string($v) ? htmlspecialchars($v) : $v, $plugin);
             $this->fs_plugins[$plugin_id] = $plugin;
 
             return $plugin;
@@ -595,7 +603,7 @@ DELETE FROM '. PLUGINS_TABLE .'
 
                                     // make sure the obsolete file is withing the extension directory, prevent traversal path
                                     $realpath = realpath($path);
-                                    if ($realpath === false or !str_starts_with($realpath, $extract_path_realpath)) {
+                                    if ($realpath === false or $extract_path_realpath === false or !str_starts_with($realpath, $extract_path_realpath)) {
                                         continue;
                                     }
 
@@ -624,7 +632,9 @@ DELETE FROM '. PLUGINS_TABLE .'
             $status = 'temp_path_error';
         }
 
-        @unlink($archive);
+        if (is_string($archive)) {
+            @unlink($archive);
+        }
         return $status;
     }
 

@@ -32,9 +32,9 @@ function global_rank_compare(array $a, array $b): int
  * @param array<mixed> $a
  * @param array<mixed> $b
  */
-function rank_compare(array $a, array $b): int|float
+function rank_compare(array $a, array $b): int
 {
-    return $a['rank'] - $b['rank'];
+    return (int) ($a['rank'] - $b['rank']);
 }
 
 /**
@@ -300,11 +300,14 @@ function display_select_cat_wrapper(
 /**
  * Returns all subcategory identifiers of given category ids
  *
- * @param int[]|string[] $ids
- * @return int[]
+ * @param array<int|string>|int|string $ids
+ * @return array<int>
  */
-function get_subcat_ids($ids): array
+function get_subcat_ids(array|int|string $ids): array
 {
+    if (!is_array($ids)) {
+        $ids = [$ids];
+    }
     $query = '
 SELECT DISTINCT(id)
   FROM '.CATEGORIES_TABLE.'
@@ -601,6 +604,9 @@ function get_image_ids_for_categories(array|int|string $cat_ids, string $mode = 
 {
     if (empty($cat_ids)) {
         return [];
+    }
+    if (!is_array($cat_ids)) {
+        $cat_ids = [$cat_ids];
     }
 
     $query = '

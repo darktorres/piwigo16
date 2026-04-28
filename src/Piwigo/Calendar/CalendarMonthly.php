@@ -205,7 +205,11 @@ class CalendarMonthly extends CalendarBase
         }
         //echo ('<pre>'. var_export($items, true) . '</pre>');
         if (count($items) == 1) {// only one year exists so bail out to year view
-            [$y] = array_keys($items);
+            $first_year = array_key_first($items);
+            $y = $first_year !== null ? (string) $first_year : '';
+            if (!is_array($page['chronology_date'])) {
+                $page['chronology_date'] = [];
+            }
             $page['chronology_date'][CYEAR] = $y;
             return false;
         }

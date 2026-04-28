@@ -67,6 +67,9 @@ function process_verification_code(): bool
     }
 
     $userdata = getuserdata($user_id, false);
+    if ($userdata === false) {
+        $userdata = ['status' => 'guest', 'language' => get_default_language(), 'email' => ''];
+    }
 
     $status = $userdata['status'];
 
@@ -369,7 +372,7 @@ if ($get_key !== null && input_string('submit', null, $_POST) === null) {
     $user_id = check_password_reset_key($get_key);
     if (is_numeric($user_id)) {
         $userdata = getuserdata($user_id, false);
-        $page['username'] = $userdata['username'];
+        $page['username'] = $userdata !== false ? $userdata['username'] : '';
         $template->assign('key', $get_key);
         $first_login = has_already_logged_in($user_id);
 

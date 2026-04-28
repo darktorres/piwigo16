@@ -181,9 +181,9 @@ SELECT
                 [$date_without_time] = explode(' ', (string) $row['date']);
                 [$y, $m] = explode('-', $date_without_time);
 
-                @$list_of_dates[$y]['months'][$y.'-'.$m]['days'][$date_without_time]['count']++;
-                @$list_of_dates[$y]['months'][$y.'-'.$m]['count']++;
-                @$list_of_dates[$y]['count']++;
+                $list_of_dates[$y]['months'][$y.'-'.$m]['days'][$date_without_time]['count'] = ($list_of_dates[$y]['months'][$y.'-'.$m]['days'][$date_without_time]['count'] ?? 0) + 1;
+                $list_of_dates[$y]['months'][$y.'-'.$m]['count'] = ($list_of_dates[$y]['months'][$y.'-'.$m]['count'] ?? 0) + 1;
+                $list_of_dates[$y]['count'] = ($list_of_dates[$y]['count'] ?? 0) + 1;
             }
 
             $date_posted = [
@@ -278,9 +278,9 @@ SELECT
                     [$date_without_time] = explode(' ', (string) $row['date']);
                     [$y, $m] = explode('-', $date_without_time);
 
-                    @$list_of_dates[$y]['months'][$y.'-'.$m]['days'][$date_without_time]['count']++;
-                    @$list_of_dates[$y]['months'][$y.'-'.$m]['count']++;
-                    @$list_of_dates[$y]['count']++;
+                    $list_of_dates[$y]['months'][$y.'-'.$m]['days'][$date_without_time]['count'] = ($list_of_dates[$y]['months'][$y.'-'.$m]['days'][$date_without_time]['count'] ?? 0) + 1;
+                    $list_of_dates[$y]['months'][$y.'-'.$m]['count'] = ($list_of_dates[$y]['months'][$y.'-'.$m]['count'] ?? 0) + 1;
+                    $list_of_dates[$y]['count'] = ($list_of_dates[$y]['count'] ?? 0) + 1;
                 }
             }
 

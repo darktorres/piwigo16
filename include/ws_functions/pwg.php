@@ -94,7 +94,8 @@ SELECT id, path, representative_ext, width, height, rotation
                     continue;
                 }
                 if (@filemtime($derivative->get_path()) === false) {
-                    $urls[] = $derivative->get_url().$uid;
+                    $url = $derivative->get_url();
+                    $urls[] = (is_string($url) ? $url : '').$uid;
                 }
             }
 
@@ -462,12 +463,15 @@ function ws_session_getStatus($params, \Piwigo\Ws\PwgServer &$service): mixed
     $min = '';
     $max = '';
     if (!empty($param['date_min'])) {
-        $min = date_format(date_create($param['date_min']), 'Y-m-d H:i:s');
-        $max = date_format(date_create($param['date_max']), 'Y-m-d 23:59:59');
+        $dmin = date_create($param['date_min']);
+        $dmax = date_create($param['date_max']);
+        $min = $dmin !== false ? date_format($dmin, 'Y-m-d H:i:s') : '';
+        $max = $dmax !== false ? date_format($dmax, 'Y-m-d 23:59:59') : '';
     }
 
     if (!empty($param['date_max'])) {
-        $max = date_format(date_create($param['date_max']), 'Y-m-d 23:59:59');
+        $dmax2 = date_create($param['date_max']);
+        $max = $dmax2 !== false ? date_format($dmax2, 'Y-m-d 23:59:59') : '';
     }
 
     $where = 'WHERE object != \'system\'';
@@ -550,7 +554,7 @@ SELECT
                 } else {
                     $row['details'] = str_replace('`groups`', 'groups', $row['details']);
                     $row['details'] = str_replace('`rank`', 'rank', $row['details']);
-                    $details = @unserialize($row['details']);
+                    $details = @unserialize(is_string($row['details']) ? $row['details'] : '');
 
                     if (isset($row['user_agent'])) {
                         $details['agent'] = $row['user_agent'];
@@ -610,7 +614,7 @@ SELECT
     }
 
     foreach ($output_lines as $idx => $output_line) {
-        if ('user' == $output_line['object']) {
+        if ('user' == ($output_line['object'] ?? '')) {
             foreach ($output_line['object_id'] as $user_id) {
                 @$output_lines[$idx]['details']['users'][] = $username_of[$user_id] ?? 'user#' . $user_id;
             }
@@ -620,8 +624,8 @@ SELECT
             }
         }
 
-        $output_lines[$idx]['username'] = 'user#'.$output_lines[$idx]['user_id'];
-        if (isset($username_of[ $output_lines[$idx]['user_id'] ])) {
+        $output_lines[$idx]['username'] = 'user#'.($output_lines[$idx]['user_id'] ?? '');
+        if (isset($output_lines[$idx]['user_id']) && isset($username_of[ $output_lines[$idx]['user_id'] ])) {
             $output_lines[$idx]['username'] = $username_of[ $output_lines[$idx]['user_id'] ];
         }
     }
@@ -1029,8 +1033,9 @@ SELECT
             $image_string = '';
             $image_id = $line['image_id'];
 
+            $img_url = @DerivativeImage::url(ImageStdParams::get_by_type(IMG_SQUARE), $element);
             $image_string =
-            '<span><img src="'.@DerivativeImage::url(ImageStdParams::get_by_type(IMG_SQUARE), $element)
+            '<span><img src="'.(is_string($img_url) ? $img_url : '')
             .'" alt="'.$image_title.'" title="'.$image_title.'">';
         }
 

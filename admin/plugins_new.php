@@ -130,7 +130,9 @@ if ($plugins->get_server_plugins(true, $beta_test)) {
         ;
 
         // get the age of the last revision in days
-        $last_revision_diff = date_diff(date_create($plugin['revision_date']), date_create());
+        $rev_date = date_create($plugin['revision_date']);
+        $now_date = date_create();
+        $last_revision_diff = ($rev_date !== false && $now_date !== false) ? date_diff($rev_date, $now_date) : new \DateInterval('P0D');
 
         $certification = 1;
         $has_compatible_version = false;

@@ -71,7 +71,7 @@ final class ImageStdParams
     private static $type_map = [];
     /** @var DerivativeParams[] */
     private static $disabled_type_map = [];
-    /** @var DerivativeParams[] */
+    /** @var array<string, \Piwigo\Image\DerivativeParams|string> */
     private static $undefined_type_map = [];
     /** @var \Piwigo\Image\WatermarkParams */
     private static $watermark;
@@ -116,7 +116,7 @@ final class ImageStdParams
     }
 
     /**
-     * @return DerivativeParams[]
+     * @return array<string, \Piwigo\Image\DerivativeParams|string>
      */
     public static function get_undefined_type_map()
     {

@@ -315,7 +315,7 @@ $template->assign([
   ]);
 
 if (!$category['is_virtual']) {
-    $category['cat_full_dir'] = get_complete_dir($_GET['cat_id']);
+    $category['cat_full_dir'] = get_complete_dir((string) $_GET['cat_id']);
     $category_full_dir = preg_replace('/\/$/', '', (string) $category['cat_full_dir']);
     $template->assign(
         [

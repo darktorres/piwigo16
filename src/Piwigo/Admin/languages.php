@@ -120,6 +120,9 @@ UPDATE '.USER_INFOS_TABLE.'
         $target_charset = strtolower((string) $target_charset);
 
         $dir = opendir(PHPWG_ROOT_PATH.'language');
+        if ($dir === false) {
+            return;
+        }
         while ($file = readdir($dir)) {
             if ($file != '.' and $file != '..') {
                 $path = PHPWG_ROOT_PATH.'language/'.$file;
@@ -134,7 +137,7 @@ UPDATE '.USER_INFOS_TABLE.'
                         'uri' => '',
                         'author' => '',
                       ];
-                    $plg_data = implode('', file($path.'/common.lang.php'));
+                    $plg_data = implode('', file($path.'/common.lang.php') ?: []);
 
                     if (preg_match('|Language Name:\\s*(.+)|', $plg_data, $val)) {
                         $language['name'] = trim($val[1]);
@@ -338,7 +341,7 @@ UPDATE '.USER_INFOS_TABLE.'
 
                                         // make sure the obsolete file is withing the extension directory, prevent traversal path
                                         $realpath = realpath($path);
-                                        if ($realpath === false or !str_starts_with($realpath, $extract_path_realpath)) {
+                                        if ($realpath === false or $extract_path_realpath === false or !str_starts_with($realpath, $extract_path_realpath)) {
                                             continue;
                                         }
 
@@ -370,7 +373,9 @@ UPDATE '.USER_INFOS_TABLE.'
             $status = 'temp_path_error';
         }
 
-        @unlink($archive);
+        if (is_string($archive)) {
+            @unlink($archive);
+        }
         return $status;
     }
 

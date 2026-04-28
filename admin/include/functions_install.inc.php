@@ -29,7 +29,7 @@ use Piwigo\Admin\themes;
  */
 function execute_sqlfile(string $filepath, string $replaced, string $replacing, string $dblayer): void
 {
-    $sql_lines = file($filepath);
+    $sql_lines = file($filepath) ?: [];
     $query = '';
     foreach ($sql_lines as $sql_line) {
         $sql_line = trim($sql_line);

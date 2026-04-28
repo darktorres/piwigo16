@@ -166,7 +166,7 @@ if (!empty($get_keyword)) {
               function ($s) {
                   return "content LIKE '%$s%'";
               },
-              preg_split('/[\s,;]+/', $get_keyword)
+              preg_split('/[\s,;]+/', $get_keyword) ?: []
           )
       ).
       ')';
@@ -209,7 +209,7 @@ foreach ($actions as $loop_action) {
 if (isset($action)) {
     $comment_author_id = get_comment_author_id($comment_id);
 
-    if (can_manage_comment($action, $comment_author_id)) {
+    if (can_manage_comment($action, (int) $comment_author_id)) {
         $perform_redirect = false;
 
         if ('delete' == $action) {

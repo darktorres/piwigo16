@@ -78,6 +78,9 @@ foreach (ImageStdParams::get_all_types() as $type) {
     if (!$pderivative['enabled']) {
         continue;
     }
+    if (!is_array($errors[$type] ?? null)) {
+        $errors[$type] = [];
+    }
 
     if ($type == IMG_THUMB) {
         $w = intval($pderivative['w']);

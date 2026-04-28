@@ -46,7 +46,9 @@ function cookie_path(): ?string
         $scr = $_SERVER['SCRIPT_NAME'];
     }
 
-    $scr = substr((string) $scr, 0, strrpos((string) $scr, '/'));
+    $scr_str = (string) $scr;
+    $slash_pos = strrpos($scr_str, '/');
+    $scr = $slash_pos !== false ? substr($scr_str, 0, $slash_pos) : '';
 
     // add a trailing '/' if needed
     if ((strlen($scr) == 0) or ($scr[strlen($scr) - 1] !== '/')) {

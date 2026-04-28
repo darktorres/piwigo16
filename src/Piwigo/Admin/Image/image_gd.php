@@ -6,8 +6,7 @@ namespace Piwigo\Admin\Image;
 
 class image_gd implements imageInterface
 {
-    /** @var resource|\GdImage|false */
-    public mixed $image;
+    public \GdImage $image;
     public int $quality = 95;
 
     public function __construct(string $source_filepath)
@@ -16,14 +15,19 @@ class image_gd implements imageInterface
         $extension = strtolower(get_extension($source_filepath));
 
         if (in_array($extension, ['jpg', 'jpeg'])) {
-            $this->image = imagecreatefromjpeg($source_filepath);
+            $img = imagecreatefromjpeg($source_filepath);
         } elseif ($extension == 'png') {
-            $this->image = imagecreatefrompng($source_filepath);
+            $img = imagecreatefrompng($source_filepath);
         } elseif ($extension == 'gif' and $gd_info['GIF Read Support'] and $gd_info['GIF Create Support']) {
-            $this->image = imagecreatefromgif($source_filepath);
+            $img = imagecreatefromgif($source_filepath);
         } else {
             die('[Image GD] unsupported file extension');
         }
+
+        if ($img === false) {
+            die('[Image GD] failed to load image: '.$source_filepath);
+        }
+        $this->image = $img;
     }
 
     public function get_width(): int
@@ -38,7 +42,7 @@ class image_gd implements imageInterface
 
     public function crop(int $width, int $height, int $x, int $y): bool
     {
-        $dest = imagecreatetruecolor($width, $height);
+        $dest = imagecreatetruecolor(max(1, $width), max(1, $height));
 
         imagealphablending($dest, false);
         imagesavealpha($dest, true);
@@ -59,6 +63,9 @@ class image_gd implements imageInterface
     public function rotate(int $rotation): bool
     {
         $dest = imagerotate($this->image, $rotation, 0);
+        if ($dest === false) {
+            return false;
+        }
         $this->image = $dest;
         return true;
     }
@@ -71,7 +78,7 @@ class image_gd implements imageInterface
 
     public function resize(int $width, int $height): bool
     {
-        $dest = imagecreatetruecolor($width, $height);
+        $dest = imagecreatetruecolor(max(1, $width), max(1, $height));
 
         imagealphablending($dest, false);
         imagesavealpha($dest, true);
@@ -100,7 +107,7 @@ class image_gd implements imageInterface
         $oh = imagesy($ioverlay);
 
         // Create a new blank image the site of our source image
-        $cut = imagecreatetruecolor($ow, $oh);
+        $cut = imagecreatetruecolor(max(1, $ow), max(1, $oh));
 
         // Copy the blank image into the destination image where the source goes
         imagecopy($cut, $this->image, 0, 0, $x, $y, $ow, $oh);

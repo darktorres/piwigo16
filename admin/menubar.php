@@ -23,9 +23,9 @@ if (!is_webmaster()) {
     \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
 }
 
-function abs_fn_cmp(mixed $a, mixed $b): float|int
+function abs_fn_cmp(mixed $a, mixed $b): int
 {
-    return abs($a) - abs($b);
+    return (int) (abs((int) $a) - abs((int) $b));
 }
 
 /** @param array<mixed> $orders */

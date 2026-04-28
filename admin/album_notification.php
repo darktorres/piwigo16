@@ -202,7 +202,7 @@ if (\Piwigo\Core\Config::authKeyDuration() > 0) {
     $template->assign(
         'auth_key_duration',
         time_since(
-            strtotime('now -'.\Piwigo\Core\Config::authKeyDuration().' second'),
+            strtotime('now -'.\Piwigo\Core\Config::authKeyDuration().' second') ?: null,
             'second',
             null,
             false

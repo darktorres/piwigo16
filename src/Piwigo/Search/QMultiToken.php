@@ -157,7 +157,7 @@ class QMultiToken implements \Stringable
         for ($i = 0; $i < count($this->tokens); $i++) {
             $token = $this->tokens[$i];
             $remove = false;
-            if ($token->is_single) {
+            if ($token instanceof QSingleToken) {
                 if (($token->modifier & QST_QUOTED) == 0
                   && str_ends_with((string) $token->term, '*')) {
                     $token->term = rtrim((string) $token->term, '*');
@@ -192,19 +192,19 @@ class QMultiToken implements \Stringable
                   && !$token->scope->parse($token)) {
                     $remove = true;
                 }
-            } elseif (!count($token->tokens)) {
+            } elseif ($token instanceof QMultiToken && !count($token->tokens)) {
                 $remove = true;
             }
             if ($remove) {
                 array_splice($this->tokens, $i, 1);
-                if ($i < count($this->tokens) && $this->tokens[$i]->is_single) {
+                if ($i < count($this->tokens) && $this->tokens[$i] instanceof QSingleToken) {
                     $this->tokens[$i]->modifier |= QST_BREAK;
                 }
                 $i--;
             }
         }
 
-        if ($level > 0 && count($this->tokens) && $this->tokens[0]->is_single) {
+        if ($level > 0 && count($this->tokens) && $this->tokens[0] instanceof QSingleToken) {
             $this->tokens[0]->modifier |= QST_BREAK;
         }
     }
@@ -216,11 +216,11 @@ class QMultiToken implements \Stringable
     public function apply_scope(QSearchScope $scope): void
     {
         for ($i = 0; $i < count($this->tokens); $i++) {
-            if ($this->tokens[$i]->is_single) {
+            if ($this->tokens[$i] instanceof QSingleToken) {
                 if (!isset($this->tokens[$i]->scope)) {
                     $this->tokens[$i]->scope = $scope;
                 }
-            } else {
+            } elseif ($this->tokens[$i] instanceof QMultiToken) {
                 $this->tokens[$i]->apply_scope($scope);
             }
         }
@@ -236,7 +236,7 @@ class QMultiToken implements \Stringable
     {
         $crt_prio = 0;
         for ($i = 0; $i < count($this->tokens); $i++) {
-            if (!$this->tokens[$i]->is_single) {
+            if ($this->tokens[$i] instanceof QMultiToken) {
                 $this->tokens[$i]->check_operator_priority();
             }
             if ($i == 1) {

@@ -57,6 +57,9 @@ function history_compare(array $a, array $b): int
  */
 function get_history(array $data, array $search, array|string $types): array
 {
+    if (!is_array($types)) {
+        $types = [$types];
+    }
     if (isset($search['fields']['filename'])) {
         $query = '
 SELECT

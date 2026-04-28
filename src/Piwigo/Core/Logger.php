@@ -73,7 +73,7 @@ class Logger
     private int $_logStatus = self::STATUS_LOG_CLOSED;
     /**
      * File handle for this instance's log file.
-     * @var resource
+     * @var resource|null
      */
     private $_fileHandle = null;
 
@@ -125,7 +125,9 @@ class Logger
                 throw new \RuntimeException(self::$_messages['writefail']);
             }
 
-            if (($this->_fileHandle = fopen($this->options['filePath'], 'a')) != false) {
+            $fh = fopen($this->options['filePath'], 'a');
+            if ($fh !== false) {
+                $this->_fileHandle = $fh;
                 $this->_logStatus = self::STATUS_LOG_OPEN;
             } else {
                 $this->_logStatus = self::STATUS_OPEN_FAILED;
@@ -287,7 +289,7 @@ class Logger
         $files = glob($this->options['directory'] . $this->options['globPattern']);
         $limit = time() - $this->options['archiveDays'] * 86400;
 
-        foreach ($files as $file) {
+        foreach ($files ?: [] as $file) {
             if (@filemtime($file) < $limit) {
                 @unlink($file);
             }

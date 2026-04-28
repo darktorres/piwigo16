@@ -105,7 +105,7 @@ class ScriptLoader
                     $require = []; // Vite already encoded import order via chunks
                 }
             }
-            $script = new Script($load_mode, $id, $path, $version, $require);
+            $script = new Script((int) $load_mode, $id, $path, $version, $require);
             $script->is_template = $is_template;
             self::fill_well_known($id, $script);
             $this->registered_scripts[$id] = $script;
@@ -120,7 +120,7 @@ class ScriptLoader
             // Try to load undefined required script
             foreach ($script->precedents as $script_id) {
                 if (! isset($this->registered_scripts[$script_id])) {
-                    $this->load_known_required_script($script_id, $load_mode);
+                    $this->load_known_required_script($script_id, (int) $load_mode);
                 }
             }
         } else {
@@ -133,7 +133,7 @@ class ScriptLoader
                 $script->version = $version;
             }
             if ($load_mode < $script->load_mode) {
-                $script->load_mode = $load_mode;
+                $script->load_mode = (int) $load_mode;
             }
         }
     }

@@ -35,7 +35,7 @@ class QExpression extends QMultiToken
             $token = $expr->tokens[$i];
             $crt_is_not = ($token->modifier ^ $this_is_not) & QST_NOT; // no negation OR double negation -> no negation;
 
-            if ($token->is_single) {
+            if ($token instanceof QSingleToken) {
                 $token->idx = count($this->stokens);
                 $this->stokens[] = $token;
 
@@ -46,7 +46,7 @@ class QExpression extends QMultiToken
                     $modifier &= ~QST_NOT;
                 }
                 $this->stoken_modifiers[] = $modifier;
-            } else {
+            } elseif ($token instanceof QMultiToken) {
                 $this->build_single_tokens($token, $crt_is_not);
             }
         }

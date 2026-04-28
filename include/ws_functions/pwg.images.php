@@ -687,8 +687,8 @@ SELECT *
                 $image[$k] = $row[$k];
             }
 
-            $image['name'] = strip_tags(trigger_change('render_element_name', $image['name'], __FUNCTION__) ?? '');
-            $image['comment'] = trigger_change('render_element_description', $image['comment'], __FUNCTION__);
+            $image['name'] = strip_tags(trigger_change('render_element_name', $image['name'] ?? '', __FUNCTION__) ?? '');
+            $image['comment'] = trigger_change('render_element_description', $image['comment'] ?? null, __FUNCTION__);
 
             $image = array_merge($image, ws_std_get_urls($row));
             $images[ $image_ids[ $image['id'] ] ] = $image;
@@ -1522,7 +1522,7 @@ SELECT COUNT(*)
                 $tag_ids[] = tag_id_from_tag_name($tag_name);
             }
         } else {
-            $tag_names = preg_split('~(?<!\\\),~', (string) $params['tags']);
+            $tag_names = preg_split('~(?<!\\\),~', (string) $params['tags']) ?: [];
             foreach ($tag_names as $tag_name) {
                 $tag_ids[] = tag_id_from_tag_name(preg_replace('#\\\\*,#', ',', $tag_name));
             }
@@ -1903,7 +1903,8 @@ SELECT COUNT(*)
             return ['message' => 'chunks uploaded = '.implode(',', $chunk_ids_uploaded)];
         }
 
-        if (!fwrite($fp, file_get_contents($chunkfile_path))) {
+        $chunkdata = file_get_contents($chunkfile_path);
+        if ($chunkdata === false || !fwrite($fp, $chunkdata)) {
             // could not append chunk
             $logger->error(__FUNCTION__.' error merging chunk '.$chunkfile_path);
             flock($fp, LOCK_UN);
@@ -1993,7 +1994,7 @@ SELECT COUNT(*)
 
     // delete chunks older than a week
     $now = time();
-    foreach (glob(\Piwigo\Core\Config::uploadDir().'/buffer/'.'*.chunk') as $file) {
+    foreach (glob(\Piwigo\Core\Config::uploadDir().'/buffer/'.'*.chunk') ?: [] as $file) {
         if (is_file($file)) {
             if ($now - filemtime($file) >= 60 * 60 * 24 * 7) { // 7 days
                 $logger->info(__FUNCTION__.' delete '.$file);
@@ -2005,7 +2006,7 @@ SELECT COUNT(*)
     }
 
     // delete merged older than a week
-    foreach (glob(\Piwigo\Core\Config::uploadDir().'/buffer/'.'*.merged') as $file) {
+    foreach (glob(\Piwigo\Core\Config::uploadDir().'/buffer/'.'*.merged') ?: [] as $file) {
         if (is_file($file)) {
             if ($now - filemtime($file) >= 60 * 60 * 24 * 7) { // 7 days
                 $logger->info(__FUNCTION__.' delete '.$file);
@@ -2048,7 +2049,7 @@ function ws_images_exist(array $params, \Piwigo\Ws\PwgServer $service): array
             (string) $params['md5sum_list'],
             -1,
             PREG_SPLIT_NO_EMPTY
-        );
+        ) ?: [];
 
         $query = '
 SELECT id, md5sum
@@ -2071,7 +2072,7 @@ SELECT id, md5sum
             (string) $params['filename_list'],
             -1,
             PREG_SPLIT_NO_EMPTY
-        );
+        ) ?: [];
 
         $query = '
 SELECT id, file
@@ -2203,7 +2204,7 @@ function ws_images_formats_delete(array $params, \Piwigo\Ws\PwgServer $service):
             (string) $params['format_id'],
             -1,
             PREG_SPLIT_NO_EMPTY
-        );
+        ) ?: [];
     }
     $params['format_id'] = array_map(intval(...), $params['format_id']);
 
@@ -2536,7 +2537,7 @@ function ws_images_delete(array $params, \Piwigo\Ws\PwgServer $service): PwgErro
             (string) $params['image_id'],
             -1,
             PREG_SPLIT_NO_EMPTY
-        );
+        ) ?: [];
     }
     $params['image_id'] = array_map(intval(...), $params['image_id']);
 
@@ -2617,7 +2618,7 @@ function ws_images_uploadCompleted(array $params, \Piwigo\Ws\PwgServer $service)
             (string) $params['image_id'],
             -1,
             PREG_SPLIT_NO_EMPTY
-        );
+        ) ?: [];
     }
     $params['image_id'] = array_map(intval(...), $params['image_id']);
 
@@ -2716,7 +2717,7 @@ function ws_images_syncMetadata(array $params, \Piwigo\Ws\PwgServer $service): P
             (string) $params['image_id'],
             -1,
             PREG_SPLIT_NO_EMPTY
-        );
+        ) ?: [];
     }
 
     $image_ids = [];

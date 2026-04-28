@@ -160,11 +160,11 @@ function ws_extensions_update(array $params, \Piwigo\Ws\PwgServer $service): mix
     $extension_id = $params['id'];
     $revision = $params['revision'];
 
-    $extension = new $type();
     $upgrade_status = 'ok';
     $extension_name = '';
 
     if ($type == 'plugins') {
+        $extension = new \Piwigo\Admin\plugins();
         if (
             isset($extension->db_plugins_by_id[$extension_id])
             and $extension->db_plugins_by_id[$extension_id]['state'] == 'active'
@@ -191,6 +191,7 @@ function ws_extensions_update(array $params, \Piwigo\Ws\PwgServer $service): mix
             $extension->perform_action('activate', $extension_id);
         }
     } elseif ($type == 'themes') {
+        $extension = new \Piwigo\Admin\themes();
         $upgrade_status = $extension->extract_theme_files('upgrade', $revision, $extension_id);
         $extension_name = $extension->fs_themes[$extension_id]['name'];
 
@@ -205,6 +206,7 @@ function ws_extensions_update(array $params, \Piwigo\Ws\PwgServer $service): mix
 
         pwg_activity('system', ACTIVITY_SYSTEM_THEME, 'update', $activity_details);
     } elseif ($type == 'languages') {
+        $extension = new \Piwigo\Admin\languages();
         $upgrade_status = $extension->extract_language_files('upgrade', $revision, $extension_id);
         $extension_name = $extension->fs_languages[$extension_id]['name'];
     }

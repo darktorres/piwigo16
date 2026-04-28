@@ -105,7 +105,8 @@ function input_bool(string $key, ?bool $default = null, array $source = []): ?bo
  */
 function get_extension($filename): string
 {
-    return substr(strrchr($filename, '.'), 1, strlen($filename));
+    $ext = strrchr($filename, '.');
+    return $ext !== false ? substr($ext, 1) : '';
 }
 
 /**
@@ -476,7 +477,10 @@ UPDATE '.USER_INFOS_TABLE.'
             // we need to truncate, mysql won't accept a too long string
             $tags_string = substr($tags_string, 0, 50);
             // the last tag_id may have been truncated itself, so we must remove it
-            $tags_string = substr($tags_string, 0, strrpos($tags_string, ','));
+            $comma_pos = strrpos($tags_string, ',');
+            if ($comma_pos !== false) {
+                $tags_string = substr($tags_string, 0, $comma_pos);
+            }
         }
     }
 
@@ -549,7 +553,7 @@ INSERT INTO '.HISTORY_TABLE.'
 ;';
     pwg_query($query);
 
-    $history_id = pwg_db_insert_id();
+    $history_id = (int) pwg_db_insert_id();
     if ($history_id % 1000 == 0) {
         include_once(PHPWG_ROOT_PATH.'admin/include/functions_history.inc.php');
         history_summarize(50000);
@@ -582,10 +586,7 @@ function pwg_activity(string $object, array|int|string $object_id, string $actio
         return;
     }
 
-    $object_ids = $object_id;
-    if (!is_array($object_id)) {
-        $object_ids = [$object_id];
-    }
+    $object_ids = is_array($object_id) ? $object_id : [$object_id];
 
     if (isset($_REQUEST['method'])) {
         $details['method'] = $_REQUEST['method'];
@@ -745,14 +746,14 @@ function str2DateTime(int|string|null $original, $format = null)
     }
 
     if (!empty($format) && version_compare(PHP_VERSION, '5.3.0') >= 0) {// from known date format
-        return DateTime::createFromFormat('!'.$format, $original); // ! char to reset fields to UNIX epoch
+        return DateTime::createFromFormat('!'.$format, (string) $original); // ! char to reset fields to UNIX epoch
     } else {
         $t = trim((string) $original, '0123456789');
         if (empty($t)) { // from timestamp
             return new DateTime('@'.$original);
         } else { // from unknown date format (assuming something like Y-m-d H:i:s)
             $ymdhms = [];
-            $tok = strtok($original, '- :/');
+            $tok = strtok((string) $original, '- :/');
             while ($tok !== false) {
                 $ymdhms[] = $tok;
                 $tok = strtok('- :/');
@@ -788,11 +789,11 @@ function str2DateTime(int|string|null $original, $format = null)
  * @return string
  */
 /** @param string[]|true|null $show */
-function format_date_legacy(int|string|null $original, array|bool|null $show = null, ?string $format = null): string
+function format_date_legacy(int|string|\DateTime|null $original, array|bool|null $show = null, ?string $format = null): string
 {
     global $lang;
 
-    $date = str2DateTime($original, $format);
+    $date = ($original instanceof \DateTime) ? $original : str2DateTime($original, $format);
 
     if (!$date) {
         return l10n('N/A');
@@ -867,7 +868,8 @@ function format_date(int|string|\DateTime|null $original, array|bool|null $show 
         }
 
         $fmt = new IntlDateFormatter($user['language'], $dateType, $timeType);
-        return $fmt->format($date);
+        $formatted = $fmt->format($date);
+        return $formatted !== false ? $formatted : l10n('N/A');
     }
 
     return format_date_legacy($original, $show, $format);
@@ -884,6 +886,10 @@ function format_fromto($from, $to, $full = false)
 {
     $from = str2DateTime($from);
     $to = str2DateTime($to);
+
+    if ($from === false || $to === false) {
+        return l10n('N/A');
+    }
 
     if ($from->format('Y-m-d') == $to->format('Y-m-d')) {
         return format_date($from);
@@ -995,6 +1001,9 @@ function transform_date($original, $format_in, $format_out, $default = null)
         return $default;
     }
     $date = str2DateTime($original, $format_in);
+    if ($date === false) {
+        return $default;
+    }
     return $date->format($format_out);
 }
 
@@ -1790,10 +1799,12 @@ function convert_charset(string $str, string $source_charset, string $dest_chars
         return mb_convert_encoding($str, 'ISO-8859-1', 'UTF-8');
     }
     if (function_exists('iconv')) {
-        return iconv($source_charset, $dest_charset.'//TRANSLIT', $str);
+        $result = iconv($source_charset, $dest_charset.'//TRANSLIT', $str);
+        return $result !== false ? $result : $str;
     }
     if (function_exists('mb_convert_encoding')) {
-        return mb_convert_encoding($str, $dest_charset, $source_charset);
+        $result = mb_convert_encoding($str, $dest_charset, $source_charset);
+        return $result !== false ? $result : $str;
     }
     return $str; // TODO
 }
@@ -1893,7 +1904,7 @@ function create_navigation_bar(string $url, int $nb_element, int $start, int $nb
         // pages to display
         $navbar['pages'] = [];
         $navbar['pages'][1] = $url;
-        for ($i = max(floor($cur_page) - $pages_around, 2), $stop = min(ceil($cur_page) + $pages_around + 1, $maximum);
+        for ($i = (int) max(floor($cur_page) - $pages_around, 2), $stop = (int) min(ceil($cur_page) + $pages_around + 1, $maximum);
             $i < $stop; $i++) {
             $navbar['pages'][$i] = $url.$start_str.(($i - 1) * $nb_element_page);
         }
@@ -1967,7 +1978,7 @@ function check_pwg_token(): void
  */
 function get_pwg_token(): string
 {
-    return hash_hmac('md5', session_id(), (string) \Piwigo\Core\Config::secretKey());
+    return hash_hmac('md5', (string) session_id(), (string) \Piwigo\Core\Config::secretKey());
 }
 
 /*

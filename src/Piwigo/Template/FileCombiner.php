@@ -29,6 +29,9 @@ final class FileCombiner
     public static function clear_combined_files(): void
     {
         $dir = opendir(PHPWG_ROOT_PATH.PWG_COMBINED_DIR);
+        if ($dir === false) {
+            return;
+        }
         while ($file = readdir($dir)) {
             if (get_extension($file) == 'js' || get_extension($file) == 'css') {
                 unlink(PHPWG_ROOT_PATH.PWG_COMBINED_DIR.$file);
@@ -171,6 +174,9 @@ final class FileCombiner
             // handled below
 
             $content = file_get_contents(PHPWG_ROOT_PATH . $combinable->path);
+            if ($content === false) {
+                return null;
+            }
             if ($this->is_css) {
                 $content = self::process_css($content, $combinable->path, $header);
             } else {
@@ -192,7 +198,10 @@ final class FileCombiner
         if (!str_contains($file, '.min') and !str_contains($file, '.packed')) {
             require_once(PHPWG_ROOT_PATH.'include/jshrink.class.php');
             try {
-                $js = Minifier::minify($js);
+                $minified = Minifier::minify($js);
+                if (is_string($minified)) {
+                    $js = $minified;
+                }
             } catch (\Exception) {
             }
         }
@@ -243,7 +252,8 @@ final class FileCombiner
                 if (!url_is_remote($match[1]) && $match[1][0] != '/' && !str_contains($match[1], 'data:image/')) {
                     $relative = $dir . "/$match[1]";
                     $search[] = $match[0];
-                    $replace[] = 'url('.embellish_url(get_absolute_root_url(false).$relative).')';
+                    $url = embellish_url(get_absolute_root_url(false).$relative);
+                    $replace[] = 'url('.(is_string($url) ? $url : get_absolute_root_url(false).$relative).')';
                 }
             }
             $css = str_replace($search, $replace, $css);
@@ -268,7 +278,11 @@ final class FileCombiner
                     $replace[] = '';
                 } else {
                     $sub_css = file_get_contents(PHPWG_ROOT_PATH . $dir . "/$match[1]");
-                    $replace[] = self::process_css_rec($sub_css, dirname($dir . "/$match[1]"), $header);
+                    if ($sub_css !== false) {
+                        $replace[] = self::process_css_rec($sub_css, dirname($dir . "/$match[1]"), $header);
+                    } else {
+                        $replace[] = '';
+                    }
                 }
             }
             $css = str_replace($search, $replace, $css);

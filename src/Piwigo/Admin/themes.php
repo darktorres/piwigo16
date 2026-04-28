@@ -39,7 +39,7 @@ class themes
         if (file_exists($file_to_include)) {
             include_once($file_to_include);
 
-            if (class_exists($classname)) {
+            if (class_exists($classname) && is_a($classname, \Piwigo\Admin\ThemeMaintain::class, true)) {
                 return instantiate_theme_maintain($classname, $theme_id);
             }
         }
@@ -297,6 +297,9 @@ SELECT
     public function get_fs_themes(): void
     {
         $dir = opendir(PHPWG_THEMES_PATH);
+        if ($dir === false) {
+            return;
+        }
 
         while ($file = readdir($dir)) {
             if ($file != '.' and $file != '..') {
@@ -314,7 +317,7 @@ SELECT
                       'author' => '',
                       'mobile' => false,
                       ];
-                    $theme_data = implode('', file($path.'/themeconf.inc.php'));
+                    $theme_data = implode('', file($path.'/themeconf.inc.php') ?: []);
                     if (preg_match('|Theme Name:\\s*(.+)|', $theme_data, $val)) {
                         $theme['name'] = trim($val[1]);
                     }
@@ -324,7 +327,7 @@ SELECT
                     if (preg_match('|Theme URI:\\s*(https?:\\/\\/.+)|', $theme_data, $val)) {
                         $theme['uri'] = trim($val[1]);
                     }
-                    if ($desc = load_language('description.txt', $path.'/', ['return' => true])) {
+                    if (is_string($desc = load_language('description.txt', $path.'/', ['return' => true]))) {
                         $theme['description'] = trim($desc);
                     } elseif (preg_match('|Description:\\s*(.+)|', $theme_data, $val)) {
                         $theme['description'] = trim($val[1]);
@@ -372,7 +375,7 @@ SELECT
                     }
 
                     // IMPORTANT SECURITY !
-                    $theme = array_map(htmlspecialchars(...), $theme);
+                    $theme = array_map(fn($v) => is_string($v) ? htmlspecialchars($v) : $v, $theme);
                     $this->fs_themes[$file] = $theme;
                 }
             }
@@ -572,7 +575,7 @@ SELECT
 
                                     // make sure the obsolete file is withing the extension directory, prevent traversal path
                                     $realpath = realpath($path);
-                                    if ($realpath === false or !str_starts_with($realpath, $extract_path_realpath)) {
+                                    if ($realpath === false or $extract_path_realpath === false or !str_starts_with($realpath, $extract_path_realpath)) {
                                         continue;
                                     }
 
@@ -601,7 +604,9 @@ SELECT
             $status = 'temp_path_error';
         }
 
-        @unlink($archive);
+        if (is_string($archive)) {
+            @unlink($archive);
+        }
         return $status;
     }
 

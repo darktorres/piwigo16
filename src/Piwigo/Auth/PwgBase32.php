@@ -99,7 +99,7 @@ class PwgBase32
             }
             $eightBits = str_split($x, 8);
             for ($z = 0; $z < count($eightBits); $z++) {
-                $binaryString .= (($y = chr((int)base_convert($eightBits[$z], 2, 10))) || ord($y[0]) == 48) ? $y : '';
+                $binaryString .= (($y = chr(min(255, max(0, (int)base_convert($eightBits[$z], 2, 10))))) || ord($y[0]) == 48) ? $y : '';
             }
         }
         return $binaryString;

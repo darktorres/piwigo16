@@ -8,7 +8,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-class Inflector_fr
+class Inflector_fr implements InflectorInterface
 {
     /** @var array<string,string> */
     private array $exceptions;
@@ -31,10 +31,10 @@ class Inflector_fr
 
         $this->pluralizers = array_reverse([ '/$/' => 's',
           '/(bijou|caillou|chou|genou|hibou|joujou|pou|au|eu|eau)$/' => '\1x',
-          '/(bleu|émeu|landau|lieu|pneu|sarrau)$/' => '\1s',
+          '/(bleu|ï¿½meu|landau|lieu|pneu|sarrau)$/' => '\1s',
           '/al$/' => 'aux',
           '/ail$/' => 'ails',
-          '/(b|cor|ém|gemm|soupir|trav|vant|vitr)ail$/' => '\1aux',
+          '/(b|cor|ï¿½m|gemm|soupir|trav|vant|vitr)ail$/' => '\1aux',
           '/(s|x|z)$/' => '\1',
         ]);
 
@@ -43,7 +43,7 @@ class Inflector_fr
           '/(bijou|caillou|chou|genou|hibou|joujou|pou|au|eu|eau)x$/' => '\1',
           '/(journ|chev)aux$/' => '\1al',
           '/ails$/' => 'ail',
-          '/(b|cor|ém|gemm|soupir|trav|vant|vitr)aux$/' => '\1ail',
+          '/(b|cor|ï¿½m|gemm|soupir|trav|vant|vitr)aux$/' => '\1ail',
         ]);
     }
 

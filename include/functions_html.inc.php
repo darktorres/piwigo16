@@ -346,7 +346,7 @@ function fatal_error(string $msg, $title = null, $show_trace = true): never
         $bt = debug_backtrace();
         for ($i = 1; $i < count($bt); $i++) {
             $class = isset($bt[$i]['class']) ? (@$bt[$i]['class'].'::') : '';
-            $btrace_msg .= "#$i\t".$class.@$bt[$i]['function'].' '.@$bt[$i]['file'].'('.@$bt[$i]['line'].")\n";
+            $btrace_msg .= "#$i\t".$class.$bt[$i]['function'].' '.($bt[$i]['file'] ?? '').'('.($bt[$i]['line'] ?? '').")\n";
         }
         $btrace_msg = trim($btrace_msg);
         $msg .= "\n";

@@ -8,9 +8,9 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-class Inflector_en
+class Inflector_en implements InflectorInterface
 {
-    /** @var array<string,string> */
+    /** @var array<string, int|string> */
     private array $exceptions;
     /** @var array<string,string> */
     private readonly array $pluralizers;
@@ -111,7 +111,7 @@ class Inflector_en
         $rc = @$this->exceptions[$lword];
         if (isset($rc)) {
             if (!empty($rc)) {
-                $res[] = $rc;
+                $res[] = (string) $rc;
             }
             return $res;
         }

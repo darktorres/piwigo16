@@ -356,7 +356,7 @@ function autoupdate_plugin(array &$plugin): void
     $fs_version = null;
     $i = -1;
 
-    while (($line = fgets($fh)) !== false && $fs_version == null && $i < 10) {
+    while ($fh !== false && ($line = fgets($fh)) !== false && $fs_version == null && $i < 10) {
         $i++;
         if ($i < 2) {
             continue;
@@ -367,7 +367,9 @@ function autoupdate_plugin(array &$plugin): void
         }
     }
 
-    fclose($fh);
+    if ($fh !== false) {
+        fclose($fh);
+    }
 
     // if version is auto (dev) or superior
     if ($fs_version != null && (
@@ -395,8 +397,10 @@ function autoupdate_plugin(array &$plugin): void
             // name (=plugin_id) and a class name can't have a "-". So we have to replace with a "_"
             $classname = str_replace('-', '_', $classname);
 
-            $plugin_maintain = new $classname($plugin['id']);
-            $plugin_maintain->update($plugin['version'], $fs_version, $page['errors']);
+            if (class_exists($classname) && is_a($classname, PluginMaintain::class, true)) {
+                $plugin_maintain = new $classname($plugin['id']);
+                $plugin_maintain->update($plugin['version'], $fs_version, $page['errors']);
+            }
         }
 
         // update database (only on production). We want to avoid registering an "auto" to "auto" update,
@@ -434,7 +438,7 @@ function load_plugins(): void
  * Factory helper used by PluginMaintain dispatch in src/ — keeps dynamic
  * instantiation in include/ (not subject to piwigo.noDynamicNew in src/).
  *
- * @param class-string $classname
+ * @param class-string<\PluginMaintain> $classname
  */
 function instantiate_plugin_maintain(string $classname, string $plugin_id): \PluginMaintain
 {
@@ -444,7 +448,7 @@ function instantiate_plugin_maintain(string $classname, string $plugin_id): \Plu
 /**
  * Factory helper for ThemeMaintain dispatch.
  *
- * @param class-string $classname
+ * @param class-string<\ThemeMaintain> $classname
  */
 function instantiate_theme_maintain(string $classname, string $theme_id): \ThemeMaintain
 {

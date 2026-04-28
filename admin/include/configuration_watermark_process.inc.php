@@ -42,7 +42,7 @@ $pwatermark = $_POST['w'];
 
 // step 0 - manage upload if any
 if (isset($_FILES['watermarkImage']) and !empty($_FILES['watermarkImage']['tmp_name'])) {
-    [$width, $height, $type] = getimagesize($_FILES['watermarkImage']['tmp_name']);
+    [$width, $height, $type] = getimagesize($_FILES['watermarkImage']['tmp_name']) ?: [0, 0, 0];
     if (IMAGETYPE_PNG != $type) {
         $errors['watermarkImage'] = sprintf(
             l10n('Allowed file types: %s.'),

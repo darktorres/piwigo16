@@ -135,8 +135,8 @@ SELECT SQL_CALC_FOUND_ROWS i.*
                 $image[$k] = $row[$k];
             }
 
-            $image['name'] = strip_tags(trigger_change('render_element_name', $image['name'], __FUNCTION__) ?? '');
-            $image['comment'] = trigger_change('render_element_description', $image['comment'], __FUNCTION__);
+            $image['name'] = strip_tags(trigger_change('render_element_name', $image['name'] ?? '', __FUNCTION__) ?? '');
+            $image['comment'] = trigger_change('render_element_description', $image['comment'] ?? null, __FUNCTION__);
 
             $image = array_merge($image, ws_std_get_urls($row));
 
@@ -1092,7 +1092,7 @@ SELECT *
             (string) $params['category_id'],
             -1,
             PREG_SPLIT_NO_EMPTY
-        );
+        ) ?: [];
     }
     $params['category_id'] = array_map(intval(...), $params['category_id']);
 
@@ -1151,7 +1151,7 @@ SELECT id
             (string) $params['category_id'],
             -1,
             PREG_SPLIT_NO_EMPTY
-        );
+        ) ?: [];
     }
     $params['category_id'] = array_map(intval(...), $params['category_id']);
 

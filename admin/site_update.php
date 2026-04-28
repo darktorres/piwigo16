@@ -168,7 +168,7 @@ SELECT id, uppercats, global_rank, status, visible
 
     // what is the base directory to search file system sub-directories ?
     if (isset($_POST['cat']) and is_numeric($_POST['cat'])) {
-        $basedir = $db_fulldirs[$_POST['cat']];
+        $basedir = $db_fulldirs[(int) $_POST['cat']];
     } else {
         $basedir = preg_replace('#/*$#', '', $site_url);
     }
@@ -642,7 +642,10 @@ DELETE
     // delete elements that are in database but not in the filesystem
     $to_delete_elements = [];
     foreach (array_diff($db_elements, array_keys($fs)) as $path) {
-        $to_delete_elements[] = array_search($path, $db_elements);
+        $found = array_search($path, $db_elements);
+        if ($found !== false) {
+            $to_delete_elements[] = (int) $found;
+        }
         $infos[] = [
           'path' => $path,
           'info' => l10n('deleted'),
@@ -691,7 +694,7 @@ if (isset($_POST['submit'])
         }
         $files = get_filelist(
             $opts['category_id'],
-            $site_id,
+            (int) $site_id,
             $opts['recursive'],
             false
         );
@@ -735,11 +738,11 @@ if (isset($_POST['submit'])
     $template->assign(
         'update_result',
         [
-        'NB_NEW_CATEGORIES' => $counts['new_categories'],
-        'NB_DEL_CATEGORIES' => $counts['del_categories'],
-        'NB_NEW_ELEMENTS' => $counts['new_elements'],
-        'NB_DEL_ELEMENTS' => $counts['del_elements'],
-        'NB_UPD_ELEMENTS' => $counts['upd_elements'],
+        'NB_NEW_CATEGORIES' => $counts['new_categories'] ?? 0,
+        'NB_DEL_CATEGORIES' => $counts['del_categories'] ?? 0,
+        'NB_NEW_ELEMENTS' => $counts['new_elements'] ?? 0,
+        'NB_DEL_ELEMENTS' => $counts['del_elements'] ?? 0,
+        'NB_UPD_ELEMENTS' => $counts['upd_elements'] ?? 0,
         'NB_ERRORS' => count($errors),
         ]
     );
@@ -765,7 +768,7 @@ if (isset($_POST['submit']) and isset($_POST['sync_meta'])
     $start = get_moment();
     $files = get_filelist(
         $opts['category_id'],
-        $site_id,
+        (int) $site_id,
         $opts['recursive'],
         $opts['only_new']
     );

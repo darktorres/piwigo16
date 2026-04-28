@@ -21,13 +21,13 @@ final class ImageRect
     public int $b = 0;
 
     /**
-     * @param int[] $l width and height
+     * @param array<int|float> $l width and height
      */
     public function __construct(array $l)
     {
         $this->l = $this->t = 0;
-        $this->r = $l[0];
-        $this->b = $l[1];
+        $this->r = (int) $l[0];
+        $this->b = (int) $l[1];
     }
 
     /**
@@ -72,8 +72,8 @@ final class ImageRect
                 }
             }
         }
-        $this->l += $tlcrop;
-        $this->r -= $pixels - $tlcrop;
+        $this->l += (int) $tlcrop;
+        $this->r -= (int) ($pixels - $tlcrop);
     }
 
     /**
@@ -102,7 +102,7 @@ final class ImageRect
                 }
             }
         }
-        $this->t += $tlcrop;
-        $this->b -= $pixels - $tlcrop;
+        $this->t += (int) $tlcrop;
+        $this->b -= (int) ($pixels - $tlcrop);
     }
 }

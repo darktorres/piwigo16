@@ -179,13 +179,24 @@ final class Config
     }
 
     // Security / passwords
+    /** @return callable-string */
     public static function passwordHash(): string
     {
-        return self::getString('password_hash', 'pwg_password_hash');
+        $fn = self::getString('password_hash', 'pwg_password_hash');
+        if (!is_callable($fn)) {
+            throw new \RuntimeException("Invalid callable: $fn");
+        }
+        return $fn;
     }
+
+    /** @return callable-string */
     public static function passwordVerify(): string
     {
-        return self::getString('password_verify', 'pwg_password_verify');
+        $fn = self::getString('password_verify', 'pwg_password_verify');
+        if (!is_callable($fn)) {
+            throw new \RuntimeException("Invalid callable: $fn");
+        }
+        return $fn;
     }
 
     // Mail cluster
@@ -444,10 +455,11 @@ final class Config
     // ---- Permission / access cluster ------------------------------------
 
     /** @return list<int> */
+    /** @return non-empty-list<int> */
     public static function availablePermissionLevels(): array
     {
         $v = self::$data['available_permission_levels'] ?? [0, 1, 2, 4, 8];
-        return is_array($v) ? array_values($v) : [0, 1, 2, 4, 8];
+        return is_array($v) && count($v) > 0 ? array_values($v) : [0, 1, 2, 4, 8];
     }
 
     public static function guestAccess(): bool { return self::getBool('guest_access', true); }

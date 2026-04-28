@@ -10,8 +10,8 @@ class check_integrity
     public array $ignore_list = [];
     /** @var array<mixed> */
     public array $retrieve_list = [];
-    /** @var callable|array<mixed>|null */
-    public mixed $build_ignore_list = null;
+    /** @var array<string> */
+    public array $build_ignore_list = [];
 
     public function __construct()
     {
@@ -218,7 +218,7 @@ class check_integrity
     /** @param array<mixed>|null $correction_fct_args */
     public function add_anomaly(string $anomaly, ?callable $correction_fct = null, ?array $correction_fct_args = null, ?string $correction_msg = null): void
     {
-        $id = md5($anomaly.$correction_fct.serialize($correction_fct_args).$correction_msg);
+        $id = md5($anomaly.(is_callable($correction_fct) ? serialize($correction_fct) : '').serialize($correction_fct_args).$correction_msg);
 
         if (in_array($id, $this->ignore_list)) {
             $this->build_ignore_list[] = $id;

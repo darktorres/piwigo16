@@ -185,7 +185,10 @@ final class DerivativeImage
         } elseif (substr_compare((string) $loc, '../', 0, 3) == 0) {
             $loc = substr((string) $loc, 3);
         }
-        $loc = substr_replace($loc, '-'.implode('_', $tokens), strrpos((string) $loc, '.'), 0);
+        $dot_pos = strrpos((string) $loc, '.');
+        if ($dot_pos !== false) {
+            $loc = substr_replace($loc, '-'.implode('_', $tokens), $dot_pos, 0);
+        }
 
         $rel_path = PWG_DERIVATIVE_DIR.$loc;
 
@@ -323,9 +326,9 @@ final class DerivativeImage
             if ($ratio_w > 1 || $ratio_h > 1) {
                 if ($ratio_w > $ratio_h) {
                     $size[0] = $maxw;
-                    $size[1] = floor($size[1] / $ratio_w);
+                    $size[1] = (int) floor($size[1] / $ratio_w);
                 } else {
-                    $size[0] = floor($size[0] / $ratio_h);
+                    $size[0] = (int) floor($size[0] / $ratio_h);
                     $size[1] = $maxh;
                 }
             }

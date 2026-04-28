@@ -543,7 +543,8 @@ function get_html_description_recent_post_date(array $date_detail, ?string $auth
           .'</li><br>';
 
     foreach ($date_detail['elements'] as $element) {
-        $tn_src = DerivativeImage::thumb_url($element);
+        $tn_src_raw = DerivativeImage::thumb_url($element);
+        $tn_src = is_string($tn_src_raw) ? $tn_src_raw : '';
         $description .= '<a href="'.
           add_url_params(
               make_picture_url(

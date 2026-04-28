@@ -40,7 +40,8 @@ function trigger_notify(string $event, mixed ...$args): void
 }
 function get_extension(string $filename): string
 {
-    return substr(strrchr($filename, '.'), 1, strlen($filename));
+    $ext = strrchr($filename, '.');
+    return $ext !== false ? substr($ext, 1) : '';
 }
 
 function mkgetdir(string $dir, int $flags = 0): bool
@@ -174,7 +175,7 @@ function parse_request(): void
 
     $req = ltrim($req, '/');
 
-    foreach (preg_split('#/+#', $req) as $token) {
+    foreach (preg_split('#/+#', $req) ?: [] as $token) {
         preg_match(\Piwigo\Core\Config::syncCharsRegex(), $token) or ierror('Invalid chars in request', 400);
     }
 
@@ -325,9 +326,12 @@ function send_derivative(int|false $expires): void
         return;
     }
     $fp = fopen($page['derivative_path'], 'rb');
+    if ($fp === false) {
+        ierror('Cannot open derivative file', 500);
+    }
 
     $fstat = fstat($fp);
-    header('Last-Modified: '.gmdate('D, d M Y H:i:s', $fstat['mtime']).' GMT');
+    header('Last-Modified: '.gmdate('D, d M Y H:i:s', $fstat !== false ? $fstat['mtime'] : 0).' GMT');
     if ($expires !== false) {
         header('Expires: '.gmdate('D, d M Y H:i:s', $expires).' GMT');
     }
@@ -428,6 +432,7 @@ if ($derivative_mtime === false or
     $derivative_mtime < $src_mtime or
     $derivative_mtime < $params->last_mod_time) {
     $need_generate = true;
+    $derivative_mtime = $derivative_mtime ?: 0;
 }
 
 $expires = false;
@@ -530,7 +535,7 @@ if ($crop_rect) {
 
 if ($scaled_size) {
     $changes++;
-    $image->resize($scaled_size[0], $scaled_size[1]);
+    $image->resize((int) $scaled_size[0], (int) $scaled_size[1]);
     $d_size = $scaled_size;
     $timing['scale'] = time_step($step);
 }
@@ -545,10 +550,10 @@ if ($params->will_watermark($d_size)) {
     $wm_image = new pwg_image(PHPWG_ROOT_PATH.$wm->file);
     $wm_size = array($wm_image->get_width(),$wm_image->get_height());
     if ($d_size[0] < $wm_size[0] or $d_size[1] < $wm_size[1]) {
-        $wm_scaling_params = SizingParams::classic($d_size[0], $d_size[1]);
+        $wm_scaling_params = SizingParams::classic((int) $d_size[0], (int) $d_size[1]);
         $wm_scaling_params->compute($wm_size, null, $tmp, $wm_scaled_size);
         $wm_size = $wm_scaled_size;
-        $wm_image->resize($wm_scaled_size[0], $wm_scaled_size[1]);
+        $wm_image->resize((int) $wm_scaled_size[0], (int) $wm_scaled_size[1]);
     }
     $x = round(($wm->xpos / 100) * ($d_size[0] - $wm_size[0]));
     $y = round(($wm->ypos / 100) * ($d_size[1] - $wm_size[1]));

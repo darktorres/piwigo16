@@ -105,10 +105,8 @@ function ws_tags_getAdminList(array $params, \Piwigo\Ws\PwgServer &$service): ar
     unset($tags);
     $tag_ids = array_keys($tags_by_id);
 
-    $where_clauses = ws_std_image_sql_filter($params);
-    if (!empty($where_clauses)) {
-        $where_clauses = implode(' AND ', $where_clauses);
-    }
+    $where_clauses_arr = ws_std_image_sql_filter($params);
+    $where_clauses = !empty($where_clauses_arr) ? implode(' AND ', $where_clauses_arr) : null;
 
     $order_by = ws_std_image_sql_order($params, 'i.');
     if (!empty($order_by)) {
@@ -168,8 +166,8 @@ SELECT *
                 $image[$k] = $row[$k];
             }
 
-            $image['name'] = strip_tags((string) trigger_change('render_element_name', $image['name'], __FUNCTION__));
-            $image['comment'] = trigger_change('render_element_description', $image['comment'], __FUNCTION__);
+            $image['name'] = strip_tags((string) trigger_change('render_element_name', $image['name'] ?? '', __FUNCTION__));
+            $image['comment'] = trigger_change('render_element_description', $image['comment'] ?? null, __FUNCTION__);
 
             $image = array_merge($image, ws_std_get_urls($row));
 

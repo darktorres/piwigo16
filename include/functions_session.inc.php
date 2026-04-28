@@ -58,7 +58,7 @@ if (class_exists(\Piwigo\Core\Config::class, false)
  */
 function generate_key($size): string
 {
-    $bytes = random_bytes($size + 10);
+    $bytes = random_bytes(max(1, (int) $size + 10));
 
     return substr(
         str_replace(

@@ -112,11 +112,11 @@ ORDER BY
 
     if ($last !== 'all') {
         $date = new DateTime();
-        $limit = ($last - 1) * 12 + $date->format('n') - 1;
+        $limit = ((int) $last - 1) * 12 + (int) $date->format('n') - 1;
         $query .=
 ' LIMIT '.$limit;
         $result = query2array($query.';');
-        $lastDate = $date->sub(new DateInterval('P'.($last - 1).'Y'.($date->format('n') - 1).'M'));
+        $lastDate = $date->sub(new DateInterval('P'.((int) $last - 1).'Y'.((int) $date->format('n') - 1).'M'));
         return set_missing_values('month', $result, $lastDate, new DateTime());
     }
 
@@ -252,7 +252,7 @@ $template->assign(
  * @param array<mixed> $data
  * @return array<mixed>
  */
-function set_missing_values(string $unit, array $data, DateTime|string|null $firstDate = null, DateTime|string|null $lastDate = null): array
+function set_missing_values(string $unit, array $data, DateTime|null $firstDate = null, DateTime|null $lastDate = null): array
 {
     $limit = count($data);
     $result = [];

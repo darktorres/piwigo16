@@ -684,6 +684,7 @@ foreach (array_keys($ratio_categories) as $type) {
 }
 
 // selected=bound if nothing selected
+$dimensions['selected'] = [];
 foreach (array_keys($dimensions['bounds']) as $type) {
     $dimensions['selected'][$type] = $_SESSION['bulk_manager_filter']['dimension'][$type] ?? $dimensions['bounds'][$type]
     ;

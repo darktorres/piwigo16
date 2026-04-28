@@ -51,7 +51,7 @@ final class SrcImage
                 }
                 $size = getimagesize(PHPWG_ROOT_PATH.$this->rel_path);
             }
-            $this->size = @[$size[0],$size[1]];
+            $this->size = $size !== false ? [$size[0], $size[1]] : null;
         }
 
         if (!$this->size) {

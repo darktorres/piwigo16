@@ -247,7 +247,7 @@ if (!isset($_SESSION['cache_activity_last_weeks']) or $_SESSION['cache_activity_
         $day_nb = $day_date->format('N');
 
         @$activity_last_weeks[$week][$day_nb]['details'][ucfirst((string) $action['object'])][ucfirst((string) $action['action'])] = $action['activity_counter'];
-        @$activity_last_weeks[$week][$day_nb]['number'] += $action['activity_counter'];
+        $activity_last_weeks[$week][$day_nb]['number'] = ($activity_last_weeks[$week][$day_nb]['number'] ?? 0) + $action['activity_counter'];
         @$activity_last_weeks[$week][$day_nb]['date'] = format_date($day_date->getTimestamp());
     }
 
@@ -371,7 +371,7 @@ foreach ($file_extensions as $ext => $ext_details) {
     }
 
     @$data_storage[$type]['total']['filesize'] += $ext_details['filesize'];
-    @$data_storage[$type]['total']['nb_files'] += $ext_details['ext_counter'];
+    $data_storage[$type]['total']['nb_files'] = ($data_storage[$type]['total']['nb_files'] ?? 0) + $ext_details['ext_counter'];
 
     @$data_storage[$type]['details'][strtoupper((string) $ext)] = [
       'filesize' => $ext_details['filesize'],
@@ -394,7 +394,7 @@ foreach ($file_extensions as $ext => $ext_details) {
     $type = 'Formats';
 
     @$data_storage[$type]['total']['filesize'] += $ext_details['filesize'];
-    @$data_storage[$type]['total']['nb_files'] += $ext_details['ext_counter'];
+    $data_storage[$type]['total']['nb_files'] = ($data_storage[$type]['total']['nb_files'] ?? 0) + $ext_details['ext_counter'];
 
     @$data_storage[$type]['details'][strtoupper((string) $ext)] = [
       'filesize' => $ext_details['filesize'],

@@ -210,6 +210,9 @@ function add_level_to_tags(array $tags): array
  */
 function get_image_ids_for_tags(array|int|string $tag_ids, string $mode = 'AND', ?string $extra_images_where_sql = '', ?string $order_by = '', bool $use_permissions = true): array
 {
+    if (!is_array($tag_ids)) {
+        $tag_ids = [$tag_ids];
+    }
     if (empty($tag_ids)) {
         return [];
     }

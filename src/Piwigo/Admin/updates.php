@@ -471,12 +471,16 @@ class updates
                     if (0 == $input['remaining']) {
                         $end = true;
                     }
-                    @fwrite($zip, base64_decode((string) $input['data']));
+                    if ($zip !== false) {
+                        @fwrite($zip, base64_decode((string) $input['data']));
+                    }
                 } else {
                     $end = true;
                 }
             }
-            @fclose($zip);
+            if ($zip !== false) {
+                @fclose($zip);
+            }
 
             if (@filesize($filename)) {
                 $zip = new \PclZip($filename);

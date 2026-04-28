@@ -15,9 +15,6 @@ class tabsheet
      * @var null
      */
     public ?string $uniqid = null;
-    /**
-     * @var ''
-     */
     public string $selected = '';
 
     /*
@@ -43,7 +40,8 @@ class tabsheet
     {
         if (!isset($this->sheets[$name])) {
             $this->sheets[$name] = ['caption' => $caption,
-                                         'url' => $url];
+                                         'url' => $url,
+                                         'selected' => $selected];
             if ($selected) {
                 $this->selected = $name;
             }

@@ -29,7 +29,7 @@ $template->assign(
 // what is the maximum number of pixels permitted by the memory_limit?
 if (pwg_image::get_library() == 'gd') {
     $fudge_factor = 1.7;
-    $available_memory = get_ini_size('memory_limit') - memory_get_usage();
+    $available_memory = (int) get_ini_size('memory_limit') - memory_get_usage();
     $max_upload_width = round(sqrt($available_memory / (2 * $fudge_factor)));
     $max_upload_height = round(2 * $max_upload_width / 3);
 
@@ -196,7 +196,7 @@ if (!isset($_SESSION['upload_hide_warnings'])) {
         $setup_warnings[] = sprintf(
             'Piwigo setting upload_form_chunk_size (%ukB) should be smaller than PHP configuration setting upload_max_filesize (%ukB)',
             \Piwigo\Core\Config::uploadFormChunkSize(),
-            ceil(get_ini_size('upload_max_filesize') / 1024)
+            ceil((int) get_ini_size('upload_max_filesize') / 1024)
         );
     }
 

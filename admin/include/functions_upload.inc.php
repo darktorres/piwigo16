@@ -205,7 +205,7 @@ SELECT
 
         // current date
         [$dbnow] = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
-        [$year, $month, $day] = preg_split('/[^\d]/', (string) $dbnow, 4);
+        [$year, $month, $day] = preg_split('/[^\d]/', (string) $dbnow, 4) ?: ['', '', ''];
 
         // upload directory hierarchy
         $upload_dir = sprintf(
@@ -221,7 +221,8 @@ SELECT
         $filename_wo_ext = $date_string.'-'.$random_string;
         $file_path = $upload_dir.'/'.$filename_wo_ext.'.';
 
-        [$width, $height, $type] = getimagesize($source_filepath);
+        $imgsize = getimagesize($source_filepath);
+        [$width, $height, $type] = $imgsize ?: [0, 0, 0];
 
         if (IMAGETYPE_PNG == $type) {
             $file_path .= 'png';
@@ -235,7 +236,7 @@ SELECT
             $original_extension = strtolower(get_extension($original_filename));
 
             $finfo = finfo_open(FILEINFO_MIME_TYPE);
-            $finfo_type = finfo_file($finfo, $source_filepath);
+            $finfo_type = $finfo !== false ? finfo_file($finfo, $source_filepath) : false;
 
             if (in_array($finfo_type, ['image/svg', 'image/svg+xml']) and $original_extension != 'svg') {
                 unlink($source_filepath);
@@ -370,13 +371,13 @@ SELECT
         pwg_activity('photo', $image_id, 'add');
     }
 
-    add_uploaded_file_add_to_categories($image_id, $categories);
+    add_uploaded_file_add_to_categories((int) $image_id, $categories);
 
     // update metadata from the uploaded file (exif/iptc)
     if (\Piwigo\Core\Config::useExif() and !function_exists('exif_read_data')) {
         \Piwigo\Core\Config::override('use_exif', false);
     }
-    sync_metadata([$image_id]);
+    sync_metadata([(int) $image_id]);
 
     // cache a derivative
     $query = '
@@ -392,7 +393,8 @@ SELECT
 
     set_make_full_url();
     // in case we are on uploadify.php, we have to replace the false path
-    $derivative_url = preg_replace('#admin/include/i#', 'i', DerivativeImage::url(IMG_MEDIUM, $src_image));
+    $img_url = DerivativeImage::url(IMG_MEDIUM, $src_image);
+    $derivative_url = is_string($img_url) ? (string) preg_replace('#admin/include/i#', 'i', $img_url) : '';
     unset_make_full_url();
 
     $logger->info(__FUNCTION__.' : force cache generation, derivative_url = '.$derivative_url);
@@ -401,7 +403,7 @@ SELECT
 
     trigger_notify('loc_end_add_uploaded_file', $image_infos);
 
-    return $image_id;
+    return (int) $image_id;
 }
 
 /** @param int[]|null $categories */
@@ -875,7 +877,7 @@ function need_resize(string $image_filepath, int|string $max_width, int|string $
     // TODO : the resize check should take the orientation into account. If a
     // rotation must be applied to the resized photo, then we should test
     // invert width and height.
-    [$width, $height] = getimagesize($image_filepath);
+    [$width, $height] = getimagesize($image_filepath) ?: [0, 0];
 
     if ($width > $max_width or $height > $max_height) {
         $logger->info(__FUNCTION__.' '.(string)$image_filepath.' is too big (current='.$width.'x'.$height.'px Vs max='.$max_width.'x'.$max_height.'px)');
@@ -888,7 +890,7 @@ function need_resize(string $image_filepath, int|string $max_width, int|string $
 /** @return array<string,mixed> */
 function pwg_image_infos(string $path): array
 {
-    [$width, $height] = getimagesize($path);
+    [$width, $height] = getimagesize($path) ?: [0, 0];
     $filesize = floor(filesize($path) / 1024);
 
     return [
@@ -930,6 +932,9 @@ function file_upload_error_message(int $error_code): string
 function get_ini_size(string $ini_key, bool $in_bytes = true): int|string
 {
     $size = ini_get($ini_key);
+    if ($size === false) {
+        return 0;
+    }
 
     if ($in_bytes) {
         $size = convert_shorthand_notation_to_bytes($size);
@@ -953,10 +958,10 @@ function convert_shorthand_notation_to_bytes(int|string $value): int
 
     if (isset($multiply_by)) {
         $value = substr((string) $value, 0, -1);
-        $value = (float)$value * $multiply_by;
+        $value = (int) ((float) $value * $multiply_by);
     }
 
-    return $value;
+    return (int) $value;
 }
 
 function add_upload_error(string $upload_id, string $error_message): void

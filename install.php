@@ -219,8 +219,10 @@ define(\'DB_COLLATE\', \'\');
 
             $tmp_filename = md5(uniqid((string)time()));
             $fh = @fopen(PHPWG_ROOT_PATH.\Piwigo\Core\Config::dataLocation() . 'pwg_' . $tmp_filename, 'w');
-            @fputs($fh, $file_content, strlen($file_content));
-            @fclose($fh);
+            if ($fh !== false) {
+                @fputs($fh, $file_content, strlen($file_content));
+                @fclose($fh);
+            }
 
             $template->assign(
                 [
@@ -230,8 +232,10 @@ define(\'DB_COLLATE\', \'\');
                 ]
             );
         }
-        @fputs($fp, $file_content, strlen($file_content));
-        @fclose($fp);
+        if ($fp !== false) {
+            @fputs($fp, $file_content, strlen($file_content));
+            @fclose($fp);
+        }
 
         // tables creation, based on piwigo_structure.sql
         execute_sqlfile(

@@ -25,6 +25,9 @@ function xmlrpc_encode(mixed $data): string
             return '<string>'.htmlspecialchars($data).'</string>';
         case 'object':
         case 'array':
+            if (is_object($data)) {
+                $data = get_object_vars($data);
+            }
             $is_array = range(0, count($data) - 1) === array_keys($data);
             if ($is_array) {
                 $return = '<array><data>'."\n";

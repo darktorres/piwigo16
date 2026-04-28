@@ -49,6 +49,9 @@ $sort_orders = [
  */
 function get_categories_ref_date(array|int|string $ids, string $field = 'date_available', string $minmax = 'max'): array
 {
+    if (!is_array($ids)) {
+        $ids = [$ids];
+    }
     // we need to work on the whole tree under each category, even if we don't
     // want to sort sub categories
     $category_ids = get_subcat_ids($ids);
@@ -138,7 +141,7 @@ if (isset($_GET['delete']) and is_numeric($_GET['delete'])) {
     if (isset($_GET['photo_deletion_mode'])) {
         $photo_deletion_mode = $_GET['photo_deletion_mode'];
     }
-    delete_categories([$_GET['delete']], $photo_deletion_mode);
+    delete_categories([(int) $_GET['delete']], $photo_deletion_mode);
 
     $_SESSION['page_infos'] = [l10n('Virtual album deleted')];
     update_global_rank();

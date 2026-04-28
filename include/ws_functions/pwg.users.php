@@ -102,7 +102,7 @@ use Piwigo\Ws\PwgNamedStruct;
         $max_date_tokens = explode('-', (string) $params['max_register']);
         $max_register_year = $max_date_tokens[0];
         $max_register_month = $max_date_tokens[1] ?? 12;
-        $max_register_day = $max_date_tokens[2] ?? date('t', strtotime($max_register_year.'-'.$max_register_month.'-1'));
+        $max_register_day = $max_date_tokens[2] ?? date('t', strtotime($max_register_year.'-'.$max_register_month.'-1') ?: null);
         $max_date = sprintf('%u-%02u-%02u', $max_register_year, $max_register_month, $max_register_day);
         $where_clauses[] = 'ui.registration_date <= \''.$max_date.' 23:59:59\'';
     }
@@ -831,6 +831,9 @@ SELECT
     }
 
     $user_lost = getuserdata($params['user_id']);
+    if ($user_lost === false) {
+        return new PwgError(404, 'User not found');
+    }
 
     // Cannot perform this action for a guest or generic user
     if (is_a_guest($user_lost['status']) or is_generic($user_lost['status'])) {
@@ -902,6 +905,9 @@ SELECT
     }
 
     $new_main_user = getuserdata($params['user_id']);
+    if ($new_main_user === false) {
+        return new PwgError(404, 'User not found');
+    }
 
     // check if the user to set as main user is not webmaster
     if ('webmaster' !== $new_main_user['status']) {
@@ -980,7 +986,7 @@ SELECT
     $revoked_key = revoke_api_key($user['id'], $params['pkid']);
 
     if (true !== $revoked_key) {
-        return new PwgError(403, $revoked_key);
+        return new PwgError(403, is_string($revoked_key) ? $revoked_key : '');
     }
 
     $logger->info('[api_key][user_id='.$user['id'].'][action=revoke][pkid='.$params['pkid'].']');
@@ -1057,5 +1063,5 @@ SELECT
 
     $api_keys = get_api_key($user['id']);
 
-    return $api_keys ?: l10n('No API key found');
+    return $api_keys ?: new PwgError(404, l10n('No API key found'));
 }

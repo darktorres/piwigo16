@@ -52,13 +52,17 @@ function ws_userComments_getList(array $params, \Piwigo\Ws\PwgServer &$service):
     }
 
     if (!empty($params['f_min_date'])) {
-        $min = date_format(date_create($params['f_min_date']), 'Y-m-d 00:00:00');
-        $where_clauses[] = 'date >= \''. $min .'\'';
+        $dmin = date_create($params['f_min_date']);
+        if ($dmin !== false) {
+            $where_clauses[] = 'date >= \''. date_format($dmin, 'Y-m-d 00:00:00') .'\'';
+        }
     }
 
     if (!empty($params['f_max_date'])) {
-        $max = date_format(date_create($params['f_max_date']), 'Y-m-d 23:59:59');
-        $where_clauses[] = 'date <= \''. $max .'\'';
+        $dmax = date_create($params['f_max_date']);
+        if ($dmax !== false) {
+            $where_clauses[] = 'date <= \''. date_format($dmax, 'Y-m-d 23:59:59') .'\'';
+        }
     }
 
     // reset all filters during search

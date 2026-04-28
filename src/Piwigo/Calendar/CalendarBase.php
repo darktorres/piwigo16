@@ -285,11 +285,11 @@ GROUP BY period';
         $current = implode('-', $page['chronology_date']);
         $upper_items = query2array($query, null, 'period');
 
-        usort($upper_items, version_compare(...));
+        usort($upper_items, fn($a, $b): int => version_compare((string) $a, (string) $b));
         $upper_items_rank = array_flip($upper_items);
         if (!isset($upper_items_rank[$current])) {
             $upper_items[] = $current;// just in case (external link)
-            usort($upper_items, version_compare(...));
+            usort($upper_items, fn($a, $b): int => version_compare((string) $a, (string) $b));
             $upper_items_rank = array_flip($upper_items);
         }
         $current_rank = $upper_items_rank[$current];

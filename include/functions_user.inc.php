@@ -192,7 +192,7 @@ SELECT id
             $override['language'] = $language;
         }
 
-        create_user_infos($user_id, $override);
+        create_user_infos((int) $user_id, $override);
 
         if ($notify_admin and 'none' != \Piwigo\Core\Config::get('email_admin_on_new_user')) {
             include_once(PHPWG_ROOT_PATH.'include/functions_mail.inc.php');
@@ -257,7 +257,7 @@ SELECT id
 
         pwg_activity('user', $user_id, 'add');
 
-        return $user_id;
+        return (int) $user_id;
     } else {
         return false;
     }
@@ -274,7 +274,7 @@ SELECT id
 function build_user(int $user_id, bool $use_cache = true): array
 {
     $user['id'] = $user_id;
-    $user = array_merge($user, getuserdata($user_id, $use_cache));
+    $user = array_merge($user, getuserdata($user_id, $use_cache) ?: []);
 
     if ($user['id'] == \Piwigo\Core\Config::guestId() and $user['status'] <> 'guest') {
         $user['status'] = 'guest';
@@ -979,11 +979,11 @@ function log_user($user_id, $remember_me): void
             setcookie(
                 \Piwigo\Core\Config::rememberMeName(),
                 $cookie,
-                ['expires' => time() + \Piwigo\Core\Config::rememberMeLength(), 'path' => cookie_path(), 'domain' => ini_get('session.cookie_domain'), 'secure' => ini_get('session.cookie_secure'), 'httponly' => ini_get('session.cookie_httponly')]
+                ['expires' => time() + \Piwigo\Core\Config::rememberMeLength(), 'path' => (string) cookie_path(), 'domain' => (string) ini_get('session.cookie_domain'), 'secure' => (bool) ini_get('session.cookie_secure'), 'httponly' => (bool) ini_get('session.cookie_httponly')]
             );
         }
     } else { // make sure we clean any remember me ...
-        setcookie(\Piwigo\Core\Config::rememberMeName(), '', ['expires' => 0, 'path' => cookie_path(), 'domain' => ini_get('session.cookie_domain')]);
+        setcookie(\Piwigo\Core\Config::rememberMeName(), '', ['expires' => 0, 'path' => (string) cookie_path(), 'domain' => (string) ini_get('session.cookie_domain')]);
     }
     if (session_id() != '') { // we regenerate the session for security reasons
         // see http://www.acros.si/papers/session_fixation.pdf
@@ -1022,7 +1022,7 @@ function auto_login(): bool
                 return true;
             }
         }
-        setcookie(\Piwigo\Core\Config::rememberMeName(), '', ['expires' => 0, 'path' => cookie_path(), 'domain' => ini_get('session.cookie_domain')]);
+        setcookie(\Piwigo\Core\Config::rememberMeName(), '', ['expires' => 0, 'path' => (string) cookie_path(), 'domain' => (string) ini_get('session.cookie_domain')]);
     }
     return false;
 }
@@ -1297,11 +1297,11 @@ function logout_user(): void
     session_unset();
     session_destroy();
     setcookie(
-        session_name(),
+        (string) session_name(),
         '',
-        ['expires' => 0, 'path' => ini_get('session.cookie_path'), 'domain' => ini_get('session.cookie_domain')]
+        ['expires' => 0, 'path' => (string) ini_get('session.cookie_path'), 'domain' => (string) ini_get('session.cookie_domain')]
     );
-    setcookie(\Piwigo\Core\Config::rememberMeName(), '', ['expires' => 0, 'path' => cookie_path(), 'domain' => ini_get('session.cookie_domain')]);
+    setcookie(\Piwigo\Core\Config::rememberMeName(), '', ['expires' => 0, 'path' => (string) cookie_path(), 'domain' => (string) ini_get('session.cookie_domain')]);
 }
 
 /**
@@ -1835,7 +1835,7 @@ function generate_password_link(int $user_id, bool $first_login = false): array
     unset_make_full_url();
 
     $time_validation = time_since(
-        strtotime('now -'.$duration.' second'),
+        strtotime('now -'.$duration.' second') ?: null,
         'second',
         null,
         false
@@ -2471,7 +2471,7 @@ SELECT
         $api_key['is_expired'] = $expired_on < $now;
         if ($api_key['is_expired']) {
             $api_key['expiration'] = l10n('Expired');
-        } else {
+        } elseif ($now !== false && $expired_on !== false) {
             $diff = dateDiff($now, $expired_on);
             if ($diff->days > 0) {
                 $api_key['expiration'] = l10n('%d days', $diff->days);

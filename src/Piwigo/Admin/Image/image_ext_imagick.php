@@ -34,7 +34,7 @@ class image_ext_imagick implements imageInterface
                 // frame, such as "400x300400x300400x300" (3 frames of 400x300), as a big
                 // string, impossible to parse :-/ So let's use the PHP embedded function
                 // getimagesize here.
-                [$this->width, $this->height] = getimagesize($this->source_filepath);
+                [$this->width, $this->height] = getimagesize($this->source_filepath) ?: [0, 0];
                 return;
             }
         }
@@ -56,12 +56,12 @@ class image_ext_imagick implements imageInterface
 
     public function get_width(): int
     {
-        return $this->width;
+        return (int) $this->width;
     }
 
     public function get_height(): int
     {
-        return $this->height;
+        return (int) $this->height;
     }
 
     public function crop(int $width, int $height, int $x, int $y): bool
@@ -136,7 +136,8 @@ class image_ext_imagick implements imageInterface
     public function compose(mixed $overlay, int $x, int $y, int $opacity): bool
     {
         $param = 'compose dissolve -define compose:args='.$opacity;
-        $param .= ' '.escapeshellarg(realpath($overlay->image->source_filepath));
+        $overlay_path = realpath($overlay->image->source_filepath);
+        $param .= ' '.escapeshellarg($overlay_path !== false ? $overlay_path : $overlay->image->source_filepath);
         $param .= ' -gravity NorthWest -geometry +'.$x.'+'.$y;
         $param .= ' -composite';
         $this->add_command($param);
@@ -174,7 +175,8 @@ class image_ext_imagick implements imageInterface
             }
         }
         $dest = pathinfo((string) $destination_filepath);
-        $exec .= ' "'.realpath($dest['dirname']).'/'.$dest['basename'].'" 2>&1';
+        $dirname = isset($dest['dirname']) ? (realpath($dest['dirname']) ?: $dest['dirname']) : '';
+        $exec .= ' "'.$dirname.'/'.$dest['basename'].'" 2>&1';
         $logger->debug($exec, 'i.php');
         @exec($exec, $returnarray);
 

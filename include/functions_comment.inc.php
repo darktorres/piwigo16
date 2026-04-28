@@ -47,7 +47,7 @@ function user_comment_check(string $action, array $comment): string
         '/https?:\/\//',
         (string) $comment['content'],
         $matches
-    );
+    ) ?: 0;
 
     if (str_contains((string) $comment['author'], 'http://')) {
         $link_count++;

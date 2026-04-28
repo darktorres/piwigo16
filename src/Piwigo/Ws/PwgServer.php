@@ -157,7 +157,8 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
 
     public static function isPost(): bool
     {
-        return !empty($_POST) || (strlen(file_get_contents('php://input')) > 0);
+        $input = file_get_contents('php://input');
+        return !empty($_POST) || ($input !== false && strlen($input) > 0);
     }
 
     public static function makeArrayParam(mixed &$param): void

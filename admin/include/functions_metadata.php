@@ -166,11 +166,17 @@ function get_sync_metadata(array $infos): array|false
     if (function_exists('mime_content_type')) {
         $mime_type = mime_content_type($file);
 
-        if (str_starts_with($mime_type, 'image/')) {
+        if (is_string($mime_type) && str_starts_with($mime_type, 'image/')) {
             if (in_array($mime_type, ['image/svg+xml', 'image/svg'])) {
                 $xml = file_get_contents($file);
+                if ($xml === false) {
+                    return false;
+                }
 
                 $xmlget = simplexml_load_string($xml);
+                if ($xmlget === false) {
+                    return false;
+                }
                 $xmlattributes = $xmlget->attributes();
                 $width = $xmlattributes->width;
                 $height = $xmlattributes->height;

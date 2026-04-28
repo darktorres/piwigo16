@@ -806,7 +806,7 @@ function pwg_mail(string|array $to, array $args = [], array $tpl = []): bool
         $mail->SMTPDebug = 0;
 
         $mail->Host = $smtp_host;
-        $mail->Port = $smtp_port;
+        $mail->Port = (int) $smtp_port;
 
         if (!empty($conf_mail['smtp_secure']) and in_array($conf_mail['smtp_secure'], ['ssl', 'tls'])) {
             $mail->SMTPSecure = $conf_mail['smtp_secure'];
@@ -889,11 +889,13 @@ function pwg_send_mail_test(bool $success, mixed $mail, array $args): void
         }
 
         $file = fopen($filename, 'w+');
-        if (!$success) {
-            fwrite($file, 'ERROR: ' . $mail->ErrorInfo . "\n\n");
+        if ($file !== false) {
+            if (!$success) {
+                fwrite($file, 'ERROR: ' . $mail->ErrorInfo . "\n\n");
+            }
+            fwrite($file, $mail->getSentMIMEMessage());
+            fclose($file);
         }
-        fwrite($file, $mail->getSentMIMEMessage());
-        fclose($file);
     }
 }
 

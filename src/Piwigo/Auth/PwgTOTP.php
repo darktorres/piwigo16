@@ -24,7 +24,8 @@ class PwgTOTP
         // RFC 4226, section 5.3
         $offset = ord(substr($hash, -1)[0]) & 0x0F;
         $part = substr($hash, $offset, 4);
-        $number = unpack('N', $part)[1] & 0x7FFFFFFF;
+        $unpacked = unpack('N', $part);
+        $number = ($unpacked !== false ? $unpacked[1] : 0) & 0x7FFFFFFF;
 
         $code = $number % 1000000; // code 6 digits $number % 10^6
         return str_pad((string)$code, 6, '0', STR_PAD_LEFT); // 123 become 000123
@@ -38,7 +39,7 @@ class PwgTOTP
      */
     public static function generateSecret($length = 20): string
     {
-        $random = random_bytes($length);
+        $random = random_bytes(max(1, (int) $length));
         return PwgBase32::encode($random, false);
     }
 
@@ -67,7 +68,7 @@ class PwgTOTP
         ob_start();
         \QRcode::png($otp_url);
         $qrcode_image = ob_get_clean();
-        $base64_qrcode = base64_encode($qrcode_image);
+        $base64_qrcode = base64_encode($qrcode_image ?: '');
         return 'data:image/png;base64,' . $base64_qrcode;
     }
 

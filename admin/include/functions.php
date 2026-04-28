@@ -888,7 +888,7 @@ DELETE
  * Returns all uppercats category ids of the given category ids.
  *
  * @param int[] $cat_ids
- * @return int[]
+ * @return string[]
  */
 function get_uppercat_ids($cat_ids): array
 {
@@ -1778,7 +1778,7 @@ function fill_lounge($images, $categories): void
  *
  * @since 12
  * @param boolean $invalidate_user_cache
- * @return int number of images moved
+ * @return array|null array of moved rows or null if another exec wins
  */
 function empty_lounge($invalidate_user_cache = true)
 {
@@ -1809,7 +1809,7 @@ INSERT IGNORE
 
     if ($running_exec_id != $exec_id) {
         $logger->debug(__FUNCTION__.', exec='.$exec_id.', skip');
-        return;
+        return null;
     }
     $logger->debug(__FUNCTION__.', exec='.$exec_id.' wins the race and gets the token!');
 

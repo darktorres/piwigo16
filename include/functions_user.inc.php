@@ -1693,7 +1693,7 @@ SELECT
  *
  * @since 2.8
  * @param int $user_id
- * @return array
+ * @return array|false
  */
 function create_user_auth_key($user_id, $user_status = null)
 {

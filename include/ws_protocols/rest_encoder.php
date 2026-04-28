@@ -15,22 +15,13 @@ use Piwigo\Ws\PwgError;
 
 class PwgXmlWriter
 {
-    /**
-     * @var true
-     */
+    /** @var bool */
     public $_indent;
-    /**
-     * @var '	'
-     */
+    /** @var string */
     public $_indentStr;
-
-    /**
-     * @var array{}
-     */
+    /** @var array */
     public $_elementStack;
-    /**
-     * @var false
-     */
+    /** @var bool */
     public $_lastTagOpen;
     /**
      * @var int

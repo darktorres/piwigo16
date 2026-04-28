@@ -67,7 +67,7 @@ function mkgetdir($dir, $flags = 0): bool
 
 // end fast bootstrap
 
-function ierror($msg, $code)
+function ierror($msg, $code): never
 {
     global $logger;
     if ($code == 301 || $code == 302) {
@@ -356,7 +356,21 @@ function safe_unserialize($value)
     return $value;
 }
 
-$page = array();
+$page = [
+    'coi' => null,
+    'src_location' => '',
+    'src_path' => '',
+    'src_url' => '',
+    'derivative_path' => '',
+    'derivative_params' => null,
+    'derivative_type' => null,
+    'derivative_ext' => '',
+    'root_path' => '',
+    'original_size' => null,
+    'rotation_angle' => null,
+    'count_queries' => 0,
+    'queries_time' => 0,
+];
 $begin = $step = microtime(true);
 $timing = array();
 foreach (explode(',', 'load,rotate,crop,scale,sharpen,watermark,save,send') as $k) {
@@ -396,6 +410,9 @@ parse_request();
 //var_export($page);
 
 $params = $page['derivative_params'];
+if (!($params instanceof \Piwigo\Image\DerivativeParams)) {
+    ierror('Invalid derivative params', 400);
+}
 
 $src_mtime = @filemtime($page['src_path']);
 if ($src_mtime === false) {

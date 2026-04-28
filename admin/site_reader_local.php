@@ -24,7 +24,7 @@ class LocalSiteReader
     /**
      * Is this local site ok ?
      *
-     * @return true on success, false otherwise
+     * @return bool
      */
     public function open(): bool
     {

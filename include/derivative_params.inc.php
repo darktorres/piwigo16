@@ -229,10 +229,10 @@ final class SizingParams
      *
      * @param int[] $in_size - two element array of input dimensions (width, height)
      * @param string $coi - four character encoded string containing the center of interest (unused if max_crop=0)
-     * @param \Piwigo\Image\ImageRect &$crop_rect - ImageRect containing the cropping rectangle or null if cropping is not required
-     * @param int[] &$scale_size - two element array containing width and height of the scaled image
+     * @param \Piwigo\Image\ImageRect|null &$crop_rect - ImageRect containing the cropping rectangle or null if cropping is not required
+     * @param array<int,int|float>|null &$scale_size - two element array containing width and height of the scaled image
      */
-    public function compute(array $in_size, $coi, &$crop_rect, &$scale_size): void
+    public function compute(array $in_size, $coi, mixed &$crop_rect, mixed &$scale_size): void
     {
         $destCrop = new \Piwigo\Image\ImageRect($in_size);
 

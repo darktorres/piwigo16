@@ -1739,7 +1739,7 @@ function load_language(string $filename, $dirname = '', array $options = []): st
             }
 
             // load parent language content directly in global
-            if (!empty($load_lang_info['parent'])) {
+            if (!empty($load_lang_info['parent'] ?? null)) {
                 $parent_language = $load_lang_info['parent'];
             } elseif (!empty($lang_info['parent'])) {
                 $parent_language = $lang_info['parent'];
@@ -1888,7 +1888,7 @@ function create_navigation_bar(string $url, $nb_element, $start, $nb_element_pag
             $i < $stop; $i++) {
             $navbar['pages'][$i] = $url.$start_str.(($i - 1) * $nb_element_page);
         }
-        $navbar['pages'][$maximum] = $url_start.$last;
+        $navbar['pages'][(int)$maximum] = $url_start.$last;
         $navbar['NB_PAGE'] = $maximum;
     }
     return $navbar;

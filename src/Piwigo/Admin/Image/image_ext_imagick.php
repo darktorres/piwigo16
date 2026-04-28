@@ -7,17 +7,11 @@ namespace Piwigo\Admin\Image;
 class image_ext_imagick implements imageInterface
 {
     public $imagickdir = '';
-    /**
-     * @var string
-     */
+    /** @var string|int */
     public $width = '';
-    /**
-     * @var string
-     */
+    /** @var string|int */
     public $height = '';
-    /**
-     * @var true
-     */
+    /** @var bool */
     public $is_animated_webp = false;
     public $commands = [];
 

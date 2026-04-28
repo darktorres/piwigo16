@@ -37,7 +37,7 @@ abstract class PersistentCache
     @param string $key - it should be the return value of make_key function
     @param mixed $value
     @param int $lifetime
-    @return false on error
+    * @return bool false on error
     */
     abstract public function set($key, $value, $lifetime = null);
 

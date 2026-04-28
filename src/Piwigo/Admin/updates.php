@@ -8,21 +8,15 @@ use Piwigo\Users\CurrentUser;
 
 class updates
 {
-    /**
-     * @var array{class-string<plugins>, class-string<themes>, class-string<languages>}|array{mixed}
-     */
+    /** @var string[] */
     public $types = [];
     public $plugins;
     public $themes;
     public $languages;
     public $missing = [];
-    /**
-     * @var array{'AdminTools', 'TakeATour', 'language_switch', 'LocalFilesEditor'}
-     */
+    /** @var string[] */
     public $default_plugins = [];
-    /**
-     * @var array{'modus', 'elegant', 'smartpocket'}
-     */
+    /** @var string[] */
     public $default_themes = [];
     public $default_languages = [];
     public $merged_extensions = [];

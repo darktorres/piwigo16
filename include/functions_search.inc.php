@@ -715,7 +715,7 @@ function get_clause_for_filter($filter_name): string
  *
  * @param string $filter_name
  *
- * @return array of image_ids (or false)
+ * @return array|false of image_ids
  */
 function get_items_for_filter($filter_name)
 {
@@ -1694,7 +1694,7 @@ function qsearch_eval(\Piwigo\Search\QMultiToken $expr, \Piwigo\Search\QResults 
  *    )
  *
  * @param string $q
- * @return array
+ * @return array|null
  */
 function get_quick_search_results($q, array $options)
 {

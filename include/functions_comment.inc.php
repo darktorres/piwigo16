@@ -412,7 +412,7 @@ function email_admin($action, array $comment): void
  *
  * @param int $comment_id
  * @param bool $die_on_error
- * @return int
+ * @return int|false
  */
 function get_comment_author_id($comment_id, $die_on_error = true)
 {

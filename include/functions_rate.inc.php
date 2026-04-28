@@ -18,7 +18,7 @@ declare(strict_types=1);
  *
  * @param int $image_id
  * @param float $rate
- * @return array as return by update_rating_score()
+ *  array|false as return by update_rating_score()
  */
 function rate_picture($image_id, $rate)
 {

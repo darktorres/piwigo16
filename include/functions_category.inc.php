@@ -147,7 +147,7 @@ WHERE '.$where.'
  * Retrieves informations about a category.
  *
  * @param int $id
- * @return array
+ * @return array|null
  */
 function get_cat_info($id)
 {

@@ -45,7 +45,7 @@ function get_std_sql_where_restrict_filter(
  * @param string $type 'new_comments', 'unvalidated_comments', 'new_elements', 'updated_categories', 'new_users'
  * @param string $start (mysql datetime format)
  * @param string $end (mysql datetime format)
- * @return int|array int for action count array for info
+ * @return int|array|null
  */
 function custom_notification_query($action, $type, $start = null, $end = null)
 {
@@ -431,7 +431,7 @@ function news($start = null, $end = null, $exclude_img_cats = false, $add_url = 
  * @param int $max_dates maximum number of recent dates
  * @param int $max_elements maximum number of elements per date
  * @param int $max_cats maximum number of categories per date
- * @return array
+ * @return array|null
  */
 function get_recent_post_dates($max_dates, $max_elements, $max_cats)
 {

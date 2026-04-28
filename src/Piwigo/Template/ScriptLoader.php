@@ -164,7 +164,7 @@ class ScriptLoader
     /**
      * Returns combined scripts loaded in footer.
      *
-     * @return Combinable[]
+     * @return array{0: Combinable[], 1: Combinable[]}
      */
     public function get_footer_scripts(): array
     {

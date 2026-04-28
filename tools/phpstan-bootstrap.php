@@ -28,7 +28,7 @@ $prefixeTable = 'piwigo_';
 $conf = [];
 /** @var array<string,mixed> $user */
 $user = [];
-/** @var array{infos:list<string>,errors:list<string>,warnings:list<string>,messages:list<string>,body_classes:list<string>,body_data:array<string,mixed>} $page */
+/** @var array<string,mixed> $page */
 $page = ['infos' => [], 'errors' => [], 'warnings' => [], 'messages' => [], 'body_classes' => [], 'body_data' => []];
 /** @var array<string,string> $lang */
 $lang = [];

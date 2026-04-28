@@ -22,7 +22,7 @@ final class ImageStdParams
     private static $type_map = [];
     /** @var DerivativeParams[] */
     private static $disabled_type_map = [];
-    /** @var DerivativeParams[] */
+    /** @var string[] maps undefined type names to defined type names */
     private static $undefined_type_map = [];
     /** @var WatermarkParams */
     private static $watermark;
@@ -67,7 +67,7 @@ final class ImageStdParams
     }
 
     /**
-     * @return DerivativeParams[]
+     * @return string[] maps undefined type names to defined type names
      */
     public static function get_undefined_type_map()
     {

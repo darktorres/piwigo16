@@ -27,7 +27,7 @@ class Template
     /** @var array - Templates prefilter from external sources (plugins) */
     public $external_filters = [];
 
-    /** @var string - Content to add before </head> tag */
+    /** @var array - Content to add before </head> tag */
     public $html_head_elements = [];
     /** @var string - Runtime CSS rules */
     private string $html_style = '';
@@ -67,7 +67,7 @@ class Template
         if (!$this->smarty->debugging) {
             $this->smarty->error_reporting = error_reporting() & ~E_NOTICE;
         }
-        $this->smarty->compile_check = \Piwigo\Core\Config::templateCompileCheck();
+        $this->smarty->compile_check = (int)\Piwigo\Core\Config::templateCompileCheck();
         $this->smarty->force_compile = \Piwigo\Core\Config::templateForceCompile();
 
         if (!\Piwigo\Core\Config::has('data_dir_checked')) {
@@ -256,7 +256,7 @@ class Template
     public function delete_compiled_templates(): void
     {
         $save_compile_id = $this->smarty->compile_id;
-        $this->smarty->compile_id = null;
+        $this->smarty->compile_id = '';
         $this->smarty->clearCompiledTemplate();
         $this->smarty->compile_id = $save_compile_id;
         file_put_contents($this->smarty->getCompileDir().'/index.htm', 'Not allowed!');
@@ -289,7 +289,7 @@ class Template
      * Sets the template filenames for handles.
      *
      * @param string[] $filename_array hashmap of handle=>filename
-     * @return true
+     * @return bool
      */
     public function set_filenames($filename_array): bool
     {

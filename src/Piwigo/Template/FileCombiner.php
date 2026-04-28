@@ -140,7 +140,7 @@ final class FileCombiner
                 $file = PWG_COMBINED_DIR . 't' . base_convert(hash('crc32b', implode(',', $key)), 16, 36) . '.' . $this->type;
                 if (!$force && file_exists(PHPWG_ROOT_PATH.$file)) {
                     $combinable->path = $file;
-                    $combinable->version = false;
+                    $combinable->version = 0;
                     return null;
                 }
             }

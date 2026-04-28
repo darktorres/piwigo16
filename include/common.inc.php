@@ -198,11 +198,12 @@ check_lounge();
 
 include(PHPWG_ROOT_PATH.'include/user.inc.php');
 
-if (in_array(substr($user['language'], 0, 2), ['fr','it','de','es','pl','ru','nl','tr','da'])) {
-    define('PHPWG_DOMAIN', substr($user['language'], 0, 2).'.piwigo.org');
-} elseif ('zh_CN' == $user['language']) {
+$user_language = $user['language'] ?? '';
+if (in_array(substr($user_language, 0, 2), ['fr','it','de','es','pl','ru','nl','tr','da'])) {
+    define('PHPWG_DOMAIN', substr($user_language, 0, 2).'.piwigo.org');
+} elseif ('zh_CN' == $user_language) {
     define('PHPWG_DOMAIN', 'cn.piwigo.org');
-} elseif ('pt_BR' == $user['language']) {
+} elseif ('pt_BR' == $user_language) {
     define('PHPWG_DOMAIN', 'br.piwigo.org');
 } else {
     define('PHPWG_DOMAIN', 'piwigo.org');
@@ -243,8 +244,8 @@ if (isset($page['auth_key_invalid']) and $page['auth_key_invalid']) {
 // check if we need to notified user about api_key expiration
 if (isset($page['notify_api_key_expiration']) and is_array($page['notify_api_key_expiration'])) {
     $is_mail_send = notification_api_key_expiration(
-        $user['username'],
-        $user['email'],
+        $user['username'] ?? '',
+        $user['email'] ?? '',
         $page['notify_api_key_expiration']['days_left']
     );
 
@@ -253,7 +254,7 @@ if (isset($page['notify_api_key_expiration']) and is_array($page['notify_api_key
             USER_AUTH_KEYS_TABLE,
             ['last_notified_on' => $page['notify_api_key_expiration']['dbnow']],
             [
-            'user_id' => $user['id'],
+            'user_id' => $user['id'] ?? 0,
             'auth_key' => $page['notify_api_key_expiration']['auth_key'],
       ],
         );
@@ -266,7 +267,7 @@ if (isset($page['notify_api_key_expiration']) and is_array($page['notify_api_key
 if (defined('IN_ADMIN') and IN_ADMIN) {// Admin template
     $template = new Template(PHPWG_ROOT_PATH.'admin/themes', userprefs_get_param('admin_theme', 'clear'));
 } else { // Classic template
-    $theme = $user['theme'];
+    $theme = $user['theme'] ?? '';
     if (script_basename() != 'ws' and mobile_theme()) {
         $theme = \Piwigo\Core\Config::mobilTheme();
     }

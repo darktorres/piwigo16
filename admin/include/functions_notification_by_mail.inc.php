@@ -50,7 +50,7 @@ where
  *
  * @return true, if it's timeout
  */
-function check_sendmail_timeout()
+function check_sendmail_timeout(): bool
 {
     global $env_nbm;
 
@@ -65,7 +65,8 @@ function check_sendmail_timeout()
  *
  * @return quoted check key list
  */
-function quote_check_key_list($check_key_list = []): array
+/** @param string[] $check_key_list @return string[] */
+function quote_check_key_list(array $check_key_list = []): array
 {
     return array_map(fn ($s): string => '\''.$s.'\'', $check_key_list);
 }
@@ -80,7 +81,9 @@ function quote_check_key_list($check_key_list = []): array
 /**
  * @return mixed[]
  */
-function get_user_notifications($action, $check_key_list = [], $enabled_filter_value = ''): array
+/** @param string[] $check_key_list */
+/** @return array<mixed> */
+function get_user_notifications(string $action, array $check_key_list = [], bool|string $enabled_filter_value = ''): array
 {
     $data_users = [];
 
@@ -116,7 +119,7 @@ where 1=1';
 
         $query .= $query_and_check_key;
 
-        if (isset($enabled_filter_value) and ($enabled_filter_value != '')) {
+        if ($enabled_filter_value != '') {
             $query .= ' and
         N.enabled = \''.boolean_to_string($enabled_filter_value).'\'';
         }
@@ -150,7 +153,7 @@ order by';
  *
  * Return none
  */
-function begin_users_env_nbm($is_to_send_mail = false): void
+function begin_users_env_nbm(bool $is_to_send_mail = false): void
 {
     global $user, $lang, $lang_info, $env_nbm;
 
@@ -212,7 +215,8 @@ function end_users_env_nbm(): void
  *
  * Return none
  */
-function set_user_on_env_nbm(array &$nbm_user, $is_action_send): void
+/** @param array<string,mixed> $nbm_user */
+function set_user_on_env_nbm(array &$nbm_user, bool $is_action_send): void
 {
     global $user, $lang, $lang_info, $env_nbm;
 
@@ -244,6 +248,7 @@ function unset_user_on_env_nbm(): void
  *
  * Return none
  */
+/** @param array<string,mixed> $nbm_user */
 function inc_mail_sent_success(array $nbm_user): void
 {
     global $page, $env_nbm;
@@ -257,6 +262,7 @@ function inc_mail_sent_success(array $nbm_user): void
  *
  * Return none
  */
+/** @param array<string,mixed> $nbm_user */
 function inc_mail_sent_failed(array $nbm_user): void
 {
     global $page, $env_nbm;
@@ -301,6 +307,7 @@ function display_counter_info(): void
     }
 }
 
+/** @param array<string,mixed> $nbm_user */
 function assign_vars_nbm_mail_content(array $nbm_user): void
 {
     global $env_nbm;
@@ -333,7 +340,8 @@ function assign_vars_nbm_mail_content(array $nbm_user): void
 /**
  * @return mixed[]
  */
-function do_subscribe_unsubscribe_notification_by_mail($is_admin_request, $is_subscribe = false, $check_key_list = []): array
+/** @param string[] $check_key_list @return array<mixed> */
+function do_subscribe_unsubscribe_notification_by_mail(bool $is_admin_request, bool $is_subscribe = false, array $check_key_list = []): array
 {
     global $page, $env_nbm;
 
@@ -474,7 +482,8 @@ function do_subscribe_unsubscribe_notification_by_mail($is_admin_request, $is_su
  *
  * @return check_key list treated
  */
-function unsubscribe_notification_by_mail($is_admin_request, $check_key_list = []): array
+/** @param string[] $check_key_list @return array<mixed> */
+function unsubscribe_notification_by_mail(bool $is_admin_request, array $check_key_list = []): array
 {
     return do_subscribe_unsubscribe_notification_by_mail($is_admin_request, false, $check_key_list);
 }
@@ -486,7 +495,8 @@ function unsubscribe_notification_by_mail($is_admin_request, $check_key_list = [
  *
  * @return check_key list treated
  */
-function subscribe_notification_by_mail($is_admin_request, $check_key_list = []): array
+/** @param string[] $check_key_list @return array<mixed> */
+function subscribe_notification_by_mail(bool $is_admin_request, array $check_key_list = []): array
 {
     return do_subscribe_unsubscribe_notification_by_mail($is_admin_request, true, $check_key_list);
 }

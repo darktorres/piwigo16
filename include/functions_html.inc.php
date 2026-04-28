@@ -25,7 +25,8 @@ use Piwigo\Menu\RegisteredBlock;
  * @param array $cat_informations
  * @param string|null $url
  */
-function get_cat_display_name($cat_informations, $url = ''): string
+/** @param array<mixed> $cat_informations */
+function get_cat_display_name(array $cat_informations, ?string $url = ''): string
 {
     //$output = '<a href="'.get_absolute_root_url().\Piwigo\Core\Config::get('home_page').'">'.l10n('Home').'</a>';
     $output = '';
@@ -78,11 +79,11 @@ function get_cat_display_name($cat_informations, $url = ''): string
  * @param string|null $link_class
  */
 function get_cat_display_name_cache(
-    $uppercats,
-    $url = '',
-    $single_link = false,
-    $link_class = null,
-    $auth_key = null
+    string $uppercats,
+    ?string $url = '',
+    bool $single_link = false,
+    ?string $link_class = null,
+    ?string $auth_key = null
 ): string {
     global $cache;
 
@@ -209,6 +210,10 @@ function render_comment_content($content): string|null
 /**
  * Callback used for sorting by name.
  */
+/**
+ * @param array<mixed> $a
+ * @param array<mixed> $b
+ */
 function name_compare(array $a, array $b): int
 {
     return strcmp(strtolower((string) $a['name']), strtolower((string) $b['name']));
@@ -216,6 +221,10 @@ function name_compare(array $a, array $b): int
 
 /**
  * Callback used for sorting by name (slug) with cache.
+ */
+/**
+ * @param array<mixed> $a
+ * @param array<mixed> $b
  */
 function tag_alpha_compare(array $a, array $b): int
 {
@@ -504,7 +513,8 @@ function register_default_menubar_blocks(array $menu_ref_arr): void
  * @param array $info at least file or name
  * @return string
  */
-function render_element_name(array $info)
+/** @param array<string,mixed> $info */
+function render_element_name(array $info): string
 {
     if (!empty($info['name'])) {
         return trigger_change('render_element_name', $info['name'], $info);
@@ -519,7 +529,8 @@ function render_element_name(array $info)
  * @param string $param used to identify the trigger
  * @return string
  */
-function render_element_description(array $info, $param = '')
+/** @param array<string,mixed> $info */
+function render_element_description(array $info, string $param = ''): string
 {
     if (!empty($info['comment'])) {
         return trigger_change('render_element_description', $info['comment'], $param);
@@ -535,7 +546,8 @@ function render_element_description(array $info, $param = '')
  * @param string $comment
  * @return string
  */
-function get_thumbnail_title(array $info, $title, $comment = '')
+/** @param array<string,mixed> $info */
+function get_thumbnail_title(array $info, string $title, string $comment = ''): string
 {
     global $user;
 
@@ -587,7 +599,8 @@ function get_src_image_url_protection_handler($url, $src_image)
  * @param array $infos id, path
  * @return string
  */
-function get_element_url_protection_handler($url, array $infos)
+/** @param array<string,mixed> $infos */
+function get_element_url_protection_handler(string $url, array $infos): string
 {
     if ('images' == \Piwigo\Core\Config::originalUrlProtection()) {// protect only images and not other file types (for example large movies that we don't want to send through our file proxy)
         $ext = get_extension($infos['path']);
@@ -623,7 +636,7 @@ function flush_page_messages(): void
  * parameter on nl2br() (and anyway the second parameter of nl2br does not
  * match what Piwigo gives.
  */
-function pwg_nl2br($string): array|null|int|float|false|string
+function pwg_nl2br(string $string): string
 {
     if (empty($string)) {
         return $string;

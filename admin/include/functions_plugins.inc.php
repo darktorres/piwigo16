@@ -12,7 +12,7 @@ declare(strict_types=1);
  * Retrieves an url for a plugin page.
  *  string  php script full name
  */
-function get_admin_plugin_menu_link($file): string
+function get_admin_plugin_menu_link(string $file): string
 {
     global $page;
     $real_file = realpath($file);

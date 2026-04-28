@@ -35,7 +35,8 @@ class PluginMaintain
      * @param string $plugin_version
      * @param array &$errors - used to return error messages
      */
-    public function install($plugin_version, &$errors = [])
+    /** @param string[] $errors */
+    public function install(string $plugin_version, array &$errors = []): void
     {
     }
 
@@ -43,15 +44,16 @@ class PluginMaintain
      * @param string $plugin_version
      * @param array &$errors - used to return error messages
      */
-    public function activate($plugin_version, &$errors = [])
+    /** @param string[] $errors */
+    public function activate(string $plugin_version, array &$errors = []): void
     {
     }
 
-    public function deactivate()
+    public function deactivate(): void
     {
     }
 
-    public function uninstall()
+    public function uninstall(): void
     {
     }
 
@@ -60,7 +62,8 @@ class PluginMaintain
      * @param string $new_version
      * @param array &$errors - used to return error messages
      */
-    public function update($old_version, $new_version, &$errors = [])
+    /** @param string[] $errors */
+    public function update(string $old_version, string $new_version, array &$errors = []): void
     {
     }
 
@@ -91,15 +94,16 @@ class ThemeMaintain
      * @param string $theme_version
      * @param array &$errors - used to return error messages
      */
-    public function activate($theme_version, &$errors = [])
+    /** @param string[] $errors */
+    public function activate(string $theme_version, array &$errors = []): void
     {
     }
 
-    public function deactivate()
+    public function deactivate(): void
     {
     }
 
-    public function delete()
+    public function delete(): void
     {
     }
 }
@@ -298,6 +302,7 @@ function &get_plugin_data($plugin_id)
  * @param string $state optional filter
  * @param string $id returns only data about given plugin
  */
+/** @return array<array<string,mixed>> */
 function get_db_plugins(?string $state = '', ?string $id = ''): array
 {
     $query = '
@@ -323,6 +328,7 @@ SELECT * FROM '.PLUGINS_TABLE;
  *
  * @param array $plugin
  */
+/** @param array<string,mixed> $plugin */
 function load_plugin(array $plugin): void
 {
     $file_name = PHPWG_PLUGINS_PATH.$plugin['id'].'/main.inc.php';
@@ -342,6 +348,7 @@ function load_plugin(array $plugin): void
  *
  * @param array &$plugin (id, version, state) will be updated if version changes
  */
+/** @param array<string,mixed> $plugin */
 function autoupdate_plugin(array &$plugin): void
 {
     // try to find the filesystem version in lines 2 to 10 of main.inc.php

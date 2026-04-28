@@ -149,7 +149,10 @@ function make_index_url(array $params = []): string
  * @param array $redefined keys
  * @param array $removed keys
  */
-/** @param array<mixed> $redefined @param string[] $removed */
+/**
+ * @param array<mixed> $redefined
+ * @param string[] $removed
+ */
 function duplicate_index_url(array $redefined = [], array $removed = []): string
 {
     return make_index_url(
@@ -164,7 +167,11 @@ function duplicate_index_url(array $redefined = [], array $removed = []): string
  * @param array $removed keys
  * @return array
  */
-/** @param array<mixed> $redefined @param string[] $removed @return array<mixed> */
+/**
+ * @param array<mixed> $redefined
+ * @param string[] $removed
+ * @return array<mixed>
+ */
 function params_for_duplication(array $redefined, array $removed): array
 {
     global $page;
@@ -189,7 +196,10 @@ function params_for_duplication(array $redefined, array $removed): array
  * @param array $redefined keys
  * @param array $removed keys
  */
-/** @param array<mixed> $redefined @param string[] $removed */
+/**
+ * @param array<mixed> $redefined
+ * @param string[] $removed
+ */
 function duplicate_picture_url(array $redefined = [], array $removed = []): string
 {
     return make_picture_url(
@@ -398,7 +408,10 @@ function make_section_in_url(array $params): string
  *  array  url tokens to parse
  *  int  index in the array of url tokens; in/out
  */
-/** @param string[] $tokens @return array<mixed> */
+/**
+ * @param string[] $tokens
+ * @return array<mixed>
+ */
 function parse_section_url(array $tokens, int &$next_token): array
 {
     $page = [];
@@ -586,7 +599,10 @@ function parse_section_url(array $tokens, int &$next_token): array
  * parses start, flat and chronology from url tokens
  * @return list<string>[]|string[]|true[]
 */
-/** @param string[] $tokens @return array<mixed> */
+/**
+ * @param string[] $tokens
+ * @return array<mixed>
+ */
 function parse_well_known_params_url(array $tokens, int &$i): array
 {
     $page = [];
@@ -654,7 +670,8 @@ function get_action_url(int $id, string $what_part, bool $download): string
  * @param element_info $array containing element information from db;
  * at least 'id', 'path' should be present
  */
-function get_element_url(array $element_info)
+/** @param array<string,mixed> $element_info */
+function get_element_url(array $element_info): string
 {
     $url = $element_info['path'];
     if (!url_is_remote($url)) {
@@ -713,7 +730,8 @@ function unset_make_full_url(): void
  * @param $url
  *  string
  */
-function embellish_url($url): string|array
+/** @return string|string[] */
+function embellish_url(string|array $url): string|array
 {
     $url = str_replace('/./', '/', $url);
     while (($dotdot = strpos($url, '/../', 1)) !== false) {
@@ -730,7 +748,7 @@ function embellish_url($url): string|array
 /**
  * Returns the 'home page' of this gallery
  */
-function get_gallery_home_url()
+function get_gallery_home_url(): string
 {
     if (!empty(\Piwigo\Core\Config::galleryUrl())) {
         if (url_is_remote(\Piwigo\Core\Config::galleryUrl()) or \Piwigo\Core\Config::galleryUrl()[0] == '/') {
@@ -781,6 +799,7 @@ function url_is_remote($url): bool
  * List favorite image_ids of the current user.
  * @since 13
  */
+/** @return array<int,true> */
 function get_user_favorites(): array
 {
     global $user;

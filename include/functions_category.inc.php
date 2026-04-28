@@ -16,7 +16,10 @@ declare(strict_types=1);
 /**
  * Callback used for sorting by global_rank
  */
-/** @param array<mixed> $a @param array<mixed> $b */
+/**
+ * @param array<mixed> $a
+ * @param array<mixed> $b
+ */
 function global_rank_compare(array $a, array $b): int
 {
     return strnatcasecmp((string) $a['global_rank'], (string) $b['global_rank']);
@@ -25,7 +28,10 @@ function global_rank_compare(array $a, array $b): int
 /**
  * Callback used for sorting by rank
  */
-/** @param array<mixed> $a @param array<mixed> $b */
+/**
+ * @param array<mixed> $a
+ * @param array<mixed> $b
+ */
 function rank_compare(array $a, array $b): int|float
 {
     return $a['rank'] - $b['rank'];
@@ -232,11 +238,13 @@ function get_category_preferred_image_orders(): array
 /**
  * Assign a template var useable with {html_options} from a list of categories
  *
+ * @param array<mixed> $categories
+ * @param int[]|string $selecteds
  * @param string $blockname variable name in template
  * @param bool $fullname full breadcrumb or not
  */
 function display_select_categories(
-    /** @var array<mixed> */ $categories,
+    array $categories,
     array|string $selecteds,
     string $blockname,
     bool|string $fullname = true
@@ -276,6 +284,7 @@ function display_select_categories(
 /**
  * Same as display_select_categories but categories are ordered by rank
  * @see display_select_categories()
+ * @param int[]|string $selecteds
  */
 function display_select_cat_wrapper(
     string $query,
@@ -407,7 +416,7 @@ function get_display_images_count($cat_nb_images, $cat_count_images, $cat_count_
  * @return int|null
  */
 /** @param array<string,mixed> $category */
-function get_random_image_in_category(array $category, bool $recursive = true)
+function get_random_image_in_category(array $category, bool $recursive = true): ?int
 {
     $image_id = null;
     if ($category['count_images'] > 0) {
@@ -450,7 +459,10 @@ SELECT image_id
  *
  * @param int $filter_days number of recent days to filter on or null
  */
-/** @param array<mixed> $userdata @return array<mixed> */
+/**
+ * @param array<mixed> $userdata
+ * @return array<mixed>
+ */
 function get_computed_categories(array &$userdata, ?int $filter_days = null): array
 {
     $query = 'SELECT c.id AS cat_id, id_uppercat';
@@ -548,7 +560,10 @@ FROM '.CATEGORIES_TABLE.' as c
  *
  * @param array $cat category to remove
  */
-/** @param array<mixed> $cats @param array<mixed> $cat */
+/**
+ * @param array<mixed> $cats
+ * @param array<mixed> $cat
+ */
 function remove_computed_category(array &$cats, array $cat): void
 {
     if (isset($cats[$cat['id_uppercat']])) {
@@ -578,7 +593,10 @@ function remove_computed_category(array &$cats, array $cat): void
  * @param string $extra_images_where_sql - optionally apply a sql where filter to retrieved images
  * @param string $order_by - optionally overwrite default photo order
  */
-/** @param int[]|int|string $cat_ids @return int[] */
+/**
+ * @param int[]|int|string $cat_ids
+ * @return int[]
+ */
 function get_image_ids_for_categories(array|int|string $cat_ids, string $mode = 'AND', ?string $extra_images_where_sql = '', string $order_by = '', bool $use_permissions = true): array
 {
     if (empty($cat_ids)) {
@@ -622,7 +640,11 @@ SELECT id
  * @param int[] $excluded_cat_ids
  * @return array [id, name, counter, url_name]
  */
-/** @param array<mixed> $items @param int[] $excluded_cat_ids @return array<mixed> */
+/**
+ * @param array<mixed> $items
+ * @param int[] $excluded_cat_ids
+ * @return array<mixed>
+ */
 function get_common_categories(array $items, ?int $max = null, array $excluded_cat_ids = [], bool $use_permissions = true): array
 {
     if (empty($items)) {
@@ -675,7 +697,11 @@ SELECT
 /**
  * @return mixed[]
  */
-/** @param array<mixed> $items @param int[] $excluded_cat_ids @return array<mixed> */
+/**
+ * @param array<mixed> $items
+ * @param int[] $excluded_cat_ids
+ * @return array<mixed>
+ */
 function get_related_categories_menu(array $items, array $excluded_cat_ids = []): array
 {
     global $page;

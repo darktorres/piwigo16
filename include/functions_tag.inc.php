@@ -39,7 +39,11 @@ function get_nb_available_tags()
  *
  * @return array [id, name, counter, url_name]
  */
-function get_available_tags($tag_ids = []): array
+/**
+ * @param int[] $tag_ids
+ * @return array<mixed>
+ */
+function get_available_tags(array $tag_ids = []): array
 {
     global $persistent_cache, $user;
 
@@ -61,7 +65,7 @@ SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter
         ' AND '
     );
 
-    if (is_array($tag_ids) and count($tag_ids) > 0) {
+    if (count($tag_ids) > 0) {
         $use_persistent_cache = false;
 
         $query .= '
@@ -116,6 +120,7 @@ SELECT *
  *
  * @return array [id, name, url_name]
  */
+/** @return array<mixed> */
 function get_all_tags(): array
 {
     $query = '
@@ -146,7 +151,11 @@ SELECT *
  * @param array $tags at least [id, counter]
  * @return array [..., level]
  */
-function add_level_to_tags($tags)
+/**
+ * @param array<mixed> $tags
+ * @return array<mixed>
+ */
+function add_level_to_tags(array $tags): array
 {
     if (count($tags) == 0) {
         return $tags;
@@ -195,7 +204,11 @@ function add_level_to_tags($tags)
  * @param string $extra_images_where_sql - optionally apply a sql where filter to retrieved images
  * @param string $order_by - optionally overwrite default photo order
  */
-function get_image_ids_for_tags($tag_ids, $mode = 'AND', ?string $extra_images_where_sql = '', string|null $order_by = '', $use_permissions = true): array
+/**
+ * @param int[]|int|string $tag_ids
+ * @return int[]
+ */
+function get_image_ids_for_tags(array|int|string $tag_ids, string $mode = 'AND', ?string $extra_images_where_sql = '', ?string $order_by = '', bool $use_permissions = true): array
 {
     if (empty($tag_ids)) {
         return [];
@@ -245,7 +258,12 @@ SELECT id
  * @param int[] $excluded_tag_ids
  * @return array [id, name, counter, url_name]
  */
-function get_common_tags($items, $max_tags, $excluded_tag_ids = []): array
+/**
+ * @param array<mixed> $items
+ * @param int[] $excluded_tag_ids
+ * @return array<mixed>
+ */
+function get_common_tags(array $items, int $max_tags, array $excluded_tag_ids = []): array
 {
     if (empty($items)) {
         return [];
@@ -287,7 +305,13 @@ SELECT t.*, count(*) AS counter
  * @param string[] $names
  * @return array [id, name, url_name]
  */
-function find_tags($ids = [], $url_names = [], $names = []): array
+/**
+ * @param int[]|string[] $ids
+ * @param string[] $url_names
+ * @param string[] $names
+ * @return array<mixed>
+ */
+function find_tags(array $ids = [], array $url_names = [], array $names = []): array
 {
     $where_clauses = [];
     if (!empty($ids)) {
@@ -314,11 +338,19 @@ SELECT *
     return query2array($query);
 }
 
+/**
+ * @param array<mixed> $a
+ * @param array<mixed> $b
+ */
 function tags_id_compare(array $a, array $b): int
 {
     return ($a['id'] < $b['id']) ? -1 : 1;
 }
 
+/**
+ * @param array<mixed> $a
+ * @param array<mixed> $b
+ */
 function tags_counter_compare(array $a, array $b): int
 {
     if ($a['counter'] == $b['counter']) {

@@ -99,7 +99,10 @@ function format_email($name, $email): string
  * @return array email, name
  */
 /** @return array<string,mixed> */
-/** @param string|array<mixed> $input @return array<string,mixed> */
+/**
+ * @param string|array<mixed> $input
+ * @return array<string,mixed>
+ */
 function unformat_email(string|array $input): array
 {
     if (is_array($input)) {
@@ -310,7 +313,10 @@ function switch_lang_back(): void
  * @param boolean $send_technical_details - send user IP and browser
  * @return boolean
  */
-/** @param array<mixed>|string $subject @param array<mixed>|string $content */
+/**
+ * @param array<mixed>|string $subject
+ * @param array<mixed>|string $content
+ */
 function pwg_mail_notification_admins(array|string $subject, array|string $content, bool $send_technical_details = true, ?int $group_id = null): bool
 {
     if (empty($subject) or empty($content)) {
@@ -368,7 +374,10 @@ function pwg_mail_notification_admins(array|string $subject, array|string $conte
  * @param array $tpl - as in pwg_mail()
  * @return boolean
  */
-/** @param array<mixed> $args @param array<mixed> $tpl */
+/**
+ * @param array<mixed> $args
+ * @param array<mixed> $tpl
+ */
 function pwg_mail_admins(array $args = [], array $tpl = [], bool $exclude_current_user = true, bool $only_webmasters = false, ?int $group_id = null): bool
 {
     if (empty($args['content']) and empty($tpl)) {
@@ -441,6 +450,10 @@ SELECT
  * @return boolean
  */
 /** @param array<mixed> $tpl */
+/**
+ * @param array<mixed> $args
+ * @param array<mixed> $tpl
+ */
 function pwg_mail_group(int $group_id, array $args = [], array $tpl = []): bool|int
 {
     if (empty($group_id) or (empty($args['content']) and empty($tpl))) {
@@ -551,7 +564,11 @@ SELECT
  *
  * @return boolean
  */
-/** @param string|array<mixed> $to @param array<mixed> $args @param array<mixed> $tpl */
+/**
+ * @param string|array<mixed> $to
+ * @param array<mixed> $args
+ * @param array<mixed> $tpl
+ */
 function pwg_mail(string|array $to, array $args = [], array $tpl = []): bool
 {
     global $conf_mail, $lang_info, $page;
@@ -857,7 +874,8 @@ function move_css_to_body($content)
  * @param boolean $success
  * @param PHPMailer $mail
  */
-function pwg_send_mail_test($success, $mail, array $args): void
+/** @param array<mixed> $args */
+function pwg_send_mail_test(bool $success, mixed $mail, array $args): void
 {
     global $user, $lang_info;
 
@@ -887,7 +905,8 @@ function pwg_send_mail_test($success, $mail, array $args): void
  * @param string $remaining_time
  * @return array mail content
  */
-function pwg_generate_reset_password_mail(string $username, string $password_link, string $gallery_title, $remaining_time): array
+/** @return array<mixed> */
+function pwg_generate_reset_password_mail(string $username, string $password_link, string $gallery_title, string $remaining_time): array
 {
     set_make_full_url();
 
@@ -921,7 +940,8 @@ function pwg_generate_reset_password_mail(string $username, string $password_lin
  * @param string $remaining_time
  * @return array mail content
  */
-function pwg_generate_set_password_mail(string $username, string $set_password_link, $gallery_title, $remaining_time): array
+/** @return array<mixed> */
+function pwg_generate_set_password_mail(string $username, string $set_password_link, string $gallery_title, string $remaining_time): array
 {
     set_make_full_url();
 
@@ -954,6 +974,7 @@ function pwg_generate_set_password_mail(string $username, string $set_password_l
  * @since 16
  * @return array mail content
  */
+/** @return array<mixed> */
 function pwg_generate_code_verification_mail(string $code): array
 {
     set_make_full_url();
@@ -979,7 +1000,8 @@ function pwg_generate_code_verification_mail(string $code): array
  * @since 16
  * @return array mail content
  */
-function pwg_generate_success_reset_password_mail($username, $nb_of_apikeys): array
+/** @return array<mixed> */
+function pwg_generate_success_reset_password_mail(string $username, int $nb_of_apikeys): array
 {
     set_make_full_url();
     $profile_url = get_root_url().'profile.php';

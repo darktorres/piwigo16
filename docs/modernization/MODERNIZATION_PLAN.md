@@ -6783,4 +6783,226 @@ not small enough to be safe without first completing a full typed-getter migrati
 The Wave C source (`GlobalsBridge.php`, `ConfProxy`, `PageProxy`) is fully specified in Section E of
 this document — it only needs to be wired into `Kernel::boot()` after the typed getter coverage is
 sufficient to make the proxy quiet.
+
+---
+
+## Known gaps and technical debt (audit 2026-04-27)
+
+The table below captures every gap identified in the post-Phase-5 deep review. Items already
+addressed by a Phase 6 step are marked **→ Ph6 step N**. Items not yet in any phase plan are
+marked **untracked** and need a decision: absorb into Phase 6, defer to a later phase, or accept
+as permanent technical debt.
+
+---
+
+### Phase 0 — Dev infrastructure
+
+#### G0-1 · Duplicate global-setup files · untracked
+
+`tests/e2e/global-setup.js` and `tests/e2e/global-setup.ts` both exist in the tree. The `.ts`
+version is canonical (written in Phase 0, Playwright resolves it correctly). The `.js` file is a
+stale leftover from before TypeScript was introduced to the project and should be deleted.
+
+**Fix:** `git rm tests/e2e/global-setup.js` in Phase 6 cleanup commit.
+
+#### G0-2 · Unit test coverage missing for most src/ namespaces · untracked
+
+`tests/Unit/Core/` has 5 files covering `Config`, `PageState`, `GlobalsBridge`, `Kernel`, `Lang`.
+`tests/Unit/Users/` has `PwgErrorTest.php`. The following namespaces have **zero** unit tests:
+
+| Namespace | Files |
+|-----------|-------|
+| `Piwigo\Admin` | 14 files |
+| `Piwigo\Auth` | 2 files |
+| `Piwigo\Cache` | 2 files |
+| `Piwigo\Calendar` | 3 files |
+| `Piwigo\Image` | 7 files |
+| `Piwigo\Menu` | 3 files |
+| `Piwigo\Search` | 7 files |
+| `Piwigo\Session` | 1 file |
+| `Piwigo\Template` | 8 files |
+| `Piwigo\Ws` | 9 files |
+
+The plan CI architecture doc (Section 8, `unit` job) names `src/Piwigo/Core/`, `Db/`, `Users/`,
+and `Cache/` as coverage targets. `Db/` does not exist yet. Three of the four named targets are
+partially covered; the other six namespaces are entirely dark.
+
+**Fix:** Add unit test stubs for at least `Cache`, `Template/ScriptLoader`, and `Session` in
+Phase 6. Full namespace coverage is aspirational and should be tracked as ongoing debt after
+Phase 6 ships.
+
+---
+
+### Phase 1 — Rector / PHP modernization
+
+#### G1-1 · Dynamic dblayer include is a PHPStan blindspot · → Ph6 step 7
+
+`include/common.inc.php` loads the dblayer via string interpolation:
+
+```php
+include(PHPWG_ROOT_PATH.'include/dblayer/functions_'.\Piwigo\Core\Config::dbLayer().'.inc.php');
+```
+
+PHPStan cannot see into dynamically-constructed include paths, so the ~70 functions defined in
+`functions_mysqli.inc.php` (`pwg_query`, `pwg_db_fetch_assoc`, etc.) are invisible to static
+analysis. Any typo in a call site at level 9 will be silently missed.
+
+`Config::dbLayer()` always returns `'mysqli'` (default forced in `common.inc.php`). The only
+existing file in `include/dblayer/` is `functions_mysqli.inc.php` — there are no pgsql or sqlite
+files left to delete; Phase 6 step 7 is therefore just making the include static.
+
+**Fix (Phase 6 step 7):** Replace the dynamic include with a direct static include. Delete the
+`dbLayer()` config getter or narrow its return type to the literal `'mysqli'` so any hypothetical
+non-mysqli value is a PHPStan type error.
+
+---
+
+### Phase 2 — strict_types + PHPStan level 8
+
+#### G2-1 · PHPStan baseline is 22 296 lines · → Ph6 step 4
+
+The current `phpstan-baseline.neon` suppresses the entire pre-modernization error backlog. At
+22 296 lines the baseline absorbs every new type error added to un-analyzed files without any CI
+signal. `phpstan-strict-rules` and `phpstan-deprecation-rules` are included in `phpstan.neon` but
+their findings are similarly suppressed.
+
+The practical effect: PHPStan level 8 only guards files with no baseline entries. The project is
+not meaningfully at level 8 until the baseline is eliminated.
+
+**Fix (Phase 6 step 4):** Walk level 8 → 9, address errors in slices (Core first), and delete
+`phpstan-baseline.neon`. Aspirational target; if timeline stretches, settle for level 8 with zero
+baseline and document the decision in `ARCHITECTURE.md`.
+
+#### G2-2 · `check-baseline.sh` and `check-conf-shape.php` referenced but not wired · untracked
+
+The CI architecture draft in Section 8 references `tools/check-baseline.sh` (baseline-grow guard)
+and `tools/check-conf-shape.php` (conf-shape drift detector) as lint job steps. Neither is present
+in the actual `.github/workflows/ci.yml`. The CI plan and the actual CI file have diverged.
+
+**Fix:** Either implement and wire these tools in Phase 6, or remove the references from Section 8
+to keep the architecture doc honest.
+
+---
+
+### Phase 3 — PSR-4 namespacing
+
+#### G3-1 · `aliases.php` loaded on every request · → Ph6 step 6 (indirect)
+
+`src/Piwigo/Compat/aliases.php` is loaded via `composer.json` `autoload.files`, executing
+unconditionally on every request. It contains ~60 `use` class alias declarations that exist because
+`include/` and `admin/` call sites still reference old unqualified class names. When all call sites
+are updated to FQCNs the file becomes empty and should be deleted.
+
+**Fix:** As each `include/` or `admin/` file is updated to use FQCNs, remove the corresponding
+alias. Delete `aliases.php` and the `autoload.files` entry once the file is empty. Tie to the
+Phase 6 proxy-removal commit so the two scaffolding removals land together.
+
+#### G3-2 · `DummyPlugin_maintain` and `DummyTheme_maintain` have no runtime logic · untracked (optional)
+
+`src/Piwigo/Admin/DummyPlugin_maintain.php` and `src/Piwigo/Admin/DummyTheme_maintain.php` are
+marker classes returned as fallbacks when a plugin/theme has no `maintain` class. They contain no
+logic. Their presence adds two files to the namespaced src tree and the classmap without adding
+modernization value, and their instantiation via `new $class_name()` is one of the remaining
+`NoDynamicNewRule` exemption sites.
+
+**Fix (optional):** Replace the dynamic `new $class_name()` instantiation in the plugin/theme
+loaders with a named factory method returning `null` when no maintain class exists. Remove the
+dummy files and drop the exemption from `NoDynamicNewRule`.
+
+---
+
+### Phase 4 — Config/PageState typed facades
+
+#### G4-1 · `GlobalsBridge::isSilentCaller()` pays `debug_backtrace` on every plugin `$conf` access · → Ph6 step 6
+
+Every `$conf['key']` access from plugin or un-migrated code triggers
+`GlobalsBridge::isSilentCaller()`, which calls `debug_backtrace(IGNORE_ARGS, 8)`. First-party code
+never hits this path (Wave B.5 migrated all reads). For installed plugins every `$conf` access pays
+a backtrace cost. The Wave C benchmark showed p95 +2.8% on a no-plugin install; a plugin-heavy
+install with many `$conf` accesses per request will see higher overhead.
+
+**Fix (Phase 6 step 6):** Delete `GlobalsBridge.php` and `ConfProxy` once deprecation logs are
+confirmed quiet. This removes the backtrace path entirely. Do not attempt to optimise the backtrace
+call — removal is the correct fix.
+
+#### G4-2 · No plugin developer migration guide for ConfProxy deprecations · untracked
+
+Plugin authors who install this Piwigo fork will see `E_USER_DEPRECATED` notices naming specific
+typed getters (`Config::getString()`, etc.) for every `$conf['key']` read their plugin performs.
+There is no published migration guide explaining what changed or how to update plugin code.
+
+**Fix:** Add a `docs/plugin-migration-16x.md` file, or a section in `ARCHITECTURE.md` (Phase 6
+step 8), explaining: the `$conf` proxy, what deprecation messages look like, and how to replace
+each access pattern with the equivalent `Config::get*()` call.
+
+---
+
+### Phase 5 — JS to TypeScript + Vite
+
+#### G5-1 · Wave-1 TypeScript relaxations carry forward jQuery-era looseness · → future Wave 2
+
+`tsconfig.json` has `"noImplicitAny": false`, `"noImplicitThis": false`, and
+`"strictNullChecks": false`. These were intentional Wave-1 compromises to get 38 files through
+typecheck without a complete rewrite. Null dereferences, implicit `any` propagation, and untyped
+`this` contexts are silently accepted by the compiler.
+
+**Fix (Wave 2, post-Phase 6):** Enable one flag at a time, starting with `noImplicitThis`. Fix
+the resulting errors per file. `strictNullChecks` is the heaviest lift (requires explicit null
+guards throughout jQuery callback chains) and should be last.
+
+#### G5-2 · Manifest plugin CSS association is approximate · untracked
+
+`build/piwigo-manifest-plugin.ts` associates CSS assets with entry chunks by including all CSS
+assets for every entry. This means every page served in manifest mode gets all CSS linked, not
+per-entry CSS. In practice Piwigo has minimal Vite-generated CSS output (most CSS is
+Smarty-templated), so the duplicate link tags are harmless, but the manifest is not accurate.
+
+**Fix:** Wire Vite internal CSS-to-chunk association via `moduleIds` or the `viteMetadata` plugin
+hook rather than the current blanket approach. Alternatively, accept as permanent debt since CSS
+deduplication in browsers is cheap and the volume is low.
+
+#### G5-3 · E2E TypeScript files are excluded from `npm run typecheck` · untracked
+
+`tsconfig.json` excludes `tests/e2e/**`, which means `global-setup.ts`, `helpers/admin-login.ts`,
+and all `*.spec.ts` files are not type-checked by `npm run typecheck`. Playwright resolves their
+types via its own tsconfig extension at runtime so tests work, but CI provides no safety net for
+type errors in E2E test code.
+
+**Fix:** Add `tests/e2e/tsconfig.json` extending the root config with `"include": ["**/*.ts"]`
+and `"types": ["@playwright/test"]`. Add `tsc --noEmit -p tests/e2e/tsconfig.json` to the
+`typecheck` npm script or as a separate CI step.
+
+#### G5-4 · `_data/combined/*.js` runtime artifacts accumulate without cleanup · untracked
+
+The legacy `ScriptLoader` concat path writes combined JS to `_data/combined/` when
+`dist/manifest.json` is absent (fresh clone without running `npm run build`). These files
+accumulate across server restarts and are not cleaned by any automated process. The directory is
+gitignored correctly but the artifacts consume disk space and can mask stale-bundle bugs in dev.
+
+**Fix:** Add a `clean` npm script (`rm -rf dist/ _data/combined/`) and document the dev workflow:
+run `npm run build` (or `npm run dev`) before testing; never rely on the concat fallback for
+JavaScript correctness testing.
+
+---
+
+### Summary table
+
+| ID | Phase | Description | Status |
+|----|-------|-------------|--------|
+| G0-1 | 0 | Duplicate `global-setup.js` alongside `.ts` | untracked |
+| G0-2 | 0 | Zero unit tests for 10 of 13 `src/Piwigo/` namespaces | untracked |
+| G1-1 | 1 | Dynamic dblayer include invisible to PHPStan | Ph6 step 7 |
+| G2-1 | 2 | PHPStan baseline 22 296 lines — effective level is not 8 | Ph6 step 4 |
+| G2-2 | 2 | `check-baseline.sh` / `check-conf-shape.php` in CI doc but not wired | untracked |
+| G3-1 | 3 | `aliases.php` runs on every request; FQCNs not complete | Ph6 step 6 (indirect) |
+| G3-2 | 3 | `DummyPlugin_maintain` / `DummyTheme_maintain` serve no purpose | untracked (optional) |
+| G4-1 | 4 | `debug_backtrace` on every plugin `$conf` access | Ph6 step 6 |
+| G4-2 | 4 | No plugin developer migration guide for ConfProxy deprecations | untracked |
+| G5-1 | 5 | Wave-1 TS: `noImplicitAny` / `strictNullChecks` off | future Wave 2 |
+| G5-2 | 5 | Manifest plugin CSS association is a blanket (not per-entry) | untracked |
+| G5-3 | 5 | E2E TypeScript files not covered by `npm run typecheck` | untracked |
+| G5-4 | 5 | `_data/combined/*.js` accumulate without automated cleanup | untracked |
+
+5 of 13 gaps are already covered by Phase 6 steps. The remaining 8 untracked items are candidates
+for Phase 6 scope expansion or a follow-on Phase 7 housekeeping pass.
 - **If forced to ship only three phases ever, ship 0, 1, 2.** That alone takes Piwigo from "won't run on PHP 8" to "runs on PHP 8.5, type-safe, CI-protected" — most of the user-visible upside.

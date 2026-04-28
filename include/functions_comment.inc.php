@@ -45,15 +45,18 @@ function user_comment_check(string $action, array $comment): string
 
     $link_count = preg_match_all(
         '/https?:\/\//',
-        (string) $comment['content'],
+        is_scalar($comment['content']) ? (string) $comment['content'] : '',
         $matches
     ) ?: 0;
 
-    if (str_contains((string) $comment['author'], 'http://')) {
+    if (str_contains(is_scalar($comment['author']) ? (string) $comment['author'] : '', 'http://')) {
         $link_count++;
     }
 
     if ($link_count > \Piwigo\Core\Config::commentSpamMaxLinks()) {
+        if (!is_array($_POST['cr'] ?? null)) {
+            $_POST['cr'] = [];
+        }
         $_POST['cr'][] = 'links';
         return $my_action;
     }
@@ -107,7 +110,7 @@ function insert_user_comment(array &$comm, string $key, array &$infos): string
             $query = '
 SELECT COUNT(*) AS user_exists
   FROM '.USERS_TABLE.'
-  WHERE '.\Piwigo\Core\Config::userFields()['username']." = '".addslashes((string) $comm['author'])."'";
+  WHERE '.\Piwigo\Core\Config::userFields()['username']." = '".addslashes(is_scalar($comm['author']) ? (string) $comm['author'] : '')."'";
             $row = pwg_db_fetch_assoc(pwg_query($query));
             if (($row['user_exists'] ?? 0) == 1) {
                 $infos[] = l10n('This login is already used by another user');
@@ -123,8 +126,11 @@ SELECT COUNT(*) AS user_exists
         $comment_action = 'reject';
     }
 
-    if (!verify_ephemeral_key(@$key, $comm['image_id'])) {
+    if (!verify_ephemeral_key(@$key, is_scalar($comm['image_id']) ? (string) $comm['image_id'] : '')) {
         $comment_action = 'reject';
+        if (!is_array($_POST['cr'] ?? null)) {
+            $_POST['cr'] = [];
+        }
         $_POST['cr'][] = 'key'; // rvelices: I use this outside to see how spam robots work
     }
 
@@ -132,6 +138,9 @@ SELECT COUNT(*) AS user_exists
     if (!empty($comm['website_url'])) {
         if (!\Piwigo\Core\Config::get('comments_enable_website')) { // honeypot: if the field is disabled, it should be empty !
             $comment_action = 'reject';
+            if (!is_array($_POST['cr'] ?? null)) {
+                $_POST['cr'] = [];
+            }
             $_POST['cr'][] = 'website_url';
         } else {
             $comm['website_url'] = strip_tags((string) $comm['website_url']);
@@ -159,7 +168,7 @@ SELECT COUNT(*) AS user_exists
     }
 
     // anonymous id = ip address
-    $ip_components = explode('.', (string) $comm['ip']);
+    $ip_components = explode('.', is_scalar($comm['ip']) ? (string) $comm['ip'] : '');
     if (count($ip_components) > 3) {
         array_pop($ip_components);
     }
@@ -183,12 +192,15 @@ SELECT count(1) FROM '.COMMENTS_TABLE.'
         if ($counter > 0) {
             $infos[] = l10n('Anti-flood system : please wait for a moment before trying to post another comment');
             $comment_action = 'reject';
+            if (!is_array($_POST['cr'] ?? null)) {
+                $_POST['cr'] = [];
+            }
             $_POST['cr'][] = 'flood_time';
         }
     }
 
     // perform more spam check
-    $comment_action = trigger_change(
+    $comment_action = (string) trigger_change(
         'user_comment_check',
         $comment_action,
         $comm
@@ -199,16 +211,16 @@ SELECT count(1) FROM '.COMMENTS_TABLE.'
 INSERT INTO '.COMMENTS_TABLE.'
   (author, author_id, anonymous_id, content, date, validated, validation_date, image_id, website_url, email)
   VALUES (
-    \''.$comm['author'].'\',
-    '.$comm['author_id'].',
-    \''.$comm['ip'].'\',
-    \''.$comm['content'].'\',
+    \''. (is_scalar($comm['author']) ? (string) $comm['author'] : '') .'\',
+    '. (is_scalar($comm['author_id']) ? (string) $comm['author_id'] : '0') .',
+    \''. (is_scalar($comm['ip']) ? (string) $comm['ip'] : '') .'\',
+    \''. (is_scalar($comm['content']) ? (string) $comm['content'] : '') .'\',
     NOW(),
     \''.($comment_action == 'validate' ? 'true' : 'false').'\',
     '.($comment_action == 'validate' ? 'NOW()' : 'NULL').',
-    '.$comm['image_id'].',
-    '.(!empty($comm['website_url']) ? '\''.$comm['website_url'].'\'' : 'NULL').',
-    '.(!empty($comm['email']) ? '\''.$comm['email'].'\'' : 'NULL').'
+    '. (is_scalar($comm['image_id']) ? (string) $comm['image_id'] : '0') .',
+    '.(!empty($comm['website_url']) ? '\''. (is_scalar($comm['website_url']) ? (string) $comm['website_url'] : '') .'\'' : 'NULL').',
+    '.(!empty($comm['email']) ? '\''. (is_scalar($comm['email']) ? (string) $comm['email'] : '') .'\'' : 'NULL').'
   )
 ';
         pwg_query($query);
@@ -223,9 +235,9 @@ INSERT INTO '.COMMENTS_TABLE.'
             $comment_url = get_absolute_root_url().'comments.php?comment_id='.$comm['id'];
 
             $keyargs_content = [
-              get_l10n_args('Author: %s', stripslashes((string) $comm['author'])),
-              get_l10n_args('Email: %s', stripslashes((string) $comm['email'])),
-              get_l10n_args('Comment: %s', stripslashes((string) $comm['content'])),
+              get_l10n_args('Author: %s', stripslashes(is_scalar($comm['author']) ? (string) $comm['author'] : '')),
+              get_l10n_args('Email: %s', stripslashes(is_scalar($comm['email']) ? (string) $comm['email'] : '')),
+              get_l10n_args('Comment: %s', stripslashes(is_scalar($comm['content']) ? (string) $comm['content'] : '')),
               get_l10n_args(''),
               get_l10n_args('Manage this user comment: %s', $comment_url),
             ];
@@ -235,7 +247,7 @@ INSERT INTO '.COMMENTS_TABLE.'
             }
 
             pwg_mail_notification_admins(
-                get_l10n_args('Comment by %s', stripslashes((string) $comm['author'])),
+                get_l10n_args('Comment by %s', stripslashes(is_scalar($comm['author']) ? (string) $comm['author'] : '')),
                 $keyargs_content
             );
         }
@@ -256,7 +268,7 @@ function delete_user_comment($comment_id): bool
 {
     $user_where_clause = '';
     if (!is_admin()) {
-        $user_where_clause = '   AND author_id = \''.$GLOBALS['user']['id'].'\'';
+        $user_where_clause = '   AND author_id = \''. (is_scalar($GLOBALS['user']['id']) ? (string) $GLOBALS['user']['id'] : '0') .'\'';
     }
 
     if (is_array($comment_id)) {
@@ -276,7 +288,7 @@ $user_where_clause.'
 
         email_admin(
             'delete',
-            ['author' => $GLOBALS['user']['username'],
+            ['author' => is_scalar($GLOBALS['user']['username']) ? (string) $GLOBALS['user']['username'] : '',
                           'comment_id' => $comment_id,
                       ]
         );
@@ -304,7 +316,7 @@ function update_user_comment(array $comment, string $post_key): string
 
     $comment_action = 'validate';
 
-    if (!verify_ephemeral_key($post_key, $comment['image_id'])) {
+    if (!verify_ephemeral_key($post_key, is_scalar($comment['image_id']) ? (string) $comment['image_id'] : '')) {
         $comment_action = 'reject';
     } elseif (!\Piwigo\Core\Config::get('comments_validation') or is_admin()) { // should the updated comment must be validated
         $comment_action = 'validate'; //one of validate, moderate, reject
@@ -313,13 +325,13 @@ function update_user_comment(array $comment, string $post_key): string
     }
 
     // perform more spam check
-    $comment_action =
+    $comment_action = (string)
       trigger_change(
           'user_comment_check',
           $comment_action,
           array_merge(
               $comment,
-              ['author' => $GLOBALS['user']['username']]
+              ['author' => is_scalar($GLOBALS['user']['username']) ? (string) $GLOBALS['user']['username'] : '']
           )
       );
 
@@ -338,17 +350,16 @@ function update_user_comment(array $comment, string $post_key): string
     if ($comment_action != 'reject') {
         $user_where_clause = '';
         if (!is_admin()) {
-            $user_where_clause = '   AND author_id = \''.
-    $GLOBALS['user']['id'].'\'';
+            $user_where_clause = '   AND author_id = \''. (is_scalar($GLOBALS['user']['id']) ? (string) $GLOBALS['user']['id'] : '0') .'\'';
         }
 
         $query = '
 UPDATE '.COMMENTS_TABLE.'
-  SET content = \''.$comment['content'].'\',
-      website_url = '.(!empty($comment['website_url']) ? '\''.$comment['website_url'].'\'' : 'NULL').',
+  SET content = \''. (is_scalar($comment['content']) ? (string) $comment['content'] : '') .'\',
+      website_url = '.(!empty($comment['website_url']) ? '\''. (is_scalar($comment['website_url']) ? (string) $comment['website_url'] : '') .'\'' : 'NULL').',
       validated = \''.($comment_action == 'validate' ? 'true' : 'false').'\',
       validation_date = '.($comment_action == 'validate' ? 'NOW()' : 'NULL').'
-  WHERE id = '.$comment['comment_id'].
+  WHERE id = '. (is_scalar($comment['comment_id']) ? (string) $comment['comment_id'] : '0') .
 $user_where_clause.'
 ;';
         $result = pwg_query($query);
@@ -357,25 +368,25 @@ $user_where_clause.'
         if ($result and \Piwigo\Core\Config::get('email_admin_on_comment_validation') and 'moderate' == $comment_action) {
             include_once(PHPWG_ROOT_PATH.'include/functions_mail.inc.php');
 
-            $comment_url = get_absolute_root_url().'comments.php?comment_id='.$comment['comment_id'];
+            $comment_url = get_absolute_root_url().'comments.php?comment_id='. (is_scalar($comment['comment_id']) ? (string) $comment['comment_id'] : '0');
 
             $keyargs_content = [
-              get_l10n_args('Author: %s', stripslashes((string) $GLOBALS['user']['username'])),
-              get_l10n_args('Comment: %s', stripslashes((string) $comment['content'])),
+              get_l10n_args('Author: %s', stripslashes(is_scalar($GLOBALS['user']['username']) ? (string) $GLOBALS['user']['username'] : '')),
+              get_l10n_args('Comment: %s', stripslashes(is_scalar($comment['content']) ? (string) $comment['content'] : '')),
               get_l10n_args(''),
               get_l10n_args('Manage this user comment: %s', $comment_url),
               get_l10n_args('(!) This comment requires validation'),
             ];
 
             pwg_mail_notification_admins(
-                get_l10n_args('Comment by %s', stripslashes((string) $GLOBALS['user']['username'])),
+                get_l10n_args('Comment by %s', stripslashes(is_scalar($GLOBALS['user']['username']) ? (string) $GLOBALS['user']['username'] : '')),
                 $keyargs_content
             );
         }
         // just mail admin
         elseif ($result) {
-            email_admin('edit', ['author' => $GLOBALS['user']['username'],
-                      'content' => stripslashes((string) $comment['content'])]);
+            email_admin('edit', ['author' => is_scalar($GLOBALS['user']['username']) ? (string) $GLOBALS['user']['username'] : '',
+                      'content' => stripslashes(is_scalar($comment['content']) ? (string) $comment['content'] : '')]);
         }
     }
 
@@ -442,7 +453,7 @@ SELECT
 
     [$author_id] = pwg_db_fetch_row($result) ?? [null];
 
-    return $author_id;
+    return is_int($author_id) || $author_id === false ? $author_id : (is_numeric($author_id) ? (int) $author_id : false);
 }
 
 /**

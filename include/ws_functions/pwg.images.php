@@ -870,11 +870,12 @@ function ws_images_filteredSearch_create(array $params, \Piwigo\Ws\PwgServer $se
         }
 
         if (!isset($search['fields']['date_posted'])) {
+            /** @var array<string, mixed> $search['fields']['date_posted'] */
             $search['fields']['date_posted'] = [];
         }
         $search['fields']['date_posted']['preset'] = $p_date_posted_preset;
 
-        if ('custom' == $search['fields']['date_posted']['preset'] and empty($params['date_posted_custom'])) {
+        if ('custom' == $p_date_posted_preset and empty($params['date_posted_custom'])) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'date_posted_custom is missing');
         }
     }
@@ -926,7 +927,7 @@ function ws_images_filteredSearch_create(array $params, \Piwigo\Ws\PwgServer $se
 
         @$search['fields']['date_created']['preset'] = $p_date_created_preset;
 
-        if ('custom' == ($search['fields']['date_created']['preset'] ?? '') and empty($params['date_created_custom'])) {
+        if ('custom' == $p_date_created_preset and empty($params['date_created_custom'])) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'date_created_custom is missing');
         }
     }
@@ -971,13 +972,14 @@ function ws_images_filteredSearch_create(array $params, \Piwigo\Ws\PwgServer $se
     }
 
     if (isset($params['ratios'])) {
-        foreach ($params['ratios'] as $ext) {
-            if (!preg_match('/^[a-z0-9]+$/i', (string) $ext)) {
+        $p_ratios = is_array($params['ratios']) ? $params['ratios'] : [];
+        foreach ($p_ratios as $ext) {
+            if (!preg_match('/^[a-z0-9]+$/i', is_scalar($ext) ? (string) $ext : '')) {
                 return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter ratios');
             }
         }
 
-        $search['fields']['ratios'] = $params['ratios'];
+        $search['fields']['ratios'] = $p_ratios;
     }
 
     if (isset($params['expert'])) {
@@ -1012,7 +1014,8 @@ function ws_images_filteredSearch_create(array $params, \Piwigo\Ws\PwgServer $se
         $search['fields']['height_max'] = $params['height_max'];
     }
 
-    [$search_uuid, $search_url] = save_search($search, $search_info['id'] ?? null);
+    $forked_from = isset($search_info['id']) && is_scalar($search_info['id']) ? (string) $search_info['id'] : null;
+    [$search_uuid, $search_url] = save_search($search, $forked_from);
 
     return [
       'search_id' => $search_uuid,
@@ -1473,7 +1476,7 @@ SELECT id, name, permalink
     // and now, let's create tag associations
     if (isset($params['tag_ids']) and !empty($params['tag_ids'])) {
         set_tags(
-            explode(',', (string) $params['tag_ids']),
+            explode(',', is_scalar($params['tag_ids']) ? (string) $params['tag_ids'] : ''),
             $image_id
         );
     }
@@ -1532,7 +1535,7 @@ function ws_images_addSimple(array $params, \Piwigo\Ws\PwgServer $service): PwgE
     }
 
     $p_image_id_as = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
-    $p_category_as = is_array($params['category']) ? $params['category'] : [];
+    $p_category_as = array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, is_array($params['category']) ? $params['category'] : []);
     if ($p_image_id_as > 0) {
         $query = '
 SELECT COUNT(*)
@@ -1655,12 +1658,13 @@ function ws_images_upload(array $params, \Piwigo\Ws\PwgServer $service): mixed
         }
 
         // We must check if the extension is in the authorized list.
-        if (preg_match('/\.('.implode('|', \Piwigo\Core\Config::formatExtensions()).')$/', (string) $params['name'], $matches)) {
+        $p_name = is_scalar($params['name']) ? (string) $params['name'] : '';
+        if (preg_match('/\.('.implode('|', \Piwigo\Core\Config::formatExtensions()).')$/', $p_name, $matches)) {
             $format_ext = $matches[1];
         }
 
         if (empty($format_ext)) {
-            return new PwgError(401, 'unexpected format extension of file "'.$params['name'].'" (authorized extensions: '.implode(', ', \Piwigo\Core\Config::formatExtensions()).')');
+            return new PwgError(401, 'unexpected format extension of file "'.$p_name.'" (authorized extensions: '.implode(', ', \Piwigo\Core\Config::formatExtensions()).')');
         }
     }
 
@@ -1684,22 +1688,23 @@ function ws_images_upload(array $params, \Piwigo\Ws\PwgServer $service): mixed
 
     // Get a file name
     if (isset($_REQUEST['name'])) {
-        $fileName = $_REQUEST['name'];
+        $fileName = is_scalar($_REQUEST['name']) ? (string) $_REQUEST['name'] : uniqid('file_');
     } elseif (!empty($_FILES)) {
-        $fileName = $_FILES['file']['name'];
+        $filesFile = is_array($_FILES['file']) ? $_FILES['file'] : [];
+        $fileName = is_scalar($filesFile['name'] ?? null) ? (string) $filesFile['name'] : uniqid('file_');
     } else {
         $fileName = uniqid('file_');
     }
 
     // change the name of the file in the buffer to avoid any unexpected
     // extension. Function add_uploaded_file will eventually clean the mess.
-    $fileName = md5((string) $fileName);
+    $fileName = md5($fileName);
 
     $filePath = $upload_dir.DIRECTORY_SEPARATOR.$fileName;
 
     // Chunking might be enabled
-    $chunk = isset($_REQUEST['chunk']) ? intval($_REQUEST['chunk']) : 0;
-    $chunks = isset($_REQUEST['chunks']) ? intval($_REQUEST['chunks']) : 0;
+    $chunk = isset($_REQUEST['chunk']) ? (is_numeric($_REQUEST['chunk']) ? intval($_REQUEST['chunk']) : 0) : 0;
+    $chunks = isset($_REQUEST['chunks']) ? (is_numeric($_REQUEST['chunks']) ? intval($_REQUEST['chunks']) : 0) : 0;
 
     // file_put_contents('/tmp/plupload.log', "[".date('c')."] ".__FUNCTION__.', '.$fileName.' '.($chunk+1).'/'.$chunks."\n", FILE_APPEND);
 
@@ -1709,12 +1714,15 @@ function ws_images_upload(array $params, \Piwigo\Ws\PwgServer $service): mixed
     }
 
     if (!empty($_FILES)) {
-        if ($_FILES['file']['error'] || !is_uploaded_file($_FILES['file']['tmp_name'])) {
+        $filesFile = is_array($_FILES['file']) ? $_FILES['file'] : [];
+        $filesFileError = is_scalar($filesFile['error'] ?? null) ? $filesFile['error'] : 0;
+        $filesFileTmpName = is_scalar($filesFile['tmp_name'] ?? null) ? (string) $filesFile['tmp_name'] : '';
+        if ($filesFileError || !is_uploaded_file($filesFileTmpName)) {
             die('{"jsonrpc" : "2.0", "error" : {"code": 103, "message": "Failed to move uploaded file."}, "id" : "id"}');
         }
 
         // Read binary input stream and append it to temp file
-        if (!$in = @fopen($_FILES['file']['tmp_name'], 'rb')) {
+        if (!$in = @fopen($filesFileTmpName, 'rb')) {
             die('{"jsonrpc" : "2.0", "error" : {"code": 101, "message": "Failed to open input stream."}, "id" : "id"}');
         }
     } else {
@@ -1750,33 +1758,39 @@ SELECT *
             }
 
             $image = $images[0];
+            $image_id_str = is_array($image) && isset($image['id']) && is_scalar($image['id']) ? (string) $image['id'] : '';
 
-            $add_status = add_format($filePath, $format_ext ?? '', $image['id']);
+            $add_status = add_format($filePath, $format_ext ?? '', $image_id_str);
 
             return [
-              'image_id' => $image['id'],
-              'src' => DerivativeImage::thumb_url($image),
-              'square_src' => DerivativeImage::url(ImageStdParams::get_by_type(IMG_SQUARE), $image),
-              'name' => $image['name'],
+              'image_id' => is_array($image) ? ($image['id'] ?? null) : null,
+              'src' => is_array($image) ? DerivativeImage::thumb_url($image) : '',
+              'square_src' => is_array($image) ? DerivativeImage::url(ImageStdParams::get_by_type(IMG_SQUARE), $image) : '',
+              'name' => is_array($image) ? ($image['name'] ?? null) : null,
               'add_status' => $add_status,
             ];
         }
 
-        $name = pwg_db_real_escape_string(stripslashes((string) $params['name']));
+        $name = pwg_db_real_escape_string(stripslashes(is_scalar($params['name']) ? (string) $params['name'] : ''));
         $id_image = null; //null by default
+
+        $p_category = is_array($params['category']) ? $params['category'] : [];
+        $p_category_int = array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $p_category);
+        $p_category_first = $p_category_int[0] ?? 0;
 
         if ($params['update_mode']) {
             $query = '
-SELECT 
+SELECT
   id
   FROM '.IMAGES_TABLE.' AS i
     INNER JOIN '.IMAGE_CATEGORY_TABLE.' as ic ON ic.image_id = i.id
   WHERE i.file = \''.$name.'\'
-  AND ic.category_id = '.$params['category'][0].'
+  AND ic.category_id = '.$p_category_first.'
 ;';
             $images = query2array($query);
             if ($images != null) {
-                $id_image = $images[0]['id']; //take the id of the already existing image to replace it
+                $img0 = $images[0];
+                $id_image = is_array($img0) && isset($img0['id']) && is_numeric($img0['id']) ? (int) $img0['id'] : null;
                 $add_status = 'update';
             }
         }
@@ -1784,8 +1798,8 @@ SELECT
         $image_id = add_uploaded_file(
             $filePath,
             $name, // function add_uploaded_file will secure before insert
-            $params['category'],
-            $params['level'],
+            $p_category_int,
+            is_numeric($params['level']) ? (int) $params['level'] : null,
             $id_image
         );
 
@@ -1804,7 +1818,7 @@ SELECT
 SELECT
     COUNT(*) AS nb_photos
   FROM '.IMAGE_CATEGORY_TABLE.'
-  WHERE category_id = '.$params['category'][0].'
+  WHERE category_id = '.$p_category_first.'
 ;';
         $category_infos = pwg_db_fetch_assoc(pwg_query($query));
 
@@ -1812,12 +1826,12 @@ SELECT
 SELECT
     COUNT(*)
   FROM '.LOUNGE_TABLE.'
-  WHERE category_id = '.$params['category'][0].'
+  WHERE category_id = '.$p_category_first.'
   AND image_id NOT IN (Select image_id from '.IMAGE_CATEGORY_TABLE.')
 ;';
         [$nb_photos_lounge] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
-        $category_name = get_cat_display_name_from_id($params['category'][0], null);
+        $category_name = get_cat_display_name_from_id($p_category_first, null);
 
         if ($image_infos === null) {
             return null;
@@ -1829,8 +1843,8 @@ SELECT
           'square_src' => DerivativeImage::url(ImageStdParams::get_by_type(IMG_SQUARE), $image_infos),
           'name' => $image_infos['name'],
           'category' => [
-            'id' => $params['category'][0],
-            'nb_photos' => ($category_infos['nb_photos'] ?? 0) + $nb_photos_lounge,
+            'id' => $p_category_first,
+            'nb_photos' => ($category_infos['nb_photos'] ?? 0) + (is_numeric($nb_photos_lounge) ? (int) $nb_photos_lounge : 0),
             'label' => $category_name,
           ],
           'add_status' => $add_status,
@@ -1872,15 +1886,20 @@ function ws_images_uploadAsync(array $params, \Piwigo\Ws\PwgServer &$service): m
     // to authenticate the request (a much better time/place than here)
 
     // additional check for some parameters
-    if (!preg_match('/^[a-fA-F0-9]{32}$/', (string) $params['original_sum'])) {
+    $p_original_sum = is_scalar($params['original_sum']) ? (string) $params['original_sum'] : '';
+    if (!preg_match('/^[a-fA-F0-9]{32}$/', $p_original_sum)) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid original_sum');
     }
 
-    if ($params['image_id'] > 0) {
+    $p_image_id_async = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
+    $p_chunk = is_numeric($params['chunk']) ? (int) $params['chunk'] : 0;
+    $p_chunks = is_numeric($params['chunks']) ? (int) $params['chunks'] : 0;
+
+    if ($p_image_id_async > 0) {
         $query = '
 SELECT COUNT(*)
   FROM '. IMAGES_TABLE .'
-  WHERE id = '. $params['image_id'] .'
+  WHERE id = '. $p_image_id_async .'
 ;';
         [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
         if ($count == 0) {
@@ -1891,10 +1910,11 @@ SELECT COUNT(*)
     // handle upload error as in ws_images_addSimple
     // if (isset($_FILES['image']['error']) && $_FILES['image']['error'] != 0)
 
-    $output_filepath_prefix = \Piwigo\Core\Config::uploadDir().'/buffer/'.$params['original_sum'].'-u'.$user['id'];
+    $p_user_id = is_scalar($user['id']) ? (string) $user['id'] : '';
+    $output_filepath_prefix = \Piwigo\Core\Config::uploadDir().'/buffer/'.$p_original_sum.'-u'.$p_user_id;
     $chunkfile_path_pattern = $output_filepath_prefix.'-%03uof%03u.chunk';
 
-    $chunkfile_path = sprintf($chunkfile_path_pattern, $params['chunk'] + 1, $params['chunks']);
+    $chunkfile_path = sprintf($chunkfile_path_pattern, $p_chunk + 1, $p_chunks);
 
     // create the upload directory tree if not exists
     if (!mkgetdir(dirname($chunkfile_path), MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
@@ -1903,12 +1923,15 @@ SELECT COUNT(*)
     secure_directory(dirname($chunkfile_path));
 
     // move uploaded file
-    move_uploaded_file($_FILES['file']['tmp_name'], $chunkfile_path);
+    $filesFile2 = is_array($_FILES['file'] ?? null) ? $_FILES['file'] : [];
+    $filesFile2TmpName = is_scalar($filesFile2['tmp_name'] ?? null) ? (string) $filesFile2['tmp_name'] : '';
+    move_uploaded_file($filesFile2TmpName, $chunkfile_path);
     $logger->debug(__FUNCTION__.' uploaded '.$chunkfile_path);
 
     // MD5 checksum
     $chunk_md5 = md5_file($chunkfile_path);
-    if ($chunk_md5 != $params['chunk_sum']) {
+    $p_chunk_sum = is_scalar($params['chunk_sum']) ? (string) $params['chunk_sum'] : '';
+    if ($chunk_md5 != $p_chunk_sum) {
         unlink($chunkfile_path);
         $logger->error(__FUNCTION__.' '.$chunkfile_path.' MD5 checksum mismatched');
         return new PwgError(500, 'MD5 checksum chunk file mismatched');
@@ -1916,22 +1939,22 @@ SELECT COUNT(*)
 
     // are all chunks uploaded?
     $chunk_ids_uploaded = [];
-    for ($i = 1; $i <= $params['chunks']; $i++) {
-        $chunkfile = sprintf($chunkfile_path_pattern, $i, $params['chunks']);
+    for ($i = 1; $i <= $p_chunks; $i++) {
+        $chunkfile = sprintf($chunkfile_path_pattern, $i, $p_chunks);
         if (file_exists($chunkfile) && ($fp = fopen($chunkfile, 'rb')) !== false) {
             $chunk_ids_uploaded[] = $i;
             fclose($fp);
         }
     }
 
-    if ($params['chunks'] != count($chunk_ids_uploaded)) {
+    if ($p_chunks != count($chunk_ids_uploaded)) {
         // all chunks are not yet available
         $logger->debug(__FUNCTION__.' all chunks are not uploaded yet, maybe on next chunk, exit for now');
         return ['message' => 'chunks uploaded = '.implode(',', $chunk_ids_uploaded)];
     }
 
     // all chunks available
-    $logger->debug(__FUNCTION__.' '.$params['original_sum'].' '.$params['chunks'].' chunks available, try now to get lock for merging');
+    $logger->debug(__FUNCTION__.' '.$p_original_sum.' '.$p_chunks.' chunks available, try now to get lock for merging');
     $output_filepath = $output_filepath_prefix.'.merged';
 
     // chunks already being merged?
@@ -1986,7 +2009,7 @@ SELECT COUNT(*)
             return new PwgError(500, 'error while merging chunk '.$chunk_id);
         }
 
-        $logger->debug(__FUNCTION__.' original_sum='.$params['original_sum'].', chunk '.$chunk_id.'/'.$params['chunks'].' merged');
+        $logger->debug(__FUNCTION__.' original_sum='.$p_original_sum.', chunk '.$chunk_id.'/'.$p_chunks.' merged');
 
         // delete chunk and clear cache
         unlink($chunkfile_path);
@@ -2002,7 +2025,7 @@ SELECT COUNT(*)
     // MD5 checksum
     $merged_md5 = md5_file($output_filepath);
 
-    if ($merged_md5 != $params['original_sum']) {
+    if ($merged_md5 != $p_original_sum) {
         unlink($output_filepath);
         $logger->error(__FUNCTION__.' '.$output_filepath.' MD5 checksum mismatched!');
         return new PwgError(500, 'MD5 checksum merged file mismatched');
@@ -2012,13 +2035,18 @@ SELECT COUNT(*)
 
     include_once(PHPWG_ROOT_PATH.'admin/include/functions_upload.inc.php');
 
+    $p_filename = is_scalar($params['filename']) ? (string) $params['filename'] : null;
+    $p_category_async = array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, is_array($params['category']) ? $params['category'] : []);
+    $p_level_async = is_numeric($params['level']) ? (int) $params['level'] : null;
+    $p_image_id_upload = is_numeric($params['image_id']) ? (int) $params['image_id'] : null;
+
     $image_id = add_uploaded_file(
         $output_filepath,
-        $params['filename'],
-        $params['category'],
-        $params['level'],
-        $params['image_id'],
-        $params['original_sum']
+        $p_filename,
+        $p_category_async,
+        $p_level_async,
+        $p_image_id_upload,
+        $p_original_sum
     );
 
     $logger->debug(__FUNCTION__.' image_id after add_uploaded_file = '.$image_id);
@@ -2026,7 +2054,7 @@ SELECT COUNT(*)
     // and now, let's create tag associations
     if (isset($params['tag_ids']) and !empty($params['tag_ids'])) {
         set_tags(
-            explode(',', (string) $params['tag_ids']),
+            explode(',', is_scalar($params['tag_ids']) ? (string) $params['tag_ids'] : ''),
             $image_id
         );
     }
@@ -2117,7 +2145,7 @@ function ws_images_exist(array $params, \Piwigo\Ws\PwgServer $service): array
         // search among photos the list of photos already added, based on md5sum list
         $md5sums = preg_split(
             $split_pattern,
-            (string) $params['md5sum_list'],
+            is_scalar($params['md5sum_list']) ? (string) $params['md5sum_list'] : '',
             -1,
             PREG_SPLIT_NO_EMPTY
         ) ?: [];
@@ -2140,7 +2168,7 @@ SELECT id, md5sum
         // filename list
         $filenames = preg_split(
             $split_pattern,
-            (string) $params['filename_list'],
+            is_scalar($params['filename_list']) ? (string) $params['filename_list'] : '',
             -1,
             PREG_SPLIT_NO_EMPTY
         ) ?: [];
@@ -2181,7 +2209,7 @@ function ws_images_formats_searchImage(array $params, \Piwigo\Ws\PwgServer $serv
 
     $logger->debug(__FUNCTION__, 'WS', $params);
 
-    $candidates = json_decode(stripslashes((string) $params['filename_list']), true);
+    $candidates = json_decode(stripslashes(is_scalar($params['filename_list']) ? (string) $params['filename_list'] : ''), true);
 
     $unique_filenames_db = [];
 
@@ -2193,7 +2221,7 @@ SELECT
 ;';
     $result = pwg_query($query);
     while ($row = pwg_db_fetch_assoc($result)) {
-        $filename_wo_ext = get_filename_wo_extension($row['file']);
+        $filename_wo_ext = get_filename_wo_extension((string) ($row['file'] ?? ''));
         @$unique_filenames_db[ $filename_wo_ext ][] = $row['id'];
     }
 
@@ -2208,43 +2236,50 @@ SELECT
   FROM '.IMAGE_FORMAT_TABLE.'
 ;';
     $result = pwg_query($query);
+    /** @var array<string, list<string>> $format_db */
+    $format_db = [];
     while ($row = pwg_db_fetch_assoc($result)) {
-        $format_image_id = $row['image_id'];
-        @$format_db[ $format_image_id ][] = $row['ext'];
+        $format_image_id = is_scalar($row['image_id'] ?? null) ? (string) $row['image_id'] : '';
+        $format_ext_val = is_scalar($row['ext'] ?? null) ? (string) $row['ext'] : '';
+        $format_db[$format_image_id][] = $format_ext_val;
     }
 
     $result = [];
 
-    foreach ($candidates as $format_external_id => $format_filename) {
+    $candidates_array = is_array($candidates) ? $candidates : [];
+    foreach ($candidates_array as $format_external_id => $format_filename) {
+        $format_external_id_str = is_scalar($format_external_id) ? (string) $format_external_id : '';
+        $format_filename_str = is_scalar($format_filename) ? (string) $format_filename : '';
         $candidate_filename_wo_ext = null;
 
-        if (preg_match('/^(.*?)\.('.implode('|', \Piwigo\Core\Config::formatExtensions()).')$/', (string) $format_filename, $matches)) {
+        if (preg_match('/^(.*?)\.('.implode('|', \Piwigo\Core\Config::formatExtensions()).')$/', $format_filename_str, $matches)) {
             $candidate_filename_wo_ext = $matches[1];
         }
 
         if (empty($candidate_filename_wo_ext)) {
-            $result[$format_external_id] = ['status' => 'not found'];
+            $result[$format_external_id_str] = ['status' => 'not found'];
             continue;
         }
 
         if (isset($unique_filenames_db[$candidate_filename_wo_ext])) {
             if (count($unique_filenames_db[$candidate_filename_wo_ext]) > 1) {
-                $result[$format_external_id] = ['status' => 'multiple'];
+                $result[$format_external_id_str] = ['status' => 'multiple'];
                 continue;
             }
-            $img_id = $unique_filenames_db[$candidate_filename_wo_ext][0];
+            $img_id_raw = $unique_filenames_db[$candidate_filename_wo_ext][0];
+            $img_id_str = is_scalar($img_id_raw) ? (string) $img_id_raw : '';
             $mult_form = false;
-            if (isset($format_db[$img_id])) {
-                $format_ext = pathinfo((string) $format_filename, PATHINFO_EXTENSION);
-                if (array_search($format_ext, $format_db[$img_id]) !== false) {
+            if (isset($format_db[$img_id_str])) {
+                $format_ext = pathinfo($format_filename_str, PATHINFO_EXTENSION);
+                if (array_search($format_ext, $format_db[$img_id_str]) !== false) {
                     $mult_form = true;
                 }
             }
-            $result[$format_external_id] = ['status' => 'found', 'image_id' => $img_id, 'format_exist' => $mult_form];
+            $result[$format_external_id_str] = ['status' => 'found', 'image_id' => $img_id_raw, 'format_exist' => $mult_form];
             continue;
         }
 
-        $result[$format_external_id] = ['status' => 'not found'];
+        $result[$format_external_id_str] = ['status' => 'not found'];
     }
 
     return $result;
@@ -2272,12 +2307,12 @@ function ws_images_formats_delete(array $params, \Piwigo\Ws\PwgServer $service):
     if (!is_array($params['format_id'])) {
         $params['format_id'] = preg_split(
             '/[\s,;\|]/',
-            (string) $params['format_id'],
+            is_scalar($params['format_id']) ? (string) $params['format_id'] : '',
             -1,
             PREG_SPLIT_NO_EMPTY
         ) ?: [];
     }
-    $params['format_id'] = array_map(intval(...), $params['format_id']);
+    $params['format_id'] = array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, is_array($params['format_id']) ? $params['format_id'] : []);
 
     $format_ids = [];
     foreach ($params['format_id'] as $format_id) {
@@ -2302,14 +2337,20 @@ SELECT
   WHERE format_id IN ('.implode(',', $format_ids).')
 ;';
     $result = pwg_query($query);
+    /** @var array<string, list<string>> $formats_of */
+    $formats_of = [];
+    /** @var list<string> $image_ids */
+    $image_ids = [];
     while ($row = pwg_db_fetch_assoc($result)) {
+        $row_image_id = is_scalar($row['image_id'] ?? null) ? (string) $row['image_id'] : '';
+        $row_ext = is_scalar($row['ext'] ?? null) ? (string) $row['ext'] : '';
 
-        if (!isset($formats_of[ $row['image_id'] ])) {
-            $image_ids[] = $row['image_id'];
-            $formats_of[ $row['image_id'] ] = [];
+        if (!isset($formats_of[$row_image_id])) {
+            $image_ids[] = $row_image_id;
+            $formats_of[$row_image_id] = [];
         }
 
-        $formats_of[ $row['image_id'] ][] = $row['ext'];
+        $formats_of[$row_image_id][] = $row_ext;
     }
 
     if (count($image_ids) == 0) {
@@ -2326,15 +2367,17 @@ SELECT
 ;';
     $result = pwg_query($query);
     while ($row = pwg_db_fetch_assoc($result)) {
-        if (url_is_remote($row['path'])) {
+        $row_path = is_scalar($row['path'] ?? null) ? (string) $row['path'] : '';
+        $row_id = is_scalar($row['id'] ?? null) ? (string) $row['id'] : '';
+        if (url_is_remote($row_path)) {
             continue;
         }
 
         $files = [];
         $image_path = get_element_path($row);
 
-        if (isset($formats_of[ $row['id'] ])) {
-            foreach ($formats_of[ $row['id'] ] as $format_ext) {
+        if (isset($formats_of[$row_id])) {
+            foreach ($formats_of[$row_id] as $format_ext) {
                 $files[] = original_to_format($image_path, $format_ext);
             }
         }
@@ -2390,7 +2433,8 @@ SELECT path
         return new PwgError(404, 'image_id not found');
     }
 
-    [$path] = pwg_db_fetch_row($result) ?? [null];
+    [$path_raw] = pwg_db_fetch_row($result) ?? [null];
+    $path = is_scalar($path_raw) ? (string) $path_raw : '';
 
     $ret = [];
 

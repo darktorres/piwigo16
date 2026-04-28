@@ -42,7 +42,7 @@ function get_absolute_root_url($with_scheme = true): string
     $url = '';
     if ($with_scheme) {
         $is_https = false;
-        if (isset($_SERVER['HTTPS']) &&
+        if (isset($_SERVER['HTTPS']) && is_scalar($_SERVER['HTTPS']) &&
           ((strtolower((string) $_SERVER['HTTPS']) == 'on') or ($_SERVER['HTTPS'] == 1))) {
             $is_https = true;
             $url .= 'https://';
@@ -50,9 +50,9 @@ function get_absolute_root_url($with_scheme = true): string
             $url .= 'http://';
         }
         if (isset($_SERVER['HTTP_X_FORWARDED_HOST'])) {
-            $url .= $_SERVER['HTTP_X_FORWARDED_HOST'];
+            $url .= is_scalar($_SERVER['HTTP_X_FORWARDED_HOST']) ? (string) $_SERVER['HTTP_X_FORWARDED_HOST'] : '';
         } else {
-            $url .= $_SERVER['HTTP_HOST'];
+            $url .= is_scalar($_SERVER['HTTP_HOST']) ? (string) $_SERVER['HTTP_HOST'] : '';
 
             $url_port = null;
 
@@ -60,7 +60,7 @@ function get_absolute_root_url($with_scheme = true): string
                 // do nothing
             } elseif ('auto' == \Piwigo\Core\Config::urlPort()) {
                 if ((!$is_https && $_SERVER['SERVER_PORT'] != 80) || ($is_https && $_SERVER['SERVER_PORT'] != 443)) {
-                    $url_port = ':'.$_SERVER['SERVER_PORT'];
+                    $url_port = ':'.( is_scalar($_SERVER['SERVER_PORT']) ? (string) $_SERVER['SERVER_PORT'] : '');
                 }
             } else {
                 // we have a custom port
@@ -102,7 +102,7 @@ function add_url_params(string $url, array $params, string $arg_separator = '&am
             }
             $url .= $param;
             if (isset($val)) {
-                $url .= '='.$val;
+                $url .= '='.(is_scalar($val) ? (string) $val : '');
             }
         }
     }
@@ -224,14 +224,14 @@ function make_picture_url(array $params): string
     $url .= '/';
     switch (\Piwigo\Core\Config::pictureUrlStyle()) {
         case 'id-file':
-            $url .= $params['image_id'];
+            $url .= is_scalar($params['image_id']) ? (string) $params['image_id'] : '';
             if (isset($params['image_file'])) {
-                $url .= '-'.str2url(get_filename_wo_extension($params['image_file']));
+                $url .= '-'.str2url(get_filename_wo_extension(is_scalar($params['image_file']) ? (string) $params['image_file'] : ''));
             }
             break;
         case 'file':
             if (isset($params['image_file'])) {
-                $fname_wo_ext = get_filename_wo_extension($params['image_file']);
+                $fname_wo_ext = get_filename_wo_extension(is_scalar($params['image_file']) ? (string) $params['image_file'] : '');
                 if (ord($fname_wo_ext) > ord('9') or !preg_match('/^\d+(-|$)/', $fname_wo_ext)) {
                     $url .= $fname_wo_ext;
                     break;
@@ -239,7 +239,7 @@ function make_picture_url(array $params): string
             }
             // no break
         default:
-            $url .= $params['image_id'];
+            $url .= is_scalar($params['image_id']) ? (string) $params['image_id'] : '';
     }
     if (!isset($params['category'])) {// make urls shorter ...
         unset($params['flat']);
@@ -256,13 +256,13 @@ function make_picture_url(array $params): string
 function add_well_known_params_in_url(string $url, array $params): string
 {
     if (isset($params['chronology_field'])) {
-        $url .= '/'. $params['chronology_field'];
-        $url .= '-'. $params['chronology_style'];
+        $url .= '/'. (is_scalar($params['chronology_field']) ? (string) $params['chronology_field'] : '');
+        $url .= '-'. (is_scalar($params['chronology_style']) ? (string) $params['chronology_style'] : '');
         if (isset($params['chronology_view'])) {
-            $url .= '-'. $params['chronology_view'];
+            $url .= '-'. (is_scalar($params['chronology_view']) ? (string) $params['chronology_view'] : '');
         }
         if (!empty($params['chronology_date'])) {
-            $url .= '-'. implode('-', $params['chronology_date']);
+            $url .= '-'. implode('-', array_map(fn($v) => is_scalar($v) ? (string) $v : '', is_array($params['chronology_date']) ? $params['chronology_date'] : []));
         }
     }
 
@@ -271,7 +271,7 @@ function add_well_known_params_in_url(string $url, array $params): string
     }
 
     if (isset($params['start']) and $params['start'] > 0) {
-        $url .= '/start-'.$params['start'];
+        $url .= '/start-'.(is_scalar($params['start']) ? (string) $params['start'] : '');
     }
     return $url;
 }
@@ -313,37 +313,41 @@ function make_section_in_url(array $params): string
                 if (!isset($params['category'])) {
                     $section_string .= '/categories';
                 } else {
-                    isset($params['category']['name']) or trigger_error(
+                    $cat = is_array($params['category']) ? $params['category'] : [];
+                    isset($cat['name']) or trigger_error(
                         'make_section_in_url category name not set',
                         E_USER_WARNING
                     );
 
-                    array_key_exists('permalink', $params['category']) or trigger_error(
+                    array_key_exists('permalink', $cat) or trigger_error(
                         'make_section_in_url category permalink not set',
                         E_USER_WARNING
                     );
 
                     $section_string .= '/category/';
-                    if (empty($params['category']['permalink'])) {
-                        $section_string .= $params['category']['id'];
+                    if (empty($cat['permalink'])) {
+                        $section_string .= is_scalar($cat['id'] ?? null) ? (string) ($cat['id'] ?? '') : '';
                         if (\Piwigo\Core\Config::categoryUrlStyle() == 'id-name') {
-                            $section_string .= '-'.str2url($params['category']['name']);
+                            $section_string .= '-'.str2url(is_scalar($cat['name'] ?? null) ? (string) ($cat['name'] ?? '') : '');
                         }
                     } else {
-                        $section_string .= $params['category']['permalink'];
+                        $section_string .= is_scalar($cat['permalink']) ? (string) $cat['permalink'] : '';
                     }
 
                     if (isset($params['combined_categories'])) {
-                        foreach ($params['combined_categories'] as $category) {
+                        foreach ((array) $params['combined_categories'] as $category) {
+                            if (!is_array($category)) {
+                                continue;
+                            }
                             $section_string .= '/';
 
                             if (empty($category['permalink'])) {
-                                $section_string .= $category['id'];
+                                $section_string .= is_scalar($category['id']) ? (string) $category['id'] : '';
                                 if (\Piwigo\Core\Config::categoryUrlStyle() == 'id-name') {
-                                    $section_string .= '-'.str2url($category['name']);
+                                    $section_string .= '-'.str2url(is_scalar($category['name']) ? (string) $category['name'] : '');
                                 }
                             } else {
-                                $section_string .= $category['permalink'];
+                                $section_string .= is_scalar($category['permalink']) ? (string) $category['permalink'] : '';
                             }
                         }
                     }
@@ -355,21 +359,24 @@ function make_section_in_url(array $params): string
             {
                 $section_string .= '/tags';
 
-                foreach ($params['tags'] as $tag) {
+                foreach ((array) $params['tags'] as $tag) {
+                    if (!is_array($tag)) {
+                        continue;
+                    }
                     switch (\Piwigo\Core\Config::tagUrlStyle()) {
                         case 'id':
-                            $section_string .= '/'.$tag['id'];
+                            $section_string .= '/'. (is_scalar($tag['id'] ?? null) ? (string) ($tag['id'] ?? '') : '');
                             break;
                         case 'tag':
                             if (isset($tag['url_name'])) {
-                                $section_string .= '/'.$tag['url_name'];
+                                $section_string .= '/'. (is_scalar($tag['url_name']) ? (string) $tag['url_name'] : '');
                                 break;
                             }
                             // no break
                         default:
-                            $section_string .= '/'.$tag['id'];
+                            $section_string .= '/'. (is_scalar($tag['id'] ?? null) ? (string) ($tag['id'] ?? '') : '');
                             if (isset($tag['url_name'])) {
-                                $section_string .= '-'.$tag['url_name'];
+                                $section_string .= '-'. (is_scalar($tag['url_name']) ? (string) $tag['url_name'] : '');
                             }
                     }
                 }
@@ -378,12 +385,12 @@ function make_section_in_url(array $params): string
             }
         case 'search':
             {
-                $section_string .= '/search/'.$params['search'];
+                $section_string .= '/search/'.(is_scalar($params['search']) ? (string) $params['search'] : '');
                 break;
             }
         case 'list':
             {
-                $section_string .= '/list/'.implode(',', $params['list']);
+                $section_string .= '/list/'.implode(',', array_map(fn($v) => is_scalar($v) ? (string) $v : '', is_array($params['list']) ? $params['list'] : []));
                 break;
             }
         case 'none':
@@ -392,7 +399,7 @@ function make_section_in_url(array $params): string
             }
         default:
             {
-                $section_string .= '/'.$section;
+                $section_string .= '/'.(is_scalar($section) ? (string) $section : '');
             }
     }
 
@@ -680,9 +687,10 @@ function get_action_url(int $id, string $what_part, bool $download): string
 /** @param array<string,mixed> $element_info */
 function get_element_url(array $element_info): string
 {
-    $url = $element_info['path'];
+    $url = is_scalar($element_info['path']) ? (string) $element_info['path'] : '';
     if (!url_is_remote($url)) {
-        $url = embellish_url(get_root_url().$url);
+        $result = embellish_url(get_root_url().$url);
+        return is_string($result) ? $result : '';
     }
     return $url;
 }
@@ -786,7 +794,7 @@ function get_query_string_diff($rejects = [], $escape = true): string
         return '';
     }
 
-    parse_str((string) $_SERVER['QUERY_STRING'], $vars);
+    parse_str(is_scalar($_SERVER['QUERY_STRING']) ? (string) $_SERVER['QUERY_STRING'] : '', $vars);
 
     $vars = array_diff_key($vars, array_flip($rejects));
 
@@ -829,5 +837,10 @@ SELECT
   WHERE user_id = '.$user['id'].'
 ';
 
-    return query2array($query, 'image_id', 'fake_value');
+    $raw = query2array($query, 'image_id', 'fake_value');
+    $result = [];
+    foreach ($raw as $image_id => $val) {
+        $result[(int) $image_id] = true;
+    }
+    return $result;
 }

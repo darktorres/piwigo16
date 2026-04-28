@@ -10,7 +10,9 @@ global $template, $user, $page, $persistent_cache, $lang;
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-$filters_views = safe_unserialize(conf_get_param('filters_views', \Piwigo\Core\Config::defaultFiltersViews()));
+$filters_views_unserialized = safe_unserialize(conf_get_param('filters_views', \Piwigo\Core\Config::defaultFiltersViews()));
+/** @var array<string, array<string,mixed>> $filters_views */
+$filters_views = is_array($filters_views_unserialized) ? $filters_views_unserialized : [];
 
 $template->assign('display_filter', $filters_views);
 
@@ -32,7 +34,11 @@ if ('search' == $page['section'] and isset($page['search_details'])) {
 
     include_once(PHPWG_ROOT_PATH.'include/functions_search.inc.php');
 
+    /** @var array<string, mixed> $my_search */
     $my_search = get_search_array($page['search']);
+    /** @var array<string, mixed> $my_search_fields_tmp */
+    $my_search_fields_tmp = is_array($my_search['fields'] ?? null) ? $my_search['fields'] : [];
+    $my_search['fields'] = $my_search_fields_tmp;
 
     $page['search_details']['forbidden'] = get_sql_condition_FandF(
         [
@@ -68,7 +74,7 @@ if ('search' == $page['section'] and isset($page['search_details'])) {
         $other_filters_items = get_items_for_filter('tags');
         if (false === $other_filters_items) {
             $filter_tags = get_available_tags();
-            usort($filter_tags, tag_alpha_compare(...));
+            usort($filter_tags, fn(mixed $a, mixed $b): int => tag_alpha_compare(is_array($a) ? $a : [], is_array($b) ? $b : []));
         } else {
             $filter_tags = get_common_tags($other_filters_items, 0);
 
@@ -76,10 +82,15 @@ if ('search' == $page['section'] and isset($page['search_details'])) {
             // intersection. In this case, $search_items is empty and get_common_tags
             // returns nothing. We should still display the list of selected tags. We
             // have to "force" them in the list.
-            $missing_tag_ids = array_diff($my_search['fields']['tags']['words'], array_column($filter_tags, 'id'));
+            $tags_field = is_array($my_search['fields']['tags'] ?? null) ? $my_search['fields']['tags'] : [];
+            $tags_words_raw = is_array($tags_field['words'] ?? null) ? $tags_field['words'] : [];
+            $missing_tag_ids = array_diff(
+                array_map(fn(mixed $v) => is_scalar($v) ? (string) $v : '', $tags_words_raw),
+                array_map(fn(mixed $v) => is_scalar($v) ? (string) $v : '', array_column($filter_tags, 'id'))
+            );
 
             if (count($missing_tag_ids) > 0) {
-                $filter_tags = array_merge(get_available_tags($missing_tag_ids), $filter_tags);
+                $filter_tags = array_merge(get_available_tags(array_map(fn(mixed $v) => is_numeric($v) ? (int) $v : 0, $missing_tag_ids)), $filter_tags);
             }
         }
 
@@ -88,7 +99,12 @@ if ('search' == $page['section'] and isset($page['search_details'])) {
         $filter_tag_ids = count($filter_tags) > 0 ? array_column($filter_tags, 'id') : [];
 
         // in case the search has forbidden tags for current user, we need to filter the search rule
-        $my_search['fields']['tags']['words'] = array_intersect($my_search['fields']['tags']['words'], $filter_tag_ids);
+        $tags_field2 = is_array($my_search['fields']['tags'] ?? null) ? $my_search['fields']['tags'] : [];
+        $tags_words2_raw = is_array($tags_field2['words'] ?? null) ? $tags_field2['words'] : [];
+        $tags_words2 = array_map(fn(mixed $v) => is_scalar($v) ? (string) $v : '', $tags_words2_raw);
+        $filter_tag_ids_str = array_map(fn(mixed $v) => is_scalar($v) ? (string) $v : '', $filter_tag_ids);
+        $tags_field2['words'] = array_intersect($tags_words2, $filter_tag_ids_str);
+        $my_search['fields']['tags'] = $tags_field2;
     } elseif (isset($my_search['fields']['tags']) and !($display_filters['tags']['access'])) {
         unset($my_search['fields']['tags']);
     }
@@ -135,7 +151,12 @@ SELECT
         $template->assign('AUTHORS', $filter_rows);
 
         // in case the search has forbidden authors for current user, we need to filter the search rule
-        $my_search['fields']['author']['words'] = array_intersect($my_search['fields']['author']['words'], $author_names);
+        $author_field = is_array($my_search['fields']['author'] ?? null) ? $my_search['fields']['author'] : [];
+        $author_words_raw = is_array($author_field['words'] ?? null) ? $author_field['words'] : [];
+        $author_words_str = array_map(fn(mixed $v) => is_scalar($v) ? (string) $v : '', $author_words_raw);
+        $author_names_str = array_map(fn(mixed $v) => is_scalar($v) ? (string) $v : '', $author_names);
+        $author_field['words'] = array_intersect($author_words_str, $author_names_str);
+        $my_search['fields']['author'] = $author_field;
     } elseif (isset($my_search['fields']['author']) and !($display_filters['author']['access'])) {
         unset($my_search['fields']['author']);
     }
@@ -370,7 +391,7 @@ SELECT
         if (count($added_by) > 0) {
             // now let's find the usernames of added_by users
             foreach ($added_by as $i) {
-                $user_ids[] = $i['added_by_id'];
+                $user_ids[] = is_numeric($i['added_by_id']) ? (int) $i['added_by_id'] : 0;
             }
 
             $query = '
@@ -383,7 +404,11 @@ SELECT
             $username_of = query2array($query, 'id', 'username');
 
             foreach (array_keys($added_by) as $added_by_idx) {
-                $added_by_id = $added_by[$added_by_idx]['added_by_id'];
+                if (!is_array($added_by[$added_by_idx])) {
+                    continue;
+                }
+                $added_by_id_raw = $added_by[$added_by_idx]['added_by_id'];
+                $added_by_id = is_numeric($added_by_id_raw) ? (int) $added_by_id_raw : 0;
                 $added_by[$added_by_idx]['added_by_name'] = $username_of[$added_by_id] ?? 'user #'.$added_by_id.' (deleted)';
             }
         }
@@ -391,39 +416,46 @@ SELECT
         $template->assign('ADDED_BY', $added_by);
 
         // in case the search has forbidden added_by users for current user, we need to filter the search rule
-        $my_search['fields']['added_by'] = array_intersect($my_search['fields']['added_by'], $user_ids);
+        $added_by_field_raw = is_array($my_search['fields']['added_by'] ?? null) ? $my_search['fields']['added_by'] : [];
+        $added_by_field_int = array_map(fn(mixed $v) => is_numeric($v) ? (int) $v : 0, $added_by_field_raw);
+        $my_search['fields']['added_by'] = array_intersect($added_by_field_int, $user_ids);
     } elseif (isset($my_search['fields']['added_by']) and !($display_filters['added_by']['access'])) {
         unset($my_search['fields']['added_by']);
     }
 
     if (isset($my_search['fields']['cat']) and $display_filters['album']['access']) {
-        if (!empty($my_search['fields']['cat']['words'])) {
+        $cat_field = is_array($my_search['fields']['cat'] ?? null) ? $my_search['fields']['cat'] : [];
+        $cat_words = is_array($cat_field['words'] ?? null) ? $cat_field['words'] : [];
+        if (!empty($cat_words)) {
             $fullname_of = [];
 
             $query = '
 SELECT
-    id, 
+    id,
     uppercats
   FROM '.CATEGORIES_TABLE.'
     INNER JOIN '.USER_CACHE_CATEGORIES_TABLE.' ON id = cat_id AND user_id = '.$user['id'].'
-  WHERE id IN ('.implode(',', $my_search['fields']['cat']['words']).')
+  WHERE id IN ('.implode(',', array_map(fn(mixed $v) => is_numeric($v) ? (int) $v : 0, $cat_words)).')
 ;';
             $result = pwg_query($query);
 
             while ($row = pwg_db_fetch_assoc($result)) {
+                $uppercats_val = $row['uppercats'];
                 $cat_display_name = get_cat_display_name_cache(
-                    $row['uppercats'],
+                    is_scalar($uppercats_val) ? (string) $uppercats_val : '',
                     'admin.php?page=album-' // TODO not sure it's relevant to link to admin pages
                 );
                 $row['fullname'] = strip_tags($cat_display_name);
 
-                $fullname_of[$row['id']] = $row['fullname'];
+                $fullname_of[(string) $row['id']] = $row['fullname'];
             }
 
             $template->assign('fullname_of', json_encode($fullname_of));
 
             // in case the search has forbidden albums for current user, we need to filter the search rule
-            $my_search['fields']['cat']['words'] = array_intersect($my_search['fields']['cat']['words'], array_keys($fullname_of));
+            $cat_words_str = array_map(fn(mixed $v) => is_scalar($v) ? (string) $v : '', $cat_words);
+            $cat_field['words'] = array_intersect($cat_words_str, array_keys($fullname_of));
+            $my_search['fields']['cat'] = $cat_field;
         }
     } elseif (isset($my_search['fields']['cat']) and !($display_filters['album']['access'])) {
         unset($my_search['fields']['cat']);
@@ -554,7 +586,8 @@ SELECT
 ;';
         $result = pwg_query($query);
         while ($row = pwg_db_fetch_assoc($result)) {
-            @$filesizes[sprintf('%.1f', $row['filesize'] / 1024)]++;
+            $fs_val = is_numeric($row['filesize']) ? (float) $row['filesize'] : 0.0;
+            @$filesizes[sprintf('%.1f', $fs_val / 1024)]++;
         }
 
         if (empty($filesizes)) { // arbitrary values, only used when no photos on the gallery
@@ -574,9 +607,11 @@ SELECT
         // warning: we will (hopefully) have smarter values for filters. The min/max of the
         // current search won't always be the first/last values found. It's going to be a
         // problem with this way to select selected values
+        $fs_min_raw = $my_search['fields']['filesize_min'];
+        $fs_max_raw = $my_search['fields']['filesize_max'];
         $filesize['selected'] = [
-          'min' => !empty($my_search['fields']['filesize_min']) ? sprintf('%.1f', $my_search['fields']['filesize_min'] / 1024) : $unique_filesizes[0],
-          'max' => !empty($my_search['fields']['filesize_max']) ? sprintf('%.1f', $my_search['fields']['filesize_max'] / 1024) : end($unique_filesizes),
+          'min' => !empty($fs_min_raw) ? sprintf('%.1f', (is_numeric($fs_min_raw) ? (float) $fs_min_raw : 0.0) / 1024) : $unique_filesizes[0],
+          'max' => !empty($fs_max_raw) ? sprintf('%.1f', (is_numeric($fs_max_raw) ? (float) $fs_max_raw : 0.0) / 1024) : end($unique_filesizes),
         ];
 
         $template->assign('FILESIZE', $filesize);
@@ -617,11 +652,13 @@ SELECT
             ];
 
             foreach ($filter_rows as $row) {
-                if ($row['width'] <= 0 and $row['height'] <= 0) {
+                $row_width = is_numeric($row['width']) ? (float) $row['width'] : 0.0;
+                $row_height = is_numeric($row['height']) ? (float) $row['height'] : 0.0;
+                if ($row_width <= 0 and $row_height <= 0) {
                     continue;
                 }
 
-                $r = $row['width'] / $row['height'];
+                $r = $row_height > 0 ? $row_width / $row_height : 0.0;
                 if ($r < 0.95) {
                     $ratios['Portrait']++;
                 } elseif ($r >= 0.95 and $r <= 1.05) {
@@ -756,12 +793,12 @@ SELECT
   WHERE id IN ('.implode(',', $cat_ids).')
 ;';
                 $cats = query2array($query);
-                usort($cats, name_compare(...));
+                usort($cats, fn(array $a, array $b): int => name_compare($a, $b));
                 $albums_found = [];
                 foreach ($cats as $cat) {
                     $single_link = false;
                     $albums_found[] = get_cat_display_name_cache(
-                        $cat['uppercats'],
+                        is_scalar($cat['uppercats'] ?? null) ? (string) $cat['uppercats'] : '',
                         '',
                         $single_link
                     );
@@ -777,15 +814,18 @@ SELECT
 
             if (count($tag_ids) > 0) {
                 $tags = get_available_tags($tag_ids);
-                usort($tags, tag_alpha_compare(...));
+                usort($tags, fn(mixed $a, mixed $b): int => tag_alpha_compare(is_array($a) ? $a : [], is_array($b) ? $b : []));
                 $tags_found = [];
                 foreach ($tags as $tag) {
+                    if (!is_array($tag)) {
+                        continue;
+                    }
                     $url = make_index_url(
                         [
                         'tags' => [$tag],
             ]
                     );
-                    $tags_found[] = sprintf('<a href="%s">%s</a>', $url, $tag['name']);
+                    $tags_found[] = sprintf('<a href="%s">%s</a>', $url, is_scalar($tag['name'] ?? null) ? (string) $tag['name'] : '');
                 }
 
                 if (count($tags_found) > 0) {

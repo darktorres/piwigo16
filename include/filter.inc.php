@@ -21,7 +21,7 @@ if (!get_filter_page_value('cancel')) {
     if (isset($_GET['filter'])) {
         $filter['matches'] = [];
         $filter['enabled'] =
-          preg_match('/^start-recent-(\d+)$/', (string) $_GET['filter'], $filter['matches']) === 1;
+          preg_match('/^start-recent-(\d+)$/', is_scalar($_GET['filter']) ? (string) $_GET['filter'] : '', $filter['matches']) === 1;
     } else {
         $filter['enabled'] = pwg_get_session_var('filter_enabled', false);
     }
@@ -30,7 +30,9 @@ if (!get_filter_page_value('cancel')) {
 }
 
 if ($filter['enabled']) {
-    $filter_key = pwg_get_session_var('filter_check_key', ['user' => 0,'recent_period' => -1, 'time' => 0, 'date' => '']);
+    $filter_key_raw = pwg_get_session_var('filter_check_key', ['user' => 0,'recent_period' => -1, 'time' => 0, 'date' => '']);
+    /** @var array{user: int, recent_period: int, time: int, date: string} $filter_key */
+    $filter_key = is_array($filter_key_raw) ? $filter_key_raw : ['user' => 0,'recent_period' => -1, 'time' => 0, 'date' => ''];
 
     if (isset($filter['matches'])) {
         $filter['recent_period'] = $filter['matches'][1];
@@ -89,7 +91,8 @@ WHERE ';
         pwg_set_session_var('filter_visible_images', $filter['visible_images']);
     } else {
         // Read only data
-        $filter['categories'] = unserialize(pwg_get_session_var('filter_categories', serialize([])));
+        $filter_categories_raw = pwg_get_session_var('filter_categories', serialize([]));
+        $filter['categories'] = unserialize(is_string($filter_categories_raw) ? $filter_categories_raw : serialize([]));
         $filter['visible_categories'] = pwg_get_session_var('filter_visible_categories', '');
         $filter['visible_images'] = pwg_get_session_var('filter_visible_images', '');
     }

@@ -49,7 +49,7 @@ class updates
 
         if (preg_match('/(\d+\.\d+)\.(\d+)/', PHPWG_VERSION, $matches)
           and @fetchRemote(PHPWG_URL.'/download/all_versions.php?rand='.md5(uniqid((string) random_int(0, mt_getrandmax()), true)), $result)) {
-            $all_versions = @explode("\n", $result);
+            $all_versions = @explode("\n", is_string($result) ? $result : '');
             $new_version = trim($all_versions[0]);
             $_SESSION['need_update'.PHPWG_VERSION] = version_compare(PHPWG_VERSION, $new_version, '<');
         }
@@ -75,11 +75,12 @@ class updates
           ];
 
         [$env, $build_version] = get_container_info();
+        $build_version = is_scalar($build_version) ? (string) $build_version : '';
         if (preg_match('/^(\d+\.\d+)\.(\d+)$/', PHPWG_VERSION)) {
             $new_versions['is_dev'] = false;
             $actual_branch = get_branch_from_version(
                 ('Official' === $env)
-        ? substr((string) $build_version, 0, -1)
+        ? substr($build_version, 0, -1)
         : PHPWG_VERSION
             );
 
@@ -89,7 +90,7 @@ class updates
             $url .= '&origin_hash='.sha1(\Piwigo\Core\Config::secretKey().get_absolute_root_url());
 
             if (@fetchRemote($url, $result)
-                and $all_versions = @explode("\n", $result)) {
+                and $all_versions = @explode("\n", is_string($result) ? $result : '')) {
                 $new_versions['piwigo.org-checked'] = true;
                 $last_version = trim($all_versions[0]);
                 if ('Official' === $env) {
@@ -112,7 +113,9 @@ class updates
                         }
                     }
                 } else {
-                    [$last_version_number, $last_version_php] = explode('/', trim($all_versions[0]));
+                    $parts0 = explode('/', trim($all_versions[0]));
+                    $last_version_number = $parts0[0] ?? '';
+                    $last_version_php = $parts0[1] ?? '';
 
                     if (version_compare(PHPWG_VERSION, $last_version_number, '<')) {
                         $last_branch = get_branch_from_version($last_version_number);
@@ -126,7 +129,9 @@ class updates
 
                             // Check if new version exists in same branch
                             foreach ($all_versions as $version) {
-                                [$version_number, $version_php] = explode('/', trim($version));
+                                $vparts = explode('/', trim($version));
+                                $version_number = $vparts[0] ?? '';
+                                $version_php = $vparts[1] ?? '';
                                 $branch = get_branch_from_version($version_number);
 
                                 if ($branch == $actual_branch) {
@@ -164,13 +169,12 @@ class updates
             return;
         }
 
-        $new_versions_string = join(
-            ' & ',
-            array_intersect_key(
-                $new_versions,
-                array_fill_keys(['minor', 'major'], 1)
-            )
+        $new_versions_intersected = array_intersect_key(
+            $new_versions,
+            array_fill_keys(['minor', 'major'], 1)
         );
+        $new_versions_strings = array_map(fn($v) => is_scalar($v) ? (string) $v : '', $new_versions_intersected);
+        $new_versions_string = join(' & ', $new_versions_strings);
 
         if (empty($new_versions_string)) {
             return;
@@ -186,13 +190,16 @@ class updates
             $notify = true;
         } else {
             \Piwigo\Core\Config::override('update_notify_last_notification', safe_unserialize(\Piwigo\Core\Config::get('update_notify_last_notification')));
-            $last_notification = \Piwigo\Core\Config::get('update_notify_last_notification')['notified_on'];
+            $lastNotifRaw = \Piwigo\Core\Config::get('update_notify_last_notification');
+            $lastNotifArr = is_array($lastNotifRaw) ? $lastNotifRaw : [];
+            $last_notification = is_scalar($lastNotifArr['notified_on'] ?? null) ? (string) $lastNotifArr['notified_on'] : '';
+            $last_notif_version = is_scalar($lastNotifArr['version'] ?? null) ? (string) $lastNotifArr['version'] : '';
 
-            if ($new_versions_string != \Piwigo\Core\Config::get('update_notify_last_notification')['version']) {
+            if ($new_versions_string != $last_notif_version) {
                 $notify = true;
             } elseif (
                 \Piwigo\Core\Config::updateNotifyReminderPeriod() > 0
-                and strtotime((string) $last_notification) < strtotime(\Piwigo\Core\Config::updateNotifyReminderPeriod().' seconds ago')
+                and strtotime($last_notification) < strtotime(\Piwigo\Core\Config::updateNotifyReminderPeriod().' seconds ago')
             ) {
                 $notify = true;
             }
@@ -249,13 +256,19 @@ class updates
         $versions_to_check = [];
         $url = PEM_URL . '/api/get_version_list.php';
         if (fetchRemote($url, $result, $get_data) and $pem_versions = @unserialize($result)) {
+            if (!is_array($pem_versions)) {
+                return false;
+            }
             if (!preg_match('/^\d+\.\d+\.\d+$/', (string) $version)) {
-                $version = $pem_versions[0]['name'];
+                $version = is_array($pem_versions[0]) && isset($pem_versions[0]['name']) ? (string) $pem_versions[0]['name'] : $version;
             }
             $branch = get_branch_from_version($version);
             foreach ($pem_versions as $pem_version) {
+                if (!is_array($pem_version) || !isset($pem_version['name'], $pem_version['id'])) {
+                    continue;
+                }
                 if (str_starts_with((string) $pem_version['name'], $branch)) {
-                    $versions_to_check[] = $pem_version['id'];
+                    $versions_to_check[] = (string) $pem_version['id'];
                 }
             }
         }
@@ -269,7 +282,7 @@ class updates
             $fs = 'fs_'.$type;
             foreach ($this->$type->$fs as $ext) {
                 if (isset($ext['extension'])) {
-                    $ext_to_check[$ext['extension']] = $type;
+                    $ext_to_check[(string) $ext['extension']] = $type;
                 }
             }
         }
@@ -300,6 +313,9 @@ class updates
             $servers = [];
 
             foreach ($pem_exts as $ext) {
+                if (!is_array($ext) || !isset($ext['extension_id'])) {
+                    continue;
+                }
                 if (isset($ext_to_check[$ext['extension_id']])) {
                     $type = $ext_to_check[$ext['extension_id']];
 
@@ -342,22 +358,26 @@ class updates
             $fs_ext = $this->$type->$fs;
 
             $ignore_list = [];
-            $need_upgrade = [];
 
-            foreach ($fs_ext as $ext_id => $fs_ext) {
-                if (isset($fs_ext['extension']) and isset($server_ext[$fs_ext['extension']])) {
-                    $ext_info = $server_ext[$fs_ext['extension']];
+            $updatesIgnored = \Piwigo\Core\Config::get('updates_ignored');
+            $updatesIgnoredArr = is_array($updatesIgnored) ? $updatesIgnored : [];
+            $typeIgnoreList = is_array($updatesIgnoredArr[$type] ?? null) ? $updatesIgnoredArr[$type] : [];
 
-                    if (!safe_version_compare($fs_ext['version'], $ext_info['revision_name'], '>=')) {
-                        if (in_array($ext_id, \Piwigo\Core\Config::get('updates_ignored')[$type])) {
+            foreach ($fs_ext as $ext_id => $fs_ext_item) {
+                if (isset($fs_ext_item['extension']) and isset($server_ext[$fs_ext_item['extension']])) {
+                    $ext_info = $server_ext[$fs_ext_item['extension']];
+
+                    if (!safe_version_compare($fs_ext_item['version'], is_scalar($ext_info['revision_name'] ?? null) ? (string) $ext_info['revision_name'] : '', '>=')) {
+                        if (in_array($ext_id, $typeIgnoreList)) {
                             $ignore_list[] = $ext_id;
                         } else {
-                            $_SESSION['extensions_need_update'][$type][$ext_id] = $ext_info['revision_name'];
+                            $_SESSION['extensions_need_update'][$type][$ext_id] = is_scalar($ext_info['revision_name'] ?? null) ? (string) $ext_info['revision_name'] : '';
                         }
                     }
                 }
             }
-            \Piwigo\Core\Config::get('updates_ignored')[$type] = $ignore_list;
+            $updatesIgnoredArr[$type] = $ignore_list;
+            \Piwigo\Core\Config::override('updates_ignored', $updatesIgnoredArr);
         }
         conf_update_param('updates_ignored', pwg_db_real_escape_string(serialize(\Piwigo\Core\Config::get('updates_ignored'))));
         return [];
@@ -370,8 +390,11 @@ class updates
             if (!empty($_SESSION['extensions_need_update'][$type])) {
                 $fs = 'fs_'.$type;
                 foreach ($this->$type->$fs as $ext_id => $fs_ext) {
+                    $need_update_version = is_scalar($_SESSION['extensions_need_update'][$type][$ext_id] ?? null)
+                        ? (string) $_SESSION['extensions_need_update'][$type][$ext_id]
+                        : '';
                     if (isset($_SESSION['extensions_need_update'][$type][$ext_id])
-                      and safe_version_compare($fs_ext['version'], $_SESSION['extensions_need_update'][$type][$ext_id], '>=')) {
+                      and safe_version_compare(is_scalar($fs_ext['version'] ?? null) ? (string) $fs_ext['version'] : '', $need_update_version, '>=')) {
                         // Extension have been upgraded
                         $this->check_extensions();
                         break;
@@ -385,11 +408,15 @@ class updates
     public function check_missing_extensions(array $missing): void
     {
         foreach ($missing as $id => $type) {
+            if (!is_string($type)) {
+                continue;
+            }
             $fs = 'fs_'.$type;
             $default = 'default_'.$type;
+            $defaultList = is_array($this->$default) ? $this->$default : [];
             foreach ($this->$type->$fs as $ext_id => $ext) {
                 if (isset($ext['extension']) and $id == $ext['extension']
-                  and !in_array($ext_id, $this->$default)
+                  and !in_array($ext_id, $defaultList)
                   and !in_array($ext['extension'], $this->merged_extensions)) {
                     $this->missing[$type][] = $ext;
                     break;
@@ -401,7 +428,7 @@ class updates
     public function get_merged_extensions(string $version): void
     {
         if (fetchRemote($this->merged_extension_url, $result)) {
-            $rows = explode("\n", $result);
+            $rows = explode("\n", is_string($result) ? $result : '');
             foreach ($rows as $row) {
                 if (preg_match('/^(\d+\.\d+): *(.*)$/', $row, $match)) {
                     if (version_compare($version, $match[1], '>=')) {
@@ -455,7 +482,8 @@ class updates
             $obsolete_list = PHPWG_ROOT_PATH.'install/obsolete.list';
         }
 
-        if (empty($page['errors'])) {
+        $pageErrors = is_array($page['errors'] ?? null) ? $page['errors'] : (is_scalar($page['errors'] ?? null) ? [$page['errors']] : []);
+        if (empty($pageErrors)) {
             $path = PHPWG_ROOT_PATH.\Piwigo\Core\Config::dataLocation().'update';
             $filename = $path.'/'.$code.'.zip';
             @mkgetdir($path);
@@ -467,12 +495,16 @@ class updates
             while (!$end) {
                 $chunk_num++;
                 if (@fetchRemote(PHPWG_URL.'/download/dlcounter.php?code='.$dl_code.'&chunk_num='.$chunk_num, $result)
-                  and $input = @unserialize($result)) {
-                    if (0 == $input['remaining']) {
+                  and $input = @unserialize(is_string($result) ? $result : '')) {
+                    if (!is_array($input)) {
                         $end = true;
-                    }
-                    if ($zip !== false) {
-                        @fwrite($zip, base64_decode((string) $input['data']));
+                    } else {
+                        if (0 == ($input['remaining'] ?? -1)) {
+                            $end = true;
+                        }
+                        if ($zip !== false) {
+                            @fwrite($zip, base64_decode((string) ($input['data'] ?? '')));
+                        }
                     }
                 } else {
                     $end = true;

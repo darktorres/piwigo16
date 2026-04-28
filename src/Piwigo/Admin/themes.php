@@ -23,7 +23,9 @@ class themes
         $this->get_fs_themes();
 
         foreach ($this->get_db_themes() as $db_theme) {
-            $this->db_themes_by_id[$db_theme['id']] = $db_theme;
+            if (is_array($db_theme) && isset($db_theme['id'])) {
+                $this->db_themes_by_id[(string) $db_theme['id']] = $db_theme;
+            }
         }
     }
 
@@ -31,7 +33,7 @@ class themes
      * Returns the maintain class of a theme
      * or build a new class with the procedural methods
      */
-    private static function build_maintain_class(string $theme_id): mixed
+    private static function build_maintain_class(string $theme_id): \Piwigo\Admin\ThemeMaintain
     {
         $file_to_include = PHPWG_THEMES_PATH.'/'.$theme_id.'/admin/maintain.inc.php';
         $classname = $theme_id.'_maintain';
@@ -52,7 +54,7 @@ class themes
      * @param string $action
      * @return list<mixed>
      */
-    public function perform_action($action, string $theme_id): array
+    public function perform_action(string $action, string $theme_id): array
     {
         if (!\Piwigo\Core\Config::enableExtensionsInstall() and 'delete' == $action) {
             die('Piwigo extensions install/update/delete system is disabled');
@@ -96,20 +98,24 @@ class themes
                     break;
                 }
 
-                $theme_maintain->activate($this->fs_themes[$theme_id]['version'], $errors);
-                $errors = trigger_change('theme_activate_errors', $errors);
+                $version = is_scalar($this->fs_themes[$theme_id]['version'] ?? '') ? (string) $this->fs_themes[$theme_id]['version'] : '';
+                $theme_maintain->activate($version, $errors);
+                $errorsRaw = trigger_change('theme_activate_errors', $errors);
+                $errors = is_array($errorsRaw) ? $errorsRaw : $errors;
 
                 if (empty($errors)) {
+                    $themeVersion = is_scalar($this->fs_themes[$theme_id]['version'] ?? '') ? (string) $this->fs_themes[$theme_id]['version'] : '';
+                    $themeName = is_scalar($this->fs_themes[$theme_id]['name'] ?? '') ? (string) $this->fs_themes[$theme_id]['name'] : '';
                     $query = '
 INSERT INTO '.THEMES_TABLE.'
   (id, version, name)
   VALUES(\''.$theme_id.'\',
-         \''.$this->fs_themes[$theme_id]['version'].'\',
-         \''.$this->fs_themes[$theme_id]['name'].'\')
+         \''.$themeVersion.'\',
+         \''.$themeName.'\')
 ;';
                     pwg_query($query);
 
-                    $activity_details['version'] = $this->fs_themes[$theme_id]['version'];
+                    $activity_details['version'] = $themeVersion;
 
                     if ($this->fs_themes[$theme_id]['mobile']) {
                         conf_update_param('mobile_theme', $theme_id);
@@ -142,7 +148,8 @@ SELECT id
                     if (pwg_db_num_rows($result) == 0) {
                         $new_theme = 'default';
                     } else {
-                        [$new_theme] = pwg_db_fetch_row($result) ?? [null];
+                        $new_theme_row = pwg_db_fetch_row($result) ?? [null];
+                        $new_theme = is_scalar($new_theme_row[0] ?? '') ? (string) ($new_theme_row[0] ?? 'default') : 'default';
                     }
 
                     $this->set_default_theme($new_theme);
@@ -205,6 +212,7 @@ DELETE
         }
 
         $parent = $this->fs_themes[$theme_id]['parent'];
+        $parent = is_scalar($parent) ? (string) $parent : '';
 
         if ('default' == $parent) {
             return null;
@@ -218,16 +226,15 @@ DELETE
     }
 
     /**
-     * @return mixed[]
+     * @return string[]
      */
-    /** @return string[] */
     public function get_children_themes(string $theme_id): array
     {
         $children = [];
 
         foreach ($this->fs_themes as $test_child) {
             if (isset($test_child['parent']) and $test_child['parent'] == $theme_id) {
-                $children[] = $test_child['name'];
+                $children[] = is_scalar($test_child['name'] ?? '') ? (string) $test_child['name'] : '';
             }
         }
 
@@ -362,9 +369,11 @@ SELECT
                     if (file_exists($screenshot_path)) {
                         $theme['screenshot'] = $screenshot_path;
                     } else {
+                        $admin_theme = userprefs_get_param('admin_theme', 'clear');
+                        $admin_theme = is_scalar($admin_theme) ? (string) $admin_theme : 'clear';
                         $theme['screenshot'] =
                           PHPWG_ROOT_PATH.'admin/themes/'
-                          .userprefs_get_param('admin_theme', 'clear')
+                          .$admin_theme
                           .'/images/missing_screenshot.png'
                         ;
                     }
@@ -419,13 +428,19 @@ SELECT
         $versions_to_check = [];
         $url = PEM_URL . '/api/get_version_list.php';
         if (fetchRemote($url, $result, $get_data) and $pem_versions = @unserialize($result)) {
+            if (!is_array($pem_versions)) {
+                return false;
+            }
             if (!preg_match('/^\d+\.\d+\.\d+$/', $version)) {
-                $version = $pem_versions[0]['name'];
+                $version = is_array($pem_versions[0]) && isset($pem_versions[0]['name']) ? (string) $pem_versions[0]['name'] : $version;
             }
             $branch = get_branch_from_version($version);
             foreach ($pem_versions as $pem_version) {
+                if (!is_array($pem_version) || !isset($pem_version['name'], $pem_version['id'])) {
+                    continue;
+                }
                 if (str_starts_with((string) $pem_version['name'], $branch)) {
-                    $versions_to_check[] = $pem_version['id'];
+                    $versions_to_check[] = (string) $pem_version['id'];
                 }
             }
         }
@@ -437,7 +452,7 @@ SELECT
         $themes_to_check = [];
         foreach ($this->fs_themes as $fs_theme) {
             if (isset($fs_theme['extension'])) {
-                $themes_to_check[] = $fs_theme['extension'];
+                $themes_to_check[] = (string) $fs_theme['extension'];
             }
         }
 
@@ -466,7 +481,9 @@ SELECT
                 return false;
             }
             foreach ($pem_themes as $theme) {
-                $this->server_themes[$theme['extension_id']] = $theme;
+                if (is_array($theme) && isset($theme['extension_id'])) {
+                    $this->server_themes[$theme['extension_id']] = $theme;
+                }
             }
             return true;
         }
@@ -483,16 +500,24 @@ SELECT
                 krsort($this->server_themes);
                 break;
             case 'revision':
-                usort($this->server_themes, $this->extension_revision_compare(...));
+                usort($this->server_themes, function (mixed $a, mixed $b): int {
+                    return $this->extension_revision_compare(is_array($a) ? $a : [], is_array($b) ? $b : []);
+                });
                 break;
             case 'name':
-                uasort($this->server_themes, $this->extension_name_compare(...));
+                uasort($this->server_themes, function (mixed $a, mixed $b): int {
+                    return $this->extension_name_compare(is_array($a) ? $a : [], is_array($b) ? $b : []);
+                });
                 break;
             case 'author':
-                uasort($this->server_themes, $this->extension_author_compare(...));
+                uasort($this->server_themes, function (mixed $a, mixed $b): int {
+                    return $this->extension_author_compare(is_array($a) ? $a : [], is_array($b) ? $b : []);
+                });
                 break;
             case 'downloads':
-                usort($this->server_themes, $this->extension_downloads_compare(...));
+                usort($this->server_themes, function (mixed $a, mixed $b): int {
+                    return $this->extension_downloads_compare(is_array($a) ? $a : [], is_array($b) ? $b : []);
+                });
                 break;
         }
     }
@@ -512,7 +537,8 @@ SELECT
               'origin' => 'piwigo_'.$action,
             ];
 
-            if ($handle = @fopen($archive, 'wb') and fetchRemote($url, $handle, $get_data)) {
+            $handle = @fopen($archive, 'wb');
+            if ($handle !== false and fetchRemote($url, $handle, $get_data)) {
                 fclose($handle);
                 include_once(PHPWG_ROOT_PATH.'admin/include/pclzip.lib.php');
                 $zip = new \PclZip($archive);
@@ -632,7 +658,7 @@ SELECT
      */
     public function extension_name_compare(array $a, array $b): int
     {
-        return strcmp(strtolower((string) $a['extension_name']), strtolower((string) $b['extension_name']));
+        return strcmp(strtolower(is_scalar($a['extension_name'] ?? '') ? (string) $a['extension_name'] : ''), strtolower(is_scalar($b['extension_name'] ?? '') ? (string) $b['extension_name'] : ''));
     }
 
     /**
@@ -641,7 +667,7 @@ SELECT
      */
     public function extension_author_compare(array $a, array $b): int
     {
-        $r = strcasecmp((string) $a['author_name'], (string) $b['author_name']);
+        $r = strcasecmp(is_scalar($a['author_name'] ?? '') ? (string) $a['author_name'] : '', is_scalar($b['author_name'] ?? '') ? (string) $b['author_name'] : '');
         if ($r == 0) {
             return $this->extension_name_compare($a, $b);
         } else {
@@ -655,7 +681,7 @@ SELECT
      */
     public function theme_author_compare(array $a, array $b): int
     {
-        $r = strcasecmp((string) $a['author'], (string) $b['author']);
+        $r = strcasecmp(is_scalar($a['author'] ?? '') ? (string) $a['author'] : '', is_scalar($b['author'] ?? '') ? (string) $b['author'] : '');
         if ($r == 0) {
             return name_compare($a, $b);
         } else {

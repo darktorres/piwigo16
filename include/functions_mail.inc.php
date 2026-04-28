@@ -157,23 +157,28 @@ function get_clean_recipients_list($data): array
                 $data = [unformat_email($data)];
             }
         } else { // array of hashmaps
-            $data = array_map(unformat_email(...), $data);
+            $data = array_map(fn(mixed $item): array => unformat_email(is_array($item) || is_string($item) ? $item : ''), $data);
         }
     } else {
         $data = explode(',', (string) $data);
-        $data = array_map(unformat_email(...), $data);
+        $data = array_map(fn(mixed $item): array => unformat_email(is_string($item) ? $item : ''), $data);
     }
 
     $existing = [];
     foreach ($data as $i => $entry) {
-        if (isset($existing[ $entry['email'] ])) {
+        /** @var array<string,mixed> $entry */
+        $entry = is_array($entry) ? $entry : [];
+        $email = (string) ($entry['email'] ?? '');
+        if (isset($existing[$email])) {
             unset($data[$i]);
         } else {
-            $existing[ $entry['email'] ] = true;
+            $existing[$email] = true;
         }
     }
 
-    return array_values($data);
+    /** @var array<array<string>> $result */
+    $result = array_values($data);
+    return $result;
 }
 
 /**
@@ -474,7 +479,7 @@ SELECT DISTINCT language
     AND '.\Piwigo\Core\Config::userFields()['email'].' <> ""';
     if (!empty($args['language_selected'])) {
         $query .= '
-    AND language = \''.$args['language_selected'].'\'';
+    AND language = \''.((string) $args['language_selected']).'\'';
     }
 
     $query .= '
@@ -486,6 +491,7 @@ SELECT DISTINCT language
     }
 
     foreach ($languages as $language) {
+        $language = (string) $language;
         // get subset of users in this group for a specific language
         $query = '
 SELECT
@@ -511,16 +517,25 @@ SELECT
         switch_lang_to($language);
 
         foreach ($users as $u) {
-            $authkey = create_user_auth_key($u['user_id'], $u['status']);
+            /** @var array<string,mixed> $u */
+            $u = is_array($u) ? $u : [];
+            $authkey = create_user_auth_key((int) $u['user_id'], is_string($u['status']) ? $u['status'] : null);
 
             $user_tpl = $tpl;
 
             if ($authkey !== false) {
-                $user_tpl['assign']['LINK'] = add_url_params($tpl['assign']['LINK'], ['auth' => $authkey['auth_key']]);
+                /** @var array<string,mixed> $assign */
+                $assign = is_array($user_tpl['assign'] ?? null) ? $user_tpl['assign'] : [];
+                $assign['LINK'] = add_url_params(is_string($assign['LINK'] ?? null) ? $assign['LINK'] : '', ['auth' => $authkey['auth_key']]);
+                $user_tpl['assign'] = $assign;
 
-                if (isset($user_tpl['assign']['IMG']['link'])) {
+                /** @var array<string,mixed> $tpl_assign */
+                $tpl_assign = is_array($tpl['assign'] ?? null) ? $tpl['assign'] : [];
+                /** @var array<string,mixed> $tpl_img */
+                $tpl_img = is_array($tpl_assign['IMG'] ?? null) ? $tpl_assign['IMG'] : [];
+                if (isset($tpl_img['link'])) {
                     $user_tpl['assign']['IMG']['link'] = add_url_params(
-                        $user_tpl['assign']['IMG']['link'],
+                        is_string($tpl_img['link']) ? $tpl_img['link'] : '',
                         ['auth' => $authkey['auth_key']]
                     );
                 }
@@ -531,7 +546,7 @@ SELECT
                 $user_args['auth_key'] = $authkey['auth_key'];
             }
 
-            $return &= pwg_mail($u['email'], $user_args, $user_tpl);
+            $return &= pwg_mail(is_string($u['email']) ? $u['email'] : '', $user_args, $user_tpl);
         }
 
         switch_lang_back();
@@ -603,7 +618,8 @@ function pwg_mail(string|array $to, array $args = [], array $tpl = []): bool
           'name' => $conf_mail['name_webmaster'],
           ];
     } else {
-        $from = unformat_email($args['from']);
+        $from_raw = $args['from'];
+        $from = unformat_email(is_array($from_raw) || is_string($from_raw) ? $from_raw : '');
     }
     $mail->setFrom($from['email'], $from['name']);
     $mail->addReplyTo($args['reply_to_mail_address'] ?? $from['email'], $args['reply_to_name'] ?? $from['name']);
@@ -755,10 +771,10 @@ function pwg_mail(string|array $to, array $args = [], array $tpl = []): bool
         // Runtime template
         if (isset($tpl['filename'])) {
             if (isset($tpl['dirname'])) {
-                $template->set_template_dir($tpl['dirname'] .'/'. $content_type);
+                $template->set_template_dir(((string) $tpl['dirname']) .'/'. $content_type);
             }
-            if ($template->smarty->templateExists($tpl['filename'] .'.tpl')) {
-                $template->set_filename($tpl['filename'], $tpl['filename'] .'.tpl');
+            if ($template->smarty->templateExists(((string) $tpl['filename']) .'.tpl')) {
+                $template->set_filename((string) $tpl['filename'], ((string) $tpl['filename']) .'.tpl');
                 if (!empty($tpl['assign'])) {
                     $template->assign($tpl['assign']);
                 }
@@ -848,7 +864,7 @@ function pwg_send_mail(mixed $result, string $to, string $subject, string $conte
             'subject' => $subject,
           ]);
     } else {
-        return $result;
+        return is_bool($result) || is_int($result) ? $result : (bool) $result;
     }
 }
 
@@ -890,10 +906,12 @@ function pwg_send_mail_test(bool $success, mixed $mail, array $args): void
 
         $file = fopen($filename, 'w+');
         if ($file !== false) {
-            if (!$success) {
+            if (!$success && $mail instanceof PHPMailer) {
                 fwrite($file, 'ERROR: ' . $mail->ErrorInfo . "\n\n");
             }
-            fwrite($file, $mail->getSentMIMEMessage());
+            if ($mail instanceof PHPMailer) {
+                fwrite($file, $mail->getSentMIMEMessage());
+            }
             fclose($file);
         }
     }

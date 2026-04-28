@@ -47,12 +47,14 @@ class languages
                     break;
                 }
 
+                $langVersion = is_scalar($this->fs_languages[$language_id]['version'] ?? '') ? (string) $this->fs_languages[$language_id]['version'] : '';
+                $langName = is_scalar($this->fs_languages[$language_id]['name'] ?? '') ? (string) $this->fs_languages[$language_id]['name'] : '';
                 $query = '
 INSERT INTO '.LANGUAGES_TABLE.'
   (id, version, name)
   VALUES(\''.$language_id.'\',
-         \''.$this->fs_languages[$language_id]['version'].'\',
-         \''.$this->fs_languages[$language_id]['name'].'\')
+         \''.$langVersion.'\',
+         \''.$langName.'\')
 ;';
                 pwg_query($query);
                 break;
@@ -182,7 +184,11 @@ UPDATE '.USER_INFOS_TABLE.'
         $result = pwg_query($query);
 
         while ($row = pwg_db_fetch_assoc($result)) {
-            $this->db_languages[ $row['id'] ] = $row['name'];
+            $id = is_scalar($row['id'] ?? null) ? (string) $row['id'] : '';
+            $name = is_scalar($row['name'] ?? null) ? (string) $row['name'] : '';
+            if ($id !== '') {
+                $this->db_languages[$id] = ['name' => $name];
+            }
         }
     }
 
@@ -201,13 +207,19 @@ UPDATE '.USER_INFOS_TABLE.'
         $versions_to_check = [];
         $url = PEM_URL . '/api/get_version_list.php';
         if (fetchRemote($url, $result, $get_data) and $pem_versions = @unserialize($result)) {
+            if (!is_array($pem_versions)) {
+                return false;
+            }
             if (!preg_match('/^\d+\.\d+\.\d+$/', $version)) {
-                $version = $pem_versions[0]['name'];
+                $version = is_array($pem_versions[0]) && isset($pem_versions[0]['name']) ? (string) $pem_versions[0]['name'] : $version;
             }
             $branch = get_branch_from_version($version);
             foreach ($pem_versions as $pem_version) {
+                if (!is_array($pem_version) || !isset($pem_version['name'], $pem_version['id'])) {
+                    continue;
+                }
                 if (str_starts_with((string) $pem_version['name'], $branch)) {
-                    $versions_to_check[] = $pem_version['id'];
+                    $versions_to_check[] = (string) $pem_version['id'];
                 }
             }
         }
@@ -219,7 +231,7 @@ UPDATE '.USER_INFOS_TABLE.'
         $languages_to_check = [];
         foreach ($this->fs_languages as $fs_language) {
             if (isset($fs_language['extension'])) {
-                $languages_to_check[] = $fs_language['extension'];
+                $languages_to_check[] = (string) $fs_language['extension'];
             }
         }
 
@@ -248,11 +260,16 @@ UPDATE '.USER_INFOS_TABLE.'
                 return false;
             }
             foreach ($pem_languages as $language) {
+                if (!is_array($language) || !isset($language['extension_name'], $language['extension_id'])) {
+                    continue;
+                }
                 if (preg_match('/^.*? \[[A-Z]{2}\]$/', (string) $language['extension_name'])) {
                     $this->server_languages[$language['extension_id']] = $language;
                 }
             }
-            @uasort($this->server_languages, $this->extension_name_compare(...));
+            @uasort($this->server_languages, function (mixed $a, mixed $b): int {
+                return $this->extension_name_compare(is_array($a) ? $a : [], is_array($b) ? $b : []);
+            });
             return true;
         }
         return false;
@@ -273,7 +290,8 @@ UPDATE '.USER_INFOS_TABLE.'
               'origin' => 'piwigo_'.$action,
             ];
 
-            if ($handle = @fopen($archive, 'wb') and fetchRemote($url, $handle, $get_data)) {
+            $handle = @fopen($archive, 'wb');
+            if ($handle !== false and fetchRemote($url, $handle, $get_data)) {
                 fclose($handle);
                 include_once(PHPWG_ROOT_PATH.'admin/include/pclzip.lib.php');
                 $zip = new \PclZip($archive);

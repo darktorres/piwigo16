@@ -31,16 +31,17 @@ if ($page['show_comments'] and isset($_POST['content'])) {
     }
 
     $comm = [
-      'author' => empty(@$_POST['author']) ? '' : trim((string) @$_POST['author']),
-      'content' => empty(@$_POST['content']) ? '' : trim((string) $_POST['content']),
-      'website_url' => empty(@$_POST['website_url']) ? '' : trim((string) @$_POST['website_url']),
-      'email' => empty(@$_POST['email']) ? '' : trim((string) @$_POST['email']),
+      'author' => empty($_POST['author'] ?? null) ? '' : trim(is_scalar($_POST['author']) ? (string) $_POST['author'] : ''),
+      'content' => empty($_POST['content'] ?? null) ? '' : trim(is_scalar($_POST['content']) ? (string) $_POST['content'] : ''),
+      'website_url' => empty($_POST['website_url'] ?? null) ? '' : trim(is_scalar($_POST['website_url']) ? (string) $_POST['website_url'] : ''),
+      'email' => empty($_POST['email'] ?? null) ? '' : trim(is_scalar($_POST['email']) ? (string) $_POST['email'] : ''),
       'image_id' => $page['image_id'],
      ];
 
     include_once(PHPWG_ROOT_PATH.'include/functions_comment.inc.php');
 
-    $comment_action = insert_user_comment($comm, @$_POST['key'], $page['errors']);
+    $post_key = $_POST['key'] ?? '';
+    $comment_action = insert_user_comment($comm, is_scalar($post_key) ? (string) $post_key : '', $page['errors']);
 
     switch ($comment_action) {
         case 'moderate':
@@ -89,13 +90,13 @@ SELECT
         $page['start'] = 0;
     }
 
-    $nb_comments = $row['nb_comments'] ?? 0;
+    $nb_comments = (int) ($row['nb_comments'] ?? 0);
 
     $navigation_bar = create_navigation_bar(
         duplicate_picture_url([], ['start']),
         $nb_comments,
         $page['start'],
-        \Piwigo\Core\Config::get('nb_comment_page'),
+        \Piwigo\Core\Config::getInt('nb_comment_page'),
         true // We want a clean URL
     );
 
@@ -109,10 +110,12 @@ SELECT
 
     if ($nb_comments > 0) {
         // comments order (get, session, conf)
-        if (!empty($_GET['comments_order']) && in_array(strtoupper((string) $_GET['comments_order']), ['ASC', 'DESC'])) {
-            pwg_set_session_var('comments_order', $_GET['comments_order']);
+        $get_comments_order = $_GET['comments_order'] ?? null;
+        if (!empty($get_comments_order) && in_array(strtoupper(is_scalar($get_comments_order) ? (string) $get_comments_order : ''), ['ASC', 'DESC'])) {
+            pwg_set_session_var('comments_order', $get_comments_order);
         }
-        $comments_order = pwg_get_session_var('comments_order', \Piwigo\Core\Config::get('comments_order'));
+        $comments_order_raw = pwg_get_session_var('comments_order', \Piwigo\Core\Config::getString('comments_order'));
+        $comments_order = is_scalar($comments_order_raw) ? (string) $comments_order_raw : 'ASC';
 
         $template->assign([
           'COMMENTS_ORDER_URL' => add_url_params(duplicate_picture_url(), ['comments_order' => ($comments_order == 'ASC' ? 'DESC' : 'ASC') ]),
@@ -137,7 +140,7 @@ SELECT
   WHERE com.image_id = '.$page['image_id'].'
     '.$validated_clause.'
   ORDER BY com.date '.$comments_order.'
-  LIMIT '.\Piwigo\Core\Config::get('nb_comment_page').' OFFSET '.$page['start'].'
+  LIMIT '.\Piwigo\Core\Config::getInt('nb_comment_page').' OFFSET '.$page['start'].'
 ;';
         $result = pwg_query($query);
 
@@ -157,12 +160,12 @@ SELECT
               [
                 'ID' => $row['id'],
                 'AUTHOR' => trigger_change('render_comment_author', $row['author']),
-                'DATE' => format_date($row['date'], ['day_name','day','month','year','time']),
+                'DATE' => format_date((string) $row['date'], ['day_name','day','month','year','time']),
                 'CONTENT' => trigger_change('render_comment_content', $row['content']),
                 'WEBSITE_URL' => $row['website_url'],
               ];
 
-            if (can_manage_comment('delete', $row['author_id'])) {
+            if (can_manage_comment('delete', (int) $row['author_id'])) {
                 $tpl_comment['U_DELETE'] = add_url_params(
                     $url_self,
                     [
@@ -172,7 +175,7 @@ SELECT
                     ]
                 );
             }
-            if (can_manage_comment('edit', $row['author_id'])) {
+            if (can_manage_comment('edit', (int) $row['author_id'])) {
                 $tpl_comment['U_EDIT'] = add_url_params(
                     $url_self,
                     [
@@ -234,7 +237,8 @@ SELECT
 
         if ('reject' == @$comment_action) {
             foreach (['content', 'author', 'website_url', 'email'] as $k) {
-                $tpl_var[strtoupper($k)] = isset($_POST[$k]) ? htmlspecialchars(stripslashes((string) @$_POST[$k])) : '';
+                $post_val = $_POST[$k] ?? null;
+                $tpl_var[strtoupper($k)] = isset($post_val) ? htmlspecialchars(stripslashes(is_scalar($post_val) ? (string) $post_val : '')) : '';
             }
         }
         $template->assign('comment_add', $tpl_var);

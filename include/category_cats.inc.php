@@ -63,12 +63,16 @@ if ('recent_cats' != $page['section']) {
   ORDER BY `rank`';
 }
 
+$nb_cats_page = \Piwigo\Core\Config::get('nb_categories_page');
 $query .= '
-  LIMIT '.\Piwigo\Core\Config::get('nb_categories_page').' OFFSET '.($page['startcat'] ?? 0).'
+  LIMIT '.(is_numeric($nb_cats_page) ? (int)$nb_cats_page : 20).' OFFSET '.($page['startcat'] ?? 0).'
 ;';
 
 $query = trigger_change('loc_begin_index_category_thumbnails_query', $query);
 
+if (!is_string($query)) {
+    $query = '';
+}
 $result = pwg_query($query);
 [$page['total_categories']] = pwg_db_fetch_row(pwg_query('SELECT FOUND_ROWS()')) ?? [null];
 
@@ -112,7 +116,7 @@ SELECT representative_picture_id
 
     if (isset($image_id)) {
         if (\Piwigo\Core\Config::representativeCacheOnSubcats() and $row['user_representative_picture_id'] != $image_id) {
-            $user_representative_updates_for[ $row['id'] ] = $image_id;
+            $user_representative_updates_for[is_scalar($row['id'] ?? null) ? (string)$row['id'] : ''] = $image_id;
         }
 
         $row['representative_picture_id'] = $image_id;
@@ -170,7 +174,7 @@ SELECT *
     $result = pwg_query($query);
     while ($row = pwg_db_fetch_assoc($result)) {
         if ($row['level'] <= $user['level']) {
-            $infos_of_image[$row['id']] = $row;
+            $infos_of_image[is_scalar($row['id'] ?? null) ? (string)$row['id'] : ''] = $row;
         } else {
             // problem: we must not display the thumbnail of a photo which has a
             // higher privacy level than user privacy level
@@ -190,7 +194,7 @@ SELECT *
                     }
 
                     if (\Piwigo\Core\Config::representativeCacheOnLevel()) {
-                        $user_representative_updates_for[ $category['id'] ] = $image_id;
+                        $user_representative_updates_for[is_scalar($category['id'] ?? null) ? (string)$category['id'] : ''] = $image_id;
                     }
 
                     $category['representative_picture_id'] = $image_id;
@@ -208,7 +212,7 @@ SELECT *
 ;';
         $result = pwg_query($query);
         while ($row = pwg_db_fetch_assoc($result)) {
-            $infos_of_image[$row['id']] = $row;
+            $infos_of_image[is_scalar($row['id'] ?? null) ? (string)$row['id'] : ''] = $row;
         }
     }
 
@@ -259,22 +263,22 @@ if (count($categories) > 0) {
 
         $category['name'] = trigger_change(
             'render_category_name',
-            $category['name'],
+            is_scalar($category['name'] ?? null) ? (string)$category['name'] : '',
             'subcatify_category_name'
         );
 
         if ($page['section'] == 'recent_cats') {
-            $name = get_cat_display_name_cache($category['uppercats'], null);
+            $name = get_cat_display_name_cache(is_scalar($category['uppercats'] ?? null) ? (string)$category['uppercats'] : '', null);
         } else {
             $name = $category['name'];
         }
 
-        $representative_infos = $infos_of_image[ $category['representative_picture_id'] ];
+        $representative_infos = is_array($infos_of_image[$category['representative_picture_id'] ?? null] ?? null) ? $infos_of_image[$category['representative_picture_id']] : [];
 
-        $tpl_var = array_merge($category, [
+        $tpl_var = array_merge(is_array($category) ? $category : [], [
               'ID'    => $category['id'] /*obsolete*/,
               'representative'   => $representative_infos,
-              'TN_ALT'   => strip_tags((string) $category['name']),
+              'TN_ALT'   => strip_tags((string) ($category['name'] ?? '')),
 
               'URL'   => make_index_url(
                   [
@@ -282,9 +286,9 @@ if (count($categories) > 0) {
                   ]
               ),
               'CAPTION_NB_IMAGES' => get_display_images_count(
-                  $category['nb_images'],
-                  $category['count_images'],
-                  $category['count_categories'],
+                  is_numeric($category['nb_images'] ?? null) ? (int)$category['nb_images'] : 0,
+                  is_numeric($category['count_images'] ?? null) ? (int)$category['count_images'] : 0,
+                  is_numeric($category['count_categories'] ?? null) ? (int)$category['count_categories'] : 0,
                   true,
                   '<br>'
               ),
@@ -300,7 +304,10 @@ if (count($categories) > 0) {
               'NAME'  => $name,
             ]);
         if (\Piwigo\Core\Config::indexNewIcon()) {
-            $tpl_var['icon_ts'] = get_icon($category['max_date_last'], $category['is_child_date_last']);
+            $tpl_var['icon_ts'] = get_icon(
+                is_scalar($category['max_date_last'] ?? null) ? (string)$category['max_date_last'] : null,
+                (bool)($category['is_child_date_last'] ?? false)
+            );
         }
 
         if (\Piwigo\Core\Config::get('display_fromto')) {
@@ -335,9 +342,9 @@ if (count($categories) > 0) {
     if ($page['total_categories'] > \Piwigo\Core\Config::get('nb_categories_page')) {
         $page['cats_navigation_bar'] = create_navigation_bar(
             duplicate_index_url([], ['startcat']),
-            $page['total_categories'],
+            is_numeric($page['total_categories']) ? (int)$page['total_categories'] : 0,
             $page['startcat'],
-            \Piwigo\Core\Config::get('nb_categories_page'),
+            is_numeric(\Piwigo\Core\Config::get('nb_categories_page')) ? (int)\Piwigo\Core\Config::get('nb_categories_page') : 20,
             true,
             'startcat'
         );

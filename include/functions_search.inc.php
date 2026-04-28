@@ -701,7 +701,7 @@ SELECT
     // tags
     //
     $tags_fields = is_array($search_fields['tags'] ?? null) ? $search_fields['tags'] : [];
-    $tags_words = array_map(static fn (mixed $v): int => (int) $v, is_array($tags_fields['words'] ?? null) ? $tags_fields['words'] : []);
+    $tags_words = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($tags_fields['words'] ?? null) ? $tags_fields['words'] : []);
     $tags_mode = is_scalar($tags_fields['mode'] ?? null) ? (string) $tags_fields['mode'] : 'AND';
     if (isset($search_fields['tags']) and !empty($tags_words) and $tags_filter['access']) {
         $has_filters_filled = true;
@@ -731,8 +731,9 @@ SELECT
     if (!empty($image_ids_for_filter)) {
         /** @var array<int, array<string>> $typed_filter_values */
         $typed_filter_values = array_map(
-            static function (mixed $v): array {
-                return array_map(static fn (mixed $id): string => (string) $id, is_array($v) ? $v : []);
+            /** @param array<mixed> $v */
+            static function (array $v): array {
+                return array_map(static fn (mixed $id): string => is_scalar($id) ? (string) $id : '', $v);
             },
             array_values($image_ids_for_filter)
         );
@@ -1127,6 +1128,9 @@ class QMultiToken implements \Stringable
         return $s;
     }
 
+    /**
+     * @param-out null $scope
+     */
     private function push(string &$token, int &$modifier, ?\Piwigo\Search\QSearchScope &$scope): void
     {
         if (strlen((string) $token) || (isset($scope) && $scope->nullable)) {
@@ -1147,7 +1151,7 @@ class QMultiToken implements \Stringable
     * @param int $qi the character index in $q where to start parsing
     * @param int $level the depth from root in the tree (number of opened and unclosed opening brackets)
     */
-    protected function parse_expression(string $q, int &$qi, int $level, ?\Piwigo\Search\QExpression $root): void
+    protected function parse_expression(string $q, int &$qi, int $level, \Piwigo\Search\QExpression $root): void
     {
         $crt_token = '';
         $crt_modifier = 0;
@@ -1179,7 +1183,7 @@ class QMultiToken implements \Stringable
                         }
                         break;
                     case ':':
-                        $scope = $root !== null ? ($root->scopes[strtolower((string) $crt_token)] ?? null) : null;
+                        $scope = $root->scopes[strtolower((string) $crt_token)] ?? null;
                         if (!isset($scope) || isset($crt_scope)) { // white space
                             $this->push($crt_token, $crt_modifier, $crt_scope);
                         } else {
@@ -1366,18 +1370,12 @@ class QMultiToken implements \Stringable
     }
 }
 
-class QExpression extends \Piwigo\Search\QMultiToken
+class QExpression extends \Piwigo\Search\QExpression
 {
-    /** @var array<string, \Piwigo\Search\QSearchScope> */
-    public array $scopes = [];
-    /** @var array<\Piwigo\Search\QSingleToken> */
-    public array $stokens = [];
-    /** @var int[] */
-    public array $stoken_modifiers = [];
-
     /** @param array<\Piwigo\Search\QSearchScope> $scopes */
     public function __construct(string $q, array $scopes)
     {
+        // replicate parent constructor logic using our extended parse_expression
         foreach ($scopes as $scope) {
             $this->scopes[$scope->id] = $scope;
             foreach ($scope->aliases as $alias) {
@@ -1388,10 +1386,10 @@ class QExpression extends \Piwigo\Search\QMultiToken
         $this->parse_expression($q, $i, 0, $this);
         //manipulate the tree so that 'a OR b c' is the same as 'b c OR a'
         $this->check_operator_priority();
-        $this->build_single_tokens($this, 0);
+        $this->build_single_tokens_impl($this, 0);
     }
 
-    private function build_single_tokens(\Piwigo\Search\QMultiToken $expr, int $this_is_not): void
+    private function build_single_tokens_impl(\Piwigo\Search\QMultiToken $expr, int $this_is_not): void
     {
         for ($i = 0; $i < count($expr->tokens); $i++) {
             $token = $expr->tokens[$i];
@@ -1409,7 +1407,7 @@ class QExpression extends \Piwigo\Search\QMultiToken
                 }
                 $this->stoken_modifiers[] = $modifier;
             } elseif ($token instanceof \Piwigo\Search\QMultiToken) {
-                $this->build_single_tokens($token, $crt_is_not);
+                $this->build_single_tokens_impl($token, $this_is_not);
             }
         }
     }
@@ -1565,7 +1563,7 @@ function qsearch_get_images(\Piwigo\Search\QExpression $expr, \Piwigo\Search\QRe
             default:
                 // allow plugins to have their own scope with columns added in db by themselves
                 $clauses_result = trigger_change('qsearch_get_images_sql_scopes', $clauses, $token, $expr);
-                $clauses = array_map(static fn (mixed $c): string => (string) $c, is_array($clauses_result) ? $clauses_result : []);
+                $clauses = array_map(static fn (mixed $c): string => is_scalar($c) ? (string) $c : '', is_array($clauses_result) ? $clauses_result : []);
                 break;
         }
         if (!empty($clauses)) {
@@ -1946,7 +1944,7 @@ function get_quick_search_results_no_cache(string $q, array $options): array
     $search_results_changed = trigger_change('qsearch_results', $search_results, $expression, $qsr);
     $search_results = is_array($search_results_changed) ? $search_results_changed : $search_results;
     if (isset($search_results['items'])) {
-        $extra_items = array_map('intval', is_array($search_results['items']) ? $search_results['items'] : []);
+        $extra_items = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($search_results['items']) ? $search_results['items'] : []);
         $ids = array_merge($ids, $extra_items);
     }
 

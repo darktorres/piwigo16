@@ -105,8 +105,9 @@ SELECT *
 
     $tags = [];
     while ($row = pwg_db_fetch_assoc($result)) {
-        if (isset($tag_counters[ $row['id'] ])) {
-            $row['counter'] = intval($tag_counters[ $row['id'] ]);
+        $row_id = is_numeric($row['id']) ? (int) $row['id'] : (is_scalar($row['id']) ? (string) $row['id'] : '');
+        if (isset($tag_counters[$row_id])) {
+            $row['counter'] = intval($tag_counters[$row_id]);
             $row['name_raw'] = $row['name'];
             $row['name'] = trigger_change('render_tag_name', $row['name'], $row);
             $tags[] = $row;
@@ -164,7 +165,9 @@ function add_level_to_tags(array $tags): array
     $total_count = 0;
 
     foreach ($tags as $tag) {
-        $total_count += $tag['counter'];
+        if (is_array($tag)) {
+            $total_count += is_numeric($tag['counter']) ? (int) $tag['counter'] : 0;
+        }
     }
 
     // average count of available tags will determine the level of each tag
@@ -180,11 +183,14 @@ function add_level_to_tags(array $tags): array
 
     // display sorted tags
     foreach ($tags as &$tag) {
+        if (!is_array($tag)) {
+            continue;
+        }
         $tag['level'] = 1;
 
         // based on threshold, determine current tag level
         for ($i = \Piwigo\Core\Config::tagsLevels() - 1; $i >= 1; $i--) {
-            if ($tag['counter'] > $threshold_of_level[$i]) {
+            if ((is_numeric($tag['counter']) ? (int) $tag['counter'] : 0) > $threshold_of_level[$i]) {
                 $tag['level'] = $i + 1;
                 break;
             }
@@ -250,7 +256,7 @@ SELECT id
     }
     $query .= "\n".(empty($order_by) ? \Piwigo\Core\Config::orderBy() : $order_by);
 
-    return query2array($query, null, 'id');
+    return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, query2array($query, null, 'id'));
 }
 
 /**
@@ -275,7 +281,7 @@ function get_common_tags(array $items, int $max_tags, array $excluded_tag_ids = 
 SELECT t.*, count(*) AS counter
   FROM '.IMAGE_TAG_TABLE.'
     INNER JOIN '.TAGS_TABLE.' t ON tag_id = id
-  WHERE image_id IN ('.implode(',', $items).')';
+  WHERE image_id IN ('.implode(',', array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $items)).')';
     if (!empty($excluded_tag_ids)) {
         $query .= '
     AND tag_id NOT IN ('.implode(',', $excluded_tag_ids).')';

@@ -38,14 +38,15 @@ function rate_picture(int $image_id, float|int|null $rate): array|false
         return false;
     }
 
-    $ip_components = explode('.', (string) $_SERVER['REMOTE_ADDR']);
+    $ip_components = explode('.', is_scalar($_SERVER['REMOTE_ADDR']) ? (string) $_SERVER['REMOTE_ADDR'] : '');
     if (count($ip_components) > 3) {
         array_pop($ip_components);
     }
     $anonymous_id = implode('.', $ip_components);
 
     if ($user_anonymous) {
-        $save_anonymous_id = pwg_get_cookie_var('anonymous_rater', $anonymous_id);
+        $save_anonymous_id_raw = pwg_get_cookie_var('anonymous_rater', $anonymous_id);
+        $save_anonymous_id = is_scalar($save_anonymous_id_raw) ? (string) $save_anonymous_id_raw : $anonymous_id;
 
         if ($anonymous_id != $save_anonymous_id) { // client has changed his IP adress or he's trying to fool us
             $query = '
@@ -120,7 +121,7 @@ INSERT
 function update_rating_score(int|false $element_id = false): array
 {
     if (($alt_result = trigger_change('update_rating_score', false, $element_id)) !== false) {
-        return $alt_result;
+        return is_array($alt_result) ? $alt_result : [];
     }
 
     $query = '
@@ -137,9 +138,10 @@ SELECT element_id,
 
     $result = pwg_query($query);
     while ($row = pwg_db_fetch_assoc($result)) {
-        $all_rates_count += $row['rcount'];
-        $all_rates_avg += $row['rsum'];
-        $by_item[$row['element_id']] = $row;
+        $all_rates_count += (int) $row['rcount'];
+        $all_rates_avg += (float) $row['rsum'];
+        $element_id_key = is_numeric($row['element_id']) ? (int) $row['element_id'] : (is_scalar($row['element_id']) ? (string) $row['element_id'] : 0);
+        $by_item[$element_id_key] = $row;
     }
 
     if ($all_rates_count > 0) {
@@ -149,13 +151,15 @@ SELECT element_id,
 
     $updates = [];
     foreach ($by_item as $id => $rate_summary) {
-        $score = ($item_ratecount_avg * $all_rates_avg + $rate_summary['rsum']) / ($item_ratecount_avg + $rate_summary['rcount']);
+        $rsum = (float) $rate_summary['rsum'];
+        $rcount = (int) $rate_summary['rcount'];
+        $score = ($item_ratecount_avg * $all_rates_avg + $rsum) / ($item_ratecount_avg + $rcount);
         $score = round($score, 2);
         if ($id == $element_id) {
             $return = [
               'score' => $score,
-              'average' => round($rate_summary['rsum'] / $rate_summary['rcount'], 2),
-              'count' => $rate_summary['rcount'],
+              'average' => $rcount > 0 ? round($rsum / $rcount, 2) : 0.0,
+              'count' => $rcount,
               ];
         }
         $updates[] = [ 'id' => $id, 'rating_score' => $score ];

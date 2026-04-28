@@ -21,10 +21,18 @@ function update_cats_with_filtered_data(array &$cats): void
     if ($filter['enabled']) {
         $upd_fields = ['date_last', 'max_date_last', 'count_images', 'count_categories', 'nb_images'];
 
-        foreach ($cats as $cat_id => $category) {
+        $filter_categories = is_array($filter['categories']) ? $filter['categories'] : [];
+        foreach ($cats as $cat_id => &$category) {
+            if (!is_array($category)) {
+                continue;
+            }
+            $cat_id_val = is_numeric($category['id']) ? (int) $category['id'] : (is_scalar($category['id']) ? (string) $category['id'] : '');
+            $raw_cat_data = $filter_categories[$cat_id_val] ?? null;
+            $cat_data = is_array($raw_cat_data) ? $raw_cat_data : [];
             foreach ($upd_fields as $upd_field) {
-                $cats[$cat_id][$upd_field] = $filter['categories'][$category['id']][$upd_field];
+                $category[$upd_field] = $cat_data[$upd_field] ?? null;
             }
         }
+        unset($category);
     }
 }

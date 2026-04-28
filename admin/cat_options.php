@@ -39,26 +39,30 @@ if (!empty($_POST)) {
 
 if (isset($_POST['falsify'])
     and isset($_POST['cat_true'])
-    and count($_POST['cat_true']) > 0) {
-    switch ($_GET['section']) {
+    and count(is_array($_POST['cat_true']) ? $_POST['cat_true'] : []) > 0) {
+    /** @var int[] $cat_true */
+    $cat_true = array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($_POST['cat_true']) ? $_POST['cat_true'] : []);
+    $section_raw = $_GET['section'] ?? null;
+    $current_section = is_scalar($section_raw) ? (string) $section_raw : '';
+    switch ($current_section) {
         case 'comments':
             {
                 $query = '
 UPDATE '.CATEGORIES_TABLE.'
   SET commentable = \'false\'
-  WHERE id IN ('.implode(',', $_POST['cat_true']).')
+  WHERE id IN ('.implode(',', $cat_true).')
 ;';
                 pwg_query($query);
                 break;
             }
         case 'visible':
             {
-                set_cat_visible($_POST['cat_true'], 'false');
+                set_cat_visible($cat_true, 'false');
                 break;
             }
         case 'status':
             {
-                set_cat_status($_POST['cat_true'], 'private');
+                set_cat_status($cat_true, 'private');
                 break;
             }
         case 'representative':
@@ -66,48 +70,52 @@ UPDATE '.CATEGORIES_TABLE.'
                 $query = '
 UPDATE '.CATEGORIES_TABLE.'
   SET representative_picture_id = NULL
-  WHERE id IN ('.implode(',', $_POST['cat_true']).')
+  WHERE id IN ('.implode(',', $cat_true).')
 ;';
                 pwg_query($query);
                 break;
             }
     }
 
-    pwg_activity('album', $_POST['cat_true'], 'edit', ['section' => $_GET['section'], 'action' => 'falsify']);
+    pwg_activity('album', $cat_true, 'edit', ['section' => $current_section, 'action' => 'falsify']);
 } elseif (isset($_POST['trueify'])
          and isset($_POST['cat_false'])
-         and count($_POST['cat_false']) > 0) {
-    switch ($_GET['section']) {
+         and count(is_array($_POST['cat_false']) ? $_POST['cat_false'] : []) > 0) {
+    /** @var int[] $cat_false */
+    $cat_false = array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($_POST['cat_false']) ? $_POST['cat_false'] : []);
+    $section_raw = $_GET['section'] ?? null;
+    $current_section = is_scalar($section_raw) ? (string) $section_raw : '';
+    switch ($current_section) {
         case 'comments':
             {
                 $query = '
 UPDATE '.CATEGORIES_TABLE.'
   SET commentable = \'true\'
-  WHERE id IN ('.implode(',', $_POST['cat_false']).')
+  WHERE id IN ('.implode(',', $cat_false).')
 ;';
                 pwg_query($query);
                 break;
             }
         case 'visible':
             {
-                set_cat_visible($_POST['cat_false'], 'true');
+                set_cat_visible($cat_false, 'true');
                 break;
             }
         case 'status':
             {
-                set_cat_status($_POST['cat_false'], 'public');
+                set_cat_status($cat_false, 'public');
                 break;
             }
         case 'representative':
             {
                 // theoretically, all categories in $_POST['cat_false'] contain at
                 // least one element, so Piwigo can find a representant.
-                set_random_representant($_POST['cat_false']);
+                set_random_representant($cat_false);
                 break;
             }
     }
 
-    pwg_activity('album', $_POST['cat_false'], 'edit', ['section' => $_GET['section'], 'action' => 'trueify']);
+    pwg_activity('album', $cat_false, 'edit', ['section' => $current_section, 'action' => 'trueify']);
 }
 
 // +-----------------------------------------------------------------------+
@@ -121,7 +129,8 @@ $template->set_filenames(
     ]
 );
 
-$page['section'] = $_GET['section'] ?? 'status';
+$get_section = $_GET['section'] ?? null;
+$page['section'] = is_scalar($get_section) ? (string) $get_section : 'status';
 $base_url = PHPWG_ROOT_PATH.'admin.php?page=cat_options&amp;section=';
 
 $template->assign(

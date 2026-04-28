@@ -47,8 +47,8 @@ function get_std_sql_where_restrict_filter(
  * @param string $end (mysql datetime format)
  * @return int|array|null
  */
-/** @return array<mixed>|null */
-function custom_notification_query(string $action, string $type, ?string $start = null, ?string $end = null): ?array
+/** @return array<mixed>|int|string|float|null */
+function custom_notification_query(string $action, string $type, ?string $start = null, ?string $end = null): array|int|string|float|null
 {
     global $user;
 
@@ -217,11 +217,12 @@ function nb_new_comments(?string $start = null, ?string $end = null): mixed
  *
  * @param string $start (mysql datetime format)
  * @param string $end (mysql datetime format)
- * @return int[] comment ids
+ * @return array<mixed> comment ids
  */
 function new_comments($start = null, $end = null): array
 {
-    return custom_notification_query('info', 'new_comments', $start, $end) ?? [];
+    $result = custom_notification_query('info', 'new_comments', $start, $end);
+    return is_array($result) ? $result : [];
 }
 
 /**
@@ -254,11 +255,12 @@ function nb_new_elements(?string $start = null, ?string $end = null): mixed
  *
  * @param string $start (mysql datetime format)
  * @param string $end (mysql datetime format)
- * @return int[] photos ids
+ * @return array<mixed> photos ids
  */
 function new_elements($start = null, $end = null): array
 {
-    return custom_notification_query('info', 'new_elements', $start, $end) ?? [];
+    $result = custom_notification_query('info', 'new_elements', $start, $end);
+    return is_array($result) ? $result : [];
 }
 
 /**
@@ -278,11 +280,12 @@ function nb_updated_categories(?string $start = null, ?string $end = null): mixe
  *
  * @param string $start (mysql datetime format)
  * @param string $end (mysql datetime format)
- * @return int[] categories ids
+ * @return array<mixed> categories ids
  */
 function updated_categories($start = null, $end = null): array
 {
-    return custom_notification_query('info', 'updated_categories', $start, $end) ?? [];
+    $result = custom_notification_query('info', 'updated_categories', $start, $end);
+    return is_array($result) ? $result : [];
 }
 
 /**
@@ -302,11 +305,12 @@ function nb_new_users(?string $start = null, ?string $end = null): mixed
  *
  * @param string $start (mysql datetime format)
  * @param string $end (mysql datetime format)
- * @return int[] user ids
+ * @return array<mixed> user ids
  */
 function new_users($start = null, $end = null): array
 {
-    return custom_notification_query('info', 'new_users', $start, $end) ?? [];
+    $result = custom_notification_query('info', 'new_users', $start, $end);
+    return is_array($result) ? $result : [];
 }
 
 /**
@@ -376,18 +380,20 @@ function news(?string $start = null, ?string $end = null, bool $exclude_img_cats
     }
 
     if (!$exclude_img_cats) {
+        $nb_elements = nb_new_elements($start, $end);
         add_news_line(
             $news,
-            nb_new_elements($start, $end),
+            is_numeric($nb_elements) ? (int) $nb_elements : 0,
             '%d new photo',
             '%d new photos',
             add_url_params(make_index_url(['section' => 'recent_pics']), $add_url_params),
             $add_url
         );
 
+        $nb_cats = nb_updated_categories($start, $end);
         add_news_line(
             $news,
-            nb_updated_categories($start, $end),
+            is_numeric($nb_cats) ? (int) $nb_cats : 0,
             '%d album updated',
             '%d albums updated',
             add_url_params(make_index_url(['section' => 'recent_cats']), $add_url_params),
@@ -395,9 +401,10 @@ function news(?string $start = null, ?string $end = null, bool $exclude_img_cats
         );
     }
 
+    $nb_comments = nb_new_comments($start, $end);
     add_news_line(
         $news,
-        nb_new_comments($start, $end),
+        is_numeric($nb_comments) ? (int) $nb_comments : 0,
         '%d new comment',
         '%d new comments',
         add_url_params(get_root_url().'comments.php', $add_url_params),
@@ -405,18 +412,20 @@ function news(?string $start = null, ?string $end = null, bool $exclude_img_cats
     );
 
     if (is_admin()) {
+        $nb_unvalidated = nb_unvalidated_comments($start, $end);
         add_news_line(
             $news,
-            nb_unvalidated_comments($start, $end),
+            is_numeric($nb_unvalidated) ? (int) $nb_unvalidated : 0,
             '%d comment to validate',
             '%d comments to validate',
             get_root_url().'admin.php?page=comments',
             $add_url
         );
 
+        $nb_users = nb_new_users($start, $end);
         add_news_line(
             $news,
-            nb_new_users($start, $end),
+            is_numeric($nb_users) ? (int) $nb_users : 0,
             '%d new user',
             '%d new users',
             get_root_url().'admin.php?page=user_list',
@@ -424,6 +433,7 @@ function news(?string $start = null, ?string $end = null, bool $exclude_img_cats
         );
     }
 
+    /** @var string[] $news */
     return $news;
 }
 
@@ -461,13 +471,14 @@ SELECT
     $dates = query2array($query);
 
     for ($i = 0; $i < count($dates); $i++) {
+        $date_available = (string) $dates[$i]['date_available'];
         if ($max_elements > 0) { // get some thumbnails ...
             $query = '
 SELECT DISTINCT i.*
   FROM '.IMAGES_TABLE.' i
     INNER JOIN '.IMAGE_CATEGORY_TABLE.' AS ic ON id=image_id
   '.$where_sql.'
-    AND date_available=\''.$dates[$i]['date_available'].'\'
+    AND date_available=\''.$date_available.'\'
   ORDER BY '.DB_RANDOM_FUNCTION.'()
   LIMIT '.$max_elements.'
 ;';
@@ -483,7 +494,7 @@ SELECT
     INNER JOIN '.IMAGE_CATEGORY_TABLE.' AS ic ON i.id=image_id
     INNER JOIN '.CATEGORIES_TABLE.' c ON c.id=category_id
   '.$where_sql.'
-    AND date_available=\''.$dates[$i]['date_available'].'\'
+    AND date_available=\''.$date_available.'\'
   GROUP BY category_id, c.uppercats
   ORDER BY img_count DESC
   LIMIT '.$max_cats.'
@@ -510,9 +521,9 @@ SELECT
 function get_recent_post_dates_array(array $args): array
 {
     return get_recent_post_dates(
-        (empty($args['max_dates']) ? 3 : $args['max_dates']),
-        (empty($args['max_elements']) ? 3 : $args['max_elements']),
-        (empty($args['max_cats']) ? 3 : $args['max_cats'])
+        (empty($args['max_dates']) ? 3 : (int) $args['max_dates']),
+        (empty($args['max_elements']) ? 3 : (int) $args['max_elements']),
+        (empty($args['max_cats']) ? 3 : (int) $args['max_cats'])
     ) ?? [];
 }
 
@@ -535,14 +546,18 @@ function get_html_description_recent_post_date(array $date_detail, ?string $auth
 
     $description .=
           '<li>'
-          .l10n_dec('%d new photo', '%d new photos', $date_detail['nb_elements'])
+          .l10n_dec('%d new photo', '%d new photos', (int) $date_detail['nb_elements'])
           .' ('
           .'<a href="'.add_url_params(make_index_url(['section' => 'recent_pics']), $add_url_params).'">'
             .l10n('Recent photos').'</a>'
           .')'
           .'</li><br>';
 
-    foreach ($date_detail['elements'] as $element) {
+    /** @var array<mixed> $elements */
+    $elements = is_array($date_detail['elements'] ?? null) ? $date_detail['elements'] : [];
+    foreach ($elements as $element) {
+        /** @var array<mixed> $element */
+        $element = is_array($element) ? $element : [];
         $tn_src_raw = DerivativeImage::thumb_url($element);
         $tn_src = is_string($tn_src_raw) ? $tn_src_raw : '';
         $description .= '<a href="'.
@@ -561,16 +576,20 @@ function get_html_description_recent_post_date(array $date_detail, ?string $auth
 
     $description .=
           '<li>'
-          .l10n_dec('%d album updated', '%d albums updated', $date_detail['nb_cats'])
+          .l10n_dec('%d album updated', '%d albums updated', (int) $date_detail['nb_cats'])
           .'</li>';
 
     $description .= '<ul>';
-    foreach ($date_detail['categories'] as $cat) {
+    /** @var array<mixed> $categories */
+    $categories = is_array($date_detail['categories'] ?? null) ? $date_detail['categories'] : [];
+    foreach ($categories as $cat) {
+        /** @var array<mixed> $cat */
+        $cat = is_array($cat) ? $cat : [];
         $description .=
               '<li>'
-              .get_cat_display_name_cache($cat['uppercats'], '', false, null, $auth_key)
+              .get_cat_display_name_cache((string) $cat['uppercats'], '', false, null, $auth_key)
               .' ('.
-              l10n_dec('%d new photo', '%d new photos', $cat['img_count']).')'
+              l10n_dec('%d new photo', '%d new photos', (int) $cat['img_count']).')'
               .'</li>';
     }
     $description .= '</ul>';
@@ -590,7 +609,7 @@ function get_title_recent_post_date(array $date_detail): string
 {
     global $lang;
 
-    $title = l10n_dec('%d new photo', '%d new photos', $date_detail['nb_elements']);
+    $title = l10n_dec('%d new photo', '%d new photos', (int) $date_detail['nb_elements']);
 
     if (preg_match('/^\d+-(\d+)-(\d+) /', (string) $date_detail['date_available'], $matches)) {
         $title .= ' ('.$lang['month'][(int)$matches[1]].' '.$matches[2].')';

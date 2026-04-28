@@ -38,7 +38,7 @@ $page['start'] = $page['startcat'] = 0;
 // default apache implementation it is not set
 if (\Piwigo\Core\Config::questionMarkInUrls() == false and
      isset($_SERVER['PATH_INFO']) and !empty($_SERVER['PATH_INFO'])) {
-    $rewritten = $_SERVER['PATH_INFO'];
+    $rewritten = is_scalar($_SERVER['PATH_INFO']) ? (string) $_SERVER['PATH_INFO'] : '';
     $rewritten = str_replace('//', '/', $rewritten);
     $path_count = count(explode('/', $rewritten));
     $page['root_path'] = PHPWG_ROOT_PATH.str_repeat('../', $path_count - 1);
@@ -163,11 +163,14 @@ if (pwg_get_session_var('image_order', 0) > 0) {
     // and that we are displaying images related to a tag.
     //
     // In case of incompatibility, the session stored image_order is removed.
-    if ($orders[$image_order_id][2]) {
+    $image_order_id_int = is_numeric($image_order_id) ? (int) $image_order_id : 0;
+    $order_entry = is_array($orders[$image_order_id_int]) ? $orders[$image_order_id_int] : [];
+    if ($order_entry[2] ?? false) {
+        $order_col = is_scalar($order_entry[1] ?? null) ? (string) $order_entry[1] : '';
         \Piwigo\Core\Config::override('order_by', str_replace(
             'ORDER BY ',
-            'ORDER BY '.$orders[$image_order_id][1].',',
-            \Piwigo\Core\Config::get('order_by')
+            'ORDER BY '.$order_col.',',
+            \Piwigo\Core\Config::getString('order_by')
         ));
         $page['super_order_by'] = true;
     } else {
@@ -399,7 +402,7 @@ SELECT image_id
             \Piwigo\Core\Config::override('order_by', str_replace(
                 'ORDER BY ',
                 'ORDER BY date_available DESC,',
-                \Piwigo\Core\Config::get('order_by')
+                \Piwigo\Core\Config::getString('order_by')
             ));
         }
 

@@ -33,14 +33,17 @@ function get_cat_display_name(array $cat_informations, ?string $url = ''): strin
     $is_first = true;
 
     foreach ($cat_informations as $cat) {
-        is_array($cat) or trigger_error(
-            'get_cat_display_name wrong type for category ',
-            E_USER_WARNING
-        );
+        if (!is_array($cat)) {
+            trigger_error(
+                'get_cat_display_name wrong type for category ',
+                E_USER_WARNING
+            );
+            continue;
+        }
 
         $cat['name'] = trigger_change(
             'render_category_name',
-            $cat['name'],
+            is_scalar($cat['name']) ? (string) $cat['name'] : '',
             'get_cat_display_name'
         );
 
@@ -51,7 +54,7 @@ function get_cat_display_name(array $cat_informations, ?string $url = ''): strin
         }
 
         if (!isset($url)) {
-            $output .= $cat['name'];
+            $output .= is_scalar($cat['name']) ? (string) $cat['name'] : '';
         } elseif ($url == '') {
             $output .= '<a href="'
                   .make_index_url(
@@ -60,10 +63,10 @@ function get_cat_display_name(array $cat_informations, ?string $url = ''): strin
                         ]
                   )
                   .'">';
-            $output .= $cat['name'].'</a>';
+            $output .= (is_scalar($cat['name']) ? (string) $cat['name'] : '').'</a>';
         } else {
-            $output .= '<a href="'.PHPWG_ROOT_PATH.$url.$cat['id'].'">';
-            $output .= $cat['name'].'</a>';
+            $output .= '<a href="'.PHPWG_ROOT_PATH.$url.(is_scalar($cat['id']) ? (string) $cat['id'] : '').'">';
+            $output .= (is_scalar($cat['name']) ? (string) $cat['name'] : '').'</a>';
         }
     }
     return $output;
@@ -113,10 +116,13 @@ SELECT id, name, permalink
     $is_first = true;
     foreach (explode(',', $uppercats) as $category_id) {
         $cat = $cache['cat_names'][$category_id];
+        if (!is_array($cat)) {
+            continue;
+        }
 
         $cat['name'] = trigger_change(
             'render_category_name',
-            $cat['name'],
+            is_scalar($cat['name']) ? (string) $cat['name'] : '',
             'get_cat_display_name_cache'
         );
 
@@ -126,8 +132,9 @@ SELECT id, name, permalink
             $output .= '<span>'.\Piwigo\Core\Config::levelSeparator().'</span>';
         }
 
+        $cat_name = is_scalar($cat['name']) ? (string) $cat['name'] : '';
         if (!isset($url) or $single_link) {
-            $output .= $cat['name'];
+            $output .= $cat_name;
         } elseif ($url == '') {
             $output .= '
 <a href="'
@@ -139,10 +146,10 @@ SELECT id, name, permalink
                 ),
                 $add_url_params
             )
-            .'">'.$cat['name'].'</a>';
+            .'">'.$cat_name.'</a>';
         } else {
             $output .= '
-<a href="'.PHPWG_ROOT_PATH.$url.$category_id.'">'.$cat['name'].'</a>';
+<a href="'.PHPWG_ROOT_PATH.$url.$category_id.'">'.$cat_name.'</a>';
         }
     }
 
@@ -163,7 +170,8 @@ SELECT id, name, permalink
 function get_cat_display_name_from_id($cat_id, $url = ''): string
 {
     $cat_info = get_cat_info($cat_id);
-    return get_cat_display_name($cat_info['upper_names'] ?? [], $url);
+    $upper_names = $cat_info['upper_names'] ?? [];
+    return get_cat_display_name(is_array($upper_names) ? $upper_names : [], $url);
 }
 
 /**
@@ -216,7 +224,7 @@ function render_comment_content($content): string|null
  */
 function name_compare(array $a, array $b): int
 {
-    return strcmp(strtolower((string) $a['name']), strtolower((string) $b['name']));
+    return strcmp(strtolower(is_scalar($a['name']) ? (string) $a['name'] : ''), strtolower(is_scalar($b['name']) ? (string) $b['name'] : ''));
 }
 
 /**
@@ -231,12 +239,15 @@ function tag_alpha_compare(array $a, array $b): int
     global $cache;
 
     foreach ([$a, $b] as $tag) {
-        if (!isset($cache[__FUNCTION__][ $tag['name'] ])) {
-            $cache[__FUNCTION__][ $tag['name'] ] = pwg_transliterate($tag['name']);
+        $tag_name = is_scalar($tag['name']) ? (string) $tag['name'] : '';
+        if (!isset($cache[__FUNCTION__][$tag_name])) {
+            $cache[__FUNCTION__][$tag_name] = pwg_transliterate($tag_name);
         }
     }
 
-    return strcmp((string) $cache[__FUNCTION__][ $a['name'] ], (string) $cache[__FUNCTION__][ $b['name'] ]);
+    $a_name = is_scalar($a['name']) ? (string) $a['name'] : '';
+    $b_name = is_scalar($b['name']) ? (string) $b['name'] : '';
+    return strcmp((string) $cache[__FUNCTION__][$a_name], (string) $cache[__FUNCTION__][$b_name]);
 }
 
 /**

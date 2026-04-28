@@ -147,7 +147,7 @@ if (!empty($get_comment_id_filter)) {
     if (!is_admin()) {
         $login_url =
           get_root_url().'identification.php?redirect='
-          .urlencode(urlencode($_SERVER['REQUEST_URI']))
+          .urlencode(urlencode(is_string($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : ''))
         ;
         redirect($login_url);
     }
@@ -201,7 +201,7 @@ foreach ($actions as $loop_action) {
     if (isset($_GET[$loop_action])) {
         $action = $loop_action;
         check_input_parameter($action, $_GET, false, PATTERN_ID);
-        $comment_id = $_GET[$action];
+        $comment_id = is_numeric($_GET[$action]) ? (int)$_GET[$action] : 0;
         break;
     }
 }
@@ -237,16 +237,24 @@ if (isset($action)) {
                     ),
                     input_string('key', null, $_POST) ?? ''
                 );
-
                 switch ($comment_action) {
                     case 'moderate':
+                        if (!is_array($_SESSION['page_infos'] ?? null)) {
+                            $_SESSION['page_infos'] = [];
+                        }
                         $_SESSION['page_infos'][] = l10n('An administrator must authorize your comment before it is visible.');
                         // no break
                     case 'validate':
+                        if (!is_array($_SESSION['page_infos'] ?? null)) {
+                            $_SESSION['page_infos'] = [];
+                        }
                         $_SESSION['page_infos'][] = l10n('Your comment has been registered');
                         $perform_redirect = true;
                         break;
                     case 'reject':
+                        if (!is_array($_SESSION['page_errors'] ?? null)) {
+                            $_SESSION['page_errors'] = [];
+                        }
                         $_SESSION['page_errors'][] = l10n('Your comment has NOT been registered because it did not pass the validation rules');
                         break;
                     default:
@@ -380,9 +388,9 @@ $url = PHPWG_ROOT_PATH.'comments.php'
 
 $navbar = create_navigation_bar(
     $url,
-    $counter,
+    is_numeric($counter) ? (int)$counter : 0,
     $start ?? 0,
-    $page['items_number'],
+    is_numeric($page['items_number']) ? (int)$page['items_number'] : 0,
     false
 );
 
@@ -405,81 +413,92 @@ SELECT *
     $categories = query2array($query, 'id');
 
     foreach ($comments as $comment) {
-        if (!empty($elements[$comment['image_id']]['name'])) {
-            $name = $elements[$comment['image_id']]['name'];
+        /** @var array<string, float|int|string|null> $comment */
+        $comment_image_id = is_numeric($comment['image_id']) ? (int)$comment['image_id'] : 0;
+        $comment_category_id = is_numeric($comment['category_id']) ? (int)$comment['category_id'] : 0;
+        $comment_id_val = is_numeric($comment['comment_id']) ? (int)$comment['comment_id'] : 0;
+        $comment_author_id_val = is_numeric($comment['author_id']) ? (int)$comment['author_id'] : 0;
+        /** @var array<string, float|int|string|null> $element_row */
+        $element_row = isset($elements[$comment_image_id]) && is_array($elements[$comment_image_id])
+            ? $elements[$comment_image_id]
+            : [];
+
+        if (!empty($element_row['name'])) {
+            $name = is_scalar($element_row['name']) ? (string)$element_row['name'] : '';
         } else {
-            $name = get_name_from_file($elements[$comment['image_id']]['file']);
+            $name = get_name_from_file(is_scalar($element_row['file'] ?? '') ? (string)($element_row['file'] ?? '') : '');
         }
 
         // source of the thumbnail picture
-        $src_image = new SrcImage($elements[$comment['image_id']]);
+        $src_image = new SrcImage($element_row);
 
         // link to the full size picture
         $url = make_picture_url(
             array(
-            'category' => $categories[ $comment['category_id'] ],
-            'image_id' => $comment['image_id'],
-            'image_file' => $elements[$comment['image_id']]['file'],
+            'category' => $categories[$comment_category_id] ?? [],
+            'image_id' => $comment_image_id,
+            'image_file' => is_scalar($element_row['file'] ?? '') ? (string)($element_row['file'] ?? '') : '',
             )
         );
 
         $email = null;
         if (!empty($comment['user_email'])) {
-            $email = $comment['user_email'];
+            $email = (string)$comment['user_email'];
         } elseif (!empty($comment['email'])) {
-            $email = $comment['email'];
+            $email = (string)$comment['email'];
         }
 
+        $comment_date = $comment['date'] !== null ? (string)$comment['date'] : null;
         $tpl_comment = array(
-          'ID' => $comment['comment_id'],
+          'ID' => $comment_id_val,
           'U_PICTURE' => $url,
           'src_image' => $src_image,
           'ALT' => $name,
-          'AUTHOR' => trigger_change('render_comment_author', $comment['author']),
+          'AUTHOR' => trigger_change('render_comment_author', (string)($comment['author'] ?? '')),
           'WEBSITE_URL' => $comment['website_url'],
-          'DATE' => format_date($comment['date'], array('day_name','day','month','year','time')),
-          'CONTENT' => trigger_change('render_comment_content', $comment['content']),
+          'DATE' => format_date($comment_date, array('day_name','day','month','year','time')),
+          'CONTENT' => trigger_change('render_comment_content', (string)($comment['content'] ?? '')),
           );
 
         if (is_admin()) {
             $tpl_comment['EMAIL'] = $email;
         }
 
-        if (can_manage_comment('delete', $comment['author_id'])) {
+        if (can_manage_comment('delete', $comment_author_id_val)) {
             $tpl_comment['U_DELETE'] = add_url_params(
                 $url_self,
                 array(
-                'delete' => $comment['comment_id'],
+                'delete' => $comment_id_val,
                 'pwg_token' => get_pwg_token(),
                 )
             );
         }
 
-        if (can_manage_comment('edit', $comment['author_id'])) {
+        if (can_manage_comment('edit', $comment_author_id_val)) {
             $tpl_comment['U_EDIT'] = add_url_params(
                 $url_self,
                 array(
-                'edit' => $comment['comment_id'],
+                'edit' => $comment_id_val,
                 )
             );
 
-            if (isset($edit_comment) and ($comment['comment_id'] == $edit_comment)) {
+            if (isset($edit_comment) and ($comment_id_val == $edit_comment)) {
                 $tpl_comment['IN_EDIT'] = true;
-                $key = get_ephemeral_key(2, $comment['image_id']);
+                $key = get_ephemeral_key(2, (string)$comment_image_id);
                 $tpl_comment['KEY'] = $key;
-                $tpl_comment['IMAGE_ID'] = $comment['image_id'];
-                $tpl_comment['CONTENT'] = $comment['content'];
+                $tpl_comment['IMAGE_ID'] = $comment_image_id;
+                $tpl_comment['CONTENT'] = (string)($comment['content'] ?? '');
                 $tpl_comment['PWG_TOKEN'] = get_pwg_token();
                 $tpl_comment['U_CANCEL'] = $url_self;
             }
         }
 
-        if (can_manage_comment('validate', $comment['author_id'])) {
+        if (can_manage_comment('validate', $comment_author_id_val)) {
             if ('true' != $comment['validated']) {
                 $tpl_comment['U_VALIDATE'] = add_url_params(
                     $url_self,
                     array(
-                    'validate' => $comment['comment_id'],
+                    'validate' => $comment_id_val,
                     'pwg_token' => get_pwg_token(),
                     )
                 );

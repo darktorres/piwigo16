@@ -597,7 +597,7 @@ function pwg_activity(string $object, array|int|string $object_id, string $actio
         $details['script'] = script_basename();
 
         if ('admin' == $details['script'] and isset($_GET['page'])) {
-            $details['script'] .= '/'.$_GET['page'];
+            $details['script'] .= '/'.( is_scalar($_GET['page']) ? (string)$_GET['page'] : '' );
         }
     }
 
@@ -609,12 +609,12 @@ function pwg_activity(string $object, array|int|string $object_id, string $actio
 
     $user_agent = null;
     if ('user' == $object and 'login' == $action and isset($_SERVER['HTTP_USER_AGENT'])) {
-        $user_agent = strip_tags((string) $_SERVER['HTTP_USER_AGENT']);
+        $user_agent = strip_tags(is_scalar($_SERVER['HTTP_USER_AGENT']) ? (string) $_SERVER['HTTP_USER_AGENT'] : '');
     }
 
     if (isset($_SESSION['connected_with']) and 'api_key' === $_SESSION['connected_with'] and isset($_SERVER['HTTP_USER_AGENT'])) {
         $details['connected_with'] = 'api_key';
-        $user_agent = strip_tags((string) $_SERVER['HTTP_USER_AGENT']);
+        $user_agent = strip_tags(is_scalar($_SERVER['HTTP_USER_AGENT']) ? (string) $_SERVER['HTTP_USER_AGENT'] : '');
     }
 
     // we want to know if the login is automatic with remember_me (auto_login)
@@ -632,7 +632,7 @@ function pwg_activity(string $object, array|int|string $object_id, string $actio
 
     if ('photo' == $object and 'add' == $action and !isset($details['sync'])) {
         $details['added_with'] = 'app';
-        if (isset($_SERVER['HTTP_REFERER']) and preg_match('/page=photos_add/', (string) $_SERVER['HTTP_REFERER'])) {
+        if (isset($_SERVER['HTTP_REFERER']) and preg_match('/page=photos_add/', is_scalar($_SERVER['HTTP_REFERER']) ? (string) $_SERVER['HTTP_REFERER'] : '')) {
             $details['added_with'] = 'browser';
         }
     }
@@ -1140,14 +1140,17 @@ SELECT
             }
             $row['name'] .= ' ('.l10n('Mobile').')';
         }
-        if (check_theme_installed($row['id'])) {
-            $themes[ $row['id'] ] = $row['name'];
+        $theme_id = (string) $row['id'];
+        if (check_theme_installed($theme_id)) {
+            $themes[ $theme_id ] = (string) $row['name'];
         }
     }
 
     // plugins want remove some themes based on user status maybe?
     $themes = trigger_change('get_pwg_themes', $themes);
 
+    /** @var array<string, string> $themes */
+    $themes = is_array($themes) ? $themes : [];
     return $themes;
 }
 
@@ -1196,7 +1199,7 @@ function original_to_format($path, $format_ext): string
 /** @param array<string,mixed> $element_info */
 function get_element_path(array $element_info): string
 {
-    $path = $element_info['path'];
+    $path = is_scalar($element_info['path']) ? (string) $element_info['path'] : '';
     if (!url_is_remote($path)) {
         $path = PHPWG_ROOT_PATH.$path;
     }
@@ -1321,10 +1324,14 @@ function l10n_args(array|string $key_args, string $sep = "\n"): string
             }
 
             if ($key === 'key_args') {
-                array_unshift($element, l10n(array_shift($element))); // translate the key
-                $result .= call_user_func_array(sprintf(...), $element);
+                $element = is_array($element) ? $element : [];
+                $shifted = array_shift($element);
+                array_unshift($element, l10n(is_string($shifted) ? $shifted : '')); // translate the key
+                $formatted = call_user_func_array(sprintf(...), $element);
+                $result .= is_scalar($formatted) ? (string) $formatted : '';
             } else {
-                $result .= l10n_args($element, $sep);
+                /** @var array<mixed>|string $element */
+                $result .= l10n_args(is_array($element) || is_string($element) ? $element : '', $sep);
             }
         }
     } else {
@@ -1338,11 +1345,12 @@ function l10n_args(array|string $key_args, string $sep = "\n"): string
  * returns the corresponding value from $themeconf if existing or an empty string
  *
  * @param string $key
- * @return string
  */
-function get_themeconf($key)
+function get_themeconf($key): mixed
 {
-    return $GLOBALS['template']->get_themeconf($key);
+    /** @var \Piwigo\Template\Template $template */
+    $template = $GLOBALS['template'];
+    return $template->get_themeconf($key);
 }
 
 /**
@@ -1350,7 +1358,7 @@ function get_themeconf($key)
  *
  * @return string
  */
-function get_webmaster_mail_address()
+function get_webmaster_mail_address(): string
 {
     $query = '
 SELECT '.\Piwigo\Core\Config::userFields()['email'].'
@@ -1361,7 +1369,7 @@ SELECT '.\Piwigo\Core\Config::userFields()['email'].'
 
     $email = trigger_change('get_webmaster_mail_address', $email);
 
-    return $email;
+    return is_scalar($email) ? (string) $email : '';
 }
 
 /**
@@ -1393,9 +1401,11 @@ SELECT param, value
         // After Kernel::boot() the proxy is installed on $GLOBALS['conf'];
         // write directly to Config::$data to avoid emitting deprecation notices.
         if (\Piwigo\Core\Kernel::isBooted()) {
-            \Piwigo\Core\Config::override($row['param'], $val);
+            \Piwigo\Core\Config::override((string) $row['param'], $val);
         } else {
-            $GLOBALS['conf'][$row['param']] = $val;
+            /** @var array<string, mixed> $conf */
+            $conf = &$GLOBALS['conf'];
+            $conf[(string) $row['param']] = $val;
         }
     }
 
@@ -1432,11 +1442,13 @@ function pwg_is_dbconf_writeable(): bool
 function conf_update_param(string $param, mixed $value, bool $updateGlobal = false, ?string $parser = null): void
 {
     if ($parser != null) {
-        $dbValue = call_user_func($parser, $value);
+        $raw = call_user_func($parser, $value);
+        $dbValue = is_scalar($raw) ? (string) $raw : '';
     } elseif (is_array($value) || is_object($value)) {
         $dbValue = addslashes(serialize($value));
     } else {
-        $dbValue = boolean_to_string($value);
+        $raw2 = boolean_to_string($value);
+        $dbValue = is_scalar($raw2) ? (string) $raw2 : '';
     }
 
     $query = '
@@ -1504,7 +1516,8 @@ function conf_get_param($param, $default_value = null)
 function safe_unserialize(array|string $value): array
 {
     if (is_string($value)) {
-        return unserialize($value);
+        $unserialized = unserialize($value);
+        return is_array($unserialized) ? $unserialized : [];
     }
     return $value;
 }
@@ -1519,7 +1532,8 @@ function safe_unserialize(array|string $value): array
 function safe_json_decode(array|string $value): array
 {
     if (is_string($value)) {
-        return json_decode($value, true);
+        $decoded = json_decode($value, true);
+        return is_array($decoded) ? $decoded : [];
     }
     return $value;
 }
@@ -1593,7 +1607,7 @@ function script_basename(): string
 {
     foreach (['SCRIPT_NAME', 'SCRIPT_FILENAME', 'PHP_SELF'] as $value) {
         if (!empty($_SERVER[$value])) {
-            $filename = strtolower((string) $_SERVER[$value]);
+            $filename = strtolower(is_scalar($_SERVER[$value]) ? (string) $_SERVER[$value] : '');
             if (\Piwigo\Core\Config::phpExtensionInUrls() and get_extension($filename) !== 'php') {
                 continue;
             }
@@ -1612,14 +1626,16 @@ function script_basename(): string
  * @param string $value_name
  * @return mixed
  */
-function get_filter_page_value($value_name)
+function get_filter_page_value($value_name): mixed
 {
     $page_name = script_basename();
+    /** @var array<string, array<string, mixed>> $filter_pages */
+    $filter_pages = \Piwigo\Core\Config::filterPages();
 
-    if (isset(\Piwigo\Core\Config::filterPages()[$page_name][$value_name])) {
-        return \Piwigo\Core\Config::filterPages()[$page_name][$value_name];
-    } elseif (isset(\Piwigo\Core\Config::filterPages()['default'][$value_name])) {
-        return \Piwigo\Core\Config::filterPages()['default'][$value_name];
+    if (isset($filter_pages[$page_name][$value_name])) {
+        return $filter_pages[$page_name][$value_name];
+    } elseif (isset($filter_pages['default'][$value_name])) {
+        return $filter_pages['default'][$value_name];
     } else {
         return null;
     }
@@ -1741,7 +1757,7 @@ function load_language(string $filename, string $dirname = '', array $options = 
         if (!@$options['return']) {
             // load forced fallback
             if (isset($options['force_fallback']) && $options['force_fallback'] != $selected_language) {
-                @include(str_replace($selected_language, $options['force_fallback'], $source_file));
+                @include(str_replace($selected_language, is_scalar($options['force_fallback']) ? (string) $options['force_fallback'] : '', $source_file));
             }
 
             // load language content
@@ -1828,14 +1844,15 @@ function secure_directory(string $dir): void
  *
  * @param int $valid_after_seconds - key validity start time from now
  */
-function get_ephemeral_key($valid_after_seconds, string $aditionnal_data_to_hash = ''): string
+function get_ephemeral_key(int $valid_after_seconds, string $aditionnal_data_to_hash = ''): string
 {
     $time = round(microtime(true), 1);
+    $remote_addr = is_scalar($_SERVER['REMOTE_ADDR'] ?? '') ? (string) ($_SERVER['REMOTE_ADDR'] ?? '') : '';
     return $time.':'.$valid_after_seconds.':'
         .hash_hmac(
             'md5',
-            $time.substr((string) $_SERVER['REMOTE_ADDR'], 0, 5).$valid_after_seconds.$aditionnal_data_to_hash,
-            (string) \Piwigo\Core\Config::secretKey()
+            $time.substr($remote_addr, 0, 5).$valid_after_seconds.$aditionnal_data_to_hash,
+            \Piwigo\Core\Config::secretKey()
         );
 }
 
@@ -1848,13 +1865,14 @@ function verify_ephemeral_key(string $key, string $aditionnal_data_to_hash = '')
 {
     $time = microtime(true);
     $key = explode(':', @$key);
+    $remote_addr = is_scalar($_SERVER['REMOTE_ADDR'] ?? '') ? (string) ($_SERVER['REMOTE_ADDR'] ?? '') : '';
     if (count($key) != 3
         or $key[0] > $time - (float)$key[1] // page must have been retrieved more than X sec ago
         or $key[0] < $time - 3600 // 60 minutes expiration
         or hash_hmac(
             'md5',
-            $key[0].substr((string) $_SERVER['REMOTE_ADDR'], 0, 5).$key[1].$aditionnal_data_to_hash,
-            (string) \Piwigo\Core\Config::secretKey()
+            $key[0].substr($remote_addr, 0, 5).$key[1].$aditionnal_data_to_hash,
+            \Piwigo\Core\Config::secretKey()
         ) != $key[2]
     ) {
         return false;
@@ -2016,13 +2034,13 @@ function check_input_parameter(string $param_name, array $param_array, bool $is_
         }
 
         foreach ($param_value as $key => $item_to_check) {
-            if (!preg_match(PATTERN_ID, (string) $key) or !preg_match($pattern ?? '', (string) $item_to_check)) {
+            if (!preg_match(PATTERN_ID, (string) $key) or !preg_match($pattern ?? '', is_scalar($item_to_check) ? (string) $item_to_check : '')) {
                 fatal_error('[Hacking attempt] an item is not valid in input parameter "'.$param_name.'"');
             }
         }
         return true;
     } else {
-        if (!preg_match($pattern ?? '', (string) $param_value)) {
+        if (!preg_match($pattern ?? '', is_scalar($param_value) ? (string) $param_value : '')) {
             fatal_error('[Hacking attempt] the input parameter "'.$param_name.'" is not valid');
         }
         return true;

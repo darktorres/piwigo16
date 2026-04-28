@@ -44,22 +44,22 @@ function ws_userComments_getList(array $params, \Piwigo\Ws\PwgServer &$service):
     $where_clauses = ['1=1'];
 
     if (isset($params['author_id']) and !empty($params['author_id'])) {
-        $where_clauses['author_id'] = 'author_id = \''. pwg_db_real_escape_string($params['author_id']) .'\'';
+        $where_clauses['author_id'] = 'author_id = \''. pwg_db_real_escape_string(is_scalar($params['author_id']) ? (string) $params['author_id'] : '') .'\'';
     }
 
     if (isset($params['image_id']) and !empty($params['image_id'])) {
-        $where_clauses[] = 'image_id = \''. pwg_db_real_escape_string($params['image_id']) .'\'';
+        $where_clauses[] = 'image_id = \''. pwg_db_real_escape_string(is_scalar($params['image_id']) ? (string) $params['image_id'] : '') .'\'';
     }
 
     if (!empty($params['f_min_date'])) {
-        $dmin = date_create($params['f_min_date']);
+        $dmin = date_create(is_scalar($params['f_min_date']) ? (string) $params['f_min_date'] : '');
         if ($dmin !== false) {
             $where_clauses[] = 'date >= \''. date_format($dmin, 'Y-m-d 00:00:00') .'\'';
         }
     }
 
     if (!empty($params['f_max_date'])) {
-        $dmax = date_create($params['f_max_date']);
+        $dmax = date_create(is_scalar($params['f_max_date']) ? (string) $params['f_max_date'] : '');
         if ($dmax !== false) {
             $where_clauses[] = 'date <= \''. date_format($dmax, 'Y-m-d 23:59:59') .'\'';
         }
@@ -68,7 +68,7 @@ function ws_userComments_getList(array $params, \Piwigo\Ws\PwgServer &$service):
     // reset all filters during search
     if (!empty($params['search'])) {
         $where_clauses = ['1=1'];
-        $where_clauses[] = 'content LIKE "%'. pwg_db_real_escape_string($params['search']) .'%"';
+        $where_clauses[] = 'content LIKE "%'. pwg_db_real_escape_string(is_scalar($params['search']) ? (string) $params['search'] : '') .'%"';
     }
 
     // summary
@@ -96,6 +96,9 @@ WHERE '.implode(' AND ', $where_clauses).'
             break;
     }
 
+    $per_page = is_numeric($params['per_page']) ? (int) $params['per_page'] : 10;
+    $page_num = is_numeric($params['page']) ? (int) $params['page'] : 0;
+
     // comments
     $query = '
 SELECT
@@ -122,7 +125,7 @@ SELECT
       ON ui.user_id = c.author_id
   WHERE '.implode(' AND ', $where_clauses).'
   ORDER BY c.date DESC
-  LIMIT '.$params['per_page'] * $params['page'].', '.$params['per_page'].'
+  LIMIT '.($per_page * $page_num).', '.$per_page.'
 ;';
     $result = pwg_query($query);
 
@@ -150,10 +153,10 @@ SELECT
           'admin_link' => get_root_url().'admin.php?page=photo-'.$row['image_id'],
           'medium_url' => $medium,
           'file' => $row['file'],
-          'image_date_available' => format_date($row['date_available'], ['day_name','day','month','year','time']),
+          'image_date_available' => format_date((string) $row['date_available'], ['day_name','day','month','year','time']),
           'author' => trigger_change('render_comment_author', $author_name),
           'author_status' => \Piwigo\Core\Config::webmasterId() == $row['author_id'] ? 'main_user' : $row['status'],
-          'date' => format_date($row['date'], ['day_name','day','month','year','time']),
+          'date' => format_date((string) $row['date'], ['day_name','day','month','year','time']),
           'content' => trigger_change('render_comment_content', $row['content']),
           'raw_content' => $row['content'],
           'is_pending' => ('false' == $row['validated']),
@@ -173,16 +176,18 @@ WHERE '.implode(' AND ', $where_clauses).'
 
     unset($where_clauses['author_id']);
     $query = '
-SELECT 
+SELECT
   author,
   author_id,
   count(*) as nb_authors
-FROM '.COMMENTS_TABLE.' 
+FROM '.COMMENTS_TABLE.'
 WHERE '.implode(' AND ', $where_clauses).'
 GROUP BY author_id
 ;';
 
     $nb_authors_in = query2array($query);
+
+    $total_count = is_numeric($total_comments) ? (int) $total_comments : 0;
 
     return [
       'summary' => $summary,
@@ -195,7 +200,7 @@ GROUP BY author_id
       'paging' => [
         'page' => $params['page'],
         'per_page' => $params['per_page'],
-        'total_pages' => max(0, ceil($total_comments / $params['per_page']) - 1),
+        'total_pages' => max(0, ceil($total_count / max(1, $per_page)) - 1),
       ],
     ];
 }
@@ -216,8 +221,10 @@ function ws_userComments_delete(array $params, \Piwigo\Ws\PwgServer &$service): 
         return new PwgError(403, l10n('Invalid security token'));
     }
 
-    $params['comment_id'] = array_unique($params['comment_id']);
-    delete_user_comment($params['comment_id']);
+    $raw_ids = is_array($params['comment_id']) ? $params['comment_id'] : [];
+    $str_ids = array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '', $raw_ids);
+    $comment_ids = array_map(fn(string $v): int => (int) $v, array_unique($str_ids));
+    delete_user_comment($comment_ids);
     return 'Comment successfully deleted';
 }
 
@@ -237,7 +244,9 @@ function ws_userComments_validate(array $params, \Piwigo\Ws\PwgServer &$service)
         return new PwgError(403, l10n('Invalid security token'));
     }
 
-    $params['comment_id'] = array_unique($params['comment_id']);
-    validate_user_comment($params['comment_id']);
+    $raw_ids = is_array($params['comment_id']) ? $params['comment_id'] : [];
+    $str_ids = array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '', $raw_ids);
+    $comment_ids = array_map(fn(string $v): int => (int) $v, array_unique($str_ids));
+    validate_user_comment($comment_ids);
     return 'Comment successfully validated';
 }

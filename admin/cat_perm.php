@@ -35,16 +35,18 @@ $page['cat'] = $category['id'];
 if (!empty($_POST)) {
     check_pwg_token();
 
-    if ($category['status'] != $_POST['status'] or ($category['status'] != 'public' and isset($_POST['apply_on_sub']))) {
+    $post_status_raw = $_POST['status'] ?? null;
+    $post_status = is_scalar($post_status_raw) ? (string) $post_status_raw : '';
+    if ($category['status'] != $post_status or ($category['status'] != 'public' and isset($_POST['apply_on_sub']))) {
         $cat_ids = [$page['cat']];
         if (isset($_POST['apply_on_sub'])) {
             $cat_ids = array_merge($cat_ids, get_subcat_ids([$page['cat']]));
         }
-        set_cat_status($cat_ids, $_POST['status']);
-        $category['status'] = $_POST['status'];
+        set_cat_status($cat_ids, $post_status);
+        $category['status'] = $post_status;
     }
 
-    if ('private' == $_POST['status']) {
+    if ('private' == $post_status) {
         //
         // manage groups
         //
@@ -59,10 +61,15 @@ SELECT group_id
             $_POST['groups'] = [];
         }
 
+        /** @var int[] $post_groups */
+        $post_groups = array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($_POST['groups']) ? $_POST['groups'] : []);
+        /** @var int[] $groups_granted_int */
+        $groups_granted_int = array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $groups_granted);
+
         //
         // remove permissions to groups
         //
-        $deny_groups = array_diff($groups_granted, $_POST['groups']);
+        $deny_groups = array_diff($groups_granted_int, $post_groups);
         if (count($deny_groups) > 0) {
             // if you forbid access to an album, all sub-albums become
             // automatically forbidden
@@ -78,7 +85,7 @@ DELETE
         //
         // add permissions to groups
         //
-        $grant_groups = $_POST['groups'];
+        $grant_groups = $post_groups;
         if (count($grant_groups) > 0) {
             $cat_ids = get_uppercat_ids([$page['cat']]);
             if (isset($_POST['apply_on_sub'])) {
@@ -88,7 +95,7 @@ DELETE
             $query = '
 SELECT id
   FROM '.CATEGORIES_TABLE.'
-  WHERE id IN ('.implode(',', $cat_ids).')
+  WHERE id IN ('.implode(',', array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '', $cat_ids)).')
     AND status = \'private\'
 ;';
             $private_cats = query2array($query, null, 'id');
@@ -125,10 +132,15 @@ SELECT user_id
             $_POST['users'] = [];
         }
 
+        /** @var int[] $post_users */
+        $post_users = array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($_POST['users']) ? $_POST['users'] : []);
+        /** @var int[] $users_granted_int */
+        $users_granted_int = array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $users_granted);
+
         //
         // remove permissions to users
         //
-        $deny_users = array_diff($users_granted, $_POST['users']);
+        $deny_users = array_diff($users_granted_int, $post_users);
         if (count($deny_users) > 0) {
             // if you forbid access to an album, all sub-album become automatically
             // forbidden
@@ -144,7 +156,7 @@ DELETE
         //
         // add permissions to users
         //
-        $grant_users = $_POST['users'];
+        $grant_users = $post_users;
         if (count($grant_users) > 0) {
             add_permission_on_category($page['cat'], $grant_users);
         }
@@ -231,14 +243,15 @@ if (count($group_granted_ids) > 0) {
     $query = '
 SELECT user_id, group_id
   FROM '.USER_GROUP_TABLE.'
-  WHERE group_id IN ('.implode(',', $group_granted_ids).') 
+  WHERE group_id IN ('.implode(',', $group_granted_ids).')
 ';
     $result = pwg_query($query);
     while ($row = pwg_db_fetch_assoc($result)) {
-        if (!isset($granted_groups[ $row['group_id'] ])) {
-            $granted_groups[ $row['group_id'] ] = [];
+        $row_group_id = (string) $row['group_id'];
+        if (!isset($granted_groups[$row_group_id])) {
+            $granted_groups[$row_group_id] = [];
         }
-        $granted_groups[ $row['group_id'] ][] = $row['user_id'];
+        $granted_groups[$row_group_id][] = $row['user_id'];
     }
 
     $user_granted_by_group_ids = [];
@@ -260,14 +273,15 @@ SELECT user_id, group_id
         $group_usernames = [];
         foreach ($group_users as $user_id) {
             if (in_array($user_id, $user_granted_indirect_ids)) {
-                $group_usernames[] = $users[$user_id];
+                $user_key = (string) $user_id;
+                $group_usernames[] = isset($users[$user_key]) ? (string) $users[$user_key] : '';
             }
         }
 
         $template->append(
             'user_granted_indirect_groups',
             [
-            'group_name' => $groups[$group_id],
+            'group_name' => isset($groups[$group_id]) ? (string) $groups[$group_id] : '',
             'group_users' => implode(', ', $group_usernames),
             ]
         );

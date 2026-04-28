@@ -34,14 +34,15 @@ $t2 = microtime(true);
 if (!function_exists('get_magic_quotes_gpc') or !@get_magic_quotes_gpc()) {
     function sanitize_mysql_kv(mixed &$v, string $k): void
     {
-        $v = addslashes((string) $v);
+        $v = addslashes(is_scalar($v) ? (string) $v : '');
     }
     array_walk_recursive($_GET, sanitize_mysql_kv(...));
     array_walk_recursive($_POST, sanitize_mysql_kv(...));
     array_walk_recursive($_COOKIE, sanitize_mysql_kv(...));
 }
 if (!empty($_SERVER['PATH_INFO'])) {
-    $_SERVER['PATH_INFO'] = addslashes((string) $_SERVER['PATH_INFO']);
+    $path_info = $_SERVER['PATH_INFO'];
+    $_SERVER['PATH_INFO'] = addslashes(is_scalar($path_info) ? (string) $path_info : '');
 }
 
 // Skip the bootstrap dance when Kernel::boot() has already run (e.g. a nested
@@ -110,10 +111,10 @@ if (!\Piwigo\Core\Kernel::isBooted()) :
     // Database connection
     try {
         pwg_db_connect(
-            \Piwigo\Core\Config::get('db_host'),
-            \Piwigo\Core\Config::get('db_user'),
-            \Piwigo\Core\Config::get('db_password'),
-            \Piwigo\Core\Config::get('db_base')
+            \Piwigo\Core\Config::getString('db_host'),
+            \Piwigo\Core\Config::getString('db_user'),
+            \Piwigo\Core\Config::getString('db_password'),
+            \Piwigo\Core\Config::getString('db_base')
         );
     } catch (Exception $e) {
         my_error(l10n($e->getMessage()), true);
@@ -136,7 +137,7 @@ if (!\Piwigo\Core\Kernel::isBooted()) :
       // we use an hashed filename to prevent direct file access, and we salt with
       // the db_password instead of secret_key because the log must be usable in i.php
       // (secret_key is in the database)
-      'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . \Piwigo\Core\Config::get('db_password')) . '.txt',
+      'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . \Piwigo\Core\Config::getString('db_password')) . '.txt',
       'globPattern' => 'log_*.txt',
       'archiveDays' => \Piwigo\Core\Config::logArchiveDays(),
       ]);
@@ -190,7 +191,8 @@ check_lounge();
 include(PHPWG_ROOT_PATH.'include/user.inc.php');
 
 // Use GLOBALS access to bypass type narrowing from $user initialization
-$user_language = (string)(is_array($GLOBALS['user']) ? ($GLOBALS['user']['language'] ?? '') : '');
+$user_globals = $GLOBALS['user'];
+$user_language = is_array($user_globals) ? (is_scalar($user_globals['language'] ?? null) ? (string) ($user_globals['language'] ?? '') : '') : '';
 if (in_array(substr($user_language, 0, 2), ['fr','it','de','es','pl','ru','nl','tr','da'])) {
     define('PHPWG_DOMAIN', substr($user_language, 0, 2).'.piwigo.org');
 } elseif ('zh_CN' == $user_language) {
@@ -238,18 +240,22 @@ $user_arr = $GLOBALS['user'];
 $page_arr = $GLOBALS['page'];
 $notify_exp = is_array($page_arr) ? $page_arr['notify_api_key_expiration'] : null;
 if (is_array($notify_exp)) {
+    $notify_username_raw = is_array($user_arr) ? ($user_arr['username'] ?? '') : '';
+    $notify_email_raw = is_array($user_arr) ? ($user_arr['email'] ?? '') : '';
+    $notify_days_left = $notify_exp['days_left'];
     $is_mail_send = notification_api_key_expiration(
-        (string)(is_array($user_arr) ? ($user_arr['username'] ?? '') : ''),
-        (string)(is_array($user_arr) ? ($user_arr['email'] ?? '') : ''),
-        $notify_exp['days_left']
+        is_scalar($notify_username_raw) ? (string) $notify_username_raw : '',
+        is_scalar($notify_email_raw) ? (string) $notify_email_raw : '',
+        is_numeric($notify_days_left) ? (int) $notify_days_left : 0
     );
 
     if ($is_mail_send) {
+        $notify_user_id_raw = is_array($user_arr) ? ($user_arr['id'] ?? 0) : 0;
         single_update(
             USER_AUTH_KEYS_TABLE,
             ['last_notified_on' => $notify_exp['dbnow']],
             [
-            'user_id' => (int)(is_array($user_arr) ? ($user_arr['id'] ?? 0) : 0),
+            'user_id' => is_numeric($notify_user_id_raw) ? (int) $notify_user_id_raw : 0,
             'auth_key' => $notify_exp['auth_key'],
       ],
         );
@@ -260,10 +266,12 @@ if (is_array($notify_exp)) {
 
 // template instance
 if (defined('IN_ADMIN') ? constant('IN_ADMIN') : false) {// Admin template
-    $template = new Template(PHPWG_ROOT_PATH.'admin/themes', userprefs_get_param('admin_theme', 'clear'));
+    $admin_theme_raw = userprefs_get_param('admin_theme', 'clear');
+    $template = new Template(PHPWG_ROOT_PATH.'admin/themes', is_scalar($admin_theme_raw) ? (string) $admin_theme_raw : 'clear');
 } else { // Classic template
     $user_arr_theme = $GLOBALS['user'];
-    $theme = (string)(is_array($user_arr_theme) ? ($user_arr_theme['theme'] ?? '') : '');
+    $theme_raw = is_array($user_arr_theme) ? ($user_arr_theme['theme'] ?? '') : '';
+    $theme = is_scalar($theme_raw) ? (string) $theme_raw : '';
     if (script_basename() != 'ws' and mobile_theme()) {
         $theme = \Piwigo\Core\Config::mobilTheme();
     }
@@ -275,9 +283,10 @@ if (!\Piwigo\Core\Config::has('no_photo_yet')) {
 }
 
 $user_arr_gs = $GLOBALS['user'];
-if (is_array($user_arr_gs)
-    && isset($user_arr_gs['internal_status']['guest_must_be_guest'])
-    && $user_arr_gs['internal_status']['guest_must_be_guest'] === true) {
+$internal_status_gs = is_array($user_arr_gs) ? ($user_arr_gs['internal_status'] ?? null) : null;
+if (is_array($internal_status_gs)
+    && isset($internal_status_gs['guest_must_be_guest'])
+    && $internal_status_gs['guest_must_be_guest'] === true) {
     $header_msgs[] = l10n('Bad status for user "guest", using default status. Please notify the webmaster.');
 }
 

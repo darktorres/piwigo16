@@ -25,28 +25,30 @@ function cookie_path(): ?string
 {
     if (isset($_SERVER['REDIRECT_SCRIPT_NAME']) and
          !empty($_SERVER['REDIRECT_SCRIPT_NAME'])) {
-        $scr = $_SERVER['REDIRECT_SCRIPT_NAME'];
+        $scr = is_scalar($_SERVER['REDIRECT_SCRIPT_NAME']) ? (string) $_SERVER['REDIRECT_SCRIPT_NAME'] : '';
     } elseif (isset($_SERVER['REDIRECT_URL'])) {
         // mod_rewrite is activated for upper level directories. we must set the
         // cookie to the path shown in the browser otherwise it will be discarded.
         if (
             isset($_SERVER['PATH_INFO']) and !empty($_SERVER['PATH_INFO']) and
             ($_SERVER['REDIRECT_URL'] !== $_SERVER['PATH_INFO']) and
-            (str_ends_with((string) $_SERVER['REDIRECT_URL'], (string) $_SERVER['PATH_INFO']))
+            (str_ends_with(is_scalar($_SERVER['REDIRECT_URL']) ? (string) $_SERVER['REDIRECT_URL'] : '', is_scalar($_SERVER['PATH_INFO']) ? (string) $_SERVER['PATH_INFO'] : ''))
         ) {
+            $redirect_url_str = is_scalar($_SERVER['REDIRECT_URL']) ? (string) $_SERVER['REDIRECT_URL'] : '';
+            $path_info_str = is_scalar($_SERVER['PATH_INFO']) ? (string) $_SERVER['PATH_INFO'] : '';
             $scr = substr(
-                (string) $_SERVER['REDIRECT_URL'],
+                $redirect_url_str,
                 0,
-                strlen((string) $_SERVER['REDIRECT_URL']) - strlen((string) $_SERVER['PATH_INFO'])
+                strlen($redirect_url_str) - strlen($path_info_str)
             );
         } else {
-            $scr = $_SERVER['REDIRECT_URL'];
+            $scr = is_scalar($_SERVER['REDIRECT_URL']) ? (string) $_SERVER['REDIRECT_URL'] : '';
         }
     } else {
-        $scr = $_SERVER['SCRIPT_NAME'];
+        $scr = is_scalar($_SERVER['SCRIPT_NAME']) ? (string) $_SERVER['SCRIPT_NAME'] : '';
     }
 
-    $scr_str = (string) $scr;
+    $scr_str = $scr;
     $slash_pos = strrpos($scr_str, '/');
     $scr = $slash_pos !== false ? substr($scr_str, 0, $slash_pos) : '';
 
@@ -73,7 +75,7 @@ function cookie_path(): ?string
  * Persistently stores a variable in pwg cookie.
  * Set $value to null to delete the cookie.
  *
- *  string 
+ *  string
  * @param mixed $value
  * @param int|null $expire
  */
@@ -86,7 +88,7 @@ function pwg_set_cookie_var(string $var, $value, $expire = null): bool
     } else {
         $_COOKIE['pwg_'.$var] = $value;
         $expire = is_numeric($expire) ? $expire : strtotime('+10 years');
-        return setcookie('pwg_'.$var, (string) $value, ['expires' => $expire, 'path' => cookie_path() ?? '/']);
+        return setcookie('pwg_'.$var, is_scalar($value) ? (string) $value : '', ['expires' => $expire, 'path' => cookie_path() ?? '/']);
     }
 }
 

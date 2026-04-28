@@ -40,7 +40,9 @@ function history_tabsheet(): void
  */
 function history_compare(array $a, array $b): int
 {
-    return strcmp($a['date'].$a['time'], $b['date'].$b['time']);
+    $aStr = (is_scalar($a['date'] ?? null) ? (string)$a['date'] : '') . (is_scalar($a['time'] ?? null) ? (string)$a['time'] : '');
+    $bStr = (is_scalar($b['date'] ?? null) ? (string)$b['date'] : '') . (is_scalar($b['time'] ?? null) ? (string)$b['time'] : '');
+    return strcmp($aStr, $bStr);
 }
 
 /**
@@ -60,12 +62,15 @@ function get_history(array $data, array $search, array|string $types): array
     if (!is_array($types)) {
         $types = [$types];
     }
-    if (isset($search['fields']['filename'])) {
+    /** @var array<string,mixed> $fields */
+    $fields = is_array($search['fields'] ?? null) ? $search['fields'] : [];
+
+    if (isset($fields['filename'])) {
         $query = '
 SELECT
     id
   FROM '.IMAGES_TABLE.'
-  WHERE file LIKE \''.$search['fields']['filename'].'\'
+  WHERE file LIKE \''.(is_scalar($fields['filename']) ? (string)$fields['filename'] : '').'\'
 ;';
         $search['image_ids'] = query2array($query, null, 'id');
     }
@@ -74,19 +79,20 @@ SELECT
 
     $clauses = [];
 
-    if (isset($search['fields']['date-after'])) {
-        $clauses[] = "date >= '".$search['fields']['date-after']."'";
+    if (isset($fields['date-after'])) {
+        $clauses[] = "date >= '".(is_scalar($fields['date-after']) ? (string)$fields['date-after'] : '')."'";
     }
 
-    if (isset($search['fields']['date-before'])) {
-        $clauses[] = "date <= '".$search['fields']['date-before']."'";
+    if (isset($fields['date-before'])) {
+        $clauses[] = "date <= '".(is_scalar($fields['date-before']) ? (string)$fields['date-before'] : '')."'";
     }
 
-    if (isset($search['fields']['types'])) {
+    if (isset($fields['types'])) {
         $local_clauses = [];
+        $types_field = is_array($fields['types']) ? $fields['types'] : [];
 
         foreach ($types as $type) {
-            if (in_array($type, $search['fields']['types'])) {
+            if (in_array($type, $types_field)) {
                 $clause = 'image_type ';
                 if ($type == 'none') {
                     $clause .= 'IS NULL';
@@ -103,26 +109,28 @@ SELECT
         }
     }
 
-    if (isset($search['fields']['user'])
-        and $search['fields']['user'] != -1) {
-        $clauses[] = 'user_id = '.$search['fields']['user'];
+    if (isset($fields['user'])
+        and $fields['user'] != -1) {
+        $clauses[] = 'user_id = '.(is_scalar($fields['user']) ? (string)$fields['user'] : '0');
     }
 
-    if (isset($search['fields']['image_id'])) {
-        $clauses[] = 'image_id = '.$search['fields']['image_id'];
+    if (isset($fields['image_id'])) {
+        $clauses[] = 'image_id = '.(is_scalar($fields['image_id']) ? (string)$fields['image_id'] : '0');
     }
 
-    if (isset($search['fields']['filename'])) {
-        if (count($search['image_ids']) == 0) {
+    if (isset($fields['filename'])) {
+        /** @var array<mixed> $image_ids */
+        $image_ids = is_array($search['image_ids'] ?? null) ? $search['image_ids'] : [];
+        if (count($image_ids) == 0) {
             // a clause that is always false
             $clauses[] = '1 = 2 ';
         } else {
-            $clauses[] = 'image_id IN ('.implode(', ', $search['image_ids']).')';
+            $clauses[] = 'image_id IN ('.implode(', ', array_map('strval', $image_ids)).')';
         }
     }
 
-    if (isset($search['fields']['ip'])) {
-        $clauses[] = 'IP LIKE "'.$search['fields']['ip'].'"';
+    if (isset($fields['ip'])) {
+        $clauses[] = 'IP LIKE "'.(is_scalar($fields['ip']) ? (string)$fields['ip'] : '').'"';
     }
 
     $clauses = prepend_append_array_items($clauses, '(', ')');
@@ -165,7 +173,7 @@ SELECT
  *
  * @param int $max_lines - to only compute the next X lines, not the whole remaining lines
  */
-function history_summarize($max_lines = null): void
+function history_summarize(?int $max_lines = null): void
 {
     // we need to know which was the last line "summarized"
     $query = '
@@ -181,7 +189,7 @@ SELECT
     $history_min_id = 0;
     if (count($summary_lines) > 0) {
         $last_summary = $summary_lines[0];
-        $history_min_id = $last_summary['history_id_to'];
+        $history_min_id = is_numeric($last_summary['history_id_to'] ?? null) ? (int)$last_summary['history_id_to'] : 0;
     } else {
         // if we have no "reference", ie "starting point", we need to find
         // one. And "0" is not the right answer here, because history table may
@@ -193,7 +201,7 @@ SELECT
 ;';
         $history_lines = query2array($query);
         if (count($history_lines) > 0) {
-            $history_min_id = $history_lines[0]['min_id'] - 1;
+            $history_min_id = (int) $history_lines[0]['min_id'] - 1;
         }
     }
 
@@ -396,7 +404,7 @@ SELECT
         return; // lines not summarized, no purge
     }
 
-    $history_id_last_summarized = $summary_lines[0]['history_id_to'];
+    $history_id_last_summarized = (int) $summary_lines[0]['history_id_to'];
 
     // 2) find the latest history line (and substract the number of lines to keep)
     $query = '
@@ -411,7 +419,7 @@ SELECT
         return;
     }
 
-    $history_id_latest = $history_lines[0]['id'];
+    $history_id_latest = (int) $history_lines[0]['id'];
 
     // 3) find the oldest history line (and add the number of lines to delete)
     $query = '
@@ -422,7 +430,7 @@ SELECT
   LIMIT 1
 ;';
     $history_lines = query2array($query);
-    $history_id_oldest = $history_lines[0]['id'];
+    $history_id_oldest = (int) $history_lines[0]['id'];
 
     $search_min = [
       $history_id_last_summarized,

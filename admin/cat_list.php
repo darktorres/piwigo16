@@ -84,7 +84,7 @@ SELECT
         $subcat_ids = [];
 
         foreach ($uppercats_of as $id => $uppercats) {
-            if (preg_match('/(^|,)'.$cat_id.'(,|$)/', $uppercats)) {
+            if (preg_match('/(^|,)'.$cat_id.'(,|$)/', is_scalar($uppercats) ? (string)$uppercats : '')) {
                 $subcat_ids[] = $id;
             }
         }
@@ -106,7 +106,7 @@ SELECT
     // only return the list of $ids, not the sub-categories
     $return = [];
     foreach ($ids as $id) {
-        $return[$id] = $ref_dates[$id];
+        $return[$id] = $ref_dates[$id] ?? null;
     }
 
     return $return;
@@ -141,7 +141,7 @@ if (isset($_GET['delete']) and is_numeric($_GET['delete'])) {
     if (isset($_GET['photo_deletion_mode'])) {
         $photo_deletion_mode = $_GET['photo_deletion_mode'];
     }
-    delete_categories([(int) $_GET['delete']], $photo_deletion_mode);
+    delete_categories([(int) $_GET['delete']], is_scalar($photo_deletion_mode) ? (string)$photo_deletion_mode : 'no_delete');
 
     $_SESSION['page_infos'] = [l10n('Virtual album deleted')];
     update_global_rank();
@@ -149,23 +149,23 @@ if (isset($_GET['delete']) and is_numeric($_GET['delete'])) {
 
     $redirect_url = get_root_url().'admin.php?page=cat_list';
     if (isset($_GET['parent_id'])) {
-        $redirect_url .= '&parent_id='.$_GET['parent_id'];
+        $redirect_url .= '&parent_id='.(is_scalar($_GET['parent_id']) ? (string)$_GET['parent_id'] : '');
     }
     redirect($redirect_url);
 }
 // request to add a virtual category
 elseif (isset($_POST['submitAdd'])) {
     $output_create = create_virtual_category(
-        $_POST['virtual_name'],
-        @$_GET['parent_id']
+        is_scalar($_POST['virtual_name']) ? (string)$_POST['virtual_name'] : '',
+        isset($_GET['parent_id']) ? (is_scalar($_GET['parent_id']) ? (string)$_GET['parent_id'] : null) : null
     );
 
     invalidate_user_cache();
     if (isset($output_create['error'])) {
-        \Piwigo\Core\PageState::current()->addError($output_create['error']);
+        \Piwigo\Core\PageState::current()->addError(is_scalar($output_create['error']) ? (string)$output_create['error'] : '');
     } else {
-        $edit_url = get_root_url().'admin.php?page=album-'.$output_create['id'];
-        \Piwigo\Core\PageState::current()->addInfo($output_create['info'].' <a class="icon-pencil" href="'.$edit_url.'">'.l10n('Edit album').'</a>');
+        $edit_url = get_root_url().'admin.php?page=album-'.(is_scalar($output_create['id'] ?? '') ? (string)($output_create['id'] ?? '') : '');
+        \Piwigo\Core\PageState::current()->addInfo((is_scalar($output_create['info'] ?? '') ? (string)($output_create['info'] ?? '') : '').' <a class="icon-pencil" href="'.$edit_url.'">'.l10n('Edit album').'</a>');
     }
 }
 // +-----------------------------------------------------------------------+
@@ -176,7 +176,7 @@ if (isset($_GET['parent_id'])) {
     $navigation .= \Piwigo\Core\Config::levelSeparator();
 
     $navigation .= get_cat_display_name_from_id(
-        $_GET['parent_id'],
+        (int)$_GET['parent_id'],
         $base_url.'&amp;parent_id='
     );
 }
@@ -187,7 +187,7 @@ $template->set_filename('categories', 'cat_list.tpl');
 
 $form_action = PHPWG_ROOT_PATH.'admin.php?page=cat_list';
 if (isset($_GET['parent_id'])) {
-    $form_action .= '&amp;parent_id='.$_GET['parent_id'];
+    $form_action .= '&amp;parent_id='.(is_scalar($_GET['parent_id']) ? (string)$_GET['parent_id'] : '');
 }
 $sort_orders_checked = array_keys($sort_orders);
 
@@ -214,7 +214,7 @@ if (!isset($_GET['parent_id'])) {
   WHERE id_uppercat IS NULL';
 } else {
     $query .= '
-  WHERE id_uppercat = '.$_GET['parent_id'];
+  WHERE id_uppercat = '.(is_numeric($_GET['parent_id']) ? (int)$_GET['parent_id'] : 0);
 }
 $query .= '
   ORDER BY `rank` ASC
@@ -245,7 +245,7 @@ SELECT
     $subcats_of = [];
 
     foreach ($all_categories as $id => $uppercats) {
-        foreach (array_slice(explode(',', $uppercats), 0, -1) as $uppercat_id) {
+        foreach (array_slice(explode(',', is_scalar($uppercats) ? (string)$uppercats : ''), 0, -1) as $uppercat_id) {
             @$subcats_of[$uppercat_id][] = $id;
         }
     }
@@ -269,7 +269,7 @@ $base_url = get_root_url().'admin.php?page=';
 if (isset($_GET['parent_id'])) {
     $template->assign(
         'PARENT_EDIT',
-        $base_url.'album-'.$_GET['parent_id']
+        $base_url.'album-'.(is_scalar($_GET['parent_id']) ? (string)$_GET['parent_id'] : '')
     );
 }
 
@@ -278,7 +278,7 @@ foreach ($categories as $category) {
 
     $self_url = $cat_list_url;
     if (isset($_GET['parent_id'])) {
-        $self_url .= '&amp;parent_id='.$_GET['parent_id'];
+        $self_url .= '&amp;parent_id='.(is_scalar($_GET['parent_id']) ? (string)$_GET['parent_id'] : '');
     }
 
     $tpl_cat =
@@ -293,7 +293,7 @@ foreach ($categories as $category) {
         'NB_SUB_PHOTOS' => $nb_sub_photos[$category['id']] ?? 0,
         'NB_SUB_ALBUMS' => isset($subcats_of[$category['id']]) ? count($subcats_of[$category['id']]) : 0,
         'ID'         => $category['id'],
-        'RANK'       => $category['rank'] * 10,
+        'RANK'       => (is_numeric($category['rank'] ?? null) ? (int)$category['rank'] : 0) * 10,
 
         'U_JUMPTO'   => make_index_url(
             [
@@ -301,13 +301,13 @@ foreach ($categories as $category) {
             ]
         ),
 
-        'U_CHILDREN' => $cat_list_url.'&amp;parent_id='.$category['id'],
-        'U_EDIT'     => $base_url.'album-'.$category['id'],
-        'U_ADD_PHOTOS_ALBUM' => $base_url.'photos_add&amp;album='.$category['id'],
-        'U_MOVE' => $base_url.'albums#cat-'.$category['id'],
+        'U_CHILDREN' => $cat_list_url.'&amp;parent_id='.(is_scalar($category['id'] ?? '') ? (string)($category['id'] ?? '') : ''),
+        'U_EDIT'     => $base_url.'album-'.(is_scalar($category['id'] ?? '') ? (string)($category['id'] ?? '') : ''),
+        'U_ADD_PHOTOS_ALBUM' => $base_url.'photos_add&amp;album='.(is_scalar($category['id'] ?? '') ? (string)($category['id'] ?? '') : ''),
+        'U_MOVE' => $base_url.'albums#cat-'.(is_scalar($category['id'] ?? '') ? (string)($category['id'] ?? '') : ''),
 
         'IS_VIRTUAL' => empty($category['dir']),
-        'CAT_ADMIN_ACCESS' => cat_admin_access($category['id']),
+        'CAT_ADMIN_ACCESS' => cat_admin_access(is_numeric($category['id'] ?? null) ? (int)$category['id'] : 0),
       ];
 
     if (empty($category['dir'])) {

@@ -726,7 +726,7 @@ function set_cat_visible(array|int|string $categories, bool|string $value, bool 
         $query = '
 UPDATE '.CATEGORIES_TABLE.'
   SET visible = \'true\'
-  WHERE id IN ('.implode(',', array_map('strval', $cats)).')';
+  WHERE id IN ('.implode(',', array_map(fn($v): string => (string) $v, $cats)).')';
         pwg_query($query);
     }
     // locking a category   => all its child categories become locked
@@ -735,7 +735,7 @@ UPDATE '.CATEGORIES_TABLE.'
         $query = '
 UPDATE '.CATEGORIES_TABLE.'
   SET visible = \'false\'
-  WHERE id IN ('.implode(',', array_map('strval', $subcats)).')';
+  WHERE id IN ('.implode(',', array_map(fn($v): string => (string) $v, $subcats)).')';
         pwg_query($query);
     }
 }
@@ -760,7 +760,7 @@ function set_cat_status(array|int|string $categories, string $value): void
         $query = '
 UPDATE '.CATEGORIES_TABLE.'
   SET status = \'public\'
-  WHERE id IN ('.implode(',', $uppercats).')
+  WHERE id IN ('.implode(',', array_map(fn($v): string => (string) $v, $uppercats)).')
 ;';
         pwg_query($query);
     }
@@ -872,9 +872,10 @@ SELECT
             // if it is private, else the album itself
             $ref_cat_id = $top_category['id'];
 
+            $top_cat_uppercat = is_scalar($top_category['id_uppercat']) ? (string) $top_category['id_uppercat'] : '';
             if (!empty($top_category['id_uppercat'])
-                and isset($parent_cats[ $top_category['id_uppercat'] ])
-                and 'private' == $parent_cats[ $top_category['id_uppercat'] ]['status']) {
+                and isset($parent_cats[$top_cat_uppercat])
+                and 'private' == $parent_cats[$top_cat_uppercat]['status']) {
                 $ref_cat_id = $top_category['id_uppercat'];
             }
 
@@ -1223,7 +1224,7 @@ SELECT id, id_uppercat, uppercats
     foreach ($cat_map as $id => $cat) {
         $upper_list = [];
 
-        $uppercat = is_scalar($id) ? (string) $id : '';
+        $uppercat = (string) $id;
         while ($uppercat) {
             $upper_list[] = $uppercat;
             $next = $cat_map[$uppercat]['id_uppercat'] ?? null;
@@ -1253,7 +1254,7 @@ SELECT DISTINCT(storage_category_id)
   WHERE storage_category_id IS NOT NULL
 ;';
     $cat_ids_raw = query2array($query, null, 'storage_category_id');
-    $cat_ids = array_map('strval', $cat_ids_raw);
+    $cat_ids = array_map(fn($v): int => is_numeric($v) ? (int) $v : 0, $cat_ids_raw);
     $fulldirs = get_fulldirs($cat_ids);
 
     foreach ($cat_ids as $cat_id) {
@@ -1352,7 +1353,7 @@ SELECT status
     }
 
     if ('private' == $parent_status) {
-        set_cat_status(array_map('strval', array_keys($categories)), 'private');
+        set_cat_status(array_map(fn($v): int => (int) $v, array_keys($categories)), 'private');
     }
 
     \Piwigo\Core\PageState::current()->addInfo(l10n_dec(
@@ -1577,8 +1578,7 @@ DELETE
 
     $taglist_after = get_image_tag_ids($images);
     $images_to_update_raw = compare_image_tag_lists($taglist_before, $taglist_after);
-    /** @var array<int> $images_to_update */
-    $images_to_update = array_map('intval', $images_to_update_raw);
+    $images_to_update = array_map(fn($v): int => is_numeric($v) ? (int) $v : 0, $images_to_update_raw);
     update_images_lastmodified($images_to_update);
 
     invalidate_user_cache_nb_tags();
@@ -1648,7 +1648,7 @@ SELECT id
   WHERE name = \''.$tag_name.'\'
 ;';
     if (count($existing_tags = query2array($query, null, 'id')) == 0) {
-        $url_name = trigger_change('render_tag_url', $tag_name);
+        $url_name = (string) trigger_change('render_tag_url', $tag_name);
         // search existing by url name
         $query = '
 SELECT id
@@ -1663,7 +1663,7 @@ SELECT id
                 $query = '
 SELECT id
   FROM '.TAGS_TABLE.'
-  WHERE '.implode(' OR ', array_map('strval', $sub_name_where)).'
+  WHERE '.implode(' OR ', array_map(fn($v): string => (string) $v, $sub_name_where)).'
 ;';
                 $existing_tags = query2array($query, null, 'id');
             }
@@ -1736,8 +1736,7 @@ DELETE
         global $logger;
         $logger->debug('taglist_after', $taglist_after);
         $images_to_update_raw = compare_image_tag_lists($taglist_before, $taglist_after);
-        /** @var array<int> $images_to_update */
-        $images_to_update = array_map('intval', $images_to_update_raw);
+        $images_to_update = array_map(fn($v): int => is_numeric($v) ? (int) $v : 0, $images_to_update_raw);
         global $logger;
         $logger->debug('$images_to_update', $images_to_update);
 
@@ -1802,9 +1801,11 @@ function compare_image_tag_lists(array $taglist_before, array $taglist_after): a
     $images_to_update = [];
 
     foreach ($taglist_after as $image_id => $list_after) {
+        $list_after = is_array($list_after) ? $list_after : [];
         sort($list_after);
 
         $list_before = $taglist_before[$image_id] ?? [];
+        $list_before = is_array($list_before) ? $list_before : [];
         sort($list_before);
 
         if ($list_after != $list_before) {
@@ -1857,7 +1858,7 @@ function empty_lounge(bool $invalidate_user_cache = true): ?array
     global $logger;
 
     if (\Piwigo\Core\Config::has('empty_lounge_running')) {
-        [$running_exec_id, $running_exec_start_time] = explode('-', \Piwigo\Core\Config::get('empty_lounge_running'));
+        [$running_exec_id, $running_exec_start_time] = explode('-', (string) \Piwigo\Core\Config::get('empty_lounge_running'));
         if (time() - (int)$running_exec_start_time > 60) {
             $logger->debug(__FUNCTION__.', exec='.$running_exec_id.', timeout stopped by another call to the function');
             conf_delete_param('empty_lounge_running');
@@ -1897,17 +1898,18 @@ SELECT
 
     $rows = query2array($query);
 
+    /** @var array<int> $images */
     $images = [];
     foreach ($rows as $idx => $row) {
         if ($row['image_id'] > $max_image_id) {
             $max_image_id = $row['image_id'];
         }
 
-        $images[] = $row['image_id'];
+        $images[] = is_numeric($row['image_id']) ? (int) $row['image_id'] : 0;
 
         if (!isset($rows[$idx + 1]) or $rows[$idx + 1]['category_id'] != $row['category_id']) {
             // if we're at the end of the loop OR if category changes
-            associate_images_to_categories($images, [$row['category_id']]);
+            associate_images_to_categories($images, [is_numeric($row['category_id']) ? (int) $row['category_id'] : 0]);
             $images = [];
         }
     }
@@ -1944,7 +1946,7 @@ DELETE
  */
 /**
  * @param int[] $images
- * @param array<mixed> $categories
+ * @param int[] $categories
  */
 function associate_images_to_categories(array $images, array $categories): void
 {
@@ -1965,7 +1967,8 @@ SELECT
 
     $existing = [];
     while ($row = pwg_db_fetch_assoc($result)) {
-        $existing[ $row['category_id'] ][] = $row['image_id'];
+        $cat_key = is_numeric($row['category_id']) ? (int) $row['category_id'] : 0;
+        $existing[$cat_key][] = is_numeric($row['image_id']) ? (int) $row['image_id'] : 0;
     }
 
     // get max rank of each categories
@@ -2118,7 +2121,8 @@ SELECT image_id
   FROM '.IMAGE_CATEGORY_TABLE.'
   WHERE category_id IN ('.implode(',', $sources).')
 ;';
-    $images = query2array($query, null, 'image_id');
+    $images_raw = query2array($query, null, 'image_id');
+    $images = array_map(fn($v): int => is_numeric($v) ? (int) $v : 0, $images_raw);
 
     associate_images_to_categories($images, $destinations);
 }
@@ -2521,7 +2525,7 @@ SELECT name
         return false;
     }
 
-    return $groupname;
+    return is_scalar($groupname) ? (string) $groupname : '';
 }
 
 /**
@@ -2537,7 +2541,7 @@ function delete_groups(array|int $group_ids): false|array
         return false;
     }
 
-    if (preg_match('/^group:(\d+)$/', (string) conf_get_param('email_admin_on_new_user', 'undefined'), $matches)) {
+    if (preg_match('/^group:(\d+)$/', is_scalar($v = conf_get_param('email_admin_on_new_user', 'undefined')) ? (string) $v : 'undefined', $matches)) {
         foreach ($group_ids as $group_id) {
             if ($group_id == $matches[1]) {
                 conf_update_param('email_admin_on_new_user', 'all', true);
@@ -2570,7 +2574,7 @@ SELECT id, name
 ;';
 
     $group_list = query2array($query, 'id', 'name');
-    $groupids = array_keys($group_list);
+    $groupids = array_map(fn($v): int => (int) $v, array_keys($group_list));
 
     // destruction of the group
     $query = '
@@ -2674,6 +2678,7 @@ function get_taglist(string $query, bool $only_user_language = true): array
 
         if (!$only_user_language) {
             $alt_names = trigger_change('get_tag_alt_names', [], $raw_name);
+            $alt_names = is_array($alt_names) ? $alt_names : [];
 
             foreach (array_diff(array_unique($alt_names), [$name]) as $alt) {
                 $altlist[] =  [
@@ -2773,7 +2778,7 @@ function add_permission_on_category(array|int|string $category_ids, array|int|st
     $query = '
 SELECT id
   FROM '.CATEGORIES_TABLE.'
-  WHERE id IN ('.implode(',', $cat_ids).')
+  WHERE id IN ('.implode(',', array_map(fn($v): string => (string) $v, $cat_ids)).')
     AND status = \'private\'
 ;';
     $private_cats = query2array($query, null, 'id');
@@ -2821,7 +2826,8 @@ SELECT
   WHERE status in (\''.implode("','", $status_list).'\')
 ;';
 
-    return query2array($query, null, 'user_id');
+    $raw = query2array($query, null, 'user_id');
+    return array_map(fn($v): int => is_numeric($v) ? (int) $v : 0, $raw);
 }
 
 /**
@@ -2920,14 +2926,15 @@ function clear_derivative_cache_rec(string $path, string $pattern): bool
 /** @param array<mixed> $infos */
 function delete_element_derivatives(array $infos, string|int $type = 'all'): void
 {
-    $path = $infos['path'];
+    $path = is_scalar($infos['path']) ? (string) $infos['path'] : '';
     if (!empty($infos['representative_ext'])) {
-        $path = original_to_representative($path, $infos['representative_ext']);
+        $repr_ext = is_scalar($infos['representative_ext']) ? (string) $infos['representative_ext'] : '';
+        $path = original_to_representative($path, $repr_ext);
     }
-    if (substr_compare((string) $path, '../', 0, 3) == 0) {
-        $path = substr((string) $path, 3);
+    if (substr_compare($path, '../', 0, 3) == 0) {
+        $path = substr($path, 3);
     }
-    $dot = strrpos((string) $path, '.');
+    $dot = strrpos($path, '.');
     if ($dot === false) {
         return;
     }
@@ -3070,7 +3077,8 @@ SELECT id
   FROM '.IMAGES_TABLE.'
   WHERE md5sum is null
 ;';
-    return query2array($query, null, 'id');
+    $raw = query2array($query, null, 'id');
+    return array_map(fn($v): int => is_numeric($v) ? (int) $v : 0, $raw);
 }
 
 /**
@@ -3122,20 +3130,22 @@ SELECT
     COUNT(*)
   FROM '.IMAGES_TABLE.'
 ;';
-        [$image_counter_all] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+        [$image_counter_all_raw] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+        $image_counter_all = is_numeric($image_counter_all_raw) ? (int) $image_counter_all_raw : 0;
 
         $query = '
 SELECT
     COUNT(DISTINCT(image_id))
   FROM '.IMAGE_CATEGORY_TABLE.'
 ;';
-        [$image_counter_in_categories] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+        [$image_counter_in_categories_raw] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+        $image_counter_in_categories = is_numeric($image_counter_in_categories_raw) ? (int) $image_counter_in_categories_raw : 0;
 
         $counter = $image_counter_all - $image_counter_in_categories;
         conf_update_param('count_orphans', $counter, true);
     }
 
-    return conf_get_param('count_orphans');
+    return (int) conf_get_param('count_orphans');
 }
 
 /**

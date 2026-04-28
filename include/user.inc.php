@@ -41,15 +41,16 @@ if (\Piwigo\Core\Config::apacheAuthentication()) {
     }
 
     if (isset($remote_user)) {
-        if (!($user['id'] = get_userid($remote_user))) {
-            $user['id'] = register_user($remote_user, '', '', false);
+        $remote_user_str = is_scalar($remote_user) ? (string) $remote_user : '';
+        if (!($user['id'] = get_userid($remote_user_str))) {
+            $user['id'] = register_user($remote_user_str, '', '', false);
         }
     }
 }
 
 // automatic login by authentication key
 if (isset($_GET['auth'])) {
-    auth_key_login($_GET['auth']);
+    auth_key_login(is_scalar($_GET['auth']) ? (string) $_GET['auth'] : '');
 }
 
 // HTTP_AUTHORIZATION api_key
@@ -59,7 +60,7 @@ if (
     and !empty($_SERVER['HTTP_X_PIWIGO_API'])
     and isset($_REQUEST['method'])
 ) {
-    $auth_header = pwg_db_real_escape_string($_SERVER['HTTP_X_PIWIGO_API']);
+    $auth_header = pwg_db_real_escape_string(is_scalar($_SERVER['HTTP_X_PIWIGO_API']) ? (string) $_SERVER['HTTP_X_PIWIGO_API'] : '');
 
     if ($auth_header) {
         $authenticate = auth_key_login($auth_header, true);
@@ -75,7 +76,7 @@ if (
 
         // logger
         global $logger;
-        $logger->info('[api_key][pkid='.explode(':', (string) $auth_header)[0].'][method='.$_REQUEST['method'].']');
+        $logger->info('[api_key][pkid='.explode(':', (string) $auth_header)[0].'][method='.(is_scalar($_REQUEST['method']) ? (string) $_REQUEST['method'] : '').']');
     }
 }
 
@@ -109,12 +110,12 @@ if (defined('IN_ADMIN') ? constant('IN_ADMIN') : false) {
 } elseif (
     isset($_REQUEST['method'])
     and isset($_SERVER['HTTP_REFERER'])
-    and preg_match('/\/admin\.php\?page=/', (string) $_SERVER['HTTP_REFERER'])
+    and preg_match('/\/admin\.php\?page=/', is_scalar($_SERVER['HTTP_REFERER']) ? (string) $_SERVER['HTTP_REFERER'] : '')
 ) {
     $page['user_use_cache'] = false;
 }
 
-$user = build_user($user['id'], $page['user_use_cache']);
+$user = build_user(is_numeric($user['id']) ? (int) $user['id'] : 0, $page['user_use_cache']);
 
 if (\Piwigo\Core\Config::browserLanguage() and (is_a_guest() or is_generic()) and $language = get_browser_language()) {
     $user['language'] = $language;

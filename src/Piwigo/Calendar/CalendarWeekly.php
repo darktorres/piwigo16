@@ -28,6 +28,7 @@ class CalendarWeekly extends CalendarBase
             //$week_no_labels[$i] = $i;
         }
 
+        $dayLabels = is_array($lang['day'] ?? null) ? $lang['day'] : [];
         $this->calendar_levels = [
           [
               'sql' => pwg_db_get_year($this->date_field),
@@ -39,7 +40,7 @@ class CalendarWeekly extends CalendarBase
             ],
           [
               'sql' => pwg_db_get_dayofweek($this->date_field).'-1',
-              'labels' => $lang['day'],
+              'labels' => $dayLabels,
             ],
          ];
         //Comment next lines for week starting on Sunday or if MySQL version<4.0.17
@@ -47,7 +48,9 @@ class CalendarWeekly extends CalendarBase
         if ('monday' == \Piwigo\Core\Config::get('week_starts_on')) {
             $this->calendar_levels[CWEEK]['sql'] = pwg_db_get_week($this->date_field, 5).'+1';
             $this->calendar_levels[CDAY]['sql'] = pwg_db_get_weekday($this->date_field);
-            $this->calendar_levels[CDAY]['labels'][] = array_shift($this->calendar_levels[CDAY]['labels']);
+            $dayLabelsArr = is_array($this->calendar_levels[CDAY]['labels']) ? $this->calendar_levels[CDAY]['labels'] : [];
+            $dayLabelsArr[] = array_shift($dayLabelsArr);
+            $this->calendar_levels[CDAY]['labels'] = $dayLabelsArr;
         }
     }
 
@@ -60,13 +63,14 @@ class CalendarWeekly extends CalendarBase
     {
         $page = &$GLOBALS['page'];
 
-        if (count($page['chronology_date']) == 0) {
+        $chronologyDate = is_array($page['chronology_date'] ?? null) ? $page['chronology_date'] : [];
+        if (count($chronologyDate) == 0) {
             $this->build_nav_bar(CYEAR); // years
         }
-        if (count($page['chronology_date']) == 1) {
+        if (count($chronologyDate) == 1) {
             $this->build_nav_bar(CWEEK, []); // week nav bar 1-53
         }
-        if (count($page['chronology_date']) == 2) {
+        if (count($chronologyDate) == 2) {
             $this->build_nav_bar(CDAY); // days nav bar Mon-Sun
         }
         $this->build_next_prev();
@@ -81,21 +85,23 @@ class CalendarWeekly extends CalendarBase
     public function get_date_where($max_levels = 3): string
     {
         $page = &$GLOBALS['page'];
-        $date = $page['chronology_date'];
+        $date = is_array($page['chronology_date'] ?? null) ? $page['chronology_date'] : [];
         while (count($date) > $max_levels) {
             array_pop($date);
         }
         $res = '';
         if (isset($date[CYEAR]) and $date[CYEAR] !== 'any') {
-            $y = $date[CYEAR];
+            $y = is_scalar($date[CYEAR]) ? (string)$date[CYEAR] : '';
             $res = " AND $this->date_field BETWEEN '$y-01-01' AND '$y-12-31 23:59:59'";
         }
 
         if (isset($date[CWEEK]) and $date[CWEEK] !== 'any') {
-            $res .= ' AND '.$this->calendar_levels[CWEEK]['sql'].'='.$date[CWEEK];
+            $cweekSql = is_scalar($this->calendar_levels[CWEEK]['sql'] ?? null) ? (string)$this->calendar_levels[CWEEK]['sql'] : '';
+            $res .= ' AND '.$cweekSql.'='.(is_scalar($date[CWEEK]) ? (string)$date[CWEEK] : '');
         }
         if (isset($date[CDAY]) and $date[CDAY] !== 'any') {
-            $res .= ' AND '.$this->calendar_levels[CDAY]['sql'].'='.$date[CDAY];
+            $cdaySql = is_scalar($this->calendar_levels[CDAY]['sql'] ?? null) ? (string)$this->calendar_levels[CDAY]['sql'] : '';
+            $res .= ' AND '.$cdaySql.'='.(is_scalar($date[CDAY]) ? (string)$date[CDAY] : '');
         }
         if (empty($res)) {
             $res = ' AND '.$this->date_field.' IS NOT NULL';

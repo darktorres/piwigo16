@@ -565,7 +565,8 @@ if (input_string('metadata', null, $_GET) !== null) {
 $page['body_id'] = 'thePicturePage';
 
 // allow plugins to change what we computed before passing data to template
-$picture = trigger_change('picture_pictures_data', $picture);
+/** @var array<string, array<string, mixed>> $picture */
+$picture = is_array($result_picture = trigger_change('picture_pictures_data', $picture)) ? $result_picture : $picture;
 
 //------------------------------------------------------- navigation management
 foreach (['first','previous','next','last', 'current'] as $which_image) {

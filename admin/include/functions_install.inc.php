@@ -27,7 +27,7 @@ use Piwigo\Admin\themes;
  * @param string $replaced
  * @param string $replacing
  */
-function execute_sqlfile($filepath, $replaced, $replacing, $dblayer): void
+function execute_sqlfile(string $filepath, string $replaced, string $replacing, string $dblayer): void
 {
     $sql_lines = file($filepath);
     $query = '';
@@ -89,7 +89,8 @@ function activate_core_plugins(): void
  * @param array &$infos - populated with infos
  * @param array &$errors - populated with errors
  */
-function install_db_connect(&$infos, &$errors): void
+/** @param array<mixed> $infos @param string[] $errors */
+function install_db_connect(array &$infos, array &$errors): void
 {
     try {
         pwg_db_connect(

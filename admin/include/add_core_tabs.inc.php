@@ -10,7 +10,8 @@ declare(strict_types=1);
 
 add_event_handler('tabsheet_before_select', 'add_core_tabs', 0);
 
-function add_core_tabs(array $sheets, $tab_id): array
+/** @param array<mixed> $sheets @return array<mixed> */
+function add_core_tabs(array $sheets, string $tab_id): array
 {
     switch ($tab_id) {
         case 'admin_home':

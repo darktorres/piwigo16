@@ -22,6 +22,7 @@ use Piwigo\Ws\PwgNamedStruct;
  *    @option bool sort_by_counter
  */
 /** @return array<mixed> @param array<mixed> $params */
+/** @param array<mixed> $params */
 function ws_tags_getList(array $params, \Piwigo\Ws\PwgServer &$service): array
 {
     $tags = get_available_tags();
@@ -84,6 +85,7 @@ function ws_tags_getAdminList($params, \Piwigo\Ws\PwgServer &$service): array
  *    @option string order
  */
 /** @return array<mixed> @param array<mixed> $params */
+/** @param array<mixed> $params */
 function ws_tags_getImages(array $params, \Piwigo\Ws\PwgServer &$service): array
 {
     // first build all the tag_ids we are interested in
@@ -220,6 +222,7 @@ SELECT *
  *    @option string name
  */
 /** @return array<mixed>|\PwgError @param array<mixed> $params */
+/** @param array<mixed> $params */
 function ws_tags_add(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
 {
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
@@ -248,6 +251,7 @@ WHERE id = '.$creation_output['id'].';';
 }
 
 /** @return array<mixed>|\PwgError @param array<mixed> $params */
+/** @param array<mixed> $params */
 function ws_tags_delete(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
 {
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
@@ -277,6 +281,7 @@ SELECT COUNT(*)
     }
 }
 
+/** @param array<mixed> $params */
 /** @param array<mixed> $params */
 function ws_tags_rename(array $params, \Piwigo\Ws\PwgServer &$service): mixed
 {
@@ -345,6 +350,7 @@ SELECT
 
 
 /** @return array<mixed>|\PwgError @param array<mixed> $params */
+/** @param array<mixed> $params */
 function ws_tags_duplicate(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
 {
 
@@ -424,6 +430,7 @@ SELECT image_id
 }
 
 /** @return array<mixed>|\PwgError @param array<mixed> $params */
+/** @param array<mixed> $params */
 function ws_tags_merge(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
 {
 

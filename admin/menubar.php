@@ -23,12 +23,13 @@ if (!is_webmaster()) {
     \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
 }
 
-function abs_fn_cmp($a, $b): float|int
+function abs_fn_cmp(mixed $a, mixed $b): float|int
 {
     return abs($a) - abs($b);
 }
 
-function make_consecutive(array &$orders, $step = 50): void
+/** @param array<mixed> $orders */
+function make_consecutive(array &$orders, int $step = 50): void
 {
     uasort($orders, abs_fn_cmp(...));
     $crt = 1;

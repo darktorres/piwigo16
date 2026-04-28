@@ -243,6 +243,7 @@ WHERE '.\Piwigo\Core\Config::userFields()['username'].'=\''.$username.'\'
 /**
  * which upgrades are available ?
  */
+/** @return string[] */
 function get_available_upgrade_ids(): array
 {
     $upgrades_path = PHPWG_ROOT_PATH.'install/db';

@@ -279,6 +279,7 @@ foreach ($activity_last_weeks as $week => $i) {
 //  * Set the sizes according to the groups created
 
 //Function to sort days by number of activity
+/** @param array<mixed> $a @param array<mixed> $b */
 function cmp_day(array $a, array $b): int
 {
     return $a['x'] <=> $b['x'];

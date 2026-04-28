@@ -27,6 +27,7 @@ use Piwigo\Ws\PwgNamedArray;
  *    @option int prev_page (optional)
  */
 /** @return array<mixed>|\PwgError @param array<mixed> $params */
+/** @param array<mixed> $params */
 function ws_getMissingDerivatives(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
 {
     if (empty($params['types'])) {
@@ -259,6 +260,7 @@ function ws_getCacheSize($params, \Piwigo\Ws\PwgServer &$service): array
  *    @option int[] image_id
  */
 /** @param array<mixed> $params */
+/** @param array<mixed> $params */
 function ws_caddie_add(array $params, \Piwigo\Ws\PwgServer &$service): int
 {
     global $user;
@@ -298,6 +300,7 @@ SELECT id
  *    @option string anonymous_id (optional)
  */
 /** @param array<mixed> $params */
+/** @param array<mixed> $params */
 function ws_rates_delete(array $params, \Piwigo\Ws\PwgServer &$service): mixed
 {
     $query = '
@@ -326,6 +329,7 @@ DELETE FROM '. RATE_TABLE .'
  *    @option string username
  *    @option string password
  */
+/** @param array<mixed> $params */
 /** @param array<mixed> $params */
 function ws_session_login(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|true
 {
@@ -422,6 +426,7 @@ function ws_session_getStatus($params, \Piwigo\Ws\PwgServer &$service): mixed
  *  @since 12
  */
 /** @return array<mixed>|\PwgError @param array<mixed> $param */
+/** @param array<mixed> $param */
 function ws_getActivityList(array $param, \Piwigo\Ws\PwgServer &$service): PwgError|array
 {
     foreach (['date_min', 'date_max'] as $datefield) {
@@ -622,6 +627,7 @@ SELECT
  * @since 13
  */
 /** @param array<mixed> $params */
+/** @param array<mixed> $params */
 function ws_history_log(array $params, \Piwigo\Ws\PwgServer &$service): void
 {
     global $logger, $page;
@@ -659,6 +665,7 @@ function ws_history_log(array $params, \Piwigo\Ws\PwgServer &$service): void
  * @since 13
  */
 /** @return array<mixed> @param array<mixed> $param */
+/** @param array<mixed> $param */
 function ws_history_search(array $param, \Piwigo\Ws\PwgServer &$service): array
 {
 

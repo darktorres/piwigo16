@@ -52,7 +52,8 @@ $must_repost = false;
  * @param check_key_treated: array of check_key treated
  * @return none
  */
-function do_timeout_treatment($post_keyname, $check_key_treated = []): bool
+/** @param string[] $check_key_treated */
+function do_timeout_treatment(string $post_keyname, array $check_key_treated = []): bool
 {
     global $env_nbm, $base_url, $page, $must_repost;
 
@@ -84,7 +85,7 @@ function do_timeout_treatment($post_keyname, $check_key_treated = []): bool
  * Get the authorized_status for each tab
  * return corresponding status
  */
-function get_tab_status($mode): int
+function get_tab_status(string $mode): int
 {
     $result = ACCESS_WEBMASTER;
     $result = match ($mode) {
@@ -179,7 +180,7 @@ order by
  * Apply global functions to mail content
  * return customize mail content rendered
  */
-function render_global_customize_mail_content($customize_mail_content)
+function render_global_customize_mail_content(string|array $customize_mail_content): string
 {
     if (\Piwigo\Core\Config::nbmSendHtmlMail() and !(str_starts_with((string) $customize_mail_content, '<'))) {
         // On HTML mail, detects if the content are HTML format.
@@ -198,7 +199,8 @@ function render_global_customize_mail_content($customize_mail_content)
 /**
  * @return mixed[]
  */
-function do_action_send_mail_notification($action = 'list_to_send', $check_key_list = [], $customize_mail_content = ''): array
+/** @param string[] $check_key_list @return array<mixed> */
+function do_action_send_mail_notification(string $action = 'list_to_send', array $check_key_list = [], string $customize_mail_content = ''): array
 {
     global $page, $user, $lang_info, $lang, $env_nbm;
     $return_list = [];
@@ -219,7 +221,7 @@ function do_action_send_mail_notification($action = 'list_to_send', $check_key_l
             if (count($data_users) > 0) {
                 $datas = [];
 
-                if (!isset($customize_mail_content)) {
+                if (empty($customize_mail_content)) {
                     $customize_mail_content = \Piwigo\Core\Config::nbmComplementaryMailContent();
                 }
 

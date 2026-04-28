@@ -986,7 +986,10 @@ SELECT image_id
  *  int[] 
  * @return string[]
  */
-/** @param int[]|int|string $cat_ids @return string[] */
+/**
+ * @param int[]|int|string $cat_ids
+ * @return string[]
+ */
 function get_fulldirs(array|int|string $cat_ids): array
 {
     if (count($cat_ids) == 0) {
@@ -1703,7 +1706,10 @@ DELETE
  * @param array $image_ids
  * @return array array, image_id => list of tag ids
  */
-/** @param int[] $image_ids @return array<mixed> */
+/**
+ * @param int[] $image_ids
+ * @return array<mixed>
+ */
 function get_image_tag_ids(array $image_ids): array
 {
     if (count($image_ids) == 0) {
@@ -1881,7 +1887,10 @@ DELETE
  *
  * @param int[] $images
  */
-/** @param int[] $images @param int[]|int $categories */
+/**
+ * @param int[] $images
+ * @param int[]|int $categories
+ */
 function associate_images_to_categories(array $images, array|int $categories): void
 {
     if (count($images) == 0
@@ -1998,7 +2007,10 @@ DELETE
  *
  * @param int[] $images
  */
-/** @param int[] $images @param int[] $categories */
+/**
+ * @param int[] $images
+ * @param int[] $categories
+ */
 function move_images_to_categories(array $images, array $categories): bool
 {
     if (count($images) == 0) {
@@ -2037,7 +2049,10 @@ DELETE '.IMAGE_CATEGORY_TABLE.'.*
  * @param int[] $sources
  * @param int[] $destinations
  */
-/** @param int[] $sources */
+/**
+ * @param int[] $sources
+ * @param int[] $destinations
+ */
 function associate_categories_to_categories(array $sources, array $destinations): void
 {
     if (count($sources) == 0) {
@@ -2442,7 +2457,10 @@ SELECT name
     return $groupname;
 }
 
-/** @param int[]|int $group_ids @return array<mixed>|false */
+/**
+ * @param int[]|int $group_ids
+ * @return array<mixed>|false
+ */
 function delete_groups(array|int $group_ids): false|array
 {
 
@@ -2646,7 +2664,11 @@ function get_tag_ids($raw_tags, $allow_create = true): array
  * @param string[] $name - names of elements, indexed by ids
  * @return int[]
  */
-/** @param int[] $element_ids @param string[] $name @return int[] */
+/**
+ * @param int[] $element_ids
+ * @param string[] $name
+ * @return int[]
+ */
 function order_by_name(array $element_ids, array $name): array
 {
     $ordered_element_ids = [];
@@ -2926,7 +2948,10 @@ function deltree(string $path, ?string $trash_path = null): bool
  *  string|string[]  list of keys to retrieve (categories,groups,images,tags,users)
  * @return string[]
  */
-/** @param string[] $requested @return array<mixed> */
+/**
+ * @param string[] $requested
+ * @return array<mixed>
+ */
 function get_admin_client_cache_keys(array $requested = []): array
 {
     $tables = [

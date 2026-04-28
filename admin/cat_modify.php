@@ -82,7 +82,7 @@ SELECT galleries_url
     return $row['galleries_url'];
 }
 
-function get_min_local_dir($local_dir)
+function get_min_local_dir(string $local_dir): string
 {
     $full_dir = explode('/', (string) $local_dir);
     if (count($full_dir) <= 3) {

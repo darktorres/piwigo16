@@ -43,7 +43,8 @@ $sort_orders = [
 /**
  * @return mixed[]
  */
-function get_categories_ref_date($ids, string $field = 'date_available', string $minmax = 'max'): array
+/** @param int[]|int|string $ids @return array<mixed> */
+function get_categories_ref_date(array|int|string $ids, string $field = 'date_available', string $minmax = 'max'): array
 {
     // we need to work on the whole tree under each category, even if we don't
     // want to sort sub categories

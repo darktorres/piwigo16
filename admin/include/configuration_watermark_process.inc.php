@@ -23,7 +23,8 @@ if (!is_webmaster()) {
     return;
 }
 
-function get_watermark_filename($list, $candidate, $step = 0)
+/** @param string[] $list */
+function get_watermark_filename(array $list, string $candidate, int $step = 0): string
 {
     global $change_name;
     $change_name = $candidate;

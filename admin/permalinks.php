@@ -10,11 +10,12 @@ declare(strict_types=1);
 /**
  * @return mixed[]
  */
+/** @param string[] $sortable_by @param string[]|null $get_rejects @return array<mixed> */
 function parse_sort_variables(
-    $sortable_by,
-    $default_field,
-    $get_param,
-    $get_rejects,
+    array $sortable_by,
+    ?string $default_field,
+    string $get_param,
+    ?array $get_rejects,
     ?string $template_var,
     string $anchor = ''
 ): array {

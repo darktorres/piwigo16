@@ -861,7 +861,10 @@ function get_browser_language(): false|int|string
  * @param int|int[] $user_ids
  * @param array $override_values values used to override default user values
  */
-/** @param int[]|int $user_ids @param array<mixed>|null $override_values */
+/**
+ * @param int[]|int $user_ids
+ * @param array<mixed>|null $override_values
+ */
 function create_user_infos(array|int $user_ids, ?array $override_values = null): void
 {
     if (!is_array($user_ids)) {

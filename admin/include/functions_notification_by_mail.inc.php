@@ -84,9 +84,10 @@ function quote_check_key_list(array $check_key_list = []): array
 /**
  * @return mixed[]
  */
-/** @param string[] $check_key_list */
-/** @return array<mixed> */
-function get_user_notifications(string $action, array $check_key_list = [], bool|string $enabled_filter_value = ''): array
+/**
+ * @param string[] $check_key_list
+ * @return array<mixed>
+ */function get_user_notifications(string $action, array $check_key_list = [], bool|string $enabled_filter_value = ''): array
 {
     $data_users = [];
 

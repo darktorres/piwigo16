@@ -563,7 +563,10 @@ INSERT INTO '.HISTORY_TABLE.'
     return true;
 }
 
-/** @param int[]|int|string $object_id @param array<mixed> $details */
+/**
+ * @param int[]|int|string $object_id
+ * @param array<mixed> $details
+ */
 function pwg_activity(string $object, array|int|string $object_id, string $action, array $details = []): void
 {
     global $user;

@@ -26,7 +26,7 @@ include_once(PHPWG_ROOT_PATH.'include/functions_notification.inc.php');
  *  string  mysql datetime format
  * @return int timestamp
  */
-function datetime_to_ts($datetime)
+function datetime_to_ts(string $datetime): int
 {
     return strtotime($datetime);
 }
@@ -40,7 +40,7 @@ function datetime_to_ts($datetime)
  *  int 
  * @return string ISO 8601 date format
  */
-function ts_to_iso8601($ts)
+function ts_to_iso8601(int $ts): string
 {
     $tz = date('O', $ts);
     $tz = substr($tz, 0, -2).':'.substr($tz, -2);

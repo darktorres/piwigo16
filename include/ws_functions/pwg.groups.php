@@ -20,7 +20,10 @@ use Piwigo\Ws\PwgNamedStruct;
  *    @option int[] group_id (optional)
  *    @option string name (optional)
  */
-/** @return array<mixed>|\PwgError @param array<mixed> $params */
+/**
+ * @return array<mixed>|\PwgError
+ * @param array<mixed> $params
+ */
 function ws_groups_getList(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
 {
     if (!preg_match(PATTERN_ORDER, (string) $params['order'])) {
@@ -247,7 +250,10 @@ SELECT COUNT(*)
  *    @option int destination_group_id
  *    @option int[] merge_group_id
  */
-/** @return array<mixed>|\PwgError @param array<mixed> $params */
+/**
+ * @return array<mixed>|\PwgError
+ * @param array<mixed> $params
+ */
 function ws_groups_merge(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
 {
 

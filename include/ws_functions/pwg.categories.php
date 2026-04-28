@@ -27,9 +27,11 @@ use Piwigo\Ws\PwgNamedStruct;
  *    @option int page
  *    @option string order (optional)
  */
-/** @return array<mixed>|\PwgError @param array<mixed> $params */
-/** @param array<mixed> $params */
-function ws_categories_getImages(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
+/**
+ * @return array<mixed>|\PwgError
+ * @param array<mixed> $params
+ * @param array<mixed> $params
+ */function ws_categories_getImages(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
 {
     global $user;
 
@@ -239,9 +241,11 @@ SELECT
  *    @option bool tree_output
  *    @option bool fullname
  */
-/** @return array<mixed>|\PwgError @param array<mixed> $params */
-/** @param array<mixed> $params */
-function ws_categories_getList(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
+/**
+ * @return array<mixed>|\PwgError
+ * @param array<mixed> $params
+ * @param array<mixed> $params
+ */function ws_categories_getList(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
 {
     global $user;
 
@@ -545,9 +549,11 @@ SELECT id, path, representative_ext
  * Only admin can run this method and permissions are not taken into
  * account.
  */
-/** @return array<mixed> @param array<mixed> $params */
-/** @param array<mixed> $params */
-function ws_categories_getAdminList(array $params, \Piwigo\Ws\PwgServer &$service): array
+/**
+ * @return array<mixed>
+ * @param array<mixed> $params
+ * @param array<mixed> $params
+ */function ws_categories_getAdminList(array $params, \Piwigo\Ws\PwgServer &$service): array
 {
     if (!isset($params['additional_output'])) {
         $params['additional_output'] = '';
@@ -684,9 +690,11 @@ SELECT
  *    @option string status (optional)
  *    @option bool commentable
  */
-/** @return array<mixed>|\PwgError @param array<mixed> $params */
-/** @param array<mixed> $params */
-function ws_categories_add(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
+/**
+ * @return array<mixed>|\PwgError
+ * @param array<mixed> $params
+ * @param array<mixed> $params
+ */function ws_categories_add(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
 {
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
@@ -730,9 +738,10 @@ function ws_categories_add(array $params, \Piwigo\Ws\PwgServer &$service): PwgEr
  *    @option int cat_id
  *    @option int rank
  */
-/** @param array<mixed> $params */
-/** @param array<mixed> $params */
-function ws_categories_setRank(array $params, \Piwigo\Ws\PwgServer &$service): mixed
+/**
+ * @param array<mixed> $params
+ * @param array<mixed> $params
+ */function ws_categories_setRank(array $params, \Piwigo\Ws\PwgServer &$service): mixed
 {
     // does the category really exist?
     $query = '
@@ -812,9 +821,10 @@ SELECT id
  *    @option bool commentable (optional)
  *    @option bool apply_commentable_to_subalbums (optional)
  */
-/** @param array<mixed> $params */
-/** @param array<mixed> $params */
-function ws_categories_setInfo(array $params, \Piwigo\Ws\PwgServer &$service): mixed
+/**
+ * @param array<mixed> $params
+ * @param array<mixed> $params
+ */function ws_categories_setInfo(array $params, \Piwigo\Ws\PwgServer &$service): mixed
 {
     if (isset($params['pwg_token']) and get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
@@ -900,9 +910,10 @@ UPDATE '.CATEGORIES_TABLE.'
  *    @option int category_id
  *    @option int image_id
  */
-/** @param array<mixed> $params */
-/** @param array<mixed> $params */
-function ws_categories_setRepresentative(array $params, \Piwigo\Ws\PwgServer &$service): mixed
+/**
+ * @param array<mixed> $params
+ * @param array<mixed> $params
+ */function ws_categories_setRepresentative(array $params, \Piwigo\Ws\PwgServer &$service): mixed
 {
     // does the category really exist?
     $query = '
@@ -954,9 +965,10 @@ UPDATE '. USER_CACHE_CATEGORIES_TABLE .'
  * @param mixed[] $params
  *    @option int category_id
  */
-/** @param array<mixed> $params */
-/** @param array<mixed> $params */
-function ws_categories_deleteRepresentative(array $params, \Piwigo\Ws\PwgServer &$service): mixed
+/**
+ * @param array<mixed> $params
+ * @param array<mixed> $params
+ */function ws_categories_deleteRepresentative(array $params, \Piwigo\Ws\PwgServer &$service): mixed
 {
     // does the category really exist?
     $query = '
@@ -999,9 +1011,11 @@ UPDATE '.CATEGORIES_TABLE.'
  * @param mixed[] $params
  *    @option int category_id
  */
-/** @return array<mixed>|\PwgError @param array<mixed> $params */
-/** @param array<mixed> $params */
-function ws_categories_refreshRepresentative(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
+/**
+ * @return array<mixed>|\PwgError
+ * @param array<mixed> $params
+ * @param array<mixed> $params
+ */function ws_categories_refreshRepresentative(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
 {
     // does the category really exist?
     $query = '
@@ -1053,9 +1067,10 @@ SELECT *
  *    @option string photo_deletion_mode
  *    @option string pwg_token
  */
-/** @param array<mixed> $params */
-/** @param array<mixed> $params */
-function ws_categories_delete(array $params, \Piwigo\Ws\PwgServer &$service): mixed
+/**
+ * @param array<mixed> $params
+ * @param array<mixed> $params
+ */function ws_categories_delete(array $params, \Piwigo\Ws\PwgServer &$service): mixed
 {
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
@@ -1118,9 +1133,11 @@ SELECT id
  *    @option int parent
  *    @option string pwg_token
  */
-/** @return array<mixed>|\PwgError @param array<mixed> $params */
-/** @param array<mixed> $params */
-function ws_categories_move(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
+/**
+ * @return array<mixed>|\PwgError
+ * @param array<mixed> $params
+ * @param array<mixed> $params
+ */function ws_categories_move(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
 {
     global $page;
 
@@ -1268,9 +1285,10 @@ SELECT
  * Return the number of orphan photos if an album is deleted
  * @since 12
  */
-/** @param array<mixed> $param */
-/** @param array<mixed> $param */
-function ws_categories_calculateOrphans(array $param, \Piwigo\Ws\PwgServer &$service): mixed
+/**
+ * @param array<mixed> $param
+ * @param array<mixed> $param
+ */function ws_categories_calculateOrphans(array $param, \Piwigo\Ws\PwgServer &$service): mixed
 {
     $category_id = $param['category_id'][0];
 

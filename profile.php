@@ -127,7 +127,10 @@ SELECT '.implode(',', $fields).'
 }
 
 //------------------------------------------------------ update & customization
-/** @param array<string,mixed> $userdata @param string[] $errors */
+/**
+ * @param array<string,mixed> $userdata
+ * @param string[] $errors
+ */
 function save_profile_from_post(array $userdata, array &$errors): bool
 {
     global $page;

@@ -20,6 +20,7 @@ declare(strict_types=1);
  * @param float $rate
  *  array|false as return by update_rating_score()
  */
+/** @return array<mixed>|false */
 function rate_picture($image_id, $rate)
 {
     global $user;

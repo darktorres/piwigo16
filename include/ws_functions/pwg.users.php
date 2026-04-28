@@ -34,9 +34,11 @@ use Piwigo\Ws\PwgNamedStruct;
  *    @option string min_register
  *    @option string max_register
  */
-/** @return array<mixed>|\PwgError @param array<mixed> $params */
-/** @param array<mixed> $params */
-function ws_users_getList(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
+/**
+ * @return array<mixed>|\PwgError
+ * @param array<mixed> $params
+ * @param array<mixed> $params
+ */function ws_users_getList(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
 {
     if (!preg_match(PATTERN_ORDER, (string) $params['order'])) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid input parameter order');
@@ -354,9 +356,10 @@ SELECT DISTINCT ';
  *    @option string password (optional)
  *    @option string email (optional)
  */
-/** @param array<mixed> $params */
-/** @param array<mixed> $params */
-function ws_users_add(array $params, \Piwigo\Ws\PwgServer &$service): mixed
+/**
+ * @param array<mixed> $params
+ * @param array<mixed> $params
+ */function ws_users_add(array $params, \Piwigo\Ws\PwgServer &$service): mixed
 {
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
@@ -400,9 +403,10 @@ function ws_users_add(array $params, \Piwigo\Ws\PwgServer &$service): mixed
  *    @option int[] user_id
  *    @option string pwg_token
  */
-/** @param array<mixed> $params */
-/** @param array<mixed> $params */
-function ws_users_getAuthKey(array $params, \Piwigo\Ws\PwgServer &$service): mixed
+/**
+ * @param array<mixed> $params
+ * @param array<mixed> $params
+ */function ws_users_getAuthKey(array $params, \Piwigo\Ws\PwgServer &$service): mixed
 {
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
@@ -424,9 +428,10 @@ function ws_users_getAuthKey(array $params, \Piwigo\Ws\PwgServer &$service): mix
  *    @option int[] user_id
  *    @option string pwg_token
  */
-/** @param array<mixed> $params */
-/** @param array<mixed> $params */
-function ws_users_delete(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|string
+/**
+ * @param array<mixed> $params
+ * @param array<mixed> $params
+ */function ws_users_delete(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|string
 {
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
@@ -490,9 +495,10 @@ SELECT
  *    @option bool show_nb_hits (optional)
  *    @option bool enabled_high (optional)
  */
-/** @param array<mixed> $params */
-/** @param array<mixed> $params */
-function ws_users_setInfo(array $params, \Piwigo\Ws\PwgServer &$service): mixed
+/**
+ * @param array<mixed> $params
+ * @param array<mixed> $params
+ */function ws_users_setInfo(array $params, \Piwigo\Ws\PwgServer &$service): mixed
 {
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
@@ -527,9 +533,10 @@ function ws_users_setInfo(array $params, \Piwigo\Ws\PwgServer &$service): mixed
  *    @option string new_password (optional)
  *    @option string conf_new_password (optional)
  */
-/** @param array<mixed> $params */
-/** @param array<mixed> $params */
-function ws_users_setMyInfo(array $params, \Piwigo\Ws\PwgServer &$service): mixed
+/**
+ * @param array<mixed> $params
+ * @param array<mixed> $params
+ */function ws_users_setMyInfo(array $params, \Piwigo\Ws\PwgServer &$service): mixed
 {
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
@@ -618,9 +625,10 @@ SELECT '.\Piwigo\Core\Config::userFields()['password'].' AS password
  *    @option string param
  *    @option string|mixed value
  */
-/** @param array<mixed> $params */
-/** @param array<mixed> $params */
-function ws_users_preferences_set(array $params, \Piwigo\Ws\PwgServer &$service): mixed
+/**
+ * @param array<mixed> $params
+ * @param array<mixed> $params
+ */function ws_users_preferences_set(array $params, \Piwigo\Ws\PwgServer &$service): mixed
 {
     global $user;
 
@@ -644,9 +652,10 @@ function ws_users_preferences_set(array $params, \Piwigo\Ws\PwgServer &$service)
  * @param mixed[] $params
  *    @option int image_id
  */
-/** @param array<mixed> $params */
-/** @param array<mixed> $params */
-function ws_users_favorites_add(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|true
+/**
+ * @param array<mixed> $params
+ * @param array<mixed> $params
+ */function ws_users_favorites_add(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|true
 {
     global $user;
 
@@ -683,9 +692,10 @@ SELECT COUNT(*)
  * @param mixed[] $params
  *    @option int image_id
  */
-/** @param array<mixed> $params */
-/** @param array<mixed> $params */
-function ws_users_favorites_remove(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|true
+/**
+ * @param array<mixed> $params
+ * @param array<mixed> $params
+ */function ws_users_favorites_remove(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|true
 {
     global $user;
 
@@ -724,9 +734,10 @@ DELETE
  *    @option int page
  *    @option string order
  */
-/** @param array<mixed> $params */
-/** @param array<mixed> $params */
-function ws_users_favorites_getList(array $params, \Piwigo\Ws\PwgServer &$service): false|array
+/**
+ * @param array<mixed> $params
+ * @param array<mixed> $params
+ */function ws_users_favorites_getList(array $params, \Piwigo\Ws\PwgServer &$service): false|array
 {
     global $user;
 
@@ -799,9 +810,11 @@ SELECT
  *    @option string pwg_token
  *    @option boolean send_by_mail
  */
-/** @return array<mixed>|\PwgError @param array<mixed> $params */
-/** @param array<mixed> $params */
-function ws_users_generate_password_link(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
+/**
+ * @return array<mixed>|\PwgError
+ * @param array<mixed> $params
+ * @param array<mixed> $params
+ */function ws_users_generate_password_link(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
 {
     global $user;
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
@@ -865,9 +878,10 @@ function ws_users_generate_password_link(array $params, \Piwigo\Ws\PwgServer &$s
  *    @option int user_id
  *    @option string pwg_token
  */
-/** @param array<mixed> $params */
-/** @param array<mixed> $params */
-function ws_set_main_user(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|string
+/**
+ * @param array<mixed> $params
+ * @param array<mixed> $params
+ */function ws_set_main_user(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|string
 {
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
@@ -903,9 +917,11 @@ function ws_set_main_user(array $params, \Piwigo\Ws\PwgServer &$service): PwgErr
  * @since 15
  * @param mixed[] $params
  */
-/** @return array<mixed>|\PwgError @param array<mixed> $params */
-/** @param array<mixed> $params */
-function ws_create_api_key(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
+/**
+ * @return array<mixed>|\PwgError
+ * @param array<mixed> $params
+ * @param array<mixed> $params
+ */function ws_create_api_key(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
 {
     global $user, $logger;
 
@@ -941,9 +957,10 @@ function ws_create_api_key(array $params, \Piwigo\Ws\PwgServer &$service): PwgEr
  * @since 15
  * @param mixed[] $params
  */
-/** @param array<mixed> $params */
-/** @param array<mixed> $params */
-function ws_revoke_api_key(array $params, \Piwigo\Ws\PwgServer &$service): mixed
+/**
+ * @param array<mixed> $params
+ * @param array<mixed> $params
+ */function ws_revoke_api_key(array $params, \Piwigo\Ws\PwgServer &$service): mixed
 {
     global $user, $logger;
 
@@ -976,9 +993,10 @@ function ws_revoke_api_key(array $params, \Piwigo\Ws\PwgServer &$service): mixed
  * @since 15
  * @param mixed[] $params
  */
-/** @param array<mixed> $params */
-/** @param array<mixed> $params */
-function ws_edit_api_key(array $params, \Piwigo\Ws\PwgServer &$service): mixed
+/**
+ * @param array<mixed> $params
+ * @param array<mixed> $params
+ */function ws_edit_api_key(array $params, \Piwigo\Ws\PwgServer &$service): mixed
 {
     global $user, $logger;
 
@@ -1016,9 +1034,11 @@ function ws_edit_api_key(array $params, \Piwigo\Ws\PwgServer &$service): mixed
  * @since 15
  * @param mixed[] $params
  */
-/** @return array<mixed>|\PwgError @param array<mixed> $params */
-/** @param array<mixed> $params */
-function ws_get_api_key(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
+/**
+ * @return array<mixed>|\PwgError
+ * @param array<mixed> $params
+ * @param array<mixed> $params
+ */function ws_get_api_key(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
 {
     global $user;
 

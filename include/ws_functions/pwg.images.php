@@ -281,7 +281,11 @@ function remove_chunks(string $original_sum, string $type): void
  *    @option string content
  *    @option string key
  */
-/** @return array<mixed>|\PwgError @param array<mixed> $params @param array<mixed> $params */
+/**
+ * @return array<mixed>|\PwgError
+ * @param array<mixed> $params
+ * @param array<mixed> $params
+ */
 function ws_images_addComment(array $params, \Piwigo\Ws\PwgServer $service): PwgError|array
 {
     if (!\Piwigo\Core\Config::activateComments()) {
@@ -345,7 +349,11 @@ SELECT DISTINCT image_id
  *    @option int comments_page
  *    @option int comments_per_page
  */
-/** @return array<mixed>|\PwgError @param array<mixed> $params @param array<mixed> $params */
+/**
+ * @return array<mixed>|\PwgError
+ * @param array<mixed> $params
+ * @param array<mixed> $params
+ */
 function ws_images_getInfo(array $params, \Piwigo\Ws\PwgServer $service): PwgError|array
 {
     global $user;
@@ -624,7 +632,11 @@ SELECT DISTINCT id
  *    @option int page
  *    @option string order (optional)
  */
-/** @return array<mixed> @param array<mixed> $params @param array<mixed> $params */
+/**
+ * @return array<mixed>
+ * @param array<mixed> $params
+ * @param array<mixed> $params
+ */
 function ws_images_search(array $params, \Piwigo\Ws\PwgServer $service): array
 {
     include_once(PHPWG_ROOT_PATH .'include/functions_search.inc.php');
@@ -708,7 +720,11 @@ SELECT *
  * @param mixed[] $params
  *    @option string query
  */
-/** @return array<mixed>|\PwgError @param array<mixed> $params @param array<mixed> $params */
+/**
+ * @return array<mixed>|\PwgError
+ * @param array<mixed> $params
+ * @param array<mixed> $params
+ */
 function ws_images_filteredSearch_create(array $params, \Piwigo\Ws\PwgServer $service): PwgError|array
 {
     global $user;
@@ -1011,9 +1027,11 @@ UPDATE '. IMAGES_TABLE .'
  *    @option int category_id
  *    @option int rank
  */
-/** @param array<mixed> $params */
-/** @return array<mixed> @param array<mixed> $params */
-function ws_images_setRank(array $params, \Piwigo\Ws\PwgServer $service): array|PwgError
+/**
+ * @param array<mixed> $params
+ * @return array<mixed>
+ * @param array<mixed> $params
+ */function ws_images_setRank(array $params, \Piwigo\Ws\PwgServer $service): array|PwgError
 {
     if (count($params['image_id']) > 1) {
         include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
@@ -1270,7 +1288,11 @@ SELECT
  *    @option bool check_uniqueness
  *    @option int image_id (optional)
  */
-/** @return array<mixed>|\PwgError @param array<mixed> $params @param array<mixed> $params */
+/**
+ * @return array<mixed>|\PwgError
+ * @param array<mixed> $params
+ * @param array<mixed> $params
+ */
 function ws_images_add(array $params, \Piwigo\Ws\PwgServer $service): PwgError|array
 {
     global $user, $logger;
@@ -1417,7 +1439,11 @@ SELECT id, name, permalink
  *    @option string|string[] tags
  *    @option int image_id (optional)
  */
-/** @return array<mixed>|\PwgError @param array<mixed> $params @param array<mixed> $params */
+/**
+ * @return array<mixed>|\PwgError
+ * @param array<mixed> $params
+ * @param array<mixed> $params
+ */
 function ws_images_addSimple(array $params, \Piwigo\Ws\PwgServer $service): PwgError|array
 {
     global $logger;
@@ -2001,7 +2027,11 @@ SELECT COUNT(*)
  *    @option string filename_list (optional)
  * @return mixed[]
  */
-/** @return array<mixed> @param array<mixed> $params @param array<mixed> $params */
+/**
+ * @return array<mixed>
+ * @param array<mixed> $params
+ * @param array<mixed> $params
+ */
 function ws_images_exist(array $params, \Piwigo\Ws\PwgServer $service): array
 {
     global $logger;
@@ -2266,7 +2296,11 @@ DELETE FROM '.IMAGE_FORMAT_TABLE.'
  *    @option int image_id
  *    @option string file_sum
  */
-/** @return array<mixed>|\PwgError @param array<mixed> $params @param array<mixed> $params */
+/**
+ * @return array<mixed>|\PwgError
+ * @param array<mixed> $params
+ * @param array<mixed> $params
+ */
 function ws_images_checkFiles(array $params, \Piwigo\Ws\PwgServer $service): PwgError|array
 {
     global $logger;
@@ -2544,7 +2578,11 @@ function ws_images_checkUpload($params, \Piwigo\Ws\PwgServer $service): mixed
  * @since 12
  * @param mixed[] $params
  */
-/** @return array<mixed> @param array<mixed> $params @param array<mixed> $params */
+/**
+ * @return array<mixed>
+ * @param array<mixed> $params
+ * @param array<mixed> $params
+ */
 function ws_images_emptyLounge(array $params, \Piwigo\Ws\PwgServer $service): array
 {
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
@@ -2560,7 +2598,11 @@ function ws_images_emptyLounge(array $params, \Piwigo\Ws\PwgServer $service): ar
  * @since 12
  * @param mixed[] $params
  */
-/** @return array<mixed>|\PwgError @param array<mixed> $params @param array<mixed> $params */
+/**
+ * @return array<mixed>|\PwgError
+ * @param array<mixed> $params
+ * @param array<mixed> $params
+ */
 function ws_images_uploadCompleted(array $params, \Piwigo\Ws\PwgServer $service): PwgError|array
 {
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
@@ -2624,7 +2666,11 @@ SELECT
  * @param mixed[] $params
  *    @option int block_size
  */
-/** @return array<mixed>|\PwgError @param array<mixed> $params @param array<mixed> $params */
+/**
+ * @return array<mixed>|\PwgError
+ * @param array<mixed> $params
+ * @param array<mixed> $params
+ */
 function ws_images_setMd5sum(array $params, \Piwigo\Ws\PwgServer $service): PwgError|array
 {
     if (get_pwg_token() != $params['pwg_token']) {
@@ -2653,7 +2699,11 @@ function ws_images_setMd5sum(array $params, \Piwigo\Ws\PwgServer $service): PwgE
  * @param mixed[] $params
  *    @option int image_id
  */
-/** @return array<mixed>|\PwgError @param array<mixed> $params @param array<mixed> $params */
+/**
+ * @return array<mixed>|\PwgError
+ * @param array<mixed> $params
+ * @param array<mixed> $params
+ */
 function ws_images_syncMetadata(array $params, \Piwigo\Ws\PwgServer $service): PwgError|array
 {
     if (get_pwg_token() != $params['pwg_token']) {
@@ -2710,7 +2760,11 @@ SELECT id
  * @param mixed[] $params
  *    @option int block_size
  */
-/** @return array<mixed>|\PwgError @param array<mixed> $params @param array<mixed> $params */
+/**
+ * @return array<mixed>|\PwgError
+ * @param array<mixed> $params
+ * @param array<mixed> $params
+ */
 function ws_images_deleteOrphans(array $params, \Piwigo\Ws\PwgServer $service): PwgError|array
 {
     if (get_pwg_token() != $params['pwg_token']) {

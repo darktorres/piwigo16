@@ -26,9 +26,11 @@ use Piwigo\Ws\PwgNamedArray;
  *    @option int max_urls
  *    @option int prev_page (optional)
  */
-/** @return array<mixed>|\PwgError @param array<mixed> $params */
-/** @param array<mixed> $params */
-function ws_getMissingDerivatives(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
+/**
+ * @return array<mixed>|\PwgError
+ * @param array<mixed> $params
+ * @param array<mixed> $params
+ */function ws_getMissingDerivatives(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
 {
     if (empty($params['types'])) {
         $types = array_keys(ImageStdParams::get_defined_type_map());
@@ -259,9 +261,10 @@ function ws_getCacheSize($params, \Piwigo\Ws\PwgServer &$service): array
  * @param mixed[] $params
  *    @option int[] image_id
  */
-/** @param array<mixed> $params */
-/** @param array<mixed> $params */
-function ws_caddie_add(array $params, \Piwigo\Ws\PwgServer &$service): int
+/**
+ * @param array<mixed> $params
+ * @param array<mixed> $params
+ */function ws_caddie_add(array $params, \Piwigo\Ws\PwgServer &$service): int
 {
     global $user;
 
@@ -299,9 +302,10 @@ SELECT id
  *    @option int user_id
  *    @option string anonymous_id (optional)
  */
-/** @param array<mixed> $params */
-/** @param array<mixed> $params */
-function ws_rates_delete(array $params, \Piwigo\Ws\PwgServer &$service): mixed
+/**
+ * @param array<mixed> $params
+ * @param array<mixed> $params
+ */function ws_rates_delete(array $params, \Piwigo\Ws\PwgServer &$service): mixed
 {
     $query = '
 DELETE FROM '. RATE_TABLE .'
@@ -329,9 +333,10 @@ DELETE FROM '. RATE_TABLE .'
  *    @option string username
  *    @option string password
  */
-/** @param array<mixed> $params */
-/** @param array<mixed> $params */
-function ws_session_login(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|true
+/**
+ * @param array<mixed> $params
+ * @param array<mixed> $params
+ */function ws_session_login(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|true
 {
     if (defined('PWG_API_KEY_REQUEST')) {
         return new PwgError(401, 'Cannot use this method with an api key');
@@ -425,9 +430,11 @@ function ws_session_getStatus($params, \Piwigo\Ws\PwgServer &$service): mixed
  * Returns lines of users activity
  *  @since 12
  */
-/** @return array<mixed>|\PwgError @param array<mixed> $param */
-/** @param array<mixed> $param */
-function ws_getActivityList(array $param, \Piwigo\Ws\PwgServer &$service): PwgError|array
+/**
+ * @return array<mixed>|\PwgError
+ * @param array<mixed> $param
+ * @param array<mixed> $param
+ */function ws_getActivityList(array $param, \Piwigo\Ws\PwgServer &$service): PwgError|array
 {
     foreach (['date_min', 'date_max'] as $datefield) {
         if (!empty($param[$datefield]) and !is_valid_mysql_datetime($param[$datefield])) {
@@ -626,9 +633,10 @@ SELECT
  * Log a new line in visit history
  * @since 13
  */
-/** @param array<mixed> $params */
-/** @param array<mixed> $params */
-function ws_history_log(array $params, \Piwigo\Ws\PwgServer &$service): void
+/**
+ * @param array<mixed> $params
+ * @param array<mixed> $params
+ */function ws_history_log(array $params, \Piwigo\Ws\PwgServer &$service): void
 {
     global $logger, $page;
 
@@ -664,9 +672,11 @@ function ws_history_log(array $params, \Piwigo\Ws\PwgServer &$service): void
  * Returns lines of an history search
  * @since 13
  */
-/** @return array<mixed> @param array<mixed> $param */
-/** @param array<mixed> $param */
-function ws_history_search(array $param, \Piwigo\Ws\PwgServer &$service): array
+/**
+ * @return array<mixed>
+ * @param array<mixed> $param
+ * @param array<mixed> $param
+ */function ws_history_search(array $param, \Piwigo\Ws\PwgServer &$service): array
 {
 
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');

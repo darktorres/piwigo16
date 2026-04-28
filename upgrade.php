@@ -82,7 +82,10 @@ SHOW TABLES
  *
  * @return array of array
  */
-/** @param string[] $tables @return array<string, string[]> */
+/**
+ * @param string[] $tables
+ * @return array<string, string[]>
+ */
 function get_columns_of(array $tables): array
 {
     $columns_of = [];

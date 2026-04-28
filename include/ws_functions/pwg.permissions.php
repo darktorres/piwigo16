@@ -20,7 +20,10 @@ use Piwigo\Ws\PwgNamedArray;
  *    @option int[] group_id (optional)
  *    @option int[] user_id (optional)
  */
-/** @return array<mixed>|\PwgError @param array<mixed> $params */
+/**
+ * @return array<mixed>|\PwgError
+ * @param array<mixed> $params
+ */
 function ws_permissions_getList(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
 {
     $my_params = array_intersect(array_keys($params), ['cat_id','group_id','user_id']);

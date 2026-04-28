@@ -175,7 +175,10 @@ foreach ($allAlbum as $album) {
 $is_forbidden = array_fill_keys(@explode(',', (string) $user['forbidden_categories']), 1);
 
 //Make an ordered tree
-/** @param array<mixed> $a @param array<mixed> $b */
+/**
+ * @param array<mixed> $a
+ * @param array<mixed> $b
+ */
 function cmpCat(array $a, array $b): int
 {
     return $a['rank'] <=> $b['rank'];
@@ -273,7 +276,10 @@ $template->assign_var_from_handle('ADMIN_CONTENT', 'albums');
 /**
  * @return mixed[]
  */
-/** @param int[]|int|string $ids @return array<mixed> */
+/**
+ * @param int[]|int|string $ids
+ * @return array<mixed>
+ */
 function get_categories_ref_date(array|int|string $ids, string $field = 'date_available', string $minmax = 'max'): array
 {
     // we need to work on the whole tree under each category, even if we don't

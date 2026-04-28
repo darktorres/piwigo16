@@ -172,7 +172,10 @@ if (count($missing_plugin_ids) > 0) {
 }
 
 // sort plugins by state then by name
-/** @param array<mixed> $a @param array<mixed> $b */
+/**
+ * @param array<mixed> $a
+ * @param array<mixed> $b
+ */
 function cmp(array $a, array $b): int|bool
 {
     $s = ['merged' => 0, 'missing' => 1, 'active' => 2, 'inactive' => 3];

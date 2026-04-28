@@ -67,7 +67,10 @@ function user_comment_check(string $action, array $comment)
  * @param array &$infos output array of error messages
  * @return string validate, moderate, reject
  */
-/** @param array<string,mixed> $comm @param string[] $infos */
+/**
+ * @param array<string,mixed> $comm
+ * @param string[] $infos
+ */
 function insert_user_comment(array &$comm, string $key, array &$infos)
 {
     global $user;

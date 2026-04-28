@@ -89,7 +89,10 @@ function activate_core_plugins(): void
  * @param array &$infos - populated with infos
  * @param array &$errors - populated with errors
  */
-/** @param array<mixed> $infos @param string[] $errors */
+/**
+ * @param array<mixed> $infos
+ * @param string[] $errors
+ */
 function install_db_connect(array &$infos, array &$errors): void
 {
     try {

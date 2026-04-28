@@ -48,7 +48,10 @@ class PwgTemplateAdapter
      * @param array $img
      * @return string
      */
-    /** @param array<mixed> $img @return string|array<mixed> */
+    /**
+ * @param array<mixed> $img
+ * @return string|array<mixed>
+ */
     public function derivative_url(string $type, array $img): string|array
     {
         return DerivativeImage::url($type, $img);

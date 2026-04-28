@@ -503,7 +503,10 @@ SELECT
  *
  * @return array
  */
-/** @param array<mixed> $args @return array<mixed> */
+/**
+ * @param array<mixed> $args
+ * @return array<mixed>
+ */
 function get_recent_post_dates_array(array $args): array
 {
     return get_recent_post_dates(

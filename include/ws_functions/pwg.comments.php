@@ -19,7 +19,10 @@ use Piwigo\Ws\PwgError;
  * @param mixed[] $params
  *
  */
-/** @return array<mixed>|\PwgError @param array<mixed> $params */
+/**
+ * @return array<mixed>|\PwgError
+ * @param array<mixed> $params
+ */
 function ws_userComments_getList(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
 {
     if (!\Piwigo\Core\Config::activateComments()) {

@@ -131,7 +131,10 @@ function get_sync_metadata_attributes(): array
  * @param array $infos - (path[, representative_ext])
  * @return array|false - includes data provided in $infos
  */
-/** @param array<mixed> $infos @return array<mixed>|false */
+/**
+ * @param array<mixed> $infos
+ * @return array<mixed>|false
+ */
 function get_sync_metadata(array $infos): array|false
 {
     $file = PHPWG_ROOT_PATH.$infos['path'];

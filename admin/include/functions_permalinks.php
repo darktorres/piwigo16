@@ -11,7 +11,7 @@ declare(strict_types=1);
 /** returns a category id that corresponds to the given permalink (or null)
  * @param string $permalink
  */
-function get_cat_id_from_permalink(string $permalink)
+function get_cat_id_from_permalink(string $permalink): ?int
 {
     $query = '
 SELECT id FROM '.CATEGORIES_TABLE.'
@@ -26,7 +26,7 @@ SELECT id FROM '.CATEGORIES_TABLE.'
 /** returns a category id that has used before this permalink (or null)
  * @param string $permalink
  */
-function get_cat_id_from_old_permalink(string $permalink)
+function get_cat_id_from_old_permalink(string $permalink): ?int
 {
     $query = '
 SELECT c.id

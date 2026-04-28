@@ -182,7 +182,10 @@ final class SizingParams
      *    expressed as a factor of the input width/height
      * @param int[] $min_size - (used only if _$max_crop_ !=0) two element array of output dimensions (width, height)
      */
-    /** @param array<int|float> $ideal_size @param array<int|float>|null $min_size */
+    /**
+ * @param array<int|float> $ideal_size
+ * @param array<int|float>|null $min_size
+ */
     public function __construct(public array $ideal_size, public int|float $max_crop = 0, public ?array $min_size = null)
     {
     }
@@ -323,7 +326,10 @@ final class DerivativeParams
     /**
      * @return int[]
      */
-    /** @param array<int|float> $in_size @return array<int|float> */
+    /**
+ * @param array<int|float> $in_size
+ * @return array<int|float>
+ */
     public function compute_final_size(array $in_size): array
     {
         $this->sizing->compute($in_size, null, $crop_rect, $scale_size);

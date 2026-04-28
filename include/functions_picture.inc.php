@@ -29,7 +29,10 @@ function get_default_slideshow_params(): array
 /**
  * Checks and corrects slideshow params
  */
-/** @param array<mixed> $params @return array<mixed> */
+/**
+ * @param array<mixed> $params
+ * @return array<mixed>
+ */
 function correct_slideshow_params(array $params = []): array
 {
     if ($params['period'] < \Piwigo\Core\Config::slideshowPeriodMin()) {

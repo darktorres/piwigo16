@@ -30,7 +30,10 @@ if (\Piwigo\Core\Config::enableSynchronization()) {
     $prefilters[] = ['ID' => 'no_sync_md5sum', 'NAME' => l10n('With no checksum')];
 }
 
-/** @param array<mixed> $a @param array<mixed> $b */
+/**
+ * @param array<mixed> $a
+ * @param array<mixed> $b
+ */
 function UC_name_compare(array $a, array $b): int
 {
     return strcmp(strtolower((string) $a['NAME']), strtolower((string) $b['NAME']));

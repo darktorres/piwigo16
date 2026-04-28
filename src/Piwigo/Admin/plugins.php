@@ -64,7 +64,10 @@ class plugins
      * Perform requested actions
      * @param string $action
      */
-    /** @param array<mixed> $options @return mixed */
+    /**
+ * @param array<mixed> $options
+ * @return mixed
+ */
     public function perform_action(string $action, string $plugin_id, array $options = []): mixed
     {
         if (!\Piwigo\Core\Config::enableExtensionsInstall() and 'delete' == $action) {

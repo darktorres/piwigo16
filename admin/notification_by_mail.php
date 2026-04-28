@@ -199,7 +199,10 @@ function render_global_customize_mail_content(string|array $customize_mail_conte
 /**
  * @return mixed[]
  */
-/** @param string[] $check_key_list @return array<mixed> */
+/**
+ * @param string[] $check_key_list
+ * @return array<mixed>
+ */
 function do_action_send_mail_notification(string $action = 'list_to_send', array $check_key_list = [], string $customize_mail_content = ''): array
 {
     global $page, $user, $lang_info, $lang, $env_nbm;

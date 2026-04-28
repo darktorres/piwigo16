@@ -10,7 +10,11 @@ declare(strict_types=1);
 /**
  * @return mixed[]
  */
-/** @param string[] $sortable_by @param string[]|null $get_rejects @return array<mixed> */
+/**
+ * @param string[] $sortable_by
+ * @param string[]|null $get_rejects
+ * @return array<mixed>
+ */
 function parse_sort_variables(
     array $sortable_by,
     ?string $default_field,

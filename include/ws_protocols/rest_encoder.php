@@ -186,7 +186,10 @@ class PwgRestEncoder extends PwgResponseEncoder
         }
     }
 
-    /** @param array<mixed> $data @param array<mixed> $xml_attributes */
+    /**
+ * @param array<mixed> $data
+ * @param array<mixed> $xml_attributes
+ */
     public function encode_struct(array $data, bool $skip_underscore, array $xml_attributes = []): void
     {
         foreach ($data as $name => $value) {

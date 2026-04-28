@@ -130,8 +130,12 @@ class Inflector_en
         return $res;
     }
 
-    /** @param array<string,string> $rules @param string[] $res */
-    private static function run(array $rules, string $word, array &$res): string|null|false
+    /**
+ * @param array<string,string> $rules
+ * @param string[] $res
+ */
+    /** @param array<string|null> $res */
+private static function run(array $rules, string $word, array &$res): string|null|false
     {
         foreach ($rules as $rule => $replacement) {
             $rc = preg_replace($rule.'i', (string) $replacement, (string) $word, -1, $count);

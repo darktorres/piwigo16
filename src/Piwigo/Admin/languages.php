@@ -377,7 +377,10 @@ UPDATE '.USER_INFOS_TABLE.'
     /**
      * Sort functions
      */
-    /** @param array<mixed> $a @param array<mixed> $b */
+    /**
+ * @param array<mixed> $a
+ * @param array<mixed> $b
+ */
     public function extension_name_compare(array $a, array $b): int
     {
         return strcmp(strtolower((string) $a['extension_name']), strtolower((string) $b['extension_name']));

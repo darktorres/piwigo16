@@ -113,7 +113,10 @@ class LocalSiteReader
         return ['representative_ext'];
     }
 
-        /** @param array<mixed>|string $file @return array<mixed> */
+        /**
+ * @param array<mixed>|string $file
+ * @return array<mixed>
+ */
     public function get_element_update_attributes(mixed $file): array
     {
         $data = [];
@@ -141,7 +144,10 @@ class LocalSiteReader
     }
 
     // returns a hash of attributes (metadata+filesize+width,...) for file
-        /** @param array<mixed> $infos @return array<mixed>|false */
+        /**
+ * @param array<mixed> $infos
+ * @return array<mixed>|false
+ */
     public function get_element_metadata(array $infos): array|false
     {
         return get_sync_metadata($infos);

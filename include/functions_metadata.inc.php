@@ -16,7 +16,10 @@ declare(strict_types=1);
  * @param string $filename
  * @param array $map
  */
-/** @param array<mixed> $map @return array<mixed> */
+/**
+ * @param array<mixed> $map
+ * @return array<mixed>
+ */
 function get_iptc_data(string $filename, array $map, string $array_sep = ','): array
 {
     $result = [];
@@ -103,7 +106,10 @@ function clean_iptc_value($value)
  *
  * @param array $map
  */
-/** @param array<mixed> $map @return array<mixed> */
+/**
+ * @param array<mixed> $map
+ * @return array<mixed>
+ */
 function get_exif_data(string $filename, array $map): array
 {
     global $logger;

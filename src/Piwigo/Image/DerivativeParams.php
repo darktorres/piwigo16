@@ -43,7 +43,10 @@ final class DerivativeParams
     /**
      * @return int[]
      */
-    /** @param array<int|float> $in_size @return array<int|float> */
+    /**
+ * @param array<int|float> $in_size
+ * @return array<int|float>
+ */
     public function compute_final_size(array $in_size): array
     {
         $this->sizing->compute($in_size, null, $crop_rect, $scale_size);

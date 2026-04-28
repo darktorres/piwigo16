@@ -248,7 +248,10 @@ $template->assign(
 /**
  * @return float[]|int[]
  */
-/** @param array<mixed> $data @return array<mixed> */
+/**
+ * @param array<mixed> $data
+ * @return array<mixed>
+ */
 function set_missing_values(string $unit, array $data, DateTime|string|null $firstDate = null, DateTime|string|null $lastDate = null): array
 {
     $limit = count($data);

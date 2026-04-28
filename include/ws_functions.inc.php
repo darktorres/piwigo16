@@ -38,7 +38,10 @@ function ws_isInvokeAllowed(mixed $res, string $methodName, array $params): mixe
  * filters the images (images table only)
  * @return array{}|list{0: non-falsy-string, 1?: non-falsy-string, 2?: non-falsy-string, 3?: non-falsy-string, 4?: non-falsy-string, 5?: non-falsy-string, 6?: non-falsy-string, 7?: non-falsy-string, 8?: non-falsy-string, 9?: non-falsy-string, 10?: non-falsy-string}
  */
-/** @param array<mixed> $params @return array<mixed> */
+/**
+ * @param array<mixed> $params
+ * @return array<mixed>
+ */
 function ws_std_image_sql_filter(array $params, string $tbl_name = ''): array
 {
     foreach (['f_min_date_available', 'f_max_date_available', 'f_min_date_created', 'f_max_date_created'] as $datefield) {

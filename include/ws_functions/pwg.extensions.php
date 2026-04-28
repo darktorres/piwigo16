@@ -21,9 +21,10 @@ use Piwigo\Ws\PwgError;
  * @param mixed[] $params
  * @return array{id: mixed, name: mixed, version: mixed, state: mixed, description: mixed}[]
  */
-/** @param array<mixed> $params */
-/** @return array<mixed> */
-function ws_plugins_getList(array $params, \Piwigo\Ws\PwgServer $service): array
+/**
+ * @param array<mixed> $params
+ * @return array<mixed>
+ */function ws_plugins_getList(array $params, \Piwigo\Ws\PwgServer $service): array
 {
     $plugins = new plugins();
     $plugins->sort_fs_plugins('name');
@@ -283,7 +284,10 @@ function ws_extensions_ignoreupdate(array $params, \Piwigo\Ws\PwgServer $service
  * Checks for updates (core and extensions)
  * @param mixed[] $params
  */
-/** @param array<mixed> $params @return array<mixed> */
+/**
+ * @param array<mixed> $params
+ * @return array<mixed>
+ */
 function ws_extensions_checkupdates(array $params, \Piwigo\Ws\PwgServer $service): array
 {
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');

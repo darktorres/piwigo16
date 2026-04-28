@@ -27,8 +27,7 @@ use Piwigo\Ws\PwgNamedStruct;
  *    @option int page
  *    @option string order (optional)
  */
-/** @return array<mixed>|\PwgError */
-/** @param array<mixed> $params */
+/** @return array<mixed>|\PwgError @param array<mixed> $params */
 function ws_categories_getImages(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
 {
     global $user;
@@ -239,8 +238,7 @@ SELECT
  *    @option bool tree_output
  *    @option bool fullname
  */
-/** @return array<mixed>|\PwgError */
-/** @param array<mixed> $params */
+/** @return array<mixed>|\PwgError @param array<mixed> $params */
 function ws_categories_getList(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
 {
     global $user;
@@ -545,8 +543,7 @@ SELECT id, path, representative_ext
  * Only admin can run this method and permissions are not taken into
  * account.
  */
-/** @return array<mixed> */
-/** @param array<mixed> $params */
+/** @return array<mixed> @param array<mixed> $params */
 function ws_categories_getAdminList(array $params, \Piwigo\Ws\PwgServer &$service): array
 {
     if (!isset($params['additional_output'])) {
@@ -684,8 +681,7 @@ SELECT
  *    @option string status (optional)
  *    @option bool commentable
  */
-/** @return array<mixed>|\PwgError */
-/** @param array<mixed> $params */
+/** @return array<mixed>|\PwgError @param array<mixed> $params */
 function ws_categories_add(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
 {
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
@@ -995,8 +991,7 @@ UPDATE '.CATEGORIES_TABLE.'
  * @param mixed[] $params
  *    @option int category_id
  */
-/** @return array<mixed>|\PwgError */
-/** @param array<mixed> $params */
+/** @return array<mixed>|\PwgError @param array<mixed> $params */
 function ws_categories_refreshRepresentative(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
 {
     // does the category really exist?
@@ -1113,8 +1108,7 @@ SELECT id
  *    @option int parent
  *    @option string pwg_token
  */
-/** @return array<mixed>|\PwgError */
-/** @param array<mixed> $params */
+/** @return array<mixed>|\PwgError @param array<mixed> $params */
 function ws_categories_move(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
 {
     global $page;

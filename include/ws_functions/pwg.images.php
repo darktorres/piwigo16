@@ -281,9 +281,8 @@ function remove_chunks(string $original_sum, string $type): void
  *    @option string content
  *    @option string key
  */
-/** @return array<mixed>|\PwgError */
-/** @param array<mixed> $params */
-function ws_images_addComment(array $params, $service): PwgError|array
+/** @return array<mixed>|\PwgError @param array<mixed> $params */
+function ws_images_addComment(array $params, \Piwigo\Ws\PwgServer $service): PwgError|array
 {
     if (!\Piwigo\Core\Config::activateComments()) {
         return new PwgError(403, 'Comments are disabled');
@@ -345,9 +344,8 @@ SELECT DISTINCT image_id
  *    @option int comments_page
  *    @option int comments_per_page
  */
-/** @return array<mixed>|\PwgError */
-/** @param array<mixed> $params */
-function ws_images_getInfo(array $params, $service): PwgError|array
+/** @return array<mixed>|\PwgError @param array<mixed> $params */
+function ws_images_getInfo(array $params, \Piwigo\Ws\PwgServer $service): PwgError|array
 {
     global $user;
 
@@ -584,7 +582,7 @@ SELECT id, date, author, content
  *    @option float rate
  */
 /** @param array<mixed> $params */
-function ws_images_rate(array $params, $service): mixed
+function ws_images_rate(array $params, \Piwigo\Ws\PwgServer $service): mixed
 {
     $query = '
 SELECT DISTINCT id
@@ -622,9 +620,8 @@ SELECT DISTINCT id
  *    @option int page
  *    @option string order (optional)
  */
-/** @return array<mixed> */
-/** @param array<mixed> $params */
-function ws_images_search(array $params, $service): array
+/** @return array<mixed> @param array<mixed> $params */
+function ws_images_search(array $params, \Piwigo\Ws\PwgServer $service): array
 {
     include_once(PHPWG_ROOT_PATH .'include/functions_search.inc.php');
 
@@ -707,9 +704,8 @@ SELECT *
  * @param mixed[] $params
  *    @option string query
  */
-/** @return array<mixed>|\PwgError */
-/** @param array<mixed> $params */
-function ws_images_filteredSearch_create(array $params, $service): PwgError|array
+/** @return array<mixed>|\PwgError @param array<mixed> $params */
+function ws_images_filteredSearch_create(array $params, \Piwigo\Ws\PwgServer $service): PwgError|array
 {
     global $user;
 
@@ -977,7 +973,7 @@ function ws_images_filteredSearch_create(array $params, $service): PwgError|arra
  *    @option int level
  */
 /** @param array<mixed> $params */
-function ws_images_setPrivacyLevel(array $params, $service): mixed
+function ws_images_setPrivacyLevel(array $params, \Piwigo\Ws\PwgServer $service): mixed
 {
     if (!in_array($params['level'], \Piwigo\Core\Config::availablePermissionLevels())) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid level');
@@ -1009,7 +1005,8 @@ UPDATE '. IMAGES_TABLE .'
  *    @option int rank
  */
 /** @param array<mixed> $params */
-function ws_images_setRank(array $params, $service): array|PwgError
+/** @return array<mixed> */
+function ws_images_setRank(array $params, \Piwigo\Ws\PwgServer $service): array|PwgError
 {
     if (count($params['image_id']) > 1) {
         include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
@@ -1118,7 +1115,7 @@ UPDATE '. IMAGE_CATEGORY_TABLE .'
  *    @option int position
  */
 /** @param array<mixed> $params */
-function ws_images_add_chunk(array $params, $service): mixed
+function ws_images_add_chunk(array $params, \Piwigo\Ws\PwgServer $service): mixed
 {
     global $logger;
 
@@ -1173,7 +1170,7 @@ function ws_images_add_chunk(array $params, $service): mixed
  *    @option string sum
  */
 /** @param array<mixed> $params */
-function ws_images_addFile(array $params, $service): mixed
+function ws_images_addFile(array $params, \Piwigo\Ws\PwgServer $service): mixed
 {
     global $logger;
 
@@ -1260,9 +1257,8 @@ SELECT
  *    @option bool check_uniqueness
  *    @option int image_id (optional)
  */
-/** @return array<mixed>|\PwgError */
-/** @param array<mixed> $params */
-function ws_images_add(array $params, $service): PwgError|array
+/** @return array<mixed>|\PwgError @param array<mixed> $params */
+function ws_images_add(array $params, \Piwigo\Ws\PwgServer $service): PwgError|array
 {
     global $user, $logger;
 
@@ -1408,9 +1404,8 @@ SELECT id, name, permalink
  *    @option string|string[] tags
  *    @option int image_id (optional)
  */
-/** @return array<mixed>|\PwgError */
-/** @param array<mixed> $params */
-function ws_images_addSimple(array $params, $service): PwgError|array
+/** @return array<mixed>|\PwgError @param array<mixed> $params */
+function ws_images_addSimple(array $params, \Piwigo\Ws\PwgServer $service): PwgError|array
 {
     global $logger;
 
@@ -1536,7 +1531,7 @@ SELECT id, name, permalink
  *    @option int image_id (optional)
  */
 /** @param array<mixed> $params */
-function ws_images_upload(array $params, $service): mixed
+function ws_images_upload(array $params, \Piwigo\Ws\PwgServer $service): mixed
 {
     $format_ext = null;
     if (get_pwg_token() != $params['pwg_token']) {
@@ -1987,9 +1982,8 @@ SELECT COUNT(*)
  *    @option string filename_list (optional)
  * @return mixed[]
  */
-/** @return array<mixed> */
-/** @param array<mixed> $params */
-function ws_images_exist(array $params, $service): array
+/** @return array<mixed> @param array<mixed> $params */
+function ws_images_exist(array $params, \Piwigo\Ws\PwgServer $service): array
 {
     global $logger;
 
@@ -2057,7 +2051,7 @@ SELECT id, file
  *    @option string filename_list
  */
 /** @param array<mixed> $params */
-function ws_images_formats_searchImage(array $params, $service): mixed
+function ws_images_formats_searchImage(array $params, \Piwigo\Ws\PwgServer $service): mixed
 {
     global $logger;
 
@@ -2142,7 +2136,7 @@ SELECT
  *    @option string pwg_token
  */
 /** @param array<mixed> $params */
-function ws_images_formats_delete(array $params, $service): PwgError|bool
+function ws_images_formats_delete(array $params, \Piwigo\Ws\PwgServer $service): PwgError|bool
 {
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
@@ -2247,9 +2241,8 @@ DELETE FROM '.IMAGE_FORMAT_TABLE.'
  *    @option int image_id
  *    @option string file_sum
  */
-/** @return array<mixed>|\PwgError */
-/** @param array<mixed> $params */
-function ws_images_checkFiles(array $params, $service): PwgError|array
+/** @return array<mixed>|\PwgError @param array<mixed> $params */
+function ws_images_checkFiles(array $params, \Piwigo\Ws\PwgServer $service): PwgError|array
 {
     global $logger;
 
@@ -2315,7 +2308,7 @@ SELECT path
  *    @option string multiple_value_mode
  */
 /** @param array<mixed> $params */
-function ws_images_setInfo(array $params, $service): mixed
+function ws_images_setInfo(array $params, \Piwigo\Ws\PwgServer $service): mixed
 {
     if (isset($params['pwg_token']) and get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
@@ -2466,7 +2459,7 @@ SELECT *
  *    @option string pwg_token
  */
 /** @param array<mixed> $params */
-function ws_images_delete(array $params, $service): PwgError|int
+function ws_images_delete(array $params, \Piwigo\Ws\PwgServer $service): PwgError|int
 {
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
@@ -2501,7 +2494,7 @@ function ws_images_delete(array $params, $service): PwgError|int
  * Checks if Piwigo is ready for upload
  * @param mixed[] $params
  */
-function ws_images_checkUpload($params, $service): mixed
+function ws_images_checkUpload($params, \Piwigo\Ws\PwgServer $service): mixed
 {
     include_once(PHPWG_ROOT_PATH.'admin/include/functions_upload.inc.php');
 
@@ -2520,8 +2513,8 @@ function ws_images_checkUpload($params, $service): mixed
  * @since 12
  * @param mixed[] $params
  */
-/** @return array<mixed> */
-function ws_images_emptyLounge($params, $service): array
+/** @return array<mixed> @param array<mixed> $params */
+function ws_images_emptyLounge(array $params, \Piwigo\Ws\PwgServer $service): array
 {
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
@@ -2536,9 +2529,8 @@ function ws_images_emptyLounge($params, $service): array
  * @since 12
  * @param mixed[] $params
  */
-/** @return array<mixed>|\PwgError */
-/** @param array<mixed> $params */
-function ws_images_uploadCompleted(array $params, $service): PwgError|array
+/** @return array<mixed>|\PwgError @param array<mixed> $params */
+function ws_images_uploadCompleted(array $params, \Piwigo\Ws\PwgServer $service): PwgError|array
 {
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
@@ -2601,9 +2593,8 @@ SELECT
  * @param mixed[] $params
  *    @option int block_size
  */
-/** @return array<mixed>|\PwgError */
-/** @param array<mixed> $params */
-function ws_images_setMd5sum(array $params, $service): PwgError|array
+/** @return array<mixed>|\PwgError @param array<mixed> $params */
+function ws_images_setMd5sum(array $params, \Piwigo\Ws\PwgServer $service): PwgError|array
 {
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
@@ -2631,9 +2622,8 @@ function ws_images_setMd5sum(array $params, $service): PwgError|array
  * @param mixed[] $params
  *    @option int image_id
  */
-/** @return array<mixed>|\PwgError */
-/** @param array<mixed> $params */
-function ws_images_syncMetadata(array $params, $service): PwgError|array
+/** @return array<mixed>|\PwgError @param array<mixed> $params */
+function ws_images_syncMetadata(array $params, \Piwigo\Ws\PwgServer $service): PwgError|array
 {
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
@@ -2689,9 +2679,8 @@ SELECT id
  * @param mixed[] $params
  *    @option int block_size
  */
-/** @return array<mixed>|\PwgError */
-/** @param array<mixed> $params */
-function ws_images_deleteOrphans(array $params, $service): PwgError|array
+/** @return array<mixed>|\PwgError @param array<mixed> $params */
+function ws_images_deleteOrphans(array $params, \Piwigo\Ws\PwgServer $service): PwgError|array
 {
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
@@ -2721,7 +2710,7 @@ function ws_images_deleteOrphans(array $params, $service): PwgError|array
  *    @option string pwg_token
  */
 /** @param array<mixed> $params */
-function ws_images_setCategory(array $params, $service): mixed
+function ws_images_setCategory(array $params, \Piwigo\Ws\PwgServer $service): mixed
 {
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');

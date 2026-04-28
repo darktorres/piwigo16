@@ -34,8 +34,7 @@ use Piwigo\Ws\PwgNamedStruct;
  *    @option string min_register
  *    @option string max_register
  */
-/** @return array<mixed>|\PwgError */
-/** @param array<mixed> $params */
+/** @return array<mixed>|\PwgError @param array<mixed> $params */
 function ws_users_getList(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
 {
     if (!preg_match(PATTERN_ORDER, (string) $params['order'])) {
@@ -789,8 +788,7 @@ SELECT
  *    @option string pwg_token
  *    @option boolean send_by_mail
  */
-/** @return array<mixed>|\PwgError */
-/** @param array<mixed> $params */
+/** @return array<mixed>|\PwgError @param array<mixed> $params */
 function ws_users_generate_password_link(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
 {
     global $user;
@@ -892,8 +890,7 @@ function ws_set_main_user(array $params, \Piwigo\Ws\PwgServer &$service): PwgErr
  * @since 15
  * @param mixed[] $params
  */
-/** @return array<mixed>|\PwgError */
-/** @param array<mixed> $params */
+/** @return array<mixed>|\PwgError @param array<mixed> $params */
 function ws_create_api_key(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
 {
     global $user, $logger;
@@ -1003,8 +1000,7 @@ function ws_edit_api_key(array $params, \Piwigo\Ws\PwgServer &$service): mixed
  * @since 15
  * @param mixed[] $params
  */
-/** @return array<mixed>|\PwgError */
-/** @param array<mixed> $params */
+/** @return array<mixed>|\PwgError @param array<mixed> $params */
 function ws_get_api_key(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
 {
     global $user;

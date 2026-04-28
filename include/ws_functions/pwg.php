@@ -26,8 +26,7 @@ use Piwigo\Ws\PwgNamedArray;
  *    @option int max_urls
  *    @option int prev_page (optional)
  */
-/** @return array<mixed>|\PwgError */
-/** @param array<mixed> $params */
+/** @return array<mixed>|\PwgError @param array<mixed> $params */
 function ws_getMissingDerivatives(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
 {
     if (empty($params['types'])) {
@@ -422,8 +421,7 @@ function ws_session_getStatus($params, \Piwigo\Ws\PwgServer &$service): mixed
  * Returns lines of users activity
  *  @since 12
  */
-/** @return array<mixed>|\PwgError */
-/** @param array<mixed> $param */
+/** @return array<mixed>|\PwgError @param array<mixed> $param */
 function ws_getActivityList(array $param, \Piwigo\Ws\PwgServer &$service): PwgError|array
 {
     foreach (['date_min', 'date_max'] as $datefield) {
@@ -660,8 +658,7 @@ function ws_history_log(array $params, \Piwigo\Ws\PwgServer &$service): void
  * Returns lines of an history search
  * @since 13
  */
-/** @return array<mixed> */
-/** @param array<mixed> $param */
+/** @return array<mixed> @param array<mixed> $param */
 function ws_history_search(array $param, \Piwigo\Ws\PwgServer &$service): array
 {
 

@@ -145,7 +145,7 @@ SELECT id, name, permalink
         }
     }
 
-    if ($single_link and isset($single_url)) {
+    if ($single_link) {
         $output .= '</a>';
     }
 

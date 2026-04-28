@@ -24,11 +24,11 @@ class Template
     public $files = [];
     /** @var string[] - Template extents filenames for each template handle. */
     public $extents = [];
-    /** @var array - Templates prefilter from external sources (plugins) */
-    public $external_filters = [];
+    /** @var array<mixed> - Templates prefilter from external sources (plugins) */
+    public array $external_filters = [];
 
-    /** @var array - Content to add before </head> tag */
-    public $html_head_elements = [];
+    /** @var string[] - Content to add before </head> tag */
+    public array $html_head_elements = [];
     /** @var string - Runtime CSS rules */
     private string $html_style = '';
 
@@ -42,10 +42,10 @@ class Template
     /** @var CssLoader */
     public $cssLoader;
 
-    /** @var array - Runtime buttons on picture page */
-    public $picture_buttons = [];
-    /** @var array - Runtime buttons on index page */
-    public $index_buttons = [];
+    /** @var array<mixed> - Runtime buttons on picture page */
+    public array $picture_buttons = [];
+    /** @var array<mixed> - Runtime buttons on index page */
+    public array $index_buttons = [];
 
 
     /**
@@ -178,7 +178,7 @@ class Template
      * @param bool $load_css
      * @param bool $load_local_head
      */
-    public function set_theme(string $root, $theme, string $path, $load_css = true, $load_local_head = true, $colorscheme = 'dark'): void
+    public function set_theme(string $root, string $theme, string $path, bool $load_css = true, bool $load_local_head = true, string $colorscheme = 'dark'): void
     {
         //we need themeconf before std_pgs to see what themes use_standard_pages
         $themeconf = $this->load_themeconf($root.'/'.$theme);
@@ -378,7 +378,8 @@ class Template
      *    (in this case, do not use the _$value_ parameter)
      * @param mixed $value
      */
-    public function assign($tpl_var, $value = null): void
+    /** @param string|array<string,mixed> $tpl_var */
+public function assign(string|array $tpl_var, mixed $value = null): void
     {
         $this->smarty->assign($tpl_var, $value);
     }
@@ -441,7 +442,8 @@ class Template
      *
      * @param string $tpl_var
      */
-    public function get_template_vars($tpl_var = null)
+    /** @return array<mixed>|mixed */
+public function get_template_vars(?string $tpl_var = null): mixed
     {
         return $this->smarty->getTemplateVars($tpl_var);
     }
@@ -574,11 +576,11 @@ class Template
     /**
      * Eval a temp string to retrieve the original PHP value.
      *
-     * @return mixed
+     * @return string|null
      */
-    public static function get_php_str_val($str)
+    public static function get_php_str_val(string $str): ?string
     {
-        if (is_string($str) && strlen($str) > 1) {
+        if (strlen($str) > 1) {
             if (($str[0] == '\'' && $str[strlen($str) - 1] == '\'')
               || ($str[0] == '"' && $str[strlen($str) - 1] == '"')) {
                 $tmp = null;
@@ -596,7 +598,8 @@ class Template
      *    - {'%d comments'|translate:$count}
      * @see l10n()
      */
-    public static function modcompiler_translate(array $params): string
+    /** @param array<mixed> $params */
+public static function modcompiler_translate(array $params): string
     {
         switch (count($params)) {
             case 1:
@@ -626,7 +629,8 @@ class Template
      *    - {$count|translate_dec:'%d comment':'%d comments'}
      * @see l10n_dec()
      */
-    public static function modcompiler_translate_dec(array $params): string
+    /** @param array<mixed> $params */
+public static function modcompiler_translate_dec(array $params): string
     {
         global $lang_info;
         if (\Piwigo\Core\Config::compiledTemplateCacheLanguage()) {
@@ -655,7 +659,8 @@ class Template
      * @param string $text
      * @param string $delimiter
      */
-    public static function mod_explode($text, $delimiter = ','): array
+    /** @return string[] */
+public static function mod_explode(string $text, string $delimiter = ','): array
     {
         return explode($delimiter, $text);
     }
@@ -682,9 +687,10 @@ class Template
      * @param array $params (unused)
      * @param string $content
      */
-    public function block_html_head($params, $content): void
+    /** @param array<mixed> $params */
+public function block_html_head(array $params, string $content): void
     {
-        $content = isset($content) ? trim($content) : '';
+        $content = trim($content);
         if (!empty($content)) { // second call
             $this->html_head_elements[] = $content;
         }
@@ -697,9 +703,10 @@ class Template
      * @param array $params (unused)
      * @param string $content
      */
-    public function block_html_style($params, $content): void
+    /** @param array<mixed> $params */
+public function block_html_style(array $params, string $content): void
     {
-        $content = isset($content) ? trim($content) : '';
+        $content = trim($content);
         if (!empty($content)) { // second call
             $this->html_style .= "\n".$content;
         }
@@ -719,7 +726,8 @@ class Template
      *    - min_height (optional, used with crop)
      * @param Smarty $smarty
      */
-    public function func_define_derivative(array $params, $smarty): void
+    /** @param array<mixed> $params */
+public function func_define_derivative(array $params, mixed $smarty): void
     {
         !empty($params['name']) or fatal_error('define_derivative missing name');
         if (isset($params['type'])) {
@@ -766,7 +774,8 @@ class Template
      *     and executed before this one
      *   - version (optional) used to force a browser refresh
      */
-    public function func_combine_script(array $params): void
+    /** @param array<mixed> $params */
+public function func_combine_script(array $params): void
     {
         if (!isset($params['id'])) {
             trigger_error("combine_script: missing 'id' parameter", E_USER_ERROR);
@@ -800,7 +809,8 @@ class Template
      * @param array $params
      *    - load (required)
      */
-    public function func_get_combined_scripts(array $params): string
+    /** @param array<mixed> $params */
+public function func_get_combined_scripts(array $params): string
     {
         if (!isset($params['load'])) {
             trigger_error("get_combined_scripts: missing 'load' parameter", E_USER_ERROR);
@@ -849,7 +859,8 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      * @param Combinable $script
      * @return string
      */
-    private static function make_script_src($script): string|array
+    /** @return string|array<mixed> */
+private static function make_script_src(mixed $script): string|array
     {
         $ret = '';
         if ($script->is_remote()) {
@@ -872,9 +883,10 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      *    - require (optional) comma separated list of script ids
      * @param string $content
      */
-    public function block_footer_script(array $params, $content): void
+    /** @param array<mixed> $params */
+public function block_footer_script(array $params, string $content): void
     {
-        $content = isset($content) ? trim($content) : '';
+        $content = trim($content);
         if (!empty($content)) { // second call
 
             $this->scriptLoader->add_inline(
@@ -895,7 +907,8 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      *    - order (optional)
      *    - template (optional) set to true to allow smarty syntax in the css file
      */
-    public function func_combine_css(array $params): void
+    /** @param array<mixed> $params */
+public function func_combine_css(array $params): void
     {
         if (empty($params['path'])) {
             fatal_error('combine_css missing path');
@@ -914,7 +927,8 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      *
      * @param array $params (unused)
      */
-    public function func_get_combined_css($params): string
+    /** @param array<mixed> $params */
+public function func_get_combined_css(array $params): string
     {
         return self::COMBINED_CSS_TAG;
     }
@@ -1015,7 +1029,8 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      * @param string $source
      * @param Smarty $smarty
      */
-    public static function prefilter_white_space($source, $smarty): string|array|null
+    /** @return string|array<mixed>|null */
+public static function prefilter_white_space(string $source, mixed $smarty): string|array|null
     {
         $ld = $smarty->getLeftDelimiter();
         $rd = $smarty->getRightDelimiter();
@@ -1044,7 +1059,8 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      * @param string $source
      * @param Smarty $smarty
      */
-    public static function postfilter_language($source, $smarty): string|array|null
+    /** @return string|array<mixed>|null */
+public static function postfilter_language(string $source, mixed $smarty): string|array|null
     {
         // replaces echo PHP_STRING_LITERAL; with the string literal value
         $source = preg_replace_callback(
@@ -1065,7 +1081,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      * @param string $source
      * @param Smarty $smarty
      */
-    public static function prefilter_local_css($source, $smarty)
+    public static function prefilter_local_css(string $source, mixed $smarty): string
     {
         $css = [];
         foreach ($smarty->getTemplateVars('themes') as $theme) {
@@ -1092,7 +1108,8 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      * @param string $dir
      * @return array
      */
-    public function load_themeconf($dir)
+    /** @return array<mixed> */
+public function load_themeconf(string $dir): array
     {
         global $themeconfs;
 

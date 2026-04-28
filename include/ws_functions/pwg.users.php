@@ -374,6 +374,7 @@ function ws_users_add(array $params, \Piwigo\Ws\PwgServer &$service): mixed
         $params['password'] = generate_key(random_int(15, 20));
     }
 
+    $errors = [];
     $user_id = register_user(
         $params['username'],
         $params['password'],

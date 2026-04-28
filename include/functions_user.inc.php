@@ -115,7 +115,8 @@ function search_case_username($username)
  * @param bool $notify_user
  * @return int|false user id or false
  */
-function register_user($login, $password, $mail_address, $notify_admin = true, &$errors = [], $notify_user = false)
+/** @param string[] $errors */
+function register_user(string $login, string $password, ?string $mail_address = null, bool $notify_admin = true, array &$errors = [], bool $notify_user = false): int|false
 {
     if ($login == '') {
         $errors[] = l10n('Please, enter a login');
@@ -213,7 +214,7 @@ SELECT id
                 get_l10n_args('Registration of %s', stripslashes($login)),
                 $keyargs_content,
                 true, // $send_technical_details
-                $group_id
+                (int) $group_id
             );
         }
 
@@ -269,7 +270,8 @@ SELECT id
  * @param int $user_id
  * @return array{id:int,username:string,email:string,language:string,theme:string,status:string,enabled_high:bool,internal_status:array<string,mixed>,cache_update_time:int,last_visit:string,...}
  */
-function build_user($user_id, $use_cache = true): array
+/** @return array<string,mixed> */
+function build_user(int $user_id, bool $use_cache = true): array
 {
     $user['id'] = $user_id;
     $user = array_merge($user, getuserdata($user_id, $use_cache));
@@ -297,7 +299,8 @@ function build_user($user_id, $use_cache = true): array
  * @param boolean $use_cache
  * @return array
  */
-function getuserdata($user_id, $use_cache = false)
+/** @return array<string,mixed>|false */
+function getuserdata(int $user_id, bool $use_cache = false): array|false
 {
     global $logger;
 
@@ -642,7 +645,7 @@ SELECT id
  *
  * @param string $username
  */
-function get_userid($username)
+function get_userid(string $username): int|false
 {
     $username = pwg_db_real_escape_string($username);
 
@@ -666,7 +669,7 @@ SELECT '.\Piwigo\Core\Config::userFields()['id'].'
  *
  * @param string $email
  */
-function get_userid_by_email($email)
+function get_userid_by_email(string $email): int|false
 {
     $email = pwg_db_real_escape_string($email);
 
@@ -692,7 +695,8 @@ SELECT
  *  bool  convert true/false strings to booleans
  * @return array
  */
-function get_default_user_info($convert_str = true)
+/** @return array<string,mixed>|null */
+function get_default_user_info(bool $convert_str = true): ?array
 {
     global $cache;
 
@@ -744,7 +748,7 @@ SELECT *
 function get_default_user_value($value_name, $default)
 {
     $default_user = get_default_user_info(true);
-    if ($default_user === false or empty($default_user[$value_name])) {
+    if ($default_user === null or empty($default_user[$value_name])) {
         return $default;
     } else {
         return $default_user[$value_name];
@@ -857,7 +861,8 @@ function get_browser_language(): false|int|string
  * @param int|int[] $user_ids
  * @param array $override_values values used to override default user values
  */
-function create_user_infos($user_ids, $override_values = null): void
+/** @param int[]|int $user_ids @param array<mixed>|null $override_values */
+function create_user_infos(array|int $user_ids, ?array $override_values = null): void
 {
     if (!is_array($user_ids)) {
         $user_ids = [$user_ids];
@@ -868,7 +873,7 @@ function create_user_infos($user_ids, $override_values = null): void
         [$dbnow] = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
 
         $default_user = get_default_user_info(false);
-        if ($default_user === false) {
+        if ($default_user === null) {
             // Default on structure are used
             $default_user = [];
         }
@@ -1117,7 +1122,7 @@ add_event_handler('try_log_user', 'pwg_login');
  * @param string $password
  * @param bool $remember_me
  */
-function pwg_login($success, $username, $password, $remember_me): bool
+function pwg_login(bool $success, string $username, string $password, bool $remember_me): bool
 {
     if ($success === true) {
         return true;
@@ -1205,7 +1210,8 @@ function pwg_login($success, $username, $password, $remember_me): bool
  * @param string $username_or_email
  * @return array|null
  */
-function find_user_by_username_or_email($username_or_email)
+/** @return array<string,mixed>|null */
+function find_user_by_username_or_email(string $username_or_email): ?array
 {
     $username_or_email = pwg_db_real_escape_string($username_or_email);
 
@@ -1246,7 +1252,8 @@ FROM '.USERS_TABLE.' AS u
  * @since 16
  * @return array id and password
  */
-function generate_fake_user()
+/** @return array<string,mixed> */
+function generate_fake_user(): array
 {
     // Check if password_hash or password_verify has been changed
     $is_verify_hash_changed = 'pwg_password_hash' !== \Piwigo\Core\Config::passwordHash()
@@ -1367,7 +1374,7 @@ function get_access_type_status($user_status = ''): int
  * @param string $user_status used if $user not initialized
  * @return bool
  */
-function is_autorize_status($access_type, $user_status = ''): bool
+function is_autorize_status(int $access_type, string $user_status = ''): bool
 {
     return (get_access_type_status($user_status) >= $access_type);
 }
@@ -1378,7 +1385,7 @@ function is_autorize_status($access_type, $user_status = ''): bool
  *  int one of ACCESS_* constants
  * @param string $user_status used if $user not initialized
  */
-function check_status($access_type, $user_status = ''): void
+function check_status(int $access_type, string $user_status = ''): void
 {
     if (!is_autorize_status($access_type, $user_status)) {
         access_denied();
@@ -1484,10 +1491,11 @@ function can_manage_comment($action, $comment_author_id): bool
  * @param string $prefix_condition prefixes query if condition is not empty
  * @param boolean $force_one_condition use at least "1 = 1"
  */
+/** @param array<string,string> $condition_fields */
 function get_sql_condition_FandF(
-    $condition_fields,
-    $prefix_condition = null,
-    $force_one_condition = false
+    array $condition_fields,
+    ?string $prefix_condition = null,
+    bool $force_one_condition = false
 ): string {
     global $user, $filter;
 
@@ -1576,7 +1584,7 @@ function get_recent_photos_sql(string $db_field): string
  *
  * @since 2.8
  */
-function auth_key_login($auth_key, $connection_by_header = false): bool
+function auth_key_login(string $auth_key, bool $connection_by_header = false): bool
 {
     global $user, $page;
 
@@ -1695,7 +1703,8 @@ SELECT
  * @param int $user_id
  * @return array|false
  */
-function create_user_auth_key($user_id, $user_status = null)
+/** @return array<string,mixed>|false */
+function create_user_auth_key(int $user_id, ?string $user_status = null): array|false
 {
     if (0 == \Piwigo\Core\Config::authKeyDuration()) {
         return false;
@@ -1797,7 +1806,8 @@ function deactivate_password_reset_key($user_id): void
  * @param boolean $first_login
  * @return array time_validation and password link
  */
-function generate_password_link($user_id, $first_login = false): array
+/** @return array<string,mixed> */
+function generate_password_link(int $user_id, bool $first_login = false): array
 {
     $activation_key = generate_key(20);
 
@@ -2309,7 +2319,8 @@ SELECT
  * @return array auth_key / apikey_secret / apikey_name /
  * user_id / created_on / duration / expired_on / key_type
  */
-function create_api_key($user_id, $duration, $key_name): array
+/** @return array<string,mixed> */
+function create_api_key(int $user_id, int $duration, string $key_name): array
 {
     $key_id = 'pkid-'.date('Ymd').'-'.generate_key(20);
     $key_secret = generate_key(40);
@@ -2382,9 +2393,9 @@ SELECT
  *
  * @since 16
  * @param int $user_id
- * @return string|bool
+ * @return string|true
  */
-function edit_api_key($user_id, string $pkid, $api_name)
+function edit_api_key(int $user_id, string $pkid, string $api_name): string|true
 {
     $query = '
 SELECT 
@@ -2417,6 +2428,7 @@ SELECT
  * @since 16
  * @return array|false
  */
+/** @return array<mixed>|false */
 function get_api_key(string $user_id): false|array
 {
     $query = '
@@ -2491,7 +2503,8 @@ SELECT
  * @since 16
  * @return array|false
  */
-function get_available_api_key(string $user_id)
+/** @return array<mixed>|false */
+function get_available_api_key(string $user_id): array|false
 {
     $api_keys = get_api_key($user_id);
 
@@ -2529,7 +2542,7 @@ function connected_with_pwg_ui(): bool
  * @since 16
  * @return bool
  */
-function notification_api_key_expiration($username, $email, $days_left)
+function notification_api_key_expiration(string $username, string $email, int $days_left): bool
 {
     include_once(PHPWG_ROOT_PATH . 'include/functions_mail.inc.php');
     $days_left_str = $days_left <= 1 ?
@@ -2559,6 +2572,7 @@ function notification_api_key_expiration($username, $email, $days_left)
  * @since 16
  * @return array [$secret, $code]
  */
+/** @return array<string,mixed> */
 function generate_user_code(): array
 {
     $secret = PwgTOTP::generateSecret();
@@ -2576,7 +2590,7 @@ function generate_user_code(): array
  * @since 16
  * @param string $secret
  */
-function verify_user_code($secret, $code): bool
+function verify_user_code(string $secret, string $code): bool
 {
     return PwgTOTP::verifyCode($code, $secret, min(\Piwigo\Core\Config::passwordResetCodeDuration(), 900), 1);
 }

@@ -8,9 +8,12 @@ use Piwigo\Users\CurrentUser;
 
 class themes
 {
-    public $fs_themes = [];
-    public $db_themes_by_id = [];
-    public $server_themes = [];
+    /** @var array<string, array<string,mixed>> */
+    public array $fs_themes = [];
+    /** @var array<string, array<string,mixed>> */
+    public array $db_themes_by_id = [];
+    /** @var array<mixed> */
+    public array $server_themes = [];
 
     /**
      * Initialize $fs_themes and $db_themes_by_id
@@ -28,7 +31,7 @@ class themes
      * Returns the maintain class of a theme
      * or build a new class with the procedural methods
      */
-    private static function build_maintain_class(string $theme_id)
+    private static function build_maintain_class(string $theme_id): mixed
     {
         $file_to_include = PHPWG_THEMES_PATH.'/'.$theme_id.'/admin/maintain.inc.php';
         $classname = $theme_id.'_maintain';
@@ -195,7 +198,7 @@ DELETE
         return $errors;
     }
 
-    public function missing_parent_theme($theme_id)
+    public function missing_parent_theme(string $theme_id): ?string
     {
         if (!isset($this->fs_themes[$theme_id]['parent'])) {
             return null;
@@ -217,7 +220,8 @@ DELETE
     /**
      * @return mixed[]
      */
-    public function get_children_themes($theme_id): array
+    /** @return string[] */
+    public function get_children_themes(string $theme_id): array
     {
         $children = [];
 
@@ -379,7 +383,7 @@ SELECT
     /**
      * Sort fs_themes
      */
-    public function sort_fs_themes($order = 'name'): void
+    public function sort_fs_themes(string $order = 'name'): void
     {
         switch ($order) {
             case 'name':
@@ -400,7 +404,7 @@ SELECT
     /**
      * Retrieve PEM server datas to $server_themes
      */
-    public function get_server_themes($new = false): bool
+    public function get_server_themes(bool $new = false): bool
     {
         $get_data = [
           'category_id' => \Piwigo\Core\Config::pemThemesCategory(),
@@ -469,7 +473,7 @@ SELECT
     /**
      * Sort $server_themes
      */
-    public function sort_server_themes($order = 'date'): void
+    public function sort_server_themes(string $order = 'date'): void
     {
         switch ($order) {
             case 'date':
@@ -494,7 +498,7 @@ SELECT
      * Extract theme files from archive
      *
      */
-    public function extract_theme_files(string $action, $revision, string $dest, &$theme_id = null)
+    public function extract_theme_files(string $action, string $revision, string $dest, ?string &$theme_id = null): string
     {
         global $logger;
 
@@ -604,6 +608,7 @@ SELECT
     /**
      * Sort functions
      */
+    /** @param array<mixed> $a @param array<mixed> $b */
     public function extension_revision_compare(array $a, array $b): int
     {
         if ($a['revision_date'] < $b['revision_date']) {
@@ -613,11 +618,13 @@ SELECT
         }
     }
 
+    /** @param array<mixed> $a @param array<mixed> $b */
     public function extension_name_compare(array $a, array $b): int
     {
         return strcmp(strtolower((string) $a['extension_name']), strtolower((string) $b['extension_name']));
     }
 
+    /** @param array<mixed> $a @param array<mixed> $b */
     public function extension_author_compare(array $a, array $b): int
     {
         $r = strcasecmp((string) $a['author_name'], (string) $b['author_name']);
@@ -628,6 +635,7 @@ SELECT
         }
     }
 
+    /** @param array<mixed> $a @param array<mixed> $b */
     public function theme_author_compare(array $a, array $b): int
     {
         $r = strcasecmp((string) $a['author'], (string) $b['author']);
@@ -638,6 +646,7 @@ SELECT
         }
     }
 
+    /** @param array<mixed> $a @param array<mixed> $b */
     public function extension_downloads_compare(array $a, array $b): int
     {
         if ($a['extension_nb_downloads'] < $b['extension_nb_downloads']) {

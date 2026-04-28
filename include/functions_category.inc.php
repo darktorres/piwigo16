@@ -16,6 +16,7 @@ declare(strict_types=1);
 /**
  * Callback used for sorting by global_rank
  */
+/** @param array<mixed> $a @param array<mixed> $b */
 function global_rank_compare(array $a, array $b): int
 {
     return strnatcasecmp((string) $a['global_rank'], (string) $b['global_rank']);
@@ -24,6 +25,7 @@ function global_rank_compare(array $a, array $b): int
 /**
  * Callback used for sorting by rank
  */
+/** @param array<mixed> $a @param array<mixed> $b */
 function rank_compare(array $a, array $b): int|float
 {
     return $a['rank'] - $b['rank'];
@@ -51,6 +53,7 @@ function check_restrictions($category_id): void
  *
  * @return array[]
  */
+/** @return array<mixed> */
 function get_categories_menu(): array
 {
     global $page, $user, $filter;
@@ -149,7 +152,8 @@ WHERE '.$where.'
  * @param int $id
  * @return array|null
  */
-function get_cat_info($id)
+/** @return array<mixed>|null */
+function get_cat_info(int|string $id): ?array
 {
     $query = '
 SELECT *
@@ -204,7 +208,8 @@ SELECT *
  *
  * @return array[]
  */
-function get_category_preferred_image_orders()
+/** @return array<mixed> */
+function get_category_preferred_image_orders(): array
 {
     global $page;
 
@@ -231,10 +236,10 @@ function get_category_preferred_image_orders()
  * @param bool $fullname full breadcrumb or not
  */
 function display_select_categories(
-    $categories,
-    $selecteds,
+    /** @var array<mixed> */ $categories,
+    array|string $selecteds,
     string $blockname,
-    $fullname = true
+    bool|string $fullname = true
 ): void {
     global $template;
 
@@ -274,9 +279,9 @@ function display_select_categories(
  */
 function display_select_cat_wrapper(
     string $query,
-    $selecteds,
+    array|string $selecteds,
     string $blockname,
-    $fullname = true
+    bool|string $fullname = true
 ): void {
     $categories = query2array($query);
     usort($categories, global_rank_compare(...));
@@ -401,7 +406,8 @@ function get_display_images_count($cat_nb_images, $cat_count_images, $cat_count_
  * @param bool $recursive
  * @return int|null
  */
-function get_random_image_in_category(array $category, $recursive = true)
+/** @param array<string,mixed> $category */
+function get_random_image_in_category(array $category, bool $recursive = true)
 {
     $image_id = null;
     if ($category['count_images'] > 0) {
@@ -444,7 +450,8 @@ SELECT image_id
  *
  * @param int $filter_days number of recent days to filter on or null
  */
-function get_computed_categories(array &$userdata, $filter_days = null): array
+/** @param array<mixed> $userdata @return array<mixed> */
+function get_computed_categories(array &$userdata, ?int $filter_days = null): array
 {
     $query = 'SELECT c.id AS cat_id, id_uppercat';
     $query .= ', global_rank';
@@ -541,6 +548,7 @@ FROM '.CATEGORIES_TABLE.' as c
  *
  * @param array $cat category to remove
  */
+/** @param array<mixed> $cats @param array<mixed> $cat */
 function remove_computed_category(array &$cats, array $cat): void
 {
     if (isset($cats[$cat['id_uppercat']])) {
@@ -570,7 +578,8 @@ function remove_computed_category(array &$cats, array $cat): void
  * @param string $extra_images_where_sql - optionally apply a sql where filter to retrieved images
  * @param string $order_by - optionally overwrite default photo order
  */
-function get_image_ids_for_categories($cat_ids, $mode = 'AND', ?string $extra_images_where_sql = '', $order_by = '', $use_permissions = true): array
+/** @param int[]|int|string $cat_ids @return int[] */
+function get_image_ids_for_categories(array|int|string $cat_ids, string $mode = 'AND', ?string $extra_images_where_sql = '', string $order_by = '', bool $use_permissions = true): array
 {
     if (empty($cat_ids)) {
         return [];
@@ -613,7 +622,8 @@ SELECT id
  * @param int[] $excluded_cat_ids
  * @return array [id, name, counter, url_name]
  */
-function get_common_categories($items, $max = null, $excluded_cat_ids = [], $use_permissions = true): array
+/** @param array<mixed> $items @param int[] $excluded_cat_ids @return array<mixed> */
+function get_common_categories(array $items, ?int $max = null, array $excluded_cat_ids = [], bool $use_permissions = true): array
 {
     if (empty($items)) {
         return [];
@@ -665,7 +675,8 @@ SELECT
 /**
  * @return mixed[]
  */
-function get_related_categories_menu($items, $excluded_cat_ids = []): array
+/** @param array<mixed> $items @param int[] $excluded_cat_ids @return array<mixed> */
+function get_related_categories_menu(array $items, array $excluded_cat_ids = []): array
 {
     global $page;
 

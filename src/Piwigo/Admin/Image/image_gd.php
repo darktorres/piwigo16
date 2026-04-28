@@ -35,7 +35,7 @@ class image_gd implements imageInterface
         return imagesy($this->image);
     }
 
-    public function crop($width, $height, $x, $y)
+    public function crop(int $width, int $height, int $x, int $y): bool
     {
         $dest = imagecreatetruecolor($width, $height);
 
@@ -68,7 +68,7 @@ class image_gd implements imageInterface
         return true;
     }
 
-    public function resize($width, $height)
+    public function resize(int $width, int $height): bool
     {
         $dest = imagecreatetruecolor($width, $height);
 
@@ -110,16 +110,16 @@ class image_gd implements imageInterface
         return true;
     }
 
-    public function write($destination_filepath): void
+    public function write(string $destination_filepath): bool
     {
         $extension = strtolower(get_extension($destination_filepath));
 
         if ($extension == 'png') {
-            imagepng($this->image, $destination_filepath);
+            return imagepng($this->image, $destination_filepath);
         } elseif ($extension == 'gif') {
-            imagegif($this->image, $destination_filepath);
+            return imagegif($this->image, $destination_filepath);
         } else {
-            imagejpeg($this->image, $destination_filepath, $this->quality);
+            return imagejpeg($this->image, $destination_filepath, $this->quality);
         }
     }
 

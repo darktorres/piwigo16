@@ -53,17 +53,17 @@ class image_ext_imagick implements imageInterface
         $this->commands[$command] = $params;
     }
 
-    public function get_width()
+    public function get_width(): int
     {
         return $this->width;
     }
 
-    public function get_height()
+    public function get_height(): int
     {
         return $this->height;
     }
 
-    public function crop($width, $height, $x, $y): bool
+    public function crop(int $width, int $height, int $x, int $y): bool
     {
         $this->width = $width;
         $this->height = $height;
@@ -79,7 +79,7 @@ class image_ext_imagick implements imageInterface
         return true;
     }
 
-    public function rotate($rotation): bool
+    public function rotate(int $rotation): bool
     {
         if (empty($rotation)) {
             return true;
@@ -95,7 +95,7 @@ class image_ext_imagick implements imageInterface
         return true;
     }
 
-    public function set_compression_quality($quality): bool
+    public function set_compression_quality(int $quality): bool
     {
         if ($this->is_animated_webp) {
             // in cas of animated WebP, we need to maximize quality to 70 to avoid

@@ -8,10 +8,14 @@ use Piwigo\Users\CurrentUser;
 
 class plugins
 {
-    public $fs_plugins = [];
-    public $db_plugins_by_id = [];
-    public $server_plugins = [];
-    public $default_plugins = ['LocalFilesEditor', 'language_switch', 'TakeATour', 'AdminTools'];
+    /** @var array<string, array<string,mixed>> */
+    public array $fs_plugins = [];
+    /** @var array<string, array<string,mixed>> */
+    public array $db_plugins_by_id = [];
+    /** @var array<mixed> */
+    public array $server_plugins = [];
+    /** @var string[] */
+    public array $default_plugins = ['LocalFilesEditor', 'language_switch', 'TakeATour', 'AdminTools'];
 
     /**
      * Initialize $fs_plugins and $db_plugins_by_id
@@ -29,7 +33,7 @@ class plugins
      * Returns the maintain class of a plugin
      * or build a new class with the procedural methods
      */
-    private static function build_maintain_class(string $plugin_id)
+    private static function build_maintain_class(string $plugin_id): mixed
     {
         $file_to_include = PHPWG_PLUGINS_PATH . $plugin_id . '/maintain';
         $classname = $plugin_id.'_maintain';
@@ -60,7 +64,8 @@ class plugins
      * Perform requested actions
      * @param string $action
      */
-    public function perform_action($action, string $plugin_id, array $options = [])
+    /** @param array<mixed> $options @return mixed */
+    public function perform_action(string $action, string $plugin_id, array $options = []): mixed
     {
         if (!\Piwigo\Core\Config::enableExtensionsInstall() and 'delete' == $action) {
             die('Piwigo extensions install/update/delete system is disabled');
@@ -251,6 +256,7 @@ DELETE FROM '. PLUGINS_TABLE .'
      * @param $plugin_id
      * @return false|array
      */
+    /** @return array<string,mixed>|false */
     public function get_fs_plugin(string $plugin_id): array|false
     {
         $path = PHPWG_PLUGINS_PATH.$plugin_id;
@@ -317,7 +323,7 @@ DELETE FROM '. PLUGINS_TABLE .'
     /**
      * Sort fs_plugins
      */
-    public function sort_fs_plugins($order = 'name'): void
+    public function sort_fs_plugins(string $order = 'name'): void
     {
         switch ($order) {
             case 'name':
@@ -340,7 +346,8 @@ DELETE FROM '. PLUGINS_TABLE .'
     /**
      * @return mixed[]
      */
-    public function get_versions_to_check($beta_test = false, $version = PHPWG_VERSION): array
+    /** @return string[] */
+    public function get_versions_to_check(bool $beta_test = false, string $version = PHPWG_VERSION): array
     {
         $versions_to_check = [];
         $url = PEM_URL . '/api/get_version_list.php?category_id='. \Piwigo\Core\Config::pemPluginsCategory() .'&format=php';
@@ -379,7 +386,7 @@ DELETE FROM '. PLUGINS_TABLE .'
      * Retrieve PEM server datas to $server_plugins
      * $beta_test parameter add plugins compatible with the previous version
      */
-    public function get_server_plugins($new = false, $beta_test = false): bool
+    public function get_server_plugins(bool $new = false, bool $beta_test = false): bool
     {
         $versions_to_check = $this->get_versions_to_check($beta_test);
         if (empty($versions_to_check)) {
@@ -425,7 +432,8 @@ DELETE FROM '. PLUGINS_TABLE .'
         return false;
     }
 
-    public function get_incompatible_plugins($actualize = false)
+    /** @return array<mixed>|false */
+    public function get_incompatible_plugins(bool $actualize = false): array|false
     {
         if (isset($_SESSION['incompatible_plugins']) and !$actualize
           and $_SESSION['incompatible_plugins']['~~expire~~'] > time()) {
@@ -486,7 +494,7 @@ DELETE FROM '. PLUGINS_TABLE .'
     /**
      * Sort $server_plugins
      */
-    public function sort_server_plugins($order = 'date'): void
+    public function sort_server_plugins(string $order = 'date'): void
     {
         switch ($order) {
             case 'date':
@@ -510,10 +518,10 @@ DELETE FROM '. PLUGINS_TABLE .'
     /**
      * Extract plugin files from archive
      * @param string $action install or upgrade
-     * @param mixed $revision remote revision identifier
+     * @param string $revision remote revision identifier
      * @param string $dest plugin id or extension id
      */
-    public function extract_plugin_files(string $action, $revision, string $dest, &$plugin_id = null)
+    public function extract_plugin_files(string $action, string $revision, string $dest, ?string &$plugin_id = null): string
     {
         global $logger;
 
@@ -620,7 +628,8 @@ DELETE FROM '. PLUGINS_TABLE .'
     /**
      * @return string[]
      */
-    public function get_merged_extensions($version = PHPWG_VERSION): array
+    /** @return array<mixed> */
+    public function get_merged_extensions(string $version = PHPWG_VERSION): array
     {
         $file = PHPWG_ROOT_PATH.'install/obsolete_extensions.list';
         $merged_extensions = [];
@@ -638,6 +647,7 @@ DELETE FROM '. PLUGINS_TABLE .'
     /**
      * Sort functions
      */
+    /** @param array<mixed> $a @param array<mixed> $b */
     public function extension_revision_compare(array $a, array $b): int
     {
         if ($a['revision_date'] < $b['revision_date']) {
@@ -647,11 +657,13 @@ DELETE FROM '. PLUGINS_TABLE .'
         }
     }
 
+    /** @param array<mixed> $a @param array<mixed> $b */
     public function extension_name_compare(array $a, array $b): int
     {
         return strcmp(strtolower((string) $a['extension_name']), strtolower((string) $b['extension_name']));
     }
 
+    /** @param array<mixed> $a @param array<mixed> $b */
     public function extension_author_compare(array $a, array $b): int
     {
         $r = strcasecmp((string) $a['author_name'], (string) $b['author_name']);
@@ -662,6 +674,7 @@ DELETE FROM '. PLUGINS_TABLE .'
         }
     }
 
+    /** @param array<mixed> $a @param array<mixed> $b */
     public function plugin_author_compare(array $a, array $b): int
     {
         $r = strcasecmp((string) $a['author'], (string) $b['author']);
@@ -672,6 +685,7 @@ DELETE FROM '. PLUGINS_TABLE .'
         }
     }
 
+    /** @param array<mixed> $a @param array<mixed> $b */
     public function extension_downloads_compare(array $a, array $b): int
     {
         if ($a['extension_nb_downloads'] < $b['extension_nb_downloads']) {

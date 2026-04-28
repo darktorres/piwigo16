@@ -47,6 +47,7 @@ function get_mail_sender_email()
  * - email_webmaster
  * - name_webmaster
  */
+/** @return array<string,mixed> */
 function get_mail_configuration(): array
 {
     $conf_mail = [
@@ -97,7 +98,9 @@ function format_email($name, $email): string
  * @param string|string[] $input - if is an array must contain email[, name]
  * @return array email, name
  */
-function unformat_email($input): array
+/** @return array<string,mixed> */
+/** @param string|array<mixed> $input @return array<string,mixed> */
+function unformat_email(string|array $input): array
 {
     if (is_array($input)) {
         if (!isset($input['name'])) {
@@ -307,7 +310,8 @@ function switch_lang_back(): void
  * @param boolean $send_technical_details - send user IP and browser
  * @return boolean
  */
-function pwg_mail_notification_admins($subject, $content, $send_technical_details = true, $group_id = null)
+/** @param array<mixed>|string $subject @param array<mixed>|string $content */
+function pwg_mail_notification_admins(array|string $subject, array|string $content, bool $send_technical_details = true, ?int $group_id = null): bool
 {
     if (empty($subject) or empty($content)) {
         return false;
@@ -364,7 +368,8 @@ function pwg_mail_notification_admins($subject, $content, $send_technical_detail
  * @param array $tpl - as in pwg_mail()
  * @return boolean
  */
-function pwg_mail_admins(array $args = [], $tpl = [], $exclude_current_user = true, $only_webmasters = false, $group_id = null)
+/** @param array<mixed> $args @param array<mixed> $tpl */
+function pwg_mail_admins(array $args = [], array $tpl = [], bool $exclude_current_user = true, bool $only_webmasters = false, ?int $group_id = null): bool
 {
     if (empty($args['content']) and empty($tpl)) {
         return false;
@@ -435,7 +440,8 @@ SELECT
  * @param array $tpl - as in pwg_mail()
  * @return boolean
  */
-function pwg_mail_group($group_id, array $args = [], $tpl = []): bool|int
+/** @param array<mixed> $tpl */
+function pwg_mail_group(int $group_id, array $args = [], array $tpl = []): bool|int
 {
     if (empty($group_id) or (empty($args['content']) and empty($tpl))) {
         return false;
@@ -545,7 +551,8 @@ SELECT
  *
  * @return boolean
  */
-function pwg_mail($to, array $args = [], array $tpl = [])
+/** @param string|array<mixed> $to @param array<mixed> $args @param array<mixed> $tpl */
+function pwg_mail(string|array $to, array $args = [], array $tpl = []): bool
 {
     global $conf_mail, $lang_info, $page;
 
@@ -812,7 +819,7 @@ function pwg_mail($to, array $args = [], array $tpl = [])
 }
 
 #[\Deprecated(message: '2.6')]
-function pwg_send_mail($result, $to, $subject, $content, $headers)
+function pwg_send_mail(mixed $result, string $to, string $subject, string $content, string $headers): bool|int
 {
     if (is_admin()) {
         trigger_error('pwg_send_mail function is deprecated', E_USER_NOTICE);

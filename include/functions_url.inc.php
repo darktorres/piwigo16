@@ -84,14 +84,14 @@ function get_absolute_root_url($with_scheme = true): string
  * @param array $params
  * @return string
  */
-function add_url_params($url, $params, $arg_separator = '&amp;')
+/** @param array<mixed> $params */
+function add_url_params(string $url, array $params, string $arg_separator = '&amp;'): string
 {
     if (!empty($params)) {
         if (defined('IN_WS') and '&amp;' === $arg_separator) {
             $arg_separator = '&';
         }
 
-        assert(is_array($params));
         $is_first = true;
         foreach ($params as $param => $val) {
             if ($is_first) {
@@ -113,6 +113,7 @@ function add_url_params($url, $params, $arg_separator = '&amp;')
  * build an index URL for a specific section
  *
  * @param array $params */
+/** @param array<mixed> $params */
 function make_index_url(array $params = []): string
 {
     $url = get_root_url().'index';
@@ -148,7 +149,8 @@ function make_index_url(array $params = []): string
  * @param array $redefined keys
  * @param array $removed keys
  */
-function duplicate_index_url($redefined = [], $removed = []): string
+/** @param array<mixed> $redefined @param string[] $removed */
+function duplicate_index_url(array $redefined = [], array $removed = []): string
 {
     return make_index_url(
         params_for_duplication($redefined, $removed)
@@ -162,7 +164,8 @@ function duplicate_index_url($redefined = [], $removed = []): string
  * @param array $removed keys
  * @return array
  */
-function params_for_duplication($redefined, $removed)
+/** @param array<mixed> $redefined @param string[] $removed @return array<mixed> */
+function params_for_duplication(array $redefined, array $removed): array
 {
     global $page;
 
@@ -186,7 +189,8 @@ function params_for_duplication($redefined, $removed)
  * @param array $redefined keys
  * @param array $removed keys
  */
-function duplicate_picture_url($redefined = [], $removed = []): string
+/** @param array<mixed> $redefined @param string[] $removed */
+function duplicate_picture_url(array $redefined = [], array $removed = []): string
 {
     return make_picture_url(
         params_for_duplication($redefined, $removed)
@@ -197,6 +201,7 @@ function duplicate_picture_url($redefined = [], $removed = []): string
  * create a picture URL on a specific section for a specific picture
  *
  * @param array $params */
+/** @param array<mixed> $params */
 function make_picture_url(array $params): string
 {
     $url = get_root_url().'picture';
@@ -237,6 +242,7 @@ function make_picture_url(array $params): string
 /**
  *adds to the url the chronology and start parameters
 */
+/** @param array<mixed> $params */
 function add_well_known_params_in_url(string $url, array $params): string
 {
     if (isset($params['chronology_field'])) {
@@ -267,6 +273,7 @@ function add_well_known_params_in_url(string $url, array $params): string
  * for details)
  *
  * @param array $params */
+/** @param array<mixed> $params */
 function make_section_in_url(array $params): string
 {
     $section_string = '';
@@ -391,7 +398,8 @@ function make_section_in_url(array $params): string
  *  array  url tokens to parse
  *  int  index in the array of url tokens; in/out
  */
-function parse_section_url(array $tokens, &$next_token): array
+/** @param string[] $tokens @return array<mixed> */
+function parse_section_url(array $tokens, int &$next_token): array
 {
     $page = [];
     if (isset($tokens[$next_token]) and str_starts_with($tokens[$next_token], 'categor')) {
@@ -578,7 +586,8 @@ function parse_section_url(array $tokens, &$next_token): array
  * parses start, flat and chronology from url tokens
  * @return list<string>[]|string[]|true[]
 */
-function parse_well_known_params_url(array $tokens, &$i): array
+/** @param string[] $tokens @return array<mixed> */
+function parse_well_known_params_url(array $tokens, int &$i): array
 {
     $page = [];
     while (isset($tokens[$i])) {
@@ -628,7 +637,7 @@ function parse_well_known_params_url(array $tokens, &$i): array
  *  int  image id
  *  string  one of 'e' (element), 'r' (representative)
  */
-function get_action_url($id, $what_part, $download)
+function get_action_url(int $id, string $what_part, bool $download): string
 {
     $params = [
           'id' => $id,

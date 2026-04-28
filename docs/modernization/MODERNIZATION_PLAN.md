@@ -6224,7 +6224,7 @@ The `add_combinable()` method called out in your spec — verified by inspection
 ## Phase 6 — Cleanup (M)
 
 ### Goal
-Remove the scaffolding that the earlier phases used to keep the tree runnable, raise the static-analysis floor, and lock in the modernized architecture with documentation. Specifically: drop pre-16 install/db scripts and tighten the upgrade.php guard from "soft warn" to "hard refuse"; walk PHPStan from level 8 to level 9 with the baseline file deleted; drop polyfills no longer reachable; delete the Wave C `ArrayObject` proxies if Wave C shipped (no-op otherwise); drop dead `pgsql`/`sqlite` dblayer branches; ship `docs/ARCHITECTURE.md`.
+Remove the scaffolding that the earlier phases used to keep the tree runnable, raise the static-analysis floor, and lock in the modernized architecture with documentation. Specifically: drop pre-16 install/db scripts and tighten the upgrade.php guard from "soft warn" to "hard refuse"; walk PHPStan from level 8 to level 9 with the baseline file deleted; drop polyfills no longer reachable; delete the Wave C `ArrayObject` proxies if Wave C shipped (no-op otherwise); drop dead `pgsql`/`sqlite` dblayer branches; ship `docs/ARCHITECTURE.md`; absorb the 8 untracked gaps surfaced by the 2026-04-27 post-Phase-5 audit (steps 9–16).
 
 ### Step-by-step sequence
 
@@ -6298,26 +6298,149 @@ Remove the scaffolding that the earlier phases used to keep the tree runnable, r
 
    **Exit signal:** file exists at `docs/ARCHITECTURE.md` with all 8 sections populated.
 
+9. **Delete stale `tests/e2e/global-setup.js`.** (G0-1) `global-setup.ts` is the canonical Playwright
+   global-setup file; the `.js` version is a leftover from before TypeScript was introduced.
+   ```bash
+   git rm tests/e2e/global-setup.js
+   ```
+   **Exit signal:** `ls tests/e2e/global-setup*` shows only `global-setup.ts`.
+
+10. **Add `npm run clean` script and document the dev workflow.** (G5-4) The legacy ScriptLoader
+    concat path writes combined JS to `_data/combined/` when `dist/manifest.json` is absent. These
+    files accumulate without automated cleanup and can mask stale-bundle bugs.
+    - Add to `package.json` `"scripts"`:
+      ```json
+      "clean": "node -e \"require('fs').rmSync('dist', {recursive:true,force:true}); require('fs').rmSync('_data/combined', {recursive:true,force:true});\""
+      ```
+    - Add a note to `docs/ARCHITECTURE.md` Section 5 (JS build pipeline): always run `npm run build`
+      (or `npm run dev`) before testing; run `npm run clean` to remove stale artifacts.
+    **Exit signal:** `npm run clean` exits 0; `ls _data/combined/` is empty or the directory does
+    not exist.
+
+11. **Add E2E TypeScript typecheck to CI.** (G5-3) `tsconfig.json` excludes `tests/e2e/**`, so
+    E2E test code has no CI safety net for type errors.
+    - Create `tests/e2e/tsconfig.json`:
+      ```json
+      {
+        "extends": "../../tsconfig.json",
+        "compilerOptions": {
+          "types": ["@playwright/test", "node"],
+          "noEmit": true
+        },
+        "include": ["**/*.ts"]
+      }
+      ```
+    - Update the `typecheck` npm script in `package.json`:
+      ```json
+      "typecheck": "tsc --noEmit && tsc --noEmit -p tests/e2e/tsconfig.json"
+      ```
+    **Exit signal:** `npm run typecheck` exits 0 and also validates `tests/e2e/*.ts`.
+
+12. **Wire `check-baseline.sh` and `check-conf-shape.php` into the CI lint job.** (G2-2) The
+    architecture doc (Section 8) names these tools as lint steps, but they are not in
+    `.github/workflows/ci.yml` and do not exist in `tools/`. Either implement them or remove the
+    references from Section 8.
+    - **Option A (implement):** Create `tools/check-baseline.sh` that runs PHPStan, compares the
+      output line-count against the committed baseline, and fails if the baseline grew. Create
+      `tools/check-conf-shape.php` that diffs `include/config_default.inc.php` keys against the
+      `@phpstan-type Conf` alias in `tools/phpstan-types.php`. Add both as steps in the `lint` job
+      after the existing PHPStan step.
+    - **Option B (remove references):** Delete the two bullet points from Section 8 of the
+      `docs/ARCHITECTURE.md` draft that reference these scripts.
+    Prefer Option A if PHPStan baseline work (step 4) is ongoing — the grow-guard is most valuable
+    during that work.
+    **Exit signal:** CI lint job runs without referencing non-existent scripts; Section 8 is
+    accurate.
+
+13. **Fix Vite manifest plugin per-entry CSS association.** (G5-2, optional) The current
+    `build/piwigo-manifest-plugin.ts` includes all CSS assets in every entry's manifest record.
+    This means every page gets all CSS linked, not per-entry CSS. In practice the volume is low and
+    browsers deduplicate, so this is cosmetic unless CSS output grows.
+    - In `generateBundle`, replace the blanket CSS collect with a Vite-internal per-chunk CSS
+      lookup. Vite attaches CSS filenames to each chunk via `chunk.viteMetadata.importedCss` (Vite
+      4+) or via the `vite:css-post` plugin's chunk-to-css map. Use:
+      ```typescript
+      const cssFiles = [...(chunk.viteMetadata?.importedCss ?? [])];
+      ```
+    **Exit signal:** `dist/manifest.json` entry for `core.scripts` lists only the CSS files
+    actually imported by `themes/default/js/scripts.ts`, not all CSS in the build.
+
+14. **Dissolve `DummyPlugin_maintain` and `DummyTheme_maintain`.** (G3-2, optional) These are
+    marker-only classes used as fallbacks when a plugin/theme has no `maintain` class. They contain
+    no logic and their instantiation is one of the remaining `NoDynamicNewRule` exemption sites.
+    - In `admin/include/plugins.php` (or wherever `new $class_name()` instantiates the dummy),
+      replace with a conditional: if the maintain class does not exist, return `null` and guard
+      callers against null.
+    - Delete `src/Piwigo/Admin/DummyPlugin_maintain.php` and
+      `src/Piwigo/Admin/DummyTheme_maintain.php`.
+    - Remove the corresponding entries from `src/Piwigo/Compat/aliases.php`.
+    - Remove the `NoDynamicNewRule` exemption for these instantiation sites.
+    **Exit signal:** `ls src/Piwigo/Admin/Dummy*.php` returns empty; `NoDynamicNewRule` exemption
+    list is shorter.
+
+15. **Write `docs/plugin-migration-16x.md`.** (G4-2) Plugin authors who install this fork will see
+    `E_USER_DEPRECATED` notices for every `$conf['key']` read. No migration guide exists.
+    Sections to cover:
+    - **What changed.** The `$conf` global is now a `ConfProxy` `ArrayObject`. Reads emit
+      `E_USER_DEPRECATED` naming the replacement getter (`Config::getString()`, etc.).
+    - **How to read configuration.** Mapping table: `$conf['key']` → `Config::get('key')`;
+      `$conf['some_string']` → `Config::getString('some_string')`;
+      `$conf['some_bool']` → `Config::getBool('some_bool')`.
+    - **How to write configuration.** `$conf['key'] = $value` still works (the proxy delegates to
+      `Config::override()`). For persistence use `conf_update_param('key', $value)` as before.
+    - **Silenced callers.** `install/db/`, `local/config/`, `language/` paths never emit notices.
+    - **Testing.** Run `php -r "include 'include/common.inc.php';"` with `error_reporting(E_ALL)`
+      and scan for `DEPRECATED` lines.
+    This content can be folded into `docs/ARCHITECTURE.md` Section 4 if a standalone file feels
+    heavy.
+    **Exit signal:** `docs/plugin-migration-16x.md` (or the equivalent ARCHITECTURE section)
+    exists with the mapping table and the silenced-caller list.
+
+16. **Add unit test stubs for uncovered `src/Piwigo/` namespaces.** (G0-2) Ten of thirteen
+    namespaces have zero unit tests. Priority order based on change frequency and complexity:
+    - **High priority:** `Template/ScriptLoader` (manifest-aware logic added in Phase 5),
+      `Cache/PersistentFileCache` (filesystem interaction), `Session/PwgSession` (SameSite logic).
+    - **Medium priority:** `Ws/PwgServer` (request dispatch), `Auth/PwgTOTP` (TOTP math), one
+      `Menu/` test for `BlockManager`.
+    - **Lower priority:** `Calendar/`, `Image/`, `Search/` — these wrap complex SQL queries and
+      are better covered by integration tests.
+    Each test file should live at `tests/Unit/<Namespace>/<Class>Test.php`, extend `PHPUnit\Framework\TestCase`,
+    and not require a live DB or HTTP. Mock or stub any DB calls using PHPUnit mocks or in-memory
+    fixtures.
+    **Exit signal:** `vendor/bin/phpunit --testsuite Unit` shows coverage for at least
+    `Template/ScriptLoader`, `Cache/PersistentFileCache`, `Session/PwgSession`, and `Ws/PwgServer`.
+
 ### Effort breakdown
 
-| Sub-task | Tag |
-| --- | --- |
-| Determine pre-16 cutoff and document | S |
-| `upgrade.php` guard diff + delete dead detection ladder | M |
-| Delete 121 install/db files; add 15.x rejection fixture | S |
-| PHPStan level 8 → 9 walk | L |
-| Polyfill removal | S |
-| ArrayObject proxy removal (conditional) | M |
-| `pgsql`/`sqlite` branch removal | M |
-| `docs/ARCHITECTURE.md` | M |
+| Sub-task | Step | Tag |
+| --- | --- | --- |
+| Determine pre-16 cutoff and document | 1 | S |
+| `upgrade.php` guard diff + delete dead detection ladder | 2 | M |
+| Delete 121 install/db files; add 15.x rejection fixture | 3 | S |
+| PHPStan level 8 → 9 walk | 4 | L |
+| Polyfill removal | 5 | S |
+| ArrayObject proxy removal (conditional) | 6 | M |
+| `pgsql`/`sqlite` branch removal | 7 | M |
+| `docs/ARCHITECTURE.md` | 8 | M |
+| Delete stale `global-setup.js` | 9 | S |
+| Add `npm run clean` + dev workflow note | 10 | S |
+| E2E TypeScript typecheck in CI | 11 | S |
+| Wire `check-baseline.sh` / `check-conf-shape.php` | 12 | M |
+| Fix manifest plugin per-entry CSS (optional) | 13 | M |
+| Dissolve `DummyPlugin_maintain` / `DummyTheme_maintain` (optional) | 14 | S |
+| Write `docs/plugin-migration-16x.md` | 15 | S |
+| Unit test stubs for 6+ uncovered namespaces | 16 | L |
 
-**Phase total: M.**
+**Phase total: L** (driven by steps 4 and 16).
 
 ### Risks specific to Phase 6
 
 - **Aggressive level-9 cleanup might break working code.** `treatPhpDocTypesAsCertain: true` at level 9 surfaces narrowing assumptions (`if (is_int($x))` followed by `$x + 1` — PHPStan trusts phpdoc more than the runtime check). Some "fixes" are bug-introductions. Mitigate: every level-9 fix lands in its own micro-commit with a Playwright spec exercising the touched path; if no such spec exists, write it first.
 - **Deleting `pgsql`/`sqlite` branches has unknown blast radius.** A theme or fork may rely on `$conf['dblayer'] === 'pgsql'`. Phase 1 self-heal protects only `mysql`. Mitigate: keep step 7 optional and do it only after staging logs show no `dblayer` other than `mysqli` reaches the code in question.
 - **The 15.x rejection fixture is hand-authored.** Must produce a DB that fails `in_array(181, $applied)` but is otherwise structurally valid (so table-existence checks earlier in `upgrade.php` succeed enough to reach the guard). Easiest: take the 16.x fixture and `DELETE FROM piwigo_upgrade WHERE id IN (175, 176, 177, 178, 179, 180, 181)` plus drop a table or two added between 14.x and 15.x.
+- **`check-conf-shape.php` requires the `@phpstan-type Conf` alias to be complete.** If any key in `config_default.inc.php` was added without updating `tools/phpstan-types.php`, the drift detector will emit false positives on its first run. Audit the alias before wiring CI (step 12).
+- **Unit tests for `Template/ScriptLoader` require manifest file setup.** `ScriptLoader::manifest()` reads `PHPWG_ROOT_PATH . 'dist/manifest.json'`. Tests must either define the constant to a temp dir and create a fixture manifest, or mock `is_file()` via a test double. The former approach is simpler; use `sys_get_temp_dir()` and `setUp()`/`tearDown()` to create and remove the fixture.
+- **Dissolving `DummyPlugin_maintain` (step 14) may touch plugin-loader code that is hard to test without a real plugin directory.** Verify with a Playwright admin smoke test (plugins page) after the change.
 
 ### Verification
 
@@ -6328,6 +6451,12 @@ Remove the scaffolding that the earlier phases used to keep the tree runnable, r
 5. New rejection test from `dev/fixtures/piwigo-15.x.sql` (optional) asserts HTTP 409 with the polite refusal text.
 6. Manual smoke: `docker-compose up`, fresh install, browse gallery + admin; upgrade an existing 16.x dump; both green.
 7. `docs/ARCHITECTURE.md` exists and renders in GitHub preview without dead anchors.
+8. `ls tests/e2e/global-setup*` shows only `global-setup.ts` (step 9).
+9. `npm run clean && npm run build` exits 0; `ls _data/combined/` is empty (step 10).
+10. `npm run typecheck` validates `tests/e2e/*.ts` without errors (step 11).
+11. CI lint job runs without referencing non-existent scripts; Section 8 of `ARCHITECTURE.md` matches what CI actually does (step 12).
+12. `vendor/bin/phpunit --testsuite Unit` shows test coverage for `Template/ScriptLoader`, `Cache/PersistentFileCache`, `Session/PwgSession`, and `Ws/PwgServer` (step 16).
+13. `docs/plugin-migration-16x.md` (or equivalent ARCHITECTURE section) exists with the `$conf` → `Config::get*()` mapping table (step 15).
 
 
 ### Part 2 — Phase 6: `docs/ARCHITECTURE.md` content draft
@@ -6989,20 +7118,20 @@ JavaScript correctness testing.
 
 | ID | Phase | Description | Status |
 |----|-------|-------------|--------|
-| G0-1 | 0 | Duplicate `global-setup.js` alongside `.ts` | untracked |
-| G0-2 | 0 | Zero unit tests for 10 of 13 `src/Piwigo/` namespaces | untracked |
+| G0-1 | 0 | Duplicate `global-setup.js` alongside `.ts` | Ph6 step 9 |
+| G0-2 | 0 | Zero unit tests for 10 of 13 `src/Piwigo/` namespaces | Ph6 step 16 |
 | G1-1 | 1 | Dynamic dblayer include invisible to PHPStan | Ph6 step 7 |
 | G2-1 | 2 | PHPStan baseline 22 296 lines — effective level is not 8 | Ph6 step 4 |
-| G2-2 | 2 | `check-baseline.sh` / `check-conf-shape.php` in CI doc but not wired | untracked |
+| G2-2 | 2 | `check-baseline.sh` / `check-conf-shape.php` in CI doc but not wired | Ph6 step 12 |
 | G3-1 | 3 | `aliases.php` runs on every request; FQCNs not complete | Ph6 step 6 (indirect) |
-| G3-2 | 3 | `DummyPlugin_maintain` / `DummyTheme_maintain` serve no purpose | untracked (optional) |
+| G3-2 | 3 | `DummyPlugin_maintain` / `DummyTheme_maintain` serve no purpose | Ph6 step 14 (optional) |
 | G4-1 | 4 | `debug_backtrace` on every plugin `$conf` access | Ph6 step 6 |
-| G4-2 | 4 | No plugin developer migration guide for ConfProxy deprecations | untracked |
+| G4-2 | 4 | No plugin developer migration guide for ConfProxy deprecations | Ph6 step 15 |
 | G5-1 | 5 | Wave-1 TS: `noImplicitAny` / `strictNullChecks` off | future Wave 2 |
-| G5-2 | 5 | Manifest plugin CSS association is a blanket (not per-entry) | untracked |
-| G5-3 | 5 | E2E TypeScript files not covered by `npm run typecheck` | untracked |
-| G5-4 | 5 | `_data/combined/*.js` accumulate without automated cleanup | untracked |
+| G5-2 | 5 | Manifest plugin CSS association is a blanket (not per-entry) | Ph6 step 13 (optional) |
+| G5-3 | 5 | E2E TypeScript files not covered by `npm run typecheck` | Ph6 step 11 |
+| G5-4 | 5 | `_data/combined/*.js` accumulate without automated cleanup | Ph6 step 10 |
 
-5 of 13 gaps are already covered by Phase 6 steps. The remaining 8 untracked items are candidates
-for Phase 6 scope expansion or a follow-on Phase 7 housekeeping pass.
+All 13 gaps are now assigned. 12 are addressed in Phase 6 (steps 4, 6, 7, 9–16); G5-1 (Wave-1 TS
+relaxations) is deferred to a post-Phase-6 Wave 2 TypeScript tightening pass.
 - **If forced to ship only three phases ever, ship 0, 1, 2.** That alone takes Piwigo from "won't run on PHP 8" to "runs on PHP 8.5, type-safe, CI-protected" — most of the user-visible upside.

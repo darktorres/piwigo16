@@ -7122,18 +7122,17 @@ JavaScript correctness testing.
 | G1-1 | 1 | Dynamic dblayer include invisible to PHPStan | Ph6 step 7 |
 | G2-1 | 2 | PHPStan baseline 22 296 lines — effective level is not 8 | Phase 7 |
 | G2-2 | 2 | `check-baseline.sh` / `check-conf-shape.php` in CI doc but not wired | Ph6 step 12 |
-| G3-1 | 3 | `aliases.php` runs on every request; FQCNs not complete | Ph6 step 6 (indirect) |
-| G3-2 | 3 | `DummyPlugin_maintain` / `DummyTheme_maintain` serve no purpose | Ph6 step 14 (optional) |
+| G3-1 | 3 | `aliases.php` runs on every request; FQCNs not complete | Ph8 step 4 |
+| G3-2 | 3 | `DummyPlugin_maintain` / `DummyTheme_maintain` serve no purpose | Ph8 step 5 |
 | G4-1 | 4 | `debug_backtrace` on every plugin `$conf` access | Ph6 step 6 |
 | G4-2 | 4 | No plugin developer migration guide for ConfProxy deprecations | Ph6 step 15 |
-| G5-1 | 5 | Wave-1 TS: `noImplicitAny` / `strictNullChecks` off | future Wave 2 |
-| G5-2 | 5 | Manifest plugin CSS association is a blanket (not per-entry) | Ph6 step 13 (optional) |
+| G5-1 | 5 | Wave-1 TS: `noImplicitAny` / `strictNullChecks` off | Ph8 steps 7–8 |
+| G5-2 | 5 | Manifest plugin CSS association is a blanket (not per-entry) | Ph8 step 6 |
 | G5-3 | 5 | E2E TypeScript files not covered by `npm run typecheck` | Ph6 step 11 |
 | G5-4 | 5 | `_data/combined/*.js` accumulate without automated cleanup | Ph6 step 10 |
 
-All 13 gaps are now assigned. 11 are addressed in Phase 6 (steps 6, 7, 9–16); G2-1 (PHPStan
-baseline) is addressed in Phase 7; G5-1 (Wave-1 TS relaxations) is deferred to a post-Phase-7
-Wave 2 TypeScript tightening pass.
+All 13 gaps are now assigned across Phases 6–8: 9 in Phase 6 (steps 6, 7, 9–12, 15–16);
+G2-1 (PHPStan baseline) in Phase 7; G3-1, G3-2, G5-1, G5-2 in Phase 8.
 
 ---
 
@@ -7275,6 +7274,194 @@ When Phase 7 ships, append a `## Phase 7 close-out — shipped` section recordin
 - Level reached (8 or 9) and whether `treatPhpDocTypesAsCertain` is on.
 - Number of real bugs found and fixed during baseline elimination.
 - CI run ID confirming green.
+
+---
+
+---
+
+## Phase 8 — Deferred and optional tasks (M)
+
+### Goal
+
+Complete every task that was explicitly skipped, marked optional, or deferred to a "future phase"
+across Phases 1–7. None of these tasks block the main modernization arc, but each represents a
+known correctness gap, a type-safety hole, or a doc/test gap that a well-maintained codebase
+should eventually close.
+
+**Source inventory:** every item below was previously tracked as skipped or optional in at least
+one phase. The originating reference is noted for each step.
+
+---
+
+### Step-by-step sequence
+
+**Testing**
+
+1. **Author `dev/fixtures/piwigo-15.x.sql`** — the rejection fixture for the `upgrade.php` 409
+   guard. *(Phase 6 verification step 5, optional, skipped.)*
+   The fixture must produce a structurally valid DB that `upgrade.php` can reach past the
+   table-existence checks, but lacks `applied_upgrade` id 181, so the 409 guard fires.
+   Easiest construction: start from `dev/fixtures/piwigo-16.x.sql`, then:
+   ```sql
+   DELETE FROM piwigo_upgrade WHERE id IN (175,176,177,178,179,180,181);
+   DROP TABLE IF EXISTS piwigo_activity;   -- added between 14.x and 15.x
+   ```
+   Add a PHPUnit integration test that loads the fixture, POSTs to `upgrade.php`, and asserts
+   HTTP 409 with the polite refusal text.
+   **Exit signal:** `UpgradeChainTest` still green; new rejection test asserts status 409.
+
+**Security**
+
+2. **Upgrade session cookie `SameSite` from `Lax` to `Strict`.** *(Phase 1 step 9 deferral,
+   line 641 of the plan: "tightening is a Phase 6 cleanup" — never done in Phase 6.)*
+   Phase 1 shipped `samesite: 'Lax'` in `session_set_cookie_params()` and `setcookie()` calls
+   (6 sites in `include/functions_user.inc.php`, 2 in `include/functions_cookie.inc.php`).
+   `Strict` prevents the session cookie from being sent on any cross-site navigation, which is
+   the correct security posture for a private gallery.
+   Caveats: test "remember me" login and external SSO (if any) under `Strict` before shipping —
+   some redirect-based flows break. The Phase 5 dev-mode note (`dev mode uses SameSite=Lax`)
+   may need revisiting if the dev Vite server is cross-origin.
+   **Exit signal:** `session_set_cookie_params` and all `setcookie` calls use `'Strict'`;
+   Playwright `identify + remember-me` spec green.
+
+**PHP type-safety cleanup**
+
+3. **Tighten `PwgNamedArray`, `PwgNamedStruct`, and `PwgServer` property visibility.**
+   *(Phase 1 lines 677, 790, 908 — deferred as "higher disruption, not Phase 1 scope".)*
+   - `PwgNamedArray.$_content` and `PwgNamedStruct.$_content` currently use `/*private*/ var`
+     (PHP-4-era public-visibility shorthand with an aspirational comment). Three read sites in
+     `PwgResponseEncoder::flatten()` access `$value->_content` from outside the class. Fix:
+     add a `getContent(): array` getter, change the property to `private array $_content`, update
+     the three external read sites.
+   - `PwgServer.$_methods` is `public array` because `ws_core.inc.php:616` calls
+     `array_filter($service->_methods, ...)`. Fix: add `getMethods(): array`, change `$_methods`
+     to `private array`, update the one external read site.
+   **Exit signal:** PHPStan sees no public `_`-prefixed properties on ws classes;
+   `vendor/bin/phpunit --testsuite Unit` still green.
+
+4. **Remove `src/Piwigo/Compat/aliases.php` and the `autoload.files` entry.**
+   *(Gap G3-1, Phase 3 deferral — "loaded on every request, remove once FQCNs are complete".)*
+   `aliases.php` currently holds ~60 `class_alias()` mappings from old unqualified names to
+   `Piwigo\*` FQCNs. It runs unconditionally on every request. The removal process:
+   - Run `grep -rn "use Piwigo\\" --include="*.php" include/ admin/ | wc -l` — count existing FQN
+     imports. For each old short name still used in `include/` or `admin/`, add the FQCN `use`
+     statement to that file and remove the alias entry.
+   - When `aliases.php` is empty (zero `class_alias` calls), delete it and remove the entry from
+     `composer.json` `autoload.files`.
+   - Run `composer dump-autoload` and verify `vendor/bin/phpunit --testsuite Unit` green.
+   - Run `vendor/bin/phpstan analyse --no-progress` — the removal exposes any call sites that
+     relied on the global alias rather than an import.
+   **Exit signal:** `aliases.php` is deleted; `composer.json` `autoload.files` is empty or absent;
+   PHPStan exits 0; unit suite green.
+
+5. **Dissolve `DummyPlugin_maintain` and `DummyTheme_maintain`.** *(Gap G3-2, Phase 6 step 14,
+   optional, skipped. Note: the Phase 6 plan description was partially wrong — these classes are
+   NOT empty markers; they bridge old procedural plugin callbacks.)*
+   The correct dissolution requires eliminating the procedural plugin API itself:
+   - `DummyPlugin_maintain` bridges `plugin_install()`, `plugin_activate()`,
+     `plugin_deactivate()`, `plugin_uninstall()` free functions (old pre-2.7 plugin pattern).
+   - `DummyTheme_maintain` bridges `theme_activate()`, `theme_deactivate()`, `theme_delete()`.
+   Fix: add a deprecation `trigger_error(E_USER_DEPRECATED)` inside each delegating method, emit
+   the correct OOP replacement in the error message, then schedule removal after one release
+   cycle. The classes themselves stay until no installed plugin uses the procedural pattern.
+   **Immediate action:** add `trigger_error('plugin_install() is deprecated; extend PluginMaintain instead', E_USER_DEPRECATED)` in `DummyPlugin_maintain::install()` etc.
+   **Eventual exit signal (future release):** `grep -r "function plugin_install\|function plugin_activate" .` returns zero hits in tracked code; both dummy files deleted.
+
+**Frontend**
+
+6. **Fix Vite manifest plugin per-entry CSS association.** *(Gap G5-2, Phase 6 step 13, optional,
+   skipped.)*
+   `build/piwigo-manifest-plugin.ts` currently adds ALL CSS assets to EVERY entry's manifest
+   record. Fix: use Vite's internal per-chunk CSS metadata. In the `generateBundle` hook,
+   replace the blanket collect with:
+   ```typescript
+   const cssFiles = [...((chunk as any).viteMetadata?.importedCss ?? new Set<string>())];
+   ```
+   Verify by inspecting `dist/manifest.json` after `npm run build`: the `core.scripts` entry
+   should list only CSS files actually imported by `themes/default/js/scripts.ts`.
+   **Exit signal:** `dist/manifest.json` entries have accurate per-entry `css` arrays; no
+   regressions in `npm run build` or `npm run typecheck`.
+
+7. **TypeScript Wave 2 — enable `noImplicitAny` and `noImplicitThis`.** *(Gap G5-1a, Phase 5
+   deferral, plan line 5132: "Wave 2 flips noImplicitAny true after simple files convert".)*
+   The Wave-1 relaxations in `tsconfig.json` allow implicit `any` propagation throughout jQuery
+   callback chains and class methods. Enabling these flags surfaces every untyped parameter and
+   every unresolved `this` context.
+   Approach: enable one flag at a time.
+   - **`noImplicitThis: true` first** — smaller surface, most issues are in jQuery plugin
+     implementations where `this` is `Element | JQuery`. Fix: annotate `function(this: JQuery)`
+     or wrap in arrow functions.
+   - **`noImplicitAny: true` second** — larger surface. Work file by file: add explicit `any`
+     annotations as a mechanical first pass (acceptable for Wave 2); follow up with real types
+     where the shape is known.
+   **Exit signal:** `npm run typecheck` exits 0 with `"noImplicitThis": true` and
+   `"noImplicitAny": true` in `tsconfig.json`; no `// @ts-ignore` added.
+
+8. **TypeScript Wave 3 — enable `strictNullChecks`.** *(Gap G5-1b, Phase 5 deferral, plan line
+   5132: "Wave 3 enables `strictNullChecks` on a per-file `// @ts-strict` opt-in".)*
+   The heaviest TS lift. `strictNullChecks: false` means every value implicitly includes `null |
+   undefined`, so there are no null-safety errors anywhere in the current codebase.
+   Recommended approach: opt-in per file using a triple-slash directive rather than a global
+   tsconfig flip. TypeScript 5.x supports per-file strict enabling via a project-reference
+   pattern:
+   1. Create `tsconfig.strict.json` extending the root with `"strictNullChecks": true`.
+   2. Convert the simplest files first (those with no jQuery DOM interaction): `toaster.ts`,
+      `switchbox.ts`, `pngfix.ts`, `rating.ts`.
+   3. Add each converted file to `tsconfig.strict.json`'s `include` list.
+   4. When all 38 files are in the strict config, fold `strictNullChecks: true` into the root
+      `tsconfig.json` and delete `tsconfig.strict.json`.
+   **Exit signal:** `npm run typecheck` exits 0 with `"strictNullChecks": true` in root
+   `tsconfig.json`; all 38 entry-point `.ts` files covered.
+
+---
+
+### Effort breakdown
+
+| Sub-task | Step | Tag |
+|---|---|---|
+| `dev/fixtures/piwigo-15.x.sql` rejection fixture | 1 | S |
+| SameSite Lax → Strict | 2 | M |
+| WS class property visibility tightening | 3 | M |
+| Compat aliases removal | 4 | L |
+| DummyPlugin/Theme deprecation notices | 5 | S |
+| Vite manifest per-entry CSS | 6 | M |
+| TypeScript Wave 2 (`noImplicitAny`, `noImplicitThis`) | 7 | L |
+| TypeScript Wave 3 (`strictNullChecks`) | 8 | L |
+
+**Phase total: L** (driven by steps 4, 7, and 8).
+
+### Risks specific to Phase 8
+
+- **SameSite Strict breaks cross-site navigation flows.** Any link from an external page into
+  the gallery that relies on the session cookie (e.g. SSO redirects, OAuth callbacks) will see an
+  unauthenticated request under Strict. Test exhaustively on staging before shipping step 2.
+- **Aliases removal has unknown blast radius in plugin code.** Plugins that include Piwigo files
+  and then reference short class names (e.g. `new Template()`) rely on `aliases.php`. Removing
+  the file will break those plugins silently — they'll get a fatal at `new Template()`. Audit the
+  plugin ecosystem before deleting. The safest path: keep the file but emit a deprecation from
+  each `class_alias` call, give one release cycle, then delete.
+- **`strictNullChecks` is a weeks-long effort per file when jQuery is involved.** Every `$(elem)`
+  is `JQuery | null` under strict checks. The per-file opt-in approach mitigates this by letting
+  you ship partial coverage incrementally.
+- **WS getter refactor touches the response encoder** which is exercised by every web-service
+  call. Write a `PwgResponseEncoderTest` before changing `_content` visibility to catch
+  regressions.
+
+### Verification
+
+1. `dev/fixtures/piwigo-15.x.sql` exists; PHPUnit integration test asserts HTTP 409 from
+   `upgrade.php` when that fixture is loaded (step 1).
+2. All `session_set_cookie_params` and `setcookie` calls use `'Strict'`; Playwright remember-me
+   spec green (step 2).
+3. `grep -n "\/\*private\*\/ var\|public.*_methods\|public.*_content" src/Piwigo/Ws/*.php`
+   returns zero hits (step 3).
+4. `ls src/Piwigo/Compat/aliases.php` → "No such file"; `composer.json` `autoload.files` empty
+   or absent; PHPStan exits 0 (step 4).
+5. `grep -n "trigger_error.*deprecated" src/Piwigo/Admin/DummyPlugin_maintain.php` shows
+   deprecation notices in each delegating method (step 5).
+6. `dist/manifest.json` entry for `core.scripts` lists only its own CSS (step 6).
+7. `npm run typecheck` exits 0 with `"noImplicitAny": true, "noImplicitThis": true` (step 7).
+8. `npm run typecheck` exits 0 with `"strictNullChecks": true` (step 8).
 
 ---
 

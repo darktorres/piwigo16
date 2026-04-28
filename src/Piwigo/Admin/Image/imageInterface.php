@@ -23,7 +23,7 @@ interface imageInterface
 
     public function sharpen(int $amount): bool;
 
-    public function compose(self $overlay, int $x, int $y, int $opacity): bool;
+    public function compose(mixed $overlay, int $x, int $y, int $opacity): bool;
 
     public function write(string $destination_filepath): bool;
 }

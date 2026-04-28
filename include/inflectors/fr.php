@@ -10,8 +10,11 @@ declare(strict_types=1);
 
 class Inflector_fr
 {
+    /** @var array<string,string> */
     private array $exceptions;
+    /** @var array<string,string> */
     private readonly array $pluralizers;
+    /** @var array<string,string> */
     private readonly array $singularizers;
 
     public function __construct()
@@ -47,7 +50,8 @@ class Inflector_fr
     /**
      * @return mixed[]
      */
-    public function get_variants($word): array
+    /** @return string[] */
+    public function get_variants(string $word): array
     {
         $res = [];
 

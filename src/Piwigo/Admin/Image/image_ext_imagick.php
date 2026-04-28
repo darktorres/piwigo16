@@ -6,16 +6,17 @@ namespace Piwigo\Admin\Image;
 
 class image_ext_imagick implements imageInterface
 {
-    public $imagickdir = '';
+    public string $imagickdir = '';
     /** @var string|int */
     public $width = '';
     /** @var string|int */
     public $height = '';
     /** @var bool */
     public $is_animated_webp = false;
-    public $commands = [];
+    /** @var array<mixed> */
+    public array $commands = [];
 
-    public function __construct(public $source_filepath)
+    public function __construct(public string $source_filepath)
     {
         $this->imagickdir = \Piwigo\Core\Config::extImagickDir();
 
@@ -48,7 +49,7 @@ class image_ext_imagick implements imageInterface
         $this->height = $match[2];
     }
 
-    public function add_command($command, $params = null): void
+    public function add_command(string $command, mixed $params = null): void
     {
         $this->commands[$command] = $params;
     }
@@ -108,7 +109,7 @@ class image_ext_imagick implements imageInterface
         return true;
     }
 
-    public function resize($width, $height): bool
+    public function resize(int $width, int $height): bool
     {
         $this->width = $width;
         $this->height = $height;
@@ -118,7 +119,7 @@ class image_ext_imagick implements imageInterface
         return true;
     }
 
-    public function sharpen($amount): bool
+    public function sharpen(int $amount): bool
     {
         $m = pwg_image::get_sharpen_matrix($amount);
 
@@ -132,7 +133,7 @@ class image_ext_imagick implements imageInterface
         return true;
     }
 
-    public function compose($overlay, $x, $y, $opacity): bool
+    public function compose(mixed $overlay, int $x, int $y, int $opacity): bool
     {
         $param = 'compose dissolve -define compose:args='.$opacity;
         $param .= ' '.escapeshellarg(realpath($overlay->image->source_filepath));
@@ -142,7 +143,7 @@ class image_ext_imagick implements imageInterface
         return true;
     }
 
-    public function write($destination_filepath): bool
+    public function write(string $destination_filepath): bool
     {
         global $logger;
 

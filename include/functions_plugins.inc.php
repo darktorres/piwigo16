@@ -35,7 +35,7 @@ class PluginMaintain
      * @param string $plugin_version
      * @param array &$errors - used to return error messages
      */
-    /** @param string[] $errors */
+    /** @param array<mixed> $errors */
     public function install(string $plugin_version, array &$errors = []): void
     {
     }
@@ -44,7 +44,7 @@ class PluginMaintain
      * @param string $plugin_version
      * @param array &$errors - used to return error messages
      */
-    /** @param string[] $errors */
+    /** @param array<mixed> $errors */
     public function activate(string $plugin_version, array &$errors = []): void
     {
     }
@@ -62,7 +62,7 @@ class PluginMaintain
      * @param string $new_version
      * @param array &$errors - used to return error messages
      */
-    /** @param string[] $errors */
+    /** @param array<mixed> $errors */
     public function update(string $old_version, string $new_version, array &$errors = []): void
     {
     }
@@ -94,7 +94,7 @@ class ThemeMaintain
      * @param string $theme_version
      * @param array &$errors - used to return error messages
      */
-    /** @param string[] $errors */
+    /** @param array<mixed> $errors */
     public function activate(string $theme_version, array &$errors = []): void
     {
     }

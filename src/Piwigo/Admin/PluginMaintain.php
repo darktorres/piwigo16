@@ -20,23 +20,27 @@ class PluginMaintain
      * @param string $plugin_version
      * @param array &$errors - used to return error messages
      */
-    public function install($plugin_version, &$errors = [])
+    /** @param array<mixed> $errors */
+    public function install(string $plugin_version, array &$errors = []): mixed
     {
+        return null;
     }
 
     /**
      * @param string $plugin_version
      * @param array &$errors - used to return error messages
      */
-    public function activate($plugin_version, &$errors = [])
+    /** @param array<mixed> $errors */
+    public function activate(string $plugin_version, array &$errors = []): mixed
+    {
+        return null;
+    }
+
+    public function deactivate(): void
     {
     }
 
-    public function deactivate()
-    {
-    }
-
-    public function uninstall()
+    public function uninstall(): void
     {
     }
 
@@ -45,8 +49,10 @@ class PluginMaintain
      * @param string $new_version
      * @param array &$errors - used to return error messages
      */
-    public function update($old_version, $new_version, &$errors = [])
+    /** @param array<mixed> $errors */
+    public function update(string $old_version, string $new_version, array &$errors = []): mixed
     {
+        return null;
     }
 
     /**

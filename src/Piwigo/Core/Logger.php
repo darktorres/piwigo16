@@ -47,6 +47,7 @@ class Logger
     /**
      * Standard messages produced by the class.
      */
+    /** @var array<string,string> */
     private static array $_messages = [
       'writefail'   => 'The file could not be written to. Check that appropriate permissions have been set.',
       'opensuccess' => 'The log file was opened successfully.',
@@ -56,6 +57,7 @@ class Logger
     /**
      * Instance options.
      */
+    /** @var array<string,mixed> */
     private array $options = [
       'directory' => null, // Log files directory
       'filename' => null, // Path to the log file
@@ -82,7 +84,8 @@ class Logger
      * @param array $options
      * @return void
      */
-    public function __construct($options)
+    /** @param array<string,mixed> $options */
+    public function __construct(array $options)
     {
         $this->options = array_merge($this->options, $options);
 
@@ -164,7 +167,8 @@ class Logger
      *
      * @param string $cat
      */
-    public function debug(string $line, $cat = null, $args = []): void
+    /** @param array<mixed> $args */
+    public function debug(string $line, ?string $cat = null, array $args = []): void
     {
         $this->log(self::DEBUG, $line, $cat, $args);
     }
@@ -174,7 +178,8 @@ class Logger
      *
      * @param string $cat
      */
-    public function info(string $line, $cat = null, $args = []): void
+    /** @param array<mixed> $args */
+    public function info(string $line, ?string $cat = null, array $args = []): void
     {
         $this->log(self::INFO, $line, $cat, $args);
     }
@@ -184,7 +189,8 @@ class Logger
      *
      * @param string $cat
      */
-    public function notice(string $line, $cat = null, $args = []): void
+    /** @param array<mixed> $args */
+    public function notice(string $line, ?string $cat = null, array $args = []): void
     {
         $this->log(self::NOTICE, $line, $cat, $args);
     }
@@ -194,7 +200,8 @@ class Logger
      *
      * @param string $cat
      */
-    public function warn(string $line, $cat = null, $args = []): void
+    /** @param array<mixed> $args */
+    public function warn(string $line, ?string $cat = null, array $args = []): void
     {
         $this->log(self::WARNING, $line, $cat, $args);
     }
@@ -204,7 +211,8 @@ class Logger
      *
      * @param string $cat
      */
-    public function error(string $line, $cat = null, $args = []): void
+    /** @param array<mixed> $args */
+    public function error(string $line, ?string $cat = null, array $args = []): void
     {
         $this->log(self::ERROR, $line, $cat, $args);
     }
@@ -214,7 +222,8 @@ class Logger
      *
      * @param string $cat
      */
-    public function alert(string $line, $cat = null, $args = []): void
+    /** @param array<mixed> $args */
+    public function alert(string $line, ?string $cat = null, array $args = []): void
     {
         $this->log(self::ALERT, $line, $cat, $args);
     }
@@ -224,7 +233,8 @@ class Logger
      *
      * @param string $cat
      */
-    public function critical(string $line, $cat = null, $args = []): void
+    /** @param array<mixed> $args */
+    public function critical(string $line, ?string $cat = null, array $args = []): void
     {
         $this->log(self::CRITICAL, $line, $cat, $args);
     }
@@ -234,7 +244,8 @@ class Logger
      *
      * @param string $cat
      */
-    public function emergency(string $line, $cat = null, $args = []): void
+    /** @param array<mixed> $args */
+    public function emergency(string $line, ?string $cat = null, array $args = []): void
     {
         $this->log(self::EMERGENCY, $line, $cat, $args);
     }
@@ -245,13 +256,10 @@ class Logger
      * @param integer $severity
      * @param string $cat
      */
-    public function log($severity, string $message, $cat = null, $args = []): void
+    /** @param array<mixed> $args */
+    public function log(int $severity, string $message, ?string $cat = null, array $args = []): void
     {
         if ($this->severity() >= $severity) {
-            if (is_array($cat)) {
-                $args = $cat;
-                $cat = null;
-            }
             $line = $this->formatMessage($severity, $message, $cat, $args);
             $this->write($line);
         }
@@ -261,7 +269,7 @@ class Logger
      * Directly writes a line to the log without adding level and time.
      *
      */
-    public function write($line): void
+    public function write(string $line): void
     {
         $this->open();
         if ($this->status() == self::STATUS_LOG_OPEN) {
@@ -292,7 +300,8 @@ class Logger
      * @param  int $level
      * @param  array  $context
      */
-    private function formatMessage(int $level, string $message, ?string $cat, $context): string
+    /** @param array<mixed> $context */
+    private function formatMessage(int $level, string $message, ?string $cat, array $context): string
     {
         if (!empty($context)) {
             $message .= "\n" . $this->indent($this->contextToString($context));
@@ -324,7 +333,8 @@ class Logger
      *
      * @param  array $context
      */
-    private function contextToString($context): string
+    /** @param array<mixed> $context */
+    private function contextToString(array $context): string
     {
         $export = '';
         foreach ($context as $key => $value) {

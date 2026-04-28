@@ -9,9 +9,9 @@ class image_imagick implements imageInterface
     /**
      * @var \Imagick
      */
-    public $image;
+    public \Imagick $image;
 
-    public function __construct($source_filepath)
+    public function __construct(string $source_filepath)
     {
         // A bug cause that Imagick class can not be extended
         $this->image = new \Imagick($source_filepath);
@@ -27,12 +27,12 @@ class image_imagick implements imageInterface
         return $this->image->getImageHeight();
     }
 
-    public function set_compression_quality($quality): bool
+    public function set_compression_quality(int $quality): bool
     {
         return $this->image->setImageCompressionQuality($quality);
     }
 
-    public function crop($width, $height, $x, $y): bool
+    public function crop(int $width, int $height, int $x, int $y): bool
     {
         return $this->image->cropImage($width, $height, $x, $y);
     }
@@ -42,14 +42,14 @@ class image_imagick implements imageInterface
         return $this->image->stripImage();
     }
 
-    public function rotate($rotation): bool
+    public function rotate(int $rotation): bool
     {
         $this->image->rotateImage(new \ImagickPixel(), -$rotation);
         $this->image->setImageOrientation(\Imagick::ORIENTATION_TOPLEFT);
         return true;
     }
 
-    public function resize($width, $height): bool
+    public function resize(int $width, int $height): bool
     {
         $this->image->setInterlaceScheme(\Imagick::INTERLACE_LINE);
 
@@ -63,13 +63,13 @@ class image_imagick implements imageInterface
         return $this->image->resizeImage($width, $height, \Imagick::FILTER_LANCZOS, 0.9);
     }
 
-    public function sharpen($amount): bool
+    public function sharpen(int $amount): bool
     {
         $m = pwg_image::get_sharpen_matrix($amount);
         return  $this->image->convolveImage($m);
     }
 
-    public function compose($overlay, $x, $y, $opacity): bool
+    public function compose(mixed $overlay, int $x, int $y, int $opacity): bool
     {
         $ioverlay = $overlay->image->image;
         /*if ($ioverlay->getImageAlphaChannel() !== \Imagick::ALPHACHANNEL_OPAQUE)
@@ -87,7 +87,7 @@ class image_imagick implements imageInterface
         return $this->image->compositeImage($ioverlay, \Imagick::COMPOSITE_DISSOLVE, $x, $y);
     }
 
-    public function write($destination_filepath): bool
+    public function write(string $destination_filepath): bool
     {
         // use 4:2:2 chroma subsampling (reduce file size by 20-30% with "almost" no human perception)
         $this->image->setSamplingFactors([2,1]);

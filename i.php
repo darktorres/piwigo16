@@ -38,12 +38,12 @@ $logger = new Logger(array(
 function trigger_notify(string $event, mixed ...$args): void
 {
 }
-function get_extension($filename)
+function get_extension(string $filename): string
 {
     return substr(strrchr($filename, '.'), 1, strlen($filename));
 }
 
-function mkgetdir($dir, $flags = 0): bool
+function mkgetdir(string $dir, int $flags = 0): bool
 {
     if (!is_dir($dir)) {
         if (substr(PHP_OS, 0, 3) == 'WIN') {
@@ -67,7 +67,7 @@ function mkgetdir($dir, $flags = 0): bool
 
 // end fast bootstrap
 
-function ierror($msg, $code): never
+function ierror(string $msg, int $code): never
 {
     global $logger;
     if ($code == 301 || $code == 302) {
@@ -100,14 +100,15 @@ function ierror($msg, $code): never
     exit;
 }
 
-function time_step(&$step)
+function time_step(float &$step): int
 {
     $tmp = $step;
     $step = microtime(true);
     return intval(1000 * ($step - $tmp));
 }
 
-function url_to_size($s)
+/** @return int[] */
+function url_to_size(string $s): array
 {
     $pos = strpos($s, 'x');
     if ($pos === false) {
@@ -116,7 +117,8 @@ function url_to_size($s)
     return array((int)substr($s, 0, $pos), (int)substr($s, $pos + 1));
 }
 
-function parse_custom_params($tokens)
+/** @param string[] $tokens */
+function parse_custom_params(array $tokens): \Piwigo\Image\DerivativeParams
 {
     if (count($tokens) < 1) {
         ierror('Empty array while parsing Sizing', 400);
@@ -146,7 +148,7 @@ function parse_custom_params($tokens)
     return new DerivativeParams(new SizingParams($size, $crop, $min_size));
 }
 
-function parse_request()
+function parse_request(): void
 {
     global $page;
 
@@ -238,7 +240,7 @@ function parse_request()
     $page['src_url'] = $page['root_path'].$page['src_location'];
 }
 
-function try_switch_source(DerivativeParams $params, $original_mtime)
+function try_switch_source(\Piwigo\Image\DerivativeParams $params, ?int $original_mtime): bool
 {
     global $page;
     if (!isset($page['original_size'])) {
@@ -311,7 +313,7 @@ function try_switch_source(DerivativeParams $params, $original_mtime)
     return false;
 }
 
-function send_derivative($expires)
+function send_derivative(int|false $expires): void
 {
     global $page;
 
@@ -348,7 +350,7 @@ function send_derivative($expires)
     fclose($fp);
 }
 
-function safe_unserialize($value)
+function safe_unserialize(mixed $value): mixed
 {
     if (is_string($value)) {
         return unserialize($value);

@@ -8,14 +8,17 @@ use Piwigo\Users\CurrentUser;
 
 class languages
 {
-    public $fs_languages = [];
-    public $db_languages = [];
-    public $server_languages = [];
+    /** @var array<string, array<string,mixed>> */
+    public array $fs_languages = [];
+    /** @var array<string, array<string,mixed>> */
+    public array $db_languages = [];
+    /** @var array<mixed> */
+    public array $server_languages = [];
 
     /**
      * Initialize $fs_languages and $db_languages
     */
-    public function __construct($target_charset = null)
+    public function __construct(?string $target_charset = null)
     {
         $this->get_fs_languages($target_charset);
     }
@@ -109,7 +112,7 @@ UPDATE '.USER_INFOS_TABLE.'
     /**
     *  Get languages defined in the language directory
     */
-    public function get_fs_languages($target_charset = null): void
+    public function get_fs_languages(?string $target_charset = null): void
     {
         if (empty($target_charset)) {
             $target_charset = get_pwg_charset();
@@ -183,7 +186,7 @@ UPDATE '.USER_INFOS_TABLE.'
     /**
      * Retrieve PEM server datas to $server_languages
      */
-    public function get_server_languages($new = false): bool
+    public function get_server_languages(bool $new = false): bool
     {
         $get_data = [
           'category_id' => \Piwigo\Core\Config::pemLanguagesCategory(),
@@ -256,7 +259,7 @@ UPDATE '.USER_INFOS_TABLE.'
      * Extract language files from archive
      *
      */
-    public function extract_language_files(string $action, $revision, $dest = '')
+    public function extract_language_files(string $action, string $revision, string $dest = ''): string
     {
         global $logger;
 
@@ -374,6 +377,7 @@ UPDATE '.USER_INFOS_TABLE.'
     /**
      * Sort functions
      */
+    /** @param array<mixed> $a @param array<mixed> $b */
     public function extension_name_compare(array $a, array $b): int
     {
         return strcmp(strtolower((string) $a['extension_name']), strtolower((string) $b['extension_name']));

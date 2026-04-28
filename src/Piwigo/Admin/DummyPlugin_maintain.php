@@ -11,23 +11,27 @@ namespace Piwigo\Admin;
  */
 class DummyPlugin_maintain extends PluginMaintain
 {
-    public function install($plugin_version, &$errors = [])
+    /** @param array<mixed> $errors */
+    public function install(string $plugin_version, array &$errors = []): mixed
     {
         return plugin_install($this->plugin_id, $plugin_version, $errors);
     }
-    public function activate($plugin_version, &$errors = [])
+    /** @param array<mixed> $errors */
+    public function activate(string $plugin_version, array &$errors = []): mixed
     {
         return plugin_activate($this->plugin_id, $plugin_version, $errors);
     }
-    public function deactivate()
+    public function deactivate(): void
     {
-        return plugin_deactivate($this->plugin_id);
+        plugin_deactivate($this->plugin_id);
     }
-    public function uninstall()
+    public function uninstall(): void
     {
-        return plugin_uninstall($this->plugin_id);
+        plugin_uninstall($this->plugin_id);
     }
-    public function update($old_version, $new_version, &$errors = [])
+    /** @param array<mixed> $errors */
+    public function update(string $old_version, string $new_version, array &$errors = []): mixed
     {
+        return null;
     }
 }

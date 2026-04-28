@@ -6,10 +6,11 @@ namespace Piwigo\Admin\Image;
 
 class image_gd implements imageInterface
 {
-    public $image;
-    public $quality = 95;
+    /** @var resource|\GdImage|false */
+    public mixed $image;
+    public int $quality = 95;
 
-    public function __construct($source_filepath)
+    public function __construct(string $source_filepath)
     {
         $gd_info = gd_info();
         $extension = strtolower(get_extension($source_filepath));
@@ -55,14 +56,14 @@ class image_gd implements imageInterface
         return true;
     }
 
-    public function rotate($rotation): bool
+    public function rotate(int $rotation): bool
     {
         $dest = imagerotate($this->image, $rotation, 0);
         $this->image = $dest;
         return true;
     }
 
-    public function set_compression_quality($quality): bool
+    public function set_compression_quality(int $quality): bool
     {
         $this->quality = $quality;
         return true;
@@ -83,13 +84,13 @@ class image_gd implements imageInterface
         return $result;
     }
 
-    public function sharpen($amount): bool
+    public function sharpen(int $amount): bool
     {
         $m = pwg_image::get_sharpen_matrix($amount);
         return imageconvolution($this->image, $m, 1, 0);
     }
 
-    public function compose($overlay, $x, $y, $opacity): bool
+    public function compose(mixed $overlay, int $x, int $y, int $opacity): bool
     {
         $ioverlay = $overlay->image->image;
         /* A replacement for php's imagecopymerge() function that supports the alpha channel
@@ -123,7 +124,7 @@ class image_gd implements imageInterface
         }
     }
 
-    public function destroy()
+    public function destroy(): void
     {
     }
 }

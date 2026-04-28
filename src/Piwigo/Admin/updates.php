@@ -10,19 +10,22 @@ class updates
 {
     /** @var string[] */
     public $types = [];
-    public $plugins;
-    public $themes;
-    public $languages;
-    public $missing = [];
+    public plugins $plugins;
+    public themes $themes;
+    public languages $languages;
+    /** @var array<mixed> */
+    public array $missing = [];
     /** @var string[] */
     public $default_plugins = [];
     /** @var string[] */
     public $default_themes = [];
-    public $default_languages = [];
-    public $merged_extensions = [];
-    public $merged_extension_url = 'http://piwigo.org/download/merged_extensions.txt';
+    /** @var string[] */
+    public array $default_languages = [];
+    /** @var array<mixed> */
+    public array $merged_extensions = [];
+    public string $merged_extension_url = 'http://piwigo.org/download/merged_extensions.txt';
 
-    public function __construct($page = 'updates')
+    public function __construct(string $page = 'updates')
     {
         $this->types = ['plugins', 'themes', 'languages'];
 
@@ -34,12 +37,9 @@ class updates
 
         foreach ($this->types as $type) {
             include_once(PHPWG_ROOT_PATH.'admin/include/'.$type.'.class.php');
-            $this->$type = match($type) {
-                'plugins'   => new plugins(),
-                'themes'    => new themes(),
-                'languages' => new languages(),
-                default     => throw new \RuntimeException("Unknown extension type: $type"),
-            };
+            if ($type === 'plugins') { $this->plugins = new plugins(); }
+            elseif ($type === 'themes') { $this->themes = new themes(); }
+            else { $this->languages = new languages(); }
         }
     }
 
@@ -66,6 +66,7 @@ class updates
      *   'major_version' => new major version available,
      * )
      */
+    /** @return array<mixed> */
     public function get_piwigo_new_versions(): array
     {
         $new_versions = [
@@ -238,7 +239,7 @@ class updates
         }
     }
 
-    public function get_server_extensions($version = PHPWG_VERSION): bool
+    public function get_server_extensions(string $version = PHPWG_VERSION): bool
     {
         $get_data = [
           'format' => 'php',
@@ -325,7 +326,8 @@ class updates
     }
 
     // Check all extensions upgrades
-    public function check_extensions()
+    /** @return array<mixed>|false */
+    public function check_extensions(): array|false
     {
         if (!$this->get_server_extensions()) {
             return false;
@@ -358,6 +360,7 @@ class updates
             \Piwigo\Core\Config::get('updates_ignored')[$type] = $ignore_list;
         }
         conf_update_param('updates_ignored', pwg_db_real_escape_string(serialize(\Piwigo\Core\Config::get('updates_ignored'))));
+        return [];
     }
 
     // Check if extension have been upgraded since last check
@@ -378,7 +381,8 @@ class updates
         }
     }
 
-    public function check_missing_extensions($missing): void
+    /** @param array<mixed> $missing */
+    public function check_missing_extensions(array $missing): void
     {
         foreach ($missing as $id => $type) {
             $fs = 'fs_'.$type;
@@ -394,7 +398,7 @@ class updates
         }
     }
 
-    public function get_merged_extensions($version): void
+    public function get_merged_extensions(string $version): void
     {
         if (fetchRemote($this->merged_extension_url, $result)) {
             $rows = explode("\n", $result);
@@ -425,7 +429,7 @@ class updates
         }
     }
 
-    public static function upgrade_to(string $upgrade_to, &$step, $check_current_version = true): void
+    public static function upgrade_to(string $upgrade_to, int &$step, bool $check_current_version = true): void
     {
         $page = &$GLOBALS['page'];
         global $template;
@@ -556,7 +560,7 @@ class updates
 
     // Compare version number with a letter suffix
     // Similar to version_compare with "<" sign
-    public function container_version_compare($v1, $v2): bool|int|null
+    public function container_version_compare(string $v1, string $v2): bool|int|null
     {
         // Split 16.2.0d into "16.2.0" as semantic_ver and "d" as sub_ver
         $v1_semantic_ver = substr((string) $v1, 0, -1);

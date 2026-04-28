@@ -14,11 +14,12 @@ namespace Piwigo\Calendar;
 abstract class CalendarBase
 {
     /** db column on which this calendar works */
-    public $date_field;
+    public string $date_field = '';
     /** used for queries (INNER JOIN or normal) */
-    public $inner_sql;
+    public string $inner_sql = '';
     /** used to store db fields */
-    public $calendar_levels;
+    /** @var array<mixed> */
+    public array $calendar_levels = [];
 
     /**
      * Generate navigation bars for category page.
@@ -88,7 +89,7 @@ abstract class CalendarBase
      *
      * @return string
      */
-    protected function get_date_component_label($level, $date_component)
+    protected function get_date_component_label(int $level, int|string $date_component): string
     {
         $label = $date_component;
         if (isset($this->calendar_levels[$level]['labels'][$date_component])) {
@@ -131,13 +132,19 @@ abstract class CalendarBase
      * @param array $labels - optional labels for items (e.g. Jan,Feb,...)
      * @return array
      */
+    /**
+     * @param array<mixed> $date_components
+     * @param array<mixed> $items
+     * @param array<mixed>|null $labels
+     * @return array<mixed>
+     */
     protected function get_nav_bar_from_items(
-        $date_components,
+        array $date_components,
         array $items,
-        $show_any,
-        $show_empty = false,
-        $labels = null
-    ) {
+        bool $show_any,
+        bool $show_empty = false,
+        ?array $labels = null
+    ): array {
         $page = &$GLOBALS['page'];
         global $template;
 
@@ -198,7 +205,8 @@ abstract class CalendarBase
      *
      * @param int $level - 0-year, 1-month/week, 2-day
      */
-    protected function build_nav_bar($level, $labels = null)
+    /** @param array<mixed>|null $labels */
+    protected function build_nav_bar(int $level, ?array $labels = null): void
     {
         global $template;
         $page = &$GLOBALS['page'];
@@ -250,7 +258,7 @@ $this->get_date_where($level).'
      * Assigns the next/previous link to the template with regards to
      * the currently choosen date.
      */
-    protected function build_next_prev()
+    protected function build_next_prev(): void
     {
         global $template;
         $page = &$GLOBALS['page'];

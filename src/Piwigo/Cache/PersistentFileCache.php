@@ -18,11 +18,14 @@ class PersistentFileCache extends PersistentCache
 
     public function get($key, &$value): bool
     {
-        $loaded = @file_get_contents($this->dir.$key.'.cache');
-        if ($loaded !== false && ($loaded = unserialize($loaded)) !== false) {
-            if ($loaded['expire'] > time()) {
-                $value = $loaded['data'];
-                return true;
+        $fileContent = @file_get_contents($this->dir.$key.'.cache');
+        if ($fileContent !== false) {
+            $loaded = unserialize($fileContent);
+            if (is_array($loaded) && isset($loaded['expire']) && is_int($loaded['expire'])) {
+                if ($loaded['expire'] > time()) {
+                    $value = $loaded['data'];
+                    return true;
+                }
             }
         }
         return false;

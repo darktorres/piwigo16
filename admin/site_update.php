@@ -43,7 +43,8 @@ SELECT galleries_url
 if (!isset($site_url)) {
     die('site '.$site_id.' does not exist');
 }
-$site_is_remote = url_is_remote($site_url);
+$site_url_str = is_scalar($site_url) ? (string) $site_url : '';
+$site_is_remote = url_is_remote($site_url_str);
 
 [$dbnow] = pwg_db_fetch_row(pwg_query('SELECT NOW();')) ?? [null];
 define('CURRENT_DATE', $dbnow);
@@ -65,7 +66,7 @@ if ($site_is_remote) {
     fatal_error('remote sites not supported');
 } else {
     include_once(PHPWG_ROOT_PATH.'admin/site_reader_local.php');
-    $site_reader = new LocalSiteReader($site_url);
+    $site_reader = new LocalSiteReader($site_url_str);
 }
 
 if (isset($page['no_md5sum_number'])) {
@@ -164,13 +165,13 @@ SELECT id, uppercats, global_rank, status, visible
 
     // get categort full directories in an array for comparison with file
     // system directory tree
-    $db_fulldirs = get_fulldirs(array_keys($db_categories));
+    $db_fulldirs = get_fulldirs(array_map('intval', array_keys($db_categories)));
 
     // what is the base directory to search file system sub-directories ?
     if (isset($_POST['cat']) and is_numeric($_POST['cat'])) {
-        $basedir = $db_fulldirs[(int) $_POST['cat']];
+        $basedir = (string) ($db_fulldirs[(int) $_POST['cat']] ?? '');
     } else {
-        $basedir = preg_replace('#/*$#', '', $site_url);
+        $basedir = (string) preg_replace('#/*$#', '', $site_url_str);
     }
 
     // we need to have fulldirs as keys to make efficient comparison
@@ -314,14 +315,15 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                 if (!empty($result)) {
                     $granted_grps = [];
                     while ($row = pwg_db_fetch_assoc($result)) {
-                        if (!isset($granted_grps[$row['cat_id']])) {
-                            $granted_grps[$row['cat_id']] = [];
+                        $cat_id_key = (string) ($row['cat_id'] ?? '');
+                        if (!isset($granted_grps[$cat_id_key])) {
+                            $granted_grps[$cat_id_key] = [];
                         }
                         // TODO: explanaition
                         array_push(
                             $granted_grps,
                             [
-                            $row['cat_id'] => array_push($granted_grps[$row['cat_id']], $row['group_id']),
+                            $cat_id_key => array_push($granted_grps[$cat_id_key], $row['group_id']),
               ]
                         );
                     }
@@ -335,14 +337,15 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                 if (!empty($result)) {
                     $granted_users = [];
                     while ($row = pwg_db_fetch_assoc($result)) {
-                        if (!isset($granted_users[$row['cat_id']])) {
-                            $granted_users[$row['cat_id']] = [];
+                        $cat_id_key = (string) ($row['cat_id'] ?? '');
+                        if (!isset($granted_users[$cat_id_key])) {
+                            $granted_users[$cat_id_key] = [];
                         }
                         // TODO: explanaition
                         array_push(
                             $granted_users,
                             [
-                            $row['cat_id'] => array_push($granted_users[$row['cat_id']], $row['user_id']),
+                            $cat_id_key => array_push($granted_users[$cat_id_key], $row['user_id']),
               ]
                         );
                     }
@@ -483,7 +486,7 @@ SELECT id, path
           'name'           => pwg_db_real_escape_string(get_name_from_file($filename)),
           'date_available' => CURRENT_DATE,
           'path'           => pwg_db_real_escape_string($path),
-          'representative_ext'  => $fs[$path]['representative_ext'],
+          'representative_ext'  => is_array($fs[$path]) ? ($fs[$path]['representative_ext'] ?? null) : null,
           'storage_category_id' => $db_fulldirs[$dirname],
           'added_by'       => $user['id'],
           ];
@@ -505,7 +508,8 @@ SELECT id, path
           ];
 
         if (\Piwigo\Core\Config::isFormatsEnabled()) {
-            foreach ($fs[$path]['formats'] as $ext => $filesize) {
+            $fs_path_formats = is_array($fs[$path]) && is_array($fs[$path]['formats'] ?? null) ? $fs[$path]['formats'] : [];
+            foreach ($fs_path_formats as $ext => $filesize) {
                 $insert_formats[] = [
                   'image_id' => $insert['id'],
                   'ext' => $ext,
@@ -524,7 +528,8 @@ SELECT id, path
 
     // search new/removed formats on photos already registered in database
     if (\Piwigo\Core\Config::isFormatsEnabled()) {
-        $db_elements_flip = array_flip($db_elements);
+        $db_elements_str = array_map(fn($v) => is_scalar($v) ? (string) $v : '', $db_elements);
+        $db_elements_flip = array_flip($db_elements_str);
 
         $existing_ids = [];
 
@@ -545,22 +550,27 @@ SELECT *
 ;';
             $result = pwg_query($query);
             while ($row = pwg_db_fetch_assoc($result)) {
-                if (!isset($db_formats[$row['image_id']])) {
-                    $db_formats[$row['image_id']] = [];
+                $row_image_id = (string) ($row['image_id'] ?? '');
+                $row_ext = (string) ($row['ext'] ?? '');
+                if (!isset($db_formats[$row_image_id])) {
+                    $db_formats[$row_image_id] = [];
                 }
 
-                $db_formats[$row['image_id']][$row['ext']] = $row['format_id'];
+                $db_formats[$row_image_id][$row_ext] = $row['format_id'];
             }
 
             // first we search the formats that were removed
             foreach ($db_formats as $image_id => $formats) {
-                $image_formats_to_delete = array_diff_key($formats, $fs[ $db_elements[$image_id] ]['formats']);
+                $db_elem_path = is_scalar($db_elements[$image_id] ?? null) ? (string) ($db_elements[$image_id] ?? '') : '';
+                $fs_elem = is_array($fs[$db_elem_path] ?? null) ? $fs[$db_elem_path] : [];
+                $fs_formats = is_array($fs_elem['formats'] ?? null) ? $fs_elem['formats'] : [];
+                $image_formats_to_delete = array_diff_key($formats, $fs_formats);
                 $logger->debug('image_formats_to_delete', 'sync', $image_formats_to_delete);
                 foreach ($image_formats_to_delete as $ext => $format_id) {
                     $formats_to_delete[] = $format_id;
 
                     $infos[] = [
-                      'path' => $db_elements[$image_id],
+                      'path' => $db_elem_path,
                       'info' => l10n('format %s removed', $ext),
                       ];
                 }
@@ -568,14 +578,17 @@ SELECT *
 
             // then we search for new formats on existing photos
             foreach ($existing_ids as $image_id) {
-                $path = $db_elements[$image_id];
+                $image_id_str = (string) $image_id;
+                $path = is_scalar($db_elements[$image_id_str] ?? null) ? (string) ($db_elements[$image_id_str] ?? '') : '';
 
                 $formats = [];
-                if (isset($db_formats[$image_id])) {
-                    $formats = $db_formats[$image_id];
+                if (isset($db_formats[$image_id_str])) {
+                    $formats = $db_formats[$image_id_str];
                 }
 
-                $image_formats_to_insert = array_diff_key($fs[$path]['formats'], $formats);
+                $fs_path_data = is_array($fs[$path] ?? null) ? $fs[$path] : [];
+                $fs_path_formats = is_array($fs_path_data['formats'] ?? null) ? $fs_path_data['formats'] : [];
+                $image_formats_to_insert = array_diff_key($fs_path_formats, $formats);
                 $logger->debug('image_formats_to_insert', 'sync', $image_formats_to_insert);
                 foreach ($image_formats_to_insert as $ext => $filesize) {
                     $insert_formats[] = [
@@ -585,7 +598,7 @@ SELECT *
                       ];
 
                     $infos[] = [
-                      'path' => $db_elements[$image_id],
+                      'path' => $path,
                       'info' => l10n('format %s added', $ext),
                       ];
                 }
@@ -705,8 +718,8 @@ if (isset($_POST['submit'])
 
         $datas = [];
         foreach ($files as $id => $file) {
-            $file = $file['path'];
-            $data = $site_reader->get_element_update_attributes($file);
+            $file_path = is_array($file) && is_scalar($file['path'] ?? null) ? (string) ($file['path'] ?? '') : (is_scalar($file) ? (string) $file : '');
+            $data = $site_reader->get_element_update_attributes($file_path);
 
             $data['id'] = $id;
             $datas[] = $data;
@@ -719,7 +732,7 @@ if (isset($_POST['submit'])
                 // fields
                 [
                   'primary' => ['id'],
-                  'update'  => $site_reader->get_update_attributes(),
+                  'update'  => array_map(fn($v) => is_scalar($v) ? (string) $v : '', $site_reader->get_update_attributes()),
                   ],
                 $datas
             );
@@ -782,7 +795,8 @@ if (isset($_POST['submit']) and isset($_POST['sync_meta'])
     $tags_of = [];
 
     foreach ($files as $id => $element_infos) {
-        $data = $site_reader->get_element_metadata($element_infos);
+        $element_infos_arr = is_array($element_infos) ? $element_infos : [];
+        $data = $site_reader->get_element_metadata($element_infos_arr);
 
         if (is_array($data)) {
             $data['date_metadata_update'] = CURRENT_DATE;
@@ -795,14 +809,14 @@ if (isset($_POST['submit']) and isset($_POST['sync_meta'])
                         $tags_of[$id] = [];
                     }
 
-                    foreach (explode(',', $data[$key]) as $tag_name) {
+                    foreach (explode(',', is_scalar($data[$key]) ? (string) $data[$key] : '') as $tag_name) {
                         $tags_of[$id][] = tag_id_from_tag_name($tag_name);
                     }
                 }
             }
         } else {
             $errors[] = [
-              'path' => $element_infos['path'],
+              'path' => $element_infos_arr['path'] ?? '',
               'type' => 'PWG-ERROR-NO-FS',
               ];
         }
@@ -817,11 +831,11 @@ if (isset($_POST['submit']) and isset($_POST['sync_meta'])
                   'primary' => ['id'],
                   'update'  => array_unique(
                       array_merge(
-                          array_diff(
-                              $site_reader->get_metadata_attributes(),
+                          array_values(array_diff(
+                              array_map(fn($v) => is_scalar($v) ? (string) $v : '', $site_reader->get_metadata_attributes()),
                               // keywords and tags fields are managed separately
                               ['keywords', 'tags']
-                          ),
+                          )),
                           ['date_metadata_update']
                       )
                   ),
@@ -858,12 +872,12 @@ if ($simulate) {
 
 // used_metadata string is displayed to inform admin which metadata will be
 // used from files for synchronization
-$used_metadata = implode(', ', $site_reader->get_metadata_attributes());
+$used_metadata = implode(', ', array_map(fn($v) => is_scalar($v) ? (string) $v : '', $site_reader->get_metadata_attributes()));
 // $site_is_remote is always false here (fatal_error called above if true)
 
 $template->assign(
     [
-    'SITE_URL' => $site_url,
+    'SITE_URL' => $site_url_str,
     'U_SITE_MANAGER' => get_root_url().'admin.php?page=site_manager',
     'L_RESULT_UPDATE' => $result_title.l10n('Search for new images in the directories'),
     'L_RESULT_METADATA' => $result_title.l10n('Metadata synchronization results'),
@@ -883,13 +897,13 @@ if (isset($_POST['submit'])) {
         'display_info' => isset($_POST['display_info']) and $_POST['display_info'] == 1,
         'add_to_caddie' => isset($_POST['add_to_caddie']) and $_POST['add_to_caddie'] == 1,
         'subcats_included' => isset($_POST['subcats-included']) and $_POST['subcats-included'] == 1,
-        'privacy_level_selected' => (int)@$_POST['privacy_level'],
+        'privacy_level_selected' => is_numeric($_POST['privacy_level'] ?? null) ? (int) $_POST['privacy_level'] : 0,
         'meta_all'  => isset($_POST['meta_all']) ? true : false,
         'meta_empty_overrides'  => isset($_POST['meta_empty_overrides']) ? true : false,
       ];
 
     if (isset($_POST['cat']) and is_numeric($_POST['cat'])) {
-        $cat_selected = [$_POST['cat']];
+        $cat_selected = [(int) $_POST['cat']];
     } else {
         $cat_selected = [];
     }
@@ -910,7 +924,7 @@ if (isset($_POST['submit'])) {
     if (isset($_GET['cat_id'])) {
         check_input_parameter('cat_id', $_GET, false, PATTERN_ID);
 
-        $cat_selected = [$_GET['cat_id']];
+        $cat_selected = [is_numeric($_GET['cat_id']) ? (int) $_GET['cat_id'] : 0];
         $tpl_introduction['sync'] = 'files';
     }
 }

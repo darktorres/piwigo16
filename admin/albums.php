@@ -62,13 +62,15 @@ if (isset($_POST['simpleAutoOrder']) || isset($_POST['recursiveAutoOrder'])) {
     }
     check_input_parameter('id', $_POST, false, '/^-?\d+$/');
 
+    $post_id_str = is_scalar($_POST['id']) ? (string) $_POST['id'] : '';
     $query = '
 SELECT id
   FROM '.CATEGORIES_TABLE.'
   WHERE id_uppercat '.
-      (($_POST['id'] === '-1') ? 'IS NULL' : '= '.$_POST['id']).'
+      (($post_id_str === '-1') ? 'IS NULL' : '= '.$post_id_str).'
 ;';
     $category_ids = query2array($query, null, 'id');
+    $category_ids = array_map(fn($v) => is_scalar($v) ? (string) $v : '', $category_ids);
 
     if (isset($_POST['recursiveAutoOrder'])) {
         $category_ids = get_subcat_ids($category_ids);
@@ -77,14 +79,14 @@ SELECT id
     $categories = [];
     $sort = [];
 
-    [$order_by_field, $order_by_asc] = explode(' ', (string) $_POST['order']);
+    [$order_by_field, $order_by_asc] = explode(' ', is_scalar($_POST['order']) ? (string) $_POST['order'] : '');
 
     $order_by_date = false;
     if (str_starts_with($order_by_field, 'date_')) {
         $order_by_date = true;
 
         $ref_dates = get_categories_ref_date(
-            $category_ids,
+            array_map('intval', $category_ids),
             $order_by_field,
             'ASC' == $order_by_asc ? 'min' : 'max'
         );
@@ -100,9 +102,10 @@ SELECT id, name, id_uppercat
         $row['name'] = trigger_change('render_category_name', $row['name'], 'admin_cat_list');
 
         if ($order_by_date) {
-            $sort[] = $ref_dates[ $row['id'] ];
+            $rowId = is_scalar($row['id']) ? (string) $row['id'] : '';
+            $sort[] = $ref_dates[$rowId] ?? null;
         } else {
-            $sort[] = remove_accents($row['name']);
+            $sort[] = remove_accents(is_scalar($row['name']) ? (string) $row['name'] : '');
         }
 
         $categories[] = [
@@ -120,7 +123,7 @@ SELECT id, name, id_uppercat
 
     save_categories_order($categories);
 
-    $open_cat = $_POST['id'];
+    $open_cat = is_scalar($_POST['id']) ? (string) $_POST['id'] : '-1';
 }
 
 $template->assign('open_cat', $open_cat);
@@ -157,9 +160,9 @@ $associatedTree = [];
 
 foreach ($allAlbum as $album) {
     $album['name'] = trigger_change('render_category_name', $album['name'], 'admin_cat_list');
-    $album['lastmodified'] = time_since($album['lastmodified'], 'year');
+    $album['lastmodified'] = time_since(is_string($album['lastmodified']) || is_int($album['lastmodified']) ? $album['lastmodified'] : null, 'year');
 
-    $parents = explode(',', (string) $album['uppercats']);
+    $parents = explode(',', is_scalar($album['uppercats']) ? (string) $album['uppercats'] : '');
     $the_place = &$associatedTree[strval($parents[0])];
     for ($i = 1; $i < count($parents); $i++) {
         $the_place = &$the_place['children'][strval($parents[$i])];
@@ -198,21 +201,28 @@ function assocToOrderedTree(array $assocT): array
     $orderedTree = [];
 
     foreach ($assocT as $cat) {
+        if (!is_array($cat) || !is_array($cat['cat'] ?? null)) {
+            continue;
+        }
+        /** @var array<string,mixed> $catData */
+        $catData = $cat['cat'];
         $orderedCat = [];
-        $orderedCat['rank'] = $cat['cat']['rank'];
-        $orderedCat['name'] = $cat['cat']['name'];
-        $orderedCat['status'] = $cat['cat']['status'];
-        $orderedCat['id'] = $cat['cat']['id'];
-        $orderedCat['visible'] = $cat['cat']['visible'];
-        $orderedCat['uppercats'] = $cat['cat']['uppercats'];
-        $orderedCat['nb_images'] = $nb_photos_in[$cat['cat']['id']] ?? 0;
-        $orderedCat['last_updates'] = $cat['cat']['lastmodified'];
-        $orderedCat['has_not_access'] = isset($is_forbidden[$cat['cat']['id']]);
-        $orderedCat['nb_sub_photos'] = $nb_sub_photos[$cat['cat']['id']] ?? 0;
+        $orderedCat['rank'] = $catData['rank'];
+        $orderedCat['name'] = $catData['name'];
+        $orderedCat['status'] = $catData['status'];
+        $orderedCat['id'] = $catData['id'];
+        $orderedCat['visible'] = $catData['visible'];
+        $orderedCat['uppercats'] = $catData['uppercats'];
+        $catId = is_scalar($catData['id']) ? (string) $catData['id'] : '';
+        $orderedCat['nb_images'] = $nb_photos_in[$catId] ?? 0;
+        $orderedCat['last_updates'] = $catData['lastmodified'];
+        $orderedCat['has_not_access'] = isset($is_forbidden[$catId]);
+        $orderedCat['nb_sub_photos'] = $nb_sub_photos[$catId] ?? 0;
         if (isset($cat['children'])) {
             //Does not update when moving a node
-            $orderedCat['nb_subcats'] = count($cat['children']);
-            $orderedCat['children'] = assocToOrderedTree($cat['children']);
+            $children = is_array($cat['children']) ? $cat['children'] : [];
+            $orderedCat['nb_subcats'] = count($children);
+            $orderedCat['children'] = assocToOrderedTree($children);
         }
         array_push($orderedTree, $orderedCat);
     }
@@ -241,7 +251,7 @@ $all_categories = query2array($query, 'id', 'uppercats');
 $subcats_of = [];
 
 foreach ($all_categories as $id => $uppercats) {
-    foreach (array_slice(explode(',', $uppercats), 0, -1) as $uppercat_id) {
+    foreach (array_slice(explode(',', (string) $uppercats), 0, -1) as $uppercat_id) {
         @$subcats_of[$uppercat_id][] = $id;
     }
 }
@@ -321,7 +331,7 @@ SELECT
         $subcat_ids = [];
 
         foreach ($uppercats_of as $id => $uppercats) {
-            if (preg_match('/(^|,)'.$cat_id.'(,|$)/', $uppercats)) {
+            if (preg_match('/(^|,)'.$cat_id.'(,|$)/', (string) $uppercats)) {
                 $subcat_ids[] = $id;
             }
         }
@@ -343,7 +353,7 @@ SELECT
     // only return the list of $ids, not the sub-categories
     $return = [];
     foreach ($ids as $id) {
-        $return[$id] = $ref_dates[$id];
+        $return[$id] = $ref_dates[$id] ?? null;
     }
 
     return $return;

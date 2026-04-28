@@ -46,6 +46,9 @@ class PwgRestEncoder extends PwgResponseEncoder
         /** @param array<mixed> $xml_attributes */
     public function encode_array(mixed $data, string $itemName, array $xml_attributes = []): void
     {
+        if (!is_array($data)) {
+            return;
+        }
         foreach ($data as $item) {
             $this->writer()->start_element($itemName);
             $this->encode($item, $xml_attributes);
@@ -70,8 +73,10 @@ class PwgRestEncoder extends PwgResponseEncoder
                 continue;
             } // null means we dont put it
             if ($name == WS_XML_ATTRIBUTES) {
-                foreach ($value as $attr_name => $attr_value) {
-                    $this->writer()->write_attribute($attr_name, $attr_value);
+                if (is_array($value)) {
+                    foreach ($value as $attr_name => $attr_value) {
+                        $this->writer()->write_attribute((string) $attr_name, $attr_value);
+                    }
                 }
                 unset($data[$name]);
             } elseif (isset($xml_attributes[$name])) {
@@ -126,13 +131,14 @@ class PwgRestEncoder extends PwgResponseEncoder
                 if ($data instanceof \PwgNamedArray) {
                     $this->encode_array($data->_content, $data->_itemName, $data->_xmlAttributes);
                 } elseif ($data instanceof \PwgNamedStruct) {
-                    $this->encode_struct($data->_content, false, $data->_xmlAttributes);
+                    $content = $data->_content;
+                    $this->encode_struct(is_array($content) ? $content : [], false, $data->_xmlAttributes);
                 } else {
                     $this->encode_struct(get_object_vars($data), true);
                 }
                 break;
             default:
-                trigger_error('Invalid type '. gettype($data).' '.@$data::class, E_USER_WARNING);
+                trigger_error('Invalid type '. gettype($data), E_USER_WARNING);
         }
     }
 }

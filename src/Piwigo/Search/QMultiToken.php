@@ -39,11 +39,13 @@ class QMultiToken implements \Stringable
 
     private function push(string &$token, int &$modifier, mixed &$scope): void
     {
-        if (strlen((string) $token) || (isset($scope) && $scope->nullable)) {
-            if (isset($scope)) {
+        /** @var QSearchScope|null $typedScope */
+        $typedScope = $scope instanceof QSearchScope ? $scope : null;
+        if (strlen((string) $token) || ($typedScope !== null && $typedScope->nullable)) {
+            if ($typedScope !== null) {
                 $modifier |= QST_BREAK;
             }
-            $this->tokens[] = new QSingleToken($token, $modifier, $scope);
+            $this->tokens[] = new QSingleToken($token, $modifier, $typedScope);
         }
         $token = '';
         $modifier = 0;
@@ -57,11 +59,11 @@ class QMultiToken implements \Stringable
     * @param int $qi the character index in $q where to start parsing
     * @param int $level the depth from root in the tree (number of opened and unclosed opening brackets)
     */
-    public function parse_expression(string $q, int &$qi, int $level, mixed $root): void
+    public function parse_expression(string $q, int &$qi, int $level, QExpression $root): void
     {
         $crt_token = '';
         $crt_modifier = 0;
-        $crt_scope = null;
+        $crt_scope = null; // ?QSearchScope
 
         for ($stop = false; !$stop && $qi < strlen($q); $qi++) {
             $ch = $q[$qi];
@@ -75,7 +77,7 @@ class QMultiToken implements \Stringable
                         $qi++;
                         $sub->parse_expression($q, $qi, $level + 1, $root);
                         $sub->modifier = $crt_modifier;
-                        if (isset($crt_scope) && $crt_scope->is_text) {
+                        if ($crt_scope instanceof QSearchScope && $crt_scope->is_text) {
                             $sub->apply_scope($crt_scope); // eg. 'tag:(John OR Bill)'
                         }
                         $this->tokens[] = $sub;
@@ -88,7 +90,7 @@ class QMultiToken implements \Stringable
                         }
                         break;
                     case ':':
-                        $scope = @$root->scopes[strtolower((string) $crt_token)];
+                        $scope = $root->scopes[strtolower((string) $crt_token)] ?? null;
                         if (!isset($scope) || isset($crt_scope)) { // white space
                             $this->push($crt_token, $crt_modifier, $crt_scope);
                         } else {
@@ -118,7 +120,7 @@ class QMultiToken implements \Stringable
                         }
                         break;
                     case '.':
-                        if (isset($crt_scope) && !$crt_scope->is_text) {
+                        if ($crt_scope instanceof QSearchScope && !$crt_scope->is_text) {
                             $crt_token .= $ch;
                             break;
                         }
@@ -130,7 +132,7 @@ class QMultiToken implements \Stringable
                         // else white space go on..
                         // no break
                     default:
-                        if (!$crt_scope || !$crt_scope->process_char($ch, $crt_token)) {
+                        if (!($crt_scope instanceof QSearchScope) || !$crt_scope->process_char($ch, $crt_token)) {
                             if (str_contains(' ,.;!?', $ch)) { // white space
                                 $this->push($crt_token, $crt_modifier, $crt_scope);
                             } else {

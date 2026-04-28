@@ -22,7 +22,12 @@ final class Lang
      */
     public static function attachGlobals(): void
     {
-        self::$data = $GLOBALS['lang'];
+        $raw = $GLOBALS['lang'] ?? [];
+        if (is_array($raw)) {
+            /** @var array<string,string> $typed */
+            $typed = $raw;
+            self::$data = $typed;
+        }
         $GLOBALS['lang'] = &self::$data;
     }
 
@@ -32,7 +37,10 @@ final class Lang
         // so l10n() calls during common.inc.php bootstrap still return translations.
         // After attachGlobals() $GLOBALS['lang'] IS self::$data via reference, so
         // the result is identical either way.
-        $src = self::$data !== [] ? self::$data : ($GLOBALS['lang'] ?? []);
+        $rawGlobal = $GLOBALS['lang'] ?? [];
+        /** @var array<string,string> $langGlobal */
+        $langGlobal = is_array($rawGlobal) ? $rawGlobal : [];
+        $src = self::$data !== [] ? self::$data : $langGlobal;
 
         if (!isset($src[$key])) {
             if (!empty($key) && Config::debugL10n()) {
@@ -43,7 +51,8 @@ final class Lang
             $val = $src[$key];
         }
         if (!empty($args)) {
-            $val = vsprintf($val, $args);
+            $scalarArgs = array_map(static fn(mixed $a): string => is_scalar($a) || $a === null ? (string) $a : '', $args);
+            return vsprintf($val, $scalarArgs);
         }
         return $val;
     }

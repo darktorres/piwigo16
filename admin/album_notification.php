@@ -92,11 +92,11 @@ SELECT id, file, path, representative_ext
               ],
             ]
         ),
-        'CPL_CONTENT' => empty($_POST['mail_content']) ? '' : stripslashes((string) $_POST['mail_content']),
+        'CPL_CONTENT' => empty($_POST['mail_content']) ? '' : stripslashes(is_scalar($_POST['mail_content']) ? (string) $_POST['mail_content'] : ''),
         ],
       ];
 
-    if ('users' == $_POST['who'] and isset($_POST['users']) and count($_POST['users']) > 0) {
+    if ('users' == $_POST['who'] and isset($_POST['users']) and is_array($_POST['users']) and count($_POST['users']) > 0) {
         check_input_parameter('users', $_POST, true, PATTERN_ID);
 
         // TODO code very similar to function pwg_mail_group. We'd better create
@@ -116,7 +116,7 @@ SELECT
     u.'.\Piwigo\Core\Config::userFields()['username'].' AS username
   FROM '.USER_INFOS_TABLE.' AS ui
     JOIN '.USERS_TABLE.' AS u ON u.'.\Piwigo\Core\Config::userFields()['id'].' = ui.user_id
-  WHERE ui.user_id IN ('.implode(',', $_POST['users']).')
+  WHERE ui.user_id IN ('.implode(',', array_map(fn($v) => is_scalar($v) ? (string) $v : '', (array) $_POST['users'])).')
 ;';
         $users = query2array($query);
         $usernames = [];
@@ -124,7 +124,7 @@ SELECT
         foreach ($users as $u) {
             $usernames[] = $u['username'];
 
-            $authkey = create_user_auth_key($u['user_id'], $u['status']);
+            $authkey = create_user_auth_key((int) $u['user_id'], is_string($u['status']) ? $u['status'] : null);
 
             $user_tpl = $tpl;
 
@@ -144,8 +144,8 @@ SELECT
                 $user_args['auth_key'] = $authkey['auth_key'];
             }
 
-            switch_lang_to($u['language']);
-            pwg_mail($u['email'], $user_args, $user_tpl);
+            switch_lang_to((string) $u['language']);
+            pwg_mail((string) $u['email'], $user_args, $user_tpl);
             switch_lang_back();
         }
 
@@ -160,13 +160,14 @@ SELECT
     } elseif ('group' == $_POST['who'] and !empty($_POST['group'])) {
         check_input_parameter('group', $_POST, false, PATTERN_ID);
 
-        pwg_mail_group($_POST['group'], $args, $tpl);
+        pwg_mail_group(is_numeric($_POST['group']) ? (int) $_POST['group'] : 0, $args, $tpl);
 
+        $post_group_str = is_scalar($_POST['group']) ? (string) $_POST['group'] : '0';
         $query = '
 SELECT
     name
   FROM `'.GROUPS_TABLE.'`
-  WHERE id = '.$_POST['group'].'
+  WHERE id = '.$post_group_str.'
 ;';
         [$group_name] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 

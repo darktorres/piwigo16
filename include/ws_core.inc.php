@@ -114,10 +114,12 @@ class PwgNamedStruct
             $this->_xmlAttributes = array_flip($xmlAttributes);
         } else {
             $this->_xmlAttributes = [];
-            foreach ($this->_content as $key => $value) {
-                if (!empty($key) and (is_scalar($value) or is_null($value))) {
-                    if (empty($xmlElements) or !in_array($key, $xmlElements)) {
-                        $this->_xmlAttributes[$key] = 1;
+            if (is_array($this->_content)) {
+                foreach ($this->_content as $key => $value) {
+                    if (!empty($key) and (is_scalar($value) or is_null($value))) {
+                        if (empty($xmlElements) or !in_array($key, $xmlElements)) {
+                            $this->_xmlAttributes[$key] = 1;
+                        }
                     }
                 }
             }
@@ -187,21 +189,29 @@ abstract class PwgResponseEncoder
             return;
         }
 
+        // $value is array<mixed> here; re-check after is_struct (which takes mixed &$data)
         if (self::is_struct($value)) {
-            if (isset($value[WS_XML_ATTRIBUTES])) {
+            if (is_array($value) && isset($value[WS_XML_ATTRIBUTES]) && is_array($value[WS_XML_ATTRIBUTES])) {
                 $value = array_merge($value, $value[WS_XML_ATTRIBUTES]);
                 unset($value[WS_XML_ATTRIBUTES]);
             }
         }
 
-        foreach ($value as $key => &$v) {
-            self::flatten($v);
+        if (is_array($value)) {
+            foreach ($value as $key => &$v) {
+                self::flatten($v);
+            }
+            unset($v);
         }
     }
 }
 
 
 
+/**
+ * @phpstan-type WsParam array{flags: int, type: int, default?: mixed, maxValue?: int|float, info?: string, chooseList?: list<mixed>}
+ * @phpstan-type WsMethod array{callback: mixed, description: string, signature: array<string, WsParam>, include: string, options: array<string, mixed>}
+ */
 class PwgServer
 {
     public ?PwgRequestHandler $_requestHandler = null;
@@ -209,7 +219,7 @@ class PwgServer
     public ?PwgResponseEncoder $_responseEncoder = null;
     public string $_responseFormat = '';
 
-    /** @var array<mixed> */
+    /** @var array<string, WsMethod> */
     public array $_methods = [];
 
     public function __construct()
@@ -296,47 +306,59 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
      * Registers a web service method.
      * @param string $methodName the name of the method as seen externally
      * @param mixed $callback php method to be invoked internally
-     * @param array $params map of allowed parameter names with options
-     * @param string $description a description of the method
+     * @param array<mixed>|null $params map of allowed parameter names with options
+     * @param string|null $description a description of the method
      * @param string $include_file a file to be included before the callback is executed
-     * @param array $options hidden, admin_only, post_only flags
+     * @param array<string, mixed> $options hidden, admin_only, post_only flags
      */
-    /**
-     * @param array<mixed> $params
-     * @param array<mixed> $options
-     */
-    public function addMethod(string $methodName, mixed $callback, array $params = [], string $description = '', string $include_file = '', array $options = []): void
+    public function addMethod(string $methodName, mixed $callback, ?array $params = null, ?string $description = null, string $include_file = '', array $options = []): void
     {
-
-
+        $params ??= [];
+        $description ??= '';
+        // Normalize sequential list of param names to keyed array
         if (range(0, count($params) - 1) === array_keys($params)) {
-            $params = array_flip($params);
+            $keyed = [];
+            foreach ($params as $name) {
+                if (is_string($name)) {
+                    $keyed[$name] = ['flags' => 0, 'type' => 0];
+                }
+            }
+            $params = $keyed;
         }
 
+        /** @var array<string, WsParam> $signature */
+        $signature = [];
         foreach ($params as $param => $data) {
+            $param = (string) $param;
             if (!is_array($data)) {
-                $params[$param] = ['flags' => 0,'type' => 0];
+                $signature[$param] = ['flags' => 0, 'type' => 0];
             } else {
-                if (!isset($data['flags'])) {
-                    $data['flags'] = 0;
-                }
+                $flags = isset($data['flags']) && is_int($data['flags']) ? $data['flags'] : 0;
                 if (array_key_exists('default', $data)) {
-                    $data['flags'] |= WS_PARAM_OPTIONAL;
+                    $flags |= WS_PARAM_OPTIONAL;
                 }
-                if (!isset($data['type'])) {
-                    $data['type'] = 0;
+                $type = isset($data['type']) && is_int($data['type']) ? $data['type'] : 0;
+                $entry = ['flags' => $flags, 'type' => $type];
+                if (array_key_exists('default', $data)) {
+                    $entry['default'] = $data['default'];
                 }
-                $params[$param] = $data;
+                if (isset($data['maxValue']) && (is_int($data['maxValue']) || is_float($data['maxValue']))) {
+                    $entry['maxValue'] = $data['maxValue'];
+                }
+                if (isset($data['info']) && is_string($data['info'])) {
+                    $entry['info'] = $data['info'];
+                }
+                $signature[$param] = $entry;
             }
         }
 
         $this->_methods[$methodName] = [
-          'callback'    => $callback,
-          'description' => $description,
-          'signature'   => $params,
-          'include'     => $include_file,
-          'options'     => $options,
-          ];
+            'callback'    => $callback,
+            'description' => $description,
+            'signature'   => $signature,
+            'include'     => $include_file,
+            'options'     => $options,
+        ];
     }
 
     public function hasMethod(string $methodName): bool
@@ -346,25 +368,22 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
 
     public function getMethodDescription(string $methodName): string
     {
-        $desc = @$this->_methods[$methodName]['description'];
-        return $desc ?? '';
+        return isset($this->_methods[$methodName]) ? $this->_methods[$methodName]['description'] : '';
     }
 
-    /** @return array<mixed> */
+    /** @return array<string, WsParam> */
     public function getMethodSignature(string $methodName): array
     {
-        $signature = @$this->_methods[$methodName]['signature'];
-        return $signature ?? [];
+        return isset($this->_methods[$methodName]) ? $this->_methods[$methodName]['signature'] : [];
     }
 
     /**
      * @since 2.6
-     * @return array<mixed>
+     * @return array<string, mixed>
      */
     public function getMethodOptions(string $methodName): array
     {
-        $options = @$this->_methods[$methodName]['options'];
-        return $options ?? [];
+        return isset($this->_methods[$methodName]) ? $this->_methods[$methodName]['options'] : [];
     }
 
     public static function isPost(): bool
@@ -453,19 +472,15 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
      * Invokes a registered method. Returns the return of the method (or
      * a PwgError object if the method is not found)
      * @param string $methodName the name of the method to invoke
-     * @param array $params array of parameters to pass to the invoked method
-     */
-    /**
-     * @param array<mixed> $params
+     * @param array<mixed> $params array of parameters to pass to the invoked method
      * @return mixed
      */
     public function invoke(string $methodName, array $params): mixed
     {
-        $method = @$this->_methods[$methodName];
-
-        if ($method == null) {
+        if (!isset($this->_methods[$methodName])) {
             return new \Piwigo\Ws\PwgError(WS_ERR_INVALID_METHOD, 'Method name is not valid');
         }
+        $method = $this->_methods[$methodName];
 
         if (isset($method['options']['post_only']) and $method['options']['post_only'] and !self::isPost()) {
             return new \Piwigo\Ws\PwgError(405, 'This method requires HTTP POST');
@@ -487,7 +502,7 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
             $flags = $options['flags'];
 
             // parameter not provided in the request
-            if (!array_key_exists((string) $name, $params)) {
+            if (!array_key_exists($name, $params)) {
                 if (!self::hasFlag($flags, WS_PARAM_OPTIONAL)) {
                     $missing_params[] = $name;
                 } elseif (array_key_exists('default', $options)) {
@@ -542,7 +557,11 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
             if (!empty($method['include'])) {
                 include_once($method['include']);
             }
-            $result = call_user_func_array($method['callback'], [$params, &$this]);
+            $callback = $method['callback'];
+            if (!is_callable($callback)) {
+                return new \Piwigo\Ws\PwgError(WS_ERR_INVALID_METHOD, 'Invalid method callback');
+            }
+            $result = call_user_func_array($callback, [$params, &$this]);
         }
 
         return $result;
@@ -574,6 +593,9 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
     public static function ws_getMethodDetails(array $params, PwgServer &$service): \Piwigo\Ws\PwgError|array
     {
         $methodName = $params['methodName'];
+        if (!is_string($methodName)) {
+            return new \Piwigo\Ws\PwgError(WS_ERR_INVALID_PARAM, 'methodName must be a string');
+        }
 
         if (!$service->hasMethod($methodName)) {
             return new \Piwigo\Ws\PwgError(WS_ERR_INVALID_PARAM, 'Requested method does not exist');

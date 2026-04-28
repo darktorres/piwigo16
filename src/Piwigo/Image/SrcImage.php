@@ -31,40 +31,50 @@ final class SrcImage
     /** @param array<string,mixed> $infos */
     public function __construct(array $infos)
     {
-        $this->id = $infos['id'];
-        $ext = strtolower(get_extension($infos['path']));
-        $infos['file_ext'] = @strtolower(get_extension($infos['file']));
+        $idRaw = $infos['id'] ?? 0;
+        $this->id = is_scalar($idRaw) ? (int) $idRaw : 0;
+        $pathRaw = $infos['path'] ?? '';
+        $path = is_scalar($pathRaw) ? (string) $pathRaw : '';
+        $fileRaw = $infos['file'] ?? '';
+        $file = is_scalar($fileRaw) ? (string) $fileRaw : '';
+        $ext = strtolower(get_extension($path));
+        $infos['file_ext'] = @strtolower(get_extension($file));
         $infos['path_ext'] = $ext;
         if (in_array($ext, \Piwigo\Core\Config::pictureExtensions())) {
-            $this->rel_path = $infos['path'];
+            $this->rel_path = $path;
             $this->flags |= self::IS_ORIGINAL;
         } elseif (!empty($infos['representative_ext'])) {
-            $this->rel_path = original_to_representative($infos['path'], $infos['representative_ext']);
+            $repExt = $infos['representative_ext'];
+            $this->rel_path = original_to_representative($path, is_scalar($repExt) ? (string) $repExt : '');
         } else {
-            $this->rel_path = trigger_change('get_mimetype_location', get_themeconf('mime_icon_dir').$ext.'.png', $ext);
+            $triggerResult = trigger_change('get_mimetype_location', get_themeconf('mime_icon_dir').$ext.'.png', $ext);
+            $this->rel_path = is_string($triggerResult) ? $triggerResult : '';
             $this->flags |= self::IS_MIMETYPE;
             if (($size = @getimagesize(PHPWG_ROOT_PATH.$this->rel_path)) === false) {
                 if ('svg' == $ext) {
-                    $this->rel_path = $infos['path'];
+                    $this->rel_path = $path;
                 } else {
                     $this->rel_path = 'themes/default/icon/mimetypes/unknown.png';
                 }
                 $size = getimagesize(PHPWG_ROOT_PATH.$this->rel_path);
             }
-            $this->size = $size !== false ? [$size[0], $size[1]] : null;
+            $this->size = $size !== false ? [(int) $size[0], (int) $size[1]] : null;
         }
 
         if (!$this->size) {
             if (isset($infos['width']) && isset($infos['height'])) {
-                $width = $infos['width'];
-                $height = $infos['height'];
+                $widthRaw = $infos['width'];
+                $heightRaw = $infos['height'];
+                $width = is_scalar($widthRaw) ? (int) $widthRaw : 0;
+                $height = is_scalar($heightRaw) ? (int) $heightRaw : 0;
 
-                $this->rotation = intval($infos['rotation']) % 4;
+                $rotRaw = $infos['rotation'] ?? 0;
+                $this->rotation = (is_scalar($rotRaw) ? (int) $rotRaw : 0) % 4;
                 // 1 or 5 =>  90 clockwise
                 // 3 or 7 => 270 clockwise
                 if ($this->rotation % 2) {
-                    $width = $infos['height'];
-                    $height = $infos['width'];
+                    $width = is_scalar($heightRaw) ? (int) $heightRaw : 0;
+                    $height = is_scalar($widthRaw) ? (int) $widthRaw : 0;
                 }
 
                 $this->size = [$width, $height];
@@ -97,7 +107,8 @@ final class SrcImage
     {
         $url = get_root_url().$this->rel_path;
         if (!($this->flags & self::IS_MIMETYPE)) {
-            $url = trigger_change('get_src_image_url', $url, $this);
+            $changed = trigger_change('get_src_image_url', $url, $this);
+            $url = is_string($changed) ? $changed : $url;
         }
         return embellish_url($url);
     }

@@ -59,14 +59,15 @@ function do_timeout_treatment(string $post_keyname, array $check_key_treated = [
 
     if ($env_nbm['is_sendmail_timeout']) {
         if (isset($_POST[$post_keyname])) {
-            $post_count = count($_POST[$post_keyname]);
+            $post_keyname_val = is_array($_POST[$post_keyname]) ? $_POST[$post_keyname] : [];
+            $post_count = count($post_keyname_val);
             $treated_count = count($check_key_treated);
             if ($treated_count != 0) {
                 $time_refresh = ceil((get_moment() - $env_nbm['start_time']) * $post_count / $treated_count);
             } else {
                 $time_refresh = 0;
             }
-            $_POST[$post_keyname] = array_diff($_POST[$post_keyname], $check_key_treated);
+            $_POST[$post_keyname] = array_diff($post_keyname_val, $check_key_treated);
 
             $must_repost = true;
             \Piwigo\Core\PageState::current()->addError(l10n_dec(
@@ -165,7 +166,7 @@ order by
 
         // On timeout simulate like tabsheet send
         if ($env_nbm['is_sendmail_timeout']) {
-            $quoted_check_key_list = quote_check_key_list(array_diff($check_key_list, $check_key_treated));
+            $quoted_check_key_list = quote_check_key_list(array_diff($check_key_list, array_map(fn($v) => is_scalar($v) ? (string) $v : '', $check_key_treated)));
             if (count($quoted_check_key_list) != 0) {
                 $query = 'delete from '.USER_MAIL_NOTIFICATION_TABLE.' where check_key in ('.implode(',', $quoted_check_key_list).');';
                 $result = pwg_query($query);
@@ -246,7 +247,9 @@ function do_action_send_mail_notification(string $action = 'list_to_send', array
                 // Begin nbm users environment
                 begin_users_env_nbm($is_action_send);
 
-                foreach ($data_users as $nbm_user) {
+                foreach ($data_users as $nbm_user_raw) {
+                    /** @var array<string, mixed> $nbm_user */
+                    $nbm_user = is_array($nbm_user_raw) ? $nbm_user_raw : [];
                     if ((!$is_action_send) and check_sendmail_timeout()) {
                         // Stop fill list on 'list_to_send', if the quota is override
                         \Piwigo\Core\PageState::current()->addInfo($msg_break_timeout);
@@ -265,7 +268,7 @@ function do_action_send_mail_notification(string $action = 'list_to_send', array
                         $auth = null;
                         $add_url_params = [];
 
-                        $auth_key = create_user_auth_key($nbm_user['user_id'], $nbm_user['status']);
+                        $auth_key = create_user_auth_key(is_numeric($nbm_user['user_id']) ? (int) $nbm_user['user_id'] : 0, is_string($nbm_user['status']) ? $nbm_user['status'] : null);
 
                         if ($auth_key !== false) {
                             $auth = $auth_key['auth_key'];
@@ -276,11 +279,13 @@ function do_action_send_mail_notification(string $action = 'list_to_send', array
                         // Fill return list of "treated" check_key for 'send'
                         $return_list[] = $nbm_user['check_key'];
 
+                        $last_send = is_string($nbm_user['last_send']) || is_null($nbm_user['last_send']) ? $nbm_user['last_send'] : (string) $nbm_user['last_send'];
+                        $dbnow_str = is_scalar($dbnow) ? (string) $dbnow : null;
                         if (\Piwigo\Core\Config::nbmSendDetailedContent()) {
-                            $news = news($nbm_user['last_send'], $dbnow, false, \Piwigo\Core\Config::nbmSendHtmlMail(), $auth);
+                            $news = news($last_send, $dbnow_str, false, \Piwigo\Core\Config::nbmSendHtmlMail(), $auth);
                             $exist_data = count($news) > 0;
                         } else {
-                            $exist_data = news_exists($nbm_user['last_send'], $dbnow);
+                            $exist_data = news_exists($last_send, $dbnow_str);
                         }
 
                         if ($exist_data) {
@@ -324,15 +329,16 @@ function do_action_send_mail_notification(string $action = 'list_to_send', array
                             }
 
                             if (\Piwigo\Core\Config::nbmSendHtmlMail() and \Piwigo\Core\Config::nbmSendRecentPostDates()) {
-                                $recent_post_dates = get_recent_post_dates_array(
-                                    \Piwigo\Core\Config::get('recent_post_dates')['NBM']
-                                );
+                                $recent_post_dates_conf = \Piwigo\Core\Config::get('recent_post_dates');
+                                $recent_post_dates_nbm = is_array($recent_post_dates_conf) && is_array($recent_post_dates_conf['NBM'] ?? null) ? $recent_post_dates_conf['NBM'] : [];
+                                $recent_post_dates = get_recent_post_dates_array($recent_post_dates_nbm);
                                 foreach ($recent_post_dates as $date_detail) {
+                                    $date_detail_arr = is_array($date_detail) ? $date_detail : [];
                                     $env_nbm['mail_template']->append(
                                         'recent_posts',
                                         [
-                                        'TITLE' => get_title_recent_post_date($date_detail),
-                                        'HTML_DATA' => get_html_description_recent_post_date($date_detail, $auth),
+                                        'TITLE' => get_title_recent_post_date($date_detail_arr),
+                                        'HTML_DATA' => get_html_description_recent_post_date($date_detail_arr, is_string($auth) ? $auth : null),
                     ]
                                     );
                                 }
@@ -348,8 +354,8 @@ function do_action_send_mail_notification(string $action = 'list_to_send', array
 
                             $ret = pwg_mail(
                                 [
-                                'name' => stripslashes((string) $nbm_user['username']),
-                                'email' => $nbm_user['mail_address'],
+                                'name' => stripslashes(is_scalar($nbm_user['username']) ? (string) $nbm_user['username'] : ''),
+                                'email' => is_scalar($nbm_user['mail_address']) ? (string) $nbm_user['mail_address'] : '',
                                 ],
                                 [
                                 'from' => $env_nbm['send_as_mail_formated'],

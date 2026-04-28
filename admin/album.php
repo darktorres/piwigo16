@@ -26,12 +26,13 @@ check_status(ACCESS_ADMINISTRATOR);
 
 check_input_parameter('cat_id', $_GET, false, PATTERN_ID);
 
-$admin_album_base_url = get_root_url().'admin.php?page=album-'.$_GET['cat_id'];
+$cat_id_str = is_scalar($_GET['cat_id']) ? (string) $_GET['cat_id'] : '';
+$admin_album_base_url = get_root_url().'admin.php?page=album-'.$cat_id_str;
 
 $query = '
 SELECT *
   FROM '.CATEGORIES_TABLE.'
-  WHERE id = '.$_GET['cat_id'].'
+  WHERE id = '.$cat_id_str.'
 ;';
 $category = pwg_db_fetch_assoc(pwg_query($query));
 
@@ -46,12 +47,12 @@ if (!isset($category['id'])) {
 $page['tab'] = 'properties';
 
 if (isset($_GET['tab'])) {
-    $page['tab'] = $_GET['tab'];
+    $page['tab'] = is_scalar($_GET['tab']) ? (string) $_GET['tab'] : 'properties';
 }
 
 $tabsheet = new tabsheet();
 $tabsheet->set_id('album');
-$tabsheet->select($page['tab']);
+$tabsheet->select((string) $page['tab']);
 $tabsheet->assign();
 
 // +-----------------------------------------------------------------------+
@@ -64,8 +65,8 @@ $category_name = trigger_change(
     'get_cat_display_name_cache'
 );
 $template->assign([
-  'ADMIN_PAGE_TITLE' => l10n('Edit album').' <strong>'.$category_name.'</strong>',
-  'ADMIN_PAGE_OBJECT_ID' => '#'.$category['id'],
+  'ADMIN_PAGE_TITLE' => l10n('Edit album').' <strong>'.(is_scalar($category_name) ? (string) $category_name : '').'</strong>',
+  'ADMIN_PAGE_OBJECT_ID' => '#'.(is_scalar($category['id']) ? (string) $category['id'] : ''),
 ]);
 
 if ('properties' == $page['tab']) {
@@ -76,5 +77,5 @@ if ('properties' == $page['tab']) {
     $_GET['cat'] = $_GET['cat_id'];
     include(PHPWG_ROOT_PATH.'admin/cat_perm.php');
 } else {
-    include(PHPWG_ROOT_PATH.'admin/album_'.$page['tab'].'.php');
+    include(PHPWG_ROOT_PATH.'admin/album_'.(string) $page['tab'].'.php');
 }

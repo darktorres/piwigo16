@@ -62,11 +62,14 @@ class QDateRangeScope extends QSearchScope
     public function get_sql(string $field, QSingleToken $token): string
     {
         $clauses = [];
-        if ($token->scope_data[0] != '') {
-            $clauses[] = $field.' >= \'' . $token->scope_data[0].'\'';
+        $scopeArr = is_array($token->scope_data) ? $token->scope_data : ['', ''];
+        $sd0 = isset($scopeArr[0]) && is_scalar($scopeArr[0]) ? (string) $scopeArr[0] : '';
+        $sd1 = isset($scopeArr[1]) && is_scalar($scopeArr[1]) ? (string) $scopeArr[1] : '';
+        if ($sd0 != '') {
+            $clauses[] = $field.' >= \'' . $sd0.'\'';
         }
-        if ($token->scope_data[1] != '') {
-            $clauses[] = $field.' <= \'' . $token->scope_data[1].'\'';
+        if ($sd1 != '') {
+            $clauses[] = $field.' <= \'' . $sd1.'\'';
         }
 
         if (empty($clauses)) {

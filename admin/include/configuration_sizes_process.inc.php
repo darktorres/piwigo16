@@ -47,10 +47,14 @@ if ($_POST['resize_quality'] < 50 or $_POST['resize_quality'] > 98) {
     $errors['resize_quality'] = '[50..98]';
 }
 
-$pderivatives = $_POST['d'];
+/** @var array<string, array<string, mixed>> $pderivatives */
+$pderivatives = is_array($_POST['d'] ?? null) ? $_POST['d'] : [];
 
 // step 1 - sanitize HTML input
 foreach ($pderivatives as $type => &$pderivative) {
+    if (!is_array($pderivative)) {
+        $pderivative = [];
+    }
     if ($pderivative['must_square'] = ($type == IMG_SQUARE ? true : false)) {
         $pderivative['h'] = $pderivative['w'];
         $pderivative['minh'] = $pderivative['minw'] = $pderivative['w'];
@@ -74,7 +78,8 @@ unset($pderivative);
 // step 2 - check validity
 $prev_w = $prev_h = 0;
 foreach (ImageStdParams::get_all_types() as $type) {
-    $pderivative = $pderivatives[$type];
+    /** @var array<string, mixed> $pderivative */
+    $pderivative = $pderivatives[$type] ?? [];
     if (!$pderivative['enabled']) {
         continue;
     }
@@ -83,12 +88,12 @@ foreach (ImageStdParams::get_all_types() as $type) {
     }
 
     if ($type == IMG_THUMB) {
-        $w = intval($pderivative['w']);
+        $w = is_numeric($pderivative['w']) ? (int) $pderivative['w'] : 0;
         if ($w <= 0) {
             $errors[$type]['w'] = '>0';
         }
 
-        $h = intval($pderivative['h']);
+        $h = is_numeric($pderivative['h']) ? (int) $pderivative['h'] : 0;
         if ($h <= 0) {
             $errors[$type]['h'] = '>0';
         }
@@ -97,23 +102,23 @@ foreach (ImageStdParams::get_all_types() as $type) {
             $errors[$type]['w'] = $errors[$type]['h'] = '>'.$prev_w;
         }
     } else {
-        $v = intval($pderivative['w']);
+        $v = is_numeric($pderivative['w']) ? (int) $pderivative['w'] : 0;
         if ($v <= 0 or $v <= $prev_w) {
             $errors[$type]['w'] = '>'.$prev_w;
         }
 
-        $v = intval($pderivative['h']);
+        $v = is_numeric($pderivative['h']) ? (int) $pderivative['h'] : 0;
         if ($v <= 0 or $v <= $prev_h) {
             $errors[$type]['h'] = '>'.$prev_h;
         }
     }
 
     if (count($errors) == 0) {
-        $prev_w = intval($pderivative['w']);
-        $prev_h = intval($pderivative['h']);
+        $prev_w = is_numeric($pderivative['w']) ? (int) $pderivative['w'] : 0;
+        $prev_h = is_numeric($pderivative['h']) ? (int) $pderivative['h'] : 0;
     }
 
-    $v = intval($pderivative['sharpen']);
+    $v = is_numeric($pderivative['sharpen']) ? (int) $pderivative['sharpen'] : 0;
     if ($v < 0 || $v > 100) {
         $errors[$type]['sharpen'] = '[0..100]';
     }
@@ -121,28 +126,35 @@ foreach (ImageStdParams::get_all_types() as $type) {
 
 // step 3 - save data
 if (count($errors) == 0) {
-    $quality_changed = ImageStdParams::$quality != intval($_POST['resize_quality']);
-    ImageStdParams::$quality = intval($_POST['resize_quality']);
+    $resize_quality_raw = $_POST['resize_quality'] ?? 0;
+    $resize_quality = is_numeric($resize_quality_raw) ? (int) $resize_quality_raw : 0;
+    $quality_changed = ImageStdParams::$quality != $resize_quality;
+    ImageStdParams::$quality = $resize_quality;
 
     $enabled = ImageStdParams::get_defined_type_map();
-    $disabled = safe_unserialize(ImageStdParams::get_disabled_type_map());
-    if ($disabled === false) {
-        $disabled = [];
-    }
+    $disabled_raw = safe_unserialize(ImageStdParams::get_disabled_type_map());
+    $disabled = is_array($disabled_raw) ? $disabled_raw : [];
     $changed_types = [];
 
     foreach (ImageStdParams::get_all_types() as $type) {
-        $pderivative = $pderivatives[$type];
+        /** @var array<string, mixed> $pderivative */
+        $pderivative = $pderivatives[$type] ?? [];
 
         if ($pderivative['enabled']) {
+            $pd_w = is_numeric($pderivative['w']) ? (int) $pderivative['w'] : 0;
+            $pd_h = is_numeric($pderivative['h']) ? (int) $pderivative['h'] : 0;
+            $pd_crop = is_numeric($pderivative['crop']) ? (float) $pderivative['crop'] : 0.0;
+            $pd_minw = is_numeric($pderivative['minw']) ? (int) $pderivative['minw'] : 0;
+            $pd_minh = is_numeric($pderivative['minh']) ? (int) $pderivative['minh'] : 0;
+            $pd_sharpen = is_numeric($pderivative['sharpen']) ? (int) $pderivative['sharpen'] : 0;
             $new_params = new DerivativeParams(
                 new SizingParams(
-                    [intval($pderivative['w']), intval($pderivative['h'])],
-                    round($pderivative['crop'] / 100, 2),
-                    [intval($pderivative['minw']), intval($pderivative['minh'])]
+                    [$pd_w, $pd_h],
+                    round($pd_crop / 100, 2),
+                    [$pd_minw, $pd_minh]
                 )
             );
-            $new_params->sharpen = intval($pderivative['sharpen']);
+            $new_params->sharpen = $pd_sharpen;
 
             ImageStdParams::apply_global($new_params);
 
@@ -219,7 +231,7 @@ if (count($errors) == 0) {
             $template->append(
                 'sizes',
                 [
-                $field => strip_tags((string) $_POST[$field]), // strip_tags prevents from XSS attempt
+                $field => strip_tags(is_scalar($_POST[$field]) ? (string) $_POST[$field] : ''), // strip_tags prevents from XSS attempt
                 ],
                 true
             );

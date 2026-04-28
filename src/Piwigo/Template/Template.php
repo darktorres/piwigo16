@@ -24,7 +24,7 @@ class Template
     public $files = [];
     /** @var string[] - Template extents filenames for each template handle. */
     public $extents = [];
-    /** @var array<mixed> - Templates prefilter from external sources (plugins) */
+    /** @var array<string, array<int, list<array{0: string, 1: mixed}>>> - Templates prefilter from external sources (plugins) */
     public array $external_filters = [];
 
     /** @var string[] - Content to add before </head> tag */
@@ -42,9 +42,9 @@ class Template
     /** @var CssLoader */
     public $cssLoader;
 
-    /** @var array<mixed> - Runtime buttons on picture page */
+    /** @var array<int, list<mixed>> - Runtime buttons on picture page */
     public array $picture_buttons = [];
-    /** @var array<mixed> - Runtime buttons on index page */
+    /** @var array<int, list<mixed>> - Runtime buttons on index page */
     public array $index_buttons = [];
 
 
@@ -167,7 +167,7 @@ class Template
 
         if (!defined('IN_ADMIN') and \Piwigo\Core\Config::extentsForTemplates() !== null) {
             $tpl_extents = unserialize((string)\Piwigo\Core\Config::extentsForTemplates());
-            $this->set_extents($tpl_extents, './template-extension/', true, $theme);
+            $this->set_extents(is_array($tpl_extents) ? $tpl_extents : [], './template-extension/', true, $theme);
         }
     }
 
@@ -197,12 +197,15 @@ class Template
         $this->set_template_dir($root.'/'.$theme.'/'.$path);
 
         if (isset($themeconf['parent']) and $themeconf['parent'] != $theme) {
+            $parentTheme = is_string($themeconf['parent']) ? $themeconf['parent'] : '';
+            $parentLoadCss = isset($themeconf['load_parent_css']) ? (bool) $themeconf['load_parent_css'] : $load_css;
+            $parentLoadHead = isset($themeconf['load_parent_local_head']) ? (bool) $themeconf['load_parent_local_head'] : $load_local_head;
             $this->set_theme(
                 $root,
-                $themeconf['parent'],
+                $parentTheme,
                 $path,
-                $themeconf['load_parent_css'] ?? $load_css,
-                $themeconf['load_parent_local_head'] ?? $load_local_head
+                $parentLoadCss,
+                $parentLoadHead
             );
         }
 
@@ -211,7 +214,8 @@ class Template
           'load_css' => $load_css,
         ];
         if (!empty($themeconf['local_head']) and $load_local_head) {
-            $tpl_var['local_head'] = realpath($root.'/'.$theme.'/'.$themeconf['local_head']);
+            $localHead = is_string($themeconf['local_head']) ? $themeconf['local_head'] : '';
+            $tpl_var['local_head'] = realpath($root.'/'.$theme.'/'.$localHead);
         }
         $themeconf['id'] = $theme;
 
@@ -268,10 +272,10 @@ class Template
      * @param string $val
      * @return mixed
      */
-    public function get_themeconf($val)
+    public function get_themeconf($val): mixed
     {
         $tc = $this->smarty->getTemplateVars('themeconf');
-        return $tc[$val] ?? '';
+        return is_array($tc) ? ($tc[$val] ?? '') : '';
     }
 
     /**
@@ -323,7 +327,7 @@ class Template
     /**
      * Sets template extentions filenames for handles.
      *
-     * @param string[] $filename_array hashmap of handle=>filename
+     * @param array<mixed> $filename_array hashmap of handle=>filename
      * @param bool $overwrite
      * @param string $theme
      */
@@ -334,9 +338,12 @@ class Template
         }
         foreach ($filename_array as $filename => $value) {
             if (is_array($value)) {
-                $handle = $value[0];
-                $param = $value[1];
-                $thm = $value[2];
+                $h = $value[0];
+                $handle = is_string($h) ? $h : '';
+                $p = $value[1];
+                $param = is_string($p) ? $p : 'N/A';
+                $t = $value[2];
+                $thm = is_string($t) ? $t : 'N/A';
             } elseif (is_string($value)) {
                 $handle = $value;
                 $param = 'N/A';
@@ -422,9 +429,11 @@ public function assign(string|array $tpl_var, mixed $value = null): void
      */
     public function concat($tpl_var, string $value): void
     {
+        $existing = $this->smarty->getTemplateVars($tpl_var);
+        $existingStr = is_string($existing) ? $existing : '';
         $this->assign(
             $tpl_var,
-            $this->smarty->getTemplateVars($tpl_var) . $value
+            $existingStr . $value
         );
     }
 
@@ -533,7 +542,8 @@ public function get_template_vars(?string $tpl_var = null): mixed
                 $href .= '?v' . ($combi->version ?: PHPWG_VERSION);
             }
             // trigger the event for eventual use of a cdn
-            $href = trigger_change('combined_css', $href, $combi);
+            $href_raw = trigger_change('combined_css', $href, $combi);
+            $href = is_string($href_raw) ? $href_raw : $href;
             $content[] = '<link rel="stylesheet" type="text/css" href="'.$href.'">';
         }
         $this->output = str_replace(
@@ -608,25 +618,28 @@ public function get_template_vars(?string $tpl_var = null): mixed
     /** @param array<mixed> $params */
 public static function modcompiler_translate(array $params): string
     {
+        $p0 = is_string($params[0] ?? null) ? (string) $params[0] : '';
         switch (count($params)) {
             case 1:
                 if (\Piwigo\Core\Config::compiledTemplateCacheLanguage()
-                  && ($key = self::get_php_str_val($params[0])) !== null
+                  && ($key = self::get_php_str_val($p0)) !== null
                   && \Piwigo\Core\Lang::has($key)
                 ) {
                     return var_export(\Piwigo\Core\Lang::t($key), true);
                 }
-                return 'l10n('.$params[0].')';
+                return 'l10n('.$p0.')';
 
             default:
+                $rest = array_slice($params, 1);
+                $restStr = array_map(fn($x): string => is_string($x) ? $x : (is_int($x) || is_float($x) ? (string) $x : ''), $rest);
                 if (\Piwigo\Core\Config::compiledTemplateCacheLanguage()) {
                     $ret = 'sprintf(';
-                    $ret .= self::modcompiler_translate([$params[0]]);
-                    $ret .= ','. implode(',', array_slice($params, 1));
+                    $ret .= self::modcompiler_translate([$p0]);
+                    $ret .= ','. implode(',', $restStr);
                     $ret .= ')';
                     return $ret;
                 }
-                return 'l10n('.$params[0].','.implode(',', array_slice($params, 1)).')';
+                return 'l10n('.$p0.','.implode(',', $restStr).')';
         }
     }
 
@@ -640,22 +653,25 @@ public static function modcompiler_translate(array $params): string
 public static function modcompiler_translate_dec(array $params): string
     {
         global $lang_info;
+        $p0 = is_string($params[0] ?? null) ? (string) $params[0] : '';
+        $p1 = is_string($params[1] ?? null) ? (string) $params[1] : '';
+        $p2 = is_string($params[2] ?? null) ? (string) $params[2] : '';
         if (\Piwigo\Core\Config::compiledTemplateCacheLanguage()) {
             $ret = 'sprintf(';
             if ($lang_info['zero_plural']) {
-                $ret .= '($tmp=('.$params[0].'))>1||$tmp==0';
+                $ret .= '($tmp=('.$p0.'))>1||$tmp==0';
             } else {
-                $ret .= '($tmp=('.$params[0].'))>1';
+                $ret .= '($tmp=('.$p0.'))>1';
             }
             $ret .= '?';
-            $ret .= self::modcompiler_translate([$params[2]]);
+            $ret .= self::modcompiler_translate([$p2]);
             $ret .= ':';
-            $ret .= self::modcompiler_translate([$params[1]]);
+            $ret .= self::modcompiler_translate([$p1]);
             $ret .= ',$tmp';
             $ret .= ')';
             return $ret;
         }
-        return 'l10n_dec('.$params[1].','.$params[2].','.$params[0].')';
+        return 'l10n_dec('.$p1.','.$p2.','.$p0.')';
     }
 
     /**
@@ -738,35 +754,52 @@ public function func_define_derivative(array $params, mixed $smarty): void
     {
         !empty($params['name']) or fatal_error('define_derivative missing name');
         if (isset($params['type'])) {
-            $derivative = ImageStdParams::get_by_type($params['type']);
-            $smarty->assign($params['name'], $derivative);
+            $typeVal = $params['type'];
+            $typeStr = is_string($typeVal) ? $typeVal : '';
+            $derivative = ImageStdParams::get_by_type($typeStr);
+            if ($smarty instanceof \Smarty\Smarty) {
+                $nameVal = $params['name'];
+                $nameStr = is_string($nameVal) ? $nameVal : '';
+                $smarty->assign($nameStr, $derivative);
+            }
             return;
         }
         !empty($params['width']) or fatal_error('define_derivative missing width');
         !empty($params['height']) or fatal_error('define_derivative missing height');
 
-        $w = intval($params['width']);
-        $h = intval($params['height']);
+        $widthVal = $params['width'];
+        $heightVal = $params['height'];
+        $w = is_int($widthVal) ? $widthVal : (is_numeric($widthVal) ? (int) $widthVal : 0);
+        $h = is_int($heightVal) ? $heightVal : (is_numeric($heightVal) ? (int) $heightVal : 0);
         $crop = 0;
         $minw = null;
         $minh = null;
 
         if (isset($params['crop'])) {
-            if (is_bool($params['crop'])) {
-                $crop = $params['crop'] ? 1 : 0;
-            } else {
-                $crop = round($params['crop'] / 100, 2);
+            $cropVal = $params['crop'];
+            if (is_bool($cropVal)) {
+                $crop = $cropVal ? 1 : 0;
+            } elseif (is_int($cropVal) || is_float($cropVal)) {
+                $crop = round($cropVal / 100, 2);
+            } elseif (is_string($cropVal) && is_numeric($cropVal)) {
+                $crop = round((float) $cropVal / 100, 2);
             }
 
             if ($crop) {
-                $minw = empty($params['min_width']) ? $w : intval($params['min_width']);
+                $minWidthVal = $params['min_width'] ?? null;
+                $minHeightVal = $params['min_height'] ?? null;
+                $minw = empty($minWidthVal) ? $w : (is_int($minWidthVal) ? $minWidthVal : (is_numeric($minWidthVal) ? (int) $minWidthVal : $w));
                 $minw <= $w or fatal_error('define_derivative invalid min_width');
-                $minh = empty($params['min_height']) ? $h : intval($params['min_height']);
+                $minh = empty($minHeightVal) ? $h : (is_int($minHeightVal) ? $minHeightVal : (is_numeric($minHeightVal) ? (int) $minHeightVal : $h));
                 $minh <= $h or fatal_error('define_derivative invalid min_height');
             }
         }
 
-        $smarty->assign($params['name'], ImageStdParams::get_custom($w, $h, $crop, $minw, $minh));
+        if ($smarty instanceof \Smarty\Smarty) {
+            $nameVal2 = $params['name'];
+            $nameStr2 = is_string($nameVal2) ? $nameVal2 : '';
+            $smarty->assign($nameStr2, ImageStdParams::get_custom($w, $h, $crop, $minw, $minh));
+        }
     }
 
     /**
@@ -799,13 +832,23 @@ public function func_combine_script(array $params): void
             }
         }
 
+        $scriptId = $params['id'];
+        $scriptIdStr = is_string($scriptId) ? $scriptId : '';
+        $scriptPath = $params['path'] ?? null;
+        $scriptPathVal = is_string($scriptPath) ? $scriptPath : null;
+        $scriptVersion = $params['version'] ?? 0;
+        $scriptVersionVal = (is_string($scriptVersion) || is_int($scriptVersion)) ? $scriptVersion : 0;
+        $scriptTemplate = $params['template'] ?? false;
+        $scriptTemplateVal = (bool) $scriptTemplate;
+        $requireRaw = $params['require'] ?? null;
+        $requireArr = empty($requireRaw) ? [] : explode(',', is_string($requireRaw) ? $requireRaw : '');
         $this->scriptLoader->add(
-            $params['id'],
+            $scriptIdStr,
             $load,
-            empty($params['require']) ? [] : explode(',', (string) $params['require']),
-            @$params['path'],
-            $params['version'] ?? 0,
-            @$params['template']
+            $requireArr,
+            $scriptPathVal,
+            $scriptVersionVal,
+            $scriptTemplateVal
         );
     }
 
@@ -869,7 +912,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      * @return string
      */
     /** @return string|array<mixed> */
-private static function make_script_src(mixed $script): string|array
+private static function make_script_src(Combinable $script): string|array
     {
         $ret = '';
         if ($script->is_remote()) {
@@ -881,7 +924,8 @@ private static function make_script_src(mixed $script): string|array
             }
         }
         // trigger the event for eventual use of a cdn
-        $ret = trigger_change('combined_script', $ret, $script);
+        $ret_raw = trigger_change('combined_script', $ret, $script);
+        $ret = is_string($ret_raw) ? $ret_raw : $ret;
         return embellish_url($ret);
     }
 
@@ -898,9 +942,11 @@ public function block_footer_script(array $params, string $content): void
         $content = trim($content);
         if (!empty($content)) { // second call
 
+            $requireFooter = $params['require'] ?? null;
+            $requireFooterArr = empty($requireFooter) ? [] : explode(',', is_string($requireFooter) ? $requireFooter : '');
             $this->scriptLoader->add_inline(
                 $content,
-                empty($params['require']) ? [] : explode(',', (string) $params['require'])
+                $requireFooterArr
             );
         }
     }
@@ -924,10 +970,21 @@ public function func_combine_css(array $params): void
         }
 
         if (!isset($params['id'])) {
-            $params['id'] = md5((string) $params['path']);
+            $pathForId = $params['path'];
+            $params['id'] = md5(is_string($pathForId) ? $pathForId : '');
         }
 
-        $this->cssLoader->add($params['id'], $params['path'], $params['version'] ?? 0, (int)@$params['order'], (bool)@$params['template']);
+        $cssId = $params['id'];
+        $cssIdStr = is_string($cssId) ? $cssId : '';
+        $cssPath = $params['path'];
+        $cssPathStr = is_string($cssPath) ? $cssPath : '';
+        $cssVersion = $params['version'] ?? 0;
+        $cssVersionVal = (is_string($cssVersion) || is_int($cssVersion)) ? $cssVersion : 0;
+        $cssOrder = $params['order'] ?? 0;
+        $cssOrderInt = is_int($cssOrder) ? $cssOrder : (is_numeric($cssOrder) ? (int) $cssOrder : 0);
+        $cssTemplate = $params['template'] ?? false;
+        $cssTemplateBool = (bool) $cssTemplate;
+        $this->cssLoader->add($cssIdStr, $cssPathStr, $cssVersionVal, $cssOrderInt, $cssTemplateBool);
     }
 
     /**
@@ -952,7 +1009,7 @@ public function func_get_combined_css(array $params): string
      * @param Callable $callback
      * @param int $weight
      */
-    public function set_prefilter($handle, $callback, $weight = 50): void
+    public function set_prefilter(string $handle, mixed $callback, int $weight = 50): void
     {
         $this->external_filters[$handle][$weight][] = ['pre', $callback];
         ksort($this->external_filters[$handle]);
@@ -967,7 +1024,7 @@ public function func_get_combined_css(array $params): string
      * @param Callable $callback
      * @param int $weight
      */
-    public function set_postfilter($handle, $callback, $weight = 50): void
+    public function set_postfilter(string $handle, mixed $callback, int $weight = 50): void
     {
         $this->external_filters[$handle][$weight][] = ['post', $callback];
         ksort($this->external_filters[$handle]);
@@ -982,7 +1039,7 @@ public function func_get_combined_css(array $params): string
      * @param Callable $callback
      * @param int $weight
      */
-    public function set_outputfilter($handle, $callback, $weight = 50): void
+    public function set_outputfilter(string $handle, mixed $callback, int $weight = 50): void
     {
         $this->external_filters[$handle][$weight][] = ['output', $callback];
         ksort($this->external_filters[$handle]);
@@ -993,7 +1050,7 @@ public function func_get_combined_css(array $params): string
      *
      * @param string $handle
      */
-    public function load_external_filters($handle): void
+    public function load_external_filters(string $handle): void
     {
         if (isset($this->external_filters[$handle])) {
             $compile_id = '';
@@ -1001,14 +1058,16 @@ public function func_get_combined_css(array $params): string
                 foreach ($filters as $filter) {
                     [$type, $callback] = $filter;
                     if (is_array($callback)) {
-                        $compile_id .= $type.implode('', $callback);
+                        $compile_id .= $type.implode('', array_map(fn($v): string => is_string($v) ? $v : (is_int($v) || is_float($v) ? (string) $v : ''), $callback));
                     } elseif ($callback instanceof \Closure) {
                         // Reflect the closure's function name for a stable compile_id contribution.
                         $compile_id .= $type.new \ReflectionFunction($callback)->getName();
-                    } else {
+                    } elseif (is_string($callback)) {
                         $compile_id .= $type.$callback;
                     }
-                    $this->smarty->registerFilter($type, $callback);
+                    if (is_callable($callback)) {
+                        $this->smarty->registerFilter($type, $callback);
+                    }
                 }
             }
             $this->smarty->compile_id .= '.'.base_convert(hash('crc32b', $compile_id), 16, 36);
@@ -1020,13 +1079,23 @@ public function func_get_combined_css(array $params): string
      *
      * @param string $handle
      */
-    public function unload_external_filters($handle): void
+    public function unload_external_filters(string $handle): void
     {
         if (isset($this->external_filters[$handle])) {
             foreach ($this->external_filters[$handle] as $filters) {
                 foreach ($filters as $filter) {
                     [$type, $callback] = $filter;
-                    $this->smarty->unregisterFilter($type, $callback);
+                    // Compute filter name as Smarty does: string → itself, array → "Class_method"
+                    if (is_string($callback)) {
+                        $this->smarty->unregisterFilter($type, $callback);
+                    } elseif (is_array($callback) && count($callback) >= 2) {
+                        $cls = is_object($callback[0]) ? get_class($callback[0]) : (is_string($callback[0]) ? $callback[0] : '');
+                        $meth = is_string($callback[1]) ? $callback[1] : '';
+                        if ($cls !== '' && $meth !== '') {
+                            $this->smarty->unregisterFilter($type, $cls.'_'.$meth);
+                        }
+                    }
+                    // Closures without a name cannot be unregistered via Smarty API
                 }
             }
         }
@@ -1041,8 +1110,8 @@ public function func_get_combined_css(array $params): string
     /** @return string|array<mixed>|null */
 public static function prefilter_white_space(string $source, mixed $smarty): string|array|null
     {
-        $ld = $smarty->getLeftDelimiter();
-        $rd = $smarty->getRightDelimiter();
+        $ld = ($smarty instanceof \Smarty\Smarty) ? $smarty->getLeftDelimiter() : '{';
+        $rd = ($smarty instanceof \Smarty\Smarty) ? $smarty->getRightDelimiter() : '}';
         // $ld = $smarty->left_delimiter;
         // $rd = $smarty->right_delimiter;
         $ldq = preg_quote($ld, '#');
@@ -1093,10 +1162,15 @@ public static function postfilter_language(string $source, mixed $smarty): strin
     public static function prefilter_local_css(string $source, mixed $smarty): string
     {
         $css = [];
-        foreach ($smarty->getTemplateVars('themes') as $theme) {
-            $f = PWG_LOCAL_DIR.'css/'.$theme['id'].'-rules.css';
-            if (file_exists(PHPWG_ROOT_PATH.$f)) {
-                $css[] = "{combine_css path='$f' order=10}";
+        $themes = ($smarty instanceof \Smarty\Smarty) ? $smarty->getTemplateVars('themes') : [];
+        if (is_array($themes)) {
+            foreach ($themes as $theme) {
+                $themeId = is_array($theme) ? ($theme['id'] ?? '') : '';
+                $themeIdStr = is_string($themeId) ? $themeId : '';
+                $f = PWG_LOCAL_DIR.'css/'.$themeIdStr.'-rules.css';
+                if (file_exists(PHPWG_ROOT_PATH.$f)) {
+                    $css[] = "{combine_css path='$f' order=10}";
+                }
             }
         }
         $f = PWG_LOCAL_DIR.'css/rules.css';
@@ -1138,7 +1212,7 @@ public function load_themeconf(string $dir): array
      * @param string $content
      * @param int $rank
      */
-    public function add_picture_button($content, $rank = BUTTONS_RANK_NEUTRAL): void
+    public function add_picture_button(mixed $content, int $rank = BUTTONS_RANK_NEUTRAL): void
     {
         $this->picture_buttons[$rank][] = $content;
     }
@@ -1149,7 +1223,7 @@ public function load_themeconf(string $dir): array
      * @param string $content
      * @param int $rank
      */
-    public function add_index_button($content, $rank = BUTTONS_RANK_NEUTRAL): void
+    public function add_index_button(mixed $content, int $rank = BUTTONS_RANK_NEUTRAL): void
     {
         $this->index_buttons[$rank][] = $content;
     }

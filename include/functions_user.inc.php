@@ -89,7 +89,7 @@ function search_case_username($username)
     FROM `'.USERS_TABLE.'`;
   ');
     while ($r = pwg_db_fetch_assoc($q)) {
-        $SCU_users[$r['username']] = strtolower((string) $r['username']);
+        $SCU_users[(string) $r['username']] = strtolower((string) $r['username']);
     }
     // $SCU_users is now an associative table where the key is the account as
     // registered in the DB, and the value is this same account, in lower case
@@ -101,7 +101,7 @@ function search_case_username($username)
         return $username;
     } // but normal writing will work
     else {
-        return $users_found[0];
+        return (string) $users_found[0];
     }
 }
 
@@ -145,7 +145,7 @@ function register_user(string $login, string $password, ?string $mail_address = 
         }
     }
 
-    $errors = trigger_change(
+    $errors_mixed = trigger_change(
         'register_user_check',
         $errors,
         [
@@ -154,6 +154,12 @@ function register_user(string $login, string $password, ?string $mail_address = 
         'email' => $mail_address,
         ]
     );
+    if (is_array($errors_mixed)) {
+        $errors = [];
+        foreach ($errors_mixed as $e) {
+            $errors[] = is_scalar($e) ? (string) $e : '';
+        }
+    }
 
     // if no error until here, registration of the user
     if (empty($errors)) {
@@ -170,7 +176,7 @@ function register_user(string $login, string $password, ?string $mail_address = 
         $query = '
 SELECT id
   FROM `'.GROUPS_TABLE.'`
-  WHERE is_default = \''.boolean_to_string(true).'\'
+  WHERE is_default = \'true\'
   ORDER BY id ASC
 ;';
         $result = pwg_query($query);
@@ -194,9 +200,9 @@ SELECT id
 
         create_user_infos((int) $user_id, $override);
 
-        if ($notify_admin and 'none' != \Piwigo\Core\Config::get('email_admin_on_new_user')) {
+        if ($notify_admin and 'none' != \Piwigo\Core\Config::getString('email_admin_on_new_user')) {
             include_once(PHPWG_ROOT_PATH.'include/functions_mail.inc.php');
-            $admin_url = get_absolute_root_url().'admin.php?page=user_list&user_id='.$user_id;
+            $admin_url = get_absolute_root_url().'admin.php?page=user_list&user_id='.(int) $user_id;
 
             $keyargs_content = [
               get_l10n_args('User: %s', stripslashes($login)),
@@ -206,7 +212,7 @@ SELECT id
               ];
 
             $group_id = null;
-            if (preg_match('/^group:(\d+)$/', (string) \Piwigo\Core\Config::get('email_admin_on_new_user'), $matches)) {
+            if (preg_match('/^group:(\d+)$/', \Piwigo\Core\Config::getString('email_admin_on_new_user'), $matches)) {
                 $group_id = $matches[1];
             }
 
@@ -278,13 +284,16 @@ function build_user(int $user_id, bool $use_cache = true): array
 
     if ($user['id'] == \Piwigo\Core\Config::guestId() and $user['status'] <> 'guest') {
         $user['status'] = 'guest';
+        if (!is_array($user['internal_status'])) {
+            $user['internal_status'] = [];
+        }
         $user['internal_status']['guest_must_be_guest'] = true;
     }
 
     // Check user theme. 2 possible problems:
     // 1. the user_infos.theme was not found in the themes table, thus themes.name is null
     // 2. the theme is not really installed on the filesystem
-    if (!isset($user['theme_name']) or !check_theme_installed($user['theme'])) {
+    if (!isset($user['theme_name']) or !check_theme_installed(is_scalar($user['theme']) ? (string) $user['theme'] : '')) {
         $user['theme'] = get_default_theme();
         $user['theme_name'] = $user['theme'];
     }
@@ -368,13 +377,14 @@ SELECT
     }
     unset($value);
 
-    $userdata['preferences'] = empty($userdata['preferences']) ? [] : unserialize($userdata['preferences']);
+    $userdata['preferences'] = empty($userdata['preferences']) ? [] : unserialize(is_scalar($userdata['preferences']) ? (string) $userdata['preferences'] : '');
 
     if ($use_cache) {
         $generate_user_cache = false;
-        $cache_generation_token_name = 'generate_user_cache-u'.$userdata['id'];
+        $ud_id = is_numeric($userdata['id']) ? (int) $userdata['id'] : 0;
+        $cache_generation_token_name = 'generate_user_cache-u'.$ud_id;
         $exec_code = substr(sha1(random_bytes(1000)), 0, 4);
-        $logger_msg_prefix = '['.__FUNCTION__.'][exec_code='.$exec_code.'][user_id='.$userdata['id'].'] ';
+        $logger_msg_prefix = '['.__FUNCTION__.'][exec_code='.$exec_code.'][user_id='.$ud_id.'] ';
 
         if (!isset($userdata['need_update'])
             or !is_bool($userdata['need_update'])
@@ -392,7 +402,7 @@ SELECT
 SELECT
    COUNT(*)
   FROM '.USER_CACHE_TABLE.'
-  WHERE user_id='.$userdata['id'].'
+  WHERE user_id='.$ud_id.'
 ;';
                     [$nb_cache_lines] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
@@ -429,48 +439,54 @@ SELECT
             // Set need update are done
             $userdata['need_update'] = false;
 
-            $userdata['forbidden_categories'] =
-              calculate_permissions($userdata['id'], $userdata['status']);
+            $ud_status = is_scalar($userdata['status']) ? (string) $userdata['status'] : '';
+            $ud_level = is_numeric($userdata['level']) ? (int) $userdata['level'] : 0;
+            $ud_forbidden_cats = calculate_permissions($ud_id, $ud_status);
+            $userdata['forbidden_categories'] = $ud_forbidden_cats;
 
             /* now we build the list of forbidden images (this list does not contain
             images that are not in at least an authorized category)*/
             $query = '
 SELECT DISTINCT(id)
   FROM '.IMAGES_TABLE.' INNER JOIN '.IMAGE_CATEGORY_TABLE.' ON id=image_id
-  WHERE category_id NOT IN ('.$userdata['forbidden_categories'].')
-    AND level>'.$userdata['level'];
+  WHERE category_id NOT IN ('.$ud_forbidden_cats.')
+    AND level>'.$ud_level;
             $forbidden_ids = query2array($query, null, 'id');
 
             if (empty($forbidden_ids)) {
                 $forbidden_ids[] = 0;
             }
             $userdata['image_access_type'] = 'NOT IN'; //TODO maybe later
-            $userdata['image_access_list'] = implode(',', $forbidden_ids);
+            $userdata['image_access_list'] = implode(',', array_map(static fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $forbidden_ids));
 
 
             $query = '
 SELECT COUNT(DISTINCT(image_id)) as total
   FROM '.IMAGE_CATEGORY_TABLE.'
-  WHERE category_id NOT IN ('.$userdata['forbidden_categories'].')
+  WHERE category_id NOT IN ('.$ud_forbidden_cats.')
     AND image_id '.$userdata['image_access_type'].' ('.$userdata['image_access_list'].')';
             [$userdata['nb_total_images']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
 
             // now we update user cache categories
             $user_cache_cats = get_computed_categories($userdata, null);
-            if (!is_admin($userdata['status'])) { // for non admins we forbid categories with no image (feature 1053)
+            if (!is_admin($ud_status)) { // for non admins we forbid categories with no image (feature 1053)
                 $forbidden_ids = [];
                 foreach ($user_cache_cats as $cat) {
                     if ($cat['count_images'] == 0) {
-                        $forbidden_ids[] = $cat['cat_id'];
+                        $forbidden_ids[] = is_numeric($cat['cat_id']) ? (int) $cat['cat_id'] : 0;
                         remove_computed_category($user_cache_cats, $cat);
                     }
                 }
                 if (!empty($forbidden_ids)) {
-                    if (empty($userdata['forbidden_categories'])) {
-                        $userdata['forbidden_categories'] = implode(',', $forbidden_ids);
+                    $ud_forbidden_cats = is_string($userdata['forbidden_categories'])
+                        ? $userdata['forbidden_categories']
+                        : '';
+                    $forbidden_ids_str = implode(',', array_map(static fn(int $v): string => (string) $v, $forbidden_ids));
+                    if (empty($ud_forbidden_cats)) {
+                        $userdata['forbidden_categories'] = $forbidden_ids_str;
                     } else {
-                        $userdata['forbidden_categories'] .= ','.implode(',', $forbidden_ids);
+                        $userdata['forbidden_categories'] = $ud_forbidden_cats.','.$forbidden_ids_str;
                     }
                 }
             }
@@ -478,7 +494,7 @@ SELECT COUNT(DISTINCT(image_id)) as total
             // delete user cache
             $query = '
 DELETE FROM '.USER_CACHE_CATEGORIES_TABLE.'
-  WHERE user_id = '.$userdata['id'];
+  WHERE user_id = '.$ud_id;
             pwg_query($query);
 
             // Due to concurrency issues, we ask MySQL to ignore errors on
@@ -498,22 +514,29 @@ DELETE FROM '.USER_CACHE_CATEGORIES_TABLE.'
             // update user cache
             $query = '
 DELETE FROM '.USER_CACHE_TABLE.'
-  WHERE user_id = '.$userdata['id'];
+  WHERE user_id = '.$ud_id;
             pwg_query($query);
 
             // for the same reason as user_cache_categories, we ignore error on
             // this insert
+            $ud_need_update = is_bool($userdata['need_update']) ? $userdata['need_update'] : false;
+            $ud_cache_update_time = is_numeric($userdata['cache_update_time']) ? (int) $userdata['cache_update_time'] : 0;
+            $ud_forbidden_cats_str = is_scalar($userdata['forbidden_categories']) ? (string) $userdata['forbidden_categories'] : '';
+            $ud_nb_total_images = is_numeric($userdata['nb_total_images']) ? (int) $userdata['nb_total_images'] : 0;
+            $ud_last_photo_date = is_scalar($userdata['last_photo_date']) ? (string) $userdata['last_photo_date'] : '';
+            $ud_image_access_type = is_scalar($userdata['image_access_type']) ? (string) $userdata['image_access_type'] : '';
+            $ud_image_access_list = is_scalar($userdata['image_access_list']) ? (string) $userdata['image_access_list'] : '';
             $query = '
 INSERT IGNORE INTO '.USER_CACHE_TABLE.'
   (user_id, need_update, cache_update_time, forbidden_categories, nb_total_images,
     last_photo_date,
     image_access_type, image_access_list)
   VALUES
-  ('.$userdata['id'].',\''.boolean_to_string($userdata['need_update']).'\','
-  .$userdata['cache_update_time'].',\''
-  .$userdata['forbidden_categories'].'\','.$userdata['nb_total_images'].','.
-  (empty($userdata['last_photo_date']) ? 'NULL' : '\''.$userdata['last_photo_date'].'\'').
-  ',\''.$userdata['image_access_type'].'\',\''.$userdata['image_access_list'].'\')';
+  ('.$ud_id.',\''.($ud_need_update ? 'true' : 'false').'\','
+  .$ud_cache_update_time.',\''
+  .$ud_forbidden_cats_str.'\','.$ud_nb_total_images.','.
+  (empty($ud_last_photo_date) ? 'NULL' : '\''.$ud_last_photo_date.'\'').
+  ',\''.$ud_image_access_type.'\',\''.$ud_image_access_list.'\')';
             pwg_query($query);
 
             pwg_unique_exec_ends($cache_generation_token_name);
@@ -660,7 +683,7 @@ SELECT '.\Piwigo\Core\Config::userFields()['id'].'
         return false;
     } else {
         [$user_id] = pwg_db_fetch_row($result) ?? [null];
-        return $user_id;
+        return is_numeric($user_id) ? (int) $user_id : false;
     }
 }
 
@@ -685,7 +708,7 @@ SELECT
         return false;
     } else {
         [$user_id] = pwg_db_fetch_row($result) ?? [null];
-        return $user_id;
+        return is_numeric($user_id) ? (int) $user_id : false;
     }
 }
 
@@ -761,9 +784,10 @@ function get_default_user_value($value_name, $default)
  *
  * @return string
  */
-function get_default_theme()
+function get_default_theme(): string
 {
-    $theme = get_default_user_value('theme', PHPWG_DEFAULT_TEMPLATE);
+    $theme_raw = get_default_user_value('theme', PHPWG_DEFAULT_TEMPLATE);
+    $theme = is_scalar($theme_raw) ? (string) $theme_raw : PHPWG_DEFAULT_TEMPLATE;
     if (check_theme_installed($theme)) {
         return $theme;
     }
@@ -778,9 +802,10 @@ function get_default_theme()
  *
  * @return string
  */
-function get_default_language()
+function get_default_language(): string
 {
-    return get_default_user_value('language', PHPWG_DEFAULT_LANGUAGE);
+    $lang_raw = get_default_user_value('language', PHPWG_DEFAULT_LANGUAGE);
+    return is_scalar($lang_raw) ? (string) $lang_raw : PHPWG_DEFAULT_LANGUAGE;
 }
 
 /**
@@ -790,7 +815,8 @@ function get_default_language()
  */
 function get_browser_language(): false|int|string
 {
-    $language_header = @$_SERVER['HTTP_ACCEPT_LANGUAGE'];
+    $language_header_raw = @$_SERVER['HTTP_ACCEPT_LANGUAGE'];
+    $language_header = is_scalar($language_header_raw) ? (string) $language_header_raw : '';
     if ($language_header == '') {
         return false;
     }
@@ -898,7 +924,7 @@ function create_user_infos(array|int $user_ids, ?array $override_values = null):
             }
 
             $insert = array_merge(
-                array_map(pwg_db_real_escape_string(...), $default_user),
+                array_map(static function(mixed $v): string { return pwg_db_real_escape_string(is_scalar($v) ? (string) $v : ''); }, $default_user),
                 [
                 'user_id' => $user_id,
                 'status' => $status,
@@ -955,14 +981,15 @@ function log_user($user_id, $remember_me): void
 
     //TODO check value of cookie
 
-    if (isset($_COOKIE['lang']) and $user['language'] != $_COOKIE['lang']) {
-        if (!array_key_exists((string) $_COOKIE['lang'], get_languages())) {
-            fatal_error('[Hacking attempt] the input parameter "'.$_COOKIE['lang'].'" is not valid');
+    $cookie_lang = isset($_COOKIE['lang']) && is_scalar($_COOKIE['lang']) ? (string) $_COOKIE['lang'] : '';
+    if ($cookie_lang !== '' and $user['language'] != $cookie_lang) {
+        if (!array_key_exists($cookie_lang, get_languages())) {
+            fatal_error('[Hacking attempt] the input parameter "'.$cookie_lang.'" is not valid');
         }
 
         single_update(
             USER_INFOS_TABLE,
-            ['language' => $_COOKIE['lang']],
+            ['language' => $cookie_lang],
             ['user_id' => $user_id]
         );
 
@@ -1003,8 +1030,9 @@ function log_user($user_id, $remember_me): void
  */
 function auto_login(): bool
 {
-    if (isset($_COOKIE[\Piwigo\Core\Config::rememberMeName()])) {
-        $cookie = explode('-', stripslashes((string) $_COOKIE[\Piwigo\Core\Config::rememberMeName()]));
+    $remember_cookie_raw = $_COOKIE[\Piwigo\Core\Config::rememberMeName()] ?? null;
+    if (isset($remember_cookie_raw)) {
+        $cookie = explode('-', stripslashes(is_scalar($remember_cookie_raw) ? (string) $remember_cookie_raw : ''));
         if (count($cookie) === 3
             and is_numeric(@$cookie[0]) /*user id*/
             and is_numeric(@$cookie[1]) /*time*/
@@ -1110,9 +1138,9 @@ function pwg_password_verify($password, $hash, $user_id = null)
  * @param bool $remember_me
  * @return bool
  */
-function try_log_user($username, $password, $remember_me)
+function try_log_user($username, $password, $remember_me): bool
 {
-    return trigger_change('try_log_user', false, $username, $password, $remember_me);
+    return (bool) trigger_change('try_log_user', false, $username, $password, $remember_me);
 }
 
 add_event_handler('try_log_user', 'pwg_login');
@@ -1156,10 +1184,12 @@ function pwg_login(bool $success, string $username, string $password, bool $reme
         $user_found['id'] ?? $fake_user['id']
     );
 
+    $uf_id = is_numeric($user_found['id'] ?? null) ? (int) $user_found['id'] : 0;
+
     // If the user was not found, is a guest, or the password is incorrect
     if (empty($user_found) || 'guest' === $user_found['status'] || !$password_verify) {
         if (!empty($user_found) && !$password_verify) {
-            pwg_activity('user', $user_found['id'], 'login_failure_wrong_password');
+            pwg_activity('user', $uf_id, 'login_failure_wrong_password');
         }
         trigger_notify('login_failure', stripslashes($username));
         return false;
@@ -1181,22 +1211,24 @@ function pwg_login(bool $success, string $username, string $password, bool $reme
     //     }
     //     return $state;
     //   }
-    $state = [
+    $state_init = [
       'can_login' => true,
       'reason' => null,
       'authenticated' => false,
     ];
-    $state = trigger_change('finalize_login', $state, $user_found, $remember_me);
+    $state_raw = trigger_change('finalize_login', $state_init, $user_found, $remember_me);
+    $state = is_array($state_raw) ? $state_raw : $state_init;
 
     if (!$state['can_login']) {
-        pwg_activity('user', $user_found['id'], $state['reason'] ?? 'login_failure_before_log_user');
+        $state_reason = isset($state['reason']) && is_string($state['reason']) ? $state['reason'] : 'login_failure_before_log_user';
+        pwg_activity('user', $uf_id, $state_reason);
         trigger_notify('login_failure_before_log_user', stripslashes($username));
         return false;
     }
 
     // If plugin handled authentication, skip log_user()
     if (!$state['authenticated']) {
-        log_user($user_found['id'], $remember_me);
+        log_user($uf_id, $remember_me);
     }
 
     clear_fake_user_cache();
@@ -1272,7 +1304,8 @@ function generate_fake_user(): array
         ];
     }
 
-    return $_SESSION['fake_user_cache'];
+    $fake_cache = $_SESSION['fake_user_cache'];
+    return is_array($fake_cache) ? $fake_cache : ['id' => null, 'password' => ''];
 }
 
 /**
@@ -1290,8 +1323,9 @@ function clear_fake_user_cache(): void
  */
 function logout_user(): void
 {
-    trigger_notify('user_logout', @$_SESSION['pwg_uid']);
-    pwg_activity('user', @$_SESSION['pwg_uid'], 'logout');
+    $logout_uid = isset($_SESSION['pwg_uid']) && is_numeric($_SESSION['pwg_uid']) ? (int) $_SESSION['pwg_uid'] : 0;
+    trigger_notify('user_logout', $logout_uid);
+    pwg_activity('user', $logout_uid, 'logout');
 
     $_SESSION = [];
     session_unset();
@@ -1641,7 +1675,8 @@ SELECT
     // the key is an api_key
     if ('api_key' === $valid_key) {
         // check secret
-        if (!pwg_password_verify($secret_key, $key['apikey_secret'])) {
+        $apikey_secret = is_scalar($key['apikey_secret']) ? (string) $key['apikey_secret'] : '';
+        if (!pwg_password_verify((string) $secret_key, $apikey_secret)) {
             return false;
         }
 
@@ -1657,7 +1692,7 @@ SELECT
             and !empty($key['email']) // the user have an email
             and (
                 null === $key['last_notified_on'] // we never send an email for this key
-                or strtotime($key['last_notified_on']) < strtotime((string) $key['48h_ago']) // OR when the last email was sent more than 48 hours ago
+                or strtotime(is_scalar($key['last_notified_on']) ? (string) $key['last_notified_on'] : '') < strtotime(is_scalar($key['48h_ago']) ? (string) $key['48h_ago'] : '') // OR when the last email was sent more than 48 hours ago
             )
         ) {
             $page['notify_api_key_expiration'] = [
@@ -1690,7 +1725,7 @@ SELECT
         return true;
     }
 
-    log_user($user['id'], false);
+    log_user(is_numeric($user['id']) ? (int) $user['id'] : 0, false);
     trigger_notify('login_success', $key['username']);
 
     // to be registered in history table by pwg_log function
@@ -1727,7 +1762,7 @@ SELECT
             return false;
         }
 
-        $user_status = $user_infos[0]['status'];
+        $user_status = is_scalar($user_infos[0]['status']) ? (string) $user_infos[0]['status'] : null;
     }
 
     if (!in_array($user_status, ['normal','generic'])) {
@@ -2013,7 +2048,7 @@ SELECT COUNT(*)
  */
 function check_and_save_user_infos(array $params): array
 {
-    if (isset($params['username']) and strlen(str_replace(' ', '', $params['username'])) == 0) {
+    if (isset($params['username']) and strlen(str_replace(' ', '', is_scalar($params['username']) ? (string) $params['username'] : '')) == 0) {
         // return new PwgError(WS_ERR_INVALID_PARAM, 'Name field must not be empty');
         return [
           'error' => [
@@ -2030,8 +2065,9 @@ function check_and_save_user_infos(array $params): array
     $updates = $updates_infos = [];
     $update_status = null;
 
-    if (count($params['user_id']) == 1) {
-        if (get_username($params['user_id'][0]) === false) {
+    $param_user_id = is_array($params['user_id']) ? $params['user_id'] : [];
+    if (count($param_user_id) == 1) {
+        if (get_username(is_numeric($param_user_id[0]) ? (int) $param_user_id[0] : 0) === false) {
             // return new PwgError(WS_ERR_INVALID_PARAM, 'This user does not exist.');
             return [
               'error' => [
@@ -2042,8 +2078,8 @@ function check_and_save_user_infos(array $params): array
         }
 
         if (!empty($params['username'])) {
-            $user_id = get_userid($params['username']);
-            if ($user_id and $user_id != $params['user_id'][0]) {
+            $user_id = get_userid(is_scalar($params['username']) ? (string) $params['username'] : '');
+            if ($user_id and $user_id != $param_user_id[0]) {
                 // return new PwgError(WS_ERR_INVALID_PARAM, l10n('this login is already used'));
                 return [
                   'error' => [
@@ -2052,7 +2088,8 @@ function check_and_save_user_infos(array $params): array
                   ],
                 ];
             }
-            if ($params['username'] != strip_tags((string) $params['username'])) {
+            $username_str = is_scalar($params['username']) ? (string) $params['username'] : '';
+            if ($username_str != strip_tags($username_str)) {
                 // return new PwgError(WS_ERR_INVALID_PARAM, l10n('html tags are not allowed in login'));
                 return [
                   'error' => [
@@ -2065,7 +2102,7 @@ function check_and_save_user_infos(array $params): array
         }
 
         if (!empty($params['email'])) {
-            if (($error = validate_mail_address($params['user_id'][0], $params['email'])) != '') {
+            if (($error = validate_mail_address(is_numeric($param_user_id[0]) ? (int) $param_user_id[0] : null, is_scalar($params['email']) ? (string) $params['email'] : null)) != '') {
                 // return new PwgError(WS_ERR_INVALID_PARAM, $error);
                 return [
                   'error' => [
@@ -2092,7 +2129,7 @@ SELECT
                 // we add all admin+webmaster users BUT the user herself
                 $password_protected_users = array_merge($password_protected_users, array_diff($admin_ids, [$user['id']]));
 
-                if (in_array($params['user_id'][0], $password_protected_users)) {
+                if (in_array($param_user_id[0], $password_protected_users)) {
                     // return new PwgError(403, 'Only webmasters can change password of other "webmaster/admin" users');
                     return [
                       'error' => [
@@ -2129,7 +2166,7 @@ SELECT
         }
 
         $protected_users = [
-          $user['id'],
+          is_numeric($user['id']) ? (int) $user['id'] : 0,
           \Piwigo\Core\Config::guestId(),
           \Piwigo\Core\Config::webmasterId(),
           ];
@@ -2142,12 +2179,12 @@ SELECT
   FROM '.USER_INFOS_TABLE.'
   WHERE status IN (\'webmaster\', \'admin\')
 ;';
-            $protected_users = array_merge($protected_users, query2array($query, null, 'user_id'));
+            $protected_users = array_merge($protected_users, array_map(static fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, query2array($query, null, 'user_id')));
         }
 
         // status update query is separated from the rest as not applying to the same
         // set of users (current, guest and webmaster can't be changed)
-        $params['user_id_for_status'] = array_diff($params['user_id'], $protected_users);
+        $params['user_id_for_status'] = array_values(array_diff(array_map(static fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $param_user_id), $protected_users));
 
         $update_status = $params['status'];
     }
@@ -2215,34 +2252,39 @@ SELECT
         $updates_infos['enabled_high'] = boolean_to_string($params['enabled_high']);
     }
 
+    $param_uid_0 = is_numeric($param_user_id[0]) ? (int) $param_user_id[0] : 0;
+    $param_group_id = is_array($params['group_id'] ?? null) ? $params['group_id'] : [];
+
     // perform updates
     single_update(
         USERS_TABLE,
         $updates,
-        [\Piwigo\Core\Config::userFields()['id'] => $params['user_id'][0]]
+        [\Piwigo\Core\Config::userFields()['id'] => $param_uid_0]
     );
 
     if (isset($updates[ \Piwigo\Core\Config::userFields()['password'] ])) {
-        deactivate_user_auth_keys($params['user_id'][0]);
+        deactivate_user_auth_keys($param_uid_0);
     }
 
     if (isset($updates[ \Piwigo\Core\Config::userFields()['email'] ])) {
-        deactivate_password_reset_key($params['user_id'][0]);
+        deactivate_password_reset_key($param_uid_0);
     }
 
-    if (isset($update_status) and count($params['user_id_for_status']) > 0) {
+    $param_user_id_for_status = is_array($params['user_id_for_status'] ?? null) ? $params['user_id_for_status'] : [];
+    if (isset($update_status) and count($param_user_id_for_status) > 0) {
+        $update_status_str = is_scalar($update_status) ? (string) $update_status : '';
         $query = '
 UPDATE '. USER_INFOS_TABLE .' SET
-    status = "'. $update_status .'"
-  WHERE user_id IN('. implode(',', $params['user_id_for_status']) .')
+    status = "'. $update_status_str .'"
+  WHERE user_id IN('. implode(',', array_map(static fn(mixed $v): string => is_scalar($v) ? (string) $v : '', $param_user_id_for_status)) .')
 ;';
         pwg_query($query);
 
         // we delete sessions, ie disconnect, for users if status becomes "guest".
         // It's like deactivating the user.
         if ('guest' == $update_status) {
-            foreach ($params['user_id_for_status'] as $user_id_for_status) {
-                delete_user_sessions($user_id_for_status);
+            foreach ($param_user_id_for_status as $user_id_for_status) {
+                delete_user_sessions(is_numeric($user_id_for_status) ? (int) $user_id_for_status : 0);
             }
         }
     }
@@ -2258,21 +2300,21 @@ UPDATE '. USER_INFOS_TABLE .' SET ';
             } else {
                 $first = false;
             }
-            $query .= $field .' = "'. $value .'"';
+            $query .= $field .' = "'. (is_scalar($value) ? (string) $value : '') .'"';
         }
 
         $query .= '
-  WHERE user_id IN('. implode(',', $params['user_id']) .')
+  WHERE user_id IN('. implode(',', array_map(static fn(mixed $v): string => is_scalar($v) ? (string) $v : '', $param_user_id)) .')
 ;';
         pwg_query($query);
     }
 
     // manage association to groups
-    if (!empty($params['group_id'])) {
+    if (!empty($param_group_id)) {
         $query = '
 DELETE
   FROM '.USER_GROUP_TABLE.'
-  WHERE user_id IN ('.implode(',', $params['user_id']).')
+  WHERE user_id IN ('.implode(',', array_map(static fn(mixed $v): string => is_scalar($v) ? (string) $v : '', $param_user_id)).')
 ;';
         pwg_query($query);
 
@@ -2281,7 +2323,7 @@ DELETE
 SELECT
     id
   FROM `'.GROUPS_TABLE.'`
-  WHERE id IN ('.implode(',', $params['group_id']).')
+  WHERE id IN ('.implode(',', array_map(static fn(mixed $v): string => is_scalar($v) ? (string) $v : '', $param_group_id)).')
 ;';
         $group_ids = query2array($query, null, 'id');
 
@@ -2292,7 +2334,7 @@ SELECT
             $inserts = [];
 
             foreach ($group_ids as $group_id) {
-                foreach ($params['user_id'] as $user_id) {
+                foreach ($param_user_id as $user_id) {
                     $inserts[] = ['user_id' => $user_id, 'group_id' => $group_id];
                 }
             }
@@ -2303,7 +2345,7 @@ SELECT
 
     invalidate_user_cache();
 
-    pwg_activity('user', $params['user_id'], 'edit');
+    pwg_activity('user', array_map(static fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $param_user_id), 'edit');
 
     return [
       'user_id' => $params['user_id'],
@@ -2431,7 +2473,7 @@ SELECT
  * @since 16
  * @return array|false
  */
-/** @return array<mixed>|false */
+/** @return list<array<mixed>>|false */
 function get_api_key(string $user_id): false|array
 {
     $query = '
@@ -2458,15 +2500,20 @@ SELECT
 
         $api_key['apikey_name'] = stripslashes((string) $api_key['apikey_name']);
 
-        $api_key['created_on_format'] = format_date($api_key['created_on'], ['day', 'month', 'year']);
-        $api_key['expired_on_format'] = format_date($api_key['expired_on'], ['day', 'month', 'year']);
+        $ak_created_on = is_scalar($api_key['created_on']) ? (string) $api_key['created_on'] : null;
+        $ak_expired_on = is_scalar($api_key['expired_on']) ? (string) $api_key['expired_on'] : null;
+        $ak_last_used_on = is_scalar($api_key['last_used_on']) ? (string) $api_key['last_used_on'] : null;
+        $ak_revoked_on = is_scalar($api_key['revoked_on']) ? (string) $api_key['revoked_on'] : null;
+        $api_key['created_on_format'] = format_date($ak_created_on, ['day', 'month', 'year']);
+        $api_key['expired_on_format'] = format_date($ak_expired_on, ['day', 'month', 'year']);
         $api_key['last_used_on_since'] =
-          $api_key['last_used_on']
-          ? time_since($api_key['last_used_on'], 'day')
+          $ak_last_used_on
+          ? time_since($ak_last_used_on, 'day')
           : l10n('Never');
 
-        $expired_on = str2DateTime($api_key['expired_on']);
-        $now = str2DateTime($now);
+        $expired_on = str2DateTime($ak_expired_on);
+        $now_str = is_scalar($now) ? (string) $now : null;
+        $now = str2DateTime($now_str);
 
         $api_key['is_expired'] = $expired_on < $now;
         if ($api_key['is_expired']) {
@@ -2482,16 +2529,16 @@ SELECT
             }
         }
 
-        $api_key['expired_on_since'] = time_since($api_key['expired_on'], 'day');
+        $api_key['expired_on_since'] = time_since($ak_expired_on, 'day');
 
         $api_key['revoked_on_since'] =
-          $api_key['revoked_on']
-          ? time_since($api_key['revoked_on'], 'day')
+          $ak_revoked_on
+          ? time_since($ak_revoked_on, 'day')
           : null;
 
         $api_key['revoked_on_message'] =
-          $api_key['revoked_on']
-          ? l10n('This API key was manually revoked on %s', format_date($api_key['revoked_on'], ['day', 'month', 'year']))
+          $ak_revoked_on
+          ? l10n('This API key was manually revoked on %s', format_date($ak_revoked_on, ['day', 'month', 'year']))
           : null;
 
         $api_keys[$i] = $api_key;
@@ -2625,7 +2672,8 @@ function save_edit_context(): void
     // return page on the photo edit page in the administration.
 
     // let's add the item on top of previous registered values and keep only the last 10 values
-    $_SESSION['edit_context'] = array_slice([$page['image_id'] => $page['section_url']] + $_SESSION['edit_context'], 0, 10, true);
+    $existing_context = is_array($_SESSION['edit_context']) ? $_SESSION['edit_context'] : [];
+    $_SESSION['edit_context'] = array_slice([$page['image_id'] => $page['section_url']] + $existing_context, 0, 10, true);
 }
 
 /**
@@ -2637,9 +2685,10 @@ function save_edit_context(): void
  */
 function get_edit_context($image_id): false|string|null
 {
-    if (!isset($_SESSION['edit_context'][$image_id])) {
+    $edit_context = is_array($_SESSION['edit_context'] ?? null) ? $_SESSION['edit_context'] : [];
+    if (!isset($edit_context[$image_id])) {
         return false;
     }
 
-    return preg_replace('/^\/'.$image_id.'\//', '', (string) $_SESSION['edit_context'][$image_id]);
+    return preg_replace('/^\/'.$image_id.'\//', '', is_scalar($edit_context[$image_id]) ? (string) $edit_context[$image_id] : '');
 }

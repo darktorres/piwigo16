@@ -73,7 +73,7 @@ function get_elapsed_time($start, $end): string
 function input_int(string $key, ?int $default = null, array $source = []): ?int
 {
     $src = $source ?: ($_POST + $_GET);
-    return isset($src[$key]) ? (int) $src[$key] : $default;
+    return isset($src[$key]) ? (is_numeric($src[$key]) ? (int) $src[$key] : 0) : $default;
 }
 
 /**
@@ -84,7 +84,7 @@ function input_int(string $key, ?int $default = null, array $source = []): ?int
 function input_string(string $key, ?string $default = null, array $source = []): ?string
 {
     $src = $source ?: ($_POST + $_GET);
-    return isset($src[$key]) ? trim((string) $src[$key]) : $default;
+    return isset($src[$key]) ? trim(is_scalar($src[$key]) ? (string) $src[$key] : '') : $default;
 }
 
 /**
@@ -406,8 +406,10 @@ SELECT id, name
 
     $languages = [];
     while ($row = pwg_db_fetch_assoc($result)) {
-        if (is_dir(PHPWG_ROOT_PATH.'language/'.$row['id'])) {
-            $languages[ $row['id'] ] = $row['name'];
+        $lang_id = is_scalar($row['id']) ? (string) $row['id'] : '';
+        $lang_name = is_scalar($row['name']) ? (string) $row['name'] : '';
+        if ($lang_id !== '' && is_dir(PHPWG_ROOT_PATH.'language/'.$lang_id)) {
+            $languages[$lang_id] = $lang_name;
         }
     }
 
@@ -434,9 +436,7 @@ function do_log($image_id = null, $image_type = null)
         $do_log = \Piwigo\Core\Config::get('history_guest');
     }
 
-    $do_log = trigger_change('pwg_log_allowed', $do_log, $image_id, $image_type);
-
-    return $do_log;
+    return (bool) trigger_change('pwg_log_allowed', $do_log, $image_id, $image_type);
 }
 
 /**
@@ -484,11 +484,12 @@ UPDATE '.USER_INFOS_TABLE.'
         }
     }
 
-    $ip = $_SERVER['REMOTE_ADDR'];
+    $ip_raw = $_SERVER['REMOTE_ADDR'];
+    $ip = is_scalar($ip_raw) ? (string) $ip_raw : '';
     // IPv6 should not be longer than 39 chars, and that is the maximum length of
     // the column in the database, but in case it would be longer, let's truncate it.
-    if (strlen((string) $ip) > 39) {
-        $ip = substr((string) $ip, 0, 39);
+    if (strlen($ip) > 39) {
+        $ip = substr($ip, 0, 39);
     }
 
     // If plugin developers add their own sections, Piwigo will automatically add it in the history.section enum column
@@ -498,11 +499,13 @@ UPDATE '.USER_INFOS_TABLE.'
             conf_update_param('history_sections_cache', get_enums(HISTORY_TABLE, 'section'), true);
         }
 
-        \Piwigo\Core\Config::override('history_sections_cache', safe_unserialize(\Piwigo\Core\Config::get('history_sections_cache')));
+        \Piwigo\Core\Config::override('history_sections_cache', safe_unserialize(\Piwigo\Core\Config::getString('history_sections_cache')));
 
+        $hsc = \Piwigo\Core\Config::get('history_sections_cache');
+        $history_sections_cache = is_array($hsc) ? $hsc : [];
         if (
-            in_array($page['section'], \Piwigo\Core\Config::get('history_sections_cache'))
-            or in_array(strtolower($page['section']), array_map(strtolower(...), \Piwigo\Core\Config::get('history_sections_cache')))
+            in_array($page['section'], $history_sections_cache)
+            or in_array(strtolower($page['section']), array_map(static fn(mixed $s): string => strtolower(is_scalar($s) ? (string) $s : ''), $history_sections_cache))
         ) {
             $section = $page['section'];
         } elseif (preg_match('/^[a-zA-Z0-9_-]+$/', $page['section'])) {

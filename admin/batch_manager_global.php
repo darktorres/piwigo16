@@ -55,7 +55,7 @@ if (isset($_POST['nb_photos_deleted'])) {
 
     // let's fake a collection (we don't know the image_ids so we use "null", we only
     // care about the number of items here)
-    $collection = array_fill(0, (int) $_POST['nb_photos_deleted'], null);
+    $collection = array_fill(0, is_numeric($_POST['nb_photos_deleted']) ? (int) $_POST['nb_photos_deleted'] : 0, null);
 } elseif (isset($_POST['setSelected'])) {
     // Here we don't use check_input_parameter because preg_match has a limit in
     // the repetitive pattern. Found a limit to 3276 but may depend on memory.
@@ -63,7 +63,7 @@ if (isset($_POST['nb_photos_deleted'])) {
     // check_input_parameter('whole_set', $_POST, false, '/^\d+(,\d+)*$/');
     //
     // Instead, let's break the input parameter into pieces and check pieces one by one.
-    $collection = explode(',', (string) $_POST['whole_set']);
+    $collection = explode(',', is_scalar($_POST['whole_set']) ? (string) $_POST['whole_set'] : '');
 
     foreach ($collection as $id) {
         if (!preg_match('/^\d+$/', $id)) {
@@ -71,7 +71,7 @@ if (isset($_POST['nb_photos_deleted'])) {
         }
     }
 } elseif (isset($_POST['selection'])) {
-    $collection = $_POST['selection'];
+    $collection = is_array($_POST['selection']) ? $_POST['selection'] : [];
 }
 
 // +-----------------------------------------------------------------------+
@@ -82,27 +82,32 @@ if (isset($_POST['nb_photos_deleted'])) {
 // given prefilter. The idea is to make conditions simpler to write in the
 // code.
 $page['prefilter'] = 'none';
-if (isset($_SESSION['bulk_manager_filter']['prefilter'])) {
-    $page['prefilter'] = $_SESSION['bulk_manager_filter']['prefilter'];
+/** @var array<string, mixed> $bmf */
+$bmf = is_array($_SESSION['bulk_manager_filter'] ?? null) ? $_SESSION['bulk_manager_filter'] : [];
+if (is_string($bmf['prefilter'] ?? null)) {
+    $page['prefilter'] = $bmf['prefilter'];
 }
 
-$redirect_url = get_root_url().'admin.php?page='.$_GET['page'];
+$redirect_url = get_root_url().'admin.php?page='.(is_scalar($_GET['page'] ?? null) ? (string) $_GET['page'] : '');
+
+/** @var array<int> $collection_int */
+$collection_int = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $collection);
 
 if (isset($_POST['submit'])) {
     // if the user tries to apply an action, it means that there is at least 1
     // photo in the selection
-    if (count($collection) == 0) {
+    if (count($collection_int) == 0) {
         \Piwigo\Core\PageState::current()->addError(l10n('Select at least one photo'));
     }
 
-    $action = $_POST['selectAction'];
+    $action = is_scalar($_POST['selectAction'] ?? null) ? (string) $_POST['selectAction'] : '';
     $redirect = false;
 
     if ('remove_from_caddie' == $action) {
         $query = '
 DELETE
   FROM '.CADDIE_TABLE.'
-  WHERE element_id IN ('.implode(',', $collection).')
+  WHERE element_id IN ('.implode(',', $collection_int).')
     AND user_id = '.$user['id'].'
 ;';
         pwg_query($query);
@@ -113,31 +118,44 @@ DELETE
         if (empty($_POST['add_tags'])) {
             \Piwigo\Core\PageState::current()->addError(l10n('Select at least one tag'));
         } else {
-            $tag_ids = get_tag_ids($_POST['add_tags']);
-            add_tags($tag_ids, $collection);
+            $add_tags_raw = $_POST['add_tags'];
+            if (is_array($add_tags_raw)) {
+                $add_tags_val = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $add_tags_raw);
+            } else {
+                $add_tags_val = is_scalar($add_tags_raw) ? (string) $add_tags_raw : '';
+            }
+            $tag_ids = get_tag_ids($add_tags_val);
+            add_tags($tag_ids, $collection_int);
 
             if ('no_tag' == $page['prefilter']) {
                 $redirect = true;
             }
         }
     } elseif ('del_tags' == $action) {
-        if (isset($_POST['del_tags']) and count($_POST['del_tags']) > 0) {
-            $taglist_before = get_image_tag_ids($collection);
+        $del_tags_post = is_array($_POST['del_tags'] ?? null) ? $_POST['del_tags'] : [];
+        /** @var array<int> $del_tags_int */
+        $del_tags_int = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $del_tags_post);
+        if (count($del_tags_int) > 0) {
+            $taglist_before = get_image_tag_ids($collection_int);
 
             $query = '
 DELETE
   FROM '.IMAGE_TAG_TABLE.'
-  WHERE image_id IN ('.implode(',', $collection).')
-    AND tag_id IN ('.implode(',', $_POST['del_tags']).')
+  WHERE image_id IN ('.implode(',', $collection_int).')
+    AND tag_id IN ('.implode(',', $del_tags_int).')
 ;';
             pwg_query($query);
 
-            $taglist_after = get_image_tag_ids($collection);
-            $images_to_update = compare_image_tag_lists($taglist_before, $taglist_after);
+            $taglist_after = get_image_tag_ids($collection_int);
+            $images_to_update_raw = compare_image_tag_lists($taglist_before, $taglist_after);
+            /** @var array<int> $images_to_update */
+            $images_to_update = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $images_to_update_raw);
             update_images_lastmodified($images_to_update);
 
-            if (isset($_SESSION['bulk_manager_filter']['tags']) &&
-              count(array_intersect($_SESSION['bulk_manager_filter']['tags'], $_POST['del_tags']))) {
+            $bmf_tags_arr = is_array($bmf['tags'] ?? null) ? $bmf['tags'] : [];
+            /** @var array<int> $bmf_tags_int */
+            $bmf_tags_int = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $bmf_tags_arr);
+            if (count(array_intersect($bmf_tags_int, $del_tags_int)) > 0) {
                 $redirect = true;
             }
         } else {
@@ -149,9 +167,10 @@ DELETE
         if (empty($_POST['associate'])) {
             \Piwigo\Core\PageState::current()->addError(l10n('Select at least one album'));
         } else {
+            $associate_raw = is_array($_POST['associate']) ? $_POST['associate'] : [];
             associate_images_to_categories(
-                $collection,
-                $_POST['associate']
+                $collection_int,
+                $associate_raw
             );
 
             $_SESSION['page_infos'] = [
@@ -162,14 +181,17 @@ DELETE
             if ('no_album' == $page['prefilter']) {
                 $redirect = true;
             } elseif ('no_virtual_album' == $page['prefilter']) {
-                $category_info = get_cat_info($_POST['associate']);
+                $associate_id = is_scalar($_POST['associate']) ? (string) $_POST['associate'] : '';
+                $category_info = get_cat_info($associate_id);
                 if (empty($category_info['dir'])) {
                     $redirect = true;
                 }
             }
         }
     } elseif ('move' == $action) {
-        move_images_to_categories($collection, [$_POST['move']]);
+        $move_id = is_scalar($_POST['move'] ?? null) ? (string) $_POST['move'] : '';
+        $move_id_int = is_numeric($move_id) ? (int) $move_id : 0;
+        move_images_to_categories($collection_int, [$move_id_int]);
 
         $_SESSION['page_infos'] = [
           l10n('Information data registered in database'),
@@ -179,16 +201,17 @@ DELETE
         if ('no_album' == $page['prefilter']) {
             $redirect = true;
         } elseif ('no_virtual_album' == $page['prefilter']) {
-            $category_info = get_cat_info($_POST['move']);
+            $category_info = get_cat_info($move_id);
             if (empty($category_info['dir'])) {
                 $redirect = true;
             }
-        } elseif (isset($_SESSION['bulk_manager_filter']['category'])
-            and $_POST['move'] != $_SESSION['bulk_manager_filter']['category']) {
+        } elseif (isset($bmf['category'])
+            and $move_id != (is_scalar($bmf['category']) ? (string) $bmf['category'] : '')) {
             $redirect = true;
         }
     } elseif ('dissociate' == $action) {
-        $nb_dissociated = dissociate_images_from_category($collection, $_POST['dissociate']);
+        $dissociate_raw = is_scalar($_POST['dissociate'] ?? null) ? (string) $_POST['dissociate'] : '';
+        $nb_dissociated = dissociate_images_from_category($collection_int, $dissociate_raw);
 
         if ($nb_dissociated > 0) {
             $_SESSION['page_infos'] = [
@@ -207,7 +230,7 @@ DELETE
         }
 
         $datas = [];
-        foreach ($collection as $image_id) {
+        foreach ($collection_int as $image_id) {
             $datas[] = [
               'id' => $image_id,
               'author' => $_POST['author'],
@@ -220,7 +243,7 @@ DELETE
             $datas
         );
 
-        pwg_activity('photo', $collection, 'edit', ['action' => 'author']);
+        pwg_activity('photo', $collection_int, 'edit', ['action' => 'author']);
     }
 
     // title
@@ -230,7 +253,7 @@ DELETE
         }
 
         $datas = [];
-        foreach ($collection as $image_id) {
+        foreach ($collection_int as $image_id) {
             $datas[] = [
               'id' => $image_id,
               'name' => $_POST['title'],
@@ -243,7 +266,7 @@ DELETE
             $datas
         );
 
-        pwg_activity('photo', $collection, 'edit', ['action' => 'title']);
+        pwg_activity('photo', $collection_int, 'edit', ['action' => 'title']);
     }
 
     // date_creation
@@ -255,7 +278,7 @@ DELETE
         }
 
         $datas = [];
-        foreach ($collection as $image_id) {
+        foreach ($collection_int as $image_id) {
             $datas[] = [
               'id' => $image_id,
               'date_creation' => $date_creation,
@@ -268,13 +291,13 @@ DELETE
             $datas
         );
 
-        pwg_activity('photo', $collection, 'edit', ['action' => 'date_creation']);
+        pwg_activity('photo', $collection_int, 'edit', ['action' => 'date_creation']);
     }
 
     // privacy_level
     elseif ('level' == $action) {
         $datas = [];
-        foreach ($collection as $image_id) {
+        foreach ($collection_int as $image_id) {
             $datas[] = [
               'id' => $image_id,
               'level' => $_POST['level'],
@@ -287,10 +310,12 @@ DELETE
             $datas
         );
 
-        pwg_activity('photo', $collection, 'edit', ['action' => 'privacy_level']);
+        pwg_activity('photo', $collection_int, 'edit', ['action' => 'privacy_level']);
 
-        if (isset($_SESSION['bulk_manager_filter']['level'])) {
-            if ($_POST['level'] < $_SESSION['bulk_manager_filter']['level']) {
+        if (isset($bmf['level'])) {
+            $bmf_level_val = is_numeric($bmf['level']) ? (int) $bmf['level'] : 0;
+            $post_level_val = is_numeric($_POST['level'] ?? null) ? (int) $_POST['level'] : 0;
+            if ($post_level_val < $bmf_level_val) {
                 $redirect = true;
             }
         }
@@ -298,7 +323,7 @@ DELETE
 
     // add_to_caddie
     elseif ('add_to_caddie' == $action) {
-        fill_caddie($collection);
+        fill_caddie($collection_int);
     }
 
     // delete
@@ -306,14 +331,17 @@ DELETE
         if (isset($_POST['confirm_deletion']) and 1 == $_POST['confirm_deletion']) {
             // now done with ajax calls, with blocks
             // $deleted_count = delete_elements($collection, true);
-            if (count($collection) > 0) {
-                $_SESSION['page_infos'][] = l10n_dec(
+            if (count($collection_int) > 0) {
+                if (!is_array($_SESSION['page_infos'] ?? null)) { $_SESSION['page_infos'] = []; }
+                /** @var array<mixed> $page_infos_ref */
+                $page_infos_ref = &$_SESSION['page_infos'];
+                $page_infos_ref[] = l10n_dec(
                     '%d photo was deleted',
                     '%d photos were deleted',
-                    count($collection)
+                    count($collection_int)
                 );
 
-                $redirect_url = get_root_url().'admin.php?page='.$_GET['page'];
+                $redirect_url = get_root_url().'admin.php?page='.(is_scalar($_GET['page'] ?? null) ? (string) $_GET['page'] : '');
                 $redirect = true;
             } else {
                 \Piwigo\Core\PageState::current()->addError(l10n('No photo can be deleted'));
@@ -325,14 +353,16 @@ DELETE
 
     // synchronize metadata
     elseif ('metadata' == $action) {
-        \Piwigo\Core\PageState::current()->addInfo(l10n('Metadata synchronized from file').' <span class="badge">'.count($collection).'</span>');
+        \Piwigo\Core\PageState::current()->addInfo(l10n('Metadata synchronized from file').' <span class="badge">'.count($collection_int).'</span>');
     } elseif ('delete_derivatives' == $action && !empty($_POST['del_derivatives_type'])) {
         $query = 'SELECT path,representative_ext FROM '.IMAGES_TABLE.'
-  WHERE id IN ('.implode(',', $collection).')';
+  WHERE id IN ('.implode(',', $collection_int).')';
         $result = pwg_query($query);
         while ($info = pwg_db_fetch_assoc($result)) {
-            foreach ($_POST['del_derivatives_type'] as $type) {
-                delete_element_derivatives($info, $type);
+            $del_types = is_array($_POST['del_derivatives_type']) ? $_POST['del_derivatives_type'] : [];
+            foreach ($del_types as $type) {
+                $type_str = is_scalar($type) ? (string) $type : '';
+                delete_element_derivatives($info, $type_str);
             }
         }
     } elseif ('generate_derivatives' == $action) {
@@ -348,7 +378,7 @@ DELETE
         invalidate_user_cache();
     }
 
-    trigger_notify('element_set_global_action', $action, $collection);
+    trigger_notify('element_set_global_action', $action, $collection_int);
 
     if ($redirect) {
         redirect($redirect_url);
@@ -395,7 +425,7 @@ $template->assign(
 // metadata
 include_once(PHPWG_ROOT_PATH.'admin/site_reader_local.php');
 $site_reader = new LocalSiteReader('./');
-$used_metadata = implode(', ', $site_reader->get_metadata_attributes());
+$used_metadata = implode(', ', array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $site_reader->get_metadata_attributes()));
 
 $template->assign(
     [
@@ -426,7 +456,7 @@ if (!empty($_GET['display'])) {
     if ('all' == $_GET['display']) {
         $page['nb_images'] = count($page['cat_elements_id']);
     } else {
-        $page['nb_images'] = intval($_GET['display']);
+        $page['nb_images'] = is_numeric($_GET['display']) ? (int) $_GET['display'] : 20;
     }
 } elseif (in_array(\Piwigo\Core\Config::batchManagerImagesPerPageGlobal(), [20, 50, 100])) {
     $page['nb_images'] = \Piwigo\Core\Config::batchManagerImagesPerPageGlobal();
@@ -446,15 +476,16 @@ if (count($page['cat_elements_id']) > 0) {
     $template->assign('navbar', $nav_bar);
 
     $is_category = false;
-    if (isset($_SESSION['bulk_manager_filter']['category'])
-        and !isset($_SESSION['bulk_manager_filter']['category_recursive'])) {
+    if (isset($bmf['category'])
+        and !isset($bmf['category_recursive'])) {
         $is_category = true;
     }
+    $bmf_category_val = is_numeric($bmf['category'] ?? null) ? (int) $bmf['category'] : 0;
 
     // If using the 'duplicates' filter,
     // order by the fields that are used to find duplicates.
-    if (isset($_SESSION['bulk_manager_filter']['prefilter'])
-        and 'duplicates' === $_SESSION['bulk_manager_filter']['prefilter']
+    if (is_string($bmf['prefilter'] ?? null)
+        and 'duplicates' === $bmf['prefilter']
         and isset($duplicates_on_fields)) {
         // The $duplicates_on_fields variable is defined in ./batch_manager.php
         $order_by_fields = array_merge($duplicates_on_fields, [ 'id' ]);
@@ -466,11 +497,11 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
   FROM '.IMAGES_TABLE;
 
     if ($is_category) {
-        $category_info = get_cat_info($_SESSION['bulk_manager_filter']['category']);
+        $category_info = get_cat_info($bmf_category_val);
 
         \Piwigo\Core\Config::override('order_by', \Piwigo\Core\Config::orderByInsideCategory());
         if (!empty($category_info['image_order'])) {
-            \Piwigo\Core\Config::override('order_by', ' ORDER BY '.$category_info['image_order']);
+            \Piwigo\Core\Config::override('order_by', ' ORDER BY '.(is_scalar($category_info['image_order']) ? (string) $category_info['image_order'] : ''));
         }
 
         $query .= '
@@ -482,7 +513,7 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
 
     if ($is_category) {
         $query .= '
-    AND category_id = '.$_SESSION['bulk_manager_filter']['category'];
+    AND category_id = '.$bmf_category_val;
     }
 
     $query .= '
@@ -498,11 +529,13 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
         $src_image = new SrcImage($row);
 
         $ttitle = render_element_name($row);
-        if ($ttitle != get_name_from_file($row['file'])) {
-            $ttitle .= ' ('.$row['file'].')';
+        $row_file = is_scalar($row['file'] ?? null) ? (string) $row['file'] : '';
+        if ($ttitle != get_name_from_file($row_file)) {
+            $ttitle .= ' ('.$row_file.')';
         }
 
-        $ttitle .= '<br>'.$row['width'].'&times;'.$row['height'].' pixels, '.sprintf('%.2f', $row['filesize'] / 1024).'MB';
+        $row_filesize = is_numeric($row['filesize'] ?? null) ? (float) $row['filesize'] : 0.0;
+        $ttitle .= '<br>'.$row['width'].'&times;'.$row['height'].' pixels, '.sprintf('%.2f', $row_filesize / 1024).'MB';
 
         $template->append(
             'thumbnails',

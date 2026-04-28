@@ -11,8 +11,7 @@ namespace Piwigo\Image;
  */
 final class DerivativeImage
 {
-    /** @var mixed */
-    private $params;
+    private ?DerivativeParams $params = null;
     /** @var string */
     private $rel_path;
     /** @var string */
@@ -72,15 +71,10 @@ final class DerivativeImage
         if ($params == null) {
             return $src_image->get_url();
         }
-        return embellish_url(
-            trigger_change(
-                'get_derivative_url',
-                get_root_url().$rel_url,
-                $params,
-                $src_image,
-                $rel_url
-            )
-        );
+        $trig1 = trigger_change('get_derivative_url', get_root_url().$rel_url, $params, $src_image, $rel_url);
+        /** @var array<string>|string $urlArg */
+        $urlArg = is_string($trig1) ? $trig1 : (is_array($trig1) ? array_values(array_map(static fn(mixed $x): string => is_scalar($x) ? (string) $x : '', $trig1)) : '');
+        return embellish_url($urlArg);
     }
 
     /**
@@ -148,10 +142,15 @@ final class DerivativeImage
     /**
      * @todo : documentation of DerivativeImage::build
      */
-    private static function build(mixed $src, mixed &$params, string &$rel_path, string &$rel_url, ?bool &$is_cached = null): void
+    private static function build(SrcImage $src, ?DerivativeParams &$params, string &$rel_path, string &$rel_url, ?bool &$is_cached = null): void
     {
-        if ($src->has_size() && $params->is_identity($src->get_size())) {// the source image is smaller than what we should do - we do not upsample
-            if (!$params->will_watermark($src->get_size()) && !$src->rotation) {// no watermark, no rotation required -> we will use the source image
+        if (!($params instanceof DerivativeParams)) {
+            $rel_path = $rel_url = $src->rel_path;
+            return;
+        }
+        $srcSize = $src->get_size();
+        if ($src->has_size() && $srcSize !== null && $params->is_identity($srcSize)) {// the source image is smaller than what we should do - we do not upsample
+            if (!$params->will_watermark($srcSize) && !$src->rotation) {// no watermark, no rotation required -> we will use the source image
                 $params = null;
                 $rel_path = $rel_url = $src->rel_path;
                 return;
@@ -161,7 +160,7 @@ final class DerivativeImage
                 if ($defined_types[$i] == $params->type) {
                     for ($i--; $i >= 0; $i--) {
                         $smaller = ImageStdParams::get_by_type($defined_types[$i]);
-                        if ($smaller->sizing->max_crop == $params->sizing->max_crop && $smaller->is_identity($src->get_size())) {
+                        if ($smaller !== null && $smaller->sizing->max_crop == $params->sizing->max_crop && $smaller->is_identity($srcSize)) {
                             $params = $smaller;
                             self::build($src, $params, $rel_path, $rel_url, $is_cached);
                             return;
@@ -231,15 +230,10 @@ final class DerivativeImage
         if ($this->params == null) {
             return $this->src_image->get_url();
         }
-        return embellish_url(
-            trigger_change(
-                'get_derivative_url',
-                get_root_url().$this->rel_url,
-                $this->params,
-                $this->src_image,
-                $this->rel_url
-            )
-        );
+        $trig2 = trigger_change('get_derivative_url', get_root_url().$this->rel_url, $this->params, $this->src_image, $this->rel_url);
+        /** @var array<string>|string $urlArg2 */
+        $urlArg2 = is_string($trig2) ? $trig2 : (is_array($trig2) ? array_values(array_map(static fn(mixed $x): string => is_scalar($x) ? (string) $x : '', $trig2)) : '');
+        return embellish_url($urlArg2);
     }
 
     public function same_as_source(): bool
@@ -267,7 +261,13 @@ final class DerivativeImage
         if ($this->params == null) {
             return $this->src_image->get_size();
         }
-        return $this->params->compute_final_size($this->src_image->get_size());
+        $srcSize = $this->src_image->get_size();
+        if ($srcSize === null) {
+            return null;
+        }
+        $floatSize = array_map(static fn(int $v): float => (float) $v, $srcSize);
+        $result = $this->params->compute_final_size($floatSize);
+        return array_map('intval', $result);
     }
 
     /**

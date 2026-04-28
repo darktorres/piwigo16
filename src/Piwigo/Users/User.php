@@ -33,13 +33,19 @@ final class User
     /** @param array<string,mixed> $row */
     public static function fromUserArray(array $row): self
     {
+        $id = $row['id'] ?? 0;
+        $username = $row['username'] ?? '';
+        $email = $row['email'] ?? '';
+        $language = $row['language'] ?? 'en_US';
+        $theme = $row['theme'] ?? 'elegant';
+        $status = $row['status'] ?? 'guest';
         return new self(
-            id: (int) ($row['id'] ?? 0),
-            username: (string) ($row['username'] ?? ''),
-            email: (string) ($row['email'] ?? ''),
-            language: (string) ($row['language'] ?? 'en_US'),
-            theme: (string) ($row['theme'] ?? 'elegant'),
-            status: (string) ($row['status'] ?? 'guest'),
+            id: is_scalar($id) ? (int) $id : 0,
+            username: is_scalar($username) ? (string) $username : '',
+            email: is_scalar($email) ? (string) $email : '',
+            language: is_scalar($language) ? (string) $language : 'en_US',
+            theme: is_scalar($theme) ? (string) $theme : 'elegant',
+            status: is_scalar($status) ? (string) $status : 'guest',
             enabledHigh: (bool) ($row['enabled_high'] ?? false),
             internalStatus: is_array($row['internal_status'] ?? null) ? $row['internal_status'] : [],
             rawAttributes: $row,

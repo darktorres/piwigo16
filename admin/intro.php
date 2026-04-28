@@ -141,7 +141,7 @@ if (\Piwigo\Core\Config::showNewsletterSubscription() and userprefs_get_param('s
 $stats = get_pwg_general_statitics();
 
 $du_decimals = 1;
-$du_gb = $stats['disk_usage'] / (1024 * 1024);
+$du_gb = (is_numeric($stats['disk_usage']) ? (float) $stats['disk_usage'] : 0.0) / (1024 * 1024);
 if ($du_gb > 100) {
     $du_decimals = 0;
 }
@@ -155,7 +155,7 @@ $template->assign(
     'NB_USERS' => $stats['nb_users'],
     'NB_GROUPS' => $stats['nb_groups'],
     'NB_RATES' => $stats['nb_rates'],
-    'NB_VIEWS' => number_format_human_readable($stats['nb_views']),
+    'NB_VIEWS' => number_format_human_readable(is_numeric($stats['nb_views']) ? (float) $stats['nb_views'] : 0.0),
     'NB_PLUGINS' => count($pwg_loaded_plugins),
     'STORAGE_USED' => str_replace(' ', '&nbsp;', l10n('%sGB', number_format($du_gb, $du_decimals))),
     'U_QUICK_SYNC' => PHPWG_ROOT_PATH.'admin.php?page=site_update&amp;site=1&amp;quick_sync=1&amp;pwg_token='.get_pwg_token(),
@@ -181,9 +181,9 @@ if (\Piwigo\Core\Config::showPiwigoLatestNews()) {
         \Piwigo\Core\PageState::current()->addMessage(sprintf(
             '%s <a href="%s" title="%s" target="_blank"><i class="icon-bell"></i> %s</a>',
             l10n('Latest Piwigo news'),
-            $latest_news['url'],
-            time_since($latest_news['posted_on'], 'year').' ('.$latest_news['posted'].')',
-            $latest_news['subject']
+            is_scalar($latest_news['url']) ? (string) $latest_news['url'] : '',
+            time_since(is_string($latest_news['posted_on']) || is_int($latest_news['posted_on']) ? $latest_news['posted_on'] : null, 'year').' ('.(is_scalar($latest_news['posted']) ? (string) $latest_news['posted'] : '').')',
+            is_scalar($latest_news['subject']) ? (string) $latest_news['subject'] : ''
         ));
     }
 }
@@ -219,7 +219,8 @@ while ($mondays < $nb_weeks) {
 $week_number = array_reverse($week_number);
 $date_string = $date->format('Y-m-d');
 
-if (!isset($_SESSION['cache_activity_last_weeks']) or $_SESSION['cache_activity_last_weeks']['calculated_on'] < strtotime('5 minutes ago')) {
+$cached_activity = is_array($_SESSION['cache_activity_last_weeks'] ?? null) ? $_SESSION['cache_activity_last_weeks'] : null;
+if ($cached_activity === null or (is_numeric($cached_activity['calculated_on']) ? (int) $cached_activity['calculated_on'] : 0) < strtotime('5 minutes ago')) {
     $start_time = get_moment();
 
     $query = '
@@ -259,16 +260,29 @@ if (!isset($_SESSION['cache_activity_last_weeks']) or $_SESSION['cache_activity_
     ];
 }
 
-$activity_last_weeks = $_SESSION['cache_activity_last_weeks']['data'];
+$cached_activity = is_array($_SESSION['cache_activity_last_weeks'] ?? null) ? $_SESSION['cache_activity_last_weeks'] : [];
+$activity_last_weeks = is_array($cached_activity['data'] ?? null) ? $cached_activity['data'] : [];
 
 
 foreach ($activity_last_weeks as $week => $i) {
+    if (!is_array($i)) {
+        continue;
+    }
     foreach ($i as $day => $j) {
-        $details = $j['details'];
+        if (!is_array($j)) {
+            continue;
+        }
+        $details = is_array($j['details'] ?? null) ? $j['details'] : [];
         ksort($details);
-        $activity_last_weeks[$week][$day]['details'] = $details;
-        if ($j['number'] > 0) {
-            $temp_data[] = ['x' => $j['number'], 'd' => $day, 'w' => $week];
+        if (is_array($activity_last_weeks[$week] ?? null) && is_array($activity_last_weeks[$week][$day] ?? null)) {
+            /** @var array<string,mixed> $dayEntry */
+            $dayEntry = $activity_last_weeks[$week][$day];
+            $dayEntry['details'] = $details;
+            $activity_last_weeks[$week][$day] = $dayEntry;
+        }
+        $jNumber = is_numeric($j['number'] ?? null) ? (int) $j['number'] : 0;
+        if ($jNumber > 0) {
+            $temp_data[] = ['x' => $jNumber, 'd' => $day, 'w' => $week];
         }
     }
 }
@@ -404,10 +418,12 @@ foreach ($file_extensions as $ext => $ext_details) {
 
 // Add cache size if requested and known.
 if (\Piwigo\Core\Config::addCacheToStorageChart() && \Piwigo\Core\Config::has('cache_sizes')) {
-    $cache_sizes = unserialize(\Piwigo\Core\Config::get('cache_sizes'));
+    $cache_sizes_raw = \Piwigo\Core\Config::get('cache_sizes');
+    $cache_sizes = is_string($cache_sizes_raw) ? unserialize($cache_sizes_raw) : null;
     if (isset($cache_sizes)) {
-        if (isset($cache_sizes[0]) && isset($cache_sizes[0]['value'])) {
-            @$data_storage['Cache']['total']['filesize'] = $cache_sizes[0]['value'] / 1024;
+        if (is_array($cache_sizes) && isset($cache_sizes[0]) && is_array($cache_sizes[0]) && isset($cache_sizes[0]['value'])) {
+            $cacheValue = is_numeric($cache_sizes[0]['value']) ? (float) $cache_sizes[0]['value'] : 0.0;
+            @$data_storage['Cache']['total']['filesize'] = $cacheValue / 1024;
         }
     }
 }

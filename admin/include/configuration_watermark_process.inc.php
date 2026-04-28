@@ -38,11 +38,14 @@ function get_watermark_filename(array $list, string $candidate, int $step = 0): 
 }
 
 $errors = [];
-$pwatermark = $_POST['w'];
+/** @var array<string, mixed> $pwatermark */
+$pwatermark = is_array($_POST['w'] ?? null) ? $_POST['w'] : [];
 
 // step 0 - manage upload if any
-if (isset($_FILES['watermarkImage']) and !empty($_FILES['watermarkImage']['tmp_name'])) {
-    [$width, $height, $type] = getimagesize($_FILES['watermarkImage']['tmp_name']) ?: [0, 0, 0];
+$watermarkImage = is_array($_FILES['watermarkImage'] ?? null) ? $_FILES['watermarkImage'] : [];
+if (!empty($watermarkImage['tmp_name'])) {
+    $tmp_name = is_scalar($watermarkImage['tmp_name']) ? (string) $watermarkImage['tmp_name'] : '';
+    [$width, $height, $type] = getimagesize($tmp_name) ?: [0, 0, 0];
     if (IMAGETYPE_PNG != $type) {
         $errors['watermarkImage'] = sprintf(
             l10n('Allowed file types: %s.'),
@@ -52,7 +55,8 @@ if (isset($_FILES['watermarkImage']) and !empty($_FILES['watermarkImage']['tmp_n
         $upload_dir = PHPWG_ROOT_PATH.PWG_LOCAL_DIR.'watermarks';
         if (mkgetdir($upload_dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
             // file name may include exotic chars like single quote, we need a safe name
-            $new_name = str2url(get_filename_wo_extension($_FILES['watermarkImage']['name']));
+            $wm_file_name = is_scalar($watermarkImage['name']) ? (string) $watermarkImage['name'] : '';
+            $new_name = str2url(get_filename_wo_extension($wm_file_name));
 
             // we need existing watermarks to avoid overwritting one
             $watermark_files = [];
@@ -66,7 +70,7 @@ if (isset($_FILES['watermarkImage']) and !empty($_FILES['watermarkImage']['tmp_n
 
             $file_path = $upload_dir.'/'.get_watermark_filename($watermark_files, $new_name);
 
-            if (move_uploaded_file($_FILES['watermarkImage']['tmp_name'], $file_path)) {
+            if (move_uploaded_file($tmp_name, $file_path)) {
                 $pwatermark['file'] = substr($file_path, strlen(PHPWG_ROOT_PATH));
             } else {
                 \Piwigo\Core\PageState::current()->addError($errors['watermarkImage'] = "$file_path " .l10n('no write access'));
@@ -112,17 +116,17 @@ switch ($pwatermark['position']) {
 }
 
 // step 2 - check validity
-$v = intval($pwatermark['xpos']);
+$v = is_numeric($pwatermark['xpos']) ? (int) $pwatermark['xpos'] : 0;
 if ($v < 0 or $v > 100) {
     $errors['watermark']['xpos'] = '[0..100]';
 }
 
-$v = intval($pwatermark['ypos']);
+$v = is_numeric($pwatermark['ypos']) ? (int) $pwatermark['ypos'] : 0;
 if ($v < 0 or $v > 100) {
     $errors['watermark']['ypos'] = '[0..100]';
 }
 
-$v = intval($pwatermark['opacity']);
+$v = is_numeric($pwatermark['opacity']) ? (int) $pwatermark['opacity'] : 0;
 if ($v <= 0 or $v > 100) {
     $errors['watermark']['opacity'] = '(0..100]';
 }
@@ -130,13 +134,13 @@ if ($v <= 0 or $v > 100) {
 // step 3 - save data
 if (count($errors) == 0) {
     $watermark = new WatermarkParams();
-    $watermark->file = $pwatermark['file'];
-    $watermark->xpos = intval($pwatermark['xpos']);
-    $watermark->ypos = intval($pwatermark['ypos']);
-    $watermark->xrepeat = intval($pwatermark['xrepeat']);
-    $watermark->yrepeat = intval($pwatermark['yrepeat']);
-    $watermark->opacity = intval($pwatermark['opacity']);
-    $watermark->min_size = [intval($pwatermark['minw']),intval($pwatermark['minh'])];
+    $watermark->file = is_scalar($pwatermark['file']) ? (string) $pwatermark['file'] : '';
+    $watermark->xpos = is_numeric($pwatermark['xpos']) ? (int) $pwatermark['xpos'] : 0;
+    $watermark->ypos = is_numeric($pwatermark['ypos']) ? (int) $pwatermark['ypos'] : 0;
+    $watermark->xrepeat = is_numeric($pwatermark['xrepeat']) ? (int) $pwatermark['xrepeat'] : 0;
+    $watermark->yrepeat = is_numeric($pwatermark['yrepeat']) ? (int) $pwatermark['yrepeat'] : 0;
+    $watermark->opacity = is_numeric($pwatermark['opacity']) ? (int) $pwatermark['opacity'] : 0;
+    $watermark->min_size = [is_numeric($pwatermark['minw']) ? (int) $pwatermark['minw'] : 0, is_numeric($pwatermark['minh']) ? (int) $pwatermark['minh'] : 0];
 
     $old_watermark = ImageStdParams::get_watermark();
     $watermark_changed =

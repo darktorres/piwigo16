@@ -40,52 +40,55 @@ use Piwigo\Ws\PwgNamedStruct;
  * @param array<mixed> $params
  */function ws_users_getList(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
 {
-    if (!preg_match(PATTERN_ORDER, (string) $params['order'])) {
+    $order_str = is_scalar($params['order']) ? (string) $params['order'] : '';
+    if (!preg_match(PATTERN_ORDER, $order_str)) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid input parameter order');
     }
 
     // Insensitive case sort order
     if (isset($params['order'])) {
-        if (str_contains((string) $params['order'], 'username')) {
-            $params['order'] = str_ireplace('username', 'LOWER(username)', $params['order']);
+        if (str_contains($order_str, 'username')) {
+            $order_str = str_ireplace('username', 'LOWER(username)', $order_str);
         }
     }
 
     $where_clauses = ['1=1'];
 
     if (!empty($params['user_id'])) {
-        $where_clauses[] = 'u.'.\Piwigo\Core\Config::userFields()['id'].' IN('. implode(',', $params['user_id']) .')';
+        $user_id_arr = is_array($params['user_id']) ? $params['user_id'] : [];
+        $where_clauses[] = 'u.'.\Piwigo\Core\Config::userFields()['id'].' IN('. implode(',', array_map(fn($v): int => is_numeric($v) ? (int) $v : 0, $user_id_arr)) .')';
     }
 
     if (!empty($params['username'])) {
-        $where_clauses[] = 'u.'.\Piwigo\Core\Config::userFields()['username'].' LIKE \''.pwg_db_real_escape_string($params['username']).'\'';
+        $where_clauses[] = 'u.'.\Piwigo\Core\Config::userFields()['username'].' LIKE \''.pwg_db_real_escape_string(is_scalar($params['username']) ? (string) $params['username'] : '').'\'';
     }
 
     $filtered_groups = [];
     if (!empty($params['filter'])) {
-        $filter_query = 'SELECT id FROM `'. GROUPS_TABLE .'` WHERE name LIKE \'%'. pwg_db_real_escape_string($params['filter']) . '%\';';
+        $filter_str = is_scalar($params['filter']) ? (string) $params['filter'] : '';
+        $filter_query = 'SELECT id FROM `'. GROUPS_TABLE .'` WHERE name LIKE \'%'. pwg_db_real_escape_string($filter_str) . '%\';';
         $filtered_groups_res = pwg_query($filter_query);
         while ($row = pwg_db_fetch_assoc($filtered_groups_res)) {
             $filtered_groups[] = $row['id'];
         }
         $filter_where_clause = '('.'u.'.\Piwigo\Core\Config::userFields()['username'].' LIKE \'%'.
-        pwg_db_real_escape_string($params['filter']).'%\' OR '
+        pwg_db_real_escape_string($filter_str).'%\' OR '
         .'u.'.\Piwigo\Core\Config::userFields()['email'].' LIKE \'%'.
-        pwg_db_real_escape_string($params['filter']).'%\'';
+        pwg_db_real_escape_string($filter_str).'%\'';
 
         if (!empty($filtered_groups)) {
-            $filter_where_clause .= 'OR ug.group_id IN ('. implode(',', $filtered_groups).')';
+            $filter_where_clause .= 'OR ug.group_id IN ('. implode(',', array_map(fn($v): string => is_scalar($v) ? (string) $v : '', $filtered_groups)).')';
         }
         $where_clauses[] =  $filter_where_clause.')';
     }
 
-
     if (!empty($params['min_register'])) {
-        if (!preg_match('/^\d\d\d\d(-\d{1,2}){0,2}$/', (string) $params['min_register'])) {
+        $min_register_str = is_scalar($params['min_register']) ? (string) $params['min_register'] : '';
+        if (!preg_match('/^\d\d\d\d(-\d{1,2}){0,2}$/', $min_register_str)) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid input parameter min_register');
         }
 
-        $date_tokens = explode('-', (string) $params['min_register']);
+        $date_tokens = explode('-', $min_register_str);
         $min_register_year = $date_tokens[0];
         $min_register_month = $date_tokens[1] ?? 1;
         $min_register_day =  $date_tokens[2] ?? 1;
@@ -93,24 +96,25 @@ use Piwigo\Ws\PwgNamedStruct;
         $where_clauses[] = 'ui.registration_date >= \''.$min_date.' 00:00:00\'';
     }
 
-
     if (!empty($params['max_register'])) {
-        if (!preg_match('/^\d\d\d\d(-\d{1,2}){0,2}$/', (string) $params['max_register'])) {
+        $max_register_str = is_scalar($params['max_register']) ? (string) $params['max_register'] : '';
+        if (!preg_match('/^\d\d\d\d(-\d{1,2}){0,2}$/', $max_register_str)) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid input parameter max_register');
         }
 
-        $max_date_tokens = explode('-', (string) $params['max_register']);
+        $max_date_tokens = explode('-', $max_register_str);
         $max_register_year = $max_date_tokens[0];
-        $max_register_month = $max_date_tokens[1] ?? 12;
+        $max_register_month = $max_date_tokens[1] ?? '12';
         $max_register_day = $max_date_tokens[2] ?? date('t', strtotime($max_register_year.'-'.$max_register_month.'-1') ?: null);
         $max_date = sprintf('%u-%02u-%02u', $max_register_year, $max_register_month, $max_register_day);
         $where_clauses[] = 'ui.registration_date <= \''.$max_date.' 23:59:59\'';
     }
 
     if (!empty($params['status'])) {
-        $params['status'] = array_intersect($params['status'], get_enums(USER_INFOS_TABLE, 'status'));
-        if (count($params['status']) > 0) {
-            $where_clauses[] = 'ui.status IN("'. implode('","', $params['status']) .'")';
+        $status_arr = is_array($params['status']) ? $params['status'] : [];
+        $status_arr = array_intersect($status_arr, get_enums(USER_INFOS_TABLE, 'status'));
+        if (count($status_arr) > 0) {
+            $where_clauses[] = 'ui.status IN("'. implode('","', array_map(fn($v): string => is_scalar($v) ? (string) $v : '', $status_arr)) .'")';
         }
     }
 
@@ -118,28 +122,31 @@ use Piwigo\Ws\PwgNamedStruct;
         if (!in_array($params['min_level'], \Piwigo\Core\Config::availablePermissionLevels())) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid level');
         }
-        $where_clauses[] = 'ui.level >= '.$params['min_level'];
+        $where_clauses[] = 'ui.level >= '.(is_numeric($params['min_level']) ? (int) $params['min_level'] : 0);
     }
 
     if (!empty($params['max_level'])) {
         if (!in_array($params['max_level'], \Piwigo\Core\Config::availablePermissionLevels())) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid level');
         }
-        $where_clauses[] = 'ui.level <= '.$params['max_level'];
+        $where_clauses[] = 'ui.level <= '.(is_numeric($params['max_level']) ? (int) $params['max_level'] : 0);
     }
 
     if (!empty($params['group_id'])) {
-        $where_clauses[] = 'ug.group_id IN('. implode(',', $params['group_id']) .')';
+        $group_id_arr = is_array($params['group_id']) ? $params['group_id'] : [];
+        $where_clauses[] = 'ug.group_id IN('. implode(',', array_map(fn($v): int => is_numeric($v) ? (int) $v : 0, $group_id_arr)) .')';
     }
 
     if (!empty($params['exclude'])) {
-        $where_clauses[] = 'u.'.\Piwigo\Core\Config::userFields()['id'].' NOT IN('. implode(',', $params['exclude']) .')';
+        $exclude_arr = is_array($params['exclude']) ? $params['exclude'] : [];
+        $where_clauses[] = 'u.'.\Piwigo\Core\Config::userFields()['id'].' NOT IN('. implode(',', array_map(fn($v): int => is_numeric($v) ? (int) $v : 0, $exclude_arr)) .')';
     }
 
     $display = ['u.'.\Piwigo\Core\Config::userFields()['id'] => 'id'];
 
-    if ($params['display'] != 'none') {
-        $params['display'] = array_map(trim(...), explode(',', (string) $params['display']));
+    $display_param = is_scalar($params['display']) ? (string) $params['display'] : 'none';
+    if ($display_param != 'none') {
+        $params['display'] = array_map(trim(...), explode(',', $display_param));
 
         if (in_array('all', $params['display'])) {
             $params['display'] = [
@@ -219,11 +226,13 @@ SELECT DISTINCT ';
       ON u.'. \Piwigo\Core\Config::userFields()['id'] .' = ug.user_id
   WHERE
     '. implode(' AND ', $where_clauses) .'
-  ORDER BY '. $params['order'];
-    if ($params['per_page'] != 0 || !empty($params['display'])) {
+  ORDER BY '. $order_str;
+    $per_page = is_numeric($params['per_page']) ? (int) $params['per_page'] : 0;
+    $page = is_numeric($params['page']) ? (int) $params['page'] : 0;
+    if ($per_page != 0 || !empty($params['display'])) {
         $query .= '
-    LIMIT '. $params['per_page'].'
-    OFFSET '. ($params['per_page'] * $params['page']) .';
+    LIMIT '. $per_page.'
+    OFFSET '. ($per_page * $page) .';
     ;';
     }
     $users = [];
@@ -254,32 +263,43 @@ SELECT DISTINCT ';
 ;';
             $result = pwg_query($query);
             while ($row = pwg_db_fetch_assoc($result)) {
-                $users[ $row['user_id'] ]['groups'][] = intval($row['group_id']);
+                $grp_uid = is_numeric($row['user_id']) ? (int) $row['user_id'] : 0;
+                /** @var array<string, mixed> $users[$grp_uid] */
+                if (!isset($users[$grp_uid]['groups']) || !is_array($users[$grp_uid]['groups'])) {
+                    $users[$grp_uid]['groups'] = [];
+                }
+                $users[$grp_uid]['groups'][] = intval($row['group_id']);
             }
         }
         foreach ($users as $cur_user) {
-            $users_id_arr[] = $cur_user['id'];
+            /** @var array<string, mixed> $cur_user */
+            $cur_uid = is_numeric($cur_user['id'] ?? null) ? (int) $cur_user['id'] : 0;
+            $users_id_arr[] = $cur_uid;
             if (isset($params['display']['registration_date_string'])) {
-                $users[$cur_user['id']]['registration_date_string'] = format_date($cur_user['registration_date'], ['day', 'month', 'year']);
+                $reg_date = is_scalar($cur_user['registration_date'] ?? null) ? $cur_user['registration_date'] : null;
+                $users[$cur_uid]['registration_date_string'] = format_date($reg_date, ['day', 'month', 'year']);
             }
             if (isset($params['display']['registration_date_since'])) {
-                $users[ $cur_user['id'] ]['registration_date_since'] = time_since($cur_user['registration_date'], 'month');
+                $reg_date2 = is_scalar($cur_user['registration_date'] ?? null) ? $cur_user['registration_date'] : null;
+                $users[$cur_uid]['registration_date_since'] = time_since($reg_date2, 'month');
             }
             if (isset($params['display']['last_visit'])) {
-                $last_visit = $cur_user['last_visit'];
-                $users[ $cur_user['id'] ]['last_visit'] = $last_visit;
+                $last_visit = $cur_user['last_visit'] ?? null;
+                $users[$cur_uid]['last_visit'] = $last_visit;
 
-                if (!get_boolean($cur_user['last_visit_from_history']) and empty($last_visit)) {
-                    $last_visit = get_user_last_visit_from_history($cur_user['id'], true);
-                    $users[ $cur_user['id'] ]['last_visit'] = $last_visit;
+                if (!get_boolean($cur_user['last_visit_from_history'] ?? null) and empty($last_visit)) {
+                    $last_visit = get_user_last_visit_from_history($cur_uid, true);
+                    $users[$cur_uid]['last_visit'] = $last_visit;
                 }
 
                 if (isset($params['display']['last_visit_string'])) {
-                    $users[ $cur_user['id'] ]['last_visit_string'] = format_date($last_visit, ['day', 'month', 'year']);
+                    $lv_str = is_scalar($last_visit) ? $last_visit : null;
+                    $users[$cur_uid]['last_visit_string'] = format_date($lv_str, ['day', 'month', 'year']);
                 }
 
                 if (isset($params['display']['last_visit_since'])) {
-                    $users[ $cur_user['id'] ]['last_visit_since'] = time_since($last_visit, 'day');
+                    $lv_since = is_scalar($last_visit) ? $last_visit : null;
+                    $users[$cur_uid]['last_visit_since'] = time_since($lv_since, 'day');
                 }
             }
         }
@@ -325,15 +345,17 @@ SELECT DISTINCT ';
             }
           }*/
     }
-    $users = trigger_change('ws_users_getList', $users);
-    if ($params['per_page'] == 0 && empty($params['display'])) {
+    $users_changed = trigger_change('ws_users_getList', $users);
+    /** @var array<mixed> $users */
+    $users = is_array($users_changed) ? $users_changed : $users;
+    if ($per_page == 0 && empty($params['display'])) {
         $method_result = $users_id_arr;
     } else {
         $method_result = [
           'paging' => new PwgNamedStruct(
               [
-              'page' => $params['page'],
-              'per_page' => $params['per_page'],
+              'page' => $page,
+              'per_page' => $per_page,
               'count' => count($users),
               'total_count' => $total_count,
               ]

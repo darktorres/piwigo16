@@ -44,6 +44,10 @@ $pwg_event_handlers = [];
 $pwg_loaded_plugins = [];
 /** @var \mysqli|null $mysqli */
 $mysqli = null;
+/** @var \Piwigo\Ws\PwgServer|null $service */
+$service = null;
+/** @var array<string,mixed> $persistent_cache */
+$persistent_cache = [];
 
 // Stubs for procedural plugin/theme callbacks (defined at runtime by plugin files).
 // These allow PHPStan to know the functions exist without is_callable() checks.

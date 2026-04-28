@@ -35,13 +35,14 @@ use Piwigo\Ws\PwgNamedArray;
     if (empty($params['types'])) {
         $types = array_keys(ImageStdParams::get_defined_type_map());
     } else {
-        $types = array_intersect(array_keys(ImageStdParams::get_defined_type_map()), $params['types']);
+        $types_raw = is_array($params['types']) ? $params['types'] : [];
+        $types = array_intersect(array_keys(ImageStdParams::get_defined_type_map()), array_map(fn ($v) => is_scalar($v) ? (string) $v : '', $types_raw));
         if (count($types) == 0) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid types');
         }
     }
 
-    $max_urls = $params['max_urls'];
+    $max_urls = is_numeric($params['max_urls']) ? (int) $params['max_urls'] : 0;
     $query = 'SELECT MAX(id)+1, COUNT(*) FROM '. IMAGES_TABLE .';';
     [$max_id, $image_count] = pwg_db_fetch_row(pwg_query($query)) ?? [null, null];
 
@@ -49,9 +50,10 @@ use Piwigo\Ws\PwgNamedArray;
         return [];
     }
 
-    $start_id = $params['prev_page'];
+    $image_count_int = is_numeric($image_count) ? (int) $image_count : 0;
+    $start_id = is_numeric($params['prev_page']) ? (int) $params['prev_page'] : 0;
     if ($start_id <= 0) {
-        $start_id = $max_id;
+        $start_id = is_numeric($max_id) ? (int) $max_id : 0;
     }
 
     $uid = '&b='.time();
@@ -60,12 +62,14 @@ use Piwigo\Ws\PwgNamedArray;
     \Piwigo\Core\Config::override('php_extension_in_urls', true);
     \Piwigo\Core\Config::override('derivative_url_style', 2); //script
 
-    $qlimit = min(5000, ceil(max($image_count / 500, $max_urls / count($types))));
+    $qlimit = min(5000, (int) ceil(max($image_count_int / 500, $max_urls / count($types))));
+    /** @var array<string> $where_clauses */
     $where_clauses = ws_std_image_sql_filter($params, '');
     $where_clauses[] = 'id<start_id';
 
     if (!empty($params['ids'])) {
-        $where_clauses[] = 'id IN ('.implode(',', $params['ids']).')';
+        $ids_arr = is_array($params['ids']) ? array_map(fn ($v) => is_numeric($v) ? (int) $v : 0, $params['ids']) : [];
+        $where_clauses[] = 'id IN ('.implode(',', $ids_arr).')';
     }
 
     $query_model = '
@@ -78,11 +82,11 @@ SELECT id, path, representative_ext, width, height, rotation
 
     $urls = [];
     do {
-        $result = pwg_query(str_replace('start_id', $start_id, $query_model));
+        $result = pwg_query(str_replace('start_id', (string) $start_id, $query_model));
         $is_last = pwg_db_num_rows($result) < $qlimit;
 
         while ($row = pwg_db_fetch_assoc($result)) {
-            $start_id = $row['id'];
+            $start_id = is_numeric($row['id']) ? (int) $row['id'] : 0;
             $src_image = new SrcImage($row);
             if ($src_image->is_mimetype()) {
                 continue;
@@ -280,7 +284,7 @@ SELECT id
   FROM '. IMAGES_TABLE .'
       LEFT JOIN '. CADDIE_TABLE .'
       ON id=element_id AND user_id='. $user['id'] .'
-  WHERE id IN ('. implode(',', $params['image_id']) .')
+  WHERE id IN ('. implode(',', array_map(fn ($v) => is_numeric($v) ? (int) $v : 0, is_array($params['image_id']) ? $params['image_id'] : [])) .')
     AND element_id IS NULL
 ;';
     $result = query2array($query, null, 'id');
@@ -314,15 +318,16 @@ SELECT id
  * @param array<mixed> $params
  */function ws_rates_delete(array $params, \Piwigo\Ws\PwgServer &$service): mixed
 {
+    $user_id = is_numeric($params['user_id']) ? (int) $params['user_id'] : 0;
     $query = '
 DELETE FROM '. RATE_TABLE .'
-  WHERE user_id='. $params['user_id'];
+  WHERE user_id='. $user_id;
 
     if (!empty($params['anonymous_id'])) {
-        $query .= ' AND anonymous_id=\''.$params['anonymous_id'].'\'';
+        $query .= ' AND anonymous_id=\''. (is_scalar($params['anonymous_id']) ? (string) $params['anonymous_id'] : '') .'\'';
     }
     if (!empty($params['image_id'])) {
-        $query .= ' AND element_id='.$params['image_id'];
+        $query .= ' AND element_id='. (is_numeric($params['image_id']) ? (int) $params['image_id'] : 0);
     }
 
     $changes = pwg_db_changes();
@@ -349,14 +354,16 @@ DELETE FROM '. RATE_TABLE .'
         return new PwgError(401, 'Cannot use this method with an api key');
     }
 
-    if (preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', (string) $params['username'])) {
-        $secret = pwg_db_real_escape_string($params['password']);
-        $authenticate = auth_key_login($params['username'].':'.$secret);
+    $username = is_scalar($params['username']) ? (string) $params['username'] : '';
+    $password = is_scalar($params['password']) ? (string) $params['password'] : '';
+    if (preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', $username)) {
+        $secret = pwg_db_real_escape_string($password);
+        $authenticate = auth_key_login($username.':'.$secret);
         if ($authenticate) {
             $_SESSION['connected_with'] = 'ws_session_login_api_key';
             return true;
         }
-    } elseif (try_log_user($params['username'], $params['password'], false)) {
+    } elseif (try_log_user($username, $password, false)) {
         $_SESSION['connected_with'] = 'ws_session_login';
         return true;
     }
@@ -404,14 +411,15 @@ function ws_session_getStatus($params, \Piwigo\Ws\PwgServer &$service): mixed
     $res['connected_with'] = $_SESSION['connected_with'] ?? null;
 
     // Piwigo Remote Sync does not support receiving the new (version 14) output "save_visits"
-    if (isset($_SERVER['HTTP_USER_AGENT']) and preg_match('/^PiwigoRemoteSync/', (string) $_SERVER['HTTP_USER_AGENT'])) {
+    $http_user_agent = isset($_SERVER['HTTP_USER_AGENT']) && is_string($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '';
+    if ($http_user_agent !== '' and preg_match('/^PiwigoRemoteSync/', $http_user_agent)) {
         unset($res['save_visits']);
         unset($res['connected_with']);
     }
 
     // Piwigo Remote Sync does not support receiving the available sizes
     $piwigo_remote_sync_agent = 'Apache-HttpClient/';
-    if (!isset($_SERVER['HTTP_USER_AGENT']) or !str_starts_with((string) $_SERVER['HTTP_USER_AGENT'], $piwigo_remote_sync_agent)) {
+    if ($http_user_agent === '' or !str_starts_with($http_user_agent, $piwigo_remote_sync_agent)) {
         $res['available_sizes'] = array_keys(ImageStdParams::get_defined_type_map());
     }
 
@@ -444,7 +452,7 @@ function ws_session_getStatus($params, \Piwigo\Ws\PwgServer &$service): mixed
  */function ws_getActivityList(array $param, \Piwigo\Ws\PwgServer &$service): PwgError|array
 {
     foreach (['date_min', 'date_max'] as $datefield) {
-        if (!empty($param[$datefield]) and !is_valid_mysql_datetime($param[$datefield])) {
+        if (!empty($param[$datefield]) and !is_valid_mysql_datetime(is_scalar($param[$datefield]) ? (string) $param[$datefield] : '')) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid '.$datefield);
         }
     }
@@ -453,7 +461,7 @@ function ws_session_getStatus($params, \Piwigo\Ws\PwgServer &$service): mixed
     $current_key = '';
     $page_size = 100; //We will fetch X lines in database =/= lines displayed due to line concatenation
     //$page_offset = $param['page']*$page_size;
-    $page_offset = $param['offset'];
+    $page_offset = is_numeric($param['offset']) ? (int) $param['offset'] : 0;
     $nb_rows_to_fetch = 10000;
 
     $user_ids = [];
@@ -463,14 +471,17 @@ function ws_session_getStatus($params, \Piwigo\Ws\PwgServer &$service): mixed
     $min = '';
     $max = '';
     if (!empty($param['date_min'])) {
-        $dmin = date_create($param['date_min']);
-        $dmax = date_create($param['date_max']);
+        $date_min_str = is_scalar($param['date_min']) ? (string) $param['date_min'] : '';
+        $date_max_str = isset($param['date_max']) && is_scalar($param['date_max']) ? (string) $param['date_max'] : '';
+        $dmin = date_create($date_min_str);
+        $dmax = $date_max_str !== '' ? date_create($date_max_str) : false;
         $min = $dmin !== false ? date_format($dmin, 'Y-m-d H:i:s') : '';
         $max = $dmax !== false ? date_format($dmax, 'Y-m-d 23:59:59') : '';
     }
 
     if (!empty($param['date_max'])) {
-        $dmax2 = date_create($param['date_max']);
+        $date_max_str2 = is_scalar($param['date_max']) ? (string) $param['date_max'] : '';
+        $dmax2 = date_create($date_max_str2);
         $max = $dmax2 !== false ? date_format($dmax2, 'Y-m-d 23:59:59') : '';
     }
 
@@ -478,17 +489,17 @@ function ws_session_getStatus($params, \Piwigo\Ws\PwgServer &$service): mixed
 
     if (isset($param['uid'])) {
         $where .= '
-    AND performed_by = '.$param['uid'];
+    AND performed_by = '. (is_numeric($param['uid']) ? (int) $param['uid'] : 0);
     }
 
     if (isset($param['action'])) {
         $where .= '
-    AND action = "'.pwg_db_real_escape_string($param['action']).'"';
+    AND action = "'.pwg_db_real_escape_string(is_scalar($param['action']) ? (string) $param['action'] : '').'"';
     }
 
     if (isset($param['object'])) {
         $where .= '
-    AND object = "'.pwg_db_real_escape_string($param['object']).'"';
+    AND object = "'.pwg_db_real_escape_string(is_scalar($param['object']) ? (string) $param['object'] : '').'"';
     }
 
     if (!empty($param['date_min'])) {
@@ -503,7 +514,7 @@ function ws_session_getStatus($params, \Piwigo\Ws\PwgServer &$service): mixed
 
     if (!empty($param['id'])) {
         $where .= '
-    AND object_id = '.$param['id'];
+    AND object_id = '. (is_numeric($param['id']) ? (int) $param['id'] : 0);
     }
 
     if ('none' == \Piwigo\Core\Config::activityDisplayConnections()) {
@@ -545,16 +556,21 @@ SELECT
             if (count($output_lines) < $page_size) {
                 $page_offset++;
 
-                $line_key = $row['session_idx'].'~'.$row['object'].'~'.$row['action'].'~'; // idx~photo~add
+                $row_session_idx = is_scalar($row['session_idx']) ? (string) $row['session_idx'] : '';
+                $row_object = is_scalar($row['object']) ? (string) $row['object'] : '';
+                $row_action = is_scalar($row['action']) ? (string) $row['action'] : '';
+                $line_key = $row_session_idx.'~'.$row_object.'~'.$row_action.'~'; // idx~photo~add
 
                 if ($line_key === $current_key) {
                     // I increment the counter of the previous line
                     $output_lines[count($output_lines) - 1]['counter']++;
                     $output_lines[count($output_lines) - 1]['object_id'][] = $row['object_id'];
                 } else {
-                    $row['details'] = str_replace('`groups`', 'groups', $row['details']);
-                    $row['details'] = str_replace('`rank`', 'rank', $row['details']);
-                    $details = @unserialize(is_string($row['details']) ? $row['details'] : '');
+                    $row_details_str = is_scalar($row['details']) ? (string) $row['details'] : '';
+                    $row_details_str = str_replace('`groups`', 'groups', $row_details_str);
+                    $row_details_str = str_replace('`rank`', 'rank', $row_details_str);
+                    $details_raw = @unserialize($row_details_str);
+                    $details = is_array($details_raw) ? $details_raw : [];
 
                     if (isset($row['user_agent'])) {
                         $details['agent'] = $row['user_agent'];
@@ -569,25 +585,33 @@ SELECT
                         $detailsType = 'script';
                     }
 
-                    [$date, $hour] = explode(' ', (string) $row['occured_on']);
+                    [$date, $hour] = explode(' ', is_scalar($row['occured_on']) ? (string) $row['occured_on'] : '');
+                    $row_performed_by = $row['performed_by'];
                     // New line
                     $output_lines[] = [
                       'id' => $line_id,
-                      'object' => $row['object'],
+                      'object' => $row_object,
                       'object_id' => [$row['object_id']],
-                      'action' => $row['action'],
+                      'action' => $row_action,
                       'ip_address' => $row['ip_address'],
                       'date' => format_date($date),
                       'hour' => $hour,
-                      'user_id' => $row['performed_by'],
+                      'user_id' => $row_performed_by,
                       'detailsType' => $detailsType,
                       'details' => $details,
                       'counter' => 1,
                     ];
 
-                    $user_ids[ $row['performed_by'] ] = 1;
-                    if ('user' == $row['object']) {
-                        $user_ids[ $row['object_id'] ] = 1;
+                    $user_ids_key_by = is_scalar($row_performed_by) ? (string) $row_performed_by : '';
+                    if ($user_ids_key_by !== '') {
+                        $user_ids[$user_ids_key_by] = 1;
+                    }
+                    if ('user' == $row_object) {
+                        $obj_id = $row['object_id'];
+                        $obj_id_key = is_scalar($obj_id) ? (string) $obj_id : '';
+                        if ($obj_id_key !== '') {
+                            $user_ids[$obj_id_key] = 1;
+                        }
                     }
 
                     $current_key = $line_key;
@@ -615,18 +639,32 @@ SELECT
 
     foreach ($output_lines as $idx => $output_line) {
         if ('user' == ($output_line['object'] ?? '')) {
-            foreach ($output_line['object_id'] as $user_id) {
-                @$output_lines[$idx]['details']['users'][] = $username_of[$user_id] ?? 'user#' . $user_id;
+            $obj_ids = $output_line['object_id'];
+            foreach ($obj_ids as $user_id) {
+                $user_id_key = is_scalar($user_id) ? (string) $user_id : '';
+                /** @var array<string, mixed> $details_arr */
+                $details_arr = $output_lines[$idx]['details'] ?? [];
+                /** @var list<mixed> $details_users */
+                $details_users = is_array($details_arr['users'] ?? null) ? $details_arr['users'] : [];
+                $details_users[] = (isset($username_of[$user_id_key]) ? $username_of[$user_id_key] : ('user#' . $user_id_key));
+                $details_arr['users'] = $details_users;
+                $output_lines[$idx]['details'] = $details_arr;
             }
 
-            if (isset($output_lines[$idx]['details']['users'])) {
-                $output_lines[$idx]['details']['users_string'] = implode(', ', $output_lines[$idx]['details']['users']);
+            /** @var array<string, mixed> $details_arr2 */
+            $details_arr2 = $output_lines[$idx]['details'] ?? [];
+            if (isset($details_arr2['users'])) {
+                $users_arr = is_array($details_arr2['users']) ? $details_arr2['users'] : [];
+                $details_arr2['users_string'] = implode(', ', array_map(fn ($v) => is_scalar($v) ? (string) $v : '', $users_arr));
+                $output_lines[$idx]['details'] = $details_arr2;
             }
         }
 
-        $output_lines[$idx]['username'] = 'user#'.($output_lines[$idx]['user_id'] ?? '');
-        if (isset($output_lines[$idx]['user_id']) && isset($username_of[ $output_lines[$idx]['user_id'] ])) {
-            $output_lines[$idx]['username'] = $username_of[ $output_lines[$idx]['user_id'] ];
+        $line_user_id = $output_lines[$idx]['user_id'] ?? '';
+        $line_user_id_str = is_scalar($line_user_id) ? (string) $line_user_id : '';
+        $output_lines[$idx]['username'] = 'user#'.$line_user_id_str;
+        if ($line_user_id_str !== '' && isset($username_of[$line_user_id_str])) {
+            $output_lines[$idx]['username'] = $username_of[$line_user_id_str];
         }
     }
 
@@ -658,15 +696,19 @@ SELECT
         $page['category'] = ['id' => $params['cat_id']];
     }
 
-    if (!empty($params['tags_string']) and preg_match('/^\d+(,\d+)*$/', (string) $params['tags_string'])) {
-        $page['tag_ids'] = explode(',', (string) $params['tags_string']);
+    $tags_string = is_scalar($params['tags_string']) ? (string) $params['tags_string'] : '';
+    if ($tags_string !== '' and preg_match('/^\d+(,\d+)*$/', $tags_string)) {
+        $page['tag_ids'] = explode(',', $tags_string);
     }
 
     // when visiting a photo (which is currently, in version 14, the only event registered
     // by pwg.history.log) we should also increment images.hit
+    $log_image_id = is_numeric($params['image_id']) ? (int) $params['image_id'] : null;
     if (!empty($params['image_id'])) {
         include_once(PHPWG_ROOT_PATH.'include/functions_picture.inc.php');
-        increase_image_visit_counter($params['image_id']);
+        if ($log_image_id !== null) {
+            increase_image_visit_counter($log_image_id);
+        }
     }
 
     $image_type = 'picture';
@@ -674,7 +716,7 @@ SELECT
         $image_type = 'high';
     }
 
-    pwg_log($params['image_id'], $image_type);
+    pwg_log($log_image_id, $image_type);
 }
 
 /**
@@ -733,11 +775,11 @@ SELECT
     }
 
     // user
-    $search['fields']['user'] = intval($param['user_id']);
+    $search['fields']['user'] = is_numeric($param['user_id']) ? (int) $param['user_id'] : 0;
 
     // image
     if (!empty($param['image_id'])) {
-        $search['fields']['image_id'] = intval($param['image_id']);
+        $search['fields']['image_id'] = is_numeric($param['image_id']) ? (int) $param['image_id'] : 0;
     }
 
     // filename
@@ -745,7 +787,7 @@ SELECT
         $search['fields']['filename'] = str_replace(
             '*',
             '%',
-            pwg_db_real_escape_string($param['filename'])
+            pwg_db_real_escape_string(is_scalar($param['filename']) ? (string) $param['filename'] : '')
         );
     }
 
@@ -754,7 +796,7 @@ SELECT
         $search['fields']['ip'] = str_replace(
             '*',
             '%',
-            pwg_db_real_escape_string($param['ip'])
+            pwg_db_real_escape_string(is_scalar($param['ip']) ? (string) $param['ip'] : '')
         );
     }
 
@@ -763,9 +805,10 @@ SELECT
 
     $search['fields']['display_thumbnail'] = $param['display_thumbnail'];
     // Display choise are also save to one cookie
-    if (!empty($param['display_thumbnail'])
-        and isset($display_thumbnails[$param['display_thumbnail']])) {
-        $cookie_val = $param['display_thumbnail'];
+    $display_thumbnail_str = is_scalar($param['display_thumbnail']) ? (string) $param['display_thumbnail'] : '';
+    if ($display_thumbnail_str !== ''
+        and isset($display_thumbnails[$display_thumbnail_str])) {
+        $cookie_val = $display_thumbnail_str;
     } else {
         $cookie_val = null;
     }
@@ -797,11 +840,13 @@ SELECT rules
 ;';
     [$serialized_rules] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
-    $page['search'] = unserialize($serialized_rules);
+    $page['search'] = unserialize(is_string($serialized_rules) ? $serialized_rules : '');
 
 
     /*TODO - no need to get a huge number of rows from db (should take only what needed for display + SQL_CALC_FOUND_ROWS*/
-    $data = trigger_change('get_history', [], $page['search'], $types);
+    $data_raw = trigger_change('get_history', [], $page['search'], $types);
+    /** @var list<array<mixed>> $data */
+    $data = is_array($data_raw) ? $data_raw : [];
     usort($data, history_compare(...));
 
     $page['nb_lines'] = count($data);
@@ -816,14 +861,25 @@ SELECT rules
     $search_ids = [];
 
     foreach ($data as $row) {
-        $user_ids[$row['user_id']] = 1;
+        if (!is_array($row)) {
+            continue;
+        }
+        $row_user_id = $row['user_id'] ?? null;
+        $row_user_id_key = is_scalar($row_user_id) ? (string) $row_user_id : '';
+        if ($row_user_id_key !== '') {
+            $user_ids[$row_user_id_key] = 1;
+        }
 
         if (isset($row['category_id'])) {
             array_push($category_ids, $row['category_id']);
         }
 
         if (isset($row['image_id'])) {
-            $image_ids[$row['image_id']] = 1;
+            $row_image_id = $row['image_id'];
+            $row_image_id_key = is_scalar($row_image_id) ? (string) $row_image_id : '';
+            if ($row_image_id_key !== '') {
+                $image_ids[$row_image_id_key] = 1;
+            }
         }
 
         if (isset($row['tag_ids'])) {
@@ -839,32 +895,42 @@ SELECT rules
 
     // prepare reference data (users, tags, categories...)
     if (count($search_ids) > 0) {
+        $search_ids_str = array_map(fn ($v) => is_scalar($v) ? (string) $v : '', $search_ids);
         $query = '
 SELECT
     id,
     rules
   FROM '.SEARCH_TABLE.'
-  WHERE id IN ('.implode(',', $search_ids).')
+  WHERE id IN ('.implode(',', $search_ids_str).')
 ;';
         $search_details = query2array($query, 'id', 'rules');
 
         foreach ($search_details as $id_search => $rules_search) {
-            $rules_search = safe_unserialize($rules_search)['fields'];
-            if (!empty($rules_search['tags']['words'])) {
+            $unserialized = safe_unserialize(is_scalar($rules_search) ? (string) $rules_search : '');
+            $rules_arr = is_array($unserialized) ? $unserialized : [];
+            $rules_fields = is_array($rules_arr['fields'] ?? null) ? $rules_arr['fields'] : [];
+            $rf_tags = is_array($rules_fields['tags'] ?? null) ? $rules_fields['tags'] : [];
+            $rf_cat = is_array($rules_fields['cat'] ?? null) ? $rules_fields['cat'] : [];
+            if (!empty($rf_tags['words'])) {
                 $has_tags = true;
             }
 
-            if (!empty($rules_search['cat']['words'])) {
-                $category_ids = array_merge($category_ids, $rules_search['cat']['words']);
+            if (!empty($rf_cat['words'])) {
+                $cat_words = is_array($rf_cat['words']) ? $rf_cat['words'] : [];
+                $category_ids = array_merge($category_ids, $cat_words);
             }
 
-            if (!empty($rules_search['added_by'])) {
-                foreach ($rules_search['added_by'] as $key) {
-                    $user_ids[$key] = 1;
+            if (!empty($rules_fields['added_by'])) {
+                $added_by = is_array($rules_fields['added_by']) ? $rules_fields['added_by'] : [];
+                foreach ($added_by as $key) {
+                    $key_str = is_scalar($key) ? (string) $key : '';
+                    if ($key_str !== '') {
+                        $user_ids[$key_str] = 1;
+                    }
                 }
             }
 
-            $search_details[$id_search] = $rules_search;
+            $search_details[$id_search] = $rules_fields;
         }
     }
 
@@ -879,17 +945,21 @@ SELECT '.\Piwigo\Core\Config::userFields()['id'].' AS id
 
         $username_of = [];
         while ($row = pwg_db_fetch_assoc($result)) {
-            $username_of[$row['id']] = stripslashes((string) $row['username']);
+            $row_id_key = is_scalar($row['id']) ? (string) $row['id'] : '';
+            if ($row_id_key !== '') {
+                $username_of[$row_id_key] = stripslashes((string) $row['username']);
+            }
         }
     }
 
     $name_of_category = [];
     $image_infos = [];
     if (count($category_ids) > 0) {
+        $category_ids_str = array_map(fn ($v) => is_scalar($v) ? (string) $v : '', $category_ids);
         $query = '
 SELECT id, uppercats
   FROM '.CATEGORIES_TABLE.'
-  WHERE id IN ('.implode(',', array_values($category_ids)).')
+  WHERE id IN ('.implode(',', $category_ids_str).')
 ;';
         $uppercats_of = query2array($query, 'id', 'uppercats');
 
@@ -897,14 +967,15 @@ SELECT id, uppercats
         $name_of_category = [];
 
         foreach ($uppercats_of as $category_id => $uppercats) {
+            $uppercats_s = is_scalar($uppercats) ? (string) $uppercats : '';
             $full_cat_path[$category_id] = get_cat_display_name_cache(
-                $uppercats,
+                $uppercats_s,
                 'admin.php?page=album-'
             );
 
-            $uppercats = explode(',', $uppercats);
+            $uppercats_parts = explode(',', $uppercats_s);
             $name_of_category[$category_id] = get_cat_display_name_cache(
-                end($uppercats),
+                end($uppercats_parts) ?: '',
                 'admin.php?page=album-'
             );
         }
@@ -937,7 +1008,10 @@ SELECT
         $name_of_tag = [];
         $result = pwg_query($query);
         while ($row = pwg_db_fetch_assoc($result)) {
-            $name_of_tag[ $row['id'] ] = trigger_change('render_tag_name', $row['name'], $row);
+            $tag_id_key = is_scalar($row['id']) ? (string) $row['id'] : '';
+            if ($tag_id_key !== '') {
+                $name_of_tag[$tag_id_key] = trigger_change('render_tag_name', $row['name'], $row);
+            }
         }
     }
 
@@ -952,16 +1026,28 @@ SELECT
     $sorted_members = [];
 
     foreach ($history_lines as $line) {
-        if (isset($line['image_type']) and $line['image_type'] == 'high') {
-            $summary['total_filesize'] += @intval($image_infos[$line['image_id']]['filesize']);
+        $line_image_type = is_scalar($line['image_type'] ?? null) ? (string) ($line['image_type'] ?? '') : '';
+        $line_image_id = $line['image_id'] ?? null;
+        $line_image_id_str = is_scalar($line_image_id) ? (string) $line_image_id : '';
+        $line_user_id = $line['user_id'] ?? null;
+        $line_user_id_str = is_scalar($line_user_id) ? (string) $line_user_id : '';
+        $line_IP = is_scalar($line['IP'] ?? null) ? (string) ($line['IP'] ?? '') : '';
+        $line_cat_id = $line['category_id'] ?? null;
+        $line_cat_id_str = is_scalar($line_cat_id) ? (string) $line_cat_id : '';
+        $line_search_id = $line['search_id'] ?? null;
+        $line_search_id_str = is_scalar($line_search_id) ? (string) $line_search_id : '';
+        $line_section = is_scalar($line['section'] ?? null) ? (string) ($line['section'] ?? '') : '';
+
+        if ($line_image_type === 'high' && $line_image_id_str !== '') {
+            $summary['total_filesize'] += @intval($image_infos[$line_image_id_str]['filesize'] ?? 0);
         }
 
-        if ($line['user_id'] == \Piwigo\Core\Config::guestId()) {
-            if (!isset($summary['guests_IP'][ $line['IP'] ])) {
-                $summary['guests_IP'][ $line['IP'] ] = 0;
+        if ($line_user_id_str === (string) \Piwigo\Core\Config::guestId()) {
+            if (!isset($summary['guests_IP'][$line_IP])) {
+                $summary['guests_IP'][$line_IP] = 0;
             }
 
-            $summary['guests_IP'][ $line['IP'] ]++;
+            $summary['guests_IP'][$line_IP]++;
         }
 
         $i++;
@@ -972,27 +1058,28 @@ SELECT
 
         $user_name = '#unknown';
         $user_string = '';
-        if (isset($username_of[$line['user_id']])) {
-            $user_name = $username_of[$line['user_id']];
-            $user_string .= $username_of[$line['user_id']];
+        if ($line_user_id_str !== '' && isset($username_of[$line_user_id_str])) {
+            $user_name = $username_of[$line_user_id_str];
+            $user_string .= $username_of[$line_user_id_str];
         } else {
-            $user_string .= $line['user_id'];
+            $user_string .= $line_user_id_str;
         }
         $user_string .= '&nbsp;<a href="';
         $user_string .= PHPWG_ROOT_PATH.'admin.php?page=history';
         $user_string .= '&amp;search_id='.$search_id;
-        $user_string .= '&amp;user_id='.$line['user_id'];
+        $user_string .= '&amp;user_id='.$line_user_id_str;
         $user_string .= '">+</a>';
 
         $tag_names = '';
         $tag_ids = '';
         if (isset($line['tag_ids'])) {
+            $line_tag_ids = is_scalar($line['tag_ids']) ? (string) $line['tag_ids'] : '';
             $tag_names = preg_replace_callback(
                 '/(\d+)/',
-                fn ($m) => $name_of_tag[$m[1]] ?? $m[1],
-                (string) $line['tag_ids']
-            );
-            $tag_ids = $line['tag_ids'];
+                fn (array $m): string => is_scalar($name_of_tag[$m[1]] ?? null) ? (string) ($name_of_tag[$m[1]] ?? $m[1]) : (string) $m[1],
+                $line_tag_ids
+            ) ?? $line_tag_ids;
+            $tag_ids = $line_tag_ids;
         }
 
         $image_string = '';
@@ -1000,21 +1087,21 @@ SELECT
         $image_edit_string = '';
         $image_id = '';
         $cat_name = '';
-        if (isset($line['image_id'])) {
-            $image_edit_string = PHPWG_ROOT_PATH.'admin.php?page=photo-'.$line['image_id'];
+        if ($line_image_id_str !== '') {
+            $image_edit_string = PHPWG_ROOT_PATH.'admin.php?page=photo-'.$line_image_id_str;
             $picture_url = make_picture_url(
                 [
-                'image_id' => $line['image_id'],
+                'image_id' => $line_image_id,
                 ]
             );
 
             $element = [];
-            if (isset($image_infos[$line['image_id']])) {
+            if (isset($image_infos[$line_image_id_str])) {
                 $element = [
-                  'id' => $line['image_id'],
-                  'file' => $image_infos[$line['image_id']]['file'],
-                  'path' => $image_infos[$line['image_id']]['path'],
-                  'representative_ext' => $image_infos[$line['image_id']]['representative_ext'],
+                  'id' => $line_image_id,
+                  'file' => $image_infos[$line_image_id_str]['file'],
+                  'path' => $image_infos[$line_image_id_str]['path'],
+                  'representative_ext' => $image_infos[$line_image_id_str]['representative_ext'],
                   ];
                 $thumbnail_display = $page['search']['fields']['display_thumbnail'];
             } else {
@@ -1023,15 +1110,16 @@ SELECT
 
             $image_title = '';
 
-            if (isset($image_infos[$line['image_id']]['label'])) {
-                $image_title .= ' '.trigger_change('render_element_description', $image_infos[$line['image_id']]['label']);
+            if (isset($image_infos[$line_image_id_str]['label'])) {
+                $tc_result = trigger_change('render_element_description', $image_infos[$line_image_id_str]['label']);
+                $image_title .= ' '.(is_scalar($tc_result) ? (string) $tc_result : '');
             } else {
                 $image_edit_string = '';
                 $image_title .= ' unknown filename';
             }
 
             $image_string = '';
-            $image_id = $line['image_id'];
+            $image_id = $line_image_id;
 
             $img_url = @DerivativeImage::url(ImageStdParams::get_by_type(IMG_SQUARE), $element);
             $image_string =
@@ -1039,15 +1127,25 @@ SELECT
             .'" alt="'.$image_title.'" title="'.$image_title.'">';
         }
 
-        if (isset($line['search_id'])) {
+        if ($line_search_id_str !== '' && isset($search_details[$line_search_id_str])) {
+            $sd = is_array($search_details[$line_search_id_str]) ? $search_details[$line_search_id_str] : [];
+            $sd_tags = is_array($sd['tags'] ?? null) ? $sd['tags'] : [];
+            $sd_cat = is_array($sd['cat'] ?? null) ? $sd['cat'] : [];
+            $sd_allwords = is_array($sd['allwords'] ?? null) ? $sd['allwords'] : [];
+            $sd_author = is_array($sd['author'] ?? null) ? $sd['author'] : [];
+            $sd_tags_words = is_array($sd_tags['words'] ?? null) ? $sd_tags['words'] : [];
+            $sd_cat_words = is_array($sd_cat['words'] ?? null) ? $sd_cat['words'] : [];
+            $sd_allwords_words = is_array($sd_allwords['words'] ?? null) ? $sd_allwords['words'] : [];
+            $sd_author_words = is_array($sd_author['words'] ?? null) ? $sd_author['words'] : [];
+            $sd_added_by = is_array($sd['added_by'] ?? null) ? $sd['added_by'] : [];
             $search_detail = [
-              'allwords' => !empty($search_details[$line['search_id']]['allwords']['words']) ? $search_details[$line['search_id']]['allwords']['words'] : null,
-              'tags' => !empty($search_details[$line['search_id']]['tags']['words']) ? array_intersect_key($name_of_tag, array_flip($search_details[$line['search_id']]['tags']['words'])) : null,
-              'date_posted' => !empty($search_details[$line['search_id']]['date_posted']) ? $search_details[$line['search_id']]['date_posted'] : null,
-              'cat' => !empty($search_details[$line['search_id']]['cat']['words']) ? array_intersect_key($name_of_category, array_flip($search_details[$line['search_id']]['cat']['words'])) : null,
-              'author' => !empty($search_details[$line['search_id']]['author']['words']) ? $search_details[$line['search_id']]['author']['words'] : null,
-              'added_by' => !empty($search_details[$line['search_id']]['added_by']) ? array_intersect_key($username_of, array_flip($search_details[$line['search_id']]['added_by'])) : null,
-              'filetypes' => !empty($search_details[$line['search_id']]['filetypes']) ? $search_details[$line['search_id']]['filetypes'] : null,
+              'allwords' => !empty($sd_allwords_words) ? $sd_allwords_words : null,
+              'tags' => !empty($sd_tags_words) ? array_intersect_key($name_of_tag, array_flip(array_map(fn ($v) => is_scalar($v) ? (string) $v : '', $sd_tags_words))) : null,
+              'date_posted' => !empty($sd['date_posted']) ? $sd['date_posted'] : null,
+              'cat' => !empty($sd_cat_words) ? array_intersect_key($name_of_category, array_flip(array_map(fn ($v) => is_scalar($v) ? (string) $v : '', $sd_cat_words))) : null,
+              'author' => !empty($sd_author_words) ? $sd_author_words : null,
+              'added_by' => !empty($sd_added_by) ? array_intersect_key($username_of, array_flip(array_map(fn ($v) => is_scalar($v) ? (string) $v : '', $sd_added_by))) : null,
+              'filetypes' => !empty($sd['filetypes']) ? $sd['filetypes'] : null,
             ];
         } else {
             $search_detail = null;
@@ -1055,24 +1153,25 @@ SELECT
 
         @$sorted_members[$user_name] += 1;
 
+        $line_date = is_scalar($line['date'] ?? null) ? $line['date'] : null;
         array_push(
             $result,
             [
-            'DATE'       => format_date($line['date']),
-            'TIME'       => $line['time'],
+            'DATE'       => format_date(is_string($line_date) || is_int($line_date) ? $line_date : null),
+            'TIME'       => $line['time'] ?? null,
             'USER'       => $user_string,
             'USERNAME'   => $user_name,
-            'USERID'     => $line['user_id'],
-            'IP'         => $line['IP'],
+            'USERID'     => $line_user_id,
+            'IP'         => $line_IP,
             'IMAGE'      => $image_string,
             'IMAGENAME'  => $image_title,
             'IMAGEID'    => $image_id,
             'EDIT_IMAGE' => $image_edit_string,
-            'TYPE'       => $line['image_type'],
-            'SECTION'    => $line['section'],
-            'FULL_CATEGORY_PATH'   => isset($full_cat_path[$line['category_id']]) ? strip_tags($full_cat_path[$line['category_id']]) : l10n('Root').$line['category_id'],
-            'CATEGORY'   => $name_of_category[$line['category_id']] ?? l10n('Root') . $line['category_id'],
-            'SEARCH_ID'  => $line['search_id'] ?? null,
+            'TYPE'       => $line_image_type,
+            'SECTION'    => $line_section,
+            'FULL_CATEGORY_PATH' => ($line_cat_id_str !== '' && isset($full_cat_path[$line_cat_id_str])) ? strip_tags((string) $full_cat_path[$line_cat_id_str]) : l10n('Root').$line_cat_id_str,
+            'CATEGORY'   => ($line_cat_id_str !== '' && isset($name_of_category[$line_cat_id_str])) ? $name_of_category[$line_cat_id_str] : l10n('Root') . $line_cat_id_str,
+            'SEARCH_ID'  => $line_search_id ?? null,
             'TAGS'       => explode(',', (string) $tag_names),
             'TAGIDS'     => explode(',', $tag_ids),
             'SEARCH_DETAILS'  => $search_detail,
@@ -1082,7 +1181,8 @@ SELECT
 
     $max_page = ceil(count($result) / 300);
     $result = array_reverse($result, true);
-    $result = array_slice($result, $param['pageNumber'] * 300, 300);
+    $pageNumber = is_numeric($param['pageNumber']) ? (int) $param['pageNumber'] : 0;
+    $result = array_slice($result, $pageNumber * 300, 300);
 
     $summary['nb_guests'] = 0;
     if (count(array_keys($summary['guests_IP'])) > 0) {
@@ -1090,7 +1190,7 @@ SELECT
 
         // we delete the "guest" from the $username_of hash so that it is
         // avoided in next steps
-        unset($username_of[ \Piwigo\Core\Config::guestId() ]);
+        unset($username_of[ (string) \Piwigo\Core\Config::guestId() ]);
     }
 
     $summary['nb_members'] = count($username_of);

@@ -80,11 +80,15 @@ class QNumericRangeScope extends QSearchScope
     public function get_sql(string $field, QSingleToken $token): string
     {
         $clauses = [];
-        if ($token->scope_data['range'][0] !== '') {
-            $clauses[] = $field.' >'.($token->scope_data['strict'][0] ? '' : '=').$token->scope_data['range'][0].' ';
+        /** @var array{range: array<int,mixed>, strict: array<int,mixed>} $sd */
+        $sd = is_array($token->scope_data) ? $token->scope_data : ['range' => ['', ''], 'strict' => [false, false]];
+        $range = is_array($sd['range'] ?? null) ? $sd['range'] : ['', ''];
+        $strict = is_array($sd['strict'] ?? null) ? $sd['strict'] : [false, false];
+        if (($range[0] ?? '') !== '') {
+            $clauses[] = $field.' >'.($strict[0] ? '' : '=').(is_scalar($range[0]) ? $range[0] : '').' ';
         }
-        if ($token->scope_data['range'][1] !== '') {
-            $clauses[] = $field.' <'.($token->scope_data['strict'][1] ? '' : '=').$token->scope_data['range'][1].' ';
+        if (($range[1] ?? '') !== '') {
+            $clauses[] = $field.' <'.($strict[1] ? '' : '=').(is_scalar($range[1]) ? $range[1] : '').' ';
         }
 
         if (empty($clauses)) {

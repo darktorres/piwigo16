@@ -37,16 +37,22 @@ final class Config
      */
     public static function attachGlobals(): void
     {
-        self::$data = $GLOBALS['conf'];
+        /** @var array<string,mixed> $conf */
+        $conf = $GLOBALS['conf'] ?? [];
+        self::$data = is_array($conf) ? $conf : [];
         $GLOBALS['conf'] = &self::$data;
         self::$attached = true;
     }
 
     /** Returns the array backing this facade (for pre-boot reads). */
-    /** @return array<mixed> */
+    /** @return array<string,mixed> */
     private static function src(): array
     {
-        return self::$attached ? self::$data : ($GLOBALS['conf'] ?? []);
+        if (self::$attached) {
+            return self::$data;
+        }
+        $g = $GLOBALS['conf'] ?? [];
+        return is_array($g) ? $g : [];
     }
 
     public static function get(string $key, mixed $default = null): mixed
@@ -57,13 +63,25 @@ final class Config
     public static function getString(string $key, string $default = ''): string
     {
         $v = self::src()[$key] ?? $default;
-        return is_string($v) ? $v : (string) $v;
+        if (is_string($v)) {
+            return $v;
+        }
+        if (is_scalar($v)) {
+            return (string) $v;
+        }
+        return $default;
     }
 
     public static function getInt(string $key, int $default = 0): int
     {
         $v = self::src()[$key] ?? $default;
-        return is_int($v) ? $v : (int) $v;
+        if (is_int($v)) {
+            return $v;
+        }
+        if (is_scalar($v)) {
+            return (int) $v;
+        }
+        return $default;
     }
 
     public static function getBool(string $key, bool $default = false): bool
@@ -93,7 +111,8 @@ final class Config
     }
     public static function galleryUrl(): ?string
     {
-        return isset(self::$data['gallery_url']) ? (string) self::$data['gallery_url'] : null;
+        $v = self::$data['gallery_url'] ?? null;
+        return isset($v) ? (is_scalar($v) ? (string) $v : null) : null;
     }
     public static function noPhotoYetUrl(): string
     {
@@ -158,14 +177,20 @@ final class Config
     public static function pictureExtensions(): array
     {
         $v = self::$data['picture_ext'] ?? ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-        return is_array($v) ? array_values($v) : [];
+        if (!is_array($v)) {
+            return ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        }
+        return array_values(array_map(static fn(mixed $x): string => is_scalar($x) || $x === null ? (string) $x : '', $v));
     }
 
     /** @return list<string> */
     public static function fileExtensions(): array
     {
         $v = self::$data['file_ext'] ?? [];
-        return is_array($v) ? array_values($v) : [];
+        if (!is_array($v)) {
+            return [];
+        }
+        return array_values(array_map(static fn(mixed $x): string => is_scalar($x) || $x === null ? (string) $x : '', $v));
     }
 
     // Logging
@@ -215,7 +240,7 @@ final class Config
     public static function smtpSecure(): ?string
     {
         $v = self::$data['smtp_secure'] ?? null;
-        return $v !== null ? (string) $v : null;
+        return $v !== null ? (is_scalar($v) ? (string) $v : null) : null;
     }
     public static function mailSenderName(): string
     {
@@ -335,7 +360,10 @@ final class Config
     public static function formatExtensions(): array
     {
         $v = self::$data['format_ext'] ?? ['cr2', 'tif', 'tiff', 'nef', 'dng', 'ai', 'psd'];
-        return is_array($v) ? array_values($v) : [];
+        if (!is_array($v)) {
+            return ['cr2', 'tif', 'tiff', 'nef', 'dng', 'ai', 'psd'];
+        }
+        return array_values(array_map(static fn(mixed $x): string => is_scalar($x) || $x === null ? (string) $x : '', $v));
     }
 
     // Tags cluster
@@ -402,7 +430,7 @@ final class Config
     public static function nbmMaxTreatmentTimeoutPercent(): float
     {
         $v = self::$data['nbm_max_treatment_timeout_percent'] ?? 0.8;
-        return (float) $v;
+        return is_scalar($v) ? (float) $v : 0.8;
     }
     public static function nbmTreatmentTimeoutDefault(): int
     {
@@ -442,24 +470,30 @@ final class Config
     public static function randomIndexRedirect(): array
     {
         $v = self::$data['random_index_redirect'] ?? [];
-        return is_array($v) ? $v : [];
+        if (!is_array($v)) {
+            return [];
+        }
+        /** @var array<string,string> */
+        return array_map('strval', array_filter($v, 'is_scalar'));
     }
 
     /** @return list<string> */
     public static function headerNotes(): array
     {
         $v = self::$data['header_notes'] ?? [];
-        return is_array($v) ? array_values($v) : [];
+        if (!is_array($v)) {
+            return [];
+        }
+        return array_values(array_map(static fn(mixed $x): string => is_scalar($x) || $x === null ? (string) $x : '', $v));
     }
 
     // ---- Permission / access cluster ------------------------------------
 
-    /** @return list<int> */
     /** @return non-empty-list<int> */
     public static function availablePermissionLevels(): array
     {
         $v = self::$data['available_permission_levels'] ?? [0, 1, 2, 4, 8];
-        return is_array($v) && count($v) > 0 ? array_values($v) : [0, 1, 2, 4, 8];
+        return is_array($v) && count($v) > 0 ? array_values(array_map(static fn(mixed $x): int => is_scalar($x) ? (int) $x : 0, $v)) : [0, 1, 2, 4, 8];
     }
 
     public static function guestAccess(): bool { return self::getBool('guest_access', true); }
@@ -478,13 +512,22 @@ final class Config
     /** @return array<string,string> */
     public static function userFields(): array
     {
-        $v = self::$data['user_fields'] ?? ['id' => 'id', 'username' => 'username', 'password' => 'password', 'email' => 'mail_address'];
-        return is_array($v) ? $v : ['id' => 'id', 'username' => 'username', 'password' => 'password', 'email' => 'mail_address'];
+        $default = ['id' => 'id', 'username' => 'username', 'password' => 'password', 'email' => 'mail_address'];
+        $v = self::$data['user_fields'] ?? $default;
+        if (!is_array($v)) {
+            return $default;
+        }
+        $result = [];
+        foreach ($v as $k => $val) {
+            $result[(string) $k] = is_scalar($val) ? (string) $val : '';
+        }
+        return $result;
     }
 
     public static function usersTable(): ?string
     {
-        return isset(self::$data['users_table']) ? (string) self::$data['users_table'] : null;
+        $v = self::$data['users_table'] ?? null;
+        return $v !== null ? (is_scalar($v) ? (string) $v : null) : null;
     }
 
     // ---- Calendar cluster -----------------------------------------------
@@ -572,29 +615,56 @@ final class Config
     /** @return array<string,string> */
     public static function showIptcMapping(): array
     {
-        $v = self::$data['show_iptc_mapping'] ?? ['iptc_keywords' => '2#025', 'iptc_caption_writer' => '2#122', 'iptc_byline_title' => '2#085', 'iptc_caption' => '2#120'];
-        return is_array($v) ? $v : [];
+        $default = ['iptc_keywords' => '2#025', 'iptc_caption_writer' => '2#122', 'iptc_byline_title' => '2#085', 'iptc_caption' => '2#120'];
+        $v = self::$data['show_iptc_mapping'] ?? $default;
+        if (!is_array($v)) {
+            return $default;
+        }
+        $result = [];
+        foreach ($v as $k => $val) {
+            $result[(string) $k] = is_scalar($val) ? (string) $val : '';
+        }
+        return $result;
     }
     public static function useIptc(): bool { return self::getBool('use_iptc', false); }
     /** @return array<string,string> */
     public static function useIptcMapping(): array
     {
-        $v = self::$data['use_iptc_mapping'] ?? ['keywords' => '2#025', 'date_creation' => '2#055', 'author' => '2#122', 'name' => '2#005', 'comment' => '2#120'];
-        return is_array($v) ? $v : [];
+        $default = ['keywords' => '2#025', 'date_creation' => '2#055', 'author' => '2#122', 'name' => '2#005', 'comment' => '2#120'];
+        $v = self::$data['use_iptc_mapping'] ?? $default;
+        if (!is_array($v)) {
+            return $default;
+        }
+        $result = [];
+        foreach ($v as $k => $val) {
+            $result[(string) $k] = is_scalar($val) ? (string) $val : '';
+        }
+        return $result;
     }
     public static function showExif(): bool { return self::getBool('show_exif', true); }
     /** @return list<string> */
     public static function showExifFields(): array
     {
         $v = self::$data['show_exif_fields'] ?? ['Make', 'Model', 'DateTimeOriginal', 'COMPUTED;ApertureFNumber'];
-        return is_array($v) ? array_values($v) : [];
+        if (!is_array($v)) {
+            return ['Make', 'Model', 'DateTimeOriginal', 'COMPUTED;ApertureFNumber'];
+        }
+        return array_values(array_map(static fn(mixed $x): string => is_scalar($x) || $x === null ? (string) $x : '', $v));
     }
     public static function useExif(): bool { return self::getBool('use_exif', true); }
     /** @return array<string,string> */
     public static function useExifMapping(): array
     {
-        $v = self::$data['use_exif_mapping'] ?? ['date_creation' => 'DateTimeOriginal'];
-        return is_array($v) ? $v : [];
+        $default = ['date_creation' => 'DateTimeOriginal'];
+        $v = self::$data['use_exif_mapping'] ?? $default;
+        if (!is_array($v)) {
+            return $default;
+        }
+        $result = [];
+        foreach ($v as $k => $val) {
+            $result[(string) $k] = is_scalar($val) ? (string) $val : '';
+        }
+        return $result;
     }
     public static function allowHtmlInMetadata(): bool { return self::getBool('allow_html_in_metadata', false); }
     public static function metadataKeywordSeparatorRegex(): string { return self::getString('metadata_keyword_separator_regex', '/[.,;]/'); }
@@ -607,7 +677,10 @@ final class Config
     public static function syncExcludeFolders(): array
     {
         $v = self::$data['sync_exclude_folders'] ?? [];
-        return is_array($v) ? array_values($v) : [];
+        if (!is_array($v)) {
+            return [];
+        }
+        return array_values(array_map(static fn(mixed $x): string => is_scalar($x) || $x === null ? (string) $x : '', $v));
     }
     public static function checksumComputeBlocksize(): int { return self::getInt('checksum_compute_blocksize', 50); }
     public static function uploadDetectDuplicate(): bool { return self::getBool('upload_detect_duplicate', true); }
@@ -663,12 +736,14 @@ final class Config
     public static function orderBy(): string { return self::getString('order_by', ''); }
     public static function orderByCustom(): ?string
     {
-        return isset(self::$data['order_by_custom']) ? (string) self::$data['order_by_custom'] : null;
+        $v = self::$data['order_by_custom'] ?? null;
+        return $v !== null ? (is_scalar($v) ? (string) $v : null) : null;
     }
     public static function orderByInsideCategory(): string { return self::getString('order_by_inside_category', ''); }
     public static function orderByInsideCategoryCustom(): ?string
     {
-        return isset(self::$data['order_by_inside_category_custom']) ? (string) self::$data['order_by_inside_category_custom'] : null;
+        $v = self::$data['order_by_inside_category_custom'] ?? null;
+        return $v !== null ? (is_scalar($v) ? (string) $v : null) : null;
     }
 
     public static function mobilTheme(): string { return self::getString('mobile_theme', ''); }
@@ -679,7 +754,7 @@ final class Config
     public static function rateItems(): array
     {
         $v = self::$data['rate_items'] ?? [0, 1, 2, 3, 4, 5];
-        return is_array($v) ? array_values($v) : [0, 1, 2, 3, 4, 5];
+        return is_array($v) ? array_values(array_map(static fn(mixed $x): int => is_scalar($x) ? (int) $x : 0, $v)) : [0, 1, 2, 3, 4, 5];
     }
     public static function defaultRedirectMethod(): string { return self::getString('default_redirect_method', 'http'); }
     public static function uniquenessMode(): string { return self::getString('uniqueness_mode', 'md5sum'); }
@@ -695,7 +770,10 @@ final class Config
     public static function apiKeyForbiddenMethods(): array
     {
         $v = self::$data['api_key_forbidden_methods'] ?? [];
-        return is_array($v) ? array_values($v) : [];
+        if (!is_array($v)) {
+            return [];
+        }
+        return array_values(array_map(static fn(mixed $x): string => is_scalar($x) || $x === null ? (string) $x : '', $v));
     }
 
     /** @return array<string,mixed> */

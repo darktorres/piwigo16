@@ -21,7 +21,10 @@ final class CurrentUser
      */
     public static function attachGlobals(): void
     {
-        self::$instance = User::fromUserArray($GLOBALS['user']);
+        $raw = $GLOBALS['user'] ?? [];
+        /** @var array<string,mixed> $userArray */
+        $userArray = is_array($raw) ? $raw : [];
+        self::$instance = User::fromUserArray($userArray);
     }
 
     public static function get(): User

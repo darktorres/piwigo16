@@ -97,13 +97,15 @@ class Logger
             return;
         }
 
-        $this->options['directory'] = rtrim((string) $this->options['directory'], '\\/') . DIRECTORY_SEPARATOR;
+        $dir = is_scalar($this->options['directory']) ? (string) $this->options['directory'] : '';
+        $this->options['directory'] = rtrim($dir, '\\/') . DIRECTORY_SEPARATOR;
 
         if ($this->options['filename'] == null) {
             $this->options['filename'] = 'log_' . date('Y-m-d') . '.txt';
         }
 
-        $this->options['filePath'] = $this->options['directory'] . $this->options['filename'];
+        $filename = is_scalar($this->options['filename']) ? (string) $this->options['filename'] : '';
+        $this->options['filePath'] = (string) $this->options['directory'] . $filename;
 
         if ($this->options['archiveDays'] != self::ARCHIVE_NO_PURGE && random_int(0, mt_getrandmax()) % 97 == 0) {
             $this->purge();
@@ -116,16 +118,18 @@ class Logger
     private function open(): void
     {
         if ($this->status() == self::STATUS_LOG_CLOSED) {
-            if (!file_exists($this->options['directory'])) {
-                mkgetdir($this->options['directory'], MKGETDIR_DEFAULT | MKGETDIR_PROTECT_HTACCESS);
+            $dir = is_scalar($this->options['directory']) ? (string) $this->options['directory'] : '';
+            $filePath = is_scalar($this->options['filePath']) ? (string) $this->options['filePath'] : '';
+            if (!file_exists($dir)) {
+                mkgetdir($dir, MKGETDIR_DEFAULT | MKGETDIR_PROTECT_HTACCESS);
             }
 
-            if (file_exists($this->options['filePath']) && !is_writable($this->options['filePath'])) {
+            if (file_exists($filePath) && !is_writable($filePath)) {
                 $this->_logStatus = self::STATUS_OPEN_FAILED;
                 throw new \RuntimeException(self::$_messages['writefail']);
             }
 
-            $fh = fopen($this->options['filePath'], 'a');
+            $fh = fopen($filePath, 'a');
             if ($fh !== false) {
                 $this->_fileHandle = $fh;
                 $this->_logStatus = self::STATUS_LOG_OPEN;
@@ -159,9 +163,10 @@ class Logger
      *
      * @return int
      */
-    public function severity()
+    public function severity(): int
     {
-        return $this->options['severity'];
+        $v = $this->options['severity'];
+        return is_int($v) ? $v : (is_scalar($v) ? (int) $v : self::DEBUG);
     }
 
     /**
@@ -287,8 +292,11 @@ class Logger
      */
     public function purge(): void
     {
-        $files = glob($this->options['directory'] . $this->options['globPattern']);
-        $limit = time() - $this->options['archiveDays'] * 86400;
+        $dir = is_scalar($this->options['directory']) ? (string) $this->options['directory'] : '';
+        $globPat = is_scalar($this->options['globPattern']) ? (string) $this->options['globPattern'] : '';
+        $files = glob($dir . $globPat);
+        $archiveDays = is_scalar($this->options['archiveDays']) ? (int) $this->options['archiveDays'] : self::ARCHIVE_NO_PURGE;
+        $limit = time() - $archiveDays * 86400;
 
         foreach ($files ?: [] as $file) {
             if (@filemtime($file) < $limit) {
@@ -328,7 +336,8 @@ class Logger
         $originalTime = microtime(true);
         $micro = sprintf('%06d', ($originalTime - floor($originalTime)) * 1000000);
         $date = new \DateTime(date('Y-m-d H:i:s.'.$micro, intval($originalTime)));
-        return $date->format($this->options['dateFormat']);
+        $dateFormat = is_scalar($this->options['dateFormat']) ? (string) $this->options['dateFormat'] : 'Y-m-d G:i:s';
+        return $date->format($dateFormat);
     }
 
     /**

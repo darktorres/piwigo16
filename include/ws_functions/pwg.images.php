@@ -122,7 +122,7 @@ DELETE
     AND category_id IN ('.implode(', ', $to_remove_cat_ids).')
 ;';
             pwg_query($query);
-            update_category($to_remove_cat_ids);
+            update_category(array_map(fn ($v) => (int) $v, $to_remove_cat_ids));
         }
     }
 
@@ -151,7 +151,7 @@ SELECT category_id, MAX(`rank`) AS max_rank
             }
 
             if ('auto' == $rank_on_category[$cat_id]) {
-                $rank_on_category[$cat_id] = $current_rank_of[$cat_id] + 1;
+                $rank_on_category[$cat_id] = (int) $current_rank_of[$cat_id] + 1;
             }
         }
     }
@@ -292,12 +292,13 @@ function ws_images_addComment(array $params, \Piwigo\Ws\PwgServer $service): Pwg
         return new PwgError(403, 'Comments are disabled');
     }
 
+    $p_image_id = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
     $query = '
 SELECT DISTINCT image_id
   FROM '. IMAGE_CATEGORY_TABLE .'
       INNER JOIN '.CATEGORIES_TABLE.' ON category_id=id
   WHERE commentable="true"
-    AND image_id='.$params['image_id'].
+    AND image_id='.$p_image_id.
       get_sql_condition_FandF(
           [
           'forbidden_categories' => 'id',
@@ -313,15 +314,15 @@ SELECT DISTINCT image_id
     }
 
     $comm = [
-      'author' => trim((string) $params['author']),
-      'content' => trim((string) $params['content']),
-      'image_id' => $params['image_id'],
+      'author' => trim(is_scalar($params['author']) ? (string) $params['author'] : ''),
+      'content' => trim(is_scalar($params['content']) ? (string) $params['content'] : ''),
+      'image_id' => $p_image_id,
      ];
 
     include_once(PHPWG_ROOT_PATH.'include/functions_comment.inc.php');
 
     $infos = [];
-    $comment_action = insert_user_comment($comm, $params['key'], $infos);
+    $comment_action = insert_user_comment($comm, is_scalar($params['key']) ? (string) $params['key'] : '', $infos);
 
     switch ($comment_action) {
         case 'reject':
@@ -358,10 +359,11 @@ function ws_images_getInfo(array $params, \Piwigo\Ws\PwgServer $service): PwgErr
 {
     global $user;
 
+    $p_image_id = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
     $query = '
 SELECT *
   FROM '. IMAGES_TABLE .'
-  WHERE id='. $params['image_id'] .
+  WHERE id='. $p_image_id .
       get_sql_condition_FandF(
           ['visible_images' => 'id'],
           ' AND'
@@ -378,16 +380,14 @@ LIMIT 1
     if ($image_row === null) {
         return new PwgError(404, 'image_id not found');
     }
+    /** @var array<string, mixed> $image_row */
     $image_row = array_merge($image_row, ws_std_get_urls($image_row));
+    $image_row_id = is_numeric($image_row['id']) ? (int) $image_row['id'] : 0;
+    $image_row_file = is_scalar($image_row['file']) ? (string) $image_row['file'] : '';
 
     $image_row['name_raw'] = $image_row['name'];
-    $image_row['name'] = strip_tags(
-        trigger_change(
-            'render_element_name',
-            $image_row['name'],
-            __FUNCTION__
-        ) ?? ''
-    );
+    $render_name = trigger_change('render_element_name', $image_row['name'], __FUNCTION__);
+    $image_row['name'] = strip_tags(is_scalar($render_name) ? (string) $render_name : '');
 
     $image_row['comment_raw'] = $image_row['comment'];
     $image_row['comment'] = trigger_change(
@@ -401,7 +401,7 @@ LIMIT 1
 SELECT id, name, permalink, uppercats, global_rank, commentable
   FROM '. IMAGE_CATEGORY_TABLE .'
     INNER JOIN '. CATEGORIES_TABLE .' ON category_id = id
-  WHERE image_id = '. $image_row['id'] .
+  WHERE image_id = '. $image_row_id .
       get_sql_condition_FandF(
           ['forbidden_categories' => 'category_id'],
           ' AND'
@@ -425,21 +425,16 @@ SELECT id, name, permalink, uppercats, global_rank, commentable
 
         $row['page_url'] = make_picture_url(
             [
-            'image_id' => $image_row['id'],
-            'image_file' => $image_row['file'],
+            'image_id' => $image_row_id,
+            'image_file' => $image_row_file,
             'category' => $row,
             ]
         );
 
-        $row['id'] = (int)$row['id'];
+        $row['id'] = (int) $row['id'];
 
-        $row['name'] = strip_tags(
-            (string) trigger_change(
-                'render_category_name',
-                $row['name'],
-                __FUNCTION__
-            )
-        );
+        $cat_name_raw = trigger_change('render_category_name', $row['name'], __FUNCTION__);
+        $row['name'] = strip_tags(is_scalar($cat_name_raw) ? (string) $cat_name_raw : '');
 
         $related_categories[] = $row;
     }
@@ -452,7 +447,8 @@ SELECT id, name, permalink, uppercats, global_rank, commentable
     }
 
     //-------------------------------------------------------------- related tags
-    $related_tags = get_common_tags([$image_row['id']], -1);
+    /** @var list<array<string, mixed>> $related_tags */
+    $related_tags = get_common_tags([$image_row_id], -1);
     foreach ($related_tags as $i => $tag) {
         $tag['url'] = make_index_url(
             [
@@ -461,14 +457,14 @@ SELECT id, name, permalink, uppercats, global_rank, commentable
         );
         $tag['page_url'] = make_picture_url(
             [
-            'image_id' => $image_row['id'],
-            'image_file' => $image_row['file'],
+            'image_id' => $image_row_id,
+            'image_file' => $image_row_file,
             'tags' => [$tag],
             ]
         );
 
         unset($tag['counter']);
-        $tag['id'] = (int)$tag['id'];
+        $tag['id'] = is_numeric($tag['id']) ? (int) $tag['id'] : 0;
         $related_tags[$i] = $tag;
     }
 
@@ -482,21 +478,21 @@ SELECT id, name, permalink, uppercats, global_rank, commentable
         $query = '
 SELECT COUNT(rate) AS count, ROUND(AVG(rate),2) AS average
   FROM '. RATE_TABLE .'
-  WHERE element_id = '. $image_row['id'] .'
+  WHERE element_id = '. $image_row_id .'
 ;';
         $row = pwg_db_fetch_assoc(pwg_query($query));
 
-        $rating['score'] = (float)$rating['score'];
+        $rating['score'] = is_numeric($rating['score']) ? (float) $rating['score'] : 0.0;
         if ($row !== null) {
-            $rating['average'] = (float)$row['average'];
-            $rating['count'] = (int)$row['count'];
+            $rating['average'] = is_numeric($row['average']) ? (float) $row['average'] : null;
+            $rating['count'] = is_numeric($row['count']) ? (int) $row['count'] : 0;
         }
     }
 
     //---------------------------------------------------------- related comments
     $related_comments = [];
 
-    $where_comments = 'image_id = '.$image_row['id'];
+    $where_comments = 'image_id = '.$image_row_id;
     if (!is_admin()) {
         $where_comments .= ' AND validated="true"';
     }
@@ -509,19 +505,21 @@ SELECT COUNT(id) AS nb_comments
     [$nb_comments] = query2array($query, null, 'nb_comments');
     $nb_comments = (int)$nb_comments;
 
-    if ($nb_comments > 0 and $params['comments_per_page'] > 0) {
+    $p_comments_per_page = is_numeric($params['comments_per_page']) ? (int) $params['comments_per_page'] : 0;
+    $p_comments_page = is_numeric($params['comments_page']) ? (int) $params['comments_page'] : 0;
+    if ($nb_comments > 0 and $p_comments_per_page > 0) {
         $query = '
 SELECT id, date, author, content
   FROM '. COMMENTS_TABLE .'
   WHERE '. $where_comments .'
   ORDER BY date
-  LIMIT '. (int)$params['comments_per_page'] .'
-  OFFSET '. (int)($params['comments_per_page'] * $params['comments_page']) .'
+  LIMIT '. $p_comments_per_page .'
+  OFFSET '. ($p_comments_per_page * $p_comments_page) .'
 ;';
         $result = pwg_query($query);
 
         while ($row = pwg_db_fetch_assoc($result)) {
-            $row['id'] = (int)$row['id'];
+            $row['id'] = (int) $row['id'];
             $related_comments[] = $row;
         }
     }
@@ -530,17 +528,17 @@ SELECT id, date, author, content
     if (\Piwigo\Core\Config::activateComments() and
         $is_commentable and
         (!is_a_guest()
-          or \Piwigo\Core\Config::get('comments_forall')
+          or (bool) \Piwigo\Core\Config::get('comments_forall')
         )
     ) {
         $comment_post_data['author'] = stripslashes((string) $user['username']);
-        $comment_post_data['key'] = get_ephemeral_key(2, $params['image_id']);
+        $comment_post_data['key'] = get_ephemeral_key(2, (string) $p_image_id);
     }
 
     $ret = $image_row;
     foreach (['id','width','height','hit','filesize'] as $k) {
         if (isset($ret[$k])) {
-            $ret[$k] = (int)$ret[$k];
+            $ret[$k] = is_numeric($ret[$k]) ? (int) $ret[$k] : 0;
         }
     }
     foreach (['path', 'storage_category_id'] as $k) {
@@ -601,11 +599,13 @@ SELECT id, date, author, content
  */
 function ws_images_rate(array $params, \Piwigo\Ws\PwgServer $service): mixed
 {
+    $p_image_id = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
+    $p_rate = is_numeric($params['rate']) ? (int) $params['rate'] : 0;
     $query = '
 SELECT DISTINCT id
   FROM '. IMAGES_TABLE .'
     INNER JOIN '. IMAGE_CATEGORY_TABLE .' ON id=image_id
-  WHERE id='. $params['image_id']
+  WHERE id='. $p_image_id
       .get_sql_condition_FandF(
           [
           'forbidden_categories' => 'category_id',
@@ -620,7 +620,7 @@ SELECT DISTINCT id
     }
 
     include_once(PHPWG_ROOT_PATH.'include/functions_rate.inc.php');
-    $res = rate_picture($params['image_id'], (int)$params['rate']);
+    $res = rate_picture($p_image_id, $p_rate);
 
     if ($res == false) {
         return new PwgError(403, 'Forbidden or rate not in '. implode(',', \Piwigo\Core\Config::rateItems()));
@@ -646,7 +646,11 @@ function ws_images_search(array $params, \Piwigo\Ws\PwgServer $service): array
 {
     include_once(PHPWG_ROOT_PATH .'include/functions_search.inc.php');
 
+    $p_query = is_scalar($params['query']) ? (string) $params['query'] : '';
+    $p_page = is_numeric($params['page']) ? (int) $params['page'] : 0;
+    $p_per_page = is_numeric($params['per_page']) ? (int) $params['per_page'] : 0;
     $images = [];
+    /** @var array<string> $where_clauses */
     $where_clauses = ws_std_image_sql_filter($params, 'i.');
     $order_by = ws_std_image_sql_order($params, 'i.');
 
@@ -657,46 +661,53 @@ function ws_images_search(array $params, \Piwigo\Ws\PwgServer $service): array
     }
 
     $search_result = get_quick_search_results(
-        $params['query'],
+        $p_query,
         [
         'super_order_by' => $super_order_by,
         'images_where' => implode(' AND ', $where_clauses),
     ]
     );
 
+    $search_items = is_array($search_result['items'] ?? null) ? $search_result['items'] : [];
     $image_ids = array_slice(
-        $search_result['items'] ?? [],
-        $params['page'] * $params['per_page'],
-        $params['per_page']
+        $search_items,
+        $p_page * $p_per_page,
+        $p_per_page
     );
 
     if (count($image_ids)) {
+        $image_ids_int = array_map(fn ($v) => is_numeric($v) ? (int) $v : 0, $image_ids);
         $query = '
 SELECT *
   FROM '. IMAGES_TABLE .'
-  WHERE id IN ('. implode(',', $image_ids) .')
+  WHERE id IN ('. implode(',', $image_ids_int) .')
 ;';
         $result = pwg_query($query);
-        $image_ids = array_flip($image_ids);
+        $image_ids_flip = array_flip($image_ids_int);
         $favorite_ids = get_user_favorites();
 
         while ($row = pwg_db_fetch_assoc($result)) {
             $image = [];
-            $image['is_favorite'] = isset($favorite_ids[ $row['id'] ]);
+            $row_id = is_scalar($row['id']) ? (string) $row['id'] : '';
+            $image['is_favorite'] = $row_id !== '' && isset($favorite_ids[$row_id]);
             foreach (['id', 'width', 'height', 'hit'] as $k) {
                 if (isset($row[$k])) {
-                    $image[$k] = (int)$row[$k];
+                    $image[$k] = is_numeric($row[$k]) ? (int) $row[$k] : 0;
                 }
             }
             foreach (['file', 'name', 'comment', 'date_creation', 'date_available'] as $k) {
                 $image[$k] = $row[$k];
             }
 
-            $image['name'] = strip_tags(trigger_change('render_element_name', $image['name'] ?? '', __FUNCTION__) ?? '');
+            $name_raw = trigger_change('render_element_name', $image['name'] ?? '', __FUNCTION__);
+            $image['name'] = strip_tags(is_scalar($name_raw) ? (string) $name_raw : '');
             $image['comment'] = trigger_change('render_element_description', $image['comment'] ?? null, __FUNCTION__);
 
             $image = array_merge($image, ws_std_get_urls($row));
-            $images[ $image_ids[ $image['id'] ] ] = $image;
+            $img_id_int = is_numeric($image['id']) ? (int) $image['id'] : 0;
+            if (isset($image_ids_flip[$img_id_int])) {
+                $images[$image_ids_flip[$img_id_int]] = $image;
+            }
         }
         ksort($images, SORT_NUMERIC);
         $images = array_values($images);
@@ -705,10 +716,10 @@ SELECT *
     return [
       'paging' => new PwgNamedStruct(
           [
-          'page' => $params['page'],
-          'per_page' => $params['per_page'],
+          'page' => $p_page,
+          'per_page' => $p_per_page,
           'count' => count($images),
-          'total_count' => count($search_result['items'] ?? []),
+          'total_count' => count($search_items),
           ]
       ),
       'images' => new PwgNamedArray(
@@ -737,12 +748,14 @@ function ws_images_filteredSearch_create(array $params, \Piwigo\Ws\PwgServer $se
     include_once(PHPWG_ROOT_PATH.'include/functions_search.inc.php');
 
     // * check the search exists
+    $search_info = null;
     if (isset($params['search_id'])) {
-        if (empty(get_search_id_pattern($params['search_id']))) {
+        $p_search_id = is_scalar($params['search_id']) ? (string) $params['search_id'] : '';
+        if (empty(get_search_id_pattern($p_search_id))) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid search_id input parameter.');
         }
 
-        $search_info = get_search_info($params['search_id']);
+        $search_info = get_search_info($p_search_id);
         if (empty($search_info)) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'This search does not exist.');
         }
@@ -757,28 +770,31 @@ function ws_images_filteredSearch_create(array $params, \Piwigo\Ws\PwgServer $se
         if (!isset($params['allwords_mode'])) {
             $params['allwords_mode'] = 'AND';
         }
-        if (!preg_match('/^(OR|AND)$/', (string) $params['allwords_mode'])) {
+        $p_allwords_mode = is_scalar($params['allwords_mode']) ? (string) $params['allwords_mode'] : '';
+        if (!preg_match('/^(OR|AND)$/', $p_allwords_mode)) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter allwords_mode');
         }
-        $search['fields']['allwords']['mode'] = $params['allwords_mode'];
+        $search['fields']['allwords']['mode'] = $p_allwords_mode;
 
         $allwords_fields_available = ['name', 'comment', 'file', 'author', 'tags', 'cat-title', 'cat-desc'];
         if (!isset($params['allwords_fields'])) {
             $params['allwords_fields'] = $allwords_fields_available;
         }
-        foreach ($params['allwords_fields'] as $field) {
+        $p_allwords_fields = is_array($params['allwords_fields']) ? $params['allwords_fields'] : [];
+        foreach ($p_allwords_fields as $field) {
             if (!in_array($field, $allwords_fields_available)) {
                 return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter allwords_fields');
             }
         }
-        $search['fields']['allwords']['fields'] = $params['allwords_fields'];
+        $search['fields']['allwords']['fields'] = $p_allwords_fields;
 
-        $search['fields']['allwords']['words'] = split_allwords($params['allwords']);
+        $search['fields']['allwords']['words'] = split_allwords(is_scalar($params['allwords']) ? (string) $params['allwords'] : '');
     }
 
     if (isset($params['tags'])) {
-        foreach ($params['tags'] as $tag_id) {
-            if (!preg_match('/^\d+$/', (string) $tag_id)) {
+        $p_tags = is_array($params['tags']) ? $params['tags'] : [];
+        foreach ($p_tags as $tag_id) {
+            if (!preg_match('/^\d+$/', is_scalar($tag_id) ? (string) $tag_id : '')) {
                 return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter tags');
             }
         }
@@ -786,25 +802,27 @@ function ws_images_filteredSearch_create(array $params, \Piwigo\Ws\PwgServer $se
         if (!isset($params['tags_mode'])) {
             $params['tags_mode'] = 'AND';
         }
-        if (!preg_match('/^(OR|AND)$/', (string) $params['tags_mode'])) {
+        $p_tags_mode = is_scalar($params['tags_mode']) ? (string) $params['tags_mode'] : '';
+        if (!preg_match('/^(OR|AND)$/', $p_tags_mode)) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter tags_mode');
         }
 
         $search['fields']['tags'] = [
-          'words' => $params['tags'],
-          'mode'  => $params['tags_mode'],
+          'words' => $p_tags,
+          'mode'  => $p_tags_mode,
         ];
     }
 
     if (isset($params['categories'])) {
-        foreach ($params['categories'] as $cat_id) {
-            if (!preg_match('/^\d+$/', (string) $cat_id)) {
+        $p_categories = is_array($params['categories']) ? $params['categories'] : [];
+        foreach ($p_categories as $cat_id) {
+            if (!preg_match('/^\d+$/', is_scalar($cat_id) ? (string) $cat_id : '')) {
                 return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter categories');
             }
         }
 
         $search['fields']['cat'] = [
-          'words'   => $params['categories'],
+          'words'   => $p_categories,
           'sub_inc' => $params['categories_withsubs'] ?? false,
         ];
     }
@@ -812,8 +830,9 @@ function ws_images_filteredSearch_create(array $params, \Piwigo\Ws\PwgServer $se
     if (isset($params['authors'])) {
         $authors = [];
 
-        foreach ($params['authors'] as $author) {
-            $authors[] = strip_tags((string) $author);
+        $p_authors = is_array($params['authors']) ? $params['authors'] : [];
+        foreach ($p_authors as $author) {
+            $authors[] = strip_tags(is_scalar($author) ? (string) $author : '');
         }
 
         $search['fields']['author'] = [
@@ -823,31 +842,37 @@ function ws_images_filteredSearch_create(array $params, \Piwigo\Ws\PwgServer $se
     }
 
     if (isset($params['filetypes'])) {
-        foreach ($params['filetypes'] as $ext) {
-            if (!preg_match('/^[a-z0-9]+$/i', (string) $ext)) {
+        $p_filetypes = is_array($params['filetypes']) ? $params['filetypes'] : [];
+        foreach ($p_filetypes as $ext) {
+            if (!preg_match('/^[a-z0-9]+$/i', is_scalar($ext) ? (string) $ext : '')) {
                 return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter filetypes');
             }
         }
 
-        $search['fields']['filetypes'] = $params['filetypes'];
+        $search['fields']['filetypes'] = $p_filetypes;
     }
 
     if (isset($params['added_by'])) {
-        foreach ($params['added_by'] as $user_id) {
-            if (!preg_match('/^\d+$/', (string) $user_id)) {
+        $p_added_by = is_array($params['added_by']) ? $params['added_by'] : [];
+        foreach ($p_added_by as $user_id) {
+            if (!preg_match('/^\d+$/', is_scalar($user_id) ? (string) $user_id : '')) {
                 return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter added_by');
             }
         }
 
-        $search['fields']['added_by'] = $params['added_by'];
+        $search['fields']['added_by'] = $p_added_by;
     }
 
     if (isset($params['date_posted_preset'])) {
-        if (!preg_match('/^(24h|7d|30d|3m|6m|custom|)$/', (string) $params['date_posted_preset'])) {
+        $p_date_posted_preset = is_scalar($params['date_posted_preset']) ? (string) $params['date_posted_preset'] : '';
+        if (!preg_match('/^(24h|7d|30d|3m|6m|custom|)$/', $p_date_posted_preset)) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter date_posted_preset');
         }
 
-        @$search['fields']['date_posted']['preset'] = $params['date_posted_preset'];
+        if (!isset($search['fields']['date_posted'])) {
+            $search['fields']['date_posted'] = [];
+        }
+        $search['fields']['date_posted']['preset'] = $p_date_posted_preset;
 
         if ('custom' == $search['fields']['date_posted']['preset'] and empty($params['date_posted_custom'])) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'date_posted_custom is missing');
@@ -859,23 +884,25 @@ function ws_images_filteredSearch_create(array $params, \Piwigo\Ws\PwgServer $se
             return new PwgError(WS_ERR_INVALID_PARAM, 'date_posted_custom provided date_posted_preset is not custom');
         }
 
-        foreach ($params['date_posted_custom'] as $date) {
+        $p_date_posted_custom = is_array($params['date_posted_custom']) ? $params['date_posted_custom'] : [];
+        foreach ($p_date_posted_custom as $date) {
             $correct_format = false;
+            $date_str = is_scalar($date) ? (string) $date : '';
 
-            $ymd = substr((string) $date, 0, 1);
+            $ymd = substr($date_str, 0, 1);
             if ('y' == $ymd) {
-                if (preg_match('/^y(\d{4})$/', (string) $date, $matches)) {
+                if (preg_match('/^y(\d{4})$/', $date_str, $matches)) {
                     $correct_format = true;
                 }
             } elseif ('m' == $ymd) {
-                if (preg_match('/^m(\d{4}-\d{2})$/', (string) $date, $matches)) {
+                if (preg_match('/^m(\d{4}-\d{2})$/', $date_str, $matches)) {
                     [$year, $month] = explode('-', $matches[1]);
                     if ($month >= 1 and $month <= 12) {
                         $correct_format = true;
                     }
                 }
             } elseif ('d' == $ymd) {
-                if (preg_match('/^d(\d{4}-\d{2}-\d{2})$/', (string) $date, $matches)) {
+                if (preg_match('/^d(\d{4}-\d{2}-\d{2})$/', $date_str, $matches)) {
                     [$year, $month, $day] = explode('-', $matches[1]);
                     if ($month >= 1 and $month <= 12 and $day >= 1 and $day <= cal_days_in_month(CAL_GREGORIAN, (int)$month, (int)$year)) {
                         $correct_format = true;
@@ -884,21 +911,22 @@ function ws_images_filteredSearch_create(array $params, \Piwigo\Ws\PwgServer $se
             }
 
             if (!$correct_format) {
-                return new PwgError(WS_ERR_INVALID_PARAM, 'date_posted_custom, invalid option '.$date);
+                return new PwgError(WS_ERR_INVALID_PARAM, 'date_posted_custom, invalid option '.$date_str);
             }
 
-            @$search['fields']['date_posted']['custom'][] = $date;
+            @$search['fields']['date_posted']['custom'][] = $date_str;
         }
     }
 
     if (isset($params['date_created_preset'])) {
-        if (!preg_match('/^(7d|30d|3m|6m|12m|custom|)$/', (string) $params['date_created_preset'])) {
+        $p_date_created_preset = is_scalar($params['date_created_preset']) ? (string) $params['date_created_preset'] : '';
+        if (!preg_match('/^(7d|30d|3m|6m|12m|custom|)$/', $p_date_created_preset)) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter date_created_preset');
         }
 
-        @$search['fields']['date_created']['preset'] = $params['date_created_preset'];
+        @$search['fields']['date_created']['preset'] = $p_date_created_preset;
 
-        if ('custom' == $search['fields']['date_created']['preset'] and empty($params['date_created_custom'])) {
+        if ('custom' == ($search['fields']['date_created']['preset'] ?? '') and empty($params['date_created_custom'])) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'date_created_custom is missing');
         }
     }
@@ -908,23 +936,25 @@ function ws_images_filteredSearch_create(array $params, \Piwigo\Ws\PwgServer $se
             return new PwgError(WS_ERR_INVALID_PARAM, 'date_created_custom provided date_created_preset is not custom');
         }
 
-        foreach ($params['date_created_custom'] as $date) {
+        $p_date_created_custom = is_array($params['date_created_custom']) ? $params['date_created_custom'] : [];
+        foreach ($p_date_created_custom as $date) {
             $correct_format = false;
+            $date_str = is_scalar($date) ? (string) $date : '';
 
-            $ymd = substr((string) $date, 0, 1);
+            $ymd = substr($date_str, 0, 1);
             if ('y' == $ymd) {
-                if (preg_match('/^y(\d{4})$/', (string) $date, $matches)) {
+                if (preg_match('/^y(\d{4})$/', $date_str, $matches)) {
                     $correct_format = true;
                 }
             } elseif ('m' == $ymd) {
-                if (preg_match('/^m(\d{4}-\d{2})$/', (string) $date, $matches)) {
+                if (preg_match('/^m(\d{4}-\d{2})$/', $date_str, $matches)) {
                     [$year, $month] = explode('-', $matches[1]);
                     if ($month >= 1 and $month <= 12) {
                         $correct_format = true;
                     }
                 }
             } elseif ('d' == $ymd) {
-                if (preg_match('/^d(\d{4}-\d{2}-\d{2})$/', (string) $date, $matches)) {
+                if (preg_match('/^d(\d{4}-\d{2}-\d{2})$/', $date_str, $matches)) {
                     [$year, $month, $day] = explode('-', $matches[1]);
                     if ($month >= 1 and $month <= 12 and $day >= 1 and $day <= cal_days_in_month(CAL_GREGORIAN, (int)$month, (int)$year)) {
                         $correct_format = true;
@@ -933,10 +963,10 @@ function ws_images_filteredSearch_create(array $params, \Piwigo\Ws\PwgServer $se
             }
 
             if (!$correct_format) {
-                return new PwgError(WS_ERR_INVALID_PARAM, 'date_created_custom, invalid option '.$date);
+                return new PwgError(WS_ERR_INVALID_PARAM, 'date_created_custom, invalid option '.$date_str);
             }
 
-            @$search['fields']['date_created']['custom'][] = $date;
+            @$search['fields']['date_created']['custom'][] = $date_str;
         }
     }
 
@@ -1007,14 +1037,16 @@ function ws_images_setPrivacyLevel(array $params, \Piwigo\Ws\PwgServer $service)
         return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid level');
     }
 
+    $p_level = is_numeric($params['level']) ? (int) $params['level'] : 0;
+    $p_image_ids = is_array($params['image_id']) ? array_map(fn ($v) => is_numeric($v) ? (int) $v : 0, $params['image_id']) : [];
     $query = '
 UPDATE '. IMAGES_TABLE .'
-  SET level='. (int)$params['level'] .'
-  WHERE id IN ('. implode(',', $params['image_id']) .')
+  SET level='. $p_level .'
+  WHERE id IN ('. implode(',', $p_image_ids) .')
 ;';
     $result = pwg_query($query);
 
-    pwg_activity('photo', $params['image_id'], 'edit');
+    pwg_activity('photo', $p_image_ids, 'edit');
 
     $affected_rows = pwg_db_changes();
     if ($affected_rows) {
@@ -1038,19 +1070,21 @@ UPDATE '. IMAGES_TABLE .'
  * @param array<mixed> $params
  */function ws_images_setRank(array $params, \Piwigo\Ws\PwgServer $service): array|PwgError
 {
-    if (count($params['image_id']) > 1) {
+    $p_image_id_arr = is_array($params['image_id']) ? array_map(fn ($v) => is_numeric($v) ? (int) $v : 0, $params['image_id']) : [];
+    $p_category_id = is_numeric($params['category_id']) ? (int) $params['category_id'] : 0;
+    if (count($p_image_id_arr) > 1) {
         include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
         save_images_order(
-            $params['category_id'],
-            $params['image_id']
+            $p_category_id,
+            $p_image_id_arr
         );
 
         $query = '
 SELECT
     image_id
   FROM '.IMAGE_CATEGORY_TABLE.'
-  WHERE category_id = '.$params['category_id'].'
+  WHERE category_id = '.$p_category_id.'
   ORDER BY `rank` ASC
 ;';
         $image_ids = query2array($query, null, 'image_id');
@@ -1058,12 +1092,12 @@ SELECT
         // return data for client
         return [
           'image_id' => $image_ids,
-          'category_id' => $params['category_id'],
+          'category_id' => $p_category_id,
           ];
     }
 
     // turns image_id into a simple int instead of array
-    $params['image_id'] = array_shift($params['image_id']);
+    $p_image_id = $p_image_id_arr[0] ?? 0;
 
     if (empty($params['rank'])) {
         return new PwgError(WS_ERR_MISSING_PARAM, 'rank is missing');
@@ -1073,7 +1107,7 @@ SELECT
     $query = '
 SELECT COUNT(*)
   FROM '. IMAGES_TABLE .'
-  WHERE id = '. $params['image_id'] .'
+  WHERE id = '. $p_image_id .'
 ;';
     [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
     if ($count == 0) {
@@ -1084,54 +1118,56 @@ SELECT COUNT(*)
     $query = '
 SELECT COUNT(*)
   FROM '. IMAGE_CATEGORY_TABLE .'
-  WHERE image_id = '. $params['image_id'] .'
-    AND category_id = '. $params['category_id'] .'
+  WHERE image_id = '. $p_image_id .'
+    AND category_id = '. $p_category_id .'
 ;';
     [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
     if ($count == 0) {
         return new PwgError(404, 'This image is not associated to this category');
     }
 
+    $p_rank = is_numeric($params['rank']) ? (int) $params['rank'] : 1;
+
     // what is the current higher rank for this category?
     $query = '
 SELECT MAX(`rank`) AS max_rank
   FROM '. IMAGE_CATEGORY_TABLE .'
-  WHERE category_id = '. $params['category_id'] .'
+  WHERE category_id = '. $p_category_id .'
 ;';
     $row = pwg_db_fetch_assoc(pwg_query($query));
 
     if ($row !== null && is_numeric($row['max_rank'])) {
-        if ($params['rank'] > $row['max_rank']) {
-            $params['rank'] = $row['max_rank'] + 1;
+        if ($p_rank > (int) $row['max_rank']) {
+            $p_rank = (int) $row['max_rank'] + 1;
         }
     } else {
-        $params['rank'] = 1;
+        $p_rank = 1;
     }
 
     // update rank for all other photos in the same category
     $query = '
 UPDATE '. IMAGE_CATEGORY_TABLE .'
   SET `rank` = `rank` + 1
-  WHERE category_id = '. $params['category_id'] .'
+  WHERE category_id = '. $p_category_id .'
     AND `rank` IS NOT NULL
-    AND `rank` >= '. $params['rank'] .'
+    AND `rank` >= '. $p_rank .'
 ;';
     pwg_query($query);
 
     // set the new rank for the photo
     $query = '
 UPDATE '. IMAGE_CATEGORY_TABLE .'
-  SET `rank` = '. $params['rank'] .'
-  WHERE image_id = '. $params['image_id'] .'
-    AND category_id = '. $params['category_id'] .'
+  SET `rank` = '. $p_rank .'
+  WHERE image_id = '. $p_image_id .'
+    AND category_id = '. $p_category_id .'
 ;';
     pwg_query($query);
 
     // return data for client
     return [
-      'image_id' => $params['image_id'],
-      'category_id' => $params['category_id'],
-      'rank' => $params['rank'],
+      'image_id' => $p_image_id,
+      'category_id' => $p_category_id,
+      'rank' => $p_rank,
       ];
 }
 
@@ -1160,7 +1196,7 @@ function ws_images_add_chunk(array $params, \Piwigo\Ws\PwgServer $service): mixe
         $logger->debug(sprintf(
             '[ws_images_add_chunk] input param "%s" : "%s"',
             $param_key,
-            $param_value ?? 'NULL'
+            is_scalar($param_value) ? (string) $param_value : 'NULL'
         ), 'WS');
     }
 
@@ -1171,24 +1207,28 @@ function ws_images_add_chunk(array $params, \Piwigo\Ws\PwgServer $service): mixe
         return new PwgError(500, 'error during buffer directory creation');
     }
 
+    $p_original_sum = is_scalar($params['original_sum']) ? (string) $params['original_sum'] : '';
+    $p_type = is_scalar($params['type']) ? (string) $params['type'] : '';
+    $p_position = is_numeric($params['position']) ? (int) $params['position'] : 0;
+    $p_data = is_scalar($params['data']) ? (string) $params['data'] : '';
     $filename = sprintf(
         '%s-%s-%05u.block',
-        $params['original_sum'],
-        $params['type'],
-        $params['position']
+        $p_original_sum,
+        $p_type,
+        $p_position
     );
 
-    $logger->debug('[ws_images_add_chunk] data length : '.strlen((string) $params['data']), 'WS');
+    $logger->debug('[ws_images_add_chunk] data length : '.strlen($p_data), 'WS');
 
     $bytes_written = file_put_contents(
         $upload_dir.'/'.$filename,
-        base64_decode((string) $params['data'])
+        base64_decode($p_data)
     );
 
     if (false === $bytes_written) {
         return new PwgError(
             500,
-            'an error has occured while writting chunk '.$params['position'].' for '.$params['type']
+            'an error has occured while writting chunk '.$p_position.' for '.$p_type
         );
     }
     return null;
@@ -1212,13 +1252,15 @@ function ws_images_addFile(array $params, \Piwigo\Ws\PwgServer $service): mixed
 
     $logger->debug(__FUNCTION__, 'WS', $params);
 
+    $p_image_id = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
+    $p_type_af = is_scalar($params['type']) ? (string) $params['type'] : '';
     // what is the path and other infos about the photo?
     $query = '
 SELECT
     path, file, md5sum,
     width, height, filesize
   FROM '. IMAGES_TABLE .'
-  WHERE id = '. $params['image_id'] .'
+  WHERE id = '. $p_image_id .'
 ;';
     $result = pwg_query($query);
 
@@ -1231,28 +1273,31 @@ SELECT
         return new PwgError(404, 'image_id not found');
     }
 
+    $image_md5sum = is_scalar($image['md5sum']) ? (string) $image['md5sum'] : '';
+    $image_file = is_scalar($image['file']) ? (string) $image['file'] : '';
+
     // since Piwigo 2.4 and derivatives, we do not take the imported "thumb" into account
-    if ('thumb' == $params['type']) {
-        remove_chunks($image['md5sum'], $params['type']);
+    if ('thumb' == $p_type_af) {
+        remove_chunks($image_md5sum, $p_type_af);
         return true;
     }
 
     // since Piwigo 2.4 and derivatives, we only care about the "original"
     $original_type = 'file';
-    if ('high' == $params['type']) {
+    if ('high' == $p_type_af) {
         $original_type = 'high';
     }
 
-    $file_path = \Piwigo\Core\Config::uploadDir().'/buffer/'.$image['md5sum'].'-original';
+    $file_path = \Piwigo\Core\Config::uploadDir().'/buffer/'.$image_md5sum.'-original';
 
-    merge_chunks($file_path, $image['md5sum'], $original_type);
+    merge_chunks($file_path, $image_md5sum, $original_type);
     chmod($file_path, 0644);
 
     include_once(PHPWG_ROOT_PATH.'admin/include/functions_upload.inc.php');
 
     // if we receive the "file", we only update the original if the "file" is
     // bigger than current original
-    if ('file' == $params['type']) {
+    if ('file' == $p_type_af) {
         $do_update = false;
 
         $infos = pwg_image_infos($file_path);
@@ -1271,11 +1316,11 @@ SELECT
 
     $image_id = add_uploaded_file(
         $file_path,
-        $image['file'],
+        $image_file,
         null,
         null,
-        $params['image_id'],
-        $image['md5sum'] // we force the md5sum to remain the same
+        $p_image_id,
+        $image_md5sum // we force the md5sum to remain the same
     );
     return null;
 }
@@ -1309,15 +1354,20 @@ function ws_images_add(array $params, \Piwigo\Ws\PwgServer $service): PwgError|a
         $logger->debug(sprintf(
             '[pwg.images.add] input param "%s" : "%s"',
             $param_key,
-            $param_value ?? 'NULL'
+            is_scalar($param_value) ? (string) $param_value : 'NULL'
         ), 'WS');
     }
 
-    if ($params['image_id'] > 0) {
+    $p_image_id = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
+    $p_original_sum = is_scalar($params['original_sum']) ? (string) $params['original_sum'] : '';
+    $p_original_filename = is_scalar($params['original_filename']) ? (string) $params['original_filename'] : null;
+    $p_level = isset($params['level']) && is_numeric($params['level']) ? (int) $params['level'] : null;
+
+    if ($p_image_id > 0) {
         $query = '
 SELECT COUNT(*)
   FROM '. IMAGES_TABLE .'
-  WHERE id = '. $params['image_id'] .'
+  WHERE id = '. $p_image_id .'
 ;';
         [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
         if ($count == 0) {
@@ -1329,10 +1379,10 @@ SELECT COUNT(*)
     if ($params['check_uniqueness']) {
         $where_clause = '1=1';
         if ('md5sum' == \Piwigo\Core\Config::uniquenessMode()) {
-            $where_clause = "md5sum = '".$params['original_sum']."'";
+            $where_clause = "md5sum = '".$p_original_sum."'";
         }
         if ('filename' == \Piwigo\Core\Config::uniquenessMode()) {
-            $where_clause = "file = '".$params['original_filename']."'";
+            $where_clause = "file = '".(is_scalar($params['original_filename']) ? (string) $params['original_filename'] : '')."'";
         }
 
         $query = '
@@ -1350,29 +1400,29 @@ SELECT COUNT(*)
     // Piwigo 2.4, we only take the biggest photos sent on
     // pwg.images.addChunk. If "high" is available we use it as "original"
     // else we use "file".
-    remove_chunks($params['original_sum'], 'thumb');
+    remove_chunks($p_original_sum, 'thumb');
 
     if (isset($params['high_sum'])) {
         $original_type = 'high';
-        remove_chunks($params['original_sum'], 'file');
+        remove_chunks($p_original_sum, 'file');
     } else {
         $original_type = 'file';
     }
 
-    $file_path = \Piwigo\Core\Config::uploadDir().'/buffer/'.$params['original_sum'].'-original';
+    $file_path = \Piwigo\Core\Config::uploadDir().'/buffer/'.$p_original_sum.'-original';
 
-    merge_chunks($file_path, $params['original_sum'], $original_type);
+    merge_chunks($file_path, $p_original_sum, $original_type);
     chmod($file_path, 0644);
 
     include_once(PHPWG_ROOT_PATH.'admin/include/functions_upload.inc.php');
 
     $image_id = add_uploaded_file(
         $file_path,
-        $params['original_filename'],
+        $p_original_filename,
         null, // categories
-        $params['level'] ?? null,
-        $params['image_id'] > 0 ? $params['image_id'] : null,
-        $params['original_sum']
+        $p_level,
+        $p_image_id > 0 ? $p_image_id : null,
+        $p_original_sum
     );
 
     $info_columns = [
@@ -1401,9 +1451,10 @@ SELECT COUNT(*)
 
     // let's add links between the image and the categories
     if (isset($params['categories'])) {
-        ws_add_image_category_relations($image_id, $params['categories']);
+        $p_categories_str = is_scalar($params['categories']) ? (string) $params['categories'] : '';
+        ws_add_image_category_relations($image_id, $p_categories_str);
 
-        if (preg_match('/^\d+/', (string) $params['categories'], $matches)) {
+        if (preg_match('/^\d+/', $p_categories_str, $matches)) {
             $category_id = $matches[0];
 
             $query = '
@@ -1460,8 +1511,10 @@ function ws_images_addSimple(array $params, \Piwigo\Ws\PwgServer $service): PwgE
         return new PwgError(405, 'The image (file) is missing');
     }
 
-    if (isset($_FILES['image']['error']) && $_FILES['image']['error'] != 0) {
-        $message = match ($_FILES['image']['error']) {
+    $files_image = is_array($_FILES['image']) ? $_FILES['image'] : [];
+    $files_image_error = is_numeric($files_image['error'] ?? null) ? (int) ($files_image['error'] ?? 0) : 0;
+    if (isset($files_image['error']) && $files_image_error != 0) {
+        $message = match ($files_image_error) {
             UPLOAD_ERR_INI_SIZE => 'The uploaded file exceeds the upload_max_filesize directive in php.ini.',
             UPLOAD_ERR_FORM_SIZE => 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form.',
             UPLOAD_ERR_PARTIAL => 'The uploaded file was only partially uploaded.',
@@ -1471,18 +1524,20 @@ function ws_images_addSimple(array $params, \Piwigo\Ws\PwgServer $service): PwgE
             UPLOAD_ERR_EXTENSION => 'A PHP extension stopped the file upload. ' .
             'PHP does not provide a way to ascertain which extension caused the file ' .
             'upload to stop; examining the list of loaded extensions with phpinfo() may help.',
-            default => "Error number {$_FILES['image']['error']} occurred while uploading a file.",
+            default => "Error number {$files_image_error} occurred while uploading a file.",
         };
 
         $logger->error(__FUNCTION__ . ' ' . $message);
         return new PwgError(500, $message);
     }
 
-    if ($params['image_id'] > 0) {
+    $p_image_id_as = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
+    $p_category_as = is_array($params['category']) ? $params['category'] : [];
+    if ($p_image_id_as > 0) {
         $query = '
 SELECT COUNT(*)
   FROM '. IMAGES_TABLE .'
-  WHERE id = '. $params['image_id'] .'
+  WHERE id = '. $p_image_id_as .'
 ;';
         [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
         if ($count == 0) {
@@ -1492,12 +1547,14 @@ SELECT COUNT(*)
 
     include_once(PHPWG_ROOT_PATH.'admin/include/functions_upload.inc.php');
 
+    $files_tmp = is_scalar($files_image['tmp_name'] ?? null) ? (string) ($files_image['tmp_name'] ?? '') : '';
+    $files_name = is_scalar($files_image['name'] ?? null) ? (string) ($files_image['name'] ?? '') : null;
     $image_id = add_uploaded_file(
-        $_FILES['image']['tmp_name'],
-        $_FILES['image']['name'],
-        $params['category'],
+        $files_tmp,
+        $files_name,
+        $p_category_as,
         8,
-        $params['image_id'] > 0 ? $params['image_id'] : null
+        $p_image_id_as > 0 ? $p_image_id_as : null
     );
 
     $info_columns = [
@@ -1527,10 +1584,10 @@ SELECT COUNT(*)
         $tag_ids = [];
         if (is_array($params['tags'])) {
             foreach ($params['tags'] as $tag_name) {
-                $tag_ids[] = tag_id_from_tag_name($tag_name);
+                $tag_ids[] = tag_id_from_tag_name(is_scalar($tag_name) ? (string) $tag_name : '');
             }
         } else {
-            $tag_names = preg_split('~(?<!\\\),~', (string) $params['tags']) ?: [];
+            $tag_names = preg_split('~(?<!\\\),~', is_scalar($params['tags']) ? (string) $params['tags'] : '') ?: [];
             foreach ($tag_names as $tag_name) {
                 $tag_ids[] = tag_id_from_tag_name(preg_replace('#\\\\*,#', ',', $tag_name) ?? '');
             }
@@ -1541,11 +1598,13 @@ SELECT COUNT(*)
 
     $url_params = ['image_id' => $image_id];
 
-    if (!empty($params['category'])) {
+    if (!empty($p_category_as)) {
+        $first_cat = $p_category_as[0] ?? null;
+        $first_cat_id = is_numeric($first_cat) ? (int) $first_cat : 0;
         $query = '
 SELECT id, name, permalink
   FROM '. CATEGORIES_TABLE .'
-  WHERE id = '. $params['category'][0] .'
+  WHERE id = '. $first_cat_id .'
 ;';
         $result = pwg_query($query);
         $category = pwg_db_fetch_assoc($result);

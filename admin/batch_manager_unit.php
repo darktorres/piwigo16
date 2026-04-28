@@ -41,7 +41,7 @@ trigger_notify('loc_begin_element_set_unit');
 if (isset($_POST['submit'])) {
     check_pwg_token();
     check_input_parameter('element_ids', $_POST, false, '/^\d+(,\d+)*$/');
-    $collection = explode(',', (string) $_POST['element_ids']);
+    $collection = explode(',', is_scalar($_POST['element_ids']) ? (string) $_POST['element_ids'] : '');
 
     $datas = [];
 
@@ -60,10 +60,12 @@ SELECT id, date_creation
         $data['author'] = $_POST['author-'.$row['id']];
         $data['level'] = $_POST['level-'.$row['id']];
 
+        $desc_key = 'description-'.(is_scalar($row['id']) ? (string) $row['id'] : '');
         if (\Piwigo\Core\Config::allowHtmlDescriptions()) {
-            $data['comment'] = @$_POST['description-'.$row['id']];
+            $data['comment'] = @$_POST[$desc_key];
         } else {
-            $data['comment'] = strip_tags((string) @$_POST['description-'.$row['id']]);
+            $desc_val = @$_POST[$desc_key];
+            $data['comment'] = strip_tags(is_scalar($desc_val) ? (string) $desc_val : '');
         }
 
         if (!empty($_POST['date_creation-'.$row['id']])) {
@@ -76,10 +78,18 @@ SELECT id, date_creation
 
         // tags management
         $tag_ids = [];
-        if (!empty($_POST[ 'tags-'.$row['id'] ])) {
-            $tag_ids = get_tag_ids($_POST[ 'tags-'.$row['id'] ]);
+        $tags_key = 'tags-'.(is_scalar($row['id']) ? (string) $row['id'] : '');
+        if (!empty($_POST[$tags_key])) {
+            $tags_val = $_POST[$tags_key];
+            if (is_array($tags_val)) {
+                $tags_val = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $tags_val);
+            } else {
+                $tags_val = is_scalar($tags_val) ? (string) $tags_val : '';
+            }
+            $tag_ids = get_tag_ids($tags_val);
         }
-        set_tags($tag_ids, $row['id']);
+        $row_id = is_numeric($row['id']) ? (int) $row['id'] : 0;
+        set_tags($tag_ids, $row_id);
     }
 
     mass_updates(
@@ -102,7 +112,7 @@ if (isset($_POST['nb_photos_deleted'])) {
 
     // let's fake a collection (we don't know the image_ids so we use "null", we only
     // care about the number of items here)
-    $collection = array_fill(0, (int) $_POST['nb_photos_deleted'], null);
+    $collection = array_fill(0, is_numeric($_POST['nb_photos_deleted']) ? (int) $_POST['nb_photos_deleted'] : 0, null);
 } elseif (isset($_POST['setSelected'])) {
     // Here we don't use check_input_parameter because preg_match has a limit in
     // the repetitive pattern. Found a limit to 3276 but may depend on memory.
@@ -110,7 +120,7 @@ if (isset($_POST['nb_photos_deleted'])) {
     // check_input_parameter('whole_set', $_POST, false, '/^\d+(,\d+)*$/');
     //
     // Instead, let's break the input parameter into pieces and check pieces one by one.
-    $collection = explode(',', (string) $_POST['whole_set']);
+    $collection = explode(',', is_scalar($_POST['whole_set']) ? (string) $_POST['whole_set'] : '');
 
     foreach ($collection as $id) {
         if (!preg_match('/^\d+$/', $id)) {
@@ -118,7 +128,7 @@ if (isset($_POST['nb_photos_deleted'])) {
         }
     }
 } elseif (isset($_POST['selection'])) {
-    $collection = $_POST['selection'];
+    $collection = is_array($_POST['selection']) ? $_POST['selection'] : [];
 }
 
 
@@ -153,7 +163,7 @@ $template->assign('ACTIVE_PLUGINS', array_keys($pwg_loaded_plugins));
 if (!empty($_GET['display'])) {
     // conf_update_param('batch_manager_images_per_page_unit' , intval($_GET['display']));
     // $page['nb_images'] = \Piwigo\Core\Config::batchManagerImagesPerPageUnit();
-    $page['nb_images'] = intval($_GET['display']);
+    $page['nb_images'] = is_numeric($_GET['display']) ? (int) $_GET['display'] : 5;
 } elseif (in_array(\Piwigo\Core\Config::batchManagerImagesPerPageUnit(), [5, 10, 50])) {
     $page['nb_images'] = \Piwigo\Core\Config::batchManagerImagesPerPageUnit();
 } else {
@@ -172,14 +182,18 @@ if (count($page['cat_elements_id']) > 0) {
 
     $element_ids = [];
 
+    /** @var array<string, mixed> $bmf */
+    $bmf = is_array($_SESSION['bulk_manager_filter'] ?? null) ? $_SESSION['bulk_manager_filter'] : [];
+
     $is_category = false;
-    if (isset($_SESSION['bulk_manager_filter']['category'])
-        and !isset($_SESSION['bulk_manager_filter']['category_recursive'])) {
+    if (isset($bmf['category'])
+        and !isset($bmf['category_recursive'])) {
         $is_category = true;
     }
+    $bmf_category_val = is_numeric($bmf['category'] ?? null) ? (int) $bmf['category'] : 0;
 
-    if (isset($_SESSION['bulk_manager_filter']['prefilter'])
-        and 'duplicates' == $_SESSION['bulk_manager_filter']['prefilter']) {
+    if (is_string($bmf['prefilter'] ?? null)
+        and 'duplicates' == $bmf['prefilter']) {
         \Piwigo\Core\Config::override('order_by', ' ORDER BY file, id');
     }
 
@@ -189,11 +203,11 @@ SELECT *
   FROM '.IMAGES_TABLE;
 
     if ($is_category) {
-        $category_info = get_cat_info($_SESSION['bulk_manager_filter']['category']);
+        $category_info = get_cat_info($bmf_category_val);
 
         \Piwigo\Core\Config::override('order_by', \Piwigo\Core\Config::orderByInsideCategory());
         if (!empty($category_info['image_order'])) {
-            \Piwigo\Core\Config::override('order_by', ' ORDER BY '.$category_info['image_order']);
+            \Piwigo\Core\Config::override('order_by', ' ORDER BY '.(is_scalar($category_info['image_order']) ? (string) $category_info['image_order'] : ''));
         }
 
         $query .= '
@@ -205,7 +219,7 @@ SELECT *
 
     if ($is_category) {
         $query .= '
-    AND category_id = '.$_SESSION['bulk_manager_filter']['category'];
+    AND category_id = '.$bmf_category_val;
     }
 
     $query .= '
@@ -252,10 +266,11 @@ SELECT
         $tag_selection = get_taglist($query);
 
         $legend = render_element_name($row);
-        if ($legend != get_name_from_file($row['file'])) {
-            $legend .= ' ('.$row['file'].')';
+        $row_file_str = is_scalar($row['file'] ?? null) ? (string) $row['file'] : '';
+        if ($legend != get_name_from_file($row_file_str)) {
+            $legend .= ' ('.$row_file_str.')';
         }
-        $extTab = explode('.', (string) $row['path']);
+        $extTab = explode('.', is_scalar($row['path'] ?? null) ? (string) $row['path'] : '');
 
 
 
@@ -274,12 +289,14 @@ SELECT
         $sub_result = pwg_query($query);
         $related_categories = [];
         $related_category_ids = [];
-        $media['image'] = get_image_infos($row['id'], true);
+        $row_id_int = is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0;
+        $media['image'] = get_image_infos($row_id_int, true);
 
         while ($item = pwg_db_fetch_assoc($sub_result)) {
+            $item_uppercats = is_scalar($item['uppercats'] ?? null) ? (string) $item['uppercats'] : '';
             $name =
               get_cat_display_name_cache(
-                  $item['uppercats'],
+                  $item_uppercats,
                   get_root_url().'admin.php?page=album-'
               );
 
@@ -287,8 +304,9 @@ SELECT
                 $template->assign('STORAGE_CATEGORY', $name);
             }
 
-            $related_categories[$item['category_id']] = ['name' => $name, 'unlinkable' => $item['category_id'] != $storage_category_id];
-            $related_category_ids[] = $item['category_id'];
+            $item_cat_id = is_numeric($item['category_id'] ?? null) ? (int) $item['category_id'] : 0;
+            $related_categories[$item_cat_id] = ['name' => $name, 'unlinkable' => $item_cat_id != $storage_category_id];
+            $related_category_ids[] = $item_cat_id;
         }
 
         // jump to link
@@ -344,21 +362,21 @@ SELECT
         'FILE_SRC' => DerivativeImage::url(IMG_LARGE, $src_image),
         'LEGEND' => $legend,
         'U_EDIT' => get_root_url().'admin.php?page=photo-'.$row['id'],
-        'NAME' => htmlspecialchars($row['name'] ?? ''),
-        'AUTHOR' => htmlspecialchars($row['author'] ?? ''),
+        'NAME' => htmlspecialchars((string) ($row['name'] ?? '')),
+        'AUTHOR' => htmlspecialchars((string) ($row['author'] ?? '')),
         'LEVEL' => !empty($row['level']) ? $row['level'] : '0',
-        'DESCRIPTION' => htmlspecialchars($row['comment'] ?? ''),
+        'DESCRIPTION' => htmlspecialchars((string) ($row['comment'] ?? '')),
         'DATE_CREATION' => $row['date_creation'],
         'TAGS' => $tag_selection,
         'is_svg' => (strtoupper(end($extTab)) == 'SVG'),
         'TITLE' => render_element_name($row),
         'DIMENSIONS' => @$row['width'].'x'.@$row['height'].' px',
         'FORMAT' => ($row['width'] >= $row['height']) ? 1 : 0,//0:horizontal, 1:vertical
-        'FILESIZE' => l10n('%.2f MB', $row['filesize'] / 1024),
-        'REGISTRATION_DATE' => format_date($row['date_available']),
+        'FILESIZE' => l10n('%.2f MB', (is_numeric($row['filesize'] ?? null) ? (float) $row['filesize'] : 0.0) / 1024),
+        'REGISTRATION_DATE' => format_date(is_string($row['date_available'] ?? null) ? $row['date_available'] : (is_int($row['date_available'] ?? null) ? $row['date_available'] : null)),
         'EXT' => l10n('%s file type', end($extTab)),
-        'POST_DATE' => l10n('Added on %s', format_date($row['date_available'], ['day', 'month', 'year'])),
-        'AGE' => l10n(ucfirst(time_since($row['date_available'], 'year'))),
+        'POST_DATE' => l10n('Added on %s', format_date(is_string($row['date_available'] ?? null) ? $row['date_available'] : (is_int($row['date_available'] ?? null) ? $row['date_available'] : null), ['day', 'month', 'year'])),
+        'AGE' => l10n(ucfirst(time_since(is_string($row['date_available'] ?? null) ? $row['date_available'] : (is_int($row['date_available'] ?? null) ? $row['date_available'] : null), 'year'))),
         'ADDED_BY' => l10n('Added by %s', $added_by_username_of[ $row['added_by'] ] ?? l10n('N/A')),
         'STATS' => l10n('Visited %d times', $row['hit']),
         'FILE' => l10n('%s', $row['file']),

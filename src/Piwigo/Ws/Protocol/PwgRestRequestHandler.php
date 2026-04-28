@@ -9,9 +9,10 @@ use Piwigo\Ws\PwgRequestHandler;
 
 class PwgRestRequestHandler extends PwgRequestHandler
 {
-    public function handleRequest(mixed &$service): void
+    public function handleRequest(\Piwigo\Ws\PwgServer &$service): void
     {
         $params = [];
+        $method = '';
 
         $param_array = $service->isPost() ? $_POST : $_GET;
         foreach ($param_array as $name => $value) {
@@ -19,13 +20,14 @@ class PwgRestRequestHandler extends PwgRequestHandler
                 continue;
             } // ignore - special keys
             if ($name == 'method') {
-                $method = $value;
+                $method = is_scalar($value) ? (string) $value : '';
             } else {
                 $params[$name] = $value;
             }
         }
         if (empty($method) && isset($_GET['method'])) {
-            $method = $_GET['method'];
+            $raw = $_GET['method'];
+            $method = is_scalar($raw) ? (string) $raw : '';
         }
 
         if (empty($method)) {

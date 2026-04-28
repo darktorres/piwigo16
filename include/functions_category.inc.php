@@ -464,7 +464,7 @@ SELECT image_id
  */
 /**
  * @param array<mixed> $userdata
- * @return array<mixed>
+ * @return array<array<mixed>>
  */
 function get_computed_categories(array &$userdata, ?int $filter_days = null): array
 {
@@ -567,6 +567,7 @@ FROM '.CATEGORIES_TABLE.' as c
  * @param array<mixed> $cats
  * @param array<mixed> $cat
  */
+/** @param array<array<mixed>> $cats */
 function remove_computed_category(array &$cats, array $cat): void
 {
     if (isset($cats[$cat['id_uppercat']])) {

@@ -170,7 +170,7 @@ SELECT IF(MAX('.$column.')+1 IS NULL, 1, MAX('.$column.')+1)
   FROM '.$table;
     [$next] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
-    return $next;
+    return (int) ($next ?? '1');
 }
 
 function pwg_db_changes(): int
@@ -197,7 +197,7 @@ function pwg_db_fetch_array(bool|mysqli_result $result): array|false
     return $result->fetch_array() ?? false;
 }
 
-/** @return array<string,mixed>|null */
+/** @return array<string, float|int|string|null>|null */
 function pwg_db_fetch_assoc(bool|mysqli_result $result): ?array
 {
     if (!($result instanceof mysqli_result)) {
@@ -207,7 +207,7 @@ function pwg_db_fetch_assoc(bool|mysqli_result $result): ?array
     return $row !== false ? $row : null;
 }
 
-/** @return array<int,mixed>|null */
+/** @return array<int, float|int|string|null>|null */
 function pwg_db_fetch_row(bool|mysqli_result $result): ?array
 {
     if (!($result instanceof mysqli_result)) {
@@ -300,7 +300,8 @@ UPDATE '.protect_column_name($tablename).'
                 $separator = $is_first ? '' : ",\n    ";
 
                 if (isset($data[$key]) and $data[$key] != '') {
-                    $query .= $separator.protect_column_name($key).' = \''.$data[$key].'\'';
+                    $val = $data[$key];
+                    $query .= $separator.protect_column_name($key).' = \''.(is_scalar($val) ? $val : '').'\'';
                 } else {
                     if ($flags & MASS_UPDATES_SKIP_EMPTY) {
                         continue; // next field
@@ -320,7 +321,8 @@ UPDATE '.protect_column_name($tablename).'
                         $query .= ' AND ';
                     }
                     if (isset($data[$key])) {
-                        $query .= protect_column_name($key).' = \''.$data[$key].'\'';
+                        $kval = $data[$key];
+                        $query .= protect_column_name($key).' = \''.(is_scalar($kval) ? $kval : '').'\'';
                     } else {
                         $query .= protect_column_name($key).' IS NULL';
                     }
@@ -427,7 +429,7 @@ UPDATE '.protect_column_name($tablename).'
         $separator = $is_first ? '' : ",\n    ";
 
         if (isset($value) and $value !== '') {
-            $query .= $separator.protect_column_name($key).' = \''.$value.'\'';
+            $query .= $separator.protect_column_name($key).' = \''.(is_scalar($value) ? $value : '').'\'';
         } else {
             if ($flags & MASS_UPDATES_SKIP_EMPTY) {
                 continue; // next field
@@ -448,7 +450,7 @@ UPDATE '.protect_column_name($tablename).'
                 $query .= ' AND ';
             }
             if (isset($value)) {
-                $query .= protect_column_name($key).' = \''.$value.'\'';
+                $query .= protect_column_name($key).' = \''.(is_scalar($value) ? $value : '').'\'';
             } else {
                 $query .= protect_column_name($key).' IS NULL';
             }
@@ -485,7 +487,7 @@ function mass_inserts(string $table_name, array $dbfields, array $datas, array $
 
         $query = 'SHOW VARIABLES LIKE \'max_allowed_packet\'';
         list(, $packet_size) = pwg_db_fetch_row(pwg_query($query)) ?? [null, null];
-        $packet_size = $packet_size - 2000; // The last list of values MUST not exceed 2000 character*/
+        $packet_size = (int) ($packet_size ?? '0') - 2000; // The last list of values MUST not exceed 2000 character*/
         $query = '';
 
         foreach ($datas as $insert) {
@@ -514,7 +516,8 @@ INSERT '.$ignore.' INTO '.protect_column_name($table_name).'
                 if (!isset($insert[$dbfield]) or $insert[$dbfield] === '') {
                     $query .= 'NULL';
                 } else {
-                    $query .= "'".$insert[$dbfield]."'";
+                    $dbVal = $insert[$dbfield];
+                    $query .= "'".(is_scalar($dbVal) ? $dbVal : '')."'";
                 }
             }
             $query .= ')';
@@ -561,7 +564,7 @@ INSERT '.$ignore.' INTO '.protect_column_name($table_name).'
             if ($value === '' || is_null($value)) {
                 $query .= 'NULL';
             } else {
-                $query .= "'".$value."'";
+                $query .= "'".(is_scalar($value) ? $value : '')."'";
             }
         }
         $query .= ')';
@@ -676,13 +679,13 @@ function get_enums(string $table, $field)
  * @param mixed $input
  * @return bool
  */
-function get_boolean($input)
+function get_boolean(mixed $input): bool
 {
-    if ('false' === strtolower((string) $input)) {
+    if (is_scalar($input) && 'false' === strtolower((string) $input)) {
         return false;
     }
 
-    return (bool)$input;
+    return (bool) $input;
 }
 
 /**
@@ -716,7 +719,7 @@ function pwg_db_get_recent_period(string $period, string $date = 'CURRENT_DATE')
 SELECT '.pwg_db_get_recent_period_expression($period);
     [$d] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
-    return $d;
+    return is_scalar($d) ? (string) $d : '';
 }
 
 function pwg_db_get_flood_period_expression(int|string $seconds): string
@@ -830,7 +833,13 @@ function my_error(string $header, bool $die): void
  * @param string $key_name
  * @param string $value_name
  */
-/** @return array<mixed> */
+/**
+ * @phpstan-return (
+ *   $key_name is null
+ *     ? ($value_name is null ? list<array<string, float|int|string|null>> : list<float|int|string|null>)
+ *     : ($value_name is null ? array<string, array<string, float|int|string|null>> : array<string, float|int|string|null>)
+ * )
+ */
 function query2array(string $query, ?string $key_name = null, ?string $value_name = null): array
 {
     $result = pwg_query($query);

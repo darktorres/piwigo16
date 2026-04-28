@@ -64,24 +64,24 @@ class PwgXmlWriter
             $this->_indentLevel--;
             $this->_indent();
             //      $this->_eol_indent();
-            $this->_output('</'.$name.'>');
+            $this->_output('</' . (is_string($name) ? $name : '') . '>');
         }
     }
 
     public function write_content(mixed $value): void
     {
         $this->_end_prev(false);
-        $value = (string)$value;
-        $this->_output(htmlspecialchars($value));
+        $str = is_scalar($value) || $value === null ? (string) $value : '';
+        $this->_output(htmlspecialchars($str));
     }
 
     public function write_cdata(mixed $value): void
     {
         $this->_end_prev(false);
-        $value = (string)$value;
+        $str = is_scalar($value) || $value === null ? (string) $value : '';
         $this->_output(
             '<![CDATA['
-      . str_replace(']]>', ']]&gt;', $value)
+      . str_replace(']]>', ']]&gt;', $str)
       . ']]>'
         );
     }
@@ -93,7 +93,8 @@ class PwgXmlWriter
 
     public function encode_attribute(mixed $value): string
     {
-        return htmlspecialchars((string)$value);
+        $str = is_scalar($value) || $value === null ? (string) $value : '';
+        return htmlspecialchars($str);
     }
 
     public function _end_prev(bool $done): bool

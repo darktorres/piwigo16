@@ -119,7 +119,8 @@ if (!\Piwigo\Core\Config::has('filters_views')) {
     \Piwigo\Core\Config::persist('filters_views', \Piwigo\Core\Config::defaultFiltersViews());
 }
 
-$filters_names_checkboxes = array_values(array_diff(array_keys(safe_unserialize(\Piwigo\Core\Config::get('filters_views'))), ['last_filters_conf']));
+$filters_views_raw = safe_unserialize(\Piwigo\Core\Config::get('filters_views'));
+$filters_names_checkboxes = array_values(array_diff(array_keys(is_array($filters_views_raw) ? $filters_views_raw : []), ['last_filters_conf']));
 
 // image order management
 $sort_fields = [
@@ -163,19 +164,22 @@ if (isset($_POST['submit'])) {
                     if (!empty($_POST['order_by'])) {
                         check_input_parameter('order_by', $_POST, true, '/^('.implode('|', array_keys($sort_fields)).')$/');
 
+                        $post_order_by = is_array($_POST['order_by']) ? $_POST['order_by'] : [];
                         $used = [];
-                        foreach ($_POST['order_by'] as $i => $val) {
-                            if (empty($val) or isset($used[$val])) {
-                                unset($_POST['order_by'][$i]);
+                        foreach ($post_order_by as $i => $val) {
+                            $val_str = is_scalar($val) ? (string) $val : '';
+                            if (empty($val_str) or isset($used[$val_str])) {
+                                unset($post_order_by[$i]);
                             } else {
-                                $used[$val] = true;
+                                $used[$val_str] = true;
                             }
                         }
-                        if (!count($_POST['order_by'])) {
+                        $_POST['order_by'] = $post_order_by;
+                        if (!count($post_order_by)) {
                             \Piwigo\Core\PageState::current()->addError(l10n('No order field selected'));
                         } else {
                             // limit to the number of available parameters
-                            $order_by = $order_by_inside_category = array_slice($_POST['order_by'], 0, (int) ceil(count($sort_fields) / 2));
+                            $order_by = $order_by_inside_category = array_slice($post_order_by, 0, (int) ceil(count($sort_fields) / 2));
 
                             // there is no rank outside categories
                             if (($i = array_search('`rank` ASC', $order_by)) !== false) {
@@ -187,8 +191,8 @@ if (isset($_POST['submit'])) {
                                 $order_by = ['id ASC'];
                             }
 
-                            $_POST['order_by'] = 'ORDER BY '.implode(', ', $order_by);
-                            $_POST['order_by_inside_category'] = 'ORDER BY '.implode(', ', $order_by_inside_category);
+                            $_POST['order_by'] = 'ORDER BY '.implode(', ', array_map(fn($v) => is_scalar($v) ? (string) $v : '', $order_by));
+                            $_POST['order_by_inside_category'] = 'ORDER BY '.implode(', ', array_map(fn($v) => is_scalar($v) ? (string) $v : '', $order_by_inside_category));
                         }
                     } else {
                         \Piwigo\Core\PageState::current()->addError(l10n('No order field selected'));
@@ -203,7 +207,7 @@ if (isset($_POST['submit'])) {
                     if (empty($_POST['email_admin_on_new_user_filter_group'])) {
                         $_POST['email_admin_on_new_user'] = 'all';
                     } else {
-                        $_POST['email_admin_on_new_user'] = 'group:'.$_POST['email_admin_on_new_user_filter_group'];
+                        $_POST['email_admin_on_new_user'] = 'group:'.(is_scalar($_POST['email_admin_on_new_user_filter_group']) ? (string) $_POST['email_admin_on_new_user_filter_group'] : '');
                     }
                 }
 
@@ -226,9 +230,9 @@ if (isset($_POST['submit'])) {
             {
                 // the number of comments per page must be an integer between 5 and 50
                 // included
-                if (!preg_match($int_pattern, (string) $_POST['nb_comment_page'])
-                     or $_POST['nb_comment_page'] < 5
-                     or $_POST['nb_comment_page'] > 50) {
+                if (!preg_match($int_pattern, is_scalar($_POST['nb_comment_page']) ? (string) $_POST['nb_comment_page'] : '')
+                     or (is_numeric($_POST['nb_comment_page']) && $_POST['nb_comment_page'] < 5)
+                     or (is_numeric($_POST['nb_comment_page']) && $_POST['nb_comment_page'] > 50)) {
                     \Piwigo\Core\PageState::current()->addError(l10n('The number of comments a page must be between 5 and 50 included.'));
                 }
                 foreach ($comments_checkboxes as $checkbox) {
@@ -243,34 +247,38 @@ if (isset($_POST['submit'])) {
             }
         case 'display':
             {
-                if (!preg_match($int_pattern, (string) $_POST['nb_categories_page'])
-                      or $_POST['nb_categories_page'] < 4) {
+                if (!preg_match($int_pattern, is_scalar($_POST['nb_categories_page']) ? (string) $_POST['nb_categories_page'] : '')
+                      or (is_numeric($_POST['nb_categories_page']) && $_POST['nb_categories_page'] < 4)) {
                     \Piwigo\Core\PageState::current()->addError(l10n('The number of albums a page must be above 4.'));
                 }
                 foreach ($display_checkboxes as $checkbox) {
                     $_POST[$checkbox] = empty($_POST[$checkbox]) ? 'false' : 'true';
                 }
+                $post_picture_informations = is_array($_POST['picture_informations'] ?? null) ? $_POST['picture_informations'] : [];
                 foreach ($display_info_checkboxes as $checkbox) {
-                    $_POST['picture_informations'][$checkbox] =
-                      empty($_POST['picture_informations'][$checkbox]) ? false : true;
+                    $post_picture_informations[$checkbox] =
+                      empty($post_picture_informations[$checkbox]) ? false : true;
                 }
-                $_POST['picture_informations'] = addslashes(serialize($_POST['picture_informations']));
+                $_POST['picture_informations'] = addslashes(serialize($post_picture_informations));
                 break;
             }
         case 'search':
             {
+                $post_filters_views = is_array($_POST['filters_views'] ?? null) ? $_POST['filters_views'] : [];
+                $post_filters_views_box = is_array($_POST['filters_views_box'] ?? null) ? $_POST['filters_views_box'] : [];
                 foreach ($filters_names_checkboxes as $checkbox) {
-                    if (empty($_POST['filters_views_box'][$checkbox])) {
-                        $_POST['filters_views'][$checkbox]['access'] = 'nobody';
-                        $_POST['filters_views'][$checkbox]['default'] = false;
+                    $fv_entry = is_array($post_filters_views[$checkbox] ?? null) ? $post_filters_views[$checkbox] : [];
+                    if (empty($post_filters_views_box[$checkbox])) {
+                        $fv_entry['access'] = 'nobody';
+                        $fv_entry['default'] = false;
                     } else {
-                        $_POST['filters_views'][$checkbox]['default'] =
-                          empty($_POST['filters_views'][$checkbox]['default']) ? false : true;
+                        $fv_entry['default'] = empty($fv_entry['default']) ? false : true;
                     }
+                    $post_filters_views[$checkbox] = $fv_entry;
                 }
-                $_POST['filters_views']['last_filters_conf'] =
-                  empty($_POST['filters_views']['last_filters_conf']) ? false : true;
-                $_POST['filters_views'] = addslashes(serialize($_POST['filters_views']));
+                $post_filters_views['last_filters_conf'] =
+                  empty($post_filters_views['last_filters_conf']) ? false : true;
+                $_POST['filters_views'] = addslashes(serialize($post_filters_views));
             }
     }
 
@@ -279,19 +287,20 @@ if (isset($_POST['submit'])) {
         //echo '<pre>'; print_r($_POST); echo '</pre>';
         $result = pwg_query('SELECT param FROM '.CONFIG_TABLE);
         while ($row = pwg_db_fetch_assoc($result)) {
-            if (isset($_POST[$row['param']])) {
-                $value = $_POST[$row['param']];
+            $row_param = is_scalar($row['param']) ? (string) $row['param'] : '';
+            if (isset($_POST[$row_param])) {
+                $value = is_scalar($_POST[$row_param]) ? (string) $_POST[$row_param] : '';
 
-                if ('gallery_title' == $row['param']) {
+                if ('gallery_title' == $row_param) {
                     if (!\Piwigo\Core\Config::allowHtmlDescriptions()) {
-                        $value = strip_tags((string) $value);
+                        $value = strip_tags($value);
                     }
                 }
 
                 $query = '
 UPDATE '.CONFIG_TABLE.'
 SET value = \''. str_replace("\'", "''", $value).'\'
-WHERE param = \''.$row['param'].'\'
+WHERE param = \''.$row_param.'\'
 ;';
                 pwg_query($query);
             }
@@ -327,16 +336,17 @@ if ('sizes' == $page['section'] and isset($_GET['action']) and 'restore_settings
 }
 
 //----------------------------------------------------- template initialization
-$template->set_filename('config', 'configuration_' . $page['section'] . '.tpl');
+$section_str = is_scalar($page['section']) ? (string) $page['section'] : 'main';
+$template->set_filename('config', 'configuration_' . $section_str . '.tpl');
 
 // TabSheet
 $tabsheet = new tabsheet();
 $tabsheet->set_id('configuration');
-$tabsheet->select($page['section']);
+$tabsheet->select($section_str);
 $tabsheet->assign();
 
 $action = get_root_url().'admin.php?page=configuration';
-$action .= '&amp;section='.$page['section'];
+$action .= '&amp;section='.$section_str;
 
 $template->assign(
     [
@@ -392,7 +402,7 @@ switch ($page['section']) {
                 'order_by_options' => $sort_fields,
                 'email_admin_on_new_user' => 'none' != \Piwigo\Core\Config::get('email_admin_on_new_user'),
                 'email_admin_on_new_user_filter' => in_array(\Piwigo\Core\Config::get('email_admin_on_new_user'), ['none', 'all']) ? 'all' : 'group',
-                'email_admin_on_new_user_filter_group' => preg_match('/^group:(\d+)$/', (string) \Piwigo\Core\Config::get('email_admin_on_new_user'), $matches) ? $matches[1] : -1,
+                'email_admin_on_new_user_filter_group' => preg_match('/^group:(\d+)$/', is_scalar(\Piwigo\Core\Config::get('email_admin_on_new_user')) ? (string) \Piwigo\Core\Config::get('email_admin_on_new_user') : '', $matches) ? $matches[1] : -1,
                 ]
             );
 
@@ -481,7 +491,7 @@ switch ($page['section']) {
             $template->append(
                 'display',
                 [
-                  'picture_informations' => unserialize(\Piwigo\Core\Config::get('picture_informations') ?? ''),
+                  'picture_informations' => unserialize(\Piwigo\Core\Config::getString('picture_informations', '')),
                   'NB_CATEGORIES_PAGE' => \Piwigo\Core\Config::get('nb_categories_page'),
                   ],
                 true
@@ -516,10 +526,8 @@ switch ($page['section']) {
 
                 // derivatives = multiple size
                 $enabled = ImageStdParams::get_defined_type_map();
-                $disabled = safe_unserialize(ImageStdParams::get_disabled_type_map());
-                if ($disabled === false) {
-                    $disabled = [];
-                }
+                $disabled_raw = safe_unserialize(ImageStdParams::get_disabled_type_map());
+                $disabled = is_array($disabled_raw) ? $disabled_raw : [];
 
                 $tpl_vars = [];
                 foreach (ImageStdParams::get_all_types() as $type) {
@@ -528,14 +536,16 @@ switch ($page['section']) {
                     $tpl_var['must_square'] = ($type == IMG_SQUARE ? true : false);
                     $tpl_var['must_enable'] = ($type == IMG_SQUARE || $type == IMG_THUMB || $type == \Piwigo\Core\Config::derivativeDefaultSize()) ? true : false;
 
-                    if ($params = @$enabled[$type]) {
+                    $params = $enabled[$type] ?? null;
+                    if ($params !== null) {
                         $tpl_var['enabled'] = true;
                     } else {
                         $tpl_var['enabled'] = false;
-                        $params = @$disabled[$type];
+                        $params_raw = $disabled[$type] ?? null;
+                        $params = ($params_raw instanceof \Piwigo\Image\DerivativeParams) ? $params_raw : null;
                     }
 
-                    if ($params) {
+                    if ($params instanceof \Piwigo\Image\DerivativeParams) {
                         [$tpl_var['w'], $tpl_var['h']] = $params->sizing->ideal_size;
                         if (($tpl_var['crop'] = round(100 * $params->sizing->max_crop)) > 0) {
                             [$tpl_var['minw'], $tpl_var['minh']] = $params->sizing->min_size;
@@ -552,7 +562,8 @@ switch ($page['section']) {
                 $tpl_vars = [];
                 $now = time();
                 foreach (ImageStdParams::$custom as $custom => $time) {
-                    $tpl_vars[$custom] = ($now - $time <= 24 * 3600) ? l10n('today') : time_since($time, 'day');
+                    $time_int = is_numeric($time) ? (int) $time : 0;
+                    $tpl_vars[$custom] = ($now - $time_int <= 24 * 3600) ? l10n('today') : time_since($time_int, 'day');
                 }
                 $template->assign('custom_derivatives', $tpl_vars);
             }

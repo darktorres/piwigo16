@@ -44,7 +44,9 @@ abstract class CalendarBase
     public function initialize(mixed $inner_sql): void
     {
         $page = &$GLOBALS['page'];
-        if ($page['chronology_field'] == 'posted') {
+        $pageArr = is_array($page) ? $page : [];
+        $chronologyField = $pageArr['chronology_field'] ?? '';
+        if ($chronologyField === 'posted') {
             $this->date_field = 'date_available';
         } else {
             $this->date_field = 'date_creation';
@@ -57,27 +59,31 @@ abstract class CalendarBase
      *
      * @return string
      */
-    public function get_display_name()
+    public function get_display_name(): string
     {
         $page = &$GLOBALS['page'];
+        $pageArr = is_array($page) ? $page : [];
+        $chronologyDate = is_array($pageArr['chronology_date'] ?? null) ? $pageArr['chronology_date'] : [];
         $res = '';
 
-        for ($i = 0; $i < count($page['chronology_date']); $i++) {
+        for ($i = 0; $i < count($chronologyDate); $i++) {
             $res .= \Piwigo\Core\Config::levelSeparator();
-            if (isset($page['chronology_date'][$i + 1])) {
-                $chronology_date = array_slice($page['chronology_date'], 0, $i + 1);
+            $component = $chronologyDate[$i];
+            $componentTyped = is_int($component) ? $component : (is_string($component) ? $component : '');
+            if (isset($chronologyDate[$i + 1])) {
+                $sliced = array_slice($chronologyDate, 0, $i + 1);
                 $url = duplicate_index_url(
-                    [ 'chronology_date' => $chronology_date ],
+                    [ 'chronology_date' => $sliced ],
                     [ 'start' ]
                 );
                 $res .=
                   '<a href="'.$url.'">'
-                  .$this->get_date_component_label($i, $page['chronology_date'][$i])
+                  .$this->get_date_component_label($i, $componentTyped)
                   .'</a>';
             } else {
                 $res .=
                   '<span class="calInHere">'
-                  .$this->get_date_component_label($i, $page['chronology_date'][$i])
+                  .$this->get_date_component_label($i, $componentTyped)
                   .'</span>';
             }
         }
@@ -91,10 +97,15 @@ abstract class CalendarBase
      */
     protected function get_date_component_label(int $level, int|string $date_component): string
     {
-        $label = $date_component;
-        if (isset($this->calendar_levels[$level]['labels'][$date_component])) {
-            $label = $this->calendar_levels[$level]['labels'][$date_component];
-        } elseif ('any' === $date_component) {
+        $level_data = $this->calendar_levels[$level] ?? [];
+        $labels = is_array($level_data) ? ($level_data['labels'] ?? null) : null;
+        $labelsArr = is_array($labels) ? $labels : null;
+
+        $label = (string) $date_component;
+        if ($labelsArr !== null && isset($labelsArr[$date_component])) {
+            $rawLabel = $labelsArr[$date_component];
+            $label = is_string($rawLabel) ? $rawLabel : (is_int($rawLabel) ? (string) $rawLabel : $label);
+        } elseif ('any' === (string) $date_component) {
             $label = l10n('All');
         }
         return $label;
@@ -106,7 +117,7 @@ abstract class CalendarBase
      * @param string $date
      * @return string
      */
-    protected function get_date_nice_name($date)
+    protected function get_date_nice_name(string $date): string
     {
         $date_components = explode('-', $date);
         $res = '';
@@ -145,9 +156,6 @@ abstract class CalendarBase
         bool $show_empty = false,
         ?array $labels = null
     ): array {
-        $page = &$GLOBALS['page'];
-        global $template;
-
         $nav_bar_datas = [];
 
         if (\Piwigo\Core\Config::calendarShowEmpty() and $show_empty and !empty($labels)) {
@@ -210,9 +218,13 @@ abstract class CalendarBase
     {
         global $template;
         $page = &$GLOBALS['page'];
+        $pageArr = is_array($page) ? $page : [];
+
+        $level_data = $this->calendar_levels[$level] ?? [];
+        $levelSql = is_array($level_data) ? (is_string($level_data['sql'] ?? null) ? $level_data['sql'] : '') : '';
 
         $query = '
-SELECT DISTINCT('.$this->calendar_levels[$level]['sql'].') as period,
+SELECT DISTINCT('.$levelSql.') as period,
   COUNT(DISTINCT id) as nb_images'.
 $this->inner_sql.
 $this->get_date_where($level).'
@@ -220,30 +232,38 @@ $this->get_date_where($level).'
 
         $level_items = query2array($query, 'period', 'nb_images');
 
-        if (count($level_items) == 1 and
-             count($page['chronology_date']) < count($this->calendar_levels) - 1) {
-            if (! isset($page['chronology_date'][$level])) {
-                [$key] = array_keys($level_items);
-                $page['chronology_date'][$level] = (int)$key;
+        $chronologyDate = is_array($pageArr['chronology_date'] ?? null) ? $pageArr['chronology_date'] : [];
 
-                if ($level < count($page['chronology_date']) and
+        if (count($level_items) == 1 and
+             count($chronologyDate) < count($this->calendar_levels) - 1) {
+            if (! isset($chronologyDate[$level])) {
+                [$key] = array_keys($level_items);
+                $chronologyDate[$level] = (int) $key;
+                // Write back through the reference
+                if (is_array($page)) {
+                    $page['chronology_date'] = $chronologyDate;
+                }
+
+                if ($level < count($chronologyDate) and
                      $level != count($this->calendar_levels) - 1) {
                     return;
                 }
             }
         }
 
-        $dates = $page['chronology_date'];
+        $dates = $chronologyDate;
         while ($level < count($dates)) {
             array_pop($dates);
         }
+
+        $levelLabels = is_array($level_data) ? (is_array($level_data['labels'] ?? null) ? $level_data['labels'] : null) : null;
 
         $nav_bar = $this->get_nav_bar_from_items(
             $dates,
             $level_items,
             true,
             true,
-            $labels ?? $this->calendar_levels[$level]['labels']
+            $labels ?? $levelLabels
         );
 
         $template->append(
@@ -262,19 +282,25 @@ $this->get_date_where($level).'
     {
         global $template;
         $page = &$GLOBALS['page'];
+        $pageArr = is_array($page) ? $page : [];
+
+        $chronologyDate = is_array($pageArr['chronology_date'] ?? null) ? $pageArr['chronology_date'] : [];
 
         $prev = $next = null;
-        if (empty($page['chronology_date'])) {
+        if (empty($chronologyDate)) {
             return;
         }
 
         $sub_queries = [];
-        $nb_elements = count($page['chronology_date']);
+        $nb_elements = count($chronologyDate);
         for ($i = 0; $i < $nb_elements; $i++) {
-            if ('any' === $page['chronology_date'][$i]) {
+            $elem = $chronologyDate[$i];
+            if ('any' === $elem) {
                 $sub_queries[] = '\'any\'';
             } else {
-                $sub_queries[] = pwg_db_cast_to_text($this->calendar_levels[$i]['sql']);
+                $level_data = $this->calendar_levels[$i] ?? [];
+                $levelSql = is_array($level_data) ? (is_string($level_data['sql'] ?? null) ? $level_data['sql'] : '') : '';
+                $sub_queries[] = pwg_db_cast_to_text($levelSql);
             }
         }
         $query = 'SELECT '.pwg_db_concat_ws($sub_queries, '-').' AS period';
@@ -282,23 +308,28 @@ $this->get_date_where($level).'
 AND ' . $this->date_field . ' IS NOT NULL
 GROUP BY period';
 
-        $current = implode('-', $page['chronology_date']);
+        $stringDate = [];
+        foreach ($chronologyDate as $d) {
+            $stringDate[] = is_string($d) ? $d : (is_int($d) ? (string) $d : '');
+        }
+        $current = implode('-', $stringDate);
         $upper_items = query2array($query, null, 'period');
 
         usort($upper_items, fn($a, $b): int => version_compare((string) $a, (string) $b));
-        $upper_items_rank = array_flip($upper_items);
+        $upper_items_str = array_map(fn($x): string => (string) $x, $upper_items);
+        $upper_items_rank = array_flip($upper_items_str);
         if (!isset($upper_items_rank[$current])) {
-            $upper_items[] = $current;// just in case (external link)
-            usort($upper_items, fn($a, $b): int => version_compare((string) $a, (string) $b));
-            $upper_items_rank = array_flip($upper_items);
+            $upper_items_str[] = $current;// just in case (external link)
+            usort($upper_items_str, fn($a, $b): int => version_compare($a, $b));
+            $upper_items_rank = array_flip($upper_items_str);
         }
         $current_rank = $upper_items_rank[$current];
 
         $tpl_var = [];
 
         if ($current_rank > 0) { // has previous
-            $prev = $upper_items[$current_rank - 1];
-            $chronology_date = explode('-', (string) $prev);
+            $prev = $upper_items_str[$current_rank - 1];
+            $chronology_date = explode('-', $prev);
             $tpl_var['previous'] =
               [
                 'LABEL' => $this->get_date_nice_name($prev),
@@ -309,9 +340,9 @@ GROUP BY period';
               ];
         }
 
-        if ($current_rank < count($upper_items) - 1) { // has next
-            $next = $upper_items[$current_rank + 1];
-            $chronology_date = explode('-', (string) $next);
+        if ($current_rank < count($upper_items_str) - 1) { // has next
+            $next = $upper_items_str[$current_rank + 1];
+            $chronology_date = explode('-', $next);
             $tpl_var['next'] =
               [
                 'LABEL' => $this->get_date_nice_name($next),

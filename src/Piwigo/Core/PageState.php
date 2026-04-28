@@ -52,36 +52,54 @@ final class PageState
     {
         self::$instance ??= new self();
         $inst = self::$instance;
-        $p = &$GLOBALS['page'];
 
-        $inst->errors = $p['errors'] ?? [];
-        $inst->warnings = $p['warnings'] ?? [];
-        $inst->messages = $p['messages'] ?? [];
-        $inst->infos = $p['infos'] ?? [];
-        $inst->bodyClasses = $p['body_classes'] ?? [];
-        $inst->bodyData = $p['body_data'] ?? [];
-        $inst->executionUuid = $p['execution_uuid'] ?? '';
+        // Read pre-boot values from $GLOBALS['page'] (may be mixed).
+        $raw = $GLOBALS['page'] ?? [];
+        /** @var array<string,mixed> $p */
+        $p = is_array($raw) ? $raw : [];
 
-        $p['errors'] = &$inst->errors;
-        $p['warnings'] = &$inst->warnings;
-        $p['messages'] = &$inst->messages;
-        $p['infos'] = &$inst->infos;
-        $p['body_classes'] = &$inst->bodyClasses;
-        $p['body_data'] = &$inst->bodyData;
-        $p['execution_uuid'] = &$inst->executionUuid;
+        $errors = $p['errors'] ?? [];
+        $inst->errors = is_array($errors) ? array_values(array_filter($errors, 'is_string')) : [];
+        $warnings = $p['warnings'] ?? [];
+        $inst->warnings = is_array($warnings) ? array_values(array_filter($warnings, 'is_string')) : [];
+        $messages = $p['messages'] ?? [];
+        $inst->messages = is_array($messages) ? array_values(array_filter($messages, 'is_string')) : [];
+        $infos = $p['infos'] ?? [];
+        $inst->infos = is_array($infos) ? array_values(array_filter($infos, 'is_string')) : [];
+        $bodyClasses = $p['body_classes'] ?? [];
+        $inst->bodyClasses = is_array($bodyClasses) ? array_values(array_filter($bodyClasses, 'is_string')) : [];
+        $bodyData = $p['body_data'] ?? [];
+        $inst->bodyData = is_array($bodyData) ? array_filter($bodyData, fn($v, $k) => is_string($k) && is_string($v), ARRAY_FILTER_USE_BOTH) : [];
+        $execUuid = $p['execution_uuid'] ?? '';
+        $inst->executionUuid = is_string($execUuid) ? $execUuid : '';
 
         // Runtime-attached keys: preserve pre-boot values then bridge.
         $inst->authKeyInvalid = (bool) ($p['auth_key_invalid'] ?? false);
-        $inst->notifyApiKeyExpiration = is_array($p['notify_api_key_expiration'] ?? null) ? $p['notify_api_key_expiration'] : null;
-        $inst->countQueries = (int) ($p['count_queries'] ?? 0);
-        $inst->queriesTime = (float) ($p['queries_time'] ?? 0.0);
-        $inst->upgradeStart = (float) ($p['upgrade_start'] ?? 0.0);
+        $notifyRaw = $p['notify_api_key_expiration'] ?? null;
+        /** @var array<string,mixed>|null $notifyTyped */
+        $notifyTyped = is_array($notifyRaw) ? $notifyRaw : null;
+        $inst->notifyApiKeyExpiration = $notifyTyped;
+        $countQ = $p['count_queries'] ?? 0;
+        $inst->countQueries = is_int($countQ) ? $countQ : (is_numeric($countQ) ? (int) $countQ : 0);
+        $qTime = $p['queries_time'] ?? 0.0;
+        $inst->queriesTime = is_float($qTime) ? $qTime : (is_numeric($qTime) ? (float) $qTime : 0.0);
+        $upStart = $p['upgrade_start'] ?? 0.0;
+        $inst->upgradeStart = is_float($upStart) ? $upStart : (is_numeric($upStart) ? (float) $upStart : 0.0);
 
-        $p['auth_key_invalid'] = &$inst->authKeyInvalid;
-        $p['notify_api_key_expiration'] = &$inst->notifyApiKeyExpiration;
-        $p['count_queries'] = &$inst->countQueries;
-        $p['queries_time'] = &$inst->queriesTime;
-        $p['upgrade_start'] = &$inst->upgradeStart;
+        // Now re-assign $GLOBALS['page'] with reference bridges.
+        $GLOBALS['page'] = [];
+        $GLOBALS['page']['errors'] = &$inst->errors;
+        $GLOBALS['page']['warnings'] = &$inst->warnings;
+        $GLOBALS['page']['messages'] = &$inst->messages;
+        $GLOBALS['page']['infos'] = &$inst->infos;
+        $GLOBALS['page']['body_classes'] = &$inst->bodyClasses;
+        $GLOBALS['page']['body_data'] = &$inst->bodyData;
+        $GLOBALS['page']['execution_uuid'] = &$inst->executionUuid;
+        $GLOBALS['page']['auth_key_invalid'] = &$inst->authKeyInvalid;
+        $GLOBALS['page']['notify_api_key_expiration'] = &$inst->notifyApiKeyExpiration;
+        $GLOBALS['page']['count_queries'] = &$inst->countQueries;
+        $GLOBALS['page']['queries_time'] = &$inst->queriesTime;
+        $GLOBALS['page']['upgrade_start'] = &$inst->upgradeStart;
     }
 
     /** Returns the current singleton, creating an empty one if boot hasn't run yet. */

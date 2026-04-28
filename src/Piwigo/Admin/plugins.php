@@ -25,7 +25,9 @@ class plugins
         $this->get_fs_plugins();
 
         foreach (get_db_plugins() as $db_plugin) {
-            $this->db_plugins_by_id[$db_plugin['id']] = $db_plugin;
+            if (is_array($db_plugin) && isset($db_plugin['id']) && is_string($db_plugin['id'])) {
+                $this->db_plugins_by_id[$db_plugin['id']] = $db_plugin;
+            }
         }
     }
 
@@ -33,7 +35,8 @@ class plugins
      * Returns the maintain class of a plugin
      * or build a new class with the procedural methods
      */
-    private static function build_maintain_class(string $plugin_id): mixed
+    /** @return \PluginMaintain|PluginMaintain */
+    private static function build_maintain_class(string $plugin_id)
     {
         $file_to_include = PHPWG_PLUGINS_PATH . $plugin_id . '/maintain';
         $classname = $plugin_id.'_maintain';
@@ -80,10 +83,11 @@ class plugins
             $crt_db_plugin = $this->db_plugins_by_id[$plugin_id];
         }
 
-        $plugin_maintain = null;
-        if ($action !== 'update') { // wait for files to be updated
-            $plugin_maintain = self::build_maintain_class($plugin_id);
-        }
+        // For 'update', we build the maintain class only after file extraction (see case 'update' below).
+        // Use a DummyPlugin_maintain placeholder so $plugin_maintain is always typed.
+        $plugin_maintain = $action !== 'update'
+            ? self::build_maintain_class($plugin_id)
+            : new DummyPlugin_maintain($plugin_id);
 
         $activity_details = ['plugin_id' => $plugin_id];
 
@@ -95,14 +99,17 @@ class plugins
                     break;
                 }
 
-                $plugin_maintain->install($this->fs_plugins[$plugin_id]['version'], $errors);
-                $activity_details['version'] = $this->fs_plugins[$plugin_id]['version'];
-                $errors = trigger_change('plugin_install_errors', $errors);
+                $installVersion = $this->fs_plugins[$plugin_id]['version'];
+                $installVersionStr = is_string($installVersion) ? $installVersion : '';
+                $plugin_maintain->install($installVersionStr, $errors);
+                $activity_details['version'] = $installVersionStr;
+                $errorsRaw = trigger_change('plugin_install_errors', $errors);
+                $errors = is_array($errorsRaw) ? $errorsRaw : $errors;
 
                 if (empty($errors)) {
                     $query = '
 INSERT INTO '. PLUGINS_TABLE .' (id,version)
-  VALUES (\''. $plugin_id .'\', \''. $this->fs_plugins[$plugin_id]['version'] .'\')
+  VALUES (\''. $plugin_id .'\', \''. $installVersionStr .'\')
 ;';
                     pwg_query($query);
                 } else {
@@ -111,13 +118,17 @@ INSERT INTO '. PLUGINS_TABLE .' (id,version)
                 break;
 
             case 'update':
-                $previous_version = $this->fs_plugins[$plugin_id]['version'];
+                $prevVersionRaw = $this->fs_plugins[$plugin_id]['version'] ?? '';
+                $previous_version = is_string($prevVersionRaw) ? $prevVersionRaw : '';
                 $activity_details['from_version'] = $previous_version;
-                $errors[0] = $this->extract_plugin_files('upgrade', $options['revision'], $plugin_id);
+                $revisionRaw = $options['revision'] ?? '';
+                $revisionStr = is_string($revisionRaw) ? $revisionRaw : '';
+                $errors[0] = $this->extract_plugin_files('upgrade', $revisionStr, $plugin_id);
 
                 if ($errors[0] === 'ok') {
                     $this->get_fs_plugin($plugin_id); // refresh plugins list
-                    $new_version = $this->fs_plugins[$plugin_id]['version'];
+                    $newVersionRaw = $this->fs_plugins[$plugin_id]['version'] ?? '';
+                    $new_version = is_string($newVersionRaw) ? $newVersionRaw : '';
                     $activity_details['to_version'] = $new_version;
 
                     $plugin_maintain = self::build_maintain_class($plugin_id);

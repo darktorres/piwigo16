@@ -74,7 +74,7 @@ SELECT *
  * @param int|string $search_id
  * @return array<mixed>
  */
-function get_search_array($search_id): mixed
+function get_search_array($search_id): array
 {
     global $user;
 
@@ -84,7 +84,9 @@ function get_search_array($search_id): mixed
         bad_request('this search identifier does not exist');
     }
 
-    return unserialize($search['rules'] ?? '');
+    $rules = $search['rules'] ?? '';
+    $result = unserialize(is_string($rules) ? $rules : '');
+    return is_array($result) ? $result : [];
 }
 
 /**
@@ -112,45 +114,82 @@ function get_regular_search_results(array $search, ?string $images_where = ''): 
 
     $image_ids_for_filter = [];
 
-    $display_filters = safe_unserialize(conf_get_param('filters_views', \Piwigo\Core\Config::defaultFiltersViews()));
+    $filters_views_raw = \Piwigo\Core\Config::get('filters_views');
+    if (is_array($filters_views_raw)) {
+        $display_filters = $filters_views_raw;
+    } elseif (is_string($filters_views_raw)) {
+        $display_filters = safe_unserialize($filters_views_raw);
+    } else {
+        $display_filters = \Piwigo\Core\Config::defaultFiltersViews();
+    }
+    if (!is_array($display_filters)) {
+        $display_filters = [];
+    }
 
     foreach ($display_filters as $filt_name => $filt_conf) {
+        $filt_conf = is_array($filt_conf) ? $filt_conf : [];
         if (isset($filt_conf['access'])) {
-            if ($filt_conf['access'] == 'everybody' or ($filt_conf['access'] == 'admins-only' and is_admin()) or ($filt_conf['access'] == 'registered-users' and is_classic_user())) {
-                $display_filters[$filt_name]['access'] = true;
+            $access = is_scalar($filt_conf['access']) ? (string) $filt_conf['access'] : '';
+            $filt_name_str = (string) $filt_name;
+            $filt_entry = is_array($display_filters[$filt_name_str] ?? null) ? (array) $display_filters[$filt_name_str] : [];
+            if ($access == 'everybody' or ($access == 'admins-only' and is_admin()) or ($access == 'registered-users' and is_classic_user())) {
+                $filt_entry['access'] = true;
             } else {
-                $display_filters[$filt_name]['access'] = false;
+                $filt_entry['access'] = false;
             }
+            $display_filters[$filt_name_str] = $filt_entry;
         }
     }
 
     //
     // expert
     //
-    if (isset($search['fields']['expert']) and !empty($search['fields']['expert']['string']) and $display_filters['expert']['access']) {
+    $expert_filter = is_array($display_filters['expert'] ?? null) ? (array) $display_filters['expert'] : [];
+    $allwords_filter = is_array($display_filters['words'] ?? null) ? (array) $display_filters['words'] : [];
+    $author_filter = is_array($display_filters['author'] ?? null) ? (array) $display_filters['author'] : [];
+    $filetype_filter = is_array($display_filters['file_type'] ?? null) ? (array) $display_filters['file_type'] : [];
+    $added_by_filter = is_array($display_filters['added_by'] ?? null) ? (array) $display_filters['added_by'] : [];
+    $album_filter = is_array($display_filters['album'] ?? null) ? (array) $display_filters['album'] : [];
+    $post_date_filter = is_array($display_filters['post_date'] ?? null) ? (array) $display_filters['post_date'] : [];
+    $creation_date_filter = is_array($display_filters['creation_date'] ?? null) ? (array) $display_filters['creation_date'] : [];
+    $ratio_filter = is_array($display_filters['ratio'] ?? null) ? (array) $display_filters['ratio'] : [];
+    $rating_filter = is_array($display_filters['rating'] ?? null) ? (array) $display_filters['rating'] : [];
+    $file_size_filter = is_array($display_filters['file_size'] ?? null) ? (array) $display_filters['file_size'] : [];
+    $height_filter = is_array($display_filters['height'] ?? null) ? (array) $display_filters['height'] : [];
+    $width_filter = is_array($display_filters['width'] ?? null) ? (array) $display_filters['width'] : [];
+    $tags_filter = is_array($display_filters['tags'] ?? null) ? (array) $display_filters['tags'] : [];
+
+    $search_fields = is_array($search['fields'] ?? null) ? $search['fields'] : [];
+
+    $expert_fields = is_array($search_fields['expert'] ?? null) ? $search_fields['expert'] : [];
+    if (isset($search_fields['expert']) and !empty($expert_fields['string']) and $expert_filter['access']) {
         $has_filters_filled = true;
 
-        $image_ids_for_filter['expert'] = (get_quick_search_results($search['fields']['expert']['string'], []) ?? [])['items'] ?? [];
+        $expert_string = is_scalar($expert_fields['string'] ?? null) ? (string) $expert_fields['string'] : '';
+        $expert_qsr = get_quick_search_results($expert_string, []) ?? [];
+        $image_ids_for_filter['expert'] = is_array($expert_qsr['items'] ?? null) ? $expert_qsr['items'] : [];
     }
 
     //
     // allwords
     //
-    if (isset($search['fields']['allwords']) and !empty($search['fields']['allwords']['words']) and count($search['fields']['allwords']['fields']) > 0 and $display_filters['words']['access']) {
+    $allwords_fields = is_array($search_fields['allwords'] ?? null) ? $search_fields['allwords'] : [];
+    if (isset($search_fields['allwords']) and !empty($allwords_fields['words']) and count(is_array($allwords_fields['fields'] ?? null) ? $allwords_fields['fields'] : []) > 0 and $allwords_filter['access']) {
         $has_filters_filled = true;
 
         // 1) we search in regular fields (ie, the ones in the piwigo_images table)
         $fields = ['file', 'name', 'comment', 'author'];
 
-        if (isset($search['fields']['allwords']['fields'])) {
-            $fields = array_intersect($fields, $search['fields']['allwords']['fields']);
+        $allwords_field_list = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', is_array($allwords_fields['fields'] ?? null) ? $allwords_fields['fields'] : []);
+        if (isset($allwords_fields['fields'])) {
+            $fields = array_intersect($fields, $allwords_field_list);
         }
 
         $cat_fields_dictionnary = [
           'cat-title' => 'name',
           'cat-desc' => 'comment',
         ];
-        $cat_fields = array_intersect(array_keys($cat_fields_dictionnary), $search['fields']['allwords']['fields']);
+        $cat_fields = array_intersect(array_keys($cat_fields_dictionnary), $allwords_field_list);
 
         // in the OR mode, request must be :
         // ((field1 LIKE '%word1%' OR field2 LIKE '%word1%')
@@ -161,7 +200,9 @@ function get_regular_search_results(array $search, ?string $images_where = ''): 
         // AND (field1 LIKE '%word2%' OR field2 LIKE '%word2%'))
         $word_clauses = [];
         $cat_ids_by_word = $tag_ids_by_word = [];
-        foreach ($search['fields']['allwords']['words'] as $word) {
+        $allwords_words = is_array($allwords_fields['words'] ?? null) ? $allwords_fields['words'] : [];
+        foreach ($allwords_words as $word) {
+            $word = is_scalar($word) ? (string) $word : '';
             $field_clauses = [];
             foreach ($fields as $field) {
                 $field_clauses[] = $field." LIKE '%".$word."%'";
@@ -201,7 +242,7 @@ SELECT
             }
 
             // search_in_tags
-            if (in_array('tags', $search['fields']['allwords']['fields'])) {
+            if (in_array('tags', $allwords_field_list)) {
                 $query = '
 SELECT
     id
@@ -244,12 +285,13 @@ SELECT
         }
 
         // make sure the "mode" is either OR or AND
-        if (!in_array($search['fields']['allwords']['mode'], ['OR', 'AND'])) {
-            $search['fields']['allwords']['mode'] = 'AND';
+        $allwords_mode = is_scalar($allwords_fields['mode'] ?? null) ? (string) $allwords_fields['mode'] : 'AND';
+        if (!in_array($allwords_mode, ['OR', 'AND'])) {
+            $allwords_mode = 'AND';
         }
 
         $filter_clause = "\n         ".implode(
-            "\n         ". $search['fields']['allwords']['mode']. "\n         ",
+            "\n         ". $allwords_mode. "\n         ",
             $word_clauses
         );
 
@@ -295,11 +337,14 @@ SELECT
     //
     // author
     //
-    if (isset($search['fields']['author']) and count($search['fields']['author']['words']) > 0 and $display_filters['author']['access']) {
+    $author_fields = is_array($search_fields['author'] ?? null) ? $search_fields['author'] : [];
+    $author_words = is_array($author_fields['words'] ?? null) ? $author_fields['words'] : [];
+    if (isset($search_fields['author']) and count($author_words) > 0 and $author_filter['access']) {
         $has_filters_filled = true;
 
         $author_clauses = [];
-        foreach ($search['fields']['author']['words'] as $word) {
+        foreach ($author_words as $word) {
+            $word = is_scalar($word) ? (string) $word : '';
             $author_clauses[] = "author = '".$word."'";
         }
 
@@ -317,11 +362,13 @@ SELECT
     //
     // filetypes
     //
-    if (!empty($search['fields']['filetypes']) and $display_filters['file_type']['access']) {
+    $filetypes_list = is_array($search_fields['filetypes'] ?? null) ? $search_fields['filetypes'] : [];
+    if (!empty($search_fields['filetypes']) and $filetype_filter['access']) {
         $has_filters_filled = true;
 
         $filetypes_clauses = [];
-        foreach ($search['fields']['filetypes'] as $ext) {
+        foreach ($filetypes_list as $ext) {
+            $ext = is_scalar($ext) ? (string) $ext : '';
             $filetypes_clauses[] = 'path LIKE \'%.'.$ext.'\'';
         }
 
@@ -339,7 +386,8 @@ SELECT
     //
     // added_by
     //
-    if (!empty($search['fields']['added_by']) and $display_filters['added_by']['access']) {
+    $added_by_list = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', is_array($search_fields['added_by'] ?? null) ? $search_fields['added_by'] : []);
+    if (!empty($search_fields['added_by']) and $added_by_filter['access']) {
         $has_filters_filled = true;
 
         $query = '
@@ -347,7 +395,7 @@ SELECT
     DISTINCT(id)
   FROM '.IMAGES_TABLE.' AS i
     INNER JOIN '.IMAGE_CATEGORY_TABLE.' AS ic ON id = ic.image_id
-  WHERE added_by IN ('.implode(',', $search['fields']['added_by']).')
+  WHERE added_by IN ('.implode(',', $added_by_list).')
   '.$forbidden.'
 ;';
         $image_ids_for_filter['added_by'] = query2array($query, null, 'id');
@@ -356,16 +404,19 @@ SELECT
     //
     // cat
     //
-    if (isset($search['fields']['cat']) and !empty($search['fields']['cat']['words']) and $display_filters['album']['access']) {
+    $cat_fields_data = is_array($search_fields['cat'] ?? null) ? $search_fields['cat'] : [];
+    $cat_words = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', is_array($cat_fields_data['words'] ?? null) ? $cat_fields_data['words'] : []);
+    if (isset($search_fields['cat']) and !empty($cat_words) and $album_filter['access']) {
         $has_filters_filled = true;
 
-        if ($search['fields']['cat']['sub_inc']) {
+        $cat_sub_inc = !empty($cat_fields_data['sub_inc']);
+        if ($cat_sub_inc) {
             // searching all the categories id of sub-categories
-            $cat_ids = get_subcat_ids($search['fields']['cat']['words']);
+            $cat_ids = get_subcat_ids($cat_words);
         } else {
             // TODO we take the list of cat_ids "as is", we should check they still
             // exist and are browseable to the user
-            $cat_ids = $search['fields']['cat']['words'];
+            $cat_ids = $cat_words;
         }
 
         // in case the album would no longer exists, we consider the filter on album no longer active
@@ -385,7 +436,9 @@ SELECT
     //
     // date_posted
     //
-    if (!empty($search['fields']['date_posted']['preset']) and $display_filters['post_date']['access']) {
+    $date_posted_fields = is_array($search_fields['date_posted'] ?? null) ? $search_fields['date_posted'] : [];
+    $date_posted_preset = is_scalar($date_posted_fields['preset'] ?? null) ? (string) $date_posted_fields['preset'] : '';
+    if (!empty($date_posted_preset) and $post_date_filter['access']) {
 
         $has_filters_filled = true;
 
@@ -398,11 +451,12 @@ SELECT
         ];
 
         $date_posted_clause = '';
-        if (isset($options[ $search['fields']['date_posted']['preset'] ])) {
-            $date_posted_clause = 'date_available > SUBDATE(NOW(), INTERVAL '.$options[ $search['fields']['date_posted']['preset'] ].')';
-        } elseif ('custom' == $search['fields']['date_posted']['preset'] and isset($search['fields']['date_posted']['custom'])) {
+        if (isset($options[$date_posted_preset])) {
+            $date_posted_clause = 'date_available > SUBDATE(NOW(), INTERVAL '.$options[$date_posted_preset].')';
+        } elseif ('custom' == $date_posted_preset and isset($date_posted_fields['custom'])) {
             $date_posted_subclauses = [];
-            $custom_dates = array_flip($search['fields']['date_posted']['custom']);
+            $date_posted_custom = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', is_array($date_posted_fields['custom']) ? $date_posted_fields['custom'] : []);
+            $custom_dates = array_flip($date_posted_custom);
 
             foreach (array_keys($custom_dates) as $custom_date) {
                 // in real-life tests, we have determined "where year(date_available) = 2024" was
@@ -455,7 +509,9 @@ SELECT
     //
     // date_created
     //
-    if (!empty($search['fields']['date_created']['preset']) and $display_filters['creation_date']['access']) {
+    $date_created_fields = is_array($search_fields['date_created'] ?? null) ? $search_fields['date_created'] : [];
+    $date_created_preset = is_scalar($date_created_fields['preset'] ?? null) ? (string) $date_created_fields['preset'] : '';
+    if (!empty($date_created_preset) and $creation_date_filter['access']) {
 
         $has_filters_filled = true;
 
@@ -468,11 +524,12 @@ SELECT
         ];
 
         $date_created_clause = '';
-        if (isset($options[ $search['fields']['date_created']['preset'] ])) {
-            $date_created_clause = 'date_creation > SUBDATE(NOW(), INTERVAL '.$options[ $search['fields']['date_created']['preset'] ].')';
-        } elseif ('custom' == $search['fields']['date_created']['preset'] and isset($search['fields']['date_created']['custom'])) {
+        if (isset($options[$date_created_preset])) {
+            $date_created_clause = 'date_creation > SUBDATE(NOW(), INTERVAL '.$options[$date_created_preset].')';
+        } elseif ('custom' == $date_created_preset and isset($date_created_fields['custom'])) {
             $date_created_subclauses = [];
-            $custom_dates = array_flip($search['fields']['date_created']['custom']);
+            $date_created_custom = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', is_array($date_created_fields['custom']) ? $date_created_fields['custom'] : []);
+            $custom_dates = array_flip($date_created_custom);
 
             foreach (array_keys($custom_dates) as $custom_date) {
                 // in real-life tests, we have determined "where year(date_creation) = 2024" was
@@ -525,7 +582,8 @@ SELECT
     //
     // ratios
     //
-    if (!empty($search['fields']['ratios']) and $display_filters['ratio']['access']) {
+    $ratios_list = is_array($search_fields['ratios'] ?? null) ? $search_fields['ratios'] : [];
+    if (!empty($search_fields['ratios']) and $ratio_filter['access']) {
         $has_filters_filled = true;
 
         $clause_for_ratio = [
@@ -536,7 +594,8 @@ SELECT
         ];
 
         $ratios_clauses = [];
-        foreach ($search['fields']['ratios'] as $r) {
+        foreach ($ratios_list as $r) {
+            $r = is_scalar($r) ? (string) $r : '';
             $ratios_clauses[] = $clause_for_ratio[$r];
         }
 
@@ -554,15 +613,17 @@ SELECT
     //
     // ratings
     //
-    if (\Piwigo\Core\Config::get('rate') and !empty($search['fields']['ratings']) and $display_filters['rating']['access']) {
+    $ratings_list = is_array($search_fields['ratings'] ?? null) ? $search_fields['ratings'] : [];
+    if (\Piwigo\Core\Config::getBool('rate') and !empty($search_fields['ratings']) and $rating_filter['access']) {
         $has_filters_filled = true;
 
         $filter_clauses = [];
-        foreach ($search['fields']['ratings'] as $r) {
+        foreach ($ratings_list as $r) {
+            $r = is_scalar($r) ? (int) $r : 0;
             if (0 == $r) {
                 $filter_clauses[] = 'rating_score IS NULL';
             } else {
-                $filter_clauses[] = '(rating_score >= '.(intval($r) - 1).' AND rating_score < '.$r.')';
+                $filter_clauses[] = '(rating_score >= '.($r - 1).' AND rating_score < '.$r.')';
             }
         }
 
@@ -580,7 +641,9 @@ SELECT
     //
     // filesize
     //
-    if (!empty($search['fields']['filesize_min']) and !empty($search['fields']['filesize_max']) and $display_filters['file_size']['access']) {
+    $filesize_min = is_numeric($search_fields['filesize_min'] ?? null) ? (int) $search_fields['filesize_min'] : 0;
+    $filesize_max = is_numeric($search_fields['filesize_max'] ?? null) ? (int) $search_fields['filesize_max'] : 0;
+    if (!empty($search_fields['filesize_min']) and !empty($search_fields['filesize_max']) and $file_size_filter['access']) {
         $has_filters_filled = true;
 
         // because of conversion from kB to mB, approximation, then conversion back to kB,
@@ -590,7 +653,7 @@ SELECT
     DISTINCT(id)
   FROM '.IMAGES_TABLE.' AS i
     INNER JOIN '.IMAGE_CATEGORY_TABLE.' AS ic ON id = ic.image_id
-  WHERE filesize BETWEEN '.($search['fields']['filesize_min'] - 100).' AND '.($search['fields']['filesize_max'] + 100).'
+  WHERE filesize BETWEEN '.($filesize_min - 100).' AND '.($filesize_max + 100).'
   '.$forbidden.'
 ;';
         $image_ids_for_filter['filesize'] = query2array($query, null, 'id');
@@ -599,7 +662,9 @@ SELECT
     //
     // height
     //
-    if (!empty($search['fields']['height_min']) and !empty($search['fields']['height_max']) and $display_filters['height']['access']) {
+    $height_min = is_numeric($search_fields['height_min'] ?? null) ? (int) $search_fields['height_min'] : 0;
+    $height_max = is_numeric($search_fields['height_max'] ?? null) ? (int) $search_fields['height_max'] : 0;
+    if (!empty($search_fields['height_min']) and !empty($search_fields['height_max']) and $height_filter['access']) {
         $has_filters_filled = true;
 
         $query = '
@@ -607,7 +672,7 @@ SELECT
     DISTINCT(id)
   FROM '.IMAGES_TABLE.' AS i
     INNER JOIN '.IMAGE_CATEGORY_TABLE.' AS ic ON id = ic.image_id
-  WHERE height BETWEEN '.$search['fields']['height_min'].' AND '.$search['fields']['height_max'].'
+  WHERE height BETWEEN '.$height_min.' AND '.$height_max.'
   '.$forbidden.'
 ;';
         $image_ids_for_filter['height'] = query2array($query, null, 'id');
@@ -616,7 +681,9 @@ SELECT
     //
     // width
     //
-    if (!empty($search['fields']['width_min']) and !empty($search['fields']['width_max']) and $display_filters['width']['access']) {
+    $width_min = is_numeric($search_fields['width_min'] ?? null) ? (int) $search_fields['width_min'] : 0;
+    $width_max = is_numeric($search_fields['width_max'] ?? null) ? (int) $search_fields['width_max'] : 0;
+    if (!empty($search_fields['width_min']) and !empty($search_fields['width_max']) and $width_filter['access']) {
         $has_filters_filled = true;
 
         $query = '
@@ -624,7 +691,7 @@ SELECT
     DISTINCT(id)
   FROM '.IMAGES_TABLE.' AS i
     INNER JOIN '.IMAGE_CATEGORY_TABLE.' AS ic ON id = ic.image_id
-  WHERE width BETWEEN '.$search['fields']['width_min'].' AND '.$search['fields']['width_max'].'
+  WHERE width BETWEEN '.$width_min.' AND '.$width_max.'
   '.$forbidden.'
 ;';
         $image_ids_for_filter['width'] = query2array($query, null, 'id');
@@ -633,12 +700,15 @@ SELECT
     //
     // tags
     //
-    if (isset($search['fields']['tags']) and !empty($search['fields']['tags']['words']) and $display_filters['tags']['access']) {
+    $tags_fields = is_array($search_fields['tags'] ?? null) ? $search_fields['tags'] : [];
+    $tags_words = array_map(static fn (mixed $v): int => (int) $v, is_array($tags_fields['words'] ?? null) ? $tags_fields['words'] : []);
+    $tags_mode = is_scalar($tags_fields['mode'] ?? null) ? (string) $tags_fields['mode'] : 'AND';
+    if (isset($search_fields['tags']) and !empty($tags_words) and $tags_filter['access']) {
         $has_filters_filled = true;
 
         $image_ids_for_filter['tags'] = get_image_ids_for_tags(
-            $search['fields']['tags']['words'],
-            $search['fields']['tags']['mode']
+            $tags_words,
+            $tags_mode
         );
     }
 
@@ -659,10 +729,17 @@ SELECT
 
     $items = [];
     if (!empty($image_ids_for_filter)) {
-        if (count($image_ids_for_filter) > 1) {
-            $items = array_values(array_unique(array_intersect(...array_values($image_ids_for_filter))));
+        /** @var array<int, array<string>> $typed_filter_values */
+        $typed_filter_values = array_map(
+            static function (mixed $v): array {
+                return array_map(static fn (mixed $id): string => (string) $id, is_array($v) ? $v : []);
+            },
+            array_values($image_ids_for_filter)
+        );
+        if (count($typed_filter_values) > 1) {
+            $items = array_values(array_unique(array_intersect(...$typed_filter_values)));
         } else {
-            $items = $image_ids_for_filter[ array_keys($image_ids_for_filter)[0] ];
+            $items = $typed_filter_values[0];
         }
     }
 
@@ -865,12 +942,19 @@ class QNumericRangeScope extends \Piwigo\Search\QSearchScope
 
     public function get_sql(string $field, \Piwigo\Search\QSingleToken $token): string
     {
+        $scope_data = is_array($token->scope_data) ? $token->scope_data : [];
+        $range = is_array($scope_data['range'] ?? null) ? $scope_data['range'] : ['', ''];
+        $strict = is_array($scope_data['strict'] ?? null) ? $scope_data['strict'] : [0, 0];
+        $range0 = is_scalar($range[0] ?? null) ? (string) $range[0] : '';
+        $range1 = is_scalar($range[1] ?? null) ? (string) $range[1] : '';
+        $strict0 = !empty($strict[0]);
+        $strict1 = !empty($strict[1]);
         $clauses = [];
-        if ($token->scope_data['range'][0] !== '') {
-            $clauses[] = $field.' >'.($token->scope_data['strict'][0] ? '' : '=').$token->scope_data['range'][0].' ';
+        if ($range0 !== '') {
+            $clauses[] = $field.' >'.($strict0 ? '' : '=').$range0.' ';
         }
-        if ($token->scope_data['range'][1] !== '') {
-            $clauses[] = $field.' <'.($token->scope_data['strict'][1] ? '' : '=').$token->scope_data['range'][1].' ';
+        if ($range1 !== '') {
+            $clauses[] = $field.' <'.($strict1 ? '' : '=').$range1.' ';
         }
 
         if (empty($clauses)) {
@@ -942,12 +1026,15 @@ class QDateRangeScope extends \Piwigo\Search\QSearchScope
 
     public function get_sql(string $field, \Piwigo\Search\QSingleToken $token): string
     {
+        $scope_data = is_array($token->scope_data) ? $token->scope_data : ['', ''];
+        $val0 = is_scalar($scope_data[0] ?? null) ? (string) $scope_data[0] : '';
+        $val1 = is_scalar($scope_data[1] ?? null) ? (string) $scope_data[1] : '';
         $clauses = [];
-        if ($token->scope_data[0] != '') {
-            $clauses[] = $field.' >= \'' . $token->scope_data[0].'\'';
+        if ($val0 != '') {
+            $clauses[] = $field.' >= \'' . $val0.'\'';
         }
-        if ($token->scope_data[1] != '') {
-            $clauses[] = $field.' <= \'' . $token->scope_data[1].'\'';
+        if ($val1 != '') {
+            $clauses[] = $field.' <= \'' . $val1.'\'';
         }
 
         if (empty($clauses)) {
@@ -1040,7 +1127,7 @@ class QMultiToken implements \Stringable
         return $s;
     }
 
-    private function push(string &$token, int &$modifier, mixed &$scope): void
+    private function push(string &$token, int &$modifier, ?\Piwigo\Search\QSearchScope &$scope): void
     {
         if (strlen((string) $token) || (isset($scope) && $scope->nullable)) {
             if (isset($scope)) {
@@ -1060,10 +1147,11 @@ class QMultiToken implements \Stringable
     * @param int $qi the character index in $q where to start parsing
     * @param int $level the depth from root in the tree (number of opened and unclosed opening brackets)
     */
-    protected function parse_expression(string $q, int &$qi, int $level, mixed $root): void
+    protected function parse_expression(string $q, int &$qi, int $level, ?\Piwigo\Search\QExpression $root): void
     {
         $crt_token = '';
         $crt_modifier = 0;
+        /** @var ?\Piwigo\Search\QSearchScope $crt_scope */
         $crt_scope = null;
 
         for ($stop = false; !$stop && $qi < strlen($q); $qi++) {
@@ -1091,7 +1179,7 @@ class QMultiToken implements \Stringable
                         }
                         break;
                     case ':':
-                        $scope = @$root->scopes[strtolower((string) $crt_token)];
+                        $scope = $root !== null ? ($root->scopes[strtolower((string) $crt_token)] ?? null) : null;
                         if (!isset($scope) || isset($crt_scope)) { // white space
                             $this->push($crt_token, $crt_modifier, $crt_scope);
                         } else {
@@ -1476,12 +1564,13 @@ function qsearch_get_images(\Piwigo\Search\QExpression $expr, \Piwigo\Search\QRe
                 break;
             default:
                 // allow plugins to have their own scope with columns added in db by themselves
-                $clauses = trigger_change('qsearch_get_images_sql_scopes', $clauses, $token, $expr);
+                $clauses_result = trigger_change('qsearch_get_images_sql_scopes', $clauses, $token, $expr);
+                $clauses = array_map(static fn (mixed $c): string => (string) $c, is_array($clauses_result) ? $clauses_result : []);
                 break;
         }
         if (!empty($clauses)) {
             $query = $query_base.'('.implode("\n OR ", $clauses).')';
-            $qsr->images_iids[$i] = query2array($query, null, 'id');
+            $qsr->images_iids[$i] = array_map('intval', query2array($query, null, 'id'));
         }
     }
 }
@@ -1505,8 +1594,9 @@ function qsearch_get_tags(\Piwigo\Search\QExpression $expr, \Piwigo\Search\QResu
 WHERE ('. implode("\n OR ", $clauses) .')';
         $result = pwg_query($query);
         while ($tag = pwg_db_fetch_assoc($result)) {
-            $token_tag_ids[$i][] = $tag['id'];
-            $all_tags[$tag['id']] = $tag;
+            $tag_id = (int) $tag['id'];
+            $token_tag_ids[$i][] = $tag_id;
+            $all_tags[$tag_id] = $tag;
         }
     }
 
@@ -1517,7 +1607,7 @@ WHERE ('. implode("\n OR ", $clauses) .')';
           && (($expr->stoken_modifiers[$i + 1] & (QST_BREAK | QST_QUOTED | QST_WILDCARD)) == 0)) {
             $common = array_intersect($token_tag_ids[$i], $token_tag_ids[$i + 1]);
             if (count($common)) {
-                $token_tag_ids[$i] = $token_tag_ids[$i + 1] = $common;
+                $token_tag_ids[$i] = $token_tag_ids[$i + 1] = array_values($common);
             }
         }
     }
@@ -1533,7 +1623,7 @@ WHERE ('. implode("\n OR ", $clauses) .')';
 SELECT image_id FROM '.IMAGE_TAG_TABLE.'
   WHERE tag_id IN ('.implode(',', $tag_ids).')
   GROUP BY image_id';
-            $qsr->tag_iids[$i] = query2array($query, null, 'image_id');
+            $qsr->tag_iids[$i] = array_map('intval', query2array($query, null, 'image_id'));
             if ($expr->stoken_modifiers[$i] & QST_NOT) {
                 $not_ids = array_merge($not_ids, $tag_ids);
             } else {
@@ -1543,9 +1633,9 @@ SELECT image_id FROM '.IMAGE_TAG_TABLE.'
             }
         } elseif (isset($token->scope) && 'tag' == $token->scope->id && strlen($token->term) == 0) {
             if ($token->modifier & QST_WILDCARD) {// eg. 'tag:*' returns all tagged images
-                $qsr->tag_iids[$i] = query2array('SELECT DISTINCT image_id FROM '.IMAGE_TAG_TABLE, null, 'image_id');
+                $qsr->tag_iids[$i] = array_map('intval', query2array('SELECT DISTINCT image_id FROM '.IMAGE_TAG_TABLE, null, 'image_id'));
             } else {// eg. 'tag:' returns all untagged images
-                $qsr->tag_iids[$i] = query2array('SELECT id FROM '.IMAGES_TABLE.' LEFT JOIN '.IMAGE_TAG_TABLE.' ON id=image_id WHERE image_id IS NULL', null, 'id');
+                $qsr->tag_iids[$i] = array_map('intval', query2array('SELECT id FROM '.IMAGES_TABLE.' LEFT JOIN '.IMAGE_TAG_TABLE.' ON id=image_id WHERE image_id IS NULL', null, 'id'));
             }
         }
     }
@@ -1553,7 +1643,8 @@ SELECT image_id FROM '.IMAGE_TAG_TABLE.'
     $all_tags = array_intersect_key($all_tags, array_flip(array_diff($positive_ids, $not_ids)));
     usort($all_tags, tag_alpha_compare(...));
     foreach ($all_tags as &$tag) {
-        $tag['name'] = trigger_change('render_tag_name', $tag['name'], $tag);
+        $tag_name = trigger_change('render_tag_name', $tag['name'], $tag);
+        $tag['name'] = is_string($tag_name) ? $tag_name : (is_scalar($tag_name) ? (string) $tag_name : '');
     }
     $qsr->all_tags = $all_tags;
     $qsr->tag_ids = $token_tag_ids;
@@ -1584,8 +1675,9 @@ SELECT
   WHERE ('. implode("\n OR ", $clauses) .')';
         $result = pwg_query($query);
         while ($cat = pwg_db_fetch_assoc($result)) {
-            $token_cat_ids[$i][] = $cat['id'];
-            $all_cats[$cat['id']] = $cat;
+            $cat_id = (int) $cat['id'];
+            $token_cat_ids[$i][] = $cat_id;
+            $all_cats[$cat_id] = $cat;
         }
     }
 
@@ -1596,7 +1688,7 @@ SELECT
           && (($expr->stoken_modifiers[$i + 1] & (QST_BREAK | QST_QUOTED | QST_WILDCARD)) == 0)) {
             $common = array_intersect($token_cat_ids[$i], $token_cat_ids[$i + 1]);
             if (count($common)) {
-                $token_cat_ids[$i] = $token_cat_ids[$i + 1] = $common;
+                $token_cat_ids[$i] = $token_cat_ids[$i + 1] = array_values($common);
             }
         }
     }
@@ -1616,14 +1708,14 @@ SELECT
     INNER JOIN '.USER_CACHE_CATEGORIES_TABLE.' ON id = cat_id and user_id = '.$user['id'].'
   WHERE id IN ('.implode(',', get_subcat_ids($cat_ids)) .')
 ;';
-                $cat_ids = query2array($query, null, 'id');
+                $cat_ids = array_map('intval', query2array($query, null, 'id'));
             }
 
             $query = '
 SELECT image_id FROM '.IMAGE_CATEGORY_TABLE.'
   WHERE category_id IN ('.implode(',', $cat_ids).')
   GROUP BY image_id';
-            $qsr->cat_iids[$i] = query2array($query, null, 'image_id');
+            $qsr->cat_iids[$i] = array_map('intval', query2array($query, null, 'image_id'));
             if ($expr->stoken_modifiers[$i] & QST_NOT) {
                 $not_ids = array_merge($not_ids, $cat_ids);
             } else {
@@ -1633,9 +1725,9 @@ SELECT image_id FROM '.IMAGE_CATEGORY_TABLE.'
             }
         } elseif (isset($token->scope) && 'category' == $token->scope->id && strlen($token->term) == 0) {
             if ($token->modifier & QST_WILDCARD) {// eg. 'category:*' returns all images associated to an album
-                $qsr->cat_iids[$i] = query2array('SELECT DISTINCT image_id FROM '.IMAGE_CATEGORY_TABLE, null, 'image_id');
+                $qsr->cat_iids[$i] = array_map('intval', query2array('SELECT DISTINCT image_id FROM '.IMAGE_CATEGORY_TABLE, null, 'image_id'));
             } else {// eg. 'category:' returns all orphan images
-                $qsr->cat_iids[$i] = query2array('SELECT id FROM '.IMAGES_TABLE.' LEFT JOIN '.IMAGE_CATEGORY_TABLE.' ON id=image_id WHERE image_id IS NULL', null, 'id');
+                $qsr->cat_iids[$i] = array_map('intval', query2array('SELECT id FROM '.IMAGES_TABLE.' LEFT JOIN '.IMAGE_CATEGORY_TABLE.' ON id=image_id WHERE image_id IS NULL', null, 'id'));
             }
         }
     }
@@ -1643,7 +1735,8 @@ SELECT image_id FROM '.IMAGE_CATEGORY_TABLE.'
     $all_cats = array_intersect_key($all_cats, array_flip(array_diff($positive_ids, $not_ids)));
     usort($all_cats, tag_alpha_compare(...));
     foreach ($all_cats as &$cat) {
-        $cat['name'] = trigger_change('render_category_name', $cat['name'], $cat);
+        $cat_name = trigger_change('render_category_name', $cat['name'], $cat);
+        $cat['name'] = is_string($cat_name) ? $cat_name : (is_scalar($cat_name) ? (string) $cat_name : '');
     }
     $qsr->all_cats = $all_cats;
     $qsr->cat_ids = $token_cat_ids;
@@ -1735,14 +1828,17 @@ function get_quick_search_results(string $q, array $options)
       isset($options['permissions']) ? (bool)$options['permissions'] : true,
       $options['images_where'] ?? '',
       ]);
-    $res = null;
-    if ($persistent_cache->get($cache_key, $res)) {
-        return $res;
+    /** @var mixed $res */
+    $res = false;
+    $cache_hit = $persistent_cache->get($cache_key, $res);
+    if ($cache_hit) {
+        return is_array($res) ? $res : null;
     }
 
     $res = get_quick_search_results_no_cache($q, $options);
 
-    if (count($res['items'])) {// cache the results only if not empty - otherwise it is useless
+    $res_items = is_array($res['items'] ?? null) ? $res['items'] : [];
+    if (count($res_items)) {// cache the results only if not empty - otherwise it is useless
         $persistent_cache->set($cache_key, $res, 300);
     }
     return $res;
@@ -1764,7 +1860,8 @@ function get_quick_search_results_no_cache(string $q, array $options): array
         'qs' => ['q' => $q],
       ];
 
-    $q = trigger_change('qsearch_pre', $q);
+    $q_changed = trigger_change('qsearch_pre', $q);
+    $q = is_string($q_changed) ? $q_changed : $q;
 
     $scopes = [];
     $scopes[] = new \Piwigo\Search\QSearchScope('tag', ['tags']);
@@ -1791,7 +1888,10 @@ function get_quick_search_results_no_cache(string $q, array $options): array
     $scopes[] = new \Piwigo\Search\QDateRangeScope('posted', $postedDateAliases);
 
     // allow plugins to add their own scopes
-    $scopes = trigger_change('qsearch_get_scopes', $scopes);
+    $scopes_result = trigger_change('qsearch_get_scopes', $scopes);
+    if (is_array($scopes_result)) {
+        $scopes = array_values(array_filter($scopes_result, static fn (mixed $s): bool => $s instanceof \Piwigo\Search\QSearchScope));
+    }
     $expression = new \Piwigo\Search\QExpression($q, $scopes);
 
     // get inflections for terms
@@ -1843,9 +1943,11 @@ function get_quick_search_results_no_cache(string $q, array $options): array
 
     $search_results['qs']['matching_tags'] = $qsr->all_tags;
     $search_results['qs']['matching_cats'] = $qsr->all_cats;
-    $search_results = trigger_change('qsearch_results', $search_results, $expression, $qsr);
+    $search_results_changed = trigger_change('qsearch_results', $search_results, $expression, $qsr);
+    $search_results = is_array($search_results_changed) ? $search_results_changed : $search_results;
     if (isset($search_results['items'])) {
-        $ids = array_merge($ids, $search_results['items']);
+        $extra_items = array_map('intval', is_array($search_results['items']) ? $search_results['items'] : []);
+        $ids = array_merge($ids, $extra_items);
     }
 
     global $template;
@@ -1861,7 +1963,7 @@ function get_quick_search_results_no_cache(string $q, array $options): array
     $where_clauses = [];
     $where_clauses[] = 'i.id IN ('. implode(',', $ids) . ')';
     if (!empty($options['images_where'])) {
-        $where_clauses[] = '('.$options['images_where'].')';
+        $where_clauses[] = '('.(is_scalar($options['images_where']) ? (string) $options['images_where'] : '').')';
     }
     if ($permissions) {
         $where_clauses[] = get_sql_condition_FandF(
@@ -1907,7 +2009,8 @@ function get_search_results(int|string $search_id, bool $super_order_by, ?string
     if (!isset($search['q'])) {
         return get_regular_search_results($search, $images_where);
     } else {
-        return get_quick_search_results($search['q'], ['super_order_by' => $super_order_by, 'images_where' => $images_where]) ?? [];
+        $search_q = is_scalar($search['q']) ? (string) $search['q'] : '';
+        return get_quick_search_results($search_q, ['super_order_by' => $super_order_by, 'images_where' => $images_where]) ?? [];
     }
 }
 
@@ -1980,7 +2083,8 @@ function save_search(array $rules, int|string|null $forked_from = null): array
     );
 
     if (!is_a_guest() and !is_generic()) {
-        userprefs_update_param('gallery_search_filters', array_keys($rules['fields'] ?? []));
+        $rules_fields = is_array($rules['fields'] ?? null) ? $rules['fields'] : [];
+        userprefs_update_param('gallery_search_filters', array_keys($rules_fields));
     }
 
     $url = make_index_url(

@@ -54,14 +54,24 @@ abstract class PwgResponseEncoder
             return;
         }
 
+        /** @var array<mixed> $arr */
+        $arr = $value;
         if (self::is_struct($value)) {
-            if (isset($value[WS_XML_ATTRIBUTES])) {
-                $value = array_merge($value, $value[WS_XML_ATTRIBUTES]);
-                unset($value[WS_XML_ATTRIBUTES]);
+            if (isset($arr[WS_XML_ATTRIBUTES])) {
+                $xmlAttrs = $arr[WS_XML_ATTRIBUTES];
+                if (is_array($xmlAttrs)) {
+                    $value = array_merge($arr, $xmlAttrs);
+                    /** @var array<mixed> $arr */
+                    $arr = $value;
+                    unset($arr[WS_XML_ATTRIBUTES]);
+                    $value = $arr;
+                }
             }
         }
 
-        foreach ($value as $key => &$v) {
+        /** @var array<mixed> $arrValue */
+        $arrValue = $value;
+        foreach ($arrValue as $key => &$v) {
             self::flatten($v);
         }
     }

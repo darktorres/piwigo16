@@ -19,7 +19,7 @@ abstract class PersistentCache
     public function make_key(array|string $key): string
     {
         if (is_array($key)) {
-            $key = implode('&', $key);
+            $key = implode('&', array_map(static fn(mixed $k): string => is_scalar($k) ? (string) $k : '', $key));
         }
         $key .= $this->instance_key;
         return md5($key);

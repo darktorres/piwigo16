@@ -32,10 +32,12 @@ class PwgNamedStruct
             $this->_xmlAttributes = array_flip($xmlAttributes);
         } else {
             $this->_xmlAttributes = [];
-            foreach ($this->_content as $key => $value) {
-                if (!empty($key) and (is_scalar($value) or is_null($value))) {
-                    if (empty($xmlElements) or !in_array($key, $xmlElements)) {
-                        $this->_xmlAttributes[$key] = 1;
+            if (is_array($this->_content)) {
+                foreach ($this->_content as $key => $value) {
+                    if (!empty($key) and (is_scalar($value) or is_null($value))) {
+                        if (empty($xmlElements) or !in_array($key, $xmlElements)) {
+                            $this->_xmlAttributes[(string) $key] = 1;
+                        }
                     }
                 }
             }

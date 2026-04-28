@@ -32,11 +32,11 @@ $service->run();
 /**
  * event handler that registers standard methods with the web service
  */
-/** @param array<mixed> $arr */
+/** @param array{0: PwgServer} $arr */
 function ws_addDefaultMethods(array $arr): void
 {
     global $user;
-    $service = &$arr[0];
+    $service = $arr[0];
 
     include_once(PHPWG_ROOT_PATH.'include/ws_functions.inc.php');
     $ws_functions_root = PHPWG_ROOT_PATH.'include/ws_functions/';
@@ -222,8 +222,8 @@ function ws_addDefaultMethods(array $arr): void
           'image_id' =>           ['type' => WS_TYPE_ID],
           'comments_page' =>      ['default' => 0,
                                         'type' => WS_TYPE_INT | WS_TYPE_POSITIVE],
-          'comments_per_page' =>  ['default' => \Piwigo\Core\Config::get('nb_comment_page'),
-                                        'maxValue' => 2 * \Piwigo\Core\Config::get('nb_comment_page'),
+          'comments_per_page' =>  ['default' => \Piwigo\Core\Config::getInt('nb_comment_page'),
+                                        'maxValue' => 2 * \Piwigo\Core\Config::getInt('nb_comment_page'),
                                         'type' => WS_TYPE_INT | WS_TYPE_POSITIVE],
           ],
         'Returns information about an image.',

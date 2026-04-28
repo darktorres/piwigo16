@@ -19,7 +19,9 @@ use Piwigo\Ws\PwgError;
  * @param mixed[] $params
  *
  */
-function ws_userComments_getList(array $params, &$service): PwgError|array
+/** @return array<mixed>|\PwgError */
+/** @param array<mixed> $params */
+function ws_userComments_getList(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
 {
     if (!\Piwigo\Core\Config::activateComments()) {
         return new PwgError(403, 'Comments are disabled');
@@ -198,7 +200,8 @@ GROUP BY author_id
  * @param mixed[] $params
  *
  */
-function ws_userComments_delete(array $params, &$service): PwgError|string
+/** @param array<mixed> $params */
+function ws_userComments_delete(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|string
 {
     include_once(PHPWG_ROOT_PATH.'include/functions_comment.inc.php');
 
@@ -218,7 +221,8 @@ function ws_userComments_delete(array $params, &$service): PwgError|string
  * @param mixed[] $params
  *
  */
-function ws_userComments_validate(array $params, &$service): PwgError|string
+/** @param array<mixed> $params */
+function ws_userComments_validate(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|string
 {
     include_once(PHPWG_ROOT_PATH.'include/functions_comment.inc.php');
 

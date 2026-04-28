@@ -21,7 +21,9 @@ use Piwigo\Ws\PwgError;
  * @param mixed[] $params
  * @return array{id: mixed, name: mixed, version: mixed, state: mixed, description: mixed}[]
  */
-function ws_plugins_getList($params, $service): array
+/** @param array<mixed> $params */
+/** @return array<mixed> */
+function ws_plugins_getList(array $params, \Piwigo\Ws\PwgServer $service): array
 {
     $plugins = new plugins();
     $plugins->sort_fs_plugins('name');
@@ -54,7 +56,8 @@ function ws_plugins_getList($params, $service): array
  *    @option string plugin
  *    @option string pwg_token
  */
-function ws_plugins_performAction(array $params, $service): PwgError|true
+/** @param array<mixed> $params */
+function ws_plugins_performAction(array $params, \Piwigo\Ws\PwgServer $service): PwgError|true
 {
     global $template;
 
@@ -93,7 +96,8 @@ function ws_plugins_performAction(array $params, $service): PwgError|true
  *    @option string theme
  *    @option string pwg_token
  */
-function ws_themes_performAction(array $params, $service): PwgError|true
+/** @param array<mixed> $params */
+function ws_themes_performAction(array $params, \Piwigo\Ws\PwgServer $service): PwgError|true
 {
     global $template;
 
@@ -130,7 +134,8 @@ function ws_themes_performAction(array $params, $service): PwgError|true
  *    @option string pwg_token
  *    @option bool reactivate (optional - undocumented)
  */
-function ws_extensions_update(array $params, $service)
+/** @param array<mixed> $params */
+function ws_extensions_update(array $params, \Piwigo\Ws\PwgServer $service): mixed
 {
     if (!\Piwigo\Core\Config::enableExtensionsInstall()) {
         return new PwgError(401, 'Piwigo extensions install/update system is disabled');
@@ -224,7 +229,8 @@ function ws_extensions_update(array $params, $service)
  *    @option bool reset
  *    @option string pwg_token
  */
-function ws_extensions_ignoreupdate(array $params, $service): PwgError|true
+/** @param array<mixed> $params */
+function ws_extensions_ignoreupdate(array $params, \Piwigo\Ws\PwgServer $service): PwgError|true
 {
     define('IN_ADMIN', true);
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
@@ -277,7 +283,8 @@ function ws_extensions_ignoreupdate(array $params, $service): PwgError|true
  * Checks for updates (core and extensions)
  * @param mixed[] $params
  */
-function ws_extensions_checkupdates($params, $service): array
+/** @param array<mixed> $params @return array<mixed> */
+function ws_extensions_checkupdates(array $params, \Piwigo\Ws\PwgServer $service): array
 {
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 

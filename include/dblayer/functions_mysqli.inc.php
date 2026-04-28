@@ -180,35 +180,38 @@ function pwg_db_changes(): int
     return $mysqli->affected_rows;
 }
 
-function pwg_db_num_rows(mysqli_result $result): int
+function pwg_db_num_rows(bool|mysqli_result $result): int
 {
+    if (!($result instanceof mysqli_result)) {
+        return 0;
+    }
     return $result->num_rows ?? 0;
 }
 
 /** @return array<mixed>|false */
-function pwg_db_fetch_array(mysqli_result $result): array|false
+function pwg_db_fetch_array(bool|mysqli_result $result): array|false
 {
     return $result->fetch_array();
 }
 
 /** @return array<string,mixed>|null */
-function pwg_db_fetch_assoc(mysqli_result $result): ?array
+function pwg_db_fetch_assoc(bool|mysqli_result $result): ?array
 {
     return $result->fetch_assoc();
 }
 
 /** @return array<int,mixed>|null */
-function pwg_db_fetch_row(mysqli_result $result): ?array
+function pwg_db_fetch_row(bool|mysqli_result $result): ?array
 {
     return $result->fetch_row();
 }
 
-function pwg_db_fetch_object(mysqli_result $result): ?stdClass
+function pwg_db_fetch_object(bool|mysqli_result $result): ?stdClass
 {
     return $result->fetch_object();
 }
 
-function pwg_db_free_result(mysqli_result $result): void
+function pwg_db_free_result(bool|mysqli_result $result): void
 {
     $result->free_result();
 }

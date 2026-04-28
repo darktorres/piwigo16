@@ -9,7 +9,7 @@ use Piwigo\Ws\PwgError;
 
 class PwgSerialPhpEncoder extends PwgResponseEncoder
 {
-    public function encodeResponse($response): string
+    public function encodeResponse(mixed $response): string
     {
         if ($response instanceof PwgError) {
             return serialize(

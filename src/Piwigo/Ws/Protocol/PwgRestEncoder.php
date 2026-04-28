@@ -10,7 +10,7 @@ use Piwigo\Ws\PwgError;
 class PwgRestEncoder extends PwgResponseEncoder
 {
     private ?PwgXmlWriter $_writer = null;
-    public function encodeResponse($response): string
+    public function encodeResponse(mixed $response): string
     {
         if ($response instanceof PwgError) {
             $ret = '<?xml version="1.0"?>
@@ -36,7 +36,8 @@ class PwgRestEncoder extends PwgResponseEncoder
         return 'text/xml';
     }
 
-    public function encode_array($data, $itemName, array $xml_attributes = []): void
+        /** @param array<mixed> $xml_attributes */
+    public function encode_array(mixed $data, string $itemName, array $xml_attributes = []): void
     {
         foreach ($data as $item) {
             $this->_writer->start_element($itemName);
@@ -45,7 +46,8 @@ class PwgRestEncoder extends PwgResponseEncoder
         }
     }
 
-    public function encode_struct(array $data, $skip_underscore, array $xml_attributes = []): void
+        /** @param array<mixed> $data @param array<mixed> $xml_attributes */
+    public function encode_struct(array $data, bool $skip_underscore, array $xml_attributes = []): void
     {
         foreach ($data as $name => $value) {
             if (is_numeric($name)) {
@@ -84,7 +86,8 @@ class PwgRestEncoder extends PwgResponseEncoder
         }
     }
 
-    public function encode($data, array $xml_attributes = []): void
+        /** @param array<mixed> $xml_attributes */
+    public function encode(mixed $data, array $xml_attributes = []): void
     {
         switch (gettype($data)) {
             case 'null':

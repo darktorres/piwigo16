@@ -79,7 +79,7 @@ function ws_plugins_performAction(array $params, \Piwigo\Ws\PwgServer $service):
     $errors = $plugins->perform_action($params['action'], $params['plugin']);
 
     if (!empty($errors)) {
-        return new PwgError(500, $errors);
+        return new PwgError(500, implode(", ", $errors));
     } else {
         if (in_array($params['action'], ['activate', 'deactivate'])) {
             $template->delete_compiled_templates();
@@ -115,7 +115,7 @@ function ws_themes_performAction(array $params, \Piwigo\Ws\PwgServer $service): 
     $errors = $themes->perform_action($params['action'], $params['theme']);
 
     if (!empty($errors)) {
-        return new PwgError(500, $errors);
+        return new PwgError(500, implode(", ", $errors));
     } else {
         if (in_array($params['action'], ['activate', 'deactivate'])) {
             $template->delete_compiled_templates();

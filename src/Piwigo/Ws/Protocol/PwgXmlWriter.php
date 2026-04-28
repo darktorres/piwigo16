@@ -11,7 +11,8 @@ class PwgXmlWriter
     /** @var string */
     public $_indentStr;
     /** @var array */
-    public $_elementStack;
+    /** @var array<mixed> */
+    public array $_elementStack = [];
     /** @var bool */
     public $_lastTagOpen;
     /**
@@ -35,13 +36,13 @@ class PwgXmlWriter
         $this->_indentStr = "\t";
     }
 
-    public function &getOutput()
+    public function &getOutput(): string
     {
         return $this->_encodedXml;
     }
 
 
-    public function start_element($name): void
+    public function start_element(string $name): void
     {
         $this->_end_prev(false);
         if (!empty($this->_elementStack)) {
@@ -58,7 +59,7 @@ class PwgXmlWriter
         $this->_elementStack[] = $name;
     }
 
-    public function end_element($x): void
+    public function end_element(mixed $x): void
     {
         $close_tag = $this->_end_prev(true);
         $name = array_pop($this->_elementStack);
@@ -70,14 +71,14 @@ class PwgXmlWriter
         }
     }
 
-    public function write_content($value): void
+    public function write_content(mixed $value): void
     {
         $this->_end_prev(false);
         $value = (string)$value;
         $this->_output(htmlspecialchars($value));
     }
 
-    public function write_cdata($value): void
+    public function write_cdata(mixed $value): void
     {
         $this->_end_prev(false);
         $value = (string)$value;
@@ -88,17 +89,17 @@ class PwgXmlWriter
         );
     }
 
-    public function write_attribute(string $name, $value): void
+    public function write_attribute(string $name, mixed $value): void
     {
         $this->_output(' '.$name.'="'.$this->encode_attribute($value).'"');
     }
 
-    public function encode_attribute($value): string
+    public function encode_attribute(mixed $value): string
     {
         return htmlspecialchars((string)$value);
     }
 
-    public function _end_prev($done)
+    public function _end_prev(bool $done): bool
     {
         $ret = true;
         if ($this->_lastTagOpen) {

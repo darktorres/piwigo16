@@ -51,7 +51,7 @@ function size_equals(array $s1, array $s2): bool
  *
  *  string  * @return float
  */
-function char_to_fraction($c): float|int
+function char_to_fraction(string $c): float|int
 {
     return (ord($c) - ord('a')) / 25;
 }
@@ -60,7 +60,7 @@ function char_to_fraction($c): float|int
  * Converts a float into a char a-z.
  *
  *  float  */
-function fraction_to_char($f): string
+function fraction_to_char(float|int $f): string
 {
     return chr((int)(ord('a') + round($f * 25)));
 }
@@ -78,9 +78,9 @@ final class ImageRect
      * @var int $b
      */
     public $l;
-    public $t;
-    public $r;
-    public $b;
+    public int $t = 0;
+    public int $r = 0;
+    public int $b = 0;
 
     /**
      * @param int[] $l width and height
@@ -95,7 +95,7 @@ final class ImageRect
     /**
      * @return int
      */
-    public function width(): int|float
+    public function width(): int
     {
         return $this->r - $this->l;
     }
@@ -103,7 +103,7 @@ final class ImageRect
     /**
      * @return int
      */
-    public function height(): int|float
+    public function height(): int
     {
         return $this->b - $this->t;
     }
@@ -182,7 +182,8 @@ final class SizingParams
      *    expressed as a factor of the input width/height
      * @param int[] $min_size - (used only if _$max_crop_ !=0) two element array of output dimensions (width, height)
      */
-    public function __construct(public $ideal_size, public $max_crop = 0, public $min_size = null)
+    /** @param array<int|float> $ideal_size @param array<int|float>|null $min_size */
+    public function __construct(public array $ideal_size, public int|float $max_crop = 0, public ?array $min_size = null)
     {
     }
 
@@ -201,7 +202,7 @@ final class SizingParams
      * Returns a square SizingParams object.
      *
      */
-    public static function square($w): \Piwigo\Image\SizingParams
+    public static function square(int $w): \Piwigo\Image\SizingParams
     {
         return new \Piwigo\Image\SizingParams([$w,$w], 1, [$w,$w]);
     }
@@ -299,7 +300,7 @@ final class DerivativeParams
     /**
      * @param \Piwigo\Image\SizingParams $sizing
      */
-    public function __construct(public $sizing)
+    public function __construct(public SizingParams $sizing)
     {
     }
 
@@ -313,7 +314,8 @@ final class DerivativeParams
      *
      * @param array &$tokens
      */
-    public function add_url_tokens(&$tokens): void
+    /** @param array<mixed> $tokens */
+    public function add_url_tokens(array &$tokens): void
     {
         $this->sizing->add_url_tokens($tokens);
     }
@@ -321,7 +323,8 @@ final class DerivativeParams
     /**
      * @return int[]
      */
-    public function compute_final_size($in_size)
+    /** @param array<int|float> $in_size @return array<int|float> */
+    public function compute_final_size(array $in_size): array
     {
         $this->sizing->compute($in_size, null, $crop_rect, $scale_size);
         return $scale_size != null ? $scale_size : $in_size;
@@ -330,7 +333,7 @@ final class DerivativeParams
     /**
      * @return int
      */
-    public function max_width()
+    public function max_width(): int
     {
         return $this->sizing->ideal_size[0];
     }
@@ -338,7 +341,7 @@ final class DerivativeParams
     /**
      * @return int
      */
-    public function max_height()
+    public function max_height(): int
     {
         return $this->sizing->ideal_size[1];
     }
@@ -346,7 +349,8 @@ final class DerivativeParams
     /**
      * @todo : description of DerivativeParams::is_identity
      */
-    public function is_identity($in_size): bool
+    /** @param array<int|float> $in_size */
+    public function is_identity(array $in_size): bool
     {
         if ($in_size[0] > $this->sizing->ideal_size[0] or
             $in_size[1] > $this->sizing->ideal_size[1]) {
@@ -358,7 +362,8 @@ final class DerivativeParams
     /**
      * @return bool
      */
-    public function will_watermark($out_size)
+    /** @param array<int|float> $out_size */
+    public function will_watermark(array $out_size): bool
     {
         if ($this->use_watermark) {
             $min_size = ImageStdParams::get_watermark()->min_size;

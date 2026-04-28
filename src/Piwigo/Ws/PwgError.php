@@ -9,12 +9,12 @@ namespace Piwigo\Ws;
  */
 class PwgError
 {
-    private $_code;
-    private $_codeText;
+    private int|null $_code;
+    private string $_codeText;
 
-    public function __construct($code, $codeText)
+    public function __construct(int|null $code, string $codeText)
     {
-        if ($code >= 400 and $code < 600) {
+        if ($code !== null && $code >= 400 and $code < 600) {
             set_status_header($code, $codeText);
         }
 
@@ -22,11 +22,11 @@ class PwgError
         $this->_codeText = $codeText;
     }
 
-    public function code()
+    public function code(): int|null
     {
         return $this->_code;
     }
-    public function message()
+    public function message(): string
     {
         return $this->_codeText;
     }

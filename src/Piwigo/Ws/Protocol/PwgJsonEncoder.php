@@ -9,7 +9,7 @@ use Piwigo\Ws\PwgError;
 
 class PwgJsonEncoder extends PwgResponseEncoder
 {
-    public function encodeResponse($response)
+    public function encodeResponse(mixed $response): mixed
     {
         if ($response instanceof PwgError) {
             return json_encode(

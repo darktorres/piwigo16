@@ -14,6 +14,7 @@ namespace Piwigo\Auth;
  **/
 class PwgBase32
 {
+    /** @var array<int,string> */
     private static array $map = [
       'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', //  7
       'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', // 15
@@ -22,6 +23,7 @@ class PwgBase32
       '=',  // padding char
     ];
 
+    /** @var array<mixed> */
     private static array $flippedMap = [
       'A' => '0', 'B' => '1', 'C' => '2', 'D' => '3', 'E' => '4', 'F' => '5', 'G' => '6', 'H' => '7',
       'I' => '8', 'J' => '9', 'K' => '10', 'L' => '11', 'M' => '12', 'N' => '13', 'O' => '14', 'P' => '15',
@@ -34,7 +36,7 @@ class PwgBase32
      *
      * @return string base32 encoded
      **/
-    public static function encode($input, $padding = true): string
+    public static function encode(string $input, bool $padding = true): string
     {
         if (empty($input)) {
             return '';
@@ -65,10 +67,11 @@ class PwgBase32
         return $base32;
     }
 
-    public static function decode($input)
+    /** @return string|false */
+    public static function decode(string $input): string|false
     {
         if (empty($input)) {
-            return;
+            return false;
         }
         $paddingCharCount = substr_count((string) $input, (string) self::$map[32]);
         $allowedValues = [6, 4, 3, 1, 0];

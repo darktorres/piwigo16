@@ -24,7 +24,7 @@ final class DerivativeImage
      *    or a DerivativeParams object
      * @param SrcImage $src_image the source image of this derivative
      */
-    public function __construct($type, public SrcImage $src_image)
+    public function __construct(string|\Piwigo\Image\DerivativeParams $type, public SrcImage $src_image)
     {
         if (is_string($type)) {
             $this->params = ImageStdParams::get_by_type($type);
@@ -41,7 +41,8 @@ final class DerivativeImage
      * @param array|SrcImage $infos array of info from db or SrcImage
      * @return string
      */
-    public static function thumb_url($infos): string|array
+    /** @param array<mixed>|SrcImage $infos @return string|array<mixed> */
+    public static function thumb_url(array|SrcImage $infos): string|array
     {
         return self::url(IMG_THUMB, $infos);
     }
@@ -54,10 +55,13 @@ final class DerivativeImage
      * @param array|SrcImage $infos array of info from db or SrcImage
      * @return string
      */
-    public static function url($type, $infos): string|array
+    /** @param array<mixed>|SrcImage $infos @return string|array<mixed> */
+    public static function url(string|\Piwigo\Image\DerivativeParams $type, array|SrcImage $infos): string|array
     {
         $src_image = is_object($infos) ? $infos : new SrcImage($infos);
         $params = is_string($type) ? ImageStdParams::get_by_type($type) : $type;
+        $rel_path = '';
+        $rel_url = '';
         self::build($src_image, $params, $rel_path, $rel_url);
         if ($params == null) {
             return $src_image->get_url();
@@ -83,7 +87,8 @@ final class DerivativeImage
      * @param array|SrcImage $src_image array of info from db or SrcImage
      * @return DerivativeImage[]
      */
-    public static function get_all($src_image): array
+    /** @param array<mixed>|SrcImage $src_image @return array<mixed> */
+    public static function get_all(array|SrcImage $src_image): array
     {
         if (!is_object($src_image)) {
             $src_image = new SrcImage($src_image);
@@ -111,7 +116,8 @@ final class DerivativeImage
      * @param array|SrcImage $src_image array of info from db or SrcImage
      * @return DerivativeImage|null null if $type not found
      */
-    public static function get_one($type, $src_image): ?DerivativeImage
+    /** @param array<mixed>|SrcImage $src_image */
+    public static function get_one(string $type, array|SrcImage $src_image): ?DerivativeImage
     {
         if (!is_object($src_image)) {
             $src_image = new SrcImage($src_image);
@@ -133,7 +139,7 @@ final class DerivativeImage
     /**
      * @todo : documentation of DerivativeImage::build
      */
-    private static function build($src, &$params, &$rel_path, &$rel_url, &$is_cached = null): void
+    private static function build(mixed $src, mixed &$params, string &$rel_path, string &$rel_url, ?bool &$is_cached = null): void
     {
         if ($src->has_size() && $params->is_identity($src->get_size())) {// the source image is smaller than what we should do - we do not upsample
             if (!$params->will_watermark($src->get_size()) && !$src->rotation) {// no watermark, no rotation required -> we will use the source image
@@ -231,7 +237,7 @@ final class DerivativeImage
     /**
      * @return string one if IMG_* or 'Original'
      */
-    public function get_type()
+    public function get_type(): string
     {
         if ($this->params == null) {
             return 'Original';
@@ -242,7 +248,8 @@ final class DerivativeImage
     /**
      * @return int[]
      */
-    public function get_size()
+    /** @return array<int>|null */
+    public function get_size(): ?array
     {
         if ($this->params == null) {
             return $this->src_image->get_size();
@@ -255,7 +262,7 @@ final class DerivativeImage
      *
      * @return string
      */
-    public function get_size_css()
+    public function get_size_css(): string
     {
         $size = $this->get_size();
         if ($size) {
@@ -269,7 +276,7 @@ final class DerivativeImage
      *
      * @return string
      */
-    public function get_size_htm()
+    public function get_size_htm(): string
     {
         $size = $this->get_size();
         if ($size) {
@@ -283,7 +290,7 @@ final class DerivativeImage
      *
      * @return string
      */
-    public function get_size_hr()
+    public function get_size_hr(): string
     {
         $size = $this->get_size();
         if ($size) {
@@ -296,7 +303,8 @@ final class DerivativeImage
      * @param int $maxw
      * @return int[]
      */
-    public function get_scaled_size($maxw, $maxh)
+    /** @return array<int> */
+    public function get_scaled_size(int $maxw, int $maxh): array
     {
         $size = $this->get_size();
         if ($size) {
@@ -321,7 +329,7 @@ final class DerivativeImage
      * @param int $maxw
      * @return string
      */
-    public function get_scaled_size_htm($maxw = 9999, $maxh = 9999)
+    public function get_scaled_size_htm(int $maxw = 9999, int $maxh = 9999): string
     {
         $size = $this->get_scaled_size($maxw, $maxh);
         if ($size) {

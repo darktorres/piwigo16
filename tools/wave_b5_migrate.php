@@ -123,7 +123,6 @@ const TYPED_GETTERS = [
     'password_reset_duration'          => 'passwordResetDuration',
     'password_activation_duration'     => 'passwordActivationDuration',
     'password_reset_code_duration'     => 'passwordResetCodeDuration',
-    'pass_convert'                     => 'passConvert',
     'user_fields'                      => 'userFields',
     'users_table'                      => 'usersTable',
     'calendar_datefield'               => 'calendarDatefield',

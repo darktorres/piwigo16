@@ -597,11 +597,6 @@ final class Config
     {
         return self::getInt('password_reset_code_duration', 300);
     }
-    public static function passConvert(): mixed
-    {
-        return self::get('pass_convert', false);
-    }
-
     /** @return array<string,string> */
     public static function userFields(): array
     {

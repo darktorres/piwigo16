@@ -3607,18 +3607,6 @@ parameters:
 			path: include/passwordhash.class.php
 
 		-
-			message: '#^Function gzopen\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: include/php_compat/gzopen.php
-
-		-
-			message: '#^Function gzopen64 not found\.$#'
-			identifier: function.notFound
-			count: 1
-			path: include/php_compat/gzopen.php
-
-		-
 			message: '#^Comparison operation "\>\=" between int\<80500, 80599\> and 50600 is always true\.$#'
 			identifier: greaterOrEqual.alwaysTrue
 			count: 1

@@ -1058,78 +1058,55 @@ function auto_login(): bool
 }
 
 /**
- * Hashes a password with the PasswordHash class from phpass security library.
- * @since 2.5
+ * Hashes a password using PHP's native bcrypt.
  *
  * @param string $password plain text
  * @return string
  */
-function pwg_password_hash($password)
+function pwg_password_hash(string $password): string
 {
-    global $pwg_hasher;
-
-    if (empty($pwg_hasher)) {
-        require_once(PHPWG_ROOT_PATH.'include/passwordhash.class.php');
-
-        // We use the portable hash feature from phpass because we can't be sure
-        // Piwigo runs on PHP 5.3+ (and won't run on an older version in the
-        // future)
-        $pwg_hasher = new PasswordHash(13, true);
-    }
-
-    return $pwg_hasher->HashPassword($password);
+    return password_hash($password, PASSWORD_BCRYPT);
 }
 
 /**
- * Verifies a password, with the PasswordHash class from phpass security library.
- * If the hash is 'old' (assumed MD5) the hash is updated in database, used for
- * migration from Piwigo 2.4.
- * @since 2.5
+ * Verifies a password against its stored hash.
+ *
+ * Supports bcrypt ($2y$) natively and upgrades legacy phpass ($P$) hashes
+ * to bcrypt on first successful login.
  *
  * @param string $password plain text
- * @param string $hash may be md5 or phpass hashed password
- * @param integer $user_id only useful to update password hash from md5 to phpass
+ * @param string $hash bcrypt or legacy phpass hash
+ * @param int|null $user_id provide to trigger automatic rehash upgrade in DB
  * @return bool
  */
-function pwg_password_verify($password, $hash, $user_id = null)
+function pwg_password_verify(string $password, string $hash, ?int $user_id = null): bool
 {
-    global $pwg_hasher;
-
-    // If the password has not been hashed with the current algorithm.
-    if (!str_starts_with($hash, '$P')) {
-        $pass_convert = \Piwigo\Core\Config::passConvert();
-        if (!empty($pass_convert) && is_callable($pass_convert)) {
-            $check = ($hash == $pass_convert($password));
-        } else {
-            $check = ($hash == md5($password));
+    // Native bcrypt — fast path
+    if (str_starts_with($hash, '$2y$') || str_starts_with($hash, '$2b$')) {
+        $ok = password_verify($password, $hash);
+        if ($ok && $user_id !== null && password_needs_rehash($hash, PASSWORD_BCRYPT)) {
+            single_update(USERS_TABLE, ['password' => pwg_password_hash($password)], ['id' => $user_id]);
         }
-
-        if ($check) {
-            if (!isset($user_id) or \Piwigo\Core\Config::externalAuthentification()) {
-                return true;
-            }
-
-            // Rehash using new hash.
-            $hash = pwg_password_hash($password);
-
-            single_update(
-                USERS_TABLE,
-                ['password' => $hash],
-                ['id' => $user_id]
-            );
-        }
+        return $ok;
     }
 
-    // If the stored hash is longer than an MD5, presume the
-    // new style phpass portable hash.
-    if (empty($pwg_hasher)) {
-        require_once(PHPWG_ROOT_PATH.'include/passwordhash.class.php');
-
-        // We use the portable hash feature
-        $pwg_hasher = new PasswordHash(13, true);
+    // Legacy phpass ($P$) — verify then upgrade to bcrypt on first login
+    if (str_starts_with($hash, '$P$')) {
+        global $pwg_hasher;
+        if (empty($pwg_hasher)) {
+            require_once(PHPWG_ROOT_PATH . 'include/passwordhash.class.php');
+            $pwg_hasher = new PasswordHash(13, true);
+        }
+        if (!$pwg_hasher->CheckPassword($password, $hash)) {
+            return false;
+        }
+        if ($user_id !== null && !\Piwigo\Core\Config::externalAuthentification()) {
+            single_update(USERS_TABLE, ['password' => pwg_password_hash($password)], ['id' => $user_id]);
+        }
+        return true;
     }
 
-    return $pwg_hasher->CheckPassword($password, $hash);
+    return false;
 }
 
 /**

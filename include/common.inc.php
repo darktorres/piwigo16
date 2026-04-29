@@ -70,11 +70,6 @@ if (!\Piwigo\Core\Kernel::isBooted()) :
     $header_notes = [];
     $filter = [];
 
-    // Include PHP compat shims — each file has its own function_exists guard
-    foreach (['gzopen', 'str_starts_with'] as $func) {
-        include_once(PHPWG_ROOT_PATH . 'include/php_compat/'.$func.'.php');
-    }
-
     include(PHPWG_ROOT_PATH . 'include/config_default.inc.php');
     @include(PHPWG_ROOT_PATH. 'local/config/config.inc.php');
 

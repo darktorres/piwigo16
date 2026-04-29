@@ -196,7 +196,6 @@ final class FileCombiner
     private static function process_js($js, $file): string
     {
         if (!str_contains($file, '.min') and !str_contains($file, '.packed')) {
-            require_once(PHPWG_ROOT_PATH.'include/jshrink.class.php');
             try {
                 $minified = Minifier::minify($js);
                 if (is_string($minified)) {
@@ -221,11 +220,6 @@ final class FileCombiner
     {
         $css = self::process_css_rec($css, dirname($file), $header);
         if (!str_contains($file, '.min')) {
-            require_once(PHPWG_ROOT_PATH.'include/minify/src/Minify.php');
-            require_once(PHPWG_ROOT_PATH.'include/minify/src/CSS.php');
-            require_once(PHPWG_ROOT_PATH.'include/minify/path-converter/src/ConverterInterface.php');
-            require_once(PHPWG_ROOT_PATH.'include/minify/path-converter/src/Converter.php');
-            require_once(PHPWG_ROOT_PATH.'include/minify/path-converter/src/NoConverter.php');
             $minifier = new CSS($css);
             $css = $minifier->minify();
         }

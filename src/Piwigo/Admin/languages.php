@@ -293,7 +293,6 @@ UPDATE '.USER_INFOS_TABLE.'
             $handle = @fopen($archive, 'wb');
             if ($handle !== false and fetchRemote($url, $handle, $get_data)) {
                 fclose($handle);
-                include_once(PHPWG_ROOT_PATH.'admin/include/pclzip.lib.php');
                 $zip = new \PclZip($archive);
                 if ($list = $zip->listContent()) {
                     $main_filepath = null;

@@ -11,6 +11,7 @@ declare(strict_types=1);
 /**
  * @package functions\mail
  */
+use Pelago\Emogrifier\CssInliner;
 use PHPMailer\PHPMailer\PHPMailer;
 use Piwigo\Template\Template;
 
@@ -596,10 +597,6 @@ function pwg_mail(string|array $to, array $args = [], array $tpl = []): bool
         $conf_mail = get_mail_configuration();
     }
 
-    include_once(PHPWG_ROOT_PATH.'include/phpmailer/Exception.php');
-    include_once(PHPWG_ROOT_PATH.'include/phpmailer/SMTP.php');
-    include_once(PHPWG_ROOT_PATH.'include/phpmailer/PHPMailer.php');
-
     $mail = new PHPMailer();
 
     foreach (get_clean_recipients_list($to) as $recipient) {
@@ -876,12 +873,13 @@ function pwg_send_mail(mixed $result, string $to, string $subject, string $conte
  * @param string $content
  * @return string
  */
-function move_css_to_body($content)
+function move_css_to_body(string $content): string
 {
-    include_once(PHPWG_ROOT_PATH.'include/emogrifier.class.php');
-
-    $e = new Emogrifier($content);
-    return @$e->emogrify();
+    try {
+        return CssInliner::fromHtml($content)->inlineCss()->render();
+    } catch (\Throwable) {
+        return $content;
+    }
 }
 
 /**

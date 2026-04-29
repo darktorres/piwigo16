@@ -21,14 +21,9 @@ return RectorConfig::configure()
     ])
     ->withSkip([
         __DIR__ . '/install/db', __DIR__ . '/language',
-        __DIR__ . '/include/smarty', __DIR__ . '/include/feedcreator.class.php',
-        __DIR__ . '/include/minify',
-        __DIR__ . '/include/phpmailer',
+        __DIR__ . '/include/feedcreator.class.php',
         __DIR__ . '/include/phpqrcode.php',
-        __DIR__ . '/include/emogrifier.class.php',
-        __DIR__ . '/include/jshrink.class.php',
         __DIR__ . '/include/passwordhash.class.php',
-        __DIR__ . '/admin/include/pclzip.lib.php',
         __DIR__ . '/themes', __DIR__ . '/vendor',
         // load_external_filters() uses implode('', $callback) for compile_id — array callbacks only.
         // Skip ArrayToFirstClassCallableRector on Template so set_prefilter callbacks stay as arrays.

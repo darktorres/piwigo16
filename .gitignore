@@ -30,3 +30,7 @@ node_modules/
 playwright-report/
 test-results/
 dist/
+
+# Tool session artifacts
+.playwright-mcp/
+.claude/worktrees/

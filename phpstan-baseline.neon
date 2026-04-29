@@ -7503,11 +7503,6 @@ parameters:
 			count: 1
 			path: src/Piwigo/Image/DerivativeImage.php
 
-		-
-			message: '#^Parameter \#2 \$callback of function uasort expects callable\(Piwigo\\Menu\\DisplayBlock, Piwigo\\Menu\\DisplayBlock\)\: int, array\{''BlockManager'', ''cmp_by_position''\} given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Piwigo/Menu/BlockManager.php
 
 		-
 			message: '#^Instanceof between mixed and Piwigo\\Ws\\PwgNamedArray will always evaluate to false\.$#'

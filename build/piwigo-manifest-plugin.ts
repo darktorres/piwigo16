@@ -20,19 +20,12 @@ export function piwigoManifestPlugin(): Plugin {
             chunkMap.clear();
             for (const [fileName, chunk] of Object.entries(bundle)) {
                 if (chunk.type !== 'chunk' || !chunk.isEntry) continue;
-                const cssFiles: string[] = [];
-                // Collect CSS emitted for this chunk from the bundle
-                for (const asset of Object.values(bundle)) {
-                    if (asset.type === 'asset' && asset.fileName.endsWith('.css')) {
-                        // Vite links CSS to entry chunks via `moduleIds` — approximate: include if related
-                        cssFiles.push(asset.fileName);
-                    }
-                }
+                const cssFiles = [...((chunk as any).viteMetadata?.importedCss ?? new Set<string>())];
                 chunkMap.set(fileName, {
                     name: chunk.name,
                     file: fileName,
                     imports: (chunk as OutputChunk).imports.filter((f) => !f.endsWith('.css')),
-                    css: [],
+                    css: cssFiles,
                 });
             }
         },

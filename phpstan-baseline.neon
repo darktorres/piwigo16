@@ -7264,75 +7264,9 @@ parameters:
 			path: include/ws_functions/pwg.images.php
 
 		-
-			message: '#^Function ws_images_add\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: include/ws_functions/pwg.images.php
-
-		-
-			message: '#^Function ws_images_addComment\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: include/ws_functions/pwg.images.php
-
-		-
-			message: '#^Function ws_images_addSimple\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: include/ws_functions/pwg.images.php
-
-		-
-			message: '#^Function ws_images_checkFiles\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: include/ws_functions/pwg.images.php
-
-		-
-			message: '#^Function ws_images_deleteOrphans\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: include/ws_functions/pwg.images.php
-
-		-
-			message: '#^Function ws_images_filteredSearch_create\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: include/ws_functions/pwg.images.php
-
-		-
-			message: '#^Function ws_images_getInfo\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: include/ws_functions/pwg.images.php
-
-		-
-			message: '#^Function ws_images_setMd5sum\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: include/ws_functions/pwg.images.php
-
-		-
-			message: '#^Function ws_images_syncMetadata\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: include/ws_functions/pwg.images.php
-
-		-
-			message: '#^Function ws_images_uploadCompleted\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: include/ws_functions/pwg.images.php
-
-		-
 			message: '#^Offset ''date_posted'' on non\-empty\-array\{allwords\?\: array\{mode\: string, fields\: array\<mixed\>, words\: array\|null\}, tags\?\: array\{words\: array\<mixed\>, mode\: string\}, cat\?\: array\{words\: array\<mixed\>, sub_inc\: mixed\}, author\?\: array\{words\: list\<string\>, mode\: ''OR''\}, filetypes\?\: array\<mixed\>, added_by\?\: array\<mixed\>\} in isset\(\) does not exist\.$#'
 			identifier: isset.offset
 			count: 1
-			path: include/ws_functions/pwg.images.php
-
-		-
-			message: '#^PHPDoc tag @return with type array\<mixed\>\|PwgError is not subtype of native type array\|Piwigo\\Ws\\PwgError\.$#'
-			identifier: return.phpDocType
-			count: 10
 			path: include/ws_functions/pwg.images.php
 
 		-
@@ -7352,54 +7286,6 @@ parameters:
 			identifier: offsetAccess.invalidOffset
 			count: 9
 			path: include/ws_functions/pwg.permissions.php
-
-		-
-			message: '#^Function ws_getActivityList\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: include/ws_functions/pwg.php
-
-		-
-			message: '#^Function ws_getMissingDerivatives\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: include/ws_functions/pwg.php
-
-		-
-			message: '#^PHPDoc tag @return with type array\<mixed\>\|PwgError is not subtype of native type array\|Piwigo\\Ws\\PwgError\.$#'
-			identifier: return.phpDocType
-			count: 2
-			path: include/ws_functions/pwg.php
-
-		-
-			message: '#^Function ws_tags_add\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: include/ws_functions/pwg.tags.php
-
-		-
-			message: '#^Function ws_tags_delete\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: include/ws_functions/pwg.tags.php
-
-		-
-			message: '#^Function ws_tags_duplicate\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: include/ws_functions/pwg.tags.php
-
-		-
-			message: '#^Function ws_tags_merge\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: include/ws_functions/pwg.tags.php
-
-		-
-			message: '#^PHPDoc tag @return with type array\<mixed\>\|PwgError is not subtype of native type array\|Piwigo\\Ws\\PwgError\.$#'
-			identifier: return.phpDocType
-			count: 4
-			path: include/ws_functions/pwg.tags.php
 
 		-
 			message: '#^PHPDoc tag @var with type array\<string, mixed\> is not subtype of native type non\-empty\-array\<int, non\-empty\-array\>\.$#'
@@ -7502,7 +7388,6 @@ parameters:
 			identifier: notIdentical.alwaysTrue
 			count: 1
 			path: src/Piwigo/Image/DerivativeImage.php
-
 
 		-
 			message: '#^Instanceof between mixed and Piwigo\\Ws\\PwgNamedArray will always evaluate to false\.$#'

@@ -282,7 +282,7 @@ function remove_chunks(string $original_sum, string $type): void
  *    @option string key
  */
 /**
- * @return array<mixed>|\PwgError
+ * @return array<mixed>|\Piwigo\Ws\PwgError
  * @param array<mixed> $params
  * @param array<mixed> $params
  */
@@ -351,7 +351,7 @@ SELECT DISTINCT image_id
  *    @option int comments_per_page
  */
 /**
- * @return array<mixed>|\PwgError
+ * @return array<mixed>|\Piwigo\Ws\PwgError
  * @param array<mixed> $params
  * @param array<mixed> $params
  */
@@ -737,7 +737,7 @@ SELECT *
  *    @option string query
  */
 /**
- * @return array<mixed>|\PwgError
+ * @return array<mixed>|\Piwigo\Ws\PwgError
  * @param array<mixed> $params
  * @param array<mixed> $params
  */
@@ -1345,7 +1345,7 @@ SELECT
  *    @option int image_id (optional)
  */
 /**
- * @return array<mixed>|\PwgError
+ * @return array<mixed>|\Piwigo\Ws\PwgError
  * @param array<mixed> $params
  * @param array<mixed> $params
  */
@@ -1502,7 +1502,7 @@ SELECT id, name, permalink
  *    @option int image_id (optional)
  */
 /**
- * @return array<mixed>|\PwgError
+ * @return array<mixed>|\Piwigo\Ws\PwgError
  * @param array<mixed> $params
  * @param array<mixed> $params
  */
@@ -2412,7 +2412,7 @@ DELETE FROM '.IMAGE_FORMAT_TABLE.'
  *    @option string file_sum
  */
 /**
- * @return array<mixed>|\PwgError
+ * @return array<mixed>|\Piwigo\Ws\PwgError
  * @param array<mixed> $params
  * @param array<mixed> $params
  */
@@ -2715,7 +2715,7 @@ function ws_images_emptyLounge(array $params, \Piwigo\Ws\PwgServer $service): ar
  * @param mixed[] $params
  */
 /**
- * @return array<mixed>|\PwgError
+ * @return array<mixed>|\Piwigo\Ws\PwgError
  * @param array<mixed> $params
  * @param array<mixed> $params
  */
@@ -2783,7 +2783,7 @@ SELECT
  *    @option int block_size
  */
 /**
- * @return array<mixed>|\PwgError
+ * @return array<mixed>|\Piwigo\Ws\PwgError
  * @param array<mixed> $params
  * @param array<mixed> $params
  */
@@ -2816,7 +2816,7 @@ function ws_images_setMd5sum(array $params, \Piwigo\Ws\PwgServer $service): PwgE
  *    @option int image_id
  */
 /**
- * @return array<mixed>|\PwgError
+ * @return array<mixed>|\Piwigo\Ws\PwgError
  * @param array<mixed> $params
  * @param array<mixed> $params
  */
@@ -2877,7 +2877,7 @@ SELECT id
  *    @option int block_size
  */
 /**
- * @return array<mixed>|\PwgError
+ * @return array<mixed>|\Piwigo\Ws\PwgError
  * @param array<mixed> $params
  * @param array<mixed> $params
  */

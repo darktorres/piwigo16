@@ -21,7 +21,7 @@ use Piwigo\Ws\PwgNamedStruct;
  *    @option string name (optional)
  */
 /**
- * @return array<mixed>|\PwgError
+ * @return array<mixed>|\Piwigo\Ws\PwgError
  * @param array<mixed> $params
  */
 function ws_groups_getList(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
@@ -263,7 +263,7 @@ SELECT COUNT(*)
  *    @option int[] merge_group_id
  */
 /**
- * @return array<mixed>|\PwgError
+ * @return array<mixed>|\Piwigo\Ws\PwgError
  * @param array<mixed> $params
  */
 function ws_groups_merge(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array

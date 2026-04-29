@@ -35,7 +35,7 @@ use Piwigo\Ws\PwgNamedStruct;
  *    @option string max_register
  */
 /**
- * @return array<mixed>|\PwgError
+ * @return array<mixed>|\Piwigo\Ws\PwgError
  * @param array<mixed> $params
  * @param array<mixed> $params
  */function ws_users_getList(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
@@ -834,7 +834,7 @@ SELECT
  *    @option boolean send_by_mail
  */
 /**
- * @return array<mixed>|\PwgError
+ * @return array<mixed>|\Piwigo\Ws\PwgError
  * @param array<mixed> $params
  * @param array<mixed> $params
  */function ws_users_generate_password_link(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
@@ -947,7 +947,7 @@ SELECT
  * @param mixed[] $params
  */
 /**
- * @return array<mixed>|\PwgError
+ * @return array<mixed>|\Piwigo\Ws\PwgError
  * @param array<mixed> $params
  * @param array<mixed> $params
  */function ws_create_api_key(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
@@ -1064,7 +1064,7 @@ SELECT
  * @param mixed[] $params
  */
 /**
- * @return array<mixed>|\PwgError
+ * @return array<mixed>|\Piwigo\Ws\PwgError
  * @param array<mixed> $params
  * @param array<mixed> $params
  */function ws_get_api_key(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array

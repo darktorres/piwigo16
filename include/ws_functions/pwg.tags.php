@@ -238,7 +238,7 @@ SELECT *
  *    @option string name
  */
 /**
- * @return array<mixed>|\PwgError
+ * @return array<mixed>|\Piwigo\Ws\PwgError
  * @param array<mixed> $params
  * @param array<mixed> $params
  */function ws_tags_add(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
@@ -270,7 +270,7 @@ WHERE id = '.$tag_add_id.';';
 }
 
 /**
- * @return array<mixed>|\PwgError
+ * @return array<mixed>|\Piwigo\Ws\PwgError
  * @param array<mixed> $params
  * @param array<mixed> $params
  */function ws_tags_delete(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
@@ -373,7 +373,7 @@ SELECT
 
 
 /**
- * @return array<mixed>|\PwgError
+ * @return array<mixed>|\Piwigo\Ws\PwgError
  * @param array<mixed> $params
  * @param array<mixed> $params
  */function ws_tags_duplicate(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
@@ -455,7 +455,7 @@ SELECT image_id
 }
 
 /**
- * @return array<mixed>|\PwgError
+ * @return array<mixed>|\Piwigo\Ws\PwgError
  * @param array<mixed> $params
  * @param array<mixed> $params
  */function ws_tags_merge(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array

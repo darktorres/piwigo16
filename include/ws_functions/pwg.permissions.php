@@ -21,7 +21,7 @@ use Piwigo\Ws\PwgNamedArray;
  *    @option int[] user_id (optional)
  */
 /**
- * @return array<mixed>|\PwgError
+ * @return array<mixed>|\Piwigo\Ws\PwgError
  * @param array<mixed> $params
  */
 function ws_permissions_getList(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array

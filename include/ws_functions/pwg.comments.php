@@ -20,7 +20,7 @@ use Piwigo\Ws\PwgError;
  *
  */
 /**
- * @return array<mixed>|\PwgError
+ * @return array<mixed>|\Piwigo\Ws\PwgError
  * @param array<mixed> $params
  */
 function ws_userComments_getList(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array

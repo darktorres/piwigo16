@@ -28,7 +28,7 @@ use Piwigo\Ws\PwgNamedStruct;
  *    @option string order (optional)
  */
 /**
- * @return array<mixed>|\PwgError
+ * @return array<mixed>|\Piwigo\Ws\PwgError
  * @param array<mixed> $params
  * @param array<mixed> $params
  */function ws_categories_getImages(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
@@ -255,7 +255,7 @@ SELECT
  *    @option bool fullname
  */
 /**
- * @return array<mixed>|\PwgError
+ * @return array<mixed>|\Piwigo\Ws\PwgError
  * @param array<mixed> $params
  * @param array<mixed> $params
  */function ws_categories_getList(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
@@ -714,7 +714,7 @@ SELECT
  *    @option bool commentable
  */
 /**
- * @return array<mixed>|\PwgError
+ * @return array<mixed>|\Piwigo\Ws\PwgError
  * @param array<mixed> $params
  * @param array<mixed> $params
  */function ws_categories_add(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
@@ -1056,7 +1056,7 @@ UPDATE '.CATEGORIES_TABLE.'
  *    @option int category_id
  */
 /**
- * @return array<mixed>|\PwgError
+ * @return array<mixed>|\Piwigo\Ws\PwgError
  * @param array<mixed> $params
  * @param array<mixed> $params
  */function ws_categories_refreshRepresentative(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
@@ -1183,7 +1183,7 @@ SELECT id
  *    @option string pwg_token
  */
 /**
- * @return array<mixed>|\PwgError
+ * @return array<mixed>|\Piwigo\Ws\PwgError
  * @param array<mixed> $params
  * @param array<mixed> $params
  */function ws_categories_move(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array

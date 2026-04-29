@@ -441,9 +441,9 @@ function load_plugins(): void
  * Factory helper used by PluginMaintain dispatch in src/ — keeps dynamic
  * instantiation in include/ (not subject to piwigo.noDynamicNew in src/).
  *
- * @param class-string<\PluginMaintain> $classname
+ * @param class-string<\Piwigo\Admin\PluginMaintain> $classname
  */
-function instantiate_plugin_maintain(string $classname, string $plugin_id): \PluginMaintain
+function instantiate_plugin_maintain(string $classname, string $plugin_id): \Piwigo\Admin\PluginMaintain
 {
     return new $classname($plugin_id);
 }
@@ -451,9 +451,9 @@ function instantiate_plugin_maintain(string $classname, string $plugin_id): \Plu
 /**
  * Factory helper for ThemeMaintain dispatch.
  *
- * @param class-string<\ThemeMaintain> $classname
+ * @param class-string<\Piwigo\Admin\ThemeMaintain> $classname
  */
-function instantiate_theme_maintain(string $classname, string $theme_id): \ThemeMaintain
+function instantiate_theme_maintain(string $classname, string $theme_id): \Piwigo\Admin\ThemeMaintain
 {
     return new $classname($theme_id);
 }

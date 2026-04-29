@@ -27,7 +27,7 @@ use Piwigo\Ws\PwgNamedArray;
  *    @option int prev_page (optional)
  */
 /**
- * @return array<mixed>|\PwgError
+ * @return array<mixed>|\Piwigo\Ws\PwgError
  * @param array<mixed> $params
  * @param array<mixed> $params
  */function ws_getMissingDerivatives(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
@@ -446,7 +446,7 @@ function ws_session_getStatus($params, \Piwigo\Ws\PwgServer &$service): mixed
  *  @since 12
  */
 /**
- * @return array<mixed>|\PwgError
+ * @return array<mixed>|\Piwigo\Ws\PwgError
  * @param array<mixed> $param
  * @param array<mixed> $param
  */function ws_getActivityList(array $param, \Piwigo\Ws\PwgServer &$service): PwgError|array

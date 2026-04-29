@@ -1,55 +1,51 @@
 declare var unit_MB: string;
+declare var no_time_elapsed: string;
 
-function displayResponse(domElem: JQuery[], values: string[], mDivs: NodeListOf<Element>, mValues: Record<string, string>): void {
+function displayResponse(domElem: HTMLElement[], values: string[], mDivs: NodeListOf<Element>, mValues: Record<string, string>): void {
     for (let index = 0; index < domElem.length; index++) {
-        domElem[index].html(unit_MB.replace('%s', values[index]));
+        domElem[index].innerHTML = unit_MB.replace('%s', values[index]);
     }
-    let mDivName: string;
     for (let index = 0; index < mDivs.length; index++) {
-        mDivName = (mDivs[index] as HTMLElement).getAttribute('name') ?? '';
+        const mDivName = (mDivs[index] as HTMLElement).getAttribute('name') ?? '';
         (mDivs[index] as HTMLElement).title = unit_MB.replace('%s', mValues[mDivName]);
     }
-    $('.cache-lastCalculated-value').html(no_time_elapsed);
+    document.querySelectorAll<HTMLElement>('.cache-lastCalculated-value')
+        .forEach(el => { el.innerHTML = no_time_elapsed; });
 }
 
-$(document).ready(function () {
-    $('.refresh-cache-size').on('click', function () {
-        $(this).find('.refresh-icon').addClass('animate-spin');
-        return new Promise<void>((res, rej) => {
-            jQuery.ajax({
-                url: 'ws.php?format=json&method=pwg.getCacheSize',
-                type: 'POST',
-                data: { param: 'test_param', service: 'test_service' },
-                success(raw_data: string) {
-                    const data = jQuery.parseJSON(raw_data) as any;
-                    if (data.stat === 'ok') {
-                        res();
-                        const domElemToRefresh: JQuery[] = [
-                            $('.cache-size-value'),
-                            $('.multiple-pictures-sizes'),
-                            $('.multiple-compiledTemplate-sizes'),
-                        ];
-                        const domElemValues: string[] = [
-                            data.result.infos[0].value,
-                            data.result.infos[1].value.all,
-                            data.result.infos[2].value,
-                        ];
-                        for (let i = 0; i < domElemValues.length; i++) {
-                            domElemValues[i] = (domElemValues[i] as any / 1024 / 1024).toFixed(2);
-                        }
-                        const multipleSizes = $('.delete-check-container').children('.delete-size-check');
-                        const multipleSizesValues: Record<string, string> = data.result.infos[1].value;
-                        for (const key of Object.keys(multipleSizesValues)) {
-                            (multipleSizesValues as any)[key] = ((multipleSizesValues as any)[key] / 1024 / 1024).toFixed(2);
-                        }
-                        displayResponse(domElemToRefresh, domElemValues, multipleSizes.toArray() as any, multipleSizesValues);
-                        $('.animate-spin').removeClass('animate-spin');
-                    } else {
-                        rej(data);
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll<HTMLElement>('.refresh-cache-size').forEach(btn => {
+        btn.addEventListener('click', () => {
+            btn.querySelector('.refresh-icon')?.classList.add('animate-spin');
+            fetch('ws.php?format=json&method=pwg.getCacheSize', {
+                method: 'POST',
+                body: new URLSearchParams({ param: 'test_param', service: 'test_service' }),
+            })
+                .then(r => r.json())
+                .then((data: any) => {
+                    if (data.stat !== 'ok') return;
+                    const domElemToRefresh: HTMLElement[] = [
+                        document.querySelector<HTMLElement>('.cache-size-value')!,
+                        document.querySelector<HTMLElement>('.multiple-pictures-sizes')!,
+                        document.querySelector<HTMLElement>('.multiple-compiledTemplate-sizes')!,
+                    ];
+                    const domElemValues: string[] = [
+                        data.result.infos[0].value,
+                        data.result.infos[1].value.all,
+                        data.result.infos[2].value,
+                    ];
+                    for (let i = 0; i < domElemValues.length; i++) {
+                        domElemValues[i] = (Number(domElemValues[i]) / 1024 / 1024).toFixed(2);
                     }
-                },
-                error(message) { rej(message); console.log(message); },
-            });
+                    const multipleSizes = document.querySelectorAll('.delete-check-container .delete-size-check');
+                    const multipleSizesValues: Record<string, string> = data.result.infos[1].value;
+                    for (const key of Object.keys(multipleSizesValues)) {
+                        (multipleSizesValues as any)[key] = (Number((multipleSizesValues as any)[key]) / 1024 / 1024).toFixed(2);
+                    }
+                    displayResponse(domElemToRefresh, domElemValues, multipleSizes, multipleSizesValues);
+                    document.querySelectorAll('.animate-spin').forEach(el => el.classList.remove('animate-spin'));
+                })
+                .catch((message) => console.log(message));
         });
     });
 });

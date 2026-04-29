@@ -1,40 +1,48 @@
 declare var data: Array<{ id: string | number; name: string; children?: typeof data }>;
+declare var str_result_limit: string;
+declare var str_albums_found: string;
+declare var str_album_found: string;
 
 const RESULT_LIMIT = 100;
 const editLink = 'admin.php?page=album-';
 const colors = ['icon-red', 'icon-blue', 'icon-yellow', 'icon-purple', 'icon-green'];
 
-$(function () {
-    $('.limit-album-reached').hide();
-    $('#cat_search_input').on('input', () => { updateSearch(); });
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll<HTMLElement>('.limit-album-reached').forEach(el => { el.style.display = 'none'; });
+    document.getElementById('cat_search_input')?.addEventListener('input', () => updateSearch());
 });
 
 function updateSearch(): void {
-    const string = String($('.search-input').val() ?? '');
-    $('.search-album-result').html('');
-    $('.search-album-noresult').hide();
-    $('.limit-album-reached').hide();
+    const string = (document.querySelector<HTMLInputElement>('.search-input')?.value ?? '');
+    document.querySelectorAll<HTMLElement>('.search-album-result').forEach(el => { el.innerHTML = ''; });
+    document.querySelectorAll<HTMLElement>('.search-album-noresult').forEach(el => { el.style.display = 'none'; });
+    document.querySelectorAll<HTMLElement>('.limit-album-reached').forEach(el => { el.style.display = 'none'; });
+
     if (string === '') {
-        $('.search-album-ghost').show();
-        $('.search-album-num-result').hide();
+        document.querySelectorAll<HTMLElement>('.search-album-ghost').forEach(el => { el.style.display = ''; });
+        document.querySelectorAll<HTMLElement>('.search-album-num-result').forEach(el => { el.style.display = 'none'; });
         hideSearchContainer();
     } else {
-        $('.search-album-ghost').hide();
-        $('.search-album-help').hide();
-        $('.search-album-num-result').show();
+        document.querySelectorAll<HTMLElement>('.search-album-ghost').forEach(el => { el.style.display = 'none'; });
+        document.querySelectorAll<HTMLElement>('.search-album-help').forEach(el => { el.style.display = 'none'; });
+        document.querySelectorAll<HTMLElement>('.search-album-num-result').forEach(el => { el.style.display = ''; });
         showSearchContainer();
-        let nbResult = searchAlbumByName(data, string, 0);
-        if (nbResult !== 1) {
-            if (nbResult >= RESULT_LIMIT) {
-                $('.search-album-num-result').html(str_result_limit.replace('%d', String(nbResult)));
+        const nbResult = searchAlbumByName(data, string, 0);
+        const numResult = document.querySelector<HTMLElement>('.search-album-num-result');
+        if (numResult) {
+            if (nbResult !== 1) {
+                numResult.innerHTML = nbResult >= RESULT_LIMIT
+                    ? str_result_limit.replace('%d', String(nbResult))
+                    : str_albums_found.replace('%d', String(nbResult));
             } else {
-                $('.search-album-num-result').html(str_albums_found.replace('%d', String(nbResult)));
+                numResult.innerHTML = str_album_found;
             }
-        } else {
-            $('.search-album-num-result').html(str_album_found);
         }
-        if (nbResult !== 0) resultAppear($('.search-album-result .search-album-elem').first());
-        else $('.search-album-noresult').show();
+        if (nbResult !== 0) {
+            resultAppear(document.querySelector<HTMLElement>('.search-album-result .search-album-elem'));
+        } else {
+            document.querySelectorAll<HTMLElement>('.search-album-noresult').forEach(el => { el.style.display = ''; });
+        }
     }
 }
 
@@ -56,31 +64,45 @@ function searchAlbumByName(categories: typeof data, search: string, nbResult: nu
 
 function addAlbumResult(cat: typeof data[0], nbResult: number, haveChildren: boolean, name: string): void {
     const id = +cat.id;
-    const template = $('.search-album-elem-template').html();
-    const newCatNode = $(template);
-    newCatNode.find('.search-album-icon').addClass(haveChildren ? 'icon-sitemap' : 'icon-folder-open');
-    newCatNode.find('.search-album-icon').addClass(colors[id % 5]);
-    newCatNode.find('.search-album-name').html(name.slice(0, -2));
-    newCatNode.find('.search-album-edit').attr('href', 'admin.php?page=album-' + id);
-    $('.search-album-result').append(newCatNode);
+    const templateEl = document.querySelector<HTMLElement>('.search-album-elem-template');
+    if (!templateEl) return;
+    const div = document.createElement('div');
+    div.innerHTML = templateEl.innerHTML;
+    const newCatNode = div.firstElementChild as HTMLElement | null;
+    if (!newCatNode) return;
+
+    newCatNode.querySelector('.search-album-icon')?.classList.add(haveChildren ? 'icon-sitemap' : 'icon-folder-open');
+    newCatNode.querySelector('.search-album-icon')?.classList.add(colors[id % 5]);
+    const nameEl = newCatNode.querySelector<HTMLElement>('.search-album-name');
+    if (nameEl) nameEl.innerHTML = name.slice(0, -2);
+    newCatNode.querySelector<HTMLAnchorElement>('.search-album-edit')
+        ?.setAttribute('href', 'admin.php?page=album-' + id);
+
+    document.querySelector('.search-album-result')?.append(newCatNode);
+
     if (nbResult >= RESULT_LIMIT) {
-        $('.limit-album-reached').show(1000).html(str_result_limit.replace('%d', String(nbResult)));
+        document.querySelectorAll<HTMLElement>('.limit-album-reached').forEach(el => {
+            el.style.display = '';
+            el.innerHTML = str_result_limit.replace('%d', String(nbResult));
+        });
     }
 }
 
-function resultAppear(result: JQuery): void {
-    result.fadeIn();
-    if (result.next().length !== 0) setTimeout(() => { resultAppear(result.next().first()); }, 50);
+function resultAppear(result: HTMLElement | null): void {
+    if (!result) return;
+    result.style.display = '';
+    const next = result.nextElementSibling as HTMLElement | null;
+    if (next) setTimeout(() => resultAppear(next), 50);
 }
 
 function showSearchContainer(): void {
-    $('.tree').hide();
-    $('.album-search-result-container').show();
+    document.querySelectorAll<HTMLElement>('.tree').forEach(el => { el.style.display = 'none'; });
+    document.querySelectorAll<HTMLElement>('.album-search-result-container').forEach(el => { el.style.display = ''; });
 }
 
 function hideSearchContainer(): void {
-    $('.album-search-result-container').hide();
-    $('.tree').fadeIn();
+    document.querySelectorAll<HTMLElement>('.album-search-result-container').forEach(el => { el.style.display = 'none'; });
+    document.querySelectorAll<HTMLElement>('.tree').forEach(el => { el.style.display = ''; });
 }
 
 export {};

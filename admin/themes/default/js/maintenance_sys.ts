@@ -1,5 +1,3 @@
-const color_icons = ['icon-red', 'icon-blue', 'icon-yellow', 'icon-purple', 'icon-green'];
-
 interface ActivityLine {
     id: string | number;
     username: string;
@@ -21,83 +19,104 @@ interface ActivityLine {
 }
 
 function line_constructor(line: ActivityLine): void {
-    const new_line = $('#body_example').clone();
-    const line_details_example = $('#line_details_example').clone();
+    const newLine = document.getElementById('body_example')!.cloneNode(true) as HTMLElement;
+    const lineDetailsExample = document.getElementById('line_details_example')!.cloneNode(true) as HTMLElement;
     const initial_user = line.username.charAt(0).toUpperCase();
 
-    new_line.attr('id', String(line.id));
-    if (line.major_infos) new_line.addClass('major-infos');
+    newLine.id = String(line.id);
+    if (line.major_infos) newLine.classList.add('major-infos');
 
-    new_line.find('.icon_object').addClass(line.object_icon);
-    new_line.find('.text_object').text(line.object).attr('title', line.object);
-    new_line.find('.color_action').addClass(line.action_color);
-    new_line.find('.icon_action').addClass(line.action_icon);
-    new_line.find('.text_action').text(line.action).attr('title', line.action);
+    const qs = (sel: string): HTMLElement => newLine.querySelector<HTMLElement>(sel)!;
+
+    qs('.icon_object').classList.add(line.object_icon);
+    qs('.text_object').textContent = line.object;
+    qs('.text_object').setAttribute('title', line.object);
+    qs('.color_action').classList.add(line.action_color);
+    qs('.icon_action').classList.add(line.action_icon);
+    qs('.text_action').textContent = line.action;
+    qs('.text_action').setAttribute('title', line.action);
 
     if (line.username === 'System') {
-        new_line.find('.icon_user').addClass('icon-robot-head');
+        qs('.icon_user').classList.add('icon-robot-head');
     } else {
-        new_line.find('.icon_user').addClass(color_icons[line.user_id % 5]).html(initial_user);
+        const colors = ['icon-red', 'icon-blue', 'icon-yellow', 'icon-purple', 'icon-green'];
+        qs('.icon_user').classList.add(colors[line.user_id % 5]);
+        qs('.icon_user').innerHTML = initial_user;
     }
-    new_line.find('.text_username').text(line.username).attr('title', line.username);
-    new_line.find('.text_date').text(line.date).attr('title', line.date + ' ' + line.hour);
-    new_line.find('.text_hour').text(line.hour);
+    qs('.text_username').textContent = line.username;
+    qs('.text_username').setAttribute('title', line.username);
+    qs('.text_date').textContent = line.date;
+    qs('.text_date').setAttribute('title', line.date + ' ' + line.hour);
+    qs('.text_hour').textContent = line.hour;
+
+    const tabDetails = qs('.tab-body-details');
+
+    const cloneDetail = (): HTMLElement => {
+        const d = lineDetailsExample.cloneNode(true) as HTMLElement;
+        d.removeAttribute('id');
+        return d;
+    };
 
     switch (line.detail.type) {
         case 'error':
         case 'version':
         case 'maintenance_action': {
-            const d = line_details_example.clone().removeAttr('id');
-            d.find('.icon_details').addClass(line.detail.icon ?? '');
-            d.find('.text_details').text(String(line.detail.text ?? '')).attr('title', String(line.detail.text ?? ''));
-            new_line.find('.tab-body-details').append(d);
+            const d = cloneDetail();
+            d.querySelector<HTMLElement>('.icon_details')?.classList.add(line.detail.icon ?? '');
+            const txt = d.querySelector<HTMLElement>('.text_details');
+            if (txt) { txt.textContent = String(line.detail.text ?? ''); txt.setAttribute('title', String(line.detail.text ?? '')); }
+            tabDetails.append(d);
             break;
         }
         case 'db_fs_version':
         case 'config_section':
             Object.keys(line.detail)
-                .filter((key) => key !== 'type')
-                .forEach((key) => {
+                .filter(key => key !== 'type')
+                .forEach(key => {
                     const detail = line.detail[key] as { icon: string; text: string };
-                    const d = line_details_example.clone().removeAttr('id');
-                    d.find('.icon_details').addClass(detail.icon);
-                    d.find('.text_details').text(detail.text).attr('title', detail.text);
-                    new_line.find('.tab-body-details').append(d);
+                    const d = cloneDetail();
+                    d.querySelector<HTMLElement>('.icon_details')?.classList.add(detail.icon);
+                    const txt = d.querySelector<HTMLElement>('.text_details');
+                    if (txt) { txt.textContent = detail.text; txt.setAttribute('title', detail.text); }
+                    tabDetails.append(d);
                 });
             break;
         case 'from_to': {
             const items = line.detail as unknown as Array<{ icon: string; text: string }>;
-            const from = line_details_example.clone().removeAttr('id');
-            from.find('.icon_details').addClass(items[0].icon);
-            from.find('.text_details').text(items[0].text).attr('title', items[0].text);
-            new_line.find('.tab-body-details').append(from);
-            new_line.find('.tab-body-details').append('<span class="icon-right">  </span>');
-            const to = line_details_example.clone().removeAttr('id');
-            to.find('.icon_details').addClass(items[1].icon);
-            to.find('.text_details').text(items[1].text).attr('title', items[1].text);
-            new_line.find('.tab-body-details').append(to);
+            const from = cloneDetail();
+            from.querySelector<HTMLElement>('.icon_details')?.classList.add(items[0].icon);
+            const fromTxt = from.querySelector<HTMLElement>('.text_details');
+            if (fromTxt) { fromTxt.textContent = items[0].text; fromTxt.setAttribute('title', items[0].text); }
+            tabDetails.append(from);
+            const arrow = document.createElement('span');
+            arrow.className = 'icon-right';
+            arrow.textContent = '  ';
+            tabDetails.append(arrow);
+            const to = cloneDetail();
+            to.querySelector<HTMLElement>('.icon_details')?.classList.add(items[1].icon);
+            const toTxt = to.querySelector<HTMLElement>('.text_details');
+            if (toTxt) { toTxt.textContent = items[1].text; toTxt.setAttribute('title', items[1].text); }
+            tabDetails.append(to);
             break;
         }
         default: break;
     }
 
-    $('#tab-body-content').append(new_line);
+    document.getElementById('tab-body-content')!.append(newLine);
 }
 
 function get_system_activities(): void {
-    $.ajax({
-        url: window.location.href,
-        type: 'GET',
-        data: { method: 'pwg.activity_sys.getList' },
-        dataType: 'json',
-        success: (response: { data: ActivityLine[] }) => {
-            $('.loading').hide();
-            response.data.forEach((line) => line_constructor(line));
-        },
-        error: (e) => { console.log(e); },
-    });
+    const url = new URL(window.location.href);
+    url.searchParams.set('method', 'pwg.activity_sys.getList');
+    fetch(url.toString())
+        .then(r => r.json())
+        .then((response: { data: ActivityLine[] }) => {
+            document.querySelectorAll<HTMLElement>('.loading').forEach(el => { el.style.display = 'none'; });
+            response.data.forEach(line => line_constructor(line));
+        })
+        .catch(e => console.log(e));
 }
 
-$(document).ready(function () { get_system_activities(); });
+document.addEventListener('DOMContentLoaded', () => { get_system_activities(); });
 
 export {};

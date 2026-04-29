@@ -89,6 +89,11 @@ class PwgNamedArray
     {
         $this->_xmlAttributes = array_flip($xmlAttributes);
     }
+
+    public function getContent(): mixed
+    {
+        return $this->_content;
+    }
 }
 /**
  * Simple wrapper around a "struct" (php array whose keys are not consecutive
@@ -124,6 +129,11 @@ class PwgNamedStruct
                 }
             }
         }
+    }
+
+    public function getContent(): mixed
+    {
+        return $this->_content;
     }
 }
 
@@ -220,10 +230,16 @@ class PwgServer
     public string $_responseFormat = '';
 
     /** @var array<string, WsMethod> */
-    public array $_methods = [];
+    private array $_methods = [];
 
     public function __construct()
     {
+    }
+
+    /** @return array<string, WsMethod> */
+    public function getMethods(): array
+    {
+        return $this->_methods;
     }
 
     /**

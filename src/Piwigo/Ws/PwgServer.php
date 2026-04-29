@@ -16,10 +16,16 @@ class PwgServer
     public string $_responseFormat = '';
 
     /** @var array<string, WsMethod> */
-    public array $_methods = [];
+    private array $_methods = [];
 
     public function __construct()
     {
+    }
+
+    /** @return array<string, WsMethod> */
+    public function getMethods(): array
+    {
+        return $this->_methods;
     }
 
     /**

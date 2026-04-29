@@ -26,7 +26,7 @@ class PwgNamedStruct
      * @param string[]|null $xmlAttributes
      * @param string[]|null $xmlElements
      */
-    public function __construct(public mixed $_content, ?array $xmlAttributes = null, ?array $xmlElements = null)
+    public function __construct(private mixed $_content, ?array $xmlAttributes = null, ?array $xmlElements = null)
     {
         if (isset($xmlAttributes)) {
             $this->_xmlAttributes = array_flip($xmlAttributes);
@@ -42,5 +42,10 @@ class PwgNamedStruct
                 }
             }
         }
+    }
+
+    public function getContent(): mixed
+    {
+        return $this->_content;
     }
 }

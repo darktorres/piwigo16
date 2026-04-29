@@ -7382,7 +7382,7 @@ one phase. The originating reference is noted for each step.
    **Exit signal:** `dist/manifest.json` entries have accurate per-entry `css` arrays; no
    regressions in `npm run build` or `npm run typecheck`.
 
-7. **TypeScript Wave 2 — enable `noImplicitAny` and `noImplicitThis`.** *(Gap G5-1a, Phase 5
+7. ✅ **TypeScript Wave 2 — enable `noImplicitAny` and `noImplicitThis`.** *(Gap G5-1a, Phase 5
    deferral, plan line 5132: "Wave 2 flips noImplicitAny true after simple files convert".)*
    The Wave-1 relaxations in `tsconfig.json` allow implicit `any` propagation throughout jQuery
    callback chains and class methods. Enabling these flags surfaces every untyped parameter and

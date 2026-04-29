@@ -7397,7 +7397,7 @@ one phase. The originating reference is noted for each step.
    **Exit signal:** `npm run typecheck` exits 0 with `"noImplicitThis": true` and
    `"noImplicitAny": true` in `tsconfig.json`; no `// @ts-ignore` added.
 
-8. **TypeScript Wave 3 — enable `strictNullChecks`.** *(Gap G5-1b, Phase 5 deferral, plan line
+8. ✅ **TypeScript Wave 3 — enable `strictNullChecks`.** *(Gap G5-1b, Phase 5 deferral, plan line
    5132: "Wave 3 enables `strictNullChecks` on a per-file `// @ts-strict` opt-in".)*
    The heaviest TS lift. `strictNullChecks: false` means every value implicitly includes `null |
    undefined`, so there are no null-safety errors anywhere in the current codebase.

@@ -194,7 +194,7 @@ jQuery(document).ready(function() {
     
     $.confirm({
       title: str_delete_album,
-      content : function () {
+      content : function (this: { setContent(html: string): void }) {
         const self = this
         return $.ajax({
           url: "ws.php?format=json&method=pwg.categories.calculateOrphans",
@@ -218,9 +218,9 @@ jQuery(document).ready(function() {
 
             if (data.nb_images_recursive) {
               let t = 0
-              message += `<div> 
+              message += `<div>
                 <input type="radio" name="deletion-mode" value="force_delete" id="force_delete">
-                <label for="force_delete">${str_delete_all_photos.replaceAll("%d", _ => [data.nb_images_recursive, data.nb_images_associated_outside][t++])}</label>
+                <label for="force_delete">${str_delete_all_photos.replaceAll("%d", (_: any) => [data.nb_images_recursive, data.nb_images_associated_outside][t++])}</label>
               </div>`;
             }
 
@@ -244,7 +244,7 @@ jQuery(document).ready(function() {
         deleteAlbum: {
           text: str_delete_album,
           btnClass: 'btn-red',
-          action: function () {
+          action: function (this: { showLoading(): void; close(): void }) {
             this.showLoading()
             let deletionMode = $('input[name="deletion-mode"]:checked').val();
             delete_album(deletionMode)
@@ -264,7 +264,7 @@ jQuery(document).ready(function() {
     })
   });
 
-  function delete_album(photo_deletion_mode) {
+  function delete_album(photo_deletion_mode: any) {
     return new Promise<void>((res, rej) => {
       $.ajax({
         url: "ws.php?format=json&method=pwg.categories.delete",
@@ -491,7 +491,7 @@ function checkAlbumLock() {
 
 // Parent album popin functions
 
-function add_related_category({ album, newSelectedAlbum, getSelectedAlbum }) {
+function add_related_category({ album, newSelectedAlbum, getSelectedAlbum }: { album: any; newSelectedAlbum: any; getSelectedAlbum: any }) {
   if (parent_album != album.id) {
     $("#cat-parent").html(
       album.full_name_with_admin_links ?? album.root

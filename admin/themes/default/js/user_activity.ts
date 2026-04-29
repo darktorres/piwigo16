@@ -76,7 +76,7 @@ if (additional_filt_type)
 
 get_user_activity(activity_page, uid_filter, action_filter, object_filter, [date_min_filter, date_max_filter], additional_filt_value);
 
-function get_user_activity(page, uid, action, object, date, id) {
+function get_user_activity(page: any, uid: any, action: any, object: any, date: any, id: any) {
 
     $.ajax({
         url: "ws.php?format=json&method=pwg.activity.getList",
@@ -114,7 +114,7 @@ function get_user_activity(page, uid, action, object, date, id) {
             
             if (data.result['result_lines'].length > 0)
             {
-                data.result['result_lines'].forEach(line => {
+                data.result['result_lines'].forEach((line: any) => {
                     lineConstructor(line);
                 });
             }
@@ -141,7 +141,7 @@ function get_user_activity(page, uid, action, object, date, id) {
     })
 }
 
-function lineConstructor(line) {
+function lineConstructor(line: any) {
     let newLine = $("#-1").clone();
 
     $(".tab-title").show();
@@ -578,7 +578,7 @@ function lineConstructor(line) {
     displayLine(newLine);
 }
 
-function displayLine(line) {
+function displayLine(line: any) {
     $(".tab").append(line);
 }
 
@@ -587,7 +587,7 @@ function emptyLine() {
     $(".activity-noresult").show();
 }
 
-function get_initials(username) {
+function get_initials(username: any) {
     let words = username.toUpperCase().split(" ");
     let res = words[0][0];
 
@@ -597,7 +597,7 @@ function get_initials(username) {
     return res;
 }
 
-function setCreationDate(startDate, endDate) {
+function setCreationDate(startDate: any, endDate: any) {
     $(".start-date").html(startDate)
 
     $(".end-date").html(endDate)
@@ -605,7 +605,7 @@ function setCreationDate(startDate, endDate) {
 
 //{* Pagination *}
 
-function move_to_page(page) {
+function move_to_page(page: any) {
     if (page < 0)
         return;
     actual_page = page;
@@ -621,7 +621,7 @@ $('.pagination-arrow.left').on('click', () => {
     move_to_page(actual_page - 1);
 })
 
-function update_pagination_menu(page) {
+function update_pagination_menu(page: any) {
     updateArrows();
     update_pagination_items();
     if (end_page && actual_page == 1) {
@@ -661,7 +661,7 @@ function update_pagination_items() {
     }   
 }
 
-function append_pagination_item(page = null) {
+function append_pagination_item(page: any = null) {
     if (page != null) {
         let new_tag = $(page_item.replace(/%d/g, page));
         $('.pagination-item-container').append(new_tag);

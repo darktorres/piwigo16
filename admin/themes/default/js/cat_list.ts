@@ -414,7 +414,7 @@ function removeIconDesc() {
     $(".albumActions span.iconLegend").hide();
 }
 
-function removeHoverEffect(e) {
+function removeHoverEffect(e: any) {
     e.unbind('mouseenter').unbind('mouseleave');
 }
 

@@ -40,7 +40,7 @@ Creating graph
 -------*/
 var ctx = (document.getElementById('stat-graph') as HTMLCanvasElement).getContext('2d');
 //Create the gradient under the curve
-function gradient(r, g, b) {
+function gradient(r: any, g: any, b: any) {
   let gradient = ctx.createLinearGradient(0,400, 0,0);
   gradient.addColorStop(0, 'rgba('+r+','+g+','+b+',0)');
   gradient.addColorStop(1, 'rgba('+r+','+g+','+b+',1)');
@@ -67,7 +67,7 @@ var displayOptions = {
   lineTension : 0.2
 }
 
-function changeData(dataType, options = displayOptions) {
+function changeData(dataType: any, options = displayOptions) {
   if (!compareMode) {
     statGraph.data = {
       datasets: [{
@@ -104,7 +104,7 @@ function changeData(dataType, options = displayOptions) {
         intersect : false,
       }
     }
-    statGraph.options.scales.xAxes.forEach(axe => {
+    statGraph.options.scales.xAxes.forEach((axe: any) => {
       axe.time.tooltipFormat = str_tooltip_format[dataType];
       axe.time.unit = data_unit[dataType];
       axe.time.displayFormats = str_unit_format;
@@ -169,7 +169,7 @@ function changeData(dataType, options = displayOptions) {
 }
 
 //Make Data readable by Chart.js
-function getValues(data) {
+function getValues(data: any) {
   values = [];
   Object.keys(data).forEach(function(key) {
   var newPoint = {
@@ -211,10 +211,10 @@ function getMonthStatsDataset() {
   colors = ["#ffa744", "#ff5252", "#896af3", "#2883c3", "#6ece5e"]
   dataset = [];
   colorIndice = 0;
-  let date;
+  let date: any;
 
-  data["month-stats"]["month"].forEach(values => {
-    let days_data = [];
+  data["month-stats"]["month"].forEach((values: any) => {
+    let days_data: any[] = [];
     Object.keys(values).forEach(function(key) {
       date = new Date(key)
       days_data[parseInt(date.getUTCDate()) - 1] = values[key];

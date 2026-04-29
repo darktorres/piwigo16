@@ -156,7 +156,7 @@ $(function () {
     dragdrop: true,
 
     preinit: {
-      Init: function (up, info) {
+      Init: function (up: any, info: any) {
         $('#uploader_container').removeAttr("title"); //remove the "using runtime" text
 
         $('#startUpload').on('click', function (e) {
@@ -174,7 +174,7 @@ $(function () {
 
     init: {
       // update custom button state on queue change
-      QueueChanged: function (up) {
+      QueueChanged: function (up: any) {
         $('#addFiles').addClass("addFilesButtonChanged");
         $('#startUpload').prop('disabled', up.files.length == 0);
         $("#addFiles").removeClass('buttonLike').addClass('buttonLike');
@@ -192,11 +192,11 @@ $(function () {
         }
       },
 
-      FilesAdded: async function (up, files) {
+      FilesAdded: async function (up: any, files: any) {
         // Création de la liste avec plupload_id : image_name
         fileNames = {};
         exts = {};
-        files.forEach((file) => {
+        files.forEach((file: any) => {
           fileNames[file.id] = file.name;
           exts[file.id] = file.name.substr(file.name.lastIndexOf('.') + 1);
         });
@@ -243,11 +243,11 @@ $(function () {
               })
             })
 
-            const notFound = [];
-            const multiple = [];
+            const notFound: any[] = [];
+            const multiple: any[] = [];
 
-            files.forEach((f) => {
-              const search = images_search[f.id];
+            files.forEach((f: any) => {
+              const search = (images_search as any)[f.id];
               if (search.status == "found"){
                 f.format_of = search.image_id;
                 formats.push([f.id,f.format_of]);
@@ -284,7 +284,7 @@ $(function () {
               }
             })
 
-            files.filter(f => images_search[f.id].status === "found");
+            files.filter((f: any) => (images_search as any)[f.id].status === "found");
 
             // If a file is not found or found more than one time
             if (notFound.length || multiple.length) {
@@ -318,7 +318,7 @@ $(function () {
             {
               $forms_exts = [];
             }
-            files.forEach((f) => {
+            files.forEach((f: any) => {
               f.format_of = originalImageId;
               formats.push([f.id,f.format_of]);
               $("#"+f.id+" > .plupload_file_name").append(`
@@ -349,7 +349,7 @@ $(function () {
         }
       },
 
-      FilesRemoved: function(up, file){ 
+      FilesRemoved: function(up: any, file: any) {
         formats.forEach((forms) => {
           $("#"+forms[0]+" > .plupload_file_name").append(`
           <a target=\"_blank\" href=\"admin.php?page=photo-${forms[1].trim()}-properties\">
@@ -375,12 +375,12 @@ $(function () {
         });
       },
 
-      UploadProgress: function (up, file) {
+      UploadProgress: function (up: any, file: any) {
         $('#uploadingActions .progressbar').width(up.total.percent + '%');
         Piecon.setProgress(up.total.percent);
       },
 
-      BeforeUpload: function (up, file) {
+      BeforeUpload: function (up: any, file: any) {
         // hide buttons
         $('#startUpload, .selectFilesButtonBlock').hide();
         $('#uploadingActions').show();
@@ -419,7 +419,7 @@ $(function () {
         up.setOption('multipart_params', options);
       },
 
-      FileUploaded: function (up, file, info) {
+      FileUploaded: function (up: any, file: any, info: any) {
         // Called when file has finished uploading
         //console.log('[FileUploaded] File:', file, "Info:", info);
 
@@ -450,7 +450,7 @@ $(function () {
           uploadCategory = data.result.category;
       },
 
-      Error: function (up, error) {
+      Error: function (up: any, error: any) {
         // Called when file has finished uploading
         //console.log('[Error] error: ', error);
         var piwigoApiResponse = JSON.parse(error.response);
@@ -459,7 +459,7 @@ $(function () {
         $(".errors").show();
       },
 
-      UploadComplete: function (up, files) {
+      UploadComplete: function (up: any, files: any) {
         // Called when all files are either uploaded or failed
         //console.log('[UploadComplete]');
 
@@ -531,7 +531,7 @@ $(function () {
 General functions
 --------------*/
 
-function add_related_category({ album, newSelectedAlbum }) {
+function add_related_category({ album, newSelectedAlbum }: { album: any; newSelectedAlbum: any }) {
   let text = '';
   $(album.full_name_with_admin_links).each(function (i, s) {
     if ($(s).html()) { text += $(s).html() }
@@ -568,7 +568,7 @@ function close_new_album_modal() {
   modalFirstAlbum.fadeOut();
 }
 
-function hide_first_album(cat_name) {
+function hide_first_album(cat_name: any) {
   modalFirstAlbum.hide();
   firstAlbum.hide();
 
@@ -580,7 +580,7 @@ function hide_first_album(cat_name) {
   uploadForm.fadeIn();
 }
 
-function add_first_album(add_cat) {
+function add_first_album(add_cat: any) {
   const params = {
     name: inputFirstAlbum.val().toString(),
     pwg_token

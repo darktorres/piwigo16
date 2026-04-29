@@ -194,11 +194,11 @@ $(document).ready(function() {
   pluginFunctionMapInit(activePlugins);
 })
 
-function get_related_category(pictureId) {
-  return all_related_categories_ids.find((c) => c.id == pictureId).cat_ids ?? [];
+function get_related_category(pictureId: any) {
+  return all_related_categories_ids.find((c: any) => c.id == pictureId).cat_ids ?? [];
 }
 
-function remove_selected_category(cat_id, picture_id) {
+function remove_selected_category(cat_id: any, picture_id: any) {
   const cat_to_remove_index = all_related_categories_ids[picture_id].indexOf(cat_id);
   if (cat_to_remove_index > -1) {
     all_related_categories_ids[picture_id].splice(cat_to_remove_index, 1);
@@ -208,7 +208,7 @@ function remove_selected_category(cat_id, picture_id) {
   $("#" + picture_id + " #" + cat_id).parent().remove();
 }
 
-function add_related_category({ album, getSelectedAlbum, addSelectedAlbum }) {
+function add_related_category({ album, getSelectedAlbum, addSelectedAlbum }: { album: any; getSelectedAlbum: any; addSelectedAlbum: any }) {
   if (!getSelectedAlbum().includes(album.id)) {
     $("#" + b_current_picture_id + " .related-categories-container").append(
       `<div class="breadcrumb-item album-listed">
@@ -223,7 +223,7 @@ function add_related_category({ album, getSelectedAlbum, addSelectedAlbum }) {
   check_related_categories(b_current_picture_id, getSelectedAlbum());
 }
 
-function check_related_categories(pictureId, selectedAlbum) {
+function check_related_categories(pictureId: any, selectedAlbum: any) {
   $("#picture-" + pictureId + " .linked-albums-badge").html(selectedAlbum.length);
   if (selectedAlbum.length == 0) {
     $("#" + pictureId + " .linked-albums-badge").addClass("badge-red");
@@ -249,14 +249,14 @@ function updateUnsavedGlobalBadge() {
   }
 }
 
-function showUnsavedLocalBadge(pictureId) {
+function showUnsavedLocalBadge(pictureId: any) {
   hideSuccesLocalBadge(pictureId);
   hideErrorLocalBadge(pictureId);
   $("#picture-" + pictureId + " .local-unsaved-badge").css('display', 'block');
   updateUnsavedGlobalBadge();
 }
 
-function hideUnsavedLocalBadge(pictureId) {
+function hideUnsavedLocalBadge(pictureId: any) {
   $("#picture-" + pictureId + " .local-unsaved-badge").css('display', 'none');
   updateUnsavedGlobalBadge();
 }
@@ -266,11 +266,11 @@ function hideUnsavedLocalBadge(pictureId) {
 //   }
 // });
 //Error badge
-function showErrorLocalBadge(pictureId) {
+function showErrorLocalBadge(pictureId: any) {
   $("#picture-" + pictureId + " .local-error-badge").css('display', 'block');
 }
 
-function hideErrorLocalBadge(pictureId) {
+function hideErrorLocalBadge(pictureId: any) {
   $("#picture-" + pictureId + " .local-error-badge").css('display', 'none');
 }
 //Succes badge
@@ -285,7 +285,7 @@ function updateSuccessGlobalBadge() {
   }
 }
 
-function showSuccessLocalBadge(pictureId) {
+function showSuccessLocalBadge(pictureId: any) {
   const badge = $("#picture-" + pictureId + " .local-success-badge");
   badge.css({
     'display': 'block',
@@ -298,7 +298,7 @@ function showSuccessLocalBadge(pictureId) {
   }, 3000);
 }
 
-function hideSuccesLocalBadge(pictureId) {
+function hideSuccesLocalBadge(pictureId: any) {
   $("#picture-" + pictureId + " .local-success-badge").css('display', 'none');
 }
 
@@ -319,7 +319,7 @@ function hideSuccesGlobalBadge() {
   $("global-succes-badge").css('display', 'none');
 }
 
-function showMetasyncSuccesBadge(pictureId) {
+function showMetasyncSuccesBadge(pictureId: any) {
   const badge = $("#picture-" + pictureId + " .metasync-success");
   badge.css({
     'display': 'block',
@@ -332,13 +332,13 @@ function showMetasyncSuccesBadge(pictureId) {
   }, 3000);
 }
 
-function disableLocalButton(pictureId) {
+function disableLocalButton(pictureId: any) {
   $("#picture-" + pictureId + " .action-save-picture").addClass("disabled");
   $("#picture-" + pictureId + " .action-save-picture i").removeClass("icon-floppy").addClass("icon-spin6 animate-spin");
   disableGlobalButton();
 }
 
-function enableLocalButton(pictureId) {
+function enableLocalButton(pictureId: any) {
   $("#picture-" + pictureId + " .action-save-picture").removeClass("disabled");
   $("#picture-" + pictureId + " .action-save-picture i").removeClass("icon-spin6 animate-spin").addClass("icon-floppy");
 }
@@ -353,7 +353,7 @@ function enableGlobalButton() {
   $(".action-save-global i").removeClass("icon-spin6 animate-spin").addClass("icon-floppy");
 }
 
-async function saveChanges(pictureId) {
+async function saveChanges(pictureId: any) {
   if ($("#picture-" + pictureId + " .local-unsaved-badge").css('display') === 'block') {
     disableLocalButton(pictureId);
     // Retrieve Infos
@@ -366,13 +366,13 @@ async function saveChanges(pictureId) {
     const categories = all_related_categories_ids[pictureId];
     let categoriesStr = categories.join(';');
     // Get Tags
-    let tags = [];
+    let tags: any[] = [];
     $("#picture-" + pictureId + " #tags option").each(function () {
       let tagId = $(this).val();
       tags.push(tagId);
     });
     let tagsStr = tags.join(',');
-    let ajax_data = {
+    let ajax_data: Record<string, any> = {
       method: 'pwg.images.setInfo',
       image_id: pictureId,
       name: name,
@@ -441,22 +441,22 @@ async function saveAllChanges() {
   }
 }
 //PLUGINS SAVE METHOD
-const pluginFunctionMap = {};
+const pluginFunctionMap: Record<string, any> = {};
 
-function pluginFunctionMapInit(activePlugins) {
-  activePlugins.forEach(function(pluginId) {
+function pluginFunctionMapInit(activePlugins: any) {
+  activePlugins.forEach(function(pluginId: any) {
     const functionName = pluginId + '_batchManagerSave';
-    if (typeof window[functionName] === 'function') {
-      pluginFunctionMap[pluginId] = window[functionName];
+    if (typeof (window as any)[functionName] === 'function') {
+      pluginFunctionMap[pluginId] = (window as any)[functionName];
     }
   });
 }
 
-function pluginSaveLoop(activePlugins, pictureId) {
+function pluginSaveLoop(activePlugins: any, pictureId: any) {
   if (activePlugins.length === 0) {
     return;
   }
-  activePlugins.forEach(function(pluginId) {
+  activePlugins.forEach(function(pluginId: any) {
     const saveFunction = pluginFunctionMap[pluginId];
     if (typeof saveFunction === 'function') {
       saveFunction(pictureId);
@@ -465,7 +465,7 @@ function pluginSaveLoop(activePlugins, pictureId) {
   });
 }
 // UPDATE BLOCKS
-function updateBlock(pictureId) {
+function updateBlock(pictureId: any) {
   $.ajax({
     url: 'ws.php?format=json',
     type: 'GET',

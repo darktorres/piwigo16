@@ -509,7 +509,7 @@ function setDisplayCompact() {
 Checkboxes
 ----------------*/
 
-function checkbox_change() {
+function checkbox_change(this: HTMLElement) {
     if ($(this).attr('data-selected') == '1') {
         $(this).find("i").hide();
     } else {
@@ -517,7 +517,7 @@ function checkbox_change() {
     }
 }
 
-function checkbox_click() {
+function checkbox_click(this: HTMLElement) {
     if ($(this).attr('data-selected') == '1') {
         $(this).attr('data-selected', '0');
         $(this).find("i").hide();
@@ -879,7 +879,7 @@ function add_user_open() {
 Selection mode
 ------------------*/
 
-function checkbox_container_change() {
+function checkbox_container_change(this: HTMLElement) {
     if ($(this).attr('data-selected') == '1') {
         $(this).attr('data-selected', '0');
         $(this).find("i").hide();
@@ -889,7 +889,7 @@ function checkbox_container_change() {
     }
 }
 
-function checkbox_container_click() {
+function checkbox_container_click(this: HTMLElement) {
     let curr_container = $(this).closest(".user-container");
     let in_container = curr_container.length != 0;
     let curr_user = in_container ? current_users[parseInt(curr_container.attr("key"))] : {id: -1};
@@ -1317,7 +1317,7 @@ function event_validate_main_user(new_main_username, user_id) {
 /*-----------------------
 Generate User Containers
 -----------------------*/
-function user_container_click() {
+function user_container_click(this: HTMLElement) {
     if (!isSelectionMode()) {
         return;
     }
@@ -1537,12 +1537,12 @@ function fill_user_edit_preferences(user_to_edit, pop_in) {
     let slider_key_period = getSliderKeyFromValue(parseInt(user_to_edit.recent_period), recent_period_values);
     
     pop_in.find('.photos-select-bar .slider-bar-container').slider("option", "value", slider_key_photos);
-    pop_in.find('.user-property-theme select option').each(function () {
+    pop_in.find('.user-property-theme select option').each(function (this: HTMLElement) {
         if ($(this).val() == user_to_edit.theme) {
             $(this).prop('selected', true);
         }
     });
-    pop_in.find('.user-property-lang select option').each(function () {
+    pop_in.find('.user-property-lang select option').each(function (this: HTMLElement) {
         if ($(this).val() == user_to_edit.language) {
             $(this).prop('selected', true);
         }
@@ -1826,7 +1826,7 @@ Fill data for setInfo
 -------------------*/
 
 function fill_ajax_data_from_properties(ajax_data, pop_in) {
-    let groups_selected = pop_in.find('.user-property-group .selectize-input .item').map(function () {
+    let groups_selected = pop_in.find('.user-property-group .selectize-input .item').map(function (this: HTMLElement) {
         return parseInt($(this).attr('data-value'));
     } ).get();
     // console.log(groups_selected);

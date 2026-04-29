@@ -47,7 +47,7 @@
             change: onChange,
         });
 
-        this.find('.slider-choice').on('click', (e) => {
+        this.find('.slider-choice').on('click', (e: any) => {
             slider.slider('values', 0, options.values.indexOf($(e.currentTarget).data('min') as number | string));
             slider.slider('values', 1, options.values.indexOf($(e.currentTarget).data('max') as number | string));
         });

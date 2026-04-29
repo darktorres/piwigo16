@@ -14,12 +14,12 @@ jQuery(document).ready(function() {
 	var last_clicked=0,
 		last_clickedstatus=true;
 	(jQuery.fn as any).enableShiftClick = function() {
-		var inputs = [],
+		var inputs: any[] = [],
 			count=0;
-		this.find('input[type=checkbox]').each(function() {
+		this.find('input[type=checkbox]').each(function(this: HTMLElement) {
 			var pos=count;
 			inputs[count++]=this;
-			$(this).bind("shclick", function (dummy,event) {
+			$(this).bind("shclick", function (this: HTMLElement, dummy,event) {
 				if (event.shiftKey) {
 					var first = last_clicked;
 					var last = pos;
@@ -43,11 +43,11 @@ jQuery(document).ready(function() {
 				}
 				else {
 					last_clicked = pos;
-					last_clickedstatus = this.checked;
+					last_clickedstatus = (this as HTMLInputElement).checked;
 				}
 				return true;
 			});
-			$(this).click(function(event) { $(this).triggerHandler("shclick",event)});
+			$(this).click(function(this: HTMLElement, event) { $(this).triggerHandler("shclick",event)});
 		});
 	}
 	$('ul.thumbnails').enableShiftClick();
@@ -71,7 +71,7 @@ jQuery(document).ready(function() {
 });
 
 /* ********** Album Selector */
-function select_album_action({ album, addSelectedAlbum, getSelectedAlbum }) {
+function select_album_action({ album, addSelectedAlbum, getSelectedAlbum }: { album: any; addSelectedAlbum: any; getSelectedAlbum: any }) {
   $('#associate_as p').html(str_add_alb_associate);
   $(".selected-associate-action").append(
     `<div class="selected-associate-item">
@@ -82,7 +82,7 @@ function select_album_action({ album, addSelectedAlbum, getSelectedAlbum }) {
   addSelectedAlbum();
 }
 
-function remove_album_action({ id_album, getSelectedAlbum }) {
+function remove_album_action({ id_album, getSelectedAlbum }: { id_album: any; getSelectedAlbum: any }) {
   $('.selected-associate-item').find(`#${id_album}`).parent().remove();
   const selected = getSelectedAlbum();
   if (!selected.length) {
@@ -136,7 +136,7 @@ $("input[name=remove_date_creation]").click(function () {
 	}
 });
 
-var derivatives = {
+var derivatives: { elements: any; done: number; total: number; finished: () => boolean } = {
 	elements: null,
 	done: 0,
 	total: 0,
@@ -155,7 +155,7 @@ function progress_end() {
   jQuery('#uploadingActions').hide();
 }
 
-function progress(success) {
+function progress(success: any) {
 
   percent = Math.floor(derivatives.done / derivatives.total * 100);
   jQuery('#uploadingActions .progressbar').width(percent.toString()+'%');
@@ -173,7 +173,7 @@ function progress(success) {
 
 function getDerivativeUrls() {
 	var ids = derivatives.elements.splice(0, 500);
-	var params = {max_urls: 100000, ids: ids, types: []};
+	var params: { max_urls: number; ids: any; types: any[] } = {max_urls: 100000, ids: ids, types: []};
 	jQuery("#action_generate_derivatives input").each( function(i, t) {
 		if ($(t).is(":checked"))
 			params.types.push( (t as HTMLInputElement).value );
@@ -421,7 +421,7 @@ function progress_bar_end() {
   jQuery('#uploadingActions').hide();
 }
 
-function progress_bar(val, max, success) {
+function progress_bar(val: any, max: any, success: any) {
   percent = Math.floor(val / max * 100);
   jQuery('#uploadingActions .progressbar').width(percent.toString()+'%');
   if (val == max)
@@ -445,7 +445,7 @@ jQuery('#sync_md5sum').click(function(e) {
   return false;
 });
 
-function add_md5sum_block(blockSize){
+function add_md5sum_block(blockSize: any){
   jQuery.ajax({
     url: "ws.php?format=json&method=pwg.images.setMd5sum",
     type:"POST",
@@ -495,7 +495,7 @@ jQuery('#delete_orphans').click(function(e) {
   return false;
 });
 
-function delete_orphans_block(blockSize) {
+function delete_orphans_block(blockSize: any) {
   jQuery.ajax({
     url: "ws.php?format=json&method=pwg.images.deleteOrphans",
     type:"POST",

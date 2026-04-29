@@ -38,9 +38,9 @@ let commentsParams: Record<string, any> = {
 }
 
 let updateAuthorId = true;
-let searchTimeOut = null;
+let searchTimeOut: any = null;
 let selectionMode = false;
-let commentsSelected = [];
+let commentsSelected: any[] = [];
 
 $(function() {
   $('#commentFilters').on('click', function() {
@@ -131,7 +131,7 @@ $(function() {
 });
 
 
-function getComments(params) {
+function getComments(params: any) {
   $.ajax({
     url: 'ws.php?format=json&method=pwg.userComments.getList',
     type: 'GET',
@@ -157,15 +157,15 @@ function getComments(params) {
   })
 }
 
-function commentsDisplaySummary(summary) {
+function commentsDisplaySummary(summary: any) {
   commentsAll.text(summary.all_comments);
   commentsValidated.text(summary.validated);
   commentsPending.text(summary.pending);
 }
 
-function displayComments(comments) {
+function displayComments(comments: any) {
   commentsList.empty();
-  comments.forEach((comment) => {
+  comments.forEach((comment: any) => {
     const clone = $('.comment-template').clone();
     clone.removeClass('comment-template').addClass('comment');
 
@@ -252,7 +252,7 @@ function displayComments(comments) {
   });
 }
 
-function commentsDiplayPagination(paging) {
+function commentsDiplayPagination(paging: any) {
   const container = $('.pagination-item-container');
   container.empty();
   
@@ -327,7 +327,7 @@ function commentsDiplayPagination(paging) {
 
 }
 
-function commentsDisplayFilters(filters) {
+function commentsDisplayFilters(filters: any) {
   if (updateAuthorId) {
     commentsDisplayAuthors(filters.nb_authors);
   }
@@ -369,11 +369,11 @@ function commentsDisplayFilters(filters) {
   });
 }
 
-function commentsDisplayAuthors(nb_authors) {
+function commentsDisplayAuthors(nb_authors: any) {
   filterAuthor.empty();
   filterAuthor.append(commentsOptionsFiltersAuthor);
 
-  nb_authors.forEach((a) => {
+  nb_authors.forEach((a: any) => {
     filterAuthor.append(`
       <option value="${a.author_id}">${a.author} (${a.nb_authors})</option>
       `);
@@ -394,7 +394,7 @@ function commentsDisplayAuthors(nb_authors) {
   });
 }
 
-function updateNbComments(nb) {
+function updateNbComments(nb: any) {
   commentsNb.removeClass('selected-pagination');
   $(`#pagination-per-page-${nb}`).addClass('selected-pagination');
 
@@ -402,7 +402,7 @@ function updateNbComments(nb) {
   window.localStorage.setItem('adminCommentsNB', nb);
 }
 
-function showModalViewComment(id) {
+function showModalViewComment(id: any) {
   const comment = (commentsState as any).comments.filter((c: any) => c.id == id)[0] ?? null;
   if (!comment) return;
   
@@ -443,7 +443,7 @@ function closeModalViewComment() {
   $('#commentsModalDelete').off('click')
 }
 
-function validateComment(id) {
+function validateComment(id: any) {
   const idLenght = id.length ?? 1;
 
   $.ajax({
@@ -487,7 +487,7 @@ function validateComment(id) {
   });
 }
 
-function deleteComment(id) {
+function deleteComment(id: any) {
   const idLenght = id.length ?? 1;
 
   $.confirm({

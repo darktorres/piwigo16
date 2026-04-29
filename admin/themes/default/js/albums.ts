@@ -55,7 +55,7 @@ declare var x_nb_sub_photos: any;
 declare var x_nb_subcats: any;
 $(document).ready(() => {
   const openUppercats = openCat == -1 ? [] : findAlbumById(data, openCat).uppercats.split(',');
-  const new_data = data.map((a) => {
+  const new_data = data.map((a: any) => {
     const al = {...a, children: openUppercats.includes(a.id) ? a.children : []};
     if (a.children) {
       al.load_on_demand = openUppercats.includes(a.id) ? false : true;
@@ -72,7 +72,7 @@ $(document).ready(() => {
     dragAndDrop: true,
     openFolderDelay: delay_autoOpen,
     onCreateLi : createAlbumNode,
-    onCanSelectNode: function(node) {return false}
+    onCanSelectNode: function(node: any) {return false}
   });
 
   $('.tree').on( 'click', '.move-cat-toogler', function(e) {
@@ -243,7 +243,7 @@ $(document).ready(() => {
         
         closeRenameAlbumPopIn();
       },
-      error: function(message) {
+      error: function(message: any) {
         console.log(message);
       }
     });
@@ -369,7 +369,7 @@ $(document).ready(() => {
           $(".AddAlbumSubmit").removeClass("notClickable");
         }
       },
-      error: function(message) {
+      error: function(message: any) {
         console.log(message);
       }
     });
@@ -393,7 +393,7 @@ $(document).ready(() => {
   }
 });
 
-function createAlbumNode(node, li) {
+function createAlbumNode(node: any, li: any) {
   icon = "<span class='%icon%'></span>";
   title = '<span data-id="'+node.id+'" class="move-cat-title-container ';
   if (node.status == 'private' || node.parent.status == 'private') {
@@ -429,7 +429,7 @@ function createAlbumNode(node, li) {
 
   cont.append(actions);
 
-  cont.find(".toggle-cat-option").on("click", function () {
+  cont.find(".toggle-cat-option").on("click", function (this: HTMLElement) {
     $(".cat-option").hide();
     $(this).find(".cat-option").toggle();
   });
@@ -501,7 +501,7 @@ function createAlbumNode(node, li) {
 Checkboxes
 ----------------*/
 
-function checkbox_change() {
+function checkbox_change(this: HTMLElement) {
   if ($(this).attr('data-selected') == '1') {
       $(this).find("i").hide();
   } else {
@@ -509,7 +509,7 @@ function checkbox_change() {
   }
 }
 
-function checkbox_click() {
+function checkbox_click(this: HTMLElement) {
   if ($(this).attr('data-selected') == '1') {
       $(this).attr('data-selected', '0');
       $(this).find("i").hide();
@@ -519,11 +519,11 @@ function checkbox_click() {
   }
 }
 
-function isNumeric(num){
+function isNumeric(num: any){
   return !isNaN(num)
 }
 
-function openAddAlbumPopIn(parentAlbumId) {
+function openAddAlbumPopIn(parentAlbumId: any) {
   if (parentAlbumId != 0) {
     $("#AddAlbum .AddIconTitle span").html(add_sub_album_of.replace("%s", $(".tree").tree('getNodeById', parentAlbumId).name));
   } else {
@@ -558,7 +558,7 @@ function closeAddAlbumPopIn() {
   });
 }
 
-function openRenameAlbumPopIn(replacedAlbumName) {
+function openRenameAlbumPopIn(replacedAlbumName: any) {
   $("#RenameAlbum").fadeIn();
   $(".RenameAlbumTitle span").html(rename_item.replace("%s", replacedAlbumName))
   $(".RenameAlbumLabelUsername .user-property-input").val(replacedAlbumName);
@@ -575,7 +575,7 @@ function closeRenameAlbumPopIn() {
   $("#RenameAlbum").fadeOut();
 }
 
-function triggerDeleteAlbum(cat_id) {
+function triggerDeleteAlbum(cat_id: any) {
   $.ajax({
     url: "ws.php?format=json&method=pwg.categories.calculateOrphans",
     type: "GET",
@@ -602,7 +602,7 @@ function triggerDeleteAlbum(cat_id) {
         }
       }
     },
-    error: function(message) {
+    error: function(message: any) {
       console.log(message);
     }
   }).done(function () {
@@ -610,7 +610,7 @@ function triggerDeleteAlbum(cat_id) {
   });
 }
 
-function openDeleteAlbumPopIn(cat_to_delete) {
+function openDeleteAlbumPopIn(cat_to_delete: any) {
   $("#DeleteAlbum").fadeIn();
   node = $(".tree").tree('getNodeById', cat_to_delete);
   if (node.children.length == 0) {
@@ -657,7 +657,7 @@ function openDeleteAlbumPopIn(cat_to_delete) {
         setSubcatsBadge(parentOfDeletedNode);
         closeDeleteAlbumPopIn();
       },
-      error: function(message) {
+      error: function(message: any) {
         console.log(message);
       }
     });
@@ -669,10 +669,10 @@ function closeDeleteAlbumPopIn() {
   $("#DeleteAlbum").fadeOut();
 }
 
-function getAllSubAlbumsFromNode(node, nb_sub_cats) {
+function getAllSubAlbumsFromNode(node: any, nb_sub_cats: any) {
   nb_sub_cats = 0;
   if (node.children != 0) {
-    node.children.forEach(child => {
+    node.children.forEach((child: any) => {
       nb_sub_cats++;
       tmp = getAllSubAlbumsFromNode(child, nb_sub_cats);
       nb_sub_cats += tmp;
@@ -683,7 +683,7 @@ function getAllSubAlbumsFromNode(node, nb_sub_cats) {
   return nb_sub_cats;
 }
 
-function setSubcatsBadge(node) {
+function setSubcatsBadge(node: any) {
   if (node.children.length != 0) {
     $("#cat-"+node.id).find(".nb-subcats").text(node.children.length).show(100);
     $("#cat-"+node.id).find(".badge-dropdown").find(".nb-subcats").text(x_nb_subcats.replace('%d', node.children.length));
@@ -692,12 +692,12 @@ function setSubcatsBadge(node) {
   }
 }
 
-function updateTitleBadge(new_nb_albums) {
+function updateTitleBadge(new_nb_albums: any) {
   nb_albums = new_nb_albums;
   $(".badge-number").text(new_nb_albums);
 }
 
-function goToNode(node, firstNode) {
+function goToNode(node: any, firstNode: any) {
   // console.log(firstNode.id, node.id);
   if (node.parent) {
     goToNode(node.parent, firstNode);
@@ -715,10 +715,10 @@ function goToNode(node, firstNode) {
   }
 }
 
-function showNodeChildrens(node) {
+function showNodeChildrens(node: any) {
   if (node.children) {
     // console.log("childrens : " + node.children);
-    node.children.forEach(child => {
+    node.children.forEach((child: any) => {
       // console.log("children : " + child.id, child.name);
       $("#cat-"+child.id).addClass("imune");
       showNodeChildrens(child);
@@ -727,10 +727,10 @@ function showNodeChildrens(node) {
   }
 }
 
-function closeTree(tree) {
+function closeTree(tree: any) {
   // console.log(tree);
   if (tree.tree('getState').open_nodes.length > 0) {
-    tree.tree('getState').open_nodes.forEach(nodeItem => {
+    tree.tree('getState').open_nodes.forEach((nodeItem: any) => {
       var node = tree.tree('getNodeById', nodeItem);
       tree.tree('closeNode', node);
     });
@@ -738,7 +738,7 @@ function closeTree(tree) {
 
 }
 
-function getId(parent) {
+function getId(parent: any) {
   if (parent.getLevel() == 0) {
     return 0;
   } else {
@@ -746,7 +746,7 @@ function getId(parent) {
   }
 }
 
-function getRank(node, ignoreId = null) {
+function getRank(node: any, ignoreId: any = null): any {
   if (node.getPreviousSibling() != null) {
     if (node.id != ignoreId) {
       return 1 + getRank(node.getPreviousSibling(), ignoreId);
@@ -762,7 +762,7 @@ function getRank(node, ignoreId = null) {
   }
 }
 
-function applyMove(event) {
+function applyMove(event: any) {
   waitingTimeout = setTimeout(() => {
     $('.waiting-message').addClass('visible');  
   }, 500);
@@ -840,7 +840,7 @@ function applyMove(event) {
     })
 }
 
-function moveNode(node, rank, parent) {
+function moveNode(node: any, rank: any, parent: any) {
   return new Promise<void>((res, rej) => {
     if (parent != null) {
       changeParent(node, parent, rank).then(() => res()).catch(() => rej())
@@ -850,7 +850,7 @@ function moveNode(node, rank, parent) {
   })
 }
 
-function changeParent(node, parent, rank) {
+function changeParent(node: any, parent: any, rank: any) {
   oldParent = node.parent
   return new Promise<void>((res, rej) => {
     (jQuery.ajax as any)({
@@ -864,14 +864,14 @@ function changeParent(node, parent, rank) {
       before: function () {
         oldParent = node.parent
       },
-      success: function (raw_data) {
+      success: function (raw_data: any) {
         data = jQuery.parseJSON(raw_data);
         if (data.stat === "ok") {
           changeRank(node, rank)
           const updated_cats = data.result.updated_cats;
           if (updated_cats) 
           {
-            updated_cats.forEach((cat) => {
+            updated_cats.forEach((cat: any) => {
               const node = $('.tree').tree('getNodeById', cat.cat_id);
               node.nb_sub_photos = cat.nb_sub_photos;
               $('.tree').tree('updateNode', node, node.name);
@@ -882,14 +882,14 @@ function changeParent(node, parent, rank) {
           rej(raw_data);
         }
       },
-      error: function(message) {
+      error: function(message: any) {
         rej(message);
       }
     });
   })
 }
 
-function changeRank(node, rank) {
+function changeRank(node: any, rank: any) {
   return new Promise<void>((res, rej) => {
     jQuery.ajax({
       url: "ws.php?format=json&method=pwg.categories.setRank",
@@ -906,21 +906,21 @@ function changeRank(node, rank) {
           rej(raw_data);
         }
       },
-      error: function(message) {
+      error: function(message: any) {
         rej(message);
       }
     });
   })
 }
 
-function makePrivateHierarchy(node) {
+function makePrivateHierarchy(node: any) {
   node.status = 'private';
-  node.children.forEach(node => {
+  node.children.forEach((node: any) => {
     makePrivateHierarchy(node);
   });
 }
 
-function getPathNode(node) {
+function getPathNode(node: any): any {
   if (node.parent.getLevel() != 0) {
     return getPathNode(node.parent) + ' / ' + node.name;
   } else {
@@ -928,7 +928,7 @@ function getPathNode(node) {
   }
 }
 
-function findAlbumById(a, id) {
+function findAlbumById(a: any, id: any): any {
   for (const album of a) {
     if (album.id == id) { return album };
 
@@ -940,9 +940,9 @@ function findAlbumById(a, id) {
   return null;
 }
 
-function loadOnDemand(node) {
+function loadOnDemand(node: any) {
   const children = node.haveChildren;
-  const formatedChild = children.map((a) => {
+  const formatedChild = children.map((a: any) => {
     const al = {...a, children:[]};
     if (a.children) {
       al.load_on_demand = true;
@@ -955,7 +955,7 @@ function loadOnDemand(node) {
   node.load_on_demand = false;
 }
 
-function openNodeOnDemand(node) {
+function openNodeOnDemand(node: any) {
   open_nodes = $('.tree').tree('getState').open_nodes;
   if (!open_nodes.includes(node)) {
     $('.tree').tree('openNode', node);

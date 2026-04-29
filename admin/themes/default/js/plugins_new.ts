@@ -11,7 +11,7 @@ declare var str_x_years: any;
 declare var strs_certification: any;
 // <-- Define sort orders -->
 var sortOrder = 'date';
-var sortPlugins = (function (a, b) {
+var sortPlugins = (function (a: any, b: any) {
     if (sortOrder == 'downloads' || sortOrder == 'revision' || sortOrder == 'date')
         return parseInt($(a).data(sortOrder))
             < parseInt($(b).data(sortOrder)) ? 1 : -1;
@@ -92,14 +92,14 @@ $(function () {
     // read all plugin boxes to get author and tags
     $('.pluginBox').each((i,el) => {
         let author = $(el).data('author');
-        author.split(', ').forEach(name => {
+        author.split(', ').forEach((name: any) => {
             if (!authorNames.find(el => el.value == name)) {
                 authorNames.push({ value: name, text: name})
             }
         });
 
         let tags = $(el).data('tags');
-        tags.split(', ').forEach(tag => {
+        tags.split(', ').forEach((tag: any) => {
             if (!tagsNames.find(el => el.value == tag)) {
                 tagsNames.push({ value: tag, text: tag })
             }
@@ -108,7 +108,7 @@ $(function () {
 
     // initialize the Selectize control
     $select = $('#author-filter').selectize({
-        onChange: function (value) {
+        onChange: function (value: any) {
             applyFilter('author', value);
         },
         plugins: ['remove_button'],
@@ -120,7 +120,7 @@ $(function () {
 
     // initialize the Selectize control
     $select = $('#tag-filter').selectize({
-        onChange: function (value) {
+        onChange: function (value: any) {
             applyFilter('tag', value);
         },
         plugins: ['remove_button'],
@@ -156,7 +156,7 @@ $(function () {
     });
 
     // All the slider values and it's corresponding month's number and label
-    function value_to_month(val) {
+    function value_to_month(val: any) {
         switch (val) {
             case 6:
                 return [1, str_x_month.replace('%d', 1)];
@@ -197,7 +197,7 @@ $(function () {
     });
 
     // Diffrence between two dates, in months
-    function monthDiff(d1, d2) {
+    function monthDiff(d1: any, d2: any) {
         var months;
         months = (d2.getFullYear() - d1.getFullYear()) * 12;
         months -= d1.getMonth();
@@ -209,7 +209,7 @@ $(function () {
     updateCertificationFilterLabel(minCertification);
     updateRevisionFilterLabel(0);
 
-    function displayStars(element, rating) {
+    function displayStars(element: any, rating: any) {
 
         element.find('span').addClass('icon-star-empty');
         element.find('span i').attr('class','');
@@ -230,11 +230,11 @@ $(function () {
 
     // Updates labels when input change
 
-    function updateRatingFilterLabel(value) {
+    function updateRatingFilterLabel(value: any) {
         displayStars($('.advanced-filter-rating .rating-star-container'), value);
     }
 
-    function updateCertificationFilterLabel(value) {
+    function updateCertificationFilterLabel(value: any) {
         let certifNode = $('.advanced-filter-certification .certification');
         certifNode.attr('data-certification', value);
         certifNode.attr('title', strs_certification[String(value)]);
@@ -245,7 +245,7 @@ $(function () {
         });
     }
 
-    function updateRevisionFilterLabel(val) {
+    function updateRevisionFilterLabel(val: any) {
         let label;
         [_, label] = value_to_month(val);
         $('.revision-date').html(label);
@@ -268,11 +268,11 @@ $(function () {
     selectizeTag.setValue('');
 
 
-    function applyFilter(changed, value) {
+    function applyFilter(changed: any, value: any) {
 
         filters[changed] = value;
 
-        sort((pluginBox) => {
+        sort((pluginBox: any) => {
             let pluginRating = pluginBox.find('.pluginRating').data('rating') || 0;
             let pluginCertification = pluginBox.find('.certification').data('certification');
             let pluginAuthors = pluginBox.data('author').split(', ');
@@ -290,7 +290,7 @@ $(function () {
     }
 
     // Display or not plugin with a function handler
-    function sort(sortFunction) {
+    function sort(sortFunction: any) {
         $('.pluginBox').each((i, el) => {
             if (sortFunction($(el))) {
                 $(el).show();

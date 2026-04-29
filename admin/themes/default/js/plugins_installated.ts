@@ -79,7 +79,7 @@ function normalTitle() {
     }
 }
 
-function activatePlugin(id) {
+function activatePlugin(id: any) {
 
     $("#"+id+" .switch").prop("disabled", true);
 
@@ -117,7 +117,7 @@ function activatePlugin(id) {
     })
 }
 
-function disactivatePlugin(id) {
+function disactivatePlugin(id: any) {
     $("#"+id+" .switch").prop("disabled", true);
 
     $.ajax({
@@ -154,7 +154,7 @@ function disactivatePlugin(id) {
     })
 }
 
-function deletePlugin(id, name) {
+function deletePlugin(id: any, name: any) {
     $.alert({
         title : deleted_plugin_msg.replace("%s",name),
         content: function() {
@@ -188,7 +188,7 @@ function deletePlugin(id, name) {
     });
 }
 
-function restorePlugin(id) {
+function restorePlugin(id: any) {
     $.ajax({
         type: 'GET',
         dataType: 'json',
@@ -218,7 +218,7 @@ function restorePlugin(id) {
     })
 }
 
-function uninstallPlugin(id) {
+function uninstallPlugin(id: any) {
     $.ajax({
         type: 'GET',
         dataType: 'json',
@@ -443,7 +443,7 @@ $(document).ready(function () {
       })
 })
 
-function set_view_selector(view_type) {
+function set_view_selector(view_type: any) {
   $.ajax({
     url: "ws.php?format=json&method=pwg.users.preferences.set",
     type: "POST",
@@ -502,7 +502,7 @@ function actualizeFilter() {
   });
 }
 
-function performPluginDeactivate(id) {
+function performPluginDeactivate(id: any) {
   queuedManager.add({
     type: "GET",
     dataType: "json",

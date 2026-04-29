@@ -165,7 +165,7 @@ jQuery(document).ready(function () {
   });
 });
 
-var createGroup = function(group) {
+var createGroup = function(group: any) {
   //Setup the group
   newgroup = $("#group-template").clone().attr("id", "group-" + group.id);
   newgroup.attr("data-id", group.id);
@@ -200,7 +200,7 @@ jQuery(document).ready(function () {
       setupGroupBox($(this));
   });
 });
-var setupGroupBox = function (groupBox) {
+var setupGroupBox = function (groupBox: any) {
   var id = groupBox.data("id");
 
   /* Change background color of group block if checked in selection mode */
@@ -210,7 +210,7 @@ var setupGroupBox = function (groupBox) {
   groupBox.find(".Group-checkbox input[type='checkbox']").prop("checked", false)
 
   /* Display the option on the click on "..." */
-  groupBox.find(".group-dropdown-options").click(function GroupOptions() {
+  groupBox.find(".group-dropdown-options").click(function GroupOptions(this: HTMLElement, e: any) {
     $(this).find("#GroupOptions").toggle();
   });
 
@@ -229,7 +229,7 @@ var setupGroupBox = function (groupBox) {
       groupBox.find(".group-rename form").trigger("submit");
   });
 
-  groupBox.find(".group-rename form").on("submit", function (e) {
+  groupBox.find(".group-rename form").on("submit", function (e: any) {
     e.preventDefault();
     renameGroup(id, groupBox.find(".group_name-editable").val())
   });
@@ -267,7 +267,7 @@ var setupGroupBox = function (groupBox) {
 
 };
 
-var toogleSelection = function(group_id, toggle) {
+var toogleSelection = function(group_id: any, toggle: any) {
   groupBox = $("#group-"+group_id);
   if (toggle) {
     groupBox.find(".Group-checkbox input").prop("checked", true);
@@ -313,7 +313,7 @@ var toogleSelection = function(group_id, toggle) {
 }
 
 /* Group Ajax and Display Functions */
-var deleteGroup = function (id) {
+var deleteGroup = function (id: any) {
   $.confirm({
     title: str_delete.replace("%s",$("#group-"+id+" #group_name").html()),
     draggable: false,
@@ -365,7 +365,7 @@ var deleteGroup = function (id) {
   });
 };
 
-var renameGroup = function(id, newName) {
+var renameGroup = function(id: any, newName: any) {
   let loadState = new TemporaryState();
   loadState.changeHTML($("#group-" + id + " .group-rename .validate"), "<i class='animate-spin icon-spin6'></i>")
   loadState.removeClass($("#group-" + id + " .group-rename .validate"), "icon-ok")
@@ -409,7 +409,7 @@ var renameGroup = function(id, newName) {
 }
 
 // Hide or display rename form
-var displayRenameForm = function(doDisplay, grp_id) {
+var displayRenameForm = function(doDisplay: any, grp_id: any) {
   if (doDisplay) {
     $("#group-" + grp_id).find(".group-rename").css("display", "flex");
     $("#group-" + grp_id).find(".Group-name-container .icon-pencil").hide();
@@ -421,7 +421,7 @@ var displayRenameForm = function(doDisplay, grp_id) {
   }
 }
 
-var setDefaultGroup = function (id, is_default) {
+var setDefaultGroup = function (id: any, is_default: any) {
   $("#group-" + id + " #GroupDefault").css("width", $("#group-" + id + " #GroupDefault").width())
   $("#group-" + id + " #GroupDefault").html("<i class='icon-spin6 animate-spin'> </i>")
   $("#group-" + id + " #GroupDefault").removeClass("icon-star");
@@ -448,7 +448,7 @@ var setDefaultGroup = function (id, is_default) {
   });
 };
 
-var setupDefaultActions = function(id, is_default) {
+var setupDefaultActions = function(id: any, is_default: any) {
   $("#group-" + id + " #GroupDefault").attr("style", "");
   $("#group-" + id + " #GroupDefault").addClass("icon-star")
   $("#group-" + id).find(".is-default-token").removeClass("icon-spin6").removeClass("animate-spin").addClass("icon-star")
@@ -468,14 +468,14 @@ var setupDefaultActions = function(id, is_default) {
   }
 }
 
-var duplicateAction = function(id) {
+var duplicateAction = function(id: any) {
   let loadState = new TemporaryState();
   loadState.changeHTML($("#group-" + id + " #GroupDuplicate"), "<i class='icon-spin6 animate-spin'> </i>")
   loadState.removeClass($("#group-" + id + " #GroupDuplicate"), "icon-docs");
   loadState.changeAttribute($("#group-" + id + " #GroupDuplicate"), "style", "pointer-events: none; text-align: center;")
   copy_name = $("#group-" + id + " #group_name").html() + str_copy;
 
-  let name_exist = function(name) {
+  let name_exist = function(name: any) {
     exist = false;
     $(".Group-name-container p").each(function () {
       if ($(this).html() === name)
@@ -615,12 +615,12 @@ var updateStatePanel = function (newState = "Selection") {
   }
 };
 
-var buttonAvailable = function(button, onClick) {
+var buttonAvailable = function(button: any, onClick: any) {
   button.removeClass("unavailable");
   button.attr("OnClick", onClick);
 }
 
-var buttonUnavailable = function(button) {
+var buttonUnavailable = function(button: any) {
   button.addClass("unavailable");
   button.removeAttr("OnClick");
 }
@@ -660,8 +660,8 @@ $('.ConfirmMergeButton').on("click", function() {
       data = jQuery.parseJSON(raw_data);
       if (data.stat === "ok") {
         updateSelectionPanel('Selection');
-        merge_group.forEach(function(id) {
-          ($("#group-"+id).fadeOut(complete=function(){
+        merge_group.forEach(function(id: any) {
+          ($("#group-"+id).fadeOut(complete=function(this: HTMLElement){
             $(this).remove();
           }))
         })
@@ -701,8 +701,8 @@ $('.ConfirmMergeButton').on("click", function() {
  -------*/
 
 $('.ConfirmDeleteButton').on("click", function() {
-  let names = [];
-  let ids = [];
+  let names: any[] = [];
+  let ids: any[] = [];
   $('.DeleteGroupList div').each(function () {
     let id = $(this).data('id');
     names.push($("#group-"+id+" #group_name").html());
@@ -715,7 +715,7 @@ $('.ConfirmDeleteButton').on("click", function() {
   loadState.removeClass($('.ConfirmDeleteButton'),"icon-ok");
 
   str_id = ""
-  ids.forEach(function(id) {
+  ids.forEach(function(id: any) {
     str_id += "group_id[]=" + id + "&"
   })
 
@@ -754,12 +754,12 @@ $('.ConfirmDeleteButton').on("click", function() {
  -------*/
 
 // Initialize the research user bar
-var selectize;
+var selectize: any;
 
 // Initialize the cache
 var usersCache: any = {};
 
-var usersInGroup = [];
+var usersInGroup: any[] = [];
 
 // Max offset of the user container (322 = 6 lines)
 var maxOffsetUserCont = 322;
@@ -815,7 +815,7 @@ $(function() {
 });
 
 // Display the user manager for a specific group
-var openUserManager = function(grp_id) {
+var openUserManager = function(grp_id: any) {
   let loadState = new TemporaryState();
   loadState.removeClass($("#group-" + grp_id + " #UserListTrigger"),'icon-user-1')
   loadState.changeAttribute($("#group-" + grp_id + " #UserListTrigger"), "style", "pointer-events: none");
@@ -840,7 +840,7 @@ var openUserManager = function(grp_id) {
         //Fill with user blocks
         usersInGroup = data.result.users;
         // Sort in alphabetic order
-        usersInGroup.sort(function( a, b ) {
+        usersInGroup.sort(function( a: any, b: any ) {
           if ( a.username.toLowerCase() < b.username.toLowerCase() ){
             return -1;
           } else return 1
@@ -867,7 +867,7 @@ var openUserManager = function(grp_id) {
 }
 
 //Add a user block
-var getUserDisplay = function(username, user_id, grp_id) {
+var getUserDisplay = function(username: any, user_id: any, grp_id: any) {
   let userBlock = $('<div class="UsernameBlock" data-id='+user_id+'>'+
       '<span class="icon-user-1"></span>'+
       '<p>'+username+'</p>'+
@@ -920,7 +920,7 @@ var getUserDisplay = function(username, user_id, grp_id) {
 } 
 
 //Update member number function
-function updateMembernumber(number, grp_id) {
+function updateMembernumber(number: any, grp_id: any) {
   $(".GroupContainer[data-id="+grp_id+"] .group_number_users")
     .html(String(number) + " " + ((number > 1)? str_members_default:str_member_default));
   $(".UserNumberBadge").html(String(number));
@@ -954,7 +954,7 @@ $(".AddUserBlock button").on("click", function () {
         if (data.stat === "ok") {
           // Get the username
           let username = "undefined";
-          JSON.parse(usersCache.storage[usersCache.key]).data.forEach(function(u) {
+          JSON.parse(usersCache.storage[usersCache.key]).data.forEach(function(u: any) {
             if (u.id == id) {
               username = u.username;
             }

@@ -143,7 +143,7 @@ function activateLineOptions() {
   });
 }
 
-function fillSummaryResult(summary) {
+function fillSummaryResult(summary: any) {
   $(".user-list").empty();
 
   $(".summary-lines .summary-data").html(summary.NB_LINES);
@@ -169,11 +169,11 @@ function fillSummaryResult(summary) {
     $(".summary-guests").hide();
   }
 
-  var id_of = [];
+  var id_of: Record<string, any> = {};
   var user_dot_title = "";
 
   // not sorted
-  summary.MEMBERS.forEach(keyval => {
+  summary.MEMBERS.forEach((keyval: any) => {
     for (const [key, value] of Object.entries(keyval)) {
       id_of[key] = value;
       user_dot_title += key + ", ";
@@ -193,7 +193,7 @@ function fillSummaryResult(summary) {
       new_user_item.find(".user-item-name").html(key);
       new_user_item.data("user-id", id_of[key]);
   
-      new_user_item.on("click", function () {
+      new_user_item.on("click", function (this: HTMLElement) {
         if (current_param.user_id != id_of[key]) {
           current_param.user_id = $(this).data("user-id");
           addUserFilter(key)
@@ -208,7 +208,7 @@ function fillSummaryResult(summary) {
   }
 }
 
-function showResults(doShow) {
+function showResults(doShow: any) {
   console.log("EMPTY");
   if (doShow) {
     $(".search-summary").show();
@@ -219,7 +219,7 @@ function showResults(doShow) {
   }
 }
 
-function fillHistoryResult(ajaxParam) {
+function fillHistoryResult(ajaxParam: any) {
   // console.log(current_param);
   // $(".tab .search-line").remove();
   $.ajax({
@@ -245,7 +245,7 @@ function fillHistoryResult(ajaxParam) {
       
       if (data.length > 0) {
         var id = 0;
-        data.forEach(line => {
+        data.forEach((line: any) => {
           lineConstructor(line, id, imageDisplay)
           id++
         });
@@ -275,7 +275,7 @@ function fillHistoryResult(ajaxParam) {
   })
 }
 
-function lineConstructor(line, id, imageDisplay) {
+function lineConstructor(line: any, id: any, imageDisplay: any) {
   let newLine = $("#-1").clone();
 
   let sections = [
@@ -373,7 +373,7 @@ function lineConstructor(line, id, imageDisplay) {
       }
       
       let detail_str = "";
-      line.TAGS.forEach(tag => {
+      line.TAGS.forEach((tag: any) => {
         detail_str += tag + ", ";
       });
       detail_str = detail_str.slice(0, -2)
@@ -400,7 +400,7 @@ function lineConstructor(line, id, imageDisplay) {
       // for debug
       // console.log('search n° : ', line.SEARCH_ID, ' ', line.SEARCH_DETAILS);
       const search_details = line.SEARCH_DETAILS;
-      const search_icons = {
+      const search_icons: Record<string, any> = {
         'allwords': 'gallery-icon-search',
         'tags': 'gallery-icon-tag',
         'date_posted': 'gallery-icon-calendar-plus',
@@ -591,11 +591,11 @@ function lineConstructor(line, id, imageDisplay) {
   displayLine(newLine);
 }
 
-function displayLine(line) {
+function displayLine(line: any) {
   $(".tab").append(line);
 }
 
-function addUserFilter(username) {
+function addUserFilter(username: any) {
   var newFilter = $("#default-filter").clone();
   newFilter.removeClass("hide");
 
@@ -617,7 +617,7 @@ function addUserFilter(username) {
   checkFilters();
 }
 
-function addGuestFilter(username) {
+function addGuestFilter(username: any) {
   var newFilter = $("#default-filter").clone();
   newFilter.removeClass("hide");
 
@@ -637,7 +637,7 @@ function addGuestFilter(username) {
   checkFilters();
 }
 
-function addIpFilter(ip) {
+function addIpFilter(ip: any) {
   var newFilter = $("#default-filter").clone();
   newFilter.removeClass("hide");
 
@@ -657,7 +657,7 @@ function addIpFilter(ip) {
   checkFilters();
 }
 
-function addImageFilter(img_id) {
+function addImageFilter(img_id: any) {
   var newFilter = $("#default-filter").clone();
   newFilter.removeClass("hide");
   
@@ -677,7 +677,7 @@ function addImageFilter(img_id) {
   checkFilters();
 }
 
-function updateArrows(actualPage, maxPage) {
+function updateArrows(actualPage: any, maxPage: any) {
   if (actualPage == 0) {
     $('.pagination-arrow.left').addClass('unavailable');
   } else {
@@ -691,7 +691,7 @@ function updateArrows(actualPage, maxPage) {
   }
 }
 
-function updatePagination(maxPage) {
+function updatePagination(maxPage: any) {
   updateArrows(current_param.pageNumber, maxPage);
 
   $(".pagination-item-container").empty();

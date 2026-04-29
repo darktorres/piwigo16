@@ -1335,7 +1335,7 @@ function logout_user(): void
         '',
         ['expires' => 0, 'path' => (string) ini_get('session.cookie_path'), 'domain' => (string) ini_get('session.cookie_domain'), 'samesite' => 'Strict']
     );
-    setcookie(\Piwigo\Core\Config::rememberMeName(), '', ['expires' => 0, 'path' => (string) cookie_path(), 'domain' => (string) ini_get('session.cookie_domain')]);
+    setcookie(\Piwigo\Core\Config::rememberMeName(), '', ['expires' => 0, 'path' => (string) cookie_path(), 'domain' => (string) ini_get('session.cookie_domain'), 'samesite' => 'Strict']);
 }
 
 /**

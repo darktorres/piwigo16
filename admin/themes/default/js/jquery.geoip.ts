@@ -25,7 +25,7 @@ const GeoIp = {
                 }
                 GeoIp.cache = cacheObj;
             }
-            jQuery(window).on('unload', function () {
+            window.addEventListener('beforeunload', () => {
                 localStorage.setItem('freegeoip', JSON.stringify(GeoIp.cache));
             });
         }
@@ -36,12 +36,12 @@ const GeoIp = {
             GeoIp.pending[ip].push(callback);
         } else {
             GeoIp.pending[ip] = [callback];
-            jQuery.ajax({
-                url: 'http://freegeoip.net/json/' + ip,
-                dataType: 'jsonp',
-                cache: true,
-                timeout: 5000,
-                success: (data: GeoIpData & { city?: string; region_name?: string; country_name?: string }) => {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 5000);
+            fetch('https://freegeoip.net/json/' + ip, { signal: controller.signal })
+                .then(r => r.json())
+                .then((data: GeoIpData & { city?: string; region_name?: string; country_name?: string }) => {
+                    clearTimeout(timeout);
                     data.reqTime = (new Date()).getTime();
                     const res: string[] = [];
                     if (data.city) res.push(data.city);
@@ -52,15 +52,15 @@ const GeoIp = {
                     const callbacks = GeoIp.pending[ip];
                     delete GeoIp.pending[ip];
                     callbacks.forEach((cb) => cb(data));
-                },
-                error: () => {
+                })
+                .catch(() => {
+                    clearTimeout(timeout);
                     const data: GeoIpData = { ip, reqTime: (new Date()).getTime() };
                     GeoIp.cache[ip] = data;
                     const callbacks = GeoIp.pending[ip];
                     delete GeoIp.pending[ip];
                     callbacks.forEach((cb) => cb(data));
-                },
-            });
+                });
         }
     },
 };

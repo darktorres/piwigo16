@@ -7,115 +7,136 @@ declare var str_mb: string;
 declare var translate_type: Record<string, string>;
 declare var translate_files: string;
 
-$(function () {
+function posLeft(el: HTMLElement): number {
+    const rect = el.getBoundingClientRect();
+    const parentRect = (el.offsetParent as HTMLElement | null)?.getBoundingClientRect() ?? { left: 0 };
+    return rect.left - parentRect.left;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
     Object.entries(storage_details).forEach(([type, infos]) => {
         const size = infos.total.filesize;
         const str_size_type_string = size > 1048576 ? str_gb : str_mb;
         const size_nb = size > 1048576 ? (size / 1048576).toFixed(2) : (size / 1024).toFixed(0);
         const str_size = str_size_type_string.replace('%s', size_nb);
 
-        $(`#storage-title-${type}`).html('<b>' + translate_type[type] + '</b>');
-        $(`#storage-size-${type}`).html('<b>' + str_size + '</b>');
-        $(`#storage-files-${type}`).html('<p>' + (infos.total.nb_files ? translate_files.replace('%d', String(infos.total.nb_files)) : '~') + '</p>');
+        const titleEl = document.getElementById(`storage-title-${type}`);
+        const sizeEl = document.getElementById(`storage-size-${type}`);
+        const filesEl = document.getElementById(`storage-files-${type}`);
+        if (titleEl) titleEl.innerHTML = '<b>' + translate_type[type] + '</b>';
+        if (sizeEl) sizeEl.innerHTML = '<b>' + str_size + '</b>';
+        if (filesEl) filesEl.innerHTML = '<p>' + (infos.total.nb_files ? translate_files.replace('%d', String(infos.total.nb_files)) : '~') + '</p>';
 
         if (infos.details) {
-            $.each(infos.details, function (ext, data) {
+            const detailContainer = document.getElementById(`storage-detail-${type}`);
+            const chartSpan = document.querySelector<HTMLElement>(`.storage-chart span[data-type="storage-${type}"]`);
+            const extBgColor = chartSpan ? getComputedStyle(chartSpan).backgroundColor : '';
+            Object.entries(infos.details).forEach(([ext, data]) => {
                 const detail_size = data.filesize;
-                let detail_str_size_type_string: string;
-                let detail_size_nb: string;
+                let detail_str_size: string;
                 if (detail_size > 1048576) {
-                    detail_str_size_type_string = str_gb;
-                    detail_size_nb = (detail_size / 1048576).toFixed(2);
+                    detail_str_size = str_gb.replace('%s', (detail_size / 1048576).toFixed(2));
                 } else {
                     const raw = (detail_size / 1024).toFixed(0);
-                    detail_str_size_type_string = str_mb;
-                    detail_size_nb = Number(raw) < 1 ? (detail_size / 1024).toFixed(2) : raw;
+                    detail_str_size = str_mb.replace('%s', Number(raw) < 1 ? (detail_size / 1024).toFixed(2) : raw);
                 }
-                const detail_str_size = detail_str_size_type_string.replace('%s', detail_size_nb);
-                $(`#storage-detail-${type}`).append(
+                detailContainer?.insertAdjacentHTML('beforeend',
                     '<span class="tooltip-details-cont">' +
                     '<span class="tooltip-details-ext"><b>' + ext + '</b></span>' +
                     '<span class="tooltip-details-size"><b>' + detail_str_size + '</b></span>' +
                     '<span class="tooltip-details-files">' + translate_files.replace('%d', String(data.nb_files)) + '</span>' +
                     '</span>'
                 );
-                const ext_bg_color = $(`.storage-chart span[data-type="storage-${type}"]`).css('background-color');
-                $(`#storage-${type} .tooltip-details-ext b`).css('color', ext_bg_color);
+                document.querySelectorAll<HTMLElement>(`#storage-${type} .tooltip-details-ext b`)
+                    .forEach(el => { el.style.color = extBgColor; });
             });
         } else {
-            $(`#storage-${type} .separated`).attr('style', 'display: none !important');
-            $(`#storage-${type} .tooltip-header`).css('margin', '0');
+            const separated = document.querySelector<HTMLElement>(`#storage-${type} .separated`);
+            if (separated) separated.setAttribute('style', 'display: none !important');
+            const header = document.querySelector<HTMLElement>(`#storage-${type} .tooltip-header`);
+            if (header) header.style.margin = '0';
         }
 
-        $(`#storage-${type}`).on('mouseenter', function () {
-            $(this).css('display', 'block');
-            $(`.storage-chart span[data-type="storage-${type}"] p`).css('opacity', '0.4');
-        }).on('mouseleave', function () {
-            $(this).css('display', 'none');
-            $(`.storage-chart span[data-type="storage-${type}"] p`).css('opacity', '0');
-        });
-
-        $(`.storage-chart span[data-type="storage-${type}"]`).on('mouseover', function () {
-            $(this).find('p').css('opacity', '0.4');
-        }).on('mouseout', function () {
-            $(this).find('p').css('opacity', '0');
-        });
+        const storageEl = document.getElementById(`storage-${type}`);
+        const chartSpan = document.querySelector<HTMLElement>(`.storage-chart span[data-type="storage-${type}"]`);
+        const chartSpanP = document.querySelector<HTMLElement>(`.storage-chart span[data-type="storage-${type}"] p`);
+        if (storageEl) {
+            storageEl.addEventListener('mouseenter', () => {
+                storageEl.style.display = 'block';
+                if (chartSpanP) chartSpanP.style.opacity = '0.4';
+            });
+            storageEl.addEventListener('mouseleave', () => {
+                storageEl.style.display = 'none';
+                if (chartSpanP) chartSpanP.style.opacity = '0';
+            });
+        }
+        if (chartSpan) {
+            chartSpan.addEventListener('mouseover', () => {
+                chartSpan.querySelector<HTMLElement>('p')!.style.opacity = '0.4';
+            });
+            chartSpan.addEventListener('mouseout', () => {
+                chartSpan.querySelector<HTMLElement>('p')!.style.opacity = '0';
+            });
+        }
     });
 
     resizeStorageTooltips();
     resizeActivityTooltips();
-    $(window).on('resize', function () {
+    window.addEventListener('resize', () => {
         resizeStorageTooltips(true);
         resizeActivityTooltips();
     });
 });
 
 function resizeStorageTooltips(resize = false): void {
-    $('.storage-chart span').each(function () {
-        const tooltip = $(`.storage-tooltips #${$(this).data('type')}`);
-        const arrow = $(`.storage-tooltips #${String($(this).data('type'))} .tooltip-arrow`);
-        let left = $(this).position().left + ($(this).width() ?? 0) / 2 - (tooltip.innerWidth() ?? 0) / 2;
-        const storage_width = $('#chart-title-storage').innerWidth() ?? 0;
-        if (left + (tooltip.innerWidth() ?? 0) > storage_width) {
-            const diff = left + (tooltip.innerWidth() ?? 0) - storage_width;
+    document.querySelectorAll<HTMLElement>('.storage-chart span').forEach(span => {
+        const type = span.dataset['type'] ?? '';
+        const tooltip = document.querySelector<HTMLElement>(`.storage-tooltips #${type}`);
+        const arrow = document.querySelector<HTMLElement>(`.storage-tooltips #${type} .tooltip-arrow`);
+        if (!tooltip) return;
+        const storage_width = document.getElementById('chart-title-storage')?.clientWidth ?? 0;
+        let left = posLeft(span) + span.getBoundingClientRect().width / 2 - tooltip.clientWidth / 2;
+        if (left + tooltip.clientWidth > storage_width) {
+            const diff = left + tooltip.clientWidth - storage_width;
             left -= diff;
-            arrow.css('left', `calc(50% + ${diff}px)`);
+            if (arrow) arrow.style.left = `calc(50% + ${diff}px)`;
         }
-        tooltip.css('left', left + 'px');
-        const str_chart_pos = $('.storage-chart').offset()?.top ?? 0;
-        const str_chart_height = $('.storage-chart').innerHeight() ?? 0;
-        const tooltip_height = ($(`.storage-tooltips #${String($(this).data('type'))}`).innerHeight() ?? 0) + str_chart_height;
-        const windows_height = $(window).height() ?? 0;
-
+        tooltip.style.left = left + 'px';
+        const chartRect = document.querySelector('.storage-chart')?.getBoundingClientRect();
+        const str_chart_pos = chartRect?.top ?? 0;
+        const str_chart_height = document.querySelector<HTMLElement>('.storage-chart')?.clientHeight ?? 0;
+        const tooltip_height = tooltip.clientHeight + str_chart_height;
+        const windows_height = window.innerHeight;
         if (resize) {
             if (str_chart_pos + tooltip_height > windows_height) {
-                tooltip.css('bottom', `calc(100% + ${str_chart_height}px)`);
-                arrow.addClass('bottom');
+                tooltip.style.bottom = `calc(100% + ${str_chart_height}px)`;
+                arrow?.classList.add('bottom');
             } else {
-                tooltip.css('bottom', '');
-                arrow.removeClass('bottom');
+                tooltip.style.bottom = '';
+                arrow?.classList.remove('bottom');
             }
         } else {
             if (str_chart_pos + tooltip_height > windows_height) {
-                tooltip.css('bottom', `calc(100% + ${str_chart_height}px)`);
-                arrow.addClass('bottom');
+                tooltip.style.bottom = `calc(100% + ${str_chart_height}px)`;
+                arrow?.classList.add('bottom');
             }
-            $(this).off('mouseenter').on('mouseenter', function () { tooltip.show(); });
-            $(this).off('mouseleave').on('mouseleave', function () { tooltip.hide(); });
+            span.addEventListener('mouseenter', () => { tooltip.style.display = ''; });
+            span.addEventListener('mouseleave', () => { tooltip.style.display = 'none'; });
         }
     });
 }
 
 function resizeActivityTooltips(): void {
-    $('.activity_tooltips').has('.tooltip').each(function () {
-        const max_width = ($('#pwgMain').innerWidth() ?? 0) - 20;
-        const tooltip = $(this).find('.tooltip');
-        const left = $(this).position().left + (($(this).innerWidth() ?? 0) / 2) + ((tooltip.innerWidth() ?? 0) / 2);
+    document.querySelectorAll<HTMLElement>('.activity_tooltips').forEach(container => {
+        const tooltip = container.querySelector<HTMLElement>('.tooltip');
+        if (!tooltip) return;
+        const max_width = (document.getElementById('pwgMain')?.clientWidth ?? 0) - 20;
+        const left = posLeft(container) + container.clientWidth / 2 + tooltip.clientWidth / 2;
         if (left > max_width) {
-            const arrow = $(this).find('.tooltip-arrow');
+            const arrow = container.querySelector<HTMLElement>('.tooltip-arrow');
             const diff = max_width - left;
-            tooltip.css('left', `calc(50% + ${diff}px)`);
-            arrow.css('left', `calc(50% - ${diff}px)`);
+            tooltip.style.left = `calc(50% + ${diff}px)`;
+            if (arrow) arrow.style.left = `calc(50% - ${diff}px)`;
         }
     });
 }

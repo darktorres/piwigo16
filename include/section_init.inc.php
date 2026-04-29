@@ -144,7 +144,7 @@ if (script_basename() == 'picture' and 'categories' == $page['section'] and
 
 // $page['nb_image_page'] is the number of picture to display on this page
 // By default, it is the same as the $user['nb_image_page']
-$page['nb_image_page'] = $user['nb_image_page'];
+$page['nb_image_page'] = (int) $user['nb_image_page'];
 
 // if flat mode is active, we must consider the image set as a standard set
 // and not as a category set because we can't use the #image_category.rank :

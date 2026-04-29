@@ -9,6 +9,8 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+use Monolog\Handler\StreamHandler;
+use Monolog\Logger;
 use Piwigo\admin\inc\functions_upgrade;
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_html;
@@ -20,7 +22,7 @@ use Piwigo\inc\PersistentFileCache;
 use Piwigo\inc\Template;
 
 if (! defined('PHPWG_ROOT_PATH')) {
-    throw new \RuntimeException('Hacking attempt!');
+    throw new RuntimeException('Hacking attempt!');
 }
 
 // determine the initial instant to indicate the generation time of this page
@@ -31,6 +33,42 @@ function sanitize_mysql_kv(
     string &$v
 ): void {
     $v = addslashes($v);
+}
+
+/**
+ * Read an integer from $_GET/$_POST, returning null (or $default) if absent.
+ *
+ * @param  array<string,mixed>  $source  Pass $_GET, $_POST, or $_COOKIE to restrict source.
+ */
+function input_int(string $key, ?int $default = null, array $source = []): ?int
+{
+    $src = $source ?: ($_POST + $_GET);
+
+    return isset($src[$key]) ? (int) $src[$key] : $default;
+}
+
+/**
+ * Read a trimmed string from $_GET/$_POST, returning null (or $default) if absent.
+ *
+ * @param  array<string,mixed>  $source  Pass $_GET, $_POST, or $_COOKIE to restrict source.
+ */
+function input_string(string $key, ?string $default = null, array $source = []): ?string
+{
+    $src = $source ?: ($_POST + $_GET);
+
+    return isset($src[$key]) ? trim((string) $src[$key]) : $default;
+}
+
+/**
+ * Read a boolean from $_GET/$_POST (truthy string → true), returning null (or $default) if absent.
+ *
+ * @param  array<string,mixed>  $source  Pass $_GET, $_POST, or $_COOKIE to restrict source.
+ */
+function input_bool(string $key, ?bool $default = null, array $source = []): ?bool
+{
+    $src = $source ?: ($_POST + $_GET);
+
+    return isset($src[$key]) ? (bool) $src[$key] : $default;
 }
 
 if (is_array($_GET)) {
@@ -67,18 +105,18 @@ $header_msgs = [];
 $header_notes = [];
 $filter = [];
 
-require __DIR__ . '/../inc/config_default.php';
+require __DIR__.'/../inc/config_default.php';
 
-if (file_exists(__DIR__ . '/../local/config/config.php')) {
-    require __DIR__ . '/../local/config/config.php';
+if (file_exists(__DIR__.'/../local/config/config.php')) {
+    require __DIR__.'/../local/config/config.php';
 }
 
 if (! defined('PWG_LOCAL_DIR')) {
     define('PWG_LOCAL_DIR', 'local/');
 }
 
-if (file_exists(__DIR__ . '/../local/config/database.php')) {
-    require __DIR__ . '/../local/config/database.php';
+if (file_exists(__DIR__.'/../local/config/database.php')) {
+    require __DIR__.'/../local/config/database.php';
 }
 
 if (! defined('PHPWG_INSTALLED')) {
@@ -101,11 +139,11 @@ if ($conf->session_gc_probability > 0) {
     ini_set('session.gc_probability', min($conf->session_gc_probability, 100));
 }
 
-require __DIR__ . '/../inc/constants.php';
-require __DIR__ . '/../inc/functions.php';
-require __DIR__ . '/../inc/Template.php';
+require __DIR__.'/../inc/constants.php';
+require __DIR__.'/../inc/functions.php';
+require __DIR__.'/../inc/Template.php';
 
-$persistent_cache = new PersistentFileCache();
+$persistent_cache = new PersistentFileCache;
 
 // Database connection
 try {
@@ -122,12 +160,12 @@ try {
 functions::load_conf_from_db();
 
 // filename hashed to prevent direct access; salted with db_password (secret_key unavailable in i.php)
-$logFile = './' . $conf->data_location . $conf->log_dir . '/log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . $conf->db_password) . '.txt';
-$logger = new Monolog\Logger('piwigo');
-$logger->pushHandler(new Monolog\Handler\StreamHandler($logFile, $conf->log_level));
+$logFile = './'.$conf->data_location.$conf->log_dir.'/log_'.date('Y-m-d').'_'.sha1(date('Y-m-d').$conf->db_password).'.txt';
+$logger = new Logger('piwigo');
+$logger->pushHandler(new StreamHandler($logFile, $conf->log_level));
 
 if (! $conf->check_upgrade_feed && (! isset($conf->piwigo_db_version) || $conf->piwigo_db_version != functions::get_branch_from_version(PHPWG_VERSION))) {
-    functions::redirect(functions_url::get_root_url() . 'upgrade.php');
+    functions::redirect(functions_url::get_root_url().'upgrade.php');
 }
 
 ImageStdParams::load_from_db();
@@ -156,10 +194,10 @@ if (isset($conf->order_by_inside_category_custom)) {
 
 functions::check_lounge();
 
-require __DIR__ . '/../inc/user.php';
+require __DIR__.'/../inc/user.php';
 
 if (in_array(substr($user['language'], 0, 2), ['fr', 'it', 'de', 'es', 'pl', 'ru', 'nl', 'tr', 'da'], true)) {
-    define('PHPWG_DOMAIN', substr($user['language'], 0, 2) . '.piwigo.org');
+    define('PHPWG_DOMAIN', substr($user['language'], 0, 2).'.piwigo.org');
 } elseif ($user['language'] == 'zh_CN') {
     define('PHPWG_DOMAIN', 'cn.piwigo.org');
 } elseif ($user['language'] == 'pt_BR') {
@@ -168,14 +206,14 @@ if (in_array(substr($user['language'], 0, 2), ['fr', 'it', 'de', 'es', 'pl', 'ru
     define('PHPWG_DOMAIN', 'piwigo.org');
 }
 
-const PHPWG_URL = 'https://' . PHPWG_DOMAIN;
+const PHPWG_URL = 'https://'.PHPWG_DOMAIN;
 
 if (isset($conf->alternative_pem_url) &&
     $conf->alternative_pem_url != ''
 ) {
     define('PEM_URL', $conf->alternative_pem_url);
 } else {
-    define('PEM_URL', 'https://' . PHPWG_DOMAIN . '/ext');
+    define('PEM_URL', 'https://'.PHPWG_DOMAIN.'/ext');
 }
 
 // language files
@@ -206,8 +244,7 @@ if (isset($page['auth_key_invalid']) &&
 ) {
     $page['errors'][] =
       functions::l10n('Your authentication key is no longer valid.')
-      . sprintf(' <a href="%s">%s</a>', functions_url::get_root_url() . 'identification.php', functions::l10n('Login'))
-    ;
+      .sprintf(' <a href="%s">%s</a>', functions_url::get_root_url().'identification.php', functions::l10n('Login'));
 }
 
 // template instance
@@ -228,7 +265,7 @@ if (defined('IN_ADMIN') &&
 }
 
 if (! isset($conf->no_photo_yet)) {
-    require __DIR__ . '/../inc/no_photo_yet.php';
+    require __DIR__.'/../inc/no_photo_yet.php';
 }
 
 if (isset($user['internal_status']['guest_must_be_guest']) &&
@@ -246,15 +283,15 @@ if ($conf->gallery_locked) {
         functions_html::set_status_header(503, 'Service Unavailable');
         header('Retry-After: 900');
         header('Content-Type: text/html; charset=utf-8');
-        echo '<a href="' . functions_url::get_absolute_root_url(false) . 'identification.php">' . functions::l10n('The gallery is locked for maintenance. Please, come back later.') . '</a>';
-        echo str_repeat(' ', 512); //IE6 doesn't error output if below a size
+        echo '<a href="'.functions_url::get_absolute_root_url(false).'identification.php">'.functions::l10n('The gallery is locked for maintenance. Please, come back later.').'</a>';
+        echo str_repeat(' ', 512); // IE6 doesn't error output if below a size
         exit();
     }
 }
 
 if ($conf->check_upgrade_feed && functions_upgrade::check_upgrade_feed()) {
     $header_msgs[] = 'Some database upgrades are missing, '
-      . '<a href="' . functions_url::get_absolute_root_url(false) . 'upgrade_feed.php">upgrade now</a>';
+      .'<a href="'.functions_url::get_absolute_root_url(false).'upgrade_feed.php">upgrade now</a>';
 }
 
 if ($header_msgs !== []) {
@@ -265,7 +302,7 @@ if ($header_msgs !== []) {
 if (! empty($conf->filter_pages) &&
     functions::get_filter_page_value('used')
 ) {
-    require __DIR__ . '/../inc/filter.php';
+    require __DIR__.'/../inc/filter.php';
 } else {
     $filter['enabled'] = false;
 }

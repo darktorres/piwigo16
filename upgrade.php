@@ -25,10 +25,10 @@ ini_set('opcache.enable', 0);
 const PHPWG_ROOT_PATH = './';
 
 // load config file
-require __DIR__ . '/inc/config_default.php';
+require __DIR__.'/inc/config_default.php';
 
-if (file_exists(__DIR__ . '/local/config/config.php')) {
-    require __DIR__ . '/local/config/config.php';
+if (file_exists(__DIR__.'/local/config/config.php')) {
+    require __DIR__.'/local/config/config.php';
 }
 
 if (! defined('PWG_LOCAL_DIR')) {
@@ -39,22 +39,22 @@ $config_file = './local/config/database.php';
 $config_file_contents = file_get_contents($config_file);
 
 if ($config_file_contents === false) {
-    exit('Cannot load ' . $config_file);
+    exit('Cannot load '.$config_file);
 }
 
 $php_end_tag = strrpos($config_file_contents, '?>');
 
 if ($php_end_tag === false) {
-    exit('Cannot find php end tag in ' . $config_file);
+    exit('Cannot find php end tag in '.$config_file);
 }
 
 require $config_file;
 
-require_once __DIR__ . '/inc/constants.php';
+require_once __DIR__.'/inc/constants.php';
 const UPGRADES_PATH = './install/db';
 
-require_once __DIR__ . '/inc/functions.php';
-require_once __DIR__ . '/inc/Template.php';
+require_once __DIR__.'/inc/functions.php';
+require_once __DIR__.'/inc/Template.php';
 
 // +-----------------------------------------------------------------------+
 // |                             playing zone                              |
@@ -73,8 +73,10 @@ require_once __DIR__ . '/inc/Template.php';
 // +-----------------------------------------------------------------------+
 $languages = new languages('utf-8');
 
-if (isset($_GET['language'])) {
-    $language = strip_tags($_GET['language']);
+$get_language = isset($_GET['language']) ? strip_tags((string) $_GET['language']) : null;
+
+if ($get_language !== null) {
+    $language = $get_language;
 
     if (! in_array($language, array_keys($languages->fs_languages))) {
         $language = PHPWG_DEFAULT_LANGUAGE;
@@ -116,7 +118,7 @@ if ($language == 'fr_FR') {
     define('PHPWG_DOMAIN', 'piwigo.org');
 }
 
-const PHPWG_URL = 'https://' . PHPWG_DOMAIN;
+const PHPWG_URL = 'https://'.PHPWG_DOMAIN;
 
 functions::load_language('common.lang', '', [
     'language' => $language,
@@ -159,7 +161,7 @@ $template->set_filenames([
 $template->assign(
     [
         'RELEASE' => PHPWG_VERSION,
-        'L_UPGRADE_HELP' => functions::l10n('Need help ? Ask your question on <a href="%s">Piwigo message board</a>.', PHPWG_URL . '/forum'),
+        'L_UPGRADE_HELP' => functions::l10n('Need help ? Ask your question on <a href="%s">Piwigo message board</a>.', PHPWG_URL.'/forum'),
     ]
 );
 
@@ -169,7 +171,7 @@ $template->assign(
 
 $has_remote_site = false;
 
-$query = <<<SQL
+$query = <<<'SQL'
     SELECT galleries_url FROM sites;
     SQL;
 $result = $conf->sql_backend::pwg_query($query);
@@ -189,7 +191,7 @@ if ($has_remote_site) {
         echo '<ul>';
 
         foreach ($page['errors'] as $error) {
-            echo '<li>' . $error . '</li>';
+            echo '<li>'.$error.'</li>';
         }
 
         echo '</ul>';
@@ -239,7 +241,7 @@ if (! in_array('param', $columns_of['config'])) {
     $current_release = '2.9.0';
 } else {
     // retrieve already applied upgrades
-    $query = <<<SQL
+    $query = <<<'SQL'
         SELECT id
         FROM upgrade;
         SQL;
@@ -279,9 +281,9 @@ if (version_compare(PHP_VERSION, REQUIRED_PHP_VERSION, '<')) {
 functions_upgrade::check_upgrade_access_rights();
 
 if ((isset($_POST['submit']) || isset($_GET['now'])) &&
-     functions_upgrade::check_upgrade()
+    functions_upgrade::check_upgrade()
 ) {
-    $upgrade_file = './install/upgrade_' . $current_release . '.php';
+    $upgrade_file = './install/upgrade_'.$current_release.'.php';
 
     if (is_file($upgrade_file)) {
         // reset SQL counters
@@ -296,17 +298,17 @@ if ((isset($_POST['submit']) || isset($_GET['now'])) &&
         // Something to add in database.php?
         if ($mysql_changes !== []) {
             $config_file_contents =
-              substr($config_file_contents, 0, $php_end_tag) . "\r\n"
-              . implode("\r\n", $mysql_changes) . "\r\n"
-              . substr($config_file_contents, $php_end_tag);
+              substr($config_file_contents, 0, $php_end_tag)."\r\n"
+              .implode("\r\n", $mysql_changes)."\r\n"
+              .substr($config_file_contents, $php_end_tag);
 
             if (! file_put_contents($config_file, $config_file_contents)) {
                 $page['infos'][] = functions::l10n(
                     'In <i>%s</i>, before <b>?></b>, insert:',
                     'local/config/database.php'
                 )
-                . '<p><textarea rows="4" cols="40">'
-                . implode("\r\n", $mysql_changes) . '</textarea></p>';
+                .'<p><textarea rows="4" cols="40">'
+                .implode("\r\n", $mysql_changes).'</textarea></p>';
             }
         }
 
@@ -330,7 +332,7 @@ if ((isset($_POST['submit']) || isset($_GET['now'])) &&
                     3,
                     '.',
                     ' '
-                ) . ' s',
+                ).' s',
                 'NB_QUERIES' => $page['count_queries'],
             ]
         );
@@ -350,10 +352,10 @@ if ((isset($_POST['submit']) || isset($_GET['now'])) &&
 
         // if the webmaster has a session, let's give a link to discover new features
         if (! empty($_SESSION['pwg_uid'])) {
-            $version_ = str_replace('.', '_', functions::get_branch_from_version(PHPWG_VERSION) . '.0');
+            $version_ = str_replace('.', '_', functions::get_branch_from_version(PHPWG_VERSION).'.0');
 
-            if (file_exists(PHPWG_PLUGINS_PATH . 'TakeATour/tours/' . $version_ . '/config.php')) {
-                $query = <<<SQL
+            if (file_exists(PHPWG_PLUGINS_PATH.'TakeATour/tours/'.$version_.'/config.php')) {
+                $query = <<<'SQL'
                     REPLACE INTO plugins
                         (id, state)
                     VALUES
@@ -367,7 +369,7 @@ if ((isset($_POST['submit']) || isset($_GET['now'])) &&
                 $template->assign(
                     [
                         'button_label' => functions::l10n("Discover what's new in Piwigo %s", functions::get_branch_from_version(PHPWG_VERSION)),
-                        'button_link' => 'admin.php?submitted_tour_path=tours/' . $version_ . '&amp;pwg_token=' . functions::get_pwg_token(),
+                        'button_link' => 'admin.php?submitted_tour_path=tours/'.$version_.'&amp;pwg_token='.functions::get_pwg_token(),
                     ]
                 );
             }
@@ -387,7 +389,7 @@ if ((isset($_POST['submit']) || isset($_GET['now'])) &&
 // |                          start template output                        |
 // +-----------------------------------------------------------------------+
 else {
-    $languages = new languages();
+    $languages = new languages;
 
     foreach ($languages->fs_languages as $language_code => $fs_language) {
         if ($language === $language_code) {
@@ -401,7 +403,7 @@ else {
 
     $template->assign('introduction', [
         'CURRENT_RELEASE' => $current_release,
-        'F_ACTION' => 'upgrade.php?language=' . $language,
+        'F_ACTION' => 'upgrade.php?language='.$language,
     ]);
 
     if (! functions_upgrade::check_upgrade()) {

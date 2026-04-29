@@ -26,8 +26,8 @@ use Piwigo\inc\menubar;
 use Piwigo\inc\SrcImage;
 
 const PHPWG_ROOT_PATH = './';
-require_once __DIR__ . '/inc/common.php';
-require __DIR__ . '/inc/section_init.php';
+require_once __DIR__.'/inc/common.php';
+require __DIR__.'/inc/section_init.php';
 
 // Check Access and exit when user status is not ok
 functions_user::check_status(ACCESS_GUEST);
@@ -42,7 +42,7 @@ $page['rank_of'] = array_flip($page['items']);
 // if this image_id doesn't correspond to this category, an error message is
 // displayed, and execution is stopped
 if (! isset($page['rank_of'][$page['image_id']])) {
-    $query = <<<SQL
+    $query = <<<'SQL'
         SELECT id, file, level
         FROM images
         WHERE
@@ -124,7 +124,7 @@ if (! isset($page['rank_of'][$page['image_id']])) {
 }
 
 // There is cookie, so we must handle it at the beginning
-if (isset($_GET['metadata'])) {
+if (input_string('metadata', null, $_GET) !== null) {
     if (functions_session::pwg_get_session_var('show_metadata') == null) {
         functions_session::pwg_set_session_var('show_metadata', 1);
     } else {
@@ -166,8 +166,7 @@ if ($page['current_rank'] != $page['last_rank']) {
 
 $url_up = functions_url::duplicate_index_url(
     [
-        'start' =>
-          floor($page['current_rank'] / $page['nb_image_page'])
+        'start' => floor($page['current_rank'] / $page['nb_image_page'])
           * $page['nb_image_page'],
     ],
     [
@@ -187,9 +186,10 @@ $url_self = functions_url::duplicate_picture_url();
  *
  * Actions finish by a redirection
  */
+$get_action = input_string('action', null, $_GET);
 
-if (isset($_GET['action'])) {
-    switch ($_GET['action']) {
+if ($get_action !== null) {
+    switch ($get_action) {
         case 'add_to_favorites':
 
             $query = <<<SQL
@@ -230,7 +230,7 @@ if (isset($_GET['action'])) {
                     SQL;
                 $conf->sql_backend::pwg_query($query);
                 functions::pwg_activity('album', $page['category']['id'], 'edit', [
-                    'action' => $_GET['action'],
+                    'action' => $get_action,
                     'image_id' => $page['image_id'],
                 ]);
 
@@ -246,26 +246,27 @@ if (isset($_GET['action'])) {
             break;
 
         case 'rate':
-            functions_rate::rate_picture($page['image_id'], $_POST['rate']);
+            functions_rate::rate_picture($page['image_id'], input_string('rate', null, $_POST));
             functions::redirect($url_self);
             // no break
 
         case 'edit_comment':
-            require_once __DIR__ . '/inc/functions_comment.php';
+            require_once __DIR__.'/inc/functions_comment.php';
             functions::check_input_parameter('comment_to_edit', $_GET, false, PATTERN_ID);
-            $author_id = functions_comment::get_comment_author_id($_GET['comment_to_edit']);
+            $comment_to_edit = input_int('comment_to_edit', null, $_GET);
+            $author_id = functions_comment::get_comment_author_id($comment_to_edit);
 
             if (functions_user::can_manage_comment('edit', $author_id)) {
                 if (! empty($_POST['content'])) {
                     functions::check_pwg_token();
                     $comment_action = functions_comment::update_user_comment(
                         [
-                            'comment_id' => $_GET['comment_to_edit'],
+                            'comment_id' => $comment_to_edit,
                             'image_id' => $page['image_id'],
-                            'content' => $_POST['content'],
-                            'website_url' => $_POST['website_url'],
+                            'content' => input_string('content', null, $_POST),
+                            'website_url' => input_string('website_url', null, $_POST),
                         ],
-                        $_POST['key']
+                        input_string('key', null, $_POST)
                     );
 
                     $perform_redirect = false;
@@ -285,7 +286,7 @@ if (isset($_GET['action'])) {
                             break;
 
                         default:
-                            trigger_error('Invalid comment action ' . $comment_action, E_USER_WARNING);
+                            trigger_error('Invalid comment action '.$comment_action, E_USER_WARNING);
                     }
 
                     if ($perform_redirect) {
@@ -295,7 +296,7 @@ if (isset($_GET['action'])) {
                     unset($_POST['content']);
                 }
 
-                $edit_comment = $_GET['comment_to_edit'];
+                $edit_comment = $comment_to_edit;
             }
 
             break;
@@ -303,14 +304,14 @@ if (isset($_GET['action'])) {
         case 'delete_comment':
             functions::check_pwg_token();
 
-            require_once __DIR__ . '/inc/functions_comment.php';
+            require_once __DIR__.'/inc/functions_comment.php';
 
             functions::check_input_parameter('comment_to_delete', $_GET, false, PATTERN_ID);
-
-            $author_id = functions_comment::get_comment_author_id($_GET['comment_to_delete']);
+            $comment_to_delete = input_int('comment_to_delete', null, $_GET);
+            $author_id = functions_comment::get_comment_author_id($comment_to_delete);
 
             if (functions_user::can_manage_comment('delete', $author_id)) {
-                functions_comment::delete_user_comment($_GET['comment_to_delete']);
+                functions_comment::delete_user_comment($comment_to_delete);
             }
 
             functions::redirect($url_self);
@@ -319,22 +320,22 @@ if (isset($_GET['action'])) {
         case 'validate_comment':
             functions::check_pwg_token();
 
-            require_once __DIR__ . '/inc/functions_comment.php';
+            require_once __DIR__.'/inc/functions_comment.php';
 
             functions::check_input_parameter('comment_to_validate', $_GET, false, PATTERN_ID);
-
-            $author_id = functions_comment::get_comment_author_id($_GET['comment_to_validate']);
+            $comment_to_validate = input_int('comment_to_validate', null, $_GET);
+            $author_id = functions_comment::get_comment_author_id($comment_to_validate);
 
             if (functions_user::can_manage_comment('validate', $author_id)) {
-                functions_comment::validate_user_comment($_GET['comment_to_validate']);
+                functions_comment::validate_user_comment($comment_to_validate);
             }
 
             functions::redirect($url_self);
     }
 }
 
-//---------- incrementation of the number of hits
-$inc_hit_count = ! isset($_POST['content']);
+// ---------- incrementation of the number of hits
+$inc_hit_count = input_string('content', null, $_POST) === null;
 // don't increment counter if in the Mozilla Firefox prefetch
 if (isset($_SERVER['HTTP_X_MOZ']) &&
     $_SERVER['HTTP_X_MOZ'] == 'prefetch'
@@ -354,7 +355,7 @@ if (functions_plugins::trigger_change('allow_increment_element_hit_count', $inc_
     functions_picture::increase_image_visit_counter($page['image_id']);
 }
 
-//---------------------------------------------------------- related categories
+// ---------------------------------------------------------- related categories
 $sql_condition = functions_user::get_sql_condition_FandF(
     [
         'forbidden_categories' => 'id',
@@ -368,10 +369,10 @@ $query = <<<SQL
     INNER JOIN categories ON category_id = id
     WHERE image_id = {$page['image_id']} {$sql_condition}
     SQL;
-$query = trim($query) . ';';
+$query = trim($query).';';
 $related_categories = $conf->sql_backend::query2array($query);
 usort($related_categories, functions_category::global_rank_compare(...));
-//-------------------------first, prev, current, next & last picture management
+// -------------------------first, prev, current, next & last picture management
 $picture = [];
 
 $ids = [$page['image_id']];
@@ -467,14 +468,16 @@ while ($row = $conf->sql_backend::pwg_db_fetch_assoc($result)) {
 $slideshow_params = [];
 $slideshow_url_params = [];
 
-if (isset($_GET['slideshow'])) {
+$slideshow_param = input_string('slideshow', null, $_GET);
+
+if ($slideshow_param !== null) {
     $page['slideshow'] = true;
     $page['meta_robots'] = [
         'noindex' => 1,
         'nofollow' => 1,
     ];
 
-    $slideshow_params = functions_picture::decode_slideshow_params($_GET['slideshow']);
+    $slideshow_params = functions_picture::decode_slideshow_params($slideshow_param);
     $slideshow_url_params['slideshow'] = functions_picture::encode_slideshow_params($slideshow_params);
 
     if ($slideshow_params['play']) {
@@ -514,7 +517,7 @@ if ($page['slideshow'] &&
 }
 
 $title = $picture['current']['TITLE'];
-$title_nb = ($page['current_rank'] + 1) . '/' . count($page['items']);
+$title_nb = ($page['current_rank'] + 1).'/'.count($page['items']);
 
 // metadata
 $url_metadata = functions_url::duplicate_picture_url();
@@ -543,7 +546,7 @@ $page['body_id'] = 'thePicturePage';
 // allow plugins to change what we computed before passing data to template
 $picture = functions_plugins::trigger_change('picture_pictures_data', $picture);
 
-//------------------------------------------------------- navigation management
+// ------------------------------------------------------- navigation management
 foreach (['first', 'previous', 'next', 'last', 'current'] as $which_image) {
     if (isset($picture[$which_image])) {
         $template->assign(
@@ -552,11 +555,10 @@ foreach (['first', 'previous', 'next', 'last', 'current'] as $which_image) {
                 $picture[$which_image],
                 [
                     // Params slideshow was transmit to navigation buttons
-                    'U_IMG' =>
-                      functions_url::add_url_params(
-                          $picture[$which_image]['url'],
-                          $slideshow_url_params
-                      ),
+                    'U_IMG' => functions_url::add_url_params(
+                        $picture[$which_image]['url'],
+                        $slideshow_url_params
+                    ),
                 ]
             )
         );
@@ -592,11 +594,11 @@ if ($conf->picture_download_icon &&
 
         foreach ($formats as &$format) {
             if (! isset($format['download_url'])) {
-                $format['download_url'] = 'action.php?format=' . $format['format_id'] . '&amp;download';
+                $format['download_url'] = 'action.php?format='.$format['format_id'].'&amp;download';
             }
 
             $format['label'] = strtoupper($format['ext']);
-            $lang_key = 'format ' . strtoupper($format['ext']);
+            $lang_key = 'format '.strtoupper($format['ext']);
 
             if (isset($lang[$lang_key])) {
                 $format['label'] = $lang[$lang_key];
@@ -614,7 +616,7 @@ if ($conf->picture_download_icon &&
 if ($page['slideshow']) {
     $tpl_slideshow = [];
 
-    //slideshow end
+    // slideshow end
     $template->assign(
         [
             'U_SLIDESHOW_STOP' => $picture['current']['url'],
@@ -624,22 +626,21 @@ if ($page['slideshow']) {
     foreach (['repeat', 'play'] as $p) {
         $var_name =
           'U_'
-          . ($slideshow_params[$p] ? 'STOP_' : 'START_')
-          . strtoupper($p);
+          .($slideshow_params[$p] ? 'STOP_' : 'START_')
+          .strtoupper($p);
 
         $tpl_slideshow[$var_name] =
               functions_url::add_url_params(
                   $picture['current']['url'],
                   [
-                      'slideshow' =>
-                                    functions_picture::encode_slideshow_params(
-                                        array_merge(
-                                            $slideshow_params,
-                                            [
-                                                $p => ! $slideshow_params[$p],
-                                            ]
-                                        )
-                                    ),
+                      'slideshow' => functions_picture::encode_slideshow_params(
+                          array_merge(
+                              $slideshow_params,
+                              [
+                                  $p => ! $slideshow_params[$p],
+                              ]
+                          )
+                      ),
                   ]
               );
     }
@@ -657,7 +658,7 @@ if ($page['slideshow']) {
           );
 
         if ($new_slideshow_params['period'] === $new_period) {
-            $var_name = 'U_' . strtoupper($op) . '_PERIOD';
+            $var_name = 'U_'.strtoupper($op).'_PERIOD';
             $tpl_slideshow[$var_name] =
                   functions_url::add_url_params(
                       $picture['current']['url'],
@@ -673,13 +674,12 @@ if ($page['slideshow']) {
 } elseif ($conf->picture_slideshow_icon) {
     $template->assign(
         [
-            'U_SLIDESHOW_START' =>
-              functions_url::add_url_params(
-                  $picture['current']['url'],
-                  [
-                      'slideshow' => '',
-                  ]
-              ),
+            'U_SLIDESHOW_START' => functions_url::add_url_params(
+                $picture['current']['url'],
+                [
+                    'slideshow' => '',
+                ]
+            ),
         ]
     );
 }
@@ -702,7 +702,7 @@ if ($conf->picture_metadata_icon) {
     $template->assign('U_METADATA', $url_metadata);
 }
 
-//------------------------------------------------------- upper menu management
+// ------------------------------------------------------- upper menu management
 
 // admin links
 if (functions_user::is_admin()) {
@@ -722,7 +722,7 @@ if (functions_user::is_admin()) {
     }
 
     if ($conf->picture_edit_icon) {
-        $url_admin = functions_url::get_root_url() . 'admin.php?page=photo-' . $page['image_id'] . (isset($page['category']) ? '&amp;cat_id=' . $page['category']['id'] : '');
+        $url_admin = functions_url::get_root_url().'admin.php?page=photo-'.$page['image_id'].(isset($page['category']) ? '&amp;cat_id='.$page['category']['id'] : '');
         $template->assign('U_PHOTO_ADMIN', $url_admin);
     }
 
@@ -766,7 +766,7 @@ if (! functions_user::is_a_guest() &&
     );
 }
 
-//--------------------------------------------------------- picture information
+// --------------------------------------------------------- picture information
 // legend
 if (isset($picture['current']['comment']) &&
     ! empty($picture['current']['comment'])
@@ -797,7 +797,7 @@ if (! empty($picture['current']['date_creation'])) {
             'chronology_date' => explode('-', substr($picture['current']['date_creation'], 0, 10)),
         ]
     );
-    $infos['INFO_CREATION_DATE'] = '<a href="' . $url . '" rel="nofollow">' . $val . '</a>';
+    $infos['INFO_CREATION_DATE'] = '<a href="'.$url.'" rel="nofollow">'.$val.'</a>';
 }
 
 // date of availability
@@ -813,13 +813,13 @@ $url = functions_url::make_index_url(
         ),
     ]
 );
-$infos['INFO_POSTED_DATE'] = '<a href="' . $url . '" rel="nofollow">' . $val . '</a>';
+$infos['INFO_POSTED_DATE'] = '<a href="'.$url.'" rel="nofollow">'.$val.'</a>';
 
 // size in pixels
 if ($picture['current']['src_image']->is_original() &&
     isset($picture['current']['width'])
 ) {
-    $infos['INFO_DIMENSIONS'] = $picture['current']['width'] . '*' . $picture['current']['height'];
+    $infos['INFO_DIMENSIONS'] = $picture['current']['width'].'*'.$picture['current']['height'];
 }
 
 // filesize
@@ -933,16 +933,16 @@ $template->assign(
 // |                               sub pages                               |
 // +-----------------------------------------------------------------------+
 
-require __DIR__ . '/inc/picture_rate.php';
+require __DIR__.'/inc/picture_rate.php';
 
 if ($conf->activate_comments) {
-    require __DIR__ . '/inc/picture_comment.php';
+    require __DIR__.'/inc/picture_comment.php';
 }
 
 if ($metadata_showable &&
     functions_session::pwg_get_session_var('show_metadata') != null
 ) {
-    require __DIR__ . '/inc/picture_metadata.php';
+    require __DIR__.'/inc/picture_metadata.php';
 }
 
 // include menubar
@@ -958,7 +958,7 @@ if ($conf->picture_menu &&
     menubar::initialize_menu();
 }
 
-require __DIR__ . '/inc/page_header.php';
+require __DIR__.'/inc/page_header.php';
 functions_plugins::trigger_notify('loc_end_picture');
 functions_html::flush_page_messages();
 
@@ -971,6 +971,6 @@ if ($page['slideshow'] &&
     $template->pparse('picture');
 }
 
-//------------------------------------------------------------ log information
+// ------------------------------------------------------------ log information
 functions::pwg_log($picture['current']['id'], 'picture');
-require __DIR__ . '/inc/page_tail.php';
+require __DIR__.'/inc/page_tail.php';

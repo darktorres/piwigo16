@@ -9,7 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-//--------------------------------------------------------------------- include
+// --------------------------------------------------------------------- include
 use Piwigo\inc\functions;
 use Piwigo\inc\functions_plugins;
 use Piwigo\inc\functions_search;
@@ -17,7 +17,7 @@ use Piwigo\inc\functions_tag;
 use Piwigo\inc\functions_user;
 
 const PHPWG_ROOT_PATH = './';
-require_once __DIR__ . '/inc/common.php';
+require_once __DIR__.'/inc/common.php';
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
@@ -48,9 +48,10 @@ if (functions_user::is_a_guest() ||
 }
 
 $words = [];
+$get_q = input_string('q', null, $_GET);
 
-if (! empty($_GET['q'])) {
-    $words = functions_search::split_allwords($_GET['q']);
+if (! empty($get_q)) {
+    $words = functions_search::split_allwords($get_q);
 }
 
 if (count($words) > 0 ||
@@ -65,9 +66,9 @@ if (count($words) > 0 ||
 
 $cat_ids = [];
 
-if (isset($_GET['cat_id'])) {
+if (input_string('cat_id', null, $_GET) !== null) {
     functions::check_input_parameter('cat_id', $_GET, false, PATTERN_ID);
-    $cat_ids = [$_GET['cat_id']];
+    $cat_ids = [input_int('cat_id', null, $_GET)];
 }
 
 if ($cat_ids !== [] ||
@@ -82,9 +83,11 @@ if ($cat_ids !== [] ||
 if (functions_tag::get_available_tags() !== []) {
     $tag_ids = [];
 
-    if (isset($_GET['tag_id'])) {
+    $get_tag_id = input_string('tag_id', null, $_GET);
+
+    if ($get_tag_id !== null) {
         functions::check_input_parameter('tag_id', $_GET, false, '/^\d+(,\d+)*$/');
-        $tag_ids = explode(',', $_GET['tag_id']);
+        $tag_ids = explode(',', $get_tag_id);
     }
 
     if ($tag_ids !== [] ||

@@ -21,9 +21,9 @@ use Piwigo\inc\functions_url;
 use Piwigo\inc\functions_user;
 use Piwigo\inc\menubar;
 
-if (! defined('PHPWG_ROOT_PATH')) { //direct script access
+if (! defined('PHPWG_ROOT_PATH')) { // direct script access
     define('PHPWG_ROOT_PATH', './');
-    require_once __DIR__ . '/inc/common.php';
+    require_once __DIR__.'/inc/common.php';
 
     // +-----------------------------------------------------------------------+
     // | Check Access and exit when user status is not ok                      |
@@ -39,7 +39,7 @@ if (! defined('PHPWG_ROOT_PATH')) { //direct script access
     functions_plugins::trigger_notify('loc_begin_profile');
 
     // Reset to default (Guest) custom settings
-    if (isset($_POST['reset_to_default'])) {
+    if (input_string('reset_to_default', null, $_POST) !== null) {
         $fields = [
             'nb_image_page', 'expand',
             'show_nb_comments', 'show_nb_hits', 'recent_period', 'show_nb_hits',
@@ -65,7 +65,7 @@ if (! defined('PHPWG_ROOT_PATH')) { //direct script access
     $template->set_filename('profile_content', 'profile_content.tpl');
 
     functions::load_profile_in_template(
-        functions_url::get_root_url() . 'profile.php', // action
+        functions_url::get_root_url().'profile.php', // action
         functions_url::make_index_url(), // for redirect
         $userdata
     );
@@ -80,9 +80,9 @@ if (! defined('PHPWG_ROOT_PATH')) { //direct script access
         menubar::initialize_menu();
     }
 
-    require __DIR__ . '/inc/page_header.php';
+    require __DIR__.'/inc/page_header.php';
     functions_plugins::trigger_notify('loc_end_profile');
     functions_html::flush_page_messages();
     $template->pparse('profile');
-    require __DIR__ . '/inc/page_tail.php';
+    require __DIR__.'/inc/page_tail.php';
 }

@@ -22,7 +22,7 @@ use Piwigo\inc\functions_user;
 use Piwigo\inc\menubar;
 
 const PHPWG_ROOT_PATH = './';
-require_once __DIR__ . '/inc/common.php';
+require_once __DIR__.'/inc/common.php';
 
 functions_user::check_status(ACCESS_GUEST);
 
@@ -41,14 +41,16 @@ $template->set_filenames([
 
 $page['display_mode'] = $conf->tags_default_display_mode;
 
-if (isset($_GET['display_mode']) && in_array($_GET['display_mode'], ['cloud', 'letters'])) {
-    $page['display_mode'] = $_GET['display_mode'];
+$get_display_mode = input_string('display_mode', null, $_GET);
+
+if ($get_display_mode !== null && in_array($get_display_mode, ['cloud', 'letters'])) {
+    $page['display_mode'] = $get_display_mode;
 }
 
 foreach (['cloud', 'letters'] as $mode) {
     $template->assign(
-        'U_' . strtoupper($mode),
-        functions_url::get_root_url() . 'tags.php' . ($conf->tags_default_display_mode == $mode ? '' : '?display_mode=' . $mode)
+        'U_'.strtoupper($mode),
+        functions_url::get_root_url().'tags.php'.($conf->tags_default_display_mode == $mode ? '' : '?display_mode='.$mode)
     );
 }
 
@@ -82,7 +84,7 @@ if ($page['display_mode'] == 'letters') {
             $letter['TITLE'] = $tag_letter;
         }
 
-        //lettre precedente differente de la lettre suivante
+        // lettre precedente differente de la lettre suivante
         if ($tag_letter !== $current_letter) {
             if ($current_column < $conf->tag_letters_column_number &&
                 $current_tag_idx > $current_column * $nb_tags / $conf->tag_letters_column_number
@@ -167,8 +169,8 @@ if (! isset($themeconf['hide_menu_on']) ||
     menubar::initialize_menu();
 }
 
-require __DIR__ . '/inc/page_header.php';
+require __DIR__.'/inc/page_header.php';
 functions_plugins::trigger_notify('loc_end_tags');
 functions_html::flush_page_messages();
 $template->pparse('tags');
-require __DIR__ . '/inc/page_tail.php';
+require __DIR__.'/inc/page_tail.php';

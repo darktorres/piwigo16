@@ -20,20 +20,21 @@ use Piwigo\inc\SrcImage;
 
 const PHPWG_ROOT_PATH = './';
 session_cache_limiter('public');
-require_once __DIR__ . '/inc/common.php';
+require_once __DIR__.'/inc/common.php';
 
 // Check Access and exit when user status is not ok
 functions_user::check_status(ACCESS_GUEST);
 
 if ($conf->enable_formats &&
-    isset($_GET['format'])
+    input_string('format', null, $_GET) !== null
 ) {
     functions::check_input_parameter('format', $_GET, false, PATTERN_ID);
+    $get_format_id = input_int('format', null, $_GET);
 
     $query = <<<SQL
         SELECT *
         FROM image_format
-        WHERE format_id = {$_GET['format']};
+        WHERE format_id = {$get_format_id};
         SQL;
     $formats = $conf->sql_backend::query2array($query);
 
@@ -47,10 +48,12 @@ if ($conf->enable_formats &&
     $_GET['part'] = 'f'; // "f" for "format"
 }
 
-if (! isset($_GET['id']) ||
-    ! is_numeric($_GET['id']) ||
-    ! isset($_GET['part']) ||
-    ! in_array($_GET['part'], ['e', 'r', 'f'])
+$get_id = input_int('id', null, $_GET);
+$get_part = input_string('part', null, $_GET);
+
+if ($get_id === null ||
+    $get_part === null ||
+    ! in_array($get_part, ['e', 'r', 'f'])
 ) {
     functions::do_error(400, 'Invalid request - id/part');
 }
@@ -58,7 +61,7 @@ if (! isset($_GET['id']) ||
 $query = <<<SQL
     SELECT *
     FROM images
-    WHERE id = {$_GET['id']};
+    WHERE id = {$get_id};
     SQL;
 
 $element_info = $conf->sql_backend::pwg_db_fetch_assoc($conf->sql_backend::pwg_query($query));
@@ -69,10 +72,11 @@ if (empty($element_info)) {
 
 // special download action for admins
 $is_admin_download = false;
+$get_pwg_token = input_string('pwg_token', null, $_GET);
 
 if (functions_user::is_admin() &&
-    isset($_GET['pwg_token']) &&
-    functions::get_pwg_token() == $_GET['pwg_token']
+    $get_pwg_token !== null &&
+    functions::get_pwg_token() == $get_pwg_token
 ) {
     $is_admin_download = true;
     $user['enabled_high'] = true;
@@ -94,7 +98,7 @@ $query = <<<SQL
     SELECT id
     FROM categories
     INNER JOIN image_category ON category_id = id
-    WHERE image_id = {$_GET['id']}
+    WHERE image_id = {$get_id}
     {$sql_condition}
     LIMIT 1;
     SQL;
@@ -107,7 +111,7 @@ if (! $is_admin_download &&
 
 $file = '';
 
-switch ($_GET['part']) {
+switch ($get_part) {
     case 'e':
         if ($src_image->is_original() &&
             ! $user['enabled_high']
@@ -128,7 +132,7 @@ switch ($_GET['part']) {
 
     case 'f':
         $file = functions::original_to_format(functions::get_element_path($element_info), $format['ext']);
-        $element_info['file'] = functions::get_filename_wo_extension($element_info['file']) . '.' . $format['ext'];
+        $element_info['file'] = functions::get_filename_wo_extension($element_info['file']).'.'.$format['ext'];
         break;
 }
 
@@ -136,12 +140,12 @@ if (empty($file)) {
     functions::do_error(404, 'Requested file not found');
 }
 
-if ($_GET['part'] == 'e') {
-    functions::pwg_log($_GET['id'], 'high');
-} elseif ($_GET['part'] == 'r') {
-    functions::pwg_log($_GET['id'], 'other');
-} elseif ($_GET['part'] == 'f') {
-    functions::pwg_log($_GET['id'], 'high', $format['format_id']);
+if ($get_part == 'e') {
+    functions::pwg_log($get_id, 'high');
+} elseif ($get_part == 'r') {
+    functions::pwg_log($get_id, 'other');
+} elseif ($get_part == 'f') {
+    functions::pwg_log($get_id, 'high', $format['format_id']);
 }
 
 functions_plugins::trigger_notify('loc_action_before_http_headers');
@@ -155,11 +159,11 @@ if (! functions_url::url_is_remote($file)) {
         functions::do_error(404, "Requested file not found - {$file}");
     }
 
-    $http_headers[] = 'Content-Length: ' . filesize($file);
+    $http_headers[] = 'Content-Length: '.filesize($file);
     $finfo = new finfo(FILEINFO_MIME_TYPE);
     $ctype = $finfo->file($file);
-    $gmt_mtime = gmdate('D, d M Y H:i:s', filemtime($file)) . ' GMT';
-    $http_headers[] = 'Last-Modified: ' . $gmt_mtime;
+    $gmt_mtime = gmdate('D, d M Y H:i:s', filemtime($file)).' GMT';
+    $http_headers[] = 'Last-Modified: '.$gmt_mtime;
 
     // following lines would indicate how the client should handle the cache
     /* $max_age=300;
@@ -167,7 +171,7 @@ if (! functions_url::url_is_remote($file)) {
     // HTTP/1.1 only
     $http_headers[] = 'Cache-Control: private, must-revalidate, max-age='.$max_age;*/
 
-    if ($_GET['part'] != 'f' &&
+    if ($get_part != 'f' &&
         isset($_SERVER['HTTP_IF_MODIFIED_SINCE'])
     ) {
         functions_html::set_status_header(304);
@@ -184,13 +188,13 @@ if (! isset($ctype)) { // give it a guess
     $ctype = functions::guess_mime_type(functions::get_extension($file));
 }
 
-$http_headers[] = 'Content-Type: ' . $ctype;
+$http_headers[] = 'Content-Type: '.$ctype;
 
-if (isset($_GET['download'])) {
-    $http_headers[] = 'Content-Disposition: attachment; filename="' . htmlspecialchars_decode($element_info['file']) . '";';
+if (input_string('download', null, $_GET) !== null) {
+    $http_headers[] = 'Content-Disposition: attachment; filename="'.htmlspecialchars_decode($element_info['file']).'";';
     $http_headers[] = 'Content-Transfer-Encoding: binary';
 } else {
-    $http_headers[] = 'Content-Disposition: inline; filename="' . basename($file) . '";';
+    $http_headers[] = 'Content-Disposition: inline; filename="'.basename($file).'";';
 }
 
 foreach ($http_headers as $header) {

@@ -16,7 +16,7 @@ use Piwigo\inc\functions_url;
 use Piwigo\inc\functions_user;
 
 const PHPWG_ROOT_PATH = './';
-require_once __DIR__ . '/inc/common.php';
+require_once __DIR__.'/inc/common.php';
 
 // +-----------------------------------------------------------------------+
 // |                            initialization                             |
@@ -24,8 +24,8 @@ require_once __DIR__ . '/inc/common.php';
 
 functions::check_input_parameter('feed', $_GET, false, '/^[0-9a-z]{50}$/i');
 
-$feed_id = $_GET['feed'] ?? '';
-$image_only = isset($_GET['image_only']);
+$feed_id = input_string('feed', '', $_GET);
+$image_only = input_string('image_only', null, $_GET) !== null;
 
 // echo '<pre>'.\Piwigo\inc\functions_session::generate_key(50).'</pre>';
 if (! empty($feed_id)) {
@@ -59,9 +59,9 @@ functions_user::check_status(ACCESS_GUEST);
 
 functions_url::set_make_full_url();
 
-$rss = new UniversalFeedCreator();
+$rss = new UniversalFeedCreator;
 $rss->title = $conf->gallery_title;
-$rss->title .= ' (as ' . stripslashes($user['username']) . ')';
+$rss->title .= ' (as '.stripslashes($user['username']).')';
 
 $rss->link = functions_url::get_gallery_home_url();
 
@@ -74,7 +74,7 @@ if (! $image_only) {
     $news = functions_notification::news($feed_row['last_check'], $dbnow, true, true);
 
     if ($news !== []) {
-        $item = new FeedItem();
+        $item = new FeedItem;
         $item->title = functions::l10n('New on %s', functions::format_date($dbnow));
         $item->link = functions_url::get_gallery_home_url();
 
@@ -82,7 +82,7 @@ if (! $image_only) {
         $item->description = '<ul>';
 
         foreach ($news as $line) {
-            $item->description .= '<li>' . $line . '</li>';
+            $item->description .= '<li>'.$line.'</li>';
         }
 
         $item->description .= '</ul>';
@@ -117,7 +117,7 @@ if (! empty($feed_id) && $news === [] && (! isset($feed_row['last_check']) || ti
 $dates = functions_notification::get_recent_post_dates_array($conf->recent_post_dates['RSS']);
 
 foreach ($dates as $date_detail) { // for each recent post date we create a feed item
-    $item = new FeedItem();
+    $item = new FeedItem;
     $date = $date_detail['date_available'];
     $item->title = functions_notification::get_title_recent_post_date($date_detail);
     $item->link = functions_url::make_index_url(
@@ -129,19 +129,19 @@ foreach ($dates as $date_detail) { // for each recent post date we create a feed
         ]
     );
 
-    $item->description .= '<a href="' . functions_url::make_index_url() . '">' . $conf->gallery_title . '</a><br> ';
+    $item->description .= '<a href="'.functions_url::make_index_url().'">'.$conf->gallery_title.'</a><br> ';
     $item->description .= functions_notification::get_html_description_recent_post_date($date_detail);
 
     $item->descriptionHtmlSyndicated = true;
 
     $item->date = functions::ts_to_iso8601(functions::datetime_to_ts($date));
     $item->author = $conf->rss_feed_author;
-    $item->guid = 'pics-' . $date;
+    $item->guid = 'pics-'.$date;
 
     $rss->addItem($item);
 }
 
-$fileName = './' . $conf->data_location . 'tmp';
+$fileName = './'.$conf->data_location.'tmp';
 functions::mkgetdir($fileName); // just in case
 $fileName .= '/feed.xml';
 // send XML feed

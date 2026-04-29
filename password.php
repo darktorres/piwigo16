@@ -21,8 +21,8 @@ use Piwigo\inc\functions_user;
 use Piwigo\inc\menubar;
 
 const PHPWG_ROOT_PATH = './';
-require_once __DIR__ . '/inc/common.php';
-require_once __DIR__ . '/inc/functions_mail.php';
+require_once __DIR__.'/inc/common.php';
+require_once __DIR__.'/inc/functions_mail.php';
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
@@ -33,18 +33,22 @@ functions_user::check_status(ACCESS_FREE);
 functions_plugins::trigger_notify('loc_begin_password');
 
 functions::check_input_parameter('action', $_GET, false, '/^(lost|reset|none)$/');
+$get_action = input_string('action', null, $_GET);
+$get_key = input_string('key', null, $_GET);
 
 // +-----------------------------------------------------------------------+
 // | Process form                                                          |
 // +-----------------------------------------------------------------------+
-if (isset($_POST['submit'])) {
+$post_submit = input_string('submit', null, $_POST);
+
+if ($post_submit !== null) {
     functions::check_pwg_token();
 
-    if ($_GET['action'] == 'lost' && functions::process_password_request()) {
+    if ($get_action == 'lost' && functions::process_password_request()) {
         $page['action'] = 'none';
     }
 
-    if ($_GET['action'] == 'reset' && functions::reset_password()) {
+    if ($get_action == 'reset' && functions::reset_password()) {
         $page['action'] = 'none';
     }
 }
@@ -54,21 +58,21 @@ if (isset($_POST['submit'])) {
 // +-----------------------------------------------------------------------+
 
 // a connected user can't reset the password from a mail
-if (isset($_GET['key']) &&
+if ($get_key !== null &&
     ! functions_user::is_a_guest()
 ) {
-    unset($_GET['key']);
+    $get_key = null;
 }
 
-if (isset($_GET['key']) &&
-    ! isset($_POST['submit'])
+if ($get_key !== null &&
+    $post_submit === null
 ) {
-    $user_id = functions::check_password_reset_key($_GET['key']);
+    $user_id = functions::check_password_reset_key($get_key);
 
     if (is_numeric($user_id)) {
         $userdata = functions_user::getuserdata($user_id);
         $page['username'] = $userdata['username'];
-        $template->assign('key', $_GET['key']);
+        $template->assign('key', $get_key);
 
         if (! isset($page['action'])) {
             $page['action'] = 'reset';
@@ -79,15 +83,15 @@ if (isset($_GET['key']) &&
 }
 
 if (! isset($page['action'])) {
-    if (! isset($_GET['action'])) {
+    if ($get_action === null) {
         $page['action'] = 'lost';
-    } elseif (in_array($_GET['action'], ['lost', 'reset', 'none'])) {
-        $page['action'] = $_GET['action'];
+    } elseif (in_array($get_action, ['lost', 'reset', 'none'])) {
+        $page['action'] = $get_action;
     }
 }
 
 if ($page['action'] == 'reset' &&
-    ! isset($_GET['key']) &&
+    $get_key === null &&
     (functions_user::is_a_guest() || functions_user::is_generic())
 ) {
     functions::redirect(functions_url::get_gallery_home_url());
@@ -108,8 +112,10 @@ $title = functions::l10n('Password Reset');
 if ($page['action'] == 'lost') {
     $title = functions::l10n('Forgot your password?');
 
-    if (isset($_POST['username_or_email'])) {
-        $template->assign('username_or_email', htmlspecialchars(stripslashes($_POST['username_or_email'])));
+    $post_username_or_email = input_string('username_or_email', null, $_POST);
+
+    if ($post_username_or_email !== null) {
+        $template->assign('username_or_email', htmlspecialchars(stripslashes($post_username_or_email)));
     }
 }
 
@@ -121,7 +127,7 @@ $template->set_filenames([
 $template->assign(
     [
         'title' => $title,
-        'form_action' => functions_url::get_root_url() . 'password.php',
+        'form_action' => functions_url::get_root_url().'password.php',
         'action' => $page['action'],
         'username' => $page['username'] ?? $user['username'],
         'PWG_TOKEN' => functions::get_pwg_token(),
@@ -141,8 +147,8 @@ if (! isset($themeconf['hide_menu_on']) ||
 // |                           html code display                           |
 // +-----------------------------------------------------------------------+
 
-require __DIR__ . '/inc/page_header.php';
+require __DIR__.'/inc/page_header.php';
 functions_plugins::trigger_notify('loc_end_password');
 functions_html::flush_page_messages();
 $template->pparse('password');
-require __DIR__ . '/inc/page_tail.php';
+require __DIR__.'/inc/page_tail.php';

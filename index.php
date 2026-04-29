@@ -22,10 +22,10 @@ use Piwigo\inc\functions_user;
 use Piwigo\inc\ImageStdParams;
 use Piwigo\inc\menubar;
 
-//--------------------------------------------------------------------- include
+// --------------------------------------------------------------------- include
 const PHPWG_ROOT_PATH = './';
-require_once __DIR__ . '/inc/common.php';
-require __DIR__ . '/inc/section_init.php';
+require_once __DIR__.'/inc/common.php';
+require __DIR__.'/inc/section_init.php';
 
 // Check Access and exit when user status is not ok
 functions_user::check_status(ACCESS_GUEST);
@@ -45,10 +45,12 @@ if ($page['start'] > 0 &&
 
 functions_plugins::trigger_notify('loc_begin_index');
 
-//---------------------------------------------- change of image display order
-if (isset($_GET['image_order'])) {
-    if ((int) $_GET['image_order'] > 0) {
-        functions_session::pwg_set_session_var('image_order', (int) $_GET['image_order']);
+// ---------------------------------------------- change of image display order
+$image_order = input_int('image_order', null, $_GET);
+
+if ($image_order !== null) {
+    if ($image_order > 0) {
+        functions_session::pwg_set_session_var('image_order', $image_order);
     } else {
         functions_session::pwg_unset_session_var('image_order');
     }
@@ -61,15 +63,17 @@ if (isset($_GET['image_order'])) {
     );
 }
 
-if (isset($_GET['display'])) {
+$display = input_string('display', null, $_GET);
+
+if ($display !== null) {
     $page['meta_robots']['noindex'] = 1;
 
-    if (array_key_exists($_GET['display'], ImageStdParams::get_defined_type_map())) {
-        functions_session::pwg_set_session_var('index_deriv', $_GET['display']);
+    if (array_key_exists($display, ImageStdParams::get_defined_type_map())) {
+        functions_session::pwg_set_session_var('index_deriv', $display);
     }
 }
 
-//-------------------------------------------------------------- initialization
+// -------------------------------------------------------------- initialization
 // navigation bar
 $page['navigation_bar'] = [];
 
@@ -86,7 +90,7 @@ if (($page['total_items'] ?? count($page['items'])) > $page['nb_image_page']) {
 $template->assign('thumb_navbar', $page['navigation_bar']);
 
 // caddie filling :-)
-if (isset($_GET['caddie'])) {
+if (input_string('caddie', null, $_GET) !== null) {
     functions::fill_caddie($page['items']);
     functions::redirect(functions_url::duplicate_index_url());
 }
@@ -111,14 +115,14 @@ if (isset($page['is_homepage']) &&
 
 $template->assign('U_CANONICAL', $canonical_url);
 
-//-------------------------------------------------------------- page title
+// -------------------------------------------------------------- page title
 $title = $page['title'];
 $template_title = $page['section_title'];
 $nb_items = $page['total_items'] ?? count($page['items']);
 $template->assign('TITLE', $template_title);
 $template->assign('NB_ITEMS', $nb_items);
 
-//-------------------------------------------------------------- menubar
+// -------------------------------------------------------------- menubar
 menubar::initialize_menu();
 
 $template->set_filename('index', 'index.tpl');
@@ -127,7 +131,7 @@ $template->set_filename('index', 'index.tpl');
 // |  index page (categories, thumbnails, search, calendar, random, etc.)  |
 // +-----------------------------------------------------------------------+
 if (empty($page['is_external'])) {
-    //----------------------------------------------------- template initialization
+    // ----------------------------------------------------- template initialization
     $page['body_id'] = 'theCategoryPage';
 
     if (isset($page['flat']) ||
@@ -174,7 +178,7 @@ if (empty($page['is_external'])) {
         }
     } else {
         $chronology_field = $page['chronology_field'] == 'created' ? 'posted' : 'created';
-        if ($conf->{'index_' . $chronology_field . '_date_icon'}) {
+        if ($conf->{'index_'.$chronology_field.'_date_icon'}) {
             $url = functions_url::duplicate_index_url(
                 [
                     'chronology_field' => $chronology_field,
@@ -182,7 +186,7 @@ if (empty($page['is_external'])) {
                 ['chronology_date', 'start', 'flat']
             );
             $template->assign(
-                'U_MODE_' . strtoupper($chronology_field),
+                'U_MODE_'.strtoupper($chronology_field),
                 $url
             );
         }
@@ -204,7 +208,7 @@ if (empty($page['is_external'])) {
                 $search_items = $page['items'];
             }
 
-            $search_items_clause = 'image_id IN (' . implode(', ', $search_items) . ')';
+            $search_items_clause = 'image_id IN ('.implode(', ', $search_items).')';
         } else {
             $search_items_clause = '1 = 1';
         }
@@ -271,7 +275,7 @@ if (empty($page['is_external'])) {
         }
 
         if (isset($my_search['fields']['date_posted'])) {
-            $query = <<<SQL
+            $query = <<<'SQL'
                 SELECT
                     SUBDATE(NOW(), INTERVAL 24 HOUR) AS 24h,
                     SUBDATE(NOW(), INTERVAL 7 DAY) AS 7d,
@@ -302,7 +306,7 @@ if (empty($page['is_external'])) {
 
             foreach ($dates as $date_row) {
                 $year = date('Y', strtotime($date_row['date_available']));
-                $pre_counters['y' . $year][$date_row['image_id']] = 1;
+                $pre_counters['y'.$year][$date_row['image_id']] = 1;
 
                 foreach ($thresholds as $threshold => $date_limit) {
                     if ($date_row['date_available'] > $date_limit) {
@@ -391,7 +395,7 @@ if (empty($page['is_external'])) {
 
                 foreach (array_keys($added_by) as $added_by_idx) {
                     $added_by_id = $added_by[$added_by_idx]['added_by_id'];
-                    $added_by[$added_by_idx]['added_by_name'] = $username_of[$added_by_id] ?? 'user #' . $added_by_id . ' (deleted)';
+                    $added_by[$added_by_idx]['added_by_name'] = $username_of[$added_by_id] ?? 'user #'.$added_by_id.' (deleted)';
                 }
             }
 
@@ -527,7 +531,7 @@ if (empty($page['is_external'])) {
             [
                 'SEARCH_IN_SET_BUTTON' => $conf->index_search_in_set_button,
                 'SEARCH_IN_SET_ACTION' => $conf->index_search_in_set_action,
-                'SEARCH_IN_SET_URL' => functions_url::get_root_url() . 'search.php?cat_id=' . $page['category']['id'],
+                'SEARCH_IN_SET_URL' => functions_url::get_root_url().'search.php?cat_id='.$page['category']['id'],
             ]
         );
     }
@@ -537,7 +541,7 @@ if (empty($page['is_external'])) {
             [
                 'SEARCH_IN_SET_BUTTON' => $conf->index_search_in_set_button,
                 'SEARCH_IN_SET_ACTION' => $conf->index_search_in_set_action,
-                'SEARCH_IN_SET_URL' => functions_url::get_root_url() . 'search.php?tag_id=' . implode(',', $page['body_data']['tag_ids']),
+                'SEARCH_IN_SET_URL' => functions_url::get_root_url().'search.php?tag_id='.implode(',', $page['body_data']['tag_ids']),
             ]
         );
     }
@@ -548,7 +552,7 @@ if (empty($page['is_external'])) {
     ) {
         $template->assign(
             'U_EDIT',
-            functions_url::get_root_url() . 'admin.php?page=album-' . $page['category']['id']
+            functions_url::get_root_url().'admin.php?page=album-'.$page['category']['id']
         );
     }
 
@@ -639,7 +643,7 @@ if (empty($page['is_external'])) {
 
                 $tpl_orders[$order_id] = [
                     'DISPLAY' => $order[0],
-                    'URL' => $url . $order_id,
+                    'URL' => $url.$order_id,
                     'SELECTED' => $order_idx == $order_id,
                 ];
             }
@@ -663,18 +667,18 @@ if (empty($page['is_external'])) {
         $template->clear_assign('U_MODE_FLAT');
     }
 
-    //------------------------------------------------------ main part : thumbnails
+    // ------------------------------------------------------ main part : thumbnails
     if ($page['start'] == 0 &&
         ! isset($page['flat']) &&
         ! isset($page['chronology_field']) &&
         ($page['section'] == 'recent_cats' || $page['section'] == 'categories') &&
         (! isset($page['category']['count_categories']) || $page['category']['count_categories'] > 0)
     ) {
-        require __DIR__ . '/inc/category_cats.php';
+        require __DIR__.'/inc/category_cats.php';
     }
 
     if (! empty($page['items'])) {
-        require __DIR__ . '/inc/category_default.php';
+        require __DIR__.'/inc/category_default.php';
     }
 
     if ($conf->index_sizes_icon && (! empty($page['items']) || $template->get_template_vars('CATEGORIES'))) {
@@ -696,7 +700,7 @@ if (empty($page['is_external'])) {
                 'image_derivatives',
                 [
                     'DISPLAY' => functions::l10n($params->type),
-                    'URL' => $url . $params->type,
+                    'URL' => $url.$params->type,
                     'SELECTED' => $params->type == $selected_type,
                 ]
             );
@@ -706,7 +710,7 @@ if (empty($page['is_external'])) {
     // slideshow
     // execute after init thumbs in order to have all picture information
     if (! empty($page['cat_slideshow_url'])) {
-        if (isset($_GET['slideshow'])) {
+        if (input_string('slideshow', null, $_GET) !== null) {
             functions::redirect($page['cat_slideshow_url']);
         } elseif ($conf->index_slideshow_icon) {
             $template->assign('U_SLIDESHOW', $page['cat_slideshow_url']);
@@ -714,13 +718,13 @@ if (empty($page['is_external'])) {
     }
 }
 
-//------------------------------------------------------------ end
-require __DIR__ . '/inc/page_header.php';
+// ------------------------------------------------------------ end
+require __DIR__.'/inc/page_header.php';
 functions_plugins::trigger_notify('loc_end_index');
 functions_html::flush_page_messages();
 $template->parse_index_buttons();
 $template->pparse('index');
 
-//------------------------------------------------------------ log information
+// ------------------------------------------------------------ log information
 functions::pwg_log();
-require __DIR__ . '/inc/page_tail.php';
+require __DIR__.'/inc/page_tail.php';

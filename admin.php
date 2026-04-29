@@ -24,8 +24,8 @@ use Piwigo\inc\functions_user;
 const PHPWG_ROOT_PATH = './';
 const IN_ADMIN = true;
 
-require_once __DIR__ . '/inc/common.php';
-require_once __DIR__ . '/admin/inc/add_core_tabs.php';
+require_once __DIR__.'/inc/common.php';
+require_once __DIR__.'/admin/inc/add_core_tabs.php';
 
 functions_plugins::trigger_notify('loc_begin_admin');
 
@@ -47,13 +47,15 @@ functions::check_input_parameter('section', $_GET, false, '/^[a-z]+[a-z_\/-]*(\.
 // +-----------------------------------------------------------------------+
 
 // save plugins_new display order (AJAX action)
-if (isset($_GET['plugins_new_order'])) {
-    functions_session::pwg_set_session_var('plugins_new_order', $_GET['plugins_new_order']);
+$get_plugins_new_order = input_string('plugins_new_order', null, $_GET);
+
+if ($get_plugins_new_order !== null) {
+    functions_session::pwg_set_session_var('plugins_new_order', $get_plugins_new_order);
     exit;
 }
 
 // theme changer
-if (isset($_GET['change_theme'])) {
+if (input_string('change_theme', null, $_GET) !== null) {
     $admin_themes = ['roma', 'clear'];
     $admin_theme_array = [functions_user::userprefs_get_param('admin_theme', 'roma')];
     $result = array_diff(
@@ -71,14 +73,14 @@ if (isset($_GET['change_theme'])) {
 
     foreach (['page', 'tab', 'section'] as $url_param) {
         if (isset($_GET[$url_param])) {
-            $url_params[] = $url_param . '=' . $_GET[$url_param];
+            $url_params[] = $url_param.'='.$_GET[$url_param];
         }
     }
 
     $redirect_url = 'admin.php';
 
     if ($url_params !== []) {
-        $redirect_url .= '?' . implode('&amp;', $url_params);
+        $redirect_url .= '?'.implode('&amp;', $url_params);
     }
 
     functions::redirect($redirect_url);
@@ -106,7 +108,7 @@ unset($test_get['tag']);
 if ($test_get === [] &&
     ! empty($_SERVER['QUERY_STRING'])
 ) {
-    $change_theme_url .= str_replace('&', '&amp;', $_SERVER['QUERY_STRING']) . '&amp;';
+    $change_theme_url .= str_replace('&', '&amp;', $_SERVER['QUERY_STRING']).'&amp;';
 }
 
 $change_theme_url .= 'change_theme=1';
@@ -122,7 +124,7 @@ if (isset($_GET['page']) &&
         $matches[1] = str_replace('_', '-', $matches[1]);
     }
 
-    $_GET['section'] = $matches[1] . '/admin.php';
+    $_GET['section'] = $matches[1].'/admin.php';
 
     if (isset($matches[2])) {
         $_GET['tab'] = $matches[2];
@@ -157,7 +159,7 @@ if (isset($_GET['page']) &&
 
 if (isset($_GET['page']) &&
     preg_match('/^[a-z_]*$/', $_GET['page']) &&
-    is_file('./admin/' . $_GET['page'] . '.php')
+    is_file('./admin/'.$_GET['page'].'.php')
 ) {
     $page['page'] = $_GET['page'];
 } else {
@@ -165,7 +167,7 @@ if (isset($_GET['page']) &&
 }
 
 $link_start = './admin.php?page=';
-$conf_link = $link_start . 'configuration&amp;section=';
+$conf_link = $link_start.'configuration&amp;section=';
 
 // $_GET['tab'] is often used to perform and
 // require 'admin_page_'.$_GET['tab'].'.php' : we need to protect it to
@@ -177,7 +179,7 @@ functions::check_input_parameter('tab', $_GET, false, '/^[a-zA-Z\d_-]+$/');
 // +-----------------------------------------------------------------------+
 
 $title = functions::l10n('Piwigo Administration'); // for inc/page_header.php
-$page['page_banner'] = '<h1>' . functions::l10n('Piwigo Administration') . '</h1>';
+$page['page_banner'] = '<h1>'.functions::l10n('Piwigo Administration').'</h1>';
 $page['body_id'] = 'theAdminPage';
 
 $template->set_filenames([
@@ -188,34 +190,34 @@ $template->assign(
     [
         'USERNAME' => $user['username'],
         'ENABLE_SYNCHRONIZATION' => $conf->enable_synchronization,
-        'U_SITE_MANAGER' => $link_start . 'site_manager',
-        'U_HISTORY_STAT' => $link_start . 'stats&amp;year=' . date('Y') . '&amp;month=' . date('n'),
-        'U_FAQ' => $link_start . 'help',
-        'U_SITES' => $link_start . 'remote_site',
-        'U_MAINTENANCE' => $link_start . 'maintenance',
-        'U_NOTIFICATION_BY_MAIL' => $link_start . 'notification_by_mail',
-        'U_CONFIG_GENERAL' => $link_start . 'configuration',
-        'U_CONFIG_DISPLAY' => $conf_link . 'default',
-        'U_CONFIG_EXTENTS' => $link_start . 'extend_for_templates',
-        'U_CONFIG_MENUBAR' => $link_start . 'menubar',
-        'U_CONFIG_LANGUAGES' => $link_start . 'languages',
-        'U_CONFIG_THEMES' => $link_start . 'themes',
-        'U_CATEGORIES' => $link_start . 'cat_list',
-        'U_ALBUMS' => $link_start . 'albums',
-        'U_CAT_OPTIONS' => $link_start . 'cat_options',
-        'U_CAT_SEARCH' => $link_start . 'cat_search',
-        'U_CAT_UPDATE' => $link_start . 'site_update&amp;site=1',
-        'U_RATING' => $link_start . 'rating',
-        'U_RECENT_SET' => $link_start . 'batch_manager&amp;filter=prefilter-last_import',
-        'U_BATCH' => $link_start . 'batch_manager',
-        'U_TAGS' => $link_start . 'tags',
-        'U_USERS' => $link_start . 'user_list',
-        'U_GROUPS' => $link_start . 'group_list',
+        'U_SITE_MANAGER' => $link_start.'site_manager',
+        'U_HISTORY_STAT' => $link_start.'stats&amp;year='.date('Y').'&amp;month='.date('n'),
+        'U_FAQ' => $link_start.'help',
+        'U_SITES' => $link_start.'remote_site',
+        'U_MAINTENANCE' => $link_start.'maintenance',
+        'U_NOTIFICATION_BY_MAIL' => $link_start.'notification_by_mail',
+        'U_CONFIG_GENERAL' => $link_start.'configuration',
+        'U_CONFIG_DISPLAY' => $conf_link.'default',
+        'U_CONFIG_EXTENTS' => $link_start.'extend_for_templates',
+        'U_CONFIG_MENUBAR' => $link_start.'menubar',
+        'U_CONFIG_LANGUAGES' => $link_start.'languages',
+        'U_CONFIG_THEMES' => $link_start.'themes',
+        'U_CATEGORIES' => $link_start.'cat_list',
+        'U_ALBUMS' => $link_start.'albums',
+        'U_CAT_OPTIONS' => $link_start.'cat_options',
+        'U_CAT_SEARCH' => $link_start.'cat_search',
+        'U_CAT_UPDATE' => $link_start.'site_update&amp;site=1',
+        'U_RATING' => $link_start.'rating',
+        'U_RECENT_SET' => $link_start.'batch_manager&amp;filter=prefilter-last_import',
+        'U_BATCH' => $link_start.'batch_manager',
+        'U_TAGS' => $link_start.'tags',
+        'U_USERS' => $link_start.'user_list',
+        'U_GROUPS' => $link_start.'group_list',
         'U_RETURN' => functions_url::get_gallery_home_url(),
         'U_ADMIN' => './admin.php',
         'U_LOGOUT' => './index.php?act=logout',
-        'U_PLUGINS' => $link_start . 'plugins',
-        'U_ADD_PHOTOS' => $link_start . 'photos_add',
+        'U_PLUGINS' => $link_start.'plugins',
+        'U_ADD_PHOTOS' => $link_start.'photos_add',
         'U_CHANGE_THEME' => $change_theme_url,
         'ADMIN_PAGE_TITLE' => 'Piwigo Administration Page',
         'ADMIN_PAGE_OBJECT_ID' => '',
@@ -225,14 +227,14 @@ $template->assign(
 );
 
 if ($conf->enable_core_update) {
-    $template->assign('U_UPDATES', $link_start . 'updates');
+    $template->assign('U_UPDATES', $link_start.'updates');
 }
 
 if ($conf->activate_comments) {
-    $template->assign('U_COMMENTS', $link_start . 'comments');
+    $template->assign('U_COMMENTS', $link_start.'comments');
 
     // pending comments
-    $query = <<<SQL
+    $query = <<<'SQL'
         SELECT COUNT(*) AS "COUNT(*)"
         FROM comments
         WHERE validated = 'false';
@@ -259,7 +261,7 @@ if ($nb_photos_in_caddie > 0) {
     $template->assign(
         [
             'NB_PHOTOS_IN_CADDIE' => $nb_photos_in_caddie,
-            'U_CADDIE' => $link_start . 'batch_manager&amp;filter=prefilter-caddie',
+            'U_CADDIE' => $link_start.'batch_manager&amp;filter=prefilter-caddie',
         ]
     );
 } else {
@@ -286,7 +288,7 @@ if ($page['nb_photos_total'] < 100000) { // 100k is already a big gallery
 $template->assign(
     [
         'NB_ORPHANS' => $page['nb_orphans'],
-        'U_ORPHANS' => $link_start . 'batch_manager&amp;filter=prefilter-no_album',
+        'U_ORPHANS' => $link_start.'batch_manager&amp;filter=prefilter-no_album',
     ]
 );
 
@@ -316,7 +318,7 @@ if (! empty($_POST) && in_array(
 // +-----------------------------------------------------------------------+
 
 functions_plugins::trigger_notify('loc_begin_admin_page');
-require __DIR__ . '/admin/' . $page['page'] . '.php';
+require __DIR__.'/admin/'.$page['page'].'.php';
 
 $template->assign('ACTIVE_MENU', functions_admin::get_active_menu($page['page']));
 
@@ -327,15 +329,15 @@ $template->assign('ACTIVE_MENU', functions_admin::get_active_menu($page['page'])
 // Add the Piwigo Official menu
 $template->assign('pwgmenu', functions_admin::pwg_URL());
 
-require __DIR__ . '/inc/page_header.php';
+require __DIR__.'/inc/page_header.php';
 
 functions_plugins::trigger_notify('loc_end_admin');
 
 functions_html::flush_page_messages();
 
-require_once __DIR__ . '/inc/vite_helper.php';
+require_once __DIR__.'/inc/vite_helper.php';
 \Piwigo\Vite\vite_assign_modules($template, ['admin', 'helpPopin']);
 
 $template->pparse('admin');
 
-require __DIR__ . '/inc/page_tail.php';
+require __DIR__.'/inc/page_tail.php';

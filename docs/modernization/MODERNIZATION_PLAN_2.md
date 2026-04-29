@@ -1,149 +1,421 @@
-# Phase 7 — PHPStan level 9 / baseline elimination (L)
+# Modernization Plan — Phase 7 and beyond
 
-## Goal
+This document covers all remaining modernization work after Phase 8 of
+`MODERNIZATION_PLAN.md` completed. Each phase is self-contained and
+ordered by impact vs. effort.
 
-Delete `phpstan-baseline.neon` and raise PHPStan from level 8 (with a baseline
-suppressing ~1 412 errors as of the Phase 8 close) to level 9 with
-`treatPhpDocTypesAsCertain: true` and zero suppressed errors. This makes static
-analysis genuinely effective: every new file is fully checked, every type error
-is a CI failure, and the `phpstan-strict-rules` and `phpstan-deprecation-rules`
-packages already installed in `phpstan.neon` become load-bearing rather than
-silenced.
+**Current state of the codebase (as of Phase 8 close):**
 
-**Starting state (current):** level 8, baseline 1 412 errors, PHPStan exits 0
-because every remaining error is suppressed. The baseline was reduced from the
-original ~22 279 lines (Phase 6 exit) to 1 412 during Phases 7–8 work.
+| Metric | Value |
+|---|---|
+| PHPStan level | 8 (baseline 1 412 errors) |
+| PHP minimum | 8.5 |
+| TypeScript | strict + noImplicitAny + noImplicitThis + strictNullChecks |
+| JS→TS (frontend themes) | 5% (5 TS / ~13 first-party + 280 vendored JS files) |
+| Unit test coverage | 13% (9 / 69 source classes) |
+| CSS custom properties | 0 (189 hardcoded hex colors in first-party CSS) |
+| Baseline error breakdown | ~850 vendor code, ~560 first-party |
 
 ---
 
-## Step-by-step sequence
+## Phase 7 — PHPStan level 9 / baseline elimination (L) — WIP
 
-### Preparation (before touching phpstan.neon)
+**Note on baseline composition:** ~850 of the 1 412 baseline errors are in
+vendored third-party files (`include/phpqrcode.php` 443,
+`admin/include/pclzip.lib.php` 192, `include/mdetect.php` 168,
+`include/phpmailer/` ~50). These cannot be fixed without forking upstream.
+The actionable first-party error count is ~560.
 
-1. **Freeze the baseline.** The CI `check-baseline.sh` guard is already wired.
-   Confirm it passes on the current branch. Any new error added during Phase 7
-   work is a regression, not a baseline entry — fix it before proceeding.
+### Step-by-step sequence
 
-2. **Slice the baseline by namespace.** Run:
+1. **Exclude vendored files from PHPStan analysis.** Add to `phpstan.neon`:
+   ```yaml
+   excludePaths:
+     analyseAndScan:
+       - include/phpqrcode.php
+       - include/mdetect.php
+       - admin/include/pclzip.lib.php
+       - include/phpmailer/**
+   ```
+   Regenerate baseline — expected drop from 1 412 → ~560.
+
+2. **Slice the remaining baseline by file:**
    ```bash
-   grep "path:" phpstan-baseline.neon | sed 's/.*path: //' | sort | uniq -c | sort -rn | head -30
+   grep "path:" phpstan-baseline.neon | sed 's/.*path: //' | sort | uniq -c | sort -rn | head -20
    ```
-   This shows which files contribute the most suppressions. Work from
-   highest-count files downward within each namespace slice.
+   Top first-party contributors: `feed.php` (21),
+   `admin/include/functions_upload.inc.php` (12), `admin/rating_user.php` (6).
 
-### Namespace slices (recommended order)
+3. **Fix dominant error classes** (93.5% of errors are type-related):
+   - `missingType.parameter` (343) — add native parameter types
+   - `missingType.return` (318) — add return type declarations
+   - `missingType.property` (163) — add property type declarations
+   - `argument.type` (117) — fix type mismatches at call sites
+   - `missingType.iterableValue` (68) — replace bare `array` with `array<K,V>`
 
-3. **`src/Piwigo/Core/`** — typed services already have unit tests. Errors here
-   are typically `mixed` return types on `Config::get()` propagating into typed
-   contexts. Fix by narrowing call sites or adding `@phpstan-var` inline casts
-   only where PHPStan cannot infer.
+4. **Work namespace slices in order:**
+   - `src/Piwigo/Core/` — typed services, unit tests provide safety net
+   - `src/Piwigo/Template/` — Smarty adapter `mixed` types
+   - `src/Piwigo/Ws/` — WS parameter extraction `mixed` flow
+   - `include/functions*.inc.php` — one function per commit
+   - `admin/` — one file per commit (`--paths admin/file.php`)
 
-4. **`src/Piwigo/Template/`** — Smarty adapter code. Errors are typically
-   `mixed` from Smarty's loosely-typed plugin API. Narrow `Template::assign()`
-   callers or add method-level `@param` phpdoc where the shape is knowable.
+5. **Bump to level 9 + `treatPhpDocTypesAsCertain: true`** after baseline
+   reaches zero at level 8. Expect 200–500 new errors; fix without adding
+   baseline entries.
 
-5. **`src/Piwigo/Ws/`** — web service handlers. Errors are typically `mixed`
-   flowing from `$_GET`/`$_POST` through the WS parameter extraction. The
-   `input_*` helpers from Phase 2 already coerce many of these; wire remaining
-   call sites.
-
-6. **`include/functions.inc.php` and friends** — the largest single-file error
-   contributor. Work one function at a time. Common patterns:
-   - `pwg_db_fetch_assoc()` returns `array<string,mixed>|false` — add
-     null-checks at call sites.
-   - `array_map()` / `array_filter()` return types losing specificity — use
-     `@return` phpdoc or the `list<>` / `array<int,T>` narrowing syntax.
-   - Implicit `mixed` from `unserialize()` — add a type-guard
-     (`is_array($v) ? $v : []`).
-
-7. **`admin/`** — largest directory by file count. Batch-process: run PHPStan
-   on one admin file at a time (`--paths admin/admin.php`) and fix errors before
-   moving on.
-
-### Level bump
-
-8. **Bump to level 9 and enable `treatPhpDocTypesAsCertain: true`.** Only after
-   the baseline entry count reaches zero at level 8. Do this as a single commit:
-   ```diff
-   --- a/phpstan.neon
-   +++ b/phpstan.neon
-   @@ -1,3 +1,4 @@
-    parameters:
-   -    level: 8
-   +    level: 9
-   +    treatPhpDocTypesAsCertain: true
-   ```
-   Let PHPStan emit the new level-9 errors. Expect ~200–500 new errors, mostly:
-   - `never` return type inference on unreachable branches.
-   - Phpdoc `@return` types claimed as certain that PHPStan can now disprove.
-   - Narrower `mixed` handling inside conditionals.
-   Fix each in its own commit. Do not add baseline entries.
-
-9. **Delete the baseline.** Once level 9 exits 0:
+6. **Delete the baseline** once level 9 exits 0:
    ```bash
    rm phpstan-baseline.neon
    # remove the includes: block from phpstan.neon
-   vendor/bin/phpstan analyse --no-progress  # must exit 0
+   vendor/bin/phpstan analyse --no-progress
    ```
-   Update `tools/check-baseline.sh` to be a no-op when the file is absent (it
-   already handles this — the first `if [ ! -f "$BASELINE" ]` guard exits 0).
 
----
+### Exit signal
 
-## Effort breakdown
+`phpstan.neon` at level 9 with `treatPhpDocTypesAsCertain: true`, no
+`includes: [phpstan-baseline.neon]`, `vendor/bin/phpstan analyse` exits 0,
+CI lint green.
 
-| Sub-task | Tag |
-|---|---|
-| Freeze + slice baseline by namespace | S |
-| Fix `src/Piwigo/` (Core, Template, Ws, etc.) | M |
-| Fix `include/functions.inc.php` and friends | L |
-| Fix `admin/` files | L |
-| Bump to level 9 + `treatPhpDocTypesAsCertain` | M |
-| Fix level-9 new errors | M |
-| Delete baseline file + update phpstan.neon | S |
-
-**Phase total: L.**
-
----
-
-## Risks
-
-- **`treatPhpDocTypesAsCertain: true` can surface false positives.** When
-  phpdoc says `@return string` but the function can actually return `null`,
-  PHPStan level 9 trusts the phpdoc and will flag callers that guard against
-  null. Fix: update the phpdoc, not the null-guard. Never widen a parameter or
-  return type just to silence the error — that hides real bugs.
-- **Level-9 fixes in `include/` may silently change behaviour** if a
-  type-narrowing assumption was wrong. Mitigate: every fix in
-  `include/functions.inc.php` or `include/functions_user.inc.php` should be
-  accompanied by a PHPUnit assertion or a Playwright spec that exercises the
-  fixed path.
-- **The baseline shrinks slowly at first.** Each namespace slice takes a day
-  or two. Don't try to fix everything in one commit — it makes bisecting
-  regressions impossible.
-- **New errors may appear during slice work.** Fixing a type in one file can
-  expose previously suppressed errors in callers. Treat them as bonus fixes,
-  not scope creep.
-
----
-
-## Verification (exit signal)
-
-1. `vendor/bin/phpstan analyse --no-progress` exits 0 with `level: 9`,
-   `treatPhpDocTypesAsCertain: true`, and no `includes: [phpstan-baseline.neon]`
-   in `phpstan.neon`.
-2. `ls phpstan-baseline.neon` returns "No such file".
-3. `bash tools/check-baseline.sh` exits 0 ("No baseline file — nothing to check.").
-4. CI lint job green end-to-end (pint + phpstan + baseline guard + conf shape +
-   typecheck + build).
-5. Unit suite: 84+ tests, 0 failures.
-6. Playwright E2E: all specs green against the Docker stack.
-
----
-
-## Close-out (fill in when shipped)
+### Close-out (fill in when shipped)
 
 - Final baseline line count at close: _
 - Level reached and `treatPhpDocTypesAsCertain` status: _
 - Real bugs found and fixed during baseline elimination: _
 - CI run ID confirming green: _
+
+---
+
+## Phase 9 — Fix global variable violations in `src/` (S)
+
+**Problem:** 11 `global` declarations remain inside `src/Piwigo/` classes,
+violating the `NoGlobalInSrcRule` PHPStan custom rule:
+
+| File | Variable | Count |
+|---|---|---|
+| `src/Piwigo/Template/Template.php` | `$lang_info` | 3 |
+| `src/Piwigo/Calendar/CalendarBase.php` | `$template` | 2 |
+| `src/Piwigo/Calendar/CalendarMonthly.php` | `$template` | 1 |
+| `src/Piwigo/Admin/updates.php` | `$template` | 1 |
+| `src/Piwigo/Admin/tabsheet.php` | `$template` | 1 |
+| `src/Piwigo/Menu/BlockManager.php` | `$template` | 1 |
+| `src/Piwigo/Template/FileCombiner.php` | `$template` | 1 |
+| `src/Piwigo/Admin/Integrity/c13y_internal.php` | `$template` | 1 |
+
+**Fix:** Replace each `global $template` with
+`ServiceLocator::get(Template::class)`. For `$lang_info`, expose via
+`Lang::current()->info()` or pass as a parameter.
+
+### Exit signal
+
+`grep -rn "global \$template\|global \$lang_info" src/` returns zero
+hits; PHPStan exits 0; unit suite green.
+
+---
+
+## Phase 10 — Remove `ws_core.inc.php` class duplication (M)
+
+**Problem:** `include/ws_core.inc.php` still defines five global classes
+(`PwgError`, `PwgNamedArray`, `PwgNamedStruct`, `PwgServer`,
+`PwgRequestHandler`) that are now also in `src/Piwigo/Ws/`. Both
+definitions coexist at runtime via PHP class-alias shims in Rector config.
+
+### Step-by-step
+
+1. **Audit remaining direct callers** outside `src/`:
+   ```bash
+   grep -rn "new PwgError\|new PwgNamedArray\|new PwgNamedStruct\|new PwgServer" include/ admin/ --include="*.php"
+   ```
+2. **Migrate remaining callers** to the namespaced FQCN via `use` imports.
+3. **Replace class bodies** in `ws_core.inc.php` with `class_alias` calls:
+   ```php
+   class_alias(\Piwigo\Ws\PwgError::class, 'PwgError');
+   ```
+4. **Verify:** `grep -n "^class Pwg" include/ws_core.inc.php` returns zero;
+   all tests green; E2E WS endpoints respond correctly.
+
+### Exit signal
+
+No class definitions in `ws_core.inc.php`; PHPStan exits 0; Playwright
+WS specs green.
+
+---
+
+## Phase 11 — Unit test coverage expansion (L)
+
+**Current:** 9 test files, 13% of 69 source classes.
+**Target:** ≥40% (≥28 test files).
+
+**Untested namespaces (prioritised):**
+
+| Namespace | Classes | Priority | Notes |
+|---|---|---|---|
+| `Piwigo\Admin` | 9 | HIGH | Most PHPStan violations |
+| `Piwigo\Search` | 7 | HIGH | Complex query logic, pure parsing — easy unit tests |
+| `Piwigo\Template` | 5 | HIGH | ScriptLoader tested; FileCombiner, CssLoader not |
+| `Piwigo\Image` | 5 | MEDIUM | Derivative/sizing math |
+| `Piwigo\Calendar` | 3 | MEDIUM | Date/range logic |
+| `Piwigo\Auth` | 2 | MEDIUM | Security-critical |
+| `Piwigo\Menu` | 3 | LOW | UI rendering logic |
+
+### Approach
+
+- One commit per class. No DB, no HTTP — unit scope only.
+- Search classes (`QMultiToken`, `QDateRangeScope`, `QNumericRangeScope`)
+  have pure parsing logic — zero mocking needed.
+- For DB-dependent Admin classes, use the stub pattern in `tests/bootstrap.php`.
+- For `Template` classes, test file-path logic and loader registration only
+  (no Smarty render).
+
+### Exit signal
+
+`vendor/bin/phpunit --testsuite Unit` reports ≥28 test files; zero
+failures; no risky tests.
+
+---
+
+## Phase 12 — PHP code quality: readonly, enums, match (M)
+
+**Goal:** Adopt PHP 8.1–8.5 features where semantically correct.
+Currently: 3 `readonly` uses, 0 `enum`, 4 `match`, 14 legacy `switch`
+in `src/`.
+
+### 12a — `readonly` properties (S)
+
+Scan for properties written only in the constructor:
+
+Candidates: `Piwigo\Image` value objects (`ImageRect`, dimension fields of
+`SizingParams`), `Piwigo\Ws` request/response structs, `Piwigo\Cache\PersistentFileCache` path.
+
+### 12b — `enum` for status constants (M)
+
+Replace string discriminated unions with backed enums:
+
+| Current | Enum |
+|---|---|
+| `$user['status']` (`'guest'\|'normal'\|'admin'\|'webmaster'`) | `enum UserStatus: string` |
+| `$conf['session_save_handler']` (`'db'\|'file'`) | `enum SessionHandler: string` |
+| Derivative size names (`'square'\|'thumb'\|'small'\|...`) | `enum DerivativeSize: string` |
+| `$conf['category_url_style']` (`'id'\|'id-name'`) | `enum CategoryUrlStyle: string` |
+
+### 12c — `match` over `switch` (S)
+
+Convert the 14 `switch` statements in `src/` that have no fall-through and
+return a value. Mechanical Rector conversion:
+```bash
+grep -rn "switch (" src/ --include="*.php" -l
+```
+
+### 12d — `#[Override]` attribute (S)
+
+Add `#[Override]` via Rector:
+```php
+->withRules([AddOverrideAttributeToOverriddenMethodsRector::class])
+```
+
+### Exit signal
+
+`switch` count in `src/` reduced by ≥10; ≥3 new `enum` types; PHPStan
+exits 0; unit suite green.
+
+---
+
+## Phase 13 — `functions_user.inc.php` refactoring (L)
+
+**Problem:** 2 696-line monolith with 10 TODO/FIXME markers covering
+auth, validation, data loading, permissions, and notification logic.
+
+### Proposed split
+
+| New class | Responsibility | Est. lines |
+|---|---|---|
+| `Users\UserRepository` | DB reads: `get_user()`, `get_user_infos()` | ~400 |
+| `Users\AuthService` | Login, logout, remember-me, API key auth | ~500 |
+| `Users\UserValidator` | Registration, password rules | ~300 |
+| `Users\PermissionChecker` | `is_admin()`, level checks | ~200 |
+| `Users\UserPreferences` | Theme, language, per-user settings | ~200 |
+
+`functions_user.inc.php` becomes a shim of free-function wrappers
+delegating to the new classes (backward compat for plugins).
+
+### Approach
+
+One class at a time. Each commit: extract class, add unit test, keep
+free-function delegate, PHPStan green.
+
+### Exit signal
+
+`wc -l include/functions_user.inc.php` ≤ 500; `ls src/Piwigo/Users/`
+shows ≥5 new classes; unit test coverage for `Users/` ≥80%.
+
+---
+
+## Phase 14 — TypeScript: reduce `any` / type-escape patterns (M)
+
+**Current:** 883 type-escape patterns:
+
+| Pattern | Count |
+|---|---|
+| `: any` annotations | 754 |
+| `as any` / `as unknown` | 129 |
+| `!` non-null assertions | 163 |
+
+**Target:** Reduce to ≤450 by replacing mechanical `any`s with real types.
+
+### Approach
+
+1. **Define shared types in `src/types/piwigo.d.ts`:**
+   ```typescript
+   interface PiwigoCategory { id: number; name: string; permalink?: string; }
+   interface PiwigoUser { id: number; username: string; status: string; }
+   interface PiwigoTag { id: number; name: string; url_name: string; }
+   interface WsResponse<T> { stat: 'ok' | 'fail'; result: T; }
+   ```
+2. **Replace `any[]` module-level arrays** with typed arrays:
+   `current_users: PiwigoUser[]`, `groups_arr: [number, string][]`.
+3. **Replace `(ajax_data: any)` parameters** with named interface types.
+4. **Audit `!` non-null assertions** — replace unsafe ones with explicit
+   null checks.
+5. **Enable `noUncheckedIndexedAccess`** in tsconfig once `any[]` is
+   mostly eliminated.
+
+### Exit signal
+
+Total type-escape patterns ≤450; `npm run typecheck` exits 0; no
+`// @ts-ignore`.
+
+---
+
+## Phase 15 — Frontend JS → TypeScript migration (M)
+
+**Scope clarification:** The 293 `.js` files figure is inflated by vendored
+plugin files in `themes/default/js/plugins/` (~280 files). First-party
+authored `.js` files are ~13 at the root of `themes/default/js/`.
+
+**Goal:** Convert the ~13 first-party `.js` files; leave `plugins/` as-is.
+
+### Approach
+
+```bash
+ls themes/default/js/*.js  # identify first-party files
+```
+For each: rename `.js` → `.ts`, fix type errors, verify Vite entry point.
+Enable `checkJs: true` scoped to `themes/default/js/*.ts` (not `plugins/`).
+
+### Exit signal
+
+`ls themes/default/js/*.js` returns only plugin files; `npm run typecheck`
+exits 0; `npm run build` produces correct bundles.
+
+---
+
+## Phase 16 — CSS design tokens and linting (M)
+
+**Current:** 0 CSS custom properties; 189 hardcoded hex colors; no Stylelint.
+
+**Note:** `feature/css-modernization` branch has 63 CSS variables and
+refactored admin CSS — review and merge before doing new work here.
+
+### Tasks
+
+**16a — Merge `feature/css-modernization`** — brings CSS variable contract,
+split component files, removed dead plugin CSS, fixed `!important` issues.
+
+**16b — Frontend gallery theme tokens** — extract color palette from
+`themes/default/css/default.css` into `:root` custom properties in a new
+`tokens.css`. Replace hex literals with `var(--color-*)`.
+
+**16c — Add Stylelint:**
+```bash
+npm install --save-dev stylelint stylelint-config-standard
+```
+```json
+// stylelint.config.json
+{
+  "extends": ["stylelint-config-standard"],
+  "ignoreFiles": ["**/js/plugins/**", "**/fonts/**"],
+  "rules": { "color-named": "never", "color-no-invalid-hex": true }
+}
+```
+Add `npx stylelint "**/*.css"` to CI lint job.
+
+### Exit signal
+
+`npx stylelint "themes/default/css/*.css" "admin/themes/default/css/*.css"`
+exits 0; hardcoded hex count in first-party CSS ≤10; CI lint includes
+stylelint.
+
+---
+
+## Phase 17 — jQuery migration (XL — incremental, long-term)
+
+**Current:** jQuery 1.11.x (2014), 313+ references in TS files, jQuery UI
+for sliders/datepicker/sortable. Cannot remove jQuery without breaking the
+plugin contract.
+
+### Migration ladder (do in order)
+
+| Step | Action | Effort |
+|---|---|---|
+| 1 | Upgrade jQuery 1.11 → 3.7 in `themes/default/js/plugins/` | M |
+| 2 | Replace jQueryUI `$.fn.datepicker` → `<input type="date">` | S |
+| 3 | Replace jQueryUI `$.fn.slider` → `<input type="range">` | M |
+| 4 | Replace Selectize → TomSelect (maintained fork) | M |
+| 5 | Replace jQueryUI `$.fn.sortable` → native Drag and Drop API | L |
+| 6 | Replace Colorbox → `<dialog>` + CSS | L |
+| 7 | Replace `$.ajax` → `fetch()` in new code; keep old | incremental |
+
+**Constraint:** jQuery must remain globally available for plugin authors
+until the plugin API is officially versioned.
+
+### Exit signal (step 1 only)
+
+`grep -r "jquery-1\." themes/default/js/plugins/` returns zero;
+Playwright E2E green (gallery interactions work).
+
+---
+
+## Phase 18 — Overdue TODO cleanup (S)
+
+**46 TODO/FIXME/HACK markers** in first-party code. At least one is
+explicitly overdue:
+
+- `common.inc.php:172` — "TODO remove this data update as soon as 2025
+  arrives" — **past due**. Investigate and remove or re-date.
+- `include/functions_user.inc.php` — 10 markers (resolved by Phase 13).
+
+### Approach
+
+```bash
+grep -rn "TODO\|FIXME\|HACK" src/ include/ admin/ --include="*.php"
+```
+Triage: fix now / reference phase / close as won't-fix. One commit per fix.
+
+### Exit signal
+
+`common.inc.php` overdue TODO resolved; total TODO count in `src/` ≤10.
+
+---
+
+## Effort summary and recommended sequence
+
+| Phase | Description | Size | Status |
+|---|---|---|---|
+| 7 | PHPStan level 9 / baseline elimination | L | **WIP** |
+| 9 | Fix global vars in `src/` | S | Not started |
+| 10 | Remove `ws_core.inc.php` class duplication | M | Not started |
+| 11 | Unit test coverage expansion | L | Not started |
+| 12 | PHP: readonly, enum, match | M | Not started |
+| 13 | `functions_user.inc.php` refactoring | L | Not started |
+| 14 | TypeScript `any` reduction | M | Not started |
+| 15 | Frontend JS → TypeScript | M | Not started |
+| 16 | CSS design tokens + Stylelint | M | Not started |
+| 17 | jQuery migration (incremental) | XL | Planning only |
+| 18 | Overdue TODO cleanup | S | Not started |
+
+**Recommended sequence:**
+7 → 9 → 18 → 10 → 11 → 12 → 14 → 16 → 13 → 15 → 17
+
+Phases 7, 9, 18, and 10 are quick wins that clean up technical debt from
+the main modernization. Phases 13, 15, and 17 are multi-week efforts best
+deferred until the codebase stabilises at level 9.

@@ -27,6 +27,11 @@ final class CurrentUser
         self::$instance = User::fromUserArray($userArray);
     }
 
+    public static function isInitialized(): bool
+    {
+        return self::$instance !== null;
+    }
+
     public static function get(): User
     {
         if (self::$instance === null) {

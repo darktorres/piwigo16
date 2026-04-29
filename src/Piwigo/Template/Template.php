@@ -708,12 +708,12 @@ public static function mod_explode(string $text, string $delimiter = ','): array
      * </head> element in the output after the head has been parsed.
      *
      * @param array $params (unused)
-     * @param string $content
+     * @param string|null $content
      */
     /** @param array<mixed> $params */
-public function block_html_head(array $params, string $content): void
+public function block_html_head(array $params, string|null $content): void
     {
-        $content = trim($content);
+        $content = trim($content ?? '');
         if (!empty($content)) { // second call
             $this->html_head_elements[] = $content;
         }
@@ -724,12 +724,12 @@ public function block_html_head(array $params, string $content): void
      * </head> element in the output after the head has been parsed.
      *
      * @param array $params (unused)
-     * @param string $content
+     * @param string|null $content
      */
     /** @param array<mixed> $params */
-public function block_html_style(array $params, string $content): void
+public function block_html_style(array $params, string|null $content): void
     {
-        $content = trim($content);
+        $content = trim($content ?? '');
         if (!empty($content)) { // second call
             $this->html_style .= "\n".$content;
         }
@@ -934,12 +934,12 @@ private static function make_script_src(Combinable $script): string|array
      *
      * @param array $params
      *    - require (optional) comma separated list of script ids
-     * @param string $content
+     * @param string|null $content
      */
     /** @param array<mixed> $params */
-public function block_footer_script(array $params, string $content): void
+public function block_footer_script(array $params, string|null $content): void
     {
-        $content = trim($content);
+        $content = trim($content ?? '');
         if (!empty($content)) { // second call
 
             $requireFooter = $params['require'] ?? null;

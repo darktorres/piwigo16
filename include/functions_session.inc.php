@@ -42,7 +42,7 @@ if (class_exists(\Piwigo\Core\Config::class, false)
     session_set_cookie_params([
         'lifetime' => 0,
         'path' => cookie_path(),
-        'samesite' => 'Lax',
+        'samesite' => 'Strict',
         'httponly' => true,
         'secure' => !empty($_SERVER['HTTPS']),
     ]);

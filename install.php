@@ -25,7 +25,7 @@ define('PHPWG_ROOT_PATH', './');
 define('DEFAULT_PREFIX_TABLE', 'piwigo_');
 
 if (isset($_POST['install'])) {
-    $prefixeTable = $_POST['prefix'];
+    $prefixeTable = (string) ($_POST['prefix'] ?? DEFAULT_PREFIX_TABLE);
 } else {
     $prefixeTable = DEFAULT_PREFIX_TABLE;
 }
@@ -316,11 +316,13 @@ INSERT INTO '.$prefixeTable.'config (param,value,comment)
               'description' => 'upgrade included in installation',
               ];
         }
-        mass_inserts(
-            UPGRADE_TABLE,
-            array_keys($datas[0]),
-            $datas
-        );
+        if (!empty($datas)) {
+            mass_inserts(
+                UPGRADE_TABLE,
+                array_keys($datas[0]),
+                $datas
+            );
+        }
     }
 }
 

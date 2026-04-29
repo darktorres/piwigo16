@@ -1153,7 +1153,7 @@ SELECT *
     }
 
     if (count($category_ids) == 0) {
-        return;
+        return null;
     }
 
     $query = '
@@ -1164,7 +1164,7 @@ SELECT id
     $raw_category_ids = query2array($query, null, 'id');
 
     if (count($raw_category_ids) == 0) {
-        return;
+        return null;
     }
 
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');

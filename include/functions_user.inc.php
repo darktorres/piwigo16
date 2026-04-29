@@ -741,7 +741,7 @@ SELECT *
             unset($cache['default_user']['last_visit']);
             unset($cache['default_user']['last_visit_from_history']);
         } else {
-            $cache['default_user'] = false;
+            $cache['default_user'] = false; // sentinel: queried, no row found
         }
     }
 
@@ -757,7 +757,7 @@ SELECT *
         }
         return $default_user;
     } else {
-        return $cache['default_user'];
+        return is_array($cache['default_user']) ? $cache['default_user'] : null;
     }
 }
 
@@ -995,7 +995,7 @@ function log_user($user_id, $remember_me): void
 
         // We unset the lang cookie, if user has changed their language using interface we don't want to keep setting it back
         // to what was chosen using standard pages lang switch
-        setcookie('lang', '', ['expires' => time() - 3600]);
+        setcookie('lang', '', ['expires' => time() - 3600, 'samesite' => 'Strict']);
     }
 
     if ($remember_me and \Piwigo\Core\Config::authorizeRemembering()) {
@@ -1006,11 +1006,11 @@ function log_user($user_id, $remember_me): void
             setcookie(
                 \Piwigo\Core\Config::rememberMeName(),
                 $cookie,
-                ['expires' => time() + \Piwigo\Core\Config::rememberMeLength(), 'path' => (string) cookie_path(), 'domain' => (string) ini_get('session.cookie_domain'), 'secure' => (bool) ini_get('session.cookie_secure'), 'httponly' => (bool) ini_get('session.cookie_httponly')]
+                ['expires' => time() + \Piwigo\Core\Config::rememberMeLength(), 'path' => (string) cookie_path(), 'domain' => (string) ini_get('session.cookie_domain'), 'secure' => (bool) ini_get('session.cookie_secure'), 'httponly' => (bool) ini_get('session.cookie_httponly'), 'samesite' => 'Strict']
             );
         }
     } else { // make sure we clean any remember me ...
-        setcookie(\Piwigo\Core\Config::rememberMeName(), '', ['expires' => 0, 'path' => (string) cookie_path(), 'domain' => (string) ini_get('session.cookie_domain')]);
+        setcookie(\Piwigo\Core\Config::rememberMeName(), '', ['expires' => 0, 'path' => (string) cookie_path(), 'domain' => (string) ini_get('session.cookie_domain'), 'samesite' => 'Strict']);
     }
     if (session_id() != '') { // we regenerate the session for security reasons
         // see http://www.acros.si/papers/session_fixation.pdf
@@ -1050,7 +1050,7 @@ function auto_login(): bool
                 return true;
             }
         }
-        setcookie(\Piwigo\Core\Config::rememberMeName(), '', ['expires' => 0, 'path' => (string) cookie_path(), 'domain' => (string) ini_get('session.cookie_domain')]);
+        setcookie(\Piwigo\Core\Config::rememberMeName(), '', ['expires' => 0, 'path' => (string) cookie_path(), 'domain' => (string) ini_get('session.cookie_domain'), 'samesite' => 'Strict']);
     }
     return false;
 }
@@ -1333,7 +1333,7 @@ function logout_user(): void
     setcookie(
         (string) session_name(),
         '',
-        ['expires' => 0, 'path' => (string) ini_get('session.cookie_path'), 'domain' => (string) ini_get('session.cookie_domain')]
+        ['expires' => 0, 'path' => (string) ini_get('session.cookie_path'), 'domain' => (string) ini_get('session.cookie_domain'), 'samesite' => 'Strict']
     );
     setcookie(\Piwigo\Core\Config::rememberMeName(), '', ['expires' => 0, 'path' => (string) cookie_path(), 'domain' => (string) ini_get('session.cookie_domain')]);
 }

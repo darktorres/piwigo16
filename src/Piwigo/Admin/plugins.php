@@ -321,7 +321,7 @@ DELETE FROM '. PLUGINS_TABLE .'
             }
             if (preg_match('/Has Settings:\\s*([Tt]rue|[Ww]ebmaster)/', $plg_data, $val)) {
                 if (strtolower($val[1]) == 'webmaster') {
-                    if ('webmaster' == CurrentUser::get()->status) {
+                    if (CurrentUser::isInitialized() && 'webmaster' == CurrentUser::get()->status) {
                         $plugin['hasSettings'] = true;
                     }
                 } else {

@@ -92,7 +92,7 @@ final class ScriptLoaderTest extends TestCase
         self::assertSame('dist/assets/common-XYZ789.js', $scripts['common']->path);
     }
 
-    public function test_add_with_manifest_clears_require_list(): void
+    public function test_add_with_manifest_preserves_require_list(): void
     {
         $this->writeManifest([
             'common' => ['file' => 'assets/common-abc.js', 'imports' => [], 'css' => []],
@@ -101,8 +101,11 @@ final class ScriptLoaderTest extends TestCase
         $loader = new ScriptLoader();
         $loader->add('common', 1, ['jquery', 'jquery.ui'], 'admin/themes/default/js/common.js');
         $scripts = $this->getRegisteredScripts($loader);
-        // Vite encodes import order via chunks — require list should be empty.
-        self::assertEmpty($scripts['common']->precedents);
+        // Manifest resolves the dist path, but the caller-supplied require list is
+        // preserved — legacy plugins and other Vite entries are not encoded as
+        // manifest chunk imports and still need to load separately.
+        self::assertSame('dist/assets/common-abc.js', $scripts['common']->path);
+        self::assertSame(['jquery', 'jquery.ui'], $scripts['common']->precedents);
     }
 
     public function test_add_unknown_manifest_key_falls_back_to_original_path(): void

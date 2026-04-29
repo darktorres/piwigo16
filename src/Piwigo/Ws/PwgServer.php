@@ -10,10 +10,10 @@ namespace Piwigo\Ws;
  */
 class PwgServer
 {
-    public ?PwgRequestHandler $_requestHandler = null;
-    public string $_requestFormat = '';
-    public ?\Piwigo\Ws\Encoder\PwgResponseEncoder $_responseEncoder = null;
-    public string $_responseFormat = '';
+    private ?PwgRequestHandler $_requestHandler = null;
+    private string $_requestFormat = '';
+    private ?\Piwigo\Ws\Encoder\PwgResponseEncoder $_responseEncoder = null;
+    private string $_responseFormat = '';
 
     /** @var array<string, WsMethod> */
     private array $_methods = [];
@@ -26,6 +26,11 @@ class PwgServer
     public function getMethods(): array
     {
         return $this->_methods;
+    }
+
+    public function getResponseFormat(): string
+    {
+        return $this->_responseFormat;
     }
 
     /**

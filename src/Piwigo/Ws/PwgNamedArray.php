@@ -11,12 +11,8 @@ namespace Piwigo\Ws;
  */
 class PwgNamedArray
 {
-    /*private*/
-    /**
-     * @var mixed[]
-     */
     /** @var array<mixed> */
-    public array $_xmlAttributes = [];
+    private array $_xmlAttributes = [];
 
     /**
      * Constructs a named array
@@ -25,7 +21,7 @@ class PwgNamedArray
      * @param array $xmlAttributes sub-item attributes that will be encoded as xml attributes
      */
     /** @param string[] $xmlAttributes */
-    public function __construct(private mixed $_content, public string $_itemName, array $xmlAttributes = [])
+    public function __construct(private mixed $_content, private string $_itemName, array $xmlAttributes = [])
     {
         $this->_xmlAttributes = array_flip($xmlAttributes);
     }

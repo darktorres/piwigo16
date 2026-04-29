@@ -577,7 +577,7 @@ SELECT id, date, author, content
         ['id','date']
     );
 
-    if ($service->_responseFormat != 'rest') {
+    if ($service->getResponseFormat() != 'rest') {
         return $ret; // for backward compatibility only
     } else {
         return [

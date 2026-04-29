@@ -7,20 +7,17 @@ namespace Piwigo\Ws\Protocol;
 class PwgXmlWriter
 {
     /** @var bool */
-    public $_indent;
+    private $_indent;
     /** @var string */
-    public $_indentStr;
-    /** @var array */
+    private $_indentStr;
     /** @var array<mixed> */
-    public array $_elementStack = [];
+    private array $_elementStack = [];
     /** @var bool */
-    public $_lastTagOpen;
-    /**
-     * @var int
-     */
-    public $_indentLevel;
+    private $_lastTagOpen;
+    /** @var int */
+    private $_indentLevel;
 
-    public string $_encodedXml = '';
+    private string $_encodedXml = '';
 
     public function __construct()
     {

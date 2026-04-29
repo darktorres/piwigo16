@@ -36,3 +36,20 @@ if (!function_exists('set_status_header')) {
         // No-op in unit test environment — headers cannot be sent from CLI.
     }
 }
+
+// pwg_password_hash / pwg_password_verify are free functions defined in
+// include/functions_user.inc.php which is not loaded in unit tests.
+// Config::passwordHash() / passwordVerify() validate is_callable() before
+// returning, so stubs must exist for those tests to pass.
+if (!function_exists('pwg_password_hash')) {
+    function pwg_password_hash(mixed $password): string
+    {
+        return password_hash((string) $password, PASSWORD_BCRYPT);
+    }
+}
+if (!function_exists('pwg_password_verify')) {
+    function pwg_password_verify(mixed $password, mixed $hash, mixed $user_id = null): bool
+    {
+        return password_verify((string) $password, (string) $hash);
+    }
+}

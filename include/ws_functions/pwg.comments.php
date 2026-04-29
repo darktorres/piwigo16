@@ -222,8 +222,8 @@ function ws_userComments_delete(array $params, \Piwigo\Ws\PwgServer &$service): 
     }
 
     $raw_ids = is_array($params['comment_id']) ? $params['comment_id'] : [];
-    $str_ids = array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '', $raw_ids);
-    $comment_ids = array_map(fn(string $v): int => (int) $v, array_unique($str_ids));
+    $str_ids = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $raw_ids);
+    $comment_ids = array_map(fn (string $v): int => (int) $v, array_unique($str_ids));
     delete_user_comment($comment_ids);
     return 'Comment successfully deleted';
 }
@@ -245,8 +245,8 @@ function ws_userComments_validate(array $params, \Piwigo\Ws\PwgServer &$service)
     }
 
     $raw_ids = is_array($params['comment_id']) ? $params['comment_id'] : [];
-    $str_ids = array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '', $raw_ids);
-    $comment_ids = array_map(fn(string $v): int => (int) $v, array_unique($str_ids));
+    $str_ids = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $raw_ids);
+    $comment_ids = array_map(fn (string $v): int => (int) $v, array_unique($str_ids));
     validate_user_comment($comment_ids);
     return 'Comment successfully validated';
 }

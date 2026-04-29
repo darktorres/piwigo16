@@ -97,9 +97,9 @@ function ws_tags_getAdminList(array $params, \Piwigo\Ws\PwgServer &$service): ar
  */function ws_tags_getImages(array $params, \Piwigo\Ws\PwgServer &$service): array
 {
     // first build all the tag_ids we are interested in
-    $tag_id_arr = is_array($params['tag_id']) ? array_map(fn($v): string => is_scalar($v) ? (string) $v : '', $params['tag_id']) : [];
-    $tag_url_name_arr = is_array($params['tag_url_name']) ? array_map(fn($v): string => is_scalar($v) ? (string) $v : '', $params['tag_url_name']) : [];
-    $tag_name_arr = is_array($params['tag_name']) ? array_map(fn($v): string => is_scalar($v) ? (string) $v : '', $params['tag_name']) : [];
+    $tag_id_arr = is_array($params['tag_id']) ? array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $params['tag_id']) : [];
+    $tag_url_name_arr = is_array($params['tag_url_name']) ? array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $params['tag_url_name']) : [];
+    $tag_name_arr = is_array($params['tag_name']) ? array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $params['tag_name']) : [];
     /** @var array<int, array<string, mixed>> $tags_result */
     $tags_result = find_tags($tag_id_arr, $tag_url_name_arr, $tag_name_arr);
     $tags_by_id = [];
@@ -283,7 +283,7 @@ WHERE id = '.$tag_add_id.';';
 
     $tag_ids_raw = is_array($params['tag_id']) ? $params['tag_id'] : [];
     /** @var int[] $tag_ids_del */
-    $tag_ids_del = array_map(fn($v): int => is_numeric($v) ? (int) $v : 0, $tag_ids_raw);
+    $tag_ids_del = array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $tag_ids_raw);
 
     $query = '
 SELECT COUNT(*)
@@ -467,7 +467,7 @@ SELECT image_id
 
     $merge_dest_id = is_numeric($params['destination_tag_id']) ? (int) $params['destination_tag_id'] : (is_scalar($params['destination_tag_id']) ? (string) $params['destination_tag_id'] : 0);
     $merge_tag_ids_raw = is_array($params['merge_tag_id']) ? $params['merge_tag_id'] : [];
-    $merge_tag_ids = array_map(fn($v): int => is_numeric($v) ? (int) $v : 0, $merge_tag_ids_raw);
+    $merge_tag_ids = array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $merge_tag_ids_raw);
 
     $all_tags = $merge_tag_ids;
     $all_tags[] = $merge_dest_id;

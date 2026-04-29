@@ -56,7 +56,7 @@ use Piwigo\Ws\PwgNamedStruct;
 
     if (!empty($params['user_id'])) {
         $user_id_arr = is_array($params['user_id']) ? $params['user_id'] : [];
-        $where_clauses[] = 'u.'.\Piwigo\Core\Config::userFields()['id'].' IN('. implode(',', array_map(fn($v): int => is_numeric($v) ? (int) $v : 0, $user_id_arr)) .')';
+        $where_clauses[] = 'u.'.\Piwigo\Core\Config::userFields()['id'].' IN('. implode(',', array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $user_id_arr)) .')';
     }
 
     if (!empty($params['username'])) {
@@ -77,7 +77,7 @@ use Piwigo\Ws\PwgNamedStruct;
         pwg_db_real_escape_string($filter_str).'%\'';
 
         if (!empty($filtered_groups)) {
-            $filter_where_clause .= 'OR ug.group_id IN ('. implode(',', array_map(fn($v): string => is_scalar($v) ? (string) $v : '', $filtered_groups)).')';
+            $filter_where_clause .= 'OR ug.group_id IN ('. implode(',', array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $filtered_groups)).')';
         }
         $where_clauses[] =  $filter_where_clause.')';
     }
@@ -114,7 +114,7 @@ use Piwigo\Ws\PwgNamedStruct;
         $status_arr = is_array($params['status']) ? $params['status'] : [];
         $status_arr = array_intersect($status_arr, get_enums(USER_INFOS_TABLE, 'status'));
         if (count($status_arr) > 0) {
-            $where_clauses[] = 'ui.status IN("'. implode('","', array_map(fn($v): string => is_scalar($v) ? (string) $v : '', $status_arr)) .'")';
+            $where_clauses[] = 'ui.status IN("'. implode('","', array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $status_arr)) .'")';
         }
     }
 
@@ -134,12 +134,12 @@ use Piwigo\Ws\PwgNamedStruct;
 
     if (!empty($params['group_id'])) {
         $group_id_arr = is_array($params['group_id']) ? $params['group_id'] : [];
-        $where_clauses[] = 'ug.group_id IN('. implode(',', array_map(fn($v): int => is_numeric($v) ? (int) $v : 0, $group_id_arr)) .')';
+        $where_clauses[] = 'ug.group_id IN('. implode(',', array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $group_id_arr)) .')';
     }
 
     if (!empty($params['exclude'])) {
         $exclude_arr = is_array($params['exclude']) ? $params['exclude'] : [];
-        $where_clauses[] = 'u.'.\Piwigo\Core\Config::userFields()['id'].' NOT IN('. implode(',', array_map(fn($v): int => is_numeric($v) ? (int) $v : 0, $exclude_arr)) .')';
+        $where_clauses[] = 'u.'.\Piwigo\Core\Config::userFields()['id'].' NOT IN('. implode(',', array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $exclude_arr)) .')';
     }
 
     $display = ['u.'.\Piwigo\Core\Config::userFields()['id'] => 'id'];

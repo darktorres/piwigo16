@@ -39,7 +39,7 @@ function ws_groups_getList(array $params, \Piwigo\Ws\PwgServer &$service): PwgEr
 
     if (!empty($params['group_id'])) {
         $group_id_arr = is_array($params['group_id']) ? $params['group_id'] : [];
-        $where_clauses[] = 'id IN('. implode(',', array_map(fn($v): int => is_numeric($v) ? (int) $v : 0, $group_id_arr)) .')';
+        $where_clauses[] = 'id IN('. implode(',', array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $group_id_arr)) .')';
     }
 
     $per_page = is_numeric($params['per_page']) ? (int) $params['per_page'] : 0;
@@ -127,7 +127,7 @@ function ws_groups_delete(array $params, \Piwigo\Ws\PwgServer &$service): PwgErr
     }
 
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
-    $group_id_int = is_numeric($params['group_id']) ? (int) $params['group_id'] : (is_array($params['group_id']) ? array_map(fn($v): int => is_numeric($v) ? (int) $v : 0, $params['group_id']) : 0);
+    $group_id_int = is_numeric($params['group_id']) ? (int) $params['group_id'] : (is_array($params['group_id']) ? array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $params['group_id']) : 0);
     $groupnames = array_values(delete_groups($group_id_int) ?: []);
 
     invalidate_user_cache();
@@ -250,7 +250,7 @@ SELECT COUNT(*)
     invalidate_user_cache();
 
     pwg_activity('group', $adduser_group_id, 'edit');
-    pwg_activity('user', array_map(fn($v): int => is_numeric($v) ? (int) $v : 0, $user_ids), 'edit');
+    pwg_activity('user', array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $user_ids), 'edit');
 
     return $service->invoke('pwg.groups.getList', ['group_id' => $adduser_group_id]);
 }
@@ -275,7 +275,7 @@ function ws_groups_merge(array $params, \Piwigo\Ws\PwgServer &$service): PwgErro
 
     $dest_group_id = is_numeric($params['destination_group_id']) ? (int) $params['destination_group_id'] : 0;
     $merge_group_ids_raw = is_array($params['merge_group_id']) ? $params['merge_group_id'] : [];
-    $merge_group_ids = array_map(fn($v): int => is_numeric($v) ? (int) $v : 0, $merge_group_ids_raw);
+    $merge_group_ids = array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $merge_group_ids_raw);
 
     $all_groups = $merge_group_ids;
     $all_groups[] = $dest_group_id;
@@ -467,7 +467,7 @@ SELECT COUNT(*)
 DELETE FROM '. USER_GROUP_TABLE .'
   WHERE
     group_id = '. $deluser_group_id .'
-    AND user_id IN('. implode(',', array_map(fn($v): int => is_numeric($v) ? (int) $v : 0, $deluser_user_ids)) .')
+    AND user_id IN('. implode(',', array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $deluser_user_ids)) .')
 ;';
     pwg_query($query);
 
@@ -475,7 +475,7 @@ DELETE FROM '. USER_GROUP_TABLE .'
     invalidate_user_cache();
 
     pwg_activity('group', $deluser_group_id, 'edit');
-    pwg_activity('user', array_map(fn($v): int => is_numeric($v) ? (int) $v : 0, $deluser_user_ids), 'edit');
+    pwg_activity('user', array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $deluser_user_ids), 'edit');
 
     return $service->invoke('pwg.groups.getList', ['group_id' => $deluser_group_id]);
 }

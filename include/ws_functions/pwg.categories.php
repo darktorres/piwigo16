@@ -37,7 +37,7 @@ use Piwigo\Ws\PwgNamedStruct;
 
     $raw_cat_id = is_array($params['cat_id']) ? $params['cat_id'] : [];
     /** @var int[] $cat_ids */
-    $cat_ids = array_values(array_unique(array_map(fn($v): int => is_numeric($v) ? (int) $v : 0, $raw_cat_id)));
+    $cat_ids = array_values(array_unique(array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $raw_cat_id)));
 
     if (count($cat_ids) > 0) {
         // do the categories really exist?
@@ -47,7 +47,7 @@ SELECT id
   WHERE id IN ('.implode(',', $cat_ids).')
 ;';
         $db_cat_ids = query2array($query, null, 'id');
-        $missing_cat_ids = array_diff($cat_ids, array_map(fn($v): int => is_numeric($v) ? (int) $v : 0, $db_cat_ids));
+        $missing_cat_ids = array_diff($cat_ids, array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $db_cat_ids));
 
         if (count($missing_cat_ids) > 0) {
             return new PwgError(404, 'cat_id {'.implode(',', $missing_cat_ids).'} not found');
@@ -672,7 +672,7 @@ SELECT
     id_uppercat,
     COUNT(*) AS nb_subcats
   FROM '. CATEGORIES_TABLE .'
-  WHERE id_uppercat IN ('. implode(',', array_map(fn($v): string => is_scalar($v) ? (string) $v : '', $cats_ids)) .')
+  WHERE id_uppercat IN ('. implode(',', array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $cats_ids)) .')
   GROUP BY id_uppercat
 ';
 
@@ -773,7 +773,7 @@ SELECT
     // does the category really exist?
     $raw_setrank_ids = is_array($params['category_id']) ? $params['category_id'] : [];
     /** @var int[] $setrank_category_ids */
-    $setrank_category_ids = array_map(fn($v): int => is_numeric($v) ? (int) $v : 0, $raw_setrank_ids);
+    $setrank_category_ids = array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $raw_setrank_ids);
     $query = '
 SELECT id, id_uppercat, `rank`
   FROM '.CATEGORIES_TABLE.'
@@ -802,14 +802,14 @@ SELECT id
 
         $cat_asc = query2array($query, null, 'id');
 
-        $cat_asc_str = array_map(fn($v): string => is_scalar($v) ? (string) $v : '', $cat_asc);
-        $order_new_str = array_map(fn(int $v): string => (string) $v, $order_new_by_id);
+        $cat_asc_str = array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $cat_asc);
+        $order_new_str = array_map(fn (int $v): string => (string) $v, $order_new_by_id);
         if (strcmp(implode(',', $cat_asc_str), implode(',', $order_new_str)) !== 0) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'you need to provide all sub-category ids for a given category');
         }
         $order_new = $setrank_category_ids;
     } else {
-        $single_cat_id = implode('', array_map(fn(int $v): string => (string) $v, $setrank_category_ids));
+        $single_cat_id = implode('', array_map(fn (int $v): string => (string) $v, $setrank_category_ids));
         $id_uppercat_str = is_scalar($category['id_uppercat']) ? (string) $category['id_uppercat'] : '';
 
         $query = '
@@ -923,7 +923,7 @@ SELECT *
         if (count($subcats) > 0) {
             $query = '
 UPDATE '.CATEGORIES_TABLE.'
-  SET commentable = \''.( is_scalar($params['commentable']) ? (string) $params['commentable'] : '').'\'
+  SET commentable = \''.(is_scalar($params['commentable']) ? (string) $params['commentable'] : '').'\'
   WHERE id IN ('.implode(',', $subcats).')
 ;';
             pwg_query($query);
@@ -1143,7 +1143,7 @@ SELECT *
         ) ?: [];
     }
     $params_cat_ids_delete = is_array($params['category_id']) ? $params['category_id'] : [];
-    $params['category_id'] = array_map(fn($v): int => is_numeric($v) ? (int) $v : 0, $params_cat_ids_delete);
+    $params['category_id'] = array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $params_cat_ids_delete);
 
     $category_ids = [];
     foreach ($params['category_id'] as $category_id) {
@@ -1168,7 +1168,7 @@ SELECT id
     }
 
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
-    delete_categories(array_map(fn($v): int => is_numeric($v) ? (int) $v : 0, $raw_category_ids), $photo_deletion_mode);
+    delete_categories(array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $raw_category_ids), $photo_deletion_mode);
     update_global_rank();
     invalidate_user_cache();
     return null;
@@ -1203,7 +1203,7 @@ SELECT id
         ) ?: [];
     }
     $params_cat_ids = is_array($params['category_id']) ? $params['category_id'] : [];
-    $params['category_id'] = array_map(fn($v): int => is_numeric($v) ? (int) $v : 0, $params_cat_ids);
+    $params['category_id'] = array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $params_cat_ids);
 
     $category_ids = [];
     foreach ($params['category_id'] as $category_id) {

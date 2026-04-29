@@ -335,7 +335,7 @@ DELETE FROM '. PLUGINS_TABLE .'
             }
 
             // IMPORTANT SECURITY !
-            $plugin = array_map(fn($v) => is_string($v) ? htmlspecialchars($v) : $v, $plugin);
+            $plugin = array_map(fn ($v) => is_string($v) ? htmlspecialchars($v) : $v, $plugin);
             $this->fs_plugins[$plugin_id] = $plugin;
 
             return $plugin;

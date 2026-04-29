@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 global $template, $user, $page, $persistent_cache, $lang, $prefixeTable;
 
+use Piwigo\Admin\Image\pwg_image;
 use Piwigo\Core\Logger;
+use Piwigo\Image\DerivativeParams;
+use Piwigo\Image\SizingParams;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -481,7 +484,7 @@ SELECT *
                     array('id' => $row['id'])
                 );
             } else {
-                $page['rotation_angle'] = pwg_image::get_rotation_angle_from_code($row['rotation']);
+                $page['rotation_angle'] = pwg_image::get_rotation_angle_from_code((int) $row['rotation']);
             }
         }
         if (!$row) {
@@ -526,7 +529,7 @@ if (0 != $page['rotation_angle']) {
 $o_size = $d_size = array($image->get_width(),$image->get_height());
 $crop_rect = null;
 $scaled_size = null;
-$params->sizing->compute($o_size, $page['coi'], $crop_rect, $scaled_size);
+$params->sizing->compute($o_size, is_string($page['coi']) ? $page['coi'] : null, $crop_rect, $scaled_size);
 if ($crop_rect) {
     $changes++;
     $image->crop($crop_rect->width(), $crop_rect->height(), $crop_rect->l, $crop_rect->t);

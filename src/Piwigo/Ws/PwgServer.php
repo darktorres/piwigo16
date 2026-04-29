@@ -75,11 +75,11 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
         // add reflection methods
         $this->addMethod(
             'reflection.getMethodList',
-            ['PwgServer', 'ws_getMethodList']
+            [self::class, 'ws_getMethodList']
         );
         $this->addMethod(
             'reflection.getMethodDetails',
-            ['PwgServer', 'ws_getMethodDetails'],
+            [self::class, 'ws_getMethodDetails'],
             ['methodName']
         );
 

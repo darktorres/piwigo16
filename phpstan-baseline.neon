@@ -1,229 +1,163 @@
 parameters:
 	ignoreErrors:
 		-
-			message: '#^Cannot use array destructuring on array\<int, mixed\>\|null\.$#'
-			identifier: offsetAccess.nonArray
-			count: 1
-			path: admin/album_notification.php
+			message: '#^Possibly invalid array key type float\|int\|string\|null\.$#'
+			identifier: offsetAccess.invalidOffset
+			count: 4
+			path: admin/cat_list.php
 
 		-
-			message: '#^Offset ''file'' might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
+			message: '#^Function get_site_url\(\) should return string but returns float\|int\|string\.$#'
+			identifier: return.type
 			count: 1
-			path: admin/album_notification.php
+			path: admin/cat_modify.php
 
 		-
-			message: '#^Offset ''id'' might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
-			count: 1
-			path: admin/album_notification.php
-
-		-
-			message: '#^Parameter \#2 \$infos of static method Piwigo\\Image\\DerivativeImage\:\:url\(\) expects array\<mixed\>\|Piwigo\\Image\\SrcImage, array\<string, mixed\>\|null given\.$#'
+			message: '#^Parameter \#1 \$original of function format_date expects DateTime\|int\|string\|null, float\|int\|string\|null given\.$#'
 			identifier: argument.type
-			count: 1
-			path: admin/album_notification.php
-
-		-
-			message: '#^Cannot use array destructuring on array\<int, mixed\>\|null\.$#'
-			identifier: offsetAccess.nonArray
-			count: 1
-			path: admin/albums.php
-
-		-
-			message: '#^Cannot use array destructuring on array\<int, mixed\>\|null\.$#'
-			identifier: offsetAccess.nonArray
-			count: 1
-			path: admin/batch_manager.php
-
-		-
-			message: '#^Offset ''level'' might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
-			count: 1
-			path: admin/batch_manager_unit.php
-
-		-
-			message: '#^Cannot use array destructuring on array\<int, mixed\>\|null\.$#'
-			identifier: offsetAccess.nonArray
-			count: 1
+			count: 4
 			path: admin/cat_modify.php
 
 		-
-			message: '#^Offset ''galleries_url'' might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
-			count: 1
-			path: admin/cat_modify.php
-
-		-
-			message: '#^Offset ''uppercats'' might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
-			count: 1
-			path: admin/cat_modify.php
-
-		-
-			message: '#^Parameter \#1 \$local_dir of function get_min_local_dir expects string, string\|null given\.$#'
+			message: '#^Parameter \#1 \$original of function time_since expects int\|string\|null, float\|int\|string\|null given\.$#'
 			identifier: argument.type
 			count: 1
 			path: admin/cat_modify.php
 
 		-
-			message: '#^Offset ''image_order'' might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
-			count: 3
-			path: admin/element_set_ranks.php
+			message: '#^Possibly invalid array key type float\|int\|string\|null\.$#'
+			identifier: offsetAccess.invalidOffset
+			count: 1
+			path: admin/cat_modify.php
 
 		-
-			message: '#^Offset ''uppercats'' might not exist on array\<mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
+			message: '#^Parameter \#1 \$filename of function get_filename_wo_extension expects string, float\|int\|string\|null given\.$#'
+			identifier: argument.type
 			count: 1
 			path: admin/element_set_ranks.php
 
 		-
-			message: '#^Cannot use array destructuring on array\<int, mixed\>\|null\.$#'
-			identifier: offsetAccess.nonArray
+			message: '#^Parameter \#1 \$uppercats of function get_cat_display_name_cache expects string, float\|int\|string given\.$#'
+			identifier: argument.type
 			count: 1
-			path: admin/history.php
+			path: admin/element_set_ranks.php
 
 		-
-			message: '#^Cannot use array destructuring on array\<int, mixed\>\|null\.$#'
-			identifier: offsetAccess.nonArray
+			message: '#^Parameter \#2 \$string of function explode expects string, float\|int\|string given\.$#'
+			identifier: argument.type
 			count: 1
-			path: admin/include/albums_tab.inc.php
+			path: admin/element_set_ranks.php
 
 		-
-			message: '#^Argument of an invalid type array\<int\>\|null supplied for foreach, only iterables are supported\.$#'
-			identifier: foreach.nonIterable
-			count: 1
-			path: admin/include/functions.php
-
-		-
-			message: '#^Cannot use array destructuring on array\<int, mixed\>\|null\.$#'
-			identifier: offsetAccess.nonArray
-			count: 20
-			path: admin/include/functions.php
-
-		-
-			message: '#^Offset ''global_rank'' might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
+			message: '#^Binary operation "\+\=" between float\|int\|string\|null and float\|int\|string\|null results in an error\.$#'
+			identifier: assignOp.invalid
 			count: 1
 			path: admin/include/functions.php
 
 		-
-			message: '#^Offset ''id'' might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
+			message: '#^Function get_installation_date\(\) should return string\|null but returns float\|int\|string\|null\.$#'
+			identifier: return.type
 			count: 1
 			path: admin/include/functions.php
 
 		-
-			message: '#^Offset ''max_rank'' might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
+			message: '#^Function get_orphans\(\) should return array\<int\> but returns list\<float\|int\|string\|null\>\.$#'
+			identifier: return.type
 			count: 1
 			path: admin/include/functions.php
 
 		-
-			message: '#^Offset ''status'' might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
-			count: 1
-			path: admin/include/functions.php
-
-		-
-			message: '#^Offset ''uppercats'' might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
-			count: 1
-			path: admin/include/functions.php
-
-		-
-			message: '#^Offset ''visible'' might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
-			count: 1
-			path: admin/include/functions.php
-
-		-
-			message: '#^Parameter \#1 \$infos of static method Piwigo\\Image\\DerivativeImage\:\:thumb_url\(\) expects array\<mixed\>\|Piwigo\\Image\\SrcImage, array\<string, mixed\>\|null given\.$#'
+			message: '#^Parameter \#1 \$filename of function file_exists expects string, float\|int\|string\|null given\.$#'
 			identifier: argument.type
 			count: 1
 			path: admin/include/functions.php
 
 		-
-			message: '#^Parameter \#2 \$infos of static method Piwigo\\Image\\DerivativeImage\:\:url\(\) expects array\<mixed\>\|Piwigo\\Image\\SrcImage, array\<string, mixed\>\|null given\.$#'
-			identifier: argument.type
+			message: '#^Function get_cat_id_from_old_permalink\(\) should return int\|null but returns float\|int\|string\|null\.$#'
+			identifier: return.type
 			count: 1
-			path: admin/include/functions.php
-
-		-
-			message: '#^Cannot use array destructuring on array\<int, mixed\>\|null\.$#'
-			identifier: offsetAccess.nonArray
-			count: 2
-			path: admin/include/functions_history.inc.php
-
-		-
-			message: '#^Parameter \#3 \$subject of function str_replace expects array\<string\>\|string, string\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: admin/include/functions_metadata.php
-
-		-
-			message: '#^Cannot use array destructuring on array\<int, mixed\>\|null\.$#'
-			identifier: offsetAccess.nonArray
-			count: 1
-			path: admin/include/functions_notification_by_mail.inc.php
-
-		-
-			message: '#^Cannot use array destructuring on array\<int, mixed\>\|null\.$#'
-			identifier: offsetAccess.nonArray
-			count: 2
 			path: admin/include/functions_permalinks.php
 
 		-
-			message: '#^Cannot use array destructuring on array\<int, mixed\>\|null\.$#'
-			identifier: offsetAccess.nonArray
-			count: 2
-			path: admin/include/functions_upgrade.php
-
-		-
-			message: '#^Offset ''password'' might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
+			message: '#^Function get_cat_id_from_permalink\(\) should return int\|null but returns float\|int\|string\|null\.$#'
+			identifier: return.type
 			count: 1
-			path: admin/include/functions_upgrade.php
+			path: admin/include/functions_permalinks.php
 
 		-
-			message: '#^Offset ''status'' might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
-			count: 2
-			path: admin/include/functions_upgrade.php
-
-		-
-			message: '#^Cannot use array destructuring on array\<int, mixed\>\|null\.$#'
-			identifier: offsetAccess.nonArray
-			count: 2
-			path: admin/include/functions_upload.inc.php
-
-		-
-			message: '#^Parameter \#1 \$filename of function file_exists expects string, string\|null given\.$#'
+			message: '#^Parameter \#1 \$permalink of function get_cat_id_from_old_permalink expects string, float\|int\|string given\.$#'
 			identifier: argument.type
-			count: 2
+			count: 1
+			path: admin/include/functions_permalinks.php
+
+		-
+			message: '#^Function add_uploaded_file\(\) should return int but returns float\|int\|string\|null\.$#'
+			identifier: return.type
+			count: 1
 			path: admin/include/functions_upload.inc.php
 
 		-
-			message: '#^Parameter \#1 \$filename of function get_extension expects string, string\|null given\.$#'
+			message: '#^Parameter \#1 \$destination_filepath of method Piwigo\\Admin\\Image\\pwg_image\:\:pwg_resize\(\) expects string, float\|int\|string given\.$#'
 			identifier: argument.type
 			count: 1
 			path: admin/include/functions_upload.inc.php
 
 		-
-			message: '#^Parameter \#1 \$from of function rename expects string, string\|null given\.$#'
-			identifier: argument.type
-			count: 2
-			path: admin/include/functions_upload.inc.php
-
-		-
-			message: '#^Parameter \#1 \$infos of class Piwigo\\Image\\SrcImage constructor expects array\<string, mixed\>, array\<string, mixed\>\|null given\.$#'
+			message: '#^Parameter \#1 \$filename of function chmod expects string, float\|int\|string given\.$#'
 			identifier: argument.type
 			count: 1
 			path: admin/include/functions_upload.inc.php
 
 		-
-			message: '#^Parameter \#1 \$rotation_angle of static method Piwigo\\Admin\\Image\\pwg_image\:\:get_rotation_code_from_angle\(\) expects int, int\|null given\.$#'
+			message: '#^Parameter \#1 \$image_filepath of function need_resize expects string, float\|int\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/functions_upload.inc.php
+
+		-
+			message: '#^Parameter \#1 \$image_id of function add_uploaded_file_add_to_categories expects int, float\|int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/functions_upload.inc.php
+
+		-
+			message: '#^Parameter \#1 \$path of function basename expects string, float\|int\|string given\.$#'
+			identifier: argument.type
+			count: 2
+			path: admin/include/functions_upload.inc.php
+
+		-
+			message: '#^Parameter \#1 \$path of function pwg_image_infos expects string, float\|int\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/functions_upload.inc.php
+
+		-
+			message: '#^Parameter \#1 \$source_filepath of class Piwigo\\Admin\\Image\\pwg_image constructor expects string, float\|int\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/functions_upload.inc.php
+
+		-
+			message: '#^Parameter \#1 \$source_filepath of static method Piwigo\\Admin\\Image\\pwg_image\:\:get_rotation_angle\(\) expects string, float\|int\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/functions_upload.inc.php
+
+		-
+			message: '#^Parameter \#2 \$to of function move_uploaded_file expects string, float\|int\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/functions_upload.inc.php
+
+		-
+			message: '#^Parameter \#2 \$to of function rename expects string, float\|int\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/include/functions_upload.inc.php
+
+		-
+			message: '#^Parameter \#3 \$subject of function preg_replace expects array\<float\|int\|string\>\|string, float\|int\|string given\.$#'
 			identifier: argument.type
 			count: 1
 			path: admin/include/functions_upload.inc.php
@@ -1381,190 +1315,172 @@ parameters:
 			path: admin/include/pclzip.lib.php
 
 		-
-			message: '#^Cannot use array destructuring on array\<int, mixed\>\|null\.$#'
-			identifier: offsetAccess.nonArray
+			message: '#^Parameter \#1 \$uppercats of function get_cat_display_name_cache expects string, float\|int\|string given\.$#'
+			identifier: argument.type
 			count: 1
 			path: admin/include/photos_add_direct_prepare.inc.php
 
 		-
-			message: '#^Offset ''category_id'' might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
+			message: '#^Parameter \#1 \$uppercats of function get_cat_display_name_cache expects string, float\|int\|string\|null given\.$#'
+			identifier: argument.type
 			count: 1
 			path: admin/include/photos_add_direct_prepare.inc.php
 
 		-
-			message: '#^Offset ''uppercats'' might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
-			count: 2
-			path: admin/include/photos_add_direct_prepare.inc.php
-
-		-
-			message: '#^Cannot use array destructuring on array\<int, mixed\>\|null\.$#'
-			identifier: offsetAccess.nonArray
-			count: 5
-			path: admin/intro.php
-
-		-
-			message: '#^Cannot use array destructuring on array\<int, mixed\>\|null\.$#'
-			identifier: offsetAccess.nonArray
-			count: 2
-			path: admin/maintenance_actions.php
-
-		-
-			message: '#^Parameter \#1 \$value of function count expects array\|Countable, array\<mixed\>\|null given\.$#'
+			message: '#^Parameter \#1 \$data of function unserialize expects string, float\|int\|string\|null given\.$#'
 			identifier: argument.type
 			count: 1
-			path: admin/maintenance_actions.php
+			path: admin/maintenance_sys.php
 
 		-
-			message: '#^Parameter \#1 \$version1 of function version_compare expects string, string\|null given\.$#'
+			message: '#^Parameter \#1 \$param of function conf_update_param expects string, float\|int\|string\|null given\.$#'
 			identifier: argument.type
-			count: 1
-			path: admin/maintenance_actions.php
-
-		-
-			message: '#^Cannot use array destructuring on array\<int, mixed\>\|null\.$#'
-			identifier: offsetAccess.nonArray
-			count: 1
-			path: admin/maintenance_env.php
-
-		-
-			message: '#^Parameter \#1 \$version1 of function version_compare expects string, string\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: admin/maintenance_env.php
-
-		-
-			message: '#^Cannot use array destructuring on array\<int, mixed\>\|null\.$#'
-			identifier: offsetAccess.nonArray
 			count: 1
 			path: admin/notification_by_mail.php
 
 		-
-			message: '#^Parameter \#2 \$haystack of function in_array expects array, array\<string\>\|null given\.$#'
+			message: '#^Parameter \#2 \$end of function news_exists expects string\|null, float\|int\|string\|null given\.$#'
 			identifier: argument.type
 			count: 1
+			path: admin/notification_by_mail.php
+
+		-
+			message: '#^Possibly invalid array key type float\|int\|string\|null\.$#'
+			identifier: offsetAccess.invalidOffset
+			count: 2
+			path: admin/notification_by_mail.php
+
+		-
+			message: '#^Parameter \#1 \$uppercats of function get_cat_display_name_cache expects string, float\|int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 2
 			path: admin/permalinks.php
 
 		-
-			message: '#^Cannot use array destructuring on array\<int, mixed\>\|null\.$#'
-			identifier: offsetAccess.nonArray
-			count: 3
+			message: '#^Binary operation "/" between float\|int\|string\|null and 1024 results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
 			path: admin/photos_add_direct.php
 
 		-
-			message: '#^Offset ''file'' might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
+			message: '#^Cannot access offset 0 on float\|int\<min, \-1\>\|int\<1, max\>\|non\-falsy\-string\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: admin/picture_coi.php
 
 		-
-			message: '#^Parameter \#1 \$info of function render_element_name expects array\<string, mixed\>, array\<string, mixed\>\|null given\.$#'
-			identifier: argument.type
+			message: '#^Cannot access offset 1 on float\|int\<min, \-1\>\|int\<1, max\>\|non\-falsy\-string\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: admin/picture_coi.php
 
 		-
-			message: '#^Parameter \#1 \$infos of class Piwigo\\Image\\SrcImage constructor expects array\<string, mixed\>, array\<string, mixed\>\|null given\.$#'
-			identifier: argument.type
+			message: '#^Cannot access offset 2 on float\|int\<min, \-1\>\|int\<1, max\>\|non\-falsy\-string\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: admin/picture_coi.php
 
 		-
-			message: '#^Parameter \#1 \$infos of function delete_element_derivatives expects array\<mixed\>, array\<string, mixed\>\|null given\.$#'
-			identifier: argument.type
-			count: 2
-			path: admin/picture_coi.php
-
-		-
-			message: '#^Parameter \#2 \$infos of static method Piwigo\\Image\\DerivativeImage\:\:url\(\) expects array\<mixed\>\|Piwigo\\Image\\SrcImage, array\<string, mixed\>\|null given\.$#'
-			identifier: argument.type
+			message: '#^Cannot access offset 3 on float\|int\<min, \-1\>\|int\<1, max\>\|non\-falsy\-string\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: admin/picture_coi.php
 
 		-
-			message: '#^Cannot use array destructuring on array\<int, mixed\>\|null\.$#'
-			identifier: offsetAccess.nonArray
+			message: '#^Binary operation "/" between float\|int\|string\|null and 1024 results in an error\.$#'
+			identifier: binaryOp.invalid
 			count: 1
 			path: admin/picture_modify.php
 
 		-
-			message: '#^Cannot use array destructuring on array\<int, mixed\>\|null\.$#'
-			identifier: offsetAccess.nonArray
-			count: 2
+			message: '#^Parameter \#2 \$nb_element of function create_navigation_bar expects int, float\|int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
 			path: admin/rating.php
 
 		-
-			message: '#^Cannot use array destructuring on array\<int, mixed\>\|null\.$#'
-			identifier: offsetAccess.nonArray
+			message: '#^Possibly invalid array key type float\|int\|string\|null\.$#'
+			identifier: offsetAccess.invalidOffset
+			count: 3
+			path: admin/rating.php
+
+		-
+			message: '#^Binary operation "\*" between int\<1, max\> and int\|string results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 2
+			path: admin/rating_user.php
+
+		-
+			message: '#^Binary operation "\-" between int\|string and float results in an error\.$#'
+			identifier: binaryOp.invalid
 			count: 1
 			path: admin/rating_user.php
 
 		-
-			message: '#^Cannot use array destructuring on array\<int, mixed\>\|null\.$#'
-			identifier: offsetAccess.nonArray
-			count: 1
-			path: admin/site_manager.php
-
-		-
-			message: '#^Offset ''count'' might not exist on array\<string, mixed\>\|null\.$#'
+			message: '#^Offset float\|int\|string\|null might not exist on array\<int, array\{avg\: float\}\>\.$#'
 			identifier: offsetAccess.notFound
 			count: 1
+			path: admin/rating_user.php
+
+		-
+			message: '#^Parameter \#1 \$array of function array_flip expects array\<int\|string\>, list\<float\|int\|string\|null\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/rating_user.php
+
+		-
+			message: '#^Parameter \#2 \$user_status of function is_autorize_status expects string, float\|int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: admin/rating_user.php
+
+		-
+			message: '#^Possibly invalid array key type float\|int\|string\|null\.$#'
+			identifier: offsetAccess.invalidOffset
+			count: 16
+			path: admin/rating_user.php
+
+		-
+			message: '#^Offset float\|int\|string\|null might not exist on array\<string, array\<string, float\|int\|string\|null\>\>\.$#'
+			identifier: offsetAccess.notFound
+			count: 2
 			path: admin/site_manager.php
 
 		-
-			message: '#^Cannot use array destructuring on array\<int, mixed\>\|null\.$#'
-			identifier: offsetAccess.nonArray
-			count: 2
-			path: admin/site_update.php
-
-		-
-			message: '#^Cannot use array destructuring on array\<int, mixed\>\|null\.$#'
-			identifier: offsetAccess.nonArray
+			message: '#^Parameter \#1 \$url of function url_is_remote expects string, float\|int\|string\|null given\.$#'
+			identifier: argument.type
 			count: 1
-			path: admin/stats.php
+			path: admin/site_manager.php
 
 		-
-			message: '#^Cannot use array destructuring on array\<int, mixed\>\|null\.$#'
-			identifier: offsetAccess.nonArray
-			count: 3
+			message: '#^Possibly invalid array key type float\|int\|string\|null\.$#'
+			identifier: offsetAccess.invalidOffset
+			count: 2
+			path: admin/site_manager.php
+
+		-
+			message: '#^Parameter \#3 \$subject of function str_replace expects array\<string\>\|string, float\|int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
 			path: admin/user_activity.php
 
 		-
-			message: '#^Offset ''level'' might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
-			count: 1
-			path: admin/user_list.php
-
-		-
-			message: '#^Offset ''nb_image_page'' might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
-			count: 1
-			path: admin/user_list.php
-
-		-
-			message: '#^Offset ''recent_period'' might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
-			count: 1
-			path: admin/user_list.php
-
-		-
-			message: '#^Cannot use array destructuring on array\<int, mixed\>\|null\.$#'
-			identifier: offsetAccess.nonArray
-			count: 1
-			path: comments.php
-
-		-
-			message: '#^Parameter \#2 \$selecteds of function display_select_cat_wrapper expects array\<int\>\|string, array\<int, int\|null\> given\.$#'
+			message: '#^Parameter \#1 \$s of function pwg_db_real_escape_string expects string, float\|int\|string\|null given\.$#'
 			identifier: argument.type
 			count: 1
-			path: comments.php
+			path: admin/user_list.php
 
 		-
-			message: '#^Parameter \#3 \$start of function create_navigation_bar expects int, int\|null given\.$#'
+			message: '#^Possibly invalid array key type float\|int\|string\|null\.$#'
+			identifier: offsetAccess.invalidOffset
+			count: 3
+			path: admin/user_list.php
+
+		-
+			message: '#^Parameter \#1 \$uppercats of function get_cat_display_name_cache expects string, float\|int\|string\|null given\.$#'
 			identifier: argument.type
 			count: 1
-			path: comments.php
+			path: admin/user_perm.php
 
 		-
 			message: '#^Access to property \$author on an unknown class FeedItem\.$#'
@@ -1639,12 +1555,6 @@ parameters:
 			path: feed.php
 
 		-
-			message: '#^Cannot use array destructuring on array\<int, mixed\>\|null\.$#'
-			identifier: offsetAccess.nonArray
-			count: 1
-			path: feed.php
-
-		-
 			message: '#^Instantiated class FeedItem not found\.$#'
 			identifier: class.notFound
 			count: 2
@@ -1657,94 +1567,52 @@ parameters:
 			path: feed.php
 
 		-
-			message: '#^Offset ''last_check'' might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
+			message: '#^Parameter \#1 \$datetime of function datetime_to_ts expects string, float\|int\|string given\.$#'
+			identifier: argument.type
 			count: 1
 			path: feed.php
 
 		-
-			message: '#^Offset ''user_id'' might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
-			count: 2
+			message: '#^Parameter \#1 \$datetime of function datetime_to_ts expects string, float\|int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
 			path: feed.php
 
 		-
-			message: '#^Offset 0 might not exist on array\<int, float\|int\>\|null\.$#'
-			identifier: offsetAccess.notFound
-			count: 5
-			path: i.php
-
-		-
-			message: '#^Offset 1 might not exist on array\<int, float\|int\>\|null\.$#'
-			identifier: offsetAccess.notFound
-			count: 5
-			path: i.php
-
-		-
-			message: '#^Parameter \#1 \$rotation_angle of static method Piwigo\\Admin\\Image\\pwg_image\:\:get_rotation_code_from_angle\(\) expects int, int\|null given\.$#'
+			message: '#^Parameter \#1 \$original of function format_date expects DateTime\|int\|string\|null, float\|int\|string\|null given\.$#'
 			identifier: argument.type
 			count: 1
-			path: i.php
+			path: feed.php
 
 		-
-			message: '#^Parameter \#1 \$s of function url_to_size expects string, string\|null given\.$#'
+			message: '#^Parameter \#1 \$start of function news expects string\|null, float\|int\|string\|null given\.$#'
 			identifier: argument.type
 			count: 1
-			path: i.php
+			path: feed.php
 
 		-
-			message: '#^Cannot use array destructuring on array\<int, mixed\>\|null\.$#'
-			identifier: offsetAccess.nonArray
-			count: 2
-			path: include/category_cats.inc.php
-
-		-
-			message: '#^Cannot use array destructuring on array\<int, mixed\>\|null\.$#'
-			identifier: offsetAccess.nonArray
-			count: 1
-			path: include/common.inc.php
-
-		-
-			message: '#^Cannot use array destructuring on array\<int, mixed\>\|null\.$#'
-			identifier: offsetAccess.nonArray
-			count: 4
-			path: include/dblayer/functions_mysqli.inc.php
-
-		-
-			message: '#^Offset 0 might not exist on array\<float\|int\>\|null\.$#'
-			identifier: offsetAccess.notFound
-			count: 1
-			path: include/derivative_params.inc.php
-
-		-
-			message: '#^Offset 1 might not exist on array\<float\|int\>\|null\.$#'
-			identifier: offsetAccess.notFound
-			count: 1
-			path: include/derivative_params.inc.php
-
-		-
-			message: '#^Parameter \#1 \$s of function size_to_url expects array\<float\|int\>, array\<float\|int\>\|null given\.$#'
+			message: '#^Parameter \#1 \$user_id of function build_user expects int, float\|int\|string\|null given\.$#'
 			identifier: argument.type
 			count: 1
-			path: include/derivative_params.inc.php
+			path: feed.php
 
 		-
-			message: '#^Parameter \#2 \$coi of method Piwigo\\Image\\ImageRect\:\:crop_h\(\) expects string, string\|null given\.$#'
+			message: '#^Parameter \#2 \$date of function pwg_db_get_recent_period_expression expects string, float\|int\|string\|null given\.$#'
 			identifier: argument.type
 			count: 1
-			path: include/derivative_params.inc.php
+			path: feed.php
 
 		-
-			message: '#^Parameter \#2 \$coi of method Piwigo\\Image\\ImageRect\:\:crop_v\(\) expects string, string\|null given\.$#'
+			message: '#^Parameter \#2 \$end of function news expects string\|null, float\|int\|string\|null given\.$#'
 			identifier: argument.type
 			count: 1
-			path: include/derivative_params.inc.php
+			path: feed.php
 
 		-
-			message: '#^Parameter \#3 \$min_size of class Piwigo\\Image\\SizingParams constructor expects array\<int\>\|null, array\<int, int\|null\> given\.$#'
-			identifier: argument.type
+			message: '#^Possibly invalid array key type float\|int\|string\|null\.$#'
+			identifier: offsetAccess.invalidOffset
 			count: 1
-			path: include/derivative_std_params.inc.php
+			path: include/category_default.inc.php
 
 		-
 			message: '#^Argument of an invalid type DOMNodeList\<DOMNameSpaceNode\|DOMNode\>\|false supplied for foreach, only iterables are supported\.$#'
@@ -1945,214 +1813,34 @@ parameters:
 			path: include/emogrifier.class.php
 
 		-
-			message: '#^Cannot use array destructuring on array\<int, mixed\>\|null\.$#'
-			identifier: offsetAccess.nonArray
-			count: 6
-			path: include/functions.inc.php
-
-		-
-			message: '#^Function transform_date\(\) should return string but returns string\|null\.$#'
-			identifier: return.type
-			count: 2
-			path: include/functions.inc.php
-
-		-
-			message: '#^Parameter \#1 \$pattern of function preg_match expects string, string\|null given\.$#'
-			identifier: argument.type
-			count: 2
-			path: include/functions.inc.php
-
-		-
-			message: '#^Parameter \#1 \$s of function pwg_db_real_escape_string expects string, string\|null given\.$#'
-			identifier: argument.type
+			message: '#^Cannot access offset float\|int\|string\|null on non\-empty\-array\<int\|string, float\|int\|string\|null\>\|float\|int\|string\|null\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: include/functions.inc.php
 
 		-
-			message: '#^Parameter \#1 \$version1 of function version_compare expects string, string\|null given\.$#'
-			identifier: argument.type
-			count: 2
+			message: '#^Possibly invalid array key type float\|int\|string\|null\.$#'
+			identifier: offsetAccess.invalidOffset
+			count: 5
 			path: include/functions.inc.php
 
 		-
-			message: '#^Parameter \#2 \$version2 of function version_compare expects string, string\|null given\.$#'
-			identifier: argument.type
-			count: 2
-			path: include/functions.inc.php
-
-		-
-			message: '#^Parameter \#3 \$subject of function str_replace expects array\<string\>\|string, string\|null given\.$#'
-			identifier: argument.type
+			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
 			count: 1
-			path: include/functions.inc.php
+			path: include/functions_mail.inc.php
 
 		-
-			message: '#^Cannot use array destructuring on array\<int, mixed\>\|null\.$#'
-			identifier: offsetAccess.nonArray
-			count: 1
-			path: include/functions_category.inc.php
-
-		-
-			message: '#^Cannot use array destructuring on array\<int, mixed\>\|null\.$#'
-			identifier: offsetAccess.nonArray
-			count: 2
-			path: include/functions_comment.inc.php
-
-		-
-			message: '#^Offset ''user_exists'' might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
-			count: 1
-			path: include/functions_comment.inc.php
-
-		-
-			message: '#^Parameter \#3 \$options of function setcookie expects array\{expires\?\: int, path\?\: string, domain\?\: string, secure\?\: bool, httponly\?\: bool, samesite\?\: ''Lax''\|''lax''\|''None''\|''none''\|''Strict''\|''strict''\}, array\{expires\: 0, path\: string\|null\} given\.$#'
-			identifier: argument.type
-			count: 1
-			path: include/functions_cookie.inc.php
-
-		-
-			message: '#^Parameter \#3 \$options of function setcookie expects array\{expires\?\: int, path\?\: string, domain\?\: string, secure\?\: bool, httponly\?\: bool, samesite\?\: ''Lax''\|''lax''\|''None''\|''none''\|''Strict''\|''strict''\}, array\{expires\: int\<min, \-1\>\|int\<1, max\>, path\: string\|null\} given\.$#'
-			identifier: argument.type
-			count: 1
-			path: include/functions_cookie.inc.php
-
-		-
-			message: '#^Offset ''upper_names'' might not exist on array\<mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
-			count: 1
-			path: include/functions_html.inc.php
-
-		-
-			message: '#^Cannot use array destructuring on array\<int, mixed\>\|null\.$#'
-			identifier: offsetAccess.nonArray
+			message: '#^Cannot cast float\|int\|list\<array\<string, float\|int\|string\|null\>\>\|string\|null to string\.$#'
+			identifier: cast.string
 			count: 1
 			path: include/functions_notification.inc.php
 
 		-
-			message: '#^Function get_recent_post_dates_array\(\) should return array\<mixed\> but returns array\<mixed\>\|null\.$#'
+			message: '#^Function pwg_session_read\(\) should return string but returns float\|int\|string\|null\.$#'
 			identifier: return.type
 			count: 1
-			path: include/functions_notification.inc.php
-
-		-
-			message: '#^Function new_comments\(\) should return array\<int\> but returns array\<mixed\>\|null\.$#'
-			identifier: return.type
-			count: 1
-			path: include/functions_notification.inc.php
-
-		-
-			message: '#^Function new_elements\(\) should return array\<int\> but returns array\<mixed\>\|null\.$#'
-			identifier: return.type
-			count: 1
-			path: include/functions_notification.inc.php
-
-		-
-			message: '#^Function new_users\(\) should return array\<int\> but returns array\<mixed\>\|null\.$#'
-			identifier: return.type
-			count: 1
-			path: include/functions_notification.inc.php
-
-		-
-			message: '#^Function updated_categories\(\) should return array\<int\> but returns array\<mixed\>\|null\.$#'
-			identifier: return.type
-			count: 1
-			path: include/functions_notification.inc.php
-
-		-
-			message: '#^Cannot call method get_sql\(\) on Piwigo\\Search\\QSearchScope\|null\.$#'
-			identifier: method.nonObject
-			count: 9
-			path: include/functions_search.inc.php
-
-		-
-			message: '#^Cannot use array destructuring on array\<int, mixed\>\|null\.$#'
-			identifier: offsetAccess.nonArray
-			count: 2
-			path: include/functions_search.inc.php
-
-		-
-			message: '#^Function get_search_results\(\) should return array\<mixed\> but returns array\<mixed\>\|null\.$#'
-			identifier: return.type
-			count: 1
-			path: include/functions_search.inc.php
-
-		-
-			message: '#^Offset ''items'' might not exist on array\<mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
-			count: 1
-			path: include/functions_search.inc.php
-
-		-
-			message: '#^Offset ''rules'' might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
-			count: 1
-			path: include/functions_search.inc.php
-
-		-
-			message: '#^Cannot use array destructuring on array\<int, mixed\>\|null\.$#'
-			identifier: offsetAccess.nonArray
-			count: 15
-			path: include/functions_user.inc.php
-
-		-
-			message: '#^Function get_user_last_visit_from_history\(\) should return string but returns string\|null\.$#'
-			identifier: return.type
-			count: 1
-			path: include/functions_user.inc.php
-
-		-
-			message: '#^Offset ''password'' might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
-			count: 1
-			path: include/functions_user.inc.php
-
-		-
-			message: '#^Offset ''username'' might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
-			count: 1
-			path: include/functions_user.inc.php
-
-		-
-			message: '#^Parameter \#1 \$mail_address of function email_check_format expects string, string\|null given\.$#'
-			identifier: argument.type
-			count: 2
-			path: include/functions_user.inc.php
-
-		-
-			message: '#^Parameter \#1 \$to of function pwg_mail expects array\<mixed\>\|string, string\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: include/functions_user.inc.php
-
-		-
-			message: '#^Parameter \#1 \.\.\.\$arrays of function array_merge expects array, array\<string, mixed\>\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: include/functions_user.inc.php
-
-		-
-			message: '#^Parameter \#2 \.\.\.\$arrays of function array_merge expects array, array\<string, mixed\>\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: include/functions_user.inc.php
-
-		-
-			message: '#^Method Inflector_en\:\:get_variants\(\) should return array\<string\> but returns array\<string\|null\>\.$#'
-			identifier: return.type
-			count: 1
-			path: include/inflectors/en.php
-
-		-
-			message: '#^Parameter \#2 \$word of static method Inflector_en\:\:run\(\) expects string, string\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: include/inflectors/en.php
-
-		-
-			message: '#^Method Inflector_fr\:\:get_variants\(\) should return array\<string\> but returns list\<string\|null\>\.$#'
-			identifier: return.type
-			count: 1
-			path: include/inflectors/fr.php
+			path: include/functions_session.inc.php
 
 		-
 			message: '#^Cannot unset property JShrink\\Minifier\:\:\$c because it might have hooks in a subclass\.$#'
@@ -3737,12 +3425,6 @@ parameters:
 			identifier: assign.propertyType
 			count: 1
 			path: include/minify/src/Minify.php
-
-		-
-			message: '#^Cannot use array destructuring on array\<int, mixed\>\|null\.$#'
-			identifier: offsetAccess.nonArray
-			count: 1
-			path: include/no_photo_yet.inc.php
 
 		-
 			message: '#^Method PasswordHash\:\:CheckPassword\(\) has no return type specified\.$#'
@@ -7558,439 +7240,349 @@ parameters:
 			path: include/phpqrcode.php
 
 		-
-			message: '#^Offset ''nb_comments'' might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
-			count: 3
-			path: include/picture_comment.inc.php
-
-		-
-			message: '#^Cannot use array destructuring on array\<int, mixed\>\|null\.$#'
-			identifier: offsetAccess.nonArray
+			message: '#^Binary operation "\+" between float\|int\|string and int results in an error\.$#'
+			identifier: binaryOp.invalid
 			count: 1
-			path: include/picture_rate.inc.php
+			path: include/ws_functions/pwg.images.php
 
 		-
-			message: '#^Offset ''rate'' might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
-			count: 1
-			path: include/picture_rate.inc.php
-
-		-
-			message: '#^Offset ''list_of_dates'' might not exist on array\{pre_counters\: array\<\(float\|int\)\>, list_of_dates\: array\<string, array\{months\: non\-empty\-array\<non\-falsy\-string, array\{days\: non\-empty\-array\<string, array\{count\: int\<1, max\>, label\?\: string\}\>, count\: int\<1, max\>, label\?\: non\-falsy\-string\}\>, count\: int\<1, max\>, label\?\: string\}\>\}\|null\.$#'
-			identifier: offsetAccess.notFound
+			message: '#^Call to function is_array\(\) with array\<mixed, mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
 			count: 2
-			path: include/search_filters.inc.php
+			path: include/ws_functions/pwg.images.php
 
 		-
-			message: '#^Offset ''list_of_dates'' might not exist on array\{pre_counters\: array\<\(float\|int\)\>, list_of_dates\: array\<string, array\{months\: non\-empty\-array\<non\-falsy\-string, array\{days\: non\-empty\-array\<string, array\{count\: int\<1, max\>\}\>, count\: int\<1, max\>\}\>, count\: int\<1, max\>\}\>\}\|null\.$#'
-			identifier: offsetAccess.notFound
-			count: 2
-			path: include/search_filters.inc.php
-
-		-
-			message: '#^Cannot call method encodeResponse\(\) on Piwigo\\Ws\\Encoder\\PwgResponseEncoder\|null\.$#'
-			identifier: method.nonObject
+			message: '#^Call to function is_array\(\) with array\<mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
 			count: 1
-			path: include/ws_core.inc.php
+			path: include/ws_functions/pwg.images.php
 
 		-
-			message: '#^Cannot call method getContentType\(\) on Piwigo\\Ws\\Encoder\\PwgResponseEncoder\|null\.$#'
-			identifier: method.nonObject
+			message: '#^Call to function is_scalar\(\) with \(int\|string\) will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
 			count: 1
-			path: include/ws_core.inc.php
+			path: include/ws_functions/pwg.images.php
 
 		-
-			message: '#^Cannot call method handleRequest\(\) on Piwigo\\Ws\\PwgRequestHandler\|null\.$#'
-			identifier: method.nonObject
+			message: '#^Function ws_images_add\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
 			count: 1
-			path: include/ws_core.inc.php
+			path: include/ws_functions/pwg.images.php
 
 		-
-			message: '#^Cannot use array destructuring on array\<int, mixed\>\|null\.$#'
-			identifier: offsetAccess.nonArray
-			count: 7
-			path: include/ws_functions/pwg.categories.php
-
-		-
-			message: '#^Offset ''representative_picture_id'' might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
+			message: '#^Function ws_images_addComment\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
 			count: 1
-			path: include/ws_functions/pwg.categories.php
+			path: include/ws_functions/pwg.images.php
 
 		-
-			message: '#^Cannot call method get_url\(\) on Piwigo\\Image\\DerivativeImage\|null\.$#'
-			identifier: method.nonObject
+			message: '#^Function ws_images_addSimple\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
 			count: 1
-			path: include/ws_functions/pwg.comments.php
+			path: include/ws_functions/pwg.images.php
 
 		-
-			message: '#^Offset ''all_comments'' might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
+			message: '#^Function ws_images_checkFiles\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
 			count: 1
-			path: include/ws_functions/pwg.comments.php
+			path: include/ws_functions/pwg.images.php
 
 		-
-			message: '#^Offset ''ended_at'' might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
+			message: '#^Function ws_images_deleteOrphans\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
 			count: 1
-			path: include/ws_functions/pwg.comments.php
+			path: include/ws_functions/pwg.images.php
 
 		-
-			message: '#^Offset ''pending'' might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
+			message: '#^Function ws_images_filteredSearch_create\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
 			count: 1
-			path: include/ws_functions/pwg.comments.php
+			path: include/ws_functions/pwg.images.php
 
 		-
-			message: '#^Offset ''started_at'' might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
+			message: '#^Function ws_images_getInfo\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
 			count: 1
-			path: include/ws_functions/pwg.comments.php
+			path: include/ws_functions/pwg.images.php
 
 		-
-			message: '#^Offset ''validated'' might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
+			message: '#^Function ws_images_setMd5sum\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
 			count: 1
-			path: include/ws_functions/pwg.comments.php
+			path: include/ws_functions/pwg.images.php
 
 		-
-			message: '#^Cannot use array destructuring on array\<int, mixed\>\|null\.$#'
-			identifier: offsetAccess.nonArray
+			message: '#^Function ws_images_syncMetadata\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: include/ws_functions/pwg.images.php
+
+		-
+			message: '#^Function ws_images_uploadCompleted\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: include/ws_functions/pwg.images.php
+
+		-
+			message: '#^Offset ''date_posted'' on non\-empty\-array\{allwords\?\: array\{mode\: string, fields\: array\<mixed\>, words\: array\|null\}, tags\?\: array\{words\: array\<mixed\>, mode\: string\}, cat\?\: array\{words\: array\<mixed\>, sub_inc\: mixed\}, author\?\: array\{words\: list\<string\>, mode\: ''OR''\}, filetypes\?\: array\<mixed\>, added_by\?\: array\<mixed\>\} in isset\(\) does not exist\.$#'
+			identifier: isset.offset
+			count: 1
+			path: include/ws_functions/pwg.images.php
+
+		-
+			message: '#^PHPDoc tag @return with type array\<mixed\>\|PwgError is not subtype of native type array\|Piwigo\\Ws\\PwgError\.$#'
+			identifier: return.phpDocType
+			count: 10
+			path: include/ws_functions/pwg.images.php
+
+		-
+			message: '#^PHPDoc tag @var with type array\<string, mixed\> is not subtype of native type array\{mode\: ''AND'', fields\?\: non\-empty\-array\{allwords\?\: array\{mode\: string, fields\: array\<mixed\>, words\: array\|null\}, tags\?\: array\{words\: array\<mixed\>, mode\: string\}, cat\?\: array\{words\: array\<mixed\>, sub_inc\: mixed\}, author\?\: array\{words\: list\<string\>, mode\: ''OR''\}, filetypes\?\: array\<mixed\>, added_by\?\: array\<mixed\>\}\}\.$#'
+			identifier: varTag.nativeType
+			count: 1
+			path: include/ws_functions/pwg.images.php
+
+		-
+			message: '#^Parameter \#1 \$ids of function sync_metadata expects array\<int\>, list\<float\|int\|string\|null\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: include/ws_functions/pwg.images.php
+
+		-
+			message: '#^Possibly invalid array key type float\|int\|string\|null\.$#'
+			identifier: offsetAccess.invalidOffset
 			count: 9
-			path: include/ws_functions/pwg.groups.php
+			path: include/ws_functions/pwg.permissions.php
 
 		-
-			message: '#^Cannot use array destructuring on array\<int, mixed\>\|null\.$#'
-			identifier: offsetAccess.nonArray
-			count: 8
-			path: include/ws_functions/pwg.images.php
-
-		-
-			message: '#^Offset ''average'' might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
+			message: '#^Function ws_getActivityList\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
 			count: 1
-			path: include/ws_functions/pwg.images.php
-
-		-
-			message: '#^Offset ''count'' might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
-			count: 1
-			path: include/ws_functions/pwg.images.php
-
-		-
-			message: '#^Offset ''file'' might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
-			count: 1
-			path: include/ws_functions/pwg.images.php
-
-		-
-			message: '#^Offset ''filesize''\|''height''\|''width'' might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
-			count: 1
-			path: include/ws_functions/pwg.images.php
-
-		-
-			message: '#^Offset ''items'' might not exist on array\<mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
-			count: 2
-			path: include/ws_functions/pwg.images.php
-
-		-
-			message: '#^Offset ''max_rank'' might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
-			count: 1
-			path: include/ws_functions/pwg.images.php
-
-		-
-			message: '#^Offset ''md5sum'' might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
-			count: 4
-			path: include/ws_functions/pwg.images.php
-
-		-
-			message: '#^Offset ''name'' might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
-			count: 1
-			path: include/ws_functions/pwg.images.php
-
-		-
-			message: '#^Offset ''nb_photos'' might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
-			count: 2
-			path: include/ws_functions/pwg.images.php
-
-		-
-			message: '#^Parameter \#1 \$image_row of function ws_std_get_urls expects array\<string, mixed\>, array\<string, mixed\>\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: include/ws_functions/pwg.images.php
-
-		-
-			message: '#^Parameter \#1 \$infos of static method Piwigo\\Image\\DerivativeImage\:\:thumb_url\(\) expects array\<mixed\>\|Piwigo\\Image\\SrcImage, array\<string, mixed\>\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: include/ws_functions/pwg.images.php
-
-		-
-			message: '#^Parameter \#1 \$tag_name of function tag_id_from_tag_name expects string, string\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: include/ws_functions/pwg.images.php
-
-		-
-			message: '#^Parameter \#1 \.\.\.\$arrays of function array_merge expects array, array\<string, mixed\>\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: include/ws_functions/pwg.images.php
-
-		-
-			message: '#^Parameter \#2 \$format_ext of function add_format expects string, string\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: include/ws_functions/pwg.images.php
-
-		-
-			message: '#^Parameter \#2 \$infos of static method Piwigo\\Image\\DerivativeImage\:\:url\(\) expects array\<mixed\>\|Piwigo\\Image\\SrcImage, array\<string, mixed\>\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: include/ws_functions/pwg.images.php
-
-		-
-			message: '#^Cannot use array destructuring on array\<int, mixed\>\|null\.$#'
-			identifier: offsetAccess.nonArray
-			count: 15
 			path: include/ws_functions/pwg.php
 
 		-
-			message: '#^Cannot use array destructuring on array\<int, mixed\>\|null\.$#'
-			identifier: offsetAccess.nonArray
-			count: 5
+			message: '#^Function ws_getMissingDerivatives\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: include/ws_functions/pwg.php
+
+		-
+			message: '#^PHPDoc tag @return with type array\<mixed\>\|PwgError is not subtype of native type array\|Piwigo\\Ws\\PwgError\.$#'
+			identifier: return.phpDocType
+			count: 2
+			path: include/ws_functions/pwg.php
+
+		-
+			message: '#^Function ws_tags_add\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
 			path: include/ws_functions/pwg.tags.php
 
 		-
-			message: '#^Cannot use array destructuring on array\<int, mixed\>\|null\.$#'
-			identifier: offsetAccess.nonArray
+			message: '#^Function ws_tags_delete\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: include/ws_functions/pwg.tags.php
+
+		-
+			message: '#^Function ws_tags_duplicate\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: include/ws_functions/pwg.tags.php
+
+		-
+			message: '#^Function ws_tags_merge\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: include/ws_functions/pwg.tags.php
+
+		-
+			message: '#^PHPDoc tag @return with type array\<mixed\>\|PwgError is not subtype of native type array\|Piwigo\\Ws\\PwgError\.$#'
+			identifier: return.phpDocType
 			count: 4
+			path: include/ws_functions/pwg.tags.php
+
+		-
+			message: '#^PHPDoc tag @var with type array\<string, mixed\> is not subtype of native type non\-empty\-array\<int, non\-empty\-array\>\.$#'
+			identifier: varTag.nativeType
+			count: 1
 			path: include/ws_functions/pwg.users.php
 
 		-
-			message: '#^Cannot call method end_element\(\) on Piwigo\\Ws\\Protocol\\PwgXmlWriter\|null\.$#'
-			identifier: method.nonObject
-			count: 2
-			path: include/ws_protocols/rest_encoder.php
-
-		-
-			message: '#^Cannot call method getOutput\(\) on Piwigo\\Ws\\Protocol\\PwgXmlWriter\|null\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: include/ws_protocols/rest_encoder.php
-
-		-
-			message: '#^Cannot call method start_element\(\) on Piwigo\\Ws\\Protocol\\PwgXmlWriter\|null\.$#'
-			identifier: method.nonObject
-			count: 2
-			path: include/ws_protocols/rest_encoder.php
-
-		-
-			message: '#^Cannot call method write_attribute\(\) on Piwigo\\Ws\\Protocol\\PwgXmlWriter\|null\.$#'
-			identifier: method.nonObject
-			count: 2
-			path: include/ws_protocols/rest_encoder.php
-
-		-
-			message: '#^Cannot call method write_content\(\) on Piwigo\\Ws\\Protocol\\PwgXmlWriter\|null\.$#'
-			identifier: method.nonObject
-			count: 4
-			path: include/ws_protocols/rest_encoder.php
-
-		-
-			message: '#^Cannot use array destructuring on array\<int, mixed\>\|null\.$#'
-			identifier: offsetAccess.nonArray
-			count: 1
-			path: install.php
-
-		-
-			message: '#^Cannot use array destructuring on array\<int, mixed\>\|null\.$#'
-			identifier: offsetAccess.nonArray
-			count: 1
-			path: notification.php
-
-		-
-			message: '#^Offset ''level'' might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
-			count: 1
-			path: picture.php
-
-		-
-			message: '#^Offset ''nb_fav'' might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
-			count: 1
-			path: picture.php
-
-		-
-			message: '#^Parameter \#1 \$comment_id of function delete_user_comment expects array\<int\>\|int, int\|null given\.$#'
+			message: '#^Parameter \#1 \$original of function format_date expects DateTime\|int\|string\|null, bool\|float\|int\|string\|null given\.$#'
 			identifier: argument.type
-			count: 1
-			path: picture.php
-
-		-
-			message: '#^Parameter \#1 \$comment_id of function get_comment_author_id expects int, int\|null given\.$#'
-			identifier: argument.type
-			count: 3
-			path: picture.php
-
-		-
-			message: '#^Parameter \#1 \$comment_id of function validate_user_comment expects array\<int\>\|int, int\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: picture.php
-
-		-
-			message: '#^Parameter \#3 \$options of function setcookie expects array\{expires\?\: int, path\?\: string, domain\?\: string, secure\?\: bool, httponly\?\: bool, samesite\?\: ''Lax''\|''lax''\|''None''\|''none''\|''Strict''\|''strict''\}, array\{expires\: 0, path\: string\|null\} given\.$#'
-			identifier: argument.type
-			count: 1
-			path: picture.php
-
-		-
-			message: '#^Cannot use array destructuring on array\<int, mixed\>\|null\.$#'
-			identifier: offsetAccess.nonArray
 			count: 2
-			path: profile.php
+			path: include/ws_functions/pwg.users.php
 
 		-
-			message: '#^Parameter \#2 \.\.\.\$arrays of function array_merge expects array, array\<string, mixed\>\|null given\.$#'
+			message: '#^Parameter \#1 \$original of function time_since expects int\|string\|null, bool\|float\|int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 2
+			path: include/ws_functions/pwg.users.php
+
+		-
+			message: '#^Access to private property Piwigo\\Ws\\PwgNamedArray\:\:\$_content\.$#'
+			identifier: property.private
+			count: 1
+			path: include/ws_protocols/rest_encoder.php
+
+		-
+			message: '#^Access to private property Piwigo\\Ws\\PwgNamedArray\:\:\$_itemName\.$#'
+			identifier: property.private
+			count: 1
+			path: include/ws_protocols/rest_encoder.php
+
+		-
+			message: '#^Access to private property Piwigo\\Ws\\PwgNamedArray\:\:\$_xmlAttributes\.$#'
+			identifier: property.private
+			count: 1
+			path: include/ws_protocols/rest_encoder.php
+
+		-
+			message: '#^Access to private property Piwigo\\Ws\\PwgNamedStruct\:\:\$_content\.$#'
+			identifier: property.private
+			count: 1
+			path: include/ws_protocols/rest_encoder.php
+
+		-
+			message: '#^Access to private property Piwigo\\Ws\\PwgNamedStruct\:\:\$_xmlAttributes\.$#'
+			identifier: property.private
+			count: 1
+			path: include/ws_protocols/rest_encoder.php
+
+		-
+			message: '#^Cannot cast array\<mixed\>\|float\|int\|Piwigo\\Image\\SrcImage\|string\|null to string\.$#'
+			identifier: cast.string
+			count: 1
+			path: picture.php
+
+		-
+			message: '#^Parameter \#1 \$filename of function get_extension expects string, array\<mixed\>\|float\|int\|Piwigo\\Image\\SrcImage\|string\|null given\.$#'
+			identifier: argument.type
+			count: 2
+			path: picture.php
+
+		-
+			message: '#^Parameter \#1 \$id of function get_action_url expects int, array\<mixed\>\|float\|int\|Piwigo\\Image\\SrcImage\|string\|null given\.$#'
+			identifier: argument.type
+			count: 2
+			path: picture.php
+
+		-
+			message: '#^Parameter \#1 \$original of function format_date expects DateTime\|int\|string\|null, float\|int\|string\|null given\.$#'
 			identifier: argument.type
 			count: 1
 			path: profile.php
 
 		-
-			message: '#^Parameter \#1 \$value of function count expects array\|Countable, array\<string\>\|null given\.$#'
-			identifier: argument.type
+			message: '#^Possibly invalid array key type float\|int\|string\|null\.$#'
+			identifier: offsetAccess.invalidOffset
 			count: 1
-			path: search.php
+			path: src/Piwigo/Admin/Integrity/c13y_internal.php
 
 		-
-			message: '#^Cannot use array destructuring on array\<int, mixed\>\|null\.$#'
-			identifier: offsetAccess.nonArray
+			message: '#^Method Piwigo\\Admin\\themes\:\:perform_action\(\) should return list\<mixed\> but returns array\<mixed\>\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Piwigo/Admin/themes.php
 
 		-
-			message: '#^Offset ''dow'' might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
+			message: '#^Call to function is_array\(\) with array\<mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
 			count: 1
-			path: src/Piwigo/Calendar/CalendarMonthly.php
+			path: src/Piwigo/Calendar/CalendarWeekly.php
 
 		-
-			message: '#^Offset ''file'' might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
-			count: 1
-			path: src/Piwigo/Calendar/CalendarMonthly.php
+			message: '#^PHPDoc tag @var with type array\<string\>\|string is not subtype of native type list\<mixed\>\|string\.$#'
+			identifier: varTag.nativeType
+			count: 2
+			path: src/Piwigo/Image/DerivativeImage.php
 
 		-
-			message: '#^Parameter \#1 \$infos of class Piwigo\\Image\\SrcImage constructor expects array\<string, mixed\>, array\<string, mixed\>\|null given\.$#'
+			message: '#^Strict comparison using \!\=\= between Piwigo\\Image\\DerivativeParams and null will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: src/Piwigo/Image/DerivativeImage.php
+
+		-
+			message: '#^Parameter \#2 \$callback of function uasort expects callable\(Piwigo\\Menu\\DisplayBlock, Piwigo\\Menu\\DisplayBlock\)\: int, array\{''BlockManager'', ''cmp_by_position''\} given\.$#'
 			identifier: argument.type
 			count: 1
-			path: src/Piwigo/Calendar/CalendarMonthly.php
+			path: src/Piwigo/Menu/BlockManager.php
 
 		-
-			message: '#^Parameter \#1 \$stream of function fwrite expects resource, resource\|null given\.$#'
-			identifier: argument.type
+			message: '#^Instanceof between mixed and Piwigo\\Ws\\PwgNamedArray will always evaluate to false\.$#'
+			identifier: instanceof.alwaysFalse
 			count: 1
-			path: src/Piwigo/Core/Logger.php
+			path: src/Piwigo/Ws/Encoder/PwgResponseEncoder.php
 
 		-
-			message: '#^Method Piwigo\\Image\\DerivativeImage\:\:get_scaled_size\(\) should return array\<int\> but returns array\<int\>\|null\.$#'
+			message: '#^Instanceof between mixed and Piwigo\\Ws\\PwgNamedStruct will always evaluate to false\.$#'
+			identifier: instanceof.alwaysFalse
+			count: 1
+			path: src/Piwigo/Ws/Encoder/PwgResponseEncoder.php
+
+		-
+			message: '#^Access to private property Piwigo\\Ws\\PwgNamedArray\:\:\$_content\.$#'
+			identifier: property.private
+			count: 1
+			path: src/Piwigo/Ws/Protocol/PwgRestEncoder.php
+
+		-
+			message: '#^Access to private property Piwigo\\Ws\\PwgNamedArray\:\:\$_itemName\.$#'
+			identifier: property.private
+			count: 1
+			path: src/Piwigo/Ws/Protocol/PwgRestEncoder.php
+
+		-
+			message: '#^Access to private property Piwigo\\Ws\\PwgNamedArray\:\:\$_xmlAttributes\.$#'
+			identifier: property.private
+			count: 1
+			path: src/Piwigo/Ws/Protocol/PwgRestEncoder.php
+
+		-
+			message: '#^Access to private property Piwigo\\Ws\\PwgNamedStruct\:\:\$_content\.$#'
+			identifier: property.private
+			count: 1
+			path: src/Piwigo/Ws/Protocol/PwgRestEncoder.php
+
+		-
+			message: '#^Access to private property Piwigo\\Ws\\PwgNamedStruct\:\:\$_xmlAttributes\.$#'
+			identifier: property.private
+			count: 1
+			path: src/Piwigo/Ws/Protocol/PwgRestEncoder.php
+
+		-
+			message: '#^Property Piwigo\\Ws\\PwgNamedArray\:\:\$_itemName is never read, only written\.$#'
+			identifier: property.onlyWritten
+			count: 1
+			path: src/Piwigo/Ws/PwgNamedArray.php
+
+		-
+			message: '#^Property Piwigo\\Ws\\PwgNamedArray\:\:\$_xmlAttributes is never read, only written\.$#'
+			identifier: property.onlyWritten
+			count: 1
+			path: src/Piwigo/Ws/PwgNamedArray.php
+
+		-
+			message: '#^Property Piwigo\\Ws\\PwgNamedStruct\:\:\$_xmlAttributes is never read, only written\.$#'
+			identifier: property.onlyWritten
+			count: 1
+			path: src/Piwigo/Ws/PwgNamedStruct.php
+
+		-
+			message: '#^Function get_columns_of\(\) should return array\<string, array\<string\>\> but returns array\<string, list\<float\|int\|string\|null\>\>\.$#'
 			identifier: return.type
 			count: 1
-			path: src/Piwigo/Image/DerivativeImage.php
+			path: upgrade.php
 
 		-
-			message: '#^Property Piwigo\\Image\\DerivativeImage\:\:\$is_cached \(bool\) does not accept bool\|null\.$#'
-			identifier: assign.propertyType
+			message: '#^Function get_tables\(\) should return array\<string\> but returns list\<float\|int\|string\|null\>\.$#'
+			identifier: return.type
 			count: 1
-			path: src/Piwigo/Image/DerivativeImage.php
+			path: upgrade.php
 
 		-
-			message: '#^Parameter \#3 \$min_size of class Piwigo\\Image\\SizingParams constructor expects array\<int\>\|null, array\<int, int\|null\> given\.$#'
+			message: '#^Parameter \#1 \$url of function url_is_remote expects string, float\|int\|string\|null given\.$#'
 			identifier: argument.type
-			count: 1
-			path: src/Piwigo/Image/ImageStdParams.php
-
-		-
-			message: '#^Parameter \#2 \$coi of method Piwigo\\Image\\ImageRect\:\:crop_h\(\) expects string, string\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Piwigo/Image/SizingParams.php
-
-		-
-			message: '#^Parameter \#2 \$coi of method Piwigo\\Image\\ImageRect\:\:crop_v\(\) expects string, string\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Piwigo/Image/SizingParams.php
-
-		-
-			message: '#^Parameter \#2 \$path of method Piwigo\\Template\\Combinable\:\:__construct\(\) expects string, string\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Piwigo/Template/Script.php
-
-		-
-			message: '#^Parameter \#1 \$path of method Piwigo\\Template\\Combinable\:\:set_path\(\) expects string, string\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Piwigo/Template/ScriptLoader.php
-
-		-
-			message: '#^Cannot call method end_element\(\) on Piwigo\\Ws\\Protocol\\PwgXmlWriter\|null\.$#'
-			identifier: method.nonObject
-			count: 2
-			path: src/Piwigo/Ws/Protocol/PwgRestEncoder.php
-
-		-
-			message: '#^Cannot call method getOutput\(\) on Piwigo\\Ws\\Protocol\\PwgXmlWriter\|null\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: src/Piwigo/Ws/Protocol/PwgRestEncoder.php
-
-		-
-			message: '#^Cannot call method start_element\(\) on Piwigo\\Ws\\Protocol\\PwgXmlWriter\|null\.$#'
-			identifier: method.nonObject
-			count: 2
-			path: src/Piwigo/Ws/Protocol/PwgRestEncoder.php
-
-		-
-			message: '#^Cannot call method write_attribute\(\) on Piwigo\\Ws\\Protocol\\PwgXmlWriter\|null\.$#'
-			identifier: method.nonObject
-			count: 2
-			path: src/Piwigo/Ws/Protocol/PwgRestEncoder.php
-
-		-
-			message: '#^Cannot call method write_content\(\) on Piwigo\\Ws\\Protocol\\PwgXmlWriter\|null\.$#'
-			identifier: method.nonObject
-			count: 4
-			path: src/Piwigo/Ws/Protocol/PwgRestEncoder.php
-
-		-
-			message: '#^Cannot call method encodeResponse\(\) on Piwigo\\Ws\\Encoder\\PwgResponseEncoder\|null\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: src/Piwigo/Ws/PwgServer.php
-
-		-
-			message: '#^Cannot call method getContentType\(\) on Piwigo\\Ws\\Encoder\\PwgResponseEncoder\|null\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: src/Piwigo/Ws/PwgServer.php
-
-		-
-			message: '#^Cannot call method handleRequest\(\) on Piwigo\\Ws\\PwgRequestHandler\|null\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: src/Piwigo/Ws/PwgServer.php
-
-		-
-			message: '#^Cannot use array destructuring on array\<int, mixed\>\|null\.$#'
-			identifier: offsetAccess.nonArray
 			count: 1
 			path: upgrade.php

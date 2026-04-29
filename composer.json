@@ -23,8 +23,7 @@
             "Smarty\\": "include/smarty/src/"
         },
         "files": [
-            "include/smarty/src/functions.php",
-            "src/Piwigo/Compat/aliases.php"
+            "include/smarty/src/functions.php"
         ]
     },
     "autoload-dev": {

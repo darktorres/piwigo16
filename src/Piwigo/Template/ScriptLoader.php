@@ -158,7 +158,7 @@ class ScriptLoader
             $this->compute_script_topological_order($id);
         }
 
-        uasort($this->registered_scripts, ['ScriptLoader', 'cmp_by_mode_and_order']);
+        uasort($this->registered_scripts, [self::class, 'cmp_by_mode_and_order']);
 
         foreach ($this->registered_scripts as $id => $script) {
             if ($script->load_mode > 0) {
@@ -196,7 +196,7 @@ class ScriptLoader
             $this->compute_script_topological_order($id);
         }
 
-        uasort($todo, ['ScriptLoader', 'cmp_by_mode_and_order']);
+        uasort($todo, [self::class, 'cmp_by_mode_and_order']);
 
         $result = [ [], [] ];
         foreach ($todo as $id => $script) {

@@ -445,9 +445,13 @@ function do_log($image_id = null, $image_type = null)
  * @param int $image_id
  * @param string $image_type
  */
-function pwg_log(?int $image_id = null, ?string $image_type = null, ?string $format_id = null): bool
+function pwg_log(int|string|null $image_id = null, ?string $image_type = null, ?string $format_id = null): bool
 {
     global $user, $page;
+
+    if ($image_id !== null) {
+        $image_id = (int) $image_id;
+    }
 
     $update_last_visit = false;
     if (empty($user['last_visit']) or strtotime((string) $user['last_visit']) < time() - \Piwigo\Core\Config::sessionLength()) {

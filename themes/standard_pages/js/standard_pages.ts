@@ -1,3 +1,7 @@
+declare var selected_language: string;
+declare var url_logo_dark: string;
+declare var url_logo_light: string;
+
 let modeCookie = getCookie('mode');
 if (modeCookie !== '') {
     toggle_mode(modeCookie);
@@ -7,96 +11,103 @@ if (modeCookie !== '') {
 }
 
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (event) => {
-    const newMode = event.matches ? 'dark' : 'light';
-    toggle_mode(newMode);
+    toggle_mode(event.matches ? 'dark' : 'light');
 });
 
-jQuery(document).ready(function () {
-    const langEl = jQuery('#selected-language');
-    if (langEl.length) langEl.text(selected_language);
+document.addEventListener('DOMContentLoaded', () => {
+    const langEl = document.getElementById('selected-language');
+    if (langEl) langEl.textContent = selected_language;
 
-    jQuery('form').on('submit', function (e) {
-        let isValid = true;
-
-        jQuery('.column-flex').each(function () {
-            const input = jQuery(this).find('input');
-            if (input.data('required') === true) {
-                const errorMessage = jQuery(this).find('.error-message');
-                if (!String(input.val() ?? '').trim()) {
-                    e.preventDefault();
-                    (input[0] as HTMLInputElement).setCustomValidity('');
-                    errorMessage.show();
-                    isValid = false;
-                } else {
-                    (input[0] as HTMLInputElement).setCustomValidity('');
-                    errorMessage.hide();
+    document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', (e) => {
+            let isValid = true;
+            form.querySelectorAll<HTMLElement>('.column-flex').forEach(col => {
+                const input = col.querySelector<HTMLInputElement>('input');
+                if (input?.dataset['required'] === 'true') {
+                    const errorMessage = col.querySelector<HTMLElement>('.error-message');
+                    if (!String(input.value ?? '').trim()) {
+                        e.preventDefault();
+                        input.setCustomValidity('');
+                        if (errorMessage) errorMessage.style.display = '';
+                        isValid = false;
+                    } else {
+                        input.setCustomValidity('');
+                        if (errorMessage) errorMessage.style.display = 'none';
+                    }
                 }
-            }
+            });
+            return isValid;
         });
-
-        return isValid;
     });
 
-    jQuery('.column-flex input').on('input', function () {
-        const errorMessage = jQuery(this).closest('.column-flex').find('.error-message');
-        (jQuery(this)[0] as HTMLInputElement).setCustomValidity('');
-        errorMessage.hide();
+    document.querySelectorAll<HTMLInputElement>('.column-flex input').forEach(input => {
+        input.addEventListener('input', () => {
+            const errorMessage = input.closest<HTMLElement>('.column-flex')?.querySelector<HTMLElement>('.error-message');
+            input.setCustomValidity('');
+            if (errorMessage) errorMessage.style.display = 'none';
+        });
+    });
+
+    document.querySelectorAll<HTMLElement>('.togglePassword').forEach(toggle => {
+        toggle.addEventListener('click', (e) => {
+            const target = e.target as HTMLElement;
+            const input = target.parentElement?.querySelector<HTMLInputElement>('input');
+            if (!input) return;
+            if (input.type === 'password') {
+                input.type = 'text';
+                target.style.color = '#ff7700';
+            } else {
+                input.type = 'password';
+                target.style.color = '#898989';
+            }
+        });
+    });
+
+    document.querySelectorAll<HTMLAnchorElement>('#other-languages a').forEach(a => {
+        a.addEventListener('click', () => {
+            const href = a.getAttribute('href');
+            if (!href) return;
+            const clickedUrl = new URL(href, location.href);
+            const selectedLang = clickedUrl.searchParams.get('lang');
+            if (selectedLang) setCookie('lang', selectedLang, 1);
+        });
     });
 });
 
 function toggle_mode(mode: string): void {
     setCookie('mode', mode, 30);
+    const logoEl = document.getElementById('piwigo-logo') as HTMLImageElement | null;
+    const modeEl = document.getElementById('mode');
+    const lightBtn = document.getElementById('toggle_mode_light');
+    const darkBtn = document.getElementById('toggle_mode_dark');
     if (mode === 'dark') {
-        jQuery('#toggle_mode_light').hide();
-        jQuery('#toggle_mode_dark').show();
-        jQuery('#mode').addClass('dark').removeClass('light');
-        jQuery('#piwigo-logo').attr('src', url_logo_dark);
+        if (lightBtn) lightBtn.style.display = 'none';
+        if (darkBtn) darkBtn.style.display = '';
+        modeEl?.classList.add('dark');
+        modeEl?.classList.remove('light');
+        if (logoEl) logoEl.src = url_logo_dark;
     } else {
-        jQuery('#toggle_mode_dark').hide();
-        jQuery('#toggle_mode_light').show();
-        jQuery('#mode').addClass('light').removeClass('dark');
-        jQuery('#piwigo-logo').attr('src', url_logo_light);
+        if (darkBtn) darkBtn.style.display = 'none';
+        if (lightBtn) lightBtn.style.display = '';
+        modeEl?.classList.add('light');
+        modeEl?.classList.remove('dark');
+        if (logoEl) logoEl.src = url_logo_light;
     }
 }
 
 function setCookie(cname: string, cvalue: string, exdays: number): void {
     const d = new Date();
     d.setTime(d.getTime() + exdays * 24 * 60 * 60 * 1000);
-    const expires = 'expires=' + d.toUTCString();
-    document.cookie = cname + '=' + cvalue + ';' + expires + ';path=/';
-    if (cname === 'lang') {
-        location.reload();
-    }
+    document.cookie = cname + '=' + cvalue + ';expires=' + d.toUTCString() + ';path=/';
+    if (cname === 'lang') location.reload();
 }
 
 function getCookie(cname: string): string {
     const name = cname + '=';
     const decodedCookie = decodeURIComponent(document.cookie);
-    const ca = decodedCookie.split(';');
-    for (let i = 0; i < ca.length; i++) {
-        let c = ca[i];
+    for (let c of decodedCookie.split(';')) {
         while (c.charAt(0) === ' ') c = c.substring(1);
         if (c.indexOf(name) === 0) return c.substring(name.length, c.length);
     }
     return '';
 }
-
-jQuery('.togglePassword').on('click', function (e) {
-    const toggle = jQuery(e.target);
-    const input = toggle.siblings('input')[0] as HTMLInputElement;
-    if (input.type === 'password') {
-        input.type = 'text';
-        toggle.css('color', '#ff7700');
-    } else {
-        input.type = 'password';
-        toggle.css('color', '#898989');
-    }
-});
-
-jQuery('#other-languages a').on('click', function (e) {
-    const href = jQuery(e.target).attr('href');
-    if (!href) return;
-    const clickedUrl = new URL(href, location.href);
-    const selectedLang = clickedUrl.searchParams.get('lang');
-    if (selectedLang) setCookie('lang', selectedLang, 1);
-});

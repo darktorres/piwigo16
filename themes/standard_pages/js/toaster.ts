@@ -5,35 +5,22 @@ interface ToasterInfo {
 }
 
 function pwgToaster(info: ToasterInfo): void {
-    if (!info.text || !info.icon) {
-        console.log('set info.text or info.icon');
-        return;
-    }
+    if (!info.text || !info.icon) { console.log('set info.text or info.icon'); return; }
+    if (typeof info.text !== 'string') { console.log('info.text is not a string'); return; }
+    if (info.icon !== 'success' && info.icon !== 'error') { console.log('info.icon must be success or error'); return; }
 
-    if (typeof info.text !== 'string') {
-        console.log('info.text is not a string');
-        return;
-    }
-
-    if (info.icon !== 'success' && info.icon !== 'error') {
-        console.log('info.icon must be success or error');
-        return;
-    }
-
-    const template = $('#toast_template').clone();
-
-    template.find('.toast_text').html(info.text);
-    template.find('.toast_icon').addClass(info.icon === 'success' ? 'icon-ok' : 'icon-cancel');
-    template.addClass(info.icon === 'success' ? info.icon : 'error');
-
-    template.removeClass('template-pwg-toaster');
-    template.appendTo('#pwg_toaster');
+    const template = document.getElementById('toast_template')!.cloneNode(true) as HTMLElement;
+    template.querySelector<HTMLElement>('.toast_text')!.innerHTML = info.text;
+    template.querySelector<HTMLElement>('.toast_icon')!.classList.add(info.icon === 'success' ? 'icon-ok' : 'icon-cancel');
+    template.classList.add(info.icon === 'success' ? 'success' : 'error');
+    template.classList.remove('template-pwg-toaster');
+    document.getElementById('pwg_toaster')!.appendChild(template);
 
     const time = info.time ?? 3600;
     setTimeout(() => {
-        template.fadeOut(() => {
-            template.remove();
-        });
+        template.style.transition = 'opacity 0.4s';
+        template.style.opacity = '0';
+        setTimeout(() => template.remove(), 400);
     }, time);
 }
 

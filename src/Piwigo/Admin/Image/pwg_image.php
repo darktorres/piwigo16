@@ -344,8 +344,9 @@ class pwg_image
         if (!isset($page['ext_imagick_command'])) {
             $retval = null;
             $cmd_out = null;
-            // check if magick is in path
-            exec('command -v '.\Piwigo\Core\Config::extImagickDir().'magick', $cmd_out, $retval);
+            // check if magick is in path (command -v is bash-only; use where.exe on Windows)
+            $find_cmd = PHP_OS_FAMILY === 'Windows' ? 'where' : 'command -v';
+            exec($find_cmd.' '.\Piwigo\Core\Config::extImagickDir().'magick', $cmd_out, $retval);
             if (0 == $retval) {
                 $page['ext_imagick_command'] = 'magick';
             } else {

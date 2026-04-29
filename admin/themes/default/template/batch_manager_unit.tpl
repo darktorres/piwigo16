@@ -333,7 +333,6 @@ pluginValues = [];
 {include file='include/album_selector.inc.tpl'}
 
 {footer_script}
-var pluginFunctionNames = pluginFunctionMapInit(activePlugins);
 const all_related_categories_ids = {$all_selected_album|json_encode};
 {/footer_script}
 

@@ -1,3 +1,6 @@
+import tippy from 'tippy.js';
+import 'tippy.js/dist/tippy.css';
+
 declare var API_METHOD: any;
 declare var current_param: any;
 declare var data: any;
@@ -23,688 +26,415 @@ declare var str_search_details: any;
 declare var summary: any;
 declare var today: any;
 declare var unit_MB: any;
-$(document).ready(() => {
+declare function sprintf(fmt: string, ...args: unknown[]): string;
 
-  activateLineOptions();
-  checkFilters();
+document.addEventListener('DOMContentLoaded', () => {
+    activateLineOptions();
+    checkFilters();
+    if (current_param.ip != '') addIpFilter(current_param.ip);
+    if (current_param.image_id != '') addImageFilter(current_param.image_id);
+    if (current_param.user_id != '-1') addUserFilter(filter_user_name);
 
-  if (current_param.ip != "") {
-    addIpFilter(current_param.ip);
-  }
-  if (current_param.image_id != "") {
-    addImageFilter(current_param.image_id);
-  }
-  if (current_param.user_id != "-1") {
-    addUserFilter(filter_user_name);
-  }
+    document.querySelectorAll<HTMLElement>('.elem-type-select').forEach(el => {
+        el.addEventListener('change', () => {
+            const val = document.querySelector<HTMLSelectElement>('.elem-type-select option:checked')?.value;
+            if (val === 'visited') {
+                current_param.types = { 0: 'none', 1: 'picture' };
+            } else if (val === 'downloaded') {
+                current_param.types = { 0: 'high', 1: 'other' };
+            } else {
+                current_param.types = { 0: 'none', 1: 'picture', 2: 'high', 3: 'other' };
+            }
+            fillHistoryResult(current_param);
+        });
+    });
 
-  $(".elem-type-select").on("change", function (e) {
-    console.log($(".elem-type-select option:selected").attr("value"));
+    document.querySelector('.date-start')?.addEventListener('change', () => {
+        const val = document.querySelector<HTMLInputElement>('.date-start input[name="start"]')?.getAttribute('value');
+        if (current_param.start != val) {
+            current_param.start = val;
+            current_param.pageNumber = 0;
+            fillHistoryResult(current_param);
+        }
+    });
 
-    if ($(".elem-type-select option:selected").attr("value") == "visited") {
-      current_param.types = {
-        0: "none",
-        1: "picture"
-      }
-    } else if ($(".elem-type-select option:selected").attr("value") == "downloaded"){
-      current_param.types = {
-        0: "high",
-        1: "other"
-      }
-    } else {
-      current_param.types = {
-        0: "none",
-        1: "picture",
-        2: "high",
-        3: "other"
-      }
-    }
+    document.querySelector('.date-end')?.addEventListener('change', () => {
+        const newValue = document.querySelector<HTMLInputElement>('.date-end input[name="end"]')?.getAttribute('value');
+        if (current_param.end != newValue) {
+            current_param.end = newValue;
+            current_param.pageNumber = 0;
+            if (newValue !== '1899-12-31') fillHistoryResult(current_param);
+        }
+    });
 
-    fillHistoryResult(current_param)
-  });
+    document.getElementById('start_unset')?.addEventListener('click', () => {
+        if (current_param.start != '') {
+            current_param.pageNumber = 0;
+            current_param.start = '';
+            fillHistoryResult(current_param);
+        }
+    });
 
-  $('.date-start').on("change", function () {
-    if (current_param.start != $('.date-start input[name="start"]').attr("value")) {
-      current_param.start = $('.date-start input[name="start"]').attr("value");
-      current_param.pageNumber = 0;
-      fillHistoryResult(current_param);
-    }
-  });
+    document.getElementById('end_unset')?.addEventListener('click', () => {
+        if (!current_param.start == today) {
+            current_param.end = today;
+            current_param.pageNumber = 0;
+            fillHistoryResult(current_param);
+        }
+    });
 
-  $('.date-end').on("change", function () {
-    const newValue = $('.date-end input[name="end"]').attr("value");
-    if (current_param.end != newValue) {
-      current_param.end = $('.date-end input[name="end"]').attr("value");
-      current_param.pageNumber = 0;
-      // The datepicker first fills the end-date with '1899-12-31',
-      // which triggers an unnecessary ajax request
-      // when you come to the history search page from a photo.
-      if (newValue !== '1899-12-31') {
+    document.querySelector('.pagination-arrow.rigth')?.addEventListener('click', () => {
+        current_param.pageNumber += 1;
         fillHistoryResult(current_param);
-      }
-    }
-  });
+    });
+    document.querySelector('.pagination-arrow.left')?.addEventListener('click', () => {
+        current_param.pageNumber -= 1;
+        fillHistoryResult(current_param);
+    });
 
-  $("#start_unset").on("click", function () {
-    console.log("here" + current_param.start);
-    if (current_param.start != "") {
-      
-      current_param.pageNumber = 0;
-      current_param.start = "";
-      fillHistoryResult(current_param);
-    }
-  });
-
-  $("#end_unset").on("click", function () {
-    if (!current_param.start == today) {
-      current_param.end = today;
-      current_param.pageNumber = 0;
-      fillHistoryResult(current_param);
-    }
-  });
-
-
-  $('.pagination-arrow.rigth').on('click', () => {
-    current_param.pageNumber += 1;
-    fillHistoryResult(current_param);
-  });
-  
-  $('.pagination-arrow.left').on('click', () => {
-    current_param.pageNumber -= 1;
-    fillHistoryResult(current_param);
-  });
-
-  $(".refresh-results").on("click", function () {
-    fillHistoryResult(current_param);
-  })
-})
+    document.querySelector<HTMLElement>('.refresh-results')?.addEventListener('click', () => {
+        fillHistoryResult(current_param);
+    });
+});
 
 function activateLineOptions() {
-  $(".search-line").find(".img-option").hide();
-
-  /* Display the option on the click on "..." */
-  $(".search-line").find(".toggle-img-option").on("click", function () {
-    $(this).find(".img-option").toggle();
-  })
-
-  /* Hide img options and rename field on click on the screen */
-
-  $(document).mouseup(function (e) {
-    e.stopPropagation();
-    let option_is_clicked = false
-    $(".img-option span").each(function () {
-      if (!($(this).has(e.target as unknown as Element).length === 0)) {
-        option_is_clicked = true;
-      }
-    })
-    if (!option_is_clicked) {
-      $(".search-line").find(".img-option").hide();
-    }
-  });
+    document.querySelectorAll<HTMLElement>('.search-line .img-option').forEach(el => { el.style.display = 'none'; });
+    document.querySelectorAll<HTMLElement>('.search-line .toggle-img-option').forEach(el => {
+        el.addEventListener('click', () => {
+            const opt = el.querySelector<HTMLElement>('.img-option');
+            if (opt) opt.style.display = opt.style.display === 'none' ? '' : 'none';
+        });
+    });
+    document.addEventListener('mouseup', (e: MouseEvent) => {
+        e.stopPropagation();
+        const target = e.target as Element;
+        const clicked = Array.from(document.querySelectorAll('.img-option span')).some(span => span.contains(target));
+        if (!clicked) document.querySelectorAll<HTMLElement>('.search-line .img-option').forEach(el => { el.style.display = 'none'; });
+    });
 }
 
 function fillSummaryResult(summary: any) {
-  $(".user-list").empty();
+    document.querySelector('.user-list')!.innerHTML = '';
+    document.querySelector<HTMLElement>('.summary-lines .summary-data')!.innerHTML = summary.NB_LINES;
+    document.querySelector<HTMLElement>('.summary-weight .summary-data')!.innerHTML = unit_MB.replace('%s', summary.FILESIZE);
+    document.querySelector<HTMLElement>('.summary-users .summary-data')!.innerHTML = summary.USERS;
+    document.querySelector<HTMLElement>('.summary-guests .summary-data')!.innerHTML = summary.GUESTS;
 
-  $(".summary-lines .summary-data").html(summary.NB_LINES);
-  $(".summary-weight .summary-data").html(unit_MB.replace("%s", summary.FILESIZE));
-  $(".summary-users .summary-data").html(summary.USERS);
-  $(".summary-guests .summary-data").html(summary.GUESTS);
-
-  if ((summary.GUESTS.split(" ")[0] != "0")) {
-    $(".summary-guests .summary-data").addClass("icon-plus-circled").on("click", function () {
-      if (current_param.user_id == "-1") {
-        current_param.user_id = guest_id;
-        addGuestFilter(str_guest);
-        fillHistoryResult(current_param);
-      }
-    }).hover(function () {
-      $(this).css({
-        cursor : "pointer"
-      })
-    });
-
-    $(".summary-guests").show();
-  } else {
-    $(".summary-guests").hide();
-  }
-
-  var id_of: Record<string, any> = {};
-  var user_dot_title = "";
-
-  // not sorted
-  summary.MEMBERS.forEach((keyval: any) => {
-    for (const [key, value] of Object.entries(keyval)) {
-      id_of[key] = value;
-      user_dot_title += key + ", ";
-    }
-  });
-  user_dot_title = user_dot_title.slice(0, -2);
-  $(".user-dot").attr("title", user_dot_title).addClass("tiptip");
-
-  var tmp = 0;
-  $(".user-dot").hide();
-  //sorted
-  for (const [key, value] of Object.entries(summary.SORTED_MEMBERS)) {
-    if (tmp < 5) {
-      new_user_item = $("#-2").clone();
-
-      new_user_item.removeClass("hide");
-      new_user_item.find(".user-item-name").html(key);
-      new_user_item.data("user-id", id_of[key]);
-  
-      new_user_item.on("click", function (this: HTMLElement) {
-        if (current_param.user_id != id_of[key]) {
-          current_param.user_id = $(this).data("user-id");
-          addUserFilter(key)
-          fillHistoryResult(current_param);
-        }
-      })
-      $(".user-list").append(new_user_item);
-      tmp++;
+    const guestsData = document.querySelector<HTMLElement>('.summary-guests .summary-data')!;
+    const guestsEl = document.querySelector<HTMLElement>('.summary-guests')!;
+    if (summary.GUESTS.split(' ')[0] != '0') {
+        guestsData.classList.add('icon-plus-circled');
+        guestsData.style.cursor = 'pointer';
+        guestsData.addEventListener('click', () => {
+            if (current_param.user_id == '-1') {
+                current_param.user_id = guest_id;
+                addGuestFilter(str_guest);
+                fillHistoryResult(current_param);
+            }
+        });
+        guestsEl.style.display = '';
     } else {
-      $(".user-dot").show();
+        guestsEl.style.display = 'none';
     }
-  }
+
+    const id_of: Record<string, any> = {};
+    let user_dot_title = '';
+    summary.MEMBERS.forEach((keyval: any) => {
+        for (const [key, value] of Object.entries(keyval)) { id_of[key] = value; user_dot_title += key + ', '; }
+    });
+    user_dot_title = user_dot_title.slice(0, -2);
+    document.querySelectorAll<HTMLElement>('.user-dot').forEach(el => { el.title = user_dot_title; el.classList.add('tiptip'); el.style.display = 'none'; });
+
+    let tmp = 0;
+    for (const [key] of Object.entries(summary.SORTED_MEMBERS)) {
+        if (tmp < 5) {
+            const item = document.getElementById('-2')!.cloneNode(true) as HTMLElement;
+            new_user_item = item;
+            item.classList.remove('hide');
+            item.querySelector<HTMLElement>('.user-item-name')!.innerHTML = key as string;
+            item.dataset['userId'] = String(id_of[key as string]);
+            item.addEventListener('click', () => {
+                if (current_param.user_id != id_of[key as string]) {
+                    current_param.user_id = item.dataset['userId'];
+                    addUserFilter(key);
+                    fillHistoryResult(current_param);
+                }
+            });
+            document.querySelector('.user-list')!.appendChild(item);
+            tmp++;
+        } else {
+            document.querySelectorAll<HTMLElement>('.user-dot').forEach(el => { el.style.display = ''; });
+        }
+    }
 }
 
-function showResults(doShow: any) {
-  console.log("EMPTY");
-  if (doShow) {
-    $(".search-summary").show();
-    $(".container").show();
-  } else {
-    $(".search-summary").hide();
-    $(".container").hide();
-  }
+function showResults(doShow: boolean) {
+    const display = doShow ? '' : 'none';
+    document.querySelectorAll<HTMLElement>('.search-summary,.container').forEach(el => { el.style.display = display; });
 }
 
 function fillHistoryResult(ajaxParam: any) {
-  // console.log(current_param);
-  // $(".tab .search-line").remove();
-  $.ajax({
-    url: API_METHOD,
-    method: "POST",
-    dataType: "JSON",
-    data: ajaxParam,
-    beforeSend: function () {
-      showResults(false);
-      $(".loading").removeClass("hide");
-      $(".noResults").hide();
-      $(".tab").empty();
-    },
-    success: function (raw_data) {
-      
-      data = raw_data.result["lines"];
-      imageDisplay = raw_data.result["params"].display_thumbnail;
-      maxPage = raw_data.result["maxPage"];
-      summary = raw_data.result["summary"];
-      // console.log(raw_data);
+    showResults(false);
+    document.querySelector<HTMLElement>('.loading')!.classList.remove('hide');
+    document.querySelectorAll<HTMLElement>('.noResults').forEach(el => { el.style.display = 'none'; });
+    document.querySelector<HTMLElement>('.tab')!.innerHTML = '';
 
-      //clear lines before refill
-      
-      if (data.length > 0) {
-        var id = 0;
-        data.forEach((line: any) => {
-          lineConstructor(line, id, imageDisplay)
-          id++
-        });
-  
-        fillSummaryResult(summary);
-        showResults(true);
-        $(".noResults").hide();
-      } else {
-        showResults(false);
-        $(".noResults").show();
-      }
-
-    },
-    error: function (e) {
-      console.log(e);
+    const body = new URLSearchParams();
+    for (const [k, v] of Object.entries(ajaxParam as Record<string, unknown>)) {
+        if (v !== null && v !== undefined) body.append(k, String(v));
     }
-  }).done(() => {
-    activateLineOptions();
-    $(".loading").addClass("hide");
-    updatePagination(maxPage);
-    $('.tiptip').tipTip({
-      delay: 0,
-      fadeIn: 200,
-      fadeOut: 200,
-      edgeOffset: 3
-    });
-  })
+    fetch(API_METHOD, { method: 'POST', body })
+        .then(r => r.json())
+        .then((raw_data: any) => {
+            data = raw_data.result['lines'];
+            imageDisplay = raw_data.result['params'].display_thumbnail;
+            maxPage = raw_data.result['maxPage'];
+            summary = raw_data.result['summary'];
+
+            if (data.length > 0) {
+                data.forEach((line: any, id: number) => lineConstructor(line, id, imageDisplay));
+                fillSummaryResult(summary);
+                showResults(true);
+                document.querySelectorAll<HTMLElement>('.noResults').forEach(el => { el.style.display = 'none'; });
+            } else {
+                showResults(false);
+                document.querySelectorAll<HTMLElement>('.noResults').forEach(el => { el.style.display = ''; });
+            }
+
+            activateLineOptions();
+            document.querySelector<HTMLElement>('.loading')!.classList.add('hide');
+            updatePagination(maxPage);
+            tippy('.tiptip', { delay: [0, 0], duration: [200, 200] });
+        })
+        .catch(e => console.log(e));
 }
 
 function lineConstructor(line: any, id: any, imageDisplay: any) {
-  let newLine = $("#-1").clone();
+    const newLine = document.getElementById('-1')!.cloneNode(true) as HTMLElement;
+    const find = (sel: string) => newLine.querySelector<HTMLElement>(sel)!;
 
-  let sections = [
-    "categories",
-    "tags",
-    "best_rated",
-    "memories-1-year-ago",
-    "list",
-    "search",
-    "most_visited",
-    "recent_pics",
-    "recent_cats",
-    "favorites"
-  ]
+    const sections = ['categories','tags','best_rated','memories-1-year-ago','list','search','most_visited','recent_pics','recent_cats','favorites'];
+    const icons = ['line-icon icon-folder-open icon-yellow','line-icon icon-tags icon-blue','line-icon icon-star icon-green','line-icon icon-clock icon-yellow','line-icon icon-dice-solid icon-purple','line-icon icon-search icon-purple','line-icon icon-fire icon-red','line-icon icon-clock icon-yellow','line-icon icon-clock icon-yellow','line-icon icon-heart icon-red'];
 
-  let icons = [
-    "line-icon icon-folder-open icon-yellow",
-    "line-icon icon-tags icon-blue",
-    "line-icon icon-star icon-green",
-    "line-icon icon-clock icon-yellow",
-    "line-icon icon-dice-solid icon-purple",
-    "line-icon icon-search icon-purple",
-    "line-icon icon-fire icon-red",
-    "line-icon icon-clock icon-yellow",
-    "line-icon icon-clock icon-yellow",
-    "line-icon icon-heart icon-red"
-  ];
+    newLine.classList.remove('hide');
+    newLine.id = String(id);
+    find('.date-day').innerHTML = line.DATE;
+    find('.date-hour').innerHTML = line.TIME;
+    find('.user-name').innerHTML = line.USERNAME + '<i class="add-filter icon-plus-circled"></i>';
+    find('.user-name').id = String(line.USERID);
 
-  newLine.removeClass("hide");
-
-  /* console log to help debug */
-  // console.log(line);
-  newLine.attr("id", id);
-  // console.log(id);
-
-  newLine.find(".date-day").html(line.DATE);
-  newLine.find(".date-hour").html(line.TIME);
-
-  newLine.find(".user-name").html(line.USERNAME + '<i class="add-filter icon-plus-circled"></i>');
-
-  newLine.find(".user-name").attr("id", line.USERID);
-  if (current_param.user_id == "-1") {
-    newLine.find(".user-name").on("click", function ()  {
-      current_param.user_id = $(this).attr('id') + "";
-      current_param.pageNumber = 0;
-      addUserFilter($(this).html());
-      fillHistoryResult(current_param);
-    })
-  }
-
-  newLine.find(".user-ip").html(line.IP + '<i class="add-filter icon-plus-circled"></i>');
-  newLine.find(".user-ip").data("ip", line.IP);
-  if (current_param.ip == "") {
-    newLine.find(".user-ip").on("click", function () {
-      current_param.ip = $(this).data("ip");
-      current_param.pageNumber = 0;
-      addIpFilter($(this).html());
-      fillHistoryResult(current_param);
-    })
-  }
-
-  newLine.find(".add-img-as-filter").data("img-id", line.IMAGEID);
-  if (current_param.image_id == "") {
-    newLine.find(".add-img-as-filter").on("click", function () {
-      current_param.image_id = $(this).data("img-id");
-      current_param.pageNumber = 0;
-      addImageFilter($(this).data("img-id"));
-      fillHistoryResult(current_param);
-    });
-  }
-
-  if (line.EDIT_IMAGE != "") {
-    newLine.find(".edit-img").attr("href", line.EDIT_IMAGE);
-  } else {
-    newLine.find(".edit-img")
-      .attr("href", "#")
-      .addClass("notClickable tiptip")
-      .attr('title', str_no_longer_exist_photo)
-      .on("click", (e) => {
-      e.preventDefault();
-    });
-  }
-
-  switch (line.SECTION) {
-    case "tags":
-      if (line.TAGS.length > 1 && line.TAGS.length <= 2  ) {
-        newLine.find(".type-name").html(line.TAGS[0] +", "+ line.TAGS[1] + ", ...");
-        newLine.find(".type-id").html("#" + line.TAGIDS[0] +", "+ line.TAGIDS[1] + ", ...");
-      } else if (line.TAGS.length > 2) {
-        newLine.find(".type-name").html(line.TAGS[0] +", "+ line.TAGS[1] +", "+ line.TAGS[2]  + ", ...");
-        newLine.find(".type-id").html("#" + line.TAGIDS[0] +", "+ line.TAGIDS[1] +", "+ line.TAGIDS[2] + ", ...");
-      } else {
-        newLine.find(".type-name").html(line.TAGS[0]);
-        newLine.find(".type-id").html("#" + line.TAGIDS[0]);
-      }
-      
-      let detail_str = "";
-      line.TAGS.forEach((tag: any) => {
-        detail_str += tag + ", ";
-      });
-      detail_str = detail_str.slice(0, -2)
-      newLine.find(".detail-item-1").html(detail_str);
-      newLine.find(".detail-item-1").attr("title", detail_str).removeClass("hide").addClass('icon-tags');;
-      break;
-    
-    case "most_visited":
-      newLine.find(".type-name").html(str_most_visited);
-      newLine.find(".detail-item-1").html(str_most_visited).addClass('icon-fire');
-      newLine.find(".type-id").hide();
-      break;
-    case "best_rated":
-      newLine.find(".type-name").html(str_best_rated);
-      newLine.find(".detail-item-1").html(str_best_rated).addClass("icon-star");
-      newLine.find(".type-id").hide();
-      break;
-    case "list":
-      newLine.find(".type-name").html(str_list);
-      newLine.find(".detail-item-1").html(str_list).addClass('icon-dice-solid');
-      newLine.find(".type-id").hide();
-      break;
-    case "search":
-      // for debug
-      // console.log('search n° : ', line.SEARCH_ID, ' ', line.SEARCH_DETAILS);
-      const search_details = line.SEARCH_DETAILS;
-      const search_icons: Record<string, any> = {
-        'allwords': 'gallery-icon-search',
-        'tags': 'gallery-icon-tag',
-        'date_posted': 'gallery-icon-calendar-plus',
-        'cat': 'gallery-icon-album',
-        'author': 'gallery-icon-user-edit',
-        'added_by': 'gallery-icon-user',
-        'filetypes': 'gallery-icon-file-image',
-      }
-      newLine.find(".type-name").html(line.SECTION);
-      newLine.find(".type-id").html("#" + line.SEARCH_ID);
-      if (!line.SEARCH_ID)
-      {
-        newLine.find(".type-id").hide();
-      }
-
-      if (!search_details) 
-      {
-        newLine.find(".detail-item-1").hide();
-        break; 
-      }
-      let active_search_details: Record<string, any> = {};
-      Object.keys(search_details).forEach(key => {
-          if (search_details[key] !== null) {
-            active_search_details[key] = search_details[key];
-          }
-      });
-      let count_item = 1;
-      let active_more = [];
-      const active_items = Object.keys(active_search_details);
-      if (active_items.length > 0)
-      {
-        if (active_search_details.allwords)
-        {
-          newLine.find(".detail-item-" + count_item).html(active_search_details.allwords.join(' ')).addClass(search_icons.allwords + ' tiptip');
-          newLine.find(".detail-item-" + count_item).attr('title', '<b>' + str_search_details['allwords'] + ' :</b> ' + active_search_details.allwords.join(' '));
-          count_item++;
-          active_more.push('allwords');
-        }
-        if (active_search_details.cat)
-        {
-          const array_cat = Object.values(active_search_details.cat);
-          const cat = array_cat.join(' + ');
-          let temp_div = $('<div>').html(cat);
-          let text = temp_div.text().trim();
-          newLine.find(".detail-item-" + count_item).html(cat).addClass(search_icons.cat + ' tiptip');
-          newLine.find(".detail-item-"+ count_item).attr('title','<b>' + str_search_details['cat'] + ' :</b> ' + text).removeClass("hide");
-          count_item++;
-          active_more.push('cat');
-        }
-        if (count_item <= 2 && active_search_details.tags)
-        {
-          const array_tags = Object.values(active_search_details.tags);
-          newLine.find(".detail-item-" + count_item).html(array_tags.join(' + ')).addClass(search_icons.tags + ' tiptip');
-          newLine.find(".detail-item-"+ count_item).attr('title', '<b>' + str_search_details['tags'] + ' :</b> ' + array_tags.join(' + ')).removeClass("hide");
-          count_item++;
-          active_more.push('tags');
-        }
-        if (count_item <= 2)
-        {
-          let badge_to_add = active_items.length == 1 ? 1 : count_item == 1 ? 2 : 1;
-          let badge_added = 0;
-          active_items.some(key => {
-            if (key !== 'allwords' && key !== 'cat' && key !== 'tags') {
-              let array_key;
-              if (Array.isArray(active_search_details[key]))
-              {
-                array_key = active_search_details[key];
-              }
-              else if (typeof active_search_details[key] === 'object')
-              {
-                array_key = Object.values(active_search_details[key]);
-              }
-              else
-              {
-                array_key = [active_search_details[key]];
-              }
-              newLine.find(".detail-item-" + count_item).html(array_key.join(' + ')).addClass(search_icons[key] + ' tiptip');
-              newLine.find(".detail-item-" + count_item).attr('title', '<b>' + str_search_details[key] + ' :</b> ' + array_key.join(' + ')).removeClass("hide");
-              count_item++;
-              badge_added++;
-              active_more.push(key);
-              if (badge_added === badge_to_add) {
-                return true;
-              }
-            }
-            return false;
-          });
-        }
-      }
-      else
-      {
-        newLine.find(".detail-item-1").hide();
-      }
-      if (active_items.length >= 3) 
-      {
-        let count_more = 0;
-        let search_details_str = Object.entries(active_search_details)
-        .filter(([key]) => !active_more.includes(key))
-          .map(([key, value]) => {
-            let value_str;
-            if(Array.isArray(value)) {
-              value_str = value.join(' + ');
-            } else if (typeof value === 'object') {
-              value_str = Object.entries(value).map(([k, v]) => v).join(' + ');
-            } else {
-              value_str = value;
-            }
-
-            if (key == 'cat')
-            {
-              let temp_div = $('<div>').html(value_str);
-              let text = temp_div.text().trim();
-              value_str = text;
-            }
-            count_more++;
-            return `<b>${str_search_details[key]}</b> : ${value_str}`;
-          }).join(' <br />');
-        newLine.find(".detail-item-3").html(sprintf(str_and_more, count_more)).addClass('icon-info-circled-1 tiptip');
-        newLine.find(".detail-item-3").attr('title', search_details_str).removeClass('hide');
-      }
-      break;
-    case "favorites":
-      newLine.find(".type-name").html(str_favorites);
-      newLine.find(".detail-item-1").html(str_favorites).addClass('icon-heart');
-      newLine.find(".type-id").hide();
-      break;
-    case "recent_cats":
-      newLine.find(".type-name").html(str_recent_cats);
-      newLine.find(".detail-item-1").html(str_recent_cats).addClass('icon-clock');
-      newLine.find(".type-id").hide();
-      break;
-    case "recent_pics":
-      newLine.find(".type-name").html(str_recent_pics);
-      newLine.find(".detail-item-1").html(str_recent_pics).addClass('icon-clock');
-      newLine.find(".type-id").hide();
-      break;
-    case "categories":
-      newLine.find(".type-name").html(line.CATEGORY);
-      newLine.find(".detail-item-1").html(line.CATEGORY).addClass("icon-folder-open tiptip").attr("title", line.FULL_CATEGORY_PATH);
-      if (line.IMAGE == "") {
-        newLine.find(".type-id").hide();
-      }
-      break;
-    case "memories-1-year-ago":
-      newLine.find(".type-name").html(str_memories);
-      newLine.find(".detail-item-1").html(str_memories).addClass('icon-clock');
-      newLine.find(".type-id").hide();
-    break;
-    case "contact":
-      newLine.find(".type-icon i").addClass("line-icon icon-mail-1 icon-yellow");
-      newLine.find(".type-name").html(str_contact_form);
-      newLine.find(".detail-item-1").html(str_contact_form);
-      newLine.find(".type-id").hide();
-    break;
-    default:
-      newLine.find(".type-icon i").addClass("line-icon icon-help-puzzle icon-grey");
-      newLine.find(".type-name").html(line.SECTION);
-      newLine.find(".type-id").hide();
-    break;
-  }
-
-  if (line.IMAGE != "") {
-    newLine.find(".type-name").html(line.IMAGENAME);
-    newLine.find(".type-icon").html(line.IMAGE);
-    newLine.find(".type-id").html("#" + line.IMAGEID);
-    newLine.find(".type-icon").attr("href", line.EDIT_IMAGE).removeClass("no-img")
-    newLine.find(".type-icon img").attr("title", str_edit_img).addClass("tiptip")
-    newLine.find(".type-id").show();
-  } else {
-    newLine.find(".type-icon .icon-file-image").removeClass("icon-file-image");
-    newLine.find(".toggle-img-option").hide();
-
-    if (sections.indexOf(line.SECTION) != -1) {
-      var lineIconClass = icons[sections.indexOf(line.SECTION)];
-      newLine.find(".type-icon i").addClass(lineIconClass)
-    } else {
-      console.log("Unhandled section : " + line.SECTION);
+    if (current_param.user_id == '-1') {
+        find('.user-name').addEventListener('click', function(this: HTMLElement) {
+            current_param.user_id = this.id + '';
+            current_param.pageNumber = 0;
+            addUserFilter(this.innerHTML);
+            fillHistoryResult(current_param);
+        });
     }
-  }
 
-  newLine.find(".detail-item-1").removeClass("hide");
-  if (line.TYPE == "high") {
-    newLine.find(".detail-item-1").html(str_dwld).addClass("icon-blue").removeClass("detail-item-1").removeClass("hide");
-    newLine.find(".date-dwld-icon").addClass("icon-blue icon-floppy")
-  } else {
-    newLine.find(".date-dwld-icon").remove();
-  }
-  displayLine(newLine);
+    find('.user-ip').innerHTML = line.IP + '<i class="add-filter icon-plus-circled"></i>';
+    find('.user-ip').dataset['ip'] = line.IP;
+    if (current_param.ip == '') {
+        find('.user-ip').addEventListener('click', function(this: HTMLElement) {
+            current_param.ip = this.dataset['ip'];
+            current_param.pageNumber = 0;
+            addIpFilter(this.innerHTML);
+            fillHistoryResult(current_param);
+        });
+    }
+
+    find('.add-img-as-filter').dataset['imgId'] = String(line.IMAGEID);
+    if (current_param.image_id == '') {
+        find('.add-img-as-filter').addEventListener('click', function(this: HTMLElement) {
+            current_param.image_id = this.dataset['imgId'];
+            current_param.pageNumber = 0;
+            addImageFilter(this.dataset['imgId']);
+            fillHistoryResult(current_param);
+        });
+    }
+
+    if (line.EDIT_IMAGE != '') {
+        (find('.edit-img') as HTMLAnchorElement).href = line.EDIT_IMAGE;
+    } else {
+        const editImg = find('.edit-img') as HTMLAnchorElement;
+        editImg.href = '#';
+        editImg.classList.add('notClickable', 'tiptip');
+        editImg.title = str_no_longer_exist_photo;
+        editImg.addEventListener('click', e => e.preventDefault());
+    }
+
+    const setDetailItem = (n: number, html: string, classes: string, title?: string, showItem = false) => {
+        const di = newLine.querySelector<HTMLElement>('.detail-item-' + n);
+        if (!di) return;
+        di.innerHTML = html;
+        classes.split(' ').filter(Boolean).forEach(c => di.classList.add(c));
+        if (title !== undefined) di.title = title;
+        if (showItem) di.classList.remove('hide');
+    };
+
+    switch (line.SECTION) {
+        case 'tags': {
+            const tl = line.TAGS.length;
+            if (tl > 2) {
+                find('.type-name').innerHTML = line.TAGS[0] + ', ' + line.TAGS[1] + ', ' + line.TAGS[2] + ', ...';
+                find('.type-id').innerHTML = '#' + line.TAGIDS[0] + ', ' + line.TAGIDS[1] + ', ' + line.TAGIDS[2] + ', ...';
+            } else if (tl > 1) {
+                find('.type-name').innerHTML = line.TAGS[0] + ', ' + line.TAGS[1] + ', ...';
+                find('.type-id').innerHTML = '#' + line.TAGIDS[0] + ', ' + line.TAGIDS[1] + ', ...';
+            } else {
+                find('.type-name').innerHTML = line.TAGS[0];
+                find('.type-id').innerHTML = '#' + line.TAGIDS[0];
+            }
+            const detail_str = line.TAGS.join(', ');
+            setDetailItem(1, detail_str, 'icon-tags', detail_str, true);
+            break;
+        }
+        case 'most_visited': find('.type-name').innerHTML = str_most_visited; setDetailItem(1, str_most_visited, 'icon-fire'); find('.type-id').style.display = 'none'; break;
+        case 'best_rated': find('.type-name').innerHTML = str_best_rated; setDetailItem(1, str_best_rated, 'icon-star'); find('.type-id').style.display = 'none'; break;
+        case 'list': find('.type-name').innerHTML = str_list; setDetailItem(1, str_list, 'icon-dice-solid'); find('.type-id').style.display = 'none'; break;
+        case 'search': {
+            const search_details = line.SEARCH_DETAILS;
+            const search_icons: Record<string, string> = { allwords: 'gallery-icon-search', tags: 'gallery-icon-tag', date_posted: 'gallery-icon-calendar-plus', cat: 'gallery-icon-album', author: 'gallery-icon-user-edit', added_by: 'gallery-icon-user', filetypes: 'gallery-icon-file-image' };
+            find('.type-name').innerHTML = line.SECTION;
+            find('.type-id').innerHTML = '#' + line.SEARCH_ID;
+            if (!line.SEARCH_ID) find('.type-id').style.display = 'none';
+            if (!search_details) { find('.detail-item-1').style.display = 'none'; break; }
+            const active: Record<string, any> = {};
+            Object.keys(search_details).forEach(k => { if (search_details[k] !== null) active[k] = search_details[k]; });
+            let count_item = 1, active_more: string[] = [];
+            const active_items = Object.keys(active);
+            if (active_items.length > 0) {
+                if (active.allwords) { setDetailItem(count_item, active.allwords.join(' '), search_icons.allwords + ' tiptip', '<b>' + str_search_details['allwords'] + ' :</b> ' + active.allwords.join(' ')); count_item++; active_more.push('allwords'); }
+                if (active.cat) {
+                    const cat = Object.values(active.cat).join(' + ');
+                    const tmp = document.createElement('div'); tmp.innerHTML = cat;
+                    setDetailItem(count_item, cat, search_icons.cat + ' tiptip', '<b>' + str_search_details['cat'] + ' :</b> ' + tmp.textContent!.trim(), true);
+                    count_item++; active_more.push('cat');
+                }
+                if (count_item <= 2 && active.tags) { setDetailItem(count_item, Object.values(active.tags).join(' + '), search_icons.tags + ' tiptip', '<b>' + str_search_details['tags'] + ' :</b> ' + Object.values(active.tags).join(' + '), true); count_item++; active_more.push('tags'); }
+                if (count_item <= 2) {
+                    const badge_to_add = active_items.length == 1 ? 1 : count_item == 1 ? 2 : 1;
+                    let badge_added = 0;
+                    active_items.some(key => {
+                        if (['allwords','cat','tags'].includes(key)) return false;
+                        const vals = Array.isArray(active[key]) ? active[key] : typeof active[key] === 'object' ? Object.values(active[key]) : [active[key]];
+                        setDetailItem(count_item, vals.join(' + '), (search_icons[key] ?? '') + ' tiptip', '<b>' + str_search_details[key] + ' :</b> ' + vals.join(' + '), true);
+                        count_item++; badge_added++; active_more.push(key);
+                        return badge_added === badge_to_add;
+                    });
+                }
+            } else { find('.detail-item-1').style.display = 'none'; }
+            if (active_items.length >= 3) {
+                let count_more = 0;
+                const details_str = Object.entries(active).filter(([k]) => !active_more.includes(k)).map(([k, v]) => {
+                    let vs = Array.isArray(v) ? v.join(' + ') : typeof v === 'object' ? Object.values(v as object).join(' + ') : String(v);
+                    if (k === 'cat') { const d = document.createElement('div'); d.innerHTML = vs; vs = d.textContent!.trim(); }
+                    count_more++;
+                    return `<b>${str_search_details[k]}</b> : ${vs}`;
+                }).join(' <br />');
+                setDetailItem(3, sprintf(str_and_more, count_more), 'icon-info-circled-1 tiptip', details_str, true);
+            }
+            break;
+        }
+        case 'favorites': find('.type-name').innerHTML = str_favorites; setDetailItem(1, str_favorites, 'icon-heart'); find('.type-id').style.display = 'none'; break;
+        case 'recent_cats': find('.type-name').innerHTML = str_recent_cats; setDetailItem(1, str_recent_cats, 'icon-clock'); find('.type-id').style.display = 'none'; break;
+        case 'recent_pics': find('.type-name').innerHTML = str_recent_pics; setDetailItem(1, str_recent_pics, 'icon-clock'); find('.type-id').style.display = 'none'; break;
+        case 'categories': find('.type-name').innerHTML = line.CATEGORY; setDetailItem(1, line.CATEGORY, 'icon-folder-open tiptip', line.FULL_CATEGORY_PATH); if (line.IMAGE == '') find('.type-id').style.display = 'none'; break;
+        case 'memories-1-year-ago': find('.type-name').innerHTML = str_memories; setDetailItem(1, str_memories, 'icon-clock'); find('.type-id').style.display = 'none'; break;
+        case 'contact': find('.type-icon i').classList.add('line-icon', 'icon-mail-1', 'icon-yellow'); find('.type-name').innerHTML = str_contact_form; setDetailItem(1, str_contact_form, ''); find('.type-id').style.display = 'none'; break;
+        default: find('.type-icon i').classList.add('line-icon', 'icon-help-puzzle', 'icon-grey'); find('.type-name').innerHTML = line.SECTION; find('.type-id').style.display = 'none'; break;
+    }
+
+    if (line.IMAGE != '') {
+        find('.type-name').innerHTML = line.IMAGENAME;
+        find('.type-icon').innerHTML = line.IMAGE;
+        find('.type-id').innerHTML = '#' + line.IMAGEID;
+        (find('.type-icon') as HTMLAnchorElement).href = line.EDIT_IMAGE;
+        find('.type-icon').classList.remove('no-img');
+        const img = find('.type-icon img');
+        if (img) { img.title = str_edit_img; img.classList.add('tiptip'); }
+        find('.type-id').style.display = '';
+    } else {
+        find('.type-icon .icon-file-image')?.classList.remove('icon-file-image');
+        find('.toggle-img-option').style.display = 'none';
+        const sIdx = sections.indexOf(line.SECTION);
+        if (sIdx !== -1) find('.type-icon i').classList.add(...icons[sIdx].split(' '));
+        else console.log('Unhandled section : ' + line.SECTION);
+    }
+
+    find('.detail-item-1').classList.remove('hide');
+    if (line.TYPE == 'high') {
+        const di1 = find('.detail-item-1');
+        di1.innerHTML = str_dwld;
+        di1.classList.add('icon-blue');
+        di1.classList.remove('detail-item-1', 'hide');
+        find('.date-dwld-icon').classList.add('icon-blue', 'icon-floppy');
+    } else {
+        find('.date-dwld-icon')?.remove();
+    }
+
+    document.querySelector<HTMLElement>('.tab')!.appendChild(newLine);
 }
 
-function displayLine(line: any) {
-  $(".tab").append(line);
+function makeFilter(html: string, iconClass: string, onRemove: () => void): HTMLElement {
+    const newFilter = document.getElementById('default-filter')!.cloneNode(true) as HTMLElement;
+    newFilter.classList.remove('hide');
+    newFilter.querySelector<HTMLElement>('.filter-title')!.innerHTML = html;
+    const icon = newFilter.querySelector<HTMLElement>('.filter-icon')!;
+    if (iconClass) icon.classList.add(iconClass);
+    newFilter.querySelector<HTMLElement>('.remove-filter')!.addEventListener('click', () => {
+        newFilter.remove();
+        onRemove();
+        checkFilters();
+    });
+    document.querySelector('.filter-container')!.appendChild(newFilter);
+    checkFilters();
+    return newFilter;
 }
 
 function addUserFilter(username: any) {
-  var newFilter = $("#default-filter").clone();
-  newFilter.removeClass("hide");
-
-  newFilter.find(".filter-title").html(username);
-  newFilter.find(".filter-icon").addClass("icon-user");
-
-  newFilter.find(".remove-filter").on("click", function () {
-    $(this).parent().remove();
-
-    current_param.user_id = "-1";
-    current_param.pageNumber = 0;
-    fillHistoryResult(current_param);
-    checkFilters();
-    $(".summary-guests").show();
-  })
-
-  $(".summary-guests").hide();
-  $(".filter-container").append(newFilter);
-  checkFilters();
+    makeFilter(username, 'icon-user', () => {
+        current_param.user_id = '-1';
+        current_param.pageNumber = 0;
+        fillHistoryResult(current_param);
+        document.querySelectorAll<HTMLElement>('.summary-guests').forEach(el => { el.style.display = ''; });
+    });
+    document.querySelectorAll<HTMLElement>('.summary-guests').forEach(el => { el.style.display = 'none'; });
 }
 
 function addGuestFilter(username: any) {
-  var newFilter = $("#default-filter").clone();
-  newFilter.removeClass("hide");
-
-  newFilter.find(".filter-title").html(username);
-  newFilter.find(".filter-icon").addClass("icon-user-secret");
-
-  newFilter.find(".remove-filter").on("click", function () {
-    $(this).parent().remove();
-
-    current_param.user_id = "-1";
-    current_param.pageNumber = 0;
-    fillHistoryResult(current_param);
-    checkFilters();
-  })
-
-  $(".filter-container").append(newFilter);
-  checkFilters();
+    makeFilter(username, 'icon-user-secret', () => {
+        current_param.user_id = '-1';
+        current_param.pageNumber = 0;
+        fillHistoryResult(current_param);
+    });
 }
 
 function addIpFilter(ip: any) {
-  var newFilter = $("#default-filter").clone();
-  newFilter.removeClass("hide");
-
-  newFilter.find(".filter-title").html(ip);
-  newFilter.find(".filter-icon").html("IP ").addClass("bold");
-
-  newFilter.find(".remove-filter").on("click", function () {
-    $(this).parent().remove();
-
-    current_param.ip = "";
-    current_param.pageNumber = 0;
-    fillHistoryResult(current_param);
-    checkFilters();
-  })
-
-  $(".filter-container").append(newFilter);
-  checkFilters();
+    const f = makeFilter(ip, '', () => { current_param.ip = ''; current_param.pageNumber = 0; fillHistoryResult(current_param); });
+    f.querySelector<HTMLElement>('.filter-icon')!.innerHTML = 'IP ';
+    f.querySelector<HTMLElement>('.filter-icon')!.classList.add('bold');
 }
 
 function addImageFilter(img_id: any) {
-  var newFilter = $("#default-filter").clone();
-  newFilter.removeClass("hide");
-  
-  newFilter.find(".filter-title").html("Image #" + img_id);
-  newFilter.find(".filter-icon").addClass("icon-picture");
-
-  newFilter.find(".remove-filter").on("click", function () {
-    $(this).parent().remove();
-
-    current_param.image_id = "";
-    current_param.pageNumber = 0;
-    fillHistoryResult(current_param);
-    checkFilters();
-  })
-
-  $(".filter-container").append(newFilter);
-  checkFilters();
+    makeFilter('Image #' + img_id, 'icon-picture', () => { current_param.image_id = ''; current_param.pageNumber = 0; fillHistoryResult(current_param); });
 }
 
 function updateArrows(actualPage: any, maxPage: any) {
-  if (actualPage == 0) {
-    $('.pagination-arrow.left').addClass('unavailable');
-  } else {
-    $('.pagination-arrow.left').removeClass('unavailable');
-  }
-
-  if (actualPage == maxPage-1) {
-    $('.pagination-arrow.rigth').addClass('unavailable');
-  } else {
-    $('.pagination-arrow.rigth').removeClass('unavailable');
-  }
+    document.querySelector('.pagination-arrow.left')?.classList.toggle('unavailable', actualPage == 0);
+    document.querySelector('.pagination-arrow.rigth')?.classList.toggle('unavailable', actualPage == maxPage - 1);
 }
 
 function updatePagination(maxPage: any) {
-  updateArrows(current_param.pageNumber, maxPage);
-
-  $(".pagination-item-container").empty();
-  $(".pagination-item-container").append(
-    "<a class='actual'>"+ (current_param.pageNumber+1) + "/" + maxPage +"</a>"
-  )
+    updateArrows(current_param.pageNumber, maxPage);
+    const container = document.querySelector<HTMLElement>('.pagination-item-container')!;
+    container.innerHTML = '';
+    container.insertAdjacentHTML('beforeend', `<a class='actual'>${current_param.pageNumber + 1}/${maxPage}</a>`);
 }
 
 function checkFilters() {
-  if ($(".filter-container")[0].childElementCount - 1 > 0) { //Check if there are filters
-    $(".filter-tags label").show();
-  } else {
-    $(".filter-tags label").hide();
-  }
+    const hasFilters = (document.querySelector('.filter-container')?.childElementCount ?? 0) - 1 > 0;
+    document.querySelectorAll<HTMLElement>('.filter-tags label').forEach(el => { el.style.display = hasFilters ? '' : 'none'; });
 }
+
 export {};

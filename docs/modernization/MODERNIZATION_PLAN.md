@@ -7138,7 +7138,7 @@ G2-1 (PHPStan baseline) in Phase 7; G3-1, G3-2, G5-1, G5-2 in Phase 8.
 
 ## Phase 7 — PHPStan level 9 / baseline elimination (L)
 
-**Status: WIP.** Full plan moved to [`docs/modernization/PHASE7_PHPSTAN.md`](PHASE7_PHPSTAN.md).
+**Status: WIP.** Full plan moved to [`docs/modernization/MODERNIZATION_PLAN_2.md`](MODERNIZATION_PLAN_2.md).
 
 **Current state:** level 8, baseline 1 412 errors (reduced from ~22 279 at Phase 6 exit).
 Exit signal: `phpstan.neon` at level 9 with `treatPhpDocTypesAsCertain: true`, no baseline file,

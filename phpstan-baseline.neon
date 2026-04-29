@@ -7306,36 +7306,6 @@ parameters:
 			path: include/ws_functions/pwg.users.php
 
 		-
-			message: '#^Access to private property Piwigo\\Ws\\PwgNamedArray\:\:\$_content\.$#'
-			identifier: property.private
-			count: 1
-			path: include/ws_protocols/rest_encoder.php
-
-		-
-			message: '#^Access to private property Piwigo\\Ws\\PwgNamedArray\:\:\$_itemName\.$#'
-			identifier: property.private
-			count: 1
-			path: include/ws_protocols/rest_encoder.php
-
-		-
-			message: '#^Access to private property Piwigo\\Ws\\PwgNamedArray\:\:\$_xmlAttributes\.$#'
-			identifier: property.private
-			count: 1
-			path: include/ws_protocols/rest_encoder.php
-
-		-
-			message: '#^Access to private property Piwigo\\Ws\\PwgNamedStruct\:\:\$_content\.$#'
-			identifier: property.private
-			count: 1
-			path: include/ws_protocols/rest_encoder.php
-
-		-
-			message: '#^Access to private property Piwigo\\Ws\\PwgNamedStruct\:\:\$_xmlAttributes\.$#'
-			identifier: property.private
-			count: 1
-			path: include/ws_protocols/rest_encoder.php
-
-		-
 			message: '#^Cannot cast array\<mixed\>\|float\|int\|Piwigo\\Image\\SrcImage\|string\|null to string\.$#'
 			identifier: cast.string
 			count: 1
@@ -7388,48 +7358,6 @@ parameters:
 			identifier: notIdentical.alwaysTrue
 			count: 1
 			path: src/Piwigo/Image/DerivativeImage.php
-
-		-
-			message: '#^Instanceof between mixed and Piwigo\\Ws\\PwgNamedArray will always evaluate to false\.$#'
-			identifier: instanceof.alwaysFalse
-			count: 1
-			path: src/Piwigo/Ws/Encoder/PwgResponseEncoder.php
-
-		-
-			message: '#^Instanceof between mixed and Piwigo\\Ws\\PwgNamedStruct will always evaluate to false\.$#'
-			identifier: instanceof.alwaysFalse
-			count: 1
-			path: src/Piwigo/Ws/Encoder/PwgResponseEncoder.php
-
-		-
-			message: '#^Access to private property Piwigo\\Ws\\PwgNamedArray\:\:\$_content\.$#'
-			identifier: property.private
-			count: 1
-			path: src/Piwigo/Ws/Protocol/PwgRestEncoder.php
-
-		-
-			message: '#^Access to private property Piwigo\\Ws\\PwgNamedArray\:\:\$_itemName\.$#'
-			identifier: property.private
-			count: 1
-			path: src/Piwigo/Ws/Protocol/PwgRestEncoder.php
-
-		-
-			message: '#^Access to private property Piwigo\\Ws\\PwgNamedArray\:\:\$_xmlAttributes\.$#'
-			identifier: property.private
-			count: 1
-			path: src/Piwigo/Ws/Protocol/PwgRestEncoder.php
-
-		-
-			message: '#^Access to private property Piwigo\\Ws\\PwgNamedStruct\:\:\$_content\.$#'
-			identifier: property.private
-			count: 1
-			path: src/Piwigo/Ws/Protocol/PwgRestEncoder.php
-
-		-
-			message: '#^Access to private property Piwigo\\Ws\\PwgNamedStruct\:\:\$_xmlAttributes\.$#'
-			identifier: property.private
-			count: 1
-			path: src/Piwigo/Ws/Protocol/PwgRestEncoder.php
 
 		-
 			message: '#^Property Piwigo\\Ws\\PwgNamedArray\:\:\$_itemName is never read, only written\.$#'

@@ -301,9 +301,6 @@ final class DerivativeParams
     /** @var float from 0=no sharpening to 1=max sharpening */
     public $sharpen = 0;
 
-    /**
-     * @param \Piwigo\Image\SizingParams $sizing
-     */
     public function __construct(public SizingParams $sizing)
     {
     }
@@ -342,15 +339,12 @@ final class DerivativeParams
      */
     public function max_width(): int
     {
-        return $this->sizing->ideal_size[0];
+        return (int) $this->sizing->ideal_size[0];
     }
 
-    /**
-     * @return int
-     */
     public function max_height(): int
     {
-        return $this->sizing->ideal_size[1];
+        return (int) $this->sizing->ideal_size[1];
     }
 
     /**

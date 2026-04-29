@@ -31,6 +31,9 @@ playwright-report/
 test-results/
 dist/
 
+# Composer dependencies
+/vendor/
+
 # Tool session artifacts
 .playwright-mcp/
 .claude/worktrees/

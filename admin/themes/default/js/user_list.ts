@@ -443,7 +443,7 @@ $( document ).ready(function() {
 
      /* tabsheet pop in guest */
     $('.guest-edit-user-tabsheet').off('click').on('click', function() {
-        const tabName = $(this).attr('id').split('_');
+        const tabName = $(this).attr('id')!.split('_');
         const tabId = tabName[1] + '_' + tabName[2] + '_' + tabName[3];
         $('#' + tabId)[0].scrollIntoView({
             behavior: 'smooth'
@@ -580,7 +580,7 @@ jQuery('#UserList .photos-select-bar .slider-bar-container').slider({
         $('#UserList .photos-select-bar .nb-img-page-infos').html(getNbImagePageInfoFromIdx(ui.value));
     },
     stop: function( event, ui ) {
-        $('#UserList .photos-select-bar input[name=nb_image_page]').val(nb_image_page_values[ui.value]).trigger('change');
+        $('#UserList .photos-select-bar input[name=nb_image_page]').val(nb_image_page_values[ui.value!]).trigger('change');
     }
 });
 
@@ -597,7 +597,7 @@ jQuery('#GuestUserList .photos-select-bar .slider-bar-container').slider({
         $('#GuestUserList .photos-select-bar .nb-img-page-infos').html(getNbImagePageInfoFromIdx(ui.value));
     },
     stop: function( event, ui ) {
-        $('#GuestUserList .photos-select-bar input[name=nb_image_page]').val(nb_image_page_values[ui.value]).trigger('change');
+        $('#GuestUserList .photos-select-bar input[name=nb_image_page]').val(nb_image_page_values[ui.value!]).trigger('change');
     }
 });
 
@@ -614,7 +614,7 @@ jQuery('#permitActionUserList .photos-select-bar .slider-bar-container').slider(
         $('#permitActionUserList .photos-select-bar .nb-img-page-infos').html(getNbImagePageInfoFromIdx(ui.value));
     },
     stop: function( event, ui ) {
-        $('#permitActionUserList .photos-select-bar input[name=nb_image_page]').val(nb_image_page_values[ui.value]).trigger('change');
+        $('#permitActionUserList .photos-select-bar input[name=nb_image_page]').val(nb_image_page_values[ui.value!]).trigger('change');
     }
 });
 
@@ -631,7 +631,7 @@ $('#UserList .period-select-bar .slider-bar-container').slider({
         $('#UserList .period-select-bar .recent_period_infos').html(getRecentPeriodInfoFromIdx(ui.value));
     },
     stop: function( event, ui ) {
-        $('#UserList .period-select-bar input[name=recent_period]').val(recent_period_values[ui.value]).trigger('change');
+        $('#UserList .period-select-bar input[name=recent_period]').val(recent_period_values[ui.value!]).trigger('change');
     }
 });
 
@@ -647,7 +647,7 @@ $('#GuestUserList .period-select-bar .slider-bar-container').slider({
         $('#GuestUserList .period-select-bar .recent_period_infos').html(getRecentPeriodInfoFromIdx(ui.value));
     },
     stop: function( event, ui ) {
-        $('#GuestUserList .period-select-bar input[name=recent_period]').val(recent_period_values[ui.value]).trigger('change');
+        $('#GuestUserList .period-select-bar input[name=recent_period]').val(recent_period_values[ui.value!]).trigger('change');
     }
 });
 
@@ -663,7 +663,7 @@ $('#permitActionUserList .period-select-bar .slider-bar-container').slider({
         $('#permitActionUserList .period-select-bar .recent_period_infos').html(getRecentPeriodInfoFromIdx(ui.value));
     },
     stop: function( event, ui ) {
-        $('#permitActionUserList .period-select-bar input[name=recent_period]').val(recent_period_values[ui.value]).trigger('change');
+        $('#permitActionUserList .period-select-bar input[name=recent_period]').val(recent_period_values[ui.value!]).trigger('change');
     }
 });
 $('#permitActionUserList .photos-select-bar .slider-bar-container').slider("option", "value", 0);
@@ -817,13 +817,13 @@ function setupRegisterDates(register_dates: any) {
         max: register_dates.length - 1,
         values: [0, register_dates.length - 1],
         change: function( event, ui ) {
-            $(".advanced-filter .dates-infos").html(sprintf(dates_infos, getDateStr(register_dates[ui.values[0]]), getDateStr(register_dates[ui.values[1]])));
+            $(".advanced-filter .dates-infos").html(sprintf(dates_infos, getDateStr(register_dates[ui.values![0]]), getDateStr(register_dates[ui.values![1]])));
         },
         slide: function( event, ui ) {
-            $(".advanced-filter .dates-infos").html(sprintf(dates_infos, getDateStr(register_dates[ui.values[0]]), getDateStr(register_dates[ui.values[1]])));
+            $(".advanced-filter .dates-infos").html(sprintf(dates_infos, getDateStr(register_dates[ui.values![0]]), getDateStr(register_dates[ui.values![1]])));
         },
         stop: function( event, ui ) {
-            $(".advanced-filter .dates-infos").html(sprintf(dates_infos, getDateStr(register_dates[ui.values[0]]), getDateStr(register_dates[ui.values[1]])));
+            $(".advanced-filter .dates-infos").html(sprintf(dates_infos, getDateStr(register_dates[ui.values![0]]), getDateStr(register_dates[ui.values![1]])));
             update_user_list();
         }
     });
@@ -892,7 +892,7 @@ function checkbox_container_change(this: HTMLElement) {
 function checkbox_container_click(this: HTMLElement) {
     let curr_container = $(this).closest(".user-container");
     let in_container = curr_container.length != 0;
-    let curr_user = in_container ? current_users[parseInt(curr_container.attr("key"))] : {id: -1};
+    let curr_user = in_container ? current_users[parseInt(curr_container.attr("key")!)] : {id: -1};
     if ($(this).attr('data-selected') == '1') {
         $(this).attr('data-selected', '0');
         $(this).find("i").hide();
@@ -1071,7 +1071,7 @@ function reset_input_password() {
 
 function editTabsBind () {
     $('.edit-user-tabsheet').off('click').on('click', function() {
-        const tabName = $(this).attr('id').split('_');
+        const tabName = $(this).attr('id')!.split('_');
         const tabId = tabName[1] + '_' + tabName[2];
 
         $('#' + tabId)[0].scrollIntoView({
@@ -1324,7 +1324,7 @@ function user_container_click(this: HTMLElement) {
     let curr_container = $(this)
     let in_container = curr_container.length != 0;
     let container_checkbox = $(this).find('.user-list-checkbox');
-    let curr_user = in_container ? current_users[parseInt(curr_container.attr("key"))] : {id: -1};
+    let curr_user = in_container ? current_users[parseInt(curr_container.attr("key")!)] : {id: -1};
     if (container_checkbox.attr('data-selected') == '1') {
         container_checkbox.attr('data-selected', '0');
         container_checkbox.find("i").hide();
@@ -1827,7 +1827,7 @@ Fill data for setInfo
 
 function fill_ajax_data_from_properties(ajax_data: any, pop_in: any) {
     let groups_selected = pop_in.find('.user-property-group .selectize-input .item').map(function (this: HTMLElement) {
-        return parseInt($(this).attr('data-value'));
+        return parseInt($(this).attr('data-value')!);
     } ).get();
     // console.log(groups_selected);
     ajax_data['email'] = pop_in.find('.user-property-email input').val();
@@ -2202,7 +2202,7 @@ function update_user_list() {
 function add_user() {
     let ajax_data: Record<string, any> = {};
     let groups_selected = $('.AddUserInputContainer .user-property-group .selectize-input .item').map(function () {
-        return parseInt($(this).attr('data-value'));
+        return parseInt($(this).attr('data-value')!);
     } ).get();
     ajax_data.username = $('.AddUserLabelUsername .user-property-input').val();
     ajax_data.email = $(".AddUserLabelEmail .user-property-input").val();

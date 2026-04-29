@@ -466,7 +466,7 @@ jQuery(document).ready(function() {
     desc_modal.fadeToggle();
   });
   textareas.keyup(function() {
-    textareas.val($(this).val());
+    textareas.val($(this).val() ?? '');
   });
   $(window).on('click', function(e) {
     if((e.target as unknown as Element) === desc_modal[0]){

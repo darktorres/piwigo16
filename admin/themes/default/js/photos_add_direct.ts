@@ -582,7 +582,7 @@ function hide_first_album(cat_name: any) {
 
 function add_first_album(add_cat: any) {
   const params = {
-    name: inputFirstAlbum.val().toString(),
+    name: String(inputFirstAlbum.val() ?? ''),
     pwg_token
   }
 

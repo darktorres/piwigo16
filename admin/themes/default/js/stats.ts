@@ -38,7 +38,7 @@ compareMode = false;
 /*-------
 Creating graph
 -------*/
-var ctx = (document.getElementById('stat-graph') as HTMLCanvasElement).getContext('2d');
+var ctx = (document.getElementById('stat-graph') as HTMLCanvasElement).getContext('2d')!;
 //Create the gradient under the curve
 function gradient(r: any, g: any, b: any) {
   let gradient = ctx.createLinearGradient(0,400, 0,0);

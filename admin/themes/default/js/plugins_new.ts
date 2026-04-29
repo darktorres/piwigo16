@@ -320,7 +320,7 @@ $(function () {
 
         queryParams.set("beta-test", (e.currentTarget as HTMLInputElement).checked.toString());
 
-        history.replaceState(null, null, "?" + queryParams.toString());
+        history.replaceState(null, '', "?" + queryParams.toString());
 
         window.location.reload();
     })

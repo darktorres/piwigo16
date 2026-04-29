@@ -597,7 +597,7 @@ function commentsUpdateSelection() {
   });
 
   $('.comments-selected-remove').off('click').on('click', function() {
-    const id = $(this).attr('id').split('_')[1];
+    const id = $(this).attr('id')!.split('_')[1];
     if (!id) return;
     $(`#${id} .comment-content`).trigger('click');
   });

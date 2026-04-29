@@ -422,7 +422,7 @@ var displayRenameForm = function(doDisplay: any, grp_id: any) {
 }
 
 var setDefaultGroup = function (id: any, is_default: any) {
-  $("#group-" + id + " #GroupDefault").css("width", $("#group-" + id + " #GroupDefault").width())
+  $("#group-" + id + " #GroupDefault").css("width", $("#group-" + id + " #GroupDefault").width()!)
   $("#group-" + id + " #GroupDefault").html("<i class='icon-spin6 animate-spin'> </i>")
   $("#group-" + id + " #GroupDefault").removeClass("icon-star");
   $("#group-" + id + " #GroupDefault").attr("style", "pointer-events: none; text-align: center;")
@@ -802,7 +802,7 @@ $(function() {
     JSON.parse(usersCache.storage[usersCache.key]).data.forEach(function(u: any){
       selectize.addOption({value:u.id, text:u.username})
     })
-    idSearch = $("#UserList").attr("data-group_id");
+    idSearch = $("#UserList").attr("data-group_id")!;
     for (const [key, value] of Object.entries(selectize.options as Record<string, any>)) {
       if (value.username === "guest") {
         selectize.removeOption(value.id);
@@ -846,11 +846,11 @@ var openUserManager = function(grp_id: any) {
           } else return 1
         });
         let i = 0;
-        while ($(".UsersInGroupList").outerHeight() <= maxOffsetUserCont && usersInGroup[i] != undefined){
+        while (($(".UsersInGroupList").outerHeight() ?? 0) <= maxOffsetUserCont && usersInGroup[i] != undefined){
           getUserDisplay(usersInGroup[i].username, usersInGroup[i].id, grp_id).appendTo(".UsersInGroupList");
           i++;
         };
-        while ($(".UsersInGroupList").height() > maxOffsetUserCont) {
+        while (($(".UsersInGroupList").height() ?? 0) > maxOffsetUserCont) {
           $(".UsernameBlock").last().remove();
         }
         updateMembernumber(usersInGroup.length, grp_id);
@@ -904,7 +904,7 @@ var getUserDisplay = function(username: any, user_id: any, grp_id: any) {
 
           updateUserSearch();
 
-          while ($(".UsersInGroupList").height() > maxOffsetUserCont) {
+          while (($(".UsersInGroupList").height() ?? 0) > maxOffsetUserCont) {
             $(".UsernameBlock").last().remove();
           }
 
@@ -974,7 +974,7 @@ $(".AddUserBlock button").on("click", function () {
 
           usersInGroup.push({username: username, id:id});
           
-          while ($(".UsersInGroupList").height() > maxOffsetUserCont) {
+          while (($(".UsersInGroupList").height() ?? 0) > maxOffsetUserCont) {
             $(".UsernameBlock").last().remove();
           }
 
@@ -990,7 +990,7 @@ $(".input-user-name").on("input", function() {
   searchString = String($(this).val()).toLowerCase();
   grp_id = $(".UserListPopIn").data("group_id");
   if (searchString != "") {
-    $(".UsersInGroupListContainer").css("min-height", $(".UsersInGroupListContainer").height())
+    $(".UsersInGroupListContainer").css("min-height", $(".UsersInGroupListContainer").height()!)
     usersInGroup.forEach(function(u) {
       let isSearched = u.username.toLowerCase().includes(searchString)
       if ($(".UsernameBlock[data-id="+u.id+"]").length != 0) {
@@ -1006,14 +1006,14 @@ $(".input-user-name").on("input", function() {
     $(".UsersInGroupListContainer").css("min-height", "")
     $(".UsersInGroupList").html("");
     let i = 0;
-    while ($(".UsersInGroupList").outerHeight() <= maxOffsetUserCont && usersInGroup[i] != undefined){
+    while (($(".UsersInGroupList").outerHeight() ?? 0) <= maxOffsetUserCont && usersInGroup[i] != undefined){
       getUserDisplay(usersInGroup[i].username, usersInGroup[i].id, grp_id)
         .appendTo(".UsersInGroupList");
       i++;
     }
   }
   $(".AmountOfUsersShown strong:nth-child(1)").html(String($(".UsernameBlock").length))
-  while ($(".UsersInGroupList").height() > maxOffsetUserCont) {
+  while (($(".UsersInGroupList").height() ?? 0) > maxOffsetUserCont) {
     $(".UsernameBlock").last().remove();
   }
 })

@@ -733,7 +733,7 @@ $(document).ready(function () {
         page_reset();
         if ($('#date_min_activity').val()=='')
         {
-            document.getElementById('date_max_activity').setAttribute("min", date_min);
+            document.getElementById('date_max_activity')!.setAttribute("min", date_min);
         }
         else
         {

@@ -99,7 +99,7 @@ $(document).ready(() => {
         });
         $(".move-cat-title-container").off("click").on("click", function () {
           openRenameAlbumPopIn($(this).find(".move-cat-title").attr("title"));
-          $(".RenameAlbumSubmit").data("cat_id", $(this).attr('data-id'));
+          $(".RenameAlbumSubmit").data("cat_id", $(this).attr('data-id')!);
         });
       } else {
         $(this).html(toggler_close);
@@ -168,7 +168,7 @@ $(document).ready(() => {
     if (node) {
       $('.cat-move-order-popin').fadeIn();
       $('.cat-move-order-popin .album-name').html(getPathNode(node));
-      $('.cat-move-order-popin input[name=id]').val(node_id);
+      $('.cat-move-order-popin input[name=id]').val(node_id!);
       $('input[name=simpleAutoOrder]').attr('value', str_sub_album_order);
     }
   });
@@ -197,7 +197,7 @@ $(document).ready(() => {
     }
 
     $([document.documentElement, document.body]).animate({
-      scrollTop: $("#cat-"+openCat).offset().top - ($(window).height() / 2) + ($("#cat-"+openCat).outerHeight() / 2)
+      scrollTop: $("#cat-"+openCat).offset()!.top - (($(window).height() ?? 0) / 2) + (($("#cat-"+openCat).outerHeight() ?? 0) / 2)
     }, 500);
   }
 
@@ -205,7 +205,7 @@ $(document).ready(() => {
   $(".RenameAlbumErrors").hide();
   $(".move-cat-title-container").on("click", function () {
     openRenameAlbumPopIn($(this).find(".move-cat-title").attr("title"));
-    $(".RenameAlbumSubmit").data("cat_id", $(this).attr('data-id'));
+    $(".RenameAlbumSubmit").data("cat_id", $(this).attr('data-id')!);
   });
   $(".CloseRenameAlbum").on("click", function () {
     closeRenameAlbumPopIn();
@@ -232,7 +232,7 @@ $(document).ready(() => {
         
         $(".move-cat-title-container").on("click", function () {
           openRenameAlbumPopIn($(this).find(".move-cat-title").attr("title"));
-          $(".RenameAlbumSubmit").data("cat_id", $(this).attr('data-id'));
+          $(".RenameAlbumSubmit").data("cat_id", $(this).attr('data-id')!);
         });
 
         $(".move-cat-add").off("click").on("click", function (e) {
@@ -346,7 +346,7 @@ $(document).ready(() => {
           });
           $(".move-cat-title-container").unbind("click").on("click", function () {
             openRenameAlbumPopIn($(this).find(".move-cat-title").attr("title"));
-            $(".RenameAlbumSubmit").data("cat_id", $(this).attr('data-id'));
+            $(".RenameAlbumSubmit").data("cat_id", $(this).attr('data-id')!);
           });
           $('.tiptip').tipTip({
             delay: 0,
@@ -359,7 +359,7 @@ $(document).ready(() => {
 
           goToNode($(".tree").tree('getNodeById', data.result.id), $(".tree").tree('getNodeById', data.result.id));
           $('html,body').animate({
-            scrollTop: $("#cat-" + data.result.id).offset().top - screen.height / 2},
+            scrollTop: ($("#cat-" + data.result.id).offset()?.top ?? 0) - screen.height / 2},
             'slow');
 
           closeAddAlbumPopIn();
@@ -644,7 +644,7 @@ function openDeleteAlbumPopIn(cat_to_delete: any) {
         });
         $(".move-cat-title-container").unbind("click").on("click", function () {
           openRenameAlbumPopIn($(this).find(".move-cat-title").attr("title"));
-          $(".RenameAlbumSubmit").data("cat_id", $(this).attr('data-id'));
+          $(".RenameAlbumSubmit").data("cat_id", $(this).attr('data-id')!);
         });
         $('.tiptip').tipTip({
           delay: 0,
@@ -808,7 +808,7 @@ function applyMove(event: any) {
     });
     $(".move-cat-title-container").on("click", function () {
       openRenameAlbumPopIn($(this).find(".move-cat-title").attr("title"));
-      $(".RenameAlbumSubmit").data("cat_id", $(this).attr('data-id'));
+      $(".RenameAlbumSubmit").data("cat_id", $(this).attr('data-id')!);
     });
     $('.tiptip').tipTip({
       delay: 0,
@@ -829,7 +829,7 @@ function applyMove(event: any) {
       });
       $(".move-cat-title-container").on("click", function () {
         openRenameAlbumPopIn($(this).find(".move-cat-title").attr("title"));
-        $(".RenameAlbumSubmit").data("cat_id", $(this).attr('data-id'));
+        $(".RenameAlbumSubmit").data("cat_id", $(this).attr('data-id')!);
       });
       $('.tiptip').tipTip({
         delay: 0,
@@ -969,7 +969,7 @@ function openNodeOnDemand(node: any) {
     });
     $(".move-cat-title-container").off("click").on("click", function () {
       openRenameAlbumPopIn($(this).find(".move-cat-title").attr("title"));
-      $(".RenameAlbumSubmit").data("cat_id", $(this).attr('data-id'));
+      $(".RenameAlbumSubmit").data("cat_id", $(this).attr('data-id')!);
     });
   }
 }

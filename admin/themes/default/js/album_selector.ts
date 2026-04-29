@@ -271,14 +271,14 @@ class AlbumSelector {
     if (this.#isAlbumCreationChecked) {
       $('.prefill-results-item').off(`click${instanceAb}`).on(`click${instanceAb}`, (e) => {
         const curr = $(e.currentTarget);
-        const cat_id = curr.attr('id');
+        const cat_id = curr.attr('id')!;
         const cat = this.#cats[cat_id];
         this.#switch_album_view(cat);
       });
     } else {
       $('.prefill-results-item.available').off(`click${instanceAb}`).on(`click${instanceAb}`, (e) => {
         const curr = $(e.currentTarget);
-        const cat_id = curr.attr('id');
+        const cat_id = curr.attr('id')!;
         const cat = this.#cats[cat_id];
 
         this.#currentSelectedId = cat.id;
@@ -318,7 +318,7 @@ class AlbumSelector {
 
     AlbumSelector.selectors.searchResult.find('.search-result-item').off(`click${instanceAb}`).on(`click${instanceAb}`, (e) => {
       const curr = $(e.currentTarget);
-      const cat_id = curr.attr('id');
+      const cat_id = curr.attr('id')!;
       const cat = this.#searchCat[cat_id];
 
       const formated_cat_id = this.#in_admin_mode ? cat.id : String(cat.id);

@@ -257,7 +257,7 @@ $applied_upgrades = in_array(PREFIX_TABLE.'upgrade', $tables, true)
     ? query2array('SELECT id FROM '.PREFIX_TABLE.'upgrade', null, 'id')
     : [];
 
-if (!in_array(181, $applied_upgrades, true)) {
+if (!in_array('181', $applied_upgrades, true)) {
     header('Content-Type: text/html; charset=UTF-8', true, 409);
     echo '<h1>Upgrade refused</h1>';
     echo '<p>This Piwigo build only upgrades from <strong>Piwigo 16.x</strong> sources. ';

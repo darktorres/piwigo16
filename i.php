@@ -41,6 +41,10 @@ $logger = new Logger(array(
 function trigger_notify(string $event, mixed ...$args): void
 {
 }
+function trigger_change(string $event, mixed $data = null): mixed
+{
+    return $data;
+}
 function get_extension(string $filename): string
 {
     $ext = strrchr($filename, '.');

@@ -106,54 +106,47 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ----- TemporaryState --------------------------------------------------------
-// NOTE: still uses JQuery types; will be updated when tags.ts/group_list.ts are converted
 
-interface AttrChange { object: JQuery; attribute: string; value: string | undefined }
-interface ClassChange { object: JQuery; state: boolean; class: string }
-interface HtmlChange { object: JQuery; html: string }
+interface AttrChange { element: HTMLElement; attribute: string; value: string | null }
+interface ClassChange { element: HTMLElement; state: boolean; cls: string }
+interface HtmlChange { element: HTMLElement; html: string }
 
 class TemporaryState {
-    attrChanges: AttrChange[] = [];
-    classChanges: ClassChange[] = [];
-    htmlChanges: HtmlChange[] = [];
+    private attrChanges: AttrChange[] = [];
+    private classChanges: ClassChange[] = [];
+    private htmlChanges: HtmlChange[] = [];
 
-    changeAttribute(obj: JQuery, attr: string, tempVal: string): void {
-        for (let i = 0; i < obj.length; i++) {
-            this.attrChanges.push({ object: $(obj[i]), attribute: attr, value: $(obj[i]).attr(attr) });
-        }
-        obj.attr(attr, tempVal);
+    changeAttribute(el: HTMLElement, attr: string, tempVal: string): void {
+        this.attrChanges.push({ element: el, attribute: attr, value: el.getAttribute(attr) });
+        el.setAttribute(attr, tempVal);
     }
 
-    changeClass(obj: JQuery, st: boolean, tempclass: string): void {
-        for (let i = 0; i < obj.length; i++) {
-            if (!($(obj[i]).hasClass(tempclass) && st)) {
-                this.classChanges.push({ object: $(obj[i]), state: !st, class: tempclass });
-                if (st) $(obj[i]).addClass(tempclass);
-                else $(obj[i]).removeClass(tempclass);
-            }
+    private changeClass(el: HTMLElement, state: boolean, cls: string): void {
+        if (!(el.classList.contains(cls) && state)) {
+            this.classChanges.push({ element: el, state: !state, cls });
+            if (state) el.classList.add(cls);
+            else el.classList.remove(cls);
         }
     }
 
-    addClass(obj: JQuery, tempclass: string): void { this.changeClass(obj, true, tempclass); }
-    removeClass(obj: JQuery, tempclass: string): void { this.changeClass(obj, false, tempclass); }
+    addClass(el: HTMLElement, cls: string): void { this.changeClass(el, true, cls); }
+    removeClass(el: HTMLElement, cls: string): void { this.changeClass(el, false, cls); }
 
-    changeHTML(obj: JQuery, temphtml: string): void {
-        for (let i = 0; i < obj.length; i++) {
-            this.htmlChanges.push({ object: $(obj[i]), html: $(obj[i]).html() });
-        }
-        obj.html(temphtml);
+    changeHTML(el: HTMLElement, html: string): void {
+        this.htmlChanges.push({ element: el, html: el.innerHTML });
+        el.innerHTML = html;
     }
 
     reverse(): void {
-        this.attrChanges.forEach((change) => {
-            if (change.value === undefined) change.object.removeAttr(change.attribute);
-            else change.object.attr(change.attribute, change.value);
+        this.attrChanges.forEach(({ element, attribute, value }) => {
+            if (value === null) element.removeAttribute(attribute);
+            else element.setAttribute(attribute, value);
         });
-        this.classChanges.forEach((change) => {
-            if (change.state) change.object.addClass(change.class);
-            else change.object.removeClass(change.class);
+        this.classChanges.forEach(({ element, state, cls }) => {
+            if (state) element.classList.add(cls);
+            else element.classList.remove(cls);
         });
-        this.htmlChanges.forEach((change) => { change.object.html(change.html); });
+        this.htmlChanges.forEach(({ element, html }) => { element.innerHTML = html; });
         this.attrChanges = [];
         this.classChanges = [];
         this.htmlChanges = [];
@@ -210,9 +203,23 @@ $.fn.pwg_jconfirm_follow_href = function ({
     });
 };
 
+// ----- standalone pwg_jconfirm_follow_href for non-jQuery callers -----------
+
+function pwg_jconfirm_follow_href_fn(el: HTMLElement, options: {
+    alert_title?: string; alert_confirm?: string; alert_cancel?: string; alert_content?: string;
+} = {}): void {
+    const href = el.getAttribute('href');
+    el.addEventListener('click', (e) => {
+        e.preventDefault();
+        const msg = (options.alert_title ?? 'TITLE') + (options.alert_content ? '\n\n' + options.alert_content : '');
+        if (window.confirm(msg)) window.location.href = href!;
+    });
+}
+
 // ----- expose globals --------------------------------------------------------
 
 (window as any).applyFontCheckbox = applyFontCheckbox;
+(window as any).pwg_jconfirm_follow_href_fn = pwg_jconfirm_follow_href_fn;
 (window as any).array_delete = array_delete;
 (window as any).str_repeat = str_repeat;
 (window as any).getRandomInt = getRandomInt;

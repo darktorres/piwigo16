@@ -16,12 +16,21 @@
         "@types/jqueryui": "^1.12.23",
         "@types/js-cookie": "^3.0.6",
         "@types/node": "^25.6.0",
+        "@types/sortablejs": "^1.15.9",
         "typescript": "^5.6.3",
         "vite": "^5.4.10"
     },
     "dependencies": {
         "@popperjs/core": "^2.11.8",
+        "cropperjs": "^2.1.1",
+        "dayjs": "^1.11.20",
+        "flatpickr": "^4.6.13",
+        "glightbox": "^3.3.1",
         "js-cookie": "^3.0.5",
-        "tippy.js": "^6.3.7"
+        "notyf": "^3.10.0",
+        "nouislider": "^15.8.1",
+        "sortablejs": "^1.15.7",
+        "tippy.js": "^6.3.7",
+        "tom-select": "^2.6.0"
     }
 }

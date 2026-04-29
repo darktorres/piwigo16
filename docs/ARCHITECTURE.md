@@ -46,7 +46,6 @@ composer.json
 ├── autoload.psr-4: "Piwigo\\" → src/Piwigo/
 ├── autoload.psr-4: "Smarty\\" → include/smarty/src/
 ├── autoload.files: include/smarty/src/functions.php
-│                   src/Piwigo/Compat/aliases.php       ← backward-compat class aliases
 └── config.classmap-authoritative: true                 ← no filesystem scan at runtime
 ```
 
@@ -57,13 +56,6 @@ PHP free functions cannot be autoloaded. Files like `include/functions.inc.php`,
 loaded explicitly in `common.inc.php`. They contain the bulk of Piwigo's business
 logic and cannot be moved to classes without rewriting every call site. They are
 excluded from Rector and linted but not namespaced.
-
-### Compat aliases (`src/Piwigo/Compat/aliases.php`)
-
-Loaded on every request via `autoload.files`. Provides `class_alias()` mappings so
-old code like `new Template()` or plugin files that extend `PluginMaintain` continue
-working without modification. Each alias maps the unqualified legacy name to its
-namespaced equivalent in `src/Piwigo/`.
 
 ---
 

@@ -7297,7 +7297,7 @@ one phase. The originating reference is noted for each step.
 
 **Testing**
 
-1. **Author `dev/fixtures/piwigo-15.x.sql`** — the rejection fixture for the `upgrade.php` 409
+1. ✅ **Author `dev/fixtures/piwigo-15.x.sql`** — the rejection fixture for the `upgrade.php` 409
    guard. *(Phase 6 verification step 5, optional, skipped.)*
    The fixture must produce a structurally valid DB that `upgrade.php` can reach past the
    table-existence checks, but lacks `applied_upgrade` id 181, so the 409 guard fires.
@@ -7312,7 +7312,7 @@ one phase. The originating reference is noted for each step.
 
 **Security**
 
-2. **Upgrade session cookie `SameSite` from `Lax` to `Strict`.** *(Phase 1 step 9 deferral,
+2. ✅ **Upgrade session cookie `SameSite` from `Lax` to `Strict`.** *(Phase 1 step 9 deferral,
    line 641 of the plan: "tightening is a Phase 6 cleanup" — never done in Phase 6.)*
    Phase 1 shipped `samesite: 'Lax'` in `session_set_cookie_params()` and `setcookie()` calls
    (6 sites in `include/functions_user.inc.php`, 2 in `include/functions_cookie.inc.php`).
@@ -7326,7 +7326,7 @@ one phase. The originating reference is noted for each step.
 
 **PHP type-safety cleanup**
 
-3. **Tighten `PwgNamedArray`, `PwgNamedStruct`, and `PwgServer` property visibility.**
+3. ✅ **Tighten `PwgNamedArray`, `PwgNamedStruct`, and `PwgServer` property visibility.**
    *(Phase 1 lines 677, 790, 908 — deferred as "higher disruption, not Phase 1 scope".)*
    - `PwgNamedArray.$_content` and `PwgNamedStruct.$_content` currently use `/*private*/ var`
      (PHP-4-era public-visibility shorthand with an aspirational comment). Three read sites in
@@ -7339,7 +7339,7 @@ one phase. The originating reference is noted for each step.
    **Exit signal:** PHPStan sees no public `_`-prefixed properties on ws classes;
    `vendor/bin/phpunit --testsuite Unit` still green.
 
-4. **Remove `src/Piwigo/Compat/aliases.php` and the `autoload.files` entry.**
+4. ✅ **Remove `src/Piwigo/Compat/aliases.php` and the `autoload.files` entry.**
    *(Gap G3-1, Phase 3 deferral — "loaded on every request, remove once FQCNs are complete".)*
    `aliases.php` currently holds ~60 `class_alias()` mappings from old unqualified names to
    `Piwigo\*` FQCNs. It runs unconditionally on every request. The removal process:
@@ -7354,7 +7354,7 @@ one phase. The originating reference is noted for each step.
    **Exit signal:** `aliases.php` is deleted; `composer.json` `autoload.files` is empty or absent;
    PHPStan exits 0; unit suite green.
 
-5. **Dissolve `DummyPlugin_maintain` and `DummyTheme_maintain`.** *(Gap G3-2, Phase 6 step 14,
+5. ✅ **Dissolve `DummyPlugin_maintain` and `DummyTheme_maintain`.** *(Gap G3-2, Phase 6 step 14,
    optional, skipped. Note: the Phase 6 plan description was partially wrong — these classes are
    NOT empty markers; they bridge old procedural plugin callbacks.)*
    The correct dissolution requires eliminating the procedural plugin API itself:
@@ -7369,7 +7369,7 @@ one phase. The originating reference is noted for each step.
 
 **Frontend**
 
-6. **Fix Vite manifest plugin per-entry CSS association.** *(Gap G5-2, Phase 6 step 13, optional,
+6. ✅ **Fix Vite manifest plugin per-entry CSS association.** *(Gap G5-2, Phase 6 step 13, optional,
    skipped.)*
    `build/piwigo-manifest-plugin.ts` currently adds ALL CSS assets to EVERY entry's manifest
    record. Fix: use Vite's internal per-chunk CSS metadata. In the `generateBundle` hook,

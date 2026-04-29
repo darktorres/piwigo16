@@ -169,13 +169,13 @@ if ($plugins->get_server_plugins(true, $beta_test)) {
           'REVISION_DATE' => preg_replace('/[^0-9]/', '', (string) strtotime((string) $plugin['revision_date'])),
           'REVISION_FORMATED_DATE' => format_date($plugin['revision_date'], ['day','month','year']).', '.time_since($plugin['revision_date'], 'day'),
           'AUTHOR' => $plugin['author_name'],
-          'DOWNLOADS' => $plugin['extension_nb_downloads'],
+          'DOWNLOADS' => $plugin['extension_nb_downloads'] ?? null,
           'URL_INSTALL' => $url_auto_install,
           'CERTIFICATION' => $certification,
-          'RATING' => $plugin['rating_score'],
-          'NB_RATINGS' => $plugin['nb_ratings'],
-          'SCREENSHOT' => (key_exists('screenshot_url', $plugin)) ? $plugin['screenshot_url'] : '',
-          'TAGS' => $plugin['tags'],
+          'RATING' => $plugin['rating_score'] ?? null,
+          'NB_RATINGS' => $plugin['nb_ratings'] ?? null,
+          'SCREENSHOT' => $plugin['screenshot_url'] ?? '',
+          'TAGS' => $plugin['tags'] ?? [],
         ]);
     }
 

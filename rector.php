@@ -28,7 +28,6 @@ return RectorConfig::configure()
         __DIR__ . '/include/emogrifier.class.php',
         __DIR__ . '/include/jshrink.class.php',
         __DIR__ . '/include/passwordhash.class.php',
-        __DIR__ . '/include/mdetect.php',
         __DIR__ . '/admin/include/pclzip.lib.php',
         __DIR__ . '/themes', __DIR__ . '/vendor',
         // load_external_filters() uses implode('', $callback) for compile_id — array callbacks only.

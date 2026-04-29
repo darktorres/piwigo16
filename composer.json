@@ -4,9 +4,10 @@
     "type": "project",
     "require": {
         "php": "^8.5",
-        "ext-mysqli": "*",
+        "ext-gd": "*",
         "ext-mbstring": "*",
-        "ext-gd": "*"
+        "ext-mysqli": "*",
+        "ahand/mobileesp": "dev-master"
     },
     "require-dev": {
         "laravel/pint": "^1.18",
@@ -37,5 +38,7 @@
         "classmap-authoritative": true,
         "sort-packages": true,
         "allow-plugins": {}
-    }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
 }

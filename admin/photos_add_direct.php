@@ -69,7 +69,6 @@ SELECT COUNT(*)
 ;';
     [$nb_images] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
-    include_once(PHPWG_ROOT_PATH.'include/mdetect.php');
     $uagent_obj = new uagent_info();
     // To see the mobile app promote, the account must have 2 weeks ancient, 3 albums created and 30 photos uploaded
     $template->assign('PROMOTE_MOBILE_APPS', (!$uagent_obj->DetectIos() and strtotime((string) $register_date) < strtotime('2 weeks ago') and $nb_cats >= 3 and $nb_images >= 30));

@@ -121,7 +121,6 @@ if (\Piwigo\Core\Config::showNewsletterSubscription() and userprefs_get_param('s
   ;';
     [$nb_images] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
-    include_once(PHPWG_ROOT_PATH.'include/mdetect.php');
     $uagent_obj = new uagent_info();
     // To see the newsletter promote, the account must have 2 weeks ancient, 3 albums created and 30 photos uploaded
 

@@ -49,25 +49,25 @@ const color_icons = ["icon-red", "icon-blue", "icon-yellow", "icon-purple", "ico
 const status_arr = ['webmaster', 'admin', 'normal', 'generic', 'guest'];
 const level_arr = ['0', '1', '2', '4', '8'];
 const king_template = '<p class="icon-king" id="the_king"></p>';
-let current_users = [];
+let current_users: any[] = [];
 let guest_id = 0;
 let guest_user: any = {};
 let connected_user = 0;
-let groups_arr = [];
+let groups_arr: any[] = [];
 let nb_days = '';
 let nb_photos = '';
 let nb_photos_per_page = '';
 let last_user_index: any = -1;
 let last_user_id = -1;
 let pwg_token = '';
-let selection = [];
+let selection: any[] = [];
 let first_update = true;
 let total_users = 0
 let filter_by = 'id DESC';
-let plugins_set_functions = {};
-let plugins_get_functions = {};
+let plugins_set_functions: Record<string, any> = {};
+let plugins_get_functions: Record<string, any> = {};
 let plugins_load = [];
-let plugins_users_infos_table = [];
+let plugins_users_infos_table: any[] = [];
 let owner_username = '';
 /*----------------
 Escape of pop-in
@@ -464,7 +464,7 @@ $( document ).ready(function() {
     });
 });
 
-function set_view_selector(view_type) {
+function set_view_selector(view_type: any) {
   $.ajax({
     url: "ws.php?format=json&method=pwg.users.preferences.set",
     type: "POST",
@@ -543,7 +543,7 @@ const nb_image_page_init = 0;
 /**
 * find the key from a value in the startStopValues array
 */
-function getSliderKeyFromValue(value, values) {
+function getSliderKeyFromValue(value: any, values: any) {
     for (var key in values) {
         if (values[key] >= value) {
             return key;
@@ -552,14 +552,14 @@ function getSliderKeyFromValue(value, values) {
     return 0;
 }
 
-function getNbImagePageInfoFromIdx(idx) {
+function getNbImagePageInfoFromIdx(idx: any) {
     return sprintf(
         nb_photos,
         nb_image_page_values[idx]
     );
 }
 
-function getRecentPeriodInfoFromIdx(idx) {
+function getRecentPeriodInfoFromIdx(idx: any) {
     return sprintf(
         nb_days,
         recent_period_values[idx]
@@ -684,7 +684,7 @@ const page_item = '<a data-page="%d">%d</a>';
 let promise_pending = false;
 let update_ask = false;
 
-function move_to_page(page) {
+function move_to_page(page: any) {
     if (page < 1 || page > max_page)
         return;
     actual_page = page;
@@ -723,7 +723,7 @@ $('.pagination-per-page a').on('click',function () {
     $(this).addClass("selected-pagination");
 });
 
-function append_pagination_item(page = null) {
+function append_pagination_item(page: any = null) {
     if (page != null) {
         let new_tag = $(page_item.replace(/%d/g, page));
         $('.pagination-item-container').append(new_tag);
@@ -802,15 +802,15 @@ function advanced_filter_hide() {
     $(".advanced-filter-btn, .advanced-filter").removeClass("advanced-filter-open");
 }
 
-let months = [];
+let months: any[] = [];
 
-function getDateStr(date) {
+function getDateStr(date: any) {
     let date_arr = date.split('-');
     let curr_month = months[parseInt(date_arr[1]) - 1];
     return curr_month + " " + date_arr[0]
 }
 
-function setupRegisterDates(register_dates) {
+function setupRegisterDates(register_dates: any) {
     $('.advanced-filter .dates-select-bar .slider-bar-container').slider({
         range: true,
         min: 0,
@@ -913,7 +913,7 @@ function checkbox_container_click(this: HTMLElement) {
     }
 }
 
-function create_user_selected_item(user) {
+function create_user_selected_item(user: any) {
     let new_elem = $("#template .user-selected-item").clone();
     new_elem.attr("data-id", user.id.toString());
     new_elem.find("p").html(user.username);
@@ -991,7 +991,7 @@ function set_selected_to_selection() {
     })
 }
 
-function selectionMode(isSelection) {
+function selectionMode(isSelection: any) {
     $("#permitActionUserList select[name=selectAction]").val("-1");
     $("#permitActionUserList select[name=selectAction]").trigger("change");
     if (isSelection) {
@@ -1039,7 +1039,7 @@ function hide_temporary_messages() {
     $('.error-msg').hide();
 }
 
-function get_group_name_from_id(id) {
+function get_group_name_from_id(id: any) {
     for (let i = 0; i < groups_arr.length; i++) {
         if (groups_arr[i][0] == id) {
             return (groups_arr[i][1]);
@@ -1048,7 +1048,7 @@ function get_group_name_from_id(id) {
     return ("group_id error");
 }
 
-function get_container_index_from_uid(uid) {
+function get_container_index_from_uid(uid: any) {
     for (let i = 0; i < current_users.length; i++) {
         if (current_users[i].id == uid) {
             return i;
@@ -1080,7 +1080,7 @@ function editTabsBind () {
     });
 }
 
-function check_tabs (title_tab_name_id) {
+function check_tabs(title_tab_name_id: any) {
     if (plugins_load.length > 2) {
         $('.edit-user-tab-title').css({gap : '0px', justifyContent: 'space-between'});
         const countMoresPlugins = plugins_load.length - 2;
@@ -1135,7 +1135,7 @@ function check_tabs (title_tab_name_id) {
  * @param {() => {} | null} get_data_function - API call get function with ajax (must be null if users_table is used)
  * @returns {void} Displays the new tab in the user's modal
  */
-function plugin_add_tab_in_user_modal(tab_name, content_id, users_table=null, set_data_function=null, get_data_function=null) {
+function plugin_add_tab_in_user_modal(tab_name: any, content_id: any, users_table: any = null, set_data_function: any = null, get_data_function: any = null) {
     // verification
     if (typeof tab_name !== 'string') {
         throw new TypeError('tab_name must be a string.');
@@ -1239,7 +1239,7 @@ function hide_modals() {
     reset_main_user_modals();
 }
 
-function display_long_string(username) {
+function display_long_string(username: any) {
     const formatedUsername = username.length > 20 ? username.slice(0, 17) + '...' : username;
     return formatedUsername;
 }
@@ -1257,7 +1257,7 @@ function generate_random_string() {
 /* ---------------
 Who is the king functions (main user)
 ----------------*/
-function open_main_user_modal(user_to_edit) {
+function open_main_user_modal(user_to_edit: any) {
     const modal = $('.user-property-main-user-change');
     reset_main_user_modals();
     $('.main-user-proceed-desc').html(sprintf(mainUserContinue, `<b>${display_long_string(user_to_edit.username)}</b>`, `<b>${display_long_string(owner_username)}</b>`));
@@ -1293,7 +1293,7 @@ function set_main_user_success() {
     $('.main-user-success').fadeIn();
 }
 
-function event_check_string_main_user(new_main_username, new_main_id, stringToCheck) {
+function event_check_string_main_user(new_main_username: any, new_main_id: any, stringToCheck: any) {
     const icon = $('#main_user_rewrite_icon');
     $('#main_user_rewrite').off('keyup').on('keyup', function() {
         icon.removeClass('icon-ok icon-green').addClass('icon-cancel icon-red');
@@ -1308,7 +1308,7 @@ function event_check_string_main_user(new_main_username, new_main_id, stringToCh
     });
 }
 
-function event_validate_main_user(new_main_username, user_id) {
+function event_validate_main_user(new_main_username: any, user_id: any) {
     $('.main-user-btn-validate').off('click').on('click', function() {
         set_main_user(user_id, new_main_username);
     });
@@ -1345,7 +1345,7 @@ function user_container_click(this: HTMLElement) {
     }
 }
 
-function generate_groups(container, groups) {
+function generate_groups(container: any, groups: any) {
     container.find(".user-container-groups").html('');
     if (groups.length >= 1) {
         let primary_grp = $("#template .group-primary").clone();
@@ -1374,7 +1374,7 @@ function generate_groups(container, groups) {
     }
 }
 
-function get_initials(username) {
+function get_initials(username: any) {
     let words = username.toUpperCase().split(" ");
     let res = words[0][0];
 
@@ -1384,7 +1384,7 @@ function get_initials(username) {
     return res;
 }
 
-function fill_container_user_info(container, user_index) {
+function fill_container_user_info(container: any, user_index: any) {
     let user = current_users[user_index];
     let registration_dates = user.registration_date.split(' ');
     container.attr('key', user_index);
@@ -1423,14 +1423,14 @@ function generate_user_list() {
     $(".user-container").click(user_container_click);
 }
 
-function copyToClipboard(toCopy) {
+function copyToClipboard(toCopy: any) {
     navigator.clipboard.writeText(toCopy);
 }
 /*---------------------
 Fill the pop-in values
 ---------------------*/
 
-function get_formatted_date(date_str) {
+function get_formatted_date(date_str: any) {
     if (date_str === null) {
         return "N/A"
     }
@@ -1440,7 +1440,7 @@ function get_formatted_date(date_str) {
     return (formatted);
 }
 
-function get_status_index(status) {
+function get_status_index(status: any) {
     for (let i = 0; i < status_arr.length; i++) {
         if (status_arr[i] === status) {
             return i;
@@ -1449,7 +1449,7 @@ function get_status_index(status) {
     return 0;
 }
 
-function get_level_index(level) {
+function get_level_index(level: any) {
     for (let i = 0; i < level_arr.length; i++) {
         if (level_arr[i] === level) {
             return i;
@@ -1458,13 +1458,13 @@ function get_level_index(level) {
     return 0;
 }
 
-function set_selected_groups(groups) {
+function set_selected_groups(groups: any) {
     for (let i = 0; i < groupOptions.length; i++) {
         groupOptions[i].isSelected = groups.includes(groupOptions[i].value);
     }
 }
 
-function fill_user_edit_summary(user_to_edit, pop_in, isGuest) {
+function fill_user_edit_summary(user_to_edit: any, pop_in: any, isGuest: any) {
     // console.log(isGuest);
     if (isGuest) {
       pop_in.find('.user-property-initials span').removeClass(color_icons.join(' ')).addClass(color_icons[user_to_edit.id % 5]);
@@ -1510,7 +1510,7 @@ function fill_user_edit_summary(user_to_edit, pop_in, isGuest) {
     }
 }
 
-function fill_user_edit_properties(user_to_edit, pop_in) {
+function fill_user_edit_properties(user_to_edit: any, pop_in: any) {
     let status_index = get_status_index(user_to_edit.status);
     let level_index = get_level_index(user_to_edit.level);
     let current_group_selectize = user_to_edit.id === guest_id ? groupGuestSelectize : groupSelectize;
@@ -1521,7 +1521,7 @@ function fill_user_edit_properties(user_to_edit, pop_in) {
     pop_in.find('.photos-select-bar input').val(user_to_edit.recent_period);
     set_selected_groups(user_to_edit.groups);
     current_group_selectize.clear();
-    current_group_selectize.load(function(callback) {
+    current_group_selectize.load(function(callback: any) {
         callback(groupOptions);
     });
     jQuery.each(jQuery.grep(groupOptions, function(group) {
@@ -1532,7 +1532,7 @@ function fill_user_edit_properties(user_to_edit, pop_in) {
     pop_in.find('.user-list-checkbox[name="hd_enabled"]').attr('data-selected', user_to_edit.enabled_high == 'true' ? '1' : '0');
 }
 
-function fill_user_edit_preferences(user_to_edit, pop_in) {
+function fill_user_edit_preferences(user_to_edit: any, pop_in: any) {
     let slider_key_photos = getSliderKeyFromValue(parseInt(user_to_edit.nb_image_page), nb_image_page_values);
     let slider_key_period = getSliderKeyFromValue(parseInt(user_to_edit.recent_period), recent_period_values);
     
@@ -1553,7 +1553,7 @@ function fill_user_edit_preferences(user_to_edit, pop_in) {
     pop_in.find('.user-list-checkbox[name="show_nb_hits"]').attr('data-selected', user_to_edit.show_nb_hits == 'true' ? '1' : '0');   
 }
 
-function fill_user_edit_update(user_to_edit, pop_in) {
+function fill_user_edit_update(user_to_edit: any, pop_in: any) {
     pop_in.find('.update-user-button').unbind("click").click(
         user_to_edit.id === guest_id ? update_guest_info : update_user_info);
     pop_in.find('.edit-username-validate').unbind("click").click(update_user_username);
@@ -1642,7 +1642,7 @@ function fill_user_edit_update(user_to_edit, pop_in) {
     })
 }
 
-function fill_user_edit_permissions(user_to_edit, pop_in) {
+function fill_user_edit_permissions(user_to_edit: any, pop_in: any) {
   if (user_to_edit.id != connected_user) {
     // I'm not the connected user
     if (!is_owner(connected_user)) {
@@ -1712,11 +1712,11 @@ function fill_user_edit_permissions(user_to_edit, pop_in) {
   $(".notClickable").parent().addClass("notClickableBefore");
 }
 
-function is_owner(user_id) {
+function is_owner(user_id: any) {
   return user_id === owner_id;
 }
 
-function fill_user_edit(user_to_edit) {
+function fill_user_edit(user_to_edit: any) {
     let pop_in = $('#UserList');
     fill_user_edit_summary(user_to_edit, pop_in, false);
     fill_user_edit_properties(user_to_edit, pop_in);
@@ -1761,7 +1761,7 @@ function fill_new_user() {
     const level_index = get_level_index(guest_user.level);
     set_selected_groups(guest_user.groups);
     groupAddUserSelectize.clear();
-    groupAddUserSelectize.load(function(callback) {
+    groupAddUserSelectize.load(function(callback: any) {
         callback(groupOptions);
     });
     jQuery.each(jQuery.grep(groupOptions, function(group) {
@@ -1774,7 +1774,7 @@ function fill_new_user() {
     addUserPopIn.find('.user-list-checkbox[name="hd_enabled"]').attr('data-selected', guest_user.enabled_high == 'true' ? '1' : '0');
 }
 
-function fill_who_is_the_king(user_to_edit, pop_in) {
+function fill_who_is_the_king(user_to_edit: any, pop_in: any) {
     const who_is_the_king = pop_in.find("#who_is_the_king");
     // By default I'm an admin and I only see who is the Main User
     who_is_the_king
@@ -1825,7 +1825,7 @@ function fill_who_is_the_king(user_to_edit, pop_in) {
 Fill data for setInfo
 -------------------*/
 
-function fill_ajax_data_from_properties(ajax_data, pop_in) {
+function fill_ajax_data_from_properties(ajax_data: any, pop_in: any) {
     let groups_selected = pop_in.find('.user-property-group .selectize-input .item').map(function (this: HTMLElement) {
         return parseInt($(this).attr('data-value'));
     } ).get();
@@ -1843,7 +1843,7 @@ function fill_ajax_data_from_properties(ajax_data, pop_in) {
     return ajax_data
 }
 
-function fill_ajax_data_from_preferences(ajax_data, pop_in) {
+function fill_ajax_data_from_preferences(ajax_data: any, pop_in: any) {
     ajax_data['theme'] = pop_in.find('.user-property-theme select').val();
     ajax_data['language'] = pop_in.find('.user-property-lang select').val();
     ajax_data['nb_image_page'] = nb_image_page_values[pop_in.find('.photos-select-bar .slider-bar-container').slider("option", "value")];
@@ -1854,7 +1854,7 @@ function fill_ajax_data_from_preferences(ajax_data, pop_in) {
     return ajax_data
 }
 
-function fill_ajax_data_from_container(ajax_data, pop_in) {
+function fill_ajax_data_from_container(ajax_data: any, pop_in: any) {
     ajax_data = fill_ajax_data_from_properties(ajax_data, pop_in);
     ajax_data = fill_ajax_data_from_preferences(ajax_data, pop_in);
     return ajax_data
@@ -1864,7 +1864,7 @@ function fill_ajax_data_from_container(ajax_data, pop_in) {
 Ajax Requests
 ----------------*/
 
-function get_first_selection_usernames(callback) {
+function get_first_selection_usernames(callback: any) {
     let first_ids = selection.slice(0, 50).map(x => x.id);
     jQuery.ajax({
         url: "ws.php?format=json&method=pwg.users.getList",
@@ -1911,7 +1911,7 @@ function select_whole_set() {
         },
         success:function(data) {
             data = jQuery.parseJSON(data);
-            selection = data.result.map((x) => {
+            selection = data.result.map((x: any) => {
                 return {id: x};
             });
             $("#checkActions .loading").hide();
@@ -2079,7 +2079,7 @@ function get_guest_info() {
     });
 }
 
-function get_user_info(uid, callback=None) {
+function get_user_info(uid: any, callback: any = null) {
     jQuery.ajax({
         url: "ws.php?format=json&method=pwg.users.getList",
         type: "POST",
@@ -2128,7 +2128,7 @@ function update_guest_info() {
 }
 
 function update_user_list() {
-    let update_data = {
+    let update_data: Record<string, any> = {
         display: "all",
         order: filter_by, // We want the most recent user first
         page: actual_page - 1,
@@ -2171,7 +2171,7 @@ function update_user_list() {
             current_users = data.result.users;
             generate_user_list();
             $(".user-col.user-first-col.user-container-edit").click(function () {
-                let uid_index = $(this).closest('.user-container').attr('key');
+                let uid_index = Number($(this).closest('.user-container').attr('key'));
                 last_user_id = current_users[uid_index].id;
                 last_user_index = uid_index;
                 fill_user_edit(current_users[uid_index]);
@@ -2275,7 +2275,7 @@ function add_user() {
     });
 }
 
-function add_infos_to_new_user(user_id, ajax_data) {
+function add_infos_to_new_user(user_id: any, ajax_data: any) {
     $.ajax({
         url: 'ws.php?format=json&method=pwg.users.setInfo',
         type: 'POST',
@@ -2324,7 +2324,7 @@ function add_infos_to_new_user(user_id, ajax_data) {
     });
 }
 
-function send_new_user_password(user_id, mail) {
+function send_new_user_password(user_id: any, mail: any) {
     let send_by_mail = mail === '' ? false : true;
     $.ajax({
         url: "ws.php?format=json",
@@ -2380,7 +2380,7 @@ function send_new_user_password(user_id, mail) {
     });
 }
 
-function delete_user(uid) {
+function delete_user(uid: any) {
     jQuery.ajax({
         url: "ws.php?format=json&method=pwg.users.delete",
         type:"POST",
@@ -2405,7 +2405,7 @@ function delete_user(uid) {
     })
 }
 
-function show_filter_infos(nb_filters) {
+function show_filter_infos(nb_filters: any) {
   if (String($("#user_search").val()).length != 0 || nb_filters != 0) {
     if (total_users != 1) {
       $(".filtered-users").html(filtered_users.replace(/%d/g, total_users));
@@ -2429,7 +2429,7 @@ function show_filter_infos(nb_filters) {
   }
 }
 
-function send_link_password(email, username, user_id, send_by_mail) {
+function send_link_password(email: any, username: any, user_id: any, send_by_mail: any) {
     $.ajax({
         url: "ws.php?format=json",
         dataType: "json",
@@ -2491,7 +2491,7 @@ function send_link_password(email, username, user_id, send_by_mail) {
     });
 }
 
-function set_main_user(user_id, new_username) {
+function set_main_user(user_id: any, new_username: any) {
     $.ajax({
         url: 'ws.php?format=json',
         dataType: 'json',

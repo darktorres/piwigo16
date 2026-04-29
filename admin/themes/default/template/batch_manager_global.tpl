@@ -7,7 +7,8 @@
 {combine_script id='jquery.progressBar' load='async' path='themes/default/js/plugins/jquery.progressbar.min.js'}
 {combine_script id='jquery.ajaxmanager' load='async' path='themes/default/js/plugins/jquery.ajaxmanager.js'}
 
-{combine_script id='batchManagerGlobal' load='async' require='jquery,datepicker,jquery.colorbox,addAlbum,doubleSlider' path='admin/themes/default/js/batchManagerGlobal.js'}
+{combine_script id='album_selector' load='footer' require='jquery,common' path='admin/themes/default/js/album_selector.js'}
+{combine_script id='batchManagerGlobal' load='async' require='jquery,datepicker,jquery.colorbox,addAlbum,doubleSlider,album_selector' path='admin/themes/default/js/batchManagerGlobal.js'}
 
 {footer_script}
 var lang = {

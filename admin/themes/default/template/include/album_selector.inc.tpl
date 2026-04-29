@@ -4,7 +4,7 @@
 {include file='include/colorbox.inc.tpl' load_mode=$load_mode}
 {combine_css path="admin/themes/default/css/components/album_selector.css"}
 {combine_css path="themes/default/vendor/fontello/css/gallery-icon.css" order=-10}
-{combine_script id='albumSelector' load=$load_mode path='admin/themes/default/js/album_selector.js'}
+{combine_script id='album_selector' load=$load_mode require='jquery,common' path='admin/themes/default/js/album_selector.js'}
 {* {combine_script id='albumSelector' load=$load_mode path='admin/themes/default/js/test-ab.js'} *}
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
 {footer_script}

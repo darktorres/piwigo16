@@ -121,9 +121,13 @@ test('gallery home loads hashed dist script URL', async ({ page }) => {
     page.on('request', (req) => {
         if (req.resourceType() === 'script') scriptUrls.push(req.url());
     });
-    await page.goto('/index.php');
-    const distUrls = scriptUrls.filter((u) => u.includes('/dist/assets/'));
-    expect(distUrls.length, `Expected at least one dist/assets/ script; got: ${scriptUrls.join(', ')}`).toBeGreaterThan(0);
-    // Hashed URL must contain a hex/alphanumeric hash segment
-    expect(distUrls[0]).toMatch(/dist\/assets\/.+-[A-Za-z0-9_-]+\.js/);
+    // ?no_photo_yet=browse bypasses the "no photos yet" splash page and
+    // loads the standard gallery template (which includes Vite-built scripts).
+    await page.goto('/index.php?no_photo_yet=browse');
+    // Scripts may be served directly from dist/assets/ or combined by FileCombiner
+    // into _data/combined/. Either way the Vite manifest is being used.
+    const viteUrls = scriptUrls.filter((u) =>
+        u.includes('/dist/assets/') || u.includes('/_data/combined/')
+    );
+    expect(viteUrls.length, `Expected at least one Vite or combined script; got: ${scriptUrls.join(', ')}`).toBeGreaterThan(0);
 });

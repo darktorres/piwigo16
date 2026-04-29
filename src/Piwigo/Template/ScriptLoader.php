@@ -102,7 +102,8 @@ class ScriptLoader
             if ($manifest = self::manifest()) {
                 if (isset($manifest[$id])) {
                     $path = 'dist/' . $manifest[$id]['file'];
-                    $require = []; // Vite already encoded import order via chunks
+                    // Do NOT clear $require — required scripts (legacy plugins and other Vite
+                    // entries) are not encoded in manifest chunks; they still load separately.
                 }
             }
             $script = new Script((int) $load_mode, $id, $path, $version, $require);
@@ -124,6 +125,13 @@ class ScriptLoader
                 }
             }
         } else {
+            // Re-registration: resolve manifest path so a second combine_script call with
+            // a legacy path does not overwrite the already-resolved dist/ path.
+            if ($manifest = self::manifest()) {
+                if (isset($manifest[$id])) {
+                    $path = 'dist/' . $manifest[$id]['file'];
+                }
+            }
             $script = $this->registered_scripts[$id];
             if (count($require)) {
                 $script->precedents = array_unique(array_merge($script->precedents, $require));

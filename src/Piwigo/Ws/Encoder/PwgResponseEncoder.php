@@ -44,9 +44,9 @@ abstract class PwgResponseEncoder
 
     private static function flatten(mixed &$value): void
     {
-        if ($value instanceof \PwgNamedArray) {
+        if ($value instanceof \PwgNamedArray || $value instanceof \Piwigo\Ws\PwgNamedArray) {
             $value = $value->_content;
-        } elseif ($value instanceof \PwgNamedStruct) {
+        } elseif ($value instanceof \PwgNamedStruct || $value instanceof \Piwigo\Ws\PwgNamedStruct) {
             $value = $value->_content;
         }
 
@@ -69,10 +69,9 @@ abstract class PwgResponseEncoder
             }
         }
 
-        /** @var array<mixed> $arrValue */
-        $arrValue = $value;
-        foreach ($arrValue as $key => &$v) {
+        foreach ($value as $key => &$v) {
             self::flatten($v);
         }
+        unset($v);
     }
 }

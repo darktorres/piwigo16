@@ -64,7 +64,23 @@ export default defineConfig({
             },
         },
     },
-    plugins: [piwigoManifestPlugin()],
+    plugins: [
+        piwigoManifestPlugin(),
+        // Wrap every output chunk (including Rollup-generated helpers) in an IIFE.
+        // Rollup places helpers (var G=..., var i=...) before user code; the banner/
+        // footer approach only wraps user code. This plugin wraps the full chunk so
+        // helpers are function-scoped and cannot conflict across combined bundles.
+        {
+            name: 'iife-wrap',
+            generateBundle(_opts, bundle) {
+                for (const chunk of Object.values(bundle)) {
+                    if (chunk.type === 'chunk') {
+                        chunk.code = `(function(){\n${chunk.code}})();\n`;
+                    }
+                }
+            },
+        },
+    ],
     server: {
         port: 5173,
         strictPort: true,

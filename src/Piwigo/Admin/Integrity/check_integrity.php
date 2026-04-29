@@ -23,7 +23,7 @@ class check_integrity
     /**
      * Check integrities
      *
-     
+
      */
     public function check(): void
     {
@@ -136,7 +136,7 @@ class check_integrity
     /**
      * Display anomalies list
      *
-     
+
      */
     public function display(): void
     {
@@ -213,7 +213,7 @@ class check_integrity
     /**
      * Add anomaly data
      *
-     *  array 
+     *  array
      */
     /** @param array<mixed>|null $correction_fct_args */
     public function add_anomaly(string $anomaly, ?callable $correction_fct = null, ?array $correction_fct_args = null, ?string $correction_msg = null): void
@@ -252,7 +252,7 @@ class check_integrity
     /**
      * Apply maintenance
      *
-     
+
      */
     public function maintenance(): void
     {
@@ -262,7 +262,7 @@ class check_integrity
     /**
      * Returns links more informations
      *
-     
+
      *  string
      */
     public function get_htlm_links_more_info(): string

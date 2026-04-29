@@ -37,9 +37,13 @@ class updates
 
         foreach ($this->types as $type) {
             include_once(PHPWG_ROOT_PATH.'admin/include/'.$type.'.class.php');
-            if ($type === 'plugins') { $this->plugins = new plugins(); }
-            elseif ($type === 'themes') { $this->themes = new themes(); }
-            else { $this->languages = new languages(); }
+            if ($type === 'plugins') {
+                $this->plugins = new plugins();
+            } elseif ($type === 'themes') {
+                $this->themes = new themes();
+            } else {
+                $this->languages = new languages();
+            }
         }
     }
 
@@ -173,7 +177,7 @@ class updates
             $new_versions,
             array_fill_keys(['minor', 'major'], 1)
         );
-        $new_versions_strings = array_map(fn($v) => is_scalar($v) ? (string) $v : '', $new_versions_intersected);
+        $new_versions_strings = array_map(fn ($v) => is_scalar($v) ? (string) $v : '', $new_versions_intersected);
         $new_versions_string = join(' & ', $new_versions_strings);
 
         if (empty($new_versions_string)) {

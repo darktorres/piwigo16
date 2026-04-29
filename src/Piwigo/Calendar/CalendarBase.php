@@ -315,12 +315,12 @@ GROUP BY period';
         $current = implode('-', $stringDate);
         $upper_items = query2array($query, null, 'period');
 
-        usort($upper_items, fn($a, $b): int => version_compare((string) $a, (string) $b));
-        $upper_items_str = array_map(fn($x): string => (string) $x, $upper_items);
+        usort($upper_items, fn ($a, $b): int => version_compare((string) $a, (string) $b));
+        $upper_items_str = array_map(fn ($x): string => (string) $x, $upper_items);
         $upper_items_rank = array_flip($upper_items_str);
         if (!isset($upper_items_rank[$current])) {
             $upper_items_str[] = $current;// just in case (external link)
-            usort($upper_items_str, fn($a, $b): int => version_compare($a, $b));
+            usort($upper_items_str, fn ($a, $b): int => version_compare($a, $b));
             $upper_items_rank = array_flip($upper_items_str);
         }
         $current_rank = $upper_items_rank[$current];

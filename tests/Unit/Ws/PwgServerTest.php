@@ -100,11 +100,11 @@ final class PwgServerTest extends TestCase
     public function test_multiple_methods_registered_independently(): void
     {
         $this->server->addMethod('pwg.alpha', 'cb_a', [], 'Alpha');
-        $this->server->addMethod('pwg.beta',  'cb_b', [], 'Beta');
+        $this->server->addMethod('pwg.beta', 'cb_b', [], 'Beta');
 
         self::assertTrue($this->server->hasMethod('pwg.alpha'));
         self::assertTrue($this->server->hasMethod('pwg.beta'));
         self::assertSame('Alpha', $this->server->getMethodDescription('pwg.alpha'));
-        self::assertSame('Beta',  $this->server->getMethodDescription('pwg.beta'));
+        self::assertSame('Beta', $this->server->getMethodDescription('pwg.beta'));
     }
 }

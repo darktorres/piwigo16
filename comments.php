@@ -307,7 +307,7 @@ SELECT id, name, uppercats, global_rank
     'WHERE'
 ).'
 ;';
-display_select_cat_wrapper($query, array_filter([$get_cat], fn($v) => $v !== null), $blockname, true);
+display_select_cat_wrapper($query, array_filter([$get_cat], fn ($v) => $v !== null), $blockname, true);
 
 // Filter on recent comments...
 $tpl_var = array();

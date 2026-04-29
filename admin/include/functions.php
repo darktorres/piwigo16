@@ -711,7 +711,9 @@ SELECT id, id_uppercat, uppercats, `rank`, global_rank
 /** @param int[]|int|string $categories */
 function set_cat_visible(array|int|string $categories, bool|string $value, bool $unlock_child = false): void
 {
-    if (!is_array($categories)) { $categories = [$categories]; }
+    if (!is_array($categories)) {
+        $categories = [$categories];
+    }
     if (($value = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE)) === null) {
         trigger_error("set_cat_visible invalid param $value", E_USER_WARNING);
         return;
@@ -726,7 +728,7 @@ function set_cat_visible(array|int|string $categories, bool|string $value, bool 
         $query = '
 UPDATE '.CATEGORIES_TABLE.'
   SET visible = \'true\'
-  WHERE id IN ('.implode(',', array_map(fn($v): string => (string) $v, $cats)).')';
+  WHERE id IN ('.implode(',', array_map(fn ($v): string => (string) $v, $cats)).')';
         pwg_query($query);
     }
     // locking a category   => all its child categories become locked
@@ -735,7 +737,7 @@ UPDATE '.CATEGORIES_TABLE.'
         $query = '
 UPDATE '.CATEGORIES_TABLE.'
   SET visible = \'false\'
-  WHERE id IN ('.implode(',', array_map(fn($v): string => (string) $v, $subcats)).')';
+  WHERE id IN ('.implode(',', array_map(fn ($v): string => (string) $v, $subcats)).')';
         pwg_query($query);
     }
 }
@@ -748,7 +750,9 @@ UPDATE '.CATEGORIES_TABLE.'
 /** @param int[]|int|string $categories */
 function set_cat_status(array|int|string $categories, string $value): void
 {
-    if (!is_array($categories)) { $categories = [$categories]; }
+    if (!is_array($categories)) {
+        $categories = [$categories];
+    }
     if (!in_array($value, ['public', 'private'])) {
         trigger_error("set_cat_status invalid param $value", E_USER_WARNING);
         return;
@@ -760,7 +764,7 @@ function set_cat_status(array|int|string $categories, string $value): void
         $query = '
 UPDATE '.CATEGORIES_TABLE.'
   SET status = \'public\'
-  WHERE id IN ('.implode(',', array_map(fn($v): string => (string) $v, $uppercats)).')
+  WHERE id IN ('.implode(',', array_map(fn ($v): string => (string) $v, $uppercats)).')
 ;';
         pwg_query($query);
     }
@@ -977,7 +981,9 @@ SELECT id,representative_ext,path
 /** @param int[]|int $categories */
 function set_random_representant(array|int $categories): void
 {
-    if (!is_array($categories)) { $categories = [$categories]; }
+    if (!is_array($categories)) {
+        $categories = [$categories];
+    }
     $datas = [];
     foreach ($categories as $category_id) {
         $query = '
@@ -1008,7 +1014,7 @@ SELECT image_id
 /**
  * Returns the fulldir for each given category id.
  *
- *  int[] 
+ *  int[]
  * @return string[]
  */
 /**
@@ -1017,7 +1023,9 @@ SELECT image_id
  */
 function get_fulldirs(array|int|string $cat_ids): array
 {
-    if (!is_array($cat_ids)) { $cat_ids = [$cat_ids]; }
+    if (!is_array($cat_ids)) {
+        $cat_ids = [$cat_ids];
+    }
     if (count($cat_ids) == 0) {
         return [];
     }
@@ -1254,7 +1262,7 @@ SELECT DISTINCT(storage_category_id)
   WHERE storage_category_id IS NOT NULL
 ;';
     $cat_ids_raw = query2array($query, null, 'storage_category_id');
-    $cat_ids = array_map(fn($v): int => is_numeric($v) ? (int) $v : 0, $cat_ids_raw);
+    $cat_ids = array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $cat_ids_raw);
     $fulldirs = get_fulldirs($cat_ids);
 
     foreach ($cat_ids as $cat_id) {
@@ -1353,7 +1361,7 @@ SELECT status
     }
 
     if ('private' == $parent_status) {
-        set_cat_status(array_map(fn($v): int => (int) $v, array_keys($categories)), 'private');
+        set_cat_status(array_map(fn ($v): int => (int) $v, array_keys($categories)), 'private');
     }
 
     \Piwigo\Core\PageState::current()->addInfo(l10n_dec(
@@ -1578,7 +1586,7 @@ DELETE
 
     $taglist_after = get_image_tag_ids($images);
     $images_to_update_raw = compare_image_tag_lists($taglist_before, $taglist_after);
-    $images_to_update = array_map(fn($v): int => is_numeric($v) ? (int) $v : 0, $images_to_update_raw);
+    $images_to_update = array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $images_to_update_raw);
     update_images_lastmodified($images_to_update);
 
     invalidate_user_cache_nb_tags();
@@ -1663,7 +1671,7 @@ SELECT id
                 $query = '
 SELECT id
   FROM '.TAGS_TABLE.'
-  WHERE '.implode(' OR ', array_map(fn($v): string => (string) $v, $sub_name_where)).'
+  WHERE '.implode(' OR ', array_map(fn ($v): string => (string) $v, $sub_name_where)).'
 ;';
                 $existing_tags = query2array($query, null, 'id');
             }
@@ -1736,7 +1744,7 @@ DELETE
         global $logger;
         $logger->debug('taglist_after', $taglist_after);
         $images_to_update_raw = compare_image_tag_lists($taglist_before, $taglist_after);
-        $images_to_update = array_map(fn($v): int => is_numeric($v) ? (int) $v : 0, $images_to_update_raw);
+        $images_to_update = array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $images_to_update_raw);
         global $logger;
         $logger->debug('$images_to_update', $images_to_update);
 
@@ -2122,7 +2130,7 @@ SELECT image_id
   WHERE category_id IN ('.implode(',', $sources).')
 ;';
     $images_raw = query2array($query, null, 'image_id');
-    $images = array_map(fn($v): int => is_numeric($v) ? (int) $v : 0, $images_raw);
+    $images = array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $images_raw);
 
     associate_images_to_categories($images, $destinations);
 }
@@ -2208,23 +2216,23 @@ function create_table_add_character_set($query)
         $charset_collate .= ' COLLATE '.$db_collate;
     }
     if (is_array($query)) {
-            foreach ($query as $id => $q) {
-                $q = trim($q);
-                $q = trim($q, ';');
-                if (preg_match('/^CREATE\s+TABLE/i', $q)) {
-                    $q .= $charset_collate;
-                }
-                $q .= ';';
-                $query[$id] = $q;
+        foreach ($query as $id => $q) {
+            $q = trim($q);
+            $q = trim($q, ';');
+            if (preg_match('/^CREATE\s+TABLE/i', $q)) {
+                $q .= $charset_collate;
             }
-        } else {
-            $query = trim($query);
-            $query = trim($query, ';');
-            if (preg_match('/^CREATE\s+TABLE/i', $query)) {
-                $query .= $charset_collate;
-            }
-            $query .= ';';
+            $q .= ';';
+            $query[$id] = $q;
         }
+    } else {
+        $query = trim($query);
+        $query = trim($query, ';');
+        if (preg_match('/^CREATE\s+TABLE/i', $query)) {
+            $query .= $charset_collate;
+        }
+        $query .= ';';
+    }
     return $query;
 }
 
@@ -2259,7 +2267,9 @@ function get_extents($start = ''): array
     $dir = opendir($start);
     $extents = [];
 
-    if ($dir === false) { return $extents; }
+    if ($dir === false) {
+        return $extents;
+    }
     while (($file = readdir($dir)) !== false) {
         if ($file == '.' or $file == '..' or $file == '.svn') {
             continue;
@@ -2534,7 +2544,9 @@ SELECT name
  */
 function delete_groups(array|int $group_ids): false|array
 {
-    if (!is_array($group_ids)) { $group_ids = [$group_ids]; }
+    if (!is_array($group_ids)) {
+        $group_ids = [$group_ids];
+    }
 
     if (count($group_ids) == 0) {
         trigger_error('There is no group to delete', E_USER_WARNING);
@@ -2574,7 +2586,7 @@ SELECT id, name
 ;';
 
     $group_list = query2array($query, 'id', 'name');
-    $groupids = array_map(fn($v): int => (int) $v, array_keys($group_list));
+    $groupids = array_map(fn ($v): int => (int) $v, array_keys($group_list));
 
     // destruction of the group
     $query = '
@@ -2761,8 +2773,12 @@ function order_by_name(array $element_ids, array $name): array
  */
 function add_permission_on_category(array|int|string $category_ids, array|int|string $user_ids): void
 {
-    if (!is_array($category_ids)) { $category_ids = [$category_ids]; }
-    if (!is_array($user_ids)) { $user_ids = [$user_ids]; }
+    if (!is_array($category_ids)) {
+        $category_ids = [$category_ids];
+    }
+    if (!is_array($user_ids)) {
+        $user_ids = [$user_ids];
+    }
 
     // check for emptiness
     if (count($category_ids) == 0 or count($user_ids) == 0) {
@@ -2778,7 +2794,7 @@ function add_permission_on_category(array|int|string $category_ids, array|int|st
     $query = '
 SELECT id
   FROM '.CATEGORIES_TABLE.'
-  WHERE id IN ('.implode(',', array_map(fn($v): string => (string) $v, $cat_ids)).')
+  WHERE id IN ('.implode(',', array_map(fn ($v): string => (string) $v, $cat_ids)).')
     AND status = \'private\'
 ;';
     $private_cats = query2array($query, null, 'id');
@@ -2827,7 +2843,7 @@ SELECT
 ;';
 
     $raw = query2array($query, null, 'user_id');
-    return array_map(fn($v): int => is_numeric($v) ? (int) $v : 0, $raw);
+    return array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $raw);
 }
 
 /**
@@ -3078,7 +3094,7 @@ SELECT id
   WHERE md5sum is null
 ;';
     $raw = query2array($query, null, 'id');
-    return array_map(fn($v): int => is_numeric($v) ? (int) $v : 0, $raw);
+    return array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $raw);
 }
 
 /**

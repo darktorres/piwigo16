@@ -41,7 +41,7 @@ if (isset($_POST['falsify'])
     and isset($_POST['cat_true'])
     and count(is_array($_POST['cat_true']) ? $_POST['cat_true'] : []) > 0) {
     /** @var int[] $cat_true */
-    $cat_true = array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($_POST['cat_true']) ? $_POST['cat_true'] : []);
+    $cat_true = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($_POST['cat_true']) ? $_POST['cat_true'] : []);
     $section_raw = $_GET['section'] ?? null;
     $current_section = is_scalar($section_raw) ? (string) $section_raw : '';
     switch ($current_section) {
@@ -82,7 +82,7 @@ UPDATE '.CATEGORIES_TABLE.'
          and isset($_POST['cat_false'])
          and count(is_array($_POST['cat_false']) ? $_POST['cat_false'] : []) > 0) {
     /** @var int[] $cat_false */
-    $cat_false = array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($_POST['cat_false']) ? $_POST['cat_false'] : []);
+    $cat_false = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($_POST['cat_false']) ? $_POST['cat_false'] : []);
     $section_raw = $_GET['section'] ?? null;
     $current_section = is_scalar($section_raw) ? (string) $section_raw : '';
     switch ($current_section) {

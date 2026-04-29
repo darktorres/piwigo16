@@ -157,11 +157,11 @@ function get_clean_recipients_list($data): array
                 $data = [unformat_email($data)];
             }
         } else { // array of hashmaps
-            $data = array_map(fn(mixed $item): array => unformat_email(is_array($item) || is_string($item) ? $item : ''), $data);
+            $data = array_map(fn (mixed $item): array => unformat_email(is_array($item) || is_string($item) ? $item : ''), $data);
         }
     } else {
         $data = explode(',', (string) $data);
-        $data = array_map(fn(mixed $item): array => unformat_email(is_string($item) ? $item : ''), $data);
+        $data = array_map(fn (mixed $item): array => unformat_email(is_string($item) ? $item : ''), $data);
     }
 
     $existing = [];

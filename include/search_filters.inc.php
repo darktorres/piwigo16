@@ -74,7 +74,7 @@ if ('search' == $page['section'] and isset($page['search_details'])) {
         $other_filters_items = get_items_for_filter('tags');
         if (false === $other_filters_items) {
             $filter_tags = get_available_tags();
-            usort($filter_tags, fn(mixed $a, mixed $b): int => tag_alpha_compare(is_array($a) ? $a : [], is_array($b) ? $b : []));
+            usort($filter_tags, fn (mixed $a, mixed $b): int => tag_alpha_compare(is_array($a) ? $a : [], is_array($b) ? $b : []));
         } else {
             $filter_tags = get_common_tags($other_filters_items, 0);
 
@@ -85,12 +85,12 @@ if ('search' == $page['section'] and isset($page['search_details'])) {
             $tags_field = is_array($my_search['fields']['tags'] ?? null) ? $my_search['fields']['tags'] : [];
             $tags_words_raw = is_array($tags_field['words'] ?? null) ? $tags_field['words'] : [];
             $missing_tag_ids = array_diff(
-                array_map(fn(mixed $v) => is_scalar($v) ? (string) $v : '', $tags_words_raw),
-                array_map(fn(mixed $v) => is_scalar($v) ? (string) $v : '', array_column($filter_tags, 'id'))
+                array_map(fn (mixed $v) => is_scalar($v) ? (string) $v : '', $tags_words_raw),
+                array_map(fn (mixed $v) => is_scalar($v) ? (string) $v : '', array_column($filter_tags, 'id'))
             );
 
             if (count($missing_tag_ids) > 0) {
-                $filter_tags = array_merge(get_available_tags(array_map(fn(mixed $v) => is_numeric($v) ? (int) $v : 0, $missing_tag_ids)), $filter_tags);
+                $filter_tags = array_merge(get_available_tags(array_map(fn (mixed $v) => is_numeric($v) ? (int) $v : 0, $missing_tag_ids)), $filter_tags);
             }
         }
 
@@ -101,8 +101,8 @@ if ('search' == $page['section'] and isset($page['search_details'])) {
         // in case the search has forbidden tags for current user, we need to filter the search rule
         $tags_field2 = is_array($my_search['fields']['tags'] ?? null) ? $my_search['fields']['tags'] : [];
         $tags_words2_raw = is_array($tags_field2['words'] ?? null) ? $tags_field2['words'] : [];
-        $tags_words2 = array_map(fn(mixed $v) => is_scalar($v) ? (string) $v : '', $tags_words2_raw);
-        $filter_tag_ids_str = array_map(fn(mixed $v) => is_scalar($v) ? (string) $v : '', $filter_tag_ids);
+        $tags_words2 = array_map(fn (mixed $v) => is_scalar($v) ? (string) $v : '', $tags_words2_raw);
+        $filter_tag_ids_str = array_map(fn (mixed $v) => is_scalar($v) ? (string) $v : '', $filter_tag_ids);
         $tags_field2['words'] = array_intersect($tags_words2, $filter_tag_ids_str);
         $my_search['fields']['tags'] = $tags_field2;
     } elseif (isset($my_search['fields']['tags']) and !($display_filters['tags']['access'])) {
@@ -153,8 +153,8 @@ SELECT
         // in case the search has forbidden authors for current user, we need to filter the search rule
         $author_field = is_array($my_search['fields']['author'] ?? null) ? $my_search['fields']['author'] : [];
         $author_words_raw = is_array($author_field['words'] ?? null) ? $author_field['words'] : [];
-        $author_words_str = array_map(fn(mixed $v) => is_scalar($v) ? (string) $v : '', $author_words_raw);
-        $author_names_str = array_map(fn(mixed $v) => is_scalar($v) ? (string) $v : '', $author_names);
+        $author_words_str = array_map(fn (mixed $v) => is_scalar($v) ? (string) $v : '', $author_words_raw);
+        $author_names_str = array_map(fn (mixed $v) => is_scalar($v) ? (string) $v : '', $author_names);
         $author_field['words'] = array_intersect($author_words_str, $author_names_str);
         $my_search['fields']['author'] = $author_field;
     } elseif (isset($my_search['fields']['author']) and !($display_filters['author']['access'])) {
@@ -417,7 +417,7 @@ SELECT
 
         // in case the search has forbidden added_by users for current user, we need to filter the search rule
         $added_by_field_raw = is_array($my_search['fields']['added_by'] ?? null) ? $my_search['fields']['added_by'] : [];
-        $added_by_field_int = array_map(fn(mixed $v) => is_numeric($v) ? (int) $v : 0, $added_by_field_raw);
+        $added_by_field_int = array_map(fn (mixed $v) => is_numeric($v) ? (int) $v : 0, $added_by_field_raw);
         $my_search['fields']['added_by'] = array_intersect($added_by_field_int, $user_ids);
     } elseif (isset($my_search['fields']['added_by']) and !($display_filters['added_by']['access'])) {
         unset($my_search['fields']['added_by']);
@@ -435,7 +435,7 @@ SELECT
     uppercats
   FROM '.CATEGORIES_TABLE.'
     INNER JOIN '.USER_CACHE_CATEGORIES_TABLE.' ON id = cat_id AND user_id = '.$user['id'].'
-  WHERE id IN ('.implode(',', array_map(fn(mixed $v) => is_numeric($v) ? (int) $v : 0, $cat_words)).')
+  WHERE id IN ('.implode(',', array_map(fn (mixed $v) => is_numeric($v) ? (int) $v : 0, $cat_words)).')
 ;';
             $result = pwg_query($query);
 
@@ -453,7 +453,7 @@ SELECT
             $template->assign('fullname_of', json_encode($fullname_of));
 
             // in case the search has forbidden albums for current user, we need to filter the search rule
-            $cat_words_str = array_map(fn(mixed $v) => is_scalar($v) ? (string) $v : '', $cat_words);
+            $cat_words_str = array_map(fn (mixed $v) => is_scalar($v) ? (string) $v : '', $cat_words);
             $cat_field['words'] = array_intersect($cat_words_str, array_keys($fullname_of));
             $my_search['fields']['cat'] = $cat_field;
         }
@@ -793,7 +793,7 @@ SELECT
   WHERE id IN ('.implode(',', $cat_ids).')
 ;';
                 $cats = query2array($query);
-                usort($cats, fn(array $a, array $b): int => name_compare($a, $b));
+                usort($cats, fn (array $a, array $b): int => name_compare($a, $b));
                 $albums_found = [];
                 foreach ($cats as $cat) {
                     $single_link = false;
@@ -814,7 +814,7 @@ SELECT
 
             if (count($tag_ids) > 0) {
                 $tags = get_available_tags($tag_ids);
-                usort($tags, fn(mixed $a, mixed $b): int => tag_alpha_compare(is_array($a) ? $a : [], is_array($b) ? $b : []));
+                usort($tags, fn (mixed $a, mixed $b): int => tag_alpha_compare(is_array($a) ? $a : [], is_array($b) ? $b : []));
                 $tags_found = [];
                 foreach ($tags as $tag) {
                     if (!is_array($tag)) {

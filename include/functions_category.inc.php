@@ -330,7 +330,7 @@ SELECT DISTINCT(id)
     }
     $query .= '
 ;';
-    return array_map(fn($v) => (int) $v, query2array($query, null, 'id'));
+    return array_map(fn ($v) => (int) $v, query2array($query, null, 'id'));
 }
 
 /**
@@ -646,7 +646,7 @@ SELECT id
     }
     $query .= "\n".(empty($order_by) ? \Piwigo\Core\Config::orderBy() : $order_by);
 
-    return array_map(fn($v) => (int) $v, query2array($query, null, 'id'));
+    return array_map(fn ($v) => (int) $v, query2array($query, null, 'id'));
 }
 
 /**

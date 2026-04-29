@@ -389,7 +389,7 @@ class Template
      * @param mixed $value
      */
     /** @param string|array<string,mixed> $tpl_var */
-public function assign(string|array $tpl_var, mixed $value = null): void
+    public function assign(string|array $tpl_var, mixed $value = null): void
     {
         $this->smarty->assign($tpl_var, $value);
     }
@@ -455,7 +455,7 @@ public function assign(string|array $tpl_var, mixed $value = null): void
      * @param string $tpl_var
      */
     /** @return array<mixed>|mixed */
-public function get_template_vars(?string $tpl_var = null): mixed
+    public function get_template_vars(?string $tpl_var = null): mixed
     {
         return $this->smarty->getTemplateVars($tpl_var);
     }
@@ -601,7 +601,7 @@ public function get_template_vars(?string $tpl_var = null): mixed
             if (($str[0] == '\'' && $str[strlen($str) - 1] == '\'')
               || ($str[0] == '"' && $str[strlen($str) - 1] == '"')) {
                 $tmp = null;
-            eval('$tmp='.$str.';');
+                eval('$tmp='.$str.';');
                 return $tmp;
             }
         }
@@ -616,7 +616,7 @@ public function get_template_vars(?string $tpl_var = null): mixed
      * @see l10n()
      */
     /** @param array<mixed> $params */
-public static function modcompiler_translate(array $params): string
+    public static function modcompiler_translate(array $params): string
     {
         $p0 = is_string($params[0] ?? null) ? (string) $params[0] : '';
         switch (count($params)) {
@@ -631,7 +631,7 @@ public static function modcompiler_translate(array $params): string
 
             default:
                 $rest = array_slice($params, 1);
-                $restStr = array_map(fn($x): string => is_string($x) ? $x : (is_int($x) || is_float($x) ? (string) $x : ''), $rest);
+                $restStr = array_map(fn ($x): string => is_string($x) ? $x : (is_int($x) || is_float($x) ? (string) $x : ''), $rest);
                 if (\Piwigo\Core\Config::compiledTemplateCacheLanguage()) {
                     $ret = 'sprintf(';
                     $ret .= self::modcompiler_translate([$p0]);
@@ -650,7 +650,7 @@ public static function modcompiler_translate(array $params): string
      * @see l10n_dec()
      */
     /** @param array<mixed> $params */
-public static function modcompiler_translate_dec(array $params): string
+    public static function modcompiler_translate_dec(array $params): string
     {
         global $lang_info;
         $p0 = is_string($params[0] ?? null) ? (string) $params[0] : '';
@@ -683,7 +683,7 @@ public static function modcompiler_translate_dec(array $params): string
      * @param string $delimiter
      */
     /** @return string[] */
-public static function mod_explode(string $text, string $delimiter = ','): array
+    public static function mod_explode(string $text, string $delimiter = ','): array
     {
         return explode($delimiter ?: ',', $text);
     }
@@ -711,7 +711,7 @@ public static function mod_explode(string $text, string $delimiter = ','): array
      * @param string|null $content
      */
     /** @param array<mixed> $params */
-public function block_html_head(array $params, string|null $content): void
+    public function block_html_head(array $params, string|null $content): void
     {
         $content = trim($content ?? '');
         if (!empty($content)) { // second call
@@ -727,7 +727,7 @@ public function block_html_head(array $params, string|null $content): void
      * @param string|null $content
      */
     /** @param array<mixed> $params */
-public function block_html_style(array $params, string|null $content): void
+    public function block_html_style(array $params, string|null $content): void
     {
         $content = trim($content ?? '');
         if (!empty($content)) { // second call
@@ -750,7 +750,7 @@ public function block_html_style(array $params, string|null $content): void
      * @param Smarty $smarty
      */
     /** @param array<mixed> $params */
-public function func_define_derivative(array $params, mixed $smarty): void
+    public function func_define_derivative(array $params, mixed $smarty): void
     {
         !empty($params['name']) or fatal_error('define_derivative missing name');
         if (isset($params['type'])) {
@@ -815,7 +815,7 @@ public function func_define_derivative(array $params, mixed $smarty): void
      *   - version (optional) used to force a browser refresh
      */
     /** @param array<mixed> $params */
-public function func_combine_script(array $params): void
+    public function func_combine_script(array $params): void
     {
         if (!isset($params['id'])) {
             trigger_error("combine_script: missing 'id' parameter", E_USER_ERROR);
@@ -860,7 +860,7 @@ public function func_combine_script(array $params): void
      *    - load (required)
      */
     /** @param array<mixed> $params */
-public function func_get_combined_scripts(array $params): string
+    public function func_get_combined_scripts(array $params): string
     {
         if (!isset($params['load'])) {
             trigger_error("get_combined_scripts: missing 'load' parameter", E_USER_ERROR);
@@ -912,7 +912,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      * @return string
      */
     /** @return string|array<mixed> */
-private static function make_script_src(Combinable $script): string|array
+    private static function make_script_src(Combinable $script): string|array
     {
         $ret = '';
         if ($script->is_remote()) {
@@ -937,7 +937,7 @@ private static function make_script_src(Combinable $script): string|array
      * @param string|null $content
      */
     /** @param array<mixed> $params */
-public function block_footer_script(array $params, string|null $content): void
+    public function block_footer_script(array $params, string|null $content): void
     {
         $content = trim($content ?? '');
         if (!empty($content)) { // second call
@@ -963,7 +963,7 @@ public function block_footer_script(array $params, string|null $content): void
      *    - template (optional) set to true to allow smarty syntax in the css file
      */
     /** @param array<mixed> $params */
-public function func_combine_css(array $params): void
+    public function func_combine_css(array $params): void
     {
         if (empty($params['path'])) {
             fatal_error('combine_css missing path');
@@ -994,7 +994,7 @@ public function func_combine_css(array $params): void
      * @param array $params (unused)
      */
     /** @param array<mixed> $params */
-public function func_get_combined_css(array $params): string
+    public function func_get_combined_css(array $params): string
     {
         return self::COMBINED_CSS_TAG;
     }
@@ -1058,7 +1058,7 @@ public function func_get_combined_css(array $params): string
                 foreach ($filters as $filter) {
                     [$type, $callback] = $filter;
                     if (is_array($callback)) {
-                        $compile_id .= $type.implode('', array_map(fn($v): string => is_string($v) ? $v : (is_int($v) || is_float($v) ? (string) $v : ''), $callback));
+                        $compile_id .= $type.implode('', array_map(fn ($v): string => is_string($v) ? $v : (is_int($v) || is_float($v) ? (string) $v : ''), $callback));
                     } elseif ($callback instanceof \Closure) {
                         // Reflect the closure's function name for a stable compile_id contribution.
                         $compile_id .= $type.new \ReflectionFunction($callback)->getName();
@@ -1108,7 +1108,7 @@ public function func_get_combined_css(array $params): string
      * @param Smarty $smarty
      */
     /** @return string|array<mixed>|null */
-public static function prefilter_white_space(string $source, mixed $smarty): string|array|null
+    public static function prefilter_white_space(string $source, mixed $smarty): string|array|null
     {
         $ld = ($smarty instanceof \Smarty\Smarty) ? $smarty->getLeftDelimiter() : '{';
         $rd = ($smarty instanceof \Smarty\Smarty) ? $smarty->getRightDelimiter() : '}';
@@ -1138,7 +1138,7 @@ public static function prefilter_white_space(string $source, mixed $smarty): str
      * @param Smarty $smarty
      */
     /** @return string|array<mixed>|null */
-public static function postfilter_language(string $source, mixed $smarty): string|array|null
+    public static function postfilter_language(string $source, mixed $smarty): string|array|null
     {
         // replaces echo PHP_STRING_LITERAL; with the string literal value
         $source = preg_replace_callback(
@@ -1192,7 +1192,7 @@ public static function postfilter_language(string $source, mixed $smarty): strin
      * @return array
      */
     /** @return array<mixed> */
-public function load_themeconf(string $dir): array
+    public function load_themeconf(string $dir): array
     {
         global $themeconfs;
 

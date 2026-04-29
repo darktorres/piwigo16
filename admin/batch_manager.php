@@ -59,7 +59,9 @@ DELETE FROM '.CADDIE_TABLE.'
 
         $nb_orphans_deleted = is_numeric($_GET['nb_orphans_deleted']) ? (int) $_GET['nb_orphans_deleted'] : 0;
         if ($nb_orphans_deleted > 0) {
-            if (!is_array($_SESSION['page_infos'] ?? null)) { $_SESSION['page_infos'] = []; }
+            if (!is_array($_SESSION['page_infos'] ?? null)) {
+                $_SESSION['page_infos'] = [];
+            }
             /** @var array<mixed> $page_infos_ref */
             $page_infos_ref = &$_SESSION['page_infos'];
             $page_infos_ref[] = l10n_dec(
@@ -76,7 +78,9 @@ DELETE FROM '.CADDIE_TABLE.'
         check_input_parameter('nb_md5sum_added', $_GET, false, '/^\d+$/');
         $nb_md5sum_added = is_numeric($_GET['nb_md5sum_added']) ? (int) $_GET['nb_md5sum_added'] : 0;
         if ($nb_md5sum_added > 0) {
-            if (!is_array($_SESSION['page_infos'] ?? null)) { $_SESSION['page_infos'] = []; }
+            if (!is_array($_SESSION['page_infos'] ?? null)) {
+                $_SESSION['page_infos'] = [];
+            }
             /** @var array<mixed> $page_infos_ref */
             $page_infos_ref = &$_SESSION['page_infos'];
             $page_infos_ref[] = l10n_dec(

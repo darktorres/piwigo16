@@ -11,7 +11,7 @@ declare(strict_types=1);
 // provides data for site synchronization from the local file system
 class LocalSiteReader
 {
-        public function __construct(public string $site_url)
+    public function __construct(public string $site_url)
     {
         if (!\Piwigo\Core\Config::has('flip_file_ext')) {
             \Piwigo\Core\Config::override('flip_file_ext', array_flip(\Piwigo\Core\Config::fileExtensions()));
@@ -46,7 +46,7 @@ class LocalSiteReader
     /**
      * @return mixed[]
      */
-        /** @return string[] */
+    /** @return string[] */
     public function get_full_directories(string $basedir): array
     {
         $fs_fulldirs = get_fs_directories($basedir);
@@ -59,7 +59,7 @@ class LocalSiteReader
      * @param string $path recurse in this directory
      * @return array like "pic.jpg"=>array('representative_ext'=>'jpg' ... )
      */
-        /** @return array<mixed> */
+    /** @return array<mixed> */
     public function get_elements(string $path): array
     {
         $subdirs = [];
@@ -107,13 +107,13 @@ class LocalSiteReader
 
     // returns the name of the attributes that are supported for
     // files update/synchronization
-        /** @return array<mixed> */
+    /** @return array<mixed> */
     public function get_update_attributes(): array
     {
         return ['representative_ext'];
     }
 
-        /**
+    /**
  * @param array<mixed>|string $file
  * @return array<mixed>
  */
@@ -140,14 +140,14 @@ class LocalSiteReader
 
     // returns the name of the attributes that are supported for
     // metadata update/synchronization according to configuration
-        /** @return array<mixed> */
+    /** @return array<mixed> */
     public function get_metadata_attributes(): array
     {
         return get_sync_metadata_attributes();
     }
 
     // returns a hash of attributes (metadata+filesize+width,...) for file
-        /**
+    /**
  * @param array<mixed> $infos
  * @return array<mixed>|false
  */
@@ -158,7 +158,7 @@ class LocalSiteReader
 
 
     //-------------------------------------------------- private functions --------
-        public function get_representative_ext(string $path, string $filename_wo_ext): ?string
+    public function get_representative_ext(string $path, string $filename_wo_ext): ?string
     {
         $base_test = $path.'/pwg_representative/'.$filename_wo_ext.'.';
         foreach (\Piwigo\Core\Config::pictureExtensions() as $ext) {

@@ -191,8 +191,8 @@ if (isset($_POST['submit'])) {
                                 $order_by = ['id ASC'];
                             }
 
-                            $_POST['order_by'] = 'ORDER BY '.implode(', ', array_map(fn($v) => is_scalar($v) ? (string) $v : '', $order_by));
-                            $_POST['order_by_inside_category'] = 'ORDER BY '.implode(', ', array_map(fn($v) => is_scalar($v) ? (string) $v : '', $order_by_inside_category));
+                            $_POST['order_by'] = 'ORDER BY '.implode(', ', array_map(fn ($v) => is_scalar($v) ? (string) $v : '', $order_by));
+                            $_POST['order_by_inside_category'] = 'ORDER BY '.implode(', ', array_map(fn ($v) => is_scalar($v) ? (string) $v : '', $order_by_inside_category));
                         }
                     } else {
                         \Piwigo\Core\PageState::current()->addError(l10n('No order field selected'));

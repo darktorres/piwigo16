@@ -73,7 +73,7 @@ final class DerivativeImage
         }
         $trig1 = trigger_change('get_derivative_url', get_root_url().$rel_url, $params, $src_image, $rel_url);
         /** @var array<string>|string $urlArg */
-        $urlArg = is_string($trig1) ? $trig1 : (is_array($trig1) ? array_values(array_map(static fn(mixed $x): string => is_scalar($x) ? (string) $x : '', $trig1)) : '');
+        $urlArg = is_string($trig1) ? $trig1 : (is_array($trig1) ? array_values(array_map(static fn (mixed $x): string => is_scalar($x) ? (string) $x : '', $trig1)) : '');
         return embellish_url($urlArg);
     }
 
@@ -232,7 +232,7 @@ final class DerivativeImage
         }
         $trig2 = trigger_change('get_derivative_url', get_root_url().$this->rel_url, $this->params, $this->src_image, $this->rel_url);
         /** @var array<string>|string $urlArg2 */
-        $urlArg2 = is_string($trig2) ? $trig2 : (is_array($trig2) ? array_values(array_map(static fn(mixed $x): string => is_scalar($x) ? (string) $x : '', $trig2)) : '');
+        $urlArg2 = is_string($trig2) ? $trig2 : (is_array($trig2) ? array_values(array_map(static fn (mixed $x): string => is_scalar($x) ? (string) $x : '', $trig2)) : '');
         return embellish_url($urlArg2);
     }
 
@@ -265,7 +265,7 @@ final class DerivativeImage
         if ($srcSize === null) {
             return null;
         }
-        $floatSize = array_map(static fn(int $v): float => (float) $v, $srcSize);
+        $floatSize = array_map(static fn (int $v): float => (float) $v, $srcSize);
         $result = $this->params->compute_final_size($floatSize);
         return array_map('intval', $result);
     }

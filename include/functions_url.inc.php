@@ -60,7 +60,7 @@ function get_absolute_root_url($with_scheme = true): string
                 // do nothing
             } elseif ('auto' == \Piwigo\Core\Config::urlPort()) {
                 if ((!$is_https && $_SERVER['SERVER_PORT'] != 80) || ($is_https && $_SERVER['SERVER_PORT'] != 443)) {
-                    $url_port = ':'.( is_scalar($_SERVER['SERVER_PORT']) ? (string) $_SERVER['SERVER_PORT'] : '');
+                    $url_port = ':'.(is_scalar($_SERVER['SERVER_PORT']) ? (string) $_SERVER['SERVER_PORT'] : '');
                 }
             } else {
                 // we have a custom port
@@ -262,7 +262,7 @@ function add_well_known_params_in_url(string $url, array $params): string
             $url .= '-'. (is_scalar($params['chronology_view']) ? (string) $params['chronology_view'] : '');
         }
         if (!empty($params['chronology_date'])) {
-            $url .= '-'. implode('-', array_map(fn($v) => is_scalar($v) ? (string) $v : '', is_array($params['chronology_date']) ? $params['chronology_date'] : []));
+            $url .= '-'. implode('-', array_map(fn ($v) => is_scalar($v) ? (string) $v : '', is_array($params['chronology_date']) ? $params['chronology_date'] : []));
         }
     }
 
@@ -390,7 +390,7 @@ function make_section_in_url(array $params): string
             }
         case 'list':
             {
-                $section_string .= '/list/'.implode(',', array_map(fn($v) => is_scalar($v) ? (string) $v : '', is_array($params['list']) ? $params['list'] : []));
+                $section_string .= '/list/'.implode(',', array_map(fn ($v) => is_scalar($v) ? (string) $v : '', is_array($params['list']) ? $params['list'] : []));
                 break;
             }
         case 'none':
@@ -752,7 +752,7 @@ function unset_make_full_url(): void
 function embellish_url(string|array $url): string|array
 {
     if (is_array($url)) {
-        return array_map(fn(string $u): string => is_string($r = embellish_url($u)) ? $r : $u, $url);
+        return array_map(fn (string $u): string => is_string($r = embellish_url($u)) ? $r : $u, $url);
     }
     $url = str_replace('/./', '/', $url);
     while (($dotdot = strpos($url, '/../', 1)) !== false) {

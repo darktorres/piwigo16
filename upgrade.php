@@ -6,7 +6,6 @@ global $template, $user, $page, $persistent_cache, $lang, $prefixeTable;
 
 use Piwigo\Admin\languages;
 use Piwigo\Admin\updates;
-use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Template\Template;
 
 // +-----------------------------------------------------------------------+

@@ -37,7 +37,7 @@ function datetime_to_ts(string $datetime): int
  *
  * function copied from Dotclear project http://dotclear.net
  *
- *  int 
+ *  int
  * @return string ISO 8601 date format
  */
 function ts_to_iso8601(int $ts): string

@@ -43,7 +43,7 @@ class PwgRestEncoder extends PwgResponseEncoder
         return 'text/xml';
     }
 
-        /** @param array<mixed> $xml_attributes */
+    /** @param array<mixed> $xml_attributes */
     public function encode_array(mixed $data, string $itemName, array $xml_attributes = []): void
     {
         if (!is_array($data)) {
@@ -56,7 +56,7 @@ class PwgRestEncoder extends PwgResponseEncoder
         }
     }
 
-        /**
+    /**
  * @param array<mixed> $data
  * @param array<mixed> $xml_attributes
  */
@@ -101,7 +101,7 @@ class PwgRestEncoder extends PwgResponseEncoder
         }
     }
 
-        /** @param array<mixed> $xml_attributes */
+    /** @param array<mixed> $xml_attributes */
     public function encode(mixed $data, array $xml_attributes = []): void
     {
         switch (gettype($data)) {

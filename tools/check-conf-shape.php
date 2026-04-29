@@ -61,5 +61,5 @@ if (count($stale) > 0) {
     exit(1);
 }
 
-echo "Conf shape OK: all " . count($aliasKeys) . " alias keys are valid.\n";
+echo 'Conf shape OK: all ' . count($aliasKeys) . " alias keys are valid.\n";
 exit(0);

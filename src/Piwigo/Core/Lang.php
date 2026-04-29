@@ -51,7 +51,7 @@ final class Lang
             $val = $src[$key];
         }
         if (!empty($args)) {
-            $scalarArgs = array_map(static fn(mixed $a): string => is_scalar($a) || $a === null ? (string) $a : '', $args);
+            $scalarArgs = array_map(static fn (mixed $a): string => is_scalar($a) || $a === null ? (string) $a : '', $args);
             return vsprintf($val, $scalarArgs);
         }
         return $val;

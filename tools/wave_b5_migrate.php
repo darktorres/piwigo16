@@ -87,7 +87,7 @@ const TYPED_GETTERS = [
     'enable_synchronization'           => 'enableSynchronization',
     'nbm_default_value_user_enabled'   => 'nbmDefaultValueUserEnabled',
     'nbm_list_all_enabled_users_to_send' => 'nbmListAllEnabledUsersToSend',
-    'nbm_max_treatment_timeout_percent'=> 'nbmMaxTreatmentTimeoutPercent',
+    'nbm_max_treatment_timeout_percent' => 'nbmMaxTreatmentTimeoutPercent',
     'nbm_treatment_timeout_default'    => 'nbmTreatmentTimeoutDefault',
     'top_number'                       => 'topNumber',
     'anti-flood_time'                  => 'antiFloodTime',
@@ -198,7 +198,7 @@ const TYPED_GETTERS = [
     'original_resize_maxwidth'         => 'originalResizeMaxwidth',
     'original_resize_maxheight'        => 'originalResizeMaxheight',
     'original_resize_quality'          => 'originalResizeQuality',
-    'animated_webp_compression_quality'=> 'animatedWebpCompressionQuality',
+    'animated_webp_compression_quality' => 'animatedWebpCompressionQuality',
     'max_requests'                     => 'maxRequests',
     'lounge_active'                    => 'loungeActive',
     'lounge_activate_threshold'        => 'loungeActivateThreshold',
@@ -257,7 +257,9 @@ const EXEMPT = [
 function is_exempt(string $path): bool
 {
     foreach (EXEMPT as $frag) {
-        if (str_contains($path, $frag)) return true;
+        if (str_contains($path, $frag)) {
+            return true;
+        }
     }
     return false;
 }
@@ -282,14 +284,14 @@ function migrate_line(string $line): array
     // ---- (A) isset($conf['key']) → null !== \Piwigo\Core\Config::get / has()
     $line = preg_replace_callback(
         "/isset\(\s*\\\$conf\['([^']+)'\]\s*\)/",
-        fn($m) => "\\Piwigo\\Core\\Config::has('" . $m[1] . "')",
+        fn ($m) => "\\Piwigo\\Core\\Config::has('" . $m[1] . "')",
         $line
     );
 
     // ---- (B) array_key_exists('key', $conf) → Config::has('key')
     $line = preg_replace_callback(
         "/array_key_exists\(\s*'([^']+)'\s*,\s*\\\$conf\s*\)/",
-        fn($m) => "\\Piwigo\\Core\\Config::has('" . $m[1] . "')",
+        fn ($m) => "\\Piwigo\\Core\\Config::has('" . $m[1] . "')",
         $line
     );
 
@@ -311,14 +313,14 @@ function migrate_line(string $line): array
     // Guard: ensure $var is a simple variable, not an array read
     $line = preg_replace_callback(
         "/\\\$conf\[(\\\$[a-zA-Z_][a-zA-Z0-9_]*)\](?!\[)/",
-        fn($m) => "\\Piwigo\\Core\\Config::get({$m[1]})",
+        fn ($m) => "\\Piwigo\\Core\\Config::get({$m[1]})",
         $line
     );
 
     // ---- (E) static read: $conf['key'] (handles 2D via chaining automatically)
     $line = preg_replace_callback(
         "/\\\$conf\['([^']+)'\]/",
-        fn($m) => conf_call($m[1]),
+        fn ($m) => conf_call($m[1]),
         $line
     );
 
@@ -350,8 +352,12 @@ function remove_global_conf(string $content): string
 
 function migrate_file(string $path, bool $dry_run): bool
 {
-    if (!is_file($path) || pathinfo($path, PATHINFO_EXTENSION) !== 'php') return false;
-    if (is_exempt($path)) return false;
+    if (!is_file($path) || pathinfo($path, PATHINFO_EXTENSION) !== 'php') {
+        return false;
+    }
+    if (is_exempt($path)) {
+        return false;
+    }
 
     $original = file_get_contents($path);
     $lines = explode("\n", $original);
@@ -366,10 +372,14 @@ function migrate_file(string $path, bool $dry_run): bool
         }
         [$new_line, $changed] = migrate_line($line);
         $new_lines[] = $new_line;
-        if ($changed) $changed_any = true;
+        if ($changed) {
+            $changed_any = true;
+        }
     }
 
-    if (!$changed_any) return false;
+    if (!$changed_any) {
+        return false;
+    }
 
     $new_content = implode("\n", $new_lines);
 
@@ -377,7 +387,9 @@ function migrate_file(string $path, bool $dry_run): bool
     if (!has_remaining_conf($new_content)) {
         $before_remove = $new_content;
         $new_content = remove_global_conf($new_content);
-        if ($new_content !== $before_remove) $changed_any = true;
+        if ($new_content !== $before_remove) {
+            $changed_any = true;
+        }
     }
 
     if ($dry_run) {
@@ -401,7 +413,9 @@ function migrate_file(string $path, bool $dry_run): bool
 
 function collect_php_files(string $path): array
 {
-    if (is_file($path)) return [$path];
+    if (is_file($path)) {
+        return [$path];
+    }
     $files = [];
     $it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($path, RecursiveDirectoryIterator::SKIP_DOTS));
     foreach ($it as $file) {
@@ -419,7 +433,10 @@ $dry_run = false;
 $targets = [];
 
 foreach (array_slice($argv, 1) as $arg) {
-    if ($arg === '--dry-run') { $dry_run = true; continue; }
+    if ($arg === '--dry-run') {
+        $dry_run = true;
+        continue;
+    }
     $targets[] = $arg;
 }
 
@@ -437,7 +454,10 @@ $skipped = 0;
 
 foreach ($targets as $target) {
     foreach (collect_php_files($target) as $file) {
-        if (is_exempt($file)) { $skipped++; continue; }
+        if (is_exempt($file)) {
+            $skipped++;
+            continue;
+        }
         if (migrate_file($file, $dry_run)) {
             echo ($dry_run ? '[dry] ' : '[ok]  ') . $file . "\n";
             $changed++;
@@ -446,4 +466,6 @@ foreach ($targets as $target) {
 }
 
 echo "\nDone. Changed: {$changed}, skipped (exempt): {$skipped}\n";
-if ($dry_run) echo "(dry-run: no files written)\n";
+if ($dry_run) {
+    echo "(dry-run: no files written)\n";
+}

@@ -1534,31 +1534,49 @@ function qsearch_get_images(\Piwigo\Search\QExpression $expr, \Piwigo\Search\QRe
                 break;
             case 'width':
             case 'height':
-                if ($token_scope !== null) { $clauses[] = $token_scope->get_sql($scope_id, $token); }
+                if ($token_scope !== null) {
+                    $clauses[] = $token_scope->get_sql($scope_id, $token);
+                }
                 break;
             case 'ratio':
-                if ($token_scope !== null) { $clauses[] = $token_scope->get_sql('width/height', $token); }
+                if ($token_scope !== null) {
+                    $clauses[] = $token_scope->get_sql('width/height', $token);
+                }
                 break;
             case 'size':
-                if ($token_scope !== null) { $clauses[] = $token_scope->get_sql('width*height', $token); }
+                if ($token_scope !== null) {
+                    $clauses[] = $token_scope->get_sql('width*height', $token);
+                }
                 break;
             case 'hits':
-                if ($token_scope !== null) { $clauses[] = $token_scope->get_sql('hit', $token); }
+                if ($token_scope !== null) {
+                    $clauses[] = $token_scope->get_sql('hit', $token);
+                }
                 break;
             case 'score':
-                if ($token_scope !== null) { $clauses[] = $token_scope->get_sql('rating_score', $token); }
+                if ($token_scope !== null) {
+                    $clauses[] = $token_scope->get_sql('rating_score', $token);
+                }
                 break;
             case 'filesize':
-                if ($token_scope !== null) { $clauses[] = $token_scope->get_sql('1024*filesize', $token); }
+                if ($token_scope !== null) {
+                    $clauses[] = $token_scope->get_sql('1024*filesize', $token);
+                }
                 break;
             case 'created':
-                if ($token_scope !== null) { $clauses[] = $token_scope->get_sql('date_creation', $token); }
+                if ($token_scope !== null) {
+                    $clauses[] = $token_scope->get_sql('date_creation', $token);
+                }
                 break;
             case 'posted':
-                if ($token_scope !== null) { $clauses[] = $token_scope->get_sql('date_available', $token); }
+                if ($token_scope !== null) {
+                    $clauses[] = $token_scope->get_sql('date_available', $token);
+                }
                 break;
             case 'id':
-                if ($token_scope !== null) { $clauses[] = $token_scope->get_sql($scope_id, $token); }
+                if ($token_scope !== null) {
+                    $clauses[] = $token_scope->get_sql($scope_id, $token);
+                }
                 break;
             default:
                 // allow plugins to have their own scope with columns added in db by themselves

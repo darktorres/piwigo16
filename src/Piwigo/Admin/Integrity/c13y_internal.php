@@ -16,7 +16,7 @@ class c13y_internal
     /**
      * Check version
      *
-     *  object 
+     *  object
      */
     public function c13y_version(\Piwigo\Admin\Integrity\check_integrity $c13y): void
     {
@@ -51,7 +51,7 @@ class c13y_internal
     /**
      * Check exif
      *
-     *  object 
+     *  object
      */
     public function c13y_exif(\Piwigo\Admin\Integrity\check_integrity $c13y): void
     {
@@ -72,7 +72,7 @@ class c13y_internal
     /**
      * Check user
      *
-     *  object 
+     *  object
      */
     public function c13y_user(\Piwigo\Admin\Integrity\check_integrity $c13y): void
     {
@@ -130,8 +130,8 @@ class c13y_internal
     /**
      * Do correction user
      *
-     **  mixed 
-     *  string 
+     **  mixed
+     *  string
      * @return boolean true if ok else false
      */
     public function c13y_correction_user(int $id, string $action): bool

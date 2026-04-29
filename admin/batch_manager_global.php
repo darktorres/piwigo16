@@ -332,7 +332,9 @@ DELETE
             // now done with ajax calls, with blocks
             // $deleted_count = delete_elements($collection, true);
             if (count($collection_int) > 0) {
-                if (!is_array($_SESSION['page_infos'] ?? null)) { $_SESSION['page_infos'] = []; }
+                if (!is_array($_SESSION['page_infos'] ?? null)) {
+                    $_SESSION['page_infos'] = [];
+                }
                 /** @var array<mixed> $page_infos_ref */
                 $page_infos_ref = &$_SESSION['page_infos'];
                 $page_infos_ref[] = l10n_dec(

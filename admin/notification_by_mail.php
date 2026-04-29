@@ -166,7 +166,7 @@ order by
 
         // On timeout simulate like tabsheet send
         if ($env_nbm['is_sendmail_timeout']) {
-            $quoted_check_key_list = quote_check_key_list(array_diff($check_key_list, array_map(fn($v) => is_scalar($v) ? (string) $v : '', $check_key_treated)));
+            $quoted_check_key_list = quote_check_key_list(array_diff($check_key_list, array_map(fn ($v) => is_scalar($v) ? (string) $v : '', $check_key_treated)));
             if (count($quoted_check_key_list) != 0) {
                 $query = 'delete from '.USER_MAIL_NOTIFICATION_TABLE.' where check_key in ('.implode(',', $quoted_check_key_list).');';
                 $result = pwg_query($query);
@@ -496,10 +496,14 @@ switch ($page['mode']) {
         {
             if (isset($_POST['falsify']) and isset($_POST['cat_true'])) {
                 $check_key_treated = unsubscribe_notification_by_mail(true, $_POST['cat_true']);
-                if (do_timeout_treatment('cat_true', $check_key_treated)) { $must_repost = true; }
+                if (do_timeout_treatment('cat_true', $check_key_treated)) {
+                    $must_repost = true;
+                }
             } elseif (isset($_POST['trueify']) and isset($_POST['cat_false'])) {
                 $check_key_treated = subscribe_notification_by_mail(true, $_POST['cat_false']);
-                if (do_timeout_treatment('cat_false', $check_key_treated)) { $must_repost = true; }
+                if (do_timeout_treatment('cat_false', $check_key_treated)) {
+                    $must_repost = true;
+                }
             }
             break;
         }
@@ -508,7 +512,9 @@ switch ($page['mode']) {
         {
             if (isset($_POST['send_submit']) and isset($_POST['send_selection']) and isset($_POST['send_customize_mail_content'])) {
                 $check_key_treated = do_action_send_mail_notification('send', $_POST['send_selection'], stripslashes((string) $_POST['send_customize_mail_content']));
-                if (do_timeout_treatment('send_selection', $check_key_treated)) { $must_repost = true; }
+                if (do_timeout_treatment('send_selection', $check_key_treated)) {
+                    $must_repost = true;
+                }
             }
         }
 }

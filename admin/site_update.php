@@ -528,7 +528,7 @@ SELECT id, path
 
     // search new/removed formats on photos already registered in database
     if (\Piwigo\Core\Config::isFormatsEnabled()) {
-        $db_elements_str = array_map(fn($v) => is_scalar($v) ? (string) $v : '', $db_elements);
+        $db_elements_str = array_map(fn ($v) => is_scalar($v) ? (string) $v : '', $db_elements);
         $db_elements_flip = array_flip($db_elements_str);
 
         $existing_ids = [];
@@ -732,7 +732,7 @@ if (isset($_POST['submit'])
                 // fields
                 [
                   'primary' => ['id'],
-                  'update'  => array_map(fn($v) => is_scalar($v) ? (string) $v : '', $site_reader->get_update_attributes()),
+                  'update'  => array_map(fn ($v) => is_scalar($v) ? (string) $v : '', $site_reader->get_update_attributes()),
                   ],
                 $datas
             );
@@ -832,7 +832,7 @@ if (isset($_POST['submit']) and isset($_POST['sync_meta'])
                   'update'  => array_unique(
                       array_merge(
                           array_values(array_diff(
-                              array_map(fn($v) => is_scalar($v) ? (string) $v : '', $site_reader->get_metadata_attributes()),
+                              array_map(fn ($v) => is_scalar($v) ? (string) $v : '', $site_reader->get_metadata_attributes()),
                               // keywords and tags fields are managed separately
                               ['keywords', 'tags']
                           )),
@@ -872,7 +872,7 @@ if ($simulate) {
 
 // used_metadata string is displayed to inform admin which metadata will be
 // used from files for synchronization
-$used_metadata = implode(', ', array_map(fn($v) => is_scalar($v) ? (string) $v : '', $site_reader->get_metadata_attributes()));
+$used_metadata = implode(', ', array_map(fn ($v) => is_scalar($v) ? (string) $v : '', $site_reader->get_metadata_attributes()));
 // $site_is_remote is always false here (fatal_error called above if true)
 
 $template->assign(

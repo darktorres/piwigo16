@@ -505,7 +505,7 @@ UPDATE '.USER_INFOS_TABLE.'
         $history_sections_cache = is_array($hsc) ? $hsc : [];
         if (
             in_array($page['section'], $history_sections_cache)
-            or in_array(strtolower($page['section']), array_map(static fn(mixed $s): string => strtolower(is_scalar($s) ? (string) $s : ''), $history_sections_cache))
+            or in_array(strtolower($page['section']), array_map(static fn (mixed $s): string => strtolower(is_scalar($s) ? (string) $s : ''), $history_sections_cache))
         ) {
             $section = $page['section'];
         } elseif (preg_match('/^[a-zA-Z0-9_-]+$/', $page['section'])) {
@@ -597,7 +597,7 @@ function pwg_activity(string $object, array|int|string $object_id, string $actio
         $details['script'] = script_basename();
 
         if ('admin' == $details['script'] and isset($_GET['page'])) {
-            $details['script'] .= '/'.( is_scalar($_GET['page']) ? (string)$_GET['page'] : '' );
+            $details['script'] .= '/'.(is_scalar($_GET['page']) ? (string)$_GET['page'] : '');
         }
     }
 

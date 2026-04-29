@@ -69,7 +69,7 @@ final class PageState
         $bodyClasses = $p['body_classes'] ?? [];
         $inst->bodyClasses = is_array($bodyClasses) ? array_values(array_filter($bodyClasses, 'is_string')) : [];
         $bodyData = $p['body_data'] ?? [];
-        $inst->bodyData = is_array($bodyData) ? array_filter($bodyData, fn($v, $k) => is_string($k) && is_string($v), ARRAY_FILTER_USE_BOTH) : [];
+        $inst->bodyData = is_array($bodyData) ? array_filter($bodyData, fn ($v, $k) => is_string($k) && is_string($v), ARRAY_FILTER_USE_BOTH) : [];
         $execUuid = $p['execution_uuid'] ?? '';
         $inst->executionUuid = is_string($execUuid) ? $execUuid : '';
 

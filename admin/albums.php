@@ -70,7 +70,7 @@ SELECT id
       (($post_id_str === '-1') ? 'IS NULL' : '= '.$post_id_str).'
 ;';
     $category_ids = query2array($query, null, 'id');
-    $category_ids = array_map(fn($v) => is_scalar($v) ? (string) $v : '', $category_ids);
+    $category_ids = array_map(fn ($v) => is_scalar($v) ? (string) $v : '', $category_ids);
 
     if (isset($_POST['recursiveAutoOrder'])) {
         $category_ids = get_subcat_ids($category_ids);

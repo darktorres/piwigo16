@@ -49,22 +49,22 @@ $service->setHandler($requestFormat, $handler);
 
 $encoder = null;
 switch ($responseFormat) {
-        case 'rest':
-            include_once(PHPWG_ROOT_PATH.'include/ws_protocols/rest_encoder.php');
-            $encoder = new PwgRestEncoder();
-            break;
-        case 'php':
-            include_once(PHPWG_ROOT_PATH.'include/ws_protocols/php_encoder.php');
-            $encoder = new PwgSerialPhpEncoder();
-            break;
-        case 'json':
-            include_once(PHPWG_ROOT_PATH.'include/ws_protocols/json_encoder.php');
-            $encoder = new PwgJsonEncoder();
-            break;
-        case 'xmlrpc':
-            include_once(PHPWG_ROOT_PATH.'include/ws_protocols/xmlrpc_encoder.php');
-            $encoder = new PwgXmlRpcEncoder();
-            break;
+    case 'rest':
+        include_once(PHPWG_ROOT_PATH.'include/ws_protocols/rest_encoder.php');
+        $encoder = new PwgRestEncoder();
+        break;
+    case 'php':
+        include_once(PHPWG_ROOT_PATH.'include/ws_protocols/php_encoder.php');
+        $encoder = new PwgSerialPhpEncoder();
+        break;
+    case 'json':
+        include_once(PHPWG_ROOT_PATH.'include/ws_protocols/json_encoder.php');
+        $encoder = new PwgJsonEncoder();
+        break;
+    case 'xmlrpc':
+        include_once(PHPWG_ROOT_PATH.'include/ws_protocols/xmlrpc_encoder.php');
+        $encoder = new PwgXmlRpcEncoder();
+        break;
 }
 $service->setEncoder($responseFormat, $encoder);
 

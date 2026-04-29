@@ -457,7 +457,7 @@ SELECT DISTINCT(id)
                 $forbidden_ids[] = 0;
             }
             $userdata['image_access_type'] = 'NOT IN'; //TODO maybe later
-            $userdata['image_access_list'] = implode(',', array_map(static fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $forbidden_ids));
+            $userdata['image_access_list'] = implode(',', array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $forbidden_ids));
 
 
             $query = '
@@ -482,7 +482,7 @@ SELECT COUNT(DISTINCT(image_id)) as total
                     $ud_forbidden_cats = is_string($userdata['forbidden_categories'])
                         ? $userdata['forbidden_categories']
                         : '';
-                    $forbidden_ids_str = implode(',', array_map(static fn(int $v): string => (string) $v, $forbidden_ids));
+                    $forbidden_ids_str = implode(',', array_map(static fn (int $v): string => (string) $v, $forbidden_ids));
                     if (empty($ud_forbidden_cats)) {
                         $userdata['forbidden_categories'] = $forbidden_ids_str;
                     } else {
@@ -924,7 +924,9 @@ function create_user_infos(array|int $user_ids, ?array $override_values = null):
             }
 
             $insert = array_merge(
-                array_map(static function(mixed $v): string { return pwg_db_real_escape_string(is_scalar($v) ? (string) $v : ''); }, $default_user),
+                array_map(static function (mixed $v): string {
+                    return pwg_db_real_escape_string(is_scalar($v) ? (string) $v : '');
+                }, $default_user),
                 [
                 'user_id' => $user_id,
                 'status' => $status,
@@ -2179,12 +2181,12 @@ SELECT
   FROM '.USER_INFOS_TABLE.'
   WHERE status IN (\'webmaster\', \'admin\')
 ;';
-            $protected_users = array_merge($protected_users, array_map(static fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, query2array($query, null, 'user_id')));
+            $protected_users = array_merge($protected_users, array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, query2array($query, null, 'user_id')));
         }
 
         // status update query is separated from the rest as not applying to the same
         // set of users (current, guest and webmaster can't be changed)
-        $params['user_id_for_status'] = array_values(array_diff(array_map(static fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $param_user_id), $protected_users));
+        $params['user_id_for_status'] = array_values(array_diff(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $param_user_id), $protected_users));
 
         $update_status = $params['status'];
     }
@@ -2276,7 +2278,7 @@ SELECT
         $query = '
 UPDATE '. USER_INFOS_TABLE .' SET
     status = "'. $update_status_str .'"
-  WHERE user_id IN('. implode(',', array_map(static fn(mixed $v): string => is_scalar($v) ? (string) $v : '', $param_user_id_for_status)) .')
+  WHERE user_id IN('. implode(',', array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $param_user_id_for_status)) .')
 ;';
         pwg_query($query);
 
@@ -2304,7 +2306,7 @@ UPDATE '. USER_INFOS_TABLE .' SET ';
         }
 
         $query .= '
-  WHERE user_id IN('. implode(',', array_map(static fn(mixed $v): string => is_scalar($v) ? (string) $v : '', $param_user_id)) .')
+  WHERE user_id IN('. implode(',', array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $param_user_id)) .')
 ;';
         pwg_query($query);
     }
@@ -2314,7 +2316,7 @@ UPDATE '. USER_INFOS_TABLE .' SET ';
         $query = '
 DELETE
   FROM '.USER_GROUP_TABLE.'
-  WHERE user_id IN ('.implode(',', array_map(static fn(mixed $v): string => is_scalar($v) ? (string) $v : '', $param_user_id)).')
+  WHERE user_id IN ('.implode(',', array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $param_user_id)).')
 ;';
         pwg_query($query);
 
@@ -2323,7 +2325,7 @@ DELETE
 SELECT
     id
   FROM `'.GROUPS_TABLE.'`
-  WHERE id IN ('.implode(',', array_map(static fn(mixed $v): string => is_scalar($v) ? (string) $v : '', $param_group_id)).')
+  WHERE id IN ('.implode(',', array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $param_group_id)).')
 ;';
         $group_ids = query2array($query, null, 'id');
 
@@ -2345,7 +2347,7 @@ SELECT
 
     invalidate_user_cache();
 
-    pwg_activity('user', array_map(static fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $param_user_id), 'edit');
+    pwg_activity('user', array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $param_user_id), 'edit');
 
     return [
       'user_id' => $params['user_id'],

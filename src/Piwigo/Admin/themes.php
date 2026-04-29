@@ -384,7 +384,7 @@ SELECT
                     }
 
                     // IMPORTANT SECURITY !
-                    $theme = array_map(fn($v) => is_string($v) ? htmlspecialchars($v) : $v, $theme);
+                    $theme = array_map(fn ($v) => is_string($v) ? htmlspecialchars($v) : $v, $theme);
                     $this->fs_themes[$file] = $theme;
                 }
             }

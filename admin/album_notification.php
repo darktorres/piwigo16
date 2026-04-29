@@ -116,7 +116,7 @@ SELECT
     u.'.\Piwigo\Core\Config::userFields()['username'].' AS username
   FROM '.USER_INFOS_TABLE.' AS ui
     JOIN '.USERS_TABLE.' AS u ON u.'.\Piwigo\Core\Config::userFields()['id'].' = ui.user_id
-  WHERE ui.user_id IN ('.implode(',', array_map(fn($v) => is_scalar($v) ? (string) $v : '', (array) $_POST['users'])).')
+  WHERE ui.user_id IN ('.implode(',', array_map(fn ($v) => is_scalar($v) ? (string) $v : '', (array) $_POST['users'])).')
 ;';
         $users = query2array($query);
         $usernames = [];

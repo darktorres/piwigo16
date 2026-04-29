@@ -62,9 +62,9 @@ SELECT group_id
         }
 
         /** @var int[] $post_groups */
-        $post_groups = array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($_POST['groups']) ? $_POST['groups'] : []);
+        $post_groups = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($_POST['groups']) ? $_POST['groups'] : []);
         /** @var int[] $groups_granted_int */
-        $groups_granted_int = array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $groups_granted);
+        $groups_granted_int = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $groups_granted);
 
         //
         // remove permissions to groups
@@ -95,7 +95,7 @@ DELETE
             $query = '
 SELECT id
   FROM '.CATEGORIES_TABLE.'
-  WHERE id IN ('.implode(',', array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '', $cat_ids)).')
+  WHERE id IN ('.implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $cat_ids)).')
     AND status = \'private\'
 ;';
             $private_cats = query2array($query, null, 'id');
@@ -133,9 +133,9 @@ SELECT user_id
         }
 
         /** @var int[] $post_users */
-        $post_users = array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($_POST['users']) ? $_POST['users'] : []);
+        $post_users = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($_POST['users']) ? $_POST['users'] : []);
         /** @var int[] $users_granted_int */
-        $users_granted_int = array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $users_granted);
+        $users_granted_int = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $users_granted);
 
         //
         // remove permissions to users

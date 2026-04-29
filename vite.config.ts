@@ -16,15 +16,15 @@ export default defineConfig({
             input: {
                 // ── Frontend (themes/default) ─────────────────────────────
                 'core.scripts':       r('themes/default/js/scripts.ts'),
-                'switchbox':          r('themes/default/js/switchbox.ts'),
+                'core.switchbox':     r('themes/default/js/switchbox.ts'),
                 'pngfix':             r('themes/default/js/pngfix.ts'),
                 'rating':             r('themes/default/js/rating.ts'),
                 'thumbnails.loader':  r('themes/default/js/thumbnails.loader.ts'),
 
                 // ── Standard pages ────────────────────────────────────────
-                'toaster':            r('themes/standard_pages/js/toaster.ts'),
-                'standard_pages':     r('themes/standard_pages/js/standard_pages.ts'),
-                'profile':            r('themes/standard_pages/js/profile.ts'),
+                'toaster_js':         r('themes/standard_pages/js/toaster.ts'),
+                'standard_pages_js':  r('themes/standard_pages/js/standard_pages.ts'),
+                'standard_profile_js': r('themes/standard_pages/js/profile.ts'),
 
                 // ── Admin (admin/themes/default) ──────────────────────────
                 'common':             r('admin/themes/default/js/common.ts'),
@@ -47,12 +47,12 @@ export default defineConfig({
                 'jquery.geoip':       r('admin/themes/default/js/jquery.geoip.ts'),
                 'maintenance':        r('admin/themes/default/js/maintenance.ts'),
                 'maintenance_env':    r('admin/themes/default/js/maintenance_env.ts'),
-                'maintenance_sys':    r('admin/themes/default/js/maintenance_sys.ts'),
+                'sys':                r('admin/themes/default/js/maintenance_sys.ts'),
                 'photos_add_direct':  r('admin/themes/default/js/photos_add_direct.ts'),
                 'picture_formats':    r('admin/themes/default/js/picture_formats.ts'),
                 'picture_modify':     r('admin/themes/default/js/picture_modify.ts'),
-                'plugins_installated': r('admin/themes/default/js/plugins_installated.ts'),
-                'plugins_new':        r('admin/themes/default/js/plugins_new.ts'),
+                'pluginInstallated':  r('admin/themes/default/js/plugins_installated.ts'),
+                'pluginsNew':         r('admin/themes/default/js/plugins_new.ts'),
                 'stats':              r('admin/themes/default/js/stats.ts'),
                 'tags':               r('admin/themes/default/js/tags.ts'),
                 'user_activity':      r('admin/themes/default/js/user_activity.ts'),

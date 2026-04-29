@@ -2,8 +2,8 @@ declare var related_categories_ids: (string | number)[];
 declare var str_assoc_album_ab: string;
 declare var str_orphan: string;
 
-$(document).ready(function () {
-    const ab = new AlbumSelector({
+document.addEventListener('DOMContentLoaded', () => {
+    const ab = new (window as any).AlbumSelector({
         selectedCategoriesIds: related_categories_ids,
         selectAlbum: add_related_category,
         removeSelectedAlbum: remove_related_category,
@@ -11,55 +11,61 @@ $(document).ready(function () {
         modalTitle: str_assoc_album_ab,
     });
 
-    $('.linked-albums.add-item').on('click', function () { ab.open(); });
+    document.querySelector('.linked-albums.add-item')?.addEventListener('click', () => ab.open());
 
-    $('.related-categories-container').on('click', (e) => {
-        if ((e.target as HTMLElement).classList.contains('remove-item')) {
-            ab.remove_selected_album($(e.target).attr('id'));
+    document.querySelector('.related-categories-container')?.addEventListener('click', (e: Event) => {
+        const target = e.target as HTMLElement;
+        if (target.classList.contains('remove-item')) {
+            ab.remove_selected_album(target.id);
         }
     });
 
     let form_unsaved = false;
     let user_interacted = false;
-    $('#pictureModify').find(':input').on('focus', function () { user_interacted = true; });
-    $('#pictureModify').find(':input').on('change', function () {
-        if (user_interacted) { form_unsaved = true; }
+
+    document.querySelectorAll('#pictureModify input, #pictureModify textarea, #pictureModify select').forEach(el => {
+        el.addEventListener('focus', () => { user_interacted = true; });
+        el.addEventListener('change', () => { if (user_interacted) form_unsaved = true; });
     });
-    $(window).on('beforeunload', function () {
-        if (form_unsaved) return 'Somes changes are not registered';
+
+    window.addEventListener('beforeunload', (e) => {
+        if (form_unsaved) { e.preventDefault(); e.returnValue = 'Some changes are not registered'; }
     });
-    $('#pictureModify').on('submit', function () { form_unsaved = false; });
+
+    document.getElementById('pictureModify')?.addEventListener('submit', () => { form_unsaved = false; });
 });
 
 function remove_related_category({ id_album, getSelectedAlbum }: { id_album: string | number; getSelectedAlbum: () => (string | number)[] }): void {
-    $(`.invisible-related-categories-select option[value=${id_album}]`).remove();
-    $('.invisible-related-categories-select').trigger('change');
-    $(`#${id_album}`).parent().remove();
+    document.querySelector<HTMLOptionElement>(`.invisible-related-categories-select option[value="${id_album}"]`)?.remove();
+    document.querySelector('.invisible-related-categories-select')?.dispatchEvent(new Event('change'));
+    document.getElementById(String(id_album))?.parentElement?.remove();
     check_related_categories(getSelectedAlbum());
 }
 
 function add_related_category({ album, addSelectedAlbum, getSelectedAlbum }: { album: any; addSelectedAlbum: () => void; getSelectedAlbum: () => (string | number)[] }): void {
     if (!getSelectedAlbum().includes(album.id)) {
-        $('.related-categories-container').append(
+        document.querySelector('.related-categories-container')?.insertAdjacentHTML('beforeend',
             `<div class="breadcrumb-item"><span class="link-path">${album.full_name_with_admin_links}</span><span id="${album.id}" class="icon-cancel-circled remove-item"></span></div>`
         );
-        $(`.search-result-item #${album.id}`).addClass('notClickable');
-        $('.invisible-related-categories-select').append(`<option selected value=${album.id}></option>`).trigger('change');
+        document.querySelector<HTMLElement>(`.search-result-item #${album.id}`)?.classList.add('notClickable');
+        const sel = document.querySelector('.invisible-related-categories-select');
+        sel?.insertAdjacentHTML('beforeend', `<option selected value="${album.id}"></option>`);
+        sel?.dispatchEvent(new Event('change'));
         addSelectedAlbum();
     }
     check_related_categories(getSelectedAlbum());
 }
 
 function check_related_categories(selected_cat: (string | number)[]): void {
-    $('.linked-albums-badge').html(String(selected_cat.length));
+    document.querySelectorAll<HTMLElement>('.linked-albums-badge').forEach(el => { el.innerHTML = String(selected_cat.length); });
     if (selected_cat.length === 0) {
-        $('.linked-albums-badge').addClass('badge-red');
-        $('.add-item').addClass('highlight');
-        $('.orphan-photo').html(str_orphan).show();
+        document.querySelectorAll('.linked-albums-badge').forEach(el => el.classList.add('badge-red'));
+        document.querySelectorAll('.add-item').forEach(el => el.classList.add('highlight'));
+        document.querySelectorAll<HTMLElement>('.orphan-photo').forEach(el => { el.innerHTML = str_orphan; el.style.display = ''; });
     } else {
-        $('.linked-albums-badge.badge-red').removeClass('badge-red');
-        $('.add-item.highlight').removeClass('highlight');
-        $('.orphan-photo').hide();
+        document.querySelectorAll('.linked-albums-badge.badge-red').forEach(el => el.classList.remove('badge-red'));
+        document.querySelectorAll('.add-item.highlight').forEach(el => el.classList.remove('highlight'));
+        document.querySelectorAll<HTMLElement>('.orphan-photo').forEach(el => { el.style.display = 'none'; });
     }
 }
 

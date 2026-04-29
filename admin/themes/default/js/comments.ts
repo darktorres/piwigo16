@@ -1,28 +1,30 @@
-declare var str_an_error_has: any;
-declare var str_and_others: any;
-declare var str_comment_validated: any;
-declare var str_comments_validated: any;
-declare var str_delete: any;
-declare var str_deletes: any;
-declare var str_no_delete_confirmation: any;
-declare var str_yes_delete_confirmation: any;
-const commentsContainer = $('#comments');
-const advancedFilters = $('#advancedFilters');
-const switchMode = $('#toggleSelectionMode');
-const commentContainer = $('#commentContainer');
-const commentsAll = $('#commentsAll');
-const commentsValidated = $('#commentsValidated');
-const commentsPending = $('#commentsPending');
-const commentsList = $('#commentsList');
-const commentsNb = $('#commentsNb a');
-const filterAuthor = $('#filter_author');
-const filterDateStart = $('#filter_date_start');
-const filterDateEnd = $('#filter_date_end');
-const commentsSelectController = $('#commentsSelectController');
-const tabFilters = $('#tabFilters');
-const commentsSelectedArea = $('#commentsSelected');
-const commentsSelectedOthers = $('#commentsSelectedOthers');
-const modalViewComment = $('#modalViewComment');
+declare var str_an_error_has: string;
+declare var str_and_others: string;
+declare var str_comment_validated: string;
+declare var str_comments_validated: string;
+declare var str_delete: string;
+declare var str_deletes: string;
+declare var str_no_delete_confirmation: string;
+declare var str_yes_delete_confirmation: string;
+declare var pwg_token: string;
+
+const commentsContainer = document.getElementById('comments')!;
+const advancedFilters = document.getElementById('advancedFilters') as HTMLElement;
+const switchMode = document.getElementById('toggleSelectionMode') as HTMLInputElement;
+const commentContainer = document.getElementById('commentContainer') as HTMLElement;
+const commentsAll = document.getElementById('commentsAll') as HTMLElement;
+const commentsValidated = document.getElementById('commentsValidated') as HTMLElement;
+const commentsPending = document.getElementById('commentsPending') as HTMLElement;
+const commentsList = document.getElementById('commentsList') as HTMLElement;
+const commentsNb = document.querySelectorAll<HTMLElement>('#commentsNb a');
+const filterAuthor = document.getElementById('filter_author') as HTMLSelectElement;
+const filterDateStart = document.getElementById('filter_date_start') as HTMLInputElement;
+const filterDateEnd = document.getElementById('filter_date_end') as HTMLInputElement;
+const commentsSelectController = document.getElementById('commentsSelectController') as HTMLElement;
+const tabFilters = document.getElementById('tabFilters') as HTMLElement;
+const commentsSelectedArea = document.getElementById('commentsSelected') as HTMLElement;
+const commentsSelectedOthers = document.getElementById('commentsSelectedOthers') as HTMLElement;
+const modalViewComment = document.getElementById('modalViewComment') as HTMLElement;
 
 const commentsPaginElipsis = '<span>...</span>';
 const commentsPaginItems = '<a id="comments_page_%d" class="comments-paging" data-page="%d">%d</a>';
@@ -31,597 +33,451 @@ const commentsOptionsFiltersAuthor = '<option value="" selected="">--</option>';
 const commentsSelectedList = '<div class="comments-selected-item"><a class="icon-cancel comments-selected-remove" id="deletecomment_%d"></a> <p>#%d</p></div>';
 
 let commentsState: Record<string, any> = {};
-let commentsParams: Record<string, any> = {
-  status: 'all',
-  page: 0,
-  per_page: 5,
-}
-
+let commentsParams: Record<string, any> = { status: 'all', page: 0, per_page: 5 };
 let updateAuthorId = true;
-let searchTimeOut: any = null;
+let searchTimeOut: ReturnType<typeof setTimeout> | null = null;
 let selectionMode = false;
 let commentsSelected: any[] = [];
+let selectionAbort: AbortController | null = null;
+let filtersAbort: AbortController | null = null;
 
-$(function() {
-  $('#commentFilters').on('click', function() {
-    $(this).toggleClass('advanced-filter-open');
-    advancedFilters.toggle();
-  });
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('commentFilters')?.addEventListener('click', function(this: HTMLElement) {
+        this.classList.toggle('advanced-filter-open');
+        advancedFilters.style.display = advancedFilters.style.display === 'none' ? '' : 'none';
+    });
 
-  switchMode.on('change', function() {
-    $('#contentSelectMode').toggle();
-    $('#headerSelectMode, #contentSelectMode').toggleClass('selection-mode');
-    commentContainer.toggleClass('active');
+    switchMode.addEventListener('change', function(this: HTMLInputElement) {
+        const contentSelectMode = document.getElementById('contentSelectMode') as HTMLElement;
+        contentSelectMode.style.display = contentSelectMode.style.display === 'none' ? '' : 'none';
+        document.getElementById('headerSelectMode')?.classList.toggle('selection-mode');
+        contentSelectMode.classList.toggle('selection-mode');
+        commentContainer.classList.toggle('active');
 
-    if (!commentContainer.hasClass('active')) {
-      selectionMode = false;
-      $('.comment-select-checkbox').hide();
+        if (!commentContainer.classList.contains('active')) {
+            selectionMode = false;
+            document.querySelectorAll<HTMLElement>('.comment-select-checkbox').forEach(el => { el.style.display = 'none'; });
+            document.querySelectorAll<HTMLElement>('.comment-buttons').forEach(el => { el.style.display = ''; });
+            commentsSelectController.classList.remove('show');
+            tabFilters.style.display = '';
+            commentsUnselectAll();
+        } else {
+            selectionMode = true;
+            document.querySelectorAll<HTMLElement>('.comment-select-checkbox').forEach(el => { el.style.display = ''; });
+            document.querySelectorAll<HTMLElement>('.comment-buttons').forEach(el => { el.style.display = 'none'; });
+            tabFilters.style.display = 'none';
+            commentsSelectController.classList.add('show');
+        }
+    });
 
-      $('.comment-buttons').show();
-      commentsSelectController.removeClass('show');
-      tabFilters.show();
-      commentsUnselectAll();
-    } else {
-      selectionMode = true;
-      $('.comment-select-checkbox').show();
+    document.getElementById('selectAll')?.addEventListener('click', () => commentsSelectAll());
+    document.getElementById('selectNone')?.addEventListener('click', () => commentsUnselectAll());
+    document.getElementById('selectInvert')?.addEventListener('click', () => commentsInvertSelect());
 
-      $('.comment-buttons').hide();
-      tabFilters.hide();
-      commentsSelectController.addClass('show');
-    }
-  });
+    document.querySelectorAll<HTMLElement>('.tab-filters input').forEach(el => {
+        el.addEventListener('change', function(this: HTMLInputElement) {
+            commentsParams.status = this.dataset['status'];
+            commentsParams.page = 0;
+            getComments(commentsParams);
+        });
+    });
 
-  $('#selectAll').on('click', function() {
-    commentsSelectAll();
-  });
+    commentsNb.forEach(el => {
+        el.addEventListener('click', function(this: HTMLElement) {
+            updateNbComments(this.textContent ?? '');
+            commentsParams.page = 0;
+            getComments(commentsParams);
+        });
+    });
 
-  $('#selectNone').on('click', function() {
-    commentsUnselectAll();
-  });
+    document.getElementById('closeModalViewComment')?.addEventListener('click', () => closeModalViewComment());
 
-  $('#selectInvert').on('click', function() {
-    commentsInvertSelect();
-  });
+    document.getElementById('commentSearchInput')?.addEventListener('input', function(this: HTMLInputElement) {
+        if (searchTimeOut) clearTimeout(searchTimeOut);
+        searchTimeOut = setTimeout(() => {
+            const search = this.value;
+            delete commentsParams.author_id;
+            delete commentsParams.f_min_date;
+            delete commentsParams.f_max_date;
+            commentsParams.search = search;
+            getComments(commentsParams);
+        }, 300);
+    });
 
-  $('.tab-filters input').on('change', function() {
-    commentsParams.status = $(this).attr('data-status');
-    commentsParams.page = 0;
+    document.getElementById('commentsResetFilters')?.addEventListener('click', () => commentsClearFilters());
+
+    window.addEventListener('keydown', (e: KeyboardEvent) => {
+        if (e.key === 'Escape') closeModalViewComment();
+    });
+
+    commentsParams.per_page = window.localStorage.getItem('adminCommentsNB') ?? 5;
+    updateNbComments(commentsParams.per_page);
     getComments(commentsParams);
-  });
-
-  commentsNb.on('click', function() {
-    const nb = $(this).text();
-    updateNbComments(nb);
-    commentsParams.page = 0;
-    getComments(commentsParams);
-  });
-
-  $('#closeModalViewComment').on('click', function() {
-    closeModalViewComment();
-  });
-
-  $('#commentSearchInput').on('input', function() {
-    clearTimeout(searchTimeOut);
-    searchTimeOut = setTimeout(() => {
-      const search = $(this).val();
-
-      delete commentsParams.author_id;
-      delete commentsParams.f_min_date;
-      delete commentsParams.f_max_date;
-
-      commentsParams.search = search;
-      getComments(commentsParams);
-    }, 300);
-  });
-
-  $('#commentsResetFilters').on('click', function() {
-    commentsClearFilters();
-  });
-
-  $(window).on('keydown', function(e) {
-    if (e.key === 'Escape') {
-      closeModalViewComment();
-    }
-  });
-
-  // get comments and set display
-  commentsParams.per_page = window.localStorage.getItem('adminCommentsNB') ?? 5
-  updateNbComments(commentsParams.per_page);
-  getComments(commentsParams);
 });
 
+function pwgFetch(url: string, data: Record<string, any>): Promise<any> {
+    const body = new URLSearchParams();
+    for (const [k, v] of Object.entries(data)) {
+        if (Array.isArray(v)) v.forEach(item => body.append(k + '[]', String(item)));
+        else body.append(k, String(v ?? ''));
+    }
+    return fetch(url, { method: 'POST', body }).then(r => r.json());
+}
 
 function getComments(params: any) {
-  $.ajax({
-    url: 'ws.php?format=json&method=pwg.userComments.getList',
-    type: 'GET',
-    dataType: 'json',
-    data: params,
-    success: (data) => {
-      if (data.stat === 'ok') {
-        // for debug
-        // console.log(data.result);
-        commentsState = {...data.result};
-        commentsDisplaySummary(data.result.summary);
-        displayComments(data.result.comments);
-        commentsDiplayPagination(data.result.paging);
-        commentsDisplayFilters(data.result.filters);
-
-        delete commentsParams.search;
-      }
-    },
-    error: (e) => {
-      console.log(e);
-      $.alert({ title: str_an_error_has, content: "" , ...jConfirm_warning_options});
-    }
-  })
+    const query = new URLSearchParams();
+    for (const [k, v] of Object.entries(params)) query.append(k, String(v ?? ''));
+    fetch('ws.php?format=json&method=pwg.userComments.getList&' + query.toString())
+        .then(r => r.json())
+        .then((data) => {
+            if (data.stat === 'ok') {
+                commentsState = { ...data.result };
+                commentsDisplaySummary(data.result.summary);
+                displayComments(data.result.comments);
+                commentsDiplayPagination(data.result.paging);
+                commentsDisplayFilters(data.result.filters);
+                delete commentsParams.search;
+            }
+        })
+        .catch(e => {
+            console.log(e);
+            window.alert(str_an_error_has);
+        });
 }
 
 function commentsDisplaySummary(summary: any) {
-  commentsAll.text(summary.all_comments);
-  commentsValidated.text(summary.validated);
-  commentsPending.text(summary.pending);
+    commentsAll.textContent = summary.all_comments;
+    commentsValidated.textContent = summary.validated;
+    commentsPending.textContent = summary.pending;
 }
 
 function displayComments(comments: any) {
-  commentsList.empty();
-  comments.forEach((comment: any) => {
-    const clone = $('.comment-template').clone();
-    clone.removeClass('comment-template').addClass('comment');
+    commentsList.innerHTML = '';
+    const template = document.querySelector<HTMLElement>('.comment-template')!;
+    comments.forEach((comment: any) => {
+        const clone = template.cloneNode(true) as HTMLElement;
+        clone.classList.remove('comment-template');
+        clone.classList.add('comment');
+        clone.id = String(comment.id);
+        clone.querySelector<HTMLImageElement>('.comment-img')!.src = comment.medium_url;
+        const raw_length = comment.raw_content.length;
+        const preview = raw_length > 50 ? comment.raw_content.substring(0, 50) + '...' : comment.raw_content;
+        clone.querySelector<HTMLElement>('.comment-msg')!.textContent = '"' + preview + '"';
+        clone.querySelector<HTMLElement>('.comment-author-name')!.textContent = comment.author;
+        clone.querySelector<HTMLElement>('.comment-datetime')!.textContent = comment.date;
+        clone.querySelector<HTMLElement>('.comment-delete')!.dataset['idx'] = String(comment.id);
+        clone.querySelector<HTMLElement>('.comment-validate')!.dataset['idx'] = String(comment.id);
+        clone.querySelector<HTMLElement>('.comment-content')!.dataset['idx'] = String(comment.id);
+        clone.querySelector<HTMLElement>('.comment-hash')!.textContent = `#${comment.id}`;
+        clone.querySelector<HTMLInputElement>('.comment-select-checkbox')!.value = String(comment.id);
+        clone.querySelector<HTMLAnchorElement>('.comment-link')!.href = comment.admin_link;
+        const authorIcons = clone.querySelectorAll<HTMLElement>('.comment-author-icon');
+        const iconClass: Record<string, string> = {
+            guest: 'icon-user-secret icon-yellow',
+            webmaster: 'icon-user icon-purple',
+            admin: 'icon-user icon-green',
+            main_user: 'icon-king icon-blue',
+        };
+        authorIcons.forEach(icon => icon.classList.add(...(iconClass[comment.author_status] ?? 'icon-user icon-yellow').split(' ')));
+        if (comment.is_pending) clone.querySelector<HTMLElement>('.comment-validate')!.style.display = '';
+        else clone.querySelector<HTMLElement>('.comment-container')?.classList.add('comment-validated');
+        commentsList.append(clone);
+    });
 
-    clone.attr('id', comment.id);
-    clone.find('.comment-img').attr('src', comment.medium_url);
-    const raw_lenght = comment.raw_content.length;
-    const preview = raw_lenght > 50 ? comment.raw_content.substring(0, 50) + '...' : comment.raw_content;
-    clone.find('.comment-msg').text('"' + preview + '"');
-    clone.find('.comment-author-name').text(comment.author);
-    clone.find('.comment-datetime').text(comment.date);
-    clone.find('.comment-delete').data('idx', comment.id);
-    clone.find('.comment-validate').data('idx', comment.id);
-    clone.find('.comment-content').data('idx', comment.id);
-    clone.find('.comment-hash').text(`#${comment.id}`);
-    clone.find('.comment-select-checkbox').val(comment.id);
-    clone.find('.comment-link').attr('href', comment.admin_link);
-    const authorIcons = clone.find('.comment-author-icon');
-
-    switch (comment.author_status) {
-      case "guest":
-        authorIcons.addClass('icon-user-secret icon-yellow');
-        break;
-
-      case "webmaster":
-        authorIcons.addClass('icon-user icon-purple');
-        break;
-
-      case "admin":
-        authorIcons.addClass('icon-user icon-green');
-        break;
-
-      case "main_user":
-        authorIcons.addClass('icon-king icon-blue');
-        break;
-    
-      default:
-        authorIcons.addClass('icon-user icon-yellow');
-        break;
-    }
-
-    if (comment.is_pending) {
-      clone.find('.comment-validate').show();
-    } else {
-      clone.find('.comment-container').addClass('comment-validated');
-    }
-
-    commentsList.append(clone);
-  });
-
-  $('.comment-delete').off('click').on('click', function(e) {
-    e.stopPropagation();
-    const id = $(this).data('idx'); 
-    deleteComment([id]);
-  });
-
-  $('.comment-validate').off('click').on('click', function(e) {
-    e.stopPropagation();
-    const id = $(this).data('idx');
-    validateComment([id]);
-  });
-
-  $('.comment-content').off('click').on('click', function() {
-    const id = $(this).data('idx');
-    if (selectionMode) {
-      const checkbox = $(this).find('.comment-select-checkbox');
-
-      if (checkbox.hasClass('icon-circle-empty')) {
-        checkbox.removeClass('icon-circle-empty').addClass('icon-ok-circled');
-        $(`#${id}`).addClass('comment-selected');
-        commentsSelected.push(id);
-
-      } else {
-        checkbox.removeClass('icon-ok-circled').addClass('icon-circle-empty');
-        $(`#${id}`).removeClass('comment-selected');
-
-        commentsSelected = commentsSelected.filter((idx) => idx != id);
-      }
-
-      commentsUpdateSelection();
-      return;
-    }
-
-    showModalViewComment(id);
-  });
+    document.querySelectorAll<HTMLElement>('.comment-delete').forEach(el => {
+        el.addEventListener('click', (e) => {
+            e.stopPropagation();
+            deleteComment([el.dataset['idx']]);
+        });
+    });
+    document.querySelectorAll<HTMLElement>('.comment-validate').forEach(el => {
+        el.addEventListener('click', (e) => {
+            e.stopPropagation();
+            validateComment([el.dataset['idx']]);
+        });
+    });
+    document.querySelectorAll<HTMLElement>('.comment-content').forEach(el => {
+        el.addEventListener('click', () => {
+            const id = el.dataset['idx'];
+            if (selectionMode) {
+                const checkbox = el.querySelector<HTMLElement>('.comment-select-checkbox')!;
+                const commentEl = document.getElementById(id!)!;
+                if (checkbox.classList.contains('icon-circle-empty')) {
+                    checkbox.classList.replace('icon-circle-empty', 'icon-ok-circled');
+                    commentEl.classList.add('comment-selected');
+                    commentsSelected.push(id);
+                } else {
+                    checkbox.classList.replace('icon-ok-circled', 'icon-circle-empty');
+                    commentEl.classList.remove('comment-selected');
+                    commentsSelected = commentsSelected.filter(idx => idx != id);
+                }
+                commentsUpdateSelection();
+                return;
+            }
+            showModalViewComment(id);
+        });
+    });
 }
 
 function commentsDiplayPagination(paging: any) {
-  const container = $('.pagination-item-container');
-  container.empty();
-  
-  if (paging.total_pages == 0) {
-    const pageNumbers = paging.total_pages + 1;
-    const page = commentsPaginItems.replace(/%d/g, String(pageNumbers));
-    $(page).addClass('actual').appendTo(container);
+    const container = document.querySelector<HTMLElement>('.pagination-item-container')!;
+    container.innerHTML = '';
 
-  } else if (paging.total_pages <= 2) {
-    Array.from(Array(paging.total_pages + 1)).forEach((_, i) => {
-      const page = commentsPaginItems.replace(/%d/g, String(i + 1));
-      $(page).appendTo(container);
-    });
-    $(`#comments_page_${paging.page + 1}`).addClass('actual');
+    const makePageEl = (html: string, cls?: string): HTMLElement => {
+        const div = document.createElement('div');
+        div.innerHTML = html;
+        const el = div.firstElementChild as HTMLElement;
+        if (cls) el.classList.add(cls);
+        return el;
+    };
 
-  } else {
-    const pageOne = commentsPaginItems.replace(/%d/g, "1");
-    const pageLast = commentsPaginItems.replace(/%d/g, String(paging.total_pages + 1));
-    const pageCurrent = commentsPaginItemsCurrent.replace(/%d/g, String(paging.page + 1));
+    if (paging.total_pages === 0) {
+        container.append(makePageEl(commentsPaginItems.replace(/%d/g, '1'), 'actual'));
+    } else if (paging.total_pages <= 2) {
+        Array.from({ length: paging.total_pages + 1 }, (_, i) => {
+            container.insertAdjacentHTML('beforeend', commentsPaginItems.replace(/%d/g, String(i + 1)));
+        });
+        document.getElementById(`comments_page_${paging.page + 1}`)?.classList.add('actual');
+    } else {
+        const pageOne = commentsPaginItems.replace(/%d/g, '1');
+        const pageLast = commentsPaginItems.replace(/%d/g, String(paging.total_pages + 1));
+        const pageCurrent = commentsPaginItemsCurrent.replace(/%d/g, String(paging.page + 1));
+        switch (paging.page) {
+            case 0:
+                container.insertAdjacentHTML('beforeend', pageCurrent + commentsPaginElipsis + pageLast);
+                break;
+            case paging.total_pages:
+                container.insertAdjacentHTML('beforeend', pageOne + commentsPaginElipsis + pageCurrent);
+                break;
+            default:
+                container.insertAdjacentHTML('beforeend', pageOne + commentsPaginElipsis + pageCurrent + commentsPaginElipsis + pageLast);
+        }
 
-    switch (paging.page) {
-      case 0:
-        (container.append as any)([
-          pageCurrent,
-          commentsPaginElipsis,
-          pageLast
-        ]);
-        break;
-
-      case paging.total_pages:
-        (container.append as any)([
-          pageOne,
-          commentsPaginElipsis,
-          pageCurrent
-        ]);
-        break;
-    
-      default:
-        (container.append as any)([
-          pageOne,
-          commentsPaginElipsis,
-          pageCurrent,
-          commentsPaginElipsis,
-          pageLast
-        ]);
-        break;
+        document.querySelectorAll<HTMLElement>('.pagination-arrow').forEach(arrow => {
+            arrow.classList.remove('unavailable');
+            arrow.addEventListener('click', () => {
+                let newPage = commentsParams.page;
+                newPage += arrow.classList.contains('left') ? -1 : 1;
+                if (newPage === -1 || newPage > commentsState.paging.total_pages) return;
+                commentsParams.page = newPage;
+                getComments(commentsParams);
+            });
+        });
     }
 
-    $('.pagination-arrow').removeClass('unavailable')
-      .off('click').on('click', function() {
-        let newPage = commentsParams.page;
-        if ($(this).hasClass('left')) {
-          newPage = newPage - 1;
-        } else {
-          newPage = newPage + 1;
-        }
-
-        if (newPage == -1 || newPage > commentsState.paging.total_pages) {
-          return;
-        }
-        commentsParams.page = newPage;
-        getComments(commentsParams);
-      });
-  }
-
-  $('.comments-paging').off('click').on('click', function() {
-    const newPage = Number($(this).attr('data-page')) - 1;
-    commentsParams.page = newPage;
-    getComments(commentsParams);
-  });
-
-
+    document.querySelectorAll<HTMLElement>('.comments-paging').forEach(el => {
+        el.addEventListener('click', function(this: HTMLElement) {
+            commentsParams.page = Number(this.dataset['page']) - 1;
+            getComments(commentsParams);
+        });
+    });
 }
 
 function commentsDisplayFilters(filters: any) {
-  if (updateAuthorId) {
-    commentsDisplayAuthors(filters.nb_authors);
-  }
-  // reset here to let decide filterAuthor onChange
-  updateAuthorId = true;
+    filtersAbort?.abort();
+    filtersAbort = new AbortController();
+    const { signal } = filtersAbort;
 
-  const minDate = filters.started_at?.split(' ')[0] ?? '';
-  const maxDate = filters.ended_at?.split(' ')[0] ?? ''
-  filterDateStart.val(minDate).attr({ 'min': minDate, 'max': maxDate });
-  filterDateEnd.val(maxDate).attr({ 'max': maxDate, 'min': minDate });
+    if (updateAuthorId) commentsDisplayAuthors(filters.nb_authors);
+    updateAuthorId = true;
 
+    const minDate = filters.started_at?.split(' ')[0] ?? '';
+    const maxDate = filters.ended_at?.split(' ')[0] ?? '';
+    filterDateStart.value = minDate;
+    filterDateStart.setAttribute('min', minDate);
+    filterDateStart.setAttribute('max', maxDate);
+    filterDateEnd.value = maxDate;
+    filterDateEnd.setAttribute('max', maxDate);
+    filterDateEnd.setAttribute('min', minDate);
 
-  filterDateStart.off('change').on('change', function() {
-    const min = $(this).val();
+    filterDateStart.addEventListener('change', function(this: HTMLInputElement) {
+        const min = this.value;
+        if (!min) delete commentsParams.f_min_date;
+        else commentsParams.f_min_date = min;
+        filterDateEnd.setAttribute('min', min);
+        commentsParams.page = 0;
+        getComments(commentsParams);
+    }, { signal });
 
-    if (!min) {
-      delete commentsParams.f_min_date;
-    } else {
-      commentsParams.f_min_date = min;
-    }
-
-    filterDateEnd.attr({ 'min': min });
-    commentsParams.page = 0;
-    getComments(commentsParams);
-  });
-
-  filterDateEnd.off('change').on('change', function() {
-    const max = $(this).val();
-
-    if (!max) {
-      delete commentsParams.f_max_date;
-    } else {
-      commentsParams.f_max_date = max;
-    }
-
-    filterDateStart.attr({ 'max': max });
-    commentsParams.page = 0;
-    getComments(commentsParams);
-  });
+    filterDateEnd.addEventListener('change', function(this: HTMLInputElement) {
+        const max = this.value;
+        if (!max) delete commentsParams.f_max_date;
+        else commentsParams.f_max_date = max;
+        filterDateStart.setAttribute('max', max);
+        commentsParams.page = 0;
+        getComments(commentsParams);
+    }, { signal });
 }
 
 function commentsDisplayAuthors(nb_authors: any) {
-  filterAuthor.empty();
-  filterAuthor.append(commentsOptionsFiltersAuthor);
+    filterAuthor.innerHTML = commentsOptionsFiltersAuthor;
+    nb_authors.forEach((a: any) => {
+        filterAuthor.insertAdjacentHTML('beforeend', `<option value="${a.author_id}">${a.author} (${a.nb_authors})</option>`);
+    });
 
-  nb_authors.forEach((a: any) => {
-    filterAuthor.append(`
-      <option value="${a.author_id}">${a.author} (${a.nb_authors})</option>
-      `);
-  });
-
-  filterAuthor.off('change').on('change', function() {
-    const authorId = $(this).val();
-
-    if (!authorId) {
-      delete commentsParams.author_id;
-    } else {
-      commentsParams.author_id = authorId;
-    }
-
-    commentsParams.page = 0;
-    updateAuthorId = false;
-    getComments(commentsParams);
-  });
+    filtersAbort?.abort();
+    filtersAbort = new AbortController();
+    const { signal } = filtersAbort;
+    filterAuthor.addEventListener('change', function(this: HTMLSelectElement) {
+        const authorId = this.value;
+        if (!authorId) delete commentsParams.author_id;
+        else commentsParams.author_id = authorId;
+        commentsParams.page = 0;
+        updateAuthorId = false;
+        getComments(commentsParams);
+    }, { signal });
 }
 
 function updateNbComments(nb: any) {
-  commentsNb.removeClass('selected-pagination');
-  $(`#pagination-per-page-${nb}`).addClass('selected-pagination');
-
-  commentsParams.per_page = nb;
-  window.localStorage.setItem('adminCommentsNB', nb);
+    document.querySelectorAll<HTMLElement>('.comments-paging-link').forEach(el => el.classList.remove('selected-pagination'));
+    document.getElementById(`pagination-per-page-${nb}`)?.classList.add('selected-pagination');
+    commentsParams.per_page = nb;
+    window.localStorage.setItem('adminCommentsNB', String(nb));
 }
 
 function showModalViewComment(id: any) {
-  const comment = (commentsState as any).comments.filter((c: any) => c.id == id)[0] ?? null;
-  if (!comment) return;
-  
-  const item = $(`#${id}`);
-  modalViewComment.find('.comment-datetime').text(comment.date);
-  modalViewComment.find('.comment-author').remove();
-  modalViewComment.find('.comments-modal-infos').prepend(item.find('.comment-author').clone());
-  modalViewComment.find('.comments-modal-img').attr('src', comment.medium_url);
-  modalViewComment.find('.comments-modal-img-i').empty()
-  .append(`
-    <p class="comments-modal-filename">${comment.file}</p>
-    <p class="icon-calendar">${comment.image_date_available}</p>
-  `);
-  modalViewComment.find('.comments-modal-body').html(comment.content)
-  
-  const validBtn = modalViewComment.find('.comments-modal-validate');
-  if (comment.is_pending) {
-    validBtn.show();
-    $('#commentsModalValidate').off('click').on('click', function() {
-      validateComment([id]);
-      closeModalViewComment();
-    });
-  } else {
-    validBtn.hide();
-  }
-  
-  $('#commentsModalDelete').off('click').on('click', function() {
-    deleteComment([id]);
-    closeModalViewComment();
-  });
+    const comment = (commentsState as any).comments.find((c: any) => c.id == id) ?? null;
+    if (!comment) return;
+    const item = document.getElementById(id)!;
+    modalViewComment.querySelector<HTMLElement>('.comment-datetime')!.textContent = comment.date;
+    modalViewComment.querySelector('.comment-author')?.remove();
+    modalViewComment.querySelector('.comments-modal-infos')!
+        .prepend(item.querySelector('.comment-author')!.cloneNode(true));
+    modalViewComment.querySelector<HTMLImageElement>('.comments-modal-img')!.src = comment.medium_url;
+    const imgInfo = modalViewComment.querySelector<HTMLElement>('.comments-modal-img-i')!;
+    imgInfo.innerHTML = `<p class="comments-modal-filename">${comment.file}</p><p class="icon-calendar">${comment.image_date_available}</p>`;
+    modalViewComment.querySelector<HTMLElement>('.comments-modal-body')!.innerHTML = comment.content;
 
-  modalViewComment.fadeIn();
+    const validBtn = modalViewComment.querySelector<HTMLElement>('.comments-modal-validate')!;
+    const validateBtn = document.getElementById('commentsModalValidate')!;
+    const deleteBtn = document.getElementById('commentsModalDelete')!;
+    const newValidateBtn = validateBtn.cloneNode(true) as HTMLElement;
+    const newDeleteBtn = deleteBtn.cloneNode(true) as HTMLElement;
+    validateBtn.replaceWith(newValidateBtn);
+    deleteBtn.replaceWith(newDeleteBtn);
+
+    if (comment.is_pending) {
+        validBtn.style.display = '';
+        newValidateBtn.addEventListener('click', () => { validateComment([id]); closeModalViewComment(); });
+    } else {
+        validBtn.style.display = 'none';
+    }
+    newDeleteBtn.addEventListener('click', () => { deleteComment([id]); closeModalViewComment(); });
+    modalViewComment.style.display = '';
 }
 
 function closeModalViewComment() {
-  modalViewComment.fadeOut();
-  $('#commentsModalValidate').off('click');
-  $('#commentsModalDelete').off('click')
+    modalViewComment.style.display = 'none';
 }
 
 function validateComment(id: any) {
-  const idLenght = id.length ?? 1;
-
-  $.ajax({
-    url: 'ws.php?format=json&method=pwg.userComments.validate',
-    type: 'POST',
-    dataType: 'json',
-    data: {
-      comment_id: id,
-      pwg_token: pwg_token
-    },
-    success: function (res) {
-      if (res.stat === 'ok') {
-        $.alert({
-          ...{
-            title: idLenght > 1 ? str_comments_validated : str_comment_validated,
-            content: "",
-          },
-          ...jConfirm_alert_options
+    const idLength = id.length ?? 1;
+    pwgFetch('ws.php?format=json&method=pwg.userComments.validate', { comment_id: id, pwg_token })
+        .then(res => {
+            if (res.stat === 'ok') {
+                window.alert(idLength > 1 ? str_comments_validated : str_comment_validated);
+                getComments(commentsParams);
+                return;
+            }
+            window.alert(str_an_error_has);
+        })
+        .catch(e => {
+            console.log(e);
+            window.alert(str_an_error_has);
         });
-        getComments(commentsParams);
-        return;
-      }
-      $.alert({
-        ...{
-          title: str_an_error_has,
-          content: "",
-        },
-        ...jConfirm_warning_options
-      });
-    },
-    error: function (e) {
-      console.log(e)
-      $.alert({
-        ...{
-          title: str_an_error_has,
-          content: "",
-        },
-        ...jConfirm_warning_options
-      });
-    }
-  });
 }
 
 function deleteComment(id: any) {
-  const idLenght = id.length ?? 1;
-
-  $.confirm({
-    title: idLenght > 1 ? str_deletes.replace("%d", idLenght) : str_delete.replace("%s", id),
-    draggable: false,
-    titleClass: "jconfirmDeleteConfirm",
-    theme: "modern",
-    content: "",
-    animation: "zoom",
-    boxWidth: '30%',
-    useBootstrap: false,
-    type: 'red',
-    animateFromElement: false,
-    backgroundDismiss: true,
-    typeAnimated: false,
-    buttons: {
-      confirm: {
-        text: str_yes_delete_confirmation,
-        btnClass: 'btn-red',
-        action: function () {
-          $.ajax({
-            url: 'ws.php?format=json&method=pwg.userComments.delete',
-            type: 'POST',
-            dataType: 'json',
-            data: {
-              comment_id: id,
-              pwg_token
-            },
-            success: function(res) {
-              if (res.stat === 'ok') {
-                getComments(commentsParams);
-              }
-            },
-            error: function(e) {
-              console.log(e)
-            }
-          })
-        }
-      },
-      cancel: {
-        text: str_no_delete_confirmation
-      }
-    }
-  });
+    const idLength = id.length ?? 1;
+    const msg = idLength > 1 ? str_deletes.replace('%d', String(idLength)) : str_delete.replace('%s', String(id));
+    if (!window.confirm(msg)) return;
+    pwgFetch('ws.php?format=json&method=pwg.userComments.delete', { comment_id: id, pwg_token })
+        .then(res => { if (res.stat === 'ok') getComments(commentsParams); })
+        .catch(e => console.log(e));
 }
 
 function commentsUnselectAll() {
-  $('.comment').removeClass('comment-selected');
-  $('.comment-select-checkbox')
-    .removeClass('icon-ok-circled')
-    .addClass('icon-circle-empty');
-
-  commentsSelected = [];
-  commentsUpdateSelection();
+    document.querySelectorAll<HTMLElement>('.comment').forEach(el => el.classList.remove('comment-selected'));
+    document.querySelectorAll<HTMLElement>('.comment-select-checkbox').forEach(el => {
+        el.classList.remove('icon-ok-circled');
+        el.classList.add('icon-circle-empty');
+    });
+    commentsSelected = [];
+    commentsUpdateSelection();
 }
 
-function commentsSelectAll(){
-  $('.comment').addClass('comment-selected');
-  $('.comment-select-checkbox')
-    .removeClass('icon-circle-empty')
-    .addClass('icon-ok-circled');
-
-  commentsSelected = [];
-  $('.comment-selected').each((i, el) => {
-    const id = $(el).attr('id');
-    commentsSelected.push(id);
-  });
-  commentsUpdateSelection();
+function commentsSelectAll() {
+    document.querySelectorAll<HTMLElement>('.comment').forEach(el => el.classList.add('comment-selected'));
+    document.querySelectorAll<HTMLElement>('.comment-select-checkbox').forEach(el => {
+        el.classList.remove('icon-circle-empty');
+        el.classList.add('icon-ok-circled');
+    });
+    commentsSelected = [];
+    document.querySelectorAll<HTMLElement>('.comment-selected').forEach(el => commentsSelected.push(el.id));
+    commentsUpdateSelection();
 }
 
 function commentsInvertSelect() {
-  $('.comment').toggleClass('comment-selected');
-  $('.comment-select-checkbox')
-    .toggleClass('icon-ok-circled')
-    .toggleClass('icon-circle-empty');
-
-  commentsSelected = [];
-  $('.comment-selected').each((i, el) => {
-    const id = $(el).attr('id');
-    commentsSelected.push(id);
-  });
-  commentsUpdateSelection();
+    document.querySelectorAll<HTMLElement>('.comment').forEach(el => el.classList.toggle('comment-selected'));
+    document.querySelectorAll<HTMLElement>('.comment-select-checkbox').forEach(el => {
+        el.classList.toggle('icon-ok-circled');
+        el.classList.toggle('icon-circle-empty');
+    });
+    commentsSelected = [];
+    document.querySelectorAll<HTMLElement>('.comment-selected').forEach(el => commentsSelected.push(el.id));
+    commentsUpdateSelection();
 }
 
 function commentsUpdateSelection() {
-  if (commentsSelected.length === 0) {
-    $('#commentsSelection').hide();
-    $('#commentsNoSelection').show();
-    $('.comments-selected-remove').off('click');
-    $('#ValisateSelectionMode').off('click');
-    $('#DeleteSelectionMode').off('click');
+    selectionAbort?.abort();
+    selectionAbort = new AbortController();
+    const { signal } = selectionAbort;
 
-    return;
-  }
-
-  commentsSelectedArea.empty();
-  let count = 0;
-  commentsSelected.forEach((id) => {
-    if (count === 5) {
-      commentsSelectedOthers.text(str_and_others.replace(/%s/g, commentsSelected.length - 5));
-      return;
+    if (commentsSelected.length === 0) {
+        document.getElementById('commentsSelection')!.style.display = 'none';
+        document.getElementById('commentsNoSelection')!.style.display = '';
+        return;
     }
-    commentsSelectedOthers.text('');
-    const item = commentsSelectedList.replace(/%d/g, id);
-    commentsSelectedArea.append(item);
-    count++
-  });
 
-  $('.comments-selected-remove').off('click').on('click', function() {
-    const id = $(this).attr('id')!.split('_')[1];
-    if (!id) return;
-    $(`#${id} .comment-content`).trigger('click');
-  });
+    commentsSelectedArea.innerHTML = '';
+    commentsSelectedOthers.textContent = '';
+    commentsSelected.forEach((id, count) => {
+        if (count === 5) {
+            commentsSelectedOthers.textContent = str_and_others.replace(/%s/g, String(commentsSelected.length - 5));
+            return;
+        }
+        commentsSelectedArea.insertAdjacentHTML('beforeend', commentsSelectedList.replace(/%d/g, String(id)));
+    });
 
-  $('#ValisateSelectionMode').off('click').on('click', function() {
-    validateComment(commentsSelected);
-    commentsUnselectAll();
-  });
+    document.querySelectorAll<HTMLElement>('.comments-selected-remove').forEach(el => {
+        el.addEventListener('click', function(this: HTMLElement) {
+            const id = this.id.split('_')[1];
+            if (!id) return;
+            document.getElementById(id)?.querySelector<HTMLElement>('.comment-content')?.click();
+        }, { signal });
+    });
 
-  $('#DeleteSelectionMode').off('click').on('click', function() {
-    deleteComment(commentsSelected);
-    commentsUnselectAll();
-  });
+    document.getElementById('ValisateSelectionMode')?.addEventListener('click', () => {
+        validateComment(commentsSelected);
+        commentsUnselectAll();
+    }, { signal });
 
-  $('#commentsNoSelection').hide();
-  $('#commentsSelection').show();
+    document.getElementById('DeleteSelectionMode')?.addEventListener('click', () => {
+        deleteComment(commentsSelected);
+        commentsUnselectAll();
+    }, { signal });
+
+    document.getElementById('commentsNoSelection')!.style.display = 'none';
+    document.getElementById('commentsSelection')!.style.display = '';
 }
 
 function commentsClearFilters() {
-  delete commentsParams.author_id;
-  delete commentsParams.image_id;
-  delete commentsParams.search;
-  delete commentsParams.f_min_date;
-  delete commentsParams.f_max_date;
-  getComments(commentsParams);
+    delete commentsParams.author_id;
+    delete commentsParams.image_id;
+    delete commentsParams.search;
+    delete commentsParams.f_min_date;
+    delete commentsParams.f_max_date;
+    getComments(commentsParams);
 }
+
 export {};

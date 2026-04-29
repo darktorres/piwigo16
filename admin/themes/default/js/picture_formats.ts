@@ -1,51 +1,43 @@
 declare var str_confirm_delete_format: string;
 declare var str_confirm_msg: string;
 declare var str_cancel_msg: string;
+declare var pwg_token: string;
 
 function fitExtensions(): void {
-    $('.format-card-ext span').each((_i, node) => {
-        const el = node as HTMLElement;
+    document.querySelectorAll<HTMLElement>('.format-card-ext span').forEach(el => {
         const size = Math.min(180 * (1 / el.innerHTML.length), 45);
-        el.setAttribute('style', `font-size:${size}px`);
+        el.style.fontSize = `${size}px`;
     });
 }
 
 fitExtensions();
 
-$('.format-card').each((_i, node) => {
-    const card = $(node);
-    const button = card.find('.format-delete');
-    button.on('click', () => {
-        $.confirm({
-            title: str_confirm_delete_format.replace('%s', card.find('.format-card-ext span').html() ?? ''),
-            content: '',
-            buttons: {
-                confirm: {
-                    text: str_confirm_msg,
-                    btnClass: 'btn-red',
-                    action() { deleteFormat(card); },
-                },
-                cancel: { text: str_cancel_msg },
-            },
-            ...jConfirm_confirm_options,
-        });
+document.querySelectorAll<HTMLElement>('.format-card').forEach(card => {
+    card.querySelector<HTMLElement>('.format-delete')!.addEventListener('click', () => {
+        const extText = card.querySelector<HTMLElement>('.format-card-ext span')?.innerHTML ?? '';
+        if (!window.confirm(str_confirm_delete_format.replace('%s', extText))) return;
+        deleteFormat(card);
     });
 });
 
-function deleteFormat(card: JQuery): void {
-    card.find('.format-delete i').attr('class', 'icon-spin6 animate-spin');
-    $.ajax({
-        url: 'ws.php?format=json&method=pwg.images.formats.delete',
-        type: 'POST',
-        data: { pwg_token, format_id: card.data('id') },
-        success() {
-            card.fadeOut('slow', () => {
+function deleteFormat(card: HTMLElement): void {
+    const icon = card.querySelector('.format-delete i');
+    if (icon) icon.className = 'icon-spin6 animate-spin';
+    fetch('ws.php?format=json&method=pwg.images.formats.delete', {
+        method: 'POST',
+        body: new URLSearchParams({ pwg_token, format_id: card.dataset['id'] ?? '' }),
+    })
+        .then(() => {
+            card.style.transition = 'opacity 0.6s';
+            card.style.opacity = '0';
+            setTimeout(() => {
                 card.remove();
-                if ($('.format-card').length === 0) $('.no-formats').show();
-            });
-        },
-        error(message) { console.log(message); },
-    });
+                if (document.querySelectorAll('.format-card').length === 0) {
+                    (document.querySelector<HTMLElement>('.no-formats'))!.style.display = '';
+                }
+            }, 600);
+        })
+        .catch(message => console.log(message));
 }
 
 export {};

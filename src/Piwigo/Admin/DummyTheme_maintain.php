@@ -14,14 +14,19 @@ class DummyTheme_maintain extends ThemeMaintain
     /** @param array<mixed> $errors */
     public function activate(string $theme_version, array &$errors = []): mixed
     {
+        trigger_error('theme_activate() is deprecated; extend ThemeMaintain instead', E_USER_DEPRECATED);
         return theme_activate($this->theme_id, $theme_version, $errors);
     }
+
     public function deactivate(): void
     {
+        trigger_error('theme_deactivate() is deprecated; extend ThemeMaintain instead', E_USER_DEPRECATED);
         theme_deactivate($this->theme_id);
     }
+
     public function delete(): void
     {
+        trigger_error('theme_delete() is deprecated; extend ThemeMaintain instead', E_USER_DEPRECATED);
         theme_delete($this->theme_id);
     }
 }

@@ -153,7 +153,7 @@ class TemporaryState {
     }
 }
 
-// ----- jConfirm option sets (kept until all callers are migrated) ------------
+// ----- jConfirm option sets (kept for albums.ts and unconverted callers) -----
 
 const jConfirm_alert_options = {
     icon: 'icon-ok', titleClass: 'jconfirmAlert', theme: 'modern',
@@ -180,30 +180,7 @@ const jConfirm_confirm_with_content_options = {
     backgroundDismiss: true, typeAnimated: false,
 };
 
-// ----- jconfirm follow-href plugin (kept for plugins_installated.ts) ---------
-
-$.fn.pwg_jconfirm_follow_href = function ({
-    alert_title = 'TITLE',
-    alert_confirm = 'CONFIRM',
-    alert_cancel = 'CANCEL',
-    alert_content = '',
-}: {
-    alert_title?: string;
-    alert_confirm?: string;
-    alert_cancel?: string;
-    alert_content?: string;
-} = {}) {
-    const button_href = $(this).attr('href');
-    $(this).on('click', function () {
-        const msg = alert_title + (alert_content ? '\n\n' + alert_content : '');
-        if (window.confirm(msg)) {
-            window.location.href = button_href!;
-        }
-        return false;
-    });
-};
-
-// ----- standalone pwg_jconfirm_follow_href for non-jQuery callers -----------
+// ----- standalone pwg_jconfirm_follow_href -----------
 
 function pwg_jconfirm_follow_href_fn(el: HTMLElement, options: {
     alert_title?: string; alert_confirm?: string; alert_cancel?: string; alert_content?: string;

@@ -42,15 +42,12 @@ function execute_sqlfile(string $filepath, string $replaced, string $replacing, 
         if (preg_match('/;$/', $sql_line)) {
             $query = trim($query);
             $query = str_replace($replaced, $replacing, $query);
-            // we don't execute "DROP TABLE" queries
-            if (!preg_match('/^DROP TABLE/i', $query)) {
-                if ('mysql' == $dblayer) {
-                    if (preg_match('/^(CREATE TABLE .*)[\s]*;[\s]*/im', $query, $matches)) {
-                        $query = $matches[1].' DEFAULT CHARACTER SET utf8'.';';
-                    }
+            if ('mysql' == $dblayer) {
+                if (preg_match('/^(CREATE TABLE .*)[\s]*;[\s]*/im', $query, $matches)) {
+                    $query = $matches[1].' DEFAULT CHARACTER SET utf8'.';';
                 }
-                pwg_query($query);
             }
+            pwg_query($query);
             $query = '';
         }
     }
@@ -95,13 +92,40 @@ function activate_core_plugins(): void
  */
 function install_db_connect(array &$infos, array &$errors): void
 {
+    $host   = $_POST['dbhost'];
+    $user   = $_POST['dbuser'];
+    $pass   = $_POST['dbpasswd'];
+    $dbname = $_POST['dbname'];
+
+    // Parse host/port/socket the same way pwg_db_connect does.
+    $port   = null;
+    $socket = null;
+    $h      = $host;
+    if (str_starts_with($host, '/')) {
+        $socket = $host;
+        $h      = null;
+    } elseif (str_contains($host, ':')) {
+        [$h, $port_str] = explode(':', $host);
+        $port = (int) $port_str;
+    }
+
+    // Drop and recreate the database so every install starts from a clean slate.
     try {
-        pwg_db_connect(
-            $_POST['dbhost'],
-            $_POST['dbuser'],
-            $_POST['dbpasswd'],
-            $_POST['dbname']
-        );
+        $tmp = @new mysqli($h, $user, $pass, '', $port, $socket);
+        if ($tmp->connect_error) {
+            throw new Exception($tmp->connect_error);
+        }
+        $safe = $tmp->real_escape_string($dbname);
+        $tmp->query("DROP DATABASE IF EXISTS `{$safe}`");
+        $tmp->query("CREATE DATABASE `{$safe}` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+        $tmp->close();
+    } catch (Exception $e) {
+        $errors[] = $e->getMessage();
+        return;
+    }
+
+    try {
+        pwg_db_connect($host, $user, $pass, $dbname);
         pwg_db_check_version();
     } catch (Exception $e) {
         $errors[] = l10n($e->getMessage());

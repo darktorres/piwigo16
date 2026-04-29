@@ -207,7 +207,10 @@ define('PHPWG_URL', 'https://'.PHPWG_DOMAIN);
 if (\Piwigo\Core\Config::has('alternative_pem_url') and \Piwigo\Core\Config::alternativePemUrl() != '') {
     define('PEM_URL', \Piwigo\Core\Config::alternativePemUrl());
 } else {
-    define('PEM_URL', 'https://'.PHPWG_DOMAIN.'/ext');
+    // Serve extensions from the local sibling repo instead of piwigo.org/ext.
+    $pem_scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $pem_host   = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    define('PEM_URL', $pem_scheme . '://' . $pem_host . '/piwigo16-ext');
 }
 
 // language files

@@ -54,9 +54,9 @@ if (!empty($_GET['dl']) && file_exists(PHPWG_ROOT_PATH.\Piwigo\Core\Config::data
 
 // Obtain various vars
 $dbhost = (!empty($_POST['dbhost'])) ? $_POST['dbhost'] : 'localhost';
-$dbuser = (!empty($_POST['dbuser'])) ? $_POST['dbuser'] : '';
-$dbpasswd = (!empty($_POST['dbpasswd'])) ? $_POST['dbpasswd'] : '';
-$dbname = (!empty($_POST['dbname'])) ? $_POST['dbname'] : '';
+$dbuser = (!empty($_POST['dbuser'])) ? $_POST['dbuser'] : 'root';
+$dbpasswd = (!empty($_POST['dbpasswd'])) ? $_POST['dbpasswd'] : '1234';
+$dbname = (!empty($_POST['dbname'])) ? $_POST['dbname'] : 'piwigo';
 
 // Only mysqli is supported since PHP 7.
 if (!extension_loaded('mysqli')) {
@@ -64,12 +64,12 @@ if (!extension_loaded('mysqli')) {
 }
 $dblayer = 'mysqli';
 
-$admin_name = (!empty($_POST['admin_name'])) ? $_POST['admin_name'] : '';
-$admin_pass1 = (!empty($_POST['admin_pass1'])) ? $_POST['admin_pass1'] : '';
-$admin_pass2 = (!empty($_POST['admin_pass2'])) ? $_POST['admin_pass2'] : '';
-$admin_mail = (!empty($_POST['admin_mail'])) ? $_POST['admin_mail'] : '';
+$admin_name = (!empty($_POST['admin_name'])) ? $_POST['admin_name'] : 'darktorres';
+$admin_pass1 = (!empty($_POST['admin_pass1'])) ? $_POST['admin_pass1'] : '1234';
+$admin_pass2 = (!empty($_POST['admin_pass2'])) ? $_POST['admin_pass2'] : '1234';
+$admin_mail = (!empty($_POST['admin_mail'])) ? $_POST['admin_mail'] : 'torres.dark@gmail.com';
 
-$is_newsletter_subscribe = true;
+$is_newsletter_subscribe = false;
 if (isset($_POST['install'])) {
     $is_newsletter_subscribe = isset($_POST['newsletter_subscribe']);
 }
@@ -343,9 +343,11 @@ $template->assign(
     'F_ACTION' => 'install.php?language=' . $language,
     'F_DB_HOST' => $dbhost,
     'F_DB_USER' => $dbuser,
+    'F_DB_PASSWD' => $dbpasswd,
     'F_DB_NAME' => $dbname,
     'F_DB_PREFIX' => $prefixeTable,
     'F_ADMIN' => $admin_name,
+    'F_ADMIN_PASS' => $admin_pass1,
     'F_ADMIN_EMAIL' => $admin_mail,
     'EMAIL' => '<span class="adminEmail">'.$admin_mail.'</span>',
     'F_NEWSLETTER_SUBSCRIBE' => $is_newsletter_subscribe,

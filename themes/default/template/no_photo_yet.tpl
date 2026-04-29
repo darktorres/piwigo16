@@ -7,114 +7,111 @@
 {literal}
 <style type="text/css">
 body {
-margin: 0;
-padding: 0;
-background-color:#f9f9f9;
+  margin: 0;
+  padding: 0;
+  background-color: #1b1b1b;
 }
 
-P {text-align:center;}
-TD {color:#888; letter-spacing:1px;}
+P { text-align: center; }
+TD { color: #c1c1c1; letter-spacing: 1px; }
 
 #global {
-position:absolute;
-left: 50%;
-top: 50%;
-width: 700px;
-height: 400px;
-margin-top: -200px; /* height half */
-margin-left: -350px; /* width half */
-
-background-color: #f1f1f1;
-border:2px solid #dddddd;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 700px;
+  height: 400px;
+  margin-top: -200px;
+  margin-left: -350px;
+  background-color: #2c2c2c;
+  border: 2px solid #444;
 }
 
-#noPhotoWelcome {font-size:25px; color:#555;text-align:center; letter-spacing:1px; margin-top:30px;}
-.bigButton {}
+#noPhotoWelcome { font-size: 25px; color: #c1c1c1; text-align: center; letter-spacing: 1px; margin-top: 30px; }
 
-.bigButton {text-align:center; margin-top:120px;}
+.bigButton { text-align: center; margin-top: 120px; }
 
 .bigButton a {
-    background-color:#666;
-    padding:10px;
-    text-decoration:none;
-    margin:0px 5px 0px 5px;
-    -moz-border-radius:6px;
-    -webkit-border-radius:6px;
-    color:#fff;
-    font-size:25px;
-    letter-spacing:2px;
-    padding:20px;
+  background-color: #ffa646;
+  padding: 20px;
+  text-decoration: none;
+  margin: 0 5px;
+  border-radius: 6px;
+  color: #493c21;
+  font-size: 25px;
+  letter-spacing: 2px;
 }
 
 .bigButton a:hover {
-    background-color:#ff7700;
-    outline:none;
-    color:#fff;
-    border:none;
+  background-color: #ff7700;
+  outline: none;
+  color: #493c21;
+  border: none;
 }
 
 #deactivate {
-    position:absolute;
-    bottom:10px;
-    text-align:center;
-    width:100%;
-
-    font-style:normal;
-    font-size:1.0em;
+  position: absolute;
+  bottom: 10px;
+  text-align: center;
+  width: 100%;
+  font-style: normal;
+  font-size: 1.0em;
 }
 
-.submit {font-size:1.0em; letter-spacing:2px; font-weight:normal;}
+.submit { font-size: 1.0em; letter-spacing: 2px; font-weight: normal; }
 
-#deactivate A {
-    text-decoration:none;
-    border:none;
-    color:#f70;
+#deactivate a {
+  text-decoration: none;
+  border: none;
+  color: #ffa646;
 }
 
-#deactivate A:hover {
-  border-bottom:1px dotted #f70;
+#deactivate a:hover {
+  border-bottom: 1px dotted #ffa646;
 }
 
 #quickconnect {
-    margin:0 auto;
-    margin-top:60px;
-    width:300px;
-    color:#555;
-    font-size:14px;
-    letter-spacing:1px;
+  margin: 0 auto;
+  margin-top: 60px;
+  width: 300px;
+  color: #c1c1c1;
+  font-size: 14px;
+  letter-spacing: 1px;
 }
 
 #quickconnect input[type="text"], #quickconnect input[type="password"] {
-  width:300px;
-  color:#555;
-  font-size:20px;
-  margin-top:3px;
-  background-color:#ddd;
-  border:2px solid #ccc;
-  -moz-border-radius:5px;
-  padding:2px;
-
+  width: 300px;
+  color: #c1c1c1;
+  font-size: 20px;
+  margin-top: 3px;
+  background-color: #3c3c3c;
+  border: 2px solid #555;
+  border-radius: 5px;
+  padding: 2px 6px;
+  box-sizing: border-box;
 }
 
 #quickconnect input[type="text"]:focus, #quickconnect input[type="password"]:focus {
-  background-color:#fff;
-  border:2px solid #ff7700;
+  background-color: #444;
+  border: 2px solid #ff7700;
+  outline: none;
 }
 
 #quickconnect input[type="submit"] {
-  font-size:14px;
-  font-weight:bold;
-  letter-spacing:2px;
-  border:none;
-  background-color:#666666;
-  color:#fff;
-  padding:5px;
-  -moz-border-radius:5px;
+  font-size: 14px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  border: none;
+  background-color: #ffa646;
+  color: #493c21;
+  padding: 5px 14px;
+  border-radius: 5px;
+  cursor: pointer;
 }
 
 #quickconnect input[type="submit"]:hover {
-  background-color:#ff7700;
-  color:white;
+  background-color: #ff7700;
+  color: #493c21;
 }
 </style>
 {/literal}

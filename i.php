@@ -38,6 +38,15 @@ $logger = new Logger(array(
   ));
 
 
+// Subset of MKGETDIR_* constants normally defined in functions.inc.php.
+// i.php skips that include, so we define them here for Logger and mkgetdir.
+define('MKGETDIR_NONE', 0);
+define('MKGETDIR_RECURSIVE', 1);
+define('MKGETDIR_DIE_ON_ERROR', 2);
+define('MKGETDIR_PROTECT_INDEX', 4);
+define('MKGETDIR_PROTECT_HTACCESS', 8);
+define('MKGETDIR_DEFAULT', MKGETDIR_RECURSIVE | MKGETDIR_DIE_ON_ERROR | MKGETDIR_PROTECT_INDEX);
+
 function trigger_notify(string $event, mixed ...$args): void
 {
 }

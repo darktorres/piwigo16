@@ -53,3 +53,65 @@ if (!function_exists('pwg_password_verify')) {
         return password_verify((string) $password, (string) $hash);
     }
 }
+
+// Derivative image type constants from include/derivative_std_params.inc.php.
+if (!defined('IMG_CUSTOM')) {
+    define('IMG_SQUARE', 'square');
+    define('IMG_THUMB', 'thumb');
+    define('IMG_XXSMALL', '2small');
+    define('IMG_XSMALL', 'xsmall');
+    define('IMG_SMALL', 'small');
+    define('IMG_MEDIUM', 'medium');
+    define('IMG_LARGE', 'large');
+    define('IMG_XLARGE', 'xlarge');
+    define('IMG_XXLARGE', 'xxlarge');
+    define('IMG_3XLARGE', '3xlarge');
+    define('IMG_4XLARGE', '4xlarge');
+    define('IMG_CUSTOM', 'custom');
+}
+
+// Search-module constants from include/functions_search.inc.php.
+if (!defined('QST_QUOTED')) {
+    define('QST_QUOTED', 0x01);
+    define('QST_NOT', 0x02);
+    define('QST_OR', 0x04);
+    define('QST_WILDCARD_BEGIN', 0x08);
+    define('QST_WILDCARD_END', 0x10);
+    define('QST_WILDCARD', QST_WILDCARD_BEGIN | QST_WILDCARD_END);
+    define('QST_BREAK', 0x20);
+}
+
+// Web-service XML constant from include/ws_core.inc.php.
+if (!defined('WS_XML_ATTRIBUTES')) {
+    define('WS_XML_ATTRIBUTES', 'attributes_xml_');
+}
+
+// Image helper stub: returns the fractional position of a COI character.
+// Real implementation is in include/functions_image.inc.php.
+if (!function_exists('char_to_fraction')) {
+    function char_to_fraction(string $char): float
+    {
+        return 0.5;
+    }
+}
+
+// Charset helper stub used by PwgRestEncoder.
+if (!function_exists('get_pwg_charset')) {
+    function get_pwg_charset(): string
+    {
+        return 'utf-8';
+    }
+}
+
+// Plugin event stubs — no plugins are loaded in unit tests.
+if (!function_exists('trigger_notify')) {
+    function trigger_notify(string $event, mixed ...$args): void
+    {
+    }
+}
+if (!function_exists('trigger_change')) {
+    function trigger_change(string $event, mixed $data = null): mixed
+    {
+        return $data;
+    }
+}

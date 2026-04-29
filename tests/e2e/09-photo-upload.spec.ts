@@ -1,0 +1,52 @@
+import * as path from 'path';
+import { test, expect } from '@playwright/test';
+import { loginAsAdmin } from './helpers/admin-login';
+import { getCookieHeader, createAlbum, uploadPhoto } from './helpers/upload-photo';
+
+const IMAGE_1 = path.join(__dirname, '../../galleries/Wallpapers/002.jpg');
+const IMAGE_2 = path.join(__dirname, '../../galleries/Wallpapers/003.jpg');
+
+test('upload photo via API returns image_id', async ({ page, request }) => {
+    await loginAsAdmin(page);
+    const cookie = await getCookieHeader(page);
+    const albumId = await createAlbum(request, cookie, 'Upload Test Album');
+
+    const imageId = await uploadPhoto(request, cookie, IMAGE_1, albumId);
+    expect(imageId).toBeGreaterThan(0);
+});
+
+test('uploaded photo appears in getInfo', async ({ page, request }) => {
+    await loginAsAdmin(page);
+    const cookie = await getCookieHeader(page);
+    const albumId = await createAlbum(request, cookie, 'GetInfo Test Album');
+
+    const imageId = await uploadPhoto(request, cookie, IMAGE_1, albumId, 'My Wallpaper');
+
+    const info = await request.get(`/ws.php?format=json&method=pwg.images.getInfo&image_id=${imageId}`, {
+        headers: { Cookie: cookie },
+    });
+    const infoBody = await info.json();
+    expect(infoBody.stat).toBe('ok');
+    expect(infoBody.result.id).toBe(imageId);
+    expect(infoBody.result.width).toBeGreaterThan(0);
+    expect(infoBody.result.height).toBeGreaterThan(0);
+});
+
+test('two uploaded photos both appear in album', async ({ page, request }) => {
+    await loginAsAdmin(page);
+    const cookie = await getCookieHeader(page);
+    const albumId = await createAlbum(request, cookie, 'Multi Upload Album');
+
+    await uploadPhoto(request, cookie, IMAGE_1, albumId);
+    await uploadPhoto(request, cookie, IMAGE_2, albumId);
+
+    const listRes = await request.get(
+        `/ws.php?format=json&method=pwg.categories.getImages&cat_id=${albumId}`,
+        { headers: { Cookie: cookie } },
+    );
+    const listBody = await listRes.json();
+    expect(listBody.stat).toBe('ok');
+    const images = listBody.result.images._content ?? listBody.result.images;
+    expect(Array.isArray(images)).toBe(true);
+    expect(images.length).toBeGreaterThanOrEqual(2);
+});

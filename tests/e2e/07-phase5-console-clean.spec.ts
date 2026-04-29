@@ -5,16 +5,7 @@
  */
 
 import { test, expect } from '@playwright/test';
-import { loginAsAdmin } from './helpers/admin-login';
-
-// Collect page errors across the test; fail if any TypeErrors/SyntaxErrors are found.
-function attachErrorCollector(page: import('@playwright/test').Page): () => Error[] {
-    const errors: Error[] = [];
-    page.on('pageerror', (err) => {
-        errors.push(err);
-    });
-    return () => errors;
-}
+import { loginAsAdmin, attachErrorCollector } from './helpers/admin-login';
 
 // ── Gallery routes ──────────────────────────────────────────────────────────
 

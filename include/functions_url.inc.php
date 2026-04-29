@@ -667,10 +667,10 @@ function parse_well_known_params_url(array $tokens, int &$i): array
  *  int  image id
  *  string  one of 'e' (element), 'r' (representative)
  */
-function get_action_url(int $id, string $what_part, bool $download): string
+function get_action_url(int|string $id, string $what_part, bool $download): string
 {
     $params = [
-          'id' => $id,
+          'id' => (int) $id,
           'part' => $what_part,
         ];
     if ($download) {

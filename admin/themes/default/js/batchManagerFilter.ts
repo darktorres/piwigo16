@@ -4,101 +4,140 @@ declare var sliders: Record<string, { values: unknown[]; selected: { min: unknow
 declare var str_select_album: string;
 declare var str_select_tag: string;
 
+const doubleSlider = (window as any).pwgDoubleSlider as (el: HTMLElement, options: any) => void;
+
 function filter_enable(filter: string): void {
-    $(`#${filter}`).show();
-    $(`input[type=checkbox][name=${filter}_use]`).prop('checked', true);
-    $(`#addFilter`).find(`a[data-value=${filter}]`).addClass('disabled');
-    $('.noFilter').hide();
-    $('.addFilter-button').removeClass('highlight');
+    const el = document.getElementById(filter);
+    if (el) el.style.display = '';
+    const cb = document.querySelector<HTMLInputElement>(`input[type=checkbox][name=${filter}_use]`);
+    if (cb) cb.checked = true;
+    document.querySelector<HTMLElement>(`#addFilter a[data-value=${filter}]`)?.classList.add('disabled');
+    document.querySelectorAll<HTMLElement>('.noFilter').forEach(e => { e.style.display = 'none'; });
+    document.querySelector<HTMLElement>('.addFilter-button')?.classList.remove('highlight');
 }
 
 function filter_disable(filter: string): void {
-    $(`#${filter}`).hide();
-    $(`input[name=${filter}_use]`).prop('checked', false);
-    $(`#addFilter`).find(`a[data-value=${filter}]`).removeClass('disabled');
-    if ($('#filterList li:visible').length === 0) {
-        $('.noFilter').show();
-        $('.addFilter-button').addClass('highlight');
+    const el = document.getElementById(filter);
+    if (el) el.style.display = 'none';
+    const cb = document.querySelector<HTMLInputElement>(`input[name=${filter}_use]`);
+    if (cb) cb.checked = false;
+    document.querySelector<HTMLElement>(`#addFilter a[data-value=${filter}]`)?.classList.remove('disabled');
+    const visible = Array.from(document.querySelectorAll('#filterList li'))
+        .filter(li => (li as HTMLElement).style.display !== 'none' && getComputedStyle(li).display !== 'none').length;
+    if (visible === 0) {
+        document.querySelectorAll<HTMLElement>('.noFilter').forEach(e => { e.style.display = ''; });
+        document.querySelector<HTMLElement>('.addFilter-button')?.classList.add('highlight');
     }
 }
 
 function select_album_filter({ album, newSelectedAlbum, getSelectedAlbum }: { album: any; newSelectedAlbum: () => void; getSelectedAlbum: () => (string | number)[] }): void {
-    $('#selectedAlbumNameFilter').html(album.name);
+    const nameEl = document.getElementById('selectedAlbumNameFilter');
+    if (nameEl) nameEl.innerHTML = album.name;
     newSelectedAlbum();
     hide_filters_error(str_select_album);
-    $('#filterCategoryValue').val(+getSelectedAlbum()[0]);
-    $('#selectAlbumFilter').hide();
-    $('#selectedAlbumFilterArea').fadeIn();
+    const valInput = document.getElementById('filterCategoryValue') as HTMLInputElement | null;
+    if (valInput) valInput.value = String(+getSelectedAlbum()[0]);
+    const selectEl = document.getElementById('selectAlbumFilter');
+    if (selectEl) selectEl.style.display = 'none';
+    const selectedArea = document.getElementById('selectedAlbumFilterArea');
+    if (selectedArea) selectedArea.style.display = '';
 }
 
 function show_filters_error(message: string): void {
     errorFilters = message;
-    $(`#errorFilter`).html(`<p>${message}</p>`).fadeIn();
+    const errorEl = document.getElementById('errorFilter');
+    if (errorEl) { errorEl.innerHTML = `<p>${message}</p>`; errorEl.style.display = ''; }
 }
 
 function hide_filters_error(message: string): void {
-    if (message === errorFilters) $('#errorFilter').hide();
+    if (message === errorFilters) {
+        const errorEl = document.getElementById('errorFilter');
+        if (errorEl) errorEl.style.display = 'none';
+    }
 }
 
-$(document).ready(function () {
-    const ab_filter = new AlbumSelector({
+document.addEventListener('DOMContentLoaded', () => {
+    const ab_filter = new (window as any).AlbumSelector({
         selectedCategoriesIds: selected_filter_cat_ids,
         selectAlbum: select_album_filter,
         adminMode: true,
     });
 
-    $('#selectAlbumFilter, #selectedAlbumEditFilter').on('click', function () { ab_filter.open(); });
+    document.getElementById('selectAlbumFilter')?.addEventListener('click', () => ab_filter.open());
+    document.getElementById('selectedAlbumEditFilter')?.addEventListener('click', () => ab_filter.open());
 
-    $('.removeFilter').addClass('icon-cancel-circled').on('click', function () {
-        const filter = $(this).parent('li').attr('id') ?? '';
-        filter_disable(filter);
-        return false;
+    document.querySelectorAll<HTMLElement>('.removeFilter').forEach(el => {
+        el.classList.add('icon-cancel-circled');
+        el.addEventListener('click', (e) => {
+            e.preventDefault();
+            const filter = el.closest('li')?.id ?? '';
+            filter_disable(filter);
+        });
     });
 
-    $('#addFilter a').on('click', function () { filter_enable(String($(this).attr('data-value'))); });
-
-    $('#removeFilters').on('click', function () {
-        $('#filterList li').each(function () { filter_disable($(this).attr('id') ?? ''); });
-        return false;
+    document.querySelectorAll<HTMLElement>('#addFilter a').forEach(a => {
+        a.addEventListener('click', () => filter_enable(a.dataset['value'] ?? ''));
     });
 
-    $('[data-slider=widths]').pwgDoubleSlider(sliders.widths as any);
-    $('[data-slider=heights]').pwgDoubleSlider(sliders.heights as any);
-    $('[data-slider=ratios]').pwgDoubleSlider(sliders.ratios as any);
-    $('[data-slider=filesizes]').pwgDoubleSlider(sliders.filesizes as any);
+    document.getElementById('removeFilters')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        document.querySelectorAll<HTMLElement>('#filterList li').forEach(li => filter_disable(li.id));
+    });
 
-    $(document).on('mouseup', function (e) {
+    document.querySelectorAll<HTMLElement>('[data-slider=widths]').forEach(el => doubleSlider(el, sliders.widths));
+    document.querySelectorAll<HTMLElement>('[data-slider=heights]').forEach(el => doubleSlider(el, sliders.heights));
+    document.querySelectorAll<HTMLElement>('[data-slider=ratios]').forEach(el => doubleSlider(el, sliders.ratios));
+    document.querySelectorAll<HTMLElement>('[data-slider=filesizes]').forEach(el => doubleSlider(el, sliders.filesizes));
+
+    document.addEventListener('mouseup', (e: MouseEvent) => {
         e.stopPropagation();
-        if (!$(e.target).hasClass('addFilter-button')) {
-            $('.addFilter-dropdown').slideUp();
+        if (!(e.target as HTMLElement).classList.contains('addFilter-button')) {
+            document.querySelectorAll<HTMLElement>('.addFilter-dropdown').forEach(el => { el.style.display = 'none'; });
         }
     });
 
-    $('.filterBlock select[data-selectize="tags"]').on('change', function () {
-        if ($(this).val()) hide_filters_error(str_select_tag);
+    document.querySelectorAll<HTMLSelectElement>('.filterBlock select[data-selectize="tags"]').forEach(sel => {
+        sel.addEventListener('change', () => { if (sel.value) hide_filters_error(str_select_tag); });
     });
 
-    $('#applyFilter').on('click', function (e) {
-        if ($('#filter_tags').is(':visible')) {
-            const tags = $('.filterBlock select[data-selectize="tags"]');
-            if (!tags.val()) {
+    let applyAbort: AbortController | null = null;
+    document.getElementById('applyFilter')?.addEventListener('click', (e) => {
+        applyAbort?.abort();
+        applyAbort = new AbortController();
+        const { signal } = applyAbort;
+
+        const filterTags = document.getElementById('filter_tags');
+        if (filterTags && getComputedStyle(filterTags).display !== 'none') {
+            const tags = document.querySelector<HTMLSelectElement>('.filterBlock select[data-selectize="tags"]');
+            if (!tags?.value) {
                 e.preventDefault();
                 show_filters_error(str_select_tag);
-                $('#filter_tags .removeFilter').off('click.apply').on('click.apply', function () { hide_filters_error(str_select_tag); });
+                document.querySelectorAll<HTMLElement>('#filter_tags .removeFilter').forEach(el => {
+                    el.addEventListener('click', () => hide_filters_error(str_select_tag), { signal });
+                });
             }
         }
-        if ($('#filter_category').is(':visible')) {
-            const albums = ab_filter.get_selected_albums();
-            if (albums.length === 0) {
+
+        const filterCat = document.getElementById('filter_category');
+        if (filterCat && getComputedStyle(filterCat).display !== 'none') {
+            if (ab_filter.get_selected_albums().length === 0) {
                 e.preventDefault();
                 show_filters_error(str_select_album);
-                $('#filter_category .removeFilter').off('click.apply').on('click.apply', function () { hide_filters_error(str_select_album); });
+                document.querySelectorAll<HTMLElement>('#filter_category .removeFilter').forEach(el => {
+                    el.addEventListener('click', () => hide_filters_error(str_select_album), { signal });
+                });
             }
         }
     });
 
-    $('.help-popin-search').on('click', function () { $('#modalQuickSearch').fadeIn(); });
-    $('#closeModalQuickSearch').on('click', function () { $('#modalQuickSearch').fadeOut(); });
+    document.querySelector('.help-popin-search')?.addEventListener('click', () => {
+        const modal = document.getElementById('modalQuickSearch');
+        if (modal) modal.style.display = '';
+    });
+    document.getElementById('closeModalQuickSearch')?.addEventListener('click', () => {
+        const modal = document.getElementById('modalQuickSearch');
+        if (modal) modal.style.display = 'none';
+    });
 });
 
 export {};

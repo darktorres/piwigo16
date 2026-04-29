@@ -1,58 +1,63 @@
-(function ($: JQueryStatic) {
+import noUiSlider from 'nouislider';
+import 'nouislider/dist/nouislider.css';
 
-    interface DoubleSliderOptions {
-        values: Array<number | string>;
-        selected: { min: number | string; max: number | string };
-        text: string;
-    }
+declare function sprintf(fmt: string, ...args: unknown[]): string;
 
-    ($.fn as any).pwgDoubleSlider = function (options: DoubleSliderOptions) {
-        const that: JQuery = this;
+interface DoubleSliderOptions {
+    values: Array<number | string>;
+    selected: { min: number | string; max: number | string };
+    text: string;
+}
 
-        function onChange(_e: unknown, ui: { values: number[] }) {
-            that.find('[data-input=min]').val(options.values[ui.values[0]] as string | number);
-            that.find('[data-input=max]').val(options.values[ui.values[1]] as string | number);
-            that.find('.slider-info').html(sprintf(
-                options.text,
-                options.values[ui.values[0]],
-                options.values[ui.values[1]]
-            ));
+function findClosest(array: Array<number | string>, value: number | string): number {
+    let closest: number | null = null, index = -1;
+    array.forEach((v, i) => {
+        const diff = Math.abs(Number(v) - Number(value));
+        if (closest === null || diff < Math.abs(Number(closest) - Number(value))) {
+            closest = Number(v);
+            index = i;
         }
+    });
+    return index;
+}
 
-        function findClosest(array: Array<number | string>, value: number | string): number {
-            let closest: number | null = null, index = -1;
-            array.forEach((v, i) => {
-                const diff = Math.abs(Number(v) - Number(value));
-                if (closest === null || diff < Math.abs(Number(closest) - Number(value))) {
-                    closest = Number(v);
-                    index = i;
-                }
-            });
-            return index;
-        }
+function pwgDoubleSlider(container: HTMLElement, options: DoubleSliderOptions): void {
+    const values = [
+        options.values.indexOf(options.selected.min),
+        options.values.indexOf(options.selected.max),
+    ];
+    if (values[0] === -1) values[0] = findClosest(options.values, options.selected.min);
+    if (values[1] === -1) values[1] = findClosest(options.values, options.selected.max);
 
-        const values = [
-            options.values.indexOf(options.selected.min),
-            options.values.indexOf(options.selected.max),
-        ];
-        if (values[0] === -1) values[0] = findClosest(options.values, options.selected.min);
-        if (values[1] === -1) values[1] = findClosest(options.values, options.selected.max);
+    const sliderEl = container.querySelector<HTMLElement>('.slider-slider')!;
+    const slider = noUiSlider.create(sliderEl, {
+        range: { min: 0, max: options.values.length - 1 },
+        start: [values[0], values[1]],
+        step: 1,
+        connect: true,
+    });
 
-        const slider = this.find('.slider-slider').slider({
-            range: true,
-            min: 0,
-            max: options.values.length - 1,
-            values: values,
-            slide: onChange,
-            change: onChange,
-        });
-
-        this.find('.slider-choice').on('click', (e: any) => {
-            slider.slider('values', 0, options.values.indexOf($(e.currentTarget).data('min') as number | string));
-            slider.slider('values', 1, options.values.indexOf($(e.currentTarget).data('max') as number | string));
-        });
-
-        return this;
+    const update = (vals: (string | number)[]) => {
+        const minIdx = parseInt(String(vals[0]));
+        const maxIdx = parseInt(String(vals[1]));
+        const minInput = container.querySelector<HTMLInputElement>('[data-input=min]');
+        const maxInput = container.querySelector<HTMLInputElement>('[data-input=max]');
+        const info = container.querySelector<HTMLElement>('.slider-info');
+        if (minInput) minInput.value = String(options.values[minIdx]);
+        if (maxInput) maxInput.value = String(options.values[maxIdx]);
+        if (info) info.innerHTML = sprintf(options.text, options.values[minIdx], options.values[maxIdx]);
     };
 
-}(jQuery));
+    slider.on('update', update);
+
+    container.querySelectorAll<HTMLElement>('.slider-choice').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const minIdx = options.values.indexOf(btn.dataset['min'] as any);
+            const maxIdx = options.values.indexOf(btn.dataset['max'] as any);
+            slider.set([minIdx, maxIdx]);
+        });
+    });
+}
+
+(window as any).pwgDoubleSlider = pwgDoubleSlider;
+export {};

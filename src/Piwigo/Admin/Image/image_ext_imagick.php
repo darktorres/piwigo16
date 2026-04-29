@@ -39,7 +39,8 @@ class image_ext_imagick implements imageInterface
             }
         }
 
-        $command = $this->imagickdir.'identify -format "%wx%h" "'.realpath($this->source_filepath).'"';
+        $identify = pwg_image::get_ext_imagick_command() === 'magick' ? 'magick identify' : 'identify';
+        $command = $this->imagickdir.$identify.' -format "%wx%h" "'.realpath($this->source_filepath).'"';
         @exec($command, $returnarray);
         if (empty($returnarray[0]) or !preg_match('/^(\d+)x(\d+)$/', $returnarray[0], $match)) {
             die("[External ImageMagick] Corrupt image\n" . var_export($returnarray, true));

@@ -1003,3 +1003,127 @@ span.related-tags .tag-counter{
     flex-direction:column;
   }
 }
+
+/**
+ * Dark theme overrides
+ */
+BODY {
+  background-color: #1b1b1b;
+  color: #c1c1c1;
+}
+
+A { color: #ffa646; }
+A:hover { border-bottom-color: #ffa646; color: #ff7700; }
+
+H1, H2, H3 { color: #c1c1c1; }
+
+INPUT[type="text"], INPUT[type="password"], INPUT[type="file"],
+INPUT[type="button"], INPUT[type="submit"], INPUT[type="reset"],
+SELECT, TEXTAREA {
+  color: #c1c1c1;
+  background-color: #3c3c3c;
+  border: 1px solid #555;
+}
+
+INPUT[type="submit"], INPUT[type="button"], INPUT[type="reset"] {
+  background-color: #ffa646;
+  color: #493c21;
+  border: none;
+  cursor: pointer;
+}
+
+INPUT[type="submit"]:hover, INPUT[type="button"]:hover, INPUT[type="reset"]:hover {
+  background-color: #ff7700;
+  color: #493c21;
+}
+
+INPUT:focus, SELECT:focus, TEXTAREA:focus {
+  background-color: #444;
+  border-color: #ff7700;
+  outline: none;
+}
+
+INPUT[type="checkbox"], INPUT[type="radio"] {
+  accent-color: #ffa646;
+}
+
+FIELDSET {
+  border-color: #444;
+}
+
+FIELDSET.tagLetter, LEGEND.tagLetterLegend {
+  border-color: #555;
+}
+
+TR.tagLine {
+  border-bottom-color: #444;
+}
+
+DIV.thumbHover {
+  border-color: #555;
+}
+
+.switchBoxTitle {
+  border-bottom-color: #555;
+}
+
+.switchBox {
+  background-color: #2c2c2c;
+  border: 1px solid #444;
+}
+
+.errors {
+  color: #f77;
+  background: #3a1a1a;
+  border-color: #f22;
+}
+
+.infos {
+  color: #7ecf7e;
+  background: #1a3a1a;
+  border: none;
+}
+
+.message {
+  background-color: #2c2c1a;
+  color: #c1c1c1;
+}
+
+.header_msgs {
+  color: #c1c1c1;
+  background-color: #2c2c2c;
+}
+
+.header_notes {
+  border-color: #555;
+  color: #c1c1c1;
+}
+
+span.related-tags {
+  background-color: #2c2c2c;
+}
+
+span.related-tags a { color: #c1c1c1; }
+
+span.related-tags:hover { background-color: #3c3c3c; }
+
+span.related-tags .tag-counter { color: #777; }
+
+#selected-tags-container .selected-related-tag {
+  background-color: #3a2800;
+  border-color: #ff7700;
+}
+
+.calBackDate { color: #c1c1c1; }
+
+.commentElement {
+  background-color: #2c2c2c;
+  border: 1px solid #444;
+}
+
+TD { color: #c1c1c1; }
+TABLE { color: #c1c1c1; }
+
+.content .navigationBar, SPAN.calItem, TD.calDayCellEmpty { color: #666; }
+
+#copyright { color: #777; }

@@ -2521,4 +2521,12 @@ function set_main_user(user_id: any, new_username: any) {
     });
 }
 
+$(document).ready(function() {
+  setupRegisterDates(register_dates);
+  selectionMode(false);
+  get_guest_info();
+  update_user_list();
+  update_selection_content();
+});
+
 export {};

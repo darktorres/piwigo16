@@ -111,12 +111,7 @@ let register_dates = register_dates_str.split(',');
 let groupOptions = groups_arr.map(x => ({value: x[0], label: x[1], isSelected: 0}));
 {/literal}
 
-/* Startup */
-setupRegisterDates(register_dates);
-selectionMode(false);
-get_guest_info();
-update_user_list();
-update_selection_content();
+/* Startup — moved into $(document).ready() inside user_list.js bundle */
 
 $(".icon-help-circled").tipTip({
   'maxWidth':'700px',

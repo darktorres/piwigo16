@@ -1,41 +1,36 @@
-// ----- font-checkbox plugin --------------------------------------------------
+// ----- font-checkbox ---------------------------------------------------------
 
-$.fn.fontCheckbox = function (this: JQuery): JQuery {
-    this.find('input[type=checkbox]').each(function () {
-        if (!$(this).is(':checked')) {
-            $(this).prev().toggleClass('icon-check icon-check-empty');
-        }
-    });
-    this.find('input[type=checkbox]').on('change', function () {
-        $(this).prev().removeClass();
-        if (!$(this).is(':checked')) $(this).prev().addClass('icon-check-empty');
-        else $(this).prev().addClass('icon-check');
-    });
-
-    this.find('input[type=radio]').each(function () {
-        if (!$(this).is(':checked')) {
-            $(this).prev().toggleClass('icon-dot-circled icon-circle-empty');
-        } else {
-            $(this).closest('label').addClass('selected');
-        }
-    });
-    this.find('input[type=radio]').on('change', function () {
-        const name = $(this).attr('name');
-        $(`.font-checkbox input[type=radio][name="${name}"]`).each(function () {
-            $(this).prev().removeClass();
-            $(this).closest('label').removeClass('selected');
-            if (!$(this).is(':checked')) {
-                $(this).prev().addClass('icon-circle-empty');
-            } else {
-                $(this).prev().addClass('icon-dot-circled');
-                $(this).closest('label').addClass('selected');
-            }
+function applyFontCheckbox(container: HTMLElement): void {
+    container.querySelectorAll<HTMLInputElement>('input[type=checkbox]').forEach(input => {
+        if (!input.checked) input.previousElementSibling?.classList.toggle('icon-check', false) || input.previousElementSibling?.classList.toggle('icon-check-empty', true);
+        input.addEventListener('change', () => {
+            const prev = input.previousElementSibling as HTMLElement | null;
+            if (!prev) return;
+            prev.className = input.checked ? 'icon-check' : 'icon-check-empty';
         });
     });
-    return this;
-};
+    container.querySelectorAll<HTMLInputElement>('input[type=radio]').forEach(input => {
+        const prev = input.previousElementSibling as HTMLElement | null;
+        if (!input.checked) {
+            prev?.classList.toggle('icon-dot-circled', false);
+            prev?.classList.toggle('icon-circle-empty', true);
+        } else {
+            input.closest('label')?.classList.add('selected');
+        }
+        input.addEventListener('change', () => {
+            const name = input.name;
+            container.querySelectorAll<HTMLInputElement>(`.font-checkbox input[type=radio][name="${name}"]`).forEach(r => {
+                const rPrev = r.previousElementSibling as HTMLElement | null;
+                if (rPrev) rPrev.className = r.checked ? 'icon-dot-circled' : 'icon-circle-empty';
+                r.closest('label')?.classList.toggle('selected', r.checked);
+            });
+        });
+    });
+}
 
-$(() => { $('.font-checkbox').fontCheckbox(); });
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll<HTMLElement>('.font-checkbox').forEach(applyFontCheckbox);
+});
 
 // ----- helpers ---------------------------------------------------------------
 
@@ -60,7 +55,6 @@ function sprintf(format: string, ...args: unknown[]): string {
     const o: string[] = [];
     let m: RegExpExecArray | null;
     let s = '';
-
     while (f) {
         if ((m = /^[^\x25]+/.exec(f))) {
             o.push(m[0]);
@@ -95,16 +89,24 @@ function sprintf(format: string, ...args: unknown[]): string {
     return o.join('');
 }
 
-$('.search-cancel').on('click', function () {
-    $('.search-input').val('').trigger('input');
-});
-
-$('.search-input').on('input', function () {
-    if ($('.search-input').val() === '') $('.search-cancel').hide();
-    else $('.search-cancel').show();
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll<HTMLElement>('.search-cancel').forEach(el => {
+        el.addEventListener('click', () => {
+            const input = document.querySelector<HTMLInputElement>('.search-input');
+            if (input) { input.value = ''; input.dispatchEvent(new Event('input')); }
+        });
+    });
+    document.querySelectorAll<HTMLInputElement>('.search-input').forEach(el => {
+        el.addEventListener('input', function(this: HTMLInputElement) {
+            document.querySelectorAll<HTMLElement>('.search-cancel').forEach(c => {
+                c.style.display = this.value === '' ? 'none' : '';
+            });
+        });
+    });
 });
 
 // ----- TemporaryState --------------------------------------------------------
+// NOTE: still uses JQuery types; will be updated when tags.ts/group_list.ts are converted
 
 interface AttrChange { object: JQuery; attribute: string; value: string | undefined }
 interface ClassChange { object: JQuery; state: boolean; class: string }
@@ -158,7 +160,7 @@ class TemporaryState {
     }
 }
 
-// ----- jConfirm option sets --------------------------------------------------
+// ----- jConfirm option sets (kept until all callers are migrated) ------------
 
 const jConfirm_alert_options = {
     icon: 'icon-ok', titleClass: 'jconfirmAlert', theme: 'modern',
@@ -185,7 +187,7 @@ const jConfirm_confirm_with_content_options = {
     backgroundDismiss: true, typeAnimated: false,
 };
 
-// ----- jconfirm follow-href plugin ------------------------------------------
+// ----- jconfirm follow-href plugin (kept for plugins_installated.ts) ---------
 
 $.fn.pwg_jconfirm_follow_href = function ({
     alert_title = 'TITLE',
@@ -199,27 +201,18 @@ $.fn.pwg_jconfirm_follow_href = function ({
     alert_content?: string;
 } = {}) {
     const button_href = $(this).attr('href');
-    const options = alert_content === '' ? jConfirm_confirm_options : jConfirm_confirm_with_content_options;
     $(this).on('click', function () {
-        $.confirm({
-            content: alert_content,
-            title: alert_title,
-            buttons: {
-                confirm: {
-                    text: alert_confirm,
-                    btnClass: 'btn-red',
-                    action() { window.location.href = button_href!; },
-                },
-                cancel: { text: alert_cancel },
-            },
-            ...options,
-        });
+        const msg = alert_title + (alert_content ? '\n\n' + alert_content : '');
+        if (window.confirm(msg)) {
+            window.location.href = button_href!;
+        }
         return false;
     });
 };
 
 // ----- expose globals --------------------------------------------------------
 
+(window as any).applyFontCheckbox = applyFontCheckbox;
 (window as any).array_delete = array_delete;
 (window as any).str_repeat = str_repeat;
 (window as any).getRandomInt = getRandomInt;

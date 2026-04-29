@@ -12,10 +12,8 @@ namespace Piwigo\Image;
 final class DerivativeImage
 {
     private ?DerivativeParams $params = null;
-    /** @var string */
-    private $rel_path;
-    /** @var string */
-    private $rel_url;
+    private string $rel_path = '';
+    private string $rel_url = '';
     private ?bool $is_cached = true;
 
     /**

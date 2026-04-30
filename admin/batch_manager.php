@@ -803,19 +803,22 @@ $template->assign('filesize', $filesize);
 // +-----------------------------------------------------------------------+
 
 // Build typed slider data for batchManagerFilter JSON block
+$dim_widths  = is_string($dimensions['widths'])  ? $dimensions['widths']  : '';
+$dim_heights = is_string($dimensions['heights']) ? $dimensions['heights'] : '';
+$dim_ratios  = is_string($dimensions['ratios'])  ? $dimensions['ratios']  : '';
 $sliders_json = [
     'widths' => [
-        'values'   => array_map('floatval', explode(',', $dimensions['widths'])),
+        'values'   => array_map('floatval', explode(',', $dim_widths)),
         'selected' => ['min' => $dimensions['selected']['min_width'], 'max' => $dimensions['selected']['max_width']],
         'text'     => l10n('between %d and %d pixels'),
     ],
     'heights' => [
-        'values'   => array_map('floatval', explode(',', $dimensions['heights'])),
+        'values'   => array_map('floatval', explode(',', $dim_heights)),
         'selected' => ['min' => $dimensions['selected']['min_height'], 'max' => $dimensions['selected']['max_height']],
         'text'     => l10n('between %d and %d pixels'),
     ],
     'ratios' => [
-        'values'   => array_map('floatval', explode(',', $dimensions['ratios'])),
+        'values'   => array_map('floatval', explode(',', $dim_ratios)),
         'selected' => ['min' => $dimensions['selected']['min_ratio'], 'max' => $dimensions['selected']['max_ratio']],
         'text'     => l10n('between %.2f and %.2f'),
     ],

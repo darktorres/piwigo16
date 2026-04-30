@@ -910,12 +910,10 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
     /**
      * Returns clean relative URL to script file.
      *
-     * @param Combinable $script
-     * @return string
      */
     private static function is_module_script(Combinable $script): bool
     {
-        return str_starts_with($script->path ?? '', 'dist/');
+        return str_starts_with($script->path, 'dist/');
     }
 
     /** @return string|array<mixed> */

@@ -69,7 +69,7 @@ final class FileCombiner
         $key = $ini_key;
 
         foreach ($this->combinables as $combinable) {
-            $is_dist = !$this->is_css && str_starts_with($combinable->path ?? '', 'dist/');
+            $is_dist = !$this->is_css && str_starts_with($combinable->path, 'dist/');
             if ($combinable->is_remote() || $is_dist) {
                 $this->flush_pending($result, $pending, $key, $force);
                 $key = $ini_key;

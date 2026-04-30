@@ -1,2 +1,1 @@
-{if empty($load_mode)}{$load_mode='footer'}{/if}
-{combine_script id='glightbox-admin' load=$load_mode path='admin/themes/default/js/glightbox-init.js'}
+{* GLightbox is provided by common.js, loaded on every admin page *}

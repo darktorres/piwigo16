@@ -210,6 +210,8 @@ document.addEventListener('DOMContentLoaded', () => {
     console.timeEnd('TomSelect initialization');
 
     console.time('Slider initialization');
+
+    console.time('Rating slider');
     const ratingSliderEl = qs<HTMLElement>('.notation-filter-slider')!;
     const ratingSlider = noUiSlider.create(ratingSliderEl, {
         range: { min: 0, max: 5 }, start: 0, step: 0.5, connect: [true, false]
@@ -219,7 +221,9 @@ document.addEventListener('DOMContentLoaded', () => {
         updateRatingFilterLabel(ratingValue);
         applyFilter('rating', ratingValue);
     });
+    console.timeEnd('Rating slider');
 
+    console.time('Revision slider');
     const revSliderEl = qs<HTMLElement>('.revision-date-filter-slider')!;
     const revSlider = noUiSlider.create(revSliderEl, {
         range: { min: 0, max: 6 }, start: 0, step: 1, connect: [true, false]
@@ -231,7 +235,9 @@ document.addEventListener('DOMContentLoaded', () => {
         updateRevisionFilterLabel(intVal);
         applyFilter('revision', month);
     });
+    console.timeEnd('Revision slider');
 
+    console.time('Certification slider');
     const certSliderEl = qs<HTMLElement>('.certification-filter-slider')!;
     const certSlider = noUiSlider.create(certSliderEl, {
         range: { min: minCertification, max: 3 }, start: minCertification, step: 1, connect: [true, false]
@@ -241,6 +247,8 @@ document.addEventListener('DOMContentLoaded', () => {
         updateCertificationFilterLabel(certValue);
         applyFilter('certification', certValue);
     });
+    console.timeEnd('Certification slider');
+
     console.timeEnd('Slider initialization');
 
     console.time('Filter initialization');

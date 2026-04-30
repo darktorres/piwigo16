@@ -8,25 +8,40 @@
     'input[name="user_can_delete_comment"]' : '#email_admin_on_comment_deletion'
   };
 
-  for (selector in targets) {
+  for (var selector in targets) {
     var target = targets[selector];
 
-    jQuery(target).toggle(jQuery(selector).is(':checked'));
+    var targetEl = document.querySelector(target);
+    var selectorEl = document.querySelector(selector);
+    if (targetEl && selectorEl) {
+      targetEl.style.display = selectorEl.checked ? '' : 'none';
 
-    (function(target){
-      jQuery(selector).on('change', function() {
-        jQuery(target).toggle($(this).is(':checked'));
-      });
-    })(target);
+      (function(targetSel, sourceSel) {
+        var src = document.querySelector(sourceSel);
+        var tgt = document.querySelector(targetSel);
+        if (src && tgt) {
+          src.addEventListener('change', function() {
+            tgt.style.display = this.checked ? '' : 'none';
+          });
+        }
+      })(target, selector);
+    }
   };
 
   function check_activate_comments() {
-    jQuery("#comments_param_container").toggle(jQuery("input[name=activate_comments]").is(":checked"));
+    var checkbox = document.querySelector("input[name=activate_comments]");
+    var container = document.getElementById("comments_param_container");
+    if (checkbox && container) {
+      container.style.display = checkbox.checked ? '' : 'none';
+    }
   }
   check_activate_comments();
-  jQuery("input[name=activate_comments]").on("change", function() {
-    check_activate_comments();
-  });
+  var activateCheckbox = document.querySelector("input[name=activate_comments]");
+  if (activateCheckbox) {
+    activateCheckbox.addEventListener("change", function() {
+      check_activate_comments();
+    });
+  }
 }());
 {/footer_script}
 

@@ -1,8 +1,6 @@
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
 {combine_script id='LocalStorageCache' load='footer' path='admin/themes/default/js/LocalStorageCache.js'}
 
-{combine_script id='jquery.selectize' load='footer' path='themes/default/js/plugins/selectize.min.js'}
-{combine_css id='jquery.selectize' path="themes/default/js/plugins/selectize.{$themeconf.colorscheme}.css"}
 
 {footer_script}
 {* <!-- CATEGORIES --> *}
@@ -12,30 +10,43 @@ var categoriesCache = new CategoriesCache({
   rootUrl: '{$ROOT_URL}'
 });
 
-categoriesCache.selectize(jQuery('[data-selectize=categories]'));
+window.categoriesCache?.selectize(document.querySelector('[data-selectize=categories]'));
 
-jQuery("#removeAlbumFilter").click(function() {
-  jQuery("select[name=cat]")[0].selectize.setValue(null);
-  return false;
-});
+var removeAlbumFilter = document.getElementById("removeAlbumFilter");
+if (removeAlbumFilter) {
+  removeAlbumFilter.addEventListener('click', function(e) {
+    e.preventDefault();
+    var catSelect = document.querySelector("select[name=cat]");
+    if (catSelect && catSelect.selectize) catSelect.selectize.setValue(null);
+  });
+}
 
 function checkCatFilter() {
-  if (jQuery("select[name=cat]").val() == "") {
-    jQuery("#removeAlbumFilter").hide();
-  }
-  else {
-    jQuery("#removeAlbumFilter").show();
+  var catSelect = document.querySelector("select[name=cat]");
+  var removeBtn = document.getElementById("removeAlbumFilter");
+  if (!catSelect || !removeBtn) return;
+  if (catSelect.value == "") {
+    removeBtn.style.display = 'none';
+  } else {
+    removeBtn.style.display = '';
   }
 }
 
 checkCatFilter();
-jQuery("select[name=cat]").change(function(){
-  checkCatFilter();
-});
+var catSelectEl = document.querySelector("select[name=cat]");
+if (catSelectEl) {
+  catSelectEl.addEventListener('change', function() {
+    checkCatFilter();
+  });
+}
 
-$(document).ready(function() {
-  $('h1').append("<span class='badge-number'>{$NB_ELEMENTS}</span>")
-});
+var h1El = document.querySelector('h1');
+if (h1El) {
+  var badge = document.createElement('span');
+  badge.className = 'badge-number';
+  badge.textContent = '{$NB_ELEMENTS}';
+  h1El.appendChild(badge);
+}
 
 {/footer_script}
 
@@ -121,28 +132,32 @@ $(document).ready(function() {
 {combine_script id='core.scripts' load='async' path='themes/default/js/scripts.js'}
 {footer_script}
 function del(node,id,uid,aid){
-	var tr = jQuery(node).parents("tr").first().fadeTo(1000, 0.4),
-		data = {
-			image_id: id,
-			user_id: uid
-		};
-	if (aid)
-		data.anonymous_id = aid;
+  var tr = node.closest("tr");
+  if (tr) tr.style.opacity = '0.4';
+  var data = {
+    image_id: id,
+    user_id: uid
+  };
+  if (aid) data.anonymous_id = aid;
 
-	(new PwgWS('{$ROOT_URL|@escape:javascript}')).callService(
-		'pwg.rates.delete', data,
-		{
-			method: 'POST',
-			onFailure: function(num, text) { tr.stop(); tr.fadeTo(0,1); alert(num + " " + text); },
-			onSuccess: function(result){
-				if (result)
-					tr.remove();
-				else 
-					alert(result); 
-			}
-		}
-	);
-	return false;
+  (new PwgWS('{$ROOT_URL|@escape:javascript}')).callService(
+    'pwg.rates.delete', data,
+    {
+      method: 'POST',
+      onFailure: function(num, text) {
+        if (tr) tr.style.opacity = '';
+        alert(num + " " + text);
+      },
+      onSuccess: function(result){
+        if (result) {
+          if (tr) tr.remove();
+        } else {
+          alert(result);
+        }
+      }
+    }
+  );
+  return false;
 }
 {/footer_script}
 

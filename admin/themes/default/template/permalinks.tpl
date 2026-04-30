@@ -1,16 +1,35 @@
-{footer_script require='jquery.ui.sortable'}
-jQuery(document).ready(function(){
-  $("h1").append("<span class='badge-number'>{$nb_cats}</span>")
-  jQuery("#addPermalinkOpen").click(function(){
-    jQuery("#addPermalink").show();
-    jQuery("#showAddPermalink").hide();
-  });
+{footer_script}
+(function() {
+  var h1 = document.querySelector("h1");
+  if (h1) {
+    var badge = document.createElement('span');
+    badge.className = 'badge-number';
+    badge.textContent = '{$nb_cats}';
+    h1.appendChild(badge);
+  }
 
-  jQuery("#addPermalinkClose").click(function(){
-    jQuery("#addPermalink").hide();
-    jQuery("#showAddPermalink").show();
-  });
-});
+  var addPermalinkOpen = document.getElementById("addPermalinkOpen");
+  if (addPermalinkOpen) {
+    addPermalinkOpen.addEventListener('click', function(e) {
+      e.preventDefault();
+      var addPermalink = document.getElementById("addPermalink");
+      var showAddPermalink = document.getElementById("showAddPermalink");
+      if (addPermalink) addPermalink.style.display = '';
+      if (showAddPermalink) showAddPermalink.style.display = 'none';
+    });
+  }
+
+  var addPermalinkClose = document.getElementById("addPermalinkClose");
+  if (addPermalinkClose) {
+    addPermalinkClose.addEventListener('click', function(e) {
+      e.preventDefault();
+      var addPermalink = document.getElementById("addPermalink");
+      var showAddPermalink = document.getElementById("showAddPermalink");
+      if (addPermalink) addPermalink.style.display = 'none';
+      if (showAddPermalink) showAddPermalink.style.display = '';
+    });
+  }
+}());
 {/footer_script}
 
 {literal}

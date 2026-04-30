@@ -1,15 +1,5 @@
-{combine_script id='jquery.sort' load='footer' path='themes/default/js/plugins/jquery.sort.js'}
-
-{combine_script id='jquery.ui.slider' require='jquery.ui' load='header' path='themes/default/js/ui/minified/jquery.ui.slider.min.js'}
-{combine_css path="themes/default/js/ui/theme/jquery.ui.slider.css"}
-
-{combine_script id='jquery.selectize' load='footer' path='themes/default/js/plugins/selectize.min.js'}
-{combine_css id='jquery.selectize' path="themes/default/js/plugins/selectize.{$themeconf.colorscheme}.css"}
-
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_script id='jquery.confirm' load='footer' require='jquery' path='themes/default/js/plugins/jquery-confirm.min.js'}
-{combine_script id='pluginsNew' load='footer' require='jquery.ui.effect-blind,jquery.sort' path='admin/themes/default/js/plugins_new.js'}
-{combine_css path="themes/default/js/plugins/jquery-confirm.min.css"}
+{combine_script id='pluginsNew' load='footer' path='admin/themes/default/js/plugins_new.js'}
 
 {footer_script}
 const str_confirm_msg = "{"Yes, I am sure"|@translate}";

@@ -1,8 +1,4 @@
-{include file='include/colorbox.inc.tpl'}
-
-{combine_script id='jquery.cluetip' load='async' require='jquery' path='themes/default/js/plugins/jquery.cluetip.js'}
-
-{footer_script require='jquery.cluetip'}
+{footer_script}
 var piwigo_need_update_msg = '<a href="admin.php?page=updates">{'A new version of Piwigo is available.'|@translate|@escape:"javascript"} <i class="icon-right"></i></a>';
 var ext_need_update_msg = '<a href="admin.php?page=updates&amp;tab=ext">{'Some upgrades are available for extensions.'|@translate|@escape:"javascript"} <i class="icon-right"></i></a>';
 const str_gb_used = "{'%s GB used'|translate}";
@@ -16,38 +12,25 @@ let translate_type = {};
 {if isset($SUBSCRIBE_BASE_URL)}
   const newsletter_base_url = "{$SUBSCRIBE_BASE_URL}";
 {/if}
-{literal}
-jQuery().ready(function(){
-	jQuery('.cluetip').cluetip({
-		width: 300,
-		splitTitle: '|',
-		positionBy: 'bottomTop'
-	});
-{/literal}
 {if $CHECK_FOR_UPDATES}
-  jQuery.ajax({
-    type: 'GET',
-    url: 'ws.php',
-    dataType: 'json',
-    data: { method: 'pwg.extensions.checkUpdates', format: 'json' },
-    timeout: 5000,
-    success: function (data) {
-      if (data['stat'] != 'ok')
-        return;
-      piwigo_update = data['result']['piwigo_need_update'];
-      ext_update = data['result']['ext_need_update']
-      if ((piwigo_update || ext_update) && !jQuery(".warnings").is('div'))
-        jQuery(".eiw").prepend('<div class="warnings"><i class="eiw-icon icon-attention"></i><ul></ul></div>');
+  fetch('ws.php?format=json&method=pwg.extensions.checkUpdates', { signal: AbortSignal.timeout(5000) })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data['stat'] != 'ok') return;
+      var piwigo_update = data['result']['piwigo_need_update'];
+      var ext_update = data['result']['ext_need_update'];
+      if ((piwigo_update || ext_update) && !document.querySelector(".warnings"))
+        document.querySelector(".eiw")?.insertAdjacentHTML('afterbegin', '<div class="warnings"><i class="eiw-icon icon-attention"></i><ul></ul></div>');
       if (piwigo_update)
-        jQuery(".warnings ul").append('<li>'+piwigo_need_update_msg+'</li>');
+        document.querySelector(".warnings ul")?.insertAdjacentHTML('beforeend', '<li>'+piwigo_need_update_msg+'</li>');
       if (ext_update)
-        jQuery(".warnings ul").append('<li>'+ext_need_update_msg+'</li>');
-    }
-  });
+        document.querySelector(".warnings ul")?.insertAdjacentHTML('beforeend', '<li>'+ext_need_update_msg+'</li>');
+    })
+    .catch(function() {});
 {/if}
 
 {if isset($SUBSCRIBE_BASE_URL)}
-  jQuery(".eiw").prepend(`
+  document.querySelector(".eiw")?.insertAdjacentHTML('afterbegin', `
   <div class="promote-newsletter">
     <div class="promote-content">
       
@@ -69,27 +52,27 @@ jQuery().ready(function(){
 {/if}
 
 {literal}
-
-  jQuery("#newsletterSubscribeInput").change(function(){
-    jQuery("#newsletterSubscribeLink").attr("href", newsletter_base_url + jQuery("#newsletterSubscribeInput").val())
-  })
-
-  jQuery('.newsletter-hide').click(function() {
-    jQuery('.promote-newsletter').hide();
-
-    jQuery.ajax({
-      type: 'GET',
-      url: 'admin.php?action=hide_newsletter_subscription'
+  var nsi = document.getElementById("newsletterSubscribeInput");
+  if (nsi) {
+    nsi.addEventListener("change", function() {
+      var link = document.getElementById("newsletterSubscribeLink");
+      if (link) link.setAttribute("href", newsletter_base_url + nsi.value);
     });
-
-    if (jQuery(this).hasClass('newsletter-hide')) {
-      return false;
-    }
+  }
+  document.querySelectorAll('.newsletter-hide').forEach(function(el) {
+    el.addEventListener("click", function(e) {
+      var promo = document.querySelector('.promote-newsletter');
+      if (promo) promo.style.display = 'none';
+      fetch('admin.php?action=hide_newsletter_subscription').catch(function() {});
+      if (el.classList.contains('newsletter-hide')) {
+        e.preventDefault();
+      }
+    });
   });
-  let size_info = storage_total > 1000000 ? str_gb_used : str_mb_used;
-  let size_nb = storage_total > 1000000 ? (storage_total / 1000000).toFixed(2) : (storage_total / 1000).toFixed(0);
-  $(".chart-title-infos").html(size_info.replace("%s", size_nb));
-});
+  var size_info = storage_total > 1000000 ? str_gb_used : str_mb_used;
+  var size_nb = storage_total > 1000000 ? (storage_total / 1000000).toFixed(2) : (storage_total / 1000).toFixed(0);
+  var chartTitleEl = document.querySelector(".chart-title-infos");
+  if (chartTitleEl) chartTitleEl.innerHTML = size_info.replace("%s", size_nb);
 {/literal}
 {foreach from=$STORAGE_CHART_DATA key=type_to_translate item=details}
 translate_type['{$type_to_translate}'] = "{$type_to_translate|translate}";

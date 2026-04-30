@@ -24,16 +24,6 @@ class ScriptLoader
     /** @var array<string, string> */
     private static array $known_paths = [
         'core.scripts' => 'themes/default/js/scripts.js',
-        'jquery' => 'themes/default/js/jquery.min.js',
-        'jquery.ui' => 'themes/default/js/ui/minified/jquery.ui.core.min.js',
-        'jquery.ui.effect' => 'themes/default/js/ui/minified/jquery.ui.effect.min.js',
-      ];
-
-    /** @var array<string, string[]> */
-    private static array $ui_core_dependencies = [
-        'jquery.ui.widget' => ['jquery'],
-        'jquery.ui.position' => ['jquery'],
-        'jquery.ui.mouse' => ['jquery', 'jquery.ui', 'jquery.ui.widget'],
       ];
 
     public function __construct()
@@ -111,14 +101,7 @@ class ScriptLoader
             self::fill_well_known($id, $script);
             $this->registered_scripts[$id] = $script;
 
-            // Load or modify all UI core files
-            if ($id == 'jquery.ui' and $script->path == self::$known_paths['jquery.ui']) {
-                foreach (self::$ui_core_dependencies as $script_id => $required_ids) {
-                    $this->add($script_id, $load_mode, $required_ids, null, $version);
-                }
-            }
-
-            // Try to load undefined required script
+                // Try to load undefined required script
             foreach ($script->precedents as $script_id) {
                 if (! isset($this->registered_scripts[$script_id])) {
                     $this->load_known_required_script($script_id, (int) $load_mode);
@@ -247,7 +230,7 @@ class ScriptLoader
     }
 
     /**
-     * Fill a script dependancies with the known jQuery UI scripts.
+     * Fill a script path from known_paths if not already set.
      *
      * @param string $id in FileCombiner::$known_paths
      */
@@ -256,42 +239,17 @@ class ScriptLoader
         if (empty($script->path) && isset(self::$known_paths[$id])) {
             $script->path = self::$known_paths[$id];
         }
-        if (str_starts_with($id, 'jquery.')) {
-            $required_ids = ['jquery'];
-
-            if (str_starts_with($id, 'jquery.ui.effect-')) {
-                $required_ids = ['jquery', 'jquery.ui.effect'];
-
-                if (empty($script->path)) {
-                    $script->path = dirname((string) self::$known_paths['jquery.ui.effect'])."/$id.min.js";
-                }
-            } elseif (str_starts_with($id, 'jquery.ui.')) {
-                if (!isset(self::$ui_core_dependencies[$id])) {
-                    $required_ids = array_merge(['jquery', 'jquery.ui'], array_keys(self::$ui_core_dependencies));
-                }
-
-                if (empty($script->path)) {
-                    $script->path = dirname((string) self::$known_paths['jquery.ui'])."/$id.min.js";
-                }
-            }
-
-            foreach ($required_ids as $required_id) {
-                if (!in_array($required_id, $script->precedents)) {
-                    $script->precedents[] = $required_id;
-                }
-            }
-        }
     }
 
     /**
-     * Add a known jQuery UI script to loaded scripts.
+     * Add a known script to loaded scripts if it appears in known_paths.
      *
      * @param string $id in FileCombiner::$known_paths
      * @param int $load_mode
      */
     private function load_known_required_script($id, $load_mode): bool
     {
-        if (isset(self::$known_paths[$id]) or str_starts_with($id, 'jquery.ui.')) {
+        if (isset(self::$known_paths[$id])) {
             $this->add($id, $load_mode, [], null);
             return true;
         }

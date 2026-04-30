@@ -28,7 +28,6 @@
   {/if}
 {/foreach}
 
-{combine_script id='jquery' path='themes/default/js/jquery.min.js'}
 {/strip}
 
 <!-- BEGIN get_combined -->

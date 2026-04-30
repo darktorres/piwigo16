@@ -78,34 +78,26 @@
 </style>
 
 
-{combine_script id='jquery.tipTip' load='footer' path='themes/default/js/plugins/jquery.tipTip.minified.js'}
-{footer_script require='jquery.tipTip'}
-jQuery('.tiptip').tipTip({
-  delay: 0,
-  fadeIn: 200,
-  fadeOut: 200
-});
-
-jQuery('a.externalLink').click(function() {
-  window.open(jQuery(this).attr("href"));
-  return false;
+{footer_script}
+document.querySelectorAll('a.externalLink').forEach(function(el) {
+  el.addEventListener('click', function(e) {
+    e.preventDefault();
+    window.open(el.getAttribute('href') || '');
+  });
 });
 
 function hide_user_whats_new() {
-  $.ajax({
-    url: "ws.php?format=json&method=pwg.users.preferences.set",
-    type: "POST",
-    dataType: "JSON",
-    data: {
-      param: 'show_whats_new_{$WHATS_NEW_MAJOR_VERSION}',
-      value: false,
-    }
-  })
-  $('#whats_new').hide();
+  fetch('ws.php?format=json&method=pwg.users.preferences.set', {
+    method: 'POST',
+    body: new URLSearchParams({ param: 'show_whats_new_{$WHATS_NEW_MAJOR_VERSION}', value: 'false' })
+  }).catch(function() {});
+  var el = document.getElementById('whats_new');
+  if (el) el.style.display = 'none';
 }
 
 function show_user_whats_new() {
-  $('#whats_new').show();
+  var el = document.getElementById('whats_new');
+  if (el) el.style.display = '';
 }
 
 {if isset($SHOW_WHATS_NEW) && $SHOW_WHATS_NEW}

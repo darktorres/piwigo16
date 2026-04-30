@@ -1,4 +1,3 @@
-{include file='include/colorbox.inc.tpl'}
 {footer_script}
 var pwg_token = "{$PWG_TOKEN}";
 var str_member_default = "{'member'|@translate|@escape:'javascript'}"
@@ -26,14 +25,16 @@ var serverKey = '{$CACHE_KEYS.users}'
 var serverId = '{$CACHE_KEYS._hash}'
 var rootUrl = '{$ROOT_URL}'
 
-$(document).on('keydown', function (e) {
-  if ( e.keyCode === 27) { // ESC button
-    $("#UserList").fadeOut();
+document.addEventListener('keydown', function(e) {
+  if (e.keyCode === 27) { // ESC button
+    var userList = document.getElementById("UserList");
+    if (userList) userList.style.display = 'none';
   }
-})
-$(document).on('click', function (e) {
-  if ($(e.target).closest(".UserListPopInContainer").length === 0) {
-    $("#UserList").fadeOut();
+});
+document.addEventListener('click', function(e) {
+  if (!e.target.closest(".UserListPopInContainer")) {
+    var userList = document.getElementById("UserList");
+    if (userList) userList.style.display = 'none';
   }
 });
 
@@ -44,20 +45,15 @@ var usersCache = new UsersCache({
   rootUrl: '{$ROOT_URL}'
 });
 
-usersCache.selectize(jQuery('select.UserSearch'));
+window.usersCache?.selectize(document.querySelector('select.UserSearch'));
 {* temporary fix for #1283 (end) *}
 {/footer_script}
 
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
 {combine_script id='group_list' load='footer' path='admin/themes/default/js/group_list.js'}
 
-{combine_script id='jquery.selectize' load='footer' path='themes/default/js/plugins/selectize.min.js'}
-{combine_css path="themes/default/js/plugins/selectize.{$themeconf.colorscheme}.css"}
-
 {combine_script id='LocalStorageCache' load='footer' path='admin/themes/default/js/LocalStorageCache.js'}
 
-{combine_script id='jquery.confirm' load='footer' require='jquery' path='themes/default/js/plugins/jquery-confirm.min.js'}
-{combine_css path="themes/default/js/plugins/jquery-confirm.min.css"}
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
 
 {* Define template function for the content of Groups*}

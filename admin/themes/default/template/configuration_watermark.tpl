@@ -3,35 +3,47 @@
 {footer_script}
 (function(){
   function onWatermarkChange() {
-    var val = jQuery("#wSelect").val();
+    var wSelect = document.getElementById("wSelect");
+    var wImg = document.getElementById("wImg");
+    if (!wSelect || !wImg) return;
+    var val = wSelect.value;
     if (val.length) {
-      jQuery("#wImg").attr('src', '{$ROOT_URL}'+val).show();
+      wImg.setAttribute('src', '{$ROOT_URL}' + val);
+      wImg.style.display = '';
     }
     else {
-      jQuery("#wImg").hide();
+      wImg.style.display = 'none';
     }
   }
 
   onWatermarkChange();
 
-  jQuery("#wSelect").bind("change", onWatermarkChange);
+  var wSelect = document.getElementById("wSelect");
+  if (wSelect) wSelect.addEventListener("change", onWatermarkChange);
 
-  if (jQuery("input[name='w[position]']:checked").val() == 'custom') {
-    jQuery("#positionCustomDetails").show();
+  var checkedPosition = document.querySelector("input[name='w[position]']:checked");
+  if (checkedPosition && checkedPosition.value === 'custom') {
+    var posCustomDetails = document.getElementById("positionCustomDetails");
+    if (posCustomDetails) posCustomDetails.style.display = '';
   }
 
-  jQuery("input[name='w[position]']").change(function(){
-    if (jQuery(this).val() == 'custom') {
-      jQuery("#positionCustomDetails").show();
-    }
-    else {
-      jQuery("#positionCustomDetails").hide();
-    }
+  document.querySelectorAll("input[name='w[position]']").forEach(function(radio) {
+    radio.addEventListener('change', function() {
+      var posCustomDetails = document.getElementById("positionCustomDetails");
+      if (posCustomDetails) {
+        posCustomDetails.style.display = (this.value === 'custom') ? '' : 'none';
+      }
+    });
   });
 
-  jQuery(".addWatermarkOpen").click(function(){
-    jQuery("#addWatermark, #selectWatermark").toggle();
-		return false;
+  document.querySelectorAll(".addWatermarkOpen").forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      ['addWatermark', 'selectWatermark'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.style.display = el.style.display === 'none' ? '' : 'none';
+      });
+    });
   });
 }());
 {/footer_script}

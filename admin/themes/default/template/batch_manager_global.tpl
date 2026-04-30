@@ -1,14 +1,11 @@
 {include file='include/datepicker.inc.tpl' load_mode='async'}
-{include file='include/colorbox.inc.tpl' load_mode='footer'}
 {include file='include/add_album.inc.tpl' load_mode='async'}
 
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
 
-{combine_script id='jquery.progressBar' load='async' path='themes/default/js/plugins/jquery.progressbar.min.js'}
-{combine_script id='jquery.ajaxmanager' load='async' path='themes/default/js/plugins/jquery.ajaxmanager.js'}
 
-{combine_script id='album_selector' load='footer' require='jquery,common' path='admin/themes/default/js/album_selector.js'}
-{combine_script id='batchManagerGlobal' load='async' require='jquery,datepicker,jquery.colorbox,addAlbum,doubleSlider,album_selector' path='admin/themes/default/js/batchManagerGlobal.js'}
+{combine_script id='album_selector' load='footer' require='common' path='admin/themes/default/js/album_selector.js'}
+{combine_script id='batchManagerGlobal' load='async' require='datepicker,addAlbum,doubleSlider,album_selector' path='admin/themes/default/js/batchManagerGlobal.js'}
 
 {footer_script}
 var lang = {
@@ -19,47 +16,43 @@ var lang = {
   generateMsg: "{'Generate multiple size images'|@translate}"
 };
 
-jQuery(document).ready(function() {
+{* <!-- TAGS --> *}
+var tagsCache = new TagsCache({
+  serverKey: '{$CACHE_KEYS.tags}',
+  serverId: '{$CACHE_KEYS._hash}',
+  rootUrl: '{$ROOT_URL}'
+});
 
-  {* <!-- TAGS --> *}
-  var tagsCache = new TagsCache({
-    serverKey: '{$CACHE_KEYS.tags}',
-    serverId: '{$CACHE_KEYS._hash}',
-    rootUrl: '{$ROOT_URL}'
-  });
+window.tagsCache?.selectize(document.querySelector('[data-selectize=tags]'), { lang: {
+  'Add': '{'Create'|translate}'
+}});
 
-  tagsCache.selectize(jQuery('[data-selectize=tags]'), { lang: {
-    'Add': '{'Create'|translate}'
-  }});
+{* <!-- CATEGORIES --> *}
+window.categoriesCache = new CategoriesCache({
+  serverKey: '{$CACHE_KEYS.categories}',
+  serverId: '{$CACHE_KEYS._hash}',
+  rootUrl: '{$ROOT_URL}'
+});
 
-  {* <!-- CATEGORIES --> *}
-  window.categoriesCache = new CategoriesCache({
-    serverKey: '{$CACHE_KEYS.categories}',
-    serverId: '{$CACHE_KEYS._hash}',
-    rootUrl: '{$ROOT_URL}'
-  });
-  
-  var associated_categories = {$associated_categories|@json_encode};
+var associated_categories = {$associated_categories|@json_encode};
 
-  categoriesCache.selectize(jQuery('[data-selectize=categories]'), {
-    filter: function(categories, options) {
-      if (this.name == 'dissociate') {
-        var filtered = jQuery.grep(categories, function(cat) {
-          return !!associated_categories[cat.id];
-        });
+window.categoriesCache?.selectize(document.querySelector('[data-selectize=categories]'), {
+  filter: function(categories, options) {
+    if (this.name == 'dissociate') {
+      var filtered = categories.filter(function(cat) {
+        return !!associated_categories[cat.id];
+      });
 
-        if (filtered.length > 0) {
-          options.default = filtered[0].id;
-        }
-
-        return filtered;
+      if (filtered.length > 0) {
+        options.default = filtered[0].id;
       }
-      else {
-        return categories;
-      }
+
+      return filtered;
     }
-  });
-
+    else {
+      return categories;
+    }
+  }
 });
 
 var nb_thumbs_page = {$nb_thumbs_page};
@@ -73,240 +66,263 @@ var selectedMessage_all = "{'All %d photos are selected'|@translate}";
 const str_add_alb_associate = "{"Add Album"|@translate}";
 const str_select_alb_associate = "{"Select an album"|@translate}";
 
-$(document).ready(function() {
-  function checkPermitAction() {
-    var nbSelected = 0;
-    if ($("input[name=setSelected]").is(':checked')) {
-      nbSelected = nb_thumbs_set;
-    }
-    else {
-      nbSelected = $(".thumbnails input[type=checkbox]").filter(':checked').length;
-    }
-
-    if (nbSelected == 0) {
-      $("#permitAction").hide();
-      $("#forbidAction").show();
-    }
-    else {
-      $("#permitAction").show();
-      $("#forbidAction").hide();
-    }
-
-    $("#applyOnDetails").text(
-      sprintf(
-        applyOnDetails_pattern,
-        nbSelected
-      )
-    );
-
-    // display the number of currently selected photos in the "Selection" fieldset
-    if (nbSelected == 0) {
-      $("#selectedMessage").text(
-        sprintf(
-          selectedMessage_none,
-          nb_thumbs_set
-        )
-      );
-    }
-    else if (nbSelected == nb_thumbs_set) {
-      $("#selectedMessage").text(
-        sprintf(
-          selectedMessage_all,
-          nb_thumbs_set
-        )
-      );
-    }
-    else {
-      $("#selectedMessage").text(
-        sprintf(
-          selectedMessage_pattern,
-          nbSelected,
-          nb_thumbs_set
-        )
-      );
-    }
+function checkPermitAction() {
+  var nbSelected = 0;
+  var setSelectedEl = document.querySelector("input[name=setSelected]");
+  if (setSelectedEl && setSelectedEl.checked) {
+    nbSelected = nb_thumbs_set;
+  }
+  else {
+    nbSelected = Array.from(document.querySelectorAll(".thumbnails input[type=checkbox]")).filter(function(el) { return el.checked; }).length;
   }
 
+  var permitAction = document.getElementById("permitAction");
+  var forbidAction = document.getElementById("forbidAction");
+  if (nbSelected == 0) {
+    if (permitAction) permitAction.style.display = 'none';
+    if (forbidAction) forbidAction.style.display = '';
+  }
+  else {
+    if (permitAction) permitAction.style.display = '';
+    if (forbidAction) forbidAction.style.display = 'none';
+  }
 
+  var applyOnDetails = document.getElementById("applyOnDetails");
+  if (applyOnDetails) applyOnDetails.textContent = sprintf(applyOnDetails_pattern, nbSelected);
 
-  $("[id^=action_]").hide();
+  var selectedMessage = document.getElementById("selectedMessage");
+  if (selectedMessage) {
+    if (nbSelected == 0) {
+      selectedMessage.textContent = sprintf(selectedMessage_none, nb_thumbs_set);
+    }
+    else if (nbSelected == nb_thumbs_set) {
+      selectedMessage.textContent = sprintf(selectedMessage_all, nb_thumbs_set);
+    }
+    else {
+      selectedMessage.textContent = sprintf(selectedMessage_pattern, nbSelected, nb_thumbs_set);
+    }
+  }
+}
 
-  $("select[name=selectAction]").change(function () {
-    $("[id^=action_]").hide();
+Array.from(document.querySelectorAll("[id^=action_]")).forEach(function(el) { el.style.display = 'none'; });
 
-    var action = $(this).prop("value");
+var selectActionEl = document.querySelector("select[name=selectAction]");
+if (selectActionEl) {
+  selectActionEl.addEventListener('change', function() {
+    Array.from(document.querySelectorAll("[id^=action_]")).forEach(function(el) { el.style.display = 'none'; });
+
+    var action = this.value;
     {* if (action == 'move') {
       action = 'associate';
     } *}
 
-    $("#action_"+action).show();
+    var actionEl = document.getElementById("action_" + action);
+    if (actionEl) actionEl.style.display = '';
 
-    if ($(this).val() != -1) {
-      $("#applyActionBlock").show();
+    var applyActionBlock = document.getElementById("applyActionBlock");
+    if (this.value != -1) {
+      if (applyActionBlock) applyActionBlock.style.display = '';
     }
     else {
-      $("#applyActionBlock").hide();
+      if (applyActionBlock) applyActionBlock.style.display = 'none';
     }
-    if ($(this).val() == "delete" || $(this).val() == "delete_derivatives") {
-      $("#confirmDel").css("visibility", "visible");
+    var confirmDel = document.getElementById("confirmDel");
+    if (this.value == "delete" || this.value == "delete_derivatives") {
+      if (confirmDel) confirmDel.style.visibility = "visible";
     } else {
-      $("#confirmDel").css("visibility", "hidden");  
+      if (confirmDel) confirmDel.style.visibility = "hidden";
     }
   });
+}
 
-  $(".wrap1 label").click(function (event) {
-    $("input[name=setSelected]").prop('checked', false).trigger('change');
+Array.from(document.querySelectorAll(".wrap1 label")).forEach(function(label) {
+  label.addEventListener('click', function(event) {
+    var setSelectedEl = document.querySelector("input[name=setSelected]");
+    if (setSelectedEl) { setSelectedEl.checked = false; setSelectedEl.dispatchEvent(new Event('change')); }
 
-    var li = $(this).closest("li");
-    var checkbox = $(this).children("input[type=checkbox]");
+    var li = this.closest("li");
+    var checkbox = this.querySelector("input[type=checkbox]");
 
-    checkbox.triggerHandler("shclick",event);
-
-    if ($(checkbox).is(':checked')) {
-      $(li).addClass("thumbSelected");
+    if (checkbox && checkbox.checked) {
+      if (li) li.classList.add("thumbSelected");
     }
     else {
-      $(li).removeClass('thumbSelected');
+      if (li) li.classList.remove('thumbSelected');
     }
 
     checkPermitAction();
   });
+});
 
-  $("#selectAll").click(function () {
-    $("input[name=setSelected]").prop('checked', false).trigger('change');
+function selectPageThumbnails() {
+  Array.from(document.querySelectorAll(".thumbnails label")).forEach(function(label) {
+    var checkbox = label.querySelector("input[type=checkbox]");
+    if (checkbox) { checkbox.checked = true; checkbox.dispatchEvent(new Event('change')); }
+    var li = label.closest("li");
+    if (li) li.classList.add("thumbSelected");
+  });
+}
+
+var selectAllEl = document.getElementById("selectAll");
+if (selectAllEl) {
+  selectAllEl.addEventListener('click', function(e) {
+    e.preventDefault();
+    var setSelectedEl = document.querySelector("input[name=setSelected]");
+    if (setSelectedEl) { setSelectedEl.checked = false; setSelectedEl.dispatchEvent(new Event('change')); }
     selectPageThumbnails();
     checkPermitAction();
-    return false;
   });
+}
 
-  function selectPageThumbnails() {
-    $(".thumbnails label").each(function() {
-      var checkbox = $(this).children("input[type=checkbox]");
+var selectNoneEl = document.getElementById("selectNone");
+if (selectNoneEl) {
+  selectNoneEl.addEventListener('click', function(e) {
+    e.preventDefault();
+    var setSelectedEl = document.querySelector("input[name=setSelected]");
+    if (setSelectedEl) { setSelectedEl.checked = false; setSelectedEl.dispatchEvent(new Event('change')); }
 
-      $(checkbox).prop('checked', true).trigger("change");
-      $(this).closest("li").addClass("thumbSelected");
-    });
-  }
-
-  $("#selectNone").click(function () {
-    $("input[name=setSelected]").prop('checked', false).trigger('change');
-
-    $(".thumbnails label").each(function() {
-      var checkbox = $(this).children("input[type=checkbox]");
-
-      if (jQuery(checkbox).is(':checked')) {
-        $(checkbox).prop('checked', false).trigger("change");
+    Array.from(document.querySelectorAll(".thumbnails label")).forEach(function(label) {
+      var checkbox = label.querySelector("input[type=checkbox]");
+      if (checkbox && checkbox.checked) {
+        checkbox.checked = false;
+        checkbox.dispatchEvent(new Event('change'));
       }
-
-      $(this).closest("li").removeClass("thumbSelected");
+      var li = label.closest("li");
+      if (li) li.classList.remove("thumbSelected");
     });
     checkPermitAction();
-    return false;
   });
+}
 
-  $("#selectInvert").click(function () {
-    $("input[name=setSelected]").prop('checked', false).trigger('change');
+var selectInvertEl = document.getElementById("selectInvert");
+if (selectInvertEl) {
+  selectInvertEl.addEventListener('click', function(e) {
+    e.preventDefault();
+    var setSelectedEl = document.querySelector("input[name=setSelected]");
+    if (setSelectedEl) { setSelectedEl.checked = false; setSelectedEl.dispatchEvent(new Event('change')); }
 
-    $(".thumbnails label").each(function() {
-      var checkbox = $(this).children("input[type=checkbox]");
-
-      $(checkbox).prop('checked', !$(checkbox).is(':checked')).trigger("change");
-
-      if ($(checkbox).is(':checked')) {
-        $(this).closest("li").addClass("thumbSelected");
+    Array.from(document.querySelectorAll(".thumbnails label")).forEach(function(label) {
+      var checkbox = label.querySelector("input[type=checkbox]");
+      if (checkbox) {
+        checkbox.checked = !checkbox.checked;
+        checkbox.dispatchEvent(new Event('change'));
+      }
+      var li = label.closest("li");
+      if (checkbox && checkbox.checked) {
+        if (li) li.classList.add("thumbSelected");
       }
       else {
-        $(this).closest("li").removeClass('thumbSelected');
+        if (li) li.classList.remove('thumbSelected');
       }
     });
     checkPermitAction();
-    return false;
   });
+}
 
-  $("#selectSet").click(function () {
+var selectSetEl = document.getElementById("selectSet");
+if (selectSetEl) {
+  selectSetEl.addEventListener('click', function(e) {
+    e.preventDefault();
     selectPageThumbnails();
-    $("input[name=setSelected]").prop('checked', true).trigger('change');
+    var setSelectedEl = document.querySelector("input[name=setSelected]");
+    if (setSelectedEl) { setSelectedEl.checked = true; setSelectedEl.dispatchEvent(new Event('change')); }
     checkPermitAction();
-    return false;
   });
+}
 
-  $("input[name=setSelected]").change(function() {
-    $('input[name=whole_set]').val(this.checked ? all_elements.join(',') : '');
+var setSelectedEl = document.querySelector("input[name=setSelected]");
+if (setSelectedEl) {
+  setSelectedEl.addEventListener('change', function() {
+    var wholeSet = document.querySelector('input[name=whole_set]');
+    if (wholeSet) wholeSet.value = this.checked ? all_elements.join(',') : '';
   });
+}
 
-  {*
-    if the whole set is selected on page load (after a first action has been applied),
-    trigger a change to make sure input[name=whole_set] is updated
-  *}
-  if ($('input[name="setSelected"]').is(':checked')) {
-    $("input[name=setSelected]").trigger('change');
-  }
+{*
+  if the whole set is selected on page load (after a first action has been applied),
+  trigger a change to make sure input[name=whole_set] is updated
+*}
+var setSelectedCheck = document.querySelector('input[name="setSelected"]');
+if (setSelectedCheck && setSelectedCheck.checked) {
+  setSelectedCheck.dispatchEvent(new Event('change'));
+}
 
-  jQuery("input[name=confirm_deletion]").change(function() {
-    jQuery("#confirmDel span.errors").css("visibility", "hidden");
+var confirmDeletionEl = document.querySelector("input[name=confirm_deletion]");
+if (confirmDeletionEl) {
+  confirmDeletionEl.addEventListener('change', function() {
+    var errorsEl = document.querySelector("#confirmDel span.errors");
+    if (errorsEl) errorsEl.style.visibility = "hidden";
   });
+}
 
-  jQuery('#applyAction').click(function() {
-		var action = jQuery('[name="selectAction"]').val();
-		if (action == 'delete_derivatives') {
-			let d_count = $('#confirmDel input[type=checkbox]').filter(':checked').length
-			let e_count = $('input[name="setSelected"]').is(':checked') ? nb_thumbs_set : $('.thumbnails input[type=checkbox]').filter(':checked').length;
-      if (!jQuery("#confirmDel input[name=confirm_deletion]").is(':checked')) {
-        jQuery("#confirmDel span.errors").css("visibility", "visible");
+var applyActionBtn = document.getElementById('applyAction');
+if (applyActionBtn) {
+  applyActionBtn.addEventListener('click', function(e) {
+    var action = document.querySelector('[name="selectAction"]').value;
+    if (action == 'delete_derivatives') {
+      var confirmDeletionEl = document.querySelector("#confirmDel input[name=confirm_deletion]");
+      if (!confirmDeletionEl || !confirmDeletionEl.checked) {
+        var errorsEl = document.querySelector("#confirmDel span.errors");
+        if (errorsEl) errorsEl.style.visibility = "visible";
+        e.preventDefault();
         return false;
       } else {
         return true;
       }
     }
 
-		if (action != 'generate_derivatives'
-			|| derivatives.finished() )
-		{
-			return true;
-		}
+    if (action != 'generate_derivatives' || derivatives.finished()) {
+      return true;
+    }
 
-		jQuery('.bulkAction').hide();
+    Array.from(document.querySelectorAll('.bulkAction')).forEach(function(el) { el.style.display = 'none'; });
 
-		var queuedManager = jQuery.manageAjax.create('queued', {
-			queue: true,
-			cacheResponse: false,
-			maxRequests: 1
-		});
+    derivatives.elements = [];
+    var setSelectedEl = document.querySelector('input[name="setSelected"]');
+    if (setSelectedEl && setSelectedEl.checked) {
+      derivatives.elements = all_elements;
+    } else {
+      Array.from(document.querySelectorAll('.thumbnails input[type=checkbox]')).forEach(function(cb) {
+        if (cb.checked) {
+          derivatives.elements.push(cb.value);
+        }
+      });
+    }
 
-		derivatives.elements = [];
-		if (jQuery('input[name="setSelected"]').is(':checked'))
-			derivatives.elements = all_elements;
-		else
-			jQuery('.thumbnails input[type=checkbox]').each(function() {
-				if (jQuery(this).is(':checked')) {
-					derivatives.elements.push(jQuery(this).val());
-				}
-			});
+    var applyActionBlock = document.getElementById('applyActionBlock');
+    if (applyActionBlock) applyActionBlock.style.display = 'none';
+    var selectActionEl = document.querySelector('select[name="selectAction"]');
+    if (selectActionEl) selectActionEl.style.display = 'none';
+    Array.from(document.querySelectorAll('.permitActionListButton div')).forEach(function(el) { el.classList.add('hidden'); });
+    var regenerationMsg = document.getElementById('regenerationMsg');
+    if (regenerationMsg) regenerationMsg.style.display = '';
 
-		jQuery('#applyActionBlock').hide();
-		jQuery('select[name="selectAction"]').hide();
-    jQuery('.permitActionListButton div').addClass('hidden');
-		jQuery('#regenerationMsg').show();
-
-		progress_start();
+    progress_start();
     progress();
-		getDerivativeUrls();
-		return false;
+    getDerivativeUrls();
+    e.preventDefault();
+    return false;
   });
+}
 
-  checkPermitAction();
+checkPermitAction();
 
-  jQuery("select[name=filter_prefilter]").change(function() {
-    jQuery("#empty_caddie").toggle(jQuery(this).val() == "caddie");
-    jQuery("#duplicates_options").toggle(jQuery(this).val() == "duplicates");
-    jQuery("#delete_orphans").toggle(jQuery(this).val() == "no_album");
-    jQuery("#sync_md5sum").toggle(jQuery(this).val() == "no_sync_md5sum");
+var filterPrefilterEl = document.querySelector("select[name=filter_prefilter]");
+if (filterPrefilterEl) {
+  filterPrefilterEl.addEventListener('change', function() {
+    var val = this.value;
+    var emptyCaddie = document.getElementById("empty_caddie");
+    var duplicatesOptions = document.getElementById("duplicates_options");
+    var deleteOrphans = document.getElementById("delete_orphans");
+    var syncMd5sum = document.getElementById("sync_md5sum");
+    if (emptyCaddie) emptyCaddie.style.display = val == "caddie" ? '' : 'none';
+    if (duplicatesOptions) duplicatesOptions.style.display = val == "duplicates" ? '' : 'none';
+    if (deleteOrphans) deleteOrphans.style.display = val == "no_album" ? '' : 'none';
+    if (syncMd5sum) syncMd5sum.style.display = val == "no_sync_md5sum" ? '' : 'none';
   });
-});
+}
 {/footer_script}
 
-{combine_script id='jquery.confirm' load='footer' require='jquery' path='themes/default/js/plugins/jquery-confirm.min.js'}
-{combine_css path="themes/default/js/plugins/jquery-confirm.min.css"}
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
 
 <div id="batchManagerGlobal">

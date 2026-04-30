@@ -48,7 +48,6 @@
   {/if}
 {/foreach}
 
-{combine_script id="jquery" load="footer"}
 {combine_script id="core.scripts" load="footer" path="themes/default/js/scripts.js"}
 {/strip}
 

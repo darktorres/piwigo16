@@ -74,23 +74,22 @@ Files: `addAlbum.ts`, `album_selector.ts`, `albums.ts`, `cat_search.ts`, `commen
 
 ## Status (as of 2026-04-29)
 
-Waves 1–5 complete. **41 of 42 TypeScript files** converted to jQuery-free native DOM + npm packages.
+**Waves 1–6 complete. jQuery fully removed.**
 
-**Single remaining blocker:** `albums.ts` depends on `jqtree` npm package which still uses `jQuery.ajax` internally (v1.8.11). Options to unblock: (a) replace jqTree with a vanilla JS tree widget, (b) fork and patch jqTree to use `fetch` instead of `jQuery.ajax`, (c) rewrite the album tree using native HTML drag-and-drop + recursive DOM rendering.
+All 42 TypeScript files are jQuery-free. All Smarty templates have been converted from inline jQuery to vanilla JS. jQuery and all vendored jQuery plugins have been deleted from the codebase.
 
-Wave 6 (removing jQuery from `ScriptLoader.php` known_paths, templates, and vendored files) cannot proceed until `albums.ts` is unblocked.
+### Wave 6 — Remove jQuery itself ✓
 
----
-
-### Wave 6 — Remove jQuery itself
-
-Only runs after all prior waves are complete.
-
-- `ScriptLoader.php`: remove `'jquery'` and all `'jquery.ui*'` from `$known_paths`
-- `themes/default/template/header.tpl` and all other templates: remove `{combine_script id="jquery"}` and all plugin `combine_script` calls
-- Delete vendored files: `themes/default/js/jquery.js`, `jquery.min.js`, `jquery.cookie.js`, `ui/`, `plugins/`
-- `package.json`: remove `@types/jquery`, `@types/jqueryui` from devDependencies
-- `tsconfig.json`: remove jquery/jqueryui type references
+- `ScriptLoader.php`: removed `'jquery'`, `'jquery.ui'`, `'jquery.ui.effect'` from `$known_paths`; removed `$ui_core_dependencies`; removed jQuery-specific auto-dependency logic from `fill_well_known`
+- All header templates: removed `{combine_script id="jquery"}` 
+- All plugin `{combine_script}` calls replaced with Vite-bundled npm equivalents
+- New Vite entries: `glightbox-admin`, `lightbox`, `mcs`, `rating_user`, `picture_coi`
+- Deleted vendored files: `themes/default/js/jquery.js`, `jquery.min.js`, `jquery.cookie.js`, `ui/`, `plugins/colorbox/`, `plugins/datatables/`, `plugins/plupload/`, and all jQuery plugins
+- `package.json`: removed `@types/jquery`, `@types/jqueryui` from devDependencies; added `datatables.net`
+- `tsconfig.json`: removed jquery/jqueryui type references
+- `mcs.js` → `mcs.ts` (2,334 lines, Tom Select replaces Selectize, fetch replaces jQuery.ajax)
+- `picture_coi.tpl`: Jcrop replaced with native drag-select crop overlay (picture_coi.ts)
+- `rating_user.tpl`: jQuery DataTables 1.x replaced with DataTables 2.x vanilla mode
 
 ## Critical files
 

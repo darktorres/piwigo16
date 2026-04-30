@@ -1,10 +1,8 @@
 {include file='include/colorbox.inc.tpl'}
 
-{footer_script}{literal}
-jQuery().ready(function(){
-  jQuery(".illustration a").colorbox({rel:'group1'});
-});
-{/literal}{/footer_script}
+{footer_script}
+GLightbox({selector: '.illustration a'});
+{/footer_script}
 
 {html_head}{literal}
 <style type="text/css">

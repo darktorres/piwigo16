@@ -1,8 +1,6 @@
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
 {combine_script id='LocalStorageCache' load='footer' path='admin/themes/default/js/LocalStorageCache.js'}
 
-{combine_script id='jquery.selectize' load='footer' path='themes/default/js/plugins/selectize.min.js'}
-{combine_css id='jquery.selectize' path="themes/default/js/plugins/selectize.{$themeconf.colorscheme}.css"}
 
 {footer_script}
 const cat_nav = '{$CATEGORIES_NAV|escape:javascript}';
@@ -14,7 +12,7 @@ var groupsCache = new GroupsCache({
   rootUrl: '{$ROOT_URL}'
 });
 
-groupsCache.selectize(jQuery('[data-selectize=groups]'));
+window.groupsCache?.selectize(document.querySelector('[data-selectize=groups]'));
 
 {* <!-- USERS --> *}
 var usersCache = new UsersCache({
@@ -23,28 +21,38 @@ var usersCache = new UsersCache({
   rootUrl: '{$ROOT_URL}'
 });
 
-usersCache.selectize(jQuery('[data-selectize=users]'));
+window.usersCache?.selectize(document.querySelector('[data-selectize=users]'));
 
 {* <!-- TOGGLES --> *}
 function checkStatusOptions() {
-  if (jQuery("input[name=status]:checked").val() == "private") {
-    jQuery("#privateOptions").show();
+  var checkedStatus = document.querySelector("input[name=status]:checked");
+  var privateOptions = document.getElementById("privateOptions");
+  if (checkedStatus && checkedStatus.value == "private") {
+    if (privateOptions) privateOptions.style.display = '';
   }
   else {
-    jQuery("#privateOptions").hide();
+    if (privateOptions) privateOptions.style.display = 'none';
   }
 }
 
 checkStatusOptions();
-jQuery("#selectStatus").change(function() {
-  checkStatusOptions();
-});
+var selectStatusEl = document.getElementById("selectStatus");
+if (selectStatusEl) {
+  selectStatusEl.addEventListener('change', function() {
+    checkStatusOptions();
+  });
+}
 
 {if isset($nb_users_granted_indirect) && $nb_users_granted_indirect>0}
-  jQuery(".toggle-indirectPermissions").click(function(e){
-    jQuery(".toggle-indirectPermissions").toggle();
-    jQuery("#indirectPermissionsDetails").toggle();
-    e.preventDefault();
+  Array.from(document.querySelectorAll(".toggle-indirectPermissions")).forEach(function(el) {
+    el.addEventListener('click', function(e) {
+      e.preventDefault();
+      Array.from(document.querySelectorAll(".toggle-indirectPermissions")).forEach(function(t) {
+        t.style.display = t.style.display === 'none' ? '' : 'none';
+      });
+      var details = document.getElementById("indirectPermissionsDetails");
+      if (details) details.style.display = details.style.display === 'none' ? '' : 'none';
+    });
   });
 {/if}
 }());

@@ -1,15 +1,20 @@
 {footer_script}
-jQuery(document).ready(function() {ldelim}
-	jQuery('input[name="submit"]').click(function() {ldelim}
-    if(!confirm('{'Are you sure?'|@translate}'))
-      return false;
-    jQuery(this).hide();
-    jQuery('.autoupdate_bar').show();
-	});
-  jQuery('[name="understand"]').click(function() {ldelim}
-    jQuery('[name="submit"]').attr('disabled', !this.checked);
+(function() {ldelim}
+  document.querySelectorAll('input[name="submit"]').forEach(function(btn) {ldelim}
+    btn.addEventListener('click', function() {ldelim}
+      if (!confirm('{'Are you sure?'|@translate}')) return false;
+      this.style.display = 'none';
+      document.querySelectorAll('.autoupdate_bar').forEach(function(el) {ldelim} el.style.display = ''; });
+    });
   });
-});
+  document.querySelectorAll('[name="understand"]').forEach(function(cb) {ldelim}
+    cb.addEventListener('click', function() {ldelim}
+      document.querySelectorAll('[name="submit"]').forEach(function(btn) {ldelim}
+        btn.disabled = !cb.checked;
+      });
+    });
+  });
+}());
 {/footer_script}
 
 {html_head}

@@ -1,7 +1,3 @@
-{html_head}
-<link rel="stylesheet" type="text/css" href="themes/default/js/plugins/jquery.Jcrop.css" />
-{/html_head}
-{combine_script id='jquery.jcrop' load='footer' require='jquery' path='themes/default/js/plugins/jquery.Jcrop.min.js'}
 
 <form method="post">
 
@@ -33,39 +29,5 @@
 </fieldset>
 </form>
 
-{footer_script}
-{literal}
-function from_coi(f, total) {
-	return f*total;
-}
-
-function to_coi(v, total) {
-	return v/total;
-}
-
-function jOnChange(sel) {
-	var $img = jQuery("#jcrop");
-	jQuery("#l").val( to_coi(sel.x, $img.width()) );
-	jQuery("#t").val( to_coi(sel.y, $img.height()) );
-	jQuery("#r").val( to_coi(sel.x2, $img.width()) );
-	jQuery("#b").val( to_coi(sel.y2, $img.height()) );
-}
-function jOnRelease() {
-	jQuery("#l,#t,#r,#b").val("");
-}
-
-{/literal}
-jQuery("#jcrop").Jcrop( {ldelim}
-	boxWidth: 500, boxHeight: 400,
-	onChange: jOnChange,
-	onRelease: jOnRelease
-	}
-{if isset($coi)}
-	,function() {ldelim}
-		var $img = jQuery("#jcrop");
-		this.animateTo( [from_coi({$coi.l}, $img.width()), from_coi({$coi.t}, $img.height()), from_coi({$coi.r}, $img.width()), from_coi({$coi.b}, $img.height()) ] );
-	}
-{/if}
-);
-{/footer_script}
+{combine_script id='picture_coi' load='footer' path='admin/themes/default/js/picture_coi.js'}
 

@@ -135,61 +135,69 @@
 
 {footer_script}
 
-
 // Update preview when user clicks on mini previews
-jQuery(".std_pgs_mini_previews img").click(function () {
+document.querySelectorAll(".std_pgs_mini_previews img").forEach(function(img) {
+  img.addEventListener('click', function() {
+    //Make selected skin outlined
+    document.querySelectorAll(".std_pgs_mini_previews img").forEach(function(i) {
+      i.classList.remove('selected');
+    });
+    this.classList.add('selected');
 
-  //Make selected skin outlined
-  jQuery(".std_pgs_mini_previews img").removeClass('selected');
-  jQuery(this).addClass('selected');
+    //Update preview when user clicks on mini
+    var skinInput = document.querySelector('input[name=std_pgs_selected_skin]');
+    if (skinInput) skinInput.value = this.id;
 
-  //Update preview when useer clicks on mini
-  jQuery('input[name=std_pgs_selected_skin]').val(jQuery(this).attr('id'));
+    var preview_light_path = "themes/standard_pages/skins/light-" + this.id + ".jpg";
+    var preview_dark_path = "themes/standard_pages/skins/dark-" + this.id + ".jpg";
 
-  let preview_light_path = "themes/standard_pages/skins/light-"+$(this).attr('id')+".jpg";
-  let preview_dark_path = "themes/standard_pages/skins/dark-"+$(this).attr('id')+".jpg";
-  
-  jQuery('.std_pgs_selected_preview img#preview-light').attr("src", preview_light_path);
-  jQuery('.std_pgs_selected_preview img#preview-dark').attr("src", preview_dark_path);
+    var previewLight = document.querySelector('.std_pgs_selected_preview img#preview-light');
+    var previewDark = document.querySelector('.std_pgs_selected_preview img#preview-dark');
+    if (previewLight) previewLight.setAttribute("src", preview_light_path);
+    if (previewDark) previewDark.setAttribute("src", preview_dark_path);
+  });
 });
 
-jQuery("input[name=std_pgs_display_logo]").click(function () {
-  if('custom_logo' == jQuery(this).val())
-  {
-    // jQuery('#std_pgs_logo').addClass('show').removeClass('hide');
-    jQuery('.custom_logo_preview').addClass('show').removeClass('hide');
-  }
-  else
-  {
-    // jQuery('#std_pgs_logo').addClass('hide').removeClass('show');
-    jQuery('.custom_logo_preview').addClass('hide').removeClass('show');
-  }
+document.querySelectorAll("input[name=std_pgs_display_logo]").forEach(function(radio) {
+  radio.addEventListener('click', function() {
+    var customLogoPreviews = document.querySelectorAll('.custom_logo_preview');
+    if (this.value === 'custom_logo') {
+      customLogoPreviews.forEach(function(el) { el.classList.add('show'); el.classList.remove('hide'); });
+    } else {
+      customLogoPreviews.forEach(function(el) { el.classList.add('hide'); el.classList.remove('show'); });
+    }
+  });
 });
 
 // Scroll mini to show the selected one
-jQuery(document).ready(function () {
-  const std_pgs_mini_previews = jQuery('.std_pgs_mini_previews');
-  const selected_mini = std_pgs_mini_previews.find('.selected');
-
-  if (selected_mini.length) {
-    std_pgs_mini_previews.scrollTop(
-      selected_mini.position().top + std_pgs_mini_previews.scrollTop()
-    );
+(function() {
+  var miniPreviewsEl = document.querySelector('.std_pgs_mini_previews');
+  if (miniPreviewsEl) {
+    var selectedMini = miniPreviewsEl.querySelector('.selected');
+    if (selectedMini) {
+      miniPreviewsEl.scrollTop = selectedMini.offsetTop - miniPreviewsEl.offsetTop;
+    }
   }
-});
+}());
 
 //Switch between change logo and use existing logo
-
-  jQuery('#change_logo').click(function () {
-    jQuery('.use_existing_logo_container').show();
-    jQuery('.change_logo_container').hide();
+var changeLogo = document.getElementById('change_logo');
+if (changeLogo) {
+  changeLogo.addEventListener('click', function(e) {
+    e.preventDefault();
+    document.querySelectorAll('.use_existing_logo_container').forEach(function(el) { el.style.display = ''; });
+    document.querySelectorAll('.change_logo_container').forEach(function(el) { el.style.display = 'none'; });
   });
-  jQuery('#use_existing_logo').click(function () {
-    jQuery('.change_logo_container').show();
-    jQuery('.use_existing_logo_container').hide();
-    jQuery('#std_pgs_logo').val('');
+}
+var useExistingLogo = document.getElementById('use_existing_logo');
+if (useExistingLogo) {
+  useExistingLogo.addEventListener('click', function(e) {
+    e.preventDefault();
+    document.querySelectorAll('.change_logo_container').forEach(function(el) { el.style.display = ''; });
+    document.querySelectorAll('.use_existing_logo_container').forEach(function(el) { el.style.display = 'none'; });
+    var logoInput = document.getElementById('std_pgs_logo');
+    if (logoInput) logoInput.value = '';
   });
-
-
+}
 
 {/footer_script}

@@ -1,49 +1,38 @@
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_script id='jquery.selectize' load='footer' path='themes/default/js/plugins/selectize.min.js'}
-{combine_css id='jquery.selectize' path="themes/default/js/plugins/selectize.{$themeconf.colorscheme}.css"}
 
 {footer_script}
 
 const cat_nav = '{$CATEGORIES_NAV|escape:javascript}';
 
-jQuery(document).ready(function() {
-
-
-  jQuery("input[name=who]").change(function () {
-    checkWhoOptions();
-  });
-
-  checkWhoOptions();
-
-  function checkWhoOptions() {
-    var option = jQuery("input[name=who]:checked").val();
-    jQuery(".who_option").hide();
-    jQuery(".who_" + option).show();
+function checkWhoOptions() {
+  var checked = document.querySelector("input[name=who]:checked");
+  var option = checked ? checked.value : '';
+  document.querySelectorAll(".who_option").forEach(function(el) { el.style.display = 'none'; });
+  if (option) {
+    document.querySelectorAll(".who_" + option).forEach(function(el) { el.style.display = ''; });
   }
+}
 
-  jQuery(".who_option select").selectize({
-    plugins: ['remove_button']
-  });
+document.querySelectorAll("input[name=who]").forEach(function(el) {
+  el.addEventListener('change', checkWhoOptions);
+});
+checkWhoOptions();
 
-  jQuery("form#categoryNotify").submit(function(e) {
-    var who_selected = false;
-    var who_option = jQuery("input[name=who]:checked").val();
-
-    if (jQuery(".who_" + who_option + " select").length > 0) {
-      if (jQuery(".who_" + who_option + " select option:selected").length > 0) {
-         who_selected = true;
-      }
-    }
-
-    if (!who_selected) {
-      jQuery(".actionButtons .errors").show();
-      e.preventDefault();
-    }
-    else {
-      jQuery(".actionButtons .errors").hide();
-      console.log("form can be submited");
-    }
-  });
+document.querySelector("form#categoryNotify")?.addEventListener('submit', function(e) {
+  var checked = document.querySelector("input[name=who]:checked");
+  var who_option = checked ? checked.value : '';
+  var who_selected = false;
+  var selEl = document.querySelector(".who_" + who_option + " select");
+  if (selEl && selEl.querySelectorAll("option:checked").length > 0) {
+    who_selected = true;
+  }
+  var errEl = document.querySelector(".actionButtons .errors");
+  if (!who_selected) {
+    if (errEl) errEl.style.display = '';
+    e.preventDefault();
+  } else {
+    if (errEl) errEl.style.display = 'none';
+  }
 });
 {/footer_script}
 

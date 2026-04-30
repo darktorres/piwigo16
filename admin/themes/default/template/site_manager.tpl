@@ -1,20 +1,18 @@
-{footer_script}{literal}
-jQuery(document).ready(function(){
-  jQuery("#showCreateSite a").click(function(){
-    jQuery("#showCreateSite").hide();
-    jQuery("#createSite").show();
-  });
-});
-{/literal}{/footer_script}
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_script id='jquery.confirm' load='footer' require='jquery' path='themes/default/js/plugins/jquery-confirm.min.js'}
-{combine_css path="themes/default/js/plugins/jquery-confirm.min.css"}
 {footer_script}
+document.querySelector("#showCreateSite a")?.addEventListener('click', function(e) {
+  e.preventDefault();
+  var showEl = document.getElementById('showCreateSite');
+  var createEl = document.getElementById('createSite');
+  if (showEl) showEl.style.display = 'none';
+  if (createEl) createEl.style.display = '';
+});
+
 const title_msg = '{'Are you sure you want to delete this site?'|@translate|@escape:'javascript'}';
 const confirm_msg = '{"Yes, I am sure"|@translate}';
 const cancel_msg = "{"No, I have changed my mind"|@translate}";
-$(".delete-site-button").each(function() {
-  $(this).pwg_jconfirm_follow_href({
+document.querySelectorAll(".delete-site-button").forEach(function(el) {
+  (window as any).pwg_jconfirm_follow_href_fn(el, {
     alert_title: title_msg,
     alert_confirm: confirm_msg,
     alert_cancel: cancel_msg

@@ -1,14 +1,10 @@
-{combine_script id='jquery.selectize' load='footer' path='themes/default/js/plugins/selectize.min.js'}
-{combine_css id='jquery.selectize' path="themes/default/js/plugins/selectize.{$themeconf.colorscheme}.css"}
 
 {footer_script}
-jQuery(document).ready(function() {
-  jQuery("#authors, #tags, #categories").each(function() {
-    jQuery(this).selectize({
-      plugins: ['remove_button'],
-      maxOptions:jQuery(this).find("option").length
-    });
-  })
+['authors', 'tags', 'categories'].forEach(function(id) {
+  var el = document.getElementById(id);
+  if (el && typeof (window as any).TomSelect !== 'undefined') {
+    new (window as any).TomSelect(el, { plugins: ['remove_button'], maxOptions: el.querySelectorAll('option').length });
+  }
 });
 {/footer_script}
 

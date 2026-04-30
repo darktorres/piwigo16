@@ -1,8 +1,6 @@
 {include file='include/colorbox.inc.tpl'}
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
 
-{combine_script id='jquery.selectize' load='footer' path='themes/default/js/plugins/selectize.min.js'}
-{combine_css id='jquery.selectize' path="themes/default/js/plugins/selectize.{$themeconf.colorscheme}.css"}
 
 {combine_script id='LocalStorageCache' load='footer' path='admin/themes/default/js/LocalStorageCache.js'}
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
@@ -114,7 +112,7 @@ var actionInfos_tags_moved = "{'%d tags moved'|translate}";
 
 {/footer_script}
 
-{combine_script id='user_activity' load='async' require='jquery' path='admin/themes/default/js/user_activity.js'}
+{combine_script id='user_activity' load='async' path='admin/themes/default/js/user_activity.js'}
 <div class="container"> 
     <div>
         <div class="activity-header">

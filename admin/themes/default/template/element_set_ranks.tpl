@@ -1,44 +1,77 @@
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{footer_script require='jquery.ui.sortable'}
+{footer_script}
 
 const cat_nav = '{$CATEGORIES_NAV|escape:javascript}';
 
-jQuery(document).ready(function() {
-  function checkOrderOptions() {
-    jQuery("#image_order_user_define_options").hide();
-    if (jQuery("input[name=image_order_choice]:checked").val() == "user_define") {
-      jQuery("#image_order_user_define_options").show();
-    }        
+function checkOrderOptions() {
+  var optionsDiv = document.getElementById("image_order_user_define_options");
+  var checked = document.querySelector("input[name=image_order_choice]:checked");
+  if (optionsDiv) {
+    optionsDiv.style.display = (checked && checked.value == "user_define") ? '' : 'none';
   }
+}
 
-  jQuery('ul.thumbnails').sortable( { 
-    revert: true, opacity: 0.7,
-    handle: jQuery('.rank-of-image').add('.rank-of-image img'),
-    update: function() {
-      jQuery(this).find('li').each(function(i) { 
-        jQuery(this).find("input[name^=rank_of_image]").each(function() {
-          jQuery(this).attr('value', (i+1)*10)
-        });
-      });
+// Native HTML5 drag-and-drop sortable for thumbnails list
+(function() {
+  var ul = document.querySelector('ul.thumbnails');
+  if (!ul) return;
 
-      jQuery('#image_order_rank').prop('checked', true);
+  var draggingEl = null;
+
+  Array.from(ul.querySelectorAll('li.rank-of-image')).forEach(function(li) {
+    li.setAttribute('draggable', 'true');
+    li.style.cursor = 'grab';
+
+    li.addEventListener('dragstart', function(e) {
+      draggingEl = li;
+      li.style.opacity = '0.5';
+      e.dataTransfer.effectAllowed = 'move';
+    });
+
+    li.addEventListener('dragend', function() {
+      li.style.opacity = '';
+      draggingEl = null;
+      updateRanks();
+      var imageOrderRank = document.getElementById('image_order_rank');
+      if (imageOrderRank) imageOrderRank.checked = true;
       checkOrderOptions();
-    }
+    });
+
+    li.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      if (draggingEl && draggingEl !== li) {
+        var allItems = Array.from(ul.querySelectorAll('li.rank-of-image'));
+        var draggingIdx = allItems.indexOf(draggingEl);
+        var targetIdx = allItems.indexOf(li);
+        if (draggingIdx < targetIdx) {
+          ul.insertBefore(draggingEl, li.nextSibling);
+        } else {
+          ul.insertBefore(draggingEl, li);
+        }
+      }
+    });
   });
 
-  jQuery("input[name=image_order_choice]").click(function () {
+  function updateRanks() {
+    Array.from(ul.querySelectorAll('li.rank-of-image')).forEach(function(li, i) {
+      var input = li.querySelector("input[name^=rank_of_image]");
+      if (input) input.value = (i + 1) * 10;
+    });
+  }
+})();
+
+Array.from(document.querySelectorAll("input[name=image_order_choice]")).forEach(function(radio) {
+  radio.addEventListener('click', function() {
     checkOrderOptions();
   });
+});
 
-  checkOrderOptions();
+checkOrderOptions();
+
+Array.from(document.querySelectorAll('.thumbnail')).forEach(function(el) {
+  el.tipTip({ 'delay': 0, 'fadeIn': 200, 'fadeOut': 200 });
 });
-jQuery(document).ready(function() {
-jQuery('.thumbnail').tipTip({
-'delay' : 0,
-'fadeIn' : 200,
-'fadeOut' : 200
-});
-}); 
 {/footer_script}
 
 <form action="{$F_ACTION}" method="post" id="element_set_ranks">

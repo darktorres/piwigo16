@@ -1,7 +1,5 @@
 {combine_script id="comments" load="footer" path="admin/themes/default/js/comments.js"}
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_script id='jquery.confirm' load='footer' require='jquery' path='themes/default/js/plugins/jquery-confirm.min.js'}
-{combine_css path="themes/default/js/plugins/jquery-confirm.min.css"}
 {footer_script}
 const str_yes_delete_confirmation = "{'Yes, delete'|@translate|@escape:'javascript'}"
 const str_no_delete_confirmation = "{"No, I have changed my mind"|@translate|@escape:'javascript'}"

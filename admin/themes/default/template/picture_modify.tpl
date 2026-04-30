@@ -1,17 +1,9 @@
 {include file='include/autosize.inc.tpl'}
 {include file='include/datepicker.inc.tpl'}
-{include file='include/colorbox.inc.tpl'}
 
 {combine_script id='LocalStorageCache' load='footer' path='admin/themes/default/js/LocalStorageCache.js'}
 
-{combine_script id='jquery.selectize' load='footer' path='themes/default/js/plugins/selectize.min.js'}
-{combine_css id='jquery.selectize' path="themes/default/js/plugins/selectize.{$themeconf.colorscheme}.css"}
-
-{combine_script id='jquery.confirm' load='footer' require='jquery' path='themes/default/js/plugins/jquery-confirm.min.js'}
-{combine_css path="themes/default/js/plugins/jquery-confirm.min.css"}
-
 {footer_script}
-(function(){
 {* <!-- CATEGORIES --> *}
 var categoriesCache = new CategoriesCache({
   serverKey: '{$CACHE_KEYS.categories}',
@@ -19,7 +11,7 @@ var categoriesCache = new CategoriesCache({
   rootUrl: '{$ROOT_URL}'
 });
 
-categoriesCache.selectize(jQuery('[data-selectize=categories]'));
+window.categoriesCache?.selectize(document.querySelector('[data-selectize=categories]'));
 
 {* <!-- TAGS --> *}
 var tagsCache = new TagsCache({
@@ -28,22 +20,20 @@ var tagsCache = new TagsCache({
   rootUrl: '{$ROOT_URL}'
 });
 
-tagsCache.selectize(jQuery('[data-selectize=tags]'), { lang: {
+window.tagsCache?.selectize(document.querySelector('[data-selectize=tags]'), { lang: {
   'Add': '{'Create'|translate}'
 }});
 
 {* <!-- DATEPICKER --> *}
-jQuery(function(){ {* <!-- onLoad needed to wait localization loads --> *}
-  jQuery('[data-datepicker]').pwgDatepicker({
+document.querySelectorAll('[data-datepicker]').forEach(function(el) {
+  window.pwgDatepicker(el, {
     showTimepicker: true,
     cancelButton: '{'Cancel'|translate}'
   });
 });
 
 {* <!-- THUMBNAILS --> *}
-jQuery("a.preview-box").colorbox({
-	photo: true
-});
+GLightbox({selector: 'a.preview-box'});
 
 str_are_you_sure = '{'Are you sure?'|translate|escape:javascript}';
 str_yes = '{'Yes, delete'|translate|escape:javascript}';
@@ -54,38 +44,12 @@ str_orphan = '{'This photo is an orphan'|@translate|escape:javascript}';
 
 related_categories_ids = {$related_categories_ids|@json_encode};
 
-{literal}
-$('#action-delete-picture').on('click', function() {
-  $.confirm({
-    title: str_are_you_sure,
-    draggable: false,
-    titleClass: "groupDeleteConfirm",
-    theme: "modern",
-    content: "",
-    animation: "zoom",
-    boxWidth: '30%',
-    useBootstrap: false,
-    type: 'red',
-    animateFromElement: false,
-    backgroundDismiss: true,
-    typeAnimated: false,
-    buttons: {
-        confirm: {
-          text: str_yes,
-          btnClass: 'btn-red',
-          action: function () {
-            window.location.href = url_delete.replaceAll('amp;', '');
-          }
-        },
-        cancel: {
-          text: str_no
-        }
-    }
-  });
-})
-{/literal}
+document.getElementById('action-delete-picture').addEventListener('click', function() {
+  if (window.confirm(str_are_you_sure)) {
+    window.location.href = url_delete.replaceAll('amp;', '');
+  }
+});
 
-}());
 const str_assoc_album_ab = '{'Associate to album'|translate|escape:javascript}';
 {/footer_script}
 

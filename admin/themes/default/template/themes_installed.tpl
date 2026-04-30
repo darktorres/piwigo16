@@ -1,66 +1,65 @@
-{include file='include/colorbox.inc.tpl'} 
-
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_script id='jquery.confirm' load='footer' require='jquery' path='themes/default/js/plugins/jquery-confirm.min.js'}
-{combine_css path="themes/default/js/plugins/jquery-confirm.min.css"}
 {footer_script}
 const title_msg = '{'Are you sure you want to delete this theme?'|@translate|@escape:'javascript'}';
 const confirm_msg = '{"Yes, I am sure"|@translate}';
 const cancel_msg = "{"No, I have changed my mind"|@translate}";
-$(".delete-theme-button").each(function() {
-  let theme_name = $(this).closest(".themeBox").find(".themeName").attr("title");
+Array.from(document.querySelectorAll(".delete-theme-button")).forEach(function(btn) {
+  let themeBox = btn.closest(".themeBox");
+  let themeNameEl = themeBox ? themeBox.querySelector(".themeName") : null;
+  let theme_name = themeNameEl ? themeNameEl.getAttribute("title") : '';
   let title = '{'Are you sure you want to delete the theme "%s"?'|@translate|@escape:'javascript'}';
-  $(this).pwg_jconfirm_follow_href({
-    alert_title: title.replace("%s", theme_name),
-    alert_confirm: confirm_msg,
-    alert_cancel: cancel_msg
+  let alert_title = title.replace("%s", theme_name);
+  btn.addEventListener('click', function(e) {
+    if (!window.confirm(alert_title)) {
+      e.preventDefault();
+    }
   });
 });
 {/footer_script}
 
-{footer_script}{literal}
-jQuery(document).ready(function() {
-  $("a.preview-box").colorbox();
-  
-  $(document).mouseup(function (e) {
-    e.stopPropagation();
-    if (!$(event.target).hasClass('showInfo')) {
-      $('.showInfo-dropdown').fadeOut();
-    }
-  });
-  
+{footer_script}
+GLightbox({selector: 'a.preview-box'});
+
+document.addEventListener('mouseup', function(e) {
+  e.stopPropagation();
+  if (!e.target.classList.contains('showInfo')) {
+    Array.from(document.querySelectorAll('.showInfo-dropdown')).forEach(function(el) { el.style.display = 'none'; });
+  }
 });
 
-$(window).bind("load", function() {
-  $('.themeBox').each(function() {
-
-    let box = $(this);
-    box.find('.showInfo').on('click', function() {
-      let dropdown = box.find('.showInfo-dropdown');
-      $('.showInfo-dropdown').each(function() {
-        if ($(this) !== dropdown) {
-          $(this).fadeOut();
-        }  
-      })
-      box.find('.showInfo-dropdown').fadeToggle();
+Array.from(document.querySelectorAll('.themeBox')).forEach(function(box) {
+  var showInfoBtn = box.querySelector('.showInfo');
+  if (showInfoBtn) {
+    showInfoBtn.addEventListener('click', function() {
+      var dropdown = box.querySelector('.showInfo-dropdown');
+      Array.from(document.querySelectorAll('.showInfo-dropdown')).forEach(function(el) {
+        if (el !== dropdown) {
+          el.style.display = 'none';
+        }
+      });
+      if (dropdown) {
+        dropdown.style.display = dropdown.style.display === 'none' || dropdown.style.display === '' ? 'block' : 'none';
+      }
     });
+  }
 
-    let screenImage = $(this).find(".preview-box img");
-    let imageW = screenImage.innerWidth();
-    let imageH = screenImage.innerHeight();
-    let size = $(this).find(".preview-box").innerWidth();
+  var screenImage = box.querySelector(".preview-box img");
+  var previewBox = box.querySelector(".preview-box");
+  if (screenImage && previewBox) {
+    var imageW = screenImage.offsetWidth;
+    var imageH = screenImage.offsetHeight;
+    var size = previewBox.offsetWidth;
 
     if (imageW > imageH) {
-      screenImage.css('height', size+'px');
-      screenImage.css('width', (imageW * size / imageH)+'px');
+      screenImage.style.height = size + 'px';
+      screenImage.style.width = (imageW * size / imageH) + 'px';
     } else {
-      screenImage.css('width', size+'px');
-      screenImage.css('heigth', (imageH * size / imageW)+'px');
+      screenImage.style.width = size + 'px';
+      screenImage.style.height = (imageH * size / imageW) + 'px';
     }
-  })
-})
-
-{/literal}{/footer_script}
+  }
+});
+{/footer_script}
 
 <div id="themesContent">
 

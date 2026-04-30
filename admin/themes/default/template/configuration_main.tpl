@@ -1,7 +1,7 @@
 {include file='include/colorbox.inc.tpl'}
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
 
-{footer_script require='jquery'}
+{footer_script}
 (function(){
   var targets = {
     'input[name="rate"]' : '#rate_anonymous',
@@ -9,24 +9,26 @@
     'input[name="email_admin_on_new_user"]' : '#email_admin_on_new_user_filter'
   };
 
-  for (selector in targets) {
+  for (var selector in targets) {
     var target = targets[selector];
 
-    jQuery(target).toggle(jQuery(selector).is(':checked'));
+    var targetEl = document.querySelector(target);
+    var selectorEl = document.querySelector(selector);
+    if (targetEl && selectorEl) {
+      targetEl.style.display = selectorEl.checked ? '' : 'none';
 
-    (function(target){
-      jQuery(selector).on('change', function() {
-        jQuery(target).toggle($(this).is(':checked'));
-      });
-    })(target);
+      (function(targetSel, sourceSel) {
+        var src = document.querySelector(sourceSel);
+        var tgt = document.querySelector(targetSel);
+        if (src && tgt) {
+          src.addEventListener('change', function() {
+            tgt.style.display = this.checked ? '' : 'none';
+          });
+        }
+      })(target, selector);
+    }
   };
-
-  jQuery('.tiptip-with-img').tipTip({
-    maxWidth: "300px",
-    delay: 0,
-    fadeIn: 200,
-    fadeOut: 200
-  });
+  /* .tipTip() calls removed — tippy.js initialized by bundled TS */
 }());
 
 {if !isset($ORDER_BY_IS_CUSTOM)}
@@ -34,46 +36,83 @@
   var max_fields = Math.ceil({$main.order_by_options|@count}/2);
 
   function updateFilters() {
-    var $selects = jQuery('#order_filters select');
+    var selects = Array.from(document.querySelectorAll('#order_filters select'));
 
-    jQuery('#order_filters .addFilter').toggle($selects.length <= max_fields);
-    jQuery('#order_filters .removeFilter').css('display', '').filter(':first').css('display', 'none');
+    var addFilter = document.querySelector('#order_filters .addFilter');
+    if (addFilter) {
+      addFilter.style.display = selects.length <= max_fields ? '' : 'none';
+    }
 
-    $selects.find('option').removeAttr('disabled');
-    $selects.each(function() {
-      $selects.not(this).find('option[value="'+ jQuery(this).val() +'"]').attr('disabled', 'disabled');
+    var removeFilters = Array.from(document.querySelectorAll('#order_filters .removeFilter'));
+    removeFilters.forEach(function(rf, idx) {
+      rf.style.display = (idx === 0) ? 'none' : '';
+    });
+
+    selects.forEach(function(sel) {
+      Array.from(sel.options).forEach(function(opt) { opt.disabled = false; });
+    });
+    selects.forEach(function(sel) {
+      var val = sel.value;
+      selects.filter(function(s) { return s !== sel; }).forEach(function(other) {
+        var opt = other.querySelector('option[value="' + val + '"]');
+        if (opt) opt.setAttribute('disabled', 'disabled');
+      });
     });
   }
 
-  jQuery('#order_filters').on('click', '.removeFilter', function() {
-    jQuery(this).parent('span.filter').remove();
+  document.getElementById('order_filters').addEventListener('click', function(e) {
+    var btn = e.target.closest('.removeFilter');
+    if (!btn) return;
+    var filterSpan = btn.closest('span.filter');
+    if (filterSpan) filterSpan.remove();
     updateFilters();
   });
 
-  jQuery('#order_filters').on('change', 'select', updateFilters);
-
-  jQuery('#order_filters .addFilter').click(function() {
-    jQuery(this).prev('span.filter').clone().insertBefore(jQuery(this));
-    jQuery(this).prev('span.filter').children('select').val('');
-    updateFilters();
+  document.getElementById('order_filters').addEventListener('change', function(e) {
+    if (e.target.tagName === 'SELECT') updateFilters();
   });
+
+  var addFilterBtn = document.querySelector('#order_filters .addFilter');
+  if (addFilterBtn) {
+    addFilterBtn.addEventListener('click', function() {
+      var prevFilter = this.previousElementSibling;
+      if (prevFilter && prevFilter.matches('span.filter')) {
+        var clone = prevFilter.cloneNode(true);
+        var cloneSelect = clone.querySelector('select');
+        if (cloneSelect) cloneSelect.value = '';
+        this.parentNode.insertBefore(clone, this);
+      }
+      updateFilters();
+    });
+  }
 
   updateFilters();
 }());
 {/if}
 
-jQuery(".themeBoxes a").colorbox();
+GLightbox({selector: '.themeBoxes a'});
 
-jQuery("input[name='mail_theme']").change(function() {
-  jQuery("input[name='mail_theme']").parents(".themeSelect").removeClass("themeDefault");
-  jQuery(this).parents(".themeSelect").addClass("themeDefault");
-});
+(function() {
+  document.querySelectorAll("input[name='mail_theme']").forEach(function(radio) {
+    radio.addEventListener('change', function() {
+      document.querySelectorAll("input[name='mail_theme']").forEach(function(r) {
+        var themeSelect = r.closest('.themeSelect');
+        if (themeSelect) themeSelect.classList.remove('themeDefault');
+      });
+      var myThemeSelect = this.closest('.themeSelect');
+      if (myThemeSelect) myThemeSelect.classList.add('themeDefault');
+    });
+  });
 
-jQuery("input[name='email_admin_on_new_user_filter']").change(function() {
-  var val = jQuery("input[name='email_admin_on_new_user_filter']:checked").val();
-
-  jQuery('#email_admin_on_new_user_filter_group_options').toggle('group' == val);
-});
+  document.querySelectorAll("input[name='email_admin_on_new_user_filter']").forEach(function(radio) {
+    radio.addEventListener('change', function() {
+      var checked = document.querySelector("input[name='email_admin_on_new_user_filter']:checked");
+      var val = checked ? checked.value : '';
+      var groupOpts = document.getElementById('email_admin_on_new_user_filter_group_options');
+      if (groupOpts) groupOpts.style.display = (val === 'group') ? '' : 'none';
+    });
+  });
+}());
 {/footer_script}
 
 <form method="post" action="{$F_ACTION}" class="properties">

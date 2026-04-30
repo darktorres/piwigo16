@@ -1,48 +1,59 @@
 {footer_script}
-jQuery.fn.lightAccordion = function(options) {
-  var settings = $.extend({
+function lightAccordion(el, options) {
+  var settings = Object.assign({
     header: 'dt',
     content: 'dd',
     active: 0
   }, options);
-  
-  return this.each(function() {
-    var self = jQuery(this);
-    
-    var contents = self.find(settings.content),
-        headers = self.find(settings.header);
-    
-    contents.not(contents[settings.active]).hide();
-  
-    self.on('click', settings.header, function() {
-        var content = jQuery(this).next(settings.content);
-        content.slideDown();
-        contents.not(content).slideUp();
+
+  var contents = Array.from(el.querySelectorAll(settings.content));
+  var headers = Array.from(el.querySelectorAll(settings.header));
+
+  contents.forEach(function(c, idx) {
+    if (idx !== settings.active) {
+      c.style.display = 'none';
+    }
+  });
+
+  el.addEventListener('click', function(e) {
+    var header = e.target.closest(settings.header);
+    if (!header) return;
+    var content = header.nextElementSibling;
+    while (content && !content.matches(settings.content)) {
+      content = content.nextElementSibling;
+    }
+    if (!content) return;
+    contents.forEach(function(c) {
+      c.style.display = (c === content) ? '' : 'none';
     });
   });
-};
+}
 
-$('#menubar').lightAccordion({
+lightAccordion(document.getElementById('menubar'), {
   active: {$ACTIVE_MENU}
 });
 
 /* in case we have several infos/errors/warnings display bullets */
-jQuery(document).ready(function() {
+(function() {
   var eiw = ["infos","erros","warnings", "messages"];
 
   for (var i = 0; i < eiw.length; i++) {
     var boxType = eiw[i];
+    var lis = document.querySelectorAll("."+boxType+" ul li");
 
-    if (jQuery("."+boxType+" ul li").length > 1) {
-      jQuery("."+boxType+" ul li").css("list-style-type", "square");
-      jQuery("."+boxType+" .eiw-icon").css("margin-right", "20px");
+    if (lis.length > 1) {
+      lis.forEach(function(li) { li.style.listStyleType = "square"; });
+      var icons = document.querySelectorAll("."+boxType+" .eiw-icon");
+      icons.forEach(function(icon) { icon.style.marginRight = "20px"; });
     }
   }
 
-  if (jQuery('h2').length > 0) {
-    jQuery('h1').html(jQuery('h2').html());
+  var h2 = document.querySelector('h2');
+  if (h2) {
+    var h1 = document.querySelector('h1');
+    if (h1) h1.innerHTML = h2.innerHTML;
   }
-});
+}());
 {/footer_script}
 
 <div id="menubar">
@@ -137,7 +148,7 @@ jQuery(document).ready(function() {
   {if isset($U_HELP)}
   {include file='include/colorbox.inc.tpl'}
 {footer_script}
-  jQuery('.help-popin').colorbox({ width:"500px" });
+  GLightbox({selector: '.help-popin', type: 'inline', width: '500px'});
 {/footer_script}
   <ul class="HelpActions">
     <li><a href="{$U_HELP}&amp;output=content_only" title="{'Help'|@translate}" class="help-popin"><span class="icon-help-circled"></span></a></li>

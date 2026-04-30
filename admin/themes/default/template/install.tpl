@@ -21,19 +21,21 @@
 {get_combined_scripts load='header'}
 <!-- END get_combined_scripts -->
 
-{combine_script id='jquery' path='themes/default/js/jquery.min.js'}
 {literal}
 <script type="text/javascript">
-$(document).ready(function() {
-  $("a.externalLink").click(function() {
-    window.open($(this).attr("href"));
-    return false;
-  });
-
-  $("#admin_mail").keyup(function() {
-    $(".adminEmail").text($(this).val());
+document.querySelectorAll("a.externalLink").forEach(function(el) {
+  el.addEventListener("click", function(e) {
+    e.preventDefault();
+    window.open(el.getAttribute("href") || '');
   });
 });
+var adminMail = document.getElementById("admin_mail");
+if (adminMail) {
+  adminMail.addEventListener("keyup", function() {
+    var val = adminMail.value;
+    document.querySelectorAll(".adminEmail").forEach(function(el) { el.textContent = val; });
+  });
+}
 </script>
 
 <style type="text/css">
@@ -165,17 +167,6 @@ a:hover {
 </style>
 {/literal}
 
-{combine_script id='jquery.cluetip' load='async' require='jquery' path='themes/default/js/plugins/jquery.cluetip.js'}
-
-{footer_script require='jquery.cluetip'}
-jQuery().ready(function(){ldelim}
-	jQuery('.cluetip').cluetip({ldelim}
-		width: 300,
-		splitTitle: '|',
-		positionBy: 'bottomTop'
-	});
-});
-{/footer_script}
 
 
 <title>Piwigo {$RELEASE} - {'Installation'|@translate}</title>

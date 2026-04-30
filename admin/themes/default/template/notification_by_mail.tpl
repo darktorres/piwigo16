@@ -1,20 +1,28 @@
 
 {include file='include/autosize.inc.tpl'}
-{footer_script}{literal}
-jQuery(document).ready(function(){
+{footer_script}
+(function() {
+  var checkAllLink = document.getElementById("checkAllLink");
+  if (checkAllLink) {
+    checkAllLink.addEventListener('click', function(e) {
+      e.preventDefault();
+      document.querySelectorAll("#notification_by_mail input[type=checkbox]").forEach(function(cb) {
+        cb.checked = true;
+      });
+    });
+  }
 
-	jQuery("#checkAllLink").click(function () {
-		jQuery("#notification_by_mail input[type=checkbox]").prop('checked', true);
-		return false;
-	});
-
-	jQuery("#uncheckAllLink").click(function () {
-		jQuery("#notification_by_mail input[type=checkbox]").prop('checked', false);
-		return false;
-	});
-
-});
-{/literal}{/footer_script}
+  var uncheckAllLink = document.getElementById("uncheckAllLink");
+  if (uncheckAllLink) {
+    uncheckAllLink.addEventListener('click', function(e) {
+      e.preventDefault();
+      document.querySelectorAll("#notification_by_mail input[type=checkbox]").forEach(function(cb) {
+        cb.checked = false;
+      });
+    });
+  }
+}());
+{/footer_script}
 
 <form method="post" name="notification_by_mail" id="notification_by_mail" action="{$F_ACTION}">
   <input type="hidden" name="pwg_token" value="{$PWG_TOKEN}">

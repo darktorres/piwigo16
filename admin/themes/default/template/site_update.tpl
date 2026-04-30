@@ -1,12 +1,13 @@
 {footer_script}
-$('#syncFiles label').click(function () {
-  if ($("input[value='files']:checked").val()) {
-    $("input[value='files']").closest("li").find("ul").show();
-  } else {
-    $("input[value='files']").closest("li").find("ul").hide();
-  }
-})
-
+document.querySelectorAll('#syncFiles label').forEach(function(label) {
+  label.addEventListener('click', function() {
+    var checked = document.querySelector("input[value='files']:checked");
+    var filesInput = document.querySelector("input[value='files']");
+    var ul = filesInput ? filesInput.closest('li') : null;
+    var subUl = ul ? ul.querySelector('ul') : null;
+    if (subUl) subUl.style.display = checked ? '' : 'none';
+  });
+});
 {/footer_script}
 
 <div class="selectedAlbum site-url-path">

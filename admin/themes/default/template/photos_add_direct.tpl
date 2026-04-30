@@ -1,27 +1,12 @@
 {if isset($ADD_TO_ALBUM) or isset($selected_category_name)}{$can_upload=true}{else}{$can_upload=false}{/if}
 
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_script id='jquery.plupload' load='footer' require='jquery' path='themes/default/js/plugins/plupload/plupload.full.min.js'}
-{combine_script id='jquery.plupload.queue' load='footer' require='jquery' path='themes/default/js/plugins/plupload/jquery.plupload.queue/jquery.plupload.queue.min.js'}
-{combine_script id='jquery.confirm' load='footer' require='jquery' path='themes/default/js/plugins/jquery-confirm.min.js'}
-{combine_css path="themes/default/js/plugins/jquery-confirm.min.css"}
-
-{combine_css path="themes/default/js/plugins/plupload/jquery.plupload.queue/css/jquery.plupload.queue.css"}
-
-{assign var="plupload_i18n" value="themes/default/js/plugins/plupload/i18n/`$lang_info.plupload_code`.js"}
-{if "PHPWG_ROOT_PATH"|@constant|@cat:$plupload_i18n|@file_exists}
-  {combine_script id="plupload_i18n-`$lang_info.plupload_code`" load="footer" path=$plupload_i18n require="jquery.plupload.queue"}
-{/if}
-
 {include file='include/colorbox.inc.tpl'}
 {if !$DISPLAY_FORMATS}
   {include file='include/add_album.inc.tpl'}
 {/if}
 
 {combine_script id='LocalStorageCache' load='footer' path='admin/themes/default/js/LocalStorageCache.js'}
-
-{combine_script id='jquery.selectize' load='footer' path='themes/default/js/plugins/selectize.min.js'}
-{combine_css id='jquery.selectize' path="themes/default/js/plugins/selectize.{$themeconf.colorscheme}.css"}
 
 {combine_script id='piecon' load='footer' path='themes/default/js/plugins/piecon.js'}
 {combine_script id='add_photo' load='footer' path='admin/themes/default/js/photos_add_direct.js'}

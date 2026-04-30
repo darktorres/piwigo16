@@ -56,17 +56,27 @@
         <p>
 			{literal}
 			<script type="text/javascript">
-			jQuery(document).ready(function(){
+			document.addEventListener('DOMContentLoaded', function() {
 
-				jQuery("#checkAllLink").click(function () {
-					jQuery("#c13y input[type=checkbox]").attr('checked', true);
-					return false;
-				});
+				var checkAllLink = document.getElementById("checkAllLink");
+				if (checkAllLink) {
+					checkAllLink.addEventListener('click', function(e) {
+						e.preventDefault();
+						document.querySelectorAll("#c13y input[type=checkbox]").forEach(function(cb) {
+							cb.checked = true;
+						});
+					});
+				}
 
-				jQuery("#uncheckAllLink").click(function () {
-					jQuery("#c13y input[type=checkbox]").attr('checked', false);
-					return false;
-				});
+				var uncheckAllLink = document.getElementById("uncheckAllLink");
+				if (uncheckAllLink) {
+					uncheckAllLink.addEventListener('click', function(e) {
+						e.preventDefault();
+						document.querySelectorAll("#c13y input[type=checkbox]").forEach(function(cb) {
+							cb.checked = false;
+						});
+					});
+				}
 
 			});
 			function DeselectAll( formulaire )

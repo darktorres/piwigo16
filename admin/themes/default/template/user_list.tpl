@@ -1,17 +1,6 @@
 
 
-{combine_script id='common' load='header' require='jquery' path='admin/themes/default/js/common.js'}
-
-{combine_script id='jquery.selectize' load='header' path='themes/default/js/plugins/selectize.min.js'}
-{combine_css id='jquery.selectize' path="themes/default/js/plugins/selectize.{$themeconf.colorscheme}.css"}
-
-{combine_script id='jquery.ui.slider' require='jquery.ui' load='header' path='themes/default/js/ui/minified/jquery.ui.slider.min.js'}
-{combine_css path="themes/default/js/ui/theme/jquery.ui.slider.css"}
-
-{combine_script id='jquery.confirm' load='header' require='jquery' path='themes/default/js/plugins/jquery-confirm.min.js'}
-{combine_css path="themes/default/js/plugins/jquery-confirm.min.css"}
-
-{combine_script id='jquery.tipTip' load='header' path='themes/default/js/plugins/jquery.tipTip.minified.js'}
+{combine_script id='common' load='header' path='admin/themes/default/js/common.js'}
 
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
 
@@ -113,107 +102,117 @@ let groupOptions = groups_arr.map(x => ({value: x[0], label: x[1], isSelected: 0
 
 /* Startup — moved into $(document).ready() inside user_list.js bundle */
 
-$(".icon-help-circled").tipTip({
-  'maxWidth':'700px',
-  'fadeIn': '1000',
+Array.from(document.querySelectorAll(".icon-help-circled")).forEach(function(el) {
+  el.tipTip({ 'maxWidth': '700px', 'fadeIn': '1000' });
 });
 
-$(document).ready(function() {
-  // Only webmaster can set admin or webmaster to others users
-  if (connected_user_status !== 'webmaster') {
-    $('select[name="status"] option[value="webmaster"], select[name="status"] option[value="admin"]').attr("disabled", true);
-  }
-  // We set the applyAction btn click event here so plugins can add cases to the list 
-  // which is not possible if this JS part is in a JS file
-  // see #1571 on Github
-  jQuery("#applyAction").click(function() {
-      let action = jQuery("select[name=selectAction]").prop("value");
-      let method = 'pwg.users.setInfo';
-      let data = {
-          pwg_token: pwg_token,
-          user_id: selection.map(x => x.id)
-      };
-      switch (action) {
-          case 'delete':
-              if (!($("#permitActionUserList .user-list-checkbox[name=confirm_deletion]").attr("data-selected") === "1")) {
-                  alert(missingConfirm);
-                  return false;
-              }
-              method = 'pwg.users.delete';
-              break;
-          case 'group_associate':
-              method = 'pwg.groups.addUser';
-              data.group_id = jQuery("#permitActionUserList select[name=associate]").prop("value");
-              break;
-          case 'group_dissociate':
-              method = 'pwg.groups.deleteUser';
-              data.group_id = jQuery("#permitActionUserList select[name=dissociate]").prop("value");
-              break;
-          case 'status':
-              data.status = jQuery("#permitActionUserList select[name=status]").prop("value");
-              break;
-          case 'enabled_high':
-              data.enabled_high = $("#permitActionUserList .user-list-checkbox[name=enabled_high_yes]").attr("data-selected") === "1" ? true : false;
-              break;
-          case 'level':
-              data.level = jQuery("#permitActionUserList select[name=level]").val();
-              break;
-          case 'nb_image_page':
-              data.nb_image_page = jQuery("#permitActionUserList input[name=nb_image_page]").val();
-              break;
-          case 'theme':
-              data.theme = jQuery("#permitActionUserList select[name=theme]").val();
-              break;
-          case 'language':
-              data.language = jQuery("#permitActionUserList select[name=language]").val();
-              break;
-          case 'recent_period':
-              data.recent_period = recent_period_values[$('#permitActionUserList .period-select-bar .slider-bar-container').slider("option", "value")];;
-              break;
-          case 'expand':
-              data.expand = $("#permitActionUserList .user-list-checkbox[name=expand_yes]").attr("data-selected") === "1" ? true : false;
-              break;
-          case 'show_nb_comments':
-              data.show_nb_comments = $("#permitActionUserList .user-list-checkbox[name=show_nb_comments_yes]").attr("data-selected") === "1" ? true : false
-              break;
-          case 'show_nb_hits':
-              data.show_nb_hits = $("#permitActionUserList .user-list-checkbox[name=show_nb_hits_yes]").attr("data-selected") === "1" ? true : false;
-              break;
-          default:
-              alert("Unexpected action");
-              return false;
-      }
-      jQuery.ajax({
-          url: "ws.php?format=json&method="+method,
-          type:"POST",
-          data: data,
-          beforeSend: function() {
-              jQuery("#applyActionLoading").show();
-              jQuery("#applyActionBlock .infos").fadeOut();
-          },
-          success:function(data) {
-              jQuery("#applyActionLoading").hide();
-              jQuery("#applyActionBlock .infos").fadeIn();
-              jQuery("#applyActionBlock .infos").css("display", "inline-block");
-              update_user_list();
-              if (action == 'delete') {
-                  selection = [];
-                  update_selection_content();
-              }
-          },
-          error:function(XMLHttpRequest, textStatus, errorThrows) {
-              jQuery("#applyActionLoading").hide();
-          }
-      });
-      return false;
+// Only webmaster can set admin or webmaster to others users
+if (connected_user_status !== 'webmaster') {
+  Array.from(document.querySelectorAll('select[name="status"] option[value="webmaster"], select[name="status"] option[value="admin"]')).forEach(function(opt) {
+    opt.disabled = true;
   });
-});
+}
+// We set the applyAction btn click event here so plugins can add cases to the list
+// which is not possible if this JS part is in a JS file
+// see #1571 on Github
+var applyActionBtn = document.getElementById("applyAction");
+if (applyActionBtn) {
+  applyActionBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    let action = document.querySelector("select[name=selectAction]").value;
+    let method = 'pwg.users.setInfo';
+    let data = {
+        pwg_token: pwg_token,
+        user_id: selection.map(x => x.id)
+    };
+    switch (action) {
+        case 'delete':
+            if (!(document.querySelector("#permitActionUserList .user-list-checkbox[name=confirm_deletion]").getAttribute("data-selected") === "1")) {
+                alert(missingConfirm);
+                return false;
+            }
+            method = 'pwg.users.delete';
+            break;
+        case 'group_associate':
+            method = 'pwg.groups.addUser';
+            data.group_id = document.querySelector("#permitActionUserList select[name=associate]").value;
+            break;
+        case 'group_dissociate':
+            method = 'pwg.groups.deleteUser';
+            data.group_id = document.querySelector("#permitActionUserList select[name=dissociate]").value;
+            break;
+        case 'status':
+            data.status = document.querySelector("#permitActionUserList select[name=status]").value;
+            break;
+        case 'enabled_high':
+            data.enabled_high = document.querySelector("#permitActionUserList .user-list-checkbox[name=enabled_high_yes]").getAttribute("data-selected") === "1";
+            break;
+        case 'level':
+            data.level = document.querySelector("#permitActionUserList select[name=level]").value;
+            break;
+        case 'nb_image_page':
+            data.nb_image_page = document.querySelector("#permitActionUserList input[name=nb_image_page]").value;
+            break;
+        case 'theme':
+            data.theme = document.querySelector("#permitActionUserList select[name=theme]").value;
+            break;
+        case 'language':
+            data.language = document.querySelector("#permitActionUserList select[name=language]").value;
+            break;
+        case 'recent_period':
+            data.recent_period = recent_period_values[document.querySelector('#permitActionUserList .period-select-bar .slider-bar-container').dataset.sliderValue];
+            break;
+        case 'expand':
+            data.expand = document.querySelector("#permitActionUserList .user-list-checkbox[name=expand_yes]").getAttribute("data-selected") === "1";
+            break;
+        case 'show_nb_comments':
+            data.show_nb_comments = document.querySelector("#permitActionUserList .user-list-checkbox[name=show_nb_comments_yes]").getAttribute("data-selected") === "1";
+            break;
+        case 'show_nb_hits':
+            data.show_nb_hits = document.querySelector("#permitActionUserList .user-list-checkbox[name=show_nb_hits_yes]").getAttribute("data-selected") === "1";
+            break;
+        default:
+            alert("Unexpected action");
+            return false;
+    }
+    var applyActionLoading = document.getElementById("applyActionLoading");
+    var applyActionInfos = document.querySelector("#applyActionBlock .infos");
+    if (applyActionLoading) applyActionLoading.style.display = '';
+    if (applyActionInfos) applyActionInfos.style.display = 'none';
+
+    var formData = new FormData();
+    Object.keys(data).forEach(function(key) {
+      var val = data[key];
+      if (Array.isArray(val)) {
+        val.forEach(function(v) { formData.append(key + '[]', v); });
+      } else {
+        formData.append(key, val);
+      }
+    });
+
+    fetch("ws.php?format=json&method=" + method, {
+        method: "POST",
+        body: formData
+    }).then(function(response) {
+        if (applyActionLoading) applyActionLoading.style.display = 'none';
+        if (applyActionInfos) {
+          applyActionInfos.style.display = 'inline-block';
+        }
+        update_user_list();
+        if (action == 'delete') {
+            selection = [];
+            update_selection_content();
+        }
+    }).catch(function() {
+        if (applyActionLoading) applyActionLoading.style.display = 'none';
+    });
+    return false;
+  });
+}
 
 {/footer_script}
 
 {combine_script id='user_list' load='footer' path='admin/themes/default/js/user_list.js'}
-
-{combine_script id='jquery.cookie' path='themes/default/js/jquery.cookie.js' load='footer'}
 
 <div class="selection-mode-group-manager" style="right:30px">
   <label class="switch">

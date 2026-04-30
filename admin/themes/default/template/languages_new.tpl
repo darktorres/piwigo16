@@ -1,13 +1,3 @@
-{combine_script id='jquery.cluetip' load='async' require='jquery' path='themes/default/js/plugins/jquery.cluetip.js'}
-
-{footer_script require='jquery.cluetip'}
-jQuery().ready(function(){ldelim}
-	jQuery('.cluetip').cluetip({ldelim}
-		width: 300,
-		splitTitle: '|'
-	});
-});
-{/footer_script}
 
 {if $isWebmaster == 1}
   

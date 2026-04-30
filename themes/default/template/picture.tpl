@@ -1,4 +1,4 @@
-{combine_script id='core.switchbox' load='async' require='jquery' path='themes/default/js/switchbox.js'}
+{combine_script id='core.switchbox' load='async' path='themes/default/js/switchbox.js'}
 {if isset($MENUBAR)}{$MENUBAR}{/if}
 <div id="content"{if isset($MENUBAR)} class="contentWithMenu"{/if}>
 
@@ -20,7 +20,7 @@
 
 <div class="actionButtons">
 {if isset($current.unique_derivatives) && count($current.unique_derivatives)>1}
-{footer_script require='jquery'}{literal}
+{footer_script}{literal}
 function changeImgSrc(url,typeSave,typeMap)
 {
 	var theImg = document.getElementById("theMainImage");
@@ -30,8 +30,9 @@ function changeImgSrc(url,typeSave,typeMap)
 		theImg.src = url;
 		theImg.useMap = "#map"+typeMap;
 	}
-	jQuery('#derivativeSwitchBox .switchCheck').css('visibility','hidden');
-	jQuery('#derivativeChecked'+typeMap).css('visibility','visible');
+	document.querySelectorAll('#derivativeSwitchBox .switchCheck').forEach(function(el) { el.style.visibility = 'hidden'; });
+	var checked = document.getElementById('derivativeChecked'+typeMap);
+	if (checked) checked.style.visibility = 'visible';
 	document.cookie = 'picture_deriv='+typeSave+';path={/literal}{$COOKIE_PATH}{literal}';
 }
 (window.SwitchBox=window.SwitchBox||[]).push("#derivativeSwitchLink", "#derivativeSwitchBox");
@@ -70,12 +71,12 @@ function changeImgSrc(url,typeSave,typeMap)
 	</a>
 
 {if !empty($current.formats)}
-{footer_script require='jquery'}{literal}
-jQuery().ready(function() {
-  jQuery("#downloadSwitchLink").removeAttr("href");
-
+{footer_script}{literal}
+(function() {
+  var downloadLink = document.getElementById("downloadSwitchLink");
+  if (downloadLink) downloadLink.removeAttribute("href");
   (window.SwitchBox=window.SwitchBox||[]).push("#downloadSwitchLink", "#downloadSwitchBox");
-});
+}());
 {/literal}{/footer_script}
 
 <div id="downloadSwitchBox" class="switchBox">

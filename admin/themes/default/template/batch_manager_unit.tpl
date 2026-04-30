@@ -1,11 +1,6 @@
 {include file='include/autosize.inc.tpl'}
 {include file='include/datepicker.inc.tpl'}
-{include file='include/colorbox.inc.tpl'}
 
-{combine_script id='jquery.sort' load='footer' path='themes/default/js/plugins/jquery.sort.js'}
-
-{combine_script id='jquery.confirm' load='footer' require='jquery' path='themes/default/js/plugins/jquery-confirm.min.js'}
-{combine_css path="themes/default/js/plugins/jquery-confirm.min.css"}
 
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10}
 {assign var='all_selected_album' value=[]}
@@ -19,7 +14,7 @@ var tagsCache = new TagsCache({
   serverId: '{$CACHE_KEYS._hash}',
   rootUrl: '{$ROOT_URL}'
 });
-tagsCache.selectize(jQuery('[data-selectize=tags]'), { lang: {
+window.tagsCache?.selectize(document.querySelector('[data-selectize=tags]'), { lang: {
   'Add': '{'Create'|translate}'
 }});
 
@@ -32,10 +27,10 @@ window.categoriesCache = new CategoriesCache({
   
   var associated_categories = {$associated_categories|@json_encode};
 
-  categoriesCache.selectize(jQuery('[data-selectize=categories]'), {
+  window.categoriesCache?.selectize(document.querySelector('[data-selectize=categories]'), {
     filter: function(categories, options) {
       if (this.name == 'dissociate') {
-        var filtered = jQuery.grep(categories, function(cat) {
+        var filtered = categories.filter(function(cat) {
           return !!associated_categories[cat.id];
         });
 
@@ -54,17 +49,15 @@ window.categoriesCache = new CategoriesCache({
 
 
 {* <!-- DATEPICKER --> *}
-jQuery(function(){ {* <!-- onLoad needed to wait localization loads --> *}
-  jQuery('[data-datepicker]').pwgDatepicker({
+document.querySelectorAll('[data-datepicker]').forEach(function(el) {
+  window.pwgDatepicker(el, {
     showTimepicker: true,
     cancelButton: '{'Cancel'|translate}'
   });
 });
 
 {* <!-- THUMBNAILS --> *}
-jQuery("a.preview-box").colorbox( {
-	photo: true
-});
+GLightbox({selector: 'a.preview-box'});
 
 str_are_you_sure = "{'Are you sure?'|translate|escape:javascript}";
 str_yes = "{'Yes, delete'|translate|escape:javascript}";
@@ -80,7 +73,7 @@ pluginValues = [];
 {/footer_script}
 
 
-{combine_script id='batchManagerUnit' load='footer' require='jquery.ui.effect-blind,jquery.sort' path='admin/themes/default/js/batchManagerUnit.js'}
+{combine_script id='batchManagerUnit' load='footer' path='admin/themes/default/js/batchManagerUnit.js'}
 <div id="batchManagerGlobal" style="margin-bottom: 80px;">
 	<div style="clear:both"></div>
 	{if isset($ELEMENT_IDS)}

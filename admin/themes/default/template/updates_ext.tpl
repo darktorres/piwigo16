@@ -1,8 +1,4 @@
-{combine_script id='jquery.ajaxmanager' load='footer' require='jquery' path='themes/default/js/plugins/jquery.ajaxmanager.js'}
-{combine_script id='jquery.jgrowl' load='footer' require='jquery' path='themes/default/js/plugins/jquery.jgrowl_minimized.js'}
-{combine_css path="themes/default/js/plugins/jquery.jgrowl.css"}
-
-{footer_script require='jquery.ui.effect-blind,jquery.ajaxmanager,jquery.jgrowl'}
+{footer_script}
 var pwg_token = '{$PWG_TOKEN}';
 var extType = '{$EXT_TYPE}';
 var confirmMsg  = '{'Are you sure?'|@translate|@escape:'javascript'}';
@@ -13,177 +9,143 @@ var restoreMsg  = '{'Reset ignored updates'|@translate|@escape:'javascript'}';
 
 {literal}
 var todo = 0;
-var queuedManager = $.manageAjax.create('queued', { 
-	queue: true,  
-	maxRequests: 1,
-  beforeSend: function() { autoupdate_bar_toggle(1); },
-  complete: function() { autoupdate_bar_toggle(-1); }
-});
+
+// Simple sequential async queue replacing $.manageAjax
+var _extQueue = Promise.resolve();
+var queuedManager = {
+  add: function(opts) {
+    _extQueue = _extQueue.then(function() {
+      if (opts.beforeSend) opts.beforeSend();
+      var params = new URLSearchParams(opts.data || {});
+      return fetch((opts.url || 'ws.php') + '?' + params.toString())
+        .then(function(r) { return r.json(); })
+        .then(function(data) { if (opts.success) opts.success(data); })
+        .catch(function(err) { if (opts.error) opts.error(err); })
+        .finally(function() { if (opts.complete) opts.complete(); });
+    });
+  }
+};
+
+// Simple toast notification replacing jQuery.jGrowl
+function pwgNotify(msg, theme) {
+  var el = document.createElement('div');
+  el.style.cssText = 'position:fixed;top:20px;right:20px;z-index:9999;padding:10px 16px;border-radius:4px;color:#fff;font-size:14px;max-width:320px;margin-bottom:5px;';
+  el.style.background = theme === 'success' ? '#27ae60' : '#e74c3c';
+  el.innerHTML = (theme === 'success' ? '<i class="icon-ok"></i> ' : '<i class="icon-attention"></i> ') + msg;
+  document.body.appendChild(el);
+  if (theme === 'success') setTimeout(function() { el.remove(); }, 4000);
+}
 
 function updateAll() {
-  jQuery('.updateExtension').each( function() {
-    if (jQuery(this).parents('div').css('display') == 'block')
-      jQuery(this).click();
+  document.querySelectorAll('.updateExtension').forEach(function(el) {
+    var parent = el.closest('div');
+    if (parent && parent.style.display !== 'none') el.click();
   });
-};
+}
 
 function ignoreAll() {
-  jQuery('.ignoreExtension').each( function() {
-    if (jQuery(this).parents('div').css('display') == 'block')
-      jQuery(this).click();
+  document.querySelectorAll('.ignoreExtension').forEach(function(el) {
+    var parent = el.closest('div');
+    if (parent && parent.style.display !== 'none') el.click();
   });
-};
+}
 
 function resetIgnored() {
-  jQuery.ajax({
-    type: 'GET',
-    url: 'ws.php',
-    dataType: 'json',
-    data: { method: 'pwg.extensions.ignoreUpdate', reset: true, type: extType, pwg_token: pwg_token, format: 'json' },
-    success: function(data) {
+  fetch('ws.php?' + new URLSearchParams({ method: 'pwg.extensions.ignoreUpdate', reset: 'true', type: extType, pwg_token: pwg_token, format: 'json' }).toString())
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
       if (data['stat'] == 'ok') {
-        jQuery(".pluginBox, fieldset").show();
-        jQuery(".pluginBox").attr('data-ignored', 'false')
-        jQuery("#update_all").show();
-        jQuery("#ignore_all").show();
-        jQuery("#up_to_date").hide();
-        jQuery("#reset_ignore").hide();
-        jQuery("#ignored").hide();
+        document.querySelectorAll(".pluginBox, fieldset").forEach(function(el) { el.style.display = ''; });
+        document.querySelectorAll(".pluginBox").forEach(function(el) { el.setAttribute('data-ignored', 'false'); });
+        ['update_all','ignore_all'].forEach(function(id) { var el = document.getElementById(id); if (el) el.style.display = ''; });
+        ['up_to_date','reset_ignore','ignored'].forEach(function(id) { var el = document.getElementById(id); if (el) el.style.display = 'none'; });
         checkFieldsets();
       }
-    }
-  });
-};
+    });
+}
 
 function checkFieldsets() {
-  var types = new Array('plugins', 'themes', 'languages');
+  var types = ['plugins', 'themes', 'languages'];
   var total = 0;
   var ignored = 0;
-  for (i=0;i<3;i++) {
-    nbExtensions = 0;
-    jQuery("fieldset[data-type="+types[i]+"] .pluginBox").each(function(index) {
-      if (jQuery(this).attr('data-ignored')== 'true')
-        ignored++;
-      else
-        nbExtensions++;
+  for (var i = 0; i < 3; i++) {
+    var nbExtensions = 0;
+    document.querySelectorAll("fieldset[data-type=" + types[i] + "] .pluginBox").forEach(function(el) {
+      if (el.getAttribute('data-ignored') == 'true') ignored++;
+      else nbExtensions++;
     });
-    total = total + nbExtensions;
-    if (nbExtensions == 0)
-      jQuery("#"+types[i]).hide();
+    total += nbExtensions;
+    if (nbExtensions == 0) { var el = document.getElementById(types[i]); if (el) el.style.display = 'none'; }
   }
-
   if (total == 0) {
-    jQuery("#update_all").hide();
-    jQuery("#ignore_all").hide();
-    jQuery("#up_to_date").show();
+    ['update_all','ignore_all'].forEach(function(id) { var el = document.getElementById(id); if (el) el.style.display = 'none'; });
+    var upToDate = document.getElementById('up_to_date'); if (upToDate) upToDate.style.display = '';
   }
   if (ignored > 0) {
-    jQuery("#reset_ignore").val(restoreMsg + ' (' + ignored + ')');
+    var resetEl = document.getElementById('reset_ignore'); if (resetEl) resetEl.value = restoreMsg + ' (' + ignored + ')';
   }
-};
+}
 
 function updateExtension(type, id, revision) {
   queuedManager.add({
-    type: 'GET',
-    dataType: 'json',
+    beforeSend: function() { autoupdate_bar_toggle(1); },
     url: 'ws.php',
     data: { method: 'pwg.extensions.update', type: type, id: id, revision: revision, pwg_token: pwg_token, format: 'json' },
     success: function(data) {
       if (data['stat'] == 'ok') {
-        jQuery.jGrowl( data['result'], { theme: 'success', header: successHead, life: 4000, sticky: false });
-        jQuery("#"+type+"_"+id).remove();
+        pwgNotify(data['result'], 'success');
+        var extEl = document.getElementById(type + '_' + id); if (extEl) extEl.remove();
         checkFieldsets();
       } else {
-        jQuery.jGrowl( data['result'], { theme: 'error', header: errorHead, sticky: true });
+        pwgNotify(data['result'], 'error');
       }
     },
-    error: function(data) {
-      jQuery.jGrowl( errorMsg, { theme: 'error', header: errorHead, sticky: true });
-    }
+    error: function() { pwgNotify(errorMsg, 'error'); },
+    complete: function() { autoupdate_bar_toggle(-1); }
   });
-};
-
-const targetNode = document.getElementById("theAdminPage");
-
-const config = { attributes: false, childList: true, subtree: true };
-
-const callback = (mutationList, observer) => {
-  for (const mutation of mutationList) {
-    if (mutation.type === "childList") {
-      let popup = jQuery("#jGrowl").children();
-      for (let i = 0; i < popup.length; i++){
-        if ((jQuery(popup[i])).hasClass("success")){
-          if (! ((jQuery(popup[i]).children(":first")).hasClass("jGrowl-popup-icon icon-ok"))){
-            jQuery(popup[i]).prepend('<div class="jGrowl-popup-icon icon-ok"></div>')
-          }
-        };
-
-        if ((jQuery(popup[i])).hasClass("error")){
-          if (! ((jQuery(popup[i]).children(":first")).hasClass("jGrowl-popup-icon icon-cancel"))){
-            jQuery(popup[i]).prepend('<div class="jGrowl-popup-icon icon-cancel"></div>')
-          }
-        }
-      };
-    }
-  }
-};
-
-const observer = new MutationObserver(callback);
-observer.observe(targetNode, config);
+}
 
 function ignoreExtension(type, id) {
   queuedManager.add({
-    type: 'GET',
+    beforeSend: function() { autoupdate_bar_toggle(1); },
     url: 'ws.php',
-    dataType: 'json',
     data: { method: 'pwg.extensions.ignoreUpdate', type: type, id: id, pwg_token: pwg_token, format: 'json' },
     success: function(data) {
       if (data['stat'] == 'ok') {
-        jQuery("#"+type+"_"+id).hide();
-        jQuery("#"+type+"_"+id).attr('data-ignored', 'true')
-        jQuery("#reset_ignore").show();
+        var extEl = document.getElementById(type + '_' + id);
+        if (extEl) { extEl.style.display = 'none'; extEl.setAttribute('data-ignored', 'true'); }
+        var resetEl = document.getElementById('reset_ignore'); if (resetEl) resetEl.style.display = '';
         checkFieldsets();
       }
-    }
+    },
+    complete: function() { autoupdate_bar_toggle(-1); }
   });
-};
+}
 
 function autoupdate_bar_toggle(i) {
-  todo = todo + i;
-  if ((i == 1 && todo == 1) || (i == -1 && todo == 0))
-    jQuery('.autoupdate_bar').toggle();
+  todo += i;
+  if ((i == 1 && todo == 1) || (i == -1 && todo == 0)) {
+    document.querySelectorAll('.autoupdate_bar').forEach(function(el) {
+      el.style.display = el.style.display === 'none' ? '' : 'none';
+    });
+  }
 }
 
 checkFieldsets();
 {/literal}
 {/footer_script}
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_script id='jquery.confirm' load='footer' require='jquery' path='themes/default/js/plugins/jquery-confirm.min.js'}
-{combine_css path="themes/default/js/plugins/jquery-confirm.min.css"}
 {footer_script}
 
 const are_you_sure_msg  = '{'Are you sure?'|@translate|@escape:'javascript'}';
 const confirm_msg = '{"Yes, I am sure"|@translate}';
 const cancel_msg = "{"No, I have changed my mind"|@translate}";
-$("#update_all").click(function() {
+document.getElementById("update_all")?.addEventListener('click', function() {
   const title_msg = "{'Are you sure you want to update all extensions?'|@translate}";
-  $.confirm({
-      title: title_msg,
-      buttons: {
-        confirm: {
-          text: confirm_msg,
-          btnClass: 'btn-red',
-          action: function () {
-            updateAll();
-          }
-        },
-        cancel: {
-          text: cancel_msg
-        }
-      },
-      ...jConfirm_confirm_options
-    });
-})
+  if (window.confirm(title_msg)) {
+    updateAll();
+  }
+});
 {/footer_script}
 
 {if $isWebmaster == 1}

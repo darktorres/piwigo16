@@ -21,8 +21,7 @@
 	{assign var=derivative value=$pwg->derivative($derivative_params, $comment.src_image)}
 	{/if}
 	{if !$derivative->is_cached()}
-	{combine_script id='jquery.ajaxmanager' path='themes/default/js/plugins/jquery.ajaxmanager.js' load='footer'}
-  {combine_script id='thumbnails.loader' path='themes/default/js/thumbnails.loader.js' require='jquery.ajaxmanager' load='footer'}
+  {combine_script id='thumbnails.loader' path='themes/default/js/thumbnails.loader.js' load='footer'}
   {/if}
 	<div class="illustration">
 		<a href="{$comment.U_PICTURE}">

@@ -371,6 +371,11 @@ class updates
                 if (isset($fs_ext_item['extension']) and isset($server_ext[$fs_ext_item['extension']])) {
                     $ext_info = $server_ext[$fs_ext_item['extension']];
 
+                    // Skip dev mode extensions (version='auto')
+                    if ('auto' === $fs_ext_item['version']) {
+                        continue;
+                    }
+
                     if (!safe_version_compare($fs_ext_item['version'], is_scalar($ext_info['revision_name'] ?? null) ? (string) $ext_info['revision_name'] : '', '>=')) {
                         if (in_array($ext_id, $typeIgnoreList)) {
                             $ignore_list[] = $ext_id;

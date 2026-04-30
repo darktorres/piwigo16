@@ -9,7 +9,18 @@ use Symfony\Component\Process\Process;
 
 /**
  * Shared database infrastructure for integration tests.
- * Subclasses read connection details from environment variables set by CI/docker-compose.
+ *
+ * Requires these environment variables (set in shell or .env.local):
+ *
+ *   PIWIGO_DB_HOST      MySQL host reachable by the test runner (default: 127.0.0.1)
+ *   PIWIGO_DB_PORT      MySQL port (default: 3306)
+ *   PIWIGO_DB_USER      MySQL user
+ *   PIWIGO_DB_PASSWORD  MySQL password
+ *   PIWIGO_DB_BASE      Test database name — never the production DB (default: piwigo_test)
+ *   PIWIGO_BASE_URL     Base URL of the running Apache Piwigo instance
+ *
+ * Each test class writes a fresh local/config/database.inc.php pointing at the
+ * test database and deletes it in tearDown, leaving a clean slate.
  */
 abstract class IntegrationTestCase extends TestCase
 {
@@ -18,18 +29,29 @@ abstract class IntegrationTestCase extends TestCase
     protected string $dbUser;
     protected string $dbPass;
     protected string $dbName;
-    protected string $webDbHost;
     protected string $baseUrl;
 
     protected function setUpConnectionFromEnv(): void
     {
-        $this->dbHost    = (string) (getenv('PIWIGO_DB_HOST') ?: '127.0.0.1');
-        $this->dbPort    = (int)    (getenv('PIWIGO_DB_PORT') ?: 3306);
-        $this->dbUser    = (string) (getenv('PIWIGO_DB_USER') ?: 'piwigo');
-        $this->dbPass    = (string) (getenv('PIWIGO_DB_PASSWORD') ?: 'piwigo');
-        $this->dbName    = (string) (getenv('PIWIGO_DB_BASE') ?: 'piwigo_test');
-        $this->webDbHost = (string) (getenv('PIWIGO_WEB_DB_HOST') ?: 'db');
-        $this->baseUrl   = rtrim((string) (getenv('PIWIGO_BASE_URL') ?: 'http://localhost:8080'), '/');
+        $missing = [];
+        foreach (['PIWIGO_DB_USER', 'PIWIGO_DB_PASSWORD'] as $var) {
+            if (getenv($var) === false) {
+                $missing[] = $var;
+            }
+        }
+        if ($missing !== []) {
+            self::markTestSkipped(
+                'Integration tests require env vars: ' . implode(', ', $missing) . '. ' .
+                'Set them in your shell or a .env.local file before running PHPUnit.'
+            );
+        }
+
+        $this->dbHost  = (string) (getenv('PIWIGO_DB_HOST') ?: '127.0.0.1');
+        $this->dbPort  = (int)    (getenv('PIWIGO_DB_PORT') ?: 3306);
+        $this->dbUser  = (string)  getenv('PIWIGO_DB_USER');
+        $this->dbPass  = (string)  getenv('PIWIGO_DB_PASSWORD');
+        $this->dbName  = (string) (getenv('PIWIGO_DB_BASE') ?: 'piwigo_test');
+        $this->baseUrl = rtrim((string) (getenv('PIWIGO_BASE_URL') ?: 'http://localhost/piwigo16'), '/');
     }
 
     protected function resetDatabase(): void
@@ -42,7 +64,7 @@ abstract class IntegrationTestCase extends TestCase
 
     protected function loadFixture(string $path): void
     {
-        self::assertFileExists($path, 'Fixture file must exist — run dev/fixtures/README.md instructions to generate it');
+        self::assertFileExists($path, 'Fixture file must exist');
 
         $proc = new Process([
             'mysql',
@@ -62,15 +84,15 @@ abstract class IntegrationTestCase extends TestCase
         if (!is_dir($dir)) {
             mkdir($dir, 0755, true);
         }
+        $host = $this->dbPort !== 3306 ? "{$this->dbHost}:{$this->dbPort}" : $this->dbHost;
         $d = '$';
-        $cfg = sprintf(
+        file_put_contents($dir . '/database.inc.php', sprintf(
             "<?php\n{$d}conf['dblayer'] = 'mysqli';\n{$d}conf['db_host'] = '%s';\n{$d}conf['db_user'] = '%s';\n{$d}conf['db_password'] = '%s';\n{$d}conf['db_base'] = '%s';\n{$d}prefixeTable = 'piwigo_';\ndefine('PHPWG_INSTALLED', true);\ndefine('PWG_CHARSET', 'utf-8');\ndefine('DB_CHARSET', 'utf8');\ndefine('DB_COLLATE', '');\n?>",
-            addslashes($this->webDbHost),
+            addslashes($host),
             addslashes($this->dbUser),
             addslashes($this->dbPass),
             addslashes($this->dbName),
-        );
-        file_put_contents($dir . '/database.inc.php', $cfg);
+        ));
     }
 
     protected function removeDatabaseConfig(): void

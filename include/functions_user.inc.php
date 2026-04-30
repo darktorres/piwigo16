@@ -1160,7 +1160,7 @@ function pwg_login(bool $success, string $username, string $password, bool $reme
     $password_verify = \Piwigo\Core\Config::passwordVerify()(
         $password,
         $user_found['password'] ?? $fake_user['password'],
-        $user_found['id'] ?? $fake_user['id']
+        isset($user_found['id']) ? (int) $user_found['id'] : null
     );
 
     $uf_id = is_numeric($user_found['id'] ?? null) ? (int) $user_found['id'] : 0;

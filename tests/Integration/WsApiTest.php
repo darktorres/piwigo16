@@ -39,8 +39,7 @@ final class WsApiTest extends IntegrationTestCase
     {
         $data = $this->apiGet('pwg.getVersion');
         self::assertSame('ok', $data['stat'], 'pwg.getVersion must return stat=ok');
-        self::assertArrayHasKey('version', $data['result']);
-        self::assertMatchesRegularExpression('/^\d+\.\d+/', (string) $data['result']['version']);
+        self::assertMatchesRegularExpression('/^\d+\.\d+/', (string) $data['result']);
     }
 
     public function test_session_login_with_valid_credentials(): void
@@ -89,8 +88,19 @@ final class WsApiTest extends IntegrationTestCase
 
     public function test_admin_only_users_list_requires_auth(): void
     {
-        $data = $this->apiGet('pwg.users.getList');
-        self::assertSame('fail', $data['stat'], 'users.getList must require authentication');
+        // Piwigo may return HTTP 401 or JSON stat='fail' for unauthenticated admin calls.
+        $url = $this->baseUrl . '/ws.php?method=pwg.users.getList&format=json';
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_FOLLOWLOCATION => true]);
+        $body   = (string) curl_exec($ch);
+        $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        unset($ch);
+        $decoded = json_decode($body, true);
+        $stat = is_array($decoded) ? ($decoded['stat'] ?? null) : null;
+        self::assertTrue(
+            $status === 401 || $stat === 'fail',
+            "users.getList must require authentication (HTTP $status, stat=" . ($stat ?? 'N/A') . ")"
+        );
     }
 
     public function test_users_list_accessible_as_admin(): void

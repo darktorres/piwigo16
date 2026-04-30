@@ -286,6 +286,5 @@ final class SizingParams
     }
 }
 
-// Authoritative definition is in src/Piwigo/Image/DerivativeParams.php;
-// this alias keeps global \DerivativeParams functional in legacy include code.
+require_once __DIR__ . '/../vendor/autoload.php';
 class_alias(\Piwigo\Image\DerivativeParams::class, 'DerivativeParams');

@@ -58,17 +58,24 @@ function monthDiff(d1: Date, d2: Date): number {
 }
 
 function displayStars(element: HTMLElement, rating: number) {
-    element.querySelectorAll('span').forEach(s => s.classList.add('icon-star-empty'));
-    element.querySelectorAll('span i').forEach(i => { i.className = ''; });
+    const spans = Array.from(element.querySelectorAll<HTMLElement>('span'));
+    const icons = Array.from(element.querySelectorAll<HTMLElement>('span i'));
+    spans.forEach(s => s.classList.add('icon-star-empty'));
+    icons.forEach(i => { i.className = ''; });
     rating = Math.round(rating * 2);
     if (rating % 2 === 1) {
-        element.querySelector<HTMLElement>(`span[data-star="${(rating - 1) / 2}"] i`)?.classList.add('icon-star-half');
+        const halfStar = spans.find(s => s.dataset['star'] === String((rating - 1) / 2))?.querySelector<HTMLElement>('i');
+        if (halfStar) halfStar.classList.add('icon-star-half');
         rating -= 1;
     }
     while (rating > 0) {
         rating -= 2;
-        element.querySelector<HTMLElement>(`span[data-star="${rating / 2}"] i`)?.classList.add('icon-star');
-        element.querySelector<HTMLElement>(`span[data-star="${rating / 2}"]`)?.classList.remove('icon-star-empty');
+        const star = spans.find(s => s.dataset['star'] === String(rating / 2));
+        if (star) {
+            const icon = star.querySelector<HTMLElement>('i');
+            if (icon) icon.classList.add('icon-star');
+            star.classList.remove('icon-star-empty');
+        }
     }
 }
 
@@ -147,12 +154,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    tippy('.certification', { delay: [0, 0], duration: [200, 200] });
-
     qsa('.pluginRating').forEach(container => {
         const rating = parseFloat(container.dataset['rating'] ?? '0');
         const starContainer = container.querySelector<HTMLElement>('.rating-star-container');
         if (starContainer) displayStars(starContainer, rating);
+    });
+
+    requestIdleCallback(() => {
+        tippy('.certification', { delay: [0, 0], duration: [200, 200] });
     });
 
     const authorNames: { value: string; text: string }[] = [{ value: '', text: '-' }];

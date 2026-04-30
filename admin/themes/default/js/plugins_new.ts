@@ -122,11 +122,9 @@ function applyFilter(changed: string, value: any) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.time('DOMContentLoaded handler');
     const betaTestPlugins = document.getElementById('showBetaTestPlugin')!.hasAttribute('checked');
     const minCertification = betaTestPlugins ? -1 : 0;
 
-    console.time('Event listeners setup');
     document.querySelector<HTMLSelectElement>('select[name="selectOrder"]')?.addEventListener('change', function(this: HTMLSelectElement) {
         sortOrder = this.value;
         const container = qs('.pluginBox')?.parentElement;
@@ -145,9 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     qs('.search-cancel')?.addEventListener('click', () => applyFilter('search', ''));
-    console.timeEnd('Event listeners setup');
 
-    console.time('Button install listeners');
     qsa('.buttonInstall').forEach(btn => {
         const pluginBox = btn.closest<HTMLElement>('.pluginBox');
         const plugin_name = pluginBox?.dataset['name'] ?? '';
@@ -157,21 +153,17 @@ document.addEventListener('DOMContentLoaded', () => {
             alert_cancel: str_cancel_msg,
         });
     });
-    console.timeEnd('Button install listeners');
 
-    console.time('Star rendering');
     qsa('.pluginRating').forEach(container => {
         const rating = parseFloat(container.dataset['rating'] ?? '0');
         const starContainer = container.querySelector<HTMLElement>('.rating-star-container');
         if (starContainer) displayStars(starContainer, rating);
     });
-    console.timeEnd('Star rendering');
 
     requestIdleCallback(() => {
         tippy('.certification', { delay: [0, 0], duration: [200, 200] });
     });
 
-    console.time('Author/tag collection');
     const authorNames: { value: string; text: string }[] = [{ value: '', text: '-' }];
     const tagsNames: { value: string; text: string }[] = [{ value: '', text: '-' }];
     const authorSet = new Set(['']);
@@ -191,9 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
-    console.timeEnd('Author/tag collection');
 
-    console.time('TomSelect initialization');
     const authorSelectEl = document.getElementById('author-filter') as HTMLSelectElement;
     const authorTs = new TomSelect(authorSelectEl, {
         onChange: (value: string) => applyFilter('author', value),
@@ -207,11 +197,8 @@ document.addEventListener('DOMContentLoaded', () => {
         plugins: { remove_button: {} },
     });
     tagsNames.forEach(({ value, text }) => tagTs.addOption({ value, text }));
-    console.timeEnd('TomSelect initialization');
 
-    console.time('Slider initialization');
 
-    console.time('Rating slider');
     const ratingSliderEl = qs<HTMLElement>('.notation-filter-slider')!;
     const ratingSlider = noUiSlider.create(ratingSliderEl, {
         range: { min: 0, max: 5 }, start: 0, step: 0.5, connect: [true, false]
@@ -221,9 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateRatingFilterLabel(ratingValue);
         applyFilter('rating', ratingValue);
     });
-    console.timeEnd('Rating slider');
 
-    console.time('Revision slider');
     const revSliderEl = qs<HTMLElement>('.revision-date-filter-slider')!;
     const revSlider = noUiSlider.create(revSliderEl, {
         range: { min: 0, max: 6 }, start: 0, step: 1, connect: [true, false]
@@ -235,9 +220,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateRevisionFilterLabel(intVal);
         applyFilter('revision', month);
     });
-    console.timeEnd('Revision slider');
 
-    console.time('Certification slider');
     const certSliderEl = qs<HTMLElement>('.certification-filter-slider')!;
     const certSlider = noUiSlider.create(certSliderEl, {
         range: { min: minCertification, max: 3 }, start: minCertification, step: 1, connect: [true, false]
@@ -247,19 +230,13 @@ document.addEventListener('DOMContentLoaded', () => {
         updateCertificationFilterLabel(certValue);
         applyFilter('certification', certValue);
     });
-    console.timeEnd('Certification slider');
 
-    console.timeEnd('Slider initialization');
 
-    console.time('Filter initialization');
 
-    console.time('Update filter labels');
     updateRatingFilterLabel(0);
     updateCertificationFilterLabel(minCertification);
     updateRevisionFilterLabel(0);
-    console.timeEnd('Update filter labels');
 
-    console.time('Initialize filters object');
     filters = {
         search: (document.getElementById('search') as HTMLInputElement)?.value ?? '',
         author: '',
@@ -268,23 +245,17 @@ document.addEventListener('DOMContentLoaded', () => {
         certification: minCertification,
         revision: value_to_month(0)[0],
     };
-    console.timeEnd('Initialize filters object');
 
     requestIdleCallback(() => {
-        console.time('TomSelect setValue (deferred)');
         authorTs.setValue('');
         tagTs.setValue('');
-        console.timeEnd('TomSelect setValue (deferred)');
     });
 
-    console.time('Truncate plugin names');
     qsa('.pluginName span').forEach(el => {
         const text = el.textContent ?? '';
         if (text.length > 30) el.textContent = text.slice(0, 30) + '...';
     });
-    console.timeEnd('Truncate plugin names');
 
-    console.timeEnd('Filter initialization');
 
     document.getElementById('showBetaTestPlugin')?.addEventListener('change', function(this: HTMLInputElement) {
         qs('.beta-test-plugin-switch .slider')?.classList.add('loading');
@@ -293,7 +264,6 @@ document.addEventListener('DOMContentLoaded', () => {
         history.replaceState(null, '', '?' + queryParams.toString());
         window.location.reload();
     });
-    console.timeEnd('DOMContentLoaded handler');
 });
 
 export {};

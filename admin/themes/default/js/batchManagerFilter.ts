@@ -1,8 +1,26 @@
-declare var selected_filter_cat_ids: (string | number)[];
-declare var errorFilters: string;
-declare var sliders: Record<string, { values: unknown[]; selected: { min: unknown; max: unknown }; text: string }>;
-declare var str_select_album: string;
-declare var str_select_tag: string;
+import { getPageData } from './page-data';
+
+interface SliderConfig {
+    values: unknown[];
+    selected: { min: unknown; max: unknown };
+    text: string;
+}
+
+interface BatchFilterPageData {
+    sliders: Record<string, SliderConfig>;
+    selected_filter_cat_ids: (string | number)[];
+    str_select_album: string;
+    str_select_tag: string;
+}
+
+const {
+    sliders,
+    selected_filter_cat_ids,
+    str_select_album,
+    str_select_tag,
+} = getPageData<BatchFilterPageData>('pwg-filter-page-data');
+
+let errorFilters = '';
 
 const doubleSlider = (window as any).pwgDoubleSlider as (el: HTMLElement, options: any) => void;
 

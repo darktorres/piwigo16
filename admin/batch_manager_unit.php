@@ -153,6 +153,16 @@ $template->assign(
     ]
 );
 include(PHPWG_ROOT_PATH.'admin/include/batch_manager_filters.inc.php');
+
+$template->assign('page_data_json', json_encode([
+    'str_are_you_sure' => l10n('Are you sure?'),
+    'str_yes'          => l10n('Yes, delete'),
+    'str_no'           => l10n('No, I have changed my mind'),
+    'str_orphan'       => l10n('This photo is an orphan'),
+    'str_meta_warning' => l10n('Warning ! Unsaved changes will be lost'),
+    'str_meta_yes'     => l10n('I want to continue'),
+    'str_title_ab'     => l10n('Associate to album'),
+], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
 // +-----------------------------------------------------------------------+
 // |                        global mode thumbnails                         |
 // +-----------------------------------------------------------------------+

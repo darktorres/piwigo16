@@ -3,10 +3,11 @@
 
 
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10}
+<script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 {assign var='all_selected_album' value=[]}
 {footer_script}
 {* <!-- PLUGINS --> *}
-var activePlugins = {$ACTIVE_PLUGINS|json_encode};
+window.activePlugins = {$ACTIVE_PLUGINS|json_encode};
 {if isset($CACHE_KEYS)}
 {* <!-- TAGS --> *}
 var tagsCache = new TagsCache({
@@ -61,15 +62,6 @@ document.querySelectorAll('[data-datepicker]').forEach(function(el) {
 GLightbox({selector: 'a.preview-box'});
 {/literal}
 
-window.str_are_you_sure = "{'Are you sure?'|translate|escape:javascript}";
-window.str_yes = "{'Yes, delete'|translate|escape:javascript}";
-window.str_no = "{'No, I have changed my mind'|translate|@escape:'javascript'}";
-window.str_orphan = "{'This photo is an orphan'|@translate|escape:javascript}";
-window.str_meta_warning = "{'Warning ! Unsaved changes will be lost'|translate|escape:javascript}";
-window.str_meta_yes = "{'I want to continue'|translate|escape:javascript}";
-const str_title_ab = "{'Associate to album'|@translate}";
-
-let b_current_picture_id;
 {* Check Skeleton extension for more details about extensibility *}
 window.pluginValues = [];
 {/footer_script}
@@ -328,7 +320,7 @@ window.pluginValues = [];
 {include file='include/album_selector.inc.tpl'}
 
 {footer_script}
-const all_related_categories_ids = {$all_selected_album|json_encode};
+window.all_related_categories_ids = {$all_selected_album|json_encode};
 {/footer_script}
 
 <style>

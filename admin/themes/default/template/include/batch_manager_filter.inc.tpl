@@ -1,55 +1,7 @@
 {combine_script id='doubleSlider' load='footer' path='admin/themes/default/js/doubleSlider.js'}
 {combine_script id='LocalStorageCache' load='footer' path='admin/themes/default/js/LocalStorageCache.js'}
 
-{footer_script}
-<!-- sliders config -->
-var sliders = {
-  widths: {
-    values: [{$dimensions.widths}],
-    selected: {
-      min: {$dimensions.selected.min_width},
-      max: {$dimensions.selected.max_width},
-    },
-    text: '{'between %d and %d pixels'|translate|escape:'javascript'}'
-  },
-
-  heights: {
-    values: [{$dimensions.heights}],
-    selected: {
-      min: {$dimensions.selected.min_height},
-      max: {$dimensions.selected.max_height},
-    },
-    text: '{'between %d and %d pixels'|translate|escape:'javascript'}'
-  },
-
-  ratios: {
-    values: [{$dimensions.ratios}],
-    selected: {
-      min: {$dimensions.selected.min_ratio},
-      max: {$dimensions.selected.max_ratio},
-    },
-    text: '{'between %.2f and %.2f'|translate|escape:'javascript'}'
-  },
-
-  filesizes: {
-    values: [{$filesize.list}],
-    selected: {
-      min: {$filesize.selected.min},
-      max: {$filesize.selected.max},
-    },
-    text: '{'between %s and %s MB'|translate|escape:'javascript'}'
-  }
-};
-{if isset($filter_category_selected) and $filter_category_selected}
-const selected_filter_cat_ids = ["{$filter_category_selected|@json_encode|escape:html}"];
-{else}
-const selected_filter_cat_ids = [];
-{/if}
-
-const str_select_album = "{'Select at least one album'|@translate|escape:javascript}";
-const str_select_tag = "{'Select at least one tag'|@translate|escape:javascript}";
-let errorFilters = '';
-{/footer_script}
+<script id="pwg-filter-page-data" type="application/json">{$batch_filter_page_data_json}</script>
 
 {combine_script id='batchManagerFilter' load='footer' path='admin/themes/default/js/batchManagerFilter.js'}
 <fieldset>

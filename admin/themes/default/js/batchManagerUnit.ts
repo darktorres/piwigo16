@@ -24,7 +24,7 @@ const {
     str_title_ab,
 } = getPageData<BatchUnitPageData>();
 
-let b_current_picture_id: string | null = null;
+let b_current_picture_id: string | undefined = undefined;
 
 function pid(pictureId: any, sel: string): HTMLElement {
     return document.querySelector<HTMLElement>('#picture-' + pictureId + ' ' + sel)!;
@@ -148,7 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll<HTMLElement>('.linked-albums.add-item').forEach(el => {
         el.addEventListener('click', () => {
             b_current_picture_id = el.closest<HTMLElement>('fieldset')?.dataset['imageId'];
-            ab.hardUpdate(all_related_categories_ids[b_current_picture_id]);
+            ab.hardUpdate(all_related_categories_ids[b_current_picture_id!]);
             ab.open();
         });
     });
@@ -191,7 +191,7 @@ function add_related_category({ album, getSelectedAlbum, addSelectedAlbum }: { a
         );
         showUnsavedLocalBadge(b_current_picture_id);
         addSelectedAlbum();
-        all_related_categories_ids[b_current_picture_id].cat_ids = getSelectedAlbum();
+        all_related_categories_ids[b_current_picture_id!].cat_ids = getSelectedAlbum();
     }
     check_related_categories(b_current_picture_id, getSelectedAlbum());
 }

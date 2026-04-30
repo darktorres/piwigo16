@@ -802,4 +802,37 @@ $template->assign('filesize', $filesize);
 // |                         open specific mode                            |
 // +-----------------------------------------------------------------------+
 
+// Build typed slider data for batchManagerFilter JSON block
+$sliders_json = [
+    'widths' => [
+        'values'   => array_map('floatval', explode(',', $dimensions['widths'])),
+        'selected' => ['min' => $dimensions['selected']['min_width'], 'max' => $dimensions['selected']['max_width']],
+        'text'     => l10n('between %d and %d pixels'),
+    ],
+    'heights' => [
+        'values'   => array_map('floatval', explode(',', $dimensions['heights'])),
+        'selected' => ['min' => $dimensions['selected']['min_height'], 'max' => $dimensions['selected']['max_height']],
+        'text'     => l10n('between %d and %d pixels'),
+    ],
+    'ratios' => [
+        'values'   => array_map('floatval', explode(',', $dimensions['ratios'])),
+        'selected' => ['min' => $dimensions['selected']['min_ratio'], 'max' => $dimensions['selected']['max_ratio']],
+        'text'     => l10n('between %.2f and %.2f'),
+    ],
+    'filesizes' => [
+        'values'   => array_map('floatval', explode(',', $filesize['list'])),
+        'selected' => ['min' => $filesize['selected']['min'], 'max' => $filesize['selected']['max']],
+        'text'     => l10n('between %s and %s MB'),
+    ],
+];
+
+$filter_category_selected_val = isset($selected_category) ? $selected_category : null;
+
+$template->assign('batch_filter_page_data_json', json_encode([
+    'sliders'                => $sliders_json,
+    'selected_filter_cat_ids' => $filter_category_selected_val !== null ? [$filter_category_selected_val] : [],
+    'str_select_album'       => l10n('Select at least one album'),
+    'str_select_tag'         => l10n('Select at least one tag'),
+], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
+
 include(PHPWG_ROOT_PATH.'admin/batch_manager_'.(string) $page['tab'].'.php');

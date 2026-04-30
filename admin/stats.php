@@ -378,8 +378,12 @@ $template->assign([
   'lastMonths' => $last_months,
   'lastYears' => $last_years,
   'langCode' => strval($user['language']),
-  'month_labels' => join('~', $lang['month']),
   'ADMIN_PAGE_TITLE' => l10n('History'),
+  'page_data_json' => json_encode([
+    'str_avg' => l10n('Average last 12 months'),
+    'str_number_page_visited' => l10n('Page Visited'),
+    'str_months' => array_values($lang['month']),
+  ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE),
 ]);
 
 $template->assign_var_from_handle('ADMIN_CONTENT', 'stats');

@@ -7,51 +7,10 @@
   var url_logo_light = `{$ROOT_URL}themes/standard_pages/images/piwigo_logo.svg`;
   var url_logo_dark = `{$ROOT_URL}themes/standard_pages/images/piwigo_logo_dark.svg`;
 </script>
+<script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 {combine_script id='standard_pages_js' load='async' require='jquery' path='themes/standard_pages/js/standard_pages.js'}
-{combine_script id='standard_profile_js' load='footer' require='jquery' path='themes/standard_pages/js/profile.js'}
-{combine_script id='common' load='footer' require='jquery' path='admin/themes/default/js/common.js'}
-{footer_script}
-let user = {
-  username: "{$USERNAME}",
-  email: "{$EMAIL}",
-  nb_image_page: $('input[name="nb_image_page"]').val(),
-  theme: $('select[name="theme"]').val(),
-  language: $('select[name="language"]').val(),
-  recent_period: $('input[name="recent_period"]').val(),
-  opt_album: $('#opt_album').is(':checked'),
-  opt_comment: $('#opt_comment').is(':checked'),
-  opt_hits: $('#opt_hits').is(':checked')
-}
-
-const canUpdatePreferences = {if $ALLOW_USER_CUSTOMIZATION}true{else}false{/if};
-const canUpdatePassword = {if not $SPECIAL_USER}true{else}false{/if};
-const standardSaveSelector = [];
-const preferencesDefaultValues = {
-nb_image_page: {$DEFAULT_USER_VALUES['nb_image_page']},
-recent_period: {$DEFAULT_USER_VALUES['recent_period']},
-opt_album: {$DEFAULT_USER_VALUES['expand']},
-opt_comment: {$DEFAULT_USER_VALUES['show_nb_comments']},
-opt_hits: {$DEFAULT_USER_VALUES['show_nb_hits']},
-};
-const selected_date = "{$API_SELECTED_EXPIRATION}";
-const can_manage_api = {($API_CAN_MANAGE) ? "true" : "false"};
-
-const str_copy_key_id = "{"ID copied."|translate|escape:javascript}";
-const str_copy_key_secret = "{"Secret copied. Keep it in a safe place."|translate|escape:javascript}";
-const str_cant_copy = "{"Impossible to copy automatically. Please copy manually."|translate|escape:javascript}";
-const str_api_added = "{"The api key has been successfully created."|translate|escape:javascript}";
-const str_revoked = "{"Revoked"|translate|escape:javascript}";
-const str_show_expired = "{"Show expired keys"|translate|escape:javascript}";
-const str_hide_expired = "{"Hide expired keys"|translate|escape:javascript}";
-const str_handle_error = "{"An error has occured"|translate|escape:javascript}";
-const str_expires_in = "{"Expires in"|translate|escape:javascript}";
-const str_expires_on = "{"Expired on"|translate|escape:javascript}";
-const str_revoke_key = "{'Do you really want to revoke the "%s" API key?'|translate|escape:javascript}";
-const str_api_revoked = "{"API Key has been successfully revoked."|translate|escape:javascript}";
-const str_api_edited = "{"API Key has been successfully edited."|translate|escape:javascript}";
-const no_time_elapsed = "{"right now"|translate|escape:javascript}";
-const str_must_not_empty = "{'must not be empty'|translate|escape:javascript}";
-{/footer_script}
+{combine_script id='standard_profile_js' load='footer' path='themes/standard_pages/js/profile.js'}
+{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
 
 <container id="mode" class="light">
   <section id="header-options">

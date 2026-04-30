@@ -65,6 +65,45 @@ SELECT '.implode(',', $fields).'
         make_index_url(), // for redirect
         $userdata
     );
+
+    $special_user = in_array($userdata['id'], [\Piwigo\Core\Config::guestId(), \Piwigo\Core\Config::defaultUserId()]);
+    $template->assign('page_data_json', json_encode([
+        'canUpdatePreferences' => \Piwigo\Core\Config::allowUserCustomization(),
+        'canUpdatePassword' => !$special_user,
+        'can_manage_api' => 'pwg_ui' === ($_SESSION['connected_with'] ?? null),
+        'user' => [
+            'username' => stripslashes((string) $userdata['username']),
+            'email' => (string) ($userdata['email'] ?? ''),
+            'nb_image_page' => (string) ($userdata['nb_image_page'] ?? ''),
+            'theme' => (string) ($userdata['theme'] ?? ''),
+            'language' => (string) ($userdata['language'] ?? ''),
+            'recent_period' => (string) ($userdata['recent_period'] ?? ''),
+            'opt_album' => !empty($userdata['expand']),
+            'opt_comment' => !empty($userdata['show_nb_comments']),
+            'opt_hits' => !empty($userdata['show_nb_hits']),
+        ],
+        'preferencesDefaultValues' => [
+            'nb_image_page' => $default_user['nb_image_page'] ?? null,
+            'recent_period' => $default_user['recent_period'] ?? null,
+            'opt_album' => !empty($default_user['expand'] ?? null),
+            'opt_comment' => !empty($default_user['show_nb_comments'] ?? null),
+            'opt_hits' => !empty($default_user['show_nb_hits'] ?? null),
+        ],
+        'standardSaveSelector' => [],
+        'selected_date' => $template->get_template_vars('API_SELECTED_EXPIRATION') ?? '',
+        'no_time_elapsed' => l10n('right now'),
+        'str_handle_error' => l10n('An error has occured'),
+        'str_copy_key_secret' => l10n('Secret copied. Keep it in a safe place.'),
+        'str_copy_key_id' => l10n('ID copied.'),
+        'str_api_edited' => l10n('API Key has been successfully edited.'),
+        'str_api_revoked' => l10n('API Key has been successfully revoked.'),
+        'str_api_added' => l10n('The api key has been successfully created.'),
+        'str_revoke_key' => l10n('Do you really want to revoke the "%s" API key?'),
+        'str_cant_copy' => l10n('Impossible to copy automatically. Please copy manually.'),
+        'str_show_expired' => l10n('Show expired keys'),
+        'str_hide_expired' => l10n('Hide expired keys'),
+    ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
+
     $template->assign_var_from_handle('PROFILE_CONTENT', 'profile_content');
 
 

@@ -139,6 +139,40 @@ $template->assign('display_thumbnail_selected', $form['display_thumbnail']);
 $template->assign('guest_id', \Piwigo\Core\Config::guestId());
 $template->assign('ADMIN_PAGE_TITLE', l10n('History'));
 
+$template->assign('page_data_json', json_encode([
+    'API_METHOD'                  => 'ws.php?format=json&method=pwg.history.search',
+    'filter_user_name'            => @$form_param['user_name'],
+    'guest_id'                    => \Piwigo\Core\Config::guestId(),
+    'today'                       => date('Y-m-d'),
+    'initial_user_id'             => $form_param['user_id'],
+    'initial_image_id'            => $form_param['image_id'] ?? '',
+    'initial_ip'                  => $form_param['ip'] ?? '',
+    'new_user_item'               => null,
+    'str_dwld'                    => l10n('Downloaded'),
+    'str_most_visited'            => l10n('Most visited'),
+    'str_best_rated'              => l10n('Best rated'),
+    'str_list'                    => l10n('Random photo'),
+    'str_favorites'               => l10n('Your favorites'),
+    'str_recent_cats'             => l10n('Recent albums'),
+    'str_recent_pics'             => l10n('Recent photos'),
+    'str_memories'                => l10n('Memories'),
+    'str_no_longer_exist_photo'   => l10n('This photo no longer exists'),
+    'str_guest'                   => l10n('guest'),
+    'str_contact_form'            => l10n('Contact Form'),
+    'str_edit_img'                => l10n('Edit photo'),
+    'unit_MB'                     => l10n('%s MB'),
+    'str_and_more'                => l10n('and %d more'),
+    'str_search_details'          => [
+        'allwords'    => l10n('Search for words'),
+        'date_posted' => l10n('Post date'),
+        'tags'        => l10n('Tags'),
+        'cat'         => l10n('Album'),
+        'author'      => l10n('Author'),
+        'added_by'    => l10n('Added by'),
+        'filetypes'   => l10n('File type'),
+    ],
+], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
+
 // +-----------------------------------------------------------------------+
 // |                           html code display                           |
 // +-----------------------------------------------------------------------+

@@ -4,6 +4,7 @@
 
 {combine_script id='LocalStorageCache' load='footer' path='admin/themes/default/js/LocalStorageCache.js'}
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
+<script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 {footer_script}
 {* <!-- USERS --> *}
 var usersCache = new UsersCache({
@@ -11,105 +12,6 @@ var usersCache = new UsersCache({
   serverId: '{$CACHE_KEYS._hash}',
   rootUrl: '{$ROOT_URL}'
 });
-const nb_users = {$nb_users};
-
-const additional_filt_type = '{$ADDITIONAL_FILT.type}';
-const additional_filt_value = {if $ADDITIONAL_FILT.type} {$ADDITIONAL_FILT.value} {else} null {/if};
-
-const color_icons = ["icon-red", "icon-blue", "icon-yellow", "icon-purple", "icon-green"];
-var activity_page = 1;
-let current_page_offset = 0;
-let page_offsets = [0];
-let actual_page = 1;
-let end_page = false;
-let uid_filter;
-let action_filter;
-let object_filter;
-let date_min_filter = '{$ACTIVITY_DATES.min}';
-let date_max_filter = '{$ACTIVITY_DATES.max}';
-
-const date_min = '{$ACTIVITY_DATES.min}';
-const date_max = '{$ACTIVITY_DATES.max}';
-
-const page_ellipsis = '<span>...</span>'
-const page_item = '<a data-page="%d">%d</a>';
-var create_selecter = true;
-const users_key = "{"Users"|@translate}";
-
-const line_key = "{'%s line'|translate}";
-const lines_key = "{'%s lines'|translate}";
-
-{*<-- Translation keys -->*}
-
-var actionType_add = "{'add'|translate}";
-var actionType_delete = "{'deletion'|translate}";
-var actionType_move = "{'move'|translate}";
-var actionType_edit = "{'edit'|translate}";
-var actionType_login = "{'login'|translate}";
-var actionType_logout = "{'logout'|translate}";
-
-{* Album keys *}
-
-var actionInfos_album_added = "{'%d album added'|translate}";
-var actionInfos_album_deleted = "{'%d album deleted'|translate}";
-var actionInfos_album_edited = "{'%d album edited'|translate}";
-var actionInfos_album_moved = "{'%d album moved'|translate}";
-
-var actionInfos_albums_added = "{'%d albums added'|translate}";
-var actionInfos_albums_deleted = "{'%d albums deleted'|translate}";
-var actionInfos_albums_edited = "{'%d albums edited'|translate}";
-var actionInfos_albums_moved = "{'%d albums moved'|translate}";
-
-{* User keys *}
-
-var actionInfos_user_added = "{'%d user added'|translate}";
-var actionInfos_user_deleted = "{'%d user deleted'|translate}";
-var actionInfos_user_edited = "{'%d user edited'|translate}";
-var actionInfos_user_logged_in = "{'%d user logged in'|translate}";
-var actionInfos_user_logged_out = "{'%d user logged out'|translate}";
-
-var actionInfos_users_added = "{'%d users added'|translate}";
-var actionInfos_users_deleted = "{'%d users deleted'|translate}";
-var actionInfos_users_edited = "{'%d users edited'|translate}";
-var actionInfos_users_logged_in = "{'%d users logged in'|translate}";
-var actionInfos_users_logged_out = "{'%d users logged out'|translate}";
-
-{* Photo keys *}
-
-var actionInfos_photo_added = "{'%d photo added'|translate}";
-var actionInfos_photo_deleted = "{'%d photo deleted'|translate}";
-var actionInfos_photo_edited = "{'%d photo edited'|translate}";
-var actionInfos_photo_moved = "{'%d photo moved'|translate}";
-
-var actionInfos_photos_added = "{'%d photos added'|translate}";
-var actionInfos_photos_deleted = "{'%d photos deleted'|translate}";
-var actionInfos_photos_edited = "{'%d photos edited'|translate}";
-var actionInfos_photos_moved = "{'%d photos moved'|translate}";
-
-{* Group keys *}
-
-var actionInfos_group_added = "{'%d group added'|translate}";
-var actionInfos_group_deleted = "{'%d group deleted'|translate}";
-var actionInfos_group_edited = "{'%d group edited'|translate}";
-var actionInfos_group_moved = "{'%d group moved'|translate}";
-
-var actionInfos_groups_added = "{'%d groups added'|translate}";
-var actionInfos_groups_deleted = "{'%d groups deleted'|translate}";
-var actionInfos_groups_edited = "{'%d groups edited'|translate}";
-var actionInfos_groups_moved = "{'%d groups moved'|translate}";
-
-{* Tags keys *}
-
-var actionInfos_tag_added = "{'%d tag added'|translate}";
-var actionInfos_tag_deleted = "{'%d tag deleted'|translate}";
-var actionInfos_tag_edited = "{'%d tag edited'|translate}";
-var actionInfos_tag_moved = "{'%d tag moved'|translate}";
-
-var actionInfos_tags_added = "{'%d tags added'|translate}";
-var actionInfos_tags_deleted = "{'%d tags deleted'|translate}";
-var actionInfos_tags_edited = "{'%d tags edited'|translate}";
-var actionInfos_tags_moved = "{'%d tags moved'|translate}";
-
 {/footer_script}
 
 {combine_script id='user_activity' load='async' path='admin/themes/default/js/user_activity.js'}

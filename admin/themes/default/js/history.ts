@@ -1,32 +1,77 @@
 import tippy from 'tippy.js';
 import 'tippy.js/dist/tippy.css';
+import { getPageData } from './page-data';
 
-declare var API_METHOD: any;
-declare var current_param: any;
-declare var data: any;
-declare var filter_user_name: any;
-declare var guest_id: any;
-declare var imageDisplay: any;
-declare var maxPage: any;
-declare var new_user_item: any;
-declare var str_and_more: any;
-declare var str_best_rated: any;
-declare var str_contact_form: any;
-declare var str_dwld: any;
-declare var str_edit_img: any;
-declare var str_favorites: any;
-declare var str_guest: any;
-declare var str_list: any;
-declare var str_memories: any;
-declare var str_most_visited: any;
-declare var str_no_longer_exist_photo: any;
-declare var str_recent_cats: any;
-declare var str_recent_pics: any;
-declare var str_search_details: any;
-declare var summary: any;
-declare var today: any;
-declare var unit_MB: any;
 declare function sprintf(fmt: string, ...args: unknown[]): string;
+
+interface HistoryPageData {
+    API_METHOD: string;
+    filter_user_name: string;
+    guest_id: number;
+    today: string;
+    initial_user_id: string;
+    initial_image_id: string;
+    initial_ip: string;
+    new_user_item: null;
+    str_dwld: string;
+    str_most_visited: string;
+    str_best_rated: string;
+    str_list: string;
+    str_favorites: string;
+    str_recent_cats: string;
+    str_recent_pics: string;
+    str_memories: string;
+    str_no_longer_exist_photo: string;
+    str_guest: string;
+    str_contact_form: string;
+    str_edit_img: string;
+    unit_MB: string;
+    str_and_more: string;
+    str_search_details: Record<string, string>;
+}
+
+const {
+    API_METHOD,
+    filter_user_name,
+    guest_id,
+    today,
+    initial_user_id,
+    initial_image_id,
+    initial_ip,
+    str_dwld,
+    str_most_visited,
+    str_best_rated,
+    str_list,
+    str_favorites,
+    str_recent_cats,
+    str_recent_pics,
+    str_memories,
+    str_no_longer_exist_photo,
+    str_guest,
+    str_contact_form,
+    str_edit_img,
+    unit_MB,
+    str_and_more,
+    str_search_details,
+} = getPageData<HistoryPageData>();
+
+// Mutable state
+let current_param: Record<string, any> = {
+    start: '',
+    end: today,
+    types: { 0: 'none', 1: 'picture', 2: 'high', 3: 'other' },
+    user_id: initial_user_id,
+    image_id: initial_image_id,
+    filename: '',
+    ip: initial_ip,
+    display_thumbnail: 'display_thumbnail_classic',
+    pageNumber: 0,
+};
+let data: any = null;
+let imageDisplay: any = null;
+let maxPage = 0;
+let summary: Record<string, any> = {};
+let new_user_item: any = null;
 
 document.addEventListener('DOMContentLoaded', () => {
     activateLineOptions();
@@ -76,7 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('end_unset')?.addEventListener('click', () => {
-        if (!current_param.start == today) {
+        if (current_param.end !== today) {
             current_param.end = today;
             current_param.pageNumber = 0;
             fillHistoryResult(current_param);

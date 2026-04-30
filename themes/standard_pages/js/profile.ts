@@ -1,21 +1,63 @@
-declare var canUpdatePreferences: boolean;
-declare var canUpdatePassword: boolean;
-declare var can_manage_api: boolean;
-declare var user: unknown;
-declare var preferencesDefaultValues: unknown;
-declare var standardSaveSelector: string[];
-declare var selected_date: string;
-declare var str_handle_error: string;
-declare var str_copy_key_secret: string;
-declare var str_copy_key_id: string;
-declare var str_api_edited: string;
-declare var str_api_revoked: string;
-declare var str_api_added: string;
-declare var str_revoke_key: string;
-declare var str_cant_copy: string;
-declare var str_show_expired: string;
-declare var str_hide_expired: string;
-declare var no_time_elapsed: string;
+import { getPageData } from './page-data';
+
+interface ProfilePageData {
+    canUpdatePreferences: boolean;
+    canUpdatePassword: boolean;
+    can_manage_api: boolean;
+    user: {
+        username: string;
+        email: string;
+        nb_image_page: string;
+        theme: string;
+        language: string;
+        recent_period: string;
+        opt_album: boolean;
+        opt_comment: boolean;
+        opt_hits: boolean;
+    };
+    preferencesDefaultValues: {
+        nb_image_page: string | null;
+        recent_period: string | null;
+        opt_album: boolean;
+        opt_comment: boolean;
+        opt_hits: boolean;
+    };
+    standardSaveSelector: string[];
+    selected_date: string;
+    no_time_elapsed: string;
+    str_handle_error: string;
+    str_copy_key_secret: string;
+    str_copy_key_id: string;
+    str_api_edited: string;
+    str_api_revoked: string;
+    str_api_added: string;
+    str_revoke_key: string;
+    str_cant_copy: string;
+    str_show_expired: string;
+    str_hide_expired: string;
+}
+
+const {
+    canUpdatePreferences,
+    canUpdatePassword,
+    can_manage_api,
+    user,
+    preferencesDefaultValues,
+    standardSaveSelector,
+    selected_date,
+    no_time_elapsed,
+    str_handle_error,
+    str_copy_key_secret,
+    str_copy_key_id,
+    str_api_edited,
+    str_api_revoked,
+    str_api_added,
+    str_revoke_key,
+    str_cant_copy,
+    str_show_expired,
+    str_hide_expired,
+} = getPageData<ProfilePageData>();
+
 declare function pwgToaster(info: { text: string; icon: 'success' | 'error' }): void;
 declare function sprintf(fmt: string, ...args: unknown[]): string;
 

@@ -1,26 +1,34 @@
+import { getPageData } from './page-data';
+
 declare var Chart: any;
-declare var averageTab: any;
-declare var colorIndice: any;
-declare var colors: any;
-declare var compareMode: any;
-declare var data: any;
-declare var dataType: any;
-declare var data_unit: any;
-declare var dataset: any;
-declare var date: any;
-declare var days: any;
-declare var str_avg: any;
-declare var str_months: any;
-declare var str_number_page_visited: any;
-declare var str_tooltip_format: any;
-declare var str_unit_format: any;
-declare var values: any;
+
+interface StatsPageData {
+    str_avg: string;
+    str_number_page_visited: string;
+    str_months: string[];
+}
+
+const { str_avg, str_number_page_visited, str_months } = getPageData<StatsPageData>();
+
+const str_tooltip_format: Record<string, string> = { years: 'YYYY', months: 'MMMM YYYY', days: 'DD MMM', hours: 'LT' };
+const str_unit_format: Record<string, string> = { day: 'dddd', month: 'MMM YYYY' };
+
+let averageTab: any;
+let colorIndice: any;
+let colors: any;
+let compareMode: any;
+let dataType: any;
+let data_unit: any;
+let dataset: any;
+let date: any;
+let days: any;
+let values: any;
 
 /*-------
 Data Get
 -------*/
 const dataEl = document.getElementById('data')!;
-data = {};
+let data: any = {};
 data["hours"] = JSON.parse(dataEl.dataset['hours'] ?? '{}');
 data["days"] = JSON.parse(dataEl.dataset['days'] ?? '{}');
 data["months"] = JSON.parse(dataEl.dataset['months'] ?? '{}');

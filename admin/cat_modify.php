@@ -365,6 +365,30 @@ if ($category['is_virtual']) {
 
 $template->assign('PWG_TOKEN', get_pwg_token());
 
+$pwg_token = get_pwg_token();
+$parent_cat_id = !empty($category['id_uppercat']) ? (int) $category['id_uppercat'] : 0;
+$template->assign('page_data_json', json_encode([
+    'album_id'                            => (int) $category['id'],
+    'album_name'                          => $category['name'] ?? '',
+    'default_parent_album'                => $parent_cat_id,
+    'is_visible'                          => boolean_to_string($category['visible']),
+    'nb_sub_albums'                       => $category['nb_subcats'],
+    'parent_album'                        => $parent_cat_id,
+    'related_categories_ids'              => [(string) $category['id'], (string) $parent_cat_id],
+    'u_delete'                            => $base_url.'albums',
+    'pwg_token'                           => $pwg_token,
+    'str_cancel'                          => l10n('No, I have changed my mind'),
+    'str_delete_album'                    => l10n('Delete album'),
+    'str_delete_album_and_his_x_subalbums' => l10n('Delete album "%s" and its %d sub-albums.'),
+    'str_just_now'                        => l10n('Just now'),
+    'str_dont_delete_photos'              => l10n('delete only album, not photos'),
+    'str_delete_orphans'                  => l10n('delete album and the %d orphan photos'),
+    'str_delete_all_photos'               => l10n('delete album and all %d photos, even the %d associated to other albums'),
+    'str_album_comment_allow'             => l10n('Comments allowed for sub-albums'),
+    'str_album_comment_disallow'          => l10n('Comments disallowed for sub-albums'),
+    'str_modal_ab'                        => l10n('New parent album'),
+], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
+
 trigger_notify('loc_end_cat_modify');
 
 //----------------------------------------------------------- sending html code

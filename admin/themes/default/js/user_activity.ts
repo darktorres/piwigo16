@@ -1,40 +1,140 @@
 import TomSelect from 'tom-select';
+import { getPageData } from './page-data';
 
-declare var action: any;
-declare var actionInfos_album_added: any; declare var actionInfos_album_deleted: any;
-declare var actionInfos_album_edited: any; declare var actionInfos_album_moved: any;
-declare var actionInfos_albums_added: any; declare var actionInfos_albums_deleted: any;
-declare var actionInfos_albums_edited: any; declare var actionInfos_albums_moved: any;
-declare var actionInfos_group_added: any; declare var actionInfos_group_deleted: any;
-declare var actionInfos_group_edited: any; declare var actionInfos_group_moved: any;
-declare var actionInfos_groups_added: any; declare var actionInfos_groups_deleted: any;
-declare var actionInfos_groups_edited: any; declare var actionInfos_groups_moved: any;
-declare var actionInfos_photo_added: any; declare var actionInfos_photo_deleted: any;
-declare var actionInfos_photo_edited: any; declare var actionInfos_photo_moved: any;
-declare var actionInfos_photos_added: any; declare var actionInfos_photos_deleted: any;
-declare var actionInfos_photos_edited: any; declare var actionInfos_photos_moved: any;
-declare var actionInfos_tag_added: any; declare var actionInfos_tag_deleted: any;
-declare var actionInfos_tag_edited: any; declare var actionInfos_tag_moved: any;
-declare var actionInfos_tags_added: any; declare var actionInfos_tags_deleted: any;
-declare var actionInfos_tags_edited: any; declare var actionInfos_tags_moved: any;
-declare var actionInfos_user_added: any; declare var actionInfos_user_deleted: any;
-declare var actionInfos_user_edited: any; declare var actionInfos_user_logged_in: any;
-declare var actionInfos_user_logged_out: any; declare var actionInfos_users_added: any;
-declare var actionInfos_users_deleted: any; declare var actionInfos_users_edited: any;
-declare var actionInfos_users_logged_in: any; declare var actionInfos_users_logged_out: any;
-declare var actionType_add: any; declare var actionType_delete: any;
-declare var actionType_edit: any; declare var actionType_login: any;
-declare var actionType_logout: any; declare var actionType_move: any;
-declare var action_filter: any; declare var activity_page: any;
-declare var actual_page: any; declare var additional_filt_type: any;
-declare var additional_filt_value: any; declare var color_icons: any;
-declare var current_page_offset: any; declare var date_max: any;
-declare var date_max_filter: any; declare var date_min: any;
-declare var date_min_filter: any; declare var end_page: any;
-declare var nb_users: any; declare var object: any;
-declare var object_filter: any; declare var page_ellipsis: any;
-declare var page_item: any; declare var page_offsets: any;
-declare var uid_filter: any; declare var users_key: any;
+interface UserActivityPageData {
+  nb_users: number;
+  additional_filt_type: string | null;
+  additional_filt_value: number | null;
+  date_min: string;
+  date_max: string;
+  color_icons: string[];
+  page_ellipsis: string;
+  page_item: string;
+  users_key: string;
+  line_key: string;
+  lines_key: string;
+  actionType_add: string;
+  actionType_delete: string;
+  actionType_move: string;
+  actionType_edit: string;
+  actionType_login: string;
+  actionType_logout: string;
+  actionInfos_album_added: string;
+  actionInfos_album_deleted: string;
+  actionInfos_album_edited: string;
+  actionInfos_album_moved: string;
+  actionInfos_albums_added: string;
+  actionInfos_albums_deleted: string;
+  actionInfos_albums_edited: string;
+  actionInfos_albums_moved: string;
+  actionInfos_user_added: string;
+  actionInfos_user_deleted: string;
+  actionInfos_user_edited: string;
+  actionInfos_user_logged_in: string;
+  actionInfos_user_logged_out: string;
+  actionInfos_users_added: string;
+  actionInfos_users_deleted: string;
+  actionInfos_users_edited: string;
+  actionInfos_users_logged_in: string;
+  actionInfos_users_logged_out: string;
+  actionInfos_photo_added: string;
+  actionInfos_photo_deleted: string;
+  actionInfos_photo_edited: string;
+  actionInfos_photo_moved: string;
+  actionInfos_photos_added: string;
+  actionInfos_photos_deleted: string;
+  actionInfos_photos_edited: string;
+  actionInfos_photos_moved: string;
+  actionInfos_group_added: string;
+  actionInfos_group_deleted: string;
+  actionInfos_group_edited: string;
+  actionInfos_group_moved: string;
+  actionInfos_groups_added: string;
+  actionInfos_groups_deleted: string;
+  actionInfos_groups_edited: string;
+  actionInfos_groups_moved: string;
+  actionInfos_tag_added: string;
+  actionInfos_tag_deleted: string;
+  actionInfos_tag_edited: string;
+  actionInfos_tag_moved: string;
+  actionInfos_tags_added: string;
+  actionInfos_tags_deleted: string;
+  actionInfos_tags_edited: string;
+  actionInfos_tags_moved: string;
+}
+
+const {
+  nb_users,
+  additional_filt_type,
+  additional_filt_value,
+  date_min,
+  date_max,
+  color_icons,
+  page_ellipsis,
+  page_item,
+  users_key,
+  actionType_add,
+  actionType_delete,
+  actionType_move,
+  actionType_edit,
+  actionType_login,
+  actionType_logout,
+  actionInfos_album_added,
+  actionInfos_album_deleted,
+  actionInfos_album_edited,
+  actionInfos_album_moved,
+  actionInfos_albums_added,
+  actionInfos_albums_deleted,
+  actionInfos_albums_edited,
+  actionInfos_albums_moved,
+  actionInfos_user_added,
+  actionInfos_user_deleted,
+  actionInfos_user_edited,
+  actionInfos_user_logged_in,
+  actionInfos_user_logged_out,
+  actionInfos_users_added,
+  actionInfos_users_deleted,
+  actionInfos_users_edited,
+  actionInfos_users_logged_in,
+  actionInfos_users_logged_out,
+  actionInfos_photo_added,
+  actionInfos_photo_deleted,
+  actionInfos_photo_edited,
+  actionInfos_photo_moved,
+  actionInfos_photos_added,
+  actionInfos_photos_deleted,
+  actionInfos_photos_edited,
+  actionInfos_photos_moved,
+  actionInfos_group_added,
+  actionInfos_group_deleted,
+  actionInfos_group_edited,
+  actionInfos_group_moved,
+  actionInfos_groups_added,
+  actionInfos_groups_deleted,
+  actionInfos_groups_edited,
+  actionInfos_groups_moved,
+  actionInfos_tag_added,
+  actionInfos_tag_deleted,
+  actionInfos_tag_edited,
+  actionInfos_tag_moved,
+  actionInfos_tags_added,
+  actionInfos_tags_deleted,
+  actionInfos_tags_edited,
+  actionInfos_tags_moved,
+} = getPageData<UserActivityPageData>();
+
+// Mutable state
+let action: string | null = null;
+let activity_page = 1;
+let current_page_offset = 0;
+let page_offsets: number[] = [0];
+let actual_page = 1;
+let end_page = false;
+let uid_filter: string | undefined;
+let action_filter: string | undefined;
+let object_filter: string | undefined;
+let date_min_filter: string = date_min;
+let date_max_filter: string = date_max;
 
 if (additional_filt_type) object_filter = additional_filt_type;
 
@@ -294,9 +394,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!value || value === 'none') {
                     get_user_activity(1, uid_filter, undefined, additional_filt_type ? object_filter : undefined, [date_min_filter, date_max_filter], additional_filt_value);
                 } else {
-                    object = value.split('/')[0];
+                    const obj = value.split('/')[0];
                     action = value.split('/')[1];
-                    get_user_activity(1, uid_filter, action, object, [date_min_filter, date_max_filter], additional_filt_value);
+                    get_user_activity(1, uid_filter, action, obj, [date_min_filter, date_max_filter], additional_filt_value);
                 }
             }
         });
@@ -335,6 +435,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         toggleTriggered = false;
     });
+
 });
 
 export {};

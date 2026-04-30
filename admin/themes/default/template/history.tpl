@@ -1,67 +1,11 @@
 
 {include file='include/datepicker.inc.tpl'}
 
+<script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 {footer_script}
 document.querySelectorAll('[data-datepicker]').forEach(function(el) {
   window.pwgDatepicker(el, {});
 });
-
-var dateObj = new Date();
-var month = dateObj.getUTCMonth() + 1; //months from 1-12
-var day = dateObj.getUTCDate();
-var year = dateObj.getUTCFullYear();
-
-var filter_user_name = "{$USER_NAME}";
-
-if (month < 10) month = "0" + month;
-if (day < 10) day = "0" + day;
-
-window.today = year + "-" + month + "-" + day;
-var current_param = {
-  start: "",
-  end: today,
-  types: {
-    0: "none",
-    1: "picture",
-    2: "high",
-    3: "other"
-  },
-  user_id: {$USER_ID},
-  image_id: {if isset($IMAGE_ID)}"{$IMAGE_ID}"{else}""{/if},
-  filename: "",
-  ip: {if isset($IP)}"{$IP}"{else}""{/if},
-  display_thumbnail: "display_thumbnail_classic",
-  pageNumber: 0 {* fetch lines from line 0 to line 100*}
-}
-
-const API_METHOD = "{$API_METHOD}";
-const str_dwld = "{'Downloaded'|translate}";
-const str_most_visited = "{'Most visited'|translate}";
-const str_best_rated = "{'Best rated'|translate}";
-const str_list = "{'Random photo'|translate}";
-const str_favorites = "{'Your favorites'|translate}";
-const str_recent_cats = "{'Recent albums'|translate}";
-const str_recent_pics = "{'Recent photos'|translate}";
-const str_memories = "{'Memories'|translate}";
-const str_no_longer_exist_photo = "{'This photo no longer exists'|@translate}";
-const str_tags = "{'Tags'|translate}";
-const unit_MB = "{"%s MB"|@translate}";
-const str_guest = '{'guest'|@translate}';
-const str_contact_form = '{'Contact Form'|@translate}';
-const str_edit_img = '{'Edit photo'|@translate}';
-
-const str_search_details = {
-    "allwords": "{'Search for words'|@translate}",
-    "date_posted": "{'Post date'|@translate}",
-    "tags": str_tags,
-    "cat": "{'Album'|@translate}",
-    "author": "{'Author'|@translate}",
-    "added_by": "{'Added by'|@translate}",
-    "filetypes": "{'File type'|@translate}",
-};
-const str_and_more = "{'and %d more'|@translate}"
-
-const guest_id = {$guest_id};
 {/footer_script}
 
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}

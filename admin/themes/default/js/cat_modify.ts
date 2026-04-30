@@ -1,26 +1,56 @@
 import tippy from 'tippy.js';
 import 'tippy.js/dist/tippy.css';
+import { getPageData } from './page-data';
 
-declare var album_id: any;
-declare var album_name: any;
-declare var default_parent_album: any;
-declare var is_visible: any;
-declare var nb_sub_albums: any;
-declare var parent_album: any;
-declare var related_categories_ids: any;
-declare var str_album_comment_allow: any;
-declare var str_album_comment_disallow: any;
-declare var str_cancel: any;
-declare var str_delete_album: any;
-declare var str_delete_album_and_his_x_subalbums: any;
-declare var str_delete_all_photos: any;
-declare var str_delete_orphans: any;
-declare var str_dont_delete_photos: any;
-declare var str_just_now: any;
-declare var str_modal_ab: any;
-declare var temp_txt: any;
-declare var u_delete: any;
-declare var pwg_token: string;
+interface CatModifyPageData {
+    album_id: number;
+    album_name: string;
+    default_parent_album: number;
+    is_visible: string;
+    nb_sub_albums: number;
+    parent_album: number;
+    related_categories_ids: string[];
+    u_delete: string;
+    pwg_token: string;
+    str_cancel: string;
+    str_delete_album: string;
+    str_delete_album_and_his_x_subalbums: string;
+    str_just_now: string;
+    str_dont_delete_photos: string;
+    str_delete_orphans: string;
+    str_delete_all_photos: string;
+    str_album_comment_allow: string;
+    str_album_comment_disallow: string;
+    str_modal_ab: string;
+}
+
+const {
+    album_id,
+    album_name,
+    str_cancel,
+    str_delete_album,
+    str_delete_album_and_his_x_subalbums,
+    str_just_now,
+    str_dont_delete_photos,
+    str_delete_orphans,
+    str_delete_all_photos,
+    str_album_comment_allow,
+    str_album_comment_disallow,
+    str_modal_ab,
+    u_delete,
+    pwg_token,
+    related_categories_ids,
+    nb_sub_albums,
+    is_visible: _is_visible,
+    parent_album: _parent_album,
+    default_parent_album: _default_parent_album,
+} = getPageData<CatModifyPageData>();
+
+// Mutable state
+let is_visible = _is_visible;
+let parent_album = _parent_album;
+let default_parent_album = _default_parent_album;
+let temp_txt = '';
 
 function pwgPost(method: string, data: Record<string, any>): Promise<any> {
     return fetch(`ws.php?format=json&method=${method}`, {

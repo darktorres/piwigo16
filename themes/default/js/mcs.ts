@@ -1,31 +1,72 @@
 import TomSelect from 'tom-select';
 import tippy from 'tippy.js';
+import { getPageData } from './page-data';
 
-declare var global_params: any;
-declare var search_id: string;
-declare var fullname_of_cat: Record<string, string>;
-declare var prefix_icon: string;
-declare var str_word_widget_label: string;
-declare var str_tags_widget_label: string;
-declare var str_album_widget_label: string;
-declare var str_author_widget_label: string;
-declare var str_added_by_widget_label: string;
-declare var str_filetypes_widget_label: string;
-declare var str_ratio_widget_label: string;
-declare var str_rating_widget_label: string;
-declare var str_filesize_widget_label: string;
-declare var str_height_widget_label: string;
-declare var str_width_widget_label: string;
-declare var str_expert_widget_label: string;
-declare var str_search_in_ab: string;
-declare var str_ratios_label: Record<string, string>;
-declare var str_no_rating: string;
-declare var str_between_rating: string;
-declare var str_empty_search_top_alt: string;
-declare var str_empty_search_bot_alt: string;
-declare var show_filter_ratings: boolean;
-declare var sliders: any;
 declare var sprintf: (fmt: string, ...args: any[]) => string;
+
+interface SliderConfig {
+    values: number[];
+    selected: { min: number | string; max: number | string };
+    text: string;
+}
+
+interface McsPageData {
+    global_params: any;
+    search_id: string;
+    fullname_of_cat: Record<string, string>;
+    show_filter_ratings: boolean;
+    sliders: {
+        filesizes?: SliderConfig;
+        heights?: SliderConfig;
+        widths?: SliderConfig;
+    };
+    str_word_widget_label: string;
+    str_tags_widget_label: string;
+    str_album_widget_label: string;
+    str_author_widget_label: string;
+    str_added_by_widget_label: string;
+    str_filetypes_widget_label: string;
+    str_ratio_widget_label: string;
+    str_rating_widget_label: string;
+    str_no_rating: string;
+    str_between_rating: string;
+    str_filesize_widget_label: string;
+    str_width_widget_label: string;
+    str_height_widget_label: string;
+    str_expert_widget_label: string;
+    str_search_in_ab: string;
+    str_empty_search_top_alt: string;
+    str_empty_search_bot_alt: string;
+    str_ratios_label: Record<string, string>;
+}
+
+const {
+    global_params,
+    search_id,
+    fullname_of_cat,
+    show_filter_ratings,
+    sliders,
+    str_word_widget_label,
+    str_tags_widget_label,
+    str_album_widget_label,
+    str_author_widget_label,
+    str_added_by_widget_label,
+    str_filetypes_widget_label,
+    str_ratio_widget_label,
+    str_rating_widget_label,
+    str_no_rating,
+    str_between_rating,
+    str_filesize_widget_label,
+    str_width_widget_label,
+    str_height_widget_label,
+    str_expert_widget_label,
+    str_search_in_ab,
+    str_empty_search_top_alt,
+    str_empty_search_bot_alt,
+    str_ratios_label,
+} = getPageData<McsPageData>();
+
+const prefix_icon = 'gallery-icon-';
 
 // Script-level mutable globals (populated inside DOMContentLoaded)
 let PS_params: Record<string, any> = {};
@@ -836,7 +877,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Setup filesize filter
-  if (global_params.fields.filesize_min != null && global_params.fields.filesize_max != null) {
+  if (global_params.fields.filesize_min != null && global_params.fields.filesize_max != null && sliders.filesizes) {
+    const filesizesSlider = sliders.filesizes;
 
     document.querySelectorAll<HTMLElement>('.filter-filesize').forEach(el => {
       el.style.display = 'flex';
@@ -845,11 +887,11 @@ document.addEventListener('DOMContentLoaded', () => {
       el.checked = true;
     });
     document.querySelectorAll<HTMLElement>('.filter.filter-filesize .slider-info').forEach(el => {
-      el.innerHTML = sprintf(sliders.filesizes.text, sliders.filesizes.selected.min, sliders.filesizes.selected.max);
+      el.innerHTML = sprintf(filesizesSlider.text, filesizesSlider.selected.min, filesizesSlider.selected.max);
     });
 
     document.querySelectorAll<HTMLElement>('[data-slider=filesizes]').forEach(el => {
-      (window as any).pwgDoubleSlider(el, sliders.filesizes);
+      (window as any).pwgDoubleSlider(el, filesizesSlider);
     });
 
     document.querySelectorAll<HTMLElement>('[data-slider=filesizes]').forEach(sliderEl => {
@@ -875,7 +917,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (global_params.fields.filesize_min != null && global_params.fields.filesize_max > 0) {
       document.querySelectorAll<HTMLElement>('.filter-filesize').forEach(el => el.classList.add('filter-filled'));
       document.querySelectorAll<HTMLElement>('.filter.filter-filesize .search-words').forEach(el => {
-        el.innerHTML = sprintf(sliders.filesizes.text, sliders.filesizes.selected.min, sliders.filesizes.selected.max);
+        el.innerHTML = sprintf(filesizesSlider.text, filesizesSlider.selected.min, filesizesSlider.selected.max);
       });
     } else {
       document.querySelectorAll<HTMLElement>('.filter.filter-filesize .search-words').forEach(el => {
@@ -889,7 +931,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const filterFilesizeEl = document.querySelector<HTMLElement>('.filter-filesize');
         if (filterFilesizeEl) filterFilesizeEl.dispatchEvent(new Event('click'));
         document.querySelectorAll<HTMLElement>('[data-slider=filesizes]').forEach(sliderEl => {
-          (window as any).pwgDoubleSlider(sliderEl, sliders.filesizes);
+          (window as any).pwgDoubleSlider(sliderEl, filesizesSlider);
         });
         if (filterFilesizeEl && filterFilesizeEl.classList.contains('filter-filled')) {
           filterFilesizeEl.classList.remove('filter-filled');
@@ -908,7 +950,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Setup Height filter
-  if (global_params.fields.height_min != null && global_params.fields.height_max != null) {
+  if (global_params.fields.height_min != null && global_params.fields.height_max != null && sliders.heights) {
+    const heightsSlider = sliders.heights;
     document.querySelectorAll<HTMLElement>('.filter-height').forEach(el => {
       el.style.display = 'flex';
     });
@@ -916,17 +959,17 @@ document.addEventListener('DOMContentLoaded', () => {
       el.checked = true;
     });
     document.querySelectorAll<HTMLElement>('.filter.filter-height .slider-info').forEach(el => {
-      el.innerHTML = sprintf(sliders.heights.text, sliders.heights.selected.min, sliders.heights.selected.max);
+      el.innerHTML = sprintf(heightsSlider.text, heightsSlider.selected.min, heightsSlider.selected.max);
     });
 
     document.querySelectorAll<HTMLElement>('[data-slider=heights]').forEach(el => {
-      (window as any).pwgDoubleSlider(el, sliders.heights);
+      (window as any).pwgDoubleSlider(el, heightsSlider);
     });
 
     if (global_params.fields.height_min > 0 && global_params.fields.height_max > 0) {
       document.querySelectorAll<HTMLElement>('.filter-height').forEach(el => el.classList.add('filter-filled'));
       document.querySelectorAll<HTMLElement>('.filter.filter-height .search-words').forEach(el => {
-        el.innerHTML = sprintf(sliders.heights.text, sliders.heights.selected.min, sliders.heights.selected.max);
+        el.innerHTML = sprintf(heightsSlider.text, heightsSlider.selected.min, heightsSlider.selected.max);
       });
     } else {
       document.querySelectorAll<HTMLElement>('.filter.filter-height .search-words').forEach(el => {
@@ -940,7 +983,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const filterHeightEl = document.querySelector<HTMLElement>('.filter-height');
         if (filterHeightEl) filterHeightEl.dispatchEvent(new Event('click'));
         document.querySelectorAll<HTMLElement>('[data-slider=heights]').forEach(sliderEl => {
-          (window as any).pwgDoubleSlider(sliderEl, sliders.heights);
+          (window as any).pwgDoubleSlider(sliderEl, heightsSlider);
         });
         if (filterHeightEl && filterHeightEl.classList.contains('filter-filled')) {
           filterHeightEl.classList.remove('filter-filled');
@@ -959,7 +1002,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Setup Width filter
-  if (global_params.fields.width_min != null && global_params.fields.width_max != null) {
+  if (global_params.fields.width_min != null && global_params.fields.width_max != null && sliders.widths) {
+    const widthsSlider = sliders.widths;
     document.querySelectorAll<HTMLElement>('.filter-width').forEach(el => {
       el.style.display = 'flex';
     });
@@ -967,17 +1011,17 @@ document.addEventListener('DOMContentLoaded', () => {
       el.checked = true;
     });
     document.querySelectorAll<HTMLElement>('.filter.filter-width .slider-info').forEach(el => {
-      el.innerHTML = sprintf(sliders.widths.text, sliders.widths.selected.min, sliders.widths.selected.max);
+      el.innerHTML = sprintf(widthsSlider.text, widthsSlider.selected.min, widthsSlider.selected.max);
     });
 
     document.querySelectorAll<HTMLElement>('[data-slider=widths]').forEach(el => {
-      (window as any).pwgDoubleSlider(el, sliders.widths);
+      (window as any).pwgDoubleSlider(el, widthsSlider);
     });
 
     if (global_params.fields.width_min > 0 && global_params.fields.width_max > 0) {
       document.querySelectorAll<HTMLElement>('.filter-width').forEach(el => el.classList.add('filter-filled'));
       document.querySelectorAll<HTMLElement>('.filter.filter-width .search-words').forEach(el => {
-        el.innerHTML = sprintf(sliders.widths.text, sliders.widths.selected.min, sliders.widths.selected.max);
+        el.innerHTML = sprintf(widthsSlider.text, widthsSlider.selected.min, widthsSlider.selected.max);
       });
     } else {
       document.querySelectorAll<HTMLElement>('.filter.filter-width .search-words').forEach(el => {
@@ -991,7 +1035,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const filterWidthEl = document.querySelector<HTMLElement>('.filter-width');
         if (filterWidthEl) filterWidthEl.dispatchEvent(new Event('click'));
         document.querySelectorAll<HTMLElement>('[data-slider=widths]').forEach(sliderEl => {
-          (window as any).pwgDoubleSlider(sliderEl, sliders.widths);
+          (window as any).pwgDoubleSlider(sliderEl, widthsSlider);
         });
         if (filterWidthEl && filterWidthEl.classList.contains('filter-filled')) {
           filterWidthEl.classList.remove('filter-filled');

@@ -781,6 +781,72 @@ SELECT
     ]
     );
 
+    $sliders_data = [];
+    if (isset($filesize)) {
+        $sliders_data['filesizes'] = [
+            'values'   => array_map('floatval', explode(',', $filesize['list'])),
+            'selected' => [
+                'min' => $filesize['selected']['min'],
+                'max' => $filesize['selected']['max'],
+            ],
+            'text' => l10n('between %s and %s MB'),
+        ];
+    }
+    if (isset($height)) {
+        $sliders_data['heights'] = [
+            'values'   => array_map('intval', explode(',', $height['list'])),
+            'selected' => [
+                'min' => $height['selected']['min'],
+                'max' => $height['selected']['max'],
+            ],
+            'text' => l10n('between %d and %d pixels'),
+        ];
+    }
+    if (isset($width)) {
+        $sliders_data['widths'] = [
+            'values'   => array_map('intval', explode(',', $width['list'])),
+            'selected' => [
+                'min' => $width['selected']['min'],
+                'max' => $width['selected']['max'],
+            ],
+            'text' => l10n('between %d and %d pixels'),
+        ];
+    }
+
+    $template->assign('page_data_json', json_encode(
+        [
+        'global_params'               => $my_search,
+        'search_id'                   => $page['search'],
+        'fullname_of_cat'             => $fullname_of ?? [],
+        'show_filter_ratings'         => \Piwigo\Core\Config::get('rate') ? true : false,
+        'sliders'                     => $sliders_data,
+        'str_word_widget_label'       => l10n('Search for words'),
+        'str_tags_widget_label'       => l10n('Tag'),
+        'str_album_widget_label'      => l10n('Album'),
+        'str_author_widget_label'     => l10n('Author'),
+        'str_added_by_widget_label'   => l10n('Added by'),
+        'str_filetypes_widget_label'  => l10n('File type'),
+        'str_ratio_widget_label'      => l10n('Ratio'),
+        'str_rating_widget_label'     => l10n('Rating'),
+        'str_no_rating'               => l10n('no rate'),
+        'str_between_rating'          => l10n('between %d and %d'),
+        'str_filesize_widget_label'   => l10n('Filesize'),
+        'str_width_widget_label'      => l10n('Width'),
+        'str_height_widget_label'     => l10n('Height'),
+        'str_expert_widget_label'     => l10n('Expert mode'),
+        'str_empty_search_top_alt'    => l10n('Fill in the filters to start a search'),
+        'str_empty_search_bot_alt'    => l10n('Pre-established filters are proposed, but you can add or remove them using the "Choose filters" button.'),
+        'str_search_in_ab'            => l10n('Search in albums'),
+        'str_ratios_label'            => [
+            'Portrait'  => l10n('Portrait'),
+            'square'    => l10n('square'),
+            'Landscape' => l10n('Landscape'),
+            'Panorama'  => l10n('Panorama'),
+        ],
+    ],
+        JSON_HEX_TAG | JSON_UNESCAPED_UNICODE
+    ));
+
     if (0 == $page['start'] and !isset($page['chronology_field']) and isset($page['search_details'])) {
         if (isset($page['search_details']['matching_cat_ids'])) {
             $cat_ids = $page['search_details']['matching_cat_ids'];

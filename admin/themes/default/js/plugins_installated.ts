@@ -1,31 +1,60 @@
 import tippy from 'tippy.js';
 import 'tippy.js/dist/tippy.css';
+import { getPageData } from './page-data';
 
-declare var activate_msg: any;
-declare var cancel_msg: any;
-declare var complete: any;
-declare var confirm_msg: any;
-declare var deactivate_all_msg: any;
-declare var delete_plugin_msg: any;
-declare var deleted_plugin_msg: any;
-declare var i: any;
-declare var incompatible_msg: any;
-declare var isWebmaster: any;
-declare var nb_plugin: any;
-declare var not_webmaster: any;
-declare var nothing_found: any;
-declare var plugin_action_error: any;
-declare var plugin_added_str: any;
-declare var plugin_deactivated_str: any;
-declare var plugin_filter: any;
-declare var plugin_found: any;
-declare var plugin_restored_str: any;
-declare var restore_plugin_msg: any;
-declare var show_details: any;
-declare var str_restore_def: any;
-declare var uninstall_plugin_msg: any;
-declare var x_plugins_found: any;
-declare var pwg_token: string;
+interface PluginsInstalledPageData {
+    pwg_token: string;
+    isWebmaster: number;
+    show_details: boolean;
+    nb_plugin: { all: number; active: number; inactive: number; other: number };
+    activate_msg: string;
+    cancel_msg: string;
+    confirm_msg: string;
+    deactivate_all_msg: string;
+    delete_plugin_msg: string;
+    deleted_plugin_msg: string;
+    incompatible_msg: string;
+    not_webmaster: string;
+    nothing_found: string;
+    plugin_action_error: string;
+    plugin_added_str: string;
+    plugin_deactivated_str: string;
+    plugin_found: string;
+    plugin_restored_str: string;
+    restore_plugin_msg: string;
+    str_restore_def: string;
+    uninstall_plugin_msg: string;
+    x_plugins_found: string;
+}
+
+const {
+    pwg_token,
+    isWebmaster,
+    show_details,
+    nb_plugin,
+    activate_msg,
+    cancel_msg,
+    confirm_msg,
+    deactivate_all_msg,
+    delete_plugin_msg,
+    deleted_plugin_msg,
+    incompatible_msg,
+    not_webmaster,
+    nothing_found,
+    plugin_action_error,
+    plugin_added_str,
+    plugin_deactivated_str,
+    plugin_found,
+    plugin_restored_str,
+    restore_plugin_msg,
+    str_restore_def,
+    uninstall_plugin_msg,
+    x_plugins_found,
+} = getPageData<PluginsInstalledPageData>();
+
+let complete = false;
+let i = 0;
+let plugin_filter: string | null = new URLSearchParams(window.location.search).get('filter');
 
 const qsa = <T extends HTMLElement = HTMLElement>(sel: string) => Array.from(document.querySelectorAll<T>(sel));
 const qs = <T extends HTMLElement = HTMLElement>(sel: string) => document.querySelector<T>(sel);
@@ -271,8 +300,8 @@ function filterPlugins(text: string, activeFilter: string) {
     } else {
         searchInfoEl.style.display = '';
         searchInfoEl.innerHTML = searchNumber === 0 ? nothing_found
-            : searchNumber === 1 ? plugin_found.replace('%s', searchNumber)
-            : x_plugins_found.replace('%s', searchNumber);
+            : searchNumber === 1 ? plugin_found.replace('%s', String(searchNumber))
+            : x_plugins_found.replace('%s', String(searchNumber));
     }
     actualizeFilter();
 }

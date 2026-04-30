@@ -555,10 +555,19 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
     $template->assign('thumb_params', $thumb_params);
 }
 
+$cache_keys = get_admin_client_cache_keys(['tags', 'categories']);
+$batch_manager_global_page_data = [
+  'CACHE_KEYS' => $cache_keys,
+  'ROOT_URL' => get_root_url(),
+  'associated_categories' => $associated_categories ?? [],
+  'str_create' => l10n('Create'),
+];
+
 $template->assign([
   'nb_thumbs_page' => $nb_thumbs_page,
   'nb_thumbs_set' => count($page['cat_elements_id']),
-  'CACHE_KEYS' => get_admin_client_cache_keys(['tags', 'categories']),
+  'CACHE_KEYS' => $cache_keys,
+  'batch_manager_global_page_data_json' => json_encode($batch_manager_global_page_data),
   ]);
 
 trigger_notify('loc_end_element_set_global');

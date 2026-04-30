@@ -2,6 +2,53 @@ import GLightbox from 'glightbox';
 import tippy from 'tippy.js';
 import 'tippy.js/dist/tippy.css';
 import { AlbumSelector } from './album_selector';
+import { TagsCache, CategoriesCache } from './LocalStorageCache';
+import { getPageData } from './page-data';
+
+interface BatchManagerGlobalPageData {
+    CACHE_KEYS: { tags: string; categories: string; _hash: string };
+    ROOT_URL: string;
+    associated_categories: Record<string, any>;
+    str_create: string;
+}
+
+const pageData = getPageData<BatchManagerGlobalPageData>('pwg-batch-manager-global-data');
+
+// Initialize caches
+const tagsCache = new TagsCache({
+    serverKey: pageData.CACHE_KEYS.tags,
+    serverId: pageData.CACHE_KEYS._hash,
+    rootUrl: pageData.ROOT_URL
+});
+
+const categoriesCache = new CategoriesCache({
+    serverKey: pageData.CACHE_KEYS.categories,
+    serverId: pageData.CACHE_KEYS._hash,
+    rootUrl: pageData.ROOT_URL
+});
+
+tagsCache?.selectize(document.querySelector('[data-selectize=tags]'), { lang: {
+    'Add': pageData.str_create
+}});
+
+categoriesCache?.selectize(document.querySelector('[data-selectize=categories]'), {
+    filter: function(categories: any[], options: any) {
+        if (this.name == 'dissociate') {
+            const filtered = categories.filter(function(cat: any) {
+                return !!pageData.associated_categories[cat.id];
+            });
+
+            if (filtered.length > 0) {
+                options.default = filtered[0].id;
+            }
+
+            return filtered;
+        }
+        else {
+            return categories;
+        }
+    }
+});
 
 declare var all_elements: any;
 declare var lang: any;

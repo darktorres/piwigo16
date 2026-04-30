@@ -1,4 +1,34 @@
 import { AlbumSelector } from './album_selector';
+import { TagsCache, CategoriesCache } from './LocalStorageCache';
+import { getPageData } from './page-data';
+
+interface PictureModifyPageData {
+    CACHE_KEYS: { tags: string; categories: string; _hash: string };
+    ROOT_URL: string;
+    associated_albums: Record<string, any>;
+    str_create: string;
+}
+
+const pageData = getPageData<PictureModifyPageData>('pwg-picture-modify-data');
+
+// Initialize caches
+const categoriesCache = new CategoriesCache({
+    serverKey: pageData.CACHE_KEYS.categories,
+    serverId: pageData.CACHE_KEYS._hash,
+    rootUrl: pageData.ROOT_URL
+});
+
+const tagsCache = new TagsCache({
+    serverKey: pageData.CACHE_KEYS.tags,
+    serverId: pageData.CACHE_KEYS._hash,
+    rootUrl: pageData.ROOT_URL
+});
+
+categoriesCache?.selectize(document.querySelector('[data-selectize=categories]'));
+
+tagsCache?.selectize(document.querySelector('[data-selectize=tags]'), { lang: {
+    'Add': pageData.str_create
+}});
 
 declare var related_categories_ids: (string | number)[];
 declare var str_assoc_album_ab: string;

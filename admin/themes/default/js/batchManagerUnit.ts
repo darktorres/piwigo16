@@ -1,5 +1,6 @@
 import { getPageData } from './page-data';
 import { AlbumSelector } from './album_selector';
+import { TagsCache, CategoriesCache } from './LocalStorageCache';
 
 declare var activePlugins: any;
 declare var all_related_categories_ids: any;
@@ -15,6 +16,13 @@ interface BatchUnitPageData {
     str_title_ab: string;
 }
 
+interface BatchManagerUnitCacheData {
+    CACHE_KEYS: { tags: string; categories: string; _hash: string };
+    ROOT_URL: string;
+    associated_categories: Record<string, any>;
+    str_create: string;
+}
+
 const {
     str_are_you_sure,
     str_yes,
@@ -24,6 +32,44 @@ const {
     str_meta_yes,
     str_title_ab,
 } = getPageData<BatchUnitPageData>();
+
+const cacheData = getPageData<BatchManagerUnitCacheData>('pwg-batch-manager-unit-data');
+
+// Initialize caches
+const tagsCache = new TagsCache({
+    serverKey: cacheData.CACHE_KEYS.tags,
+    serverId: cacheData.CACHE_KEYS._hash,
+    rootUrl: cacheData.ROOT_URL
+});
+
+const categoriesCache = new CategoriesCache({
+    serverKey: cacheData.CACHE_KEYS.categories,
+    serverId: cacheData.CACHE_KEYS._hash,
+    rootUrl: cacheData.ROOT_URL
+});
+
+tagsCache?.selectize(document.querySelector('[data-selectize=tags]'), { lang: {
+    'Add': cacheData.str_create
+}});
+
+categoriesCache?.selectize(document.querySelector('[data-selectize=categories]'), {
+    filter: function(categories: any[], options: any) {
+        if (this.name == 'dissociate') {
+            const filtered = categories.filter(function(cat: any) {
+                return !!cacheData.associated_categories[cat.id];
+            });
+
+            if (filtered.length > 0) {
+                options.default = filtered[0].id;
+            }
+
+            return filtered;
+        }
+        else {
+            return categories;
+        }
+    }
+});
 
 let b_current_picture_id: string | undefined = undefined;
 

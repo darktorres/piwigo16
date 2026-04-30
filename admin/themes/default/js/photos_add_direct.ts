@@ -5,8 +5,7 @@ import '@uppy/core/css/style.css';
 import '@uppy/dashboard/css/style.css';
 import { getPageData } from './page-data';
 import { AlbumSelector } from './album_selector';
-
-declare var Piecon: any;
+import Piecon from '../../../../themes/default/js/plugins/piecon';
 declare function sprintf(fmt: string, ...args: unknown[]): string;
 
 interface PhotosAddDirectPageData {
@@ -231,7 +230,7 @@ function initUppy() {
     uppy.on('upload-progress', (_file, progress) => {
         const pb = qs<HTMLElement>('#uploadingActions .progressbar');
         if (pb) pb.style.width = (progress.percentage ?? 0) + '%';
-        if (typeof Piecon !== 'undefined') Piecon.setProgress(progress.percentage ?? 0);
+        Piecon.setProgress(progress.percentage ?? 0);
     });
 
     uppy.on('upload', () => {
@@ -268,7 +267,7 @@ function initUppy() {
     });
 
     uppy.on('complete', () => {
-        if (typeof Piecon !== 'undefined') Piecon.reset();
+        Piecon.reset();
 
         if (!formatMode) {
             fetch('ws.php?format=json&method=pwg.images.uploadCompleted', {

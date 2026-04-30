@@ -1,17 +1,9 @@
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_script id='LocalStorageCache' load='footer' path='admin/themes/default/js/LocalStorageCache.js'}
+{combine_script id='rating_admin' load='footer' path='admin/themes/default/js/rating_admin.js'}
 
+<script id="pwg-rating-data" type="application/json">{$rating_page_data_json}</script>
 
 {footer_script}
-{* <!-- CATEGORIES --> *}
-var categoriesCache = new CategoriesCache({
-  serverKey: '{$CACHE_KEYS.categories}',
-  serverId: '{$CACHE_KEYS._hash}',
-  rootUrl: '{$ROOT_URL}'
-});
-
-window.categoriesCache?.selectize(document.querySelector('[data-selectize=categories]'));
-
 var removeAlbumFilter = document.getElementById("removeAlbumFilter");
 if (removeAlbumFilter) {
   removeAlbumFilter.addEventListener('click', function(e) {

@@ -1,4 +1,5 @@
 <script id="pwg-page-data" type="application/json">{$page_data_json}</script>
+<script id="pwg-group-list-data" type="application/json">{$group_list_page_data_json}</script>
 
 {footer_script}
 document.addEventListener('keydown', function(e) {
@@ -13,22 +14,10 @@ document.addEventListener('click', function(e) {
     if (userList) userList.style.display = 'none';
   }
 });
-
-{* temporary fix for #1283 (begin) : force user local storage cache on page load. *}
-var usersCache = new UsersCache({
-  serverKey: '{$CACHE_KEYS.users}',
-  serverId: '{$CACHE_KEYS._hash}',
-  rootUrl: '{$ROOT_URL}'
-});
-
-window.usersCache?.selectize(document.querySelector('select.UserSearch'));
-{* temporary fix for #1283 (end) *}
 {/footer_script}
 
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
 {combine_script id='group_list' load='footer' path='admin/themes/default/js/group_list.js'}
-
-{combine_script id='LocalStorageCache' load='footer' path='admin/themes/default/js/LocalStorageCache.js'}
 
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
 

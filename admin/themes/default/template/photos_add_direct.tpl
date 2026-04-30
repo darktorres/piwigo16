@@ -8,7 +8,6 @@
 
 {combine_script id='LocalStorageCache' load='footer' path='admin/themes/default/js/LocalStorageCache.js'}
 
-{combine_script id='piecon' load='footer' path='themes/default/js/plugins/piecon.js'}
 {combine_script id='add_photo' load='footer' path='admin/themes/default/js/photos_add_direct.js'}
 
 {html_style}

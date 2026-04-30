@@ -1,5 +1,6 @@
 import TomSelect from 'tom-select';
 import { getPageData } from './page-data';
+import { UsersCache } from './LocalStorageCache';
 
 interface UserActivityPageData {
   nb_users: number;
@@ -122,6 +123,21 @@ const {
   actionInfos_tags_edited,
   actionInfos_tags_moved,
 } = getPageData<UserActivityPageData>();
+
+interface UserActivityCacheData {
+  CACHE_KEYS: { users: string; _hash: string };
+  ROOT_URL: string;
+  str_create: string;
+}
+
+const cacheData = getPageData<UserActivityCacheData>('pwg-user-activity-data');
+
+// Initialize UsersCache
+const usersCache = new UsersCache({
+  serverKey: cacheData.CACHE_KEYS.users,
+  serverId: cacheData.CACHE_KEYS._hash,
+  rootUrl: cacheData.ROOT_URL
+});
 
 // Mutable state
 let action: string | null = null;

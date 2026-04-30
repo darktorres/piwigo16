@@ -5,6 +5,8 @@
 
 {combine_script id='batchManagerGlobal' load='async' require='datepicker,addAlbum,doubleSlider' path='admin/themes/default/js/batchManagerGlobal.js'}
 
+<script id="pwg-batch-manager-global-data" type="application/json">{$batch_manager_global_page_data_json}</script>
+
 {footer_script}
 window.lang = {
 	Cancel: '{'Cancel'|translate|escape:'javascript'}',
@@ -13,45 +15,6 @@ window.lang = {
 	AreYouSure: "{'Are you sure?'|translate|escape:'javascript'}",
   generateMsg: "{'Generate multiple size images'|@translate}"
 };
-
-{* <!-- TAGS --> *}
-var tagsCache = new TagsCache({
-  serverKey: '{$CACHE_KEYS.tags}',
-  serverId: '{$CACHE_KEYS._hash}',
-  rootUrl: '{$ROOT_URL}'
-});
-
-window.tagsCache?.selectize(document.querySelector('[data-selectize=tags]'), { lang: {
-  'Add': '{'Create'|translate}'
-}});
-
-{* <!-- CATEGORIES --> *}
-window.categoriesCache = new CategoriesCache({
-  serverKey: '{$CACHE_KEYS.categories}',
-  serverId: '{$CACHE_KEYS._hash}',
-  rootUrl: '{$ROOT_URL}'
-});
-
-var associated_categories = {$associated_categories|@json_encode};
-
-window.categoriesCache?.selectize(document.querySelector('[data-selectize=categories]'), {
-  filter: function(categories, options) {
-    if (this.name == 'dissociate') {
-      var filtered = categories.filter(function(cat) {
-        return !!associated_categories[cat.id];
-      });
-
-      if (filtered.length > 0) {
-        options.default = filtered[0].id;
-      }
-
-      return filtered;
-    }
-    else {
-      return categories;
-    }
-  }
-});
 
 var nb_thumbs_page = {$nb_thumbs_page};
 var nb_thumbs_set = {$nb_thumbs_set};

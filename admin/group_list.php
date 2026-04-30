@@ -49,6 +49,12 @@ $template->set_filenames(['group_list' => 'group_list.tpl']);
 
 $cache_keys = get_admin_client_cache_keys(['groups', 'users']);
 
+$group_list_page_data = [
+  'CACHE_KEYS' => $cache_keys,
+  'ROOT_URL' => get_root_url(),
+  'str_create' => l10n('Create'),
+];
+
 $template->assign(
     [
     'F_ADD_ACTION' => get_root_url().'admin.php?page=group_list',
@@ -56,6 +62,7 @@ $template->assign(
     'PWG_TOKEN' => get_pwg_token(),
     'CACHE_KEYS' => $cache_keys,
     'ROOT_URL' => get_root_url(),
+    'group_list_page_data_json' => json_encode($group_list_page_data),
     'page_data_json' => json_encode([
         'pwg_token' => get_pwg_token(),
         'rootUrl' => get_root_url(),

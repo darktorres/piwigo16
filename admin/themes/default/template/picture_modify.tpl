@@ -1,29 +1,9 @@
 {include file='include/autosize.inc.tpl'}
 {include file='include/datepicker.inc.tpl'}
 
-{combine_script id='LocalStorageCache' load='footer' path='admin/themes/default/js/LocalStorageCache.js'}
+<script id="pwg-picture-modify-data" type="application/json">{$picture_modify_page_data_json}</script>
 
 {footer_script}
-{* <!-- CATEGORIES --> *}
-var categoriesCache = new CategoriesCache({
-  serverKey: '{$CACHE_KEYS.categories}',
-  serverId: '{$CACHE_KEYS._hash}',
-  rootUrl: '{$ROOT_URL}'
-});
-
-window.categoriesCache?.selectize(document.querySelector('[data-selectize=categories]'));
-
-{* <!-- TAGS --> *}
-var tagsCache = new TagsCache({
-  serverKey: '{$CACHE_KEYS.tags}',
-  serverId: '{$CACHE_KEYS._hash}',
-  rootUrl: '{$ROOT_URL}'
-});
-
-window.tagsCache?.selectize(document.querySelector('[data-selectize=tags]'), { lang: {
-  'Add': '{'Create'|translate}'
-}});
-
 {* <!-- DATEPICKER --> *}
 document.querySelectorAll('[data-datepicker]').forEach(function(el) {
   window.pwgDatepicker(el, {

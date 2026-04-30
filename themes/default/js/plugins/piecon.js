@@ -6,31 +6,29 @@
 // Copyright (c) 2015 Lukas Lipka <lukaslipka@gmail.com>. All rights reserved.
 //
 
-(function(){
-    var Piecon = {};
+const Piecon = (() => {
+    const obj = {};
 
-    var currentFavicon = null;
-    var originalFavicon = null;
-    var originalTitle = null;
-    var canvas = null;
-    var options = {};
-    var defaults = {
+    let currentFavicon = null;
+    let originalFavicon = null;
+    let originalTitle = null;
+    let canvas = null;
+    let options = {};
+    const defaults = {
         color: '#ff0084',
         background: '#bbb',
         shadow: '#fff',
         fallback: false
     };
 
-    var isRetina = window.devicePixelRatio > 1;
+    const isRetina = window.devicePixelRatio > 1;
 
-    var ua = (function () {
-        var agent = navigator.userAgent.toLowerCase();
-        return function (browser) {
-            return agent.indexOf(browser) !== -1;
-        };
-    }());
+    const ua = (() => {
+        const agent = navigator.userAgent.toLowerCase();
+        return (browser) => agent.indexOf(browser) !== -1;
+    })();
 
-    var browser = {
+    const browser = {
         ie: ua('msie'),
         chrome: ua('chrome'),
         webkit: ua('chrome') || ua('safari'),
@@ -38,10 +36,10 @@
         mozilla: ua('mozilla') && !ua('chrome') && !ua('safari')
     };
 
-    var getFaviconTag = function() {
-        var links = document.getElementsByTagName('link');
+    const getFaviconTag = () => {
+        const links = document.getElementsByTagName('link');
 
-        for (var i = 0, l = links.length; i < l; i++) {
+        for (let i = 0, l = links.length; i < l; i++) {
             if (links[i].getAttribute('rel') === 'icon' || links[i].getAttribute('rel') === 'shortcut icon') {
                 return links[i];
             }
@@ -50,21 +48,21 @@
         return false;
     };
 
-    var removeFaviconTag = function() {
-        var links = Array.prototype.slice.call(document.getElementsByTagName('link'), 0);
-        var head = document.getElementsByTagName('head')[0];
+    const removeFaviconTag = () => {
+        const links = Array.prototype.slice.call(document.getElementsByTagName('link'), 0);
+        const head = document.getElementsByTagName('head')[0];
 
-        for (var i = 0, l = links.length; i < l; i++) {
+        for (let i = 0, l = links.length; i < l; i++) {
             if (links[i].getAttribute('rel') === 'icon' || links[i].getAttribute('rel') === 'shortcut icon') {
                 head.removeChild(links[i]);
             }
         }
     };
 
-    var setFaviconTag = function(url) {
+    const setFaviconTag = (url) => {
         removeFaviconTag();
 
-        var link = document.createElement('link');
+        const link = document.createElement('link');
         link.type = 'image/x-icon';
         link.rel = 'icon';
         link.href = url;
@@ -72,7 +70,7 @@
         document.getElementsByTagName('head')[0].appendChild(link);
     };
 
-    var getCanvas = function () {
+    const getCanvas = () => {
         if (!canvas) {
             canvas = document.createElement("canvas");
             if (isRetina) {
@@ -87,30 +85,27 @@
         return canvas;
     };
 
-    var drawFavicon = function(percentage) {
-        var canvas = getCanvas();
-        var context = canvas.getContext("2d");
+    const drawFavicon = (percentage) => {
+        const canvas = getCanvas();
+        const context = canvas.getContext("2d");
 
         percentage = percentage || 0;
 
         if (context) {
             context.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Draw shadow
             context.beginPath();
             context.moveTo(canvas.width / 2, canvas.height / 2);
             context.arc(canvas.width / 2, canvas.height / 2, Math.min(canvas.width / 2, canvas.height / 2), 0, Math.PI * 2, false);
             context.fillStyle = options.shadow;
             context.fill();
 
-            // Draw background
             context.beginPath();
             context.moveTo(canvas.width / 2, canvas.height / 2);
             context.arc(canvas.width / 2, canvas.height / 2, Math.min(canvas.width / 2, canvas.height / 2) - 2, 0, Math.PI * 2, false);
             context.fillStyle = options.background;
             context.fill();
 
-            // Draw pie
             if (percentage > 0) {
                 context.beginPath();
                 context.moveTo(canvas.width / 2, canvas.height / 2);
@@ -124,7 +119,7 @@
         }
     };
 
-    var updateTitle = function(percentage) {
+    const updateTitle = (percentage) => {
         if (percentage > 0) {
             document.title = '(' + percentage + '%) ' + originalTitle;
         } else {
@@ -132,29 +127,28 @@
         }
     };
 
-    Piecon.setOptions = function(custom) {
+    obj.setOptions = function(custom) {
         options = {};
 
-        for (var key in defaults){
+        for (const key in defaults){
             options[key] = custom.hasOwnProperty(key) ? custom[key] : defaults[key];
         }
 
         return this;
     };
 
-    Piecon.setProgress = function(percentage) {
+    obj.setProgress = function(percentage) {
         if (!originalTitle) {
             originalTitle = document.title;
         }
 
         if (!originalFavicon || !currentFavicon) {
-            var tag = getFaviconTag();
+            const tag = getFaviconTag();
             originalFavicon = currentFavicon = tag ? tag.getAttribute('href') : '/favicon.ico';
         }
 
         if (!isNaN(parseFloat(percentage)) && isFinite(percentage)) {
             if (!getCanvas().getContext || browser.ie || browser.safari || options.fallback === true) {
-                // Fallback to updating the browser title if unsupported
                 return updateTitle(percentage);
             } else if (options.fallback === 'force') {
                 updateTitle(percentage);
@@ -166,7 +160,7 @@
         return false;
     };
 
-    Piecon.reset = function() {
+    obj.reset = function() {
         if (originalTitle) {
             document.title = originalTitle;
         }
@@ -177,13 +171,9 @@
         }
     };
 
-    Piecon.setOptions(defaults);
+    obj.setOptions(defaults);
 
-    if(typeof define === 'function' && define.amd) {
-        define(Piecon);
-    } else if (typeof module !== 'undefined') {
-        module.exports = Piecon;
-    } else {
-        window.Piecon = Piecon;
-    }
+    return obj;
 })();
+
+export default Piecon;

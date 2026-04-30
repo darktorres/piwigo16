@@ -291,10 +291,18 @@ SELECT user_id, group_id
 // +-----------------------------------------------------------------------+
 // |                           sending html code                           |
 // +-----------------------------------------------------------------------+
+$cache_keys = get_admin_client_cache_keys(['groups', 'users']);
+$cat_perm_page_data = [
+  'CACHE_KEYS' => $cache_keys,
+  'ROOT_URL' => get_root_url(),
+  'str_create' => l10n('Create'),
+];
+
 $template->assign([
   'PWG_TOKEN' => get_pwg_token(),
   'INHERIT' => \Piwigo\Core\Config::inheritanceByDefault(),
-  'CACHE_KEYS' => get_admin_client_cache_keys(['groups', 'users']),
+  'CACHE_KEYS' => $cache_keys,
+  'cat_perm_page_data_json' => json_encode($cat_perm_page_data),
   ]);
 
 $template->assign_var_from_handle('ADMIN_CONTENT', 'cat_perm');

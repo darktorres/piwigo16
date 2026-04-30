@@ -1,18 +1,9 @@
 {include file='include/colorbox.inc.tpl'}
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
 
-
-{combine_script id='LocalStorageCache' load='footer' path='admin/themes/default/js/LocalStorageCache.js'}
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
 <script id="pwg-page-data" type="application/json">{$page_data_json}</script>
-{footer_script}
-{* <!-- USERS --> *}
-var usersCache = new UsersCache({
-  serverKey: '{$CACHE_KEYS.users}',
-  serverId: '{$CACHE_KEYS._hash}',
-  rootUrl: '{$ROOT_URL}'
-});
-{/footer_script}
+<script id="pwg-user-activity-data" type="application/json">{$user_activity_page_data_json}</script>
 
 {combine_script id='user_activity' load='async' path='admin/themes/default/js/user_activity.js'}
 <div class="container"> 

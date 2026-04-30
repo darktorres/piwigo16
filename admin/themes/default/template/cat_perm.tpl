@@ -1,28 +1,11 @@
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_script id='LocalStorageCache' load='footer' path='admin/themes/default/js/LocalStorageCache.js'}
+{combine_script id='cat_perm' load='footer' path='admin/themes/default/js/cat_perm.js'}
 
+<script id="pwg-cat-perm-data" type="application/json">{$cat_perm_page_data_json}</script>
 
 {footer_script}
 const cat_nav = '{$CATEGORIES_NAV|escape:javascript}';
 (function(){
-{* <!-- GROUPS --> *}
-var groupsCache = new GroupsCache({
-  serverKey: '{$CACHE_KEYS.groups}',
-  serverId: '{$CACHE_KEYS._hash}',
-  rootUrl: '{$ROOT_URL}'
-});
-
-window.groupsCache?.selectize(document.querySelector('[data-selectize=groups]'));
-
-{* <!-- USERS --> *}
-var usersCache = new UsersCache({
-  serverKey: '{$CACHE_KEYS.users}',
-  serverId: '{$CACHE_KEYS._hash}',
-  rootUrl: '{$ROOT_URL}'
-});
-
-window.usersCache?.selectize(document.querySelector('[data-selectize=users]'));
-
 {* <!-- TOGGLES --> *}
 function checkStatusOptions() {
   var checkedStatus = document.querySelector("input[name=status]:checked");

@@ -100,10 +100,18 @@ $template->assign('ADMIN_PAGE_TITLE', l10n('Users'));
 // +-----------------------------------------------------------------------+
 // |                          sending html code                            |
 // +-----------------------------------------------------------------------+
+$cache_keys = get_admin_client_cache_keys(['users']);
+$user_activity_page_data = [
+  'CACHE_KEYS' => $cache_keys,
+  'ROOT_URL' => get_root_url(),
+  'str_create' => l10n('Create'),
+];
+
 $template->assign([
   'PWG_TOKEN' => get_pwg_token(),
   'INHERIT' => \Piwigo\Core\Config::inheritanceByDefault(),
-  'CACHE_KEYS' => get_admin_client_cache_keys(['users']),
+  'CACHE_KEYS' => $cache_keys,
+  'user_activity_page_data_json' => json_encode($user_activity_page_data),
   ]);
 
 $query = '

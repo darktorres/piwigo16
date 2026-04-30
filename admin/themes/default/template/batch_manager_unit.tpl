@@ -4,50 +4,11 @@
 
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10}
 <script id="pwg-page-data" type="application/json">{$page_data_json}</script>
+<script id="pwg-batch-manager-unit-data" type="application/json">{$batch_manager_unit_page_data_json}</script>
 {assign var='all_selected_album' value=[]}
 {footer_script}
 {* <!-- PLUGINS --> *}
 window.activePlugins = {$ACTIVE_PLUGINS|json_encode};
-{if isset($CACHE_KEYS)}
-{* <!-- TAGS --> *}
-var tagsCache = new TagsCache({
-  serverKey: '{$CACHE_KEYS.tags}',
-  serverId: '{$CACHE_KEYS._hash}',
-  rootUrl: '{$ROOT_URL}'
-});
-window.tagsCache?.selectize(document.querySelector('[data-selectize=tags]'), { lang: {
-  'Add': '{'Create'|translate}'
-}});
-
-{* <!-- CATEGORIES --> *}
-window.categoriesCache = new CategoriesCache({
-    serverKey: '{$CACHE_KEYS.categories}',
-    serverId: '{$CACHE_KEYS._hash}',
-    rootUrl: '{$ROOT_URL}'
-  });
-  
-  var associated_categories = {$associated_categories|@json_encode};
-
-  window.categoriesCache?.selectize(document.querySelector('[data-selectize=categories]'), {
-    filter: function(categories, options) {
-      if (this.name == 'dissociate') {
-        var filtered = categories.filter(function(cat) {
-          return !!associated_categories[cat.id];
-        });
-
-        if (filtered.length > 0) {
-          options.default = filtered[0].id;
-        }
-
-        return filtered;
-      }
-      else {
-        return categories;
-      }
-    }
-  });
-{/if}
-
 
 {* <!-- DATEPICKER --> *}
 document.querySelectorAll('[data-datepicker]').forEach(function(el) {

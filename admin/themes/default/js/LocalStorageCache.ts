@@ -268,9 +268,3 @@ export class UsersCache extends AbstractSelectizer {
         this._selectize(target, options);
     }
 }
-
-window.LocalStorageCache = LocalStorageCache as any;
-window.CategoriesCache = CategoriesCache as any;
-window.TagsCache = TagsCache as any;
-window.GroupsCache = GroupsCache as any;
-window.UsersCache = UsersCache as any;

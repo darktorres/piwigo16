@@ -413,8 +413,17 @@ SELECT
     ]);
 }
 
+$cache_keys = get_admin_client_cache_keys(['tags', 'categories']);
+$batch_manager_unit_page_data = [
+  'CACHE_KEYS' => $cache_keys,
+  'ROOT_URL' => get_root_url(),
+  'associated_categories' => $associated_categories ?? [],
+  'str_create' => l10n('Create'),
+];
+
 $template->assign([
-  'CACHE_KEYS' => get_admin_client_cache_keys(['tags', 'categories']),
+  'CACHE_KEYS' => $cache_keys,
+  'batch_manager_unit_page_data_json' => json_encode($batch_manager_unit_page_data),
 ]);
 
 trigger_notify('loc_end_element_set_unit');

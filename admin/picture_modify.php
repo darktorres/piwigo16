@@ -400,11 +400,20 @@ SELECT id
 ;';
 $associated_albums = query2array($query, null, 'id');
 
+$cache_keys = get_admin_client_cache_keys(['tags', 'categories']);
+$picture_modify_page_data = [
+  'CACHE_KEYS' => $cache_keys,
+  'ROOT_URL' => get_root_url(),
+  'associated_albums' => $associated_albums,
+  'str_create' => l10n('Create'),
+];
+
 $template->assign([
   'associated_albums' => $associated_albums,
   'represented_albums' => $represented_albums,
   'STORAGE_ALBUM' => $storage_category_id,
-  'CACHE_KEYS' => get_admin_client_cache_keys(['tags', 'categories']),
+  'CACHE_KEYS' => $cache_keys,
+  'picture_modify_page_data_json' => json_encode($picture_modify_page_data),
   'PWG_TOKEN' => get_pwg_token(),
   ]);
 

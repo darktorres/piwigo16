@@ -109,6 +109,13 @@ SELECT
 
 $template->set_filename('rating', 'rating.tpl');
 
+$cache_keys = get_admin_client_cache_keys(['categories']);
+$rating_page_data = [
+  'CACHE_KEYS' => $cache_keys,
+  'ROOT_URL' => get_root_url(),
+  'str_create' => l10n('Create'),
+];
+
 $template->assign(
     [
     'navbar' => create_navigation_bar(
@@ -121,7 +128,8 @@ $template->assign(
     'DISPLAY' => $elements_per_page,
     'NB_ELEMENTS' => $nb_elements,
     'category' => (isset($_GET['cat']) ? [$_GET['cat']] : []),
-    'CACHE_KEYS' => get_admin_client_cache_keys(['categories']),
+    'CACHE_KEYS' => $cache_keys,
+    'rating_page_data_json' => json_encode($rating_page_data),
     ]
 );
 

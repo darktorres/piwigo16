@@ -1,8 +1,7 @@
 import TomSelect from 'tom-select';
 import Cookies from 'js-cookie';
 import { getPageData } from './page-data';
-
-declare var UsersCache: any;
+import { UsersCache } from './LocalStorageCache';
 
 interface GroupListPageData {
     pwg_token: string;
@@ -57,6 +56,14 @@ const {
     str_user_list,
     str_yes_delete_confirmation,
 } = getPageData<GroupListPageData>();
+
+interface GroupListCacheData {
+    CACHE_KEYS: { users: string; _hash: string };
+    ROOT_URL: string;
+    str_create: string;
+}
+
+const cacheData = getPageData<GroupListCacheData>('pwg-group-list-data');
 
 let complete: any;
 let copy_name: any;
@@ -681,7 +688,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!selectizeTs) return;
         selectizeTs.clear();
         if (!usersCache.key) {
-            usersCache = new UsersCache({ serverKey, serverId, rootUrl });
+            usersCache = new UsersCache({ serverKey: cacheData.CACHE_KEYS.users, serverId: cacheData.CACHE_KEYS._hash, rootUrl: cacheData.ROOT_URL });
         }
         const cachedData = JSON.parse(usersCache.storage[usersCache.key] ?? '{"data":[]}').data;
         cachedData.forEach((u: any) => selectizeTs!.addOption({ value: String(u.id), text: u.username }));

@@ -126,6 +126,9 @@ function jq(selector: string | Element | null | EventTarget): JqObj {
 
 (jq as any).Event = (name: string, data?: Record<string, unknown>): Event => {
     const event = new CustomEvent(name, { bubbles: true, cancelable: true });
+    // jQuery events expose isDefaultPrevented() — jqtree calls it after
+    // triggerEvent() to decide whether to abort default behaviour.
+    (event as any).isDefaultPrevented = () => event.defaultPrevented;
     if (data) Object.assign(event, data);
     return event;
 };

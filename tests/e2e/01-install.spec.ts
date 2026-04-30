@@ -1,15 +1,16 @@
 import { test, expect } from '@playwright/test';
+import { pwgUrl } from './helpers/url';
 
-// PIWIGO_INSTALL_DB_HOST is the hostname as seen from *inside* the web container.
-// When running against Docker Compose, this is the service name 'db'.
-// PIWIGO_DB_HOST is used by global-setup's mysql CLI on the host side.
-const INSTALL_DB_HOST = process.env.PIWIGO_INSTALL_DB_HOST || 'db';
+// PIWIGO_INSTALL_DB_HOST is the hostname as seen by PHP doing the install.
+// Default: 'localhost' (local Apache + MySQL). Override to 'db' for Docker Compose
+// where the MySQL container is reached by service name from the web container.
+const INSTALL_DB_HOST = process.env.PIWIGO_INSTALL_DB_HOST || 'localhost';
 const DB_USER = process.env.PIWIGO_DB_USER || 'piwigo';
 const DB_PASS = process.env.PIWIGO_DB_PASSWORD || 'piwigo';
 const DB_NAME = process.env.PIWIGO_DB_BASE || 'piwigo';
 
 test('fresh install completes end-to-end', async ({ page }) => {
-    await page.goto('/install.php');
+    await page.goto(pwgUrl('/install.php'));
 
     await expect(page.getByRole('heading', { name: /Installation/ })).toBeVisible();
 

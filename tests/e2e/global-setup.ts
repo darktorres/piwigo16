@@ -9,6 +9,12 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const execAsync = promisify(exec);
 
 async function globalSetup(): Promise<void> {
+    // Iterating on individual specs against an existing install is much
+    // faster when we skip the destructive DB reset. Set SKIP_GLOBAL_SETUP=1.
+    if (process.env.SKIP_GLOBAL_SETUP === '1' || process.env.SKIP_GLOBAL_SETUP === 'true') {
+        return;
+    }
+
     const host = process.env.PIWIGO_DB_HOST || '127.0.0.1';
     const port = process.env.PIWIGO_DB_PORT || '3306';
     const user = process.env.PIWIGO_DB_USER || 'piwigo';

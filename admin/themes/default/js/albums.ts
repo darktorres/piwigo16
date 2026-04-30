@@ -190,15 +190,23 @@ document.addEventListener('DOMContentLoaded', () => {
         if (toggler_el) {
             const node_id = toggler_el.dataset['id'];
             const n = $tree().tree('getNodeById', node_id);
-            if (n?.load_on_demand && n?.haveChildren) loadOnDemand(n);
-            if (n) {
-                open_nodes = $tree().tree('getState').open_nodes;
-                if (!open_nodes.includes(node_id)) {
-                    toggler_el.innerHTML = toggler_open;
-                    $tree().tree('openNode', n);
-                } else {
+            if (!n) return;
+
+            if (n.load_on_demand && n.haveChildren) loadOnDemand(n);
+
+            // jqTree's openNode/closeNode crash because createAlbumNode wipes
+            // the internal toggler element jqtree expects. We manage the
+            // open/close state directly via the LI's class instead.
+            const li = n.element as HTMLElement | undefined;
+            if (li) {
+                if (li.classList.contains('jqtree-open')) {
+                    li.classList.remove('jqtree-open');
+                    li.classList.add('jqtree-closed');
                     toggler_el.innerHTML = toggler_close;
-                    $tree().tree('closeNode', n);
+                } else {
+                    li.classList.remove('jqtree-closed');
+                    li.classList.add('jqtree-open');
+                    toggler_el.innerHTML = toggler_open;
                 }
             }
             return;
@@ -292,26 +300,34 @@ document.addEventListener('DOMContentLoaded', () => {
         pwgPost('pwg.categories.add', { name: newAlbumName, parent: newAlbumParent, position: newAlbumPosition })
             .then(raw => {
                 const d = typeof raw === 'string' ? JSON.parse(raw) : raw;
-                const parent_node = $tree().tree('getNodeById', newAlbumParent);
-                if (parent_node?.load_on_demand && parent_node?.haveChildren) loadOnDemand(parent_node);
-                if (parent_node) openNodeOnDemand(parent_node);
-                if (d.stat === 'ok') {
+                if (d.stat !== 'ok') {
+                    qsa<HTMLElement>('.AddAlbumErrors').forEach(el => { el.textContent = str_album_name_empty; el.style.display = ''; });
+                    qs<HTMLElement>('.AddAlbumSubmit')!.classList.remove('notClickable');
+                    return;
+                }
+                // Close the popin and update the count first — these must succeed
+                // even if subsequent jqtree manipulations throw (jqtree's openNode
+                // crashes because createAlbumNode wipes its internal toggler).
+                closeAddAlbumPopIn();
+                updateTitleBadge(nb_albums + 1);
+                qs<HTMLElement>('.AddAlbumSubmit')!.classList.remove('notClickable');
+                try {
+                    const parent_node = $tree().tree('getNodeById', newAlbumParent);
+                    if (parent_node?.load_on_demand && parent_node?.haveChildren) loadOnDemand(parent_node);
+                    if (parent_node) openNodeOnDemand(parent_node);
                     const method = newAlbumPosition === 'last' ? 'appendNode' : 'prependNode';
                     $tree().tree(method, { id: d.result.id, isEmptyFolder: true, name: newAlbumName }, parent_node);
                     if (parent_node) setSubcatsBadge(parent_node);
-                    updateTitleBadge(nb_albums + 1);
                     const newNode = $tree().tree('getNodeById', d.result.id);
-                    goToNode(newNode, newNode);
+                    if (newNode) goToNode(newNode, newNode);
                     const newNodeEl = document.getElementById('cat-' + d.result.id);
                     if (newNodeEl) {
                         window.scrollTo({ top: (newNodeEl.getBoundingClientRect().top + window.scrollY) - screen.height / 2, behavior: 'smooth' });
                     }
-                    closeAddAlbumPopIn();
                     refreshTipTip();
-                } else {
-                    qsa<HTMLElement>('.AddAlbumErrors').forEach(el => { el.textContent = str_album_name_empty; el.style.display = ''; });
+                } catch {
+                    // jqtree integration is fragile; tree may be stale until refresh.
                 }
-                qs<HTMLElement>('.AddAlbumSubmit')!.classList.remove('notClickable');
             }).catch(() => qs<HTMLElement>('.AddAlbumSubmit')!.classList.remove('notClickable'));
     });
 
@@ -451,7 +467,8 @@ function openAddAlbumPopIn(parentAlbumId: any) {
     } else {
         qs<HTMLElement>('#AddAlbum .AddIconTitle span')!.innerHTML = add_album_root_title;
     }
-    popin.style.display = '';
+    // Inline 'block' overrides the #AddAlbum { display: none } CSS rule.
+    popin.style.display = 'block';
     const input = qs<HTMLInputElement>('.AddAlbumLabelUsername .user-property-input')!;
     input.value = '';
     input.focus();
@@ -475,7 +492,8 @@ function closeAddAlbumPopIn() {
 
 function openRenameAlbumPopIn(replacedAlbumName: any) {
     const popin = document.getElementById('RenameAlbum')!;
-    popin.style.display = '';
+    // Inline 'block' overrides the #RenameAlbum { display: none } CSS rule.
+    popin.style.display = 'block';
     qs<HTMLElement>('.RenameAlbumTitle span')!.innerHTML = rename_item.replace('%s', replacedAlbumName);
     const input = qs<HTMLInputElement>('.RenameAlbumLabelUsername .user-property-input')!;
     input.value = replacedAlbumName;
@@ -522,7 +540,8 @@ function triggerDeleteAlbum(cat_id: any) {
 
 function openDeleteAlbumPopIn(cat_to_delete: any) {
     const popin = document.getElementById('DeleteAlbum')!;
-    popin.style.display = '';
+    // Inline 'block' overrides the #DeleteAlbum { display: none } CSS rule.
+    popin.style.display = 'block';
     node = $tree().tree('getNodeById', cat_to_delete);
     const iconTitle = qs<HTMLElement>('.DeleteIconTitle span')!;
     if (node.children.length == 0) {

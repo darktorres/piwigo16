@@ -12,7 +12,8 @@ export default defineConfig({
     workers: 1,
     reporter: 'list',
     use: {
-        baseURL: process.env.BASE_URL || 'http://localhost:8090',
+        // Default targets local Apache at /piwigo16/. CI/Docker overrides via BASE_URL.
+        baseURL: process.env.BASE_URL || 'http://localhost/piwigo16',
         trace: 'on-first-retry',
     },
     projects: [

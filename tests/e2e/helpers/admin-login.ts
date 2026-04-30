@@ -1,7 +1,8 @@
 import { Page } from '@playwright/test';
+import { pwgUrl } from './url';
 
 export async function loginAsAdmin(page: Page): Promise<void> {
-    await page.goto('/identification.php');
+    await page.goto(pwgUrl('/identification.php'));
     await page.fill('input[name="username"]', 'admin');
     await page.fill('input[name="password"]', 'p4ssword!');
     await page.click('input[name="login"]');

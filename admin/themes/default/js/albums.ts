@@ -1,3 +1,8 @@
+import './jquery-shim-jqtree';
+import 'jqtree/tree.jquery.js';
+import tippy from 'tippy.js';
+import 'tippy.js/dist/tippy.css';
+
 declare var actions: any;
 declare var add_album_root_title: any;
 declare var add_sub_album_of: any;
@@ -53,924 +58,610 @@ declare var waitingTimeout: any;
 declare var x_nb_images: any;
 declare var x_nb_sub_photos: any;
 declare var x_nb_subcats: any;
-$(document).ready(() => {
-  const openUppercats = openCat == -1 ? [] : findAlbumById(data, openCat).uppercats.split(',');
-  const new_data = data.map((a: any) => {
-    const al = {...a, children: openUppercats.includes(a.id) ? a.children : []};
-    if (a.children) {
-      al.load_on_demand = openUppercats.includes(a.id) ? false : true;
-      al.haveChildren = a.children;
+declare var pwg_token: string;
+declare function sprintf(fmt: string, ...args: unknown[]): string;
+
+const qs = <T extends HTMLElement = HTMLElement>(sel: string) => document.querySelector<T>(sel);
+const qsa = <T extends HTMLElement = HTMLElement>(sel: string) => Array.from(document.querySelectorAll<T>(sel));
+
+// jqTree convenience: $(treeEl).tree(...)
+const $tree = () => (window as any).$('.tree');
+
+function pwgPost(method: string, data: Record<string, any>): Promise<any> {
+    const body = new URLSearchParams();
+    for (const [k, v] of Object.entries(data)) {
+        if (Array.isArray(v)) v.forEach(item => body.append(k + '[]', String(item)));
+        else body.append(k, String(v ?? ''));
     }
-    return al;
-  });
+    return fetch(`ws.php?format=json&method=${method}`, { method: 'POST', body }).then(r => r.json());
+}
 
-  $("h1").append(`<span class='badge-number'>`+nb_albums+`</span>`);
+function refreshTipTip() {
+    tippy('.tiptip', { delay: [0, 0], duration: [200, 200] });
+}
 
-  $('.tree').tree({
-    data: new_data,
-    autoOpen : false,
-    dragAndDrop: true,
-    openFolderDelay: delay_autoOpen,
-    onCreateLi : createAlbumNode,
-    onCanSelectNode: function(node: any) {return false}
-  });
-
-  $('.tree').on( 'click', '.move-cat-toogler', function(e) {
-    var node_id = $(this).attr('data-id');
-    var node = $('.tree').tree('getNodeById', node_id);
-
-    if (node.load_on_demand && node.haveChildren) {
-      loadOnDemand(node);
-    }
-
-    if (node) {
-      open_nodes = $('.tree').tree('getState').open_nodes;
-      if (!open_nodes.includes(node_id)) {
-        $(this).html(toggler_open);
-        $('.tree').tree('openNode', node);
-        // reset event here:
-        $(".move-cat-add").off("click").on("click", function (e) {
-          e.preventDefault();
-          openAddAlbumPopIn($(this).data("aid"));
-          $(".AddAlbumSubmit").data("a-parent", $(this).data("aid"));
-        });
-        $(".move-cat-delete").off('click').on("click", function () {
-          triggerDeleteAlbum($(this).data("id"));
-        });
-        $(".move-cat-title-container").off("click").on("click", function () {
-          openRenameAlbumPopIn($(this).find(".move-cat-title").attr("title"));
-          $(".RenameAlbumSubmit").data("cat_id", $(this).attr('data-id')!);
-        });
-      } else {
-        $(this).html(toggler_close);
-        $('.tree').tree('closeNode', node);
-      }
-    }
-  });
-
-  $('.tree').on(
-    'tree.open',
-    function(e) {
-      $('.move-cat-toogler[data-id='+e.node.id+']').html(toggler_open);
-    }
-  );
-
-  $('.tree').on(
-    'tree.close',
-    function(e) {
-      $('.move-cat-toogler[data-id='+e.node.id+']').html(toggler_close);
-    }
-  );
-
-  $('.tree').on(
-    'tree.move',
-    function(event) {
-      event.preventDefault();
-
-      if (event.move_info.moved_node.status != 'private') {
-        parentIsPrivate = false;
-        if (event.move_info.position == 'after') {
-          parentIsPrivate = (event.move_info.target_node.parent.status == 'private');
-        } else if (event.move_info.position == 'inside') {
-          parentIsPrivate = (event.move_info.target_node.status == 'private');
-        }
-        
-        if (parentIsPrivate) {
-          $.confirm({
-            title: str_are_you_sure.replace(/%s/g, event.move_info.moved_node.name),
-            buttons: {
-              confirm: {
-                text: str_yes_change_parent,
-                btnClass: 'btn-red',
-                action: function () {
-                  makePrivateHierarchy(event.move_info.moved_node);
-                  applyMove(event);
-                },
-              },
-              cancel: {
-                text: str_no_change_parent
-              }
-            },
-            ...jConfirm_confirm_options
-          })
-        } else {
-          applyMove(event);
-        }
-      } else {
-        applyMove(event);
-      }
-    }
-  );
-
-  $('.tree').on( 'click', '.move-cat-order', function(e) {
-    var node_id = $(this).attr('data-id');
-    var node = $('.tree').tree('getNodeById', node_id);
-    if (node) {
-      $('.cat-move-order-popin').fadeIn();
-      $('.cat-move-order-popin .album-name').html(getPathNode(node));
-      $('.cat-move-order-popin input[name=id]').val(node_id!);
-      $('input[name=simpleAutoOrder]').attr('value', str_sub_album_order);
-    }
-  });
-
-  $('.order-root').on( 'click', function() {
-    $('.cat-move-order-popin').fadeIn();
-    $('.cat-move-order-popin .album-name').html(str_root);
-    $('.cat-move-order-popin input[name=id]').val(-1);
-    $('input[name=simpleAutoOrder]').attr('value', str_root_order);
-  });
-
-  $('.tree').on('mousedown mouseup', function mouseState(e) {
-    if (e.type == "mousedown") {
-      $(".tree").addClass("dragging")
-    } else if (e.type == "mouseup") {
-      $(".dragging").removeClass("dragging")
-    }
-  });
-
-  if (openCat != -1) {
-    nodeToGo = $('.tree').tree('getNodeById', openCat);
-
-    goToNode(nodeToGo, nodeToGo);
-    if (nodeToGo.children) {
-      $(".tree").tree("openNode", nodeToGo, false);
-    }
-
-    $([document.documentElement, document.body]).animate({
-      scrollTop: $("#cat-"+openCat).offset()!.top - (($(window).height() ?? 0) / 2) + (($("#cat-"+openCat).outerHeight() ?? 0) / 2)
-    }, 500);
-  }
-
-  // RenameAlbumPopIn
-  $(".RenameAlbumErrors").hide();
-  $(".move-cat-title-container").on("click", function () {
-    openRenameAlbumPopIn($(this).find(".move-cat-title").attr("title"));
-    $(".RenameAlbumSubmit").data("cat_id", $(this).attr('data-id')!);
-  });
-  $(".CloseRenameAlbum").on("click", function () {
-    closeRenameAlbumPopIn();
-  });
-  $(".RenameAlbumCancel").on("click", function () {
-    closeRenameAlbumPopIn();
-  })
-  
-  $(".RenameAlbumSubmit").on("click", function () {
-    catToEdit = $(this).data("cat_id");
-    jQuery.ajax({
-      url: "ws.php?format=json&method=pwg.categories.setInfo",
-      type: "POST",
-      data: {
-        category_id : catToEdit,
-        name : $(".RenameAlbumLabelUsername input").val(),
-      },
-      success: function (raw_data) {
-        data = jQuery.parseJSON(raw_data);
-        const node_id = $("#cat-"+catToEdit).find('.move-cat-toogler').attr('data-id');
-        const node = $('.tree').tree('getNodeById', node_id);
-        node.name = $(".RenameAlbumLabelUsername input").val();
-        $('.tree').tree('updateNode', node, $(".RenameAlbumLabelUsername input").val());
-        
-        $(".move-cat-title-container").on("click", function () {
-          openRenameAlbumPopIn($(this).find(".move-cat-title").attr("title"));
-          $(".RenameAlbumSubmit").data("cat_id", $(this).attr('data-id')!);
-        });
-
-        $(".move-cat-add").off("click").on("click", function (e) {
-          e.preventDefault();
-          openAddAlbumPopIn($(this).data("aid"));
-          $(".AddAlbumSubmit").data("a-parent", $(this).data("aid"));
-        });
-        
-        closeRenameAlbumPopIn();
-      },
-      error: function(message: any) {
-        console.log(message);
-      }
+document.addEventListener('DOMContentLoaded', () => {
+    const openUppercats = openCat == -1 ? [] : findAlbumById(data, openCat).uppercats.split(',');
+    const new_data = data.map((a: any) => {
+        const al = { ...a, children: openUppercats.includes(a.id) ? a.children : [] };
+        if (a.children) { al.load_on_demand = !openUppercats.includes(a.id); al.haveChildren = a.children; }
+        return al;
     });
-  })
 
-  // AddAlbumPopIn
-  $(".AddAlbumErrors").hide();
-  $(".DeleteAlbumErrors").hide();
-  $(".add-album-button").on("click", function () {
-    openAddAlbumPopIn(0);
-    $(".AddAlbumSubmit").data("a-parent", 0);
-  })
-  $(".move-cat-add").on("click", function (e) {
-    e.preventDefault();
-    openAddAlbumPopIn($(this).data("aid"));
-    $(".AddAlbumSubmit").data("a-parent", $(this).data("aid"));
-  })
-  $(".CloseAddAlbum").on("click", function () {
-    closeAddAlbumPopIn();
-  });
-  $(".AddAlbumCancel").on("click", function () {
-    closeAddAlbumPopIn();
-  });
-  $(".DeleteAlbumCancel").on("click", function () {
-    closeDeleteAlbumPopIn();
-  });
+    document.querySelector('h1')?.insertAdjacentHTML('beforeend', `<span class='badge-number'>${nb_albums}</span>`);
 
-  $(".AddAlbumSubmit").on("click", function () {
-    $(this).addClass("notClickable");
+    // jqTree initialization — via shim
+    $tree().tree({
+        data: new_data,
+        autoOpen: false,
+        dragAndDrop: true,
+        openFolderDelay: delay_autoOpen,
+        onCreateLi: createAlbumNode,
+        onCanSelectNode: () => false,
+    });
 
-    newAlbumName = $(".AddAlbumLabelUsername input").val();
-    newAlbumParent = $(".AddAlbumSubmit").data("a-parent");
-    newAlbumPosition = $("input[name=position]:checked").val();
+    const treeEl = qs('.tree')!;
 
-    jQuery.ajax({
-      url: "ws.php?format=json&method=pwg.categories.add",
-      type: "POST",
-      data: {
-        name : newAlbumName,
-        parent : newAlbumParent,
-        position : newAlbumPosition
-      },
-      success: function (raw_data) {
-        data = jQuery.parseJSON(raw_data);
-        var parent_node = $('.tree').tree('getNodeById', newAlbumParent);
-        if (parent_node && parent_node.load_on_demand && parent_node.haveChildren) {
-          loadOnDemand(parent_node);
-        }
-        if (parent_node) openNodeOnDemand(parent_node);
-        
-        if (data.stat == "ok") {
-          if (newAlbumPosition == "last") {
-            $('.tree').tree(
-              'appendNode',
-              {
-                id: data.result.id,
-                isEmptyFolder: true,
-                name: newAlbumName
-              },
-              parent_node
-            );
-          } else {
-            $('.tree').tree(
-              'prependNode',
-              {
-                id: data.result.id,
-                isEmptyFolder: true,
-                name: newAlbumName
-              },
-              parent_node
-            );
-          }
-  
-          if (parent_node) {
-            setSubcatsBadge(parent_node);
-  
-            $("#cat-"+parent_node.id).on( 'click', '.move-cat-toogler', function(e) {
-              var node_id = parent_node.id;
-              var node = $('.tree').tree('getNodeById', node_id);
-              if (node) {
-                open_nodes = $('.tree').tree('getState').open_nodes;
-                if (!open_nodes.includes(node_id)) {
-                  $(this).html(toggler_open);
-                  $('.tree').tree('openNode', node);
-                } else {
-                  $(this).html(toggler_close);
-                  $('.tree').tree('closeNode', node);
+    // jqTree events — native listeners (shim fires dispatchEvent)
+    treeEl.addEventListener('tree.open', (e: Event) => {
+        const nodeId = ($tree().tree('getState') as any)?.open_nodes?.find?.((id: any) => id === (e as any).node?.id);
+        qs<HTMLElement>(`.move-cat-toogler[data-id='${(e as any).node?.id}']`)?.innerHTML !== undefined &&
+            (qs<HTMLElement>(`.move-cat-toogler[data-id='${(e as any).node?.id}']`)!.innerHTML = toggler_open);
+    });
+    treeEl.addEventListener('tree.close', (e: Event) => {
+        const el = qs<HTMLElement>(`.move-cat-toogler[data-id='${(e as any).node?.id}']`);
+        if (el) el.innerHTML = toggler_close;
+    });
+    treeEl.addEventListener('tree.move', (e: Event) => {
+        const ev = e as any;
+        ev.preventDefault();
+        const moveInfo = ev.move_info;
+        if (moveInfo.moved_node.status !== 'private') {
+            parentIsPrivate = false;
+            if (moveInfo.position === 'after') parentIsPrivate = (moveInfo.target_node.parent.status === 'private');
+            else if (moveInfo.position === 'inside') parentIsPrivate = (moveInfo.target_node.status === 'private');
+            if (parentIsPrivate) {
+                if (window.confirm(str_are_you_sure.replace(/%s/g, moveInfo.moved_node.name) + '\n\n' + str_yes_change_parent)) {
+                    makePrivateHierarchy(moveInfo.moved_node);
+                    applyMove(ev);
                 }
-              }
-            });
-          } 
-          
-          $(".move-cat-add").off("click").on("click", function (e) {
-            e.preventDefault();
-            openAddAlbumPopIn($(this).data("aid"));
-            $(".AddAlbumSubmit").data("a-parent", $(this).data("aid"));
-          });
-          $(".move-cat-delete").on("click", function () {
-            triggerDeleteAlbum($(this).data("id"));
-          });
-          $(".move-cat-title-container").unbind("click").on("click", function () {
-            openRenameAlbumPopIn($(this).find(".move-cat-title").attr("title"));
-            $(".RenameAlbumSubmit").data("cat_id", $(this).attr('data-id')!);
-          });
-          $('.tiptip').tipTip({
-            delay: 0,
-            fadeIn: 200,
-            fadeOut: 200,
-            edgeOffset: 3
-          });
+            } else { applyMove(ev); }
+        } else { applyMove(ev); }
+    });
 
-          updateTitleBadge(nb_albums+1)
+    // DOM events via event delegation on tree
+    treeEl.addEventListener('mousedown', mouseState);
+    treeEl.addEventListener('mouseup', mouseState);
 
-          goToNode($(".tree").tree('getNodeById', data.result.id), $(".tree").tree('getNodeById', data.result.id));
-          $('html,body').animate({
-            scrollTop: ($("#cat-" + data.result.id).offset()?.top ?? 0) - screen.height / 2},
-            'slow');
+    treeEl.addEventListener('click', (e: Event) => {
+        const target = e.target as Element;
 
-          closeAddAlbumPopIn();
-          $(".AddAlbumSubmit").removeClass("notClickable");
-        } else {
-          $(".AddAlbumErrors").text(str_album_name_empty).show();
-          $(".AddAlbumSubmit").removeClass("notClickable");
+        // .move-cat-toogler
+        const toggler_el = target.closest<HTMLElement>('.move-cat-toogler');
+        if (toggler_el) {
+            const node_id = toggler_el.dataset['id'];
+            const n = $tree().tree('getNodeById', node_id);
+            if (n?.load_on_demand && n?.haveChildren) loadOnDemand(n);
+            if (n) {
+                open_nodes = $tree().tree('getState').open_nodes;
+                if (!open_nodes.includes(node_id)) {
+                    toggler_el.innerHTML = toggler_open;
+                    $tree().tree('openNode', n);
+                } else {
+                    toggler_el.innerHTML = toggler_close;
+                    $tree().tree('closeNode', n);
+                }
+            }
+            return;
         }
-      },
-      error: function(message: any) {
-        console.log(message);
-      }
+
+        // .move-cat-order
+        const orderEl = target.closest<HTMLElement>('.move-cat-order');
+        if (orderEl) {
+            const node_id = orderEl.dataset['id'];
+            const n = $tree().tree('getNodeById', node_id);
+            if (n) {
+                const popin = qs<HTMLElement>('.cat-move-order-popin');
+                if (popin) popin.style.display = '';
+                qs<HTMLElement>('.cat-move-order-popin .album-name')!.innerHTML = getPathNode(n);
+                (qs<HTMLInputElement>('.cat-move-order-popin input[name=id]'))!.value = node_id!;
+                (qs<HTMLInputElement>('input[name=simpleAutoOrder]'))?.setAttribute('value', str_sub_album_order);
+            }
+            return;
+        }
+
+        // .move-cat-add
+        const addEl = target.closest<HTMLElement>('.move-cat-add');
+        if (addEl) {
+            e.preventDefault();
+            openAddAlbumPopIn(addEl.dataset['aid']);
+            (qs<HTMLElement>('.AddAlbumSubmit') as any)['data-a-parent'] = addEl.dataset['aid'];
+            qs<HTMLElement>('.AddAlbumSubmit')!.dataset['aParent'] = addEl.dataset['aid'] ?? '0';
+            return;
+        }
+
+        // .move-cat-delete
+        const deleteEl = target.closest<HTMLElement>('.move-cat-delete');
+        if (deleteEl) { triggerDeleteAlbum(deleteEl.dataset['id']); return; }
+
+        // .move-cat-title-container
+        const titleEl = target.closest<HTMLElement>('.move-cat-title-container');
+        if (titleEl) {
+            openRenameAlbumPopIn(titleEl.querySelector<HTMLElement>('.move-cat-title')?.title);
+            const submitBtn = qs<HTMLElement>('.RenameAlbumSubmit')!;
+            submitBtn.dataset['catId'] = titleEl.dataset['id'];
+            return;
+        }
     });
-  })
 
-  // Delete Album
-  $(".move-cat-delete").on("click", function () {
-    triggerDeleteAlbum($(this).data("id"));
-  });
-
-  $('.user-list-checkbox').unbind("change").change(checkbox_change);
-  $('.user-list-checkbox').unbind("click").click(checkbox_click);
-
-  if (!light_album_manager) {
-    $('.tiptip').tipTip({
-      delay: 0,
-      fadeIn: 200,
-      fadeOut: 200,
-      edgeOffset: 3
+    // .order-root
+    qs('.order-root')?.addEventListener('click', () => {
+        qs<HTMLElement>('.cat-move-order-popin')!.style.display = '';
+        qs<HTMLElement>('.cat-move-order-popin .album-name')!.innerHTML = (window as any).str_root ?? 'root';
+        (qs<HTMLInputElement>('.cat-move-order-popin input[name=id]'))!.value = '-1';
+        (qs<HTMLInputElement>('input[name=simpleAutoOrder]'))?.setAttribute('value', str_root_order);
     });
-  }
+
+    // RenameAlbum
+    qsa('.RenameAlbumErrors').forEach(el => { el.style.display = 'none'; });
+    qs('.CloseRenameAlbum')?.addEventListener('click', closeRenameAlbumPopIn);
+    qs('.RenameAlbumCancel')?.addEventListener('click', closeRenameAlbumPopIn);
+    qs('.RenameAlbumSubmit')?.addEventListener('click', () => {
+        catToEdit = (qs<HTMLElement>('.RenameAlbumSubmit') as any).dataset['catId'];
+        pwgPost('pwg.categories.setInfo', {
+            category_id: catToEdit,
+            name: (qs<HTMLInputElement>('.RenameAlbumLabelUsername input'))?.value ?? '',
+        }).then(raw => {
+            const d = typeof raw === 'string' ? JSON.parse(raw) : raw;
+            const node_id = qs<HTMLElement>('#cat-' + catToEdit + ' .move-cat-toogler')?.dataset['id'];
+            const n = $tree().tree('getNodeById', node_id);
+            const newName = (qs<HTMLInputElement>('.RenameAlbumLabelUsername input'))?.value ?? '';
+            n.name = newName;
+            $tree().tree('updateNode', n, newName);
+            closeRenameAlbumPopIn();
+        }).catch(console.log);
+    });
+
+    // AddAlbum
+    qsa('.AddAlbumErrors').forEach(el => { el.style.display = 'none'; });
+    qsa('.DeleteAlbumErrors').forEach(el => { el.style.display = 'none'; });
+
+    qs('.add-album-button')?.addEventListener('click', () => {
+        openAddAlbumPopIn(0);
+        qs<HTMLElement>('.AddAlbumSubmit')!.dataset['aParent'] = '0';
+    });
+    qs('.CloseAddAlbum')?.addEventListener('click', closeAddAlbumPopIn);
+    qs('.AddAlbumCancel')?.addEventListener('click', closeAddAlbumPopIn);
+    qs('.DeleteAlbumCancel')?.addEventListener('click', closeDeleteAlbumPopIn);
+
+    qs('.AddAlbumSubmit')?.addEventListener('click', () => {
+        qs<HTMLElement>('.AddAlbumSubmit')!.classList.add('notClickable');
+        newAlbumName = (qs<HTMLInputElement>('.AddAlbumLabelUsername input'))?.value ?? '';
+        newAlbumParent = qs<HTMLElement>('.AddAlbumSubmit')!.dataset['aParent'];
+        newAlbumPosition = qs<HTMLInputElement>('input[name=position]:checked')?.value;
+
+        pwgPost('pwg.categories.add', { name: newAlbumName, parent: newAlbumParent, position: newAlbumPosition })
+            .then(raw => {
+                const d = typeof raw === 'string' ? JSON.parse(raw) : raw;
+                const parent_node = $tree().tree('getNodeById', newAlbumParent);
+                if (parent_node?.load_on_demand && parent_node?.haveChildren) loadOnDemand(parent_node);
+                if (parent_node) openNodeOnDemand(parent_node);
+                if (d.stat === 'ok') {
+                    const method = newAlbumPosition === 'last' ? 'appendNode' : 'prependNode';
+                    $tree().tree(method, { id: d.result.id, isEmptyFolder: true, name: newAlbumName }, parent_node);
+                    if (parent_node) setSubcatsBadge(parent_node);
+                    updateTitleBadge(nb_albums + 1);
+                    const newNode = $tree().tree('getNodeById', d.result.id);
+                    goToNode(newNode, newNode);
+                    const newNodeEl = document.getElementById('cat-' + d.result.id);
+                    if (newNodeEl) {
+                        window.scrollTo({ top: (newNodeEl.getBoundingClientRect().top + window.scrollY) - screen.height / 2, behavior: 'smooth' });
+                    }
+                    closeAddAlbumPopIn();
+                    refreshTipTip();
+                } else {
+                    qsa<HTMLElement>('.AddAlbumErrors').forEach(el => { el.textContent = str_album_name_empty; el.style.display = ''; });
+                }
+                qs<HTMLElement>('.AddAlbumSubmit')!.classList.remove('notClickable');
+            }).catch(() => qs<HTMLElement>('.AddAlbumSubmit')!.classList.remove('notClickable'));
+    });
+
+    // Delete Album
+    qs('.DeleteAlbumSubmit')?.addEventListener('click', () => {
+        const deletionMode = qs<HTMLInputElement>('input[name=photo_deletion_mode]:checked')?.value;
+        pwgPost('pwg.categories.delete', {
+            category_id: id,
+            photo_deletion_mode: deletionMode,
+            pwg_token,
+        }).then(() => {
+            parentOfDeletedNode = node.parent;
+            $tree().tree('removeNode', node);
+            updateTitleBadge(nb_albums - 1);
+            setSubcatsBadge(parentOfDeletedNode);
+            closeDeleteAlbumPopIn();
+            refreshTipTip();
+        }).catch(console.log);
+    });
+
+    // Selection checkboxes
+    qsa('.user-list-checkbox').forEach(el => {
+        el.addEventListener('change', checkbox_change.bind(el));
+        el.addEventListener('click', checkbox_click.bind(el));
+    });
+
+    if (openCat !== -1) {
+        nodeToGo = $tree().tree('getNodeById', openCat);
+        goToNode(nodeToGo, nodeToGo);
+        if (nodeToGo?.children) $tree().tree('openNode', nodeToGo, false);
+        const catEl = document.getElementById('cat-' + openCat);
+        if (catEl) {
+            const top = catEl.getBoundingClientRect().top + window.scrollY - window.innerHeight / 2 + catEl.offsetHeight / 2;
+            window.scrollTo({ top, behavior: 'smooth' });
+        }
+    }
+
+    if (!light_album_manager) refreshTipTip();
 });
 
-function createAlbumNode(node: any, li: any) {
-  icon = "<span class='%icon%'></span>";
-  title = '<span data-id="'+node.id+'" class="move-cat-title-container ';
-  if (node.status == 'private' || node.parent.status == 'private') {
-    node.status = 'private';
-    title += 'icon-lock';
-  }
-  title += '">';
-  if (node.visible == 'false' || node.parent.visble == 'false') {
-    node.visble = 'false';
-    title += '<span class="tiptip icon-cone" title="'+ tiptip_locked_album +'" style="font-size: 16px"></span>';
-  }
-  title += '<p class="move-cat-title" title="'+node.name+'">%name%</p> <span class="icon-pencil"></span> </span>';
-  toggler_cont = "<div class='move-cat-toogler' data-id=%id%>%content%</div>";
-  toggler_close = "<span class='icon-left-open'></span>";
-  toggler_open = "<span class='icon-down-open'></span>";
-  actions = 
-    '<div class="move-cat-action-cont">'
-      +"<div class='move-cat-action'>"
-        +'<a class="move-cat-add icon-add-album tiptip" title="'+ str_add_album +'" href="#" data-aid="'+node.id+'"></a>'
-        +'<a class="move-cat-edit icon-pencil tiptip" title="'+ str_edit_album +'" href="admin.php?page=album-'+node.id+'"></a>'
-        +'<a class="move-cat-upload icon-plus-circled tiptip" title="'+ str_add_photo +'" href="admin.php?page=photos_add&album='+node.id+'"></a>'
-        +'<a class="move-cat-see icon-eye tiptip" title="'+ str_visit_gallery +'" href="index.php?/category/'+node.id+'"></a>'
-        +'<a data-id="'+node.id+'" class="move-cat-order icon-sort-name-up tiptip" title="'+ str_sort_order +'"></a>'
-        +'<a data-id="'+node.id+'" class="move-cat-delete icon-trash tiptip" title="'+ str_delete_album +'" ></a>'
-      +"</div>"
-    +'</div>';
-  // action_order = '<a data-id="'+node.id+'" class="move-cat-order icon-sort-name-up tiptip" title="'+ str_sort_order +'"></a>';
-
-  cont = li.find('.jqtree-element');
-  cont.addClass('move-cat-container');
-  cont.attr('id', 'cat-'+node.id)
-  cont.html('');
-
-  cont.append(actions);
-
-  cont.find(".toggle-cat-option").on("click", function (this: HTMLElement) {
-    $(".cat-option").hide();
-    $(this).find(".cat-option").toggle();
-  });
-
-  if (node.haveChildren || node.children.length != 0) {
-    open_nodes = $('.tree').tree('getState').open_nodes;
-    if (open_nodes.includes(node.id)) {
-      toggler = toggler_open;
-    } else {
-      toggler = toggler_close;
-    }
-    cont.append($(toggler_cont
-      .replace(/%content%/g, toggler)
-      .replace(/%id%/g, node.id)));
-  } else {
-    cont.find('.move-cat-order').addClass("notClickable");
-
-    cont.append($(toggler_cont
-      .replace(/%content%/g, toggler_close)
-      .replace(/%id%/g, node.id))).addClass("disabledToggle");
-  }
-
-  cont.append($(icon.replace(/%icon%/g, 'icon-grip-vertical-solid')));
-  cont.find('.icon-grip-vertical-solid').attr('title', str_albs_drag_drop);
-
-  if (node.haveChildren || node.children.length != 0) {
-    cont.append($(icon.replace(/%icon%/g, 'icon-sitemap')));
-  } else {
-    cont.append($(icon.replace(/%icon%/g, 'icon-folder-open')));
-  }
-
-  cont.append($(title.replace(/%name%/g, node.name)));
-
-  var colors = ["icon-red", "icon-blue", "icon-yellow", "icon-purple", "icon-green"];
-  var colorId = Number(node.id)%5;
-  cont.find("span.icon-folder-open, span.icon-sitemap").addClass(colors[colorId]).addClass("node-icon");
-
-  cont.find(".move-cat-title-container").after(
-    "<div class='badge-container'>" 
-      +"<i class='icon-blue icon-sitemap nb-subcats'>"+node.nb_subcats+"</i>"
-      +"<i class='icon-purple icon-picture nb-images'>"+node.nb_images+"</i>"
-      +"<i class='icon-green icon-imagefolder-01 nb-sub-photos'>"+node.nb_sub_photos+"</i>"
-        +"<div class='badge-dropdown'>"
-          +"<span class='icon-blue icon-sitemap nb-subcats'>"+x_nb_subcats.replace('%d', node.nb_subcats)+"</span>"
-          +"<span class='icon-purple icon-picture nb-images'>"+x_nb_images.replace('%d', node.nb_images)+"</span>"
-          +"<span class='icon-green icon-imagefolder-01 nb-sub-photos'>"+x_nb_sub_photos.replace('%d', node.nb_sub_photos)+"</span>"
-        +"</div>"
-    +"</div>"
-  )
-
-  if (!(node.nb_subcats)) {
-    cont.find(".nb-subcats").hide();
-  }
-
-  if (!(node.nb_images != 0 && node.nb_images)) {
-    cont.find(".nb-images").hide();
-  }
-
-  if (!(node.nb_sub_photos)) {
-    cont.find(".nb-sub-photos").hide();
-  }
-
-  if (node.has_not_access) {
-    cont.find(".move-cat-see").addClass("notClickable");
-  }
+function mouseState(e: Event) {
+    const treeEl = qs('.tree')!;
+    if (e.type === 'mousedown') treeEl.classList.add('dragging');
+    else if (e.type === 'mouseup') treeEl.classList.remove('dragging');
 }
 
-/*----------------
-Checkboxes
-----------------*/
+function createAlbumNode(node: any, li: any) {
+    // li is jqTree-provided jQuery-wrapped element; use li[0] for raw DOM
+    const liEl = (li[0] ?? li) as HTMLElement;
+    icon = "<span class='%icon%'></span>";
+    title = '<span data-id="' + node.id + '" class="move-cat-title-container ';
+    if (node.status === 'private' || node.parent.status === 'private') { node.status = 'private'; title += 'icon-lock'; }
+    title += '">';
+    if (node.visible === 'false' || node.parent.visble === 'false') {
+        node.visble = 'false';
+        title += '<span class="tiptip icon-cone" title="' + tiptip_locked_album + '" style="font-size: 16px"></span>';
+    }
+    title += '<p class="move-cat-title" title="' + node.name + '">' + node.name + '</p> <span class="icon-pencil"></span> </span>';
+    toggler_cont = "<div class='move-cat-toogler' data-id=%id%>%content%</div>";
+    toggler_close = "<span class='icon-left-open'></span>";
+    toggler_open = "<span class='icon-down-open'></span>";
+    actions = '<div class="move-cat-action-cont">'
+        + "<div class='move-cat-action'>"
+        + '<a class="move-cat-add icon-add-album tiptip" title="' + str_add_album + '" href="#" data-aid="' + node.id + '"></a>'
+        + '<a class="move-cat-edit icon-pencil tiptip" title="' + str_edit_album + '" href="admin.php?page=album-' + node.id + '"></a>'
+        + '<a class="move-cat-upload icon-plus-circled tiptip" title="' + str_add_photo + '" href="admin.php?page=photos_add&album=' + node.id + '"></a>'
+        + '<a class="move-cat-see icon-eye tiptip" title="' + str_visit_gallery + '" href="index.php?/category/' + node.id + '"></a>'
+        + '<a data-id="' + node.id + '" class="move-cat-order icon-sort-name-up tiptip" title="' + str_sort_order + '"></a>'
+        + '<a data-id="' + node.id + '" class="move-cat-delete icon-trash tiptip" title="' + str_delete_album + '" ></a>'
+        + "</div>"
+        + '</div>';
+
+    const contEl = liEl.querySelector<HTMLElement>('.jqtree-element')!;
+    contEl.classList.add('move-cat-container');
+    contEl.id = 'cat-' + node.id;
+    contEl.innerHTML = '';
+    contEl.insertAdjacentHTML('beforeend', actions);
+    cont = contEl; // keep global for compatibility
+
+    if (node.haveChildren || node.children.length !== 0) {
+        open_nodes = $tree().tree('getState').open_nodes;
+        toggler = open_nodes.includes(node.id) ? toggler_open : toggler_close;
+        contEl.insertAdjacentHTML('beforeend', toggler_cont.replace(/%content%/g, toggler).replace(/%id%/g, node.id));
+    } else {
+        contEl.querySelector<HTMLElement>('.move-cat-order')?.classList.add('notClickable');
+        contEl.insertAdjacentHTML('beforeend', toggler_cont.replace(/%content%/g, toggler_close).replace(/%id%/g, node.id));
+        contEl.classList.add('disabledToggle');
+    }
+
+    contEl.insertAdjacentHTML('beforeend', icon.replace(/%icon%/g, 'icon-grip-vertical-solid'));
+    contEl.querySelector<HTMLElement>('.icon-grip-vertical-solid')!.title = str_albs_drag_drop;
+
+    if (node.haveChildren || node.children.length !== 0) contEl.insertAdjacentHTML('beforeend', icon.replace(/%icon%/g, 'icon-sitemap'));
+    else contEl.insertAdjacentHTML('beforeend', icon.replace(/%icon%/g, 'icon-folder-open'));
+
+    contEl.insertAdjacentHTML('beforeend', title.replace(/%name%/g, node.name));
+
+    const colors = ['icon-red', 'icon-blue', 'icon-yellow', 'icon-purple', 'icon-green'];
+    contEl.querySelectorAll<HTMLElement>('span.icon-folder-open, span.icon-sitemap').forEach(el => {
+        el.classList.add(colors[Number(node.id) % 5], 'node-icon');
+    });
+
+    contEl.querySelector('.move-cat-title-container')?.insertAdjacentHTML('afterend',
+        "<div class='badge-container'>"
+        + "<i class='icon-blue icon-sitemap nb-subcats'>" + node.nb_subcats + "</i>"
+        + "<i class='icon-purple icon-picture nb-images'>" + node.nb_images + "</i>"
+        + "<i class='icon-green icon-imagefolder-01 nb-sub-photos'>" + node.nb_sub_photos + "</i>"
+        + "<div class='badge-dropdown'>"
+        + "<span class='icon-blue icon-sitemap nb-subcats'>" + x_nb_subcats.replace('%d', node.nb_subcats) + "</span>"
+        + "<span class='icon-purple icon-picture nb-images'>" + x_nb_images.replace('%d', node.nb_images) + "</span>"
+        + "<span class='icon-green icon-imagefolder-01 nb-sub-photos'>" + x_nb_sub_photos.replace('%d', node.nb_sub_photos) + "</span>"
+        + "</div></div>"
+    );
+
+    if (!node.nb_subcats) contEl.querySelector<HTMLElement>('.nb-subcats')?.style.setProperty('display', 'none');
+    if (!node.nb_images) contEl.querySelector<HTMLElement>('.nb-images')?.style.setProperty('display', 'none');
+    if (!node.nb_sub_photos) contEl.querySelector<HTMLElement>('.nb-sub-photos')?.style.setProperty('display', 'none');
+    if (node.has_not_access) contEl.querySelector<HTMLElement>('.move-cat-see')?.classList.add('notClickable');
+}
 
 function checkbox_change(this: HTMLElement) {
-  if ($(this).attr('data-selected') == '1') {
-      $(this).find("i").hide();
-  } else {
-      $(this).find("i").show();
-  }
+    if (this.dataset['selected'] === '1') hide(this.querySelector('i'));
+    else show(this.querySelector('i'));
 }
-
 function checkbox_click(this: HTMLElement) {
-  if ($(this).attr('data-selected') == '1') {
-      $(this).attr('data-selected', '0');
-      $(this).find("i").hide();
-  } else {
-      $(this).attr('data-selected', '1');
-      $(this).find("i").show();
-  }
+    if (this.dataset['selected'] === '1') { this.dataset['selected'] = '0'; hide(this.querySelector('i')); }
+    else { this.dataset['selected'] = '1'; show(this.querySelector('i')); }
 }
+function show(el: Element | null | undefined) { if (el) (el as HTMLElement).style.display = ''; }
+function hide(el: Element | null | undefined) { if (el) (el as HTMLElement).style.display = 'none'; }
 
-function isNumeric(num: any){
-  return !isNaN(num)
-}
+function isNumeric(num: any) { return !isNaN(num); }
 
 function openAddAlbumPopIn(parentAlbumId: any) {
-  if (parentAlbumId != 0) {
-    $("#AddAlbum .AddIconTitle span").html(add_sub_album_of.replace("%s", $(".tree").tree('getNodeById', parentAlbumId).name));
-  } else {
-    $("#AddAlbum .AddIconTitle span").html(add_album_root_title)
-  }
-  $("#AddAlbum").fadeIn();
-  const modalInput = $(".AddAlbumLabelUsername .user-property-input");
-  modalInput.val('');
-  modalInput.trigger('focus');
-  modalInput.off('keyup').on('keyup', function () {
-    if ($(this).val() !== '') {
-      $(".AddAlbumErrors").hide();
+    const popin = document.getElementById('AddAlbum')!;
+    if (parentAlbumId != 0) {
+        qs<HTMLElement>('#AddAlbum .AddIconTitle span')!.innerHTML = add_sub_album_of.replace('%s', $tree().tree('getNodeById', parentAlbumId).name);
+    } else {
+        qs<HTMLElement>('#AddAlbum .AddIconTitle span')!.innerHTML = add_album_root_title;
     }
-  });
-
-  $("#AddAlbum").unbind('keyup');
-  $("#AddAlbum").on('keyup', function (e) {
-    // 13 is 'Enter'
-    if(e.keyCode === 13) {
-      $(".AddAlbumSubmit").trigger("click");
-    }
-    // 27 is 'Escape'
-    if(e.keyCode === 27) {
-      closeAddAlbumPopIn();
-    }
-  })
+    popin.style.display = '';
+    const input = qs<HTMLInputElement>('.AddAlbumLabelUsername .user-property-input')!;
+    input.value = '';
+    input.focus();
+    input.addEventListener('keyup', () => {
+        if (input.value !== '') qsa<HTMLElement>('.AddAlbumErrors').forEach(el => { el.style.display = 'none'; });
+    }, { once: false });
+    popin.addEventListener('keyup', function handler(e: Event) {
+        const ke = e as KeyboardEvent;
+        if (ke.key === 'Enter') qs<HTMLElement>('.AddAlbumSubmit')?.click();
+        if (ke.key === 'Escape') { closeAddAlbumPopIn(); popin.removeEventListener('keyup', handler); }
+    });
 }
 
 function closeAddAlbumPopIn() {
-  $("#AddAlbum").fadeOut(function() {
-    $(".AddAlbumErrors").hide();
-  });
+    const popin = document.getElementById('AddAlbum');
+    if (popin) {
+        popin.style.display = 'none';
+        qsa<HTMLElement>('.AddAlbumErrors').forEach(el => { el.style.display = 'none'; });
+    }
 }
 
 function openRenameAlbumPopIn(replacedAlbumName: any) {
-  $("#RenameAlbum").fadeIn();
-  $(".RenameAlbumTitle span").html(rename_item.replace("%s", replacedAlbumName))
-  $(".RenameAlbumLabelUsername .user-property-input").val(replacedAlbumName);
-  $(".RenameAlbumLabelUsername .user-property-input").focus();
-
-  $(document).unbind("keypress").on('keypress',function(e) {
-    if(e.which == 13) {
-      $(".RenameAlbumSubmit").trigger("click");
-    }
-  });
+    const popin = document.getElementById('RenameAlbum')!;
+    popin.style.display = '';
+    qs<HTMLElement>('.RenameAlbumTitle span')!.innerHTML = rename_item.replace('%s', replacedAlbumName);
+    const input = qs<HTMLInputElement>('.RenameAlbumLabelUsername .user-property-input')!;
+    input.value = replacedAlbumName;
+    input.focus();
+    document.addEventListener('keypress', function handler(e: Event) {
+        if ((e as KeyboardEvent).key === 'Enter') {
+            qs<HTMLElement>('.RenameAlbumSubmit')?.click();
+            document.removeEventListener('keypress', handler);
+        }
+    });
 }
 
 function closeRenameAlbumPopIn() {
-  $("#RenameAlbum").fadeOut();
+    const popin = document.getElementById('RenameAlbum');
+    if (popin) popin.style.display = 'none';
 }
 
 function triggerDeleteAlbum(cat_id: any) {
-  $.ajax({
-    url: "ws.php?format=json&method=pwg.categories.calculateOrphans",
-    type: "GET",
-    data: {
-      category_id: cat_id,
-    },
-    success: function (raw_data) {
-      let data = JSON.parse(raw_data).result[0]
-      if (data.nb_images_recursive == 0) {
-        $(".deleteAlbumOptions").hide();
-      } else {
-        $(".deleteAlbumOptions").show();
-        if (data.nb_images_associated_outside == 0) {
-          $("#IMAGES_ASSOCIATED_OUTSIDE").hide();
-        } else {
-          $("#IMAGES_ASSOCIATED_OUTSIDE .innerText").html("");
-          $("#IMAGES_ASSOCIATED_OUTSIDE .innerText").append(has_images_associated_outside.replace('%d', data.nb_images_recursive).replace('%d', data.nb_images_associated_outside));
-        }
-        if (data.nb_images_becoming_orphan == 0) {
-          $("#IMAGES_BECOMING_ORPHAN").hide();
-        } else {
-          $("#IMAGES_BECOMING_ORPHAN .innerText").html("");
-          $("#IMAGES_BECOMING_ORPHAN .innerText").append(has_images_becomming_orphans.replace('%d', data.nb_images_becoming_orphan));
-        }
-      }
-    },
-    error: function(message: any) {
-      console.log(message);
-    }
-  }).done(function () {
-    openDeleteAlbumPopIn(cat_id);
-  });
+    pwgPost('pwg.categories.calculateOrphans', { category_id: cat_id })
+        .then(raw => {
+            const orphanData = (typeof raw === 'string' ? JSON.parse(raw) : raw).result[0];
+            if (orphanData.nb_images_recursive == 0) {
+                qsa('.deleteAlbumOptions').forEach(el => (el as HTMLElement).style.display = 'none');
+            } else {
+                qsa<HTMLElement>('.deleteAlbumOptions').forEach(el => { el.style.display = ''; });
+                if (orphanData.nb_images_associated_outside == 0) {
+                    hide(document.getElementById('IMAGES_ASSOCIATED_OUTSIDE'));
+                } else {
+                    const el = qs<HTMLElement>('#IMAGES_ASSOCIATED_OUTSIDE .innerText')!;
+                    el.innerHTML = has_images_associated_outside
+                        .replace('%d', orphanData.nb_images_recursive)
+                        .replace('%d', orphanData.nb_images_associated_outside);
+                }
+                if (orphanData.nb_images_becoming_orphan == 0) {
+                    hide(document.getElementById('IMAGES_BECOMING_ORPHAN'));
+                } else {
+                    const el = qs<HTMLElement>('#IMAGES_BECOMING_ORPHAN .innerText')!;
+                    el.innerHTML = has_images_becomming_orphans.replace('%d', orphanData.nb_images_becoming_orphan);
+                }
+            }
+            openDeleteAlbumPopIn(cat_id);
+        }).catch(console.log);
 }
 
 function openDeleteAlbumPopIn(cat_to_delete: any) {
-  $("#DeleteAlbum").fadeIn();
-  node = $(".tree").tree('getNodeById', cat_to_delete);
-  if (node.children.length == 0) {
-    $(".DeleteIconTitle span").html(delete_album_with_name.replace("%s", node.name));
-  } else {
-    nb_sub_cats = 0;
-    $(".DeleteIconTitle span").html(delete_album_with_subs.replace("%s", node.name).replace("%d", getAllSubAlbumsFromNode(node, nb_sub_cats)));
-  }
-
-  // Actually delete
-  $(".DeleteAlbumSubmit").unbind("click").on("click", function () {
-    $.ajax({
-      url: "ws.php?format=json&method=pwg.categories.delete",
-      type: "POST",
-      data: {
-        category_id: cat_to_delete,
-        photo_deletion_mode: $("input[name=photo_deletion_mode]:checked").val(),
-        pwg_token: pwg_token,
-      },
-      success: function (raw_data) {
-        parentOfDeletedNode = node.parent
-        $('.tree').tree('removeNode', node);
-
-        $(".move-cat-add").on("click", function (e) {
-          e.preventDefault();
-          openAddAlbumPopIn($(this).data("aid"));
-          $(".AddAlbumSubmit").data("a-parent", $(this).data("aid"));
-        });
-        $(".move-cat-delete").on("click", function () {
-          triggerDeleteAlbum($(this).data("id"));
-        });
-        $(".move-cat-title-container").unbind("click").on("click", function () {
-          openRenameAlbumPopIn($(this).find(".move-cat-title").attr("title"));
-          $(".RenameAlbumSubmit").data("cat_id", $(this).attr('data-id')!);
-        });
-        $('.tiptip').tipTip({
-          delay: 0,
-          fadeIn: 200,
-          fadeOut: 200,
-          edgeOffset: 3
-        });
-
-        updateTitleBadge(nb_albums-1);
-        setSubcatsBadge(parentOfDeletedNode);
-        closeDeleteAlbumPopIn();
-      },
-      error: function(message: any) {
-        console.log(message);
-      }
-    });
-  })
-
+    const popin = document.getElementById('DeleteAlbum')!;
+    popin.style.display = '';
+    node = $tree().tree('getNodeById', cat_to_delete);
+    const iconTitle = qs<HTMLElement>('.DeleteIconTitle span')!;
+    if (node.children.length == 0) {
+        iconTitle.innerHTML = delete_album_with_name.replace('%s', node.name);
+    } else {
+        nb_sub_cats = 0;
+        iconTitle.innerHTML = delete_album_with_subs.replace('%s', node.name).replace('%d', getAllSubAlbumsFromNode(node, nb_sub_cats));
+    }
+    id = cat_to_delete;
 }
 
 function closeDeleteAlbumPopIn() {
-  $("#DeleteAlbum").fadeOut();
+    const popin = document.getElementById('DeleteAlbum');
+    if (popin) popin.style.display = 'none';
 }
 
-function getAllSubAlbumsFromNode(node: any, nb_sub_cats: any) {
-  nb_sub_cats = 0;
-  if (node.children != 0) {
-    node.children.forEach((child: any) => {
-      nb_sub_cats++;
-      tmp = getAllSubAlbumsFromNode(child, nb_sub_cats);
-      nb_sub_cats += tmp;
-    });
-  } else {
-    return 0;
-  }
-  return nb_sub_cats;
+function getAllSubAlbumsFromNode(n: any, nb: any) {
+    nb = 0;
+    if (n.children != 0) {
+        n.children.forEach((child: any) => { nb++; tmp = getAllSubAlbumsFromNode(child, nb); nb += tmp; });
+    } else { return 0; }
+    return nb;
 }
 
-function setSubcatsBadge(node: any) {
-  if (node.children.length != 0) {
-    $("#cat-"+node.id).find(".nb-subcats").text(node.children.length).show(100);
-    $("#cat-"+node.id).find(".badge-dropdown").find(".nb-subcats").text(x_nb_subcats.replace('%d', node.children.length));
-  } else {
-    $("#cat-"+node.id).find(".nb-subcats").hide(100)
-  }
+function setSubcatsBadge(n: any) {
+    const catEl = document.getElementById('cat-' + n.id);
+    if (!catEl) return;
+    const nbSubcats = catEl.querySelector<HTMLElement>('.nb-subcats');
+    const badgeSubcats = catEl.querySelector<HTMLElement>('.badge-dropdown .nb-subcats');
+    if (n.children.length != 0) {
+        if (nbSubcats) { nbSubcats.textContent = String(n.children.length); nbSubcats.style.display = ''; }
+        if (badgeSubcats) badgeSubcats.textContent = x_nb_subcats.replace('%d', n.children.length);
+    } else {
+        if (nbSubcats) nbSubcats.style.display = 'none';
+    }
 }
 
 function updateTitleBadge(new_nb_albums: any) {
-  nb_albums = new_nb_albums;
-  $(".badge-number").text(new_nb_albums);
+    nb_albums = new_nb_albums;
+    qs('.badge-number')!.textContent = String(new_nb_albums);
 }
 
-function goToNode(node: any, firstNode: any) {
-  // console.log(firstNode.id, node.id);
-  if (node.parent) {
-    goToNode(node.parent, firstNode);
-    if(node != firstNode) {
-      $(".tree").tree('openNode', node);
-      // console.log("parent id : " + node.parent.id);
-      $("#cat-"+node.parent.id).show();
-      $("#cat-"+node.parent.id).addClass("imune");
+function goToNode(n: any, firstNode: any) {
+    if (n.parent) {
+        goToNode(n.parent, firstNode);
+        if (n !== firstNode) {
+            $tree().tree('openNode', n);
+            const parentCatEl = document.getElementById('cat-' + n.parent.id);
+            if (parentCatEl) { parentCatEl.style.display = ''; parentCatEl.classList.add('imune'); }
+        }
+    } else {
+        $tree().tree('openNode', n);
+        const catEl = document.getElementById('cat-' + firstNode.id);
+        if (catEl) catEl.classList.add('animateFocus');
+        showNodeChildrens(firstNode);
     }
-  } else {
-    $(".tree").tree('openNode', node);
-    $("#cat-"+firstNode.id).addClass("animateFocus");
-
-    showNodeChildrens(firstNode);
-  }
 }
 
-function showNodeChildrens(node: any) {
-  if (node.children) {
-    // console.log("childrens : " + node.children);
-    node.children.forEach((child: any) => {
-      // console.log("children : " + child.id, child.name);
-      $("#cat-"+child.id).addClass("imune");
-      showNodeChildrens(child);
-    });
-    
-  }
+function showNodeChildrens(n: any) {
+    if (n.children) {
+        n.children.forEach((child: any) => {
+            const childEl = document.getElementById('cat-' + child.id);
+            if (childEl) childEl.classList.add('imune');
+            showNodeChildrens(child);
+        });
+    }
 }
 
 function closeTree(tree: any) {
-  // console.log(tree);
-  if (tree.tree('getState').open_nodes.length > 0) {
-    tree.tree('getState').open_nodes.forEach((nodeItem: any) => {
-      var node = tree.tree('getNodeById', nodeItem);
-      tree.tree('closeNode', node);
-    });
-  }
-
+    if (tree.tree('getState').open_nodes.length > 0) {
+        tree.tree('getState').open_nodes.forEach((nodeItem: any) => {
+            const n = tree.tree('getNodeById', nodeItem);
+            tree.tree('closeNode', n);
+        });
+    }
 }
 
 function getId(parent: any) {
-  if (parent.getLevel() == 0) {
-    return 0;
-  } else {
-    return parent.id;
-  }
+    return parent.getLevel() == 0 ? 0 : parent.id;
 }
 
-function getRank(node: any, ignoreId: any = null): any {
-  if (node.getPreviousSibling() != null) {
-    if (node.id != ignoreId) {
-      return 1 + getRank(node.getPreviousSibling(), ignoreId);
+function getRank(n: any, ignoreId: any = null): any {
+    if (n.getPreviousSibling() != null) {
+        if (n.id != ignoreId) return 1 + getRank(n.getPreviousSibling(), ignoreId);
+        else return getRank(n.getPreviousSibling(), ignoreId);
     } else {
-      return getRank(node.getPreviousSibling(), ignoreId);
+        return n.id != ignoreId ? 1 : 0;
     }
-  } else {
-    if (node.id != ignoreId) {
-      return 1;
-    } else {
-      return 0;
-    }
-  }
 }
 
 function applyMove(event: any) {
-  waitingTimeout = setTimeout(() => {
-    $('.waiting-message').addClass('visible');  
-  }, 500);
-  id = event.move_info.moved_node.id;
-  moveParent = null;
-  moveRank = null;
-  previous_parent = event.move_info.previous_parent;
-  target = event.move_info.target_node;
-  if (event.move_info.position == 'after') {
-    if (getId(previous_parent) != getId(target.parent)) {
-      moveParent = getId(target.parent);
+    waitingTimeout = setTimeout(() => {
+        qs<HTMLElement>('.waiting-message')!.classList.add('visible');
+    }, 500);
+    id = event.move_info.moved_node.id;
+    moveParent = null; moveRank = null;
+    previous_parent = event.move_info.previous_parent;
+    target = event.move_info.target_node;
+    if (event.move_info.position === 'after') {
+        if (getId(previous_parent) != getId(target.parent)) moveParent = getId(target.parent);
+        moveRank = getRank(target, id) + 1;
+    } else if (event.move_info.position === 'inside') {
+        if (getId(previous_parent) != getId(target)) {
+            moveParent = getId(target);
+            const currentNode = $tree().tree('getNodeById', moveParent);
+            if (currentNode?.load_on_demand && currentNode?.haveChildren) loadOnDemand(currentNode);
+        }
+        moveRank = 1;
+    } else if (event.move_info.position === 'before') {
+        if (getId(previous_parent) != getId(target.parent)) moveParent = getId(target.parent);
+        moveRank = 1;
     }
-    moveRank = getRank(target, id) + 1;
-  } else if (event.move_info.position == 'inside') {
-    if (getId(previous_parent) != getId(target)) {
-      moveParent = getId(target);
-      const currentNode = $('.tree').tree('getNodeById', moveParent);
-      if (currentNode && currentNode.load_on_demand && currentNode.haveChildren) {
-        loadOnDemand(currentNode);
-      }
-    }
-    moveRank = 1;
-  } else if (event.move_info.position == 'before') {
-    if (getId(previous_parent) != getId(target.parent)) {
-      moveParent = getId(target.parent);
-    }
-    moveRank = 1;
-  } 
-  moveNode(id, moveRank, moveParent).then(() => {
-    event.move_info.do_move();
-    clearTimeout(waitingTimeout);
-    $('.waiting-message').removeClass('visible');
-    setSubcatsBadge(previous_parent);
-    setSubcatsBadge($('.tree').tree('getNodeById', moveParent));
-
-    $(".move-cat-add").off("click").on("click", function (e) {
-      e.preventDefault();
-      openAddAlbumPopIn($(this).data("aid"));
-      $(".AddAlbumSubmit").data("a-parent", $(this).data("aid"));
+    moveNode(id, moveRank, moveParent).then(() => {
+        event.move_info.do_move();
+        clearTimeout(waitingTimeout);
+        qs<HTMLElement>('.waiting-message')!.classList.remove('visible');
+        setSubcatsBadge(previous_parent);
+        setSubcatsBadge($tree().tree('getNodeById', moveParent));
+        refreshTipTip();
+    }).catch(msg => {
+        console.log('An error has occurred: ' + msg);
+        refreshTipTip();
     });
-    $(".move-cat-delete").on("click", function () {
-      triggerDeleteAlbum($(this).data("id"));
-    });
-    $(".move-cat-title-container").on("click", function () {
-      openRenameAlbumPopIn($(this).find(".move-cat-title").attr("title"));
-      $(".RenameAlbumSubmit").data("cat_id", $(this).attr('data-id')!);
-    });
-    $('.tiptip').tipTip({
-      delay: 0,
-      fadeIn: 200,
-      fadeOut: 200,
-      edgeOffset: 3
-    });
-  })
-    .catch(function (message) {
-      console.log('An error has occured : ' + message );
-      $(".move-cat-add").off("click").on("click", function (e) {
-        e.preventDefault();
-        openAddAlbumPopIn($(this).data("aid"));
-        $(".AddAlbumSubmit").data("a-parent", $(this).data("aid"));
-      });
-      $(".move-cat-delete").on("click", function () {
-        triggerDeleteAlbum($(this).data("id"));
-      });
-      $(".move-cat-title-container").on("click", function () {
-        openRenameAlbumPopIn($(this).find(".move-cat-title").attr("title"));
-        $(".RenameAlbumSubmit").data("cat_id", $(this).attr('data-id')!);
-      });
-      $('.tiptip').tipTip({
-        delay: 0,
-        fadeIn: 200,
-        fadeOut: 200,
-        edgeOffset: 3
-      });
-    })
 }
 
-function moveNode(node: any, rank: any, parent: any) {
-  return new Promise<void>((res, rej) => {
-    if (parent != null) {
-      changeParent(node, parent, rank).then(() => res()).catch(() => rej())
-    } else if (rank != null) {
-      changeRank(node, rank).then(() => res()).catch(() => rej())
-    }
-  })
+function moveNode(n: any, rank: any, parent: any): Promise<void> {
+    return new Promise<void>((res, rej) => {
+        if (parent != null) changeParent(n, parent, rank).then(res).catch(rej);
+        else if (rank != null) changeRank(n, rank).then(res).catch(rej);
+        else res();
+    });
 }
 
-function changeParent(node: any, parent: any, rank: any) {
-  oldParent = node.parent
-  return new Promise<void>((res, rej) => {
-    (jQuery.ajax as any)({
-      url: "ws.php?format=json&method=pwg.categories.move",
-      type: "POST",
-      data: {
-        category_id : node,
-        parent : parent,
-        pwg_token : pwg_token
-      },
-      before: function () {
-        oldParent = node.parent
-      },
-      success: function (raw_data: any) {
-        data = jQuery.parseJSON(raw_data);
-        if (data.stat === "ok") {
-          changeRank(node, rank)
-          const updated_cats = data.result.updated_cats;
-          if (updated_cats) 
-          {
-            updated_cats.forEach((cat: any) => {
-              const node = $('.tree').tree('getNodeById', cat.cat_id);
-              node.nb_sub_photos = cat.nb_sub_photos;
-              $('.tree').tree('updateNode', node, node.name);
+function changeParent(n: any, parent: any, rank: any): Promise<void> {
+    oldParent = n.parent;
+    return pwgPost('pwg.categories.move', { category_id: n, parent, pwg_token }).then(raw => {
+        const d = typeof raw === 'string' ? JSON.parse(raw) : raw;
+        if (d.stat === 'ok') {
+            changeRank(n, rank);
+            (d.result.updated_cats ?? []).forEach((cat: any) => {
+                const treeNode = $tree().tree('getNodeById', cat.cat_id);
+                if (treeNode) { treeNode.nb_sub_photos = cat.nb_sub_photos; $tree().tree('updateNode', treeNode, treeNode.name); }
             });
-          }
-          res();
-        } else {
-          rej(raw_data);
-        }
-      },
-      error: function(message: any) {
-        rej(message);
-      }
+        } else { throw raw; }
     });
-  })
 }
 
-function changeRank(node: any, rank: any) {
-  return new Promise<void>((res, rej) => {
-    jQuery.ajax({
-      url: "ws.php?format=json&method=pwg.categories.setRank",
-      type: "POST",
-      data: {
-        category_id : node,
-        rank : rank
-      },
-      success: function (raw_data) {
-        data = jQuery.parseJSON(raw_data);
-        if (data.stat === "ok") {
-          res();
-        } else {
-          rej(raw_data);
-        }
-      },
-      error: function(message: any) {
-        rej(message);
-      }
+function changeRank(n: any, rank: any): Promise<void> {
+    return pwgPost('pwg.categories.setRank', { category_id: n, rank }).then(raw => {
+        const d = typeof raw === 'string' ? JSON.parse(raw) : raw;
+        if (d.stat !== 'ok') throw raw;
     });
-  })
 }
 
-function makePrivateHierarchy(node: any) {
-  node.status = 'private';
-  node.children.forEach((node: any) => {
-    makePrivateHierarchy(node);
-  });
+function makePrivateHierarchy(n: any) {
+    n.status = 'private';
+    n.children.forEach((child: any) => makePrivateHierarchy(child));
 }
 
-function getPathNode(node: any): any {
-  if (node.parent.getLevel() != 0) {
-    return getPathNode(node.parent) + ' / ' + node.name;
-  } else {
-    return node.name;
-  }
+function getPathNode(n: any): any {
+    return n.parent.getLevel() != 0 ? getPathNode(n.parent) + ' / ' + n.name : n.name;
 }
 
 function findAlbumById(a: any, id: any): any {
-  for (const album of a) {
-    if (album.id == id) { return album };
-
-    if (album.haveChildren && album.haveChildren.length > 0 || album.children && album.children.length > 0) {
-      const al = findAlbumById(album.haveChildren ?? album.children, id);
-      if (al) { return al };
+    for (const album of a) {
+        if (album.id == id) return album;
+        if ((album.haveChildren?.length || album.children?.length)) {
+            const al = findAlbumById(album.haveChildren ?? album.children, id);
+            if (al) return al;
+        }
     }
-  }
-  return null;
+    return null;
 }
 
-function loadOnDemand(node: any) {
-  const children = node.haveChildren;
-  const formatedChild = children.map((a: any) => {
-    const al = {...a, children:[]};
-    if (a.children) {
-      al.load_on_demand = true;
-      al.haveChildren = a.children;
-    }
-    return al;
-  });
-    
-  $('.tree').tree('loadData', formatedChild, node);
-  node.load_on_demand = false;
+function loadOnDemand(n: any) {
+    const formated = (n.haveChildren ?? []).map((a: any) => {
+        const al = { ...a, children: [] };
+        if (a.children) { al.load_on_demand = true; al.haveChildren = a.children; }
+        return al;
+    });
+    $tree().tree('loadData', formated, n);
+    n.load_on_demand = false;
 }
 
-function openNodeOnDemand(node: any) {
-  open_nodes = $('.tree').tree('getState').open_nodes;
-  if (!open_nodes.includes(node)) {
-    $('.tree').tree('openNode', node);
-    $(".move-cat-add").off("click").on("click", function (e) {
-      e.preventDefault();
-      openAddAlbumPopIn($(this).data("aid"));
-      $(".AddAlbumSubmit").data("a-parent", $(this).data("aid"));
-    });
-    $(".move-cat-delete").off('click').on("click", function () {
-      triggerDeleteAlbum($(this).data("id"));
-    });
-    $(".move-cat-title-container").off("click").on("click", function () {
-      openRenameAlbumPopIn($(this).find(".move-cat-title").attr("title"));
-      $(".RenameAlbumSubmit").data("cat_id", $(this).attr('data-id')!);
-    });
-  }
+function openNodeOnDemand(n: any) {
+    open_nodes = $tree().tree('getState').open_nodes;
+    if (!open_nodes.includes(n)) $tree().tree('openNode', n);
 }
+
 export {};

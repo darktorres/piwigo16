@@ -110,7 +110,8 @@ function checkPlugin(box: HTMLElement): boolean {
 
 function applyFilter(changed: string, value: any) {
     filters[changed] = value;
-    qsa('.pluginBox').forEach(box => { box.style.display = checkPlugin(box) ? '' : 'none'; });
+    const boxes = qsa('.pluginBox');
+    boxes.forEach(box => { box.style.display = checkPlugin(box) ? '' : 'none'; });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -123,7 +124,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (container) {
             const boxes = Array.from(container.querySelectorAll<HTMLElement>('.pluginBox'));
             boxes.sort(sortPlugins);
-            boxes.forEach(box => container.appendChild(box));
+            const fragment = document.createDocumentFragment();
+            boxes.forEach(box => fragment.appendChild(box));
+            container.appendChild(fragment);
         }
         fetch('admin.php?plugins_new_order=' + sortOrder);
     });
@@ -154,13 +157,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const authorNames: { value: string; text: string }[] = [{ value: '', text: '-' }];
     const tagsNames: { value: string; text: string }[] = [{ value: '', text: '-' }];
+    const authorSet = new Set(['']);
+    const tagSet = new Set(['']);
 
     qsa('.pluginBox').forEach(box => {
         (box.dataset['author'] ?? '').split(', ').forEach(name => {
-            if (!authorNames.find(el => el.value === name)) authorNames.push({ value: name, text: name });
+            if (!authorSet.has(name)) {
+                authorNames.push({ value: name, text: name });
+                authorSet.add(name);
+            }
         });
         (box.dataset['tags'] ?? '').split(', ').forEach(tag => {
-            if (!tagsNames.find(el => el.value === tag)) tagsNames.push({ value: tag, text: tag });
+            if (!tagSet.has(tag)) {
+                tagsNames.push({ value: tag, text: tag });
+                tagSet.add(tag);
+            }
         });
     });
 
@@ -227,7 +238,8 @@ document.addEventListener('DOMContentLoaded', () => {
     tagTs.setValue('');
 
     qsa('.pluginName span').forEach(el => {
-        if (el.innerHTML.length > 30) el.innerHTML = el.innerHTML.slice(0, 30) + '...';
+        const text = el.textContent ?? '';
+        if (text.length > 30) el.textContent = text.slice(0, 30) + '...';
     });
 
     document.getElementById('showBetaTestPlugin')?.addEventListener('change', function(this: HTMLInputElement) {

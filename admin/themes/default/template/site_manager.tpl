@@ -12,7 +12,7 @@ const title_msg = '{'Are you sure you want to delete this site?'|@translate|@esc
 const confirm_msg = '{"Yes, I am sure"|@translate}';
 const cancel_msg = "{"No, I have changed my mind"|@translate}";
 document.querySelectorAll(".delete-site-button").forEach(function(el) {
-  (window as any).pwg_jconfirm_follow_href_fn(el, {
+  window.pwg_jconfirm_follow_href_fn(el, {
     alert_title: title_msg,
     alert_confirm: confirm_msg,
     alert_cancel: cancel_msg

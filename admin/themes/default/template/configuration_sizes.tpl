@@ -7,7 +7,7 @@ const confirm_msg = '{'Yes, I am sure'|@translate|@escape}';
 const cancel_msg = '{'No, I have changed my mind'|@translate|@escape}';
 
 document.querySelectorAll(".restore-settings-button").forEach(function(el) {
-  (window as any).pwg_jconfirm_follow_href_fn(el, {
+  window.pwg_jconfirm_follow_href_fn(el, {
     alert_title: title_msg,
     alert_confirm: confirm_msg,
     alert_cancel: cancel_msg

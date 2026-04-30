@@ -667,18 +667,20 @@
       </div>
 
       <div class="user-property-password-change-inputs" style="display: none;">
-        <div class="summary-input-container">
-          <div class="user-property-input-icon" style="margin-bottom: 10px;">
-            <input class="user-property-input user-property-input-password" value=""
-              placeholder="{'New password'|@translate}" type="password" id="edit_user_password" />
-            <span class="icon-eye icon-show-password"></span>
+        <form onsubmit="return false">
+          <div class="summary-input-container">
+            <div class="user-property-input-icon" style="margin-bottom: 10px;">
+              <input class="user-property-input user-property-input-password" value=""
+                placeholder="{'New password'|@translate}" type="password" id="edit_user_password" />
+              <span class="icon-eye icon-show-password"></span>
+            </div>
+            <div class="user-property-input-icon">
+              <input class="user-property-input user-property-input-password-conf" value=""
+                placeholder="{'Confirm Password'|@translate}" type="password" id="edit_user_conf_password" />
+              <span class="icon-eye icon-show-password"></span>
+            </div>
           </div>
-          <div class="user-property-input-icon">
-            <input class="user-property-input user-property-input-password-conf" value=""
-              placeholder="{'Confirm Password'|@translate}" type="password" id="edit_user_conf_password" />
-            <span class="icon-eye icon-show-password"></span>
-          </div>
-        </div>
+        </form>
         <div class="EditUserGenPassword">
           <span class="icon-dice-solid"></span><span>{'Generate random password'|@translate}</span>
         </div>
@@ -979,22 +981,24 @@
       </div>
 
       <div id="add_user_password" style="display: none;">
-        <div class="AddUserGenPassword">
-          <label for="add_user_pass" class="user-property-label AddUserLabelPassword">{'Password'|@translate}</label>
-          <span class="icon-dice-solid"> {'Generate random password'|@translate}</span>
-        </div>
-        <div class="user-property-input-icon" style="margin-bottom: 5px;">
-          <input id="add_user_pass" class="user-property-input user-property-input-password" value=""
-            placeholder="{'Password'|@translate}" type="password" />
-          <span class="icon-eye icon-show-password"></span>
-        </div>
+        <form onsubmit="return false">
+          <div class="AddUserGenPassword">
+            <label for="add_user_pass" class="user-property-label AddUserLabelPassword">{'Password'|@translate}</label>
+            <span class="icon-dice-solid"> {'Generate random password'|@translate}</span>
+          </div>
+          <div class="user-property-input-icon" style="margin-bottom: 5px;">
+            <input id="add_user_pass" class="user-property-input user-property-input-password" value=""
+              placeholder="{'Password'|@translate}" type="password" />
+            <span class="icon-eye icon-show-password"></span>
+          </div>
 
-        <label for="add_user_confpass" class="user-property-label AddUserLabelPasswordConf">{'Confirm Password'|@translate}</label>
-        <div class="user-property-input-icon" style="margin-bottom: 5px;">
-          <input id="add_user_confpass" class="user-property-input user-property-input-password-conf" value=""
-            placeholder="{'Confirm Password'|@translate}" type="password" />
-          <span class="icon-eye icon-show-password"></span>
-        </div>
+          <label for="add_user_confpass" class="user-property-label AddUserLabelPasswordConf">{'Confirm Password'|@translate}</label>
+          <div class="user-property-input-icon" style="margin-bottom: 5px;">
+            <input id="add_user_confpass" class="user-property-input user-property-input-password-conf" value=""
+              placeholder="{'Confirm Password'|@translate}" type="password" />
+            <span class="icon-eye icon-show-password"></span>
+          </div>
+        </form>
       </div>
 
       <div class="AddUserInputContainer">

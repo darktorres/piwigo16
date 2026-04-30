@@ -310,7 +310,6 @@ function mouseState(e: Event) {
 }
 
 function createAlbumNode(node: any, li: any) {
-    // li is jqTree-provided jQuery-wrapped element; use li[0] for raw DOM
     const liEl = (li[0] ?? li) as HTMLElement;
     icon = "<span class='%icon%'></span>";
     title = '<span data-id="' + node.id + '" class="move-cat-title-container ';

@@ -26,7 +26,6 @@ var queuedManager = {
   }
 };
 
-// Simple toast notification replacing jQuery.jGrowl
 function pwgNotify(msg, theme) {
   var el = document.createElement('div');
   el.style.cssText = 'position:fixed;top:20px;right:20px;z-index:9999;padding:10px 16px;border-radius:4px;color:#fff;font-size:14px;max-width:320px;margin-bottom:5px;';

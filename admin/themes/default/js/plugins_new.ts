@@ -244,10 +244,14 @@ document.addEventListener('DOMContentLoaded', () => {
     console.timeEnd('Slider initialization');
 
     console.time('Filter initialization');
+
+    console.time('Update filter labels');
     updateRatingFilterLabel(0);
     updateCertificationFilterLabel(minCertification);
     updateRevisionFilterLabel(0);
+    console.timeEnd('Update filter labels');
 
+    console.time('Initialize filters object');
     filters = {
         search: (document.getElementById('search') as HTMLInputElement)?.value ?? '',
         author: '',
@@ -256,14 +260,20 @@ document.addEventListener('DOMContentLoaded', () => {
         certification: minCertification,
         revision: value_to_month(0)[0],
     };
+    console.timeEnd('Initialize filters object');
 
+    console.time('TomSelect setValue');
     authorTs.setValue('');
     tagTs.setValue('');
+    console.timeEnd('TomSelect setValue');
 
+    console.time('Truncate plugin names');
     qsa('.pluginName span').forEach(el => {
         const text = el.textContent ?? '';
         if (text.length > 30) el.textContent = text.slice(0, 30) + '...';
     });
+    console.timeEnd('Truncate plugin names');
+
     console.timeEnd('Filter initialization');
 
     document.getElementById('showBetaTestPlugin')?.addEventListener('change', function(this: HTMLInputElement) {

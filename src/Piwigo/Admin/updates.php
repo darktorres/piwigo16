@@ -349,11 +349,11 @@ class updates
     /** @return array<mixed>|false */
     public function check_extensions(): array|false
     {
+        $_SESSION['extensions_need_update'] = [];
+
         if (!$this->get_server_extensions()) {
             return false;
         }
-
-        $_SESSION['extensions_need_update'] = [];
 
         foreach ($this->types as $type) {
             $fs = 'fs_'.$type;

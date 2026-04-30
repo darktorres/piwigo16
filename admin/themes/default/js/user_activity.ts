@@ -181,8 +181,11 @@ function get_user_activity(page: any, uid: any, act: any, obj: any, date: any, i
 }
 
 function lineConstructor(line: any) {
-    const newLine = document.getElementById('-1')!.cloneNode(true) as HTMLElement;
-    const qs = (sel: string): HTMLElement => newLine.querySelector<HTMLElement>(sel)!;
+    const template = document.getElementById('-1');
+    if (!template) return;
+    const newLine = template.cloneNode(true) as HTMLElement;
+    const qs = (sel: string): HTMLElement | null => newLine.querySelector<HTMLElement>(sel);
+    const set = (sel: string, html: string) => { const el = qs(sel); if (el) el.innerHTML = html; };
 
     document.querySelectorAll<HTMLElement>('.tab-title').forEach(el => { el.style.display = ''; });
     document.querySelectorAll<HTMLElement>('.activity-noresult').forEach(el => { el.style.display = 'none'; });
@@ -194,13 +197,13 @@ function lineConstructor(line: any) {
     const p = line.counter > 1;
     const c = line.counter;
     const addActionBase = (typeClass: string, icon: string, nameHtml: string) => {
-        qs('.action-type').classList.add(typeClass);
-        qs('.user-pic').classList.add(color_icons[line.user_id % 5]);
-        qs('.action-icon').classList.add(icon);
-        qs('.action-name').innerHTML = nameHtml;
+        qs('.action-type')?.classList.add(typeClass);
+        qs('.user-pic')?.classList.add(color_icons[line.user_id % 5]);
+        qs('.action-icon')?.classList.add(icon);
+        set('.action-name', nameHtml);
     };
     const addObj = (infos: string, icon: string) => {
-        final_albumInfos = infos; qs('.action-section').classList.add(icon);
+        final_albumInfos = infos; qs('.action-section')?.classList.add(icon);
     };
 
     switch (line.action) {
@@ -244,60 +247,60 @@ function lineConstructor(line: any) {
                 default: final_albumInfos = c + ' ' + line.object + ' ' + line.action;
             } break;
         case 'login':
-            qs('.action-type').classList.add('icon-purple');
-            qs('.user-pic').classList.add(color_icons[line.user_id % 5]);
-            qs('.action-icon').classList.add('icon-key');
-            qs('.action-section').classList.add('icon-user-1');
-            qs('.action-name').innerHTML = actionType_login;
+            qs('.action-type')?.classList.add('icon-purple');
+            qs('.user-pic')?.classList.add(color_icons[line.user_id % 5]);
+            qs('.action-icon')?.classList.add('icon-key');
+            qs('.action-section')?.classList.add('icon-user-1');
+            set('.action-name', actionType_login);
             final_albumInfos = (p ? actionInfos_users_logged_in : actionInfos_user_logged_in).replace('%d', c);
             break;
         case 'logout':
-            qs('.action-type').classList.add('icon-purple');
-            qs('.user-pic').classList.add(color_icons[(line.user_id == 2 ? line.object_id[0] : line.user_id) % 5]);
-            qs('.action-icon').classList.add('icon-logout');
-            qs('.action-section').classList.add('icon-user-1');
-            qs('.action-name').innerHTML = actionType_logout;
+            qs('.action-type')?.classList.add('icon-purple');
+            qs('.user-pic')?.classList.add(color_icons[(line.user_id == 2 ? line.object_id[0] : line.user_id) % 5]);
+            qs('.action-icon')?.classList.add('icon-logout');
+            qs('.action-section')?.classList.add('icon-user-1');
+            set('.action-name', actionType_logout);
             final_albumInfos = (p ? actionInfos_users_logged_out : actionInfos_user_logged_out).replace('%d', c);
             break;
         default:
-            qs('.action-type').classList.add('icon-purple');
-            qs('.user-pic').classList.add(color_icons[line.user_id % 5]);
-            qs('.action-section').classList.add('icon-user-1');
-            qs('.action-name').innerHTML = line.action;
+            qs('.action-type')?.classList.add('icon-purple');
+            qs('.user-pic')?.classList.add(color_icons[line.user_id % 5]);
+            qs('.action-section')?.classList.add('icon-user-1');
+            set('.action-name', line.action);
             final_albumInfos = 'x' + c;
     }
 
-    qs('.action-infos-test').innerHTML = final_albumInfos;
-    qs('.nb_items').innerHTML = line.counter;
-    qs('.date-day').innerHTML = line.date;
-    qs('.date-hour').innerHTML = line.hour;
-    qs('.user-name').innerHTML = line.username;
-    qs('.user-pic').innerHTML = get_initials(line.username);
-    qs('.detail-item-1').innerHTML = line.ip_address;
-    qs('.detail-item-1').title = 'IP: ' + line.ip_address;
+    set('.action-infos-test', final_albumInfos);
+    set('.nb_items', line.counter);
+    set('.date-day', line.date);
+    set('.date-hour', line.hour);
+    set('.user-name', line.username);
+    set('.user-pic', get_initials(line.username));
+    const d1 = qs('.detail-item-1');
+    if (d1) { d1.innerHTML = line.ip_address; d1.title = 'IP: ' + line.ip_address; }
 
-    if (line.detailsType === 'script') {
-        qs('.detail-item-2').innerHTML = line.details.script;
-        qs('.detail-item-2').title = 'Script';
-    } else if (line.detailsType === 'method') {
-        qs('.detail-item-2').innerHTML = line.details.method;
-        qs('.detail-item-2').title = 'API Method';
+    const d2 = qs('.detail-item-2');
+    if (d2) {
+        if (line.detailsType === 'script') { d2.innerHTML = line.details.script; d2.title = 'Script'; }
+        else if (line.detailsType === 'method') { d2.innerHTML = line.details.method; d2.title = 'API Method'; }
     }
 
+    const d3 = qs('.detail-item-3');
     if (line.details.agent) {
-        const api_key = line.details.connected_with ? 'API Key, ' : '';
-        qs('.detail-item-3').innerHTML = line.details.connected_with ? '<i class="icon-key"></i>' + line.details.agent : line.details.agent;
-        qs('.detail-item-3').title = api_key + 'User-Agent: ' + line.details.agent;
+        if (d3) {
+            const api_key = line.details.connected_with ? 'API Key, ' : '';
+            d3.innerHTML = line.details.connected_with ? '<i class="icon-key"></i>' + line.details.agent : line.details.agent;
+            d3.title = api_key + 'User-Agent: ' + line.details.agent;
+        }
     } else if (line.details.users && line.action !== 'logout' && line.action !== 'login') {
         const user_string = [...new Set<unknown>(line.details.users)].toString();
-        qs('.detail-item-3').innerHTML = user_string;
-        qs('.detail-item-3').title = users_key + ': ' + user_string;
+        if (d3) { d3.innerHTML = user_string; d3.title = users_key + ': ' + user_string; }
     } else {
-        qs('.detail-item-3')?.remove();
+        d3?.remove();
     }
 
     newLine.classList.add('uid-' + line.user_id);
-    document.querySelector<HTMLElement>('.tab')!.appendChild(newLine);
+    document.querySelector<HTMLElement>('.tab')?.appendChild(newLine);
 }
 
 function emptyLine() {

@@ -72,6 +72,16 @@ Files: `addAlbum.ts`, `album_selector.ts`, `albums.ts`, `cat_search.ts`, `commen
 - Replace Selectize in remaining templates with Tom Select
 - Remove jQuery Autogrow — replace with `field-sizing: content` CSS (supported in modern browsers)
 
+## Status (as of 2026-04-29)
+
+Waves 1–5 complete. **41 of 42 TypeScript files** converted to jQuery-free native DOM + npm packages.
+
+**Single remaining blocker:** `albums.ts` depends on `jqtree` npm package which still uses `jQuery.ajax` internally (v1.8.11). Options to unblock: (a) replace jqTree with a vanilla JS tree widget, (b) fork and patch jqTree to use `fetch` instead of `jQuery.ajax`, (c) rewrite the album tree using native HTML drag-and-drop + recursive DOM rendering.
+
+Wave 6 (removing jQuery from `ScriptLoader.php` known_paths, templates, and vendored files) cannot proceed until `albums.ts` is unblocked.
+
+---
+
 ### Wave 6 — Remove jQuery itself
 
 Only runs after all prior waves are complete.

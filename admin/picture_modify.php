@@ -406,6 +406,7 @@ $picture_modify_page_data = [
   'ROOT_URL' => get_root_url(),
   'associated_albums' => $associated_albums,
   'str_create' => l10n('Create'),
+  'str_assoc_album_ab' => l10n('Associate to album'),
 ];
 
 $template->assign([

@@ -3,7 +3,7 @@
 
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
 
-{combine_script id='batchManagerGlobal' load='async' require='datepicker,addAlbum,doubleSlider' path='admin/themes/default/js/batchManagerGlobal.js'}
+{combine_script id='batchManagerGlobal' load='async' require='datepicker,addAlbum' path='admin/themes/default/js/batchManagerGlobal.js'}
 
 <script id="pwg-batch-manager-global-data" type="application/json">{$batch_manager_global_page_data_json}</script>
 

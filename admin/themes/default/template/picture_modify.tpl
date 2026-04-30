@@ -31,8 +31,6 @@ document.getElementById('action-delete-picture').addEventListener('click', funct
     window.location.href = url_delete.replaceAll('amp;', '');
   }
 });
-
-const str_assoc_album_ab = '{'Associate to album'|translate|escape:javascript}';
 {/footer_script}
 
 {combine_script id='picture_modify' load='footer' path='admin/themes/default/js/picture_modify.js'}

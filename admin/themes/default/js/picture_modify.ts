@@ -7,6 +7,7 @@ interface PictureModifyPageData {
     ROOT_URL: string;
     associated_albums: Record<string, any>;
     str_create: string;
+    str_assoc_album_ab: string;
 }
 
 const pageData = getPageData<PictureModifyPageData>('pwg-picture-modify-data');
@@ -31,7 +32,6 @@ tagsCache?.selectize(document.querySelector('[data-selectize=tags]'), { lang: {
 }});
 
 declare var related_categories_ids: (string | number)[];
-declare var str_assoc_album_ab: string;
 declare var str_orphan: string;
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
         selectAlbum: add_related_category,
         removeSelectedAlbum: remove_related_category,
         adminMode: true,
-        modalTitle: str_assoc_album_ab,
+        modalTitle: pageData.str_assoc_album_ab,
     });
 
     document.querySelector('.linked-albums.add-item')?.addEventListener('click', () => ab.open());

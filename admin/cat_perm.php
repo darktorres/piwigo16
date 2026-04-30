@@ -26,6 +26,13 @@ check_status(ACCESS_ADMINISTRATOR);
 // |                       variable initialization                         |
 // +-----------------------------------------------------------------------+
 
+check_input_parameter('cat_id', $_GET, false, PATTERN_ID);
+$cat_id = is_scalar($_GET['cat_id'] ?? null) ? (string)$_GET['cat_id'] : '';
+if (empty($cat_id)) {
+    die('No category selected');
+}
+
+$category = get_cat_info((int)$cat_id);
 $page['cat'] = $category['id'];
 
 // +-----------------------------------------------------------------------+

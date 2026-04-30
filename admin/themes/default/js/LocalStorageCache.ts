@@ -76,7 +76,8 @@ export class LocalStorageCache<T = CacheItem[]> {
 }
 
 export abstract class AbstractSelectizer extends LocalStorageCache<CacheItem[]> {
-    protected _selectize(target: HTMLSelectElement, globalOptions: SelectizerOptions): void {
+    protected _selectize(target: HTMLSelectElement | null, globalOptions: SelectizerOptions): void {
+        if (!target) return;
         (target as any)['_cache'] = this;
         this.get((data) => {
             const options = { ...globalOptions };
@@ -135,7 +136,8 @@ export abstract class AbstractSelectizer extends LocalStorageCache<CacheItem[]> 
     }
 }
 
-function makeTomSelect(target: HTMLSelectElement, options: Record<string, any>): TomSelect {
+function makeTomSelect(target: HTMLSelectElement | null, options: Record<string, any>): TomSelect | null {
+    if (!target) return null;
     const ts = new TomSelect(target, options);
     (target as any)['_tomSelect'] = ts;
     return ts;
@@ -162,7 +164,8 @@ export class CategoriesCache extends AbstractSelectizer {
         });
     }
 
-    selectize(target: HTMLSelectElement, options: SelectizerOptions = {}): void {
+    selectize(target: HTMLSelectElement | null, options: SelectizerOptions = {}): void {
+        if (!target) return;
         makeTomSelect(target, {
             valueField: 'id', labelField: 'fullname', sortField: 'pos', searchField: ['fullname'],
             plugins: { remove_button: {} },
@@ -193,7 +196,8 @@ export class TagsCache extends AbstractSelectizer {
         });
     }
 
-    selectize(target: HTMLSelectElement, options: SelectizerOptions = {}): void {
+    selectize(target: HTMLSelectElement | null, options: SelectizerOptions = {}): void {
+        if (!target) return;
         makeTomSelect(target, {
             valueField: 'id', labelField: 'name', sortField: 'name', searchField: ['name'],
             plugins: { remove_button: {} },
@@ -222,7 +226,8 @@ export class GroupsCache extends AbstractSelectizer {
         });
     }
 
-    selectize(target: HTMLSelectElement, options: SelectizerOptions = {}): void {
+    selectize(target: HTMLSelectElement | null, options: SelectizerOptions = {}): void {
+        if (!target) return;
         makeTomSelect(target, {
             valueField: 'id', labelField: 'name', sortField: 'name', searchField: ['name'],
             plugins: { remove_button: {} },
@@ -253,7 +258,8 @@ export class UsersCache extends AbstractSelectizer {
         });
     }
 
-    selectize(target: HTMLSelectElement, options: SelectizerOptions = {}): void {
+    selectize(target: HTMLSelectElement | null, options: SelectizerOptions = {}): void {
+        if (!target) return;
         makeTomSelect(target, {
             valueField: 'id', labelField: 'username', sortField: 'username', searchField: ['username'],
             plugins: { remove_button: {} },

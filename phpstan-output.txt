@@ -1,8 +1,0 @@
-Note: Using configuration file C:\Apache24\htdocs\piwigo16\phpstan.neon.
-   0/252 [>---------------------------]   0%[1G[2K 252/252 [============================] 100%
-
-
-[30;42m                                                                                                                       [39;49m
-[30;42m [OK] No errors                                                                                                        [39;49m
-[30;42m                                                                                                                       [39;49m
-

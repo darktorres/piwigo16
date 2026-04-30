@@ -368,6 +368,23 @@ $template->assign(
 // | Include specific page                                                 |
 // +-----------------------------------------------------------------------+
 
+$template->assign('album_selector_page_data_json', json_encode([
+    'str_album_modal_title'      => l10n('Select an album'),
+    'str_album_modal_placeholder' => l10n('Search'),
+    'str_no_search_in_progress'  => l10n('No search in progress'),
+    'str_root'                   => l10n('Root'),
+    'str_root_album_select'      => l10n('Root'),
+    'str_album_selected'         => l10n('Album already selected'),
+    'str_result_limit'           => l10n('<b>%d+</b> albums found, try to refine the search'),
+    'str_album_found'            => l10n('<b>1</b> album found'),
+    'str_albums_found'           => l10n('<b>%d</b> albums found'),
+    'str_plus_albums_found'      => l10n('Only the first %d albums are displayed, out of %d.'),
+    'str_create_and_select'      => l10n('Create and select'),
+    'str_add_subcat_of'          => l10n('Add a sub-album to "%s"'),
+    'str_complete_name_field'    => l10n('Name field must not be empty'),
+    'str_an_error_has_occured'   => l10n('An error has occured'),
+], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
+
 trigger_notify('loc_begin_admin_page');
 include(PHPWG_ROOT_PATH.'admin/'.$page['page'].'.php');
 

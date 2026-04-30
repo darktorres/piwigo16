@@ -1,188 +1,294 @@
+import { Chart, registerables } from 'chart.js';
+import type { ChartConfiguration, ChartDataset } from 'chart.js';
+import 'chartjs-adapter-dayjs-4';
+import dayjs from 'dayjs';
+import LocalizedFormat from 'dayjs/plugin/localizedFormat';
 import { getPageData } from './page-data';
 
-declare var Chart: any;
+Chart.register(...registerables);
+dayjs.extend(LocalizedFormat);
 
 interface StatsPageData {
     str_avg: string;
     str_number_page_visited: string;
     str_months: string[];
+    lang_code: string;
 }
 
-const { str_avg, str_number_page_visited, str_months } = getPageData<StatsPageData>();
+interface MonthStats {
+    month: Array<Record<string, number>>;
+    avg: number;
+}
 
-const str_tooltip_format: Record<string, string> = { years: 'YYYY', months: 'MMMM YYYY', days: 'DD MMM', hours: 'LT' };
+interface PageDataset {
+    hours: Record<string, number>;
+    days: Record<string, number>;
+    months: Record<string, number>;
+    years: Record<string, number>;
+    'compare-years': Record<string, number>;
+    'month-stats': MonthStats;
+}
+
+type DataType = 'hours' | 'days' | 'months' | 'years';
+
+const { str_avg, str_number_page_visited, str_months, lang_code } = getPageData<StatsPageData>();
+
+const str_tooltip_format: Record<DataType, string> = {
+    years: 'YYYY',
+    months: 'MMMM YYYY',
+    days: 'DD MMM',
+    hours: 'LT',
+};
 const str_unit_format: Record<string, string> = { day: 'dddd', month: 'MMM YYYY' };
 
-let averageTab: any;
-let colorIndice: any;
-let colors: any;
-let compareMode: any;
-let dataType: any;
-let data_unit: any;
-let dataset: any;
-let date: any;
-let days: any;
-let values: any;
+// Each entry must be a literal import() so Vite can code-split per locale.
+// Add a row when Piwigo gains a translation.
+const dayjsLocaleLoaders: Record<string, () => Promise<unknown>> = {
+    'cs': () => import('dayjs/locale/cs.js'),
+    'da': () => import('dayjs/locale/da.js'),
+    'de': () => import('dayjs/locale/de.js'),
+    'el': () => import('dayjs/locale/el.js'),
+    'en-gb': () => import('dayjs/locale/en-gb.js'),
+    'es': () => import('dayjs/locale/es.js'),
+    'fi': () => import('dayjs/locale/fi.js'),
+    'fr': () => import('dayjs/locale/fr.js'),
+    'hu': () => import('dayjs/locale/hu.js'),
+    'it': () => import('dayjs/locale/it.js'),
+    'ja': () => import('dayjs/locale/ja.js'),
+    'ko': () => import('dayjs/locale/ko.js'),
+    'nb': () => import('dayjs/locale/nb.js'),
+    'nl': () => import('dayjs/locale/nl.js'),
+    'pl': () => import('dayjs/locale/pl.js'),
+    'pt': () => import('dayjs/locale/pt.js'),
+    'pt-br': () => import('dayjs/locale/pt-br.js'),
+    'ro': () => import('dayjs/locale/ro.js'),
+    'ru': () => import('dayjs/locale/ru.js'),
+    'sk': () => import('dayjs/locale/sk.js'),
+    'sl': () => import('dayjs/locale/sl.js'),
+    'sv': () => import('dayjs/locale/sv.js'),
+    'tr': () => import('dayjs/locale/tr.js'),
+    'uk': () => import('dayjs/locale/uk.js'),
+    'vi': () => import('dayjs/locale/vi.js'),
+    'zh-cn': () => import('dayjs/locale/zh-cn.js'),
+    'zh-tw': () => import('dayjs/locale/zh-tw.js'),
+};
 
-/*-------
-Data Get
--------*/
+// Piwigo locale (e.g. "en_UK", "fr_FR", "pt_BR") → dayjs locale identifier.
+function piwigoToDayjsLocale(code: string): string {
+    const special: Record<string, string> = {
+        en_UK: 'en-gb',
+        en_GB: 'en-gb',
+        pt_BR: 'pt-br',
+        zh_CN: 'zh-cn',
+        zh_TW: 'zh-tw',
+    };
+    if (code in special) return special[code]!;
+    const lang = code.split('_')[0];
+    return (lang ?? 'en').toLowerCase();
+}
+
+async function loadDayjsLocale(code: string): Promise<void> {
+    if (code === 'en') return;
+    const loader = dayjsLocaleLoaders[code];
+    if (!loader) return;
+    await loader();
+    dayjs.locale(code);
+}
+
 const dataEl = document.getElementById('data')!;
-let data: any = {};
-data["hours"] = JSON.parse(dataEl.dataset['hours'] ?? '{}');
-data["days"] = JSON.parse(dataEl.dataset['days'] ?? '{}');
-data["months"] = JSON.parse(dataEl.dataset['months'] ?? '{}');
-data["years"] = JSON.parse(dataEl.dataset['years'] ?? '{}');
-data["compare-years"] = JSON.parse(dataEl.dataset['compareYears'] ?? '{}');
-data["month-stats"] = JSON.parse(dataEl.dataset['monthStats'] ?? '{}');
+const data: PageDataset = {
+    hours: JSON.parse(dataEl.dataset['hours'] ?? '{}'),
+    days: JSON.parse(dataEl.dataset['days'] ?? '{}'),
+    months: JSON.parse(dataEl.dataset['months'] ?? '{}'),
+    years: JSON.parse(dataEl.dataset['years'] ?? '{}'),
+    'compare-years': JSON.parse(dataEl.dataset['compareYears'] ?? '{}'),
+    'month-stats': JSON.parse(dataEl.dataset['monthStats'] ?? '{}'),
+};
 
-data_unit = { "hours": "day", "days": "month", "months": "year", "years": "year" };
-compareMode = false;
+const data_unit: Record<DataType, 'day' | 'month' | 'year'> = {
+    hours: 'day', days: 'month', months: 'year', years: 'year',
+};
+let compareMode = false;
 
-/*-------
-Creating graph
--------*/
-var ctx = (document.getElementById('stat-graph') as HTMLCanvasElement).getContext('2d')!;
+const ctx = (document.getElementById('stat-graph') as HTMLCanvasElement).getContext('2d')!;
 
-function gradient(r: any, g: any, b: any) {
-    let grad = ctx.createLinearGradient(0, 400, 0, 0);
-    grad.addColorStop(0, 'rgba(' + r + ',' + g + ',' + b + ',0)');
-    grad.addColorStop(1, 'rgba(' + r + ',' + g + ',' + b + ',1)');
+function gradient(r: number, g: number, b: number): CanvasGradient {
+    const grad = ctx.createLinearGradient(0, 400, 0, 0);
+    grad.addColorStop(0, `rgba(${r},${g},${b},0)`);
+    grad.addColorStop(1, `rgba(${r},${g},${b},1)`);
     return grad;
 }
 
-Chart.defaults.global.elements.point.radius = 0.1;
-Chart.defaults.global.elements.point.hitRadius = 10;
-Chart.defaults.global.defaultFontSize = 14;
-Chart.defaults.global.defaultFontColor = '#888';
-Chart.defaults.global.tooltips.intersect = false;
-Chart.defaults.global.legend.onClick = null;
+Chart.defaults.elements.point.radius = 0.1;
+Chart.defaults.elements.point.hitRadius = 10;
+Chart.defaults.font.size = 14;
+Chart.defaults.color = '#888';
+Chart.defaults.plugins.tooltip.intersect = false;
+Chart.defaults.plugins.legend.onClick = () => {};
 
-var statGraph = new Chart(ctx, { type: 'line', maintainAspectRatio: false });
+const baseConfig: ChartConfiguration<'line'> = {
+    type: 'line',
+    data: { datasets: [] },
+    options: { maintainAspectRatio: false },
+};
+const statGraph = new Chart(ctx, baseConfig);
 
-var displayOptions = { backgroundColor: gradient(255, 119, 0), borderColor: '#FFA646 ', lineTension: 0.2 };
+const displayOptions = {
+    backgroundColor: gradient(255, 119, 0),
+    borderColor: '#FFA646',
+    tension: 0.2,
+};
 
-function changeData(dataType: any, options = displayOptions) {
+function getValues(d: Record<string, number>): Array<{ x: Date; y: number }> {
+    return Object.keys(d).map(key => ({ x: new Date(key), y: d[key]! }));
+}
+
+function getComparedYearDataset(): ChartDataset<'line'>[] {
+    const colors = ['#ffa744', '#ff5252', '#896af3', '#2883c3', '#6ece5e'];
+    const valuesByYear: Record<number, number[]> = {};
+    Object.keys(data['compare-years']).forEach(key => {
+        const d = new Date(key);
+        const year = d.getFullYear();
+        valuesByYear[year] ??= [];
+        valuesByYear[year]![d.getMonth()] = data['compare-years'][key]!;
+    });
+    return Object.keys(valuesByYear).map((key, i) => ({
+        label: key,
+        data: valuesByYear[Number(key)]!,
+        tension: 0.2,
+        borderColor: colors[i % colors.length],
+        backgroundColor: 'rgba(0,0,0,0)',
+    }));
+}
+
+function getMonthStatsDataset(): ChartDataset<'line'>[] {
+    const colors = ['#ffa744', '#ff5252', '#896af3', '#2883c3', '#6ece5e'];
+    const datasets: ChartDataset<'line'>[] = [];
+    data['month-stats'].month.forEach((vals, i) => {
+        const days_data: number[] = [];
+        let lastDate = new Date();
+        Object.keys(vals).forEach(key => {
+            lastDate = new Date(key);
+            days_data[lastDate.getUTCDate() - 1] = vals[key]!;
+        });
+        datasets.push({
+            label: `${str_months[lastDate.getMonth()]!} ${lastDate.getFullYear()}`,
+            data: days_data,
+            tension: 0.2,
+            borderColor: colors[i % colors.length],
+            backgroundColor: 'rgba(0,0,0,0)',
+        });
+    });
+    const averageTab = new Array<number>(31).fill(data['month-stats'].avg);
+    datasets.push({
+        label: str_avg,
+        data: averageTab,
+        tension: 0.2,
+        borderColor: colors[4],
+        backgroundColor: 'rgba(0,0,0,0)',
+    });
+    return datasets;
+}
+
+function changeData(dataType: DataType, options = displayOptions): void {
     if (!compareMode) {
         statGraph.data = {
-            datasets: [{ label: str_number_page_visited, data: getValues(data[dataType]), ...options }]
+            datasets: [{
+                label: str_number_page_visited,
+                data: getValues(data[dataType]) as unknown as number[],
+                ...options,
+            }],
         };
         statGraph.options = {
+            maintainAspectRatio: false,
             scales: {
-                xAxes: [{ type: 'time', time: { tooltipFormat: 'll' }, gridLines: { display: false } }],
-                yAxes: [{ ticks: { min: 0 } }]
+                x: {
+                    type: 'time',
+                    time: {
+                        tooltipFormat: str_tooltip_format[dataType],
+                        unit: data_unit[dataType],
+                        displayFormats: str_unit_format,
+                    },
+                    grid: { display: false },
+                },
+                y: { min: 0 },
             },
-            legend: { display: false },
-            tooltips: { mode: 'index' },
-            hover: { intersect: false }
+            plugins: {
+                legend: { display: false },
+                tooltip: { mode: 'index' },
+            },
+            interaction: { intersect: false },
         };
-        statGraph.options.scales.xAxes.forEach((axe: any) => {
-            axe.time.tooltipFormat = str_tooltip_format[dataType];
-            axe.time.unit = data_unit[dataType];
-            axe.time.displayFormats = str_unit_format;
-        });
-        statGraph.update();
-    } else {
-        statGraph.options.legend.display = true;
-        statGraph.options.hover = { intersect: true };
-        statGraph.options.tooltips = { mode: 'nearest' };
-        if (dataType == "years") {
-            statGraph.data = { datasets: getComparedYearDataset() };
-            statGraph.options.scales = {
-                xAxes: [{ type: 'category', labels: str_months, gridLines: { display: false } }],
-                yAxes: [{ scaleLabel: { display: true, labelString: str_number_page_visited }, tick: { min: 0 } }]
-            };
-        } else if (dataType == "months") {
-            days = [];
-            for (let i = 1; i <= 31; i++) days.push(i);
-            statGraph.data = { datasets: getMonthStatsDataset() };
-            statGraph.options.scales = {
-                xAxes: [{ type: 'category', labels: days, gridLines: { display: false } }],
-                yAxes: [{ scaleLabel: { display: true, labelString: str_number_page_visited } }]
-            };
-        }
-        statGraph.update();
+    } else if (dataType === 'years') {
+        statGraph.data = { datasets: getComparedYearDataset() };
+        statGraph.options = {
+            maintainAspectRatio: false,
+            scales: {
+                x: { type: 'category', labels: str_months, grid: { display: false } },
+                y: { min: 0, title: { display: true, text: str_number_page_visited } },
+            },
+            plugins: {
+                legend: { display: true },
+                tooltip: { mode: 'nearest' },
+            },
+            interaction: { intersect: true },
+        };
+    } else if (dataType === 'months') {
+        const days = Array.from({ length: 31 }, (_, i) => String(i + 1));
+        statGraph.data = { datasets: getMonthStatsDataset() };
+        statGraph.options = {
+            maintainAspectRatio: false,
+            scales: {
+                x: { type: 'category', labels: days, grid: { display: false } },
+                y: { title: { display: true, text: str_number_page_visited } },
+            },
+            plugins: {
+                legend: { display: true },
+                tooltip: { mode: 'nearest' },
+            },
+            interaction: { intersect: true },
+        };
     }
+    statGraph.update();
 }
 
-function getValues(data: any) {
-    values = [];
-    Object.keys(data).forEach(key => values.push({ x: new Date(key), y: data[key] }));
-    return values;
-}
-
-function getComparedYearDataset() {
-    colors = ["#ffa744", "#ff5252", "#896af3", "#2883c3", "#6ece5e"];
-    values = {};
-    dataset = [];
-    Object.keys(data["compare-years"]).forEach(key => {
-        date = new Date(key);
-        if (values[date.getFullYear()] == undefined) values[date.getFullYear()] = [];
-        values[date.getFullYear()][parseInt(date.getMonth())] = data["compare-years"][key];
-    });
-    Object.keys(values).forEach(key => {
-        dataset.push({ label: key, data: values[key], lineTension: 0.2, borderColor: colors[parseInt(key) % colors.length], backgroundColor: "rgba(0,0,0,0)" });
-    });
-    return dataset;
-}
-
-function getMonthStatsDataset() {
-    colors = ["#ffa744", "#ff5252", "#896af3", "#2883c3", "#6ece5e"];
-    dataset = [];
-    colorIndice = 0;
-    let date: any;
-    data["month-stats"]["month"].forEach((vals: any) => {
-        let days_data: any[] = [];
-        Object.keys(vals).forEach(key => {
-            date = new Date(key);
-            days_data[parseInt(date.getUTCDate()) - 1] = vals[key];
+// Locale loads async; once ready, attach listeners and render the initial chart.
+// The data-type labels begin disabled-ish (no chart yet) but typical render is sub-100ms.
+loadDayjsLocale(piwigoToDayjsLocale(lang_code)).then(() => {
+    document.querySelectorAll<HTMLElement>('.stat-data-selector label').forEach(el => {
+        el.addEventListener('click', function (this: HTMLElement) {
+            const value = this.dataset['value'] as DataType | undefined;
+            if (value) changeData(value);
         });
-        dataset.push({ label: str_months[date.getMonth()] + " " + date.getFullYear(), data: days_data, lineTension: 0.2, borderColor: colors[colorIndice % colors.length], backgroundColor: "rgba(0,0,0,0)" });
-        colorIndice++;
     });
-    averageTab = [];
-    for (let i = 0; i < 31; i++) averageTab[i] = data["month-stats"]["avg"];
-    dataset.push({ label: str_avg, data: averageTab, lineTension: 0.2, borderColor: colors[4], backgroundColor: "rgba(0,0,0,0)" });
-    return dataset;
-}
 
-/*-------
-Event listeners
--------*/
-document.querySelectorAll<HTMLElement>(".stat-data-selector label").forEach(el => {
-    el.addEventListener("click", function(this: HTMLElement) {
-        dataType = this.dataset['value'];
-        changeData(dataType);
-    });
-});
+    document.querySelectorAll<HTMLInputElement>('.stat-compare-mode input').forEach(el => {
+        el.addEventListener('change', function (this: HTMLInputElement) {
+            compareMode = this.checked;
+            const hoursSel = document.getElementById('hours-selector') as HTMLInputElement;
+            const daysSel = document.getElementById('days-selector') as HTMLInputElement;
+            const yearsSel = document.getElementById('years-selector') as HTMLInputElement;
+            const labels = document.querySelectorAll<HTMLElement>('#hours-selector + label, #days-selector + label');
 
-document.querySelectorAll<HTMLInputElement>(".stat-compare-mode input").forEach(el => {
-    el.addEventListener("change", function(this: HTMLInputElement) {
-        compareMode = this.checked;
-        if (compareMode) {
-            document.querySelectorAll<HTMLElement>('#hours-selector + label, #days-selector + label')
-                .forEach(l => l.classList.add('unavailable'));
-            const hoursChecked = (document.getElementById('hours-selector') as HTMLInputElement).checked;
-            const daysChecked = (document.getElementById('days-selector') as HTMLInputElement).checked;
-            if (hoursChecked || daysChecked) {
-                (document.getElementById('years-selector') as HTMLInputElement).checked = true;
-                (document.getElementById('hours-selector') as HTMLInputElement).checked = false;
-                (document.getElementById('days-selector') as HTMLInputElement).checked = false;
-                changeData("years");
+            if (compareMode) {
+                labels.forEach(l => l.classList.add('unavailable'));
+                if (hoursSel.checked || daysSel.checked) {
+                    yearsSel.checked = true;
+                    hoursSel.checked = false;
+                    daysSel.checked = false;
+                    changeData('years');
+                    return;
+                }
             } else {
-                changeData(document.querySelector<HTMLElement>('.stat-data-selector input:checked + label')?.dataset['value']);
+                labels.forEach(l => l.classList.remove('unavailable'));
             }
-        } else {
-            document.querySelectorAll<HTMLElement>('#hours-selector + label, #days-selector + label')
-                .forEach(l => l.classList.remove('unavailable'));
-            changeData(document.querySelector<HTMLElement>('.stat-data-selector input:checked + label')?.dataset['value']);
-        }
+            const current = document.querySelector<HTMLElement>('.stat-data-selector input:checked + label')?.dataset['value'] as DataType | undefined;
+            if (current) changeData(current);
+        });
     });
-});
 
-/*-------
-Initialize
--------*/
-changeData(document.querySelector<HTMLElement>('.stat-data-selector input:checked + label')?.dataset['value']);
+    const initial = document.querySelector<HTMLElement>('.stat-data-selector input:checked + label')?.dataset['value'] as DataType | undefined;
+    if (initial) changeData(initial);
+});
 
 export {};

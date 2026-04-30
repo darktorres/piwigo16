@@ -8,6 +8,9 @@ const r = (p: string) => resolve(__dirname, p);
 
 export default defineConfig({
     root: '.',
+    // Resolve dynamic chunk URLs via import.meta.url so they work under any
+    // Apache document root prefix (Piwigo can be served at /, /piwigo16/, etc.).
+    base: './',
     build: {
         outDir: 'dist',
         emptyOutDir: true,

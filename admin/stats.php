@@ -377,12 +377,12 @@ $template->assign([
   'lastDays' => $last_days,
   'lastMonths' => $last_months,
   'lastYears' => $last_years,
-  'langCode' => strval($user['language']),
   'ADMIN_PAGE_TITLE' => l10n('History'),
   'page_data_json' => json_encode([
     'str_avg' => l10n('Average last 12 months'),
     'str_number_page_visited' => l10n('Page Visited'),
     'str_months' => array_values($lang['month']),
+    'lang_code' => strval($user['language']),
   ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE),
 ]);
 

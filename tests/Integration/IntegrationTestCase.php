@@ -33,25 +33,12 @@ abstract class IntegrationTestCase extends TestCase
 
     protected function setUpConnectionFromEnv(): void
     {
-        $missing = [];
-        foreach (['PIWIGO_DB_USER', 'PIWIGO_DB_PASSWORD'] as $var) {
-            if (getenv($var) === false) {
-                $missing[] = $var;
-            }
-        }
-        if ($missing !== []) {
-            self::markTestSkipped(
-                'Integration tests require env vars: ' . implode(', ', $missing) . '. ' .
-                'Set them in your shell or a .env.local file before running PHPUnit.'
-            );
-        }
-
-        $this->dbHost  = (string) (getenv('PIWIGO_DB_HOST') ?: '127.0.0.1');
-        $this->dbPort  = (int)    (getenv('PIWIGO_DB_PORT') ?: 3306);
-        $this->dbUser  = (string)  getenv('PIWIGO_DB_USER');
-        $this->dbPass  = (string)  getenv('PIWIGO_DB_PASSWORD');
-        $this->dbName  = (string) (getenv('PIWIGO_DB_BASE') ?: 'piwigo_test');
-        $this->baseUrl = rtrim((string) (getenv('PIWIGO_BASE_URL') ?: 'http://localhost/piwigo16'), '/');
+        $this->dbHost  = (string) getenv('PIWIGO_DB_HOST');
+        $this->dbPort  = (int)    getenv('PIWIGO_DB_PORT');
+        $this->dbUser  = (string) getenv('PIWIGO_DB_USER');
+        $this->dbPass  = (string) getenv('PIWIGO_DB_PASSWORD');
+        $this->dbName  = (string) getenv('PIWIGO_DB_BASE');
+        $this->baseUrl = rtrim((string) getenv('PIWIGO_BASE_URL'), '/');
     }
 
     protected function resetDatabase(): void
@@ -84,7 +71,7 @@ abstract class IntegrationTestCase extends TestCase
         if (!is_dir($dir)) {
             mkdir($dir, 0755, true);
         }
-        $host = $this->dbPort !== 3306 ? "{$this->dbHost}:{$this->dbPort}" : $this->dbHost;
+        $host = $this->dbPort ? "{$this->dbHost}:{$this->dbPort}" : $this->dbHost;
         $d = '$';
         file_put_contents($dir . '/database.inc.php', sprintf(
             "<?php\n{$d}conf['dblayer'] = 'mysqli';\n{$d}conf['db_host'] = '%s';\n{$d}conf['db_user'] = '%s';\n{$d}conf['db_password'] = '%s';\n{$d}conf['db_base'] = '%s';\n{$d}prefixeTable = 'piwigo_';\ndefine('PHPWG_INSTALLED', true);\ndefine('PWG_CHARSET', 'utf-8');\ndefine('DB_CHARSET', 'utf8');\ndefine('DB_COLLATE', '');\n?>",

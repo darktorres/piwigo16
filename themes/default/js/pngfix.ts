@@ -26,3 +26,5 @@ function correctPNG(): void {
 }
 
 window.addEventListener('load', correctPNG);
+
+export {};

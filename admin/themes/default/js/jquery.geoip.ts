@@ -66,3 +66,5 @@ const GeoIp = {
 };
 
 (window as any).GeoIp = GeoIp;
+
+export {};

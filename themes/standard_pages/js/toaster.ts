@@ -25,3 +25,5 @@ function pwgToaster(info: ToasterInfo): void {
 }
 
 (window as any).pwgToaster = pwgToaster;
+
+export {};

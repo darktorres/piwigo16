@@ -32,3 +32,5 @@
 
     (window as any).SwitchBox = { push: sbFunc };
 })();
+
+export {};

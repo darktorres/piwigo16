@@ -50,3 +50,5 @@ function pwg_ajax_thumbnails_loader(): void {
 }
 
 document.addEventListener('DOMContentLoaded', pwg_ajax_thumbnails_loader);
+
+export {};

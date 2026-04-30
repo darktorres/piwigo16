@@ -144,3 +144,5 @@ function pwgAddEventListener(elem: Element | Window, evt: string, fn: EventListe
 (window as any).pwgBind = pwgBind;
 (window as any).PwgWS = PwgWS;
 (window as any).pwgAddEventListener = pwgAddEventListener;
+
+export {};

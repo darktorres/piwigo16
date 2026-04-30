@@ -94,3 +94,5 @@ function updateRating(e: Event): void {
         push: (opts: Record<string, unknown>) => { makeNiceRatingForm(opts); },
     };
 })();
+
+export {};

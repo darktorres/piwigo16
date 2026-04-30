@@ -111,3 +111,5 @@ function getCookie(cname: string): string {
     }
     return '';
 }
+
+export {};

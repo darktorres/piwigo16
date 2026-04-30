@@ -117,6 +117,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.querySelectorAll<HTMLSelectElement>('.filterBlock select[data-selectize="tags"]').forEach(sel => {
+        // Hide the original select element - Tom Select creates a styled replacement
+        sel.style.display = 'none';
         sel.addEventListener('change', () => { if (sel.value) hide_filters_error(str_select_tag); });
     });
 

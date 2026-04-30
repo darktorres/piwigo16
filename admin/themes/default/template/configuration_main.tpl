@@ -90,7 +90,9 @@
 }());
 {/if}
 
+{literal}
 GLightbox({selector: '.themeBoxes a'});
+{/literal}
 
 (function() {
   document.querySelectorAll("input[name='mail_theme']").forEach(function(radio) {

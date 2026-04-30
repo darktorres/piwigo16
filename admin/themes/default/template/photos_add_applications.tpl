@@ -1,7 +1,9 @@
 {include file='include/colorbox.inc.tpl'}
 
 {footer_script}
+{literal}
 GLightbox({selector: '.illustration a'});
+{/literal}
 {/footer_script}
 
 {html_head}{literal}

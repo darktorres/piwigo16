@@ -57,7 +57,9 @@ document.querySelectorAll('[data-datepicker]').forEach(function(el) {
 });
 
 {* <!-- THUMBNAILS --> *}
+{literal}
 GLightbox({selector: 'a.preview-box'});
+{/literal}
 
 str_are_you_sure = "{'Are you sure?'|translate|escape:javascript}";
 str_yes = "{'Yes, delete'|translate|escape:javascript}";

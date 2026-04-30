@@ -147,9 +147,9 @@ lightAccordion(document.getElementById('menubar'), {
   {/if}
   {if isset($U_HELP)}
   {include file='include/colorbox.inc.tpl'}
-{footer_script}
+{footer_script}{literal}
   GLightbox({selector: '.help-popin', type: 'inline', width: '500px'});
-{/footer_script}
+{/literal}{/footer_script}
   <ul class="HelpActions">
     <li><a href="{$U_HELP}&amp;output=content_only" title="{'Help'|@translate}" class="help-popin"><span class="icon-help-circled"></span></a></li>
   </ul>

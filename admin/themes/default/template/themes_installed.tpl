@@ -18,7 +18,9 @@ Array.from(document.querySelectorAll(".delete-theme-button")).forEach(function(b
 {/footer_script}
 
 {footer_script}
+{literal}
 GLightbox({selector: 'a.preview-box'});
+{/literal}
 
 document.addEventListener('mouseup', function(e) {
   e.stopPropagation();

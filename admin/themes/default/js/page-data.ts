@@ -5,9 +5,10 @@
  * Usage:
  *   interface MyPageData { pwg_token: string; nb_items: number; }
  *   const d = getPageData<MyPageData>();
+ *   const d = getPageData<MyPageData>('pwg-filter-page-data');
  */
-export function getPageData<T>(): T {
-    const el = document.getElementById('pwg-page-data');
-    if (!el?.textContent) throw new Error('pwg-page-data script element not found');
+export function getPageData<T>(id = 'pwg-page-data'): T {
+    const el = document.getElementById(id);
+    if (!el?.textContent) throw new Error(`${id} script element not found`);
     return JSON.parse(el.textContent) as T;
 }

@@ -3,15 +3,17 @@ import tippy from 'tippy.js';
 import 'tippy.js/dist/tippy.css';
 
 declare var all_elements: any;
-declare var elements: any;
-declare var i: any;
-declare var input: any;
 declare var lang: any;
-declare var percent: any;
-declare var progressBar_max: any;
 declare var str_add_alb_associate: any;
 declare var str_select_alb_associate: any;
-declare var pwg_token: string;
+
+let elements: string[] = [];
+let i = 0;
+let input: HTMLInputElement | null = null;
+let percent = 0;
+let progressBar_max = 0;
+
+const pwg_token = (document.querySelector<HTMLInputElement>('input[name=pwg_token]')?.value) ?? '';
 
 const qs = <T extends HTMLElement = HTMLElement>(sel: string) => document.querySelector<T>(sel);
 const qsa = <T extends HTMLElement = HTMLElement>(sel: string) => Array.from(document.querySelectorAll<T>(sel));

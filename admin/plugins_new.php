@@ -189,4 +189,21 @@ if (!$beta_test and preg_match('/(beta|RC)/', PHPWG_VERSION)) {
 }
 $template->assign('ADMIN_PAGE_TITLE', l10n('Plugins'));
 $template->assign('BETA_TEST', $beta_test);
+$template->assign('page_data_json', json_encode([
+    'str_confirm_msg'    => l10n('Yes, I am sure'),
+    'str_cancel_msg'     => l10n('No, I have changed my mind'),
+    'str_install_title'  => l10n('Are you sure you want to install the plugin "%s"?'),
+    'str_x_month'        => l10n('%d month'),
+    'str_x_months'       => l10n('%d months'),
+    'str_x_year'         => l10n('%d year'),
+    'str_x_years'        => l10n('%d years'),
+    'str_from_begining'  => l10n('since the beginning'),
+    'strs_certification' => [
+        '-1' => l10n('This plugin is incompatible with your version'),
+        '0'  => l10n('This plugin have no update since 3 years ! It may be outdated'),
+        '1'  => l10n('This plugin has no recent update'),
+        '2'  => l10n('This plugin was updated less than 6 months ago'),
+        '3'  => l10n('This plugin have been updated recently'),
+    ],
+], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
 $template->assign_var_from_handle('ADMIN_CONTENT', 'plugins');

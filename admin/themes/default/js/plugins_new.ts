@@ -4,17 +4,25 @@ import 'nouislider/dist/nouislider.css';
 import tippy from 'tippy.js';
 import 'tippy.js/dist/tippy.css';
 
-declare var $select: any;
-declare var _: any;
-declare var str_cancel_msg: any;
-declare var str_confirm_msg: any;
-declare var str_from_begining: any;
-declare var str_install_title: any;
-declare var str_x_month: any;
-declare var str_x_months: any;
-declare var str_x_year: any;
-declare var str_x_years: any;
-declare var strs_certification: any;
+import { getPageData } from './page-data';
+
+interface PluginsNewPageData {
+    str_confirm_msg: string;
+    str_cancel_msg: string;
+    str_install_title: string;
+    str_x_month: string;
+    str_x_months: string;
+    str_x_year: string;
+    str_x_years: string;
+    str_from_begining: string;
+    strs_certification: Record<string, string>;
+}
+
+const {
+    str_confirm_msg, str_cancel_msg, str_install_title,
+    str_x_month, str_x_months, str_x_year, str_x_years,
+    str_from_begining, strs_certification,
+} = getPageData<PluginsNewPageData>();
 
 const qs = <T extends HTMLElement = HTMLElement>(sel: string, ctx: Element | Document = document) => ctx.querySelector<T>(sel);
 const qsa = <T extends HTMLElement = HTMLElement>(sel: string) => Array.from(document.querySelectorAll<T>(sel));
@@ -32,12 +40,12 @@ function sortPlugins(a: HTMLElement, b: HTMLElement): number {
 
 function value_to_month(val: number): [number, string] {
     switch (val) {
-        case 6: return [1, str_x_month.replace('%d', 1)];
-        case 5: return [3, str_x_months.replace('%d', 3)];
-        case 4: return [6, str_x_months.replace('%d', 6)];
-        case 3: return [12, str_x_year.replace('%d', 1)];
-        case 2: return [24, str_x_years.replace('%d', 2)];
-        case 1: return [60, str_x_years.replace('%d', 5)];
+        case 6: return [1, str_x_month.replace('%d', '1')];
+        case 5: return [3, str_x_months.replace('%d', '3')];
+        case 4: return [6, str_x_months.replace('%d', '6')];
+        case 3: return [12, str_x_year.replace('%d', '1')];
+        case 2: return [24, str_x_years.replace('%d', '2')];
+        case 1: return [60, str_x_years.replace('%d', '5')];
         default: return [Number.MAX_SAFE_INTEGER, str_from_begining];
     }
 }

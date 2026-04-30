@@ -1,14 +1,30 @@
+import { getPageData } from './page-data';
+
 declare var activePlugins: any;
 declare var all_related_categories_ids: any;
-declare var b_current_picture_id: any;
 declare var pluginValues: any;
-declare var str_are_you_sure: any;
-declare var str_meta_warning: any;
-declare var str_meta_yes: any;
-declare var str_no: any;
-declare var str_orphan: any;
-declare var str_title_ab: any;
-declare var str_yes: any;
+
+interface BatchUnitPageData {
+    str_are_you_sure: string;
+    str_yes: string;
+    str_no: string;
+    str_orphan: string;
+    str_meta_warning: string;
+    str_meta_yes: string;
+    str_title_ab: string;
+}
+
+const {
+    str_are_you_sure,
+    str_yes,
+    str_no,
+    str_orphan,
+    str_meta_warning,
+    str_meta_yes,
+    str_title_ab,
+} = getPageData<BatchUnitPageData>();
+
+let b_current_picture_id: string | null = null;
 
 function pid(pictureId: any, sel: string): HTMLElement {
     return document.querySelector<HTMLElement>('#picture-' + pictureId + ' ' + sel)!;

@@ -268,13 +268,49 @@ foreach ($subcats_of as $cat_id => $subcat_ids) {
     $nb_sub_photos[$cat_id] = $nb_photos;
 }
 
+$nb_albums = count($allAlbum);
+$light_album_manager = ($albums_counter > \Piwigo\Core\Config::lightAlbumManagerThreshold()) ? 1 : 0;
+$album_tree = assocToOrderedTree($associatedTree);
+
 $template->assign(
     [
-    'album_data' => assocToOrderedTree($associatedTree),
+    'album_data' => $album_tree,
     'PWG_TOKEN' => get_pwg_token(),
-    'nb_albums' => count($allAlbum),
+    'nb_albums' => $nb_albums,
     'ADMIN_PAGE_TITLE' => l10n('Albums'),
-    'light_album_manager' => ($albums_counter > \Piwigo\Core\Config::lightAlbumManagerThreshold()) ? 1 : 0,
+    'light_album_manager' => $light_album_manager,
+    'page_data_json' => json_encode([
+        'data'                       => $album_tree,
+        'pwg_token'                  => get_pwg_token(),
+        'openCat'                    => (int) $open_cat,
+        'nb_albums'                  => $nb_albums,
+        'light_album_manager'        => (bool) $light_album_manager,
+        'delay_autoOpen'             => \Piwigo\Core\Config::albumMoveDelayBeforeAutoOpening(),
+        'x_nb_subcats'               => l10n('%d sub-albums'),
+        'x_nb_images'                => l10n('%d photos'),
+        'x_nb_sub_photos'            => l10n('%d pictures in sub-albums'),
+        'str_are_you_sure'           => l10n("The status of the album '%s' and its sub-albums will change to private. Are you sure?"),
+        'str_yes_change_parent'      => l10n('Yes change parent anyway'),
+        'str_no_change_parent'       => l10n("No, don't move this album here"),
+        'str_albs_drag_drop'         => l10n('Drag and drop to reorder albums'),
+        'delete_album_with_name'     => l10n('Delete album "%s".'),
+        'delete_album_with_subs'     => l10n('Delete album "%s" and its %d sub-albums.'),
+        'has_images_associated_outside' => l10n('delete album and all %d photos, even the %d associated to other albums'),
+        'has_images_becomming_orphans'  => l10n('delete album and the %d orphan photos'),
+        'rename_item'                => l10n('Rename "%s"'),
+        'str_add_album'              => l10n('Add Album'),
+        'str_edit_album'             => l10n('Edit album'),
+        'str_add_photo'              => l10n('Add Photos'),
+        'str_visit_gallery'          => l10n('Visit Gallery'),
+        'str_sort_order'             => l10n('Automatic sort order'),
+        'str_delete_album'           => l10n('Delete album'),
+        'str_root_order'             => l10n('Apply to root albums'),
+        'str_sub_album_order'        => l10n('Apply to direct sub-albums'),
+        'str_album_name_empty'       => l10n('Album name must not be empty'),
+        'add_album_root_title'       => l10n('Create a new album at root'),
+        'add_sub_album_of'           => l10n('Create a sub-album of "%s"'),
+        'tiptip_locked_album'        => l10n('Locked album'),
+    ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE),
   ]
 );
 

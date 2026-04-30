@@ -1,57 +1,74 @@
 import Cookies from 'js-cookie';
+import { getPageData } from './page-data';
 
-declare var number: any;
-declare var $tagboxid: any;
-declare var boxToRecycle: any;
-declare var copy_name: any;
-declare var data: any;
-declare var dataToDisplay: any;
-declare var dataVisible: any;
-declare var dest_id: any;
-declare var destination_name: any;
-declare var exist: any;
-declare var index: any;
-declare var indexOfTag: any;
-declare var isNotCreate: any;
-declare var loadState: any;
-declare var maxItemDisplayed: any;
-declare var mergeOption: any;
-declare var merge_name: any;
-declare var nbPage: any;
-declare var newPage: any;
-declare var newTag: any;
-declare var orphan_tag_names: any;
-declare var promises: any;
-declare var str_already_exist: any;
-declare var str_and_others_tags: any;
-declare var str_clear_selection: any;
-declare var str_copy: any;
-declare var str_delete: any;
-declare var str_delete_orphan_tags: any;
-declare var str_delete_tags: any;
-declare var str_delete_them: any;
-declare var str_keep_them: any;
-declare var str_merged_into: any;
-declare var str_message: any;
-declare var str_no_delete_confirmation: any;
-declare var str_no_photos: any;
-declare var str_number_photos: any;
-declare var str_orphan_tags: any;
-declare var str_other_copy: any;
-declare var str_select_all_tag: any;
-declare var str_selection_done: any;
-declare var str_tag_created: any;
-declare var str_tag_deleted: any;
-declare var str_tag_found: any;
-declare var str_tag_rename: any;
-declare var str_tag_selected: any;
-declare var str_tags_deleted: any;
-declare var str_tags_found: any;
-declare var str_yes_delete_confirmation: any;
-declare var str_yes_rename_confirmation: any;
-declare var tagBox: any;
-declare var tagBoxes: any;
-declare var pwg_token: string;
+interface TagsPageData {
+    pwg_token: string;
+    total: number;
+    orphan_tag_names: string[];
+    str_already_exist: string;
+    str_and_others_tags: string;
+    str_clear_selection: string;
+    str_copy: string;
+    str_delete: string;
+    str_delete_orphan_tags: string;
+    str_delete_tags: string;
+    str_delete_them: string;
+    str_keep_them: string;
+    str_merged_into: string;
+    str_no_delete_confirmation: string;
+    str_no_photos: string;
+    str_number_photos: string;
+    str_orphan_tags: string;
+    str_other_copy: string;
+    str_select_all_tag: string;
+    str_selection_done: string;
+    str_tag_created: string;
+    str_tag_deleted: string;
+    str_tag_found: string;
+    str_tag_rename: string;
+    str_tag_selected: string;
+    str_tags_deleted: string;
+    str_tags_found: string;
+    str_yes_delete_confirmation: string;
+    str_yes_rename_confirmation: string;
+}
+
+const {
+    pwg_token,
+    total,
+    orphan_tag_names,
+    str_already_exist, str_and_others_tags, str_clear_selection, str_copy,
+    str_delete, str_delete_orphan_tags, str_delete_tags, str_delete_them,
+    str_keep_them, str_merged_into, str_no_delete_confirmation, str_no_photos,
+    str_number_photos, str_orphan_tags, str_other_copy, str_select_all_tag,
+    str_selection_done, str_tag_created, str_tag_deleted, str_tag_found,
+    str_tag_rename, str_tag_selected, str_tags_deleted, str_tags_found,
+    str_yes_delete_confirmation, str_yes_rename_confirmation,
+} = getPageData<TagsPageData>();
+
+// mutable state
+let number: any;
+let $tagboxid: any;
+let boxToRecycle: any;
+let copy_name: any;
+let data: any;
+let dataToDisplay: any;
+let dataVisible: any;
+let dest_id: any;
+let destination_name: any;
+let index: any;
+let indexOfTag: any;
+let isNotCreate: any;
+let loadState: any;
+let maxItemDisplayed = 5;
+let mergeOption: any = false;
+let merge_name: any;
+let nbPage: any;
+let newPage: any;
+let newTag: any;
+let promises: any;
+let str_message: any;
+let tagBox: any;
 
 const qs = <T extends HTMLElement = HTMLElement>(sel: string, ctx: Element | Document = document) => ctx.querySelector<T>(sel);
 const qsa = <T extends HTMLElement = HTMLElement>(sel: string, ctx: Element | Document = document) => Array.from(ctx.querySelectorAll<T>(sel));
@@ -67,7 +84,7 @@ var dataTags: any[] = JSON.parse(qs('.tag-container')?.dataset['tags'] ?? '[]');
 qs('.info-warning p a')?.addEventListener('click', () => {
     const url = qs<HTMLAnchorElement>('.info-warning p a')!.dataset['url'] ?? '';
     const tags = orphan_tag_names;
-    const str_orphans = str_orphan_tags.replace('%s1', tags.length).replace('%s2', tags.join(', '));
+    const str_orphans = str_orphan_tags.replace('%s1', String(tags.length)).replace('%s2', tags.join(', '));
     if (window.confirm(str_delete_orphan_tags + '\n\n' + str_orphans)) {
         window.location.href = url.replace(/amp;/g, '');
     } else {
@@ -328,7 +345,7 @@ function duplicateTag(id: any, name: any): Promise<any> {
     copy_name = name + str_copy;
     const name_exist = (n: string) => qsa('.tag-box .tag-name').some(el => el.innerHTML === n);
     let i = 1;
-    while (name_exist(copy_name)) copy_name = name + str_other_copy.replace('%s', i++);
+    while (name_exist(copy_name)) copy_name = name + str_other_copy.replace('%s', String(i++));
 
     const body = new URLSearchParams({ method: 'pwg.tags.duplicate', tag_id: id, copy_name, pwg_token });
     return fetch('ws.php?format=json', { method: 'POST', body }).then(r => r.json()).then(rawData => {
@@ -349,7 +366,6 @@ function duplicateTag(id: any, name: any): Promise<any> {
 /*------- Selection mode -------*/
 
 var selected: any[] = [];
-maxItemDisplayed = 5;
 
 (document.getElementById('toggleSelectionMode') as HTMLInputElement).checked = false;
 document.getElementById('toggleSelectionMode')?.addEventListener('click', function(this: HTMLInputElement) {
@@ -386,7 +402,7 @@ function addSelectedItem(id: any) {
     if (selected.length > maxItemDisplayed) {
         show(qs('.selection-other-tags'));
         const numDisplayed = qsa('.selection-mode-tag .tag-list div').length;
-        const othersEl = qs('.selection-other-tags'); if (othersEl) othersEl.innerHTML = str_and_others_tags.replace('%s', selected.length - numDisplayed);
+        const othersEl = qs('.selection-other-tags'); if (othersEl) othersEl.innerHTML = str_and_others_tags.replace('%s', String(selected.length - numDisplayed));
     } else {
         hide(qs('.selection-other-tags'));
         const found = dataTags.find((tag: any) => tag.id == id);
@@ -424,7 +440,7 @@ function removeSelectedItem(id: any) {
     }
     const numDisplayed = qsa('.selection-mode-tag .tag-list div').length;
     const othersEl = qs('.selection-other-tags');
-    if (othersEl) othersEl.innerHTML = str_and_others_tags.replace('%s', selected.length - numDisplayed);
+    if (othersEl) othersEl.innerHTML = str_and_others_tags.replace('%s', String(selected.length - numDisplayed));
     if (selected.length - numDisplayed <= 0) hide(othersEl);
     hide(qs<HTMLElement>('.tag-select-message'));
 }
@@ -439,8 +455,6 @@ function updateMergeItems() {
         qs('#MergeOptionsChoices')?.appendChild(opt);
     });
 }
-
-mergeOption = false;
 
 function updateSelectionContent() {
     number = selected.length;
@@ -472,8 +486,8 @@ document.getElementById('selectAll')?.addEventListener('click', () => {
     updateSelectionContent();
     if (selected.length < dataTags.length) {
         showSelectMessage(
-            str_selection_done.replace('%d', qsa('.tag-box').length),
-            str_select_all_tag.replace('%d', dataTags.length),
+            str_selection_done.replace('%d', String(qsa('.tag-box').length)),
+            str_select_all_tag.replace('%d', String(dataTags.length)),
             () => {
                 const msgA = qs('.tag-select-message a'); if (msgA) msgA.innerHTML = '';
                 const msgDiv = qs('.tag-select-message div'); if (msgDiv) msgDiv.innerHTML = "<i class='icon-spin6 animate-spin'> </i>";
@@ -595,7 +609,7 @@ function mergeGroups(destination_id: any, merge_ids: any[]) {
 }
 
 function tagListToString(list: any[]) {
-    if (list.length > 5) return list.slice(0, 5).join(', ') + ' ' + str_and_others_tags.replace('%s', list.length - 5);
+    if (list.length > 5) return list.slice(0, 5).join(', ') + ' ' + str_and_others_tags.replace('%s', String(list.length - 5));
     return list.join(', ');
 }
 
@@ -757,7 +771,7 @@ function updateSearchInfo() {
     if (!infoEl) return;
     if (searchEl?.value) {
         const n = dataTags.filter(isDataSearched).length;
-        infoEl.innerHTML = n > 1 ? str_tags_found.replace('%d', n) : str_tag_found.replace('%d', n);
+        infoEl.innerHTML = n > 1 ? str_tags_found.replace('%d', String(n)) : str_tag_found.replace('%d', String(n));
     } else {
         infoEl.innerHTML = '';
     }

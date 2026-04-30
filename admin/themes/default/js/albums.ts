@@ -2,63 +2,112 @@ import './jquery-shim-jqtree';
 import 'jqtree/tree.jquery.js';
 import tippy from 'tippy.js';
 import 'tippy.js/dist/tippy.css';
+import { getPageData } from './page-data';
 
-declare var actions: any;
-declare var add_album_root_title: any;
-declare var add_sub_album_of: any;
-declare var catToEdit: any;
-declare var cont: any;
-declare var data: any;
-declare var delay_autoOpen: any;
-declare var delete_album_with_name: any;
-declare var delete_album_with_subs: any;
-declare var has_images_associated_outside: any;
-declare var has_images_becomming_orphans: any;
-declare var icon: any;
-declare var id: any;
-declare var light_album_manager: any;
-declare var moveParent: any;
-declare var moveRank: any;
-declare var nb_albums: any;
-declare var nb_sub_cats: any;
-declare var newAlbumName: any;
-declare var newAlbumParent: any;
-declare var newAlbumPosition: any;
-declare var node: any;
-declare var nodeToGo: any;
-declare var oldParent: any;
-declare var openCat: any;
-declare var open_nodes: any;
-declare var parentIsPrivate: any;
-declare var parentOfDeletedNode: any;
-declare var previous_parent: any;
-declare var rename_item: any;
-declare var str_add_album: any;
-declare var str_add_photo: any;
-declare var str_albs_drag_drop: any;
-declare var str_album_name_empty: any;
-declare var str_are_you_sure: any;
-declare var str_delete_album: any;
-declare var str_edit_album: any;
-declare var str_no_change_parent: any;
-declare var str_root_order: any;
-declare var str_sort_order: any;
-declare var str_sub_album_order: any;
-declare var str_visit_gallery: any;
-declare var str_yes_change_parent: any;
-declare var target: any;
-declare var tiptip_locked_album: any;
-declare var title: any;
-declare var tmp: any;
-declare var toggler: any;
-declare var toggler_close: any;
-declare var toggler_cont: any;
-declare var toggler_open: any;
-declare var waitingTimeout: any;
-declare var x_nb_images: any;
-declare var x_nb_sub_photos: any;
-declare var x_nb_subcats: any;
-declare var pwg_token: string;
+// ---------------------------------------------------------------------------
+// Page-data interface — values injected by PHP via #pwg-page-data JSON block
+// ---------------------------------------------------------------------------
+interface AlbumsPageData {
+    data: any[];
+    pwg_token: string;
+    openCat: number;
+    nb_albums: number;
+    light_album_manager: boolean;
+    delay_autoOpen: number;
+    x_nb_subcats: string;
+    x_nb_images: string;
+    x_nb_sub_photos: string;
+    str_are_you_sure: string;
+    str_yes_change_parent: string;
+    str_no_change_parent: string;
+    str_albs_drag_drop: string;
+    delete_album_with_name: string;
+    delete_album_with_subs: string;
+    has_images_associated_outside: string;
+    has_images_becomming_orphans: string;
+    rename_item: string;
+    str_add_album: string;
+    str_edit_album: string;
+    str_add_photo: string;
+    str_visit_gallery: string;
+    str_sort_order: string;
+    str_delete_album: string;
+    str_root_order: string;
+    str_sub_album_order: string;
+    str_album_name_empty: string;
+    add_album_root_title: string;
+    add_sub_album_of: string;
+    tiptip_locked_album: string;
+}
+
+const pageData = getPageData<AlbumsPageData>();
+
+// Template-provided constants
+const {
+    data,
+    pwg_token,
+    openCat,
+    light_album_manager,
+    delay_autoOpen,
+    x_nb_subcats,
+    x_nb_images,
+    x_nb_sub_photos,
+    str_are_you_sure,
+    str_yes_change_parent,
+    str_no_change_parent,
+    str_albs_drag_drop,
+    delete_album_with_name,
+    delete_album_with_subs,
+    has_images_associated_outside,
+    has_images_becomming_orphans,
+    rename_item,
+    str_add_album,
+    str_edit_album,
+    str_add_photo,
+    str_visit_gallery,
+    str_sort_order,
+    str_delete_album,
+    str_root_order,
+    str_sub_album_order,
+    str_album_name_empty,
+    add_album_root_title,
+    add_sub_album_of,
+    tiptip_locked_album,
+} = pageData;
+
+// nb_albums is template-provided but also mutated by updateTitleBadge()
+let nb_albums = pageData.nb_albums;
+
+// ---------------------------------------------------------------------------
+// Module-level mutable state (was global via declare var)
+// ---------------------------------------------------------------------------
+let actions: any;
+let catToEdit: any;
+let cont: any;
+let icon: any;
+let id: any;
+let moveParent: any;
+let moveRank: any;
+let nb_sub_cats: any;
+let newAlbumName: any;
+let newAlbumParent: any;
+let newAlbumPosition: any;
+let node: any;
+let nodeToGo: any;
+let oldParent: any;
+let open_nodes: any;
+let parentIsPrivate: any;
+let parentOfDeletedNode: any;
+let previous_parent: any;
+let target: any;
+let title: any;
+let tmp: any;
+let toggler: any;
+let toggler_close: any;
+let toggler_cont: any;
+let toggler_open: any;
+let waitingTimeout: any;
+
 declare function sprintf(fmt: string, ...args: unknown[]): string;
 
 const qs = <T extends HTMLElement = HTMLElement>(sel: string) => document.querySelector<T>(sel);

@@ -1,50 +1,8 @@
-{footer_script}
-window.pwg_token = "{$PWG_TOKEN}";
-window.orphan_tag_names = {$orphan_tag_names_array};
-window.str_delete = '{'Delete tag "%s"?'|@translate}';
-window.str_delete_tags = '{'Delete tags \{%s\}?'|@translate}';
-window.str_yes_delete_confirmation = "{'Yes, delete'|@translate}";
-window.str_no_delete_confirmation = "{"No, I have changed my mind"|@translate}";
-window.str_yes_rename_confirmation = "{'Yes, rename'|@translate}";
-window.str_tag_deleted = '{'Tag "%s" succesfully deleted'|@translate}';
-window.str_tags_deleted = '{'Tags \{%s\} succesfully deleted'|@translate}';
-window.str_already_exist = '{'Tag "%s" already exists'|@translate}';
-window.str_tag_created = '{'Tag "%s" created'|@translate}';
-window.str_tag_renamed = '{'Tag "%s1" renamed in "%s2"'|@translate}';
-window.str_tag_rename = '{'Rename "%s"'|@translate}';
-window.str_delete_orphan_tags = '{'Delete orphan tags ?'|@translate}';
-window.str_orphan_tags = '{'You have %s1 orphan : %s2'|@translate}';
-window.str_delete_them = '{'Delete them'|@translate}';
-window.str_keep_them = '{'Keep them'|@translate}';
-window.str_copy = '{' (copy)'|@translate}';
-window.str_other_copy = '{' (copy %s)'|@translate}';
-window.str_merged_into = '{'Tag(s) \{%s1\} succesfully merged into "%s2"'|@translate}';
-window.str_and_others_tags = '{'and %s others'|@translate}';
-window.str_others_tags_available = '{'%s other tags available...'|@translate}';
-window.str_number_photos = '{'%d photos'}';
-window.str_no_photos = '{'no photo'}';
-window.str_select_all_tag = '{'Select all %d tags'|@translate}';
-window.str_clear_selection = '{'Clear Selection'|@translate}';
-window.str_selection_done = '{'The %d tags on this page are selected'|@translate}';
-window.str_tag_selected = '{'<b>%d</b> tag selected'|@translate}';
-window.str_tags_found = '{'<b>%d</b> tags found'|@translate}';
-window.str_tag_found = '{'<b>%d</b> tag found'|@translate}';
-
-$(document).ready(function() {
-  $("h1").append('<span class="badge-number">{$total}</span>');
-});
-
-{/footer_script}
+<script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
 {combine_script id='tags' load='footer' path='admin/themes/default/js/tags.js'}
-
-{footer_script}
-if (!$.cookie("pwg_tags_per_page")) {
-  $.cookie("pwg_tags_per_page", "100");
-}
-{/footer_script}
 
 <meta http-equiv='cache-control' content='no-cache'>
 <meta http-equiv='expires' content='0'>

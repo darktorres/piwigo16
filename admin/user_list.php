@@ -257,6 +257,80 @@ function webmaster_id_is_local(): int
 if (webmaster_id_is_local()) {
     \Piwigo\Core\PageState::current()->addWarning(l10n('You have specified <i>' . '$' . 'conf[\'webmaster_id\']</i> in your local configuration file, this parameter in deprecated, please remove it!'));
 }
+// Build groups_arr as [[id, name], ...] pairs for the JSON block
+$groups_arr_json = [];
+foreach ($groups as $id => $name) {
+    $groups_arr_json[] = [(int)$id, $name];
+}
+
+$template->assign('page_data_json', json_encode([
+    'pwg_token'                => get_pwg_token(),
+    'connected_user'           => (int)$user['id'],
+    'connected_user_status'    => $user['status'],
+    'owner_id'                 => (int)\Piwigo\Core\Config::webmasterId(),
+    'owner_username'           => $owner_username[0] ?? '',
+    'guest_id'                 => (int)\Piwigo\Core\Config::guestId(),
+    'has_group'                => $_GET['group'] ?? '',
+    'view_selector'            => userprefs_get_param('user-manager-view', 'line'),
+    'pagination'               => (int)userprefs_get_param(
+        'user-manager-pagination',
+        userprefs_get_param('user-manager-view', 'line') === 'line' ? 5 : 10
+    ),
+    'history_base_url'         => get_root_url() . 'admin.php?page=history&filter_user_id=',
+    'register_dates'           => $register_dates,
+    'groups_arr'               => $groups_arr_json,
+    'months'                   => [
+        l10n('Jan'), l10n('Feb'), l10n('Mar'), l10n('Apr'),
+        l10n('May'), l10n('Jun'), l10n('Jul'), l10n('Aug'),
+        l10n('Sep'), l10n('Oct'), l10n('Nov'), l10n('Dec'),
+    ],
+    'status_to_str'            => [
+        'webmaster' => l10n('user_status_webmaster'),
+        'admin'     => l10n('user_status_admin'),
+        'normal'    => l10n('user_status_normal'),
+        'generic'   => l10n('user_status_generic'),
+        'guest'     => l10n('user_status_guest'),
+    ],
+    // translation strings
+    'cancel_msg'               => l10n('No, I have changed my mind'),
+    'cannotSendMail'           => l10n("Cannot send an email to this user because he doesn't have an email address"),
+    'cantCopy'                 => l10n('You cannot copy the password if the connection to this site is not secure.'),
+    'confirm_msg'              => l10n('Yes, I am sure'),
+    'copyLinkStr'              => l10n('Copied link'),
+    'dates_infos'              => l10n('between %s and %s'),
+    'errorMailSent'            => l10n('Error sending email'),
+    'errorMailSentMsg'         => l10n('An activation link valid for %s was created but could not be sent. You can now copy the link below and send it to the user.'),
+    'errorStr'                 => l10n('an error happened'),
+    'fieldNotEmpty'            => l10n('Name field must not be empty'),
+    'filtered_user'            => l10n('<b>%d</b> filtered user'),
+    'filtered_users'           => l10n('<b>%d</b> filtered users'),
+    'last_visit_str'           => l10n('Last visit'),
+    'mailSentAt'               => l10n('Mail sent to %s [%s].'),
+    'mainAskWebmaster'         => l10n('You are not authorised to change the main user, please ask your webmaster'),
+    'mainUserContinue'         => l10n('You are about to set %s as main user instead of %s, do you wish to continue ?'),
+    'mainUserRewrite'          => l10n('To be sure, please rewrite the word "%s" below'),
+    'mainUserSet'              => l10n('Set as main user'),
+    'mainUserStr'              => l10n('Main user'),
+    'mainUserSuccess'          => l10n('%s is the new main user'),
+    'mainUserUpgradeWebmaster' => l10n('This user must first be defined as the webmaster before it can be upgraded to the main user'),
+    'mainUserValidate'         => l10n('You can now change the main user from %s to %s.'),
+    'missingConfirm'           => l10n('You need to confirm deletion'),
+    'missingConfPassword'      => l10n('Password confirmation is missing. Please confirm the chosen password.'),
+    'missingField'             => l10n('Please complete all fields'),
+    'missingPassword'          => l10n('Password is missing. Please enter the password.'),
+    'missingUsername'          => l10n('Please, enter a login'),
+    'noMatchPassword'          => l10n('The passwords do not match'),
+    'nb_days'                  => l10n('%d days'),
+    'nb_photos'                => l10n('%d photos'),
+    'passwordCopied'           => l10n('Password copied'),
+    'registered_str'           => l10n('Registered'),
+    'str_and_others_tags'      => l10n('and %s others'),
+    'title_msg'                => l10n('Are you sure you want to delete the user "%s"?'),
+    'user_added_str'           => l10n('User %s added'),
+    'validLinkMail'            => l10n("An activation link valid for %s has been sent to \"%s\". If the user doesn't receive the link, you can generate and copy a new one by editing the user and managing her password."),
+    'validLinkWithoutMail'     => l10n('Copy the link below and send it to the user so the password can be set.'),
+], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
+
 // +-----------------------------------------------------------------------+
 // | html code display                                                     |
 // +-----------------------------------------------------------------------+

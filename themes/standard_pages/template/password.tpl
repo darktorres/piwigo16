@@ -1,12 +1,8 @@
 {combine_css id='standard_pages_css' path="themes/standard_pages/skins/{$STD_PGS_SELECTED_SKIN}.css" order=100}
 {combine_css path="themes/default/vendor/fontello/css/gallery-icon.css" order=-10}
 
-<script>
-  var selected_language = `{$language_options[$current_language]}`;
-  var url_logo_light = `{$ROOT_URL}themes/standard_pages/images/piwigo_logo.svg`;
-  var url_logo_dark = `{$ROOT_URL}themes/standard_pages/images/piwigo_logo_dark.svg`;
-</script>
-{combine_script id='standard_pages_js' load='async' require='jquery' path='themes/standard_pages/js/standard_pages.js'}
+<script id="pwg-std-pages-data" type="application/json">{$page_data_json}</script>
+{combine_script id='standard_pages_js' load='async' path='themes/standard_pages/js/standard_pages.js'}
 
 <container id="mode" class="light">
 

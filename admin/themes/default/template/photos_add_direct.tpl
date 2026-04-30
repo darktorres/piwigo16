@@ -15,40 +15,7 @@
 .addAlbumFormParent { display: none; } /* specific to this page, do not move in theme.css */
 {/html_style}
 
-{footer_script}
-
-window.formatMode = {if $DISPLAY_FORMATS}true{else}false{/if};
-window.haveFormatsOriginal = {if $HAVE_FORMATS_ORIGINAL}true{else}false{/if};
-window.originalImageId = window.haveFormatsOriginal? '{if isset($FORMATS_ORIGINAL_INFO['id'])} {$FORMATS_ORIGINAL_INFO['id']} {else} -1 {/if}' : -1;
-window.imageFormatsExtensions = '{$FORMATS_EXT_INFO}';
-window.nb_albums = {$NB_ALBUMS|escape:javascript};
-window.chunk_size = '{$chunk_size}kb';
-window.max_file_size = '{$max_file_size}mb';
-window.format_update_warning = "{'This format already exists, it will be overwritten !'|translate}";
-window.format_remove = "{'Remove'|translate}";
-window.pwg_token = '{$pwg_token}';
-window.photosAdded_label = "{'%d photos uploaded'|translate|escape:javascript}";
-window.photosUpdated_label = "{'%d photos updated'|translate|escape:javascript}";
-window.formatsAdded_label = "{'%d formats added for %d photos'|translate|escape:javascript}";
-window.formatsUpdated_label = "{'%d formats updated for %d photos'|translate|escape:javascript}";
-window.batch_Label = "{'Manage this set of %d photos'|translate|escape:javascript}";
-window.albumSummary_label = "{'Album "%s" now contains %d photos'|translate|escape:javascript}";
-window.str_format_warning = "{'Error when trying to detect formats'|translate|escape:javascript}";
-const str_ok = "{'Ok'|translate|escape:javascript}";
-window.str_format_warning_multiple = "{'There is multiple image in the database with the following names : %s.'|translate|escape:javascript}";
-window.str_format_warning_notFound = "{'No picture found with the following name : %s.'|translate|escape:javascript}";
-window.str_and_X_others = "{'and %d more'|translate|escape:javascript}";
-window.str_upload_in_progress = "{'Upload in progress'|translate|escape:javascript}";
-window.str_drop_album_ab = '{'Drop into album'|@translate|escape:javascript}';
-window.file_ext = "{$file_exts}";
-window.format_ext = "{$format_ext}";
-window.uploadedPhotos = [];
-window.uploadCategory = null;
-window.addedPhotos = [];
-window.updatedPhotos = [];
-window.related_categories_ids = {$selected_category|json_encode};
-
-{/footer_script}
+<script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 
 <div id="photosAddContent">
 

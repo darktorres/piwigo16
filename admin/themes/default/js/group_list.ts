@@ -1,50 +1,80 @@
 import TomSelect from 'tom-select';
 import Cookies from 'js-cookie';
+import { getPageData } from './page-data';
 
-declare var $select: any;
 declare var UsersCache: any;
-declare var complete: any;
-declare var copy_name: any;
-declare var data: any;
-declare var dest_grp: any;
-declare var exist: any;
-declare var group: any;
-declare var groupBox: any;
-declare var grp_id: any;
-declare var item: any;
-declare var merge_group: any;
-declare var name_dest: any;
-declare var name_merge: any;
-declare var newgroup: any;
-declare var option: any;
-declare var rootUrl: any;
-declare var searchString: any;
-declare var serverId: any;
-declare var serverKey: any;
-declare var str_copy: any;
-declare var str_delete: any;
-declare var str_group_created: any;
-declare var str_group_deleted: any;
-declare var str_groups_deleted: any;
-declare var str_id: any;
-declare var str_member_default: any;
-declare var str_members_default: any;
-declare var str_merge_group: any;
-declare var str_merged_into: any;
-declare var str_name_not_empty: any;
-declare var str_name_taken: any;
-declare var str_no_delete_confirmation: any;
-declare var str_other_copy: any;
-declare var str_renaming_done: any;
-declare var str_set_default: any;
-declare var str_unset_default: any;
-declare var str_user_associated: any;
-declare var str_user_dissociate: any;
-declare var str_user_dissociated: any;
-declare var str_user_list: any;
-declare var str_yes_delete_confirmation: any;
-declare var updateUserSearch: any;
-declare var pwg_token: string;
+
+interface GroupListPageData {
+    pwg_token: string;
+    rootUrl: string;
+    serverId: string;
+    serverKey: string;
+    str_copy: string;
+    str_delete: string;
+    str_group_created: string;
+    str_group_deleted: string;
+    str_groups_deleted: string;
+    str_member_default: string;
+    str_members_default: string;
+    str_merged_into: string;
+    str_name_not_empty: string;
+    str_name_taken: string;
+    str_no_delete_confirmation: string;
+    str_other_copy: string;
+    str_renaming_done: string;
+    str_set_default: string;
+    str_unset_default: string;
+    str_user_associated: string;
+    str_user_dissociate: string;
+    str_user_dissociated: string;
+    str_user_list: string;
+    str_yes_delete_confirmation: string;
+}
+
+const {
+    pwg_token,
+    rootUrl,
+    serverId,
+    serverKey,
+    str_copy,
+    str_delete,
+    str_group_created,
+    str_group_deleted,
+    str_groups_deleted,
+    str_member_default,
+    str_members_default,
+    str_merged_into,
+    str_name_not_empty,
+    str_name_taken,
+    str_no_delete_confirmation,
+    str_other_copy,
+    str_renaming_done,
+    str_set_default,
+    str_unset_default,
+    str_user_associated,
+    str_user_dissociate,
+    str_user_dissociated,
+    str_user_list,
+    str_yes_delete_confirmation,
+} = getPageData<GroupListPageData>();
+
+let complete: any;
+let copy_name: any;
+let data: any;
+let dest_grp: any;
+let exist: any;
+let group: any;
+let groupBox: any;
+let grp_id: any;
+let item: any;
+let merge_group: any;
+let name_dest: any;
+let name_merge: any;
+let newgroup: any;
+let option: any;
+let searchString: any;
+let str_merge_group: any;
+let updateUserSearch: any;
 
 const DELAY_FEEDBACK = 3000;
 
@@ -425,7 +455,7 @@ function duplicateAction(id: any) {
     copy_name = (grpQ(id, '#group_name')?.innerHTML ?? '') + str_copy;
     const name_exist = (name: string) => qsa('.Group-name-container p').some(el => el.innerHTML === name);
     let i = 1;
-    while (name_exist(copy_name)) { copy_name = (grpQ(id, '#group_name')?.innerHTML ?? '') + str_other_copy.replace('%s', i++); }
+    while (name_exist(copy_name)) { copy_name = (grpQ(id, '#group_name')?.innerHTML ?? '') + str_other_copy.replace('%s', String(i++)); }
 
     pwgPost('pwg.groups.duplicate', `group_id=${id}&pwg_token=${pwg_token}&copy_name=${encodeURIComponent(copy_name)}`)
         .then(raw_data => {

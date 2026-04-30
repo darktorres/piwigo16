@@ -1,17 +1,39 @@
-declare var str_album_modal_title: string;
-declare var str_album_modal_placeholder: string;
-declare var str_no_search_in_progress: string;
-declare var str_root: string;
-declare var str_root_album_select: string;
-declare var str_album_selected: string;
-declare var str_result_limit: string;
-declare var str_album_found: string;
-declare var str_albums_found: string;
-declare var str_plus_albums_found: string;
-declare var str_create_and_select: string;
-declare var str_add_subcat_of: string;
-declare var str_complete_name_field: string;
-declare var str_an_error_has_occured: string;
+import { getPageData } from './page-data';
+
+interface AlbumSelectorPageData {
+    str_album_modal_title: string;
+    str_album_modal_placeholder: string;
+    str_no_search_in_progress: string;
+    str_root: string;
+    str_root_album_select: string;
+    str_album_selected: string;
+    str_result_limit: string;
+    str_album_found: string;
+    str_albums_found: string;
+    str_plus_albums_found: string;
+    str_create_and_select: string;
+    str_add_subcat_of: string;
+    str_complete_name_field: string;
+    str_an_error_has_occured: string;
+}
+
+const {
+    str_album_modal_title,
+    str_album_modal_placeholder,
+    str_no_search_in_progress,
+    str_root,
+    str_root_album_select,
+    str_album_selected,
+    str_result_limit,
+    str_album_found,
+    str_albums_found,
+    str_plus_albums_found,
+    str_create_and_select,
+    str_add_subcat_of,
+    str_complete_name_field,
+    str_an_error_has_occured,
+} = getPageData<AlbumSelectorPageData>('pwg-album-selector-data');
+
 declare function sprintf(fmt: string, ...args: any[]): string;
 
 let activeAlbumSelector: AlbumSelector | null = null;

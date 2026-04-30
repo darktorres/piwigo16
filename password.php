@@ -494,6 +494,12 @@ $template->assign([
   'current_language' => $user['language'],
 ]);
 
+$template->assign('page_data_json', json_encode([
+    'selected_language' => $language_options[$user['language']] ?? '',
+    'url_logo_light' => get_root_url() . 'themes/standard_pages/images/piwigo_logo.svg',
+    'url_logo_dark'  => get_root_url() . 'themes/standard_pages/images/piwigo_logo_dark.svg',
+], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
+
 //Get link to doc
 if (str_starts_with((string) $user['language'], 'fr')) {
     $help_link = 'https://doc-fr.piwigo.org/les-utilisateurs/se-connecter-a-piwigo';

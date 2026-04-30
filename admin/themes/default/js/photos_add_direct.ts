@@ -3,42 +3,74 @@ import Dashboard from '@uppy/dashboard';
 import XHRUpload from '@uppy/xhr-upload';
 import '@uppy/core/css/style.css';
 import '@uppy/dashboard/css/style.css';
+import { getPageData } from './page-data';
 
-declare var chunk_size: any;
-declare var max_file_size: any;
-declare var $forms_exts: any;
 declare var Piecon: any;
-declare var addedPhotos: any;
-declare var albumSummary_label: any;
-declare var batch_Label: any;
-declare var exts: any;
-declare var fileNames: any;
-declare var file_ext: any;
-declare var formatMode: any;
-declare var format_ext: any;
-declare var format_remove: any;
-declare var format_update_warning: any;
-declare var formatsAdded_label: any;
-declare var formatsUpdated_label: any;
-declare var haveFormatsOriginal: any;
-declare var html: any;
-declare var imageFormatsExtensions: any;
-declare var nb_albums: any;
-declare var originalImageId: any;
-declare var photosAdded_label: any;
-declare var photosUpdated_label: any;
-declare var related_categories_ids: any;
-declare var str_and_X_others: any;
-declare var str_drop_album_ab: any;
-declare var str_format_warning: any;
-declare var str_format_warning_multiple: any;
-declare var str_format_warning_notFound: any;
-declare var str_upload_in_progress: any;
-declare var updatedPhotos: any;
-declare var uploadCategory: any;
-declare var uploadedPhotos: any;
-declare var pwg_token: string;
 declare function sprintf(fmt: string, ...args: unknown[]): string;
+
+interface PhotosAddDirectPageData {
+    pwg_token: string;
+    chunk_size: string;
+    max_file_size: string;
+    albumSummary_label: string;
+    batch_Label: string;
+    file_ext: string;
+    formatMode: boolean;
+    format_ext: string;
+    format_remove: string;
+    format_update_warning: string;
+    formatsAdded_label: string;
+    formatsUpdated_label: string;
+    haveFormatsOriginal: boolean;
+    imageFormatsExtensions: string;
+    nb_albums: number;
+    originalImageId: number | string;
+    photosAdded_label: string;
+    photosUpdated_label: string;
+    related_categories_ids: any[];
+    str_and_X_others: string;
+    str_drop_album_ab: string;
+    str_format_warning: string;
+    str_format_warning_multiple: string;
+    str_format_warning_notFound: string;
+    str_upload_in_progress: string;
+}
+
+const {
+    pwg_token,
+    chunk_size,
+    max_file_size,
+    albumSummary_label,
+    batch_Label,
+    file_ext,
+    formatMode,
+    format_ext,
+    format_remove,
+    format_update_warning,
+    formatsAdded_label,
+    formatsUpdated_label,
+    haveFormatsOriginal,
+    imageFormatsExtensions,
+    nb_albums,
+    originalImageId,
+    photosAdded_label,
+    photosUpdated_label,
+    related_categories_ids,
+    str_and_X_others,
+    str_drop_album_ab,
+    str_format_warning,
+    str_format_warning_multiple,
+    str_format_warning_notFound,
+    str_upload_in_progress,
+} = getPageData<PhotosAddDirectPageData>();
+
+let addedPhotos: any[] = [];
+let exts: any = {};
+let fileNames: any = {};
+let html: string = '';
+let updatedPhotos: any[] = [];
+let uploadCategory: any = null;
+let uploadedPhotos: any[] = [];
 
 const qs = <T extends HTMLElement = HTMLElement>(sel: string) => document.querySelector<T>(sel);
 const qsa = <T extends HTMLElement = HTMLElement>(sel: string) => Array.from(document.querySelectorAll<T>(sel));
@@ -177,7 +209,7 @@ function initUppy() {
                 if (notFound.length || multiple.length) {
                     const fmt = (tab: string[]) => {
                         tab = tab.map(f => f.slice(0, f.indexOf('.'))).filter((f, i, a) => i === a.indexOf(f));
-                        if (tab.length > 5) { tab[5] = str_and_X_others.replace('%d', tab.length - 5); tab = tab.slice(0, 6); }
+                        if (tab.length > 5) { tab[5] = str_and_X_others.replace('%d', String(tab.length - 5)); tab = tab.slice(0, 6); }
                         return tab;
                     };
                     window.alert(str_format_warning + '\n' +

@@ -47,12 +47,41 @@ if (!empty($_POST) or isset($_GET['delete']) or isset($_GET['toggle_is_default']
 
 $template->set_filenames(['group_list' => 'group_list.tpl']);
 
+$cache_keys = get_admin_client_cache_keys(['groups', 'users']);
+
 $template->assign(
     [
     'F_ADD_ACTION' => get_root_url().'admin.php?page=group_list',
     // 'U_HELP' => get_root_url().'admin/popuphelp.php?page=group_list',
     'PWG_TOKEN' => get_pwg_token(),
-    'CACHE_KEYS' => get_admin_client_cache_keys(['groups', 'users']),
+    'CACHE_KEYS' => $cache_keys,
+    'ROOT_URL' => get_root_url(),
+    'page_data_json' => json_encode([
+        'pwg_token' => get_pwg_token(),
+        'rootUrl' => get_root_url(),
+        'serverId' => $cache_keys['_hash'],
+        'serverKey' => $cache_keys['users'],
+        'str_copy' => l10n(' (copy)'),
+        'str_delete' => l10n('Are you sure you want to delete group "%s"?'),
+        'str_group_created' => l10n('Group added'),
+        'str_group_deleted' => l10n('Group "%s" succesfully deleted'),
+        'str_groups_deleted' => l10n('Groups {%s} succesfully deleted'),
+        'str_member_default' => l10n('member'),
+        'str_members_default' => l10n('members'),
+        'str_merged_into' => l10n('Group(s) {%s1} succesfully merged into "%s2"'),
+        'str_name_not_empty' => l10n('Name field must not be empty'),
+        'str_name_taken' => l10n('Name is already taken'),
+        'str_no_delete_confirmation' => l10n('No, I have changed my mind'),
+        'str_other_copy' => l10n(' (copy %s)'),
+        'str_renaming_done' => l10n('Group renamed'),
+        'str_set_default' => l10n('Set as group for new users'),
+        'str_unset_default' => l10n('Unset as group for new users'),
+        'str_user_associated' => l10n('User associated'),
+        'str_user_dissociate' => l10n('Dissociate user from this group'),
+        'str_user_dissociated' => l10n('User "%s" dissociated from this group'),
+        'str_user_list' => l10n('Manage the members'),
+        'str_yes_delete_confirmation' => l10n('Yes, delete'),
+    ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE),
     ]
 );
 

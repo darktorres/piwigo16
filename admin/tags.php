@@ -154,6 +154,38 @@ $template->assign(
     ]
 );
 
+$template->assign('page_data_json', json_encode([
+    'pwg_token'                  => get_pwg_token(),
+    'total'                      => count($all_tags),
+    'orphan_tag_names'           => $orphan_tag_names,
+    'str_already_exist'          => l10n('Tag "%s" already exists'),
+    'str_and_others_tags'        => l10n('and %s others'),
+    'str_clear_selection'        => l10n('Clear Selection'),
+    'str_copy'                   => l10n(' (copy)'),
+    'str_delete'                 => l10n('Delete tag "%s"?'),
+    'str_delete_orphan_tags'     => l10n('Delete orphan tags ?'),
+    'str_delete_tags'            => l10n('Delete tags {%s}?'),
+    'str_delete_them'            => l10n('Delete them'),
+    'str_keep_them'              => l10n('Keep them'),
+    'str_merged_into'            => l10n('Tag(s) {%s1} succesfully merged into "%s2"'),
+    'str_no_delete_confirmation' => l10n('No, I have changed my mind'),
+    'str_no_photos'              => l10n('no photo'),
+    'str_number_photos'          => l10n('%d photos'),
+    'str_orphan_tags'            => l10n('You have %s1 orphan : %s2'),
+    'str_other_copy'             => l10n(' (copy %s)'),
+    'str_select_all_tag'         => l10n('Select all %d tags'),
+    'str_selection_done'         => l10n('The %d tags on this page are selected'),
+    'str_tag_created'            => l10n('Tag "%s" created'),
+    'str_tag_deleted'            => l10n('Tag "%s" succesfully deleted'),
+    'str_tag_found'              => l10n('<b>%d</b> tag found'),
+    'str_tag_rename'             => l10n('Rename "%s"'),
+    'str_tag_selected'           => l10n('<b>%d</b> tag selected'),
+    'str_tags_deleted'           => l10n('Tags {%s} succesfully deleted'),
+    'str_tags_found'             => l10n('<b>%d</b> tags found'),
+    'str_yes_delete_confirmation' => l10n('Yes, delete'),
+    'str_yes_rename_confirmation' => l10n('Yes, rename'),
+], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
+
 // +-----------------------------------------------------------------------+
 // |                           sending html code                           |
 // +-----------------------------------------------------------------------+

@@ -144,6 +144,13 @@ include_once(PHPWG_ROOT_PATH.'admin/include/photos_add_direct_prepare.inc.php');
 
 trigger_notify('loc_end_photo_add_direct');
 
+$unique_exts_for_json = array_unique(
+    array_map(
+        strtolower(...),
+        \Piwigo\Core\Config::uploadFormAllTypes() ? \Piwigo\Core\Config::fileExtensions() : \Piwigo\Core\Config::pictureExtensions()
+    )
+);
+
 $template->assign([
   'ENABLE_FORMATS' => \Piwigo\Core\Config::isFormatsEnabled(),
   'DISPLAY_FORMATS' => $display_formats,
@@ -153,6 +160,33 @@ $template->assign([
   'SWITCH_FORMAT_MODE_URL' => get_root_url().'admin.php?page=photos_add'.($display_formats ? '' : '&formats'),
   'format_ext' =>  implode(',', \Piwigo\Core\Config::formatExtensions()),
   'str_format_ext' =>  implode(', ', \Piwigo\Core\Config::formatExtensions()),
+  'page_data_json' => json_encode([
+      'pwg_token' => get_pwg_token(),
+      'chunk_size' => \Piwigo\Core\Config::uploadFormChunkSize().'kb',
+      'max_file_size' => \Piwigo\Core\Config::uploadFormMaxFileSize().'mb',
+      'albumSummary_label' => l10n('Album "%s" now contains %d photos'),
+      'batch_Label' => l10n('Manage this set of %d photos'),
+      'file_ext' => implode(',', $unique_exts_for_json),
+      'formatMode' => $display_formats,
+      'format_ext' => implode(',', \Piwigo\Core\Config::formatExtensions()),
+      'format_remove' => l10n('Remove'),
+      'format_update_warning' => l10n('This format already exists, it will be overwritten !'),
+      'formatsAdded_label' => l10n('%d formats added for %d photos'),
+      'formatsUpdated_label' => l10n('%d formats updated for %d photos'),
+      'haveFormatsOriginal' => $have_formats_original,
+      'imageFormatsExtensions' => $formats_ext_info ?? '',
+      'nb_albums' => (int) $nb_albums,
+      'originalImageId' => $have_formats_original ? (int) ($formats_original_info['id'] ?? -1) : -1,
+      'photosAdded_label' => l10n('%d photos uploaded'),
+      'photosUpdated_label' => l10n('%d photos updated'),
+      'related_categories_ids' => $selected_category,
+      'str_and_X_others' => l10n('and %d more'),
+      'str_drop_album_ab' => l10n('Drop into album'),
+      'str_format_warning' => l10n('Error when trying to detect formats'),
+      'str_format_warning_multiple' => l10n('There is multiple image in the database with the following names : %s.'),
+      'str_format_warning_notFound' => l10n('No picture found with the following name : %s.'),
+      'str_upload_in_progress' => l10n('Upload in progress'),
+  ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE),
 ]);
 
 $template->assign_var_from_handle('ADMIN_CONTENT', 'photos_add');

@@ -3,73 +3,106 @@ import noUiSlider from 'nouislider';
 import 'nouislider/dist/nouislider.css';
 import tippy from 'tippy.js';
 import 'tippy.js/dist/tippy.css';
+import { getPageData } from './page-data';
 
-declare var number: any;
-declare var None: any;
-declare var cancel_msg: any;
-declare var cannotSendMail: any;
-declare var cantCopy: any;
-declare var confirm_msg: any;
-declare var connected_user_status: any;
-declare var copyLinkStr: any;
-declare var data: any;
-declare var dates_infos: any;
-declare var errorMailSent: any;
-declare var errorMailSentMsg: any;
-declare var errorStr: any;
-declare var fieldNotEmpty: any;
-declare var filtered_user: any;
-declare var filtered_users: any;
-declare var groupOptions: any;
-declare var has_group: any;
-declare var history_base_url: any;
-declare var last_visit_str: any;
-declare var mailSentAt: any;
-declare var mainAskWebmaster: any;
-declare var mainUserContinue: any;
-declare var mainUserRewrite: any;
-declare var mainUserSet: any;
-declare var mainUserStr: any;
-declare var mainUserSuccess: any;
-declare var mainUserUpgradeWebmaster: any;
-declare var mainUserValidate: any;
-declare var missingConfPassword: any;
-declare var missingField: any;
-declare var missingPassword: any;
-declare var missingUsername: any;
-declare var noMatchPassword: any;
-declare var owner_id: any;
-declare var pagination: any;
-declare var passwordCopied: any;
-declare var register_dates: any;
-declare var registered_str: any;
-declare var selection_ids: any;
-declare var status_to_str: any;
-declare var str_and_others_tags: any;
-declare var title_msg: any;
-declare var user_added_str: any;
-declare var validLinkMail: any;
-declare var validLinkWithoutMail: any;
-declare var view_selector: any;
-declare var nb_filtered_users: any;
+interface UserListPageData {
+    pwg_token: string;
+    connected_user: number;
+    connected_user_status: string;
+    owner_id: number;
+    owner_username: string;
+    guest_id: number;
+    has_group: string;
+    view_selector: string;
+    pagination: number;
+    history_base_url: string;
+    register_dates: string[];
+    groups_arr: [number, string][];
+    months: string[];
+    status_to_str: Record<string, string>;
+    // translation strings
+    cancel_msg: string;
+    cannotSendMail: string;
+    cantCopy: string;
+    confirm_msg: string;
+    copyLinkStr: string;
+    dates_infos: string;
+    errorMailSent: string;
+    errorMailSentMsg: string;
+    errorStr: string;
+    fieldNotEmpty: string;
+    filtered_user: string;
+    filtered_users: string;
+    last_visit_str: string;
+    mailSentAt: string;
+    mainAskWebmaster: string;
+    mainUserContinue: string;
+    mainUserRewrite: string;
+    mainUserSet: string;
+    mainUserStr: string;
+    mainUserSuccess: string;
+    mainUserUpgradeWebmaster: string;
+    mainUserValidate: string;
+    missingConfirm: string;
+    missingConfPassword: string;
+    missingField: string;
+    missingPassword: string;
+    missingUsername: string;
+    noMatchPassword: string;
+    nb_days: string;
+    nb_photos: string;
+    passwordCopied: string;
+    registered_str: string;
+    str_and_others_tags: string;
+    title_msg: string;
+    user_added_str: string;
+    validLinkMail: string;
+    validLinkWithoutMail: string;
+}
+
+const {
+    pwg_token: _pwg_token,
+    connected_user: _connected_user,
+    connected_user_status: _connected_user_status,
+    owner_id: _owner_id,
+    owner_username: _owner_username,
+    guest_id: _guest_id,
+    has_group: _has_group,
+    view_selector: _view_selector,
+    pagination: _pagination,
+    history_base_url,
+    register_dates: _register_dates,
+    groups_arr: _groups_arr,
+    months: _months,
+    status_to_str,
+    cancel_msg, cannotSendMail, cantCopy, confirm_msg, copyLinkStr,
+    dates_infos, errorMailSent, errorMailSentMsg, errorStr, fieldNotEmpty,
+    filtered_user, filtered_users, last_visit_str, mailSentAt,
+    mainAskWebmaster, mainUserContinue, mainUserRewrite, mainUserSet,
+    mainUserStr, mainUserSuccess, mainUserUpgradeWebmaster, mainUserValidate,
+    missingConfirm, missingConfPassword, missingField, missingPassword, missingUsername,
+    noMatchPassword, nb_days, nb_photos, passwordCopied, registered_str,
+    str_and_others_tags, title_msg, user_added_str, validLinkMail, validLinkWithoutMail,
+} = getPageData<UserListPageData>();
+
 declare function sprintf(fmt: string, ...args: unknown[]): string;
 declare function getRandomInt(min: number, max: number): number;
+
+// mutable state
+let number: any;
 
 const color_icons = ['icon-red', 'icon-blue', 'icon-yellow', 'icon-purple', 'icon-green'];
 const status_arr = ['webmaster', 'admin', 'normal', 'generic', 'guest'];
 const level_arr = ['0', '1', '2', '4', '8'];
 const king_template = '<p class="icon-king" id="the_king"></p>';
 let current_users: any[] = [];
-let guest_id = 0;
+let guest_id = _guest_id;
 let guest_user: any = {};
-let connected_user = 0;
-let groups_arr: any[] = [];
-let nb_days = '';
-let nb_photos = '';
-let nb_photos_per_page = '';
+let connected_user = _connected_user;
+let groups_arr: [number, string][] = _groups_arr;
 let last_user_index: any = -1;
 let last_user_id = -1;
-let pwg_token = '';
+let pwg_token = _pwg_token;
 let selection: any[] = [];
 let first_update = true;
 let total_users = 0;
@@ -78,7 +111,16 @@ let plugins_set_functions: Record<string, any> = {};
 let plugins_get_functions: Record<string, any> = {};
 let plugins_load: any[] = [];
 let plugins_users_infos_table: any[] = [];
-let owner_username = '';
+let owner_username = _owner_username;
+let owner_id = _owner_id;
+let connected_user_status = _connected_user_status;
+let has_group = _has_group;
+let view_selector = _view_selector;
+let register_dates: string[] = _register_dates;
+let months: string[] = _months;
+let groupOptions = _groups_arr.map(x => ({ value: x[0], label: x[1], isSelected: 0 }));
+let nb_filtered_users: number;
+let per_page = _pagination;
 
 const qs = <T extends HTMLElement = HTMLElement>(sel: string, ctx: Element | Document = document) => ctx.querySelector<T>(sel);
 const qsa = <T extends HTMLElement = HTMLElement>(sel: string, ctx: Element | Document = document) => Array.from(ctx.querySelectorAll<T>(sel));
@@ -205,7 +247,6 @@ function initSliders() {
 }
 
 /*---- Pagination ----*/
-let per_page = 5;
 let actual_page = 1;
 
 function update_pagination_menu() {
@@ -226,7 +267,6 @@ function advanced_filter_hide() {
     qsa('.advanced-filter-btn, .advanced-filter').forEach(el => el.classList.remove('advanced-filter-open'));
 }
 
-let months: any[] = [];
 function getDateStr(date: any) {
     const parts = date.split('-');
     return months[parseInt(parts[1]) - 1] + ' ' + parts[0];
@@ -346,7 +386,7 @@ function generate_user_selected_items() {
         }
     }
     const othersEl = qs<HTMLElement>('.selection-other-users');
-    if (others >= 1) { if (othersEl) { othersEl.innerHTML = str_and_others_tags.replace('%s', others); show(othersEl); } }
+    if (others >= 1) { if (othersEl) { othersEl.innerHTML = str_and_others_tags.replace('%s', String(others)); show(othersEl); } }
     else hide(othersEl);
 }
 
@@ -1032,7 +1072,7 @@ function show_filter_infos(nb_filters: any) {
     const filteredEl = qs('.filtered-users');
     const searchVal = (qs<HTMLInputElement>('#user_search'))?.value ?? '';
     if (filteredEl) {
-        if (searchVal.length !== 0 || nb_filters !== 0) filteredEl.innerHTML = total_users !== 1 ? filtered_users.replace(/%d/g, total_users) : filtered_user.replace(/%d/g, total_users);
+        if (searchVal.length !== 0 || nb_filters !== 0) filteredEl.innerHTML = total_users !== 1 ? filtered_users.replace(/%d/g, String(total_users)) : filtered_user.replace(/%d/g, String(total_users));
         else filteredEl.innerHTML = '';
     }
     const btnEl = qs<HTMLElement>('.advanced-filter-btn');
@@ -1346,7 +1386,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Pagination init
     qsa('[id^=pagination-per-page-]').forEach(el => el.classList.remove('selected-pagination'));
-    qs(`#pagination-per-page-${pagination}`)?.classList.add('selected-pagination');
+    qs(`#pagination-per-page-${per_page}`)?.classList.add('selected-pagination');
 
     if (has_group) { advanced_filter_button_click(); (qs<HTMLSelectElement>("select[name='filter_group']"))!.value = has_group; update_user_list(); }
 
@@ -1412,6 +1452,95 @@ document.addEventListener('DOMContentLoaded', () => {
     get_guest_info();
     update_user_list();
     update_selection_content();
+
+    // applyAction bulk handler (plugin-extensible — plugins may call
+    // window.pwg_apply_action_handlers to prepend additional cases)
+    const applyActionBtn = document.getElementById('applyAction');
+    if (applyActionBtn) {
+        applyActionBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const action = (document.querySelector('select[name=selectAction]') as HTMLSelectElement)?.value ?? '';
+            let method = 'pwg.users.setInfo';
+            const data: Record<string, any> = {
+                pwg_token,
+                user_id: selection.map(x => x.id),
+            };
+            switch (action) {
+                case 'delete':
+                    if ((document.querySelector('#permitActionUserList .user-list-checkbox[name=confirm_deletion]') as HTMLElement)?.getAttribute('data-selected') !== '1') {
+                        alert(missingConfirm);
+                        return false;
+                    }
+                    method = 'pwg.users.delete';
+                    break;
+                case 'group_associate':
+                    method = 'pwg.groups.addUser';
+                    data['group_id'] = (document.querySelector('#permitActionUserList select[name=associate]') as HTMLSelectElement)?.value;
+                    break;
+                case 'group_dissociate':
+                    method = 'pwg.groups.deleteUser';
+                    data['group_id'] = (document.querySelector('#permitActionUserList select[name=dissociate]') as HTMLSelectElement)?.value;
+                    break;
+                case 'status':
+                    data['status'] = (document.querySelector('#permitActionUserList select[name=status]') as HTMLSelectElement)?.value;
+                    break;
+                case 'enabled_high':
+                    data['enabled_high'] = (document.querySelector('#permitActionUserList .user-list-checkbox[name=enabled_high_yes]') as HTMLElement)?.getAttribute('data-selected') === '1';
+                    break;
+                case 'level':
+                    data['level'] = (document.querySelector('#permitActionUserList select[name=level]') as HTMLSelectElement)?.value;
+                    break;
+                case 'nb_image_page':
+                    data['nb_image_page'] = (document.querySelector('#permitActionUserList input[name=nb_image_page]') as HTMLInputElement)?.value;
+                    break;
+                case 'theme':
+                    data['theme'] = (document.querySelector('#permitActionUserList select[name=theme]') as HTMLSelectElement)?.value;
+                    break;
+                case 'language':
+                    data['language'] = (document.querySelector('#permitActionUserList select[name=language]') as HTMLSelectElement)?.value;
+                    break;
+                case 'recent_period':
+                    data['recent_period'] = recent_period_values[(document.querySelector('#permitActionUserList .period-select-bar .slider-bar-container') as HTMLElement)?.dataset['sliderValue'] as any];
+                    break;
+                case 'expand':
+                    data['expand'] = (document.querySelector('#permitActionUserList .user-list-checkbox[name=expand_yes]') as HTMLElement)?.getAttribute('data-selected') === '1';
+                    break;
+                case 'show_nb_comments':
+                    data['show_nb_comments'] = (document.querySelector('#permitActionUserList .user-list-checkbox[name=show_nb_comments_yes]') as HTMLElement)?.getAttribute('data-selected') === '1';
+                    break;
+                case 'show_nb_hits':
+                    data['show_nb_hits'] = (document.querySelector('#permitActionUserList .user-list-checkbox[name=show_nb_hits_yes]') as HTMLElement)?.getAttribute('data-selected') === '1';
+                    break;
+                default:
+                    alert('Unexpected action');
+                    return false;
+            }
+            const applyActionLoading = document.getElementById('applyActionLoading');
+            const applyActionInfos = document.querySelector('#applyActionBlock .infos') as HTMLElement | null;
+            if (applyActionLoading) applyActionLoading.style.display = '';
+            if (applyActionInfos) applyActionInfos.style.display = 'none';
+
+            const formData = new FormData();
+            Object.keys(data).forEach(key => {
+                const val = data[key];
+                if (Array.isArray(val)) val.forEach((v: any) => formData.append(key + '[]', v));
+                else formData.append(key, val);
+            });
+
+            fetch('ws.php?format=json&method=' + method, { method: 'POST', body: formData }).then(() => {
+                if (applyActionLoading) applyActionLoading.style.display = 'none';
+                if (applyActionInfos) applyActionInfos.style.display = 'inline-block';
+                update_user_list();
+                if (action === 'delete') {
+                    selection = [];
+                    update_selection_content();
+                }
+            }).catch(() => {
+                if (applyActionLoading) applyActionLoading.style.display = 'none';
+            });
+            return false;
+        });
+    }
 });
 
 export {};

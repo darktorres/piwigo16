@@ -1,6 +1,12 @@
-declare var selected_language: string;
-declare var url_logo_dark: string;
-declare var url_logo_light: string;
+import { getPageData } from './page-data';
+
+interface StandardPagesData {
+    selected_language: string;
+    url_logo_light: string;
+    url_logo_dark: string;
+}
+
+const { selected_language, url_logo_light, url_logo_dark } = getPageData<StandardPagesData>('pwg-std-pages-data');
 
 let modeCookie = getCookie('mode');
 if (modeCookie !== '') {

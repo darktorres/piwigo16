@@ -305,11 +305,8 @@ function ws_extensions_checkupdates(array $params, \Piwigo\Ws\PwgServer $service
 
     \Piwigo\Core\Config::override('updates_ignored', unserialize(\Piwigo\Core\Config::get('updates_ignored') ?? ''));
 
-    if (!isset($_SESSION['extensions_need_update'])) {
-        $update->check_extensions();
-    } else {
-        $update->check_updated_extensions();
-    }
+    // Always check extensions fresh to match the updates page behavior
+    $update->check_extensions();
 
     if (!is_array($_SESSION['extensions_need_update'])) {
         $result['ext_need_update'] = null;

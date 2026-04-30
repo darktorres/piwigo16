@@ -7,7 +7,7 @@
 {combine_script id='album_selector' load=$load_mode require='common' path='admin/themes/default/js/album_selector.js'}
 {* {combine_script id='albumSelector' load=$load_mode path='admin/themes/default/js/test-ab.js'} *}
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-<script id=”pwg-album-selector-data” type=”application/json”>{$album_selector_page_data_json}</script>
+<script id="pwg-album-selector-data" type="application/json">{$album_selector_page_data_json}</script>
 
 <div id="addLinkedAlbum" class="linkedAlbumPopIn">
   <div class="linkedAlbumPopInContainer">
@@ -41,7 +41,7 @@
 
     <div class="album-create" id="linkedAlbumCreate" style="display: none;">
       <div class="linked-album-subtitle">
-        <p id="linkedAlbumSubtitle">Add a sub-album of “Album 3”</p>
+        <p id="linkedAlbumSubtitle">Add a sub-album of "Album 3"</p>
       </div>
 
       <div class="linked-album-input-container album-name">

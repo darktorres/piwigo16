@@ -9,6 +9,7 @@
  */
 export function getPageData<T>(id = 'pwg-page-data'): T {
     const el = document.getElementById(id);
-    if (!el?.textContent) throw new Error(`${id} script element not found`);
+    if (!el) throw new Error(`#${id} not found in DOM`);
+    if (!el.textContent?.trim()) throw new Error(`#${id} exists but is empty`);
     return JSON.parse(el.textContent) as T;
 }

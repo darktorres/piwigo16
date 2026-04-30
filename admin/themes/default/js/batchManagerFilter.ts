@@ -2,6 +2,7 @@ import { getPageData } from './page-data';
 import { AlbumSelector } from './album_selector';
 import { pwgDoubleSlider } from '../../../../themes/default/js/doubleSlider';
 import 'tom-select/dist/css/tom-select.bootstrap5.css';
+import '../css/components/batch_manager.css';
 
 interface SliderConfig {
     values: (number | string)[];
@@ -119,6 +120,18 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll<HTMLSelectElement>('.filterBlock select[data-selectize="tags"]').forEach(sel => {
         // Hide the original select element - Tom Select creates a styled replacement
         sel.style.display = 'none';
+
+        // After Tom Select initializes, resize the control for better readability
+        setTimeout(() => {
+            const wrapper = sel.closest('#filter_tags')?.querySelector<HTMLElement>('.ts-control');
+            if (wrapper) {
+                wrapper.style.minHeight = '36px';
+                wrapper.style.padding = '6px 8px';
+                wrapper.style.fontSize = '14px';
+                wrapper.style.lineHeight = '24px';
+            }
+        }, 100);
+
         sel.addEventListener('change', () => { if (sel.value) hide_filters_error(str_select_tag); });
     });
 

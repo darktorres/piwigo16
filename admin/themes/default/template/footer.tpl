@@ -86,19 +86,19 @@ document.querySelectorAll('a.externalLink').forEach(function(el) {
   });
 });
 
-function hide_user_whats_new() {
+window.hide_user_whats_new = function hide_user_whats_new() {
   fetch('ws.php?format=json&method=pwg.users.preferences.set', {
     method: 'POST',
     body: new URLSearchParams({ param: 'show_whats_new_{$WHATS_NEW_MAJOR_VERSION}', value: 'false' })
   }).catch(function() {});
   var el = document.getElementById('whats_new');
   if (el) el.style.display = 'none';
-}
+};
 
-function show_user_whats_new() {
+window.show_user_whats_new = function show_user_whats_new() {
   var el = document.getElementById('whats_new');
   if (el) el.style.display = '';
-}
+};
 
 {if isset($SHOW_WHATS_NEW) && $SHOW_WHATS_NEW}
   show_user_whats_new()

@@ -437,6 +437,18 @@ foreach ($data_storage as $value) {
 $template->assign('STORAGE_TOTAL', $total_storage);
 $template->assign('STORAGE_CHART_DATA', $data_storage);
 
+$translate_type = [];
+foreach ($data_storage as $type => $_) {
+    $translate_type[$type] = l10n($type);
+}
+$template->assign('page_data_json', json_encode([
+    'storage_details' => $data_storage,
+    'str_gb'          => l10n('%sGB'),
+    'str_mb'          => l10n('%sMB'),
+    'translate_type'  => $translate_type,
+    'translate_files'  => l10n('%d files'),
+], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
+
 // +-----------------------------------------------------------------------+
 // |                           sending html code                           |
 // +-----------------------------------------------------------------------+

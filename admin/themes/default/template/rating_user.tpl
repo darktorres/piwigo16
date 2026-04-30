@@ -48,7 +48,7 @@ document.querySelector('h1')?.insertAdjacentHTML('beforeend', "<span class='badg
 {combine_script id='core.scripts' load='async' path='themes/default/js/scripts.js'}
 {combine_script id='jquery.geoip' load='async'}
 {footer_script}
-var oTable = new DataTable('#rateTable', {
+window.oTable = new DataTable('#rateTable', {
 	pageLength: 100,
 	lengthMenu: [[25, 50, 100, 500, -1], [25, 50, 100, 500, "All"]],
 	order: [],
@@ -86,7 +86,7 @@ document.getElementById('rateTable')?.addEventListener('click', function(e) {
 			onFailure: function(num, text) { tr.style.opacity = '1'; alert(num + ' ' + text); },
 			onSuccess: function(result) {
 				if (result)
-					oTable.row(tr).remove().draw();
+					window.oTable.row(tr).remove().draw();
 				else
 					alert(result);
 			}

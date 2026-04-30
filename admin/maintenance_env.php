@@ -241,6 +241,12 @@ DELETE
 // +-----------------------------------------------------------------------+
 
 $template->set_filenames(['maintenance' => 'maintenance_env.tpl']);
+$template->assign('page_data_json', json_encode([
+    'unit_MB'         => l10n('%s MB'),
+    'no_time_elapsed'  => l10n('right now'),
+    'no_active_plugin' => l10n('No plugin activated'),
+    'error_occured'    => l10n('an error happened'),
+], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
 
 $url_format = get_root_url().'admin.php?page=maintenance&amp;action=%s&amp;pwg_token='.get_pwg_token();
 

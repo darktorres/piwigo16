@@ -1,10 +1,9 @@
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
+<script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 {footer_script}
 const confirm_msg = '{"Yes, I am sure"|@translate}';
 const cancel_msg = "{"No, I have changed my mind"|@translate}";
-const no_time_elapsed = "{"right now"|@translate}";
-const unit_MB = "{"%s MB"|@translate}"
 let selected = [];
 $(".lock-gallery-button").each(function() {
   const gallery_tip = '{"A locked gallery is only visible to administrators"|@translate|@escape:'javascript'}';

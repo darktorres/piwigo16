@@ -16,7 +16,7 @@ var filter_user_name = "{$USER_NAME}";
 if (month < 10) month = "0" + month;
 if (day < 10) day = "0" + day;
 
-today = year + "-" + month + "-" + day;
+window.today = year + "-" + month + "-" + day;
 var current_param = {
   start: "",
   end: today,

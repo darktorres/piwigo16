@@ -61,17 +61,17 @@ document.querySelectorAll('[data-datepicker]').forEach(function(el) {
 GLightbox({selector: 'a.preview-box'});
 {/literal}
 
-str_are_you_sure = "{'Are you sure?'|translate|escape:javascript}";
-str_yes = "{'Yes, delete'|translate|escape:javascript}";
-str_no = "{'No, I have changed my mind'|translate|@escape:'javascript'}";
-str_orphan = "{'This photo is an orphan'|@translate|escape:javascript}";
-str_meta_warning = "{'Warning ! Unsaved changes will be lost'|translate|escape:javascript}";
-str_meta_yes = "{'I want to continue'|translate|escape:javascript}";
+window.str_are_you_sure = "{'Are you sure?'|translate|escape:javascript}";
+window.str_yes = "{'Yes, delete'|translate|escape:javascript}";
+window.str_no = "{'No, I have changed my mind'|translate|@escape:'javascript'}";
+window.str_orphan = "{'This photo is an orphan'|@translate|escape:javascript}";
+window.str_meta_warning = "{'Warning ! Unsaved changes will be lost'|translate|escape:javascript}";
+window.str_meta_yes = "{'I want to continue'|translate|escape:javascript}";
 const str_title_ab = "{'Associate to album'|@translate}";
 
 let b_current_picture_id;
 {* Check Skeleton extension for more details about extensibility *}
-pluginValues = [];
+window.pluginValues = [];
 {/footer_script}
 
 
@@ -112,7 +112,7 @@ pluginValues = [];
 	{foreach from=$elements item=element} 
 	{$all_selected_album[$element.ID] = json_decode($element.related_category_ids)} 
 	{footer_script}
-      url_delete_{$element.id} = '{$element.U_DELETE}';  
+      window['url_delete_{$element.id}'] = '{$element.U_DELETE}';
     {/footer_script}
 	<div class="infos deleted-badge" data-image_id="{$element.ID}" style="display: none;">
 		<i class="icon-ok" style="font-size: 20px;"></i>

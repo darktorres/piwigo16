@@ -32,12 +32,22 @@ check_status(ACCESS_ADMINISTRATOR);
 
 $template->set_filenames(['comments' => 'comments.tpl']);
 
-$template->assign(
-    [
-    'F_ACTION' => get_root_url().'admin.php?page=comments',
-    'PWG_TOKEN' => get_pwg_token(),
-    ]
-);
+$template->assign([
+    'F_ACTION'       => get_root_url().'admin.php?page=comments',
+    'PWG_TOKEN'      => get_pwg_token(),
+    'page_data_json' => json_encode([
+        'pwg_token'                => get_pwg_token(),
+        'str_yes_delete_confirmation' => l10n('Yes, delete'),
+        'str_no_delete_confirmation'  => l10n('No, I have changed my mind'),
+        'str_delete'               => l10n('Are you sure you want to delete comment #%s?'),
+        'str_deletes'              => l10n('Are you sure you want to delete "%d" comments?'),
+        'str_no_comments_selected' => l10n('No comments selected, no actions possible.'),
+        'str_an_error_has'         => l10n('An error has occured'),
+        'str_comment_validated'    => l10n('The comment has been validated.'),
+        'str_comments_validated'   => l10n('The comments have been validated.'),
+        'str_and_others'           => l10n('and %s others'),
+    ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE),
+]);
 
 // +-----------------------------------------------------------------------+
 // | Tabs                                                                  |

@@ -8,7 +8,7 @@
 {combine_script id='batchManagerGlobal' load='async' require='datepicker,addAlbum,doubleSlider,album_selector' path='admin/themes/default/js/batchManagerGlobal.js'}
 
 {footer_script}
-var lang = {
+window.lang = {
 	Cancel: '{'Cancel'|translate|escape:'javascript'}',
 	deleteProgressMessage: "{'Deletion in progress'|translate|escape:'javascript'}",
 	syncProgressMessage: "{'Synchronization in progress'|translate|escape:'javascript'}",
@@ -58,13 +58,13 @@ window.categoriesCache?.selectize(document.querySelector('[data-selectize=catego
 var nb_thumbs_page = {$nb_thumbs_page};
 var nb_thumbs_set = {$nb_thumbs_set};
 var applyOnDetails_pattern = "{'on the %d selected photos'|@translate}";
-var all_elements = [{if !empty($all_elements)}{$all_elements|join:","}{/if}];
+window.all_elements = [{if !empty($all_elements)}{$all_elements|join:","}{/if}];
 
 var selectedMessage_pattern = "{'%d of %d photos selected'|@translate}";
 var selectedMessage_none = "{'No photo selected, %d photos in current set'|@translate}";
 var selectedMessage_all = "{'All %d photos are selected'|@translate}";
-const str_add_alb_associate = "{"Add Album"|@translate}";
-const str_select_alb_associate = "{"Select an album"|@translate}";
+window.str_add_alb_associate = "{"Add Album"|@translate}";
+window.str_select_alb_associate = "{"Select an album"|@translate}";
 
 function checkPermitAction() {
   var nbSelected = 0;

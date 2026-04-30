@@ -1,32 +1,32 @@
 {footer_script}
-var data = {json_encode($album_data)};
-var pwg_token = "{$PWG_TOKEN}";
+window.data = {json_encode($album_data)};
+window.pwg_token = "{$PWG_TOKEN}";
 var str_show_sub = "{'Show sub-albums'|@translate|escape:javascript}";
 var str_hide_sub = "{'Hide sub-albums'|@translate|escape:javascript}";
 var str_manage_sub_album = "{'Manage sub-albums'|@translate|escape:javascript}";
 var str_apply_order_raw = "{'apply automatic sort order'|translate|escape:javascript}";
 var str_apply_order = str_apply_order_raw.charAt(0).toUpperCase() + str_apply_order_raw.slice(1);
 var str_edit = "{'Edit album'|@translate|escape:javascript}";
-var str_are_you_sure = "{'The status of the album \'%s\' and its sub-albums will change to private. Are you sure?'|@translate|escape:javascript}";
-var str_yes_change_parent = "{'Yes change parent anyway'|@translate|escape:javascript}";
-var str_no_change_parent = "{'No, don\'t move this album here'|@translate|escape:javascript}";
+window.str_are_you_sure = "{'The status of the album \'%s\' and its sub-albums will change to private. Are you sure?'|@translate|escape:javascript}";
+window.str_yes_change_parent = "{'Yes change parent anyway'|@translate|escape:javascript}";
+window.str_no_change_parent = "{'No, don\'t move this album here'|@translate|escape:javascript}";
 var str_root = "{'Root'|@translate|escape:javascript}";
-var openCat = {$open_cat};
-var nb_albums = {$nb_albums};
-var light_album_manager = {$light_album_manager};
+window.openCat = {$open_cat};
+window.nb_albums = {$nb_albums};
+window.light_album_manager = {$light_album_manager};
 
-var x_nb_subcats = "{'%d sub-albums'|@translate|escape:javascript}";
-var x_nb_images = "{'%d photos'|@translate|escape:javascript}";
-var x_nb_sub_photos = "{'%d pictures in sub-albums'|@translate|escape:javascript}";
+window.x_nb_subcats = "{'%d sub-albums'|@translate|escape:javascript}";
+window.x_nb_images = "{'%d photos'|@translate|escape:javascript}";
+window.x_nb_sub_photos = "{'%d pictures in sub-albums'|@translate|escape:javascript}";
 
 var str_albums_found = '{"<b>%d</b> albums found"|translate|escape:javascript}';
 var str_album_found = '{"<b>1</b> album found"|translate|escape:javascript}';
 var str_result_limit = '{"<b>%d+</b> albums found, try to refine the search"|translate|escape:javascript}';
-const str_albs_drag_drop = '{"Drag and drop to reorder albums"|translate|escape:javascript}';
+window.str_albs_drag_drop = '{"Drag and drop to reorder albums"|translate|escape:javascript}';
 
-var delay_autoOpen = {$delay_before_autoOpen}
+window.delay_autoOpen = {$delay_before_autoOpen}
 
-const categoriesforSearch = Object.values(data);
+const categoriesforSearch = Object.values(window.data);
 {/footer_script}
 
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
@@ -34,22 +34,22 @@ const categoriesforSearch = Object.values(data);
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
 
 {footer_script}
-const delete_album_with_name = '{'Delete album "%s".'|@translate|escape:javascript}';
-const delete_album_with_subs = '{'Delete album "%s" and its %d sub-albums.'|@translate|escape:javascript}'
-const has_images_associated_outside = '{"delete album and all %d photos, even the %d associated to other albums"|@translate|escape:javascript}';
-const has_images_becomming_orphans = '{'delete album and the %d orphan photos'|@translate|escape:javascript}';
-const has_images_recursives = '{'delete only album, not photos'|@translate|escape:javascript}';
-const rename_item = '{'Rename "%s"'|@translate|escape:javascript}';
+window.delete_album_with_name = '{'Delete album "%s".'|@translate|escape:javascript}';
+window.delete_album_with_subs = '{'Delete album "%s" and its %d sub-albums.'|@translate|escape:javascript}';
+window.has_images_associated_outside = '{"delete album and all %d photos, even the %d associated to other albums"|@translate|escape:javascript}';
+window.has_images_becomming_orphans = '{'delete album and the %d orphan photos'|@translate|escape:javascript}';
+window.has_images_recursives = '{'delete only album, not photos'|@translate|escape:javascript}';
+window.rename_item = '{'Rename "%s"'|@translate|escape:javascript}';
 
-const str_add_album = '{'Add Album'|@translate|escape:javascript}';
-const str_edit_album = '{'Edit album'|@translate|escape:javascript}';
-const str_add_photo = '{'Add Photos'|@translate|escape:javascript}';
-const str_visit_gallery = '{'Visit Gallery'|@translate|escape:javascript}';
-const str_sort_order = '{'Automatic sort order'|@translate|escape:javascript}';
-const str_delete_album = '{'Delete album'|@translate|escape:javascript}';
-const str_root_order = '{'Apply to root albums'|@translate|escape:javascript}';
-str_sub_album_order = '{'Apply to direct sub-albums'|@translate|escape:javascript}';
-str_album_name_empty = '{'Album name must not be empty'|@translate|escape:javascript}'
+window.str_add_album = '{'Add Album'|@translate|escape:javascript}';
+window.str_edit_album = '{'Edit album'|@translate|escape:javascript}';
+window.str_add_photo = '{'Add Photos'|@translate|escape:javascript}';
+window.str_visit_gallery = '{'Visit Gallery'|@translate|escape:javascript}';
+window.str_sort_order = '{'Automatic sort order'|@translate|escape:javascript}';
+window.str_delete_album = '{'Delete album'|@translate|escape:javascript}';
+window.str_root_order = '{'Apply to root albums'|@translate|escape:javascript}';
+window.str_sub_album_order = '{'Apply to direct sub-albums'|@translate|escape:javascript}';
+window.str_album_name_empty = '{'Album name must not be empty'|@translate|escape:javascript}'
 
 const add_album_root_title = '{'Create a new album at root'|@translate|escape:javascript}';
 const add_sub_album_of = '{'Create a sub-album of "%s"'|@translate|escape:javascript}';

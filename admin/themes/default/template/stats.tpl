@@ -1,19 +1,19 @@
 {footer_script}
-var str_number_page_visited = "{'Page Visited'|@translate}";
+window.str_number_page_visited = "{'Page Visited'|@translate}";
 var str_number_page_visited_with_year = "{'Page Visited in %s'|@translate}";
-var str_tooltip_format = {
+window.str_tooltip_format = {
   "years":"YYYY",
   "months":"MMMM YYYY",
   "days":"DD MMM",
   "hours":"LT"
 };
-var str_unit_format = {
+window.str_unit_format = {
   "day":"dddd",
   "month":"MMM YYYY"
-}
-var str_avg = "{'Average last 12 months'|@translate}";
+};
+window.str_avg = "{'Average last 12 months'|@translate}";
 var str_months_tosplit = "{$month_labels}";
-var str_months = str_months_tosplit.split('~');
+window.str_months = str_months_tosplit.split('~');
 moment.locale("{$langCode}");
 {/footer_script}
 

@@ -2,13 +2,7 @@
 {combine_script id='picture_formats' load='footer' path='admin/themes/default/js/picture_formats.js'}
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
 
-<script>
-    const nbFormats = {count($FORMATS)}
-    const pwg_token = "{$PWG_TOKEN}"
-    const str_confirm_delete_format = "{'Delete %s format ?'|@translate}"
-    const str_confirm_msg = '{"Yes, I am sure"|@translate}';
-    const str_cancel_msg = "{"No, I have changed my mind"|@translate}";
-</script>
+<script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 
 <div class="formats-header">
     <a class="{if (count($FORMATS) != 0)}head-button-1{else}head-button-2{/if} icon-plus-circled" href="{$ADD_FORMATS_URL}">{"Add formats"|@translate}</a>

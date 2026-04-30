@@ -1,8 +1,15 @@
-declare var plugins: Array<{ name: string; state: string }>;
-declare var hasActivePlugins: boolean;
-declare var nbActivatedPlugins: number;
-declare var no_active_plugin: string;
-declare var error_occured: string;
+import { getPageData } from './page-data';
+
+interface MaintenanceEnvPageData {
+    no_active_plugin: string;
+    error_occured: string;
+}
+
+const { no_active_plugin, error_occured } = getPageData<MaintenanceEnvPageData>();
+
+let plugins: Array<{ name: string; state: string }> = [];
+let hasActivePlugins = false;
+let nbActivatedPlugins = 0;
 
 document.addEventListener('DOMContentLoaded', () => {
     fetch('ws.php?format=json&method=pwg.plugins.getList')

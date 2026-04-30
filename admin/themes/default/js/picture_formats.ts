@@ -1,7 +1,14 @@
-declare var str_confirm_delete_format: string;
-declare var str_confirm_msg: string;
-declare var str_cancel_msg: string;
-declare var pwg_token: string;
+import { getPageData } from './page-data';
+
+interface PictureFormatsPageData {
+    pwg_token: string;
+    str_confirm_delete_format: string;
+    str_confirm_msg: string;
+    str_cancel_msg: string;
+}
+
+const { pwg_token, str_confirm_delete_format, str_confirm_msg, str_cancel_msg } =
+    getPageData<PictureFormatsPageData>();
 
 function fitExtensions(): void {
     document.querySelectorAll<HTMLElement>('.format-card-ext span').forEach(el => {

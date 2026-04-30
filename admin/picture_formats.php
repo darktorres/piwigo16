@@ -57,10 +57,17 @@ foreach ($formats as &$format) {
 }
 
 $template->assign([
-  'ADD_FORMATS_URL' => get_root_url().'admin.php?page=photos_add&formats='.$_GET['image_id'],
-  'IMG_SQUARE_SRC' => DerivativeImage::url(ImageStdParams::get_by_type(IMG_SQUARE), $image),
-  'FORMATS' => $formats,
-  'PWG_TOKEN' => get_pwg_token(),
+    'ADD_FORMATS_URL' => get_root_url().'admin.php?page=photos_add&formats='.$_GET['image_id'],
+    'IMG_SQUARE_SRC'  => DerivativeImage::url(ImageStdParams::get_by_type(IMG_SQUARE), $image),
+    'FORMATS'         => $formats,
+    'PWG_TOKEN'       => get_pwg_token(),
+    'page_data_json'  => json_encode([
+        'pwg_token'                => get_pwg_token(),
+        'nb_formats'               => count($formats),
+        'str_confirm_delete_format' => l10n('Delete %s format ?'),
+        'str_confirm_msg'          => l10n('Yes, I am sure'),
+        'str_cancel_msg'           => l10n('No, I have changed my mind'),
+    ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE),
 ]);
 
 $template->set_filename('picture_formats', 'picture_formats.tpl');

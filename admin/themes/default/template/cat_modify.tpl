@@ -8,28 +8,28 @@ const has_images_becomming_orphans = '{'delete album and the %d orphan photos'|@
 const has_images_recursives = '{'delete only album, not photos'|@translate|escape:javascript}';
 const cat_nav = '{$CATEGORIES_NAV|escape:javascript}';
 const album_id = {$CAT_ID}
-var parent_album = {$PARENT_CAT_ID}
-var default_parent_album = {$PARENT_CAT_ID}
+window.parent_album = {$PARENT_CAT_ID};
+window.default_parent_album = {$PARENT_CAT_ID};
 const album_name = "{$CAT_NAME}"
 const nb_sub_albums = {$NB_SUBCATS}
-const pwg_token = '{$PWG_TOKEN}'
-const u_delete = '{$U_DELETE}'
-var is_visible = '{$IS_VISIBLE}'
-let related_categories_ids = ["{$CAT_ID}", "{$PARENT_CAT_ID}"];
+window.pwg_token = '{$PWG_TOKEN}';
+window.u_delete = '{$U_DELETE}';
+window.is_visible = '{$IS_VISIBLE}';
+window.related_categories_ids = ["{$CAT_ID}", "{$PARENT_CAT_ID}"];
 
-const str_cancel = '{'No, I have changed my mind'|@translate|@escape}'
-const str_delete_album = '{'Delete album'|@translate|escape:javascript}'
-const str_delete_album_and_his_x_subalbums = '{'Delete album "%s" and its %d sub-albums.'|@translate|escape:javascript}'
-const str_just_now = '{'Just now'|@translate|escape:javascript}'
+window.str_cancel = '{'No, I have changed my mind'|@translate|@escape}';
+window.str_delete_album = '{'Delete album'|@translate|escape:javascript}';
+window.str_delete_album_and_his_x_subalbums = '{'Delete album "%s" and its %d sub-albums.'|@translate|escape:javascript}';
+window.str_just_now = '{'Just now'|@translate|escape:javascript}';
 
-const str_dont_delete_photos = '{'delete only album, not photos'|@translate|escape:javascript}';
-const str_delete_orphans = '{'delete album and the %d orphan photos'|@translate|escape:javascript}';
-const str_delete_all_photos = '{'delete album and all %d photos, even the %d associated to other albums'|@translate|escape:javascript}';
+window.str_dont_delete_photos = '{'delete only album, not photos'|@translate|escape:javascript}';
+window.str_delete_orphans = '{'delete album and the %d orphan photos'|@translate|escape:javascript}';
+window.str_delete_all_photos = '{'delete album and all %d photos, even the %d associated to other albums'|@translate|escape:javascript}';
 
-str_orphan = '{'This photo is an orphan'|@translate|escape:javascript}';
-str_album_comment_allow = '{'Comments allowed for sub-albums'|@translate|escape:javascript}';
-str_album_comment_disallow = '{'Comments disallowed for sub-albums'|@translate|escape:javascript}';
-const str_modal_ab = '{'New parent album'|@translate}';
+window.str_orphan = '{'This photo is an orphan'|@translate|escape:javascript}';
+window.str_album_comment_allow = '{'Comments allowed for sub-albums'|@translate|escape:javascript}';
+window.str_album_comment_disallow = '{'Comments disallowed for sub-albums'|@translate|escape:javascript}';
+window.str_modal_ab = '{'New parent album'|@translate}';
 {/footer_script}
 
 <div class="cat-modify" id="cat-modify">

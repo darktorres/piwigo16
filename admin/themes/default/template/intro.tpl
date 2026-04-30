@@ -3,12 +3,7 @@ var piwigo_need_update_msg = '<a href="admin.php?page=updates">{'A new version o
 var ext_need_update_msg = '<a href="admin.php?page=updates&amp;tab=ext">{'Some upgrades are available for extensions.'|@translate|@escape:"javascript"} <i class="icon-right"></i></a>';
 const str_gb_used = "{'%s GB used'|translate}";
 const str_mb_used = "{'%s MB used'|translate}";
-const str_gb = "{'%sGB'|translate}".replace(' ', '&nbsp;');
-const str_mb = "{'%sMB'|translate}".replace(' ', '&nbsp;');
 const storage_total = {$STORAGE_TOTAL};
-const storage_details = {$STORAGE_CHART_DATA|json_encode};
-const translate_files = "{'%d files'|translate|escape:javascript}";
-let translate_type = {};
 {if isset($SUBSCRIBE_BASE_URL)}
   const newsletter_base_url = "{$SUBSCRIBE_BASE_URL}";
 {/if}
@@ -74,10 +69,8 @@ let translate_type = {};
   var chartTitleEl = document.querySelector(".chart-title-infos");
   if (chartTitleEl) chartTitleEl.innerHTML = size_info.replace("%s", size_nb);
 {/literal}
-{foreach from=$STORAGE_CHART_DATA key=type_to_translate item=details}
-translate_type['{$type_to_translate}'] = "{$type_to_translate|translate}";
-{/foreach}
 {/footer_script}
+<script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 {combine_script id='intro_tooltips' load='footer' path='admin/themes/default/js/intro_tooltips.js'}
 
 {html_style}

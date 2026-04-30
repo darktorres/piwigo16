@@ -1,12 +1,25 @@
-declare var str_an_error_has: string;
-declare var str_and_others: string;
-declare var str_comment_validated: string;
-declare var str_comments_validated: string;
-declare var str_delete: string;
-declare var str_deletes: string;
-declare var str_no_delete_confirmation: string;
-declare var str_yes_delete_confirmation: string;
-declare var pwg_token: string;
+import { getPageData } from './page-data';
+
+interface CommentsPageData {
+    pwg_token: string;
+    str_yes_delete_confirmation: string;
+    str_no_delete_confirmation: string;
+    str_delete: string;
+    str_deletes: string;
+    str_no_comments_selected: string;
+    str_an_error_has: string;
+    str_comment_validated: string;
+    str_comments_validated: string;
+    str_and_others: string;
+}
+
+const {
+    pwg_token,
+    str_yes_delete_confirmation, str_no_delete_confirmation,
+    str_delete, str_deletes, str_no_comments_selected,
+    str_an_error_has, str_comment_validated, str_comments_validated,
+    str_and_others,
+} = getPageData<CommentsPageData>();
 
 const commentsContainer = document.getElementById('comments')!;
 const advancedFilters = document.getElementById('advancedFilters') as HTMLElement;

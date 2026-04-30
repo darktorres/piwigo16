@@ -1,11 +1,18 @@
-declare var storage_details: Record<string, {
-    total: { filesize: number; nb_files: number };
-    details?: Record<string, { filesize: number; nb_files: number }>;
-}>;
-declare var str_gb: string;
-declare var str_mb: string;
-declare var translate_type: Record<string, string>;
-declare var translate_files: string;
+import { getPageData } from './page-data';
+
+interface IntroTooltipsPageData {
+    storage_details: Record<string, {
+        total: { filesize: number; nb_files: number };
+        details?: Record<string, { filesize: number; nb_files: number }>;
+    }>;
+    str_gb: string;
+    str_mb: string;
+    translate_type: Record<string, string>;
+    translate_files: string;
+}
+
+const { storage_details, str_gb, str_mb, translate_type, translate_files } =
+    getPageData<IntroTooltipsPageData>();
 
 function posLeft(el: HTMLElement): number {
     const rect = el.getBoundingClientRect();

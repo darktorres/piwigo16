@@ -1,5 +1,11 @@
-declare var unit_MB: string;
-declare var no_time_elapsed: string;
+import { getPageData } from './page-data';
+
+interface MaintenancePageData {
+    unit_MB: string;
+    no_time_elapsed: string;
+}
+
+const { unit_MB, no_time_elapsed } = getPageData<MaintenancePageData>();
 
 function displayResponse(domElem: HTMLElement[], values: string[], mDivs: NodeListOf<Element>, mValues: Record<string, string>): void {
     for (let index = 0; index < domElem.length; index++) {

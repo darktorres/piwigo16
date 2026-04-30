@@ -37,14 +37,14 @@ document.querySelectorAll('[data-datepicker]').forEach(function(el) {
 GLightbox({selector: 'a.preview-box'});
 {/literal}
 
-str_are_you_sure = '{'Are you sure?'|translate|escape:javascript}';
-str_yes = '{'Yes, delete'|translate|escape:javascript}';
-str_no = '{'No, I have changed my mind'|translate|@escape:'javascript'}';
-url_delete = '{$U_DELETE}';
-str_orphan = '{'This photo is an orphan'|@translate|escape:javascript}';
+window.str_are_you_sure = '{'Are you sure?'|translate|escape:javascript}';
+window.str_yes = '{'Yes, delete'|translate|escape:javascript}';
+window.str_no = '{'No, I have changed my mind'|translate|@escape:'javascript'}';
+window.url_delete = '{$U_DELETE}';
+window.str_orphan = '{'This photo is an orphan'|@translate|escape:javascript}';
 
 
-related_categories_ids = {$related_categories_ids|@json_encode};
+window.related_categories_ids = {$related_categories_ids|@json_encode};
 
 document.getElementById('action-delete-picture').addEventListener('click', function() {
   if (window.confirm(str_are_you_sure)) {

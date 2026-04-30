@@ -257,6 +257,10 @@ if ($register_activity) {
 // +-----------------------------------------------------------------------+
 
 $template->set_filenames(['maintenance' => 'maintenance_actions.tpl']);
+$template->assign('page_data_json', json_encode([
+    'unit_MB'        => l10n('%s MB'),
+    'no_time_elapsed' => l10n('right now'),
+], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
 $pwg_token = get_pwg_token();
 $url_format = get_root_url().'admin.php?page=maintenance&amp;action=%s&amp;pwg_token='.get_pwg_token();
 

@@ -14,6 +14,18 @@ function pwgDatepicker(el: HTMLElement, settings: PwgDatepickerOptions = {}): vo
     const linked = !!targetEl;
 
     let originalValue = String(linked ? (targetEl!.value ?? '') : (el as HTMLInputElement).value ?? '');
+    // Normalize date values to match the configured format
+    if (/^\d{4}-\d{2}-\d{2}( \d{2}:\d{2}(:\d{2})?)?$/.test(originalValue)) {
+        if (options.showTimepicker) {
+            // Ensure 'YYYY-MM-DD HH:MM' — append 00:00 if only date present
+            originalValue = originalValue.length === 10
+                ? originalValue + ' 00:00'
+                : originalValue.slice(0, 16);
+        } else {
+            originalValue = originalValue.slice(0, 10);  // 'YYYY-MM-DD'
+        }
+        if (!linked) (el as HTMLInputElement).value = originalValue;
+    }
 
     const fpOptions: flatpickr.Options.Options = {
         enableTime: !!options.showTimepicker,
@@ -53,11 +65,13 @@ function pwgDatepicker(el: HTMLElement, settings: PwgDatepickerOptions = {}): vo
     const fp = flatpickr(el, fpOptions);
     (el as any)._flatpickr = fp;
 
-    // Set initial value
+    // Set initial value — pass ISO format explicitly so Flatpickr doesn't try to parse
+    // the ISO string with the human-readable display format
     if (linked && originalValue) {
         const parts = originalValue.split(' ');
         if (parts[0].length === 10) {
-            fp.setDate(originalValue, false);
+            const isoFormat = 'Y-m-d' + (options.showTimepicker ? ' H:i' : '');
+            fp.setDate(originalValue, false, isoFormat);
         }
     }
 

@@ -31,11 +31,11 @@ declare global {
 
     // TemporaryState — constructor-type var to avoid conflict with class in common.ts module
     var TemporaryState: new () => {
-        changeAttribute(obj: JQuery, attr: string, tempVal: string): void;
-        changeClass(obj: JQuery, st: boolean, tempclass: string): void;
-        addClass(obj: JQuery, tempclass: string): void;
-        removeClass(obj: JQuery, tempclass: string): void;
-        changeHTML(obj: JQuery, temphtml: string): void;
+        changeAttribute(el: HTMLElement, attr: string, tempVal: string): void;
+        changeClass(el: HTMLElement, st: boolean, tempclass: string): void;
+        addClass(el: HTMLElement, tempclass: string): void;
+        removeClass(el: HTMLElement, tempclass: string): void;
+        changeHTML(el: HTMLElement, html: string): void;
         reverse(): void;
     };
 

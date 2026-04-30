@@ -53,9 +53,23 @@
 }
 
 .flatpickr-prev svg,
-.flatpickr-next svg {
-  width: 14px;
-  height: 14px;
+.flatpickr-next svg,
+.flatpickr-prev-month svg,
+.flatpickr-next-month svg {
+  display: block;
+  width: 14px !important;
+  height: 14px !important;
+  max-width: 14px;
+  max-height: 14px;
+}
+
+.flatpickr-prev-month,
+.flatpickr-next-month {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Navigation arrows as SVG */

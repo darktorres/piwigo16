@@ -121,7 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Hide the original select element - Tom Select creates a styled replacement
         sel.style.display = 'none';
 
-        // After Tom Select initializes, resize the control for better readability
+        // After Tom Select initializes, resize the control and input field for better readability
         setTimeout(() => {
             const wrapper = sel.closest('#filter_tags')?.querySelector<HTMLElement>('.ts-control');
             if (wrapper) {
@@ -129,6 +129,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 wrapper.style.padding = '6px 8px';
                 wrapper.style.fontSize = '14px';
                 wrapper.style.lineHeight = '24px';
+                const input = wrapper.querySelector<HTMLInputElement>('input[type="text"]');
+                if (input) {
+                    input.removeAttribute('size');
+                }
             }
         }, 100);
 

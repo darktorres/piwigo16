@@ -243,7 +243,7 @@ if (userprefs_get_param('user-manager-view', 'line') == 'line') {
     $template->assign('pagination', userprefs_get_param('user-manager-pagination', 10));
 }
 
-function webmaster_id_is_local(): int
+function webmaster_id_is_local(): bool
 {
     $conf = [];
     include(PHPWG_ROOT_PATH . 'include/config_default.inc.php');
@@ -251,7 +251,7 @@ function webmaster_id_is_local(): int
     if (\Piwigo\Core\Config::has('local_dir_site')) {
         @include(PHPWG_ROOT_PATH.PWG_LOCAL_DIR. 'config/config.inc.php');
     }
-    return \Piwigo\Core\Config::webmasterId();
+    return isset($conf['webmaster_id']);
 }
 
 if (webmaster_id_is_local()) {

@@ -66,6 +66,15 @@ function pwgDatepicker(el: HTMLElement, settings: PwgDatepickerOptions = {}): vo
     const fp = flatpickr(el, fpOptions);
     (el as any)._flatpickr = fp;
 
+    // Fix SVG arrow sizing - set width/height attributes on navigation SVGs
+    const calendar = fp.calendarContainer;
+    if (calendar) {
+        calendar.querySelectorAll('svg').forEach((svg) => {
+            svg.setAttribute('width', '14');
+            svg.setAttribute('height', '14');
+        });
+    }
+
     // Set initial value — pass ISO format explicitly so Flatpickr doesn't try to parse
     // the ISO string with the human-readable display format
     if (linked && originalValue) {

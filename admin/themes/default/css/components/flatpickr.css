@@ -57,10 +57,6 @@
 .flatpickr-prev-month svg,
 .flatpickr-next-month svg {
   display: block;
-  width: 14px !important;
-  height: 14px !important;
-  max-width: 14px;
-  max-height: 14px;
 }
 
 .flatpickr-prev-month,

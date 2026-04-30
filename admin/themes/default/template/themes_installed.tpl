@@ -1,4 +1,5 @@
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
+{include file='include/colorbox.inc.tpl'}
 {footer_script}
 const title_msg = '{'Are you sure you want to delete this theme?'|@translate|@escape:'javascript'}';
 const confirm_msg = '{"Yes, I am sure"|@translate}';
@@ -19,7 +20,7 @@ Array.from(document.querySelectorAll(".delete-theme-button")).forEach(function(b
 
 {footer_script}
 {literal}
-GLightbox({selector: 'a.preview-box'});
+if (window.GLightbox) window.GLightbox({selector: 'a.preview-box'});
 {/literal}
 
 document.addEventListener('mouseup', function(e) {

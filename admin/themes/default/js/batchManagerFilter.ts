@@ -22,8 +22,6 @@ const {
 
 let errorFilters = '';
 
-const doubleSlider = (window as any).pwgDoubleSlider as (el: HTMLElement, options: any) => void;
-
 function filter_enable(filter: string): void {
     const el = document.getElementById(filter);
     if (el) el.style.display = '';
@@ -75,6 +73,8 @@ function hide_filters_error(message: string): void {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    const doubleSlider = (window as any).pwgDoubleSlider as (el: HTMLElement, options: any) => void;
+
     const ab_filter = new (window as any).AlbumSelector({
         selectedCategoriesIds: selected_filter_cat_ids,
         selectAlbum: select_album_filter,

@@ -1,6 +1,6 @@
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
 
-{combine_script id='alternativeView' load='footer' path='admin/themes/default/js/cat_list.js'}
+{combine_script id='cat_list' load='footer' path='admin/themes/default/js/cat_list.js'}
 
 {footer_script}
 var addAlbumHead = document.querySelector(".addAlbumHead");

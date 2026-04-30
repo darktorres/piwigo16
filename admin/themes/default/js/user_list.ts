@@ -514,8 +514,8 @@ function get_initials(username: string) {
     const words = username.toUpperCase().split(' ');
     return words[0][0] + (words.length > 1 && words[1][0] ? words[1][0] : '');
 }
-function get_status_index(status: string) { return status_arr.indexOf(status) || 0; }
-function get_level_index(level: string) { return level_arr.indexOf(level) || 0; }
+function get_status_index(status: string) { const i = status_arr.indexOf(status); return i >= 0 ? i : 0; }
+function get_level_index(level: string) { const i = level_arr.indexOf(level); return i >= 0 ? i : 0; }
 function is_owner(user_id: any) { return user_id === owner_id; }
 function copyToClipboard(text: string) { navigator.clipboard?.writeText(text); }
 
@@ -564,9 +564,9 @@ function fill_user_edit_properties(user_to_edit: any, popIn: HTMLElement) {
     const currentGroupTs = user_to_edit.id === guest_id ? groupGuestTs : groupTs;
     const emailInput = q<HTMLInputElement>('.user-property-email input'); if (emailInput) emailInput.value = user_to_edit.email ?? '';
     const statusSelect = q<HTMLSelectElement>('.user-property-status select');
-    if (statusSelect) { Array.from(statusSelect.options)[get_status_index(user_to_edit.status)]!.selected = true; }
+    if (statusSelect) { const o = Array.from(statusSelect.options)[get_status_index(user_to_edit.status)]; if (o) o.selected = true; }
     const levelSelect = q<HTMLSelectElement>('.user-property-level select');
-    if (levelSelect) { Array.from(levelSelect.options)[get_level_index(user_to_edit.level)]!.selected = true; }
+    if (levelSelect) { const o = Array.from(levelSelect.options)[get_level_index(user_to_edit.level)]; if (o) o.selected = true; }
     set_selected_groups(user_to_edit.groups);
     loadGroupOptions(currentGroupTs);
     const hdCb = q('.user-list-checkbox[name="hd_enabled"]'); if (hdCb) hdCb.dataset['selected'] = user_to_edit.enabled_high === 'true' ? '1' : '0';
@@ -748,9 +748,9 @@ function fill_new_user() {
     set_selected_groups(guest_user.groups ?? []);
     loadGroupOptions(groupAddUserTs);
     const statusSelect = qs<HTMLSelectElement>(`.AddUserInputContainer .user-property-status select`, popIn);
-    if (statusSelect) Array.from(statusSelect.options)[statusIdx]!.selected = true;
+    if (statusSelect) { const o = Array.from(statusSelect.options)[statusIdx]; if (o) o.selected = true; }
     const levelSelect = qs<HTMLSelectElement>(`.AddUserInputContainer .user-property-level select`, popIn);
-    if (levelSelect) Array.from(levelSelect.options)[levelIdx]!.selected = true;
+    if (levelSelect) { const o = Array.from(levelSelect.options)[levelIdx]; if (o) o.selected = true; }
     const hdCb = qs('.AddUserInputContainer .user-list-checkbox[name="hd_enabled"]', popIn);
     if (hdCb) (hdCb as HTMLElement).dataset['selected'] = guest_user.enabled_high === 'true' ? '1' : '0';
 }

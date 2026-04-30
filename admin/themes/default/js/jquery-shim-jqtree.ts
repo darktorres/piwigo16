@@ -51,6 +51,55 @@ const jqFn: Record<string, (...args: any[]) => any> = {
         if (content !== undefined) { if (this._el) (this._el as HTMLElement).innerHTML = content; return this; }
         return (this._el as HTMLElement)?.innerHTML ?? '';
     },
+    get(this: JqObj, index?: number): Element | Element[] | undefined {
+        const els: Element[] = this._el ? [this._el] : [];
+        return index === undefined ? els : els[index];
+    },
+    empty(this: JqObj): JqObj {
+        if (this._el) (this._el as HTMLElement).innerHTML = '';
+        return this;
+    },
+    append(this: JqObj, content: JqObj | Element | string): JqObj {
+        if (!this._el) return this;
+        if (typeof content === 'string') { (this._el as HTMLElement).insertAdjacentHTML('beforeend', content); }
+        else if (content instanceof Element) { this._el.appendChild(content); }
+        else if ((content as JqObj)._el) { this._el.appendChild((content as JqObj)._el!); }
+        return this;
+    },
+    before(this: JqObj, content: JqObj | Element | string): JqObj {
+        if (!this._el?.parentNode) return this;
+        if (typeof content === 'string') { this._el.insertAdjacentHTML('beforebegin', content); }
+        else { const el = content instanceof Element ? content : (content as JqObj)._el; if (el) this._el.parentNode.insertBefore(el, this._el); }
+        return this;
+    },
+    after(this: JqObj, content: JqObj | Element | string): JqObj {
+        if (!this._el?.parentNode) return this;
+        if (typeof content === 'string') { this._el.insertAdjacentHTML('afterend', content); }
+        else { const el = content instanceof Element ? content : (content as JqObj)._el; if (el) this._el.parentNode.insertBefore(el, this._el.nextSibling); }
+        return this;
+    },
+    remove(this: JqObj): JqObj {
+        this._el?.parentNode?.removeChild(this._el);
+        return this;
+    },
+    hide(this: JqObj): JqObj {
+        if (this._el) (this._el as HTMLElement).style.display = 'none';
+        return this;
+    },
+    show(this: JqObj): JqObj {
+        if (this._el) (this._el as HTMLElement).style.display = '';
+        return this;
+    },
+    slideUp(this: JqObj, _duration?: number | string, callback?: () => void): JqObj {
+        if (this._el) (this._el as HTMLElement).style.display = 'none';
+        if (callback) callback();
+        return this;
+    },
+    slideDown(this: JqObj, _duration?: number | string, callback?: () => void): JqObj {
+        if (this._el) (this._el as HTMLElement).style.display = '';
+        if (callback) callback();
+        return this;
+    },
 };
 
 function jq(selector: string | Element | null | EventTarget): JqObj {
@@ -88,6 +137,19 @@ function jq(selector: string | Element | null | EventTarget): JqObj {
         .then(r => r.json())
         .then((d: unknown) => opts.success?.(d))
         .catch((e: unknown) => opts.error?.(e));
+};
+
+// jqTree uses jQuery.removeData(el, key) to clean up
+(jq as any).removeData = (el: Element | null, key: string): void => {
+    if (el) delete (el as any).__jqData__?.[key];
+};
+
+// jqTree uses jQuery.data(el, key, val) as a static data store
+(jq as any).data = (el: Element | null, key: string, value?: unknown): any => {
+    if (!el) return undefined;
+    (el as any).__jqData__ ??= {};
+    if (value !== undefined) { (el as any).__jqData__[key] = value; }
+    return (el as any).__jqData__?.[key];
 };
 
 // Stub for widget registration (jqTree's simple.widget uses this pattern)

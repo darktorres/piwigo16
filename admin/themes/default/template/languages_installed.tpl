@@ -1,14 +1,15 @@
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
 {footer_script}
-$(".delete-lang-button").each(function() {
-  let title_msg = '{'Are you sure you want to delete the language "%s"?'|@translate|@escape:'javascript'}';
-  const confirm_msg = '{"Yes, I am sure"|@translate}';
-  const cancel_msg = '{"No, I have changed my mind"|@translate|@escape:'javascript'}';
-  let lang_name = $(this).closest(".languageBox").find('.languageName').html();
-  $(this).pwg_jconfirm_follow_href({
-    alert_title: title_msg.replace("%s", lang_name),
-    alert_confirm: confirm_msg,
-    alert_cancel: cancel_msg
+document.querySelectorAll('.delete-lang-button').forEach(function(el) {
+  var title_msg = '{'Are you sure you want to delete the language "%s"?'|@translate|@escape:'javascript'}';
+  var confirm_msg = '{"Yes, I am sure"|@translate}';
+  var cancel_msg = '{"No, I have changed my mind"|@translate|@escape:'javascript'}';
+  var lang_name = el.closest('.languageBox').querySelector('.languageName').innerHTML;
+  el.addEventListener('click', function(e) {
+    e.preventDefault();
+    if (window.confirm(title_msg.replace('%s', lang_name))) {
+      window.location.href = el.getAttribute('href');
+    }
   });
 });
 {/footer_script}

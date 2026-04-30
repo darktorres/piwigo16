@@ -4,112 +4,130 @@
 {footer_script}
 const confirm_msg = '{"Yes, I am sure"|@translate}';
 const cancel_msg = "{"No, I have changed my mind"|@translate}";
-let selected = [];
-$(".lock-gallery-button").each(function() {
+
+document.querySelectorAll('.lock-gallery-button').forEach(function(el) {
   const gallery_tip = '{"A locked gallery is only visible to administrators"|@translate|@escape:'javascript'}';
   {if (isset($U_MAINT_LOCK_GALLERY))}
-    let title = '{"Are you sure you want to lock the gallery?"|@translate}';
+    const title = '{"Are you sure you want to lock the gallery?"|@translate}';
   {else}
-    let title = '{"Are you sure you want to unlock the gallery?"|@translate}';
+    const title = '{"Are you sure you want to unlock the gallery?"|@translate}';
   {/if}
-  
-  let confirm_msg_gallery = '{"Yes, I want to lock the gallery"|@translate}';
-  let cancel_msg_gallery = '{"Keep it unlocked"|@translate}';
-  $(this).pwg_jconfirm_follow_href({
-    alert_title: title,
-    alert_confirm: confirm_msg,
-    alert_cancel: cancel_msg,
-    alert_content: gallery_tip
+  el.addEventListener('click', function(e) {
+    e.preventDefault();
+    if (window.confirm(title + '\n' + gallery_tip)) {
+      window.location.href = el.getAttribute('href');
+    }
   });
 });
-$(".purge-history-detail-button").each(function() {
+
+document.querySelectorAll('.purge-history-detail-button').forEach(function(el) {
   const title = '{"Purge history detail"|@translate|@escape:'javascript'}';
-  $(this).pwg_jconfirm_follow_href({
-    alert_title: title,
-    alert_confirm: confirm_msg,
-    alert_cancel: cancel_msg
+  el.addEventListener('click', function(e) {
+    e.preventDefault();
+    if (window.confirm(title)) {
+      window.location.href = el.getAttribute('href');
+    }
   });
 });
-$(".purge-history-summary-button").each(function() {
+
+document.querySelectorAll('.purge-history-summary-button').forEach(function(el) {
   const title = '{"Purge history summary"|@translate|@escape:'javascript'}';
-  $(this).pwg_jconfirm_follow_href({
-    alert_title: title,
-    alert_confirm: confirm_msg,
-    alert_cancel: cancel_msg
+  el.addEventListener('click', function(e) {
+    e.preventDefault();
+    if (window.confirm(title)) {
+      window.location.href = el.getAttribute('href');
+    }
   });
 });
-$(".purge-search-history-button").each(function() {
+
+document.querySelectorAll('.purge-search-history-button').forEach(function(el) {
   const title = '{"Purge search history"|@translate|@escape:'javascript'}';
-  $(this).pwg_jconfirm_follow_href({
-    alert_title: title,
-    alert_confirm: confirm_msg,
-    alert_cancel: cancel_msg
+  el.addEventListener('click', function(e) {
+    e.preventDefault();
+    if (window.confirm(title)) {
+      window.location.href = el.getAttribute('href');
+    }
   });
 });
-$(".delete-all-sizes-button").each(function() {
+
+document.querySelectorAll('.delete-all-sizes-button').forEach(function(el) {
   const title = '{"Are you sure you want to delete all sizes?"|@translate|@escape:'javascript'}';
-  $(this).pwg_jconfirm_follow_href({
-    alert_title: title,
-    alert_confirm: confirm_msg,
-    alert_cancel: cancel_msg
+  el.addEventListener('click', function(e) {
+    e.preventDefault();
+    if (window.confirm(title)) {
+      window.location.href = el.getAttribute('href');
+    }
   });
 });
 
-$(".delete-size-check").click(function () {
-  if ($(this).attr('data-selected') == '1') {
-    $(this).attr('data-selected', '0');
-    $(this).find("i").hide();
-  } else {
-    $(this).attr('data-selected', '1');
-    $(this).find("i").show();
-  }
-  $(this).trigger("change");
-});
-$(".delete-size-check:first").change(function() {
-  if ($(this).attr('data-selected') == '1') {
-    $(".delete-size-check").hide();
-    $(".delete-size-check").attr("data-selected", "1");
-    $(this).show();
-  } else {
-    $(".delete-size-check").show();
-    $(".delete-size-check").attr("data-selected", "0");
-  }
-})
-const delete_deriv_URL = "admin.php?page=maintenance&action=derivatives&";
-$(".delete-size-check").change(function() {
-  let delete_deriv_with_token = delete_deriv_URL + "pwg_token=" + "{$pwg_token}&";
-  let types_str = '';
-  let selected = []
-  $(".delete-size-check").each(function () {
-    if ($(this).attr("data-selected") == '1') {
-      selected.push($(this).attr("name"));
-    }
-  })
-  if (selected.length == 0) {
-    $(".delete-sizes").attr("href", "");
-  } else {
-    if (selected[0] == "all") {
-      types_str = "all";
+document.querySelectorAll('.delete-size-check').forEach(function(el) {
+  el.addEventListener('click', function() {
+    if (el.getAttribute('data-selected') == '1') {
+      el.setAttribute('data-selected', '0');
+      el.querySelector('i').style.display = 'none';
     } else {
-      types_str = selected.join("_");
+      el.setAttribute('data-selected', '1');
+      el.querySelector('i').style.display = '';
     }
-    console.log(selected);
-    $(".delete-sizes").attr("href", delete_deriv_with_token + "type=" + types_str);
-  }
-})
+    el.dispatchEvent(new Event('change'));
+  });
+});
 
-$(".delete-sizes").hide();
-$(".delete-size-check").click( function () {
-  let displayDeleteSizes = false;
-  $(".delete-size-check").each(function() {
-    if ($(this).attr("data-selected") == 1) {
-      displayDeleteSizes = true;
+const firstCheck = document.querySelector('.delete-size-check');
+if (firstCheck) {
+  firstCheck.addEventListener('change', function() {
+    if (firstCheck.getAttribute('data-selected') == '1') {
+      document.querySelectorAll('.delete-size-check').forEach(function(x) {
+        x.style.display = 'none';
+        x.setAttribute('data-selected', '1');
+      });
+      firstCheck.style.display = '';
+    } else {
+      document.querySelectorAll('.delete-size-check').forEach(function(x) {
+        x.style.display = '';
+        x.setAttribute('data-selected', '0');
+      });
     }
   });
+}
 
-  (displayDeleteSizes ? $(".delete-sizes").show() : $(".delete-sizes").hide())
+const delete_deriv_URL = "admin.php?page=maintenance&action=derivatives&";
+document.querySelectorAll('.delete-size-check').forEach(function(el) {
+  el.addEventListener('change', function() {
+    const delete_deriv_with_token = delete_deriv_URL + "pwg_token=" + "{$pwg_token}&";
+    let types_str = '';
+    const selected = [];
+    document.querySelectorAll('.delete-size-check').forEach(function(x) {
+      if (x.getAttribute('data-selected') == '1') {
+        selected.push(x.getAttribute('name'));
+      }
+    });
+    if (selected.length == 0) {
+      document.querySelector('.delete-sizes').setAttribute('href', '');
+    } else {
+      if (selected[0] == 'all') {
+        types_str = 'all';
+      } else {
+        types_str = selected.join('_');
+      }
+      console.log(selected);
+      document.querySelector('.delete-sizes').setAttribute('href', delete_deriv_with_token + 'type=' + types_str);
+    }
+  });
+});
 
-})
+document.querySelector('.delete-sizes').style.display = 'none';
+document.querySelectorAll('.delete-size-check').forEach(function(el) {
+  el.addEventListener('click', function() {
+    let displayDeleteSizes = false;
+    document.querySelectorAll('.delete-size-check').forEach(function(x) {
+      if (x.getAttribute('data-selected') == '1') {
+        displayDeleteSizes = true;
+      }
+    });
+    document.querySelector('.delete-sizes').style.display = displayDeleteSizes ? '' : 'none';
+  });
+});
 
 {/footer_script}
 

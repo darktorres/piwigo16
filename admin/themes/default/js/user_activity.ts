@@ -142,7 +142,7 @@ get_user_activity(activity_page, uid_filter, action_filter, object_filter, [date
 
 function get_user_activity(page: any, uid: any, act: any, obj: any, date: any, id: any) {
     // beforeSend equivalent
-    document.querySelectorAll<HTMLElement>('.tab > *:not(#-1):not(.loading)').forEach(el => el.remove());
+    document.querySelectorAll<HTMLElement>('.tab > *:not([id="-1"]):not(.loading)').forEach(el => el.remove());
     document.querySelectorAll<HTMLElement>('.loading').forEach(el => { el.style.display = ''; });
     document.querySelector('.pagination-arrow.rigth')?.classList.add('unavailable');
     document.querySelector('.pagination-arrow.left')?.classList.add('unavailable');

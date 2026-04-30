@@ -78,7 +78,8 @@ const hide = (el: HTMLElement | null | undefined) => { if (el) el.style.display 
 var dataTags: any[] = JSON.parse(qs('.tag-container')?.dataset['tags'] ?? '[]');
 
 /*------- init select -------*/
-(document.getElementById('select-100') as HTMLInputElement)!.checked = true;
+const sel100 = document.getElementById('select-100') as HTMLInputElement | null;
+if (sel100) sel100.checked = true;
 
 /*------- Orphan tags -------*/
 qs('.info-warning p a')?.addEventListener('click', () => {

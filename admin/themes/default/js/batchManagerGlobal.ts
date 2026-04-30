@@ -1,5 +1,3 @@
-import GLightbox from 'glightbox';
-import 'glightbox/dist/css/glightbox.css';
 import tippy from 'tippy.js';
 import 'tippy.js/dist/tippy.css';
 
@@ -99,7 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /*---- Preview lightbox ----*/
-GLightbox({ selector: 'a.preview-box' });
+(window as any).GLightbox({ selector: 'a.preview-box' });
 tippy('.thumbnails img', { delay: [0, 0], duration: [200, 200] });
 
 /*---- Datepicker + AddAlbum ----*/

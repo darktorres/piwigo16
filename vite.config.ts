@@ -17,7 +17,6 @@ export default defineConfig({
                 // ── Frontend (themes/default) ─────────────────────────────
                 'core.scripts':       r('themes/default/js/scripts.ts'),
                 'core.switchbox':     r('themes/default/js/switchbox.ts'),
-                'lightbox':           r('themes/default/js/lightbox.ts'),
                 'mcs':                r('themes/default/js/mcs.ts'),
                 'pngfix':             r('themes/default/js/pngfix.ts'),
                 'rating':             r('themes/default/js/rating.ts'),

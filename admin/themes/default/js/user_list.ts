@@ -1,3 +1,9 @@
+import TomSelect from 'tom-select';
+import noUiSlider from 'nouislider';
+import 'nouislider/dist/nouislider.css';
+import tippy from 'tippy.js';
+import 'tippy.js/dist/tippy.css';
+
 declare var number: any;
 declare var None: any;
 declare var cancel_msg: any;
@@ -45,7 +51,11 @@ declare var user_added_str: any;
 declare var validLinkMail: any;
 declare var validLinkWithoutMail: any;
 declare var view_selector: any;
-const color_icons = ["icon-red", "icon-blue", "icon-yellow", "icon-purple", "icon-green"];
+declare var nb_filtered_users: any;
+declare function sprintf(fmt: string, ...args: unknown[]): string;
+declare function getRandomInt(min: number, max: number): number;
+
+const color_icons = ['icon-red', 'icon-blue', 'icon-yellow', 'icon-purple', 'icon-green'];
 const status_arr = ['webmaster', 'admin', 'normal', 'generic', 'guest'];
 const level_arr = ['0', '1', '2', '4', '8'];
 const king_template = '<p class="icon-king" id="the_king"></p>';
@@ -62,2471 +72,1346 @@ let last_user_id = -1;
 let pwg_token = '';
 let selection: any[] = [];
 let first_update = true;
-let total_users = 0
+let total_users = 0;
 let filter_by = 'id DESC';
 let plugins_set_functions: Record<string, any> = {};
 let plugins_get_functions: Record<string, any> = {};
-let plugins_load = [];
+let plugins_load: any[] = [];
 let plugins_users_infos_table: any[] = [];
 let owner_username = '';
-/*----------------
-Escape of pop-in
-----------------*/
 
-//get out of pop in via escape key
-$(document).on('keydown', function (e) {
-    if ( e.keyCode === 27) { // ESC button
-        hide_modals();
-        close_user_list();
+const qs = <T extends HTMLElement = HTMLElement>(sel: string, ctx: Element | Document = document) => ctx.querySelector<T>(sel);
+const qsa = <T extends HTMLElement = HTMLElement>(sel: string, ctx: Element | Document = document) => Array.from(ctx.querySelectorAll<T>(sel));
+const show = (el: HTMLElement | null | undefined) => { if (el) el.style.display = ''; };
+const hide = (el: HTMLElement | null | undefined) => { if (el) el.style.display = 'none'; };
+function fadeInEl(el: HTMLElement | null | undefined) { if (el) el.style.display = ''; }
+function fadeOutEl(el: HTMLElement | null | undefined, delay = 0) {
+    if (!el) return;
+    setTimeout(() => {
+        el.style.transition = 'opacity 0.4s';
+        el.style.opacity = '0';
+        setTimeout(() => { el.style.display = 'none'; el.style.opacity = ''; el.style.transition = ''; }, 400);
+    }, delay);
+}
+function fadeInThenOut(el: HTMLElement | null | undefined, showMs = 0, fadeDuration = 400) {
+    if (!el) return;
+    el.style.display = '';
+    el.style.opacity = '1';
+    setTimeout(() => {
+        el.style.transition = `opacity ${fadeDuration / 1000}s`;
+        el.style.opacity = '0';
+        setTimeout(() => { el.style.display = 'none'; el.style.opacity = ''; el.style.transition = ''; }, fadeDuration);
+    }, showMs);
+}
+
+function pwgPost(method: string, params: Record<string, any>): Promise<any> {
+    const body = new URLSearchParams();
+    for (const [k, v] of Object.entries(params)) {
+        if (Array.isArray(v)) v.forEach(item => body.append(k + '[]', String(item ?? '')));
+        else if (v !== undefined && v !== null) body.append(k, String(v));
     }
+    return fetch(`ws.php?format=json&method=${method}`, { method: 'POST', body }).then(r => r.json());
+}
+
+function getSliderValue(el: HTMLElement | null): number {
+    if (!el) return 0;
+    const val = (el as any).noUiSlider?.get();
+    return Array.isArray(val) ? parseInt(String(val[0])) : parseInt(String(val ?? 0));
+}
+function getSliderValues(el: HTMLElement | null): [number, number] {
+    if (!el) return [0, 0];
+    const vals = (el as any).noUiSlider?.get() as string[] | undefined;
+    return [parseInt(vals?.[0] ?? '0'), parseInt(vals?.[1] ?? '0')];
+}
+function setSliderValue(el: HTMLElement | null | undefined, val: number) {
+    if (el && (el as any).noUiSlider) (el as any).noUiSlider.set(val);
+}
+
+// Tom Select instances for groups
+const groupSelectEls = Array.from(document.querySelectorAll<HTMLSelectElement>('[data-selectize=groups]'));
+const tsOptions = { valueField: 'value', labelField: 'label', searchField: ['label'], plugins: { remove_button: {} } };
+let groupTs = groupSelectEls[0] ? new TomSelect(groupSelectEls[0], tsOptions) : null;
+let groupGuestTs = groupSelectEls[1] ? new TomSelect(groupSelectEls[1], tsOptions) : null;
+let groupAddUserTs = groupSelectEls[2] ? new TomSelect(groupSelectEls[2], tsOptions) : null;
+
+function getPopInTs(popIn: HTMLElement): TomSelect | null {
+    const sel = popIn.querySelector<HTMLElement>('.user-property-group select');
+    return sel ? (sel as any).tomselect ?? null : null;
+}
+
+/*---- Escape popup ----*/
+document.addEventListener('keydown', (e: KeyboardEvent) => {
+    if (e.key === 'Escape') { hide_modals(); close_user_list(); }
 });
 
-//get out of pop in via clicking outside pop in
-//$(document).on('click', function (e) {
-//    console.log($(e.target));
-//    if ($(e.target) && $(e.target).closest(".UserListPopInContainer").length === 0) {
-//        $("#UserList").fadeOut();
-//    }
-//});
+/*---- Open/Close functions ----*/
+function open_user_list() { hide_temporary_messages(); show(document.getElementById('UserList')); }
+function close_user_list() { hide_temporary_messages(); (qs<HTMLInputElement>('#result_send_mail_copy_input'))!.value = ''; hide(document.getElementById('UserList')); }
+function open_guest_user_list() { hide_temporary_messages(); show(document.getElementById('GuestUserList')); }
+function close_guest_user_list() { hide_temporary_messages(); hide(document.getElementById('GuestUserList')); }
+function isSelectionMode() { return (document.getElementById('toggleSelectionMode') as HTMLInputElement)?.checked; }
 
-/*----------------
-Group Selectize
-----------------*/
-
-jQuery('[data-selectize=groups]').selectize({
-    valueField: 'value',
-    labelField: 'label',
-    searchField: ['label'],
-    plugins: ['remove_button']
-});
-
-let groupSelectize = (jQuery('[data-selectize=groups]')[0] as any).selectize;
-let groupGuestSelectize = (jQuery('[data-selectize=groups]')[1] as any).selectize;
-let groupAddUserSelectize = ($('[data-selectize=groups]')[2] as any).selectize;
-
-/*-----------------
-OnClick functions
------------------*/
-function open_user_list() {
-    hide_temporary_messages();
-    $("#UserList").fadeIn();
-}
-
-function close_user_list() {
-    hide_temporary_messages();
-    $('#result_send_mail_copy_input').val('');
-    $("#UserList").fadeOut();
-}
-
-function open_guest_user_list() {
-    hide_temporary_messages();
-    $("#GuestUserList").fadeIn();
-}
-
-function close_guest_user_list() {
-    hide_temporary_messages();
-    $("#GuestUserList").fadeOut();
-}
-
-
-function isSelectionMode() {
-    return $("#toggleSelectionMode").is(":checked")
-}
-
-$( document ).ready(function() {
-    $(".user-property-register").tipTip({
-        maxWidth: "300px",
-        delay: 0,
-        fadeIn: 200,
-        fadeOut: 200
-    });
-    $(".user-property-last-visit").tipTip({
-        maxWidth: "300px",
-        delay: 0,
-        fadeIn: 200,
-        fadeOut: 200
-    });
-    $(".advanced-filter-level select option").eq(1).remove();
-
-    /* Edit Password */ 
-    $('.button-edit-password-icon').click(function () {
-        reset_password_modals();
-        $('.user-property-password-change').fadeIn();
-    })
-
-    $('.edit-password-cancel').click(function () {
-        $('.user-property-password-change').fadeOut();
-        reset_input_password();
-    })
-
-    $('.icon-show-password').on('click', function() {
-        const icon = $(this);
-        const closestInput = icon.siblings();
-        if (closestInput.attr('type') === 'password') {
-            closestInput.attr('type', 'text');
-            icon.removeClass('icon-eye').addClass('icon-eye-off');
-        } else {
-            closestInput.attr('type', 'password');
-            icon.removeClass('icon-eye-off').addClass('icon-eye');
-        }
-    });
-
-    // Password input onkeyup clear error
-    $('#edit_user_password, #edit_user_conf_password').on('keyup', function() {
-        hide_error_edit_user();
-    });
-
-    /* Edit Username */
-    $('.edit-username').click(function () {
-        $('.user-property-username-change').show();
-    })
-
-    $('.edit-username-cancel').click(function () {
-        //possibly reset input value
-        $('.user-property-username-change').hide();
-    })
-
-    $('#UserList .close-update-button').click(close_user_list);
-    $('.CloseUserList').click(close_user_list);
-
-    $("#toggleSelectionMode").prop("checked", false);
-    $("#toggleSelectionMode").click(function () {
-        let isSelection = $(this).is(":checked");
-        selectionMode(isSelection);
-    });
-    $('.edit-guest-user-button').click(open_guest_user_list);
-    $('.CloseGuestUserList').click(close_guest_user_list);
-    $('#GuestUserList .close-update-button').click(close_guest_user_list);
-    /* Action */
-    jQuery("[id^=action_]").hide();
-
-    jQuery("select[name=selectAction]").change(function () {
-        jQuery("#applyActionBlock .infos").hide();
-        jQuery("[id^=action_]").hide();
-        jQuery("#action_"+$(this).prop("value")).show();
-        if (jQuery(this).val() != -1) {
-            jQuery("#applyActionBlock").show();
-        } else {
-            jQuery("#applyActionBlock").hide();
-        }
-    });
-    $(".yes_no_radio .user-list-checkbox").unbind("click").click(function () {
-        if ($(this).attr("data-selected") !== "1") {
-            $(this).attr("data-selected", "1");
-            $(this).siblings().attr("data-selected", "0");
-        }
-    })
-    $('.EditUserGenPassword').on('click', function() {
-        const password = gen_password();
-        $('#edit_user_password').val(password);
-        $('#edit_user_conf_password').val(password);
-        hide_error_edit_user();
-    });
-    $('.AddUserGenPassword span').on('click', function() {
-        const password = gen_password();
-        $('#add_user_pass').val(password);
-        $('#add_user_confpass').val(password);
-    });
-    $('.AddUserSubmit').click(add_user);
-    $('.AddUserCancel').click(add_user_close);
-    $(".CloseAddUser").click(add_user_close);   
-
-
-    //open add user pop in
-    $('.add-user-button').click(add_user_open);
-
-    /* Select */
-
-    jQuery("#selectSet").click(function () {
-        select_whole_set();
-        return false;
-    });
-
-
-    jQuery("#selectAllPage").click(function () {
-        let selection_ids = selection.map(x => x.id);
-        for (let i = 0; i < current_users.length; i++) {
-            if (!selection_ids.includes(current_users[i].id)) {
-                selection.push({id: current_users[i].id, username: current_users[i].username});
-            }
-        }
-        update_selection_content();
-        return false;
-    });
-
-    jQuery("#selectNone").click(function () {
-        selection = [];
-        update_selection_content();
-        return false;
-    });
-
-    jQuery("#selectInvert").click(function () {
-        let selection_ids = selection.map(x => x.id);
-        for (let i = 0; i < current_users.length; i++) {
-            if (selection_ids.includes(current_users[i].id)) {
-                selection.splice(selection.findIndex((x) => x.id == current_users[i].id), 1);
-            } else {
-                selection.push({id: current_users[i].id, username: current_users[i].username});
-            }
-        }
-        update_selection_content();
-        return false;
-    });
-
-    $("#permitActionUserList select[name=selectAction]").val("-1");
-
-    $(".advanced-filter-btn").click(advanced_filter_button_click);
-    $(".advanced-filter span.icon-cancel").click(advanced_filter_hide);
-    $(".advanced-filter-select").change(update_user_list);
-    $("#user_search").on("input", update_user_list);
-
-    /*View manager*/
-
-    if ($("#displayCompact").is(":checked")) {
-        setDisplayCompact();
-    };
-
-    if ($("#displayLine").is(":checked")) {
-        setDisplayLine();
-    };
-
-    if ($("#displayTile").is(":checked")) {
-        setDisplayTile();
-    };
-
-    $("#displayCompact").change(function () {
-        setDisplayCompact();
-
-        if ($(".addAlbum").hasClass("input-mode")) {
-            $(".addAlbum p").hide();
-        }
-        set_view_selector('compact');
-    });
-
-    $("#displayLine").change(function () {
-        setDisplayLine();
-
-        if ($(".addAlbum").hasClass("input-mode")) {
-            $(".addAlbum p").hide();
-        }
-        set_view_selector('line');
-    });
-
-    $("#displayTile").change(function () {
-        setDisplayTile();
-
-        if ($(".addAlbum").hasClass("input-mode")) {
-            $(".addAlbum p").show();
-        }
-        set_view_selector('tile');
-    });
-
-    /* Pagination */
-
-    switch (pagination) {
-      case '5':
-        $("#pagination-per-page-5").addClass("selected-pagination");
-        $("#pagination-per-page-10").removeClass("selected-pagination");
-        $("#pagination-per-page-25").removeClass("selected-pagination");
-        $("#pagination-per-page-50").removeClass("selected-pagination");
-        break;
-      case '10':
-        $("#pagination-per-page-5").removeClass("selected-pagination");
-        $("#pagination-per-page-10").addClass("selected-pagination");
-        $("#pagination-per-page-25").removeClass("selected-pagination");
-        $("#pagination-per-page-50").removeClass("selected-pagination");
-      
-        break;
-      case '25':
-        $("#pagination-per-page-5").removeClass("selected-pagination");
-        $("#pagination-per-page-10").removeClass("selected-pagination");
-        $("#pagination-per-page-25").addClass("selected-pagination");
-        $("#pagination-per-page-50").removeClass("selected-pagination");
-      
-        break;
-      case '50':
-        $("#pagination-per-page-5").removeClass("selected-pagination");
-        $("#pagination-per-page-10").removeClass("selected-pagination");
-        $("#pagination-per-page-25").removeClass("selected-pagination");
-        $("#pagination-per-page-50").addClass("selected-pagination");
-        break;
-      default:
-
-        break;
-    }
-
-    
-    //$("#pagination-per-page-"+pagination).trigger('click');
-
-    if (has_group) {
-      advanced_filter_button_click();
-      $("select[name='filter_group']").val(has_group);
-      update_user_list();
-    }
-
-    $('.search-cancel').on('click', function () {
-      $('.search-input').val('');
-      $('.search-input').trigger ("input");
-    })
-    
-    $('.search-input').on('input', function() {
-      if ($('.search-input').val() == '') {
-        $('.search-cancel').hide();
-      } else {
-        $('.search-cancel').show();
-      }
-    })
-    // Filter by id (registered) and username
-    const icon_user = $('#icon-usr-list-user');
-    const icon_registered = $('#icon-usr-list-registered');
-    $('#usr-list-registered').on('click', function() {
-        icon_user.css('display', 'none');
-        icon_registered.css('display', 'block');
-        icon_user.attr('class', 'icon-down');
-        switch(filter_by) {
-            case 'id DESC':
-                icon_registered.attr('class', 'icon-down');
-                filter_by = 'id ASC';
-                break;
-            case 'id ASC':
-                icon_registered.attr('class', 'icon-up');
-                filter_by = 'id DESC';
-                break;
-            default:
-                icon_registered.attr('class', 'icon-up');
-                filter_by = 'id DESC';
-                break;
-        }
-        update_user_list();
-    });
-    $('#usr-list-user').on('click', function() {
-        icon_registered.css('display', 'none');
-        icon_user.css('display', 'block');
-        icon_registered.attr('class', 'icon-up');
-        switch(filter_by) {
-            case 'username DESC':
-                icon_user.attr('class', 'icon-down');
-                filter_by = 'username ASC';
-                break;
-            case 'username ASC':
-                icon_user.attr('class', 'icon-up');
-                filter_by = 'username DESC';
-                break;
-            default:
-                icon_user.attr('class', 'icon-down');
-                filter_by = 'username ASC'
-                break;
-        }
-        update_user_list();
-    });
-
-    /* tabsheet pop in user */
-    editTabsBind();
-
-    $('.edit-user-slides').on('scroll', function() {
-        const slides = $('.edit-user-slides').children();
-        const rectView = this.getBoundingClientRect();
-        $('.edit-user-tabsheet').removeClass('selected');
-        // for debug
-        // console.log('RECT REFERENCES left / right', rectView.left.toFixed(0), ' / ', rectView.right.toFixed(0));
-
-        slides.each(function() {
-            const rect = this.getBoundingClientRect();
-            // for debug
-            // console.log('rect',$(this).attr('id'), ' left / right : ', rect.left, ' / ', rect.right);
-            if (+rect.left.toFixed(0) >= +rectView.left.toFixed(0) - 1 && +rect.right.toFixed(0) <= +rectView.right.toFixed(0) + 1) {
-                const tabId = $(this).attr('id');
-                $('#name_' + tabId).addClass('selected');
-            }
-        });
-    });
-
-     /* tabsheet pop in guest */
-    $('.guest-edit-user-tabsheet').off('click').on('click', function() {
-        const tabName = $(this).attr('id')!.split('_');
-        const tabId = tabName[1] + '_' + tabName[2] + '_' + tabName[3];
-        $('#' + tabId)[0].scrollIntoView({
-            behavior: 'smooth'
-        });
-    });
-    $('.guest-edit-user-slides').on('scroll', function() {
-        const slides = $('.guest-edit-user-slides').children();
-        const rectView = this.getBoundingClientRect();
-        $('.guest-edit-user-tabsheet').removeClass('selected');
-        slides.each(function() {
-            const rect = this.getBoundingClientRect();
-            if (+rect.left.toFixed(0) >= +rectView.left.toFixed(0) - 1 && +rect.right.toFixed(0) <= +rectView.right.toFixed(0) + 1) {
-                const tabId = $(this).attr('id');
-                $('#name_' + tabId).addClass('selected');
-            }
-        });
-
-    });
-});
-
-function set_view_selector(view_type: any) {
-  $.ajax({
-    url: "ws.php?format=json&method=pwg.users.preferences.set",
-    type: "POST",
-    dataType: "JSON",
-    data: {
-      param: 'user-manager-view',
-      value: view_type,
-    }
-  })
-}
-
-function setDisplayTile() {
-    $(".user-container-wrapper").removeClass("compactView").removeClass("lineView").addClass("tileView");
-    $(".user-header-col").addClass("hide");
-
-}
-
-function setDisplayLine() {
-    $(".user-container-wrapper").removeClass("tileView").removeClass("compactView").addClass("lineView");
-    $(".user-header-col").removeClass("hide");
-
-}
-
-function setDisplayCompact() {
-    $(".user-container-wrapper").removeClass("tileView").removeClass("lineView").addClass("compactView");
-    $(".user-header-col").addClass("hide");
-
-    if (per_page < 10) {
-        per_page = 10
-        update_pagination_menu();
-        update_user_list();
-    
-        $("#pagination-per-page-5").removeClass("selected-pagination");
-        $("#pagination-per-page-10").addClass("selected-pagination");
-        $("#pagination-per-page-25").removeClass("selected-pagination");
-        $("#pagination-per-page-50").removeClass("selected-pagination");
-    }
-}
-
-
-/*----------------
-Checkboxes
-----------------*/
-
-function checkbox_change(this: HTMLElement) {
-    if ($(this).attr('data-selected') == '1') {
-        $(this).find("i").hide();
-    } else {
-        $(this).find("i").show();
-    }
-}
-
-function checkbox_click(this: HTMLElement) {
-    if ($(this).attr('data-selected') == '1') {
-        $(this).attr('data-selected', '0');
-        $(this).find("i").hide();
-    } else {
-        $(this).attr('data-selected', '1');
-        $(this).find("i").show();
-    }
-}
-
-$('.user-list-checkbox').unbind("change").change(checkbox_change);
-$('.user-list-checkbox').unbind("click").click(checkbox_click);
-
-/* ---------------
-User edit sliders 
-----------------*/
+/*---- Sliders ----*/
 const nb_image_page_values = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,35,40,45,50,60,70,80,90,100,200,300,500,999];
 const recent_period_values = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,25,30,40,50,60,80,99];
 const recent_period_init = 0;
-//const recent_period_init = getSliderKeyFromValue($('.period-select-bar input[name=recent_period]').val(), recent_period_values);
 const nb_image_page_init = 0;
-//const nb_image_page_init = getSliderKeyFromValue($('.photos-select-bar input[name=nb_image_page]').val(), nb_image_page_values);
 
-/**
-* find the key from a value in the startStopValues array
-*/
-function getSliderKeyFromValue(value: any, values: any) {
-    for (var key in values) {
-        if (values[key] >= value) {
-            return key;
-        }
+function getSliderKeyFromValue(value: any, values: any[]) {
+    for (let key = 0; key < values.length; key++) {
+        if (values[key] >= value) return key;
     }
     return 0;
 }
+function getNbImagePageInfoFromIdx(idx: any) { return String(nb_image_page_values[idx]); }
+function getRecentPeriodInfoFromIdx(idx: any) { return sprintf(nb_days, recent_period_values[idx]); }
 
-function getNbImagePageInfoFromIdx(idx: any) {
-    return sprintf(
-        nb_photos,
-        nb_image_page_values[idx]
-    );
+function makeSlider(sel: string, maxIdx: number, initVal: number, onUpdate: (idx: number) => void, onStop?: (idx: number) => void) {
+    const el = qs<HTMLElement>(sel);
+    if (!el) return;
+    const slider = noUiSlider.create(el, { range: { min: 0, max: maxIdx }, start: initVal, step: 1, connect: [true, false] });
+    slider.on('update', ([val]) => onUpdate(parseInt(String(val))));
+    if (onStop) slider.on('change', ([val]) => onStop(parseInt(String(val))));
 }
 
-function getRecentPeriodInfoFromIdx(idx: any) {
-    return sprintf(
-        nb_days,
-        recent_period_values[idx]
-    );
-    //return recent_period_values[idx].toString();
+function initSliders() {
+    // Photos sliders
+    [
+        { sel: '#UserList .photos-select-bar .slider-bar-container', infoSel: '#UserList .photos-select-bar .nb-img-page-infos', inputSel: '#UserList .photos-select-bar input[name=nb_image_page]' },
+        { sel: '#GuestUserList .photos-select-bar .slider-bar-container', infoSel: '#GuestUserList .photos-select-bar .nb-img-page-infos', inputSel: '#GuestUserList .photos-select-bar input[name=nb_image_page]' },
+        { sel: '#permitActionUserList .photos-select-bar .slider-bar-container', infoSel: '#permitActionUserList .photos-select-bar .nb-img-page-infos', inputSel: '#permitActionUserList .photos-select-bar input[name=nb_image_page]' },
+    ].forEach(({ sel, infoSel, inputSel }) => {
+        makeSlider(sel, nb_image_page_values.length - 1, nb_image_page_init,
+            idx => { const el = qs<HTMLElement>(infoSel); if (el) el.innerHTML = getNbImagePageInfoFromIdx(idx); },
+            idx => { const inp = qs<HTMLInputElement>(inputSel); if (inp) { inp.value = String(nb_image_page_values[idx]); inp.dispatchEvent(new Event('change')); } }
+        );
+    });
+    // Reset permitAction photos slider to 0
+    setSliderValue(qs('#permitActionUserList .photos-select-bar .slider-bar-container'), 0);
+    const periodInfo = getRecentPeriodInfoFromIdx(0);
+    const piEl = qs<HTMLElement>('#permitActionUserList .period-select-bar .recent_period_infos'); if (piEl) piEl.innerHTML = periodInfo;
+
+    // Period sliders
+    [
+        { sel: '#UserList .period-select-bar .slider-bar-container', infoSel: '#UserList .period-select-bar .recent_period_infos', inputSel: '#UserList .period-select-bar input[name=recent_period]' },
+        { sel: '#GuestUserList .period-select-bar .slider-bar-container', infoSel: '#GuestUserList .period-select-bar .recent_period_infos', inputSel: '#GuestUserList .period-select-bar input[name=recent_period]' },
+        { sel: '#permitActionUserList .period-select-bar .slider-bar-container', infoSel: '#permitActionUserList .period-select-bar .recent_period_infos', inputSel: '#permitActionUserList .period-select-bar input[name=recent_period]' },
+    ].forEach(({ sel, infoSel, inputSel }) => {
+        makeSlider(sel, recent_period_values.length - 1, recent_period_init,
+            idx => { const el = qs<HTMLElement>(infoSel); if (el) el.innerHTML = getRecentPeriodInfoFromIdx(idx); },
+            idx => { const inp = qs<HTMLInputElement>(inputSel); if (inp) { inp.value = String(recent_period_values[idx]); inp.dispatchEvent(new Event('change')); } }
+        );
+    });
 }
 
-/* Photos bar slider */
-jQuery('#UserList .photos-select-bar .slider-bar-container').slider({
-    range: "min",
-    min: 0,
-    max: nb_image_page_values.length - 1,
-    value: nb_image_page_init,
-    change: function( event, ui ) {
-        $('#UserList .photos-select-bar .nb-img-page-infos').html(getNbImagePageInfoFromIdx(ui.value));
-    },
-    slide: function( event, ui ) {
-        $('#UserList .photos-select-bar .nb-img-page-infos').html(getNbImagePageInfoFromIdx(ui.value));
-    },
-    stop: function( event, ui ) {
-        $('#UserList .photos-select-bar input[name=nb_image_page]').val(nb_image_page_values[ui.value!]).trigger('change');
-    }
-});
-
-
-jQuery('#GuestUserList .photos-select-bar .slider-bar-container').slider({
-    range: "min",
-    min: 0,
-    max: nb_image_page_values.length - 1,
-    value: nb_image_page_init,
-    change: function( event, ui ) {
-        $('#GuestUserList .photos-select-bar .nb-img-page-infos').html(getNbImagePageInfoFromIdx(ui.value));
-    },
-    slide: function( event, ui ) {
-        $('#GuestUserList .photos-select-bar .nb-img-page-infos').html(getNbImagePageInfoFromIdx(ui.value));
-    },
-    stop: function( event, ui ) {
-        $('#GuestUserList .photos-select-bar input[name=nb_image_page]').val(nb_image_page_values[ui.value!]).trigger('change');
-    }
-});
-
-$('#permitActionUserList .photos-select-bar .nb-img-page-infos').html(getNbImagePageInfoFromIdx(0));
-jQuery('#permitActionUserList .photos-select-bar .slider-bar-container').slider({
-    range: "min",
-    min: 0,
-    max: nb_image_page_values.length - 1,
-    value: nb_image_page_init,
-    change: function( event, ui ) {
-        $('#permitActionUserList .photos-select-bar .nb-img-page-infos').html(getNbImagePageInfoFromIdx(ui.value));
-    },
-    slide: function( event, ui ) {
-        $('#permitActionUserList .photos-select-bar .nb-img-page-infos').html(getNbImagePageInfoFromIdx(ui.value));
-    },
-    stop: function( event, ui ) {
-        $('#permitActionUserList .photos-select-bar input[name=nb_image_page]').val(nb_image_page_values[ui.value!]).trigger('change');
-    }
-});
-
-/* recent_period slider */
-$('#UserList .period-select-bar .slider-bar-container').slider({
-    range: "min",
-    min: 0,
-    max: recent_period_values.length - 1,
-    value: recent_period_init,
-    change: function( event, ui ) {
-        $('#UserList .period-select-bar .recent_period_infos').html(getRecentPeriodInfoFromIdx(ui.value));
-    },
-    slide: function( event, ui ) {
-        $('#UserList .period-select-bar .recent_period_infos').html(getRecentPeriodInfoFromIdx(ui.value));
-    },
-    stop: function( event, ui ) {
-        $('#UserList .period-select-bar input[name=recent_period]').val(recent_period_values[ui.value!]).trigger('change');
-    }
-});
-
-$('#GuestUserList .period-select-bar .slider-bar-container').slider({
-    range: "min",
-    min: 0,
-    max: recent_period_values.length - 1,
-    value: recent_period_init,
-    change: function( event, ui ) {
-        $('#GuestUserList .period-select-bar .recent_period_infos').html(getRecentPeriodInfoFromIdx(ui.value));
-    },
-    slide: function( event, ui ) {
-        $('#GuestUserList .period-select-bar .recent_period_infos').html(getRecentPeriodInfoFromIdx(ui.value));
-    },
-    stop: function( event, ui ) {
-        $('#GuestUserList .period-select-bar input[name=recent_period]').val(recent_period_values[ui.value!]).trigger('change');
-    }
-});
-
-$('#permitActionUserList .period-select-bar .slider-bar-container').slider({
-    range: "min",
-    min: 0,
-    max: recent_period_values.length - 1,
-    value: recent_period_init,
-    change: function( event, ui ) {
-        $('#permitActionUserList .period-select-bar .recent_period_infos').html(getRecentPeriodInfoFromIdx(ui.value));
-    },
-    slide: function( event, ui ) {
-        $('#permitActionUserList .period-select-bar .recent_period_infos').html(getRecentPeriodInfoFromIdx(ui.value));
-    },
-    stop: function( event, ui ) {
-        $('#permitActionUserList .period-select-bar input[name=recent_period]').val(recent_period_values[ui.value!]).trigger('change');
-    }
-});
-$('#permitActionUserList .photos-select-bar .slider-bar-container').slider("option", "value", 0);
-let period_info = getRecentPeriodInfoFromIdx(0);
-$('#permitActionUserList .period-select-bar .recent_period_infos').html(period_info);
-
-
-/* -----------
-Pagination
-------------*/
-
+/*---- Pagination ----*/
 let per_page = 5;
 let actual_page = 1;
-let max_page = 1;
-let nb_filtered_users = 0;
-const page_ellipsis = '<span>...</span>'
-const page_item = '<a data-page="%d">%d</a>';
-let promise_pending = false;
-let update_ask = false;
-
-function move_to_page(page: any) {
-    if (page < 1 || page > max_page)
-        return;
-    actual_page = page;
-    update_pagination_menu();
-    update_user_list();
-}
-
-$('.pagination-arrow.rigth').on('click', () => {
-    move_to_page(actual_page + 1);
-})
-
-$('.pagination-arrow.left').on('click', () => {
-    move_to_page(actual_page - 1);
-})
-
-$('.pagination-per-page a').on('click',function () {
-
-    jQuery.ajax({
-      url: "ws.php?format=json&method=pwg.users.preferences.set",
-      type: "POST",
-      data: {
-          param: "user-manager-pagination",
-          value: parseInt($(this).html()),
-          is_json: false,
-      }
-  });
-
-    per_page = parseInt($(this).html());
-    actual_page = 1;
-    update_pagination_menu();
-    update_user_list();
-
-
-    $(this).parent().children("a").removeClass("selected-pagination");
-
-    $(this).addClass("selected-pagination");
-});
-
-function append_pagination_item(page: any = null) {
-    if (page != null) {
-        let new_tag = $(page_item.replace(/%d/g, page));
-        $('.pagination-item-container').append(new_tag);
-        if (actual_page == page) {
-            new_tag.addClass('actual');
-        }
-        new_tag.on('click', () => {
-            move_to_page(new_tag.data('page'));
-        })
-    } else {
-        $('.pagination-item-container').append($(page_ellipsis));
-    }
-}
-
-function update_pagination_items() {
-    $('.pagination-item-container a').remove();
-    $('.pagination-item-container span').remove();
-
-    append_pagination_item(1);
-
-    if (actual_page > 2) {
-        append_pagination_item();
-    }
-    if (actual_page != 1 && actual_page != max_page) {
-        append_pagination_item(actual_page)
-    }
-    if (actual_page < (max_page - 1)) {
-        append_pagination_item();
-    }   
-    append_pagination_item(max_page);
-
-}
 
 function update_pagination_menu() {
-    max_page = Math.ceil(nb_filtered_users / per_page);
-    updateArrows();
-    update_pagination_items();
-    if (max_page <= 1) {
-        $('.pagination-container').hide();
-    } else {
-        $('.pagination-container').show();
-    }
+    const container = qs<HTMLElement>('.pagination-item-container'); if (container) container.innerHTML = '';
+    // pages are rendered server-side; just update arrows
+    qs('.pagination-arrow.left')?.classList.toggle('unavailable', actual_page <= 1);
 }
 
-function updateArrows() {
-    if (actual_page == 1) {
-        $('.pagination-arrow.left').addClass('unavailable');
-    } else {
-        $('.pagination-arrow.left').removeClass('unavailable');
-    }   
-    if (actual_page == max_page) {
-        $('.pagination-arrow.rigth').addClass('unavailable');
-    } else {
-        $('.pagination-arrow.rigth').removeClass('unavailable');
-    }
-}
-
-/*------------------
-Advanced filter
-------------------*/
-
+/*---- Advanced filter ----*/
 function advanced_filter_button_click() {
-    if (!$(".advanced-filter").hasClass("advanced-filter-open")) {
-        advanced_filter_show();
-    } else { 
-        advanced_filter_hide();
-    }
-    // update_user_list();
+    if (!qs('.advanced-filter')?.classList.contains('advanced-filter-open')) advanced_filter_show();
+    else advanced_filter_hide();
 }
-
 function advanced_filter_show() {
-    $(".advanced-filter-btn, .advanced-filter").addClass("advanced-filter-open");
+    qsa('.advanced-filter-btn, .advanced-filter').forEach(el => el.classList.add('advanced-filter-open'));
 }
-
 function advanced_filter_hide() {
-    $(".advanced-filter-btn, .advanced-filter").removeClass("advanced-filter-open");
+    qsa('.advanced-filter-btn, .advanced-filter').forEach(el => el.classList.remove('advanced-filter-open'));
 }
 
 let months: any[] = [];
-
 function getDateStr(date: any) {
-    let date_arr = date.split('-');
-    let curr_month = months[parseInt(date_arr[1]) - 1];
-    return curr_month + " " + date_arr[0]
+    const parts = date.split('-');
+    return months[parseInt(parts[1]) - 1] + ' ' + parts[0];
 }
 
 function setupRegisterDates(register_dates: any) {
-    $('.advanced-filter .dates-select-bar .slider-bar-container').slider({
-        range: true,
-        min: 0,
-        max: register_dates.length - 1,
-        values: [0, register_dates.length - 1],
-        change: function( event, ui ) {
-            $(".advanced-filter .dates-infos").html(sprintf(dates_infos, getDateStr(register_dates[ui.values![0]]), getDateStr(register_dates[ui.values![1]])));
-        },
-        slide: function( event, ui ) {
-            $(".advanced-filter .dates-infos").html(sprintf(dates_infos, getDateStr(register_dates[ui.values![0]]), getDateStr(register_dates[ui.values![1]])));
-        },
-        stop: function( event, ui ) {
-            $(".advanced-filter .dates-infos").html(sprintf(dates_infos, getDateStr(register_dates[ui.values![0]]), getDateStr(register_dates[ui.values![1]])));
-            update_user_list();
-        }
+    const el = qs<HTMLElement>('.advanced-filter .dates-select-bar .slider-bar-container');
+    if (!el || !register_dates?.length) return;
+    const slider = noUiSlider.create(el, {
+        range: { min: 0, max: register_dates.length - 1 },
+        start: [0, register_dates.length - 1],
+        step: 1,
+        connect: true
     });
-
-    $(".advanced-filter .dates-infos").html(sprintf(dates_infos, getDateStr(register_dates[0]), getDateStr(register_dates[register_dates.length - 1])));
-            
+    const updateDates = (vals: (string | number)[]) => {
+        const min = parseInt(String(vals[0])), max = parseInt(String(vals[1]));
+        const infoEl = qs<HTMLElement>('.advanced-filter .dates-infos');
+        if (infoEl) infoEl.innerHTML = sprintf(dates_infos, getDateStr(register_dates[min]), getDateStr(register_dates[max]));
+    };
+    slider.on('update', updateDates);
+    slider.on('change', (vals) => { updateDates(vals); update_user_list(); });
+    const infoEl = qs<HTMLElement>('.advanced-filter .dates-infos');
+    if (infoEl) infoEl.innerHTML = sprintf(dates_infos, getDateStr(register_dates[0]), getDateStr(register_dates[register_dates.length - 1]));
 }
-/*------------------
-Add User
-------------------*/
 
+/*---- Add User ----*/
 function gen_password() {
-    var characterSet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
-
-    var i;
-    var password;
-    var length = getRandomInt(8, 15);
-
-    password = '';
-    for (i = 0; i < length; i++) {
-      password += characterSet.charAt(Math.floor(Math.random() * characterSet.length));
-    }
-
-    return password;
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+    const length = getRandomInt(8, 15);
+    return Array.from({ length }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
 }
 
 function add_user_close() {
-    $("#AddUser").fadeOut(() => {
-        $("#AddUser .AddUserErrors").css("visibility", "hidden");
-    });
+    const addUser = document.getElementById('AddUser')!;
+    addUser.style.display = 'none';
+    const errors = qs<HTMLElement>('#AddUser .AddUserErrors'); if (errors) errors.style.visibility = 'hidden';
 }
 
 function add_user_open() {
-    $('#AddUserSuccessContainer').hide();
-    $('#AddUserFieldContainer').show();
-    $('#AddUser :input').val('');
-    $('#add_user_password').hide();
+    hide(document.getElementById('AddUserSuccessContainer'));
+    show(document.getElementById('AddUserFieldContainer'));
+    qsa<HTMLInputElement>('#AddUser :is(input, textarea, select)').forEach(el => { el.value = ''; });
+    hide(document.getElementById('add_user_password'));
     fill_new_user();
-    $("#AddUser").fadeIn();
-    $(".AddUserLabelUsername input").first().focus();
-    $('#AddUser .user-property-status .user-property-select').off('change').on('change', function() {
-        const status = $(this).val();
-        $('#add_user_pass ,#add_user_confpass').val('');
-        if ('generic' === status) {
-            $('#add_user_password').show();
-            return;
-        }
-        $('#add_user_password').hide();
+    show(document.getElementById('AddUser'));
+    (qs<HTMLInputElement>('.AddUserLabelUsername input'))?.focus();
+
+    const statusSel = qs<HTMLSelectElement>('#AddUser .user-property-status .user-property-select');
+    const newSel = statusSel?.cloneNode(true) as HTMLSelectElement;
+    statusSel?.replaceWith(newSel);
+    newSel?.addEventListener('change', function(this: HTMLSelectElement) {
+        const status = this.value;
+        (qs<HTMLInputElement>('#add_user_pass'))!.value = '';
+        (qs<HTMLInputElement>('#add_user_confpass'))!.value = '';
+        if ('generic' === status) show(document.getElementById('add_user_password'));
+        else hide(document.getElementById('add_user_password'));
     });
 }
 
-/*------------------
-Selection mode
-------------------*/
+/*---- Checkboxes ----*/
+function checkbox_change(this: HTMLElement) {
+    const i = this.querySelector<HTMLElement>('i');
+    if (this.dataset['selected'] === '1') hide(i); else show(i);
+}
+function checkbox_click(this: HTMLElement) {
+    const i = this.querySelector<HTMLElement>('i');
+    if (this.dataset['selected'] === '1') { this.dataset['selected'] = '0'; hide(i); }
+    else { this.dataset['selected'] = '1'; show(i); }
+}
 
+qsa('.user-list-checkbox').forEach(el => {
+    el.addEventListener('change', checkbox_change.bind(el));
+    el.addEventListener('click', checkbox_click.bind(el));
+});
+
+/*---- Selection mode ----*/
 function checkbox_container_change(this: HTMLElement) {
-    if ($(this).attr('data-selected') == '1') {
-        $(this).attr('data-selected', '0');
-        $(this).find("i").hide();
-    } else {
-        $(this).attr('data-selected', '1');
-        $(this).find("i").show();
-    }
+    const i = this.querySelector<HTMLElement>('i');
+    if (this.dataset['selected'] === '1') hide(i); else show(i);
 }
-
 function checkbox_container_click(this: HTMLElement) {
-    let curr_container = $(this).closest(".user-container");
-    let in_container = curr_container.length != 0;
-    let curr_user = in_container ? current_users[parseInt(curr_container.attr("key")!)] : {id: -1};
-    if ($(this).attr('data-selected') == '1') {
-        $(this).attr('data-selected', '0');
-        $(this).find("i").hide();
-        if (in_container) {
-            curr_container.removeClass("container-selected");
-            selection = selection.filter((elem) => elem.id != curr_user.id);
-        }
+    const container = this.closest<HTMLElement>('.user-container');
+    const inContainer = !!container;
+    const currUser = inContainer ? current_users[parseInt(container!.getAttribute('key') ?? '0')] : { id: -1 };
+    if (this.dataset['selected'] === '1') {
+        this.dataset['selected'] = '0';
+        this.querySelector<HTMLElement>('i')!.style.display = 'none';
+        if (inContainer) { container!.classList.remove('container-selected'); selection = selection.filter(e => e.id !== currUser.id); }
     } else {
-        $(this).attr('data-selected', '1');
-        $(this).find("i").show();
-        if (in_container) {
-            curr_container.addClass("container-selected");
-            selection.push({id: curr_user.id, username: curr_user.username})
-        }
+        this.dataset['selected'] = '1';
+        this.querySelector<HTMLElement>('i')!.style.display = '';
+        if (inContainer) { container!.classList.add('container-selected'); selection.push({ id: currUser.id, username: currUser.username }); }
     }
-    if (in_container) {
-        update_selection_content();
-    }
+    if (inContainer) update_selection_content();
 }
 
-function create_user_selected_item(user: any) {
-    let new_elem = $("#template .user-selected-item").clone();
-    new_elem.attr("data-id", user.id.toString());
-    new_elem.find("p").html(user.username);
-    new_elem.find("a").click(() => {
-        selection.splice(selection.findIndex((i) => i.id == user.id), 1);
+function create_user_selected_item(user: any): HTMLElement {
+    const tmpl = document.getElementById('template')?.querySelector<HTMLElement>('.user-selected-item')?.cloneNode(true) as HTMLElement;
+    if (!tmpl) return document.createElement('div');
+    tmpl.dataset['id'] = String(user.id);
+    tmpl.querySelector('p')!.innerHTML = user.username;
+    tmpl.querySelector('a')?.addEventListener('click', () => {
+        selection.splice(selection.findIndex(i => i.id === user.id), 1);
         update_selection_content();
-    })
-    return new_elem;
+    });
+    return tmpl;
 }
 
 function generate_user_selected_items() {
-    let items_created = 0;
-    let others = selection.length - 5;
-    $('.user-selected-list .user-selected-item').remove();
-    for (let i = 0; i < selection.length && items_created < 5; i++) {
+    qsa('.user-selected-list .user-selected-item').forEach(el => el.remove());
+    let created = 0;
+    const others = selection.length - 5;
+    for (let i = 0; i < selection.length && created < 5; i++) {
         if (typeof selection[i].username !== 'undefined') {
-            $('.user-selected-list').append(create_user_selected_item(selection[i])); 
-            items_created += 1;
+            qs('.user-selected-list')?.appendChild(create_user_selected_item(selection[i]));
+            created++;
         }
     }
-    if (others >= 1) {
-        $(".selection-other-users").html(str_and_others_tags.replace('%s', others))
-        $(".selection-other-users").show()
-    } else {
-        $(".selection-other-users").hide();
-    }
-    return
+    const othersEl = qs<HTMLElement>('.selection-other-users');
+    if (others >= 1) { if (othersEl) { othersEl.innerHTML = str_and_others_tags.replace('%s', others); show(othersEl); } }
+    else hide(othersEl);
 }
 
 function fill_user_selected_list() {
-    let elems_with_username = 0;
-    for (let i = 0; i < selection.length && elems_with_username < 5;i++) {
-        if (typeof selection[i].username !== 'undefined') {
-            elems_with_username += 1;
-        }
+    let withUsername = 0;
+    for (let i = 0; i < selection.length && withUsername < 5; i++) {
+        if (typeof selection[i].username !== 'undefined') withUsername++;
     }
-    if (elems_with_username < 5 && elems_with_username != selection.length) {
-        get_first_selection_usernames(generate_user_selected_items);
-    } else {
-        generate_user_selected_items();
-    }
+    if (withUsername < 5 && withUsername !== selection.length) get_first_selection_usernames(generate_user_selected_items);
+    else generate_user_selected_items();
 }
 
 function update_selection_content() {
     number = selection.length;
     fill_user_selected_list();
-    if (number == 0) {
-        $("#forbidAction").show();
-        $('.selection-mode-ul').hide();
-        $("#permitActionUserList").hide();
-    } else {
-        $("#forbidAction").hide();
-        $("#permitActionUserList").show();
-        $('.selection-mode-ul').show();
-    }
+    if (number === 0) { show(document.getElementById('forbidAction')); qsa('.selection-mode-ul').forEach(hide); hide(document.getElementById('permitActionUserList')); }
+    else { hide(document.getElementById('forbidAction')); show(document.getElementById('permitActionUserList')); qsa('.selection-mode-ul').forEach(show); }
     set_selected_to_selection();
-    $("#applyActionBlock .infos").hide();
+    qsa<HTMLElement>('#applyActionBlock .infos').forEach(hide);
 }
 
 function set_selected_to_selection() {
-    if (!$("#toggleSelectionMode").is(":checked")) {
-        return
-    }
-    $(".user-container-wrapper .user-container").each(function (index) {
-        selection_ids = selection.map(x => x.id);
-        if (selection_ids.includes(current_users[index].id)) {
-            $(this).addClass("container-selected");
-            $(this).find(".user-list-checkbox").attr("data-selected", "1");
-            $(this).find(".user-list-checkbox i").show();
+    if (!isSelectionMode()) return;
+    qsa('.user-container-wrapper .user-container').forEach((container, index) => {
+        const selIds = selection.map(x => x.id);
+        if (current_users[index] && selIds.includes(current_users[index].id)) {
+            container.classList.add('container-selected');
+            container.querySelector<HTMLElement>('.user-list-checkbox')!.dataset['selected'] = '1';
+            show(container.querySelector<HTMLElement>('.user-list-checkbox i'));
         } else {
-            $(this).removeClass("container-selected");
-            $(this).find(".user-list-checkbox").attr("data-selected", "0");
-            $(this).find(".user-list-checkbox i").hide();
+            container.classList.remove('container-selected');
+            container.querySelector<HTMLElement>('.user-list-checkbox')!.dataset['selected'] = '0';
+            hide(container.querySelector<HTMLElement>('.user-list-checkbox i'));
         }
-    })
+    });
 }
 
-function selectionMode(isSelection: any) {
-    $("#permitActionUserList select[name=selectAction]").val("-1");
-    $("#permitActionUserList select[name=selectAction]").trigger("change");
+function selectionMode(isSelection: boolean) {
+    (qs<HTMLSelectElement>('#permitActionUserList select[name=selectAction]'))!.value = '-1';
+    qs('#permitActionUserList select[name=selectAction]')?.dispatchEvent(new Event('change'));
     if (isSelection) {
-        //resets the selection
-        //selection = [];
         set_selected_to_selection();
-        $(".in-selection-mode").show();
-        $(".not-in-selection-mode").hide();
-
-        if (view_selector === "tile") {
-            $(".user-container-email").show();
-        }
-
-        if (view_selector === "compact") {
-            $(".user-container-email").css({
-                display: "none"
-            })
-        }
-
-        $(".user-container").addClass("selectable");
+        qsa('.in-selection-mode').forEach(el => { el.style.display = ''; });
+        qsa('.not-in-selection-mode').forEach(el => { el.style.display = 'none'; });
+        if (view_selector === 'tile') qsa<HTMLElement>('.user-container-email').forEach(el => { el.style.display = ''; });
+        if (view_selector === 'compact') qsa<HTMLElement>('.user-container-email').forEach(el => { el.style.display = 'none'; });
+        qsa('.user-container').forEach(el => el.classList.add('selectable'));
     } else {
-        $(".container-selected").removeClass("container-selected");
-        $(".in-selection-mode").hide();
-        $(".not-in-selection-mode").show();
-
-        if (view_selector === "tile" || view_selector === "line") {
-            $(".user-container-email").css({
-                display: "flex"
-            })
-        }
-
-        $(".user-container").removeClass("selectable");
-
+        qsa('.container-selected').forEach(el => el.classList.remove('container-selected'));
+        qsa('.in-selection-mode').forEach(el => { el.style.display = 'none'; });
+        qsa('.not-in-selection-mode').forEach(el => { el.style.display = ''; });
+        if (view_selector === 'tile' || view_selector === 'line') qsa<HTMLElement>('.user-container-email').forEach(el => { el.style.display = 'flex'; });
+        qsa('.user-container').forEach(el => el.classList.remove('selectable'));
     }
 }
 
-
-/*------------------
-General functions
-------------------*/
-
+/*---- General helpers ----*/
 function hide_temporary_messages() {
-    $(".update-user-success").hide();
-    $("#AddUserSuccess").hide();
-    $('.error-msg').hide();
+    qsa('.update-user-success,.error-msg,#AddUserSuccess').forEach(hide);
 }
 
 function get_group_name_from_id(id: any) {
-    for (let i = 0; i < groups_arr.length; i++) {
-        if (groups_arr[i][0] == id) {
-            return (groups_arr[i][1]);
-        }
-    }
-    return ("group_id error");
+    const g = groups_arr.find(g => g[0] == id);
+    return g ? g[1] : 'group_id error';
 }
-
 function get_container_index_from_uid(uid: any) {
-    for (let i = 0; i < current_users.length; i++) {
-        if (current_users[i].id == uid) {
-            return i;
-        }
-    }
-    return -1;
+    return current_users.findIndex(u => u.id == uid);
 }
-
 function hide_error_edit_user() {
-    $('#UserList .EditUserErrors').animate({opacity: 0}, 100);
+    const el = qs<HTMLElement>('#UserList .EditUserErrors'); if (el) { el.style.transition = 'opacity 0.1s'; el.style.opacity = '0'; }
 }
-
 function show_error_edit_user() {
-    $('#UserList .EditUserErrors').animate({opacity: 1}, 300);
+    const el = qs<HTMLElement>('#UserList .EditUserErrors'); if (el) { el.style.transition = 'opacity 0.3s'; el.style.opacity = '1'; }
 }
-
 function reset_input_password() {
-    $('#edit_user_password, #edit_user_conf_password').val('');
+    qsa<HTMLInputElement>('#edit_user_password, #edit_user_conf_password').forEach(el => { el.value = ''; });
 }
 
-function editTabsBind () {
-    $('.edit-user-tabsheet').off('click').on('click', function() {
-        const tabName = $(this).attr('id')!.split('_');
-        const tabId = tabName[1] + '_' + tabName[2];
-
-        $('#' + tabId)[0].scrollIntoView({
-            behavior: 'smooth'
+function editTabsBind() {
+    qsa('.edit-user-tabsheet').forEach(el => {
+        const newEl = el.cloneNode(true) as HTMLElement;
+        el.replaceWith(newEl);
+        newEl.addEventListener('click', () => {
+            const parts = newEl.id.split('_');
+            const tabId = parts[1] + '_' + parts[2];
+            document.getElementById(tabId)?.scrollIntoView({ behavior: 'smooth' });
         });
     });
 }
 
-function check_tabs(title_tab_name_id: any) {
-    if (plugins_load.length > 2) {
-        $('.edit-user-tab-title').css({gap : '0px', justifyContent: 'space-between'});
-        const countMoresPlugins = plugins_load.length - 2;
-        if (!document.getElementById('mores_plugins_expand')) {
-            $('.edit-user-tab-title').append(
-                '<span class="close mores-plugins" id="mores_plugins_expand"></span>' +
-                '<div class="dropdown-mores-plugins" id="dropdown_mores_plugins"></div>'
-            );
-        }
-        $('#mores_plugins_expand').html('+' + countMoresPlugins);
-
-        const dropdown = $('#dropdown_mores_plugins');
-        const tabsheetTitle = $('#' + title_tab_name_id);
-        $('.edit-user-tab-title').css('margin-top', '3px');
-        $('.edit-user-tab-title p:lt(4)').css('padding-top', '5px');
-        tabsheetTitle.css({'max-width': '100%'});
-        tabsheetTitle.appendTo(dropdown);
-
-        if (1 === countMoresPlugins) {
-            tabsheetTitle.css('border-radius', '10px');
-        } else {
-            dropdown.children().css('border-radius', '0');
-            dropdown.children().first().css('border-radius', '10px 10px 0 0');
-            dropdown.children().last().css('border-radius', '0 0 10px 10px');
-        }
-
-        $('#mores_plugins_expand').off('click').on('click', function () {
-            const icon = $(this);
-            if(icon.hasClass('open')) {
-                icon.removeClass('open').addClass('close');
-                dropdown.fadeOut();
-            } else {
-                icon.removeClass('close').addClass('open');
-                dropdown.fadeIn();
-                $(window).off('click.hideUsersModal').on('click.hideUsersModal', function(e) {
-                    if (!$(e.target).closest('#dropdown_mores_plugins').length && !$(e.target).is('#mores_plugins_expand')) {
-                        $('#dropdown_mores_plugins').fadeOut();
-                        icon.removeClass('open').addClass('close');
-                    }
-                });
-            }
-        });
-    }
-}
-
-/**
- * Adds a new tab to the user's modal
- * @param {string} tab_name - The tab name (will also be used for the new tab id)
- * @param {string} content_id - The id of the HTML element
- * @param {string | null} users_table  - The name of the column created in the users table (must be null if the set_data_function and get_data_function functions are used)
- * @param {() => {} | null} set_data_function - API call set function with ajax (must be null if users_table is used)
- * @param {() => {} | null} get_data_function - API call get function with ajax (must be null if users_table is used)
- * @returns {void} Displays the new tab in the user's modal
- */
-function plugin_add_tab_in_user_modal(tab_name: any, content_id: any, users_table: any = null, set_data_function: any = null, get_data_function: any = null) {
-    // verification
-    if (typeof tab_name !== 'string') {
-        throw new TypeError('tab_name must be a string.');
-    }
-    const name = tab_name.replace(/ /g, '').toLowerCase();
-    if (document.getElementById('name_tab_' + name)) {
-        throw new TypeError('An element with this tab_name already exists.');
-    }
-
-    if (typeof content_id !== 'string') {
-        throw new TypeError('content_id must be a string.');
-    } else if (!document.getElementById(content_id)) {
-        throw new TypeError('HTML element "' + content_id + '" not found.');
-    } else if (document.querySelector('.edit-user-slides #' + content_id)) {
-        throw new TypeError('An element with this content_id already exists.');
-    }
-
-    if (users_table && typeof users_table !== 'string') {
-        throw new TypeError('users_table must be a string.');
-    }
-    if (users_table && (set_data_function || get_data_function)) {
-        throw new TypeError('users_table must be null if set_data_function or get_data_function is used.');
-    }
-
-    if (set_data_function && typeof set_data_function !== 'function') {
-        throw new TypeError('set_data_function must be a function.');
-    } else if (set_data_function && typeof set_data_function === 'function') {
-        plugins_set_functions[name + '_set_function'] = set_data_function;
-    }
-
-    if (get_data_function && typeof get_data_function !== 'function') {
-        throw new TypeError('get_data_function must be a function.');
-    } else if (get_data_function && typeof get_data_function === 'function') {
-        plugins_get_functions[name + '_get_function'] = get_data_function;
-    }
-
-    if (users_table) {
-        plugins_users_infos_table.push({content_id, users_table});
-    }
-
-    // DOM modification
-    const content = $('#' + content_id);
-    
-    $('.edit-user-tab-title').append(
-        '<p class="edit-user-tabsheet" id="name_tab_' + name + '" title="'+ tab_name +'">'+ tab_name +'</p>'
-    );
-    
-    $('.edit-user-slides').append(
-        '<div class="edit-user-tabsheet-plugins '+ name +'-container" id="tab_'+ name +'"></div>'
-    );
-
-    content.appendTo('#tab_' + name);
-    content.show();
-
-    editTabsBind();
-
-    $('.edit-user-tabsheet').addClass('tab-with-plugin');
-    
-    plugins_load.push('name_tab_' + name);
-    check_tabs('name_tab_' + name);
-
+function check_tabs(title_tab_name_id: string) {
     if (plugins_load.length <= 2) {
-        $('#name_tab_' + name).tipTip({
-            delay: 0,
-            fadeIn: 200,
-            fadeOut: 200,
-            edgeOffset: 3
-        });
+        const el = document.getElementById(title_tab_name_id);
+        if (el) tippy(el, { delay: [0, 0], duration: [200, 200] });
     }
 }
 
 function reset_password_modals() {
-    $('.user-property-password-change').hide();
-    $('.user-property-password-change-inputs').hide();
-    $('#edit_password_success_change').hide();
-    $('#edit_password_result_mail').hide();
-    $('#edit_password_result_mail_copy').hide();
-    $('.user-property-password-choice').show();
+    qsa('.user-property-password-change,.user-property-password-change-inputs,#edit_password_success_change,#edit_password_result_mail,#edit_password_result_mail_copy').forEach(hide);
+    show(qs('.user-property-password-choice'));
 }
-
 function reset_username_modals() {
-    $('.edit-username-success').hide();
-    $('.user-property-username-change-input').show();
+    hide(qs('.edit-username-success'));
+    show(qs('.user-property-username-change-input'));
 }
-
 function reset_main_user_modals() {
-    $('#main_user_rewrite').val('');
-    $('#main_user_rewrite_icon').removeClass('icon-ok icon-green icon-cancel icon-red');
-    $('.main-user-rewrite').hide();
-    $('.main-user-validate').hide();
-    $('.main-user-success').hide();
-    $('.main-user-proceed').show();
+    (qs<HTMLInputElement>('#main_user_rewrite'))!.value = '';
+    qs('#main_user_rewrite_icon')?.classList.remove('icon-ok', 'icon-green', 'icon-cancel', 'icon-red');
+    qsa('.main-user-rewrite,.main-user-validate,.main-user-success').forEach(hide);
+    show(qs('.main-user-proceed'));
 }
-
 function hide_modals() {
-    $('.user-property-username-change').hide();
-    $('.user-property-password-change').hide();
-    $('.user-property-main-user-change').hide();
-    reset_password_modals();
-    reset_username_modals();
-    reset_main_user_modals();
+    qsa('.user-property-username-change,.user-property-password-change,.user-property-main-user-change').forEach(hide);
+    reset_password_modals(); reset_username_modals(); reset_main_user_modals();
 }
 
-function display_long_string(username: any) {
-    const formatedUsername = username.length > 20 ? username.slice(0, 17) + '...' : username;
-    return formatedUsername;
+function display_long_string(username: string) {
+    return username.length > 20 ? username.slice(0, 17) + '...' : username;
 }
-
 function generate_random_string() {
-    const string = 'abcdefghijkmlnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let result = '';
-    let c = 5;
-    for (let i = 0; i < c; i++) {
-        result += string.charAt(Math.floor(Math.random() * string.length));
-    }
-    return result;
+    const s = 'abcdefghijkmlnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    return Array.from({ length: 5 }, () => s[Math.floor(Math.random() * s.length)]).join('');
+}
+function get_initials(username: string) {
+    const words = username.toUpperCase().split(' ');
+    return words[0][0] + (words.length > 1 && words[1][0] ? words[1][0] : '');
+}
+function get_status_index(status: string) { return status_arr.indexOf(status) || 0; }
+function get_level_index(level: string) { return level_arr.indexOf(level) || 0; }
+function is_owner(user_id: any) { return user_id === owner_id; }
+function copyToClipboard(text: string) { navigator.clipboard?.writeText(text); }
+
+function set_selected_groups(groups: any[]) {
+    groupOptions.forEach((g: any) => g.isSelected = groups.includes(g.value));
 }
 
-/* ---------------
-Who is the king functions (main user)
-----------------*/
-function open_main_user_modal(user_to_edit: any) {
-    const modal = $('.user-property-main-user-change');
-    reset_main_user_modals();
-    $('.main-user-proceed-desc').html(sprintf(mainUserContinue, `<b>${display_long_string(user_to_edit.username)}</b>`, `<b>${display_long_string(owner_username)}</b>`));
-    modal.fadeIn();
-
-    // set event
-    $('.main-user-btn-proceed').off('click').on('click', function() {
-        const gen_string = generate_random_string();
-        $('.main-user-rewrite-desc').html(sprintf(mainUserRewrite, `<b>${gen_string}</b>`) + ' :');
-        $('.main-user-proceed').hide();
-        $('.main-user-rewrite').fadeIn();
-        event_check_string_main_user(user_to_edit.username, user_to_edit.id, gen_string);
-    });
-
-    $('.user-property-main-user-cancel, #main_user_success_close').off('click').on('click', function() {
-        modal.fadeOut();
-    });
-
-}
-
-function set_main_user_success() {
-    const indexKey = current_users.findIndex(u => u.id === owner_id);
-    const new_main = $('.user-container[key="' + indexKey + '"]').find('.user-container-username');
-    let king = $('#the_king');
-    if (!king.length) {
-        king = $(king_template);
-        king.attr('title', mainUserStr);
-        king.tipTip();
-    }
-    king.appendTo(new_main);
-    $('.delete-user-button').hide();
-    $('.main-user-validate').hide();
-    $('.main-user-success').fadeIn();
-}
-
-function event_check_string_main_user(new_main_username: any, new_main_id: any, stringToCheck: any) {
-    const icon = $('#main_user_rewrite_icon');
-    $('#main_user_rewrite').off('keyup').on('keyup', function() {
-        icon.removeClass('icon-ok icon-green').addClass('icon-cancel icon-red');
-        if (stringToCheck === $(this).val()) {
-            icon.removeClass('icon-cancel icon-red').addClass('icon-ok icon-green');
-            $('.main-user-validate-desc').html(sprintf(mainUserValidate, `<b>${display_long_string(owner_username)}</b>`, `<b>${display_long_string(new_main_username)}</b>`));
-            $('.main-user-success-desc').html(sprintf(mainUserSuccess, display_long_string(new_main_username)));
-            $('.main-user-rewrite').hide();
-            $('.main-user-validate').fadeIn();
-            event_validate_main_user(new_main_username, new_main_id);
-        }
-    });
-}
-
-function event_validate_main_user(new_main_username: any, user_id: any) {
-    $('.main-user-btn-validate').off('click').on('click', function() {
-        set_main_user(user_id, new_main_username);
-    });
-}
-
-/*-----------------------
-Generate User Containers
------------------------*/
-function user_container_click(this: HTMLElement) {
-    if (!isSelectionMode()) {
-        return;
-    }
-    let curr_container = $(this)
-    let in_container = curr_container.length != 0;
-    let container_checkbox = $(this).find('.user-list-checkbox');
-    let curr_user = in_container ? current_users[parseInt(curr_container.attr("key")!)] : {id: -1};
-    if (container_checkbox.attr('data-selected') == '1') {
-        container_checkbox.attr('data-selected', '0');
-        container_checkbox.find("i").hide();
-        if (in_container) {
-            curr_container.removeClass("container-selected");
-            selection = selection.filter((elem) => elem.id != curr_user.id);
-        }
+/*---- Pop-in fill functions ----*/
+function fill_user_edit_summary(user_to_edit: any, popIn: HTMLElement, isGuest: boolean) {
+    const q = <T extends HTMLElement = HTMLElement>(sel: string) => popIn.querySelector<T>(sel);
+    if (!isGuest) {
+        const initFill = get_initials(user_to_edit.username);
+        const span = q('.user-property-initials span');
+        if (span) { span.innerHTML = initFill; span.classList.remove(...color_icons); span.classList.add(color_icons[user_to_edit.id % 5]); span.classList.toggle('small', initFill.length > 1); }
     } else {
-        container_checkbox.attr('data-selected', '1');
-        container_checkbox.find("i").show();
-        if (in_container) {
-            curr_container.addClass("container-selected");
-            selection.push({id: curr_user.id, username: curr_user.username})
-        }
+        const span = q('.user-property-initials span');
+        if (span) { span.classList.remove(...color_icons); span.classList.add(color_icons[user_to_edit.id % 5]); }
     }
-    if (in_container) {
-        update_selection_content();
+    const usernameSpan = q('.user-property-username span:first-child');
+    if (usernameSpan) { usernameSpan.innerHTML = user_to_edit.username; tippy(usernameSpan, { content: user_to_edit.username }); }
+    const editSpec = q('.user-property-username .edit-username-specifier');
+    (user_to_edit.id === connected_user || user_to_edit.id === 1) ? show(editSpec) : hide(editSpec);
+    const unameInput = q<HTMLInputElement>('.user-property-username-change input'); if (unameInput) unameInput.value = user_to_edit.username;
+    const pwdInput = q<HTMLInputElement>('.user-property-password-change input'); if (pwdInput) pwdInput.value = '';
+    const permsLink = q<HTMLAnchorElement>('.user-property-permissions a'); if (permsLink) permsLink.href = `admin.php?page=user_perm&user_id=${user_to_edit.id}`;
+    const regEl = q('.user-property-register'); if (regEl) { regEl.innerHTML = user_to_edit.registration_date_string; tippy(regEl, { content: `${registered_str}<br />${user_to_edit.registration_date_since}`, allowHTML: true }); }
+    const lastEl = q('.user-property-last-visit'); if (lastEl) { lastEl.innerHTML = user_to_edit.last_visit_string; tippy(lastEl, { content: `${last_visit_str}<br />${user_to_edit.last_visit_since}`, allowHTML: true }); }
+    const histLink = q<HTMLAnchorElement>('.user-property-history a'); if (histLink) histLink.href = history_base_url + user_to_edit.id;
+
+    if (!window.isSecureContext) {
+        hide(qs('#copy_password'));
+        const copyBtn = q('#result_send_mail_copy_btn');
+        if (copyBtn) { copyBtn.title = cantCopy; tippy(copyBtn, { content: cantCopy }); }
     }
 }
 
-function generate_groups(container: any, groups: any) {
-    container.find(".user-container-groups").html('');
-    if (groups.length >= 1) {
-        let primary_grp = $("#template .group-primary").clone();
-        primary_grp.html(get_group_name_from_id(groups[0]));
-        primary_grp.addClass(color_icons[groups[0] % 5]);
-        container.find(".user-container-groups").append(primary_grp);
-    }
-    if (groups.length >= 2) {
-        let primary_grp = $("#template .group-primary").clone();
-        primary_grp.html(get_group_name_from_id(groups[1]));
-        primary_grp.addClass(color_icons[groups[1] % 5]);
-        container.find(".user-container-groups").append(primary_grp);
-    }
-    if (groups.length >= 3) {
-        let bonus_grp = $("#template .group-bonus").clone();
-        bonus_grp.html("...");
-        bonus_grp.addClass(color_icons[groups[2] % 5]);
-        bonus_grp.addClass("tiptip");
-        let groups_in_title = "";
-        for (let i = 2; i < groups.length; i++) {
-            groups_in_title += get_group_name_from_id(groups[i]) + ", ";
-        }
-        groups_in_title = groups_in_title.substring(0, groups_in_title.length -2);
-        bonus_grp.prop('title', groups_in_title);
-        container.find(".user-container-groups").append(bonus_grp);
-    }
+function loadGroupOptions(ts: TomSelect | null) {
+    if (!ts) return;
+    ts.clear(); ts.clearOptions();
+    groupOptions.forEach((g: any) => ts.addOption({ value: g.value, text: g.label ?? g.value }));
+    groupOptions.filter((g: any) => g.isSelected).forEach((g: any) => ts.addItem(String(g.value)));
 }
 
-function get_initials(username: any) {
-    let words = username.toUpperCase().split(" ");
-    let res = words[0][0];
-
-    if (words.length > 1 && words[1][0] !== undefined ) {
-        res += words[1][0];
-    }
-    return res;
-}
-
-function fill_container_user_info(container: any, user_index: any) {
-    let user = current_users[user_index];
-    let registration_dates = user.registration_date.split(' ');
-    container.attr('key', user_index);
-    container.find(".user-container-username span").html(user.username);
-    if(user.id === owner_id && !$('#the_king').length) {
-        let kingToDisplay = $(king_template);
-        kingToDisplay.attr('title', mainUserStr);
-        kingToDisplay.tipTip();
-        container.find(".user-container-username").append(kingToDisplay);
-    }
-    const initial_to_fill = get_initials(user.username);
-    const initialSpan = container.find(".user-container-initials span");
-    initialSpan.html(initial_to_fill).addClass(color_icons[user.id % 5]);
-    if (initial_to_fill.length > 1) {
-        initialSpan.addClass('small');
-    } else {
-        initialSpan.removeClass('small');
-    }
-    container.find(".user-container-status span").html(status_to_str[user.status]);
-    container.find(".user-container-email span").html(user.email);
-    generate_groups(container, user.groups);
-    container.find(".user-container-registration-date").html(registration_dates[0]);
-    container.find(".user-container-registration-time").html(registration_dates[1]);
-    container.find(".user-container-registration-date-since").html(user.registration_date_since);
-}  
-
-function generate_user_list() {
-    $("#user-table-content").find(".user-container").remove();
-    for (let i = 0; i < current_users.length; i++) {
-        let new_container = $("#template .user-container").clone();
-        fill_container_user_info(new_container, i);
-        $("#user-table-content .user-container-wrapper").append(new_container);
-    }
-    $('.user-container .user-list-checkbox').unbind("change").change(checkbox_change);
-    $('.user-container .user-list-checkbox').unbind("click");
-    $(".user-container").click(user_container_click);
-}
-
-function copyToClipboard(toCopy: any) {
-    navigator.clipboard.writeText(toCopy);
-}
-/*---------------------
-Fill the pop-in values
----------------------*/
-
-function get_formatted_date(date_str: any) {
-    if (date_str === null) {
-        return "N/A"
-    }
-    let first_part = date_str.split(' ')[0];
-    let formatted = first_part.split('-').join('/');
-    // console.log(formatted);
-    return (formatted);
-}
-
-function get_status_index(status: any) {
-    for (let i = 0; i < status_arr.length; i++) {
-        if (status_arr[i] === status) {
-            return i;
-        }
-    }
-    return 0;
-}
-
-function get_level_index(level: any) {
-    for (let i = 0; i < level_arr.length; i++) {
-        if (level_arr[i] === level) {
-            return i;
-        }
-    }
-    return 0;
-}
-
-function set_selected_groups(groups: any) {
-    for (let i = 0; i < groupOptions.length; i++) {
-        groupOptions[i].isSelected = groups.includes(groupOptions[i].value);
-    }
-}
-
-function fill_user_edit_summary(user_to_edit: any, pop_in: any, isGuest: any) {
-    // console.log(isGuest);
-    if (isGuest) {
-      pop_in.find('.user-property-initials span').removeClass(color_icons.join(' ')).addClass(color_icons[user_to_edit.id % 5]);
-    } else {
-        const initial_to_fill = get_initials(user_to_edit.username);
-        const initialSpan = pop_in.find('.user-property-initials span');
-        initialSpan.html(initial_to_fill).removeClass(color_icons.join(' ')).addClass(color_icons[user_to_edit.id % 5]);
-        if (initial_to_fill.length > 1) {
-            initialSpan.addClass('small');
-        } else {
-            initialSpan.removeClass('small');
-        }
-    }
-    pop_in.find('.user-property-username span:first').html(user_to_edit.username).tipTip({content: user_to_edit.username});
-    
-    if (user_to_edit.id === connected_user || user_to_edit.id === 1) {
-        pop_in.find('.user-property-username .edit-username-specifier').show();
-    } else {
-        pop_in.find('.user-property-username .edit-username-specifier').hide();
-    }
-    pop_in.find('.user-property-username-change input').val(user_to_edit.username);
-    pop_in.find('.user-property-password-change input').val('');
-    pop_in.find('.user-property-permissions a').attr('href', `admin.php?page=user_perm&user_id=${user_to_edit.id}`);
-    pop_in.find('.user-property-register').html(user_to_edit.registration_date_string);
-    pop_in.find('.user-property-register').tipTip({content:`${registered_str}<br />${user_to_edit.registration_date_since}`});
-    pop_in.find('.user-property-last-visit').html(user_to_edit.last_visit_string);
-    pop_in.find('.user-property-last-visit').tipTip({content: `${last_visit_str}<br />${user_to_edit.last_visit_since}`});
-    pop_in.find('.user-property-history a').attr('href', history_base_url + user_to_edit.id);
-
-    // Hide the copy password button and change modal copy password
-    // if you are not using https
-    if(!window.isSecureContext) {
-        $('#copy_password').hide();
-        $('.update-password-success').css('margin', '40px 0');
-        $('#result_send_mail_copy').hide();
-        $('#result_send_mail_copy_btn, #AddUserCopyPassword')
-            .css({'cursor': 'not-allowed', 'background-color' : 'grey', 'color': '#ffffff'})
-            .attr('title', cantCopy)
-            .on('mouseenter', function() {
-                $(this).css('background-color', 'grey');
-            })
-            .tipTip();
-    }
-}
-
-function fill_user_edit_properties(user_to_edit: any, pop_in: any) {
-    let status_index = get_status_index(user_to_edit.status);
-    let level_index = get_level_index(user_to_edit.level);
-    let current_group_selectize = user_to_edit.id === guest_id ? groupGuestSelectize : groupSelectize;
-
-    pop_in.find('.user-property-email input').val(user_to_edit.email);
-    pop_in.find(`.user-property-status select option:eq(${status_index})`).prop("selected", true);
-    pop_in.find(`.user-property-level select option:eq(${level_index})`).prop('selected', true);
-    pop_in.find('.photos-select-bar input').val(user_to_edit.recent_period);
+function fill_user_edit_properties(user_to_edit: any, popIn: HTMLElement) {
+    const q = <T extends HTMLElement = HTMLElement>(sel: string) => popIn.querySelector<T>(sel);
+    const currentGroupTs = user_to_edit.id === guest_id ? groupGuestTs : groupTs;
+    const emailInput = q<HTMLInputElement>('.user-property-email input'); if (emailInput) emailInput.value = user_to_edit.email ?? '';
+    const statusSelect = q<HTMLSelectElement>('.user-property-status select');
+    if (statusSelect) { Array.from(statusSelect.options)[get_status_index(user_to_edit.status)]!.selected = true; }
+    const levelSelect = q<HTMLSelectElement>('.user-property-level select');
+    if (levelSelect) { Array.from(levelSelect.options)[get_level_index(user_to_edit.level)]!.selected = true; }
     set_selected_groups(user_to_edit.groups);
-    current_group_selectize.clear();
-    current_group_selectize.load(function(callback: any) {
-        callback(groupOptions);
-    });
-    jQuery.each(jQuery.grep(groupOptions, function(group) {
-        return (group as any).isSelected;
-    }), function(i, group) {
-        current_group_selectize.addItem((group as any).value);
-    });
-    pop_in.find('.user-list-checkbox[name="hd_enabled"]').attr('data-selected', user_to_edit.enabled_high == 'true' ? '1' : '0');
+    loadGroupOptions(currentGroupTs);
+    const hdCb = q('.user-list-checkbox[name="hd_enabled"]'); if (hdCb) hdCb.dataset['selected'] = user_to_edit.enabled_high === 'true' ? '1' : '0';
 }
 
-function fill_user_edit_preferences(user_to_edit: any, pop_in: any) {
-    let slider_key_photos = getSliderKeyFromValue(parseInt(user_to_edit.nb_image_page), nb_image_page_values);
-    let slider_key_period = getSliderKeyFromValue(parseInt(user_to_edit.recent_period), recent_period_values);
-    
-    pop_in.find('.photos-select-bar .slider-bar-container').slider("option", "value", slider_key_photos);
-    pop_in.find('.user-property-theme select option').each(function (this: HTMLElement) {
-        if ($(this).val() == user_to_edit.theme) {
-            $(this).prop('selected', true);
-        }
-    });
-    pop_in.find('.user-property-lang select option').each(function (this: HTMLElement) {
-        if ($(this).val() == user_to_edit.language) {
-            $(this).prop('selected', true);
-        }
-    });
-    pop_in.find('.period-select-bar .slider-bar-container').slider("option", "value", slider_key_period);
-    pop_in.find('.user-list-checkbox[name="expand_all_albums"]').attr('data-selected', user_to_edit.expand == 'true' ? '1' : '0');
-    pop_in.find('.user-list-checkbox[name="show_nb_comments"]').attr('data-selected', user_to_edit.show_nb_comments == 'true' ? '1' : '0');
-    pop_in.find('.user-list-checkbox[name="show_nb_hits"]').attr('data-selected', user_to_edit.show_nb_hits == 'true' ? '1' : '0');   
+function fill_user_edit_preferences(user_to_edit: any, popIn: HTMLElement) {
+    const q = <T extends HTMLElement = HTMLElement>(sel: string) => popIn.querySelector<T>(sel);
+    const photosKey = getSliderKeyFromValue(parseInt(user_to_edit.nb_image_page), nb_image_page_values);
+    const periodKey = getSliderKeyFromValue(parseInt(user_to_edit.recent_period), recent_period_values);
+    setSliderValue(q('.photos-select-bar .slider-bar-container'), photosKey);
+    const themeSelect = q<HTMLSelectElement>('.user-property-theme select');
+    if (themeSelect) Array.from(themeSelect.options).forEach(o => { o.selected = o.value === user_to_edit.theme; });
+    const langSelect = q<HTMLSelectElement>('.user-property-lang select');
+    if (langSelect) Array.from(langSelect.options).forEach(o => { o.selected = o.value === user_to_edit.language; });
+    setSliderValue(q('.period-select-bar .slider-bar-container'), periodKey);
+    const expandCb = q('.user-list-checkbox[name="expand_all_albums"]'); if (expandCb) expandCb.dataset['selected'] = user_to_edit.expand === 'true' ? '1' : '0';
+    const commentsCb = q('.user-list-checkbox[name="show_nb_comments"]'); if (commentsCb) commentsCb.dataset['selected'] = user_to_edit.show_nb_comments === 'true' ? '1' : '0';
+    const hitsCb = q('.user-list-checkbox[name="show_nb_hits"]'); if (hitsCb) hitsCb.dataset['selected'] = user_to_edit.show_nb_hits === 'true' ? '1' : '0';
 }
 
-function fill_user_edit_update(user_to_edit: any, pop_in: any) {
-    pop_in.find('.update-user-button').unbind("click").click(
-        user_to_edit.id === guest_id ? update_guest_info : update_user_info);
-    pop_in.find('.edit-username-validate').unbind("click").click(update_user_username);
-    pop_in.find('#edit_modal_password').off('click').on('click', function() {
-        $('.user-property-password-choice').hide();
-        $('.user-property-password-change-inputs').fadeIn();
-    });
-    if (user_to_edit.email) {
-        pop_in.find('#send_password_link')
-            .removeClass('unavailable tiptip')
-            .attr('title', '')
-            .off('click')
-            .on('click', function () {
-            send_link_password(user_to_edit.email, user_to_edit.username, user_to_edit.id, true);
-        });
-        pop_in.find('#send_password_link').off('mouseenter mouseleave focus blur');
-    } else {
-        pop_in.find('#send_password_link')
-            .addClass('unavailable tiptip')
-            .off('click')
-            .attr('title', cannotSendMail)
-            .tipTip({
-                delay: 0,
-                fadeIn: 200,
-                fadeOut: 200,
-                edgeOffset: 3
-            });
+function fill_user_edit_update(user_to_edit: any, popIn: HTMLElement) {
+    const q = <T extends HTMLElement = HTMLElement>(sel: string) => popIn.querySelector<T>(sel);
+    const updateBtn = q('.update-user-button');
+    if (updateBtn) {
+        const newBtn = updateBtn.cloneNode(true) as HTMLElement;
+        updateBtn.replaceWith(newBtn);
+        newBtn.addEventListener('click', user_to_edit.id === guest_id ? update_guest_info : update_user_info);
     }
-    pop_in.find('#copy_password_link').off('click').on('click', function() {
-        const inputValue = $('#result_send_mail_copy_input').val();
-        if (inputValue === '') {
-            send_link_password(user_to_edit.email, user_to_edit.username, user_to_edit.id, false);
-        } else {
-            if (window.isSecureContext && navigator.clipboard) {
-                copyToClipboard(inputValue);
-            };
-        }
-        $('.user-property-password-choice').hide();
-        $('#edit_password_result_mail_copy').fadeIn();
-        $('#close_password_mail_send_close').off('click').on('click', function() {
-            reset_password_modals();
-        });
-        $('#result_send_mail_copy_btn').off('click').on('click', function() {
-            if (window.isSecureContext && navigator.clipboard) {
-                const success = $('#result_send_mail_copy');
-                success.fadeOut(100);
-                copyToClipboard($('#result_send_mail_copy_input').val());
-                success.fadeIn(100);
-            };
-        });
-        $('#result_send_mail_copy_input').trigger('focus');
-    });
-    pop_in.find('.edit-password-validate').unbind("click").click(function() {
-        const errDiv = $('#UserList .EditUserErrors');
-        const inputPassword = $('#edit_user_password').val();
-        const inputConfirmPassword = $('#edit_user_conf_password').val();
-
-        if (inputPassword === '' || inputConfirmPassword === '') {
-            errDiv.html(missingField);
-            show_error_edit_user();
-        } else if (inputPassword !== inputConfirmPassword) {
-            errDiv.html(noMatchPassword);
-            show_error_edit_user();
-        } else {
-            update_user_password();
-        }
-    });
-    pop_in.find('.delete-user-button').unbind("click").click(function () {
-        $.confirm({
-            title: title_msg.replace('%s', user_to_edit.username),
-            content: "",
-            buttons: {
-                confirm: {
-                    text: confirm_msg,
-                    btnClass: 'btn-red',
-                    action: function () {
-                        delete_user(user_to_edit.id);
-                    }
-                },
-                cancel: {
-                    text: cancel_msg
-                }
-            },
-            ...jConfirm_confirm_options
-        });
-    })
-}
-
-function fill_user_edit_permissions(user_to_edit: any, pop_in: any) {
-  if (user_to_edit.id != connected_user) {
-    // I'm not the connected user
-    if (!is_owner(connected_user)) {
-      // I'm not the owner, you need to test my permissions
-      if (is_owner(user_to_edit.id)) {
-        // I want to edit the owner but I'm not the owner (No matter my status)
-        pop_in.find(".delete-user-button").hide();
-        pop_in.find(".user-property-password.edit-password").hide();
-        pop_in.find(".user-property-email .user-property-input").attr('disabled','disabled');
-        pop_in.find(".user-property-status .user-property-select").addClass("notClickable");
-        pop_in.find(".user-property-username .edit-username").hide();
-      } else {
-        pop_in.find(".delete-user-button").show();
-        pop_in.find(".user-property-password.edit-password").show();
-        pop_in.find(".user-property-email .user-property-input").removeAttr('disabled');
-        pop_in.find(".user-property-status .user-property-select").removeClass("notClickable");
-        pop_in.find(".user-property-username .edit-username").show();
-      }
-      
-      if (user_to_edit.status == connected_user_status && connected_user_status == "webmaster" && !is_owner(user_to_edit.id)) {
-        // I have the same status than the user I want to edit and I'm a webmaster, I can do whatever I want
-        pop_in.find(".delete-user-button").show();
-        pop_in.find(".user-property-password.edit-password").show();
-        pop_in.find(".user-property-email .user-property-input").removeAttr('disabled');
-        pop_in.find(".user-property-status .user-property-select").removeClass("notClickable");
-        pop_in.find(".user-property-username .edit-username").show();
-      } else if (user_to_edit.status == connected_user_status && connected_user_status == "admin") {
-        // I have the same status than the user I want to edit and I'm an admin, I can do whatever I want but edit the status
-        pop_in.find(".delete-user-button").hide();
-        pop_in.find(".user-property-password.edit-password").show();
-        pop_in.find(".user-property-email .user-property-input").removeAttr('disabled');
-        pop_in.find(".user-property-username .edit-username").removeClass("notClickable");
-        pop_in.find(".user-property-status .user-property-select").addClass("notClickable");
-      } else if (user_to_edit.status == "webmaster" && connected_user_status == "admin") {
-        // I'm admin and I want to edit webmaster
-        pop_in.find(".delete-user-button").hide();
-        pop_in.find(".user-property-password.edit-password").hide();
-        pop_in.find(".user-property-email .user-property-input").attr('disabled','disabled');
-        pop_in.find(".user-property-status .user-property-select").addClass("notClickable");
-        pop_in.find(".user-property-username .edit-username").hide();
-      } else if (user_to_edit.status == "admin" && connected_user_status == "webmaster") {
-        // I'm webmaster and I want to edit admin
-        pop_in.find(".delete-user-button").show();
-        pop_in.find(".user-property-password.edit-password").show();
-        pop_in.find(".user-property-email .user-property-input").removeAttr('disabled');
-        pop_in.find(".user-property-status .user-property-select").removeClass("notClickable");
-        pop_in.find(".user-property-username .edit-username").show();
-      }
-    } else {
-      // I'm the owner, I can do whatever I want. No need to test, I am GOD here
-      pop_in.find(".delete-user-button").show();
-      pop_in.find(".user-property-password.edit-password").show();
-      pop_in.find(".user-property-email .user-property-input").removeAttr('disabled');
-      pop_in.find(".user-property-status .user-property-select").removeClass("notClickable");
-      pop_in.find(".user-property-username .edit-username").show();
+    const validateUsernameBtn = q('.edit-username-validate');
+    if (validateUsernameBtn) {
+        const nb = validateUsernameBtn.cloneNode(true) as HTMLElement;
+        validateUsernameBtn.replaceWith(nb);
+        nb.addEventListener('click', update_user_username);
     }
-  } else {
-    // I'm the connected user, I can do whatever I want on my profile but kill myself (Suicide is not allowed) and edit my status
-    pop_in.find(".delete-user-button").hide();
-    pop_in.find(".user-property-password.edit-password").show();
-    pop_in.find(".user-property-email .user-property-input").removeAttr('disabled');
-    pop_in.find(".user-property-status .user-property-select").addClass("notClickable");
-    pop_in.find(".user-property-username .edit-username").show();
-  }
-
-  $(".notClickableBefore").removeClass("notClickableBefore");
-  $(".notClickable").parent().addClass("notClickableBefore");
+    const editPwdBtn = q('#edit_modal_password');
+    if (editPwdBtn) {
+        const nb = editPwdBtn.cloneNode(true) as HTMLElement;
+        editPwdBtn.replaceWith(nb);
+        nb.addEventListener('click', () => { hide(qs('.user-property-password-choice')); show(qs('.user-property-password-change-inputs')); });
+    }
+    const sendPwdLink = q('#send_password_link');
+    if (sendPwdLink) {
+        const nb = sendPwdLink.cloneNode(true) as HTMLElement;
+        sendPwdLink.replaceWith(nb);
+        if (user_to_edit.email) {
+            nb.classList.remove('unavailable', 'tiptip');
+            nb.title = '';
+            nb.addEventListener('click', () => send_link_password(user_to_edit.email, user_to_edit.username, user_to_edit.id, true));
+        } else {
+            nb.classList.add('unavailable', 'tiptip');
+            nb.title = cannotSendMail;
+            tippy(nb, { delay: [0, 0], duration: [200, 200] });
+        }
+    }
+    const copyPwdLink = q('#copy_password_link');
+    if (copyPwdLink) {
+        const nb = copyPwdLink.cloneNode(true) as HTMLElement;
+        copyPwdLink.replaceWith(nb);
+        nb.addEventListener('click', () => {
+            const inputValue = (qs<HTMLInputElement>('#result_send_mail_copy_input'))?.value ?? '';
+            if (!inputValue) send_link_password(user_to_edit.email, user_to_edit.username, user_to_edit.id, false);
+            else if (window.isSecureContext && navigator.clipboard) copyToClipboard(inputValue);
+            hide(qs('.user-property-password-choice'));
+            show(qs('#edit_password_result_mail_copy'));
+            (qs<HTMLInputElement>('#result_send_mail_copy_input'))?.focus();
+        });
+    }
+    const validatePwdBtn = q('.edit-password-validate');
+    if (validatePwdBtn) {
+        const nb = validatePwdBtn.cloneNode(true) as HTMLElement;
+        validatePwdBtn.replaceWith(nb);
+        nb.addEventListener('click', () => {
+            const errDiv = qs<HTMLElement>('#UserList .EditUserErrors');
+            const pwd = (qs<HTMLInputElement>('#edit_user_password'))?.value;
+            const conf = (qs<HTMLInputElement>('#edit_user_conf_password'))?.value;
+            if (!pwd || !conf) { if (errDiv) errDiv.innerHTML = missingField; show_error_edit_user(); }
+            else if (pwd !== conf) { if (errDiv) errDiv.innerHTML = noMatchPassword; show_error_edit_user(); }
+            else update_user_password();
+        });
+    }
+    const deleteBtn = q('.delete-user-button');
+    if (deleteBtn) {
+        const nb = deleteBtn.cloneNode(true) as HTMLElement;
+        deleteBtn.replaceWith(nb);
+        nb.addEventListener('click', () => {
+            if (window.confirm(title_msg.replace('%s', user_to_edit.username))) delete_user(user_to_edit.id);
+        });
+    }
 }
 
-function is_owner(user_id: any) {
-  return user_id === owner_id;
+function fill_user_edit_permissions(user_to_edit: any, popIn: HTMLElement) {
+    const q = <T extends HTMLElement = HTMLElement>(sel: string) => popIn.querySelector<T>(sel);
+    const setPerms = (canDelete: boolean, canEditPwd: boolean, canEditEmail: boolean, canEditStatus: boolean, canEditUsername: boolean) => {
+        if (canDelete) show(q('.delete-user-button')); else hide(q('.delete-user-button'));
+        if (canEditPwd) show(q('.user-property-password.edit-password')); else hide(q('.user-property-password.edit-password'));
+        const emailInput = q<HTMLInputElement>('.user-property-email .user-property-input');
+        if (emailInput) { if (canEditEmail) emailInput.removeAttribute('disabled'); else emailInput.setAttribute('disabled', 'disabled'); }
+        const statusSel = q('.user-property-status .user-property-select');
+        if (statusSel) { if (canEditStatus) statusSel.classList.remove('notClickable'); else statusSel.classList.add('notClickable'); }
+        const editUsername = q('.user-property-username .edit-username');
+        if (editUsername) { if (canEditUsername) show(editUsername); else hide(editUsername); }
+    };
+
+    if (user_to_edit.id !== connected_user) {
+        if (!is_owner(connected_user)) {
+            if (is_owner(user_to_edit.id)) { setPerms(false, false, false, false, false); }
+            else {
+                setPerms(true, true, true, true, true);
+                if (user_to_edit.status === connected_user_status && connected_user_status === 'webmaster' && !is_owner(user_to_edit.id)) setPerms(true, true, true, true, true);
+                else if (user_to_edit.status === connected_user_status && connected_user_status === 'admin') setPerms(false, true, true, false, true);
+                else if (user_to_edit.status === 'webmaster' && connected_user_status === 'admin') setPerms(false, false, false, false, false);
+                else if (user_to_edit.status === 'admin' && connected_user_status === 'webmaster') setPerms(true, true, true, true, true);
+            }
+        } else { setPerms(true, true, true, true, true); }
+    } else { setPerms(false, true, true, false, true); }
+
+    qsa('.notClickableBefore').forEach(el => el.classList.remove('notClickableBefore'));
+    qsa('.notClickable').forEach(el => el.parentElement?.classList.add('notClickableBefore'));
+}
+
+function fill_who_is_the_king(user_to_edit: any, popIn: HTMLElement) {
+    const king = popIn.querySelector<HTMLElement>('#who_is_the_king');
+    if (!king) return;
+    const setKingClass = (cls: string, title: string, clickable: boolean) => {
+        king.classList.remove('princes-of-this-piwigo', 'king-of-this-piwigo', 'royal-court-of-this-piwigo', 'can-change', 'cannot-change');
+        king.classList.add(cls, clickable ? 'can-change' : 'cannot-change');
+        king.title = title;
+        tippy(king, { content: title });
+        const nb = king.cloneNode(true) as HTMLElement;
+        king.replaceWith(nb);
+    };
+
+    if (is_owner(user_to_edit.id)) {
+        setKingClass('king-of-this-piwigo', mainUserStr, false);
+    } else if (connected_user_status === 'webmaster') {
+        if (user_to_edit.status === 'webmaster') {
+            setKingClass('princes-of-this-piwigo', mainUserSet, true);
+            const nb = popIn.querySelector<HTMLElement>('#who_is_the_king')!;
+            if (!is_owner(user_to_edit.id)) nb.addEventListener('click', () => open_main_user_modal(user_to_edit));
+        } else {
+            setKingClass('royal-court-of-this-piwigo', mainUserUpgradeWebmaster, false);
+        }
+    } else {
+        setKingClass('royal-court-of-this-piwigo', mainAskWebmaster, false);
+    }
 }
 
 function fill_user_edit(user_to_edit: any) {
-    let pop_in = $('#UserList');
-    fill_user_edit_summary(user_to_edit, pop_in, false);
-    fill_user_edit_properties(user_to_edit, pop_in);
-    fill_user_edit_preferences(user_to_edit, pop_in);
-    fill_user_edit_update(user_to_edit, pop_in);
-    fill_user_edit_permissions(user_to_edit, pop_in);
-    fill_who_is_the_king(user_to_edit, pop_in);
-
-    // show/hide password button depending on permissions
-    
-    // plugins get function
+    const popIn = document.getElementById('UserList')!;
+    fill_user_edit_summary(user_to_edit, popIn, false);
+    fill_user_edit_properties(user_to_edit, popIn);
+    fill_user_edit_preferences(user_to_edit, popIn);
+    fill_user_edit_update(user_to_edit, popIn);
+    fill_user_edit_permissions(user_to_edit, popIn);
+    fill_who_is_the_king(user_to_edit, popIn);
     if (Object.keys(plugins_get_functions).length > 0) {
-        Object.entries(plugins_get_functions).forEach((f) => {
-            ((f[1] as unknown) as () => void)();
-        });
+        Object.values(plugins_get_functions).forEach((f: any) => f());
     }
-    const keyUserToEdit = Object.keys(user_to_edit);
-    plugins_users_infos_table.forEach((i) => {
-        $('#' + i.content_id).val('');
-        if (keyUserToEdit.includes(i.users_table)) {
-            $('#' + i.content_id).val(user_to_edit[i.users_table]);
-        } else {
-            console.error(i.users_table, ' doesn\'t exist in USER_INFOS_TABLE');
-        }
+    const keyUser = Object.keys(user_to_edit);
+    plugins_users_infos_table.forEach(i => {
+        const el = qs<HTMLInputElement>('#' + i.content_id); if (!el) return;
+        el.value = keyUser.includes(i.users_table) ? user_to_edit[i.users_table] : '';
     });
 }
 
 function fill_guest_edit() {
-    let user_to_edit = guest_user;
-    let pop_in = $('.GuestUserListPopInContainer');
-    fill_user_edit_summary(user_to_edit, pop_in, true);
-    fill_user_edit_properties(user_to_edit, pop_in);
-    fill_user_edit_preferences(user_to_edit, pop_in);
-    fill_user_edit_update(user_to_edit, pop_in);
+    const user_to_edit = guest_user;
+    const popIn = qs<HTMLElement>('.GuestUserListPopInContainer')!;
+    fill_user_edit_summary(user_to_edit, popIn, true);
+    fill_user_edit_properties(user_to_edit, popIn);
+    fill_user_edit_preferences(user_to_edit, popIn);
+    fill_user_edit_update(user_to_edit, popIn);
 }
 
 function fill_new_user() {
-    // When you want to add an user: privacy level and groups
-    // by default are the same as Guest, not status
-    const addUserPopIn = $('#AddUser');
-    const status_index = get_status_index('normal');
-    const level_index = get_level_index(guest_user.level);
-    set_selected_groups(guest_user.groups);
-    groupAddUserSelectize.clear();
-    groupAddUserSelectize.load(function(callback: any) {
-        callback(groupOptions);
-    });
-    jQuery.each(jQuery.grep(groupOptions, function(group) {
-        return (group as any).isSelected;
-    }), function(i, group) {
-        groupAddUserSelectize.addItem((group as any).value);
-    });
-    addUserPopIn.find(`.user-property-status select option:eq(${status_index})`).prop("selected", true);
-    addUserPopIn.find(`.user-property-level select option:eq(${level_index})`).prop("selected", true);
-    addUserPopIn.find('.user-list-checkbox[name="hd_enabled"]').attr('data-selected', guest_user.enabled_high == 'true' ? '1' : '0');
+    const popIn = document.getElementById('AddUser')!;
+    const statusIdx = get_status_index('normal');
+    const levelIdx = get_level_index(guest_user.level ?? '0');
+    set_selected_groups(guest_user.groups ?? []);
+    loadGroupOptions(groupAddUserTs);
+    const statusSelect = qs<HTMLSelectElement>(`.AddUserInputContainer .user-property-status select`, popIn);
+    if (statusSelect) Array.from(statusSelect.options)[statusIdx]!.selected = true;
+    const levelSelect = qs<HTMLSelectElement>(`.AddUserInputContainer .user-property-level select`, popIn);
+    if (levelSelect) Array.from(levelSelect.options)[levelIdx]!.selected = true;
+    const hdCb = qs('.AddUserInputContainer .user-list-checkbox[name="hd_enabled"]', popIn);
+    if (hdCb) (hdCb as HTMLElement).dataset['selected'] = guest_user.enabled_high === 'true' ? '1' : '0';
 }
 
-function fill_who_is_the_king(user_to_edit: any, pop_in: any) {
-    const who_is_the_king = pop_in.find("#who_is_the_king");
-    // By default I'm an admin and I only see who is the Main User
-    who_is_the_king
-        .removeClass('princes-of-this-piwigo king-of-this-piwigo can-change')
-        .addClass('royal-court-of-this-piwigo cannot-change')
-        .attr('title', mainAskWebmaster)
-        .tipTip();
-    who_is_the_king.off('click');
-    // I'm an webmaster
-    if (connected_user_status === 'webmaster') {
-        // check user to edit status
-        switch (user_to_edit.status) {
-            // user to edit is an webmaster
-            case 'webmaster':
-                who_is_the_king
-                    .removeClass('royal-court-of-this-piwigo king-of-this-piwigo cannot-change')
-                    .addClass('princes-of-this-piwigo can-change')
-                    .attr('title', mainUserSet)
-                    .tipTip();
-                if (!is_owner(user_to_edit.id)) {
-                    who_is_the_king.off('click').on('click', function() {
-                        open_main_user_modal(user_to_edit);
-                    });
-                }
-                break;
-            // if user to edit is not an webmaster he cannot be set as a main user
-            default:
-                who_is_the_king
-                    .removeClass('princes-of-this-piwigo king-of-this-piwigo')
-                    .addClass('royal-court-of-this-piwigo')
-                    .attr('title', mainUserUpgradeWebmaster)
-                    .tipTip();
-                break;
-        }
-    }
-
-    // Main User also the King
-    if (is_owner(user_to_edit.id)) {
-        who_is_the_king
-        .removeClass('princes-of-this-piwigo royal-court-of-this-piwigo can-change')
-        .addClass('king-of-this-piwigo cannot-change')
-        .attr('title', mainUserStr)
-        .tipTip();
-    }
+/*---- Ajax data helpers ----*/
+function fill_ajax_data_from_properties(ajax_data: any, popIn: HTMLElement) {
+    const ts = getPopInTs(popIn);
+    const groups_selected = ts ? ts.items.map((id: string) => parseInt(id)) : [];
+    const emailInput = qs<HTMLInputElement>('.user-property-email input', popIn); ajax_data['email'] = emailInput?.value;
+    const statusSelect = qs<HTMLSelectElement>('.user-property-status select', popIn);
+    const statusVal = statusSelect?.value;
+    if (connected_user_status === 'admin' && statusVal !== 'webmaster' && statusVal !== 'admin') ajax_data['status'] = statusVal;
+    else if (connected_user_status === 'webmaster') ajax_data['status'] = statusVal;
+    ajax_data['level'] = qs<HTMLSelectElement>('.user-property-level select', popIn)?.value;
+    ajax_data['group_id'] = groups_selected.length === 0 ? -1 : groups_selected;
+    ajax_data['enabled_high'] = qs<HTMLElement>('.user-list-checkbox[name="hd_enabled"]', popIn)?.dataset['selected'] === '1';
+    return ajax_data;
 }
 
-/*-------------------
-Fill data for setInfo
--------------------*/
-
-function fill_ajax_data_from_properties(ajax_data: any, pop_in: any) {
-    let groups_selected = pop_in.find('.user-property-group .selectize-input .item').map(function (this: HTMLElement) {
-        return parseInt($(this).attr('data-value')!);
-    } ).get();
-    // console.log(groups_selected);
-    ajax_data['email'] = pop_in.find('.user-property-email input').val();
-    if (connected_user_status == "admin" && pop_in.find('.user-property-status select').val() != "webmaster" && pop_in.find('.user-property-status select').val() != "admin") {
-      ajax_data['status'] = pop_in.find('.user-property-status select').val();
-    } else if (connected_user_status == "webmaster"){
-      ajax_data['status'] = pop_in.find('.user-property-status select').val();
-    }
-    // console.log(ajax_data['status']);
-    ajax_data['level'] = pop_in.find('.user-property-level select').val();
-    ajax_data['group_id'] = groups_selected.length == 0 ? -1 : groups_selected;
-    ajax_data['enabled_high'] = pop_in.find('.user-list-checkbox[name="hd_enabled"]').attr('data-selected') == '1' ? true : false ;
-    return ajax_data
+function fill_ajax_data_from_preferences(ajax_data: any, popIn: HTMLElement) {
+    ajax_data['theme'] = qs<HTMLSelectElement>('.user-property-theme select', popIn)?.value;
+    ajax_data['language'] = qs<HTMLSelectElement>('.user-property-lang select', popIn)?.value;
+    const photosIdx = getSliderValue(qs('.photos-select-bar .slider-bar-container', popIn));
+    ajax_data['nb_image_page'] = nb_image_page_values[photosIdx];
+    const periodIdx = getSliderValue(qs('.period-select-bar .slider-bar-container', popIn));
+    ajax_data['recent_period'] = recent_period_values[periodIdx];
+    ajax_data['expand'] = qs<HTMLElement>('.user-list-checkbox[name="expand_all_albums"]', popIn)?.dataset['selected'] === '1';
+    ajax_data['show_nb_comments'] = qs<HTMLElement>('.user-list-checkbox[name="show_nb_comments"]', popIn)?.dataset['selected'] === '1';
+    ajax_data['show_nb_hits'] = qs<HTMLElement>('.user-list-checkbox[name="show_nb_hits"]', popIn)?.dataset['selected'] === '1';
+    return ajax_data;
 }
 
-function fill_ajax_data_from_preferences(ajax_data: any, pop_in: any) {
-    ajax_data['theme'] = pop_in.find('.user-property-theme select').val();
-    ajax_data['language'] = pop_in.find('.user-property-lang select').val();
-    ajax_data['nb_image_page'] = nb_image_page_values[pop_in.find('.photos-select-bar .slider-bar-container').slider("option", "value")];
-    ajax_data['recent_period'] = recent_period_values[pop_in.find('.period-select-bar .slider-bar-container').slider("option", "value")];
-    ajax_data['expand'] = pop_in.find('.user-list-checkbox[name="expand_all_albums"]').attr('data-selected') == '1' ? true : false;
-    ajax_data['show_nb_comments'] = pop_in.find('.user-list-checkbox[name="show_nb_comments"]').attr('data-selected') == '1' ? true : false ;
-    ajax_data['show_nb_hits'] = pop_in.find('.user-list-checkbox[name="show_nb_hits"]').attr('data-selected') == '1' ? true : false ;
-    return ajax_data
+function fill_ajax_data_from_container(ajax_data: any, popIn: HTMLElement) {
+    ajax_data = fill_ajax_data_from_properties(ajax_data, popIn);
+    ajax_data = fill_ajax_data_from_preferences(ajax_data, popIn);
+    return ajax_data;
 }
 
-function fill_ajax_data_from_container(ajax_data: any, pop_in: any) {
-    ajax_data = fill_ajax_data_from_properties(ajax_data, pop_in);
-    ajax_data = fill_ajax_data_from_preferences(ajax_data, pop_in);
-    return ajax_data
-}
-
-/*----------------
-Ajax Requests
-----------------*/
-
+/*---- Ajax requests ----*/
 function get_first_selection_usernames(callback: any) {
-    let first_ids = selection.slice(0, 50).map(x => x.id);
-    jQuery.ajax({
-        url: "ws.php?format=json&method=pwg.users.getList",
-        type: "POST",
-        data: {
-            display: "username",
-            order: "id",
-            user_id: first_ids,
-            exclude: [guest_id]
-        },
-        success:function(data) {
-            data = jQuery.parseJSON(data);
-            let result = data.result.users;
-            for (let i = 0; i < result.length;i++) {
-                let index = selection.findIndex(x => x.id === result[i].id);
-                if (index != -1) {
-                    selection[index].username = result[i].username;
-                }
-            }
-            callback();
-        }
+    const ids = selection.slice(0, 50).map(x => x.id);
+    const body = new URLSearchParams({ display: 'username', order: 'id' });
+    ids.forEach(id => body.append('user_id[]', id));
+    body.append('exclude[]', String(guest_id));
+    fetch('ws.php?format=json&method=pwg.users.getList', { method: 'POST', body }).then(r => r.json()).then(d => {
+        d.result.users.forEach((u: any) => {
+            const idx = selection.findIndex(x => x.id === u.id);
+            if (idx !== -1) selection[idx].username = u.username;
+        });
+        callback();
     });
 }
 
 function select_whole_set() {
-    jQuery.ajax({
-        url: "ws.php?format=json&method=pwg.users.getList",
-        type: "POST",
-        data: {
-            display: "only_id",
-            order: "id",
-            page: actual_page - 1,
-            per_page: 0,
-            exclude: [guest_id],
-            status: $(".advanced-filter-select[name=filter_status]").val(),
-            group_id: $(".advanced-filter-select[name=filter_group]").val(),
-            min_level: $(".advanced-filter-select[name=filter_level]").val(),
-            max_level: $(".advanced-filter-select[name=filter_level]").val(),
-            min_register: register_dates[$(".dates-select-bar .slider-bar-container").slider("option", "values")[0]],
-            max_register: register_dates[$(".dates-select-bar .slider-bar-container").slider("option", "values")[1]],
-        },
-        beforeSend: function() {
-            $("#checkActions .loading").show();
-        },
-        success:function(data) {
-            data = jQuery.parseJSON(data);
-            selection = data.result.map((x: any) => {
-                return {id: x};
-            });
-            $("#checkActions .loading").hide();
-            update_selection_content();
-        },
-        error:function(XMLHttpRequest, textStatus, errorThrows) {
-            $("#checkActions .loading").hide();
+    const datesSliderEl = qs<HTMLElement>('.dates-select-bar .slider-bar-container');
+    const [minIdx, maxIdx] = getSliderValues(datesSliderEl);
+    const body = new URLSearchParams({
+        display: 'only_id', order: 'id', page: String(actual_page - 1), per_page: '0',
+        status: (qs<HTMLSelectElement>('.advanced-filter-select[name=filter_status]'))?.value ?? '',
+        group_id: (qs<HTMLSelectElement>('.advanced-filter-select[name=filter_group]'))?.value ?? '',
+        min_level: (qs<HTMLSelectElement>('.advanced-filter-select[name=filter_level]'))?.value ?? '',
+        max_level: (qs<HTMLSelectElement>('.advanced-filter-select[name=filter_level]'))?.value ?? '',
+        min_register: register_dates[minIdx] ?? '',
+        max_register: register_dates[maxIdx] ?? '',
+    });
+    body.append('exclude[]', String(guest_id));
+    show(qs('#checkActions .loading'));
+    fetch('ws.php?format=json&method=pwg.users.getList', { method: 'POST', body }).then(r => r.json()).then(d => {
+        selection = d.result.map((x: any) => ({ id: x }));
+        hide(qs('#checkActions .loading'));
+        update_selection_content();
+    }).catch(() => hide(qs('#checkActions .loading')));
+}
+
+function update_user_username() {
+    const popIn = document.getElementById('UserList')!;
+    const username = qs<HTMLInputElement>('.user-property-input-username', popIn)?.value ?? '';
+    if (!username.replace(/\s/g, '')) {
+        const failEl = qs<HTMLElement>('.update-user-fail'); if (failEl) { failEl.innerHTML = fieldNotEmpty; fadeInThenOut(failEl, 0, 2500); }
+        return;
+    }
+    pwgPost('pwg.users.setInfo', { pwg_token, user_id: last_user_id, username }).then(d => {
+        if (d.stat === 'ok' && last_user_index !== -1) {
+            current_users[last_user_index].username = d.result.users[0].username;
+            qs<HTMLElement>('#UserList .user-property-username .edit-username-title')!.innerHTML = current_users[last_user_index].username;
+            qs<HTMLElement>('#UserList .user-property-initials span')!.innerHTML = get_initials(current_users[last_user_index].username);
+            fill_container_user_info(qsa('#user-table-content .user-container')[last_user_index] as HTMLElement, last_user_index);
+            hide(qs('.user-property-username-change-input'));
+            show(qs('.edit-username-success'));
         }
     });
 }
 
-function update_user_username() {
-    let pop_in_container = $('#UserList');
-    let ajax_data: Record<string, any> = {
-        pwg_token: pwg_token,
-        user_id: last_user_id
-    };
-    ajax_data['username'] = pop_in_container.find('.user-property-input-username').val();
-    if (ajax_data.username.replace(/\s/g, '').length == 0) {
-        $(".update-user-fail").html(fieldNotEmpty).fadeIn().delay(1500).fadeOut(2500);
-        return
-    }
-    jQuery.ajax({
-        url: "ws.php?format=json&method=pwg.users.setInfo",
-        type: "POST",
-        data: ajax_data,
-        success: (raw_data) => {
-            data = jQuery.parseJSON(raw_data);
-            if (data.stat == 'ok') {
-                if (last_user_index != -1) {
-                    current_users[last_user_index].username = data.result.users[0].username;
-                    $('#UserList .user-property-username .edit-username-title').html(current_users[last_user_index].username);
-                    $('#UserList .user-property-initials span').html(get_initials(current_users[last_user_index].username));
-                    fill_container_user_info($('#user-table-content .user-container').eq(last_user_index), last_user_index);
-                }
-                $('.user-property-username-change-input').hide();
-                $('.edit-username-success').fadeIn();
-                $('#close_username_success').on('click', function () {
-                    $('.edit-username-success').hide();
-                    $('.user-property-username-change-input').show();
-                    $('.user-property-username-change').hide();
-                });
-            }
-        }
-    })
-}
-
 function update_user_password() {
-    let pop_in_container = $('#UserList');
-    let ajax_data: Record<string, any> = {
-        pwg_token: pwg_token,
-        user_id: last_user_id
-    };
-    ajax_data['password'] = pop_in_container.find('.user-property-input-password').val();
-    jQuery.ajax({
-        url: "ws.php?format=json&method=pwg.users.setInfo",
-        type: "POST",
-        data: ajax_data,
-        success: (raw_data) => {
-            data = jQuery.parseJSON(raw_data);
-            if (data.stat == 'ok') {
-                $('.user-property-password-change-inputs').hide();
-                $('#edit_password_success_change').fadeIn();
-
-                if (window.isSecureContext && navigator.clipboard) {
-                    $('#copy_password').on('click', async function() {
-                        copyToClipboard(ajax_data['password'])
-                        $('#password_msg_success').html(passwordCopied);
-                    });
-                };
-            
-                $('#close_password_success').on('click', function() {
-                    $('.user-property-password-change').hide();
-                    $('#edit_password_success_change').hide();
-                    $('.user-property-password-change-inputs').show();
-                    reset_input_password();
-                });
+    const popIn = document.getElementById('UserList')!;
+    const password = qs<HTMLInputElement>('.user-property-input-password', popIn)?.value ?? '';
+    pwgPost('pwg.users.setInfo', { pwg_token, user_id: last_user_id, password }).then(d => {
+        if (d.stat === 'ok') {
+            hide(qs('.user-property-password-change-inputs'));
+            show(document.getElementById('edit_password_success_change'));
+            if (window.isSecureContext && navigator.clipboard) {
+                qs('#copy_password')?.addEventListener('click', () => { copyToClipboard(password); qs<HTMLElement>('#password_msg_success')!.innerHTML = passwordCopied; });
             }
         }
-    })
+    });
 }
 
 function update_user_info() {
-
-    //Show spinner
-    $(".update-user-button i").removeClass("icon-floppy").addClass("icon-spin6 animate-spin");
-    $(".update-user-button").addClass("unclickable");
-    let pop_in_container = $('.UserListPopInContainer');
-    let ajax_data: Record<string, any> = {
-        pwg_token: pwg_token,
-        user_id: last_user_id
-    };
-    if (plugins_users_infos_table.length > 0) {
-        const keyCurrentUsers = Object.keys(current_users[last_user_index]);
-        plugins_users_infos_table.forEach((i) => {
-            if (keyCurrentUsers.includes(i.users_table)) {
-                ajax_data[i.users_table] = $('#' + i.content_id).val();
-            } else {
-                console.error(i.users_table, ' doesn\'t exist in USER_INFOS_TABLE');
+    qsa('.update-user-button i').forEach(el => { el.classList.remove('icon-floppy'); el.classList.add('icon-spin6', 'animate-spin'); });
+    qsa('.update-user-button').forEach(el => el.classList.add('unclickable'));
+    const popIn = qs<HTMLElement>('.UserListPopInContainer')!;
+    let ajax_data: Record<string, any> = { pwg_token, user_id: last_user_id };
+    plugins_users_infos_table.forEach(i => {
+        const el = qs<HTMLInputElement>('#' + i.content_id);
+        if (el && Object.keys(current_users[last_user_index] ?? {}).includes(i.users_table)) ajax_data[i.users_table] = el.value;
+    });
+    ajax_data = fill_ajax_data_from_container(ajax_data, popIn);
+    qsa<HTMLElement>('#UserList .update-user-fail, #UserList .update-user-success').forEach(el => { el.style.display = 'none'; });
+    pwgPost('pwg.users.setInfo', ajax_data).then(d => {
+        if (d.stat === 'ok') {
+            const result = d.result.users[0];
+            if (last_user_index !== -1) {
+                current_users[last_user_index] = { ...current_users[last_user_index], ...result };
+                fill_container_user_info(qsa('#user-table-content .user-container')[last_user_index] as HTMLElement, last_user_index);
             }
-        });
-    }
-
-    ajax_data = fill_ajax_data_from_container(ajax_data, pop_in_container);
-    jQuery.ajax({
-        url: "ws.php?format=json&method=pwg.users.setInfo",
-        type: "POST",
-        data: ajax_data,
-        beforeSend: function() {
-            $("#UserList .update-user-fail").fadeOut();
-            $("#UserList .update-user-success").fadeOut();
-        },
-        success: function(raw_data) {
-            data = jQuery.parseJSON(raw_data);
-            if (data.stat === 'ok') {
-                let result_user = data.result.users[0];
-                if (last_user_index != -1) {
-                    current_users[last_user_index] = {...current_users[last_user_index], ...result_user};
-                    fill_container_user_info($('#user-table-content .user-container').eq(last_user_index), last_user_index);
-                }
-                $("#UserList .update-user-success").fadeIn().delay(1500).fadeOut(2500);
-
-                //Hide spinner
-                $(".update-user-button i").removeClass("icon-spin6 animate-spin").addClass("icon-floppy");
-                $(".update-user-button").removeClass("unclickable");
-
-                // update plugins
-                if (Object.keys(plugins_get_functions).length > 0) {
-                    Object.entries(plugins_set_functions).forEach((f) => {
-                        ((f[1] as unknown) as () => void)();
-                    });
-                }
-
-                // update who is the king
-                fill_who_is_the_king(result_user, $('#UserList'));
-
-            } else if (data.stat === 'fail') {
-                $("#UserList .update-user-fail").html(data.message);
-                $("#UserList .update-user-fail").fadeIn();
-                $(".update-user-button i").addClass("icon-floppy").removeClass("icon-spin6 animate-spin");
-                $(".update-user-button").removeClass("unclickable");
-                setTimeout(() => {
-                  $("#UserList .update-user-fail").fadeOut();
-                }, 5000);
-            }
+            fadeInThenOut(qs('#UserList .update-user-success'), 0, 2500);
+            qsa('.update-user-button i').forEach(el => { el.classList.remove('icon-spin6', 'animate-spin'); el.classList.add('icon-floppy'); });
+            qsa('.update-user-button').forEach(el => el.classList.remove('unclickable'));
+            if (Object.keys(plugins_set_functions).length > 0) Object.values(plugins_set_functions).forEach((f: any) => f());
+            fill_who_is_the_king(result, document.getElementById('UserList')!);
+        } else if (d.stat === 'fail') {
+            const failEl = qs<HTMLElement>('#UserList .update-user-fail');
+            if (failEl) { failEl.innerHTML = d.message; failEl.style.display = ''; }
+            qsa('.update-user-button i').forEach(el => { el.classList.add('icon-floppy'); el.classList.remove('icon-spin6', 'animate-spin'); });
+            qsa('.update-user-button').forEach(el => el.classList.remove('unclickable'));
+            setTimeout(() => hide(qs<HTMLElement>('#UserList .update-user-fail')), 5000);
         }
     });
 }
 
 function get_guest_info() {
-    jQuery.ajax({
-        url: "ws.php?format=json&method=pwg.users.getList",
-        type: "POST",
-        data: {
-            display: "all",
-            user_id: guest_id
-        },
-        success: (raw_data) => {
-            data = jQuery.parseJSON(raw_data);
-            if (data.stat == 'ok') {
-                guest_user = data.result.users[0];
-                fill_guest_edit();
-            }
-        }
+    pwgPost('pwg.users.getList', { display: 'all', user_id: guest_id }).then(d => {
+        if (d.stat === 'ok') { guest_user = d.result.users[0]; fill_guest_edit(); }
     });
 }
 
 function get_user_info(uid: any, callback: any = null) {
-    jQuery.ajax({
-        url: "ws.php?format=json&method=pwg.users.getList",
-        type: "POST",
-        data: {
-            display: "all",
-            user_id: uid
-        },
-        success: (raw_data) => {
-            data = jQuery.parseJSON(raw_data);
-            if (data.stat == 'ok') {
-                let result_user = data.result.users[0];
-                fill_user_edit(result_user);
-                callback();
-            }
-        }
+    pwgPost('pwg.users.getList', { display: 'all', user_id: uid }).then(d => {
+        if (d.stat === 'ok') { fill_user_edit(d.result.users[0]); if (callback) callback(); }
     });
 }
 
 function update_guest_info() {
-    //Show spinner
-    $(".update-user-button i").removeClass("icon-floppy").addClass("icon-spin6 animate-spin");
-    $(".update-user-button").addClass("unclickable");
-
-    let pop_in_container = $('.GuestUserListPopInContainer');
-    let ajax_data: Record<string, any> = {
-        pwg_token: pwg_token,
-        user_id: guest_id
-    };
-    ajax_data = fill_ajax_data_from_container(ajax_data, pop_in_container);
-    ajax_data.email = undefined;
-    ajax_data.status = undefined;
-    jQuery.ajax({
-        url: "ws.php?format=json&method=pwg.users.setInfo",
-        type: "POST",
-        data: ajax_data,
-        success: function(raw_data) {
-            data = jQuery.parseJSON(raw_data);
-            if (data.stat == 'ok') {
-                $("#GuestUserList .update-user-success").fadeIn().delay(1500).fadeOut(2500);
-            }
-             //Hide spinner
-            $(".update-user-button i").removeClass("icon-spin6 animate-spin").addClass("icon-floppy");
-            $(".update-user-button").removeClass("unclickable");
-        }
+    qsa('.update-user-button i').forEach(el => { el.classList.remove('icon-floppy'); el.classList.add('icon-spin6', 'animate-spin'); });
+    qsa('.update-user-button').forEach(el => el.classList.add('unclickable'));
+    const popIn = qs<HTMLElement>('.GuestUserListPopInContainer')!;
+    let ajax_data: Record<string, any> = { pwg_token, user_id: guest_id };
+    ajax_data = fill_ajax_data_from_container(ajax_data, popIn);
+    delete ajax_data.email; delete ajax_data.status;
+    pwgPost('pwg.users.setInfo', ajax_data).then(d => {
+        if (d.stat === 'ok') fadeInThenOut(qs('#GuestUserList .update-user-success'), 0, 2500);
+        qsa('.update-user-button i').forEach(el => { el.classList.remove('icon-spin6', 'animate-spin'); el.classList.add('icon-floppy'); });
+        qsa('.update-user-button').forEach(el => el.classList.remove('unclickable'));
     });
 }
 
 function update_user_list() {
-    let update_data: Record<string, any> = {
-        display: "all",
-        order: filter_by, // We want the most recent user first
-        page: actual_page - 1,
-        per_page: per_page,
-        exclude: [guest_id]
+    const update_data: Record<string, any> = {
+        display: 'all', order: filter_by, page: actual_page - 1, per_page, exclude: [guest_id]
+    };
+    const searchVal = (qs<HTMLInputElement>('#user_search'))?.value ?? '';
+    if (searchVal) {
+        const m = searchVal.match(/^id:(\d+)$/);
+        update_data[m ? 'user_id' : 'filter'] = m ? m[1] : searchVal;
     }
-    const userSearchVal = $("#user_search").val();
-    if (userSearchVal) {
-        const matches = String(userSearchVal).match(/^id:(\d+)$/);
-        update_data[matches ? "user_id" : "filter"] = matches ? matches[1] : userSearchVal;
+    if (qs('.advanced-filter')?.classList.contains('advanced-filter-open')) {
+        update_data['status'] = (qs<HTMLSelectElement>('.advanced-filter-select[name=filter_status]'))?.value;
+        update_data['group_id'] = (qs<HTMLSelectElement>('.advanced-filter-select[name=filter_group]'))?.value;
+        update_data['min_level'] = (qs<HTMLSelectElement>('.advanced-filter-select[name=filter_level]'))?.value;
+        update_data['max_level'] = update_data['min_level'];
+        const [minIdx, maxIdx] = getSliderValues(qs('.dates-select-bar .slider-bar-container'));
+        update_data['min_register'] = register_dates[minIdx] ?? '';
+        update_data['max_register'] = register_dates[maxIdx] ?? '';
     }
-    if ($(".advanced-filter").hasClass('advanced-filter-open')) {
-        update_data["status"] = $(".advanced-filter-select[name=filter_status]").val();
-        update_data["group_id"] = $(".advanced-filter-select[name=filter_group]").val();
-        update_data["min_level"] = $(".advanced-filter-select[name=filter_level]").val();
-        update_data["max_level"] = $(".advanced-filter-select[name=filter_level]").val();
-        update_data["min_register"] = register_dates[$(".dates-select-bar .slider-bar-container").slider("option", "values")[0]];
-        update_data["max_register"] = register_dates[$(".dates-select-bar .slider-bar-container").slider("option", "values")[1]];
-    }
-    jQuery.ajax({
-        url: "ws.php?format=json&method=pwg.users.getList",
-        type: "POST",
-        data: update_data,
-        beforeSend: function () {
-            $(".user-update-spinner").show();
-        },
-        success: function (raw_data) {
-            data = jQuery.parseJSON(raw_data);
-            if (data.stat === "fail") {
-                // console.log(data.message);
-                return;
-            }
-            total_users = data.result.paging.total_count;
-            if (first_update) {
-                $("h1").append(`<span class='badge-number'>${total_users}</span>`);
-                first_update = false;
-            }
-            nb_filtered_users = data.result.paging.total_count;
-            update_pagination_menu();
-            current_users = data.result.users;
-            generate_user_list();
-            $(".user-col.user-first-col.user-container-edit").click(function () {
-                let uid_index = Number($(this).closest('.user-container').attr('key'));
-                last_user_id = current_users[uid_index].id;
-                last_user_index = uid_index;
-                fill_user_edit(current_users[uid_index]);
-                $("#UserList").fadeIn();
-                $('#tab_properties')[0].scrollIntoView({
-                    behavior: 'instant'
-                });
-            });
-            set_selected_to_selection();
-
-            $(".user-update-spinner").hide();
-
-            let nb_filters = 0;
-            ($(".advanced-filter-select[name=filter_status]").val() != "") ? nb_filters += 1 : false;
-            ($(".advanced-filter-select[name=filter_group]").val() != "") ? nb_filters += 1 : false;
-            ($(".advanced-filter-select[name=filter_level]").val() != "") ? nb_filters += 1 : false;
-            ($(".dates-select-bar .slider-bar-container").slider("option", "values")[0] != 0) ? nb_filters += 1 : false;
-            ($(".dates-select-bar .slider-bar-container").slider("option", "values")[1] != register_dates.length -1) ? nb_filters += 1 : false;
-        
-            show_filter_infos(nb_filters);
-        },
-        error: (raw_data) => {
-            $(".user-update-spinner").hide();
+    show(qs('.user-update-spinner'));
+    pwgPost('pwg.users.getList', update_data).then(d => {
+        if (d.stat === 'fail') return;
+        total_users = d.result.paging.total_count;
+        if (first_update) {
+            document.querySelector('h1')?.insertAdjacentHTML('beforeend', `<span class='badge-number'>${total_users}</span>`);
+            first_update = false;
         }
-    });
+        nb_filtered_users = d.result.paging.total_count;
+        update_pagination_menu();
+        current_users = d.result.users;
+        generate_user_list();
+        qsa('.user-col.user-first-col.user-container-edit').forEach(el => {
+            el.addEventListener('click', () => {
+                const key = parseInt(el.closest<HTMLElement>('.user-container')?.getAttribute('key') ?? '0');
+                last_user_id = current_users[key].id;
+                last_user_index = key;
+                fill_user_edit(current_users[key]);
+                show(document.getElementById('UserList'));
+                document.getElementById('tab_properties')?.scrollIntoView({ behavior: 'instant' as ScrollBehavior });
+            });
+        });
+        set_selected_to_selection();
+        hide(qs('.user-update-spinner'));
+
+        let nb_filters = 0;
+        const filterStatus = (qs<HTMLSelectElement>('.advanced-filter-select[name=filter_status]'))?.value;
+        const filterGroup = (qs<HTMLSelectElement>('.advanced-filter-select[name=filter_group]'))?.value;
+        const filterLevel = (qs<HTMLSelectElement>('.advanced-filter-select[name=filter_level]'))?.value;
+        if (filterStatus) nb_filters++;
+        if (filterGroup) nb_filters++;
+        if (filterLevel) nb_filters++;
+        const [minIdx, maxIdx] = getSliderValues(qs('.dates-select-bar .slider-bar-container'));
+        if (minIdx !== 0) nb_filters++;
+        if (register_dates && maxIdx !== register_dates.length - 1) nb_filters++;
+        show_filter_infos(nb_filters);
+    }).catch(() => hide(qs('.user-update-spinner')));
 }
 
 function add_user() {
-    let ajax_data: Record<string, any> = {};
-    let groups_selected = $('.AddUserInputContainer .user-property-group .selectize-input .item').map(function () {
-        return parseInt($(this).attr('data-value')!);
-    } ).get();
-    ajax_data.username = $('.AddUserLabelUsername .user-property-input').val();
-    ajax_data.email = $(".AddUserLabelEmail .user-property-input").val();
-    ajax_data.status = $(".AddUserInputContainer .user-property-status select").val();
-    ajax_data.level = $(".AddUserInputContainer .user-property-level select").val();
-    ajax_data.enabled_high = $(".AddUserInputContainer .user-list-checkbox[name=\"hd_enabled\"]").attr('data-selected') == '1' ? true : false;
-    ajax_data.group_id = groups_selected;
+    const addUserTs = groupAddUserTs;
+    const groups_selected = addUserTs ? addUserTs.items.map((id: string) => parseInt(id)) : [];
+    const username = (qs<HTMLInputElement>('.AddUserLabelUsername .user-property-input'))?.value ?? '';
+    const email = (qs<HTMLInputElement>('.AddUserLabelEmail .user-property-input'))?.value ?? '';
+    const status = (qs<HTMLSelectElement>('.AddUserInputContainer .user-property-status select'))?.value ?? '';
+    const level = (qs<HTMLSelectElement>('.AddUserInputContainer .user-property-level select'))?.value ?? '';
+    const enabled_high = qs<HTMLElement>('.AddUserInputContainer .user-list-checkbox[name="hd_enabled"]')?.dataset['selected'] === '1';
 
-    // for debug
-    // console.log(ajax_data);
-
-    const data: Record<string, any> = {
-        username: ajax_data.username,
-        email: ajax_data.email,
-        pwg_token,
+    const errEl = qs<HTMLElement>('#AddUser .AddUserErrors');
+    const showErr = (msg: string) => { if (errEl) { errEl.innerHTML = msg; errEl.style.visibility = 'visible'; } };
+    if (errEl) errEl.style.visibility = 'hidden';
+    if (!username) { showErr(missingUsername); return; }
+    if (status === 'generic') {
+        const pass = (qs<HTMLInputElement>('#add_user_pass'))?.value ?? '';
+        const conf = (qs<HTMLInputElement>('#add_user_confpass'))?.value ?? '';
+        if (!pass) { showErr(missingPassword); return; }
+        if (!conf) { showErr(missingConfPassword); return; }
+        if (pass !== conf) { showErr(noMatchPassword); return; }
     }
 
-    if ('generic' === ajax_data.status) {
-        data.password = $('#add_user_pass').val();
-        data.password_confirm = $('#add_user_confpass').val();
-    } else {
-        data.auto_password = true;
-    }
+    const params: Record<string, any> = { username, email, pwg_token };
+    if (status === 'generic') {
+        params.password = (qs<HTMLInputElement>('#add_user_pass'))?.value;
+        params.password_confirm = (qs<HTMLInputElement>('#add_user_confpass'))?.value;
+    } else { params.auto_password = true; }
 
-    $.ajax({
-        url: "ws.php?format=json&method=pwg.users.add",
-        type:"POST",
-        data: data,
-        beforeSend: function() {
-            $("#AddUser .AddUserErrors").css("visibility", "hidden");
-            if ($(".AddUserLabelUsername .user-property-input").val() == "") {
-                $("#AddUser .AddUserErrors").html(missingUsername);
-                $("#AddUser .AddUserErrors").css("visibility", "visible");
-                return false;
-            }
-            if ('generic' === ajax_data.status) {
-                const pass = $('#add_user_pass').val();
-                const confPass = $('#add_user_confpass').val();
-                if ('' == pass) {
-                    $("#AddUser .AddUserErrors").html(missingPassword);
-                    $("#AddUser .AddUserErrors").css("visibility", "visible");
-                    return false;
-                }
-                if ('' == confPass) {
-                    $("#AddUser .AddUserErrors").html(missingConfPassword);
-                    $("#AddUser .AddUserErrors").css("visibility", "visible");
-                    return false;
-                }
-                if (pass !== confPass) {
-                    $("#AddUser .AddUserErrors").html(noMatchPassword);
-                    $("#AddUser .AddUserErrors").css("visibility", "visible");
-                    return false;
-                }
-                
-            }
-        },
-        success: (raw_data) => {
-            let data = jQuery.parseJSON(raw_data);
-            if (data.stat == 'ok') {
-                let new_user_id = data.result.users[0].id;
-                const default_group = data.result.users[0].groups ?? [];
-                ajax_data.group_id = ajax_data.group_id.concat(default_group);
-                add_infos_to_new_user(new_user_id, ajax_data);
-            }
-            else {
-                $("#AddUser .AddUserErrors").html(data.message)
-                $("#AddUser .AddUserErrors").css("visibility", "visible");
-            }
-        }
+    pwgPost('pwg.users.add', params).then(d => {
+        if (d.stat === 'ok') {
+            const new_user_id = d.result.users[0].id;
+            const default_group = d.result.users[0].groups ?? [];
+            add_infos_to_new_user(new_user_id, { username, email, status, level, group_id: groups_selected.concat(default_group), enabled_high });
+        } else { showErr(d.message); }
     });
 }
 
 function add_infos_to_new_user(user_id: any, ajax_data: any) {
-    $.ajax({
-        url: 'ws.php?format=json&method=pwg.users.setInfo',
-        type: 'POST',
-        data: {
-            user_id,
-            status: ajax_data.status,
-            level: ajax_data.level,
-            group_id: ajax_data.group_id,
-            enabled_high: ajax_data.enabled_high,
-            pwg_token
-        },
-        success: function(response) {
-            const data = JSON.parse(response);
-            if (data.stat == 'ok') {
-                let new_user_id = data.result.users[0].id;
-                update_user_list();
-                // add_user_close();
-                $('#AddUserUpdated').removeClass('icon-red icon-cancel').addClass('icon-green border-green icon-ok');
-                $('#AddUserUpdatedText').html(user_added_str.replace("%s", ajax_data.username));
-                const status = ['webmaster', 'admin', 'normal'];
-                if (status.includes(ajax_data.status)) {
-                    send_new_user_password(new_user_id, ajax_data.email);
-                } else {
-                    add_user_close();
-                }
-                $("#AddUser .user-property-input").val("");
-                $("#AddUserSuccess .edit-now").off("click").on("click", () => {
+    pwgPost('pwg.users.setInfo', { user_id, status: ajax_data.status, level: ajax_data.level, group_id: ajax_data.group_id, enabled_high: ajax_data.enabled_high, pwg_token }).then(d => {
+        if (d.stat === 'ok') {
+            const new_user_id = d.result.users[0].id;
+            update_user_list();
+            qs('#AddUserUpdated')?.classList.replace('icon-red', 'icon-green');
+            qs('#AddUserUpdated')?.classList.replace('icon-cancel', 'icon-ok');
+            qs('#AddUserUpdated')?.classList.add('border-green');
+            const textEl = qs<HTMLElement>('#AddUserUpdatedText'); if (textEl) textEl.innerHTML = user_added_str.replace('%s', ajax_data.username);
+            if (['webmaster', 'admin', 'normal'].includes(ajax_data.status)) send_new_user_password(new_user_id, ajax_data.email);
+            else add_user_close();
+            qsa<HTMLInputElement>('#AddUser .user-property-input').forEach(el => { el.value = ''; });
+            const editNow = qs('#AddUserSuccess .edit-now');
+            if (editNow) {
+                const nb = editNow.cloneNode(true) as HTMLElement;
+                editNow.replaceWith(nb);
+                nb.addEventListener('click', () => {
                     last_user_id = new_user_id;
                     last_user_index = get_container_index_from_uid(new_user_id);
-                    if (last_user_index != -1) {
-                        fill_user_edit(current_users[last_user_index]);
-                        open_user_list();
-                    } else {
-                        get_user_info(new_user_id, open_user_list);
-                    }
-                })
-                $("#AddUserSuccess label span:first").html(user_added_str.replace("%s", ajax_data.username));
-                $("#AddUserSuccess").css("display", "flex");
-                $('.badge-number').html(String(Number($('.badge-number').html()) + 1));
+                    if (last_user_index !== -1) { fill_user_edit(current_users[last_user_index]); open_user_list(); }
+                    else get_user_info(new_user_id, open_user_list);
+                });
             }
-            else {
-                $("#AddUser .AddUserErrors").html(data.message)
-                $("#AddUser .AddUserErrors").css("visibility", "visible");
-            }
-        }
+            const labelSpan = qs<HTMLElement>('#AddUserSuccess label span:first-child'); if (labelSpan) labelSpan.innerHTML = user_added_str.replace('%s', ajax_data.username);
+            const successEl = qs<HTMLElement>('#AddUserSuccess'); if (successEl) successEl.style.display = 'flex';
+            const badge = qs('.badge-number'); if (badge) badge.innerHTML = String(parseInt(badge.innerHTML) + 1);
+        } else { qs<HTMLElement>('#AddUser .AddUserErrors')!.style.visibility = 'visible'; qs<HTMLElement>('#AddUser .AddUserErrors')!.innerHTML = d.message; }
     });
 }
 
 function send_new_user_password(user_id: any, mail: any) {
-    let send_by_mail = mail === '' ? false : true;
-    $.ajax({
-        url: "ws.php?format=json",
-        dataType: "json",
-        type: "POST",
-        data:{
-            method: 'pwg.users.generatePasswordLink',
-            user_id: user_id,
-            send_by_mail: send_by_mail,
-            pwg_token: pwg_token
-        },
-        success: function(response) {
-            if('ok' === response.stat) {
-                const password_container = $('#AddUserPasswordInputContainer');
-                password_container.show();
-                $('#AddUserFieldContainer').hide();
-                $('#AddUserSuccessContainer').fadeIn();
-                $('#AddUserPasswordLink').val(response.result.generated_link).trigger('focus');
-                $('#AddUserTextField').html(send_by_mail 
-                    ? sprintf(validLinkMail, response.result.time_validation, `<b>${mail}</b>`) 
-                    : sprintf(validLinkWithoutMail, response.result.time_validation));
-
-                if(send_by_mail && !response.result.send_by_mail) {
-                    $('#AddUserUpdated').removeClass('icon-green border-green icon-ok').addClass('icon-red-error icon-cancel');
-                    $('#AddUserUpdatedText').html(errorMailSent);
-                    $('#AddUserTextField').html(sprintf(errorMailSentMsg, response.result.time_validation));
-                } else if (send_by_mail && response.result.send_by_mail) {
-                    password_container.hide();
-                }
-                
-                if (window.isSecureContext && navigator.clipboard) {
-                    $('#AddUserCopyPassword').off('click').on('click', function() {
-                        const successMsg = $('#AddUserUpdatedText');
-                        successMsg.fadeOut();
-                        copyToClipboard(response.result.generated_link);
-                        $('#AddUserUpdated').removeClass('icon-red icon-cancel').addClass('icon-green border-green icon-ok');
-                        successMsg.html(copyLinkStr);
-                        successMsg.fadeIn();
-                    });
-                };
-                $('#AddUserButton').off('click').on('click', function() {
-                    add_user_close();
-                });
-            } else {
-                $('#AddUserUpdated').removeClass('icon-green border-green icon-ok').addClass('icon-red-error icon-cancel');
-                $('#AddUserUpdatedText').html((response as any).message);
-            }
-        },
-        error: function(response) {
-            $('#AddUserUpdated').removeClass('icon-green border-green icon-ok').addClass('icon-red-error icon-cancel');
-            $('#AddUserUpdatedText').html((response as any).message);
+    const send_by_mail = mail !== '';
+    pwgPost('pwg.users.generatePasswordLink', { user_id, send_by_mail, pwg_token }).then(res => {
+        if (res.stat === 'ok') {
+            const password_container = document.getElementById('AddUserPasswordInputContainer');
+            show(password_container);
+            hide(document.getElementById('AddUserFieldContainer'));
+            show(document.getElementById('AddUserSuccessContainer'));
+            const pwdLink = qs<HTMLInputElement>('#AddUserPasswordLink'); if (pwdLink) { pwdLink.value = res.result.generated_link; pwdLink.focus(); }
+            const textEl = qs<HTMLElement>('#AddUserTextField');
+            if (textEl) textEl.innerHTML = send_by_mail ? sprintf(validLinkMail, res.result.time_validation, `<b>${mail}</b>`) : sprintf(validLinkWithoutMail, res.result.time_validation);
+            if (send_by_mail && !res.result.send_by_mail) {
+                qs('#AddUserUpdated')?.classList.add('icon-red-error', 'icon-cancel');
+                const ut = qs<HTMLElement>('#AddUserUpdatedText'); if (ut) ut.innerHTML = errorMailSent;
+                if (textEl) textEl.innerHTML = sprintf(errorMailSentMsg, res.result.time_validation);
+            } else if (send_by_mail && res.result.send_by_mail) { hide(password_container); }
         }
     });
 }
 
 function delete_user(uid: any) {
-    jQuery.ajax({
-        url: "ws.php?format=json&method=pwg.users.delete",
-        type:"POST",
-        data: {
-            user_id:uid,
-            pwg_token:pwg_token
-        },
-        beforeSend: function() {
-            //jQuery('#user'+uid+' .userDelete .loading').show();
-        },
-        success:function(data) {
-            close_user_list();
-            update_user_list();
-            $('.badge-number').html(String(Number($('.badge-number').html()) - 1));
-            // msg where user was deleted
-            //jQuery('#showAddUser .infos').html('&#x2714; User '+username+' deleted').show();
-        },
-        error:function(XMLHttpRequest, textStatus, errorThrows) {
-            //error just hide loading
-            //jQuery('#user'+uid+' .userDelete .loading').hide();
-        }
-    })
+    pwgPost('pwg.users.delete', { user_id: uid, pwg_token }).then(() => {
+        close_user_list();
+        update_user_list();
+        const badge = qs('.badge-number'); if (badge) badge.innerHTML = String(parseInt(badge.innerHTML) - 1);
+    });
 }
 
 function show_filter_infos(nb_filters: any) {
-  if (String($("#user_search").val()).length != 0 || nb_filters != 0) {
-    if (total_users != 1) {
-      $(".filtered-users").html(filtered_users.replace(/%d/g, total_users));
-    } else {
-      $(".filtered-users").html(filtered_user.replace(/%d/g, total_users));
+    const filteredEl = qs('.filtered-users');
+    const searchVal = (qs<HTMLInputElement>('#user_search'))?.value ?? '';
+    if (filteredEl) {
+        if (searchVal.length !== 0 || nb_filters !== 0) filteredEl.innerHTML = total_users !== 1 ? filtered_users.replace(/%d/g, total_users) : filtered_user.replace(/%d/g, total_users);
+        else filteredEl.innerHTML = '';
     }
-  } else {
-    $(".filtered-users").html("");
-  }
-  
-  if (nb_filters != 0) {
-    $(".advanced-filter-btn").css({
-      width: "80px",
-    });
-    $(".filter-counter").html(nb_filters).css('display', 'flex');
-  } else {
-    $(".advanced-filter-btn").css({
-      width: "70px",
-    });
-    $(".filter-counter").css('display', 'none').html("0");
-  }
+    const btnEl = qs<HTMLElement>('.advanced-filter-btn');
+    const counterEl = qs<HTMLElement>('.filter-counter');
+    if (nb_filters !== 0) {
+        if (btnEl) btnEl.style.width = '80px';
+        if (counterEl) { counterEl.innerHTML = String(nb_filters); counterEl.style.display = 'flex'; }
+    } else {
+        if (btnEl) btnEl.style.width = '70px';
+        if (counterEl) { counterEl.style.display = 'none'; counterEl.innerHTML = '0'; }
+    }
 }
 
-function send_link_password(email: any, username: any, user_id: any, send_by_mail: any) {
-    $.ajax({
-        url: "ws.php?format=json",
-        dataType: "json",
-        type: "POST",
-        data: {
-            method: 'pwg.users.generatePasswordLink',
-            user_id: user_id,
-            send_by_mail: send_by_mail,
-            pwg_token: pwg_token
-        },
-        success: function(response) {
-            if('ok' === response.stat) {
-                $('#result_send_mail_copy_input').val(response.result.generated_link);
-                if(send_by_mail) {
-                    if(response.result.send_by_mail) {
-                        $('#result_send_mail').removeClass('update-password-fail icon-red').addClass('update-password-success icon-green');
-                        $('#icon_password_msg_result_mail').removeClass('icon-cancel').addClass('icon-ok');
-                        const curr_mail = String($('.user-property-email .user-property-input').val()).length 
-                            ? $('.user-property-email .user-property-input').val() 
-                            : email;
-                        $('#password_msg_result_mail').html(sprintf(mailSentAt, username, curr_mail));
-                    } else {
-                        $('#result_send_mail').removeClass('update-password-success icon-green').addClass('update-password-fail icon-red');
-                        $('#icon_password_msg_result_mail').removeClass('icon-ok').addClass('icon-cancel');
-                        $('#password_msg_result_mail').html(errorMailSent);
-                    }
-                    $('.user-property-password-choice').hide();
-                    $('#edit_password_result_mail').fadeIn();
-                    $('#close_password_mail_close').off('click').on('click', function() {
-                        reset_password_modals();
-                    });
+function send_link_password(email: any, username: any, user_id: any, send_by_mail: boolean) {
+    pwgPost('pwg.users.generatePasswordLink', { user_id, send_by_mail: String(send_by_mail), pwg_token }).then(res => {
+        if (res.stat === 'ok') {
+            const copyInput = qs<HTMLInputElement>('#result_send_mail_copy_input'); if (copyInput) copyInput.value = res.result.generated_link;
+            if (send_by_mail) {
+                const resultMail = qs('#result_send_mail');
+                if (res.result.send_by_mail) {
+                    resultMail?.classList.remove('update-password-fail', 'icon-red');
+                    resultMail?.classList.add('update-password-success', 'icon-green');
+                    qs('#icon_password_msg_result_mail')?.classList.replace('icon-cancel', 'icon-ok');
+                    const curr_mail = (qs<HTMLInputElement>('.user-property-email .user-property-input'))?.value || email;
+                    qs<HTMLElement>('#password_msg_result_mail')!.innerHTML = sprintf(mailSentAt, username, curr_mail);
                 } else {
-                    $('#result_send_mail_copy').removeClass('update-password-fail icon-red').addClass('update-password-success icon-green');
-                    $('#result_send_mail_copy_icon').removeClass('icon-cancel').addClass('icon-ok');
-                    $('#result_send_mail_copy_msg').html(copyLinkStr);
-                    if (window.isSecureContext && navigator.clipboard) {
-                        copyToClipboard(response.result.generated_link);
-                    };
+                    resultMail?.classList.remove('update-password-success', 'icon-green');
+                    resultMail?.classList.add('update-password-fail', 'icon-red');
+                    qs('#icon_password_msg_result_mail')?.classList.replace('icon-ok', 'icon-cancel');
+                    qs<HTMLElement>('#password_msg_result_mail')!.innerHTML = errorMailSent;
                 }
-            }
-        },
-        error: function(err) {
-            console.log('Error send_link_password :', err);
-            if (!send_by_mail) {
-                $('#result_send_mail_copy').removeClass('update-password-success icon-green').addClass('update-password-fail icon-red');
-                $('#result_send_mail_copy_icon').removeClass('icon-ok').addClass('icon-cancel');
-                $('#result_send_mail_copy_msg').html(errorStr);
+                hide(qs('.user-property-password-choice'));
+                show(qs('#edit_password_result_mail'));
             } else {
-                $('#result_send_mail').removeClass('update-password-success icon-green').addClass('update-password-fail icon-red');
-                $('#icon_password_msg_result_mail').removeClass('icon-ok').addClass('icon-cancel');
-                $('#password_msg_result_mail').html(errorMailSent);
-                $('.user-property-password-choice').hide();
-                $('#edit_password_result_mail').fadeIn();
-                $('#close_password_mail_close').off('click').on('click', function() {
-                    reset_password_modals();
-                });
+                if (window.isSecureContext && navigator.clipboard) copyToClipboard(res.result.generated_link);
             }
-        },
-    });
+        }
+    }).catch(err => console.log('Error send_link_password:', err));
 }
 
 function set_main_user(user_id: any, new_username: any) {
-    $.ajax({
-        url: 'ws.php?format=json',
-        dataType: 'json',
-        type: 'POST',
-        data: {
-            method: 'pwg.users.setMainUser',
-            user_id: user_id,
-            pwg_token: pwg_token
-        },
-        success: function(res) {
-            if('ok' === res.stat) {
-                $('#who_is_the_king')
-                .off('click')
-                .removeClass('princes-of-this-piwigo royal-court-of-this-piwigo can-change')
-                .addClass('king-of-this-piwigo cannot-change')
-                .attr('title', mainUserStr)
-                .tipTip();
-
-                owner_id = user_id;
-                owner_username = new_username;
-                set_main_user_success();
-            }
-        },
-        error: function(err) {
-            console.log(err);
+    pwgPost('pwg.users.setMainUser', { user_id, pwg_token }).then(res => {
+        if (res.stat === 'ok') {
+            const king = qs('#who_is_the_king');
+            if (king) { king.classList.remove('princes-of-this-piwigo', 'royal-court-of-this-piwigo', 'can-change'); king.classList.add('king-of-this-piwigo', 'cannot-change'); king.title = mainUserStr; tippy(king, { content: mainUserStr }); }
+            owner_id = user_id;
+            owner_username = new_username;
+            set_main_user_success();
         }
     });
 }
 
-$(document).ready(function() {
-  setupRegisterDates(register_dates);
-  selectionMode(false);
-  get_guest_info();
-  update_user_list();
-  update_selection_content();
+/*---- Main user (king) ----*/
+function open_main_user_modal(user_to_edit: any) {
+    const modal = qs<HTMLElement>('.user-property-main-user-change')!;
+    reset_main_user_modals();
+    qs<HTMLElement>('.main-user-proceed-desc')!.innerHTML = sprintf(mainUserContinue, `<b>${display_long_string(user_to_edit.username)}</b>`, `<b>${display_long_string(owner_username)}</b>`);
+    show(modal);
+    const proceedBtn = qs('.main-user-btn-proceed')!;
+    const newProceed = proceedBtn.cloneNode(true) as HTMLElement;
+    proceedBtn.replaceWith(newProceed);
+    newProceed.addEventListener('click', () => {
+        const gen = generate_random_string();
+        qs<HTMLElement>('.main-user-rewrite-desc')!.innerHTML = sprintf(mainUserRewrite, `<b>${gen}</b>`) + ' :';
+        hide(qs('.main-user-proceed')); show(qs('.main-user-rewrite'));
+        event_check_string_main_user(user_to_edit.username, user_to_edit.id, gen);
+    });
+    qsa('.user-property-main-user-cancel, #main_user_success_close').forEach(el => {
+        const nb = el.cloneNode(true) as HTMLElement;
+        el.replaceWith(nb);
+        nb.addEventListener('click', () => hide(modal));
+    });
+}
+
+function set_main_user_success() {
+    const indexKey = current_users.findIndex(u => u.id === owner_id);
+    const new_main = qs<HTMLElement>(`.user-container[key="${indexKey}"] .user-container-username`);
+    let king = document.getElementById('the_king') as HTMLElement | null;
+    if (!king) {
+        const div = document.createElement('div');
+        div.innerHTML = king_template;
+        king = div.firstElementChild as HTMLElement;
+        king.title = mainUserStr;
+        tippy(king, { content: mainUserStr });
+    }
+    new_main?.appendChild(king);
+    qsa('.delete-user-button').forEach(hide);
+    hide(qs('.main-user-validate'));
+    show(qs('.main-user-success'));
+}
+
+function event_check_string_main_user(new_main_username: string, new_main_id: any, stringToCheck: string) {
+    const input = qs<HTMLInputElement>('#main_user_rewrite')!;
+    const icon = qs<HTMLElement>('#main_user_rewrite_icon')!;
+    const newInput = input.cloneNode(true) as HTMLInputElement;
+    input.replaceWith(newInput);
+    newInput.addEventListener('keyup', () => {
+        icon.classList.remove('icon-ok', 'icon-green');
+        icon.classList.add('icon-cancel', 'icon-red');
+        if (stringToCheck === newInput.value) {
+            icon.classList.remove('icon-cancel', 'icon-red');
+            icon.classList.add('icon-ok', 'icon-green');
+            qs<HTMLElement>('.main-user-validate-desc')!.innerHTML = sprintf(mainUserValidate, `<b>${display_long_string(owner_username)}</b>`, `<b>${display_long_string(new_main_username)}</b>`);
+            qs<HTMLElement>('.main-user-success-desc')!.innerHTML = sprintf(mainUserSuccess, display_long_string(new_main_username));
+            hide(qs('.main-user-rewrite')); show(qs('.main-user-validate'));
+            event_validate_main_user(new_main_username, new_main_id);
+        }
+    });
+}
+
+function event_validate_main_user(new_main_username: string, user_id: any) {
+    const btn = qs('.main-user-btn-validate')!;
+    const nb = btn.cloneNode(true) as HTMLElement;
+    btn.replaceWith(nb);
+    nb.addEventListener('click', () => set_main_user(user_id, new_main_username));
+}
+
+function set_view_selector(view_type: string) {
+    fetch('ws.php?format=json&method=pwg.users.preferences.set', {
+        method: 'POST',
+        body: new URLSearchParams({ param: 'user-manager-view', value: view_type }),
+    });
+}
+function setDisplayTile() { qsa('.user-container-wrapper').forEach(el => { el.classList.remove('compactView', 'lineView'); el.classList.add('tileView'); }); qsa('.user-header-col').forEach(el => el.classList.add('hide')); }
+function setDisplayLine() { qsa('.user-container-wrapper').forEach(el => { el.classList.remove('tileView', 'compactView'); el.classList.add('lineView'); }); qsa('.user-header-col').forEach(el => el.classList.remove('hide')); }
+function setDisplayCompact() {
+    qsa('.user-container-wrapper').forEach(el => { el.classList.remove('tileView', 'lineView'); el.classList.add('compactView'); });
+    qsa('.user-header-col').forEach(el => el.classList.add('hide'));
+    if (per_page < 10) { per_page = 10; update_pagination_menu(); update_user_list(); qsa('[id^=pagination-per-page-]').forEach(el => el.classList.remove('selected-pagination')); qs('#pagination-per-page-10')?.classList.add('selected-pagination'); }
+}
+
+/*---- Generate user containers ----*/
+function user_container_click(this: HTMLElement) {
+    if (!isSelectionMode()) return;
+    const container = this;
+    const key = parseInt(container.getAttribute('key') ?? '0');
+    const currUser = current_users[key] ?? { id: -1 };
+    const cb = container.querySelector<HTMLElement>('.user-list-checkbox');
+    if (!cb) return;
+    if (cb.dataset['selected'] === '1') {
+        cb.dataset['selected'] = '0';
+        hide(cb.querySelector('i'));
+        container.classList.remove('container-selected');
+        selection = selection.filter(e => e.id !== currUser.id);
+    } else {
+        cb.dataset['selected'] = '1';
+        show(cb.querySelector('i'));
+        container.classList.add('container-selected');
+        selection.push({ id: currUser.id, username: currUser.username });
+    }
+    update_selection_content();
+}
+
+function generate_groups(container: HTMLElement, groups: any[]) {
+    const groupsContainer = container.querySelector<HTMLElement>('.user-container-groups');
+    if (!groupsContainer) return;
+    groupsContainer.innerHTML = '';
+    const tmpl = document.getElementById('template');
+    if (groups.length >= 1) {
+        const pg = tmpl?.querySelector<HTMLElement>('.group-primary')?.cloneNode(true) as HTMLElement;
+        if (pg) { pg.innerHTML = get_group_name_from_id(groups[0]); pg.classList.add(color_icons[groups[0] % 5]); groupsContainer.appendChild(pg); }
+    }
+    if (groups.length >= 2) {
+        const pg2 = tmpl?.querySelector<HTMLElement>('.group-primary')?.cloneNode(true) as HTMLElement;
+        if (pg2) { pg2.innerHTML = get_group_name_from_id(groups[1]); pg2.classList.add(color_icons[groups[1] % 5]); groupsContainer.appendChild(pg2); }
+    }
+    if (groups.length >= 3) {
+        const bonus = tmpl?.querySelector<HTMLElement>('.group-bonus')?.cloneNode(true) as HTMLElement;
+        if (bonus) {
+            bonus.innerHTML = '...'; bonus.classList.add(color_icons[groups[2] % 5], 'tiptip');
+            let title = groups.slice(2).map(id => get_group_name_from_id(id)).join(', ');
+            bonus.title = title;
+            tippy(bonus, { content: title });
+            groupsContainer.appendChild(bonus);
+        }
+    }
+}
+
+function fill_container_user_info(container: HTMLElement, user_index: number) {
+    const user = current_users[user_index];
+    if (!user || !container) return;
+    const regParts = user.registration_date?.split(' ') ?? [];
+    container.setAttribute('key', String(user_index));
+    const usernameSpan = container.querySelector<HTMLElement>('.user-container-username span'); if (usernameSpan) usernameSpan.innerHTML = user.username;
+    if (user.id === owner_id && !document.getElementById('the_king')) {
+        const div = document.createElement('div'); div.innerHTML = king_template;
+        const king = div.firstElementChild as HTMLElement;
+        king.title = mainUserStr; tippy(king, { content: mainUserStr });
+        container.querySelector('.user-container-username')?.appendChild(king);
+    }
+    const initFill = get_initials(user.username);
+    const initSpan = container.querySelector<HTMLElement>('.user-container-initials span');
+    if (initSpan) { initSpan.innerHTML = initFill; initSpan.classList.remove(...color_icons); initSpan.classList.add(color_icons[user.id % 5]); initSpan.classList.toggle('small', initFill.length > 1); }
+    const statusSpan = container.querySelector<HTMLElement>('.user-container-status span'); if (statusSpan) statusSpan.innerHTML = status_to_str[user.status];
+    const emailSpan = container.querySelector<HTMLElement>('.user-container-email span'); if (emailSpan) emailSpan.innerHTML = user.email ?? '';
+    generate_groups(container, user.groups ?? []);
+    const regDate = container.querySelector<HTMLElement>('.user-container-registration-date'); if (regDate) regDate.innerHTML = regParts[0] ?? '';
+    const regTime = container.querySelector<HTMLElement>('.user-container-registration-time'); if (regTime) regTime.innerHTML = regParts[1] ?? '';
+    const regSince = container.querySelector<HTMLElement>('.user-container-registration-date-since'); if (regSince) regSince.innerHTML = user.registration_date_since ?? '';
+}
+
+function generate_user_list() {
+    qsa('#user-table-content .user-container').forEach(el => el.remove());
+    const tmplContainer = document.getElementById('template')?.querySelector<HTMLElement>('.user-container');
+    const wrapper = qs('#user-table-content .user-container-wrapper');
+    for (let i = 0; i < current_users.length; i++) {
+        const container = tmplContainer?.cloneNode(true) as HTMLElement;
+        if (!container || !wrapper) continue;
+        fill_container_user_info(container, i);
+        wrapper.appendChild(container);
+    }
+    qsa('.user-container .user-list-checkbox').forEach(el => {
+        el.addEventListener('change', checkbox_change.bind(el));
+    });
+    qsa('.user-container').forEach(el => {
+        el.addEventListener('click', user_container_click.bind(el));
+    });
+}
+
+/*---- Plugin API ----*/
+(window as any).plugin_add_tab_in_user_modal = function(tab_name: any, content_id: any, users_table: any = null, set_data_function: any = null, get_data_function: any = null) {
+    if (typeof tab_name !== 'string') throw new TypeError('tab_name must be a string.');
+    const name = tab_name.replace(/ /g, '').toLowerCase();
+    if (document.getElementById('name_tab_' + name)) throw new TypeError('An element with this tab_name already exists.');
+    if (typeof content_id !== 'string') throw new TypeError('content_id must be a string.');
+    if (!document.getElementById(content_id)) throw new TypeError('HTML element "' + content_id + '" not found.');
+    if (document.querySelector('.edit-user-slides #' + content_id)) throw new TypeError('An element with this content_id already exists.');
+    if (users_table && (set_data_function || get_data_function)) throw new TypeError('users_table must be null if set_data_function or get_data_function is used.');
+    if (set_data_function && typeof set_data_function === 'function') plugins_set_functions[name + '_set_function'] = set_data_function;
+    if (get_data_function && typeof get_data_function === 'function') plugins_get_functions[name + '_get_function'] = get_data_function;
+    if (users_table) plugins_users_infos_table.push({ content_id, users_table });
+
+    qs('.edit-user-tab-title')?.insertAdjacentHTML('beforeend', `<p class="edit-user-tabsheet" id="name_tab_${name}" title="${tab_name}">${tab_name}</p>`);
+    qs('.edit-user-slides')?.insertAdjacentHTML('beforeend', `<div class="edit-user-tabsheet-plugins ${name}-container" id="tab_${name}"></div>`);
+    const content = document.getElementById(content_id);
+    document.getElementById('tab_' + name)?.appendChild(content!);
+    show(content);
+    editTabsBind();
+    qsa('.edit-user-tabsheet').forEach(el => el.classList.add('tab-with-plugin'));
+    plugins_load.push('name_tab_' + name);
+    check_tabs('name_tab_' + name);
+};
+
+/*---- DOMContentLoaded ----*/
+document.addEventListener('DOMContentLoaded', () => {
+    tippy('.user-property-register, .user-property-last-visit', { delay: [0, 0], duration: [200, 200], maxWidth: 300, allowHTML: true });
+    qs('.advanced-filter-level select option:nth-child(2)')?.remove();
+
+    qs('.button-edit-password-icon')?.addEventListener('click', () => { reset_password_modals(); show(qs('.user-property-password-change')); });
+    qs('.edit-password-cancel')?.addEventListener('click', () => { hide(qs('.user-property-password-change')); reset_input_password(); });
+
+    qsa('.icon-show-password').forEach(icon => {
+        icon.addEventListener('click', () => {
+            const input = icon.nextElementSibling as HTMLInputElement | null ?? icon.previousElementSibling as HTMLInputElement | null;
+            if (input?.type === 'password') { input.type = 'text'; icon.classList.replace('icon-eye', 'icon-eye-off'); }
+            else if (input) { input.type = 'password'; icon.classList.replace('icon-eye-off', 'icon-eye'); }
+        });
+    });
+
+    qsa('#edit_user_password, #edit_user_conf_password').forEach(el => el.addEventListener('keyup', hide_error_edit_user));
+    qs('.edit-username')?.addEventListener('click', () => show(qs('.user-property-username-change')));
+    qs('.edit-username-cancel')?.addEventListener('click', () => hide(qs('.user-property-username-change')));
+    qs('#UserList .close-update-button')?.addEventListener('click', close_user_list);
+    qsa('.CloseUserList').forEach(el => el.addEventListener('click', close_user_list));
+
+    const toggleSel = document.getElementById('toggleSelectionMode') as HTMLInputElement;
+    if (toggleSel) { toggleSel.checked = false; toggleSel.addEventListener('click', () => selectionMode(toggleSel.checked)); }
+    qs('.edit-guest-user-button')?.addEventListener('click', open_guest_user_list);
+    qsa('.CloseGuestUserList').forEach(el => el.addEventListener('click', close_guest_user_list));
+    qs('#GuestUserList .close-update-button')?.addEventListener('click', close_guest_user_list);
+
+    qsa('[id^=action_]').forEach(hide);
+    qs<HTMLSelectElement>('select[name=selectAction]')?.addEventListener('change', function(this: HTMLSelectElement) {
+        qsa('#applyActionBlock .infos').forEach(hide);
+        qsa('[id^=action_]').forEach(hide);
+        show(document.getElementById('action_' + this.value));
+        this.value !== '-1' ? show(document.getElementById('applyActionBlock')) : hide(document.getElementById('applyActionBlock'));
+    });
+
+    qsa('.yes_no_radio .user-list-checkbox').forEach(el => {
+        el.addEventListener('click', () => {
+            if (el.dataset['selected'] !== '1') { el.dataset['selected'] = '1'; Array.from(el.parentElement?.children ?? []).forEach(s => { if (s !== el) (s as HTMLElement).dataset['selected'] = '0'; }); }
+        });
+    });
+
+    qs('.EditUserGenPassword')?.addEventListener('click', () => { const p = gen_password(); (qs<HTMLInputElement>('#edit_user_password'))!.value = p; (qs<HTMLInputElement>('#edit_user_conf_password'))!.value = p; hide_error_edit_user(); });
+    qs('.AddUserGenPassword span')?.addEventListener('click', () => { const p = gen_password(); (qs<HTMLInputElement>('#add_user_pass'))!.value = p; (qs<HTMLInputElement>('#add_user_confpass'))!.value = p; });
+    qs('.AddUserSubmit')?.addEventListener('click', add_user);
+    qs('.AddUserCancel')?.addEventListener('click', add_user_close);
+    qs('.CloseAddUser')?.addEventListener('click', add_user_close);
+    qs('.add-user-button')?.addEventListener('click', add_user_open);
+
+    qs('#selectSet')?.addEventListener('click', (e) => { e.preventDefault(); select_whole_set(); });
+    qs('#selectAllPage')?.addEventListener('click', (e) => { e.preventDefault(); const ids = selection.map(x => x.id); current_users.forEach(u => { if (!ids.includes(u.id)) selection.push({ id: u.id, username: u.username }); }); update_selection_content(); });
+    qs('#selectNone')?.addEventListener('click', (e) => { e.preventDefault(); selection = []; update_selection_content(); });
+    qs('#selectInvert')?.addEventListener('click', (e) => { e.preventDefault(); const ids = selection.map(x => x.id); current_users.forEach(u => { if (ids.includes(u.id)) selection.splice(selection.findIndex(x => x.id === u.id), 1); else selection.push({ id: u.id, username: u.username }); }); update_selection_content(); });
+
+    (qs<HTMLSelectElement>('#permitActionUserList select[name=selectAction]'))!.value = '-1';
+
+    qs('.advanced-filter-btn')?.addEventListener('click', advanced_filter_button_click);
+    qs('.advanced-filter span.icon-cancel')?.addEventListener('click', advanced_filter_hide);
+    qsa('.advanced-filter-select').forEach(el => el.addEventListener('change', update_user_list));
+    qs('#user_search')?.addEventListener('input', update_user_list);
+
+    if ((qs<HTMLInputElement>('#displayCompact'))?.checked) setDisplayCompact();
+    if ((qs<HTMLInputElement>('#displayLine'))?.checked) setDisplayLine();
+    if ((qs<HTMLInputElement>('#displayTile'))?.checked) setDisplayTile();
+    qs('#displayCompact')?.addEventListener('change', () => { setDisplayCompact(); set_view_selector('compact'); });
+    qs('#displayLine')?.addEventListener('change', () => { setDisplayLine(); set_view_selector('line'); });
+    qs('#displayTile')?.addEventListener('change', () => { setDisplayTile(); set_view_selector('tile'); });
+
+    // Pagination init
+    qsa('[id^=pagination-per-page-]').forEach(el => el.classList.remove('selected-pagination'));
+    qs(`#pagination-per-page-${pagination}`)?.classList.add('selected-pagination');
+
+    if (has_group) { advanced_filter_button_click(); (qs<HTMLSelectElement>("select[name='filter_group']"))!.value = has_group; update_user_list(); }
+
+    qs('.search-cancel')?.addEventListener('click', () => { (qs<HTMLInputElement>('.search-input'))!.value = ''; qs('.search-input')?.dispatchEvent(new Event('input')); });
+    qs('.search-input')?.addEventListener('input', function(this: HTMLInputElement) {
+        this.value === '' ? hide(qs('.search-cancel')) : show(qs('.search-cancel'));
+    });
+
+    const iconUser = document.getElementById('icon-usr-list-user');
+    const iconReg = document.getElementById('icon-usr-list-registered');
+    qs('#usr-list-registered')?.addEventListener('click', () => {
+        hide(iconUser); show(iconReg); if (iconUser) iconUser.className = 'icon-down';
+        if (filter_by === 'id DESC') { if (iconReg) iconReg.className = 'icon-down'; filter_by = 'id ASC'; }
+        else if (filter_by === 'id ASC') { if (iconReg) iconReg.className = 'icon-up'; filter_by = 'id DESC'; }
+        else { if (iconReg) iconReg.className = 'icon-up'; filter_by = 'id DESC'; }
+        update_user_list();
+    });
+    qs('#usr-list-user')?.addEventListener('click', () => {
+        hide(iconReg); show(iconUser); if (iconReg) iconReg.className = 'icon-up';
+        if (filter_by === 'username DESC') { if (iconUser) iconUser.className = 'icon-down'; filter_by = 'username ASC'; }
+        else if (filter_by === 'username ASC') { if (iconUser) iconUser.className = 'icon-up'; filter_by = 'username DESC'; }
+        else { if (iconUser) iconUser.className = 'icon-down'; filter_by = 'username ASC'; }
+        update_user_list();
+    });
+
+    editTabsBind();
+
+    qs('.edit-user-slides')?.addEventListener('scroll', function(this: HTMLElement) {
+        const slides = Array.from(this.children) as HTMLElement[];
+        const rectView = this.getBoundingClientRect();
+        qsa('.edit-user-tabsheet').forEach(el => el.classList.remove('selected'));
+        slides.forEach(slide => {
+            const rect = slide.getBoundingClientRect();
+            if (+rect.left.toFixed(0) >= +rectView.left.toFixed(0) - 1 && +rect.right.toFixed(0) <= +rectView.right.toFixed(0) + 1) {
+                qs('#name_' + slide.id)?.classList.add('selected');
+            }
+        });
+    });
+
+    qsa('.guest-edit-user-tabsheet').forEach(el => {
+        el.addEventListener('click', () => {
+            const parts = el.id.split('_');
+            const tabId = parts[1] + '_' + parts[2] + '_' + parts[3];
+            document.getElementById(tabId)?.scrollIntoView({ behavior: 'smooth' });
+        });
+    });
+
+    qs('.guest-edit-user-slides')?.addEventListener('scroll', function(this: HTMLElement) {
+        const slides = Array.from(this.children) as HTMLElement[];
+        const rectView = this.getBoundingClientRect();
+        qsa('.guest-edit-user-tabsheet').forEach(el => el.classList.remove('selected'));
+        slides.forEach(slide => {
+            const rect = slide.getBoundingClientRect();
+            if (+rect.left.toFixed(0) >= +rectView.left.toFixed(0) - 1 && +rect.right.toFixed(0) <= +rectView.right.toFixed(0) + 1) {
+                qs('#name_' + slide.id)?.classList.add('selected');
+            }
+        });
+    });
+
+    initSliders();
+    setupRegisterDates(register_dates);
+    selectionMode(false);
+    get_guest_info();
+    update_user_list();
+    update_selection_content();
 });
 
 export {};

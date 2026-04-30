@@ -671,12 +671,12 @@
           <div class="summary-input-container">
             <div class="user-property-input-icon" style="margin-bottom: 10px;">
               <input class="user-property-input user-property-input-password" value=""
-                placeholder="{'New password'|@translate}" type="password" id="edit_user_password" />
+                placeholder="{'New password'|@translate}" type="password" id="edit_user_password" autocomplete="new-password" />
               <span class="icon-eye icon-show-password"></span>
             </div>
             <div class="user-property-input-icon">
               <input class="user-property-input user-property-input-password-conf" value=""
-                placeholder="{'Confirm Password'|@translate}" type="password" id="edit_user_conf_password" />
+                placeholder="{'Confirm Password'|@translate}" type="password" id="edit_user_conf_password" autocomplete="new-password" />
               <span class="icon-eye icon-show-password"></span>
             </div>
           </div>
@@ -988,14 +988,14 @@
           </div>
           <div class="user-property-input-icon" style="margin-bottom: 5px;">
             <input id="add_user_pass" class="user-property-input user-property-input-password" value=""
-              placeholder="{'Password'|@translate}" type="password" />
+              placeholder="{'Password'|@translate}" type="password" autocomplete="new-password" />
             <span class="icon-eye icon-show-password"></span>
           </div>
 
           <label for="add_user_confpass" class="user-property-label AddUserLabelPasswordConf">{'Confirm Password'|@translate}</label>
           <div class="user-property-input-icon" style="margin-bottom: 5px;">
             <input id="add_user_confpass" class="user-property-input user-property-input-password-conf" value=""
-              placeholder="{'Confirm Password'|@translate}" type="password" />
+              placeholder="{'Confirm Password'|@translate}" type="password" autocomplete="new-password" />
             <span class="icon-eye icon-show-password"></span>
           </div>
         </form>

@@ -668,6 +668,7 @@
 
       <div class="user-property-password-change-inputs" style="display: none;">
         <form onsubmit="return false">
+          <input type="text" style="display: none;" autocomplete="username" />
           <div class="summary-input-container">
             <div class="user-property-input-icon" style="margin-bottom: 10px;">
               <input class="user-property-input user-property-input-password" value=""
@@ -982,6 +983,7 @@
 
       <div id="add_user_password" style="display: none;">
         <form onsubmit="return false">
+          <input type="text" style="display: none;" autocomplete="username" />
           <div class="AddUserGenPassword">
             <label for="add_user_pass" class="user-property-label AddUserLabelPassword">{'Password'|@translate}</label>
             <span class="icon-dice-solid"> {'Generate random password'|@translate}</span>

@@ -270,10 +270,12 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     console.timeEnd('Initialize filters object');
 
-    console.time('TomSelect setValue');
-    authorTs.setValue('');
-    tagTs.setValue('');
-    console.timeEnd('TomSelect setValue');
+    requestIdleCallback(() => {
+        console.time('TomSelect setValue (deferred)');
+        authorTs.setValue('');
+        tagTs.setValue('');
+        console.timeEnd('TomSelect setValue (deferred)');
+    });
 
     console.time('Truncate plugin names');
     qsa('.pluginName span').forEach(el => {

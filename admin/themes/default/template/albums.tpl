@@ -17,7 +17,7 @@ var str_result_limit = '{"<b>%d+</b> albums found, try to refine the search"|tra
 
 <div class="cat-move-order-popin">
   <div class="order-popin-container">
-    <a class="close-popin icon-cancel" onClick="$('.cat-move-order-popin').fadeOut()"> </a>
+    <a class="close-popin icon-cancel" onClick="var el=document.querySelector('.cat-move-order-popin');if(el)el.style.display='none'"> </a>
     <div class="popin-title"><span class="icon-sort-name-up icon-purple"></span><span class="popin-title-text">{'apply automatic sort order'|translate}</span></div>
     <div class="album-name icon-sitemap"></div>
     <form action="{$F_ACTION}" method="post">

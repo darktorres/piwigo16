@@ -579,28 +579,30 @@ document.addEventListener('DOMContentLoaded', () => {
       album_widget_value += fullname_of_cat[cat_id] + ', ';
     });
 
-    // Load Album Selector
-    ab = new (window as any).AlbumSelector({
-      selectedCategoriesIds: global_params.fields.cat.words,
-      selectAlbum: add_related_category,
-      removeSelectedAlbum: remove_related_category,
-      modalTitle: str_search_in_ab,
-    });
-
-    document.querySelectorAll<HTMLElement>('.add-album-button').forEach(el => {
-      el.addEventListener('click', () => {
-        ab.open();
+    // Load Album Selector (only available on pages that include album_selector.inc.tpl)
+    if ((window as any).AlbumSelector) {
+      ab = new (window as any).AlbumSelector({
+        selectedCategoriesIds: global_params.fields.cat.words,
+        selectAlbum: add_related_category,
+        removeSelectedAlbum: remove_related_category,
+        modalTitle: str_search_in_ab,
       });
-    });
 
-    const selectedCatsContainer = document.querySelector<HTMLElement>('.selected-categories-container');
-    if (selectedCatsContainer) {
-      selectedCatsContainer.addEventListener('click', (e: Event) => {
-        const target = e.target as HTMLElement;
-        if (target.classList.contains('remove-item')) {
-          ab.remove_selected_album(target.getAttribute('id'));
-        }
+      document.querySelectorAll<HTMLElement>('.add-album-button').forEach(el => {
+        el.addEventListener('click', () => {
+          ab?.open();
+        });
       });
+
+      const selectedCatsContainer = document.querySelector<HTMLElement>('.selected-categories-container');
+      if (selectedCatsContainer) {
+        selectedCatsContainer.addEventListener('click', (e: Event) => {
+          const target = e.target as HTMLElement;
+          if (target.classList.contains('remove-item')) {
+            ab?.remove_selected_album(target.getAttribute('id'));
+          }
+        });
+      }
     }
 
     if (global_params.fields.cat.words && global_params.fields.cat.words.length > 0) {

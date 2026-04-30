@@ -1,6 +1,7 @@
 import { getPageData } from './page-data';
 import { AlbumSelector } from './album_selector';
 import { pwgDoubleSlider } from '../../../../themes/default/js/doubleSlider';
+import 'tom-select/dist/css/tom-select.bootstrap5.css';
 
 interface SliderConfig {
     values: (number | string)[];

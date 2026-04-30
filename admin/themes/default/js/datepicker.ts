@@ -1,5 +1,6 @@
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.css';
+import '../css/components/flatpickr.css';
 
 interface PwgDatepickerOptions {
     showTimepicker?: boolean;

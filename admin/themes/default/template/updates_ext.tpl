@@ -35,21 +35,21 @@ function pwgNotify(msg, theme) {
   if (theme === 'success') setTimeout(function() { el.remove(); }, 4000);
 }
 
-function updateAll() {
+window.updateAll = function updateAll() {
   document.querySelectorAll('.updateExtension').forEach(function(el) {
     var parent = el.closest('div');
     if (parent && parent.style.display !== 'none') el.click();
   });
 }
 
-function ignoreAll() {
+window.ignoreAll = function ignoreAll() {
   document.querySelectorAll('.ignoreExtension').forEach(function(el) {
     var parent = el.closest('div');
     if (parent && parent.style.display !== 'none') el.click();
   });
 }
 
-function resetIgnored() {
+window.resetIgnored = function resetIgnored() {
   fetch('ws.php?' + new URLSearchParams({ method: 'pwg.extensions.ignoreUpdate', reset: 'true', type: extType, pwg_token: pwg_token, format: 'json' }).toString())
     .then(function(r) { return r.json(); })
     .then(function(data) {
@@ -85,7 +85,7 @@ function checkFieldsets() {
   }
 }
 
-function updateExtension(type, id, revision) {
+window.updateExtension = function updateExtension(type, id, revision) {
   queuedManager.add({
     beforeSend: function() { autoupdate_bar_toggle(1); },
     url: 'ws.php',
@@ -104,7 +104,7 @@ function updateExtension(type, id, revision) {
   });
 }
 
-function ignoreExtension(type, id) {
+window.ignoreExtension = function ignoreExtension(type, id) {
   queuedManager.add({
     beforeSend: function() { autoupdate_bar_toggle(1); },
     url: 'ws.php',

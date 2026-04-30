@@ -520,8 +520,9 @@ class Template
                 $content = [];
                 foreach ($scripts as $script) {
                     $src = self::make_script_src($script);
+                    $type = self::is_module_script($script) ? 'module' : 'text/javascript';
                     $content[] =
-                        '<script type="text/javascript" src="'
+                        '<script type="' . $type . '" src="'
                         . (is_string($src) ? $src : '')
                         .'"></script>';
                 }
@@ -874,16 +875,16 @@ class Template
             $scripts = $this->scriptLoader->get_footer_scripts();
             foreach ($scripts[0] as $script) {
                 $src0 = self::make_script_src($script);
+                $type = self::is_module_script($script) ? 'module' : 'text/javascript';
                 $content[] =
-                  '<script type="text/javascript" src="'
+                  '<script type="' . $type . '" src="'
                   . (is_string($src0) ? $src0 : '')
                   .'"></script>';
             }
             if (count($this->scriptLoader->inline_scripts)) {
-                $content[] = '<script type="text/javascript">//<![CDATA[
-';
+                $content[] = '<script type="module">';
                 $content = array_merge($content, $this->scriptLoader->inline_scripts);
-                $content[] = '//]]></script>';
+                $content[] = '</script>';
             }
 
             if (count($scripts[1])) {
@@ -892,8 +893,9 @@ class Template
 var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTagName(\'script\').length-1];';
                 foreach ($scripts[1] as $id => $script) {
                     $src1 = self::make_script_src($script);
+                    $stype = self::is_module_script($script) ? 'module' : 'text/javascript';
                     $content[] =
-                      's=document.createElement(\'script\'); s.type=\'text/javascript\'; s.async=true; s.src=\''
+                      's=document.createElement(\'script\'); s.type=\'' . $stype . '\'; s.async=true; s.src=\''
                       . (is_string($src1) ? $src1 : '')
                       .'\';';
                     $content[] = 'after = after.parentNode.insertBefore(s, after);';
@@ -911,6 +913,11 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      * @param Combinable $script
      * @return string
      */
+    private static function is_module_script(Combinable $script): bool
+    {
+        return str_starts_with($script->path ?? '', 'dist/');
+    }
+
     /** @return string|array<mixed> */
     private static function make_script_src(Combinable $script): string|array
     {

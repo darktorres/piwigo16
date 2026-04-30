@@ -1,6 +1,7 @@
 import TomSelect from 'tom-select';
 import tippy from 'tippy.js';
 import { getPageData } from './page-data';
+import { pwgDoubleSlider } from './doubleSlider';
 
 declare var sprintf: (fmt: string, ...args: any[]) => string;
 
@@ -579,32 +580,6 @@ document.addEventListener('DOMContentLoaded', () => {
       album_widget_value += fullname_of_cat[cat_id] + ', ';
     });
 
-    // Load Album Selector (only available on pages that include album_selector.inc.tpl)
-    if ((window as any).AlbumSelector) {
-      ab = new (window as any).AlbumSelector({
-        selectedCategoriesIds: global_params.fields.cat.words,
-        selectAlbum: add_related_category,
-        removeSelectedAlbum: remove_related_category,
-        modalTitle: str_search_in_ab,
-      });
-
-      document.querySelectorAll<HTMLElement>('.add-album-button').forEach(el => {
-        el.addEventListener('click', () => {
-          ab?.open();
-        });
-      });
-
-      const selectedCatsContainer = document.querySelector<HTMLElement>('.selected-categories-container');
-      if (selectedCatsContainer) {
-        selectedCatsContainer.addEventListener('click', (e: Event) => {
-          const target = e.target as HTMLElement;
-          if (target.classList.contains('remove-item')) {
-            ab?.remove_selected_album(target.getAttribute('id'));
-          }
-        });
-      }
-    }
-
     if (global_params.fields.cat.words && global_params.fields.cat.words.length > 0) {
       document.querySelectorAll<HTMLElement>('.filter-album').forEach(el => el.classList.add('filter-filled'));
       document.querySelectorAll<HTMLElement>('.filter-album .search-words').forEach(el => {
@@ -893,7 +868,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.querySelectorAll<HTMLElement>('[data-slider=filesizes]').forEach(el => {
-      (window as any).pwgDoubleSlider(el, filesizesSlider);
+      pwgDoubleSlider(el, filesizesSlider);
     });
 
     document.querySelectorAll<HTMLElement>('[data-slider=filesizes]').forEach(sliderEl => {
@@ -933,7 +908,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const filterFilesizeEl = document.querySelector<HTMLElement>('.filter-filesize');
         if (filterFilesizeEl) filterFilesizeEl.dispatchEvent(new Event('click'));
         document.querySelectorAll<HTMLElement>('[data-slider=filesizes]').forEach(sliderEl => {
-          (window as any).pwgDoubleSlider(sliderEl, filesizesSlider);
+          pwgDoubleSlider(sliderEl, filesizesSlider);
         });
         if (filterFilesizeEl && filterFilesizeEl.classList.contains('filter-filled')) {
           filterFilesizeEl.classList.remove('filter-filled');
@@ -965,7 +940,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.querySelectorAll<HTMLElement>('[data-slider=heights]').forEach(el => {
-      (window as any).pwgDoubleSlider(el, heightsSlider);
+      pwgDoubleSlider(el, heightsSlider);
     });
 
     if (global_params.fields.height_min > 0 && global_params.fields.height_max > 0) {
@@ -985,7 +960,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const filterHeightEl = document.querySelector<HTMLElement>('.filter-height');
         if (filterHeightEl) filterHeightEl.dispatchEvent(new Event('click'));
         document.querySelectorAll<HTMLElement>('[data-slider=heights]').forEach(sliderEl => {
-          (window as any).pwgDoubleSlider(sliderEl, heightsSlider);
+          pwgDoubleSlider(sliderEl, heightsSlider);
         });
         if (filterHeightEl && filterHeightEl.classList.contains('filter-filled')) {
           filterHeightEl.classList.remove('filter-filled');
@@ -1017,7 +992,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.querySelectorAll<HTMLElement>('[data-slider=widths]').forEach(el => {
-      (window as any).pwgDoubleSlider(el, widthsSlider);
+      pwgDoubleSlider(el, widthsSlider);
     });
 
     if (global_params.fields.width_min > 0 && global_params.fields.width_max > 0) {
@@ -1037,7 +1012,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const filterWidthEl = document.querySelector<HTMLElement>('.filter-width');
         if (filterWidthEl) filterWidthEl.dispatchEvent(new Event('click'));
         document.querySelectorAll<HTMLElement>('[data-slider=widths]').forEach(sliderEl => {
-          (window as any).pwgDoubleSlider(sliderEl, widthsSlider);
+          pwgDoubleSlider(sliderEl, widthsSlider);
         });
         if (filterWidthEl && filterWidthEl.classList.contains('filter-filled')) {
           filterWidthEl.classList.remove('filter-filled');

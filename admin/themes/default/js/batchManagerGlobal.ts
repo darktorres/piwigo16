@@ -1,6 +1,7 @@
 import GLightbox from 'glightbox';
 import tippy from 'tippy.js';
 import 'tippy.js/dist/tippy.css';
+import { AlbumSelector } from './album_selector';
 
 declare var all_elements: any;
 declare var lang: any;
@@ -86,7 +87,7 @@ function remove_album_action({ id_album, getSelectedAlbum }: { id_album: any; ge
 document.addEventListener('DOMContentLoaded', () => {
     enableShiftClick(qs('ul.thumbnails') ?? document.body);
 
-    const ab_action = new (window as any).AlbumSelector({
+    const ab_action = new AlbumSelector({
         adminMode: true,
         selectAlbum: select_album_action,
         removeSelectedAlbum: remove_album_action,

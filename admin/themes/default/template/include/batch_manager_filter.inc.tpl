@@ -1,4 +1,3 @@
-{combine_script id='doubleSlider' load='footer' path='admin/themes/default/js/doubleSlider.js'}
 {combine_script id='LocalStorageCache' load='footer' path='admin/themes/default/js/LocalStorageCache.js'}
 
 <script id="pwg-filter-page-data" type="application/json">{$batch_filter_page_data_json}</script>

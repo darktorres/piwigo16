@@ -1,6 +1,7 @@
 import tippy from 'tippy.js';
 import 'tippy.js/dist/tippy.css';
 import { getPageData } from './page-data';
+import { AlbumSelector } from './album_selector';
 
 interface CatModifyPageData {
     album_id: number;
@@ -192,7 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
     checkAlbumLock();
     activateCommentDropdown();
 
-    const ab = new (window as any).AlbumSelector({
+    const ab = new AlbumSelector({
         selectedCategoriesIds: related_categories_ids,
         selectAlbum: add_related_category,
         showRootButton: true,

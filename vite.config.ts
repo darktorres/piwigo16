@@ -21,6 +21,7 @@ export default defineConfig({
                 'pngfix':             r('themes/default/js/pngfix.ts'),
                 'rating':             r('themes/default/js/rating.ts'),
                 'thumbnails.loader':  r('themes/default/js/thumbnails.loader.ts'),
+                'doubleSlider':       r('themes/default/js/doubleSlider.ts'),
 
                 // ── Standard pages ────────────────────────────────────────
                 'toaster_js':         r('themes/standard_pages/js/toaster.ts'),
@@ -30,7 +31,6 @@ export default defineConfig({
                 // ── Admin (admin/themes/default) ──────────────────────────
                 'common':             r('admin/themes/default/js/common.ts'),
                 'LocalStorageCache':  r('admin/themes/default/js/LocalStorageCache.ts'),
-                'album_selector':     r('admin/themes/default/js/album_selector.ts'),
                 'addAlbum':           r('admin/themes/default/js/addAlbum.ts'),
                 'albums':             r('admin/themes/default/js/albums.ts'),
                 'batchManagerGlobal': r('admin/themes/default/js/batchManagerGlobal.ts'),
@@ -41,7 +41,6 @@ export default defineConfig({
                 'cat_search':         r('admin/themes/default/js/cat_search.ts'),
                 'comments':           r('admin/themes/default/js/comments.ts'),
                 'datepicker':         r('admin/themes/default/js/datepicker.ts'),
-                'doubleSlider':       r('admin/themes/default/js/doubleSlider.ts'),
                 'group_list':         r('admin/themes/default/js/group_list.ts'),
                 'history':            r('admin/themes/default/js/history.ts'),
                 'intro_tooltips':     r('admin/themes/default/js/intro_tooltips.ts'),

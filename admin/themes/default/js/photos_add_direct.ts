@@ -4,6 +4,7 @@ import XHRUpload from '@uppy/xhr-upload';
 import '@uppy/core/css/style.css';
 import '@uppy/dashboard/css/style.css';
 import { getPageData } from './page-data';
+import { AlbumSelector } from './album_selector';
 
 declare var Piecon: any;
 declare function sprintf(fmt: string, ...args: unknown[]): string;
@@ -107,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    ab = new (window as any).AlbumSelector({
+    ab = new AlbumSelector({
         selectedCategoriesIds: related_categories_ids,
         selectAlbum: add_related_category,
         adminMode: true,

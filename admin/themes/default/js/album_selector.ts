@@ -601,5 +601,4 @@ class AlbumSelector {
     }
 }
 
-(window as any).AlbumSelector = AlbumSelector;
-export {};
+export { AlbumSelector };

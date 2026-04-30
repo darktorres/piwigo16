@@ -1,8 +1,10 @@
 import { getPageData } from './page-data';
+import { AlbumSelector } from './album_selector';
+import { pwgDoubleSlider } from '../../../../themes/default/js/doubleSlider';
 
 interface SliderConfig {
-    values: unknown[];
-    selected: { min: unknown; max: unknown };
+    values: (number | string)[];
+    selected: { min: number | string; max: number | string };
     text: string;
 }
 
@@ -73,9 +75,8 @@ function hide_filters_error(message: string): void {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    const doubleSlider = (window as any).pwgDoubleSlider as (el: HTMLElement, options: any) => void;
 
-    const ab_filter = new (window as any).AlbumSelector({
+    const ab_filter = new AlbumSelector({
         selectedCategoriesIds: selected_filter_cat_ids,
         selectAlbum: select_album_filter,
         adminMode: true,
@@ -102,10 +103,10 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll<HTMLElement>('#filterList li').forEach(li => filter_disable(li.id));
     });
 
-    document.querySelectorAll<HTMLElement>('[data-slider=widths]').forEach(el => doubleSlider(el, sliders.widths));
-    document.querySelectorAll<HTMLElement>('[data-slider=heights]').forEach(el => doubleSlider(el, sliders.heights));
-    document.querySelectorAll<HTMLElement>('[data-slider=ratios]').forEach(el => doubleSlider(el, sliders.ratios));
-    document.querySelectorAll<HTMLElement>('[data-slider=filesizes]').forEach(el => doubleSlider(el, sliders.filesizes));
+    document.querySelectorAll<HTMLElement>('[data-slider=widths]').forEach(el => pwgDoubleSlider(el, sliders.widths));
+    document.querySelectorAll<HTMLElement>('[data-slider=heights]').forEach(el => pwgDoubleSlider(el, sliders.heights));
+    document.querySelectorAll<HTMLElement>('[data-slider=ratios]').forEach(el => pwgDoubleSlider(el, sliders.ratios));
+    document.querySelectorAll<HTMLElement>('[data-slider=filesizes]').forEach(el => pwgDoubleSlider(el, sliders.filesizes));
 
     document.addEventListener('mouseup', (e: MouseEvent) => {
         e.stopPropagation();

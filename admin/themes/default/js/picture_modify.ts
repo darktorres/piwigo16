@@ -1,9 +1,11 @@
+import { AlbumSelector } from './album_selector';
+
 declare var related_categories_ids: (string | number)[];
 declare var str_assoc_album_ab: string;
 declare var str_orphan: string;
 
 document.addEventListener('DOMContentLoaded', () => {
-    const ab = new (window as any).AlbumSelector({
+    const ab = new AlbumSelector({
         selectedCategoriesIds: related_categories_ids,
         selectAlbum: add_related_category,
         removeSelectedAlbum: remove_related_category,

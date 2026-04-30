@@ -3,9 +3,7 @@
 
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
 
-
-{combine_script id='album_selector' load='footer' require='common' path='admin/themes/default/js/album_selector.js'}
-{combine_script id='batchManagerGlobal' load='async' require='datepicker,addAlbum,doubleSlider,album_selector' path='admin/themes/default/js/batchManagerGlobal.js'}
+{combine_script id='batchManagerGlobal' load='async' require='datepicker,addAlbum,doubleSlider' path='admin/themes/default/js/batchManagerGlobal.js'}
 
 {footer_script}
 window.lang = {

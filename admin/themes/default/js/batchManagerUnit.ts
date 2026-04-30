@@ -1,4 +1,5 @@
 import { getPageData } from './page-data';
+import { AlbumSelector } from './album_selector';
 
 declare var activePlugins: any;
 declare var all_related_categories_ids: any;
@@ -138,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.querySelector('.action-save-global')?.addEventListener('click', () => saveAllChanges());
 
-    const ab = new (window as any).AlbumSelector({
+    const ab = new AlbumSelector({
         selectedCategoriesIds: [],
         selectAlbum: add_related_category,
         adminMode: true,

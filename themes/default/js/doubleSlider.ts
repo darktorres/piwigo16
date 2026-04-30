@@ -21,7 +21,7 @@ function findClosest(array: Array<number | string>, value: number | string): num
     return index;
 }
 
-function pwgDoubleSlider(container: HTMLElement, options: DoubleSliderOptions): void {
+export function pwgDoubleSlider(container: HTMLElement, options: DoubleSliderOptions): void {
     const values = [
         options.values.indexOf(options.selected.min),
         options.values.indexOf(options.selected.max),
@@ -58,6 +58,3 @@ function pwgDoubleSlider(container: HTMLElement, options: DoubleSliderOptions): 
         });
     });
 }
-
-(window as any).pwgDoubleSlider = pwgDoubleSlider;
-export {};

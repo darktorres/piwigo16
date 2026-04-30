@@ -23,11 +23,12 @@
         }
     }
 
-    if (typeof SwitchBox !== 'undefined' && Array.isArray(SwitchBox)) {
-        for (let i = 0; i < (SwitchBox as string[]).length; i += 2) {
-            sbFunc((SwitchBox as string[])[i], (SwitchBox as string[])[i + 1]);
+    const existing = (window as any).SwitchBox;
+    if (Array.isArray(existing)) {
+        for (let i = 0; i < existing.length; i += 2) {
+            sbFunc(existing[i], existing[i + 1]);
         }
     }
 
-    SwitchBox = { push: sbFunc };
+    (window as any).SwitchBox = { push: sbFunc };
 })();

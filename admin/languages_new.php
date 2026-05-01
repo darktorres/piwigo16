@@ -48,7 +48,7 @@ if (isset($_GET['revision'])) {
     } else {
         check_pwg_token();
 
-        $install_status = $languages->extract_language_files('install', $_GET['revision']);
+        $install_status = $languages->extract_language_files('install', is_string($_GET['revision']) ? $_GET['revision'] : '');
 
         redirect($base_url.'&installstatus='.$install_status);
     }
@@ -76,7 +76,8 @@ if (isset($_GET['installstatus'])) {
             break;
 
         default:
-            \Piwigo\Core\PageState::current()->addError(l10n('An error occured during extraction (%s).', htmlspecialchars((string) $_GET['installstatus'])));
+            $installStatus = is_scalar($_GET['installstatus'] ?? null) ? (string) $_GET['installstatus'] : '';
+            \Piwigo\Core\PageState::current()->addError(l10n('An error occured during extraction (%s).', htmlspecialchars($installStatus)));
     }
 }
 
@@ -85,23 +86,27 @@ if (isset($_GET['installstatus'])) {
 // +-----------------------------------------------------------------------+
 if ($languages->get_server_languages(true)) {
     foreach ($languages->server_languages as $language) {
-        list($date, ) = explode(' ', (string) $language['revision_date']);
+        $revDate = is_scalar($language['revision_date'] ?? null) ? (string) $language['revision_date'] : '';
+        list($date, ) = explode(' ', $revDate);
 
+        $revId = is_scalar($language['revision_id'] ?? null) ? (string) $language['revision_id'] : '';
         $url_auto_install = htmlentities($base_url)
-          . '&amp;revision=' . $language['revision_id']
+          . '&amp;revision=' . $revId
           . '&amp;pwg_token='.get_pwg_token()
         ;
 
+        $extId = is_scalar($language['extension_id'] ?? null) ? (string) $language['extension_id'] : '';
+        $dlUrl = is_scalar($language['download_url'] ?? null) ? (string) $language['download_url'] : '';
         $template->append('languages', [
-          'EXT_NAME' => $language['extension_name'],
-          'EXT_DESC' => $language['extension_description'],
-          'EXT_URL' => PEM_URL.'/extension_view.php?eid='.$language['extension_id'],
-          'VERSION' => $language['revision_name'],
-          'VER_DESC' => $language['revision_description'],
+          'EXT_NAME' => is_scalar($language['extension_name'] ?? null) ? (string) $language['extension_name'] : '',
+          'EXT_DESC' => is_scalar($language['extension_description'] ?? null) ? (string) $language['extension_description'] : '',
+          'EXT_URL' => PEM_URL.'/extension_view.php?eid='.$extId,
+          'VERSION' => is_scalar($language['revision_name'] ?? null) ? (string) $language['revision_name'] : '',
+          'VER_DESC' => is_scalar($language['revision_description'] ?? null) ? (string) $language['revision_description'] : '',
           'DATE' => $date,
-          'AUTHOR' => $language['author_name'],
+          'AUTHOR' => is_scalar($language['author_name'] ?? null) ? (string) $language['author_name'] : '',
           'URL_INSTALL' => $url_auto_install,
-          'URL_DOWNLOAD' => $language['download_url'] . '&amp;origin=piwigo_download']);
+          'URL_DOWNLOAD' => $dlUrl . '&amp;origin=piwigo_download']);
     }
 } else {
     \Piwigo\Core\PageState::current()->addError(l10n('Can\'t connect to server.'));

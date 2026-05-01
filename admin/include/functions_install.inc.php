@@ -92,10 +92,10 @@ function activate_core_plugins(): void
  */
 function install_db_connect(array &$infos, array &$errors): void
 {
-    $host   = $_POST['dbhost'];
-    $user   = $_POST['dbuser'];
-    $pass   = $_POST['dbpasswd'];
-    $dbname = $_POST['dbname'];
+    $host   = is_scalar($_POST['dbhost'] ?? null) ? (string) $_POST['dbhost'] : '';
+    $user   = is_scalar($_POST['dbuser'] ?? null) ? (string) $_POST['dbuser'] : '';
+    $pass   = is_scalar($_POST['dbpasswd'] ?? null) ? (string) $_POST['dbpasswd'] : '';
+    $dbname = is_scalar($_POST['dbname'] ?? null) ? (string) $_POST['dbname'] : '';
 
     // Parse host/port/socket the same way pwg_db_connect does.
     $port   = null;

@@ -31,7 +31,7 @@ function get_sync_iptc_data(string $file): array
 
     foreach ($iptc as $pwg_key => $value) {
         if (in_array($pwg_key, ['date_creation', 'date_available'])) {
-            if (preg_match('/(\d{4})(\d{2})(\d{2})/', (string) $value, $matches)) {
+            if (is_scalar($value) && preg_match('/(\d{4})(\d{2})(\d{2})/', (string) $value, $matches)) {
                 $year = $matches[1];
                 $month = $matches[2];
                 $day = $matches[3];
@@ -48,11 +48,11 @@ function get_sync_iptc_data(string $file): array
     }
 
     if (isset($iptc['keywords'])) {
-        $iptc['keywords'] = metadata_normalize_keywords_string($iptc['keywords']);
+        $iptc['keywords'] = metadata_normalize_keywords_string(is_scalar($iptc['keywords']) ? (string) $iptc['keywords'] : '');
     }
 
     foreach ($iptc as $pwg_key => $value) {
-        $iptc[$pwg_key] = addslashes((string) $iptc[$pwg_key]);
+        $iptc[$pwg_key] = addslashes(is_scalar($iptc[$pwg_key]) ? (string) $iptc[$pwg_key] : '');
     }
 
     return $iptc;
@@ -68,12 +68,13 @@ function get_sync_exif_data(string $file): array
 
     foreach ($exif as $pwg_key => $value) {
         if (in_array($pwg_key, ['date_creation', 'date_available'])) {
-            if (preg_match('/^(\d{4}).(\d{2}).(\d{2}) (\d{2}).(\d{2}).(\d{2})/', (string) $value, $matches)) {
+            $valueStr = is_scalar($value) ? (string) $value : '';
+            if (preg_match('/^(\d{4}).(\d{2}).(\d{2}) (\d{2}).(\d{2}).(\d{2})/', $valueStr, $matches)) {
                 $exif[$pwg_key] = $matches[1].'-'.$matches[2].'-'.$matches[3].' '.$matches[4].':'.$matches[5].':'.$matches[6];
                 if ($exif[$pwg_key] == '0000-00-00 00:00:00') {
                     $exif[$pwg_key] = null;
                 }
-            } elseif (preg_match('/^(\d{4}).(\d{2}).(\d{2})/', (string) $value, $matches)) {
+            } elseif (preg_match('/^(\d{4}).(\d{2}).(\d{2})/', $valueStr, $matches)) {
                 $exif[$pwg_key] = $matches[1].'-'.$matches[2].'-'.$matches[3];
             } else {
                 unset($exif[$pwg_key]);
@@ -82,7 +83,7 @@ function get_sync_exif_data(string $file): array
         }
 
         if (in_array($pwg_key, ['keywords', 'tags'])) {
-            $exif[$pwg_key] = metadata_normalize_keywords_string($exif[$pwg_key]);
+            $exif[$pwg_key] = metadata_normalize_keywords_string(is_scalar($exif[$pwg_key]) ? (string) $exif[$pwg_key] : '');
         }
 
         if (empty($exif[$pwg_key])) {
@@ -90,7 +91,7 @@ function get_sync_exif_data(string $file): array
             continue;
         }
 
-        $exif[$pwg_key] = addslashes((string) $exif[$pwg_key]);
+        $exif[$pwg_key] = addslashes(is_scalar($exif[$pwg_key]) ? (string) $exif[$pwg_key] : '');
     }
 
     return $exif;
@@ -137,7 +138,7 @@ function get_sync_metadata_attributes(): array
  */
 function get_sync_metadata(array $infos): array|false
 {
-    $file = PHPWG_ROOT_PATH.$infos['path'];
+    $file = PHPWG_ROOT_PATH.(is_scalar($infos['path'] ?? null) ? (string) $infos['path'] : '');
     $fs = @filesize($file);
 
     if ($fs === false) {
@@ -160,7 +161,7 @@ function get_sync_metadata(array $infos): array|false
             }
         }
 
-        $file = original_to_representative($file, $infos['representative_ext']);
+        $file = original_to_representative($file, is_scalar($infos['representative_ext']) ? (string) $infos['representative_ext'] : '');
     }
 
     if (function_exists('mime_content_type')) {
@@ -203,7 +204,7 @@ function get_sync_metadata(array $infos): array|false
 
     if ($is_tiff) {
         // back to original file
-        $file = PHPWG_ROOT_PATH.$infos['path'];
+        $file = PHPWG_ROOT_PATH.(is_scalar($infos['path'] ?? null) ? (string) $infos['path'] : '');
     }
 
     if (\Piwigo\Core\Config::useExif()) {
@@ -217,10 +218,12 @@ function get_sync_metadata(array $infos): array|false
     }
 
     foreach (['name', 'author'] as $single_line_field) {
-        if (isset($infos[$single_line_field])) {
+        if (isset($infos[$single_line_field]) && is_scalar($infos[$single_line_field])) {
+            $fieldVal = (string) $infos[$single_line_field];
             foreach (["\r\n", "\n", "\r"] as $to_replace_string) {
-                $infos[$single_line_field] = str_replace($to_replace_string, ' ', $infos[$single_line_field]);
+                $fieldVal = str_replace($to_replace_string, ' ', $fieldVal);
             }
+            $infos[$single_line_field] = $fieldVal;
         }
     }
 
@@ -257,14 +260,14 @@ SELECT id, path, representative_ext
             continue;
         }
         // print_r($data);
-        $id = $data['id'];
+        $id = is_scalar($data['id'] ?? null) ? (string) $data['id'] : '';
         foreach (['keywords', 'tags'] as $key) {
             if (isset($data[$key])) {
                 if (!isset($tags_of[$id])) {
                     $tags_of[$id] = [];
                 }
 
-                foreach (explode(',', $data[$key]) as $tag_name) {
+                foreach (explode(',', is_scalar($data[$key]) ? (string) $data[$key] : '') as $tag_name) {
                     $tags_of[$id][] = tag_id_from_tag_name($tag_name);
                 }
             }

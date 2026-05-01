@@ -12,7 +12,7 @@ class languages
     public array $fs_languages = [];
     /** @var array<string, array<string,mixed>> */
     public array $db_languages = [];
-    /** @var array<mixed> */
+    /** @var array<int|string, array<string, mixed>> */
     public array $server_languages = [];
 
     /**
@@ -47,8 +47,10 @@ class languages
                     break;
                 }
 
-                $langVersion = is_scalar($this->fs_languages[$language_id]['version'] ?? '') ? (string) $this->fs_languages[$language_id]['version'] : '';
-                $langName = is_scalar($this->fs_languages[$language_id]['name'] ?? '') ? (string) $this->fs_languages[$language_id]['name'] : '';
+                $fsLangVersion = $this->fs_languages[$language_id]['version'] ?? null;
+                $langVersion = is_scalar($fsLangVersion) ? (string) $fsLangVersion : '';
+                $fsLangName = $this->fs_languages[$language_id]['name'] ?? null;
+                $langName = is_scalar($fsLangName) ? (string) $fsLangName : '';
                 $query = '
 INSERT INTO '.LANGUAGES_TABLE.'
   (id, version, name)
@@ -211,15 +213,18 @@ UPDATE '.USER_INFOS_TABLE.'
                 return false;
             }
             if (!preg_match('/^\d+\.\d+\.\d+$/', $version)) {
-                $version = is_array($pem_versions[0]) && isset($pem_versions[0]['name']) ? (string) $pem_versions[0]['name'] : $version;
+                $pem_ver0 = $pem_versions[0] ?? null;
+                $version = is_array($pem_ver0) && isset($pem_ver0['name']) ? (string) $pem_ver0['name'] : $version;
             }
             $branch = get_branch_from_version($version);
             foreach ($pem_versions as $pem_version) {
                 if (!is_array($pem_version) || !isset($pem_version['name'], $pem_version['id'])) {
                     continue;
                 }
-                if (str_starts_with((string) $pem_version['name'], $branch)) {
-                    $versions_to_check[] = (string) $pem_version['id'];
+                $pemVerName = is_scalar($pem_version['name'] ?? null) ? (string) $pem_version['name'] : '';
+                $pemVerId = is_scalar($pem_version['id'] ?? null) ? (string) $pem_version['id'] : '';
+                if (str_starts_with($pemVerName, $branch)) {
+                    $versions_to_check[] = $pemVerId;
                 }
             }
         }
@@ -231,7 +236,7 @@ UPDATE '.USER_INFOS_TABLE.'
         $languages_to_check = [];
         foreach ($this->fs_languages as $fs_language) {
             if (isset($fs_language['extension'])) {
-                $languages_to_check[] = (string) $fs_language['extension'];
+                $languages_to_check[] = is_scalar($fs_language['extension']) ? (string) $fs_language['extension'] : '';
             }
         }
 
@@ -263,8 +268,10 @@ UPDATE '.USER_INFOS_TABLE.'
                 if (!is_array($language) || !isset($language['extension_name'], $language['extension_id'])) {
                     continue;
                 }
-                if (preg_match('/^.*? \[[A-Z]{2}\]$/', (string) $language['extension_name'])) {
-                    $this->server_languages[$language['extension_id']] = $language;
+                $langExtName = is_scalar($language['extension_name'] ?? null) ? (string) $language['extension_name'] : '';
+                $langExtId = $language['extension_id'] ?? null;
+                if (preg_match('/^.*? \[[A-Z]{2}\]$/', $langExtName) && (is_string($langExtId) || is_int($langExtId))) {
+                    $this->server_languages[$langExtId] = $language;
                 }
             }
             @uasort($this->server_languages, function (mixed $a, mixed $b): int {
@@ -291,9 +298,11 @@ UPDATE '.USER_INFOS_TABLE.'
             ];
 
             $handle = @fopen($archive, 'wb');
-            if ($handle !== false and fetchRemote($url, $handle, $get_data)) {
-                fclose($handle);
-                $zip = new \PclZip($archive);
+            if ($handle !== false) {
+                $fh = $handle;
+                if (fetchRemote($url, $handle, $get_data)) {
+                    fclose($fh);
+                    $zip = new \PclZip($archive);
                 if ($list = $zip->listContent()) {
                     $main_filepath = null;
                     $status = 'ok';
@@ -405,6 +414,8 @@ UPDATE '.USER_INFOS_TABLE.'
  */
     public function extension_name_compare(array $a, array $b): int
     {
-        return strcmp(strtolower((string) $a['extension_name']), strtolower((string) $b['extension_name']));
+        $na = is_scalar($a['extension_name'] ?? null) ? (string) $a['extension_name'] : '';
+        $nb = is_scalar($b['extension_name'] ?? null) ? (string) $b['extension_name'] : '';
+        return strcmp(strtolower($na), strtolower($nb));
     }
 }

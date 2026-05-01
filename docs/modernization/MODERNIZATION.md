@@ -338,20 +338,19 @@ a photo page, and the admin dashboard. Check the PHP error log for any `Deprecat
   `include/functions_user.inc.php` (121), `include/ws_functions/pwg.images.php` (95).
   `CurrentUser::` adoption is light — `$user` global still dominant outside `src/`.
 
-### Phase 7–18 roadmap
+### Roadmap
 
-| Phase | Description | Size | Status |
+| # | Description | Size | Status |
 |---|---|---|---|
-| 7 | PHPStan level 9 / baseline elimination (currently 1 412 errors) | L | **WIP** |
-| 9 | Fix remaining `global` declarations inside `src/` | S | Not started |
-| 10 | Remove class duplication in `ws_core.inc.php` | M | Not started |
-| 11 | Unit test coverage expansion (13% → ≥40%) | L | Not started |
-| 12 | PHP 8.1–8.5 features: readonly, enum, match | M | Not started |
-| 13 | `functions_user.inc.php` split into typed classes | L | Not started |
-| 14 | TypeScript `any` reduction (883 → ≤450 escapes) | M | Not started |
-| 16 | CSS design tokens + Stylelint | M | Not started |
-| 17 | jQuery upgrade / incremental replacement | XL | Planning only |
-| 18 | Overdue TODO cleanup (46 markers, 1 past-due) | S | Not started |
+| 1 | PHPStan level 9 / baseline elimination (currently 1 412 errors) | L | **WIP** |
+| 2 | Fix remaining `global` declarations inside `src/` | S | Not started |
+| 3 | Remove class duplication in `ws_core.inc.php` | M | Not started |
+| 4 | Unit test coverage expansion (13% → ≥40%) | L | Not started |
+| 5 | PHP 8.1–8.5 features: readonly, enum, match | M | Not started |
+| 6 | `functions_user.inc.php` split into typed classes | L | Not started |
+| 7 | TypeScript `any` reduction (883 → ≤450 escapes) | M | Not started |
+| 8 | CSS design tokens + Stylelint | M | Not started |
+| 9 | jQuery upgrade / incremental replacement | XL | Planning only |
+| 10 | Overdue TODO cleanup (46 markers, 1 past-due) | S | Not started |
 
-Recommended sequence: 7 → 9 → 18 → 10 → 11 → 12 → 14 → 16 → 13 → 17.
-Full step-by-step plans for each phase are in `MODERNIZATION_PLAN_2.md`.
+Recommended sequence: 1 → 2 → 10 → 3 → 4 → 5 → 7 → 8 → 6 → 9.

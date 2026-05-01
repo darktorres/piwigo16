@@ -95,19 +95,21 @@ if (isset($_GET['album'])) {
     check_input_parameter('album', $_GET, false, PATTERN_ID);
 
     // test if album really exists
+    $album_id_str = is_scalar($_GET['album']) ? (string) $_GET['album'] : '0';
     $query = '
 SELECT id, uppercats
   FROM '.CATEGORIES_TABLE.'
-  WHERE id = '.$_GET['album'].'
+  WHERE id = '.$album_id_str.'
 ;';
     $result = pwg_query($query);
     if (pwg_db_num_rows($result) == 1) {
         $selected_category = [$_GET['album']];
 
         $cat = pwg_db_fetch_assoc($result);
-        $template->assign('ADD_TO_ALBUM', get_cat_display_name_cache((string)($cat['uppercats'] ?? ''), null));
+        $template->assign('ADD_TO_ALBUM', get_cat_display_name_cache(is_scalar($cat['uppercats'] ?? null) ? (string)($cat['uppercats'] ?? '') : '', null));
     } else {
-        fatal_error('[Hacking attempt] the album id = "'.$_GET['album'].'" is not valid');
+        $album_id = is_scalar($_GET['album']) ? (string) $_GET['album'] : '';
+        fatal_error('[Hacking attempt] the album id = "'.$album_id.'" is not valid');
     }
 } else {
     // we need to know the category in which the last photo was added

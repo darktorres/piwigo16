@@ -71,7 +71,7 @@ if (isset($_POST['submit'])) {
 
         save_images_order(
             (int) $page['category_id'],
-            array_keys($_POST['rank_of_image'])
+            array_keys($rank_of_image)
         );
     }
 
@@ -84,12 +84,14 @@ if (isset($_POST['submit'])) {
 
     $image_order = null;
     if ($image_order_choice == 'user_define') {
+        $image_order_post = is_array($_POST['image_order'] ?? null) ? $_POST['image_order'] : [];
         for ($i = 0; $i < 3; $i++) {
-            if (!empty($_POST['image_order'][$i]) and in_array($_POST['image_order'][$i], array_keys($sort_fields))) {
+            $image_order_val = is_string($image_order_post[$i] ?? null) ? $image_order_post[$i] : null;
+            if (!empty($image_order_val) and in_array($image_order_val, array_keys($sort_fields))) {
                 if (!empty($image_order)) {
                     $image_order .= ',';
                 }
-                $image_order .= $_POST['image_order'][$i];
+                $image_order .= $image_order_val;
             }
         }
     } elseif ($image_order_choice == 'rank') {
@@ -97,14 +99,15 @@ if (isset($_POST['submit'])) {
 
         $message = l10n('Images manual order was saved');
     }
+    $category_id_int = is_scalar($page['category_id']) ? (int) $page['category_id'] : 0;
     $query = '
-UPDATE '.CATEGORIES_TABLE.' 
+UPDATE '.CATEGORIES_TABLE.'
   SET image_order = '.(isset($image_order) ? '\''.$image_order.'\'' : 'NULL').'
-  WHERE id='.$page['category_id'];
+  WHERE id='.$category_id_int;
     pwg_query($query);
 
     if (isset($_POST['image_order_subcats'])) {
-        $cat_info = get_cat_info((string) $page['category_id']);
+        $cat_info = get_cat_info((string) $category_id_int);
 
         $query = '
 UPDATE '.CATEGORIES_TABLE.'

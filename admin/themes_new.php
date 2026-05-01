@@ -47,8 +47,8 @@ if (isset($_GET['revision']) and isset($_GET['extension'])) {
 
         $install_status = $themes->extract_theme_files(
             'install',
-            $_GET['revision'],
-            $_GET['extension'],
+            is_string($_GET['revision']) ? $_GET['revision'] : '',
+            is_string($_GET['extension']) ? $_GET['extension'] : '',
             $theme_id
         );
 
@@ -65,14 +65,15 @@ if (isset($_GET['installstatus'])) {
         case 'ok':
             \Piwigo\Core\PageState::current()->addInfo(l10n('Theme has been successfully installed'));
 
-            if (isset($themes->fs_themes[$_GET['theme_id']])) {
+            $theme_id_str = is_string($_GET['theme_id'] ?? null) ? $_GET['theme_id'] : '';
+            if ($theme_id_str !== '' && isset($themes->fs_themes[$theme_id_str])) {
                 pwg_activity(
                     'system',
                     ACTIVITY_SYSTEM_THEME,
                     'install',
                     [
-                    'theme_id' => $_GET['theme_id'],
-                    'version' => $themes->fs_themes[$_GET['theme_id']]['version'],
+                    'theme_id' => $theme_id_str,
+                    'version' => $themes->fs_themes[$theme_id_str]['version'],
           ]
                 );
             }
@@ -93,7 +94,7 @@ if (isset($_GET['installstatus'])) {
         default:
             \Piwigo\Core\PageState::current()->addError(l10n(
                 'An error occured during extraction (%s).',
-                htmlspecialchars((string) $_GET['installstatus'])
+                htmlspecialchars(is_scalar($_GET['installstatus']) ? (string) $_GET['installstatus'] : '')
             ));
     }
 }
@@ -106,9 +107,11 @@ $template->set_filenames(['themes' => 'themes_new.tpl']);
 
 if ($themes->get_server_themes(true)) { // only new themes
     foreach ($themes->server_themes as $theme) {
+        $theme_revision_id = is_scalar($theme['revision_id'] ?? null) ? (string) $theme['revision_id'] : '';
+        $theme_extension_id = is_scalar($theme['extension_id'] ?? null) ? (string) $theme['extension_id'] : '';
         $url_auto_install = htmlentities($base_url)
-          . '&amp;revision=' . $theme['revision_id']
-          . '&amp;extension=' . $theme['extension_id']
+          . '&amp;revision=' . $theme_revision_id
+          . '&amp;extension=' . $theme_extension_id
           . '&amp;pwg_token='.get_pwg_token()
         ;
 
@@ -128,7 +131,7 @@ if ($themes->get_server_themes(true)) { // only new themes
 
 $template->assign(
     'default_screenshot',
-    get_root_url().'admin/themes/'.userprefs_get_param('admin_theme', 'clear').'/images/missing_screenshot.png'
+    get_root_url().'admin/themes/'.(is_scalar(userprefs_get_param('admin_theme', 'clear')) ? (string) userprefs_get_param('admin_theme', 'clear') : 'clear').'/images/missing_screenshot.png'
 );
 $template->assign('ADMIN_PAGE_TITLE', l10n('Themes'));
 

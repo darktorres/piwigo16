@@ -68,7 +68,12 @@ $orphan_tags = get_orphan_tags();
 $orphan_tag_names_array = '[]';
 $orphan_tag_names = [];
 foreach ($orphan_tags as $tag) {
-    $orphan_tag_names[] = trigger_change('render_tag_name', $tag['name'], $tag);
+    if (!is_array($tag)) {
+        continue;
+    }
+    $tag_name = is_scalar($tag['name'] ?? null) ? (string) $tag['name'] : '';
+    $rendered = trigger_change('render_tag_name', $tag_name, $tag);
+    $orphan_tag_names[] = is_scalar($rendered) ? (string) $rendered : $tag_name;
 }
 
 if (count($orphan_tag_names) > 0) {
@@ -130,9 +135,10 @@ while ($tag = pwg_db_fetch_assoc($result)) {
     $raw_name = $tag['name'];
     $tag['raw_name'] = $raw_name;
     $tag['name'] = trigger_change('render_tag_name', $raw_name, $tag);
-    $counter = intval(@$tag_counters[ $tag['id'] ]);
+    $tag_id_key = is_scalar($tag['id']) ? (string) $tag['id'] : '';
+    $counter = intval(@$tag_counters[$tag_id_key]);
     if ($counter > 0) {
-        $tag['counter'] = intval(@$tag_counters[ $tag['id'] ]);
+        $tag['counter'] = intval(@$tag_counters[$tag_id_key]);
     }
 
     $alt_names = trigger_change('get_tag_alt_names', [], $raw_name);

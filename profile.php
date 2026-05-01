@@ -207,7 +207,7 @@ function save_profile_from_post(array $userdata, array &$errors): bool
     if (\Piwigo\Core\Config::allowUserCustomization() or defined('IN_ADMIN')) {
         $int_pattern = '/^\d+$/';
         if (empty($_POST['nb_image_page'])
-            or (!preg_match($int_pattern, is_scalar($_POST['nb_image_page'] ?? null) ? (string) $_POST['nb_image_page'] : ''))) {
+            or (!preg_match($int_pattern, is_scalar($_POST['nb_image_page']) ? (string) $_POST['nb_image_page'] : ''))) {
             $errors[] = l10n('The number of photos per page must be a not null scalar');
         }
 
@@ -229,7 +229,7 @@ function save_profile_from_post(array $userdata, array &$errors): bool
     if (isset($_POST['mail_address'])) {
         // if $_POST and $userdata have are same email
         // validate_mail_address allows, however, to check email
-        $mail_error = validate_mail_address(is_int($userdata['id'] ?? null) ? $userdata['id'] : null, is_string($_POST['mail_address'] ?? null) ? $_POST['mail_address'] : null);
+        $mail_error = validate_mail_address(is_int($userdata['id'] ?? null) ? $userdata['id'] : null, is_string($_POST['mail_address']) ? $_POST['mail_address'] : null);
         if (!empty($mail_error)) {
             $errors[] = $mail_error;
         }
@@ -280,7 +280,7 @@ function save_profile_from_post(array $userdata, array &$errors): bool
 
             // username is updated only if allowed
             if (!empty($_POST['username'])) {
-                if ($_POST['username'] != $userdata['username'] and get_userid(is_string($_POST['username'] ?? null) ? $_POST['username'] : '')) {
+                if ($_POST['username'] != $userdata['username'] and get_userid(is_string($_POST['username']) ? $_POST['username'] : '')) {
                     \Piwigo\Core\PageState::current()->addError(l10n('this login is already used'));
                     unset($_POST['redirect']);
                 } else {
@@ -298,7 +298,7 @@ function save_profile_from_post(array $userdata, array &$errors): bool
                           ];
 
                         pwg_mail(
-                            is_string($_POST['mail_address'] ?? null) ? $_POST['mail_address'] : '',
+                            is_string($_POST['mail_address']) ? $_POST['mail_address'] : '',
                             [
                             'subject' => '['.\Piwigo\Core\Config::galleryTitle().'] '.l10n('Username modification'),
                             'content' => l10n_args($keyargs_content),
@@ -359,7 +359,7 @@ function save_profile_from_post(array $userdata, array &$errors): bool
         pwg_activity('user', $userId, 'edit', ['function' => __FUNCTION__, 'tables' => implode(',', $activity_details_tables)]);
 
         if (!empty($_POST['redirect'])) {
-            redirect(is_string($_POST['redirect'] ?? null) ? $_POST['redirect'] : get_root_url());
+            redirect(is_string($_POST['redirect']) ? $_POST['redirect'] : get_root_url());
         }
     }
     return true;

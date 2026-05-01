@@ -272,10 +272,10 @@ if (count($categories) > 0) {
 
         $representative_infos = is_array($infos_of_image[$category['representative_picture_id'] ?? null] ?? null) ? $infos_of_image[$category['representative_picture_id']] : [];
 
-        $tpl_var = array_merge(is_array($category) ? $category : [], [
+        $tpl_var = array_merge($category, [
               'ID'    => $category['id'] /*obsolete*/,
               'representative'   => $representative_infos,
-              'TN_ALT'   => strip_tags((string) ($category['name'] ?? '')),
+              'TN_ALT'   => strip_tags(is_scalar($category['name']) ? (string) $category['name'] : ''),
 
               'URL'   => make_index_url(
                   [
@@ -284,7 +284,7 @@ if (count($categories) > 0) {
               ),
               'CAPTION_NB_IMAGES' => get_display_images_count(
                   is_numeric($category['nb_images'] ?? null) ? (int)$category['nb_images'] : 0,
-                  is_numeric($category['count_images'] ?? null) ? (int)$category['count_images'] : 0,
+                  is_numeric($category['count_images']) ? (int)$category['count_images'] : 0,
                   is_numeric($category['count_categories'] ?? null) ? (int)$category['count_categories'] : 0,
                   true,
                   '<br>'

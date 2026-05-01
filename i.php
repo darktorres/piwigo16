@@ -172,7 +172,7 @@ function parse_request(): void
 
     if (\Piwigo\Core\Config::questionMarkInUrls() == false and
          isset($_SERVER['PATH_INFO']) and !empty($_SERVER['PATH_INFO'])) {
-        $req = is_scalar($_SERVER['PATH_INFO'] ?? null) ? (string) $_SERVER['PATH_INFO'] : '';
+        $req = is_scalar($_SERVER['PATH_INFO']) ? (string) $_SERVER['PATH_INFO'] : '';
         $req = str_replace('//', '/', $req);
         $path_count = count(explode('/', $req));
         $page['root_path'] = PHPWG_ROOT_PATH.str_repeat('../', $path_count - 1);
@@ -443,9 +443,10 @@ parse_request();
 
 // parse_request() sets $page['derivative_params'] to a DerivativeParams instance
 $dpRaw = $page['derivative_params'];
-$params = ($dpRaw instanceof \Piwigo\Image\DerivativeParams)
-    ? trigger_change('derivative_params_get', $dpRaw)
-    : null;
+if (!($dpRaw instanceof \Piwigo\Image\DerivativeParams)) {
+    ierror('Invalid derivative params', 400);
+}
+$params = trigger_change('derivative_params_get', $dpRaw);
 if (!($params instanceof \Piwigo\Image\DerivativeParams)) {
     ierror('Invalid derivative params', 400);
 }

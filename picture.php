@@ -835,7 +835,7 @@ $infos['INFO_POSTED_DATE'] = '<a href="'.$url.'" rel="nofollow">'.$val.'</a>';
 // size in pixels
 if ($currentSrcImage !== null && $currentSrcImage->is_original() and isset($currentPic['width'])) {
     $infos['INFO_DIMENSIONS'] =
-      (is_scalar($currentPic['width'] ?? null) ? (string) $currentPic['width'] : '')
+      (is_scalar($currentPic['width']) ? (string) $currentPic['width'] : '')
       .'*'.
       (is_scalar($currentPic['height'] ?? null) ? (string) $currentPic['height'] : '');
 }

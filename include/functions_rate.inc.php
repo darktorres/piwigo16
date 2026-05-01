@@ -120,7 +120,7 @@ INSERT
 /** @return array<mixed> */
 function update_rating_score(int|false $element_id = false): array
 {
-    trigger_change('update_rating_score', false, $element_id);
+    $_ = trigger_change('update_rating_score', false, $element_id);
 
     $query = '
 SELECT element_id,

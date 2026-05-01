@@ -89,7 +89,8 @@ if (isset($_POST['submit'])) {
 
     $to_sanitize_fields = ['name', 'author', 'comment'];
     foreach ($to_sanitize_fields as $field) {
-        $data[$field] = \Piwigo\Core\Config::allowHtmlDescriptions() ? @$_POST[$field] : strip_tags((string) @$_POST[$field]);
+        $post_field = @$_POST[$field];
+        $data[$field] = \Piwigo\Core\Config::allowHtmlDescriptions() ? $post_field : strip_tags(is_scalar($post_field) ? (string) $post_field : '');
     }
 
     if (!empty($_POST['date_creation'])) {
@@ -109,7 +110,12 @@ if (isset($_POST['submit'])) {
     // time to deal with tags
     $tag_ids = [];
     if (!empty($_POST['tags'])) {
-        $tag_ids = get_tag_ids(is_scalar($_POST['tags']) ? (string)$_POST['tags'] : (is_array($_POST['tags']) ? $_POST['tags'] : []));
+        $tags_post = $_POST['tags'];
+        if (is_scalar($tags_post)) {
+            $tag_ids = get_tag_ids((string) $tags_post);
+        } elseif (is_array($tags_post)) {
+            $tag_ids = get_tag_ids(array_map('strval', $tags_post));
+        }
     }
     set_tags($tag_ids, is_numeric($_GET['image_id'] ?? null) ? (int)$_GET['image_id'] : 0);
 
@@ -120,7 +126,7 @@ if (isset($_POST['submit'])) {
     check_input_parameter('associate', $_POST, true, PATTERN_ID);
     move_images_to_categories(
         [is_numeric($_GET['image_id'] ?? null) ? (int)$_GET['image_id'] : 0],
-        is_array($_POST['associate']) ? $_POST['associate'] : []
+        is_array($_POST['associate']) ? array_map('intval', $_POST['associate']) : []
     );
 
     invalidate_user_cache();
@@ -131,12 +137,14 @@ if (isset($_POST['submit'])) {
     }
     check_input_parameter('represent', $_POST, true, PATTERN_ID);
 
-    $no_longer_thumbnail_for = array_diff($represented_albums, is_array($_POST['represent']) ? $_POST['represent'] : []);
+    $represented_albums_int = array_map('intval', $represented_albums);
+    $represent_post_int = is_array($_POST['represent']) ? array_map('intval', $_POST['represent']) : [];
+    $no_longer_thumbnail_for = array_diff($represented_albums_int, $represent_post_int);
     if (count($no_longer_thumbnail_for) > 0) {
-        set_random_representant(array_values(array_filter($no_longer_thumbnail_for, 'is_int')));
+        set_random_representant(array_values($no_longer_thumbnail_for));
     }
 
-    $new_thumbnail_for = array_diff(is_array($_POST['represent']) ? $_POST['represent'] : [], $represented_albums);
+    $new_thumbnail_for = array_diff($represent_post_int, $represented_albums_int);
     if (count($new_thumbnail_for) > 0) {
         $query = '
 UPDATE '.CATEGORIES_TABLE.'
@@ -146,7 +154,7 @@ UPDATE '.CATEGORIES_TABLE.'
         pwg_query($query);
     }
 
-    $represented_albums = is_array($_POST['represent']) ? $_POST['represent'] : [];
+    $represented_albums = is_array($_POST['represent']) ? array_map('intval', $_POST['represent']) : [];
 
     $template->assign(
         [
@@ -219,7 +227,7 @@ $template->assign(
 
     'NAME' =>
       isset($_POST['name']) ?
-        stripslashes((string) $_POST['name']) : @$row['name'],
+        stripslashes(is_scalar($_POST['name']) ? (string) $_POST['name'] : '') : @$row['name'],
 
     'TITLE' => render_element_name($row),
 
@@ -232,16 +240,19 @@ $template->assign(
     'REGISTRATION_DATE' => format_date($row['date_available']),
 
     'AUTHOR' => htmlspecialchars(
-        (string) isset($_POST['author'])
-        ? stripslashes((string) $_POST['author'])
-        : (empty($row['author']) ? '' : $row['author'])
+        isset($_POST['author'])
+        ? stripslashes(is_scalar($_POST['author']) ? (string) $_POST['author'] : '')
+        : (empty($row['author']) ? '' : (is_scalar($row['author']) ? (string) $row['author'] : ''))
     ),
 
     'DATE_CREATION' => $row['date_creation'],
 
     'DESCRIPTION' =>
-      htmlspecialchars((string) isset($_POST['comment']) ?
-        stripslashes((string) $_POST['comment']) : (empty($row['comment']) ? '' : $row['comment'])),
+      htmlspecialchars(
+          isset($_POST['comment']) ?
+          stripslashes(is_scalar($_POST['comment']) ? (string) $_POST['comment'] : '') :
+          (empty($row['comment']) ? '' : (is_scalar($row['comment']) ? (string) $row['comment'] : ''))
+      ),
 
     'F_ACTION' =>
         get_root_url().'admin.php'

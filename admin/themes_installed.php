@@ -31,7 +31,9 @@ $themes = new themes();
 // +-----------------------------------------------------------------------+
 
 if (isset($_GET['action']) and isset($_GET['theme'])) {
-    $page['errors'] = $themes->perform_action($_GET['action'], $_GET['theme']);
+    $get_action = is_string($_GET['action']) ? $_GET['action'] : '';
+    $get_theme = is_string($_GET['theme']) ? $_GET['theme'] : '';
+    $page['errors'] = $themes->perform_action($get_action, $get_theme);
 
     if (empty($page['errors'])) {
         if ($_GET['action'] == 'activate' or $_GET['action'] == 'deactivate') {
@@ -144,10 +146,14 @@ function cmp(array $a, array $b): int
         return 1;
     }
 
-    if ($a['STATE'] == $b['STATE']) {
-        return strcasecmp((string) $a['NAME'], (string) $b['NAME']);
+    $a_state = is_string($a['STATE'] ?? null) ? (string) $a['STATE'] : '';
+    $b_state = is_string($b['STATE'] ?? null) ? (string) $b['STATE'] : '';
+    $a_name = is_scalar($a['NAME'] ?? null) ? (string) $a['NAME'] : '';
+    $b_name = is_scalar($b['NAME'] ?? null) ? (string) $b['NAME'] : '';
+    if ($a_state == $b_state) {
+        return strcasecmp($a_name, $b_name);
     } else {
-        return ($s[$a['STATE']] >= $s[$b['STATE']] ? 1 : -1);
+        return (($s[$a_state] ?? 0) >= ($s[$b_state] ?? 0) ? 1 : -1);
     }
 }
 usort($tpl_themes, cmp(...));

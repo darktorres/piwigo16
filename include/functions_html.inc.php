@@ -573,7 +573,7 @@ function get_thumbnail_title(array $info, string $title, string $comment = ''): 
     }
 
     if (isset($info['nb_comments']) and $info['nb_comments'] != 0) {
-        $details[] = l10n_dec('%d comment', '%d comments', $info['nb_comments']);
+        $details[] = l10n_dec('%d comment', '%d comments', (int) $info['nb_comments']);
     }
 
     if (count($details) > 0) {

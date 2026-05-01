@@ -8,6 +8,7 @@ use PhpParser\Node\Expr\FuncCall;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\FunctionReflection;
 use PHPStan\Type\DynamicFunctionReturnTypeExtension;
+use PHPStan\Type\GeneralizePrecision;
 use PHPStan\Type\MixedType;
 use PHPStan\Type\NullType;
 use PHPStan\Type\Type;
@@ -32,7 +33,9 @@ class PwgGetSessionVarDynamicReturnType implements DynamicFunctionReturnTypeExte
     ): Type {
         $args = $functionCall->getArgs();
         if (count($args) >= 2) {
-            return $scope->getType($args[1]->value);
+            // Widen constant types (e.g. literal '' -> string, literal 0 -> int)
+            // so comparisons like $result === '' don't always evaluate to true.
+            return $scope->getType($args[1]->value)->generalize(GeneralizePrecision::lessSpecific());
         }
         // No default given — default is null, return is null|mixed (session value unknown)
         return new NullType();

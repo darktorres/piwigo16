@@ -521,9 +521,9 @@ SELECT
 function get_recent_post_dates_array(array $args): array
 {
     return get_recent_post_dates(
-        (empty($args['max_dates']) ? 3 : (int) $args['max_dates']),
-        (empty($args['max_elements']) ? 3 : (int) $args['max_elements']),
-        (empty($args['max_cats']) ? 3 : (int) $args['max_cats'])
+        (empty($args['max_dates']) ? 3 : (is_numeric($args['max_dates']) ? (int) $args['max_dates'] : 3)),
+        (empty($args['max_elements']) ? 3 : (is_numeric($args['max_elements']) ? (int) $args['max_elements'] : 3)),
+        (empty($args['max_cats']) ? 3 : (is_numeric($args['max_cats']) ? (int) $args['max_cats'] : 3))
     ) ?? [];
 }
 
@@ -546,17 +546,15 @@ function get_html_description_recent_post_date(array $date_detail, ?string $auth
 
     $description .=
           '<li>'
-          .l10n_dec('%d new photo', '%d new photos', (int) $date_detail['nb_elements'])
+          .l10n_dec('%d new photo', '%d new photos', is_numeric($date_detail['nb_elements'] ?? null) ? (int) $date_detail['nb_elements'] : 0)
           .' ('
           .'<a href="'.add_url_params(make_index_url(['section' => 'recent_pics']), $add_url_params).'">'
             .l10n('Recent photos').'</a>'
           .')'
           .'</li><br>';
 
-    /** @var array<mixed> $elements */
     $elements = is_array($date_detail['elements'] ?? null) ? $date_detail['elements'] : [];
     foreach ($elements as $element) {
-        /** @var array<mixed> $element */
         $element = is_array($element) ? $element : [];
         $tn_src_raw = DerivativeImage::thumb_url($element);
         $tn_src = is_string($tn_src_raw) ? $tn_src_raw : '';
@@ -576,20 +574,18 @@ function get_html_description_recent_post_date(array $date_detail, ?string $auth
 
     $description .=
           '<li>'
-          .l10n_dec('%d album updated', '%d albums updated', (int) $date_detail['nb_cats'])
+          .l10n_dec('%d album updated', '%d albums updated', is_numeric($date_detail['nb_cats'] ?? null) ? (int) $date_detail['nb_cats'] : 0)
           .'</li>';
 
     $description .= '<ul>';
-    /** @var array<mixed> $categories */
     $categories = is_array($date_detail['categories'] ?? null) ? $date_detail['categories'] : [];
     foreach ($categories as $cat) {
-        /** @var array<mixed> $cat */
         $cat = is_array($cat) ? $cat : [];
         $description .=
               '<li>'
-              .get_cat_display_name_cache((string) $cat['uppercats'], '', false, null, $auth_key)
+              .get_cat_display_name_cache(is_scalar($cat['uppercats'] ?? null) ? (string) $cat['uppercats'] : '', '', false, null, $auth_key)
               .' ('.
-              l10n_dec('%d new photo', '%d new photos', (int) $cat['img_count']).')'
+              l10n_dec('%d new photo', '%d new photos', is_numeric($cat['img_count'] ?? null) ? (int) $cat['img_count'] : 0).')'
               .'</li>';
     }
     $description .= '</ul>';
@@ -609,9 +605,9 @@ function get_title_recent_post_date(array $date_detail): string
 {
     global $lang;
 
-    $title = l10n_dec('%d new photo', '%d new photos', (int) $date_detail['nb_elements']);
+    $title = l10n_dec('%d new photo', '%d new photos', is_numeric($date_detail['nb_elements'] ?? null) ? (int) $date_detail['nb_elements'] : 0);
 
-    if (preg_match('/^\d+-(\d+)-(\d+) /', (string) $date_detail['date_available'], $matches)) {
+    if (preg_match('/^\d+-(\d+)-(\d+) /', is_scalar($date_detail['date_available'] ?? null) ? (string) $date_detail['date_available'] : '', $matches)) {
         $title .= ' ('.$lang['month'][(int)$matches[1]].' '.$matches[2].')';
     }
 

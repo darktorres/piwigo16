@@ -254,9 +254,6 @@ function display_select_categories(
 
     $tpl_cats = [];
     foreach ($categories as $category) {
-        if (!is_array($category)) {
-            continue;
-        }
         if ($fullname) {
             $option = strip_tags(
                 get_cat_display_name_cache(
@@ -469,7 +466,7 @@ SELECT image_id
  */
 /**
  * @param array<string, float|int|string|null> $userdata
- * @return array<array<string, float|int|string|null>>
+ * @return array<string, array<string, mixed>>
  */
 function get_computed_categories(array &$userdata, ?int $filter_days = null): array
 {
@@ -575,27 +572,30 @@ FROM '.CATEGORIES_TABLE.' as c
  */
 function remove_computed_category(array &$cats, array $cat): void
 {
-    $cat_uppercat_key = isset($cat['id_uppercat']) ? (string) $cat['id_uppercat'] : '';
+    $idUppercat = $cat['id_uppercat'] ?? null;
+    $cat_uppercat_key = is_scalar($idUppercat) ? (string) $idUppercat : '';
     if ($cat_uppercat_key !== '' && isset($cats[$cat_uppercat_key])) {
         $parent = &$cats[$cat_uppercat_key];
-        $parent['nb_categories'] = (int) $parent['nb_categories'] - 1;
+        $parent['nb_categories'] = (is_numeric($parent['nb_categories'] ?? null) ? (int) $parent['nb_categories'] : 0) - 1;
 
         do {
-            $parent['count_images'] = (int) $parent['count_images'] - (is_numeric($cat['nb_images']) ? (int) $cat['nb_images'] : 0);
-            $parent['count_categories'] = (int) $parent['count_categories'] - 1 - (is_numeric($cat['count_categories']) ? (int) $cat['count_categories'] : 0);
+            $parent['count_images'] = (is_numeric($parent['count_images'] ?? null) ? (int) $parent['count_images'] : 0) - (is_numeric($cat['nb_images'] ?? null) ? (int) $cat['nb_images'] : 0);
+            $parent['count_categories'] = (is_numeric($parent['count_categories'] ?? null) ? (int) $parent['count_categories'] : 0) - 1 - (is_numeric($cat['count_categories'] ?? null) ? (int) $cat['count_categories'] : 0);
 
             if (!isset($parent['id_uppercat'])) {
                 break;
             }
-            $parent_uppercat_key = (string) $parent['id_uppercat'];
-            if (!isset($cats[$parent_uppercat_key])) {
+            $parentUppercat = $parent['id_uppercat'] ?? null;
+            $parent_uppercat_key = is_scalar($parentUppercat) ? (string) $parentUppercat : '';
+            if ($parent_uppercat_key === '' || !isset($cats[$parent_uppercat_key])) {
                 break;
             }
             $parent = &$cats[$parent_uppercat_key];
         } while (true);
     }
 
-    unset($cats[(string) $cat['cat_id']]);
+    $catId = $cat['cat_id'] ?? null;
+    unset($cats[is_scalar($catId) ? (string) $catId : '']);
 }
 
 /**

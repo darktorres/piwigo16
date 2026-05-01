@@ -8,6 +8,7 @@ use PhpParser\Node\Expr\FuncCall;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\FunctionReflection;
 use PHPStan\Type\DynamicFunctionReturnTypeExtension;
+use PHPStan\Type\GeneralizePrecision;
 use PHPStan\Type\MixedType;
 use PHPStan\Type\Type;
 
@@ -30,7 +31,7 @@ class TriggerChangeDynamicReturnType implements DynamicFunctionReturnTypeExtensi
     ): Type {
         $args = $functionCall->getArgs();
         if (count($args) >= 2) {
-            return $scope->getType($args[1]->value);
+            return $scope->getType($args[1]->value)->generalize(GeneralizePrecision::lessSpecific());
         }
         return new MixedType();
     }

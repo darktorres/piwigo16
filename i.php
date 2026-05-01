@@ -370,10 +370,11 @@ function send_derivative(int|false $expires): void
     fclose($fp);
 }
 
-function safe_unserialize(mixed $value): mixed
+function safe_unserialize(array|string $value): array
 {
     if (is_string($value)) {
-        return unserialize($value);
+        $result = unserialize($value);
+        return is_array($result) ? $result : [];
     }
     return $value;
 }

@@ -1398,8 +1398,7 @@ function conf_update_param(string $param, mixed $value, bool $updateGlobal = fal
     } elseif (is_array($value) || is_object($value)) {
         $dbValue = addslashes(serialize($value));
     } else {
-        $raw2 = boolean_to_string($value);
-        $dbValue = is_scalar($raw2) ? (string) $raw2 : '';
+        $dbValue = boolean_to_string(is_bool($value) ? $value : (is_scalar($value) ? (string) $value : ''));
     }
 
     $query = '
@@ -2245,7 +2244,8 @@ function send_piwigo_infos(): void
 
     $do_send = false;
     if (\Piwigo\Core\Config::has('send_piwigo_infos_last_notice')) {
-        if (strtotime(\Piwigo\Core\Config::sendPiwigoInfosLastNotice()) < strtotime(conf_get_param('send_piwigo_infos_period', 7 * 24 * 60 * 60).' second ago')) {
+        $period = conf_get_param('send_piwigo_infos_period', 7 * 24 * 60 * 60);
+        if (strtotime(\Piwigo\Core\Config::sendPiwigoInfosLastNotice() ?? '') < strtotime((is_scalar($period) ? (string) $period : '604800').' second ago')) {
             $do_send = true;
         }
     } else {
@@ -2297,7 +2297,8 @@ function send_piwigo_infos(): void
 
 
     // convert disk_usage from kB to mB
-    $piwigo_infos['general_stats']['disk_usage'] = intval($piwigo_infos['general_stats']['disk_usage'] / 1024);
+    $du = $piwigo_infos['general_stats']['disk_usage'] ?? 0;
+    $piwigo_infos['general_stats']['disk_usage'] = intval((is_numeric($du) ? $du : 0) / 1024);
 
     $piwigo_infos['general_stats']['installed_on'] = get_installation_date();
     $piwigo_infos['general_stats']['nb_photos_synced'] = 0;
@@ -2360,11 +2361,17 @@ SELECT
     // \Piwigo\Core\Config::override('pem_plugins_category', 12);
     // \Piwigo\Core\Config::override('pem_themes_category', 10);
     $url = PEM_URL . '/api/get_extension_list.php';
-    if (fetchRemote($url, $result) and $pem_extensions = @unserialize($result)) {
+    $pem_extensions_raw = fetchRemote($url, $result) ? @unserialize(is_string($result) ? $result : '') : false;
+    $pem_extensions = is_array($pem_extensions_raw) ? $pem_extensions_raw : [];
+    if ($pem_extensions !== []) {
         $official_exts = [];
         foreach ($pem_extensions as $eid => $ext) {
-            if (!empty($ext['archive_root_dir'])) {
-                @$official_exts[ $ext['idx_category'] ][ $ext['archive_root_dir'] ] = $eid;
+            if (is_array($ext) && !empty($ext['archive_root_dir'])) {
+                $idxCat = $ext['idx_category'] ?? null;
+                $archiveDir = $ext['archive_root_dir'] ?? null;
+                if (is_string($idxCat) || is_int($idxCat)) {
+                    @$official_exts[$idxCat][is_string($archiveDir) ? $archiveDir : ''] = $eid;
+                }
             }
         }
     } else {
@@ -2379,35 +2386,38 @@ SELECT
     $piwigo_infos['general_stats']['nb_private_plugins'] = 0;
     $piwigo_infos['plugins'] = [];
     foreach ($plugins->db_plugins_by_id as $plugin) {
-        if ('active' == $plugin['state']) {
+        if (!is_array($plugin)) {
+            continue;
+        }
+        $pluginId = is_string($plugin['id'] ?? null) ? $plugin['id'] : '';
+        $pluginState = is_string($plugin['state'] ?? null) ? $plugin['state'] : '';
+        $pluginVersion = is_string($plugin['version'] ?? null) ? $plugin['version'] : '';
+        if ('active' == $pluginState) {
             $eid = null;
-            if (isset($plugins->fs_plugins[ $plugin['id'] ])) {
-                $uri = $plugins->fs_plugins[ $plugin['id'] ]['uri'];
-                if (preg_match('/eid=(\d+)/', (string) $uri, $matches)) {
-                    if (isset($pem_extensions[ $matches[1] ])) {
+            $fsPlugin = $plugins->fs_plugins[$pluginId] ?? null;
+            if (is_array($fsPlugin)) {
+                $uri = is_string($fsPlugin['uri'] ?? null) ? $fsPlugin['uri'] : '';
+                if (preg_match('/eid=(\d+)/', $uri, $matches)) {
+                    if (isset($pem_extensions[$matches[1]])) {
                         $eid = $matches[1];
                     }
                 }
             }
 
             if (empty($eid)) {
-                // let's search in the data fetched from PEM
-                $eid = $official_exts[ \Piwigo\Core\Config::pemPluginsCategory() ][ $plugin['id'] ] ?? null;
+                $eid = $official_exts[\Piwigo\Core\Config::pemPluginsCategory()][$pluginId] ?? null;
             }
 
-            // we must exclude "private extensions". A private extension :
-            //
-            // * has no eid
-            // * OR has un unknown plugin_id among all "Archive root directory" in PEM
             if (empty($eid)) {
-                $logger->info('['.__FUNCTION__.'][exec='.$exec_id.'] '.$plugin['id'].' is a private plugin, not sent to piwigo.org');
+                $logger->info('['.__FUNCTION__.'][exec='.$exec_id.'] '.$pluginId.' is a private plugin, not sent to piwigo.org');
                 $piwigo_infos['general_stats']['nb_private_plugins']++;
                 continue;
             }
 
-            $codename = $pem_extensions[$eid]['archive_root_dir'] ?? $plugin['id'];
+            $pemExt = is_array($pem_extensions[$eid] ?? null) ? $pem_extensions[$eid] : [];
+            $codename = is_string($pemExt['archive_root_dir'] ?? null) ? $pemExt['archive_root_dir'] : $pluginId;
 
-            $piwigo_infos['plugins'][] = '#'.$eid.'/'.$codename.'/'.$plugin['version'];
+            $piwigo_infos['plugins'][] = '#'.(string)$eid.'/'.$codename.'/'.$pluginVersion;
         }
     }
 
@@ -2418,35 +2428,36 @@ SELECT
     $piwigo_infos['themes'] = [];
     $private_themes = [];
     foreach ($themes->db_themes_by_id as $theme) {
-        $theme['state'] = 'active'; // db_themes_by_id only contains active themes
+        if (!is_array($theme)) {
+            continue;
+        }
+        $themeId = is_string($theme['id'] ?? null) ? $theme['id'] : '';
+        $themeVersion = is_string($theme['version'] ?? null) ? $theme['version'] : '';
         $eid = null;
-        if (isset($themes->fs_themes[ $theme['id'] ])) {
-            $uri = $themes->fs_themes[ $theme['id'] ]['uri'];
-            if (preg_match('/eid=(\d+)/', (string) $uri, $matches)) {
-                if (isset($pem_extensions[ $matches[1] ])) {
+        $fsTheme = $themes->fs_themes[$themeId] ?? null;
+        if (is_array($fsTheme)) {
+            $uri = is_string($fsTheme['uri'] ?? null) ? $fsTheme['uri'] : '';
+            if (preg_match('/eid=(\d+)/', $uri, $matches)) {
+                if (isset($pem_extensions[$matches[1]])) {
                     $eid = $matches[1];
                 }
             }
         }
 
         if (empty($eid)) {
-            // let's search in the data fetched from PEM
-            $eid = $official_exts[ \Piwigo\Core\Config::pemThemesCategory() ][ $theme['id'] ] ?? null;
+            $eid = $official_exts[\Piwigo\Core\Config::pemThemesCategory()][$themeId] ?? null;
         }
 
-        // we must exclude "private extensions". A private extension :
-        //
-        // * has no eid
-        // * OR has un unknown theme_id among all "Archive root directory" in PEM
         if (empty($eid)) {
-            $logger->info('['.__FUNCTION__.'][exec='.$exec_id.'] '.$theme['id'].' is a private theme, not sent to piwigo.org');
-            $private_themes[ $theme['id'] ] = 1;
+            $logger->info('['.__FUNCTION__.'][exec='.$exec_id.'] '.$themeId.' is a private theme, not sent to piwigo.org');
+            $private_themes[$themeId] = 1;
             continue;
         }
 
-        $codename = $pem_extensions[$eid]['archive_root_dir'] ?? $theme['id'];
+        $pemExt = is_array($pem_extensions[$eid] ?? null) ? $pem_extensions[$eid] : [];
+        $codename = is_string($pemExt['archive_root_dir'] ?? null) ? $pemExt['archive_root_dir'] : $themeId;
 
-        $piwigo_infos['themes'][] = '#'.$eid.'/'.$codename.'/'.$theme['version'];
+        $piwigo_infos['themes'][] = '#'.(string)$eid.'/'.$codename.'/'.$themeVersion;
     }
 
     $piwigo_infos['general_stats']['nb_private_themes'] = count(array_keys($private_themes));
@@ -2553,7 +2564,7 @@ SELECT
 ;';
     $updates = query2array($query);
     foreach ($updates as $update) {
-        $details = safe_unserialize($update['details']);
+        $details = safe_unserialize(is_string($update['details']) ? $update['details'] : '');
         if (isset($details['from_version']) and isset($details['to_version'])) {
             @$piwigo_infos['updates'][] = [
               'action' => $update['action'],
@@ -2630,7 +2641,8 @@ SELECT
         $piwigo_infos['features'][$feature] = \Piwigo\Core\Config::get($feature) ? 'yes' : 'no';
     }
 
-    $url = conf_get_param('send_piwigo_infos_update_url', PHPWG_URL).'/ws.php';
+    $updateUrl = conf_get_param('send_piwigo_infos_update_url', PHPWG_URL);
+    $url = (is_scalar($updateUrl) ? (string) $updateUrl : PHPWG_URL).'/ws.php';
 
     $get_data = [
       'format' => 'php',
@@ -2660,7 +2672,7 @@ function send_piwigo_infos_retry_later(int $wait_time): void
     global $logger;
 
     // let's fake a last_notice so that we only try 1 day later
-    $last_notice = \Piwigo\Core\Config::has('send_piwigo_infos_last_notice') ? strtotime(\Piwigo\Core\Config::sendPiwigoInfosLastNotice()) : time();
+    $last_notice = \Piwigo\Core\Config::has('send_piwigo_infos_last_notice') ? strtotime(\Piwigo\Core\Config::sendPiwigoInfosLastNotice() ?? '') : time();
     $last_notice += $wait_time;
 
     conf_update_param('send_piwigo_infos_last_notice', date('c', $last_notice), true);
@@ -2675,7 +2687,8 @@ function pwg_unique_exec_begins(string $token_name, int $timeout = 60): false|st
     $logger->info('['.$token_name.'][exec='.$exec_id.'] starts now');
 
     if (\Piwigo\Core\Config::has($token_name . '_running')) {
-        [$running_exec_id, $running_exec_start_time] = explode('-', (string) \Piwigo\Core\Config::get($token_name . '_running'));
+        $runningRaw = \Piwigo\Core\Config::get($token_name . '_running');
+        [$running_exec_id, $running_exec_start_time] = explode('-', is_scalar($runningRaw) ? (string) $runningRaw : '-');
         if (time() - (int)$running_exec_start_time > $timeout) {
             $logger->info('['.$token_name.'][exec='.$exec_id.'] exec='.$running_exec_id.', timeout stopped by another call to the function');
             pwg_unique_exec_ends($token_name);

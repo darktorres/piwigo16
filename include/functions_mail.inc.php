@@ -149,7 +149,7 @@ function get_clean_recipients_list($data): array
             if (is_int($keys[0])) { // simple array of emails
                 foreach ($data as &$item) {
                     $item = [
-                      'email' => trim((string) $item),
+                      'email' => trim(is_scalar($item) ? (string) $item : ''),
                       'name' => '',
                       ];
                 }
@@ -161,15 +161,14 @@ function get_clean_recipients_list($data): array
             $data = array_map(fn (mixed $item): array => unformat_email(is_array($item) || is_string($item) ? $item : ''), $data);
         }
     } else {
-        $data = explode(',', (string) $data);
-        $data = array_map(fn (mixed $item): array => unformat_email((string) $item), $data);
+        $data = explode(',', is_scalar($data) ? (string) $data : '');
+        $data = array_map(fn (mixed $item): array => unformat_email(is_scalar($item) ? (string) $item : ''), $data);
     }
 
     $existing = [];
     foreach ($data as $i => $entry) {
-        /** @var array<string,mixed> $entry */
         $entry = is_array($entry) ? $entry : [];
-        $email = (string) ($entry['email'] ?? '');
+        $email = is_scalar($entry['email'] ?? null) ? (string) $entry['email'] : '';
         if (isset($existing[$email])) {
             unset($data[$i]);
         } else {
@@ -480,7 +479,7 @@ SELECT DISTINCT language
     AND '.\Piwigo\Core\Config::userFields()['email'].' <> ""';
     if (!empty($args['language_selected'])) {
         $query .= '
-    AND language = \''.((string) $args['language_selected']).'\'';
+    AND language = \''.(is_scalar($args['language_selected']) ? (string) $args['language_selected'] : '').'\'';
     }
 
     $query .= '
@@ -518,26 +517,26 @@ SELECT
         switch_lang_to($language);
 
         foreach ($users as $u) {
-            /** @var array<string,mixed> $u */
-            $authkey = create_user_auth_key((int) $u['user_id'], is_string($u['status']) ? $u['status'] : null);
+            $userId = is_numeric($u['user_id'] ?? null) ? (int) $u['user_id'] : 0;
+            $authkey = create_user_auth_key($userId, is_string($u['status'] ?? null) ? $u['status'] : null);
 
             $user_tpl = $tpl;
 
             if ($authkey !== false) {
-                /** @var array<string,mixed> $assign */
+                $authKeyStr = is_scalar($authkey['auth_key'] ?? null) ? (string) $authkey['auth_key'] : '';
                 $assign = is_array($user_tpl['assign'] ?? null) ? $user_tpl['assign'] : [];
-                $assign['LINK'] = add_url_params(is_string($assign['LINK'] ?? null) ? $assign['LINK'] : '', ['auth' => $authkey['auth_key']]);
+                $assign['LINK'] = add_url_params(is_string($assign['LINK'] ?? null) ? $assign['LINK'] : '', ['auth' => $authKeyStr]);
                 $user_tpl['assign'] = $assign;
 
-                /** @var array<string,mixed> $tpl_assign */
                 $tpl_assign = is_array($tpl['assign'] ?? null) ? $tpl['assign'] : [];
-                /** @var array<string,mixed> $tpl_img */
                 $tpl_img = is_array($tpl_assign['IMG'] ?? null) ? $tpl_assign['IMG'] : [];
                 if (isset($tpl_img['link'])) {
-                    $user_tpl['assign']['IMG']['link'] = add_url_params(
+                    $imgArr = is_array($user_tpl['assign']['IMG'] ?? null) ? $user_tpl['assign']['IMG'] : [];
+                    $imgArr['link'] = add_url_params(
                         is_string($tpl_img['link']) ? $tpl_img['link'] : '',
-                        ['auth' => $authkey['auth_key']]
+                        ['auth' => $authKeyStr]
                     );
+                    $user_tpl['assign']['IMG'] = $imgArr;
                 }
             }
 
@@ -624,7 +623,7 @@ function pwg_mail(string|array $to, array $args = [], array $tpl = []): bool
     if (empty($args['subject'])) {
         $args['subject'] = 'Piwigo';
     }
-    $args['subject'] = trim((string) preg_replace('#[\n\r]+#s', '', (string) $args['subject']));
+    $args['subject'] = trim((string) preg_replace('#[\n\r]+#s', '', is_scalar($args['subject'] ?? null) ? (string) $args['subject'] : ''));
     $mail->Subject = $args['subject'];
 
     // Cc
@@ -767,15 +766,16 @@ function pwg_mail(string|array $to, array $args = [], array $tpl = []): bool
         // Runtime template
         if (isset($tpl['filename'])) {
             if (isset($tpl['dirname'])) {
-                $template->set_template_dir(((string) $tpl['dirname']) .'/'. $content_type);
+                $template->set_template_dir((is_scalar($tpl['dirname']) ? (string) $tpl['dirname'] : '') .'/'. $content_type);
             }
-            if ($template->smarty->templateExists(((string) $tpl['filename']) .'.tpl')) {
-                $template->set_filename((string) $tpl['filename'], ((string) $tpl['filename']) .'.tpl');
+            $tplFilename = is_scalar($tpl['filename'] ?? null) ? (string) $tpl['filename'] : '';
+            if ($template->smarty->templateExists($tplFilename .'.tpl')) {
+                $template->set_filename($tplFilename, $tplFilename .'.tpl');
                 if (!empty($tpl['assign'])) {
                     $template->assign($tpl['assign']);
                 }
                 $template->assign('CONTENT', $mail_content);
-                $contents[$content_type] .= $template->parse($tpl['filename'], true);
+                $contents[$content_type] .= $template->parse($tplFilename, true);
             } else {
                 $contents[$content_type] .= $mail_content;
             }

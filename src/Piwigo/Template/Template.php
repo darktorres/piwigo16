@@ -836,12 +836,15 @@ class Template
         // (e.g. `import './tree.css'` inside an entry module); without
         // this, those styles wouldn't reach the page.
         $manifest = ScriptLoader::getManifest();
-        if ($manifest !== null && isset($manifest[$scriptIdStr]['css'])) {
-            foreach ($manifest[$scriptIdStr]['css'] as $i => $cssPath) {
-                if ($cssPath !== '') {
+        $manifestEntry = ($manifest !== null && is_array($manifest[$scriptIdStr] ?? null)) ? $manifest[$scriptIdStr] : null;
+        if ($manifestEntry !== null) {
+            $cssList = is_array($manifestEntry['css'] ?? null) ? $manifestEntry['css'] : [];
+            foreach ($cssList as $i => $cssPath) {
+                $cssPathStr = is_scalar($cssPath) ? (string) $cssPath : '';
+                if ($cssPathStr !== '') {
                     $this->cssLoader->add(
                         $scriptIdStr . '-vite-css-' . $i,
-                        'dist/' . $cssPath,
+                        'dist/' . $cssPathStr,
                         $scriptVersionVal
                     );
                 }

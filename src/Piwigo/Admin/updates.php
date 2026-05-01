@@ -53,7 +53,7 @@ class updates
 
         if (preg_match('/(\d+\.\d+)\.(\d+)/', PHPWG_VERSION, $matches)
           and @fetchRemote(PHPWG_URL.'/download/all_versions.php?rand='.md5(uniqid((string) random_int(0, mt_getrandmax()), true)), $result)) {
-            $all_versions = @explode("\n", is_string($result) ? $result : '');
+            $all_versions = @explode("\n", $result);
             $new_version = trim($all_versions[0]);
             $_SESSION['need_update'.PHPWG_VERSION] = version_compare(PHPWG_VERSION, $new_version, '<');
         }
@@ -194,7 +194,6 @@ class updates
             $notify = true;
         } else {
             $lastNotifArr = safe_unserialize(\Piwigo\Core\Config::updateNotifyLastNotification() ?? '');
-            $lastNotifArr = is_array($lastNotifArr) ? $lastNotifArr : [];
             $last_notification = is_scalar($lastNotifArr['notified_on'] ?? null) ? (string) $lastNotifArr['notified_on'] : '';
             $last_notif_version = is_scalar($lastNotifArr['version'] ?? null) ? (string) $lastNotifArr['version'] : '';
 
@@ -263,15 +262,18 @@ class updates
                 return false;
             }
             if (!preg_match('/^\d+\.\d+\.\d+$/', (string) $version)) {
-                $version = is_array($pem_versions[0]) && isset($pem_versions[0]['name']) ? (string) $pem_versions[0]['name'] : $version;
+                $pem_ver0 = $pem_versions[0] ?? null;
+                $version = is_array($pem_ver0) && isset($pem_ver0['name']) ? (string) $pem_ver0['name'] : $version;
             }
             $branch = get_branch_from_version($version);
             foreach ($pem_versions as $pem_version) {
                 if (!is_array($pem_version) || !isset($pem_version['name'], $pem_version['id'])) {
                     continue;
                 }
-                if (str_starts_with((string) $pem_version['name'], $branch)) {
-                    $versions_to_check[] = (string) $pem_version['id'];
+                $pemVersionName = is_scalar($pem_version['name'] ?? null) ? (string) $pem_version['name'] : '';
+                $pemVersionId = is_scalar($pem_version['id'] ?? null) ? (string) $pem_version['id'] : '';
+                if (str_starts_with($pemVersionName, $branch)) {
+                    $versions_to_check[] = $pemVersionId;
                 }
             }
         }
@@ -319,16 +321,20 @@ class updates
                 if (!is_array($ext) || !isset($ext['extension_id'])) {
                     continue;
                 }
-                if (isset($ext_to_check[$ext['extension_id']])) {
-                    $type = $ext_to_check[$ext['extension_id']];
+                $extId = $ext['extension_id'];
+                if (!is_string($extId) && !is_int($extId)) {
+                    continue;
+                }
+                if (isset($ext_to_check[$extId])) {
+                    $type = $ext_to_check[$extId];
 
                     if (!isset($servers[$type])) {
                         $servers[$type] = [];
                     }
 
-                    $servers[$type][ $ext['extension_id'] ] = $ext;
+                    $servers[$type][$extId] = $ext;
 
-                    unset($ext_to_check[$ext['extension_id']]);
+                    unset($ext_to_check[$extId]);
                 }
             }
 
@@ -394,14 +400,16 @@ class updates
     // Check if extension have been upgraded since last check
     public function check_updated_extensions(): void
     {
+        $extensionsNeedUpdate = is_array($_SESSION['extensions_need_update'] ?? null) ? $_SESSION['extensions_need_update'] : [];
         foreach ($this->types as $type) {
-            if (!empty($_SESSION['extensions_need_update'][$type])) {
+            $typeUpdates = is_array($extensionsNeedUpdate[$type] ?? null) ? $extensionsNeedUpdate[$type] : [];
+            if (!empty($typeUpdates)) {
                 $fs = 'fs_'.$type;
                 foreach ($this->$type->$fs as $ext_id => $fs_ext) {
-                    $need_update_version = is_scalar($_SESSION['extensions_need_update'][$type][$ext_id] ?? null)
-                        ? (string) $_SESSION['extensions_need_update'][$type][$ext_id]
+                    $need_update_version = is_scalar($typeUpdates[$ext_id] ?? null)
+                        ? (string) $typeUpdates[$ext_id]
                         : '';
-                    if (isset($_SESSION['extensions_need_update'][$type][$ext_id])
+                    if (isset($typeUpdates[$ext_id])
                       and safe_version_compare(is_scalar($fs_ext['version'] ?? null) ? (string) $fs_ext['version'] : '', $need_update_version, '>=')) {
                         // Extension have been upgraded
                         $this->check_extensions();
@@ -416,9 +424,6 @@ class updates
     public function check_missing_extensions(array $missing): void
     {
         foreach ($missing as $id => $type) {
-            if (!is_string($type)) {
-                continue;
-            }
             $fs = 'fs_'.$type;
             $default = 'default_'.$type;
             $defaultList = is_array($this->$default) ? $this->$default : [];
@@ -436,7 +441,7 @@ class updates
     public function get_merged_extensions(string $version): void
     {
         if (fetchRemote($this->merged_extension_url, $result)) {
-            $rows = explode("\n", is_string($result) ? $result : '');
+            $rows = explode("\n", $result);
             foreach ($rows as $row) {
                 if (preg_match('/^(\d+\.\d+): *(.*)$/', $row, $match)) {
                     if (version_compare($version, $match[1], '>=')) {
@@ -467,6 +472,9 @@ class updates
     public static function upgrade_to(string $upgrade_to, int &$step, bool $check_current_version = true): void
     {
         $page = &$GLOBALS['page'];
+        if (!is_array($page)) {
+            $page = [];
+        }
         global $template;
 
         if ($check_current_version and !version_compare($upgrade_to, PHPWG_VERSION, '>')) {
@@ -490,7 +498,8 @@ class updates
             $obsolete_list = PHPWG_ROOT_PATH.'install/obsolete.list';
         }
 
-        $pageErrors = is_array($page['errors'] ?? null) ? $page['errors'] : (is_scalar($page['errors'] ?? null) ? [$page['errors']] : []);
+        $pageErrRaw = $page['errors'] ?? null;
+        $pageErrors = is_array($pageErrRaw) ? $pageErrRaw : (is_scalar($pageErrRaw) ? [$pageErrRaw] : []);
         if (empty($pageErrors)) {
             $path = PHPWG_ROOT_PATH.\Piwigo\Core\Config::dataLocation().'update';
             $filename = $path.'/'.$code.'.zip';
@@ -503,7 +512,7 @@ class updates
             while (!$end) {
                 $chunk_num++;
                 if (@fetchRemote(PHPWG_URL.'/download/dlcounter.php?code='.$dl_code.'&chunk_num='.$chunk_num, $result)
-                  and $input = @unserialize(is_string($result) ? $result : '')) {
+                  and $input = @unserialize($result)) {
                     if (!is_array($input)) {
                         $end = true;
                     } else {
@@ -536,12 +545,17 @@ class updates
                     //Check if all files were extracted
                     $error = '';
                     foreach ($result as $extract) {
-                        if (!in_array($extract['status'], ['ok', 'filtered', 'already_a_directory'])) {
+                        if (!is_array($extract)) {
+                            continue;
+                        }
+                        $extractStatus = is_scalar($extract['status'] ?? null) ? (string) $extract['status'] : '';
+                        $extractFilename = is_scalar($extract['filename'] ?? null) ? (string) $extract['filename'] : '';
+                        if (!in_array($extractStatus, ['ok', 'filtered', 'already_a_directory'])) {
                             // Try to change chmod and extract
-                            if (@chmod(PHPWG_ROOT_PATH.$extract['filename'], 0777)
+                            if (@chmod(PHPWG_ROOT_PATH.$extractFilename, 0777)
                               and ($res = $zip->extract(
                                   PCLZIP_OPT_BY_NAME,
-                                  $remove_path.'/'.$extract['filename'],
+                                  $remove_path.'/'.$extractFilename,
                                   PCLZIP_OPT_PATH,
                                   PHPWG_ROOT_PATH,
                                   PCLZIP_OPT_REMOVE_PATH,
@@ -554,7 +568,7 @@ class updates
                               and $res[0]['status'] == 'ok') {
                                 continue;
                             } else {
-                                $error .= $extract['filename'].': '.$extract['status']."\n";
+                                $error .= $extractFilename.': '.$extractStatus."\n";
                             }
                         }
                     }

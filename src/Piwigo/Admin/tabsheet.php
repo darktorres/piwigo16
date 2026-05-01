@@ -6,10 +6,7 @@ namespace Piwigo\Admin;
 
 class tabsheet
 {
-    /**
-     * @var array{}
-     */
-    /** @var array<string, array{caption: string, url: string, selected: bool}> */
+    /** @var array<string, array<string, bool|string>> */
     public array $sheets = [];
     /**
      * @var null
@@ -98,7 +95,7 @@ class tabsheet
     /*
       returns properties of selected tab
     */
-    /** @return array{caption: string, url: string, selected: bool}|null */
+    /** @return array<string, bool|string>|null */
     public function get_selected(): ?array
     {
         if ($this->selected !== '') {
@@ -125,8 +122,9 @@ class tabsheet
         $selected_tab = $this->get_selected();
 
         if (isset($selected_tab)) {
+            $caption = is_scalar($selected_tab['caption'] ?? null) ? (string) $selected_tab['caption'] : '';
             $template->assign(
-                [$this->titlename => '['.$selected_tab['caption'].']']
+                [$this->titlename => '['.$caption.']']
             );
         }
 

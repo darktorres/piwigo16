@@ -6,9 +6,9 @@ namespace Piwigo\Admin\Integrity;
 
 class check_integrity
 {
-    /** @var array<mixed> */
+    /** @var array<string> */
     public array $ignore_list = [];
-    /** @var array<mixed> */
+    /** @var array<int, array<string, mixed>> */
     public array $retrieve_list = [];
     /** @var array<string> */
     public array $build_ignore_list = [];
@@ -60,6 +60,7 @@ class check_integrity
         }
 
         // Treatments
+        $c13y_selection_post = is_array($_POST['c13y_selection'] ?? null) ? $_POST['c13y_selection'] : [];
         if (isset($_POST['c13y_submit_correction']) and isset($_POST['c13y_selection'])) {
             $corrected_count = 0;
             $not_corrected_count = 0;
@@ -67,7 +68,7 @@ class check_integrity
             foreach ($this->retrieve_list as $i => $c13y) {
                 if (!empty($c13y['correction_fct']) and
                     $c13y['is_callable'] and
-                    in_array($c13y['id'], $_POST['c13y_selection'])) {
+                    in_array($c13y['id'], $c13y_selection_post)) {
                     if (is_array($c13y['correction_fct_args'])) {
                         $args = $c13y['correction_fct_args'];
                     } elseif (!is_null($c13y['correction_fct_args'])) {
@@ -75,7 +76,8 @@ class check_integrity
                     } else {
                         $args = [];
                     }
-                    $this->retrieve_list[$i]['corrected'] = call_user_func_array($c13y['correction_fct'], $args);
+                    $fct = $c13y['correction_fct'];
+                    $this->retrieve_list[$i]['corrected'] = is_callable($fct) ? call_user_func_array($fct, $args) : false;
 
                     if ($this->retrieve_list[$i]['corrected']) {
                         $corrected_count += 1;
@@ -104,8 +106,8 @@ class check_integrity
                 $ignored_count = 0;
 
                 foreach ($this->retrieve_list as $i => $c13y) {
-                    if (in_array($c13y['id'], $_POST['c13y_selection'])) {
-                        $this->build_ignore_list[] = $c13y['id'];
+                    if (in_array($c13y['id'], $c13y_selection_post)) {
+                        $this->build_ignore_list[] = is_string($c13y['id']) ? $c13y['id'] : '';
                         $this->retrieve_list[$i]['ignored'] = true;
                         $ignored_count += 1;
                     }

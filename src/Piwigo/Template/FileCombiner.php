@@ -59,8 +59,8 @@ final class FileCombiner
     {
         $force = false;
         if (is_admin() && ($this->is_css || !\Piwigo\Core\Config::templateCompileCheck())) {
-            $force = (isset($_SERVER['HTTP_CACHE_CONTROL']) && str_contains((string) $_SERVER['HTTP_CACHE_CONTROL'], 'max-age=0'))
-              || (isset($_SERVER['HTTP_PRAGMA']) && strpos((string) $_SERVER['HTTP_PRAGMA'], 'no-cache'));
+            $force = (isset($_SERVER['HTTP_CACHE_CONTROL']) && is_string($_SERVER['HTTP_CACHE_CONTROL']) && str_contains($_SERVER['HTTP_CACHE_CONTROL'], 'max-age=0'))
+              || (isset($_SERVER['HTTP_PRAGMA']) && is_string($_SERVER['HTTP_PRAGMA']) && strpos($_SERVER['HTTP_PRAGMA'], 'no-cache') !== false);
         }
 
         $result = [];

@@ -288,21 +288,21 @@ class ScriptLoader
         return $max;
     }
 
-    /** @var array<string, mixed>|false|null */
+    /** @var array<mixed, mixed>|false|null */
     private static array|false|null $manifest = null;
 
     /**
      * Returns the Piwigo manifest (dist/manifest.json) if it exists.
      * Returns null when the file is absent (legacy concat path is used).
      *
-     * @return array<string, mixed>|null
+     * @return array<mixed, mixed>|null
      */
     public static function getManifest(): ?array
     {
         return self::manifest();
     }
 
-    /** @return array<string, mixed>|null */
+    /** @return array<mixed, mixed>|null */
     private static function manifest(): ?array
     {
         if (self::$manifest !== null) {

@@ -89,7 +89,7 @@ class pwg_image
         if ($resize_dimensions['width'] == $source_width and $resize_dimensions['height'] == $source_height) {
             // the image doesn't need any resize! We just copy it to the destination
             copy($this->source_filepath, $destination_filepath);
-            return $this->get_resize_result($destination_filepath, $resize_dimensions['width'], $resize_dimensions['height'], $starttime);
+            return $this->get_resize_result($destination_filepath, (int) $resize_dimensions['width'], (int) $resize_dimensions['height'], $starttime);
         }
 
         $this->image->set_compression_quality($quality);
@@ -99,11 +99,17 @@ class pwg_image
             $this->image->strip();
         }
 
-        if (isset($resize_dimensions['crop'])) {
-            $this->image->crop($resize_dimensions['crop']['width'], $resize_dimensions['crop']['height'], $resize_dimensions['crop']['x'], $resize_dimensions['crop']['y']);
+        if (isset($resize_dimensions['crop']) && is_array($resize_dimensions['crop'])) {
+            $crop = $resize_dimensions['crop'];
+            $this->image->crop(
+                (int) ($crop['width'] ?? 0),
+                (int) ($crop['height'] ?? 0),
+                (int) ($crop['x'] ?? 0),
+                (int) ($crop['y'] ?? 0)
+            );
         }
 
-        $this->image->resize($resize_dimensions['width'], $resize_dimensions['height']);
+        $this->image->resize((int) $resize_dimensions['width'], (int) $resize_dimensions['height']);
 
         if (!empty($rotation)) {
             $this->image->rotate($rotation);
@@ -112,7 +118,7 @@ class pwg_image
         $this->image->write($destination_filepath);
 
         // everything should be OK if we are here!
-        return $this->get_resize_result($destination_filepath, $resize_dimensions['width'], $resize_dimensions['height'], $starttime);
+        return $this->get_resize_result($destination_filepath, (int) $resize_dimensions['width'], (int) $resize_dimensions['height'], $starttime);
     }
 
     /** @return array<mixed> */
@@ -343,6 +349,9 @@ class pwg_image
     public static function get_ext_imagick_command(): string
     {
         $page = &$GLOBALS['page'];
+        if (!is_array($page)) {
+            $page = [];
+        }
 
         if (!isset($page['ext_imagick_command'])) {
             $retval = null;
@@ -357,7 +366,7 @@ class pwg_image
             }
         }
 
-        return $page['ext_imagick_command'];
+        return is_string($page['ext_imagick_command']) ? $page['ext_imagick_command'] : 'convert';
     }
 
     public static function is_ext_imagick(): bool

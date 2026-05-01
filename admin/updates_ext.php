@@ -26,7 +26,8 @@ if (!is_webmaster()) {
     \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
 }
 
-\Piwigo\Core\Config::override('updates_ignored', unserialize(\Piwigo\Core\Config::get('updates_ignored') ?? ''));
+$updates_ignored_raw = \Piwigo\Core\Config::get('updates_ignored');
+\Piwigo\Core\Config::override('updates_ignored', safe_unserialize(is_string($updates_ignored_raw) ? $updates_ignored_raw : ''));
 
 $autoupdate = new updates($page['page']);
 
@@ -62,6 +63,9 @@ foreach ($autoupdate->types as $type) {
 
         $ext_info = $server_ext[$fs_ext['extension']];
 
+        $updates_ignored = \Piwigo\Core\Config::get('updates_ignored');
+        $updates_ignored_for_type = is_array($updates_ignored) ? ($updates_ignored[$type] ?? []) : [];
+        $updates_ignored_for_type = is_array($updates_ignored_for_type) ? $updates_ignored_for_type : [];
         if (!safe_version_compare($fs_ext['version'], $ext_info['revision_name'], '>=')) {
             array_push(
                 $updates_extension[$type],
@@ -75,13 +79,13 @@ foreach ($autoupdate->types as $type) {
         'CURRENT_VERSION' => $fs_ext['version'],
         'NEW_VERSION' => $ext_info['revision_name'],
         'URL_DOWNLOAD' => $ext_info['download_url'] . '&amp;origin=piwigo_download',
-        'IGNORED' => in_array($ext_id, \Piwigo\Core\Config::get('updates_ignored')[$type]),
+        'IGNORED' => in_array($ext_id, $updates_ignored_for_type),
         ]
             );
         }
     }
 
-    if (!empty(\Piwigo\Core\Config::get('updates_ignored')[$type])) {
+    if (!empty($updates_ignored_for_type)) {
         $show_reset = true;
     }
 }

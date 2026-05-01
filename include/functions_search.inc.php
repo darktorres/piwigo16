@@ -115,9 +115,6 @@ function get_regular_search_results(array $search, ?string $images_where = ''): 
     $image_ids_for_filter = [];
 
     $display_filters = safe_unserialize(\Piwigo\Core\Config::filtersViews() ?? '');
-    if (!is_array($display_filters)) {
-        $display_filters = \Piwigo\Core\Config::defaultFiltersViews();
-    }
 
     foreach ($display_filters as $filt_name => $filt_conf) {
         $filt_conf = is_array($filt_conf) ? $filt_conf : [];
@@ -1896,7 +1893,7 @@ function get_quick_search_results_no_cache(string $q, array $options): array
 
     // allow plugins to add their own scopes
     $scopes_result = trigger_change('qsearch_get_scopes', $scopes);
-    $scopes = array_values(array_filter($scopes_result, static fn (mixed $s): bool => $s instanceof \Piwigo\Search\QSearchScope));
+    $scopes = is_array($scopes_result) ? array_values($scopes_result) : $scopes;
     $expression = new \Piwigo\Search\QExpression($q, $scopes);
 
     // get inflections for terms

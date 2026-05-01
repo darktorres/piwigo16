@@ -35,7 +35,7 @@ if (isset($_GET['revision']) and isset($_GET['extension'])) {
     } else {
         check_pwg_token();
 
-        $install_status = $plugins->extract_plugin_files('install', is_string($_GET['revision'] ?? null) ? $_GET['revision'] : '', is_string($_GET['extension'] ?? null) ? $_GET['extension'] : '', $plugin_id);
+        $install_status = $plugins->extract_plugin_files('install', is_string($_GET['revision']) ? $_GET['revision'] : '', is_string($_GET['extension']) ? $_GET['extension'] : '', $plugin_id);
 
         redirect($base_url.'&installstatus='.$install_status.'&plugin_id='.$plugin_id);
     }
@@ -81,7 +81,7 @@ if (isset($_GET['installstatus'])) {
             break;
 
         default:
-            \Piwigo\Core\PageState::current()->addError(l10n('An error occured during extraction (%s).', htmlspecialchars((string) $_GET['installstatus'])));
+            \Piwigo\Core\PageState::current()->addError(l10n('An error occured during extraction (%s).', htmlspecialchars(is_scalar($_GET['installstatus']) ? (string) $_GET['installstatus'] : '')));
             \Piwigo\Core\PageState::current()->addError(l10n('Please check "plugins" folder and sub-folders permissions (CHMOD).'));
     }
 }

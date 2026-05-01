@@ -146,10 +146,12 @@ function cmp(array $a, array $b): int
         return 1;
     }
 
-    $a_state = is_string($a['STATE'] ?? null) ? (string) $a['STATE'] : '';
-    $b_state = is_string($b['STATE'] ?? null) ? (string) $b['STATE'] : '';
-    $a_name = is_scalar($a['NAME'] ?? null) ? (string) $a['NAME'] : '';
-    $b_name = is_scalar($b['NAME'] ?? null) ? (string) $b['NAME'] : '';
+    $aStateRaw = $a['STATE'] ?? null; $bStateRaw = $b['STATE'] ?? null;
+    $a_state = is_string($aStateRaw) ? $aStateRaw : '';
+    $b_state = is_string($bStateRaw) ? $bStateRaw : '';
+    $aNameRaw = $a['NAME'] ?? null; $bNameRaw = $b['NAME'] ?? null;
+    $a_name = is_scalar($aNameRaw) ? (string) $aNameRaw : '';
+    $b_name = is_scalar($bNameRaw) ? (string) $bNameRaw : '';
     if ($a_state == $b_state) {
         return strcasecmp($a_name, $b_name);
     } else {

@@ -54,7 +54,7 @@ function get_cat_display_name(array $cat_informations, ?string $url = ''): strin
         }
 
         if (!isset($url)) {
-            $output .= is_scalar($cat['name']) ? (string) $cat['name'] : '';
+            $output .= $cat['name'];
         } elseif ($url == '') {
             $output .= '<a href="'
                   .make_index_url(
@@ -63,10 +63,10 @@ function get_cat_display_name(array $cat_informations, ?string $url = ''): strin
                         ]
                   )
                   .'">';
-            $output .= (is_scalar($cat['name']) ? (string) $cat['name'] : '').'</a>';
+            $output .= $cat['name'].'</a>';
         } else {
             $output .= '<a href="'.PHPWG_ROOT_PATH.$url.(is_scalar($cat['id']) ? (string) $cat['id'] : '').'">';
-            $output .= (is_scalar($cat['name']) ? (string) $cat['name'] : '').'</a>';
+            $output .= $cat['name'].'</a>';
         }
     }
     return $output;
@@ -132,7 +132,7 @@ SELECT id, name, permalink
             $output .= '<span>'.\Piwigo\Core\Config::levelSeparator().'</span>';
         }
 
-        $cat_name = is_scalar($cat['name']) ? (string) $cat['name'] : '';
+        $cat_name = $cat['name'];
         if (!isset($url) or $single_link) {
             $output .= $cat_name;
         } elseif ($url == '') {

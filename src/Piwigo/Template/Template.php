@@ -523,8 +523,7 @@ class Template
             }
             $href .= '?v' . ($combi->version ?: PHPWG_VERSION);
             // trigger the event for eventual use of a cdn
-            $href_raw = trigger_change('combined_css', $href, $combi);
-            $href = is_string($href_raw) ? $href_raw : $href;
+            $href = trigger_change('combined_css', $href, $combi);
             $content[] = '<link rel="stylesheet" type="text/css" href="'.$href.'">';
         }
         $this->output = str_replace(
@@ -924,8 +923,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
             $ret .= '?v'. ($script->version ?: PHPWG_VERSION);
         }
         // trigger the event for eventual use of a cdn
-        $ret_raw = trigger_change('combined_script', $ret, $script);
-        $ret = is_string($ret_raw) ? $ret_raw : $ret;
+        $ret = trigger_change('combined_script', $ret, $script);
         return embellish_url($ret);
     }
 

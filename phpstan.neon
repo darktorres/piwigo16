@@ -30,5 +30,12 @@ parameters:
 rules:
     - Piwigo\Tools\PhpStan\NoDynamicNewRule
     - Piwigo\Tools\PhpStan\NoGlobalInSrcRule
+services:
+    -
+        class: Piwigo\Tools\PhpStan\TriggerChangeDynamicReturnType
+        tags: [phpstan.broker.dynamicFunctionReturnTypeExtension]
+    -
+        class: Piwigo\Tools\PhpStan\PwgGetSessionVarDynamicReturnType
+        tags: [phpstan.broker.dynamicFunctionReturnTypeExtension]
 includes:
     - vendor/phpstan/phpstan-deprecation-rules/rules.neon

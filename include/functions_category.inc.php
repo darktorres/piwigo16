@@ -105,7 +105,7 @@ FROM '.CATEGORIES_TABLE.' INNER JOIN '.USER_CACHE_CATEGORIES_TABLE.'
     );
 
     $query .= '
-WHERE '.(is_string($where) ? $where : '').'
+WHERE '.$where.'
 ;';
 
     $result = pwg_query($query);
@@ -233,7 +233,7 @@ function get_category_preferred_image_orders(): array
       [l10n('Visits, low &rarr; high'),        'hit ASC',              true],
       [l10n('Permissions'),                    'level DESC',           is_admin()],
       ]);
-    return is_array($result) ? $result : [];
+    return $result;
 }
 
 /**

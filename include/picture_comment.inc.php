@@ -114,8 +114,7 @@ SELECT
         if (!empty($get_comments_order) && in_array(strtoupper(is_scalar($get_comments_order) ? (string) $get_comments_order : ''), ['ASC', 'DESC'])) {
             pwg_set_session_var('comments_order', $get_comments_order);
         }
-        $comments_order_raw = pwg_get_session_var('comments_order', \Piwigo\Core\Config::commentsOrder());
-        $comments_order = is_scalar($comments_order_raw) ? (string) $comments_order_raw : 'ASC';
+        $comments_order = pwg_get_session_var('comments_order', \Piwigo\Core\Config::commentsOrder());
 
         $template->assign([
           'COMMENTS_ORDER_URL' => add_url_params(duplicate_picture_url(), ['comments_order' => ($comments_order == 'ASC' ? 'DESC' : 'ASC') ]),

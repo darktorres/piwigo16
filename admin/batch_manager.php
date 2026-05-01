@@ -301,8 +301,7 @@ elseif (isset($_GET['filter'])) {
                 break;
 
             default:
-                $bmf_raw = trigger_change('batch_manager_url_filter', $bmf, $filter);
-                $bmf = is_array($bmf_raw) ? $bmf_raw : $bmf;
+                $bmf = trigger_change('batch_manager_url_filter', $bmf, $filter);
                 break;
         }
     }
@@ -478,8 +477,7 @@ SELECT id
             break;
 
         default:
-            $filter_sets_raw = trigger_change('perform_batch_manager_prefilters', $filter_sets, $bmf_prefilter);
-            $filter_sets = is_array($filter_sets_raw) ? $filter_sets_raw : $filter_sets;
+            $filter_sets = trigger_change('perform_batch_manager_prefilters', $filter_sets, $bmf_prefilter);
             break;
     }
 }
@@ -619,8 +617,7 @@ if (isset($bmf['search'])) {
     }
 }
 
-$filter_sets_raw = trigger_change('batch_manager_perform_filters', $filter_sets, $bmf);
-$filter_sets = is_array($filter_sets_raw) ? $filter_sets_raw : $filter_sets;
+$filter_sets = trigger_change('batch_manager_perform_filters', $filter_sets, $bmf);
 
 $current_set = array_shift($filter_sets);
 foreach ($filter_sets as $set) {

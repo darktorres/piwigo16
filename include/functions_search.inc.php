@@ -1573,8 +1573,7 @@ function qsearch_get_images(\Piwigo\Search\QExpression $expr, \Piwigo\Search\QRe
                 break;
             default:
                 // allow plugins to have their own scope with columns added in db by themselves
-                $clauses_result = trigger_change('qsearch_get_images_sql_scopes', $clauses, $token, $expr);
-                $clauses = array_map(static fn (mixed $c): string => is_scalar($c) ? (string) $c : '', is_array($clauses_result) ? $clauses_result : []);
+                $clauses = trigger_change('qsearch_get_images_sql_scopes', $clauses, $token, $expr);
                 break;
         }
         if (!empty($clauses)) {
@@ -1869,8 +1868,7 @@ function get_quick_search_results_no_cache(string $q, array $options): array
         'qs' => ['q' => $q],
       ];
 
-    $q_changed = trigger_change('qsearch_pre', $q);
-    $q = is_string($q_changed) ? $q_changed : $q;
+    $q = trigger_change('qsearch_pre', $q);
 
     $scopes = [];
     $scopes[] = new \Piwigo\Search\QSearchScope('tag', ['tags']);
@@ -1898,9 +1896,7 @@ function get_quick_search_results_no_cache(string $q, array $options): array
 
     // allow plugins to add their own scopes
     $scopes_result = trigger_change('qsearch_get_scopes', $scopes);
-    if (is_array($scopes_result)) {
-        $scopes = array_values(array_filter($scopes_result, static fn (mixed $s): bool => $s instanceof \Piwigo\Search\QSearchScope));
-    }
+    $scopes = array_values(array_filter($scopes_result, static fn (mixed $s): bool => $s instanceof \Piwigo\Search\QSearchScope));
     $expression = new \Piwigo\Search\QExpression($q, $scopes);
 
     // get inflections for terms
@@ -1956,12 +1952,9 @@ function get_quick_search_results_no_cache(string $q, array $options): array
 
     $search_results['qs']['matching_tags'] = $qsr->all_tags;
     $search_results['qs']['matching_cats'] = $qsr->all_cats;
-    $search_results_changed = trigger_change('qsearch_results', $search_results, $expression, $qsr);
-    $search_results = is_array($search_results_changed) ? $search_results_changed : $search_results;
-    if (isset($search_results['items'])) {
-        $extra_items = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($search_results['items']) ? $search_results['items'] : []);
-        $ids = array_merge($ids, $extra_items);
-    }
+    $search_results = trigger_change('qsearch_results', $search_results, $expression, $qsr);
+    $extra_items = array_map(static fn (mixed $v): int => (int) $v, $search_results['items']);
+    $ids = array_merge($ids, $extra_items);
 
     global $template;
 

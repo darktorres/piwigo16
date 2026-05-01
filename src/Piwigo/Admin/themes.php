@@ -101,8 +101,7 @@ class themes
 
                 $version = is_scalar($this->fs_themes[$theme_id]['version'] ?? '') ? (string) $this->fs_themes[$theme_id]['version'] : '';
                 $theme_maintain->activate($version, $errors);
-                $errorsRaw = trigger_change('theme_activate_errors', $errors);
-                $errors = is_array($errorsRaw) ? $errorsRaw : $errors;
+                $errors = trigger_change('theme_activate_errors', $errors);
 
                 if (empty($errors)) {
                     $themeVersion = is_scalar($this->fs_themes[$theme_id]['version'] ?? '') ? (string) $this->fs_themes[$theme_id]['version'] : '';

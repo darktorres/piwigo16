@@ -1102,8 +1102,6 @@ SELECT
     // plugins want remove some themes based on user status maybe?
     $themes = trigger_change('get_pwg_themes', $themes);
 
-    /** @var array<string, string> $themes */
-    $themes = is_array($themes) ? $themes : [];
     return $themes;
 }
 
@@ -2044,9 +2042,9 @@ function get_branch_from_version($version): string
  */
 function get_device()
 {
-    $device = pwg_get_session_var('device');
+    $device = pwg_get_session_var('device', '');
 
-    if (is_null($device)) {
+    if ($device === '') {
         $uagent_obj = new uagent_info();
         if ($uagent_obj->DetectSmartphone()) {
             $device = 'mobile';

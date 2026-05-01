@@ -140,7 +140,7 @@ SELECT SQL_CALC_FOUND_ROWS i.*
 
             $image_name = (string)($image['name'] ?? '');
             $rendered_name = trigger_change('render_element_name', $image_name, __FUNCTION__);
-            $image['name'] = strip_tags(is_scalar($rendered_name) ? (string) $rendered_name : '');
+            $image['name'] = strip_tags($rendered_name);
             $image['comment'] = trigger_change('render_element_description', $image['comment'] ?? null, __FUNCTION__);
 
             $image = array_merge($image, ws_std_get_urls($row));
@@ -381,7 +381,7 @@ SELECT SQL_CALC_FOUND_ROWS
                 is_scalar($row['name']) ? (string) $row['name'] : '',
                 'ws_categories_getList'
             );
-            $row['name'] = strip_tags(is_scalar($rendered_list_name) ? (string) $rendered_list_name : '');
+            $row['name'] = strip_tags($rendered_list_name);
         }
 
         $row['comment_raw'] = $row['comment'];
@@ -391,7 +391,7 @@ SELECT SQL_CALC_FOUND_ROWS
             is_scalar($row['comment']) ? (string) $row['comment'] : '',
             'ws_categories_getList'
         );
-        $row['comment'] = is_scalar($rendered_comment) ? (string) $rendered_comment : '';
+        $row['comment'] = $rendered_comment;
 
         // management of the album thumbnail -- starts here
         //
@@ -642,7 +642,7 @@ SELECT SQL_CALC_FOUND_ROWS id, name, comment, uppercats, global_rank, dir, statu
             is_scalar($row['name']) ? (string) $row['name'] : '',
             'ws_categories_getAdminList'
         );
-        $row['name'] = strip_tags(is_scalar($rendered_admin_name) ? (string) $rendered_admin_name : '');
+        $row['name'] = strip_tags($rendered_admin_name);
         $row['fullname'] = strip_tags($cat_display_name);
 
         $row['comment_raw'] = $row['comment'];
@@ -1238,7 +1238,7 @@ SELECT id, name, dir, uppercats
                 is_scalar($row['name']) ? (string) $row['name'] : '',
                 'ws_categories_move'
             );
-            $row['name'] = strip_tags(is_scalar($rendered_move_name) ? (string) $rendered_move_name : '');
+            $row['name'] = strip_tags($rendered_move_name);
 
             return new PwgError(
                 403,

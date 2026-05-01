@@ -1665,16 +1665,7 @@ SELECT id
 ;';
         if (count($existing_tags = query2array($query, null, 'id')) == 0) {
             // search by extended description (plugin sub name)
-            $sub_name_where_raw = trigger_change('get_tag_name_like_where', [], $tag_name);
-            $sub_name_where = is_array($sub_name_where_raw) ? $sub_name_where_raw : [];
-            if (count($sub_name_where)) {
-                $query = '
-SELECT id
-  FROM '.TAGS_TABLE.'
-  WHERE '.implode(' OR ', array_map(fn ($v): string => (string) $v, $sub_name_where)).'
-;';
-                $existing_tags = query2array($query, null, 'id');
-            }
+            trigger_change('get_tag_name_like_where', [], $tag_name);
 
             if (count($existing_tags) == 0) {// finally create the tag
                 mass_inserts(
@@ -2678,7 +2669,6 @@ function get_taglist(string $query, bool $only_user_language = true): array
 
         if (!$only_user_language) {
             $alt_names = trigger_change('get_tag_alt_names', [], $raw_name);
-            $alt_names = is_array($alt_names) ? $alt_names : [];
 
             foreach (array_diff(array_unique($alt_names), [$name]) as $alt) {
                 $altlist[] =  [

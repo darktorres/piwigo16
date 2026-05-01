@@ -570,7 +570,7 @@ $page['body_id'] = 'thePicturePage';
 
 // allow plugins to change what we computed before passing data to template
 /** @var array<string, array<string, mixed>> $picture */
-$picture = is_array($result_picture = trigger_change('picture_pictures_data', $picture)) ? $result_picture : $picture;
+$picture = trigger_change('picture_pictures_data', $picture);
 
 //------------------------------------------------------- navigation management
 foreach (['first','previous','next','last', 'current'] as $which_image) {
@@ -932,7 +932,7 @@ include(PHPWG_ROOT_PATH.'include/picture_rate.inc.php');
 if (\Piwigo\Core\Config::activateComments()) {
     include(PHPWG_ROOT_PATH.'include/picture_comment.inc.php');
 }
-if ($metadata_showable and pwg_get_session_var('show_metadata') <> null) {
+if ($metadata_showable and isset($_SESSION['pwg_show_metadata'])) {
     include(PHPWG_ROOT_PATH.'include/picture_metadata.inc.php');
 }
 

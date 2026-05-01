@@ -48,7 +48,7 @@ final class SrcImage
             $this->rel_path = original_to_representative($path, is_scalar($repExt) ? (string) $repExt : '');
         } else {
             $triggerResult = trigger_change('get_mimetype_location', get_themeconf('mime_icon_dir').$ext.'.png', $ext);
-            $this->rel_path = is_string($triggerResult) ? $triggerResult : '';
+            $this->rel_path = $triggerResult;
             $this->flags |= self::IS_MIMETYPE;
             if (($size = @getimagesize(PHPWG_ROOT_PATH.$this->rel_path)) === false) {
                 if ('svg' == $ext) {
@@ -108,7 +108,7 @@ final class SrcImage
         $url = get_root_url().$this->rel_path;
         if (!($this->flags & self::IS_MIMETYPE)) {
             $changed = trigger_change('get_src_image_url', $url, $this);
-            $url = is_string($changed) ? $changed : $url;
+            $url = $changed;
         }
         return embellish_url($url);
     }

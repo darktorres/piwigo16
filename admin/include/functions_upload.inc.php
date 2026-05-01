@@ -286,14 +286,6 @@ SELECT
 
     $logger->info('Handling ' . (string)$file_path . ' got ' . (string)$representative_ext);
 
-    // If it is set to either true (the file didn't need a
-    // representative generated) or false (the generation of the
-    // representative failed), set it to null because we have no
-    // representative file.
-    if (is_bool($representative_ext)) {
-        $representative_ext = null;
-    }
-
     if (pwg_image::get_library() != 'gd') {
         if (\Piwigo\Core\Config::originalResize()) {
             $need_resize = need_resize($file_path, \Piwigo\Core\Config::originalResizeMaxwidth(), \Piwigo\Core\Config::originalResizeMaxheight());

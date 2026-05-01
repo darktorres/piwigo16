@@ -154,7 +154,7 @@ if ('categories' == $page['section'] and !isset($page['flat'])) {
 }
 
 if (pwg_get_session_var('image_order', 0) > 0) {
-    $image_order_id = pwg_get_session_var('image_order');
+    $image_order_id = pwg_get_session_var('image_order', 0);
 
     $orders = get_category_preferred_image_orders();
 
@@ -163,7 +163,7 @@ if (pwg_get_session_var('image_order', 0) > 0) {
     // and that we are displaying images related to a tag.
     //
     // In case of incompatibility, the session stored image_order is removed.
-    $image_order_id_int = is_numeric($image_order_id) ? (int) $image_order_id : 0;
+    $image_order_id_int = (int) $image_order_id;
     $order_entry = is_array($orders[$image_order_id_int]) ? $orders[$image_order_id_int] : [];
     if ($order_entry[2] ?? false) {
         $order_col = is_scalar($order_entry[1] ?? null) ? (string) $order_entry[1] : '';

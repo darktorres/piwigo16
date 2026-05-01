@@ -70,9 +70,6 @@ $query .= '
 
 $query = trigger_change('loc_begin_index_category_thumbnails_query', $query);
 
-if (!is_string($query)) {
-    $query = '';
-}
 $result = pwg_query($query);
 [$page['total_categories']] = pwg_db_fetch_row(pwg_query('SELECT FOUND_ROWS()')) ?? [null];
 

@@ -102,8 +102,7 @@ class plugins
                 $installVersionStr = is_string($installVersion) ? $installVersion : '';
                 $plugin_maintain->install($installVersionStr, $errors);
                 $activity_details['version'] = $installVersionStr;
-                $errorsRaw = trigger_change('plugin_install_errors', $errors);
-                $errors = is_array($errorsRaw) ? $errorsRaw : $errors;
+                $errors = trigger_change('plugin_install_errors', $errors);
 
                 if (empty($errors)) {
                     $query = '

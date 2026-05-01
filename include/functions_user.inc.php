@@ -145,7 +145,7 @@ function register_user(string $login, string $password, ?string $mail_address = 
         }
     }
 
-    $errors_mixed = trigger_change(
+    $errors = trigger_change(
         'register_user_check',
         $errors,
         [
@@ -154,12 +154,6 @@ function register_user(string $login, string $password, ?string $mail_address = 
         'email' => $mail_address,
         ]
     );
-    if (is_array($errors_mixed)) {
-        $errors = [];
-        foreach ($errors_mixed as $e) {
-            $errors[] = is_scalar($e) ? (string) $e : '';
-        }
-    }
 
     // if no error until here, registration of the user
     if (empty($errors)) {
@@ -1236,11 +1230,10 @@ function pwg_login(bool $success, string $username, string $password, bool $reme
       'reason' => null,
       'authenticated' => false,
     ];
-    $state_raw = trigger_change('finalize_login', $state_init, $user_found, $remember_me);
-    $state = is_array($state_raw) ? $state_raw : $state_init;
+    $state = trigger_change('finalize_login', $state_init, $user_found, $remember_me);
 
     if (!$state['can_login']) {
-        $state_reason = isset($state['reason']) && is_string($state['reason']) ? $state['reason'] : 'login_failure_before_log_user';
+        $state_reason = is_string($state['reason']) ? $state['reason'] : 'login_failure_before_log_user';
         pwg_activity('user', $uf_id, $state_reason);
         trigger_notify('login_failure_before_log_user', stripslashes($username));
         return false;

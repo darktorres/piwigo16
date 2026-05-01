@@ -176,7 +176,7 @@ SELECT *
 
             $img_name_str = (string)($image['name'] ?? '');
             $rendered_tag_name = trigger_change('render_element_name', $img_name_str, __FUNCTION__);
-            $image['name'] = strip_tags(is_scalar($rendered_tag_name) ? (string) $rendered_tag_name : '');
+            $image['name'] = strip_tags($rendered_tag_name);
             $image['comment'] = trigger_change('render_element_description', $image['comment'] ?? null, __FUNCTION__);
 
             $image = array_merge($image, ws_std_get_urls($row));

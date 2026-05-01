@@ -844,9 +844,8 @@ SELECT rules
 
 
     /*TODO - no need to get a huge number of rows from db (should take only what needed for display + SQL_CALC_FOUND_ROWS*/
-    $data_raw = trigger_change('get_history', [], $page['search'], $types);
-    /** @var list<array<mixed>> $data */
-    $data = is_array($data_raw) ? $data_raw : [];
+    /** @var list<array<string, mixed>> $data */
+    $data = trigger_change('get_history', [], $page['search'], $types);
     usort($data, history_compare(...));
 
     $page['nb_lines'] = count($data);
@@ -1109,7 +1108,7 @@ SELECT
 
             if (isset($image_infos[$line_image_id_str]['label'])) {
                 $tc_result = trigger_change('render_element_description', $image_infos[$line_image_id_str]['label']);
-                $image_title .= ' '.(is_scalar($tc_result) ? (string) $tc_result : '');
+                $image_title .= ' '.$tc_result;
             } else {
                 $image_edit_string = '';
                 $image_title .= ' unknown filename';

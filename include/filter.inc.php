@@ -30,9 +30,8 @@ if (!get_filter_page_value('cancel')) {
 }
 
 if ($filter['enabled']) {
-    $filter_key_raw = pwg_get_session_var('filter_check_key', ['user' => 0,'recent_period' => -1, 'time' => 0, 'date' => '']);
     /** @var array{user: int, recent_period: int, time: int, date: string} $filter_key */
-    $filter_key = is_array($filter_key_raw) ? $filter_key_raw : ['user' => 0,'recent_period' => -1, 'time' => 0, 'date' => ''];
+    $filter_key = pwg_get_session_var('filter_check_key', ['user' => 0,'recent_period' => -1, 'time' => 0, 'date' => '']);
 
     if (isset($filter['matches'])) {
         $filter['recent_period'] = $filter['matches'][1];
@@ -41,8 +40,6 @@ if ($filter['enabled']) {
     }
 
     if (
-        // New filter
-        !pwg_get_session_var('filter_enabled', false) or
         // Cache data updated
         $filter_key['time'] <= $user['cache_update_time'] or
         // Date, period, user are changed
@@ -91,8 +88,7 @@ WHERE ';
         pwg_set_session_var('filter_visible_images', $filter['visible_images']);
     } else {
         // Read only data
-        $filter_categories_raw = pwg_get_session_var('filter_categories', serialize([]));
-        $filter['categories'] = unserialize(is_string($filter_categories_raw) ? $filter_categories_raw : serialize([]));
+        $filter['categories'] = unserialize(pwg_get_session_var('filter_categories', serialize([])));
         $filter['visible_categories'] = pwg_get_session_var('filter_visible_categories', '');
         $filter['visible_images'] = pwg_get_session_var('filter_visible_images', '');
     }
@@ -106,7 +102,7 @@ WHERE ';
     }
     include_once(PHPWG_ROOT_PATH.'include/functions_filter.inc.php');
 } else {
-    if (pwg_get_session_var('filter_enabled', false)) {
+    if (!empty($_SESSION['pwg_filter_enabled'])) {
         pwg_unset_session_var('filter_enabled');
         pwg_unset_session_var('filter_check_key');
         pwg_unset_session_var('filter_categories');

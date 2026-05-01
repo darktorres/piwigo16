@@ -700,7 +700,7 @@ SELECT *
             }
 
             $name_raw = trigger_change('render_element_name', $image['name'] ?? '', __FUNCTION__);
-            $image['name'] = strip_tags(is_scalar($name_raw) ? (string) $name_raw : '');
+            $image['name'] = strip_tags($name_raw);
             $image['comment'] = trigger_change('render_element_description', $image['comment'] ?? null, __FUNCTION__);
 
             $image = array_merge($image, ws_std_get_urls($row));

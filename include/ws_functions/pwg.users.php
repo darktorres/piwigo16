@@ -344,9 +344,7 @@ SELECT DISTINCT ';
             }
           }*/
     }
-    $users_changed = trigger_change('ws_users_getList', $users);
-    /** @var array<mixed> $users */
-    $users = is_array($users_changed) ? $users_changed : $users;
+    $users = trigger_change('ws_users_getList', $users);
     if ($per_page == 0 && empty($params['display'])) {
         $method_result = $users_id_arr;
     } else {

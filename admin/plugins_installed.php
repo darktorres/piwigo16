@@ -29,10 +29,8 @@ if (isset($_GET['show_details'])) {
     }
 
     pwg_set_session_var('plugins_show_details', $show_details);
-} elseif (null != pwg_get_session_var('plugins_show_details')) {
-    $show_details = pwg_get_session_var('plugins_show_details');
 } else {
-    $show_details = false;
+    $show_details = pwg_get_session_var('plugins_show_details', false);
 }
 
 $base_url = get_root_url().'admin.php?page='.$page['page'];
@@ -95,9 +93,7 @@ foreach ($plugins->fs_plugins as $plugin_id => $fs_plugin) {
     }
 
     $setting_url = '';
-    if (isset($settings_url_for_plugin_deprec[$plugin_id])) { //old version
-        $setting_url = $settings_url_for_plugin_deprec[$plugin_id];
-    } elseif ($fs_plugin['hasSettings']) { // new version
+    if ($fs_plugin['hasSettings']) { // new version
         $setting_url = 'admin.php?page=plugin-'.$plugin_id;
 
         if (preg_match('/^piwigo-(videojs|openstreetmap)$/', (string) $plugin_id)) {

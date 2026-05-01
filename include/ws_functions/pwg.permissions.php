@@ -47,10 +47,11 @@ SELECT user_id, cat_id
     $result = pwg_query($query);
 
     while ($row = pwg_db_fetch_assoc($result)) {
-        if (!isset($perms[ $row['cat_id'] ])) {
-            $perms[ $row['cat_id'] ]['id'] = intval($row['cat_id']);
+        $cat_id = (int)$row['cat_id'];
+        if (!isset($perms[ $cat_id ])) {
+            $perms[ $cat_id ]['id'] = $cat_id;
         }
-        $perms[ $row['cat_id'] ]['users'][] = intval($row['user_id']);
+        $perms[ $cat_id ]['users'][] = (int)$row['user_id'];
     }
 
     // indirect users
@@ -64,10 +65,11 @@ SELECT ug.user_id, ga.cat_id
     $result = pwg_query($query);
 
     while ($row = pwg_db_fetch_assoc($result)) {
-        if (!isset($perms[ $row['cat_id'] ])) {
-            $perms[ $row['cat_id'] ]['id'] = intval($row['cat_id']);
+        $cat_id = (int)$row['cat_id'];
+        if (!isset($perms[ $cat_id ])) {
+            $perms[ $cat_id ]['id'] = $cat_id;
         }
-        $perms[ $row['cat_id'] ]['users_indirect'][] = intval($row['user_id']);
+        $perms[ $cat_id ]['users_indirect'][] = (int)$row['user_id'];
     }
 
     // groups
@@ -79,10 +81,11 @@ SELECT group_id, cat_id
     $result = pwg_query($query);
 
     while ($row = pwg_db_fetch_assoc($result)) {
-        if (!isset($perms[ $row['cat_id'] ])) {
-            $perms[ $row['cat_id'] ]['id'] = intval($row['cat_id']);
+        $cat_id = (int)$row['cat_id'];
+        if (!isset($perms[ $cat_id ])) {
+            $perms[ $cat_id ]['id'] = $cat_id;
         }
-        $perms[ $row['cat_id'] ]['groups'][] = intval($row['group_id']);
+        $perms[ $cat_id ]['groups'][] = (int)$row['group_id'];
     }
 
     // filter by group and user

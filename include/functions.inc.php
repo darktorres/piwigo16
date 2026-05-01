@@ -2739,6 +2739,7 @@ function pwg_unique_exec_ends(string $token_name): void
  *
  * @return array<mixed>
  */
+/** @return array{0: string, 1: string|null} */
 function get_container_info(): array
 {
     // Check if OS is Linux and PHP doesn't restrict opening files

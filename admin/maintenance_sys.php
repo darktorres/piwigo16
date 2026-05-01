@@ -51,7 +51,8 @@ if (is_webmaster()) {
             $action = $rows['action'];
             $date = '';
             $hour = '';
-            $details = unserialize((string)$rows['details']);
+            $detailsRaw = unserialize((string)$rows['details']);
+            $details = is_array($detailsRaw) ? $detailsRaw : [];
             $detail = [
               'type' => 'empty',
             ];
@@ -164,7 +165,7 @@ if (is_webmaster()) {
                     $object_icon = 'icon-puzzle';
                     $object = 'plugin';
                     if (isset($details['plugin_id'])) {
-                        $object = str_replace(['_', '-'], ' ', $details['plugin_id']);
+                        $object = str_replace(['_', '-'], ' ', is_scalar($details['plugin_id']) ? (string)$details['plugin_id'] : '');
                     }
                     switch ($rows['action']) {
                         case 'install':
@@ -212,14 +213,14 @@ if (is_webmaster()) {
                                 $detail['type'] = 'db_fs_version';
                                 $detail[] = [
                                   'icon' => 'icon-flow-branch',
-                                  'text' => 'database : ' . $details['db_version'],
+                                  'text' => 'database : ' . (is_scalar($details['db_version']) ? (string)$details['db_version'] : ''),
                                 ];
                             }
                             if (isset($details['fs_version'])) {
                                 $detail['type'] = 'db_fs_version';
                                 $detail[] = [
                                   'icon' => 'icon-flow-branch',
-                                  'text' => 'filesystem : ' . $details['fs_version'],
+                                  'text' => 'filesystem : ' . (is_scalar($details['fs_version']) ? (string)$details['fs_version'] : ''),
                                 ];
                             }
                             break;
@@ -241,7 +242,7 @@ if (is_webmaster()) {
                     $object_icon = 'icon-brush';
                     $object = 'theme';
                     if (isset($details['theme_id'])) {
-                        $object = str_replace(['_', '-'], ' ', $details['theme_id']);
+                        $object = str_replace(['_', '-'], ' ', is_scalar($details['theme_id']) ? (string)$details['theme_id'] : '');
                     }
 
                     switch ($rows['action']) {
@@ -298,24 +299,24 @@ if (is_webmaster()) {
                   'type' => 'from_to',
                   [
                     'icon' => 'icon-flow-branch',
-                    'text' => $details['from_version'],
+                    'text' => is_scalar($details['from_version']) ? (string)$details['from_version'] : '',
                   ],
                   [
                     'icon' => isset($details['to_version']) ? 'icon-flow-branch' : 'icon-block',
-                    'text' => $details['to_version'] ?? ($details['result'] ?? ''),
+                    'text' => is_scalar($details['to_version'] ?? null) ? (string)$details['to_version'] : (is_scalar($details['result'] ?? null) ? (string)$details['result'] : ''),
                   ],
                 ];
             } elseif (isset($details['version'])) {
                 $detail = [
                   'type' => 'version',
                   'icon' => 'icon-flow-branch',
-                  'text' => $details['version'],
+                  'text' => is_scalar($details['version'] ?? null) ? (string)$details['version'] : '',
                 ];
             } elseif (isset($details['result'])) {
                 $detail = [
                   'type' => 'error',
                   'icon' => 'icon-block',
-                  'text' => $details['result'],
+                  'text' => is_scalar($details['result'] ?? null) ? (string)$details['result'] : '',
                 ];
             }
 

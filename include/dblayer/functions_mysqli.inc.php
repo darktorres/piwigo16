@@ -689,19 +689,14 @@ function get_boolean(mixed $input): bool
 }
 
 /**
- * Returns string 'true' or 'false' if the given var is boolean.
- * If the input is another type, it is not changed.
- *
- * @param mixed $var
- * @return mixed
+ * Returns string 'true' or 'false' if the given var is boolean, else returns it as string.
  */
-function boolean_to_string($var)
+function boolean_to_string(bool|string $var): string
 {
     if (is_bool($var)) {
         return $var ? 'true' : 'false';
-    } else {
-        return $var;
     }
+    return $var;
 }
 
 function pwg_db_get_recent_period_expression(int|string $period, string $date = 'CURRENT_DATE'): string

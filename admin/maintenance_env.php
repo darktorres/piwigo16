@@ -184,7 +184,8 @@ DELETE
         }
     case 'derivatives':
         {
-            clear_derivative_cache($_GET['type']);
+            $dtype = is_string($_GET['type'] ?? null) ? $_GET['type'] : '';
+            clear_derivative_cache($dtype);
             break;
         }
 
@@ -194,7 +195,7 @@ DELETE
                 \Piwigo\Core\PageState::current()->addError(l10n('Unable to check for upgrade.'));
             } else {
                 $versions = ['current' => PHPWG_VERSION];
-                $lines = @explode("\r\n", $result);
+                $lines = @explode("\r\n", is_string($result) ? $result : '');
 
                 // if the current version is a BSF (development branch) build, we check
                 // the first line, for stable versions, we check the second line
@@ -295,8 +296,15 @@ $template->assign(
     'U_PHPINFO' => sprintf($url_format, 'phpinfo'),
     'PHP_DATATIME' => $php_current_timestamp,
     'DB_DATATIME' => $db_current_date,
-    'cache_sizes' => (\Piwigo\Core\Config::has('cache_sizes')) ? unserialize((string)\Piwigo\Core\Config::cacheSizes()) : null,
-    'time_elapsed_since_last_calc' => (\Piwigo\Core\Config::has('cache_sizes')) ? time_since(unserialize((string)\Piwigo\Core\Config::cacheSizes())[3]['value'], 'year') : null,
+    'cache_sizes' => (\Piwigo\Core\Config::has('cache_sizes')) ? safe_unserialize((string)\Piwigo\Core\Config::cacheSizes()) : null,
+    'time_elapsed_since_last_calc' => (function (): ?string {
+        if (!\Piwigo\Core\Config::has('cache_sizes')) {
+            return null;
+        }
+        $cs = safe_unserialize((string)\Piwigo\Core\Config::cacheSizes());
+        $entry = is_array($cs[3] ?? null) ? $cs[3] : [];
+        return time_since(is_scalar($entry['value'] ?? null) ? (string)$entry['value'] : null, 'year');
+    })(),
     ]
 );
 

@@ -119,13 +119,12 @@ SELECT
     }
 
     if (isset($fields['filename'])) {
-        /** @var array<mixed> $image_ids */
         $image_ids = is_array($search['image_ids'] ?? null) ? $search['image_ids'] : [];
         if (count($image_ids) == 0) {
             // a clause that is always false
             $clauses[] = '1 = 2 ';
         } else {
-            $clauses[] = 'image_id IN ('.implode(', ', array_map('strval', $image_ids)).')';
+            $clauses[] = 'image_id IN ('.implode(', ', array_map(fn(mixed $v): string => is_scalar($v) ? (string)$v : '', $image_ids)).')';
         }
     }
 

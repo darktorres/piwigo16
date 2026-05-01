@@ -21,7 +21,7 @@ include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 add_event_handler('upload_image_resize', 'pwg_image_resize');
 add_event_handler('upload_thumbnail_resize', 'pwg_image_resize');
 
-/** @return array<string,mixed> */
+/** @return array<string, array{default: bool|int|string, can_be_null: bool, min?: int, max?: int, pattern?: string, error_message?: string}> */
 function get_upload_form_config(): array
 {
     // default configuration for upload
@@ -282,7 +282,7 @@ SELECT
 
     // handle the uploaded file type by potentially making a
     // pwg_representative file.
-    $representative_ext = trigger_change('upload_file', null, $file_path);
+    $representative_ext = trigger_change('upload_file', '', $file_path);
 
     $logger->info('Handling ' . (string)$file_path . ' got ' . (string)$representative_ext);
 
@@ -354,7 +354,7 @@ SELECT
             $insert['level'] = $level;
         }
 
-        if (isset($representative_ext)) {
+        if ($representative_ext !== '') {
             $insert['representative_ext'] = $representative_ext;
         }
 
@@ -442,8 +442,12 @@ function add_format(string $source_filepath, string $format_ext, string $format_
         die('['.__FUNCTION__.'] formats are disabled');
     }
 
-    if (!in_array($format_ext, conf_get_param('format_ext', ['cr2']))) {
-        die('['.__FUNCTION__.'] unexpected format extension "'.$format_ext.'" (authorized extensions: '.implode(', ', conf_get_param('format_ext', ['cr2'])).')');
+    $format_ext_list = conf_get_param('format_ext', ['cr2']);
+    if (!is_array($format_ext_list)) {
+        $format_ext_list = ['cr2'];
+    }
+    if (!in_array($format_ext, $format_ext_list)) {
+        die('['.__FUNCTION__.'] unexpected format extension "'.$format_ext.'" (authorized extensions: '.implode(', ', $format_ext_list).')');
     }
 
     $query = '
@@ -536,8 +540,10 @@ function upload_file_pdf(?string $representative_ext, string $file_path): ?strin
         return $representative_ext;
     }
 
-    $ext = conf_get_param('pdf_representative_ext', 'jpg');
-    $jpg_quality = conf_get_param('pdf_jpg_quality', 90);
+    $extRaw = conf_get_param('pdf_representative_ext', 'jpg');
+    $ext = is_string($extRaw) ? $extRaw : 'jpg';
+    $qualityRaw = conf_get_param('pdf_jpg_quality', 90);
+    $jpg_quality = is_int($qualityRaw) ? $qualityRaw : 90;
 
     // move the uploaded file to pwg_representative sub-directory
     $representative_file_path = original_to_representative($file_path, $ext);
@@ -962,6 +968,9 @@ function convert_shorthand_notation_to_bytes(int|string $value): int
 
 function add_upload_error(string $upload_id, string $error_message): void
 {
+    if (!is_array($_SESSION['uploads_error'] ?? null)) {
+        $_SESSION['uploads_error'] = [];
+    }
     $_SESSION['uploads_error'][$upload_id][] = $error_message;
 }
 
@@ -1011,9 +1020,9 @@ function get_optimal_dimensions_for_representative(): array
     $w = $h = 2000; // safe default values
 
     foreach (ImageStdParams::get_all_types() as $type) {
-        $params = $enabled[$type] ?? @$disabled[$type];
+        $params = $enabled[$type] ?? (is_array($disabled) && isset($disabled[$type]) ? $disabled[$type] : null);
 
-        if ($params) {
+        if ($params instanceof \Piwigo\Image\DerivativeParams) {
             [$w, $h] = $params->sizing->ideal_size;
         }
     }

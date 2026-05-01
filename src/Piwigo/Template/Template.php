@@ -851,6 +851,23 @@ class Template
             $scriptVersionVal,
             $scriptTemplateVal
         );
+
+        // Auto-register stylesheets bundled into this entry by Vite. The
+        // manifest's "css" array enumerates side-effect CSS imports
+        // (e.g. `import './tree.css'` inside an entry module); without
+        // this, those styles wouldn't reach the page.
+        $manifest = ScriptLoader::getManifest();
+        if ($manifest !== null && isset($manifest[$scriptIdStr]['css']) && is_array($manifest[$scriptIdStr]['css'])) {
+            foreach ($manifest[$scriptIdStr]['css'] as $i => $cssPath) {
+                if (is_string($cssPath) && $cssPath !== '') {
+                    $this->cssLoader->add(
+                        $scriptIdStr . '-vite-css-' . $i,
+                        'dist/' . $cssPath,
+                        $scriptVersionVal
+                    );
+                }
+            }
+        }
     }
 
     /**

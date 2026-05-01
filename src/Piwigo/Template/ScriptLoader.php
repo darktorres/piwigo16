@@ -295,6 +295,11 @@ class ScriptLoader
      *
      * @return array<string,array{file:string,imports:string[],css:string[]}>|null
      */
+    public static function getManifest(): ?array
+    {
+        return self::manifest();
+    }
+
     private static function manifest(): ?array
     {
         if (self::$manifest !== null) {

@@ -9,7 +9,7 @@ var str_result_limit = '{"<b>%d+</b> albums found, try to refine the search"|tra
 {/footer_script}
 
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_css path="themes/default/js/plugins/jqtree.css"}
+{* tree.css is now bundled into albums.js via the album-tree module *}
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
 
 {combine_script id='cat_search' load='footer' path='admin/themes/default/js/cat_search.js'}

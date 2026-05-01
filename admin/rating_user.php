@@ -51,7 +51,7 @@ while ($row = pwg_db_fetch_assoc($result)) {
 
 $by_user_rating_model = [ 'rates' => [] ];
 foreach (\Piwigo\Core\Config::rateItems() as $rate) {
-    $by_user_rating_model['rates'][$rate] = [];
+    $by_user_rating_model['rates'][(int)$rate] = [];
 }
 
 // by user aggregation
@@ -61,10 +61,11 @@ $query = '
 SELECT * FROM '.RATE_TABLE.' ORDER by date DESC';
 $result = pwg_query($query);
 while ($row = pwg_db_fetch_assoc($result)) {
-    if (!isset($users_by_id[$row['user_id']])) {
-        $users_by_id[$row['user_id']] = ['name' => '???'.$row['user_id'], 'anon' => false];
+    $user_id = (int)$row['user_id'];
+    if (!isset($users_by_id[$user_id])) {
+        $users_by_id[$user_id] = ['name' => '???'.$user_id, 'anon' => false];
     }
-    $usr = $users_by_id[$row['user_id']];
+    $usr = $users_by_id[$user_id];
     if ($usr['anon']) {
         $user_key = $usr['name'].'('.$row['anonymous_id'].')';
     } else {
@@ -80,11 +81,13 @@ while ($row = pwg_db_fetch_assoc($result)) {
         $by_user_ratings[$user_key]['first_date'] = $row['date'];
     }
 
-    $by_user_ratings[$user_key]['rates'][$row['rate']][] = [
-      'id' => $row['element_id'],
+    $rate = (int)$row['rate'];
+    $element_id = (int)$row['element_id'];
+    $by_user_ratings[$user_key]['rates'][$rate][] = [
+      'id' => $element_id,
       'date' => $row['date'],
     ];
-    $image_ids[$row['element_id']] = 1;
+    $image_ids[$element_id] = 1;
 }
 
 // get image tn urls
@@ -96,7 +99,8 @@ if (count($image_ids) > 0) {
     $result = pwg_query($query);
     $params = ImageStdParams::get_by_type(IMG_SQUARE);
     while ($row = pwg_db_fetch_assoc($result)) {
-        $image_urls[ $row['id'] ] = [
+        $id = (int)$row['id'];
+        $image_urls[ $id ] = [
           'tn' => DerivativeImage::url($params, $row),
           'page' => make_picture_url(['image_id' => $row['id'], 'image_file' => $row['file']]),
         ];

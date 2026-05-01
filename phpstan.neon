@@ -26,6 +26,8 @@ parameters:
             - include/smarty/*
             - include/feedcreator.class.php
             - include/pwgsession_php7.class.php
+            - include/phpqrcode.php
+            - include/passwordhash.class.php
             - vendor/*
     bootstrapFiles:
         - tools/phpstan-bootstrap.php
@@ -43,5 +45,4 @@ rules:
     - Piwigo\Tools\PhpStan\NoDynamicNewRule
     - Piwigo\Tools\PhpStan\NoGlobalInSrcRule
 includes:
-    - phpstan-baseline.neon
     - vendor/phpstan/phpstan-deprecation-rules/rules.neon

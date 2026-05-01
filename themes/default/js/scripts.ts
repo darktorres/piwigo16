@@ -138,6 +138,58 @@ function pwgAddEventListener(elem: Element | Window, evt: string, fn: EventListe
     elem.addEventListener(evt, fn, false);
 }
 
+function changeImgSrc(url: string, typeSave: string, typeMap: string): void {
+    const theImg = document.getElementById('theMainImage') as HTMLImageElement | null;
+    if (theImg) {
+        theImg.removeAttribute('width');
+        theImg.removeAttribute('height');
+        theImg.src = url;
+        theImg.useMap = '#map' + typeMap;
+    }
+    document.querySelectorAll<HTMLElement>('#derivativeSwitchBox .switchCheck').forEach(el => { el.style.visibility = 'hidden'; });
+    const checked = document.getElementById('derivativeChecked' + typeMap);
+    if (checked) checked.style.visibility = 'visible';
+    const cookiePath = document.querySelector<HTMLElement>('#derivativeSwitchBox')?.dataset['cookiePath'] ?? '/';
+    document.cookie = 'picture_deriv=' + typeSave + ';path=' + cookiePath;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Derivative size switcher links
+    document.querySelectorAll<HTMLAnchorElement>('a.derivative-switch-item').forEach(el => {
+        el.addEventListener('click', (e) => {
+            e.preventDefault();
+            changeImgSrc(el.href, el.dataset['typeSave']!, el.dataset['typeMap']!);
+        });
+    });
+
+    // Download switchbox: remove href so it acts as a toggle trigger, not a download link
+    const downloadSwitchBox = document.querySelector<HTMLElement>('[data-disable-href]');
+    if (downloadSwitchBox) {
+        const targetId = downloadSwitchBox.dataset['disableHref']!;
+        document.getElementById(targetId)?.removeAttribute('href');
+    }
+
+    // Caddie button
+    const caddieBtn = document.getElementById('cmdAddToCaddie') as HTMLAnchorElement | null;
+    if (caddieBtn) {
+        caddieBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (caddieBtn.dataset['loading']) return;
+            caddieBtn.dataset['loading'] = '1';
+            const rootUrl = caddieBtn.dataset['rootUrl']!;
+            const imageId = Number(caddieBtn.dataset['imageId']!);
+            const y = new PwgWS(rootUrl);
+            y.callService('pwg.caddie.add', { image_id: imageId }, {
+                onFailure: (num: number, text: string) => {
+                    alert(num + ' ' + text);
+                    location.href = caddieBtn.href;
+                },
+                onSuccess: () => { delete caddieBtn.dataset['loading']; },
+            });
+        });
+    }
+});
+
 // Expose to window for inline-script callers
 (window as any).phpWGOpenWindow = phpWGOpenWindow;
 (window as any).popuphelp = popuphelp;

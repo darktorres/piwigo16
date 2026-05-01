@@ -1,21 +1,6 @@
 <script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 <script id="pwg-group-list-data" type="application/json">{$group_list_page_data_json}</script>
 
-{footer_script}
-document.addEventListener('keydown', function(e) {
-  if (e.keyCode === 27) { // ESC button
-    var userList = document.getElementById("UserList");
-    if (userList) userList.style.display = 'none';
-  }
-});
-document.addEventListener('click', function(e) {
-  if (!e.target.closest(".UserListPopInContainer")) {
-    var userList = document.getElementById("UserList");
-    if (userList) userList.style.display = 'none';
-  }
-});
-{/footer_script}
-
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
 {combine_script id='group_list' load='footer' path='admin/themes/default/js/group_list.js'}
 
@@ -116,14 +101,14 @@ document.addEventListener('click', function(e) {
     </div>
     
     <button class="icon-ok ConfirmMergeButton">{'Confirm merge'|@translate}</button>
-    <a id="CancelMerge" onclick="updateSelectionPanel('Selection')">{'Cancel'|@translate}</a>
+    <a id="CancelMerge">{'Cancel'|@translate}</a>
    </div>
  
 
    <div id="ConfirmGroupAction">
     <p>{'You are about to delete %s groups, are you sure?'|translate:'<span class="number-Selected">0</span>'}</p>
     <button class="icon-ok ConfirmDeleteButton">{'Yes, delete'|@translate}</button>
-    <a id="CancelDelete" onclick="updateSelectionPanel('Selection')">{"No, I have changed my mind"|@translate}</a>
+    <a id="CancelDelete">{"No, I have changed my mind"|@translate}</a>
     </div>
   
   </div>
@@ -150,7 +135,7 @@ document.addEventListener('click', function(e) {
               <i class='icon-plus'> </i> {'Add'|translate}
             </button> 
             <br/>
-            <a id="addGroupClose" onclick="hideAddGroupForm()">{'Cancel'|@translate}</a>
+            <a id="addGroupClose">{'Cancel'|@translate}</a>
           </div>
           <input type="hidden" name="pwg_token" value="{$PWG_TOKEN}">
         </fieldset>

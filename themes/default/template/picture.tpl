@@ -20,31 +20,17 @@
 
 <div class="actionButtons">
 {if isset($current.unique_derivatives) && count($current.unique_derivatives)>1}
-{footer_script}{literal}
-function changeImgSrc(url,typeSave,typeMap)
-{
-	var theImg = document.getElementById("theMainImage");
-	if (theImg)
-	{
-		theImg.removeAttribute("width");theImg.removeAttribute("height");
-		theImg.src = url;
-		theImg.useMap = "#map"+typeMap;
-	}
-	document.querySelectorAll('#derivativeSwitchBox .switchCheck').forEach(function(el) { el.style.visibility = 'hidden'; });
-	var checked = document.getElementById('derivativeChecked'+typeMap);
-	if (checked) checked.style.visibility = 'visible';
-	document.cookie = 'picture_deriv='+typeSave+';path={/literal}{$COOKIE_PATH}{literal}';
-}
+{footer_script}
 (window.SwitchBox=window.SwitchBox||[]).push("#derivativeSwitchLink", "#derivativeSwitchBox");
-{/literal}{/footer_script}
+{/footer_script}
 {strip}<a id="derivativeSwitchLink" title="{'Photo sizes'|@translate}" class="pwg-state-default pwg-button" rel="nofollow">
   <span class="pwg-icon pwg-icon-sizes"></span><span class="pwg-button-text">{'Photo sizes'|@translate}</span>
 </a>
-<div id="derivativeSwitchBox" class="switchBox">
+<div id="derivativeSwitchBox" class="switchBox" data-cookie-path="{$COOKIE_PATH|escape}">
   <div class="switchBoxTitle">{'Photo sizes'|@translate}</div>
   {foreach from=$current.unique_derivatives item=derivative key=derivative_type}
   <span class="switchCheck" id="derivativeChecked{$derivative->get_type()}"{if $derivative->get_type() ne $current.selected_derivative->get_type()} style="visibility:hidden"{/if}>&#x2714; </span>
-  <a href="javascript:changeImgSrc('{$derivative->get_url()|@escape:javascript}','{$derivative_type}','{$derivative->get_type()}')">
+  <a href="{$derivative->get_url()}" class="derivative-switch-item" data-type-save="{$derivative_type|escape}" data-type-map="{$derivative->get_type()|escape}">
     {$derivative->get_type()|@translate}<span class="derivativeSizeDetails"> ({$derivative->get_size_hr()})</span>
   </a><br>
   {/foreach}
@@ -71,15 +57,11 @@ function changeImgSrc(url,typeSave,typeMap)
 	</a>
 
 {if !empty($current.formats)}
-{footer_script}{literal}
-(function() {
-  var downloadLink = document.getElementById("downloadSwitchLink");
-  if (downloadLink) downloadLink.removeAttribute("href");
-  (window.SwitchBox=window.SwitchBox||[]).push("#downloadSwitchLink", "#downloadSwitchBox");
-}());
-{/literal}{/footer_script}
+{footer_script}
+(window.SwitchBox=window.SwitchBox||[]).push("#downloadSwitchLink", "#downloadSwitchBox");
+{/footer_script}
 
-<div id="downloadSwitchBox" class="switchBox">
+<div id="downloadSwitchBox" class="switchBox" data-disable-href="downloadSwitchLink">
   <div class="switchBoxTitle">{'Download'|translate} - {'Formats'|translate}</div>
   <ul>
   {foreach from=$current.formats item=format}
@@ -107,22 +89,7 @@ function changeImgSrc(url,typeSave,typeMap)
 	</a>
 {/if}{/strip}
 {strip}{if isset($U_CADDIE)}{*caddie management BEGIN*}
-{footer_script}
-{literal}function addToCadie(aElement, rootUrl, id)
-{
-if (aElement.disabled) return;
-aElement.disabled=true;
-var y = new PwgWS(rootUrl);
-y.callService(
-	"pwg.caddie.add", {image_id: id} ,
-	{
-		onFailure: function(num, text) { alert(num + " " + text); document.location=aElement.href; },
-		onSuccess: function(result) { aElement.disabled = false; }
-	}
-	);
-}{/literal}
-{/footer_script}
-	<a href="{$U_CADDIE}" onclick="addToCadie(this, '{$ROOT_URL}', {$current.id}); return false;" title="{'Add to caddie'|@translate}" class="pwg-state-default pwg-button" rel="nofollow">
+	<a id="cmdAddToCaddie" href="{$U_CADDIE}" data-root-url="{$ROOT_URL|escape}" data-image-id="{$current.id}" title="{'Add to caddie'|@translate}" class="pwg-state-default pwg-button" rel="nofollow">
 		<span class="pwg-icon pwg-icon-caddie-add"> </span><span class="pwg-button-text">{'Caddie'|@translate}</span>
 	</a>
 {/if}{/strip}{*caddie management END*}
@@ -275,21 +242,13 @@ y.callService(
 			{combine_script id='rating' load='async' require='core.scripts' path='themes/default/js/rating.js'}
 			{footer_script}
 				var _pwgRatingAutoQueue = _pwgRatingAutoQueue||[];
-				_pwgRatingAutoQueue.push( {ldelim}rootUrl: '{$ROOT_URL}', image_id: {$current.id},
-					onSuccess : function(rating) {ldelim}
-						var e = document.getElementById("updateRate");
-						if (e) e.innerHTML = "{'Update your rating'|@translate|@escape:'javascript'}";
-						e = document.getElementById("ratingScore");
-						if (e) e.innerHTML = rating.score;
-						e = document.getElementById("ratingCount");
-						if (e) {ldelim}
-							if (rating.count == 1) {ldelim}
-								e.innerHTML = "({'%d rate'|@translate|@escape:'javascript'})".replace( "%d", rating.count);
-							} else {ldelim}
-								e.innerHTML = "({'%d rates'|@translate|@escape:'javascript'})".replace( "%d", rating.count);
-              }
-						{rdelim}
-					{rdelim}{rdelim} );
+				_pwgRatingAutoQueue.push({ldelim}
+					rootUrl: '{$ROOT_URL}',
+					image_id: {$current.id},
+					str_update_your_rating: '{'Update your rating'|@translate|@escape:'javascript'}',
+					str_rate: '{'%d rate'|@translate|@escape:'javascript'}',
+					str_rates: '{'%d rates'|@translate|@escape:'javascript'}'
+				{rdelim});
 			{/footer_script}
 			{/strip}
 			</div>

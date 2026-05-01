@@ -5,28 +5,6 @@
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10}
 <script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 <script id="pwg-batch-manager-unit-data" type="application/json">{$batch_manager_unit_page_data_json}</script>
-{assign var='all_selected_album' value=[]}
-{footer_script}
-{* <!-- PLUGINS --> *}
-window.activePlugins = {$ACTIVE_PLUGINS|json_encode};
-
-{* <!-- DATEPICKER --> *}
-document.querySelectorAll('[data-datepicker]').forEach(function(el) {
-  window.pwgDatepicker(el, {
-    showTimepicker: true,
-    cancelButton: '{'Cancel'|translate}'
-  });
-});
-
-{* <!-- THUMBNAILS --> *}
-{literal}
-GLightbox({selector: 'a.preview-box'});
-{/literal}
-
-{* Check Skeleton extension for more details about extensibility *}
-window.pluginValues = [];
-{/footer_script}
-
 
 {combine_script id='batchManagerUnit' load='footer' path='admin/themes/default/js/batchManagerUnit.js'}
 <div id="batchManagerGlobal" style="margin-bottom: 80px;">
@@ -62,11 +40,7 @@ window.pluginValues = [];
 			</div>
 		</div>
 	</div>
-	{foreach from=$elements item=element} 
-	{$all_selected_album[$element.ID] = json_decode($element.related_category_ids)} 
-	{footer_script}
-      window['url_delete_{$element.id}'] = '{$element.U_DELETE}';
-    {/footer_script}
+	{foreach from=$elements item=element}
 	<div class="infos deleted-badge" data-image_id="{$element.ID}" style="display: none;">
 		<i class="icon-ok" style="font-size: 20px;"></i>
 		<p>
@@ -77,7 +51,7 @@ window.pluginValues = [];
 			&nbsp;{'was succesfully deleted'|@translate}
 		</p>
 	</div>
-	<fieldset class="elementEdit" id="picture-{$element.ID}" data-image_id="{$element.ID}">
+	<fieldset class="elementEdit" id="picture-{$element.ID}" data-image_id="{$element.ID}" data-related-category-ids="{$element.related_category_ids|escape}">
 		<div class="metasync-success badge-container" style="display: none;">
 			<div class="badge-succes">
 				<i class="icon-ok"></i>
@@ -279,10 +253,6 @@ window.pluginValues = [];
 
 
 {include file='include/album_selector.inc.tpl'}
-
-{footer_script}
-window.all_related_categories_ids = {$all_selected_album|json_encode};
-{/footer_script}
 
 <style>
 #action_add_tags .item,

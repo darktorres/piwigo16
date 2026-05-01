@@ -79,6 +79,23 @@ function updateRating(e: Event): void {
                     while (idx < args.length) t = t.replace(rexp, String(args[idx++]));
                     (gRatingOptions as any).ratingSummaryElement.innerHTML = t;
                 }
+                // i18n strings passed directly as data (no callback)
+                const opts = gRatingOptions as any;
+                if (opts.str_update_your_rating) {
+                    const e = document.getElementById('updateRate');
+                    if (e) e.innerHTML = opts.str_update_your_rating;
+                }
+                if (opts.str_rate || opts.str_rates) {
+                    const e = document.getElementById('ratingCount');
+                    if (e) {
+                        const tpl = res.count === 1 ? (opts.str_rate ?? '') : (opts.str_rates ?? '');
+                        e.innerHTML = '(' + tpl.replace('%d', String(res.count)) + ')';
+                    }
+                }
+                if (opts.str_rate !== undefined) {
+                    const e = document.getElementById('ratingScore');
+                    if (e) e.innerHTML = res.score;
+                }
             },
         }
     );

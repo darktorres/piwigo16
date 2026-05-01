@@ -2,9 +2,10 @@ import { getPageData } from './page-data';
 import { AlbumSelector } from './album_selector';
 import { TagsCache, CategoriesCache } from './LocalStorageCache';
 
-declare var activePlugins: any;
-declare var all_related_categories_ids: any;
-declare var pluginValues: any;
+// Plugin scripts push their per-element field descriptors into this array before save.
+// Initialised here so plugins can push before DOMContentLoaded.
+(window as any).pluginValues = (window as any).pluginValues || [];
+const pluginValues: Array<{ selector: string; api_key: string }> = (window as any).pluginValues;
 
 interface BatchUnitPageData {
     str_are_you_sure: string;
@@ -14,6 +15,7 @@ interface BatchUnitPageData {
     str_meta_warning: string;
     str_meta_yes: string;
     str_title_ab: string;
+    str_cancel: string;
 }
 
 interface BatchManagerUnitCacheData {
@@ -21,6 +23,7 @@ interface BatchManagerUnitCacheData {
     ROOT_URL: string;
     associated_categories: Record<string, any>;
     str_create: string;
+    active_plugins: string[];
 }
 
 const {
@@ -31,9 +34,14 @@ const {
     str_meta_warning,
     str_meta_yes,
     str_title_ab,
+    str_cancel,
 } = getPageData<BatchUnitPageData>();
 
 const cacheData = getPageData<BatchManagerUnitCacheData>('pwg-batch-manager-unit-data');
+
+// Map from element ID → related category ID array; built from DOM data-attrs in DOMContentLoaded.
+// Typed as any to accommodate the .cat_ids property that AlbumSelector attaches after add.
+let allRelatedCategoryIds: Record<string, any> = {};
 
 // Initialize caches
 const tagsCache = new TagsCache({
@@ -106,6 +114,24 @@ function pwgToken(): string {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Build related-category map from data-attributes on each element fieldset.
+    document.querySelectorAll<HTMLElement>('fieldset.elementEdit').forEach(fs => {
+        const id = fs.dataset['imageId']!;
+        try {
+            allRelatedCategoryIds[id] = JSON.parse(fs.dataset['relatedCategoryIds'] ?? '[]');
+        } catch {
+            allRelatedCategoryIds[id] = [];
+        }
+    });
+
+    // GLightbox for preview thumbnails.
+    (window as any).GLightbox({ selector: 'a.preview-box' });
+
+    // Datepicker with timepicker for date_creation fields.
+    document.querySelectorAll<HTMLElement>('[data-datepicker]').forEach(el => {
+        (window as any).pwgDatepicker(el, { showTimepicker: true, cancelButton: str_cancel });
+    });
+
     let user_interacted = false;
 
     document.querySelectorAll<HTMLElement>('input, textarea, select').forEach(el => {
@@ -195,7 +221,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll<HTMLElement>('.linked-albums.add-item').forEach(el => {
         el.addEventListener('click', () => {
             b_current_picture_id = el.closest<HTMLElement>('fieldset')?.dataset['imageId'];
-            ab.hardUpdate(all_related_categories_ids[b_current_picture_id!]);
+            ab.hardUpdate(allRelatedCategoryIds[b_current_picture_id!]);
             ab.open();
         });
     });
@@ -207,22 +233,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 const cat_id = target.id;
                 const picture_id = target.closest<HTMLElement>('fieldset')?.dataset['imageId'] ?? '';
                 remove_selected_category(cat_id, picture_id);
-                check_related_categories(picture_id, all_related_categories_ids[picture_id]);
+                check_related_categories(picture_id, allRelatedCategoryIds[picture_id]);
             }
         });
     });
 
-    pluginFunctionMapInit(activePlugins);
+    pluginFunctionMapInit(cacheData.active_plugins);
 });
 
-function get_related_category(pictureId: any) {
-    return all_related_categories_ids.find((c: any) => c.id == pictureId).cat_ids ?? [];
-}
-
 function remove_selected_category(cat_id: any, picture_id: any) {
-    const idx = all_related_categories_ids[picture_id].indexOf(cat_id);
+    const idx = allRelatedCategoryIds[picture_id].indexOf(cat_id);
     if (idx > -1) {
-        all_related_categories_ids[picture_id].splice(idx, 1);
+        allRelatedCategoryIds[picture_id].splice(idx, 1);
         showUnsavedLocalBadge(picture_id);
     }
     document.getElementById(cat_id)?.parentElement?.remove();
@@ -238,7 +260,7 @@ function add_related_category({ album, getSelectedAlbum, addSelectedAlbum }: { a
         );
         showUnsavedLocalBadge(b_current_picture_id);
         addSelectedAlbum();
-        all_related_categories_ids[b_current_picture_id!].cat_ids = getSelectedAlbum();
+        allRelatedCategoryIds[b_current_picture_id!].cat_ids = getSelectedAlbum();
     }
     check_related_categories(b_current_picture_id, getSelectedAlbum());
 }
@@ -377,7 +399,7 @@ async function saveChanges(pictureId: any) {
         author: (pidInput(pictureId, '#author') as HTMLInputElement)?.value,
         date_creation: (pidInput(pictureId, '#date_creation') as HTMLInputElement)?.value,
         comment: (pidInput(pictureId, '#description') as HTMLTextAreaElement)?.value,
-        categories: (all_related_categories_ids[pictureId] ?? []).join(';'),
+        categories: (allRelatedCategoryIds[pictureId] ?? []).join(';'),
         tag_list: tags,
         level: (document.querySelector<HTMLOptionElement>(`#picture-${pictureId} #level option:checked`))?.value,
         single_value_mode: 'replace',
@@ -399,7 +421,7 @@ async function saveChanges(pictureId: any) {
             hideUnsavedLocalBadge(pictureId);
             showSuccessLocalBadge(pictureId);
             updateSuccessGlobalBadge();
-            pluginSaveLoop(activePlugins, pictureId);
+            pluginSaveLoop(cacheData.active_plugins, pictureId);
         } else {
             console.error('Error: ' + JSON.stringify(data));
             enableLocalButton(pictureId);

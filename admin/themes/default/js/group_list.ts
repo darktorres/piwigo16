@@ -484,6 +484,24 @@ function duplicateAction(id: any) {
 /*------- Selection mode -------*/
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Close user-list popup on ESC or outside click
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            const userList = document.getElementById('UserList');
+            if (userList) userList.style.display = 'none';
+        }
+    });
+    document.addEventListener('click', (e) => {
+        if (!(e.target as Element).closest('.UserListPopInContainer')) {
+            const userList = document.getElementById('UserList');
+            if (userList) userList.style.display = 'none';
+        }
+    });
+
+    document.getElementById('CancelMerge')?.addEventListener('click', () => updateSelectionPanel('Selection'));
+    document.getElementById('CancelDelete')?.addEventListener('click', () => updateSelectionPanel('Selection'));
+    document.getElementById('addGroupClose')?.addEventListener('click', () => hideAddGroupForm());
+
     const toggleSel = document.getElementById('toggleSelectionMode') as HTMLInputElement | null;
     if (toggleSel) {
         toggleSel.checked = false;
@@ -551,15 +569,15 @@ function updateStatePanel(newState = 'Selection') {
     }
 }
 
-function buttonAvailable(el: HTMLElement | null, onClick: string) {
+function buttonAvailable(el: HTMLElement | null, onClickState: string) {
     if (!el) return;
     el.classList.remove('unavailable');
-    el.setAttribute('onclick', onClick);
+    el.onclick = () => updateSelectionPanel(onClickState);
 }
 function buttonUnavailable(el: HTMLElement | null) {
     if (!el) return;
     el.classList.add('unavailable');
-    el.removeAttribute('onclick');
+    el.onclick = null;
 }
 
 /*------- Merge -------*/

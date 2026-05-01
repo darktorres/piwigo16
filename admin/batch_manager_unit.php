@@ -162,6 +162,7 @@ $template->assign('page_data_json', json_encode([
     'str_meta_warning' => l10n('Warning ! Unsaved changes will be lost'),
     'str_meta_yes'     => l10n('I want to continue'),
     'str_title_ab'     => l10n('Associate to album'),
+    'str_cancel'       => l10n('Cancel'),
 ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
 // +-----------------------------------------------------------------------+
 // |                        global mode thumbnails                         |
@@ -419,6 +420,7 @@ $batch_manager_unit_page_data = [
   'ROOT_URL' => get_root_url(),
   'associated_categories' => $associated_categories ?? [],
   'str_create' => l10n('Create'),
+  'active_plugins' => array_keys($pwg_loaded_plugins),
 ];
 
 $template->assign([

@@ -12,6 +12,13 @@ interface BatchManagerGlobalPageData {
     str_create: string;
 }
 
+// `window.lang` is populated by a {footer_script} block in batch_manager_global.tpl.
+// In strict ESM the bare identifier `lang` doesn't resolve, so reach through window
+// at access time (window.lang is defined before any callback below fires).
+const lang = new Proxy({} as Record<string, string>, {
+    get: (_t, key: string) => ((window as unknown) as { lang?: Record<string, string> }).lang?.[key] ?? '',
+});
+
 const pageData = getPageData<BatchManagerGlobalPageData>('pwg-batch-manager-global-data');
 
 // Initialize caches
@@ -51,7 +58,6 @@ categoriesCache?.selectize(document.querySelector('[data-selectize=categories]')
 });
 
 declare var all_elements: any;
-declare var lang: any;
 declare var str_add_alb_associate: any;
 declare var str_select_alb_associate: any;
 

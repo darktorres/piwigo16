@@ -165,7 +165,8 @@ SELECT
         $images_found = query2array($query);
 
         if (count($images_found) > 0) {
-            $image_id = $images_found[0]['id'];
+            // SQL fetches return strings in PHP; cast for the int-typed callees below.
+            $image_id = (int) $images_found[0]['id'];
             $logger->info('['.__FUNCTION__.'] image already exist #'.$image_id.', we delete the newly uploaded file : '.$source_filepath);
             unlink($source_filepath);
 

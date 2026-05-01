@@ -24,6 +24,7 @@
 
 # PHP tooling
 .phpunit.cache
+phpstan*.txt
 
 # Node / Playwright
 node_modules/

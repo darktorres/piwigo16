@@ -57,7 +57,7 @@ function get_local_dir(string $category_id): string
     $query .= ';';
     $result = pwg_query($query);
     while ($row = pwg_db_fetch_assoc($result)) {
-        $database_dirs[$row['id']] = $row['dir'];
+        $database_dirs[(int)$row['id']] = $row['dir'];
     }
     foreach ($upper_array as $id) {
         $local_dir .= $database_dirs[$id].'/';

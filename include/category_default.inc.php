@@ -40,7 +40,7 @@ SELECT *
 ;';
     $result = pwg_query($query);
     while ($row = pwg_db_fetch_assoc($result)) {
-        $row['rank'] = $rank_of[ $row['id'] ];
+        $row['rank'] = $rank_of[ (int)$row['id'] ];
         $pictures[] = $row;
     }
 

@@ -32,7 +32,7 @@ DELETE FROM '.CADDIE_TABLE.'
     pwg_query($query);
 
     $inserts = [];
-    foreach (array_unique(explode(',', (string) $_GET['batch'])) as $image_id) {
+    foreach (array_unique(explode(',', is_scalar($_GET['batch'] ?? null) ? (string) $_GET['batch'] : '')) as $image_id) {
         $inserts[] = [
           'user_id' => $user['id'],
           'element_id' => $image_id,
@@ -92,17 +92,19 @@ $formats_ext_info = null;
 if ($display_formats && $_GET['formats']) {
     check_input_parameter('formats', $_GET, false, PATTERN_ID, false);
 
-    $formats_original_info = get_image_infos($_GET['formats']);
+    $formatsId = is_scalar($_GET['formats'] ?? null) ? (string) $_GET['formats'] : '';
+    $formats_original_info = get_image_infos($formatsId);
     if ($formats_original_info) {
         $src_image = new SrcImage($formats_original_info);
 
         $formats_original_info['src'] = DerivativeImage::url(IMG_SQUARE, $src_image);
 
+        $fmtId = is_scalar($formats_original_info['id'] ?? null) ? (string) $formats_original_info['id'] : '0';
         // Fetch actual formats
         $query = '
 SELECT *
   FROM '.IMAGE_FORMAT_TABLE.'
-  WHERE image_id = '.$formats_original_info['id'].'
+  WHERE image_id = '.$fmtId.'
 ;';
         $formats = query2array($query);
 
@@ -119,11 +121,11 @@ SELECT *
             $formats_ext_info = json_encode($formats_exts);
         }
 
-        $extTab = explode('.', (string) $formats_original_info['file']);
+        $extTab = explode('.', is_scalar($formats_original_info['file'] ?? null) ? (string) $formats_original_info['file'] : '');
 
         $formats_original_info['ext'] = l10n('%s file type', strtoupper(end($extTab)));
 
-        $formats_original_info['u_edit'] = get_root_url().'admin.php?page=photo-'.$formats_original_info['id'];
+        $formats_original_info['u_edit'] = get_root_url().'admin.php?page=photo-'.$fmtId;
 
         $have_formats_original = true;
     } else {
@@ -176,7 +178,7 @@ $template->assign([
       'haveFormatsOriginal' => $have_formats_original,
       'imageFormatsExtensions' => $formats_ext_info ?? '',
       'nb_albums' => (int) ($nb_albums ?? 0),
-      'originalImageId' => $have_formats_original ? (int) ($formats_original_info['id'] ?? -1) : -1,
+      'originalImageId' => $have_formats_original ? (is_numeric($formats_original_info['id'] ?? null) ? (int) $formats_original_info['id'] : -1) : -1,
       'photosAdded_label' => l10n('%d photos uploaded'),
       'photosUpdated_label' => l10n('%d photos updated'),
       'related_categories_ids' => $selected_category ?? [],

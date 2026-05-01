@@ -17,7 +17,8 @@ global $template, $user, $page, $persistent_cache, $lang;
 
 check_input_parameter('user_id', $_GET, false, PATTERN_ID);
 
-$edit_user = build_user($_GET['user_id'], false);
+$editUserId = is_numeric($_GET['user_id'] ?? null) ? (int) $_GET['user_id'] : 0;
+$edit_user = build_user($editUserId, false);
 
 if (!empty($_POST)) {
     check_pwg_token();
@@ -29,7 +30,7 @@ $errors = [];
 save_profile_from_post($edit_user, $errors);
 
 load_profile_in_template(
-    get_root_url().'admin.php?page=profile&amp;user_id='.$edit_user['id'],
+    get_root_url().'admin.php?page=profile&amp;user_id='.(is_scalar($edit_user['id'] ?? null) ? (string) $edit_user['id'] : ''),
     get_root_url().'admin.php?page=user_list',
     $edit_user
 );

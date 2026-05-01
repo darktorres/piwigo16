@@ -25,11 +25,12 @@ global $template, $user, $page, $persistent_cache, $lang;
 check_status(ACCESS_ADMINISTRATOR);
 
 check_input_parameter('image_id', $_GET, false, PATTERN_ID);
+$picFmtId = is_scalar($_GET['image_id'] ?? null) ? (string) $_GET['image_id'] : '0';
 
 $query = '
 SELECT *
   FROM '.IMAGES_TABLE.'
-  WHERE id = '. $_GET['image_id'] .'
+  WHERE id = '.$picFmtId.'
 ;';
 $images = query2array($query);
 $image = $images[0];
@@ -38,7 +39,7 @@ $query = '
 SELECT
     *
   FROM '.IMAGE_FORMAT_TABLE.'
-  WHERE image_id = '.$_GET['image_id'].'
+  WHERE image_id = '.$picFmtId.'
 ;';
 
 $formats = query2array($query);
@@ -57,7 +58,7 @@ foreach ($formats as &$format) {
 }
 
 $template->assign([
-    'ADD_FORMATS_URL' => get_root_url().'admin.php?page=photos_add&formats='.$_GET['image_id'],
+    'ADD_FORMATS_URL' => get_root_url().'admin.php?page=photos_add&formats='.$picFmtId,
     'IMG_SQUARE_SRC'  => DerivativeImage::url(ImageStdParams::get_by_type(IMG_SQUARE), $image),
     'FORMATS'         => $formats,
     'PWG_TOKEN'       => get_pwg_token(),

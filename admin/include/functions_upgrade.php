@@ -182,11 +182,12 @@ function check_upgrade_access_rights(): void
     if (version_compare($current_release, '2.0', '>=') and isset($_COOKIE[session_name()])) {
         // Check if user is already connected as webmaster
         session_start();
-        if (!empty($_SESSION['pwg_uid'])) {
+        $pwgUid = is_scalar($_SESSION['pwg_uid'] ?? null) ? (string) $_SESSION['pwg_uid'] : '';
+        if (!empty($pwgUid)) {
             $query = '
 SELECT status
   FROM '.USER_INFOS_TABLE.'
-  WHERE user_id = '.$_SESSION['pwg_uid'].'
+  WHERE user_id = '.$pwgUid.'
 ;';
             pwg_query($query);
 
@@ -202,8 +203,8 @@ SELECT status
         return;
     }
 
-    $username = $_POST['username'];
-    $password = $_POST['password'];
+    $username = is_scalar($_POST['username'] ?? null) ? (string) $_POST['username'] : '';
+    $password = is_scalar($_POST['password'] ?? null) ? (string) $_POST['password'] : '';
 
     if (function_exists('get_magic_quotes_gpc') && !@get_magic_quotes_gpc()) {
         $username = pwg_db_real_escape_string($username);

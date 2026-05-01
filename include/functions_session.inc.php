@@ -99,10 +99,11 @@ function get_remote_addr_session_hash(): string
         return '';
     }
 
-    if (!str_contains((string) $_SERVER['REMOTE_ADDR'], ':')) {//ipv4
+    $remoteAddr = is_scalar($_SERVER['REMOTE_ADDR'] ?? null) ? (string) $_SERVER['REMOTE_ADDR'] : '';
+    if (!str_contains($remoteAddr, ':')) {//ipv4
         return vsprintf(
             '%02X%02X',
-            explode('.', (string) $_SERVER['REMOTE_ADDR'])
+            explode('.', $remoteAddr)
         );
     }
     return ''; //ipv6 not yet

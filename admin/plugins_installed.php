@@ -63,15 +63,20 @@ if (isset($_GET['incompatible_plugins'])) {
 
 //--------------------------------------------------------Get the menu with the depreciated version
 
-$plugin_menu_links_deprec = trigger_change('get_admin_plugin_menu_links', []);
+$plugin_menu_links_raw = trigger_change('get_admin_plugin_menu_links', []);
+$plugin_menu_links_deprec = is_array($plugin_menu_links_raw) ? $plugin_menu_links_raw : [];
 
 $settings_url_for_plugin_deprec = [];
 
 foreach ($plugin_menu_links_deprec as $value) {
-    if (preg_match('/^admin\.php\?page=plugin-(.*)$/', (string) $value['URL'], $matches)) {
-        $settings_url_for_plugin_deprec[$matches[1]] = $value['URL'];
-    } elseif (preg_match('/^.*section=(.*?)[\/&%].*$/', (string) $value['URL'], $matches)) {
-        $settings_url_for_plugin_deprec[$matches[1]] = $value['URL'];
+    if (!is_array($value)) {
+        continue;
+    }
+    $vUrl = is_scalar($value['URL'] ?? null) ? (string) $value['URL'] : '';
+    if (preg_match('/^admin\.php\?page=plugin-(.*)$/', $vUrl, $matches)) {
+        $settings_url_for_plugin_deprec[$matches[1]] = $vUrl;
+    } elseif (preg_match('/^.*section=(.*?)[\/&%].*$/', $vUrl, $matches)) {
+        $settings_url_for_plugin_deprec[$matches[1]] = $vUrl;
     }
 }
 
@@ -86,8 +91,9 @@ $tpl_plugins = [];
 $count_types_plugins = ['active' => 0, 'inactive' => 0, 'missing' => 0, 'merged' => 0];
 
 foreach ($plugins->fs_plugins as $plugin_id => $fs_plugin) {
-    if (isset($_SESSION['incompatible_plugins'][$plugin_id])
-      and $fs_plugin['version'] != $_SESSION['incompatible_plugins'][$plugin_id]) {
+    $incompatPlugins = is_array($_SESSION['incompatible_plugins'] ?? null) ? $_SESSION['incompatible_plugins'] : [];
+    if (isset($incompatPlugins[$plugin_id])
+      and $fs_plugin['version'] != $incompatPlugins[$plugin_id]) {
         // Incompatible plugins must be reinitilized
         unset($_SESSION['incompatible_plugins']);
     }
@@ -105,7 +111,7 @@ foreach ($plugins->fs_plugins as $plugin_id => $fs_plugin) {
       'http://piwigo.org/ext',
       'https://piwigo.org/ext',
     ];
-    $visit_url = str_replace($url_to_replace, PEM_URL, $fs_plugin['uri']);
+    $visit_url = str_replace($url_to_replace, PEM_URL, is_scalar($fs_plugin['uri'] ?? null) ? (string) $fs_plugin['uri'] : '');
 
     $tpl_plugin = [
       'ID' => $plugin_id,
@@ -125,7 +131,8 @@ foreach ($plugins->fs_plugins as $plugin_id => $fs_plugin) {
         $tpl_plugin['STATE'] = 'inactive';
     }
 
-    if (isset($fs_plugin['extension']) and isset($merged_extensions[$fs_plugin['extension']])) {
+    $fsExtId = $fs_plugin['extension'] ?? null;
+    if (isset($fsExtId) && (is_string($fsExtId) || is_int($fsExtId)) && isset($merged_extensions[$fsExtId])) {
         // Deactivate manually plugin from database
         $query = 'UPDATE '.PLUGINS_TABLE.' SET state=\'inactive\' WHERE id=\''.$plugin_id.'\'';
         pwg_query($query);
@@ -135,7 +142,10 @@ foreach ($plugins->fs_plugins as $plugin_id => $fs_plugin) {
         $merged_plugins = true;
     }
 
-    $count_types_plugins[$tpl_plugin['STATE']]++;
+    $pluginState = is_scalar($tpl_plugin['STATE']) ? (string) $tpl_plugin['STATE'] : 'inactive';
+    if (isset($count_types_plugins[$pluginState])) {
+        $count_types_plugins[$pluginState]++;
+    }
 
     $tpl_plugins[] = $tpl_plugin;
 }
@@ -176,10 +186,14 @@ function cmp(array $a, array $b): int|bool
 {
     $s = ['merged' => 0, 'missing' => 1, 'active' => 2, 'inactive' => 3];
 
-    if ($a['STATE'] == $b['STATE']) {
-        return strcasecmp((string) $a['NAME'], (string) $b['NAME']);
+    $aState = is_scalar($a['STATE'] ?? null) ? (string) $a['STATE'] : 'inactive';
+    $bState = is_scalar($b['STATE'] ?? null) ? (string) $b['STATE'] : 'inactive';
+    if ($aState == $bState) {
+        $aName = is_scalar($a['NAME'] ?? null) ? (string) $a['NAME'] : '';
+        $bName = is_scalar($b['NAME'] ?? null) ? (string) $b['NAME'] : '';
+        return strcasecmp($aName, $bName);
     } else {
-        return $s[$a['STATE']] >= $s[$b['STATE']];
+        return ($s[$aState] ?? 99) >= ($s[$bState] ?? 99);
     }
 }
 

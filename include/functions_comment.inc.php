@@ -266,9 +266,10 @@ INSERT INTO '.COMMENTS_TABLE.'
  */
 function delete_user_comment($comment_id): bool
 {
+    $globalUser = is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : [];
     $user_where_clause = '';
     if (!is_admin()) {
-        $user_where_clause = '   AND author_id = \''. (is_scalar($GLOBALS['user']['id']) ? (string) $GLOBALS['user']['id'] : '0') .'\'';
+        $user_where_clause = '   AND author_id = \''. (is_scalar($globalUser['id'] ?? null) ? (string) $globalUser['id'] : '0') .'\'';
     }
 
     if (is_array($comment_id)) {
@@ -288,7 +289,7 @@ $user_where_clause.'
 
         email_admin(
             'delete',
-            ['author' => is_scalar($GLOBALS['user']['username']) ? (string) $GLOBALS['user']['username'] : '',
+            ['author' => is_scalar($globalUser['username'] ?? null) ? (string) $globalUser['username'] : '',
                           'comment_id' => $comment_id,
                       ]
         );
@@ -324,6 +325,7 @@ function update_user_comment(array $comment, string $post_key): string
         $comment_action = 'moderate'; //one of validate, moderate, reject
     }
 
+    $globalUser2 = is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : [];
     // perform more spam check
     $comment_action = (string)
       trigger_change(
@@ -331,14 +333,15 @@ function update_user_comment(array $comment, string $post_key): string
           $comment_action,
           array_merge(
               $comment,
-              ['author' => is_scalar($GLOBALS['user']['username']) ? (string) $GLOBALS['user']['username'] : '']
+              ['author' => is_scalar($globalUser2['username'] ?? null) ? (string) $globalUser2['username'] : '']
           )
       );
 
     // website
     if (!empty($comment['website_url'])) {
-        $comment['website_url'] = strip_tags((string) $comment['website_url']);
-        if (!preg_match('/^https?/i', (string) $comment['website_url'])) {
+        $wUrl = is_scalar($comment['website_url']) ? (string) $comment['website_url'] : '';
+        $comment['website_url'] = strip_tags($wUrl);
+        if (!preg_match('/^https?/i', is_scalar($comment['website_url']) ? (string) $comment['website_url'] : '')) {
             $comment['website_url'] = 'http://'.$comment['website_url'];
         }
         if (!url_check_format($comment['website_url'])) {
@@ -350,7 +353,7 @@ function update_user_comment(array $comment, string $post_key): string
     if ($comment_action != 'reject') {
         $user_where_clause = '';
         if (!is_admin()) {
-            $user_where_clause = '   AND author_id = \''. (is_scalar($GLOBALS['user']['id']) ? (string) $GLOBALS['user']['id'] : '0') .'\'';
+            $user_where_clause = '   AND author_id = \''. (is_scalar($globalUser2['id'] ?? null) ? (string) $globalUser2['id'] : '0') .'\'';
         }
 
         $query = '

@@ -36,7 +36,8 @@ $category = get_cat_info((int)$cat_id);
 if ($category === null) {
     die('Invalid category');
 }
-$page['cat'] = $category['id'];
+$pageCat = $category['id'];
+$pageCat = is_numeric($pageCat ?? null) ? (int) $pageCat : 0;
 
 // +-----------------------------------------------------------------------+
 // |                           form submission                             |
@@ -48,9 +49,9 @@ if (!empty($_POST)) {
     $post_status_raw = $_POST['status'] ?? null;
     $post_status = is_scalar($post_status_raw) ? (string) $post_status_raw : '';
     if ($category['status'] != $post_status or ($category['status'] != 'public' and isset($_POST['apply_on_sub']))) {
-        $cat_ids = [$page['cat']];
+        $cat_ids = [$pageCat];
         if (isset($_POST['apply_on_sub'])) {
-            $cat_ids = array_merge($cat_ids, get_subcat_ids([$page['cat']]));
+            $cat_ids = array_merge($cat_ids, get_subcat_ids([$pageCat]));
         }
         set_cat_status($cat_ids, $post_status);
         $category['status'] = $post_status;
@@ -63,7 +64,7 @@ if (!empty($_POST)) {
         $query = '
 SELECT group_id
   FROM '.GROUP_ACCESS_TABLE.'
-  WHERE cat_id = '.$page['cat'].'
+  WHERE cat_id = '.$pageCat.'
 ;';
         $groups_granted = query2array($query, null, 'group_id');
 
@@ -87,7 +88,7 @@ SELECT group_id
 DELETE
   FROM '.GROUP_ACCESS_TABLE.'
   WHERE group_id IN ('.implode(',', $deny_groups).')
-    AND cat_id IN ('.implode(',', get_subcat_ids([$page['cat']])).')
+    AND cat_id IN ('.implode(',', get_subcat_ids([$pageCat])).')
 ;';
             pwg_query($query);
         }
@@ -97,9 +98,9 @@ DELETE
         //
         $grant_groups = $post_groups;
         if (count($grant_groups) > 0) {
-            $cat_ids = get_uppercat_ids([$page['cat']]);
+            $cat_ids = get_uppercat_ids([$pageCat]);
             if (isset($_POST['apply_on_sub'])) {
-                $cat_ids = array_merge($cat_ids, get_subcat_ids([$page['cat']]));
+                $cat_ids = array_merge($cat_ids, get_subcat_ids([$pageCat]));
             }
 
             $query = '
@@ -134,7 +135,7 @@ SELECT id
         $query = '
 SELECT user_id
   FROM '.USER_ACCESS_TABLE.'
-  WHERE cat_id = '.$page['cat'].'
+  WHERE cat_id = '.$pageCat.'
 ;';
         $users_granted = query2array($query, null, 'user_id');
 
@@ -158,7 +159,7 @@ SELECT user_id
 DELETE
   FROM '.USER_ACCESS_TABLE.'
   WHERE user_id IN ('.implode(',', $deny_users).')
-    AND cat_id IN ('.implode(',', get_subcat_ids([$page['cat']])).')
+    AND cat_id IN ('.implode(',', get_subcat_ids([$pageCat])).')
 ;';
             pwg_query($query);
         }
@@ -168,7 +169,7 @@ DELETE
         //
         $grant_users = $post_users;
         if (count($grant_users) > 0) {
-            add_permission_on_category($page['cat'], $grant_users);
+            add_permission_on_category($pageCat, $grant_users);
         }
     }
 
@@ -190,7 +191,7 @@ $template->assign(
     [
     'CATEGORIES_NAV' =>
       get_cat_display_name_from_id(
-          $page['cat'],
+          $pageCat,
           'admin.php?page=album-'
       ),
     'U_HELP' => get_root_url().'admin/popuphelp.php?page=cat_perm',
@@ -220,7 +221,7 @@ $template->assign('groups', $groups);
 $query = '
 SELECT group_id
   FROM '.GROUP_ACCESS_TABLE.'
-  WHERE cat_id = '.$page['cat'].'
+  WHERE cat_id = '.$pageCat.'
 ;';
 $group_granted_ids = query2array($query, null, 'group_id');
 $template->assign('groups_selected', $group_granted_ids);
@@ -240,7 +241,7 @@ $template->assign('users', $users);
 $query = '
 SELECT user_id
   FROM '.USER_ACCESS_TABLE.'
-  WHERE cat_id = '.$page['cat'].'
+  WHERE cat_id = '.$pageCat.'
 ;';
 $user_granted_direct_ids = query2array($query, null, 'user_id');
 $template->assign('users_selected', $user_granted_direct_ids);

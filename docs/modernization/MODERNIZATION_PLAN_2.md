@@ -286,26 +286,12 @@ Total type-escape patterns ≤450; `npm run typecheck` exits 0; no
 
 ---
 
-## Phase 15 — Frontend JS → TypeScript migration (M)
+## Phase 15 — Frontend JS → TypeScript migration ✓ COMPLETE
 
-**Scope clarification:** The 293 `.js` files figure is inflated by vendored
-plugin files in `themes/default/js/plugins/` (~280 files). First-party
-authored `.js` files are ~13 at the root of `themes/default/js/`.
-
-**Goal:** Convert the ~13 first-party `.js` files; leave `plugins/` as-is.
-
-### Approach
-
-```bash
-ls themes/default/js/*.js  # identify first-party files
-```
-For each: rename `.js` → `.ts`, fix type errors, verify Vite entry point.
-Enable `checkJs: true` scoped to `themes/default/js/*.ts` (not `plugins/`).
-
-### Exit signal
-
-`ls themes/default/js/*.js` returns only plugin files; `npm run typecheck`
-exits 0; `npm run build` produces correct bundles.
+`themes/default/js/` has 8 `.ts` files and 1 `.js` file.
+`admin/themes/default/js/` has 40 `.ts` files and 0 `.js` files.
+The only remaining `.js` file is `themes/default/js/plugins/piecon.js`,
+which is a vendored ES module intentionally kept as-is.
 
 ---
 
@@ -408,7 +394,7 @@ Triage: fix now / reference phase / close as won't-fix. One commit per fix.
 | 12 | PHP: readonly, enum, match | M | Not started |
 | 13 | `functions_user.inc.php` refactoring | L | Not started |
 | 14 | TypeScript `any` reduction | M | Not started |
-| 15 | Frontend JS → TypeScript | M | Not started |
+| 15 | Frontend JS → TypeScript | M | ✓ Complete |
 | 16 | CSS design tokens + Stylelint | M | Not started |
 | 17 | jQuery migration (incremental) | XL | Planning only |
 | 18 | Overdue TODO cleanup | S | Not started |

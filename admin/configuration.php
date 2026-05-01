@@ -119,7 +119,7 @@ if (!\Piwigo\Core\Config::has('filters_views')) {
     \Piwigo\Core\Config::persist('filters_views', \Piwigo\Core\Config::defaultFiltersViews());
 }
 
-$filters_views_raw = safe_unserialize(\Piwigo\Core\Config::get('filters_views'));
+$filters_views_raw = safe_unserialize(\Piwigo\Core\Config::filtersViews() ?? '');
 $filters_names_checkboxes = array_values(array_diff(array_keys(is_array($filters_views_raw) ? $filters_views_raw : []), ['last_filters_conf']));
 
 // image order management
@@ -395,14 +395,14 @@ switch ($page['section']) {
                   'sunday' => $lang['day'][0],
                   'monday' => $lang['day'][1],
                   ],
-                'week_starts_on_options_selected' => \Piwigo\Core\Config::get('week_starts_on'),
-                'mail_theme' => \Piwigo\Core\Config::get('mail_theme'),
+                'week_starts_on_options_selected' => \Piwigo\Core\Config::weekStartsOn(),
+                'mail_theme' => \Piwigo\Core\Config::mailTheme(),
                 'mail_theme_options' => $mail_themes,
                 'order_by' => $order_by,
                 'order_by_options' => $sort_fields,
-                'email_admin_on_new_user' => 'none' != \Piwigo\Core\Config::get('email_admin_on_new_user'),
-                'email_admin_on_new_user_filter' => in_array(\Piwigo\Core\Config::get('email_admin_on_new_user'), ['none', 'all']) ? 'all' : 'group',
-                'email_admin_on_new_user_filter_group' => preg_match('/^group:(\d+)$/', is_scalar(\Piwigo\Core\Config::get('email_admin_on_new_user')) ? (string) \Piwigo\Core\Config::get('email_admin_on_new_user') : '', $matches) ? $matches[1] : -1,
+                'email_admin_on_new_user' => 'none' != \Piwigo\Core\Config::emailAdminOnNewUser(),
+                'email_admin_on_new_user_filter' => in_array(\Piwigo\Core\Config::emailAdminOnNewUser(), ['none', 'all']) ? 'all' : 'group',
+                'email_admin_on_new_user_filter_group' => preg_match('/^group:(\d+)$/', \Piwigo\Core\Config::emailAdminOnNewUser(), $matches) ? $matches[1] : -1,
                 ]
             );
 
@@ -438,8 +438,8 @@ switch ($page['section']) {
             $template->assign(
                 'comments',
                 [
-                'NB_COMMENTS_PAGE' => \Piwigo\Core\Config::get('nb_comment_page'),
-                'comments_order' => \Piwigo\Core\Config::get('comments_order'),
+                'NB_COMMENTS_PAGE' => \Piwigo\Core\Config::nbCommentPage(),
+                'comments_order' => \Piwigo\Core\Config::commentsOrder(),
                 'comments_order_options' => $comments_order,
                 ]
             );
@@ -491,8 +491,8 @@ switch ($page['section']) {
             $template->append(
                 'display',
                 [
-                  'picture_informations' => unserialize(\Piwigo\Core\Config::getString('picture_informations', '')),
-                  'NB_CATEGORIES_PAGE' => \Piwigo\Core\Config::get('nb_categories_page'),
+                  'picture_informations' => unserialize(\Piwigo\Core\Config::pictureInformations()),
+                  'NB_CATEGORIES_PAGE' => \Piwigo\Core\Config::nbCategoriesPage(),
                   ],
                 true
             );
@@ -635,11 +635,11 @@ switch ($page['section']) {
             $template->assign(
                 'search',
                 [
-                  'filters_views' => safe_unserialize(\Piwigo\Core\Config::get('filters_views')),
+                  'filters_views' => safe_unserialize(\Piwigo\Core\Config::filtersViews() ?? ''),
                   'filters_names' => $filters_names_checkboxes,
                 ],
             );
-            $template->assign('SHOW_FILTER_RATINGS', \Piwigo\Core\Config::get('rate'));
+            $template->assign('SHOW_FILTER_RATINGS', \Piwigo\Core\Config::rateEnabled());
         }
 }
 

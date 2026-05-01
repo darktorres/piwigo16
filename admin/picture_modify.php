@@ -277,7 +277,7 @@ $intro_vars = [
   'is_svg' => (strtoupper(end($extTab)) == 'SVG'),
   ];
 
-if (\Piwigo\Core\Config::get('rate') and !empty($row['rating_score'])) {
+if (\Piwigo\Core\Config::rateEnabled() and !empty($row['rating_score'])) {
     $query = '
 SELECT
     COUNT(*)

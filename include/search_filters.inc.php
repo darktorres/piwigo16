@@ -506,7 +506,7 @@ SELECT
     }
 
     // For rating
-    if (\Piwigo\Core\Config::get('rate')) {
+    if (\Piwigo\Core\Config::rateEnabled()) {
         $template->assign('SHOW_FILTER_RATINGS', true);
 
         if (isset($my_search['fields']['ratings']) and $display_filters['rating']['access']) {
@@ -815,7 +815,7 @@ SELECT
         'global_params'               => $my_search,
         'search_id'                   => $page['search'],
         'fullname_of_cat'             => $fullname_of ?? [],
-        'show_filter_ratings'         => \Piwigo\Core\Config::get('rate') ? true : false,
+        'show_filter_ratings'         => \Piwigo\Core\Config::rateEnabled() ? true : false,
         'sliders'                     => $sliders_data,
         'str_word_widget_label'       => l10n('Search for words'),
         'str_tags_widget_label'       => l10n('Tag'),

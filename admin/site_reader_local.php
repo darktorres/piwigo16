@@ -74,9 +74,9 @@ class LocalSiteReader
                     $extension = strtolower(get_extension($node));
                     $filename_wo_ext = get_filename_wo_extension($node);
 
-                    if (isset(\Piwigo\Core\Config::get('flip_file_ext')[$extension])) {
+                    if (isset(\Piwigo\Core\Config::flipFileExt()[$extension])) {
                         $representative_ext = null;
-                        if (! isset(\Piwigo\Core\Config::get('flip_picture_ext')[$extension])) {
+                        if (! isset(\Piwigo\Core\Config::flipPictureExt()[$extension])) {
                             $representative_ext = $this->get_representative_ext($path, $filename_wo_ext);
                         }
 
@@ -128,7 +128,7 @@ class LocalSiteReader
         $extension = get_extension($filename);
 
         $representative_ext = null;
-        if (! isset(\Piwigo\Core\Config::get('flip_picture_ext')[$extension])) {
+        if (! isset(\Piwigo\Core\Config::flipPictureExt()[$extension])) {
             $dirname = dirname($file);
             $filename_wo_ext = get_filename_wo_extension($filename);
             $representative_ext = $this->get_representative_ext($dirname, $filename_wo_ext);

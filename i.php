@@ -34,7 +34,7 @@ $logger = new Logger(array(
   // we use an hashed filename to prevent direct file access, and we salt with
   // the db_password instead of secret_key because the log must be usable in i.php
   // (secret_key is in the database)
-  'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . \Piwigo\Core\Config::get('db_password')) . '.txt',
+  'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . \Piwigo\Core\Config::dbPassword()) . '.txt',
   ));
 
 
@@ -405,10 +405,10 @@ include_once(PHPWG_ROOT_PATH .'/include/derivative_std_params.inc.php');
 
 try {
     pwg_db_connect(
-        \Piwigo\Core\Config::get('db_host'),
-        \Piwigo\Core\Config::get('db_user'),
-        \Piwigo\Core\Config::get('db_password'),
-        \Piwigo\Core\Config::get('db_base')
+        \Piwigo\Core\Config::dbHost(),
+        \Piwigo\Core\Config::dbUser(),
+        \Piwigo\Core\Config::dbPassword(),
+        \Piwigo\Core\Config::dbName()
     );
 } catch (Exception $e) {
     $logger->error($e->getMessage(), 'i.php');

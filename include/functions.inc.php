@@ -428,12 +428,12 @@ SELECT id, name
  */
 function do_log($image_id = null, $image_type = null)
 {
-    $do_log = \Piwigo\Core\Config::get('log');
+    $do_log = \Piwigo\Core\Config::logConf();
     if (is_admin()) {
-        $do_log = \Piwigo\Core\Config::get('history_admin');
+        $do_log = \Piwigo\Core\Config::historyAdmin();
     }
     if (is_a_guest()) {
-        $do_log = \Piwigo\Core\Config::get('history_guest');
+        $do_log = \Piwigo\Core\Config::historyGuest();
     }
 
     return (bool) trigger_change('pwg_log_allowed', $do_log, $image_id, $image_type);
@@ -503,10 +503,8 @@ UPDATE '.USER_INFOS_TABLE.'
             conf_update_param('history_sections_cache', get_enums(HISTORY_TABLE, 'section'), true);
         }
 
-        \Piwigo\Core\Config::override('history_sections_cache', safe_unserialize(\Piwigo\Core\Config::getString('history_sections_cache')));
-
-        $hsc = \Piwigo\Core\Config::get('history_sections_cache');
-        $history_sections_cache = is_array($hsc) ? $hsc : [];
+        $history_sections_cache = safe_unserialize(\Piwigo\Core\Config::historySectionsCache() ?? '');
+        \Piwigo\Core\Config::override('history_sections_cache', $history_sections_cache);
         if (
             in_array($page['section'], $history_sections_cache)
             or in_array(strtolower($page['section']), array_map(static fn (mixed $s): string => strtolower(is_scalar($s) ? (string) $s : ''), $history_sections_cache))
@@ -2249,7 +2247,7 @@ function send_piwigo_infos(): void
 
     $do_send = false;
     if (\Piwigo\Core\Config::has('send_piwigo_infos_last_notice')) {
-        if (strtotime(\Piwigo\Core\Config::get('send_piwigo_infos_last_notice')) < strtotime(conf_get_param('send_piwigo_infos_period', 7 * 24 * 60 * 60).' second ago')) {
+        if (strtotime(\Piwigo\Core\Config::sendPiwigoInfosLastNotice()) < strtotime(conf_get_param('send_piwigo_infos_period', 7 * 24 * 60 * 60).' second ago')) {
             $do_send = true;
         }
     } else {
@@ -2260,7 +2258,7 @@ function send_piwigo_infos(): void
         return;
     }
 
-    $logger->info('['.__FUNCTION__.'] current conf.send_piwigo_infos_last_notice='.(\Piwigo\Core\Config::get('send_piwigo_infos_last_notice') ?? 'notFound').' => lets do it');
+    $logger->info('['.__FUNCTION__.'] current conf.send_piwigo_infos_last_notice='.(\Piwigo\Core\Config::sendPiwigoInfosLastNotice() ?? 'notFound').' => lets do it');
 
     if (!pwg_is_dbconf_writeable()) {
         $logger->info('['.__FUNCTION__.'] conf is not writeable, abort');
@@ -2284,7 +2282,7 @@ function send_piwigo_infos(): void
     [$container_type, $container_version] = get_container_info();
 
     $piwigo_infos = [
-      'origin_hash' => \Piwigo\Core\Config::get('send_piwigo_infos_origin_hash'),
+      'origin_hash' => \Piwigo\Core\Config::sendPiwigoInfosOriginHash(),
       'technical' => [
         'php_version' => PHP_VERSION,
         'piwigo_version' => PHPWG_VERSION,
@@ -2652,7 +2650,7 @@ SELECT
     } else {
         $last_notice = date('c');
         conf_update_param('send_piwigo_infos_last_notice', $last_notice, true);
-        $logger->info('['.__FUNCTION__.'][exec='.$exec_id.'] fetchRemote success, new send_piwigo_infos_last_notice='.\Piwigo\Core\Config::get('send_piwigo_infos_last_notice'));
+        $logger->info('['.__FUNCTION__.'][exec='.$exec_id.'] fetchRemote success, new send_piwigo_infos_last_notice='.\Piwigo\Core\Config::sendPiwigoInfosLastNotice());
     }
 
     pwg_unique_exec_ends('send_piwigo_infos');
@@ -2664,11 +2662,11 @@ function send_piwigo_infos_retry_later(int $wait_time): void
     global $logger;
 
     // let's fake a last_notice so that we only try 1 day later
-    $last_notice = \Piwigo\Core\Config::has('send_piwigo_infos_last_notice') ? strtotime(\Piwigo\Core\Config::get('send_piwigo_infos_last_notice')) : time();
+    $last_notice = \Piwigo\Core\Config::has('send_piwigo_infos_last_notice') ? strtotime(\Piwigo\Core\Config::sendPiwigoInfosLastNotice()) : time();
     $last_notice += $wait_time;
 
     conf_update_param('send_piwigo_infos_last_notice', date('c', $last_notice), true);
-    $logger->info('['.__FUNCTION__.'] new send_piwigo_infos_last_notice='.\Piwigo\Core\Config::get('send_piwigo_infos_last_notice'));
+    $logger->info('['.__FUNCTION__.'] new send_piwigo_infos_last_notice='.\Piwigo\Core\Config::sendPiwigoInfosLastNotice());
 }
 
 function pwg_unique_exec_begins(string $token_name, int $timeout = 60): false|string

@@ -417,13 +417,10 @@ foreach ($file_extensions as $ext => $ext_details) {
 
 // Add cache size if requested and known.
 if (\Piwigo\Core\Config::addCacheToStorageChart() && \Piwigo\Core\Config::has('cache_sizes')) {
-    $cache_sizes_raw = \Piwigo\Core\Config::get('cache_sizes');
-    $cache_sizes = is_string($cache_sizes_raw) ? unserialize($cache_sizes_raw) : null;
-    if (isset($cache_sizes)) {
-        if (is_array($cache_sizes) && isset($cache_sizes[0]) && is_array($cache_sizes[0]) && isset($cache_sizes[0]['value'])) {
-            $cacheValue = is_numeric($cache_sizes[0]['value']) ? (float) $cache_sizes[0]['value'] : 0.0;
-            @$data_storage['Cache']['total']['filesize'] = $cacheValue / 1024;
-        }
+    $cache_sizes = unserialize((string)\Piwigo\Core\Config::cacheSizes());
+    if (is_array($cache_sizes) && isset($cache_sizes[0]) && is_array($cache_sizes[0]) && isset($cache_sizes[0]['value'])) {
+        $cacheValue = is_numeric($cache_sizes[0]['value']) ? (float) $cache_sizes[0]['value'] : 0.0;
+        @$data_storage['Cache']['total']['filesize'] = $cacheValue / 1024;
     }
 }
 

@@ -193,9 +193,8 @@ class updates
         if (!\Piwigo\Core\Config::has('update_notify_last_notification')) {
             $notify = true;
         } else {
-            \Piwigo\Core\Config::override('update_notify_last_notification', safe_unserialize(\Piwigo\Core\Config::get('update_notify_last_notification')));
-            $lastNotifRaw = \Piwigo\Core\Config::get('update_notify_last_notification');
-            $lastNotifArr = is_array($lastNotifRaw) ? $lastNotifRaw : [];
+            $lastNotifArr = safe_unserialize(\Piwigo\Core\Config::updateNotifyLastNotification() ?? '');
+            $lastNotifArr = is_array($lastNotifArr) ? $lastNotifArr : [];
             $last_notification = is_scalar($lastNotifArr['notified_on'] ?? null) ? (string) $lastNotifArr['notified_on'] : '';
             $last_notif_version = is_scalar($lastNotifArr['version'] ?? null) ? (string) $lastNotifArr['version'] : '';
 

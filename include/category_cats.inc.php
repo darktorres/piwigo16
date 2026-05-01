@@ -63,9 +63,9 @@ if ('recent_cats' != $page['section']) {
   ORDER BY `rank`';
 }
 
-$nb_cats_page = \Piwigo\Core\Config::get('nb_categories_page');
+$nb_cats_page = \Piwigo\Core\Config::nbCategoriesPage();
 $query .= '
-  LIMIT '.(is_numeric($nb_cats_page) ? (int)$nb_cats_page : 20).' OFFSET '.($page['startcat'] ?? 0).'
+  LIMIT '.$nb_cats_page.' OFFSET '.($page['startcat'] ?? 0).'
 ;';
 
 $query = trigger_change('loc_begin_index_category_thumbnails_query', $query);
@@ -135,7 +135,7 @@ SELECT representative_picture_id
     unset($image_id);
 }
 
-if (\Piwigo\Core\Config::get('display_fromto')) {
+if (\Piwigo\Core\Config::displayFromto()) {
     if (count($category_ids) > 0) {
         $query = '
 SELECT
@@ -310,7 +310,7 @@ if (count($categories) > 0) {
             );
         }
 
-        if (\Piwigo\Core\Config::get('display_fromto')) {
+        if (\Piwigo\Core\Config::displayFromto()) {
             if (isset($dates_of_category[ $category['id'] ])) {
                 $from = $dates_of_category[ $category['id'] ]['from'];
                 $to   = $dates_of_category[ $category['id'] ]['to'];
@@ -339,12 +339,12 @@ if (count($categories) > 0) {
 
     // navigation bar
     $page['cats_navigation_bar'] = [];
-    if ($page['total_categories'] > \Piwigo\Core\Config::get('nb_categories_page')) {
+    if ($page['total_categories'] > \Piwigo\Core\Config::nbCategoriesPage()) {
         $page['cats_navigation_bar'] = create_navigation_bar(
             duplicate_index_url([], ['startcat']),
             is_numeric($page['total_categories']) ? (int)$page['total_categories'] : 0,
             $page['startcat'],
-            is_numeric(\Piwigo\Core\Config::get('nb_categories_page')) ? (int)\Piwigo\Core\Config::get('nb_categories_page') : 20,
+            \Piwigo\Core\Config::nbCategoriesPage(),
             true,
             'startcat'
         );

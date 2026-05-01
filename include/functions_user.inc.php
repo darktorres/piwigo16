@@ -200,7 +200,7 @@ SELECT id
 
         create_user_infos((int) $user_id, $override);
 
-        if ($notify_admin and 'none' != \Piwigo\Core\Config::getString('email_admin_on_new_user')) {
+        if ($notify_admin and 'none' != \Piwigo\Core\Config::emailAdminOnNewUser()) {
             include_once(PHPWG_ROOT_PATH.'include/functions_mail.inc.php');
             $admin_url = get_absolute_root_url().'admin.php?page=user_list&user_id='.(int) $user_id;
 
@@ -212,7 +212,7 @@ SELECT id
               ];
 
             $group_id = null;
-            if (preg_match('/^group:(\d+)$/', \Piwigo\Core\Config::getString('email_admin_on_new_user'), $matches)) {
+            if (preg_match('/^group:(\d+)$/', \Piwigo\Core\Config::emailAdminOnNewUser(), $matches)) {
                 $group_id = $matches[1];
             }
 
@@ -1521,13 +1521,13 @@ function can_manage_comment($action, $comment_author_id): bool
         return true;
     }
 
-    if ('edit' == $action and \Piwigo\Core\Config::get('user_can_edit_comment')) {
+    if ('edit' == $action and \Piwigo\Core\Config::userCanEditComment()) {
         if ($comment_author_id == $user['id']) {
             return true;
         }
     }
 
-    if ('delete' == $action and \Piwigo\Core\Config::get('user_can_delete_comment')) {
+    if ('delete' == $action and \Piwigo\Core\Config::userCanDeleteComment()) {
         if ($comment_author_id == $user['id']) {
             return true;
         }

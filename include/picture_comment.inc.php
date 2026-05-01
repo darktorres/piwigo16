@@ -26,7 +26,7 @@ foreach ($related_categories as $category) {
 }
 
 if ($page['show_comments'] and isset($_POST['content'])) {
-    if (is_a_guest() and !\Piwigo\Core\Config::get('comments_forall')) {
+    if (is_a_guest() and !\Piwigo\Core\Config::commentsForall()) {
         die('Session expired');
     }
 
@@ -96,7 +96,7 @@ SELECT
         duplicate_picture_url([], ['start']),
         $nb_comments,
         $page['start'],
-        \Piwigo\Core\Config::getInt('nb_comment_page'),
+        \Piwigo\Core\Config::nbCommentPage(),
         true // We want a clean URL
     );
 
@@ -114,7 +114,7 @@ SELECT
         if (!empty($get_comments_order) && in_array(strtoupper(is_scalar($get_comments_order) ? (string) $get_comments_order : ''), ['ASC', 'DESC'])) {
             pwg_set_session_var('comments_order', $get_comments_order);
         }
-        $comments_order_raw = pwg_get_session_var('comments_order', \Piwigo\Core\Config::getString('comments_order'));
+        $comments_order_raw = pwg_get_session_var('comments_order', \Piwigo\Core\Config::commentsOrder());
         $comments_order = is_scalar($comments_order_raw) ? (string) $comments_order_raw : 'ASC';
 
         $template->assign([
@@ -140,7 +140,7 @@ SELECT
   WHERE com.image_id = '.$page['image_id'].'
     '.$validated_clause.'
   ORDER BY com.date '.$comments_order.'
-  LIMIT '.\Piwigo\Core\Config::getInt('nb_comment_page').' OFFSET '.$page['start'].'
+  LIMIT '.\Piwigo\Core\Config::nbCommentPage().' OFFSET '.$page['start'].'
 ;';
         $result = pwg_query($query);
 
@@ -214,7 +214,7 @@ SELECT
     if (isset($edit_comment)) {
         $show_add_comment_form = false;
     }
-    if (is_a_guest() and !\Piwigo\Core\Config::get('comments_forall')) {
+    if (is_a_guest() and !\Piwigo\Core\Config::commentsForall()) {
         $show_add_comment_form = false;
     }
 
@@ -226,13 +226,13 @@ SELECT
             'KEY' =>              $key,
             'CONTENT' =>          '',
             'SHOW_AUTHOR' =>      !is_classic_user(),
-            'AUTHOR_MANDATORY' => \Piwigo\Core\Config::get('comments_author_mandatory'),
+            'AUTHOR_MANDATORY' => \Piwigo\Core\Config::commentsAuthorMandatory(),
             'AUTHOR' =>           '',
             'WEBSITE_URL' =>      '',
             'SHOW_EMAIL' =>       !is_classic_user() or empty($user['email']),
-            'EMAIL_MANDATORY' =>  \Piwigo\Core\Config::get('comments_email_mandatory'),
+            'EMAIL_MANDATORY' =>  \Piwigo\Core\Config::commentsEmailMandatory(),
             'EMAIL' =>            '',
-            'SHOW_WEBSITE' =>     \Piwigo\Core\Config::get('comments_enable_website'),
+            'SHOW_WEBSITE' =>     \Piwigo\Core\Config::commentsEnableWebsite(),
           ];
 
         if ('reject' == @$comment_action) {

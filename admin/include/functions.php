@@ -1113,9 +1113,9 @@ function get_fs(string $path, $recursive = true)
                 if (is_file($path.'/'.$node)) {
                     $extension = get_extension($node);
 
-                    $flip_pic_ext = \Piwigo\Core\Config::get('flip_picture_ext');
-                    $flip_file_ext = \Piwigo\Core\Config::get('flip_file_ext');
-                    if (is_array($flip_pic_ext) && isset($flip_pic_ext[$extension])) {
+                    $flip_pic_ext = \Piwigo\Core\Config::flipPictureExt();
+                    $flip_file_ext = \Piwigo\Core\Config::flipFileExt();
+                    if (isset($flip_pic_ext[$extension])) {
                         if (basename($path) == 'thumbnail') {
                             $fs['thumbnails'][] = $path.'/'.$node;
                         } elseif (basename($path) == 'pwg_representative') {
@@ -1123,7 +1123,7 @@ function get_fs(string $path, $recursive = true)
                         } else {
                             $fs['elements'][] = $path.'/'.$node;
                         }
-                    } elseif (is_array($flip_file_ext) && isset($flip_file_ext[$extension])) {
+                    } elseif (isset($flip_file_ext[$extension])) {
                         $fs['elements'][] = $path.'/'.$node;
                     }
                 } elseif (is_dir($path.'/'.$node) and $node != 'pwg_high' and $recursive) {
@@ -1866,7 +1866,7 @@ function empty_lounge(bool $invalidate_user_cache = true): ?array
     global $logger;
 
     if (\Piwigo\Core\Config::has('empty_lounge_running')) {
-        [$running_exec_id, $running_exec_start_time] = explode('-', (string) \Piwigo\Core\Config::get('empty_lounge_running'));
+        [$running_exec_id, $running_exec_start_time] = explode('-', (string) \Piwigo\Core\Config::emptyLoungeRunning());
         if (time() - (int)$running_exec_start_time > 60) {
             $logger->debug(__FUNCTION__.', exec='.$running_exec_id.', timeout stopped by another call to the function');
             conf_delete_param('empty_lounge_running');
@@ -2541,7 +2541,7 @@ function delete_groups(array|int $group_ids): false|array
         return false;
     }
 
-    if (preg_match('/^group:(\d+)$/', is_scalar($v = conf_get_param('email_admin_on_new_user', 'undefined')) ? (string) $v : 'undefined', $matches)) {
+    if (preg_match('/^group:(\d+)$/', \Piwigo\Core\Config::emailAdminOnNewUser(), $matches)) {
         foreach ($group_ids as $group_id) {
             if ($group_id == $matches[1]) {
                 conf_update_param('email_admin_on_new_user', 'all', true);
@@ -3441,7 +3441,7 @@ function get_piwigo_news(): array|false
 
     $news = null;
 
-    $cache_path = PHPWG_ROOT_PATH.conf_get_param('data_location').'cache/piwigo_latest_news-'.$lang_info['code'].'.cache.php';
+    $cache_path = PHPWG_ROOT_PATH.\Piwigo\Core\Config::dataLocation().'cache/piwigo_latest_news-'.$lang_info['code'].'.cache.php';
     if (!is_file($cache_path) or filemtime($cache_path) < strtotime('24 hours ago')) {
         $url = PHPWG_URL.'/ws.php?method=porg.news.getLatest&format=json';
 

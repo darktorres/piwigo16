@@ -38,7 +38,7 @@ check_input_parameter('section', $_GET, false, '/^[a-z]+[a-z_\/-]*(\.php)?$/i');
 if (\Piwigo\Core\Config::fsQuickCheckPeriod() > 0) {
     $perform_fsqc = false;
     if (\Piwigo\Core\Config::has('fs_quick_check_last_check')) {
-        if (strtotime(\Piwigo\Core\Config::get('fs_quick_check_last_check')) < strtotime(\Piwigo\Core\Config::fsQuickCheckPeriod().' seconds ago')) {
+        if (strtotime((string) \Piwigo\Core\Config::fsQuickCheckLastCheck()) < strtotime(\Piwigo\Core\Config::fsQuickCheckPeriod().' seconds ago')) {
             $perform_fsqc = true;
         }
     } else {
@@ -211,7 +211,7 @@ $template->assign(
     'ADMIN_PAGE_TITLE' => 'Piwigo Administration Page',
     'ADMIN_PAGE_OBJECT_ID' => '',
     'U_SHOW_TEMPLATE_TAB' => \Piwigo\Core\Config::showTemplateInSideMenu(),
-    'SHOW_RATING' => \Piwigo\Core\Config::get('rate'),
+    'SHOW_RATING' => \Piwigo\Core\Config::rateEnabled(),
     )
 );
 
@@ -317,7 +317,7 @@ $show_whats_new = false;
 $whats_new_major_version = get_branch_from_version(PHPWG_VERSION);
 
 if (userprefs_get_param('show_whats_new_'.$whats_new_major_version, true) and pwg_is_dbconf_writeable()) {
-    if ($user['registration_date'] > \Piwigo\Core\Config::get('last_major_update')) {
+    if ($user['registration_date'] > \Piwigo\Core\Config::lastMajorUpdate()) {
         userprefs_update_param('show_whats_new_'.$whats_new_major_version, false);
     } else {
         // purge old whats_new_*
@@ -350,7 +350,7 @@ $whats_new_imgs = array(
 
 //If last major update conf is less than a month old then display bell for whats new popin
 $display_bell = false;
-if (strtotime(\Piwigo\Core\Config::get('last_major_update')) > strtotime('1 month ago')) {
+if (strtotime(\Piwigo\Core\Config::lastMajorUpdate()) > strtotime('1 month ago')) {
     $display_bell = true;
 }
 

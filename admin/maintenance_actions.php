@@ -308,8 +308,8 @@ $template->assign(
     'PHP_DATATIME' => $php_current_timestamp,
     'DB_DATATIME' => $db_current_date,
     'pwg_token' => $pwg_token,
-    'cache_sizes' => (\Piwigo\Core\Config::has('cache_sizes')) ? unserialize(\Piwigo\Core\Config::get('cache_sizes')) : null,
-    'time_elapsed_since_last_calc' => (\Piwigo\Core\Config::has('cache_sizes')) ? time_since(unserialize(\Piwigo\Core\Config::get('cache_sizes'))[3]['value'], 'year') : null,
+    'cache_sizes' => (\Piwigo\Core\Config::has('cache_sizes')) ? unserialize((string)\Piwigo\Core\Config::cacheSizes()) : null,
+    'time_elapsed_since_last_calc' => (\Piwigo\Core\Config::has('cache_sizes')) ? time_since(unserialize((string)\Piwigo\Core\Config::cacheSizes())[3]['value'], 'year') : null,
     ]
 );
 
@@ -340,7 +340,7 @@ switch (pwg_image::get_library()) {
         break;
 }
 
-if (\Piwigo\Core\Config::get('gallery_locked')) {
+if (\Piwigo\Core\Config::galleryLocked()) {
     $template->assign(
         [
         'U_MAINT_UNLOCK_GALLERY' => sprintf($url_format, 'unlock_gallery'),

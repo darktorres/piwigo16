@@ -106,10 +106,10 @@ if (!\Piwigo\Core\Kernel::isBooted()) :
     // Database connection
     try {
         pwg_db_connect(
-            \Piwigo\Core\Config::getString('db_host'),
-            \Piwigo\Core\Config::getString('db_user'),
-            \Piwigo\Core\Config::getString('db_password'),
-            \Piwigo\Core\Config::getString('db_base')
+            \Piwigo\Core\Config::dbHost(),
+            \Piwigo\Core\Config::dbUser(),
+            \Piwigo\Core\Config::dbPassword(),
+            \Piwigo\Core\Config::dbName()
         );
     } catch (Exception $e) {
         my_error(l10n($e->getMessage()), true);
@@ -132,13 +132,13 @@ if (!\Piwigo\Core\Kernel::isBooted()) :
       // we use an hashed filename to prevent direct file access, and we salt with
       // the db_password instead of secret_key because the log must be usable in i.php
       // (secret_key is in the database)
-      'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . \Piwigo\Core\Config::getString('db_password')) . '.txt',
+      'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . \Piwigo\Core\Config::dbPassword()) . '.txt',
       'globPattern' => 'log_*.txt',
       'archiveDays' => \Piwigo\Core\Config::logArchiveDays(),
       ]);
 
     if (!\Piwigo\Core\Config::checkUpgradeFeed()) {
-        if (!\Piwigo\Core\Config::has('piwigo_db_version') or \Piwigo\Core\Config::get('piwigo_db_version') != get_branch_from_version(PHPWG_VERSION)) {
+        if (!\Piwigo\Core\Config::has('piwigo_db_version') or \Piwigo\Core\Config::piwigoDbVersion() != get_branch_from_version(PHPWG_VERSION)) {
             redirect(get_root_url().'upgrade.php');
         }
     }
@@ -150,9 +150,9 @@ if (!\Piwigo\Core\Kernel::isBooted()) :
 
     if (!\Piwigo\Core\Config::has('piwigo_installed_version')) {
         conf_update_param('piwigo_installed_version', PHPWG_VERSION);
-    } elseif (\Piwigo\Core\Config::get('piwigo_installed_version') != PHPWG_VERSION) {
+    } elseif (\Piwigo\Core\Config::piwigoInstalledVersion() != PHPWG_VERSION) {
         // Piwigo has been updated "from filesystem" and not "from the administration UI". We mark it as an autoupdate in the system activities log
-        pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'autoupdate', ['from_version' => \Piwigo\Core\Config::get('piwigo_installed_version'), 'to_version' => PHPWG_VERSION]);
+        pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'autoupdate', ['from_version' => \Piwigo\Core\Config::piwigoInstalledVersion(), 'to_version' => PHPWG_VERSION]);
         conf_update_param('piwigo_installed_version', PHPWG_VERSION);
     }
 
@@ -288,7 +288,7 @@ if (is_array($internal_status_gs)
     $header_msgs[] = l10n('Bad status for user "guest", using default status. Please notify the webmaster.');
 }
 
-if (\Piwigo\Core\Config::get('gallery_locked')) {
+if (\Piwigo\Core\Config::galleryLocked()) {
     $header_msgs[] = l10n('The gallery is locked for maintenance. Please, come back later.');
 
     if (script_basename() != 'identification' and !is_admin()) {

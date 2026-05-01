@@ -114,16 +114,9 @@ function get_regular_search_results(array $search, ?string $images_where = ''): 
 
     $image_ids_for_filter = [];
 
-    $filters_views_raw = \Piwigo\Core\Config::get('filters_views');
-    if (is_array($filters_views_raw)) {
-        $display_filters = $filters_views_raw;
-    } elseif (is_string($filters_views_raw)) {
-        $display_filters = safe_unserialize($filters_views_raw);
-    } else {
-        $display_filters = \Piwigo\Core\Config::defaultFiltersViews();
-    }
+    $display_filters = safe_unserialize(\Piwigo\Core\Config::filtersViews() ?? '');
     if (!is_array($display_filters)) {
-        $display_filters = [];
+        $display_filters = \Piwigo\Core\Config::defaultFiltersViews();
     }
 
     foreach ($display_filters as $filt_name => $filt_conf) {
@@ -614,7 +607,7 @@ SELECT
     // ratings
     //
     $ratings_list = is_array($search_fields['ratings'] ?? null) ? $search_fields['ratings'] : [];
-    if (\Piwigo\Core\Config::getBool('rate') and !empty($search_fields['ratings']) and $rating_filter['access']) {
+    if (\Piwigo\Core\Config::rateEnabled() and !empty($search_fields['ratings']) and $rating_filter['access']) {
         $has_filters_filled = true;
 
         $filter_clauses = [];

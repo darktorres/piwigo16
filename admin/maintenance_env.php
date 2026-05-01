@@ -295,8 +295,8 @@ $template->assign(
     'U_PHPINFO' => sprintf($url_format, 'phpinfo'),
     'PHP_DATATIME' => $php_current_timestamp,
     'DB_DATATIME' => $db_current_date,
-    'cache_sizes' => (\Piwigo\Core\Config::has('cache_sizes')) ? unserialize(\Piwigo\Core\Config::get('cache_sizes')) : null,
-    'time_elapsed_since_last_calc' => (\Piwigo\Core\Config::has('cache_sizes')) ? time_since(unserialize(\Piwigo\Core\Config::get('cache_sizes'))[3]['value'], 'year') : null,
+    'cache_sizes' => (\Piwigo\Core\Config::has('cache_sizes')) ? unserialize((string)\Piwigo\Core\Config::cacheSizes()) : null,
+    'time_elapsed_since_last_calc' => (\Piwigo\Core\Config::has('cache_sizes')) ? time_since(unserialize((string)\Piwigo\Core\Config::cacheSizes())[3]['value'], 'year') : null,
     ]
 );
 
@@ -306,7 +306,7 @@ if (!empty($graphics_library)) {
     $template->assign('GRAPHICS_LIBRARY', $graphics_library);
 }
 
-if (\Piwigo\Core\Config::get('gallery_locked')) {
+if (\Piwigo\Core\Config::galleryLocked()) {
     $template->assign(
         [
         'U_MAINT_UNLOCK_GALLERY' => sprintf($url_format, 'unlock_gallery'),

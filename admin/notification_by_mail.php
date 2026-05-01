@@ -330,9 +330,7 @@ function do_action_send_mail_notification(string $action = 'list_to_send', array
                             }
 
                             if (\Piwigo\Core\Config::nbmSendHtmlMail() and \Piwigo\Core\Config::nbmSendRecentPostDates()) {
-                                $recent_post_dates_conf = \Piwigo\Core\Config::get('recent_post_dates');
-                                $recent_post_dates_nbm = is_array($recent_post_dates_conf) && is_array($recent_post_dates_conf['NBM'] ?? null) ? $recent_post_dates_conf['NBM'] : [];
-                                $recent_post_dates = get_recent_post_dates_array($recent_post_dates_nbm);
+                                $recent_post_dates = get_recent_post_dates_array(\Piwigo\Core\Config::recentPostDates()['NBM']);
                                 foreach ($recent_post_dates as $date_detail) {
                                     $date_detail_arr = is_array($date_detail) ? $date_detail : [];
                                     $env_nbm['mail_template']->append(

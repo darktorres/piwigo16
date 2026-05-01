@@ -106,17 +106,17 @@ $template->assign(
     ]
 );
 
-if (!\Piwigo\Core\Config::get('gallery_locked') && \Piwigo\Core\Config::allowUserRegistration()) {
+if (!\Piwigo\Core\Config::galleryLocked() && \Piwigo\Core\Config::allowUserRegistration()) {
     $template->assign('U_REGISTER', get_root_url().'register.php');
 }
 
-if (!\Piwigo\Core\Config::get('gallery_locked')) {
+if (!\Piwigo\Core\Config::galleryLocked()) {
     $template->assign('U_LOST_PASSWORD', get_root_url().'password.php');
 }
 
 // include menubar
 $themeconf = $template->get_template_vars('themeconf');
-if (!\Piwigo\Core\Config::get('gallery_locked') && (!isset($themeconf['hide_menu_on']) or !in_array('theIdentificationPage', $themeconf['hide_menu_on']))) {
+if (!\Piwigo\Core\Config::galleryLocked() && (!isset($themeconf['hide_menu_on']) or !in_array('theIdentificationPage', $themeconf['hide_menu_on']))) {
     include(PHPWG_ROOT_PATH.'include/menubar.inc.php');
 }
 

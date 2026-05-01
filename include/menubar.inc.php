@@ -161,7 +161,7 @@ function initialize_menu(): void
             'NAME' => l10n('Most visited'),
           ];
 
-        if (\Piwigo\Core\Config::get('rate')) {
+        if (\Piwigo\Core\Config::rateEnabled()) {
             $block->data['best_rated'] =
              [
                'URL' => make_index_url(['section' => 'best_rated']),

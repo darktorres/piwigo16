@@ -39,10 +39,10 @@ define('UPGRADES_PATH', PHPWG_ROOT_PATH.'install/db');
 // +-----------------------------------------------------------------------+
 try {
     pwg_db_connect(
-        \Piwigo\Core\Config::get('db_host'),
-        \Piwigo\Core\Config::get('db_user'),
-        \Piwigo\Core\Config::get('db_password'),
-        \Piwigo\Core\Config::get('db_base')
+        \Piwigo\Core\Config::dbHost(),
+        \Piwigo\Core\Config::dbUser(),
+        \Piwigo\Core\Config::dbPassword(),
+        \Piwigo\Core\Config::dbName()
     );
 } catch (Exception $e) {
     my_error(l10n($e->getMessage(), true));

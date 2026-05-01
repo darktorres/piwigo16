@@ -528,7 +528,7 @@ SELECT id, date, author, content
     if (\Piwigo\Core\Config::activateComments() and
         $is_commentable and
         (!is_a_guest()
-          or (bool) \Piwigo\Core\Config::get('comments_forall')
+          or \Piwigo\Core\Config::commentsForall()
         )
     ) {
         $comment_post_data['author'] = stripslashes((string) $user['username']);
@@ -982,7 +982,7 @@ function ws_images_filteredSearch_create(array $params, \Piwigo\Ws\PwgServer $se
         $search['fields']['expert'] = ['string' => $params['expert']];
     }
 
-    if (\Piwigo\Core\Config::get('rate') and isset($params['ratings'])) {
+    if (\Piwigo\Core\Config::rateEnabled() and isset($params['ratings'])) {
         $search['fields']['ratings'] = $params['ratings'];
     }
 

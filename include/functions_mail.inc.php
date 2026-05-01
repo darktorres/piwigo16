@@ -54,7 +54,7 @@ function get_mail_configuration(): array
     $conf_mail = [
       'send_bcc_mail_webmaster' => \Piwigo\Core\Config::sendBccMailWebmaster(),
       'mail_allow_html' => \Piwigo\Core\Config::mailAllowHtml(),
-      'mail_theme' => \Piwigo\Core\Config::get('mail_theme'),
+      'mail_theme' => \Piwigo\Core\Config::mailTheme(),
       'use_smtp' => !empty(\Piwigo\Core\Config::smtpHost()),
       'smtp_host' => \Piwigo\Core\Config::smtpHost(),
       'smtp_user' => \Piwigo\Core\Config::smtpUser(),

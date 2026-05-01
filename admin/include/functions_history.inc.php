@@ -454,7 +454,7 @@ DELETE
 
 function history_remove_summarized_column(): void
 {
-    if (\Piwigo\Core\Config::has('history_summarized_dropped') and \Piwigo\Core\Config::get('history_summarized_dropped')) {
+    if (\Piwigo\Core\Config::has('history_summarized_dropped') and \Piwigo\Core\Config::historySummarizedDropped()) {
         return;
     }
 

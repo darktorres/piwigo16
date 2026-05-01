@@ -418,6 +418,34 @@ final class Config
         return self::getBool('enable_synchronization', true);
     }
 
+    /**
+     * @return array{RSS: array{max_dates: int, max_elements: int, max_cats: int}, NBM: array{max_dates: int, max_elements: int, max_cats: int}}
+     */
+    public static function recentPostDates(): array
+    {
+        $default = [
+            'RSS' => ['max_dates' => 7, 'max_elements' => 5, 'max_cats' => 8],
+            'NBM' => ['max_dates' => 7, 'max_elements' => 5, 'max_cats' => 8],
+        ];
+        $v = self::$data['recent_post_dates'] ?? $default;
+        if (!is_array($v)) {
+            return $default;
+        }
+        foreach (['RSS', 'NBM'] as $key) {
+            if (!isset($v[$key]) || !is_array($v[$key])) {
+                $v[$key] = $default[$key];
+            } else {
+                $v[$key] = [
+                    'max_dates'    => isset($v[$key]['max_dates'])    && is_int($v[$key]['max_dates'])    ? $v[$key]['max_dates']    : $default[$key]['max_dates'],
+                    'max_elements' => isset($v[$key]['max_elements']) && is_int($v[$key]['max_elements']) ? $v[$key]['max_elements'] : $default[$key]['max_elements'],
+                    'max_cats'     => isset($v[$key]['max_cats'])     && is_int($v[$key]['max_cats'])     ? $v[$key]['max_cats']     : $default[$key]['max_cats'],
+                ];
+            }
+        }
+        /** @var array{RSS: array{max_dates: int, max_elements: int, max_cats: int}, NBM: array{max_dates: int, max_elements: int, max_cats: int}} $v */
+        return $v;
+    }
+
     // Notification cluster (nbm)
     public static function nbmDefaultValueUserEnabled(): bool
     {
@@ -1153,6 +1181,352 @@ final class Config
     {
         $v = self::$data['default_filters_views'] ?? [];
         return is_array($v) ? $v : [];
+    }
+
+    // ---- DB connection cluster ------------------------------------------
+
+    public static function dbHost(): string
+    {
+        return self::getString('db_host', 'localhost');
+    }
+    public static function dbUser(): string
+    {
+        return self::getString('db_user', '');
+    }
+    public static function dbName(): string
+    {
+        return self::getString('db_base', '');
+    }
+    public static function dbPassword(): string
+    {
+        return self::getString('db_password', '');
+    }
+
+    // ---- Ratings cluster ------------------------------------------------
+
+    public static function rateEnabled(): bool
+    {
+        return self::getBool('rate', true);
+    }
+    public static function rateAnonymous(): bool
+    {
+        return self::getBool('rate_anonymous', true);
+    }
+
+    // ---- Gallery state cluster ------------------------------------------
+
+    public static function galleryLocked(): bool
+    {
+        return self::getBool('gallery_locked', false);
+    }
+    public static function nbCategoriesPage(): int
+    {
+        return self::getInt('nb_categories_page', 9999);
+    }
+    public static function nbCommentPage(): int
+    {
+        return self::getInt('nb_comment_page', 10);
+    }
+    public static function weekStartsOn(): string
+    {
+        return self::getString('week_starts_on', 'monday');
+    }
+    public static function homePage(): string
+    {
+        return self::getString('home_page', 'recent_pics');
+    }
+    public static function displayFromto(): bool
+    {
+        return self::getBool('display_fromto', false);
+    }
+    public static function indexSortOrderInput(): string
+    {
+        return self::getString('index_sort_order_input', '');
+    }
+    public static function indexSearchInSetButton(): bool
+    {
+        return self::getBool('index_search_in_set_button', false);
+    }
+    public static function indexSearchInSetAction(): string
+    {
+        return self::getString('index_search_in_set_action', 'results');
+    }
+
+    // ---- Picture display cluster ----------------------------------------
+
+    public static function pictureInformations(): ?string
+    {
+        $v = self::$data['picture_informations'] ?? null;
+        return $v !== null ? (is_scalar($v) ? (string) $v : null) : null;
+    }
+    public static function pictureMenu(): bool
+    {
+        return self::getBool('picture_menu', true);
+    }
+    public static function pictureSlideShowIcon(): bool
+    {
+        return self::getBool('picture_slideshow_icon', true);
+    }
+    public static function pictureSizesIcon(): bool
+    {
+        return self::getBool('picture_sizes_icon', true);
+    }
+    public static function pictureRepresentativeIcon(): bool
+    {
+        return self::getBool('picture_representative_icon', true);
+    }
+    public static function pictureNavigationThumb(): bool
+    {
+        return self::getBool('picture_navigation_thumb', true);
+    }
+    public static function pictureNavigationIcons(): bool
+    {
+        return self::getBool('picture_navigation_icons', true);
+    }
+    public static function pictureMetadataIcon(): bool
+    {
+        return self::getBool('picture_metadata_icon', true);
+    }
+    public static function pictureFavoriteIcon(): bool
+    {
+        return self::getBool('picture_favorite_icon', true);
+    }
+    public static function pictureEditIcon(): bool
+    {
+        return self::getBool('picture_edit_icon', true);
+    }
+    public static function pictureDownloadIcon(): bool
+    {
+        return self::getBool('picture_download_icon', true);
+    }
+    public static function pictureCaddieIcon(): bool
+    {
+        return self::getBool('picture_caddie_icon', true);
+    }
+
+    // ---- Index display cluster ------------------------------------------
+
+    public static function indexSlideShowIcon(): bool
+    {
+        return self::getBool('index_slideshow_icon', true);
+    }
+    public static function indexSizesIcon(): bool
+    {
+        return self::getBool('index_sizes_icon', true);
+    }
+    public static function indexPostedDateIcon(): bool
+    {
+        return self::getBool('index_posted_date_icon', true);
+    }
+    public static function indexFlatIcon(): bool
+    {
+        return self::getBool('index_flat_icon', true);
+    }
+    public static function indexEditIcon(): bool
+    {
+        return self::getBool('index_edit_icon', true);
+    }
+    public static function indexCreatedDateIcon(): bool
+    {
+        return self::getBool('index_created_date_icon', true);
+    }
+    public static function indexCaddieIcon(): bool
+    {
+        return self::getBool('index_caddie_icon', true);
+    }
+
+    // ---- Comments cluster -----------------------------------------------
+
+    public static function commentsForall(): bool
+    {
+        return self::getBool('comments_forall', false);
+    }
+    public static function commentsValidation(): bool
+    {
+        return self::getBool('comments_validation', false);
+    }
+    public static function commentsEnableWebsite(): bool
+    {
+        return self::getBool('comments_enable_website', true);
+    }
+    public static function commentsEmailMandatory(): bool
+    {
+        return self::getBool('comments_email_mandatory', false);
+    }
+    public static function commentsAuthorMandatory(): bool
+    {
+        return self::getBool('comments_author_mandatory', false);
+    }
+    public static function commentsOrder(): string
+    {
+        return self::getString('comments_order', 'ASC');
+    }
+    public static function userCanEditComment(): bool
+    {
+        return self::getBool('user_can_edit_comment', false);
+    }
+    public static function userCanDeleteComment(): bool
+    {
+        return self::getBool('user_can_delete_comment', false);
+    }
+
+    // ---- Email admin notification cluster -------------------------------
+
+    public static function emailAdminOnNewUser(): string
+    {
+        return self::getString('email_admin_on_new_user', 'none');
+    }
+    public static function emailAdminOnComment(): string
+    {
+        return self::getString('email_admin_on_comment', 'none');
+    }
+    public static function emailAdminOnCommentValidation(): string
+    {
+        return self::getString('email_admin_on_comment_validation', 'none');
+    }
+    public static function emailAdminOnCommentEdition(): string
+    {
+        return self::getString('email_admin_on_comment_edition', 'none');
+    }
+    public static function emailAdminOnCommentDeletion(): string
+    {
+        return self::getString('email_admin_on_comment_deletion', 'none');
+    }
+
+    // ---- Mail cluster (additions) ---------------------------------------
+
+    public static function mailTheme(): string
+    {
+        return self::getString('mail_theme', 'clear');
+    }
+
+    // ---- Derivatives / image cluster (additions) -----------------------
+
+    public static function derivativeUrlStyle(): int
+    {
+        return self::getInt('derivative_url_style', 0);
+    }
+    public static function disabledDerivatives(): ?string
+    {
+        $v = self::$data['disabled_derivatives'] ?? null;
+        return $v !== null ? (is_scalar($v) ? (string) $v : null) : null;
+    }
+    public static function derivatives(): ?string
+    {
+        $v = self::$data['derivatives'] ?? null;
+        return $v !== null ? (is_scalar($v) ? (string) $v : null) : null;
+    }
+    /** @return array<string, int> */
+    public static function flipPictureExt(): array
+    {
+        $v = self::$data['flip_picture_ext'] ?? [];
+        return is_array($v) ? $v : [];
+    }
+    /** @return array<string, int> */
+    public static function flipFileExt(): array
+    {
+        $v = self::$data['flip_file_ext'] ?? [];
+        return is_array($v) ? $v : [];
+    }
+
+    // ---- Volatile / timestamp cluster -----------------------------------
+
+    public static function sendPiwigoInfosLastNotice(): ?string
+    {
+        $v = self::$data['send_piwigo_infos_last_notice'] ?? null;
+        return $v !== null ? (is_scalar($v) ? (string) $v : null) : null;
+    }
+    public static function sendPiwigoInfosOriginHash(): ?string
+    {
+        $v = self::$data['send_piwigo_infos_origin_hash'] ?? null;
+        return $v !== null ? (is_scalar($v) ? (string) $v : null) : null;
+    }
+    public static function updateNotifyLastCheck(): ?string
+    {
+        $v = self::$data['update_notify_last_check'] ?? null;
+        return $v !== null ? (is_scalar($v) ? (string) $v : null) : null;
+    }
+    public static function updateNotifyLastNotification(): ?string
+    {
+        $v = self::$data['update_notify_last_notification'] ?? null;
+        return $v !== null ? (is_scalar($v) ? (string) $v : null) : null;
+    }
+    public static function lastMajorUpdate(): ?string
+    {
+        $v = self::$data['last_major_update'] ?? null;
+        return $v !== null ? (is_scalar($v) ? (string) $v : null) : null;
+    }
+    public static function piwigoInstalledVersion(): ?string
+    {
+        $v = self::$data['piwigo_installed_version'] ?? null;
+        return $v !== null ? (is_scalar($v) ? (string) $v : null) : null;
+    }
+    public static function piwigoDbVersion(): ?string
+    {
+        $v = self::$data['piwigo_db_version'] ?? null;
+        return $v !== null ? (is_scalar($v) ? (string) $v : null) : null;
+    }
+    public static function emptyLoungeRunning(): ?string
+    {
+        $v = self::$data['empty_lounge_running'] ?? null;
+        return $v !== null ? (is_scalar($v) ? (string) $v : null) : null;
+    }
+    public static function fsQuickCheckLastCheck(): ?string
+    {
+        $v = self::$data['fs_quick_check_last_check'] ?? null;
+        return $v !== null ? (is_scalar($v) ? (string) $v : null) : null;
+    }
+
+    // ---- Updates cluster (additions) ------------------------------------
+
+    /** @return list<string> */
+    public static function updatesIgnored(): array
+    {
+        $v = self::$data['updates_ignored'] ?? [];
+        if (!is_array($v)) {
+            return [];
+        }
+        return array_values(array_map(static fn (mixed $x): string => is_scalar($x) || $x === null ? (string) $x : '', $v));
+    }
+
+    // ---- Cache / misc cluster -------------------------------------------
+
+    /** @return array<mixed> */
+    public static function cacheSizes(): ?string
+    {
+        $v = self::$data['cache_sizes'] ?? null;
+        return $v !== null ? (is_scalar($v) ? (string) $v : null) : null;
+    }
+    public static function filtersViews(): ?string
+    {
+        $v = self::$data['filters_views'] ?? null;
+        return $v !== null ? (is_scalar($v) ? (string) $v : null) : null;
+    }
+    public static function logConf(): bool
+    {
+        return self::getBool('log', false);
+    }
+    public static function c13yIgnore(): ?string
+    {
+        $v = self::$data['c13y_ignore'] ?? null;
+        return $v !== null ? (is_scalar($v) ? (string) $v : null) : null;
+    }
+    public static function historyAdmin(): bool
+    {
+        return self::getBool('history_admin', false);
+    }
+    public static function historyGuest(): bool
+    {
+        return self::getBool('history_guest', false);
+    }
+    public static function historySectionsCache(): ?string
+    {
+        $v = self::$data['history_sections_cache'] ?? null;
+        return $v !== null ? (is_scalar($v) ? (string) $v : null) : null;
+    }
+    public static function historySummarizedDropped(): bool
+    {
+        return self::getBool('history_summarized_dropped', false);
     }
 
     // ---- Bulk access / Wave C support -----------------------------------

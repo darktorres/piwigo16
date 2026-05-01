@@ -149,7 +149,7 @@ UPDATE '.USER_FEED_TABLE.'
     }
 }
 
-$dates = get_recent_post_dates_array(\Piwigo\Core\Config::get('recent_post_dates')['RSS']);
+$dates = get_recent_post_dates_array(\Piwigo\Core\Config::recentPostDates()['RSS']);
 
 foreach ($dates as $date_detail) { // for each recent post date we create a feed item
     $item = new FeedItem();

@@ -170,7 +170,7 @@ if (pwg_get_session_var('image_order', 0) > 0) {
         \Piwigo\Core\Config::override('order_by', str_replace(
             'ORDER BY ',
             'ORDER BY '.$order_col.',',
-            \Piwigo\Core\Config::getString('order_by')
+            \Piwigo\Core\Config::orderBy()
         ));
         $page['super_order_by'] = true;
     } else {
@@ -402,7 +402,7 @@ SELECT image_id
             \Piwigo\Core\Config::override('order_by', str_replace(
                 'ORDER BY ',
                 'ORDER BY date_available DESC,',
-                \Piwigo\Core\Config::getString('order_by')
+                \Piwigo\Core\Config::orderBy()
             ));
         }
 

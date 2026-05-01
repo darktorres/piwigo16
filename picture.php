@@ -158,7 +158,7 @@ function default_picture_content(string $content, array $element_info): string
         $show_original &= !($derivative->same_as_source());
 
         // in case we do not display the sizes icon, we only add the selected size to unique_derivatives
-        if (\Piwigo\Core\Config::get('picture_sizes_icon') or $type == $deriv_type) {
+        if (\Piwigo\Core\Config::pictureSizesIcon() or $type == $deriv_type) {
             $unique_derivatives[$type] = $derivative;
         }
     }
@@ -591,7 +591,7 @@ foreach (['first','previous','next','last', 'current'] as $which_image) {
         );
     }
 }
-if (\Piwigo\Core\Config::get('picture_download_icon') and !empty($picture['current']['download_url']) and $user['enabled_high'] == 'true') {
+if (\Piwigo\Core\Config::pictureDownloadIcon() and !empty($picture['current']['download_url']) and $user['enabled_high'] == 'true') {
     $template->append('current', ['U_DOWNLOAD' => $picture['current']['download_url']], true);
 
     if (\Piwigo\Core\Config::isFormatsEnabled()) {
@@ -681,7 +681,7 @@ if ($page['slideshow']) {
         }
     }
     $template->assign('slideshow', $tpl_slideshow);
-} elseif (\Piwigo\Core\Config::get('picture_slideshow_icon')) {
+} elseif (\Piwigo\Core\Config::pictureSlideShowIcon()) {
     $template->assign(
         [
         'U_SLIDESHOW_START' =>
@@ -702,12 +702,12 @@ $template->assign(
     'LEVEL_SEPARATOR' => \Piwigo\Core\Config::levelSeparator(),
 
     'U_UP' => $url_up,
-    'DISPLAY_NAV_BUTTONS' => \Piwigo\Core\Config::get('picture_navigation_icons'),
-    'DISPLAY_NAV_THUMB' => \Piwigo\Core\Config::get('picture_navigation_thumb'),
+    'DISPLAY_NAV_BUTTONS' => \Piwigo\Core\Config::pictureNavigationIcons(),
+    'DISPLAY_NAV_THUMB' => \Piwigo\Core\Config::pictureNavigationThumb(),
     ]
 );
 
-if (\Piwigo\Core\Config::get('picture_metadata_icon')) {
+if (\Piwigo\Core\Config::pictureMetadataIcon()) {
     $template->assign('U_METADATA', $url_metadata);
 }
 
@@ -716,7 +716,7 @@ if (\Piwigo\Core\Config::get('picture_metadata_icon')) {
 
 // admin links
 if (is_admin()) {
-    if (isset($page['category']) and \Piwigo\Core\Config::get('picture_representative_icon')) {
+    if (isset($page['category']) and \Piwigo\Core\Config::pictureRepresentativeIcon()) {
         $template->assign(
             [
             'U_SET_AS_REPRESENTATIVE' => add_url_params(
@@ -727,11 +727,11 @@ if (is_admin()) {
         );
     }
 
-    if (\Piwigo\Core\Config::get('picture_edit_icon')) {
+    if (\Piwigo\Core\Config::pictureEditIcon()) {
         $template->assign('U_PHOTO_ADMIN', get_root_url().'admin.php?page=photo-'.$page['image_id']);
     }
 
-    if (\Piwigo\Core\Config::get('picture_caddie_icon')) {
+    if (\Piwigo\Core\Config::pictureCaddieIcon()) {
         $template->assign(
             'U_CADDIE',
             add_url_params($url_self, ['action' => 'add_to_caddie'])
@@ -741,7 +741,7 @@ if (is_admin()) {
 }
 
 // favorite manipulation
-if (!is_a_guest() and \Piwigo\Core\Config::get('picture_favorite_icon')) {
+if (!is_a_guest() and \Piwigo\Core\Config::pictureFavoriteIcon()) {
     // verify if the picture is already in the favorite of the user
     $query = '
 SELECT COUNT(*) AS nb_fav
@@ -831,7 +831,7 @@ $infos['INFO_VISITS'] = $picture['current']['hit'];
 $infos['INFO_FILE'] = $picture['current']['file'];
 
 $template->assign($infos);
-$template->assign('display_info', unserialize(\Piwigo\Core\Config::get('picture_informations')));
+$template->assign('display_info', unserialize(\Piwigo\Core\Config::pictureInformations()));
 
 // related tags
 $tags = get_common_tags([$page['image_id']], -1);
@@ -938,7 +938,7 @@ if ($metadata_showable and pwg_get_session_var('show_metadata') <> null) {
 
 // include menubar
 $themeconf = $template->get_template_vars('themeconf');
-if (\Piwigo\Core\Config::get('picture_menu') and (!isset($themeconf['hide_menu_on']) or !in_array('thePicturePage', $themeconf['hide_menu_on']))) {
+if (\Piwigo\Core\Config::pictureMenu() and (!isset($themeconf['hide_menu_on']) or !in_array('thePicturePage', $themeconf['hide_menu_on']))) {
     if (!isset($page['start'])) {
         $page['start'] = 0;
     }

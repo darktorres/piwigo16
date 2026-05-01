@@ -567,7 +567,7 @@ function get_thumbnail_title(array $info, string $title, string $comment = ''): 
         $details[] = l10n('%d visits', $info['hit']);
     }
 
-    if (\Piwigo\Core\Config::get('rate') and !empty($info['rating_score'])) {
+    if (\Piwigo\Core\Config::rateEnabled() and !empty($info['rating_score'])) {
         $details[] = l10n('rating score %s', $info['rating_score']);
     }
 

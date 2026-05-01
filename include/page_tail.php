@@ -36,7 +36,7 @@ if (!is_a_guest()) {
 if (\Piwigo\Core\Config::updateNotifyCheckPeriod() > 0) {
     $check_for_updates = false;
     if (\Piwigo\Core\Config::has('update_notify_last_check')) {
-        if (strtotime(\Piwigo\Core\Config::get('update_notify_last_check')) < strtotime(\Piwigo\Core\Config::updateNotifyCheckPeriod().' seconds ago')) {
+        if (strtotime((string) \Piwigo\Core\Config::updateNotifyLastCheck()) < strtotime(\Piwigo\Core\Config::updateNotifyCheckPeriod().' seconds ago')) {
             $check_for_updates = true;
         }
     } else {

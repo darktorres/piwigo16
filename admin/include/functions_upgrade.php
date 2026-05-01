@@ -287,10 +287,10 @@ function upgrade_db_connect(): void
 {
     try {
         pwg_db_connect(
-            \Piwigo\Core\Config::get('db_host'),
-            \Piwigo\Core\Config::get('db_user'),
-            \Piwigo\Core\Config::get('db_password'),
-            \Piwigo\Core\Config::get('db_base')
+            \Piwigo\Core\Config::dbHost(),
+            \Piwigo\Core\Config::dbUser(),
+            \Piwigo\Core\Config::dbPassword(),
+            \Piwigo\Core\Config::dbName()
         );
         pwg_db_check_version();
     } catch (Exception $e) {

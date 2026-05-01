@@ -19,10 +19,7 @@ use Piwigo\Session\PwgSession;
 // two parameters is deprecated. To correct this,
 // we pass a SessionHandlerInterface instance.
 // https://github.com/Piwigo/Piwigo/issues/2296
-// PwgSession is autoloaded by Composer; legacy PHP 7 class kept for back-compat.
-if (version_compare(PHP_VERSION, '8.0.0') < 0) {
-    include_once(PHPWG_ROOT_PATH.'/include/pwgsession_php7.class.php');
-}
+// PwgSession is autoloaded by Composer.
 
 // Config class may not be autoloaded yet during install.php bootstrap.
 if (class_exists(\Piwigo\Core\Config::class, false)

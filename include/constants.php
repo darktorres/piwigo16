@@ -29,7 +29,7 @@ defined('PWG_DERIVATIVE_DIR') or define('PWG_DERIVATIVE_DIR', (isset($_conf_arr[
 unset($_conf_arr);
 
 // Required versions
-define('REQUIRED_PHP_VERSION', '7.4.0');
+define('REQUIRED_PHP_VERSION', '8.5.0');
 
 // Access codes
 define('ACCESS_FREE', 0);

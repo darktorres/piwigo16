@@ -7,11 +7,6 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-//check php version
-if (version_compare(PHP_VERSION, '5', '<')) {
-    die('Piwigo requires PHP 5 or above.');
-}
-
 define('PHPWG_ROOT_PATH', './');
 
 include(PHPWG_ROOT_PATH . 'include/config_default.inc.php');

@@ -687,56 +687,7 @@ function pwg_activity(string $object, array|int|string $object_id, string $actio
  */
 function dateDiff($date1, $date2): \DateInterval|\stdClass
 {
-    if (version_compare(PHP_VERSION, '5.3.0') >= 0) {
-        return $date1->diff($date2);
-    }
-
-    $diff = new stdClass();
-
-    //Make sure $date1 is ealier
-    $diff->invert = $date2 < $date1;
-    if ($diff->invert) {
-        [$date1, $date2] = [$date2, $date1];
-    }
-
-    //Calculate R values
-    $R = ($date1 <= $date2 ? '+' : '-');
-    $r = ($date1 <= $date2 ? '' : '-');
-
-    //Calculate total days
-    $diff->days = round(abs($date1->format('U') - $date2->format('U')) / 86400);
-
-    //A leap year work around - consistent with DateInterval
-    $leap_year = $date1->format('m-d') == '02-29';
-    if ($leap_year) {
-        $date1->modify('-1 day');
-    }
-
-    //Years, months, days, hours
-    $periods = ['years' => -1, 'months' => -1, 'days' => -1, 'hours' => -1];
-
-    foreach ($periods as $period => &$i) {
-        if ($period == 'days' && $leap_year) {
-            $date1->modify('+1 day');
-        }
-
-        while ($date1 <= $date2) {
-            $date1->modify('+1 '.$period);
-            $i++;
-        }
-
-        //Reset date and record increments
-        $date1->modify('-1 '.$period);
-    }
-
-    [$diff->y, $diff->m, $diff->d, $diff->h] = array_values($periods);
-
-    //Minutes, seconds
-    $diff->s = round(abs($date1->format('U') - $date2->format('U')));
-    $diff->i = floor($diff->s / 60);
-    $diff->s = $diff->s - $diff->i * 60;
-
-    return $diff;
+    return $date1->diff($date2);
 }
 
 /**
@@ -752,7 +703,7 @@ function str2DateTime(int|string|null $original, $format = null)
         return false;
     }
 
-    if (!empty($format) && version_compare(PHP_VERSION, '5.3.0') >= 0) {// from known date format
+    if (!empty($format)) {// from known date format
         return DateTime::createFromFormat('!'.$format, (string) $original); // ! char to reset fields to UNIX epoch
     } else {
         $t = trim((string) $original, '0123456789');

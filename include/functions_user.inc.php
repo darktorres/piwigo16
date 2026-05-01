@@ -1079,6 +1079,50 @@ function pwg_password_hash(string $password): string
  * @param int|null $user_id provide to trigger automatic rehash upgrade in DB
  * @return bool
  */
+function phpass_verify(string $password, string $hash): bool
+{
+    if (strlen($hash) != 34) {
+        return false;
+    }
+    $itoa64 = './0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+    $count_log2 = strpos($itoa64, $hash[3]);
+    if ($count_log2 < 7 || $count_log2 > 30) {
+        return false;
+    }
+    $count = 1 << $count_log2;
+    $salt = substr($hash, 4, 8);
+    if (strlen($salt) != 8) {
+        return false;
+    }
+    $output_hash = md5($salt . $password, true);
+    for ($i = 0; $i < $count; $i++) {
+        $output_hash = md5($output_hash . $password, true);
+    }
+    $result = substr($hash, 0, 12);
+    $result_chars = '';
+    $i = 0;
+    do {
+        $value = ord($output_hash[$i++]);
+        $result_chars .= $itoa64[$value & 0x3f];
+        if ($i < 16) {
+            $value |= ord($output_hash[$i]) << 8;
+        }
+        $result_chars .= $itoa64[($value >> 6) & 0x3f];
+        if ($i++ >= 16) {
+            break;
+        }
+        if ($i < 16) {
+            $value |= ord($output_hash[$i]) << 16;
+        }
+        $result_chars .= $itoa64[($value >> 12) & 0x3f];
+        if ($i++ >= 16) {
+            break;
+        }
+        $result_chars .= $itoa64[($value >> 18) & 0x3f];
+    } while ($i < 16);
+    return $result . $result_chars === $hash;
+}
+
 function pwg_password_verify(string $password, string $hash, ?int $user_id = null): bool
 {
     // Native bcrypt — fast path
@@ -1091,13 +1135,8 @@ function pwg_password_verify(string $password, string $hash, ?int $user_id = nul
     }
 
     // Legacy phpass ($P$) — verify then upgrade to bcrypt on first login
-    if (str_starts_with($hash, '$P$')) {
-        global $pwg_hasher;
-        if (empty($pwg_hasher)) {
-            require_once(PHPWG_ROOT_PATH . 'include/passwordhash.class.php');
-            $pwg_hasher = new PasswordHash(13, true);
-        }
-        if (!$pwg_hasher->CheckPassword($password, $hash)) {
+    if (str_starts_with($hash, '$P$') || str_starts_with($hash, '$H$')) {
+        if (!phpass_verify($password, $hash)) {
             return false;
         }
         if ($user_id !== null && !\Piwigo\Core\Config::externalAuthentification()) {

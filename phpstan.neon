@@ -24,7 +24,6 @@ parameters:
             - install/db/*.php
             - language/*.php
             - include/feedcreator.class.php
-            - include/passwordhash.class.php
             - vendor/*
     bootstrapFiles:
         - tools/phpstan-bootstrap.php

@@ -112,9 +112,10 @@ use Piwigo\Ws\PwgNamedStruct;
 
     if (!empty($params['status'])) {
         $status_arr = is_array($params['status']) ? $params['status'] : [];
+        $status_arr = array_map(fn ($v) => is_scalar($v) ? (string) $v : '', $status_arr);
         $status_arr = array_intersect($status_arr, get_enums(USER_INFOS_TABLE, 'status'));
         if (count($status_arr) > 0) {
-            $where_clauses[] = 'ui.status IN("'. implode('","', array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $status_arr)) .'")';
+            $where_clauses[] = 'ui.status IN("'. implode('","', $status_arr) .'")';
         }
     }
 
@@ -384,7 +385,7 @@ SELECT DISTINCT ';
         return new PwgError(403, 'Invalid security token');
     }
 
-    if (strlen(str_replace(' ', '', $params['username'])) == 0) {
+    if (strlen(str_replace(' ', '', is_scalar($params['username']) ? (string) $params['username'] : '')) == 0) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'Name field must not be empty');
     }
 
@@ -400,9 +401,9 @@ SELECT DISTINCT ';
 
     $errors = [];
     $user_id = register_user(
-        $params['username'],
-        $params['password'],
-        $params['email'],
+        is_string($params['username']) ? $params['username'] : '',
+        is_string($params['password']) ? $params['password'] : '',
+        is_string($params['email']) ? $params['email'] : null,
         false, // notify admin
         $errors,
         false // $params['send_password_by_mail']
@@ -431,7 +432,7 @@ SELECT DISTINCT ';
         return new PwgError(403, 'Invalid security token');
     }
 
-    $authkey = create_user_auth_key($params['user_id']);
+    $authkey = create_user_auth_key(is_numeric($params['user_id']) ? (int) $params['user_id'] : 0);
 
     if ($authkey === false) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'invalid user_id');
@@ -479,11 +480,12 @@ SELECT
     }
 
     // protect some users
-    $params['user_id'] = array_diff($params['user_id'], $protected_users);
+    $user_id_arr = is_array($params['user_id']) ? array_map(fn ($v) => is_numeric($v) ? (int) $v : 0, $params['user_id']) : [];
+    $user_id_arr = array_diff($user_id_arr, $protected_users);
 
     $counter = 0;
 
-    foreach ($params['user_id'] as $user_id) {
+    foreach ($user_id_arr as $user_id) {
         delete_user($user_id);
         $counter++;
     }
@@ -526,12 +528,17 @@ SELECT
     $updated_users = check_and_save_user_infos($params);
 
     if (isset($updated_users['error'])) {
-        return new PwgError($updated_users[ 'error' ][ 'code' ], $updated_users[ 'error' ][ 'message' ]);
+        $err = is_array($updated_users['error']) ? $updated_users['error'] : [];
+        return new PwgError(
+            is_int($err['code'] ?? null) ? $err['code'] : null,
+            is_string($err['message'] ?? null) ? $err['message'] : ''
+        );
     }
 
+    $infos_val = is_array($updated_users['infos'] ?? null) ? $updated_users['infos'] : [];
     return $service->invoke('pwg.users.getList', [
       'user_id' => $updated_users['user_id'],
-      'display' => 'basics,'.implode(',', array_keys($updated_users['infos'])),
+      'display' => 'basics,'.implode(',', array_keys($infos_val)),
     ]);
 }
 
@@ -630,7 +637,11 @@ SELECT '.\Piwigo\Core\Config::userFields()['password'].' AS password
     $updated_users = check_and_save_user_infos($params);
 
     if (isset($updated_users['error'])) {
-        return new PwgError($updated_users[ 'error' ][ 'code' ], $updated_users[ 'error' ][ 'message' ]);
+        $err2 = is_array($updated_users['error']) ? $updated_users['error'] : [];
+        return new PwgError(
+            is_int($err2['code'] ?? null) ? $err2['code'] : null,
+            is_string($err2['message'] ?? null) ? $err2['message'] : ''
+        );
     }
 
     return l10n('Your changes have been applied.');
@@ -651,16 +662,17 @@ SELECT '.\Piwigo\Core\Config::userFields()['password'].' AS password
 {
     global $user;
 
-    if (!preg_match('/^[a-zA-Z0-9_-]+$/', (string) $params['param'])) {
-        return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid param name #'.$params['param'].'#');
+    $pref_param = is_scalar($params['param']) ? (string) $params['param'] : '';
+    if (!preg_match('/^[a-zA-Z0-9_-]+$/', $pref_param)) {
+        return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid param name #'.$pref_param.'#');
     }
 
-    $value = stripslashes((string) $params['value']);
+    $value = stripslashes(is_scalar($params['value']) ? (string) $params['value'] : '');
     if ($params['is_json']) {
         $value = json_decode($value, true);
     }
 
-    userprefs_update_param($params['param'], $value);
+    userprefs_update_param($pref_param, $value);
 
     return $user['preferences'];
 }
@@ -682,11 +694,12 @@ SELECT '.\Piwigo\Core\Config::userFields()['password'].' AS password
         return new PwgError(403, 'User must be logged in.');
     }
 
+    $fav_image_id = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
     // does the image really exist?
     $query = '
 SELECT COUNT(*)
   FROM '. IMAGES_TABLE .'
-  WHERE id = '. $params['image_id'] .'
+  WHERE id = '. $fav_image_id .'
 ;';
     [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
     if ($count == 0) {
@@ -696,7 +709,7 @@ SELECT COUNT(*)
     single_insert(
         FAVORITES_TABLE,
         [
-        'image_id' => $params['image_id'],
+        'image_id' => $fav_image_id,
         'user_id' => $user['id'],
     ],
         ['ignore' => true]
@@ -722,11 +735,12 @@ SELECT COUNT(*)
         return new PwgError(403, 'User must be logged in.');
     }
 
+    $rem_image_id = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
     // does the image really exist?
     $query = '
 SELECT COUNT(*)
   FROM '. IMAGES_TABLE .'
-  WHERE id = '. $params['image_id'] .'
+  WHERE id = '. $rem_image_id .'
 ;';
     [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
     if ($count == 0) {
@@ -737,7 +751,7 @@ SELECT COUNT(*)
 DELETE
   FROM '.FAVORITES_TABLE.'
   WHERE user_id = '.$user['id'].'
-    AND image_id = '.$params['image_id'].'
+    AND image_id = '.$rem_image_id.'
 ;';
 
     pwg_query($query);
@@ -802,14 +816,16 @@ SELECT
         $images[] = array_merge($image, ws_std_get_urls($row));
     }
 
+    $fav_per_page = is_numeric($params['per_page']) ? (int) $params['per_page'] : 0;
+    $fav_page = is_numeric($params['page']) ? (int) $params['page'] : 0;
     $count = count($images);
-    $images = array_slice($images, $params['per_page'] * $params['page'], $params['per_page']);
+    $images = array_slice($images, $fav_per_page * $fav_page, $fav_per_page);
 
     return [
       'paging' => new PwgNamedStruct(
           [
-          'page' => $params['page'],
-          'per_page' => $params['per_page'],
+          'page' => $fav_page,
+          'per_page' => $fav_per_page,
           'count' => $count,
       ]
       ),
@@ -844,42 +860,49 @@ SELECT
         return new PwgError(403, 'Invalid security token');
     }
 
+    $target_user_id = is_numeric($params['user_id']) ? (int) $params['user_id'] : 0;
     // check if user exist
-    if (get_username($params['user_id']) === false) {
+    if (get_username($target_user_id) === false) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'This user does not exist.');
     }
 
-    $user_lost = getuserdata($params['user_id']);
+    $user_lost = getuserdata($target_user_id);
     if ($user_lost === false) {
         return new PwgError(404, 'User not found');
     }
 
+    $user_lost_status = is_string($user_lost['status'] ?? null) ? $user_lost['status'] : '';
     // Cannot perform this action for a guest or generic user
-    if (is_a_guest($user_lost['status']) or is_generic($user_lost['status'])) {
+    if (is_a_guest($user_lost_status) or is_generic($user_lost_status)) {
         return new PwgError(403, 'Password reset is not allowed for this user');
     }
 
     // Only webmaster can perform this action for another webmaster
-    if ('admin' === $user['status'] && 'webmaster' === $user_lost['status']) {
+    if ('admin' === $user['status'] && 'webmaster' === $user_lost_status) {
         return new PwgError(403, 'You cannot perform this action');
     }
 
-    $first_login = has_already_logged_in($params['user_id']);
+    $first_login = has_already_logged_in($target_user_id);
     $send_by_mail_response = null;
-    $lang_to_use = $first_login ? get_default_language() : $user_lost['language'];
+    $user_lost_language = is_string($user_lost['language'] ?? null) ? $user_lost['language'] : '';
+    $lang_to_use = $first_login ? get_default_language() : $user_lost_language;
 
     switch_lang_to($lang_to_use);
-    $generate_link = generate_password_link($params['user_id'], $first_login);
+    $generate_link = generate_password_link($target_user_id, $first_login);
 
-    if ($params['send_by_mail'] and !empty($user_lost['email'])) {
+    $user_lost_email = is_string($user_lost['email'] ?? null) ? $user_lost['email'] : '';
+    $user_lost_username = is_string($user_lost['username'] ?? null) ? $user_lost['username'] : '';
+    $gen_password_link = is_string($generate_link['password_link'] ?? null) ? $generate_link['password_link'] : '';
+    $gen_time_validation = is_string($generate_link['time_validation'] ?? null) ? $generate_link['time_validation'] : '';
+    if ($params['send_by_mail'] and !empty($user_lost_email)) {
         if ($first_login) {
-            $email_params = pwg_generate_set_password_mail($user_lost['username'], $generate_link['password_link'], \Piwigo\Core\Config::galleryTitle(), $generate_link['time_validation']);
+            $email_params = pwg_generate_set_password_mail($user_lost_username, $gen_password_link, \Piwigo\Core\Config::galleryTitle(), $gen_time_validation);
         } else {
-            $email_params = pwg_generate_reset_password_mail($user_lost['username'], $generate_link['password_link'], \Piwigo\Core\Config::galleryTitle(), $generate_link['time_validation']);
+            $email_params = pwg_generate_reset_password_mail($user_lost_username, $gen_password_link, \Piwigo\Core\Config::galleryTitle(), $gen_time_validation);
         }
         // Here we remove the display of errors because they prevent the response from being parsed
-        if (@pwg_mail($user_lost['email'], $email_params)) {
-            $send_by_mail_response = 'Mail sent at : ' . $user_lost['email'];
+        if (@pwg_mail($user_lost_email, $email_params)) {
+            $send_by_mail_response = 'Mail sent at : ' . $user_lost_email;
         } else {
             $send_by_mail_response = false;
         }
@@ -887,9 +910,9 @@ SELECT
     switch_lang_back();
 
     return [
-      'generated_link' => $generate_link['password_link'],
+      'generated_link' => $gen_password_link,
       'send_by_mail' => $send_by_mail_response,
-      'time_validation' => $generate_link['time_validation'],
+      'time_validation' => $gen_time_validation,
     ];
 }
 
@@ -918,12 +941,13 @@ SELECT
         return new PwgError(403, 'Invalid security token');
     }
 
+    $main_user_id = is_numeric($params['user_id']) ? (int) $params['user_id'] : 0;
     // checl if user exist
-    if (get_username($params['user_id']) === false) {
+    if (get_username($main_user_id) === false) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'This user does not exist.');
     }
 
-    $new_main_user = getuserdata($params['user_id']);
+    $new_main_user = getuserdata($main_user_id);
     if ($new_main_user === false) {
         return new PwgError(404, 'User not found');
     }
@@ -963,16 +987,17 @@ SELECT
         return new PwgError(400, 'Invalid duration max days is 999999');
     }
 
-    if (strlen((string) $params['key_name']) > 100) {
+    $api_key_name_raw = is_scalar($params['key_name']) ? (string) $params['key_name'] : '';
+    if (strlen($api_key_name_raw) > 100) {
         return new PwgError(400, 'Key name is too long');
     }
 
-    $key_name = pwg_db_real_escape_string($params['key_name']);
-    $duration = 0 == $params['duration'] ? 1 : $params['duration'];
+    $key_name = pwg_db_real_escape_string($api_key_name_raw);
+    $duration = is_numeric($params['duration']) ? (0 == (int) $params['duration'] ? 1 : (int) $params['duration']) : 1;
 
     $secret = create_api_key($user['id'], $duration, $key_name);
 
-    $logger->info('[api_key][user_id='.$user['id'].'][action=create][key_name='.$params['key_name'].']');
+    $logger->info('[api_key][user_id='.$user['id'].'][action=create][key_name='.$api_key_name_raw.']');
 
     return $secret;
 }
@@ -998,17 +1023,18 @@ SELECT
         return new PwgError(403, l10n('Invalid security token'));
     }
 
-    if (!preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', (string) $params['pkid'])) {
+    $revoke_pkid = is_scalar($params['pkid']) ? (string) $params['pkid'] : '';
+    if (!preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', $revoke_pkid)) {
         return new PwgError(403, l10n('Invalid pkid format'));
     }
 
-    $revoked_key = revoke_api_key($user['id'], $params['pkid']);
+    $revoked_key = revoke_api_key($user['id'], $revoke_pkid);
 
     if (true !== $revoked_key) {
         return new PwgError(403, is_string($revoked_key) ? $revoked_key : '');
     }
 
-    $logger->info('[api_key][user_id='.$user['id'].'][action=revoke][pkid='.$params['pkid'].']');
+    $logger->info('[api_key][user_id='.$user['id'].'][action=revoke][pkid='.$revoke_pkid.']');
 
     return l10n('API Key has been successfully revoked.');
 }
@@ -1038,18 +1064,19 @@ SELECT
         return new PwgError(403, l10n('Invalid security token'));
     }
 
-    if (!preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', (string) $params['pkid'])) {
+    $edit_pkid = is_scalar($params['pkid']) ? (string) $params['pkid'] : '';
+    if (!preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', $edit_pkid)) {
         return new PwgError(403, l10n('Invalid pkid format'));
     }
 
-    $key_name = pwg_db_real_escape_string($params['key_name']);
-    $edited_key = edit_api_key($user['id'], $params['pkid'], $key_name);
+    $key_name = pwg_db_real_escape_string(is_scalar($params['key_name']) ? (string) $params['key_name'] : '');
+    $edited_key = edit_api_key($user['id'], $edit_pkid, $key_name);
 
     if (true !== $edited_key) {
         return new PwgError(403, $edited_key);
     }
 
-    $logger->info('[api_key][user_id='.$user['id'].'][action=edit][pkid='.$params['pkid'].'][new_name='.$key_name.']');
+    $logger->info('[api_key][user_id='.$user['id'].'][action=edit][pkid='.$edit_pkid.'][new_name='.$key_name.']');
 
     return l10n('API Key has been successfully edited.');
 }

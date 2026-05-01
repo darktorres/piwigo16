@@ -77,12 +77,14 @@ function ws_plugins_performAction(array $params, \Piwigo\Ws\PwgServer $service):
     define('IN_ADMIN', true);
 
     $plugins = new plugins();
-    $errors = $plugins->perform_action($params['action'], $params['plugin']);
+    $plugin_action = is_string($params['action']) ? $params['action'] : '';
+    $plugin_id = is_string($params['plugin']) ? $params['plugin'] : '';
+    $errors = $plugins->perform_action($plugin_action, $plugin_id);
 
     if (!empty($errors)) {
-        return new PwgError(500, implode(', ', $errors));
+        return new PwgError(500, implode(', ', array_map(fn ($e) => is_scalar($e) ? (string) $e : '', is_array($errors) ? $errors : [])));
     } else {
-        if (in_array($params['action'], ['activate', 'deactivate'])) {
+        if (in_array($plugin_action, ['activate', 'deactivate'])) {
             $template->delete_compiled_templates();
         }
         return true;
@@ -113,12 +115,14 @@ function ws_themes_performAction(array $params, \Piwigo\Ws\PwgServer $service): 
     define('IN_ADMIN', true);
 
     $themes = new themes();
-    $errors = $themes->perform_action($params['action'], $params['theme']);
+    $theme_action = is_string($params['action']) ? $params['action'] : '';
+    $theme_id = is_string($params['theme']) ? $params['theme'] : '';
+    $errors = $themes->perform_action($theme_action, $theme_id);
 
     if (!empty($errors)) {
-        return new PwgError(500, implode(', ', $errors));
+        return new PwgError(500, implode(', ', array_map(fn ($e) => is_scalar($e) ? (string) $e : '', $errors)));
     } else {
-        if (in_array($params['action'], ['activate', 'deactivate'])) {
+        if (in_array($theme_action, ['activate', 'deactivate'])) {
             $template->delete_compiled_templates();
         }
         return true;
@@ -156,9 +160,9 @@ function ws_extensions_update(array $params, \Piwigo\Ws\PwgServer $service): mix
 
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
-    $type = $params['type'];
-    $extension_id = $params['id'];
-    $revision = $params['revision'];
+    $type = is_string($params['type']) ? $params['type'] : '';
+    $extension_id = is_string($params['id']) ? $params['id'] : '';
+    $revision = is_string($params['revision']) ? $params['revision'] : '';
 
     $upgrade_status = 'ok';
     $extension_name = '';
@@ -184,8 +188,10 @@ function ws_extensions_update(array $params, \Piwigo\Ws\PwgServer $service): mix
             );
         }
 
-        [$upgrade_status] = $extension->perform_action('update', $extension_id, ['revision' => $revision]);
-        $extension_name = $extension->fs_plugins[$extension_id]['name'];
+        $perform_result = $extension->perform_action('update', $extension_id, ['revision' => $revision]);
+        $upgrade_status = is_array($perform_result) ? ($perform_result[0] ?? 'ok') : 'ok';
+        $upgrade_status = is_string($upgrade_status) ? $upgrade_status : 'ok';
+        $extension_name = is_string($extension->fs_plugins[$extension_id]['name'] ?? null) ? $extension->fs_plugins[$extension_id]['name'] : '';
 
         if (isset($params['reactivate'])) {
             $extension->perform_action('activate', $extension_id);
@@ -193,13 +199,14 @@ function ws_extensions_update(array $params, \Piwigo\Ws\PwgServer $service): mix
     } elseif ($type == 'themes') {
         $extension = new \Piwigo\Admin\themes();
         $upgrade_status = $extension->extract_theme_files('upgrade', $revision, $extension_id);
-        $extension_name = $extension->fs_themes[$extension_id]['name'];
+        $extension_name = is_string($extension->fs_themes[$extension_id]['name'] ?? null) ? $extension->fs_themes[$extension_id]['name'] : '';
 
-        $activity_details = ['theme_id' => $extension_id, 'from_version' => $extension->fs_themes[$extension_id]['version']];
+        $from_version = is_string($extension->fs_themes[$extension_id]['version'] ?? null) ? $extension->fs_themes[$extension_id]['version'] : '';
+        $activity_details = ['theme_id' => $extension_id, 'from_version' => $from_version];
 
         if ('ok' == $upgrade_status) {
             $extension->get_fs_themes(); // refresh list
-            $activity_details['to_version'] = $extension->fs_themes[$extension_id]['version'];
+            $activity_details['to_version'] = is_string($extension->fs_themes[$extension_id]['version'] ?? null) ? $extension->fs_themes[$extension_id]['version'] : '';
         } else {
             $activity_details['result'] = 'error';
         }
@@ -208,7 +215,7 @@ function ws_extensions_update(array $params, \Piwigo\Ws\PwgServer $service): mix
     } elseif ($type == 'languages') {
         $extension = new \Piwigo\Admin\languages();
         $upgrade_status = $extension->extract_language_files('upgrade', $revision, $extension_id);
-        $extension_name = $extension->fs_languages[$extension_id]['name'];
+        $extension_name = is_string($extension->fs_languages[$extension_id]['name'] ?? null) ? $extension->fs_languages[$extension_id]['name'] : '';
     }
 
     global $template;
@@ -246,13 +253,16 @@ function ws_extensions_ignoreupdate(array $params, \Piwigo\Ws\PwgServer $service
         return new PwgError(403, 'Invalid security token');
     }
 
-    \Piwigo\Core\Config::override('updates_ignored', unserialize(\Piwigo\Core\Config::get('updates_ignored') ?? ''));
+    $updates_ignored_raw = \Piwigo\Core\Config::get('updates_ignored');
+    $updates_ignored_unserialized = is_string($updates_ignored_raw) ? unserialize($updates_ignored_raw) : false;
+    \Piwigo\Core\Config::override('updates_ignored', is_array($updates_ignored_unserialized) ? $updates_ignored_unserialized : []);
 
     // Reset ignored extension
     if ($params['reset']) {
         $updates_ignored = \Piwigo\Core\Config::get('updates_ignored');
-        if (!empty($params['type']) and isset($updates_ignored[ $params['type'] ])) {
-            $updates_ignored[$params['type']] = [];
+        $ignore_type = is_string($params['type'] ?? null) ? $params['type'] : '';
+        if (!empty($ignore_type) and is_array($updates_ignored) and isset($updates_ignored[$ignore_type])) {
+            $updates_ignored[$ignore_type] = [];
             \Piwigo\Core\Config::override('updates_ignored', $updates_ignored);
         } else {
             \Piwigo\Core\Config::override('updates_ignored', [
@@ -267,13 +277,20 @@ function ws_extensions_ignoreupdate(array $params, \Piwigo\Ws\PwgServer $service
         return true;
     }
 
-    if (empty($params['id']) or empty($params['type']) or !in_array($params['type'], ['plugins', 'themes', 'languages'])) {
+    $ignore_id = is_string($params['id'] ?? null) ? $params['id'] : '';
+    $ignore_type2 = is_string($params['type'] ?? null) ? $params['type'] : '';
+    if (empty($ignore_id) or empty($ignore_type2) or !in_array($ignore_type2, ['plugins', 'themes', 'languages'])) {
         return new PwgError(403, 'Invalid parameters');
     }
 
     // Add or remove extension from ignore list
-    if (!in_array($params['id'], \Piwigo\Core\Config::get('updates_ignored')[ $params['type'] ])) {
-        \Piwigo\Core\Config::get('updates_ignored')[ $params['type'] ][] = $params['id'];
+    $ignored_cfg_raw = \Piwigo\Core\Config::get('updates_ignored');
+    $ignored_cfg = is_array($ignored_cfg_raw) ? $ignored_cfg_raw : [];
+    $ignored_for_type = is_array($ignored_cfg[$ignore_type2] ?? null) ? $ignored_cfg[$ignore_type2] : [];
+    if (!in_array($ignore_id, $ignored_for_type)) {
+        $ignored_for_type[] = $ignore_id;
+        $ignored_cfg[$ignore_type2] = $ignored_for_type;
+        \Piwigo\Core\Config::override('updates_ignored', $ignored_cfg);
     }
 
     conf_update_param('updates_ignored', pwg_db_real_escape_string(serialize(\Piwigo\Core\Config::get('updates_ignored'))));
@@ -303,7 +320,9 @@ function ws_extensions_checkupdates(array $params, \Piwigo\Ws\PwgServer $service
 
     $result['piwigo_need_update'] = $_SESSION['need_update'.PHPWG_VERSION];
 
-    \Piwigo\Core\Config::override('updates_ignored', unserialize(\Piwigo\Core\Config::get('updates_ignored') ?? ''));
+    $cu_updates_ignored_raw = \Piwigo\Core\Config::get('updates_ignored');
+    $cu_updates_ignored = is_string($cu_updates_ignored_raw) ? unserialize($cu_updates_ignored_raw) : false;
+    \Piwigo\Core\Config::override('updates_ignored', is_array($cu_updates_ignored) ? $cu_updates_ignored : []);
 
     // Always check extensions fresh to match the updates page behavior
     $update->check_extensions();

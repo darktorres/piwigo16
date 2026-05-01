@@ -45,7 +45,7 @@ function ws_isInvokeAllowed(mixed $res, string $methodName, array $params): mixe
 function ws_std_image_sql_filter(array $params, string $tbl_name = ''): array
 {
     foreach (['f_min_date_available', 'f_max_date_available', 'f_min_date_created', 'f_max_date_created'] as $datefield) {
-        if (isset($params[$datefield]) and !is_valid_mysql_datetime($params[$datefield])) {
+        if (isset($params[$datefield]) and !is_valid_mysql_datetime(is_scalar($params[$datefield]) ? (string) $params[$datefield] : '')) {
             global $service;
             $service->sendResponse(new PwgError(WS_ERR_INVALID_PARAM, 'Invalid '.$datefield));
             exit;
@@ -66,16 +66,16 @@ function ws_std_image_sql_filter(array $params, string $tbl_name = ''): array
         $clauses[] = $tbl_name.'hit<='.$params['f_max_hit'];
     }
     if (isset($params['f_min_date_available'])) {
-        $clauses[] = $tbl_name."date_available>='".$params['f_min_date_available']."'";
+        $clauses[] = $tbl_name."date_available>='". (is_scalar($params['f_min_date_available']) ? (string) $params['f_min_date_available'] : '') ."'";
     }
     if (isset($params['f_max_date_available'])) {
-        $clauses[] = $tbl_name."date_available<'".$params['f_max_date_available']."'";
+        $clauses[] = $tbl_name."date_available<'". (is_scalar($params['f_max_date_available']) ? (string) $params['f_max_date_available'] : '') ."'";
     }
     if (isset($params['f_min_date_created'])) {
-        $clauses[] = $tbl_name."date_creation>='".$params['f_min_date_created']."'";
+        $clauses[] = $tbl_name."date_creation>='". (is_scalar($params['f_min_date_created']) ? (string) $params['f_min_date_created'] : '') ."'";
     }
     if (isset($params['f_max_date_created'])) {
-        $clauses[] = $tbl_name."date_creation<'".$params['f_max_date_created']."'";
+        $clauses[] = $tbl_name."date_creation<'". (is_scalar($params['f_max_date_created']) ? (string) $params['f_max_date_created'] : '') ."'";
     }
     if (is_numeric($params['f_min_ratio'])) {
         $clauses[] = $tbl_name.'width/'.$tbl_name.'height>='.$params['f_min_ratio'];
@@ -102,7 +102,7 @@ function ws_std_image_sql_order(array $params, string $tbl_name = ''): string
     $matches = [];
     preg_match_all(
         '/([a-z_]+) *(?:(asc|desc)(?:ending)?)? *(?:, *|$)/i',
-        (string) $params['order'],
+        is_scalar($params['order']) ? (string) $params['order'] : '',
         $matches
     );
     for ($i = 0; $i < count($matches[1]); $i++) {
@@ -169,12 +169,15 @@ function ws_std_get_urls(array $image_row): array
 
     $ret['download_url'] = null;
     if ($provide_download_url) {
-        $ret['download_url'] = get_action_url($image_row['id'], 'e', true);
+        $ret['download_url'] = get_action_url(is_int($image_row['id']) || is_string($image_row['id']) ? $image_row['id'] : 0, 'e', true);
     }
 
     $derivatives = DerivativeImage::get_all($src_image);
     $derivatives_arr = [];
     foreach ($derivatives as $type => $derivative) {
+        if (!($derivative instanceof DerivativeImage)) {
+            continue;
+        }
         $size = $derivative->get_size();
         if ($size === null) {
             $size = [null, null];
@@ -216,7 +219,7 @@ function ws_std_get_tag_xml_attributes(): array
 
 /**
  * create a tree from a flat list of categories, no recursivity for high speed
- * @param array<mixed> $categories
+ * @param array<array<string,mixed>> $categories
  * @return array<mixed>
  */
 function categories_flatlist_to_tree(array $categories): array
@@ -225,17 +228,31 @@ function categories_flatlist_to_tree(array $categories): array
     $key_of_cat = [];
 
     foreach ($categories as $key => &$node) {
-        $key_of_cat[$node['id']] = $key;
+        $node_id_raw = $node['id'] ?? null;
+        $node_id = is_int($node_id_raw) || is_string($node_id_raw) ? $node_id_raw : null;
+        if ($node_id === null) {
+            continue;
+        }
+        $key_of_cat[$node_id] = $key;
 
         if (!isset($node['id_uppercat'])) {
             $tree[] = &$node;
         } else {
-            if (!isset($categories[ $key_of_cat[ $node['id_uppercat'] ] ]['sub_categories'])) {
-                $categories[ $key_of_cat[ $node['id_uppercat'] ] ]['sub_categories'] =
+            $upper_id_raw = $node['id_uppercat'];
+            $upper_id = is_int($upper_id_raw) || is_string($upper_id_raw) ? $upper_id_raw : null;
+            if ($upper_id === null || !isset($key_of_cat[$upper_id])) {
+                continue;
+            }
+            $parent_key = $key_of_cat[$upper_id];
+            if (!isset($categories[$parent_key]['sub_categories'])) {
+                $categories[$parent_key]['sub_categories'] =
                   new PwgNamedArray([], 'category', ws_std_get_category_xml_attributes());
             }
 
-            $categories[ $key_of_cat[ $node['id_uppercat'] ] ]['sub_categories']->_content[] = &$node;
+            $sub = $categories[$parent_key]['sub_categories'];
+            if ($sub instanceof PwgNamedArray) {
+                $sub->appendItem($node);
+            }
         }
     }
 

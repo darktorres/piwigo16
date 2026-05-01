@@ -700,7 +700,7 @@ SELECT *
             }
 
             $name_raw = trigger_change('render_element_name', $image['name'] ?? '', __FUNCTION__);
-            $image['name'] = strip_tags($name_raw);
+            $image['name'] = strip_tags(is_string($name_raw) ? $name_raw : (string) $name_raw);
             $image['comment'] = trigger_change('render_element_description', $image['comment'] ?? null, __FUNCTION__);
 
             $image = array_merge($image, ws_std_get_urls($row));
@@ -1743,10 +1743,11 @@ function ws_images_upload(array $params, \Piwigo\Ws\PwgServer $service): mixed
         include_once(PHPWG_ROOT_PATH.'admin/include/functions_upload.inc.php');
 
         if (isset($params['format_of'])) {
+            $format_of_id = is_numeric($params['format_of']) ? (int) $params['format_of'] : 0;
             $query = '
 SELECT *
   FROM '.IMAGES_TABLE.'
-  WHERE id = '. $params['format_of'] .'
+  WHERE id = '. $format_of_id .'
 ;';
             $images = query2array($query);
             if (count($images) == 0) {
@@ -1982,7 +1983,7 @@ SELECT COUNT(*)
 
     // loop over all chunks
     foreach ($chunk_ids_uploaded as $chunk_id) {
-        $chunkfile_path = sprintf($chunkfile_path_pattern, $chunk_id, $params['chunks']);
+        $chunkfile_path = sprintf($chunkfile_path_pattern, $chunk_id, is_numeric($params['chunks']) ? (int) $params['chunks'] : 0);
 
         // chunk deleted by preceding merge?
         if (!file_exists($chunkfile_path)) {
@@ -2245,7 +2246,7 @@ SELECT
     $candidates_array = is_array($candidates) ? $candidates : [];
     foreach ($candidates_array as $format_external_id => $format_filename) {
         $format_external_id_str = (string) $format_external_id;
-        $format_filename_str = (string) $format_filename;
+        $format_filename_str = is_scalar($format_filename) ? (string) $format_filename : '';
         $candidate_filename_wo_ext = null;
 
         if (preg_match('/^(.*?)\.('.implode('|', \Piwigo\Core\Config::formatExtensions()).')$/', $format_filename_str, $matches)) {
@@ -2418,10 +2419,11 @@ function ws_images_checkFiles(array $params, \Piwigo\Ws\PwgServer $service): Pwg
 
     $logger->debug(__FUNCTION__, 'WS', $params);
 
+    $check_image_id = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
     $query = '
 SELECT path
   FROM '. IMAGES_TABLE .'
-  WHERE id = '. $params['image_id'] .'
+  WHERE id = '. $check_image_id .'
 ;';
     $result = pwg_query($query);
 
@@ -2490,10 +2492,11 @@ function ws_images_setInfo(array $params, \Piwigo\Ws\PwgServer $service): mixed
 
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
+    $set_image_id = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
     $query = '
 SELECT *
   FROM '. IMAGES_TABLE .'
-  WHERE id = '. $params['image_id'] .'
+  WHERE id = '. $set_image_id .'
 ;';
     $result = pwg_query($query);
 
@@ -2514,23 +2517,26 @@ SELECT *
       'date_creation',
       ];
 
+    $single_value_mode = is_scalar($params['single_value_mode'] ?? null) ? (string) $params['single_value_mode'] : '';
+    $multiple_value_mode = is_scalar($params['multiple_value_mode'] ?? null) ? (string) $params['multiple_value_mode'] : '';
+
     foreach ($info_columns as $key) {
         if (isset($params[$key])) {
             if (!\Piwigo\Core\Config::allowHtmlDescriptions() or !isset($params['pwg_token'])) {
-                $params[$key] = strip_tags((string) $params[$key], '<b><strong><em><i>');
+                $params[$key] = strip_tags(is_scalar($params[$key]) ? (string) $params[$key] : '', '<b><strong><em><i>');
             }
 
-            if ('fill_if_empty' == $params['single_value_mode']) {
+            if ('fill_if_empty' == $single_value_mode) {
                 if (empty($image_row[$key])) {
                     $update[$key] = $params[$key];
                 }
-            } elseif ('replace' == $params['single_value_mode']) {
+            } elseif ('replace' == $single_value_mode) {
                 $update[$key] = $params[$key];
             } else {
                 return new PwgError(
                     500,
                     '[ws_images_setInfo]'
-          .' invalid parameter single_value_mode "'.$params['single_value_mode'].'"'
+          .' invalid parameter single_value_mode "'.$single_value_mode.'"'
           .', possible values are {fill_if_empty, replace}.'
                 );
             }
@@ -2546,14 +2552,14 @@ SELECT *
         }
 
         // prevent XSS, remove HTML tags
-        $update['file'] = strip_tags((string) $params['file']);
+        $update['file'] = strip_tags(is_scalar($params['file']) ? (string) $params['file'] : '');
         if (empty($update['file'])) {
             unset($update['file']);
         }
     }
 
     if (count(array_keys($update)) > 0) {
-        $update['id'] = $params['image_id'];
+        $update['id'] = $set_image_id;
 
         single_update(
             IMAGES_TABLE,
@@ -2561,14 +2567,14 @@ SELECT *
             ['id' => $update['id']]
         );
 
-        pwg_activity('photo', $update['id'], 'edit');
+        pwg_activity('photo', $set_image_id, 'edit');
     }
 
     if (isset($params['categories'])) {
         ws_add_image_category_relations(
-            $params['image_id'],
-            $params['categories'],
-            ('replace' == $params['multiple_value_mode'] ? true : false)
+            $set_image_id,
+            is_string($params['categories']) ? $params['categories'] : '',
+            ('replace' == $multiple_value_mode ? true : false)
         );
     }
 
@@ -2576,7 +2582,7 @@ SELECT *
     if (isset($params['tag_ids'])) {
         $tag_ids = [];
 
-        foreach (explode(',', (string) $params['tag_ids']) as $candidate) {
+        foreach (explode(',', is_scalar($params['tag_ids']) ? (string) $params['tag_ids'] : '') as $candidate) {
             $candidate = trim($candidate);
 
             if (preg_match(PATTERN_ID, $candidate)) {
@@ -2584,21 +2590,21 @@ SELECT *
             }
         }
 
-        if ('replace' == $params['multiple_value_mode']) {
+        if ('replace' == $multiple_value_mode) {
             set_tags(
                 $tag_ids,
-                $params['image_id']
+                $set_image_id
             );
-        } elseif ('append' == $params['multiple_value_mode']) {
+        } elseif ('append' == $multiple_value_mode) {
             add_tags(
                 $tag_ids,
-                [$params['image_id']]
+                [$set_image_id]
             );
         } else {
             return new PwgError(
                 500,
                 '[ws_images_setInfo]'
-        .' invalid parameter multiple_value_mode "'.$params['multiple_value_mode'].'"'
+        .' invalid parameter multiple_value_mode "'.$multiple_value_mode.'"'
         .', possible values are {replace, append}.'
             );
         }
@@ -2613,12 +2619,13 @@ SELECT *
         }
 
         // clean user input
-        foreach ($_REQUEST['tag_list'] as $idx => $tag_candidate) {
-            $_REQUEST['tag_list'][$idx] = pwg_db_real_escape_string(strip_tags(stripslashes((string) $tag_candidate)));
+        $request_tag_list = is_array($_REQUEST['tag_list']) ? $_REQUEST['tag_list'] : [];
+        foreach ($request_tag_list as $idx => $tag_candidate) {
+            $request_tag_list[$idx] = pwg_db_real_escape_string(strip_tags(stripslashes(is_scalar($tag_candidate) ? (string) $tag_candidate : '')));
         }
 
-        $tag_list = get_tag_ids($_REQUEST['tag_list']);
-        set_tags($tag_list, $params['image_id']);
+        $tag_list = get_tag_ids($request_tag_list);
+        set_tags($tag_list, $set_image_id);
     }
 
     invalidate_user_cache();
@@ -2642,18 +2649,19 @@ function ws_images_delete(array $params, \Piwigo\Ws\PwgServer $service): PwgErro
         return new PwgError(403, 'Invalid security token');
     }
 
-    if (!is_array($params['image_id'])) {
-        $params['image_id'] = preg_split(
+    $del_image_ids_raw = $params['image_id'];
+    if (!is_array($del_image_ids_raw)) {
+        $del_image_ids_raw = preg_split(
             '/[\s,;\|]/',
-            (string) $params['image_id'],
+            is_scalar($del_image_ids_raw) ? (string) $del_image_ids_raw : '',
             -1,
             PREG_SPLIT_NO_EMPTY
         ) ?: [];
     }
-    $params['image_id'] = array_map(intval(...), $params['image_id']);
+    $del_image_ids_raw = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $del_image_ids_raw);
 
     $image_ids = [];
-    foreach ($params['image_id'] as $image_id) {
+    foreach ($del_image_ids_raw as $image_id) {
         if ($image_id > 0) {
             $image_ids[] = $image_id;
         }
@@ -2723,23 +2731,25 @@ function ws_images_uploadCompleted(array $params, \Piwigo\Ws\PwgServer $service)
         return new PwgError(403, 'Invalid security token');
     }
 
-    if (!is_array($params['image_id'])) {
-        $params['image_id'] = preg_split(
+    $uc_image_ids_raw = $params['image_id'];
+    if (!is_array($uc_image_ids_raw)) {
+        $uc_image_ids_raw = preg_split(
             '/[\s,;\|]/',
-            (string) $params['image_id'],
+            is_scalar($uc_image_ids_raw) ? (string) $uc_image_ids_raw : '',
             -1,
             PREG_SPLIT_NO_EMPTY
         ) ?: [];
     }
-    $params['image_id'] = array_map(intval(...), $params['image_id']);
+    $uc_image_ids_raw = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $uc_image_ids_raw);
 
     $image_ids = [];
-    foreach ($params['image_id'] as $image_id) {
+    foreach ($uc_image_ids_raw as $image_id) {
         if ($image_id > 0) {
             $image_ids[] = $image_id;
         }
     }
 
+    $uc_category_id = is_numeric($params['category_id']) ? (int) $params['category_id'] : 0;
     // the list of images moved from the lounge might not be the same than
     // $image_ids (canbe a subset or more image_ids from another upload too)
     $moved_from_lounge = empty_lounge();
@@ -2748,16 +2758,16 @@ function ws_images_uploadCompleted(array $params, \Piwigo\Ws\PwgServer $service)
 SELECT
     COUNT(*) AS nb_photos
   FROM '.IMAGE_CATEGORY_TABLE.'
-  WHERE category_id = '.$params['category_id'].'
+  WHERE category_id = '.$uc_category_id.'
 ;';
     $category_infos = pwg_db_fetch_assoc(pwg_query($query));
-    $category_name = get_cat_display_name_from_id($params['category_id'], null);
+    $category_name = get_cat_display_name_from_id($uc_category_id, null);
 
     trigger_notify(
         'ws_images_uploadCompleted',
         [
         'image_ids' => $image_ids,
-        'category_id' => $params['category_id'],
+        'category_id' => $uc_category_id,
         'moved_from_lounge' => $moved_from_lounge,
     ]
     );
@@ -2765,7 +2775,7 @@ SELECT
     return [
       'moved_from_lounge' => $moved_from_lounge,
       'category' => [
-        'id' => $params['category_id'],
+        'id' => $uc_category_id,
         'nb_photos' => $category_infos['nb_photos'] ?? 0,
         'label' => $category_name,
       ],
@@ -2795,7 +2805,7 @@ function ws_images_setMd5sum(array $params, \Piwigo\Ws\PwgServer $service): PwgE
     $added_count = 0;
 
     if (count($no_md5sum_ids) > 0) {
-        $md5sum_ids_to_add = array_slice($no_md5sum_ids, 0, $params['block_size']);
+        $md5sum_ids_to_add = array_slice($no_md5sum_ids, 0, is_numeric($params['block_size']) ? (int) $params['block_size'] : null);
         $added_count = add_md5sum($md5sum_ids_to_add);
     }
 
@@ -2822,18 +2832,19 @@ function ws_images_syncMetadata(array $params, \Piwigo\Ws\PwgServer $service): P
         return new PwgError(403, 'Invalid security token');
     }
 
-    if (!is_array($params['image_id'])) {
-        $params['image_id'] = preg_split(
+    $sync_image_ids_raw = $params['image_id'];
+    if (!is_array($sync_image_ids_raw)) {
+        $sync_image_ids_raw = preg_split(
             '/[\s,;\|]/',
-            (string) $params['image_id'],
+            is_scalar($sync_image_ids_raw) ? (string) $sync_image_ids_raw : '',
             -1,
             PREG_SPLIT_NO_EMPTY
         ) ?: [];
     }
 
     $image_ids = [];
-    foreach ($params['image_id'] as $image_id) {
-        $image_id = trim((string) $image_id);
+    foreach ($sync_image_ids_raw as $image_id) {
+        $image_id = trim(is_scalar($image_id) ? (string) $image_id : '');
 
         if (!preg_match(PATTERN_ID, $image_id)) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid image_id "'.$image_id.'"');
@@ -2885,7 +2896,7 @@ function ws_images_deleteOrphans(array $params, \Piwigo\Ws\PwgServer $service): 
 
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
-    $orphan_ids_to_delete = array_slice(get_orphans(), 0, $params['block_size']);
+    $orphan_ids_to_delete = array_slice(get_orphans(), 0, is_numeric($params['block_size']) ? (int) $params['block_size'] : null);
     $deleted_count = delete_elements($orphan_ids_to_delete, true);
     invalidate_user_cache();
 
@@ -2916,12 +2927,14 @@ function ws_images_setCategory(array $params, \Piwigo\Ws\PwgServer $service): mi
         return new PwgError(403, 'Invalid security token');
     }
 
+    $sc_category_id = is_numeric($params['category_id']) ? (int) $params['category_id'] : 0;
+    $sc_image_ids = is_array($params['image_id']) ? array_map(fn ($v) => is_numeric($v) ? (int) $v : 0, $params['image_id']) : [];
     // does the category really exist?
     $query = '
 SELECT
     id
   FROM '.CATEGORIES_TABLE.'
-  WHERE id = '.$params['category_id'].'
+  WHERE id = '.$sc_category_id.'
 ;';
     $categories = query2array($query);
 
@@ -2931,12 +2944,13 @@ SELECT
 
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
-    if ('associate' == $params['action']) {
-        associate_images_to_categories($params['image_id'], [$params['category_id']]);
-    } elseif ('dissociate' == $params['action']) {
-        dissociate_images_from_category($params['image_id'], $params['category_id']);
-    } elseif ('move' == $params['action']) {
-        move_images_to_categories($params['image_id'], [$params['category_id']]);
+    $sc_action = is_string($params['action'] ?? null) ? $params['action'] : '';
+    if ('associate' == $sc_action) {
+        associate_images_to_categories($sc_image_ids, [$sc_category_id]);
+    } elseif ('dissociate' == $sc_action) {
+        dissociate_images_from_category($sc_image_ids, (string) $sc_category_id);
+    } elseif ('move' == $sc_action) {
+        move_images_to_categories($sc_image_ids, [$sc_category_id]);
     }
 
     invalidate_user_cache();

@@ -31,6 +31,14 @@ class PwgNamedArray
         return $this->_content;
     }
 
+    public function appendItem(mixed $item): void
+    {
+        if (!is_array($this->_content)) {
+            $this->_content = [];
+        }
+        $this->_content[] = $item;
+    }
+
     /** @return array<string, int> */
     public function getXmlAttributes(): array
     {

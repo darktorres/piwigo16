@@ -85,8 +85,6 @@ check_status(ACCESS_GUEST);
 list($dbnow) = pwg_db_fetch_row(pwg_query('SELECT NOW();')) ?? [null];
 $dbnow = $dbnow ? (string)$dbnow : null;
 
-include_once(PHPWG_ROOT_PATH.'include/feedcreator.class.php');
-
 set_make_full_url();
 
 $rss = new UniversalFeedCreator();

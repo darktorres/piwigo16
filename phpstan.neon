@@ -23,7 +23,6 @@ parameters:
         analyseAndScan:
             - install/db/*.php
             - language/*.php
-            - include/feedcreator.class.php
             - vendor/*
     bootstrapFiles:
         - tools/phpstan-bootstrap.php

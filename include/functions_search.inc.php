@@ -165,7 +165,7 @@ function get_regular_search_results(array $search, ?string $images_where = ''): 
     if (isset($search_fields['expert']) and !empty($expert_fields['string']) and $expert_filter['access']) {
         $has_filters_filled = true;
 
-        $expert_string = is_scalar($expert_fields['string'] ?? null) ? (string) $expert_fields['string'] : '';
+        $expert_string = is_scalar($expert_fields['string']) ? (string) $expert_fields['string'] : '';
         $expert_qsr = get_quick_search_results($expert_string, []) ?? [];
         $image_ids_for_filter['expert'] = is_array($expert_qsr['items'] ?? null) ? $expert_qsr['items'] : [];
     }
@@ -200,7 +200,7 @@ function get_regular_search_results(array $search, ?string $images_where = ''): 
         // AND (field1 LIKE '%word2%' OR field2 LIKE '%word2%'))
         $word_clauses = [];
         $cat_ids_by_word = $tag_ids_by_word = [];
-        $allwords_words = is_array($allwords_fields['words'] ?? null) ? $allwords_fields['words'] : [];
+        $allwords_words = is_array($allwords_fields['words']) ? $allwords_fields['words'] : [];
         foreach ($allwords_words as $word) {
             $word = is_scalar($word) ? (string) $word : '';
             $field_clauses = [];
@@ -1287,7 +1287,7 @@ class QMultiToken implements \Stringable
                   && !$token->scope->parse($token)) {
                     $remove = true;
                 }
-            } elseif ($token instanceof \Piwigo\Search\QMultiToken && !count($token->tokens)) {
+            } elseif (!count($token->tokens)) {
                 $remove = true;
             }
             if ($remove) {
@@ -1912,11 +1912,15 @@ function get_quick_search_results_no_cache(string $q, array $options): array
 
     // get inflections for terms
     $lang_code = substr(get_default_language(), 0, 2);
-    @include_once(PHPWG_ROOT_PATH.'include/inflectors/InflectorInterface.php');
-    @include_once(PHPWG_ROOT_PATH.'include/inflectors/'.$lang_code.'.php');
-    $class_name = 'Inflector_'.$lang_code;
-    if (class_exists($class_name) && is_a($class_name, InflectorInterface::class, true)) {
-        $inflector = new $class_name();
+    include_once(PHPWG_ROOT_PATH.'include/inflectors/InflectorInterface.php');
+    include_once(PHPWG_ROOT_PATH.'include/inflectors/en.php');
+    include_once(PHPWG_ROOT_PATH.'include/inflectors/fr.php');
+    $inflector = match($lang_code) {
+        'en' => new Inflector_en(),
+        'fr' => new Inflector_fr(),
+        default => null,
+    };
+    if ($inflector !== null) {
         foreach ($expression->stokens as $token) {
             if (isset($token->scope) && !$token->scope->is_text) {
                 continue;

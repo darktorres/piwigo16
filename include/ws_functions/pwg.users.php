@@ -255,7 +255,7 @@ SELECT DISTINCT ';
 
     $users_id_arr = [];
     if (count($users) > 0) {
-        if (isset($params['display']['groups'])) {
+        if (array_key_exists('groups', $params['display'])) {
             $query = '
   SELECT user_id, group_id
   FROM '. USER_GROUP_TABLE .'

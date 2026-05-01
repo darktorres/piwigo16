@@ -27,15 +27,6 @@ parameters:
     bootstrapFiles:
         - tools/phpstan-bootstrap.php
         - tools/phpstan-types.php
-    treatPhpDocTypesAsCertain: false
-    ignoreErrors:
-        # local/config/config.inc.php and local/config/database.inc.php are gitignored runtime
-        # files. Linux CI (lint job) never has them; Windows dev has them after install/setup.
-        # reportUnmatched: false silently skips entries on platforms that don't produce the error.
-        - message: '#^Path in include\(\) "\./local/config/config\.inc\.php" is not a file or it does not exist\.$#'
-          reportUnmatched: false
-        - message: '#^Path in include\(\) "\./local/config/database\.inc\.php" is not a file or it does not exist\.$#'
-          reportUnmatched: false
 rules:
     - Piwigo\Tools\PhpStan\NoDynamicNewRule
     - Piwigo\Tools\PhpStan\NoGlobalInSrcRule

@@ -103,7 +103,7 @@ SELECT
               and count($cat_ids) == 1
               and isset($cats[ $cat_ids[0] ]['image_order'])
         ) {
-            $order_by = is_scalar($cats[ $cat_ids[0] ]['image_order']) ? (string) $cats[ $cat_ids[0] ]['image_order'] : '';
+            $order_by = (string) $cats[ $cat_ids[0] ]['image_order'];
         }
         $order_by = empty($order_by) ? \Piwigo\Core\Config::orderBy() : 'ORDER BY '.$order_by;
         $favorite_ids = get_user_favorites();
@@ -138,7 +138,7 @@ SELECT SQL_CALC_FOUND_ROWS i.*
                 $image[$k] = $row[$k];
             }
 
-            $image_name = is_scalar($image['name'] ?? null) ? (string) ($image['name'] ?? '') : '';
+            $image_name = (string)($image['name'] ?? '');
             $rendered_name = trigger_change('render_element_name', $image_name, __FUNCTION__);
             $image['name'] = strip_tags(is_scalar($rendered_name) ? (string) $rendered_name : '');
             $image['comment'] = trigger_change('render_element_description', $image['comment'] ?? null, __FUNCTION__);
@@ -191,7 +191,7 @@ SELECT
                 $image_cats = [];
 
                 // it should not be possible at this point, but let's consider a photo can be in no album
-                $image_id_key = is_scalar($image['id'] ?? null) ? (string) ($image['id'] ?? '') : '';
+                $image_id_key = is_scalar($image['id']) ? (string) $image['id'] : '';
                 if (!isset($categories_of_image[$image_id_key])) {
                     continue;
                 }
@@ -796,7 +796,7 @@ SELECT id, id_uppercat, `rank`
         $query = '
 SELECT id
   FROM '.CATEGORIES_TABLE.'
-  WHERE id_uppercat '.(empty($category['id_uppercat']) ? 'IS NULL' : '= '.(is_scalar($category['id_uppercat']) ? (string) $category['id_uppercat'] : '')).'
+  WHERE id_uppercat '.(empty($category['id_uppercat']) ? 'IS NULL' : '= '.(string) $category['id_uppercat']).'
   ORDER BY `id` ASC
 ;';
 
@@ -1102,7 +1102,7 @@ SELECT *
 ;';
     $category = pwg_db_fetch_assoc(pwg_query($query));
 
-    $rep_id = isset($category['representative_picture_id']) && is_scalar($category['representative_picture_id']) ? (string) $category['representative_picture_id'] : '';
+    $rep_id = isset($category['representative_picture_id']) ? (string) $category['representative_picture_id'] : '';
     return get_category_representant_properties($rep_id, IMG_SMALL);
 }
 
@@ -1142,8 +1142,7 @@ SELECT *
             PREG_SPLIT_NO_EMPTY
         ) ?: [];
     }
-    $params_cat_ids_delete = is_array($params['category_id']) ? $params['category_id'] : [];
-    $params['category_id'] = array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $params_cat_ids_delete);
+    $params['category_id'] = array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $params['category_id']);
 
     $category_ids = [];
     foreach ($params['category_id'] as $category_id) {
@@ -1202,8 +1201,7 @@ SELECT id
             PREG_SPLIT_NO_EMPTY
         ) ?: [];
     }
-    $params_cat_ids = is_array($params['category_id']) ? $params['category_id'] : [];
-    $params['category_id'] = array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $params_cat_ids);
+    $params['category_id'] = array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $params['category_id']);
 
     $category_ids = [];
     foreach ($params['category_id'] as $category_id) {
@@ -1275,16 +1273,9 @@ SELECT id, name, dir, uppercats
         }
     }
 
-    $page['infos'] = [];
-    $page['errors'] = [];
-
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
     move_categories($category_ids, $parent_id);
     invalidate_user_cache();
-
-    if (count($page['errors']) != 0) {
-        return new PwgError(403, implode('; ', $page['errors']));
-    }
 
     $query = '
   SELECT uppercats
@@ -1318,7 +1309,7 @@ SELECT
         $sub_cat_without_parent = array_diff(get_subcat_ids([$update_cat]), [$update_cat]);
 
         foreach ($sub_cat_without_parent as $id_sub_cat) {
-            $nb_sub_photos += $nb_photos_in[$id_sub_cat] ?? 0;
+            $nb_sub_photos += $nb_photos_in[(string) $id_sub_cat] ?? 0;
         }
 
         $update_cats[] = [

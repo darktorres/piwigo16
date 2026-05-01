@@ -174,14 +174,14 @@ SELECT *
                 $image[$k] = $row[$k];
             }
 
-            $img_name_str = is_scalar($image['name'] ?? null) ? (string) ($image['name'] ?? '') : '';
+            $img_name_str = (string)($image['name'] ?? '');
             $rendered_tag_name = trigger_change('render_element_name', $img_name_str, __FUNCTION__);
             $image['name'] = strip_tags(is_scalar($rendered_tag_name) ? (string) $rendered_tag_name : '');
             $image['comment'] = trigger_change('render_element_description', $image['comment'] ?? null, __FUNCTION__);
 
             $image = array_merge($image, ws_std_get_urls($row));
 
-            $img_id_key = is_numeric($image['id'] ?? null) ? (int) ($image['id'] ?? 0) : 0;
+            $img_id_key = is_numeric($image['id']) ? (int) $image['id'] : 0;
             $image_tag_ids = ($params['tag_mode_and']) ? $tag_ids : ($image_tag_map[$img_id_key] ?? []);
             $image_tags = [];
             foreach ($image_tag_ids as $tag_id) {

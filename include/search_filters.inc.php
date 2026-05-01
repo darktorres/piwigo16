@@ -82,7 +82,7 @@ if ('search' == $page['section'] and isset($page['search_details'])) {
             // intersection. In this case, $search_items is empty and get_common_tags
             // returns nothing. We should still display the list of selected tags. We
             // have to "force" them in the list.
-            $tags_field = is_array($my_search['fields']['tags'] ?? null) ? $my_search['fields']['tags'] : [];
+            $tags_field = is_array($my_search['fields']['tags']) ? $my_search['fields']['tags'] : [];
             $tags_words_raw = is_array($tags_field['words'] ?? null) ? $tags_field['words'] : [];
             $missing_tag_ids = array_diff(
                 array_map(fn (mixed $v) => is_scalar($v) ? (string) $v : '', $tags_words_raw),
@@ -99,7 +99,7 @@ if ('search' == $page['section'] and isset($page['search_details'])) {
         $filter_tag_ids = count($filter_tags) > 0 ? array_column($filter_tags, 'id') : [];
 
         // in case the search has forbidden tags for current user, we need to filter the search rule
-        $tags_field2 = is_array($my_search['fields']['tags'] ?? null) ? $my_search['fields']['tags'] : [];
+        $tags_field2 = is_array($my_search['fields']['tags']) ? $my_search['fields']['tags'] : [];
         $tags_words2_raw = is_array($tags_field2['words'] ?? null) ? $tags_field2['words'] : [];
         $tags_words2 = array_map(fn (mixed $v) => is_scalar($v) ? (string) $v : '', $tags_words2_raw);
         $filter_tag_ids_str = array_map(fn (mixed $v) => is_scalar($v) ? (string) $v : '', $filter_tag_ids);
@@ -151,7 +151,7 @@ SELECT
         $template->assign('AUTHORS', $filter_rows);
 
         // in case the search has forbidden authors for current user, we need to filter the search rule
-        $author_field = is_array($my_search['fields']['author'] ?? null) ? $my_search['fields']['author'] : [];
+        $author_field = is_array($my_search['fields']['author']) ? $my_search['fields']['author'] : [];
         $author_words_raw = is_array($author_field['words'] ?? null) ? $author_field['words'] : [];
         $author_words_str = array_map(fn (mixed $v) => is_scalar($v) ? (string) $v : '', $author_words_raw);
         $author_names_str = array_map(fn (mixed $v) => is_scalar($v) ? (string) $v : '', $author_names);
@@ -404,19 +404,16 @@ SELECT
             $username_of = query2array($query, 'id', 'username');
 
             foreach (array_keys($added_by) as $added_by_idx) {
-                if (!is_array($added_by[$added_by_idx])) {
-                    continue;
-                }
                 $added_by_id_raw = $added_by[$added_by_idx]['added_by_id'];
                 $added_by_id = is_numeric($added_by_id_raw) ? (int) $added_by_id_raw : 0;
-                $added_by[$added_by_idx]['added_by_name'] = $username_of[$added_by_id] ?? 'user #'.$added_by_id.' (deleted)';
+                $added_by[$added_by_idx]['added_by_name'] = $username_of[(string) $added_by_id] ?? 'user #'.$added_by_id.' (deleted)';
             }
         }
 
         $template->assign('ADDED_BY', $added_by);
 
         // in case the search has forbidden added_by users for current user, we need to filter the search rule
-        $added_by_field_raw = is_array($my_search['fields']['added_by'] ?? null) ? $my_search['fields']['added_by'] : [];
+        $added_by_field_raw = is_array($my_search['fields']['added_by']) ? $my_search['fields']['added_by'] : [];
         $added_by_field_int = array_map(fn (mixed $v) => is_numeric($v) ? (int) $v : 0, $added_by_field_raw);
         $my_search['fields']['added_by'] = array_intersect($added_by_field_int, $user_ids);
     } elseif (isset($my_search['fields']['added_by']) and !($display_filters['added_by']['access'])) {
@@ -424,7 +421,7 @@ SELECT
     }
 
     if (isset($my_search['fields']['cat']) and $display_filters['album']['access']) {
-        $cat_field = is_array($my_search['fields']['cat'] ?? null) ? $my_search['fields']['cat'] : [];
+        $cat_field = is_array($my_search['fields']['cat']) ? $my_search['fields']['cat'] : [];
         $cat_words = is_array($cat_field['words'] ?? null) ? $cat_field['words'] : [];
         if (!empty($cat_words)) {
             $fullname_of = [];

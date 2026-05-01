@@ -208,7 +208,7 @@ SELECT
         $files[] = get_element_path($row);
 
         if (!empty($row['representative_ext'])) {
-            $rep_ext = is_scalar($row['representative_ext']) ? (string) $row['representative_ext'] : '';
+            $rep_ext = (string) $row['representative_ext'];
             $files[] = original_to_representative($files[0], $rep_ext);
         }
 
@@ -845,7 +845,7 @@ SELECT
                 $top_categories[$cat_id_key] = $cat;
 
                 if (!empty($cat['id_uppercat'])) {
-                    $parent_ids[] = is_scalar($cat['id_uppercat']) ? (string) $cat['id_uppercat'] : '0';
+                    $parent_ids[] = (string) $cat['id_uppercat'];
                 }
             }
         }
@@ -2158,10 +2158,10 @@ function pwg_URL(): array
  */
 function invalidate_user_cache(bool $full = true): void
 {
-    /** @var \Piwigo\Core\Logger $logger */
+    /** @var \Piwigo\Core\Logger|null $logger */
     global $persistent_cache, $logger;
 
-    if (isset($logger) and gettype($logger) == 'object' and $logger::class == 'Logger') {
+    if (isset($logger)) {
         $logger->info(__FUNCTION__.' called');
     }
 
@@ -2215,24 +2215,12 @@ function create_table_add_character_set($query)
     if ($db_collate !== '') {
         $charset_collate .= ' COLLATE '.$db_collate;
     }
-    if (is_array($query)) {
-        foreach ($query as $id => $q) {
-            $q = trim($q);
-            $q = trim($q, ';');
-            if (preg_match('/^CREATE\s+TABLE/i', $q)) {
-                $q .= $charset_collate;
-            }
-            $q .= ';';
-            $query[$id] = $q;
-        }
-    } else {
-        $query = trim($query);
-        $query = trim($query, ';');
-        if (preg_match('/^CREATE\s+TABLE/i', $query)) {
-            $query .= $charset_collate;
-        }
-        $query .= ';';
+    $query = trim($query);
+    $query = trim($query, ';');
+    if (preg_match('/^CREATE\s+TABLE/i', $query)) {
+        $query .= $charset_collate;
     }
+    $query .= ';';
     return $query;
 }
 
@@ -3329,10 +3317,9 @@ function get_cache_size_derivatives(string $path): array
                 }
 
                 if (is_file($path.'/'.$node)) {
-                    if ($split = explode('-', $node)) {
-                        $size_code = substr(end($split), 0, 2);
-                        @$msizes[$size_code] += filesize($path.'/'.$node);
-                    }
+                    $split = explode('-', $node);
+                    $size_code = substr(end($split), 0, 2);
+                    @$msizes[$size_code] += filesize($path.'/'.$node);
                 } elseif (is_dir($path.'/'.$node)) {
                     $tmp_msizes = get_cache_size_derivatives($path.'/'.$node);
                     foreach ($tmp_msizes as $size_key => $value) {

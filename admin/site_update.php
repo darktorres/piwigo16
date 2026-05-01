@@ -43,7 +43,7 @@ SELECT galleries_url
 if (!isset($site_url)) {
     die('site '.$site_id.' does not exist');
 }
-$site_url_str = is_scalar($site_url) ? (string) $site_url : '';
+$site_url_str = (string) $site_url;
 $site_is_remote = url_is_remote($site_url_str);
 
 [$dbnow] = pwg_db_fetch_row(pwg_query('SELECT NOW();')) ?? [null];
@@ -718,7 +718,7 @@ if (isset($_POST['submit'])
 
         $datas = [];
         foreach ($files as $id => $file) {
-            $file_path = is_array($file) && is_scalar($file['path'] ?? null) ? (string) ($file['path'] ?? '') : (is_scalar($file) ? (string) $file : '');
+            $file_path = (string) $file['path'];
             $data = $site_reader->get_element_update_attributes($file_path);
 
             $data['id'] = $id;

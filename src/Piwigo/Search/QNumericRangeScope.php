@@ -82,8 +82,8 @@ class QNumericRangeScope extends QSearchScope
         $clauses = [];
         /** @var array{range: array<int,mixed>, strict: array<int,mixed>} $sd */
         $sd = is_array($token->scope_data) ? $token->scope_data : ['range' => ['', ''], 'strict' => [false, false]];
-        $range = is_array($sd['range'] ?? null) ? $sd['range'] : ['', ''];
-        $strict = is_array($sd['strict'] ?? null) ? $sd['strict'] : [false, false];
+        $range = $sd['range'];
+        $strict = $sd['strict'];
         if (($range[0] ?? '') !== '') {
             $clauses[] = $field.' >'.($strict[0] ? '' : '=').(is_scalar($range[0]) ? $range[0] : '').' ';
         }

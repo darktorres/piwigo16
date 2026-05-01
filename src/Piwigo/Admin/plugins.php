@@ -25,7 +25,7 @@ class plugins
         $this->get_fs_plugins();
 
         foreach (get_db_plugins() as $db_plugin) {
-            if (is_array($db_plugin) && isset($db_plugin['id']) && is_string($db_plugin['id'])) {
+            if (isset($db_plugin['id']) && is_string($db_plugin['id'])) {
                 $this->db_plugins_by_id[$db_plugin['id']] = $db_plugin;
             }
         }
@@ -158,7 +158,7 @@ UPDATE '. PLUGINS_TABLE .'
                 }
 
                 if (empty($errors)) {
-                    $version = is_array($crt_db_plugin) && isset($crt_db_plugin['version']) ? (string) $crt_db_plugin['version'] : '';
+                    $version = isset($crt_db_plugin['version']) ? (string) $crt_db_plugin['version'] : '';
                     $errorsArr = is_array($errors) ? $errors : [];
                     $plugin_maintain->activate($version, $errorsArr);
                     $errors = $errorsArr;

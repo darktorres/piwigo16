@@ -39,7 +39,7 @@ final class Config
     {
         /** @var array<string,mixed> $conf */
         $conf = $GLOBALS['conf'] ?? [];
-        self::$data = is_array($conf) ? $conf : [];
+        self::$data = $conf;
         $GLOBALS['conf'] = &self::$data;
         self::$attached = true;
     }

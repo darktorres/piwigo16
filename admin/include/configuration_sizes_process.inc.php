@@ -52,9 +52,6 @@ $pderivatives = is_array($_POST['d'] ?? null) ? $_POST['d'] : [];
 
 // step 1 - sanitize HTML input
 foreach ($pderivatives as $type => &$pderivative) {
-    if (!is_array($pderivative)) {
-        $pderivative = [];
-    }
     if ($pderivative['must_square'] = ($type == IMG_SQUARE ? true : false)) {
         $pderivative['h'] = $pderivative['w'];
         $pderivative['minh'] = $pderivative['minw'] = $pderivative['w'];

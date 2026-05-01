@@ -183,9 +183,7 @@ class ScriptLoader
 
         $result = [ [], [] ];
         foreach ($todo as $id => $script) {
-            if (!is_string($script->load_mode)) {
-                $result[$script->load_mode - 1][$id] = $script;
-            }
+            $result[$script->load_mode - 1][$id] = $script;
         }
         return [ self::do_combine($result[0], 1), self::do_combine($result[1], 2) ];
     }

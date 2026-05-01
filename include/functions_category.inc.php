@@ -755,16 +755,13 @@ SELECT
     $index_of_cat = [];
 
     foreach ($cats as $idx => $cat) {
-        if (!is_array($cat)) {
-            continue;
-        }
         $cat_id_key = (string) $cat['id'];
         $index_of_cat[$cat_id_key] = $idx;
         $cats[$idx]['LEVEL'] = substr_count(is_scalar($cat['global_rank']) ? (string) $cat['global_rank'] : '', '.') + 1;
         $cats[$idx]['name'] = trigger_change('render_category_name', is_scalar($cat['name']) ? (string) $cat['name'] : '', $cat);
 
         // if the category is directly linked to the items, we add an URL + counter
-        if (isset($common_cats[$cat_id_key]) && is_array($common_cats[$cat_id_key])) {
+        if (isset($common_cats[$cat_id_key])) {
             $cats[$idx]['count_images'] = $common_cats[$cat_id_key]['counter'];
 
             $url_params = [];
@@ -791,7 +788,7 @@ SELECT
         if (!empty($cat['id_uppercat']) and @$cats[$idx]['count_images'] > 0) {
             foreach (array_slice(explode(',', (string) $cat['uppercats']), 0, -1) as $uppercat_id) {
                 $upper_idx = $index_of_cat[$uppercat_id] ?? null;
-                if ($upper_idx !== null && is_array($cats[$upper_idx])) {
+                if ($upper_idx !== null) {
                     $cats[$upper_idx]['count_categories'] = ((int) ($cats[$upper_idx]['count_categories'] ?? 0)) + 1;
                 }
             }

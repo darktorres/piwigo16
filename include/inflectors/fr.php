@@ -57,8 +57,8 @@ class Inflector_fr implements InflectorInterface
 
         $word = strtolower((string) $word);
 
-        $rc = @$this->exceptions[$word];
-        if (isset($rc)) {
+        $rc = $this->exceptions[$word] ?? null;
+        if ($rc !== null) {
             if (!empty($rc)) {
                 $res[] = $rc;
             }

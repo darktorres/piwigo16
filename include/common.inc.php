@@ -187,7 +187,7 @@ include(PHPWG_ROOT_PATH.'include/user.inc.php');
 
 // Use GLOBALS access to bypass type narrowing from $user initialization
 $user_globals = $GLOBALS['user'];
-$user_language = is_array($user_globals) ? (is_scalar($user_globals['language'] ?? null) ? (string) ($user_globals['language'] ?? '') : '') : '';
+$user_language = is_array($user_globals) ? (string) $user_globals['language'] : '';
 if (in_array(substr($user_language, 0, 2), ['fr','it','de','es','pl','ru','nl','tr','da'])) {
     define('PHPWG_DOMAIN', substr($user_language, 0, 2).'.piwigo.org');
 } elseif ('zh_CN' == $user_language) {

@@ -377,7 +377,7 @@ SELECT
     }
     unset($value);
 
-    $userdata['preferences'] = empty($userdata['preferences']) ? [] : unserialize(is_scalar($userdata['preferences']) ? (string) $userdata['preferences'] : '');
+    $userdata['preferences'] = [];
 
     if ($use_cache) {
         $generate_user_cache = false;
@@ -1712,7 +1712,7 @@ SELECT
             and !empty($key['email']) // the user have an email
             and (
                 null === $key['last_notified_on'] // we never send an email for this key
-                or strtotime(is_scalar($key['last_notified_on']) ? (string) $key['last_notified_on'] : '') < strtotime(is_scalar($key['48h_ago']) ? (string) $key['48h_ago'] : '') // OR when the last email was sent more than 48 hours ago
+                or strtotime((string) $key['last_notified_on']) < strtotime((string) $key['48h_ago']) // OR when the last email was sent more than 48 hours ago
             )
         ) {
             $page['notify_api_key_expiration'] = [

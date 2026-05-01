@@ -108,8 +108,8 @@ class Inflector_en implements InflectorInterface
 
         $lword = strtolower((string) $word);
 
-        $rc = @$this->exceptions[$lword];
-        if (isset($rc)) {
+        $rc = $this->exceptions[$lword] ?? null;
+        if ($rc !== null) {
             if (!empty($rc)) {
                 $res[] = (string) $rc;
             }

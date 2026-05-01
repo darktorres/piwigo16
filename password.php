@@ -298,10 +298,10 @@ function reset_password(): bool
         ? $_SESSION['valid_reset_password_code']
         : null;
     if ($valid_reset_code !== null && !empty($valid_reset_code['email'])) {
-        $reset_user_language = (string)($valid_reset_code['language'] ?? '');
-        $reset_user_id = isset($valid_reset_code['user_id']) ? (string)$valid_reset_code['user_id'] : '';
-        $reset_user_username = (string)($valid_reset_code['username'] ?? '');
-        $reset_user_email = (string)($valid_reset_code['email'] ?? '');
+        $reset_user_language = $valid_reset_code['language'];
+        $reset_user_id = $valid_reset_code['user_id'] !== null ? (string)$valid_reset_code['user_id'] : '';
+        $reset_user_username = $valid_reset_code['username'];
+        $reset_user_email = $valid_reset_code['email'];
         switch_lang_to($reset_user_language);
 
         $api_keys = get_available_api_key($reset_user_id);

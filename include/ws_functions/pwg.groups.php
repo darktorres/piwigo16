@@ -150,7 +150,7 @@ function ws_groups_setInfo(array $params, \Piwigo\Ws\PwgServer &$service): mixed
         return new PwgError(403, 'Invalid security token');
     }
 
-    $setinfo_name = is_scalar($params['name'] ?? null) ? (string) ($params['name'] ?? '') : '';
+    $setinfo_name = is_scalar($params['name']) ? (string) $params['name'] : '';
     if (isset($params['name']) && strlen(str_replace(' ', '', $setinfo_name)) == 0) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'Name field must not be empty');
     }

@@ -246,7 +246,7 @@ class CalendarMonthly extends CalendarBase
         }
         if (count($items) == 1) {// only one year exists so bail out to year view
             $first_year = array_key_first($items);
-            $y = $first_year !== null ? (string) $first_year : '';
+            $y = (string) $first_year;
             if (is_array($page)) {
                 if (!is_array($page['chronology_date'] ?? null)) {
                     $page['chronology_date'] = [];

@@ -218,7 +218,7 @@ DELETE
                 // script generator
                 elseif ('%'.'PWGVERSION'.'%' == $versions['current']) {
                     \Piwigo\Core\PageState::current()->addInfo(l10n('You are running on development sources, no check possible.'));
-                } elseif (version_compare($versions['current'] ?? '', $versions['latest'] ?? '') < 0) {
+                } elseif (version_compare($versions['current'] ?? '', $versions['latest']) < 0) {
                     \Piwigo\Core\PageState::current()->addInfo(l10n('A new version of Piwigo is available.'));
 
                     $update_url = PHPWG_ROOT_PATH.'admin.php?page=updates';

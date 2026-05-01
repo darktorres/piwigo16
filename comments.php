@@ -421,14 +421,14 @@ SELECT *
         $comment_id_val = is_numeric($comment['comment_id']) ? (int)$comment['comment_id'] : 0;
         $comment_author_id_val = is_numeric($comment['author_id']) ? (int)$comment['author_id'] : 0;
         /** @var array<string, float|int|string|null> $element_row */
-        $element_row = isset($elements[$comment_image_id]) && is_array($elements[$comment_image_id])
-            ? $elements[$comment_image_id]
+        $element_row = isset($elements[(string)$comment_image_id])
+            ? $elements[(string)$comment_image_id]
             : [];
 
         if (!empty($element_row['name'])) {
-            $name = is_scalar($element_row['name']) ? (string)$element_row['name'] : '';
+            $name = (string)$element_row['name'];
         } else {
-            $name = get_name_from_file(is_scalar($element_row['file'] ?? '') ? (string)($element_row['file'] ?? '') : '');
+            $name = get_name_from_file((string)($element_row['file'] ?? ''));
         }
 
         // source of the thumbnail picture
@@ -437,9 +437,9 @@ SELECT *
         // link to the full size picture
         $url = make_picture_url(
             array(
-            'category' => $categories[$comment_category_id] ?? [],
+            'category' => $categories[(string)$comment_category_id] ?? [],
             'image_id' => $comment_image_id,
-            'image_file' => is_scalar($element_row['file'] ?? '') ? (string)($element_row['file'] ?? '') : '',
+            'image_file' => (string)($element_row['file'] ?? ''),
             )
         );
 

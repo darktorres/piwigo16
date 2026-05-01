@@ -93,8 +93,8 @@ class updates
             $url .= ('Official' === $env) ? '&docker' : '&show_requirements'; // Check docker version if in container
             $url .= '&origin_hash='.sha1(\Piwigo\Core\Config::secretKey().get_absolute_root_url());
 
-            if (@fetchRemote($url, $result)
-                and $all_versions = @explode("\n", is_string($result) ? $result : '')) {
+            if (@fetchRemote($url, $result)) {
+                $all_versions = explode("\n", $result);
                 $new_versions['piwigo.org-checked'] = true;
                 $last_version = trim($all_versions[0]);
                 if ('Official' === $env) {
@@ -118,7 +118,7 @@ class updates
                     }
                 } else {
                     $parts0 = explode('/', trim($all_versions[0]));
-                    $last_version_number = $parts0[0] ?? '';
+                    $last_version_number = $parts0[0];
                     $last_version_php = $parts0[1] ?? '';
 
                     if (version_compare(PHPWG_VERSION, $last_version_number, '<')) {
@@ -134,7 +134,7 @@ class updates
                             // Check if new version exists in same branch
                             foreach ($all_versions as $version) {
                                 $vparts = explode('/', trim($version));
-                                $version_number = $vparts[0] ?? '';
+                                $version_number = $vparts[0];
                                 $version_php = $vparts[1] ?? '';
                                 $branch = get_branch_from_version($version_number);
 

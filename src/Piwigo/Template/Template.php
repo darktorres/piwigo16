@@ -289,16 +289,9 @@ class Template
      */
     public function set_filenames($filename_array): bool
     {
-        if (!is_array($filename_array)) {
-            return false;
-        }
         reset($filename_array);
         foreach ($filename_array as $handle => $filename) {
-            if (is_null($filename)) {
-                unset($this->files[$handle]);
-            } else {
-                $this->files[$handle] = $this->get_extent($filename, $handle);
-            }
+            $this->files[$handle] = $this->get_extent($filename, $handle);
         }
         return true;
     }
@@ -325,9 +318,6 @@ class Template
      */
     public function set_extents($filename_array, string $dir = '', $overwrite = true, $theme = 'N/A'): bool
     {
-        if (!is_array($filename_array)) {
-            return false;
-        }
         foreach ($filename_array as $filename => $value) {
             if (is_array($value)) {
                 $h = $value[0];
@@ -531,9 +521,7 @@ class Template
             if (!is_string($href)) {
                 $href = get_root_url().$combi->path;
             }
-            if ($combi->version !== false) {
-                $href .= '?v' . ($combi->version ?: PHPWG_VERSION);
-            }
+            $href .= '?v' . ($combi->version ?: PHPWG_VERSION);
             // trigger the event for eventual use of a cdn
             $href_raw = trigger_change('combined_css', $href, $combi);
             $href = is_string($href_raw) ? $href_raw : $href;
@@ -849,9 +837,9 @@ class Template
         // (e.g. `import './tree.css'` inside an entry module); without
         // this, those styles wouldn't reach the page.
         $manifest = ScriptLoader::getManifest();
-        if ($manifest !== null && isset($manifest[$scriptIdStr]['css']) && is_array($manifest[$scriptIdStr]['css'])) {
+        if ($manifest !== null && isset($manifest[$scriptIdStr]['css'])) {
             foreach ($manifest[$scriptIdStr]['css'] as $i => $cssPath) {
-                if (is_string($cssPath) && $cssPath !== '') {
+                if ($cssPath !== '') {
                     $this->cssLoader->add(
                         $scriptIdStr . '-vite-css-' . $i,
                         'dist/' . $cssPath,
@@ -933,9 +921,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
             $ret = $script->path;
         } else {
             $ret = get_root_url().$script->path;
-            if ($script->version !== false) {
-                $ret .= '?v'. ($script->version ?: PHPWG_VERSION);
-            }
+            $ret .= '?v'. ($script->version ?: PHPWG_VERSION);
         }
         // trigger the event for eventual use of a cdn
         $ret_raw = trigger_change('combined_script', $ret, $script);
@@ -1173,10 +1159,10 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      * @param string $source
      * @param Smarty $smarty
      */
-    public static function prefilter_local_css(string $source, mixed $smarty): string
+    public static function prefilter_local_css(string $source, \Smarty\Smarty $smarty): string
     {
         $css = [];
-        $themes = ($smarty instanceof \Smarty\Smarty) ? $smarty->getTemplateVars('themes') : [];
+        $themes = $smarty->getTemplateVars('themes');
         if (is_array($themes)) {
             foreach ($themes as $theme) {
                 $themeId = is_array($theme) ? ($theme['id'] ?? '') : '';

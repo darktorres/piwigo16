@@ -18,8 +18,8 @@ namespace Piwigo\Admin\Image;
  */
 class pwg_image
 {
-    /** @var imageInterface */
-    public $image;
+    /** @var imageInterface|null */
+    public $image = null;
     public string $library = '';
     public static string $ext_imagick_version = '';
 
@@ -27,7 +27,7 @@ class pwg_image
     {
         trigger_notify('load_image_library', [&$this]);
 
-        if (is_object($this->image)) {
+        if ($this->image !== null) {
             return; // A plugin may have load its own library
         }
 
@@ -71,6 +71,9 @@ class pwg_image
     {
         $starttime = get_moment();
 
+        if ($this->image === null) {
+            throw new \LogicException('Image library not initialized');
+        }
         // width/height
         $source_width  = $this->image->get_width();
         $source_height = $this->image->get_height();
@@ -413,6 +416,9 @@ class pwg_image
 
     public function destroy(): bool
     {
+        if ($this->image === null) {
+            return true;
+        }
         if (method_exists($this->image, 'destroy')) {
             return (bool)$this->image->destroy();
         }

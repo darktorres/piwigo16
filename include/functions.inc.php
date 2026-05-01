@@ -1286,7 +1286,7 @@ function l10n_args(array|string $key_args, string $sep = "\n"): string
                 $result .= is_scalar($formatted) ? (string) $formatted : '';
             } else {
                 /** @var array<mixed>|string $element */
-                $result .= l10n_args(is_array($element) || is_string($element) ? $element : '', $sep);
+                $result .= l10n_args($element, $sep);
             }
         }
     } else {

@@ -487,7 +487,6 @@ function set_status_header($code, $text = ''): void
  */
 function render_category_literal_description($desc): string
 {
-    !isset($desc) ? $desc = '' : false;
     return strip_tags($desc, '<span><p><a><br><b><i><small><big><strong><em>');
 }
 

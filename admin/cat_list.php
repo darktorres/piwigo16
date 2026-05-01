@@ -289,11 +289,11 @@ foreach ($categories as $category) {
               $category['name'],
               'admin_cat_list'
           ),
-        'NB_PHOTOS' => $nb_photos_in[(int)$category['id']] ?? 0,
-        'NB_SUB_PHOTOS' => $nb_sub_photos[(int)$category['id']] ?? 0,
-        'NB_SUB_ALBUMS' => isset($subcats_of[(int)$category['id']]) ? count($subcats_of[(int)$category['id']]) : 0,
+        'NB_PHOTOS' => $nb_photos_in[(string)(int)$category['id']] ?? 0,
+        'NB_SUB_PHOTOS' => $nb_sub_photos[(string)(int)$category['id']] ?? 0,
+        'NB_SUB_ALBUMS' => isset($subcats_of[(string)(int)$category['id']]) ? count($subcats_of[(string)(int)$category['id']]) : 0,
         'ID'         => $category['id'],
-        'RANK'       => (is_numeric($category['rank'] ?? null) ? (int)$category['rank'] : 0) * 10,
+        'RANK'       => (int)($category['rank'] ?? 0) * 10,
 
         'U_JUMPTO'   => make_index_url(
             [
@@ -301,10 +301,10 @@ foreach ($categories as $category) {
             ]
         ),
 
-        'U_CHILDREN' => $cat_list_url.'&amp;parent_id='.(is_scalar($category['id'] ?? '') ? (string)($category['id'] ?? '') : ''),
-        'U_EDIT'     => $base_url.'album-'.(is_scalar($category['id'] ?? '') ? (string)($category['id'] ?? '') : ''),
-        'U_ADD_PHOTOS_ALBUM' => $base_url.'photos_add&amp;album='.(is_scalar($category['id'] ?? '') ? (string)($category['id'] ?? '') : ''),
-        'U_MOVE' => $base_url.'albums#cat-'.(is_scalar($category['id'] ?? '') ? (string)($category['id'] ?? '') : ''),
+        'U_CHILDREN' => $cat_list_url.'&amp;parent_id='.(string)($category['id'] ?? ''),
+        'U_EDIT'     => $base_url.'album-'.(string)($category['id'] ?? ''),
+        'U_ADD_PHOTOS_ALBUM' => $base_url.'photos_add&amp;album='.(string)($category['id'] ?? ''),
+        'U_MOVE' => $base_url.'albums#cat-'.(string)($category['id'] ?? ''),
 
         'IS_VIRTUAL' => empty($category['dir']),
         'CAT_ADMIN_ACCESS' => cat_admin_access(is_numeric($category['id'] ?? null) ? (int)$category['id'] : 0),

@@ -326,9 +326,9 @@ function make_section_in_url(array $params): string
 
                     $section_string .= '/category/';
                     if (empty($cat['permalink'])) {
-                        $section_string .= is_scalar($cat['id'] ?? null) ? (string) ($cat['id'] ?? '') : '';
+                        $section_string .= is_scalar($cat['id']) ? (string) $cat['id'] : '';
                         if (\Piwigo\Core\Config::categoryUrlStyle() == 'id-name') {
-                            $section_string .= '-'.str2url(is_scalar($cat['name'] ?? null) ? (string) ($cat['name'] ?? '') : '');
+                            $section_string .= '-'.str2url(is_scalar($cat['name']) ? (string) $cat['name'] : '');
                         }
                     } else {
                         $section_string .= is_scalar($cat['permalink']) ? (string) $cat['permalink'] : '';
@@ -365,7 +365,7 @@ function make_section_in_url(array $params): string
                     }
                     switch (\Piwigo\Core\Config::tagUrlStyle()) {
                         case 'id':
-                            $section_string .= '/'. (is_scalar($tag['id'] ?? null) ? (string) ($tag['id'] ?? '') : '');
+                            $section_string .= '/'. (is_scalar($tag['id']) ? (string) $tag['id'] : '');
                             break;
                         case 'tag':
                             if (isset($tag['url_name'])) {
@@ -374,7 +374,7 @@ function make_section_in_url(array $params): string
                             }
                             // no break
                         default:
-                            $section_string .= '/'. (is_scalar($tag['id'] ?? null) ? (string) ($tag['id'] ?? '') : '');
+                            $section_string .= '/'. (is_scalar($tag['id']) ? (string) $tag['id'] : '');
                             if (isset($tag['url_name'])) {
                                 $section_string .= '-'. (is_scalar($tag['url_name']) ? (string) $tag['url_name'] : '');
                             }
@@ -464,8 +464,8 @@ function parse_section_url(array $tokens, int &$next_token): array
                 while (isset($tokens[$current_token])
                     and !str_starts_with($tokens[$current_token], 'created-')
                     and !str_starts_with($tokens[$current_token], 'posted-')
-                    and !str_starts_with((string)($tokens[$next_token] ?? ''), 'start-')
-                    and !str_starts_with((string)($tokens[$next_token] ?? ''), 'startcat-')
+                    and !str_starts_with((string) $tokens[$next_token], 'start-')
+                    and !str_starts_with((string) $tokens[$next_token], 'startcat-')
                     and $tokens[$current_token] != 'flat') {
                     if (empty($maybe_permalinks)) {
                         $maybe_permalinks[] = $tokens[$current_token];
@@ -498,7 +498,7 @@ function parse_section_url(array $tokens, int &$next_token): array
             }
         }
 
-        if (isset($page['category']) && !is_array($page['category'])) {
+        if (isset($page['category'])) {
             $result = get_cat_info($page['category']);
             if (empty($result)) {
                 page_not_found(l10n('Requested album does not exist'));
@@ -506,7 +506,7 @@ function parse_section_url(array $tokens, int &$next_token): array
             $page['category'] = $result;
         }
 
-        if (isset($page['combined_categories']) && is_array($page['combined_categories'])) {
+        if (isset($page['combined_categories'])) {
             $combined_categories = [];
 
             foreach ($page['combined_categories'] as $cat_id) {

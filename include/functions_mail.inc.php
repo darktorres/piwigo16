@@ -519,7 +519,6 @@ SELECT
 
         foreach ($users as $u) {
             /** @var array<string,mixed> $u */
-            $u = is_array($u) ? $u : [];
             $authkey = create_user_auth_key((int) $u['user_id'], is_string($u['status']) ? $u['status'] : null);
 
             $user_tpl = $tpl;

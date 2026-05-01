@@ -150,7 +150,7 @@ SELECT id
                         $new_theme = 'default';
                     } else {
                         $new_theme_row = pwg_db_fetch_row($result) ?? [null];
-                        $new_theme = is_scalar($new_theme_row[0] ?? '') ? (string) ($new_theme_row[0] ?? 'default') : 'default';
+                        $new_theme = (string) ($new_theme_row[0] ?? 'default');
                     }
 
                     $this->set_default_theme($new_theme);

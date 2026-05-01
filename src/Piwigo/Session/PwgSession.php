@@ -34,6 +34,7 @@ class PwgSession implements \SessionHandlerInterface
 
     public function gc(int $max_lifetime): int|false
     {
-        return pwg_session_gc() ? 1 : false;
+        pwg_session_gc();
+        return 1;
     }
 }

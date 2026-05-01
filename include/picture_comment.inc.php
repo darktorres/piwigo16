@@ -32,7 +32,7 @@ if ($page['show_comments'] and isset($_POST['content'])) {
 
     $comm = [
       'author' => empty($_POST['author'] ?? null) ? '' : trim(is_scalar($_POST['author']) ? (string) $_POST['author'] : ''),
-      'content' => empty($_POST['content'] ?? null) ? '' : trim(is_scalar($_POST['content']) ? (string) $_POST['content'] : ''),
+      'content' => empty($_POST['content']) ? '' : trim(is_scalar($_POST['content']) ? (string) $_POST['content'] : ''),
       'website_url' => empty($_POST['website_url'] ?? null) ? '' : trim(is_scalar($_POST['website_url']) ? (string) $_POST['website_url'] : ''),
       'email' => empty($_POST['email'] ?? null) ? '' : trim(is_scalar($_POST['email']) ? (string) $_POST['email'] : ''),
       'image_id' => $page['image_id'],

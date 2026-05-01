@@ -652,7 +652,7 @@ SELECT
             }
 
             /** @var array<string, mixed> $details_arr2 */
-            $details_arr2 = $output_lines[$idx]['details'] ?? [];
+            $details_arr2 = $output_lines[$idx]['details'];
             if (isset($details_arr2['users'])) {
                 $users_arr = is_array($details_arr2['users']) ? $details_arr2['users'] : [];
                 $details_arr2['users_string'] = implode(', ', array_map(fn ($v) => is_scalar($v) ? (string) $v : '', $users_arr));
@@ -661,7 +661,7 @@ SELECT
         }
 
         $line_user_id = $output_lines[$idx]['user_id'] ?? '';
-        $line_user_id_str = is_scalar($line_user_id) ? (string) $line_user_id : '';
+        $line_user_id_str = (string) $line_user_id;
         $output_lines[$idx]['username'] = 'user#'.$line_user_id_str;
         if ($line_user_id_str !== '' && isset($username_of[$line_user_id_str])) {
             $output_lines[$idx]['username'] = $username_of[$line_user_id_str];
@@ -861,9 +861,6 @@ SELECT rules
     $search_ids = [];
 
     foreach ($data as $row) {
-        if (!is_array($row)) {
-            continue;
-        }
         $row_user_id = $row['user_id'] ?? null;
         $row_user_id_key = is_scalar($row_user_id) ? (string) $row_user_id : '';
         if ($row_user_id_key !== '') {
@@ -1026,17 +1023,17 @@ SELECT
     $sorted_members = [];
 
     foreach ($history_lines as $line) {
-        $line_image_type = is_scalar($line['image_type'] ?? null) ? (string) ($line['image_type'] ?? '') : '';
+        $line_image_type = is_scalar($line['image_type']) ? (string) $line['image_type'] : '';
         $line_image_id = $line['image_id'] ?? null;
         $line_image_id_str = is_scalar($line_image_id) ? (string) $line_image_id : '';
         $line_user_id = $line['user_id'] ?? null;
         $line_user_id_str = is_scalar($line_user_id) ? (string) $line_user_id : '';
-        $line_IP = is_scalar($line['IP'] ?? null) ? (string) ($line['IP'] ?? '') : '';
+        $line_IP = is_scalar($line['IP']) ? (string) $line['IP'] : '';
         $line_cat_id = $line['category_id'] ?? null;
         $line_cat_id_str = is_scalar($line_cat_id) ? (string) $line_cat_id : '';
         $line_search_id = $line['search_id'] ?? null;
         $line_search_id_str = is_scalar($line_search_id) ? (string) $line_search_id : '';
-        $line_section = is_scalar($line['section'] ?? null) ? (string) ($line['section'] ?? '') : '';
+        $line_section = is_scalar($line['section']) ? (string) $line['section'] : '';
 
         if ($line_image_type === 'high' && $line_image_id_str !== '') {
             $summary['total_filesize'] += @intval($image_infos[$line_image_id_str]['filesize'] ?? 0);

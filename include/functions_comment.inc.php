@@ -453,7 +453,7 @@ SELECT
 
     [$author_id] = pwg_db_fetch_row($result) ?? [null];
 
-    return is_int($author_id) || $author_id === false ? $author_id : (is_numeric($author_id) ? (int) $author_id : false);
+    return is_int($author_id) ? $author_id : (is_numeric($author_id) ? (int) $author_id : false);
 }
 
 /**

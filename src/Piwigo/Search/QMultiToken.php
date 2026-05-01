@@ -194,7 +194,7 @@ class QMultiToken implements \Stringable
                   && !$token->scope->parse($token)) {
                     $remove = true;
                 }
-            } elseif ($token instanceof QMultiToken && !count($token->tokens)) {
+            } elseif (!count($token->tokens)) {
                 $remove = true;
             }
             if ($remove) {

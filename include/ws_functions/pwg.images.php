@@ -1511,7 +1511,7 @@ function ws_images_addSimple(array $params, \Piwigo\Ws\PwgServer $service): PwgE
     }
 
     $files_image = is_array($_FILES['image']) ? $_FILES['image'] : [];
-    $files_image_error = is_numeric($files_image['error'] ?? null) ? (int) ($files_image['error'] ?? 0) : 0;
+    $files_image_error = is_numeric($files_image['error']) ? (int) $files_image['error'] : 0;
     if (isset($files_image['error']) && $files_image_error != 0) {
         $message = match ($files_image_error) {
             UPLOAD_ERR_INI_SIZE => 'The uploaded file exceeds the upload_max_filesize directive in php.ini.',
@@ -1546,8 +1546,8 @@ SELECT COUNT(*)
 
     include_once(PHPWG_ROOT_PATH.'admin/include/functions_upload.inc.php');
 
-    $files_tmp = is_scalar($files_image['tmp_name'] ?? null) ? (string) ($files_image['tmp_name'] ?? '') : '';
-    $files_name = is_scalar($files_image['name'] ?? null) ? (string) ($files_image['name'] ?? '') : null;
+    $files_tmp = is_scalar($files_image['tmp_name']) ? (string) $files_image['tmp_name'] : '';
+    $files_name = is_scalar($files_image['name']) ? (string) $files_image['name'] : null;
     $image_id = add_uploaded_file(
         $files_tmp,
         $files_name,
@@ -1754,7 +1754,7 @@ SELECT *
             }
 
             $image = $images[0];
-            $image_id_str = is_array($image) && isset($image['id']) && is_scalar($image['id']) ? (string) $image['id'] : '';
+            $image_id_str = isset($image['id']) ? (string) $image['id'] : '';
 
             $add_status = add_format($filePath, $format_ext ?? '', $image_id_str);
 
@@ -1786,7 +1786,7 @@ SELECT
             $images = query2array($query);
             if ($images != null) {
                 $img0 = $images[0];
-                $id_image = is_array($img0) && isset($img0['id']) && is_numeric($img0['id']) ? (int) $img0['id'] : null;
+                $id_image = isset($img0['id']) && is_numeric($img0['id']) ? (int) $img0['id'] : null;
                 $add_status = 'update';
             }
         }
@@ -2308,7 +2308,7 @@ function ws_images_formats_delete(array $params, \Piwigo\Ws\PwgServer $service):
             PREG_SPLIT_NO_EMPTY
         ) ?: [];
     }
-    $params['format_id'] = array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, is_array($params['format_id']) ? $params['format_id'] : []);
+    $params['format_id'] = array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $params['format_id']);
 
     $format_ids = [];
     foreach ($params['format_id'] as $format_id) {

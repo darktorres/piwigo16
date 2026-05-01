@@ -513,7 +513,7 @@ DELETE FROM '.USER_CACHE_TABLE.'
 
             // for the same reason as user_cache_categories, we ignore error on
             // this insert
-            $ud_need_update = is_bool($userdata['need_update']) ? $userdata['need_update'] : false;
+            $ud_need_update = ($userdata['need_update'] ?? '') === 'true';
             $ud_cache_update_time = is_numeric($userdata['cache_update_time']) ? (int) $userdata['cache_update_time'] : 0;
             $ud_forbidden_cats_str = is_scalar($userdata['forbidden_categories']) ? (string) $userdata['forbidden_categories'] : '';
             $ud_nb_total_images = is_numeric($userdata['nb_total_images']) ? (int) $userdata['nb_total_images'] : 0;
@@ -712,7 +712,7 @@ SELECT
  *  bool  convert true/false strings to booleans
  * @return array
  */
-/** @return array<string,mixed>|null */
+/** @return array<mixed,mixed>|null */
 function get_default_user_info(bool $convert_str = true): ?array
 {
     global $cache;
@@ -1195,7 +1195,7 @@ function pwg_login(bool $success, string $username, string $password, bool $reme
     $password_verify = \Piwigo\Core\Config::passwordVerify()(
         $password,
         $user_found['password'] ?? $fake_user['password'],
-        isset($user_found['id']) ? (int) $user_found['id'] : null
+        is_numeric($user_found['id'] ?? null) ? (int) $user_found['id'] : null
     );
 
     $uf_id = is_numeric($user_found['id'] ?? null) ? (int) $user_found['id'] : 0;
@@ -1233,7 +1233,7 @@ function pwg_login(bool $success, string $username, string $password, bool $reme
     $state = trigger_change('finalize_login', $state_init, $user_found, $remember_me);
 
     if (!$state['can_login']) {
-        $state_reason = is_string($state['reason']) ? $state['reason'] : 'login_failure_before_log_user';
+        $state_reason = is_scalar($state['reason'] ?? null) ? (string) ($state['reason'] ?? '') : 'login_failure_before_log_user';
         pwg_activity('user', $uf_id, $state_reason);
         trigger_notify('login_failure_before_log_user', stripslashes($username));
         return false;
@@ -2250,19 +2250,23 @@ SELECT
     }
 
     if (!empty($params['expand']) or @$params['expand'] === false) {
-        $updates_infos['expand'] = boolean_to_string($params['expand']);
+        $v = $params['expand'];
+        $updates_infos['expand'] = boolean_to_string(is_bool($v) ? $v : (is_string($v) ? $v : ''));
     }
 
     if (!empty($params['show_nb_comments']) or @$params['show_nb_comments'] === false) {
-        $updates_infos['show_nb_comments'] = boolean_to_string($params['show_nb_comments']);
+        $v = $params['show_nb_comments'];
+        $updates_infos['show_nb_comments'] = boolean_to_string(is_bool($v) ? $v : (is_string($v) ? $v : ''));
     }
 
     if (!empty($params['show_nb_hits']) or @$params['show_nb_hits'] === false) {
-        $updates_infos['show_nb_hits'] = boolean_to_string($params['show_nb_hits']);
+        $v = $params['show_nb_hits'];
+        $updates_infos['show_nb_hits'] = boolean_to_string(is_bool($v) ? $v : (is_string($v) ? $v : ''));
     }
 
     if (!empty($params['enabled_high']) or @$params['enabled_high'] === false) {
-        $updates_infos['enabled_high'] = boolean_to_string($params['enabled_high']);
+        $v = $params['enabled_high'];
+        $updates_infos['enabled_high'] = boolean_to_string(is_bool($v) ? $v : (is_string($v) ? $v : ''));
     }
 
     $param_uid_0 = is_numeric($param_user_id[0]) ? (int) $param_user_id[0] : 0;

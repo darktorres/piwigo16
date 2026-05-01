@@ -35,8 +35,7 @@ global $template, $user, $page, $persistent_cache, $lang;
 include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 check_status(ACCESS_ADMINISTRATOR);
 
-$tpl_extension = \Piwigo\Core\Config::extentsForTemplates() !== null ?
-      unserialize((string)\Piwigo\Core\Config::extentsForTemplates()) : [];
+$tpl_extension = safe_unserialize(\Piwigo\Core\Config::extentsForTemplates() ?? '');
 $new_extensions = get_extents();
 
 /* Selective URLs keyword */
@@ -114,17 +113,21 @@ $available_templates = array_merge(
 // +-----------------------------------------------------------------------+
 
 if (isset($_POST['submit'])) {
+    $reptpl_arr = is_array($_POST['reptpl'] ?? null) ? $_POST['reptpl'] : [];
+    $original_arr = is_array($_POST['original'] ?? null) ? $_POST['original'] : [];
+    $url_arr = is_array($_POST['url'] ?? null) ? $_POST['url'] : [];
+    $bound_arr = is_array($_POST['bound'] ?? null) ? $_POST['bound'] : [];
     $replacements = [];
     $i = 0;
-    while (isset($_POST['reptpl'][$i])) {
-        $newtpl = $_POST['reptpl'][$i];
-        $original = $_POST['original'][$i];
-        $handle = $eligible_templates[$original];
-        $url_keyword = $_POST['url'][$i];
+    while (isset($reptpl_arr[$i])) {
+        $newtpl = is_scalar($reptpl_arr[$i]) ? (string) $reptpl_arr[$i] : '';
+        $original = is_scalar($original_arr[$i] ?? null) ? (string) $original_arr[$i] : '';
+        $handle = $eligible_templates[$original] ?? 'N/A';
+        $url_keyword = is_scalar($url_arr[$i] ?? null) ? (string) $url_arr[$i] : '';
         if ($url_keyword == '----------') {
             $url_keyword = 'N/A';
         }
-        $bound_tpl = $_POST['bound'][$i];
+        $bound_tpl = is_scalar($bound_arr[$i] ?? null) ? (string) $bound_arr[$i] : '';
         if ($bound_tpl == '----------') {
             $bound_tpl = 'N/A';
         }
@@ -151,10 +154,11 @@ WHERE param = \'extents_for_templates\';';
 
 /* Clearing (remove old extents, add new ones) */
 foreach ($tpl_extension as $file => $conditions) {
-    if (!in_array($file, $new_extensions)) {
+    $fileStr = is_scalar($file) ? (string) $file : '';
+    if (!in_array($fileStr, $new_extensions)) {
         unset($tpl_extension[$file]);
     } else {
-        $new_extensions = array_diff($new_extensions, [$file]);
+        $new_extensions = array_diff($new_extensions, [$fileStr]);
     }
 }
 foreach ($new_extensions as $file) {
@@ -173,9 +177,12 @@ $template->assign(
 );
 ksort($tpl_extension);
 foreach ($tpl_extension as $file => $conditions) {
-    $handle = $conditions[0];
-    $url_keyword = $conditions[1];
-    $bound_tpl = $conditions[2];
+    if (!is_array($conditions)) {
+        continue;
+    }
+    $handle = is_scalar($conditions[0] ?? null) ? (string) $conditions[0] : 'N/A';
+    $url_keyword = is_scalar($conditions[1] ?? null) ? (string) $conditions[1] : 'N/A';
+    $bound_tpl = is_scalar($conditions[2] ?? null) ? (string) $conditions[2] : 'N/A';
     {
         $template->append(
             'extents',
@@ -184,7 +191,7 @@ foreach ($tpl_extension as $file => $conditions) {
             'url_parameter'  => $relevant_parameters,
             'original_tpl'   => array_keys($eligible_templates),
             'bound_tpl'          => $available_templates,
-            'selected_tpl'   => $flip_templates[$handle],
+            'selected_tpl'   => $flip_templates[$handle] ?? '',
             'selected_url'   => $url_keyword,
             'selected_bound' => $bound_tpl,]
         );

@@ -465,7 +465,7 @@ SELECT image_id
  * @param int $filter_days number of recent days to filter on or null
  */
 /**
- * @param array<string, float|int|string|null> $userdata
+ * @param array<string, mixed> $userdata
  * @return array<string, array<string, mixed>>
  */
 function get_computed_categories(array &$userdata, ?int $filter_days = null): array

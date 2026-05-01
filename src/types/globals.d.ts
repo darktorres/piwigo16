@@ -7,7 +7,6 @@ declare global {
     // ── PHP/Smarty-emitted constants ─────────────────────────────────────────
     const pwg_token: string;
     const pwg_root_url: string;
-    const pwg_lang_info: { code: string; name: string; jquery_code: string };
     const cookie_path: string;
     const cookie_domain: string;
 

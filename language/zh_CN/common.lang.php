@@ -18,7 +18,6 @@ $lang_info['language_name'] = "简体中文";
 $lang_info['country'] = "中国";
 $lang_info['direction'] = "ltr";
 $lang_info['code'] = "cn";
-$lang_info['jquery_code'] = "zh-CN";
 $lang_info['zero_plural'] = true;
 
 $lang['%d Kb'] = '%d KB';

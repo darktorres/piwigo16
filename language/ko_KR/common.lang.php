@@ -17,7 +17,6 @@ $lang_info['language_name'] = "한국어";
 $lang_info['country'] = "대한민국";
 $lang_info['direction'] = "ltr";
 $lang_info['code'] = "en";
-$lang_info['jquery_code'] = "ko";
 $lang_info['zero_plural'] = true;
 
 $lang['%d album updated'] = '앨범 %d개가 업데이트 되었습니다';

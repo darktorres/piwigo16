@@ -1,410 +1,309 @@
-# Piwigo 16.x modernization
+# Piwigo 16.x — Modernization & Architecture
+
+Audience: contributors and plugin authors working against the `16.x-rewrite` branch.
+
+**Current state:** Phases 0–6 and Phase 8 complete. PHP 8.5 strict, full TypeScript, PSR-4
+namespacing, typed services, 218 unit tests, 15 E2E specs. Active work is Phase 7
+(PHPStan baseline elimination).
 
 ---
 
-## Architecture
+## How the codebase boots
 
-This document describes how the Piwigo 16.x-rewrite branch is organised after
-the modernization plan completed (Phases 0–6). Audience: a contributor who has
-just cloned the repo and wants to understand the moving parts.
+Every entry point (`index.php`, `admin.php`, `picture.php`, `ws.php`, …) follows the same prologue:
 
----
-
-### 1. Bootstrap order
-
-Every HTTP entry point (e.g. `index.php`, `admin.php`, `picture.php`) follows
-the same two-phase bootstrap:
-
-**Phase 1 — legacy globals (handled by `include/common.inc.php`)**
-1. Loads `include/config_default.inc.php` — populates `$conf` with defaults.
-2. Loads `local/config/database.inc.php` — merges DB credentials into `$conf`.
-3. Includes `include/dblayer/functions_mysqli.inc.php` — registers all `pwg_query()` etc. free functions.
-4. Opens the DB connection, loads conf from DB, sets PHP locale/charset.
-5. Loads `include/functions.inc.php` and friends — the bulk of Piwigo's free-function library.
-6. Bootstraps the session (`PwgSession`), current user, and page state into globals.
-
-**Phase 2 — typed services (handled by `Piwigo\Core\Kernel::boot()`)**
-
-Called immediately after `include/common.inc.php` in every entry point:
 ```php
+define('PHPWG_ROOT_PATH', './');
+require __DIR__ . '/vendor/autoload.php';
+include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
 Kernel::boot();
 ```
 
-`Kernel::boot()` wires the typed service layer to the already-loaded globals
-via PHP reference bridges, making both `$conf['key']` and `Config::get('key')`
-return the same data. The call is idempotent (guarded by `self::$booted`).
+**`include/common.inc.php`** is the legacy bridge. It loads `config_default.inc.php`,
+`local/config/database.inc.php`, the mysqli dblayer free functions, `functions.inc.php`
+and friends, then bootstraps the session and current user into globals.
 
-Boot sequence inside `Kernel::boot()`:
-1. `Config::attachGlobals()` — references `$GLOBALS['conf']` into `Config::$data`.
-2. `PageState::attachGlobals()` — binds page-state properties to `$GLOBALS['page']` keys.
-3. `Lang::attachGlobals()` — binds `$GLOBALS['lang']` and `$GLOBALS['lang_info']`.
-4. `CurrentUser::attachGlobals()` — binds `$GLOBALS['user']` keys.
-5. `ServiceLocator::register()` — registers `Config` and `PageState` instances.
+**`Kernel::boot()`** (`src/Piwigo/Core/Kernel.php`) wires the typed service layer on top
+of those globals via PHP reference bridges. The call is idempotent. Boot order:
+
+1. `Config::attachGlobals()` — `$GLOBALS['conf']` becomes a reference into `Config::$data`
+2. `PageState::attachGlobals()` — binds `$GLOBALS['page']` keys by reference
+3. `Lang::attachGlobals()` — binds `$GLOBALS['lang']` and `$GLOBALS['lang_info']`
+4. `CurrentUser::attachGlobals()` — binds `$GLOBALS['user']` keys
+5. `ServiceLocator::register()` — registers `Config` and `PageState` instances
+
+After boot, both `$conf['key']` and `Config::get('key')` return the same value. Legacy
+`include/` free-function libraries keep working unchanged.
 
 ---
 
-### 2. Autoload layout
+## Autoload layout
 
 ```
 composer.json
-├── autoload.psr-4: "Piwigo\\" → src/Piwigo/
-├── autoload.psr-4: "Smarty\\" → include/smarty/src/
-├── autoload.files: include/smarty/src/functions.php
-└── config.classmap-authoritative: true                 ← no filesystem scan at runtime
+├── autoload.psr-4  "Piwigo\\"  → src/Piwigo/
+├── autoload.psr-4  "Smarty\\"  → include/smarty/src/
+├── autoload.files              → include/smarty/src/functions.php
+└── config.classmap-authoritative: true
 ```
 
-#### Why `include/*.inc.php` free-function libraries stay
-
-PHP free functions cannot be autoloaded. Files like `include/functions.inc.php`,
-`include/functions_user.inc.php`, `include/dblayer/functions_mysqli.inc.php` are
-loaded explicitly in `common.inc.php`. They contain the bulk of Piwigo's business
-logic and cannot be moved to classes without rewriting every call site. They are
-excluded from Rector and linted but not namespaced.
+PHP free functions cannot be autoloaded. `include/functions.inc.php`,
+`include/functions_user.inc.php`, and `include/dblayer/functions_mysqli.inc.php` are
+loaded explicitly in `common.inc.php` and excluded from Rector and PHPStan. Only
+classes migrate to `src/`; free functions stay.
 
 ---
 
-### 3. The DB upgrade contract
+## Typed services
 
-#### Rules
+### Config
 
-1. `install/db/*.php` files are the upgrade-chain contract. They are excluded from
-   Rector and PHPStan **permanently** — they must not be modernized.
-2. The only file in `install/db/` after Phase 6 is `index.php` (security stub).
-   All numbered scripts 61–181 were deleted; they covered Piwigo 1.3.0–15.0.0.
-3. The upgrade floor is **Piwigo 16.0.0**. `upgrade.php` refuses databases that
-   do not have applied_upgrade id 181 (the 15.0.0 boundary) with HTTP 409.
-
-#### Authoring a new 16.x upgrade script
-
-When a schema change is needed for a 16.x release:
-
-1. Create `install/db/<N>-database.php` where `<N>` is the next integer after 181.
-2. Add 16.x version detection in `upgrade.php` (look for the "add detection here"
-   comment after the 409 guard). The restore point is the commit just before
-   Phase 6 step 2 in git history, which contains the full upgrade launch machinery.
-3. Add the expected `<N>` to `dev/fixtures/piwigo-16.x.sql`'s `piwigo_upgrade`
-   table so `UpgradeChainTest` exercises the new script.
-
-#### Free functions used by upgrade scripts
-
-The following free functions must not be removed as long as any `install/db/*.php`
-references them:
-`pwg_query()`, `pwg_db_fetch_assoc()`, `pwg_db_fetch_array()`,
-`pwg_db_real_escape_string()`, `pwg_db_num_rows()`, `conf_update_param()`.
-
----
-
-### 4. Globals / typed services
-
-#### Config
-
-`Piwigo\Core\Config` is a typed facade over `$GLOBALS['conf']`.
+`Piwigo\Core\Config` is the typed reader over `$conf`. Legacy access still works:
 
 ```php
-// Reading (preferred):
-$dir = Config::getString('upload_dir', 'upload/');
-$max = Config::getInt('upload_form_max_file_size', 100);
-
-// Fallback (for unknown keys or mixed types):
-$val = Config::get('my_plugin_setting');
-
-// Per-request override (not persisted):
-Config::override('die_on_sql_error', false);
-
-// DB-persisted write:
-conf_update_param('my_plugin_setting', $newValue);
+global $conf;
+$dir = $conf['upload_dir'];       // still fine
 ```
 
-`Config::attachGlobals()` establishes a PHP reference so `$conf['key'] = $v`
-and `Config::override('key', $v)` are equivalent and stay in sync.
+New code uses typed getters:
 
-#### PageState
+```php
+Config::getString('upload_dir', './upload')
+Config::getInt('upload_form_max_file_size', 100)
+Config::getBool('enable_formats')
+Config::get('any_key')            // returns mixed — fallback for dynamic keys
+Config::override('key', $value)   // per-request, not persisted
+conf_update_param('key', $value)  // DB-persisted (free function, unchanged)
+```
 
-`Piwigo\Core\PageState` wraps `$GLOBALS['page']` with typed accessors:
+### PageState
+
+`Piwigo\Core\PageState` wraps `$page`. The `$GLOBALS['page']` arrays are bound by
+reference, so `$page['errors'][] = 'msg'` and `PageState::current()->addError('msg')`
+are equivalent.
 
 ```php
 PageState::current()->addError('something went wrong');
 PageState::current()->addInfo('done');
-$errors = PageState::current()->errors; // list<string>
+$errors = PageState::current()->errors;   // list<string>
 ```
 
-#### CurrentUser and Lang
+### CurrentUser and Lang
 
-`Piwigo\Users\CurrentUser` and `Piwigo\Core\Lang` follow the same pattern —
-typed facades with reference bridges to `$GLOBALS['user']` and `$GLOBALS['lang']`.
+Same pattern — typed facades with reference bridges to `$GLOBALS['user']` and
+`$GLOBALS['lang']`. `l10n()` delegates to `Lang::current()->t()`.
 
-#### ServiceLocator
+### ServiceLocator
 
-`Piwigo\Core\ServiceLocator` is a minimal service container. After boot, you can
-resolve typed instances:
+Minimal static map. After boot:
 
 ```php
 $config = ServiceLocator::get(Config::class);
 $page   = ServiceLocator::get(PageState::class);
 ```
 
-Only `Config` and `PageState` are pre-registered. Plugins should not add to the
-locator — use constructor injection or free function calls instead.
+Only `Config` and `PageState` are pre-registered. Plugins should not add to it.
 
 ---
 
-### 5. JS build pipeline
+## DB upgrade contract
 
-#### Vite multi-entry build
+`install/db/*.php` files are the permanent regression contract for existing-database
+compatibility. Five rules, enforced by tooling:
 
-The frontend build uses **Vite 5** with 39 entry points in `vite.config.ts`:
+1. **Excluded from Rector and PHPStan forever.** Any automated rewrite that touched
+   these files could break the upgrade chain.
+2. **No numbered scripts remain** — files 61–181 (Piwigo 1.3.0–15.0.0) were deleted
+   in Phase 6. `install/db/` now contains only `index.php`.
+3. **Upgrade floor is Piwigo 16.0.0.** `upgrade.php` refuses databases without
+   `applied_upgrade` id 181 (the 15.0.0 marker) with HTTP 409.
+4. **Free functions never disappear.** `pwg_query()`, `pwg_db_fetch_assoc()`,
+   `pwg_db_real_escape_string()`, `pwg_db_num_rows()`, `conf_update_param()` retain
+   their current signatures forever.
+5. **`UpgradeChainTest` gates every push.** Loads `dev/fixtures/piwigo-16.x.sql`,
+   drives `upgrade.php`, asserts `piwigo_db_version` matches `PHPWG_VERSION`.
+
+To add a new 16.x upgrade script: create `install/db/<N>-database.php` (next integer
+after 181), add 16.x version detection in `upgrade.php`, and insert the expected `<N>`
+into `dev/fixtures/piwigo-16.x.sql`'s `piwigo_upgrade` table.
+
+---
+
+## JS / TypeScript build pipeline
+
+### Entries and chunks
+
+Vite 5 with 39 entry points in `vite.config.ts`:
 
 ```
-themes/default/js/*.ts          → core.scripts, switchbox, pngfix, rating, thumbnails.loader, mcs
+themes/default/js/*.ts          → core.scripts, mcs, switchbox, pngfix, rating, thumbnails.loader
 themes/standard_pages/js/*.ts   → toaster_js, standard_pages_js, standard_profile_js
 admin/themes/default/js/*.ts    → common, addAlbum, albums, batchManagerGlobal, … (30 files)
 ```
 
-`LocalStorageCache`, `album_selector`, and `doubleSlider` are **not** standalone
-entries — they are imported by multiple entry points and Vite promotes them to
-shared chunks automatically (`assets/chunks/`).
+`LocalStorageCache`, `album_selector`, and `doubleSlider` are imported by multiple entries
+and auto-promoted to shared chunks under `dist/assets/chunks/`. They have no standalone
+Vite entries.
 
-Build output goes to `dist/assets/` with content-hashed filenames.
-`dist/manifest.json` maps each entry id (e.g. `core.scripts`) to the hashed filename.
+Build output goes to `dist/assets/` with content-hashed filenames. `dist/manifest.json`
+maps each entry id to its hashed filename (Piwigo-specific format produced by
+`build/piwigo-manifest-plugin.ts`; differs from Vite's own `.vite/manifest.json`).
 
-#### Custom manifest plugin
+### ScriptLoader integration
 
-`build/piwigo-manifest-plugin.ts` uses Rollup's `generateBundle` hook to capture
-the input key (the rollupOptions.input key name) alongside the hashed output filename.
-This is critical: Vite's own `.vite/manifest.json` uses file paths as keys, which
-would map `core.scripts` incorrectly to `scripts`.
+`Piwigo\Template\ScriptLoader::add()` consults `dist/manifest.json` when a
+`{combine_script id="..."}` Smarty tag is processed. If the id is in the manifest,
+the loader emits the hashed URL and clears the require list (Vite handles import order).
+If the manifest is absent (fresh clone, no build), it falls back to the legacy
+file-concatenation path — the gallery works without a build step.
 
-#### ScriptLoader manifest-aware mode
-
-`Piwigo\Template\ScriptLoader::add()` checks `dist/manifest.json` before registering
-a script. If the entry id is present, it replaces the original path with the hashed
-dist URL and clears the require list (Vite encodes import order internally).
-
-**Fallback:** when `dist/manifest.json` is absent (fresh clone, CI without a build
-step, or `npm run clean`), ScriptLoader falls through to the legacy file-concatenation
-path. This means the gallery and admin work without a build, but JS is served
-un-minified and un-hashed.
-
-#### Dev workflow
+### Dev workflow
 
 ```bash
 npm run build        # production build — creates dist/ and dist/manifest.json
-npm run dev          # Vite dev server with HMR (requires PIWIGO_VITE_DEV=1 env)
-npm run typecheck    # tsc --noEmit for all TS files including tests/e2e/
-npm run clean        # rm -rf dist/ _data/combined/ (removes stale build artifacts)
+npm run dev          # Vite HMR dev server (set PIWIGO_VITE_DEV=1 in the web container)
+npm run typecheck    # tsc --noEmit across all .ts files
+npm run clean        # remove dist/ and _data/combined/
 ```
 
-TypeScript configuration: `tsconfig.json` at the root covers all authored `.ts`
-files. `strict: true`, `noImplicitAny: true`, and `strictNullChecks: true` are all
-enabled. Some `any` casts remain in legacy-bridge code but the compiler enforces
-types across the authored TS surface.
+### Adding a new JS module
+
+1. Create `.ts` in `admin/themes/default/js/` or `themes/default/js/`.
+2. Add it as a Vite entry in `vite.config.ts` with the id that Smarty templates will reference.
+3. Reference it from a template: `{combine_script id="my_module" path="...my_module.ts"}`.
+4. Run `npm run typecheck && npm run build`.
 
 ---
 
-### 6. Authoring a new web service method
+## Authoring a new web service method
 
-All web service methods live in `ws.php` (dispatch) and `include/ws_functions.inc.php`
-(registration). The framework is `Piwigo\Ws\PwgServer`.
+Register in `include/ws_functions.inc.php`:
 
-Steps:
-1. Register the method in `include/ws_functions.inc.php`:
-   ```php
-   $service->addMethod(
-       'pwg.my.method',
-       'ws_my_method',           // callback name
-       [                         // parameter definitions
-           'photo_id' => ['type' => WS_TYPE_INT|WS_TYPE_POSITIVE],
-       ],
-       'Description shown in API browser'
-   );
-   ```
-2. Implement the callback (free function or static method):
-   ```php
-   function ws_my_method(array $params, PwgServer $service): mixed
-   {
-       $id = (int) $params['photo_id'];
-       // ... query the DB, return a result ...
-       return ['id' => $id, 'status' => 'ok'];
-   }
-   ```
-   Return values:
-   - A scalar or array — encoded as the response payload.
-   - `new PwgError(404, 'No such photo')` — encodes as `{"stat":"fail","err":404,...}`.
-   - `new PwgNamedArray(...)` or `PwgNamedStruct(...)` — controls XML/JSON output naming.
-3. The JSON response shape is fixed:
-   ```json
-   { "stat": "ok", "result": <return value> }
-   ```
+```php
+$service->addMethod(
+    'pwg.my.method',
+    'ws_my_method',
+    ['photo_id' => ['type' => WS_TYPE_INT|WS_TYPE_POSITIVE]],
+    'Description shown in the API browser'
+);
+```
+
+Implement as a free function:
+
+```php
+function ws_my_method(array $params, PwgServer $service): mixed
+{
+    $id = (int) $params['photo_id'];
+    // query DB, return result
+    return ['id' => $id, 'status' => 'ok'];
+}
+```
+
+Return a scalar/array for success, `new PwgError(404, 'msg')` for failure, or
+`PwgNamedArray`/`PwgNamedStruct` to control XML/JSON output naming. The JSON envelope
+is always `{"stat":"ok","result":...}` or `{"stat":"fail","err":N,"message":"..."}`.
 
 ---
 
-### 7. Where things are not yet modernized
+## CI gates
 
-- **Templates.** Still Smarty 5. ~300 `.tpl` files across `themes/default/` and
-  `admin/themes/default/`. No plans to replace Smarty; the surface is too large and
-  plugins extend templates by name.
-- **Plugin contract.** The plugin loader uses legacy `add_event_handler('foo', 'callback')`
-  patterns. `PluginMaintain` and `ThemeMaintain` are now namespaced, but the plugin
-  API itself is unchanged.
-- **Vendored frontend libraries.** jQuery and all jQuery plugins were removed in
-  the Wave 1–6 migration. The only remaining vendored file is
-  `themes/default/js/plugins/piecon.js` (favicon progress indicator, converted to
-  an ES module). All other replacements are npm packages bundled by Vite.
-- **Translations.** `language/*.php` stays as `$lang['key'] = 'value'` arrays.
-  Excluded from Rector and PHPStan permanently.
-- **Themes other than `default`.** Third-party themes are out of scope. Their
-  files are not Rector- or PHPStan-checked. PHP 8.5 deprecation noise in third-party
-  themes is the theme author's responsibility.
+Three jobs per push; all must pass for merge.
 
----
+### lint
 
-### 8. CI gates
-
-CI runs three jobs per push (GitHub Actions, `.github/workflows/ci.yml`).
-All three must pass for merge.
-
-#### `lint`
-
-| Step | Command | Fail reason |
-|---|---|---|
-| PHP format | `vendor/bin/pint --test` | PSR-12 / import-order drift |
-| Static analysis | `vendor/bin/phpstan analyse --no-progress` | Type errors, banned constructs |
-| Baseline guard | `bash tools/check-baseline.sh` | Baseline grew vs. committed version |
-| Conf shape drift | `php tools/check-conf-shape.php` | Alias key removed from config_default |
-| TypeScript check | `npm run typecheck` | TS errors in `.ts` or `tests/e2e/*.ts` |
-| JS build | `npm run build` | Vite build failure |
-| Tarball check | (inline script) | Vendor dev-deps leaked into release tarball |
-| `strict_types` guard | (inline script) | PHP file missing `declare(strict_types=1)` |
-
-#### `unit`
-
-`vendor/bin/phpunit --testsuite Unit` — runs `tests/Unit/`. No DB, no HTTP, no
-filesystem mutation outside temp dirs. Zero failures, zero errors, zero risky tests.
-
-Current coverage: `Core/` (Config, PageState, Kernel, Lang, PwgError),
-`Template/ScriptLoader`, `Cache/PersistentFileCache`.
-
-#### `e2e` + integration
-
-1. `docker compose up -d --wait db web` — MariaDB + PHP 8.5 Apache.
-2. `npx playwright test` — full Playwright spec suite (install, smoke, upload,
-   create-album, change-setting, Phase 5 console-clean).
-3. `vendor/bin/phpunit --testsuite Integration` — `UpgradeChainTest` loads
-   `dev/fixtures/piwigo-16.x.sql` and verifies `upgrade.php` updates
-   `piwigo_db_version` to the current branch.
-
----
-
-## Plugin migration guide — Piwigo 16.x-rewrite
-
-This guide is for plugin authors whose code runs against the Piwigo 16.x-rewrite fork.
-It covers every behavioural change that can break a plugin without any PHP fatal error.
-
----
-
-### 1. Configuration access (`$conf`)
-
-#### What changed
-
-In Piwigo 16.x, `$conf` is backed by the typed `Piwigo\Core\Config` service.
-After `Kernel::boot()` runs, `$GLOBALS['conf']` is a PHP reference to
-`Config::$data`, so **reading `$conf['key']` continues to work with no changes
-required**. Writing `$conf['key'] = $value` also works and stays in sync.
-
-> **Note:** An earlier 16.x preview build (Phase 4 Wave C) temporarily wrapped
-> `$conf` in a deprecation-emitting `ConfProxy` that logged `E_USER_DEPRECATED`
-> for every `$conf['key']` access. That proxy has been **removed** in Phase 6.
-> If you saw deprecation notices during testing against a preview build, they are
-> gone in the current build.
-
-#### Optional: use typed getters
-
-Plugin code can voluntarily call the typed getters for stronger safety:
-
-| Legacy access | Typed getter |
+| Step | Command |
 |---|---|
-| `$conf['some_string']` | `\Piwigo\Core\Config::getString('some_string')` |
-| `$conf['some_int']` | `\Piwigo\Core\Config::getInt('some_int')` |
-| `$conf['some_bool']` | `\Piwigo\Core\Config::getBool('some_bool')` |
-| `$conf['some_key']` | `\Piwigo\Core\Config::get('some_key')` (returns `mixed`) |
-| `$conf['some_key'] = $v` | `\Piwigo\Core\Config::override('some_key', $v)` |
+| PHP format | `vendor/bin/pint --test` |
+| Static analysis | `vendor/bin/phpstan analyse --no-progress` |
+| Baseline guard | `bash tools/check-baseline.sh` |
+| Conf shape drift | `php tools/check-conf-shape.php` |
+| TypeScript check | `npm run typecheck` |
+| JS build | `npm run build` |
+| Tarball check | dev-deps must not leak into release tarball |
+| `strict_types` guard | every tracked PHP file must declare strict types |
 
-Use the FQN (`\Piwigo\Core\Config::get(...)`) to avoid relying on global aliases.
-The `override()` method mutates the in-memory value for the current request only;
-it does NOT persist to the database. For persistent changes, continue to use
-`conf_update_param()`.
+### unit
 
----
+`vendor/bin/phpunit --testsuite Unit` — no DB, no HTTP. Zero failures, zero risky tests.
 
-### 2. Database layer
+### e2e + integration
 
-#### What changed
-
-Only `mysqli` is supported. The `pgsql` and `sqlite` layers were removed in
-Phase 1. If your plugin detected the active layer via `$conf['dblayer']`, that
-key still exists in `$conf` (populated from `local/config/database.inc.php`)
-and will always be `'mysqli'`.
-
-The dynamic `include("functions_{$conf['dblayer']}.inc.php")` call in
-`include/common.inc.php` is now a static `include("functions_mysqli.inc.php")`.
-No plugin action required.
+`docker compose up -d --wait db web` then `npx playwright test` (15 specs), then
+`vendor/bin/phpunit --testsuite Integration` (`UpgradeChainTest`).
 
 ---
 
-### 3. Upgrade floor
+## What is not yet modernized
 
-#### What changed
-
-`upgrade.php` now **refuses** databases older than Piwigo 15.0.0 with HTTP 409.
-If your plugin ships its own upgrade logic in `main.inc.php` or a separate
-upgrade file, it is unaffected — this guard only applies to Piwigo core upgrades.
+- **Templates** — still Smarty 5; ~300 `.tpl` files. No plans to replace.
+- **Plugin contract** — plugin API uses `add_event_handler()` patterns. `PluginMaintain`
+  and `ThemeMaintain` are namespaced but the contract is unchanged.
+- **Free-function libraries** — `include/functions*.inc.php` have native types and
+  `declare(strict_types=1)` but remain procedural and non-namespaced.
+- **Translations** — `language/*.php` stays as `$lang['key'] = 'value'` arrays,
+  excluded from Rector and PHPStan permanently.
+- **Third-party themes** — not Rector- or PHPStan-checked; PHP 8.5 compatibility is
+  the theme author's responsibility.
 
 ---
 
-### 4. Namespaced class names
+## Plugin author guide
 
-#### What changed
+This section covers what changed in 16.x that can affect plugin behaviour without
+causing an immediate fatal error.
 
-All first-party Piwigo classes were moved to the `Piwigo\` namespace in Phase 3.
-The old unqualified names remain available via `src/Piwigo/Compat/aliases.php`
-(loaded by Composer on every request), so `class_alias` or bare class names in
-plugin code continue to work.
+### Configuration
 
-**Voluntary migration:** if your plugin extends a Piwigo class, use the
-namespaced name to opt into IDE tooling and PHPStan analysis:
+`$conf` is still a plain PHP array and `$conf['key']` still works. No action required.
 
-| Old name | Namespaced name |
+> **Note:** An earlier 16.x preview (Phase 4 Wave C) wrapped `$conf` in a
+> deprecation-emitting proxy. That proxy was removed before final release. If you saw
+> `E_USER_DEPRECATED` notices during pre-release testing, they are gone.
+
+Voluntary migration to typed getters (use the FQN to avoid alias dependency):
+
+| Was | Now |
+|---|---|
+| `$conf['upload_dir']` | `\Piwigo\Core\Config::getString('upload_dir')` |
+| `$conf['max_file_size']` | `\Piwigo\Core\Config::getInt('max_file_size')` |
+| `$conf['enable_formats']` | `\Piwigo\Core\Config::getBool('enable_formats')` |
+| `$conf['key'] = $v` | `\Piwigo\Core\Config::override('key', $v)` (per-request) |
+| `conf_update_param(...)` | unchanged — still the right way to persist |
+
+### Database layer
+
+Only `mysqli` is supported. If your plugin checked `$conf['dblayer']`, that key still
+exists and will always return `'mysqli'`. No code change needed.
+
+### Class names
+
+All first-party Piwigo classes moved to the `Piwigo\` namespace. Short unqualified names
+still resolve via `src/Piwigo/Compat/aliases.php` (loaded by Composer automatically),
+so existing `extends PluginMaintain` or `new PwgError(...)` calls continue to work.
+
+To opt into IDE tooling, use the namespaced names:
+
+| Old | New |
 |---|---|
 | `PluginMaintain` | `Piwigo\Admin\PluginMaintain` |
 | `ThemeMaintain` | `Piwigo\Admin\ThemeMaintain` |
 | `Template` | `Piwigo\Template\Template` |
+| `PwgError` | `Piwigo\Ws\PwgError` |
 | `PwgSession` | `Piwigo\Session\PwgSession` |
 
-The full alias list is in `src/Piwigo/Compat/aliases.php`.
+### PHP version
 
----
+PHP 8.5 is required. Key breakage points:
+- `curl_close()` is deprecated — use `unset($ch)`.
+- `mysql_*` functions are gone — use `pwg_query()` / `pwg_db_*`.
+- Undeclared dynamic properties emit `E_DEPRECATED` — add explicit declarations or
+  `#[AllowDynamicProperties]`.
 
-### 5. PHP version floor
+### Testing your plugin
 
-Piwigo 16.x requires **PHP 8.5**. If your plugin uses syntax or functions
-removed before 8.5, it will fail with a fatal error on activation.
-
-Key 8.5 compatibility notes:
-- `curl_close()` is deprecated — use `unset($ch)` instead.
-- `mysql_*` functions do not exist — use `pwg_query()` / `pwg_db_*` wrappers.
-- Dynamic properties (`$obj->dynamic = 'val'` on undeclared properties) are
-  deprecated. Declare all properties explicitly or use `#[AllowDynamicProperties]`.
-
----
-
-### 6. Testing your plugin against 16.x
-
-1. Install a fresh Piwigo 16.x-rewrite instance via `install.php`.
-2. Activate your plugin from the admin panel.
-3. Run a request with `error_reporting(E_ALL)` and check the Apache/PHP error log
-   for `E_DEPRECATED`, `E_NOTICE`, or `E_WARNING` messages.
-4. Browse the gallery home, a photo page, and the admin dashboard with the plugin
-   active and confirm no fatal errors or visible breakage.
+Activate on a fresh 16.x install with `error_reporting(E_ALL)` and browse the gallery,
+a photo page, and the admin dashboard. Check the PHP error log for any `Deprecated` or
+`Warning` lines before shipping.
 
 ---
 
@@ -412,73 +311,47 @@ Key 8.5 compatibility notes:
 
 ### Phase 6 — unconfirmed cleanup steps
 
-No explicit close-out was written for Phase 6. Steps below have no completion evidence:
+- **Delete `GlobalsBridge.php`** — Wave C shipped but the proxy can be removed once
+  deprecation logs confirm plugin-side access is quiet. Delete
+  `src/Piwigo/Core/GlobalsBridge.php` and the `installAsConfProxy()` call in
+  `Kernel::boot()`.
+- **Static dblayer include** — `common.inc.php` uses a dynamic string-interpolation
+  include; `Config::dbLayer()` always returns `'mysqli'`. Replace with a static
+  `include` so PHPStan can see the 70 `pwg_*` free functions.
+- **Delete `tests/e2e/global-setup.js`** — stale CJS leftover alongside the canonical
+  `global-setup.ts`.
+- **Wire `check-baseline.sh` and `check-conf-shape.php` into CI** — both tools exist in
+  `tools/` but are not yet in `.github/workflows/ci.yml`.
+- **E2E TypeScript typecheck in CI** — `tests/e2e/` is excluded from `tsconfig.json`;
+  add `tests/e2e/tsconfig.json` and `tsc --noEmit -p tests/e2e/tsconfig.json` to the
+  `typecheck` npm script.
 
-- **Step 6 — Delete `GlobalsBridge.php` / `ConfProxy`**: do after deprecation logs confirm quiet. Wave C is live so every plugin `$conf` access still pays a `debug_backtrace` cost. When logs are clean, delete `src/Piwigo/Core/GlobalsBridge.php` and the `installAsConfProxy()` call in `Kernel::boot()`.
-- **Step 7 — Static dblayer include**: `Config::dbLayer()` always returns `'mysqli'` but `common.inc.php` still uses a dynamic string-interpolation include, making the ~70 `pwg_*` functions invisible to PHPStan. Replace with a static `include`.
-- **Step 9 — Delete `tests/e2e/global-setup.js`**: stale CJS leftover alongside the canonical `global-setup.ts`.
-- **Step 10 — Add `npm run clean` script**: `"clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true}); require('fs').rmSync('_data/combined',{recursive:true,force:true});\""` — prevents stale concat artifacts.
-- **Step 11 — E2E TypeScript typecheck in CI**: `tests/e2e/` is excluded from `tsconfig.json`; create `tests/e2e/tsconfig.json` and add `tsc --noEmit -p tests/e2e/tsconfig.json` to the `typecheck` script.
-- **Step 12 — Wire `check-baseline.sh` and `check-conf-shape.php` into CI**: both tools exist in `tools/` but are not in `.github/workflows/ci.yml`. Add as steps in the `lint` job after PHPStan.
+### Phase 3/4 — sub-plan long tail
 
-### Phase 3 / Phase 6 sub-plan audits — pending items
+- **Phase 2 (~85–90%)** — untyped params on older free functions in
+  `include/functions.inc.php`, `functions_url.inc.php`, etc. Rector bleeds this off
+  gradually.
+- **Phase 3 (~50–60%)** — 20 legacy `*.class.php` shims in `include/` (12) and
+  `admin/include/` (8) should be confirmed as empty stub aliases and removed.
+- **Phase 4 (~35–50%)** — raw `$conf[...]` hot spots still to migrate:
+  `admin/include/functions.php` (149), `include/functions.inc.php` (139),
+  `include/functions_user.inc.php` (121), `include/ws_functions/pwg.images.php` (95).
+  `CurrentUser::` adoption is light — `$user` global still dominant outside `src/`.
 
-**matsumoto umbrella — Phase 2 (~85-90%)**
-
-Long tail of untyped params on older free functions. Rector's `TYPE_DECLARATION` set is wired and bleeds this off gradually. Hot files: `include/functions.inc.php`, `include/functions_url.inc.php`.
-
-**matsumoto umbrella — Phase 3 (~50-60%)**
-
-- Confirm the 20 legacy `*.class.php` shims in `include/` (12) and `admin/include/` (8) are empty stub aliases, not duplicate implementations — then remove them.
-- Finish migrating any remaining plugin/theme classes still under `include/`.
-
-**matsumoto umbrella — Phase 4 (~35-50%)**
-
-Largest remaining phase. Scaffolds and Wave A/B are in place; Wave C not started.
-
-Raw `$conf[...]` hot spots still to migrate:
-
-| File | Occurrences |
-|---|---|
-| `admin/include/functions.php` | 149 |
-| `include/functions.inc.php` | 139 |
-| `include/functions_user.inc.php` | 121 |
-| `include/ws_functions/pwg.images.php` | 95 |
-
-`CurrentUser::` adoption is light — `$user` global still dominant outside `src/`.
-
-Wave C (ArrayObject deprecation proxy / `GlobalsBridge`) — not started.
-
----
-
-## Roadmap (Phases 7–18)
-
-**Current state of the codebase:**
-
-| Metric | Value |
-|---|---|
-| PHPStan level | 8 (baseline 1 412 errors) |
-| PHP minimum | 8.5 |
-| TypeScript | strict + noImplicitAny + noImplicitThis + strictNullChecks |
-| Unit test coverage | 13% (9 / 69 source classes) |
-| CSS custom properties | 0 (189 hardcoded hex colors in first-party CSS) |
-| Baseline error breakdown | ~850 vendor code, ~560 first-party |
+### Phase 7–18 roadmap
 
 | Phase | Description | Size | Status |
 |---|---|---|---|
-| 7 | PHPStan level 9 / baseline elimination | L | **WIP** |
-| 9 | Fix global vars in `src/` | S | Not started |
-| 10 | Remove `ws_core.inc.php` class duplication | M | Not started |
-| 11 | Unit test coverage expansion | L | Not started |
-| 12 | PHP: readonly, enum, match | M | Not started |
-| 13 | `functions_user.inc.php` refactoring | L | Not started |
-| 14 | TypeScript `any` reduction | M | Not started |
-| 15 | Frontend JS → TypeScript | M | ✓ Complete |
+| 7 | PHPStan level 9 / baseline elimination (currently 1 412 errors) | L | **WIP** |
+| 9 | Fix remaining `global` declarations inside `src/` | S | Not started |
+| 10 | Remove class duplication in `ws_core.inc.php` | M | Not started |
+| 11 | Unit test coverage expansion (13% → ≥40%) | L | Not started |
+| 12 | PHP 8.1–8.5 features: readonly, enum, match | M | Not started |
+| 13 | `functions_user.inc.php` split into typed classes | L | Not started |
+| 14 | TypeScript `any` reduction (883 → ≤450 escapes) | M | Not started |
 | 16 | CSS design tokens + Stylelint | M | Not started |
-| 17 | jQuery migration (incremental) | XL | Planning only |
-| 18 | Overdue TODO cleanup | S | Not started |
+| 17 | jQuery upgrade / incremental replacement | XL | Planning only |
+| 18 | Overdue TODO cleanup (46 markers, 1 past-due) | S | Not started |
 
-**Recommended sequence:**
-7 → 9 → 18 → 10 → 11 → 12 → 14 → 16 → 13 → 17
-
-Full step-by-step plans for each phase are in `MODERNIZATION_PLAN_2.md` (to be folded in here once each phase closes).
+Recommended sequence: 7 → 9 → 18 → 10 → 11 → 12 → 14 → 16 → 13 → 17.
+Full step-by-step plans for each phase are in `MODERNIZATION_PLAN_2.md`.

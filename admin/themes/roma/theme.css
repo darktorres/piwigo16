@@ -2234,59 +2234,47 @@ background:#6C2D2D!important;
   color: #373737 !important;
 }
 
-/*Jqtree*/
-ul.jqtree-tree span.jqtree-border {
-  border: solid 2px #ededed !important;
-}
+/* album-tree (vanilla TS) overrides */
 
-ul.jqtree-tree li.jqtree-ghost span.jqtree-circle {
-  border: solid 2px #ededed !important;
-}
-
-ul.jqtree-tree li.jqtree-ghost span.jqtree-line {
-  background-color: #ededed !important;
-}
-
-
-.jqtree-moving .move-cat-container {
+.pwgtree-moving .move-cat-container {
   background-color: #232323!important;
 }
 
-.jqtree-moving .move-cat-container .badge-container i.icon-green,
-.jqtree-moving .move-cat-container .node-icon.icon-green {
+.pwgtree-moving .move-cat-container .badge-container i.icon-green,
+.pwgtree-moving .move-cat-container .node-icon.icon-green {
   background: #50a48f;
   color: #a9f6e3;
 }
 
-.jqtree-moving .move-cat-container .badge-container i.icon-blue,
-.jqtree-moving .move-cat-container .node-icon.icon-blue {
+.pwgtree-moving .move-cat-container .badge-container i.icon-blue,
+.pwgtree-moving .move-cat-container .node-icon.icon-blue {
   background: #50a48f;
   color: #a9f6e3;
 }
 
-.jqtree-moving .move-cat-container .badge-container i.icon-purple,
-.jqtree-moving .move-cat-container .node-icon.icon-purple {
+.pwgtree-moving .move-cat-container .badge-container i.icon-purple,
+.pwgtree-moving .move-cat-container .node-icon.icon-purple {
   background: #4e5aa3;
     color: #a1adf6;
 }
 
-.jqtree-moving .move-cat-container .badge-container i.icon-red,
-.jqtree-moving .move-cat-container .node-icon.icon-red {
+.pwgtree-moving .move-cat-container .badge-container i.icon-red,
+.pwgtree-moving .move-cat-container .node-icon.icon-red {
   color: #fec6c7;
   background: #bc4b4a;
 }
 
-.jqtree-moving .move-cat-container .badge-container i.icon-yellow,
-.jqtree-moving .move-cat-container .node-icon.icon-yellow {
+.pwgtree-moving .move-cat-container .badge-container i.icon-yellow,
+.pwgtree-moving .move-cat-container .node-icon.icon-yellow {
   color: #fedac0;
     background: #d47f44;
 }
 
-.jqtree-moving .move-cat-container  .icon-yellow, 
-.jqtree-moving .move-cat-container  .icon-red, 
-.jqtree-moving .move-cat-container  .icon-purple, 
-.jqtree-moving .move-cat-container  .icon-blue, 
-.jqtree-moving .move-cat-container .icon-green{
+.pwgtree-moving .move-cat-container  .icon-yellow,
+.pwgtree-moving .move-cat-container  .icon-red,
+.pwgtree-moving .move-cat-container  .icon-purple,
+.pwgtree-moving .move-cat-container  .icon-blue,
+.pwgtree-moving .move-cat-container .icon-green{
   opacity:60%!important;
 }
 

@@ -16,7 +16,7 @@ export interface DndContext {
     onMove?: (info: MoveInfo, ev: { preventDefault: () => void; readonly defaultPrevented: boolean }) => void;
 }
 
-const GHOST_CLASS = 'jqtree-ghost-indicator';
+const GHOST_CLASS = 'pwgtree-ghost-indicator';
 
 export function attachDnd(ctx: DndContext): () => void {
     let draggedNode: TreeNode | null = null;
@@ -29,7 +29,7 @@ export function attachDnd(ctx: DndContext): () => void {
         ghost = null;
         lastTargetLi = null;
         lastPosition = null;
-        ctx.rootEl.querySelectorAll('.jqtree-moving').forEach(el => el.classList.remove('jqtree-moving'));
+        ctx.rootEl.querySelectorAll('.pwgtree-moving').forEach(el => el.classList.remove('pwgtree-moving'));
     }
 
     function placeGhost(targetLi: HTMLElement, position: Position): void {
@@ -60,7 +60,7 @@ export function attachDnd(ctx: DndContext): () => void {
     }
 
     function computePosition(targetLi: HTMLElement, clientY: number, allowInside: boolean): Position {
-        const elDiv = targetLi.querySelector<HTMLElement>(':scope > .jqtree-element');
+        const elDiv = targetLi.querySelector<HTMLElement>(':scope > .pwgtree-element');
         const rect = (elDiv ?? targetLi).getBoundingClientRect();
         const rel = clientY - rect.top;
         const third = rect.height / 3;
@@ -82,13 +82,13 @@ export function attachDnd(ctx: DndContext): () => void {
     }
 
     const onDragStart = (e: DragEvent): void => {
-        const li = (e.target as HTMLElement | null)?.closest<HTMLElement>('li.jqtree_common');
+        const li = (e.target as HTMLElement | null)?.closest<HTMLElement>('li.pwgtree-common');
         if (!li || !ctx.rootEl.contains(li)) return;
         const node = ctx.nodeForLi(li);
         if (!node) return;
         draggedNode = node;
-        li.classList.add('jqtree-moving');
-        ctx.rootEl.classList.add('jqtree-dragging');
+        li.classList.add('pwgtree-moving');
+        ctx.rootEl.classList.add('pwgtree-dragging');
         try {
             e.dataTransfer?.setData('text/plain', String(node.id));
             if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
@@ -99,7 +99,7 @@ export function attachDnd(ctx: DndContext): () => void {
 
     const onDragOver = (e: DragEvent): void => {
         if (!draggedNode) return;
-        const li = (e.target as HTMLElement | null)?.closest<HTMLElement>('li.jqtree_common');
+        const li = (e.target as HTMLElement | null)?.closest<HTMLElement>('li.pwgtree-common');
         if (!li || !ctx.rootEl.contains(li)) return;
         const targetNode = ctx.nodeForLi(li);
         if (!targetNode || targetNode === draggedNode) return;
@@ -130,7 +130,7 @@ export function attachDnd(ctx: DndContext): () => void {
         if (!draggedNode || !lastTargetLi || !lastPosition) {
             clearGhost();
             draggedNode = null;
-            ctx.rootEl.classList.remove('jqtree-dragging');
+            ctx.rootEl.classList.remove('pwgtree-dragging');
             return;
         }
         const targetNode = ctx.nodeForLi(lastTargetLi);
@@ -140,7 +140,7 @@ export function attachDnd(ctx: DndContext): () => void {
 
         clearGhost();
         draggedNode = null;
-        ctx.rootEl.classList.remove('jqtree-dragging');
+        ctx.rootEl.classList.remove('pwgtree-dragging');
 
         if (!targetNode) return;
         e.preventDefault();
@@ -165,7 +165,7 @@ export function attachDnd(ctx: DndContext): () => void {
     const onDragEnd = (): void => {
         clearGhost();
         draggedNode = null;
-        ctx.rootEl.classList.remove('jqtree-dragging');
+        ctx.rootEl.classList.remove('pwgtree-dragging');
     };
 
     ctx.rootEl.addEventListener('dragstart', onDragStart);

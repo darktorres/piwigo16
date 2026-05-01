@@ -1,6 +1,7 @@
 // Builds the LI/UL DOM for a single node (children excluded — the tree
-// orchestrates child rendering). Class names mirror jqtree's so the existing
-// CSS in albums.tpl and tree.css continues to apply unchanged.
+// orchestrates child rendering). Class names use the pwgtree- prefix to
+// match the bundled tree.css and the matching rules in albums.tpl + the
+// admin themes.
 
 import type { TreeNode, RenderHook } from './types';
 
@@ -16,18 +17,18 @@ export function createNodeLi(
     onCreateLi?: RenderHook,
 ): HTMLElement {
     const li = document.createElement('li');
-    li.classList.add('jqtree_common');
+    li.classList.add('pwgtree-common');
 
     if (isFolder(node)) {
-        li.classList.add('jqtree-folder');
-        li.classList.add(isOpen ? 'jqtree-open' : 'jqtree-closed');
+        li.classList.add('pwgtree-folder');
+        li.classList.add(isOpen ? 'pwgtree-open' : 'pwgtree-closed');
     }
 
     const elDiv = document.createElement('div');
-    elDiv.classList.add('jqtree-element', 'jqtree_common');
+    elDiv.classList.add('pwgtree-element', 'pwgtree-common');
 
     const titleSpan = document.createElement('span');
-    titleSpan.classList.add('jqtree-title');
+    titleSpan.classList.add('pwgtree-title');
     titleSpan.textContent = String(node.name);
     elDiv.appendChild(titleSpan);
 
@@ -41,6 +42,6 @@ export function createNodeLi(
 
 export function createChildrenUl(): HTMLElement {
     const ul = document.createElement('ul');
-    ul.classList.add('jqtree_common');
+    ul.classList.add('pwgtree-common');
     return ul;
 }

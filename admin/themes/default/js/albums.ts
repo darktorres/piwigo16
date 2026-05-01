@@ -132,7 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const openUppercats = openCat == -1 ? [] : findAlbumById(data, openCat).uppercats.split(',');
     // Honour persisted-open ids so that nodes the user previously expanded
     // come back with their children already rendered (otherwise the saved
-    // jqtree-open class on the LI would have nothing inside it to show).
+    // pwgtree-open class on the LI would have nothing inside it to show).
     const savedOpen: string[] = (() => {
         try {
             const raw = window.localStorage?.getItem('pwg_album_tree_open_admin_albums');
@@ -160,11 +160,11 @@ document.addEventListener('DOMContentLoaded', () => {
         saveStateKey: 'admin_albums',
         onCreateLi: createAlbumNode,
         onOpen: (n: TreeNode) => {
-            const el = n.element?.querySelector<HTMLElement>(':scope > .jqtree-element .move-cat-toogler');
+            const el = n.element?.querySelector<HTMLElement>(':scope > .pwgtree-element .move-cat-toogler');
             if (el) el.innerHTML = toggler_open;
         },
         onClose: (n: TreeNode) => {
-            const el = n.element?.querySelector<HTMLElement>(':scope > .jqtree-element .move-cat-toogler');
+            const el = n.element?.querySelector<HTMLElement>(':scope > .pwgtree-element .move-cat-toogler');
             if (el) el.innerHTML = toggler_close;
         },
         onMove: (moveInfo: MoveInfo, ev) => {
@@ -386,7 +386,7 @@ function createAlbumNode(node: TreeNode, li: HTMLElement) {
         + "</div>"
         + '</div>';
 
-    const contEl = liEl.querySelector<HTMLElement>('.jqtree-element')!;
+    const contEl = liEl.querySelector<HTMLElement>('.pwgtree-element')!;
     contEl.classList.add('move-cat-container');
     contEl.id = 'cat-' + node.id;
     contEl.innerHTML = '';
@@ -394,9 +394,9 @@ function createAlbumNode(node: TreeNode, li: HTMLElement) {
     cont = contEl; // keep global for compatibility
 
     if (node.haveChildren || node.children.length !== 0) {
-        // The album-tree adds jqtree-open / jqtree-closed to the LI before
+        // The album-tree adds pwgtree-open / pwgtree-closed to the LI before
         // calling onCreateLi, so the open state is readable from the class.
-        const isOpen = liEl.classList.contains('jqtree-open');
+        const isOpen = liEl.classList.contains('pwgtree-open');
         toggler = isOpen ? toggler_open : toggler_close;
         contEl.insertAdjacentHTML('beforeend', toggler_cont.replace(/%content%/g, toggler).replace(/%id%/g, String(node.id)));
     } else {

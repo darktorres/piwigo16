@@ -1,13 +1,12 @@
 // Vanilla TypeScript replacement for jqTree, scoped to Piwigo's album admin
-// page. Models a tree of albums and renders matching DOM with the same class
-// names jqtree used (jqtree-tree / jqtree-folder / jqtree-element /
-// jqtree-open / jqtree-closed / jqtree_common) so existing CSS keeps working.
+// page. Models a tree of albums and renders DOM with the pwgtree- class
+// prefix (pwgtree-tree / pwgtree-folder / pwgtree-element / pwgtree-open /
+// pwgtree-closed / pwgtree-common); matching styles live in tree.css and
+// the admin themes.
 //
-// Public API mirrors the subset of jqtree's surface that albums.ts depends on:
-// getNodeById, openNode, closeNode, updateNode, removeNode, appendNode,
-// prependNode, loadData. State persistence and HTML5 drag-and-drop are
-// provided directly by this module, replacing two features that were either
-// disabled (saveState) or broken (drag-drop) in the patched jqtree path.
+// Public API: getNodeById, openNode, closeNode, updateNode, removeNode,
+// appendNode, prependNode, loadData. State persistence is mirrored to
+// localStorage; drag-and-drop uses HTML5 native events.
 
 import './tree.css';
 import type {
@@ -38,9 +37,9 @@ class AlbumTreeImpl {
         this.store = options.saveStateKey ? new TreeStateStore(options.saveStateKey) : null;
         if (this.store) this.openIds = this.store.load();
 
-        this.rootEl.classList.add('jqtree-tree');
+        this.rootEl.classList.add('pwgtree-tree');
         this.rootUl = document.createElement('ul');
-        this.rootUl.classList.add('jqtree-tree', 'jqtree_common');
+        this.rootUl.classList.add('pwgtree-tree', 'pwgtree-common');
         // The mount point is itself a div; hold the UL inside it.
         this.rootEl.innerHTML = '';
         this.rootEl.appendChild(this.rootUl);
@@ -147,8 +146,8 @@ class AlbumTreeImpl {
         this.openIds.add(key);
         const li = node.element;
         if (li) {
-            li.classList.remove('jqtree-closed');
-            li.classList.add('jqtree-open');
+            li.classList.remove('pwgtree-closed');
+            li.classList.add('pwgtree-open');
         }
         this.persistState();
         this.options.onOpen?.(node);
@@ -161,8 +160,8 @@ class AlbumTreeImpl {
         this.openIds.delete(key);
         const li = node.element;
         if (li) {
-            li.classList.remove('jqtree-open');
-            li.classList.add('jqtree-closed');
+            li.classList.remove('pwgtree-open');
+            li.classList.add('pwgtree-closed');
         }
         this.persistState();
         this.options.onClose?.(node);
@@ -179,14 +178,14 @@ class AlbumTreeImpl {
         if (!li) return;
         // Re-render through the user hook by wiping the element and rebuilding
         // its inner content. Children UL is preserved.
-        const childUl = li.querySelector<HTMLElement>(':scope > ul.jqtree_common');
-        const elDiv = li.querySelector<HTMLElement>(':scope > .jqtree-element');
+        const childUl = li.querySelector<HTMLElement>(':scope > ul.pwgtree-common');
+        const elDiv = li.querySelector<HTMLElement>(':scope > .pwgtree-element');
         if (elDiv) elDiv.remove();
 
         const newDiv = document.createElement('div');
-        newDiv.classList.add('jqtree-element', 'jqtree_common');
+        newDiv.classList.add('pwgtree-element', 'pwgtree-common');
         const titleSpan = document.createElement('span');
-        titleSpan.classList.add('jqtree-title');
+        titleSpan.classList.add('pwgtree-title');
         titleSpan.textContent = String(newName);
         newDiv.appendChild(titleSpan);
         // Insert before the children UL (if any) so DOM order stays consistent.
@@ -216,10 +215,10 @@ class AlbumTreeImpl {
         const parentEl = node.parent?.element ?? null;
         node.element?.remove();
         if (parentEl) {
-            const ul = parentEl.querySelector<HTMLElement>(':scope > ul.jqtree_common');
+            const ul = parentEl.querySelector<HTMLElement>(':scope > ul.pwgtree-common');
             if (ul && ul.children.length === 0) {
                 ul.remove();
-                parentEl.classList.remove('jqtree-folder', 'jqtree-open', 'jqtree-closed');
+                parentEl.classList.remove('pwgtree-folder', 'pwgtree-open', 'pwgtree-closed');
             }
         }
         this.persistState();
@@ -244,12 +243,12 @@ class AlbumTreeImpl {
         if (parent) {
             const parentLi = parent.element;
             if (parentLi) {
-                let ul = parentLi.querySelector<HTMLElement>(':scope > ul.jqtree_common');
+                let ul = parentLi.querySelector<HTMLElement>(':scope > ul.pwgtree-common');
                 if (!ul) {
                     ul = createChildrenUl();
                     parentLi.appendChild(ul);
-                    parentLi.classList.add('jqtree-folder');
-                    if (!parentLi.classList.contains('jqtree-open')) parentLi.classList.add('jqtree-closed');
+                    parentLi.classList.add('pwgtree-folder');
+                    if (!parentLi.classList.contains('pwgtree-open')) parentLi.classList.add('pwgtree-closed');
                 }
                 if (where === 'append') ul.appendChild(li);
                 else ul.insertBefore(li, ul.firstChild);
@@ -275,19 +274,19 @@ class AlbumTreeImpl {
 
             const parentLi = parent.element;
             if (parentLi) {
-                let ul = parentLi.querySelector<HTMLElement>(':scope > ul.jqtree_common');
+                let ul = parentLi.querySelector<HTMLElement>(':scope > ul.pwgtree-common');
                 if (ul) ul.innerHTML = '';
                 else {
                     ul = createChildrenUl();
                     parentLi.appendChild(ul);
                 }
                 if (parent.children.length > 0) {
-                    parentLi.classList.add('jqtree-folder');
-                    if (!parentLi.classList.contains('jqtree-open')) parentLi.classList.add('jqtree-closed');
+                    parentLi.classList.add('pwgtree-folder');
+                    if (!parentLi.classList.contains('pwgtree-open')) parentLi.classList.add('pwgtree-closed');
                     for (const child of parent.children) ul.appendChild(this.renderNodeRecursive(child));
                 } else {
                     ul.remove();
-                    parentLi.classList.remove('jqtree-folder', 'jqtree-open', 'jqtree-closed');
+                    parentLi.classList.remove('pwgtree-folder', 'pwgtree-open', 'pwgtree-closed');
                 }
             }
         } else {
@@ -332,12 +331,12 @@ class AlbumTreeImpl {
         if (position === 'inside') {
             const targetLi = target.element;
             if (!targetLi) return;
-            let ul = targetLi.querySelector<HTMLElement>(':scope > ul.jqtree_common');
+            let ul = targetLi.querySelector<HTMLElement>(':scope > ul.pwgtree-common');
             if (!ul) {
                 ul = createChildrenUl();
                 targetLi.appendChild(ul);
-                targetLi.classList.add('jqtree-folder');
-                if (!targetLi.classList.contains('jqtree-open')) targetLi.classList.add('jqtree-closed');
+                targetLi.classList.add('pwgtree-folder');
+                if (!targetLi.classList.contains('pwgtree-open')) targetLi.classList.add('pwgtree-closed');
             }
             ul.appendChild(movedLi);
         } else {
@@ -350,10 +349,10 @@ class AlbumTreeImpl {
         // Old parent went childless — drop its UL and folder classes so it no
         // longer paints as expandable.
         if (oldParent && oldParent !== newParent && oldSiblings.length === 0 && oldParent.element) {
-            const ul = oldParent.element.querySelector<HTMLElement>(':scope > ul.jqtree_common');
+            const ul = oldParent.element.querySelector<HTMLElement>(':scope > ul.pwgtree-common');
             if (ul) {
                 ul.remove();
-                oldParent.element.classList.remove('jqtree-folder', 'jqtree-open', 'jqtree-closed');
+                oldParent.element.classList.remove('pwgtree-folder', 'pwgtree-open', 'pwgtree-closed');
             }
         }
     }

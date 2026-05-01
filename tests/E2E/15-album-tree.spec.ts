@@ -1,22 +1,13 @@
-// Regression net for the album tree (currently jqTree, will be replaced by a
-// vanilla TS module). All assertions describe behaviour visible to the user,
-// not implementation details, so the same suite must pass before AND after
-// the swap.
+// Behavioural regression net for the album tree (admin/themes/default/js/
+// album-tree/). Originally written against jqTree as a safety net for the
+// rewrite; now exercises the vanilla TS module. All assertions describe
+// what the user sees, not implementation details — survives further refactors.
 //
 // Setup: each test creates throwaway albums via the pwg API and cleans them
 // up at the end. Tests run serially (workers: 1 in playwright.config.ts).
 //
-// Status: 5 of 7 tests active and green against the patched jqtree integration
-// (render, toggler, rename, delete, add). Two are test.fixme with explanations:
-//   - "expanded state persists across page refresh" — jqtree's saveState is off;
-//     persistence is a target of the new album-tree module (LocalStorageCache).
-//   - "drag-drop re-parents a node" — jqtree's drag mouse-handlers don't fire
-//     because createAlbumNode wipes the elements jqtree expects to attach them
-//     to. The new module will implement native HTML5 drag-and-drop.
-//
 // Iteration: set SKIP_GLOBAL_SETUP=1 to skip the destructive DB reset and run
-// against the existing install. First run (or after schema changes) needs the
-// 01-install spec to run alongside.
+// against the existing install.
 
 import { test, expect, type Page } from '@playwright/test';
 import { loginAsAdmin } from './helpers/admin-login';
@@ -77,7 +68,7 @@ async function setupTest(page: Page): Promise<CreatedAlbums> {
 async function gotoAlbums(page: Page): Promise<void> {
     await page.goto(pwgUrl('/admin.php?page=albums'));
     await expect(page.locator('.tree')).toBeVisible();
-    // jqtree renders asynchronously; wait for at least one node to appear.
+    // The tree renders asynchronously; wait for at least one node to appear.
     await expect(page.locator('.move-cat-container').first()).toBeVisible();
 }
 
@@ -224,8 +215,8 @@ test.describe('album tree', () => {
         ctx.ids.push(sourceId);
 
         await gotoAlbums(page);
-        const sourceLi = page.locator(`li.jqtree_common:has(#cat-${sourceId})`);
-        const targetLi = page.locator(`li.jqtree_common:has(#cat-${targetId})`);
+        const sourceLi = page.locator(`li.pwgtree-common:has(#cat-${sourceId})`);
+        const targetLi = page.locator(`li.pwgtree-common:has(#cat-${targetId})`);
         await expect(sourceLi).toBeVisible();
         await expect(targetLi).toBeVisible();
 

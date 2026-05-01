@@ -261,7 +261,7 @@ var str_result_limit = '{"<b>%d+</b> albums found, try to refine the search"|tra
   border-radius: 5px;
 }
 
-.jqtree_element {
+.pwgtree-element {
   transition: 1s;
 }
 
@@ -494,12 +494,12 @@ input[name="position"] {
   transition: 0.2s;
 }
 
-.jqtree-moving .move-cat-container {
+.pwgtree-moving .move-cat-container {
   background-color: #ffd7ad;
 }
 
-.jqtree-moving .move-cat-container .badge-container i,
-.jqtree-moving .move-cat-container .node-icon {
+.pwgtree-moving .move-cat-container .badge-container i,
+.pwgtree-moving .move-cat-container .node-icon {
   color: #ffd7ad;
   background-color: #f98100;
 }
@@ -579,7 +579,7 @@ input[name="position"] {
     display: none;
   }
 
-  ul.jqtree-tree ul.jqtree_common {
+  ul.pwgtree-tree ul.pwgtree-common {
     margin-left: 20px !important;
   }
 

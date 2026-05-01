@@ -5555,39 +5555,17 @@ FORM#categoryOrdering p.albumActions .userSeparator {margin:0 5px;}
   margin-right: 10px; 
 }
 
-/*Overwrite JQtree CSS*/
+/* album-tree (vanilla TS) overrides */
 
-.jqtree_common {
+.pwgtree-common {
   margin: 20px 0px !important;
 }
 
-li.jqtree-ghost {
-  display: flex !important;
-  margin: 0 !important;
-}
-
-ul.jqtree-tree ul.jqtree_common {
+ul.pwgtree-tree ul.pwgtree-common {
   margin-left: 50px !important;
 }
 
-ul.jqtree-tree span.jqtree-border {
-  border: solid 2px #FFBD4D !important;
-  width: 98%;
-}
-
-ul.jqtree-tree li.jqtree-ghost span.jqtree-circle {
-  border: solid 2px #FFBD4D !important;
-  margin: 0 !important;
-}
-
-ul.jqtree-tree li.jqtree-ghost span.jqtree-line {
-  background-color: #FFBD4D !important;
-  position: relative !important;
-  height: 2px !important;
-  margin: 0 !important;
-}
-
-ul.jqtree-tree .jqtree-element {
+ul.pwgtree-tree .pwgtree-element {
   cursor: move !important;
 }
 

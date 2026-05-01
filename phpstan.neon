@@ -26,7 +26,6 @@ parameters:
             - include/smarty/*
             - include/feedcreator.class.php
             - include/pwgsession_php7.class.php
-            - include/phpqrcode.php
             - include/passwordhash.class.php
             - vendor/*
     bootstrapFiles:

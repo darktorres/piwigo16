@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Auth;
 
+use Endroid\QrCode\QrCode;
+use Endroid\QrCode\Writer\PngWriter;
 use Piwigo\Users\CurrentUser;
 
 class PwgTOTP
@@ -65,10 +67,11 @@ class PwgTOTP
     {
         $otp_url = self::getOtpAuthUrl($secret);
 
-        ob_start();
-        \QRcode::png($otp_url);
-        $qrcode_image = ob_get_clean();
-        $base64_qrcode = base64_encode($qrcode_image ?: '');
+        $qrCode = new QrCode($otp_url);
+        $writer = new PngWriter();
+        $result = $writer->write($qrCode);
+        $qrcode_image = $result->getString();
+        $base64_qrcode = base64_encode($qrcode_image);
         return 'data:image/png;base64,' . $base64_qrcode;
     }
 

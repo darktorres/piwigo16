@@ -310,13 +310,13 @@ if (is_webmaster()) {
                 $detail = [
                   'type' => 'version',
                   'icon' => 'icon-flow-branch',
-                  'text' => is_scalar($details['version'] ?? null) ? (string)$details['version'] : '',
+                  'text' => is_scalar($details['version']) ? (string)$details['version'] : '',
                 ];
             } elseif (isset($details['result'])) {
                 $detail = [
                   'type' => 'error',
                   'icon' => 'icon-block',
-                  'text' => is_scalar($details['result'] ?? null) ? (string)$details['result'] : '',
+                  'text' => is_scalar($details['result']) ? (string)$details['result'] : '',
                 ];
             }
 

@@ -513,7 +513,7 @@ switch ($page['mode']) {
         {
             if (isset($_POST['send_submit']) and isset($_POST['send_selection']) and isset($_POST['send_customize_mail_content'])) {
                 $send_selection = is_array($_POST['send_selection']) ? array_map(fn(mixed $v): string => is_scalar($v) ? (string)$v : '',$_POST['send_selection']) : [];
-                $check_key_treated = do_action_send_mail_notification('send', $send_selection, stripslashes(is_scalar($_POST['send_customize_mail_content'] ?? null) ? (string)$_POST['send_customize_mail_content'] : ''));
+                $check_key_treated = do_action_send_mail_notification('send', $send_selection, stripslashes(is_scalar($_POST['send_customize_mail_content']) ? (string)$_POST['send_customize_mail_content'] : ''));
                 $check_key_treated_str = array_map(fn(mixed $v): string => is_scalar($v) ? (string)$v : '', $check_key_treated);
                 if (do_timeout_treatment('send_selection', $check_key_treated_str)) {
                     $must_repost = true;
@@ -640,7 +640,7 @@ switch ($page['mode']) {
                     if (!is_array($nbm_user_raw)) {
                         continue;
                     }
-                    $checkKey = (string) ($nbm_user_raw['check_key'] ?? '');
+                    $checkKey = is_scalar($nbm_user_raw['check_key'] ?? null) ? (string) $nbm_user_raw['check_key'] : '';
                     if (
                         !$must_repost or // Not timeout, normal treatment
                         in_array($checkKey, $send_sel_post)  // Must be repost, show only user to send
@@ -652,7 +652,7 @@ switch ($page['mode']) {
                                 isset($_POST['send_selection']) and // not init
                                 !in_array($checkKey, $send_sel_post) // not selected
                             ) ? '' : 'checked="checked"',
-                            'USERNAME' => stripslashes((string) ($nbm_user_raw['username'] ?? '')),
+                            'USERNAME' => stripslashes(is_scalar($nbm_user_raw['username'] ?? null) ? (string) $nbm_user_raw['username'] : ''),
                             'EMAIL' => $nbm_user_raw['mail_address'] ?? '',
                             'LAST_SEND' => $nbm_user_raw['last_send'] ?? null,
                             ];

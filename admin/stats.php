@@ -258,12 +258,14 @@ function set_missing_values(string $unit, array $data, DateTime|null $firstDate 
     $result = [];
 
     if ($firstDate == null) {
-        $date = get_date_object($data[count($data) - 1]);
+        $data_last = $data[count($data) - 1] ?? null;
+        $date = is_array($data_last) ? get_date_object($data_last) : new \DateTime();
     } else {
         $date = $firstDate;
     }
     if ($lastDate == null) {
-        $date_end = get_date_object($data[0]);
+        $data_first = $data[0] ?? null;
+        $date_end = is_array($data_first) ? get_date_object($data_first) : new \DateTime();
     } else {
         $date_end = $lastDate;
     }
@@ -293,9 +295,12 @@ function set_missing_values(string $unit, array $data, DateTime|null $firstDate 
 
     //Overload with database rows
     foreach ($data as $value) {
+        if (!is_array($value)) {
+            continue;
+        }
         $str = get_date_object($value)->format($date_format);
         if (isset($result[$str])) {
-            $result[$str] += $value['nb_pages'];
+            $result[$str] += is_numeric($value['nb_pages'] ?? null) ? (int) $value['nb_pages'] : 0;
         }
     }
 
@@ -306,13 +311,13 @@ function set_missing_values(string $unit, array $data, DateTime|null $firstDate 
 /** @param array<mixed> $row */
 function get_date_object(array $row): \DateTime
 {
-    $date_string = $row['year'];
-    if ($row['month'] != null) {
-        $date_string = $date_string.'-'.$row['month'] ;
-        if ($row['day'] != null) {
-            $date_string = $date_string.'-'.$row['day'];
-            if ($row['hour'] != null) {
-                $date_string = $date_string.' '.$row['hour'].':00';
+    $date_string = is_scalar($row['year'] ?? null) ? (string) $row['year'] : '2000';
+    if (($row['month'] ?? null) != null) {
+        $date_string = $date_string.'-'.(is_scalar($row['month']) ? (string) $row['month'] : '1');
+        if (($row['day'] ?? null) != null) {
+            $date_string = $date_string.'-'.(is_scalar($row['day']) ? (string) $row['day'] : '1');
+            if (($row['hour'] ?? null) != null) {
+                $date_string = $date_string.' '.(is_scalar($row['hour']) ? (string) $row['hour'] : '0').':00';
             }
         }
     } else {

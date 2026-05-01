@@ -24,63 +24,53 @@ Original findings (kept for reference):
 
 ## Bucket 2 — Standalone tools that still use jQuery (out of Vite scope)
 
-These are debugging utilities loaded outside the Vite pipeline. They are not reached from any normal user flow and use their own self-contained jQuery via CDN or vendored copy.
+These are debugging utilities loaded outside the Vite pipeline.
 
 | File | Notes |
 |---|---|
-| `tools/ws/ws.js` | Web-services explorer. `$()` ready callback throughout, `jQuery.parseJSON`. Loaded by `tools/ws.html` via vendored CDN jQuery. |
-| `tools/ws/jquery.json-viewer.js` | Vendored jQuery plugin used only by `ws.js`. |
-| `tools/triggers_list.php` | Standalone trigger-debugging page. Lines 940-941, 1053-1054, 1058 hardcode CDN URLs for `jquery-1.9.1.min.js`, jQuery UI 1.9.2, jQuery DataTables 1.9.4, and uses `bJQueryUI: true`. Not part of the modernized admin. |
+| `tools/ws/ws.js` + `tools/ws.htm` + `tools/ws/jquery.json-viewer.js` | Web-services explorer. `$()` ready callback throughout, `jQuery.parseJSON`. **Broken since Wave 6**: `tools/ws.htm` lines 13-15 still reference `../themes/default/js/jquery.min.js`, `jquery.cookie.js`, and `plugins/jquery.tipTip.minified.js`, all of which were deleted. The page loads but `$()` is undefined and the explorer cannot function. |
+| `tools/triggers_list.php` | Standalone trigger-debugging page. Lines 940-941, 1053-1054, 1058 hardcode CDN URLs for `jquery-1.9.1.min.js`, jQuery UI 1.9.2, jQuery DataTables 1.9.4, and uses `bJQueryUI: true`. CDN URLs still resolve, so this one still works. |
 
-Decision: leave as-is. Touching these is a rewrite, not a sweep — they're contained, dev-only, and pre-date the modernization. If they ever get rewritten, do it as a separate phase.
+Decision: pending. The web-services explorer is broken and has been since Wave 6 — three options:
+1. **Delete** `tools/ws.htm` and `tools/ws/` entirely (clean up dead code; assumes nobody relies on it).
+2. **Restore** standalone vendored jquery.min.js + jquery.cookie.js + jquery.tipTip.minified.js inside `tools/ws/` so the existing tool works again (preserves functionality but reintroduces vendored jQuery).
+3. **Rewrite** `ws.js` to vanilla TS (proper modernization; multi-day project).
 
-## Bucket 3 — Identifier carries the jQuery name but the implementation is jQuery-free
+`tools/triggers_list.php` is functional via CDN and is dev-only; safe to leave.
 
-These would require a coordinated rename across PHP + every language file; pure cosmetic, no behavior change.
+## Bucket 3 — Identifier carries the jQuery name but the implementation is jQuery-free ✓ Resolved
 
-### `pwg_lang_info.jquery_code`
+### `pwg_lang_info.jquery_code` — deleted (chain was dead)
 
-PHP-side per-locale field for the jQuery-UI locale code (e.g., `fr`, `pt-BR`, `zh-TW`). Used to derive `plupload_code` by `_-` swap. The field is now read by zero JS files but is still set by every translated language pack.
+Investigation revealed the entire chain was unused: `pwg_lang_info` is declared in `globals.d.ts` but no PHP template emits it as a JS global, no TS file reads it, and the derived `plupload_code` field is also unread (Plupload was replaced by Uppy in Wave 4). The whole apparatus was purely PHP-side ceremony with no consumer.
 
-| File | Lines | Role |
-|---|---|---|
-| `src/types/globals.d.ts` | 10 | TS ambient declaration of `pwg_lang_info` shape |
-| `src/Piwigo/Template/Template.php` | 158-163 | Default-fills `jquery_code` from `code`, derives `plupload_code` from `jquery_code` |
-| `language/zh_TW/common.lang.php` | 21 | `$lang_info['jquery_code'] = 'zh-TW';` |
-| `language/zh_CN/common.lang.php` | 21 | `$lang_info['jquery_code'] = "zh-CN";` |
-| `language/ko_KR/common.lang.php` | 20 | `$lang_info['jquery_code'] = "ko";` |
-| `language/sh_RS/common.lang.php` | 21 | `$lang_info['jquery_code'] = 'sr-SR';` |
-| `language/uk_UA/common.lang.php` | 21 | `$lang_info['jquery_code'] = "uk";` |
-| `language/pt_BR/common.lang.php` | 21 | `$lang_info['jquery_code'] = 'pt-BR';` |
+Resolution: deleted entirely (not renamed):
+- `Template.php` lines 158-164 — the if/then defaulting block, removed.
+- `globals.d.ts` line 10 — the `pwg_lang_info` ambient declaration, removed.
+- 6 language files — `$lang_info['jquery_code'] = ...` lines removed (zh_TW, zh_CN, ko_KR, sh_RS, uk_UA, pt_BR).
+- 4 language files — `$lang_info['plupload_code'] = ...` lines removed (sh_RS, uk_UA, sr_RS, th_TH).
 
-Decision: defer. A clean rename to `ui_locale_code` (plus shim period for plugins reading the old key) belongs in the broader modernization plan's "globals → typed services" phase. Not worth a one-off churn commit.
+### `jquery.geoip` → `geoip` — renamed
 
-### `admin/themes/default/js/jquery.geoip.ts` + entry name `jquery.geoip`
+The TS module is jQuery-free; only the legacy filename + Vite entry id preserved the name. Renamed across 5 sites:
+- `admin/themes/default/js/jquery.geoip.ts` → `geoip.ts` (file rename via `git mv`).
+- `vite.config.ts` entry id renamed.
+- `dev/vite-entries.json` entry id renamed.
+- `admin/themes/default/template/rating_user.tpl` `combine_script id` updated.
+- `admin/themes/default/template/history.tpl` `combine_script id` updated.
 
-The TS module is jQuery-free; only the **filename** and Vite **entry id** preserve the legacy `jquery.geoip` name.
+## Bucket 4 — Stale CSS comments + dead rules ✓ Resolved
 
-| File | Lines | Role |
-|---|---|---|
-| `admin/themes/default/js/jquery.geoip.ts` | (whole file) | The actual module (TS, no jQuery) |
-| `vite.config.ts` | 52 | `'jquery.geoip': r('admin/themes/default/js/jquery.geoip.ts')` |
-| `dev/vite-entries.json` | 31 | Entry inventory mirror of the above |
-| `admin/themes/default/template/rating_user.tpl` | 49 | `{combine_script id='jquery.geoip' load='async'}` |
-| `admin/themes/default/template/history.tpl` | 193 | `{combine_script id='jquery.geoip' load='async'}` |
+Repo-wide grep confirmed: every `.ui-tooltip`, `.cluetip-*`, `.ui-datepicker-*`, `.ui-resizable*`, `.ui-wrapper`, `.ui-slider*`, `.ui-state-{default,hover,focus,active,disabled,error}`, `.ui-widget-content`, `.ui-widget-header`, `.ui-corner-all`, `.ui-timepicker-*`, `.ui-icon-circle-*`, `#tiptip_*` class appeared **only inside the CSS files where it was defined** — no template, no .ts file, and no .tpl emits any of them. (Modernized libraries use disjoint namespaces: Tippy.js → `.tippy-*`, Flatpickr → `.flatpickr-*`, noUiSlider → `.noUi-*`.)
 
-Decision: defer. A rename touches all 5 sites consistently; same risk profile as `jquery_code` above.
+Resolution: deleted entire dead rule blocks across 5 CSS files (442 lines total):
+- `admin/themes/default/theme.css` — main jQuery UI Tooltip/Datepicker block, full TipTip CSS block (113 lines including Webkit @media), scoped `#batchManagerGlobal .ui-slider*` and `.user_form_popin .ui-slider*` and `.slider-bar-wrapper .ui-slider-horizontal*` rules.
+- `admin/themes/roma/theme.css` — main jQuery UI block, scoped `#batchManagerGlobal .ui-state-*`/`.ui-slider*`, `.user_form_popin .ui-slider*`, `.slider-bar-wrapper .ui-slider-horizontal`, plus a stale commented-out block.
+- `admin/themes/clear/theme.css` — main jQuery UI Tooltip/Datepicker/Resizable/TipTip block plus scoped `#filterList .ui-slider*` and `#batchManagerGlobal .ui-state-*` rules.
+- `themes/default/theme.css` — `IMG.ui-datepicker-trigger` block.
+- `themes/default/css/search.css` — full jQuery UI Slider/State/Widget block (60 lines).
 
-## Bucket 4 — Stale CSS comments
-
-CSS comments above selectors that styled jQuery-plugin DOM. The comment text is dead; whether the rules underneath are still load-bearing depends on whether the classes still appear in any modernized component.
-
-| File | Lines | Comment |
-|---|---|---|
-| `admin/themes/default/theme.css` | 1810, 1839 | `/* jQuery tooltips */`, `/* jQuery datepicker */` |
-| `admin/themes/roma/theme.css` | 171, 178 | `/* jQuery tooltips */`, `/* jQuery ui resizable */` |
-| `admin/themes/clear/theme.css` | 128, 135, 139 | `/* jQuery tooltips */`, `/* jQuery ui resizable */`, `/* jQuery tiptip */` |
-| `themes/default/theme.css` | 696 | `/* jQuery datepicker */` |
-
-Decision: do during a CSS audit, not in isolation. Each comment block needs its rules cross-checked against current selectors before deletion (the rules may still match e.g. `.ui-tooltip` classes emitted by Tippy or Flatpickr).
+Note: `.disableSlider` in `search.css` and `.tiptip` (Tippy.js attachment class) in `albums.ts` are NOT dead — they are custom or modern markers that happen to share substrings with jQuery names.
 
 ## Bucket 5 — Comments / module descriptions referencing the historical library
 
@@ -113,9 +103,14 @@ Decision: keep. Removing them rewrites history.
 
 Decision: accept. Lockfile-only artifact; bundles do not contain jQuery.
 
-## Suggested cleanup order
+## Status summary
 
-1. ~~**Bucket 1**~~ — done in this series.
-2. **Bucket 4** as part of any future theme.css audit.
-3. **Bucket 3** during the broader globals→services phase.
-4. Buckets 2, 5, 6, 7 — leave alone.
+| Bucket | Status |
+|---|---|
+| 1 — Live runtime residue | ✓ Resolved |
+| 2 — Standalone tools | Pending decision: `tools/ws/` is broken since Wave 6 (3 options noted above); `tools/triggers_list.php` works via CDN, leave alone |
+| 3 — Legacy identifier names | ✓ Resolved (chain deleted as dead; `jquery.geoip` renamed) |
+| 4 — Dead CSS rules | ✓ Resolved (442 lines deleted) |
+| 5 — Descriptive comments | Keep |
+| 6 — Historical docs | Keep |
+| 7 — Lockfile noise | Accept |

@@ -22,21 +22,17 @@ Original findings (kept for reference):
 | `tests/playwright.config.ts` | 31, 32, 40-42 | Coverage filter excluded `/themes/default/js/plugins/`, `/themes/default/js/ui/`, `jquery.js`, `jquery.min.js`, `jquery.cookie.js`. Those directories and files no longer exist. Filter rules pruned. |
 | `tests/e2e/base-test.ts` | 169, 170, 178-180 | Same dead filter rules (parallel definition). Pruned. |
 
-## Bucket 2 — Standalone tools that still use jQuery (out of Vite scope)
+## Bucket 2 — Standalone tools that still use jQuery (out of Vite scope) ✓ Resolved
 
-These are debugging utilities loaded outside the Vite pipeline.
+`tools/ws/` was rewritten as vanilla ES2020+ modules (no jQuery, no build step — the directory sits outside the Vite pipeline). `tools/triggers_list.php` is left alone (CDN-loaded, still functional).
 
-| File | Notes |
-|---|---|
-| `tools/ws/ws.js` + `tools/ws.htm` + `tools/ws/jquery.json-viewer.js` | Web-services explorer. `$()` ready callback throughout, `jQuery.parseJSON`. **Broken since Wave 6**: `tools/ws.htm` lines 13-15 still reference `../themes/default/js/jquery.min.js`, `jquery.cookie.js`, and `plugins/jquery.tipTip.minified.js`, all of which were deleted. The page loads but `$()` is undefined and the explorer cannot function. |
-| `tools/triggers_list.php` | Standalone trigger-debugging page. Lines 940-941, 1053-1054, 1058 hardcode CDN URLs for `jquery-1.9.1.min.js`, jQuery UI 1.9.2, jQuery DataTables 1.9.4, and uses `bJQueryUI: true`. CDN URLs still resolve, so this one still works. |
+Resolution for `tools/ws/`:
+- `tools/ws/ws.js` rewritten from ~540 lines of jQuery to ~370 lines of vanilla DOM/fetch. Same UI behavior; tooltip animations dropped (replaced with native `title` attributes which the browser already renders); cookie helpers inlined (~12 lines of `document.cookie` shims, replaces `$.cookie` plugin); slide animations replaced with instant show/hide.
+- `tools/ws/jquery.json-viewer.js` deleted, replaced by `tools/ws/json-viewer.js` — vanilla ES module that exports `renderJsonViewer(targetEl, json, options)`. Same HTML output, same `.json-*` CSS classes, same click-delegation behavior.
+- `tools/ws/jquery.json-viewer.css` renamed to `tools/ws/json-viewer.css` (no rule changes — the class names were already library-neutral).
+- `tools/ws.htm` cleaned up: dropped the three broken vendored `<script>` tags, dropped the dead `cdn.jsdelivr.net/tiptip` CSS link, switched the remaining script to `<script type="module">`.
 
-Decision: pending. The web-services explorer is broken and has been since Wave 6 — three options:
-1. **Delete** `tools/ws.htm` and `tools/ws/` entirely (clean up dead code; assumes nobody relies on it).
-2. **Restore** standalone vendored jquery.min.js + jquery.cookie.js + jquery.tipTip.minified.js inside `tools/ws/` so the existing tool works again (preserves functionality but reintroduces vendored jQuery).
-3. **Rewrite** `ws.js` to vanilla TS (proper modernization; multi-day project).
-
-`tools/triggers_list.php` is functional via CDN and is dev-only; safe to leave.
+`tools/triggers_list.php` still loads jQuery 1.9 + DataTables 1.9 + jQuery UI 1.9 from public CDNs (lines 940-941, 1053-1054, 1058). The CDN URLs still resolve, so it works as-is. Standalone dev-only page; no action.
 
 ## Bucket 3 — Identifier carries the jQuery name but the implementation is jQuery-free ✓ Resolved
 
@@ -108,7 +104,7 @@ Decision: accept. Lockfile-only artifact; bundles do not contain jQuery.
 | Bucket | Status |
 |---|---|
 | 1 — Live runtime residue | ✓ Resolved |
-| 2 — Standalone tools | Pending decision: `tools/ws/` is broken since Wave 6 (3 options noted above); `tools/triggers_list.php` works via CDN, leave alone |
+| 2 — Standalone tools | ✓ Resolved (`tools/ws/` rewritten to vanilla; `tools/triggers_list.php` left as CDN dev tool) |
 | 3 — Legacy identifier names | ✓ Resolved (chain deleted as dead; `jquery.geoip` renamed) |
 | 4 — Dead CSS rules | ✓ Resolved (442 lines deleted) |
 | 5 — Descriptive comments | Keep |

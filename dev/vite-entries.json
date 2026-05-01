@@ -28,7 +28,7 @@
         "group_list":         "admin/themes/default/js/group_list.ts",
         "history":            "admin/themes/default/js/history.ts",
         "intro_tooltips":     "admin/themes/default/js/intro_tooltips.ts",
-        "jquery.geoip":       "admin/themes/default/js/jquery.geoip.ts",
+        "geoip":              "admin/themes/default/js/geoip.ts",
         "maintenance":        "admin/themes/default/js/maintenance.ts",
         "maintenance_env":    "admin/themes/default/js/maintenance_env.ts",
         "maintenance_sys":    "admin/themes/default/js/maintenance_sys.ts",

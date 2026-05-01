@@ -49,7 +49,7 @@ export default defineConfig({
                 'history':            r('admin/themes/default/js/history.ts'),
                 'intro_tooltips':     r('admin/themes/default/js/intro_tooltips.ts'),
                 'glightbox-admin':    r('admin/themes/default/js/glightbox-init.ts'),
-                'jquery.geoip':       r('admin/themes/default/js/jquery.geoip.ts'),
+                'geoip':              r('admin/themes/default/js/geoip.ts'),
                 'rating_user':        r('admin/themes/default/js/rating_user.ts'),
                 'ajax':               r('admin/themes/default/js/maintenance.ts'),
                 'activated_plugin_list': r('admin/themes/default/js/maintenance_env.ts'),

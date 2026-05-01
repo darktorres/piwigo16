@@ -190,7 +190,7 @@ document.querySelectorAll('[data-datepicker]').forEach(function(el) {
 
 {if !empty($navbar) }{include file='navigation_bar.tpl'|@get_extent:'navbar'}{/if}
 
-{combine_script id='jquery.geoip' load='async'}
+{combine_script id='geoip' load='async'}
 
 {footer_script}
 Array.from(document.querySelectorAll(".IP")).forEach(function(ipEl) {

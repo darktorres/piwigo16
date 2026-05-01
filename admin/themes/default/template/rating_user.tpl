@@ -46,7 +46,7 @@ document.querySelector('h1')?.insertAdjacentHTML('beforeend', "<span class='badg
 </form>
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
 {combine_script id='core.scripts' load='async' path='themes/default/js/scripts.js'}
-{combine_script id='jquery.geoip' load='async'}
+{combine_script id='geoip' load='async'}
 {footer_script}
 window.oTable = new DataTable('#rateTable', {
 	pageLength: 100,

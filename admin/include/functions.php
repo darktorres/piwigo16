@@ -2338,6 +2338,7 @@ function cat_admin_access($category_id): bool
 /**
  * @param array<mixed> $get_data
  * @param array<mixed> $post_data
+ * @param-out string $dest
  */
 function fetchRemote(string $src, mixed &$dest, array $get_data = [], array $post_data = [], string $user_agent = 'Piwigo', int $step = 0): bool
 {

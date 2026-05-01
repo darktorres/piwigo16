@@ -12,7 +12,7 @@ class themes
     public array $fs_themes = [];
     /** @var array<string, array<string,mixed>> */
     public array $db_themes_by_id = [];
-    /** @var array<mixed> */
+    /** @var array<int|string, array<string, mixed>> */
     public array $server_themes = [];
 
     /**
@@ -99,13 +99,16 @@ class themes
                     break;
                 }
 
-                $version = is_scalar($this->fs_themes[$theme_id]['version'] ?? '') ? (string) $this->fs_themes[$theme_id]['version'] : '';
+                $vRaw = $this->fs_themes[$theme_id]['version'] ?? null;
+                $version = is_scalar($vRaw) ? (string) $vRaw : '';
                 $theme_maintain->activate($version, $errors);
                 $errors = trigger_change('theme_activate_errors', $errors);
 
                 if (empty($errors)) {
-                    $themeVersion = is_scalar($this->fs_themes[$theme_id]['version'] ?? '') ? (string) $this->fs_themes[$theme_id]['version'] : '';
-                    $themeName = is_scalar($this->fs_themes[$theme_id]['name'] ?? '') ? (string) $this->fs_themes[$theme_id]['name'] : '';
+                    $tvRaw = $this->fs_themes[$theme_id]['version'] ?? null;
+                    $themeVersion = is_scalar($tvRaw) ? (string) $tvRaw : '';
+                    $tnRaw = $this->fs_themes[$theme_id]['name'] ?? null;
+                    $themeName = is_scalar($tnRaw) ? (string) $tnRaw : '';
                     $query = '
 INSERT INTO '.THEMES_TABLE.'
   (id, version, name)
@@ -234,7 +237,8 @@ DELETE
 
         foreach ($this->fs_themes as $test_child) {
             if (isset($test_child['parent']) and $test_child['parent'] == $theme_id) {
-                $children[] = is_scalar($test_child['name'] ?? '') ? (string) $test_child['name'] : '';
+                $cn = $test_child['name'] ?? null;
+                $children[] = is_scalar($cn) ? (string) $cn : '';
             }
         }
 
@@ -271,7 +275,7 @@ UPDATE '.USER_INFOS_TABLE.'
     }
 
     /**
-     * @return mixed[]
+     * @return list<array<string, float|int|string|null>>
      */
     public function get_db_themes(?string $id = ''): array
     {
@@ -427,20 +431,22 @@ SELECT
         $version = PHPWG_VERSION;
         $versions_to_check = [];
         $url = PEM_URL . '/api/get_version_list.php';
-        if (fetchRemote($url, $result, $get_data) and $pem_versions = @unserialize($result)) {
+        if (fetchRemote($url, $result, $get_data) and $pem_versions = @unserialize(is_string($result) ? $result : '')) {
             if (!is_array($pem_versions)) {
                 return false;
             }
             if (!preg_match('/^\d+\.\d+\.\d+$/', $version)) {
-                $version = is_array($pem_versions[0]) && isset($pem_versions[0]['name']) ? (string) $pem_versions[0]['name'] : $version;
+                $pv0name = is_array($pem_versions[0]) && isset($pem_versions[0]['name']) ? ($pem_versions[0]['name'] ?? null) : null;
+                $version = is_scalar($pv0name) ? (string) $pv0name : $version;
             }
             $branch = get_branch_from_version($version);
             foreach ($pem_versions as $pem_version) {
                 if (!is_array($pem_version) || !isset($pem_version['name'], $pem_version['id'])) {
                     continue;
                 }
-                if (str_starts_with((string) $pem_version['name'], $branch)) {
-                    $versions_to_check[] = (string) $pem_version['id'];
+                $pvName = $pem_version['name'] ?? null; $pvId = $pem_version['id'] ?? null;
+                if (str_starts_with(is_scalar($pvName) ? (string) $pvName : '', $branch)) {
+                    $versions_to_check[] = is_scalar($pvId) ? (string) $pvId : '';
                 }
             }
         }
@@ -452,7 +458,8 @@ SELECT
         $themes_to_check = [];
         foreach ($this->fs_themes as $fs_theme) {
             if (isset($fs_theme['extension'])) {
-                $themes_to_check[] = (string) $fs_theme['extension'];
+                $extRaw = $fs_theme['extension'] ?? null;
+                $themes_to_check[] = is_scalar($extRaw) ? (string) $extRaw : '';
             }
         }
 
@@ -476,12 +483,12 @@ SELECT
             }
         }
         if (fetchRemote($url, $result, $get_data)) {
-            $pem_themes = @unserialize($result);
+            $pem_themes = @unserialize(is_string($result) ? $result : '');
             if (!is_array($pem_themes)) {
                 return false;
             }
             foreach ($pem_themes as $theme) {
-                if (is_array($theme) && isset($theme['extension_id'])) {
+                if (is_array($theme) && isset($theme['extension_id']) && (is_string($theme['extension_id']) || is_int($theme['extension_id']))) {
                     $this->server_themes[$theme['extension_id']] = $theme;
                 }
             }
@@ -500,24 +507,16 @@ SELECT
                 krsort($this->server_themes);
                 break;
             case 'revision':
-                usort($this->server_themes, function (mixed $a, mixed $b): int {
-                    return $this->extension_revision_compare(is_array($a) ? $a : [], is_array($b) ? $b : []);
-                });
+                usort($this->server_themes, fn(array $a, array $b): int => $this->extension_revision_compare($a, $b));
                 break;
             case 'name':
-                uasort($this->server_themes, function (mixed $a, mixed $b): int {
-                    return $this->extension_name_compare(is_array($a) ? $a : [], is_array($b) ? $b : []);
-                });
+                uasort($this->server_themes, fn(array $a, array $b): int => $this->extension_name_compare($a, $b));
                 break;
             case 'author':
-                uasort($this->server_themes, function (mixed $a, mixed $b): int {
-                    return $this->extension_author_compare(is_array($a) ? $a : [], is_array($b) ? $b : []);
-                });
+                uasort($this->server_themes, fn(array $a, array $b): int => $this->extension_author_compare($a, $b));
                 break;
             case 'downloads':
-                usort($this->server_themes, function (mixed $a, mixed $b): int {
-                    return $this->extension_downloads_compare(is_array($a) ? $a : [], is_array($b) ? $b : []);
-                });
+                usort($this->server_themes, fn(array $a, array $b): int => $this->extension_downloads_compare($a, $b));
                 break;
         }
     }
@@ -538,8 +537,10 @@ SELECT
             ];
 
             $handle = @fopen($archive, 'wb');
-            if ($handle !== false and fetchRemote($url, $handle, $get_data)) {
-                fclose($handle);
+            if ($handle !== false) {
+                $fh = $handle;
+                if (fetchRemote($url, $handle, $get_data)) {
+                fclose($fh);
                 $zip = new \PclZip($archive);
                 if ($list = $zip->listContent()) {
                     $main_filepath = null;
@@ -625,6 +626,9 @@ SELECT
             } else {
                 $status = 'dl_archive_error';
             }
+            } else {
+                $status = 'dl_archive_error';
+            }
         } else {
             $status = 'temp_path_error';
         }
@@ -657,7 +661,8 @@ SELECT
      */
     public function extension_name_compare(array $a, array $b): int
     {
-        return strcmp(strtolower(is_scalar($a['extension_name'] ?? '') ? (string) $a['extension_name'] : ''), strtolower(is_scalar($b['extension_name'] ?? '') ? (string) $b['extension_name'] : ''));
+        $na = $a['extension_name'] ?? null; $nb = $b['extension_name'] ?? null;
+        return strcmp(strtolower(is_scalar($na) ? (string) $na : ''), strtolower(is_scalar($nb) ? (string) $nb : ''));
     }
 
     /**
@@ -666,7 +671,8 @@ SELECT
      */
     public function extension_author_compare(array $a, array $b): int
     {
-        $r = strcasecmp(is_scalar($a['author_name'] ?? '') ? (string) $a['author_name'] : '', is_scalar($b['author_name'] ?? '') ? (string) $b['author_name'] : '');
+        $na = $a['author_name'] ?? null; $nb = $b['author_name'] ?? null;
+        $r = strcasecmp(is_scalar($na) ? (string) $na : '', is_scalar($nb) ? (string) $nb : '');
         if ($r == 0) {
             return $this->extension_name_compare($a, $b);
         } else {
@@ -680,7 +686,8 @@ SELECT
      */
     public function theme_author_compare(array $a, array $b): int
     {
-        $r = strcasecmp(is_scalar($a['author'] ?? '') ? (string) $a['author'] : '', is_scalar($b['author'] ?? '') ? (string) $b['author'] : '');
+        $na = $a['author'] ?? null; $nb = $b['author'] ?? null;
+        $r = strcasecmp(is_scalar($na) ? (string) $na : '', is_scalar($nb) ? (string) $nb : '');
         if ($r == 0) {
             return name_compare($a, $b);
         } else {

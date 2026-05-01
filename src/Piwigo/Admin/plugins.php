@@ -157,7 +157,8 @@ UPDATE '. PLUGINS_TABLE .'
                 }
 
                 if (empty($errors)) {
-                    $version = isset($crt_db_plugin['version']) ? (string) $crt_db_plugin['version'] : '';
+                    $vRaw = $crt_db_plugin['version'] ?? null;
+                    $version = is_scalar($vRaw) ? (string) $vRaw : '';
                     $errorsArr = is_array($errors) ? $errors : [];
                     $plugin_maintain->activate($version, $errorsArr);
                     $errors = $errorsArr;
@@ -373,7 +374,7 @@ DELETE FROM '. PLUGINS_TABLE .'
     {
         $versions_to_check = [];
         $url = PEM_URL . '/api/get_version_list.php?category_id='. \Piwigo\Core\Config::pemPluginsCategory() .'&format=php';
-        if (fetchRemote($url, $result) and $pem_versions = @unserialize($result)) {
+        if (fetchRemote($url, $result) and $pem_versions = @unserialize(is_string($result) ? $result : '')) {
             if (!is_array($pem_versions)) {
                 return $versions_to_check;
             }
@@ -385,8 +386,8 @@ DELETE FROM '. PLUGINS_TABLE .'
                     $i++;
                     continue;
                 }
-                if (get_branch_from_version((string) $pem_versions[$i]['name']) == get_branch_from_version($version)) {
-                    $versions_to_check[] = (string) $pem_versions[$i]['id'];
+                if (get_branch_from_version(is_scalar($pem_versions[$i]['name'] ?? null) ? (string) $pem_versions[$i]['name'] : '') == get_branch_from_version($version)) {
+                    $versions_to_check[] = is_scalar($pem_versions[$i]['id'] ?? null) ? (string) $pem_versions[$i]['id'] : '';
                 }
                 $i++;
             }
@@ -396,7 +397,7 @@ DELETE FROM '. PLUGINS_TABLE .'
                 // If the actual version is not in PEM, put the latest PEM version
                 if (count($versions_to_check) == 0) {
                     if (is_array($pem_versions[0]) && isset($pem_versions[0]['id'])) {
-                        $versions_to_check[] = (string) $pem_versions[0]['id'];
+                        $versions_to_check[] = is_scalar($pem_versions[0]['id']) ? (string) $pem_versions[0]['id'] : '';
                     }
                 } else { // Else search the next version in PEM
                     $has_found_previous_version = false;
@@ -455,12 +456,12 @@ DELETE FROM '. PLUGINS_TABLE .'
             }
         }
         if (fetchRemote($url, $result, $get_data)) {
-            $pem_plugins = @unserialize($result);
+            $pem_plugins = @unserialize(is_string($result) ? $result : '');
             if (!is_array($pem_plugins)) {
                 return false;
             }
             foreach ($pem_plugins as $plugin) {
-                if (is_array($plugin) && isset($plugin['extension_id'])) {
+                if (is_array($plugin) && isset($plugin['extension_id']) && (is_string($plugin['extension_id']) || is_int($plugin['extension_id']))) {
                     $this->server_plugins[$plugin['extension_id']] = $plugin;
                 }
             }
@@ -504,7 +505,7 @@ DELETE FROM '. PLUGINS_TABLE .'
         ];
 
         if (fetchRemote($url, $result, $get_data)) {
-            $pem_plugins = @unserialize($result);
+            $pem_plugins = @unserialize(is_string($result) ? $result : '');
             if (!is_array($pem_plugins)) {
                 return false;
             }
@@ -514,10 +515,14 @@ DELETE FROM '. PLUGINS_TABLE .'
                 if (!is_array($plugin) || !isset($plugin['extension_id'], $plugin['revision_name'])) {
                     continue;
                 }
-                if (!isset($server_plugins[$plugin['extension_id']])) {
-                    $server_plugins[$plugin['extension_id']] = [];
+                $eid = $plugin['extension_id'];
+                if (!(is_string($eid) || is_int($eid))) {
+                    continue;
                 }
-                $server_plugins[$plugin['extension_id']][] = $plugin['revision_name'];
+                if (!isset($server_plugins[$eid])) {
+                    $server_plugins[$eid] = [];
+                }
+                $server_plugins[$eid][] = is_scalar($plugin['revision_name']) ? (string) $plugin['revision_name'] : '';
             }
 
             foreach ($this->fs_plugins as $plugin_id => $fs_plugin) {
@@ -543,24 +548,16 @@ DELETE FROM '. PLUGINS_TABLE .'
                 krsort($this->server_plugins);
                 break;
             case 'revision':
-                usort($this->server_plugins, function (mixed $a, mixed $b): int {
-                    return $this->extension_revision_compare(is_array($a) ? $a : [], is_array($b) ? $b : []);
-                });
+                usort($this->server_plugins, fn(array $a, array $b): int => $this->extension_revision_compare($a, $b));
                 break;
             case 'name':
-                uasort($this->server_plugins, function (mixed $a, mixed $b): int {
-                    return $this->extension_name_compare(is_array($a) ? $a : [], is_array($b) ? $b : []);
-                });
+                uasort($this->server_plugins, fn(array $a, array $b): int => $this->extension_name_compare($a, $b));
                 break;
             case 'author':
-                uasort($this->server_plugins, function (mixed $a, mixed $b): int {
-                    return $this->extension_author_compare(is_array($a) ? $a : [], is_array($b) ? $b : []);
-                });
+                uasort($this->server_plugins, fn(array $a, array $b): int => $this->extension_author_compare($a, $b));
                 break;
             case 'downloads':
-                usort($this->server_plugins, function (mixed $a, mixed $b): int {
-                    return $this->extension_downloads_compare(is_array($a) ? $a : [], is_array($b) ? $b : []);
-                });
+                usort($this->server_plugins, fn(array $a, array $b): int => $this->extension_downloads_compare($a, $b));
                 break;
         }
     }
@@ -583,8 +580,10 @@ DELETE FROM '. PLUGINS_TABLE .'
             ];
 
             $handle = @fopen($archive, 'wb');
-            if ($handle !== false and fetchRemote($url, $handle, $get_data)) {
-                fclose($handle);
+            if ($handle !== false) {
+                $fh = $handle;
+                if (fetchRemote($url, $handle, $get_data)) {
+                fclose($fh);
                 $zip = new \PclZip($archive);
                 if ($list = $zip->listContent()) {
                     $main_filepath = null;
@@ -668,6 +667,9 @@ DELETE FROM '. PLUGINS_TABLE .'
                 $status = 'dl_archive_error';
             }
         } else {
+            $status = 'dl_archive_error';
+        }
+        } else {
             $status = 'temp_path_error';
         }
 
@@ -718,7 +720,8 @@ DELETE FROM '. PLUGINS_TABLE .'
      */
     public function extension_name_compare(array $a, array $b): int
     {
-        return strcmp(strtolower(is_scalar($a['extension_name'] ?? '') ? (string) $a['extension_name'] : ''), strtolower(is_scalar($b['extension_name'] ?? '') ? (string) $b['extension_name'] : ''));
+        $na = $a['extension_name'] ?? null; $nb = $b['extension_name'] ?? null;
+        return strcmp(strtolower(is_scalar($na) ? (string) $na : ''), strtolower(is_scalar($nb) ? (string) $nb : ''));
     }
 
     /**
@@ -727,7 +730,8 @@ DELETE FROM '. PLUGINS_TABLE .'
      */
     public function extension_author_compare(array $a, array $b): int
     {
-        $r = strcasecmp(is_scalar($a['author_name'] ?? '') ? (string) $a['author_name'] : '', is_scalar($b['author_name'] ?? '') ? (string) $b['author_name'] : '');
+        $na = $a['author_name'] ?? null; $nb = $b['author_name'] ?? null;
+        $r = strcasecmp(is_scalar($na) ? (string) $na : '', is_scalar($nb) ? (string) $nb : '');
         if ($r == 0) {
             return $this->extension_name_compare($a, $b);
         } else {
@@ -741,7 +745,8 @@ DELETE FROM '. PLUGINS_TABLE .'
      */
     public function plugin_author_compare(array $a, array $b): int
     {
-        $r = strcasecmp(is_scalar($a['author'] ?? '') ? (string) $a['author'] : '', is_scalar($b['author'] ?? '') ? (string) $b['author'] : '');
+        $na = $a['author'] ?? null; $nb = $b['author'] ?? null;
+        $r = strcasecmp(is_scalar($na) ? (string) $na : '', is_scalar($nb) ? (string) $nb : '');
         if ($r == 0) {
             return name_compare($a, $b);
         } else {

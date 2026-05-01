@@ -25,7 +25,7 @@ if (!is_webmaster()) {
 
 function abs_fn_cmp(mixed $a, mixed $b): int
 {
-    return abs(is_int($a) ? $a : (int) $a) - abs(is_int($b) ? $b : (int) $b);
+    return abs(is_numeric($a) ? (int) $a : 0) - abs(is_numeric($b) ? (int) $b : 0);
 }
 
 /** @param array<mixed> $orders */
@@ -81,7 +81,7 @@ foreach ($reg_blocks as $id => $block) {
 if (isset($_POST['submit']) and is_webmaster()) {
     foreach ($mb_conf as $id => $pos) {
         $hide = isset($_POST['hide_'.$id]);
-        $int_pos = is_int($pos) ? $pos : (int) $pos;
+        $int_pos = is_numeric($pos) ? (int) $pos : 0;
         $mb_conf[$id] = ($hide ? -1 : +1) * abs($int_pos);
 
         $raw_pos = $_POST['pos_'.$id] ?? null;
@@ -156,7 +156,7 @@ foreach ($mb_conf as $id => $pos) {
     $template->append(
         'blocks',
         [
-          'pos' => (is_int($pos) ? $pos : (int) $pos) / 5,
+          'pos' => (is_numeric($pos) ? (int) $pos : 0) / 5,
           'reg' => $reg_blocks[$id],
         ]
     );

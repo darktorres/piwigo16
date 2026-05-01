@@ -275,7 +275,7 @@ if (count($categories) > 0) {
         $tpl_var = array_merge($category, [
               'ID'    => $category['id'] /*obsolete*/,
               'representative'   => $representative_infos,
-              'TN_ALT'   => strip_tags(is_scalar($category['name'] ?? null) ? (string) ($category['name'] ?? '') : ''),
+              'TN_ALT'   => strip_tags(is_scalar($category['name']) ? (string) $category['name'] : ''),
 
               'URL'   => make_index_url(
                   [

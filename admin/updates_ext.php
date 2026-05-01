@@ -64,8 +64,8 @@ foreach ($autoupdate->types as $type) {
         $ext_info = $server_ext[$fs_ext['extension']];
 
         $updates_ignored = \Piwigo\Core\Config::get('updates_ignored');
-        $updates_ignored_for_type = is_array($updates_ignored) ? ($updates_ignored[$type] ?? []) : [];
-        $updates_ignored_for_type = is_array($updates_ignored_for_type) ? $updates_ignored_for_type : [];
+        $updates_ignored_arr = is_array($updates_ignored) ? $updates_ignored : [];
+        $updates_ignored_for_type = is_array($updates_ignored_arr[$type] ?? null) ? $updates_ignored_arr[$type] : [];
         if (!safe_version_compare($fs_ext['version'], $ext_info['revision_name'], '>=')) {
             array_push(
                 $updates_extension[$type],
@@ -83,11 +83,11 @@ foreach ($autoupdate->types as $type) {
         ]
             );
         }
+        if (!empty($updates_ignored_for_type)) {
+            $show_reset = true;
+        }
     }
 
-    if (!empty($updates_ignored_for_type)) {
-        $show_reset = true;
-    }
 }
 
 $template->assign('UPDATES_EXTENSION', $updates_extension);

@@ -189,7 +189,7 @@ if (empty($page['is_external'])) {
 
         foreach ($tags as $tag) {
             $related_tags[] = array_merge(
-                $tag,
+                is_array($tag) ? $tag : [],
                 [
                 'U_ADD' => make_index_url(
                     [
@@ -287,6 +287,9 @@ if (empty($page['is_external'])) {
         $order_selected = false;
 
         foreach ($preferred_image_orders as $order_id => $order) {
+            if (!is_array($order)) {
+                continue;
+            }
             if ($order[2]) {
                 // force select if the field is the first field of order_by
                 if (!$order_selected && $order[1] == $first_order) {
@@ -371,7 +374,7 @@ if (empty($page['is_external'])) {
         foreach ($tags as $tag) {
             $related_tags[] =
             array_merge(
-                $tag,
+                is_array($tag) ? $tag : [],
                 [
                 'URL' => make_index_url([ 'tags' => [$tag] ]),
         ]

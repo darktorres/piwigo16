@@ -175,8 +175,8 @@ foreach ($by_user_ratings as $id => $rating) {
 
 
 /**
- * @param array<mixed> $a
- * @param array<mixed> $b
+ * @param array<string, float|int|string|null> $a
+ * @param array<string, float|int|string|null> $b
  */
 function avg_compare(array $a, array $b): int
 {
@@ -185,8 +185,8 @@ function avg_compare(array $a, array $b): int
 }
 
 /**
- * @param array<mixed> $a
- * @param array<mixed> $b
+ * @param array<string, float|int|string|null> $a
+ * @param array<string, float|int|string|null> $b
  */
 function count_compare(array $a, array $b): int
 {
@@ -195,8 +195,8 @@ function count_compare(array $a, array $b): int
 }
 
 /**
- * @param array<mixed> $a
- * @param array<mixed> $b
+ * @param array<string, float|int|string|null> $a
+ * @param array<string, float|int|string|null> $b
  */
 function cv_compare(array $a, array $b): int
 {
@@ -205,8 +205,8 @@ function cv_compare(array $a, array $b): int
 }
 
 /**
- * @param array<mixed> $a
- * @param array<mixed> $b
+ * @param array<string, float|int|string|null> $a
+ * @param array<string, float|int|string|null> $b
  */
 function consensus_dev_compare(array $a, array $b): int
 {
@@ -215,14 +215,12 @@ function consensus_dev_compare(array $a, array $b): int
 }
 
 /**
- * @param array<mixed> $a
- * @param array<mixed> $b
+ * @param array<string, float|int|string|null> $a
+ * @param array<string, float|int|string|null> $b
  */
 function last_rate_compare(array $a, array $b): int
 {
-    $da = is_scalar($a['last_date']) ? (string) $a['last_date'] : '';
-    $db = is_scalar($b['last_date']) ? (string) $b['last_date'] : '';
-    return -strcmp($da, $db);
+    return -strcmp((string) ($a['last_date'] ?? ''), (string) ($b['last_date'] ?? ''));
 }
 
 $order_by_index = 4;

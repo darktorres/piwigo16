@@ -728,7 +728,7 @@ function set_cat_visible(array|int|string $categories, bool|string $value, bool 
         $query = '
 UPDATE '.CATEGORIES_TABLE.'
   SET visible = \'true\'
-  WHERE id IN ('.implode(',', array_map(fn ($v): string => (string) $v, $cats)).')';
+  WHERE id IN ('.implode(',', array_map('intval', $cats)).')';
         pwg_query($query);
     }
     // locking a category   => all its child categories become locked
@@ -764,7 +764,7 @@ function set_cat_status(array|int|string $categories, string $value): void
         $query = '
 UPDATE '.CATEGORIES_TABLE.'
   SET status = \'public\'
-  WHERE id IN ('.implode(',', array_map(fn ($v): string => (string) $v, $uppercats)).')
+  WHERE id IN ('.implode(',', array_map('intval', $uppercats)).')
 ;';
         pwg_query($query);
     }
@@ -1665,7 +1665,15 @@ SELECT id
 ;';
         if (count($existing_tags = query2array($query, null, 'id')) == 0) {
             // search by extended description (plugin sub name)
-            trigger_change('get_tag_name_like_where', [], $tag_name);
+            $extra_where_clauses = trigger_change('get_tag_name_like_where', [], $tag_name);
+            if (is_array($extra_where_clauses) && count($extra_where_clauses) > 0) {
+                $query = '
+SELECT id
+  FROM '.TAGS_TABLE.'
+  WHERE '.implode(' OR ', array_map('strval', $extra_where_clauses)).'
+;';
+                $existing_tags = query2array($query, null, 'id');
+            }
 
             if (count($existing_tags) == 0) {// finally create the tag
                 mass_inserts(
@@ -2773,7 +2781,7 @@ function add_permission_on_category(array|int|string $category_ids, array|int|st
     $query = '
 SELECT id
   FROM '.CATEGORIES_TABLE.'
-  WHERE id IN ('.implode(',', array_map(fn ($v): string => (string) $v, $cat_ids)).')
+  WHERE id IN ('.implode(',', array_map('intval', $cat_ids)).')
     AND status = \'private\'
 ;';
     $private_cats = query2array($query, null, 'id');
@@ -3140,7 +3148,8 @@ SELECT
         conf_update_param('count_orphans', $counter, true);
     }
 
-    return (int) conf_get_param('count_orphans');
+    $count_orphans = conf_get_param('count_orphans');
+    return is_numeric($count_orphans) ? (int) $count_orphans : 0;
 }
 
 /**
@@ -3441,15 +3450,16 @@ function get_piwigo_news(): array|false
 
             $porg_news_getLatest = json_decode($content, true);
 
-            if (isset($porg_news_getLatest['result'])) {
+            if (is_array($porg_news_getLatest) && isset($porg_news_getLatest['result']) && is_array($porg_news_getLatest['result'])) {
                 $topic = $porg_news_getLatest['result'];
+                $posted_on = is_scalar($topic['posted_on'] ?? null) ? (string) ($topic['posted_on'] ?? '') : null;
 
                 $news = [
-                  'id' => $topic['topic_id'],
-                  'subject' => $topic['subject'],
-                  'posted_on' => $topic['posted_on'],
-                  'posted' => format_date($topic['posted_on']),
-                  'url' => $topic['url'],
+                  'id' => $topic['topic_id'] ?? null,
+                  'subject' => $topic['subject'] ?? null,
+                  'posted_on' => $posted_on,
+                  'posted' => format_date($posted_on),
+                  'url' => $topic['url'] ?? null,
                 ];
             }
 
@@ -3463,10 +3473,11 @@ function get_piwigo_news(): array|false
 
     if (is_null($news)) {
         $cache_contents = file_get_contents($cache_path);
-        $news = $cache_contents !== false ? unserialize($cache_contents) : [];
+        $unserialized = $cache_contents !== false ? unserialize($cache_contents) : [];
+        $news = is_array($unserialized) ? $unserialized : [];
     }
 
-    return $news;
+    return is_array($news) ? $news : false;
 }
 
 function get_graphics_library(): string

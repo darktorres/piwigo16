@@ -142,7 +142,6 @@ load_language('install.lang', '', ['language' => $language, 'target_charset' => 
 header('Content-Type: text/html; charset=UTF-8');
 //------------------------------------------------- check php version
 if (version_compare(PHP_VERSION, REQUIRED_PHP_VERSION, '<')) {
-    // include(PHPWG_ROOT_PATH.'install/php5_apache_configuration.php'); // to remove, with all its related content
     $errors[] = l10n('PHP version %s required (you are running on PHP %s)', REQUIRED_PHP_VERSION, PHP_VERSION);
 }
 

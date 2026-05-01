@@ -10,9 +10,10 @@ global $template, $user, $page, $persistent_cache, $lang;
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-$filters_views_unserialized = safe_unserialize(conf_get_param('filters_views', \Piwigo\Core\Config::defaultFiltersViews()));
+$filters_views_raw = conf_get_param('filters_views', \Piwigo\Core\Config::defaultFiltersViews());
+$filters_views_str = is_array($filters_views_raw) ? $filters_views_raw : (is_string($filters_views_raw) ? $filters_views_raw : '');
 /** @var array<string, array<string,mixed>> $filters_views */
-$filters_views = is_array($filters_views_unserialized) ? $filters_views_unserialized : [];
+$filters_views = safe_unserialize($filters_views_str);
 
 $template->assign('display_filter', $filters_views);
 

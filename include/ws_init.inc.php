@@ -29,12 +29,13 @@ $requestFormat = 'rest';
 $responseFormat = null;
 
 if (isset($_GET['format'])) {
-    $responseFormat = $_GET['format'];
+    $responseFormat = is_string($_GET['format']) ? $_GET['format'] : null;
 }
 
 if (!isset($responseFormat)) {
     $responseFormat = $requestFormat;
 }
+$responseFormat = (string) $responseFormat;
 
 $service = new PwgServer();
 

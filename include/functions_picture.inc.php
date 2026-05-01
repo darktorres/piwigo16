@@ -30,8 +30,8 @@ function get_default_slideshow_params(): array
  * Checks and corrects slideshow params
  */
 /**
- * @param array<mixed> $params
- * @return array<mixed>
+ * @param array<string,mixed> $params
+ * @return array<string,mixed>
  */
 function correct_slideshow_params(array $params = []): array
 {
@@ -79,7 +79,7 @@ function decode_slideshow_params(?string $encode_params = null): array
 /**
  * Encodes slideshow array params into a string
  */
-/** @param array<mixed> $decode_params */
+/** @param array<string,mixed> $decode_params */
 function encode_slideshow_params(array $decode_params = []): string
 {
     $params = array_diff_assoc(correct_slideshow_params($decode_params), get_default_slideshow_params());
@@ -87,7 +87,8 @@ function encode_slideshow_params(array $decode_params = []): string
 
     foreach ($params as $name => $value) {
         // boolean_to_string return $value, if it's not a bool
-        $result .= '+'.$name.'-'.boolean_to_string($value);
+        $bool_val = is_bool($value) ? $value : (is_string($value) ? $value : '');
+        $result .= '+'.$name.'-'.boolean_to_string($bool_val);
     }
 
     return $result;

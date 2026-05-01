@@ -54,11 +54,12 @@ $tabsheet->assign();
 // |                        new site creation form                         |
 // +-----------------------------------------------------------------------+
 if (isset($_POST['submit']) and !empty($_POST['galleries_url'])) {
-    $is_remote = url_is_remote($_POST['galleries_url']);
+    $galleries_url = is_scalar($_POST['galleries_url']) ? (string) $_POST['galleries_url'] : '';
+    $is_remote = url_is_remote($galleries_url);
     if ($is_remote) {
         fatal_error('remote sites not supported');
     }
-    $url = preg_replace('/[\/]*$/', '', (string) $_POST['galleries_url']);
+    $url = preg_replace('/[\/]*$/', '', $galleries_url);
     $url .= '/';
     if (! (str_starts_with($url, '.'))) {
         $url = './' . $url;

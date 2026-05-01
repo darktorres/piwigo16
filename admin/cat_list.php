@@ -174,9 +174,9 @@ elseif (isset($_POST['submitAdd'])) {
 
 if (isset($_GET['parent_id'])) {
     $navigation .= \Piwigo\Core\Config::levelSeparator();
-
+    $raw_parent_id = $_GET['parent_id'];
     $navigation .= get_cat_display_name_from_id(
-        (int)$_GET['parent_id'],
+        is_scalar($raw_parent_id) ? (int) $raw_parent_id : 0,
         $base_url.'&amp;parent_id='
     );
 }

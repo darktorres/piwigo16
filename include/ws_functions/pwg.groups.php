@@ -98,11 +98,13 @@ SELECT COUNT(*)
     }
 
     // creating the group
+    $is_default_raw = $params['is_default'];
+    $is_default_val = is_bool($is_default_raw) ? $is_default_raw : (is_string($is_default_raw) ? $is_default_raw : '');
     single_insert(
         GROUPS_TABLE,
         [
         'name' => $params['name'],
-        'is_default' => boolean_to_string($params['is_default']),
+        'is_default' => boolean_to_string($is_default_val),
         ]
     );
     $inserted_id = pwg_db_insert_id();
@@ -189,7 +191,8 @@ SELECT COUNT(*)
     }
 
     if (!empty($params['is_default']) or @$params['is_default'] === false) {
-        $updates['is_default'] = boolean_to_string($params['is_default']);
+        $is_default_upd = $params['is_default'];
+        $updates['is_default'] = boolean_to_string(is_bool($is_default_upd) ? $is_default_upd : (is_string($is_default_upd) ? $is_default_upd : ''));
     }
 
     single_update(
@@ -394,7 +397,7 @@ SELECT is_default
         GROUPS_TABLE,
         [
         'name' => $copy_name_str,
-        'is_default' => boolean_to_string($is_default),
+        'is_default' => boolean_to_string(is_string($is_default) ? $is_default : ''),
         ]
     );
     $inserted_id = pwg_db_insert_id();

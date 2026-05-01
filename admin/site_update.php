@@ -718,7 +718,7 @@ if (isset($_POST['submit'])
 
         $datas = [];
         foreach ($files as $id => $file) {
-            $file_path = (string) $file['path'];
+            $file_path = is_array($file) && is_scalar($file['path'] ?? null) ? (string) $file['path'] : '';
             $data = $site_reader->get_element_update_attributes($file_path);
 
             $data['id'] = $id;

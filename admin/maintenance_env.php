@@ -195,7 +195,7 @@ DELETE
                 \Piwigo\Core\PageState::current()->addError(l10n('Unable to check for upgrade.'));
             } else {
                 $versions = ['current' => PHPWG_VERSION];
-                $lines = @explode("\r\n", is_string($result) ? $result : '');
+                $lines = @explode("\r\n", $result);
 
                 // if the current version is a BSF (development branch) build, we check
                 // the first line, for stable versions, we check the second line

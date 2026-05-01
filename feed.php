@@ -152,8 +152,11 @@ UPDATE '.USER_FEED_TABLE.'
 $dates = get_recent_post_dates_array(\Piwigo\Core\Config::recentPostDates()['RSS']);
 
 foreach ($dates as $date_detail) { // for each recent post date we create a feed item
+    if (!is_array($date_detail)) {
+        continue;
+    }
     $item = new FeedItem();
-    $date = $date_detail['date_available'];
+    $date = is_scalar($date_detail['date_available']) ? (string) $date_detail['date_available'] : '';
     $item->title = get_title_recent_post_date($date_detail);
     $item->link = make_index_url(
         array(

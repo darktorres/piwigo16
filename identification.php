@@ -62,7 +62,8 @@ if (input_string('login', null, $_POST) !== null) {
         $remember_me_raw = input_string('remember_me', null, $_POST);
         $remember_me = $remember_me_raw !== null && $remember_me_raw == 1;
 
-        if (try_log_user($username, $_POST['password'], $remember_me)) {
+        $post_password = is_string($_POST['password']) ? $_POST['password'] : '';
+        if (try_log_user($username, $post_password, $remember_me)) {
             // security (level 2): force redirect within Piwigo. We redirect to
             // absolute root url, including http(s)://, without the cookie path,
             // concatenated with $_POST['redirect'] param.

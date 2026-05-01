@@ -24,12 +24,14 @@ $tabsheet->assign();
 
 $filter_min_rates = 2;
 if (isset($_GET['f_min_rates'])) {
-    $filter_min_rates = (int)$_GET['f_min_rates'];
+    $raw_f_min_rates = $_GET['f_min_rates'];
+    $filter_min_rates = is_scalar($raw_f_min_rates) ? (int) $raw_f_min_rates : 2;
 }
 
 $consensus_top_number = \Piwigo\Core\Config::topNumber();
 if (isset($_GET['consensus_top_number'])) {
-    $consensus_top_number = (int)$_GET['consensus_top_number'];
+    $raw_consensus_top = $_GET['consensus_top_number'];
+    $consensus_top_number = is_scalar($raw_consensus_top) ? (int) $raw_consensus_top : $consensus_top_number;
 }
 
 // build users
@@ -178,7 +180,7 @@ foreach ($by_user_ratings as $id => $rating) {
  */
 function avg_compare(array $a, array $b): int
 {
-    $d = $a['avg'] - $b['avg'];
+    $d = (float) $a['avg'] - (float) $b['avg'];
     return ($d == 0) ? 0 : ($d < 0 ? -1 : 1);
 }
 
@@ -188,7 +190,7 @@ function avg_compare(array $a, array $b): int
  */
 function count_compare(array $a, array $b): int
 {
-    $d = $a['count'] - $b['count'];
+    $d = (int) $a['count'] - (int) $b['count'];
     return ($d == 0) ? 0 : ($d < 0 ? -1 : 1);
 }
 
@@ -198,7 +200,7 @@ function count_compare(array $a, array $b): int
  */
 function cv_compare(array $a, array $b): int
 {
-    $d = $b['cv'] - $a['cv']; //desc
+    $d = (float) $b['cv'] - (float) $a['cv']; //desc
     return ($d == 0) ? 0 : ($d < 0 ? -1 : 1);
 }
 
@@ -208,7 +210,7 @@ function cv_compare(array $a, array $b): int
  */
 function consensus_dev_compare(array $a, array $b): int
 {
-    $d = $b['cd'] - $a['cd']; //desc
+    $d = (float) $b['cd'] - (float) $a['cd']; //desc
     return ($d == 0) ? 0 : ($d < 0 ? -1 : 1);
 }
 
@@ -218,7 +220,9 @@ function consensus_dev_compare(array $a, array $b): int
  */
 function last_rate_compare(array $a, array $b): int
 {
-    return -strcmp((string) $a['last_date'], (string) $b['last_date']);
+    $da = is_scalar($a['last_date']) ? (string) $a['last_date'] : '';
+    $db = is_scalar($b['last_date']) ? (string) $b['last_date'] : '';
+    return -strcmp($da, $db);
 }
 
 $order_by_index = 4;

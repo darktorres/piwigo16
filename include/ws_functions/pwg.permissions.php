@@ -33,7 +33,8 @@ function ws_permissions_getList(array $params, \Piwigo\Ws\PwgServer &$service): 
 
     $cat_filter = '';
     if (!empty($params['cat_id'])) {
-        $cat_filter = 'WHERE cat_id IN('. implode(',', $params['cat_id']) .')';
+        $cat_id_arr = is_array($params['cat_id']) ? $params['cat_id'] : [];
+        $cat_filter = 'WHERE cat_id IN('. implode(',', $cat_id_arr) .')';
     }
 
     $perms = [];
@@ -91,15 +92,17 @@ SELECT group_id, cat_id
     // filter by group and user
     foreach ($perms as $cat_id => &$cat) {
         if (isset($params['group_id'])) {
-            if (empty($cat['groups']) or count(array_intersect($cat['groups'], $params['group_id'])) == 0) {
+            $group_id_arr = is_array($params['group_id']) ? $params['group_id'] : [];
+            if (empty($cat['groups']) or count(array_intersect($cat['groups'], $group_id_arr)) == 0) {
                 unset($perms[$cat_id]);
                 continue;
             }
         }
         if (isset($params['user_id'])) {
+            $user_id_arr = is_array($params['user_id']) ? $params['user_id'] : [];
             if (
-                (empty($cat['users_indirect']) or count(array_intersect($cat['users_indirect'], $params['user_id'])) == 0)
-                and (empty($cat['users']) or count(array_intersect($cat['users'], $params['user_id'])) == 0)
+                (empty($cat['users_indirect']) or count(array_intersect($cat['users_indirect'], $user_id_arr)) == 0)
+                and (empty($cat['users']) or count(array_intersect($cat['users'], $user_id_arr)) == 0)
             ) {
                 unset($perms[$cat_id]);
                 continue;
@@ -140,9 +143,10 @@ function ws_permissions_add(array $params, \Piwigo\Ws\PwgServer &$service): mixe
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
     if (!empty($params['group_id'])) {
-        $cat_ids = get_uppercat_ids($params['cat_id']);
+        $cat_id_param = is_array($params['cat_id']) ? $params['cat_id'] : [];
+        $cat_ids = get_uppercat_ids($cat_id_param);
         if ($params['recursive']) {
-            $cat_ids = array_merge($cat_ids, get_subcat_ids($params['cat_id']));
+            $cat_ids = array_merge($cat_ids, get_subcat_ids($cat_id_param));
         }
 
         $query = '
@@ -154,8 +158,9 @@ SELECT id
         $private_cats = query2array($query, null, 'id');
 
         $inserts = [];
+        $group_id_param = is_array($params['group_id']) ? $params['group_id'] : [];
         foreach ($private_cats as $cat_id) {
-            foreach ($params['group_id'] as $group_id) {
+            foreach ($group_id_param as $group_id) {
                 $inserts[] = [
                   'group_id' => $group_id,
                   'cat_id' => $cat_id,
@@ -175,7 +180,9 @@ SELECT id
         if ($params['recursive']) {
             $_POST['apply_on_sub'] = true;
         }
-        add_permission_on_category($params['cat_id'], $params['user_id']);
+        $cat_id_param2 = is_array($params['cat_id']) ? $params['cat_id'] : [];
+        $user_id_param = is_array($params['user_id']) ? $params['user_id'] : [];
+        add_permission_on_category($cat_id_param2, $user_id_param);
     }
 
     return $service->invoke('pwg.permissions.getList', ['cat_id' => $params['cat_id']]);
@@ -198,23 +205,26 @@ function ws_permissions_remove(array $params, \Piwigo\Ws\PwgServer &$service): m
 
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
-    $cat_ids = get_subcat_ids($params['cat_id']);
+    $cat_id_param3 = is_array($params['cat_id']) ? $params['cat_id'] : [];
+    $cat_ids = get_subcat_ids($cat_id_param3);
 
     if (!empty($params['group_id'])) {
+        $group_id_rem = is_array($params['group_id']) ? $params['group_id'] : [];
         $query = '
 DELETE
   FROM '. GROUP_ACCESS_TABLE .'
-  WHERE group_id IN ('. implode(',', $params['group_id']).')
+  WHERE group_id IN ('. implode(',', $group_id_rem).')
     AND cat_id IN ('. implode(',', $cat_ids).')
 ;';
         pwg_query($query);
     }
 
     if (!empty($params['user_id'])) {
+        $user_id_rem = is_array($params['user_id']) ? $params['user_id'] : [];
         $query = '
 DELETE
   FROM '. USER_ACCESS_TABLE .'
-  WHERE user_id IN ('. implode(',', $params['user_id']) .')
+  WHERE user_id IN ('. implode(',', $user_id_rem) .')
     AND cat_id IN ('. implode(',', $cat_ids) .')
 ;';
         pwg_query($query);

@@ -41,12 +41,14 @@ if (isset($_GET['user_id']) and is_numeric($_GET['user_id'])) {
 // |                                updates                                |
 // +-----------------------------------------------------------------------+
 
+$post_cat_true = is_array($_POST['cat_true'] ?? null) ? $_POST['cat_true'] : [];
+$post_cat_false = is_array($_POST['cat_false'] ?? null) ? $_POST['cat_false'] : [];
+
 if (isset($_POST['falsify'])
-    and isset($_POST['cat_true'])
-    and count($_POST['cat_true']) > 0) {
+    and count($post_cat_true) > 0) {
     // if you forbid access to a category, all sub-categories become
     // automatically forbidden
-    $subcats = get_subcat_ids($_POST['cat_true']);
+    $subcats = get_subcat_ids($post_cat_true);
     $query = '
 DELETE FROM '.USER_ACCESS_TABLE.'
   WHERE user_id = '.$page['user'].'
@@ -54,9 +56,8 @@ DELETE FROM '.USER_ACCESS_TABLE.'
 ;';
     pwg_query($query);
 } elseif (isset($_POST['trueify'])
-    and isset($_POST['cat_false'])
-    and count($_POST['cat_false']) > 0) {
-    add_permission_on_category($_POST['cat_false'], (int) $page['user']);
+    and count($post_cat_false) > 0) {
+    add_permission_on_category($post_cat_false, (int) $page['user']);
 }
 
 // +-----------------------------------------------------------------------+

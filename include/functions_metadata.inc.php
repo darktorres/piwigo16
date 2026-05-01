@@ -17,7 +17,7 @@ declare(strict_types=1);
  * @param array $map
  */
 /**
- * @param array<mixed> $map
+ * @param array<string,string> $map
  * @return array<mixed>
  */
 function get_iptc_data(string $filename, array $map, string $array_sep = ','): array
@@ -107,7 +107,7 @@ function clean_iptc_value($value)
  * @param array $map
  */
 /**
- * @param array<mixed> $map
+ * @param array<string,string> $map
  * @return array<mixed>
  */
 function get_exif_data(string $filename, array $map): array
@@ -145,12 +145,18 @@ function get_exif_data(string $filename, array $map): array
         // GPS data
         $gps_exif = array_intersect_key($exif, array_flip(['GPSLatitudeRef', 'GPSLatitude', 'GPSLongitudeRef', 'GPSLongitude']));
         if (count($gps_exif) == 4) {
+            $gps_lat_arr = is_array($gps_exif['GPSLatitude']) ? $gps_exif['GPSLatitude'] : null;
+            $gps_lon_arr = is_array($gps_exif['GPSLongitude']) ? $gps_exif['GPSLongitude'] : null;
             if (
-                is_array($gps_exif['GPSLatitude'])  and in_array($gps_exif['GPSLatitudeRef'], ['S', 'N']) and
-                is_array($gps_exif['GPSLongitude']) and in_array($gps_exif['GPSLongitudeRef'], ['W', 'E'])
+                $gps_lat_arr !== null and in_array($gps_exif['GPSLatitudeRef'], ['S', 'N']) and
+                $gps_lon_arr !== null and in_array($gps_exif['GPSLongitudeRef'], ['W', 'E'])
             ) {
-                $latitude = parse_exif_gps_data($gps_exif['GPSLatitude'], $gps_exif['GPSLatitudeRef']);
-                $longitude = parse_exif_gps_data($gps_exif['GPSLongitude'], $gps_exif['GPSLongitudeRef']);
+                $gps_lat_str = array_map(fn ($v) => is_scalar($v) ? (string) $v : '', $gps_lat_arr);
+                $gps_lon_str = array_map(fn ($v) => is_scalar($v) ? (string) $v : '', $gps_lon_arr);
+                $gps_lat_ref = is_scalar($gps_exif['GPSLatitudeRef']) ? (string) $gps_exif['GPSLatitudeRef'] : '';
+                $gps_lon_ref = is_scalar($gps_exif['GPSLongitudeRef']) ? (string) $gps_exif['GPSLongitudeRef'] : '';
+                $latitude = parse_exif_gps_data($gps_lat_str, $gps_lat_ref);
+                $longitude = parse_exif_gps_data($gps_lon_str, $gps_lon_ref);
 
                 if ($latitude >= -90.0  &&  $latitude <= 90.0  &&  $longitude >= -180.0  &&  $longitude <= 180.0) {
                     $result['latitude'] = $latitude;
@@ -179,7 +185,7 @@ function get_exif_data(string $filename, array $map): array
 
 function strip_html_in_metadata(mixed &$v, string $k): void
 {
-    $v = strip_tags((string) $v);
+    $v = strip_tags(is_scalar($v) ? (string) $v : '');
 }
 
 /**

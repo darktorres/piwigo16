@@ -585,7 +585,7 @@ function remove_computed_category(array &$cats, array $cat): void
             if (!isset($parent['id_uppercat'])) {
                 break;
             }
-            $parentUppercat = $parent['id_uppercat'] ?? null;
+            $parentUppercat = $parent['id_uppercat'];
             $parent_uppercat_key = is_scalar($parentUppercat) ? (string) $parentUppercat : '';
             if ($parent_uppercat_key === '' || !isset($cats[$parent_uppercat_key])) {
                 break;

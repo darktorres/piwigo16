@@ -27,7 +27,8 @@ if (!in_array($_GET['theme'], array_keys($themes->fs_themes))) {
     die('Invalid theme');
 }
 
-$filename = PHPWG_THEMES_PATH.$_GET['theme'].'/admin/admin.inc.php';
+$theme_name = is_scalar($_GET['theme']) ? (string) $_GET['theme'] : '';
+$filename = PHPWG_THEMES_PATH.$theme_name.'/admin/admin.inc.php';
 if (is_file($filename)) {
     include_once($filename);
 } else {

@@ -47,9 +47,10 @@ if (input_string('submit', null, $_POST) !== null) {
         $page['errors']['register_form_error'] = l10n('The passwords do not match');
     }
 
+    $post_password = is_string($_POST['password']) ? $_POST['password'] : '';
     register_user(
         $post_login ?? '',
-        $_POST['password'],
+        $post_password,
         $post_mail ?? '',
         true,
         $page['errors'],
@@ -59,6 +60,9 @@ if (input_string('submit', null, $_POST) !== null) {
     if (count($page['errors']) == 0) {
         // email notification
         if ($post_send_mail and email_check_format($post_mail ?? '')) {
+            if (!is_array($_SESSION['page_infos'])) {
+                $_SESSION['page_infos'] = [];
+            }
             $_SESSION['page_infos'][] = l10n('Successfully registered, you will soon receive an email with your connection settings. Welcome!');
         }
 

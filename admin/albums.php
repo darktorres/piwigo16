@@ -42,7 +42,8 @@ include(PHPWG_ROOT_PATH.'admin/include/albums_tab.inc.php');
 // |                         categories auto order                         |
 // +-----------------------------------------------------------------------+
 
-$open_cat = $_GET['parent_id'] ?? -1;
+$raw_open_cat = $_GET['parent_id'] ?? -1;
+$open_cat = is_scalar($raw_open_cat) ? (int) $raw_open_cat : -1;
 
 $sort_orders = [
   'name ASC',

@@ -44,23 +44,25 @@ $page['group'] = $_GET['group_id'];
 // |                                updates                                |
 // +-----------------------------------------------------------------------+
 
+$post_cat_true = is_array($_POST['cat_true'] ?? null) ? $_POST['cat_true'] : [];
+$post_cat_false = is_array($_POST['cat_false'] ?? null) ? $_POST['cat_false'] : [];
+$group_id = is_scalar($page['group']) ? (int) $page['group'] : 0;
+
 if (isset($_POST['falsify'])
-    and isset($_POST['cat_true'])
-    and count($_POST['cat_true']) > 0) {
+    and count($post_cat_true) > 0) {
     // if you forbid access to a category, all sub-categories become
     // automatically forbidden
-    $subcats = get_subcat_ids($_POST['cat_true']);
+    $subcats = get_subcat_ids($post_cat_true);
     $query = '
 DELETE
   FROM '.GROUP_ACCESS_TABLE.'
-  WHERE group_id = '.$page['group'].'
+  WHERE group_id = '.$group_id.'
   AND cat_id IN ('.implode(',', $subcats).')
 ;';
     pwg_query($query);
 } elseif (isset($_POST['trueify'])
-         and isset($_POST['cat_false'])
-         and count($_POST['cat_false']) > 0) {
-    $uppercats = get_uppercat_ids($_POST['cat_false']);
+         and count($post_cat_false) > 0) {
+    $uppercats = get_uppercat_ids($post_cat_false);
     $private_uppercats = [];
 
     $query = '
@@ -82,7 +84,7 @@ SELECT id
     $query = '
 SELECT cat_id
   FROM '.GROUP_ACCESS_TABLE.'
-  WHERE group_id = '.$page['group'].'
+  WHERE group_id = '.$group_id.'
 ;';
     $result = pwg_query($query);
 
@@ -94,7 +96,7 @@ SELECT cat_id
     $to_autorize_ids = array_diff($private_uppercats, $authorized_ids);
     foreach ($to_autorize_ids as $to_autorize_id) {
         $inserts[] = [
-          'group_id' => $page['group'],
+          'group_id' => $group_id,
           'cat_id' => $to_autorize_id,
           ];
     }
@@ -119,7 +121,7 @@ $template->assign(
     'TITLE' =>
       l10n(
           'Manage permissions for group "%s"',
-          get_groupname($page['group'])
+          get_groupname($group_id)
       ),
     'L_CAT_OPTIONS_TRUE' => l10n('Authorized'),
     'L_CAT_OPTIONS_FALSE' => l10n('Forbidden'),
@@ -127,7 +129,7 @@ $template->assign(
     'F_ACTION' =>
         get_root_url().
         'admin.php?page=group_perm&amp;group_id='.
-        $page['group'],
+        $group_id,
     ]
 );
 
@@ -136,7 +138,7 @@ $query_true = '
 SELECT id,name,uppercats,global_rank
   FROM '.CATEGORIES_TABLE.' INNER JOIN '.GROUP_ACCESS_TABLE.' ON cat_id = id
   WHERE status = \'private\'
-    AND group_id = '.$page['group'].'
+    AND group_id = '.$group_id.'
 ;';
 display_select_cat_wrapper($query_true, [], 'category_option_true');
 

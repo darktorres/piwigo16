@@ -129,8 +129,7 @@ if (count($errors) == 0) {
     ImageStdParams::$quality = $resize_quality;
 
     $enabled = ImageStdParams::get_defined_type_map();
-    $disabled_raw = safe_unserialize(ImageStdParams::get_disabled_type_map());
-    $disabled = is_array($disabled_raw) ? $disabled_raw : [];
+    $disabled = safe_unserialize(ImageStdParams::get_disabled_type_map());
     $changed_types = [];
 
     foreach (ImageStdParams::get_all_types() as $type) {
@@ -209,7 +208,8 @@ if (count($errors) == 0) {
     }
 
     ImageStdParams::set_and_save($enabled_by);
-    ImageStdParams::set_and_save_disabled($disabled);
+    $disabled_params = array_filter($disabled, fn ($v) => $v instanceof DerivativeParams);
+    ImageStdParams::set_and_save_disabled($disabled_params);
 
     if (count($changed_types)) {
         clear_derivative_cache($changed_types);

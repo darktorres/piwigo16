@@ -120,7 +120,7 @@ if (!\Piwigo\Core\Config::has('filters_views')) {
 }
 
 $filters_views_raw = safe_unserialize(\Piwigo\Core\Config::filtersViews() ?? '');
-$filters_names_checkboxes = array_values(array_diff(array_keys(is_array($filters_views_raw) ? $filters_views_raw : []), ['last_filters_conf']));
+$filters_names_checkboxes = array_values(array_diff(array_keys($filters_views_raw), ['last_filters_conf']));
 
 // image order management
 $sort_fields = [
@@ -491,7 +491,7 @@ switch ($page['section']) {
             $template->append(
                 'display',
                 [
-                  'picture_informations' => unserialize(\Piwigo\Core\Config::pictureInformations()),
+                  'picture_informations' => @unserialize(is_string(\Piwigo\Core\Config::pictureInformations()) ? \Piwigo\Core\Config::pictureInformations() : ''),
                   'NB_CATEGORIES_PAGE' => \Piwigo\Core\Config::nbCategoriesPage(),
                   ],
                 true
@@ -527,7 +527,7 @@ switch ($page['section']) {
                 // derivatives = multiple size
                 $enabled = ImageStdParams::get_defined_type_map();
                 $disabled_raw = safe_unserialize(ImageStdParams::get_disabled_type_map());
-                $disabled = is_array($disabled_raw) ? $disabled_raw : [];
+                $disabled = $disabled_raw;
 
                 $tpl_vars = [];
                 foreach (ImageStdParams::get_all_types() as $type) {

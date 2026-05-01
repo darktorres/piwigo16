@@ -13,7 +13,7 @@ declare(strict_types=1);
 /**
  * Updates data of categories with filtered values
  */
-/** @param array<array<string, bool|float|int|string|null>> $cats */
+/** @param array<array<string, mixed>> $cats */
 function update_cats_with_filtered_data(array &$cats): void
 {
     global $filter;
@@ -23,9 +23,6 @@ function update_cats_with_filtered_data(array &$cats): void
 
         $filter_categories = is_array($filter['categories']) ? $filter['categories'] : [];
         foreach ($cats as $cat_id => &$category) {
-            if (!is_array($category)) {
-                continue;
-            }
             $cat_id_val = is_numeric($category['id']) ? (int) $category['id'] : (is_scalar($category['id']) ? (string) $category['id'] : '');
             $raw_cat_data = $filter_categories[$cat_id_val] ?? null;
             $cat_data = is_array($raw_cat_data) ? $raw_cat_data : [];

@@ -902,8 +902,7 @@ SELECT
         $search_details = query2array($query, 'id', 'rules');
 
         foreach ($search_details as $id_search => $rules_search) {
-            $unserialized = safe_unserialize(is_scalar($rules_search) ? (string) $rules_search : '');
-            $rules_arr = is_array($unserialized) ? $unserialized : [];
+            $rules_arr = safe_unserialize(is_scalar($rules_search) ? (string) $rules_search : '');
             $rules_fields = is_array($rules_arr['fields'] ?? null) ? $rules_arr['fields'] : [];
             $rf_tags = is_array($rules_fields['tags'] ?? null) ? $rules_fields['tags'] : [];
             $rf_cat = is_array($rules_fields['cat'] ?? null) ? $rules_fields['cat'] : [];

@@ -349,13 +349,10 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
         }
 
         $result = trigger_change('ws_invoke_allowed', true, $methodName, $params);
+        // $result is mixed: trigger_change may return a PwgError if a handler rejects the call
+        $resultMixed = (static function (mixed $v): mixed { return $v; })($result);
 
-        $is_error = false;
-        if ($result instanceof PwgError) {
-            $is_error = true;
-        }
-
-        if (!$is_error) {
+        if (!($resultMixed instanceof PwgError)) {
             if (!empty($method['include'])) {
                 include_once($method['include']);
             }
@@ -363,10 +360,10 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
             if (!is_callable($callback)) {
                 return new PwgError(WS_ERR_INVALID_METHOD, 'Invalid method callback');
             }
-            $result = call_user_func_array($callback, [$params, &$this]);
+            $resultMixed = call_user_func_array($callback, [$params, &$this]);
         }
 
-        return $result;
+        return $resultMixed;
     }
 
     /**

@@ -36,7 +36,9 @@ if (\Piwigo\Core\Config::enableSynchronization()) {
  */
 function UC_name_compare(array $a, array $b): int
 {
-    return strcmp(strtolower((string) $a['NAME']), strtolower((string) $b['NAME']));
+    $aName = is_scalar($a['NAME']) ? (string) $a['NAME'] : '';
+    $bName = is_scalar($b['NAME']) ? (string) $b['NAME'] : '';
+    return strcmp(strtolower($aName), strtolower($bName));
 }
 
 $prefilters = trigger_change('get_batch_manager_prefilters', $prefilters);
@@ -78,23 +80,25 @@ foreach (\Piwigo\Core\Config::availablePermissionLevels() as $level) {
         $level_options[$level] = l10n('Everybody');
     }
 }
+$bulk_manager_filter = is_array($_SESSION['bulk_manager_filter']) ? $_SESSION['bulk_manager_filter'] : [];
 $template->assign(
     [
     'filter_level_options' => $level_options,
-    'filter_level_options_selected' => $_SESSION['bulk_manager_filter']['level'] ?? 0,
+    'filter_level_options_selected' => $bulk_manager_filter['level'] ?? 0,
   ]
 );
 
 // tags
 $filter_tags = [];
 
-if (!empty($_SESSION['bulk_manager_filter']['tags'])) {
+if (!empty($bulk_manager_filter['tags'])) {
+    $filter_tags_ids = is_array($bulk_manager_filter['tags']) ? $bulk_manager_filter['tags'] : [];
     $query = '
 SELECT
     id,
     name
   FROM ' . TAGS_TABLE . '
-  WHERE id IN (' . implode(',', $_SESSION['bulk_manager_filter']['tags']) . ')
+  WHERE id IN (' . implode(',', $filter_tags_ids) . ')
 ;';
 
     $filter_tags = get_taglist($query);
@@ -106,8 +110,8 @@ $template->assign('filter_tags', $filter_tags);
 $selected_category = null;
 $selected_category_name = '';
 
-if (isset($_SESSION['bulk_manager_filter']['category'])) {
-    $selected_category = intval($_SESSION['bulk_manager_filter']['category']);
+if (isset($bulk_manager_filter['category'])) {
+    $selected_category = intval($bulk_manager_filter['category']);
     $selected_category_name = get_cat_display_name_from_id($selected_category);
 }
 

@@ -239,7 +239,7 @@ function get_category_preferred_image_orders(): array
 /**
  * Assign a template var useable with {html_options} from a list of categories
  *
- * @param array<mixed> $categories
+ * @param list<array<string, float|int|string|null>> $categories
  * @param int[]|string $selecteds
  * @param string $blockname variable name in template
  * @param bool $fullname full breadcrumb or not
@@ -422,7 +422,7 @@ function get_display_images_count($cat_nb_images, $cat_count_images, $cat_count_
  * @param bool $recursive
  * @return int|null
  */
-/** @param array<string,mixed> $category */
+/** @param array<string, float|int|string|null> $category */
 function get_random_image_in_category(array $category, bool $recursive = true): ?int
 {
     $image_id = null;
@@ -468,8 +468,8 @@ SELECT image_id
  * @param int $filter_days number of recent days to filter on or null
  */
 /**
- * @param array<mixed> $userdata
- * @return array<array<mixed>>
+ * @param array<string, float|int|string|null> $userdata
+ * @return array<array<string, float|int|string|null>>
  */
 function get_computed_categories(array &$userdata, ?int $filter_days = null): array
 {
@@ -660,7 +660,7 @@ SELECT id
 /**
  * @param array<mixed> $items
  * @param int[] $excluded_cat_ids
- * @return array<mixed>
+ * @return array<string, array<string, float|int|string|null>>
  */
 function get_common_categories(array $items, ?int $max = null, array $excluded_cat_ids = [], bool $use_permissions = true): array
 {
@@ -675,7 +675,7 @@ SELECT
     count(*) AS counter
   FROM '.IMAGE_CATEGORY_TABLE.'
     INNER JOIN '.CATEGORIES_TABLE.' c ON category_id = id
-  WHERE image_id IN ('.implode(',', array_map('strval', $items)).')';
+  WHERE image_id IN ('.implode(',', array_map(fn(mixed $v): string => is_scalar($v) ? (string)$v : '', $items)).')';
 
     if ($use_permissions) {
         $query .= get_sql_condition_FandF(

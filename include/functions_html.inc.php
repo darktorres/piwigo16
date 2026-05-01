@@ -272,7 +272,7 @@ function access_denied(): void
         exit();
     }
 
-    redirect_http(get_root_url().'identification.php?redirect='.urlencode(urlencode((string) $_SERVER['REQUEST_URI'])));
+    redirect_http(get_root_url().'identification.php?redirect='.urlencode(urlencode(is_scalar($_SERVER['REQUEST_URI'] ?? null) ? (string)$_SERVER['REQUEST_URI'] : '')));
 }
 
 
@@ -427,7 +427,7 @@ function get_combined_categories_content_title(): string
               '<a id="TagsGroupRemoveTag" href="'.$remove_url.'" style="border:none;" title="'
               .l10n('remove this tag from the list')
               .'"><img src="'
-                .get_root_url().get_themeconf('icon_dir').'/remove_s.png'
+                .get_root_url().(is_string(get_themeconf('icon_dir')) ? get_themeconf('icon_dir') : '').'/remove_s.png'
               .'" alt="x" style="vertical-align:bottom;" >'
               .'<span class="pwg-icon pwg-icon-close" ></span>'
               .'</a>';
@@ -470,7 +470,8 @@ function set_status_header($code, $text = ''): void
                 break;
         }
     }
-    $protocol = $_SERVER['SERVER_PROTOCOL'];
+    $protocolRaw = $_SERVER['SERVER_PROTOCOL'] ?? 'HTTP/1.0';
+    $protocol = is_string($protocolRaw) ? $protocolRaw : 'HTTP/1.0';
     if (('HTTP/1.1' != $protocol) && ('HTTP/1.0' != $protocol)) {
         $protocol = 'HTTP/1.0';
     }
@@ -523,13 +524,13 @@ function register_default_menubar_blocks(array $menu_ref_arr): void
  * @param array $info at least file or name
  * @return string
  */
-/** @param array<string,mixed> $info */
+/** @param array<string, float|int|string|null> $info */
 function render_element_name(array $info): string
 {
     if (!empty($info['name'])) {
-        return trigger_change('render_element_name', $info['name'], $info);
+        return (string) trigger_change('render_element_name', $info['name'], $info);
     }
-    return get_name_from_file($info['file']);
+    return get_name_from_file(is_string($info['file'] ?? null) ? $info['file'] : '');
 }
 
 /**
@@ -539,11 +540,11 @@ function render_element_name(array $info): string
  * @param string $param used to identify the trigger
  * @return string
  */
-/** @param array<string,mixed> $info */
+/** @param array<string, float|int|string|null> $info */
 function render_element_description(array $info, string $param = ''): string
 {
     if (!empty($info['comment'])) {
-        return trigger_change('render_element_description', $info['comment'], $param);
+        return (string) trigger_change('render_element_description', $info['comment'], $param);
     }
     return '';
 }
@@ -556,7 +557,7 @@ function render_element_description(array $info, string $param = ''): string
  * @param string $comment
  * @return string
  */
-/** @param array<string,mixed> $info */
+/** @param array<string, float|int|string|null> $info */
 function get_thumbnail_title(array $info, string $title, string $comment = ''): string
 {
     global $user;
@@ -609,16 +610,16 @@ function get_src_image_url_protection_handler($url, $src_image)
  * @param array $infos id, path
  * @return string
  */
-/** @param array<string,mixed> $infos */
+/** @param array<string, float|int|string|null> $infos */
 function get_element_url_protection_handler(string $url, array $infos): string
 {
     if ('images' == \Piwigo\Core\Config::originalUrlProtection()) {// protect only images and not other file types (for example large movies that we don't want to send through our file proxy)
-        $ext = get_extension($infos['path']);
+        $ext = get_extension(is_string($infos['path'] ?? null) ? $infos['path'] : '');
         if (!in_array($ext, \Piwigo\Core\Config::pictureExtensions())) {
             return $url;
         }
     }
-    return get_action_url($infos['id'], 'e', false);
+    return get_action_url(is_int($infos['id'] ?? null) || is_string($infos['id'] ?? null) ? $infos['id'] : 0, 'e', false);
 }
 
 /**
@@ -630,7 +631,9 @@ function flush_page_messages(): void
     if ($template->get_template_vars('page_refresh') === null) {
         foreach (['errors','infos','warnings', 'messages'] as $mode) {
             if (isset($_SESSION['page_'.$mode])) {
-                $page[$mode] = array_merge($page[$mode], $_SESSION['page_'.$mode]);
+                $sessionArr = is_array($_SESSION['page_'.$mode]) ? $_SESSION['page_'.$mode] : [];
+                $pageArr = is_array($page[$mode] ?? null) ? $page[$mode] : [];
+                $page[$mode] = array_merge($pageArr, $sessionArr);
                 unset($_SESSION['page_'.$mode]);
             }
 

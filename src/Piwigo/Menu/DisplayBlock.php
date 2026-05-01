@@ -14,8 +14,8 @@ class DisplayBlock
     /** @var string|null */
     protected $_title = null;
 
-    /** @var mixed */
-    public $data;
+    /** @var array<mixed> */
+    public array $data = [];
     /** @var string */
     public $template;
     /** @var string */

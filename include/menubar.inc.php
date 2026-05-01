@@ -127,11 +127,12 @@ function initialize_menu(): void
     $block = $menu->get_block('mbTags');
     if ($block != null and 'picture' != script_basename()) {
         $tags = get_available_tags();
-        usort($tags, tags_counter_compare(...));
+        usort($tags, fn(mixed $a, mixed $b): int => tags_counter_compare(is_array($a) ? $a : [], is_array($b) ? $b : []));
         $tags = array_slice($tags, 0, \Piwigo\Core\Config::menubarTagCloudItemsNumber());
         foreach ($tags as $tag) {
+            $tagArr = is_array($tag) ? $tag : [];
             $block->data[] = array_merge(
-                $tag,
+                $tagArr,
                 [
                 'URL' => make_index_url([ 'tags' => [$tag] ]),
         ]

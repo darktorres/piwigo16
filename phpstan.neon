@@ -23,7 +23,6 @@ parameters:
         analyseAndScan:
             - install/db/*.php
             - language/*.php
-            - include/smarty/*
             - include/feedcreator.class.php
             - include/pwgsession_php7.class.php
             - include/passwordhash.class.php

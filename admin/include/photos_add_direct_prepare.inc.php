@@ -105,7 +105,7 @@ SELECT id, uppercats
         $selected_category = [$_GET['album']];
 
         $cat = pwg_db_fetch_assoc($result);
-        $template->assign('ADD_TO_ALBUM', get_cat_display_name_cache($cat['uppercats'] ?? '', null));
+        $template->assign('ADD_TO_ALBUM', get_cat_display_name_cache((string)($cat['uppercats'] ?? ''), null));
     } else {
         fatal_error('[Hacking attempt] the album id = "'.$_GET['album'].'" is not valid');
     }
@@ -125,7 +125,7 @@ SELECT category_id, c.uppercats
         $row = pwg_db_fetch_assoc($result);
         if ($row !== null) {
             $selected_category = [$row['category_id']];
-            $selected_category_name = get_cat_display_name_cache($row['uppercats'], null);
+            $selected_category_name = get_cat_display_name_cache((string)$row['uppercats'], null);
             $template->assign('selected_category_name', $selected_category_name);
         }
     }

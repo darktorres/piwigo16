@@ -471,7 +471,7 @@ SELECT
     $dates = query2array($query);
 
     for ($i = 0; $i < count($dates); $i++) {
-        $date_available = (string) $dates[$i]['date_available'];
+        $date_available = is_scalar($dates[$i]['date_available']) ? (string) $dates[$i]['date_available'] : '';
         if ($max_elements > 0) { // get some thumbnails ...
             $query = '
 SELECT DISTINCT i.*

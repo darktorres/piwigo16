@@ -192,7 +192,7 @@ SELECT
 ;';
         $result = pwg_query($query);
         while ($row = pwg_db_fetch_assoc($result)) {
-            $file_path = $row['path'];
+            $file_path = (string)$row['path'];
         }
 
         if (!isset($file_path)) {

@@ -113,7 +113,7 @@ if (pwg_db_num_rows($result) > 0) {
     foreach ($cats as $category) {
         $template->append(
             'categories_because_of_groups',
-            get_cat_display_name_cache($category['uppercats'], null)
+            get_cat_display_name_cache((string)($category['uppercats'] ?? ''), null)
         );
     }
 }

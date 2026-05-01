@@ -289,9 +289,9 @@ foreach ($categories as $category) {
               $category['name'],
               'admin_cat_list'
           ),
-        'NB_PHOTOS' => $nb_photos_in[$category['id']] ?? 0,
-        'NB_SUB_PHOTOS' => $nb_sub_photos[$category['id']] ?? 0,
-        'NB_SUB_ALBUMS' => isset($subcats_of[$category['id']]) ? count($subcats_of[$category['id']]) : 0,
+        'NB_PHOTOS' => $nb_photos_in[(int)$category['id']] ?? 0,
+        'NB_SUB_PHOTOS' => $nb_sub_photos[(int)$category['id']] ?? 0,
+        'NB_SUB_ALBUMS' => isset($subcats_of[(int)$category['id']]) ? count($subcats_of[(int)$category['id']]) : 0,
         'ID'         => $category['id'],
         'RANK'       => (is_numeric($category['rank'] ?? null) ? (int)$category['rank'] : 0) * 10,
 

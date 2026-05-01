@@ -125,7 +125,7 @@ SELECT data
 ;';
     $result = pwg_query($query);
     if (($row = pwg_db_fetch_assoc($result))) {
-        return $row['data'];
+        return (string)$row['data'];
     }
     return '';
 }

@@ -18,7 +18,7 @@ SELECT id FROM '.CATEGORIES_TABLE.'
   WHERE permalink=\''.$permalink.'\'';
     $ids = query2array($query, null, 'id');
     if (!empty($ids)) {
-        return $ids[0];
+        return (int)$ids[0];
     }
     return null;
 }
@@ -38,6 +38,9 @@ SELECT c.id
     $cat_id = null;
     if (pwg_db_num_rows($result)) {
         [$cat_id] = pwg_db_fetch_row($result) ?? [null];
+        if ($cat_id !== null) {
+            $cat_id = (int)$cat_id;
+        }
     }
     return $cat_id;
 }
@@ -65,7 +68,7 @@ SELECT permalink
         return true;
     }
     if ($save) {
-        $old_cat_id = get_cat_id_from_old_permalink($permalink);
+        $old_cat_id = get_cat_id_from_old_permalink((string)$permalink);
         if (isset($old_cat_id) and $old_cat_id != $cat_id) {
             \Piwigo\Core\PageState::current()->addError(
                 sprintf(

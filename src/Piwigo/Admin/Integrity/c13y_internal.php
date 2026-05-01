@@ -107,7 +107,7 @@ class c13y_internal
 
         $result = pwg_query($query);
         while ($row = pwg_db_fetch_assoc($result)) {
-            $status[$row['id']] = $row['status'];
+            $status[(int)$row['id']] = $row['status'];
         }
 
         foreach ($c13y_users as $id => $data) {

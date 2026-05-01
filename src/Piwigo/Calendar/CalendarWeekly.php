@@ -48,7 +48,7 @@ class CalendarWeekly extends CalendarBase
         if ('monday' == \Piwigo\Core\Config::get('week_starts_on')) {
             $this->calendar_levels[CWEEK]['sql'] = pwg_db_get_week($this->date_field, 5).'+1';
             $this->calendar_levels[CDAY]['sql'] = pwg_db_get_weekday($this->date_field);
-            $dayLabelsArr = is_array($this->calendar_levels[CDAY]['labels']) ? $this->calendar_levels[CDAY]['labels'] : [];
+            $dayLabelsArr = $this->calendar_levels[CDAY]['labels'];
             $dayLabelsArr[] = array_shift($dayLabelsArr);
             $this->calendar_levels[CDAY]['labels'] = $dayLabelsArr;
         }

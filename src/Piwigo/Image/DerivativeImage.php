@@ -70,7 +70,7 @@ final class DerivativeImage
             return $src_image->get_url();
         }
         $trig1 = trigger_change('get_derivative_url', get_root_url().$rel_url, $params, $src_image, $rel_url);
-        /** @var array<string>|string $urlArg */
+        /** @var list<mixed>|string $urlArg */
         $urlArg = is_string($trig1) ? $trig1 : (is_array($trig1) ? array_values(array_map(static fn (mixed $x): string => is_scalar($x) ? (string) $x : '', $trig1)) : '');
         return embellish_url($urlArg);
     }
@@ -158,7 +158,7 @@ final class DerivativeImage
                 if ($defined_types[$i] == $params->type) {
                     for ($i--; $i >= 0; $i--) {
                         $smaller = ImageStdParams::get_by_type($defined_types[$i]);
-                        if ($smaller !== null && $smaller->sizing->max_crop == $params->sizing->max_crop && $smaller->is_identity($srcSize)) {
+                        if ($smaller->sizing->max_crop == $params->sizing->max_crop && $smaller->is_identity($srcSize)) {
                             $params = $smaller;
                             self::build($src, $params, $rel_path, $rel_url, $is_cached);
                             return;
@@ -229,7 +229,7 @@ final class DerivativeImage
             return $this->src_image->get_url();
         }
         $trig2 = trigger_change('get_derivative_url', get_root_url().$this->rel_url, $this->params, $this->src_image, $this->rel_url);
-        /** @var array<string>|string $urlArg2 */
+        /** @var list<mixed>|string $urlArg2 */
         $urlArg2 = is_string($trig2) ? $trig2 : (is_array($trig2) ? array_values(array_map(static fn (mixed $x): string => is_scalar($x) ? (string) $x : '', $trig2)) : '');
         return embellish_url($urlArg2);
     }

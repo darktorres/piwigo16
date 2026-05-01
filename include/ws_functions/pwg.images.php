@@ -870,7 +870,6 @@ function ws_images_filteredSearch_create(array $params, \Piwigo\Ws\PwgServer $se
         }
 
         if (!isset($search['fields']['date_posted'])) {
-            /** @var array<string, mixed> $search['fields']['date_posted'] */
             $search['fields']['date_posted'] = [];
         }
         $search['fields']['date_posted']['preset'] = $p_date_posted_preset;
@@ -1763,10 +1762,10 @@ SELECT *
             $add_status = add_format($filePath, $format_ext ?? '', $image_id_str);
 
             return [
-              'image_id' => is_array($image) ? ($image['id'] ?? null) : null,
-              'src' => is_array($image) ? DerivativeImage::thumb_url($image) : '',
-              'square_src' => is_array($image) ? DerivativeImage::url(ImageStdParams::get_by_type(IMG_SQUARE), $image) : '',
-              'name' => is_array($image) ? ($image['name'] ?? null) : null,
+              'image_id' => $image['id'] ?? null,
+              'src' => DerivativeImage::thumb_url($image),
+              'square_src' => DerivativeImage::url(ImageStdParams::get_by_type(IMG_SQUARE), $image),
+              'name' => $image['name'] ?? null,
               'add_status' => $add_status,
             ];
         }
@@ -1844,7 +1843,7 @@ SELECT
           'name' => $image_infos['name'],
           'category' => [
             'id' => $p_category_first,
-            'nb_photos' => ($category_infos['nb_photos'] ?? 0) + (is_numeric($nb_photos_lounge) ? (int) $nb_photos_lounge : 0),
+            'nb_photos' => (int)($category_infos['nb_photos'] ?? 0) + (is_numeric($nb_photos_lounge) ? (int) $nb_photos_lounge : 0),
             'label' => $category_name,
           ],
           'add_status' => $add_status,
@@ -2248,8 +2247,8 @@ SELECT
 
     $candidates_array = is_array($candidates) ? $candidates : [];
     foreach ($candidates_array as $format_external_id => $format_filename) {
-        $format_external_id_str = is_scalar($format_external_id) ? (string) $format_external_id : '';
-        $format_filename_str = is_scalar($format_filename) ? (string) $format_filename : '';
+        $format_external_id_str = (string) $format_external_id;
+        $format_filename_str = (string) $format_filename;
         $candidate_filename_wo_ext = null;
 
         if (preg_match('/^(.*?)\.('.implode('|', \Piwigo\Core\Config::formatExtensions()).')$/', $format_filename_str, $matches)) {
@@ -2855,7 +2854,7 @@ SELECT id
   FROM '.IMAGES_TABLE.'
   WHERE id IN ('.implode(', ', $image_ids).')
 ;';
-    $image_ids = query2array($query, null, 'id');
+    $image_ids = array_map(static fn($id) => (int)$id, query2array($query, null, 'id'));
 
     if (empty($image_ids)) {
         return new PwgError(403, 'No image found');

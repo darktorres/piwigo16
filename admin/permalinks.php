@@ -148,7 +148,7 @@ if ($sort_by[0] == 'id' or $sort_by[0] == 'permalink') {
 $categories = [];
 $result = pwg_query($query);
 while ($row = pwg_db_fetch_assoc($result)) {
-    $row['name'] = get_cat_display_name_cache($row['uppercats']);
+    $row['name'] = get_cat_display_name_cache((string)($row['uppercats'] ?? ''));
     $categories[] = $row;
 }
 
@@ -176,7 +176,7 @@ if (count($sort_by)) {
 $result = pwg_query($query);
 $deleted_permalinks = [];
 while ($row = pwg_db_fetch_assoc($result)) {
-    $row['name'] = get_cat_display_name_cache($row['cat_id']);
+    $row['name'] = get_cat_display_name_cache((string)(int)$row['cat_id']);
     $row['U_DELETE'] =
         add_url_params(
             $url_del_base,

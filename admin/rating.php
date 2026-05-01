@@ -77,7 +77,7 @@ SELECT '.\Piwigo\Core\Config::userFields()['username'].' as username, '.\Piwigo\
 ;';
 $result = pwg_query($query);
 while ($row = pwg_db_fetch_assoc($result)) {
-    $users[$row['id']] = stripslashes((string) $row['username']);
+    $users[(int)$row['id']] = stripslashes((string) $row['username']);
 }
 
 
@@ -95,6 +95,7 @@ if (!empty($page['cat_filter'])) {
 $query .= '
 WHERE 1=1'. $page['user_filter'];
 [$nb_images] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+$nb_images = (int)$nb_images;
 
 $query = '
 SELECT
@@ -229,10 +230,11 @@ ORDER BY date DESC;';
      ];
 
     while ($row = pwg_db_fetch_assoc($result)) {
-        if (isset($users[$row['user_id']])) {
-            $user_rate = $users[$row['user_id']];
+        $user_id = (int)$row['user_id'];
+        if (isset($users[$user_id])) {
+            $user_rate = $users[$user_id];
         } else {
-            $user_rate = '? '. $row['user_id'];
+            $user_rate = '? '. $user_id;
         }
         if (strlen((string) $row['anonymous_id']) > 0) {
             $user_rate .= '('.$row['anonymous_id'].')';

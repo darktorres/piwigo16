@@ -70,7 +70,7 @@ SELECT user_id,
         page_not_found(l10n('Unknown feed identifier'));
     }
     if ($feed_row !== null && $feed_row['user_id'] != $user['id']) { // new user
-        $user = build_user($feed_row['user_id'], true);
+        $user = build_user((int)$feed_row['user_id'], true);
     }
 } else {
     $image_only = true;
@@ -83,6 +83,7 @@ SELECT user_id,
 check_status(ACCESS_GUEST);
 
 list($dbnow) = pwg_db_fetch_row(pwg_query('SELECT NOW();')) ?? [null];
+$dbnow = $dbnow ? (string)$dbnow : null;
 
 include_once(PHPWG_ROOT_PATH.'include/feedcreator.class.php');
 
@@ -101,7 +102,8 @@ $rss->link = get_gallery_home_url();
 
 $news = array();
 if (!$image_only) {
-    $news = news($feed_row['last_check'] ?? null, $dbnow, true, true);
+    $last_check = isset($feed_row['last_check']) ? (string)$feed_row['last_check'] : null;
+    $news = news($last_check, $dbnow, true, true);
 
     if (count($news) > 0) {
         $item = new FeedItem();

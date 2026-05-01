@@ -44,8 +44,8 @@ $users_by_id = [];
 $result = pwg_query($query);
 while ($row = pwg_db_fetch_assoc($result)) {
     $users_by_id[(int)$row['id']] = [
-      'name' => $row['name'],
-      'anon' => is_autorize_status(ACCESS_CLASSIC, $row['status']) ? false : true,
+      'name' => (string)$row['name'],
+      'anon' => is_autorize_status(ACCESS_CLASSIC, (string)$row['status']) ? false : true,
     ];
 }
 
@@ -67,7 +67,7 @@ while ($row = pwg_db_fetch_assoc($result)) {
     }
     $usr = $users_by_id[$user_id];
     if ($usr['anon']) {
-        $user_key = $usr['name'].'('.$row['anonymous_id'].')';
+        $user_key = $usr['name'].'('.(string)$row['anonymous_id'].')';
     } else {
         $user_key = $usr['name'];
     }
@@ -122,7 +122,7 @@ $query = 'SELECT id
   FROM '.IMAGES_TABLE.'
   ORDER by rating_score DESC
   LIMIT '.$consensus_top_number;
-$best_rated = array_flip(query2array($query, null, 'id'));
+$best_rated = array_flip(array_map(static fn($id) => (int)$id, query2array($query, null, 'id')));
 
 // by user stats
 foreach ($by_user_ratings as $id => &$rating) {

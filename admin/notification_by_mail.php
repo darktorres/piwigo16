@@ -215,6 +215,7 @@ function do_action_send_mail_notification(string $action = 'list_to_send', array
 
     if (in_array($action, ['list_to_send', 'send'])) {
         [$dbnow] = pwg_db_fetch_row(pwg_query('SELECT NOW();')) ?? [null];
+        $dbnow = $dbnow ? (string)$dbnow : null;
 
         $is_action_send = ($action == 'send');
 
@@ -381,7 +382,8 @@ function do_action_send_mail_notification(string $action = 'list_to_send', array
                             unset_make_full_url();
                         }
                     } else {
-                        if (news_exists($nbm_user['last_send'], $dbnow)) {
+                        $last_send = isset($nbm_user['last_send']) ? (string)$nbm_user['last_send'] : null;
+                        if (news_exists($last_send, $dbnow)) {
                             // Fill return list of "selected" users for 'list_to_send'
                             $return_list[] = $nbm_user;
                         }
@@ -475,8 +477,9 @@ switch ($page['mode']) {
                 // Update param
                 $result = pwg_query('select param, value from '.CONFIG_TABLE.' where param like \'nbm\\_%\'');
                 while ($nbm_user = pwg_db_fetch_assoc($result)) {
-                    if (isset($_POST[$nbm_user['param']])) {
-                        conf_update_param($nbm_user['param'], $_POST[$nbm_user['param']], true);
+                    $param = (string)$nbm_user['param'];
+                    if (isset($_POST[$param])) {
+                        conf_update_param($param, $_POST[$param], true);
                         $updated_param_count++;
                     }
                 }

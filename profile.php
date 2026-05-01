@@ -437,7 +437,7 @@ SELECT
 ;';
     $result = query2array($query)[0];
     foreach ($result as $day => $date) {
-        $display_duration[ $day ] = l10n('%d days', $day) . ' (' . format_date($date, ['day', 'month', 'year']) . ')';
+        $display_duration[ $day ] = l10n('%d days', $day) . ' (' . format_date((string)$date, ['day', 'month', 'year']) . ')';
     }
 
     if ($has_custom) {

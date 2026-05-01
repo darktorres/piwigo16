@@ -143,7 +143,7 @@ if ($category !== null && ($category['image_order'] == 'rank ASC' or $category['
 
 // Navigation path
 $navigation = get_cat_display_name_cache(
-    $category['uppercats'] ?? '',
+    (string)($category['uppercats'] ?? ''),
     get_root_url().'admin.php?page=album-'
 );
 
@@ -183,7 +183,7 @@ if (pwg_db_num_rows($result) > 0) {
         if (!empty($row['name'])) {
             $thumbnail_name = $row['name'];
         } else {
-            $file_wo_ext = get_filename_wo_extension($row['file']);
+            $file_wo_ext = get_filename_wo_extension((string)$row['file']);
             $thumbnail_name = str_replace('_', ' ', $file_wo_ext);
         }
         $current_rank++;
@@ -202,7 +202,7 @@ if (pwg_db_num_rows($result) > 0) {
 // image order management
 $template->assign('image_order_options', $sort_fields);
 
-$image_order = explode(',', $category['image_order'] ?? '');
+$image_order = explode(',', (string)($category['image_order'] ?? ''));
 
 for ($i = 0; $i < 3; $i++) { // 3 fields
     if (isset($image_order[$i])) {

@@ -79,7 +79,7 @@ SELECT galleries_url
     AND c.id = '.$category_id.'
 ;';
     $row = pwg_db_fetch_assoc(pwg_query($query));
-    return $row['galleries_url'] ?? '';
+    return (string)($row['galleries_url'] ?? '');
 }
 
 function get_min_local_dir(string $local_dir): string
@@ -215,6 +215,8 @@ SELECT
   WHERE category_id = '.$category['id'].'
 ;';
     [$image_count, $min_date, $max_date] = pwg_db_fetch_row(pwg_query($query)) ?? [null, null, null];
+    $min_date = (string)$min_date;
+    $max_date = (string)$max_date;
 
     if ($min_date == $max_date) {
         $info_title = l10n(
@@ -265,10 +267,11 @@ SELECT occured_on
 $result = query2array($query);
 
 if (count($result) > 0) {
+    $occurred_on = (string)$result[0]['occured_on'];
     $template->assign(
         [
-        'INFO_CREATION_SINCE' => time_since($result[0]['occured_on'], 'day', $format = null, $with_text = true, $with_week = true, $only_last_unit = true),
-        'INFO_CREATION' => format_date($result[0]['occured_on'], ['day', 'month','year']),
+        'INFO_CREATION_SINCE' => time_since($occurred_on, 'day', $format = null, $with_text = true, $with_week = true, $only_last_unit = true),
+        'INFO_CREATION' => format_date($occurred_on, ['day', 'month','year']),
         ]
     );
 }

@@ -69,7 +69,7 @@ SHOW TABLES
 
     while ($row = pwg_db_fetch_row($result)) {
         if (preg_match('/^'.PREFIX_TABLE.'/', (string) $row[0])) {
-            $tables[] = $row[0];
+            $tables[] = (string)$row[0];
         }
     }
 
@@ -98,7 +98,7 @@ DESC `'.$table.'`
         $columns_of[$table] = [];
 
         while ($row = pwg_db_fetch_row($result)) {
-            $columns_of[$table][] = $row[0];
+            $columns_of[$table][] = (string)$row[0];
         }
     }
 
@@ -219,7 +219,7 @@ $has_remote_site = false;
 $query = 'SELECT galleries_url FROM '.SITES_TABLE.';';
 $result = pwg_query($query);
 while ($row = pwg_db_fetch_assoc($result)) {
-    if (url_is_remote($row['galleries_url'])) {
+    if (url_is_remote((string)$row['galleries_url'])) {
         $has_remote_site = true;
     }
 }

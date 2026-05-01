@@ -456,12 +456,16 @@ while ($row = pwg_db_fetch_assoc($result)) {
         $i = 'current';
     }
 
+    $src_path = (string)($row['path'] ?? '');
+    $src_file = (string)($row['file'] ?? '');
+    $src_id = (int)($row['id'] ?? 0);
+
     $row['src_image'] = new SrcImage($row);
     $row['derivatives'] = DerivativeImage::get_all($row['src_image']);
 
-    $extTab = explode('.', (string) $row['path']);
-    $row['path_ext'] = strtolower(get_extension($row['path']));
-    $row['file_ext'] = strtolower(get_extension($row['file']));
+    $extTab = explode('.', $src_path);
+    $row['path_ext'] = strtolower(get_extension($src_path));
+    $row['file_ext'] = strtolower(get_extension($src_file));
 
     if ($i == 'current') {
         $row['element_path'] = get_element_path($row);
@@ -469,11 +473,11 @@ while ($row = pwg_db_fetch_assoc($result)) {
         if ($row['src_image']->is_original()) {// we have a photo
             if ($user['enabled_high'] == 'true') {
                 $row['element_url'] = $row['src_image']->get_url();
-                $row['download_url'] = get_action_url($row['id'], 'e', true);
+                $row['download_url'] = get_action_url($src_id, 'e', true);
             }
         } else { // not a pic - need download link
             $row['element_url'] = get_element_url($row);
-            $row['download_url'] = get_action_url($row['id'], 'e', true);
+            $row['download_url'] = get_action_url($src_id, 'e', true);
         }
     }
 

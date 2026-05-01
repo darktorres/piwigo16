@@ -162,7 +162,7 @@ function get_clean_recipients_list($data): array
         }
     } else {
         $data = explode(',', (string) $data);
-        $data = array_map(fn (mixed $item): array => unformat_email(is_string($item) ? $item : ''), $data);
+        $data = array_map(fn (mixed $item): array => unformat_email((string) $item), $data);
     }
 
     $existing = [];
@@ -876,6 +876,9 @@ function pwg_send_mail(mixed $result, string $to, string $subject, string $conte
 function move_css_to_body(string $content): string
 {
     try {
+        if (empty($content)) {
+            return $content;
+        }
         return CssInliner::fromHtml($content)->inlineCss()->render();
     } catch (\Throwable) {
         return $content;

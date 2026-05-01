@@ -264,7 +264,6 @@ SELECT DISTINCT ';
             $result = pwg_query($query);
             while ($row = pwg_db_fetch_assoc($result)) {
                 $grp_uid = is_numeric($row['user_id']) ? (int) $row['user_id'] : 0;
-                /** @var array<string, mixed> $users[$grp_uid] */
                 if (!isset($users[$grp_uid]['groups']) || !is_array($users[$grp_uid]['groups'])) {
                     $users[$grp_uid]['groups'] = [];
                 }
@@ -276,11 +275,11 @@ SELECT DISTINCT ';
             $cur_uid = is_numeric($cur_user['id'] ?? null) ? (int) $cur_user['id'] : 0;
             $users_id_arr[] = $cur_uid;
             if (isset($params['display']['registration_date_string'])) {
-                $reg_date = is_scalar($cur_user['registration_date'] ?? null) ? $cur_user['registration_date'] : null;
+                $reg_date = is_scalar($cur_user['registration_date'] ?? null) ? (string)$cur_user['registration_date'] : null;
                 $users[$cur_uid]['registration_date_string'] = format_date($reg_date, ['day', 'month', 'year']);
             }
             if (isset($params['display']['registration_date_since'])) {
-                $reg_date2 = is_scalar($cur_user['registration_date'] ?? null) ? $cur_user['registration_date'] : null;
+                $reg_date2 = is_scalar($cur_user['registration_date'] ?? null) ? (string)$cur_user['registration_date'] : null;
                 $users[$cur_uid]['registration_date_since'] = time_since($reg_date2, 'month');
             }
             if (isset($params['display']['last_visit'])) {
@@ -293,12 +292,12 @@ SELECT DISTINCT ';
                 }
 
                 if (isset($params['display']['last_visit_string'])) {
-                    $lv_str = is_scalar($last_visit) ? $last_visit : null;
+                    $lv_str = is_scalar($last_visit) ? (string)$last_visit : null;
                     $users[$cur_uid]['last_visit_string'] = format_date($lv_str, ['day', 'month', 'year']);
                 }
 
                 if (isset($params['display']['last_visit_since'])) {
-                    $lv_since = is_scalar($last_visit) ? $last_visit : null;
+                    $lv_since = is_scalar($last_visit) ? (string)$last_visit : null;
                     $users[$cur_uid]['last_visit_since'] = time_since($lv_since, 'day');
                 }
             }

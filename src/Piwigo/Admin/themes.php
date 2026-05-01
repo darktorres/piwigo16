@@ -66,6 +66,7 @@ class themes
 
         $theme_maintain = self::build_maintain_class($theme_id);
 
+        /** @var list<mixed> $errors */
         $errors = [];
         $activity_details = ['theme_id' => $theme_id];
 
@@ -202,7 +203,7 @@ DELETE
 
         pwg_activity('system', ACTIVITY_SYSTEM_THEME, $action, $activity_details);
 
-        return $errors;
+        return array_values($errors);
     }
 
     public function missing_parent_theme(string $theme_id): ?string

@@ -2555,8 +2555,10 @@ SELECT
 ;';
     $activities = query2array($query);
     foreach ($activities as $activity) {
-        $piwigo_infos['general_stats']['nb_activities'] += $activity['counter'];
-        @$piwigo_infos['activities'][ $activity['object'] ][ $activity['action'] ] = $activity['counter'];
+        $piwigo_infos['general_stats']['nb_activities'] += (int)$activity['counter'];
+        $object_key = (string)$activity['object'];
+        $action_key = (string)$activity['action'];
+        @$piwigo_infos['activities'][ $object_key ][ $action_key ] = $activity['counter'];
     }
 
     $label_for_system_object_id = [
@@ -2576,8 +2578,21 @@ SELECT
   GROUP BY object, object_id, action
 ;';
     $activities = query2array($query);
+    if (!isset($piwigo_infos['activities'])) {
+        $piwigo_infos['activities'] = [];
+    }
     foreach ($activities as $activity) {
-        @$piwigo_infos['activities'][ $activity['object'] ][ $label_for_system_object_id[ $activity['object_id'] ] ?? 'undefined' ][ $activity['action'] ] = $activity['counter'];
+        $object_key = (string)$activity['object'];
+        $object_id_key = (int)$activity['object_id'];
+        $action_key = (string)$activity['action'];
+        $label_key = (string) ($label_for_system_object_id[ $object_id_key ] ?? 'undefined');
+        if (!isset($piwigo_infos['activities'][$object_key])) {
+            $piwigo_infos['activities'][$object_key] = [];
+        }
+        if (!isset($piwigo_infos['activities'][$object_key][$label_key])) {
+            $piwigo_infos['activities'][$object_key][$label_key] = [];
+        }
+        $piwigo_infos['activities'][$object_key][$label_key][$action_key] = $activity['counter'];
     }
 
     $query = '

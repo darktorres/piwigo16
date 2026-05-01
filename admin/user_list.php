@@ -41,7 +41,7 @@ SELECT id, name, COUNT(ug.user_id) as nb_users_of
 $result = pwg_query($query);
 
 while ($row = pwg_db_fetch_assoc($result)) {
-    $groups[$row['id']] = $row['name'];
+    $groups[(int)$row['id']] = $row['name'];
     $groups_for_filter[] = [
       'id' => $row['id'],
       'name' => $row['name'],
@@ -166,8 +166,9 @@ SELECT
 $nb_users_by_status = [];
 $result = pwg_query($query);
 while ($row = pwg_db_fetch_assoc($result)) {
-    $nb_users_by_status[$row['status']] = [
-      'name' => l10n('user_status_'.$row['status']),
+    $status = (string)$row['status'];
+    $nb_users_by_status[$status] = [
+      'name' => l10n('user_status_'.$status),
       'counter' => $row['nb_users_of'],
     ];
 }
@@ -205,8 +206,9 @@ SELECT
 $result = pwg_query($query);
 $nb_users_by_level = $level_options;
 while ($row = pwg_db_fetch_assoc($result)) {
-    $nb_users_by_level[$row['level']] = [
-      'name' => l10n(sprintf('Level %d', $row['level'])),
+    $level = (int)$row['level'];
+    $nb_users_by_level[$level] = [
+      'name' => l10n(sprintf('Level %d', $level)),
       'counter' => $row['nb_users_of'],
     ];
 }
@@ -225,7 +227,7 @@ $result = pwg_query($query);
 $groups_arr_id = [];
 $groups_arr_name = [];
 while ($row = pwg_db_fetch_assoc($result)) {
-    $groups_arr_name[] = '"'.pwg_db_real_escape_string($row['name']).'"';
+    $groups_arr_name[] = '"'.pwg_db_real_escape_string((string)$row['name']).'"';
     $groups_arr_id[] = $row['id'];
 }
 

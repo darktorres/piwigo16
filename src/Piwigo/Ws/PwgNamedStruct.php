@@ -47,4 +47,10 @@ class PwgNamedStruct
     {
         return $this->_content;
     }
+
+    /** @return array<string, int> */
+    public function getXmlAttributes(): array
+    {
+        return $this->_xmlAttributes;
+    }
 }

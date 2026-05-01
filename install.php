@@ -180,10 +180,10 @@ if (isset($_POST['install'])) {
     } elseif (preg_match('/[\'"]/', $webmaster)) {
         $errors[] = l10n('webmaster login can\'t contain characters \' or "');
     }
-    if ($admin_pass1 != $admin_pass2 || empty($admin_pass1)) {
+    if (empty($_POST['admin_pass1'] ?? '') || empty($_POST['admin_pass2'] ?? '') || $_POST['admin_pass1'] !== $_POST['admin_pass2']) {
         $errors[] = l10n('please enter your password again');
     }
-    if (empty($admin_mail)) {
+    if (empty($_POST['admin_mail'] ?? '')) {
         $errors[] = l10n('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
     } else {
         $error_mail_address = validate_mail_address(null, $admin_mail);

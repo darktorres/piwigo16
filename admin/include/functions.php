@@ -3195,7 +3195,7 @@ SELECT
   ORDER BY id ASC
 ;';
 
-    return query2array($query, null, 'id');
+    return array_map(static fn($id) => (int)$id, query2array($query, null, 'id'));
 }
 
 /**
@@ -3404,7 +3404,7 @@ SELECT
     $fsqc_paths = query2array($query, 'id', 'path');
 
     foreach ($fsqc_paths as $id => $path) {
-        if (!file_exists($path)) {
+        if (!file_exists((string)$path)) {
             global $template;
 
             $template->assign(
@@ -3614,7 +3614,7 @@ SELECT
 ;';
     [$stats['nb_formats'], $stats['formats_disk_usage']] = pwg_db_fetch_row(pwg_query($query)) ?? [null, null];
 
-    $stats['disk_usage'] += $stats['formats_disk_usage'];
+    $stats['disk_usage'] = (int)$stats['disk_usage'] + (int)$stats['formats_disk_usage'];
 
     return $stats;
 }
@@ -3666,5 +3666,5 @@ SELECT
         }
     }
 
-    return $candidate;
+    return $candidate ? (string)$candidate : null;
 }

@@ -111,7 +111,7 @@ SELECT *
             $formats_exts = [];
 
             foreach ($formats as $format) {
-                $format_strings[] = sprintf('%s (%.2fMB)', $format['ext'], $format['filesize'] / 1024);
+                $format_strings[] = sprintf('%s (%.2fMB)', $format['ext'], (int)$format['filesize'] / 1024);
                 $formats_exts[] = strtolower((string) $format['ext']);
             }
 

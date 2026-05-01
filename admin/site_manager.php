@@ -139,7 +139,7 @@ SELECT *
 $result = pwg_query($query);
 
 while ($row = pwg_db_fetch_assoc($result)) {
-    $is_remote = url_is_remote($row['galleries_url']);
+    $is_remote = url_is_remote((string)$row['galleries_url']);
     $base_url = PHPWG_ROOT_PATH.'admin.php';
     $base_url .= '?page=site_manager';
     $base_url .= '&amp;site='.$row['id'];
@@ -150,12 +150,13 @@ while ($row = pwg_db_fetch_assoc($result)) {
     $update_url .= '?page=site_update';
     $update_url .= '&amp;site='.$row['id'];
 
+    $site_id = (int)$row['id'];
     $tpl_var =
       [
         'NAME' => $row['galleries_url'],
         'TYPE' => l10n($is_remote ? 'Remote' : 'Local'),
-        'CATEGORIES' => (int)@$sites_detail[$row['id']]['nb_categories'],
-        'IMAGES' => (int)@$sites_detail[$row['id']]['nb_images'],
+        'CATEGORIES' => (int)@$sites_detail[(string)$site_id]['nb_categories'],
+        'IMAGES' => (int)@$sites_detail[(string)$site_id]['nb_images'],
         'U_SYNCHRONIZE' => $update_url,
        ];
 

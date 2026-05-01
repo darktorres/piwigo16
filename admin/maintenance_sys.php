@@ -51,7 +51,7 @@ if (is_webmaster()) {
             $action = $rows['action'];
             $date = '';
             $hour = '';
-            $details = unserialize($rows['details']);
+            $details = unserialize((string)$rows['details']);
             $detail = [
               'type' => 'empty',
             ];

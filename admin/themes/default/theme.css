@@ -144,24 +144,6 @@ TABLE.languages TR TD { padding: 7px 20px; }
   height: 2px;
 }
 
-.slider-bar-wrapper .ui-slider-horizontal .ui-slider-handle{
-    background-color:#ffa646;
-    border: 1px solid #ffa646;
-    border-radius:25px;
-    top: -.7em !important;
-    width: 1.4em;
-    height: 1.4em;
-}
-
-.slider-bar-wrapper .ui-slider-horizontal .ui-slider-range {
-  background-color: #ffa646;
-}
-
-.slider-bar-wrapper .ui-slider-horizontal{
-    border:none;
-    border-radius:25px;
-}
-
 /* Category List */
 .categoryContainer {
   display: flex;
@@ -1807,42 +1789,6 @@ UL.tagSelection LI {
 	white-space: nowrap;
 }
 
-/* jQuery tooltips */
-.ui-tooltip {
-	padding: 8px;
-	position: absolute;
-	z-index: 9999;
-	max-width: 300px;
-	-webkit-box-shadow: 0 0 5px #aaa;
-	box-shadow: 0 0 5px #aaa;
-}
-
-.cluetip-outer {
-	position: relative;
-	border: 1px solid #111111;
-	color: #dddddd;
-	background-color: #222222;
-	text-align: left;
-}
-.cluetip-title {
-	margin: 0 0 5px;
-	padding: 8px;
-	color: #666666;
-	background-color: #d3d3d3;
-	font-size: 1.1em;
-	font-weight: bold;
-}
-.cluetip-inner {
-	padding: 10px;
-}
-
-/* jQuery datepicker */
-img.ui-datepicker-trigger {
-  cursor : pointer;
-  vertical-align: middle;
-  margin:-3px 5px 2px 5px;
-}
-
 /* Add photos, direct mode */
 #uploadBoxes P {
   margin:0;
@@ -2006,120 +1952,6 @@ a.admin-main:hover {color:#fff;}
 
 #piwigoInfos {float:left; margin-left:140px;}
 #pageInfos {display: none;}
-
-/* TipTip CSS - Version 1.2 */
-
-#tiptip_holder {
-	display: none;
-	position: absolute;
-	top: 0;
-	left: 0;
-	z-index: 99999;
-}
-
-#tiptip_holder.tip_top {
-	padding-bottom: 5px;
-}
-
-#tiptip_holder.tip_bottom {
-	padding-top: 5px;
-}
-
-#tiptip_holder.tip_right {
-	padding-left: 5px;
-}
-
-#tiptip_holder.tip_left {
-	padding-right: 5px;
-}
-
-#tiptip_content {
-	font-size: 11px;
-	color: #fff;
-	text-shadow: 0 0 2px #000;
-	padding: 4px 8px;
-	border: 1px solid rgba(255,255,255,0.25);
-	background-color: rgb(25,25,25);
-	background-color: rgba(25,25,25,0.92);
-	background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(transparent), to(#000));
-	border-radius: 3px;
-	-webkit-border-radius: 3px;
-	-moz-border-radius: 3px;
-	box-shadow: 0 0 3px #555;
-	-webkit-box-shadow: 0 0 3px #555;
-	-moz-box-shadow: 0 0 3px #555;
-}
-
-#tiptip_arrow, #tiptip_arrow_inner {
-	position: absolute;
-	border-color: transparent;
-	border-style: solid;
-	border-width: 6px;
-	height: 0;
-	width: 0;
-}
-
-#tiptip_holder.tip_top #tiptip_arrow {
-	border-top-color: #fff;
-	border-top-color: rgba(255,255,255,0.35);
-}
-
-#tiptip_holder.tip_bottom #tiptip_arrow {
-	border-bottom-color: #fff;
-	border-bottom-color: rgba(255,255,255,0.35);
-}
-
-#tiptip_holder.tip_right #tiptip_arrow {
-	border-right-color: #fff;
-	border-right-color: rgba(255,255,255,0.35);
-}
-
-#tiptip_holder.tip_left #tiptip_arrow {
-	border-left-color: #fff;
-	border-left-color: rgba(255,255,255,0.35);
-}
-
-#tiptip_holder.tip_top #tiptip_arrow_inner {
-	margin-top: -7px;
-	margin-left: -6px;
-	border-top-color: rgb(25,25,25);
-	border-top-color: rgba(25,25,25,0.92);
-}
-
-#tiptip_holder.tip_bottom #tiptip_arrow_inner {
-	margin-top: -5px;
-	margin-left: -6px;
-	border-bottom-color: rgb(25,25,25);
-	border-bottom-color: rgba(25,25,25,0.92);
-}
-
-#tiptip_holder.tip_right #tiptip_arrow_inner {
-	margin-top: -6px;
-	margin-left: -5px;
-	border-right-color: rgb(25,25,25);
-	border-right-color: rgba(25,25,25,0.92);
-}
-
-#tiptip_holder.tip_left #tiptip_arrow_inner {
-	margin-top: -6px;
-	margin-left: -7px;
-	border-left-color: rgb(25,25,25);
-	border-left-color: rgba(25,25,25,0.92);
-}
-
-/* Webkit Hacks  */
-@media screen and (-webkit-min-device-pixel-ratio:0) {
-	#tiptip_content {
-		padding: 4px 8px 5px 8px;
-		background-color: rgba(45,45,45,0.88);
-	}
-	#tiptip_holder.tip_bottom #tiptip_arrow_inner {
-		border-bottom-color: rgba(45,45,45,0.88);
-	}
-	#tiptip_holder.tip_top #tiptip_arrow_inner {
-		border-top-color: rgba(20,20,20,0.92);
-	}
-}
 
 /* Set the width of the menubar for the galery */
 #menubar {
@@ -3098,11 +2930,6 @@ div.jGrowl div.jGrowl-notification{
 .languageActions {display: table-row; font-size:12px; }
 .languageActions DIV {display: table-cell; vertical-align: middle; line-height:18px; }
 
-#ui-datepicker-div {-moz-border-radius:5px; border-radius:5px;}
-#ui-datepicker-div .ui-icon-circle-triangle-w, #ui-datepicker-div .ui-icon-circle-triangle-e {color:transparent;}
-#ui-datepicker-div A.ui-datepicker-prev, #ui-datepicker-div A.ui-datepicker-next {background-color:transparent;}
-#ui-datepicker-div A.ui-datepicker-prev:hover, #ui-datepicker-div A.ui-datepicker-next:hover {-moz-border-radius:5px;}
-
 .HelpActions {
   float:right;
   margin:0;
@@ -3955,8 +3782,6 @@ LEGEND SPAN {
 #batchManagerGlobal .useFilterCheckbox {display:none;}
 
 #batchManagerGlobal blockquote {margin:10px 0 0px 0;}
-#batchManagerGlobal .ui-slider-horizontal {width:280px; margin:10px 0 10px 9px;}
-#batchManagerGlobal #filter_dimension .ui-slider-horizontal {width:580px;}
 
 #batchManagerGlobal #duplicates_options label {margin-left:10px;}
 
@@ -6898,27 +6723,6 @@ a.group_users {
 }
 
 
-/* Edit user popin*/
-
-
-.user_form_popin .ui-slider-horizontal .ui-slider-handle{
-  background-color:#FFA646;
-  border:none;
-  border-radius:25px;
-  border: 1px solid #818181;
-}
-
-.user_form_popin .ui-slider-horizontal .ui-slider-range-min{
-  background-color:#818181;
-  border-radius:25px;
-}
-
-.user_form_popin .ui-slider-horizontal{
-  background-color:#e3e3e3;
-  border:none;
-  border-radius:25px;
-}
-
 /* table in help/quick_search.html */
 table.qsearch_help_table {
   border-collapse:collapse;
@@ -7264,14 +7068,8 @@ li.plupload_delete a:hover {background: url("images/cancelhover.svg")!important;
 .dimensionSlidersTitleButtons, .dimensionSlidersRatioButtons {display: flex; justify-content: space-between;}
 .dimensionSlidersTitleButtons {margin-bottom: 5px;}
 .dimensionSlidersRatioButtons {margin-bottom: 15px;}
-#filter_dimension blockquote div:last-child .ui-slider-horizontal {margin-top: 5px;}
-#batchManagerGlobal .ui-slider-horizontal .ui-slider-handle {top: -.7em !important; width: 1.4em; height: 1.4em;}
-#batchManagerGlobal .ui-slider-handle.ui-state-default.ui-corner-all {border-radius: 10px;}
 #action_delete .errors {display: block; min-height: initial; margin: 10px 0px 0px 0px;}
 
-#batchManagerGlobal .ui-slider-horizontal .ui-slider-range {height: 2px;}
-#batchManagerGlobal .ui-slider-horizontal {height: 2px;}
-#batchManagerGlobal .ui-slider-range.ui-widget-header.ui-corner-all {margin-top: -1px;}
 #batchManagerGlobal .font-checkbox.selected span:first-child::before {content: '\f192';}
 #action_delete_derivatives .font-checkbox span, #action_delete_derivatives .font-checkbox span {margin-right: 5px;}
 #action_generate_derivatives, #action_delete_derivatives {width: 320px;}
@@ -7609,10 +7407,6 @@ color:#FF7B00;
 
 .user-property-register-visit .icon-calendar {
   color: #4c4c4c
-}
-
-.slider-bar-wrapper .ui-slider-horizontal{
-  background-color:#e3e3e3;
 }
 
 .edit-user-tab,

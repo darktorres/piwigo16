@@ -893,75 +893,10 @@
   cursor:pointer
 }
 
-.ui-slider-horizontal
-{
-  margin: 10px;
-  height: 2px;
-}
-
-.ui-widget-content
-{
-  border: 1px solid #EEE;
-  background: #DDD;
-}
-
-.ui-slider .ui-slider-range 
-{
-  background: rgba(255, 166, 70, 0.9);
-  margin-top: -1px;
-  border: 1px solid #ffaf58;
-}
-
-.ui-slider-range.ui-widget-header.ui-corner-all
-{
-  border: 1px solid #ffaf58;
-  padding:1px 0;
-}
-
-.ui-slider-handle.ui-state-default.ui-corner-all
-{
-  margin-top:-3px;
-  border-radius: 10px;
-}
-
-.ui-state-default,
-.ui-widget-content .ui-state-default,
-.ui-widget-header .ui-state-default
-{
-  border: 1px solid #ffaf58;
-  background: #ffaf58;
-}
-
-.ui-state-hover,
-.ui-widget-content .ui-state-hover,
-.ui-widget-header .ui-state-hover
-{
-  background: #ffaf58
-}
-
-.ui-state-focus,
-.ui-widget-content .ui-state-focus,
-.ui-widget-header .ui-state-focus
-{
-  border: 1px solid #ffaf58;
-  background: #ffaf58
-}
-
-.ui-state-active, 
-.ui-widget-content .ui-state-active,
-.ui-widget-header .ui-state-active 
-{
-  background: #ffaf58
-}
-
 .disableSlider{
   pointer-events: none;
   border:1px solid #ccc!important;
   background-color:#ccc!important;
-}
-
-.ui-slider-horizontal .ui-slider-handle:hover{
-  cursor:pointer;
 }
 
 .mcs-container div .slider_input{

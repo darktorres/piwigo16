@@ -693,12 +693,6 @@ TABLE.tagLetterContent {
 
 #theHeader {text-align: center;}
 
-/* jQuery datepicker */
-IMG.ui-datepicker-trigger {
-	cursor : pointer;
-}
-
-
 /**
  * Default colors
  */

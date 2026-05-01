@@ -168,60 +168,6 @@ ul.actions, .content form#waiting  {text-align:center;}
   color:#444!important;
 }
 
-/* jQuery tooltips */
-.ui-tooltip {
-	color: #eee;
-	background-color: #000;
-}
-.cluetip-outer { border-color: #666; color: #666; background-color: #222; }
-.cluetip-title { color: #ff3363; background-color: #111; }
-/* jQuery ui resizable */
-.ui-resizable { position: relative; }
-.ui-wrapper { border: 0; }
-.ui-wrapper input, .ui-wrapper textarea { border: 0; }
-
-/* Global handle styles */
-.ui-resizable-handle { position: absolute; display: none; font-size: 0.1px; }
-.ui-resizable .ui-resizable-handle { display: block; }
-body .ui-resizable-disabled .ui-resizable-handle { display: none; } /* use 'body' to make it more specific (css order) */
-body .ui-resizable-autohide .ui-resizable-handle { display: none; } /* use 'body' to make it more specific (css order) */
-
-#ui-datepicker-div {background-color: #555; border:2px solid #333;}
-#ui-datepicker-div.ui-widget-content { background: #555}
-#ui-datepicker-div .ui-datepicker-title {color:white;}
-#ui-datepicker-div .ui-icon-circle-triangle-w {background: transparent url(icon/prev.png) no-repeat;}
-#ui-datepicker-div .ui-icon-circle-triangle-e {background: transparent url(icon/next.png) no-repeat;}
-#ui-datepicker-div A.ui-datepicker-prev:hover,
-#ui-datepicker-div A.ui-datepicker-next:hover
-{
-  background-color:#eee;border:1px solid #aaa;
-}
-.ui-datepicker th {color:#ccc;}
-.ui-state-disabled {color:#aaa;}
-.ui-timepicker-div, .ui-timepicker-div dt {color:#ccc;}
-
-.ui-slider { background:#444 !important;border-radius:2px;border:1px solid #3c3939 !important; }
-.ui-slider .ui-slider-handle { border:1px solid #f36;background:#222;border-radius:0.6em; }
-.ui-slider .ui-slider-range { background:#666;border-radius:2px; }
-
-#ui-datepicker-div .ui-datepicker-control, #ui-datepicker-div  a { background-color: #111; color: #f70 !important;}
-#ui-datepicker-div .ui-datepicker-days-row { background-color: #444;}
-#ui-datepicker-div .ui-datepicker-week-end-cell, #ui-datepicker-div .ui-datepicker-week-end-cell  a { background-color: #222; color: #f33; border-color: #444; border-top-color: #222; border-left-color: #222;}
-#ui-datepicker-div .ui-datepicker-title-row { background-color: #111;}
-#ui-datepicker-div .ui-datepicker-title-row .ui-datepicker-week-end-cell a { color: #f33;}
-#ui-datepicker-div  a:hover { color: #ff3333 !important; border: 0; background-color: #111 !important;}
-#ui-datepicker-div .ui-datepicker-header select { background-color:#444; color:#999; font-weight:normal;}
-#ui-datepicker-div .ui-datepicker-links { background-color:#222;}
-#ui-datepicker-div .ui-datepicker-header { background:#555;}
-#ui-datepicker-div .ui-widget-header { border: 1px solid #3c3939; }
-#ui-datepicker-div .ui-datepicker-current-day { background-color: #111 !important; border-color: #444; border-top-color: #111; border-left-color: #111;}
-#ui-datepicker-div .ui-datepicker-days-cell { background-color:#444; border:1px solid #222; border-top-color: #444; border-left-color: #444;}
-#ui-datepicker-div .ui-datepicker-calendar .ui-state-default { background: #333; color: #ccc !important; border: 1px solid #3c3939;}
-#ui-datepicker-div .ui-slider .ui-slider-handle { background: #333; border:1px solid #3c3939; cursor: pointer;}
-#ui-datepicker-div .ui-datepicker-buttonpane .ui-state-default { background: #333; color: #ccc; border:1px solid #3c3939;}
-#ui-datepicker-div .ui-datepicker-buttonpane .ui-state-default:hover { background: #111; }
-#ui-datepicker-div .ui-datepicker-buttonpane .ui-state-error { background: #BE4949; color: #FFC8C8;}
-#ui-datepicker-div .ui-datepicker-buttonpane .ui-state-error:hover { background: #7e3030;}
 INPUT[type="text"].large  { width: 317px; }
 
 .buttonLike:disabled, .filters-icon-check:disabled, input[type="button"]:disabled, input[type="submit"]:disabled, input[type="reset"]:disabled {
@@ -905,11 +851,6 @@ input:focus + .slider {
   color: #FFC8C8 !important;
 }
 
-/* .UserListPopInContainer .slider-bar-wrapper .ui-slider-horizontal .ui-slider-range {
-  background-color: #ffa646;
-} */
-/*------*/
-
 .userSeparator {
   color:#666;
   visibility: hidden;
@@ -926,21 +867,6 @@ input:focus + .slider {
 
 .AddUserSubmit:hover{
   background-color: #f70;
-}
-
-/*Edit user popin*/
-
-.user_form_popin .ui-slider-horizontal .ui-slider-handle{
-  background-color:#FFA646;
-  border:1px solid #5a5a5a;
-}
-
-.user_form_popin .ui-slider-horizontal .ui-slider-range-min{
-  background-color:#5a5a5a;
-}
-.user_form_popin .ui-slider-horizontal{
-  background-color:#151515;
-
 }
 
 table.dataTable tr.even {
@@ -1139,22 +1065,6 @@ li.plupload_delete a.remove-format:hover{color: #c0c0c0;}
 #addFilter optgroup, #batchManagerGlobal option[disabled] {background-color: #555;}
 .dimension-cancel {background-color: #555 !important;}
 .pageNumberSelected {color: #777 !important; font-weight: bold;}
-
-#batchManagerGlobal .ui-state-default, #batchManagerGlobal .ui-widget-content .ui-state-default,#batchManagerGlobal .ui-widget-header .ui-state-default {
-  border: 1px solid #ffaf58; background: #ffaf58;
-}
-#batchManagerGlobal .ui-state-hover,#batchManagerGlobal .ui-widget-content .ui-state-hover, #batchManagerGlobal .ui-widget-header .ui-state-hover {
-  background: #ffaf58;
-}
-#batchManagerGlobal .ui-state-focus, #batchManagerGlobal .ui-widget-content .ui-state-focus,#batchManagerGlobal .ui-widget-header .ui-state-focus {
-  border: 1px solid #ffaf58; background: #ffaf58;
-}
-#batchManagerGlobal .ui-state-active, #batchManagerGlobal .ui-widget-content .ui-state-active,#batchManagerGlobal .ui-widget-header .ui-state-active {
-  background: #ffaf58;
-}
-#batchManagerGlobal .ui-widget-content {background: #666; border: 1px solid #666;}
-#batchManagerGlobal .ui-slider .ui-slider-range {background-color: #aaaaaa;}
-#batchManagerGlobal .ui-slider-range.ui-widget-header.ui-corner-all {border: 1px solid #ffaf58; background-color: #ffaf58;}
 
 .help-popin-search:hover span,
 .help-popin-search:hover .icon-help-circled::before {
@@ -1822,10 +1732,6 @@ background:#6C2D2D!important;
 
 .user-property-register-visit .icon-calendar {
   color: #c1c1c1
-}
-
-.slider-bar-wrapper .ui-slider-horizontal{
-  background-color:#666;
 }
 
 .edit-user-tab,

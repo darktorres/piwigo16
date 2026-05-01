@@ -25,7 +25,7 @@ function parse_sort_variables(
 ): array {
     global $template;
 
-    $url_components = parse_url((string) $_SERVER['REQUEST_URI']);
+    $url_components = parse_url(is_scalar($_SERVER['REQUEST_URI'] ?? null) ? (string) $_SERVER['REQUEST_URI'] : '');
     if ($url_components === false) {
         $url_components = ['path' => '', 'query' => ''];
     }
@@ -87,18 +87,19 @@ check_input_parameter('cat_id', $_POST, false, PATTERN_ID);
 $selected_cat = [];
 if (isset($_POST['set_permalink']) and $_POST['cat_id'] > 0) {
     check_pwg_token();
-    $permalink = $_POST['permalink'];
+    $permalink = is_scalar($_POST['permalink'] ?? null) ? (string) $_POST['permalink'] : '';
+    $postCatId = is_scalar($_POST['cat_id'] ?? null) ? (string) $_POST['cat_id'] : '';
     if (empty($permalink)) {
-        delete_cat_permalink($_POST['cat_id'], isset($_POST['save']));
+        delete_cat_permalink($postCatId, isset($_POST['save']));
     } else {
-        set_cat_permalink($_POST['cat_id'], $permalink, isset($_POST['save']));
+        set_cat_permalink($postCatId, $permalink, isset($_POST['save']));
     }
-    $selected_cat = [ $_POST['cat_id'] ];
+    $selected_cat = [(int) $postCatId];
 } elseif (isset($_GET['delete_permanent'])) {
     check_pwg_token();
     $query = '
 DELETE FROM '.OLD_PERMALINKS_TABLE.'
-  WHERE permalink=\''.pwg_db_real_escape_string($_GET['delete_permanent']).'\'
+  WHERE permalink=\''.pwg_db_real_escape_string(is_scalar($_GET['delete_permanent'] ?? null) ? (string) $_GET['delete_permanent'] : '').'\'
   LIMIT 1';
     $result = pwg_query($query);
     if (pwg_db_changes() == 0) {
@@ -142,8 +143,9 @@ SELECT id, permalink, uppercats, global_rank
   FROM '.CATEGORIES_TABLE.'
   WHERE permalink IS NOT NULL
 ';
-if ($sort_by[0] == 'id' or $sort_by[0] == 'permalink') {
-    $query .= ' ORDER BY '.$sort_by[0];
+$sortBy0 = is_scalar($sort_by[0] ?? null) ? (string) $sort_by[0] : '';
+if ($sortBy0 == 'id' or $sortBy0 == 'permalink') {
+    $query .= ' ORDER BY '.$sortBy0;
 }
 $categories = [];
 $result = pwg_query($query);
@@ -170,8 +172,9 @@ $sort_by = parse_sort_variables(
 
 $url_del_base = get_root_url().'admin.php?page=permalinks';
 $query = 'SELECT * FROM '.OLD_PERMALINKS_TABLE;
-if (count($sort_by)) {
-    $query .= ' ORDER BY '.$sort_by[0];
+$sortByOld0 = is_scalar($sort_by[0] ?? null) ? (string) $sort_by[0] : '';
+if (count($sort_by) && $sortByOld0 !== '') {
+    $query .= ' ORDER BY '.$sortByOld0;
 }
 $result = pwg_query($query);
 $deleted_permalinks = [];

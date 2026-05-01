@@ -45,12 +45,13 @@ if (!isset($_GET['output']) or 'content_only' != $_GET['output']) {
     include(PHPWG_ROOT_PATH.'include/page_header.php');
 }
 
+$helpPage = is_scalar($_GET['page'] ?? null) ? (string) $_GET['page'] : '';
 if (
     isset($_GET['page'])
-    and preg_match('/^[a-z_]*$/', (string) $_GET['page'])
+    and preg_match('/^[a-z_]*$/', $helpPage)
 ) {
     $help_content = load_language(
-        'help/'.$_GET['page'].'.html',
+        'help/'.$helpPage.'.html',
         '',
         [
         'force_fallback' => 'en_UK',

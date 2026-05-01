@@ -196,21 +196,22 @@ $additional_filters = [
 
 foreach ($additional_filters as $filter_key => $filter_table) {
     if (isset($_GET[$filter_key])) {
+        $filterId = is_scalar($_GET[$filter_key]) ? (string) $_GET[$filter_key] : '0';
         $query = '
 SELECT
     name
   FROM '.$filter_table.'
-  WHERE id = '.$_GET[$filter_key].'
+  WHERE id = '.$filterId.'
 ;';
         $rows = query2array($query);
 
         if (count($rows) == 0) {
-            fatal_error($filter_key.' #'.$_GET[$filter_key].' does not exist');
+            fatal_error($filter_key.' #'.$filterId.' does not exist');
         }
 
         $additional_filt_type = $filter_key;
         $additional_filt_name = $rows[0]['name'];
-        $additional_filt_value = $_GET[$filter_key];
+        $additional_filt_value = $filterId;
 
         break;
     }
@@ -253,7 +254,7 @@ $template->assign('ACTIONS', $actions);
 $template->assign('page_data_json', json_encode([
   'nb_users'                      => (int) $nb_users,
   'additional_filt_type'          => $additional_filt_type ?: null,
-  'additional_filt_value'         => $additional_filt_value !== null ? (int) $additional_filt_value : null,
+  'additional_filt_value'         => $additional_filt_value !== null ? (is_numeric($additional_filt_value) ? (int) $additional_filt_value : 0) : null,
   'date_min'                      => empty($min_date) ? '' : substr((string) $min_date, 0, 10),
   'date_max'                      => empty($max_date) ? '' : substr((string) $max_date, 0, 10),
   'color_icons'                   => ['icon-red', 'icon-blue', 'icon-yellow', 'icon-purple', 'icon-green'],

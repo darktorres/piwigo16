@@ -8,7 +8,7 @@ Audit date: 2026-05-01. Branch: `16.x-rewrite`.
 
 ## `move-php-libs-to-cached-iverson.md` — Eliminate `window.*` globals via ES module static imports
 
-**Status: ~95% complete.** All three waves landed in substance — every `window.*` global the plan targets is gone from live code (remaining mentions are only in `docs/modernization/globals-removal.md` and `MODERNIZATION_PLAN.md` retrospectives).
+**Status: 100% complete.** All three waves landed; every `window.*` global the plan targets is gone from live code. Remaining mentions in `MODERNIZATION_PLAN.md` are retrospective only. `globals-removal.md` was verified complete and deleted.
 
 ### What's done
 
@@ -34,11 +34,11 @@ Audit date: 2026-05-01. Branch: `16.x-rewrite`.
 
 ### What's still pending
 
-Three small loose ends:
+Nothing. All three loose ends resolved:
 
-1. **`admin/themes/default/template/photos_add_direct.tpl:9`** still has stale `{combine_script id='LocalStorageCache' load='footer' path='admin/themes/default/js/LocalStorageCache.js'}` — Wave 2 cleaned this from every other template but missed this one. The `.js` path no longer resolves and the import is now redundant (whatever the page's TS imports gets auto-loaded as a Vite shared chunk).
-2. **`vite.config.ts:36`** still lists `'LocalStorageCache': r('admin/themes/default/js/LocalStorageCache.ts')` as a standalone entry. Plan implied removing it (parallel to the `album_selector` entry removal that did happen) so it becomes an auto-shared chunk. Keeping it just produces an unused bundle output; not breakage.
-3. **`vite.config.ts:27`** still lists `'doubleSlider': r('themes/default/js/doubleSlider.ts')` as a standalone entry. Plan said "remove from admin entries — let it become a shared chunk" — admin entry was indeed removed during the file move, but a new frontend entry was added in its place. Same dead-bundle concern as #2.
+1. Stale `combine_script id='LocalStorageCache'` in `photos_add_direct.tpl` — removed.
+2. `'LocalStorageCache'` standalone Vite entry — removed; now auto-shared chunk.
+3. `'doubleSlider'` standalone Vite entry — removed; now auto-shared chunk.
 
 ---
 
@@ -136,16 +136,17 @@ The plan flagged this as the largest phase and most likely cut point. Scaffolds 
 - **Wave C** (ArrayObject deprecation proxy): not landed (no `GlobalsBridge` class).
 - **Caveat**: this phase is too sprawling to fully audit in one pass — sampled the four scaffolds (Config/PageState/CurrentUser/Kernel), boot wiring, and adoption greps. Did not inspect each push-site.
 
-### Phase 5 — JS → TS conversion ✓ (~95%)
+### Phase 5 — JS → TS conversion ✓ (~100%)
 
-Confirmed only at file-presence level (substantively audited via the jquery-removal and globals-removal plan audits above).
+Confirmed only at file-presence level (substantively audited via the jquery-removal and globals-removal plan audits, both of which were verified complete and deleted).
 
 - `package.json` declares Vite 5, TypeScript 5.6.3, Playwright; full runtime deps modernised (Uppy, Tom Select, dayjs, Chart.js, GLightbox, noUiSlider, Tippy, Flatpickr).
-- `vite.config.ts` (4.8 KB) and `tsconfig.json` present at root.
+- `vite.config.ts` and `tsconfig.json` present at root. `tsconfig.json` has `strict: true`, `noImplicitAny: true`, `strictNullChecks: true` all enabled.
 - `admin/themes/default/js/`: **40 `.ts` files, 0 `.js` files** (full conversion).
-- `themes/default/js/`: **8 `.ts` files, 1 `.js` file** (`plugins/piecon.js` — vendored, expected per plan).
-- `dev/vite-entries.json` (2.8 KB) artifact present per plan step 2.
+- `themes/default/js/`: **8 `.ts` files, 1 `.js` file** (`plugins/piecon.js` — vendored ES module, expected per plan).
+- `dev/vite-entries.json` artifact present per plan step 2.
 - Phase 5 console-clean spec exists at `tests/e2e/07-phase5-console-clean.spec.ts`.
+- **Module-graph gaps closed** (2026-05-01): all `{footer_script}` function definitions and `onclick=` calls to TS-defined functions eliminated. Specifically: `changeImgSrc` + `addToCadie` moved to `scripts.ts`; rating `_pwgRatingAutoQueue` callback replaced with plain data fields; `group_list` event listeners + cancel-button handlers moved to `group_list.ts`; `batch_manager_unit` globals (`activePlugins`, `all_related_categories_ids`, `pluginValues`, GLightbox, datepicker init) migrated to typed JSON + TS DOMContentLoaded.
 
 ### Phase 6 — Cleanup
 
@@ -158,4 +159,4 @@ Out of scope for this audit (depends on prior phases finishing).
 - **Phase 2**: strict_types enforced repo-wide via CI; native return types on new code; long tail of param types remains.
 - **Phase 3**: 69 PSR-4 classes migrated; 20 legacy `*.class.php` shims remain in `include/` + `admin/include/` (worth confirming these are aliases not duplicates).
 - **Phase 4**: services scaffolded, Wave A reference-bridge live, Wave B in active progress (171 PageState + 182 Config callsites), Wave C not started — this is the active cut-point area.
-- **Phase 5**: TS migration effectively complete (only 1 vendored JS remaining).
+- **Phase 5**: TS migration complete (only 1 vendored JS remaining, `piecon.js`); module-graph gaps closed.

@@ -24,8 +24,6 @@ export default defineConfig({
                 'pngfix':             r('themes/default/js/pngfix.ts'),
                 'rating':             r('themes/default/js/rating.ts'),
                 'thumbnails.loader':  r('themes/default/js/thumbnails.loader.ts'),
-                'doubleSlider':       r('themes/default/js/doubleSlider.ts'),
-
                 // ── Standard pages ────────────────────────────────────────
                 'toaster_js':         r('themes/standard_pages/js/toaster.ts'),
                 'standard_pages_js':  r('themes/standard_pages/js/standard_pages.ts'),
@@ -33,7 +31,6 @@ export default defineConfig({
 
                 // ── Admin (admin/themes/default) ──────────────────────────
                 'common':             r('admin/themes/default/js/common.ts'),
-                'LocalStorageCache':  r('admin/themes/default/js/LocalStorageCache.ts'),
                 'addAlbum':           r('admin/themes/default/js/addAlbum.ts'),
                 'albums':             r('admin/themes/default/js/albums.ts'),
                 'batchManagerGlobal': r('admin/themes/default/js/batchManagerGlobal.ts'),

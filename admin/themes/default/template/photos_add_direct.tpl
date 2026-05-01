@@ -6,8 +6,6 @@
   {include file='include/add_album.inc.tpl'}
 {/if}
 
-{combine_script id='LocalStorageCache' load='footer' path='admin/themes/default/js/LocalStorageCache.js'}
-
 {combine_script id='add_photo' load='footer' path='admin/themes/default/js/photos_add_direct.js'}
 
 {html_style}

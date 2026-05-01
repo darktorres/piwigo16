@@ -148,13 +148,17 @@ locator — use constructor injection or free function calls instead.
 
 ### Vite multi-entry build
 
-The frontend build uses **Vite 5** with 38 entry points in `vite.config.ts`:
+The frontend build uses **Vite 5** with 39 entry points in `vite.config.ts`:
 
 ```
-themes/default/js/*.ts          → core.scripts, switchbox, pngfix, rating, thumbnails.loader
-themes/standard_pages/js/*.ts   → toaster, standard_pages, profile
-admin/themes/default/js/*.ts    → common, LocalStorageCache, album_selector, … (30 files)
+themes/default/js/*.ts          → core.scripts, switchbox, pngfix, rating, thumbnails.loader, mcs
+themes/standard_pages/js/*.ts   → toaster_js, standard_pages_js, standard_profile_js
+admin/themes/default/js/*.ts    → common, addAlbum, albums, batchManagerGlobal, … (30 files)
 ```
+
+`LocalStorageCache`, `album_selector`, and `doubleSlider` are **not** standalone
+entries — they are imported by multiple entry points and Vite promotes them to
+shared chunks automatically (`assets/chunks/`).
 
 Build output goes to `dist/assets/` with content-hashed filenames.
 `dist/manifest.json` maps each entry id (e.g. `core.scripts`) to the hashed filename.
@@ -238,17 +242,18 @@ Steps:
 - **Plugin contract.** The plugin loader uses legacy `add_event_handler('foo', 'callback')`
   patterns. `PluginMaintain` and `ThemeMaintain` are now namespaced, but the plugin
   API itself is unchanged.
-- **Vendored frontend libraries.** jQuery 1.11.x, jQuery UI, plupload/moxie,
-  colorbox, selectize, Chart.js, dataTables — all stay as committed JS files in
-  `themes/default/js/plugins/`. Replacing any of them is a multi-week project.
+- **Vendored frontend libraries.** jQuery and all jQuery plugins were removed in
+  the Wave 1–6 migration. The only remaining vendored file is
+  `themes/default/js/plugins/piecon.js` (favicon progress indicator, converted to
+  an ES module). All other replacements are npm packages bundled by Vite.
 - **Translations.** `language/*.php` stays as `$lang['key'] = 'value'` arrays.
   Excluded from Rector and PHPStan permanently.
 - **Themes other than `default`.** Third-party themes are out of scope. Their
   files are not Rector- or PHPStan-checked. PHP 8.5 deprecation noise in third-party
   themes is the theme author's responsibility.
-- **TypeScript Wave 1.** `noImplicitAny` and `strictNullChecks` are off. A future
-  Wave-2 pass will enable them one at a time. See `docs/plugin-migration-16x.md`
-  for the TS-related guidance for plugin authors.
+- **TypeScript strictness.** `tsconfig.json` has `strict: true`, `noImplicitAny: true`,
+  and `strictNullChecks: true` all enabled. Some `any` casts remain in legacy-bridge
+  code but the compiler enforces types across the authored TS surface.
 
 ---
 

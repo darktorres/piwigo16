@@ -1,5 +1,4 @@
-import './jquery-shim-jqtree';
-import 'jqtree/tree.jquery.js';
+import { mount, type AlbumTree, type TreeNode, type MoveInfo, type NodeData } from './album-tree';
 import tippy from 'tippy.js';
 import 'tippy.js/dist/tippy.css';
 import { getPageData } from './page-data';
@@ -113,8 +112,8 @@ declare function sprintf(fmt: string, ...args: unknown[]): string;
 const qs = <T extends HTMLElement = HTMLElement>(sel: string) => document.querySelector<T>(sel);
 const qsa = <T extends HTMLElement = HTMLElement>(sel: string) => Array.from(document.querySelectorAll<T>(sel));
 
-// jqTree convenience: $(treeEl).tree(...)
-const $tree = () => (window as any).$('.tree');
+// Set during DOMContentLoaded after the album-tree module mounts.
+let tree: AlbumTree | null = null;
 
 function pwgPost(method: string, data: Record<string, any>): Promise<any> {
     const body = new URLSearchParams();
@@ -131,54 +130,61 @@ function refreshTipTip() {
 
 document.addEventListener('DOMContentLoaded', () => {
     const openUppercats = openCat == -1 ? [] : findAlbumById(data, openCat).uppercats.split(',');
+    // Honour persisted-open ids so that nodes the user previously expanded
+    // come back with their children already rendered (otherwise the saved
+    // jqtree-open class on the LI would have nothing inside it to show).
+    const savedOpen: string[] = (() => {
+        try {
+            const raw = window.localStorage?.getItem('pwg_album_tree_open_admin_albums');
+            return raw ? (JSON.parse(raw) as string[]) : [];
+        } catch { return []; }
+    })();
+    const expandedIds = new Set<string>([
+        ...openUppercats.map(String),
+        ...savedOpen.map(String),
+    ]);
     const new_data = data.map((a: any) => {
-        const al = { ...a, children: openUppercats.includes(a.id) ? a.children : [] };
-        if (a.children) { al.load_on_demand = !openUppercats.includes(a.id); al.haveChildren = a.children; }
+        const isExpanded = expandedIds.has(String(a.id));
+        const al = { ...a, children: isExpanded ? a.children : [] };
+        if (a.children) { al.load_on_demand = !isExpanded; al.haveChildren = a.children; }
         return al;
     });
 
     document.querySelector('h1')?.insertAdjacentHTML('beforeend', `<span class='badge-number'>${nb_albums}</span>`);
 
-    // jqTree initialization — via shim
-    $tree().tree({
-        data: new_data,
-        autoOpen: false,
-        dragAndDrop: true,
-        openFolderDelay: delay_autoOpen,
-        onCreateLi: createAlbumNode,
-        onCanSelectNode: () => false,
-    });
-
     const treeEl = qs('.tree')!;
 
-    // jqTree events — native listeners (shim fires dispatchEvent)
-    treeEl.addEventListener('tree.open', (e: Event) => {
-        const nodeId = ($tree().tree('getState') as any)?.open_nodes?.find?.((id: any) => id === (e as any).node?.id);
-        qs<HTMLElement>(`.move-cat-toogler[data-id='${(e as any).node?.id}']`)?.innerHTML !== undefined &&
-            (qs<HTMLElement>(`.move-cat-toogler[data-id='${(e as any).node?.id}']`)!.innerHTML = toggler_open);
-    });
-    treeEl.addEventListener('tree.close', (e: Event) => {
-        const el = qs<HTMLElement>(`.move-cat-toogler[data-id='${(e as any).node?.id}']`);
-        if (el) el.innerHTML = toggler_close;
-    });
-    treeEl.addEventListener('tree.move', (e: Event) => {
-        const ev = e as any;
-        ev.preventDefault();
-        const moveInfo = ev.move_info;
-        if (moveInfo.moved_node.status !== 'private') {
-            parentIsPrivate = false;
-            if (moveInfo.position === 'after') parentIsPrivate = (moveInfo.target_node.parent.status === 'private');
-            else if (moveInfo.position === 'inside') parentIsPrivate = (moveInfo.target_node.status === 'private');
-            if (parentIsPrivate) {
-                if (window.confirm(str_are_you_sure.replace(/%s/g, moveInfo.moved_node.name) + '\n\n' + str_yes_change_parent)) {
-                    makePrivateHierarchy(moveInfo.moved_node);
-                    applyMove(ev);
-                }
-            } else { applyMove(ev); }
-        } else { applyMove(ev); }
+    tree = mount(treeEl, {
+        data: new_data,
+        dragAndDrop: true,
+        saveStateKey: 'admin_albums',
+        onCreateLi: createAlbumNode,
+        onOpen: (n: TreeNode) => {
+            const el = n.element?.querySelector<HTMLElement>(':scope > .jqtree-element .move-cat-toogler');
+            if (el) el.innerHTML = toggler_open;
+        },
+        onClose: (n: TreeNode) => {
+            const el = n.element?.querySelector<HTMLElement>(':scope > .jqtree-element .move-cat-toogler');
+            if (el) el.innerHTML = toggler_close;
+        },
+        onMove: (moveInfo: MoveInfo, ev) => {
+            ev.preventDefault();
+            if (moveInfo.moved_node.status !== 'private') {
+                parentIsPrivate = false;
+                if (moveInfo.position === 'after') parentIsPrivate = (moveInfo.target_node.parent?.status === 'private');
+                else if (moveInfo.position === 'inside') parentIsPrivate = (moveInfo.target_node.status === 'private');
+                if (parentIsPrivate) {
+                    if (window.confirm(str_are_you_sure.replace(/%s/g, String(moveInfo.moved_node.name)) + '\n\n' + str_yes_change_parent)) {
+                        makePrivateHierarchy(moveInfo.moved_node);
+                        applyMove(moveInfo);
+                    }
+                } else { applyMove(moveInfo); }
+            } else { applyMove(moveInfo); }
+        },
     });
 
-    // DOM events via event delegation on tree
+    // Visual feedback: the tree element gets a "dragging" class during a
+    // mousedown→mouseup, used by CSS in albums.tpl to dim non-target nodes.
     treeEl.addEventListener('mousedown', mouseState);
     treeEl.addEventListener('mouseup', mouseState);
 
@@ -187,36 +193,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // .move-cat-toogler
         const toggler_el = target.closest<HTMLElement>('.move-cat-toogler');
-        if (toggler_el) {
+        if (toggler_el && tree) {
             const node_id = toggler_el.dataset['id'];
-            const n = $tree().tree('getNodeById', node_id);
+            const n = tree.getNodeById(node_id ?? null);
             if (!n) return;
 
-            if (n.load_on_demand && n.haveChildren) loadOnDemand(n);
+            if (n.load_on_demand && Array.isArray(n.haveChildren)) loadOnDemand(n);
 
-            // jqTree's openNode/closeNode crash because createAlbumNode wipes
-            // the internal toggler element jqtree expects. We manage the
-            // open/close state directly via the LI's class instead.
-            const li = n.element as HTMLElement | undefined;
-            if (li) {
-                if (li.classList.contains('jqtree-open')) {
-                    li.classList.remove('jqtree-open');
-                    li.classList.add('jqtree-closed');
-                    toggler_el.innerHTML = toggler_close;
-                } else {
-                    li.classList.remove('jqtree-closed');
-                    li.classList.add('jqtree-open');
-                    toggler_el.innerHTML = toggler_open;
-                }
-            }
+            if (tree.isNodeOpen(n)) tree.closeNode(n);
+            else tree.openNode(n);
             return;
         }
 
         // .move-cat-order
         const orderEl = target.closest<HTMLElement>('.move-cat-order');
-        if (orderEl) {
+        if (orderEl && tree) {
             const node_id = orderEl.dataset['id'];
-            const n = $tree().tree('getNodeById', node_id);
+            const n = tree.getNodeById(node_id ?? null);
             if (n) {
                 const popin = qs<HTMLElement>('.cat-move-order-popin');
                 if (popin) popin.style.display = '';
@@ -268,13 +261,11 @@ document.addEventListener('DOMContentLoaded', () => {
         pwgPost('pwg.categories.setInfo', {
             category_id: catToEdit,
             name: (qs<HTMLInputElement>('.RenameAlbumLabelUsername input'))?.value ?? '',
-        }).then(raw => {
-            const d = typeof raw === 'string' ? JSON.parse(raw) : raw;
+        }).then(() => {
             const node_id = qs<HTMLElement>('#cat-' + catToEdit + ' .move-cat-toogler')?.dataset['id'];
-            const n = $tree().tree('getNodeById', node_id);
+            const n = tree?.getNodeById(node_id ?? null);
             const newName = (qs<HTMLInputElement>('.RenameAlbumLabelUsername input'))?.value ?? '';
-            n.name = newName;
-            $tree().tree('updateNode', n, newName);
+            if (n && tree) tree.updateNode(n, newName);
             closeRenameAlbumPopIn();
         }).catch(console.log);
     });
@@ -305,29 +296,24 @@ document.addEventListener('DOMContentLoaded', () => {
                     qs<HTMLElement>('.AddAlbumSubmit')!.classList.remove('notClickable');
                     return;
                 }
-                // Close the popin and update the count first — these must succeed
-                // even if subsequent jqtree manipulations throw (jqtree's openNode
-                // crashes because createAlbumNode wipes its internal toggler).
                 closeAddAlbumPopIn();
                 updateTitleBadge(nb_albums + 1);
                 qs<HTMLElement>('.AddAlbumSubmit')!.classList.remove('notClickable');
-                try {
-                    const parent_node = $tree().tree('getNodeById', newAlbumParent);
-                    if (parent_node?.load_on_demand && parent_node?.haveChildren) loadOnDemand(parent_node);
-                    if (parent_node) openNodeOnDemand(parent_node);
-                    const method = newAlbumPosition === 'last' ? 'appendNode' : 'prependNode';
-                    $tree().tree(method, { id: d.result.id, isEmptyFolder: true, name: newAlbumName }, parent_node);
-                    if (parent_node) setSubcatsBadge(parent_node);
-                    const newNode = $tree().tree('getNodeById', d.result.id);
-                    if (newNode) goToNode(newNode, newNode);
-                    const newNodeEl = document.getElementById('cat-' + d.result.id);
-                    if (newNodeEl) {
-                        window.scrollTo({ top: (newNodeEl.getBoundingClientRect().top + window.scrollY) - screen.height / 2, behavior: 'smooth' });
-                    }
-                    refreshTipTip();
-                } catch {
-                    // jqtree integration is fragile; tree may be stale until refresh.
+                if (!tree) return;
+                const parent_node = tree.getNodeById(newAlbumParent);
+                if (parent_node?.load_on_demand && Array.isArray(parent_node.haveChildren)) loadOnDemand(parent_node);
+                if (parent_node) openNodeOnDemand(parent_node);
+                const newData: NodeData = { id: d.result.id, isEmptyFolder: true, name: newAlbumName };
+                if (newAlbumPosition === 'last') tree.appendNode(newData, parent_node);
+                else tree.prependNode(newData, parent_node);
+                if (parent_node) setSubcatsBadge(parent_node);
+                const newNode = tree.getNodeById(d.result.id);
+                if (newNode) goToNode(newNode, newNode);
+                const newNodeEl = document.getElementById('cat-' + d.result.id);
+                if (newNodeEl) {
+                    window.scrollTo({ top: (newNodeEl.getBoundingClientRect().top + window.scrollY) - screen.height / 2, behavior: 'smooth' });
                 }
+                refreshTipTip();
             }).catch(() => qs<HTMLElement>('.AddAlbumSubmit')!.classList.remove('notClickable'));
     });
 
@@ -340,9 +326,10 @@ document.addEventListener('DOMContentLoaded', () => {
             pwg_token,
         }).then(() => {
             parentOfDeletedNode = node.parent;
-            $tree().tree('removeNode', node);
+            tree?.removeNode(node);
             updateTitleBadge(nb_albums - 1);
-            setSubcatsBadge(parentOfDeletedNode);
+            // Root-level deletes have no parent in the new tree model.
+            if (parentOfDeletedNode) setSubcatsBadge(parentOfDeletedNode);
             closeDeleteAlbumPopIn();
             refreshTipTip();
         }).catch(console.log);
@@ -354,10 +341,10 @@ document.addEventListener('DOMContentLoaded', () => {
         el.addEventListener('click', checkbox_click.bind(el));
     });
 
-    if (openCat !== -1) {
-        nodeToGo = $tree().tree('getNodeById', openCat);
-        goToNode(nodeToGo, nodeToGo);
-        if (nodeToGo?.children) $tree().tree('openNode', nodeToGo, false);
+    if (openCat !== -1 && tree) {
+        nodeToGo = tree.getNodeById(openCat);
+        if (nodeToGo) goToNode(nodeToGo, nodeToGo);
+        if (nodeToGo?.children?.length) tree.openNode(nodeToGo);
         const catEl = document.getElementById('cat-' + openCat);
         if (catEl) {
             const top = catEl.getBoundingClientRect().top + window.scrollY - window.innerHeight / 2 + catEl.offsetHeight / 2;
@@ -374,13 +361,13 @@ function mouseState(e: Event) {
     else if (e.type === 'mouseup') treeEl.classList.remove('dragging');
 }
 
-function createAlbumNode(node: any, li: any) {
-    const liEl = (li[0] ?? li) as HTMLElement;
+function createAlbumNode(node: TreeNode, li: HTMLElement) {
+    const liEl = li;
     icon = "<span class='%icon%'></span>";
     title = '<span data-id="' + node.id + '" class="move-cat-title-container ';
-    if (node.status === 'private' || node.parent.status === 'private') { node.status = 'private'; title += 'icon-lock'; }
+    if (node.status === 'private' || node.parent?.status === 'private') { node.status = 'private'; title += 'icon-lock'; }
     title += '">';
-    if (node.visible === 'false' || node.parent.visble === 'false') {
+    if (node.visible === 'false' || node.parent?.visble === 'false') {
         node.visble = 'false';
         title += '<span class="tiptip icon-cone" title="' + tiptip_locked_album + '" style="font-size: 16px"></span>';
     }
@@ -407,12 +394,14 @@ function createAlbumNode(node: any, li: any) {
     cont = contEl; // keep global for compatibility
 
     if (node.haveChildren || node.children.length !== 0) {
-        open_nodes = $tree().tree('getState').open_nodes;
-        toggler = open_nodes.includes(node.id) ? toggler_open : toggler_close;
-        contEl.insertAdjacentHTML('beforeend', toggler_cont.replace(/%content%/g, toggler).replace(/%id%/g, node.id));
+        // The album-tree adds jqtree-open / jqtree-closed to the LI before
+        // calling onCreateLi, so the open state is readable from the class.
+        const isOpen = liEl.classList.contains('jqtree-open');
+        toggler = isOpen ? toggler_open : toggler_close;
+        contEl.insertAdjacentHTML('beforeend', toggler_cont.replace(/%content%/g, toggler).replace(/%id%/g, String(node.id)));
     } else {
         contEl.querySelector<HTMLElement>('.move-cat-order')?.classList.add('notClickable');
-        contEl.insertAdjacentHTML('beforeend', toggler_cont.replace(/%content%/g, toggler_close).replace(/%id%/g, node.id));
+        contEl.insertAdjacentHTML('beforeend', toggler_cont.replace(/%content%/g, toggler_close).replace(/%id%/g, String(node.id)));
         contEl.classList.add('disabledToggle');
     }
 
@@ -435,9 +424,9 @@ function createAlbumNode(node: any, li: any) {
         + "<i class='icon-purple icon-picture nb-images'>" + node.nb_images + "</i>"
         + "<i class='icon-green icon-imagefolder-01 nb-sub-photos'>" + node.nb_sub_photos + "</i>"
         + "<div class='badge-dropdown'>"
-        + "<span class='icon-blue icon-sitemap nb-subcats'>" + x_nb_subcats.replace('%d', node.nb_subcats) + "</span>"
-        + "<span class='icon-purple icon-picture nb-images'>" + x_nb_images.replace('%d', node.nb_images) + "</span>"
-        + "<span class='icon-green icon-imagefolder-01 nb-sub-photos'>" + x_nb_sub_photos.replace('%d', node.nb_sub_photos) + "</span>"
+        + "<span class='icon-blue icon-sitemap nb-subcats'>" + x_nb_subcats.replace('%d', String(node.nb_subcats ?? '')) + "</span>"
+        + "<span class='icon-purple icon-picture nb-images'>" + x_nb_images.replace('%d', String(node.nb_images ?? '')) + "</span>"
+        + "<span class='icon-green icon-imagefolder-01 nb-sub-photos'>" + x_nb_sub_photos.replace('%d', String(node.nb_sub_photos ?? '')) + "</span>"
         + "</div></div>"
     );
 
@@ -463,7 +452,8 @@ function isNumeric(num: any) { return !isNaN(num); }
 function openAddAlbumPopIn(parentAlbumId: any) {
     const popin = document.getElementById('AddAlbum')!;
     if (parentAlbumId != 0) {
-        qs<HTMLElement>('#AddAlbum .AddIconTitle span')!.innerHTML = add_sub_album_of.replace('%s', $tree().tree('getNodeById', parentAlbumId).name);
+        const parentName = String(tree?.getNodeById(parentAlbumId)?.name ?? '');
+        qs<HTMLElement>('#AddAlbum .AddIconTitle span')!.innerHTML = add_sub_album_of.replace('%s', parentName);
     } else {
         qs<HTMLElement>('#AddAlbum .AddIconTitle span')!.innerHTML = add_album_root_title;
     }
@@ -542,8 +532,9 @@ function openDeleteAlbumPopIn(cat_to_delete: any) {
     const popin = document.getElementById('DeleteAlbum')!;
     // Inline 'block' overrides the #DeleteAlbum { display: none } CSS rule.
     popin.style.display = 'block';
-    node = $tree().tree('getNodeById', cat_to_delete);
+    node = tree?.getNodeById(cat_to_delete);
     const iconTitle = qs<HTMLElement>('.DeleteIconTitle span')!;
+    if (!node) return;
     if (node.children.length == 0) {
         iconTitle.innerHTML = delete_album_with_name.replace('%s', node.name);
     } else {
@@ -588,12 +579,12 @@ function goToNode(n: any, firstNode: any) {
     if (n.parent) {
         goToNode(n.parent, firstNode);
         if (n !== firstNode) {
-            $tree().tree('openNode', n);
+            tree?.openNode(n);
             const parentCatEl = document.getElementById('cat-' + n.parent.id);
             if (parentCatEl) { parentCatEl.style.display = ''; parentCatEl.classList.add('imune'); }
         }
     } else {
-        $tree().tree('openNode', n);
+        tree?.openNode(n);
         const catEl = document.getElementById('cat-' + firstNode.id);
         if (catEl) catEl.classList.add('animateFocus');
         showNodeChildrens(firstNode);
@@ -610,17 +601,14 @@ function showNodeChildrens(n: any) {
     }
 }
 
-function closeTree(tree: any) {
-    if (tree.tree('getState').open_nodes.length > 0) {
-        tree.tree('getState').open_nodes.forEach((nodeItem: any) => {
-            const n = tree.tree('getNodeById', nodeItem);
-            tree.tree('closeNode', n);
-        });
-    }
-}
+// closeTree() helper removed — was unreferenced.
 
-function getId(parent: any) {
-    return parent.getLevel() == 0 ? 0 : parent.id;
+function getId(parent: TreeNode | null | undefined): number | string {
+    // Root-level nodes have no parent in the new tree; jqtree had a synthetic
+    // level-0 container with id 0 — surface the same value to keep API parity
+    // with the existing PHP "parent=0 means root" convention.
+    if (!parent) return 0;
+    return parent.id;
 }
 
 function getRank(n: any, ignoreId: any = null): any {
@@ -632,34 +620,35 @@ function getRank(n: any, ignoreId: any = null): any {
     }
 }
 
-function applyMove(event: any) {
+function applyMove(event: MoveInfo) {
     waitingTimeout = setTimeout(() => {
         qs<HTMLElement>('.waiting-message')!.classList.add('visible');
     }, 500);
-    id = event.move_info.moved_node.id;
+    id = event.moved_node.id;
     moveParent = null; moveRank = null;
-    previous_parent = event.move_info.previous_parent;
-    target = event.move_info.target_node;
-    if (event.move_info.position === 'after') {
+    previous_parent = event.previous_parent;
+    target = event.target_node;
+    if (event.position === 'after') {
         if (getId(previous_parent) != getId(target.parent)) moveParent = getId(target.parent);
         moveRank = getRank(target, id) + 1;
-    } else if (event.move_info.position === 'inside') {
+    } else if (event.position === 'inside') {
         if (getId(previous_parent) != getId(target)) {
             moveParent = getId(target);
-            const currentNode = $tree().tree('getNodeById', moveParent);
-            if (currentNode?.load_on_demand && currentNode?.haveChildren) loadOnDemand(currentNode);
+            const currentNode = tree?.getNodeById(moveParent);
+            if (currentNode?.load_on_demand && Array.isArray(currentNode.haveChildren)) loadOnDemand(currentNode);
         }
         moveRank = 1;
-    } else if (event.move_info.position === 'before') {
+    } else if (event.position === 'before') {
         if (getId(previous_parent) != getId(target.parent)) moveParent = getId(target.parent);
         moveRank = 1;
     }
     moveNode(id, moveRank, moveParent).then(() => {
-        event.move_info.do_move();
+        event.do_move();
         clearTimeout(waitingTimeout);
         qs<HTMLElement>('.waiting-message')!.classList.remove('visible');
-        setSubcatsBadge(previous_parent);
-        setSubcatsBadge($tree().tree('getNodeById', moveParent));
+        if (previous_parent) setSubcatsBadge(previous_parent);
+        const newParent = tree?.getNodeById(moveParent);
+        if (newParent) setSubcatsBadge(newParent);
         refreshTipTip();
     }).catch(msg => {
         console.log('An error has occurred: ' + msg);
@@ -682,8 +671,11 @@ function changeParent(n: any, parent: any, rank: any): Promise<void> {
         if (d.stat === 'ok') {
             changeRank(n, rank);
             (d.result.updated_cats ?? []).forEach((cat: any) => {
-                const treeNode = $tree().tree('getNodeById', cat.cat_id);
-                if (treeNode) { treeNode.nb_sub_photos = cat.nb_sub_photos; $tree().tree('updateNode', treeNode, treeNode.name); }
+                const treeNode = tree?.getNodeById(cat.cat_id);
+                if (treeNode) {
+                    treeNode.nb_sub_photos = cat.nb_sub_photos;
+                    tree?.updateNode(treeNode, String(treeNode.name));
+                }
             });
         } else { throw raw; }
     });
@@ -716,19 +708,18 @@ function findAlbumById(a: any, id: any): any {
     return null;
 }
 
-function loadOnDemand(n: any) {
-    const formated = (n.haveChildren ?? []).map((a: any) => {
-        const al = { ...a, children: [] };
+function loadOnDemand(n: TreeNode) {
+    const formated: NodeData[] = (Array.isArray(n.haveChildren) ? n.haveChildren : []).map((a: NodeData) => {
+        const al: NodeData = { ...a, children: [] };
         if (a.children) { al.load_on_demand = true; al.haveChildren = a.children; }
         return al;
     });
-    $tree().tree('loadData', formated, n);
+    tree?.loadData(formated, n);
     n.load_on_demand = false;
 }
 
-function openNodeOnDemand(n: any) {
-    open_nodes = $tree().tree('getState').open_nodes;
-    if (!open_nodes.includes(n)) $tree().tree('openNode', n);
+function openNodeOnDemand(n: TreeNode) {
+    if (tree && !tree.isNodeOpen(n)) tree.openNode(n);
 }
 
 export {};

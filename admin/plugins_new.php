@@ -35,7 +35,7 @@ if (isset($_GET['revision']) and isset($_GET['extension'])) {
     } else {
         check_pwg_token();
 
-        $install_status = $plugins->extract_plugin_files('install', $_GET['revision'], $_GET['extension'], $plugin_id);
+        $install_status = $plugins->extract_plugin_files('install', is_string($_GET['revision'] ?? null) ? $_GET['revision'] : '', is_string($_GET['extension'] ?? null) ? $_GET['extension'] : '', $plugin_id);
 
         redirect($base_url.'&installstatus='.$install_status.'&plugin_id='.$plugin_id);
     }
@@ -54,14 +54,15 @@ if (isset($_GET['installstatus'])) {
             \Piwigo\Core\PageState::current()->addInfo(l10n('Plugin has been successfully copied'));
             \Piwigo\Core\PageState::current()->addInfo('<a href="'. $activate_url . '">' . l10n('Activate it now') . '</a>');
 
-            if (isset($plugins->fs_plugins[$_GET['plugin_id']])) {
+            $getPluginId = is_string($_GET['plugin_id'] ?? null) ? $_GET['plugin_id'] : '';
+            if ($getPluginId !== '' && isset($plugins->fs_plugins[$getPluginId])) {
                 pwg_activity(
                     'system',
                     ACTIVITY_SYSTEM_PLUGIN,
                     'install',
                     [
-                    'plugin_id' => $_GET['plugin_id'],
-                    'version' => $plugins->fs_plugins[$_GET['plugin_id']]['version'],
+                    'plugin_id' => $getPluginId,
+                    'version' => $plugins->fs_plugins[$getPluginId]['version'],
           ]
                 );
             }
@@ -120,17 +121,20 @@ if ($plugins->get_server_plugins(true, $beta_test)) {
     }
 
     foreach ($plugins->server_plugins as $plugin) {
-        $ext_desc = trim((string) $plugin['extension_description'], " \n\r");
+        $ext_desc = trim(is_scalar($plugin['extension_description'] ?? null) ? (string) $plugin['extension_description'] : '', " \n\r");
         [$small_desc] = explode("\n", wordwrap($ext_desc, 200));
 
+        $revisionId = is_scalar($plugin['revision_id'] ?? null) ? (string) $plugin['revision_id'] : '';
+        $extensionId = is_scalar($plugin['extension_id'] ?? null) ? (string) $plugin['extension_id'] : '';
         $url_auto_install = htmlentities($base_url)
-          . '&amp;revision=' . $plugin['revision_id']
-          . '&amp;extension=' . $plugin['extension_id']
+          . '&amp;revision=' . $revisionId
+          . '&amp;extension=' . $extensionId
           . '&amp;pwg_token='.get_pwg_token()
         ;
 
         // get the age of the last revision in days
-        $rev_date = date_create($plugin['revision_date']);
+        $revisionDateRaw = $plugin['revision_date'] ?? null;
+        $rev_date = date_create(is_string($revisionDateRaw) ? $revisionDateRaw : '');
         $now_date = date_create();
         $last_revision_diff = ($rev_date !== false && $now_date !== false) ? date_diff($rev_date, $now_date) : new \DateInterval('P0D');
 
@@ -139,8 +143,9 @@ if ($plugins->get_server_plugins(true, $beta_test)) {
 
         // Check if the current version is in the compatible version (not necessary if we are in beta test)
         if ($beta_test) {
-            foreach ($plugin['compatible_with_versions'] as $vers) {
-                if (get_branch_from_version($vers) == get_branch_from_version(PHPWG_VERSION)) {
+            $compatVersions = is_array($plugin['compatible_with_versions'] ?? null) ? $plugin['compatible_with_versions'] : [];
+            foreach ($compatVersions as $vers) {
+                if (get_branch_from_version(is_string($vers) ? $vers : '') == get_branch_from_version(PHPWG_VERSION)) {
                     $has_compatible_version = true;
                 }
             }
@@ -159,23 +164,24 @@ if ($plugins->get_server_plugins(true, $beta_test)) {
         }
         // Between 6 month and 3 years : certification = 1
 
+        $revDateStr = is_string($revisionDateRaw) ? $revisionDateRaw : null;
         $template->append('plugins', [
-          'ID' => $plugin['extension_id'],
-          'EXT_NAME' => $plugin['extension_name'],
-          'EXT_URL' => PEM_URL.'/extension_view.php?eid='.$plugin['extension_id'],
+          'ID' => $extensionId,
+          'EXT_NAME' => is_scalar($plugin['extension_name'] ?? null) ? $plugin['extension_name'] : '',
+          'EXT_URL' => PEM_URL.'/extension_view.php?eid='.$extensionId,
           'SMALL_DESC' => trim($small_desc, " \r\n"),
           'BIG_DESC' => $ext_desc,
-          'VERSION' => $plugin['revision_name'],
-          'REVISION_DATE' => preg_replace('/[^0-9]/', '', (string) strtotime((string) $plugin['revision_date'])),
-          'REVISION_FORMATED_DATE' => format_date($plugin['revision_date'], ['day','month','year']).', '.time_since($plugin['revision_date'], 'day'),
-          'AUTHOR' => $plugin['author_name'],
+          'VERSION' => is_scalar($plugin['revision_name'] ?? null) ? $plugin['revision_name'] : '',
+          'REVISION_DATE' => preg_replace('/[^0-9]/', '', (string) strtotime($revDateStr ?? '')),
+          'REVISION_FORMATED_DATE' => format_date($revDateStr, ['day','month','year']).', '.time_since($revDateStr, 'day'),
+          'AUTHOR' => is_scalar($plugin['author_name'] ?? null) ? $plugin['author_name'] : '',
           'DOWNLOADS' => $plugin['extension_nb_downloads'] ?? null,
           'URL_INSTALL' => $url_auto_install,
           'CERTIFICATION' => $certification,
           'RATING' => $plugin['rating_score'] ?? null,
           'NB_RATINGS' => $plugin['nb_ratings'] ?? null,
-          'SCREENSHOT' => $plugin['screenshot_url'] ?? '',
-          'TAGS' => $plugin['tags'] ?? [],
+          'SCREENSHOT' => is_scalar($plugin['screenshot_url'] ?? null) ? $plugin['screenshot_url'] : '',
+          'TAGS' => is_array($plugin['tags'] ?? null) ? $plugin['tags'] : [],
         ]);
     }
 

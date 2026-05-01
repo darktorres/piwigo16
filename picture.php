@@ -148,13 +148,16 @@ function default_picture_content(string $content, array $element_info): string
         if ($type == IMG_SQUARE || $type == IMG_THUMB) {
             continue;
         }
-        if (!array_key_exists(is_scalar($type) ? (string) $type : '', ImageStdParams::get_defined_type_map())) {
+        if (!array_key_exists((string) $type, ImageStdParams::get_defined_type_map())) {
             continue;
         }
         if (!($derivative instanceof DerivativeImage)) {
             continue;
         }
         $url = $derivative->get_url();
+        if (!is_string($url)) {
+            continue;
+        }
         if (isset($added[$url])) {
             continue;
         }
@@ -575,11 +578,13 @@ $page['body_id'] = 'thePicturePage';
 // allow plugins to change what we computed before passing data to template
 /** @var array<string, array<string, mixed>> $picture */
 $picture = trigger_change('picture_pictures_data', $picture);
+$currentPic = is_array($picture['current'] ?? null) ? $picture['current'] : [];
+$currentSrcImage = ($currentPic['src_image'] ?? null) instanceof SrcImage ? $currentPic['src_image'] : null;
 
 //------------------------------------------------------- navigation management
 foreach (['first','previous','next','last', 'current'] as $which_image) {
     if (isset($picture[$which_image])) {
-        $imgArr = is_array($picture[$which_image]) ? $picture[$which_image] : [];
+        $imgArr = $picture[$which_image];
         $template->assign(
             $which_image,
             array_merge(
@@ -600,7 +605,6 @@ if (\Piwigo\Core\Config::pictureDownloadIcon() and !empty($picture['current']['d
     $template->append('current', ['U_DOWNLOAD' => $picture['current']['download_url']], true);
 
     if (\Piwigo\Core\Config::isFormatsEnabled()) {
-        $currentPic = is_array($picture['current'] ?? null) ? $picture['current'] : [];
         $query = '
 SELECT *
   FROM '.IMAGE_FORMAT_TABLE.'
@@ -794,12 +798,10 @@ if (!empty($currentPic['author'] ?? null)) {
     $infos['INFO_AUTHOR'] = $currentPic['author'];
 }
 
-$currentPic = is_array($picture['current'] ?? null) ? $picture['current'] : [];
-$currentSrcImage = ($currentPic['src_image'] ?? null) instanceof SrcImage ? $currentPic['src_image'] : null;
-
 // creation date
 if (!empty($currentPic['date_creation'])) {
-    $dateCreation = is_scalar($currentPic['date_creation']) ? $currentPic['date_creation'] : null;
+    $dateCreationRaw = $currentPic['date_creation'];
+    $dateCreation = (is_string($dateCreationRaw) || is_int($dateCreationRaw)) ? $dateCreationRaw : null;
     $val = format_date($dateCreation);
     $url = make_index_url(
         [
@@ -814,7 +816,8 @@ if (!empty($currentPic['date_creation'])) {
 }
 
 // date of availability
-$dateAvailable = is_scalar($currentPic['date_available'] ?? null) ? $currentPic['date_available'] : null;
+$dateAvailableRaw = $currentPic['date_available'] ?? null;
+$dateAvailable = (is_string($dateAvailableRaw) || is_int($dateAvailableRaw)) ? $dateAvailableRaw : null;
 $val = format_date($dateAvailable);
 $url = make_index_url(
     [
@@ -832,7 +835,9 @@ $infos['INFO_POSTED_DATE'] = '<a href="'.$url.'" rel="nofollow">'.$val.'</a>';
 // size in pixels
 if ($currentSrcImage !== null && $currentSrcImage->is_original() and isset($currentPic['width'])) {
     $infos['INFO_DIMENSIONS'] =
-      $currentPic['width'].'*'.$currentPic['height'];
+      (is_scalar($currentPic['width'] ?? null) ? (string) $currentPic['width'] : '')
+      .'*'.
+      (is_scalar($currentPic['height'] ?? null) ? (string) $currentPic['height'] : '');
 }
 
 // filesize
@@ -927,7 +932,7 @@ $nextSrcImage = ($nextPic !== null && ($nextPic['src_image'] ?? null) instanceof
 if ($nextSrcImage !== null
     and $nextSrcImage->is_original()
     and $template->get_template_vars('U_PREFETCH') == null
-    and !str_contains((string) @$_SERVER['HTTP_USER_AGENT'], 'Chrome/')) {
+    and !str_contains(is_scalar($_SERVER['HTTP_USER_AGENT'] ?? null) ? (string) $_SERVER['HTTP_USER_AGENT'] : '', 'Chrome/')) {
     $derivType = pwg_get_session_var('picture_deriv', \Piwigo\Core\Config::derivativeDefaultSize());
     $nextDerivs = is_array($nextPic['derivatives'] ?? null) ? $nextPic['derivatives'] : [];
     $nextDeriv = ($nextDerivs[$derivType] ?? null) instanceof DerivativeImage ? $nextDerivs[$derivType] : null;
@@ -976,5 +981,6 @@ if ($page['slideshow'] and \Piwigo\Core\Config::lightSlideshow()) {
     $template->pparse('picture');
 }
 //------------------------------------------------------------ log informations
-pwg_log(is_scalar($currentPic['id'] ?? null) ? $currentPic['id'] : null, 'picture');
+$picIdRaw = $currentPic['id'] ?? null;
+pwg_log((is_int($picIdRaw) || is_string($picIdRaw)) ? $picIdRaw : null, 'picture');
 include(PHPWG_ROOT_PATH.'include/page_tail.php');

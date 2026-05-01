@@ -12,7 +12,7 @@ class plugins
     public array $fs_plugins = [];
     /** @var array<string, array<string,mixed>> */
     public array $db_plugins_by_id = [];
-    /** @var array<mixed> */
+    /** @var array<int|string, array<string, mixed>> */
     public array $server_plugins = [];
     /** @var string[] */
     public array $default_plugins = ['LocalFilesEditor', 'language_switch', 'TakeATour', 'AdminTools'];

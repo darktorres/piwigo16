@@ -207,13 +207,13 @@ function save_profile_from_post(array $userdata, array &$errors): bool
     if (\Piwigo\Core\Config::allowUserCustomization() or defined('IN_ADMIN')) {
         $int_pattern = '/^\d+$/';
         if (empty($_POST['nb_image_page'])
-            or (!preg_match($int_pattern, (string) $_POST['nb_image_page']))) {
+            or (!preg_match($int_pattern, is_scalar($_POST['nb_image_page'] ?? null) ? (string) $_POST['nb_image_page'] : ''))) {
             $errors[] = l10n('The number of photos per page must be a not null scalar');
         }
 
         // periods must be integer values, they represents number of days
-        if (!preg_match($int_pattern, (string) $_POST['recent_period'])
-            or $_POST['recent_period'] < 0) {
+        if (!preg_match($int_pattern, is_scalar($_POST['recent_period'] ?? null) ? (string) $_POST['recent_period'] : '')
+            or (is_numeric($_POST['recent_period'] ?? null) ? $_POST['recent_period'] : 0) < 0) {
             $errors[] = l10n('Recent period must be a positive integer value') ;
         }
 
@@ -229,7 +229,7 @@ function save_profile_from_post(array $userdata, array &$errors): bool
     if (isset($_POST['mail_address'])) {
         // if $_POST and $userdata have are same email
         // validate_mail_address allows, however, to check email
-        $mail_error = validate_mail_address($userdata['id'], $_POST['mail_address']);
+        $mail_error = validate_mail_address(is_int($userdata['id'] ?? null) ? $userdata['id'] : null, is_string($_POST['mail_address'] ?? null) ? $_POST['mail_address'] : null);
         if (!empty($mail_error)) {
             $errors[] = $mail_error;
         }
@@ -245,7 +245,7 @@ function save_profile_from_post(array $userdata, array &$errors): bool
             $query = '
   SELECT '.\Piwigo\Core\Config::userFields()['password'].' AS password
     FROM '.USERS_TABLE.'
-    WHERE '.\Piwigo\Core\Config::userFields()['id'].' = \''.$userdata['id'].'\'
+    WHERE '.\Piwigo\Core\Config::userFields()['id'].' = \''.(is_scalar($userdata['id'] ?? null) ? (int) $userdata['id'] : 0).'\'
   ;';
             [$current_password] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
@@ -275,12 +275,12 @@ function save_profile_from_post(array $userdata, array &$errors): bool
                 // password is hashed with function \Piwigo\Core\Config::passwordHash()
                 $data[ \Piwigo\Core\Config::userFields()['password'] ] = \Piwigo\Core\Config::passwordHash()($_POST['use_new_pwd']);
 
-                deactivate_user_auth_keys($userdata['id']);
+                deactivate_user_auth_keys(is_numeric($userdata['id'] ?? null) ? (int) $userdata['id'] : 0);
             }
 
             // username is updated only if allowed
             if (!empty($_POST['username'])) {
-                if ($_POST['username'] != $userdata['username'] and get_userid($_POST['username'])) {
+                if ($_POST['username'] != $userdata['username'] and get_userid(is_string($_POST['username'] ?? null) ? $_POST['username'] : '')) {
                     \Piwigo\Core\PageState::current()->addError(l10n('this login is already used'));
                     unset($_POST['redirect']);
                 } else {
@@ -290,7 +290,7 @@ function save_profile_from_post(array $userdata, array &$errors): bool
                     // send email to the user
                     if ($_POST['username'] != $userdata['username']) {
                         include_once(PHPWG_ROOT_PATH.'include/functions_mail.inc.php');
-                        switch_lang_to($userdata['language']);
+                        switch_lang_to(is_string($userdata['language'] ?? null) ? $userdata['language'] : '');
 
                         $keyargs_content = [
                           get_l10n_args('Hello', ''),
@@ -298,7 +298,7 @@ function save_profile_from_post(array $userdata, array &$errors): bool
                           ];
 
                         pwg_mail(
-                            $_POST['mail_address'],
+                            is_string($_POST['mail_address'] ?? null) ? $_POST['mail_address'] : '',
                             [
                             'subject' => '['.\Piwigo\Core\Config::galleryTitle().'] '.l10n('Username modification'),
                             'content' => l10n_args($keyargs_content),
@@ -321,7 +321,7 @@ function save_profile_from_post(array $userdata, array &$errors): bool
             );
 
             if ($_POST['mail_address'] != $userdata['email']) {
-                deactivate_password_reset_key($userdata['id']);
+                deactivate_password_reset_key(is_numeric($userdata['id'] ?? null) ? (int) $userdata['id'] : 0);
             }
 
             $activity_details_tables[] = 'users';
@@ -354,11 +354,12 @@ function save_profile_from_post(array $userdata, array &$errors): bool
 
             $activity_details_tables[] = 'user_infos';
         }
-        trigger_notify('save_profile_from_post', $userdata['id']);
-        pwg_activity('user', $userdata['id'], 'edit', ['function' => __FUNCTION__, 'tables' => implode(',', $activity_details_tables)]);
+        $userId = is_numeric($userdata['id'] ?? null) ? (int) $userdata['id'] : 0;
+        trigger_notify('save_profile_from_post', $userId);
+        pwg_activity('user', $userId, 'edit', ['function' => __FUNCTION__, 'tables' => implode(',', $activity_details_tables)]);
 
         if (!empty($_POST['redirect'])) {
-            redirect($_POST['redirect']);
+            redirect(is_string($_POST['redirect'] ?? null) ? $_POST['redirect'] : get_root_url());
         }
     }
     return true;
@@ -385,7 +386,7 @@ function load_profile_in_template(string $url_action, string $url_redirect, arra
 
     $template->assign(
         [
-        $template_prefixe.'USERNAME' => stripslashes((string) $userdata['username']),
+        $template_prefixe.'USERNAME' => stripslashes(is_scalar($userdata['username'] ?? null) ? (string) $userdata['username'] : ''),
         $template_prefixe.'EMAIL' => @$userdata['email'],
         $template_prefixe.'ALLOW_USER_CUSTOMIZATION' => \Piwigo\Core\Config::allowUserCustomization(),
         $template_prefixe.'ACTIVATE_COMMENTS' => \Piwigo\Core\Config::activateComments(),
@@ -428,7 +429,8 @@ function load_profile_in_template(string $url_action, string $url_redirect, arra
             $has_custom = true;
             continue;
         }
-        $duration[] = 'ADDDATE(NOW(), INTERVAL '.$day.' DAY) as `'.$day.'`';
+        $dayStr = is_scalar($day) ? (string) $day : '0';
+        $duration[] = 'ADDDATE(NOW(), INTERVAL '.$dayStr.' DAY) as `'.$dayStr.'`';
     }
 
     $query = '

@@ -300,6 +300,7 @@ class ScriptLoader
         return self::manifest();
     }
 
+    /** @return array<string, mixed>|null */
     private static function manifest(): ?array
     {
         if (self::$manifest !== null) {

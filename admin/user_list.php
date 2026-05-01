@@ -245,6 +245,7 @@ if (userprefs_get_param('user-manager-view', 'line') == 'line') {
 
 function webmaster_id_is_local(): bool
 {
+    /** @var array<string, mixed> $conf */
     $conf = [];
     include(PHPWG_ROOT_PATH . 'include/config_default.inc.php');
     @include(PHPWG_ROOT_PATH. 'local/config/config.inc.php');

@@ -33,6 +33,9 @@ if (empty($cat_id)) {
 }
 
 $category = get_cat_info((int)$cat_id);
+if ($category === null) {
+    die('Invalid category');
+}
 $page['cat'] = $category['id'];
 
 // +-----------------------------------------------------------------------+

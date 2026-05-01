@@ -127,12 +127,6 @@ parameters:
 			path: admin/include/functions_permalinks.php
 
 		-
-			message: '#^Function add_uploaded_file\(\) should return int but returns float\|int\|string\|null\.$#'
-			identifier: return.type
-			count: 1
-			path: admin/include/functions_upload.inc.php
-
-		-
 			message: '#^Function trigger_change invoked with 3 parameters, 1\-2 required\.$#'
 			identifier: arguments.count
 			count: 1
@@ -152,12 +146,6 @@ parameters:
 
 		-
 			message: '#^Parameter \#1 \$image_filepath of function need_resize expects string, float\|int\|string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: admin/include/functions_upload.inc.php
-
-		-
-			message: '#^Parameter \#1 \$image_id of function add_uploaded_file_add_to_categories expects int, float\|int\|string\|null given\.$#'
 			identifier: argument.type
 			count: 1
 			path: admin/include/functions_upload.inc.php

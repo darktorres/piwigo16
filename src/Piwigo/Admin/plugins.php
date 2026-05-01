@@ -374,7 +374,7 @@ DELETE FROM '. PLUGINS_TABLE .'
     {
         $versions_to_check = [];
         $url = PEM_URL . '/api/get_version_list.php?category_id='. \Piwigo\Core\Config::pemPluginsCategory() .'&format=php';
-        if (fetchRemote($url, $result) and $pem_versions = @unserialize(is_string($result) ? $result : '')) {
+        if (fetchRemote($url, $result) and $pem_versions = @unserialize($result)) {
             if (!is_array($pem_versions)) {
                 return $versions_to_check;
             }
@@ -386,8 +386,8 @@ DELETE FROM '. PLUGINS_TABLE .'
                     $i++;
                     continue;
                 }
-                if (get_branch_from_version(is_scalar($pem_versions[$i]['name'] ?? null) ? (string) $pem_versions[$i]['name'] : '') == get_branch_from_version($version)) {
-                    $versions_to_check[] = is_scalar($pem_versions[$i]['id'] ?? null) ? (string) $pem_versions[$i]['id'] : '';
+                if (get_branch_from_version(is_scalar($pem_versions[$i]['name']) ? (string) $pem_versions[$i]['name'] : '') == get_branch_from_version($version)) {
+                    $versions_to_check[] = is_scalar($pem_versions[$i]['id']) ? (string) $pem_versions[$i]['id'] : '';
                 }
                 $i++;
             }
@@ -407,7 +407,7 @@ DELETE FROM '. PLUGINS_TABLE .'
                             continue;
                         }
                         if ($pem_versions[$i]['id'] != $versions_to_check[0]) {
-                            $versions_to_check[] = (string) $pem_versions[$i]['id'];
+                            $versions_to_check[] = is_scalar($pem_versions[$i]['id']) ? (string) $pem_versions[$i]['id'] : '';
                             $has_found_previous_version = true;
                         }
                         $i++;
@@ -433,7 +433,7 @@ DELETE FROM '. PLUGINS_TABLE .'
         $plugins_to_check = [];
         foreach ($this->fs_plugins as $fs_plugin) {
             if (isset($fs_plugin['extension'])) {
-                $plugins_to_check[] = (string) $fs_plugin['extension'];
+                $plugins_to_check[] = is_scalar($fs_plugin['extension']) ? (string) $fs_plugin['extension'] : '';
             }
         }
 
@@ -456,7 +456,7 @@ DELETE FROM '. PLUGINS_TABLE .'
             }
         }
         if (fetchRemote($url, $result, $get_data)) {
-            $pem_plugins = @unserialize(is_string($result) ? $result : '');
+            $pem_plugins = @unserialize($result);
             if (!is_array($pem_plugins)) {
                 return false;
             }
@@ -491,7 +491,7 @@ DELETE FROM '. PLUGINS_TABLE .'
         $plugins_to_check = [];
         foreach ($this->fs_plugins as $fs_plugin) {
             if (isset($fs_plugin['extension'])) {
-                $plugins_to_check[] = (string) $fs_plugin['extension'];
+                $plugins_to_check[] = is_scalar($fs_plugin['extension']) ? (string) $fs_plugin['extension'] : '';
             }
         }
 
@@ -505,7 +505,7 @@ DELETE FROM '. PLUGINS_TABLE .'
         ];
 
         if (fetchRemote($url, $result, $get_data)) {
-            $pem_plugins = @unserialize(is_string($result) ? $result : '');
+            $pem_plugins = @unserialize($result);
             if (!is_array($pem_plugins)) {
                 return false;
             }
@@ -526,10 +526,13 @@ DELETE FROM '. PLUGINS_TABLE .'
             }
 
             foreach ($this->fs_plugins as $plugin_id => $fs_plugin) {
-                if (isset($fs_plugin['extension'])
-                  and !in_array($plugin_id, $this->default_plugins)
+                $extIdPlug = $fs_plugin['extension'] ?? null;
+                if (!is_string($extIdPlug) && !is_int($extIdPlug)) {
+                    continue;
+                }
+                if (!in_array($plugin_id, $this->default_plugins)
                   and $fs_plugin['version'] != 'auto'
-                  and (!isset($server_plugins[$fs_plugin['extension']]) or !in_array($fs_plugin['version'], $server_plugins[$fs_plugin['extension']]))) {
+                  and (!isset($server_plugins[$extIdPlug]) or !in_array($fs_plugin['version'], $server_plugins[$extIdPlug]))) {
                     $_SESSION['incompatible_plugins'][$plugin_id] = $fs_plugin['version'];
                 }
             }

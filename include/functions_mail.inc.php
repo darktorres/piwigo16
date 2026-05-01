@@ -162,7 +162,7 @@ function get_clean_recipients_list($data): array
         }
     } else {
         $data = explode(',', is_scalar($data) ? (string) $data : '');
-        $data = array_map(fn (mixed $item): array => unformat_email(is_scalar($item) ? (string) $item : ''), $data);
+        $data = array_map(fn (string $item): array => unformat_email($item), $data);
     }
 
     $existing = [];
@@ -623,7 +623,7 @@ function pwg_mail(string|array $to, array $args = [], array $tpl = []): bool
     if (empty($args['subject'])) {
         $args['subject'] = 'Piwigo';
     }
-    $args['subject'] = trim((string) preg_replace('#[\n\r]+#s', '', is_scalar($args['subject'] ?? null) ? (string) $args['subject'] : ''));
+    $args['subject'] = trim((string) preg_replace('#[\n\r]+#s', '', is_scalar($args['subject']) ? (string) $args['subject'] : ''));
     $mail->Subject = $args['subject'];
 
     // Cc
@@ -768,7 +768,7 @@ function pwg_mail(string|array $to, array $args = [], array $tpl = []): bool
             if (isset($tpl['dirname'])) {
                 $template->set_template_dir((is_scalar($tpl['dirname']) ? (string) $tpl['dirname'] : '') .'/'. $content_type);
             }
-            $tplFilename = is_scalar($tpl['filename'] ?? null) ? (string) $tpl['filename'] : '';
+            $tplFilename = is_scalar($tpl['filename']) ? (string) $tpl['filename'] : '';
             if ($template->smarty->templateExists($tplFilename .'.tpl')) {
                 $template->set_filename($tplFilename, $tplFilename .'.tpl');
                 if (!empty($tpl['assign'])) {

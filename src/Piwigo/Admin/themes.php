@@ -23,7 +23,7 @@ class themes
         $this->get_fs_themes();
 
         foreach ($this->get_db_themes() as $db_theme) {
-            if (is_array($db_theme) && isset($db_theme['id'])) {
+            if (isset($db_theme['id'])) {
                 $this->db_themes_by_id[(string) $db_theme['id']] = $db_theme;
             }
         }
@@ -431,12 +431,13 @@ SELECT
         $version = PHPWG_VERSION;
         $versions_to_check = [];
         $url = PEM_URL . '/api/get_version_list.php';
-        if (fetchRemote($url, $result, $get_data) and $pem_versions = @unserialize(is_string($result) ? $result : '')) {
+        if (fetchRemote($url, $result, $get_data) and $pem_versions = @unserialize($result)) {
             if (!is_array($pem_versions)) {
                 return false;
             }
             if (!preg_match('/^\d+\.\d+\.\d+$/', $version)) {
-                $pv0name = is_array($pem_versions[0]) && isset($pem_versions[0]['name']) ? ($pem_versions[0]['name'] ?? null) : null;
+                $pv0 = $pem_versions[0] ?? null;
+                $pv0name = is_array($pv0) && isset($pv0['name']) ? $pv0['name'] : null;
                 $version = is_scalar($pv0name) ? (string) $pv0name : $version;
             }
             $branch = get_branch_from_version($version);
@@ -444,7 +445,7 @@ SELECT
                 if (!is_array($pem_version) || !isset($pem_version['name'], $pem_version['id'])) {
                     continue;
                 }
-                $pvName = $pem_version['name'] ?? null; $pvId = $pem_version['id'] ?? null;
+                $pvName = $pem_version['name']; $pvId = $pem_version['id'];
                 if (str_starts_with(is_scalar($pvName) ? (string) $pvName : '', $branch)) {
                     $versions_to_check[] = is_scalar($pvId) ? (string) $pvId : '';
                 }
@@ -458,8 +459,7 @@ SELECT
         $themes_to_check = [];
         foreach ($this->fs_themes as $fs_theme) {
             if (isset($fs_theme['extension'])) {
-                $extRaw = $fs_theme['extension'] ?? null;
-                $themes_to_check[] = is_scalar($extRaw) ? (string) $extRaw : '';
+                $themes_to_check[] = is_scalar($fs_theme['extension']) ? (string) $fs_theme['extension'] : '';
             }
         }
 
@@ -483,7 +483,7 @@ SELECT
             }
         }
         if (fetchRemote($url, $result, $get_data)) {
-            $pem_themes = @unserialize(is_string($result) ? $result : '');
+            $pem_themes = @unserialize($result);
             if (!is_array($pem_themes)) {
                 return false;
             }

@@ -97,18 +97,19 @@ function save_upload_form_config(array $data, array &$errors = [], array &$form_
               'value' => 'false',
               ];
         } else {
-            $min = $upload_form_config[$field]['min'];
-            $max = $upload_form_config[$field]['max'];
-            $pattern = $upload_form_config[$field]['pattern'];
+            $min = $upload_form_config[$field]['min'] ?? 0;
+            $max = $upload_form_config[$field]['max'] ?? PHP_INT_MAX;
+            $pattern = $upload_form_config[$field]['pattern'] ?? '';
+            $errMsg = $upload_form_config[$field]['error_message'] ?? '%s - %s';
 
-            if (preg_match($pattern, (string) $value) and $value >= $min and $value <= $max) {
+            if (preg_match($pattern, is_scalar($value) ? (string) $value : '') and $value >= $min and $value <= $max) {
                 $updates[] = [
                  'param' => $field,
                  'value' => $value,
                  ];
             } else {
                 $errors[] = sprintf(
-                    $upload_form_config[$field]['error_message'],
+                    $errMsg,
                     $min,
                     $max
                 );
@@ -447,7 +448,8 @@ function add_format(string $source_filepath, string $format_ext, string $format_
         $format_ext_list = ['cr2'];
     }
     if (!in_array($format_ext, $format_ext_list)) {
-        die('['.__FUNCTION__.'] unexpected format extension "'.$format_ext.'" (authorized extensions: '.implode(', ', $format_ext_list).')');
+        $extList = array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '', $format_ext_list);
+        die('['.__FUNCTION__.'] unexpected format extension "'.$format_ext.'" (authorized extensions: '.implode(', ', $extList).')');
     }
 
     $query = '
@@ -968,10 +970,12 @@ function convert_shorthand_notation_to_bytes(int|string $value): int
 
 function add_upload_error(string $upload_id, string $error_message): void
 {
-    if (!is_array($_SESSION['uploads_error'] ?? null)) {
-        $_SESSION['uploads_error'] = [];
+    $uploadsError = is_array($_SESSION['uploads_error'] ?? null) ? $_SESSION['uploads_error'] : [];
+    if (!isset($uploadsError[$upload_id])) {
+        $uploadsError[$upload_id] = [];
     }
-    $_SESSION['uploads_error'][$upload_id][] = $error_message;
+    $uploadsError[$upload_id][] = $error_message;
+    $_SESSION['uploads_error'] = $uploadsError;
 }
 
 function ready_for_upload_message(): ?string
@@ -1013,14 +1017,11 @@ function get_optimal_dimensions_for_representative(): array
 {
     $enabled = ImageStdParams::get_defined_type_map();
     $disabled = safe_unserialize(ImageStdParams::get_disabled_type_map());
-    if ($disabled === false) {
-        $disabled = [];
-    }
 
     $w = $h = 2000; // safe default values
 
     foreach (ImageStdParams::get_all_types() as $type) {
-        $params = $enabled[$type] ?? (is_array($disabled) && isset($disabled[$type]) ? $disabled[$type] : null);
+        $params = $enabled[$type] ?? ($disabled[$type] ?? null);
 
         if ($params instanceof \Piwigo\Image\DerivativeParams) {
             [$w, $h] = $params->sizing->ideal_size;

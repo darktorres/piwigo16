@@ -71,14 +71,19 @@ class BlockManager
     public function prepare_display(): void
     {
         $conf_id = 'blk_'.$this->id;
-        $mb_conf = \Piwigo\Core\Config::get($conf_id) ?? [];
-        if (!is_array($mb_conf)) {
-            $mb_conf = @unserialize($mb_conf);
+        $mb_conf_raw = \Piwigo\Core\Config::get($conf_id);
+        if (is_array($mb_conf_raw)) {
+            $mb_conf = $mb_conf_raw;
+        } elseif (is_string($mb_conf_raw)) {
+            $mb_conf = safe_unserialize($mb_conf_raw);
+        } else {
+            $mb_conf = [];
         }
 
         $idx = 1;
         foreach ($this->registered_blocks as $id => $block) {
-            $pos = $mb_conf[$id] ?? $idx * 50;
+            $stored = $mb_conf[$id] ?? null;
+            $pos = is_int($stored) ? $stored : $idx * 50;
             if ($pos > 0) {
                 $this->display_blocks[$id] = new DisplayBlock($block);
                 $this->display_blocks[$id]->set_position($pos);
@@ -145,7 +150,7 @@ class BlockManager
     /**
      * Callback for blocks sorting.
      */
-    protected static function cmp_by_position(mixed $a, mixed $b): int|float
+    protected static function cmp_by_position(DisplayBlock $a, DisplayBlock $b): int
     {
         return $a->get_position() - $b->get_position();
     }

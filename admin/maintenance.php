@@ -108,7 +108,7 @@ $my_base_url = get_root_url().'admin.php?page=';
 
 if (isset($_GET['tab'])) {
     check_input_parameter('tab', $_GET, false, '/^(actions|env|sys)$/');
-    $page['tab'] = $_GET['tab'];
+    $page['tab'] = is_string($_GET['tab']) ? $_GET['tab'] : 'actions';
 } else {
     $page['tab'] = 'actions';
 }

@@ -28,7 +28,8 @@ class CalendarWeekly extends CalendarBase
             //$week_no_labels[$i] = $i;
         }
 
-        $dayLabels = is_array($lang['day'] ?? null) ? $lang['day'] : [];
+        $langArr = is_array($lang) ? $lang : [];
+        $dayLabels = is_array($langArr['day'] ?? null) ? $langArr['day'] : [];
         $this->calendar_levels = [
           [
               'sql' => pwg_db_get_year($this->date_field),
@@ -62,8 +63,9 @@ class CalendarWeekly extends CalendarBase
     public function generate_category_content(): bool
     {
         $page = &$GLOBALS['page'];
+        $pageArr = is_array($page) ? $page : [];
 
-        $chronologyDate = is_array($page['chronology_date'] ?? null) ? $page['chronology_date'] : [];
+        $chronologyDate = is_array($pageArr['chronology_date'] ?? null) ? $pageArr['chronology_date'] : [];
         if (count($chronologyDate) == 0) {
             $this->build_nav_bar(CYEAR); // years
         }
@@ -85,7 +87,8 @@ class CalendarWeekly extends CalendarBase
     public function get_date_where($max_levels = 3): string
     {
         $page = &$GLOBALS['page'];
-        $date = is_array($page['chronology_date'] ?? null) ? $page['chronology_date'] : [];
+        $pageArr2 = is_array($page) ? $page : [];
+        $date = is_array($pageArr2['chronology_date'] ?? null) ? $pageArr2['chronology_date'] : [];
         while (count($date) > $max_levels) {
             array_pop($date);
         }
@@ -96,11 +99,13 @@ class CalendarWeekly extends CalendarBase
         }
 
         if (isset($date[CWEEK]) and $date[CWEEK] !== 'any') {
-            $cweekSql = is_scalar($this->calendar_levels[CWEEK]['sql'] ?? null) ? (string)$this->calendar_levels[CWEEK]['sql'] : '';
+            $cweekLevel = is_array($this->calendar_levels[CWEEK] ?? null) ? $this->calendar_levels[CWEEK] : [];
+            $cweekSql = is_string($cweekLevel['sql'] ?? null) ? $cweekLevel['sql'] : '';
             $res .= ' AND '.$cweekSql.'='.(is_scalar($date[CWEEK]) ? (string)$date[CWEEK] : '');
         }
         if (isset($date[CDAY]) and $date[CDAY] !== 'any') {
-            $cdaySql = is_scalar($this->calendar_levels[CDAY]['sql'] ?? null) ? (string)$this->calendar_levels[CDAY]['sql'] : '';
+            $cdayLevel = is_array($this->calendar_levels[CDAY] ?? null) ? $this->calendar_levels[CDAY] : [];
+            $cdaySql = is_string($cdayLevel['sql'] ?? null) ? $cdayLevel['sql'] : '';
             $res .= ' AND '.$cdaySql.'='.(is_scalar($date[CDAY]) ? (string)$date[CDAY] : '');
         }
         if (empty($res)) {

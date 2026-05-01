@@ -90,8 +90,9 @@ class ScriptLoader
         }
         if (! isset($this->registered_scripts[$id])) {
             if ($manifest = self::manifest()) {
-                if (isset($manifest[$id])) {
-                    $path = 'dist/' . $manifest[$id]['file'];
+                $entry = $manifest[$id] ?? null;
+                if (is_array($entry) && is_string($entry['file'] ?? null)) {
+                    $path = 'dist/' . $entry['file'];
                     // Do NOT clear $require — required scripts (legacy plugins and other Vite
                     // entries) are not encoded in manifest chunks; they still load separately.
                 }
@@ -111,8 +112,9 @@ class ScriptLoader
             // Re-registration: resolve manifest path so a second combine_script call with
             // a legacy path does not overwrite the already-resolved dist/ path.
             if ($manifest = self::manifest()) {
-                if (isset($manifest[$id])) {
-                    $path = 'dist/' . $manifest[$id]['file'];
+                $entry = $manifest[$id] ?? null;
+                if (is_array($entry) && is_string($entry['file'] ?? null)) {
+                    $path = 'dist/' . $entry['file'];
                 }
             }
             $script = $this->registered_scripts[$id];
@@ -262,7 +264,7 @@ class ScriptLoader
      * @param int $recursion_limiter
      * @return int
      */
-    private function compute_script_topological_order($script_id, int|float $recursion_limiter = 0)
+    private function compute_script_topological_order(string $script_id, int $recursion_limiter = 0): int
     {
         if (!isset($this->registered_scripts[$script_id])) {
             trigger_error("Undefined script $script_id is required by someone", E_USER_WARNING);
@@ -271,27 +273,29 @@ class ScriptLoader
         $recursion_limiter < 5 or fatal_error('combined script circular dependency');
         $script = $this->registered_scripts[$script_id];
         if (isset($script->extra['order'])) {
-            return $script->extra['order'];
+            return is_int($script->extra['order']) ? $script->extra['order'] : 0;
         }
         if (count($script->precedents) == 0) {
-            return ($script->extra['order'] = 0);
+            $script->extra['order'] = 0;
+            return 0;
         }
         $max = 0;
         foreach ($script->precedents as $precedent) {
             $max = max($max, $this->compute_script_topological_order($precedent, $recursion_limiter + 1));
         }
         $max++;
-        return ($script->extra['order'] = $max);
+        $script->extra['order'] = $max;
+        return $max;
     }
 
-    /** @var array<string,array{file:string,imports:string[],css:string[]}>|false|null */
+    /** @var array<string, mixed>|false|null */
     private static array|false|null $manifest = null;
 
     /**
      * Returns the Piwigo manifest (dist/manifest.json) if it exists.
      * Returns null when the file is absent (legacy concat path is used).
      *
-     * @return array<string,array{file:string,imports:string[],css:string[]}>|null
+     * @return array<string, mixed>|null
      */
     public static function getManifest(): ?array
     {
@@ -317,19 +321,21 @@ class ScriptLoader
     /**
      * Callback for scripts sorter.
      */
-    private static function cmp_by_mode_and_order(mixed $s1, mixed $s2): int|float
+    private static function cmp_by_mode_and_order(Script $s1, Script $s2): int
     {
-        $ret = intval($s1->load_mode) - intval($s2->load_mode);
+        $ret = $s1->load_mode - $s2->load_mode;
         if ($ret) {
             return $ret;
         }
 
-        $ret = $s1->extra['order'] - $s2->extra['order'];
+        $order1 = is_int($s1->extra['order'] ?? null) ? $s1->extra['order'] : 0;
+        $order2 = is_int($s2->extra['order'] ?? null) ? $s2->extra['order'] : 0;
+        $ret = $order1 - $order2;
         if ($ret) {
             return $ret;
         }
 
-        if ($s1->extra['order'] == 0 and ($s1->is_remote() xor $s2->is_remote())) {
+        if ($order1 == 0 and ($s1->is_remote() xor $s2->is_remote())) {
             return $s1->is_remote() ? -1 : 1;
         }
         return strcmp((string) $s1->id, (string) $s2->id);

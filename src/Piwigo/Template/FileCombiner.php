@@ -18,7 +18,7 @@ final class FileCombiner
      * @param string $type 'js' or 'css'
      * @param Combinable[] $combinables
      */
-    public function __construct(private $type, private $combinables = [])
+    public function __construct(private string $type, private array $combinables = [])
     {
         $this->is_css = $this->type == 'css';
     }
@@ -81,9 +81,10 @@ final class FileCombiner
             }
 
             $key[] = $combinable->path;
-            $key[] = $combinable->version;
+            $key[] = (string) $combinable->version;
             if (\Piwigo\Core\Config::templateCompileCheck()) {
-                $key[] = filemtime(PHPWG_ROOT_PATH . $combinable->path);
+                $mtime = filemtime(PHPWG_ROOT_PATH . $combinable->path);
+                $key[] = $mtime !== false ? (string) $mtime : '0';
             }
             $pending[] = $combinable;
         }
@@ -97,9 +98,9 @@ final class FileCombiner
      * @param string[] $key
      */
     /**
-     * @param array<mixed> $result
-     * @param array<mixed> $pending
-     * @param array<mixed> $key
+     * @param Combinable[] $result
+     * @param Combinable[] $pending
+     * @param string[] $key
      */
     private function flush_pending(array &$result, array &$pending, array $key, bool $force): void
     {

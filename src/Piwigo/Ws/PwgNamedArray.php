@@ -11,7 +11,7 @@ namespace Piwigo\Ws;
  */
 class PwgNamedArray
 {
-    /** @var array<mixed> */
+    /** @var array<string, int> */
     private array $_xmlAttributes = [];
 
     /**

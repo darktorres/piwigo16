@@ -47,7 +47,8 @@ final class SrcImage
             $repExt = $infos['representative_ext'];
             $this->rel_path = original_to_representative($path, is_scalar($repExt) ? (string) $repExt : '');
         } else {
-            $triggerResult = trigger_change('get_mimetype_location', get_themeconf('mime_icon_dir').$ext.'.png', $ext);
+            $mimeIconDir = get_themeconf('mime_icon_dir');
+            $triggerResult = trigger_change('get_mimetype_location', (is_string($mimeIconDir) ? $mimeIconDir : '').$ext.'.png', $ext);
             $this->rel_path = $triggerResult;
             $this->flags |= self::IS_MIMETYPE;
             if (($size = @getimagesize(PHPWG_ROOT_PATH.$this->rel_path)) === false) {

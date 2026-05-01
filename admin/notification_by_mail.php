@@ -248,9 +248,7 @@ function do_action_send_mail_notification(string $action = 'list_to_send', array
                 // Begin nbm users environment
                 begin_users_env_nbm($is_action_send);
 
-                foreach ($data_users as $nbm_user_raw) {
-                    /** @var array<string, mixed> $nbm_user */
-                    $nbm_user = is_array($nbm_user_raw) ? $nbm_user_raw : [];
+                foreach ($data_users as $nbm_user) {
                     if ((!$is_action_send) and check_sendmail_timeout()) {
                         // Stop fill list on 'list_to_send', if the quota is override
                         \Piwigo\Core\PageState::current()->addInfo($msg_break_timeout);
@@ -271,14 +269,14 @@ function do_action_send_mail_notification(string $action = 'list_to_send', array
 
                         $auth_key = create_user_auth_key(is_numeric($nbm_user['user_id']) ? (int) $nbm_user['user_id'] : 0, is_string($nbm_user['status']) ? $nbm_user['status'] : null);
 
-                        if ($auth_key !== false) {
+                        if (is_array($auth_key) && is_string($auth_key['auth_key'] ?? null)) {
                             $auth = $auth_key['auth_key'];
                             $add_url_params['auth'] = $auth;
                         }
 
                         set_make_full_url();
                         // Fill return list of "treated" check_key for 'send'
-                        $return_list[] = $nbm_user['check_key'];
+                        $return_list[] = (string) $nbm_user['check_key'];
 
                         $last_send = is_string($nbm_user['last_send']) || is_null($nbm_user['last_send']) ? $nbm_user['last_send'] : (string) $nbm_user['last_send'];
                         $dbnow_str = is_scalar($dbnow) ? (string) $dbnow : null;
@@ -426,7 +424,7 @@ function do_action_send_mail_notification(string $action = 'list_to_send', array
 // +-----------------------------------------------------------------------+
 // | Main                                                                  |
 // +-----------------------------------------------------------------------+
-if (!isset($_GET['mode'])) {
+if (!isset($_GET['mode']) || !is_string($_GET['mode'])) {
     $page['mode'] = 'send';
 } else {
     $page['mode'] = $_GET['mode'];
@@ -465,7 +463,7 @@ switch ($page['mode']) {
     case 'param':
         {
             if (isset($_POST['param_submit'])) {
-                $_POST['nbm_send_mail_as'] = strip_tags((string) $_POST['nbm_send_mail_as']);
+                $_POST['nbm_send_mail_as'] = strip_tags(is_scalar($_POST['nbm_send_mail_as'] ?? null) ? (string)$_POST['nbm_send_mail_as'] : '');
 
                 check_input_parameter('nbm_send_html_mail', $_POST, false, '/^(true|false)$/');
                 check_input_parameter('nbm_send_detailed_content', $_POST, false, '/^(true|false)$/');
@@ -496,12 +494,14 @@ switch ($page['mode']) {
     case 'subscribe':
         {
             if (isset($_POST['falsify']) and isset($_POST['cat_true'])) {
-                $check_key_treated = unsubscribe_notification_by_mail(true, $_POST['cat_true']);
+                $cat_true = is_array($_POST['cat_true']) ? array_map('strval', $_POST['cat_true']) : [];
+                $check_key_treated = unsubscribe_notification_by_mail(true, $cat_true);
                 if (do_timeout_treatment('cat_true', $check_key_treated)) {
                     $must_repost = true;
                 }
             } elseif (isset($_POST['trueify']) and isset($_POST['cat_false'])) {
-                $check_key_treated = subscribe_notification_by_mail(true, $_POST['cat_false']);
+                $cat_false = is_array($_POST['cat_false']) ? array_map('strval', $_POST['cat_false']) : [];
+                $check_key_treated = subscribe_notification_by_mail(true, $cat_false);
                 if (do_timeout_treatment('cat_false', $check_key_treated)) {
                     $must_repost = true;
                 }
@@ -512,7 +512,8 @@ switch ($page['mode']) {
     case 'send':
         {
             if (isset($_POST['send_submit']) and isset($_POST['send_selection']) and isset($_POST['send_customize_mail_content'])) {
-                $check_key_treated = do_action_send_mail_notification('send', $_POST['send_selection'], stripslashes((string) $_POST['send_customize_mail_content']));
+                $send_selection = is_array($_POST['send_selection']) ? array_map('strval', $_POST['send_selection']) : [];
+                $check_key_treated = do_action_send_mail_notification('send', $send_selection, stripslashes(is_scalar($_POST['send_customize_mail_content'] ?? null) ? (string)$_POST['send_customize_mail_content'] : ''));
                 if (do_timeout_treatment('send_selection', $check_key_treated)) {
                     $must_repost = true;
                 }
@@ -593,16 +594,19 @@ switch ($page['mode']) {
             $opt_true_selected = [];
             $opt_false = [];
             $opt_false_selected = [];
+            $cat_true_post = is_array($_POST['cat_true'] ?? null) ? array_map('strval', $_POST['cat_true']) : [];
+            $cat_false_post = is_array($_POST['cat_false'] ?? null) ? array_map('strval', $_POST['cat_false']) : [];
             foreach ($data_users as $nbm_user) {
+                $ck = (string) $nbm_user['check_key'];
                 if (get_boolean($nbm_user['enabled'])) {
-                    $opt_true[ $nbm_user['check_key'] ] = stripslashes((string) $nbm_user['username']).'['.$nbm_user['mail_address'].']';
-                    if ((isset($_POST['falsify']) and isset($_POST['cat_true']) and in_array($nbm_user['check_key'], $_POST['cat_true']))) {
-                        $opt_true_selected[] = $nbm_user['check_key'];
+                    $opt_true[$ck] = stripslashes((string) $nbm_user['username']).'['.(string)$nbm_user['mail_address'].']';
+                    if (isset($_POST['falsify']) and in_array($ck, $cat_true_post)) {
+                        $opt_true_selected[] = $ck;
                     }
                 } else {
-                    $opt_false[ $nbm_user['check_key'] ] = stripslashes((string) $nbm_user['username']).'['.$nbm_user['mail_address'].']';
-                    if (isset($_POST['trueify']) and isset($_POST['cat_false']) and in_array($nbm_user['check_key'], $_POST['cat_false'])) {
-                        $opt_false_selected[] = $nbm_user['check_key'];
+                    $opt_false[$ck] = stripslashes((string) $nbm_user['username']).'['.(string)$nbm_user['mail_address'].']';
+                    if (isset($_POST['trueify']) and in_array($ck, $cat_false_post)) {
+                        $opt_false_selected[] = $ck;
                     }
                 }
             }
@@ -629,22 +633,27 @@ switch ($page['mode']) {
                 ? stripslashes((string) $_POST['send_customize_mail_content'])
                 : \Piwigo\Core\Config::nbmComplementaryMailContent();
 
+            $send_sel_post = is_array($_POST['send_selection'] ?? null) ? array_map('strval', $_POST['send_selection']) : [];
             if (count($data_users)) {
-                foreach ($data_users as $nbm_user) {
+                foreach ($data_users as $nbm_user_raw) {
+                    if (!is_array($nbm_user_raw)) {
+                        continue;
+                    }
+                    $checkKey = (string) ($nbm_user_raw['check_key'] ?? '');
                     if (
                         !$must_repost or // Not timeout, normal treatment
-                        in_array($nbm_user['check_key'], $_POST['send_selection'])  // Must be repost, show only user to send
+                        in_array($checkKey, $send_sel_post)  // Must be repost, show only user to send
                     ) {
                         $tpl_var['users'][] =
                           [
-                            'ID' => $nbm_user['check_key'],
+                            'ID' => $checkKey,
                             'CHECKED' =>  ( // not check if not selected,  on init select<all
                                 isset($_POST['send_selection']) and // not init
-                                !in_array($nbm_user['check_key'], $_POST['send_selection']) // not selected
+                                !in_array($checkKey, $send_sel_post) // not selected
                             ) ? '' : 'checked="checked"',
-                            'USERNAME' => stripslashes((string) $nbm_user['username']),
-                            'EMAIL' => $nbm_user['mail_address'],
-                            'LAST_SEND' => $nbm_user['last_send'],
+                            'USERNAME' => stripslashes((string) ($nbm_user_raw['username'] ?? '')),
+                            'EMAIL' => $nbm_user_raw['mail_address'] ?? '',
+                            'LAST_SEND' => $nbm_user_raw['last_send'] ?? null,
                             ];
                     }
                 }

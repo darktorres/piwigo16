@@ -22,7 +22,7 @@ $my_base_url = get_root_url().'admin.php?page=languages';
 
 if (isset($_GET['tab'])) {
     check_input_parameter('tab', $_GET, false, '/^(installed|update|new)$/');
-    $page['tab'] = $_GET['tab'];
+    $page['tab'] = is_string($_GET['tab']) ? $_GET['tab'] : 'installed';
 } else {
     $page['tab'] = 'installed';
 }

@@ -1419,14 +1419,12 @@ final class Config
     /** @return array<string, int> */
     public static function flipPictureExt(): array
     {
-        $v = self::$data['flip_picture_ext'] ?? [];
-        return is_array($v) ? $v : [];
+        return array_flip(self::pictureExtensions());
     }
     /** @return array<string, int> */
     public static function flipFileExt(): array
     {
-        $v = self::$data['flip_file_ext'] ?? [];
-        return is_array($v) ? $v : [];
+        return array_flip(self::fileExtensions());
     }
 
     // ---- Volatile / timestamp cluster -----------------------------------
@@ -1491,7 +1489,6 @@ final class Config
 
     // ---- Cache / misc cluster -------------------------------------------
 
-    /** @return array<mixed> */
     public static function cacheSizes(): ?string
     {
         $v = self::$data['cache_sizes'] ?? null;

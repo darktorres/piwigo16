@@ -22,7 +22,7 @@ if (!\Piwigo\Core\Config::enableExtensionsInstall() and !\Piwigo\Core\Config::en
 $my_base_url = get_root_url().'admin.php?page=updates';
 
 if (isset($_GET['tab'])) {
-    $page['tab'] = $_GET['tab'];
+    $page['tab'] = is_string($_GET['tab']) ? $_GET['tab'] : 'pwg';
 } else {
     $page['tab'] = 'pwg';
 }

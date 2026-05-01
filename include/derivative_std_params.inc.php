@@ -105,9 +105,9 @@ final class ImageStdParams
     }
 
     /**
-     * @return DerivativeParams[]
+     * @return DerivativeParams[]|string
      */
-    public static function get_disabled_type_map()
+    public static function get_disabled_type_map(): array|string
     {
         if (count(self::$disabled_type_map)) {
             return self::$disabled_type_map;
@@ -167,18 +167,22 @@ final class ImageStdParams
     public static function load_from_db(): void
     {
         $arr = @unserialize(\Piwigo\Core\Config::derivatives() ?? '');
-        if (false !== $arr) {
-            self::$type_map = $arr['d'];
-            self::$watermark = @$arr['w'];
-            if (!self::$watermark) {
-                self::$watermark = new \Piwigo\Image\WatermarkParams();
+        if (is_array($arr)) {
+            $typeMapRaw = is_array($arr['d'] ?? null) ? $arr['d'] : [];
+            $typeMap = [];
+            foreach ($typeMapRaw as $k => $v) {
+                if ($v instanceof DerivativeParams) {
+                    $typeMap[$k] = $v;
+                }
             }
-            self::$custom = @$arr['c'];
-            if (!self::$custom) {
-                self::$custom = [];
-            }
-            if (isset($arr['q'])) {
-                self::$quality = $arr['q'];
+            self::$type_map = $typeMap;
+            $w = $arr['w'] ?? null;
+            self::$watermark = $w instanceof \Piwigo\Image\WatermarkParams ? $w : new \Piwigo\Image\WatermarkParams();
+            $c = $arr['c'] ?? null;
+            self::$custom = is_array($c) ? $c : [];
+            $q = $arr['q'] ?? null;
+            if (is_int($q)) {
+                self::$quality = $q;
             }
         } else {
             self::$watermark = new \Piwigo\Image\WatermarkParams();
@@ -186,7 +190,14 @@ final class ImageStdParams
             self::save(false);
         }
 
-        self::$disabled_type_map = safe_unserialize(self::get_disabled_type_map());
+        $rawDisabled = safe_unserialize(self::get_disabled_type_map());
+        $filteredDisabled = [];
+        foreach ($rawDisabled as $k => $v) {
+            if ($v instanceof DerivativeParams) {
+                $filteredDisabled[$k] = $v;
+            }
+        }
+        self::$disabled_type_map = $filteredDisabled;
         if (empty(self::$disabled_type_map)) {
             self::$disabled_type_map = self::get_disabled_default_sizes();
             self::save_disabled();
@@ -247,7 +258,7 @@ final class ImageStdParams
         }
     }
 
-    /** @param array<mixed> $map */
+    /** @param DerivativeParams[] $map */
     public static function set_and_save_disabled(array $map): void
     {
         self::$disabled_type_map = $map;

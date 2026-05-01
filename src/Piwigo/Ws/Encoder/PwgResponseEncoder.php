@@ -69,6 +69,9 @@ abstract class PwgResponseEncoder
             }
         }
 
+        if (!is_array($value)) {
+            return;
+        }
         foreach ($value as $key => &$v) {
             self::flatten($v);
         }

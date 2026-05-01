@@ -27,10 +27,11 @@ check_status(ACCESS_ADMINISTRATOR);
 check_input_parameter('cat_id', $_GET, false, PATTERN_ID);
 check_input_parameter('image_id', $_GET, false, PATTERN_ID);
 
-$admin_photo_base_url = get_root_url().'admin.php?page=photo-'.$_GET['image_id'];
+$image_id_str = is_scalar($_GET['image_id'] ?? null) ? (string)$_GET['image_id'] : '';
+$admin_photo_base_url = get_root_url().'admin.php?page=photo-'.$image_id_str;
 
 // retrieving direct information about picture
-$page['image'] = get_image_infos($_GET['image_id'], true);
+$page['image'] = get_image_infos($image_id_str, true);
 
 if (isset($_GET['cat_id'])) {
     $query = '
@@ -48,7 +49,7 @@ SELECT *
 $page['tab'] = 'properties';
 
 if (isset($_GET['tab'])) {
-    $page['tab'] = $_GET['tab'];
+    $page['tab'] = is_string($_GET['tab']) ? $_GET['tab'] : 'properties';
 }
 
 $tabsheet = new tabsheet();
@@ -58,7 +59,7 @@ $tabsheet->assign();
 
 $template->assign(
     [
-    'ADMIN_PAGE_TITLE' => l10n('Edit photo').' <span class="image-id">#'.$_GET['image_id'].'</span>',
+    'ADMIN_PAGE_TITLE' => l10n('Edit photo').' <span class="image-id">#'.$image_id_str.'</span>',
     ]
 );
 

@@ -21,7 +21,7 @@ global $template, $user, $page, $persistent_cache, $lang;
 $my_base_url = get_root_url().'admin.php?page=plugins';
 
 if (isset($_GET['tab'])) {
-    $page['tab'] = $_GET['tab'];
+    $page['tab'] = is_string($_GET['tab']) ? $_GET['tab'] : 'installed';
 } else {
     $page['tab'] = 'installed';
 }

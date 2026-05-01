@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3f6d8d291039853d265cf49490223a14",
+    "content-hash": "ecd036c4575aa6120c6ca6ce8d704451",
     "packages": [
         {
             "name": "ahand/mobileesp",
@@ -364,6 +364,61 @@
                 "source": "https://github.com/matthiasmullie/path-converter/tree/1.1.3"
             },
             "time": "2019-02-05T23:41:09+00:00"
+        },
+        {
+            "name": "openpsa/universalfeedcreator",
+            "version": "v1.9.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/flack/UniversalFeedCreator.git",
+                "reference": "c55f908e867aa6dade0905b8aefb94fd9d8c1f9e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/flack/UniversalFeedCreator/zipball/c55f908e867aa6dade0905b8aefb94fd9d8c1f9e",
+                "reference": "c55f908e867aa6dade0905b8aefb94fd9d8c1f9e",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.2"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^6.5.14 || ^7.5.20 || ^8.5.32 || ^9.5.10"
+            },
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "lib/constants.php"
+                ],
+                "classmap": [
+                    "lib"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "LGPL-2.1-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "Andreas Flack",
+                    "email": "flack@contentcontrol-berlin.de",
+                    "homepage": "http://www.contentcontrol-berlin.de/"
+                }
+            ],
+            "description": "RSS and Atom feed generator by Kai Blankenhorn",
+            "keywords": [
+                "atom",
+                "georss",
+                "gpx",
+                "opml",
+                "pie",
+                "rss"
+            ],
+            "support": {
+                "issues": "https://github.com/flack/UniversalFeedCreator/issues",
+                "source": "https://github.com/flack/UniversalFeedCreator/tree/v1.9.0"
+            },
+            "time": "2024-02-22T11:08:24+00:00"
         },
         {
             "name": "pclzip/pclzip",

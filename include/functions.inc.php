@@ -685,7 +685,7 @@ function pwg_activity(string $object, array|int|string $object_id, string $actio
  * @param DateTime $date1
  * @param DateTime $date2
  */
-function dateDiff($date1, $date2): \DateInterval|\stdClass
+function dateDiff($date1, $date2): \DateInterval
 {
     return $date1->diff($date2);
 }
@@ -2509,7 +2509,10 @@ SELECT
         $piwigo_infos['general_stats']['nb_activities'] += (int)$activity['counter'];
         $object_key = (string)$activity['object'];
         $action_key = (string)$activity['action'];
-        @$piwigo_infos['activities'][ $object_key ][ $action_key ] = $activity['counter'];
+        if (!isset($piwigo_infos['activities'][$object_key])) {
+            $piwigo_infos['activities'][$object_key] = [];
+        }
+        $piwigo_infos['activities'][$object_key][$action_key] = $activity['counter'];
     }
 
     $label_for_system_object_id = [
@@ -2529,22 +2532,17 @@ SELECT
   GROUP BY object, object_id, action
 ;';
     $activities = query2array($query);
-    if (!isset($piwigo_infos['activities'])) {
-        $piwigo_infos['activities'] = [];
-    }
+    $system_activities = [];
     foreach ($activities as $activity) {
-        $object_key = (string)$activity['object'];
         $object_id_key = (int)$activity['object_id'];
         $action_key = (string)$activity['action'];
-        $label_key = (string) ($label_for_system_object_id[ $object_id_key ] ?? 'undefined');
-        if (!isset($piwigo_infos['activities'][$object_key])) {
-            $piwigo_infos['activities'][$object_key] = [];
+        $label_key = (string) ($label_for_system_object_id[$object_id_key] ?? 'undefined');
+        if (!isset($system_activities[$label_key])) {
+            $system_activities[$label_key] = [];
         }
-        if (!isset($piwigo_infos['activities'][$object_key][$label_key])) {
-            $piwigo_infos['activities'][$object_key][$label_key] = [];
-        }
-        $piwigo_infos['activities'][$object_key][$label_key][$action_key] = $activity['counter'];
+        $system_activities[$label_key][$action_key] = $activity['counter'];
     }
+    $piwigo_infos['activities']['system'] = $system_activities;
 
     $query = '
 SELECT

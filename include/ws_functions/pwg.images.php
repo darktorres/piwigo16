@@ -869,10 +869,7 @@ function ws_images_filteredSearch_create(array $params, \Piwigo\Ws\PwgServer $se
             return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter date_posted_preset');
         }
 
-        if (!isset($search['fields']['date_posted'])) {
-            $search['fields']['date_posted'] = [];
-        }
-        $search['fields']['date_posted']['preset'] = $p_date_posted_preset;
+        $search['fields']['date_posted'] = ['preset' => $p_date_posted_preset];
 
         if ('custom' == $p_date_posted_preset and empty($params['date_posted_custom'])) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'date_posted_custom is missing');

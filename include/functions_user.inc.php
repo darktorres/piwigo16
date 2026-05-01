@@ -1076,7 +1076,6 @@ function pwg_password_hash(string $password): string
  *
  * @param string $password plain text
  * @param string $hash bcrypt or legacy phpass hash
- * @param int|null $user_id provide to trigger automatic rehash upgrade in DB
  * @return bool
  */
 function phpass_verify(string $password, string $hash): bool
@@ -1102,22 +1101,25 @@ function phpass_verify(string $password, string $hash): bool
     $result_chars = '';
     $i = 0;
     do {
-        $value = ord($output_hash[$i++]);
+        $value = ord($output_hash[$i]);
+        $i++;
         $result_chars .= $itoa64[$value & 0x3f];
         if ($i < 16) {
             $value |= ord($output_hash[$i]) << 8;
         }
         $result_chars .= $itoa64[($value >> 6) & 0x3f];
-        if ($i++ >= 16) {
+        if ($i >= 16) {
             break;
         }
+        $i++;
         if ($i < 16) {
             $value |= ord($output_hash[$i]) << 16;
         }
         $result_chars .= $itoa64[($value >> 12) & 0x3f];
-        if ($i++ >= 16) {
+        if ($i >= 16) {
             break;
         }
+        $i++;
         $result_chars .= $itoa64[($value >> 18) & 0x3f];
     } while ($i < 16);
     return $result . $result_chars === $hash;

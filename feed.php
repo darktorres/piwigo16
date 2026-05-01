@@ -83,11 +83,16 @@ SELECT user_id,
 check_status(ACCESS_GUEST);
 
 list($dbnow) = pwg_db_fetch_row(pwg_query('SELECT NOW();')) ?? [null];
-$dbnow = $dbnow ? (string)$dbnow : null;
+$dbnow = $dbnow ? (string)$dbnow : date('Y-m-d H:i:s');
 
 set_make_full_url();
 
-$rss = new UniversalFeedCreator();
+// UniversalFeedCreator::$encoding is protected; subclass widens it.
+class PiwigoFeedCreator extends UniversalFeedCreator {
+    /** @var string */
+    public $encoding = 'UTF-8';
+}
+$rss = new PiwigoFeedCreator();
 $rss->encoding = get_pwg_charset();
 $rss->title = \Piwigo\Core\Config::galleryTitle();
 $rss->title .= ' (as '.stripslashes($user['username']).')';
@@ -134,7 +139,7 @@ UPDATE '.USER_FEED_TABLE.'
 
 if (!empty($feed_id) and empty($news)) {// update the last check from time to time to avoid deletion by maintenance tasks
     if (!isset($feed_row['last_check'])
-      or time() - datetime_to_ts($feed_row['last_check']) > 30 * 24 * 3600) {
+      or time() - datetime_to_ts((string)$feed_row['last_check']) > 30 * 24 * 3600) {
         $query = '
 UPDATE '.USER_FEED_TABLE.'
   SET last_check = '.pwg_db_get_recent_period_expression(-15, $dbnow).'

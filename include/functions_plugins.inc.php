@@ -187,14 +187,15 @@ function remove_event_handler(
  *
  * @since 2.6
  *
- * @param string $event
- * @param mixed $data data to transmit to all handlers
- * @return mixed $data
+ * @param string $event the event name
+ * @param mixed ...$args data to transmit to all handlers; first arg is the main data
+ * @return mixed the modified data
  */
-function trigger_change($event, $data = null)
+function trigger_change(string $event, mixed ...$args): mixed
 {
     global $pwg_event_handlers;
 
+    $data = $args[0] ?? null;
     if (isset($pwg_event_handlers['trigger'])) {// debugging
         trigger_notify(
             'trigger',
@@ -205,8 +206,6 @@ function trigger_change($event, $data = null)
     if (!isset($pwg_event_handlers[$event])) {
         return $data;
     }
-    $args = func_get_args();
-    array_shift($args);
 
     foreach ($pwg_event_handlers[$event] as $priority => $handlers) {
         foreach ($handlers as $handler) {

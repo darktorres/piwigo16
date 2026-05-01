@@ -50,9 +50,9 @@ define('MKGETDIR_DEFAULT', MKGETDIR_RECURSIVE | MKGETDIR_DIE_ON_ERROR | MKGETDIR
 function trigger_notify(string $event, mixed ...$args): void
 {
 }
-function trigger_change(string $event, mixed $data = null): mixed
+function trigger_change(string $event, mixed ...$args): mixed
 {
-    return $data;
+    return $args[0] ?? null;
 }
 function get_extension(string $filename): string
 {

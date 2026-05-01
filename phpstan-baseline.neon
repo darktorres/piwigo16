@@ -1,34 +1,9 @@
 parameters:
 	ignoreErrors:
-		-
-			message: '#^Function trigger_change invoked with 3 parameters, 1\-2 required\.$#'
-			identifier: arguments.count
-			count: 1
-			path: admin/album.php
 
-		-
-			message: '#^Function trigger_change invoked with 3 parameters, 1\-2 required\.$#'
-			identifier: arguments.count
-			count: 3
-			path: admin/album_notification.php
 
-		-
-			message: '#^Function trigger_change invoked with 3 parameters, 1\-2 required\.$#'
-			identifier: arguments.count
-			count: 2
-			path: admin/albums.php
 
-		-
-			message: '#^Function trigger_change invoked with 3 parameters, 1\-2 required\.$#'
-			identifier: arguments.count
-			count: 3
-			path: admin/batch_manager.php
 
-		-
-			message: '#^Function trigger_change invoked with 3 parameters, 1\-2 required\.$#'
-			identifier: arguments.count
-			count: 1
-			path: admin/cat_list.php
 
 		-
 			message: '#^Possibly invalid array key type float\|int\|string\|null\.$#'
@@ -96,11 +71,6 @@ parameters:
 			count: 1
 			path: admin/include/functions.php
 
-		-
-			message: '#^Function trigger_change invoked with 3 parameters, 1\-2 required\.$#'
-			identifier: arguments.count
-			count: 3
-			path: admin/include/functions.php
 
 		-
 			message: '#^Parameter \#1 \$filename of function file_exists expects string, float\|int\|string\|null given\.$#'
@@ -126,11 +96,6 @@ parameters:
 			count: 1
 			path: admin/include/functions_permalinks.php
 
-		-
-			message: '#^Function trigger_change invoked with 3 parameters, 1\-2 required\.$#'
-			identifier: arguments.count
-			count: 1
-			path: admin/include/functions_upload.inc.php
 
 		-
 			message: '#^Parameter \#1 \$destination_filepath of method Piwigo\\Admin\\Image\\pwg_image\:\:pwg_resize\(\) expects string, float\|int\|string given\.$#'
@@ -210,11 +175,6 @@ parameters:
 			count: 1
 			path: admin/maintenance_sys.php
 
-		-
-			message: '#^Function trigger_change invoked with 3 parameters, 1\-2 required\.$#'
-			identifier: arguments.count
-			count: 1
-			path: admin/notification_by_mail.php
 
 		-
 			message: '#^Parameter \#1 \$param of function conf_update_param expects string, float\|int\|string\|null given\.$#'
@@ -276,11 +236,6 @@ parameters:
 			count: 1
 			path: admin/picture_modify.php
 
-		-
-			message: '#^Function trigger_change invoked with 3 parameters, 1\-2 required\.$#'
-			identifier: arguments.count
-			count: 1
-			path: admin/popuphelp.php
 
 		-
 			message: '#^Parameter \#2 \$nb_element of function create_navigation_bar expects int, float\|int\|string\|null given\.$#'
@@ -330,11 +285,6 @@ parameters:
 			count: 16
 			path: admin/rating_user.php
 
-		-
-			message: '#^Function trigger_change invoked with 4 parameters, 1\-2 required\.$#'
-			identifier: arguments.count
-			count: 1
-			path: admin/site_manager.php
 
 		-
 			message: '#^Offset float\|int\|string\|null might not exist on array\<string, array\<string, float\|int\|string\|null\>\>\.$#'
@@ -354,11 +304,6 @@ parameters:
 			count: 2
 			path: admin/site_manager.php
 
-		-
-			message: '#^Function trigger_change invoked with 3 parameters, 1\-2 required\.$#'
-			identifier: arguments.count
-			count: 3
-			path: admin/tags.php
 
 		-
 			message: '#^Parameter \#3 \$subject of function str_replace expects array\<string\>\|string, float\|int\|string\|null given\.$#'
@@ -510,17 +455,7 @@ parameters:
 			count: 1
 			path: feed.php
 
-		-
-			message: '#^Function trigger_change invoked with 3 parameters, 1\-2 required\.$#'
-			identifier: arguments.count
-			count: 2
-			path: include/category_cats.inc.php
 
-		-
-			message: '#^Function trigger_change invoked with 3 parameters, 1\-2 required\.$#'
-			identifier: arguments.count
-			count: 1
-			path: include/category_default.inc.php
 
 		-
 			message: '#^Possibly invalid array key type float\|int\|string\|null\.$#'
@@ -534,11 +469,6 @@ parameters:
 			count: 1
 			path: include/functions.inc.php
 
-		-
-			message: '#^Function trigger_change invoked with 4 parameters, 1\-2 required\.$#'
-			identifier: arguments.count
-			count: 1
-			path: include/functions.inc.php
 
 		-
 			message: '#^Possibly invalid array key type float\|int\|string\|null\.$#'
@@ -546,29 +476,9 @@ parameters:
 			count: 5
 			path: include/functions.inc.php
 
-		-
-			message: '#^Function trigger_change invoked with 3 parameters, 1\-2 required\.$#'
-			identifier: arguments.count
-			count: 3
-			path: include/functions_category.inc.php
 
-		-
-			message: '#^Function trigger_change invoked with 4 parameters, 1\-2 required\.$#'
-			identifier: arguments.count
-			count: 1
-			path: include/functions_category.inc.php
 
-		-
-			message: '#^Function trigger_change invoked with 3 parameters, 1\-2 required\.$#'
-			identifier: arguments.count
-			count: 2
-			path: include/functions_comment.inc.php
 
-		-
-			message: '#^Function trigger_change invoked with 3 parameters, 1\-2 required\.$#'
-			identifier: arguments.count
-			count: 5
-			path: include/functions_html.inc.php
 
 		-
 			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
@@ -576,11 +486,6 @@ parameters:
 			count: 1
 			path: include/functions_mail.inc.php
 
-		-
-			message: '#^Function trigger_change invoked with 5 parameters, 1\-2 required\.$#'
-			identifier: arguments.count
-			count: 1
-			path: include/functions_mail.inc.php
 
 		-
 			message: '#^Parameter \#1 \$unprocessedHtml of static method Pelago\\Emogrifier\\HtmlProcessor\\AbstractHtmlProcessor\:\:fromHtml\(\) expects non\-empty\-string, string given\.$#'
@@ -588,11 +493,6 @@ parameters:
 			count: 1
 			path: include/functions_mail.inc.php
 
-		-
-			message: '#^Function trigger_change invoked with 4 parameters, 1\-2 required\.$#'
-			identifier: arguments.count
-			count: 2
-			path: include/functions_metadata.inc.php
 
 		-
 			message: '#^Cannot cast float\|int\|list\<array\<string, float\|int\|string\|null\>\>\|string\|null to string\.$#'
@@ -600,23 +500,8 @@ parameters:
 			count: 1
 			path: include/functions_notification.inc.php
 
-		-
-			message: '#^Function trigger_change invoked with 3 parameters, 1\-2 required\.$#'
-			identifier: arguments.count
-			count: 1
-			path: include/functions_rate.inc.php
 
-		-
-			message: '#^Function trigger_change invoked with 3 parameters, 1\-2 required\.$#'
-			identifier: arguments.count
-			count: 2
-			path: include/functions_search.inc.php
 
-		-
-			message: '#^Function trigger_change invoked with 4 parameters, 1\-2 required\.$#'
-			identifier: arguments.count
-			count: 2
-			path: include/functions_search.inc.php
 
 		-
 			message: '#^Function pwg_session_read\(\) should return string but returns float\|int\|string\|null\.$#'
@@ -624,29 +509,9 @@ parameters:
 			count: 1
 			path: include/functions_session.inc.php
 
-		-
-			message: '#^Function trigger_change invoked with 3 parameters, 1\-2 required\.$#'
-			identifier: arguments.count
-			count: 3
-			path: include/functions_tag.inc.php
 
-		-
-			message: '#^Function trigger_change invoked with 3 parameters, 1\-2 required\.$#'
-			identifier: arguments.count
-			count: 1
-			path: include/functions_user.inc.php
 
-		-
-			message: '#^Function trigger_change invoked with 4 parameters, 1\-2 required\.$#'
-			identifier: arguments.count
-			count: 1
-			path: include/functions_user.inc.php
 
-		-
-			message: '#^Function trigger_change invoked with 5 parameters, 1\-2 required\.$#'
-			identifier: arguments.count
-			count: 1
-			path: include/functions_user.inc.php
 
 		-
 			message: '#^Method PasswordHash\:\:CheckPassword\(\) has no return type specified\.$#'
@@ -3486,29 +3351,9 @@ parameters:
 			count: 1
 			path: include/phpqrcode.php
 
-		-
-			message: '#^Function trigger_change invoked with 3 parameters, 1\-2 required\.$#'
-			identifier: arguments.count
-			count: 1
-			path: include/section_init.inc.php
 
-		-
-			message: '#^Function trigger_change invoked with 3 parameters, 1\-2 required\.$#'
-			identifier: arguments.count
-			count: 1
-			path: include/selected_tags.inc.php
 
-		-
-			message: '#^Function trigger_change invoked with 4 parameters, 1\-2 required\.$#'
-			identifier: arguments.count
-			count: 1
-			path: include/ws_core.inc.php
 
-		-
-			message: '#^Function trigger_change invoked with 3 parameters, 1\-2 required\.$#'
-			identifier: arguments.count
-			count: 7
-			path: include/ws_functions/pwg.categories.php
 
 		-
 			message: '#^Binary operation "\+" between float\|int\|string and int results in an error\.$#'
@@ -3534,11 +3379,6 @@ parameters:
 			count: 1
 			path: include/ws_functions/pwg.images.php
 
-		-
-			message: '#^Function trigger_change invoked with 3 parameters, 1\-2 required\.$#'
-			identifier: arguments.count
-			count: 5
-			path: include/ws_functions/pwg.images.php
 
 		-
 			message: '#^Offset ''date_posted'' on non\-empty\-array\{allwords\?\: array\{mode\: string, fields\: array\<mixed\>, words\: array\|null\}, tags\?\: array\{words\: array\<mixed\>, mode\: string\}, cat\?\: array\{words\: array\<mixed\>, sub_inc\: mixed\}, author\?\: array\{words\: list\<string\>, mode\: ''OR''\}, filetypes\?\: array\<mixed\>, added_by\?\: array\<mixed\>\} in isset\(\) does not exist\.$#'
@@ -3564,23 +3404,8 @@ parameters:
 			count: 9
 			path: include/ws_functions/pwg.permissions.php
 
-		-
-			message: '#^Function trigger_change invoked with 3 parameters, 1\-2 required\.$#'
-			identifier: arguments.count
-			count: 1
-			path: include/ws_functions/pwg.php
 
-		-
-			message: '#^Function trigger_change invoked with 4 parameters, 1\-2 required\.$#'
-			identifier: arguments.count
-			count: 1
-			path: include/ws_functions/pwg.php
 
-		-
-			message: '#^Function trigger_change invoked with 3 parameters, 1\-2 required\.$#'
-			identifier: arguments.count
-			count: 4
-			path: include/ws_functions/pwg.tags.php
 
 		-
 			message: '#^PHPDoc tag @var with type array\<string, mixed\> is not subtype of native type non\-empty\-array\<int, non\-empty\-array\>\.$#'
@@ -3618,11 +3443,6 @@ parameters:
 			count: 1
 			path: picture.php
 
-		-
-			message: '#^Function trigger_change invoked with 3 parameters, 1\-2 required\.$#'
-			identifier: arguments.count
-			count: 4
-			path: picture.php
 
 		-
 			message: '#^Parameter \#1 \$filename of function get_extension expects string, array\<mixed\>\|float\|int\|Piwigo\\Image\\SrcImage\|string\|null given\.$#'
@@ -3648,11 +3468,6 @@ parameters:
 			count: 1
 			path: src/Piwigo/Admin/Integrity/c13y_internal.php
 
-		-
-			message: '#^Function trigger_change invoked with 3 parameters, 1\-2 required\.$#'
-			identifier: arguments.count
-			count: 1
-			path: src/Piwigo/Admin/tabsheet.php
 
 		-
 			message: '#^Method Piwigo\\Admin\\themes\:\:perform_action\(\) should return list\<mixed\> but returns array\<mixed\>\.$#'
@@ -3666,11 +3481,6 @@ parameters:
 			count: 1
 			path: src/Piwigo/Calendar/CalendarWeekly.php
 
-		-
-			message: '#^Function trigger_change invoked with 5 parameters, 1\-2 required\.$#'
-			identifier: arguments.count
-			count: 2
-			path: src/Piwigo/Image/DerivativeImage.php
 
 		-
 			message: '#^PHPDoc tag @var with type array\<string\>\|string is not subtype of native type list\<mixed\>\|string\.$#'
@@ -3684,17 +3494,7 @@ parameters:
 			count: 1
 			path: src/Piwigo/Image/DerivativeImage.php
 
-		-
-			message: '#^Function trigger_change invoked with 3 parameters, 1\-2 required\.$#'
-			identifier: arguments.count
-			count: 2
-			path: src/Piwigo/Image/SrcImage.php
 
-		-
-			message: '#^Function trigger_change invoked with 3 parameters, 1\-2 required\.$#'
-			identifier: arguments.count
-			count: 2
-			path: src/Piwigo/Template/Template.php
 
 		-
 			message: '#^Property Piwigo\\Ws\\PwgNamedArray\:\:\$_itemName is never read, only written\.$#'
@@ -3714,11 +3514,6 @@ parameters:
 			count: 1
 			path: src/Piwigo/Ws/PwgNamedStruct.php
 
-		-
-			message: '#^Function trigger_change invoked with 4 parameters, 1\-2 required\.$#'
-			identifier: arguments.count
-			count: 1
-			path: src/Piwigo/Ws/PwgServer.php
 
 		-
 			message: '#^Function get_columns_of\(\) should return array\<string, array\<string\>\> but returns array\<string, list\<float\|int\|string\|null\>\>\.$#'

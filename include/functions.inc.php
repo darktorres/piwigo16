@@ -2368,7 +2368,7 @@ SELECT
         foreach ($pem_extensions as $eid => $ext) {
             if (is_array($ext) && !empty($ext['archive_root_dir'])) {
                 $idxCat = $ext['idx_category'] ?? null;
-                $archiveDir = $ext['archive_root_dir'] ?? null;
+                $archiveDir = $ext['archive_root_dir'];
                 if (is_string($idxCat) || is_int($idxCat)) {
                     @$official_exts[$idxCat][is_string($archiveDir) ? $archiveDir : ''] = $eid;
                 }
@@ -2386,9 +2386,6 @@ SELECT
     $piwigo_infos['general_stats']['nb_private_plugins'] = 0;
     $piwigo_infos['plugins'] = [];
     foreach ($plugins->db_plugins_by_id as $plugin) {
-        if (!is_array($plugin)) {
-            continue;
-        }
         $pluginId = is_string($plugin['id'] ?? null) ? $plugin['id'] : '';
         $pluginState = is_string($plugin['state'] ?? null) ? $plugin['state'] : '';
         $pluginVersion = is_string($plugin['version'] ?? null) ? $plugin['version'] : '';
@@ -2428,9 +2425,6 @@ SELECT
     $piwigo_infos['themes'] = [];
     $private_themes = [];
     foreach ($themes->db_themes_by_id as $theme) {
-        if (!is_array($theme)) {
-            continue;
-        }
         $themeId = is_string($theme['id'] ?? null) ? $theme['id'] : '';
         $themeVersion = is_string($theme['version'] ?? null) ? $theme['version'] : '';
         $eid = null;

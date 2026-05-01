@@ -102,12 +102,13 @@ function ierror(string $msg, int $code): never
         exit;
     }
     if ($code >= 400) {
-        $protocol = $_SERVER['SERVER_PROTOCOL'];
+        $protocolRaw = $_SERVER['SERVER_PROTOCOL'] ?? 'HTTP/1.0';
+        $protocol = is_string($protocolRaw) ? $protocolRaw : 'HTTP/1.0';
         if (('HTTP/1.1' != $protocol) && ('HTTP/1.0' != $protocol)) {
             $protocol = 'HTTP/1.0';
         }
 
-        header("$protocol $code $msg", true, $code);
+        header($protocol.' '.$code.' '.$msg, true, $code);
     }
     //todo improve
     echo $msg;
@@ -171,12 +172,12 @@ function parse_request(): void
 
     if (\Piwigo\Core\Config::questionMarkInUrls() == false and
          isset($_SERVER['PATH_INFO']) and !empty($_SERVER['PATH_INFO'])) {
-        $req = $_SERVER['PATH_INFO'];
+        $req = is_scalar($_SERVER['PATH_INFO'] ?? null) ? (string) $_SERVER['PATH_INFO'] : '';
         $req = str_replace('//', '/', $req);
         $path_count = count(explode('/', $req));
         $page['root_path'] = PHPWG_ROOT_PATH.str_repeat('../', $path_count - 1);
     } else {
-        $req = $_SERVER['QUERY_STRING'];
+        $req = is_scalar($_SERVER['QUERY_STRING'] ?? null) ? (string) $_SERVER['QUERY_STRING'] : '';
         if ($pos = strpos($req, '&')) {
             $req = substr($req, 0, $pos);
         }
@@ -370,6 +371,10 @@ function send_derivative(int|false $expires): void
     fclose($fp);
 }
 
+/**
+ * @param array<mixed>|string $value
+ * @return array<mixed>
+ */
 function safe_unserialize(array|string $value): array
 {
     if (is_string($value)) {
@@ -423,9 +428,13 @@ SELECT param, value
 ;';
 
 $result = pwg_query($query);
+$confPatch = is_array($GLOBALS['conf']) ? $GLOBALS['conf'] : [];
 while ($row = pwg_db_fetch_assoc($result)) {
-    $GLOBALS['conf'][$row['param']] = $row['value'];
+    if (is_string($row['param'] ?? null)) {
+        $confPatch[$row['param']] = $row['value'];
+    }
 }
+$GLOBALS['conf'] = $confPatch;
 ImageStdParams::load_from_db();
 
 
@@ -433,7 +442,10 @@ parse_request();
 //var_export($page);
 
 // parse_request() sets $page['derivative_params'] to a DerivativeParams instance
-$params = trigger_change('derivative_params_get', $page['derivative_params']);
+$dpRaw = $page['derivative_params'];
+$params = ($dpRaw instanceof \Piwigo\Image\DerivativeParams)
+    ? trigger_change('derivative_params_get', $dpRaw)
+    : null;
 if (!($params instanceof \Piwigo\Image\DerivativeParams)) {
     ierror('Invalid derivative params', 400);
 }

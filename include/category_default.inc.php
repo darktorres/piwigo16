@@ -105,12 +105,12 @@ foreach ($pictures as $row) {
       'URL' => $url,
       'DESCRIPTION' => $desc,
       'src_image' => new SrcImage($row),
-      'path_ext' => strtolower(get_extension($row['path'])),
-      'file_ext' => strtolower(get_extension($row['file'])),
+      'path_ext' => strtolower(get_extension(is_string($row['path'] ?? null) ? $row['path'] : '')),
+      'file_ext' => strtolower(get_extension(is_string($row['file'] ?? null) ? $row['file'] : '')),
       ]);
 
     if (\Piwigo\Core\Config::indexNewIcon()) {
-        $tpl_var['icon_ts'] = get_icon($row['date_available']);
+        $tpl_var['icon_ts'] = get_icon(is_string($row['date_available'] ?? null) ? $row['date_available'] : null);
     }
 
     if ($user['show_nb_hits']) {

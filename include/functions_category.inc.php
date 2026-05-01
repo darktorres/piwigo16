@@ -419,7 +419,7 @@ function get_display_images_count($cat_nb_images, $cat_count_images, $cat_count_
  * @param bool $recursive
  * @return int|null
  */
-/** @param array<string, float|int|string|null> $category */
+/** @param array<string, bool|float|int|string|null> $category */
 function get_random_image_in_category(array $category, bool $recursive = true): ?int
 {
     $image_id = null;

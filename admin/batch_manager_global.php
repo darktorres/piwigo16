@@ -167,7 +167,7 @@ DELETE
         if (empty($_POST['associate'])) {
             \Piwigo\Core\PageState::current()->addError(l10n('Select at least one album'));
         } else {
-            $associate_raw = is_array($_POST['associate']) ? $_POST['associate'] : [];
+            $associate_raw = is_array($_POST['associate']) ? array_map('intval', $_POST['associate']) : [];
             associate_images_to_categories(
                 $collection_int,
                 $associate_raw

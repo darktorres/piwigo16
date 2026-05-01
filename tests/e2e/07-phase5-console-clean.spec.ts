@@ -6,30 +6,31 @@
 
 import { test, expect } from '@playwright/test';
 import { loginAsAdmin, attachErrorCollector } from './helpers/admin-login';
+import { pwgUrl } from './helpers/url';
 
 // ── Gallery routes ──────────────────────────────────────────────────────────
 
 test('gallery home — no JS errors', async ({ page }) => {
     const getErrors = attachErrorCollector(page);
-    await page.goto('/index.php');
+    await page.goto(pwgUrl('/index.php'));
     expect(getErrors(), `pageerrors: ${getErrors().map((e) => e.message).join('; ')}`).toHaveLength(0);
 });
 
 test('identification page — no JS errors', async ({ page }) => {
     const getErrors = attachErrorCollector(page);
-    await page.goto('/identification.php');
+    await page.goto(pwgUrl('/identification.php'));
     expect(getErrors(), `pageerrors: ${getErrors().map((e) => e.message).join('; ')}`).toHaveLength(0);
 });
 
 test('search page — no JS errors', async ({ page }) => {
     const getErrors = attachErrorCollector(page);
-    await page.goto('/search.php');
+    await page.goto(pwgUrl('/search.php'));
     expect(getErrors(), `pageerrors: ${getErrors().map((e) => e.message).join('; ')}`).toHaveLength(0);
 });
 
 test('tags page — no JS errors', async ({ page }) => {
     const getErrors = attachErrorCollector(page);
-    await page.goto('/tags.php');
+    await page.goto(pwgUrl('/tags.php'));
     expect(getErrors(), `pageerrors: ${getErrors().map((e) => e.message).join('; ')}`).toHaveLength(0);
 });
 
@@ -38,70 +39,70 @@ test('tags page — no JS errors', async ({ page }) => {
 test('admin dashboard — no JS errors', async ({ page }) => {
     const getErrors = attachErrorCollector(page);
     await loginAsAdmin(page);
-    await page.goto('/admin.php');
+    await page.goto(pwgUrl('/admin.php'));
     expect(getErrors(), `pageerrors: ${getErrors().map((e) => e.message).join('; ')}`).toHaveLength(0);
 });
 
 test('admin albums — no JS errors', async ({ page }) => {
     const getErrors = attachErrorCollector(page);
     await loginAsAdmin(page);
-    await page.goto('/admin.php?page=albums');
+    await page.goto(pwgUrl('/admin.php?page=albums'));
     expect(getErrors(), `pageerrors: ${getErrors().map((e) => e.message).join('; ')}`).toHaveLength(0);
 });
 
 test('admin batch manager global — no JS errors', async ({ page }) => {
     const getErrors = attachErrorCollector(page);
     await loginAsAdmin(page);
-    await page.goto('/admin.php?page=batch_manager&filter=all');
+    await page.goto(pwgUrl('/admin.php?page=batch_manager&filter=all'));
     expect(getErrors(), `pageerrors: ${getErrors().map((e) => e.message).join('; ')}`).toHaveLength(0);
 });
 
 test('admin photos_add_direct — no JS errors', async ({ page }) => {
     const getErrors = attachErrorCollector(page);
     await loginAsAdmin(page);
-    await page.goto('/admin.php?page=photos_add&section=direct');
+    await page.goto(pwgUrl('/admin.php?page=photos_add&section=direct'));
     expect(getErrors(), `pageerrors: ${getErrors().map((e) => e.message).join('; ')}`).toHaveLength(0);
 });
 
 test('admin configuration — no JS errors', async ({ page }) => {
     const getErrors = attachErrorCollector(page);
     await loginAsAdmin(page);
-    await page.goto('/admin.php?page=configuration');
+    await page.goto(pwgUrl('/admin.php?page=configuration'));
     expect(getErrors(), `pageerrors: ${getErrors().map((e) => e.message).join('; ')}`).toHaveLength(0);
 });
 
 test('admin history — no JS errors', async ({ page }) => {
     const getErrors = attachErrorCollector(page);
     await loginAsAdmin(page);
-    await page.goto('/admin.php?page=history');
+    await page.goto(pwgUrl('/admin.php?page=history'));
     expect(getErrors(), `pageerrors: ${getErrors().map((e) => e.message).join('; ')}`).toHaveLength(0);
 });
 
 test('admin plugins installed — no JS errors', async ({ page }) => {
     const getErrors = attachErrorCollector(page);
     await loginAsAdmin(page);
-    await page.goto('/admin.php?page=plugins');
+    await page.goto(pwgUrl('/admin.php?page=plugins'));
     expect(getErrors(), `pageerrors: ${getErrors().map((e) => e.message).join('; ')}`).toHaveLength(0);
 });
 
 test('admin languages — no JS errors', async ({ page }) => {
     const getErrors = attachErrorCollector(page);
     await loginAsAdmin(page);
-    await page.goto('/admin.php?page=languages');
+    await page.goto(pwgUrl('/admin.php?page=languages'));
     expect(getErrors(), `pageerrors: ${getErrors().map((e) => e.message).join('; ')}`).toHaveLength(0);
 });
 
 test('admin themes — no JS errors', async ({ page }) => {
     const getErrors = attachErrorCollector(page);
     await loginAsAdmin(page);
-    await page.goto('/admin.php?page=themes');
+    await page.goto(pwgUrl('/admin.php?page=themes'));
     expect(getErrors(), `pageerrors: ${getErrors().map((e) => e.message).join('; ')}`).toHaveLength(0);
 });
 
 test('admin maintenance — no JS errors', async ({ page }) => {
     const getErrors = attachErrorCollector(page);
     await loginAsAdmin(page);
-    await page.goto('/admin.php?page=maintenance');
+    await page.goto(pwgUrl('/admin.php?page=maintenance'));
     expect(getErrors(), `pageerrors: ${getErrors().map((e) => e.message).join('; ')}`).toHaveLength(0);
 });
 
@@ -114,7 +115,7 @@ test('gallery home loads hashed dist script URL', async ({ page }) => {
     });
     // ?no_photo_yet=browse bypasses the "no photos yet" splash page and
     // loads the standard gallery template (which includes Vite-built scripts).
-    await page.goto('/index.php?no_photo_yet=browse');
+    await page.goto(pwgUrl('/index.php?no_photo_yet=browse'));
     // Scripts may be served directly from dist/assets/ or combined by FileCombiner
     // into _data/combined/. Either way the Vite manifest is being used.
     const viteUrls = scriptUrls.filter((u) =>

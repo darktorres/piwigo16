@@ -8,11 +8,12 @@
  */
 
 import { test, expect } from '@playwright/test';
+import { pwgUrl } from './helpers/url';
 
 const REMEMBER_COOKIE = 'pwg_remember';
 
 test('login with remember-me sets the remember cookie', async ({ page, context }) => {
-    await page.goto('/identification.php');
+    await page.goto(pwgUrl('/identification.php'));
     await page.fill('input[name="username"]', 'admin');
     await page.fill('input[name="password"]', 'p4ssword!');
     await page.check('input[name="remember_me"]');
@@ -26,7 +27,7 @@ test('login with remember-me sets the remember cookie', async ({ page, context }
 });
 
 test('login without remember-me does not set the remember cookie', async ({ page, context }) => {
-    await page.goto('/identification.php');
+    await page.goto(pwgUrl('/identification.php'));
     await page.fill('input[name="username"]', 'admin');
     await page.fill('input[name="password"]', 'p4ssword!');
     // leave remember_me unchecked
@@ -40,7 +41,7 @@ test('login without remember-me does not set the remember cookie', async ({ page
 
 test('logout clears the remember cookie', async ({ page, context }) => {
     // Log in with remember-me so the cookie is set
-    await page.goto('/identification.php');
+    await page.goto(pwgUrl('/identification.php'));
     await page.fill('input[name="username"]', 'admin');
     await page.fill('input[name="password"]', 'p4ssword!');
     await page.check('input[name="remember_me"]');
@@ -54,7 +55,7 @@ test('logout clears the remember cookie', async ({ page, context }) => {
     ).toBeDefined();
 
     // Logout — Piwigo reads ?act=logout via include/user.inc.php
-    await page.goto('/identification.php?act=logout');
+    await page.goto(pwgUrl('/identification.php?act=logout'));
     await page.waitForURL(url => !url.search.includes('act=logout'));
 
     const afterLogout = await context.cookies();

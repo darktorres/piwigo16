@@ -1,4 +1,4 @@
-{combine_script id='toaster_js' load='async' require='jquery' path='themes/standard_pages/js/toaster.js'}
+{combine_script id='toaster_js' load='async' path='themes/standard_pages/js/toaster.js'}
 {html_style}
 .toast.template-pwg-toaster {
   display: none;

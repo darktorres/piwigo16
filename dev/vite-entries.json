@@ -1,5 +1,5 @@
 {
-    "_comment": "Vite entry inventory for Phase 5. Each id maps to the authored source file. Vendored ids (jquery, jquery.ui, jquery.colorbox, etc.) are served via the legacy ScriptLoader fallback and are NOT included here.",
+    "_comment": "Vite entry inventory for Phase 5. Each id maps to the authored source file.",
     "entries": {
         "core.scripts":       "themes/default/js/scripts.ts",
         "switchbox":          "themes/default/js/switchbox.ts",
@@ -41,14 +41,5 @@
         "tags":               "admin/themes/default/js/tags.ts",
         "user_activity":      "admin/themes/default/js/user_activity.ts",
         "user_list":          "admin/themes/default/js/user_list.ts"
-    },
-    "vendored_ids": [
-        "jquery", "jquery.ui", "jquery.ui.effect", "jquery.colorbox",
-        "jquery.selectize", "jquery.ajaxmanager", "jquery.confirm",
-        "jquery.tipTip", "jquery.cluetip", "jquery.cookie", "jquery.geoip",
-        "jquery.progressBar", "jquery.sort", "jquery.autogrow",
-        "jquery.plupload", "jquery.plupload.queue",
-        "jquery.ui.datepicker", "jquery.ui.timepicker-addon",
-        "piecon", "mcs", "jtree", "plupload_i18n"
-    ]
+    }
 }

@@ -164,20 +164,8 @@ export const test = base.extend<TestFixtures>({
         // Exclude node_modules
         if (url.includes('node_modules')) return false;
 
-        // Exclude 3rd-party directories
-        const thirdPartyDirs = [
-          '/themes/default/js/plugins/',    // All jQuery plugins (Chart, chosen, colorbox, datatables, etc.)
-          '/themes/default/js/ui/',         // jQuery UI
-        ];
-        for (const dir of thirdPartyDirs) {
-          if (url.includes(dir)) return false;
-        }
-
         // Exclude 3rd-party files
         const thirdPartyFiles = [
-          'jquery.js',
-          'jquery.min.js',
-          'jquery.cookie.js',
           'mcs.js',           // Custom scrollbar library
           'pngfix.js',        // IE PNG fix
           'fontawesome',      // Font Awesome icons

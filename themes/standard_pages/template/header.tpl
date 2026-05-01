@@ -20,8 +20,6 @@
   {include file=$theme.local_head load_css=$theme.load_css}
   {/if}
 {/foreach}
-
-{combine_script id="jquery" load="header"}
 {/strip}
 
 <!-- BEGIN get_combined -->

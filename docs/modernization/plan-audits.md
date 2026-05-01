@@ -77,3 +77,85 @@ Two cosmetic differences, neither a gap:
 
 - **Integration suite** — needs `docker compose up -d --wait db web`; Docker is not currently up in this environment. Tests exist and parse; have not confirmed they pass.
 - **E2E suite** — needs Playwright + DB reset; same constraint.
+
+---
+
+## `i-want-to-modernize-vectorized-matsumoto.md` — Modernize Piwigo 16.x → PHP 8.5 + full typing + TypeScript (umbrella plan)
+
+**Status: substantial progress on every phase; the active cut-point is Phase 4.** Phases 0, 1, 5 are effectively done. Phases 2 and 3 are mostly done with long-tail remainders. Phase 4 is the largest remaining phase — Wave A complete and Wave B underway, Wave C not started.
+
+### Phase 0 — Foundation & safety net ✓ (~100%, exceeds plan in places)
+
+- `composer.json` matches plan (PHP `^8.5`, phpstan/rector/pint/phpunit/symfony-process pinned); also pulls runtime deps the plan didn't enumerate (smarty, phpmailer, pclzip, emogrifier, jshrink, minify, mobileesp).
+- `phpstan.neon` at **level 8** (plan started at 0); `phpstan-baseline.neon` (109.6 KB) committed plus a `phpstan-nobaseline.neon` variant. Bootstrap files `tools/phpstan-bootstrap.php` + `tools/phpstan-types.php`. Custom rules `Piwigo\Tools\PhpStan\NoDynamicNewRule` and `NoGlobalInSrcRule` registered.
+- `rector.php` is well past Phase 0 dry-run: `withPhpSets(php85: true)`, `SetList::TYPE_DECLARATION`, `DeclareStrictTypesRector`, ~75 `RenameClassRector` mappings driving the Phase 3 namespacing.
+- `pint.json` matches spec exactly (PSR-12, `declare_strict_types: false`, single-quote, ordered imports).
+- `phpunit.xml.dist` declares Unit + Integration suites; bootstrap is `tests/bootstrap.php`.
+- `docker-compose.yml` matches plan (mariadb:10.11 healthcheck-gated, php:8.5-apache via `docker/Dockerfile`, playwright service). Ports 3307/8090.
+- `.github/workflows/ci.yml` runs lint (pint + phpstan + baseline-grow guard + conf-shape drift + typecheck + vite build + tarball-excludes-dev-deps + strict_types coverage gate), unit, e2e (docker compose + playwright + integration).
+- 16.x fixture: `dev/fixtures/piwigo-16.x.sql` 241 KB (above plan's ≥200 KB target).
+- Playwright suite: 15 specs in `tests/e2e/` covering install, smoke gallery/admin, create-album, upload-photo, change-setting plus 9 additional specs (identify-remember-me, photo lifecycle, search, tags, user-mgmt, album-tree, etc.) — well beyond plan's 6.
+
+### Phase 1 — Make it run on PHP 8.5 ✓ (100%)
+
+- `mysql_*` (legacy non-`i`) function calls in `*.php`: **0** matches across repo.
+- `create_function(`: **0** live calls (only 2 commented references in `src/Piwigo/Template/Template.php:1262,1285`).
+- `utf8_encode(` / `utf8_decode(`: **0** matches.
+
+### Phase 2 — phpdoc → native types ~ (~85-90%)
+
+- `declare(strict_types=1)` enforced repo-wide by CI gate (`ci.yml:36-51` fails on any missing file in `include/ admin/ install/ src/`, with allowlist for vendored libs like `feedcreator`, `phpqrcode`, `pclzip`, `emogrifier`).
+- Sampled `include/functions.inc.php`: 81 top-level functions, 66 carry native return types; spot-check shows full param typing on newer functions (`input_int`, `input_string`, `input_bool`), older ones still use untyped params (`get_extension`, `mkgetdir`).
+- Sampled `include/functions_picture.inc.php`, `include/ws_functions/pwg.images.php`, `include/functions_user.inc.php`, `admin/include/functions.php`, `admin/include/functions_install.inc.php`: all carry `declare(strict_types=1)` and consistent native return types.
+- Phpdoc `@param`/`@return` counts: `include/` 1,162 across 37 files, `admin/` 282 across 22 files. Most are now type-supplementary (generic shapes for arrays) rather than primary type source.
+- **What's left**: long tail of legacy untyped params on older free functions in `include/functions.inc.php`, `functions_url.inc.php`, etc. Rector's TYPE_DECLARATION set is wired so this will continue to bleed off.
+
+### Phase 3 — PSR-4 + namespacing ~ (~50-60%)
+
+- `composer.json` autoload: `"Piwigo\\": "src/Piwigo/"` PSR-4 mapping live (with `classmap-authoritative: true`).
+- `src/Piwigo/` holds 69 PHP class files across 12 namespace clusters (`Admin`, `Auth`, `Cache`, `Calendar`, `Core`, `Image`, `Menu`, `Search`, `Session`, `Template`, `Users`, `Ws`).
+- Legacy `*.class.php` still in `include/`: 12 (`Logger`, `block`, `cache`, `calendar_base`, `calendar_monthly`, `calendar_weekly`, `feedcreator`, `passwordhash`, `pwgsession`, `pwgsession_php7`, `template`, `totp`). All correspond to classes already migrated to `src/Piwigo/` per `rector.php` `RenameClassRector` map — these legacy shims appear to remain on disk as transitional aliases (worth confirming they're empty/redirects).
+- Legacy `*.class.php` still in `admin/include/`: 8 (`c13y_internal`, `check_integrity`, `image`, `languages`, `plugins`, `tabsheet`, `themes`, `updates`) — all also mapped in `RenameClassRector`.
+- `include_once`/`require_once` in `src/Piwigo/`: **0** matches — clean PSR-4 inside the new tree.
+- Plan target was 358 classes. Repo has ~89 total class definitions across legacy locations + 69 in `src/`. Either the 358 figure included many enums/interfaces/traits the plan over-counted, or large swaths of code remain free-function-based. Either way, the bulk of identified classes have been moved.
+- **What's left**: confirm the 12+8 legacy `*.class.php` files are stub shims (or remove them); finish migrating any plugin/theme classes still under `include/`.
+
+### Phase 4 — Globals → typed services / DTOs ~ (~35-50%, **sampled, not exhaustive**)
+
+The plan flagged this as the largest phase and most likely cut point. Scaffolds are in place; adoption is in progress.
+
+- All five plan-spec services exist: `src/Piwigo/Core/Config.php` (1,204 lines), `Kernel.php`, `Lang.php`, `PageState.php`, `ServiceLocator.php`, `src/Piwigo/Users/User.php`, `CurrentUser.php`.
+- `Config.php` implements `attachGlobals()` reference-bridge as planned (`$GLOBALS['conf'] = &self::$data`), plus `get/getString/getInt/getBool` and lazy `src()` for pre-boot reads.
+- `Kernel::boot()` is wired into **20** root entry points (`about`, `admin`, `comments`, `action`, `check_admin`, `identification`, `feed`, `index`, `nbm`, `notification`, `picture`, `password`, `ws`, `random`, `profile`, `qsearch`, `popuphelp`, `register`, `search`, `tags`). `common.inc.php:48` honours the `Kernel::isBooted()` re-entrance guard.
+- Adoption metrics:
+  - `Config::(get|getString|getInt|getBool|getArray)` callsites: **182+** across 50+ files (good distribution: includes, admin, root entry points, `src/`).
+  - `PageState::(current|init|addError|...)` callsites: **171** across 48 files — substantial Wave B writer migration done (esp. `admin/maintenance_actions.php` 19 hits, `admin/include/functions_notification_by_mail.inc.php` 11 hits, `admin/themes_new.php`/`languages_new.php`/`plugins_new.php` 8-9 each — matches plan's hot spots).
+  - `CurrentUser::` callsites: **30** across 11 files (lighter adoption — `User`/`CurrentUser` mostly read by `src/`, legacy `$user` still dominant elsewhere).
+- Remaining raw `$conf[...]` access: `include/` 1,162 occurrences (1 file, `config_default.inc.php`, alone has 209 — that's the writer file and should stay), `admin/` 282 across 22 files. Hot spots: `admin/include/functions.php` 149, `include/functions.inc.php` 139, `include/functions_user.inc.php` 121, `include/ws_functions/pwg.images.php` 95.
+- Wave B migrate tooling exists: `tools/wave_b_migrate.php`, `tools/wave_b5_migrate.php`, `tools/remove_global_conf.php`, `tools/check-conf-shape.php` (last is a CI gate).
+- **Wave C** (ArrayObject deprecation proxy): not landed (no `GlobalsBridge` class).
+- **Caveat**: this phase is too sprawling to fully audit in one pass — sampled the four scaffolds (Config/PageState/CurrentUser/Kernel), boot wiring, and adoption greps. Did not inspect each push-site.
+
+### Phase 5 — JS → TS conversion ✓ (~95%)
+
+Confirmed only at file-presence level (substantively audited via the jquery-removal and globals-removal plan audits above).
+
+- `package.json` declares Vite 5, TypeScript 5.6.3, Playwright; full runtime deps modernised (Uppy, Tom Select, dayjs, Chart.js, GLightbox, noUiSlider, Tippy, Flatpickr).
+- `vite.config.ts` (4.8 KB) and `tsconfig.json` present at root.
+- `admin/themes/default/js/`: **40 `.ts` files, 0 `.js` files** (full conversion).
+- `themes/default/js/`: **8 `.ts` files, 1 `.js` file** (`plugins/piecon.js` — vendored, expected per plan).
+- `dev/vite-entries.json` (2.8 KB) artifact present per plan step 2.
+- Phase 5 console-clean spec exists at `tests/e2e/07-phase5-console-clean.spec.ts`.
+
+### Phase 6 — Cleanup
+
+Out of scope for this audit (depends on prior phases finishing).
+
+### Headline numbers
+
+- **Phase 0**: scaffolding 100% landed; exceeds plan in places (PHPStan level 8 not 0; 15 e2e specs not 6).
+- **Phase 1**: zero offending PHP function calls remain.
+- **Phase 2**: strict_types enforced repo-wide via CI; native return types on new code; long tail of param types remains.
+- **Phase 3**: 69 PSR-4 classes migrated; 20 legacy `*.class.php` shims remain in `include/` + `admin/include/` (worth confirming these are aliases not duplicates).
+- **Phase 4**: services scaffolded, Wave A reference-bridge live, Wave B in active progress (171 PageState + 182 Config callsites), Wave C not started — this is the active cut-point area.
+- **Phase 5**: TS migration effectively complete (only 1 vendored JS remaining).

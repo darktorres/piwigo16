@@ -298,11 +298,10 @@ UPDATE '.USER_INFOS_TABLE.'
             ];
 
             $handle = @fopen($archive, 'wb');
-            if ($handle !== false) {
-                $fh = $handle;
-                if (fetchRemote($url, $handle, $get_data)) {
-                    fclose($fh);
-                    $zip = new \PclZip($archive);
+            $fh = $handle;
+            if (is_resource($fh) && fetchRemote($url, $handle, $get_data)) {
+                fclose($fh);
+                $zip = new \PclZip($archive);
                 if ($list = $zip->listContent()) {
                     $main_filepath = null;
                     $status = 'ok';

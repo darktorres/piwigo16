@@ -524,7 +524,7 @@ function register_default_menubar_blocks(array $menu_ref_arr): void
  * @param array $info at least file or name
  * @return string
  */
-/** @param array<string, float|int|string|null> $info */
+/** @param array<string, mixed> $info */
 function render_element_name(array $info): string
 {
     if (!empty($info['name'])) {
@@ -540,7 +540,7 @@ function render_element_name(array $info): string
  * @param string $param used to identify the trigger
  * @return string
  */
-/** @param array<string, float|int|string|null> $info */
+/** @param array<string, mixed> $info */
 function render_element_description(array $info, string $param = ''): string
 {
     if (!empty($info['comment'])) {
@@ -557,7 +557,7 @@ function render_element_description(array $info, string $param = ''): string
  * @param string $comment
  * @return string
  */
-/** @param array<string, float|int|string|null> $info */
+/** @param array<string, mixed> $info */
 function get_thumbnail_title(array $info, string $title, string $comment = ''): string
 {
     global $user;
@@ -610,7 +610,7 @@ function get_src_image_url_protection_handler($url, $src_image)
  * @param array $infos id, path
  * @return string
  */
-/** @param array<string, float|int|string|null> $infos */
+/** @param array<string, mixed> $infos */
 function get_element_url_protection_handler(string $url, array $infos): string
 {
     if ('images' == \Piwigo\Core\Config::originalUrlProtection()) {// protect only images and not other file types (for example large movies that we don't want to send through our file proxy)

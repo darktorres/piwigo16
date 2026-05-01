@@ -138,16 +138,20 @@ function default_picture_content(string $content, array $element_info): string
         setcookie('picture_deriv', '', ['expires' => 0, 'path' => cookie_path() ?? '']);
     }
     $deriv_type = pwg_get_session_var('picture_deriv', \Piwigo\Core\Config::derivativeDefaultSize());
-    $selected_derivative = $element_info['derivatives'][$deriv_type];
+    $derivativesRaw = is_array($element_info['derivatives'] ?? null) ? $element_info['derivatives'] : [];
+    $selected_derivative = $derivativesRaw[$deriv_type] ?? null;
 
     $unique_derivatives = [];
     $show_original = isset($element_info['element_url']);
     $added = [];
-    foreach ($element_info['derivatives'] as $type => $derivative) {
+    foreach ($derivativesRaw as $type => $derivative) {
         if ($type == IMG_SQUARE || $type == IMG_THUMB) {
             continue;
         }
-        if (!array_key_exists((string) $type, ImageStdParams::get_defined_type_map())) {
+        if (!array_key_exists(is_scalar($type) ? (string) $type : '', ImageStdParams::get_defined_type_map())) {
+            continue;
+        }
+        if (!($derivative instanceof DerivativeImage)) {
             continue;
         }
         $url = $derivative->get_url();
@@ -326,14 +330,14 @@ UPDATE '.CATEGORIES_TABLE.'
                         $perform_redirect = false;
                         switch ($comment_action) {
                             case 'moderate':
-                                $_SESSION['page_infos'][] = l10n('An administrator must authorize your comment before it is visible.');
+                                \Piwigo\Core\PageState::current()->addInfo(l10n('An administrator must authorize your comment before it is visible.'));
                                 // no break
                             case 'validate':
-                                $_SESSION['page_infos'][] = l10n('Your comment has been registered');
+                                \Piwigo\Core\PageState::current()->addInfo(l10n('Your comment has been registered'));
                                 $perform_redirect = true;
                                 break;
                             case 'reject':
-                                $_SESSION['page_errors'][] = l10n('Your comment has NOT been registered because it did not pass the validation rules');
+                                \Piwigo\Core\PageState::current()->addError(l10n('Your comment has NOT been registered because it did not pass the validation rules'));
                                 break;
                             default:
                                 trigger_error('Invalid comment action '.$comment_action, E_USER_WARNING);
@@ -575,15 +579,16 @@ $picture = trigger_change('picture_pictures_data', $picture);
 //------------------------------------------------------- navigation management
 foreach (['first','previous','next','last', 'current'] as $which_image) {
     if (isset($picture[$which_image])) {
+        $imgArr = is_array($picture[$which_image]) ? $picture[$which_image] : [];
         $template->assign(
             $which_image,
             array_merge(
-                $picture[$which_image],
+                $imgArr,
                 [
           // Params slideshow was transmit to navigation buttons
           'U_IMG' =>
                 add_url_params(
-                    $picture[$which_image]['url'],
+                    is_string($imgArr['url'] ?? null) ? $imgArr['url'] : '',
                     $slideshow_url_params
                 ),
           ]
@@ -595,10 +600,11 @@ if (\Piwigo\Core\Config::pictureDownloadIcon() and !empty($picture['current']['d
     $template->append('current', ['U_DOWNLOAD' => $picture['current']['download_url']], true);
 
     if (\Piwigo\Core\Config::isFormatsEnabled()) {
+        $currentPic = is_array($picture['current'] ?? null) ? $picture['current'] : [];
         $query = '
 SELECT *
   FROM '.IMAGE_FORMAT_TABLE.'
-  WHERE image_id = '.$picture['current']['id'].'
+  WHERE image_id = '.(is_scalar($currentPic['id'] ?? null) ? (int) $currentPic['id'] : 0).'
 ;';
         $formats = query2array($query);
 
@@ -607,24 +613,26 @@ SELECT *
         array_unshift(
             $formats,
             [
-            'download_url' => $picture['current']['download_url'],
-            'ext' => get_extension($picture['current']['file']),
-            'filesize' => $picture['current']['filesize'],
+            'download_url' => is_scalar($currentPic['download_url'] ?? null) ? $currentPic['download_url'] : '',
+            'ext' => get_extension(is_string($currentPic['file'] ?? null) ? $currentPic['file'] : ''),
+            'filesize' => $currentPic['filesize'] ?? null,
             ]
         );
 
         foreach ($formats as &$format) {
             if (!isset($format['download_url'])) {
-                $format['download_url'] = 'action.php?format='.$format['format_id'].'&amp;download';
+                $format['download_url'] = 'action.php?format='.(is_scalar($format['format_id'] ?? null) ? (string) $format['format_id'] : '').'&amp;download';
             }
 
-            $format['label'] = strtoupper((string) $format['ext']);
-            $lang_key = 'format '.strtoupper((string) $format['ext']);
+            $extStr = is_scalar($format['ext'] ?? null) ? (string) $format['ext'] : '';
+            $format['label'] = strtoupper($extStr);
+            $lang_key = 'format '.strtoupper($extStr);
             if (isset($lang[$lang_key])) {
                 $format['label'] = $lang[$lang_key];
             }
 
-            $format['filesize'] = sprintf('%.1fMB', $format['filesize'] / 1024);
+            $fsRaw = $format['filesize'] ?? 0;
+            $format['filesize'] = sprintf('%.1fMB', (is_numeric($fsRaw) ? $fsRaw : 0) / 1024);
         }
         $template->append('current', ['formats' => $formats], true);
     }
@@ -634,9 +642,10 @@ if ($page['slideshow']) {
     $tpl_slideshow = [];
 
     //slideshow end
+    $currentUrl = is_string($picture['current']['url'] ?? null) ? $picture['current']['url'] : '';
     $template->assign(
         [
-        'U_SLIDESHOW_STOP' => $picture['current']['url'],
+        'U_SLIDESHOW_STOP' => $currentUrl,
         ]
     );
 
@@ -648,7 +657,7 @@ if ($page['slideshow']) {
 
         $tpl_slideshow[$var_name] =
               add_url_params(
-                  $picture['current']['url'],
+                  $currentUrl,
                   ['slideshow' =>
                   encode_slideshow_params(
                       array_merge(
@@ -661,7 +670,8 @@ if ($page['slideshow']) {
     }
 
     foreach (['dec', 'inc'] as $op) {
-        $new_period = $slideshow_params['period'] + ((($op == 'dec') ? -1 : 1) * \Piwigo\Core\Config::slideshowPeriodStep());
+        $periodRaw = $slideshow_params['period'] ?? 0;
+        $new_period = (is_numeric($periodRaw) ? $periodRaw : 0) + ((($op == 'dec') ? -1 : 1) * \Piwigo\Core\Config::slideshowPeriodStep());
         $new_slideshow_params =
           correct_slideshow_params(
               array_merge(
@@ -674,7 +684,7 @@ if ($page['slideshow']) {
             $var_name = 'U_'.strtoupper($op).'_PERIOD';
             $tpl_slideshow[$var_name] =
                   add_url_params(
-                      $picture['current']['url'],
+                      $currentUrl,
                       ['slideshow' => encode_slideshow_params($new_slideshow_params),
                         ]
                   );
@@ -682,11 +692,12 @@ if ($page['slideshow']) {
     }
     $template->assign('slideshow', $tpl_slideshow);
 } elseif (\Piwigo\Core\Config::pictureSlideShowIcon()) {
+    $currentUrl = is_string($picture['current']['url'] ?? null) ? $picture['current']['url'] : '';
     $template->assign(
         [
         'U_SLIDESHOW_START' =>
           add_url_params(
-              $picture['current']['url'],
+              $currentUrl,
               [ 'slideshow' => '']
           ),
         ]
@@ -779,19 +790,23 @@ if (isset($picture['current']['comment'])
 }
 
 // author
-if (!empty($picture['current']['author'])) {
-    $infos['INFO_AUTHOR'] = $picture['current']['author'];
+if (!empty($currentPic['author'] ?? null)) {
+    $infos['INFO_AUTHOR'] = $currentPic['author'];
 }
 
+$currentPic = is_array($picture['current'] ?? null) ? $picture['current'] : [];
+$currentSrcImage = ($currentPic['src_image'] ?? null) instanceof SrcImage ? $currentPic['src_image'] : null;
+
 // creation date
-if (!empty($picture['current']['date_creation'])) {
-    $val = format_date($picture['current']['date_creation']);
+if (!empty($currentPic['date_creation'])) {
+    $dateCreation = is_scalar($currentPic['date_creation']) ? $currentPic['date_creation'] : null;
+    $val = format_date($dateCreation);
     $url = make_index_url(
         [
         'chronology_field' => 'created',
         'chronology_style' => 'monthly',
         'chronology_view' => 'list',
-        'chronology_date' => explode('-', substr((string) $picture['current']['date_creation'], 0, 10)),
+        'chronology_date' => explode('-', substr(is_scalar($dateCreation) ? (string) $dateCreation : '', 0, 10)),
         ]
     );
     $infos['INFO_CREATION_DATE'] =
@@ -799,7 +814,8 @@ if (!empty($picture['current']['date_creation'])) {
 }
 
 // date of availability
-$val = format_date($picture['current']['date_available']);
+$dateAvailable = is_scalar($currentPic['date_available'] ?? null) ? $currentPic['date_available'] : null;
+$val = format_date($dateAvailable);
 $url = make_index_url(
     [
     'chronology_field' => 'posted',
@@ -807,40 +823,41 @@ $url = make_index_url(
     'chronology_view' => 'list',
     'chronology_date' => explode(
         '-',
-        substr((string) $picture['current']['date_available'], 0, 10)
+        substr(is_scalar($dateAvailable) ? (string) $dateAvailable : '', 0, 10)
     ),
     ]
 );
 $infos['INFO_POSTED_DATE'] = '<a href="'.$url.'" rel="nofollow">'.$val.'</a>';
 
 // size in pixels
-if ($picture['current']['src_image']->is_original() and isset($picture['current']['width'])) {
+if ($currentSrcImage !== null && $currentSrcImage->is_original() and isset($currentPic['width'])) {
     $infos['INFO_DIMENSIONS'] =
-      $picture['current']['width'].'*'.$picture['current']['height'];
+      $currentPic['width'].'*'.$currentPic['height'];
 }
 
 // filesize
-if (!empty($picture['current']['filesize'])) {
-    $infos['INFO_FILESIZE'] = l10n('%d Kb', $picture['current']['filesize']);
+if (!empty($currentPic['filesize'] ?? null)) {
+    $infos['INFO_FILESIZE'] = l10n('%d Kb', $currentPic['filesize']);
 }
 
 // number of visits
-$infos['INFO_VISITS'] = $picture['current']['hit'];
+$infos['INFO_VISITS'] = $currentPic['hit'] ?? null;
 
 // file
-$infos['INFO_FILE'] = $picture['current']['file'];
+$infos['INFO_FILE'] = $currentPic['file'] ?? null;
 
 $template->assign($infos);
-$template->assign('display_info', unserialize(\Piwigo\Core\Config::pictureInformations()));
+$template->assign('display_info', unserialize(\Piwigo\Core\Config::pictureInformations() ?? ''));
 
 // related tags
 $tags = get_common_tags([$page['image_id']], -1);
 if (count($tags)) {
     foreach ($tags as $tag) {
+        $tagArr = is_array($tag) ? $tag : [];
         $template->append(
             'related_tags',
             array_merge(
-                $tag,
+                $tagArr,
                 [
                 'URL' => make_index_url(
                     [
@@ -887,11 +904,11 @@ SELECT id, name, permalink
     }
 }
 
-if (in_array(strtolower(get_extension($picture['current']['file'])), ['pdf'])) {
+if (in_array(strtolower(get_extension(is_string($currentPic['file'] ?? null) ? $currentPic['file'] : '')), ['pdf'])) {
     $template->assign(
         [
         'PDF_VIEWER_FILESIZE_THRESHOLD' => \Piwigo\Core\Config::pdfViewerFilesizeThreshold() * 1024,
-        'PDF_NB_PAGES' => count_pdf_pages($picture['current']['path']),
+        'PDF_NB_PAGES' => count_pdf_pages(is_string($currentPic['path'] ?? null) ? $currentPic['path'] : ''),
     ]
     );
 }
@@ -905,22 +922,26 @@ $element_content = trigger_change(
 );
 $template->assign('ELEMENT_CONTENT', $element_content);
 
-if (isset($picture['next'])
-    and $picture['next']['src_image']->is_original()
+$nextPic = is_array($picture['next'] ?? null) ? $picture['next'] : null;
+$nextSrcImage = ($nextPic !== null && ($nextPic['src_image'] ?? null) instanceof SrcImage) ? $nextPic['src_image'] : null;
+if ($nextSrcImage !== null
+    and $nextSrcImage->is_original()
     and $template->get_template_vars('U_PREFETCH') == null
     and !str_contains((string) @$_SERVER['HTTP_USER_AGENT'], 'Chrome/')) {
-    $template->assign(
-        'U_PREFETCH',
-        $picture['next']['derivatives'][pwg_get_session_var('picture_deriv', \Piwigo\Core\Config::derivativeDefaultSize())]->get_url()
-    );
+    $derivType = pwg_get_session_var('picture_deriv', \Piwigo\Core\Config::derivativeDefaultSize());
+    $nextDerivs = is_array($nextPic['derivatives'] ?? null) ? $nextPic['derivatives'] : [];
+    $nextDeriv = ($nextDerivs[$derivType] ?? null) instanceof DerivativeImage ? $nextDerivs[$derivType] : null;
+    if ($nextDeriv !== null) {
+        $template->assign('U_PREFETCH', $nextDeriv->get_url());
+    }
 }
 
 $template->assign(
     'U_CANONICAL',
     make_picture_url(
         [
-      'image_id' => $picture['current']['id'],
-      'image_file' => $picture['current']['file']]
+      'image_id' => $currentPic['id'] ?? null,
+      'image_file' => $currentPic['file'] ?? null]
     )
 );
 
@@ -955,5 +976,5 @@ if ($page['slideshow'] and \Piwigo\Core\Config::lightSlideshow()) {
     $template->pparse('picture');
 }
 //------------------------------------------------------------ log informations
-pwg_log($picture['current']['id'], 'picture');
+pwg_log(is_scalar($currentPic['id'] ?? null) ? $currentPic['id'] : null, 'picture');
 include(PHPWG_ROOT_PATH.'include/page_tail.php');

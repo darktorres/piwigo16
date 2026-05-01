@@ -37,7 +37,7 @@ class PwgGetSessionVarDynamicReturnType implements DynamicFunctionReturnTypeExte
             // so comparisons like $result === '' don't always evaluate to true.
             return $scope->getType($args[1]->value)->generalize(GeneralizePrecision::lessSpecific());
         }
-        // No default given — default is null, return is null|mixed (session value unknown)
-        return new NullType();
+        // No default given — session value type is unknown
+        return new MixedType();
     }
 }

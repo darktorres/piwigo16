@@ -33,7 +33,8 @@ $search = array(
 );
 
 // list of filters in user preferences
-$filters_views = safe_unserialize(conf_get_param('filters_views', \Piwigo\Core\Config::defaultFiltersViews()));
+$filters_views_raw = conf_get_param('filters_views', \Piwigo\Core\Config::defaultFiltersViews());
+$filters_views = safe_unserialize(is_scalar($filters_views_raw) ? (string) $filters_views_raw : '');
 
 //change the name of the keys so that they can be used with this part of the program
 $filter_rename_for = array(
@@ -57,17 +58,16 @@ foreach ($filters_views as $filter_name => $filter_value) {
 //get all default filters
 $default_fields = array();
 foreach ($filters_conf as $filt_name => $filt_conf) {
-    if (isset($filt_conf['default'])) {
-        if ($filt_conf['default'] == true) {
-            $default_fields[] = $filt_name;
-        }
+    if (is_array($filt_conf) && isset($filt_conf['default']) && $filt_conf['default'] == true) {
+        $default_fields[] = $filt_name;
     }
 }
 
 if (is_a_guest() or is_generic() or $filters_conf['last_filters_conf'] == false) {
     $fields = $default_fields;
 } else {
-    $fields = userprefs_get_param('gallery_search_filters', $default_fields);
+    $fields_raw = userprefs_get_param('gallery_search_filters', $default_fields);
+    $fields = is_array($fields_raw) ? $fields_raw : $default_fields;
 }
 
 $words = array();
@@ -176,4 +176,4 @@ foreach (array('filesize_min', 'filesize_max', 'width_min', 'width_max', 'height
 }
 
 list($search_uuid, $search_url) = save_search($search);
-redirect($search_url);
+redirect(is_scalar($search_url) ? (string) $search_url : '');

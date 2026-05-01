@@ -86,7 +86,7 @@ if (!empty(\Piwigo\Core\Config::mobilTheme()) && (get_device() != 'desktop' || m
     $template->assign(
         'TOGGLE_MOBILE_THEME_URL',
         add_url_params(
-            htmlspecialchars((string) $_SERVER['REQUEST_URI']),
+            htmlspecialchars(is_scalar($_SERVER['REQUEST_URI'] ?? null) ? (string) $_SERVER['REQUEST_URI'] : ''),
             ['mobile' => mobile_theme() ? 'false' : 'true']
         )
     );

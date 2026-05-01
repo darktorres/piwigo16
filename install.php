@@ -25,7 +25,7 @@ define('PHPWG_ROOT_PATH', './');
 define('DEFAULT_PREFIX_TABLE', 'piwigo_');
 
 if (isset($_POST['install'])) {
-    $prefixeTable = (string) ($_POST['prefix'] ?? DEFAULT_PREFIX_TABLE);
+    $prefixeTable = is_scalar($_POST['prefix'] ?? null) ? (string) $_POST['prefix'] : DEFAULT_PREFIX_TABLE;
 } else {
     $prefixeTable = DEFAULT_PREFIX_TABLE;
 }
@@ -40,8 +40,9 @@ require_once PHPWG_ROOT_PATH . 'vendor/autoload.php';
 // download database config file if exists
 check_input_parameter('dl', $_GET, false, '/^[a-f0-9]{32}$/');
 
-if (!empty($_GET['dl']) && file_exists(PHPWG_ROOT_PATH.\Piwigo\Core\Config::dataLocation().'pwg_'.$_GET['dl'])) {
-    $filename = PHPWG_ROOT_PATH.\Piwigo\Core\Config::dataLocation().'pwg_'.$_GET['dl'];
+$dlParam = is_scalar($_GET['dl'] ?? null) ? (string) $_GET['dl'] : '';
+if (!empty($dlParam) && file_exists(PHPWG_ROOT_PATH.\Piwigo\Core\Config::dataLocation().'pwg_'.$dlParam)) {
+    $filename = PHPWG_ROOT_PATH.\Piwigo\Core\Config::dataLocation().'pwg_'.$dlParam;
     header('Cache-Control: no-cache, must-revalidate');
     header('Pragma: no-cache');
     header('Content-Disposition: attachment; filename="database.inc.php"');
@@ -53,10 +54,10 @@ if (!empty($_GET['dl']) && file_exists(PHPWG_ROOT_PATH.\Piwigo\Core\Config::data
 }
 
 // Obtain various vars
-$dbhost = (!empty($_POST['dbhost'])) ? $_POST['dbhost'] : 'localhost';
-$dbuser = (!empty($_POST['dbuser'])) ? $_POST['dbuser'] : 'root';
-$dbpasswd = (!empty($_POST['dbpasswd'])) ? $_POST['dbpasswd'] : '1234';
-$dbname = (!empty($_POST['dbname'])) ? $_POST['dbname'] : 'piwigo';
+$dbhost   = is_scalar($_POST['dbhost'] ?? null) && !empty($_POST['dbhost'])   ? (string) $_POST['dbhost']   : 'localhost';
+$dbuser   = is_scalar($_POST['dbuser'] ?? null) && !empty($_POST['dbuser'])   ? (string) $_POST['dbuser']   : 'root';
+$dbpasswd = is_scalar($_POST['dbpasswd'] ?? null) && !empty($_POST['dbpasswd']) ? (string) $_POST['dbpasswd'] : '1234';
+$dbname   = is_scalar($_POST['dbname'] ?? null) && !empty($_POST['dbname'])   ? (string) $_POST['dbname']   : 'piwigo';
 
 // Only mysqli is supported since PHP 7.
 if (!extension_loaded('mysqli')) {
@@ -64,10 +65,10 @@ if (!extension_loaded('mysqli')) {
 }
 $dblayer = 'mysqli';
 
-$admin_name = (!empty($_POST['admin_name'])) ? $_POST['admin_name'] : 'darktorres';
-$admin_pass1 = (!empty($_POST['admin_pass1'])) ? $_POST['admin_pass1'] : '1234';
-$admin_pass2 = (!empty($_POST['admin_pass2'])) ? $_POST['admin_pass2'] : '1234';
-$admin_mail = (!empty($_POST['admin_mail'])) ? $_POST['admin_mail'] : 'torres.dark@gmail.com';
+$admin_name  = is_scalar($_POST['admin_name'] ?? null) && !empty($_POST['admin_name'])  ? (string) $_POST['admin_name']  : 'darktorres';
+$admin_pass1 = is_scalar($_POST['admin_pass1'] ?? null) && !empty($_POST['admin_pass1']) ? (string) $_POST['admin_pass1'] : '1234';
+$admin_pass2 = is_scalar($_POST['admin_pass2'] ?? null) && !empty($_POST['admin_pass2']) ? (string) $_POST['admin_pass2'] : '1234';
+$admin_mail  = is_scalar($_POST['admin_mail'] ?? null) && !empty($_POST['admin_mail'])   ? (string) $_POST['admin_mail']  : 'torres.dark@gmail.com';
 
 $is_newsletter_subscribe = false;
 if (isset($_POST['install'])) {
@@ -379,9 +380,12 @@ if ($step == 1) {
         // we don't load user cache because since Piwigo 15.4.0 the calculation of user
         // cache requires $logger which is not instanciated
         $user = build_user(1, false);
-        log_user($user['id'], false);
+        log_user(is_numeric($user['id'] ?? null) ? (int) $user['id'] : 0, false);
         $_SESSION['connected_with'] = 'pwg_ui';
 
+        if (!is_array($user['preferences'] ?? null)) {
+            $user['preferences'] = [];
+        }
         $user['preferences']['show_whats_new_'.get_branch_from_version(PHPWG_VERSION)] = false;
 
         // newsletter subscription

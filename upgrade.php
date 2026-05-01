@@ -146,7 +146,8 @@ if ($get_language !== null) {
     $language = 'en_UK';
     // Try to get browser language
     foreach ($languages->fs_languages as $language_code => $fs_language) {
-        if (substr((string) $language_code, 0, 2) == @substr((string) $_SERVER['HTTP_ACCEPT_LANGUAGE'], 0, 2)) {
+        $httpAccLang = is_scalar($_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? null) ? (string) $_SERVER['HTTP_ACCEPT_LANGUAGE'] : '';
+        if (substr((string) $language_code, 0, 2) == @substr($httpAccLang, 0, 2)) {
             $language = $language_code;
             break;
         }

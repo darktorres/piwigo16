@@ -528,7 +528,7 @@ function register_default_menubar_blocks(array $menu_ref_arr): void
 function render_element_name(array $info): string
 {
     if (!empty($info['name'])) {
-        return (string) trigger_change('render_element_name', $info['name'], $info);
+        return (string) trigger_change('render_element_name', is_scalar($info['name']) ? (string) $info['name'] : '', $info);
     }
     return get_name_from_file(is_string($info['file'] ?? null) ? $info['file'] : '');
 }
@@ -544,7 +544,7 @@ function render_element_name(array $info): string
 function render_element_description(array $info, string $param = ''): string
 {
     if (!empty($info['comment'])) {
-        return (string) trigger_change('render_element_description', $info['comment'], $param);
+        return (string) trigger_change('render_element_description', is_scalar($info['comment']) ? (string) $info['comment'] : '', $param);
     }
     return '';
 }
@@ -573,7 +573,7 @@ function get_thumbnail_title(array $info, string $title, string $comment = ''): 
     }
 
     if (isset($info['nb_comments']) and $info['nb_comments'] != 0) {
-        $details[] = l10n_dec('%d comment', '%d comments', (int) $info['nb_comments']);
+        $details[] = l10n_dec('%d comment', '%d comments', is_numeric($info['nb_comments']) ? (int) $info['nb_comments'] : 0);
     }
 
     if (count($details) > 0) {

@@ -233,6 +233,30 @@ Three jobs per push; all must pass for merge.
 
 ---
 
+## Roadmap
+
+See **[ROADMAP.md](ROADMAP.md)** for the full breakdown of remaining work, with current state, concrete steps, and verification commands for each item.
+
+Summary table:
+
+| # | Description | Size | Status |
+|---|---|---|---|
+| 1 | PHPStan level 9 / baseline elimination (625 errors remaining) | L | **WIP** |
+| 2 | Fix remaining `global` declarations inside `src/` | S | Verify/close |
+| 3 | Remove class duplication in `ws_core.inc.php` | M | Not started |
+| 4 | Unit test coverage expansion (229 tests → ≥40% coverage) | L | Not started |
+| 5 | PHP 8.1–8.5 features: readonly, enum, match | M | Not started |
+| 6 | `functions_user.inc.php` split into typed classes | L | Not started |
+| 7 | TypeScript `any` reduction (468 → ≤250) | M | Not started |
+| 8 | CSS design tokens + Stylelint | M | Not started |
+| 9 | jQuery upgrade / incremental replacement | XL | Planning only |
+| 10 | Overdue TODO cleanup (34 markers) | S | Not started |
+| 11 | Eliminate remaining `window.*` data-bridge globals (~20 assignments) | M | Not started |
+
+Recommended sequence: 1 → 2 → 10 → 3 → 4 → 5 → 7 → 8 → 6 → 9 → 11.
+
+---
+
 ## What is not yet modernized
 
 - **Templates** — still Smarty 5; ~300 `.tpl` files. No plans to replace.
@@ -337,20 +361,3 @@ a photo page, and the admin dashboard. Check the PHP error log for any `Deprecat
   `admin/include/functions.php` (149), `include/functions.inc.php` (139),
   `include/functions_user.inc.php` (121), `include/ws_functions/pwg.images.php` (95).
   `CurrentUser::` adoption is light — `$user` global still dominant outside `src/`.
-
-### Roadmap
-
-| # | Description | Size | Status |
-|---|---|---|---|
-| 1 | PHPStan level 9 / baseline elimination (currently 1 412 errors) | L | **WIP** |
-| 2 | Fix remaining `global` declarations inside `src/` | S | Not started |
-| 3 | Remove class duplication in `ws_core.inc.php` | M | Not started |
-| 4 | Unit test coverage expansion (13% → ≥40%) | L | Not started |
-| 5 | PHP 8.1–8.5 features: readonly, enum, match | M | Not started |
-| 6 | `functions_user.inc.php` split into typed classes | L | Not started |
-| 7 | TypeScript `any` reduction (883 → ≤450 escapes) | M | Not started |
-| 8 | CSS design tokens + Stylelint | M | Not started |
-| 9 | jQuery upgrade / incremental replacement | XL | Planning only |
-| 10 | Overdue TODO cleanup (46 markers, 1 past-due) | S | Not started |
-
-Recommended sequence: 1 → 2 → 10 → 3 → 4 → 5 → 7 → 8 → 6 → 9.

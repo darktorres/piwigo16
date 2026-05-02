@@ -101,15 +101,26 @@ function updateRating(e: Event): void {
     );
 }
 
-(function () {
-    if (typeof _pwgRatingAutoQueue !== 'undefined' && Array.isArray(_pwgRatingAutoQueue) && _pwgRatingAutoQueue.length) {
-        for (let i = 0; i < (_pwgRatingAutoQueue as Array<Record<string, unknown>>).length; i++) {
-            makeNiceRatingForm((_pwgRatingAutoQueue as Array<Record<string, unknown>>)[i]);
-        }
+// Process any legacy _pwgRatingAutoQueue queue (plugins may still push to it)
+// then auto-discover the rating form on the current page via its data-* attrs.
+if (typeof _pwgRatingAutoQueue !== 'undefined' && Array.isArray(_pwgRatingAutoQueue) && _pwgRatingAutoQueue.length) {
+    for (let i = 0; i < (_pwgRatingAutoQueue as Array<Record<string, unknown>>).length; i++) {
+        makeNiceRatingForm((_pwgRatingAutoQueue as Array<Record<string, unknown>>)[i]);
     }
-    _pwgRatingAutoQueue = {
-        push: (opts: Record<string, unknown>) => { makeNiceRatingForm(opts); },
-    };
-})();
+}
+_pwgRatingAutoQueue = {
+    push: (opts: Record<string, unknown>) => { makeNiceRatingForm(opts); },
+};
+
+const ratingForm = document.getElementById('rateForm');
+if (ratingForm?.dataset['rootUrl']) {
+    makeNiceRatingForm({
+        rootUrl: ratingForm.dataset['rootUrl'],
+        image_id: Number(ratingForm.dataset['imageId']),
+        str_update_your_rating: ratingForm.dataset['strUpdateYourRating'],
+        str_rate: ratingForm.dataset['strRate'],
+        str_rates: ratingForm.dataset['strRates'],
+    });
+}
 
 export {};

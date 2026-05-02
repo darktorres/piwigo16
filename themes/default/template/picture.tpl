@@ -222,7 +222,12 @@
 			<span id="updateRate">{if isset($rating.USER_RATE)}{'Update your rating'|@translate}{else}{'Rate this photo'|@translate}{/if}</span>
 		</dt>
 		<dd>
-			<form action="{$rating.F_ACTION}" method="post" id="rateForm" style="margin:0;">
+			<form action="{$rating.F_ACTION}" method="post" id="rateForm" style="margin:0;"
+			      data-root-url="{$ROOT_URL|escape}"
+			      data-image-id="{$current.id}"
+			      data-str-update-your-rating="{'Update your rating'|@translate|@escape:'html'}"
+			      data-str-rate="{'%d rate'|@translate|@escape:'html'}"
+			      data-str-rates="{'%d rates'|@translate|@escape:'html'}">
 			<div>
 			{foreach from=$rating.marks item=mark name=rate_loop}
 			{if isset($rating.USER_RATE) && $mark==$rating.USER_RATE}
@@ -233,16 +238,6 @@
 			{/foreach}
 			{strip}{combine_script id='core.scripts' load='async' path='themes/default/js/scripts.js'}
 			{combine_script id='rating' load='async' require='core.scripts' path='themes/default/js/rating.js'}
-			{footer_script}
-				var _pwgRatingAutoQueue = _pwgRatingAutoQueue||[];
-				_pwgRatingAutoQueue.push({ldelim}
-					rootUrl: '{$ROOT_URL}',
-					image_id: {$current.id},
-					str_update_your_rating: '{'Update your rating'|@translate|@escape:'javascript'}',
-					str_rate: '{'%d rate'|@translate|@escape:'javascript'}',
-					str_rates: '{'%d rates'|@translate|@escape:'javascript'}'
-				{rdelim});
-			{/footer_script}
 			{/strip}
 			</div>
 			</form>

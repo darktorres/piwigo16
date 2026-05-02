@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 global $template, $user, $page, $persistent_cache, $lang, $prefixeTable;
 
-use Piwigo\Admin\Image\pwg_image;
+use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Core\Logger;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\SizingParams;
@@ -506,15 +506,15 @@ SELECT *
             $page['coi'] = $row['coi'];
 
             if (!isset($row['rotation'])) {
-                $page['rotation_angle'] = pwg_image::get_rotation_angle($page['src_path']);
+                $page['rotation_angle'] = PwgImage::get_rotation_angle($page['src_path']);
 
                 single_update(
                     $prefixeTable.'images',
-                    array('rotation' => pwg_image::get_rotation_code_from_angle($page['rotation_angle'] ?? 0)),
+                    array('rotation' => PwgImage::get_rotation_code_from_angle($page['rotation_angle'] ?? 0)),
                     array('id' => $row['id'])
                 );
             } else {
-                $page['rotation_angle'] = pwg_image::get_rotation_angle_from_code((int) $row['rotation']);
+                $page['rotation_angle'] = PwgImage::get_rotation_angle_from_code((int) $row['rotation']);
             }
         }
         if (!$row) {
@@ -543,7 +543,7 @@ if (!mkgetdir(dirname($page['derivative_path']))) {
 ignore_user_abort(true);
 @set_time_limit(0);
 
-$image = new pwg_image($page['src_path']);
+$image = new PwgImage($page['src_path']);
 $timing['load'] = time_step($step);
 
 $changes = 0;
@@ -580,7 +580,7 @@ if ($params->sharpen) {
 
 if ($params->will_watermark($d_size)) {
     $wm = ImageStdParams::get_watermark();
-    $wm_image = new pwg_image(PHPWG_ROOT_PATH.$wm->file);
+    $wm_image = new PwgImage(PHPWG_ROOT_PATH.$wm->file);
     $wm_size = array($wm_image->get_width(),$wm_image->get_height());
     if ($d_size[0] < $wm_size[0] or $d_size[1] < $wm_size[1]) {
         $wm_scaling_params = SizingParams::classic((int) $d_size[0], (int) $d_size[1]);

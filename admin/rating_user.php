@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Piwigo\Admin\tabsheet;
+use Piwigo\Admin\Tabsheet;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 
@@ -17,7 +17,7 @@ defined('PHPWG_ROOT_PATH') or die('Hacking attempt!');
 
 global $template, $user, $page, $persistent_cache, $lang;
 
-$tabsheet = new tabsheet();
+$tabsheet = new Tabsheet();
 $tabsheet->set_id('rating');
 $tabsheet->select('rating_user');
 $tabsheet->assign();

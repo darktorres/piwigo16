@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Piwigo\Admin\tabsheet;
+use Piwigo\Admin\Tabsheet;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -141,7 +141,7 @@ $template->assign(
 );
 
 // TabSheet
-$tabsheet = new tabsheet();
+$tabsheet = new Tabsheet();
 $tabsheet->set_id('cat_options');
 $tabsheet->select($page['section']);
 $tabsheet->assign();

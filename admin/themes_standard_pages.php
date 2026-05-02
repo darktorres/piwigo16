@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Piwigo\Admin\themes;
+use Piwigo\Admin\Themes;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -124,7 +124,7 @@ if (isset($_FILES['std_pgs_logo']) and !empty($std_pgs_logo_tmp)) {
 }
 
 //We want to now if any themes use standard pages and which ones
-$themes = new themes();
+$themes = new Themes();
 $themes->get_fs_themes();
 
 $is_standard_pages_used = false;

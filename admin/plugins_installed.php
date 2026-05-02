@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Piwigo\Admin\plugins;
+use Piwigo\Admin\Plugins;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -37,7 +37,7 @@ $base_url = get_root_url().'admin.php?page='.$page['page'];
 $pwg_token = get_pwg_token();
 $action_url = $base_url.'&amp;plugin='.'%s'.'&amp;pwg_token='.$pwg_token;
 
-$plugins = new plugins();
+$plugins = new Plugins();
 
 //--------------------------------------------------------Incompatible Plugins
 if (isset($_GET['incompatible_plugins'])) {

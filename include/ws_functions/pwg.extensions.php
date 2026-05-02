@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 global $template, $user, $page, $persistent_cache, $lang;
 
-use Piwigo\Admin\plugins;
-use Piwigo\Admin\themes;
-use Piwigo\Admin\updates;
+use Piwigo\Admin\Plugins;
+use Piwigo\Admin\Themes;
+use Piwigo\Admin\Updates;
 use Piwigo\Ws\PwgError;
 
 // +-----------------------------------------------------------------------+
@@ -26,7 +26,7 @@ use Piwigo\Ws\PwgError;
  * @return array<mixed>
  */function ws_plugins_getList(array $params, \Piwigo\Ws\PwgServer $service): array
 {
-    $plugins = new plugins();
+    $plugins = new Plugins();
     $plugins->sort_fs_plugins('name');
     $plugin_list = [];
 
@@ -76,7 +76,7 @@ function ws_plugins_performAction(array $params, \Piwigo\Ws\PwgServer $service):
 
     define('IN_ADMIN', true);
 
-    $plugins = new plugins();
+    $plugins = new Plugins();
     $plugin_action = is_string($params['action']) ? $params['action'] : '';
     $plugin_id = is_string($params['plugin']) ? $params['plugin'] : '';
     $errors = $plugins->perform_action($plugin_action, $plugin_id);
@@ -114,7 +114,7 @@ function ws_themes_performAction(array $params, \Piwigo\Ws\PwgServer $service): 
 
     define('IN_ADMIN', true);
 
-    $themes = new themes();
+    $themes = new Themes();
     $theme_action = is_string($params['action']) ? $params['action'] : '';
     $theme_id = is_string($params['theme']) ? $params['theme'] : '';
     $errors = $themes->perform_action($theme_action, $theme_id);
@@ -168,7 +168,7 @@ function ws_extensions_update(array $params, \Piwigo\Ws\PwgServer $service): mix
     $extension_name = '';
 
     if ($type == 'plugins') {
-        $extension = new \Piwigo\Admin\plugins();
+        $extension = new \Piwigo\Admin\Plugins();
         if (
             isset($extension->db_plugins_by_id[$extension_id])
             and $extension->db_plugins_by_id[$extension_id]['state'] == 'active'
@@ -197,7 +197,7 @@ function ws_extensions_update(array $params, \Piwigo\Ws\PwgServer $service): mix
             $extension->perform_action('activate', $extension_id);
         }
     } elseif ($type == 'themes') {
-        $extension = new \Piwigo\Admin\themes();
+        $extension = new \Piwigo\Admin\Themes();
         $upgrade_status = $extension->extract_theme_files('upgrade', $revision, $extension_id);
         $extension_name = is_string($extension->fs_themes[$extension_id]['name'] ?? null) ? $extension->fs_themes[$extension_id]['name'] : '';
 
@@ -213,7 +213,7 @@ function ws_extensions_update(array $params, \Piwigo\Ws\PwgServer $service): mix
 
         pwg_activity('system', ACTIVITY_SYSTEM_THEME, 'update', $activity_details);
     } elseif ($type == 'languages') {
-        $extension = new \Piwigo\Admin\languages();
+        $extension = new \Piwigo\Admin\Languages();
         $upgrade_status = $extension->extract_language_files('upgrade', $revision, $extension_id);
         $extension_name = is_string($extension->fs_languages[$extension_id]['name'] ?? null) ? $extension->fs_languages[$extension_id]['name'] : '';
     }
@@ -311,7 +311,7 @@ function ws_extensions_checkupdates(array $params, \Piwigo\Ws\PwgServer $service
 {
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
-    $update = new updates();
+    $update = new Updates();
     $result = [];
 
     if (!isset($_SESSION['need_update'.PHPWG_VERSION])) {

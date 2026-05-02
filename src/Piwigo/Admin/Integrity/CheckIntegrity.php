@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Integrity;
 
-class check_integrity
+class CheckIntegrity
 {
     /** @var array<string> */
     public array $ignore_list = [];

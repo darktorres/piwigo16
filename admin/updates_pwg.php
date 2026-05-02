@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Piwigo\Admin\updates;
+use Piwigo\Admin\Updates;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -50,7 +50,7 @@ if ('Official' === $ct_env) {
     $upgrade_to = isset($_GET['to']) ? (is_scalar($_GET['to']) ? (string) $_GET['to'] : '') : '';
 }
 
-$updates = new updates();
+$updates = new Updates();
 $new_versions = $updates->get_piwigo_new_versions();
 
 // +-----------------------------------------------------------------------+
@@ -85,7 +85,7 @@ if ($step == 1) {
 if ($step == 2 and is_webmaster()) {
     if (isset($_POST['submit']) and isset($_POST['upgrade_to'])) {
         $post_upgrade_to = is_scalar($_POST['upgrade_to']) ? (string) $_POST['upgrade_to'] : '';
-        updates::upgrade_to($post_upgrade_to, $step);
+        Updates::upgrade_to($post_upgrade_to, $step);
     }
 }
 
@@ -95,7 +95,7 @@ if ($step == 2 and is_webmaster()) {
 if ($step == 3 and is_webmaster()) {
     if (isset($_POST['submit']) and isset($_POST['upgrade_to'])) {
         $post_upgrade_to3 = is_scalar($_POST['upgrade_to']) ? (string) $_POST['upgrade_to'] : '';
-        updates::upgrade_to($post_upgrade_to3, $step);
+        Updates::upgrade_to($post_upgrade_to3, $step);
     }
 
     $updates->get_merged_extensions($upgrade_to);

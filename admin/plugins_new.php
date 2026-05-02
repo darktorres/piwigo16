@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Piwigo\Admin\plugins;
+use Piwigo\Admin\Plugins;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -26,7 +26,7 @@ $template->set_filenames(['plugins' => 'plugins_new.tpl']);
 
 $base_url = get_root_url().'admin.php?page='.$page['page'].'&tab='.($page['tab'] ?? '');
 
-$plugins = new plugins();
+$plugins = new Plugins();
 
 //------------------------------------------------------automatic installation
 if (isset($_GET['revision']) and isset($_GET['extension'])) {

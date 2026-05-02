@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Image;
 
-class image_ext_imagick implements imageInterface
+class ImageExtImagick implements ImageInterface
 {
     public string $imagickdir = '';
     /** @var string|int */
@@ -26,7 +26,7 @@ class image_ext_imagick implements imageInterface
         }
 
         if ('webp' == strtolower(get_extension($this->source_filepath))) {
-            $webp_info = pwg_image::webp_info($this->source_filepath);
+            $webp_info = PwgImage::webp_info($this->source_filepath);
 
             if ($webp_info['has-animation']) {
                 $this->is_animated_webp = true;
@@ -40,7 +40,7 @@ class image_ext_imagick implements imageInterface
             }
         }
 
-        $identify = pwg_image::get_ext_imagick_command() === 'magick' ? 'magick identify' : 'identify';
+        $identify = PwgImage::get_ext_imagick_command() === 'magick' ? 'magick identify' : 'identify';
         $command = $this->imagickdir.$identify.' -format "%wx%h" "'.realpath($this->source_filepath).'"';
         @exec($command, $returnarray);
         if (empty($returnarray[0]) or !preg_match('/^(\d+)x(\d+)$/', $returnarray[0], $match)) {
@@ -123,7 +123,7 @@ class image_ext_imagick implements imageInterface
 
     public function sharpen(int $amount): bool
     {
-        $m = pwg_image::get_sharpen_matrix($amount);
+        $m = PwgImage::get_sharpen_matrix($amount);
 
         $param = 'convolve "'.count($m).':';
         foreach ($m as $line) {
@@ -137,7 +137,7 @@ class image_ext_imagick implements imageInterface
 
     public function compose(mixed $overlay, int $x, int $y, int $opacity): bool
     {
-        if (!($overlay instanceof image_ext_imagick)) {
+        if (!($overlay instanceof ImageExtImagick)) {
             return false;
         }
         $param = 'compose dissolve -define compose:args='.$opacity;
@@ -161,11 +161,11 @@ class image_ext_imagick implements imageInterface
         // to detect IM version and when we know which version supports this
         // option
         //
-        if (version_compare(pwg_image::$ext_imagick_version, '6.6') > 0) {
+        if (version_compare(PwgImage::$ext_imagick_version, '6.6') > 0) {
             $this->add_command('sampling-factor', '4:2:2');
         }
 
-        $exec = $this->imagickdir.pwg_image::get_ext_imagick_command();
+        $exec = $this->imagickdir.PwgImage::get_ext_imagick_command();
         $exec .= ' "'.realpath($this->source_filepath).'"';
 
         // If the image is animated webp add a filter to avoid breaking the animation

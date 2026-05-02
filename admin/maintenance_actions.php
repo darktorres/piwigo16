@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Piwigo\Admin\Image\pwg_image;
-use Piwigo\Admin\Integrity\check_integrity;
+use Piwigo\Admin\Image\PwgImage;
+use Piwigo\Admin\Integrity\CheckIntegrity;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Template\FileCombiner;
 
@@ -158,7 +158,7 @@ DELETE
         }
     case 'c13y':
         {
-            $c13y = new check_integrity();
+            $c13y = new CheckIntegrity();
             $c13y->maintenance();
             \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', l10n('Reinitialize check integrity'), l10n('action successfully performed.')));
             break;
@@ -331,10 +331,10 @@ $template->assign(
 );
 
 // graphics library
-switch (pwg_image::get_library()) {
+switch (PwgImage::get_library()) {
     case 'ext_imagick':
         $library = 'External ImageMagick';
-        exec(\Piwigo\Core\Config::extImagickDir().pwg_image::get_ext_imagick_command().' -version', $returnarray);
+        exec(\Piwigo\Core\Config::extImagickDir().PwgImage::get_ext_imagick_command().' -version', $returnarray);
         if (preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray[0], $match)) {
             $library .= ' ' . $match[1];
         }

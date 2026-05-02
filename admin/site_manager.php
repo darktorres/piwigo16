@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Piwigo\Admin\tabsheet;
+use Piwigo\Admin\Tabsheet;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -45,7 +45,7 @@ $template->set_filenames(['site_manager' => 'site_manager.tpl']);
 
 $my_base_url = get_root_url().'admin.php?page=';
 
-$tabsheet = new tabsheet();
+$tabsheet = new Tabsheet();
 $tabsheet->set_id('site_update');
 $tabsheet->select('site_maager');
 $tabsheet->assign();

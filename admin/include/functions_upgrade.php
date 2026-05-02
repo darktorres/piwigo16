@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Piwigo\Admin\themes;
+use Piwigo\Admin\Themes;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -153,7 +153,7 @@ SELECT
             [$counter] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
             if ($counter < 1) {
                 // we need to activate theme first
-                $themes = new themes();
+                $themes = new Themes();
                 $themes->perform_action('activate', PHPWG_DEFAULT_TEMPLATE);
             }
 

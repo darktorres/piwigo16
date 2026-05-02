@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Piwigo\Admin\tabsheet;
+use Piwigo\Admin\Tabsheet;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -26,7 +26,7 @@ include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
 $my_base_url = get_root_url().'admin.php?page=';
 
-$tabsheet = new tabsheet();
+$tabsheet = new Tabsheet();
 $tabsheet->set_id('groups');
 $tabsheet->select('group_list');
 $tabsheet->assign();

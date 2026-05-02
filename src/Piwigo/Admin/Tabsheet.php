@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
-class tabsheet
+class Tabsheet
 {
     /** @var array<string, array<string, bool|string>> */
     public array $sheets = [];

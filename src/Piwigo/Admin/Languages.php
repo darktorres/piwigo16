@@ -6,7 +6,7 @@ namespace Piwigo\Admin;
 
 use Piwigo\Users\CurrentUser;
 
-class languages
+class Languages
 {
     /** @var array<string, array<string,mixed>> */
     public array $fs_languages = [];

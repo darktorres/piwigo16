@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Image;
 
-class image_imagick implements imageInterface
+class ImageImagick implements ImageInterface
 {
     /**
      * @var \Imagick
@@ -65,13 +65,13 @@ class image_imagick implements imageInterface
 
     public function sharpen(int $amount): bool
     {
-        $m = pwg_image::get_sharpen_matrix($amount);
+        $m = PwgImage::get_sharpen_matrix($amount);
         return  $this->image->convolveImage($m);
     }
 
     public function compose(mixed $overlay, int $x, int $y, int $opacity): bool
     {
-        if (!($overlay instanceof image_imagick)) {
+        if (!($overlay instanceof ImageImagick)) {
             return false;
         }
         $ioverlay = $overlay->image;

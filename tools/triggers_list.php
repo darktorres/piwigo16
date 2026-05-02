@@ -308,13 +308,13 @@ array(
   'name' => 'list_check_integrity',
   'type' => 'trigger_notify',
   'vars' => array('object', 'this'),
-  'files' => array('admin\include\check_integrity.class.php (check_integrity::check)'),
+  'files' => array('src/Piwigo/Admin/Integrity/CheckIntegrity.php (CheckIntegrity::check)'),
 ),
 array(
   'name' => 'load_image_library',
   'type' => 'trigger_notify',
   'vars' => array('object', 'this'),
-  'files' => array('admin\include\image.class.php (pwg_image::__construct)'),
+  'files' => array('src/Piwigo/Admin/Image/PwgImage.php (PwgImage::__construct)'),
 ),
 array(
   'name' => 'load_profile_in_template',
@@ -826,7 +826,7 @@ array(
   'name' => 'tabsheet_before_select',
   'type' => 'trigger_change',
   'vars' => array('array', 'sheets', 'string', 'tabsheet_id'),
-  'files' => array('include\tabsheet.class.php (tabsheet::select)'),
+  'files' => array('src/Piwigo/Admin/Tabsheet.php (Tabsheet::select)'),
   'infos' => 'New in 2.4, use this trigger to add tabs to a tabsheets',
 ),
 array(

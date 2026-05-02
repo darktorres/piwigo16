@@ -6,7 +6,7 @@ namespace Piwigo\Admin;
 
 use Piwigo\Users\CurrentUser;
 
-class themes
+class Themes
 {
     /** @var array<string, array<string,mixed>> */
     public array $fs_themes = [];
@@ -46,7 +46,7 @@ class themes
             }
         }
 
-        return new DummyTheme_maintain($theme_id);
+        return new DummyThemeMaintain($theme_id);
     }
 
     /**

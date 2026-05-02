@@ -16,9 +16,9 @@ namespace Piwigo\Admin\Image;
  * @method bool write(string $destination_filepath)
  * @method bool set_compression_quality(int $quality)
  */
-class pwg_image
+class PwgImage
 {
-    /** @var imageInterface|null */
+    /** @var ImageInterface|null */
     public $image = null;
     public string $library = '';
     public static string $ext_imagick_version = '';
@@ -44,9 +44,9 @@ class pwg_image
         $this->library = $lib;
 
         $this->image = match($this->library) {
-            'gd'          => new image_gd($this->source_filepath),
-            'imagick'     => new image_imagick($this->source_filepath),
-            'ext_imagick' => new image_ext_imagick($this->source_filepath),
+            'gd'          => new ImageGd($this->source_filepath),
+            'imagick'     => new ImageImagick($this->source_filepath),
+            'ext_imagick' => new ImageExtImagick($this->source_filepath),
             default       => throw new \RuntimeException("Unknown image library: {$this->library}"),
         };
     }
@@ -384,7 +384,7 @@ class pwg_image
             return false;
         }
 
-        @exec(\Piwigo\Core\Config::extImagickDir().pwg_image::get_ext_imagick_command().' -version', $returnarray);
+        @exec(\Piwigo\Core\Config::extImagickDir().self::get_ext_imagick_command().' -version', $returnarray);
         if (!empty($returnarray[0]) and preg_match('/ImageMagick/i', $returnarray[0])) {
             if (preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray[0], $match)) {
                 self::$ext_imagick_version = $match[1];

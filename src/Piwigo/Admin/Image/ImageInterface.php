@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Image;
 
 // Define all needed methods for image class
-interface imageInterface
+interface ImageInterface
 {
     public function get_width(): int;
 

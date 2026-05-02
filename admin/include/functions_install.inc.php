@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Piwigo\Admin\plugins;
-use Piwigo\Admin\themes;
+use Piwigo\Admin\Plugins;
+use Piwigo\Admin\Themes;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -58,7 +58,7 @@ function execute_sqlfile(string $filepath, string $replaced, string $replacing, 
  */
 function activate_core_themes(): void
 {
-    $themes = new themes();
+    $themes = new Themes();
     foreach ($themes->fs_themes as $theme_id => $fs_theme) {
         if (in_array($theme_id, ['modus'])) {
             $themes->perform_action('activate', $theme_id);
@@ -71,7 +71,7 @@ function activate_core_themes(): void
  */
 function activate_core_plugins(): void
 {
-    $plugins = new plugins();
+    $plugins = new Plugins();
 
     foreach ($plugins->fs_plugins as $plugin_id => $fs_plugin) {
         if (in_array($plugin_id, [])) {

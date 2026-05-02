@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Image;
 
-class image_gd implements imageInterface
+class ImageGd implements ImageInterface
 {
     public \GdImage $image;
     public int $quality = 95;
@@ -93,13 +93,13 @@ class image_gd implements imageInterface
 
     public function sharpen(int $amount): bool
     {
-        $m = pwg_image::get_sharpen_matrix($amount);
+        $m = PwgImage::get_sharpen_matrix($amount);
         return imageconvolution($this->image, $m, 1, 0);
     }
 
     public function compose(mixed $overlay, int $x, int $y, int $opacity): bool
     {
-        if (!($overlay instanceof image_gd)) {
+        if (!($overlay instanceof ImageGd)) {
             return false;
         }
         $ioverlay = $overlay->image;

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Piwigo\Admin\tabsheet;
+use Piwigo\Admin\Tabsheet;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -25,7 +25,7 @@ function history_tabsheet(): void
     global $page, $link_start;
 
     // TabSheet
-    $tabsheet = new tabsheet();
+    $tabsheet = new Tabsheet();
     $tabsheet->set_id('history');
     $tabsheet->select($page['page']);
     $tabsheet->assign();

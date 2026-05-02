@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Piwigo\Admin\tabsheet;
+use Piwigo\Admin\Tabsheet;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -84,7 +84,7 @@ if (isset($page['no_md5sum_number'])) {
 
 $my_base_url = get_root_url().'admin.php?page=';
 
-$tabsheet = new tabsheet();
+$tabsheet = new Tabsheet();
 $tabsheet->set_id('site_update');
 $tabsheet->select('synchronization');
 $tabsheet->assign();

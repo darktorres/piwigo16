@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Piwigo\Admin\tabsheet;
+use Piwigo\Admin\Tabsheet;
 use Piwigo\Menu\BlockManager;
 
 // +-----------------------------------------------------------------------+
@@ -45,7 +45,7 @@ function make_consecutive(array &$orders, int $step = 50): void
 
 $my_base_url = get_root_url().'admin.php?page=';
 
-$tabsheet = new tabsheet();
+$tabsheet = new Tabsheet();
 $tabsheet->set_id('menus');
 $tabsheet->select('');
 $tabsheet->assign();

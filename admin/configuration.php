@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Piwigo\Admin\Image\pwg_image;
-use Piwigo\Admin\tabsheet;
+use Piwigo\Admin\Image\PwgImage;
+use Piwigo\Admin\Tabsheet;
 use Piwigo\Image\ImageStdParams;
 
 // +-----------------------------------------------------------------------+
@@ -340,7 +340,7 @@ $section_str = is_scalar($page['section']) ? (string) $page['section'] : 'main';
 $template->set_filename('config', 'configuration_' . $section_str . '.tpl');
 
 // TabSheet
-$tabsheet = new tabsheet();
+$tabsheet = new Tabsheet();
 $tabsheet->set_id('configuration');
 $tabsheet->select($section_str);
 $tabsheet->assign();
@@ -515,7 +515,7 @@ switch ($page['section']) {
             // we only load the derivatives if it was not already loaded: it occurs
             // when submitting the form and an error remains
             if (!isset($page['sizes_loaded_in_tpl'])) {
-                $is_gd = (pwg_image::get_library() == 'gd') ? true : false;
+                $is_gd = (PwgImage::get_library() == 'gd') ? true : false;
                 $template->assign('is_gd', $is_gd);
                 $template->assign(
                     'sizes',

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 global $template, $user, $page, $persistent_cache, $lang, $title, $debug, $t2;
 
-use Piwigo\Admin\updates;
+use Piwigo\Admin\Updates;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -47,7 +47,7 @@ if (\Piwigo\Core\Config::updateNotifyCheckPeriod() > 0) {
         $exec_id = pwg_unique_exec_begins('check_for_updates');
         if (false !== $exec_id) {
             include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
-            $updates = new updates();
+            $updates = new Updates();
             $updates->notify_piwigo_new_versions();
 
             pwg_unique_exec_ends('check_for_updates');

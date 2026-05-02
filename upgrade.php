@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 global $template, $user, $page, $persistent_cache, $lang, $prefixeTable;
 
-use Piwigo\Admin\languages;
-use Piwigo\Admin\updates;
+use Piwigo\Admin\Languages;
+use Piwigo\Admin\Updates;
 use Piwigo\Template\Template;
 
 // +-----------------------------------------------------------------------+
@@ -138,7 +138,7 @@ function print_time(string $message): void
 // +-----------------------------------------------------------------------+
 // |                             language                                  |
 // +-----------------------------------------------------------------------+
-$languages = new languages('utf-8');
+$languages = new Languages('utf-8');
 $get_language = input_string('language', null, $_GET);
 if ($get_language !== null) {
     $language = strip_tags($get_language);
@@ -234,7 +234,7 @@ if ($has_remote_site) {
 
     $page['errors'] = [];
     $step = 3;
-    updates::upgrade_to('2.3.4', $step, false);
+    Updates::upgrade_to('2.3.4', $step, false);
 
     if (!empty($page['errors'])) {
         echo '<ul>';

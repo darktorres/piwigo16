@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Piwigo\Admin\Image\pwg_image;
+use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
@@ -287,12 +287,12 @@ SELECT
 
     $logger->info('Handling ' . (string)$file_path . ' got ' . (string)$representative_ext);
 
-    if (pwg_image::get_library() != 'gd') {
+    if (PwgImage::get_library() != 'gd') {
         if (\Piwigo\Core\Config::originalResize()) {
             $need_resize = need_resize($file_path, \Piwigo\Core\Config::originalResizeMaxwidth(), \Piwigo\Core\Config::originalResizeMaxheight());
 
             if ($need_resize) {
-                $img = new pwg_image($file_path);
+                $img = new PwgImage($file_path);
 
                 $img->pwg_resize(
                     $file_path,
@@ -310,8 +310,8 @@ SELECT
 
     // we need to save the rotation angle in the database to compute
     // width/height of "multisizes"
-    $rotation_angle = pwg_image::get_rotation_angle($file_path);
-    $rotation = pwg_image::get_rotation_code_from_angle($rotation_angle ?? 0);
+    $rotation_angle = PwgImage::get_rotation_angle($file_path);
+    $rotation = PwgImage::get_rotation_code_from_angle($rotation_angle ?? 0);
 
     $file_infos = pwg_image_infos($file_path);
 
@@ -534,7 +534,7 @@ function upload_file_pdf(?string $representative_ext, string $file_path): ?strin
         return $representative_ext;
     }
 
-    if (pwg_image::get_library() != 'ext_imagick') {
+    if (PwgImage::get_library() != 'ext_imagick') {
         return $representative_ext;
     }
 
@@ -551,7 +551,7 @@ function upload_file_pdf(?string $representative_ext, string $file_path): ?strin
     $representative_file_path = original_to_representative($file_path, $ext);
     prepare_directory(dirname($representative_file_path));
 
-    $exec = \Piwigo\Core\Config::extImagickDir().pwg_image::get_ext_imagick_command();
+    $exec = \Piwigo\Core\Config::extImagickDir().PwgImage::get_ext_imagick_command();
     $exec .= ' "'.realpath($file_path).'"[0]';
     if ('jpg' == $ext) {
         $exec .= ' -quality '.$jpg_quality;
@@ -579,7 +579,7 @@ function upload_file_heic(?string $representative_ext, string $file_path): ?stri
         return $representative_ext;
     }
 
-    if (pwg_image::get_library() != 'ext_imagick') {
+    if (PwgImage::get_library() != 'ext_imagick') {
         return $representative_ext;
     }
 
@@ -595,7 +595,7 @@ function upload_file_heic(?string $representative_ext, string $file_path): ?stri
 
     [$w, $h] = get_optimal_dimensions_for_representative();
 
-    $exec = \Piwigo\Core\Config::extImagickDir().pwg_image::get_ext_imagick_command();
+    $exec = \Piwigo\Core\Config::extImagickDir().PwgImage::get_ext_imagick_command();
     $exec .= ' "'.realpath($file_path).'"';
     $exec .= ' -sampling-factor 4:2:0 -quality 85 -interlace JPEG -colorspace sRGB -auto-orient +repage -resize "'.$w.'x'.$h.'>"';
     $exec .= ' "'.$representative_file_path.'"';
@@ -624,7 +624,7 @@ function upload_file_tiff(?string $representative_ext, string $file_path): ?stri
         return $representative_ext;
     }
 
-    if (pwg_image::get_library() != 'ext_imagick') {
+    if (PwgImage::get_library() != 'ext_imagick') {
         return $representative_ext;
     }
 
@@ -641,7 +641,7 @@ function upload_file_tiff(?string $representative_ext, string $file_path): ?stri
 
     prepare_directory(dirname($representative_file_path));
 
-    $exec = \Piwigo\Core\Config::extImagickDir().pwg_image::get_ext_imagick_command();
+    $exec = \Piwigo\Core\Config::extImagickDir().PwgImage::get_ext_imagick_command();
     $exec .= ' "'.realpath($file_path).'"';
 
     if ('jpg' == \Piwigo\Core\Config::tiffRepresentativeExt()) {
@@ -755,7 +755,7 @@ function upload_file_psd(?string $representative_ext, string $file_path): ?strin
         return $representative_ext;
     }
 
-    if (pwg_image::get_library() != 'ext_imagick') {
+    if (PwgImage::get_library() != 'ext_imagick') {
         return $representative_ext;
     }
 
@@ -772,7 +772,7 @@ function upload_file_psd(?string $representative_ext, string $file_path): ?strin
 
     prepare_directory(dirname($representative_file_path));
 
-    $exec = \Piwigo\Core\Config::extImagickDir().pwg_image::get_ext_imagick_command();
+    $exec = \Piwigo\Core\Config::extImagickDir().PwgImage::get_ext_imagick_command();
 
     $exec .= ' "'.realpath($file_path).'"';
 
@@ -812,7 +812,7 @@ function upload_file_eps(?string $representative_ext, string $file_path): ?strin
         return $representative_ext;
     }
 
-    if (pwg_image::get_library() != 'ext_imagick') {
+    if (PwgImage::get_library() != 'ext_imagick') {
         return $representative_ext;
     }
 
@@ -829,7 +829,7 @@ function upload_file_eps(?string $representative_ext, string $file_path): ?strin
 
     // convert -density 300 image.eps -resize 2048x2048 image.png
 
-    $exec = \Piwigo\Core\Config::extImagickDir().pwg_image::get_ext_imagick_command();
+    $exec = \Piwigo\Core\Config::extImagickDir().PwgImage::get_ext_imagick_command();
     $exec .= ' "'.realpath($file_path).'"';
     $exec .= ' -density 300';
     $exec .= ' -resize 2048x2048';

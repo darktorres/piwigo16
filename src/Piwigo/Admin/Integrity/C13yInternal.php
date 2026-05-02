@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Integrity;
 
-class c13y_internal
+class C13yInternal
 {
     public function __construct()
     {
@@ -18,7 +18,7 @@ class c13y_internal
      *
      *  object
      */
-    public function c13y_version(\Piwigo\Admin\Integrity\check_integrity $c13y): void
+    public function c13y_version(\Piwigo\Admin\Integrity\CheckIntegrity $c13y): void
     {
         $check_list = [];
 
@@ -53,7 +53,7 @@ class c13y_internal
      *
      *  object
      */
-    public function c13y_exif(\Piwigo\Admin\Integrity\check_integrity $c13y): void
+    public function c13y_exif(\Piwigo\Admin\Integrity\CheckIntegrity $c13y): void
     {
         foreach (['show_exif', 'use_exif'] as $value) {
             if ((\Piwigo\Core\Config::get($value)) and (!function_exists('exif_read_data'))) {
@@ -74,7 +74,7 @@ class c13y_internal
      *
      *  object
      */
-    public function c13y_user(\Piwigo\Admin\Integrity\check_integrity $c13y): void
+    public function c13y_user(\Piwigo\Admin\Integrity\CheckIntegrity $c13y): void
     {
         $c13y_users = [];
         $c13y_users[\Piwigo\Core\Config::guestId()] = [

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Piwigo\Admin\themes;
+use Piwigo\Admin\Themes;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -24,7 +24,7 @@ if (!\Piwigo\Core\Config::enableExtensionsInstall()) {
 
 $base_url = get_root_url().'admin.php?page='.$page['page'].'&tab='.$page['tab'];
 
-$themes = new themes();
+$themes = new Themes();
 
 // +-----------------------------------------------------------------------+
 // |                           setup check                                 |
@@ -105,7 +105,7 @@ if (isset($_GET['installstatus'])) {
 
 $template->set_filenames(['themes' => 'themes_new.tpl']);
 
-if ($themes->get_server_themes(true)) { // only new themes
+if ($themes->get_server_themes(true)) { // only new Themes
     foreach ($themes->server_themes as $theme) {
         $theme_revision_id = is_scalar($theme['revision_id'] ?? null) ? (string) $theme['revision_id'] : '';
         $theme_extension_id = is_scalar($theme['extension_id'] ?? null) ? (string) $theme['extension_id'] : '';

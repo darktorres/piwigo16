@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 global $template, $user, $page, $persistent_cache, $lang;
 
-use Piwigo\Admin\tabsheet;
+use Piwigo\Admin\Tabsheet;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -15,7 +15,7 @@ use Piwigo\Admin\tabsheet;
 
 $my_base_url = get_root_url().'admin.php?page=';
 
-$tabsheet = new tabsheet();
+$tabsheet = new Tabsheet();
 $tabsheet->set_id('users');
 $tabsheet->select($page['tab']);
 $tabsheet->assign();

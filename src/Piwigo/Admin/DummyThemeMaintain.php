@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 /**
- * class DummyTheme_maintain
+ * class DummyThemeMaintain
  * used when a theme uses the old procedural declaration of maintenance methods.
  * Old-style themes define theme_activate(), theme_deactivate(), theme_delete() as global functions.
  */
-class DummyTheme_maintain extends ThemeMaintain
+class DummyThemeMaintain extends ThemeMaintain
 {
     /** @param array<mixed> $errors */
     public function activate(string $theme_version, array &$errors = []): mixed

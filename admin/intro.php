@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Piwigo\Admin\Integrity\c13y_internal;
-use Piwigo\Admin\Integrity\check_integrity;
-use Piwigo\Admin\tabsheet;
+use Piwigo\Admin\Integrity\C13yInternal;
+use Piwigo\Admin\Integrity\CheckIntegrity;
+use Piwigo\Admin\Tabsheet;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -39,7 +39,7 @@ if (isset($_GET['action']) and 'hide_newsletter_subscription' == $_GET['action']
 
 $my_base_url = get_root_url().'admin.php?page=';
 
-$tabsheet = new tabsheet();
+$tabsheet = new Tabsheet();
 $tabsheet->set_id('admin_home');
 $tabsheet->select('');
 $tabsheet->assign();
@@ -470,9 +470,9 @@ $template->assign('page_data_json', json_encode([
 $template->assign_var_from_handle('ADMIN_CONTENT', 'intro');
 
 // Check integrity
-$c13y = new check_integrity();
+$c13y = new CheckIntegrity();
 // add internal checks
-new c13y_internal();
+new C13yInternal();
 // check and display
 $c13y->check();
 $c13y->display();

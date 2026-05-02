@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Piwigo\Admin\plugins;
-use Piwigo\Admin\themes;
+use Piwigo\Admin\Plugins;
+use Piwigo\Admin\Themes;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Template\Template;
 
@@ -2382,7 +2382,7 @@ SELECT
         return;
     }
 
-    $plugins = new plugins();
+    $plugins = new Plugins();
     $piwigo_infos['general_stats']['nb_private_plugins'] = 0;
     $piwigo_infos['plugins'] = [];
     foreach ($plugins->db_plugins_by_id as $plugin) {
@@ -2420,7 +2420,7 @@ SELECT
 
     $piwigo_infos['general_stats']['nb_plugins'] = $piwigo_infos['general_stats']['nb_private_plugins'] + count($piwigo_infos['plugins']);
 
-    $themes = new themes();
+    $themes = new Themes();
     $piwigo_infos['general_stats']['nb_private_themes'] = 0;
     $piwigo_infos['themes'] = [];
     $private_themes = [];

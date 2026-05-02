@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Piwigo\Admin\themes;
+use Piwigo\Admin\Themes;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -24,7 +24,7 @@ if (!is_webmaster()) {
 
 $base_url = get_root_url().'admin.php?page='.$page['page'];
 
-$themes = new themes();
+$themes = new Themes();
 
 // +-----------------------------------------------------------------------+
 // |                          perform actions                              |

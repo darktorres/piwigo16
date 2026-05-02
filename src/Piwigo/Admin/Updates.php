@@ -6,13 +6,13 @@ namespace Piwigo\Admin;
 
 use Piwigo\Users\CurrentUser;
 
-class updates
+class Updates
 {
     /** @var string[] */
     public $types = [];
-    public plugins $plugins;
-    public themes $themes;
-    public languages $languages;
+    public Plugins $plugins;
+    public Themes $themes;
+    public Languages $languages;
     /** @var array<string, array<mixed>> */
     public array $missing = [];
     /** @var string[] */
@@ -38,11 +38,11 @@ class updates
         foreach ($this->types as $type) {
             include_once(PHPWG_ROOT_PATH.'admin/include/'.$type.'.class.php');
             if ($type === 'plugins') {
-                $this->plugins = new plugins();
+                $this->plugins = new Plugins();
             } elseif ($type === 'themes') {
-                $this->themes = new themes();
+                $this->themes = new Themes();
             } else {
-                $this->languages = new languages();
+                $this->languages = new Languages();
             }
         }
     }

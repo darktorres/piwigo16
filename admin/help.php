@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Piwigo\Admin\tabsheet;
+use Piwigo\Admin\Tabsheet;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -29,7 +29,7 @@ if (!isset($_GET['section']) || !is_string($_GET['section'])) {
     $selected = $_GET['section'];
 }
 
-$tabsheet = new tabsheet();
+$tabsheet = new Tabsheet();
 $tabsheet->set_id('help');
 $tabsheet->select($selected);
 $tabsheet->assign();

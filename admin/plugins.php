@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Piwigo\Admin\tabsheet;
+use Piwigo\Admin\Tabsheet;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -26,7 +26,7 @@ if (isset($_GET['tab'])) {
     $page['tab'] = 'installed';
 }
 
-$tabsheet = new tabsheet();
+$tabsheet = new Tabsheet();
 $tabsheet->set_id('plugins');
 $tabsheet->select($page['tab']);
 $tabsheet->assign();

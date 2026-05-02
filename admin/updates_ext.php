@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Piwigo\Admin\updates;
+use Piwigo\Admin\Updates;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -29,7 +29,7 @@ if (!is_webmaster()) {
 $updates_ignored_raw = \Piwigo\Core\Config::get('updates_ignored');
 \Piwigo\Core\Config::override('updates_ignored', safe_unserialize(is_string($updates_ignored_raw) ? $updates_ignored_raw : ''));
 
-$autoupdate = new updates($page['page']);
+$autoupdate = new Updates($page['page']);
 
 $show_reset = false;
 if (!$autoupdate->get_server_extensions()) {

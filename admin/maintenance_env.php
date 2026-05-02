@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Piwigo\Admin\Integrity\check_integrity;
+use Piwigo\Admin\Integrity\CheckIntegrity;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Template\FileCombiner;
 
@@ -162,7 +162,7 @@ DELETE
         }
     case 'c13y':
         {
-            $c13y = new check_integrity();
+            $c13y = new CheckIntegrity();
             $c13y->maintenance();
             break;
         }

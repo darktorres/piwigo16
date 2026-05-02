@@ -6,7 +6,7 @@ namespace Piwigo\Admin;
 
 use Piwigo\Users\CurrentUser;
 
-class plugins
+class Plugins
 {
     /** @var array<string, array<string,mixed>> */
     public array $fs_plugins = [];
@@ -61,7 +61,7 @@ class plugins
             }
         }
 
-        return new DummyPlugin_maintain($plugin_id);
+        return new DummyPluginMaintain($plugin_id);
     }
 
     /**
@@ -83,10 +83,10 @@ class plugins
         }
 
         // For 'update', we build the maintain class only after file extraction (see case 'update' below).
-        // Use a DummyPlugin_maintain placeholder so $plugin_maintain is always typed.
+        // Use a DummyPluginMaintain placeholder so $plugin_maintain is always typed.
         $plugin_maintain = $action !== 'update'
             ? self::build_maintain_class($plugin_id)
-            : new DummyPlugin_maintain($plugin_id);
+            : new DummyPluginMaintain($plugin_id);
 
         $activity_details = ['plugin_id' => $plugin_id];
 

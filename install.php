@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 global $template, $user, $page, $persistent_cache, $lang;
 
-use Piwigo\Admin\languages;
+use Piwigo\Admin\Languages;
 use Piwigo\Session\PwgSession;
 use Piwigo\Template\Template;
 
@@ -94,7 +94,7 @@ if (@file_exists($config_file)) {
 include(PHPWG_ROOT_PATH . 'include/constants.php');
 include(PHPWG_ROOT_PATH . 'admin/include/functions.php');
 
-$languages = new languages('utf-8');
+$languages = new Languages('utf-8');
 
 if (isset($_GET['language'])) {
     $language = strip_tags(is_scalar($_GET['language']) ? (string) $_GET['language'] : '');

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Piwigo\Admin\tabsheet;
+use Piwigo\Admin\Tabsheet;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -50,7 +50,7 @@ if (isset($_GET['tab'])) {
     $page['tab'] = is_scalar($_GET['tab']) ? (string) $_GET['tab'] : 'properties';
 }
 
-$tabsheet = new tabsheet();
+$tabsheet = new Tabsheet();
 $tabsheet->set_id('album');
 $tabsheet->select((string) $page['tab']);
 $tabsheet->assign();

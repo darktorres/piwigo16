@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Piwigo\Admin\Image\pwg_image;
+use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 
@@ -3494,14 +3494,14 @@ function get_piwigo_news(): array
 
 function get_graphics_library(): string
 {
-    $library = pwg_image::get_library();
+    $library = PwgImage::get_library();
     if ($library === false) {
         return '';
     }
 
-    switch (pwg_image::get_library()) {
+    switch (PwgImage::get_library()) {
         case 'ext_imagick':
-            exec(\Piwigo\Core\Config::extImagickDir().pwg_image::get_ext_imagick_command().' -version', $returnarray);
+            exec(\Piwigo\Core\Config::extImagickDir().PwgImage::get_ext_imagick_command().' -version', $returnarray);
             if (preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray[0], $match)) {
                 $library .= '/'.$match[1];
             }

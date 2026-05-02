@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Piwigo\Admin\tabsheet;
+use Piwigo\Admin\Tabsheet;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -52,7 +52,7 @@ if (isset($_GET['section'])) {
     $page['tab'] = 'direct';
 }
 
-$tabsheet = new tabsheet();
+$tabsheet = new Tabsheet();
 $tabsheet->set_id('photos_add');
 $tabsheet->select($page['tab']);
 $tabsheet->assign();

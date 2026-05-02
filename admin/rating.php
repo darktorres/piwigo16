@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Piwigo\Admin\tabsheet;
+use Piwigo\Admin\Tabsheet;
 use Piwigo\Image\DerivativeImage;
 
 // +-----------------------------------------------------------------------+
@@ -28,7 +28,7 @@ check_status(ACCESS_ADMINISTRATOR);
 
 check_input_parameter('display', $_GET, false, PATTERN_ID);
 
-$tabsheet = new tabsheet();
+$tabsheet = new Tabsheet();
 $tabsheet->set_id('rating');
 $tabsheet->select('rating');
 $tabsheet->assign();

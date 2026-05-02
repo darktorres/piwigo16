@@ -68,7 +68,7 @@ vendor/bin/phpstan analyse --no-progress                     # green, including 
 
 ## #3 — PSR-4 strict layout + PascalCase normalization
 
-**Status:** Step (a) done — class bodies moved to `src/`; renaming + stub deletion remain &nbsp;|&nbsp; **Size:** M
+**Status:** ✅ Done (renames + callers); placeholder deletion deferred to #30 &nbsp;|&nbsp; **Size:** M
 
 ### Goal
 
@@ -76,29 +76,30 @@ Composer's `--strict-psr` mode passes clean. Every class in `src/` lives in a Pa
 
 ### Current state
 
-The 9 legacy `include/*.class.php` and 8 `admin/include/*.class.php` files have been **emptied** (each is a 5-line `<?php declare(strict_types=1); // Class moved to src/Piwigo/ — autoloaded by Composer.` placeholder). Their class bodies live under `src/Piwigo/`. The roadmap previously claimed `class_alias()` shims in `src/Piwigo/Compat/aliases.php` carry the legacy unqualified names — **that file does not exist**. Every caller now uses the namespaced `use Piwigo\Admin\plugins;` form, so the placeholders are inert and slated for deletion in #29.
+All 14 lowercase / mixed-case classes under `src/Piwigo/Admin/` have been renamed to PascalCase, with their files moved via `git mv` to match. Every first-party caller (admin/, include/, top-level entry-points) now references the new names. `composer dump-autoload --strict-psr` exits clean. The 17 legacy `include/*.class.php` and `admin/include/*.class.php` placeholder stubs (5-line `<?php declare(strict_types=1);` files) are still present and slated for deletion in #30; no first-party code depends on them.
 
-**Snake_case files in `src/` (8 — class names match filenames):**
+**Renames applied:**
 
-- `src/Piwigo/Admin/plugins.php` (class `plugins`)
-- `src/Piwigo/Admin/themes.php` (class `themes`)
-- `src/Piwigo/Admin/languages.php` (class `languages`)
-- `src/Piwigo/Admin/tabsheet.php` (class `tabsheet`)
-- `src/Piwigo/Admin/updates.php` (class `updates`)
-- `src/Piwigo/Admin/Image/image_gd.php` (class `image_gd`)
-- `src/Piwigo/Admin/Image/image_imagick.php`
-- `src/Piwigo/Admin/Image/image_ext_imagick.php`
-- `src/Piwigo/Admin/Image/pwg_image.php`
+| Old | New |
+|---|---|
+| `Piwigo\Admin\plugins` | `Piwigo\Admin\Plugins` |
+| `Piwigo\Admin\themes` | `Piwigo\Admin\Themes` |
+| `Piwigo\Admin\languages` | `Piwigo\Admin\Languages` |
+| `Piwigo\Admin\tabsheet` | `Piwigo\Admin\Tabsheet` |
+| `Piwigo\Admin\updates` | `Piwigo\Admin\Updates` |
+| `Piwigo\Admin\DummyPlugin_maintain` | `Piwigo\Admin\DummyPluginMaintain` |
+| `Piwigo\Admin\DummyTheme_maintain` | `Piwigo\Admin\DummyThemeMaintain` |
+| `Piwigo\Admin\Image\pwg_image` | `Piwigo\Admin\Image\PwgImage` |
+| `Piwigo\Admin\Image\image_gd` | `Piwigo\Admin\Image\ImageGd` |
+| `Piwigo\Admin\Image\image_imagick` | `Piwigo\Admin\Image\ImageImagick` |
+| `Piwigo\Admin\Image\image_ext_imagick` | `Piwigo\Admin\Image\ImageExtImagick` |
+| `Piwigo\Admin\Image\imageInterface` | `Piwigo\Admin\Image\ImageInterface` |
+| `Piwigo\Admin\Integrity\c13y_internal` | `Piwigo\Admin\Integrity\C13yInternal` |
+| `Piwigo\Admin\Integrity\check_integrity` | `Piwigo\Admin\Integrity\CheckIntegrity` |
 
-**Mixed-case violations (5):**
+`rector.php`'s `RenameClassRector` map keeps the legacy unqualified names as **keys** pointing to the new FQN values, so any leftover bare reference (e.g. inside an out-of-tree plugin) gets rewritten correctly when rector is run on it. No `src/Piwigo/Compat/aliases.php` shim is needed — first-party code is fully migrated.
 
-- `src/Piwigo/Admin/Image/imageInterface.php` (interface should be `ImageInterface`)
-- `src/Piwigo/Admin/Integrity/c13y_internal.php`
-- `src/Piwigo/Admin/Integrity/check_integrity.php`
-- `src/Piwigo/Admin/DummyPlugin_maintain.php` (class `DummyPlugin_maintain` — should be `DummyPluginMaintain`)
-- `src/Piwigo/Admin/DummyTheme_maintain.php` (class `DummyTheme_maintain` — should be `DummyThemeMaintain`)
-
-**Out-of-band naming corrections in `src/`:**
+**Out-of-band naming corrections in `src/` (historical context, already in place):**
 
 - `include/Logger.class.php` was moved to `src/Piwigo/Core/Logger.php` (not `src/Piwigo/Log/Logger.php` as the original plan said). The `Log\` namespace doesn't exist.
 - `include/totp.class.php` was moved to `src/Piwigo/Auth/PwgTOTP.php` (kept the `Pwg` prefix — not `Totp`).
@@ -107,15 +108,15 @@ The 9 legacy `include/*.class.php` and 8 `admin/include/*.class.php` files have 
 
 ### Steps
 
-1. **Rename `src/` files to PascalCase.** One `git mv` per file. Update the `class` declaration to match. Keep namespace unchanged.
+1. **Rename `src/` files to PascalCase.** ✅ Done — 14 `git mv` operations against `src/Piwigo/Admin/`.
 
-2. **Rename lowercase classes.** `plugins` → `Plugins`, `themes` → `Themes`, `tabsheet` → `Tabsheet`, `languages` → `Languages`, `updates` → `Updates`, `image_gd` → `ImageGd`, `image_imagick` → `ImageImagick`, `image_ext_imagick` → `ImageExtImagick`, `pwg_image` → `PwgImage`, `c13y_internal` → `C13yInternal`, `check_integrity` → `CheckIntegrity`, `DummyPlugin_maintain` → `DummyPluginMaintain`, `DummyTheme_maintain` → `DummyThemeMaintain`. Update every `use Piwigo\Admin\<oldname>;` and `new <oldname>()` site. Plugins are out-of-tree — there's no first-party caller left that uses unqualified legacy names, so no `class_alias` shim layer is needed at this point. (If 3rd-party plugin compatibility becomes a requirement, introduce `src/Piwigo/Compat/aliases.php` then.)
+2. **Rename lowercase classes.** ✅ Done — class declarations, internal self-references, all first-party `use` and `new` sites, the FQN type hint inside `C13yInternal`, the `\Piwigo\Admin\Plugins`-style FQN constructions in `pwg.extensions.php`, and the doc strings in `tools/triggers_list.php` were all updated. Out-of-tree plugins were deliberately left untouched per the original plan; `rector.php`'s rename map points old keys at the new FQNs so any bare legacy reference still gets rewritten if rector runs on it.
 
-3. **Delete the empty `*.class.php` placeholders.** Already covered by #30 — execute that item alongside this one.
+3. **Delete the empty `*.class.php` placeholders.** ⏭️ Defer to #30 — placeholders are inert and no first-party code requires them.
 
-4. **Run `composer dump-autoload --strict-psr`.** This must exit clean.
+4. **Run `composer dump-autoload --strict-psr`.** ✅ Clean.
 
-5. **PHPStan rule.** Add `Piwigo\Tools\PhpStan\Psr4StrictRule` to keep new violations out (or just rely on `--strict-psr` in CI once #1's CI workflow lands).
+5. **PHPStan rule.** ⏭️ Optional. The roadmap allowed either a custom `Psr4StrictRule` or relying on `--strict-psr` in CI; the latter waits on #27 (PHPStan in CI) to be wired up alongside the existing Pint job.
 
 ### Verification
 
@@ -1744,11 +1745,18 @@ PHPStan analyse passes at level 10 with no baseline file. Level 10 enforces full
 
 5. **Drop the level-9 baseline file.** No baseline = no inherited debt.
 
+6. **Wire CI.** Add a `phpstan` job to `.github/workflows/ci.yml` alongside the existing `style` job. This job is the one that actually enforces:
+   - `StrictTypesRequiredRule` (registered for #2 — currently local-only)
+   - `composer dump-autoload --strict-psr` (verification step from #3 — currently local-only; this also satisfies #3's optional step 5 without needing a custom `Psr4StrictRule`)
+
+   Until this job lands, regressions for either invariant can slip past push without anyone noticing.
+
 ### Verification
 
 ```bash
 vendor/bin/phpstan analyse --no-progress     # exits 0 with level: 10
 test -z "$(cat phpstan-baseline.neon || echo '')"   # baseline empty / removed
+composer dump-autoload --strict-psr          # zero warnings
 ```
 
 ---

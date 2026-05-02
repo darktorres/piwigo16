@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Piwigo\Admin\languages;
+use Piwigo\Admin\Languages;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -26,7 +26,7 @@ $template->set_filenames(['languages' => 'languages_new.tpl']);
 
 $base_url = get_root_url().'admin.php?page='.$page['page'].'&tab='.$page['tab'];
 
-$languages = new languages();
+$languages = new Languages();
 $languages->get_db_languages();
 
 // +-----------------------------------------------------------------------+

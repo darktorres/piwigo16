@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Piwigo\Admin\tabsheet;
+use Piwigo\Admin\Tabsheet;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -542,7 +542,7 @@ $template->assign(
 
 if (is_autorize_status(ACCESS_WEBMASTER)) {
     // TabSheet
-    $tabsheet = new tabsheet();
+    $tabsheet = new Tabsheet();
     $tabsheet->set_id('nbm');
     $tabsheet->select($page['mode']);
     $tabsheet->assign();

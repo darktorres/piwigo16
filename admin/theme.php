@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Piwigo\Admin\themes;
+use Piwigo\Admin\Themes;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -22,7 +22,7 @@ if (empty($_GET['theme'])) {
     die('Invalid theme URL');
 }
 
-$themes = new themes();
+$themes = new Themes();
 if (!in_array($_GET['theme'], array_keys($themes->fs_themes))) {
     die('Invalid theme');
 }

@@ -2098,3 +2098,42 @@ Advanced filter
     right: 640px;
   }
 }
+
+/* user_list page — header layout previously inline. */
+.selection-mode-group-manager { right: 30px; }
+.user-manager-header-row {
+  display: flex;
+  justify-content: space-between;
+  flex-grow: 1;
+}
+.user-manager-header-left {
+  display: flex;
+  align-items: center;
+}
+.user-manager-header-right {
+  display: flex;
+  width: 270px;
+}
+.user-header-button-spaced { margin: auto; }
+.not-in-selection-mode-spacer { width: 264px; height: 2px; }
+.advanced-filter-date-title { display: flex; }
+
+#selection-mode-block {
+  width: 250px;
+  min-width: 250px;
+  display: block;
+  position: relative;
+}
+
+#applyActionUserListMessage {
+  display: inline-block;
+  max-width: 100%;
+  margin: 0;
+  margin-top: 30px;
+  min-height: 0;
+}
+
+.user-list-checkbox-spaced { margin-bottom: 35px; }
+.user-property-input-icon-mb-10 { margin-bottom: 10px; }
+.user-property-input-icon-mb-5 { margin-bottom: 5px; }
+.notifications-tab-wip { margin: 0; }

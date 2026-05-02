@@ -7,7 +7,7 @@
 
 {combine_script id='user_list' load='footer' path='admin/themes/default/js/user_list.js'}
 
-<div class="selection-mode-group-manager" style="right:30px">
+<div class="selection-mode-group-manager">
   <label class="switch">
     <input type="checkbox" id="toggleSelectionMode">
     <span class="slider round"></span>
@@ -24,15 +24,15 @@
         <input type="radio" name="layout" class="switchLayout" id="displayCompact" {if $view_selector == 'compact'}checked{/if}/><label for="displayCompact"><span class="icon-th-large firstIcon tiptip" title="{'Compact View'|translate}"></span></label><input type="radio" name="layout" class="switchLayout tiptip" id="displayLine" {if $view_selector == 'line'}checked{/if}/><label for="displayLine"><span class="icon-th-list tiptip" title="{'Line View'|translate}"></span></label><input type="radio" name="layout" class="switchLayout" id="displayTile" {if $view_selector == 'tile'}checked{/if}/><label for="displayTile"><span class="icon-pause lastIcon tiptip" title="{'Tile View'|translate}"></span></label>
       </div>
 
-      <div style="display:flex;justify-content:space-between; flex-grow:1;">
-        <div style="display:flex; align-items: center;">
-          <div class="not-in-selection-mode user-header-button add-user-button" style="margin: auto;">
+      <div class="user-manager-header-row">
+        <div class="user-manager-header-left">
+          <div class="not-in-selection-mode user-header-button add-user-button user-header-button-spaced">
             <label class="head-button-2 icon-plus-circled">
               <p>{'Add a user'|@translate}</p>
             </label>
           </div>
 
-          <div class="not-in-selection-mode user-header-button" style="margin: auto;">
+          <div class="not-in-selection-mode user-header-button user-header-button-spaced">
             <label class="head-button-2 icon-user-secret edit-guest-user-button">
               <p>{'Edit guest user'|@translate}</p>
             </label>
@@ -53,10 +53,10 @@
             </div>
           </div>
         </div>
-        <div style="display:flex; width: 270px;">
+        <div class="user-manager-header-right">
         </div>
       </div>
-      <div class="not-in-selection-mode" style="width: 264px; height:2px">
+      <div class="not-in-selection-mode not-in-selection-mode-spacer">
       </div>
     </div>
     <div class="filtered-users"></div>
@@ -122,7 +122,7 @@
           </div>
         </div>
         <div class="advanced-filter-date advanced-filter-item">
-          <div class="advanced-filter-date-title" style="display:flex">
+          <div class="advanced-filter-date-title">
             <span class="advanced-filter-item-label">{'Registered'|@translate}</span>
             <span class='dates-infos'></span>
           </div>
@@ -192,7 +192,7 @@
       </div>
     </div>
   </div>
-  <div id="selection-mode-block" class="in-selection-mode tag-selection" style="width: 250px; min-width:250px;display: block;position:relative">
+  <div id="selection-mode-block" class="in-selection-mode tag-selection">
     <div class="user-selection-content">
       <div class="selection-mode-ul">
         <p>{'Your selection'|@translate}</p>
@@ -384,7 +384,7 @@
             <input id="applyAction" class="submit" type="submit" value="{'Apply action'|@translate}" name="submit"> <span id="applyOnDetails"></span></input>
             <span id="applyActionLoading" hidden><img src="themes/default/images/ajax-loader-small.gif"></span>
             <br />
-            <span class="infos icon-ok icon-green" style="display:inline-block;display:none;max-width:100%;margin:0;margin-top:30px;min-height:0;">{'Users modified'|translate}</span>
+            <span id="applyActionUserListMessage" class="infos icon-ok icon-green" hidden>{'Users modified'|translate}</span>
           </p>
         </div> {* #permitActionUserList *}
       </fieldset>
@@ -549,7 +549,7 @@
                 </div>
               </div>
 
-              <div class="user-list-checkbox" name="hd_enabled" style="margin-bottom: 35px;">
+              <div class="user-list-checkbox user-list-checkbox-spaced" name="hd_enabled">
                 <span class="select-checkbox">
                   <i class="icon-ok"></i>
                 </span>
@@ -612,7 +612,7 @@
             </div>
              <!-- Pop in tabs 3 Notifications WIP-->
             {* <div class="notifications-container" id="tab_notifications">
-              <p style="margin: 0;">Notifications tab WIP</p>
+              <p class="notifications-tab-wip">Notifications tab WIP</p>
             </div> *}
           </div>
         </div>
@@ -670,7 +670,7 @@
         <form data-prevent-submit>
           <input type="text" hidden autocomplete="username" />
           <div class="summary-input-container">
-            <div class="user-property-input-icon" style="margin-bottom: 10px;">
+            <div class="user-property-input-icon user-property-input-icon-mb-10">
               <input class="user-property-input user-property-input-password" value=""
                 placeholder="{'New password'|@translate}" type="password" id="edit_user_password" autocomplete="new-password" />
               <span class="icon-eye icon-show-password"></span>
@@ -988,14 +988,14 @@
             <label for="add_user_pass" class="user-property-label AddUserLabelPassword">{'Password'|@translate}</label>
             <span class="icon-dice-solid"> {'Generate random password'|@translate}</span>
           </div>
-          <div class="user-property-input-icon" style="margin-bottom: 5px;">
+          <div class="user-property-input-icon user-property-input-icon-mb-5">
             <input id="add_user_pass" class="user-property-input user-property-input-password" value=""
               placeholder="{'Password'|@translate}" type="password" autocomplete="new-password" />
             <span class="icon-eye icon-show-password"></span>
           </div>
 
           <label for="add_user_confpass" class="user-property-label AddUserLabelPasswordConf">{'Confirm Password'|@translate}</label>
-          <div class="user-property-input-icon" style="margin-bottom: 5px;">
+          <div class="user-property-input-icon user-property-input-icon-mb-5">
             <input id="add_user_confpass" class="user-property-input user-property-input-password-conf" value=""
               placeholder="{'Confirm Password'|@translate}" type="password" autocomplete="new-password" />
             <span class="icon-eye icon-show-password"></span>

@@ -3,13 +3,6 @@
 
 {combine_css path="admin/themes/default/css/pages/permalinks.css"}
 
-{html_style}
-[name="permalink"] {
-  width : 100%;
-  max-width : 600px;
-}
-{/html_style}
-
 <p id="showAddPermalink"><a href="#" id="addPermalinkOpen">{'Add/delete a permalink'|@translate}</a></p>
 
 <form method="post" action="" id="addPermalink" style="display:none">

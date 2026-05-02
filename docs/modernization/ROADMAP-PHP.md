@@ -16,7 +16,7 @@ Enforce PSR-12 across the entire PHP codebase via Laravel Pint as a hard CI gate
 
 - `vendor/bin/pint` already installed (`composer.json` `require-dev`).
 - `pint.json` exists with `psr12` preset + project rules (`single_quote`, `ordered_imports`, `no_unused_imports`, `trailing_comma_in_multiline`, `declare_strict_types: false`); `_data`, `language`, `local`, `vendor` excluded. Codebase has been baseline-formatted (`pint --test` is the working contract for any new style work).
-- No `.github/` directory exists — **no CI workflow at all**, so neither the Pint check nor any other gate currently runs on push/PR. This is the actual blocker for items #1, #4, #26, #27, and the audit jobs throughout the roadmap.
+- No `.github/` directory exists — **no CI workflow at all**, so neither the Pint check nor any other gate currently runs on push/PR. This is the actual blocker for items #1, #4, #27, #28, and the audit jobs throughout the roadmap.
 - No `.editorconfig`.
 
 ### Steps
@@ -38,7 +38,7 @@ Enforce PSR-12 across the entire PHP codebase via Laravel Pint as a hard CI gate
        - run: vendor/bin/pint --test
    ```
 
-   `pint --test` exits non-zero on any style violation. The same workflow file is the home for items #4 (audit), #26 (PHPStan level 10), #27 (Infection), and the test/lint jobs from ROADMAP-CSS.md and ROADMAP-TS.md.
+   `pint --test` exits non-zero on any style violation. The same workflow file is the home for items #4 (audit), #27 (PHPStan level 10), #28 (Infection), and the test/lint jobs from ROADMAP-CSS.md and ROADMAP-TS.md.
 
 4. **Add `.editorconfig`** at repo root with PSR-12 rules (LF, UTF-8, 4-space PHP indent, 2-space JSON/YAML, trim trailing whitespace, final newline).
 
@@ -128,7 +128,7 @@ The 9 legacy `include/*.class.php` and 8 `admin/include/*.class.php` files have 
 
 2. **Rename lowercase classes.** `plugins` → `Plugins`, `themes` → `Themes`, `tabsheet` → `Tabsheet`, `languages` → `Languages`, `updates` → `Updates`, `image_gd` → `ImageGd`, `image_imagick` → `ImageImagick`, `image_ext_imagick` → `ImageExtImagick`, `pwg_image` → `PwgImage`, `c13y_internal` → `C13yInternal`, `check_integrity` → `CheckIntegrity`, `DummyPlugin_maintain` → `DummyPluginMaintain`, `DummyTheme_maintain` → `DummyThemeMaintain`. Update every `use Piwigo\Admin\<oldname>;` and `new <oldname>()` site. Plugins are out-of-tree — there's no first-party caller left that uses unqualified legacy names, so no `class_alias` shim layer is needed at this point. (If 3rd-party plugin compatibility becomes a requirement, introduce `src/Piwigo/Compat/aliases.php` then.)
 
-3. **Delete the empty `*.class.php` placeholders.** Already covered by #29 — execute that item alongside this one.
+3. **Delete the empty `*.class.php` placeholders.** Already covered by #30 — execute that item alongside this one.
 
 4. **Run `composer dump-autoload --strict-psr`.** This must exit clean.
 
@@ -321,7 +321,7 @@ The following globals also appear in `global` statements but are deferred — th
 grep -rn "^[[:space:]]*global \$" admin/ include/ src/
 grep -rnE "\bglobal \$(conf|user|page|lang|template)\b" admin/ include/ src/
 
-# PHPStan level 10 must pass clean (target item #26):
+# PHPStan level 10 must pass clean (target item #27):
 PHPSTAN_TABLE_ERROR_FORMATTER_FORCE_SHOW_ALL_ERRORS=1 vendor/bin/phpstan analyse --no-progress
 
 # E2E smoke (admin pages still load, plugins still work):
@@ -504,7 +504,7 @@ The Piwigo logger implements `Psr\Log\LoggerInterface`. Callsites use the standa
 
 ### Current state
 
-- Logger class lives at `src/Piwigo/Core/Logger.php` (the original plan said `src/Piwigo/Log/Logger.php`, but the move went to `Core/`). `include/Logger.class.php` is one of the empty stubs from #29.
+- Logger class lives at `src/Piwigo/Core/Logger.php` (the original plan said `src/Piwigo/Log/Logger.php`, but the move went to `Core/`). `include/Logger.class.php` is one of the empty stubs from #30.
 - Custom API: `$logger->debug($msg, $file, $array)`, `$logger->error(...)`, etc. — leveled methods exist but accept positional `(message, file, array)` args, not the PSR-3 `(message, context)` signature.
 - No `psr/log` dependency in `composer.json`.
 - Callers under `src/Piwigo/Admin/{languages,plugins,themes}.php` and `src/Piwigo/Admin/Image/image_ext_imagick.php` reach for the `global $logger` (5 in-scope sites — kept until typed accessor lands; see #6 "Out of scope").
@@ -699,7 +699,7 @@ All user-facing file I/O goes through `League\Flysystem\Filesystem`. Named files
 
 5. **Optional cloud adapters.** Document how to switch a single filesystem (e.g., `derivatives`) to S3 by editing `config/storage.php` and adding the S3 composer dependency. Filesystem names stay the same.
 
-6. **Update plugin documentation** (links in to item #25) — third-party plugins should use `StorageRegistry::get('plugins')->write(...)` instead of raw `file_put_contents`.
+6. **Update plugin documentation** (links in to item #26) — third-party plugins should use `StorageRegistry::get('plugins')->write(...)` instead of raw `file_put_contents`.
 
 ### Verification
 
@@ -859,7 +859,7 @@ Replace 583 raw `pwg_query()` calls with Doctrine DBAL's query builder. Reposito
 grep -rc 'pwg_query\(' include/ admin/ src/ --include='*.php' | awk -F: '{s+=$2} END {print s}'
 # shrinking each PR; final target: 0
 
-vendor/bin/phpstan analyse           # green at level 9, eventually level 10 (item #26)
+vendor/bin/phpstan analyse           # green at level 9, eventually level 10 (item #27)
 vendor/bin/phpunit --testsuite Integration   # green
 npx playwright test                  # green
 ```
@@ -988,7 +988,7 @@ Translation files move from `$lang['key'] = 'value';` PHP arrays to gettext PO/M
 
 5. **Lazy-load.** Boot only loads the active locale's `common.mo`. Admin pages load `admin.mo` on demand. The 73 locales never all load at once.
 
-6. **Migrate template syntax** (depends on items #14 Latte and #25 plugin/theme):
+6. **Migrate template syntax** (depends on items #24 Latte and #26 plugin/theme):
    - Smarty: `{translate $key}` and `{$key|translate}` already exist — point both at the new service.
    - Latte: `{$key|translate}` filter already planned in item #24 step 4.
 
@@ -1475,7 +1475,56 @@ npx playwright test                                        # green (no visual re
 
 ---
 
-## #25 — Plugin and theme system modernization
+## #25 — Pre-compile templates as a deploy step
+
+**Status:** Not started &nbsp;|&nbsp; **Size:** S
+
+### Goal
+
+Eliminate first-request compile latency by warming `_data/templates_c/` at deploy time instead of on first hit. Ship `tools/precompile_templates.php`, a CLI entrypoint that walks every active theme + admin context and compiles every template ahead of time. End state: the first request after a deploy serves cached PHP without invoking the template compiler. Depends on #24 — Latte is the primary target post-migration; legacy Smarty templates are covered for the duration of the compatibility shim.
+
+### Current state
+
+- Smarty 5 lazy-compiles `.tpl` → `_data/templates_c/<hash>_0.file_<name>.tpl.php` on first render of each template; the gallery + admin first-walk emits 100+ compiled files.
+- Latte (post-#24) lazy-compiles `.latte` → `_data/templates_c/latte/` with the same first-hit penalty.
+- `template_compile_check` is on by default — Smarty `stat`s every source on every render. `Piwigo\Core\Config::templateCompileCheck()` reads it from config; there is no CLI override and no production-time flip.
+- No `tools/precompile_*` script exists today.
+
+### Steps
+
+1. **Add `tools/precompile_templates.php`.** Boot Piwigo (`include/common.inc.php`) in CLI mode without emitting output, then for each engine instance:
+   - **Smarty path** (during the transition window): call `$engine->smarty->compileAllTemplates('.tpl', force: true)` per `template_dir` push (gallery context, admin context).
+   - **Latte path** (primary post-#24): iterate every `.latte` under the active theme + admin dirs and call the engine's compile-only API (`Latte\Engine::warmupCache($name)` or equivalent — settle the call site against the Latte version pinned in #24 step 1).
+
+   Report counts and any compile error on stderr; exit non-zero if any template fails to compile. This catches syntax regressions before they reach the gallery.
+
+2. **Iterate per-theme.** Compiled cache keys are bound to the resolved `template_dir` stack. Cover every theme that may serve traffic — active gallery theme, admin theme, every theme listed under `themes_installed` — pushing/popping the dir stack between runs.
+
+3. **Iterate per-plugin-set.** Plugins inject Smarty prefilters and Latte extensions at boot, both of which alter compiled output. Run against the production-active plugin set so cache keys match request-path lookups. Document in `CONTRIBUTING.md` that staging/test environments with different plugin sets need a separate warm.
+
+4. **Wire into deploy and turn off `compile_check` in production.** Add a `make precompile-templates` target and a `php tools/precompile_templates.php` step in `INSTALL.md` after `composer install --no-dev`. The pay-off this enables is **`template_compile_check = 0`** — once compile-on-first-hit is gone, the per-render `stat()` is wasted work. Add a config example and an `INSTALL.md` callout.
+
+5. **OPcache guidance.** `_data/templates_c/` holds plain PHP. Document that hosters should leave OPcache enabled with a generous `opcache.max_accelerated_files` (file count is high — ~150 today, similar post-Latte) and may use `opcache.preload` for the truly hot files.
+
+6. **CI hook.** Add a job that runs the precompile against a representative theme + plugin set on every PR. Acts as a second syntax gate beyond #24's verification — catches Latte regressions in plugin templates that don't have unit-test coverage.
+
+### Verification
+
+```bash
+rm -rf _data/templates_c/* _data/templates_c/latte/* 2>/dev/null
+php tools/precompile_templates.php           # exits 0; reports N templates compiled
+ls _data/templates_c/ | wc -l                # > 0, matches reported count
+
+# After warming, the first request must not write to _data/templates_c/:
+mtime_before=$(stat -c %Y _data/templates_c/)
+curl -s http://localhost/ > /dev/null
+mtime_after=$(stat -c %Y _data/templates_c/)
+[ "$mtime_before" = "$mtime_after" ] && echo "no recompile on first hit"
+```
+
+---
+
+## #26 — Plugin and theme system modernization
 
 **Status:** Not started &nbsp;|&nbsp; **Size:** XL
 
@@ -1684,7 +1733,7 @@ npx playwright test
 
 ---
 
-## #26 — PHPStan level 10
+## #27 — PHPStan level 10
 
 **Status:** Not started (gated) &nbsp;|&nbsp; **Size:** M–L
 
@@ -1704,7 +1753,7 @@ PHPStan analyse passes at level 10 with no baseline file. Level 10 enforces full
 2. **Switch `phpstan.neon` to `level: 10`.** Initial run will likely have <100 hits at this point.
 
 3. **Sweep remaining errors module-by-module.** Most remaining hits will be:
-   - Untyped event payloads (resolved by item #25's typed events).
+   - Untyped event payloads (resolved by item #26's typed events).
    - `mixed` returns from PSR-3 logger context arrays — fine to suppress with `@phpstan-ignore-line`, since the API is intentionally generic.
    - Reflection / dynamic-property paths — case-by-case judgment.
 
@@ -1721,7 +1770,7 @@ test -z "$(cat phpstan-baseline.neon || echo '')"   # baseline empty / removed
 
 ---
 
-## #27 — Mutation testing (Infection)
+## #28 — Mutation testing (Infection)
 
 **Status:** Not started &nbsp;|&nbsp; **Size:** S
 
@@ -1786,7 +1835,7 @@ open build/infection/report.html   # visualize surviving mutants per file
 
 ---
 
-## #28 — Unit test coverage expansion (13% → ≥40%)
+## #29 — Unit test coverage expansion (13% → ≥40%)
 
 **Status:** Not started (continuous) &nbsp;|&nbsp; **Size:** L
 
@@ -1822,7 +1871,7 @@ vendor/bin/phpunit --testsuite Unit --coverage-text | grep "Lines:"
 
 ---
 
-## #29 — Delete empty `*.class.php` stub shims
+## #30 — Delete empty `*.class.php` stub shims
 
 **Status:** Not started &nbsp;|&nbsp; **Size:** XS
 

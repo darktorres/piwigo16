@@ -111,7 +111,7 @@ final class Config
     }
     public static function galleryUrl(): ?string
     {
-        $v = self::$data['gallery_url'] ?? null;
+        $v = self::src()['gallery_url'] ?? null;
         return isset($v) ? (is_scalar($v) ? (string) $v : null) : null;
     }
     public static function noPhotoYetUrl(): string
@@ -176,7 +176,7 @@ final class Config
     /** @return list<string> */
     public static function pictureExtensions(): array
     {
-        $v = self::$data['picture_ext'] ?? ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        $v = self::src()['picture_ext'] ?? ['jpg', 'jpeg', 'png', 'gif', 'webp'];
         if (!is_array($v)) {
             return ['jpg', 'jpeg', 'png', 'gif', 'webp'];
         }
@@ -186,7 +186,7 @@ final class Config
     /** @return list<string> */
     public static function fileExtensions(): array
     {
-        $v = self::$data['file_ext'] ?? [];
+        $v = self::src()['file_ext'] ?? [];
         if (!is_array($v)) {
             return [];
         }
@@ -239,7 +239,7 @@ final class Config
     }
     public static function smtpSecure(): ?string
     {
-        $v = self::$data['smtp_secure'] ?? null;
+        $v = self::src()['smtp_secure'] ?? null;
         return $v !== null ? (is_scalar($v) ? (string) $v : null) : null;
     }
     public static function mailSenderName(): string
@@ -359,7 +359,7 @@ final class Config
     /** @return list<string> */
     public static function formatExtensions(): array
     {
-        $v = self::$data['format_ext'] ?? ['cr2', 'tif', 'tiff', 'nef', 'dng', 'ai', 'psd'];
+        $v = self::src()['format_ext'] ?? ['cr2', 'tif', 'tiff', 'nef', 'dng', 'ai', 'psd'];
         if (!is_array($v)) {
             return ['cr2', 'tif', 'tiff', 'nef', 'dng', 'ai', 'psd'];
         }
@@ -427,7 +427,7 @@ final class Config
             'RSS' => ['max_dates' => 7, 'max_elements' => 5, 'max_cats' => 8],
             'NBM' => ['max_dates' => 7, 'max_elements' => 5, 'max_cats' => 8],
         ];
-        $v = self::$data['recent_post_dates'] ?? $default;
+        $v = self::src()['recent_post_dates'] ?? $default;
         if (!is_array($v)) {
             return $default;
         }
@@ -457,7 +457,7 @@ final class Config
     }
     public static function nbmMaxTreatmentTimeoutPercent(): float
     {
-        $v = self::$data['nbm_max_treatment_timeout_percent'] ?? 0.8;
+        $v = self::src()['nbm_max_treatment_timeout_percent'] ?? 0.8;
         return is_scalar($v) ? (float) $v : 0.8;
     }
     public static function nbmTreatmentTimeoutDefault(): int
@@ -547,14 +547,14 @@ final class Config
     /** @return array<string,mixed> */
     public static function links(): array
     {
-        $v = self::$data['links'] ?? [];
+        $v = self::src()['links'] ?? [];
         return is_array($v) ? $v : [];
     }
 
     /** @return array<string,string> */
     public static function randomIndexRedirect(): array
     {
-        $v = self::$data['random_index_redirect'] ?? [];
+        $v = self::src()['random_index_redirect'] ?? [];
         if (!is_array($v)) {
             return [];
         }
@@ -565,7 +565,7 @@ final class Config
     /** @return list<string> */
     public static function headerNotes(): array
     {
-        $v = self::$data['header_notes'] ?? [];
+        $v = self::src()['header_notes'] ?? [];
         if (!is_array($v)) {
             return [];
         }
@@ -577,7 +577,7 @@ final class Config
     /** @return non-empty-list<int> */
     public static function availablePermissionLevels(): array
     {
-        $v = self::$data['available_permission_levels'] ?? [0, 1, 2, 4, 8];
+        $v = self::src()['available_permission_levels'] ?? [0, 1, 2, 4, 8];
         return is_array($v) && count($v) > 0 ? array_values(array_map(static fn (mixed $x): int => is_scalar($x) ? (int) $x : 0, $v)) : [0, 1, 2, 4, 8];
     }
 
@@ -629,7 +629,7 @@ final class Config
     public static function userFields(): array
     {
         $default = ['id' => 'id', 'username' => 'username', 'password' => 'password', 'email' => 'mail_address'];
-        $v = self::$data['user_fields'] ?? $default;
+        $v = self::src()['user_fields'] ?? $default;
         if (!is_array($v)) {
             return $default;
         }
@@ -642,7 +642,7 @@ final class Config
 
     public static function usersTable(): ?string
     {
-        $v = self::$data['users_table'] ?? null;
+        $v = self::src()['users_table'] ?? null;
         return $v !== null ? (is_scalar($v) ? (string) $v : null) : null;
     }
 
@@ -820,7 +820,7 @@ final class Config
     /** @return array<string,mixed> */
     public static function filterPages(): array
     {
-        $v = self::$data['filter_pages'] ?? [];
+        $v = self::src()['filter_pages'] ?? [];
         return is_array($v) ? $v : [];
     }
 
@@ -888,7 +888,7 @@ final class Config
     public static function showIptcMapping(): array
     {
         $default = ['iptc_keywords' => '2#025', 'iptc_caption_writer' => '2#122', 'iptc_byline_title' => '2#085', 'iptc_caption' => '2#120'];
-        $v = self::$data['show_iptc_mapping'] ?? $default;
+        $v = self::src()['show_iptc_mapping'] ?? $default;
         if (!is_array($v)) {
             return $default;
         }
@@ -906,7 +906,7 @@ final class Config
     public static function useIptcMapping(): array
     {
         $default = ['keywords' => '2#025', 'date_creation' => '2#055', 'author' => '2#122', 'name' => '2#005', 'comment' => '2#120'];
-        $v = self::$data['use_iptc_mapping'] ?? $default;
+        $v = self::src()['use_iptc_mapping'] ?? $default;
         if (!is_array($v)) {
             return $default;
         }
@@ -923,7 +923,7 @@ final class Config
     /** @return list<string> */
     public static function showExifFields(): array
     {
-        $v = self::$data['show_exif_fields'] ?? ['Make', 'Model', 'DateTimeOriginal', 'COMPUTED;ApertureFNumber'];
+        $v = self::src()['show_exif_fields'] ?? ['Make', 'Model', 'DateTimeOriginal', 'COMPUTED;ApertureFNumber'];
         if (!is_array($v)) {
             return ['Make', 'Model', 'DateTimeOriginal', 'COMPUTED;ApertureFNumber'];
         }
@@ -937,7 +937,7 @@ final class Config
     public static function useExifMapping(): array
     {
         $default = ['date_creation' => 'DateTimeOriginal'];
-        $v = self::$data['use_exif_mapping'] ?? $default;
+        $v = self::src()['use_exif_mapping'] ?? $default;
         if (!is_array($v)) {
             return $default;
         }
@@ -969,7 +969,7 @@ final class Config
     /** @return list<string> */
     public static function syncExcludeFolders(): array
     {
-        $v = self::$data['sync_exclude_folders'] ?? [];
+        $v = self::src()['sync_exclude_folders'] ?? [];
         if (!is_array($v)) {
             return [];
         }
@@ -1112,7 +1112,7 @@ final class Config
     }
     public static function orderByCustom(): ?string
     {
-        $v = self::$data['order_by_custom'] ?? null;
+        $v = self::src()['order_by_custom'] ?? null;
         return $v !== null ? (is_scalar($v) ? (string) $v : null) : null;
     }
     public static function orderByInsideCategory(): string
@@ -1121,7 +1121,7 @@ final class Config
     }
     public static function orderByInsideCategoryCustom(): ?string
     {
-        $v = self::$data['order_by_inside_category_custom'] ?? null;
+        $v = self::src()['order_by_inside_category_custom'] ?? null;
         return $v !== null ? (is_scalar($v) ? (string) $v : null) : null;
     }
 
@@ -1141,7 +1141,7 @@ final class Config
     /** @return list<int> */
     public static function rateItems(): array
     {
-        $v = self::$data['rate_items'] ?? [0, 1, 2, 3, 4, 5];
+        $v = self::src()['rate_items'] ?? [0, 1, 2, 3, 4, 5];
         return is_array($v) ? array_values(array_map(static fn (mixed $x): int => is_scalar($x) ? (int) $x : 0, $v)) : [0, 1, 2, 3, 4, 5];
     }
     public static function defaultRedirectMethod(): string
@@ -1163,13 +1163,13 @@ final class Config
     /** @return array<mixed> */
     public static function apiKeyDuration(): array
     {
-        $v = self::$data['api_key_duration'] ?? ['30', '90', '180', '365', 'custom'];
+        $v = self::src()['api_key_duration'] ?? ['30', '90', '180', '365', 'custom'];
         return is_array($v) ? $v : ['30', '90', '180', '365', 'custom'];
     }
     /** @return list<string> */
     public static function apiKeyForbiddenMethods(): array
     {
-        $v = self::$data['api_key_forbidden_methods'] ?? [];
+        $v = self::src()['api_key_forbidden_methods'] ?? [];
         if (!is_array($v)) {
             return [];
         }
@@ -1179,7 +1179,7 @@ final class Config
     /** @return array<string,mixed> */
     public static function defaultFiltersViews(): array
     {
-        $v = self::$data['default_filters_views'] ?? [];
+        $v = self::src()['default_filters_views'] ?? [];
         return is_array($v) ? $v : [];
     }
 
@@ -1256,7 +1256,7 @@ final class Config
 
     public static function pictureInformations(): ?string
     {
-        $v = self::$data['picture_informations'] ?? null;
+        $v = self::src()['picture_informations'] ?? null;
         return $v !== null ? (is_scalar($v) ? (string) $v : null) : null;
     }
     public static function pictureMenu(): bool
@@ -1408,12 +1408,12 @@ final class Config
     }
     public static function disabledDerivatives(): ?string
     {
-        $v = self::$data['disabled_derivatives'] ?? null;
+        $v = self::src()['disabled_derivatives'] ?? null;
         return $v !== null ? (is_scalar($v) ? (string) $v : null) : null;
     }
     public static function derivatives(): ?string
     {
-        $v = self::$data['derivatives'] ?? null;
+        $v = self::src()['derivatives'] ?? null;
         return $v !== null ? (is_scalar($v) ? (string) $v : null) : null;
     }
     /** @return array<string, int> */
@@ -1431,47 +1431,47 @@ final class Config
 
     public static function sendPiwigoInfosLastNotice(): ?string
     {
-        $v = self::$data['send_piwigo_infos_last_notice'] ?? null;
+        $v = self::src()['send_piwigo_infos_last_notice'] ?? null;
         return $v !== null ? (is_scalar($v) ? (string) $v : null) : null;
     }
     public static function sendPiwigoInfosOriginHash(): ?string
     {
-        $v = self::$data['send_piwigo_infos_origin_hash'] ?? null;
+        $v = self::src()['send_piwigo_infos_origin_hash'] ?? null;
         return $v !== null ? (is_scalar($v) ? (string) $v : null) : null;
     }
     public static function updateNotifyLastCheck(): ?string
     {
-        $v = self::$data['update_notify_last_check'] ?? null;
+        $v = self::src()['update_notify_last_check'] ?? null;
         return $v !== null ? (is_scalar($v) ? (string) $v : null) : null;
     }
     public static function updateNotifyLastNotification(): ?string
     {
-        $v = self::$data['update_notify_last_notification'] ?? null;
+        $v = self::src()['update_notify_last_notification'] ?? null;
         return $v !== null ? (is_scalar($v) ? (string) $v : null) : null;
     }
     public static function lastMajorUpdate(): ?string
     {
-        $v = self::$data['last_major_update'] ?? null;
+        $v = self::src()['last_major_update'] ?? null;
         return $v !== null ? (is_scalar($v) ? (string) $v : null) : null;
     }
     public static function piwigoInstalledVersion(): ?string
     {
-        $v = self::$data['piwigo_installed_version'] ?? null;
+        $v = self::src()['piwigo_installed_version'] ?? null;
         return $v !== null ? (is_scalar($v) ? (string) $v : null) : null;
     }
     public static function piwigoDbVersion(): ?string
     {
-        $v = self::$data['piwigo_db_version'] ?? null;
+        $v = self::src()['piwigo_db_version'] ?? null;
         return $v !== null ? (is_scalar($v) ? (string) $v : null) : null;
     }
     public static function emptyLoungeRunning(): ?string
     {
-        $v = self::$data['empty_lounge_running'] ?? null;
+        $v = self::src()['empty_lounge_running'] ?? null;
         return $v !== null ? (is_scalar($v) ? (string) $v : null) : null;
     }
     public static function fsQuickCheckLastCheck(): ?string
     {
-        $v = self::$data['fs_quick_check_last_check'] ?? null;
+        $v = self::src()['fs_quick_check_last_check'] ?? null;
         return $v !== null ? (is_scalar($v) ? (string) $v : null) : null;
     }
 
@@ -1480,7 +1480,7 @@ final class Config
     /** @return list<string> */
     public static function updatesIgnored(): array
     {
-        $v = self::$data['updates_ignored'] ?? [];
+        $v = self::src()['updates_ignored'] ?? [];
         if (!is_array($v)) {
             return [];
         }
@@ -1491,12 +1491,12 @@ final class Config
 
     public static function cacheSizes(): ?string
     {
-        $v = self::$data['cache_sizes'] ?? null;
+        $v = self::src()['cache_sizes'] ?? null;
         return $v !== null ? (is_scalar($v) ? (string) $v : null) : null;
     }
     public static function filtersViews(): ?string
     {
-        $v = self::$data['filters_views'] ?? null;
+        $v = self::src()['filters_views'] ?? null;
         return $v !== null ? (is_scalar($v) ? (string) $v : null) : null;
     }
     public static function logConf(): bool
@@ -1505,7 +1505,7 @@ final class Config
     }
     public static function c13yIgnore(): ?string
     {
-        $v = self::$data['c13y_ignore'] ?? null;
+        $v = self::src()['c13y_ignore'] ?? null;
         return $v !== null ? (is_scalar($v) ? (string) $v : null) : null;
     }
     public static function historyAdmin(): bool
@@ -1518,7 +1518,7 @@ final class Config
     }
     public static function historySectionsCache(): ?string
     {
-        $v = self::$data['history_sections_cache'] ?? null;
+        $v = self::src()['history_sections_cache'] ?? null;
         return $v !== null ? (is_scalar($v) ? (string) $v : null) : null;
     }
     public static function historySummarizedDropped(): bool
@@ -1531,7 +1531,7 @@ final class Config
     /** @return array<string,mixed> */
     public static function all(): array
     {
-        return self::$data;
+        return self::src();
     }
 
     // ---- Existence check ------------------------------------------------

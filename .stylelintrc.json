@@ -1,7 +1,6 @@
 {
   "extends": ["stylelint-config-standard"],
   "rules": {
-    "declaration-no-important": [true, { "severity": "warning" }],
     "custom-property-pattern": "^[a-z][a-z0-9-]*$",
     "color-no-invalid-hex": true,
     "shorthand-property-no-redundant-values": true,

@@ -307,3 +307,68 @@ wc -l admin/themes/default/theme.css                        # ≤ 30 (just @impo
 wc -l themes/default/theme.css                             # ≤ 15 (just @imports)
 grep -rn "!important" themes/modus/css/skins/              # empty (after Step 8)
 ```
+
+---
+
+## #2 — A11y audit (axe-core in Playwright)
+
+**Status:** Not started &nbsp;|&nbsp; **Size:** M
+
+### Goal
+
+Integrate `@axe-core/playwright` into the existing E2E suite. WCAG 2.1 AA violations of severity *moderate* and above fail CI. Existing violations are triaged: fixable ones get fixed, justified exemptions go into a documented allowlist.
+
+### Current state
+
+- **Zero accessibility testing.** 15 Playwright E2E specs cover functional flows but never invoke axe-core.
+- No `aria-*` audit, no focus-management tests, no contrast checks.
+- Color contrast issues are likely once #1 design tokens land — values currently inline are easier to evaluate against tokenized variables.
+- `package.json` already has Playwright 1.48; no axe-core dependency yet.
+
+### Steps
+
+1. **Install dependencies.**
+   ```bash
+   npm i -D @axe-core/playwright axe-core
+   ```
+
+2. **Helper at `tests/e2e/utils/a11y.ts`.**
+   ```typescript
+   import AxeBuilder from '@axe-core/playwright';
+   import { expect, Page } from '@playwright/test';
+
+   export async function runA11y(page: Page, opts: { disable?: string[] } = {}) {
+       const results = await new AxeBuilder({ page })
+           .withTags(['wcag21aa', 'wcag2aa'])
+           .disableRules(opts.disable ?? [])
+           .analyze();
+       const blocking = results.violations.filter(v =>
+           ['critical', 'serious', 'moderate'].includes(v.impact ?? ''));
+       expect(blocking, JSON.stringify(blocking, null, 2)).toEqual([]);
+   }
+   ```
+
+3. **Wrap critical pages.** Add `runA11y(page)` calls in existing E2E specs covering: gallery index, picture page, search results, login, register, admin dashboard, batch manager, picture edit, user management.
+
+4. **Initial sweep.** Run the augmented suite once. Snapshot every violation. Triage:
+   - **Fixable:** open one task per violation; fix in template / CSS / TypeScript.
+   - **Accepted with rationale:** add to a per-page `disable: [rule-id]` list with an inline comment explaining why (e.g., "color-contrast: this is a brand-color admonition; contrast verified manually at 4.6:1 by the design team").
+   - **Out of scope:** vendor 3rd-party libraries (Tom Select, jqTree) — listed in a global allowlist with version-pinned rationale.
+
+5. **Pair with the design tokens work (#1).** Most color-contrast violations dissolve once colors come from `--color-*` variables — central change fixes all callers.
+
+6. **CI gate.** The Playwright job (already in CI) now also enforces a11y. Any new violation fails the build.
+
+7. **Document.** Add an "Accessibility" section to `CONTRIBUTING.md` with the rationale-on-disable rule and the workflow for adding new pages to the audit.
+
+### Verification
+
+```bash
+npx playwright test tests/e2e/                              # all pages green, a11y included
+npx playwright test --grep '@a11y'                          # focused a11y-only run
+
+# Regression check: introduce a button without label, expect failure
+echo '<button>X</button>' > /tmp/probe && \
+  ! npx playwright test tests/e2e/probe.spec.ts             # exits non-zero
+```
+

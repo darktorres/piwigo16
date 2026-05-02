@@ -1,12 +1,8 @@
-{if not $ENABLE_SYNCHRONIZATION}
-{html_style}{literal}
-#helpSynchro {display:none;}
-{/literal}{/html_style}
-{/if}
+{combine_css path="admin/themes/default/css/pages/help.css"}
 
 <h2>{'Help'|@translate} &raquo; {$HELP_SECTION_TITLE}</h2>
 
-<div id="helpContent">
+<div id="helpContent"{if not $ENABLE_SYNCHRONIZATION} class="sync-disabled"{/if}>
 
 {$HELP_CONTENT}
 

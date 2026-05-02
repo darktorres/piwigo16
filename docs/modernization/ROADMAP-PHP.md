@@ -6,7 +6,7 @@ PHP-only modernization work. See [MODERNIZATION.md](MODERNIZATION.md) for archit
 
 ## #1 — PSR-12 + Pint CI gate
 
-**Status:** Not started &nbsp;|&nbsp; **Size:** S
+**Status:** In progress (config done; no CI) &nbsp;|&nbsp; **Size:** S
 
 ### Goal
 
@@ -15,17 +15,17 @@ Enforce PSR-12 across the entire PHP codebase via Laravel Pint as a hard CI gate
 ### Current state
 
 - `vendor/bin/pint` already installed (`composer.json` `require-dev`).
-- No `.editorconfig`, no `.php-cs-fixer.php`, no `phpcs.xml`.
-- No CI step runs Pint; style drift is unbounded.
-- `pint.json` configuration is minimal or absent.
+- `pint.json` exists with `psr12` preset + project rules (`single_quote`, `ordered_imports`, `no_unused_imports`, `trailing_comma_in_multiline`, `declare_strict_types: false`); `_data`, `language`, `local`, `vendor` excluded. Codebase has been baseline-formatted (`pint --test` is the working contract for any new style work).
+- No `.github/` directory exists — **no CI workflow at all**, so neither the Pint check nor any other gate currently runs on push/PR. This is the actual blocker for items #1, #4, #26, #27, and the audit jobs throughout the roadmap.
+- No `.editorconfig`.
 
 ### Steps
 
-1. **Configure `pint.json`.** Pick the `psr12` preset; add explicit rules for any project-specific exceptions (e.g., trailing comma in multiline arrays). Commit the config alone first so the diff is reviewable.
+1. **Configure `pint.json`.** ✅ Done — `psr12` preset + project-specific rules.
 
-2. **Baseline-format all PHP.** Run `vendor/bin/pint` once across `admin/`, `include/`, `src/`, `tests/`, `tools/`. This produces a single large mechanical-format commit. Avoid mixing it with logic changes.
+2. **Baseline-format all PHP.** ✅ Done — current tree passes `vendor/bin/pint --test`.
 
-3. **Add the CI job.** Append a `style` job to `.github/workflows/ci.yml`:
+3. **Stand up `.github/workflows/`.** Currently no CI exists at all. Create `.github/workflows/ci.yml` and add a `style` job:
 
    ```yaml
    style:
@@ -38,11 +38,11 @@ Enforce PSR-12 across the entire PHP codebase via Laravel Pint as a hard CI gate
        - run: vendor/bin/pint --test
    ```
 
-   `pint --test` exits non-zero on any style violation.
+   `pint --test` exits non-zero on any style violation. The same workflow file is the home for items #4 (audit), #26 (PHPStan level 10), #27 (Infection), and the test/lint jobs from ROADMAP-CSS.md and ROADMAP-TS.md.
 
 4. **Add `.editorconfig`** at repo root with PSR-12 rules (LF, UTF-8, 4-space PHP indent, 2-space JSON/YAML, trim trailing whitespace, final newline).
 
-5. **Document.** Add a `Style` section to `CONTRIBUTING.md` (or `README.md`) pointing at `vendor/bin/pint` and the optional pre-commit hook (`pint --dirty`).
+5. **Document.** Add a `Style` section to `CONTRIBUTING.md` (which doesn't exist yet either) pointing at `vendor/bin/pint` and the optional pre-commit hook (`pint --dirty`).
 
 ### Verification
 
@@ -57,32 +57,27 @@ CI fails any PR introducing PSR-12 violations.
 
 ## #2 — `declare(strict_types=1)` sweep
 
-**Status:** Not started &nbsp;|&nbsp; **Size:** S
+**Status:** ✅ Done (file coverage); enforcement rule still TODO &nbsp;|&nbsp; **Size:** S
 
 ### Goal
 
-Every file under `src/` declares `strict_types=1`. A PHPStan rule fails CI if a new file is added without it. `include/` is deferred to item #17, where each migrated module lands directly in `src/` with the declaration.
+Every file under `src/`, `include/`, and `admin/` declares `strict_types=1`. A PHPStan rule fails CI if a new file is added without it.
 
 ### Current state
 
-- `src/`: partial coverage — the bulk of `Core/`, `Ws/`, `Template/` already declare strict_types; `Admin/`, `Calendar/`, `Db/`, and a few stragglers do not.
-- `include/`: zero coverage — none of the legacy free-function modules use strict_types.
-- No PHPStan rule enforces the declaration.
+- `grep -rL 'declare(strict_types=1);' src/ admin/ include/ --include='*.php'` is empty — every PHP file in scope has the declaration. No deferral to #17 was needed; the sweep was global.
+- No PHPStan rule enforces the declaration on new files yet.
 
-### Steps
+### Remaining work
 
-1. **Audit.** `grep -rL 'declare(strict_types=1);' src/ --include='*.php'` lists offenders. Expect ~20–30 files.
+1. **Add `Piwigo\Tools\PhpStan\StrictTypesRequiredRule`** under `tools/phpstan/`. The rule fires when a file inside `src/`, `include/`, or `admin/` is missing the declaration. Register it in `phpstan.neon` alongside `NoGlobalInSrcRule` and `NoDynamicNewRule`.
 
-2. **Fix in one pass.** Insert `declare(strict_types=1);` as the first line after `<?php` (with one blank line before the `namespace` line). Run the unit suite after — strict_types changes coercion behavior at the boundary, so latent bugs may surface here.
-
-3. **Add `Piwigo\Phpstan\Rules\StrictTypesRequiredRule`** under `tools/phpstan/Rules/`. The rule fires when a file inside `src/` is missing the declaration. Register it in `phpstan.neon` alongside `NoGlobalInSrcRule`.
-
-4. **Run PHPStan.** New rule should report zero hits on a clean sweep.
+2. **Run PHPStan.** New rule should report zero hits on a clean sweep.
 
 ### Verification
 
 ```bash
-grep -rL 'declare(strict_types=1);' src/ --include='*.php'   # empty
+grep -rL 'declare(strict_types=1);' src/ admin/ include/ --include='*.php'   # empty (already)
 vendor/bin/phpstan analyse --no-progress                     # green, including new rule
 ```
 
@@ -90,58 +85,54 @@ vendor/bin/phpstan analyse --no-progress                     # green, including 
 
 ## #3 — PSR-4 strict layout + PascalCase normalization
 
-**Status:** Not started &nbsp;|&nbsp; **Size:** M
+**Status:** Step (a) done — class bodies moved to `src/`; renaming + stub deletion remain &nbsp;|&nbsp; **Size:** M
 
 ### Goal
 
-Composer's `--strict-psr` mode passes clean. Every class in `src/` lives in a PascalCase file matching its class name. Lowercase class names are renamed to PascalCase. The 9 legacy `include/*.class.php` files are moved into `src/Piwigo/<domain>/` with PascalCase. `class_alias()` shims keep plugins and unmigrated callers working.
+Composer's `--strict-psr` mode passes clean. Every class in `src/` lives in a PascalCase file matching its class name. Lowercase class names are renamed to PascalCase. The legacy `include/*.class.php` files are gone (their bodies are already in `src/Piwigo/`).
 
 ### Current state
 
-**Snake_case files in `src/` (8):**
+The 9 legacy `include/*.class.php` and 8 `admin/include/*.class.php` files have been **emptied** (each is a 5-line `<?php declare(strict_types=1); // Class moved to src/Piwigo/ — autoloaded by Composer.` placeholder). Their class bodies live under `src/Piwigo/`. The roadmap previously claimed `class_alias()` shims in `src/Piwigo/Compat/aliases.php` carry the legacy unqualified names — **that file does not exist**. Every caller now uses the namespaced `use Piwigo\Admin\plugins;` form, so the placeholders are inert and slated for deletion in #29.
+
+**Snake_case files in `src/` (8 — class names match filenames):**
 
 - `src/Piwigo/Admin/plugins.php` (class `plugins`)
 - `src/Piwigo/Admin/themes.php` (class `themes`)
 - `src/Piwigo/Admin/languages.php` (class `languages`)
 - `src/Piwigo/Admin/tabsheet.php` (class `tabsheet`)
+- `src/Piwigo/Admin/updates.php` (class `updates`)
 - `src/Piwigo/Admin/Image/image_gd.php` (class `image_gd`)
 - `src/Piwigo/Admin/Image/image_imagick.php`
 - `src/Piwigo/Admin/Image/image_ext_imagick.php`
 - `src/Piwigo/Admin/Image/pwg_image.php`
 
-**Mixed-case violations (3):**
+**Mixed-case violations (5):**
 
 - `src/Piwigo/Admin/Image/imageInterface.php` (interface should be `ImageInterface`)
 - `src/Piwigo/Admin/Integrity/c13y_internal.php`
 - `src/Piwigo/Admin/Integrity/check_integrity.php`
+- `src/Piwigo/Admin/DummyPlugin_maintain.php` (class `DummyPlugin_maintain` — should be `DummyPluginMaintain`)
+- `src/Piwigo/Admin/DummyTheme_maintain.php` (class `DummyTheme_maintain` — should be `DummyThemeMaintain`)
 
-**Legacy `.class.php` files in `include/` (9):**
+**Out-of-band naming corrections in `src/`:**
 
-- `include/Logger.class.php` → `src/Piwigo/Log/Logger.php`
-- `include/block.class.php` → `src/Piwigo/Menu/Block.php`
-- `include/cache.class.php` → `src/Piwigo/Cache/Cache.php`
-- `include/calendar_base.class.php` → `src/Piwigo/Calendar/CalendarBase.php`
-- `include/calendar_monthly.class.php` → `src/Piwigo/Calendar/CalendarMonthly.php`
-- `include/calendar_weekly.class.php` → `src/Piwigo/Calendar/CalendarWeekly.php`
-- `include/pwgsession.class.php` → `src/Piwigo/Session/PwgSession.php`
-- `include/template.class.php` → `src/Piwigo/Template/Template.php` (if not already moved)
-- `include/totp.class.php` → `src/Piwigo/Auth/Totp.php`
+- `include/Logger.class.php` was moved to `src/Piwigo/Core/Logger.php` (not `src/Piwigo/Log/Logger.php` as the original plan said). The `Log\` namespace doesn't exist.
+- `include/totp.class.php` was moved to `src/Piwigo/Auth/PwgTOTP.php` (kept the `Pwg` prefix — not `Totp`).
+- `include/block.class.php` was split into `src/Piwigo/Menu/{BlockManager,DisplayBlock,RegisteredBlock}.php`.
+- `include/cache.class.php` was split into `src/Piwigo/Cache/{PersistentCache,PersistentFileCache}.php`.
 
 ### Steps
 
 1. **Rename `src/` files to PascalCase.** One `git mv` per file. Update the `class` declaration to match. Keep namespace unchanged.
 
-2. **Rename lowercase classes.** `plugins` → `Plugins`, `themes` → `Themes`, `tabsheet` → `Tabsheet`, `languages` → `Languages`, `image_gd` → `ImageGd`, `image_imagick` → `ImageImagick`, `image_ext_imagick` → `ImageExtImagick`, `pwg_image` → `PwgImage`, `c13y_internal` → `C13yInternal`, `check_integrity` → `CheckIntegrity`. Add `class_alias(Plugins::class, 'plugins');` etc. in `src/Piwigo/Compat/aliases.php` so plugins can keep using the old names.
+2. **Rename lowercase classes.** `plugins` → `Plugins`, `themes` → `Themes`, `tabsheet` → `Tabsheet`, `languages` → `Languages`, `updates` → `Updates`, `image_gd` → `ImageGd`, `image_imagick` → `ImageImagick`, `image_ext_imagick` → `ImageExtImagick`, `pwg_image` → `PwgImage`, `c13y_internal` → `C13yInternal`, `check_integrity` → `CheckIntegrity`, `DummyPlugin_maintain` → `DummyPluginMaintain`, `DummyTheme_maintain` → `DummyThemeMaintain`. Update every `use Piwigo\Admin\<oldname>;` and `new <oldname>()` site. Plugins are out-of-tree — there's no first-party caller left that uses unqualified legacy names, so no `class_alias` shim layer is needed at this point. (If 3rd-party plugin compatibility becomes a requirement, introduce `src/Piwigo/Compat/aliases.php` then.)
 
-3. **Move `include/*.class.php` to `src/`.** For each:
-   a. `git mv include/Foo.class.php src/Piwigo/<Domain>/Foo.php`.
-   b. Add `namespace Piwigo\<Domain>;` and PSR-12 header.
-   c. Replace `include/Foo.class.php` with a one-line `class_alias()` shim or rely on `src/Piwigo/Compat/aliases.php`.
-   d. Update the `include_once` callsites in `common.inc.php` and elsewhere — the file no longer needs to be explicitly loaded once Composer autoload resolves it.
+3. **Delete the empty `*.class.php` placeholders.** Already covered by #29 — execute that item alongside this one.
 
-4. **Run `composer dump-autoload --strict-psr`.** This must exit clean. Any remaining violation is a PSR-4 bug that needs surgical fix.
+4. **Run `composer dump-autoload --strict-psr`.** This must exit clean.
 
-5. **PHPStan rule.** Add `Piwigo\Phpstan\Rules\Psr4StrictRule` to keep new violations out (or just rely on `--strict-psr` in CI).
+5. **PHPStan rule.** Add `Piwigo\Tools\PhpStan\Psr4StrictRule` to keep new violations out (or just rely on `--strict-psr` in CI once #1's CI workflow lands).
 
 ### Verification
 
@@ -149,7 +140,7 @@ Composer's `--strict-psr` mode passes clean. Every class in `src/` lives in a Pa
 composer dump-autoload --strict-psr   # zero warnings
 vendor/bin/phpstan analyse            # green
 vendor/bin/phpunit                    # green
-npx playwright test                   # green (plugin compat alias chain works)
+npx playwright test                   # green
 ```
 
 ---
@@ -302,10 +293,10 @@ The reference-bridge pattern in `Config::attachGlobals()` and `PageState::attach
 
 ### Current state
 
-- `src/`: **done** — `grep -rn "^global \$" src/` returns 0; `NoGlobalInSrcRule` enforces this in CI.
-- `admin/`: **138** `global` statements across 72 files (largest concentrations: `include/add_core_tabs.inc.php` 21, `include/functions.php` 17, `include/functions_notification_by_mail.inc.php` 10, `include/functions_upload.inc.php` 9).
-- `include/`: **158** `global` statements across 40 files (largest: `functions.inc.php` 17, `functions_user.inc.php` 15, `dblayer/functions_mysqli.inc.php` 12, `ws_functions/pwg.images.php` 12, `ws_functions/pwg.users.php` 12).
-- PHPStan level 10 is the proxy metric: 1000+ errors at level 10 today (truncated output), ~75% trace back to `mixed` types from these unannotated `global` declarations. Hot-spot files: `cat_modify.php` (101 errors), `picture_modify.php` (76), `include/functions_notification_by_mail.inc.php` (57), `include/add_core_tabs.inc.php` (54), `include/functions.php` (41).
+- `src/`: **done for the guarded set** — `NoGlobalInSrcRule` flags any `global $conf|$user|$page|$lang` and fires zero hits today. 19 `global` statements remain in `src/` but exclusively for out-of-scope names (`$template`, `$logger`, `$lang_info`, `$themeconfs`, `$header_notes`, `$dirty_trick_xrepeat`, `$t2`); those need their own typed accessors before they can join the rule (see "Out of scope" below).
+- `admin/`: **138** `global` statements across 72 files (largest concentrations: `include/add_core_tabs.inc.php` 21, `include/functions.php` 17, `include/functions_notification_by_mail.inc.php` 10, `include/functions_upload.inc.php` 9). Unchanged from the original baseline.
+- `include/`: **158** `global` statements across 40 files (largest: `functions.inc.php` 17, `functions_user.inc.php` 15, `dblayer/functions_mysqli.inc.php` 12, `ws_functions/pwg.images.php` 12, `ws_functions/pwg.users.php` 12). Unchanged.
+- PHPStan level 9 is currently clean (`vendor/bin/phpstan analyse` reports `[OK] No errors`). Level 10 is the proxy metric for this item — re-measure once typed services land.
 
 ### Steps
 
@@ -341,23 +332,25 @@ npx playwright test
 
 ## #7 — Overdue TODO cleanup
 
-**Status:** Not started &nbsp;|&nbsp; **Size:** S
+**Status:** In progress (34 → 20 markers) &nbsp;|&nbsp; **Size:** S
 
 ### Goal
 
-Resolve or formally defer all `TODO`/`FIXME` markers in tracked PHP files. Current count: **34 markers** in `src/` and `include/`.
+Resolve or formally defer all `TODO`/`FIXME` markers in tracked PHP files. Current count: **20 markers** in `src/` and `include/` (down from 34 at original audit; 14 already resolved).
 
-### Current state (selected markers)
+### Current state (selected markers — line numbers re-checked against the current tree)
 
-| File                                 | Line | Marker                                                                   |
-| ------------------------------------ | ---- | ------------------------------------------------------------------------ |
-| `include/common.inc.php`             | 167  | `// TODO remove this data update as soon as 2025 arrives` — **past-due** |
-| `include/functions.inc.php`          | 1832 | `return $str; // TODO` — stub return, function body missing              |
-| `include/functions_category.inc.php` | 530  | `// TODO 2.7: add an upgrade script…` — pre-16 remnant                   |
-| `include/config_default.inc.php`     | 990  | `//TODO: Put this in admin…` — design note                               |
-| `include/ws_functions/pwg.php`       | 846  | `/*TODO - no need to get a huge number of rows…*/` — SQL optimization    |
-| `include/search_filters.inc.php`     | 71   | `// TODO calling get_available_tags()… may cost time` — performance note |
-| `src/Piwigo/Admin/updates.php`       | 474  | `// TODO why redirect to a plugin page?` — logic question                |
+| File                                      | Line     | Marker                                                                           |
+| ----------------------------------------- | -------- | -------------------------------------------------------------------------------- |
+| `include/common.inc.php`                  | 174      | `// TODO remove this data update as soon as 2025 arrives` — **past-due**         |
+| `include/functions.inc.php`               | 1778     | `return $str; // TODO` — stub return, function body missing                      |
+| `include/functions_category.inc.php`      | 527      | `// TODO 2.7: add an upgrade script…` — pre-16 remnant                           |
+| `include/config_default.inc.php`          | 990      | `//TODO: Put this in admin…` — design note                                       |
+| `include/search_filters.inc.php`          | 72       | `// TODO calling get_available_tags()… may cost time` — performance note         |
+| `src/Piwigo/Admin/updates.php`            | 485      | `// TODO why redirect to a plugin page?` — logic question                        |
+| `include/functions_url.inc.php`           | 20, 35   | `// TODO - add HERE the possibility to call PWG functions from external scripts` |
+| `include/functions_user.inc.php`          | 453, 978 | type-juggling and cookie-validation TODOs                                        |
+| `include/ws_functions/pwg.categories.php` | 729      | `//TODO make persistent with user prefs`                                         |
 
 ### Steps
 
@@ -390,21 +383,21 @@ grep -rn "TODO\|FIXME" src/ include/ --include="*.php" | grep -v "vendor\|instal
 
 ### Current state
 
-- `include/ws_core.inc.php`: 681 lines — defines all 6 classes + 10 `define()` constants.
-- `src/Piwigo/Ws/PwgServer.php`: 467 lines — PSR-4 copy already exists.
-- All class aliases in `src/Piwigo/Compat/aliases.php` let unqualified `PwgError` etc. keep resolving.
+- `include/ws_core.inc.php`: **676 lines** — defines all 6 classes (`PwgError`, `PwgNamedArray`, `PwgNamedStruct`, `PwgRequestHandler`, `PwgResponseEncoder`, `PwgServer`) + the 9 `define()` constants (`WS_PARAM_*`, `WS_TYPE_*`, `WS_ERR_*`, `WS_XML_ATTRIBUTES`).
+- PSR-4 copies under `src/Piwigo/Ws/` exist (`PwgError.php`, `PwgNamedArray.php`, `PwgNamedStruct.php`, `PwgRequestHandler.php`, `PwgServer.php`) plus `src/Piwigo/Ws/Encoder/PwgResponseEncoder.php` and 5 protocol encoders/handlers under `src/Piwigo/Ws/Protocol/`. They're not yet the canonical source — `ws_core.inc.php` redeclares the same class bodies and is `include_once`-loaded at boot. Removing the redundant declarations is the bulk of this item.
+- No `src/Piwigo/Compat/aliases.php` exists (the original plan referenced one as a fallback). All in-tree callers reference the namespaced versions via `use Piwigo\Ws\…;`.
 
 ### Steps
 
-1. **Verify `src/Piwigo/Ws/` is feature-complete.** Diff each class in `include/ws_core.inc.php` against its `src/` counterpart. Confirm all methods, properties, and typed annotations are present in the `src/` version. If anything is missing, backport it.
+1. **Verify `src/Piwigo/Ws/` is feature-complete.** Diff each class in `include/ws_core.inc.php` against its `src/` counterpart (including `src/Piwigo/Ws/Encoder/PwgResponseEncoder.php` for the abstract base). Confirm all methods, properties, and typed annotations are present in the `src/` version. If anything is missing, backport it.
 
 2. **Convert `WS_TYPE_*` constants to an enum (bonus — ties into #19).** The 10 `define()` constants (`WS_TYPE_BOOL`, `WS_TYPE_INT`, `WS_TYPE_FLOAT`, `WS_TYPE_POSITIVE`, `WS_TYPE_NEGATIVE`, `WS_TYPE_NOTNULL`, `WS_PARAM_ACCEPT_ARRAY`, `WS_PARAM_FORCE_ARRAY`, `WS_PARAM_OPTIONAL`) are bitmask flags used in `addMethod()` call sites. Introduce `Piwigo\Ws\WsType` and `Piwigo\Ws\WsParam` backed integer enums (or flag constants on the class). Update `ws_functions.inc.php` registration sites.
 
-3. **Strip the class bodies from `include/ws_core.inc.php`.** Replace each class definition with a `class_alias` call pointing at the `Piwigo\Ws\*` counterpart, or simply rely on the existing `src/Piwigo/Compat/aliases.php`. Keep only the `define()` constants (or forward them from the new enum) and the `global` declaration at the top. The file shrinks from 681 to ~30 lines.
+3. **Strip the class bodies from `include/ws_core.inc.php`.** Delete each class definition (PSR-4 autoload resolves `Piwigo\Ws\PwgError` etc. directly — no `class_alias` chain needed because in-tree callers already `use Piwigo\Ws\…;`). Keep only the `define()` constants (or forward them from the new enum) and the `global` declaration at the top. The file shrinks from 676 to ~30 lines.
 
-4. **Confirm `ws.php` still boots.** `ws.php` includes `ws_core.inc.php` before using any WS types. With the class bodies removed, it must receive the PSR-4 autoloaded versions instead. Run `npx playwright test tests/e2e/` — the `WsApiTest` exercises the live WS layer.
+4. **Confirm `ws.php` still boots.** `ws.php` includes `ws_core.inc.php` before using any WS types. With the class bodies removed, it must receive the PSR-4 autoloaded versions instead. Run the Playwright suite — the WS-API specs exercise the live WS layer.
 
-5. **PHPStan.** Level-9 errors in the WS layer should drop significantly once `src/Piwigo/Ws/` is the single source of truth.
+5. **PHPStan.** Level-9 is already clean. Re-run after this lands to confirm no regression.
 
 ### Verification
 
@@ -418,7 +411,7 @@ npx playwright test                         # e2e green
 
 ## #9 — `@` error-suppression cleanup
 
-**Status:** Not started (audit complete) &nbsp;|&nbsp; **Size:** M
+**Status:** In progress (254 → 136 sites, ~46% done) &nbsp;|&nbsp; **Size:** M
 
 ### Goal
 
@@ -426,8 +419,9 @@ Eliminate the 254 `@` error-suppression sites across 73 files inventoried in [`e
 
 ### Current state
 
-- 254 `@` sites across 73 files (per the existing audit).
-- Top hot spots: file ops (`@unlink`, `@mkdir`, `@chmod`), network calls (`@fsockopen`, `@file_get_contents` over HTTP), deprecated function shims, and pre-PHP-8 type-juggling defenses that are no longer needed under strict_types.
+- **136 `@` sites** across 32 files (down from 254 / 73). Breakdown: `include/` 37, `admin/` 51, `src/` 48.
+- Top hot spots: `admin/include/functions.php` (29), `admin/include/functions_upload.inc.php` (12), `src/Piwigo/Admin/updates.php` (11), `include/functions.inc.php` (10), `src/Piwigo/Admin/languages.php` (7), `src/Piwigo/Admin/plugins.php` (6), `include/ws_functions/pwg.images.php` (6).
+- Remaining categories: file ops (`@unlink`, `@mkdir`, `@chmod`), network calls (`@fsockopen`, `@file_get_contents` over HTTP), deprecated function shims. Most type-juggling defenses (covered by strict_types under #2 ✅) are already gone.
 
 ### Steps
 
@@ -462,8 +456,8 @@ Define a typed exception hierarchy under `Piwigo\Exception\`. Replace the 27 `di
 
 ### Current state
 
-- 27 `die()` calls in `include/` (mostly `dblayer/`, `common.inc.php`, install/upgrade flows).
-- Generic `throw new \Exception(...)` in `include/dblayer/functions_mysqli.inc.php` and similar.
+- **103 `die()` calls** total: 92 in `admin/` (61 files — mostly `if (!is_admin()) die();` permission guards at the top of each entrypoint), 11 in `include/` (`dblayer/`, `picture_comment.inc.php`, install/upgrade flows). The original "27 in include/" estimate undercounted because it excluded the admin permission guards, which behave the same way and need the same exception treatment.
+- **7 generic `throw new \Exception(...)`** sites: `include/dblayer/functions_mysqli.inc.php` (2), `admin/include/functions_install.inc.php` (1), `src/Piwigo/Admin/Image/pwg_image.php` (4).
 - `src/` already uses typed SPL exceptions (`\RuntimeException`, `\LogicException`, `\BadMethodCallException`).
 - `src/Piwigo/Ws/PwgError` exists but is WS-protocol-specific, not a general base.
 
@@ -510,9 +504,10 @@ The Piwigo logger implements `Psr\Log\LoggerInterface`. Callsites use the standa
 
 ### Current state
 
-- `include/Logger.class.php` exists (moved to `src/Piwigo/Log/Logger.php` by item #3).
-- Custom API: `$logger->add($message, $level)`.
-- No PSR-3 dependency in `composer.json`.
+- Logger class lives at `src/Piwigo/Core/Logger.php` (the original plan said `src/Piwigo/Log/Logger.php`, but the move went to `Core/`). `include/Logger.class.php` is one of the empty stubs from #29.
+- Custom API: `$logger->debug($msg, $file, $array)`, `$logger->error(...)`, etc. — leveled methods exist but accept positional `(message, file, array)` args, not the PSR-3 `(message, context)` signature.
+- No `psr/log` dependency in `composer.json`.
+- Callers under `src/Piwigo/Admin/{languages,plugins,themes}.php` and `src/Piwigo/Admin/Image/image_ext_imagick.php` reach for the `global $logger` (5 in-scope sites — kept until typed accessor lands; see #6 "Out of scope").
 
 ### Steps
 
@@ -524,7 +519,7 @@ The Piwigo logger implements `Psr\Log\LoggerInterface`. Callsites use the standa
 
 4. **Migrate callsites.** Replace `$logger->add('foo', 'error')` with `$logger->error('foo')`. Sweep `include/` and `admin/`. For sites that pass dynamic levels, use `$logger->log($level, $msg)`.
 
-5. **Optionally swap in Monolog.** Once the interface is the contract, the implementation can be replaced with `monolog/monolog` in `src/Piwigo/Log/Logger.php` factory without touching callsites. Defer the actual swap unless there's demand.
+5. **Optionally swap in Monolog.** Once the interface is the contract, the implementation can be replaced with `monolog/monolog` in `src/Piwigo/Core/Logger.php` factory without touching callsites. Defer the actual swap unless there's demand.
 
 ### Verification
 
@@ -735,7 +730,8 @@ Replace the 22 hand-written `install/upgrade_*.php` scripts with versioned migra
 
 ### Current state
 
-- **22 hand-written `install/upgrade_*.php` scripts** (1.3.0 → 15.0.0). Each is a top-level PHP file calling `pwg_query()` directly.
+- **23 hand-written `install/upgrade_*.php` scripts** (1.3.0 → 15.0.0). Each is a top-level PHP file calling `pwg_query()` directly.
+- The 16.x modernization floor is 16.0.0 (see auto-memory `project_modernization_floor.md`) — every script for a pre-16 version (1.3.0 through 15.0.0, all 23 of them) is unreachable and should be **deleted outright** before this item starts. Doctrine Migrations only needs to track schema changes from 16.0.0 forward, so the conversion list shrinks to whatever 16.x adds.
 - No version tracking table. No rollback. No migration runner class.
 - Upgrade flow: `upgrade.php` includes each file in version order based on installed version.
 
@@ -810,8 +806,8 @@ Replace 583 raw `pwg_query()` calls with Doctrine DBAL's query builder. Reposito
 
 ### Current state
 
-- **583 `pwg_query()` sites across 121 files**. Zero repository classes in `src/`.
-- `include/dblayer/functions_mysqli.inc.php` is the procedural wrapper layer.
+- **492 `pwg_query()` sites across `include/`, `admin/`, `src/`** (down from 583). Zero repository classes in `src/` yet.
+- `include/dblayer/functions_mysqli.inc.php` (869 lines) is the procedural wrapper layer.
 - SQL strings interpolate PHP variables; some pass through `pwg_db_real_escape_string`, some don't — an injection audit is part of this work.
 - `$conf['dblayer']` is always `'mysqli'` (16.x floor).
 
@@ -887,29 +883,33 @@ Move all 366 free functions across the 19 `functions_*.inc.php` modules into typ
 
 ### Per-module checklist
 
-| Module                             | Lines | Funcs | Target namespace                |
-| ---------------------------------- | ----- | ----- | ------------------------------- |
-| `functions_user.inc.php`           | 2,673 | 63    | `Piwigo\Users\`, `Piwigo\Auth\` |
-| `functions.inc.php`                | ?     | 81    | spread by domain — split first  |
-| `functions_category.inc.php`       | ?     | 17    | `Piwigo\Category\`              |
-| `functions_search.inc.php`         | ?     | 17    | `Piwigo\Search\`                |
-| `functions_url.inc.php`            | ?     | ?     | `Piwigo\Url\`                   |
-| `functions_html.inc.php`           | ?     | ?     | `Piwigo\Html\`                  |
-| `functions_session.inc.php`        | ?     | ?     | `Piwigo\Session\`               |
-| `functions_picture.inc.php`        | ?     | ?     | `Piwigo\Picture\`               |
-| `functions_tag.inc.php`            | ?     | ?     | `Piwigo\Tag\`                   |
-| `functions_rate.inc.php`           | ?     | ?     | `Piwigo\Rate\`                  |
-| `functions_comment.inc.php`        | ?     | 8     | `Piwigo\Comment\`               |
-| `functions_metadata.inc.php`       | ?     | 5     | `Piwigo\Metadata\`              |
-| `functions_mail.inc.php`           | ?     | ?     | `Piwigo\Mail\`                  |
-| `functions_notification.inc.php`   | ?     | ?     | `Piwigo\Notification\`          |
-| `functions_filter.inc.php`         | ?     | ?     | `Piwigo\Filter\`                |
-| `functions_plugins.inc.php`        | ?     | ?     | `Piwigo\Plugin\`                |
-| `functions_cookie.inc.php`         | ?     | ?     | `Piwigo\Auth\`                  |
-| `dblayer/functions_mysqli.inc.php` | ?     | ?     | `Piwigo\Db\` (item #16)         |
-| `ws_functions/*.php`               | ?     | ?     | `Piwigo\Ws\Method\`             |
+Counts re-measured against the current tree.
 
-(Question marks filled in during step 1 of each module.)
+| Module                                                 | Lines | Funcs | Target namespace                                         |
+| ------------------------------------------------------ | ----- | ----- | -------------------------------------------------------- |
+| `functions_user.inc.php`                               | 2,711 | 63    | `Piwigo\Users\`, `Piwigo\Auth\`                          |
+| `functions.inc.php`                                    | 2,820 | 81    | spread by domain — split first                           |
+| `functions_search.inc.php`                             | 2,101 | 17    | `Piwigo\Search\`                                         |
+| `functions_mail.inc.php`                               | 1,054 | 22    | `Piwigo\Mail\`                                           |
+| `functions_url.inc.php`                                | 846   | 21    | `Piwigo\Url\`                                            |
+| `functions_category.inc.php`                           | 799   | 17    | `Piwigo\Category\`                                       |
+| `functions_html.inc.php`                               | 659   | 23    | `Piwigo\Html\`                                           |
+| `functions_notification.inc.php`                       | 615   | 18    | `Piwigo\Notification\`                                   |
+| `functions_comment.inc.php`                            | 501   | 8     | `Piwigo\Comment\`                                        |
+| `functions_plugins.inc.php`                            | 458   | 12    | `Piwigo\Plugin\`                                         |
+| `functions_tag.inc.php`                                | 370   | 9     | `Piwigo\Tag\`                                            |
+| `functions_session.inc.php`                            | ?     | 12    | `Piwigo\Session\`                                        |
+| `functions_picture.inc.php`                            | ?     | 6     | `Piwigo\Picture\`                                        |
+| `functions_metadata.inc.php`                           | ?     | 5     | `Piwigo\Metadata\`                                       |
+| `functions_cookie.inc.php`                             | ?     | 3     | `Piwigo\Auth\`                                           |
+| `functions_rate.inc.php`                               | ?     | 2     | `Piwigo\Rate\`                                           |
+| `functions_filter.inc.php`                             | ?     | 1     | `Piwigo\Filter\`                                         |
+| `functions_calendar.inc.php`                           | ?     | 1     | `Piwigo\Calendar\`                                       |
+| `dblayer/functions_mysqli.inc.php`                     | 869   | 45    | `Piwigo\Db\` (item #16)                                  |
+| `ws_functions/*.php`                                   | —     | —     | `Piwigo\Ws\Method\` — 9 files in `include/ws_functions/` |
+| `admin/include/functions.php`                          | 3,671 | ?     | spread by admin domain                                   |
+| `admin/include/functions_upload.inc.php`               | 1,033 | ?     | `Piwigo\Admin\Upload\`                                   |
+| `admin/include/functions_notification_by_mail.inc.php` | 513   | ?     | `Piwigo\Admin\Mail\`                                     |
 
 ### Steps (per module)
 
@@ -963,7 +963,7 @@ Translation files move from `$lang['key'] = 'value';` PHP arrays to gettext PO/M
 
 ### Current state
 
-- **388 `.lang.php` files** across **73 locales** in `language/<locale>/{common,admin,upgrade}.lang.php`.
+- **324 `.lang.php` files** across **73 locales** in `language/<locale>/{common,admin,upgrade}.lang.php` (down from 388 — ~16% reduction, likely from dropped `upgrade.lang.php` files for pre-16 versions).
 - Format: `$lang['key_name'] = 'translated value';`. No plural handling beyond ad-hoc `if ($n == 1)` in callers.
 - Active locale picked via `include()` of the right `.lang.php` files in `common.inc.php`.
 - Free function `l10n($key)` looks up from the global `$lang` array.
@@ -1022,8 +1022,8 @@ Adopt PHP 8.1–8.5 language features where they tighten invariants without chan
 
 ### Current state
 
-- `src/` has 68 classes; `include/` free functions are out of scope (covered by item #17).
-- No `readonly`, `enum`, or `match` usage found in `src/`.
+- `src/` has 68 classes/interfaces; `include/` free functions are out of scope (covered by item #17).
+- 3 `readonly` declarations exist in `src/` so far; 0 enums, no `match` adoption beyond a few isolated uses.
 - `include/ws_core.inc.php` has 10 `define()` bitmask constants — enum candidates (linked to #8).
 
 ### Steps
@@ -1410,15 +1410,15 @@ Migrate every template from Smarty 5 to [Nette Latte](https://latte.nette.org). 
 ### Current state
 
 - **`smarty/smarty: ^5.0`** in `composer.json`.
-- **~170 `.tpl` files** across `themes/default/template/`, `themes/standard_pages/`, `admin/themes/<skin>/template/`, and `plugins/*/template/`.
+- **169 `.tpl` files**: `admin/themes/default/template/` 69, `themes/default/template/` 55, plugins 31, `themes/standard_pages/` 7, plus a handful in includes/standard_pages skins. Zero `.latte` files yet.
 - **`src/Piwigo/Template/Template.php`** wraps Smarty and registers ~30+ custom plugins:
   - **Modifiers:** `translate`, `translate_dec`, `sprintf`, `urlencode`, `intval`, `file_exists`, `constant`, `json_encode`, `json_decode`, `htmlspecialchars`, `implode`, `stripslashes`, `in_array`, `ucfirst`, `strstr`, `stristr`, `trim`, `md5`, `strtolower`, `str_ireplace`, `explode`, `ternary`, `get_extent`, `url_is_remote`, `is_null`, `l10n`, `str_replace`, `is_admin`, `is_classic_user`, `get_device`, `is_file`.
   - **Functions:** `combine_script`, `get_combined_scripts`, `combine_css`, `define_derivative`.
   - **Compilers:** `get_combined_css`.
   - **Blocks:** `html_head`, `html_style`, `footer_script`. Of these, only `html_head` is currently called from a template (`themes/default/template/notification.tpl`). `html_style` and `footer_script` have zero in-scope callers — kept implemented in `Template.php` for the future `{html_style}` + nonce path described in `PLAN-inline-assets-extraction.md`.
   - **Filters:** `prefilter_white_space` (whitespace stripper).
-- **3rd-party plugins** (LocalFilesEditor, nbc_ThemeChanger, piwigo-openstreetmap, piwigo-videojs, user_tags) ship their own `.tpl` files and rely on the Smarty plugin API.
-- **Custom inline `<style>`/`<script>` blocks** with `{$skin.*}` Smarty variable injection (see `themes/modus/css/base.css.tpl`).
+- **Bundled plugin templates** under `plugins/*/template/`: `LocalFilesEditor`, `nbc_ThemeChanger`, `piwigo-openstreetmap`, `piwigo-videojs`, `user_tags` ship their own `.tpl` files and rely on the Smarty plugin API.
+- **No `.css.tpl` files remain** — the original modus theme that carried `themes/modus/css/base.css.tpl` is no longer in the codebase. Step 4 of "convert templates in waves" below referenced it; that wave is now empty.
 
 ### Steps
 
@@ -1443,11 +1443,10 @@ Migrate every template from Smarty 5 to [Nette Latte](https://latte.nette.org). 
    - **`prefilter_white_space`** — Latte template loader wrapper (run before compilation).
 
 5. **Convert templates in waves.** Order risk-low → risk-high:
-   - **Wave 1 — admin pages without dynamic CSS** (lowest risk, ~70 files in `admin/themes/default/template/`). Each `.tpl` → `.latte`. Smarty syntax → Latte syntax. Run the page in the browser after each conversion.
-   - **Wave 2 — public theme `default`** (~40 files in `themes/default/template/`).
-   - **Wave 3 — public theme `standard_pages`** and email templates.
-   - **Wave 4 — `.css.tpl` files** (`themes/modus/css/base.css.tpl` etc.). These need `Latte::setContentType('css')` per file.
-   - **Wave 5 — plugin templates** (3rd-party plugins). Each plugin gets its own commit/PR.
+   - **Wave 1 — admin templates** (lowest risk, 69 files in `admin/themes/default/template/`). Each `.tpl` → `.latte`. Smarty syntax → Latte syntax. Run the page in the browser after each conversion.
+   - **Wave 2 — public theme `default`** (55 files in `themes/default/template/`).
+   - **Wave 3 — public theme `standard_pages`** (7 files) and email templates.
+   - **Wave 4 — plugin templates** (31 files across 5 bundled plugins). Each plugin gets its own commit.
 
 6. **Mechanical conversion helpers.** Most Smarty-to-Latte syntax is regex-replaceable:
    - `{if $foo}` → `{if $foo}` (compatible)
@@ -1467,7 +1466,7 @@ Migrate every template from Smarty 5 to [Nette Latte](https://latte.nette.org). 
 
 ```bash
 find . -name "*.tpl" -not -path "*/_data/*" -not -path "*/vendor/*" -not -path "*/node_modules/*" | wc -l
-# target: 0 (all converted to .latte) — or only inside legacy plugin directories during transition
+# baseline: 169 today; target: 0 (all converted to .latte) — or only inside legacy plugin directories during transition
 
 composer show smarty/smarty 2>&1 | grep "not installed"   # after final removal
 vendor/bin/phpunit                                         # green
@@ -1695,7 +1694,7 @@ PHPStan analyse passes at level 10 with no baseline file. Level 10 enforces full
 
 ### Current state
 
-- `phpstan.neon` set to `level: 9`, baseline empty (clean).
+- `phpstan.neon` set to `level: 9`, no baseline file. `vendor/bin/phpstan analyse` reports `[OK] No errors`. Custom rules registered: `NoDynamicNewRule`, `NoGlobalInSrcRule`, `TriggerChangeDynamicReturnType`, `PwgGetSessionVarDynamicReturnType`. The deprecation-rules pack is included; the strict-rules pack is required-dev but not yet wired in.
 - Level 10 (`PHPSTAN_TABLE_ERROR_FORMATTER_FORCE_SHOW_ALL_ERRORS=1 phpstan analyse --level=10`) reports **1000+ errors** today — most from `mixed` returns of untyped helpers and the `global $conf, $page, $user, $lang, $template;` propagation.
 
 ### Steps
@@ -1797,8 +1796,8 @@ Raise PHPUnit unit-test coverage from the current level to ≥40% of `src/` stat
 
 ### Current state
 
-- **229 test methods** across `tests/Unit/` (Auth, Cache, Core, Image, Menu, Search, Session, Template, Users, Ws).
-- Largest untested areas in `src/`: `Admin/` (image backends, plugins, themes, updates), `Calendar/`, `Db/`.
+- **218 test methods** across `tests/Unit/` (Auth, Cache, Core, Image, Menu, Search, Session, Template, Users, Ws). 28 test files.
+- Largest untested areas in `src/`: `Admin/` (image backends, `plugins`, `themes`, `updates`), `Calendar/`. (The `Db/` namespace doesn't exist yet — gated by item #16.)
 
 ### Steps
 
@@ -1829,21 +1828,23 @@ vendor/bin/phpunit --testsuite Unit --coverage-text | grep "Lines:"
 
 ### Goal
 
-Delete the 17 five-line `*.class.php` files in `include/` and `admin/include/` that exist only as `// Class moved to src/Piwigo/ — autoloaded by Composer.` placeholders. Composer autoload + `src/Piwigo/Compat/aliases.php` already resolve the legacy unqualified names; the stubs themselves include nothing and have no real callers.
+Delete the 17 five-line `*.class.php` files in `include/` and `admin/include/` that exist only as `// Class moved to src/Piwigo/ — autoloaded by Composer.` placeholders. Composer PSR-4 autoload already resolves the namespaced classes (`Piwigo\Admin\plugins`, etc.), and every first-party caller has been updated to `use Piwigo\…\…;` — the stubs themselves include nothing and have no real callers.
 
 ### Current state
 
 - 9 stubs in `include/`: `block`, `cache`, `calendar_base`, `calendar_monthly`, `calendar_weekly`, `Logger`, `pwgsession`, `template`, `totp`.
 - 8 stubs in `admin/include/`: `c13y_internal`, `check_integrity`, `image`, `languages`, `plugins`, `tabsheet`, `themes`, `updates`.
 - Each is exactly 5 lines: `<?php`, `declare(strict_types=1);`, comment, blank.
-- `tools/triggers_list.php` mentions some of these paths in event-handler description strings (e.g. `'include\block.class.php (BlockManager::apply)'`) — those are documentation strings, not includes, but should be updated to point at the `src/Piwigo/...` locations as part of this task.
+- `src/Piwigo/Compat/aliases.php` does **not** exist; the stubs are not backed by any `class_alias` chain. They are pure dead weight — every first-party caller already uses the namespaced `use Piwigo\…\…;` form.
+- `tools/triggers_list.php` mentions some of these paths in event-handler description strings (e.g. `'include\block.class.php (BlockManager::apply)'`, `'include\template.class.php (Template::flush)'`, `'admin\include\check_integrity.class.php …'`, `'admin\include\image.class.php …'`, `'include\tabsheet.class.php …'`) — at least 6 entries. Those are documentation strings, not includes, but should be updated to point at the `src/Piwigo/...` locations as part of this task.
 
 ### Steps
 
 1. `git rm` the 17 stub files.
-2. Run `vendor/bin/phpstan analyse --no-progress` and `vendor/bin/phpunit` to confirm nothing broke (autoload + aliases.php carry the legacy names).
-3. Update the 6 path strings in `tools/triggers_list.php` to reference the corresponding `src/Piwigo/...` files.
-4. Spot-check that a representative legacy plugin still loads (e.g. activate `nbc_ThemeChanger` in a test gallery).
+2. Run `vendor/bin/phpstan analyse --no-progress` and `vendor/bin/phpunit` to confirm nothing broke (autoload carries the namespaced names).
+3. Update the path strings in `tools/triggers_list.php` to reference the corresponding `src/Piwigo/...` files.
+4. Spot-check that a representative bundled plugin still loads (e.g. activate `nbc_ThemeChanger` in a test gallery).
+5. Decide whether to introduce `src/Piwigo/Compat/aliases.php` for 3rd-party-plugin compatibility (legacy plugins might reference unqualified `plugins`/`themes`/etc.). Defer until a concrete plugin breaks; today no first-party caller needs it.
 
 ### Verification
 

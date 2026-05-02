@@ -59,7 +59,10 @@ const Piecon: PieconInstance = (() => {
     };
 
     const removeFaviconTag = (): void => {
-        const links = Array.prototype.slice.call(document.getElementsByTagName('link'), 0) as HTMLLinkElement[];
+        const links = Array.prototype.slice.call(
+            document.getElementsByTagName('link'),
+            0
+        ) as HTMLLinkElement[];
         const head = document.getElementsByTagName('head')[0];
         for (let i = 0, l = links.length; i < l; i++) {
             const rel = links[i].getAttribute('rel');
@@ -112,7 +115,14 @@ const Piecon: PieconInstance = (() => {
         if (percentage > 0) {
             context.beginPath();
             context.moveTo(cx, cy);
-            context.arc(cx, cy, r - 2, -0.5 * Math.PI, (-0.5 + 2 * percentage / 100) * Math.PI, false);
+            context.arc(
+                cx,
+                cy,
+                r - 2,
+                -0.5 * Math.PI,
+                (-0.5 + (2 * percentage) / 100) * Math.PI,
+                false
+            );
             context.lineTo(cx, cy);
             context.fillStyle = options.color;
             context.fill();
@@ -122,24 +132,28 @@ const Piecon: PieconInstance = (() => {
     };
 
     const updateTitle = (percentage: number): void => {
-        document.title = percentage > 0
-            ? '(' + percentage + '%) ' + originalTitle
-            : (originalTitle ?? '');
+        document.title =
+            percentage > 0 ? '(' + percentage + '%) ' + originalTitle : (originalTitle ?? '');
     };
 
-    obj.setOptions = function(custom: Partial<PieconOptions>): PieconInstance {
+    obj.setOptions = function (custom: Partial<PieconOptions>): PieconInstance {
         options = { ...defaults, ...custom } as PieconOptions;
         return this;
     };
 
-    obj.setProgress = function(percentage: number): void {
+    obj.setProgress = function (percentage: number): void {
         if (!originalTitle) originalTitle = document.title;
         if (!originalFavicon || !currentFavicon) {
             const tag = getFaviconTag();
             originalFavicon = currentFavicon = tag ? tag.getAttribute('href') : '/favicon.ico';
         }
         if (!isNaN(parseFloat(String(percentage))) && isFinite(percentage)) {
-            if (!getCanvas().getContext || browser.ie || browser.safari || options.fallback === true) {
+            if (
+                !getCanvas().getContext ||
+                browser.ie ||
+                browser.safari ||
+                options.fallback === true
+            ) {
                 updateTitle(percentage);
             } else {
                 if (options.fallback === 'force') updateTitle(percentage);
@@ -148,7 +162,7 @@ const Piecon: PieconInstance = (() => {
         }
     };
 
-    obj.reset = function(): void {
+    obj.reset = function (): void {
         if (originalTitle) document.title = originalTitle;
         if (originalFavicon) {
             currentFavicon = originalFavicon;

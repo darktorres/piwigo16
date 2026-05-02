@@ -193,6 +193,9 @@ $template->assign([
   'U_HELP' => get_root_url().'admin/popuphelp.php?page=permalinks',
   'deleted_permalinks' => $deleted_permalinks,
   'ADMIN_PAGE_TITLE' => l10n('Albums'),
+  'page_data_json' => json_encode([
+      'nb_cats' => count($categories),
+  ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE),
   ]);
 
 $template->assign_var_from_handle('ADMIN_CONTENT', 'permalinks');

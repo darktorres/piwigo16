@@ -1,36 +1,5 @@
-{footer_script}
-(function() {
-  var h1 = document.querySelector("h1");
-  if (h1) {
-    var badge = document.createElement('span');
-    badge.className = 'badge-number';
-    badge.textContent = '{$nb_cats}';
-    h1.appendChild(badge);
-  }
-
-  var addPermalinkOpen = document.getElementById("addPermalinkOpen");
-  if (addPermalinkOpen) {
-    addPermalinkOpen.addEventListener('click', function(e) {
-      e.preventDefault();
-      var addPermalink = document.getElementById("addPermalink");
-      var showAddPermalink = document.getElementById("showAddPermalink");
-      if (addPermalink) addPermalink.style.display = '';
-      if (showAddPermalink) showAddPermalink.style.display = 'none';
-    });
-  }
-
-  var addPermalinkClose = document.getElementById("addPermalinkClose");
-  if (addPermalinkClose) {
-    addPermalinkClose.addEventListener('click', function(e) {
-      e.preventDefault();
-      var addPermalink = document.getElementById("addPermalink");
-      var showAddPermalink = document.getElementById("showAddPermalink");
-      if (addPermalink) addPermalink.style.display = 'none';
-      if (showAddPermalink) showAddPermalink.style.display = '';
-    });
-  }
-}());
-{/footer_script}
+<script id="pwg-page-data" type="application/json">{$page_data_json}</script>
+{combine_script id='permalinks' load='footer' path='admin/themes/default/js/permalinks.js'}
 
 {combine_css path="admin/themes/default/css/pages/permalinks.css"}
 

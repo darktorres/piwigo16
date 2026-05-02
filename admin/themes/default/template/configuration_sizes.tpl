@@ -1,67 +1,6 @@
+<script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{footer_script}
-
-
-const title_msg = '{'Are you sure you want to restore to default settings?'|@translate|@escape:javascript}';
-const confirm_msg = '{'Yes, I am sure'|@translate|@escape}';
-const cancel_msg = '{'No, I have changed my mind'|@translate|@escape}';
-
-document.querySelectorAll(".restore-settings-button").forEach(function(el) {
-  window.pwg_jconfirm_follow_href_fn(el, {
-    alert_title: title_msg,
-    alert_confirm: confirm_msg,
-    alert_cancel: cancel_msg
-  });
-});
-
-(function(){
-  var labelMaxWidth = "{'Maximum width'|translate}",
-      labelWidth = "{'Width'|translate}",
-      labelMaxHeight = "{'Maximum height'|translate}",
-      labelHeight = "{'Height'|translate}";
-
-  function toggleResizeFields() {
-    var checkbox = document.querySelector("[name=original_resize]");
-    var needToggle = document.getElementById("sizeEdit-original");
-    if (!needToggle) return;
-    needToggle.style.display = (checkbox && checkbox.checked) ? '' : 'none';
-  }
-
-  toggleResizeFields();
-  document.querySelector("[name=original_resize]")?.addEventListener('click', toggleResizeFields);
-
-  document.querySelectorAll("a[id^='sizeEditOpen-']").forEach(function(el) {
-    el.addEventListener('click', function(e) {
-      e.preventDefault();
-      var sizeName = el.id.split("-")[1];
-      var sizeEdit = document.getElementById("sizeEdit-" + sizeName);
-      if (sizeEdit) sizeEdit.style.display = sizeEdit.style.display === 'none' ? '' : 'none';
-      el.style.display = 'none';
-    });
-  });
-
-  document.querySelectorAll(".cropToggle").forEach(function(el) {
-    el.addEventListener('click', function() {
-      var form = el.closest('table.sizeEditForm');
-      var labelBoxWidth = form ? form.querySelector('td.sizeEditWidth') : null;
-      var labelBoxHeight = form ? form.querySelector('td.sizeEditHeight') : null;
-      if (el.checked) {
-        if (labelBoxWidth) labelBoxWidth.innerHTML = labelWidth;
-        if (labelBoxHeight) labelBoxHeight.innerHTML = labelHeight;
-      } else {
-        if (labelBoxWidth) labelBoxWidth.innerHTML = labelMaxWidth;
-        if (labelBoxHeight) labelBoxHeight.innerHTML = labelMaxHeight;
-      }
-    });
-  });
-
-  document.getElementById("showDetails")?.addEventListener('click', function(e) {
-    e.preventDefault();
-    document.querySelectorAll(".sizeDetails").forEach(function(el) { el.style.display = ''; });
-    this.style.visibility = 'hidden';
-  });
-})();
-{/footer_script}
+{combine_script id='configuration_sizes' load='footer' require='common' path='admin/themes/default/js/configuration_sizes.js'}
 
 {html_style}
 .sizeEnable { width:50px; }

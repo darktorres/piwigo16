@@ -573,6 +573,14 @@ switch ($page['section']) {
                 $template->assign('custom_derivatives', $tpl_vars);
             }
 
+            $template->assign('page_data_json', json_encode([
+                'str_restore_confirm' => l10n('Are you sure you want to restore to default settings?'),
+                'str_max_width'       => l10n('Maximum width'),
+                'str_width'           => l10n('Width'),
+                'str_max_height'      => l10n('Maximum height'),
+                'str_height'          => l10n('Height'),
+            ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
+
             break;
         }
     case 'watermark':

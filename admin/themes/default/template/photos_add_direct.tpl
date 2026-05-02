@@ -181,7 +181,7 @@
     
     <div id="uploadingActions" hidden>
       <div class="big-progressbar" style="max-width:98%;margin-bottom: 10px;">
-        <div class="progressbar" style="width:0%"></div>
+        <div class="progressbar"></div>
       </div>
       <button id="cancelUpload" class="buttonLike icon-cancel-circled">{'Cancel'|translate}</button>
     </div>

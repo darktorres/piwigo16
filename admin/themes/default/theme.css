@@ -3977,6 +3977,10 @@ a#showPermissions:hover {text-decoration: none;}
   background-size: 33px 25px;
 }
 
+/* Progress bar default starting width — JS animates inline style.width
+   to grow the bar. The default 0% used to live as inline style="width:0%". */
+.progressbar { width: 0%; }
+
 /* Selectize */
 .selectize-dropdown [data-selectable], .selectize-dropdown .optgroup-header {
     padding: 0px 5px !important;

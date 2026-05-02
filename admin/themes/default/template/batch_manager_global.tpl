@@ -261,7 +261,7 @@
     <!-- progress bar -->
     <div id="uploadingActions" hidden>
       <div class="big-progressbar" style="max-width:100%;margin-bottom: 10px;">
-        <div class="progressbar" style="width:0%"></div>
+        <div class="progressbar"></div>
       </div>
     </div>
   </fieldset>

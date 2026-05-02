@@ -265,6 +265,11 @@ $template->assign([
   'TN_WIDTH' => ImageStdParams::get_by_type(IMG_SQUARE)->sizing->ideal_size[0],
   'NB_ELEMENTS' => $nb_elements,
   'ADMIN_PAGE_TITLE' => l10n('Rating'),
+  'page_data_json' => json_encode([
+      'nb_elements' => $nb_elements,
+      'root_url' => get_root_url(),
+      'str_delete_ratings_confirm' => l10n('Are you sure you want to delete the ratings of the user "%s"?'),
+  ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE),
   ]);
 $template->set_filename('rating', 'rating_user.tpl');
 $template->assign_var_from_handle('ADMIN_CONTENT', 'rating');

@@ -1,4 +1,6 @@
-{combine_script id='rating_user' load='footer' path='admin/themes/default/js/rating_user.js'}
+<script id="pwg-page-data" type="application/json">{$page_data_json}</script>
+{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
+{combine_script id='rating_user' load='footer' require='common' path='admin/themes/default/js/rating_user.js'}
 {html_style}
 .dtBar {
 	text-align:left;
@@ -12,9 +14,6 @@
 	padding-left: 3px;
 }
 {/html_style}
-{footer_script}
-document.querySelector('h1')?.insertAdjacentHTML('beforeend', "<span class='badge-number'>{$NB_ELEMENTS}</span>");
-{/footer_script}
 
 <form action="{$F_ACTION}" method="GET">
 <fieldset>
@@ -44,56 +43,8 @@ document.querySelector('h1')?.insertAdjacentHTML('beforeend', "<span class='badg
 	<input type="hidden" name="page" value="rating_user">
 </fieldset>
 </form>
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
 {combine_script id='core.scripts' load='async' path='themes/default/js/scripts.js'}
 {combine_script id='geoip' load='async'}
-{footer_script}
-window.oTable = new DataTable('#rateTable', {
-	pageLength: 100,
-	lengthMenu: [[25, 50, 100, 500, -1], [25, 50, 100, 500, "All"]],
-	order: [],
-	autoWidth: false,
-	columnDefs: [
-		{ targets: '.dtc_user', type: 'string' },
-		{ targets: '.dtc_date', orderSequence: ['desc', 'asc'], type: 'string' },
-		{ targets: '.dtc_stat', orderSequence: ['desc', 'asc'], searchable: false, type: 'num' },
-		{ targets: '.dtc_rate', orderSequence: ['desc', 'asc'], searchable: false, type: 'html' },
-		{ targets: '.dtc_del', orderable: false, searchable: false }
-	]
-});
-
-function uidFromCell(cell) {
-	var tr = cell;
-	while (tr.nodeName !== "TR") tr = tr.parentNode;
-	return JSON.parse(tr.getAttribute('data-usr'));
-}
-
-document.getElementById('rateTable')?.addEventListener('click', function(e) {
-	var delBtn = e.target.closest('.del');
-	if (!delBtn) return;
-	e.preventDefault();
-	var tr = delBtn.closest('tr');
-	var usrName = tr.querySelector('.usr')?.innerHTML ?? '';
-	var title_msg = '{'Are you sure you want to delete the ratings of the user "%s"?'|@translate|@escape:'javascript'}';
-	if (!window.confirm(title_msg.replace('%s', usrName))) return;
-	var cell = delBtn.parentElement;
-	var data = uidFromCell(cell);
-	tr.style.opacity = '0.4';
-	(new PwgWS('{$ROOT_URL|@escape:javascript}')).callService(
-		'pwg.rates.delete', { user_id: data.uid, anonymous_id: data.aid },
-		{
-			method: 'POST',
-			onFailure: function(num, text) { tr.style.opacity = '1'; alert(num + ' ' + text); },
-			onSuccess: function(result) {
-				if (result)
-					window.oTable.row(tr).remove().draw();
-				else
-					alert(result);
-			}
-		}
-	);
-});
-{/footer_script}
 <table id="rateTable">
 <thead>
 <tr class="throw">

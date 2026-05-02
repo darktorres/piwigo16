@@ -16,7 +16,7 @@ declare(strict_types=1);
  * - repeat
  * - play
  */
-/** @return array<string, scalar> */
+/** @return array<string, mixed> */
 function get_default_slideshow_params(): array
 {
     return [
@@ -31,7 +31,7 @@ function get_default_slideshow_params(): array
  */
 /**
  * @param array<string, mixed> $params
- * @return array<string, scalar>
+ * @return array<string, mixed>
  */
 function correct_slideshow_params(array $params = []): array
 {
@@ -82,11 +82,14 @@ function decode_slideshow_params(?string $encode_params = null): array
 /** @param array<string,mixed> $decode_params */
 function encode_slideshow_params(array $decode_params = []): string
 {
-    $params = array_diff_assoc(correct_slideshow_params($decode_params), get_default_slideshow_params());
+    $corrected = correct_slideshow_params($decode_params);
+    $default = get_default_slideshow_params();
     $result = '';
 
-    foreach ($params as $name => $value) {
-        // boolean_to_string return $value, if it's not a bool
+    foreach ($corrected as $name => $value) {
+        if (array_key_exists($name, $default) && $default[$name] === $value) {
+            continue;
+        }
         $bool_val = is_bool($value) ? $value : (is_string($value) ? $value : '');
         $result .= '+'.$name.'-'.boolean_to_string($bool_val);
     }

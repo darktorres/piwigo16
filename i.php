@@ -472,7 +472,7 @@ if (isset($_GET['b'])) {
 
 if (!$need_generate) {
     if (isset($_SERVER['HTTP_IF_MODIFIED_SINCE'])
-      and (is_scalar($_SERVER['HTTP_IF_MODIFIED_SINCE'] ?? null) && strtotime((string) $_SERVER['HTTP_IF_MODIFIED_SINCE']) == $derivative_mtime)) {// send the last mod time of the file back
+      and (is_scalar($_SERVER['HTTP_IF_MODIFIED_SINCE']) && strtotime((string) $_SERVER['HTTP_IF_MODIFIED_SINCE']) == $derivative_mtime)) {// send the last mod time of the file back
         header('Last-Modified: '.gmdate('D, d M Y H:i:s', $derivative_mtime).' GMT', true, 304);
         header('Expires: '.gmdate('D, d M Y H:i:s', time() + 10 * 24 * 3600).' GMT', true, 304);
         exit;

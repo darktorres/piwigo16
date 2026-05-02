@@ -66,7 +66,7 @@ DELETE
          and count($post_cat_false) > 0) {
     $post_cat_false_ids = array_map(fn($v) => is_numeric($v) ? (int) $v : 0, $post_cat_false);
     $uppercats = get_uppercat_ids($post_cat_false_ids);
-    $uppercats_str = array_map(fn($v) => is_scalar($v) ? (string) $v : '', $uppercats);
+    $uppercats_str = array_map(fn($v) => (string) $v, $uppercats);
     $private_uppercats = [];
 
     $query = '

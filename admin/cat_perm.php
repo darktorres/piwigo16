@@ -106,7 +106,7 @@ DELETE
             $query = '
 SELECT id
   FROM '.CATEGORIES_TABLE.'
-  WHERE id IN ('.implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $cat_ids)).')
+  WHERE id IN ('.implode(',', array_map(fn($v) => (string) $v, $cat_ids)).')
     AND status = \'private\'
 ;';
             $private_cats = query2array($query, null, 'id');

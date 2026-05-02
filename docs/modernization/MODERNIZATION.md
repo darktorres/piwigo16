@@ -305,34 +305,3 @@ PHP 8.5 is required. Key breakage points:
 Activate on a fresh 16.x install with `error_reporting(E_ALL)` and browse the gallery,
 a photo page, and the admin dashboard. Check the PHP error log for any `Deprecated` or
 `Warning` lines before shipping.
-
----
-
-## Pending work
-
-### Phase 6 — unconfirmed cleanup steps
-
-- **Delete `GlobalsBridge.php`** — Wave C shipped but the proxy can be removed once
-  deprecation logs confirm plugin-side access is quiet. Delete
-  `src/Piwigo/Core/GlobalsBridge.php` and the `installAsConfProxy()` call in
-  `Kernel::boot()`.
-- **Static dblayer include** — `common.inc.php` uses a dynamic string-interpolation
-  include; `Config::dbLayer()` always returns `'mysqli'`. Replace with a static
-  `include` so PHPStan can see the 70 `pwg_*` free functions.
-- **Delete `tests/e2e/global-setup.js`** — stale CJS leftover alongside the canonical
-  `global-setup.ts`.
-- **E2E TypeScript typecheck** — `tests/e2e/` is excluded from `tsconfig.json`;
-  add `tests/e2e/tsconfig.json` and `tsc --noEmit -p tests/e2e/tsconfig.json` to the
-  `typecheck` npm script.
-
-### Phase 3/4 — sub-plan long tail
-
-- **Phase 2 (~85–90%)** — untyped params on older free functions in
-  `include/functions.inc.php`, `functions_url.inc.php`, etc. Rector bleeds this off
-  gradually.
-- **Phase 3 (~50–60%)** — 20 legacy `*.class.php` shims in `include/` (12) and
-  `admin/include/` (8) should be confirmed as empty stub aliases and removed.
-- **Phase 4 (~35–50%)** — raw `$conf[...]` hot spots still to migrate:
-  `admin/include/functions.php` (149), `include/functions.inc.php` (139),
-  `include/functions_user.inc.php` (121), `include/ws_functions/pwg.images.php` (95).
-  `CurrentUser::` adoption is light — `$user` global still dominant outside `src/`.

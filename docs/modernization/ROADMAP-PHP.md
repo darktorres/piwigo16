@@ -1820,3 +1820,35 @@ Raise PHPUnit unit-test coverage from the current level to ≥40% of `src/` stat
 vendor/bin/phpunit --testsuite Unit --coverage-text | grep "Lines:"
 # Target: ≥ 40.00%
 ```
+
+---
+
+## #29 — Delete empty `*.class.php` stub shims
+
+**Status:** Not started &nbsp;|&nbsp; **Size:** XS
+
+### Goal
+
+Delete the 17 five-line `*.class.php` files in `include/` and `admin/include/` that exist only as `// Class moved to src/Piwigo/ — autoloaded by Composer.` placeholders. Composer autoload + `src/Piwigo/Compat/aliases.php` already resolve the legacy unqualified names; the stubs themselves include nothing and have no real callers.
+
+### Current state
+
+- 9 stubs in `include/`: `block`, `cache`, `calendar_base`, `calendar_monthly`, `calendar_weekly`, `Logger`, `pwgsession`, `template`, `totp`.
+- 8 stubs in `admin/include/`: `c13y_internal`, `check_integrity`, `image`, `languages`, `plugins`, `tabsheet`, `themes`, `updates`.
+- Each is exactly 5 lines: `<?php`, `declare(strict_types=1);`, comment, blank.
+- `tools/triggers_list.php` mentions some of these paths in event-handler description strings (e.g. `'include\block.class.php (BlockManager::apply)'`) — those are documentation strings, not includes, but should be updated to point at the `src/Piwigo/...` locations as part of this task.
+
+### Steps
+
+1. `git rm` the 17 stub files.
+2. Run `vendor/bin/phpstan analyse --no-progress` and `vendor/bin/phpunit` to confirm nothing broke (autoload + aliases.php carry the legacy names).
+3. Update the 6 path strings in `tools/triggers_list.php` to reference the corresponding `src/Piwigo/...` files.
+4. Spot-check that a representative legacy plugin still loads (e.g. activate `nbc_ThemeChanger` in a test gallery).
+
+### Verification
+
+```bash
+git ls-files 'include/*.class.php' 'admin/include/*.class.php'   # empty
+vendor/bin/phpstan analyse --no-progress                         # green
+vendor/bin/phpunit                                               # green
+```

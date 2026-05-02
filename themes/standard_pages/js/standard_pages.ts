@@ -78,6 +78,20 @@ document.addEventListener('DOMContentLoaded', () => {
             if (selectedLang) setCookie('lang', selectedLang, 1);
         });
     });
+
+    document.querySelectorAll<HTMLElement>('[data-toggle-mode]').forEach(el => {
+        el.addEventListener('click', () => {
+            const mode = el.getAttribute('data-toggle-mode') || '';
+            if (mode === 'dark' || mode === 'light') toggle_mode(mode);
+        });
+    });
+
+    document.querySelectorAll<HTMLElement>('[data-set-lang]').forEach(el => {
+        el.addEventListener('click', () => {
+            const code = el.getAttribute('data-set-lang') || '';
+            if (code) setCookie('lang', code, 30);
+        });
+    });
 });
 
 function toggle_mode(mode: string): void {

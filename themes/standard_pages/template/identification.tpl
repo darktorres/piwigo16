@@ -8,8 +8,8 @@
 
   <section id="header-options">
     <div>
-      <i class="gallery-icon-moon toggle-mode" id="toggle_mode_light" onclick="toggle_mode('dark')"></i>
-      <i class="gallery-icon-sun toggle-mode" id="toggle_mode_dark" onclick="toggle_mode('light')"></i>
+      <i class="gallery-icon-moon toggle-mode" id="toggle_mode_light" data-toggle-mode="dark"></i>
+      <i class="gallery-icon-sun toggle-mode" id="toggle_mode_dark" data-toggle-mode="light"></i>
     </div>
     <div>
       <a href="{$HELP_LINK}" target="_blank">{'Help'|translate}</a>
@@ -105,7 +105,7 @@
     <div id="lang-select">
       <span id="other-languages">
   {foreach from=$language_options key=code item=lang}
-          <span id="lang={$code}" onclick="setCookie('lang','{$code}',30)">{$lang}</span>
+          <span id="lang={$code}" data-set-lang="{$code}">{$lang}</span>
   {/foreach}
       </span>
       <div id="selected-language-container">

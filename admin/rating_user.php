@@ -180,7 +180,7 @@ foreach ($by_user_ratings as $id => $rating) {
  */
 function avg_compare(array $a, array $b): int
 {
-    $d = (float) $a['avg'] - (float) $b['avg'];
+    $d = (is_numeric($a['avg']) ? (float) $a['avg'] : 0.0) - (is_numeric($b['avg']) ? (float) $b['avg'] : 0.0);
     return ($d == 0) ? 0 : ($d < 0 ? -1 : 1);
 }
 
@@ -190,7 +190,7 @@ function avg_compare(array $a, array $b): int
  */
 function count_compare(array $a, array $b): int
 {
-    $d = (int) $a['count'] - (int) $b['count'];
+    $d = (is_numeric($a['count']) ? (int) $a['count'] : 0) - (is_numeric($b['count']) ? (int) $b['count'] : 0);
     return ($d == 0) ? 0 : ($d < 0 ? -1 : 1);
 }
 
@@ -200,7 +200,7 @@ function count_compare(array $a, array $b): int
  */
 function cv_compare(array $a, array $b): int
 {
-    $d = (float) $b['cv'] - (float) $a['cv']; //desc
+    $d = (is_numeric($b['cv']) ? (float) $b['cv'] : 0.0) - (is_numeric($a['cv']) ? (float) $a['cv'] : 0.0); //desc
     return ($d == 0) ? 0 : ($d < 0 ? -1 : 1);
 }
 
@@ -210,7 +210,7 @@ function cv_compare(array $a, array $b): int
  */
 function consensus_dev_compare(array $a, array $b): int
 {
-    $d = (float) $b['cd'] - (float) $a['cd']; //desc
+    $d = (is_numeric($b['cd']) ? (float) $b['cd'] : 0.0) - (is_numeric($a['cd']) ? (float) $a['cd'] : 0.0); //desc
     return ($d == 0) ? 0 : ($d < 0 ? -1 : 1);
 }
 
@@ -220,7 +220,9 @@ function consensus_dev_compare(array $a, array $b): int
  */
 function last_rate_compare(array $a, array $b): int
 {
-    return -strcmp((string) ($a['last_date'] ?? ''), (string) ($b['last_date'] ?? ''));
+    $da = is_scalar($a['last_date'] ?? null) ? (string) $a['last_date'] : '';
+    $db = is_scalar($b['last_date'] ?? null) ? (string) $b['last_date'] : '';
+    return -strcmp($da, $db);
 }
 
 $order_by_index = 4;

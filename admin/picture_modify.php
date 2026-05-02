@@ -138,7 +138,7 @@ if (isset($_POST['submit'])) {
     check_input_parameter('represent', $_POST, true, PATTERN_ID);
 
     $represented_albums_int = array_map(fn($v) => is_numeric($v) ? (int) $v : 0, $represented_albums);
-    $represent_post_int = is_array($_POST['represent']) ? array_map('intval', $_POST['represent']) : [];
+    $represent_post_int = is_array($_POST['represent']) ? array_map(fn($v) => is_numeric($v) ? (int) $v : 0, $_POST['represent']) : [];
     $no_longer_thumbnail_for = array_diff($represented_albums_int, $represent_post_int);
     if (count($no_longer_thumbnail_for) > 0) {
         set_random_representant(array_values($no_longer_thumbnail_for));
@@ -149,7 +149,7 @@ if (isset($_POST['submit'])) {
         $query = '
 UPDATE '.CATEGORIES_TABLE.'
   SET representative_picture_id = '.(is_numeric($_GET['image_id'] ?? null) ? (int)$_GET['image_id'] : 0).'
-  WHERE id IN ('.implode(',', array_map(fn($v) => is_numeric($v) ? (int) $v : 0, $new_thumbnail_for)).')
+  WHERE id IN ('.implode(',', array_map(fn($v) => (int) $v, $new_thumbnail_for)).')
 ;';
         pwg_query($query);
     }

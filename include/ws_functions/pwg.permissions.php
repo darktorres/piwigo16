@@ -218,7 +218,7 @@ function ws_permissions_remove(array $params, \Piwigo\Ws\PwgServer &$service): m
     $cat_id_param3 = is_array($params['cat_id']) ? $params['cat_id'] : [];
     $cat_id_param3_int = array_map(fn($v) => is_numeric($v) ? (int) $v : 0, $cat_id_param3);
     $cat_ids = get_subcat_ids($cat_id_param3_int);
-    $cat_ids_str = array_map(fn($v) => is_scalar($v) ? (string) $v : '', $cat_ids);
+    $cat_ids_str = array_map(fn($v) => (string) $v, $cat_ids);
 
     if (!empty($params['group_id'])) {
         $group_id_rem = is_array($params['group_id']) ? $params['group_id'] : [];

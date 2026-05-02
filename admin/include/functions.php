@@ -919,7 +919,7 @@ DELETE
  */
 /**
  * @param array<int|string>|int|string $cat_ids
- * @return array<mixed>
+ * @return array<string>
  */
 function get_uppercat_ids(array|int|string $cat_ids): array
 {

@@ -526,7 +526,7 @@ FROM '.CATEGORIES_TABLE.' as c
         //
         // TODO 2.7: add an upgrade script to repair permissions and remove this
         // test
-        $cat_uppercat_key = is_scalar($cat['id_uppercat']) ? (string) $cat['id_uppercat'] : '';
+        $cat_uppercat_key = (string) $cat['id_uppercat'];
         if (!isset($cats[$cat_uppercat_key])) {
             continue;
         }
@@ -545,7 +545,7 @@ FROM '.CATEGORIES_TABLE.' as c
             if (!isset($parent['id_uppercat'])) {
                 break;
             }
-            $parent = & $cats[is_scalar($parent['id_uppercat']) ? (string) $parent['id_uppercat'] : ''];
+            $parent = & $cats[(string) $parent['id_uppercat']];
         } while (true);
         unset($parent);
     }

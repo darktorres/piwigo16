@@ -20,10 +20,7 @@
 
 <div class="actionButtons">
 {if isset($current.unique_derivatives) && count($current.unique_derivatives)>1}
-{footer_script}
-(window.SwitchBox=window.SwitchBox||[]).push("#derivativeSwitchLink", "#derivativeSwitchBox");
-{/footer_script}
-{strip}<a id="derivativeSwitchLink" title="{'Photo sizes'|@translate}" class="pwg-state-default pwg-button" rel="nofollow">
+{strip}<a id="derivativeSwitchLink" data-switchbox="#derivativeSwitchBox" title="{'Photo sizes'|@translate}" class="pwg-state-default pwg-button" rel="nofollow">
   <span class="pwg-icon pwg-icon-sizes"></span><span class="pwg-button-text">{'Photo sizes'|@translate}</span>
 </a>
 <div id="derivativeSwitchBox" class="switchBox" data-cookie-path="{$COOKIE_PATH|escape}">
@@ -52,15 +49,11 @@
 	</a>
 {/if}{/strip}
 {strip}{if isset($current.U_DOWNLOAD)}
-	<a id="downloadSwitchLink" href="{$current.U_DOWNLOAD}" title="{'Download this file'|@translate}" class="pwg-state-default pwg-button" rel="nofollow">
+	<a id="downloadSwitchLink"{if !empty($current.formats)} data-switchbox="#downloadSwitchBox"{/if} href="{$current.U_DOWNLOAD}" title="{'Download this file'|@translate}" class="pwg-state-default pwg-button" rel="nofollow">
 		<span class="pwg-icon pwg-icon-save"></span><span class="pwg-button-text">{'Download'|@translate}</span>
 	</a>
 
 {if !empty($current.formats)}
-{footer_script}
-(window.SwitchBox=window.SwitchBox||[]).push("#downloadSwitchLink", "#downloadSwitchBox");
-{/footer_script}
-
 <div id="downloadSwitchBox" class="switchBox" data-disable-href="downloadSwitchLink">
   <div class="switchBoxTitle">{'Download'|translate} - {'Formats'|translate}</div>
   <ul>

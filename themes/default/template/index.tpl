@@ -21,7 +21,7 @@
 
 {* We want the related tags action icon on all pages except the index and tag pages*}
 {if isset($RELATED_TAGS_ACTION) and $RELATED_TAGS_ACTION}
-    <li>{strip}<a id="cmdRelatedTags" title="{'Related tags'|@translate}" class="pwg-state-default pwg-button" rel="nofollow">
+    <li>{strip}<a id="cmdRelatedTags" data-switchbox="#relatedTagsBox" title="{'Related tags'|@translate}" class="pwg-state-default pwg-button" rel="nofollow">
 			<span class="pwg-icon gallery-icon-tag"></span><span class="pwg-button-text">{'Related tags'|@translate}</span>
 		</a>
 		<div id="relatedTagsBox" class="switchBox">
@@ -33,12 +33,11 @@
       </a>
 	{/foreach}
 		</div>
-		{footer_script}(window.SwitchBox=window.SwitchBox||[]).push("#cmdRelatedTags", "#relatedTagsBox");{/footer_script}
 		{/strip}</li>
 {/if}
 
 {if !empty($image_orders)}
-		<li>{strip}<a id="sortOrderLink" title="{'Sort order'|@translate}" class="pwg-state-default pwg-button" rel="nofollow">
+		<li>{strip}<a id="sortOrderLink" data-switchbox="#sortOrderBox" title="{'Sort order'|@translate}" class="pwg-state-default pwg-button" rel="nofollow">
 			<span class="pwg-icon pwg-icon-sort"></span><span class="pwg-button-text">{'Sort order'|@translate}</span>
 		</a>
 		<div id="sortOrderBox" class="switchBox">
@@ -51,11 +50,10 @@
 			{/if}
 			{/foreach}
 		</div>
-		{footer_script}(window.SwitchBox=window.SwitchBox||[]).push("#sortOrderLink", "#sortOrderBox");{/footer_script}
 		{/strip}</li>
 {/if}
 {if !empty($image_derivatives)}
-		<li>{strip}<a id="derivativeSwitchLink" title="{'Photo sizes'|@translate}" class="pwg-state-default pwg-button" rel="nofollow">
+		<li>{strip}<a id="derivativeSwitchLink" data-switchbox="#derivativeSwitchBox" title="{'Photo sizes'|@translate}" class="pwg-state-default pwg-button" rel="nofollow">
 			<span class="pwg-icon pwg-icon-sizes"></span><span class="pwg-button-text">{'Photo sizes'|@translate}</span>
 		</a>
 		<div id="derivativeSwitchBox" class="switchBox">
@@ -68,7 +66,6 @@
 			{/if}
 			{/foreach}
 		</div>
-		{footer_script}(window.SwitchBox=window.SwitchBox||[]).push("#derivativeSwitchLink", "#derivativeSwitchBox");{/footer_script}
 		{/strip}</li>
 {/if}
 
@@ -126,7 +123,7 @@
 
 {if isset($chronology_views)}
 <div class="calendarViews">{'View'|@translate}:
-	<a id="calendarViewSwitchLink" href="#">
+	<a id="calendarViewSwitchLink" data-switchbox="#calendarViewSwitchBox" href="#">
 	{foreach from=$chronology_views item=view}{if $view.SELECTED}{$view.CONTENT}{/if}{/foreach}
 	</a>
 	<div id="calendarViewSwitchBox" class="switchBox">
@@ -134,7 +131,6 @@
 		<span{if !$view.SELECTED} style="visibility:hidden"{/if}>&#x2714; </span><a href="{$view.VALUE}">{$view.CONTENT}</a>
 		{/foreach}
 	</div>
-	{footer_script}(window.SwitchBox=window.SwitchBox||[]).push("#calendarViewSwitchLink", "#calendarViewSwitchBox");{/footer_script}
 </div>
 {/if}
 

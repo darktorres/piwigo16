@@ -561,6 +561,22 @@ $batch_manager_global_page_data = [
   'ROOT_URL' => get_root_url(),
   'associated_categories' => $associated_categories ?? [],
   'str_create' => l10n('Create'),
+  'nb_thumbs_page' => $nb_thumbs_page,
+  'nb_thumbs_set' => count($page['cat_elements_id']),
+  'all_elements' => $page['cat_elements_id'],
+  'lang' => [
+    'Cancel'                => l10n('Cancel'),
+    'deleteProgressMessage' => l10n('Deletion in progress'),
+    'syncProgressMessage'   => l10n('Synchronization in progress'),
+    'AreYouSure'            => l10n('Are you sure?'),
+    'generateMsg'           => l10n('Generate multiple size images'),
+  ],
+  'str_add_alb_associate'  => l10n('Add Album'),
+  'str_select_alb_associate' => l10n('Select an album'),
+  'applyOnDetails_pattern' => l10n('on the %d selected photos'),
+  'selectedMessage_pattern' => l10n('%d of %d photos selected'),
+  'selectedMessage_none'   => l10n('No photo selected, %d photos in current set'),
+  'selectedMessage_all'    => l10n('All %d photos are selected'),
 ];
 
 $template->assign([

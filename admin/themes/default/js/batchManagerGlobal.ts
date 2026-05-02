@@ -10,16 +10,26 @@ interface BatchManagerGlobalPageData {
     ROOT_URL: string;
     associated_categories: Record<string, any>;
     str_create: string;
+    nb_thumbs_page: number;
+    nb_thumbs_set: number;
+    all_elements: string[];
+    lang: {
+        Cancel: string;
+        deleteProgressMessage: string;
+        syncProgressMessage: string;
+        AreYouSure: string;
+        generateMsg: string;
+    };
+    str_add_alb_associate: string;
+    str_select_alb_associate: string;
+    applyOnDetails_pattern: string;
+    selectedMessage_pattern: string;
+    selectedMessage_none: string;
+    selectedMessage_all: string;
 }
 
-// `window.lang` is populated by a {footer_script} block in batch_manager_global.tpl.
-// In strict ESM the bare identifier `lang` doesn't resolve, so reach through window
-// at access time (window.lang is defined before any callback below fires).
-const lang = new Proxy({} as Record<string, string>, {
-    get: (_t, key: string) => ((window as unknown) as { lang?: Record<string, string> }).lang?.[key] ?? '',
-});
-
 const pageData = getPageData<BatchManagerGlobalPageData>('pwg-batch-manager-global-data');
+const lang = pageData.lang;
 
 // Initialize caches
 const tagsCache = new TagsCache({
@@ -57,9 +67,14 @@ categoriesCache?.selectize(document.querySelector('[data-selectize=categories]')
     }
 });
 
-declare var all_elements: any;
-declare var str_add_alb_associate: any;
-declare var str_select_alb_associate: any;
+const all_elements = pageData.all_elements;
+const str_add_alb_associate = pageData.str_add_alb_associate;
+const str_select_alb_associate = pageData.str_select_alb_associate;
+const nb_thumbs_set = pageData.nb_thumbs_set;
+const applyOnDetails_pattern = pageData.applyOnDetails_pattern;
+const selectedMessage_pattern = pageData.selectedMessage_pattern;
+const selectedMessage_none = pageData.selectedMessage_none;
+const selectedMessage_all = pageData.selectedMessage_all;
 
 let elements: string[] = [];
 let i = 0;
@@ -400,6 +415,236 @@ function delete_orphans_block(blockSize: any) {
         const errEl = qs('#orphans_deletion_error'); if (errEl) { errEl.style.display = ''; errEl.innerHTML = 'error: ' + xhr.message; }
     });
 }
+
+/*---- Selection / permit-action UI (migrated from {footer_script}) ----*/
+declare function sprintf(fmt: string, ...args: unknown[]): string;
+
+function checkPermitAction(): void {
+    let nbSelected = 0;
+    const setSelectedEl = qs<HTMLInputElement>('input[name=setSelected]');
+    if (setSelectedEl?.checked) {
+        nbSelected = nb_thumbs_set;
+    } else {
+        nbSelected = qsa<HTMLInputElement>('.thumbnails input[type=checkbox]').filter((el) => el.checked).length;
+    }
+
+    const permitAction = qs('#permitAction');
+    const forbidAction = qs('#forbidAction');
+    if (nbSelected === 0) {
+        if (permitAction) permitAction.style.display = 'none';
+        if (forbidAction) forbidAction.style.display = '';
+    } else {
+        if (permitAction) permitAction.style.display = '';
+        if (forbidAction) forbidAction.style.display = 'none';
+    }
+
+    const applyOnDetails = qs('#applyOnDetails');
+    if (applyOnDetails) applyOnDetails.textContent = sprintf(applyOnDetails_pattern, nbSelected);
+
+    const selectedMessage = qs('#selectedMessage');
+    if (selectedMessage) {
+        if (nbSelected === 0) {
+            selectedMessage.textContent = sprintf(selectedMessage_none, nb_thumbs_set);
+        } else if (nbSelected === nb_thumbs_set) {
+            selectedMessage.textContent = sprintf(selectedMessage_all, nb_thumbs_set);
+        } else {
+            selectedMessage.textContent = sprintf(selectedMessage_pattern, nbSelected, nb_thumbs_set);
+        }
+    }
+}
+
+function selectPageThumbnails(): void {
+    qsa('.thumbnails label').forEach((label) => {
+        const checkbox = label.querySelector<HTMLInputElement>('input[type=checkbox]');
+        if (checkbox) {
+            checkbox.checked = true;
+            checkbox.dispatchEvent(new Event('change'));
+        }
+        const li = label.closest('li');
+        if (li) li.classList.add('thumbSelected');
+    });
+}
+
+qsa('[id^=action_]').forEach((el) => { el.style.display = 'none'; });
+
+qs<HTMLSelectElement>('select[name=selectAction]')?.addEventListener('change', function(this: HTMLSelectElement) {
+    qsa('[id^=action_]').forEach((el) => { el.style.display = 'none'; });
+
+    const action = this.value;
+    const actionEl = document.getElementById('action_' + action);
+    if (actionEl) actionEl.style.display = '';
+
+    const applyActionBlock = qs('#applyActionBlock');
+    if (applyActionBlock) {
+        applyActionBlock.style.display = (this.value !== '-1') ? '' : 'none';
+    }
+
+    const confirmDel = qs<HTMLElement>('#confirmDel');
+    if (confirmDel) {
+        confirmDel.style.visibility = (this.value === 'delete' || this.value === 'delete_derivatives') ? 'visible' : 'hidden';
+    }
+});
+
+qsa('.wrap1 label').forEach((label) => {
+    label.addEventListener('click', function(this: HTMLElement) {
+        const setSelectedEl = qs<HTMLInputElement>('input[name=setSelected]');
+        if (setSelectedEl) {
+            setSelectedEl.checked = false;
+            setSelectedEl.dispatchEvent(new Event('change'));
+        }
+
+        const li = this.closest('li');
+        const checkbox = this.querySelector<HTMLInputElement>('input[type=checkbox]');
+
+        if (checkbox?.checked) {
+            if (li) li.classList.add('thumbSelected');
+        } else {
+            if (li) li.classList.remove('thumbSelected');
+        }
+
+        checkPermitAction();
+    });
+});
+
+qs('#selectAll')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    const setSelectedEl = qs<HTMLInputElement>('input[name=setSelected]');
+    if (setSelectedEl) {
+        setSelectedEl.checked = false;
+        setSelectedEl.dispatchEvent(new Event('change'));
+    }
+    selectPageThumbnails();
+    checkPermitAction();
+});
+
+qs('#selectNone')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    const setSelectedEl = qs<HTMLInputElement>('input[name=setSelected]');
+    if (setSelectedEl) {
+        setSelectedEl.checked = false;
+        setSelectedEl.dispatchEvent(new Event('change'));
+    }
+    qsa('.thumbnails label').forEach((label) => {
+        const checkbox = label.querySelector<HTMLInputElement>('input[type=checkbox]');
+        if (checkbox?.checked) {
+            checkbox.checked = false;
+            checkbox.dispatchEvent(new Event('change'));
+        }
+        const li = label.closest('li');
+        if (li) li.classList.remove('thumbSelected');
+    });
+    checkPermitAction();
+});
+
+qs('#selectInvert')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    const setSelectedEl = qs<HTMLInputElement>('input[name=setSelected]');
+    if (setSelectedEl) {
+        setSelectedEl.checked = false;
+        setSelectedEl.dispatchEvent(new Event('change'));
+    }
+    qsa('.thumbnails label').forEach((label) => {
+        const checkbox = label.querySelector<HTMLInputElement>('input[type=checkbox]');
+        if (checkbox) {
+            checkbox.checked = !checkbox.checked;
+            checkbox.dispatchEvent(new Event('change'));
+        }
+        const li = label.closest('li');
+        if (checkbox?.checked) {
+            if (li) li.classList.add('thumbSelected');
+        } else {
+            if (li) li.classList.remove('thumbSelected');
+        }
+    });
+    checkPermitAction();
+});
+
+qs('#selectSet')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    selectPageThumbnails();
+    const setSelectedEl = qs<HTMLInputElement>('input[name=setSelected]');
+    if (setSelectedEl) {
+        setSelectedEl.checked = true;
+        setSelectedEl.dispatchEvent(new Event('change'));
+    }
+    checkPermitAction();
+});
+
+qs<HTMLInputElement>('input[name=setSelected]')?.addEventListener('change', function(this: HTMLInputElement) {
+    const wholeSet = qs<HTMLInputElement>('input[name=whole_set]');
+    if (wholeSet) wholeSet.value = this.checked ? all_elements.join(',') : '';
+});
+
+// If the whole set was selected on page load (after a first action), trigger
+// change once so input[name=whole_set] is filled in.
+const setSelectedCheck = qs<HTMLInputElement>('input[name="setSelected"]');
+if (setSelectedCheck?.checked) {
+    setSelectedCheck.dispatchEvent(new Event('change'));
+}
+
+// Apply-action handler for the derivatives flow. The other handler in this
+// module (above, with the legacy `typeof elements` guard) covers the
+// metadata/delete branches; this one preventDefault's for the
+// generate_derivatives and delete_derivatives branches.
+qs<HTMLElement>('#applyAction')?.addEventListener('click', (e) => {
+    const action = qs<HTMLSelectElement>('[name="selectAction"]')?.value;
+
+    if (action === 'delete_derivatives') {
+        const confirmDeletionEl = qs<HTMLInputElement>('#confirmDel input[name=confirm_deletion]');
+        if (!confirmDeletionEl?.checked) {
+            const errorsEl = qs<HTMLElement>('#confirmDel span.errors');
+            if (errorsEl) errorsEl.style.visibility = 'visible';
+            e.preventDefault();
+            return;
+        }
+        return;
+    }
+
+    if (action !== 'generate_derivatives' || derivatives.finished()) {
+        return;
+    }
+
+    qsa('.bulkAction').forEach((el) => { el.style.display = 'none'; });
+
+    derivatives.elements = [];
+    const setSelectedEl = qs<HTMLInputElement>('input[name="setSelected"]');
+    if (setSelectedEl?.checked) {
+        derivatives.elements = all_elements;
+    } else {
+        qsa<HTMLInputElement>('.thumbnails input[type=checkbox]').forEach((cb) => {
+            if (cb.checked) {
+                (derivatives.elements as string[]).push(cb.value);
+            }
+        });
+    }
+
+    const applyActionBlock = qs('#applyActionBlock');
+    if (applyActionBlock) applyActionBlock.style.display = 'none';
+    const selectActionEl = qs<HTMLSelectElement>('select[name="selectAction"]');
+    if (selectActionEl) selectActionEl.style.display = 'none';
+    qsa('.permitActionListButton div').forEach((el) => el.classList.add('hidden'));
+    const regenerationMsg = qs('#regenerationMsg');
+    if (regenerationMsg) regenerationMsg.style.display = '';
+
+    progress_start();
+    progress(undefined);
+    getDerivativeUrls();
+    e.preventDefault();
+});
+
+checkPermitAction();
+
+qs<HTMLSelectElement>('select[name=filter_prefilter]')?.addEventListener('change', function(this: HTMLSelectElement) {
+    const val = this.value;
+    const emptyCaddie = qs<HTMLElement>('#empty_caddie');
+    const duplicatesOptions = qs<HTMLElement>('#duplicates_options');
+    const deleteOrphans = qs<HTMLElement>('#delete_orphans');
+    const syncMd5sum = qs<HTMLElement>('#sync_md5sum');
+    if (emptyCaddie) emptyCaddie.style.display = val === 'caddie' ? '' : 'none';
+    if (duplicatesOptions) duplicatesOptions.style.display = val === 'duplicates' ? '' : 'none';
+    if (deleteOrphans) deleteOrphans.style.display = val === 'no_album' ? '' : 'none';
+    if (syncMd5sum) syncMd5sum.style.display = val === 'no_sync_md5sum' ? '' : 'none';
+});
 
 (window as any).selectGenerateDerivAll = selectGenerateDerivAll;
 (window as any).selectGenerateDerivNone = selectGenerateDerivNone;

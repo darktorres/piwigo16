@@ -38,3 +38,7 @@ dist/
 # Tool session artifacts
 .playwright-mcp/
 .claude/worktrees/
+
+# Local env (test credentials, never commit)
+.env.local
+.env.*.local

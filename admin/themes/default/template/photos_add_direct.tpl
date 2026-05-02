@@ -8,9 +8,7 @@
 
 {combine_script id='add_photo' load='footer' path='admin/themes/default/js/photos_add_direct.js'}
 
-{html_style}
-.addAlbumFormParent { display: none; } /* specific to this page, do not move in theme.css */
-{/html_style}
+{combine_css path="admin/themes/default/css/pages/photos_add_direct.css"}
 
 <script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 

@@ -22,7 +22,7 @@
 	{/if}
 	<div class="description">
 		{if isset($comment.U_DELETE) or isset($comment.U_VALIDATE) or isset($comment.U_EDIT)}
-		<div class="actions" style="float:right;font-size:90%">
+		<div class="actions">
 		{if isset($comment.U_DELETE)}
 			<a href="{$comment.U_DELETE}" data-confirm="{'Are you sure?'|@translate|@escape:'html'}">
 				{'Delete'|@translate}

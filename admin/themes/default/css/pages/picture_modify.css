@@ -22,3 +22,5 @@
 .selectize-input .item .remove:hover {
   background-color: #ff7700 !important;
 }
+
+.picture-modify-tomselect { width: calc(100% + 2px); }

@@ -24,6 +24,10 @@
 .u-w-524 { width: 524px; }
 .u-w-600 { width: 600px; }
 .u-w-30p { width: 30%; }
+.u-text-left { text-align: left; }
+.u-fs-15 { font-size: 15px; }
+.u-w-99p { width: 99%; }
+.u-pl-3em { padding-left: 3em; }
 
 /* tiptip help icons get the help cursor implicitly so templates don't
    have to repeat style="cursor:help" on every <i class="tiptip"> next to

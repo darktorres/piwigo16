@@ -29,11 +29,11 @@
 	<legend>{'Quick connect'|@translate}</legend>
 	<div>
 	<label for="username">{'Username'|@translate}</label><br>
-	<input type="text" name="username" id="username" value="" style="width:99%">
+	<input type="text" name="username" id="username" value="" class="u-w-99p">
 	</div>
 
 	<div><label for="password">{'Password'|@translate}</label><br>
-	<input type="password" name="password" id="password" style="width:99%">
+	<input type="password" name="password" id="password" class="u-w-99p">
 	</div>
 
 	{if $AUTHORIZE_REMEMBERING}

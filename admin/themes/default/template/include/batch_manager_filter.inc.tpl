@@ -125,7 +125,7 @@
         </div>
 
         <div data-slider="ratios" class="dimensionSlidersBlocks">
-            <div style="margin-bottom: 11px;">
+            <div>
               <span>{'Ratio'|translate} ({'Width'|@translate}/{'Height'|@translate})</span>
               <span class="slider-info">{'between %.2f and %.2f'|translate:$dimensions.selected.min_ratio:$dimensions.selected.max_ratio}</span>
             </div>
@@ -209,7 +209,7 @@
       <i class="icon-arrows-cw"></i> {'Refresh photo set'|@translate}
     </button>
 
-    <div id="errorFilter" class="icon-red-error" style="display: none; margin-left: 10px;"></div>
+    <div id="errorFilter" class="icon-red-error" hidden></div>
   </div>
 </div>
 </fieldset>

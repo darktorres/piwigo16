@@ -39,6 +39,13 @@
   cursor: pointer
 }
 
+.delete-size-check .select-checkbox .icon-ok { margin-left: 8px; }
+.delete-size-check .picture-deletion-size {
+  font-size: 14px;
+  margin-left: 5px;
+  padding-top: 2px;
+}
+
 .select-checkbox {
   display: inline-block;
 }

@@ -5,7 +5,7 @@
       <select class="categoryList" name="cat_true[]" multiple="multiple" size="30">
         {html_options options=$category_option_true selected=$category_option_true_selected}
       </select>
-      <p><input class="submit" type="submit" value="&raquo;" name="falsify" style="font-size:15px;"></p>
+      <p><input class="submit u-fs-15" type="submit" value="&raquo;" name="falsify"></p>
     </td>
 
     <td>
@@ -13,7 +13,7 @@
       <select class="categoryList" name="cat_false[]" multiple="multiple" size="30">
         {html_options options=$category_option_false selected=$category_option_false_selected}
       </select>
-      <p><input class="submit" type="submit" value="&laquo;" name="trueify" style="font-size:15px;"></p>
+      <p><input class="submit u-fs-15" type="submit" value="&laquo;" name="trueify"></p>
     </td>
   </tr>
 </table>

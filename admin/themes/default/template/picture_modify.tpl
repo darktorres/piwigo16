@@ -105,7 +105,7 @@
       <br>
       <select data-selectize="categories" data-value="{$represented_albums|@json_encode|escape:html}"
         placeholder="{'Type in a search term'|translate}"
-        name="represent[]" multiple style="width:calc(100% + 2px);"></select>
+        name="represent[]" multiple class="picture-modify-tomselect"></select>
     </p>
 
     <p>
@@ -113,7 +113,7 @@
       <br>
       <select data-selectize="tags" data-value="{$tag_selection|@json_encode|escape:html}"
         placeholder="{'Type in a search term'|translate}"
-        data-create="true" name="tags[]" multiple style="width:calc(100% + 2px);"></select>
+        data-create="true" name="tags[]" multiple class="picture-modify-tomselect"></select>
     </p>
 
     <p>

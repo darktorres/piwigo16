@@ -5,3 +5,8 @@
 .content .commentsList .commentElement .description {
   min-height: var(--comment-desc-h);
 }
+
+.commentsList .commentElement .description .actions {
+  float: right;
+  font-size: 90%;
+}

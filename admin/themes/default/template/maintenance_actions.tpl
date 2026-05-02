@@ -87,8 +87,8 @@
     <div class="delete-check-container">
 {foreach from=$purge_derivatives key=name item=url name=loop}
       <div class="delete-size-check" title="{if isset($cache_sizes) and isset($cache_sizes[1]['value'][$url])}{"%s MB"|@translate:{round($cache_sizes[1]['value'][$url]/1024/1024, 2)}}{else}{'N/A'|translate}{/if}" data-selected="0" name="{$url}">
-          <span class="select-checkbox"><i class="icon-ok" style="margin-left:8px"></i></span>
-          <span class="picture-deletion-size" style="font-size:14px;margin-left:5px;padding-top:2px;">{$name}</span>
+          <span class="select-checkbox"><i class="icon-ok"></i></span>
+          <span class="picture-deletion-size">{$name}</span>
       </div>
 {/foreach}
     </div>

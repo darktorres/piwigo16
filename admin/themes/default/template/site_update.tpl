@@ -64,7 +64,7 @@
 			<li><label><input type="radio" name="sync" value="dirs" {if 'dirs'==$introduction.sync}checked="checked"{/if}> {'only directories'|@translate}</label></li>
 
 			<li><label><input type="radio" name="sync" value="files" {if 'files'==$introduction.sync}checked="checked"{/if}> {'directories + files'|@translate}</label>
-				<ul style="display:none;padding-left:3em">
+				<ul class="u-pl-3em" hidden>
 					<li><label><input type="checkbox" name="display_info" value="1" {if $introduction.display_info}checked="checked"{/if}> {'display maximum informations (added albums and photos, deleted albums and photos)'|@translate}</label></li>
 					<li><label><input type="checkbox" name="add_to_caddie" value="1" {if $introduction.add_to_caddie}checked="checked"{/if}> {'add new photos to caddie'|@translate}</label></li>
 					<li><label>{'Who can see these photos?'|@translate} <select name="privacy_level">{html_options options=$introduction.privacy_level_options selected=$introduction.privacy_level_selected}</select></label></li>
@@ -76,7 +76,7 @@
 	<fieldset id="syncMetadata">
 		<legend><span class="icon-hdd icon-red"></span>{'synchronize files metadata with database photos informations'|@translate}</legend>
 		<label><input type="checkbox" name="sync_meta" {if $introduction.sync_meta}checked="checked"{/if}> {'Synchronize metadata'|@translate} ({$METADATA_LIST})</label>
-		<ul style="padding-left:3em">
+		<ul class="u-pl-3em">
 	  		<li>
 	  			<label><input type="checkbox" name="meta_all" {if $introduction.meta_all}checked="checked"{/if}> {'even already synchronized photos'|@translate}</label>
 	  		</li>

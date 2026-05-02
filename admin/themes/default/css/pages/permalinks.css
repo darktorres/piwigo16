@@ -6,3 +6,6 @@ form fieldset p.actionButtons {margin-bottom:0}
   width: 100%;
   max-width: 600px;
 }
+
+.permalink-table tr { line-height: 1.5em; }
+.permalink-table .delete-col { width: 5px; }

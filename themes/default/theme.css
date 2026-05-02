@@ -14,6 +14,10 @@
 .u-d-block { display: block; }
 .u-clear-both { clear: both; }
 .u-box-border { box-sizing: border-box; }
+.u-text-left { text-align: left; }
+.u-w-99p { width: 99%; }
+.u-w-90p { width: 90%; }
+.u-reset-margin { margin: 0; padding: 0; }
 
 /**
  * Menubar

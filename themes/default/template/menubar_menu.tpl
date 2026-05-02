@@ -2,8 +2,8 @@
 <dd>
 {if isset($block->data.qsearch) and  $block->data.qsearch==true}
 	<form action="{$ROOT_URL}qsearch.php" method="get" id="quicksearch">
-		<p style="margin:0;padding:0"{*this <p> is for html validation only - does not affect positioning*}>
-			<input type="text" name="q" id="qsearchInput" placeholder="{'Quick search'|@translate|@escape:'html'}" required style="width:90%"{if !empty($QUERY_SEARCH)} value="{$QUERY_SEARCH}"{/if}>
+		<p class="u-reset-margin"{*this <p> is for html validation only - does not affect positioning*}>
+			<input type="text" name="q" id="qsearchInput" placeholder="{'Quick search'|@translate|@escape:'html'}" required class="u-w-90p"{if !empty($QUERY_SEARCH)} value="{$QUERY_SEARCH}"{/if}>
 		</p>
 	</form>
 {/if}

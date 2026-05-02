@@ -7,7 +7,7 @@
 <script id="pwg-batch-manager-unit-data" type="application/json">{$batch_manager_unit_page_data_json}</script>
 
 {combine_script id='batchManagerUnit' load='footer' path='admin/themes/default/js/batchManagerUnit.js'}
-<div id="batchManagerGlobal" style="margin-bottom: 80px;">
+<div id="batchManagerGlobal">
 	<div class="u-clear-both"></div>
 	{if isset($ELEMENT_IDS)}
 	<div>
@@ -18,7 +18,7 @@
 	<form method="post" action="{$F_ACTION}">
 		{include file='include/batch_manager_filter.inc.tpl'   title={'Batch Manager Filter'|@translate}  searchPlaceholder={'Filters'|@translate}}
 	</form>
-	<legend style="padding: 1em;">
+	<legend class="bm-list-legend">
 		<span class='icon-menu icon-blue'></span>
 		{'List'|@translate}
 		<span class="count-badge"> {count($all_elements)}</span>
@@ -42,7 +42,7 @@
 	</div>
 	{foreach from=$elements item=element}
 	<div class="infos deleted-badge" data-image_id="{$element.ID}" hidden>
-		<i class="icon-ok" style="font-size: 20px;"></i>
+		<i class="icon-ok bm-deleted-icon"></i>
 		<p>
 			&nbsp;{'Image'|@translate}&nbsp;
 			<p class="u-text-bold">

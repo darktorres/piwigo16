@@ -1,6 +1,7 @@
 <script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
 {combine_script id='site_manager' load='footer' require='common' path='admin/themes/default/js/site_manager.js'}
+{combine_css path="admin/themes/default/css/pages/site_manager.css"}
 
 {if not empty($remote_output)}
 <div class="remoteOutput">
@@ -13,13 +14,13 @@
 {/if}
 
 {if not empty($sites)}
-<table class="table2">
+<table class="table2 site-manager-table">
 	<tr class="throw">
 		<td>{'Directory'|@translate}</td>
 		<td>{'Actions'|@translate}</td>
 	</tr>
   {foreach from=$sites item=site name=site}
-  <tr style="text-align:left" class="{if $smarty.foreach.site.index is odd}row1{else}row2{/if}"><td>
+  <tr class="{if $smarty.foreach.site.index is odd}row1{else}row2{/if}"><td>
     <a href="{$site.NAME}">{$site.NAME}</a><br>({$site.TYPE}, {$site.CATEGORIES} {'Albums'|@translate}, {$site.IMAGES|@translate_dec:'%d photo':'%d photos'})
   </td><td>
     [<a href="{$site.U_SYNCHRONIZE}" title="{'update the database from files'|@translate}">{'Synchronize'|@translate}</a>]
@@ -37,7 +38,7 @@
 </table>
 {/if}
 
-<p id="showCreateSite" style="text-align:left;margin-left:1em;">
+<p id="showCreateSite">
   <a href="#">{'create a new site'|@translate}</a>
 </p>
 
@@ -46,7 +47,7 @@
   <fieldset>
     <legend>{'create a new site'|@translate}</legend>
 
-  <p style="margin-top:0;"><strong>{'Directory'|@translate}</strong>
+  <p><strong>{'Directory'|@translate}</strong>
     <br><input type="text" name="galleries_url" id="galleries_url">
   </p>
 

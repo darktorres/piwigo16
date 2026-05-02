@@ -36,14 +36,14 @@
 
 <fieldset>
   <legend><span class="icon-lock icon-blue"></span>{'Permalinks'|@translate}</legend>
-<table class="table2 u-m-0">
+<table class="table2 u-m-0 permalink-table">
 	<tr class="throw">
 		<td>Id {$SORT_ID}</td>
 		<td>{'Album'|@translate} {$SORT_NAME}</td>
 		<td>{'Permalink'|@translate} {$SORT_PERMALINK}</td>
 	</tr>
 {foreach from=$permalinks item=permalink name="permalink_loop"}
-	<tr class="{if $smarty.foreach.permalink_loop.index is odd}row1{else}row2{/if}" style="line-height:1.5em;">
+	<tr class="{if $smarty.foreach.permalink_loop.index is odd}row1{else}row2{/if}">
 		<td class="u-text-center">{$permalink.id}</td>
 		<td>{$permalink.name}</td>
 		<td>{$permalink.permalink}</td>
@@ -54,7 +54,7 @@
 
 <fieldset>
   <legend><span class="icon-lock icon-red"></span>{'Permalink history'|@translate} <a name="old_permalinks"></a></legend>
-<table class="table2 u-m-0">
+<table class="table2 u-m-0 permalink-table">
 	<tr class="throw">
 		<td>Id {$SORT_OLD_CAT_ID}</td>
 		<td>{'Album'|@translate}</td>
@@ -62,10 +62,10 @@
 		<td>{'Deleted on'|@translate} {$SORT_OLD_DATE_DELETED}</td>
 		<td>{'Last hit'|@translate} {$SORT_OLD_LAST_HIT}</td>
 		<td>{'Hit'|@translate} {$SORT_OLD_HIT}</td>
-		<td style="width:5px;"></td>
+		<td class="delete-col"></td>
 	</tr>
 {foreach from=$deleted_permalinks item=permalink}
-	<tr style="line-height:1.5em;">
+	<tr>
 		<td class="u-text-center">{$permalink.cat_id}</td>
 		<td>{$permalink.name}</td>
 		<td>{$permalink.permalink}</td>

@@ -1,6 +1,6 @@
 {combine_script id='admin' load='footer' path='admin/themes/default/js/admin.js'}
 
-<div id="menubar">
+<div id="menubar" data-active-menu="{$ACTIVE_MENU}">
   <div id="adminHome"><a href="{$U_ADMIN}" class="admin-main"><i class="icon-television"></i> {'Dashboard'|@translate}</a></div>
 
 	<dl>

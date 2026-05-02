@@ -4,6 +4,46 @@ interface AccordionOptions {
     active: number;
 }
 
+const SLIDE_DURATION = 180;
+
+function expand(el: HTMLElement): void {
+    el.style.height = '0px';
+    el.style.overflow = 'hidden';
+    el.style.display = '';
+    const target = el.scrollHeight;
+    const anim = el.animate(
+        [
+            { height: '0px', opacity: 0 },
+            { height: `${target}px`, opacity: 1 },
+        ],
+        { duration: SLIDE_DURATION, easing: 'ease-out', fill: 'forwards' }
+    );
+    anim.onfinish = () => {
+        el.style.overflow = '';
+        el.style.height = '';
+        anim.cancel();
+    };
+}
+
+function collapse(el: HTMLElement): void {
+    if (el.style.display === 'none') return;
+    const start = el.scrollHeight;
+    el.style.overflow = 'hidden';
+    const anim = el.animate(
+        [
+            { height: `${start}px`, opacity: 1 },
+            { height: '0px', opacity: 0 },
+        ],
+        { duration: SLIDE_DURATION, easing: 'ease-out', fill: 'forwards' }
+    );
+    anim.onfinish = () => {
+        el.style.display = 'none';
+        el.style.overflow = '';
+        el.style.height = '';
+        anim.cancel();
+    };
+}
+
 function lightAccordion(el: HTMLElement | null, options: Partial<AccordionOptions>): void {
     if (!el) return;
     const settings: AccordionOptions = {
@@ -24,18 +64,26 @@ function lightAccordion(el: HTMLElement | null, options: Partial<AccordionOption
         const header =
             (e.target as HTMLElement | null)?.closest<HTMLElement>(settings.header) ?? null;
         if (!header) return;
-        let content = header.nextElementSibling as HTMLElement | null;
-        while (content && !content.matches(settings.content)) {
-            content = content.nextElementSibling as HTMLElement | null;
+        let next = header.nextElementSibling as HTMLElement | null;
+        while (next && !next.matches(settings.content)) {
+            next = next.nextElementSibling as HTMLElement | null;
         }
-        if (!content) return;
+        if (!next) return;
+        const target = next;
         contents.forEach((c) => {
-            c.style.display = c === content ? '' : 'none';
+            if (c === target) {
+                if (c.style.display === 'none') expand(c);
+            } else {
+                collapse(c);
+            }
         });
     });
 }
 
-lightAccordion(document.getElementById('menubar'), { active: 0 });
+const menubarEl = document.getElementById('menubar');
+const activeAttr = menubarEl?.dataset.activeMenu;
+const activeMenu = activeAttr !== undefined && activeAttr !== '' ? parseInt(activeAttr, 10) : 0;
+lightAccordion(menubarEl, { active: activeMenu });
 
 /* If we have several infos/errors/warnings, show them as bulleted list. */
 const eiw = ['infos', 'erros', 'warnings', 'messages'];

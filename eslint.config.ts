@@ -1,8 +1,10 @@
 import type { Linter } from 'eslint';
+import js from '@eslint/js';
 import tsParser from '@typescript-eslint/parser';
 import tsPlugin from '@typescript-eslint/eslint-plugin';
 import prettierPlugin from 'eslint-plugin-prettier';
 import prettierConfig from 'eslint-config-prettier';
+import globals from 'globals';
 
 const config: Linter.Config[] = [
     {
@@ -23,6 +25,30 @@ const config: Linter.Config[] = [
             'themes/smartpocket/**',
             'themes/modus/**',
         ],
+    },
+    {
+        files: ['**/*.{js,mjs,cjs}'],
+        languageOptions: {
+            ecmaVersion: 'latest',
+            sourceType: 'module',
+            globals: {
+                ...globals.browser,
+                ...globals.node,
+            },
+        },
+        plugins: {
+            prettier: prettierPlugin,
+        },
+        rules: {
+            ...js.configs.recommended.rules,
+            ...prettierConfig.rules,
+            'prettier/prettier': 'error',
+            'no-console': ['warn', { allow: ['warn', 'error'] }],
+            'no-unused-vars': [
+                'warn',
+                { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+            ],
+        },
     },
     {
         files: ['**/*.ts'],

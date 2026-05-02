@@ -649,6 +649,9 @@ switch ($page['section']) {
                 ],
             );
             $template->assign('SHOW_FILTER_RATINGS', \Piwigo\Core\Config::rateEnabled());
+            $template->assign('page_data_json', json_encode([
+                'filters_names' => $filters_names_checkboxes,
+            ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
         }
 }
 

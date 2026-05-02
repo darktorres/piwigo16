@@ -128,15 +128,13 @@ final class SrcImage
             // probably not metadata synced — try to read from disk before
             // giving up. Covers e.g. the dupe-image upload path where the
             // returning record only carries id, not width/height.
-            if (($size = getimagesize($this->get_path())) !== false) {
+            $path = $this->get_path();
+            if (is_readable($path) && ($size = @getimagesize($path)) !== false) {
                 $this->size = [$size[0], $size[1]];
                 if ($this->id !== 0) {
                     pwg_query('UPDATE '.IMAGES_TABLE.' SET width='.$size[0].', height='.$size[1].' WHERE id='.$this->id);
                 }
                 return $this->size;
-            }
-            if ($this->flags & self::DIM_NOT_GIVEN) {
-                fatal_error('SrcImage dimensions required but not provided');
             }
         }
         return $this->size;

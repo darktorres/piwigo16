@@ -377,7 +377,7 @@ $btrace_msg
         ini_set('display_errors', false);
     }
     error_reporting(E_ALL);
-    trigger_error(strip_tags($msg).$btrace_msg, E_USER_ERROR);
+    throw new \RuntimeException(strip_tags($msg).$btrace_msg);
 }
 
 /**

@@ -6,9 +6,7 @@ namespace Piwigo\Tests\Unit\Search;
 
 use PHPUnit\Framework\TestCase;
 use Piwigo\Search\QExpression;
-use Piwigo\Search\QMultiToken;
 use Piwigo\Search\QSearchScope;
-use Piwigo\Search\QSingleToken;
 
 final class QExpressionTest extends TestCase
 {
@@ -99,7 +97,7 @@ final class QExpressionTest extends TestCase
     {
         $expr = new QExpression('foo NOT bar', []);
         // 'bar' gets the NOT modifier; 'NOT' itself is removed
-        $terms = array_map(fn($t) => $t->term, $expr->stokens);
+        $terms = array_map(fn ($t) => $t->term, $expr->stokens);
         self::assertContains('foo', $terms);
         self::assertContains('bar', $terms);
         self::assertNotContains('NOT', $terms);

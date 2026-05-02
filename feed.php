@@ -88,7 +88,8 @@ $dbnow = $dbnow ? (string)$dbnow : date('Y-m-d H:i:s');
 set_make_full_url();
 
 // UniversalFeedCreator::$encoding is protected; subclass widens it.
-class PiwigoFeedCreator extends UniversalFeedCreator {
+class PiwigoFeedCreator extends UniversalFeedCreator
+{
     /** @var string */
     public $encoding = 'UTF-8';
 }

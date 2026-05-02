@@ -58,10 +58,10 @@ if (!empty($dlParam) && file_exists(PHPWG_ROOT_PATH.\Piwigo\Core\Config::dataLoc
 }
 
 // Obtain various vars
-$dbhost   = is_scalar($_POST['dbhost'] ?? null) && !empty($_POST['dbhost'])   ? (string) $_POST['dbhost']   : 'localhost';
-$dbuser   = is_scalar($_POST['dbuser'] ?? null) && !empty($_POST['dbuser'])   ? (string) $_POST['dbuser']   : 'root';
+$dbhost   = is_scalar($_POST['dbhost'] ?? null) && !empty($_POST['dbhost']) ? (string) $_POST['dbhost'] : 'localhost';
+$dbuser   = is_scalar($_POST['dbuser'] ?? null) && !empty($_POST['dbuser']) ? (string) $_POST['dbuser'] : 'root';
 $dbpasswd = is_scalar($_POST['dbpasswd'] ?? null) && !empty($_POST['dbpasswd']) ? (string) $_POST['dbpasswd'] : '1234';
-$dbname   = is_scalar($_POST['dbname'] ?? null) && !empty($_POST['dbname'])   ? (string) $_POST['dbname']   : 'piwigo';
+$dbname   = is_scalar($_POST['dbname'] ?? null) && !empty($_POST['dbname']) ? (string) $_POST['dbname'] : 'piwigo';
 
 // Only mysqli is supported since PHP 7.
 if (!extension_loaded('mysqli')) {
@@ -69,10 +69,10 @@ if (!extension_loaded('mysqli')) {
 }
 $dblayer = 'mysqli';
 
-$admin_name  = is_scalar($_POST['admin_name'] ?? null) && !empty($_POST['admin_name'])  ? (string) $_POST['admin_name']  : 'darktorres';
+$admin_name  = is_scalar($_POST['admin_name'] ?? null) && !empty($_POST['admin_name']) ? (string) $_POST['admin_name'] : 'darktorres';
 $admin_pass1 = is_scalar($_POST['admin_pass1'] ?? null) && !empty($_POST['admin_pass1']) ? (string) $_POST['admin_pass1'] : '1234';
 $admin_pass2 = is_scalar($_POST['admin_pass2'] ?? null) && !empty($_POST['admin_pass2']) ? (string) $_POST['admin_pass2'] : '1234';
-$admin_mail  = is_scalar($_POST['admin_mail'] ?? null) && !empty($_POST['admin_mail'])   ? (string) $_POST['admin_mail']  : 'torres.dark@gmail.com';
+$admin_mail  = is_scalar($_POST['admin_mail'] ?? null) && !empty($_POST['admin_mail']) ? (string) $_POST['admin_mail'] : 'torres.dark@gmail.com';
 
 $is_newsletter_subscribe = false;
 if (isset($_POST['install'])) {

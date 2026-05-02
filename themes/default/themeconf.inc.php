@@ -1,4 +1,5 @@
 <?php
+
 $themeconf = array(
   'name'         => 'default',
   'icon_dir'      => 'themes/default/icon',
@@ -6,4 +7,3 @@ $themeconf = array(
   'mime_icon_dir' => 'themes/default/icon/mimetypes/',
   'local_head'    => 'local_head.tpl',
 );
-?>

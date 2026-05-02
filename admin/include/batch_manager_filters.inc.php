@@ -98,7 +98,7 @@ SELECT
     id,
     name
   FROM ' . TAGS_TABLE . '
-  WHERE id IN (' . implode(',', array_map(fn($v) => is_scalar($v) ? (string) $v : '0', $filter_tags_ids)) . ')
+  WHERE id IN (' . implode(',', array_map(fn ($v) => is_scalar($v) ? (string) $v : '0', $filter_tags_ids)) . ')
 ;';
 
     $filter_tags = get_taglist($query);

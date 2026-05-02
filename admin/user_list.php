@@ -282,7 +282,10 @@ $template->assign('page_data_json', json_encode([
     'guest_id'                 => (int)\Piwigo\Core\Config::guestId(),
     'has_group'                => $_GET['group'] ?? '',
     'view_selector'            => userprefs_get_param('user-manager-view', 'line'),
-    'pagination'               => (function() { $v = userprefs_get_param('user-manager-pagination', userprefs_get_param('user-manager-view', 'line') === 'line' ? 5 : 10); return is_numeric($v) ? (int) $v : 0; })(),
+    'pagination'               => (function () {
+        $v = userprefs_get_param('user-manager-pagination', userprefs_get_param('user-manager-view', 'line') === 'line' ? 5 : 10);
+        return is_numeric($v) ? (int) $v : 0;
+    })(),
     'history_base_url'         => get_root_url() . 'admin.php?page=history&filter_user_id=',
     'register_dates'           => $register_dates,
     'groups_arr'               => $groups_arr_json,

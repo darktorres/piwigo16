@@ -124,7 +124,7 @@ SELECT
             // a clause that is always false
             $clauses[] = '1 = 2 ';
         } else {
-            $clauses[] = 'image_id IN ('.implode(', ', array_map(fn(mixed $v): string => is_scalar($v) ? (string)$v : '', $image_ids)).')';
+            $clauses[] = 'image_id IN ('.implode(', ', array_map(fn (mixed $v): string => is_scalar($v) ? (string)$v : '', $image_ids)).')';
         }
     }
 

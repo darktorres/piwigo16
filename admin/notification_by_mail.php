@@ -59,7 +59,7 @@ function do_timeout_treatment(string $post_keyname, array $check_key_treated = [
 
     if ($env_nbm['is_sendmail_timeout']) {
         if (isset($_POST[$post_keyname])) {
-            $post_keyname_val = is_array($_POST[$post_keyname]) ? array_map(fn(mixed $v): string => is_scalar($v) ? (string)$v : '', $_POST[$post_keyname]) : [];
+            $post_keyname_val = is_array($_POST[$post_keyname]) ? array_map(fn (mixed $v): string => is_scalar($v) ? (string)$v : '', $_POST[$post_keyname]) : [];
             $post_count = count($post_keyname_val);
             $treated_count = count($check_key_treated);
             if ($treated_count != 0) {
@@ -494,13 +494,13 @@ switch ($page['mode']) {
     case 'subscribe':
         {
             if (isset($_POST['falsify']) and isset($_POST['cat_true'])) {
-                $cat_true = is_array($_POST['cat_true']) ? array_map(fn(mixed $v): string => is_scalar($v) ? (string)$v : '',$_POST['cat_true']) : [];
+                $cat_true = is_array($_POST['cat_true']) ? array_map(fn (mixed $v): string => is_scalar($v) ? (string)$v : '', $_POST['cat_true']) : [];
                 $check_key_treated = unsubscribe_notification_by_mail(true, $cat_true);
                 if (do_timeout_treatment('cat_true', $check_key_treated)) {
                     $must_repost = true;
                 }
             } elseif (isset($_POST['trueify']) and isset($_POST['cat_false'])) {
-                $cat_false = is_array($_POST['cat_false']) ? array_map(fn(mixed $v): string => is_scalar($v) ? (string)$v : '',$_POST['cat_false']) : [];
+                $cat_false = is_array($_POST['cat_false']) ? array_map(fn (mixed $v): string => is_scalar($v) ? (string)$v : '', $_POST['cat_false']) : [];
                 $check_key_treated = subscribe_notification_by_mail(true, $cat_false);
                 if (do_timeout_treatment('cat_false', $check_key_treated)) {
                     $must_repost = true;
@@ -512,9 +512,9 @@ switch ($page['mode']) {
     case 'send':
         {
             if (isset($_POST['send_submit']) and isset($_POST['send_selection']) and isset($_POST['send_customize_mail_content'])) {
-                $send_selection = is_array($_POST['send_selection']) ? array_map(fn(mixed $v): string => is_scalar($v) ? (string)$v : '',$_POST['send_selection']) : [];
+                $send_selection = is_array($_POST['send_selection']) ? array_map(fn (mixed $v): string => is_scalar($v) ? (string)$v : '', $_POST['send_selection']) : [];
                 $check_key_treated = do_action_send_mail_notification('send', $send_selection, stripslashes(is_scalar($_POST['send_customize_mail_content']) ? (string)$_POST['send_customize_mail_content'] : ''));
-                $check_key_treated_str = array_map(fn(mixed $v): string => is_scalar($v) ? (string)$v : '', $check_key_treated);
+                $check_key_treated_str = array_map(fn (mixed $v): string => is_scalar($v) ? (string)$v : '', $check_key_treated);
                 if (do_timeout_treatment('send_selection', $check_key_treated_str)) {
                     $must_repost = true;
                 }
@@ -595,8 +595,8 @@ switch ($page['mode']) {
             $opt_true_selected = [];
             $opt_false = [];
             $opt_false_selected = [];
-            $cat_true_post = is_array($_POST['cat_true'] ?? null) ? array_map(fn(mixed $v): string => is_scalar($v) ? (string)$v : '',$_POST['cat_true']) : [];
-            $cat_false_post = is_array($_POST['cat_false'] ?? null) ? array_map(fn(mixed $v): string => is_scalar($v) ? (string)$v : '',$_POST['cat_false']) : [];
+            $cat_true_post = is_array($_POST['cat_true'] ?? null) ? array_map(fn (mixed $v): string => is_scalar($v) ? (string)$v : '', $_POST['cat_true']) : [];
+            $cat_false_post = is_array($_POST['cat_false'] ?? null) ? array_map(fn (mixed $v): string => is_scalar($v) ? (string)$v : '', $_POST['cat_false']) : [];
             foreach ($data_users as $nbm_user) {
                 $ck = (string) $nbm_user['check_key'];
                 if (get_boolean($nbm_user['enabled'])) {
@@ -634,7 +634,7 @@ switch ($page['mode']) {
                 ? stripslashes(is_scalar($_POST['send_customize_mail_content']) ? (string)$_POST['send_customize_mail_content'] : '')
                 : \Piwigo\Core\Config::nbmComplementaryMailContent();
 
-            $send_sel_post = is_array($_POST['send_selection'] ?? null) ? array_map(fn(mixed $v): string => is_scalar($v) ? (string)$v : '',$_POST['send_selection']) : [];
+            $send_sel_post = is_array($_POST['send_selection'] ?? null) ? array_map(fn (mixed $v): string => is_scalar($v) ? (string)$v : '', $_POST['send_selection']) : [];
             if (count($data_users)) {
                 foreach ($data_users as $nbm_user_raw) {
                     if (!is_array($nbm_user_raw)) {

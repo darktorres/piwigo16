@@ -38,7 +38,7 @@ class check_integrity
             is_array($conf_c13y_ignore['list'])
         ) {
             $ignore_list_changed = false;
-            $this->ignore_list = array_map(fn($v) => is_scalar($v) ? (string) $v : '', $conf_c13y_ignore['list']);
+            $this->ignore_list = array_map(fn ($v) => is_scalar($v) ? (string) $v : '', $conf_c13y_ignore['list']);
         } else {
             $ignore_list_changed = true;
             $this->ignore_list = [];

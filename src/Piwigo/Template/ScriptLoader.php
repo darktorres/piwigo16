@@ -102,7 +102,7 @@ class ScriptLoader
             self::fill_well_known($id, $script);
             $this->registered_scripts[$id] = $script;
 
-                // Try to load undefined required script
+            // Try to load undefined required script
             foreach ($script->precedents as $script_id) {
                 if (! isset($this->registered_scripts[$script_id])) {
                     $this->load_known_required_script($script_id, (int) $load_mode);

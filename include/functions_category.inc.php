@@ -675,7 +675,7 @@ SELECT
     count(*) AS counter
   FROM '.IMAGE_CATEGORY_TABLE.'
     INNER JOIN '.CATEGORIES_TABLE.' c ON category_id = id
-  WHERE image_id IN ('.implode(',', array_map(fn(mixed $v): string => is_scalar($v) ? (string)$v : '', $items)).')';
+  WHERE image_id IN ('.implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string)$v : '', $items)).')';
 
     if ($use_permissions) {
         $query .= get_sql_condition_FandF(

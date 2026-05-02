@@ -100,7 +100,7 @@ final class WsApiTest extends IntegrationTestCase
         $stat = is_array($decoded) ? ($decoded['stat'] ?? null) : null;
         self::assertTrue(
             $status === 401 || $stat === 'fail',
-            "users.getList must require authentication (HTTP $status, stat=" . ($stat ?? 'N/A') . ")"
+            "users.getList must require authentication (HTTP $status, stat=" . ($stat ?? 'N/A') . ')'
         );
     }
 

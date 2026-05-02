@@ -728,7 +728,7 @@ function set_cat_visible(array|int|string $categories, bool|string $value, bool 
         $query = '
 UPDATE '.CATEGORIES_TABLE.'
   SET visible = \'true\'
-  WHERE id IN ('.implode(',', array_map(fn($v) => is_numeric($v) ? (int) $v : 0, $cats)).')';
+  WHERE id IN ('.implode(',', array_map(fn ($v) => is_numeric($v) ? (int) $v : 0, $cats)).')';
         pwg_query($query);
     }
     // locking a category   => all its child categories become locked
@@ -764,7 +764,7 @@ function set_cat_status(array|int|string $categories, string $value): void
         $query = '
 UPDATE '.CATEGORIES_TABLE.'
   SET status = \'public\'
-  WHERE id IN ('.implode(',', array_map(fn($v) => is_numeric($v) ? (int) $v : 0, $uppercats)).')
+  WHERE id IN ('.implode(',', array_map(fn ($v) => is_numeric($v) ? (int) $v : 0, $uppercats)).')
 ;';
         pwg_query($query);
     }
@@ -2793,7 +2793,7 @@ function add_permission_on_category(array|int|string $category_ids, array|int|st
     $query = '
 SELECT id
   FROM '.CATEGORIES_TABLE.'
-  WHERE id IN ('.implode(',', array_map(fn($v) => is_numeric($v) ? (int) $v : 0, $cat_ids)).')
+  WHERE id IN ('.implode(',', array_map(fn ($v) => is_numeric($v) ? (int) $v : 0, $cat_ids)).')
     AND status = \'private\'
 ;';
     $private_cats = query2array($query, null, 'id');
@@ -3195,7 +3195,7 @@ SELECT
   ORDER BY id ASC
 ;';
 
-    return array_map(static fn($id) => (int)$id, query2array($query, null, 'id'));
+    return array_map(static fn ($id) => (int)$id, query2array($query, null, 'id'));
 }
 
 /**

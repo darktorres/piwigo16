@@ -10,9 +10,7 @@ use PHPStan\Reflection\FunctionReflection;
 use PHPStan\Type\DynamicFunctionReturnTypeExtension;
 use PHPStan\Type\GeneralizePrecision;
 use PHPStan\Type\MixedType;
-use PHPStan\Type\NullType;
 use PHPStan\Type\Type;
-use PHPStan\Type\UnionType;
 
 /**
  * Teaches PHPStan that pwg_get_session_var() returns the same type as its $default argument.

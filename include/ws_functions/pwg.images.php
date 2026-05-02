@@ -2862,7 +2862,7 @@ SELECT id
   FROM '.IMAGES_TABLE.'
   WHERE id IN ('.implode(', ', $image_ids).')
 ;';
-    $image_ids = array_map(static fn($id) => (int)$id, query2array($query, null, 'id'));
+    $image_ids = array_map(static fn ($id) => (int)$id, query2array($query, null, 'id'));
 
     if (empty($image_ids)) {
         return new PwgError(403, 'No image found');

@@ -448,7 +448,7 @@ function add_format(string $source_filepath, string $format_ext, string $format_
         $format_ext_list = ['cr2'];
     }
     if (!in_array($format_ext, $format_ext_list)) {
-        $extList = array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '', $format_ext_list);
+        $extList = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $format_ext_list);
         die('['.__FUNCTION__.'] unexpected format extension "'.$format_ext.'" (authorized extensions: '.implode(', ', $extList).')');
     }
 

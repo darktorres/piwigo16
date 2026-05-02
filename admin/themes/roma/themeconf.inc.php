@@ -6,4 +6,3 @@ $themeconf = [
   'parent' => 'default',
   'colorscheme' => 'dark',
 ];
-?>

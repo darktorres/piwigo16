@@ -55,7 +55,7 @@ $tags = get_available_tags();
 
 if ($page['display_mode'] == 'letters') {
     // we want tags diplayed in alphabetic order
-    usort($tags, fn(mixed $a, mixed $b): int => tag_alpha_compare(is_array($a) ? $a : [], is_array($b) ? $b : []));
+    usort($tags, fn (mixed $a, mixed $b): int => tag_alpha_compare(is_array($a) ? $a : [], is_array($b) ? $b : []));
 
     $current_letter = null;
     $nb_tags = count($tags);
@@ -121,14 +121,14 @@ if ($page['display_mode'] == 'letters') {
 
     // we want only the first most represented tags, so we sort them by counter
     // and take the first tags
-    usort($tags, fn(mixed $a, mixed $b): int => tags_counter_compare(is_array($a) ? $a : [], is_array($b) ? $b : []));
+    usort($tags, fn (mixed $a, mixed $b): int => tags_counter_compare(is_array($a) ? $a : [], is_array($b) ? $b : []));
     $tags = array_slice($tags, 0, \Piwigo\Core\Config::fullTagCloudItemsNumber());
 
     // depending on its counter and the other tags counter, each tag has a level
     $tags = add_level_to_tags($tags);
 
     // we want tags diplayed in alphabetic order
-    usort($tags, fn(mixed $a, mixed $b): int => tag_alpha_compare(is_array($a) ? $a : [], is_array($b) ? $b : []));
+    usort($tags, fn (mixed $a, mixed $b): int => tag_alpha_compare(is_array($a) ? $a : [], is_array($b) ? $b : []));
 
     // display sorted tags
     foreach ($tags as $tag) {

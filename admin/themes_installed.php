@@ -146,10 +146,12 @@ function cmp(array $a, array $b): int
         return 1;
     }
 
-    $aStateRaw = $a['STATE'] ?? null; $bStateRaw = $b['STATE'] ?? null;
+    $aStateRaw = $a['STATE'] ?? null;
+    $bStateRaw = $b['STATE'] ?? null;
     $a_state = is_string($aStateRaw) ? $aStateRaw : '';
     $b_state = is_string($bStateRaw) ? $bStateRaw : '';
-    $aNameRaw = $a['NAME'] ?? null; $bNameRaw = $b['NAME'] ?? null;
+    $aNameRaw = $a['NAME'] ?? null;
+    $bNameRaw = $b['NAME'] ?? null;
     $a_name = is_scalar($aNameRaw) ? (string) $aNameRaw : '';
     $b_name = is_scalar($bNameRaw) ? (string) $bNameRaw : '';
     if ($a_state == $b_state) {

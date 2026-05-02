@@ -436,9 +436,9 @@ final class Config
                 $v[$key] = $default[$key];
             } else {
                 $v[$key] = [
-                    'max_dates'    => isset($v[$key]['max_dates'])    && is_int($v[$key]['max_dates'])    ? $v[$key]['max_dates']    : $default[$key]['max_dates'],
+                    'max_dates'    => isset($v[$key]['max_dates'])    && is_int($v[$key]['max_dates']) ? $v[$key]['max_dates'] : $default[$key]['max_dates'],
                     'max_elements' => isset($v[$key]['max_elements']) && is_int($v[$key]['max_elements']) ? $v[$key]['max_elements'] : $default[$key]['max_elements'],
-                    'max_cats'     => isset($v[$key]['max_cats'])     && is_int($v[$key]['max_cats'])     ? $v[$key]['max_cats']     : $default[$key]['max_cats'],
+                    'max_cats'     => isset($v[$key]['max_cats'])     && is_int($v[$key]['max_cats']) ? $v[$key]['max_cats'] : $default[$key]['max_cats'],
                 ];
             }
         }

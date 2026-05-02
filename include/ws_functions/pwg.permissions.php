@@ -34,7 +34,7 @@ function ws_permissions_getList(array $params, \Piwigo\Ws\PwgServer &$service): 
     $cat_filter = '';
     if (!empty($params['cat_id'])) {
         $cat_id_arr = is_array($params['cat_id']) ? $params['cat_id'] : [];
-        $cat_id_arr_str = array_map(fn($v) => is_scalar($v) ? (string) $v : '', $cat_id_arr);
+        $cat_id_arr_str = array_map(fn ($v) => is_scalar($v) ? (string) $v : '', $cat_id_arr);
         $cat_filter = 'WHERE cat_id IN('. implode(',', $cat_id_arr_str) .')';
     }
 
@@ -94,8 +94,8 @@ SELECT group_id, cat_id
     foreach ($perms as $cat_id => &$cat) {
         if (isset($params['group_id'])) {
             $group_id_arr = is_array($params['group_id']) ? $params['group_id'] : [];
-            $group_id_arr_str = array_map(fn($v) => is_scalar($v) ? (string) $v : '', $group_id_arr);
-            $cat_groups_str = array_map(fn($v) => (string) $v, $cat['groups'] ?? []);
+            $group_id_arr_str = array_map(fn ($v) => is_scalar($v) ? (string) $v : '', $group_id_arr);
+            $cat_groups_str = array_map(fn ($v) => (string) $v, $cat['groups'] ?? []);
             if (empty($cat['groups']) or count(array_intersect($cat_groups_str, $group_id_arr_str)) == 0) {
                 unset($perms[$cat_id]);
                 continue;
@@ -103,9 +103,9 @@ SELECT group_id, cat_id
         }
         if (isset($params['user_id'])) {
             $user_id_arr = is_array($params['user_id']) ? $params['user_id'] : [];
-            $user_id_arr_str = array_map(fn($v) => is_scalar($v) ? (string) $v : '', $user_id_arr);
-            $cat_users_indirect_str = array_map(fn($v) => (string) $v, $cat['users_indirect'] ?? []);
-            $cat_users_str = array_map(fn($v) => (string) $v, $cat['users'] ?? []);
+            $user_id_arr_str = array_map(fn ($v) => is_scalar($v) ? (string) $v : '', $user_id_arr);
+            $cat_users_indirect_str = array_map(fn ($v) => (string) $v, $cat['users_indirect'] ?? []);
+            $cat_users_str = array_map(fn ($v) => (string) $v, $cat['users'] ?? []);
             if (
                 (empty($cat['users_indirect']) or count(array_intersect($cat_users_indirect_str, $user_id_arr_str)) == 0)
                 and (empty($cat['users']) or count(array_intersect($cat_users_str, $user_id_arr_str)) == 0)
@@ -150,12 +150,12 @@ function ws_permissions_add(array $params, \Piwigo\Ws\PwgServer &$service): mixe
 
     if (!empty($params['group_id'])) {
         $cat_id_param = is_array($params['cat_id']) ? $params['cat_id'] : [];
-        $cat_id_param_int = array_map(fn($v) => is_numeric($v) ? (int) $v : 0, $cat_id_param);
+        $cat_id_param_int = array_map(fn ($v) => is_numeric($v) ? (int) $v : 0, $cat_id_param);
         $cat_ids = get_uppercat_ids($cat_id_param_int);
         if ($params['recursive']) {
             $cat_ids = array_merge($cat_ids, get_subcat_ids($cat_id_param_int));
         }
-        $cat_ids_str = array_map(fn($v) => (string) $v, $cat_ids);
+        $cat_ids_str = array_map(fn ($v) => (string) $v, $cat_ids);
 
         $query = '
 SELECT id
@@ -189,9 +189,9 @@ SELECT id
             $_POST['apply_on_sub'] = true;
         }
         $cat_id_param2 = is_array($params['cat_id']) ? $params['cat_id'] : [];
-        $cat_id_param2_int = array_map(fn($v) => is_numeric($v) ? (int) $v : 0, $cat_id_param2);
+        $cat_id_param2_int = array_map(fn ($v) => is_numeric($v) ? (int) $v : 0, $cat_id_param2);
         $user_id_param = is_array($params['user_id']) ? $params['user_id'] : [];
-        $user_id_param_int = array_map(fn($v) => is_numeric($v) ? (int) $v : 0, $user_id_param);
+        $user_id_param_int = array_map(fn ($v) => is_numeric($v) ? (int) $v : 0, $user_id_param);
         add_permission_on_category($cat_id_param2_int, $user_id_param_int);
     }
 
@@ -216,13 +216,13 @@ function ws_permissions_remove(array $params, \Piwigo\Ws\PwgServer &$service): m
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
     $cat_id_param3 = is_array($params['cat_id']) ? $params['cat_id'] : [];
-    $cat_id_param3_int = array_map(fn($v) => is_numeric($v) ? (int) $v : 0, $cat_id_param3);
+    $cat_id_param3_int = array_map(fn ($v) => is_numeric($v) ? (int) $v : 0, $cat_id_param3);
     $cat_ids = get_subcat_ids($cat_id_param3_int);
-    $cat_ids_str = array_map(fn($v) => (string) $v, $cat_ids);
+    $cat_ids_str = array_map(fn ($v) => (string) $v, $cat_ids);
 
     if (!empty($params['group_id'])) {
         $group_id_rem = is_array($params['group_id']) ? $params['group_id'] : [];
-        $group_id_rem_str = array_map(fn($v) => is_scalar($v) ? (string) $v : '', $group_id_rem);
+        $group_id_rem_str = array_map(fn ($v) => is_scalar($v) ? (string) $v : '', $group_id_rem);
         $query = '
 DELETE
   FROM '. GROUP_ACCESS_TABLE .'
@@ -234,7 +234,7 @@ DELETE
 
     if (!empty($params['user_id'])) {
         $user_id_rem = is_array($params['user_id']) ? $params['user_id'] : [];
-        $user_id_rem_str = array_map(fn($v) => is_scalar($v) ? (string) $v : '', $user_id_rem);
+        $user_id_rem_str = array_map(fn ($v) => is_scalar($v) ? (string) $v : '', $user_id_rem);
         $query = '
 DELETE
   FROM '. USER_ACCESS_TABLE .'

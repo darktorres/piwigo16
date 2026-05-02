@@ -67,7 +67,7 @@ $image_order_choice = 'default';
 if (isset($_POST['submit'])) {
     if (isset($_POST['rank_of_image'])) {
         $rank_of_image_raw = is_array($_POST['rank_of_image']) ? $_POST['rank_of_image'] : [];
-        $rank_of_image = array_map(fn($v) => is_numeric($v) ? (int) $v : 0, $rank_of_image_raw);
+        $rank_of_image = array_map(fn ($v) => is_numeric($v) ? (int) $v : 0, $rank_of_image_raw);
         asort($rank_of_image, SORT_NUMERIC);
 
         save_images_order(
@@ -113,7 +113,7 @@ UPDATE '.CATEGORIES_TABLE.'
         $query = '
 UPDATE '.CATEGORIES_TABLE.'
   SET image_order = '.(isset($image_order) ? '\''.$image_order.'\'' : 'NULL').'
-  WHERE uppercats LIKE \''.( is_scalar($cat_info['uppercats'] ?? null) ? (string) $cat_info['uppercats'] : '').',%\'';
+  WHERE uppercats LIKE \''.(is_scalar($cat_info['uppercats'] ?? null) ? (string) $cat_info['uppercats'] : '').',%\'';
         pwg_query($query);
     }
 

@@ -551,16 +551,16 @@ DELETE FROM '. PLUGINS_TABLE .'
                 krsort($this->server_plugins);
                 break;
             case 'revision':
-                usort($this->server_plugins, fn(array $a, array $b): int => $this->extension_revision_compare($a, $b));
+                usort($this->server_plugins, fn (array $a, array $b): int => $this->extension_revision_compare($a, $b));
                 break;
             case 'name':
-                uasort($this->server_plugins, fn(array $a, array $b): int => $this->extension_name_compare($a, $b));
+                uasort($this->server_plugins, fn (array $a, array $b): int => $this->extension_name_compare($a, $b));
                 break;
             case 'author':
-                uasort($this->server_plugins, fn(array $a, array $b): int => $this->extension_author_compare($a, $b));
+                uasort($this->server_plugins, fn (array $a, array $b): int => $this->extension_author_compare($a, $b));
                 break;
             case 'downloads':
-                usort($this->server_plugins, fn(array $a, array $b): int => $this->extension_downloads_compare($a, $b));
+                usort($this->server_plugins, fn (array $a, array $b): int => $this->extension_downloads_compare($a, $b));
                 break;
         }
     }
@@ -586,92 +586,92 @@ DELETE FROM '. PLUGINS_TABLE .'
             if ($handle !== false) {
                 $fh = $handle;
                 if (fetchRemote($url, $handle, $get_data)) {
-                fclose($fh);
-                $zip = new \PclZip($archive);
-                if ($list = $zip->listContent()) {
-                    $main_filepath = null;
-                    $status = 'ok';
-                    foreach ($list as $file) {
-                        // we search main.inc.php in archive
-                        if (basename((string) $file['filename']) == 'main.inc.php'
-                          and ($main_filepath === null
-                          or strlen((string) $file['filename']) < strlen($main_filepath))) {
-                            $main_filepath = $file['filename'];
-                        }
-                    }
-
-                    $logger->debug(__FUNCTION__.', $main_filepath = '.$main_filepath);
-
-                    if (isset($main_filepath)) {
-                        $root = dirname($main_filepath); // main.inc.php path in archive
-                        if ($action == 'upgrade') {
-                            $plugin_id = $dest;
-                        } else {
-                            $plugin_id = ($root == '.' ? 'extension_' . $dest : basename($root));
-                        }
-                        $extract_path = PHPWG_PLUGINS_PATH . $plugin_id;
-                        $logger->debug(__FUNCTION__.', $extract_path = '.$extract_path);
-
-                        if ($result = $zip->extract(
-                            PCLZIP_OPT_PATH,
-                            $extract_path,
-                            PCLZIP_OPT_REMOVE_PATH,
-                            $root,
-                            PCLZIP_OPT_REPLACE_NEWER
-                        )) {
-                            foreach ($result as $file) {
-                                if ($file['stored_filename'] == $main_filepath) {
-                                    $status = $file['status'];
-                                    break;
-                                }
+                    fclose($fh);
+                    $zip = new \PclZip($archive);
+                    if ($list = $zip->listContent()) {
+                        $main_filepath = null;
+                        $status = 'ok';
+                        foreach ($list as $file) {
+                            // we search main.inc.php in archive
+                            if (basename((string) $file['filename']) == 'main.inc.php'
+                              and ($main_filepath === null
+                              or strlen((string) $file['filename']) < strlen($main_filepath))) {
+                                $main_filepath = $file['filename'];
                             }
-                            if (file_exists($extract_path.'/obsolete.list')
-                              and $old_files = file($extract_path.'/obsolete.list', FILE_IGNORE_NEW_LINES)) {
-                                $old_files[] = 'obsolete.list';
-                                $logger->debug(__FUNCTION__.', $old_files = {'.join('},{', $old_files).'}');
+                        }
 
-                                $extract_path_realpath = realpath($extract_path);
+                        $logger->debug(__FUNCTION__.', $main_filepath = '.$main_filepath);
 
-                                foreach ($old_files as $old_file) {
-                                    $old_file = trim($old_file);
-                                    $old_file = trim($old_file, '/'); // prevent path starting with a "/"
+                        if (isset($main_filepath)) {
+                            $root = dirname($main_filepath); // main.inc.php path in archive
+                            if ($action == 'upgrade') {
+                                $plugin_id = $dest;
+                            } else {
+                                $plugin_id = ($root == '.' ? 'extension_' . $dest : basename($root));
+                            }
+                            $extract_path = PHPWG_PLUGINS_PATH . $plugin_id;
+                            $logger->debug(__FUNCTION__.', $extract_path = '.$extract_path);
 
-                                    if (empty($old_file)) { // empty here means the extension itself
-                                        continue;
-                                    }
-
-                                    $path = $extract_path.'/'.$old_file;
-
-                                    // make sure the obsolete file is withing the extension directory, prevent traversal path
-                                    $realpath = realpath($path);
-                                    if ($realpath === false or $extract_path_realpath === false or !str_starts_with($realpath, $extract_path_realpath)) {
-                                        continue;
-                                    }
-
-                                    $logger->debug(__FUNCTION__.', to delete = '.$path);
-
-                                    if (is_file($path)) {
-                                        @unlink($path);
-                                    } elseif (is_dir($path)) {
-                                        deltree($path, PHPWG_PLUGINS_PATH . 'trash');
+                            if ($result = $zip->extract(
+                                PCLZIP_OPT_PATH,
+                                $extract_path,
+                                PCLZIP_OPT_REMOVE_PATH,
+                                $root,
+                                PCLZIP_OPT_REPLACE_NEWER
+                            )) {
+                                foreach ($result as $file) {
+                                    if ($file['stored_filename'] == $main_filepath) {
+                                        $status = $file['status'];
+                                        break;
                                     }
                                 }
+                                if (file_exists($extract_path.'/obsolete.list')
+                                  and $old_files = file($extract_path.'/obsolete.list', FILE_IGNORE_NEW_LINES)) {
+                                    $old_files[] = 'obsolete.list';
+                                    $logger->debug(__FUNCTION__.', $old_files = {'.join('},{', $old_files).'}');
+
+                                    $extract_path_realpath = realpath($extract_path);
+
+                                    foreach ($old_files as $old_file) {
+                                        $old_file = trim($old_file);
+                                        $old_file = trim($old_file, '/'); // prevent path starting with a "/"
+
+                                        if (empty($old_file)) { // empty here means the extension itself
+                                            continue;
+                                        }
+
+                                        $path = $extract_path.'/'.$old_file;
+
+                                        // make sure the obsolete file is withing the extension directory, prevent traversal path
+                                        $realpath = realpath($path);
+                                        if ($realpath === false or $extract_path_realpath === false or !str_starts_with($realpath, $extract_path_realpath)) {
+                                            continue;
+                                        }
+
+                                        $logger->debug(__FUNCTION__.', to delete = '.$path);
+
+                                        if (is_file($path)) {
+                                            @unlink($path);
+                                        } elseif (is_dir($path)) {
+                                            deltree($path, PHPWG_PLUGINS_PATH . 'trash');
+                                        }
+                                    }
+                                }
+                            } else {
+                                $status = 'extract_error';
                             }
                         } else {
-                            $status = 'extract_error';
+                            $status = 'archive_error';
                         }
                     } else {
                         $status = 'archive_error';
                     }
                 } else {
-                    $status = 'archive_error';
+                    $status = 'dl_archive_error';
                 }
             } else {
                 $status = 'dl_archive_error';
             }
-        } else {
-            $status = 'dl_archive_error';
-        }
         } else {
             $status = 'temp_path_error';
         }
@@ -723,7 +723,8 @@ DELETE FROM '. PLUGINS_TABLE .'
      */
     public function extension_name_compare(array $a, array $b): int
     {
-        $na = $a['extension_name'] ?? null; $nb = $b['extension_name'] ?? null;
+        $na = $a['extension_name'] ?? null;
+        $nb = $b['extension_name'] ?? null;
         return strcmp(strtolower(is_scalar($na) ? (string) $na : ''), strtolower(is_scalar($nb) ? (string) $nb : ''));
     }
 
@@ -733,7 +734,8 @@ DELETE FROM '. PLUGINS_TABLE .'
      */
     public function extension_author_compare(array $a, array $b): int
     {
-        $na = $a['author_name'] ?? null; $nb = $b['author_name'] ?? null;
+        $na = $a['author_name'] ?? null;
+        $nb = $b['author_name'] ?? null;
         $r = strcasecmp(is_scalar($na) ? (string) $na : '', is_scalar($nb) ? (string) $nb : '');
         if ($r == 0) {
             return $this->extension_name_compare($a, $b);
@@ -748,7 +750,8 @@ DELETE FROM '. PLUGINS_TABLE .'
      */
     public function plugin_author_compare(array $a, array $b): int
     {
-        $na = $a['author'] ?? null; $nb = $b['author'] ?? null;
+        $na = $a['author'] ?? null;
+        $nb = $b['author'] ?? null;
         $r = strcasecmp(is_scalar($na) ? (string) $na : '', is_scalar($nb) ? (string) $nb : '');
         if ($r == 0) {
             return name_compare($a, $b);

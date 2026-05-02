@@ -8,4 +8,3 @@ $themeconf = [
   'mime_icon_dir'  => 'themes/default/icon/mimetypes/',
   'colorscheme' => 'dark',
 ];
-?>

@@ -91,7 +91,7 @@
           </a>
         {/if}
         {if isset($representant.ALLOW_DELETE)}
-          <a class="deleteRepresentative buttonLike" id="deleteRepresentative" title="{'Delete Representant'|@translate}" style="{if !isset($representant.picture)}display:none{/if}">
+          <a class="deleteRepresentative buttonLike" id="deleteRepresentative" title="{'Delete Representant'|@translate}" {if !isset($representant.picture)}hidden{/if}>
             <i class="icon-cancel"></i>
             {'Remove thumbnail'|translate}
           </a>

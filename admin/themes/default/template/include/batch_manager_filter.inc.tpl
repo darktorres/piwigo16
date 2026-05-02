@@ -18,12 +18,12 @@
         <option value="{$prefilter.ID}"  class="{$optionClass}" {if isset($filter.prefilter) && $filter.prefilter eq $prefilter.ID}selected="selected"{/if}>{$prefilter.NAME}</option>
         {/foreach}
       </select>
-      <a id="empty_caddie" href="admin.php?page=batch_manager&amp;action=empty_caddie" style="{if !isset($filter.prefilter) or $filter.prefilter ne 'caddie'}display:none{/if}">{'Empty caddie'|translate}</a>
+      <a id="empty_caddie" href="admin.php?page=batch_manager&amp;action=empty_caddie" {if !isset($filter.prefilter) or $filter.prefilter ne 'caddie'}hidden{/if}>{'Empty caddie'|translate}</a>
 {if $NB_ORPHANS > 0}
-      <a id="delete_orphans" href="#" style="{if !isset($filter.prefilter) or $filter.prefilter ne 'no_album'}display:none{/if}" class="icon-trash">{'Delete %d orphan photos'|translate:$NB_ORPHANS}</a>
+      <a id="delete_orphans" href="#" class="icon-trash" {if !isset($filter.prefilter) or $filter.prefilter ne 'no_album'}hidden{/if}>{'Delete %d orphan photos'|translate:$NB_ORPHANS}</a>
 {/if}
 {if $NB_NO_MD5SUM > 0}
-<a id="sync_md5sum" href="#" style="{if !isset($filter.prefilter) or $filter.prefilter ne 'no_sync_md5sum'}display:none{/if}" class="icon-arrows-cw">{'Compute %d missing checksums'|translate:{$NB_NO_MD5SUM}}</a>
+<a id="sync_md5sum" href="#" class="icon-arrows-cw" {if !isset($filter.prefilter) or $filter.prefilter ne 'no_sync_md5sum'}hidden{/if}>{'Compute %d missing checksums'|translate:{$NB_NO_MD5SUM}}</a>
 {/if}
 
       <span id="add_md5sum" hidden>
@@ -44,7 +44,7 @@
 
       <span id="orphans_deletion_error" class="errors" hidden></span>
 
-      <span id="duplicates_options" style="{if !isset($filter.prefilter) or $filter.prefilter ne 'duplicates'}display:none{/if}">
+      <span id="duplicates_options" {if !isset($filter.prefilter) or $filter.prefilter ne 'duplicates'}hidden{/if}>
         {'based on'|translate}
         <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="filter_duplicates_filename" {if isset($filter.duplicates_filename)}checked="checked"{/if}> {'file name'|translate}</label>
         <label class="font-checkbox" title="md5sum"><span class="icon-check"></span><input type="checkbox" name="filter_duplicates_checksum" {if isset($filter.duplicates_checksum)}checked="checked"{/if}> {'checksum'|translate} <i class="icon-help-circled tiptip" title="translated md5sum definition here !"> </i></label>

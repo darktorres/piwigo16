@@ -23,9 +23,9 @@
       {/if}
     </div>
       {if $INTRO.is_svg}
-      <img src="{$PATH}" alt="{'Thumbnail'|translate}" class="svg-image other-image-format" style="{if $FORMAT}width:100%; max-height:100%; {else}max-width:100%; height:100%;{/if} object-fit:contain;">
+      <img src="{$PATH}" alt="{'Thumbnail'|translate}" class="svg-image other-image-format u-object-contain {if $FORMAT}u-fit-width{else}u-fit-height{/if}">
       {else}
-      <img src="{$TN_SRC}" alt="{'Thumbnail'|translate}" class="other-image-format" style="{if $FORMAT}width:100%; max-height:100%;{else}max-width:100%; height:100%;{/if} object-fit:contain;">
+      <img src="{$TN_SRC}" alt="{'Thumbnail'|translate}" class="other-image-format u-object-contain {if $FORMAT}u-fit-width{else}u-fit-height{/if}">
       {/if}
   </div>
   <div id='picture-content'>

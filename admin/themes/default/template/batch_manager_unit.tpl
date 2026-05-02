@@ -24,15 +24,15 @@
 		<span class="count-badge"> {count($all_elements)}</span>
 	</legend>
 	{if !empty($elements) }
-	<div style="margin: 10px 0; display: flex; justify-content: space-between; padding: 1em; height: 33px;">
-	  	<div style="margin-right: 21px;" class="pagination-per-page">
-      		<span style="font-weight: bold;color: unset;">{'photos per page'|@translate} :</span>
+	<div class="bm-pagination-row">
+	  	<div class="pagination-per-page">
+      		<span>{'photos per page'|@translate} :</span>
     		<a href="{$U_ELEMENTS_PAGE}&amp;display=5" class="{if $per_page == 5}selected-pagination{/if}">5</a>
     		<a href="{$U_ELEMENTS_PAGE}&amp;display=10" class="{if $per_page == 10}selected-pagination{/if}">10</a>
     		<a href="{$U_ELEMENTS_PAGE}&amp;display=50" class="{if $per_page == 50}selected-pagination{/if}">50</a>
 		</div>
 
-		<div style="margin-left: 22px;">
+		<div class="pagination-actions">
 			<div class="pagination-reload">
 				{if !empty($navbar) }
 				<a class="button-reload tiptip" title="{'Pagination has changed and needs to be reloaded !'|@translate}" hidden href="{$F_ACTION}"><i class="icon-cw"></i></a>
@@ -62,7 +62,7 @@
 			#{$element.ID}
 		</div>
 		<div class="media-box">
-			<img src="{$element.TN_SRC}" alt="imagename" class="media-box-embed" style="{if $element.FORMAT}width:100%; max-height:100%;{else}max-width:100%; height:100%;{/if}">
+			<img src="{$element.TN_SRC}" alt="imagename" class="media-box-embed {if $element.FORMAT}u-fit-width{else}u-fit-height{/if}">
 			<div class="media-hover">
 				<div class='picture-preview-actions'>
 					<a class="preview-box icon-zoom-square tiptip" href="{$element.FILE_SRC}" title="{'Zoom'|@translate}"></a>
@@ -93,7 +93,7 @@
 			</div>
 			<div class="main-info-container">
 				<div class="main-info-block">
-					<div class='info-framed-icon' style="margin-right:0px;">
+					<div class='info-framed-icon bm-info-framed-icon-tight'>
 						<i class='icon-picture'></i>
 					</div>
 					<span class="main-info-title" id="filename">{$element.FILE}</span>
@@ -102,7 +102,7 @@
 					<span class="main-info-desc">{$element.EXT}</span>
 				</div>
 				<div class="main-info-block">
-					<div class='info-framed-icon' style="margin-right:0px;">
+					<div class='info-framed-icon bm-info-framed-icon-tight'>
 						<span class='icon-calendar'></span>
 					</div>
 					<span class="main-info-title first-letter-capitalize">{$element.POST_DATE}</span>
@@ -206,15 +206,15 @@
 			</div>
 		</fieldset>
 		{/foreach}
-		<div style="margin: 10px 0; display: flex; justify-content: space-between; padding: 1em; height: 33px;">
-			<div style="margin-right: 21px;" class="pagination-per-page">
-				<span style="font-weight: bold;color: unset;">{'photos per page'|@translate} :</span>
+		<div class="bm-pagination-row">
+			<div class="pagination-per-page">
+				<span>{'photos per page'|@translate} :</span>
 		  		<a href="{$U_ELEMENTS_PAGE}&amp;display=5" class="{if $per_page == 5}selected-pagination{/if}">5</a>
 		  		<a href="{$U_ELEMENTS_PAGE}&amp;display=10" class="{if $per_page == 10}selected-pagination{/if}">10</a>
 		  		<a href="{$U_ELEMENTS_PAGE}&amp;display=50" class="{if $per_page == 50}selected-pagination{/if}">50</a>
 	  		</div>
 
-	  		<div style="margin-left: 22px;">
+	  		<div class="pagination-actions">
 		  		<div class="pagination-reload">
 		{if !empty($navbar) }
 			  		<a class="button-reload tiptip" title="{'Pagination has changed and needs to be reloaded !'|@translate}" hidden href="{$F_ACTION}"><i class="icon-cw"></i></a>

@@ -30,7 +30,7 @@
       <li>{$warning}</li>
       {/foreach}
     </ul>
-    <div class="hideButton" style="text-align:center"><a href="{$hide_warnings_link}">{'Hide'|@translate}</a></div>
+    <div class="hideButton u-text-center"><a href="{$hide_warnings_link}">{'Hide'|@translate}</a></div>
   </div>
     {/if}
   {/if} {* $setup_errors *}

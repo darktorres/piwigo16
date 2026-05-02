@@ -31,3 +31,28 @@
 .breadcrumb-item{
   margin: 5px 0 5px 0 !important;
 }
+
+/* Pagination row layout (rendered above and below the photo list). */
+.bm-pagination-row {
+  margin: 10px 0;
+  display: flex;
+  justify-content: space-between;
+  padding: 1em;
+  height: 33px;
+}
+.bm-pagination-row .pagination-per-page {
+  margin-right: 21px;
+}
+.bm-pagination-row .pagination-actions {
+  margin-left: 22px;
+}
+/* Override the .pagination-per-page span gray color for the leading
+   "photos per page :" label. */
+.bm-pagination-row .pagination-per-page > span:first-child {
+  color: unset;
+}
+
+/* Tighter info-framed icon (remove default right margin in batch_manager_unit). */
+.bm-info-framed-icon-tight {
+  margin-right: 0;
+}

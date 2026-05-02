@@ -131,7 +131,7 @@ npx playwright test                   # green
 
 ## #4 — Composer audit + Renovate (or Dependabot)
 
-**Status:** Dependabot live; audit CI step + CONTRIBUTING policy still pending &nbsp;|&nbsp; **Size:** S
+**Status:** ✅ Done &nbsp;|&nbsp; **Size:** S
 
 ### Goal
 
@@ -139,33 +139,18 @@ npx playwright test                   # green
 
 ### Current state
 
-- No `composer audit` step in CI; no `npm audit` step either.
-- `.github/dependabot.yml` is live for the three present ecosystems (composer, npm, github-actions). Weekly Monday-morning runs; minor/patch grouped per ecosystem; majors arrive as separate PRs (default Dependabot behavior, which already requires manual merge — no `automerge` setting needed). Security alerts run independently via Dependabot vulnerability alerts (toggled in repo settings, not in the YAML).
+- `.github/workflows/ci.yml` runs an `audit` job alongside `style` and `phpstan`: `composer audit --abandoned=fail` and `npm audit --omit=dev --audit-level=high`. Both exit clean on the current tree.
+- `.github/dependabot.yml` is live for the three present ecosystems (composer, npm, github-actions). Weekly Monday-morning runs; minor/patch grouped per ecosystem; majors arrive as separate PRs (default Dependabot behavior, which already requires manual merge — no `automerge` setting needed). Security alerts run independently via Dependabot vulnerability alerts (enabled in repo settings).
 - No `renovate.json` (Dependabot was chosen instead).
-- `composer.lock` and `package-lock.json` exist (so audits will produce useful output).
+- `CONTRIBUTING.md` documents the dep-update workflow and the advisory-triage policy (manual bumps, advisory severity tiers, override mechanism).
 
 ### Steps
 
-1. **Add audit job to CI.** Append to `.github/workflows/ci.yml`:
-
-   ```yaml
-   audit:
-     runs-on: ubuntu-latest
-     steps:
-       - uses: actions/checkout@v4
-       - uses: shivammathur/setup-php@v2
-         with: { php-version: '8.5' }
-       - uses: actions/setup-node@v4
-         with: { node-version: '22' }
-       - run: composer install --no-progress
-       - run: composer audit --abandoned=fail
-       - run: npm ci
-       - run: npm audit --omit=dev --audit-level=high
-   ```
+1. **Add audit job to CI.** ✅ Done — third job in `.github/workflows/ci.yml`, runs `composer audit --abandoned=fail` and `npm audit --omit=dev --audit-level=high` on each push. Uses the same action pins as the other jobs (`actions/checkout@v6`, `shivammathur/setup-php@v2`, `ramsey/composer-install@v4`) plus `actions/setup-node@v6` with Node 24 + npm cache.
 
 2. **Add dependency update bot.** ✅ Done — `.github/dependabot.yml` covers composer, npm, and github-actions, weekly on Monday at 06:00 UTC, with minor/patch grouped per ecosystem and labels (`dependencies` + ecosystem name). Majors fall outside the group and arrive as individual PRs requiring manual merge. Dev-dep auto-merge from the Renovate spec was not ported — Dependabot doesn't ship with auto-merge, and adding the corresponding workflow can be a follow-up if churn warrants it.
 
-3. **Document policy** in `CONTRIBUTING.md`: how to triage a vulnerability advisory, when to override (with rationale), how to bump a single dep manually.
+3. **Document policy** ✅ Done — `CONTRIBUTING.md` Dependencies section covers manual bumps, Dependabot's two layers (weekly grouped PRs + advisory PRs), the per-push audit gate, and a four-step triage flow with a CVSS ≥ 7 / 48-hour patch SLA for known fixes.
 
 ### Verification
 

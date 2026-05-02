@@ -31,3 +31,21 @@ jobs:
       - uses: ramsey/composer-install@v4
       - run: composer dump-autoload --strict-psr
       - run: vendor/bin/phpstan analyse --no-progress
+
+  audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          coverage: none
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+      - uses: ramsey/composer-install@v4
+      - run: composer audit --abandoned=fail
+      - run: npm ci
+      - run: npm audit --omit=dev --audit-level=high

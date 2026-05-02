@@ -176,6 +176,9 @@ trigger_notify('loc_end_themes_installed');
 $template->assign('isWebmaster', (is_webmaster()) ? 1 : 0);
 $template->assign('ADMIN_PAGE_TITLE', l10n('Themes'));
 $template->assign('CONF_ENABLE_EXTENSIONS_INSTALL', \Piwigo\Core\Config::enableExtensionsInstall());
+$template->assign('page_data_json', json_encode([
+    'str_delete_theme_confirm' => l10n('Are you sure you want to delete the theme "%s"?'),
+], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
 
 $template->set_filenames(['themes' => 'themes_installed.tpl']);
 $template->assign_var_from_handle('ADMIN_CONTENT', 'themes');

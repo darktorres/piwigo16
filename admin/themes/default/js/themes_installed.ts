@@ -1,5 +1,23 @@
 import GLightbox from 'glightbox';
 import 'glightbox/dist/css/glightbox.css';
+import { getPageData } from './page-data';
+
+interface ThemesInstalledPageData {
+    str_delete_theme_confirm: string;
+}
+
+const { str_delete_theme_confirm } = getPageData<ThemesInstalledPageData>();
+
+document.querySelectorAll<HTMLAnchorElement>('.delete-theme-button').forEach((btn) => {
+    const themeBox = btn.closest('.themeBox');
+    const theme_name = themeBox?.querySelector('.themeName')?.getAttribute('title') ?? '';
+    const alert_title = str_delete_theme_confirm.replace('%s', theme_name);
+    btn.addEventListener('click', (e) => {
+        if (!window.confirm(alert_title)) {
+            e.preventDefault();
+        }
+    });
+});
 
 GLightbox({ selector: 'a.preview-box' });
 

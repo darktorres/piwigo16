@@ -1,24 +1,7 @@
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
 {include file='include/colorbox.inc.tpl'}
-{footer_script}
-const title_msg = '{'Are you sure you want to delete this theme?'|@translate|@escape:'javascript'}';
-const confirm_msg = '{"Yes, I am sure"|@translate}';
-const cancel_msg = "{"No, I have changed my mind"|@translate}";
-Array.from(document.querySelectorAll(".delete-theme-button")).forEach(function(btn) {
-  let themeBox = btn.closest(".themeBox");
-  let themeNameEl = themeBox ? themeBox.querySelector(".themeName") : null;
-  let theme_name = themeNameEl ? themeNameEl.getAttribute("title") : '';
-  let title = '{'Are you sure you want to delete the theme "%s"?'|@translate|@escape:'javascript'}';
-  let alert_title = title.replace("%s", theme_name);
-  btn.addEventListener('click', function(e) {
-    if (!window.confirm(alert_title)) {
-      e.preventDefault();
-    }
-  });
-});
-{/footer_script}
-
-{combine_script id='themes_installed' load='footer' path='admin/themes/default/js/themes_installed.js'}
+<script id="pwg-page-data" type="application/json">{$page_data_json}</script>
+{combine_script id='themes_installed' load='footer' require='common' path='admin/themes/default/js/themes_installed.js'}
 
 <div id="themesContent">
 

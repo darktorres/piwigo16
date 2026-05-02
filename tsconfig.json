@@ -22,7 +22,9 @@
     "themes/standard_pages/js/**/*.ts",
     "src/types/**/*",
     "build/**/*.ts",
-    "vite.config.ts"
+    "vite.config.ts",
+    "playwright.config.ts",
+    "eslint.config.ts"
   ],
-  "exclude": ["node_modules", "dist", "tests/e2e/**", "playwright.config.ts"]
+  "exclude": ["node_modules", "dist", "tests/e2e/**"]
 }

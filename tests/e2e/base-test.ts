@@ -2,16 +2,15 @@
  * Base Test Configuration
  *
  * @remarks
- * Extended Playwright test base with automatic timeout configuration and
- * JavaScript coverage collection support. Tests are configured based on
- * tags in their titles:
+ * Extended Playwright test base with automatic timeout configuration. Tests
+ * are configured based on tags in their titles:
  * - @upload: 120s timeout (file uploads are slow)
  * - @slow: 60s timeout (complex operations)
  * - @quick: 15s timeout (fast tests)
  * - default: 30s timeout (standard tests)
  *
  * FIXTURES:
- * - page: Standard page with debug capture and coverage
+ * - page: Standard page with debug capture
  * - adminPage: Pre-authenticated page with fresh session per test (isolated, parallel-safe)
  * - adminContext: Authenticated browser context for creating multiple pages
  *
@@ -29,14 +28,6 @@ import {
 import { TEST_DATA } from './helpers/test-data';
 
 const baseUrl = process.env.PIWIGO_URL || 'http://localhost/piwigo16';
-
-// Import addCoverageReport from monocart-reporter for proper coverage handling
-let addCoverageReport: any;
-try {
-    addCoverageReport = require('monocart-reporter').addCoverageReport;
-} catch (e) {
-    // monocart-reporter not available, coverage won't be collected
-}
 
 /**
  * Get configured test timeout based on test title tags
@@ -115,17 +106,14 @@ type TestFixtures = {
 };
 
 /**
- * Extended test fixture with automatic timeout, coverage, and debug capture
+ * Extended test fixture with automatic timeout and debug capture
  *
  * @remarks
  * Provides configured test base that:
  * 1. Automatically sets timeout based on test title tags using {@link getConfiguredTimeout}
- * 2. Collects JavaScript coverage via page.coverage when COLLECT_COVERAGE=true
- * 3. Filters coverage to include only Piwigo's own JS files
- * 4. Reports coverage to monocart-reporter for V8 coverage analysis
- * 5. Automatically captures HTTP requests/responses, console logs, and page errors on test failure
- * 6. Provides `adminPage` fixture for pre-authenticated pages (isolated per test)
- * 7. Provides `adminContext` fixture for creating multiple authenticated pages
+ * 2. Automatically captures HTTP requests/responses, console logs, and page errors on test failure
+ * 3. Provides `adminPage` fixture for pre-authenticated pages (isolated per test)
+ * 4. Provides `adminContext` fixture for creating multiple authenticated pages
  *
  * Debug information is automatically saved to test-debug/ directory when tests fail,
  * including:
@@ -142,51 +130,12 @@ export const test = base.extend<TestFixtures>({
         const timeout = getConfiguredTimeout(testInfo.title);
         testInfo.setTimeout(timeout);
 
-        const collectCoverage = process.env.COLLECT_COVERAGE === 'true';
-
         // Set up automatic debug capture for all pages
         await setupHttpLogging(page);
         await setupConsoleLogging(page);
 
-        // Start JS coverage before test
-        if (collectCoverage) {
-            await page.coverage.startJSCoverage({
-                resetOnNavigation: false,
-            });
-        }
-
         // Run the test with the page
         await use(page);
-
-        // Stop JS coverage and report to monocart-reporter
-        if (collectCoverage) {
-            const coverage = await page.coverage.stopJSCoverage();
-
-            // Filter to only include Piwigo's own JS files
-            const filteredCoverage = coverage.filter((entry) => {
-                const url = entry.url;
-
-                // Exclude node_modules
-                if (url.includes('node_modules')) return false;
-
-                // Exclude 3rd-party files
-                const thirdPartyFiles = [
-                    'mcs.js', // Custom scrollbar library
-                    'pngfix.js', // IE PNG fix
-                    'fontawesome', // Font Awesome icons
-                ];
-                for (const file of thirdPartyFiles) {
-                    if (url.includes(file)) return false;
-                }
-
-                return true;
-            });
-
-            // Add coverage to monocart-reporter
-            if (filteredCoverage.length > 0 && addCoverageReport) {
-                await addCoverageReport(filteredCoverage, testInfo);
-            }
-        }
 
         // Capture and save debug context if test failed
         if (testInfo.status === 'failed' || testInfo.status === 'timedOut') {
@@ -269,45 +218,8 @@ export const test = base.extend<TestFixtures>({
         await setupHttpLogging(page);
         await setupConsoleLogging(page);
 
-        const collectCoverage = process.env.COLLECT_COVERAGE === 'true';
-
-        // Start JS coverage before test
-        if (collectCoverage) {
-            await page.coverage.startJSCoverage({
-                resetOnNavigation: false,
-            });
-        }
-
         // Provide the authenticated page to the test
         await use(page);
-
-        // Stop JS coverage and report
-        if (collectCoverage) {
-            const coverage = await page.coverage.stopJSCoverage();
-            const filteredCoverage = coverage.filter((entry) => {
-                const url = entry.url;
-                if (url.includes('node_modules')) return false;
-                const thirdPartyDirs = ['/themes/default/js/plugins/', '/themes/default/js/ui/'];
-                for (const dir of thirdPartyDirs) {
-                    if (url.includes(dir)) return false;
-                }
-                const thirdPartyFiles = [
-                    'jquery.js',
-                    'jquery.min.js',
-                    'jquery.cookie.js',
-                    'mcs.js',
-                    'pngfix.js',
-                    'fontawesome',
-                ];
-                for (const file of thirdPartyFiles) {
-                    if (url.includes(file)) return false;
-                }
-                return true;
-            });
-            if (filteredCoverage.length > 0 && addCoverageReport) {
-                await addCoverageReport(filteredCoverage, testInfo);
-            }
-        }
 
         // Capture debug context if test failed
         if (testInfo.status === 'failed' || testInfo.status === 'timedOut') {

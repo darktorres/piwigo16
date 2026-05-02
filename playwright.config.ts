@@ -2,9 +2,6 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
     testDir: './tests/e2e',
-    // tests/e2e/specs/** and tests/e2e/pages/** are partial restorations that
-    // reference unresolved @base-test aliases. Mirroring tsconfig's exclude.
-    testIgnore: ['**/specs/**', '**/pages/**'],
     globalSetup: './tests/e2e/global-setup.ts',
     fullyParallel: false,
     forbidOnly: !!process.env.CI,

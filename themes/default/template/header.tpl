@@ -68,7 +68,7 @@
 {/if}
 </head>
 
-<body id="{$BODY_ID}" class="{foreach from=$BODY_CLASSES item=class}{$class} {/foreach}"  data-infos='{$BODY_DATA}'>
+<body id="{$BODY_ID}" class="{foreach from=$BODY_CLASSES item=class}{$class} {/foreach}"  data-infos='{$BODY_DATA}' data-error-icon="{$ROOT_URL}{$themeconf.icon_dir}/errors_small.png"{if isset($maxRequests)} data-max-requests="{$maxRequests}"{/if}>
 
 <div id="the_page">
 

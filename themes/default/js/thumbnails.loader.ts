@@ -1,7 +1,16 @@
+// Configuration is read from <body data-error-icon="..." data-max-requests="...">
+// (set by themes/default/template/header.tpl). Falling back to ambient globals
+// for any plugin that still defines `error_icon` / `max_requests` inline.
 declare var error_icon: string;
 
+const errorIconFromBody = document.body.dataset['errorIcon'];
+const maxRequestsFromBody = document.body.dataset['maxRequests'];
+
+if (errorIconFromBody && typeof error_icon === 'undefined') {
+    (window as any).error_icon = errorIconFromBody;
+}
 if (typeof max_requests === 'undefined') {
-    (window as any).max_requests = 3;
+    (window as any).max_requests = maxRequestsFromBody ? Number(maxRequestsFromBody) : 3;
 }
 
 class AjaxQueue {

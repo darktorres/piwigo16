@@ -1,6 +1,5 @@
 {if !$current.selected_derivative->is_cached()}
 {combine_script id='thumbnails.loader' path='themes/default/js/thumbnails.loader.js' load='footer'}
-{footer_script}var error_icon = "{$ROOT_URL}{$themeconf.icon_dir}/errors_small.png"{/footer_script}
 {/if}
 
 {if isset($current.path_ext) and $current.path_ext == 'pdf' and $current.filesize < $PDF_VIEWER_FILESIZE_THRESHOLD}

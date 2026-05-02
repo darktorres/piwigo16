@@ -205,32 +205,21 @@ is always `{"stat":"ok","result":...}` or `{"stat":"fail","err":N,"message":"...
 
 ---
 
-## CI gates
+## Local checks
 
-Three jobs per push; all must pass for merge.
+This is a personal fork without enforced CI. Run these locally before
+landing significant changes:
 
-### lint
-
-| Step | Command |
+| Check | Command |
 |---|---|
 | PHP format | `vendor/bin/pint --test` |
 | Static analysis | `vendor/bin/phpstan analyse --no-progress` |
-| Baseline guard | `bash tools/check-baseline.sh` |
 | Conf shape drift | `php tools/check-conf-shape.php` |
 | TypeScript check | `npm run typecheck` |
 | JS build | `npm run build` |
-| Tarball check | dev-deps must not leak into release tarball |
-| `strict_types` guard | every tracked PHP file must declare strict types |
-
-### unit
-
-`vendor/bin/phpunit --testsuite Unit` — no DB, no HTTP. Zero failures, zero risky tests.
-
-### e2e + integration
-
-Run the local Apache + MySQL stack (`http://localhost/piwigo16` with credentials
-in `.env.local`), then `npx playwright test` (15 specs) and
-`vendor/bin/phpunit --testsuite Integration` (`UpgradeChainTest`, `WsApiTest`).
+| Unit tests | `vendor/bin/phpunit --testsuite Unit` |
+| Integration tests | `vendor/bin/phpunit --testsuite Integration` (needs `.env.local`) |
+| E2E tests | `npx playwright test` (needs `.env.local` + local Apache up) |
 
 ---
 

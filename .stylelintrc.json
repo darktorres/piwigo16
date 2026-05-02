@@ -28,6 +28,7 @@
     "dist/**",
     "_data/**",
     "vendor/**",
+    "plugins/**",
     "tests/**",
     "themes/bootstrap_darkroom/css/**",
     "themes/modus/css/open-sans/**",

@@ -20,6 +20,8 @@ themes/default/js/plugins/selectize.*
 themes/elegant/admin/
 themes/modus/css/open-sans/
 themes/modus/css/fontello/
+admin/themes/default/fontello/
+admin/themes/default/fonts/
 plugins/
 package-lock.json
 composer.lock

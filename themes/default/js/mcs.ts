@@ -14,7 +14,6 @@ interface SliderConfig {
 interface McsPageData {
     global_params: any;
     search_id: string;
-    fullname_of_cat: Record<string, string>;
     show_filter_ratings: boolean;
     sliders: {
         filesizes?: SliderConfig;
@@ -23,7 +22,6 @@ interface McsPageData {
     };
     str_word_widget_label: string;
     str_tags_widget_label: string;
-    str_album_widget_label: string;
     str_author_widget_label: string;
     str_added_by_widget_label: string;
     str_filetypes_widget_label: string;
@@ -35,7 +33,6 @@ interface McsPageData {
     str_width_widget_label: string;
     str_height_widget_label: string;
     str_expert_widget_label: string;
-    str_search_in_ab: string;
     str_empty_search_top_alt: string;
     str_empty_search_bot_alt: string;
     str_ratios_label: Record<string, string>;
@@ -44,12 +41,10 @@ interface McsPageData {
 const {
     global_params,
     search_id,
-    fullname_of_cat,
     show_filter_ratings,
     sliders,
     str_word_widget_label,
     str_tags_widget_label,
-    str_album_widget_label,
     str_author_widget_label,
     str_added_by_widget_label,
     str_filetypes_widget_label,
@@ -61,7 +56,6 @@ const {
     str_width_widget_label,
     str_height_widget_label,
     str_expert_widget_label,
-    str_search_in_ab,
     str_empty_search_top_alt,
     str_empty_search_bot_alt,
     str_ratios_label,
@@ -82,7 +76,6 @@ let word_search_mode: string;
 let tag_search_str: string;
 let date_posted_str: string;
 let date_created_str: string;
-let album_widget_value: string;
 let author_search_str: string;
 let added_by_names: string[];
 let filetypes_search_str: string;
@@ -727,55 +720,10 @@ document.addEventListener('DOMContentLoaded', () => {
         empty_filters_list.push(PS_params.date_created_custom);
     }
 
-    // Setup album filter
+    // Album filter: server may pre-set global_params.fields.cat (from URL params);
+    // forward to PS_params so subsequent searches keep the category filter.
+    // The filter-album dropdown UI is not rendered by any public-theme template.
     if (global_params.fields.cat) {
-        document.querySelectorAll<HTMLElement>('.filter-album').forEach((el) => {
-            el.style.display = 'flex';
-        });
-        document
-            .querySelectorAll<HTMLInputElement>('.filter-manager-controller.album')
-            .forEach((el) => {
-                el.checked = true;
-            });
-
-        album_widget_value = '';
-        global_params.fields.cat.words.forEach((cat_id: string) => {
-            display_related_category(cat_id, fullname_of_cat[cat_id]);
-            album_widget_value += fullname_of_cat[cat_id] + ', ';
-        });
-
-        if (global_params.fields.cat.words && global_params.fields.cat.words.length > 0) {
-            document
-                .querySelectorAll<HTMLElement>('.filter-album')
-                .forEach((el) => el.classList.add('filter-filled'));
-            document.querySelectorAll<HTMLElement>('.filter-album .search-words').forEach((el) => {
-                el.innerHTML = album_widget_value.slice(0, -2);
-            });
-        } else {
-            document.querySelectorAll<HTMLElement>('.filter-album .search-words').forEach((el) => {
-                el.innerHTML = str_album_widget_label;
-            });
-        }
-
-        if (global_params.fields.cat.sub_inc) {
-            const searchSubCats = document.querySelector<HTMLInputElement>('#search-sub-cats');
-            if (searchSubCats) searchSubCats.checked = true;
-        }
-
-        document
-            .querySelectorAll<HTMLElement>('.filter-album .filter-actions .clear')
-            .forEach((el) => {
-                el.addEventListener('click', () => {
-                    const selCatsCont = document.querySelector<HTMLElement>(
-                        '.selected-categories-container'
-                    );
-                    if (selCatsCont) selCatsCont.innerHTML = '';
-                    const searchSubCatsInp =
-                        document.querySelector<HTMLInputElement>('#search-sub-cats');
-                    if (searchSubCatsInp) searchSubCatsInp.checked = false;
-                });
-            });
-
         PS_params.categories =
             global_params.fields.cat.words.length > 0 ? global_params.fields.cat.words : '';
         PS_params.categories_withsubs = global_params.fields.cat.sub_inc;
@@ -1952,66 +1900,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
     /**
-     * Filter Album
-     */
-    const filterAlbumEl = document.querySelector<HTMLElement>('.filter-album');
-    if (filterAlbumEl) {
-        filterAlbumEl.addEventListener('click', (e: Event) => {
-            const filterForm = filterAlbumEl.querySelector('.filter-form');
-            const target = e.target as HTMLElement;
-            if (
-                (filterForm && filterForm.contains(target)) ||
-                target.classList.contains('filter-form') ||
-                target.classList.contains('remove-item')
-            ) {
-                return;
-            }
-            const filterAlbumForm = document.querySelector<HTMLElement>('.filter-album-form');
-            if (!filterAlbumForm) return;
-
-            const isVisible =
-                filterAlbumForm.style.display !== 'none' && filterAlbumForm.offsetParent !== null;
-            filterAlbumForm.style.display = isVisible ? 'none' : '';
-
-            if (!isVisible) {
-                filterAlbumEl.classList.add('show-filter-dropdown');
-            } else {
-                filterAlbumEl.classList.remove('show-filter-dropdown');
-                global_params.fields.cat = {};
-                global_params.fields.cat.words = [];
-                global_params.fields.cat.sub_inc =
-                    document.querySelectorAll("input[name='search-sub-cats']:checked").length != 0;
-
-                PS_params.categories = '';
-                PS_params.categories_withsubs =
-                    document.querySelectorAll("input[name='search-sub-cats']:checked").length != 0;
-            }
-        });
-    }
-    document.querySelectorAll<HTMLElement>('.filter-album .filter-validate').forEach((el) => {
-        el.addEventListener('click', () => {
-            filterAlbumEl?.dispatchEvent(new Event('click'));
-            performSearch(PS_params, true);
-        });
-    });
-    document
-        .querySelectorAll<HTMLElement>('.filter-album .filter-actions .delete')
-        .forEach((el) => {
-            el.addEventListener('click', () => {
-                updateFilters('album', 'del');
-                performSearch(PS_params, true);
-                if (filterAlbumEl && !filterAlbumEl.classList.contains('filter-filled')) {
-                    filterAlbumEl.style.display = 'none';
-                    document
-                        .querySelectorAll<HTMLInputElement>('.filter-manager-controller.album')
-                        .forEach((inp) => {
-                            inp.checked = false;
-                        });
-                }
-            });
-        });
-
-    /**
      * Author Widget
      */
     const filterAuthorsEl = document.querySelector<HTMLElement>('.filter-authors');
@@ -2635,34 +2523,6 @@ function performSearch(params: Record<string, any>, reload: boolean = false): vo
                 el.classList.add(prefix_icon + 'cancel');
             });
         });
-}
-
-function add_related_category({
-    album,
-    addSelectedAlbum,
-}: {
-    album: { id: string; name: string };
-    addSelectedAlbum: () => void;
-}): void {
-    display_related_category(album.id, album.name);
-    document
-        .querySelector<HTMLElement>('.invisible-related-categories-select')
-        ?.insertAdjacentHTML('beforeend', `<option selected value="${album.id}"></option>`);
-    addSelectedAlbum();
-}
-
-function remove_related_category({ id_album }: { id_album: string }): void {
-    const el = document.getElementById(id_album);
-    if (el) el.parentElement?.remove();
-}
-
-function display_related_category(cat_id: string, cat_link_path: string): void {
-    document.querySelector<HTMLElement>('.selected-categories-container')?.insertAdjacentHTML(
-        'beforeend',
-        `<div class="breadcrumb-item">
-      <span class="link-path">${cat_link_path}</span><span id="${cat_id}" class="mcs-icon ${prefix_icon}cancel remove-item"></span>
-    </div>`
-    );
 }
 
 function updateFilters(filterName: string, mode: string): void {

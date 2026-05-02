@@ -13,7 +13,6 @@
 
     "common": "admin/themes/default/js/common.ts",
     "LocalStorageCache": "admin/themes/default/js/LocalStorageCache.ts",
-    "album_selector": "admin/themes/default/js/album_selector.ts",
     "addAlbum": "admin/themes/default/js/addAlbum.ts",
     "albums": "admin/themes/default/js/albums.ts",
     "batchManagerGlobal": "admin/themes/default/js/batchManagerGlobal.ts",

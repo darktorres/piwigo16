@@ -42,28 +42,6 @@ declare global {
         reverse(): void;
     };
 
-    // ── From admin/themes/default/js/album_selector.ts ──────────────────────
-    class AlbumSelector {
-        constructor(opts: {
-            selectedCategoriesIds?: (string | number)[];
-            selectAlbum?: (args: any) => void;
-            removeSelectedAlbum?: (args: any) => void;
-            showRootButton?: boolean;
-            adminMode?: boolean;
-            limitParam?: number;
-            currentAlbumId?: number;
-            modalTitle?: string;
-            modalSearchPlaceholder?: string;
-        });
-        open(): void;
-        close(): void;
-        remove_selected_album(id: string | number | undefined): void;
-        get_selected_albums(): (string | number)[];
-        select_album(id: string | number): void;
-        resetAll(): void;
-        hardUpdate(cats: (string | number)[]): void;
-    }
-
     // ── From themes/standard_pages/js/toaster.ts ─────────────────────────────
     function pwgToaster(info: { text: string; icon: 'success' | 'error'; time?: number }): void;
 
@@ -103,22 +81,6 @@ declare global {
         GroupsCache: new (...args: unknown[]) => unknown;
         UsersCache: new (...args: unknown[]) => unknown;
     }
-
-    // ── album_selector.ts — i18n strings emitted inline ─────────────────────
-    var str_album_modal_title: string;
-    var str_album_modal_placeholder: string;
-    var str_no_search_in_progress: string;
-    var str_result_limit: string;
-    var str_albums_found: string;
-    var str_album_found: string;
-    var str_album_selected: string;
-    var str_root: string;
-    var str_root_album_select: string;
-    var str_create_and_select: string;
-    var str_add_subcat_of: string;
-    var str_complete_name_field: string;
-    var str_an_error_has_occured: string;
-    var str_plus_albums_found: string;
 
     // ── standard_pages.ts ───────────────────────────────────────────────────
     var selected_language: string;

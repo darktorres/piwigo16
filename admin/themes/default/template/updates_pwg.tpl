@@ -17,47 +17,7 @@
 }());
 {/footer_script}
 
-{html_head}
-{literal}
-<style type="text/css">
-form { width: 750px; }
-fieldset { padding-bottom: 30px; }
-p, form p { text-align: left; margin-left:20px; }
-li { margin: 5px; }
-
-.badge-release {
-  padding:5px 10px;
-  border-radius: 5px;
-}
-
-a.badge-release:hover {
-  text-decoration:none;
-  color: currentColor;
-}
-
-.goto-update-page {
-  padding:5px 10px;
-  font-weight:bold;
-}
-
-.goto-update-page:hover {
-  text-decoration:none;
-}
-
-.update-recommendation {
-  margin-top:30px;
-}
-
-.goto-update-guide {
-  background-color: #F0F0F0;
-  padding: 10px;
-  font-weight: bold;
-}
-
-p.release .errors {margin:0}
-</style>
-{/literal}
-{/html_head}
+{combine_css path="admin/themes/default/css/pages/updates-pwg.css"}
 
 {if isset($MINOR_RELEASE_PHP_REQUIRED) and isset($MAJOR_RELEASE_PHP_REQUIRED)}
 <div class="warnings">

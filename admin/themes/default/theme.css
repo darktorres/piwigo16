@@ -1075,10 +1075,6 @@ li.menuLi {
 
 .pagination-arrow.rigth {
   transform: scale(-1, 1);
-  transform: scale(-1, 1);
-  transform: scale(-1, 1);
-  transform: scale(-1, 1);
-  transform: scale(-1, 1);
 }
 
 .pagination-arrow.unavailable {
@@ -2690,8 +2686,6 @@ div.jGrowl div.jGrowl-notification {
 
   display: none;
   border-radius: 5px;
-  border-radius: 5px;
-  border-radius: 5px;
 }
 
 .metasync-success {
@@ -2705,8 +2699,6 @@ div.jGrowl div.jGrowl-notification {
   background-color: #0a0;
   color: white;
   padding: 1px 5px;
-  border-radius: 10px;
-  border-radius: 10px;
   border-radius: 10px;
   margin-left: 5px;
 }
@@ -3410,7 +3402,6 @@ div.jGrowl div.jGrowl-notification {
   width: 200px;
   height: 40px;
   margin: 5px;
-  border-radius: 5px;
   border-radius: 5px;
   overflow: hidden;
 }
@@ -5188,7 +5179,6 @@ a#showPermissions:hover {
   position: absolute;
   top: 50%;
   transform: translate(-50%, -50%);
-  transform: translate(-50%, -50%);
   left: 50%;
 }
 
@@ -5520,7 +5510,6 @@ a#showPermissions:hover {
 
 .comments-advanced-filters .advanced-filter-select {
   min-width: 150px;
-  appearance: none;
   appearance: none;
 }
 
@@ -6215,8 +6204,6 @@ input[type="text"].dError {
   color: white;
   padding: 1px 5px;
   border-radius: 10px;
-  border-radius: 10px;
-  border-radius: 10px;
   margin-left: 5px;
 }
 
@@ -6237,8 +6224,6 @@ input[type="text"].dError {
 
 .remove-item {
   flex: 1;
-  animation: flexShrink 500ms ease forwards;
-  animation: flexShrink 500ms ease forwards;
   animation: flexShrink 500ms ease forwards;
 }
 
@@ -6464,7 +6449,6 @@ form.properties .groups .GroupContainer,
   left: 6px;
   bottom: 4px;
   transition: 0.4s;
-  transition: 0.4s;
 }
 
 .slider::after {
@@ -6488,8 +6472,6 @@ form.properties .groups .GroupContainer,
 }
 
 input:checked + .slider.small::before {
-  transform: translateX(12px);
-  transform: translateX(12px);
   transform: translateX(12px);
 }
 
@@ -6518,12 +6500,8 @@ input:checked + .slider.small::after {
 @keyframes activate_disabled {
   50% {
     transform: translateX(5px);
-    transform: translateX(5px);
-    transform: translateX(5px);
   }
   100% {
-    transform: translateX(0);
-    transform: translateX(0);
     transform: translateX(0);
   }
 }
@@ -6535,12 +6513,8 @@ input:checked + .slider.small::after {
 @keyframes desactivate_disabled {
   50% {
     transform: translateX(28px);
-    transform: translateX(28px);
-    transform: translateX(28px);
   }
   100% {
-    transform: translateX(33px);
-    transform: translateX(33px);
     transform: translateX(33px);
   }
 }
@@ -6827,7 +6801,6 @@ input:checked + .slider.small::after {
 }
 
 .jconfirmAlert .jconfirm-icon-c i {
-  padding: 5px 3px;
   border-radius: 60px;
   padding: 2px;
   font-size: 45px;
@@ -6927,8 +6900,6 @@ input:checked + .slider.small::after {
   height: 10px;
   border: solid white;
   border-width: 0 3px 3px 0;
-  transform: rotate(45deg);
-  transform: rotate(45deg);
   transform: rotate(45deg);
 }
 
@@ -7431,14 +7402,12 @@ a.group_users {
   z-index: 100;
   text-shadow: 0 0 20px rgb(0, 0, 0, 0.4);
   transition: opacity 200ms ease;
-  transition: opacity 200ms ease;
 }
 .preview-box.icon-zoom-in:hover::before {
   opacity: 0.9;
 }
 .preview-box.icon-zoom-in img {
   opacity: 1;
-  transition: opacity 200ms ease;
   transition: opacity 200ms ease;
   max-width: 100%;
 }
@@ -7486,10 +7455,6 @@ a.group_users {
   z-index: 100;
   margin: unset;
   transform: translate(-50%, -50%);
-  transform: translate(-50%, -50%);
-  transition:
-    opacity 0.2s ease-in-out,
-    transform 0.3s ease-in-out;
   transition:
     opacity 0.2s ease-in-out,
     transform 0.3s ease-in-out;
@@ -7505,7 +7470,6 @@ a.group_users {
 }
 .see-out:hover p {
   opacity: 1;
-  transform: translate(-50%, -60%);
   transform: translate(-50%, -60%);
 }
 .see-out p i {
@@ -8246,10 +8210,6 @@ li.plupload_delete a:hover {
 }
 
 #batchManagerGlobal .thumbSelected img {
-  filter: brightness(60%);
-  filter: brightness(60%);
-  filter: brightness(60%);
-  filter: brightness(60%);
   filter: brightness(60%);
 }
 #batchManagerGlobal li.thumbSelected:hover .font-checkbox [class*="icon-check"]::before {

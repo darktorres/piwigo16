@@ -32,7 +32,10 @@
     "themes/modus/css/open-sans/**",
     "themes/modus/css/fontello/**",
     "themes/default/fontello/**",
+    "themes/default/vendor/fontello/**",
     "themes/default/js/plugins/**",
-    "themes/elegant/admin/**"
+    "themes/elegant/admin/**",
+    "admin/themes/default/fontello/**",
+    "admin/themes/default/fonts/**"
   ]
 }

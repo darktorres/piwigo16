@@ -194,29 +194,4 @@ document.getElementById('action-delete-picture').addEventListener('click', funct
 
 {include file='include/album_selector.inc.tpl'}
 
-<style>
-.selectize-input  .item,
-.selectize-input .item.active {
-  background-image:none !important;
-  background-color: #ffa646 !important;
-  border-color: transparent !important;
-  color: black !important;
-
-  border-radius: 20px !important;
-}
-
-.selectize-input .item .remove,
-.selectize-input .item .remove {
-  background-color: transparent !important;
-  border-top-right-radius: 20px !important;
-  border-bottom-right-radius: 20px !important;
-  color: black !important;
-  
-  border-left: 1px solid transparent !important;
-
-}
-.selectize-input .item .remove:hover,
-.selectize-input .item .remove:hover {
-  background-color: #ff7700 !important;
-}
-</style>
+{combine_css path="admin/themes/default/css/pages/picture_modify.css"}

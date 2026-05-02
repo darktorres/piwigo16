@@ -192,7 +192,7 @@
 
   <div class="filterActions">
     <div id="addFilter">
-      <div class="addFilter-button icon-plus" onclick="var el=document.querySelector('.addFilter-dropdown');if(el)el.style.display=getComputedStyle(el).display==='none'?'block':'none'">{'Add a filter'|@translate}</div>
+      <div class="addFilter-button icon-plus">{'Add a filter'|@translate}</div>
       <div class="addFilter-dropdown">
         <a data-value="filter_prefilter" {if isset($filter.prefilter)}class="disabled"{/if}>{'Predefined filter'|@translate}</a>
         <a data-value="filter_category" {if isset($filter.category)}class="disabled"{/if}>{'Album'|@translate}</a>

@@ -100,6 +100,15 @@ document.addEventListener('DOMContentLoaded', () => {
         a.addEventListener('click', () => filter_enable(a.dataset['value'] ?? ''));
     });
 
+    document.querySelectorAll<HTMLElement>('.addFilter-button').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const dropdown = document.querySelector<HTMLElement>('.addFilter-dropdown');
+            if (!dropdown) return;
+            const isHidden = getComputedStyle(dropdown).display === 'none';
+            dropdown.style.display = isHidden ? 'block' : 'none';
+        });
+    });
+
     document.getElementById('removeFilters')?.addEventListener('click', (e) => {
         e.preventDefault();
         document.querySelectorAll<HTMLElement>('#filterList li').forEach(li => filter_disable(li.id));

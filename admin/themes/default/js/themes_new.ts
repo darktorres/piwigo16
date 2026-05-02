@@ -1,3 +1,16 @@
+document.querySelectorAll<HTMLImageElement>('img[data-fallback-src]').forEach((img) => {
+    const applyFallback = (): void => {
+        const fallback = img.getAttribute('data-fallback-src');
+        if (fallback && img.src !== fallback) {
+            img.src = fallback;
+        }
+    };
+    img.addEventListener('error', applyFallback);
+    if (img.complete && img.naturalWidth === 0) {
+        applyFallback();
+    }
+});
+
 window.addEventListener('load', () => {
     document.querySelectorAll<HTMLElement>('.themeBox').forEach((box) => {
         const screenImage = box.querySelector<HTMLImageElement>('.preview-box img');

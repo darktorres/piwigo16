@@ -89,6 +89,7 @@ export default defineConfig({
                 'user_list':          r('admin/themes/default/js/user_list.ts'),
                 'install':            r('admin/themes/default/js/install.ts'),
                 'check_integrity':    r('admin/themes/default/js/check_integrity.ts'),
+                'popuphelp_window':   r('admin/themes/default/js/popuphelp_window.ts'),
             },
             output: {
                 entryFileNames: 'assets/[name]-[hash].js',

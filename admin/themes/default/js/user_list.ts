@@ -1543,4 +1543,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+document.querySelectorAll<HTMLFormElement>('form[data-prevent-submit]').forEach((form) => {
+    form.addEventListener('submit', (e) => e.preventDefault());
+});
+
 export {};

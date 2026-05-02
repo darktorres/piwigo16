@@ -121,6 +121,9 @@ $template->assign(
     'F_ACTION'  => get_root_url().'admin.php'.get_query_string_diff(['action','site','pwg_token']),
     'PWG_TOKEN' => get_pwg_token(),
     'ADMIN_PAGE_TITLE' => l10n('Synchronize'),
+    'page_data_json' => json_encode([
+        'str_delete_site_confirm' => l10n('Are you sure you want to delete this site?'),
+    ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE),
     ]
 );
 

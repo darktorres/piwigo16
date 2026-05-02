@@ -1,49 +1,5 @@
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-
-{footer_script}
-(function(){
-  var targets = {
-    'input[name="comments_validation"]' : '#email_admin_on_comment_validation',
-    'input[name="user_can_edit_comment"]' : '#email_admin_on_comment_edition',
-    'input[name="user_can_delete_comment"]' : '#email_admin_on_comment_deletion'
-  };
-
-  for (var selector in targets) {
-    var target = targets[selector];
-
-    var targetEl = document.querySelector(target);
-    var selectorEl = document.querySelector(selector);
-    if (targetEl && selectorEl) {
-      targetEl.style.display = selectorEl.checked ? '' : 'none';
-
-      (function(targetSel, sourceSel) {
-        var src = document.querySelector(sourceSel);
-        var tgt = document.querySelector(targetSel);
-        if (src && tgt) {
-          src.addEventListener('change', function() {
-            tgt.style.display = this.checked ? '' : 'none';
-          });
-        }
-      })(target, selector);
-    }
-  };
-
-  function check_activate_comments() {
-    var checkbox = document.querySelector("input[name=activate_comments]");
-    var container = document.getElementById("comments_param_container");
-    if (checkbox && container) {
-      container.style.display = checkbox.checked ? '' : 'none';
-    }
-  }
-  check_activate_comments();
-  var activateCheckbox = document.querySelector("input[name=activate_comments]");
-  if (activateCheckbox) {
-    activateCheckbox.addEventListener("change", function() {
-      check_activate_comments();
-    });
-  }
-}());
-{/footer_script}
+{combine_script id='configuration_comments' load='footer' require='common' path='admin/themes/default/js/configuration_comments.js'}
 
 <form method="post" action="{$F_ACTION}" class="properties">
 

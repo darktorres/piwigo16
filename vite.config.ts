@@ -41,6 +41,7 @@ export default defineConfig({
                 'cat_perm':           r('admin/themes/default/js/cat_perm.ts'),
                 'cat_search':         r('admin/themes/default/js/cat_search.ts'),
                 'comments':           r('admin/themes/default/js/comments.ts'),
+                'configuration_comments': r('admin/themes/default/js/configuration_comments.ts'),
                 'datepicker':         r('admin/themes/default/js/datepicker.ts'),
                 'group_list':         r('admin/themes/default/js/group_list.ts'),
                 'history':            r('admin/themes/default/js/history.ts'),

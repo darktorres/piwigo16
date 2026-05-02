@@ -54,52 +54,13 @@
         </table>
 
         <p>
-			{literal}
-			<script type="text/javascript">
-			document.addEventListener('DOMContentLoaded', function() {
-
-				var checkAllLink = document.getElementById("checkAllLink");
-				if (checkAllLink) {
-					checkAllLink.addEventListener('click', function(e) {
-						e.preventDefault();
-						document.querySelectorAll("#c13y input[type=checkbox]").forEach(function(cb) {
-							cb.checked = true;
-						});
-					});
-				}
-
-				var uncheckAllLink = document.getElementById("uncheckAllLink");
-				if (uncheckAllLink) {
-					uncheckAllLink.addEventListener('click', function(e) {
-						e.preventDefault();
-						document.querySelectorAll("#c13y input[type=checkbox]").forEach(function(cb) {
-							cb.checked = false;
-						});
-					});
-				}
-
-			});
-			function DeselectAll( formulaire )
-			{
-				var elts = formulaire.elements;
-				for(var i=0; i <elts.length; i++)
-				{
-					if (elts[i].type=='checkbox')
-						elts[i].checked = false;
-				}
-			}
-			</script>
-			{/literal}
+          {combine_script id='check_integrity' load='footer' path='admin/themes/default/js/check_integrity.js'}
           {if $c13y_show_submit_ignore}
-              <a href="#" id="checkAllLink">{'Check all'|@translate}</a>
-            / <a href="#" id="uncheckAllLink">{'Uncheck all'|@translate}</a>
+              <a href="#" data-c13y-check-all>{'Check all'|@translate}</a>
+            / <a href="#" data-c13y-uncheck-all>{'Uncheck all'|@translate}</a>
           {/if}
           {if isset($c13y_do_check)}
-            / <a href="#" onclick="DeselectAll(document.getElementById('c13y'));
-            {foreach from=$c13y_do_check item=ID}
-              document.getElementById('c13y_selection-{$ID}').checked = true;
-            {/foreach}
-            return false;">{'Check automatic corrections'|@translate}</a>
+            / <a href="#" data-c13y-check-auto="{$c13y_do_check|json_encode|escape:'html'}">{'Check automatic corrections'|@translate}</a>
           {/if}
         </p>
 

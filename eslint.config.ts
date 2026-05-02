@@ -25,7 +25,6 @@ export default tseslint.config(
         ],
     },
     js.configs.recommended,
-    ...tseslint.configs.recommendedTypeChecked,
     {
         files: ['**/*.{js,mjs,cjs}'],
         languageOptions: {
@@ -51,6 +50,7 @@ export default tseslint.config(
     },
     {
         files: ['**/*.ts'],
+        extends: [...tseslint.configs.recommendedTypeChecked],
         languageOptions: {
             parserOptions: {
                 projectService: true,

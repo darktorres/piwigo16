@@ -36,7 +36,7 @@
 
 <fieldset>
   <legend><span class="icon-lock icon-blue"></span>{'Permalinks'|@translate}</legend>
-<table class="table2" style="margin:0">
+<table class="table2 u-m-0">
 	<tr class="throw">
 		<td>Id {$SORT_ID}</td>
 		<td>{'Album'|@translate} {$SORT_NAME}</td>
@@ -54,7 +54,7 @@
 
 <fieldset>
   <legend><span class="icon-lock icon-red"></span>{'Permalink history'|@translate} <a name="old_permalinks"></a></legend>
-<table class="table2" style="margin:0">
+<table class="table2 u-m-0">
 	<tr class="throw">
 		<td>Id {$SORT_OLD_CAT_ID}</td>
 		<td>{'Album'|@translate}</td>

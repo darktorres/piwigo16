@@ -60,7 +60,7 @@
       <a href="#" id="showDetails"{if isset($ferrors)} hidden{/if}>{'show details'|translate}</a>
     </div>
 
-    <table style="margin:0">
+    <table class="u-m-0">
     {foreach from=$derivatives item=d key=type}
       <tr>
         <td>
@@ -133,12 +133,12 @@
     {/foreach}
     </table>
 
-  <p style="margin:10px 0 0 0;{if isset($ferrors)} display:block;{/if}" class="sizeDetails">
+  <p class="sizeDetails sizeDetails-row{if isset($ferrors)} u-d-block{/if}">
     {'Image Quality'|translate}
     <input type="text" name="resize_quality" value="{$resize_quality}" size="3" maxlength="3"{if isset($ferrors.resize_quality)} class="dError"{/if}> %
     {if isset($ferrors.resize_quality)}<span class="dErrorDesc" title="{$ferrors.resize_quality}">!</span>{/if}
   </p>
-  <p style="margin:10px 0 0 0;{if isset($ferrors)} display:block;{/if}" class="sizeDetails">
+  <p class="sizeDetails sizeDetails-row{if isset($ferrors)} u-d-block{/if}">
     <a href="{$F_ACTION}&action=restore_settings" class="restore-settings-button">{'Reset to default values'|translate}</a>
   </p>
 

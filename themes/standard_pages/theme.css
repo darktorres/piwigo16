@@ -390,8 +390,13 @@ a.btn-main{
   display:none;
 }
 
-#error_api_key_date.error-message {
+#error_api_key_date.error-message,
+.error-message--form-level {
   bottom: -20px;
+}
+
+.error-message--form-level {
+  display: block;
 }
 
 .error-message i,

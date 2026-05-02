@@ -7,7 +7,7 @@
 
 <fieldset class="">
   <legend><span class="icon-globe icon-blue"></span>{'Global Gallery Actions'|translate}</legend>
-  <div style="display:flex;flex-wrap: wrap;">
+  <div class="u-flex-wrap">
 {if (isset($U_MAINT_LOCK_GALLERY))}
     <a href="{$U_MAINT_LOCK_GALLERY}" class="lock-gallery-button {$maint_actions['lock_gallery']['icon']} maintenance-action">{$maint_actions['lock_gallery']['label']}</a>
 {else}
@@ -24,7 +24,7 @@
 </fieldset>
 <fieldset class="">
   <legend><span class="icon-trash-1 icon-green"></span>{'Purge Actions'|@translate}</legend>
-  <div style="display:flex;flex-wrap: wrap;">
+  <div class="u-flex-wrap">
     <a href="{$U_MAINT_USER_CACHE}" class="{$maint_actions['user_cache']['icon']} maintenance-action">{$maint_actions['user_cache']['label']}</a>
     <a href="{$U_MAINT_ORPHAN_TAGS}" class="{$maint_actions['delete_orphan_tags']['icon']} maintenance-action">{$maint_actions['delete_orphan_tags']['label']}</a>
     <a href="{$U_MAINT_HISTORY_DETAIL}" class="{$maint_actions['history_detail']['icon']} maintenance-action purge-history-detail-button">{$maint_actions['history_detail']['label']}</a>
@@ -38,7 +38,7 @@
 {if isset($advanced_features) and !(count($advanced_features) < 1)}
   <fieldset class="">
   <legend><span class="icon-puzzle icon-purple"></span>{'Advanced features'|@translate}</legend>
-  <div style="display:flex;flex-wrap: wrap;">
+  <div class="u-flex-wrap">
   {foreach from=$advanced_features item=feature key=key name=name}
     <a href="{$feature.URL}" class="{$feature.ICON} maintenance-action">{$feature.CAPTION}</a>
   {/foreach}

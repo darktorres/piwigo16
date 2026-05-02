@@ -45,7 +45,7 @@ CI fails any PR introducing PSR-12 violations.
 
 ## #2 — `declare(strict_types=1)` sweep
 
-**Status:** ✅ Done (file coverage); enforcement rule still TODO &nbsp;|&nbsp; **Size:** S
+**Status:** ✅ Done &nbsp;|&nbsp; **Size:** S
 
 ### Goal
 
@@ -54,13 +54,8 @@ Every file under `src/`, `include/`, and `admin/` declares `strict_types=1`. A P
 ### Current state
 
 - `grep -rL 'declare(strict_types=1);' src/ admin/ include/ --include='*.php'` is empty — every PHP file in scope has the declaration. No deferral to #17 was needed; the sweep was global.
-- No PHPStan rule enforces the declaration on new files yet.
-
-### Remaining work
-
-1. **Add `Piwigo\Tools\PhpStan\StrictTypesRequiredRule`** under `tools/phpstan/`. The rule fires when a file inside `src/`, `include/`, or `admin/` is missing the declaration. Register it in `phpstan.neon` alongside `NoGlobalInSrcRule` and `NoDynamicNewRule`.
-
-2. **Run PHPStan.** New rule should report zero hits on a clean sweep.
+- `Piwigo\Tools\PhpStan\StrictTypesRequiredRule` lives at `tools/phpstan/StrictTypesRequiredRule.php` and is registered in `phpstan.neon` alongside `NoDynamicNewRule` and `NoGlobalInSrcRule`. It walks `FileNode` and flags any file under `src/`, `include/`, or `admin/` that lacks `declare(strict_types=1);`. PHPStan reports zero hits on the clean tree, and a probe file dropped under `src/Piwigo/` confirmed the rule fires on regression.
+- The CI side ("fails CI if a new file is added without it") depends on PHPStan being a CI job — that lands with #27.
 
 ### Verification
 

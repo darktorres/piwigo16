@@ -1,40 +1,5 @@
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-
-{footer_script}
-
-const cat_nav = '{$CATEGORIES_NAV|escape:javascript}';
-
-function checkWhoOptions() {
-  var checked = document.querySelector("input[name=who]:checked");
-  var option = checked ? checked.value : '';
-  document.querySelectorAll(".who_option").forEach(function(el) { el.style.display = 'none'; });
-  if (option) {
-    document.querySelectorAll(".who_" + option).forEach(function(el) { el.style.display = ''; });
-  }
-}
-
-document.querySelectorAll("input[name=who]").forEach(function(el) {
-  el.addEventListener('change', checkWhoOptions);
-});
-checkWhoOptions();
-
-document.querySelector("form#categoryNotify")?.addEventListener('submit', function(e) {
-  var checked = document.querySelector("input[name=who]:checked");
-  var who_option = checked ? checked.value : '';
-  var who_selected = false;
-  var selEl = document.querySelector(".who_" + who_option + " select");
-  if (selEl && selEl.querySelectorAll("option:checked").length > 0) {
-    who_selected = true;
-  }
-  var errEl = document.querySelector(".actionButtons .errors");
-  if (!who_selected) {
-    if (errEl) errEl.style.display = '';
-    e.preventDefault();
-  } else {
-    if (errEl) errEl.style.display = 'none';
-  }
-});
-{/footer_script}
+{combine_script id='album_notification' load='footer' path='admin/themes/default/js/album_notification.js'}
 
 {html_style}
 .who_option {

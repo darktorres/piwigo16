@@ -48,6 +48,7 @@ export default defineConfig({
                 'updates_pwg':        r('admin/themes/default/js/updates_pwg.ts'),
                 'site_manager':       r('admin/themes/default/js/site_manager.ts'),
                 'permalinks':         r('admin/themes/default/js/permalinks.ts'),
+                'album_notification': r('admin/themes/default/js/album_notification.ts'),
                 'updates_ext':        r('admin/themes/default/js/updates_ext.ts'),
                 'themes_installed':   r('admin/themes/default/js/themes_installed.ts'),
                 'themes_new':         r('admin/themes/default/js/themes_new.ts'),

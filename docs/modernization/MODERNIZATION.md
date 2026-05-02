@@ -242,8 +242,9 @@ Summary table:
 | 9   | jQuery upgrade / incremental replacement                             | XL   | Planning only                                                       |
 | 10  | Overdue TODO cleanup (34 markers)                                    | S    | Not started                                                         |
 | 11  | Eliminate remaining `window.*` data-bridge globals (~20 assignments) | M    | ✅ Done — see ROADMAP-TS.md #3 and PLAN-inline-assets-extraction.md |
+| 12  | Migrate vendored frontend libs to npm (video.js ×4, Leaflet 0.7, CodeMirror 2, Open Sans, jquery.tablesorter, jquery.addtags) | L    | Not started — see ROADMAP-TS.md #6                                  |
 
-Recommended sequence: 1 → 2 → 10 → 3 → 4 → 5 → 7 → 8 → 6 → 9 → 11.
+Recommended sequence: 1 → 2 → 10 → 3 → 4 → 5 → 7 → 8 → 6 → 9 → 12 → 11.
 
 ---
 

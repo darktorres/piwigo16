@@ -314,3 +314,105 @@ npm run build && npx size-limit    # all entrypoints within budget
 ```
 
 A PR that adds `import _ from 'lodash'` (without tree-shaking) is rejected by the CI gate.
+
+---
+
+## #6 — Migrate vendored frontend libraries to npm
+
+**Status:** Not started &nbsp;|&nbsp; **Size:** L
+
+### Goal
+
+Replace 3rd-party JS/CSS libraries currently checked into the repo under `plugins/`, `admin/themes/`, and `themes/standard_pages/fonts/` with versioned npm dependencies. Outcome: a single canonical version per library, no ~12 MB of stale `video-js-{4,5,6,7}` mirrors, and a clean Stylelint/ESLint scope (vendor stops appearing in lint output by virtue of being in `node_modules/`).
+
+### Current state — vendored inventory
+
+| Lib | Location | Pinned version | Approx size | npm package |
+|-----|----------|---------------:|------------:|-------------|
+| video.js (×4 mirrors) | `plugins/piwigo-videojs/video-js-{4,5,6,7}/` | 4.12.15 / 5.x / 6.12.1 / 7.21.5 | ~12 MB | `video.js` (8.x) |
+| Leaflet | `plugins/piwigo-openstreetmap/leaflet/leaflet.js` | **0.7.7** (2015) | ~135 KB | `leaflet` (1.9+) |
+| Leaflet plugins (×8) | `plugins/piwigo-openstreetmap/leaflet/*` (MarkerCluster, Search, Elevation, MiniMap, contextmenu, providers, EditInOSM, omnivore, jcarousel, qleaflet) | all 0.7-era | ~500 KB | `leaflet.markercluster`, `leaflet-search`, `leaflet.contextmenu`, `leaflet-providers`, `leaflet.elevation`, `leaflet-control-minimap`, `leaflet-omnivore` |
+| CodeMirror | `plugins/LocalFilesEditor/codemirror/` | ~v2 (1915 LOC) | ~70 KB | `codemirror` (v6 — full rewrite; `codemirror@5` for low-risk path) |
+| Open Sans webfont | `admin/themes/default/fonts/open-sans/` | locally generated subset | ~250 KB | `@fontsource/open-sans` |
+| Open Sans variable font | `themes/standard_pages/fonts/OpenSans-VariableFont_wdth,wght.ttf` | Google Fonts dump | ~340 KB | `@fontsource-variable/open-sans` |
+| jQuery tablesorter | `plugins/nbc_ThemeChanger/include/jquery.tablesorter.js` | ancient | ~15 KB | `tablesorter` |
+| jquery.addtags (token-input) | `plugins/user_tags/js/jquery.addtags.js` | packed/obfuscated | ~3 KB | replace with `tom-select` (already a Piwigo dep) — drops the jQuery dependency |
+
+**Stays as static asset (cannot move to npm):**
+
+- Fontello custom-glyph subsets in `admin/themes/default/fontello/`, `themes/default/vendor/fontello/`, `plugins/piwigo-openstreetmap/fontello/`. These are project-specific glyph builds from fontello.com, not packageable.
+- Bundled themes (`themes/elegant`, `themes/modus`, `themes/smartpocket`, `themes/bootstrap_darkroom`) — themes, not libs; out of 16.x core scope per ROADMAP-CSS.
+- `themes/default/js/plugins/piecon.ts` — already authored TS, ~100 LOC, no maintenance burden.
+
+**Already migrated:** PHP libs (`smarty`, `phpmailer`, `minify`, `pclzip`, `feedcreator`, `jshrink`, `passwordhash`, `mdetect`, `emogrifier`, `phpqrcode`) all moved to Composer in 16.x. `pint.json`'s `exclude` still lists them — stale entries; harmless, worth a one-line cleanup.
+
+### Tiers (recommended order)
+
+**Tier 1 — Quick wins (S, ≤1 day each).**
+
+1. `@fontsource/open-sans` replaces `admin/themes/default/fonts/open-sans/`. Vite serves the WOFF2/CSS via npm; delete the in-repo dir.
+2. `@fontsource-variable/open-sans` replaces `themes/standard_pages/fonts/OpenSans-VariableFont_wdth,wght.ttf`.
+3. `tablesorter` replaces `plugins/nbc_ThemeChanger/include/jquery.tablesorter.js`.
+4. **`tom-select` swap for `user_tags/jquery.addtags.js`** — already a Piwigo dep; deletes the jQuery dependency for that plugin entirely. Convert `init.php`/templates to load the Piwigo-shared tom-select bundle.
+
+**Tier 2 — Stylelint / ESLint scope cleanup (XS, parallel to Tier 1).**
+
+Until the vendor moves out, add these to `.stylelintrc.json` `ignoreFiles` so they stop polluting lint output:
+
+```json
+"plugins/piwigo-videojs/**",
+"plugins/piwigo-openstreetmap/leaflet/**",
+"plugins/piwigo-openstreetmap/fontello/**",
+"plugins/LocalFilesEditor/codemirror/**"
+```
+
+When Tier 3/4/5 land, the entries become unneeded and can be removed.
+
+**Tier 3 — video.js consolidation (M).**
+
+Drop `video-js-4` and `video-js-5` outright (vintage admins almost certainly absent in 16.x install base). Pin npm `video.js@7` (or `@8` if a smoke pass on the test gallery passes). Port `videojs.thumbnails` / `videojs.watermark` / `videojs.zoomrotate` / `videojs-resolution-switcher` to their npm equivalents. Net: ~12 MB removed from repo, single version to maintain.
+
+**Tier 4 — Leaflet 0.7 → 1.9 (L).**
+
+Highest blast-radius. Plan:
+
+1. Audit which Leaflet plugins `osmmap.php`/`osmmap2.php`/`osmmap3.php`/`osmmap4.php` actually call (some bundled plugins may be dead weight).
+2. Stand up `leaflet@1.9` + `leaflet.markercluster` + `leaflet-search` on a feature branch. The 0.7→1.x core-API delta is mostly tile-layer/marker construction; plugin APIs vary.
+3. Replace `Leaflet.Elevation-0.0.2` → `@raruto/leaflet-elevation`, `Control.MiniMap.js` → `leaflet-control-minimap`, `leaflet-omnivore.min.js` → `leaflet-omnivore`. `qleaflet.jquery.js` is a thin jQuery wrapper — drop or rewrite without jQuery.
+4. Smoke-test all four `osmmap*.php` entry pages and the gallery picture-page map widget across a few sample galleries with multi-marker clusters.
+
+**Tier 5 — CodeMirror (M).**
+
+Two paths:
+
+- **Low risk:** `codemirror@5` (still maintained as a legacy line). Drop-in close to v2; `LocalFilesEditor`'s wiring needs minor edits.
+- **Long term:** `codemirror@6` — rewrite. Different module shape, separate language packages (`@codemirror/lang-php`, etc.). Better future but full editor re-init.
+
+Pick one based on appetite; v5 is the recommended default unless someone wants to invest.
+
+### Verification
+
+After each tier:
+
+```bash
+# Vendor disappears from the working tree
+git ls-files plugins/piwigo-videojs/video-js-{4,5}/        # empty (after Tier 3)
+git ls-files plugins/piwigo-openstreetmap/leaflet/         # contains only Piwigo-authored glue (after Tier 4)
+git ls-files plugins/LocalFilesEditor/codemirror/          # empty (after Tier 5)
+git ls-files admin/themes/default/fonts/open-sans/         # empty (after Tier 1.1)
+
+# Dependencies show up where they belong
+jq '.dependencies' package.json | grep -E "video.js|leaflet|codemirror|@fontsource"
+
+# Lint output stops mentioning vendor paths
+npm run lint:css 2>&1 | grep -E "(piwigo-videojs|piwigo-openstreetmap|codemirror|open-sans)" # empty
+
+# Bundle still builds + smoke-tests pass
+npm run build
+npx playwright test
+```
+
+### Notes
+
+- The Stylelint ignore additions in **Tier 2** can land immediately as a single config commit; they're a no-op on the underlying code and stop noise in the meantime.
+- Tier 3+ should each produce two commits: one to add the npm dep + glue, one to delete the vendor dir. Two commits make the actual replacement reviewable; the deletion commit is otherwise a 12 MB diff that hides the real change.

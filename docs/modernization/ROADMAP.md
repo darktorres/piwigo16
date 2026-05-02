@@ -8,59 +8,76 @@ Recommended sequence: 1 → 2 → 10 → 3 → 4 → 5 → 7 → 8 → 6 → 9 �
 
 ## #1 — PHPStan level 9 / baseline elimination
 
-**Status:** WIP &nbsp;|&nbsp; **Size:** L
+**Status:** Done &nbsp;|&nbsp; **Size:** L
 
-### Goal
+### Outcome
 
-Delete `phpstan-baseline.neon` entirely and run PHPStan at level 9 with zero errors. Level 9 adds `treatPhpDocTypesAsCertain: true` and strict mixed-type checks on top of the current level 8 rules.
-
-### Current state
-
-- Level 8, baseline holds **625 errors**.
-- Most remaining errors are in `include/` free-function files and WS layer (`include/ws_core.inc.php`, `include/ws_functions/`).
-
-### Steps
-
-1. **Categorise the 625 errors.** Run `vendor/bin/phpstan analyse --error-format=json | jq '[.files[].messages[].message] | group_by(.) | map({msg: .[0], count: length}) | sort_by(-.count)'` to rank by message type. Typical clusters at this level: `mixed` return values from `pwg_db_fetch_assoc()`, unsafe array access on `mixed`, `never`-return enforcement, unresolved template types in collections.
-
-2. **Fix the dblayer mixed chain.** `pwg_db_fetch_assoc()` returns `array<string,mixed>|false`. Every caller that blindly indexes the result without a null-check generates a level-7/8 error. Add `assert(is_array($row))` guards at the narrowest choke-points (typically the while-loop site) — one pattern fix silences ~80 errors.
-
-3. **Annotate free functions in `include/functions.inc.php`.** Functions whose return type is `mixed` because they call `unserialize()` or `json_decode()` should narrow the annotation to the concrete shape (e.g., `array<string,mixed>|false` for `get_user_permissions()`). Add `@phpstan-return` where the native return type must stay `mixed` for BC.
-
-4. **Address the WS layer.** `include/ws_core.inc.php` still defines the classes (see #3). After #3 is done, `ws_core.inc.php` becomes a thin constants file — its class-level errors disappear automatically.
-
-5. **Bump `phpstan.neon` to level 9.** Add `treatPhpDocTypesAsCertain: true`. Run analysis; new errors will be narrower (false-positive-prone around `is_int`/`is_string` guards). Suppress false positives with `@phpstan-ignore-next-line` only, never with baseline.
-
-6. **Delete `phpstan-baseline.neon`.** Remove the `includes: [phpstan-baseline.neon]` line. CI (`bash tools/check-baseline.sh`) must exit 0 with no baseline file.
+`phpstan.neon` runs clean at `level: 9` (`treatPhpDocTypesAsCertain` implicit at this level) with zero errors and no baseline file. The dblayer mixed-chain narrowing, free-function PHPDoc tightening, and WS-layer cleanup all landed across the level-8 → level-9 sweep that closed out on `16.x-rewrite`. Subsequent re-runs at level 10 surface a new class of `mixed`-propagation errors driven by procedural `global` declarations — that work is tracked under #2 (eliminate globals), not as residual #1 work.
 
 ### Verification
 
 ```bash
-vendor/bin/phpstan analyse --no-progress   # exit 0, no baseline referenced
-ls phpstan-baseline.neon                   # must NOT exist
+vendor/bin/phpstan analyse --no-progress   # [OK] No errors
+ls phpstan-baseline.neon                   # No such file or directory
+grep '^\s\+level:' phpstan.neon            # level: 9 (or higher)
 ```
 
 ---
 
-## #2 — Fix remaining `global` declarations inside `src/`
+## #2 — Eliminate procedural `global` declarations across the codebase
 
-**Status:** Likely complete — verify &nbsp;|&nbsp; **Size:** S
+**Status:** In progress (`src/` done; `admin/` and `include/` remain) &nbsp;|&nbsp; **Size:** L
 
 ### Goal
 
-Zero `global $conf`, `global $user`, `global $page`, `global $lang` declarations anywhere under `src/`. All `src/` code accesses globals through the typed service layer (`Config::get()`, `CurrentUser::get()`, `PageState::current()`, `Lang::current()`).
+Zero `global $conf`, `global $user`, `global $page`, `global $lang`, `global $template` declarations anywhere in the application. All code accesses these through the typed service layer:
+
+| Global       | Replacement                                                                  |
+| ------------ | ---------------------------------------------------------------------------- |
+| `$conf`      | `Piwigo\Core\Config::get(…)` / typed accessors (`Config::galleryTitle()` etc.) |
+| `$page`      | `Piwigo\Core\PageState::current()->errors[]` etc.                            |
+| `$lang`      | `Piwigo\Core\Lang::current()` / `Lang::get($key)`                            |
+| `$user`      | `Piwigo\Users\CurrentUser::get()`                                            |
+| `$template`  | `Piwigo\Template\TemplateRegistry::current()` (new — see step 1)             |
+
+The reference-bridge pattern in `Config::attachGlobals()` and `PageState::attachGlobals()` makes the migration incremental: old `$conf['x']` and new `Config::get('x')` read/write the same backing storage, so plugins and untouched files keep working.
 
 ### Current state
 
-Grep of `src/` returns **0 hits**. The item may already be closed.
+- `src/`: **done** — `grep -rn "^global \$" src/` returns 0; `NoGlobalInSrcRule` enforces this in CI.
+- `admin/`: **138** `global` statements across 72 files (largest concentrations: `include/add_core_tabs.inc.php` 21, `include/functions.php` 17, `include/functions_notification_by_mail.inc.php` 10, `include/functions_upload.inc.php` 9).
+- `include/`: **158** `global` statements across 40 files (largest: `functions.inc.php` 17, `functions_user.inc.php` 15, `dblayer/functions_mysqli.inc.php` 12, `ws_functions/pwg.images.php` 12, `ws_functions/pwg.users.php` 12).
+- PHPStan level 10 is the proxy metric: 1000+ errors at level 10 today (truncated output), ~75% trace back to `mixed` types from these unannotated `global` declarations. Hot-spot files: `cat_modify.php` (101 errors), `picture_modify.php` (76), `include/functions_notification_by_mail.inc.php` (57), `include/add_core_tabs.inc.php` (54), `include/functions.php` (41).
 
 ### Steps
 
-1. **Confirm with a broader pattern.** Run `grep -rn "^global \$" src/` and `grep -rn "\bglobal \$conf\b\|\bglobal \$user\b\|\bglobal \$page\b\|\bglobal \$lang\b" src/`. Both should return empty.
+1. **Add a `Template` accessor.** Introduce `Piwigo\Template\TemplateRegistry::current(): Template` and `::set(Template $t): void`, mirroring the contract of `Config::attachGlobals()`/`PageState::current()`. Wire `set()` from the two `$template = new Template(…)` sites in `include/common.inc.php`. Keep `$GLOBALS['template']` referencing the same instance during the migration window so untouched files (and plugins) still work.
 
-2. **Activate the PHPStan rule.** `tools/phpstan-rules/ForbidGlobalsInSrcRule.php` (or equivalent) should be wired into `phpstan.neon` so that new `global` declarations in `src/` fail CI automatically. If the rule does not exist yet, add it.
+2. **Migrate `include/` first** (40 files, smaller surface, more reused). Order bottom-up by dependency: leaf files first (`functions_*.inc.php`), orchestrating files (`common.inc.php`) last. Per file: drop the `global $conf, $user, $page, $lang, $template;` line and replace `$conf['x']` with `Config::get('x')`, `$page['errors'][] = …` with `PageState::current()->errors[] = …`, `$user['id']` with `CurrentUser::get()->id()`, `$template->assign(...)` with `TemplateRegistry::current()->assign(...)`. Commit per file or per logical group.
 
-3. **Mark closed** once the CI rule is in place.
+3. **Migrate `admin/`** (72 files). Work top-down by error-count hot spots: `cat_modify.php`, `picture_modify.php`, `include/functions_notification_by_mail.inc.php`, `include/add_core_tabs.inc.php`, `include/functions.php` first — these five account for ~30% of the level-10 error report.
+
+4. **Extend the PHPStan rule.** Rename `NoGlobalInSrcRule` → `NoGlobalRule` (or add a sibling) covering `admin/` and `include/`. Activate as the last step so new `global` declarations fail CI.
+
+5. **Drop the bootstrap stubs.** Once no caller references the globals, the `/** @var … */` annotations in `tools/phpstan-bootstrap.php` for `$conf`, `$user`, `$page`, `$lang`, `$template` (plus the auxiliary `$logger`, `$service`, etc. once their accessors land) can be removed. The bootstrap stays for `PHPWG_ROOT_PATH` and the plugin function signatures.
+
+### Out of scope (decide separately)
+
+The following globals also appear in `global` statements but are deferred — they need their own accessors before they can join `NoGlobalRule`: `$persistent_cache`, `$logger`, `$mysqli`, `$service`, `$filter`, `$pwg_loaded_plugins`, `$pwg_event_handlers`, `$prefixeTable`. Recommend including `$logger` and `$service` in this work; defer `$mysqli` to the Db layer effort.
+
+### Verification
+
+```bash
+# Both must return zero hits in scope:
+grep -rn "^[[:space:]]*global \$" admin/ include/ src/
+grep -rnE "\bglobal \$(conf|user|page|lang|template)\b" admin/ include/ src/
+
+# PHPStan level 10 must pass clean:
+PHPSTAN_TABLE_ERROR_FORMATTER_FORCE_SHOW_ALL_ERRORS=1 vendor/bin/phpstan analyse --no-progress
+
+# E2E smoke (admin pages still load, plugins still work):
+npx playwright test
+```
 
 ---
 
@@ -583,41 +600,26 @@ grep -rn "!important" themes/modus/css/skins/              # empty (after Step 8
 
 ## #9 — jQuery upgrade / incremental replacement
 
-**Status:** Planning only &nbsp;|&nbsp; **Size:** XL
+**Status:** Done &nbsp;|&nbsp; **Size:** XL
 
-### Goal
+### Outcome
 
-Remove the jQuery runtime dependency from the browser for all pages Piwigo controls. jQuery may remain available for third-party plugins that depend on it, but no first-party authored code should call `$()` or `$.fn.*`.
+jQuery is no longer loaded in any first-party page Piwigo serves. The vendored chain is gone — no `themes/default/js/vendor/` or `admin/themes/default/js/vendor/` directories remain, and no template registers `{combine_script id='jquery'}`. Authored TypeScript is jQuery-free, and the previously jQuery-bound libraries (colorbox, selectize, jQuery Cookie, jqtree, plupload/moxie, dataTables) have been replaced with their vanilla / modern counterparts (`<dialog>`/GLightbox, TomSelect, native cookie helpers, vanilla tree, native chunked Fetch upload, Fetch-based tables).
 
-### Current state
+Plugins that still depend on jQuery are responsible for vendoring it themselves; the originally proposed conditional-load opt-in (Phase C) was unnecessary because no shipped plugin actually needed the runtime hook.
 
-- **Zero jQuery calls** in authored TypeScript (`grep -rn "jQuery\b" admin/themes/default/js/ themes/default/js/ --include="*.ts"` returns 0).
-- jQuery is still loaded as a vendored script (`themes/default/js/vendor/jquery.js`) and registered via `{combine_script id='jquery'}` in templates.
-- A handful of Smarty template `{footer_script}` blocks still call `$(…)` inline.
-- jQuery UI, colorbox, selectize, plupload, Chart.js, dataTables, jqtree all depend on jQuery.
+### Residual
 
-### Approach
+- `admin/themes/default/template/photos_add_direct.tpl:62` still has a single inline `$('.switch .slider').addClass('loading')` call inside an `onClick`. Since jQuery is no longer loaded, this throws silently before the `window.location.replace()` navigation. Replace with `document.querySelector('.switch .slider')?.classList.add('loading')` (or drop, since the navigation immediately discards the DOM). Trivial — fold into next admin-template touch.
 
-The authored TS is already jQuery-free. The remaining work is the vendor chain.
+### Verification
 
-**Phase A — Audit inline jQuery in templates.** `grep -rn "\\$(" admin/themes/default/template/ themes/default/template/ --include="*.tpl"` — catalogue remaining inline jQuery calls. Most should be replaceable with the vanilla helpers already in `scripts.ts` (`pwgBind`, `PwgWS`, etc.).
-
-**Phase B — Replace vendored jQuery plugins one at a time (lowest-risk first):**
-1. **colorbox** → native `<dialog>` element. Piwigo uses colorbox only for lightbox popups; `GLightbox` is already wired for admin — extend to gallery.
-2. **selectize** → `TomSelect` (already used in admin; extend to gallery search filters).
-3. **jQuery Cookie** → native `document.cookie` helpers (already in `scripts.ts`).
-4. **jqtree** → reassess: tree is used in album selector. Consider a small vanilla tree or a maintained npm alternative.
-5. **plupload/moxie** → native `<input type=file multiple>` + Fetch API for chunked upload. This is the largest single replacement (~3k LOC).
-6. **Chart.js** — already a standalone non-jQuery library. No change needed; just confirm the `jQuery` global is not a peer dependency at runtime.
-7. **dataTables** — admin-only. Consider switching to a vanilla alternative or removing the table entirely (rating_user.ts already handles the data table via Fetch).
-
-**Phase C — Conditionally load jQuery only for plugins.** Once all first-party usage is gone, change `{combine_script id='jquery'}` to load jQuery only when a registered plugin explicitly declares a dependency on it. The `ScriptLoader` already has a dependency graph — add a `requires: ['jquery']` opt-in.
-
-**Phase D — Remove jQuery from the bundle.** Delete `themes/default/js/vendor/jquery.js` and the combine_script tag from the default template header.
-
-### Note
-
-This is the highest-effort item on the roadmap and the most disruptive to plugin authors. Do not start until #7, #8, and #11 are complete. The plugin contract change in Phase C requires a deprecation cycle.
+```bash
+ls themes/default/js/vendor/jquery* admin/themes/default/js/vendor/jquery*  # No such file
+grep -rn "combine_script[^}]*id=['\"]jquery['\"]" themes/ admin/themes/ --include="*.tpl"  # 0 hits
+grep -rn "jQuery\b" admin/themes/default/js/ themes/default/js/ --include="*.ts"            # 0 hits
+grep -rn '\$(' admin/themes/default/template/ themes/default/template/ --include="*.tpl"    # 1 hit (residual above)
+```
 
 ---
 

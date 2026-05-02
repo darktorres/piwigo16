@@ -1,4 +1,10 @@
 @import "iconset.css";
+
+/* HTML5 hidden attribute — needs !important to win over class rules
+   like .foo { display: flex } that would otherwise override the UA
+   stylesheet's [hidden] { display: none } at higher specificity. */
+[hidden] { display: none !important; }
+
 /**
  * Menubar
  */

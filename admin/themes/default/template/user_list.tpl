@@ -46,7 +46,7 @@
             <div id="checkActions">
               <span>{'Select'|@translate}</span>
               <a href="#" id="selectAllPage">{'The whole page'|@translate}</a>
-              <a href="#" id="selectSet">{'The whole set'|@translate}</a><span class="loading" style="display:none"><img src="themes/default/images/ajax-loader-small.gif"></span>
+              <a href="#" id="selectSet">{'The whole set'|@translate}</a><span class="loading" hidden><img src="themes/default/images/ajax-loader-small.gif"></span>
               <a href="#" id="selectNone">{'None'|@translate}</a>
               <a href="#" id="selectInvert">{'Invert'|@translate}</a>
               <span id="selectedMessage"></span>
@@ -143,7 +143,7 @@
       </div>
       <!-- username -->
       <div class="user-header-col user-header-username">
-        <span id="usr-list-user">{'Username'|@translate} <span id="icon-usr-list-user" class="icon-up" style="display: none;"></span></span>
+        <span id="usr-list-user">{'Username'|@translate} <span id="icon-usr-list-user" class="icon-up" hidden></span></span>
       </div>
       <!-- status -->
       <div class="user-header-col user-header-status">
@@ -380,9 +380,9 @@
             </span>
           </div>
 
-          <p id="applyActionBlock" style="display:none" class="actionButtons">
+          <p id="applyActionBlock" hidden class="actionButtons">
             <input id="applyAction" class="submit" type="submit" value="{'Apply action'|@translate}" name="submit"> <span id="applyOnDetails"></span></input>
-            <span id="applyActionLoading" style="display:none"><img src="themes/default/images/ajax-loader-small.gif"></span>
+            <span id="applyActionLoading" hidden><img src="themes/default/images/ajax-loader-small.gif"></span>
             <br />
             <span class="infos icon-ok icon-green" style="display:inline-block;display:none;max-width:100%;margin:0;margin-top:30px;min-height:0;">{'Users modified'|translate}</span>
           </p>
@@ -643,7 +643,7 @@
         </div>
       </div>
 
-      <div class="edit-username-success" style="display: none;">
+      <div class="edit-username-success" hidden>
         <div class="update-username-success icon-green">
           <span class="icon-ok"></span>
           <span>{'Username successfully modified'|@translate|escape}</span>
@@ -666,9 +666,9 @@
         <p class="edit-password-cancel">{'Cancel'|@translate}</p>
       </div>
 
-      <div class="user-property-password-change-inputs" style="display: none;">
+      <div class="user-property-password-change-inputs" hidden>
         <form data-prevent-submit>
-          <input type="text" style="display: none;" autocomplete="username" />
+          <input type="text" hidden autocomplete="username" />
           <div class="summary-input-container">
             <div class="user-property-input-icon" style="margin-bottom: 10px;">
               <input class="user-property-input user-property-input-password" value=""
@@ -693,7 +693,7 @@
         </div>
       </div>
 
-      <div class="edit-password-success" id="edit_password_success_change" style="display: none;">
+      <div class="edit-password-success" id="edit_password_success_change" hidden>
         <div class="update-password-success icon-green">
           <span class="icon-ok" id="password_msg_success">{'Password updated'|@translate}</span>
         </div>
@@ -701,7 +701,7 @@
         <p class="edit-password-success-ok"><span class="icon-button icon-ok" id="close_password_success">{'Ok'|@translate}</span></p>
       </div>
 
-      <div class="edit-password-success" id="edit_password_result_mail" style="display: none;">
+      <div class="edit-password-success" id="edit_password_result_mail" hidden>
         <div class="update-password-success icon-green" id="result_send_mail">
           <span class="icon-ok" id="icon_password_msg_result_mail"></span>
           <span id="password_msg_result_mail">text</span>
@@ -709,7 +709,7 @@
         <p class="edit-password-success-ok"><span class="icon-button icon-ok" id="close_password_mail_close">{'Ok'|@translate}</span></p>
       </div>
 
-      <div class="edit-password-success" id="edit_password_result_mail_copy" style="display: none;">
+      <div class="edit-password-success" id="edit_password_result_mail_copy" hidden>
         <div class="edit-password-success-reset-link">
           <input class="edit-password-success-input" id="result_send_mail_copy_input" />
           <span class="icon-docs" id="result_send_mail_copy_btn"></span>
@@ -740,7 +740,7 @@
           </div>
         </div>
 
-        <div class="main-user-rewrite" style="display: none;">
+        <div class="main-user-rewrite" hidden>
           <span class="main-user-rewrite-desc">{'To be sure, please rewrite the word “%s” below'|@translate|escape} :</span>
           <div class="main-user-rewrite-footer">
             <input type="text" id="main_user_rewrite" />
@@ -748,7 +748,7 @@
           </div>
         </div>
 
-        <div class="main-user-validate" style="display: none;">
+        <div class="main-user-validate" hidden>
           <span class="main-user-validate-desc">{'You can now change the main user from %s to %s.'|@translate|escape}</span>
           <div class="main-user-validate-footer">
             <span class="user-property-main-user-cancel">{'Cancel'|@translate}</span>
@@ -756,7 +756,7 @@
           </div>
         </div>
 
-        <div class="main-user-success" style="display: none;">
+        <div class="main-user-success" hidden>
           <div class="update-main-user-success icon-green">
             <span class="icon-ok"></span>
             <span class="main-user-success-desc">{'%s is the new main user'|@translate|escape}</span>
@@ -981,9 +981,9 @@
         </div>
       </div>
 
-      <div id="add_user_password" style="display: none;">
+      <div id="add_user_password" hidden>
         <form data-prevent-submit>
-          <input type="text" style="display: none;" autocomplete="username" />
+          <input type="text" hidden autocomplete="username" />
           <div class="AddUserGenPassword">
             <label for="add_user_pass" class="user-property-label AddUserLabelPassword">{'Password'|@translate}</label>
             <span class="icon-dice-solid"> {'Generate random password'|@translate}</span>
@@ -1052,7 +1052,7 @@
       </div>
     </div>
 
-    <div id="AddUserSuccessContainer" style="display: none;">
+    <div id="AddUserSuccessContainer" hidden>
       <p class="icon-green border-green icon-ok AddUserResult" id="AddUserUpdated"> <span id="AddUserUpdatedText">{'User updated'|@translate}</span></p>
       <p class="AddUserTextField" id="AddUserTextField"></p>
       <div class="AddUserPasswordInputContainer" id="AddUserPasswordInputContainer">

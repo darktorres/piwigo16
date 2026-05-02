@@ -35,13 +35,13 @@
 		<div style="margin-left: 22px;">
 			<div class="pagination-reload">
 				{if !empty($navbar) }
-				<a class="button-reload tiptip" title="{'Pagination has changed and needs to be reloaded !'|@translate}" style="display: none;" href="{$F_ACTION}"><i class="icon-cw"></i></a>
+				<a class="button-reload tiptip" title="{'Pagination has changed and needs to be reloaded !'|@translate}" hidden href="{$F_ACTION}"><i class="icon-cw"></i></a>
 				{include file='navigation_bar.tpl'|@get_extent:'navbar'}{/if}
 			</div>
 		</div>
 	</div>
 	{foreach from=$elements item=element}
-	<div class="infos deleted-badge" data-image_id="{$element.ID}" style="display: none;">
+	<div class="infos deleted-badge" data-image_id="{$element.ID}" hidden>
 		<i class="icon-ok" style="font-size: 20px;"></i>
 		<p>
 			&nbsp;{'Image'|@translate}&nbsp;
@@ -52,7 +52,7 @@
 		</p>
 	</div>
 	<fieldset class="elementEdit" id="picture-{$element.ID}" data-image_id="{$element.ID}" data-related-category-ids="{$element.related_category_ids|escape}">
-		<div class="metasync-success badge-container" style="display: none;">
+		<div class="metasync-success badge-container" hidden>
 			<div class="badge-succes">
 				<i class="icon-ok"></i>
 				{'Metadata sync complete'|@translate}
@@ -184,19 +184,19 @@
 							{'Save'|@translate}
 						</div>
 					</div>
-					<div class="local-unsaved-badge badge-container" style="display: none;">
+					<div class="local-unsaved-badge badge-container" hidden>
 						<div class="badge-unsaved">
 							<i class="icon-attention"></i>
 							{'You have unsaved changes'|@translate}
 						</div>
 					</div>
-					<div class="local-success-badge badge-container" style="display: none;">
+					<div class="local-success-badge badge-container" hidden>
 						<div class="badge-succes">
 							<i class="icon-ok"></i>
 							{'Changes saved'|@translate}
 						</div>
 					</div>
-					<div class="local-error-badge badge-container" style="display: none;">
+					<div class="local-error-badge badge-container" hidden>
 						<div class="badge-error">
 							<i class="icon-cancel"></i>
 							{'An error has occured'|@translate}
@@ -217,7 +217,7 @@
 	  		<div style="margin-left: 22px;">
 		  		<div class="pagination-reload">
 		{if !empty($navbar) }
-			  		<a class="button-reload tiptip" title="{'Pagination has changed and needs to be reloaded !'|@translate}" style="display: none;" href="{$F_ACTION}"><i class="icon-cw"></i></a>
+			  		<a class="button-reload tiptip" title="{'Pagination has changed and needs to be reloaded !'|@translate}" hidden href="{$F_ACTION}"><i class="icon-cw"></i></a>
 		{include file='navigation_bar.tpl'|@get_extent:'navbar'}{/if}
 		  		</div>
 	  		</div>
@@ -225,20 +225,20 @@
 		{/if}
 		<div class="bottom-save-bar">
 			<input type="hidden" name="pwg_token" value="{$PWG_TOKEN}">
-			<div class="badge-container global-unsaved-badge" style="display: none;">
+			<div class="badge-container global-unsaved-badge" hidden>
 				<div class="badge-unsaved">
 					<i class="icon-attention"></i>
 					<span id="unsaved-count"></span>
 					 {'image(s) contains unsaved changes'|@translate}
 				</div>
 			</div>
-			<div class="badge-container global-succes-badge" style="display: none;">
+			<div class="badge-container global-succes-badge" hidden>
 				<div class="badge-succes">
 					<i class="icon-ok"></i>
 					{'Changes saved'|@translate}
 				</div>
 			</div>
-			<div class="badge-container global-error-badge" style="display: none;">
+			<div class="badge-container global-error-badge" hidden>
 				<div class="badge-error">
 					<i class="icon-cancel"></i>
 					{'An error has occured'|@translate}

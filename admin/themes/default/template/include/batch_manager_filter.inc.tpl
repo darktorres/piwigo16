@@ -5,7 +5,7 @@
 <legend><span class='icon-filter icon-green'></span>{'Filter'|@translate}</legend>
 <div class="filterBlock">
   <ul id="filterList">
-    <li id="filter_prefilter" {if !isset($filter.prefilter)}style="display:none"{/if}>
+    <li id="filter_prefilter" {if !isset($filter.prefilter)}hidden{/if}>
       <input type="checkbox" name="filter_prefilter_use" class="useFilterCheckbox" {if isset($filter.prefilter)}checked="checked"{/if}>
       <p>{'Predefined filter'|@translate}</p>
       <a href="#" class="removeFilter" title="{'remove this filter'|@translate}"><span>[x]</span></a>
@@ -26,23 +26,23 @@
 <a id="sync_md5sum" href="#" style="{if !isset($filter.prefilter) or $filter.prefilter ne 'no_sync_md5sum'}display:none{/if}" class="icon-arrows-cw">{'Compute %d missing checksums'|translate:{$NB_NO_MD5SUM}}</a>
 {/if}
 
-      <span id="add_md5sum" style="display:none">
+      <span id="add_md5sum" hidden>
         <img class="loading" src="themes/default/images/ajax-loader-small.gif">
         <span id="md5sum_added">0</span>% -
         <span id="md5sum_to_add" data-origin="{$NB_NO_MD5SUM}">{$NB_NO_MD5SUM}</span>
         {'checksums to add'|translate}
       </span>
 
-      <span id="add_md5sum_error" class="errors" style="display:none"></span>
+      <span id="add_md5sum_error" class="errors" hidden></span>
 
-      <span id="orphans_deletion" style="display:none">
+      <span id="orphans_deletion" hidden>
         <img class="loading" src="themes/default/images/ajax-loader-small.gif">
         <span id="orphans_deleted">0</span>% -
         <span id="orphans_to_delete" data-origin="{$NB_ORPHANS}">{$NB_ORPHANS}</span>
         {'orphans to delete'|translate}
       </span>
 
-      <span id="orphans_deletion_error" class="errors" style="display:none"></span>
+      <span id="orphans_deletion_error" class="errors" hidden></span>
 
       <span id="duplicates_options" style="{if !isset($filter.prefilter) or $filter.prefilter ne 'duplicates'}display:none{/if}">
         {'based on'|translate}
@@ -53,13 +53,13 @@
       </span>
     </li>
     {* categories *}
-    <li id="filter_category" {if !isset($filter.category)}style="display:none"{/if}>
+    <li id="filter_category" {if !isset($filter.category)}hidden{/if}>
       <input type="checkbox" name="filter_category_use" class="useFilterCheckbox" {if isset($filter.category)}checked="checked"{/if}>
       <p>{'Album'|@translate}</p>
       <a href="#" class="removeFilter" title="{'remove this filter'|translate}"><span>[x]</span></a>
       {* <select data-selectize="categories" data-value="{$filter_category_selected|@json_encode|escape:html}"
         data-default="first" name="filter_category"></select> *}
-        <div id="selectedAlbumFilterArea" {if !$filter_category_selected}style="display: none;"{/if}>
+        <div id="selectedAlbumFilterArea" {if !$filter_category_selected}hidden{/if}>
           <div class="selectedAlbum" id="selectedAlbumFilter">
             <input type="hidden" name="filter_category" id="filterCategoryValue" value="{$filter_category_selected|@json_encode|escape:html}">
             <span class="icon-sitemap" id="selectedAlbumNameFilter">{$filter_category_selected_name}</span>
@@ -67,12 +67,12 @@
           </div>
           <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="filter_category_recursive" {if isset($filter.category_recursive)}checked="checked"{/if}> {'include child albums'|@translate}</label>
         </div>
-        <p class="head-button-1" id="selectAlbumFilter" {if $filter_category_selected}style="display: none;"{/if}>
+        <p class="head-button-1" id="selectAlbumFilter" {if $filter_category_selected}hidden{/if}>
           {"Select an album"|translate}
         </p>
     </li>
 
-    <li id="filter_tags" {if !isset($filter.tags)}style="display:none"{/if}>
+    <li id="filter_tags" {if !isset($filter.tags)}hidden{/if}>
       <input type="checkbox" name="filter_tags_use" class="useFilterCheckbox" {if isset($filter.tags)}checked="checked"{/if}>
       <p>{'Tags'|@translate}</p>
       <a href="#" class="removeFilter" title="{'remove this filter'|translate}"><span>[x]</span></a>
@@ -83,7 +83,7 @@
       <label class="font-checkbox"><span class="icon-circle-empty"></span><span><input type="radio" name="tag_mode" value="OR" {if isset($filter.tag_mode) and $filter.tag_mode eq 'OR'}checked="checked"{/if}> {'Any tag'|@translate}</span></label>
     </li>
 
-    <li id="filter_level" {if !isset($filter.level)}style="display:none"{/if}>
+    <li id="filter_level" {if !isset($filter.level)}hidden{/if}>
       <input type="checkbox" name="filter_level_use" class="useFilterCheckbox" {if isset($filter.level)}checked="checked"{/if}>
       <p>{'Privacy level'|@translate}</p>
       <a href="#" class="removeFilter" title="{'remove this filter'|translate}"><span>[x]</span></a>
@@ -93,7 +93,7 @@
       <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="filter_level_include_lower" {if isset($filter.level_include_lower)}checked="checked"{/if}> {'include photos with lower privacy level'|@translate}</label>
     </li>
 
-    <li id="filter_dimension" {if !isset($filter.dimension)}style="display:none"{/if}>
+    <li id="filter_dimension" {if !isset($filter.dimension)}hidden{/if}>
       <input type="checkbox" name="filter_dimension_use" class="useFilterCheckbox" {if isset($filter.dimension)}checked="checked"{/if}>
       <p>{'Dimensions'|translate}</p>
       <a href="#" class="removeFilter" title="{'remove this filter'|translate}"><span>[x]</span></a>
@@ -149,7 +149,7 @@
       </blockquote>
     </li>
 
-    <li id="filter_search"{if !isset($filter.search)} style="display:none"{/if}>
+    <li id="filter_search"{if !isset($filter.search)} hidden{/if}>
       <input type="checkbox" name="filter_search_use" class="useFilterCheckbox"{if isset($filter.search)} checked="checked"{/if}>
       <p>{'Search'|@translate}</p>
       <a href="#" class="removeFilter" title="{'remove this filter'|translate}"><span>[x]</span></a>
@@ -171,7 +171,7 @@
 {/if}
     </li>
 
-    <li id="filter_filesize" {if !isset($filter.filesize)}style="display:none"{/if}>
+    <li id="filter_filesize" {if !isset($filter.filesize)}hidden{/if}>
       <input type="checkbox" name="filter_filesize_use" class="useFilterCheckbox" {if isset($filter.filesize)}checked="checked"{/if}>
       <p>{'Filesize'|translate}</p>
       <a href="#" class="removeFilter" title="{'remove this filter'|translate}"><span>[x]</span></a>
@@ -202,7 +202,7 @@
         <a data-value="filter_filesize" {if isset($filter.filesize)}class="disabled"{/if}>{'Filesize'|@translate}</a>
         <a data-value="filter_search"{if isset($filter.search)} class="disabled"{/if}>{'Search'|@translate}</a>
       </div>
-      <a id="removeFilters" class="icon-cancel" style="display: none;">{'Remove all filters'|@translate}</a>
+      <a id="removeFilters" class="icon-cancel" hidden>{'Remove all filters'|@translate}</a>
     </div>
 
     <button id="applyFilter" name="submitFilter" type="submit">

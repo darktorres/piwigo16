@@ -76,7 +76,7 @@
             {'Email admins when a new user registers'|translate}
           </label>
 
-          <div id="email_admin_on_new_user_filter" class="sub-setting"{if (!$main.email_admin_on_new_user)} style="display:none"{/if}>
+          <div id="email_admin_on_new_user_filter" class="sub-setting"{if (!$main.email_admin_on_new_user)} hidden{/if}>
             <label class="font-checkbox no-bold">
               <span class="icon-dot-circled"></span>
               <input type="radio" name="email_admin_on_new_user_filter" value="all" {if ($main.email_admin_on_new_user_filter eq 'all')}checked{/if}>
@@ -89,7 +89,7 @@
               {'Only admins in a specific group'|translate}
             </label>
 
-            <span id="email_admin_on_new_user_filter_group_options"{if ($main.email_admin_on_new_user_filter ne 'group')} style="display:none"{/if}>
+            <span id="email_admin_on_new_user_filter_group_options"{if ($main.email_admin_on_new_user_filter ne 'group')} hidden{/if}>
 {if count($group_options) > 0}
             <select name="email_admin_on_new_user_filter_group">
               {html_options options=$group_options selected=$main.email_admin_on_new_user_filter_group}

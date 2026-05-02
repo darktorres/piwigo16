@@ -5,7 +5,7 @@
 
 <p id="showAddPermalink"><a href="#" id="addPermalinkOpen">{'Add/delete a permalink'|@translate}</a></p>
 
-<form method="post" action="" id="addPermalink" style="display:none">
+<form method="post" action="" id="addPermalink" hidden>
 <fieldset>
   <legend>{'Add/delete a permalink'|@translate}</legend>
   <p>

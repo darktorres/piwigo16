@@ -209,17 +209,17 @@
 
 <div class='tree'> </div>
 
-<div class="album-search-result-container" style="display: none;">
+<div class="album-search-result-container" hidden>
   <div class="search-album-result"></div>
-  <div class="search-album-elem limit-album-reached" style="display: none;"></div>
+  <div class="search-album-elem limit-album-reached" hidden></div>
 
   <div class="search-album-noresult">
     {'No albums found'|translate}
   </div>
 </div>
 
-<div class="search-album-elem-template" style="display:none">
-  <div class="search-album-elem" style="display:none">
+<div class="search-album-elem-template" hidden>
+  <div class="search-album-elem" hidden>
     <span class='search-album-icon'></span>
     <p class='search-album-name'></p>
     <div class="search-album-action-cont">

@@ -35,7 +35,7 @@
 
     <span id="selectedMessage"></span>
 
-    <input type="checkbox" name="setSelected" style="display:none" {if count($selection) == $nb_thumbs_set}checked="checked"{/if}>
+    <input type="checkbox" name="setSelected" hidden {if count($selection) == $nb_thumbs_set}checked="checked"{/if}>
     <input type="hidden" name="whole_set" value="">
   </p>
 
@@ -84,8 +84,8 @@
   <fieldset id="action">
 
     <legend><span class='icon-cog icon-red'></span>{'Action'|@translate}</legend>
-      <div id="forbidAction"{if count($selection) != 0} style="display:none"{/if}>{'No photos selected, no actions possible.'|@translate}</div>
-      <div id="permitAction"{if count($selection) == 0} style="display:none"{/if}>
+      <div id="forbidAction"{if count($selection) != 0} hidden{/if}>{'No photos selected, no actions possible.'|@translate}</div>
+      <div id="permitAction"{if count($selection) == 0} hidden{/if}>
     
     <div class="permitActionListButton">
       <div>
@@ -259,7 +259,7 @@
         <input type="hidden" name="regenerateError" value="0">
       </div>
     <!-- progress bar -->
-    <div id="uploadingActions" style="display:none">
+    <div id="uploadingActions" hidden>
       <div class="big-progressbar" style="max-width:100%;margin-bottom: 10px;">
         <div class="progressbar" style="width:0%"></div>
       </div>

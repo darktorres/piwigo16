@@ -102,7 +102,7 @@
           <div class="pagination-item-container">
             {* <a data-page="1" class="actual">1</a> *}
           </div>
-          <div class="user-update-spinner icon-spin6 animate-spin" style="display: none;"></div>
+          <div class="user-update-spinner icon-spin6 animate-spin" hidden></div>
           <div class="pagination-arrow rigth unavailable">
             <span class="icon-left-open"></span>
           </div>

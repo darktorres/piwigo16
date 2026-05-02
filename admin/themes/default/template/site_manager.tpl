@@ -41,7 +41,7 @@
   <a href="#">{'create a new site'|@translate}</a>
 </p>
 
-<form action="{$F_ACTION}" method="post" id="createSite" style="display:none">
+<form action="{$F_ACTION}" method="post" id="createSite" hidden>
   <input type="hidden" name="pwg_token" value="{$PWG_TOKEN}">
   <fieldset>
     <legend>{'create a new site'|@translate}</legend>

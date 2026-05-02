@@ -49,10 +49,10 @@
 {if isset($nb_users_granted_indirect) && $nb_users_granted_indirect>0}
   <p>
     {'%u users have automatic permission because they belong to a granted group.'|@translate:$nb_users_granted_indirect}
-    <a href="#" class="toggle-indirectPermissions" style="display:none">{'hide details'|@translate}</a>
+    <a href="#" class="toggle-indirectPermissions" hidden>{'hide details'|@translate}</a>
     <a href="#" class="toggle-indirectPermissions">{'show details'|@translate}</a>
 
-    <ul id="indirectPermissionsDetails" style="display:none">
+    <ul id="indirectPermissionsDetails" hidden>
   {foreach from=$user_granted_indirect_groups item=group_details}
       <li><strong>{$group_details.group_name}</strong> : {$group_details.group_users}</li>
   {/foreach}

@@ -249,7 +249,7 @@
               <i class="icon-trash-1 delete-mode"></i>
             </div>
           </div>
-          <div class="api-tab-collapse border-line template-api" style="display: none;" id="api_collapse">
+          <div class="api-tab-collapse border-line template-api" hidden id="api_collapse">
             <div aria-hidden="true"></div>
             <div class="keys">
               <div class="row-flex key">

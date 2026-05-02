@@ -85,7 +85,7 @@
     {/if}
   {/if}
 </p>
-<p class="autoupdate_bar" style="display:none;">&nbsp; {'Update in progress...'|@translate}<br><img src="admin/themes/default/images/ajax-loader-bar.gif"></p>
+<p class="autoupdate_bar" hidden>&nbsp; {'Update in progress...'|@translate}<br><img src="admin/themes/default/images/ajax-loader-bar.gif"></p>
 <p><input type="hidden" name="upgrade_to" value="{$UPGRADE_TO}"></p>
 </form>
 {/if}
@@ -134,7 +134,7 @@
   <span class="errors icon-block">{'Requires PHP %s'|translate:$MAJOR_RELEASE_PHP_REQUIRED}</span>
 {/if}
   </p>
-  <p class="autoupdate_bar" style="display:none;">&nbsp; {'Update in progress...'|@translate}<br><img src="admin/themes/default/images/ajax-loader-bar.gif"></p>
+  <p class="autoupdate_bar" hidden>&nbsp; {'Update in progress...'|@translate}<br><img src="admin/themes/default/images/ajax-loader-bar.gif"></p>
 </fieldset>
 
 <p><input type="hidden" name="upgrade_to" value="{$UPGRADE_TO}"></p>

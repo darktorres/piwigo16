@@ -10,7 +10,7 @@
     <legend></legend>
     <ul>
       <li>
-        <span id="selectWatermark"{if isset($ferrors.watermarkImage)} style="display:none"{/if}><label>{'Select a file'|translate}</label>
+        <span id="selectWatermark"{if isset($ferrors.watermarkImage)} hidden{/if}><label>{'Select a file'|translate}</label>
           <select name="w[file]" id="wSelect">
             {html_options options=$watermark_files selected=$watermark.file}
           </select>

@@ -66,7 +66,7 @@
   {/if}
 
   {if !$DISPLAY_FORMATS}
-  <div class="addAlbumEmptyCenter"{if $NB_ALBUMS > 0} style="display:none;"{/if}>
+  <div class="addAlbumEmptyCenter"{if $NB_ALBUMS > 0} hidden{/if}>
     <div class="addAlbumEmpty">
       <div class="addAlbumEmptyTitle">{'Welcome!'|translate}</div>
       <p class="addAlbumEmptyInfos">{'Piwigo requires an album to add photos.'|translate}</p>
@@ -75,8 +75,8 @@
   </div>
   {/if}
 
-<div class="infos" style="display:none"><i class="eiw-icon icon-ok"></i></div>
-<div class="errors" style="display:none"><i class="eiw-icon icon-cancel"></i><ul></ul></div>
+<div class="infos" hidden><i class="eiw-icon icon-ok"></i></div>
+<div class="errors" hidden><i class="eiw-icon icon-cancel"></i><ul></ul></div>
 
 <p class="afterUploadActions" style="margin:10px; display:none;"> 
   {if !$DISPLAY_FORMATS}
@@ -86,15 +86,15 @@
   {/if}
 </p>
 
-  <form id="uploadForm" class="{if $DISPLAY_FORMATS}format-mode{/if}" enctype="multipart/form-data" method="post" action="{$form_action}"{if $NB_ALBUMS == 0} style="display:none;"{/if}>
+  <form id="uploadForm" class="{if $DISPLAY_FORMATS}format-mode{/if}" enctype="multipart/form-data" method="post" action="{$form_action}"{if $NB_ALBUMS == 0} hidden{/if}>
     {if not $DISPLAY_FORMATS}
     <fieldset class="selectAlbum">
       <legend><span class="icon-folder-open icon-red"></span>{'Drop into album'|@translate}</legend>
-      <div class="selectedAlbum"{if !$can_upload} style="display: none"{/if} id="selectedAlbum">
+      <div class="selectedAlbum"{if !$can_upload} hidden{/if} id="selectedAlbum">
         <span class="icon-sitemap" id="selectedAlbumName">{if isset($ADD_TO_ALBUM)}{$ADD_TO_ALBUM}{elseif isset($selected_category_name)}{$selected_category_name}{/if}</span>
         <a class="icon-pencil" id="selectedAlbumEdit"></a>
       </div>
-      <div class="selectAlbumSelector" {if $can_upload} style="display: none"{/if} id="addPhotosAS">
+      <div class="selectAlbumSelector" {if $can_upload} hidden{/if} id="addPhotosAS">
         <p class="head-button-1 icon-folder-open" id="btnPhotosAS">{"Select or create an album"|translate}</p>
       </div>
     </fieldset>
@@ -116,7 +116,7 @@
 {*
     <p class="showFieldset"><a id="showPermissions" href="#">{'Manage Permissions'|@translate}</a></p>
 
-    <fieldset id="permissions" style="display:none">
+    <fieldset id="permissions" hidden>
       <legend>{'Who can see these photos?'|@translate}</legend>
 
       <select name="level" size="1">
@@ -171,15 +171,15 @@
           </p>
         </div>
       </div>
-      <div class="photosUploader" id="uploader" {if !$can_upload}style="display: none;"{/if}>
+      <div class="photosUploader" id="uploader" {if !$can_upload}hidden{/if}>
         <p>Your browser doesn't have HTML5 support.</p>
       </div>
-      <div class="selectAlbumFirst" id="chooseAlbumFirst" {if $can_upload}style="display: none;"{/if}>
+      <div class="selectAlbumFirst" id="chooseAlbumFirst" {if $can_upload}hidden{/if}>
         <p>{"First choose an album, then add your files"|translate}</p>
       </div>
     </fieldset>
     
-    <div id="uploadingActions" style="display:none">
+    <div id="uploadingActions" hidden>
       <div class="big-progressbar" style="max-width:98%;margin-bottom: 10px;">
         <div class="progressbar" style="width:0%"></div>
       </div>
@@ -190,7 +190,7 @@
 
   </form>
 
-  <fieldset style="display:none" class="Addedphotos">
+  <fieldset hidden class="Addedphotos">
     <div id="uploadedPhotos"></div>
   </fieldset>
 

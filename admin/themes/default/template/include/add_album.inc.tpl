@@ -5,7 +5,7 @@
 
 {combine_script id='addAlbum' load=$load_mode path='admin/themes/default/js/addAlbum.js'}
 
-<div style="display:none">
+<div hidden>
   <div id="addAlbumForm">
     <form>
       <div class="popinField addAlbumFormParent">

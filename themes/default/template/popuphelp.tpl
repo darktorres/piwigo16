@@ -10,7 +10,7 @@
 
 {$HELP_CONTENT}
 
-<p id="closeLink" style="display:none">
+<p id="closeLink" hidden>
     <a href="#" data-close-window>{'Close this window'|@translate}</a>
 </p>
 

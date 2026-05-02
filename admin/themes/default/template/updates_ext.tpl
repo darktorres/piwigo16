@@ -8,9 +8,9 @@
 <div class="autoupdate_bar">
 <div class="head-button-1 icon-ok-circled" id="update_all">{'Update All'|@translate}</div>
 <div class="head-button-2 icon-block" id="ignore_all">{'Ignore All'|@translate}</div>
-<div class="head-button-2 icon-ccw" id="reset_ignore" {if !$SHOW_RESET}style="display:none;"{/if}>{'Reset ignored updates'|@translate}</div>
+<div class="head-button-2 icon-ccw" id="reset_ignore" {if !$SHOW_RESET}hidden{/if}>{'Reset ignored updates'|@translate}</div>
 </div>
-<div class="autoupdate_bar" style="display:none;">
+<div class="autoupdate_bar" hidden>
 {'Please wait...'|@translate}<br><img src="admin/themes/default/images/ajax-loader-bar.gif">
 </div>
 
@@ -30,7 +30,7 @@
     </legend>
 
     {foreach from=$updates item=extension}
-      <div class="pluginBox pluginMiniBox" id="{$type}_{$extension.EXT_ID}" {if $extension.IGNORED}data-ignored="true" style="display:none;"{/if}>
+      <div class="pluginBox pluginMiniBox" id="{$type}_{$extension.EXT_ID}" {if $extension.IGNORED}data-ignored="true" hidden{/if}>
         <div class="pluginContent">
           <div class="pluginName">
             {$extension.EXT_NAME}

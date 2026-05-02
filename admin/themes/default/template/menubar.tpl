@@ -12,7 +12,7 @@
           <label class="font-checkbox"><strong>{'Hide'|@translate}</strong><i class="icon-check"></i><input type="checkbox" name="hide_{$block.reg->get_id()}" {if $block.pos<0}checked="checked"{/if}></label>
         </span>
 
-        <img src="{$themeconf.admin_icon_dir}/cat_move.png" class="drag_button" style="display:none;" alt="{'Drag to re-order'|@translate}" title="{'Drag to re-order'|@translate}">
+        <img src="{$themeconf.admin_icon_dir}/cat_move.png" class="drag_button" hidden alt="{'Drag to re-order'|@translate}" title="{'Drag to re-order'|@translate}">
         <strong>{$block.reg->get_name()|@translate}</strong> ({$block.reg->get_id()})
       </p>
 

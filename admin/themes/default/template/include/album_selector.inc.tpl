@@ -26,7 +26,7 @@
 
       <div id="linkedAlbumSearch">
         <span class='icon-search search-icon'> </span>
-        <span class="icon-cancel search-cancel-linked-album" style="display: none;"></span>
+        <span class="icon-cancel search-cancel-linked-album" hidden></span>
         <input class='search-input' type='text' id="search-input-ab" placeholder="">
       </div>
       <div class="limitReached"></div>
@@ -37,7 +37,7 @@
     <div id="searchResult">
     </div>
 
-    <div class="album-create" id="linkedAlbumCreate" style="display: none;">
+    <div class="album-create" id="linkedAlbumCreate" hidden>
       <div class="linked-album-subtitle">
         <p id="linkedAlbumSubtitle">Add a sub-album of "Album 3"</p>
       </div>

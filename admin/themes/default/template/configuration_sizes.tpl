@@ -57,7 +57,7 @@
     <legend><span class="icon-th icon-purple"></span>{'Multiple Size'|translate}</legend>
 
     <div class="showDetails">
-      <a href="#" id="showDetails"{if isset($ferrors)} style="display:none"{/if}>{'show details'|translate}</a>
+      <a href="#" id="showDetails"{if isset($ferrors)} hidden{/if}>{'show details'|translate}</a>
     </div>
 
     <table style="margin:0">

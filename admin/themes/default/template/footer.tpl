@@ -20,7 +20,7 @@
   <div>
     <a class="externalLink tiptip piwigo-logo" href="{$PHPWG_URL}" title="{'Visit Piwigo project website'|translate}"><img src="admin/themes/default/images/piwigo-grey.svg"></a>
     {if isset($DISPLAY_BELL) and $DISPLAY_BELL}
-    <span id="whats_new_notification" class="icon-blue tiptip" onclick="show_user_whats_new()" title="{'What\'s new in version %s'|translate:$WHATS_NEW_MAJOR_VERSION}">
+    <span id="whats_new_notification" class="icon-blue tiptip" title="{'What\'s new in version %s'|translate:$WHATS_NEW_MAJOR_VERSION}">
       <i class="icon-bell"></i>
     </span>
     {/if}
@@ -38,9 +38,9 @@
 </div>{* <!-- the_page --> *}
 
 {if (isset($SHOW_WHATS_NEW) and $SHOW_WHATS_NEW) or (isset($DISPLAY_BELL) and $DISPLAY_BELL)}
-<div id="whats_new">
+<div id="whats_new" data-whats-new-version="{$WHATS_NEW_MAJOR_VERSION}"{if isset($SHOW_WHATS_NEW) && $SHOW_WHATS_NEW} data-auto-show="1"{/if}>
     <div id="whats_new_popin">
-      <a class="icon-cancel close_whats_new" onClick="hide_user_whats_new()"></a>
+      <a class="icon-cancel close_whats_new"></a>
       <h3>{'What\'s new in version %s'|translate:$WHATS_NEW_MAJOR_VERSION}</h3>
       <div>
         <div class="whats_new_block_container">
@@ -65,7 +65,7 @@
         </div> *}
       </div>
       <div class="whats_new_buttons">
-        <button onClick="hide_user_whats_new()"><i class="icon-thumbs-up"></i> {'Ok, got it!'|translate}</button>
+        <button class="close_whats_new"><i class="icon-thumbs-up"></i> {'Ok, got it!'|translate}</button>
         <a class="buttonLike" href="{$RELEASE_NOTE_URL}" target="_blank"><i class="icon-book"></i> {'Read the release note'|translate}</a>
       </div>
     </div>
@@ -74,35 +74,7 @@
 
 
 
-{footer_script}
-document.querySelectorAll('a.externalLink').forEach(function(el) {
-  el.addEventListener('click', function(e) {
-    e.preventDefault();
-    window.open(el.getAttribute('href') || '');
-  });
-});
-
-window.hide_user_whats_new = function hide_user_whats_new() {
-  fetch('ws.php?format=json&method=pwg.users.preferences.set', {
-    method: 'POST',
-    body: new URLSearchParams({ param: 'show_whats_new_{$WHATS_NEW_MAJOR_VERSION}', value: 'false' })
-  }).catch(function() {});
-  var el = document.getElementById('whats_new');
-  if (el) el.style.display = 'none';
-};
-
-window.show_user_whats_new = function show_user_whats_new() {
-  var el = document.getElementById('whats_new');
-  if (el) el.style.display = '';
-};
-
-{if isset($SHOW_WHATS_NEW) && $SHOW_WHATS_NEW}
-  show_user_whats_new()
-{/if}
-
-
-
-{/footer_script}
+{combine_script id='admin_footer' load='footer' path='admin/themes/default/js/admin_footer.js'}
 
 <!-- BEGIN get_combined -->
 {get_combined_scripts load='footer'}

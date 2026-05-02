@@ -257,11 +257,21 @@ if ($register_activity) {
 // +-----------------------------------------------------------------------+
 
 $template->set_filenames(['maintenance' => 'maintenance_actions.tpl']);
-$template->assign('page_data_json', json_encode([
-    'unit_MB'        => l10n('%s MB'),
-    'no_time_elapsed' => l10n('right now'),
-], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
 $pwg_token = get_pwg_token();
+$gallery_locked = \Piwigo\Core\Config::galleryLocked();
+$template->assign('page_data_json', json_encode([
+    'unit_MB'                     => l10n('%s MB'),
+    'no_time_elapsed'             => l10n('right now'),
+    'pwg_token'                   => $pwg_token,
+    'gallery_locked'              => $gallery_locked,
+    'str_lock_gallery_tip'        => l10n('A locked gallery is only visible to administrators'),
+    'str_lock_gallery_confirm'    => l10n('Are you sure you want to lock the gallery?'),
+    'str_unlock_gallery_confirm'  => l10n('Are you sure you want to unlock the gallery?'),
+    'str_purge_history_detail'    => l10n('Purge history detail'),
+    'str_purge_history_summary'   => l10n('Purge history summary'),
+    'str_purge_search_history'    => l10n('Purge search history'),
+    'str_delete_all_sizes_confirm' => l10n('Are you sure you want to delete all sizes?'),
+], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
 $url_format = get_root_url().'admin.php?page=maintenance&amp;action=%s&amp;pwg_token='.get_pwg_token();
 
 if (!is_webmaster()) {

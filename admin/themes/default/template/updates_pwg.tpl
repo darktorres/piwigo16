@@ -1,21 +1,5 @@
-{footer_script}
-(function() {ldelim}
-  document.querySelectorAll('input[name="submit"]').forEach(function(btn) {ldelim}
-    btn.addEventListener('click', function() {ldelim}
-      if (!confirm('{'Are you sure?'|@translate}')) return false;
-      this.style.display = 'none';
-      document.querySelectorAll('.autoupdate_bar').forEach(function(el) {ldelim} el.style.display = ''; });
-    });
-  });
-  document.querySelectorAll('[name="understand"]').forEach(function(cb) {ldelim}
-    cb.addEventListener('click', function() {ldelim}
-      document.querySelectorAll('[name="submit"]').forEach(function(btn) {ldelim}
-        btn.disabled = !cb.checked;
-      });
-    });
-  });
-}());
-{/footer_script}
+<script id="pwg-page-data" type="application/json">{$page_data_json}</script>
+{combine_script id='updates_pwg' load='footer' path='admin/themes/default/js/updates_pwg.js'}
 
 {combine_css path="admin/themes/default/css/pages/updates-pwg.css"}
 

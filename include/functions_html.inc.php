@@ -483,12 +483,10 @@ function set_status_header($code, $text = ''): void
 /**
  * Returns the category comment for rendering in html textual mode (subcatify)
  * This method is called by a trigger_notify()
- *
- * @param string $desc
  */
-function render_category_literal_description($desc): string
+function render_category_literal_description(?string $desc): string
 {
-    return strip_tags($desc, '<span><p><a><br><b><i><small><big><strong><em>');
+    return strip_tags($desc ?? '', '<span><p><a><br><b><i><small><big><strong><em>');
 }
 
 /**

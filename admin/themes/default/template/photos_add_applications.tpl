@@ -6,67 +6,7 @@ GLightbox({selector: '.illustration a'});
 {/literal}
 {/footer_script}
 
-{html_head}{literal}
-<style type="text/css">
-  .applicationContainer {
-    width: 100%;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-  }
-
-  .applicationCard {
-    max-width: 500px;
-    margin: 20px;
-
-    display: flex;
-    flex-direction: row;
-  }
-
-  .applicationCard img {
-    max-width: 210px;
-    height: 175px;
-    margin: 20px;
-  }
-
-  .applicationCard .textSide {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .applicationCard .applicationName {
-    font-size: 15px;
-    font-weight: bold;
-    margin: 20px 0 10px 0;
-    padding-right: 15px;
-    text-align: left;
-  }
-
-  .applicationCard .applicationDesc {
-    text-align: left;
-    padding-right: 15px;
-
-    display: -webkit-box;
-    -webkit-line-clamp: 6;
-    -webkit-box-orient: vertical;  
-    overflow: hidden;
-  }
-  
-  .applicationCard .applicationLink {
-    width: fit-content;
-    margin-top: auto;
-    margin-bottom: 20px;
-    display: flex;
-    justify-content: flex-start;
-  }
-
-  .applicationCard .applicationLink a {
-    text-decoration: none;
-    margin-left: 0;
-  }
-
-</style>
-{/literal}{/html_head}
+{combine_css path="admin/themes/default/css/pages/photos-add-applications.css"}
 
 <div class="applicationContainer">
 

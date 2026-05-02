@@ -1,1 +1,6 @@
 .addAlbumFormParent { display: none; } /* specific to this page, do not move in theme.css */
+
+.afterUploadActions { margin: 10px; }
+.selectFiles legend > div:first-child { display: flex; align-items: center; }
+.upload-options-content > div { margin-left: 6px; }
+#uploadingActions .big-progressbar { max-width: 98%; margin-bottom: 10px; }

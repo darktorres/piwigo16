@@ -39,7 +39,7 @@
 
 {if isset($config_creation_failed)}
 <div class="errors">
-  <p style="margin-left:30px;">
+  <p class="install-config-failed-message">
     <strong>{'Creation of config file local/config/database.inc.php failed.'|@translate}</strong>
   </p>
   <ul>
@@ -169,7 +169,7 @@
 
 </fieldset>
 
-  <div style="text-align:center; margin:20px 0 10px 0">
+  <div class="install-submit-row">
     <input class="submit" type="submit" name="install" value="{'Start Install'|@translate}">
   </div>
 </form>
@@ -179,7 +179,7 @@
 </p>
 {/if}
 </div> {* content *}
-<div class="u-text-center">{$L_INSTALL_HELP}</div>
+<div class="install-help-text">{$L_INSTALL_HELP}</div>
 </div> {* the_page *}
 
 <!-- BEGIN get_combined_scripts -->

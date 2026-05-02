@@ -24,7 +24,7 @@
 
   <div class="u-clear-both"></div>
 
-  <p style="margin:10px 0 0 0">
+  <p class="rating-user-submit-row">
     <button name="submit" type="submit" class="buttonLike">
       <i class="icon-filter"></i> {'Submit'|translate}
     </button>

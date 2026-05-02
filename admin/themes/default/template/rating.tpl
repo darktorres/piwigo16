@@ -1,6 +1,8 @@
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
 {combine_script id='rating_admin' load='footer' require='common' path='admin/themes/default/js/rating_admin.js'}
 
+{combine_css path="admin/themes/default/css/pages/rating.css"}
+
 <script id="pwg-rating-data" type="application/json">{$rating_page_data_json}</script>
 
 <form action="{$F_ACTION}" method="GET" class="filter">
@@ -33,13 +35,13 @@
         data-value="{$category|@json_encode|escape:html}"
         placeholder="{'No filter on album. Select one or type to search'|translate}"
         name="cat"
-        style="width:400px"
+        class="rating-album-filter-select"
       ></select>
     </label>
 
     <div class="u-clear-both"></div>
 
-    <p style="margin:10px 0 0 0">
+    <p class="rating-submit-row">
       <button name="submit" type="submit" class="buttonLike">
         <i class="icon-filter"></i> {'Submit'|translate}
       </button>
@@ -50,7 +52,7 @@
 
 {if !empty($navbar) }{include file='navigation_bar.tpl'|@get_extent:'navbar'}{/if}
 
-<table width="99%">
+<table class="rating-table">
 <tr class="throw">
   <td>{'File'|@translate}</td>
   <td>{'Number of rates'|@translate}</td>
@@ -66,9 +68,9 @@
 	<td><strong>{$image.NB_RATES}/{$image.NB_RATES_TOTAL}</strong></td>
 	<td><strong>{$image.SCORE_RATE}</strong></td>
 	<td><strong>{$image.AVG_RATE}</strong></td>
-	<td style="border-right:1px solid" ><strong>{$image.SUM_RATE}</strong></td>
+	<td class="sum-rate-cell"><strong>{$image.SUM_RATE}</strong></td>
 	<td>
-		<table style="width:100%">
+		<table class="rating-rates-table">
 {foreach from=$image.rates item=rate name=rate}
 <tr>
 	<td>{$rate.rate}</td>

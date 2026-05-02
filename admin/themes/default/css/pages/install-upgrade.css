@@ -120,6 +120,16 @@ a:hover {
   border-left: 4px solid #0a0;
 }
 
-#the_page > div[style*="text-align: center"] {
+.install-help-text {
   color: #888;
+  text-align: center;
+}
+
+.install-submit-row {
+  text-align: center;
+  margin: 20px 0 10px 0;
+}
+
+.install-config-failed-message {
+  margin-left: 30px;
 }

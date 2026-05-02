@@ -78,7 +78,7 @@
 <div class="infos" hidden><i class="eiw-icon icon-ok"></i></div>
 <div class="errors" hidden><i class="eiw-icon icon-cancel"></i><ul></ul></div>
 
-<p class="afterUploadActions" style="margin:10px; display:none;"> 
+<p class="afterUploadActions" hidden>
   {if !$DISPLAY_FORMATS}
     <a class="batchLink icon-pencil"></a><span class="buttonSeparator">{'or'|translate}</span><a href="admin.php?page=photos_add" class="secondary_button icon-plus-circled">{'Add another set of photos'|@translate}</a>
   {else}
@@ -127,7 +127,7 @@
     <fieldset class="selectFiles">
 
       <legend>
-        <div style="display:flex;align-items: center;">
+        <div>
           <span class="icon-file-image icon-yellow"></span>{'Select files'|@translate}
           {if !$DISPLAY_FORMATS}
           <div id="uploadOptions" class="upload-options">
@@ -141,7 +141,7 @@
           <input type="checkbox" id="toggleUpdateMode">
           <span class="slider round"></span>
         </label>
-        <div style="margin-left: 6px;">
+        <div>
           <p>{'If a photo in this album has the same filename, update the file without changing the photo\'s properties'|@translate}</p>
         </div>
       </div>
@@ -180,7 +180,7 @@
     </fieldset>
     
     <div id="uploadingActions" hidden>
-      <div class="big-progressbar" style="max-width:98%;margin-bottom: 10px;">
+      <div class="big-progressbar">
         <div class="progressbar"></div>
       </div>
       <button id="cancelUpload" class="buttonLike icon-cancel-circled">{'Cancel'|translate}</button>

@@ -23,6 +23,7 @@
     "at-rule-no-unknown": [true, { "ignoreAtRules": ["literal"] }]
   },
   "ignoreFiles": [
+    "**/*.min.css",
     "node_modules/**",
     "dist/**",
     "_data/**",

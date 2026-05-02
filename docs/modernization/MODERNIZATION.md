@@ -225,26 +225,11 @@ landing significant changes:
 
 ## Roadmap
 
-See **[ROADMAP.md](ROADMAP.md)** for the full breakdown of remaining work, with current state, concrete steps, and verification commands for each item.
+Remaining modernization work is tracked in three per-track files, each with current state, concrete steps, and verification commands per item:
 
-Summary table:
-
-| #   | Description                                                          | Size | Status                                                              |
-| --- | -------------------------------------------------------------------- | ---- | ------------------------------------------------------------------- |
-| 1   | PHPStan level 9 / baseline elimination (625 errors remaining)        | L    | **WIP**                                                             |
-| 2   | Fix remaining `global` declarations inside `src/`                    | S    | Verify/close                                                        |
-| 3   | Remove class duplication in `ws_core.inc.php`                        | M    | Not started                                                         |
-| 4   | Unit test coverage expansion (229 tests → ≥40% coverage)             | L    | Not started                                                         |
-| 5   | PHP 8.1–8.5 features: readonly, enum, match                          | M    | Not started                                                         |
-| 6   | `functions_user.inc.php` split into typed classes                    | L    | Not started                                                         |
-| 7   | TypeScript `any` reduction (468 → ≤250)                              | M    | Not started                                                         |
-| 8   | CSS design tokens + Stylelint                                        | M    | Not started                                                         |
-| 9   | jQuery upgrade / incremental replacement                             | XL   | Planning only                                                       |
-| 10  | Overdue TODO cleanup (34 markers)                                    | S    | Not started                                                         |
-| 11  | Eliminate remaining `window.*` data-bridge globals (~20 assignments) | M    | ✅ Done — see ROADMAP-TS.md #3 and PLAN-inline-assets-extraction.md |
-| 12  | Migrate vendored frontend libs to npm (video.js ×4, Leaflet 0.7, CodeMirror 2, Open Sans, jquery.tablesorter, jquery.addtags) | L    | Not started — see ROADMAP-TS.md #6                                  |
-
-Recommended sequence: 1 → 2 → 10 → 3 → 4 → 5 → 7 → 8 → 6 → 9 → 12 → 11.
+- `ROADMAP-PHP.md` — PHP / backend
+- `ROADMAP-TS.md` — TypeScript / frontend glue
+- `ROADMAP-CSS.md` — CSS / themes
 
 ---
 

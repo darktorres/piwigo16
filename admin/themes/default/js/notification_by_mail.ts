@@ -1,3 +1,5 @@
+export {};
+
 function setAllCheckboxes(checked: boolean) {
     document
         .querySelectorAll<HTMLInputElement>('#notification_by_mail input[type=checkbox]')

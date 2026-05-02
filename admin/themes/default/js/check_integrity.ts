@@ -1,3 +1,5 @@
+export {};
+
 function setAllCheckboxes(checked: boolean): void {
     document.querySelectorAll<HTMLInputElement>('#c13y input[type=checkbox]').forEach((cb) => {
         cb.checked = checked;

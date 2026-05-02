@@ -7,7 +7,7 @@
 	<div class="titrePage">
 		<ul class="categoryActions">
 			{combine_script id='core.scripts' load='async' path='themes/default/js/scripts.js'}
-			<li><a href="{$U_HELP}" onclick="popuphelp(this.href); return false;" title="{'Help'|@translate}" class="pwg-state-default pwg-button">
+			<li><a href="{$U_HELP}" data-popuphelp title="{'Help'|@translate}" class="pwg-state-default pwg-button">
 				<span class="pwg-icon pwg-icon-help"></span><span class="pwg-button-text">{'Help'|@translate}</span>
 			</a></li>
 		</ul>

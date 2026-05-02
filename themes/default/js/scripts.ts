@@ -162,6 +162,43 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // Generic confirm-on-click: <a data-confirm="Are you sure?" href="...">
+    document.querySelectorAll<HTMLElement>('[data-confirm]').forEach(el => {
+        el.addEventListener('click', (e) => {
+            const msg = el.getAttribute('data-confirm') || '';
+            if (!confirm(msg)) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        });
+    });
+
+    // Open in named window: <a href data-window-open-name=NAME data-window-open-features=FEATURES>
+    document.querySelectorAll<HTMLAnchorElement>('a[data-window-open-name]').forEach(a => {
+        a.addEventListener('click', (e) => {
+            e.preventDefault();
+            const name = a.getAttribute('data-window-open-name') || '';
+            const features = a.getAttribute('data-window-open-features') || '';
+            window.open(a.href, name, features);
+        });
+    });
+
+    // Open as popup help window: <a href data-popuphelp>
+    document.querySelectorAll<HTMLAnchorElement>('a[data-popuphelp]').forEach(a => {
+        a.addEventListener('click', (e) => {
+            e.preventDefault();
+            popuphelp(a.href);
+        });
+    });
+
+    // Close window: <a data-close-window>
+    document.querySelectorAll<HTMLElement>('[data-close-window]').forEach(el => {
+        el.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.close();
+        });
+    });
+
     // Download switchbox: remove href so it acts as a toggle trigger, not a download link
     const downloadSwitchBox = document.querySelector<HTMLElement>('[data-disable-href]');
     if (downloadSwitchBox) {

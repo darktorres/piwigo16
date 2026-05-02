@@ -125,7 +125,7 @@
       {if isset($errors['password_form_error'])}
       <p class="error-message error-message--form-level"><i class="gallery-icon-attention-circled"></i> {$errors['password_form_error']}</p>
       {/if}
-      <p style="font-size: 12px;">{"If you do not receive the email, please contact your webmaster."|translate}</p>
+      <p class="password-webmaster-hint">{"If you do not receive the email, please contact your webmaster."|translate}</p>
     </div>
   {/if}
       </form>

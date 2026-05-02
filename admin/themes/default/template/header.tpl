@@ -80,7 +80,7 @@
   </div>
 </div>
 
-<div style="clear:both;"></div>
+<div class="u-clear-both"></div>
 
 {if not empty($header_notes)}
 <div class="header_notes">

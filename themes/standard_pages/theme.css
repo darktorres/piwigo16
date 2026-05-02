@@ -399,6 +399,10 @@ a.btn-main{
   display: block;
 }
 
+.password-webmaster-hint {
+  font-size: 12px;
+}
+
 .error-message i,
 p.error-message,
 .modal-secret {

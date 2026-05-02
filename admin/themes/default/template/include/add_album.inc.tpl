@@ -16,7 +16,7 @@
       <div class="popinField">
         <span class="popinFieldLabel">{'Album name'|@translate}</span>
         <input name="category_name" type="text" maxlength="255">
-        <span id="categoryNameError" style="color:red;">{'The name of an album must not be empty'|translate}</span>
+        <span id="categoryNameError">{'The name of an album must not be empty'|translate}</span>
       </div>
 
       <div class="popinButtons">

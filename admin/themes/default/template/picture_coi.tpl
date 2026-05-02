@@ -10,7 +10,7 @@
 
 <fieldset>
 <legend>{'Center of interest'|@translate}</legend>
-<p style="margin:0 0 10px 0;padding:0;">
+<p class="picture-coi-intro">
 {'The center of interest is the most meaningful zone in the photo.'|@translate}
 {'For photo sizes with crop, such as "Square", Piwigo will do its best to include the center of interest.'|@translate}
 {'By default, the center of interest is placed in the middle of the photo.'|@translate}

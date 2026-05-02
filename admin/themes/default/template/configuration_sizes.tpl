@@ -13,7 +13,7 @@
   {if (isset($is_gd) and $is_gd)}
     <div>
       {'Resize after upload disabled due to the use of GD as graphic library'|translate}
-      <input type="checkbox" name="original_resize"disabled="disabled" style="visibility: hidden">
+      <input type="checkbox" name="original_resize" disabled="disabled" class="u-invisible">
       <input type="hidden" name="original_resize_maxwidth" value="{$sizes.original_resize_maxwidth}">
       <input type="hidden" name="original_resize_maxheight" value="{$sizes.original_resize_maxheight}">
       <input type="hidden" name="original_resize_quality" value="{$sizes.original_resize_quality}">

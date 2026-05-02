@@ -253,7 +253,7 @@
     <div id="regenerationMsg" class="bulkAction" hidden>
         <div id="regenerationStatus">
           <span id="regenerationText">{'Generate multiple size images'|@translate}</span>
-          <span class="badge-number" style="font-size:12.8px"></span>
+          <span class="badge-number badge-number-fs-128"></span>
         </div>
         <input type="hidden" name="regenerateSuccess" value="0">
         <input type="hidden" name="regenerateError" value="0">

@@ -7,3 +7,8 @@
 .sizeDetails { display: none; margin-left: 10px; }
 .sizeDetails-row { margin: 10px 0 0 0; }
 .sizeEditOpen { margin-left: 10px; }
+.watermark-position-custom-label {
+  display: block;
+  margin-top: 10px;
+  font-weight: normal;
+}

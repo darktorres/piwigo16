@@ -56,7 +56,7 @@
           <label class="font-checkbox"><span class="icon-dot-circled"></span><input name="w[position]" type="radio" value="bottomleft"{if $watermark.position eq 'bottomleft'} checked="checked"{/if}> {'bottom left corner'|translate}</label>
         </div>
 
-        <label class="font-checkbox" style="display:block;margin-top:10px;font-weight:normal;"><span class="icon-dot-circled"></span><input name="w[position]" type="radio" value="custom"{if $watermark.position eq 'custom'} checked="checked"{/if}> {'custom'|translate}</label>
+        <label class="font-checkbox watermark-position-custom-label"><span class="icon-dot-circled"></span><input name="w[position]" type="radio" value="custom"{if $watermark.position eq 'custom'} checked="checked"{/if}> {'custom'|translate}</label>
 
         <div id="positionCustomDetails">
           <label>{'X Position'|translate}

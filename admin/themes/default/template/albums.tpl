@@ -85,7 +85,7 @@
     <div class="search-album-cont">
       {* <div class="search-album-label">{'Search albums'|@translate}</div> *}
       <span class="search-album-num-result"></span>
-      <div class="search-album-input-container" style="position:relative">
+      <div class="search-album-input-container">
         <span class="icon-search search-icon"></span>
         <span class="icon-cancel search-cancel"></span>
         <input id="cat_search_input" class='search-input' type="text" placeholder="{"Search"|@translate}">

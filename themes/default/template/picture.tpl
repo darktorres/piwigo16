@@ -222,7 +222,7 @@
 			<span id="updateRate">{if isset($rating.USER_RATE)}{'Update your rating'|@translate}{else}{'Rate this photo'|@translate}{/if}</span>
 		</dt>
 		<dd>
-			<form action="{$rating.F_ACTION}" method="post" id="rateForm" style="margin:0;"
+			<form action="{$rating.F_ACTION}" method="post" id="rateForm"
 			      data-root-url="{$ROOT_URL|escape}"
 			      data-image-id="{$current.id}"
 			      data-str-update-your-rating="{'Update your rating'|@translate|@escape:'html'}"

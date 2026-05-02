@@ -72,7 +72,7 @@
   </div>
 </div>
 
-<p class="quick-search-section" style="padding-top: 30px;">{"Others"|translate}</p>
+<p class="quick-search-section">{"Others"|translate}</p>
 <div class="quick-search-items{if $is_dark_mode} dark {/if}">
   <div class="quick-search-item">
     <div class="quick-search-item-info">

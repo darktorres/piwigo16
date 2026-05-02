@@ -19,6 +19,10 @@
 .u-w-90p { width: 90%; }
 .u-reset-margin { margin: 0; padding: 0; }
 
+.selected-related-tag-remove { border: none; }
+#rateForm { margin: 0; }
+.quick-search-section { padding-top: 30px; }
+
 /**
  * Menubar
  */

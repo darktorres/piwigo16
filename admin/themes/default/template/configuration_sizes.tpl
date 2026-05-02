@@ -2,16 +2,7 @@
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
 {combine_script id='configuration_sizes' load='footer' require='common' path='admin/themes/default/js/configuration_sizes.js'}
 
-{html_style}
-.sizeEnable { width:50px; }
-.sizeEnable .icon-ok { position:relative; left:2px; }
-.sizeEditForm { margin:0 0 10px 20px; }
-.sizeEdit { display:none; }
-#sizesConf table { margin:0; }
-.showDetails { padding:0; }
-.sizeDetails { display:none;margin-left:10px; }
-.sizeEditOpen { margin-left:10px; }
-{/html_style}
+{combine_css path="admin/themes/default/css/pages/configuration_sizes.css"}
 
 <form method="post" action="{$F_ACTION}" class="properties">
 

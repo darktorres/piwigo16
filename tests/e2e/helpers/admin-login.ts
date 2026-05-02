@@ -6,7 +6,7 @@ export async function loginAsAdmin(page: Page): Promise<void> {
     await page.fill('input[name="username"]', 'admin');
     await page.fill('input[name="password"]', 'p4ssword!');
     await page.click('input[name="login"]');
-    await page.waitForURL(url => !url.pathname.includes('identification.php'));
+    await page.waitForURL((url) => !url.pathname.includes('identification.php'));
 }
 
 export function attachErrorCollector(page: Page): () => Error[] {

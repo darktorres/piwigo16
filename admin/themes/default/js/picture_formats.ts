@@ -11,7 +11,7 @@ const { pwg_token, str_confirm_delete_format, str_confirm_msg, str_cancel_msg } 
     getPageData<PictureFormatsPageData>();
 
 function fitExtensions(): void {
-    document.querySelectorAll<HTMLElement>('.format-card-ext span').forEach(el => {
+    document.querySelectorAll<HTMLElement>('.format-card-ext span').forEach((el) => {
         const size = Math.min(180 * (1 / el.innerHTML.length), 45);
         el.style.fontSize = `${size}px`;
     });
@@ -19,7 +19,7 @@ function fitExtensions(): void {
 
 fitExtensions();
 
-document.querySelectorAll<HTMLElement>('.format-card').forEach(card => {
+document.querySelectorAll<HTMLElement>('.format-card').forEach((card) => {
     card.querySelector<HTMLElement>('.format-delete')!.addEventListener('click', () => {
         const extText = card.querySelector<HTMLElement>('.format-card-ext span')?.innerHTML ?? '';
         if (!window.confirm(str_confirm_delete_format.replace('%s', extText))) return;
@@ -40,11 +40,11 @@ function deleteFormat(card: HTMLElement): void {
             setTimeout(() => {
                 card.remove();
                 if (document.querySelectorAll('.format-card').length === 0) {
-                    (document.querySelector<HTMLElement>('.no-formats'))!.style.display = '';
+                    document.querySelector<HTMLElement>('.no-formats')!.style.display = '';
                 }
             }, 600);
         })
-        .catch(message => console.log(message));
+        .catch((message) => console.log(message));
 }
 
 export {};

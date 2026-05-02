@@ -35,23 +35,25 @@ const lang = pageData.lang;
 const tagsCache = new TagsCache({
     serverKey: pageData.CACHE_KEYS.tags,
     serverId: pageData.CACHE_KEYS._hash,
-    rootUrl: pageData.ROOT_URL
+    rootUrl: pageData.ROOT_URL,
 });
 
 const categoriesCache = new CategoriesCache({
     serverKey: pageData.CACHE_KEYS.categories,
     serverId: pageData.CACHE_KEYS._hash,
-    rootUrl: pageData.ROOT_URL
+    rootUrl: pageData.ROOT_URL,
 });
 
-tagsCache?.selectize(document.querySelector('[data-selectize=tags]'), { lang: {
-    'Add': pageData.str_create
-}});
+tagsCache?.selectize(document.querySelector('[data-selectize=tags]'), {
+    lang: {
+        Add: pageData.str_create,
+    },
+});
 
 categoriesCache?.selectize(document.querySelector('[data-selectize=categories]'), {
-    filter: function(categories: any[], options: any) {
+    filter: function (categories: any[], options: any) {
         if (this.name == 'dissociate') {
-            const filtered = categories.filter(function(cat: any) {
+            const filtered = categories.filter(function (cat: any) {
                 return !!pageData.associated_categories[cat.id];
             });
 
@@ -60,11 +62,10 @@ categoriesCache?.selectize(document.querySelector('[data-selectize=categories]')
             }
 
             return filtered;
-        }
-        else {
+        } else {
             return categories;
         }
-    }
+    },
 });
 
 const all_elements = pageData.all_elements;
@@ -82,24 +83,37 @@ let input: HTMLInputElement | null = null;
 let percent = 0;
 let progressBar_max = 0;
 
-const pwg_token = (document.querySelector<HTMLInputElement>('input[name=pwg_token]')?.value) ?? '';
+const pwg_token = document.querySelector<HTMLInputElement>('input[name=pwg_token]')?.value ?? '';
 
 const qs = <T extends HTMLElement = HTMLElement>(sel: string) => document.querySelector<T>(sel);
-const qsa = <T extends HTMLElement = HTMLElement>(sel: string) => Array.from(document.querySelectorAll<T>(sel));
-const show = (el: HTMLElement | null | undefined) => { if (el) el.style.display = ''; };
-const hide = (el: HTMLElement | null | undefined) => { if (el) el.style.display = 'none'; };
+const qsa = <T extends HTMLElement = HTMLElement>(sel: string) =>
+    Array.from(document.querySelectorAll<T>(sel));
+const show = (el: HTMLElement | null | undefined) => {
+    if (el) el.style.display = '';
+};
+const hide = (el: HTMLElement | null | undefined) => {
+    if (el) el.style.display = 'none';
+};
 
 class AjaxQueue {
     private pending: Array<() => Promise<void>> = [];
     private running = 0;
     private max: number;
-    constructor(max: number) { this.max = max; }
-    add(fn: () => Promise<void>): void { this.pending.push(fn); this.process(); }
+    constructor(max: number) {
+        this.max = max;
+    }
+    add(fn: () => Promise<void>): void {
+        this.pending.push(fn);
+        this.process();
+    }
     private process(): void {
         while (this.running < this.max && this.pending.length > 0) {
             const fn = this.pending.shift()!;
             this.running++;
-            fn().finally(() => { this.running--; this.process(); });
+            fn().finally(() => {
+                this.running--;
+                this.process();
+            });
         }
     }
 }
@@ -110,13 +124,17 @@ const derivativesQueue = new AjaxQueue(3);
 /*---- Thumbnails shift-click ----*/
 function enableShiftClick(container: HTMLElement) {
     const inputs: HTMLInputElement[] = [];
-    let lastClicked = 0, lastClickedStatus = true;
+    let lastClicked = 0,
+        lastClickedStatus = true;
     container.querySelectorAll<HTMLInputElement>('input[type=checkbox]').forEach((inp, pos) => {
         inputs.push(inp);
         inp.addEventListener('click', (e: MouseEvent) => {
             if (e.shiftKey) {
-                let first = lastClicked, last = pos;
-                if (first > last) { [first, last] = [last, first]; }
+                let first = lastClicked,
+                    last = pos;
+                if (first > last) {
+                    [first, last] = [last, first];
+                }
                 for (let idx = first; idx <= last; idx++) {
                     inputs[idx].checked = lastClickedStatus;
                     inputs[idx].dispatchEvent(new Event('change'));
@@ -134,7 +152,8 @@ function enableShiftClick(container: HTMLElement) {
 function select_album_action({ album, addSelectedAlbum }: { album: any; addSelectedAlbum: any }) {
     const assocP = qs('#associate_as p');
     if (assocP) assocP.innerHTML = str_add_alb_associate;
-    qs('.selected-associate-action')?.insertAdjacentHTML('beforeend',
+    qs('.selected-associate-action')?.insertAdjacentHTML(
+        'beforeend',
         `<div class="selected-associate-item">
             <span>${album.name}</span><span id="${album.id}" class="remove-associate icon-cancel-circled"></span>
             <input type="hidden" id="associate_input_${album.id}" name="associate[]" value="${album.id}">
@@ -143,7 +162,13 @@ function select_album_action({ album, addSelectedAlbum }: { album: any; addSelec
     addSelectedAlbum();
 }
 
-function remove_album_action({ id_album, getSelectedAlbum }: { id_album: any; getSelectedAlbum: any }) {
+function remove_album_action({
+    id_album,
+    getSelectedAlbum,
+}: {
+    id_album: any;
+    getSelectedAlbum: any;
+}) {
     document.getElementById(String(id_album))?.parentElement?.remove();
     if (!getSelectedAlbum().length) {
         const assocP = qs('#associate_as p');
@@ -164,7 +189,8 @@ document.addEventListener('DOMContentLoaded', () => {
     qs('#associate_as')?.addEventListener('click', () => ab_action.open());
     qs('.selected-associate-action')?.addEventListener('click', (e: Event) => {
         const target = e.target as HTMLElement;
-        if (target.classList.contains('remove-associate')) ab_action.remove_selected_album(target.id);
+        if (target.classList.contains('remove-associate'))
+            ab_action.remove_selected_album(target.id);
     });
 });
 
@@ -173,45 +199,65 @@ GLightbox({ selector: 'a.preview-box' });
 tippy('.thumbnails img', { delay: [0, 0], duration: [200, 200] });
 
 /*---- Datepicker + AddAlbum ----*/
-document.querySelectorAll<HTMLElement>('[data-datepicker]').forEach(el => {
+document.querySelectorAll<HTMLElement>('[data-datepicker]').forEach((el) => {
     (window as any).pwgDatepicker(el, { showTimepicker: true, cancelButton: lang.Cancel });
 });
-document.querySelectorAll<HTMLElement>('[data-add-album]').forEach(el => {
+document.querySelectorAll<HTMLElement>('[data-add-album]').forEach((el) => {
     (window as any).pwgAddAlbum(el);
 });
 
 /*---- Toggle visibility ----*/
-qs<HTMLInputElement>('input[name=remove_author]')?.addEventListener('click', function(this: HTMLInputElement) {
-    this.checked ? hide(qs('input[name=author]')) : show(qs('input[name=author]'));
-});
-qs<HTMLInputElement>('input[name=remove_title]')?.addEventListener('click', function(this: HTMLInputElement) {
-    this.checked ? hide(qs('input[name=title]')) : show(qs('input[name=title]'));
-});
-qs<HTMLInputElement>('input[name=remove_date_creation]')?.addEventListener('click', function(this: HTMLInputElement) {
-    this.checked ? hide(qs('#set_date_creation')) : show(qs('#set_date_creation'));
-});
+qs<HTMLInputElement>('input[name=remove_author]')?.addEventListener(
+    'click',
+    function (this: HTMLInputElement) {
+        this.checked ? hide(qs('input[name=author]')) : show(qs('input[name=author]'));
+    }
+);
+qs<HTMLInputElement>('input[name=remove_title]')?.addEventListener(
+    'click',
+    function (this: HTMLInputElement) {
+        this.checked ? hide(qs('input[name=title]')) : show(qs('input[name=title]'));
+    }
+);
+qs<HTMLInputElement>('input[name=remove_date_creation]')?.addEventListener(
+    'click',
+    function (this: HTMLInputElement) {
+        this.checked ? hide(qs('#set_date_creation')) : show(qs('#set_date_creation'));
+    }
+);
 
 /*---- Derivatives ----*/
 var derivatives: { elements: any; done: number; total: number; finished: () => boolean } = {
-    elements: null, done: 0, total: 0,
-    finished() { return this.done === this.total && this.elements && this.elements.length === 0; }
+    elements: null,
+    done: 0,
+    total: 0,
+    finished() {
+        return this.done === this.total && this.elements && this.elements.length === 0;
+    },
 };
 
 function progress_start() {
     show(qs('#uploadingActions'));
-    const pb = qs<HTMLElement>('#uploadingActions .progress-bar'); if (pb) pb.style.width = '0%';
+    const pb = qs<HTMLElement>('#uploadingActions .progress-bar');
+    if (pb) pb.style.width = '0%';
 }
-function progress_end() { hide(qs('#uploadingActions')); }
+function progress_end() {
+    hide(qs('#uploadingActions'));
+}
 
 function progress(success: any) {
-    percent = Math.floor(derivatives.done / derivatives.total * 100);
-    const pb = qs<HTMLElement>('#uploadingActions .progressbar'); if (pb) pb.style.width = percent + '%';
+    percent = Math.floor((derivatives.done / derivatives.total) * 100);
+    const pb = qs<HTMLElement>('#uploadingActions .progressbar');
+    if (pb) pb.style.width = percent + '%';
     if (success !== undefined) {
         const type = success ? 'regenerateSuccess' : 'regenerateError';
         const inp = qs<HTMLInputElement>(`[name="${type}"]`);
         if (inp) inp.value = String(parseInt(inp.value ?? '0') + 1);
     }
-    if (derivatives.finished()) { progress_end(); qs<HTMLElement>('#applyAction')?.click(); }
+    if (derivatives.finished()) {
+        progress_end();
+        qs<HTMLElement>('#applyAction')?.click();
+    }
 }
 
 function updateDerivativeBadge() {
@@ -222,45 +268,89 @@ function updateDerivativeBadge() {
 function getDerivativeUrls() {
     const ids = derivatives.elements.splice(0, 500);
     const types: string[] = [];
-    document.querySelectorAll<HTMLInputElement>('#action_generate_derivatives input').forEach(t => { if (t.checked) types.push(t.value); });
-    hide(qs('#applyActionBlock')); hide(qs('.permitActionListButton')); hide(qs('#confirmDel'));
+    document
+        .querySelectorAll<HTMLInputElement>('#action_generate_derivatives input')
+        .forEach((t) => {
+            if (t.checked) types.push(t.value);
+        });
+    hide(qs('#applyActionBlock'));
+    hide(qs('.permitActionListButton'));
+    hide(qs('#confirmDel'));
     show(qs('#regenerationMsg'));
-    const regen = qs('#regenerationText'); if (regen) regen.innerHTML = lang.generateMsg;
+    const regen = qs('#regenerationText');
+    if (regen) regen.innerHTML = lang.generateMsg;
     progress_start();
 
     const body = new URLSearchParams({ max_urls: '100000', types: types.join(',') });
     ids.forEach((id: any) => body.append('ids[]', id));
-    fetch('ws.php?format=json&method=pwg.getMissingDerivatives', { method: 'POST', body }).then(r => r.json()).then((data: any) => {
-        if (!data.stat || data.stat !== 'ok') return;
-        derivatives.total += data.result.urls.length;
-        updateDerivativeBadge();
-        progress(undefined);
-        data.result.urls.forEach((url: string) => {
-            derivativesQueue.add(async () => {
-                try { await fetch(url + '&ajaxload=true'); derivatives.done++; updateDerivativeBadge(); progress(true); }
-                catch { derivatives.done++; updateDerivativeBadge(); progress(false); }
+    fetch('ws.php?format=json&method=pwg.getMissingDerivatives', { method: 'POST', body })
+        .then((r) => r.json())
+        .then((data: any) => {
+            if (!data.stat || data.stat !== 'ok') return;
+            derivatives.total += data.result.urls.length;
+            updateDerivativeBadge();
+            progress(undefined);
+            data.result.urls.forEach((url: string) => {
+                derivativesQueue.add(async () => {
+                    try {
+                        await fetch(url + '&ajaxload=true');
+                        derivatives.done++;
+                        updateDerivativeBadge();
+                        progress(true);
+                    } catch {
+                        derivatives.done++;
+                        updateDerivativeBadge();
+                        progress(false);
+                    }
+                });
             });
+            if (derivatives.elements.length)
+                setTimeout(getDerivativeUrls, 25 * (derivatives.total - derivatives.done));
         });
-        if (derivatives.elements.length) setTimeout(getDerivativeUrls, 25 * (derivatives.total - derivatives.done));
-    });
 }
 
 function selectGenerateDerivAll() {
-    document.querySelectorAll<HTMLInputElement>('#action_generate_derivatives input[type=checkbox]').forEach(el => { el.checked = true; el.dispatchEvent(new Event('change')); });
+    document
+        .querySelectorAll<HTMLInputElement>('#action_generate_derivatives input[type=checkbox]')
+        .forEach((el) => {
+            el.checked = true;
+            el.dispatchEvent(new Event('change'));
+        });
 }
 function selectGenerateDerivNone() {
-    document.querySelectorAll<HTMLInputElement>('#action_generate_derivatives input[type=checkbox]').forEach(el => { el.checked = false; el.dispatchEvent(new Event('change')); });
+    document
+        .querySelectorAll<HTMLInputElement>('#action_generate_derivatives input[type=checkbox]')
+        .forEach((el) => {
+            el.checked = false;
+            el.dispatchEvent(new Event('change'));
+        });
 }
 function selectDelDerivAll() {
-    document.querySelectorAll<HTMLInputElement>('#action_delete_derivatives input[name="del_derivatives_type[]"]').forEach(el => { el.checked = true; el.dispatchEvent(new Event('change')); });
+    document
+        .querySelectorAll<HTMLInputElement>(
+            '#action_delete_derivatives input[name="del_derivatives_type[]"]'
+        )
+        .forEach((el) => {
+            el.checked = true;
+            el.dispatchEvent(new Event('change'));
+        });
 }
 function selectDelDerivNone() {
-    document.querySelectorAll<HTMLInputElement>('#action_delete_derivatives input[name="del_derivatives_type[]"]').forEach(el => { el.checked = false; el.dispatchEvent(new Event('change')); });
+    document
+        .querySelectorAll<HTMLInputElement>(
+            '#action_delete_derivatives input[name="del_derivatives_type[]"]'
+        )
+        .forEach((el) => {
+            el.checked = false;
+            el.dispatchEvent(new Event('change'));
+        });
 }
 
 window.addEventListener('keypress', (e: KeyboardEvent) => {
-    const selected = (qs<HTMLSelectElement>("select[name='selectAction']"))?.value;
-    const haveTextarea = selected ? document.querySelectorAll(`#action_${selected} textarea`).length : 0;
+    const selected = qs<HTMLSelectElement>("select[name='selectAction']")?.value;
+    const haveTextarea = selected
+        ? document.querySelectorAll(`#action_${selected} textarea`).length
+        : 0;
     const addLinkedAlbum = document.getElementById('addLinkedAlbum');
     const isVisible = addLinkedAlbum && getComputedStyle(addLinkedAlbum).display !== 'none';
     if (e.key === 'Enter' && selected && selected !== '-1' && !haveTextarea && !isVisible) {
@@ -273,22 +363,31 @@ window.addEventListener('keypress', (e: KeyboardEvent) => {
 qs<HTMLElement>('#applyAction')?.addEventListener('click', (e: Event) => {
     if (typeof elements !== 'undefined') return;
 
-    const selectAction = (qs<HTMLSelectElement>('[name="selectAction"]'))?.value;
+    const selectAction = qs<HTMLSelectElement>('[name="selectAction"]')?.value;
 
     if (selectAction === 'metadata') {
-        e.preventDefault(); e.stopPropagation();
+        e.preventDefault();
+        e.stopPropagation();
         qsa('.bulkAction').forEach(hide);
-        const regenText = qs('#regenerationText'); if (regenText) regenText.innerHTML = lang.syncProgressMessage;
+        const regenText = qs('#regenerationText');
+        if (regenText) regenText.innerHTML = lang.syncProgressMessage;
         elements = [];
-        if ((qs<HTMLInputElement>('input[name=setSelected]'))?.checked) { elements = all_elements; }
-        else { document.querySelectorAll<HTMLInputElement>('input[name="selection[]"]:checked').forEach(el => elements.push(el.value)); }
+        if (qs<HTMLInputElement>('input[name=setSelected]')?.checked) {
+            elements = all_elements;
+        } else {
+            document
+                .querySelectorAll<HTMLInputElement>('input[name="selection[]"]:checked')
+                .forEach((el) => elements.push(el.value));
+        }
 
         const queuedMgr = new AjaxQueue(1);
         progressBar_max = elements.length;
         let todo = 0;
         const syncBlockSize = Math.min(Math.floor(elements.length / 2) || 1, 1000);
         let image_ids: any[] = [];
-        hide(qs('#applyActionBlock')); hide(qs('.permitActionListButton')); hide(qs('#confirmDel'));
+        hide(qs('#applyActionBlock'));
+        hide(qs('.permitActionListButton'));
+        hide(qs('#confirmDel'));
         show(qs('#regenerationMsg'));
         progress_bar_start();
 
@@ -300,10 +399,14 @@ qs<HTMLElement>('#applyAction')?.addEventListener('click', (e: Event) => {
             queuedMgr.add(async () => {
                 try {
                     const body = new URLSearchParams({ pwg_token, image_id: ids.join(',') });
-                    await fetch('ws.php?format=json&method=pwg.images.syncMetadata', { method: 'POST', body }).then(r => r.json());
+                    await fetch('ws.php?format=json&method=pwg.images.syncMetadata', {
+                        method: 'POST',
+                        body,
+                    }).then((r) => r.json());
                 } finally {
                     todo += thisBatchSize;
-                    const badge = qs('#regenerationStatus .badge-number'); if (badge) badge.innerHTML = todo + '/' + progressBar_max;
+                    const badge = qs('#regenerationStatus .badge-number');
+                    if (badge) badge.innerHTML = todo + '/' + progressBar_max;
                     progress_bar(todo, progressBar_max, false);
                 }
             });
@@ -315,24 +418,35 @@ qs<HTMLElement>('#applyAction')?.addEventListener('click', (e: Event) => {
     if (selectAction === 'delete') {
         const confirmCb = qs<HTMLInputElement>('#confirmDel input[name=confirm_deletion]');
         if (!confirmCb?.checked) {
-            const errSpan = qs<HTMLElement>('#confirmDel span.errors'); if (errSpan) errSpan.style.visibility = 'visible';
+            const errSpan = qs<HTMLElement>('#confirmDel span.errors');
+            if (errSpan) errSpan.style.visibility = 'visible';
             return;
         }
         e.stopPropagation();
-    } else { return; }
+    } else {
+        return;
+    }
 
     qsa('.bulkAction').forEach(hide);
     const queuedMgr = new AjaxQueue(1);
     elements = [];
-    if ((qs<HTMLInputElement>('input[name=setSelected]'))?.checked) { elements = all_elements; }
-    else { document.querySelectorAll<HTMLInputElement>('input[name="selection[]"]:checked').forEach(el => elements.push(el.value)); }
+    if (qs<HTMLInputElement>('input[name=setSelected]')?.checked) {
+        elements = all_elements;
+    } else {
+        document
+            .querySelectorAll<HTMLInputElement>('input[name="selection[]"]:checked')
+            .forEach((el) => elements.push(el.value));
+    }
 
     progressBar_max = elements.length;
     let todo = 0;
     const deleteBlockSize = Math.min(Math.floor(elements.length / 2) || 1, 1000);
     let image_ids: any[] = [];
-    hide(qs('#applyActionBlock')); hide(qs('.permitActionListButton')); hide(qs('#confirmDel'));
-    const regenText = qs('#regenerationText'); if (regenText) regenText.innerHTML = lang.deleteProgressMessage;
+    hide(qs('#applyActionBlock'));
+    hide(qs('.permitActionListButton'));
+    hide(qs('#confirmDel'));
+    const regenText = qs('#regenerationText');
+    if (regenText) regenText.innerHTML = lang.deleteProgressMessage;
     show(qs('#regenerationMsg'));
     progress_bar_start();
 
@@ -343,37 +457,53 @@ qs<HTMLElement>('#applyAction')?.addEventListener('click', (e: Event) => {
         const thisBatchSize = ids.length;
         queuedMgr.add(async () => {
             try {
-                const body = new URLSearchParams({ method: 'pwg.images.delete', pwg_token, image_id: ids.join(',') });
-                await fetch('ws.php?format=json', { method: 'POST', body }).then(r => r.json());
+                const body = new URLSearchParams({
+                    method: 'pwg.images.delete',
+                    pwg_token,
+                    image_id: ids.join(','),
+                });
+                await fetch('ws.php?format=json', { method: 'POST', body }).then((r) => r.json());
             } finally {
                 todo += thisBatchSize;
-                const badge = qs('#regenerationStatus .badge-number'); if (badge) badge.innerHTML = todo + '/' + progressBar_max;
+                const badge = qs('#regenerationStatus .badge-number');
+                if (badge) badge.innerHTML = todo + '/' + progressBar_max;
                 progress_bar(todo, progressBar_max, false);
             }
         });
         image_ids = [];
     }
-    document.querySelector('form')?.insertAdjacentHTML('beforeend', `<input type="hidden" name="nb_photos_deleted" value="${elements.length}">`);
+    document
+        .querySelector('form')
+        ?.insertAdjacentHTML(
+            'beforeend',
+            `<input type="hidden" name="nb_photos_deleted" value="${elements.length}">`
+        );
 });
 
 function progress_bar_start() {
     show(qs('#uploadingActions'));
-    const pb = qs<HTMLElement>('#uploadingActions .progress-bar'); if (pb) pb.style.width = '0%';
+    const pb = qs<HTMLElement>('#uploadingActions .progress-bar');
+    if (pb) pb.style.width = '0%';
 }
-function progress_bar_end() { hide(qs('#uploadingActions')); }
+function progress_bar_end() {
+    hide(qs('#uploadingActions'));
+}
 function progress_bar(val: any, max: any, _success: any) {
-    percent = Math.floor(val / max * 100);
-    const pb = qs<HTMLElement>('#uploadingActions .progressbar'); if (pb) pb.style.width = percent + '%';
+    percent = Math.floor((val / max) * 100);
+    const pb = qs<HTMLElement>('#uploadingActions .progressbar');
+    if (pb) pb.style.width = percent + '%';
     if (val === max) qs<HTMLElement>('#applyAction')?.click();
 }
 
 qs<HTMLInputElement>('#confirmDel input[name=confirm_deletion]')?.addEventListener('change', () => {
-    const errSpan = qs<HTMLElement>('#confirmDel span.errors'); if (errSpan) errSpan.style.visibility = 'hidden';
+    const errSpan = qs<HTMLElement>('#confirmDel span.errors');
+    if (errSpan) errSpan.style.visibility = 'hidden';
 });
 
 qs('#sync_md5sum')?.addEventListener('click', (e) => {
     e.preventDefault();
-    hide(qs('#sync_md5sum')); show(qs('#add_md5sum'));
+    hide(qs('#sync_md5sum'));
+    show(qs('#add_md5sum'));
     const originEl = qs('#md5sum_to_add');
     const origin = parseInt(originEl?.dataset['origin'] ?? '0');
     add_md5sum_block(Math.min(Math.floor(origin / 2) || 1, 1000));
@@ -381,39 +511,66 @@ qs('#sync_md5sum')?.addEventListener('click', (e) => {
 
 function add_md5sum_block(blockSize: any) {
     const body = new URLSearchParams({ pwg_token, block_size: String(blockSize ?? '') });
-    fetch('ws.php?format=json&method=pwg.images.setMd5sum', { method: 'POST', body }).then(r => r.json()).then((data: any) => {
-        const el = qs('#md5sum_to_add'); if (el) el.innerHTML = data.result.nb_no_md5sum;
-        const origin = parseInt(qs('#md5sum_to_add')?.dataset['origin'] ?? '0');
-        const pctDone = 100 - Math.floor(data.result.nb_no_md5sum * 100 / origin);
-        const addedEl = qs('#md5sum_added'); if (addedEl) addedEl.innerHTML = String(pctDone);
-        if (data.result.nb_no_md5sum > 0) { add_md5sum_block(undefined); }
-        else { document.location = `admin.php?page=batch_manager&action=sync_md5sum&nb_md5sum_added=${origin}` as any; }
-    }).catch((xhr: any) => {
-        hide(qs('#add_md5sum'));
-        const errEl = qs('#add_md5sum_error'); if (errEl) { errEl.style.display = ''; errEl.innerHTML = 'error: ' + xhr.message; }
-    });
+    fetch('ws.php?format=json&method=pwg.images.setMd5sum', { method: 'POST', body })
+        .then((r) => r.json())
+        .then((data: any) => {
+            const el = qs('#md5sum_to_add');
+            if (el) el.innerHTML = data.result.nb_no_md5sum;
+            const origin = parseInt(qs('#md5sum_to_add')?.dataset['origin'] ?? '0');
+            const pctDone = 100 - Math.floor((data.result.nb_no_md5sum * 100) / origin);
+            const addedEl = qs('#md5sum_added');
+            if (addedEl) addedEl.innerHTML = String(pctDone);
+            if (data.result.nb_no_md5sum > 0) {
+                add_md5sum_block(undefined);
+            } else {
+                document.location =
+                    `admin.php?page=batch_manager&action=sync_md5sum&nb_md5sum_added=${origin}` as any;
+            }
+        })
+        .catch((xhr: any) => {
+            hide(qs('#add_md5sum'));
+            const errEl = qs('#add_md5sum_error');
+            if (errEl) {
+                errEl.style.display = '';
+                errEl.innerHTML = 'error: ' + xhr.message;
+            }
+        });
 }
 
 qs('#delete_orphans')?.addEventListener('click', (e) => {
     e.preventDefault();
-    hide(qs('#delete_orphans')); show(qs('#orphans_deletion'));
+    hide(qs('#delete_orphans'));
+    show(qs('#orphans_deletion'));
     const origin = parseInt(qs('#orphans_to_delete')?.dataset['origin'] ?? '0');
     delete_orphans_block(Math.min(Math.floor(origin / 2) || 1, 1000));
 });
 
 function delete_orphans_block(blockSize: any) {
     const body = new URLSearchParams({ pwg_token, block_size: String(blockSize ?? '') });
-    fetch('ws.php?format=json&method=pwg.images.deleteOrphans', { method: 'POST', body }).then(r => r.json()).then((data: any) => {
-        const el = qs('#orphans_to_delete'); if (el) el.innerHTML = data.result.nb_orphans;
-        const origin = parseInt(qs('#orphans_to_delete')?.dataset['origin'] ?? '0');
-        const pctDone = 100 - Math.floor(data.result.nb_orphans * 100 / origin);
-        const delEl = qs('#orphans_deleted'); if (delEl) delEl.innerHTML = String(pctDone);
-        if (data.result.nb_orphans > 0) { delete_orphans_block(undefined); }
-        else { document.location = `admin.php?page=batch_manager&action=delete_orphans&nb_orphans_deleted=${origin}` as any; }
-    }).catch((xhr: any) => {
-        hide(qs('#orphans_deletion'));
-        const errEl = qs('#orphans_deletion_error'); if (errEl) { errEl.style.display = ''; errEl.innerHTML = 'error: ' + xhr.message; }
-    });
+    fetch('ws.php?format=json&method=pwg.images.deleteOrphans', { method: 'POST', body })
+        .then((r) => r.json())
+        .then((data: any) => {
+            const el = qs('#orphans_to_delete');
+            if (el) el.innerHTML = data.result.nb_orphans;
+            const origin = parseInt(qs('#orphans_to_delete')?.dataset['origin'] ?? '0');
+            const pctDone = 100 - Math.floor((data.result.nb_orphans * 100) / origin);
+            const delEl = qs('#orphans_deleted');
+            if (delEl) delEl.innerHTML = String(pctDone);
+            if (data.result.nb_orphans > 0) {
+                delete_orphans_block(undefined);
+            } else {
+                document.location =
+                    `admin.php?page=batch_manager&action=delete_orphans&nb_orphans_deleted=${origin}` as any;
+            }
+        })
+        .catch((xhr: any) => {
+            hide(qs('#orphans_deletion'));
+            const errEl = qs('#orphans_deletion_error');
+            if (errEl) {
+                errEl.style.display = '';
+                errEl.innerHTML = 'error: ' + xhr.message;
+            }
+        });
 }
 
 /*---- Selection / permit-action UI (migrated from {footer_script}) ----*/
@@ -425,7 +582,9 @@ function checkPermitAction(): void {
     if (setSelectedEl?.checked) {
         nbSelected = nb_thumbs_set;
     } else {
-        nbSelected = qsa<HTMLInputElement>('.thumbnails input[type=checkbox]').filter((el) => el.checked).length;
+        nbSelected = qsa<HTMLInputElement>('.thumbnails input[type=checkbox]').filter(
+            (el) => el.checked
+        ).length;
     }
 
     const permitAction = qs('#permitAction');
@@ -448,7 +607,11 @@ function checkPermitAction(): void {
         } else if (nbSelected === nb_thumbs_set) {
             selectedMessage.textContent = sprintf(selectedMessage_all, nb_thumbs_set);
         } else {
-            selectedMessage.textContent = sprintf(selectedMessage_pattern, nbSelected, nb_thumbs_set);
+            selectedMessage.textContent = sprintf(
+                selectedMessage_pattern,
+                nbSelected,
+                nb_thumbs_set
+            );
         }
     }
 }
@@ -465,28 +628,38 @@ function selectPageThumbnails(): void {
     });
 }
 
-qsa('[id^=action_]').forEach((el) => { el.style.display = 'none'; });
-
-qs<HTMLSelectElement>('select[name=selectAction]')?.addEventListener('change', function(this: HTMLSelectElement) {
-    qsa('[id^=action_]').forEach((el) => { el.style.display = 'none'; });
-
-    const action = this.value;
-    const actionEl = document.getElementById('action_' + action);
-    if (actionEl) actionEl.style.display = '';
-
-    const applyActionBlock = qs('#applyActionBlock');
-    if (applyActionBlock) {
-        applyActionBlock.style.display = (this.value !== '-1') ? '' : 'none';
-    }
-
-    const confirmDel = qs<HTMLElement>('#confirmDel');
-    if (confirmDel) {
-        confirmDel.style.visibility = (this.value === 'delete' || this.value === 'delete_derivatives') ? 'visible' : 'hidden';
-    }
+qsa('[id^=action_]').forEach((el) => {
+    el.style.display = 'none';
 });
 
+qs<HTMLSelectElement>('select[name=selectAction]')?.addEventListener(
+    'change',
+    function (this: HTMLSelectElement) {
+        qsa('[id^=action_]').forEach((el) => {
+            el.style.display = 'none';
+        });
+
+        const action = this.value;
+        const actionEl = document.getElementById('action_' + action);
+        if (actionEl) actionEl.style.display = '';
+
+        const applyActionBlock = qs('#applyActionBlock');
+        if (applyActionBlock) {
+            applyActionBlock.style.display = this.value !== '-1' ? '' : 'none';
+        }
+
+        const confirmDel = qs<HTMLElement>('#confirmDel');
+        if (confirmDel) {
+            confirmDel.style.visibility =
+                this.value === 'delete' || this.value === 'delete_derivatives'
+                    ? 'visible'
+                    : 'hidden';
+        }
+    }
+);
+
 qsa('.wrap1 label').forEach((label) => {
-    label.addEventListener('click', function(this: HTMLElement) {
+    label.addEventListener('click', function (this: HTMLElement) {
         const setSelectedEl = qs<HTMLInputElement>('input[name=setSelected]');
         if (setSelectedEl) {
             setSelectedEl.checked = false;
@@ -570,10 +743,13 @@ qs('#selectSet')?.addEventListener('click', (e) => {
     checkPermitAction();
 });
 
-qs<HTMLInputElement>('input[name=setSelected]')?.addEventListener('change', function(this: HTMLInputElement) {
-    const wholeSet = qs<HTMLInputElement>('input[name=whole_set]');
-    if (wholeSet) wholeSet.value = this.checked ? all_elements.join(',') : '';
-});
+qs<HTMLInputElement>('input[name=setSelected]')?.addEventListener(
+    'change',
+    function (this: HTMLInputElement) {
+        const wholeSet = qs<HTMLInputElement>('input[name=whole_set]');
+        if (wholeSet) wholeSet.value = this.checked ? all_elements.join(',') : '';
+    }
+);
 
 // If the whole set was selected on page load (after a first action), trigger
 // change once so input[name=whole_set] is filled in.
@@ -604,7 +780,9 @@ qs<HTMLElement>('#applyAction')?.addEventListener('click', (e) => {
         return;
     }
 
-    qsa('.bulkAction').forEach((el) => { el.style.display = 'none'; });
+    qsa('.bulkAction').forEach((el) => {
+        el.style.display = 'none';
+    });
 
     derivatives.elements = [];
     const setSelectedEl = qs<HTMLInputElement>('input[name="setSelected"]');
@@ -634,17 +812,20 @@ qs<HTMLElement>('#applyAction')?.addEventListener('click', (e) => {
 
 checkPermitAction();
 
-qs<HTMLSelectElement>('select[name=filter_prefilter]')?.addEventListener('change', function(this: HTMLSelectElement) {
-    const val = this.value;
-    const emptyCaddie = qs<HTMLElement>('#empty_caddie');
-    const duplicatesOptions = qs<HTMLElement>('#duplicates_options');
-    const deleteOrphans = qs<HTMLElement>('#delete_orphans');
-    const syncMd5sum = qs<HTMLElement>('#sync_md5sum');
-    if (emptyCaddie) emptyCaddie.style.display = val === 'caddie' ? '' : 'none';
-    if (duplicatesOptions) duplicatesOptions.style.display = val === 'duplicates' ? '' : 'none';
-    if (deleteOrphans) deleteOrphans.style.display = val === 'no_album' ? '' : 'none';
-    if (syncMd5sum) syncMd5sum.style.display = val === 'no_sync_md5sum' ? '' : 'none';
-});
+qs<HTMLSelectElement>('select[name=filter_prefilter]')?.addEventListener(
+    'change',
+    function (this: HTMLSelectElement) {
+        const val = this.value;
+        const emptyCaddie = qs<HTMLElement>('#empty_caddie');
+        const duplicatesOptions = qs<HTMLElement>('#duplicates_options');
+        const deleteOrphans = qs<HTMLElement>('#delete_orphans');
+        const syncMd5sum = qs<HTMLElement>('#sync_md5sum');
+        if (emptyCaddie) emptyCaddie.style.display = val === 'caddie' ? '' : 'none';
+        if (duplicatesOptions) duplicatesOptions.style.display = val === 'duplicates' ? '' : 'none';
+        if (deleteOrphans) deleteOrphans.style.display = val === 'no_album' ? '' : 'none';
+        if (syncMd5sum) syncMd5sum.style.display = val === 'no_sync_md5sum' ? '' : 'none';
+    }
+);
 
 (window as any).selectGenerateDerivAll = selectGenerateDerivAll;
 (window as any).selectGenerateDerivNone = selectGenerateDerivNone;

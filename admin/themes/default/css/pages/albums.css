@@ -8,14 +8,14 @@
 }
 
 .animateFocus:before {
-  content: '';
+  content: "";
   width: 100%;
   height: 100%;
-  position:absolute;
-  top:50%;
-  left:50%;
-  transform: translate(-50%,-50%);
-  animation: ripples .8s ease-out 0.3s  ;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: ripples 0.8s ease-out 0.3s;
   opacity: 0;
   border-radius: 5px;
 }
@@ -26,12 +26,12 @@
 
 @keyframes ripples {
   0% {
-      border: 0px solid #ff7700;
-      opacity: 0.7;
+    border: 0px solid #ff7700;
+    opacity: 0.7;
   }
   100% {
-      border: 20px solid #ff7700;
-      opacity: 0;
+    border: 20px solid #ff7700;
+    opacity: 0;
   }
 }
 
@@ -39,32 +39,38 @@
   margin-right: 7px;
 }
 
-#AddAlbum, #DeleteAlbum, #RenameAlbum {
+#AddAlbum,
+#DeleteAlbum,
+#RenameAlbum {
   display: none;
 }
 
-.AddAlbumPopIn, .DeleteAlbumPopIn, .RenameAlbumPopIn{
+.AddAlbumPopIn,
+.DeleteAlbumPopIn,
+.RenameAlbumPopIn {
   position: fixed;
   z-index: 100;
   left: 0;
   top: 0;
-  width: 100%; 
+  width: 100%;
   height: 100%;
-  overflow: auto; 
-  background-color: rgba(0,0,0,0.7);
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.7);
 }
 
-.AddAlbumPopInContainer, .DeleteAlbumPopInContainer, .RenameAlbumPopInContainer{
-  display:flex;
-  position:absolute;
-  left:50%;
+.AddAlbumPopInContainer,
+.DeleteAlbumPopInContainer,
+.RenameAlbumPopInContainer {
+  display: flex;
+  position: absolute;
+  left: 50%;
   top: 50%;
-  transform:translate(-50%, -48%);
-  text-align:left;
-  padding:20px;
-  flex-direction:column;
-  border-radius:15px;
-  align-items:center;
+  transform: translate(-50%, -48%);
+  text-align: left;
+  padding: 20px;
+  flex-direction: column;
+  border-radius: 15px;
+  align-items: center;
   width: 270px;
 }
 .DeleteAlbumPopInContainer {
@@ -78,58 +84,63 @@
   max-width: 700px;
 }
 
-.AddIconContainer, .DeleteIconContainer, .AddIconContainer {
+.AddIconContainer,
+.DeleteIconContainer,
+.AddIconContainer {
   margin-top: 10px;
 }
 
 .AddIcon {
-  border-radius:50%;
-  padding:10px;
+  border-radius: 50%;
+  padding: 10px;
   font-size: 2em;
 }
 
-.AddIconTitle, .RenameAlbumTitle {
-  font-size:1.4em;
-  font-weight:bold;
-  margin-bottom:20px;
-  margin-top:15px;
+.AddIconTitle,
+.RenameAlbumTitle {
+  font-size: 1.4em;
+  font-weight: bold;
+  margin-bottom: 20px;
+  margin-top: 15px;
   text-align: center;
 }
 .DeleteIconTitle {
-  font-size:1.7em;
-  font-weight:bold;
-  margin-bottom:10px;
-  margin-top:15px;
+  font-size: 1.7em;
+  font-weight: bold;
+  margin-bottom: 10px;
+  margin-top: 15px;
   text-align: center;
 }
 
 .AddAlbumSubmit,
 .DeleteAlbumSubmit,
 .RenameAlbumSubmit {
-  cursor:pointer;
-  font-weight:bold;
+  cursor: pointer;
+  font-weight: bold;
   padding: 10px;
   margin: 20px;
-  font-size:1em;
-  margin-bottom:0;
+  font-size: 1em;
+  margin-bottom: 0;
 }
 
 .DeleteAlbumSubmit {
   border-radius: 4px;
-  transition: .1s;
+  transition: 0.1s;
 }
 
-.AddAlbumCancel, .RenameAlbumCancel {
+.AddAlbumCancel,
+.RenameAlbumCancel {
   font-weight: bold;
   cursor: pointer;
-  font-size:1em;
+  font-size: 1em;
 }
 
-.CloseAddAlbum, .CloseRenameAlbum {
-  position:absolute;
-  right:-40px;
-  top:-40px;
-  font-size:30px;
+.CloseAddAlbum,
+.CloseRenameAlbum {
+  position: absolute;
+  right: -40px;
+  top: -40px;
+  font-size: 30px;
 }
 
 .AddAlbumPositionSelect {
@@ -188,7 +199,7 @@ input[name="position"] {
   background-color: #ecf0f1;
   color: #000;
   border-radius: 4px;
-  transition: .1s;
+  transition: 0.1s;
 }
 .DeleteAlbumCancel:hover {
   background: #bdc3c7;
@@ -206,11 +217,12 @@ input[name="position"] {
 .deleteAlbumOptions {
   list-style-type: none;
 }
-.deleteAlbumOptions input{
+.deleteAlbumOptions input {
   margin-right: 5px;
 }
 
-.album-add-button-label, .order-root-button-label {
+.album-add-button-label,
+.order-root-button-label {
   padding: 10px;
   border-radius: 5px;
   font-weight: bold;
@@ -232,7 +244,7 @@ input[name="position"] {
 }
 
 .badge-container i {
-  padding: 2px 6px 2px 4px!important;
+  padding: 2px 6px 2px 4px !important;
   border-radius: 10px !important;
   font-size: 0.85em !important;
   margin: 0 2px !important;
@@ -249,7 +261,8 @@ input[name="position"] {
   cursor: not-allowed;
 }
 
-.move-cat-container, .move-cat-container .badge-container i {
+.move-cat-container,
+.move-cat-container .badge-container i {
   transition: 0.2s;
 }
 
@@ -269,13 +282,12 @@ input[name="position"] {
 
 .dragging .move-cat-container .move-cat-toogler,
 .dragging .move-cat-container .move-cat-action-cont a,
-.dragging .move-cat-container .move-cat-title-container{
+.dragging .move-cat-container .move-cat-title-container {
   pointer-events: all;
 }
 
-
 .last-update {
-    display: none;
+  display: none;
 }
 
 .badge-container:hover .badge-dropdown {
@@ -292,7 +304,7 @@ input[name="position"] {
   border-radius: 10px;
   z-index: 10;
   transform: translateX(48%);
-  box-shadow: 0px 3px 3px 1px rgba(0,0,0,0.2);
+  box-shadow: 0px 3px 3px 1px rgba(0, 0, 0, 0.2);
   padding: 10px 20px;
 }
 
@@ -317,8 +329,8 @@ input[name="position"] {
   width: 20px;
 }
 
-@media (max-width: 1415px) { 
-  .badge-container  .last-update {
+@media (max-width: 1415px) {
+  .badge-container .last-update {
     display: none;
   }
 
@@ -327,13 +339,13 @@ input[name="position"] {
   }
 }
 
-@media (max-width: 1300px) { 
+@media (max-width: 1300px) {
   .badge-container {
     display: none;
   }
 }
 
-@media (max-width: 1230px) { 
+@media (max-width: 1230px) {
   .badge-container {
     display: none;
   }
@@ -347,13 +359,13 @@ input[name="position"] {
   }
 }
 
-@media (max-width: 1100px) { 
+@media (max-width: 1100px) {
   .move-cat-title-container {
     max-width: 50%;
   }
 }
 
-@media (max-width: 850px) { 
+@media (max-width: 850px) {
   .move-cat-title-container {
     max-width: 40%;
   }

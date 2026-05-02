@@ -14,7 +14,7 @@ export function isFolder(node: TreeNode): boolean {
 export function createNodeLi(
     node: TreeNode,
     isOpen: boolean,
-    onCreateLi?: RenderHook,
+    onCreateLi?: RenderHook
 ): HTMLElement {
     const li = document.createElement('li');
     li.classList.add('pwgtree-common');

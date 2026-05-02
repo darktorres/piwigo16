@@ -30,21 +30,21 @@
 }
 
 .light .toast.success {
-  background-color: #D6FFCF;
-  color: #4CA530;
+  background-color: #d6ffcf;
+  color: #4ca530;
 }
 
 .light .toast.error {
-  background-color: #F8D7DC;
-  color: #EB3D33;
+  background-color: #f8d7dc;
+  color: #eb3d33;
 }
 
 .dark .toast.success {
-  background-color: #4EA590;
-  color: #AAF6E4;
+  background-color: #4ea590;
+  color: #aaf6e4;
 }
 
 .dark .toast.error {
-  background-color: #BE4949;
-  color: #FFC8C8;
+  background-color: #be4949;
+  color: #ffc8c8;
 }

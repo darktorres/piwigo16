@@ -17,7 +17,7 @@ declare class PwgWS {
             method?: string;
             onFailure?: (num: number, text: string) => void;
             onSuccess?: (result: unknown) => void;
-        },
+        }
     ): void;
 }
 
@@ -51,7 +51,9 @@ document.getElementById('removeAlbumFilter')?.addEventListener('click', (e) => {
 });
 
 checkCatFilter();
-document.querySelector<HTMLSelectElement>('select[name=cat]')?.addEventListener('change', checkCatFilter);
+document
+    .querySelector<HTMLSelectElement>('select[name=cat]')
+    ?.addEventListener('change', checkCatFilter);
 
 const h1El = document.querySelector('h1');
 if (h1El) {

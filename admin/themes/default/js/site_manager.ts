@@ -4,7 +4,10 @@ interface SiteManagerPageData {
     str_delete_site_confirm: string;
 }
 
-declare function pwg_jconfirm_follow_href_fn(el: HTMLElement, options: { alert_title?: string }): void;
+declare function pwg_jconfirm_follow_href_fn(
+    el: HTMLElement,
+    options: { alert_title?: string }
+): void;
 
 const { str_delete_site_confirm } = getPageData<SiteManagerPageData>();
 

@@ -1,42 +1,42 @@
-input[type='radio'] {
+input[type="radio"] {
   accent-color: #a8d600;
 }
 
 .input-container:focus-within,
-.input-modal:focus-within{
-  border:1px solid #a8d600!important;
+.input-modal:focus-within {
+  border: 1px solid #a8d600 !important;
 }
 
 .gallery-icon-checkmark {
-    border: 1px solid #777;
+  border: 1px solid #777;
 }
 
-.btn-main{
-  background-color:#a8d600!important;
-  color:black!important;
+.btn-main {
+  background-color: #a8d600 !important;
+  color: black !important;
 }
 
 .btn-secondary {
-  background-color: #ECECEC!important;
-  color: #3C3C3C!important;
+  background-color: #ececec !important;
+  color: #3c3c3c !important;
 }
 
 .btn-main:disabled {
-  background-color:#aaaaaa!important;
-  color: #3C3C3C !important;
+  background-color: #aaaaaa !important;
+  color: #3c3c3c !important;
 }
 
-#separator{
-  border-bottom:1px solid #D8D8D8;
+#separator {
+  border-bottom: 1px solid #d8d8d8;
 }
 
-#lang-select #other-languages span:hover{
-  color:#a8d600; 
+#lang-select #other-languages span:hover {
+  color: #a8d600;
 }
 
 .profile-section .api-icon-action i:hover,
 .close-modal:hover,
-.profile-section .icon-clone:hover  {
+.profile-section .icon-clone:hover {
   color: #a8d600;
 }
 
@@ -48,12 +48,12 @@ input[type='radio'] {
   border: 1px solid #a8d600 !important;
 }
 
-.profile-section .new-apikey .btn-link{
-  color: #9A9A9A !important;
+.profile-section .new-apikey .btn-link {
+  color: #9a9a9a !important;
 }
 
 .bg-modal {
-  background-color: rgba(0,0,0,0.7);
+  background-color: rgba(0, 0, 0, 0.7);
 }
 
 .slider {
@@ -68,8 +68,8 @@ input[type='radio'] {
 #theIdentificationPage .light,
 #theRegisterPage .light,
 #thePasswordPage .light,
-#theProfilePage .light{
-  background: linear-gradient(75.69deg, #F0FFB8 7.64%, #F9FFE6 77.87%);
+#theProfilePage .light {
+  background: linear-gradient(75.69deg, #f0ffb8 7.64%, #f9ffe6 77.87%);
 }
 
 .light #login-form,
@@ -80,7 +80,7 @@ input[type='radio'] {
 .light .slider:before,
 .light .body-modal,
 .light [data-tooltip]:hover::after {
-  background-color:#ffffff;
+  background-color: #ffffff;
 }
 
 #theIdentificationPage .light a,
@@ -102,76 +102,75 @@ input[type='radio'] {
 .light #lang-select #other-languages span,
 .light .btn-cancel,
 .light .btn-link {
-  color:#3C3C3C;
+  color: #3c3c3c;
 }
 
 #theIdentificationPage .light a:hover,
 #theRegisterPage .light a:hover,
 #thePasswordPage .light a:hover,
-#theProfilePage .light a:hover{
-  color:#a8d600;
+#theProfilePage .light a:hover {
+  color: #a8d600;
 }
 
 .light #header-options a,
 .light #header-options .toggle-mode,
-.light #selected-language-container{
-  color:#a8d600;
+.light #selected-language-container {
+  color: #a8d600;
 }
 
 .light .input-container,
 .light .input-modal,
 .light .api-list-head {
-  background-color:#F0F0F0;
-  border:1px solid #F0F0F0;
+  background-color: #f0f0f0;
+  border: 1px solid #f0f0f0;
 }
 
-.light .input-container input:is(:-webkit-autofill, :autofill)
-{
-  box-shadow: 0 0 0 100px #F0F0F0 inset;
-  -webkit-box-shadow: 0 0 0px 1000px #F0F0F0 inset !important;
-  -webkit-text-fill-color: #3C3C3C;
-  color:#3C3C3C;
+.light .input-container input:is(:-webkit-autofill, :autofill) {
+  box-shadow: 0 0 0 100px #f0f0f0 inset;
+  -webkit-box-shadow: 0 0 0px 1000px #f0f0f0 inset !important;
+  -webkit-text-fill-color: #3c3c3c;
+  color: #3c3c3c;
 }
 
-.light #separator{
-  border-bottom:1px solid #D8D8D8;
+.light #separator {
+  border-bottom: 1px solid #d8d8d8;
 }
 
-.light .gallery-icon-eye{
-  color:#898989;
+.light .gallery-icon-eye {
+  color: #898989;
 }
 
-.light .success-message{
-  background-color: #DBF6D7;
-  color: #6DCE5E !important;
-  border-left: 4px solid #6DCE5E;
+.light .success-message {
+  background-color: #dbf6d7;
+  color: #6dce5e !important;
+  border-left: 4px solid #6dce5e;
 }
 
-.light .success-message i{
-  color:#6DCE5E;
+.light .success-message i {
+  color: #6dce5e;
 }
 
-.light .infos-message{
+.light .infos-message {
   background-color: #bde5f8;
   color: #00529b !important;
   border-left: 4px solid #00529b;
 }
 
 .light input:checked + .slider {
-  background-color: #FFA646;
+  background-color: #ffa646;
 }
 
 .light input:focus + .slider {
-  box-shadow: 0 0 1px #FFA646;
+  box-shadow: 0 0 1px #ffa646;
 }
 
 .light .slider {
-  background-color: #CCCCCC;
+  background-color: #cccccc;
 }
 
-.light .api-list-body > div:nth-child(4n+1),
-.light .api-list-body > div:nth-child(4n+2) {
-  background-color: #F8F8F8;
+.light .api-list-body > div:nth-child(4n + 1),
+.light .api-list-body > div:nth-child(4n + 2) {
+  background-color: #f8f8f8;
 }
 
 .light .api-tab-line p,
@@ -195,30 +194,30 @@ input[type='radio'] {
 }
 
 .light .btn-revoked {
-  background-color: #EB3223 !important;
+  background-color: #eb3223 !important;
 }
 
 /* Dark */
 #theIdentificationPage .dark,
 #theRegisterPage .dark,
 #thePasswordPage .dark,
-#theProfilePage .dark{
-  background: linear-gradient(75.69deg, #1B1B1D 7.64%, #2F2F2F 77.87%);
+#theProfilePage .dark {
+  background: linear-gradient(75.69deg, #1b1b1d 7.64%, #2f2f2f 77.87%);
 }
 
 .dark #login-form,
 .dark #register-form,
 .dark #password-form,
-.dark .profile-section, 
+.dark .profile-section,
 .dark .body-modal {
-  background-color:#3C3C3C;
+  background-color: #3c3c3c;
 }
 
 #theIdentificationPage .dark a,
 #theRegisterPage .dark a,
 #thePasswordPage .dark a,
-#theProfilePage .dark a:not(.close-modal){
-  color:#F0FFB8;
+#theProfilePage .dark a:not(.close-modal) {
+  color: #f0ffb8;
 }
 
 .dark h1,
@@ -236,74 +235,73 @@ input[type='radio'] {
 .dark #lang-select #other-languages span,
 .dark .btn-cancel,
 .dark .btn-link {
-  color:#D6D6D6;
+  color: #d6d6d6;
 }
 
 #theIdentificationPage .dark a:hover,
 #theRegisterPage .dark a:hover,
 #thePasswordPage .dark a:hover,
 #theProfilePage .dark a:hover,
-.dark #lang-select #other-languages span{
-  color:#F0FFB8;
+.dark #lang-select #other-languages span {
+  color: #f0ffb8;
 }
 
 .dark #header-options a,
 .dark #header-options .toggle-mode,
-.dark #selected-language-container{
-  color:#F0FFB8;
+.dark #selected-language-container {
+  color: #f0ffb8;
 }
 
 .dark .input-container,
 .dark .input-modal {
-  background-color:#303030;
-  border:1px solid #303030;
+  background-color: #303030;
+  border: 1px solid #303030;
 }
 
-.dark .input-container input:is(:-webkit-autofill, :autofill)
-{
+.dark .input-container input:is(:-webkit-autofill, :autofill) {
   box-shadow: 0 0 0 100px #303030 inset;
   -webkit-box-shadow: 0 0 0px 1000px #303030 inset !important;
-  -webkit-text-fill-color: #D6D6D6;
-  color:#D6D6D6;
+  -webkit-text-fill-color: #d6d6d6;
+  color: #d6d6d6;
 }
 
-.dark #separator{
-  border-bottom:1px solid #303030;
+.dark #separator {
+  border-bottom: 1px solid #303030;
 }
 
-.dark .gallery-icon-eye{
-  color:#898989;
+.dark .gallery-icon-eye {
+  color: #898989;
 }
 
 .dark #lang-select #other-languages,
 .dark .slider,
 .dark input:checked + .slider:before {
-  background-color: #3C3C3C;
+  background-color: #3c3c3c;
 }
 
-.dark .success-message{
-  background-color: #4EA590;
-  color: #AAF6E4 !important;
-  border-left: 4px solid #AAF6E4;
+.dark .success-message {
+  background-color: #4ea590;
+  color: #aaf6e4 !important;
+  border-left: 4px solid #aaf6e4;
 }
 
-.dark .success-message i{
-  color: #AAF6E4;
+.dark .success-message i {
+  color: #aaf6e4;
 }
 
-.dark .infos-message{
+.dark .infos-message {
   background-color: #4f71a4;
   color: #bad6ff !important;
   border-left: 4px solid #bad6ff;
 }
 
 .dark .btn-secondary {
-  background-color: #202020!important;
-  color: white!important;
+  background-color: #202020 !important;
+  color: white !important;
 }
 
 .dark input:checked + .slider {
-  background-color: #FFA646;
+  background-color: #ffa646;
 }
 
 .dark .slider:before {
@@ -311,12 +309,12 @@ input[type='radio'] {
 }
 
 .dark .api-list-head,
-.dark [data-tooltip]:hover::after{
-  background-color: #2A2A2A;
+.dark [data-tooltip]:hover::after {
+  background-color: #2a2a2a;
 }
 
-.dark .api-list-body > div:nth-child(4n+1),
-.dark .api-list-body > div:nth-child(4n+2) {
+.dark .api-list-body > div:nth-child(4n + 1),
+.dark .api-list-body > div:nth-child(4n + 2) {
   background-color: #333333;
 }
 
@@ -325,7 +323,7 @@ input[type='radio'] {
 }
 
 .dark .close-modal {
-  color: #3C3C3C;
+  color: #3c3c3c;
 }
 
 .dark input[type="date"] {
@@ -337,5 +335,5 @@ input[type='radio'] {
 }
 
 .dark .btn-revoked {
-  background-color: #BE4949 !important;
+  background-color: #be4949 !important;
 }

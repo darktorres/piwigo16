@@ -1,12 +1,32 @@
-.sizeEnable { width: 50px; }
-.sizeEnable .icon-ok { position: relative; left: 2px; }
-.sizeEditForm { margin: 0 0 10px 20px; }
-.sizeEdit { display: none; }
-#sizesConf table { margin: 0; }
-.showDetails { padding: 0; }
-.sizeDetails { display: none; margin-left: 10px; }
-.sizeDetails-row { margin: 10px 0 0 0; }
-.sizeEditOpen { margin-left: 10px; }
+.sizeEnable {
+  width: 50px;
+}
+.sizeEnable .icon-ok {
+  position: relative;
+  left: 2px;
+}
+.sizeEditForm {
+  margin: 0 0 10px 20px;
+}
+.sizeEdit {
+  display: none;
+}
+#sizesConf table {
+  margin: 0;
+}
+.showDetails {
+  padding: 0;
+}
+.sizeDetails {
+  display: none;
+  margin-left: 10px;
+}
+.sizeDetails-row {
+  margin: 10px 0 0 0;
+}
+.sizeEditOpen {
+  margin-left: 10px;
+}
 .watermark-position-custom-label {
   display: block;
   margin-top: 10px;

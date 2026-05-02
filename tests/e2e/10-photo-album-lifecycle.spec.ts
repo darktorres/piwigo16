@@ -23,7 +23,7 @@ test('photo and album full CRUD lifecycle', async ({ page, request }) => {
     // --- Photo appears in album ---
     const listRes = await request.get(
         pwgUrl(`/ws.php?format=json&method=pwg.categories.getImages&cat_id=${albumId}`),
-        { headers: { Cookie: cookie } },
+        { headers: { Cookie: cookie } }
     );
     const listBody = await listRes.json();
     expect(listBody.stat).toBe('ok');
@@ -35,13 +35,18 @@ test('photo and album full CRUD lifecycle', async ({ page, request }) => {
         headers: { Cookie: cookie },
         // single_value_mode defaults to 'fill_if_empty' which would keep the
         // existing name; 'replace' is what callers usually want for an update.
-        form: { method: 'pwg.images.setInfo', image_id: String(imageId), name: 'Updated Name', single_value_mode: 'replace' },
+        form: {
+            method: 'pwg.images.setInfo',
+            image_id: String(imageId),
+            name: 'Updated Name',
+            single_value_mode: 'replace',
+        },
     });
     expect((await updateRes.json()).stat).toBe('ok');
 
     const infoRes = await request.get(
         pwgUrl(`/ws.php?format=json&method=pwg.images.getInfo&image_id=${imageId}`),
-        { headers: { Cookie: cookie } },
+        { headers: { Cookie: cookie } }
     );
     const infoBody = await infoRes.json();
     expect(infoBody.stat).toBe('ok');
@@ -57,7 +62,7 @@ test('photo and album full CRUD lifecycle', async ({ page, request }) => {
     // Deleted photo getInfo must fail
     const afterDelete = await request.get(
         pwgUrl(`/ws.php?format=json&method=pwg.images.getInfo&image_id=${imageId}`),
-        { headers: { Cookie: cookie } },
+        { headers: { Cookie: cookie } }
     );
     expect((await afterDelete.json()).stat).toBe('fail');
 
@@ -76,7 +81,7 @@ test('photo and album full CRUD lifecycle', async ({ page, request }) => {
     // Deleted album must not appear in admin list
     const catList = await request.get(
         pwgUrl('/ws.php?format=json&method=pwg.categories.getAdminList'),
-        { headers: { Cookie: cookie } },
+        { headers: { Cookie: cookie } }
     );
     const catBody = await catList.json();
     const cats = catBody.result.categories._content ?? catBody.result.categories ?? [];

@@ -1,6 +1,6 @@
 #action_add_tags .item,
 #action_add_tags .item.active {
-  background-image:none;
+  background-image: none;
   background-color: #ffa646;
   border-color: transparent;
   color: black;
@@ -14,7 +14,6 @@
   border-bottom-right-radius: 20px;
   color: black;
   border-left: 1px solid transparent;
-
 }
 #action_add_tags .item .remove:hover,
 #action_add_tags .item .remove:hover {
@@ -28,7 +27,7 @@
   border: 1px solid #D3D3D3 !important;
 } */
 
-.breadcrumb-item{
+.breadcrumb-item {
   margin: 5px 0 5px 0 !important;
 }
 
@@ -58,6 +57,12 @@
 }
 
 /* batch_manager_unit page-level layout overrides. */
-#batchManagerGlobal { margin-bottom: 80px; }
-.bm-list-legend { padding: 1em; }
-.bm-deleted-icon { font-size: 20px; }
+#batchManagerGlobal {
+  margin-bottom: 80px;
+}
+.bm-list-legend {
+  padding: 1em;
+}
+.bm-deleted-icon {
+  font-size: 20px;
+}

@@ -6,7 +6,7 @@ test('create album via web service API', async ({ page, request }) => {
     await loginAsAdmin(page);
 
     const cookies = await page.context().cookies();
-    const cookieHeader = cookies.map(c => `${c.name}=${c.value}`).join('; ');
+    const cookieHeader = cookies.map((c) => `${c.name}=${c.value}`).join('; ');
 
     const response = await request.post(pwgUrl('/ws.php?format=json'), {
         headers: { Cookie: cookieHeader },

@@ -12,7 +12,10 @@ export async function getCookieHeader(page: Page): Promise<string> {
 
 // Fetches the per-session CSRF token required by destructive API methods
 // (pwg.images.delete, pwg.tags.delete, pwg.users.add/delete, …).
-export async function getPwgToken(request: APIRequestContext, cookieHeader: string): Promise<string> {
+export async function getPwgToken(
+    request: APIRequestContext,
+    cookieHeader: string
+): Promise<string> {
     const res = await request.post(pwgUrl('/ws.php?format=json'), {
         headers: { Cookie: cookieHeader },
         form: { method: 'pwg.session.getStatus' },
@@ -24,7 +27,7 @@ export async function getPwgToken(request: APIRequestContext, cookieHeader: stri
 export async function createAlbum(
     request: APIRequestContext,
     cookieHeader: string,
-    name: string,
+    name: string
 ): Promise<number> {
     const res = await request.post(pwgUrl('/ws.php?format=json'), {
         headers: { Cookie: cookieHeader },
@@ -39,7 +42,7 @@ export async function uploadPhoto(
     cookieHeader: string,
     imagePath: string,
     albumId: number,
-    photoName?: string,
+    photoName?: string
 ): Promise<number> {
     const buffer = fs.readFileSync(imagePath);
     const filename = path.basename(imagePath);
@@ -63,7 +66,9 @@ export async function uploadPhoto(
     try {
         body = JSON.parse(text);
     } catch {
-        throw new Error(`Photo upload returned non-JSON (HTTP ${response.status()}): ${text.slice(0, 600)}`);
+        throw new Error(
+            `Photo upload returned non-JSON (HTTP ${response.status()}): ${text.slice(0, 600)}`
+        );
     }
     if (body.stat !== 'ok') {
         throw new Error(`Photo upload failed: ${JSON.stringify(body)}`);

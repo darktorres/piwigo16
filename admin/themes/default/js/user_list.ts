@@ -75,14 +75,43 @@ const {
     groups_arr: _groups_arr,
     months: _months,
     status_to_str,
-    cancel_msg, cannotSendMail, cantCopy, confirm_msg, copyLinkStr,
-    dates_infos, errorMailSent, errorMailSentMsg, errorStr, fieldNotEmpty,
-    filtered_user, filtered_users, last_visit_str, mailSentAt,
-    mainAskWebmaster, mainUserContinue, mainUserRewrite, mainUserSet,
-    mainUserStr, mainUserSuccess, mainUserUpgradeWebmaster, mainUserValidate,
-    missingConfirm, missingConfPassword, missingField, missingPassword, missingUsername,
-    noMatchPassword, nb_days, nb_photos, passwordCopied, registered_str,
-    str_and_others_tags, title_msg, user_added_str, validLinkMail, validLinkWithoutMail,
+    cancel_msg,
+    cannotSendMail,
+    cantCopy,
+    confirm_msg,
+    copyLinkStr,
+    dates_infos,
+    errorMailSent,
+    errorMailSentMsg,
+    errorStr,
+    fieldNotEmpty,
+    filtered_user,
+    filtered_users,
+    last_visit_str,
+    mailSentAt,
+    mainAskWebmaster,
+    mainUserContinue,
+    mainUserRewrite,
+    mainUserSet,
+    mainUserStr,
+    mainUserSuccess,
+    mainUserUpgradeWebmaster,
+    mainUserValidate,
+    missingConfirm,
+    missingConfPassword,
+    missingField,
+    missingPassword,
+    missingUsername,
+    noMatchPassword,
+    nb_days,
+    nb_photos,
+    passwordCopied,
+    registered_str,
+    str_and_others_tags,
+    title_msg,
+    user_added_str,
+    validLinkMail,
+    validLinkWithoutMail,
 } = getPageData<UserListPageData>();
 
 declare function sprintf(fmt: string, ...args: unknown[]): string;
@@ -118,21 +147,35 @@ let has_group = _has_group;
 let view_selector = _view_selector;
 let register_dates: string[] = _register_dates;
 let months: string[] = _months;
-let groupOptions = _groups_arr.map(x => ({ value: x[0], label: x[1], isSelected: 0 }));
+let groupOptions = _groups_arr.map((x) => ({ value: x[0], label: x[1], isSelected: 0 }));
 let nb_filtered_users: number;
 let per_page = _pagination;
 
-const qs = <T extends HTMLElement = HTMLElement>(sel: string, ctx: Element | Document = document) => ctx.querySelector<T>(sel);
-const qsa = <T extends HTMLElement = HTMLElement>(sel: string, ctx: Element | Document = document) => Array.from(ctx.querySelectorAll<T>(sel));
-const show = (el: HTMLElement | null | undefined) => { if (el) el.style.display = ''; };
-const hide = (el: HTMLElement | null | undefined) => { if (el) el.style.display = 'none'; };
-function fadeInEl(el: HTMLElement | null | undefined) { if (el) el.style.display = ''; }
+const qs = <T extends HTMLElement = HTMLElement>(sel: string, ctx: Element | Document = document) =>
+    ctx.querySelector<T>(sel);
+const qsa = <T extends HTMLElement = HTMLElement>(
+    sel: string,
+    ctx: Element | Document = document
+) => Array.from(ctx.querySelectorAll<T>(sel));
+const show = (el: HTMLElement | null | undefined) => {
+    if (el) el.style.display = '';
+};
+const hide = (el: HTMLElement | null | undefined) => {
+    if (el) el.style.display = 'none';
+};
+function fadeInEl(el: HTMLElement | null | undefined) {
+    if (el) el.style.display = '';
+}
 function fadeOutEl(el: HTMLElement | null | undefined, delay = 0) {
     if (!el) return;
     setTimeout(() => {
         el.style.transition = 'opacity 0.4s';
         el.style.opacity = '0';
-        setTimeout(() => { el.style.display = 'none'; el.style.opacity = ''; el.style.transition = ''; }, 400);
+        setTimeout(() => {
+            el.style.display = 'none';
+            el.style.opacity = '';
+            el.style.transition = '';
+        }, 400);
     }, delay);
 }
 function fadeInThenOut(el: HTMLElement | null | undefined, showMs = 0, fadeDuration = 400) {
@@ -142,17 +185,23 @@ function fadeInThenOut(el: HTMLElement | null | undefined, showMs = 0, fadeDurat
     setTimeout(() => {
         el.style.transition = `opacity ${fadeDuration / 1000}s`;
         el.style.opacity = '0';
-        setTimeout(() => { el.style.display = 'none'; el.style.opacity = ''; el.style.transition = ''; }, fadeDuration);
+        setTimeout(() => {
+            el.style.display = 'none';
+            el.style.opacity = '';
+            el.style.transition = '';
+        }, fadeDuration);
     }, showMs);
 }
 
 function pwgPost(method: string, params: Record<string, any>): Promise<any> {
     const body = new URLSearchParams();
     for (const [k, v] of Object.entries(params)) {
-        if (Array.isArray(v)) v.forEach(item => body.append(k + '[]', String(item ?? '')));
+        if (Array.isArray(v)) v.forEach((item) => body.append(k + '[]', String(item ?? '')));
         else if (v !== undefined && v !== null) body.append(k, String(v));
     }
-    return fetch(`ws.php?format=json&method=${method}`, { method: 'POST', body }).then(r => r.json());
+    return fetch(`ws.php?format=json&method=${method}`, { method: 'POST', body }).then((r) =>
+        r.json()
+    );
 }
 
 function getSliderValue(el: HTMLElement | null): number {
@@ -170,32 +219,63 @@ function setSliderValue(el: HTMLElement | null | undefined, val: number) {
 }
 
 // Tom Select instances for groups
-const groupSelectEls = Array.from(document.querySelectorAll<HTMLSelectElement>('[data-selectize=groups]'));
-const tsOptions = { valueField: 'value', labelField: 'label', searchField: ['label'], plugins: { remove_button: {} } };
+const groupSelectEls = Array.from(
+    document.querySelectorAll<HTMLSelectElement>('[data-selectize=groups]')
+);
+const tsOptions = {
+    valueField: 'value',
+    labelField: 'label',
+    searchField: ['label'],
+    plugins: { remove_button: {} },
+};
 let groupTs = groupSelectEls[0] ? new TomSelect(groupSelectEls[0], tsOptions) : null;
 let groupGuestTs = groupSelectEls[1] ? new TomSelect(groupSelectEls[1], tsOptions) : null;
 let groupAddUserTs = groupSelectEls[2] ? new TomSelect(groupSelectEls[2], tsOptions) : null;
 
 function getPopInTs(popIn: HTMLElement): TomSelect | null {
     const sel = popIn.querySelector<HTMLElement>('.user-property-group select');
-    return sel ? (sel as any).tomselect ?? null : null;
+    return sel ? ((sel as any).tomselect ?? null) : null;
 }
 
 /*---- Escape popup ----*/
 document.addEventListener('keydown', (e: KeyboardEvent) => {
-    if (e.key === 'Escape') { hide_modals(); close_user_list(); }
+    if (e.key === 'Escape') {
+        hide_modals();
+        close_user_list();
+    }
 });
 
 /*---- Open/Close functions ----*/
-function open_user_list() { hide_temporary_messages(); show(document.getElementById('UserList')); }
-function close_user_list() { hide_temporary_messages(); (qs<HTMLInputElement>('#result_send_mail_copy_input'))!.value = ''; hide(document.getElementById('UserList')); }
-function open_guest_user_list() { hide_temporary_messages(); show(document.getElementById('GuestUserList')); }
-function close_guest_user_list() { hide_temporary_messages(); hide(document.getElementById('GuestUserList')); }
-function isSelectionMode() { return (document.getElementById('toggleSelectionMode') as HTMLInputElement)?.checked; }
+function open_user_list() {
+    hide_temporary_messages();
+    show(document.getElementById('UserList'));
+}
+function close_user_list() {
+    hide_temporary_messages();
+    qs<HTMLInputElement>('#result_send_mail_copy_input')!.value = '';
+    hide(document.getElementById('UserList'));
+}
+function open_guest_user_list() {
+    hide_temporary_messages();
+    show(document.getElementById('GuestUserList'));
+}
+function close_guest_user_list() {
+    hide_temporary_messages();
+    hide(document.getElementById('GuestUserList'));
+}
+function isSelectionMode() {
+    return (document.getElementById('toggleSelectionMode') as HTMLInputElement)?.checked;
+}
 
 /*---- Sliders ----*/
-const nb_image_page_values = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,35,40,45,50,60,70,80,90,100,200,300,500,999];
-const recent_period_values = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,25,30,40,50,60,80,99];
+const nb_image_page_values = [
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26,
+    27, 28, 29, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 200, 300, 500, 999,
+];
+const recent_period_values = [
+    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 25, 30, 40, 50, 60,
+    80, 99,
+];
 const recent_period_init = 0;
 const nb_image_page_init = 0;
 
@@ -205,13 +285,28 @@ function getSliderKeyFromValue(value: any, values: any[]) {
     }
     return 0;
 }
-function getNbImagePageInfoFromIdx(idx: any) { return String(nb_image_page_values[idx]); }
-function getRecentPeriodInfoFromIdx(idx: any) { return sprintf(nb_days, recent_period_values[idx]); }
+function getNbImagePageInfoFromIdx(idx: any) {
+    return String(nb_image_page_values[idx]);
+}
+function getRecentPeriodInfoFromIdx(idx: any) {
+    return sprintf(nb_days, recent_period_values[idx]);
+}
 
-function makeSlider(sel: string, maxIdx: number, initVal: number, onUpdate: (idx: number) => void, onStop?: (idx: number) => void) {
+function makeSlider(
+    sel: string,
+    maxIdx: number,
+    initVal: number,
+    onUpdate: (idx: number) => void,
+    onStop?: (idx: number) => void
+) {
     const el = qs<HTMLElement>(sel);
     if (!el) return;
-    const slider = noUiSlider.create(el, { range: { min: 0, max: maxIdx }, start: initVal, step: 1, connect: [true, false] });
+    const slider = noUiSlider.create(el, {
+        range: { min: 0, max: maxIdx },
+        start: initVal,
+        step: 1,
+        connect: [true, false],
+    });
     slider.on('update', ([val]) => onUpdate(parseInt(String(val))));
     if (onStop) slider.on('change', ([val]) => onStop(parseInt(String(val))));
 }
@@ -219,29 +314,78 @@ function makeSlider(sel: string, maxIdx: number, initVal: number, onUpdate: (idx
 function initSliders() {
     // Photos sliders
     [
-        { sel: '#UserList .photos-select-bar .slider-bar-container', infoSel: '#UserList .photos-select-bar .nb-img-page-infos', inputSel: '#UserList .photos-select-bar input[name=nb_image_page]' },
-        { sel: '#GuestUserList .photos-select-bar .slider-bar-container', infoSel: '#GuestUserList .photos-select-bar .nb-img-page-infos', inputSel: '#GuestUserList .photos-select-bar input[name=nb_image_page]' },
-        { sel: '#permitActionUserList .photos-select-bar .slider-bar-container', infoSel: '#permitActionUserList .photos-select-bar .nb-img-page-infos', inputSel: '#permitActionUserList .photos-select-bar input[name=nb_image_page]' },
+        {
+            sel: '#UserList .photos-select-bar .slider-bar-container',
+            infoSel: '#UserList .photos-select-bar .nb-img-page-infos',
+            inputSel: '#UserList .photos-select-bar input[name=nb_image_page]',
+        },
+        {
+            sel: '#GuestUserList .photos-select-bar .slider-bar-container',
+            infoSel: '#GuestUserList .photos-select-bar .nb-img-page-infos',
+            inputSel: '#GuestUserList .photos-select-bar input[name=nb_image_page]',
+        },
+        {
+            sel: '#permitActionUserList .photos-select-bar .slider-bar-container',
+            infoSel: '#permitActionUserList .photos-select-bar .nb-img-page-infos',
+            inputSel: '#permitActionUserList .photos-select-bar input[name=nb_image_page]',
+        },
     ].forEach(({ sel, infoSel, inputSel }) => {
-        makeSlider(sel, nb_image_page_values.length - 1, nb_image_page_init,
-            idx => { const el = qs<HTMLElement>(infoSel); if (el) el.innerHTML = getNbImagePageInfoFromIdx(idx); },
-            idx => { const inp = qs<HTMLInputElement>(inputSel); if (inp) { inp.value = String(nb_image_page_values[idx]); inp.dispatchEvent(new Event('change')); } }
+        makeSlider(
+            sel,
+            nb_image_page_values.length - 1,
+            nb_image_page_init,
+            (idx) => {
+                const el = qs<HTMLElement>(infoSel);
+                if (el) el.innerHTML = getNbImagePageInfoFromIdx(idx);
+            },
+            (idx) => {
+                const inp = qs<HTMLInputElement>(inputSel);
+                if (inp) {
+                    inp.value = String(nb_image_page_values[idx]);
+                    inp.dispatchEvent(new Event('change'));
+                }
+            }
         );
     });
     // Reset permitAction photos slider to 0
     setSliderValue(qs('#permitActionUserList .photos-select-bar .slider-bar-container'), 0);
     const periodInfo = getRecentPeriodInfoFromIdx(0);
-    const piEl = qs<HTMLElement>('#permitActionUserList .period-select-bar .recent_period_infos'); if (piEl) piEl.innerHTML = periodInfo;
+    const piEl = qs<HTMLElement>('#permitActionUserList .period-select-bar .recent_period_infos');
+    if (piEl) piEl.innerHTML = periodInfo;
 
     // Period sliders
     [
-        { sel: '#UserList .period-select-bar .slider-bar-container', infoSel: '#UserList .period-select-bar .recent_period_infos', inputSel: '#UserList .period-select-bar input[name=recent_period]' },
-        { sel: '#GuestUserList .period-select-bar .slider-bar-container', infoSel: '#GuestUserList .period-select-bar .recent_period_infos', inputSel: '#GuestUserList .period-select-bar input[name=recent_period]' },
-        { sel: '#permitActionUserList .period-select-bar .slider-bar-container', infoSel: '#permitActionUserList .period-select-bar .recent_period_infos', inputSel: '#permitActionUserList .period-select-bar input[name=recent_period]' },
+        {
+            sel: '#UserList .period-select-bar .slider-bar-container',
+            infoSel: '#UserList .period-select-bar .recent_period_infos',
+            inputSel: '#UserList .period-select-bar input[name=recent_period]',
+        },
+        {
+            sel: '#GuestUserList .period-select-bar .slider-bar-container',
+            infoSel: '#GuestUserList .period-select-bar .recent_period_infos',
+            inputSel: '#GuestUserList .period-select-bar input[name=recent_period]',
+        },
+        {
+            sel: '#permitActionUserList .period-select-bar .slider-bar-container',
+            infoSel: '#permitActionUserList .period-select-bar .recent_period_infos',
+            inputSel: '#permitActionUserList .period-select-bar input[name=recent_period]',
+        },
     ].forEach(({ sel, infoSel, inputSel }) => {
-        makeSlider(sel, recent_period_values.length - 1, recent_period_init,
-            idx => { const el = qs<HTMLElement>(infoSel); if (el) el.innerHTML = getRecentPeriodInfoFromIdx(idx); },
-            idx => { const inp = qs<HTMLInputElement>(inputSel); if (inp) { inp.value = String(recent_period_values[idx]); inp.dispatchEvent(new Event('change')); } }
+        makeSlider(
+            sel,
+            recent_period_values.length - 1,
+            recent_period_init,
+            (idx) => {
+                const el = qs<HTMLElement>(infoSel);
+                if (el) el.innerHTML = getRecentPeriodInfoFromIdx(idx);
+            },
+            (idx) => {
+                const inp = qs<HTMLInputElement>(inputSel);
+                if (inp) {
+                    inp.value = String(recent_period_values[idx]);
+                    inp.dispatchEvent(new Event('change'));
+                }
+            }
         );
     });
 }
@@ -250,7 +394,8 @@ function initSliders() {
 let actual_page = 1;
 
 function update_pagination_menu() {
-    const container = qs<HTMLElement>('.pagination-item-container'); if (container) container.innerHTML = '';
+    const container = qs<HTMLElement>('.pagination-item-container');
+    if (container) container.innerHTML = '';
     // pages are rendered server-side; just update arrows
     qs('.pagination-arrow.left')?.classList.toggle('unavailable', actual_page <= 1);
 }
@@ -261,10 +406,14 @@ function advanced_filter_button_click() {
     else advanced_filter_hide();
 }
 function advanced_filter_show() {
-    qsa('.advanced-filter-btn, .advanced-filter').forEach(el => el.classList.add('advanced-filter-open'));
+    qsa('.advanced-filter-btn, .advanced-filter').forEach((el) =>
+        el.classList.add('advanced-filter-open')
+    );
 }
 function advanced_filter_hide() {
-    qsa('.advanced-filter-btn, .advanced-filter').forEach(el => el.classList.remove('advanced-filter-open'));
+    qsa('.advanced-filter-btn, .advanced-filter').forEach((el) =>
+        el.classList.remove('advanced-filter-open')
+    );
 }
 
 function getDateStr(date: any) {
@@ -279,17 +428,31 @@ function setupRegisterDates(register_dates: any) {
         range: { min: 0, max: register_dates.length - 1 },
         start: [0, register_dates.length - 1],
         step: 1,
-        connect: true
+        connect: true,
     });
     const updateDates = (vals: (string | number)[]) => {
-        const min = parseInt(String(vals[0])), max = parseInt(String(vals[1]));
+        const min = parseInt(String(vals[0])),
+            max = parseInt(String(vals[1]));
         const infoEl = qs<HTMLElement>('.advanced-filter .dates-infos');
-        if (infoEl) infoEl.innerHTML = sprintf(dates_infos, getDateStr(register_dates[min]), getDateStr(register_dates[max]));
+        if (infoEl)
+            infoEl.innerHTML = sprintf(
+                dates_infos,
+                getDateStr(register_dates[min]),
+                getDateStr(register_dates[max])
+            );
     };
     slider.on('update', updateDates);
-    slider.on('change', (vals) => { updateDates(vals); update_user_list(); });
+    slider.on('change', (vals) => {
+        updateDates(vals);
+        update_user_list();
+    });
     const infoEl = qs<HTMLElement>('.advanced-filter .dates-infos');
-    if (infoEl) infoEl.innerHTML = sprintf(dates_infos, getDateStr(register_dates[0]), getDateStr(register_dates[register_dates.length - 1]));
+    if (infoEl)
+        infoEl.innerHTML = sprintf(
+            dates_infos,
+            getDateStr(register_dates[0]),
+            getDateStr(register_dates[register_dates.length - 1])
+        );
 }
 
 /*---- Add User ----*/
@@ -302,25 +465,28 @@ function gen_password() {
 function add_user_close() {
     const addUser = document.getElementById('AddUser')!;
     addUser.style.display = 'none';
-    const errors = qs<HTMLElement>('#AddUser .AddUserErrors'); if (errors) errors.style.visibility = 'hidden';
+    const errors = qs<HTMLElement>('#AddUser .AddUserErrors');
+    if (errors) errors.style.visibility = 'hidden';
 }
 
 function add_user_open() {
     hide(document.getElementById('AddUserSuccessContainer'));
     show(document.getElementById('AddUserFieldContainer'));
-    qsa<HTMLInputElement>('#AddUser :is(input, textarea, select)').forEach(el => { el.value = ''; });
+    qsa<HTMLInputElement>('#AddUser :is(input, textarea, select)').forEach((el) => {
+        el.value = '';
+    });
     hide(document.getElementById('add_user_password'));
     fill_new_user();
     show(document.getElementById('AddUser'));
-    (qs<HTMLInputElement>('.AddUserLabelUsername input'))?.focus();
+    qs<HTMLInputElement>('.AddUserLabelUsername input')?.focus();
 
     const statusSel = qs<HTMLSelectElement>('#AddUser .user-property-status .user-property-select');
     const newSel = statusSel?.cloneNode(true) as HTMLSelectElement;
     statusSel?.replaceWith(newSel);
-    newSel?.addEventListener('change', function(this: HTMLSelectElement) {
+    newSel?.addEventListener('change', function (this: HTMLSelectElement) {
         const status = this.value;
-        (qs<HTMLInputElement>('#add_user_pass'))!.value = '';
-        (qs<HTMLInputElement>('#add_user_confpass'))!.value = '';
+        qs<HTMLInputElement>('#add_user_pass')!.value = '';
+        qs<HTMLInputElement>('#add_user_confpass')!.value = '';
         if ('generic' === status) show(document.getElementById('add_user_password'));
         else hide(document.getElementById('add_user_password'));
     });
@@ -329,15 +495,21 @@ function add_user_open() {
 /*---- Checkboxes ----*/
 function checkbox_change(this: HTMLElement) {
     const i = this.querySelector<HTMLElement>('i');
-    if (this.dataset['selected'] === '1') hide(i); else show(i);
+    if (this.dataset['selected'] === '1') hide(i);
+    else show(i);
 }
 function checkbox_click(this: HTMLElement) {
     const i = this.querySelector<HTMLElement>('i');
-    if (this.dataset['selected'] === '1') { this.dataset['selected'] = '0'; hide(i); }
-    else { this.dataset['selected'] = '1'; show(i); }
+    if (this.dataset['selected'] === '1') {
+        this.dataset['selected'] = '0';
+        hide(i);
+    } else {
+        this.dataset['selected'] = '1';
+        show(i);
+    }
 }
 
-qsa('.user-list-checkbox').forEach(el => {
+qsa('.user-list-checkbox').forEach((el) => {
     el.addEventListener('change', checkbox_change.bind(el));
     el.addEventListener('click', checkbox_click.bind(el));
 });
@@ -345,38 +517,53 @@ qsa('.user-list-checkbox').forEach(el => {
 /*---- Selection mode ----*/
 function checkbox_container_change(this: HTMLElement) {
     const i = this.querySelector<HTMLElement>('i');
-    if (this.dataset['selected'] === '1') hide(i); else show(i);
+    if (this.dataset['selected'] === '1') hide(i);
+    else show(i);
 }
 function checkbox_container_click(this: HTMLElement) {
     const container = this.closest<HTMLElement>('.user-container');
     const inContainer = !!container;
-    const currUser = inContainer ? current_users[parseInt(container!.getAttribute('key') ?? '0')] : { id: -1 };
+    const currUser = inContainer
+        ? current_users[parseInt(container!.getAttribute('key') ?? '0')]
+        : { id: -1 };
     if (this.dataset['selected'] === '1') {
         this.dataset['selected'] = '0';
         this.querySelector<HTMLElement>('i')!.style.display = 'none';
-        if (inContainer) { container!.classList.remove('container-selected'); selection = selection.filter(e => e.id !== currUser.id); }
+        if (inContainer) {
+            container!.classList.remove('container-selected');
+            selection = selection.filter((e) => e.id !== currUser.id);
+        }
     } else {
         this.dataset['selected'] = '1';
         this.querySelector<HTMLElement>('i')!.style.display = '';
-        if (inContainer) { container!.classList.add('container-selected'); selection.push({ id: currUser.id, username: currUser.username }); }
+        if (inContainer) {
+            container!.classList.add('container-selected');
+            selection.push({ id: currUser.id, username: currUser.username });
+        }
     }
     if (inContainer) update_selection_content();
 }
 
 function create_user_selected_item(user: any): HTMLElement {
-    const tmpl = document.getElementById('template')?.querySelector<HTMLElement>('.user-selected-item')?.cloneNode(true) as HTMLElement;
+    const tmpl = document
+        .getElementById('template')
+        ?.querySelector<HTMLElement>('.user-selected-item')
+        ?.cloneNode(true) as HTMLElement;
     if (!tmpl) return document.createElement('div');
     tmpl.dataset['id'] = String(user.id);
     tmpl.querySelector('p')!.innerHTML = user.username;
     tmpl.querySelector('a')?.addEventListener('click', () => {
-        selection.splice(selection.findIndex(i => i.id === user.id), 1);
+        selection.splice(
+            selection.findIndex((i) => i.id === user.id),
+            1
+        );
         update_selection_content();
     });
     return tmpl;
 }
 
 function generate_user_selected_items() {
-    qsa('.user-selected-list .user-selected-item').forEach(el => el.remove());
+    qsa('.user-selected-list .user-selected-item').forEach((el) => el.remove());
     let created = 0;
     const others = selection.length - 5;
     for (let i = 0; i < selection.length && created < 5; i++) {
@@ -386,8 +573,12 @@ function generate_user_selected_items() {
         }
     }
     const othersEl = qs<HTMLElement>('.selection-other-users');
-    if (others >= 1) { if (othersEl) { othersEl.innerHTML = str_and_others_tags.replace('%s', String(others)); show(othersEl); } }
-    else hide(othersEl);
+    if (others >= 1) {
+        if (othersEl) {
+            othersEl.innerHTML = str_and_others_tags.replace('%s', String(others));
+            show(othersEl);
+        }
+    } else hide(othersEl);
 }
 
 function fill_user_selected_list() {
@@ -395,15 +586,23 @@ function fill_user_selected_list() {
     for (let i = 0; i < selection.length && withUsername < 5; i++) {
         if (typeof selection[i].username !== 'undefined') withUsername++;
     }
-    if (withUsername < 5 && withUsername !== selection.length) get_first_selection_usernames(generate_user_selected_items);
+    if (withUsername < 5 && withUsername !== selection.length)
+        get_first_selection_usernames(generate_user_selected_items);
     else generate_user_selected_items();
 }
 
 function update_selection_content() {
     number = selection.length;
     fill_user_selected_list();
-    if (number === 0) { show(document.getElementById('forbidAction')); qsa('.selection-mode-ul').forEach(hide); hide(document.getElementById('permitActionUserList')); }
-    else { hide(document.getElementById('forbidAction')); show(document.getElementById('permitActionUserList')); qsa('.selection-mode-ul').forEach(show); }
+    if (number === 0) {
+        show(document.getElementById('forbidAction'));
+        qsa('.selection-mode-ul').forEach(hide);
+        hide(document.getElementById('permitActionUserList'));
+    } else {
+        hide(document.getElementById('forbidAction'));
+        show(document.getElementById('permitActionUserList'));
+        qsa('.selection-mode-ul').forEach(show);
+    }
     set_selected_to_selection();
     qsa<HTMLElement>('#applyActionBlock .infos').forEach(hide);
 }
@@ -411,7 +610,7 @@ function update_selection_content() {
 function set_selected_to_selection() {
     if (!isSelectionMode()) return;
     qsa('.user-container-wrapper .user-container').forEach((container, index) => {
-        const selIds = selection.map(x => x.id);
+        const selIds = selection.map((x) => x.id);
         if (current_users[index] && selIds.includes(current_users[index].id)) {
             container.classList.add('container-selected');
             container.querySelector<HTMLElement>('.user-list-checkbox')!.dataset['selected'] = '1';
@@ -425,21 +624,38 @@ function set_selected_to_selection() {
 }
 
 function selectionMode(isSelection: boolean) {
-    (qs<HTMLSelectElement>('#permitActionUserList select[name=selectAction]'))!.value = '-1';
+    qs<HTMLSelectElement>('#permitActionUserList select[name=selectAction]')!.value = '-1';
     qs('#permitActionUserList select[name=selectAction]')?.dispatchEvent(new Event('change'));
     if (isSelection) {
         set_selected_to_selection();
-        qsa('.in-selection-mode').forEach(el => { el.style.display = ''; });
-        qsa('.not-in-selection-mode').forEach(el => { el.style.display = 'none'; });
-        if (view_selector === 'tile') qsa<HTMLElement>('.user-container-email').forEach(el => { el.style.display = ''; });
-        if (view_selector === 'compact') qsa<HTMLElement>('.user-container-email').forEach(el => { el.style.display = 'none'; });
-        qsa('.user-container').forEach(el => el.classList.add('selectable'));
+        qsa('.in-selection-mode').forEach((el) => {
+            el.style.display = '';
+        });
+        qsa('.not-in-selection-mode').forEach((el) => {
+            el.style.display = 'none';
+        });
+        if (view_selector === 'tile')
+            qsa<HTMLElement>('.user-container-email').forEach((el) => {
+                el.style.display = '';
+            });
+        if (view_selector === 'compact')
+            qsa<HTMLElement>('.user-container-email').forEach((el) => {
+                el.style.display = 'none';
+            });
+        qsa('.user-container').forEach((el) => el.classList.add('selectable'));
     } else {
-        qsa('.container-selected').forEach(el => el.classList.remove('container-selected'));
-        qsa('.in-selection-mode').forEach(el => { el.style.display = 'none'; });
-        qsa('.not-in-selection-mode').forEach(el => { el.style.display = ''; });
-        if (view_selector === 'tile' || view_selector === 'line') qsa<HTMLElement>('.user-container-email').forEach(el => { el.style.display = 'flex'; });
-        qsa('.user-container').forEach(el => el.classList.remove('selectable'));
+        qsa('.container-selected').forEach((el) => el.classList.remove('container-selected'));
+        qsa('.in-selection-mode').forEach((el) => {
+            el.style.display = 'none';
+        });
+        qsa('.not-in-selection-mode').forEach((el) => {
+            el.style.display = '';
+        });
+        if (view_selector === 'tile' || view_selector === 'line')
+            qsa<HTMLElement>('.user-container-email').forEach((el) => {
+                el.style.display = 'flex';
+            });
+        qsa('.user-container').forEach((el) => el.classList.remove('selectable'));
     }
 }
 
@@ -449,24 +665,34 @@ function hide_temporary_messages() {
 }
 
 function get_group_name_from_id(id: any) {
-    const g = groups_arr.find(g => g[0] == id);
+    const g = groups_arr.find((g) => g[0] == id);
     return g ? g[1] : 'group_id error';
 }
 function get_container_index_from_uid(uid: any) {
-    return current_users.findIndex(u => u.id == uid);
+    return current_users.findIndex((u) => u.id == uid);
 }
 function hide_error_edit_user() {
-    const el = qs<HTMLElement>('#UserList .EditUserErrors'); if (el) { el.style.transition = 'opacity 0.1s'; el.style.opacity = '0'; }
+    const el = qs<HTMLElement>('#UserList .EditUserErrors');
+    if (el) {
+        el.style.transition = 'opacity 0.1s';
+        el.style.opacity = '0';
+    }
 }
 function show_error_edit_user() {
-    const el = qs<HTMLElement>('#UserList .EditUserErrors'); if (el) { el.style.transition = 'opacity 0.3s'; el.style.opacity = '1'; }
+    const el = qs<HTMLElement>('#UserList .EditUserErrors');
+    if (el) {
+        el.style.transition = 'opacity 0.3s';
+        el.style.opacity = '1';
+    }
 }
 function reset_input_password() {
-    qsa<HTMLInputElement>('#edit_user_password, #edit_user_conf_password').forEach(el => { el.value = ''; });
+    qsa<HTMLInputElement>('#edit_user_password, #edit_user_conf_password').forEach((el) => {
+        el.value = '';
+    });
 }
 
 function editTabsBind() {
-    qsa('.edit-user-tabsheet').forEach(el => {
+    qsa('.edit-user-tabsheet').forEach((el) => {
         const newEl = el.cloneNode(true) as HTMLElement;
         el.replaceWith(newEl);
         newEl.addEventListener('click', () => {
@@ -485,7 +711,9 @@ function check_tabs(title_tab_name_id: string) {
 }
 
 function reset_password_modals() {
-    qsa('.user-property-password-change,.user-property-password-change-inputs,#edit_password_success_change,#edit_password_result_mail,#edit_password_result_mail_copy').forEach(hide);
+    qsa(
+        '.user-property-password-change,.user-property-password-change-inputs,#edit_password_success_change,#edit_password_result_mail,#edit_password_result_mail_copy'
+    ).forEach(hide);
     show(qs('.user-property-password-choice'));
 }
 function reset_username_modals() {
@@ -493,14 +721,23 @@ function reset_username_modals() {
     show(qs('.user-property-username-change-input'));
 }
 function reset_main_user_modals() {
-    (qs<HTMLInputElement>('#main_user_rewrite'))!.value = '';
-    qs('#main_user_rewrite_icon')?.classList.remove('icon-ok', 'icon-green', 'icon-cancel', 'icon-red');
+    qs<HTMLInputElement>('#main_user_rewrite')!.value = '';
+    qs('#main_user_rewrite_icon')?.classList.remove(
+        'icon-ok',
+        'icon-green',
+        'icon-cancel',
+        'icon-red'
+    );
     qsa('.main-user-rewrite,.main-user-validate,.main-user-success').forEach(hide);
     show(qs('.main-user-proceed'));
 }
 function hide_modals() {
-    qsa('.user-property-username-change,.user-property-password-change,.user-property-main-user-change').forEach(hide);
-    reset_password_modals(); reset_username_modals(); reset_main_user_modals();
+    qsa(
+        '.user-property-username-change,.user-property-password-change,.user-property-main-user-change'
+    ).forEach(hide);
+    reset_password_modals();
+    reset_username_modals();
+    reset_main_user_modals();
 }
 
 function display_long_string(username: string) {
@@ -514,13 +751,23 @@ function get_initials(username: string) {
     const words = username.toUpperCase().split(' ');
     return words[0][0] + (words.length > 1 && words[1][0] ? words[1][0] : '');
 }
-function get_status_index(status: string) { const i = status_arr.indexOf(status); return i >= 0 ? i : 0; }
-function get_level_index(level: string) { const i = level_arr.indexOf(level); return i >= 0 ? i : 0; }
-function is_owner(user_id: any) { return user_id === owner_id; }
-function copyToClipboard(text: string) { navigator.clipboard?.writeText(text); }
+function get_status_index(status: string) {
+    const i = status_arr.indexOf(status);
+    return i >= 0 ? i : 0;
+}
+function get_level_index(level: string) {
+    const i = level_arr.indexOf(level);
+    return i >= 0 ? i : 0;
+}
+function is_owner(user_id: any) {
+    return user_id === owner_id;
+}
+function copyToClipboard(text: string) {
+    navigator.clipboard?.writeText(text);
+}
 
 function set_selected_groups(groups: any[]) {
-    groupOptions.forEach((g: any) => g.isSelected = groups.includes(g.value));
+    groupOptions.forEach((g: any) => (g.isSelected = groups.includes(g.value)));
 }
 
 /*---- Pop-in fill functions ----*/
@@ -529,32 +776,65 @@ function fill_user_edit_summary(user_to_edit: any, popIn: HTMLElement, isGuest: 
     if (!isGuest) {
         const initFill = get_initials(user_to_edit.username);
         const span = q('.user-property-initials span');
-        if (span) { span.innerHTML = initFill; span.classList.remove(...color_icons); span.classList.add(color_icons[user_to_edit.id % 5]); span.classList.toggle('small', initFill.length > 1); }
+        if (span) {
+            span.innerHTML = initFill;
+            span.classList.remove(...color_icons);
+            span.classList.add(color_icons[user_to_edit.id % 5]);
+            span.classList.toggle('small', initFill.length > 1);
+        }
     } else {
         const span = q('.user-property-initials span');
-        if (span) { span.classList.remove(...color_icons); span.classList.add(color_icons[user_to_edit.id % 5]); }
+        if (span) {
+            span.classList.remove(...color_icons);
+            span.classList.add(color_icons[user_to_edit.id % 5]);
+        }
     }
     const usernameSpan = q('.user-property-username span:first-child');
-    if (usernameSpan) { usernameSpan.innerHTML = user_to_edit.username; tippy(usernameSpan, { content: user_to_edit.username }); }
+    if (usernameSpan) {
+        usernameSpan.innerHTML = user_to_edit.username;
+        tippy(usernameSpan, { content: user_to_edit.username });
+    }
     const editSpec = q('.user-property-username .edit-username-specifier');
-    (user_to_edit.id === connected_user || user_to_edit.id === 1) ? show(editSpec) : hide(editSpec);
-    const unameInput = q<HTMLInputElement>('.user-property-username-change input'); if (unameInput) unameInput.value = user_to_edit.username;
-    const pwdInput = q<HTMLInputElement>('.user-property-password-change input'); if (pwdInput) pwdInput.value = '';
-    const permsLink = q<HTMLAnchorElement>('.user-property-permissions a'); if (permsLink) permsLink.href = `admin.php?page=user_perm&user_id=${user_to_edit.id}`;
-    const regEl = q('.user-property-register'); if (regEl) { regEl.innerHTML = user_to_edit.registration_date_string; tippy(regEl, { content: `${registered_str}<br />${user_to_edit.registration_date_since}`, allowHTML: true }); }
-    const lastEl = q('.user-property-last-visit'); if (lastEl) { lastEl.innerHTML = user_to_edit.last_visit_string; tippy(lastEl, { content: `${last_visit_str}<br />${user_to_edit.last_visit_since}`, allowHTML: true }); }
-    const histLink = q<HTMLAnchorElement>('.user-property-history a'); if (histLink) histLink.href = history_base_url + user_to_edit.id;
+    user_to_edit.id === connected_user || user_to_edit.id === 1 ? show(editSpec) : hide(editSpec);
+    const unameInput = q<HTMLInputElement>('.user-property-username-change input');
+    if (unameInput) unameInput.value = user_to_edit.username;
+    const pwdInput = q<HTMLInputElement>('.user-property-password-change input');
+    if (pwdInput) pwdInput.value = '';
+    const permsLink = q<HTMLAnchorElement>('.user-property-permissions a');
+    if (permsLink) permsLink.href = `admin.php?page=user_perm&user_id=${user_to_edit.id}`;
+    const regEl = q('.user-property-register');
+    if (regEl) {
+        regEl.innerHTML = user_to_edit.registration_date_string;
+        tippy(regEl, {
+            content: `${registered_str}<br />${user_to_edit.registration_date_since}`,
+            allowHTML: true,
+        });
+    }
+    const lastEl = q('.user-property-last-visit');
+    if (lastEl) {
+        lastEl.innerHTML = user_to_edit.last_visit_string;
+        tippy(lastEl, {
+            content: `${last_visit_str}<br />${user_to_edit.last_visit_since}`,
+            allowHTML: true,
+        });
+    }
+    const histLink = q<HTMLAnchorElement>('.user-property-history a');
+    if (histLink) histLink.href = history_base_url + user_to_edit.id;
 
     if (!window.isSecureContext) {
         hide(qs('#copy_password'));
         const copyBtn = q('#result_send_mail_copy_btn');
-        if (copyBtn) { copyBtn.title = cantCopy; tippy(copyBtn, { content: cantCopy }); }
+        if (copyBtn) {
+            copyBtn.title = cantCopy;
+            tippy(copyBtn, { content: cantCopy });
+        }
     }
 }
 
 function loadGroupOptions(ts: TomSelect | null) {
     if (!ts) return;
-    ts.clear(); ts.clearOptions();
+    ts.clear();
+    ts.clearOptions();
     groupOptions.forEach((g: any) => ts.addOption({ value: g.value, text: g.label ?? g.value }));
     groupOptions.filter((g: any) => g.isSelected).forEach((g: any) => ts.addItem(String(g.value)));
 }
@@ -562,29 +842,53 @@ function loadGroupOptions(ts: TomSelect | null) {
 function fill_user_edit_properties(user_to_edit: any, popIn: HTMLElement) {
     const q = <T extends HTMLElement = HTMLElement>(sel: string) => popIn.querySelector<T>(sel);
     const currentGroupTs = user_to_edit.id === guest_id ? groupGuestTs : groupTs;
-    const emailInput = q<HTMLInputElement>('.user-property-email input'); if (emailInput) emailInput.value = user_to_edit.email ?? '';
+    const emailInput = q<HTMLInputElement>('.user-property-email input');
+    if (emailInput) emailInput.value = user_to_edit.email ?? '';
     const statusSelect = q<HTMLSelectElement>('.user-property-status select');
-    if (statusSelect) { const o = Array.from(statusSelect.options)[get_status_index(user_to_edit.status)]; if (o) o.selected = true; }
+    if (statusSelect) {
+        const o = Array.from(statusSelect.options)[get_status_index(user_to_edit.status)];
+        if (o) o.selected = true;
+    }
     const levelSelect = q<HTMLSelectElement>('.user-property-level select');
-    if (levelSelect) { const o = Array.from(levelSelect.options)[get_level_index(user_to_edit.level)]; if (o) o.selected = true; }
+    if (levelSelect) {
+        const o = Array.from(levelSelect.options)[get_level_index(user_to_edit.level)];
+        if (o) o.selected = true;
+    }
     set_selected_groups(user_to_edit.groups);
     loadGroupOptions(currentGroupTs);
-    const hdCb = q('.user-list-checkbox[name="hd_enabled"]'); if (hdCb) hdCb.dataset['selected'] = user_to_edit.enabled_high === 'true' ? '1' : '0';
+    const hdCb = q('.user-list-checkbox[name="hd_enabled"]');
+    if (hdCb) hdCb.dataset['selected'] = user_to_edit.enabled_high === 'true' ? '1' : '0';
 }
 
 function fill_user_edit_preferences(user_to_edit: any, popIn: HTMLElement) {
     const q = <T extends HTMLElement = HTMLElement>(sel: string) => popIn.querySelector<T>(sel);
-    const photosKey = getSliderKeyFromValue(parseInt(user_to_edit.nb_image_page), nb_image_page_values);
-    const periodKey = getSliderKeyFromValue(parseInt(user_to_edit.recent_period), recent_period_values);
+    const photosKey = getSliderKeyFromValue(
+        parseInt(user_to_edit.nb_image_page),
+        nb_image_page_values
+    );
+    const periodKey = getSliderKeyFromValue(
+        parseInt(user_to_edit.recent_period),
+        recent_period_values
+    );
     setSliderValue(q('.photos-select-bar .slider-bar-container'), photosKey);
     const themeSelect = q<HTMLSelectElement>('.user-property-theme select');
-    if (themeSelect) Array.from(themeSelect.options).forEach(o => { o.selected = o.value === user_to_edit.theme; });
+    if (themeSelect)
+        Array.from(themeSelect.options).forEach((o) => {
+            o.selected = o.value === user_to_edit.theme;
+        });
     const langSelect = q<HTMLSelectElement>('.user-property-lang select');
-    if (langSelect) Array.from(langSelect.options).forEach(o => { o.selected = o.value === user_to_edit.language; });
+    if (langSelect)
+        Array.from(langSelect.options).forEach((o) => {
+            o.selected = o.value === user_to_edit.language;
+        });
     setSliderValue(q('.period-select-bar .slider-bar-container'), periodKey);
-    const expandCb = q('.user-list-checkbox[name="expand_all_albums"]'); if (expandCb) expandCb.dataset['selected'] = user_to_edit.expand === 'true' ? '1' : '0';
-    const commentsCb = q('.user-list-checkbox[name="show_nb_comments"]'); if (commentsCb) commentsCb.dataset['selected'] = user_to_edit.show_nb_comments === 'true' ? '1' : '0';
-    const hitsCb = q('.user-list-checkbox[name="show_nb_hits"]'); if (hitsCb) hitsCb.dataset['selected'] = user_to_edit.show_nb_hits === 'true' ? '1' : '0';
+    const expandCb = q('.user-list-checkbox[name="expand_all_albums"]');
+    if (expandCb) expandCb.dataset['selected'] = user_to_edit.expand === 'true' ? '1' : '0';
+    const commentsCb = q('.user-list-checkbox[name="show_nb_comments"]');
+    if (commentsCb)
+        commentsCb.dataset['selected'] = user_to_edit.show_nb_comments === 'true' ? '1' : '0';
+    const hitsCb = q('.user-list-checkbox[name="show_nb_hits"]');
+    if (hitsCb) hitsCb.dataset['selected'] = user_to_edit.show_nb_hits === 'true' ? '1' : '0';
 }
 
 function fill_user_edit_update(user_to_edit: any, popIn: HTMLElement) {
@@ -593,7 +897,10 @@ function fill_user_edit_update(user_to_edit: any, popIn: HTMLElement) {
     if (updateBtn) {
         const newBtn = updateBtn.cloneNode(true) as HTMLElement;
         updateBtn.replaceWith(newBtn);
-        newBtn.addEventListener('click', user_to_edit.id === guest_id ? update_guest_info : update_user_info);
+        newBtn.addEventListener(
+            'click',
+            user_to_edit.id === guest_id ? update_guest_info : update_user_info
+        );
     }
     const validateUsernameBtn = q('.edit-username-validate');
     if (validateUsernameBtn) {
@@ -605,7 +912,10 @@ function fill_user_edit_update(user_to_edit: any, popIn: HTMLElement) {
     if (editPwdBtn) {
         const nb = editPwdBtn.cloneNode(true) as HTMLElement;
         editPwdBtn.replaceWith(nb);
-        nb.addEventListener('click', () => { hide(qs('.user-property-password-choice')); show(qs('.user-property-password-change-inputs')); });
+        nb.addEventListener('click', () => {
+            hide(qs('.user-property-password-choice'));
+            show(qs('.user-property-password-change-inputs'));
+        });
     }
     const sendPwdLink = q('#send_password_link');
     if (sendPwdLink) {
@@ -614,7 +924,9 @@ function fill_user_edit_update(user_to_edit: any, popIn: HTMLElement) {
         if (user_to_edit.email) {
             nb.classList.remove('unavailable', 'tiptip');
             nb.title = '';
-            nb.addEventListener('click', () => send_link_password(user_to_edit.email, user_to_edit.username, user_to_edit.id, true));
+            nb.addEventListener('click', () =>
+                send_link_password(user_to_edit.email, user_to_edit.username, user_to_edit.id, true)
+            );
         } else {
             nb.classList.add('unavailable', 'tiptip');
             nb.title = cannotSendMail;
@@ -626,12 +938,18 @@ function fill_user_edit_update(user_to_edit: any, popIn: HTMLElement) {
         const nb = copyPwdLink.cloneNode(true) as HTMLElement;
         copyPwdLink.replaceWith(nb);
         nb.addEventListener('click', () => {
-            const inputValue = (qs<HTMLInputElement>('#result_send_mail_copy_input'))?.value ?? '';
-            if (!inputValue) send_link_password(user_to_edit.email, user_to_edit.username, user_to_edit.id, false);
+            const inputValue = qs<HTMLInputElement>('#result_send_mail_copy_input')?.value ?? '';
+            if (!inputValue)
+                send_link_password(
+                    user_to_edit.email,
+                    user_to_edit.username,
+                    user_to_edit.id,
+                    false
+                );
             else if (window.isSecureContext && navigator.clipboard) copyToClipboard(inputValue);
             hide(qs('.user-property-password-choice'));
             show(qs('#edit_password_result_mail_copy'));
-            (qs<HTMLInputElement>('#result_send_mail_copy_input'))?.focus();
+            qs<HTMLInputElement>('#result_send_mail_copy_input')?.focus();
         });
     }
     const validatePwdBtn = q('.edit-password-validate');
@@ -640,11 +958,15 @@ function fill_user_edit_update(user_to_edit: any, popIn: HTMLElement) {
         validatePwdBtn.replaceWith(nb);
         nb.addEventListener('click', () => {
             const errDiv = qs<HTMLElement>('#UserList .EditUserErrors');
-            const pwd = (qs<HTMLInputElement>('#edit_user_password'))?.value;
-            const conf = (qs<HTMLInputElement>('#edit_user_conf_password'))?.value;
-            if (!pwd || !conf) { if (errDiv) errDiv.innerHTML = missingField; show_error_edit_user(); }
-            else if (pwd !== conf) { if (errDiv) errDiv.innerHTML = noMatchPassword; show_error_edit_user(); }
-            else update_user_password();
+            const pwd = qs<HTMLInputElement>('#edit_user_password')?.value;
+            const conf = qs<HTMLInputElement>('#edit_user_conf_password')?.value;
+            if (!pwd || !conf) {
+                if (errDiv) errDiv.innerHTML = missingField;
+                show_error_edit_user();
+            } else if (pwd !== conf) {
+                if (errDiv) errDiv.innerHTML = noMatchPassword;
+                show_error_edit_user();
+            } else update_user_password();
         });
     }
     const deleteBtn = q('.delete-user-button');
@@ -652,46 +974,86 @@ function fill_user_edit_update(user_to_edit: any, popIn: HTMLElement) {
         const nb = deleteBtn.cloneNode(true) as HTMLElement;
         deleteBtn.replaceWith(nb);
         nb.addEventListener('click', () => {
-            if (window.confirm(title_msg.replace('%s', user_to_edit.username))) delete_user(user_to_edit.id);
+            if (window.confirm(title_msg.replace('%s', user_to_edit.username)))
+                delete_user(user_to_edit.id);
         });
     }
 }
 
 function fill_user_edit_permissions(user_to_edit: any, popIn: HTMLElement) {
     const q = <T extends HTMLElement = HTMLElement>(sel: string) => popIn.querySelector<T>(sel);
-    const setPerms = (canDelete: boolean, canEditPwd: boolean, canEditEmail: boolean, canEditStatus: boolean, canEditUsername: boolean) => {
-        if (canDelete) show(q('.delete-user-button')); else hide(q('.delete-user-button'));
-        if (canEditPwd) show(q('.user-property-password.edit-password')); else hide(q('.user-property-password.edit-password'));
+    const setPerms = (
+        canDelete: boolean,
+        canEditPwd: boolean,
+        canEditEmail: boolean,
+        canEditStatus: boolean,
+        canEditUsername: boolean
+    ) => {
+        if (canDelete) show(q('.delete-user-button'));
+        else hide(q('.delete-user-button'));
+        if (canEditPwd) show(q('.user-property-password.edit-password'));
+        else hide(q('.user-property-password.edit-password'));
         const emailInput = q<HTMLInputElement>('.user-property-email .user-property-input');
-        if (emailInput) { if (canEditEmail) emailInput.removeAttribute('disabled'); else emailInput.setAttribute('disabled', 'disabled'); }
+        if (emailInput) {
+            if (canEditEmail) emailInput.removeAttribute('disabled');
+            else emailInput.setAttribute('disabled', 'disabled');
+        }
         const statusSel = q('.user-property-status .user-property-select');
-        if (statusSel) { if (canEditStatus) statusSel.classList.remove('notClickable'); else statusSel.classList.add('notClickable'); }
+        if (statusSel) {
+            if (canEditStatus) statusSel.classList.remove('notClickable');
+            else statusSel.classList.add('notClickable');
+        }
         const editUsername = q('.user-property-username .edit-username');
-        if (editUsername) { if (canEditUsername) show(editUsername); else hide(editUsername); }
+        if (editUsername) {
+            if (canEditUsername) show(editUsername);
+            else hide(editUsername);
+        }
     };
 
     if (user_to_edit.id !== connected_user) {
         if (!is_owner(connected_user)) {
-            if (is_owner(user_to_edit.id)) { setPerms(false, false, false, false, false); }
-            else {
+            if (is_owner(user_to_edit.id)) {
+                setPerms(false, false, false, false, false);
+            } else {
                 setPerms(true, true, true, true, true);
-                if (user_to_edit.status === connected_user_status && connected_user_status === 'webmaster' && !is_owner(user_to_edit.id)) setPerms(true, true, true, true, true);
-                else if (user_to_edit.status === connected_user_status && connected_user_status === 'admin') setPerms(false, true, true, false, true);
-                else if (user_to_edit.status === 'webmaster' && connected_user_status === 'admin') setPerms(false, false, false, false, false);
-                else if (user_to_edit.status === 'admin' && connected_user_status === 'webmaster') setPerms(true, true, true, true, true);
+                if (
+                    user_to_edit.status === connected_user_status &&
+                    connected_user_status === 'webmaster' &&
+                    !is_owner(user_to_edit.id)
+                )
+                    setPerms(true, true, true, true, true);
+                else if (
+                    user_to_edit.status === connected_user_status &&
+                    connected_user_status === 'admin'
+                )
+                    setPerms(false, true, true, false, true);
+                else if (user_to_edit.status === 'webmaster' && connected_user_status === 'admin')
+                    setPerms(false, false, false, false, false);
+                else if (user_to_edit.status === 'admin' && connected_user_status === 'webmaster')
+                    setPerms(true, true, true, true, true);
             }
-        } else { setPerms(true, true, true, true, true); }
-    } else { setPerms(false, true, true, false, true); }
+        } else {
+            setPerms(true, true, true, true, true);
+        }
+    } else {
+        setPerms(false, true, true, false, true);
+    }
 
-    qsa('.notClickableBefore').forEach(el => el.classList.remove('notClickableBefore'));
-    qsa('.notClickable').forEach(el => el.parentElement?.classList.add('notClickableBefore'));
+    qsa('.notClickableBefore').forEach((el) => el.classList.remove('notClickableBefore'));
+    qsa('.notClickable').forEach((el) => el.parentElement?.classList.add('notClickableBefore'));
 }
 
 function fill_who_is_the_king(user_to_edit: any, popIn: HTMLElement) {
     const king = popIn.querySelector<HTMLElement>('#who_is_the_king');
     if (!king) return;
     const setKingClass = (cls: string, title: string, clickable: boolean) => {
-        king.classList.remove('princes-of-this-piwigo', 'king-of-this-piwigo', 'royal-court-of-this-piwigo', 'can-change', 'cannot-change');
+        king.classList.remove(
+            'princes-of-this-piwigo',
+            'king-of-this-piwigo',
+            'royal-court-of-this-piwigo',
+            'can-change',
+            'cannot-change'
+        );
         king.classList.add(cls, clickable ? 'can-change' : 'cannot-change');
         king.title = title;
         tippy(king, { content: title });
@@ -705,7 +1067,8 @@ function fill_who_is_the_king(user_to_edit: any, popIn: HTMLElement) {
         if (user_to_edit.status === 'webmaster') {
             setKingClass('princes-of-this-piwigo', mainUserSet, true);
             const nb = popIn.querySelector<HTMLElement>('#who_is_the_king')!;
-            if (!is_owner(user_to_edit.id)) nb.addEventListener('click', () => open_main_user_modal(user_to_edit));
+            if (!is_owner(user_to_edit.id))
+                nb.addEventListener('click', () => open_main_user_modal(user_to_edit));
         } else {
             setKingClass('royal-court-of-this-piwigo', mainUserUpgradeWebmaster, false);
         }
@@ -726,8 +1089,9 @@ function fill_user_edit(user_to_edit: any) {
         Object.values(plugins_get_functions).forEach((f: any) => f());
     }
     const keyUser = Object.keys(user_to_edit);
-    plugins_users_infos_table.forEach(i => {
-        const el = qs<HTMLInputElement>('#' + i.content_id); if (!el) return;
+    plugins_users_infos_table.forEach((i) => {
+        const el = qs<HTMLInputElement>('#' + i.content_id);
+        if (!el) return;
         el.value = keyUser.includes(i.users_table) ? user_to_edit[i.users_table] : '';
     });
 }
@@ -747,26 +1111,43 @@ function fill_new_user() {
     const levelIdx = get_level_index(guest_user.level ?? '0');
     set_selected_groups(guest_user.groups ?? []);
     loadGroupOptions(groupAddUserTs);
-    const statusSelect = qs<HTMLSelectElement>(`.AddUserInputContainer .user-property-status select`, popIn);
-    if (statusSelect) { const o = Array.from(statusSelect.options)[statusIdx]; if (o) o.selected = true; }
-    const levelSelect = qs<HTMLSelectElement>(`.AddUserInputContainer .user-property-level select`, popIn);
-    if (levelSelect) { const o = Array.from(levelSelect.options)[levelIdx]; if (o) o.selected = true; }
+    const statusSelect = qs<HTMLSelectElement>(
+        `.AddUserInputContainer .user-property-status select`,
+        popIn
+    );
+    if (statusSelect) {
+        const o = Array.from(statusSelect.options)[statusIdx];
+        if (o) o.selected = true;
+    }
+    const levelSelect = qs<HTMLSelectElement>(
+        `.AddUserInputContainer .user-property-level select`,
+        popIn
+    );
+    if (levelSelect) {
+        const o = Array.from(levelSelect.options)[levelIdx];
+        if (o) o.selected = true;
+    }
     const hdCb = qs('.AddUserInputContainer .user-list-checkbox[name="hd_enabled"]', popIn);
-    if (hdCb) (hdCb as HTMLElement).dataset['selected'] = guest_user.enabled_high === 'true' ? '1' : '0';
+    if (hdCb)
+        (hdCb as HTMLElement).dataset['selected'] = guest_user.enabled_high === 'true' ? '1' : '0';
 }
 
 /*---- Ajax data helpers ----*/
 function fill_ajax_data_from_properties(ajax_data: any, popIn: HTMLElement) {
     const ts = getPopInTs(popIn);
     const groups_selected = ts ? ts.items.map((id: string) => parseInt(id)) : [];
-    const emailInput = qs<HTMLInputElement>('.user-property-email input', popIn); ajax_data['email'] = emailInput?.value;
+    const emailInput = qs<HTMLInputElement>('.user-property-email input', popIn);
+    ajax_data['email'] = emailInput?.value;
     const statusSelect = qs<HTMLSelectElement>('.user-property-status select', popIn);
     const statusVal = statusSelect?.value;
-    if (connected_user_status === 'admin' && statusVal !== 'webmaster' && statusVal !== 'admin') ajax_data['status'] = statusVal;
+    if (connected_user_status === 'admin' && statusVal !== 'webmaster' && statusVal !== 'admin')
+        ajax_data['status'] = statusVal;
     else if (connected_user_status === 'webmaster') ajax_data['status'] = statusVal;
     ajax_data['level'] = qs<HTMLSelectElement>('.user-property-level select', popIn)?.value;
     ajax_data['group_id'] = groups_selected.length === 0 ? -1 : groups_selected;
-    ajax_data['enabled_high'] = qs<HTMLElement>('.user-list-checkbox[name="hd_enabled"]', popIn)?.dataset['selected'] === '1';
+    ajax_data['enabled_high'] =
+        qs<HTMLElement>('.user-list-checkbox[name="hd_enabled"]', popIn)?.dataset['selected'] ===
+        '1';
     return ajax_data;
 }
 
@@ -777,9 +1158,17 @@ function fill_ajax_data_from_preferences(ajax_data: any, popIn: HTMLElement) {
     ajax_data['nb_image_page'] = nb_image_page_values[photosIdx];
     const periodIdx = getSliderValue(qs('.period-select-bar .slider-bar-container', popIn));
     ajax_data['recent_period'] = recent_period_values[periodIdx];
-    ajax_data['expand'] = qs<HTMLElement>('.user-list-checkbox[name="expand_all_albums"]', popIn)?.dataset['selected'] === '1';
-    ajax_data['show_nb_comments'] = qs<HTMLElement>('.user-list-checkbox[name="show_nb_comments"]', popIn)?.dataset['selected'] === '1';
-    ajax_data['show_nb_hits'] = qs<HTMLElement>('.user-list-checkbox[name="show_nb_hits"]', popIn)?.dataset['selected'] === '1';
+    ajax_data['expand'] =
+        qs<HTMLElement>('.user-list-checkbox[name="expand_all_albums"]', popIn)?.dataset[
+            'selected'
+        ] === '1';
+    ajax_data['show_nb_comments'] =
+        qs<HTMLElement>('.user-list-checkbox[name="show_nb_comments"]', popIn)?.dataset[
+            'selected'
+        ] === '1';
+    ajax_data['show_nb_hits'] =
+        qs<HTMLElement>('.user-list-checkbox[name="show_nb_hits"]', popIn)?.dataset['selected'] ===
+        '1';
     return ajax_data;
 }
 
@@ -791,53 +1180,71 @@ function fill_ajax_data_from_container(ajax_data: any, popIn: HTMLElement) {
 
 /*---- Ajax requests ----*/
 function get_first_selection_usernames(callback: any) {
-    const ids = selection.slice(0, 50).map(x => x.id);
+    const ids = selection.slice(0, 50).map((x) => x.id);
     const body = new URLSearchParams({ display: 'username', order: 'id' });
-    ids.forEach(id => body.append('user_id[]', id));
+    ids.forEach((id) => body.append('user_id[]', id));
     body.append('exclude[]', String(guest_id));
-    fetch('ws.php?format=json&method=pwg.users.getList', { method: 'POST', body }).then(r => r.json()).then(d => {
-        d.result.users.forEach((u: any) => {
-            const idx = selection.findIndex(x => x.id === u.id);
-            if (idx !== -1) selection[idx].username = u.username;
+    fetch('ws.php?format=json&method=pwg.users.getList', { method: 'POST', body })
+        .then((r) => r.json())
+        .then((d) => {
+            d.result.users.forEach((u: any) => {
+                const idx = selection.findIndex((x) => x.id === u.id);
+                if (idx !== -1) selection[idx].username = u.username;
+            });
+            callback();
         });
-        callback();
-    });
 }
 
 function select_whole_set() {
     const datesSliderEl = qs<HTMLElement>('.dates-select-bar .slider-bar-container');
     const [minIdx, maxIdx] = getSliderValues(datesSliderEl);
     const body = new URLSearchParams({
-        display: 'only_id', order: 'id', page: String(actual_page - 1), per_page: '0',
-        status: (qs<HTMLSelectElement>('.advanced-filter-select[name=filter_status]'))?.value ?? '',
-        group_id: (qs<HTMLSelectElement>('.advanced-filter-select[name=filter_group]'))?.value ?? '',
-        min_level: (qs<HTMLSelectElement>('.advanced-filter-select[name=filter_level]'))?.value ?? '',
-        max_level: (qs<HTMLSelectElement>('.advanced-filter-select[name=filter_level]'))?.value ?? '',
+        display: 'only_id',
+        order: 'id',
+        page: String(actual_page - 1),
+        per_page: '0',
+        status: qs<HTMLSelectElement>('.advanced-filter-select[name=filter_status]')?.value ?? '',
+        group_id: qs<HTMLSelectElement>('.advanced-filter-select[name=filter_group]')?.value ?? '',
+        min_level: qs<HTMLSelectElement>('.advanced-filter-select[name=filter_level]')?.value ?? '',
+        max_level: qs<HTMLSelectElement>('.advanced-filter-select[name=filter_level]')?.value ?? '',
         min_register: register_dates[minIdx] ?? '',
         max_register: register_dates[maxIdx] ?? '',
     });
     body.append('exclude[]', String(guest_id));
     show(qs('#checkActions .loading'));
-    fetch('ws.php?format=json&method=pwg.users.getList', { method: 'POST', body }).then(r => r.json()).then(d => {
-        selection = d.result.map((x: any) => ({ id: x }));
-        hide(qs('#checkActions .loading'));
-        update_selection_content();
-    }).catch(() => hide(qs('#checkActions .loading')));
+    fetch('ws.php?format=json&method=pwg.users.getList', { method: 'POST', body })
+        .then((r) => r.json())
+        .then((d) => {
+            selection = d.result.map((x: any) => ({ id: x }));
+            hide(qs('#checkActions .loading'));
+            update_selection_content();
+        })
+        .catch(() => hide(qs('#checkActions .loading')));
 }
 
 function update_user_username() {
     const popIn = document.getElementById('UserList')!;
     const username = qs<HTMLInputElement>('.user-property-input-username', popIn)?.value ?? '';
     if (!username.replace(/\s/g, '')) {
-        const failEl = qs<HTMLElement>('.update-user-fail'); if (failEl) { failEl.innerHTML = fieldNotEmpty; fadeInThenOut(failEl, 0, 2500); }
+        const failEl = qs<HTMLElement>('.update-user-fail');
+        if (failEl) {
+            failEl.innerHTML = fieldNotEmpty;
+            fadeInThenOut(failEl, 0, 2500);
+        }
         return;
     }
-    pwgPost('pwg.users.setInfo', { pwg_token, user_id: last_user_id, username }).then(d => {
+    pwgPost('pwg.users.setInfo', { pwg_token, user_id: last_user_id, username }).then((d) => {
         if (d.stat === 'ok' && last_user_index !== -1) {
             current_users[last_user_index].username = d.result.users[0].username;
-            qs<HTMLElement>('#UserList .user-property-username .edit-username-title')!.innerHTML = current_users[last_user_index].username;
-            qs<HTMLElement>('#UserList .user-property-initials span')!.innerHTML = get_initials(current_users[last_user_index].username);
-            fill_container_user_info(qsa('#user-table-content .user-container')[last_user_index] as HTMLElement, last_user_index);
+            qs<HTMLElement>('#UserList .user-property-username .edit-username-title')!.innerHTML =
+                current_users[last_user_index].username;
+            qs<HTMLElement>('#UserList .user-property-initials span')!.innerHTML = get_initials(
+                current_users[last_user_index].username
+            );
+            fill_container_user_info(
+                qsa('#user-table-content .user-container')[last_user_index] as HTMLElement,
+                last_user_index
+            );
             hide(qs('.user-property-username-change-input'));
             show(qs('.edit-username-success'));
         }
@@ -847,181 +1254,290 @@ function update_user_username() {
 function update_user_password() {
     const popIn = document.getElementById('UserList')!;
     const password = qs<HTMLInputElement>('.user-property-input-password', popIn)?.value ?? '';
-    pwgPost('pwg.users.setInfo', { pwg_token, user_id: last_user_id, password }).then(d => {
+    pwgPost('pwg.users.setInfo', { pwg_token, user_id: last_user_id, password }).then((d) => {
         if (d.stat === 'ok') {
             hide(qs('.user-property-password-change-inputs'));
             show(document.getElementById('edit_password_success_change'));
             if (window.isSecureContext && navigator.clipboard) {
-                qs('#copy_password')?.addEventListener('click', () => { copyToClipboard(password); qs<HTMLElement>('#password_msg_success')!.innerHTML = passwordCopied; });
+                qs('#copy_password')?.addEventListener('click', () => {
+                    copyToClipboard(password);
+                    qs<HTMLElement>('#password_msg_success')!.innerHTML = passwordCopied;
+                });
             }
         }
     });
 }
 
 function update_user_info() {
-    qsa('.update-user-button i').forEach(el => { el.classList.remove('icon-floppy'); el.classList.add('icon-spin6', 'animate-spin'); });
-    qsa('.update-user-button').forEach(el => el.classList.add('unclickable'));
+    qsa('.update-user-button i').forEach((el) => {
+        el.classList.remove('icon-floppy');
+        el.classList.add('icon-spin6', 'animate-spin');
+    });
+    qsa('.update-user-button').forEach((el) => el.classList.add('unclickable'));
     const popIn = qs<HTMLElement>('.UserListPopInContainer')!;
     let ajax_data: Record<string, any> = { pwg_token, user_id: last_user_id };
-    plugins_users_infos_table.forEach(i => {
+    plugins_users_infos_table.forEach((i) => {
         const el = qs<HTMLInputElement>('#' + i.content_id);
-        if (el && Object.keys(current_users[last_user_index] ?? {}).includes(i.users_table)) ajax_data[i.users_table] = el.value;
+        if (el && Object.keys(current_users[last_user_index] ?? {}).includes(i.users_table))
+            ajax_data[i.users_table] = el.value;
     });
     ajax_data = fill_ajax_data_from_container(ajax_data, popIn);
-    qsa<HTMLElement>('#UserList .update-user-fail, #UserList .update-user-success').forEach(el => { el.style.display = 'none'; });
-    pwgPost('pwg.users.setInfo', ajax_data).then(d => {
+    qsa<HTMLElement>('#UserList .update-user-fail, #UserList .update-user-success').forEach(
+        (el) => {
+            el.style.display = 'none';
+        }
+    );
+    pwgPost('pwg.users.setInfo', ajax_data).then((d) => {
         if (d.stat === 'ok') {
             const result = d.result.users[0];
             if (last_user_index !== -1) {
                 current_users[last_user_index] = { ...current_users[last_user_index], ...result };
-                fill_container_user_info(qsa('#user-table-content .user-container')[last_user_index] as HTMLElement, last_user_index);
+                fill_container_user_info(
+                    qsa('#user-table-content .user-container')[last_user_index] as HTMLElement,
+                    last_user_index
+                );
             }
             fadeInThenOut(qs('#UserList .update-user-success'), 0, 2500);
-            qsa('.update-user-button i').forEach(el => { el.classList.remove('icon-spin6', 'animate-spin'); el.classList.add('icon-floppy'); });
-            qsa('.update-user-button').forEach(el => el.classList.remove('unclickable'));
-            if (Object.keys(plugins_set_functions).length > 0) Object.values(plugins_set_functions).forEach((f: any) => f());
+            qsa('.update-user-button i').forEach((el) => {
+                el.classList.remove('icon-spin6', 'animate-spin');
+                el.classList.add('icon-floppy');
+            });
+            qsa('.update-user-button').forEach((el) => el.classList.remove('unclickable'));
+            if (Object.keys(plugins_set_functions).length > 0)
+                Object.values(plugins_set_functions).forEach((f: any) => f());
             fill_who_is_the_king(result, document.getElementById('UserList')!);
         } else if (d.stat === 'fail') {
             const failEl = qs<HTMLElement>('#UserList .update-user-fail');
-            if (failEl) { failEl.innerHTML = d.message; failEl.style.display = ''; }
-            qsa('.update-user-button i').forEach(el => { el.classList.add('icon-floppy'); el.classList.remove('icon-spin6', 'animate-spin'); });
-            qsa('.update-user-button').forEach(el => el.classList.remove('unclickable'));
+            if (failEl) {
+                failEl.innerHTML = d.message;
+                failEl.style.display = '';
+            }
+            qsa('.update-user-button i').forEach((el) => {
+                el.classList.add('icon-floppy');
+                el.classList.remove('icon-spin6', 'animate-spin');
+            });
+            qsa('.update-user-button').forEach((el) => el.classList.remove('unclickable'));
             setTimeout(() => hide(qs<HTMLElement>('#UserList .update-user-fail')), 5000);
         }
     });
 }
 
 function get_guest_info() {
-    pwgPost('pwg.users.getList', { display: 'all', user_id: guest_id }).then(d => {
-        if (d.stat === 'ok') { guest_user = d.result.users[0]; fill_guest_edit(); }
+    pwgPost('pwg.users.getList', { display: 'all', user_id: guest_id }).then((d) => {
+        if (d.stat === 'ok') {
+            guest_user = d.result.users[0];
+            fill_guest_edit();
+        }
     });
 }
 
 function get_user_info(uid: any, callback: any = null) {
-    pwgPost('pwg.users.getList', { display: 'all', user_id: uid }).then(d => {
-        if (d.stat === 'ok') { fill_user_edit(d.result.users[0]); if (callback) callback(); }
+    pwgPost('pwg.users.getList', { display: 'all', user_id: uid }).then((d) => {
+        if (d.stat === 'ok') {
+            fill_user_edit(d.result.users[0]);
+            if (callback) callback();
+        }
     });
 }
 
 function update_guest_info() {
-    qsa('.update-user-button i').forEach(el => { el.classList.remove('icon-floppy'); el.classList.add('icon-spin6', 'animate-spin'); });
-    qsa('.update-user-button').forEach(el => el.classList.add('unclickable'));
+    qsa('.update-user-button i').forEach((el) => {
+        el.classList.remove('icon-floppy');
+        el.classList.add('icon-spin6', 'animate-spin');
+    });
+    qsa('.update-user-button').forEach((el) => el.classList.add('unclickable'));
     const popIn = qs<HTMLElement>('.GuestUserListPopInContainer')!;
     let ajax_data: Record<string, any> = { pwg_token, user_id: guest_id };
     ajax_data = fill_ajax_data_from_container(ajax_data, popIn);
-    delete ajax_data.email; delete ajax_data.status;
-    pwgPost('pwg.users.setInfo', ajax_data).then(d => {
+    delete ajax_data.email;
+    delete ajax_data.status;
+    pwgPost('pwg.users.setInfo', ajax_data).then((d) => {
         if (d.stat === 'ok') fadeInThenOut(qs('#GuestUserList .update-user-success'), 0, 2500);
-        qsa('.update-user-button i').forEach(el => { el.classList.remove('icon-spin6', 'animate-spin'); el.classList.add('icon-floppy'); });
-        qsa('.update-user-button').forEach(el => el.classList.remove('unclickable'));
+        qsa('.update-user-button i').forEach((el) => {
+            el.classList.remove('icon-spin6', 'animate-spin');
+            el.classList.add('icon-floppy');
+        });
+        qsa('.update-user-button').forEach((el) => el.classList.remove('unclickable'));
     });
 }
 
 function update_user_list() {
     const update_data: Record<string, any> = {
-        display: 'all', order: filter_by, page: actual_page - 1, per_page, exclude: [guest_id]
+        display: 'all',
+        order: filter_by,
+        page: actual_page - 1,
+        per_page,
+        exclude: [guest_id],
     };
-    const searchVal = (qs<HTMLInputElement>('#user_search'))?.value ?? '';
+    const searchVal = qs<HTMLInputElement>('#user_search')?.value ?? '';
     if (searchVal) {
         const m = searchVal.match(/^id:(\d+)$/);
         update_data[m ? 'user_id' : 'filter'] = m ? m[1] : searchVal;
     }
     if (qs('.advanced-filter')?.classList.contains('advanced-filter-open')) {
-        update_data['status'] = (qs<HTMLSelectElement>('.advanced-filter-select[name=filter_status]'))?.value;
-        update_data['group_id'] = (qs<HTMLSelectElement>('.advanced-filter-select[name=filter_group]'))?.value;
-        update_data['min_level'] = (qs<HTMLSelectElement>('.advanced-filter-select[name=filter_level]'))?.value;
+        update_data['status'] = qs<HTMLSelectElement>(
+            '.advanced-filter-select[name=filter_status]'
+        )?.value;
+        update_data['group_id'] = qs<HTMLSelectElement>(
+            '.advanced-filter-select[name=filter_group]'
+        )?.value;
+        update_data['min_level'] = qs<HTMLSelectElement>(
+            '.advanced-filter-select[name=filter_level]'
+        )?.value;
         update_data['max_level'] = update_data['min_level'];
         const [minIdx, maxIdx] = getSliderValues(qs('.dates-select-bar .slider-bar-container'));
         update_data['min_register'] = register_dates[minIdx] ?? '';
         update_data['max_register'] = register_dates[maxIdx] ?? '';
     }
     show(qs('.user-update-spinner'));
-    pwgPost('pwg.users.getList', update_data).then(d => {
-        if (d.stat === 'fail') return;
-        total_users = d.result.paging.total_count;
-        if (first_update) {
-            document.querySelector('h1')?.insertAdjacentHTML('beforeend', `<span class='badge-number'>${total_users}</span>`);
-            first_update = false;
-        }
-        nb_filtered_users = d.result.paging.total_count;
-        update_pagination_menu();
-        current_users = d.result.users;
-        generate_user_list();
-        qsa('.user-col.user-first-col.user-container-edit').forEach(el => {
-            el.addEventListener('click', () => {
-                const key = parseInt(el.closest<HTMLElement>('.user-container')?.getAttribute('key') ?? '0');
-                last_user_id = current_users[key].id;
-                last_user_index = key;
-                fill_user_edit(current_users[key]);
-                show(document.getElementById('UserList'));
-                document.getElementById('tab_properties')?.scrollIntoView({ behavior: 'instant' as ScrollBehavior });
+    pwgPost('pwg.users.getList', update_data)
+        .then((d) => {
+            if (d.stat === 'fail') return;
+            total_users = d.result.paging.total_count;
+            if (first_update) {
+                document
+                    .querySelector('h1')
+                    ?.insertAdjacentHTML(
+                        'beforeend',
+                        `<span class='badge-number'>${total_users}</span>`
+                    );
+                first_update = false;
+            }
+            nb_filtered_users = d.result.paging.total_count;
+            update_pagination_menu();
+            current_users = d.result.users;
+            generate_user_list();
+            qsa('.user-col.user-first-col.user-container-edit').forEach((el) => {
+                el.addEventListener('click', () => {
+                    const key = parseInt(
+                        el.closest<HTMLElement>('.user-container')?.getAttribute('key') ?? '0'
+                    );
+                    last_user_id = current_users[key].id;
+                    last_user_index = key;
+                    fill_user_edit(current_users[key]);
+                    show(document.getElementById('UserList'));
+                    document
+                        .getElementById('tab_properties')
+                        ?.scrollIntoView({ behavior: 'instant' as ScrollBehavior });
+                });
             });
-        });
-        set_selected_to_selection();
-        hide(qs('.user-update-spinner'));
+            set_selected_to_selection();
+            hide(qs('.user-update-spinner'));
 
-        let nb_filters = 0;
-        const filterStatus = (qs<HTMLSelectElement>('.advanced-filter-select[name=filter_status]'))?.value;
-        const filterGroup = (qs<HTMLSelectElement>('.advanced-filter-select[name=filter_group]'))?.value;
-        const filterLevel = (qs<HTMLSelectElement>('.advanced-filter-select[name=filter_level]'))?.value;
-        if (filterStatus) nb_filters++;
-        if (filterGroup) nb_filters++;
-        if (filterLevel) nb_filters++;
-        const [minIdx, maxIdx] = getSliderValues(qs('.dates-select-bar .slider-bar-container'));
-        if (minIdx !== 0) nb_filters++;
-        if (register_dates && maxIdx !== register_dates.length - 1) nb_filters++;
-        show_filter_infos(nb_filters);
-    }).catch(() => hide(qs('.user-update-spinner')));
+            let nb_filters = 0;
+            const filterStatus = qs<HTMLSelectElement>(
+                '.advanced-filter-select[name=filter_status]'
+            )?.value;
+            const filterGroup = qs<HTMLSelectElement>(
+                '.advanced-filter-select[name=filter_group]'
+            )?.value;
+            const filterLevel = qs<HTMLSelectElement>(
+                '.advanced-filter-select[name=filter_level]'
+            )?.value;
+            if (filterStatus) nb_filters++;
+            if (filterGroup) nb_filters++;
+            if (filterLevel) nb_filters++;
+            const [minIdx, maxIdx] = getSliderValues(qs('.dates-select-bar .slider-bar-container'));
+            if (minIdx !== 0) nb_filters++;
+            if (register_dates && maxIdx !== register_dates.length - 1) nb_filters++;
+            show_filter_infos(nb_filters);
+        })
+        .catch(() => hide(qs('.user-update-spinner')));
 }
 
 function add_user() {
     const addUserTs = groupAddUserTs;
     const groups_selected = addUserTs ? addUserTs.items.map((id: string) => parseInt(id)) : [];
-    const username = (qs<HTMLInputElement>('.AddUserLabelUsername .user-property-input'))?.value ?? '';
-    const email = (qs<HTMLInputElement>('.AddUserLabelEmail .user-property-input'))?.value ?? '';
-    const status = (qs<HTMLSelectElement>('.AddUserInputContainer .user-property-status select'))?.value ?? '';
-    const level = (qs<HTMLSelectElement>('.AddUserInputContainer .user-property-level select'))?.value ?? '';
-    const enabled_high = qs<HTMLElement>('.AddUserInputContainer .user-list-checkbox[name="hd_enabled"]')?.dataset['selected'] === '1';
+    const username =
+        qs<HTMLInputElement>('.AddUserLabelUsername .user-property-input')?.value ?? '';
+    const email = qs<HTMLInputElement>('.AddUserLabelEmail .user-property-input')?.value ?? '';
+    const status =
+        qs<HTMLSelectElement>('.AddUserInputContainer .user-property-status select')?.value ?? '';
+    const level =
+        qs<HTMLSelectElement>('.AddUserInputContainer .user-property-level select')?.value ?? '';
+    const enabled_high =
+        qs<HTMLElement>('.AddUserInputContainer .user-list-checkbox[name="hd_enabled"]')?.dataset[
+            'selected'
+        ] === '1';
 
     const errEl = qs<HTMLElement>('#AddUser .AddUserErrors');
-    const showErr = (msg: string) => { if (errEl) { errEl.innerHTML = msg; errEl.style.visibility = 'visible'; } };
+    const showErr = (msg: string) => {
+        if (errEl) {
+            errEl.innerHTML = msg;
+            errEl.style.visibility = 'visible';
+        }
+    };
     if (errEl) errEl.style.visibility = 'hidden';
-    if (!username) { showErr(missingUsername); return; }
+    if (!username) {
+        showErr(missingUsername);
+        return;
+    }
     if (status === 'generic') {
-        const pass = (qs<HTMLInputElement>('#add_user_pass'))?.value ?? '';
-        const conf = (qs<HTMLInputElement>('#add_user_confpass'))?.value ?? '';
-        if (!pass) { showErr(missingPassword); return; }
-        if (!conf) { showErr(missingConfPassword); return; }
-        if (pass !== conf) { showErr(noMatchPassword); return; }
+        const pass = qs<HTMLInputElement>('#add_user_pass')?.value ?? '';
+        const conf = qs<HTMLInputElement>('#add_user_confpass')?.value ?? '';
+        if (!pass) {
+            showErr(missingPassword);
+            return;
+        }
+        if (!conf) {
+            showErr(missingConfPassword);
+            return;
+        }
+        if (pass !== conf) {
+            showErr(noMatchPassword);
+            return;
+        }
     }
 
     const params: Record<string, any> = { username, email, pwg_token };
     if (status === 'generic') {
-        params.password = (qs<HTMLInputElement>('#add_user_pass'))?.value;
-        params.password_confirm = (qs<HTMLInputElement>('#add_user_confpass'))?.value;
-    } else { params.auto_password = true; }
+        params.password = qs<HTMLInputElement>('#add_user_pass')?.value;
+        params.password_confirm = qs<HTMLInputElement>('#add_user_confpass')?.value;
+    } else {
+        params.auto_password = true;
+    }
 
-    pwgPost('pwg.users.add', params).then(d => {
+    pwgPost('pwg.users.add', params).then((d) => {
         if (d.stat === 'ok') {
             const new_user_id = d.result.users[0].id;
             const default_group = d.result.users[0].groups ?? [];
-            add_infos_to_new_user(new_user_id, { username, email, status, level, group_id: groups_selected.concat(default_group), enabled_high });
-        } else { showErr(d.message); }
+            add_infos_to_new_user(new_user_id, {
+                username,
+                email,
+                status,
+                level,
+                group_id: groups_selected.concat(default_group),
+                enabled_high,
+            });
+        } else {
+            showErr(d.message);
+        }
     });
 }
 
 function add_infos_to_new_user(user_id: any, ajax_data: any) {
-    pwgPost('pwg.users.setInfo', { user_id, status: ajax_data.status, level: ajax_data.level, group_id: ajax_data.group_id, enabled_high: ajax_data.enabled_high, pwg_token }).then(d => {
+    pwgPost('pwg.users.setInfo', {
+        user_id,
+        status: ajax_data.status,
+        level: ajax_data.level,
+        group_id: ajax_data.group_id,
+        enabled_high: ajax_data.enabled_high,
+        pwg_token,
+    }).then((d) => {
         if (d.stat === 'ok') {
             const new_user_id = d.result.users[0].id;
             update_user_list();
             qs('#AddUserUpdated')?.classList.replace('icon-red', 'icon-green');
             qs('#AddUserUpdated')?.classList.replace('icon-cancel', 'icon-ok');
             qs('#AddUserUpdated')?.classList.add('border-green');
-            const textEl = qs<HTMLElement>('#AddUserUpdatedText'); if (textEl) textEl.innerHTML = user_added_str.replace('%s', ajax_data.username);
-            if (['webmaster', 'admin', 'normal'].includes(ajax_data.status)) send_new_user_password(new_user_id, ajax_data.email);
+            const textEl = qs<HTMLElement>('#AddUserUpdatedText');
+            if (textEl) textEl.innerHTML = user_added_str.replace('%s', ajax_data.username);
+            if (['webmaster', 'admin', 'normal'].includes(ajax_data.status))
+                send_new_user_password(new_user_id, ajax_data.email);
             else add_user_close();
-            qsa<HTMLInputElement>('#AddUser .user-property-input').forEach(el => { el.value = ''; });
+            qsa<HTMLInputElement>('#AddUser .user-property-input').forEach((el) => {
+                el.value = '';
+            });
             const editNow = qs('#AddUserSuccess .edit-now');
             if (editNow) {
                 const nb = editNow.cloneNode(true) as HTMLElement;
@@ -1029,33 +1545,52 @@ function add_infos_to_new_user(user_id: any, ajax_data: any) {
                 nb.addEventListener('click', () => {
                     last_user_id = new_user_id;
                     last_user_index = get_container_index_from_uid(new_user_id);
-                    if (last_user_index !== -1) { fill_user_edit(current_users[last_user_index]); open_user_list(); }
-                    else get_user_info(new_user_id, open_user_list);
+                    if (last_user_index !== -1) {
+                        fill_user_edit(current_users[last_user_index]);
+                        open_user_list();
+                    } else get_user_info(new_user_id, open_user_list);
                 });
             }
-            const labelSpan = qs<HTMLElement>('#AddUserSuccess label span:first-child'); if (labelSpan) labelSpan.innerHTML = user_added_str.replace('%s', ajax_data.username);
-            const successEl = qs<HTMLElement>('#AddUserSuccess'); if (successEl) successEl.style.display = 'flex';
-            const badge = qs('.badge-number'); if (badge) badge.innerHTML = String(parseInt(badge.innerHTML) + 1);
-        } else { qs<HTMLElement>('#AddUser .AddUserErrors')!.style.visibility = 'visible'; qs<HTMLElement>('#AddUser .AddUserErrors')!.innerHTML = d.message; }
+            const labelSpan = qs<HTMLElement>('#AddUserSuccess label span:first-child');
+            if (labelSpan) labelSpan.innerHTML = user_added_str.replace('%s', ajax_data.username);
+            const successEl = qs<HTMLElement>('#AddUserSuccess');
+            if (successEl) successEl.style.display = 'flex';
+            const badge = qs('.badge-number');
+            if (badge) badge.innerHTML = String(parseInt(badge.innerHTML) + 1);
+        } else {
+            qs<HTMLElement>('#AddUser .AddUserErrors')!.style.visibility = 'visible';
+            qs<HTMLElement>('#AddUser .AddUserErrors')!.innerHTML = d.message;
+        }
     });
 }
 
 function send_new_user_password(user_id: any, mail: any) {
     const send_by_mail = mail !== '';
-    pwgPost('pwg.users.generatePasswordLink', { user_id, send_by_mail, pwg_token }).then(res => {
+    pwgPost('pwg.users.generatePasswordLink', { user_id, send_by_mail, pwg_token }).then((res) => {
         if (res.stat === 'ok') {
             const password_container = document.getElementById('AddUserPasswordInputContainer');
             show(password_container);
             hide(document.getElementById('AddUserFieldContainer'));
             show(document.getElementById('AddUserSuccessContainer'));
-            const pwdLink = qs<HTMLInputElement>('#AddUserPasswordLink'); if (pwdLink) { pwdLink.value = res.result.generated_link; pwdLink.focus(); }
+            const pwdLink = qs<HTMLInputElement>('#AddUserPasswordLink');
+            if (pwdLink) {
+                pwdLink.value = res.result.generated_link;
+                pwdLink.focus();
+            }
             const textEl = qs<HTMLElement>('#AddUserTextField');
-            if (textEl) textEl.innerHTML = send_by_mail ? sprintf(validLinkMail, res.result.time_validation, `<b>${mail}</b>`) : sprintf(validLinkWithoutMail, res.result.time_validation);
+            if (textEl)
+                textEl.innerHTML = send_by_mail
+                    ? sprintf(validLinkMail, res.result.time_validation, `<b>${mail}</b>`)
+                    : sprintf(validLinkWithoutMail, res.result.time_validation);
             if (send_by_mail && !res.result.send_by_mail) {
                 qs('#AddUserUpdated')?.classList.add('icon-red-error', 'icon-cancel');
-                const ut = qs<HTMLElement>('#AddUserUpdatedText'); if (ut) ut.innerHTML = errorMailSent;
-                if (textEl) textEl.innerHTML = sprintf(errorMailSentMsg, res.result.time_validation);
-            } else if (send_by_mail && res.result.send_by_mail) { hide(password_container); }
+                const ut = qs<HTMLElement>('#AddUserUpdatedText');
+                if (ut) ut.innerHTML = errorMailSent;
+                if (textEl)
+                    textEl.innerHTML = sprintf(errorMailSentMsg, res.result.time_validation);
+            } else if (send_by_mail && res.result.send_by_mail) {
+                hide(password_container);
+            }
         }
     });
 }
@@ -1064,60 +1599,100 @@ function delete_user(uid: any) {
     pwgPost('pwg.users.delete', { user_id: uid, pwg_token }).then(() => {
         close_user_list();
         update_user_list();
-        const badge = qs('.badge-number'); if (badge) badge.innerHTML = String(parseInt(badge.innerHTML) - 1);
+        const badge = qs('.badge-number');
+        if (badge) badge.innerHTML = String(parseInt(badge.innerHTML) - 1);
     });
 }
 
 function show_filter_infos(nb_filters: any) {
     const filteredEl = qs('.filtered-users');
-    const searchVal = (qs<HTMLInputElement>('#user_search'))?.value ?? '';
+    const searchVal = qs<HTMLInputElement>('#user_search')?.value ?? '';
     if (filteredEl) {
-        if (searchVal.length !== 0 || nb_filters !== 0) filteredEl.innerHTML = total_users !== 1 ? filtered_users.replace(/%d/g, String(total_users)) : filtered_user.replace(/%d/g, String(total_users));
+        if (searchVal.length !== 0 || nb_filters !== 0)
+            filteredEl.innerHTML =
+                total_users !== 1
+                    ? filtered_users.replace(/%d/g, String(total_users))
+                    : filtered_user.replace(/%d/g, String(total_users));
         else filteredEl.innerHTML = '';
     }
     const btnEl = qs<HTMLElement>('.advanced-filter-btn');
     const counterEl = qs<HTMLElement>('.filter-counter');
     if (nb_filters !== 0) {
         if (btnEl) btnEl.style.width = '80px';
-        if (counterEl) { counterEl.innerHTML = String(nb_filters); counterEl.style.display = 'flex'; }
+        if (counterEl) {
+            counterEl.innerHTML = String(nb_filters);
+            counterEl.style.display = 'flex';
+        }
     } else {
         if (btnEl) btnEl.style.width = '70px';
-        if (counterEl) { counterEl.style.display = 'none'; counterEl.innerHTML = '0'; }
+        if (counterEl) {
+            counterEl.style.display = 'none';
+            counterEl.innerHTML = '0';
+        }
     }
 }
 
 function send_link_password(email: any, username: any, user_id: any, send_by_mail: boolean) {
-    pwgPost('pwg.users.generatePasswordLink', { user_id, send_by_mail: String(send_by_mail), pwg_token }).then(res => {
-        if (res.stat === 'ok') {
-            const copyInput = qs<HTMLInputElement>('#result_send_mail_copy_input'); if (copyInput) copyInput.value = res.result.generated_link;
-            if (send_by_mail) {
-                const resultMail = qs('#result_send_mail');
-                if (res.result.send_by_mail) {
-                    resultMail?.classList.remove('update-password-fail', 'icon-red');
-                    resultMail?.classList.add('update-password-success', 'icon-green');
-                    qs('#icon_password_msg_result_mail')?.classList.replace('icon-cancel', 'icon-ok');
-                    const curr_mail = (qs<HTMLInputElement>('.user-property-email .user-property-input'))?.value || email;
-                    qs<HTMLElement>('#password_msg_result_mail')!.innerHTML = sprintf(mailSentAt, username, curr_mail);
+    pwgPost('pwg.users.generatePasswordLink', {
+        user_id,
+        send_by_mail: String(send_by_mail),
+        pwg_token,
+    })
+        .then((res) => {
+            if (res.stat === 'ok') {
+                const copyInput = qs<HTMLInputElement>('#result_send_mail_copy_input');
+                if (copyInput) copyInput.value = res.result.generated_link;
+                if (send_by_mail) {
+                    const resultMail = qs('#result_send_mail');
+                    if (res.result.send_by_mail) {
+                        resultMail?.classList.remove('update-password-fail', 'icon-red');
+                        resultMail?.classList.add('update-password-success', 'icon-green');
+                        qs('#icon_password_msg_result_mail')?.classList.replace(
+                            'icon-cancel',
+                            'icon-ok'
+                        );
+                        const curr_mail =
+                            qs<HTMLInputElement>('.user-property-email .user-property-input')
+                                ?.value || email;
+                        qs<HTMLElement>('#password_msg_result_mail')!.innerHTML = sprintf(
+                            mailSentAt,
+                            username,
+                            curr_mail
+                        );
+                    } else {
+                        resultMail?.classList.remove('update-password-success', 'icon-green');
+                        resultMail?.classList.add('update-password-fail', 'icon-red');
+                        qs('#icon_password_msg_result_mail')?.classList.replace(
+                            'icon-ok',
+                            'icon-cancel'
+                        );
+                        qs<HTMLElement>('#password_msg_result_mail')!.innerHTML = errorMailSent;
+                    }
+                    hide(qs('.user-property-password-choice'));
+                    show(qs('#edit_password_result_mail'));
                 } else {
-                    resultMail?.classList.remove('update-password-success', 'icon-green');
-                    resultMail?.classList.add('update-password-fail', 'icon-red');
-                    qs('#icon_password_msg_result_mail')?.classList.replace('icon-ok', 'icon-cancel');
-                    qs<HTMLElement>('#password_msg_result_mail')!.innerHTML = errorMailSent;
+                    if (window.isSecureContext && navigator.clipboard)
+                        copyToClipboard(res.result.generated_link);
                 }
-                hide(qs('.user-property-password-choice'));
-                show(qs('#edit_password_result_mail'));
-            } else {
-                if (window.isSecureContext && navigator.clipboard) copyToClipboard(res.result.generated_link);
             }
-        }
-    }).catch(err => console.log('Error send_link_password:', err));
+        })
+        .catch((err) => console.log('Error send_link_password:', err));
 }
 
 function set_main_user(user_id: any, new_username: any) {
-    pwgPost('pwg.users.setMainUser', { user_id, pwg_token }).then(res => {
+    pwgPost('pwg.users.setMainUser', { user_id, pwg_token }).then((res) => {
         if (res.stat === 'ok') {
             const king = qs('#who_is_the_king');
-            if (king) { king.classList.remove('princes-of-this-piwigo', 'royal-court-of-this-piwigo', 'can-change'); king.classList.add('king-of-this-piwigo', 'cannot-change'); king.title = mainUserStr; tippy(king, { content: mainUserStr }); }
+            if (king) {
+                king.classList.remove(
+                    'princes-of-this-piwigo',
+                    'royal-court-of-this-piwigo',
+                    'can-change'
+                );
+                king.classList.add('king-of-this-piwigo', 'cannot-change');
+                king.title = mainUserStr;
+                tippy(king, { content: mainUserStr });
+            }
             owner_id = user_id;
             owner_username = new_username;
             set_main_user_success();
@@ -1129,18 +1704,24 @@ function set_main_user(user_id: any, new_username: any) {
 function open_main_user_modal(user_to_edit: any) {
     const modal = qs<HTMLElement>('.user-property-main-user-change')!;
     reset_main_user_modals();
-    qs<HTMLElement>('.main-user-proceed-desc')!.innerHTML = sprintf(mainUserContinue, `<b>${display_long_string(user_to_edit.username)}</b>`, `<b>${display_long_string(owner_username)}</b>`);
+    qs<HTMLElement>('.main-user-proceed-desc')!.innerHTML = sprintf(
+        mainUserContinue,
+        `<b>${display_long_string(user_to_edit.username)}</b>`,
+        `<b>${display_long_string(owner_username)}</b>`
+    );
     show(modal);
     const proceedBtn = qs('.main-user-btn-proceed')!;
     const newProceed = proceedBtn.cloneNode(true) as HTMLElement;
     proceedBtn.replaceWith(newProceed);
     newProceed.addEventListener('click', () => {
         const gen = generate_random_string();
-        qs<HTMLElement>('.main-user-rewrite-desc')!.innerHTML = sprintf(mainUserRewrite, `<b>${gen}</b>`) + ' :';
-        hide(qs('.main-user-proceed')); show(qs('.main-user-rewrite'));
+        qs<HTMLElement>('.main-user-rewrite-desc')!.innerHTML =
+            sprintf(mainUserRewrite, `<b>${gen}</b>`) + ' :';
+        hide(qs('.main-user-proceed'));
+        show(qs('.main-user-rewrite'));
         event_check_string_main_user(user_to_edit.username, user_to_edit.id, gen);
     });
-    qsa('.user-property-main-user-cancel, #main_user_success_close').forEach(el => {
+    qsa('.user-property-main-user-cancel, #main_user_success_close').forEach((el) => {
         const nb = el.cloneNode(true) as HTMLElement;
         el.replaceWith(nb);
         nb.addEventListener('click', () => hide(modal));
@@ -1148,7 +1729,7 @@ function open_main_user_modal(user_to_edit: any) {
 }
 
 function set_main_user_success() {
-    const indexKey = current_users.findIndex(u => u.id === owner_id);
+    const indexKey = current_users.findIndex((u) => u.id === owner_id);
     const new_main = qs<HTMLElement>(`.user-container[key="${indexKey}"] .user-container-username`);
     let king = document.getElementById('the_king') as HTMLElement | null;
     if (!king) {
@@ -1164,7 +1745,11 @@ function set_main_user_success() {
     show(qs('.main-user-success'));
 }
 
-function event_check_string_main_user(new_main_username: string, new_main_id: any, stringToCheck: string) {
+function event_check_string_main_user(
+    new_main_username: string,
+    new_main_id: any,
+    stringToCheck: string
+) {
     const input = qs<HTMLInputElement>('#main_user_rewrite')!;
     const icon = qs<HTMLElement>('#main_user_rewrite_icon')!;
     const newInput = input.cloneNode(true) as HTMLInputElement;
@@ -1175,9 +1760,17 @@ function event_check_string_main_user(new_main_username: string, new_main_id: an
         if (stringToCheck === newInput.value) {
             icon.classList.remove('icon-cancel', 'icon-red');
             icon.classList.add('icon-ok', 'icon-green');
-            qs<HTMLElement>('.main-user-validate-desc')!.innerHTML = sprintf(mainUserValidate, `<b>${display_long_string(owner_username)}</b>`, `<b>${display_long_string(new_main_username)}</b>`);
-            qs<HTMLElement>('.main-user-success-desc')!.innerHTML = sprintf(mainUserSuccess, display_long_string(new_main_username));
-            hide(qs('.main-user-rewrite')); show(qs('.main-user-validate'));
+            qs<HTMLElement>('.main-user-validate-desc')!.innerHTML = sprintf(
+                mainUserValidate,
+                `<b>${display_long_string(owner_username)}</b>`,
+                `<b>${display_long_string(new_main_username)}</b>`
+            );
+            qs<HTMLElement>('.main-user-success-desc')!.innerHTML = sprintf(
+                mainUserSuccess,
+                display_long_string(new_main_username)
+            );
+            hide(qs('.main-user-rewrite'));
+            show(qs('.main-user-validate'));
             event_validate_main_user(new_main_username, new_main_id);
         }
     });
@@ -1196,12 +1789,35 @@ function set_view_selector(view_type: string) {
         body: new URLSearchParams({ param: 'user-manager-view', value: view_type }),
     });
 }
-function setDisplayTile() { qsa('.user-container-wrapper').forEach(el => { el.classList.remove('compactView', 'lineView'); el.classList.add('tileView'); }); qsa('.user-header-col').forEach(el => el.classList.add('hide')); }
-function setDisplayLine() { qsa('.user-container-wrapper').forEach(el => { el.classList.remove('tileView', 'compactView'); el.classList.add('lineView'); }); qsa('.user-header-col').forEach(el => el.classList.remove('hide')); }
+function setDisplayTile() {
+    qsa('.user-container-wrapper').forEach((el) => {
+        el.classList.remove('compactView', 'lineView');
+        el.classList.add('tileView');
+    });
+    qsa('.user-header-col').forEach((el) => el.classList.add('hide'));
+}
+function setDisplayLine() {
+    qsa('.user-container-wrapper').forEach((el) => {
+        el.classList.remove('tileView', 'compactView');
+        el.classList.add('lineView');
+    });
+    qsa('.user-header-col').forEach((el) => el.classList.remove('hide'));
+}
 function setDisplayCompact() {
-    qsa('.user-container-wrapper').forEach(el => { el.classList.remove('tileView', 'lineView'); el.classList.add('compactView'); });
-    qsa('.user-header-col').forEach(el => el.classList.add('hide'));
-    if (per_page < 10) { per_page = 10; update_pagination_menu(); update_user_list(); qsa('[id^=pagination-per-page-]').forEach(el => el.classList.remove('selected-pagination')); qs('#pagination-per-page-10')?.classList.add('selected-pagination'); }
+    qsa('.user-container-wrapper').forEach((el) => {
+        el.classList.remove('tileView', 'lineView');
+        el.classList.add('compactView');
+    });
+    qsa('.user-header-col').forEach((el) => el.classList.add('hide'));
+    if (per_page < 10) {
+        per_page = 10;
+        update_pagination_menu();
+        update_user_list();
+        qsa('[id^=pagination-per-page-]').forEach((el) =>
+            el.classList.remove('selected-pagination')
+        );
+        qs('#pagination-per-page-10')?.classList.add('selected-pagination');
+    }
 }
 
 /*---- Generate user containers ----*/
@@ -1216,7 +1832,7 @@ function user_container_click(this: HTMLElement) {
         cb.dataset['selected'] = '0';
         hide(cb.querySelector('i'));
         container.classList.remove('container-selected');
-        selection = selection.filter(e => e.id !== currUser.id);
+        selection = selection.filter((e) => e.id !== currUser.id);
     } else {
         cb.dataset['selected'] = '1';
         show(cb.querySelector('i'));
@@ -1232,18 +1848,36 @@ function generate_groups(container: HTMLElement, groups: any[]) {
     groupsContainer.innerHTML = '';
     const tmpl = document.getElementById('template');
     if (groups.length >= 1) {
-        const pg = tmpl?.querySelector<HTMLElement>('.group-primary')?.cloneNode(true) as HTMLElement;
-        if (pg) { pg.innerHTML = get_group_name_from_id(groups[0]); pg.classList.add(color_icons[groups[0] % 5]); groupsContainer.appendChild(pg); }
+        const pg = tmpl
+            ?.querySelector<HTMLElement>('.group-primary')
+            ?.cloneNode(true) as HTMLElement;
+        if (pg) {
+            pg.innerHTML = get_group_name_from_id(groups[0]);
+            pg.classList.add(color_icons[groups[0] % 5]);
+            groupsContainer.appendChild(pg);
+        }
     }
     if (groups.length >= 2) {
-        const pg2 = tmpl?.querySelector<HTMLElement>('.group-primary')?.cloneNode(true) as HTMLElement;
-        if (pg2) { pg2.innerHTML = get_group_name_from_id(groups[1]); pg2.classList.add(color_icons[groups[1] % 5]); groupsContainer.appendChild(pg2); }
+        const pg2 = tmpl
+            ?.querySelector<HTMLElement>('.group-primary')
+            ?.cloneNode(true) as HTMLElement;
+        if (pg2) {
+            pg2.innerHTML = get_group_name_from_id(groups[1]);
+            pg2.classList.add(color_icons[groups[1] % 5]);
+            groupsContainer.appendChild(pg2);
+        }
     }
     if (groups.length >= 3) {
-        const bonus = tmpl?.querySelector<HTMLElement>('.group-bonus')?.cloneNode(true) as HTMLElement;
+        const bonus = tmpl
+            ?.querySelector<HTMLElement>('.group-bonus')
+            ?.cloneNode(true) as HTMLElement;
         if (bonus) {
-            bonus.innerHTML = '...'; bonus.classList.add(color_icons[groups[2] % 5], 'tiptip');
-            let title = groups.slice(2).map(id => get_group_name_from_id(id)).join(', ');
+            bonus.innerHTML = '...';
+            bonus.classList.add(color_icons[groups[2] % 5], 'tiptip');
+            let title = groups
+                .slice(2)
+                .map((id) => get_group_name_from_id(id))
+                .join(', ');
             bonus.title = title;
             tippy(bonus, { content: title });
             groupsContainer.appendChild(bonus);
@@ -1256,27 +1890,44 @@ function fill_container_user_info(container: HTMLElement, user_index: number) {
     if (!user || !container) return;
     const regParts = user.registration_date?.split(' ') ?? [];
     container.setAttribute('key', String(user_index));
-    const usernameSpan = container.querySelector<HTMLElement>('.user-container-username span'); if (usernameSpan) usernameSpan.innerHTML = user.username;
+    const usernameSpan = container.querySelector<HTMLElement>('.user-container-username span');
+    if (usernameSpan) usernameSpan.innerHTML = user.username;
     if (user.id === owner_id && !document.getElementById('the_king')) {
-        const div = document.createElement('div'); div.innerHTML = king_template;
+        const div = document.createElement('div');
+        div.innerHTML = king_template;
         const king = div.firstElementChild as HTMLElement;
-        king.title = mainUserStr; tippy(king, { content: mainUserStr });
+        king.title = mainUserStr;
+        tippy(king, { content: mainUserStr });
         container.querySelector('.user-container-username')?.appendChild(king);
     }
     const initFill = get_initials(user.username);
     const initSpan = container.querySelector<HTMLElement>('.user-container-initials span');
-    if (initSpan) { initSpan.innerHTML = initFill; initSpan.classList.remove(...color_icons); initSpan.classList.add(color_icons[user.id % 5]); initSpan.classList.toggle('small', initFill.length > 1); }
-    const statusSpan = container.querySelector<HTMLElement>('.user-container-status span'); if (statusSpan) statusSpan.innerHTML = status_to_str[user.status];
-    const emailSpan = container.querySelector<HTMLElement>('.user-container-email span'); if (emailSpan) emailSpan.innerHTML = user.email ?? '';
+    if (initSpan) {
+        initSpan.innerHTML = initFill;
+        initSpan.classList.remove(...color_icons);
+        initSpan.classList.add(color_icons[user.id % 5]);
+        initSpan.classList.toggle('small', initFill.length > 1);
+    }
+    const statusSpan = container.querySelector<HTMLElement>('.user-container-status span');
+    if (statusSpan) statusSpan.innerHTML = status_to_str[user.status];
+    const emailSpan = container.querySelector<HTMLElement>('.user-container-email span');
+    if (emailSpan) emailSpan.innerHTML = user.email ?? '';
     generate_groups(container, user.groups ?? []);
-    const regDate = container.querySelector<HTMLElement>('.user-container-registration-date'); if (regDate) regDate.innerHTML = regParts[0] ?? '';
-    const regTime = container.querySelector<HTMLElement>('.user-container-registration-time'); if (regTime) regTime.innerHTML = regParts[1] ?? '';
-    const regSince = container.querySelector<HTMLElement>('.user-container-registration-date-since'); if (regSince) regSince.innerHTML = user.registration_date_since ?? '';
+    const regDate = container.querySelector<HTMLElement>('.user-container-registration-date');
+    if (regDate) regDate.innerHTML = regParts[0] ?? '';
+    const regTime = container.querySelector<HTMLElement>('.user-container-registration-time');
+    if (regTime) regTime.innerHTML = regParts[1] ?? '';
+    const regSince = container.querySelector<HTMLElement>(
+        '.user-container-registration-date-since'
+    );
+    if (regSince) regSince.innerHTML = user.registration_date_since ?? '';
 }
 
 function generate_user_list() {
-    qsa('#user-table-content .user-container').forEach(el => el.remove());
-    const tmplContainer = document.getElementById('template')?.querySelector<HTMLElement>('.user-container');
+    qsa('#user-table-content .user-container').forEach((el) => el.remove());
+    const tmplContainer = document
+        .getElementById('template')
+        ?.querySelector<HTMLElement>('.user-container');
     const wrapper = qs('#user-table-content .user-container-wrapper');
     for (let i = 0; i < current_users.length; i++) {
         const container = tmplContainer?.cloneNode(true) as HTMLElement;
@@ -1284,149 +1935,278 @@ function generate_user_list() {
         fill_container_user_info(container, i);
         wrapper.appendChild(container);
     }
-    qsa('.user-container .user-list-checkbox').forEach(el => {
+    qsa('.user-container .user-list-checkbox').forEach((el) => {
         el.addEventListener('change', checkbox_change.bind(el));
     });
-    qsa('.user-container').forEach(el => {
+    qsa('.user-container').forEach((el) => {
         el.addEventListener('click', user_container_click.bind(el));
     });
 }
 
 /*---- Plugin API ----*/
-(window as any).plugin_add_tab_in_user_modal = function(tab_name: any, content_id: any, users_table: any = null, set_data_function: any = null, get_data_function: any = null) {
+(window as any).plugin_add_tab_in_user_modal = function (
+    tab_name: any,
+    content_id: any,
+    users_table: any = null,
+    set_data_function: any = null,
+    get_data_function: any = null
+) {
     if (typeof tab_name !== 'string') throw new TypeError('tab_name must be a string.');
     const name = tab_name.replace(/ /g, '').toLowerCase();
-    if (document.getElementById('name_tab_' + name)) throw new TypeError('An element with this tab_name already exists.');
+    if (document.getElementById('name_tab_' + name))
+        throw new TypeError('An element with this tab_name already exists.');
     if (typeof content_id !== 'string') throw new TypeError('content_id must be a string.');
-    if (!document.getElementById(content_id)) throw new TypeError('HTML element "' + content_id + '" not found.');
-    if (document.querySelector('.edit-user-slides #' + content_id)) throw new TypeError('An element with this content_id already exists.');
-    if (users_table && (set_data_function || get_data_function)) throw new TypeError('users_table must be null if set_data_function or get_data_function is used.');
-    if (set_data_function && typeof set_data_function === 'function') plugins_set_functions[name + '_set_function'] = set_data_function;
-    if (get_data_function && typeof get_data_function === 'function') plugins_get_functions[name + '_get_function'] = get_data_function;
+    if (!document.getElementById(content_id))
+        throw new TypeError('HTML element "' + content_id + '" not found.');
+    if (document.querySelector('.edit-user-slides #' + content_id))
+        throw new TypeError('An element with this content_id already exists.');
+    if (users_table && (set_data_function || get_data_function))
+        throw new TypeError(
+            'users_table must be null if set_data_function or get_data_function is used.'
+        );
+    if (set_data_function && typeof set_data_function === 'function')
+        plugins_set_functions[name + '_set_function'] = set_data_function;
+    if (get_data_function && typeof get_data_function === 'function')
+        plugins_get_functions[name + '_get_function'] = get_data_function;
     if (users_table) plugins_users_infos_table.push({ content_id, users_table });
 
-    qs('.edit-user-tab-title')?.insertAdjacentHTML('beforeend', `<p class="edit-user-tabsheet" id="name_tab_${name}" title="${tab_name}">${tab_name}</p>`);
-    qs('.edit-user-slides')?.insertAdjacentHTML('beforeend', `<div class="edit-user-tabsheet-plugins ${name}-container" id="tab_${name}"></div>`);
+    qs('.edit-user-tab-title')?.insertAdjacentHTML(
+        'beforeend',
+        `<p class="edit-user-tabsheet" id="name_tab_${name}" title="${tab_name}">${tab_name}</p>`
+    );
+    qs('.edit-user-slides')?.insertAdjacentHTML(
+        'beforeend',
+        `<div class="edit-user-tabsheet-plugins ${name}-container" id="tab_${name}"></div>`
+    );
     const content = document.getElementById(content_id);
     document.getElementById('tab_' + name)?.appendChild(content!);
     show(content);
     editTabsBind();
-    qsa('.edit-user-tabsheet').forEach(el => el.classList.add('tab-with-plugin'));
+    qsa('.edit-user-tabsheet').forEach((el) => el.classList.add('tab-with-plugin'));
     plugins_load.push('name_tab_' + name);
     check_tabs('name_tab_' + name);
 };
 
 /*---- DOMContentLoaded ----*/
 document.addEventListener('DOMContentLoaded', () => {
-    tippy('.user-property-register, .user-property-last-visit', { delay: [0, 0], duration: [200, 200], maxWidth: 300, allowHTML: true });
+    tippy('.user-property-register, .user-property-last-visit', {
+        delay: [0, 0],
+        duration: [200, 200],
+        maxWidth: 300,
+        allowHTML: true,
+    });
     qs('.advanced-filter-level select option:nth-child(2)')?.remove();
 
-    qs('.button-edit-password-icon')?.addEventListener('click', () => { reset_password_modals(); show(qs('.user-property-password-change')); });
-    qs('.edit-password-cancel')?.addEventListener('click', () => { hide(qs('.user-property-password-change')); reset_input_password(); });
+    qs('.button-edit-password-icon')?.addEventListener('click', () => {
+        reset_password_modals();
+        show(qs('.user-property-password-change'));
+    });
+    qs('.edit-password-cancel')?.addEventListener('click', () => {
+        hide(qs('.user-property-password-change'));
+        reset_input_password();
+    });
 
-    qsa('.icon-show-password').forEach(icon => {
+    qsa('.icon-show-password').forEach((icon) => {
         icon.addEventListener('click', () => {
-            const input = icon.nextElementSibling as HTMLInputElement | null ?? icon.previousElementSibling as HTMLInputElement | null;
-            if (input?.type === 'password') { input.type = 'text'; icon.classList.replace('icon-eye', 'icon-eye-off'); }
-            else if (input) { input.type = 'password'; icon.classList.replace('icon-eye-off', 'icon-eye'); }
+            const input =
+                (icon.nextElementSibling as HTMLInputElement | null) ??
+                (icon.previousElementSibling as HTMLInputElement | null);
+            if (input?.type === 'password') {
+                input.type = 'text';
+                icon.classList.replace('icon-eye', 'icon-eye-off');
+            } else if (input) {
+                input.type = 'password';
+                icon.classList.replace('icon-eye-off', 'icon-eye');
+            }
         });
     });
 
-    qsa('#edit_user_password, #edit_user_conf_password').forEach(el => el.addEventListener('keyup', hide_error_edit_user));
-    qs('.edit-username')?.addEventListener('click', () => show(qs('.user-property-username-change')));
-    qs('.edit-username-cancel')?.addEventListener('click', () => hide(qs('.user-property-username-change')));
+    qsa('#edit_user_password, #edit_user_conf_password').forEach((el) =>
+        el.addEventListener('keyup', hide_error_edit_user)
+    );
+    qs('.edit-username')?.addEventListener('click', () =>
+        show(qs('.user-property-username-change'))
+    );
+    qs('.edit-username-cancel')?.addEventListener('click', () =>
+        hide(qs('.user-property-username-change'))
+    );
     qs('#UserList .close-update-button')?.addEventListener('click', close_user_list);
-    qsa('.CloseUserList').forEach(el => el.addEventListener('click', close_user_list));
+    qsa('.CloseUserList').forEach((el) => el.addEventListener('click', close_user_list));
 
     const toggleSel = document.getElementById('toggleSelectionMode') as HTMLInputElement;
-    if (toggleSel) { toggleSel.checked = false; toggleSel.addEventListener('click', () => selectionMode(toggleSel.checked)); }
+    if (toggleSel) {
+        toggleSel.checked = false;
+        toggleSel.addEventListener('click', () => selectionMode(toggleSel.checked));
+    }
     qs('.edit-guest-user-button')?.addEventListener('click', open_guest_user_list);
-    qsa('.CloseGuestUserList').forEach(el => el.addEventListener('click', close_guest_user_list));
+    qsa('.CloseGuestUserList').forEach((el) => el.addEventListener('click', close_guest_user_list));
     qs('#GuestUserList .close-update-button')?.addEventListener('click', close_guest_user_list);
 
     qsa('[id^=action_]').forEach(hide);
-    qs<HTMLSelectElement>('select[name=selectAction]')?.addEventListener('change', function(this: HTMLSelectElement) {
-        qsa('#applyActionBlock .infos').forEach(hide);
-        qsa('[id^=action_]').forEach(hide);
-        show(document.getElementById('action_' + this.value));
-        this.value !== '-1' ? show(document.getElementById('applyActionBlock')) : hide(document.getElementById('applyActionBlock'));
-    });
+    qs<HTMLSelectElement>('select[name=selectAction]')?.addEventListener(
+        'change',
+        function (this: HTMLSelectElement) {
+            qsa('#applyActionBlock .infos').forEach(hide);
+            qsa('[id^=action_]').forEach(hide);
+            show(document.getElementById('action_' + this.value));
+            this.value !== '-1'
+                ? show(document.getElementById('applyActionBlock'))
+                : hide(document.getElementById('applyActionBlock'));
+        }
+    );
 
-    qsa('.yes_no_radio .user-list-checkbox').forEach(el => {
+    qsa('.yes_no_radio .user-list-checkbox').forEach((el) => {
         el.addEventListener('click', () => {
-            if (el.dataset['selected'] !== '1') { el.dataset['selected'] = '1'; Array.from(el.parentElement?.children ?? []).forEach(s => { if (s !== el) (s as HTMLElement).dataset['selected'] = '0'; }); }
+            if (el.dataset['selected'] !== '1') {
+                el.dataset['selected'] = '1';
+                Array.from(el.parentElement?.children ?? []).forEach((s) => {
+                    if (s !== el) (s as HTMLElement).dataset['selected'] = '0';
+                });
+            }
         });
     });
 
-    qs('.EditUserGenPassword')?.addEventListener('click', () => { const p = gen_password(); (qs<HTMLInputElement>('#edit_user_password'))!.value = p; (qs<HTMLInputElement>('#edit_user_conf_password'))!.value = p; hide_error_edit_user(); });
-    qs('.AddUserGenPassword span')?.addEventListener('click', () => { const p = gen_password(); (qs<HTMLInputElement>('#add_user_pass'))!.value = p; (qs<HTMLInputElement>('#add_user_confpass'))!.value = p; });
+    qs('.EditUserGenPassword')?.addEventListener('click', () => {
+        const p = gen_password();
+        qs<HTMLInputElement>('#edit_user_password')!.value = p;
+        qs<HTMLInputElement>('#edit_user_conf_password')!.value = p;
+        hide_error_edit_user();
+    });
+    qs('.AddUserGenPassword span')?.addEventListener('click', () => {
+        const p = gen_password();
+        qs<HTMLInputElement>('#add_user_pass')!.value = p;
+        qs<HTMLInputElement>('#add_user_confpass')!.value = p;
+    });
     qs('.AddUserSubmit')?.addEventListener('click', add_user);
     qs('.AddUserCancel')?.addEventListener('click', add_user_close);
     qs('.CloseAddUser')?.addEventListener('click', add_user_close);
     qs('.add-user-button')?.addEventListener('click', add_user_open);
 
-    qs('#selectSet')?.addEventListener('click', (e) => { e.preventDefault(); select_whole_set(); });
-    qs('#selectAllPage')?.addEventListener('click', (e) => { e.preventDefault(); const ids = selection.map(x => x.id); current_users.forEach(u => { if (!ids.includes(u.id)) selection.push({ id: u.id, username: u.username }); }); update_selection_content(); });
-    qs('#selectNone')?.addEventListener('click', (e) => { e.preventDefault(); selection = []; update_selection_content(); });
-    qs('#selectInvert')?.addEventListener('click', (e) => { e.preventDefault(); const ids = selection.map(x => x.id); current_users.forEach(u => { if (ids.includes(u.id)) selection.splice(selection.findIndex(x => x.id === u.id), 1); else selection.push({ id: u.id, username: u.username }); }); update_selection_content(); });
+    qs('#selectSet')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        select_whole_set();
+    });
+    qs('#selectAllPage')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        const ids = selection.map((x) => x.id);
+        current_users.forEach((u) => {
+            if (!ids.includes(u.id)) selection.push({ id: u.id, username: u.username });
+        });
+        update_selection_content();
+    });
+    qs('#selectNone')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        selection = [];
+        update_selection_content();
+    });
+    qs('#selectInvert')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        const ids = selection.map((x) => x.id);
+        current_users.forEach((u) => {
+            if (ids.includes(u.id))
+                selection.splice(
+                    selection.findIndex((x) => x.id === u.id),
+                    1
+                );
+            else selection.push({ id: u.id, username: u.username });
+        });
+        update_selection_content();
+    });
 
-    (qs<HTMLSelectElement>('#permitActionUserList select[name=selectAction]'))!.value = '-1';
+    qs<HTMLSelectElement>('#permitActionUserList select[name=selectAction]')!.value = '-1';
 
     qs('.advanced-filter-btn')?.addEventListener('click', advanced_filter_button_click);
     qs('.advanced-filter span.icon-cancel')?.addEventListener('click', advanced_filter_hide);
-    qsa('.advanced-filter-select').forEach(el => el.addEventListener('change', update_user_list));
+    qsa('.advanced-filter-select').forEach((el) => el.addEventListener('change', update_user_list));
     qs('#user_search')?.addEventListener('input', update_user_list);
 
-    if ((qs<HTMLInputElement>('#displayCompact'))?.checked) setDisplayCompact();
-    if ((qs<HTMLInputElement>('#displayLine'))?.checked) setDisplayLine();
-    if ((qs<HTMLInputElement>('#displayTile'))?.checked) setDisplayTile();
-    qs('#displayCompact')?.addEventListener('change', () => { setDisplayCompact(); set_view_selector('compact'); });
-    qs('#displayLine')?.addEventListener('change', () => { setDisplayLine(); set_view_selector('line'); });
-    qs('#displayTile')?.addEventListener('change', () => { setDisplayTile(); set_view_selector('tile'); });
+    if (qs<HTMLInputElement>('#displayCompact')?.checked) setDisplayCompact();
+    if (qs<HTMLInputElement>('#displayLine')?.checked) setDisplayLine();
+    if (qs<HTMLInputElement>('#displayTile')?.checked) setDisplayTile();
+    qs('#displayCompact')?.addEventListener('change', () => {
+        setDisplayCompact();
+        set_view_selector('compact');
+    });
+    qs('#displayLine')?.addEventListener('change', () => {
+        setDisplayLine();
+        set_view_selector('line');
+    });
+    qs('#displayTile')?.addEventListener('change', () => {
+        setDisplayTile();
+        set_view_selector('tile');
+    });
 
     // Pagination init
-    qsa('[id^=pagination-per-page-]').forEach(el => el.classList.remove('selected-pagination'));
+    qsa('[id^=pagination-per-page-]').forEach((el) => el.classList.remove('selected-pagination'));
     qs(`#pagination-per-page-${per_page}`)?.classList.add('selected-pagination');
 
-    if (has_group) { advanced_filter_button_click(); (qs<HTMLSelectElement>("select[name='filter_group']"))!.value = has_group; update_user_list(); }
+    if (has_group) {
+        advanced_filter_button_click();
+        qs<HTMLSelectElement>("select[name='filter_group']")!.value = has_group;
+        update_user_list();
+    }
 
-    qs('.search-cancel')?.addEventListener('click', () => { (qs<HTMLInputElement>('.search-input'))!.value = ''; qs('.search-input')?.dispatchEvent(new Event('input')); });
-    qs('.search-input')?.addEventListener('input', function(this: HTMLInputElement) {
+    qs('.search-cancel')?.addEventListener('click', () => {
+        qs<HTMLInputElement>('.search-input')!.value = '';
+        qs('.search-input')?.dispatchEvent(new Event('input'));
+    });
+    qs('.search-input')?.addEventListener('input', function (this: HTMLInputElement) {
         this.value === '' ? hide(qs('.search-cancel')) : show(qs('.search-cancel'));
     });
 
     const iconUser = document.getElementById('icon-usr-list-user');
     const iconReg = document.getElementById('icon-usr-list-registered');
     qs('#usr-list-registered')?.addEventListener('click', () => {
-        hide(iconUser); show(iconReg); if (iconUser) iconUser.className = 'icon-down';
-        if (filter_by === 'id DESC') { if (iconReg) iconReg.className = 'icon-down'; filter_by = 'id ASC'; }
-        else if (filter_by === 'id ASC') { if (iconReg) iconReg.className = 'icon-up'; filter_by = 'id DESC'; }
-        else { if (iconReg) iconReg.className = 'icon-up'; filter_by = 'id DESC'; }
+        hide(iconUser);
+        show(iconReg);
+        if (iconUser) iconUser.className = 'icon-down';
+        if (filter_by === 'id DESC') {
+            if (iconReg) iconReg.className = 'icon-down';
+            filter_by = 'id ASC';
+        } else if (filter_by === 'id ASC') {
+            if (iconReg) iconReg.className = 'icon-up';
+            filter_by = 'id DESC';
+        } else {
+            if (iconReg) iconReg.className = 'icon-up';
+            filter_by = 'id DESC';
+        }
         update_user_list();
     });
     qs('#usr-list-user')?.addEventListener('click', () => {
-        hide(iconReg); show(iconUser); if (iconReg) iconReg.className = 'icon-up';
-        if (filter_by === 'username DESC') { if (iconUser) iconUser.className = 'icon-down'; filter_by = 'username ASC'; }
-        else if (filter_by === 'username ASC') { if (iconUser) iconUser.className = 'icon-up'; filter_by = 'username DESC'; }
-        else { if (iconUser) iconUser.className = 'icon-down'; filter_by = 'username ASC'; }
+        hide(iconReg);
+        show(iconUser);
+        if (iconReg) iconReg.className = 'icon-up';
+        if (filter_by === 'username DESC') {
+            if (iconUser) iconUser.className = 'icon-down';
+            filter_by = 'username ASC';
+        } else if (filter_by === 'username ASC') {
+            if (iconUser) iconUser.className = 'icon-up';
+            filter_by = 'username DESC';
+        } else {
+            if (iconUser) iconUser.className = 'icon-down';
+            filter_by = 'username ASC';
+        }
         update_user_list();
     });
 
     editTabsBind();
 
-    qs('.edit-user-slides')?.addEventListener('scroll', function(this: HTMLElement) {
+    qs('.edit-user-slides')?.addEventListener('scroll', function (this: HTMLElement) {
         const slides = Array.from(this.children) as HTMLElement[];
         const rectView = this.getBoundingClientRect();
-        qsa('.edit-user-tabsheet').forEach(el => el.classList.remove('selected'));
-        slides.forEach(slide => {
+        qsa('.edit-user-tabsheet').forEach((el) => el.classList.remove('selected'));
+        slides.forEach((slide) => {
             const rect = slide.getBoundingClientRect();
-            if (+rect.left.toFixed(0) >= +rectView.left.toFixed(0) - 1 && +rect.right.toFixed(0) <= +rectView.right.toFixed(0) + 1) {
+            if (
+                +rect.left.toFixed(0) >= +rectView.left.toFixed(0) - 1 &&
+                +rect.right.toFixed(0) <= +rectView.right.toFixed(0) + 1
+            ) {
                 qs('#name_' + slide.id)?.classList.add('selected');
             }
         });
     });
 
-    qsa('.guest-edit-user-tabsheet').forEach(el => {
+    qsa('.guest-edit-user-tabsheet').forEach((el) => {
         el.addEventListener('click', () => {
             const parts = el.id.split('_');
             const tabId = parts[1] + '_' + parts[2] + '_' + parts[3];
@@ -1434,13 +2214,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    qs('.guest-edit-user-slides')?.addEventListener('scroll', function(this: HTMLElement) {
+    qs('.guest-edit-user-slides')?.addEventListener('scroll', function (this: HTMLElement) {
         const slides = Array.from(this.children) as HTMLElement[];
         const rectView = this.getBoundingClientRect();
-        qsa('.guest-edit-user-tabsheet').forEach(el => el.classList.remove('selected'));
-        slides.forEach(slide => {
+        qsa('.guest-edit-user-tabsheet').forEach((el) => el.classList.remove('selected'));
+        slides.forEach((slide) => {
             const rect = slide.getBoundingClientRect();
-            if (+rect.left.toFixed(0) >= +rectView.left.toFixed(0) - 1 && +rect.right.toFixed(0) <= +rectView.right.toFixed(0) + 1) {
+            if (
+                +rect.left.toFixed(0) >= +rectView.left.toFixed(0) - 1 &&
+                +rect.right.toFixed(0) <= +rectView.right.toFixed(0) + 1
+            ) {
                 qs('#name_' + slide.id)?.classList.add('selected');
             }
         });
@@ -1457,17 +2240,25 @@ document.addEventListener('DOMContentLoaded', () => {
     // window.pwg_apply_action_handlers to prepend additional cases)
     const applyActionBtn = document.getElementById('applyAction');
     if (applyActionBtn) {
-        applyActionBtn.addEventListener('click', function(e) {
+        applyActionBtn.addEventListener('click', function (e) {
             e.preventDefault();
-            const action = (document.querySelector('select[name=selectAction]') as HTMLSelectElement)?.value ?? '';
+            const action =
+                (document.querySelector('select[name=selectAction]') as HTMLSelectElement)?.value ??
+                '';
             let method = 'pwg.users.setInfo';
             const data: Record<string, any> = {
                 pwg_token,
-                user_id: selection.map(x => x.id),
+                user_id: selection.map((x) => x.id),
             };
             switch (action) {
                 case 'delete':
-                    if ((document.querySelector('#permitActionUserList .user-list-checkbox[name=confirm_deletion]') as HTMLElement)?.getAttribute('data-selected') !== '1') {
+                    if (
+                        (
+                            document.querySelector(
+                                '#permitActionUserList .user-list-checkbox[name=confirm_deletion]'
+                            ) as HTMLElement
+                        )?.getAttribute('data-selected') !== '1'
+                    ) {
                         alert(missingConfirm);
                         return false;
                     }
@@ -1475,69 +2266,128 @@ document.addEventListener('DOMContentLoaded', () => {
                     break;
                 case 'group_associate':
                     method = 'pwg.groups.addUser';
-                    data['group_id'] = (document.querySelector('#permitActionUserList select[name=associate]') as HTMLSelectElement)?.value;
+                    data['group_id'] = (
+                        document.querySelector(
+                            '#permitActionUserList select[name=associate]'
+                        ) as HTMLSelectElement
+                    )?.value;
                     break;
                 case 'group_dissociate':
                     method = 'pwg.groups.deleteUser';
-                    data['group_id'] = (document.querySelector('#permitActionUserList select[name=dissociate]') as HTMLSelectElement)?.value;
+                    data['group_id'] = (
+                        document.querySelector(
+                            '#permitActionUserList select[name=dissociate]'
+                        ) as HTMLSelectElement
+                    )?.value;
                     break;
                 case 'status':
-                    data['status'] = (document.querySelector('#permitActionUserList select[name=status]') as HTMLSelectElement)?.value;
+                    data['status'] = (
+                        document.querySelector(
+                            '#permitActionUserList select[name=status]'
+                        ) as HTMLSelectElement
+                    )?.value;
                     break;
                 case 'enabled_high':
-                    data['enabled_high'] = (document.querySelector('#permitActionUserList .user-list-checkbox[name=enabled_high_yes]') as HTMLElement)?.getAttribute('data-selected') === '1';
+                    data['enabled_high'] =
+                        (
+                            document.querySelector(
+                                '#permitActionUserList .user-list-checkbox[name=enabled_high_yes]'
+                            ) as HTMLElement
+                        )?.getAttribute('data-selected') === '1';
                     break;
                 case 'level':
-                    data['level'] = (document.querySelector('#permitActionUserList select[name=level]') as HTMLSelectElement)?.value;
+                    data['level'] = (
+                        document.querySelector(
+                            '#permitActionUserList select[name=level]'
+                        ) as HTMLSelectElement
+                    )?.value;
                     break;
                 case 'nb_image_page':
-                    data['nb_image_page'] = (document.querySelector('#permitActionUserList input[name=nb_image_page]') as HTMLInputElement)?.value;
+                    data['nb_image_page'] = (
+                        document.querySelector(
+                            '#permitActionUserList input[name=nb_image_page]'
+                        ) as HTMLInputElement
+                    )?.value;
                     break;
                 case 'theme':
-                    data['theme'] = (document.querySelector('#permitActionUserList select[name=theme]') as HTMLSelectElement)?.value;
+                    data['theme'] = (
+                        document.querySelector(
+                            '#permitActionUserList select[name=theme]'
+                        ) as HTMLSelectElement
+                    )?.value;
                     break;
                 case 'language':
-                    data['language'] = (document.querySelector('#permitActionUserList select[name=language]') as HTMLSelectElement)?.value;
+                    data['language'] = (
+                        document.querySelector(
+                            '#permitActionUserList select[name=language]'
+                        ) as HTMLSelectElement
+                    )?.value;
                     break;
                 case 'recent_period':
-                    data['recent_period'] = recent_period_values[(document.querySelector('#permitActionUserList .period-select-bar .slider-bar-container') as HTMLElement)?.dataset['sliderValue'] as any];
+                    data['recent_period'] =
+                        recent_period_values[
+                            (
+                                document.querySelector(
+                                    '#permitActionUserList .period-select-bar .slider-bar-container'
+                                ) as HTMLElement
+                            )?.dataset['sliderValue'] as any
+                        ];
                     break;
                 case 'expand':
-                    data['expand'] = (document.querySelector('#permitActionUserList .user-list-checkbox[name=expand_yes]') as HTMLElement)?.getAttribute('data-selected') === '1';
+                    data['expand'] =
+                        (
+                            document.querySelector(
+                                '#permitActionUserList .user-list-checkbox[name=expand_yes]'
+                            ) as HTMLElement
+                        )?.getAttribute('data-selected') === '1';
                     break;
                 case 'show_nb_comments':
-                    data['show_nb_comments'] = (document.querySelector('#permitActionUserList .user-list-checkbox[name=show_nb_comments_yes]') as HTMLElement)?.getAttribute('data-selected') === '1';
+                    data['show_nb_comments'] =
+                        (
+                            document.querySelector(
+                                '#permitActionUserList .user-list-checkbox[name=show_nb_comments_yes]'
+                            ) as HTMLElement
+                        )?.getAttribute('data-selected') === '1';
                     break;
                 case 'show_nb_hits':
-                    data['show_nb_hits'] = (document.querySelector('#permitActionUserList .user-list-checkbox[name=show_nb_hits_yes]') as HTMLElement)?.getAttribute('data-selected') === '1';
+                    data['show_nb_hits'] =
+                        (
+                            document.querySelector(
+                                '#permitActionUserList .user-list-checkbox[name=show_nb_hits_yes]'
+                            ) as HTMLElement
+                        )?.getAttribute('data-selected') === '1';
                     break;
                 default:
                     alert('Unexpected action');
                     return false;
             }
             const applyActionLoading = document.getElementById('applyActionLoading');
-            const applyActionInfos = document.querySelector('#applyActionBlock .infos') as HTMLElement | null;
+            const applyActionInfos = document.querySelector(
+                '#applyActionBlock .infos'
+            ) as HTMLElement | null;
             if (applyActionLoading) applyActionLoading.style.display = '';
             if (applyActionInfos) applyActionInfos.style.display = 'none';
 
             const formData = new FormData();
-            Object.keys(data).forEach(key => {
+            Object.keys(data).forEach((key) => {
                 const val = data[key];
                 if (Array.isArray(val)) val.forEach((v: any) => formData.append(key + '[]', v));
                 else formData.append(key, val);
             });
 
-            fetch('ws.php?format=json&method=' + method, { method: 'POST', body: formData }).then(() => {
-                if (applyActionLoading) applyActionLoading.style.display = 'none';
-                if (applyActionInfos) applyActionInfos.style.display = 'inline-block';
-                update_user_list();
-                if (action === 'delete') {
-                    selection = [];
-                    update_selection_content();
-                }
-            }).catch(() => {
-                if (applyActionLoading) applyActionLoading.style.display = 'none';
-            });
+            fetch('ws.php?format=json&method=' + method, { method: 'POST', body: formData })
+                .then(() => {
+                    if (applyActionLoading) applyActionLoading.style.display = 'none';
+                    if (applyActionInfos) applyActionInfos.style.display = 'inline-block';
+                    update_user_list();
+                    if (action === 'delete') {
+                        selection = [];
+                        update_selection_content();
+                    }
+                })
+                .catch(() => {
+                    if (applyActionLoading) applyActionLoading.style.display = 'none';
+                });
             return false;
         });
     }

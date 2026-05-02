@@ -27,7 +27,9 @@ function hideWhatsNew(): void {
                 param: 'show_whats_new_' + version,
                 value: 'false',
             }),
-        }).catch(() => { /* best-effort */ });
+        }).catch(() => {
+            /* best-effort */
+        });
     }
     whatsNew.style.display = 'none';
 }

@@ -12,7 +12,11 @@ declare global {
 
     // ── From themes/default/js/scripts.ts (core.scripts bundle) ─────────────
     function phpWGOpenWindow(theURL: string, winName: string, features: string): void;
-    function pwgBind(object: object, method: (...args: unknown[]) => unknown, ...args: unknown[]): (...more: unknown[]) => unknown;
+    function pwgBind(
+        object: object,
+        method: (...args: unknown[]) => unknown,
+        ...args: unknown[]
+    ): (...more: unknown[]) => unknown;
     function pwgAddEventListener(elem: Element | Window, evt: string, fn: EventListener): void;
     function popuphelp(url: string): void;
 
@@ -68,7 +72,9 @@ declare global {
     var SwitchBox: Array<string> | { push(link: string, box: string): void };
 
     // rating.ts
-    var _pwgRatingAutoQueue: Array<Record<string, unknown>> | { push(opts: Record<string, unknown>): void };
+    var _pwgRatingAutoQueue:
+        | Array<Record<string, unknown>>
+        | { push(opts: Record<string, unknown>): void };
 
     // thumbnails.loader.ts
     var max_requests: number | undefined;

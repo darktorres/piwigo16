@@ -12,16 +12,27 @@ function phpWGOpenWindow(theURL: string, winName: string, features: string): voi
             newWin.resizeTo(img.width + 50, img.height + 100);
         };
     }
-    const newWin = window.open(theURL, winName, features + ',left=2,top=1,width=' + width + ',height=' + height)!;
+    const newWin = window.open(
+        theURL,
+        winName,
+        features + ',left=2,top=1,width=' + width + ',height=' + height
+    )!;
     (window as any).newWin = newWin;
 }
 
 function popuphelp(url: string): void {
-    window.open(url, 'dc_popup',
-        'alwaysRaised=yes,dependent=yes,toolbar=no,height=420,width=500,menubar=no,resizable=yes,scrollbars=yes,status=no');
+    window.open(
+        url,
+        'dc_popup',
+        'alwaysRaised=yes,dependent=yes,toolbar=no,height=420,width=500,menubar=no,resizable=yes,scrollbars=yes,status=no'
+    );
 }
 
-function pwgBind(object: object, method: (...args: unknown[]) => unknown, ...boundArgs: unknown[]): (...callArgs: unknown[]) => unknown {
+function pwgBind(
+    object: object,
+    method: (...args: unknown[]) => unknown,
+    ...boundArgs: unknown[]
+): (...callArgs: unknown[]) => unknown {
     return function (...callArgs: unknown[]) {
         return method.apply(object, boundArgs.concat(callArgs));
     };
@@ -47,7 +58,11 @@ class PwgWS {
         };
     }
 
-    callService(method: string, parameters: Record<string, unknown> | null, options?: Partial<typeof this.options>): void {
+    callService(
+        method: string,
+        parameters: Record<string, unknown> | null,
+        options?: Partial<typeof this.options>
+    ): void {
         if (options) {
             for (const prop in options) {
                 (this.options as any)[prop] = (options as any)[prop];
@@ -63,7 +78,8 @@ class PwgWS {
                 const val = parameters[prop];
                 if (typeof val === 'object' && val && Array.isArray(val)) {
                     for (let i = 0; i < (val as unknown[]).length; i++) {
-                        body += prop + '[]=' + encodeURIComponent(String((val as unknown[])[i])) + '&';
+                        body +=
+                            prop + '[]=' + encodeURIComponent(String((val as unknown[])[i])) + '&';
                     }
                 } else {
                     body += prop + '=' + encodeURIComponent(String(val)) + '&';
@@ -146,16 +162,19 @@ function changeImgSrc(url: string, typeSave: string, typeMap: string): void {
         theImg.src = url;
         theImg.useMap = '#map' + typeMap;
     }
-    document.querySelectorAll<HTMLElement>('#derivativeSwitchBox .switchCheck').forEach(el => { el.style.visibility = 'hidden'; });
+    document.querySelectorAll<HTMLElement>('#derivativeSwitchBox .switchCheck').forEach((el) => {
+        el.style.visibility = 'hidden';
+    });
     const checked = document.getElementById('derivativeChecked' + typeMap);
     if (checked) checked.style.visibility = 'visible';
-    const cookiePath = document.querySelector<HTMLElement>('#derivativeSwitchBox')?.dataset['cookiePath'] ?? '/';
+    const cookiePath =
+        document.querySelector<HTMLElement>('#derivativeSwitchBox')?.dataset['cookiePath'] ?? '/';
     document.cookie = 'picture_deriv=' + typeSave + ';path=' + cookiePath;
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     // Derivative size switcher links
-    document.querySelectorAll<HTMLAnchorElement>('a.derivative-switch-item').forEach(el => {
+    document.querySelectorAll<HTMLAnchorElement>('a.derivative-switch-item').forEach((el) => {
         el.addEventListener('click', (e) => {
             e.preventDefault();
             changeImgSrc(el.href, el.dataset['typeSave']!, el.dataset['typeMap']!);
@@ -163,7 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Generic confirm-on-click: <a data-confirm="Are you sure?" href="...">
-    document.querySelectorAll<HTMLElement>('[data-confirm]').forEach(el => {
+    document.querySelectorAll<HTMLElement>('[data-confirm]').forEach((el) => {
         el.addEventListener('click', (e) => {
             const msg = el.getAttribute('data-confirm') || '';
             if (!confirm(msg)) {
@@ -174,7 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Open in named window: <a href data-window-open-name=NAME data-window-open-features=FEATURES>
-    document.querySelectorAll<HTMLAnchorElement>('a[data-window-open-name]').forEach(a => {
+    document.querySelectorAll<HTMLAnchorElement>('a[data-window-open-name]').forEach((a) => {
         a.addEventListener('click', (e) => {
             e.preventDefault();
             const name = a.getAttribute('data-window-open-name') || '';
@@ -184,7 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Open as popup help window: <a href data-popuphelp>
-    document.querySelectorAll<HTMLAnchorElement>('a[data-popuphelp]').forEach(a => {
+    document.querySelectorAll<HTMLAnchorElement>('a[data-popuphelp]').forEach((a) => {
         a.addEventListener('click', (e) => {
             e.preventDefault();
             popuphelp(a.href);
@@ -192,7 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Close window: <a data-close-window>
-    document.querySelectorAll<HTMLElement>('[data-close-window]').forEach(el => {
+    document.querySelectorAll<HTMLElement>('[data-close-window]').forEach((el) => {
         el.addEventListener('click', (e) => {
             e.preventDefault();
             window.close();
@@ -216,13 +235,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const rootUrl = caddieBtn.dataset['rootUrl']!;
             const imageId = Number(caddieBtn.dataset['imageId']!);
             const y = new PwgWS(rootUrl);
-            y.callService('pwg.caddie.add', { image_id: imageId }, {
-                onFailure: (num: number, text: string) => {
-                    alert(num + ' ' + text);
-                    location.href = caddieBtn.href;
-                },
-                onSuccess: () => { delete caddieBtn.dataset['loading']; },
-            });
+            y.callService(
+                'pwg.caddie.add',
+                { image_id: imageId },
+                {
+                    onFailure: (num: number, text: string) => {
+                        alert(num + ' ' + text);
+                        location.href = caddieBtn.href;
+                    },
+                    onSuccess: () => {
+                        delete caddieBtn.dataset['loading'];
+                    },
+                }
+            );
         });
     }
 });

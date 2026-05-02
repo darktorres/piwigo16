@@ -66,14 +66,14 @@ Result: **0 `<style>` tags and 0 `{html_style}` blocks remain** in `themes/defau
 
 **Tier 1 — Keep permanently (~230 instances).** Add `/* reason */` comment where missing.
 
-| Reason | Files | Count |
-|--------|-------|-------|
-| Child-theme load-order (child CSS loads before parent; overrides need `!important` until CSS variable migration is complete) | `admin/themes/roma/theme.css`, `admin/themes/clear/theme.css` | ~97 |
-| Third-party plugin CSS override (mcs-search, masonry inject their own CSS) | `plugin_compatibility.css`, `search.css`, `dark-search.css`, `clear-search.css` | ~33 |
-| Modus skin overrides of mcs-search (already commented) | All 9 skin files | ~83 |
-| Masonry/JS inline position overrides | `hf_layout.css`, `hf_responsive.css`, `thumbnails.css` | ~7 |
-| JS-toggled visibility (`display: none/flex/block`) | `user_activity.css`, `upload.css`, `user_list.css`, `icons.css`, `smartpocket/theme.css`, `search-in-set.css` | ~7 |
-| Tag cloud JS inline-style override | `themes/modus/css/tags.css` | ~5 |
+| Reason                                                                                                                       | Files                                                                                                         | Count |
+| ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ----- |
+| Child-theme load-order (child CSS loads before parent; overrides need `!important` until CSS variable migration is complete) | `admin/themes/roma/theme.css`, `admin/themes/clear/theme.css`                                                 | ~97   |
+| Third-party plugin CSS override (mcs-search, masonry inject their own CSS)                                                   | `plugin_compatibility.css`, `search.css`, `dark-search.css`, `clear-search.css`                               | ~33   |
+| Modus skin overrides of mcs-search (already commented)                                                                       | All 9 skin files                                                                                              | ~83   |
+| Masonry/JS inline position overrides                                                                                         | `hf_layout.css`, `hf_responsive.css`, `thumbnails.css`                                                        | ~7    |
+| JS-toggled visibility (`display: none/flex/block`)                                                                           | `user_activity.css`, `upload.css`, `user_list.css`, `icons.css`, `smartpocket/theme.css`, `search-in-set.css` | ~7    |
+| Tag cloud JS inline-style override                                                                                           | `themes/modus/css/tags.css`                                                                                   | ~5    |
 
 **Tier 2 — Fix with higher specificity: tom-select overrides (22 instances).**
 `batch_manager_unit.css` (11) and `picture_modify.css` (11) contain an identical block styling `.ts-control .item` at specificity (0,2,0). Tom-select ships `.ts-control > .item` at (0,1,1). Our (0,2,0) already wins — `!important` is redundant. Fix: verify against `node_modules/tom-select/dist/css/tom-select.css`, then drop `!important`. Extract the shared block into `admin/themes/default/css/components/tomselect-item.css`.
@@ -81,19 +81,19 @@ Result: **0 `<style>` tags and 0 `{html_style}` blocks remain** in `themes/defau
 **Tier 3 — Fix internal specificity battles (~95 instances, ~20 files).**
 These exist because the original monolithic `theme.css` relied on cascade order within one file; when split, overrides lost their position advantage.
 
-| File | Count | Notes |
-|------|-------|-------|
-| `css/pages/album-manager.css` | 16 | Mixed: tom-select items (Tier 2 pass) + layout overrides |
-| `css/pages/dashboard.css` | 11 | Pure specificity: cursor, display, margin, padding, text-decoration |
-| `css/pages/user-manager.css` | 8 | `background: var(--admin-*)` fighting higher-specificity parent rules |
-| `css/pages/plugins.css` | 7 | `display: grid/inline/flex`, `margin-right/left: 0` |
-| `css/pages/user_list.css` | 6 | Excluding 2 JS-toggled display:none (keep) |
-| `css/pages/albums.css` | 6 | Tom-select `.item` (Tier 2 fix) + margin |
-| `css/pages/cat-list.css` | 5 | `var(--admin-*)` + transform — fighting higher specificity |
-| `css/components/icons.css` | 3 | Excluding 1 JS-toggled |
-| `css/pages/watermark.css` | 3 | |
-| `css/pages/history.css` | 3 | |
-| Remaining single-instance files | ~10 | tabsheets, content, batch-manager, picture-edit, themes/elegant, colors.css, picture.css |
+| File                            | Count | Notes                                                                                    |
+| ------------------------------- | ----- | ---------------------------------------------------------------------------------------- |
+| `css/pages/album-manager.css`   | 16    | Mixed: tom-select items (Tier 2 pass) + layout overrides                                 |
+| `css/pages/dashboard.css`       | 11    | Pure specificity: cursor, display, margin, padding, text-decoration                      |
+| `css/pages/user-manager.css`    | 8     | `background: var(--admin-*)` fighting higher-specificity parent rules                    |
+| `css/pages/plugins.css`         | 7     | `display: grid/inline/flex`, `margin-right/left: 0`                                      |
+| `css/pages/user_list.css`       | 6     | Excluding 2 JS-toggled display:none (keep)                                               |
+| `css/pages/albums.css`          | 6     | Tom-select `.item` (Tier 2 fix) + margin                                                 |
+| `css/pages/cat-list.css`        | 5     | `var(--admin-*)` + transform — fighting higher specificity                               |
+| `css/components/icons.css`      | 3     | Excluding 1 JS-toggled                                                                   |
+| `css/pages/watermark.css`       | 3     |                                                                                          |
+| `css/pages/history.css`         | 3     |                                                                                          |
+| Remaining single-instance files | ~10   | tabsheets, content, batch-manager, picture-edit, themes/elegant, colors.css, picture.css |
 
 Approach per instance: (1) note the property + selector, (2) grep for conflicting rule, (3) fix by raising specificity, lowering source rule specificity, or reordering within the file.
 
@@ -213,8 +213,12 @@ Replace `search.css` + `clear-search.css` + `dark-search.css` with a single `sea
 
 ```css
 /* search.css — variable-driven */
-.filter .filter-icon        { color: var(--search-icon); }
-.filter-manager-popin       { background-color: var(--search-popin-bg); }
+.filter .filter-icon {
+  color: var(--search-icon);
+}
+.filter-manager-popin {
+  background-color: var(--search-popin-bg);
+}
 ```
 
 Each skin supplies its `--search-*` variable set (either in its `theme.css` `:root` block or a dedicated skin file). Drop the `{$themeconf.colorscheme}-search.css` load in `themes/default/template/inc/search_filters.inc.tpl:4`. Net savings: ~500 lines.
@@ -224,13 +228,23 @@ Add at top:
 
 ```css
 :root {
-  --space-xs: 5px;   --space-sm: 10px;  --space-md: 15px;
-  --space-lg: 20px;  --space-xl: 30px;
-  --font-size-sm: 13px; --font-size-base: 15px; --font-size-lg: 20px;
+  --space-xs: 5px;
+  --space-sm: 10px;
+  --space-md: 15px;
+  --space-lg: 20px;
+  --space-xl: 30px;
+  --font-size-sm: 13px;
+  --font-size-base: 15px;
+  --font-size-lg: 20px;
   --line-height-base: 1.5;
-  --radius-sm: 5px;  --radius-md: 10px;
-  --z-dropdown: 100; --z-overlay: 500;  --z-modal: 1000;
-  --bp-sm: 576px;    --bp-md: 800px;    --bp-lg: 1100px;
+  --radius-sm: 5px;
+  --radius-md: 10px;
+  --z-dropdown: 100;
+  --z-overlay: 500;
+  --z-modal: 1000;
+  --bp-sm: 576px;
+  --bp-md: 800px;
+  --bp-lg: 1100px;
 }
 ```
 
@@ -261,7 +275,7 @@ With the token system in place each skin's only job is to override variable valu
 /* avocado.css — before: 957 lines, 27× !important */
 /* avocado.css — after: ~40 lines, 0× !important */
 :root {
-  --color-accent:      #74bf04;
+  --color-accent: #74bf04;
   --color-accent-dark: #65a603;
 }
 ```
@@ -270,12 +284,12 @@ The `!important` in skin files exists solely because they fight specificity with
 
 **Step 9 — Split `themes/modus/css/hf_base.css`** (917 lines) into four files loaded via `{combine_css}` in `themes/modus/template/header.tpl`:
 
-| New file | Content |
-|----------|---------|
-| `hf_layout.css` | Structural rules, containers |
+| New file            | Content                       |
+| ------------------- | ----------------------------- |
+| `hf_layout.css`     | Structural rules, containers  |
 | `hf_components.css` | Nav, menus, thumbnails, forms |
-| `hf_typography.css` | Font sizes, headings, links |
-| `hf_responsive.css` | All `@media` blocks |
+| `hf_typography.css` | Font sizes, headings, links   |
+| `hf_responsive.css` | All `@media` blocks           |
 
 **Step 10 — Introduce CSS design tokens in admin parent.**
 Create `admin/themes/default/css/base.css.tpl` (Smarty-templated, following the modus pattern):
@@ -337,7 +351,7 @@ grep -rn "!important" themes/modus/css/skins/              # empty (after Step 8
 
 ### Goal
 
-Integrate `@axe-core/playwright` into the existing E2E suite. WCAG 2.1 AA violations of severity *moderate* and above fail CI. Existing violations are triaged: fixable ones get fixed, justified exemptions go into a documented allowlist.
+Integrate `@axe-core/playwright` into the existing E2E suite. WCAG 2.1 AA violations of severity _moderate_ and above fail CI. Existing violations are triaged: fixable ones get fixed, justified exemptions go into a documented allowlist.
 
 ### Current state
 
@@ -361,13 +375,14 @@ Integrate `@axe-core/playwright` into the existing E2E suite. WCAG 2.1 AA violat
    import { expect, Page } from '@playwright/test';
 
    export async function runA11y(page: Page, opts: { disable?: string[] } = {}) {
-       const results = await new AxeBuilder({ page })
-           .withTags(['wcag21aa', 'wcag2aa'])
-           .disableRules(opts.disable ?? [])
-           .analyze();
-       const blocking = results.violations.filter(v =>
-           ['critical', 'serious', 'moderate'].includes(v.impact ?? ''));
-       expect(blocking, JSON.stringify(blocking, null, 2)).toEqual([]);
+     const results = await new AxeBuilder({ page })
+       .withTags(['wcag21aa', 'wcag2aa'])
+       .disableRules(opts.disable ?? [])
+       .analyze();
+     const blocking = results.violations.filter((v) =>
+       ['critical', 'serious', 'moderate'].includes(v.impact ?? '')
+     );
+     expect(blocking, JSON.stringify(blocking, null, 2)).toEqual([]);
    }
    ```
 

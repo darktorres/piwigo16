@@ -23,7 +23,11 @@ export interface SelectizerOptions {
     value?: Array<number | string | CacheItem>;
     default?: number | string | 'first';
     create?: boolean;
-    filter?: (this: HTMLSelectElement, data: CacheItem[], options: SelectizerOptions) => CacheItem[];
+    filter?: (
+        this: HTMLSelectElement,
+        data: CacheItem[],
+        options: SelectizerOptions
+    ) => CacheItem[];
     lang?: { Add: string };
 }
 
@@ -59,20 +63,29 @@ export class LocalStorageCache<T = CacheItem[]> {
                 return;
             }
         }
-        this.loader((data) => { this.set(data); callback(data); });
+        this.loader((data) => {
+            this.set(data);
+            callback(data);
+        });
     }
 
     set(data: T): void {
         try {
             if (this.ready) {
-                this.storage[this.key] = JSON.stringify({ timestamp: new Date().getTime(), key: this.serverKey, data });
+                this.storage[this.key] = JSON.stringify({
+                    timestamp: new Date().getTime(),
+                    key: this.serverKey,
+                    data,
+                });
             }
         } catch (e) {
             console.log('Local storage error:', e);
         }
     }
 
-    clear(): void { if (this.ready) this.storage.removeItem(this.key); }
+    clear(): void {
+        if (this.ready) this.storage.removeItem(this.key);
+    }
 }
 
 export abstract class AbstractSelectizer extends LocalStorageCache<CacheItem[]> {
@@ -91,11 +104,16 @@ export abstract class AbstractSelectizer extends LocalStorageCache<CacheItem[]> 
 
             if (Object.keys(ts.options).length === 0) ts.addOptions(filtered as any[]);
 
-            const dataValue = target.dataset['value'] ? JSON.parse(target.dataset['value']) : undefined;
+            const dataValue = target.dataset['value']
+                ? JSON.parse(target.dataset['value'])
+                : undefined;
             if (dataValue) options.value = dataValue;
             if (options.value !== undefined) {
-                (Array.isArray(options.value) ? options.value : [options.value]).forEach(cat => {
-                    const id = (typeof cat === 'object' && cat !== null && 'id' in cat) ? (cat as CacheItem).id : cat;
+                (Array.isArray(options.value) ? options.value : [options.value]).forEach((cat) => {
+                    const id =
+                        typeof cat === 'object' && cat !== null && 'id' in cat
+                            ? (cat as CacheItem).id
+                            : cat;
                     if (!isNaN(Number(id))) ts.addItem(String(id), true);
                     else ts.addItem(String(id), true);
                 });
@@ -103,18 +121,21 @@ export abstract class AbstractSelectizer extends LocalStorageCache<CacheItem[]> 
 
             const dataDefault = target.dataset['default'] ?? undefined;
             if (dataDefault !== undefined) options.default = dataDefault as any;
-            if (options.default === 'first') options.default = filtered[0] ? filtered[0].id as any : undefined;
+            if (options.default === 'first')
+                options.default = filtered[0] ? (filtered[0].id as any) : undefined;
 
             if (options.default !== undefined) {
                 if (ts.getValue() === '') ts.addItem(String(options.default), true);
                 if (target.multiple) {
                     const defaultItem = ts.getItem(String(options.default));
-                    if (defaultItem) defaultItem.querySelector<HTMLElement>('.remove')!.style.display = 'none';
+                    if (defaultItem)
+                        defaultItem.querySelector<HTMLElement>('.remove')!.style.display = 'none';
                     ts.on('item_remove', (id: string) => {
                         if (id === String(options.default)) {
                             ts.addItem(id, true);
                             const item = ts.getItem(id);
-                            if (item) item.querySelector<HTMLElement>('.remove')!.style.display = 'none';
+                            if (item)
+                                item.querySelector<HTMLElement>('.remove')!.style.display = 'none';
                         }
                     });
                 } else {
@@ -128,7 +149,8 @@ export abstract class AbstractSelectizer extends LocalStorageCache<CacheItem[]> 
 
     static getRender(fieldLabel: string, lang: { Add: string } = { Add: 'Add' }) {
         return {
-            option: (data: Record<string, string>) => `<div class="option">${data[fieldLabel]}</div>`,
+            option: (data: Record<string, string>) =>
+                `<div class="option">${data[fieldLabel]}</div>`,
             item: (data: Record<string, string>) => `<div class="item">${data[fieldLabel]}</div>`,
             option_create: (data: { input: string }) =>
                 `<div class="create">${lang.Add} <strong>${data.input}</strong>&hellip;</div>`,
@@ -136,7 +158,10 @@ export abstract class AbstractSelectizer extends LocalStorageCache<CacheItem[]> 
     }
 }
 
-function makeTomSelect(target: HTMLSelectElement | null, options: Record<string, any>): TomSelect | null {
+function makeTomSelect(
+    target: HTMLSelectElement | null,
+    options: Record<string, any>
+): TomSelect | null {
     if (!target) return null;
     const ts = new TomSelect(target, options);
     (target as any)['_tomSelect'] = ts;
@@ -150,7 +175,7 @@ export class CategoriesCache extends AbstractSelectizer {
             key: 'categoriesAdminList',
             loader: (callback) => {
                 fetch(`${options.rootUrl}ws.php?format=json&method=pwg.categories.getAdminList`)
-                    .then(r => r.json())
+                    .then((r) => r.json())
                     .then((data: { result: { categories: CacheItem[] } }) => {
                         const cats = data.result.categories.map((c, i) => {
                             (c as any).pos = i;
@@ -167,7 +192,10 @@ export class CategoriesCache extends AbstractSelectizer {
     selectize(target: HTMLSelectElement | null, options: SelectizerOptions = {}): void {
         if (!target) return;
         makeTomSelect(target, {
-            valueField: 'id', labelField: 'fullname', sortField: 'pos', searchField: ['fullname'],
+            valueField: 'id',
+            labelField: 'fullname',
+            sortField: 'pos',
+            searchField: ['fullname'],
             plugins: { remove_button: {} },
             render: AbstractSelectizer.getRender('fullname', options.lang),
         });
@@ -182,7 +210,7 @@ export class TagsCache extends AbstractSelectizer {
             key: 'tagsAdminList',
             loader: (callback) => {
                 fetch(`${options.rootUrl}ws.php?format=json&method=pwg.tags.getAdminList`)
-                    .then(r => r.json())
+                    .then((r) => r.json())
                     .then((data: { result: { tags: CacheItem[] } }) => {
                         const tags = data.result.tags.map((t) => {
                             t.id = `~~${t.id}~~`;
@@ -199,7 +227,10 @@ export class TagsCache extends AbstractSelectizer {
     selectize(target: HTMLSelectElement | null, options: SelectizerOptions = {}): void {
         if (!target) return;
         makeTomSelect(target, {
-            valueField: 'id', labelField: 'name', sortField: 'name', searchField: ['name'],
+            valueField: 'id',
+            labelField: 'name',
+            sortField: 'name',
+            searchField: ['name'],
             plugins: { remove_button: {} },
             render: AbstractSelectizer.getRender('name', options.lang),
         });
@@ -213,8 +244,10 @@ export class GroupsCache extends AbstractSelectizer {
             ...options,
             key: 'groupsAdminList',
             loader: (callback) => {
-                fetch(`${options.rootUrl}ws.php?format=json&method=pwg.groups.getList&per_page=9999`)
-                    .then(r => r.json())
+                fetch(
+                    `${options.rootUrl}ws.php?format=json&method=pwg.groups.getList&per_page=9999`
+                )
+                    .then((r) => r.json())
                     .then((data: { result: { groups: CacheItem[] } }) => {
                         const groups = data.result.groups.map((g) => {
                             delete (g as any)['lastmodified'];
@@ -229,7 +262,10 @@ export class GroupsCache extends AbstractSelectizer {
     selectize(target: HTMLSelectElement | null, options: SelectizerOptions = {}): void {
         if (!target) return;
         makeTomSelect(target, {
-            valueField: 'id', labelField: 'name', sortField: 'name', searchField: ['name'],
+            valueField: 'id',
+            labelField: 'name',
+            sortField: 'name',
+            searchField: ['name'],
             plugins: { remove_button: {} },
             render: AbstractSelectizer.getRender('name', options.lang),
         });
@@ -245,13 +281,23 @@ export class UsersCache extends AbstractSelectizer {
             loader: (callback) => {
                 let users: CacheItem[] = [];
                 const load = (page: number): void => {
-                    fetch(`${options.rootUrl}ws.php?format=json&method=pwg.users.getList&display=username&per_page=9999&page=${page}`)
-                        .then(r => r.json())
-                        .then((data: { result: { users: CacheItem[]; paging: { count: number; per_page: number } } }) => {
-                            users = users.concat(data.result.users);
-                            if (data.result.paging.count === data.result.paging.per_page) load(page + 1);
-                            else callback(users);
-                        });
+                    fetch(
+                        `${options.rootUrl}ws.php?format=json&method=pwg.users.getList&display=username&per_page=9999&page=${page}`
+                    )
+                        .then((r) => r.json())
+                        .then(
+                            (data: {
+                                result: {
+                                    users: CacheItem[];
+                                    paging: { count: number; per_page: number };
+                                };
+                            }) => {
+                                users = users.concat(data.result.users);
+                                if (data.result.paging.count === data.result.paging.per_page)
+                                    load(page + 1);
+                                else callback(users);
+                            }
+                        );
                 };
                 load(0);
             },
@@ -261,7 +307,10 @@ export class UsersCache extends AbstractSelectizer {
     selectize(target: HTMLSelectElement | null, options: SelectizerOptions = {}): void {
         if (!target) return;
         makeTomSelect(target, {
-            valueField: 'id', labelField: 'username', sortField: 'username', searchField: ['username'],
+            valueField: 'id',
+            labelField: 'username',
+            sortField: 'username',
+            searchField: ['username'],
             plugins: { remove_button: {} },
             render: AbstractSelectizer.getRender('username', options.lang),
         });

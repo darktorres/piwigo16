@@ -5,7 +5,9 @@ document.querySelectorAll<HTMLImageElement>('.std_pgs_mini_previews img').forEac
         });
         img.classList.add('selected');
 
-        const skinInput = document.querySelector<HTMLInputElement>('input[name=std_pgs_selected_skin]');
+        const skinInput = document.querySelector<HTMLInputElement>(
+            'input[name=std_pgs_selected_skin]'
+        );
         if (skinInput) {
             skinInput.value = img.id;
         }
@@ -13,8 +15,12 @@ document.querySelectorAll<HTMLImageElement>('.std_pgs_mini_previews img').forEac
         const preview_light_path = 'themes/standard_pages/skins/light-' + img.id + '.jpg';
         const preview_dark_path = 'themes/standard_pages/skins/dark-' + img.id + '.jpg';
 
-        const previewLight = document.querySelector<HTMLImageElement>('.std_pgs_selected_preview img#preview-light');
-        const previewDark = document.querySelector<HTMLImageElement>('.std_pgs_selected_preview img#preview-dark');
+        const previewLight = document.querySelector<HTMLImageElement>(
+            '.std_pgs_selected_preview img#preview-light'
+        );
+        const previewDark = document.querySelector<HTMLImageElement>(
+            '.std_pgs_selected_preview img#preview-dark'
+        );
         if (previewLight) {
             previewLight.setAttribute('src', preview_light_path);
         }

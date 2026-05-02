@@ -25,9 +25,12 @@ test('uploaded photo appears in getInfo', async ({ page, request }) => {
 
     const imageId = await uploadPhoto(request, cookie, IMAGE_1, albumId, 'My Wallpaper');
 
-    const info = await request.get(pwgUrl(`/ws.php?format=json&method=pwg.images.getInfo&image_id=${imageId}`), {
-        headers: { Cookie: cookie },
-    });
+    const info = await request.get(
+        pwgUrl(`/ws.php?format=json&method=pwg.images.getInfo&image_id=${imageId}`),
+        {
+            headers: { Cookie: cookie },
+        }
+    );
     const infoBody = await info.json();
     expect(infoBody.stat).toBe('ok');
     expect(infoBody.result.id).toBe(imageId);
@@ -45,7 +48,7 @@ test('two uploaded photos both appear in album', async ({ page, request }) => {
 
     const listRes = await request.get(
         pwgUrl(`/ws.php?format=json&method=pwg.categories.getImages&cat_id=${albumId}`),
-        { headers: { Cookie: cookie } },
+        { headers: { Cookie: cookie } }
     );
     const listBody = await listRes.json();
     expect(listBody.stat).toBe('ok');

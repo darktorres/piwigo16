@@ -84,7 +84,9 @@ if (menuOrderingForm) {
         const items = Array.from(menuUl ? menuUl.children : []) as HTMLElement[];
         for (let i = 0; i < items.length; i++) {
             const men = items[i].id.split('menu_');
-            const posInput = document.getElementsByName('pos_' + men[1])[0] as HTMLInputElement | undefined;
+            const posInput = document.getElementsByName('pos_' + men[1])[0] as
+                | HTMLInputElement
+                | undefined;
             if (posInput) {
                 posInput.value = String(i + 1);
             }

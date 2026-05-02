@@ -17,12 +17,8 @@ interface BatchFilterPageData {
     str_select_tag: string;
 }
 
-const {
-    sliders,
-    selected_filter_cat_ids,
-    str_select_album,
-    str_select_tag,
-} = getPageData<BatchFilterPageData>('pwg-filter-page-data');
+const { sliders, selected_filter_cat_ids, str_select_album, str_select_tag } =
+    getPageData<BatchFilterPageData>('pwg-filter-page-data');
 
 let errorFilters = '';
 
@@ -31,8 +27,12 @@ function filter_enable(filter: string): void {
     if (el) el.style.display = '';
     const cb = document.querySelector<HTMLInputElement>(`input[type=checkbox][name=${filter}_use]`);
     if (cb) cb.checked = true;
-    document.querySelector<HTMLElement>(`#addFilter a[data-value=${filter}]`)?.classList.add('disabled');
-    document.querySelectorAll<HTMLElement>('.noFilter').forEach(e => { e.style.display = 'none'; });
+    document
+        .querySelector<HTMLElement>(`#addFilter a[data-value=${filter}]`)
+        ?.classList.add('disabled');
+    document.querySelectorAll<HTMLElement>('.noFilter').forEach((e) => {
+        e.style.display = 'none';
+    });
     document.querySelector<HTMLElement>('.addFilter-button')?.classList.remove('highlight');
 }
 
@@ -41,16 +41,30 @@ function filter_disable(filter: string): void {
     if (el) el.style.display = 'none';
     const cb = document.querySelector<HTMLInputElement>(`input[name=${filter}_use]`);
     if (cb) cb.checked = false;
-    document.querySelector<HTMLElement>(`#addFilter a[data-value=${filter}]`)?.classList.remove('disabled');
-    const visible = Array.from(document.querySelectorAll('#filterList li'))
-        .filter(li => (li as HTMLElement).style.display !== 'none' && getComputedStyle(li).display !== 'none').length;
+    document
+        .querySelector<HTMLElement>(`#addFilter a[data-value=${filter}]`)
+        ?.classList.remove('disabled');
+    const visible = Array.from(document.querySelectorAll('#filterList li')).filter(
+        (li) =>
+            (li as HTMLElement).style.display !== 'none' && getComputedStyle(li).display !== 'none'
+    ).length;
     if (visible === 0) {
-        document.querySelectorAll<HTMLElement>('.noFilter').forEach(e => { e.style.display = ''; });
+        document.querySelectorAll<HTMLElement>('.noFilter').forEach((e) => {
+            e.style.display = '';
+        });
         document.querySelector<HTMLElement>('.addFilter-button')?.classList.add('highlight');
     }
 }
 
-function select_album_filter({ album, newSelectedAlbum, getSelectedAlbum }: { album: any; newSelectedAlbum: () => void; getSelectedAlbum: () => (string | number)[] }): void {
+function select_album_filter({
+    album,
+    newSelectedAlbum,
+    getSelectedAlbum,
+}: {
+    album: any;
+    newSelectedAlbum: () => void;
+    getSelectedAlbum: () => (string | number)[];
+}): void {
     const nameEl = document.getElementById('selectedAlbumNameFilter');
     if (nameEl) nameEl.innerHTML = album.name;
     newSelectedAlbum();
@@ -66,7 +80,10 @@ function select_album_filter({ album, newSelectedAlbum, getSelectedAlbum }: { al
 function show_filters_error(message: string): void {
     errorFilters = message;
     const errorEl = document.getElementById('errorFilter');
-    if (errorEl) { errorEl.innerHTML = `<p>${message}</p>`; errorEl.style.display = ''; }
+    if (errorEl) {
+        errorEl.innerHTML = `<p>${message}</p>`;
+        errorEl.style.display = '';
+    }
 }
 
 function hide_filters_error(message: string): void {
@@ -77,7 +94,6 @@ function hide_filters_error(message: string): void {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-
     const ab_filter = new AlbumSelector({
         selectedCategoriesIds: selected_filter_cat_ids,
         selectAlbum: select_album_filter,
@@ -85,9 +101,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('selectAlbumFilter')?.addEventListener('click', () => ab_filter.open());
-    document.getElementById('selectedAlbumEditFilter')?.addEventListener('click', () => ab_filter.open());
+    document
+        .getElementById('selectedAlbumEditFilter')
+        ?.addEventListener('click', () => ab_filter.open());
 
-    document.querySelectorAll<HTMLElement>('.removeFilter').forEach(el => {
+    document.querySelectorAll<HTMLElement>('.removeFilter').forEach((el) => {
         el.classList.add('icon-cancel-circled');
         el.addEventListener('click', (e) => {
             e.preventDefault();
@@ -96,11 +114,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    document.querySelectorAll<HTMLElement>('#addFilter a').forEach(a => {
+    document.querySelectorAll<HTMLElement>('#addFilter a').forEach((a) => {
         a.addEventListener('click', () => filter_enable(a.dataset['value'] ?? ''));
     });
 
-    document.querySelectorAll<HTMLElement>('.addFilter-button').forEach(btn => {
+    document.querySelectorAll<HTMLElement>('.addFilter-button').forEach((btn) => {
         btn.addEventListener('click', () => {
             const dropdown = document.querySelector<HTMLElement>('.addFilter-dropdown');
             if (!dropdown) return;
@@ -111,42 +129,60 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('removeFilters')?.addEventListener('click', (e) => {
         e.preventDefault();
-        document.querySelectorAll<HTMLElement>('#filterList li').forEach(li => filter_disable(li.id));
+        document
+            .querySelectorAll<HTMLElement>('#filterList li')
+            .forEach((li) => filter_disable(li.id));
     });
 
-    document.querySelectorAll<HTMLElement>('[data-slider=widths]').forEach(el => pwgDoubleSlider(el, sliders.widths));
-    document.querySelectorAll<HTMLElement>('[data-slider=heights]').forEach(el => pwgDoubleSlider(el, sliders.heights));
-    document.querySelectorAll<HTMLElement>('[data-slider=ratios]').forEach(el => pwgDoubleSlider(el, sliders.ratios));
-    document.querySelectorAll<HTMLElement>('[data-slider=filesizes]').forEach(el => pwgDoubleSlider(el, sliders.filesizes));
+    document
+        .querySelectorAll<HTMLElement>('[data-slider=widths]')
+        .forEach((el) => pwgDoubleSlider(el, sliders.widths));
+    document
+        .querySelectorAll<HTMLElement>('[data-slider=heights]')
+        .forEach((el) => pwgDoubleSlider(el, sliders.heights));
+    document
+        .querySelectorAll<HTMLElement>('[data-slider=ratios]')
+        .forEach((el) => pwgDoubleSlider(el, sliders.ratios));
+    document
+        .querySelectorAll<HTMLElement>('[data-slider=filesizes]')
+        .forEach((el) => pwgDoubleSlider(el, sliders.filesizes));
 
     document.addEventListener('mouseup', (e: MouseEvent) => {
         e.stopPropagation();
         if (!(e.target as HTMLElement).classList.contains('addFilter-button')) {
-            document.querySelectorAll<HTMLElement>('.addFilter-dropdown').forEach(el => { el.style.display = 'none'; });
+            document.querySelectorAll<HTMLElement>('.addFilter-dropdown').forEach((el) => {
+                el.style.display = 'none';
+            });
         }
     });
 
-    document.querySelectorAll<HTMLSelectElement>('.filterBlock select[data-selectize="tags"]').forEach(sel => {
-        // Hide the original select element - Tom Select creates a styled replacement
-        sel.style.display = 'none';
+    document
+        .querySelectorAll<HTMLSelectElement>('.filterBlock select[data-selectize="tags"]')
+        .forEach((sel) => {
+            // Hide the original select element - Tom Select creates a styled replacement
+            sel.style.display = 'none';
 
-        // After Tom Select initializes, resize the control and input field for better readability
-        setTimeout(() => {
-            const wrapper = sel.closest('#filter_tags')?.querySelector<HTMLElement>('.ts-control');
-            if (wrapper) {
-                wrapper.style.minHeight = '36px';
-                wrapper.style.padding = '6px 8px';
-                wrapper.style.fontSize = '14px';
-                wrapper.style.lineHeight = '24px';
-                const input = wrapper.querySelector<HTMLInputElement>('input[type="text"]');
-                if (input) {
-                    input.removeAttribute('size');
+            // After Tom Select initializes, resize the control and input field for better readability
+            setTimeout(() => {
+                const wrapper = sel
+                    .closest('#filter_tags')
+                    ?.querySelector<HTMLElement>('.ts-control');
+                if (wrapper) {
+                    wrapper.style.minHeight = '36px';
+                    wrapper.style.padding = '6px 8px';
+                    wrapper.style.fontSize = '14px';
+                    wrapper.style.lineHeight = '24px';
+                    const input = wrapper.querySelector<HTMLInputElement>('input[type="text"]');
+                    if (input) {
+                        input.removeAttribute('size');
+                    }
                 }
-            }
-        }, 100);
+            }, 100);
 
-        sel.addEventListener('change', () => { if (sel.value) hide_filters_error(str_select_tag); });
-    });
+            sel.addEventListener('change', () => {
+                if (sel.value) hide_filters_error(str_select_tag);
+            });
+        });
 
     let applyAbort: AbortController | null = null;
     document.getElementById('applyFilter')?.addEventListener('click', (e) => {
@@ -156,13 +192,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const filterTags = document.getElementById('filter_tags');
         if (filterTags && getComputedStyle(filterTags).display !== 'none') {
-            const tags = document.querySelector<HTMLSelectElement>('.filterBlock select[data-selectize="tags"]');
+            const tags = document.querySelector<HTMLSelectElement>(
+                '.filterBlock select[data-selectize="tags"]'
+            );
             if (!tags?.value) {
                 e.preventDefault();
                 show_filters_error(str_select_tag);
-                document.querySelectorAll<HTMLElement>('#filter_tags .removeFilter').forEach(el => {
-                    el.addEventListener('click', () => hide_filters_error(str_select_tag), { signal });
-                });
+                document
+                    .querySelectorAll<HTMLElement>('#filter_tags .removeFilter')
+                    .forEach((el) => {
+                        el.addEventListener('click', () => hide_filters_error(str_select_tag), {
+                            signal,
+                        });
+                    });
             }
         }
 
@@ -171,9 +213,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (ab_filter.get_selected_albums().length === 0) {
                 e.preventDefault();
                 show_filters_error(str_select_album);
-                document.querySelectorAll<HTMLElement>('#filter_category .removeFilter').forEach(el => {
-                    el.addEventListener('click', () => hide_filters_error(str_select_album), { signal });
-                });
+                document
+                    .querySelectorAll<HTMLElement>('#filter_category .removeFilter')
+                    .forEach((el) => {
+                        el.addEventListener('click', () => hide_filters_error(str_select_album), {
+                            signal,
+                        });
+                    });
             }
         }
     });

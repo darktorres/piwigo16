@@ -18,9 +18,13 @@ interface CreatedAlbums {
     token: string;
 }
 
-async function pwgApi(page: Page, method: string, params: Record<string, string | number> = {}): Promise<unknown> {
+async function pwgApi(
+    page: Page,
+    method: string,
+    params: Record<string, string | number> = {}
+): Promise<unknown> {
     const cookies = await page.context().cookies();
-    const cookieHeader = cookies.map(c => `${c.name}=${c.value}`).join('; ');
+    const cookieHeader = cookies.map((c) => `${c.name}=${c.value}`).join('; ');
     const form: Record<string, string> = { method };
     for (const [k, v] of Object.entries(params)) form[k] = String(v);
     const response = await page.request.post(pwgUrl('/ws.php?format=json'), {
@@ -39,7 +43,10 @@ async function getToken(page: Page): Promise<string> {
 async function createAlbum(page: Page, name: string, parent?: number): Promise<number> {
     const params: Record<string, string | number> = { name };
     if (parent != null) params['parent'] = parent;
-    const r = (await pwgApi(page, 'pwg.categories.add', params)) as { stat: string; result: { id: number } };
+    const r = (await pwgApi(page, 'pwg.categories.add', params)) as {
+        stat: string;
+        result: { id: number };
+    };
     expect(r.stat).toBe('ok');
     return r.result.id;
 }
@@ -226,13 +233,22 @@ test.describe('album tree', () => {
 
         // The album-tree calls applyMove() which fires pwg.categories.move
         // and then commits the DOM move. Wait for the API result to land.
-        await expect.poll(async () => {
-            const status = (await pwgApi(page, 'pwg.categories.getList', { cat_id: sourceId })) as {
-                result: { categories: Array<{ id: number; id_uppercat?: number | string | null }> };
-            };
-            const moved = status.result.categories.find(c => c.id === sourceId);
-            return Number(moved?.id_uppercat ?? 0);
-        }, { timeout: 10000 }).toBe(targetId);
+        await expect
+            .poll(
+                async () => {
+                    const status = (await pwgApi(page, 'pwg.categories.getList', {
+                        cat_id: sourceId,
+                    })) as {
+                        result: {
+                            categories: Array<{ id: number; id_uppercat?: number | string | null }>;
+                        };
+                    };
+                    const moved = status.result.categories.find((c) => c.id === sourceId);
+                    return Number(moved?.id_uppercat ?? 0);
+                },
+                { timeout: 10000 }
+            )
+            .toBe(targetId);
 
         await deleteAlbums(page, ctx.ids, ctx.token);
     });

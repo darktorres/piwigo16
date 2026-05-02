@@ -13,7 +13,10 @@ export interface DndContext {
     rootEl: HTMLElement;
     nodeForLi(li: HTMLElement): TreeNode | null;
     moveNode(moved: TreeNode, target: TreeNode, position: Position): void;
-    onMove?: (info: MoveInfo, ev: { preventDefault: () => void; readonly defaultPrevented: boolean }) => void;
+    onMove?: (
+        info: MoveInfo,
+        ev: { preventDefault: () => void; readonly defaultPrevented: boolean }
+    ) => void;
 }
 
 const GHOST_CLASS = 'pwgtree-ghost-indicator';
@@ -29,7 +32,9 @@ export function attachDnd(ctx: DndContext): () => void {
         ghost = null;
         lastTargetLi = null;
         lastPosition = null;
-        ctx.rootEl.querySelectorAll('.pwgtree-moving').forEach(el => el.classList.remove('pwgtree-moving'));
+        ctx.rootEl
+            .querySelectorAll('.pwgtree-moving')
+            .forEach((el) => el.classList.remove('pwgtree-moving'));
     }
 
     function placeGhost(targetLi: HTMLElement, position: Position): void {
@@ -59,7 +64,11 @@ export function attachDnd(ctx: DndContext): () => void {
         if (ghost.parentNode !== ctx.rootEl) ctx.rootEl.appendChild(ghost);
     }
 
-    function computePosition(targetLi: HTMLElement, clientY: number, allowInside: boolean): Position {
+    function computePosition(
+        targetLi: HTMLElement,
+        clientY: number,
+        allowInside: boolean
+    ): Position {
         const elDiv = targetLi.querySelector<HTMLElement>(':scope > .pwgtree-element');
         const rect = (elDiv ?? targetLi).getBoundingClientRect();
         const rel = clientY - rect.top;
@@ -147,8 +156,12 @@ export function attachDnd(ctx: DndContext): () => void {
 
         let prevented = false;
         const event = {
-            preventDefault: () => { prevented = true; },
-            get defaultPrevented(): boolean { return prevented; },
+            preventDefault: () => {
+                prevented = true;
+            },
+            get defaultPrevented(): boolean {
+                return prevented;
+            },
         };
         const info: MoveInfo = {
             moved_node: moved,

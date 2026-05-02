@@ -15,9 +15,21 @@ function correctPNG(): void {
             const anchor = img.parentElement as HTMLAnchorElement | null;
             if (anchor?.href) imgStyle = 'cursor:hand;' + imgStyle;
             const strNewHTML =
-                '<span ' + imgID + imgClass + imgTitle + imgAlt +
-                ' style="width:' + img.width + 'px; height:' + img.height + 'px;' + imgStyle + ';' +
-                "filter:progid:DXImageTransform.Microsoft.AlphaImageLoader(src='" + img.src + "', sizingMethod='scale');\">" +
+                '<span ' +
+                imgID +
+                imgClass +
+                imgTitle +
+                imgAlt +
+                ' style="width:' +
+                img.width +
+                'px; height:' +
+                img.height +
+                'px;' +
+                imgStyle +
+                ';' +
+                "filter:progid:DXImageTransform.Microsoft.AlphaImageLoader(src='" +
+                img.src +
+                "', sizingMethod='scale');\">" +
                 '</span>';
             img.outerHTML = strNewHTML;
             i -= 1;

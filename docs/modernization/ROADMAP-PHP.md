@@ -196,9 +196,17 @@ npx playwright test                   # green (plugin compat alias chain works)
      "extends": ["config:recommended"],
      "schedule": ["before 6am on monday"],
      "packageRules": [
-       { "matchUpdateTypes": ["minor", "patch"], "groupName": "deps (non-major)", "automerge": false },
+       {
+         "matchUpdateTypes": ["minor", "patch"],
+         "groupName": "deps (non-major)",
+         "automerge": false
+       },
        { "matchUpdateTypes": ["major"], "labels": ["dependencies", "needs-review"] },
-       { "matchDepTypes": ["devDependencies"], "matchUpdateTypes": ["minor", "patch"], "automerge": true }
+       {
+         "matchDepTypes": ["devDependencies"],
+         "matchUpdateTypes": ["minor", "patch"],
+         "automerge": true
+       }
      ],
      "vulnerabilityAlerts": { "labels": ["security"], "schedule": ["at any time"] }
    }
@@ -282,13 +290,13 @@ PIWIGO_MAIL_SMTP_HOST=localhost php -r "require 'vendor/autoload.php'; var_dump(
 
 Zero `global $conf`, `global $user`, `global $page`, `global $lang`, `global $template` declarations anywhere in the application. All code accesses these through the typed service layer:
 
-| Global       | Replacement                                                                  |
-| ------------ | ---------------------------------------------------------------------------- |
-| `$conf`      | `Piwigo\Core\Config::get(…)` / typed accessors (`Config::galleryTitle()` etc.) |
-| `$page`      | `Piwigo\Core\PageState::current()->errors[]` etc.                            |
-| `$lang`      | `Piwigo\Core\Lang::current()` / `Lang::get($key)`                            |
-| `$user`      | `Piwigo\Users\CurrentUser::get()`                                            |
-| `$template`  | `Piwigo\Template\TemplateRegistry::current()` (new — see step 1)             |
+| Global      | Replacement                                                                    |
+| ----------- | ------------------------------------------------------------------------------ |
+| `$conf`     | `Piwigo\Core\Config::get(…)` / typed accessors (`Config::galleryTitle()` etc.) |
+| `$page`     | `Piwigo\Core\PageState::current()->errors[]` etc.                              |
+| `$lang`     | `Piwigo\Core\Lang::current()` / `Lang::get($key)`                              |
+| `$user`     | `Piwigo\Users\CurrentUser::get()`                                              |
+| `$template` | `Piwigo\Template\TemplateRegistry::current()` (new — see step 1)               |
 
 The reference-bridge pattern in `Config::attachGlobals()` and `PageState::attachGlobals()` makes the migration incremental: old `$conf['x']` and new `Config::get('x')` read/write the same backing storage, so plugins and untouched files keep working.
 
@@ -341,15 +349,15 @@ Resolve or formally defer all `TODO`/`FIXME` markers in tracked PHP files. Curre
 
 ### Current state (selected markers)
 
-| File | Line | Marker |
-|------|------|--------|
-| `include/common.inc.php` | 167 | `// TODO remove this data update as soon as 2025 arrives` — **past-due** |
-| `include/functions.inc.php` | 1832 | `return $str; // TODO` — stub return, function body missing |
-| `include/functions_category.inc.php` | 530 | `// TODO 2.7: add an upgrade script…` — pre-16 remnant |
-| `include/config_default.inc.php` | 990 | `//TODO: Put this in admin…` — design note |
-| `include/ws_functions/pwg.php` | 846 | `/*TODO - no need to get a huge number of rows…*/` — SQL optimization |
-| `include/search_filters.inc.php` | 71 | `// TODO calling get_available_tags()… may cost time` — performance note |
-| `src/Piwigo/Admin/updates.php` | 474 | `// TODO why redirect to a plugin page?` — logic question |
+| File                                 | Line | Marker                                                                   |
+| ------------------------------------ | ---- | ------------------------------------------------------------------------ |
+| `include/common.inc.php`             | 167  | `// TODO remove this data update as soon as 2025 arrives` — **past-due** |
+| `include/functions.inc.php`          | 1832 | `return $str; // TODO` — stub return, function body missing              |
+| `include/functions_category.inc.php` | 530  | `// TODO 2.7: add an upgrade script…` — pre-16 remnant                   |
+| `include/config_default.inc.php`     | 990  | `//TODO: Put this in admin…` — design note                               |
+| `include/ws_functions/pwg.php`       | 846  | `/*TODO - no need to get a huge number of rows…*/` — SQL optimization    |
+| `include/search_filters.inc.php`     | 71   | `// TODO calling get_available_tags()… may cost time` — performance note |
+| `src/Piwigo/Admin/updates.php`       | 474  | `// TODO why redirect to a plugin page?` — logic question                |
 
 ### Steps
 
@@ -879,27 +887,27 @@ Move all 366 free functions across the 19 `functions_*.inc.php` modules into typ
 
 ### Per-module checklist
 
-| Module | Lines | Funcs | Target namespace |
-|--------|-------|-------|------------------|
-| `functions_user.inc.php` | 2,673 | 63 | `Piwigo\Users\`, `Piwigo\Auth\` |
-| `functions.inc.php` | ? | 81 | spread by domain — split first |
-| `functions_category.inc.php` | ? | 17 | `Piwigo\Category\` |
-| `functions_search.inc.php` | ? | 17 | `Piwigo\Search\` |
-| `functions_url.inc.php` | ? | ? | `Piwigo\Url\` |
-| `functions_html.inc.php` | ? | ? | `Piwigo\Html\` |
-| `functions_session.inc.php` | ? | ? | `Piwigo\Session\` |
-| `functions_picture.inc.php` | ? | ? | `Piwigo\Picture\` |
-| `functions_tag.inc.php` | ? | ? | `Piwigo\Tag\` |
-| `functions_rate.inc.php` | ? | ? | `Piwigo\Rate\` |
-| `functions_comment.inc.php` | ? | 8 | `Piwigo\Comment\` |
-| `functions_metadata.inc.php` | ? | 5 | `Piwigo\Metadata\` |
-| `functions_mail.inc.php` | ? | ? | `Piwigo\Mail\` |
-| `functions_notification.inc.php` | ? | ? | `Piwigo\Notification\` |
-| `functions_filter.inc.php` | ? | ? | `Piwigo\Filter\` |
-| `functions_plugins.inc.php` | ? | ? | `Piwigo\Plugin\` |
-| `functions_cookie.inc.php` | ? | ? | `Piwigo\Auth\` |
-| `dblayer/functions_mysqli.inc.php` | ? | ? | `Piwigo\Db\` (item #16) |
-| `ws_functions/*.php` | ? | ? | `Piwigo\Ws\Method\` |
+| Module                             | Lines | Funcs | Target namespace                |
+| ---------------------------------- | ----- | ----- | ------------------------------- |
+| `functions_user.inc.php`           | 2,673 | 63    | `Piwigo\Users\`, `Piwigo\Auth\` |
+| `functions.inc.php`                | ?     | 81    | spread by domain — split first  |
+| `functions_category.inc.php`       | ?     | 17    | `Piwigo\Category\`              |
+| `functions_search.inc.php`         | ?     | 17    | `Piwigo\Search\`                |
+| `functions_url.inc.php`            | ?     | ?     | `Piwigo\Url\`                   |
+| `functions_html.inc.php`           | ?     | ?     | `Piwigo\Html\`                  |
+| `functions_session.inc.php`        | ?     | ?     | `Piwigo\Session\`               |
+| `functions_picture.inc.php`        | ?     | ?     | `Piwigo\Picture\`               |
+| `functions_tag.inc.php`            | ?     | ?     | `Piwigo\Tag\`                   |
+| `functions_rate.inc.php`           | ?     | ?     | `Piwigo\Rate\`                  |
+| `functions_comment.inc.php`        | ?     | 8     | `Piwigo\Comment\`               |
+| `functions_metadata.inc.php`       | ?     | 5     | `Piwigo\Metadata\`              |
+| `functions_mail.inc.php`           | ?     | ?     | `Piwigo\Mail\`                  |
+| `functions_notification.inc.php`   | ?     | ?     | `Piwigo\Notification\`          |
+| `functions_filter.inc.php`         | ?     | ?     | `Piwigo\Filter\`                |
+| `functions_plugins.inc.php`        | ?     | ?     | `Piwigo\Plugin\`                |
+| `functions_cookie.inc.php`         | ?     | ?     | `Piwigo\Auth\`                  |
+| `dblayer/functions_mysqli.inc.php` | ?     | ?     | `Piwigo\Db\` (item #16)         |
+| `ws_functions/*.php`               | ?     | ?     | `Piwigo\Ws\Method\`             |
 
 (Question marks filled in during step 1 of each module.)
 
@@ -1347,7 +1355,7 @@ Depends on the front controller (#22) for middleware insertion; depends on the e
 2. **Login rate limiting.** `composer require symfony/rate-limiter`. Token-bucket strategy:
    - 5 failed attempts per minute per IP → 429 response.
    - 10 failed attempts within 10 minutes per IP+username → account lockout for 15 minutes; email the user.
-   Configuration in `config/security.php`.
+     Configuration in `config/security.php`.
 
 3. **Brute-force protection.** `phpwg_user_failed_logins` table tracks `(user_id, ip, timestamp)`. After threshold, `AuthService::login()` rejects with `AuthException::accountLocked()` even with the correct password. Admin "Unlock account" action clears the counter.
 
@@ -1612,9 +1620,9 @@ Themes hook into the same event bus as plugins, so most of the foundation from P
      "parent": "default",
      "loadParentCss": false,
      "assets": {
-       "img":       "images",
-       "icon":      "icon",
-       "mimeIcon":  "icon/mimetypes"
+       "img": "images",
+       "icon": "icon",
+       "mimeIcon": "icon/mimetypes"
      },
      "localHead": "local_head.tpl",
      "main": "Piwigo\\Theme\\StandardPages\\Theme",
@@ -1627,8 +1635,8 @@ Themes hook into the same event bus as plugins, so most of the foundation from P
 4. **`Piwigo\Theme\ThemeRegistry`.** Parallel to `PluginRegistry`. Reads `theme.json`, resolves the parent chain, registers PSR-4 autoload, instantiates `Theme`, calls `boot()`. Caches the resolved chain to avoid re-walking on every request.
 
 5. **Inheritance via class hierarchy or composition.** Two viable approaches — pick one:
-   - *Class inheritance:* `class StandardPagesTheme extends DefaultTheme implements ThemeInterface` — overrides only what differs.
-   - *Composition:* `Theme` always has a `?ThemeInterface $parent` and methods walk up the chain (`getAssetDir()` falls back to parent if not declared). More flexible, but more boilerplate.
+   - _Class inheritance:_ `class StandardPagesTheme extends DefaultTheme implements ThemeInterface` — overrides only what differs.
+   - _Composition:_ `Theme` always has a `?ThemeInterface $parent` and methods walk up the chain (`getAssetDir()` falls back to parent if not declared). More flexible, but more boilerplate.
 
    Recommendation: composition. It mirrors how `themeconf.inc.php` currently works (array merge along the chain) and avoids forcing 3rd-party themes to extend a base class.
 
@@ -1739,17 +1747,17 @@ Mutation testing runs in CI. Mutation Score Indicator (MSI) gated at ≥ 60% ove
 
    ```json5
    {
-       "$schema": "vendor/infection/infection/resources/schema.json",
-       "source": { "directories": ["src"] },
-       "logs": {
-           "text": "build/infection/log.txt",
-           "summary": "build/infection/summary.json",
-           "html": "build/infection/report.html"
-       },
-       "mutators": { "@default": true },
-       "phpUnit": { "configDir": "." },
-       "minMsi": 60,
-       "minCoveredMsi": 75
+     $schema: 'vendor/infection/infection/resources/schema.json',
+     source: { directories: ['src'] },
+     logs: {
+       text: 'build/infection/log.txt',
+       summary: 'build/infection/summary.json',
+       html: 'build/infection/report.html',
+     },
+     mutators: { '@default': true },
+     phpUnit: { configDir: '.' },
+     minMsi: 60,
+     minCoveredMsi: 75,
    }
    ```
 

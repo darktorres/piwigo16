@@ -1,7 +1,7 @@
 const targets: Record<string, string> = {
-    'input[name="comments_validation"]':       '#email_admin_on_comment_validation',
-    'input[name="user_can_edit_comment"]':     '#email_admin_on_comment_edition',
-    'input[name="user_can_delete_comment"]':   '#email_admin_on_comment_deletion',
+    'input[name="comments_validation"]': '#email_admin_on_comment_validation',
+    'input[name="user_can_edit_comment"]': '#email_admin_on_comment_edition',
+    'input[name="user_can_delete_comment"]': '#email_admin_on_comment_deletion',
 };
 
 for (const selector in targets) {

@@ -13,7 +13,7 @@ let nbActivatedPlugins = 0;
 
 document.addEventListener('DOMContentLoaded', () => {
     fetch('ws.php?format=json&method=pwg.plugins.getList')
-        .then(r => r.json())
+        .then((r) => r.json())
         .then((data: { result: Array<{ name: string; state: string }> }) => {
             plugins = data.result;
             hasActivePlugins = false;
@@ -23,26 +23,32 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (plugin.state === 'active') {
                     hasActivePlugins = true;
                     pluginList.insertAdjacentHTML('beforeend', '<li>' + plugin.name + '</li>');
-                    pluginList.querySelectorAll('i').forEach(i => { i.style.display = 'none'; });
+                    pluginList.querySelectorAll('i').forEach((i) => {
+                        i.style.display = 'none';
+                    });
                     nbActivatedPlugins++;
                 }
             });
             if (!hasActivePlugins) {
-                pluginList.querySelectorAll('i').forEach(i => { i.style.display = 'none'; });
+                pluginList.querySelectorAll('i').forEach((i) => {
+                    i.style.display = 'none';
+                });
                 pluginList.insertAdjacentHTML('beforeend', '<p>' + no_active_plugin + '</p>');
             }
-            document.querySelectorAll('.badge-number').forEach(el => {
+            document.querySelectorAll('.badge-number').forEach((el) => {
                 el.insertAdjacentText('beforeend', String(nbActivatedPlugins));
             });
         })
         .catch(() => {
-            document.querySelectorAll('.badge-number').forEach(el => {
+            document.querySelectorAll('.badge-number').forEach((el) => {
                 el.insertAdjacentText('beforeend', '0');
             });
             const pluginList = document.querySelector<HTMLUListElement>('#pluginList ul');
             if (pluginList) {
                 pluginList.insertAdjacentHTML('beforeend', '<p>' + error_occured + '</p>');
-                pluginList.querySelectorAll('i').forEach(i => { i.style.display = 'none'; });
+                pluginList.querySelectorAll('i').forEach((i) => {
+                    i.style.display = 'none';
+                });
             }
         });
 });

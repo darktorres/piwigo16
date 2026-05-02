@@ -22,14 +22,16 @@ function onWatermarkChange(): void {
 onWatermarkChange();
 document.getElementById('wSelect')?.addEventListener('change', onWatermarkChange);
 
-const checkedPosition = document.querySelector<HTMLInputElement>("input[name='w[position]']:checked");
+const checkedPosition = document.querySelector<HTMLInputElement>(
+    "input[name='w[position]']:checked"
+);
 if (checkedPosition?.value === 'custom') {
     const posCustomDetails = document.getElementById('positionCustomDetails');
     if (posCustomDetails) posCustomDetails.style.display = '';
 }
 
 document.querySelectorAll<HTMLInputElement>("input[name='w[position]']").forEach((radio) => {
-    radio.addEventListener('change', function(this: HTMLInputElement) {
+    radio.addEventListener('change', function (this: HTMLInputElement) {
         const posCustomDetails = document.getElementById('positionCustomDetails');
         if (posCustomDetails) {
             posCustomDetails.style.display = this.value === 'custom' ? '' : 'none';

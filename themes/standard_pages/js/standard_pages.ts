@@ -6,7 +6,8 @@ interface StandardPagesData {
     url_logo_dark: string;
 }
 
-const { selected_language, url_logo_light, url_logo_dark } = getPageData<StandardPagesData>('pwg-std-pages-data');
+const { selected_language, url_logo_light, url_logo_dark } =
+    getPageData<StandardPagesData>('pwg-std-pages-data');
 
 let modeCookie = getCookie('mode');
 if (modeCookie !== '') {
@@ -24,10 +25,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const langEl = document.getElementById('selected-language');
     if (langEl) langEl.textContent = selected_language;
 
-    document.querySelectorAll('form').forEach(form => {
+    document.querySelectorAll('form').forEach((form) => {
         form.addEventListener('submit', (e) => {
             let isValid = true;
-            form.querySelectorAll<HTMLElement>('.column-flex').forEach(col => {
+            form.querySelectorAll<HTMLElement>('.column-flex').forEach((col) => {
                 const input = col.querySelector<HTMLInputElement>('input');
                 if (input?.dataset['required'] === 'true') {
                     const errorMessage = col.querySelector<HTMLElement>('.error-message');
@@ -46,15 +47,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    document.querySelectorAll<HTMLInputElement>('.column-flex input').forEach(input => {
+    document.querySelectorAll<HTMLInputElement>('.column-flex input').forEach((input) => {
         input.addEventListener('input', () => {
-            const errorMessage = input.closest<HTMLElement>('.column-flex')?.querySelector<HTMLElement>('.error-message');
+            const errorMessage = input
+                .closest<HTMLElement>('.column-flex')
+                ?.querySelector<HTMLElement>('.error-message');
             input.setCustomValidity('');
             if (errorMessage) errorMessage.style.display = 'none';
         });
     });
 
-    document.querySelectorAll<HTMLElement>('.togglePassword').forEach(toggle => {
+    document.querySelectorAll<HTMLElement>('.togglePassword').forEach((toggle) => {
         toggle.addEventListener('click', (e) => {
             const target = e.target as HTMLElement;
             const input = target.parentElement?.querySelector<HTMLInputElement>('input');
@@ -69,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    document.querySelectorAll<HTMLAnchorElement>('#other-languages a').forEach(a => {
+    document.querySelectorAll<HTMLAnchorElement>('#other-languages a').forEach((a) => {
         a.addEventListener('click', () => {
             const href = a.getAttribute('href');
             if (!href) return;
@@ -79,14 +82,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    document.querySelectorAll<HTMLElement>('[data-toggle-mode]').forEach(el => {
+    document.querySelectorAll<HTMLElement>('[data-toggle-mode]').forEach((el) => {
         el.addEventListener('click', () => {
             const mode = el.getAttribute('data-toggle-mode') || '';
             if (mode === 'dark' || mode === 'light') toggle_mode(mode);
         });
     });
 
-    document.querySelectorAll<HTMLElement>('[data-set-lang]').forEach(el => {
+    document.querySelectorAll<HTMLElement>('[data-set-lang]').forEach((el) => {
         el.addEventListener('click', () => {
             const code = el.getAttribute('data-set-lang') || '';
             if (code) setCookie('lang', code, 30);

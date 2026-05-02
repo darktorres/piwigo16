@@ -23,10 +23,7 @@ export class TreeStateStore {
 
     save(open: Iterable<string | NodeId>): void {
         try {
-            window.localStorage?.setItem(
-                this.storageKey,
-                JSON.stringify(Array.from(open, String)),
-            );
+            window.localStorage?.setItem(this.storageKey, JSON.stringify(Array.from(open, String)));
         } catch {
             // Quota exceeded or storage disabled — silently degrade.
         }

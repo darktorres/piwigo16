@@ -81,9 +81,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (current_param.image_id != '') addImageFilter(current_param.image_id);
     if (current_param.user_id != '-1') addUserFilter(filter_user_name);
 
-    document.querySelectorAll<HTMLElement>('.elem-type-select').forEach(el => {
+    document.querySelectorAll<HTMLElement>('.elem-type-select').forEach((el) => {
         el.addEventListener('change', () => {
-            const val = document.querySelector<HTMLSelectElement>('.elem-type-select option:checked')?.value;
+            const val = document.querySelector<HTMLSelectElement>(
+                '.elem-type-select option:checked'
+            )?.value;
             if (val === 'visited') {
                 current_param.types = { 0: 'none', 1: 'picture' };
             } else if (val === 'downloaded') {
@@ -96,7 +98,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.querySelector('.date-start')?.addEventListener('change', () => {
-        const val = document.querySelector<HTMLInputElement>('.date-start input[name="start"]')?.getAttribute('value');
+        const val = document
+            .querySelector<HTMLInputElement>('.date-start input[name="start"]')
+            ?.getAttribute('value');
         if (current_param.start != val) {
             current_param.start = val;
             current_param.pageNumber = 0;
@@ -105,7 +109,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.querySelector('.date-end')?.addEventListener('change', () => {
-        const newValue = document.querySelector<HTMLInputElement>('.date-end input[name="end"]')?.getAttribute('value');
+        const newValue = document
+            .querySelector<HTMLInputElement>('.date-end input[name="end"]')
+            ?.getAttribute('value');
         if (current_param.end != newValue) {
             current_param.end = newValue;
             current_param.pageNumber = 0;
@@ -144,8 +150,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function activateLineOptions() {
-    document.querySelectorAll<HTMLElement>('.search-line .img-option').forEach(el => { el.style.display = 'none'; });
-    document.querySelectorAll<HTMLElement>('.search-line .toggle-img-option').forEach(el => {
+    document.querySelectorAll<HTMLElement>('.search-line .img-option').forEach((el) => {
+        el.style.display = 'none';
+    });
+    document.querySelectorAll<HTMLElement>('.search-line .toggle-img-option').forEach((el) => {
         el.addEventListener('click', () => {
             const opt = el.querySelector<HTMLElement>('.img-option');
             if (opt) opt.style.display = opt.style.display === 'none' ? '' : 'none';
@@ -154,17 +162,25 @@ function activateLineOptions() {
     document.addEventListener('mouseup', (e: MouseEvent) => {
         e.stopPropagation();
         const target = e.target as Element;
-        const clicked = Array.from(document.querySelectorAll('.img-option span')).some(span => span.contains(target));
-        if (!clicked) document.querySelectorAll<HTMLElement>('.search-line .img-option').forEach(el => { el.style.display = 'none'; });
+        const clicked = Array.from(document.querySelectorAll('.img-option span')).some((span) =>
+            span.contains(target)
+        );
+        if (!clicked)
+            document.querySelectorAll<HTMLElement>('.search-line .img-option').forEach((el) => {
+                el.style.display = 'none';
+            });
     });
 }
 
 function fillSummaryResult(summary: any) {
     document.querySelector('.user-list')!.innerHTML = '';
-    document.querySelector<HTMLElement>('.summary-lines .summary-data')!.innerHTML = summary.NB_LINES;
-    document.querySelector<HTMLElement>('.summary-weight .summary-data')!.innerHTML = unit_MB.replace('%s', summary.FILESIZE);
+    document.querySelector<HTMLElement>('.summary-lines .summary-data')!.innerHTML =
+        summary.NB_LINES;
+    document.querySelector<HTMLElement>('.summary-weight .summary-data')!.innerHTML =
+        unit_MB.replace('%s', summary.FILESIZE);
     document.querySelector<HTMLElement>('.summary-users .summary-data')!.innerHTML = summary.USERS;
-    document.querySelector<HTMLElement>('.summary-guests .summary-data')!.innerHTML = summary.GUESTS;
+    document.querySelector<HTMLElement>('.summary-guests .summary-data')!.innerHTML =
+        summary.GUESTS;
 
     const guestsData = document.querySelector<HTMLElement>('.summary-guests .summary-data')!;
     const guestsEl = document.querySelector<HTMLElement>('.summary-guests')!;
@@ -186,10 +202,17 @@ function fillSummaryResult(summary: any) {
     const id_of: Record<string, any> = {};
     let user_dot_title = '';
     summary.MEMBERS.forEach((keyval: any) => {
-        for (const [key, value] of Object.entries(keyval)) { id_of[key] = value; user_dot_title += key + ', '; }
+        for (const [key, value] of Object.entries(keyval)) {
+            id_of[key] = value;
+            user_dot_title += key + ', ';
+        }
     });
     user_dot_title = user_dot_title.slice(0, -2);
-    document.querySelectorAll<HTMLElement>('.user-dot').forEach(el => { el.title = user_dot_title; el.classList.add('tiptip'); el.style.display = 'none'; });
+    document.querySelectorAll<HTMLElement>('.user-dot').forEach((el) => {
+        el.title = user_dot_title;
+        el.classList.add('tiptip');
+        el.style.display = 'none';
+    });
 
     let tmp = 0;
     for (const [key] of Object.entries(summary.SORTED_MEMBERS)) {
@@ -209,20 +232,26 @@ function fillSummaryResult(summary: any) {
             document.querySelector('.user-list')!.appendChild(item);
             tmp++;
         } else {
-            document.querySelectorAll<HTMLElement>('.user-dot').forEach(el => { el.style.display = ''; });
+            document.querySelectorAll<HTMLElement>('.user-dot').forEach((el) => {
+                el.style.display = '';
+            });
         }
     }
 }
 
 function showResults(doShow: boolean) {
     const display = doShow ? '' : 'none';
-    document.querySelectorAll<HTMLElement>('.search-summary,.container').forEach(el => { el.style.display = display; });
+    document.querySelectorAll<HTMLElement>('.search-summary,.container').forEach((el) => {
+        el.style.display = display;
+    });
 }
 
 function fillHistoryResult(ajaxParam: any) {
     showResults(false);
     document.querySelector<HTMLElement>('.loading')!.classList.remove('hide');
-    document.querySelectorAll<HTMLElement>('.noResults').forEach(el => { el.style.display = 'none'; });
+    document.querySelectorAll<HTMLElement>('.noResults').forEach((el) => {
+        el.style.display = 'none';
+    });
     document.querySelector<HTMLElement>('.tab')!.innerHTML = '';
 
     const body = new URLSearchParams();
@@ -230,7 +259,7 @@ function fillHistoryResult(ajaxParam: any) {
         if (v !== null && v !== undefined) body.append(k, String(v));
     }
     fetch(API_METHOD, { method: 'POST', body })
-        .then(r => r.json())
+        .then((r) => r.json())
         .then((raw_data: any) => {
             data = raw_data.result['lines'];
             imageDisplay = raw_data.result['params'].display_thumbnail;
@@ -241,10 +270,14 @@ function fillHistoryResult(ajaxParam: any) {
                 data.forEach((line: any, id: number) => lineConstructor(line, id, imageDisplay));
                 fillSummaryResult(summary);
                 showResults(true);
-                document.querySelectorAll<HTMLElement>('.noResults').forEach(el => { el.style.display = 'none'; });
+                document.querySelectorAll<HTMLElement>('.noResults').forEach((el) => {
+                    el.style.display = 'none';
+                });
             } else {
                 showResults(false);
-                document.querySelectorAll<HTMLElement>('.noResults').forEach(el => { el.style.display = ''; });
+                document.querySelectorAll<HTMLElement>('.noResults').forEach((el) => {
+                    el.style.display = '';
+                });
             }
 
             activateLineOptions();
@@ -252,15 +285,37 @@ function fillHistoryResult(ajaxParam: any) {
             updatePagination(maxPage);
             tippy('.tiptip', { delay: [0, 0], duration: [200, 200] });
         })
-        .catch(e => console.log(e));
+        .catch((e) => console.log(e));
 }
 
 function lineConstructor(line: any, id: any, imageDisplay: any) {
     const newLine = document.getElementById('-1')!.cloneNode(true) as HTMLElement;
     const find = (sel: string) => newLine.querySelector<HTMLElement>(sel)!;
 
-    const sections = ['categories','tags','best_rated','memories-1-year-ago','list','search','most_visited','recent_pics','recent_cats','favorites'];
-    const icons = ['line-icon icon-folder-open icon-yellow','line-icon icon-tags icon-blue','line-icon icon-star icon-green','line-icon icon-clock icon-yellow','line-icon icon-dice-solid icon-purple','line-icon icon-search icon-purple','line-icon icon-fire icon-red','line-icon icon-clock icon-yellow','line-icon icon-clock icon-yellow','line-icon icon-heart icon-red'];
+    const sections = [
+        'categories',
+        'tags',
+        'best_rated',
+        'memories-1-year-ago',
+        'list',
+        'search',
+        'most_visited',
+        'recent_pics',
+        'recent_cats',
+        'favorites',
+    ];
+    const icons = [
+        'line-icon icon-folder-open icon-yellow',
+        'line-icon icon-tags icon-blue',
+        'line-icon icon-star icon-green',
+        'line-icon icon-clock icon-yellow',
+        'line-icon icon-dice-solid icon-purple',
+        'line-icon icon-search icon-purple',
+        'line-icon icon-fire icon-red',
+        'line-icon icon-clock icon-yellow',
+        'line-icon icon-clock icon-yellow',
+        'line-icon icon-heart icon-red',
+    ];
 
     newLine.classList.remove('hide');
     newLine.id = String(id);
@@ -270,7 +325,7 @@ function lineConstructor(line: any, id: any, imageDisplay: any) {
     find('.user-name').id = String(line.USERID);
 
     if (current_param.user_id == '-1') {
-        find('.user-name').addEventListener('click', function(this: HTMLElement) {
+        find('.user-name').addEventListener('click', function (this: HTMLElement) {
             current_param.user_id = this.id + '';
             current_param.pageNumber = 0;
             addUserFilter(this.innerHTML);
@@ -281,7 +336,7 @@ function lineConstructor(line: any, id: any, imageDisplay: any) {
     find('.user-ip').innerHTML = line.IP + '<i class="add-filter icon-plus-circled"></i>';
     find('.user-ip').dataset['ip'] = line.IP;
     if (current_param.ip == '') {
-        find('.user-ip').addEventListener('click', function(this: HTMLElement) {
+        find('.user-ip').addEventListener('click', function (this: HTMLElement) {
             current_param.ip = this.dataset['ip'];
             current_param.pageNumber = 0;
             addIpFilter(this.innerHTML);
@@ -291,7 +346,7 @@ function lineConstructor(line: any, id: any, imageDisplay: any) {
 
     find('.add-img-as-filter').dataset['imgId'] = String(line.IMAGEID);
     if (current_param.image_id == '') {
-        find('.add-img-as-filter').addEventListener('click', function(this: HTMLElement) {
+        find('.add-img-as-filter').addEventListener('click', function (this: HTMLElement) {
             current_param.image_id = this.dataset['imgId'];
             current_param.pageNumber = 0;
             addImageFilter(this.dataset['imgId']);
@@ -306,14 +361,23 @@ function lineConstructor(line: any, id: any, imageDisplay: any) {
         editImg.href = '#';
         editImg.classList.add('notClickable', 'tiptip');
         editImg.title = str_no_longer_exist_photo;
-        editImg.addEventListener('click', e => e.preventDefault());
+        editImg.addEventListener('click', (e) => e.preventDefault());
     }
 
-    const setDetailItem = (n: number, html: string, classes: string, title?: string, showItem = false) => {
+    const setDetailItem = (
+        n: number,
+        html: string,
+        classes: string,
+        title?: string,
+        showItem = false
+    ) => {
         const di = newLine.querySelector<HTMLElement>('.detail-item-' + n);
         if (!di) return;
         di.innerHTML = html;
-        classes.split(' ').filter(Boolean).forEach(c => di.classList.add(c));
+        classes
+            .split(' ')
+            .filter(Boolean)
+            .forEach((c) => di.classList.add(c));
         if (title !== undefined) di.title = title;
         if (showItem) di.classList.remove('hide');
     };
@@ -322,8 +386,10 @@ function lineConstructor(line: any, id: any, imageDisplay: any) {
         case 'tags': {
             const tl = line.TAGS.length;
             if (tl > 2) {
-                find('.type-name').innerHTML = line.TAGS[0] + ', ' + line.TAGS[1] + ', ' + line.TAGS[2] + ', ...';
-                find('.type-id').innerHTML = '#' + line.TAGIDS[0] + ', ' + line.TAGIDS[1] + ', ' + line.TAGIDS[2] + ', ...';
+                find('.type-name').innerHTML =
+                    line.TAGS[0] + ', ' + line.TAGS[1] + ', ' + line.TAGS[2] + ', ...';
+                find('.type-id').innerHTML =
+                    '#' + line.TAGIDS[0] + ', ' + line.TAGIDS[1] + ', ' + line.TAGIDS[2] + ', ...';
             } else if (tl > 1) {
                 find('.type-name').innerHTML = line.TAGS[0] + ', ' + line.TAGS[1] + ', ...';
                 find('.type-id').innerHTML = '#' + line.TAGIDS[0] + ', ' + line.TAGIDS[1] + ', ...';
@@ -335,60 +401,179 @@ function lineConstructor(line: any, id: any, imageDisplay: any) {
             setDetailItem(1, detail_str, 'icon-tags', detail_str, true);
             break;
         }
-        case 'most_visited': find('.type-name').innerHTML = str_most_visited; setDetailItem(1, str_most_visited, 'icon-fire'); find('.type-id').style.display = 'none'; break;
-        case 'best_rated': find('.type-name').innerHTML = str_best_rated; setDetailItem(1, str_best_rated, 'icon-star'); find('.type-id').style.display = 'none'; break;
-        case 'list': find('.type-name').innerHTML = str_list; setDetailItem(1, str_list, 'icon-dice-solid'); find('.type-id').style.display = 'none'; break;
+        case 'most_visited':
+            find('.type-name').innerHTML = str_most_visited;
+            setDetailItem(1, str_most_visited, 'icon-fire');
+            find('.type-id').style.display = 'none';
+            break;
+        case 'best_rated':
+            find('.type-name').innerHTML = str_best_rated;
+            setDetailItem(1, str_best_rated, 'icon-star');
+            find('.type-id').style.display = 'none';
+            break;
+        case 'list':
+            find('.type-name').innerHTML = str_list;
+            setDetailItem(1, str_list, 'icon-dice-solid');
+            find('.type-id').style.display = 'none';
+            break;
         case 'search': {
             const search_details = line.SEARCH_DETAILS;
-            const search_icons: Record<string, string> = { allwords: 'gallery-icon-search', tags: 'gallery-icon-tag', date_posted: 'gallery-icon-calendar-plus', cat: 'gallery-icon-album', author: 'gallery-icon-user-edit', added_by: 'gallery-icon-user', filetypes: 'gallery-icon-file-image' };
+            const search_icons: Record<string, string> = {
+                allwords: 'gallery-icon-search',
+                tags: 'gallery-icon-tag',
+                date_posted: 'gallery-icon-calendar-plus',
+                cat: 'gallery-icon-album',
+                author: 'gallery-icon-user-edit',
+                added_by: 'gallery-icon-user',
+                filetypes: 'gallery-icon-file-image',
+            };
             find('.type-name').innerHTML = line.SECTION;
             find('.type-id').innerHTML = '#' + line.SEARCH_ID;
             if (!line.SEARCH_ID) find('.type-id').style.display = 'none';
-            if (!search_details) { find('.detail-item-1').style.display = 'none'; break; }
+            if (!search_details) {
+                find('.detail-item-1').style.display = 'none';
+                break;
+            }
             const active: Record<string, any> = {};
-            Object.keys(search_details).forEach(k => { if (search_details[k] !== null) active[k] = search_details[k]; });
-            let count_item = 1, active_more: string[] = [];
+            Object.keys(search_details).forEach((k) => {
+                if (search_details[k] !== null) active[k] = search_details[k];
+            });
+            let count_item = 1,
+                active_more: string[] = [];
             const active_items = Object.keys(active);
             if (active_items.length > 0) {
-                if (active.allwords) { setDetailItem(count_item, active.allwords.join(' '), search_icons.allwords + ' tiptip', '<b>' + str_search_details['allwords'] + ' :</b> ' + active.allwords.join(' ')); count_item++; active_more.push('allwords'); }
+                if (active.allwords) {
+                    setDetailItem(
+                        count_item,
+                        active.allwords.join(' '),
+                        search_icons.allwords + ' tiptip',
+                        '<b>' +
+                            str_search_details['allwords'] +
+                            ' :</b> ' +
+                            active.allwords.join(' ')
+                    );
+                    count_item++;
+                    active_more.push('allwords');
+                }
                 if (active.cat) {
                     const cat = Object.values(active.cat).join(' + ');
-                    const tmp = document.createElement('div'); tmp.innerHTML = cat;
-                    setDetailItem(count_item, cat, search_icons.cat + ' tiptip', '<b>' + str_search_details['cat'] + ' :</b> ' + tmp.textContent!.trim(), true);
-                    count_item++; active_more.push('cat');
+                    const tmp = document.createElement('div');
+                    tmp.innerHTML = cat;
+                    setDetailItem(
+                        count_item,
+                        cat,
+                        search_icons.cat + ' tiptip',
+                        '<b>' + str_search_details['cat'] + ' :</b> ' + tmp.textContent!.trim(),
+                        true
+                    );
+                    count_item++;
+                    active_more.push('cat');
                 }
-                if (count_item <= 2 && active.tags) { setDetailItem(count_item, Object.values(active.tags).join(' + '), search_icons.tags + ' tiptip', '<b>' + str_search_details['tags'] + ' :</b> ' + Object.values(active.tags).join(' + '), true); count_item++; active_more.push('tags'); }
+                if (count_item <= 2 && active.tags) {
+                    setDetailItem(
+                        count_item,
+                        Object.values(active.tags).join(' + '),
+                        search_icons.tags + ' tiptip',
+                        '<b>' +
+                            str_search_details['tags'] +
+                            ' :</b> ' +
+                            Object.values(active.tags).join(' + '),
+                        true
+                    );
+                    count_item++;
+                    active_more.push('tags');
+                }
                 if (count_item <= 2) {
                     const badge_to_add = active_items.length == 1 ? 1 : count_item == 1 ? 2 : 1;
                     let badge_added = 0;
-                    active_items.some(key => {
-                        if (['allwords','cat','tags'].includes(key)) return false;
-                        const vals = Array.isArray(active[key]) ? active[key] : typeof active[key] === 'object' ? Object.values(active[key]) : [active[key]];
-                        setDetailItem(count_item, vals.join(' + '), (search_icons[key] ?? '') + ' tiptip', '<b>' + str_search_details[key] + ' :</b> ' + vals.join(' + '), true);
-                        count_item++; badge_added++; active_more.push(key);
+                    active_items.some((key) => {
+                        if (['allwords', 'cat', 'tags'].includes(key)) return false;
+                        const vals = Array.isArray(active[key])
+                            ? active[key]
+                            : typeof active[key] === 'object'
+                              ? Object.values(active[key])
+                              : [active[key]];
+                        setDetailItem(
+                            count_item,
+                            vals.join(' + '),
+                            (search_icons[key] ?? '') + ' tiptip',
+                            '<b>' + str_search_details[key] + ' :</b> ' + vals.join(' + '),
+                            true
+                        );
+                        count_item++;
+                        badge_added++;
+                        active_more.push(key);
                         return badge_added === badge_to_add;
                     });
                 }
-            } else { find('.detail-item-1').style.display = 'none'; }
+            } else {
+                find('.detail-item-1').style.display = 'none';
+            }
             if (active_items.length >= 3) {
                 let count_more = 0;
-                const details_str = Object.entries(active).filter(([k]) => !active_more.includes(k)).map(([k, v]) => {
-                    let vs = Array.isArray(v) ? v.join(' + ') : typeof v === 'object' ? Object.values(v as object).join(' + ') : String(v);
-                    if (k === 'cat') { const d = document.createElement('div'); d.innerHTML = vs; vs = d.textContent!.trim(); }
-                    count_more++;
-                    return `<b>${str_search_details[k]}</b> : ${vs}`;
-                }).join(' <br />');
-                setDetailItem(3, sprintf(str_and_more, count_more), 'icon-info-circled-1 tiptip', details_str, true);
+                const details_str = Object.entries(active)
+                    .filter(([k]) => !active_more.includes(k))
+                    .map(([k, v]) => {
+                        let vs = Array.isArray(v)
+                            ? v.join(' + ')
+                            : typeof v === 'object'
+                              ? Object.values(v as object).join(' + ')
+                              : String(v);
+                        if (k === 'cat') {
+                            const d = document.createElement('div');
+                            d.innerHTML = vs;
+                            vs = d.textContent!.trim();
+                        }
+                        count_more++;
+                        return `<b>${str_search_details[k]}</b> : ${vs}`;
+                    })
+                    .join(' <br />');
+                setDetailItem(
+                    3,
+                    sprintf(str_and_more, count_more),
+                    'icon-info-circled-1 tiptip',
+                    details_str,
+                    true
+                );
             }
             break;
         }
-        case 'favorites': find('.type-name').innerHTML = str_favorites; setDetailItem(1, str_favorites, 'icon-heart'); find('.type-id').style.display = 'none'; break;
-        case 'recent_cats': find('.type-name').innerHTML = str_recent_cats; setDetailItem(1, str_recent_cats, 'icon-clock'); find('.type-id').style.display = 'none'; break;
-        case 'recent_pics': find('.type-name').innerHTML = str_recent_pics; setDetailItem(1, str_recent_pics, 'icon-clock'); find('.type-id').style.display = 'none'; break;
-        case 'categories': find('.type-name').innerHTML = line.CATEGORY; setDetailItem(1, line.CATEGORY, 'icon-folder-open tiptip', line.FULL_CATEGORY_PATH); if (line.IMAGE == '') find('.type-id').style.display = 'none'; break;
-        case 'memories-1-year-ago': find('.type-name').innerHTML = str_memories; setDetailItem(1, str_memories, 'icon-clock'); find('.type-id').style.display = 'none'; break;
-        case 'contact': find('.type-icon i').classList.add('line-icon', 'icon-mail-1', 'icon-yellow'); find('.type-name').innerHTML = str_contact_form; setDetailItem(1, str_contact_form, ''); find('.type-id').style.display = 'none'; break;
-        default: find('.type-icon i').classList.add('line-icon', 'icon-help-puzzle', 'icon-grey'); find('.type-name').innerHTML = line.SECTION; find('.type-id').style.display = 'none'; break;
+        case 'favorites':
+            find('.type-name').innerHTML = str_favorites;
+            setDetailItem(1, str_favorites, 'icon-heart');
+            find('.type-id').style.display = 'none';
+            break;
+        case 'recent_cats':
+            find('.type-name').innerHTML = str_recent_cats;
+            setDetailItem(1, str_recent_cats, 'icon-clock');
+            find('.type-id').style.display = 'none';
+            break;
+        case 'recent_pics':
+            find('.type-name').innerHTML = str_recent_pics;
+            setDetailItem(1, str_recent_pics, 'icon-clock');
+            find('.type-id').style.display = 'none';
+            break;
+        case 'categories':
+            find('.type-name').innerHTML = line.CATEGORY;
+            setDetailItem(1, line.CATEGORY, 'icon-folder-open tiptip', line.FULL_CATEGORY_PATH);
+            if (line.IMAGE == '') find('.type-id').style.display = 'none';
+            break;
+        case 'memories-1-year-ago':
+            find('.type-name').innerHTML = str_memories;
+            setDetailItem(1, str_memories, 'icon-clock');
+            find('.type-id').style.display = 'none';
+            break;
+        case 'contact':
+            find('.type-icon i').classList.add('line-icon', 'icon-mail-1', 'icon-yellow');
+            find('.type-name').innerHTML = str_contact_form;
+            setDetailItem(1, str_contact_form, '');
+            find('.type-id').style.display = 'none';
+            break;
+        default:
+            find('.type-icon i').classList.add('line-icon', 'icon-help-puzzle', 'icon-grey');
+            find('.type-name').innerHTML = line.SECTION;
+            find('.type-id').style.display = 'none';
+            break;
     }
 
     if (line.IMAGE != '') {
@@ -398,7 +583,10 @@ function lineConstructor(line: any, id: any, imageDisplay: any) {
         (find('.type-icon') as HTMLAnchorElement).href = line.EDIT_IMAGE;
         find('.type-icon').classList.remove('no-img');
         const img = find('.type-icon img');
-        if (img) { img.title = str_edit_img; img.classList.add('tiptip'); }
+        if (img) {
+            img.title = str_edit_img;
+            img.classList.add('tiptip');
+        }
         find('.type-id').style.display = '';
     } else {
         find('.type-icon .icon-file-image')?.classList.remove('icon-file-image');
@@ -443,9 +631,13 @@ function addUserFilter(username: any) {
         current_param.user_id = '-1';
         current_param.pageNumber = 0;
         fillHistoryResult(current_param);
-        document.querySelectorAll<HTMLElement>('.summary-guests').forEach(el => { el.style.display = ''; });
+        document.querySelectorAll<HTMLElement>('.summary-guests').forEach((el) => {
+            el.style.display = '';
+        });
     });
-    document.querySelectorAll<HTMLElement>('.summary-guests').forEach(el => { el.style.display = 'none'; });
+    document.querySelectorAll<HTMLElement>('.summary-guests').forEach((el) => {
+        el.style.display = 'none';
+    });
 }
 
 function addGuestFilter(username: any) {
@@ -457,30 +649,48 @@ function addGuestFilter(username: any) {
 }
 
 function addIpFilter(ip: any) {
-    const f = makeFilter(ip, '', () => { current_param.ip = ''; current_param.pageNumber = 0; fillHistoryResult(current_param); });
+    const f = makeFilter(ip, '', () => {
+        current_param.ip = '';
+        current_param.pageNumber = 0;
+        fillHistoryResult(current_param);
+    });
     f.querySelector<HTMLElement>('.filter-icon')!.innerHTML = 'IP ';
     f.querySelector<HTMLElement>('.filter-icon')!.classList.add('bold');
 }
 
 function addImageFilter(img_id: any) {
-    makeFilter('Image #' + img_id, 'icon-picture', () => { current_param.image_id = ''; current_param.pageNumber = 0; fillHistoryResult(current_param); });
+    makeFilter('Image #' + img_id, 'icon-picture', () => {
+        current_param.image_id = '';
+        current_param.pageNumber = 0;
+        fillHistoryResult(current_param);
+    });
 }
 
 function updateArrows(actualPage: any, maxPage: any) {
-    document.querySelector('.pagination-arrow.left')?.classList.toggle('unavailable', actualPage == 0);
-    document.querySelector('.pagination-arrow.rigth')?.classList.toggle('unavailable', actualPage == maxPage - 1);
+    document
+        .querySelector('.pagination-arrow.left')
+        ?.classList.toggle('unavailable', actualPage == 0);
+    document
+        .querySelector('.pagination-arrow.rigth')
+        ?.classList.toggle('unavailable', actualPage == maxPage - 1);
 }
 
 function updatePagination(maxPage: any) {
     updateArrows(current_param.pageNumber, maxPage);
     const container = document.querySelector<HTMLElement>('.pagination-item-container')!;
     container.innerHTML = '';
-    container.insertAdjacentHTML('beforeend', `<a class='actual'>${current_param.pageNumber + 1}/${maxPage}</a>`);
+    container.insertAdjacentHTML(
+        'beforeend',
+        `<a class='actual'>${current_param.pageNumber + 1}/${maxPage}</a>`
+    );
 }
 
 function checkFilters() {
-    const hasFilters = (document.querySelector('.filter-container')?.childElementCount ?? 0) - 1 > 0;
-    document.querySelectorAll<HTMLElement>('.filter-tags label').forEach(el => { el.style.display = hasFilters ? '' : 'none'; });
+    const hasFilters =
+        (document.querySelector('.filter-container')?.childElementCount ?? 0) - 1 > 0;
+    document.querySelectorAll<HTMLElement>('.filter-tags label').forEach((el) => {
+        el.style.display = hasFilters ? '' : 'none';
+    });
 }
 
 // Hover-to-resolve IP geolocation popup (extracted from history.tpl footer_script).
@@ -496,7 +706,12 @@ Array.from(document.querySelectorAll<HTMLElement>('.IP')).forEach((ipEl) => {
 
             let content = data.fullName;
             if (data.latitude && data.region_name) {
-                content += '<br><a class="ipGeoOpen" data-lat="' + data.latitude + '" data-lon="' + data.longitude + '"';
+                content +=
+                    '<br><a class="ipGeoOpen" data-lat="' +
+                    data.latitude +
+                    '" data-lon="' +
+                    data.longitude +
+                    '"';
                 content += ' href="#">show on a Google Map</a>';
             }
 

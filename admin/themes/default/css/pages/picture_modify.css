@@ -1,6 +1,6 @@
-.selectize-input  .item,
+.selectize-input .item,
 .selectize-input .item.active {
-  background-image:none !important;
+  background-image: none !important;
   background-color: #ffa646 !important;
   border-color: transparent !important;
   color: black !important;
@@ -14,13 +14,14 @@
   border-top-right-radius: 20px !important;
   border-bottom-right-radius: 20px !important;
   color: black !important;
-  
-  border-left: 1px solid transparent !important;
 
+  border-left: 1px solid transparent !important;
 }
 .selectize-input .item .remove:hover,
 .selectize-input .item .remove:hover {
   background-color: #ff7700 !important;
 }
 
-.picture-modify-tomselect { width: calc(100% + 2px); }
+.picture-modify-tomselect {
+  width: calc(100% + 2px);
+}

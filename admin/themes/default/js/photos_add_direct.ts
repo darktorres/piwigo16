@@ -73,9 +73,14 @@ let uploadCategory: any = null;
 let uploadedPhotos: any[] = [];
 
 const qs = <T extends HTMLElement = HTMLElement>(sel: string) => document.querySelector<T>(sel);
-const qsa = <T extends HTMLElement = HTMLElement>(sel: string) => Array.from(document.querySelectorAll<T>(sel));
-const show = (el: Element | null | undefined) => { if (el) (el as HTMLElement).style.display = ''; };
-const hide = (el: Element | null | undefined) => { if (el) (el as HTMLElement).style.display = 'none'; };
+const qsa = <T extends HTMLElement = HTMLElement>(sel: string) =>
+    Array.from(document.querySelectorAll<T>(sel));
+const show = (el: Element | null | undefined) => {
+    if (el) (el as HTMLElement).style.display = '';
+};
+const hide = (el: Element | null | undefined) => {
+    if (el) (el as HTMLElement).style.display = 'none';
+};
 
 const btnFirstAlbum = qs('#btnFirstAlbum');
 const modalFirstAlbum = qs('#addFirstAlbum');
@@ -101,7 +106,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!nb_albums) {
         btnFirstAlbum?.addEventListener('click', () => open_new_album_modal());
         closeModalFirstAlbum?.addEventListener('click', () => close_new_album_modal());
-        btnAddFirstAlbum?.addEventListener('click', () => add_first_album((id: any) => ab?.select_album(id)));
+        btnAddFirstAlbum?.addEventListener('click', () =>
+            add_first_album((id: any) => ab?.select_album(id))
+        );
         inputFirstAlbum?.addEventListener('keyup', (e: KeyboardEvent) => {
             if (e.key === 'Enter') btnAddFirstAlbum?.click();
         });
@@ -121,7 +128,9 @@ document.addEventListener('DOMContentLoaded', () => {
         fetch('ws.php?format=json&method=pwg.users.preferences.set', {
             method: 'POST',
             body: new URLSearchParams({ param: 'promote-mobile-apps', value: 'false' }),
-        }).then(() => { hide(qs('.promote-apps')); });
+        }).then(() => {
+            hide(qs('.promote-apps'));
+        });
     });
 
     qs('#uploadWarningsSummary a.showInfo')?.addEventListener('click', (e) => {
@@ -151,7 +160,8 @@ function initUppy() {
     const uppyContainer = qs('#uploader');
     if (!uppyContainer) return;
 
-    const allowedTypes = (formatMode ? format_ext : file_ext)?.split(',').map((e: string) => '.' + e.trim()) ?? [];
+    const allowedTypes =
+        (formatMode ? format_ext : file_ext)?.split(',').map((e: string) => '.' + e.trim()) ?? [];
 
     const uppy = new Uppy({
         autoProceed: false,
@@ -160,21 +170,27 @@ function initUppy() {
             allowedFileTypes: allowedTypes.length ? allowedTypes : undefined,
         },
     })
-    .use(Dashboard, {
-        target: '#uploadForm',
-        inline: true,
-        proudlyDisplayPoweredByUppy: false,
-    } as any)
-    .use(XHRUpload, {
-        endpoint: 'ws.php?method=pwg.images.upload&format=json',
-        formData: true,
-        fieldName: 'file',
-        allowedMetaFields: ['pwg_token', 'category', 'name', 'format_of', 'update_mode'],
-    } as any);
+        .use(Dashboard, {
+            target: '#uploadForm',
+            inline: true,
+            proudlyDisplayPoweredByUppy: false,
+        } as any)
+        .use(XHRUpload, {
+            endpoint: 'ws.php?method=pwg.images.upload&format=json',
+            formData: true,
+            fieldName: 'file',
+            allowedMetaFields: ['pwg_token', 'category', 'name', 'format_of', 'update_mode'],
+        } as any);
 
     // Start/Cancel buttons
-    qs('#startUpload')?.addEventListener('click', (e) => { e.preventDefault(); uppy.upload(); });
-    qs('#cancelUpload')?.addEventListener('click', (e) => { e.preventDefault(); uppy.cancelAll(); });
+    qs('#startUpload')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        uppy.upload();
+    });
+    qs('#cancelUpload')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        uppy.cancelAll();
+    });
 
     uppy.on('files-added', async (files) => {
         fileNames = {};
@@ -188,11 +204,16 @@ function initUppy() {
             if (!haveFormatsOriginal) {
                 // Search for original images
                 const body = new URLSearchParams({ filename_list: JSON.stringify(fileNames) });
-                const result = await fetch('ws.php?format=json&method=pwg.images.formats.searchImage', { method: 'POST', body })
-                    .then(r => r.json()).catch(() => ({ result: {} }));
+                const result = await fetch(
+                    'ws.php?format=json&method=pwg.images.formats.searchImage',
+                    { method: 'POST', body }
+                )
+                    .then((r) => r.json())
+                    .catch(() => ({ result: {} }));
                 const images_search = result.result ?? {};
 
-                const notFound: string[] = [], multiple: string[] = [];
+                const notFound: string[] = [],
+                    multiple: string[] = [];
                 files.forEach((f) => {
                     const search = images_search[f.id];
                     if (search?.status === 'found') {
@@ -208,13 +229,32 @@ function initUppy() {
 
                 if (notFound.length || multiple.length) {
                     const fmt = (tab: string[]) => {
-                        tab = tab.map(f => f.slice(0, f.indexOf('.'))).filter((f, i, a) => i === a.indexOf(f));
-                        if (tab.length > 5) { tab[5] = str_and_X_others.replace('%d', String(tab.length - 5)); tab = tab.slice(0, 6); }
+                        tab = tab
+                            .map((f) => f.slice(0, f.indexOf('.')))
+                            .filter((f, i, a) => i === a.indexOf(f));
+                        if (tab.length > 5) {
+                            tab[5] = str_and_X_others.replace('%d', String(tab.length - 5));
+                            tab = tab.slice(0, 6);
+                        }
                         return tab;
                     };
-                    window.alert(str_format_warning + '\n' +
-                        (notFound.length ? str_format_warning_notFound.replace('%s', fmt(notFound).join(', ')) : '') +
-                        (multiple.length ? '\n' + str_format_warning_multiple.replace('%s', fmt(multiple).join(', ')) : ''));
+                    window.alert(
+                        str_format_warning +
+                            '\n' +
+                            (notFound.length
+                                ? str_format_warning_notFound.replace(
+                                      '%s',
+                                      fmt(notFound).join(', ')
+                                  )
+                                : '') +
+                            (multiple.length
+                                ? '\n' +
+                                  str_format_warning_multiple.replace(
+                                      '%s',
+                                      fmt(multiple).join(', ')
+                                  )
+                                : '')
+                    );
                 }
             } else {
                 const forms_exts = imageFormatsExtensions ? JSON.parse(imageFormatsExtensions) : [];
@@ -234,11 +274,13 @@ function initUppy() {
     });
 
     uppy.on('upload', () => {
-        hide(qs('#startUpload')); hide(qs('.selectFilesButtonBlock'));
-        show(qs('#uploadingActions')); hide(qs('.format-mode-group-manager'));
+        hide(qs('#startUpload'));
+        hide(qs('.selectFilesButtonBlock'));
+        show(qs('#uploadingActions'));
+        hide(qs('.format-mode-group-manager'));
         hide(selectedAlbumEdit);
         window.addEventListener('beforeunload', onBeforeUnload);
-        (qs<HTMLSelectElement>('select[name=level]'))?.setAttribute('disabled', 'disabled');
+        qs<HTMLSelectElement>('select[name=level]')?.setAttribute('disabled', 'disabled');
     });
 
     uppy.on('upload-success', (file, response) => {
@@ -247,9 +289,23 @@ function initUppy() {
         hide(document.getElementById(file.id));
         show(qs('#uploadedPhotos')?.closest('fieldset'));
 
-        html = '<a href="admin.php?page=photo-' + data.result.image_id + '" style="position:relative" target="_blank">';
-        html += '<img src="' + data.result.square_src + '" class="thumbnail" title="' + data.result.name + '">';
-        if (formatMode) html += '<div class="format-ext-name" title="' + file.name + '"><span>' + file.name.slice(file.name.indexOf('.')) + '</span></div>';
+        html =
+            '<a href="admin.php?page=photo-' +
+            data.result.image_id +
+            '" style="position:relative" target="_blank">';
+        html +=
+            '<img src="' +
+            data.result.square_src +
+            '" class="thumbnail" title="' +
+            data.result.name +
+            '">';
+        if (formatMode)
+            html +=
+                '<div class="format-ext-name" title="' +
+                file.name +
+                '"><span>' +
+                file.name.slice(file.name.indexOf('.')) +
+                '</span></div>';
         html += '</a> ';
         qs('#uploadedPhotos')?.insertAdjacentHTML('afterbegin', html);
 
@@ -261,7 +317,11 @@ function initUppy() {
 
     uppy.on('upload-error', (_file, _error, response) => {
         let msg = 'Upload error';
-        try { msg = (response as any)?.body?.message ?? msg; } catch { /* noop */ }
+        try {
+            msg = (response as any)?.body?.message ?? msg;
+        } catch {
+            /* noop */
+        }
         qs('.errors ul')?.insertAdjacentHTML('beforeend', '<li>' + msg + '</li>');
         show(qs('.errors'));
     });
@@ -286,18 +346,29 @@ function initUppy() {
             ? sprintf(formatsAdded_label, addedPhotos.length, [...new Set(addedPhotos)].length)
             : sprintf(photosAdded_label, addedPhotos.length);
         const infoTextUpdate = formatMode
-            ? sprintf(formatsUpdated_label, updatedPhotos.length, [...new Set(updatedPhotos)].length)
+            ? sprintf(
+                  formatsUpdated_label,
+                  updatedPhotos.length,
+                  [...new Set(updatedPhotos)].length
+              )
             : sprintf(photosUpdated_label, updatedPhotos.length);
 
-        const infoText = addedPhotos.length && updatedPhotos.length
-            ? infoTextAdd + ', ' + infoTextUpdate
-            : (addedPhotos.length ? infoTextAdd : infoTextUpdate);
+        const infoText =
+            addedPhotos.length && updatedPhotos.length
+                ? infoTextAdd + ', ' + infoTextUpdate
+                : addedPhotos.length
+                  ? infoTextAdd
+                  : infoTextUpdate;
         qs('.infos')?.insertAdjacentHTML('beforeend', '<ul><li>' + infoText + '</li></ul>');
 
         if (!formatMode) {
             html = sprintf(
                 albumSummary_label,
-                '<a href="admin.php?page=album-' + uploadCategory.id + '">' + uploadCategory.label + '</a>',
+                '<a href="admin.php?page=album-' +
+                    uploadCategory.id +
+                    '">' +
+                    uploadCategory.label +
+                    '</a>',
                 parseInt(uploadCategory.nb_photos)
             );
             qs('.infos ul')?.insertAdjacentHTML('beforeend', '<li>' + html + '</li>');
@@ -306,7 +377,10 @@ function initUppy() {
         show(qs('.infos'));
         const batchSet = [...new Set<number>(uploadedPhotos)];
         const batchLink = qs<HTMLAnchorElement>('.batchLink');
-        if (batchLink) { batchLink.href = 'admin.php?page=photos_add&section=direct&batch=' + batchSet.join(','); batchLink.innerHTML = sprintf(batch_Label, uploadedPhotos.length); }
+        if (batchLink) {
+            batchLink.href = 'admin.php?page=photos_add&section=direct&batch=' + batchSet.join(',');
+            batchLink.innerHTML = sprintf(batch_Label, uploadedPhotos.length);
+        }
         show(qs('.afterUploadActions'));
         hide(qs('#uploadingActions'));
         show(selectedAlbumEdit);
@@ -317,7 +391,10 @@ function initUppy() {
     uppy.on('upload', (data: any) => {
         (data.fileIDs ?? []).forEach((fileId: string) => {
             const file = uppy.getFile(fileId);
-            const opts: Record<string, any> = { pwg_token, update_mode: String((qs<HTMLInputElement>('#toggleUpdateMode'))?.checked ?? false) };
+            const opts: Record<string, any> = {
+                pwg_token,
+                update_mode: String(qs<HTMLInputElement>('#toggleUpdateMode')?.checked ?? false),
+            };
             if (formatMode) {
                 opts.format_of = file.meta.format_of ?? '';
             } else {
@@ -339,10 +416,14 @@ function add_related_category({ album, newSelectedAlbum }: { album: any; newSele
     const div = document.createElement('div');
     div.innerHTML = album.full_name_with_admin_links ?? '';
     let text = '';
-    Array.from(div.children).forEach(s => { if ((s as HTMLElement).innerHTML) text += (s as HTMLElement).innerHTML; });
+    Array.from(div.children).forEach((s) => {
+        if ((s as HTMLElement).innerHTML) text += (s as HTMLElement).innerHTML;
+    });
     if (!text) text = album.full_name_with_admin_links ?? album.name ?? '';
     newSelectedAlbum();
-    if (selectedAlbumName) { selectedAlbumName.innerHTML = text; }
+    if (selectedAlbumName) {
+        selectedAlbumName.innerHTML = text;
+    }
     hide(selectedAlbumName);
     show(selectedAlbumName);
     hide(addPhotosAS);
@@ -363,7 +444,9 @@ function open_new_album_modal() {
     inputFirstAlbum?.focus();
 }
 
-function close_new_album_modal() { hide(modalFirstAlbum); }
+function close_new_album_modal() {
+    hide(modalFirstAlbum);
+}
 
 function hide_first_album(cat_name: string) {
     hide(modalFirstAlbum);
@@ -380,10 +463,15 @@ function add_first_album(add_cat: any) {
     fetch('ws.php?format=json&method=pwg.categories.add', {
         method: 'POST',
         body: new URLSearchParams({ name, pwg_token }),
-    }).then(r => r.json()).then(res => {
-        if (res.stat === 'ok') { add_cat(res.result.id); hide_first_album(name); }
-        else console.error('An error has occurred');
-    }).catch(() => console.error('An error has occurred'));
+    })
+        .then((r) => r.json())
+        .then((res) => {
+            if (res.stat === 'ok') {
+                add_cat(res.result.id);
+                hide_first_album(name);
+            } else console.error('An error has occurred');
+        })
+        .catch(() => console.error('An error has occurred'));
 }
 
 export {};

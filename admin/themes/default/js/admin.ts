@@ -21,7 +21,8 @@ function lightAccordion(el: HTMLElement | null, options: Partial<AccordionOption
     });
 
     el.addEventListener('click', (e) => {
-        let header = (e.target as HTMLElement | null)?.closest<HTMLElement>(settings.header) ?? null;
+        let header =
+            (e.target as HTMLElement | null)?.closest<HTMLElement>(settings.header) ?? null;
         if (!header) return;
         let content = header.nextElementSibling as HTMLElement | null;
         while (content && !content.matches(settings.content)) {
@@ -41,7 +42,9 @@ const eiw = ['infos', 'erros', 'warnings', 'messages'];
 for (const boxType of eiw) {
     const lis = document.querySelectorAll<HTMLElement>(`.${boxType} ul li`);
     if (lis.length > 1) {
-        lis.forEach((li) => { li.style.listStyleType = 'square'; });
+        lis.forEach((li) => {
+            li.style.listStyleType = 'square';
+        });
         document.querySelectorAll<HTMLElement>(`.${boxType} .eiw-icon`).forEach((icon) => {
             icon.style.marginRight = '20px';
         });

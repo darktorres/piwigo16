@@ -47,23 +47,25 @@ let allRelatedCategoryIds: Record<string, any> = {};
 const tagsCache = new TagsCache({
     serverKey: cacheData.CACHE_KEYS.tags,
     serverId: cacheData.CACHE_KEYS._hash,
-    rootUrl: cacheData.ROOT_URL
+    rootUrl: cacheData.ROOT_URL,
 });
 
 const categoriesCache = new CategoriesCache({
     serverKey: cacheData.CACHE_KEYS.categories,
     serverId: cacheData.CACHE_KEYS._hash,
-    rootUrl: cacheData.ROOT_URL
+    rootUrl: cacheData.ROOT_URL,
 });
 
-tagsCache?.selectize(document.querySelector('[data-selectize=tags]'), { lang: {
-    'Add': cacheData.str_create
-}});
+tagsCache?.selectize(document.querySelector('[data-selectize=tags]'), {
+    lang: {
+        Add: cacheData.str_create,
+    },
+});
 
 categoriesCache?.selectize(document.querySelector('[data-selectize=categories]'), {
-    filter: function(categories: any[], options: any) {
+    filter: function (categories: any[], options: any) {
         if (this.name == 'dissociate') {
-            const filtered = categories.filter(function(cat: any) {
+            const filtered = categories.filter(function (cat: any) {
                 return !!cacheData.associated_categories[cat.id];
             });
 
@@ -72,11 +74,10 @@ categoriesCache?.selectize(document.querySelector('[data-selectize=categories]')
             }
 
             return filtered;
-        }
-        else {
+        } else {
             return categories;
         }
-    }
+    },
 });
 
 let b_current_picture_id: string | undefined = undefined;
@@ -85,37 +86,44 @@ function pid(pictureId: any, sel: string): HTMLElement {
     return document.querySelector<HTMLElement>('#picture-' + pictureId + ' ' + sel)!;
 }
 
-function pidInput(pictureId: any, sel: string): HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement {
-    return document.querySelector<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>('#picture-' + pictureId + ' ' + sel)!;
+function pidInput(
+    pictureId: any,
+    sel: string
+): HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement {
+    return document.querySelector<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(
+        '#picture-' + pictureId + ' ' + sel
+    )!;
 }
 
 function fieldsetId(el: EventTarget | null): string {
-    return ((el as HTMLElement).closest('fieldset') as HTMLElement | null)?.dataset['imageId'] ?? '';
+    return (
+        ((el as HTMLElement).closest('fieldset') as HTMLElement | null)?.dataset['imageId'] ?? ''
+    );
 }
 
 function pwgPost(method: string, data: Record<string, any>): Promise<any> {
     const body = new URLSearchParams();
     body.append('method', method);
     for (const [k, v] of Object.entries(data)) {
-        if (Array.isArray(v)) v.forEach(item => body.append(k + '[]', String(item ?? '')));
+        if (Array.isArray(v)) v.forEach((item) => body.append(k + '[]', String(item ?? '')));
         else body.append(k, String(v ?? ''));
     }
-    return fetch('ws.php?format=json', { method: 'POST', body }).then(r => r.json());
+    return fetch('ws.php?format=json', { method: 'POST', body }).then((r) => r.json());
 }
 
 function pwgGet(method: string, data: Record<string, any>): Promise<any> {
     const params = new URLSearchParams({ method });
     for (const [k, v] of Object.entries(data)) params.append(k, String(v ?? ''));
-    return fetch('ws.php?format=json?' + params).then(r => r.json());
+    return fetch('ws.php?format=json?' + params).then((r) => r.json());
 }
 
 function pwgToken(): string {
-    return (document.querySelector<HTMLInputElement>('input[name=pwg_token]'))?.value ?? '';
+    return document.querySelector<HTMLInputElement>('input[name=pwg_token]')?.value ?? '';
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     // Build related-category map from data-attributes on each element fieldset.
-    document.querySelectorAll<HTMLElement>('fieldset.elementEdit').forEach(fs => {
+    document.querySelectorAll<HTMLElement>('fieldset.elementEdit').forEach((fs) => {
         const id = fs.dataset['imageId']!;
         try {
             allRelatedCategoryIds[id] = JSON.parse(fs.dataset['relatedCategoryIds'] ?? '[]');
@@ -128,88 +136,110 @@ document.addEventListener('DOMContentLoaded', () => {
     (window as any).GLightbox({ selector: 'a.preview-box' });
 
     // Datepicker with timepicker for date_creation fields.
-    document.querySelectorAll<HTMLElement>('[data-datepicker]').forEach(el => {
+    document.querySelectorAll<HTMLElement>('[data-datepicker]').forEach((el) => {
         (window as any).pwgDatepicker(el, { showTimepicker: true, cancelButton: str_cancel });
     });
 
     let user_interacted = false;
 
-    document.querySelectorAll<HTMLElement>('input, textarea, select').forEach(el => {
-        el.addEventListener('focus', () => { user_interacted = true; });
+    document.querySelectorAll<HTMLElement>('input, textarea, select').forEach((el) => {
+        el.addEventListener('focus', () => {
+            user_interacted = true;
+        });
     });
 
-    document.querySelectorAll<HTMLElement>('input, textarea').forEach(el => {
+    document.querySelectorAll<HTMLElement>('input, textarea').forEach((el) => {
         el.addEventListener('input', () => {
             const pictureId = el.closest<HTMLElement>('fieldset')?.dataset['imageId'];
             if (user_interacted) showUnsavedLocalBadge(pictureId);
         });
     });
 
-    document.querySelectorAll<HTMLElement>('input[data-datepicker]').forEach(el => {
+    document.querySelectorAll<HTMLElement>('input[data-datepicker]').forEach((el) => {
         el.addEventListener('change', () => {
             const pictureId = el.closest<HTMLElement>('fieldset')?.dataset['imageId'];
             if (user_interacted) showUnsavedLocalBadge(pictureId);
         });
     });
 
-    document.querySelectorAll<HTMLElement>('select').forEach(el => {
+    document.querySelectorAll<HTMLElement>('select').forEach((el) => {
         el.addEventListener('change', () => {
             const pictureId = el.closest<HTMLElement>('fieldset')?.dataset['imageId'];
             if (user_interacted) showUnsavedLocalBadge(pictureId);
         });
     });
 
-    document.querySelectorAll<HTMLElement>('.related-categories-container .remove-item, .datepickerDelete').forEach(el => {
-        el.addEventListener('click', () => {
-            user_interacted = true;
-            const pictureId = el.closest<HTMLElement>('fieldset')?.dataset['imageId'];
-            showUnsavedLocalBadge(pictureId);
+    document
+        .querySelectorAll<HTMLElement>(
+            '.related-categories-container .remove-item, .datepickerDelete'
+        )
+        .forEach((el) => {
+            el.addEventListener('click', () => {
+                user_interacted = true;
+                const pictureId = el.closest<HTMLElement>('fieldset')?.dataset['imageId'];
+                showUnsavedLocalBadge(pictureId);
+            });
         });
-    });
 
-    document.querySelectorAll<HTMLElement>('.action-sync-metadata').forEach(el => {
+    document.querySelectorAll<HTMLElement>('.action-sync-metadata').forEach((el) => {
         el.addEventListener('click', () => {
             const pictureId = el.closest<HTMLElement>('fieldset')?.dataset['imageId'];
             if (!window.confirm(str_meta_warning)) return;
             disableLocalButton(pictureId);
             pwgPost('pwg.images.syncMetadata', { pwg_token: pwgToken(), image_id: pictureId })
-                .then(data => {
+                .then((data) => {
                     if (data.stat === 'ok') updateBlock(pictureId);
-                    else { showErrorLocalBadge(pictureId); enableLocalButton(pictureId); }
+                    else {
+                        showErrorLocalBadge(pictureId);
+                        enableLocalButton(pictureId);
+                    }
                 })
-                .catch(() => { console.error('Error occurred'); enableLocalButton(pictureId); });
+                .catch(() => {
+                    console.error('Error occurred');
+                    enableLocalButton(pictureId);
+                });
         });
     });
 
-    document.querySelectorAll<HTMLElement>('.action-delete-picture').forEach(el => {
+    document.querySelectorAll<HTMLElement>('.action-delete-picture').forEach((el) => {
         el.addEventListener('click', () => {
             const fieldset = el.closest<HTMLElement>('fieldset')!;
             const pictureId = fieldset.dataset['imageId'];
             if (!window.confirm(str_are_you_sure)) return;
             pwgPost('pwg.images.delete', { pwg_token: pwgToken(), image_id: pictureId })
-                .then(data => {
+                .then((data) => {
                     if (data.stat === 'ok') {
                         fieldset.remove();
-                        document.querySelectorAll<HTMLElement>('.pagination-container').forEach(p => {
-                            p.style.pointerEvents = 'none';
-                            p.style.opacity = '0.5';
+                        document
+                            .querySelectorAll<HTMLElement>('.pagination-container')
+                            .forEach((p) => {
+                                p.style.pointerEvents = 'none';
+                                p.style.opacity = '0.5';
+                            });
+                        document.querySelectorAll<HTMLElement>('.button-reload').forEach((b) => {
+                            b.style.display = 'block';
                         });
-                        document.querySelectorAll<HTMLElement>('.button-reload').forEach(b => { b.style.display = 'block'; });
-                        document.querySelectorAll<HTMLElement>(`div[data-image_id="${pictureId}"]`).forEach(d => { d.style.display = 'flex'; });
+                        document
+                            .querySelectorAll<HTMLElement>(`div[data-image_id="${pictureId}"]`)
+                            .forEach((d) => {
+                                d.style.display = 'flex';
+                            });
                     } else showErrorLocalBadge(pictureId);
                 })
                 .catch(() => console.error('Error occurred'));
         });
     });
 
-    document.querySelectorAll<HTMLElement>('.action-save-picture').forEach(el => {
+    document.querySelectorAll<HTMLElement>('.action-save-picture').forEach((el) => {
         el.addEventListener('click', async () => {
             const pictureId = el.closest<HTMLElement>('fieldset')?.dataset['imageId'];
             await saveChanges(pictureId);
         });
     });
 
-    document.querySelector('.action-save-global')?.addEventListener('click', () => saveAllChanges());
+    document
+        .querySelector('.action-save-global')
+        ?.addEventListener('click', () => saveAllChanges());
 
     const ab = new AlbumSelector({
         selectedCategoriesIds: [],
@@ -218,7 +248,7 @@ document.addEventListener('DOMContentLoaded', () => {
         modalTitle: str_title_ab,
     });
 
-    document.querySelectorAll<HTMLElement>('.linked-albums.add-item').forEach(el => {
+    document.querySelectorAll<HTMLElement>('.linked-albums.add-item').forEach((el) => {
         el.addEventListener('click', () => {
             b_current_picture_id = el.closest<HTMLElement>('fieldset')?.dataset['imageId'];
             ab.hardUpdate(allRelatedCategoryIds[b_current_picture_id!]);
@@ -226,12 +256,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    document.querySelectorAll<HTMLElement>('.related-categories-container').forEach(container => {
+    document.querySelectorAll<HTMLElement>('.related-categories-container').forEach((container) => {
         container.addEventListener('click', (e: Event) => {
             const target = e.target as HTMLElement;
             if (target.classList.contains('remove-item')) {
                 const cat_id = target.id;
-                const picture_id = target.closest<HTMLElement>('fieldset')?.dataset['imageId'] ?? '';
+                const picture_id =
+                    target.closest<HTMLElement>('fieldset')?.dataset['imageId'] ?? '';
                 remove_selected_category(cat_id, picture_id);
                 check_related_categories(picture_id, allRelatedCategoryIds[picture_id]);
             }
@@ -250,14 +281,25 @@ function remove_selected_category(cat_id: any, picture_id: any) {
     document.getElementById(cat_id)?.parentElement?.remove();
 }
 
-function add_related_category({ album, getSelectedAlbum, addSelectedAlbum }: { album: any; getSelectedAlbum: any; addSelectedAlbum: any }) {
+function add_related_category({
+    album,
+    getSelectedAlbum,
+    addSelectedAlbum,
+}: {
+    album: any;
+    getSelectedAlbum: any;
+    addSelectedAlbum: any;
+}) {
     if (!getSelectedAlbum().includes(album.id)) {
-        document.querySelector(`#${b_current_picture_id} .related-categories-container`)?.insertAdjacentHTML('beforeend',
-            `<div class="breadcrumb-item album-listed">
+        document
+            .querySelector(`#${b_current_picture_id} .related-categories-container`)
+            ?.insertAdjacentHTML(
+                'beforeend',
+                `<div class="breadcrumb-item album-listed">
                 <span class="link-path">${album.full_name_with_admin_links}</span>
                 <span id="${album.id}" class="icon-cancel-circled remove-item"></span>
             </div>`
-        );
+            );
         showUnsavedLocalBadge(b_current_picture_id);
         addSelectedAlbum();
         allRelatedCategoryIds[b_current_picture_id!].cat_ids = getSelectedAlbum();
@@ -269,21 +311,34 @@ function check_related_categories(pictureId: any, selectedAlbum: any) {
     const badge = document.querySelector<HTMLElement>(`#picture-${pictureId} .linked-albums-badge`);
     if (badge) badge.innerHTML = String(selectedAlbum.length);
     if (selectedAlbum.length == 0) {
-        document.getElementById(pictureId)?.querySelector('.linked-albums-badge')?.classList.add('badge-red');
+        document
+            .getElementById(pictureId)
+            ?.querySelector('.linked-albums-badge')
+            ?.classList.add('badge-red');
         document.getElementById(pictureId)?.querySelector('.add-item')?.classList.add('highlight');
         const orphan = document.querySelector<HTMLElement>(`#${pictureId} .orphan-photo`);
-        if (orphan) { orphan.innerHTML = str_orphan; orphan.style.display = ''; }
+        if (orphan) {
+            orphan.innerHTML = str_orphan;
+            orphan.style.display = '';
+        }
     } else {
-        document.getElementById(pictureId)?.querySelector('.linked-albums-badge.badge-red')?.classList.remove('badge-red');
-        document.getElementById(pictureId)?.querySelector('.add-item.highlight')?.classList.remove('highlight');
+        document
+            .getElementById(pictureId)
+            ?.querySelector('.linked-albums-badge.badge-red')
+            ?.classList.remove('badge-red');
+        document
+            .getElementById(pictureId)
+            ?.querySelector('.add-item.highlight')
+            ?.classList.remove('highlight');
         const orphan = document.querySelector<HTMLElement>(`#${pictureId} .orphan-photo`);
         if (orphan) orphan.style.display = 'none';
     }
 }
 
 function updateUnsavedGlobalBadge() {
-    const count = Array.from(document.querySelectorAll<HTMLElement>('.local-unsaved-badge'))
-        .filter(el => el.style.display === 'block').length;
+    const count = Array.from(document.querySelectorAll<HTMLElement>('.local-unsaved-badge')).filter(
+        (el) => el.style.display === 'block'
+    ).length;
     const badge = document.querySelector<HTMLElement>('.global-unsaved-badge');
     const counter = document.getElementById('unsaved-count');
     if (count > 0) {
@@ -326,14 +381,20 @@ function fadeBadge(badge: HTMLElement | null) {
     setTimeout(() => {
         badge.style.transition = 'opacity 1s';
         badge.style.opacity = '0';
-        setTimeout(() => { badge.style.display = 'none'; badge.style.transition = ''; badge.style.opacity = ''; }, 1000);
+        setTimeout(() => {
+            badge.style.display = 'none';
+            badge.style.transition = '';
+            badge.style.opacity = '';
+        }, 1000);
     }, 3000);
 }
 
 function updateSuccessGlobalBadge() {
-    const count = Array.from(document.querySelectorAll<HTMLElement>('.local-success-badge'))
-        .filter(el => el.style.display === 'block').length;
-    if (count > 0) showSuccesGlobalBadge(); else hideSuccesGlobalBadge();
+    const count = Array.from(document.querySelectorAll<HTMLElement>('.local-success-badge')).filter(
+        (el) => el.style.display === 'block'
+    ).length;
+    if (count > 0) showSuccesGlobalBadge();
+    else hideSuccesGlobalBadge();
 }
 
 function showSuccessLocalBadge(pictureId: any) {
@@ -361,37 +422,51 @@ function showMetasyncSuccesBadge(pictureId: any) {
 function disableLocalButton(pictureId: any) {
     pid(pictureId, '.action-save-picture')?.classList.add('disabled');
     const i = pid(pictureId, '.action-save-picture i');
-    if (i) { i.classList.remove('icon-floppy'); i.classList.add('icon-spin6', 'animate-spin'); }
+    if (i) {
+        i.classList.remove('icon-floppy');
+        i.classList.add('icon-spin6', 'animate-spin');
+    }
     disableGlobalButton();
 }
 
 function enableLocalButton(pictureId: any) {
     pid(pictureId, '.action-save-picture')?.classList.remove('disabled');
     const i = pid(pictureId, '.action-save-picture i');
-    if (i) { i.classList.remove('icon-spin6', 'animate-spin'); i.classList.add('icon-floppy'); }
+    if (i) {
+        i.classList.remove('icon-spin6', 'animate-spin');
+        i.classList.add('icon-floppy');
+    }
 }
 
 function disableGlobalButton() {
-    document.querySelectorAll('.action-save-global').forEach(el => el.classList.add('disabled'));
-    document.querySelectorAll<HTMLElement>('.action-save-global i').forEach(i => {
-        i.classList.remove('icon-floppy'); i.classList.add('icon-spin6', 'animate-spin');
+    document.querySelectorAll('.action-save-global').forEach((el) => el.classList.add('disabled'));
+    document.querySelectorAll<HTMLElement>('.action-save-global i').forEach((i) => {
+        i.classList.remove('icon-floppy');
+        i.classList.add('icon-spin6', 'animate-spin');
     });
 }
 
 function enableGlobalButton() {
-    document.querySelectorAll('.action-save-global').forEach(el => el.classList.remove('disabled'));
-    document.querySelectorAll<HTMLElement>('.action-save-global i').forEach(i => {
-        i.classList.remove('icon-spin6', 'animate-spin'); i.classList.add('icon-floppy');
+    document
+        .querySelectorAll('.action-save-global')
+        .forEach((el) => el.classList.remove('disabled'));
+    document.querySelectorAll<HTMLElement>('.action-save-global i').forEach((i) => {
+        i.classList.remove('icon-spin6', 'animate-spin');
+        i.classList.add('icon-floppy');
     });
 }
 
 async function saveChanges(pictureId: any) {
-    const unsavedBadge = document.querySelector<HTMLElement>(`#picture-${pictureId} .local-unsaved-badge`);
+    const unsavedBadge = document.querySelector<HTMLElement>(
+        `#picture-${pictureId} .local-unsaved-badge`
+    );
     if (unsavedBadge?.style.display !== 'block') return;
 
     disableLocalButton(pictureId);
     const tags: string[] = [];
-    document.querySelectorAll<HTMLOptionElement>(`#picture-${pictureId} #tags option`).forEach(opt => tags.push(opt.value));
+    document
+        .querySelectorAll<HTMLOptionElement>(`#picture-${pictureId} #tags option`)
+        .forEach((opt) => tags.push(opt.value));
 
     const ajax_data: Record<string, any> = {
         image_id: pictureId,
@@ -401,7 +476,9 @@ async function saveChanges(pictureId: any) {
         comment: (pidInput(pictureId, '#description') as HTMLTextAreaElement)?.value,
         categories: (allRelatedCategoryIds[pictureId] ?? []).join(';'),
         tag_list: tags,
-        level: (document.querySelector<HTMLOptionElement>(`#picture-${pictureId} #level option:checked`))?.value,
+        level: document.querySelector<HTMLOptionElement>(
+            `#picture-${pictureId} #level option:checked`
+        )?.value,
         single_value_mode: 'replace',
         multiple_value_mode: 'replace',
         pwg_token: pwgToken(),
@@ -409,7 +486,9 @@ async function saveChanges(pictureId: any) {
 
     for (const key_index in pluginValues) {
         const sel = pluginValues[key_index].selector;
-        const el = document.querySelector<HTMLInputElement | HTMLSelectElement>(`#picture-${pictureId} ${sel}`);
+        const el = document.querySelector<HTMLInputElement | HTMLSelectElement>(
+            `#picture-${pictureId} ${sel}`
+        );
         ajax_data[pluginValues[key_index].api_key] = el?.value;
     }
 
@@ -463,19 +542,30 @@ function pluginSaveLoop(activePlugins: any, pictureId: any) {
 }
 
 function updateBlock(pictureId: any) {
-    const params = new URLSearchParams({ method: 'pwg.images.getInfo', image_id: String(pictureId) });
+    const params = new URLSearchParams({
+        method: 'pwg.images.getInfo',
+        image_id: String(pictureId),
+    });
     fetch('ws.php?format=json&' + params)
-        .then(r => r.json())
+        .then((r) => r.json())
         .then((response: any) => {
             if (response.stat === 'ok') {
-                (pidInput(pictureId, '#name') as HTMLInputElement).value = response.result.name ?? '';
-                (pidInput(pictureId, '#author') as HTMLInputElement).value = response.result.author ?? '';
-                (pidInput(pictureId, '#date_creation') as HTMLInputElement).value = response.result.date_creation ?? '';
-                (pidInput(pictureId, '#description') as HTMLTextAreaElement).value = response.result.comment ?? '';
-                (pidInput(pictureId, '#level') as HTMLSelectElement).value = response.result.level ?? '';
-                const fn = pid(pictureId, '#filename'); if (fn) fn.textContent = response.result.file;
-                const fs = pid(pictureId, '#filesize'); if (fs) fs.textContent = response.result.filesize;
-                const dm = pid(pictureId, '#dimensions'); if (dm) dm.textContent = response.result.width + 'x' + response.result.height;
+                (pidInput(pictureId, '#name') as HTMLInputElement).value =
+                    response.result.name ?? '';
+                (pidInput(pictureId, '#author') as HTMLInputElement).value =
+                    response.result.author ?? '';
+                (pidInput(pictureId, '#date_creation') as HTMLInputElement).value =
+                    response.result.date_creation ?? '';
+                (pidInput(pictureId, '#description') as HTMLTextAreaElement).value =
+                    response.result.comment ?? '';
+                (pidInput(pictureId, '#level') as HTMLSelectElement).value =
+                    response.result.level ?? '';
+                const fn = pid(pictureId, '#filename');
+                if (fn) fn.textContent = response.result.file;
+                const fs = pid(pictureId, '#filesize');
+                if (fs) fs.textContent = response.result.filesize;
+                const dm = pid(pictureId, '#dimensions');
+                if (dm) dm.textContent = response.result.width + 'x' + response.result.height;
                 showMetasyncSuccesBadge(pictureId);
                 enableLocalButton(pictureId);
                 enableGlobalButton();
@@ -486,7 +576,11 @@ function updateBlock(pictureId: any) {
                 enableGlobalButton();
             }
         })
-        .catch((e) => { console.error('Error:', e); showErrorLocalBadge(pictureId); enableLocalButton(pictureId); });
+        .catch((e) => {
+            console.error('Error:', e);
+            showErrorLocalBadge(pictureId);
+            enableLocalButton(pictureId);
+        });
 }
 
 export {};

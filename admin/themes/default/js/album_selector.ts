@@ -43,7 +43,8 @@ const sel = {
     linkedAddAlbumErrors: () => document.getElementById('linkedAddAlbumErrors') as HTMLElement,
     addAlbumErrors: () => document.querySelectorAll<HTMLElement>('.AddAlbumErrors'),
     putToRootBtn: () => document.getElementById('put-to-root') as HTMLElement,
-    linkedAlbumPopInContainer: () => document.querySelector<HTMLElement>('.linkedAlbumPopInContainer')!,
+    linkedAlbumPopInContainer: () =>
+        document.querySelector<HTMLElement>('.linkedAlbumPopInContainer')!,
 };
 
 window.addEventListener('keypress', (e) => {
@@ -99,26 +100,33 @@ class AlbumSelector {
         this.#in_admin_mode = adminMode;
         this.#methodPwg = adminMode ? 'pwg.categories.getAdminList' : 'pwg.categories.getList';
         this.#limitParam = limitParam;
-        this.#selected_categories = adminMode ? [...selectedCategoriesIds] : selectedCategoriesIds.map(String);
+        this.#selected_categories = adminMode
+            ? [...selectedCategoriesIds]
+            : selectedCategoriesIds.map(String);
         this.#isAlbumCreationChecked = false;
         this.#cats = {};
         this.#searchCat = {};
-        this.#selectAlbum = (args: any) => (selectAlbum as any).call(null, {
-            ...args,
-            newSelectedAlbum: this.#newSelectedAlbum.bind(this),
-            addSelectedAlbum: this.#addSelectedAlbum.bind(this),
-            getSelectedAlbum: this.get_selected_albums.bind(this),
-        });
-        this.#removeSelectedAlbum = (args: any) => (removeSelectedAlbum as any).call(null, {
-            ...args,
-            getSelectedAlbum: this.get_selected_albums.bind(this),
-        });
+        this.#selectAlbum = (args: any) =>
+            (selectAlbum as any).call(null, {
+                ...args,
+                newSelectedAlbum: this.#newSelectedAlbum.bind(this),
+                addSelectedAlbum: this.#addSelectedAlbum.bind(this),
+                getSelectedAlbum: this.get_selected_albums.bind(this),
+            });
+        this.#removeSelectedAlbum = (args: any) =>
+            (removeSelectedAlbum as any).call(null, {
+                ...args,
+                getSelectedAlbum: this.get_selected_albums.bind(this),
+            });
         this.#currentSelectedId = '';
         this.#show_root_btn = showRootButton;
         this.#put_to_root = false;
         this.#current_cat = currentAlbumId;
         this.#title = modalTitle === '' ? this.#str.str_album_modal_title : modalTitle;
-        this.#searchPlaceholder = modalSearchPlaceholder === '' ? this.#str.str_album_modal_placeholder : modalSearchPlaceholder;
+        this.#searchPlaceholder =
+            modalSearchPlaceholder === ''
+                ? this.#str.str_album_modal_placeholder
+                : modalSearchPlaceholder;
         this.#loading_add = false;
         this.#init();
     }
@@ -151,8 +159,12 @@ class AlbumSelector {
         this.#removeSelectedAlbum({ id_album: id });
     }
 
-    get_selected_albums() { return [...this.#selected_categories]; }
-    select_album(id: any) { this.#selected_categories.push(id.toString()); }
+    get_selected_albums() {
+        return [...this.#selected_categories];
+    }
+    select_album(id: any) {
+        this.#selected_categories.push(id.toString());
+    }
 
     resetAll() {
         this.#selected_categories = [];
@@ -160,13 +172,18 @@ class AlbumSelector {
         else this.#reset_album_selector();
     }
 
-    hardUpdate(cats: any) { this.#selected_categories = cats; }
-
-    #newSelectedAlbum() {
-        this.#selected_categories = this.#show_root_btn && this.#put_to_root ? ['0'] : [this.#currentSelectedId];
+    hardUpdate(cats: any) {
+        this.#selected_categories = cats;
     }
 
-    #addSelectedAlbum() { this.#selected_categories.push(this.#currentSelectedId); }
+    #newSelectedAlbum() {
+        this.#selected_categories =
+            this.#show_root_btn && this.#put_to_root ? ['0'] : [this.#currentSelectedId];
+    }
+
+    #addSelectedAlbum() {
+        this.#selected_categories.push(this.#currentSelectedId);
+    }
 
     #on(el: EventTarget | null, event: string, handler: EventListenerOrEventListenerObject) {
         if (!el || !this.#abortController) return;
@@ -222,7 +239,7 @@ class AlbumSelector {
             ? '.prefill-results-item'
             : '.prefill-results-item.available';
 
-        document.querySelectorAll<HTMLElement>(selector).forEach(el => {
+        document.querySelectorAll<HTMLElement>(selector).forEach((el) => {
             this.#on(el, 'click', (e: Event) => {
                 const cat_id = (e.currentTarget as HTMLElement).id;
                 const cat = this.#cats[cat_id];
@@ -238,7 +255,7 @@ class AlbumSelector {
     }
 
     #loadSubCatEvent() {
-        document.querySelectorAll<HTMLElement>('.display-subcat').forEach(el => {
+        document.querySelectorAll<HTMLElement>('.display-subcat').forEach((el) => {
             this.#on(el, 'click', (e: Event) => {
                 const curr = e.currentTarget as HTMLElement;
                 const cat_id = curr.id;
@@ -251,12 +268,17 @@ class AlbumSelector {
                     curr.classList.add('open');
                     subcatEl.style.display = '';
                 } else {
-                    const spinner = document.querySelector<HTMLElement>(`#${cat_id}.display-subcat`);
+                    const spinner = document.querySelector<HTMLElement>(
+                        `#${cat_id}.display-subcat`
+                    );
                     spinner?.classList.replace('gallery-icon-up-open', 'gallery-icon-spin6');
                     spinner?.classList.add('animate-spin');
                     const container = document.querySelector(`#${cat_id}.search-result-item`);
                     if (container) {
-                        container.insertAdjacentHTML('afterend', `<div id="subcat-${cat_id}" class="search-result-subcat-item"></div>`);
+                        container.insertAdjacentHTML(
+                            'afterend',
+                            `<div id="subcat-${cat_id}" class="search-result-subcat-item"></div>`
+                        );
                     }
                     this.#prefill_search_subcats(cat_id).then(() => {
                         spinner?.classList.remove('gallery-icon-spin6', 'animate-spin');
@@ -270,18 +292,20 @@ class AlbumSelector {
     }
 
     #loadFillResultEvent(tempSelect: any[]) {
-        sel.searchResult().querySelectorAll<HTMLElement>('.search-result-item').forEach(el => {
-            this.#on(el, 'click', (e: Event) => {
-                const cat_id = (e.currentTarget as HTMLElement).id;
-                const cat = this.#searchCat[cat_id];
-                const formated_cat_id = this.#in_admin_mode ? cat.id : String(cat.id);
-                if (!tempSelect.includes(formated_cat_id)) {
-                    this.#currentSelectedId = cat.id;
-                    this.#selectAlbum({ album: cat });
-                    this.#close_album_selector();
-                }
+        sel.searchResult()
+            .querySelectorAll<HTMLElement>('.search-result-item')
+            .forEach((el) => {
+                this.#on(el, 'click', (e: Event) => {
+                    const cat_id = (e.currentTarget as HTMLElement).id;
+                    const cat = this.#searchCat[cat_id];
+                    const formated_cat_id = this.#in_admin_mode ? cat.id : String(cat.id);
+                    if (!tempSelect.includes(formated_cat_id)) {
+                        this.#currentSelectedId = cat.id;
+                        this.#selectAlbum({ album: cat });
+                        this.#close_album_selector();
+                    }
+                });
             });
-        });
     }
 
     #setActive() {
@@ -372,19 +396,28 @@ class AlbumSelector {
         sel.linkedAlbumSwitch().style.display = 'none';
         sel.albumCreate().style.display = '';
 
-        sel.linkedAlbumSubTitle().innerHTML = sprintf(this.#str.str_add_subcat_of, cat === 'root' ? this.#str.str_root_album_select : cat.name);
-        this.#on(sel.linkedAddNewAlbum(), 'click', () => this.#add_new_album(cat === 'root' ? cat : cat.id));
+        sel.linkedAlbumSubTitle().innerHTML = sprintf(
+            this.#str.str_add_subcat_of,
+            cat === 'root' ? this.#str.str_root_album_select : cat.name
+        );
+        this.#on(sel.linkedAddNewAlbum(), 'click', () =>
+            this.#add_new_album(cat === 'root' ? cat : cat.id)
+        );
         this.#on(sel.linkedAlbumCancel(), 'click', () => this.#close_album_selector());
         this.#on(sel.linkedAlbumInput(), 'input', () => this.#hide_new_album_error());
     }
 
     #hide_new_album_error() {
-        sel.addAlbumErrors().forEach(el => { el.style.visibility = 'hidden'; });
+        sel.addAlbumErrors().forEach((el) => {
+            el.style.visibility = 'hidden';
+        });
     }
 
     #show_new_album_error(text: any) {
         sel.linkedAddAlbumErrors().innerHTML = text;
-        sel.addAlbumErrors().forEach(el => { el.style.visibility = 'visible'; });
+        sel.addAlbumErrors().forEach((el) => {
+            el.style.visibility = 'visible';
+        });
     }
 
     #select_new_album_and_close(cat: any) {
@@ -418,32 +451,40 @@ class AlbumSelector {
             }
             const isNotInSelectedCat = !tempSelectedCat.includes(cat.id);
             if (isCreationMode || isNotInSelectedCat) {
-                display_div.insertAdjacentHTML('beforeend', `<div class="search-result-item" id="${cat.id}">
+                display_div.insertAdjacentHTML(
+                    'beforeend',
+                    `<div class="search-result-item" id="${cat.id}">
                     ${subcat}
                     <div class="prefill-results-item available" id="${cat.id}">
                         <span class="search-result-path"><span class="search-result-path-name">${cat.name}</span></span>
                         <span id="${cat.id}" class="${iconAlbum} item-add"></span>
                     </div>
-                </div>`);
+                </div>`
+                );
             } else {
-                display_div.insertAdjacentHTML('beforeend', `<div class="search-result-item already-in" id="${cat.id}" title="${this.#str.str_album_selected}">
+                display_div.insertAdjacentHTML(
+                    'beforeend',
+                    `<div class="search-result-item already-in" id="${cat.id}" title="${this.#str.str_album_selected}">
                     ${subcat}
                     <div class="prefill-results-item" id="${cat.id}">
                         <span class="search-result-path"><span class="search-result-path-name">${cat.name}</span></span>
                         <span id="${cat.id}" class="gallery-icon-plus-circled item-add notClickable" title="${this.#str.str_album_selected}"></span>
                     </div>
-                </div>`);
+                </div>`
+                );
             }
 
             if (rank !== 'root') {
                 const item = document.querySelector<HTMLElement>(`#${rank}.search-result-item`);
                 if (item) {
                     const ml = parseInt(getComputedStyle(item).marginLeft || '0') + 25;
-                    const catItem = document.querySelector<HTMLElement>(`#${cat.id}.search-result-item`);
+                    const catItem = document.querySelector<HTMLElement>(
+                        `#${cat.id}.search-result-item`
+                    );
                     if (catItem) {
                         catItem.style.marginLeft = ml + 'px';
                         const pathEl = catItem.querySelector<HTMLElement>('.search-result-path');
-                        if (pathEl) pathEl.style.maxWidth = (400 - ml - 80) + 'px';
+                        if (pathEl) pathEl.style.maxWidth = 400 - ml - 80 + 'px';
                     }
                 }
             }
@@ -453,12 +494,17 @@ class AlbumSelector {
         this.#loadSubCatEvent();
 
         if (limit.remaining_cats > 0) {
-            display_div.insertAdjacentHTML('beforeend', `<p class="and-more">${sprintf(this.#str.str_plus_albums_found, limit.limited_to, limit.total_cats)}</p>`);
+            display_div.insertAdjacentHTML(
+                'beforeend',
+                `<p class="and-more">${sprintf(this.#str.str_plus_albums_found, limit.limited_to, limit.total_cats)}</p>`
+            );
         }
     }
 
     #fill_results(cats: any[]) {
-        const iconAlbum = this.#isAlbumCreationChecked ? 'icon-add-album' : 'gallery-icon-plus-circled';
+        const iconAlbum = this.#isAlbumCreationChecked
+            ? 'icon-add-album'
+            : 'gallery-icon-plus-circled';
         const tempSelectedCat = this.#current_cat
             ? [...this.#selected_categories, this.#current_cat.toString()]
             : [...this.#selected_categories];
@@ -469,10 +515,13 @@ class AlbumSelector {
 
         cats.forEach((cat: any) => {
             const cat_name = this.#in_admin_mode ? cat.fullname : cat.name;
-            sr.insertAdjacentHTML('beforeend', `<div class='search-result-item' id="${cat.id}">
+            sr.insertAdjacentHTML(
+                'beforeend',
+                `<div class='search-result-item' id="${cat.id}">
                 <span class="search-result-path not-rtl">${this.#getEllipsisName(cat_name)}</span>
                 <span id="${cat.id}" class="${iconAlbum} item-add"></span>
-            </div>`);
+            </div>`
+            );
 
             if (this.#isAlbumCreationChecked) {
                 const catEl = sr.querySelector<HTMLElement>(`.search-result-item#${cat.id}`);
@@ -481,10 +530,19 @@ class AlbumSelector {
             }
 
             if (tempSelectedCat.includes(cat.id)) {
-                sr.querySelector<HTMLElement>(`.search-result-item #${cat.id}.item-add`)?.classList.add('notClickable');
-                sr.querySelector<HTMLElement>(`.search-result-item #${cat.id}.item-add`)?.setAttribute('title', this.#str.str_album_selected);
-                sr.querySelector<HTMLElement>(`#${cat.id}.search-result-item`)?.classList.add('notClickable');
-                sr.querySelector<HTMLElement>(`#${cat.id}.search-result-item`)?.setAttribute('title', this.#str.str_album_selected);
+                sr.querySelector<HTMLElement>(
+                    `.search-result-item #${cat.id}.item-add`
+                )?.classList.add('notClickable');
+                sr.querySelector<HTMLElement>(
+                    `.search-result-item #${cat.id}.item-add`
+                )?.setAttribute('title', this.#str.str_album_selected);
+                sr.querySelector<HTMLElement>(`#${cat.id}.search-result-item`)?.classList.add(
+                    'notClickable'
+                );
+                sr.querySelector<HTMLElement>(`#${cat.id}.search-result-item`)?.setAttribute(
+                    'title',
+                    this.#str.str_album_selected
+                );
             }
         });
 
@@ -502,21 +560,32 @@ class AlbumSelector {
             body: new URLSearchParams(
                 Object.fromEntries(Object.entries(params).map(([k, v]) => [k, String(v)]))
             ),
-        }).then(r => r.json());
+        }).then((r) => r.json());
     }
 
     #prefill_search() {
-        sel.iconSearchingSpin().forEach(el => { el.style.display = ''; });
-        const params: any = { cat_id: 0, recursive: false, fullname: true, limit: this.#limitParam };
+        sel.iconSearchingSpin().forEach((el) => {
+            el.style.display = '';
+        });
+        const params: any = {
+            cat_id: 0,
+            recursive: false,
+            fullname: true,
+            limit: this.#limitParam,
+        };
         if (this.#in_admin_mode) params.additional_output = 'full_name_with_admin_links';
 
         this.#apiPost(params)
-            .then(data => {
-                sel.iconSearchingSpin().forEach(el => { el.style.display = 'none'; });
+            .then((data) => {
+                sel.iconSearchingSpin().forEach((el) => {
+                    el.style.display = 'none';
+                });
                 this.#prefill_results('root', data.result.categories, data.result.limit);
             })
-            .catch(e => {
-                sel.iconSearchingSpin().forEach(el => { el.style.display = 'none'; });
+            .catch((e) => {
+                sel.iconSearchingSpin().forEach((el) => {
+                    el.style.display = 'none';
+                });
                 console.log('error:', e?.message);
             });
     }
@@ -526,34 +595,49 @@ class AlbumSelector {
         if (this.#in_admin_mode) params.additional_output = 'full_name_with_admin_links';
 
         return this.#apiPost(params)
-            .then(data => {
+            .then((data) => {
                 const cats = data.result.categories.filter((c: any) => c.id != cat_id);
                 this.#prefill_results(cat_id, cats, data.result.limit);
             })
-            .catch(e => console.log('prefill search error:', e));
+            .catch((e) => console.log('prefill search error:', e));
     }
 
     #perform_albums_search(searchText: string) {
-        if (searchText === '') { this.#reset_search_input(true); return; }
+        if (searchText === '') {
+            this.#reset_search_input(true);
+            return;
+        }
         const params: any = { cat_id: 0, recursive: true, fullname: true, search: searchText };
         if (this.#in_admin_mode) params.additional_output = 'full_name_with_admin_links';
 
-        sel.iconSearchingSpin().forEach(el => { el.style.display = ''; });
+        sel.iconSearchingSpin().forEach((el) => {
+            el.style.display = '';
+        });
         this.#apiPost(params)
-            .then(raw => {
+            .then((raw) => {
                 if (raw.stat !== 'ok') return;
-                sel.iconSearchingSpin().forEach(el => { el.style.display = 'none'; });
+                sel.iconSearchingSpin().forEach((el) => {
+                    el.style.display = 'none';
+                });
                 const categories = raw.result.categories;
                 this.#fill_results(categories);
                 const lr = sel.limitReached();
                 if (raw.result.limit_reached) {
-                    lr.innerHTML = this.#str.str_result_limit.replace('%d', String(categories.length));
+                    lr.innerHTML = this.#str.str_result_limit.replace(
+                        '%d',
+                        String(categories.length)
+                    );
                 } else {
-                    lr.innerHTML = categories.length === 1 ? this.#str.str_album_found : this.#str.str_albums_found.replace('%d', String(categories.length));
+                    lr.innerHTML =
+                        categories.length === 1
+                            ? this.#str.str_album_found
+                            : this.#str.str_albums_found.replace('%d', String(categories.length));
                 }
             })
-            .catch(e => {
-                sel.iconSearchingSpin().forEach(el => { el.style.display = 'none'; });
+            .catch((e) => {
+                sel.iconSearchingSpin().forEach((el) => {
+                    el.style.display = 'none';
+                });
                 console.log(e?.message);
             });
     }
@@ -579,8 +663,8 @@ class AlbumSelector {
                 ...(cat_position ? { position: cat_position } : {}),
             }),
         })
-            .then(r => r.json())
-            .then(data => {
+            .then((r) => r.json())
+            .then((data) => {
                 if (data.stat === 'ok') this.#get_album_by_id(data.result.id);
                 else this.#show_new_album_error(this.#str.str_an_error_has_occured);
             })
@@ -588,12 +672,15 @@ class AlbumSelector {
     }
 
     #get_album_by_id(cat_id: any) {
-        fetch(`ws.php?format=json&method=pwg.categories.getAdminList&` + new URLSearchParams({
-            cat_id: String(cat_id),
-            additional_output: 'full_name_with_admin_links',
-        }))
-            .then(r => r.json())
-            .then(data => {
+        fetch(
+            `ws.php?format=json&method=pwg.categories.getAdminList&` +
+                new URLSearchParams({
+                    cat_id: String(cat_id),
+                    additional_output: 'full_name_with_admin_links',
+                })
+        )
+            .then((r) => r.json())
+            .then((data) => {
                 if (data.stat === 'ok') this.#select_new_album_and_close(data.result.categories[0]);
                 else this.#show_new_album_error(this.#str.str_an_error_has_occured);
             })

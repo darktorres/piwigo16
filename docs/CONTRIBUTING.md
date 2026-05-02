@@ -11,10 +11,10 @@ If you don't really know how to use git, I will recommend you to check this [gui
 To add associate your GitHub account and your Git, you will need use this command on Git Bash:
 
 - Set up your name:
-`git config --global user.name "Firstname lastname"`
+  `git config --global user.name "Firstname lastname"`
 
 - Set up your e-mail address:
-`git config --global user.email "email@example.com"`
+  `git config --global user.email "email@example.com"`
 
 ### Get the project on your GitHub account
 
@@ -70,6 +70,6 @@ If you had to update your fork because there is activity on the upstream, you ca
 
 ### Tip #2 — Reference issues in commits
 
-When you finished your work and going to commit the final change. You can specify *Fixes* and the GitHub id of the original issue to help the Piwigo team. This will close automatically the pull request when this will be merged on the upstream.
+When you finished your work and going to commit the final change. You can specify _Fixes_ and the GitHub id of the original issue to help the Piwigo team. This will close automatically the pull request when this will be merged on the upstream.
 
 Example of a last commit: `Fixes #965 Add a new column`

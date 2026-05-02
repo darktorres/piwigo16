@@ -10,7 +10,8 @@ interface DoubleSliderOptions {
 }
 
 function findClosest(array: Array<number | string>, value: number | string): number {
-    let closest: number | null = null, index = -1;
+    let closest: number | null = null,
+        index = -1;
     array.forEach((v, i) => {
         const diff = Math.abs(Number(v) - Number(value));
         if (closest === null || diff < Math.abs(Number(closest) - Number(value))) {
@@ -45,12 +46,13 @@ export function pwgDoubleSlider(container: HTMLElement, options: DoubleSliderOpt
         const info = container.querySelector<HTMLElement>('.slider-info');
         if (minInput) minInput.value = String(options.values[minIdx]);
         if (maxInput) maxInput.value = String(options.values[maxIdx]);
-        if (info) info.innerHTML = sprintf(options.text, options.values[minIdx], options.values[maxIdx]);
+        if (info)
+            info.innerHTML = sprintf(options.text, options.values[minIdx], options.values[maxIdx]);
     };
 
     slider.on('update', update);
 
-    container.querySelectorAll<HTMLElement>('.slider-choice').forEach(btn => {
+    container.querySelectorAll<HTMLElement>('.slider-choice').forEach((btn) => {
         btn.addEventListener('click', () => {
             const minIdx = options.values.indexOf(btn.dataset['min'] as any);
             const maxIdx = options.values.indexOf(btn.dataset['max'] as any);

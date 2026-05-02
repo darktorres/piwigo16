@@ -44,7 +44,7 @@ test.describe('tag management', () => {
         // Tag images list returns the photo
         const tagImages = await request.get(
             pwgUrl(`/ws.php?format=json&method=pwg.tags.getImages&tag_id=${tagId}`),
-            { headers: { Cookie: cookie } },
+            { headers: { Cookie: cookie } }
         );
         const tagImagesBody = await tagImages.json();
         expect(tagImagesBody.stat).toBe('ok');
@@ -70,6 +70,11 @@ test.describe('tag management', () => {
         const getErrors = attachErrorCollector(page);
         await loginAsAdmin(page);
         await page.goto(pwgUrl('/admin.php?page=tags'));
-        expect(getErrors(), `pageerrors: ${getErrors().map((e) => e.message).join('; ')}`).toHaveLength(0);
+        expect(
+            getErrors(),
+            `pageerrors: ${getErrors()
+                .map((e) => e.message)
+                .join('; ')}`
+        ).toHaveLength(0);
     });
 });

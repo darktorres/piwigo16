@@ -19,11 +19,28 @@
 }
 
 .pwg-icon {
-	display: block;
+  display: block;
 }
 
-.imageInfoTable {display:block; margin: 0 200px;}
-.imageInfo {display:block; line-height:16px;}
-.imageInfo dt  {display:block; text-align:left; font-weight:bold; padding-right:0.5em;}
-.imageInfo dd {display:block; text-align:left; font-weight:normal;}
-#imageInfos dd { margin: 0 0 5px 20px;}
+.imageInfoTable {
+  display: block;
+  margin: 0 200px;
+}
+.imageInfo {
+  display: block;
+  line-height: 16px;
+}
+.imageInfo dt {
+  display: block;
+  text-align: left;
+  font-weight: bold;
+  padding-right: 0.5em;
+}
+.imageInfo dd {
+  display: block;
+  text-align: left;
+  font-weight: normal;
+}
+#imageInfos dd {
+  margin: 0 0 5px 20px;
+}

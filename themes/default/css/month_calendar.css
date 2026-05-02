@@ -4,5 +4,11 @@
   height: var(--cal-cell-h);
 }
 
-.calendarBar > .nav-prev { float: left; margin-right: 5px; }
-.calendarBar > .nav-next { float: right; margin-left: 5px; }
+.calendarBar > .nav-prev {
+  float: left;
+  margin-right: 5px;
+}
+.calendarBar > .nav-next {
+  float: right;
+  margin-left: 5px;
+}

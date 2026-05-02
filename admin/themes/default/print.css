@@ -1,13 +1,14 @@
-.navThumb, #addComment {
-    display: none;
+.navThumb,
+#addComment {
+  display: none;
 }
 
 BODY {
-    margin: 0;
-    color: #000000;
-    background: #ffffff;
+  margin: 0;
+  color: #000000;
+  background: #ffffff;
 }
 
 .content {
-    margin: 0;
+  margin: 0;
 }

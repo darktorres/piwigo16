@@ -21,7 +21,7 @@ const GeoIp = {
             if (cached) {
                 const cacheObj = JSON.parse(cached) as Record<string, GeoIpData>;
                 for (const key in cacheObj) {
-                    if ((new Date()).getTime() - cacheObj[key].reqTime > 96 * 3600000) {
+                    if (new Date().getTime() - cacheObj[key].reqTime > 96 * 3600000) {
                         delete cacheObj[key];
                     }
                 }
@@ -41,23 +41,31 @@ const GeoIp = {
             const controller = new AbortController();
             const timeout = setTimeout(() => controller.abort(), 5000);
             fetch('https://freegeoip.net/json/' + ip, { signal: controller.signal })
-                .then(r => r.json())
-                .then((data: GeoIpData & { city?: string; region_name?: string; country_name?: string }) => {
-                    clearTimeout(timeout);
-                    data.reqTime = (new Date()).getTime();
-                    const res: string[] = [];
-                    if (data.city) res.push(data.city);
-                    if (data.region_name) res.push(data.region_name);
-                    if (data.country_name) res.push(data.country_name);
-                    data.fullName = res.join(', ');
-                    GeoIp.cache[ip] = data;
-                    const callbacks = GeoIp.pending[ip];
-                    delete GeoIp.pending[ip];
-                    callbacks.forEach((cb) => cb(data));
-                })
+                .then((r) => r.json())
+                .then(
+                    (
+                        data: GeoIpData & {
+                            city?: string;
+                            region_name?: string;
+                            country_name?: string;
+                        }
+                    ) => {
+                        clearTimeout(timeout);
+                        data.reqTime = new Date().getTime();
+                        const res: string[] = [];
+                        if (data.city) res.push(data.city);
+                        if (data.region_name) res.push(data.region_name);
+                        if (data.country_name) res.push(data.country_name);
+                        data.fullName = res.join(', ');
+                        GeoIp.cache[ip] = data;
+                        const callbacks = GeoIp.pending[ip];
+                        delete GeoIp.pending[ip];
+                        callbacks.forEach((cb) => cb(data));
+                    }
+                )
                 .catch(() => {
                     clearTimeout(timeout);
-                    const data: GeoIpData = { ip, reqTime: (new Date()).getTime() };
+                    const data: GeoIpData = { ip, reqTime: new Date().getTime() };
                     GeoIp.cache[ip] = data;
                     const callbacks = GeoIp.pending[ip];
                     delete GeoIp.pending[ip];

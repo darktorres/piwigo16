@@ -10,7 +10,10 @@ interface PiwigoManifestEntry {
 }
 
 export function piwigoManifestPlugin(): Plugin {
-    const chunkMap = new Map<string, { name: string; file: string; imports: string[]; css: string[] }>();
+    const chunkMap = new Map<
+        string,
+        { name: string; file: string; imports: string[]; css: string[] }
+    >();
 
     return {
         name: 'piwigo-manifest',
@@ -20,7 +23,9 @@ export function piwigoManifestPlugin(): Plugin {
             chunkMap.clear();
             for (const [fileName, chunk] of Object.entries(bundle)) {
                 if (chunk.type !== 'chunk' || !chunk.isEntry) continue;
-                const cssFiles = [...((chunk as any).viteMetadata?.importedCss ?? new Set<string>())];
+                const cssFiles = [
+                    ...((chunk as any).viteMetadata?.importedCss ?? new Set<string>()),
+                ];
                 chunkMap.set(fileName, {
                     name: chunk.name,
                     file: fileName,

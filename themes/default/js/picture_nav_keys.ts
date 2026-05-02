@@ -16,12 +16,14 @@ if (nav) {
         let url: string | undefined;
 
         switch (e.keyCode || e.which) {
-            case 63235: case 39: // Right
+            case 63235:
+            case 39: // Right
                 if (ctrl || docElem.scrollLeft === docElem.scrollWidth - docElem.clientWidth) {
                     url = ds['next'];
                 }
                 break;
-            case 63234: case 37: // Left
+            case 63234:
+            case 37: // Left
                 if (ctrl || docElem.scrollLeft === 0) {
                     url = ds['previous'];
                 }

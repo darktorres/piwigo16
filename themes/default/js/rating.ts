@@ -19,7 +19,9 @@ function makeNiceRatingForm(options: Record<string, unknown>): void {
     for (let i = 0; i < gRatingButtons.length; i++) {
         const rateButton = gRatingButtons[i];
         (rateButton as any).initialRateValue = rateButton.value;
-        try { rateButton.type = 'button'; } catch (e) {}
+        try {
+            rateButton.type = 'button';
+        } catch (e) {}
 
         rateButton.value = ' ';
         rateButton.style.marginLeft = '0';
@@ -33,7 +35,9 @@ function makeNiceRatingForm(options: Record<string, unknown>): void {
         }
 
         pwgAddEventListener(rateButton, 'click', updateRating);
-        pwgAddEventListener(rateButton, 'mouseout', () => { updateRatingStarDisplay(gUserRating); });
+        pwgAddEventListener(rateButton, 'mouseout', () => {
+            updateRatingStarDisplay(gUserRating);
+        });
         pwgAddEventListener(rateButton, 'mouseover', (e: Event) => {
             const target = (e as MouseEvent).target as any;
             updateRatingStarDisplay(target.initialRateValue);
@@ -44,9 +48,10 @@ function makeNiceRatingForm(options: Record<string, unknown>): void {
 
 function updateRatingStarDisplay(userRating: string): void {
     for (let i = 0; i < gRatingButtons.length; i++) {
-        gRatingButtons[i].className = (userRating !== '' && userRating >= (gRatingButtons[i] as any).initialRateValue)
-            ? 'rateButtonStarFull'
-            : 'rateButtonStarEmpty';
+        gRatingButtons[i].className =
+            userRating !== '' && userRating >= (gRatingButtons[i] as any).initialRateValue
+                ? 'rateButtonStarFull'
+                : 'rateButtonStarEmpty';
     }
 }
 
@@ -63,14 +68,20 @@ function updateRating(e: Event): void {
             method: 'POST',
             onFailure: (num: number, text: string) => {
                 alert(num + ' ' + text);
-                document.location.href = (rateButton.form as HTMLFormElement).action + '&rate=' + rateButton.initialRateValue;
+                document.location.href =
+                    (rateButton.form as HTMLFormElement).action +
+                    '&rate=' +
+                    rateButton.initialRateValue;
             },
             onSuccess: (result: unknown) => {
                 const res = result as any;
                 gUserRating = rateButton.initialRateValue;
                 for (let i = 0; i < gRatingButtons.length; i++) gRatingButtons[i].disabled = false;
                 if ((gRatingOptions as any).onSuccess) (gRatingOptions as any).onSuccess(result);
-                if ((gRatingOptions as any).updateRateElement) (gRatingOptions as any).updateRateElement.innerHTML = (gRatingOptions as any).updateRateText;
+                if ((gRatingOptions as any).updateRateElement)
+                    (gRatingOptions as any).updateRateElement.innerHTML = (
+                        gRatingOptions as any
+                    ).updateRateText;
                 if ((gRatingOptions as any).ratingSummaryElement) {
                     let t: string = (gRatingOptions as any).ratingSummaryText;
                     const args = [res.score, res.count, res.average];
@@ -88,7 +99,8 @@ function updateRating(e: Event): void {
                 if (opts.str_rate || opts.str_rates) {
                     const e = document.getElementById('ratingCount');
                     if (e) {
-                        const tpl = res.count === 1 ? (opts.str_rate ?? '') : (opts.str_rates ?? '');
+                        const tpl =
+                            res.count === 1 ? (opts.str_rate ?? '') : (opts.str_rates ?? '');
                         e.innerHTML = '(' + tpl.replace('%d', String(res.count)) + ')';
                     }
                 }
@@ -103,13 +115,19 @@ function updateRating(e: Event): void {
 
 // Process any legacy _pwgRatingAutoQueue queue (plugins may still push to it)
 // then auto-discover the rating form on the current page via its data-* attrs.
-if (typeof _pwgRatingAutoQueue !== 'undefined' && Array.isArray(_pwgRatingAutoQueue) && _pwgRatingAutoQueue.length) {
+if (
+    typeof _pwgRatingAutoQueue !== 'undefined' &&
+    Array.isArray(_pwgRatingAutoQueue) &&
+    _pwgRatingAutoQueue.length
+) {
     for (let i = 0; i < (_pwgRatingAutoQueue as Array<Record<string, unknown>>).length; i++) {
         makeNiceRatingForm((_pwgRatingAutoQueue as Array<Record<string, unknown>>)[i]);
     }
 }
 _pwgRatingAutoQueue = {
-    push: (opts: Record<string, unknown>) => { makeNiceRatingForm(opts); },
+    push: (opts: Record<string, unknown>) => {
+        makeNiceRatingForm(opts);
+    },
 };
 
 const ratingForm = document.getElementById('rateForm');

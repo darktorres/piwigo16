@@ -7,7 +7,7 @@ interface UpdatesPwgPageData {
 const { str_are_you_sure } = getPageData<UpdatesPwgPageData>();
 
 document.querySelectorAll<HTMLInputElement>('input[name="submit"]').forEach((btn) => {
-    btn.addEventListener('click', function(this: HTMLInputElement) {
+    btn.addEventListener('click', function (this: HTMLInputElement) {
         if (!confirm(str_are_you_sure)) return;
         this.style.display = 'none';
         document.querySelectorAll<HTMLElement>('.autoupdate_bar').forEach((el) => {

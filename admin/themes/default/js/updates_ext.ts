@@ -31,7 +31,7 @@ const queuedManager = {
                 Object.entries(opts.data ?? {}).reduce<Record<string, string>>((acc, [k, v]) => {
                     acc[k] = String(v);
                     return acc;
-                }, {}),
+                }, {})
             );
             return fetch((opts.url ?? 'ws.php') + '?' + params.toString())
                 .then((r) => r.json())
@@ -44,9 +44,12 @@ const queuedManager = {
 
 function pwgNotify(msg: string, theme: 'success' | 'error'): void {
     const el = document.createElement('div');
-    el.style.cssText = 'position:fixed;top:20px;right:20px;z-index:9999;padding:10px 16px;border-radius:4px;color:#fff;font-size:14px;max-width:320px;margin-bottom:5px;';
+    el.style.cssText =
+        'position:fixed;top:20px;right:20px;z-index:9999;padding:10px 16px;border-radius:4px;color:#fff;font-size:14px;max-width:320px;margin-bottom:5px;';
     el.style.background = theme === 'success' ? '#27ae60' : '#e74c3c';
-    el.innerHTML = (theme === 'success' ? '<i class="icon-ok"></i> ' : '<i class="icon-attention"></i> ') + msg;
+    el.innerHTML =
+        (theme === 'success' ? '<i class="icon-ok"></i> ' : '<i class="icon-attention"></i> ') +
+        msg;
     document.body.appendChild(el);
     if (theme === 'success') {
         setTimeout(() => el.remove(), 4000);
@@ -68,13 +71,15 @@ function checkFieldsets(): void {
     let ignored = 0;
     for (const t of types) {
         let nbExtensions = 0;
-        document.querySelectorAll<HTMLElement>(`fieldset[data-type=${t}] .pluginBox`).forEach((el) => {
-            if (el.getAttribute('data-ignored') === 'true') {
-                ignored++;
-            } else {
-                nbExtensions++;
-            }
-        });
+        document
+            .querySelectorAll<HTMLElement>(`fieldset[data-type=${t}] .pluginBox`)
+            .forEach((el) => {
+                if (el.getAttribute('data-ignored') === 'true') {
+                    ignored++;
+                } else {
+                    nbExtensions++;
+                }
+            });
         total += nbExtensions;
         if (nbExtensions === 0) {
             const el = document.getElementById(t);
@@ -90,7 +95,10 @@ function checkFieldsets(): void {
         if (upToDate) upToDate.style.display = '';
     }
     if (ignored > 0) {
-        const resetEl = document.getElementById('reset_ignore') as HTMLInputElement | HTMLElement | null;
+        const resetEl = document.getElementById('reset_ignore') as
+            | HTMLInputElement
+            | HTMLElement
+            | null;
         if (resetEl && resetEl instanceof HTMLInputElement) {
             resetEl.value = pageData.str_restore + ' (' + ignored + ')';
         } else if (resetEl) {
@@ -105,7 +113,9 @@ function updateExtension(type: string, id: string, revision: string): void {
         url: 'ws.php',
         data: {
             method: 'pwg.extensions.update',
-            type, id, revision,
+            type,
+            id,
+            revision,
             pwg_token: pageData.pwg_token,
             format: 'json',
         },
@@ -129,7 +139,8 @@ function ignoreExtension(type: string, id: string): void {
         url: 'ws.php',
         data: {
             method: 'pwg.extensions.ignoreUpdate',
-            type, id,
+            type,
+            id,
             pwg_token: pageData.pwg_token,
             format: 'json',
         },
@@ -164,18 +175,25 @@ function ignoreAll(): void {
 }
 
 function resetIgnored(): void {
-    fetch('ws.php?' + new URLSearchParams({
-        method: 'pwg.extensions.ignoreUpdate',
-        reset: 'true',
-        type: pageData.ext_type,
-        pwg_token: pageData.pwg_token,
-        format: 'json',
-    }).toString())
+    fetch(
+        'ws.php?' +
+            new URLSearchParams({
+                method: 'pwg.extensions.ignoreUpdate',
+                reset: 'true',
+                type: pageData.ext_type,
+                pwg_token: pageData.pwg_token,
+                format: 'json',
+            }).toString()
+    )
         .then((r) => r.json())
         .then((data: Record<string, unknown>) => {
             if (data['stat'] === 'ok') {
-                document.querySelectorAll<HTMLElement>('.pluginBox, fieldset').forEach((el) => { el.style.display = ''; });
-                document.querySelectorAll<HTMLElement>('.pluginBox').forEach((el) => el.setAttribute('data-ignored', 'false'));
+                document.querySelectorAll<HTMLElement>('.pluginBox, fieldset').forEach((el) => {
+                    el.style.display = '';
+                });
+                document
+                    .querySelectorAll<HTMLElement>('.pluginBox')
+                    .forEach((el) => el.setAttribute('data-ignored', 'false'));
                 ['update_all', 'ignore_all'].forEach((id) => {
                     const el = document.getElementById(id);
                     if (el) el.style.display = '';

@@ -8,7 +8,10 @@ interface ConfigurationSizesPageData {
     str_height: string;
 }
 
-declare function pwg_jconfirm_follow_href_fn(el: HTMLElement, options: { alert_title?: string }): void;
+declare function pwg_jconfirm_follow_href_fn(
+    el: HTMLElement,
+    options: { alert_title?: string }
+): void;
 
 const pageData = getPageData<ConfigurationSizesPageData>();
 
@@ -24,7 +27,9 @@ function toggleResizeFields(): void {
 }
 
 toggleResizeFields();
-document.querySelector<HTMLInputElement>('[name=original_resize]')?.addEventListener('click', toggleResizeFields);
+document
+    .querySelector<HTMLInputElement>('[name=original_resize]')
+    ?.addEventListener('click', toggleResizeFields);
 
 document.querySelectorAll<HTMLAnchorElement>("a[id^='sizeEditOpen-']").forEach((el) => {
     el.addEventListener('click', (e) => {
@@ -51,8 +56,10 @@ document.querySelectorAll<HTMLInputElement>('.cropToggle').forEach((el) => {
     });
 });
 
-document.getElementById('showDetails')?.addEventListener('click', function(this: HTMLElement, e) {
+document.getElementById('showDetails')?.addEventListener('click', function (this: HTMLElement, e) {
     e.preventDefault();
-    document.querySelectorAll<HTMLElement>('.sizeDetails').forEach((el) => { el.style.display = ''; });
+    document.querySelectorAll<HTMLElement>('.sizeDetails').forEach((el) => {
+        el.style.display = '';
+    });
     this.style.visibility = 'hidden';
 });

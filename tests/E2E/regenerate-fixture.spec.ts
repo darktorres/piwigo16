@@ -52,7 +52,7 @@ $conf['db_user'] = '${DB_USER}';
 $conf['db_password'] = '${DB_PASS}';
 $conf['db_base'] = '${SCRATCH_DB}';
 $prefixeTable = 'piwigo_';
-`,
+`
     );
 }
 
@@ -60,7 +60,7 @@ async function callWs(
     request: APIRequestContext,
     cookieHeader: string,
     method: string,
-    params: Record<string, string> = {},
+    params: Record<string, string> = {}
 ): Promise<{ stat?: string; result?: unknown; err?: unknown; message?: unknown }> {
     const res = await request.post(pwgUrl('/ws.php?format=json'), {
         headers: { Cookie: cookieHeader },
@@ -72,14 +72,14 @@ async function callWs(
 test.describe.serial('regenerate dev/fixtures/piwigo-16.x.sql', () => {
     test.skip(
         process.env.REGENERATE_FIXTURE !== '1',
-        'Set REGENERATE_FIXTURE=1 to regenerate the fixture (writes a real DB and overwrites the committed fixture file).',
+        'Set REGENERATE_FIXTURE=1 to regenerate the fixture (writes a real DB and overwrites the committed fixture file).'
     );
 
     test.beforeAll(() => {
         // Reset scratch DB and point Apache at it.
         mysqlExec(`DROP DATABASE IF EXISTS ${SCRATCH_DB};`);
         mysqlExec(
-            `CREATE DATABASE ${SCRATCH_DB} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`,
+            `CREATE DATABASE ${SCRATCH_DB} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`
         );
         if (fs.existsSync(DB_CONFIG_PATH)) fs.unlinkSync(DB_CONFIG_PATH);
         writeDbConfig();
@@ -120,7 +120,7 @@ test.describe.serial('regenerate dev/fixtures/piwigo-16.x.sql', () => {
         // the fixture even though the schema is current.
         mysqlExec(
             `USE ${SCRATCH_DB}; INSERT INTO piwigo_upgrade (id, applied, description) ` +
-                `VALUES ('181', NOW(), 'Piwigo 15.0.0 schema baseline');`,
+                `VALUES ('181', NOW(), 'Piwigo 15.0.0 schema baseline');`
         );
     });
 
@@ -167,7 +167,9 @@ test.describe.serial('regenerate dev/fixtures/piwigo-16.x.sql', () => {
                 const filePath = path.join(tmpDir, `fixture-photo-${i}.jpg`);
                 fs.writeFileSync(filePath, buffer);
                 const albumId = i <= 3 ? rootAlbumId : subAlbumId;
-                photoIds.push(await uploadPhoto(request, cookieHeader, filePath, albumId, `Photo ${i}`));
+                photoIds.push(
+                    await uploadPhoto(request, cookieHeader, filePath, albumId, `Photo ${i}`)
+                );
             }
         } finally {
             fs.rmSync(tmpDir, { recursive: true, force: true });
@@ -191,7 +193,7 @@ test.describe.serial('regenerate dev/fixtures/piwigo-16.x.sql', () => {
             `USE ${SCRATCH_DB}; INSERT INTO piwigo_image_tag (image_id, tag_id) VALUES ` +
                 `(${photoIds[0]}, ${tagIds[0]}), (${photoIds[0]}, ${tagIds[1]}), ` +
                 `(${photoIds[0]}, ${tagIds[2]}), (${photoIds[1]}, ${tagIds[0]}), ` +
-                `(${photoIds[2]}, ${tagIds[0]});`,
+                `(${photoIds[2]}, ${tagIds[0]});`
         );
 
         // 1 comment on the first photo. pwg.images.addComment validates that
@@ -203,7 +205,7 @@ test.describe.serial('regenerate dev/fixtures/piwigo-16.x.sql', () => {
             `USE ${SCRATCH_DB}; INSERT INTO piwigo_comments ` +
                 `(image_id, date, author, anonymous_id, author_id, content, validated, validation_date) ` +
                 `VALUES (${photoIds[0]}, NOW(), 'fixture_admin', '127.0.0.1', 1, ` +
-                `'Fixture comment for integration tests.', 'true', NOW());`,
+                `'Fixture comment for integration tests.', 'true', NOW());`
         );
 
         // 2 additional users with different permission levels
@@ -231,7 +233,7 @@ test.describe.serial('regenerate dev/fixtures/piwigo-16.x.sql', () => {
             if (res.stat !== 'ok') {
                 mysqlExec(
                     `USE ${SCRATCH_DB}; UPDATE piwigo_config SET value=${shellQuote(value)} ` +
-                        `WHERE param=${shellQuote(param)};`,
+                        `WHERE param=${shellQuote(param)};`
                 );
             }
         }

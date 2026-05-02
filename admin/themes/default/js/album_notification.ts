@@ -1,9 +1,13 @@
 function checkWhoOptions(): void {
     const checked = document.querySelector<HTMLInputElement>('input[name=who]:checked');
     const option = checked?.value ?? '';
-    document.querySelectorAll<HTMLElement>('.who_option').forEach((el) => { el.style.display = 'none'; });
+    document.querySelectorAll<HTMLElement>('.who_option').forEach((el) => {
+        el.style.display = 'none';
+    });
     if (option) {
-        document.querySelectorAll<HTMLElement>('.who_' + option).forEach((el) => { el.style.display = ''; });
+        document.querySelectorAll<HTMLElement>('.who_' + option).forEach((el) => {
+            el.style.display = '';
+        });
     }
 }
 

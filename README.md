@@ -8,26 +8,26 @@ The [piwigo.org](https://piwigo.org) website introduces you to Piwigo. You'll fi
 
 ## Requirements
 
-* A webserver (Apache or nginx recommended)
-* PHP 7.4+. Piwigo can run with PHP 7.0+ but these end-of-life versions are no longer maintained and may expose your site to security vulnerabilities.
-* MySQL 5 or greater or MariaDB equivalent
-* ImageMagick (recommended) or PHP GD
+- A webserver (Apache or nginx recommended)
+- PHP 7.4+. Piwigo can run with PHP 7.0+ but these end-of-life versions are no longer maintained and may expose your site to security vulnerabilities.
+- MySQL 5 or greater or MariaDB equivalent
+- ImageMagick (recommended) or PHP GD
 
 ## Quick start install
 
 ### NetInstall
 
-* Download the [NetInstall script](https://piwigo.org/download/dlcounter.php?code=netinstall)
-* Transfer the script to your web space with any FTP client
-* Open the script in you web browser (for example <http://example.com/piwigo-netinstall.php>) and follow the steps
+- Download the [NetInstall script](https://piwigo.org/download/dlcounter.php?code=netinstall)
+- Transfer the script to your web space with any FTP client
+- Open the script in you web browser (for example <http://example.com/piwigo-netinstall.php>) and follow the steps
 
 [More information](https://piwigo.org/guides/install/netinstall)
 
 ### Manual
 
-* Download the [latest stable version](https://piwigo.org/download/dlcounter.php?code=latest) and unzip it
-* Transfer everything to your web space with any FTP client
-* Open your website (for example <http://example.com/piwigo>) and follow the steps
+- Download the [latest stable version](https://piwigo.org/download/dlcounter.php?code=latest) and unzip it
+- Transfer everything to your web space with any FTP client
+- Open your website (for example <http://example.com/piwigo>) and follow the steps
 
 [More information](https://piwigo.org/guides/install/manual)
 

@@ -18,7 +18,10 @@ function loadEnvLocal(): void {
         if (line === '' || line.startsWith('#') || !line.includes('=')) continue;
         const idx = line.indexOf('=');
         const k = line.slice(0, idx).trim();
-        const v = line.slice(idx + 1).trim().replace(/^["']|["']$/g, '');
+        const v = line
+            .slice(idx + 1)
+            .trim()
+            .replace(/^["']|["']$/g, '');
         if (k && process.env[k] === undefined) process.env[k] = v;
     }
 }

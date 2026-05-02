@@ -1,7 +1,9 @@
 function setAllCheckboxes(checked: boolean) {
-    document.querySelectorAll<HTMLInputElement>('#notification_by_mail input[type=checkbox]').forEach((cb) => {
-        cb.checked = checked;
-    });
+    document
+        .querySelectorAll<HTMLInputElement>('#notification_by_mail input[type=checkbox]')
+        .forEach((cb) => {
+            cb.checked = checked;
+        });
 }
 
 document.getElementById('checkAllLink')?.addEventListener('click', (e) => {

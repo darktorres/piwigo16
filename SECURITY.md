@@ -32,5 +32,5 @@ then work on fixing it and release a new fixed version of Piwigo, following thes
 3. Wait before publishing details until everyone has had a chance to update.
 4. Respect the privacy of others.
 
-*Avoid activities that disrupt, degrade, or interrupt our services or compromise other
-users' data, such as spam, brute force attacks, denial of service attacks, and malicious file distribution.*
+_Avoid activities that disrupt, degrade, or interrupt our services or compromise other
+users' data, such as spam, brute force attacks, denial of service attacks, and malicious file distribution._

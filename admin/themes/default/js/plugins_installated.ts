@@ -56,20 +56,29 @@ let complete = false;
 let i = 0;
 let plugin_filter: string | null = new URLSearchParams(window.location.search).get('filter');
 
-const qsa = <T extends HTMLElement = HTMLElement>(sel: string) => Array.from(document.querySelectorAll<T>(sel));
+const qsa = <T extends HTMLElement = HTMLElement>(sel: string) =>
+    Array.from(document.querySelectorAll<T>(sel));
 const qs = <T extends HTMLElement = HTMLElement>(sel: string) => document.querySelector<T>(sel);
 
 class AjaxQueue {
     private pending: Array<() => Promise<void>> = [];
     private running = 0;
     private max: number;
-    constructor(max: number) { this.max = max; }
-    add(fn: () => Promise<void>): void { this.pending.push(fn); this.process(); }
+    constructor(max: number) {
+        this.max = max;
+    }
+    add(fn: () => Promise<void>): void {
+        this.pending.push(fn);
+        this.process();
+    }
     private process(): void {
         while (this.running < this.max && this.pending.length > 0) {
             const fn = this.pending.shift()!;
             this.running++;
-            fn().finally(() => { this.running--; this.process(); });
+            fn().finally(() => {
+                this.running--;
+                this.process();
+            });
         }
     }
 }
@@ -78,20 +87,40 @@ const queuedManager = new AjaxQueue(1);
 const nb_plugins = document.querySelectorAll('div.active').length;
 let done = 0;
 
-function setDisplay(form: string, desc: boolean, actions: boolean, smallIcons: boolean, compact: boolean) {
-    qsa('.pluginContainer').forEach(el => {
+function setDisplay(
+    form: string,
+    desc: boolean,
+    actions: boolean,
+    smallIcons: boolean,
+    compact: boolean
+) {
+    qsa('.pluginContainer').forEach((el) => {
         el.classList.remove('line-form', 'compact-form', 'classic-form');
         if (form) el.classList.add(form);
     });
-    qsa('.pluginDesc').forEach(el => { el.style.display = desc ? '' : 'none'; });
-    qsa('.pluginActions').forEach(el => { el.style.display = actions ? '' : 'none'; });
-    qsa('.pluginActionsSmallIcons').forEach(el => { el.style.display = smallIcons ? '' : 'none'; });
-    qsa('.pluginName').forEach(el => { el.classList.toggle('pluginNameCompact', compact); });
+    qsa('.pluginDesc').forEach((el) => {
+        el.style.display = desc ? '' : 'none';
+    });
+    qsa('.pluginActions').forEach((el) => {
+        el.style.display = actions ? '' : 'none';
+    });
+    qsa('.pluginActionsSmallIcons').forEach((el) => {
+        el.style.display = smallIcons ? '' : 'none';
+    });
+    qsa('.pluginName').forEach((el) => {
+        el.classList.toggle('pluginNameCompact', compact);
+    });
 }
 
-function setDisplayClassic() { setDisplay('classic-form', true, true, false, false); }
-function setDisplayCompact() { setDisplay('compact-form', false, false, true, true); }
-function setDisplayLine() { setDisplay('line-form', true, true, false, false); }
+function setDisplayClassic() {
+    setDisplay('classic-form', true, true, false, false);
+}
+function setDisplayCompact() {
+    setDisplay('compact-form', false, false, true, true);
+}
+function setDisplayLine() {
+    setDisplay('line-form', true, true, false, false);
+}
 
 function showPluginError(id: string) {
     const errEl = document.querySelector<HTMLElement>(`#${id} .PluginActionError`);
@@ -100,7 +129,11 @@ function showPluginError(id: string) {
     setTimeout(() => {
         errEl.style.transition = 'opacity 2.5s';
         errEl.style.opacity = '0';
-        setTimeout(() => { errEl.style.display = 'none'; errEl.style.opacity = ''; errEl.style.transition = ''; }, 2500);
+        setTimeout(() => {
+            errEl.style.display = 'none';
+            errEl.style.opacity = '';
+            errEl.style.transition = '';
+        }, 2500);
     }, 1500);
 }
 
@@ -108,20 +141,32 @@ function fadeOut(el: HTMLElement | null, durationMs: number) {
     if (!el) return;
     el.style.transition = `opacity ${durationMs / 1000}s`;
     el.style.opacity = '0';
-    setTimeout(() => { el.style.display = 'none'; el.style.opacity = ''; el.style.transition = ''; }, durationMs);
+    setTimeout(() => {
+        el.style.display = 'none';
+        el.style.opacity = '';
+        el.style.transition = '';
+    }, durationMs);
 }
 
 function pluginAction(id: string, action: string): Promise<any> {
-    const params = new URLSearchParams({ method: 'pwg.plugins.performAction', action, plugin: id, pwg_token, format: 'json' });
-    return fetch('ws.php?' + params).then(r => r.json());
+    const params = new URLSearchParams({
+        method: 'pwg.plugins.performAction',
+        action,
+        plugin: id,
+        pwg_token,
+        format: 'json',
+    });
+    return fetch('ws.php?' + params).then((r) => r.json());
 }
 
 function activatePlugin(id: string) {
-    (document.querySelector<HTMLInputElement>(`#${id} .switch`))!.disabled = true;
+    document.querySelector<HTMLInputElement>(`#${id} .switch`)!.disabled = true;
     pluginAction(id, 'activate')
-        .then(data => {
+        .then((data) => {
             if (data.stat == 'ok') {
-                const notif = document.querySelector<HTMLElement>(`#${id} .AddPluginSuccess label span:first-child`);
+                const notif = document.querySelector<HTMLElement>(
+                    `#${id} .AddPluginSuccess label span:first-child`
+                );
                 if (notif) notif.innerHTML = plugin_added_str;
                 const success = document.querySelector<HTMLElement>(`#${id} .AddPluginSuccess`);
                 if (success) success.style.display = 'flex';
@@ -130,43 +175,62 @@ function activatePlugin(id: string) {
                 actualizeFilter();
             }
         })
-        .catch(e => {
-            document.querySelector<HTMLElement>(`#${id} .PluginActionError label span:first-child`)!.innerHTML = plugin_action_error;
+        .catch((e) => {
+            document.querySelector<HTMLElement>(
+                `#${id} .PluginActionError label span:first-child`
+            )!.innerHTML = plugin_action_error;
             showPluginError(id);
         })
         .finally(() => {
-            (document.querySelector<HTMLInputElement>(`#${id} .switch`))!.disabled = false;
-            setTimeout(() => fadeOut(document.querySelector<HTMLElement>(`#${id} .AddPluginSuccess`), 3000), 0);
+            document.querySelector<HTMLInputElement>(`#${id} .switch`)!.disabled = false;
+            setTimeout(
+                () =>
+                    fadeOut(document.querySelector<HTMLElement>(`#${id} .AddPluginSuccess`), 3000),
+                0
+            );
         });
 }
 
 function disactivatePlugin(id: string) {
-    (document.querySelector<HTMLInputElement>(`#${id} .switch`))!.disabled = true;
+    document.querySelector<HTMLInputElement>(`#${id} .switch`)!.disabled = true;
     pluginAction(id, 'deactivate')
-        .then(data => {
+        .then((data) => {
             if (data.stat == 'ok') {
-                const notif = document.querySelector<HTMLElement>(`#${id} .DeactivatePluginSuccess label span:first-child`);
+                const notif = document.querySelector<HTMLElement>(
+                    `#${id} .DeactivatePluginSuccess label span:first-child`
+                );
                 if (notif) notif.innerHTML = plugin_deactivated_str;
-                const success = document.querySelector<HTMLElement>(`#${id} .DeactivatePluginSuccess`);
+                const success = document.querySelector<HTMLElement>(
+                    `#${id} .DeactivatePluginSuccess`
+                );
                 if (success) success.style.display = 'flex';
                 nb_plugin.inactive += 1;
                 nb_plugin.active -= 1;
                 actualizeFilter();
             }
         })
-        .catch(e => {
-            document.querySelector<HTMLElement>(`#${id} .PluginActionError label span:first-child`)!.innerHTML = plugin_action_error;
+        .catch((e) => {
+            document.querySelector<HTMLElement>(
+                `#${id} .PluginActionError label span:first-child`
+            )!.innerHTML = plugin_action_error;
             showPluginError(id);
         })
         .finally(() => {
-            (document.querySelector<HTMLInputElement>(`#${id} .switch`))!.disabled = false;
-            setTimeout(() => fadeOut(document.querySelector<HTMLElement>(`#${id} .DeactivatePluginSuccess`), 3000), 0);
+            document.querySelector<HTMLInputElement>(`#${id} .switch`)!.disabled = false;
+            setTimeout(
+                () =>
+                    fadeOut(
+                        document.querySelector<HTMLElement>(`#${id} .DeactivatePluginSuccess`),
+                        3000
+                    ),
+                0
+            );
         });
 }
 
 function deletePlugin(id: string, name: string) {
     pluginAction(id, 'delete')
-        .then(data => {
+        .then((data) => {
             if (data.stat === 'ok') {
                 document.getElementById(id)?.remove();
                 nb_plugin.inactive -= 1;
@@ -175,39 +239,56 @@ function deletePlugin(id: string, name: string) {
                 window.alert(deleted_plugin_msg.replace('%s', name));
             }
         })
-        .catch(e => {
-            document.querySelector<HTMLElement>(`#${id} .PluginActionError label span:first-child`)!.innerHTML = plugin_action_error;
+        .catch((e) => {
+            document.querySelector<HTMLElement>(
+                `#${id} .PluginActionError label span:first-child`
+            )!.innerHTML = plugin_action_error;
             showPluginError(id);
         });
 }
 
 function restorePlugin(id: string) {
     pluginAction(id, 'restore')
-        .then(data => {
+        .then((data) => {
             if (data.stat == 'ok') {
-                const notif = document.querySelector<HTMLElement>(`#${id} .RestorePluginSuccess label span:first-child`);
+                const notif = document.querySelector<HTMLElement>(
+                    `#${id} .RestorePluginSuccess label span:first-child`
+                );
                 if (notif) notif.innerHTML = plugin_restored_str;
                 const success = document.querySelector<HTMLElement>(`#${id} .RestorePluginSuccess`);
                 if (success) success.style.display = 'flex';
             }
         })
-        .catch(e => {
-            document.querySelector<HTMLElement>(`#${id} .PluginActionError label span:first-child`)!.innerHTML = plugin_action_error;
+        .catch((e) => {
+            document.querySelector<HTMLElement>(
+                `#${id} .PluginActionError label span:first-child`
+            )!.innerHTML = plugin_action_error;
             showPluginError(id);
         })
-        .finally(() => setTimeout(() => fadeOut(document.querySelector<HTMLElement>(`#${id} .RestorePluginSuccess`), 3000), 0));
+        .finally(() =>
+            setTimeout(
+                () =>
+                    fadeOut(
+                        document.querySelector<HTMLElement>(`#${id} .RestorePluginSuccess`),
+                        3000
+                    ),
+                0
+            )
+        );
 }
 
 function uninstallPlugin(id: string) {
     pluginAction(id, 'uninstall')
-        .then(data => {
+        .then((data) => {
             document.getElementById(id)?.remove();
             nb_plugin.other -= 1;
             nb_plugin.all -= 1;
             actualizeFilter();
         })
-        .catch(e => {
-            document.querySelector<HTMLElement>(`#${id} .PluginActionError label span:first-child`)!.innerHTML = plugin_action_error;
+        .catch((e) => {
+            document.querySelector<HTMLElement>(
+                `#${id} .PluginActionError label span:first-child`
+            )!.innerHTML = plugin_action_error;
             showPluginError(id);
         });
 }
@@ -221,7 +302,7 @@ function set_view_selector(view_type: string) {
 
 function performPluginDeactivate(id: string) {
     queuedManager.add(() =>
-        pluginAction(id, 'deactivate').then(data => {
+        pluginAction(id, 'deactivate').then((data) => {
             if (data.stat == 'ok') {
                 const el = document.getElementById(id);
                 el?.classList.remove('active');
@@ -234,17 +315,26 @@ function performPluginDeactivate(id: string) {
 }
 
 function showInactivePlugins() {
-    qsa('.showInactivePlugins').forEach(el => { el.style.display = 'none'; });
-    qsa('.plugin-inactive').forEach(el => { el.style.display = ''; });
+    qsa('.showInactivePlugins').forEach((el) => {
+        el.style.display = 'none';
+    });
+    qsa('.plugin-inactive').forEach((el) => {
+        el.style.display = '';
+    });
 }
 
 function actualizeFilter() {
-    const setBadge = (sel: string, val: any) => { const el = qs(sel); if (el) el.innerHTML = String(val); };
+    const setBadge = (sel: string, val: any) => {
+        const el = qs(sel);
+        if (el) el.innerHTML = String(val);
+    };
     setBadge("label[for='seeAll'] .filter-badge", nb_plugin.all);
     setBadge("label[for='seeActive'] .filter-badge", nb_plugin.active);
     setBadge("label[for='seeInactive'] .filter-badge", nb_plugin.inactive);
     setBadge("label[for='seeOther'] .filter-badge", nb_plugin.other);
-    qsa<HTMLElement>('.filterLabel').forEach(el => { el.style.display = ''; });
+    qsa<HTMLElement>('.filterLabel').forEach((el) => {
+        el.style.display = '';
+    });
 
     const seeActive = qs<HTMLInputElement>('#seeActive');
     const seeInactive = qs<HTMLInputElement>('#seeInactive');
@@ -264,22 +354,29 @@ function actualizeFilter() {
 }
 
 function filterPlugins(text: string, activeFilter: string) {
-    let searchNumber = 0, searchActive = 0, searchInactive = 0, searchOther = 0;
+    let searchNumber = 0,
+        searchActive = 0,
+        searchInactive = 0,
+        searchOther = 0;
 
-    qsa('.pluginBox').forEach(box => {
-        const name = box.querySelector<HTMLElement>('.pluginName')?.textContent?.toLowerCase() ?? '';
-        const desc = box.querySelector<HTMLElement>('.pluginDesc')?.textContent?.toLowerCase() ?? '';
+    qsa('.pluginBox').forEach((box) => {
+        const name =
+            box.querySelector<HTMLElement>('.pluginName')?.textContent?.toLowerCase() ?? '';
+        const desc =
+            box.querySelector<HTMLElement>('.pluginDesc')?.textContent?.toLowerCase() ?? '';
         const isActive = box.classList.contains('plugin-active');
         const isInactive = box.classList.contains('plugin-inactive');
-        const isOther = box.classList.contains('plugin-merged') || box.classList.contains('plugin-missing');
+        const isOther =
+            box.classList.contains('plugin-merged') || box.classList.contains('plugin-missing');
 
         const matchesText = text === '' || name.includes(text) || desc.includes(text);
-        const matchesFilter = activeFilter === 'seeAll' ||
+        const matchesFilter =
+            activeFilter === 'seeAll' ||
             (activeFilter === 'seeActive' && isActive) ||
             (activeFilter === 'seeInactive' && isInactive) ||
             (activeFilter === 'seeOther' && isOther);
 
-        box.style.display = (matchesText && matchesFilter) ? '' : 'none';
+        box.style.display = matchesText && matchesFilter ? '' : 'none';
         if (matchesText && matchesFilter) {
             searchNumber++;
             if (isActive) searchActive++;
@@ -299,9 +396,12 @@ function filterPlugins(text: string, activeFilter: string) {
         searchInfoEl.style.display = 'none';
     } else {
         searchInfoEl.style.display = '';
-        searchInfoEl.innerHTML = searchNumber === 0 ? nothing_found
-            : searchNumber === 1 ? plugin_found.replace('%s', String(searchNumber))
-            : x_plugins_found.replace('%s', String(searchNumber));
+        searchInfoEl.innerHTML =
+            searchNumber === 0
+                ? nothing_found
+                : searchNumber === 1
+                  ? plugin_found.replace('%s', String(searchNumber))
+                  : x_plugins_found.replace('%s', String(searchNumber));
     }
     actualizeFilter();
 }
@@ -309,35 +409,50 @@ function filterPlugins(text: string, activeFilter: string) {
 document.addEventListener('DOMContentLoaded', () => {
     actualizeFilter();
 
-    if ((qs<HTMLInputElement>('#displayClassic'))?.checked) setDisplayClassic();
-    if ((qs<HTMLInputElement>('#displayCompact'))?.checked) setDisplayCompact();
-    if ((qs<HTMLInputElement>('#displayLine'))?.checked) setDisplayLine();
+    if (qs<HTMLInputElement>('#displayClassic')?.checked) setDisplayClassic();
+    if (qs<HTMLInputElement>('#displayCompact')?.checked) setDisplayCompact();
+    if (qs<HTMLInputElement>('#displayLine')?.checked) setDisplayLine();
 
-    qs('#displayClassic')?.addEventListener('change', () => { setDisplayClassic(); set_view_selector('classic'); });
-    qs('#displayCompact')?.addEventListener('change', () => { setDisplayCompact(); set_view_selector('compact'); });
-    qs('#displayLine')?.addEventListener('change', () => { setDisplayLine(); set_view_selector('line'); });
+    qs('#displayClassic')?.addEventListener('change', () => {
+        setDisplayClassic();
+        set_view_selector('classic');
+    });
+    qs('#displayCompact')?.addEventListener('change', () => {
+        setDisplayCompact();
+        set_view_selector('compact');
+    });
+    qs('#displayLine')?.addEventListener('change', () => {
+        setDisplayLine();
+        set_view_selector('line');
+    });
 
     if (nb_plugin.active > 0) {
-        qsa('.pluginMiniBox').forEach(el => { if (!el.classList.contains('plugin-active')) el.style.display = 'none'; });
+        qsa('.pluginMiniBox').forEach((el) => {
+            if (!el.classList.contains('plugin-active')) el.style.display = 'none';
+        });
         qs<HTMLElement>('#seeActive')?.click();
     } else {
-        qsa<HTMLElement>('.pluginMiniBox').forEach(el => { el.style.display = ''; });
+        qsa<HTMLElement>('.pluginMiniBox').forEach((el) => {
+            el.style.display = '';
+        });
     }
 
     let activeFilter = 'seeAll';
     const filterRadios = ['seeAll', 'seeActive', 'seeInactive', 'seeOther'];
-    filterRadios.forEach(id => {
+    filterRadios.forEach((id) => {
         qs(`#${id}`)?.addEventListener('change', () => {
             activeFilter = id;
-            const searchText = String((qs<HTMLInputElement>('.pluginFilter input.search-input'))?.value ?? '').toLowerCase();
+            const searchText = String(
+                qs<HTMLInputElement>('.pluginFilter input.search-input')?.value ?? ''
+            ).toLowerCase();
             filterPlugins(searchText, activeFilter);
         });
     });
 
     if (isWebmaster != 0) {
-        qsa<HTMLElement>('.switch').forEach(switchEl => {
-            switchEl.addEventListener('change', function(this: HTMLElement) {
-                qsa('.pluginMiniBox').forEach(el => el.classList.add('usable'));
+        qsa<HTMLElement>('.switch').forEach((switchEl) => {
+            switchEl.addEventListener('change', function (this: HTMLElement) {
+                qsa('.pluginMiniBox').forEach((el) => el.classList.add('usable'));
                 const pluginBox = this.parentElement?.parentElement as HTMLElement;
                 const pluginId = pluginBox?.id ?? '';
                 const toggleInput = this.querySelector<HTMLInputElement>('#toggleSelectionMode');
@@ -345,7 +460,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     activatePlugin(pluginId);
                     pluginBox.classList.add('plugin-active');
                     pluginBox.classList.remove('plugin-inactive');
-                    const unavail = pluginBox.querySelector<HTMLElement>('.pluginUnavailableAction');
+                    const unavail = pluginBox.querySelector<HTMLElement>(
+                        '.pluginUnavailableAction'
+                    );
                     if (unavail?.getAttribute('href')) {
                         unavail.classList.remove('pluginUnavailableAction');
                         unavail.classList.add('pluginActionLevel1');
@@ -354,7 +471,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     disactivatePlugin(pluginId);
                     pluginBox.classList.remove('plugin-active');
                     pluginBox.classList.add('plugin-inactive');
-                    pluginBox.querySelectorAll<HTMLElement>('.pluginActionLevel1').forEach(el => {
+                    pluginBox.querySelectorAll<HTMLElement>('.pluginActionLevel1').forEach((el) => {
                         el.classList.remove('pluginActionLevel1');
                         el.classList.add('pluginUnavailableAction');
                     });
@@ -363,63 +480,95 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     } else {
-        qsa('.pluginMiniBox').forEach(el => el.classList.add('notUsable'));
-        qsa('.plugin-active .slider').forEach(el => el.classList.add('desactivate_disabled'));
-        qsa('.plugin-inactive .slider').forEach(el => el.classList.add('activate_disabled'));
-        qsa('.switch input').forEach(input => {
+        qsa('.pluginMiniBox').forEach((el) => el.classList.add('notUsable'));
+        qsa('.plugin-active .slider').forEach((el) => el.classList.add('desactivate_disabled'));
+        qsa('.plugin-inactive .slider').forEach((el) => el.classList.add('activate_disabled'));
+        qsa('.switch input').forEach((input) => {
             input.addEventListener('click', (e) => {
                 input.classList.add('disabled');
-                e.preventDefault(); e.stopPropagation();
+                e.preventDefault();
+                e.stopPropagation();
                 const id = input.parentElement?.parentElement?.parentElement?.id ?? '';
-                const errSpan = document.querySelector<HTMLElement>(`#${id} .PluginActionError label span:first-child`);
+                const errSpan = document.querySelector<HTMLElement>(
+                    `#${id} .PluginActionError label span:first-child`
+                );
                 if (errSpan) errSpan.innerHTML = not_webmaster;
                 showPluginError(id);
-                setTimeout(() => qsa<HTMLInputElement>('.switch input').forEach(el => el.classList.remove('disabled')), 400);
+                setTimeout(
+                    () =>
+                        qsa<HTMLInputElement>('.switch input').forEach((el) =>
+                            el.classList.remove('disabled')
+                        ),
+                    400
+                );
             });
         });
     }
 
-    qsa('.pluginContent .dropdown-option.delete-plugin-button').forEach(btn => {
+    qsa('.pluginContent .dropdown-option.delete-plugin-button').forEach((btn) => {
         btn.addEventListener('click', () => {
-            const plugin_name = btn.closest<HTMLElement>('.pluginContent')?.querySelector<HTMLElement>('.pluginName')?.innerHTML.trim() ?? '';
+            const plugin_name =
+                btn
+                    .closest<HTMLElement>('.pluginContent')
+                    ?.querySelector<HTMLElement>('.pluginName')
+                    ?.innerHTML.trim() ?? '';
             const plugin_id = btn.closest<HTMLElement>('.pluginContent')?.parentElement?.id ?? '';
-            if (window.confirm(delete_plugin_msg.replace('%s', plugin_name))) deletePlugin(plugin_id, plugin_name);
+            if (window.confirm(delete_plugin_msg.replace('%s', plugin_name)))
+                deletePlugin(plugin_id, plugin_name);
         });
     });
 
-    qsa('.pluginContent .dropdown-option.plugin-restore').forEach(btn => {
+    qsa('.pluginContent .dropdown-option.plugin-restore').forEach((btn) => {
         btn.addEventListener('click', () => {
-            const plugin_name = btn.closest<HTMLElement>('.pluginContent')?.querySelector<HTMLElement>('.pluginName')?.innerHTML.trim() ?? '';
+            const plugin_name =
+                btn
+                    .closest<HTMLElement>('.pluginContent')
+                    ?.querySelector<HTMLElement>('.pluginName')
+                    ?.innerHTML.trim() ?? '';
             const plugin_id = btn.closest<HTMLElement>('.pluginContent')?.parentElement?.id ?? '';
-            const msg = restore_plugin_msg.replace('%s', plugin_name) + (str_restore_def ? '\n\n' + str_restore_def : '');
+            const msg =
+                restore_plugin_msg.replace('%s', plugin_name) +
+                (str_restore_def ? '\n\n' + str_restore_def : '');
             if (window.confirm(msg)) restorePlugin(plugin_id);
         });
     });
 
-    qsa('.pluginContent .uninstall-plugin-button').forEach(btn => {
+    qsa('.pluginContent .uninstall-plugin-button').forEach((btn) => {
         btn.addEventListener('click', () => {
-            const plugin_name = btn.closest<HTMLElement>('.pluginContent')?.querySelector<HTMLElement>('.pluginName')?.innerHTML.trim() ?? '';
+            const plugin_name =
+                btn
+                    .closest<HTMLElement>('.pluginContent')
+                    ?.querySelector<HTMLElement>('.pluginName')
+                    ?.innerHTML.trim() ?? '';
             const plugin_id = btn.closest<HTMLElement>('.pluginContent')?.parentElement?.id ?? '';
-            if (window.confirm(uninstall_plugin_msg.replace('%s', plugin_name))) uninstallPlugin(plugin_id);
+            if (window.confirm(uninstall_plugin_msg.replace('%s', plugin_name)))
+                uninstallPlugin(plugin_id);
         });
     });
 
     qs('div.deactivate_all a')?.addEventListener('click', () => {
         if (!window.confirm(deactivate_all_msg)) return;
-        document.querySelectorAll<HTMLElement>('div.active').forEach(el => performPluginDeactivate(el.id));
+        document
+            .querySelectorAll<HTMLElement>('div.active')
+            .forEach((el) => performPluginDeactivate(el.id));
     });
 
-    fetch('admin.php?' + new URLSearchParams({ page: 'plugins_installed', incompatible_plugins: 'true' }))
-        .then(r => r.json())
+    fetch(
+        'admin.php?' +
+            new URLSearchParams({ page: 'plugins_installed', incompatible_plugins: 'true' })
+    )
+        .then((r) => r.json())
         .then((data: string[]) => {
-            data.forEach(pluginId => {
+            data.forEach((pluginId) => {
                 const nameEl = document.querySelector(`#${pluginId} .pluginName`);
                 if (nameEl) {
-                    const tag = show_details ? `<a class="warning" title="${incompatible_msg}"></a>` : `<span class="warning" title="${incompatible_msg}"></span>`;
+                    const tag = show_details
+                        ? `<a class="warning" title="${incompatible_msg}"></a>`
+                        : `<span class="warning" title="${incompatible_msg}"></span>`;
                     nameEl.insertAdjacentHTML('afterbegin', tag);
                 }
                 document.getElementById(pluginId)?.classList.add('incompatible');
-                document.querySelectorAll<HTMLElement>(`#${pluginId} .activate`).forEach(el => {
+                document.querySelectorAll<HTMLElement>(`#${pluginId} .activate`).forEach((el) => {
                     (window as any).pwg_jconfirm_follow_href_fn(el, {
                         alert_title: incompatible_msg + activate_msg,
                         alert_confirm: confirm_msg,
@@ -433,16 +582,19 @@ document.addEventListener('DOMContentLoaded', () => {
     tippy('.fullInfo', { delay: [500, 0], duration: [200, 200], maxWidth: 300 });
 
     document.onkeydown = (e) => {
-        if (e.keyCode == 58) { qs<HTMLInputElement>('.pluginFilter input.search-input')?.focus(); return false; }
+        if (e.keyCode == 58) {
+            qs<HTMLInputElement>('.pluginFilter input.search-input')?.focus();
+            return false;
+        }
         return undefined;
     };
 
-    qs('.pluginFilter input')?.addEventListener('input', function(this: HTMLInputElement) {
+    qs('.pluginFilter input')?.addEventListener('input', function (this: HTMLInputElement) {
         const text = this.value.toLowerCase();
         filterPlugins(text, activeFilter);
     });
 
-    qsa('.pluginBox').forEach(box => {
+    qsa('.pluginBox').forEach((box) => {
         box.querySelector<HTMLElement>('.showOptions')?.addEventListener('click', () => {
             const optBlock = box.querySelector<HTMLElement>('.PluginOptionsBlock');
             if (optBlock) optBlock.style.display = optBlock.style.display === 'none' ? '' : 'none';
@@ -459,7 +611,7 @@ document.addEventListener('DOMContentLoaded', () => {
 document.addEventListener('mouseup', (e: MouseEvent) => {
     e.stopPropagation();
     const target = e.target as Element;
-    qsa('.pluginBox').forEach(box => {
+    qsa('.pluginBox').forEach((box) => {
         if (!box.querySelector('.showOptions')?.contains(target)) {
             const block = box.querySelector<HTMLElement>('.PluginOptionsBlock');
             if (block) block.style.display = 'none';

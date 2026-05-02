@@ -1,7 +1,10 @@
-function pwgAddAlbum(buttonEl: HTMLElement, options: {
-    filter?: (this: HTMLSelectElement, cats: any[]) => any[];
-    afterSelect?: () => void;
-} = {}): void {
+function pwgAddAlbum(
+    buttonEl: HTMLElement,
+    options: {
+        filter?: (this: HTMLSelectElement, cats: any[]) => any[];
+        afterSelect?: () => void;
+    } = {}
+): void {
     const popup = document.getElementById('addAlbumForm')!;
     const albumParentSel = popup.querySelector<HTMLSelectElement>('[name="category_parent"]')!;
     const targetName = buttonEl.dataset['addAlbum'] ?? '';
@@ -53,43 +56,67 @@ function pwgAddAlbum(buttonEl: HTMLElement, options: {
             const nameInput = popup.querySelector<HTMLInputElement>('[name=category_name]');
             const name = nameInput?.value ?? '';
             const errEl = document.getElementById('categoryNameError');
-            if (!name) { if (errEl) errEl.style.visibility = 'visible'; return; }
+            if (!name) {
+                if (errEl) errEl.style.visibility = 'visible';
+                return;
+            }
             if (errEl) errEl.style.visibility = 'hidden';
 
             const loadingEl = document.getElementById('albumCreationLoading');
             const creationBtns = document.querySelectorAll<HTMLElement>('.albumCreationButton');
             if (loadingEl) loadingEl.style.display = 'inline-block';
-            creationBtns.forEach(b => { b.style.display = 'none'; });
+            creationBtns.forEach((b) => {
+                b.style.display = 'none';
+            });
 
             fetch('ws.php?format=json', {
                 method: 'POST',
-                body: new URLSearchParams({ method: 'pwg.categories.add', parent: String(parent_id), name }),
-            }).then(r => r.json()).then((data: any) => {
-                if (loadingEl) loadingEl.style.display = 'none';
-                creationBtns.forEach(b => { b.style.display = ''; });
-                closeDialog();
+                body: new URLSearchParams({
+                    method: 'pwg.categories.add',
+                    parent: String(parent_id),
+                    name,
+                }),
+            })
+                .then((r) => r.json())
+                .then((data: any) => {
+                    if (loadingEl) loadingEl.style.display = 'none';
+                    creationBtns.forEach((b) => {
+                        b.style.display = '';
+                    });
+                    closeDialog();
 
-                const newAlbum: any = { id: data.result.id, name, fullname: name, global_rank: '0', dir: null, nb_images: 0, pos: 0 };
-                const parentTs = (albumParentSel as any).tomselect;
-                const targetTs = (targetSel as any).tomselect;
+                    const newAlbum: any = {
+                        id: data.result.id,
+                        name,
+                        fullname: name,
+                        global_rank: '0',
+                        dir: null,
+                        nb_images: 0,
+                        pos: 0,
+                    };
+                    const parentTs = (albumParentSel as any).tomselect;
+                    const targetTs = (targetSel as any).tomselect;
 
-                if (parent_id !== 0 && parent_id !== '0') {
-                    const parent = parentTs.options[String(parent_id)];
-                    if (parent) {
-                        newAlbum.fullname = parent.fullname + ' / ' + newAlbum.fullname;
-                        newAlbum.global_rank = parent.global_rank + '.1';
-                        newAlbum.pos = parent.pos + 1;
+                    if (parent_id !== 0 && parent_id !== '0') {
+                        const parent = parentTs.options[String(parent_id)];
+                        if (parent) {
+                            newAlbum.fullname = parent.fullname + ' / ' + newAlbum.fullname;
+                            newAlbum.global_rank = parent.global_rank + '.1';
+                            newAlbum.pos = parent.pos + 1;
+                        }
                     }
-                }
-                targetTs.addOption(newAlbum);
-                targetTs.setValue(String(newAlbum.id));
-                parentTs.addOption(newAlbum);
-                if (options.afterSelect) options.afterSelect();
-            }).catch((_err) => {
-                if (loadingEl) loadingEl.style.display = 'none';
-                creationBtns.forEach(b => { b.style.display = ''; });
-                alert('Error creating album');
-            });
+                    targetTs.addOption(newAlbum);
+                    targetTs.setValue(String(newAlbum.id));
+                    parentTs.addOption(newAlbum);
+                    if (options.afterSelect) options.afterSelect();
+                })
+                .catch((_err) => {
+                    if (loadingEl) loadingEl.style.display = 'none';
+                    creationBtns.forEach((b) => {
+                        b.style.display = '';
+                    });
+                    alert('Error creating album');
+                });
         });
     }
 
@@ -98,7 +125,10 @@ function pwgAddAlbum(buttonEl: HTMLElement, options: {
         const errEl = document.getElementById('categoryNameError');
         if (errEl) errEl.style.visibility = 'hidden';
         const nameInput = popup.querySelector<HTMLInputElement>('[name=category_name]');
-        if (nameInput) { nameInput.value = ''; nameInput.focus(); }
+        if (nameInput) {
+            nameInput.value = '';
+            nameInput.focus();
+        }
         const parentTs = (albumParentSel as any).tomselect;
         const targetTs = (targetSel as any).tomselect;
         if (parentTs && targetTs) parentTs.setValue(targetTs.getValue() || '0');

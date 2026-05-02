@@ -36,10 +36,12 @@
   margin-right: 15px;
   margin-bottom: 10px;
   display: flex;
-  cursor: pointer
+  cursor: pointer;
 }
 
-.delete-size-check .select-checkbox .icon-ok { margin-left: 8px; }
+.delete-size-check .select-checkbox .icon-ok {
+  margin-left: 8px;
+}
 .delete-size-check .picture-deletion-size {
   font-size: 14px;
   margin-left: 5px;

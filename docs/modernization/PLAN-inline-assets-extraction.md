@@ -2,16 +2,16 @@
 
 **Status: ✅ Done.** All six phases landed across ~70 commits. Final structural counts (excluding `mail/` templates which intentionally keep inline styles):
 
-| Kind                          | Blocks before | Blocks now |
-|-------------------------------|---------------|-----------:|
-| `<style>` tags                | 21            | **0**      |
-| `{html_style}` blocks         | 16            | **0**      |
-| `{footer_script}` blocks      | 52            | **0**      |
-| `{literal}` blocks            | 21            | **0**      |
-| `{html_head}` blocks          | 3             | 3 (intentional — CSS/JS aggregator hooks) |
+| Kind                          | Blocks before |                                                                                                       Blocks now |
+| ----------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------: |
+| `<style>` tags                | 21            |                                                                                                            **0** |
+| `{html_style}` blocks         | 16            |                                                                                                            **0** |
+| `{footer_script}` blocks      | 52            |                                                                                                            **0** |
+| `{literal}` blocks            | 21            |                                                                                                            **0** |
+| `{html_head}` blocks          | 3             |                                                                        3 (intentional — CSS/JS aggregator hooks) |
 | Bare `<script>` (no src)      | 40            | **0** executable; only `<script type="application/json">` data islands and `<script src=…>` external refs remain |
-| Inline JS event-handler attrs | ~25+          | **0**      |
-| Inline `style="…"` attributes | 240           | 13 (all uniform `--var: value` shape, all PHP/Smarty-driven, covered by `style-src-attr`) |
+| Inline JS event-handler attrs | ~25+          |                                                                                                            **0** |
+| Inline `style="…"` attributes | 240           |                        13 (all uniform `--var: value` shape, all PHP/Smarty-driven, covered by `style-src-attr`) |
 
 The 13 surviving `style=""` are CSS custom property assignments only — see `docs/modernization/ROADMAP-CSS.md` for the architectural rationale and the `{html_style}` + nonce path if a future stricter CSP requires `style-src-attr 'none'`.
 
@@ -19,14 +19,14 @@ The 13 surviving `style=""` are CSS custom property assignments only — see `do
 
 Originally, 133 project Smarty templates (in `themes/default/`, `themes/standard_pages/`, `admin/themes/default/`) carried **~6,990 lines** of inline assets and **240 inline `style="…"` attributes**:
 
-| Kind                          | Blocks | Lines |
-|-------------------------------|--------|-------|
-| `<style>`                     | 21     | 4,219 |
-| `{footer_script}`             | 52     | 1,835 |
-| `{literal}`                   | 21     | 708   |
-| `{html_head}`                 | 3      | 106   |
-| Bare `<script>` (no `src`)    | 40     | 125   |
-| `style="…"` attributes        | 240    | —     |
+| Kind                       | Blocks | Lines |
+| -------------------------- | ------ | ----- |
+| `<style>`                  | 21     | 4,219 |
+| `{footer_script}`          | 52     | 1,835 |
+| `{literal}`                | 21     | 708   |
+| `{html_head}`              | 3      | 106   |
+| Bare `<script>` (no `src`) | 40     | 125   |
+| `style="…"` attributes     | 240    | —     |
 
 This work had homes in the roadmap:
 
@@ -71,20 +71,20 @@ Pure CSS, zero Smarty interpolation. Each file: cut the `<style>…</style>` blo
 
 Highest-impact files (line counts confirmed by inspection):
 
-| Template | Block lines | Target path |
-|----------|-------------|-------------|
-| `admin/themes/default/template/user_list.tpl` (lines 1069–3171) | 2,103 | `admin/themes/default/css/pages/user-list.css` |
-| `admin/themes/default/template/history.tpl` (241–687) | 447 | `admin/themes/default/css/pages/history.css` |
-| `admin/themes/default/template/albums.tpl` (240–603) | 364 | `admin/themes/default/css/pages/albums.css` |
-| `admin/themes/default/template/user_activity.tpl` (190–469) | 280 | `admin/themes/default/css/pages/user-activity.css` |
-| `admin/themes/default/template/maintenance_sys.tpl` | 145 | `admin/themes/default/css/pages/maintenance-sys.css` |
-| `admin/themes/default/template/cat_list.tpl` | 158 | `admin/themes/default/css/pages/cat-list.css` |
-| `admin/themes/default/template/install.tpl` + `upgrade.tpl` | 127 + 106 | `admin/themes/default/css/pages/install-upgrade.css` (shared, near-identical) |
-| `admin/themes/default/template/cat_modify.tpl` | 77 | `admin/themes/default/css/pages/cat-modify.css` |
-| `admin/themes/default/template/maintenance_actions.tpl` (231–307) | 77 | `admin/themes/default/css/pages/maintenance-actions.css` |
-| `admin/themes/default/template/photos_add_applications.tpl` | 59 | `admin/themes/default/css/pages/photos-add-applications.css` |
-| `themes/default/template/no_photo_yet.tpl` (8–116) | 109 | `themes/default/css/no-photo-yet.css` |
-| Remaining ~12 small static blocks (≤40 lines each) per ROADMAP-CSS.md:62 | ~250 | `…/css/pages/<name>.css` |
+| Template                                                                 | Block lines | Target path                                                                   |
+| ------------------------------------------------------------------------ | ----------- | ----------------------------------------------------------------------------- |
+| `admin/themes/default/template/user_list.tpl` (lines 1069–3171)          | 2,103       | `admin/themes/default/css/pages/user-list.css`                                |
+| `admin/themes/default/template/history.tpl` (241–687)                    | 447         | `admin/themes/default/css/pages/history.css`                                  |
+| `admin/themes/default/template/albums.tpl` (240–603)                     | 364         | `admin/themes/default/css/pages/albums.css`                                   |
+| `admin/themes/default/template/user_activity.tpl` (190–469)              | 280         | `admin/themes/default/css/pages/user-activity.css`                            |
+| `admin/themes/default/template/maintenance_sys.tpl`                      | 145         | `admin/themes/default/css/pages/maintenance-sys.css`                          |
+| `admin/themes/default/template/cat_list.tpl`                             | 158         | `admin/themes/default/css/pages/cat-list.css`                                 |
+| `admin/themes/default/template/install.tpl` + `upgrade.tpl`              | 127 + 106   | `admin/themes/default/css/pages/install-upgrade.css` (shared, near-identical) |
+| `admin/themes/default/template/cat_modify.tpl`                           | 77          | `admin/themes/default/css/pages/cat-modify.css`                               |
+| `admin/themes/default/template/maintenance_actions.tpl` (231–307)        | 77          | `admin/themes/default/css/pages/maintenance-actions.css`                      |
+| `admin/themes/default/template/photos_add_applications.tpl`              | 59          | `admin/themes/default/css/pages/photos-add-applications.css`                  |
+| `themes/default/template/no_photo_yet.tpl` (8–116)                       | 109         | `themes/default/css/no-photo-yet.css`                                         |
+| Remaining ~12 small static blocks (≤40 lines each) per ROADMAP-CSS.md:62 | ~250        | `…/css/pages/<name>.css`                                                      |
 
 Phase total: **~4,200 lines of CSS moved to disk, 21 `<style>` tags removed**. Plus 16 `{html_style}` blocks were removed in the same shape — 10 to per-page CSS files, 5 via CSS-custom-property pattern (the dynamic ones initially declared "must stay inline" — see Scope above).
 
@@ -94,18 +94,18 @@ Phase total: **~4,200 lines of CSS moved to disk, 21 `<style>` tags removed**. P
 
 Highest-impact files (from the classification pass):
 
-| Template | Lines | Target |
-|----------|-------|--------|
-| `admin/themes/default/template/configuration_main.tpl` | 115 | `admin/themes/default/js/configuration_main.ts` |
-| `admin/themes/default/template/menubar.tpl` | 77 | `admin/themes/default/js/admin_menubar.ts` |
-| `admin/themes/default/template/element_set_ranks.tpl` | 74 | `admin/themes/default/js/element_set_ranks.ts` |
-| `admin/themes/default/template/themes_standard_pages.tpl` | 68 | `admin/themes/default/js/themes_standard_pages.ts` |
-| `admin/themes/default/template/configuration_search.tpl` | 60 | `admin/themes/default/js/configuration_search.ts` |
-| `admin/themes/default/template/admin.tpl` | 57 | merge into existing `admin/themes/default/js/admin.ts` |
-| `admin/themes/default/template/configuration_watermark.tpl` | 47 | `admin/themes/default/js/configuration_watermark.ts` |
-| `admin/themes/default/template/history.tpl` (footer_script ×2) | 50 | `admin/themes/default/js/history.ts` |
-| Remaining 12 pure-JS blocks (≤45 lines each) | ~270 | one `.ts` per template |
-| 21 `{literal}` blocks (708 lines, including `no_photo_yet.tpl:7-117`) | 708 | per-template `.ts`, or merge into existing |
+| Template                                                              | Lines | Target                                                 |
+| --------------------------------------------------------------------- | ----- | ------------------------------------------------------ |
+| `admin/themes/default/template/configuration_main.tpl`                | 115   | `admin/themes/default/js/configuration_main.ts`        |
+| `admin/themes/default/template/menubar.tpl`                           | 77    | `admin/themes/default/js/admin_menubar.ts`             |
+| `admin/themes/default/template/element_set_ranks.tpl`                 | 74    | `admin/themes/default/js/element_set_ranks.ts`         |
+| `admin/themes/default/template/themes_standard_pages.tpl`             | 68    | `admin/themes/default/js/themes_standard_pages.ts`     |
+| `admin/themes/default/template/configuration_search.tpl`              | 60    | `admin/themes/default/js/configuration_search.ts`      |
+| `admin/themes/default/template/admin.tpl`                             | 57    | merge into existing `admin/themes/default/js/admin.ts` |
+| `admin/themes/default/template/configuration_watermark.tpl`           | 47    | `admin/themes/default/js/configuration_watermark.ts`   |
+| `admin/themes/default/template/history.tpl` (footer_script ×2)        | 50    | `admin/themes/default/js/history.ts`                   |
+| Remaining 12 pure-JS blocks (≤45 lines each)                          | ~270  | one `.ts` per template                                 |
+| 21 `{literal}` blocks (708 lines, including `no_photo_yet.tpl:7-117`) | 708   | per-template `.ts`, or merge into existing             |
 
 Replacement pattern in the template:
 

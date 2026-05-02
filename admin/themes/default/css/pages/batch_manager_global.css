@@ -5,7 +5,7 @@
 
 #action_add_tags .item,
 #action_add_tags .item.active {
-  background-image:none;
+  background-image: none;
   background-color: #ffa646;
   border-color: transparent;
   color: black;
@@ -19,9 +19,8 @@
   border-top-right-radius: 20px;
   border-bottom-right-radius: 20px;
   color: black;
-  
-  border-left: 1px solid transparent;
 
+  border-left: 1px solid transparent;
 }
 #action_add_tags .item .remove:hover,
 #action_add_tags .item .remove:hover {

@@ -15,7 +15,8 @@ body {
 
 #theHeader {
   display: block;
-  background: url("admin/themes/default/images/piwigo-orange.svg") no-repeat scroll center 20px transparent;
+  background: url("admin/themes/default/images/piwigo-orange.svg") no-repeat scroll center 20px
+    transparent;
   height: 100px;
   background-size: 300px;
 }
@@ -60,7 +61,9 @@ table.table2 td.fielddesc {
   color: #888;
 }
 
-input[type="submit"], input[type="button"], a.bigButton {
+input[type="submit"],
+input[type="button"],
+a.bigButton {
   font-size: 14px;
   font-weight: bold;
   letter-spacing: 2px;
@@ -72,12 +75,16 @@ input[type="submit"], input[type="button"], a.bigButton {
   cursor: pointer;
 }
 
-input[type="submit"]:hover, input[type="button"]:hover, a.bigButton:hover {
+input[type="submit"]:hover,
+input[type="button"]:hover,
+a.bigButton:hover {
   background-color: #ff7700;
   color: #493c21;
 }
 
-input[type="text"], input[type="password"], select {
+input[type="text"],
+input[type="password"],
+select {
   background-color: #3c3c3c;
   border: 2px solid #555;
   border-radius: 5px;
@@ -85,7 +92,9 @@ input[type="text"], input[type="password"], select {
   color: #c1c1c1;
 }
 
-input[type="text"]:focus, input[type="password"]:focus, select:focus {
+input[type="text"]:focus,
+input[type="password"]:focus,
+select:focus {
   background-color: #444;
   border: 2px solid #ff7700;
   outline: none;

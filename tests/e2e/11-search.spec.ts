@@ -18,7 +18,7 @@ test.describe('search functionality', () => {
 
         const searchRes = await request.get(
             pwgUrl('/ws.php?format=json&method=pwg.images.search&query=LighthouseDusk'),
-            { headers: { Cookie: cookie } },
+            { headers: { Cookie: cookie } }
         );
         const searchBody = await searchRes.json();
         expect(searchBody.stat).toBe('ok');
@@ -30,13 +30,23 @@ test.describe('search functionality', () => {
     test('gallery search page renders without JS errors', async ({ page }) => {
         const getErrors = attachErrorCollector(page);
         await page.goto(pwgUrl('/index.php?q=sunset'));
-        expect(getErrors(), `pageerrors: ${getErrors().map((e) => e.message).join('; ')}`).toHaveLength(0);
+        expect(
+            getErrors(),
+            `pageerrors: ${getErrors()
+                .map((e) => e.message)
+                .join('; ')}`
+        ).toHaveLength(0);
     });
 
     test('search with no results renders empty state without errors', async ({ page }) => {
         const getErrors = attachErrorCollector(page);
         const response = await page.goto(pwgUrl('/index.php?q=zzznomatch99xqz'));
-        expect(getErrors(), `pageerrors: ${getErrors().map((e) => e.message).join('; ')}`).toHaveLength(0);
+        expect(
+            getErrors(),
+            `pageerrors: ${getErrors()
+                .map((e) => e.message)
+                .join('; ')}`
+        ).toHaveLength(0);
         expect(response?.status()).toBe(200);
     });
 });

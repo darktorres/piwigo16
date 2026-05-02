@@ -65,12 +65,13 @@ let PWG_TOKEN = '';
 let apiKeyAbort: AbortController | null = null;
 
 const qs = <T extends HTMLElement = HTMLElement>(sel: string) => document.querySelector<T>(sel);
-const qsa = <T extends HTMLElement = HTMLElement>(sel: string) => Array.from(document.querySelectorAll<T>(sel));
+const qsa = <T extends HTMLElement = HTMLElement>(sel: string) =>
+    Array.from(document.querySelectorAll<T>(sel));
 
 document.addEventListener('DOMContentLoaded', () => {
     PWG_TOKEN = String((document.getElementById('pwg_token') as HTMLInputElement)?.value ?? '');
 
-    qsa('.profile-section .display-section').forEach(btn => {
+    qsa('.profile-section .display-section').forEach((btn) => {
         btn.addEventListener('click', () => {
             const display = btn.dataset['display']!;
             const section = document.getElementById(display)!;
@@ -92,63 +93,74 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => qs('#account-section .display-section')?.click(), 100);
 
     qs('#save_account')?.addEventListener('click', () => {
-        const mail = (qs<HTMLInputElement>('#email'))?.value;
-        if (!mail || mail === '') { qs('#email_error')!.style.display = ''; return; }
+        const mail = qs<HTMLInputElement>('#email')?.value;
+        if (!mail || mail === '') {
+            qs('#email_error')!.style.display = '';
+            return;
+        }
         setInfos({ email: mail });
     });
 
     if (canUpdatePreferences) {
         qs('#save_preferences')?.addEventListener('click', () => {
             const values: Record<string, unknown> = {
-                nb_image_page: (qs<HTMLInputElement>('#nb_image_page'))?.value,
-                theme: (qs<HTMLSelectElement>('select[name="theme"]'))?.value,
-                language: (qs<HTMLSelectElement>('select[name="language"]'))?.value,
-                recent_period: (qs<HTMLInputElement>('#recent_period'))?.value,
-                expand: (qs<HTMLInputElement>('#opt_album'))?.checked,
-                show_nb_comments: (qs<HTMLInputElement>('#opt_comment'))?.checked,
-                show_nb_hits: (qs<HTMLInputElement>('#opt_hits'))?.checked,
+                nb_image_page: qs<HTMLInputElement>('#nb_image_page')?.value,
+                theme: qs<HTMLSelectElement>('select[name="theme"]')?.value,
+                language: qs<HTMLSelectElement>('select[name="language"]')?.value,
+                recent_period: qs<HTMLInputElement>('#recent_period')?.value,
+                expand: qs<HTMLInputElement>('#opt_album')?.checked,
+                show_nb_comments: qs<HTMLInputElement>('#opt_comment')?.checked,
+                show_nb_hits: qs<HTMLInputElement>('#opt_hits')?.checked,
             };
-            if (!values.nb_image_page) { qs('#error_nb_image')!.style.display = ''; return; }
-            if (!values.recent_period) { qs('#error_period')!.style.display = ''; return; }
+            if (!values.nb_image_page) {
+                qs('#error_nb_image')!.style.display = '';
+                return;
+            }
+            if (!values.recent_period) {
+                qs('#error_period')!.style.display = '';
+                return;
+            }
             setInfos(values);
         });
 
         qs('#reset_preferences')?.addEventListener('click', () => {
             const u = user as any;
-            (qs<HTMLInputElement>('input[name="nb_image_page"]'))!.value = u.nb_image_page;
-            (qs<HTMLSelectElement>('select[name="theme"]'))!.value = u.theme;
-            (qs<HTMLSelectElement>('select[name="language"]'))!.value = u.language;
-            (qs<HTMLInputElement>('input[name="recent_period"]'))!.value = u.recent_period;
-            (qs<HTMLInputElement>('#opt_album'))!.checked = u.opt_album;
-            (qs<HTMLInputElement>('#opt_comment'))!.checked = u.opt_comment;
-            (qs<HTMLInputElement>('#opt_hits'))!.checked = u.opt_hits;
+            qs<HTMLInputElement>('input[name="nb_image_page"]')!.value = u.nb_image_page;
+            qs<HTMLSelectElement>('select[name="theme"]')!.value = u.theme;
+            qs<HTMLSelectElement>('select[name="language"]')!.value = u.language;
+            qs<HTMLInputElement>('input[name="recent_period"]')!.value = u.recent_period;
+            qs<HTMLInputElement>('#opt_album')!.checked = u.opt_album;
+            qs<HTMLInputElement>('#opt_comment')!.checked = u.opt_comment;
+            qs<HTMLInputElement>('#opt_hits')!.checked = u.opt_hits;
         });
 
         qs('#default_preferences')?.addEventListener('click', () => {
             const d = preferencesDefaultValues as any;
-            (qs<HTMLInputElement>('input[name="nb_image_page"]'))!.value = d.nb_image_page;
-            (qs<HTMLInputElement>('input[name="recent_period"]'))!.value = d.recent_period;
-            (qs<HTMLInputElement>('#opt_album'))!.checked = d.opt_album;
-            (qs<HTMLInputElement>('#opt_comment'))!.checked = d.opt_comment;
-            (qs<HTMLInputElement>('#opt_hits'))!.checked = d.opt_hits;
+            qs<HTMLInputElement>('input[name="nb_image_page"]')!.value = d.nb_image_page;
+            qs<HTMLInputElement>('input[name="recent_period"]')!.value = d.recent_period;
+            qs<HTMLInputElement>('#opt_album')!.checked = d.opt_album;
+            qs<HTMLInputElement>('#opt_comment')!.checked = d.opt_comment;
+            qs<HTMLInputElement>('#opt_hits')!.checked = d.opt_hits;
         });
     }
 
     if (canUpdatePassword) {
         qs('#save_password')?.addEventListener('click', () => {
             const passwords: Record<string, unknown> = {
-                password: (qs<HTMLInputElement>('#password'))?.value,
-                new_password: (qs<HTMLInputElement>('#password_new'))?.value,
-                conf_new_password: (qs<HTMLInputElement>('#password_conf'))?.value,
+                password: qs<HTMLInputElement>('#password')?.value,
+                new_password: qs<HTMLInputElement>('#password_new')?.value,
+                conf_new_password: qs<HTMLInputElement>('#password_conf')?.value,
             };
             if (!passwords.password || !passwords.new_password || !passwords.conf_new_password) {
-                qsa<HTMLInputElement>('#password-section input').forEach(el => {
+                qsa<HTMLInputElement>('#password-section input').forEach((el) => {
                     if (!el.value) el.parentElement?.nextElementSibling?.removeAttribute('style');
                 });
                 return;
             }
             setInfos(passwords);
-            qsa<HTMLInputElement>('#password-section input').forEach(el => { el.value = ''; });
+            qsa<HTMLInputElement>('#password-section input').forEach((el) => {
+                el.value = '';
+            });
         });
     }
 
@@ -158,17 +170,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const blockKey = btn.dataset['standardSave'] ?? '';
         btn.addEventListener('click', () => {
             const values: Record<string, unknown> = {};
-            document.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(
-                `#${blockKey}-section input, #${blockKey}-section textarea, #${blockKey}-section select`,
-            ).forEach((el) => {
-                if (el.name) values[el.name] = el.value;
-            });
+            document
+                .querySelectorAll<
+                    HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+                >(`#${blockKey}-section input, #${blockKey}-section textarea, #${blockKey}-section select`)
+                .forEach((el) => {
+                    if (el.name) values[el.name] = el.value;
+                });
             setInfos(values);
         });
     });
 
     if (!can_manage_api) {
-        qsa('.can-manage').forEach(el => { el.style.display = 'none'; });
+        qsa('.can-manage').forEach((el) => {
+            el.style.display = 'none';
+        });
         qs('#cant_manage_api')!.style.display = '';
         return;
     }
@@ -180,7 +196,7 @@ document.addEventListener('DOMContentLoaded', () => {
     qs('#close_api_modal_revoke')?.addEventListener('click', closeApiRevokeModal);
     qs('#cancel_api_revoke')?.addEventListener('click', closeApiRevokeModal);
 
-    qs('#show_expired_list')?.addEventListener('click', function(this: HTMLElement) {
+    qs('#show_expired_list')?.addEventListener('click', function (this: HTMLElement) {
         const api_list_expired = qs('#api_key_list_expired')!;
         const isOpen = this.dataset['show'] === 'true';
         api_list_expired.style.maxHeight = isOpen ? '0' : 'max-content';
@@ -191,30 +207,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.addEventListener('keydown', (e: KeyboardEvent) => {
         if (qs('#api_modal')?.style.display !== 'none' && e.key === 'Escape') closeApiModal();
-        if (qs('#api_modal_edit')?.style.display !== 'none' && e.key === 'Escape') closeApiEditModal();
-        if (qs('#api_modal_revoke')?.style.display !== 'none' && e.key === 'Escape') closeApiRevokeModal();
+        if (qs('#api_modal_edit')?.style.display !== 'none' && e.key === 'Escape')
+            closeApiEditModal();
+        if (qs('#api_modal_revoke')?.style.display !== 'none' && e.key === 'Escape')
+            closeApiRevokeModal();
     });
 
-    qs<HTMLSelectElement>('select[name="api_expiration"]')?.addEventListener('change', function(this: HTMLSelectElement) {
-        const custom_date = qs('#api_custom_date')!;
-        custom_date.style.display = this.value === 'custom' ? 'flex' : 'none';
+    qs<HTMLSelectElement>('select[name="api_expiration"]')?.addEventListener(
+        'change',
+        function (this: HTMLSelectElement) {
+            const custom_date = qs('#api_custom_date')!;
+            custom_date.style.display = this.value === 'custom' ? 'flex' : 'none';
+            qs('#error_api_key_date')!.style.display = 'none';
+        }
+    );
+
+    qs('#api_expiration_date')?.addEventListener('change', () => {
         qs('#error_api_key_date')!.style.display = 'none';
     });
-
-    qs('#api_expiration_date')?.addEventListener('change', () => { qs('#error_api_key_date')!.style.display = 'none'; });
 
     getAllApiKeys();
 });
 
-function setInfos(params: Record<string, unknown>, method = 'pwg.users.setMyInfo', callback: ((res: unknown) => void) | null = null, errCallback: ((err: unknown) => void) | null = null): void {
+function setInfos(
+    params: Record<string, unknown>,
+    method = 'pwg.users.setMyInfo',
+    callback: ((res: unknown) => void) | null = null,
+    errCallback: ((err: unknown) => void) | null = null
+): void {
     const body = new URLSearchParams();
-    for (const [k, v] of Object.entries({ ...params, pwg_token: PWG_TOKEN })) body.append(k, String(v ?? ''));
+    for (const [k, v] of Object.entries({ ...params, pwg_token: PWG_TOKEN }))
+        body.append(k, String(v ?? ''));
     fetch(`ws.php?format=json&method=${method}`, { method: 'POST', body })
-        .then(r => r.json())
+        .then((r) => r.json())
         .then((data: any) => {
             if (data.stat === 'ok') {
                 (window as any).user = Object.assign({}, user as object, params);
-                if (typeof callback === 'function') { callback(data.result); return; }
+                if (typeof callback === 'function') {
+                    callback(data.result);
+                    return;
+                }
                 pwgToaster({ text: data.result, icon: 'success' });
             } else if (data.stat === 'fail') {
                 pwgToaster({ text: data.message, icon: 'error' });
@@ -230,23 +262,35 @@ function setInfos(params: Record<string, unknown>, method = 'pwg.users.setMyInfo
 }
 
 function getAllApiKeys(reset = false): void {
-    fetch('ws.php?format=json&method=pwg.users.api_key.get', { method: 'POST', body: new URLSearchParams({ pwg_token: PWG_TOKEN }) })
-        .then(r => r.json())
+    fetch('ws.php?format=json&method=pwg.users.api_key.get', {
+        method: 'POST',
+        body: new URLSearchParams({ pwg_token: PWG_TOKEN }),
+    })
+        .then((r) => r.json())
         .then((res: any) => {
-            if (res.stat === 'ok' && typeof res.result !== 'string' && res.result !== false) AddApiLine(res.result, reset);
+            if (res.stat === 'ok' && typeof res.result !== 'string' && res.result !== false)
+                AddApiLine(res.result, reset);
         })
-        .catch((e: any) => pwgToaster({ text: e.message ?? str_handle_error + 'getAllApiKeys', icon: 'error' }));
+        .catch((e: any) =>
+            pwgToaster({ text: e.message ?? str_handle_error + 'getAllApiKeys', icon: 'error' })
+        );
 }
 
 function AddApiLine(lines: any[], reset: boolean): void {
     const api_list = qs('#api_key_list')!;
     const api_list_expired = qs('#api_key_list_expired')!;
-    qsa('#api_key_list .api-tab-line:not(.template-api), #api_key_list .api-tab-collapse:not(.template-api)').forEach(el => el.remove());
-    qsa('#api_key_list_expired .api-tab-line:not(.template-api), #api_key_list_expired .api-tab-collapse:not(.template-api)').forEach(el => el.remove());
+    qsa(
+        '#api_key_list .api-tab-line:not(.template-api), #api_key_list .api-tab-collapse:not(.template-api)'
+    ).forEach((el) => el.remove());
+    qsa(
+        '#api_key_list_expired .api-tab-line:not(.template-api), #api_key_list_expired .api-tab-collapse:not(.template-api)'
+    ).forEach((el) => el.remove());
 
     lines.forEach((line) => {
         const api_line = document.getElementById('api_line')!.cloneNode(true) as HTMLElement;
-        const api_collapse = document.getElementById('api_collapse')!.cloneNode(true) as HTMLElement;
+        const api_collapse = document
+            .getElementById('api_collapse')!
+            .cloneNode(true) as HTMLElement;
         const tmp_id = String(line.auth_key).slice(24, 34);
 
         api_line.classList.remove('template-api');
@@ -261,7 +305,7 @@ function AddApiLine(lines: any[], reset: boolean): void {
         lastUse.textContent = line.last_used_on_since;
         lastUse.title = line.last_used_on_since;
         api_line.querySelector<HTMLElement>('.api_expiration')!.textContent = line.expiration;
-        api_line.querySelectorAll<HTMLElement>('.api-icon-action').forEach(el => {
+        api_line.querySelectorAll<HTMLElement>('.api-icon-action').forEach((el) => {
             el.dataset['api'] = `api_${tmp_id}`;
             el.dataset['pkid'] = line.auth_key;
         });
@@ -270,7 +314,10 @@ function AddApiLine(lines: any[], reset: boolean): void {
         api_collapse.classList.remove('template-api');
         api_collapse.querySelector<HTMLElement>('.api_key')!.textContent = line.auth_key;
         const cloneIcon = api_collapse.querySelector<HTMLElement>('.icon-clone');
-        if (cloneIcon) { cloneIcon.dataset['copy'] = line.auth_key; cloneIcon.dataset['success'] = `api_copy_success_${tmp_id}`; }
+        if (cloneIcon) {
+            cloneIcon.dataset['copy'] = line.auth_key;
+            cloneIcon.dataset['success'] = `api_copy_success_${tmp_id}`;
+        }
         const apiCopy = api_collapse.querySelector<HTMLElement>('.api-copy');
         if (apiCopy) apiCopy.id = `api_copy_success_${tmp_id}`;
 
@@ -281,7 +328,7 @@ function AddApiLine(lines: any[], reset: boolean): void {
             qs('#show_expired_list')!.style.display = '';
             api_list_expired.appendChild(api_line);
             api_line.after(api_collapse);
-            api_line.querySelectorAll('.api-icon-action').forEach(el => el.remove());
+            api_line.querySelectorAll('.api-icon-action').forEach((el) => el.remove());
             const expEl = api_line.querySelector<HTMLElement>('.api_expiration')!;
             if (line.is_expired) {
                 expEl.innerHTML = `<i class="gallery-icon-skull api-skull"></i> <span data-tooltip="${line.expired_on_format}">${line.expired_on_since}</span>`;
@@ -296,7 +343,7 @@ function AddApiLine(lines: any[], reset: boolean): void {
 }
 
 function apiLineEvent(): void {
-    qsa('.icon-collapse').forEach(el => {
+    qsa('.icon-collapse').forEach((el) => {
         const newEl = el.cloneNode(true) as HTMLElement;
         el.replaceWith(newEl);
         newEl.addEventListener('click', () => {
@@ -320,15 +367,19 @@ function apiLineEvent(): void {
         });
     });
 
-    qsa('.api-tab-collapse .icon-clone').forEach(el => {
+    qsa('.api-tab-collapse .icon-clone').forEach((el) => {
         const newEl = el.cloneNode(true) as HTMLElement;
         el.replaceWith(newEl);
         newEl.addEventListener('click', () => {
-            copyToClipboard(String(newEl.dataset['copy']), str_copy_key_id, `#${newEl.dataset['success']}`);
+            copyToClipboard(
+                String(newEl.dataset['copy']),
+                str_copy_key_id,
+                `#${newEl.dataset['success']}`
+            );
         });
     });
 
-    qsa('.api-tab-line .edit-mode').forEach(el => {
+    qsa('.api-tab-line .edit-mode').forEach((el) => {
         const newEl = el.cloneNode(true) as HTMLElement;
         el.replaceWith(newEl);
         newEl.addEventListener('click', () => {
@@ -336,7 +387,7 @@ function apiLineEvent(): void {
         });
     });
 
-    qsa('.api-tab-line .delete-mode').forEach(el => {
+    qsa('.api-tab-line .delete-mode').forEach((el) => {
         const newEl = el.cloneNode(true) as HTMLElement;
         el.replaceWith(newEl);
         newEl.addEventListener('click', () => {
@@ -350,7 +401,9 @@ function resetSection(selector: string, scroll = true, maxContent = false): void
     el.style.maxHeight = maxContent ? 'max-content' : el.scrollHeight + 'px';
     if (selector !== 'account-display' && scroll) {
         setTimeout(() => {
-            document.getElementById(selector.split('-')[0] + '-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            document
+                .getElementById(selector.split('-')[0] + '-section')
+                ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 200);
     }
 }
@@ -363,21 +416,26 @@ function openApiModal(): void {
 
 function closeApiModal(): void {
     qs('#api_modal')!.style.display = 'none';
-    (qs<HTMLInputElement>('#api_key_name'))!.value = '';
+    qs<HTMLInputElement>('#api_key_name')!.value = '';
     const expSelect = qs<HTMLSelectElement>('select[name="api_expiration"]');
-    if (expSelect) { expSelect.value = selected_date; expSelect.dispatchEvent(new Event('change')); }
-    (qs<HTMLInputElement>('#api_expiration_date'))!.value = '';
-    (qs<HTMLInputElement>('#api_secret_key'))!.value = '';
+    if (expSelect) {
+        expSelect.value = selected_date;
+        expSelect.dispatchEvent(new Event('change'));
+    }
+    qs<HTMLInputElement>('#api_expiration_date')!.value = '';
+    qs<HTMLInputElement>('#api_secret_key')!.value = '';
     qs('#retrieves_keyapi')!.style.display = 'none';
     qs('#generate_keyapi')!.style.display = '';
     qs<HTMLButtonElement>('#done_apikey')!.disabled = true;
-    qsa('#api_key_copy_success, #api_id_copy_success').forEach(el => el.classList.add('api-hide'));
+    qsa('#api_key_copy_success, #api_id_copy_success').forEach((el) =>
+        el.classList.add('api-hide')
+    );
     unbindApiKeyEvents();
 }
 
 function successApiModal(secret: string, id: string): void {
-    (qs<HTMLInputElement>('#api_secret_key'))!.value = secret;
-    (qs<HTMLInputElement>('#api_id_key'))!.value = id;
+    qs<HTMLInputElement>('#api_secret_key')!.value = secret;
+    qs<HTMLInputElement>('#api_id_key')!.value = id;
     qs('#generate_keyapi')!.style.display = 'none';
     qs('#retrieves_keyapi')!.style.display = '';
     const secretCopy = qs('#api_secret_copy')!;
@@ -392,14 +450,16 @@ function successApiModal(secret: string, id: string): void {
     const idCopy = qs('#api_id_copy')!;
     const idCopyNew = idCopy.cloneNode(true) as HTMLElement;
     idCopy.replaceWith(idCopyNew);
-    idCopyNew.addEventListener('click', () => copyToClipboard(id, str_copy_key_id, '#api_id_copy_success'));
+    idCopyNew.addEventListener('click', () =>
+        copyToClipboard(id, str_copy_key_id, '#api_id_copy_success')
+    );
 }
 
 function openApiEditModal(selector: string): void {
     const el = qs(selector);
     const value = el?.querySelector<HTMLElement>('.api_name')?.textContent ?? '';
     const pkid = el?.querySelector<HTMLElement>('.api-icon-action')?.dataset['pkid'];
-    (qs<HTMLInputElement>('#api_key_edit'))!.value = value;
+    qs<HTMLInputElement>('#api_key_edit')!.value = value;
     qs('#api_modal_edit')!.style.display = '';
     qs<HTMLInputElement>('#api_key_edit')?.focus();
     saveApiEditEvents(pkid);
@@ -407,7 +467,7 @@ function openApiEditModal(selector: string): void {
 
 function closeApiEditModal(): void {
     qs('#api_modal_edit')!.style.display = 'none';
-    (qs<HTMLInputElement>('#api_key_edit'))!.value = '';
+    qs<HTMLInputElement>('#api_key_edit')!.value = '';
     unbindApiEditEvents();
 }
 
@@ -416,8 +476,11 @@ function saveApiEditEvents(pkid: unknown): void {
     const newBtn = btn.cloneNode(true) as HTMLElement;
     btn.replaceWith(newBtn);
     newBtn.addEventListener('click', () => {
-        const value = String((qs<HTMLInputElement>('#api_key_edit'))?.value ?? '');
-        if (!value) { qs('#error_api_key_edit')!.style.display = ''; return; }
+        const value = String(qs<HTMLInputElement>('#api_key_edit')?.value ?? '');
+        if (!value) {
+            qs('#error_api_key_edit')!.style.display = '';
+            return;
+        }
         setInfos({ pkid, key_name: value }, 'pwg.users.api_key.edit', () => {
             pwgToaster({ text: str_api_edited, icon: 'success' });
             getAllApiKeys(true);
@@ -428,7 +491,10 @@ function saveApiEditEvents(pkid: unknown): void {
 
 function unbindApiEditEvents(): void {
     const btn = qs('#save_api_edit');
-    if (btn) { const newBtn = btn.cloneNode(true) as HTMLElement; btn.replaceWith(newBtn); }
+    if (btn) {
+        const newBtn = btn.cloneNode(true) as HTMLElement;
+        btn.replaceWith(newBtn);
+    }
 }
 
 function openApiRevokeModal(selector: string): void {
@@ -461,7 +527,10 @@ function saveApiRevokeEvents(pkid: unknown): void {
 
 function unbindApiRevokeEvents(): void {
     const btn = qs('#revoke_api_key');
-    if (btn) { const newBtn = btn.cloneNode(true) as HTMLElement; btn.replaceWith(newBtn); }
+    if (btn) {
+        const newBtn = btn.cloneNode(true) as HTMLElement;
+        btn.replaceWith(newBtn);
+    }
 }
 
 function copyToClipboard(copy: string, message: string, selector: string | null = null): boolean {
@@ -482,19 +551,33 @@ function saveApiKeyEvent(): void {
     const { signal } = apiKeyAbort;
 
     const handler = () => {
-        const api_name = String((qs<HTMLInputElement>('#api_key_name'))?.value ?? '');
-        let api_duration: string | number = String((qs<HTMLSelectElement>('select[name="api_expiration"]'))?.value ?? '');
-        if (!api_name) { qs('#error_api_key_name')!.style.display = ''; return; }
-        if (api_duration === 'custom' && !(qs<HTMLInputElement>('#api_expiration_date'))?.value) { qs('#error_api_key_date')!.style.display = ''; return; }
+        const api_name = String(qs<HTMLInputElement>('#api_key_name')?.value ?? '');
+        let api_duration: string | number = String(
+            qs<HTMLSelectElement>('select[name="api_expiration"]')?.value ?? ''
+        );
+        if (!api_name) {
+            qs('#error_api_key_name')!.style.display = '';
+            return;
+        }
+        if (api_duration === 'custom' && !qs<HTMLInputElement>('#api_expiration_date')?.value) {
+            qs('#error_api_key_date')!.style.display = '';
+            return;
+        }
         apiKeyAbort?.abort();
         if (api_duration === 'custom') {
             const today = new Date();
-            const custom_date = new Date(String((qs<HTMLInputElement>('#api_expiration_date'))?.value));
-            api_duration = Math.ceil((custom_date.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+            const custom_date = new Date(
+                String(qs<HTMLInputElement>('#api_expiration_date')?.value)
+            );
+            api_duration = Math.ceil(
+                (custom_date.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+            );
         } else {
             api_duration = Number(api_duration) || 1;
         }
-        setInfos({ key_name: api_name, duration: api_duration }, 'pwg.users.api_key.create',
+        setInfos(
+            { key_name: api_name, duration: api_duration },
+            'pwg.users.api_key.create',
             (res: unknown) => {
                 const r = res as any;
                 pwgToaster({ text: str_api_added, icon: 'success' });
@@ -506,9 +589,16 @@ function saveApiKeyEvent(): void {
     };
 
     qs('#save_apikey')?.addEventListener('click', handler, { signal });
-    window.addEventListener('keydown', (e: KeyboardEvent) => {
-        if (e.key === 'Enter') { e.preventDefault(); handler(); }
-    }, { signal });
+    window.addEventListener(
+        'keydown',
+        (e: KeyboardEvent) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handler();
+            }
+        },
+        { signal }
+    );
 }
 
 function unbindApiKeyEvents(): void {

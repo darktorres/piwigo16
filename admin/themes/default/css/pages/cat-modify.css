@@ -3,7 +3,7 @@
   position: relative;
 }
 
-.toggle-comment-option::before{
+.toggle-comment-option::before {
   transform: scale(1.3);
 }
 
@@ -18,7 +18,8 @@
   border-radius: 10px;
 }
 
-.comment-option span, .comment-option a {
+.comment-option span,
+.comment-option a {
   padding: 5px 10px;
   text-decoration: none;
   color: white;
@@ -70,5 +71,5 @@
   text-overflow: ellipsis;
 }
 .cat-modify-infos .cat-modify-info-content.directory::first-letter {
-    text-transform: none;
+  text-transform: none;
 }

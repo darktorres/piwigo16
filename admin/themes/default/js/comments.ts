@@ -15,9 +15,14 @@ interface CommentsPageData {
 
 const {
     pwg_token,
-    str_yes_delete_confirmation, str_no_delete_confirmation,
-    str_delete, str_deletes, str_no_comments_selected,
-    str_an_error_has, str_comment_validated, str_comments_validated,
+    str_yes_delete_confirmation,
+    str_no_delete_confirmation,
+    str_delete,
+    str_deletes,
+    str_no_comments_selected,
+    str_an_error_has,
+    str_comment_validated,
+    str_comments_validated,
     str_and_others,
 } = getPageData<CommentsPageData>();
 
@@ -41,9 +46,11 @@ const modalViewComment = document.getElementById('modalViewComment') as HTMLElem
 
 const commentsPaginElipsis = '<span>...</span>';
 const commentsPaginItems = '<a id="comments_page_%d" class="comments-paging" data-page="%d">%d</a>';
-const commentsPaginItemsCurrent = '<a id="comments_page_%d" class="comments-paging comment-paging-current" data-page="%d">%d</a>';
+const commentsPaginItemsCurrent =
+    '<a id="comments_page_%d" class="comments-paging comment-paging-current" data-page="%d">%d</a>';
 const commentsOptionsFiltersAuthor = '<option value="" selected="">--</option>';
-const commentsSelectedList = '<div class="comments-selected-item"><a class="icon-cancel comments-selected-remove" id="deletecomment_%d"></a> <p>#%d</p></div>';
+const commentsSelectedList =
+    '<div class="comments-selected-item"><a class="icon-cancel comments-selected-remove" id="deletecomment_%d"></a> <p>#%d</p></div>';
 
 let commentsState: Record<string, any> = {};
 let commentsParams: Record<string, any> = { status: 'all', page: 0, per_page: 5 };
@@ -55,12 +62,14 @@ let selectionAbort: AbortController | null = null;
 let filtersAbort: AbortController | null = null;
 
 document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('commentFilters')?.addEventListener('click', function(this: HTMLElement) {
-        this.classList.toggle('advanced-filter-open');
-        advancedFilters.style.display = advancedFilters.style.display === 'none' ? '' : 'none';
-    });
+    document
+        .getElementById('commentFilters')
+        ?.addEventListener('click', function (this: HTMLElement) {
+            this.classList.toggle('advanced-filter-open');
+            advancedFilters.style.display = advancedFilters.style.display === 'none' ? '' : 'none';
+        });
 
-    switchMode.addEventListener('change', function(this: HTMLInputElement) {
+    switchMode.addEventListener('change', function (this: HTMLInputElement) {
         const contentSelectMode = document.getElementById('contentSelectMode') as HTMLElement;
         contentSelectMode.style.display = contentSelectMode.style.display === 'none' ? '' : 'none';
         document.getElementById('headerSelectMode')?.classList.toggle('selection-mode');
@@ -69,15 +78,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!commentContainer.classList.contains('active')) {
             selectionMode = false;
-            document.querySelectorAll<HTMLElement>('.comment-select-checkbox').forEach(el => { el.style.display = 'none'; });
-            document.querySelectorAll<HTMLElement>('.comment-buttons').forEach(el => { el.style.display = ''; });
+            document.querySelectorAll<HTMLElement>('.comment-select-checkbox').forEach((el) => {
+                el.style.display = 'none';
+            });
+            document.querySelectorAll<HTMLElement>('.comment-buttons').forEach((el) => {
+                el.style.display = '';
+            });
             commentsSelectController.classList.remove('show');
             tabFilters.style.display = '';
             commentsUnselectAll();
         } else {
             selectionMode = true;
-            document.querySelectorAll<HTMLElement>('.comment-select-checkbox').forEach(el => { el.style.display = ''; });
-            document.querySelectorAll<HTMLElement>('.comment-buttons').forEach(el => { el.style.display = 'none'; });
+            document.querySelectorAll<HTMLElement>('.comment-select-checkbox').forEach((el) => {
+                el.style.display = '';
+            });
+            document.querySelectorAll<HTMLElement>('.comment-buttons').forEach((el) => {
+                el.style.display = 'none';
+            });
             tabFilters.style.display = 'none';
             commentsSelectController.classList.add('show');
         }
@@ -85,39 +102,47 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('selectAll')?.addEventListener('click', () => commentsSelectAll());
     document.getElementById('selectNone')?.addEventListener('click', () => commentsUnselectAll());
-    document.getElementById('selectInvert')?.addEventListener('click', () => commentsInvertSelect());
+    document
+        .getElementById('selectInvert')
+        ?.addEventListener('click', () => commentsInvertSelect());
 
-    document.querySelectorAll<HTMLElement>('.tab-filters input').forEach(el => {
-        el.addEventListener('change', function(this: HTMLInputElement) {
+    document.querySelectorAll<HTMLElement>('.tab-filters input').forEach((el) => {
+        el.addEventListener('change', function (this: HTMLInputElement) {
             commentsParams.status = this.dataset['status'];
             commentsParams.page = 0;
             getComments(commentsParams);
         });
     });
 
-    commentsNb.forEach(el => {
-        el.addEventListener('click', function(this: HTMLElement) {
+    commentsNb.forEach((el) => {
+        el.addEventListener('click', function (this: HTMLElement) {
             updateNbComments(this.textContent ?? '');
             commentsParams.page = 0;
             getComments(commentsParams);
         });
     });
 
-    document.getElementById('closeModalViewComment')?.addEventListener('click', () => closeModalViewComment());
+    document
+        .getElementById('closeModalViewComment')
+        ?.addEventListener('click', () => closeModalViewComment());
 
-    document.getElementById('commentSearchInput')?.addEventListener('input', function(this: HTMLInputElement) {
-        if (searchTimeOut) clearTimeout(searchTimeOut);
-        searchTimeOut = setTimeout(() => {
-            const search = this.value;
-            delete commentsParams.author_id;
-            delete commentsParams.f_min_date;
-            delete commentsParams.f_max_date;
-            commentsParams.search = search;
-            getComments(commentsParams);
-        }, 300);
-    });
+    document
+        .getElementById('commentSearchInput')
+        ?.addEventListener('input', function (this: HTMLInputElement) {
+            if (searchTimeOut) clearTimeout(searchTimeOut);
+            searchTimeOut = setTimeout(() => {
+                const search = this.value;
+                delete commentsParams.author_id;
+                delete commentsParams.f_min_date;
+                delete commentsParams.f_max_date;
+                commentsParams.search = search;
+                getComments(commentsParams);
+            }, 300);
+        });
 
-    document.getElementById('commentsResetFilters')?.addEventListener('click', () => commentsClearFilters());
+    document
+        .getElementById('commentsResetFilters')
+        ?.addEventListener('click', () => commentsClearFilters());
 
     window.addEventListener('keydown', (e: KeyboardEvent) => {
         if (e.key === 'Escape') closeModalViewComment();
@@ -131,17 +156,17 @@ document.addEventListener('DOMContentLoaded', () => {
 function pwgFetch(url: string, data: Record<string, any>): Promise<any> {
     const body = new URLSearchParams();
     for (const [k, v] of Object.entries(data)) {
-        if (Array.isArray(v)) v.forEach(item => body.append(k + '[]', String(item)));
+        if (Array.isArray(v)) v.forEach((item) => body.append(k + '[]', String(item)));
         else body.append(k, String(v ?? ''));
     }
-    return fetch(url, { method: 'POST', body }).then(r => r.json());
+    return fetch(url, { method: 'POST', body }).then((r) => r.json());
 }
 
 function getComments(params: any) {
     const query = new URLSearchParams();
     for (const [k, v] of Object.entries(params)) query.append(k, String(v ?? ''));
     fetch('ws.php?format=json&method=pwg.userComments.getList&' + query.toString())
-        .then(r => r.json())
+        .then((r) => r.json())
         .then((data) => {
             if (data.stat === 'ok') {
                 commentsState = { ...data.result };
@@ -152,7 +177,7 @@ function getComments(params: any) {
                 delete commentsParams.search;
             }
         })
-        .catch(e => {
+        .catch((e) => {
             console.log(e);
             window.alert(str_an_error_has);
         });
@@ -174,7 +199,8 @@ function displayComments(comments: any) {
         clone.id = String(comment.id);
         clone.querySelector<HTMLImageElement>('.comment-img')!.src = comment.medium_url;
         const raw_length = comment.raw_content.length;
-        const preview = raw_length > 50 ? comment.raw_content.substring(0, 50) + '...' : comment.raw_content;
+        const preview =
+            raw_length > 50 ? comment.raw_content.substring(0, 50) + '...' : comment.raw_content;
         clone.querySelector<HTMLElement>('.comment-msg')!.textContent = '"' + preview + '"';
         clone.querySelector<HTMLElement>('.comment-author-name')!.textContent = comment.author;
         clone.querySelector<HTMLElement>('.comment-datetime')!.textContent = comment.date;
@@ -182,7 +208,9 @@ function displayComments(comments: any) {
         clone.querySelector<HTMLElement>('.comment-validate')!.dataset['idx'] = String(comment.id);
         clone.querySelector<HTMLElement>('.comment-content')!.dataset['idx'] = String(comment.id);
         clone.querySelector<HTMLElement>('.comment-hash')!.textContent = `#${comment.id}`;
-        clone.querySelector<HTMLInputElement>('.comment-select-checkbox')!.value = String(comment.id);
+        clone.querySelector<HTMLInputElement>('.comment-select-checkbox')!.value = String(
+            comment.id
+        );
         clone.querySelector<HTMLAnchorElement>('.comment-link')!.href = comment.admin_link;
         const authorIcons = clone.querySelectorAll<HTMLElement>('.comment-author-icon');
         const iconClass: Record<string, string> = {
@@ -191,25 +219,33 @@ function displayComments(comments: any) {
             admin: 'icon-user icon-green',
             main_user: 'icon-king icon-blue',
         };
-        authorIcons.forEach(icon => icon.classList.add(...(iconClass[comment.author_status] ?? 'icon-user icon-yellow').split(' ')));
-        if (comment.is_pending) clone.querySelector<HTMLElement>('.comment-validate')!.style.display = '';
-        else clone.querySelector<HTMLElement>('.comment-container')?.classList.add('comment-validated');
+        authorIcons.forEach((icon) =>
+            icon.classList.add(
+                ...(iconClass[comment.author_status] ?? 'icon-user icon-yellow').split(' ')
+            )
+        );
+        if (comment.is_pending)
+            clone.querySelector<HTMLElement>('.comment-validate')!.style.display = '';
+        else
+            clone
+                .querySelector<HTMLElement>('.comment-container')
+                ?.classList.add('comment-validated');
         commentsList.append(clone);
     });
 
-    document.querySelectorAll<HTMLElement>('.comment-delete').forEach(el => {
+    document.querySelectorAll<HTMLElement>('.comment-delete').forEach((el) => {
         el.addEventListener('click', (e) => {
             e.stopPropagation();
             deleteComment([el.dataset['idx']]);
         });
     });
-    document.querySelectorAll<HTMLElement>('.comment-validate').forEach(el => {
+    document.querySelectorAll<HTMLElement>('.comment-validate').forEach((el) => {
         el.addEventListener('click', (e) => {
             e.stopPropagation();
             validateComment([el.dataset['idx']]);
         });
     });
-    document.querySelectorAll<HTMLElement>('.comment-content').forEach(el => {
+    document.querySelectorAll<HTMLElement>('.comment-content').forEach((el) => {
         el.addEventListener('click', () => {
             const id = el.dataset['idx'];
             if (selectionMode) {
@@ -222,7 +258,7 @@ function displayComments(comments: any) {
                 } else {
                     checkbox.classList.replace('icon-ok-circled', 'icon-circle-empty');
                     commentEl.classList.remove('comment-selected');
-                    commentsSelected = commentsSelected.filter(idx => idx != id);
+                    commentsSelected = commentsSelected.filter((idx) => idx != id);
                 }
                 commentsUpdateSelection();
                 return;
@@ -248,7 +284,10 @@ function commentsDiplayPagination(paging: any) {
         container.append(makePageEl(commentsPaginItems.replace(/%d/g, '1'), 'actual'));
     } else if (paging.total_pages <= 2) {
         Array.from({ length: paging.total_pages + 1 }, (_, i) => {
-            container.insertAdjacentHTML('beforeend', commentsPaginItems.replace(/%d/g, String(i + 1)));
+            container.insertAdjacentHTML(
+                'beforeend',
+                commentsPaginItems.replace(/%d/g, String(i + 1))
+            );
         });
         document.getElementById(`comments_page_${paging.page + 1}`)?.classList.add('actual');
     } else {
@@ -257,16 +296,25 @@ function commentsDiplayPagination(paging: any) {
         const pageCurrent = commentsPaginItemsCurrent.replace(/%d/g, String(paging.page + 1));
         switch (paging.page) {
             case 0:
-                container.insertAdjacentHTML('beforeend', pageCurrent + commentsPaginElipsis + pageLast);
+                container.insertAdjacentHTML(
+                    'beforeend',
+                    pageCurrent + commentsPaginElipsis + pageLast
+                );
                 break;
             case paging.total_pages:
-                container.insertAdjacentHTML('beforeend', pageOne + commentsPaginElipsis + pageCurrent);
+                container.insertAdjacentHTML(
+                    'beforeend',
+                    pageOne + commentsPaginElipsis + pageCurrent
+                );
                 break;
             default:
-                container.insertAdjacentHTML('beforeend', pageOne + commentsPaginElipsis + pageCurrent + commentsPaginElipsis + pageLast);
+                container.insertAdjacentHTML(
+                    'beforeend',
+                    pageOne + commentsPaginElipsis + pageCurrent + commentsPaginElipsis + pageLast
+                );
         }
 
-        document.querySelectorAll<HTMLElement>('.pagination-arrow').forEach(arrow => {
+        document.querySelectorAll<HTMLElement>('.pagination-arrow').forEach((arrow) => {
             arrow.classList.remove('unavailable');
             arrow.addEventListener('click', () => {
                 let newPage = commentsParams.page;
@@ -278,8 +326,8 @@ function commentsDiplayPagination(paging: any) {
         });
     }
 
-    document.querySelectorAll<HTMLElement>('.comments-paging').forEach(el => {
-        el.addEventListener('click', function(this: HTMLElement) {
+    document.querySelectorAll<HTMLElement>('.comments-paging').forEach((el) => {
+        el.addEventListener('click', function (this: HTMLElement) {
             commentsParams.page = Number(this.dataset['page']) - 1;
             getComments(commentsParams);
         });
@@ -303,46 +351,63 @@ function commentsDisplayFilters(filters: any) {
     filterDateEnd.setAttribute('max', maxDate);
     filterDateEnd.setAttribute('min', minDate);
 
-    filterDateStart.addEventListener('change', function(this: HTMLInputElement) {
-        const min = this.value;
-        if (!min) delete commentsParams.f_min_date;
-        else commentsParams.f_min_date = min;
-        filterDateEnd.setAttribute('min', min);
-        commentsParams.page = 0;
-        getComments(commentsParams);
-    }, { signal });
+    filterDateStart.addEventListener(
+        'change',
+        function (this: HTMLInputElement) {
+            const min = this.value;
+            if (!min) delete commentsParams.f_min_date;
+            else commentsParams.f_min_date = min;
+            filterDateEnd.setAttribute('min', min);
+            commentsParams.page = 0;
+            getComments(commentsParams);
+        },
+        { signal }
+    );
 
-    filterDateEnd.addEventListener('change', function(this: HTMLInputElement) {
-        const max = this.value;
-        if (!max) delete commentsParams.f_max_date;
-        else commentsParams.f_max_date = max;
-        filterDateStart.setAttribute('max', max);
-        commentsParams.page = 0;
-        getComments(commentsParams);
-    }, { signal });
+    filterDateEnd.addEventListener(
+        'change',
+        function (this: HTMLInputElement) {
+            const max = this.value;
+            if (!max) delete commentsParams.f_max_date;
+            else commentsParams.f_max_date = max;
+            filterDateStart.setAttribute('max', max);
+            commentsParams.page = 0;
+            getComments(commentsParams);
+        },
+        { signal }
+    );
 }
 
 function commentsDisplayAuthors(nb_authors: any) {
     filterAuthor.innerHTML = commentsOptionsFiltersAuthor;
     nb_authors.forEach((a: any) => {
-        filterAuthor.insertAdjacentHTML('beforeend', `<option value="${a.author_id}">${a.author} (${a.nb_authors})</option>`);
+        filterAuthor.insertAdjacentHTML(
+            'beforeend',
+            `<option value="${a.author_id}">${a.author} (${a.nb_authors})</option>`
+        );
     });
 
     filtersAbort?.abort();
     filtersAbort = new AbortController();
     const { signal } = filtersAbort;
-    filterAuthor.addEventListener('change', function(this: HTMLSelectElement) {
-        const authorId = this.value;
-        if (!authorId) delete commentsParams.author_id;
-        else commentsParams.author_id = authorId;
-        commentsParams.page = 0;
-        updateAuthorId = false;
-        getComments(commentsParams);
-    }, { signal });
+    filterAuthor.addEventListener(
+        'change',
+        function (this: HTMLSelectElement) {
+            const authorId = this.value;
+            if (!authorId) delete commentsParams.author_id;
+            else commentsParams.author_id = authorId;
+            commentsParams.page = 0;
+            updateAuthorId = false;
+            getComments(commentsParams);
+        },
+        { signal }
+    );
 }
 
 function updateNbComments(nb: any) {
-    document.querySelectorAll<HTMLElement>('.comments-paging-link').forEach(el => el.classList.remove('selected-pagination'));
+    document
+        .querySelectorAll<HTMLElement>('.comments-paging-link')
+        .forEach((el) => el.classList.remove('selected-pagination'));
     document.getElementById(`pagination-per-page-${nb}`)?.classList.add('selected-pagination');
     commentsParams.per_page = nb;
     window.localStorage.setItem('adminCommentsNB', String(nb));
@@ -354,12 +419,15 @@ function showModalViewComment(id: any) {
     const item = document.getElementById(id)!;
     modalViewComment.querySelector<HTMLElement>('.comment-datetime')!.textContent = comment.date;
     modalViewComment.querySelector('.comment-author')?.remove();
-    modalViewComment.querySelector('.comments-modal-infos')!
+    modalViewComment
+        .querySelector('.comments-modal-infos')!
         .prepend(item.querySelector('.comment-author')!.cloneNode(true));
-    modalViewComment.querySelector<HTMLImageElement>('.comments-modal-img')!.src = comment.medium_url;
+    modalViewComment.querySelector<HTMLImageElement>('.comments-modal-img')!.src =
+        comment.medium_url;
     const imgInfo = modalViewComment.querySelector<HTMLElement>('.comments-modal-img-i')!;
     imgInfo.innerHTML = `<p class="comments-modal-filename">${comment.file}</p><p class="icon-calendar">${comment.image_date_available}</p>`;
-    modalViewComment.querySelector<HTMLElement>('.comments-modal-body')!.innerHTML = comment.content;
+    modalViewComment.querySelector<HTMLElement>('.comments-modal-body')!.innerHTML =
+        comment.content;
 
     const validBtn = modalViewComment.querySelector<HTMLElement>('.comments-modal-validate')!;
     const validateBtn = document.getElementById('commentsModalValidate')!;
@@ -371,11 +439,17 @@ function showModalViewComment(id: any) {
 
     if (comment.is_pending) {
         validBtn.style.display = '';
-        newValidateBtn.addEventListener('click', () => { validateComment([id]); closeModalViewComment(); });
+        newValidateBtn.addEventListener('click', () => {
+            validateComment([id]);
+            closeModalViewComment();
+        });
     } else {
         validBtn.style.display = 'none';
     }
-    newDeleteBtn.addEventListener('click', () => { deleteComment([id]); closeModalViewComment(); });
+    newDeleteBtn.addEventListener('click', () => {
+        deleteComment([id]);
+        closeModalViewComment();
+    });
     modalViewComment.style.display = '';
 }
 
@@ -386,7 +460,7 @@ function closeModalViewComment() {
 function validateComment(id: any) {
     const idLength = id.length ?? 1;
     pwgFetch('ws.php?format=json&method=pwg.userComments.validate', { comment_id: id, pwg_token })
-        .then(res => {
+        .then((res) => {
             if (res.stat === 'ok') {
                 window.alert(idLength > 1 ? str_comments_validated : str_comment_validated);
                 getComments(commentsParams);
@@ -394,7 +468,7 @@ function validateComment(id: any) {
             }
             window.alert(str_an_error_has);
         })
-        .catch(e => {
+        .catch((e) => {
             console.log(e);
             window.alert(str_an_error_has);
         });
@@ -402,16 +476,23 @@ function validateComment(id: any) {
 
 function deleteComment(id: any) {
     const idLength = id.length ?? 1;
-    const msg = idLength > 1 ? str_deletes.replace('%d', String(idLength)) : str_delete.replace('%s', String(id));
+    const msg =
+        idLength > 1
+            ? str_deletes.replace('%d', String(idLength))
+            : str_delete.replace('%s', String(id));
     if (!window.confirm(msg)) return;
     pwgFetch('ws.php?format=json&method=pwg.userComments.delete', { comment_id: id, pwg_token })
-        .then(res => { if (res.stat === 'ok') getComments(commentsParams); })
-        .catch(e => console.log(e));
+        .then((res) => {
+            if (res.stat === 'ok') getComments(commentsParams);
+        })
+        .catch((e) => console.log(e));
 }
 
 function commentsUnselectAll() {
-    document.querySelectorAll<HTMLElement>('.comment').forEach(el => el.classList.remove('comment-selected'));
-    document.querySelectorAll<HTMLElement>('.comment-select-checkbox').forEach(el => {
+    document
+        .querySelectorAll<HTMLElement>('.comment')
+        .forEach((el) => el.classList.remove('comment-selected'));
+    document.querySelectorAll<HTMLElement>('.comment-select-checkbox').forEach((el) => {
         el.classList.remove('icon-ok-circled');
         el.classList.add('icon-circle-empty');
     });
@@ -420,24 +501,32 @@ function commentsUnselectAll() {
 }
 
 function commentsSelectAll() {
-    document.querySelectorAll<HTMLElement>('.comment').forEach(el => el.classList.add('comment-selected'));
-    document.querySelectorAll<HTMLElement>('.comment-select-checkbox').forEach(el => {
+    document
+        .querySelectorAll<HTMLElement>('.comment')
+        .forEach((el) => el.classList.add('comment-selected'));
+    document.querySelectorAll<HTMLElement>('.comment-select-checkbox').forEach((el) => {
         el.classList.remove('icon-circle-empty');
         el.classList.add('icon-ok-circled');
     });
     commentsSelected = [];
-    document.querySelectorAll<HTMLElement>('.comment-selected').forEach(el => commentsSelected.push(el.id));
+    document
+        .querySelectorAll<HTMLElement>('.comment-selected')
+        .forEach((el) => commentsSelected.push(el.id));
     commentsUpdateSelection();
 }
 
 function commentsInvertSelect() {
-    document.querySelectorAll<HTMLElement>('.comment').forEach(el => el.classList.toggle('comment-selected'));
-    document.querySelectorAll<HTMLElement>('.comment-select-checkbox').forEach(el => {
+    document
+        .querySelectorAll<HTMLElement>('.comment')
+        .forEach((el) => el.classList.toggle('comment-selected'));
+    document.querySelectorAll<HTMLElement>('.comment-select-checkbox').forEach((el) => {
         el.classList.toggle('icon-ok-circled');
         el.classList.toggle('icon-circle-empty');
     });
     commentsSelected = [];
-    document.querySelectorAll<HTMLElement>('.comment-selected').forEach(el => commentsSelected.push(el.id));
+    document
+        .querySelectorAll<HTMLElement>('.comment-selected')
+        .forEach((el) => commentsSelected.push(el.id));
     commentsUpdateSelection();
 }
 
@@ -456,29 +545,50 @@ function commentsUpdateSelection() {
     commentsSelectedOthers.textContent = '';
     commentsSelected.forEach((id, count) => {
         if (count === 5) {
-            commentsSelectedOthers.textContent = str_and_others.replace(/%s/g, String(commentsSelected.length - 5));
+            commentsSelectedOthers.textContent = str_and_others.replace(
+                /%s/g,
+                String(commentsSelected.length - 5)
+            );
             return;
         }
-        commentsSelectedArea.insertAdjacentHTML('beforeend', commentsSelectedList.replace(/%d/g, String(id)));
+        commentsSelectedArea.insertAdjacentHTML(
+            'beforeend',
+            commentsSelectedList.replace(/%d/g, String(id))
+        );
     });
 
-    document.querySelectorAll<HTMLElement>('.comments-selected-remove').forEach(el => {
-        el.addEventListener('click', function(this: HTMLElement) {
-            const id = this.id.split('_')[1];
-            if (!id) return;
-            document.getElementById(id)?.querySelector<HTMLElement>('.comment-content')?.click();
-        }, { signal });
+    document.querySelectorAll<HTMLElement>('.comments-selected-remove').forEach((el) => {
+        el.addEventListener(
+            'click',
+            function (this: HTMLElement) {
+                const id = this.id.split('_')[1];
+                if (!id) return;
+                document
+                    .getElementById(id)
+                    ?.querySelector<HTMLElement>('.comment-content')
+                    ?.click();
+            },
+            { signal }
+        );
     });
 
-    document.getElementById('ValisateSelectionMode')?.addEventListener('click', () => {
-        validateComment(commentsSelected);
-        commentsUnselectAll();
-    }, { signal });
+    document.getElementById('ValisateSelectionMode')?.addEventListener(
+        'click',
+        () => {
+            validateComment(commentsSelected);
+            commentsUnselectAll();
+        },
+        { signal }
+    );
 
-    document.getElementById('DeleteSelectionMode')?.addEventListener('click', () => {
-        deleteComment(commentsSelected);
-        commentsUnselectAll();
-    }, { signal });
+    document.getElementById('DeleteSelectionMode')?.addEventListener(
+        'click',
+        () => {
+            deleteComment(commentsSelected);
+            commentsUnselectAll();
+        },
+        { signal }
+    );
 
     document.getElementById('commentsNoSelection')!.style.display = 'none';
     document.getElementById('commentsSelection')!.style.display = '';

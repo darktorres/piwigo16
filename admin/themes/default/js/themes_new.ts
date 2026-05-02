@@ -23,10 +23,10 @@ window.addEventListener('load', () => {
 
         if (imageW > imageH) {
             screenImage.style.height = size + 'px';
-            screenImage.style.width = (imageW * size / imageH) + 'px';
+            screenImage.style.width = (imageW * size) / imageH + 'px';
         } else {
             screenImage.style.width = size + 'px';
-            screenImage.style.height = (imageH * size / imageW) + 'px';
+            screenImage.style.height = (imageH * size) / imageW + 'px';
         }
     });
 });

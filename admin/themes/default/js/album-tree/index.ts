@@ -9,13 +9,7 @@
 // localStorage; drag-and-drop uses HTML5 native events.
 
 import './tree.css';
-import type {
-    NodeData,
-    NodeId,
-    TreeNode,
-    TreeOptions,
-    Position,
-} from './types';
+import type { NodeData, NodeId, TreeNode, TreeOptions, Position } from './types';
 import { TreeStateStore } from './state';
 import { createNodeLi, createChildrenUl, isFolder } from './render';
 import { attachDnd, makeDraggable } from './dnd';
@@ -51,7 +45,8 @@ class AlbumTreeImpl {
                 rootEl: this.rootEl,
                 nodeForLi: (li) => this.liToNode.get(li) ?? null,
                 onMove: options.onMove,
-                moveNode: (moved, target, position) => this.moveNodeInternal(moved, target, position),
+                moveNode: (moved, target, position) =>
+                    this.moveNodeInternal(moved, target, position),
             });
         }
     }
@@ -61,7 +56,7 @@ class AlbumTreeImpl {
     // ---------------------------------------------------------------------
 
     private loadInitial(data: NodeData[]): void {
-        this.rootNodes = data.map(d => this.buildNode(d, null));
+        this.rootNodes = data.map((d) => this.buildNode(d, null));
         this.rebuildRootDom();
     }
 
@@ -80,7 +75,10 @@ class AlbumTreeImpl {
             getLevel(): number {
                 let depth = 0;
                 let p: TreeNode | null = this.parent;
-                while (p) { depth++; p = p.parent; }
+                while (p) {
+                    depth++;
+                    p = p.parent;
+                }
                 return depth + 1;
             },
             getPreviousSibling(): TreeNode | null {
@@ -96,7 +94,7 @@ class AlbumTreeImpl {
         };
 
         if (Array.isArray(data.children)) {
-            node.children = data.children.map(c => this.buildNode(c, node));
+            node.children = data.children.map((c) => this.buildNode(c, node));
         }
 
         this.nodesById.set(String(node.id), node);
@@ -232,7 +230,11 @@ class AlbumTreeImpl {
         return this.insertNode(data, parent ?? null, 'prepend');
     }
 
-    private insertNode(data: NodeData, parent: TreeNode | null, where: 'append' | 'prepend'): TreeNode {
+    private insertNode(
+        data: NodeData,
+        parent: TreeNode | null,
+        where: 'append' | 'prepend'
+    ): TreeNode {
         const node = this.buildNode(data, parent);
         const siblings = parent ? parent.children : this.rootNodes;
         if (where === 'append') siblings.push(node);
@@ -248,7 +250,8 @@ class AlbumTreeImpl {
                     ul = createChildrenUl();
                     parentLi.appendChild(ul);
                     parentLi.classList.add('pwgtree-folder');
-                    if (!parentLi.classList.contains('pwgtree-open')) parentLi.classList.add('pwgtree-closed');
+                    if (!parentLi.classList.contains('pwgtree-open'))
+                        parentLi.classList.add('pwgtree-closed');
                 }
                 if (where === 'append') ul.appendChild(li);
                 else ul.insertBefore(li, ul.firstChild);
@@ -270,7 +273,7 @@ class AlbumTreeImpl {
                 for (const c of n.children) drop(c);
             };
             for (const c of parent.children) drop(c);
-            parent.children = data.map(d => this.buildNode(d, parent));
+            parent.children = data.map((d) => this.buildNode(d, parent));
 
             const parentLi = parent.element;
             if (parentLi) {
@@ -282,8 +285,10 @@ class AlbumTreeImpl {
                 }
                 if (parent.children.length > 0) {
                     parentLi.classList.add('pwgtree-folder');
-                    if (!parentLi.classList.contains('pwgtree-open')) parentLi.classList.add('pwgtree-closed');
-                    for (const child of parent.children) ul.appendChild(this.renderNodeRecursive(child));
+                    if (!parentLi.classList.contains('pwgtree-open'))
+                        parentLi.classList.add('pwgtree-closed');
+                    for (const child of parent.children)
+                        ul.appendChild(this.renderNodeRecursive(child));
                 } else {
                     ul.remove();
                     parentLi.classList.remove('pwgtree-folder', 'pwgtree-open', 'pwgtree-closed');
@@ -292,7 +297,7 @@ class AlbumTreeImpl {
         } else {
             // Wholesale reload.
             this.nodesById.clear();
-            this.rootNodes = data.map(d => this.buildNode(d, null));
+            this.rootNodes = data.map((d) => this.buildNode(d, null));
             this.rebuildRootDom();
         }
         this.persistState();
@@ -336,7 +341,8 @@ class AlbumTreeImpl {
                 ul = createChildrenUl();
                 targetLi.appendChild(ul);
                 targetLi.classList.add('pwgtree-folder');
-                if (!targetLi.classList.contains('pwgtree-open')) targetLi.classList.add('pwgtree-closed');
+                if (!targetLi.classList.contains('pwgtree-open'))
+                    targetLi.classList.add('pwgtree-closed');
             }
             ul.appendChild(movedLi);
         } else {
@@ -352,7 +358,11 @@ class AlbumTreeImpl {
             const ul = oldParent.element.querySelector<HTMLElement>(':scope > ul.pwgtree-common');
             if (ul) {
                 ul.remove();
-                oldParent.element.classList.remove('pwgtree-folder', 'pwgtree-open', 'pwgtree-closed');
+                oldParent.element.classList.remove(
+                    'pwgtree-folder',
+                    'pwgtree-open',
+                    'pwgtree-closed'
+                );
             }
         }
     }

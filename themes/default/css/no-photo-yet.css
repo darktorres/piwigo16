@@ -4,8 +4,13 @@ body {
   background-color: #1b1b1b;
 }
 
-P { text-align: center; }
-TD { color: #c1c1c1; letter-spacing: 1px; }
+P {
+  text-align: center;
+}
+TD {
+  color: #c1c1c1;
+  letter-spacing: 1px;
+}
 
 #global {
   position: absolute;
@@ -19,9 +24,18 @@ TD { color: #c1c1c1; letter-spacing: 1px; }
   border: 2px solid #444;
 }
 
-#noPhotoWelcome { font-size: 25px; color: #c1c1c1; text-align: center; letter-spacing: 1px; margin-top: 30px; }
+#noPhotoWelcome {
+  font-size: 25px;
+  color: #c1c1c1;
+  text-align: center;
+  letter-spacing: 1px;
+  margin-top: 30px;
+}
 
-.bigButton { text-align: center; margin-top: 120px; }
+.bigButton {
+  text-align: center;
+  margin-top: 120px;
+}
 
 .bigButton a {
   background-color: #ffa646;
@@ -47,10 +61,14 @@ TD { color: #c1c1c1; letter-spacing: 1px; }
   text-align: center;
   width: 100%;
   font-style: normal;
-  font-size: 1.0em;
+  font-size: 1em;
 }
 
-.submit { font-size: 1.0em; letter-spacing: 2px; font-weight: normal; }
+.submit {
+  font-size: 1em;
+  letter-spacing: 2px;
+  font-weight: normal;
+}
 
 #deactivate a {
   text-decoration: none;
@@ -71,7 +89,8 @@ TD { color: #c1c1c1; letter-spacing: 1px; }
   letter-spacing: 1px;
 }
 
-#quickconnect input[type="text"], #quickconnect input[type="password"] {
+#quickconnect input[type="text"],
+#quickconnect input[type="password"] {
   width: 300px;
   color: #c1c1c1;
   font-size: 20px;
@@ -83,7 +102,8 @@ TD { color: #c1c1c1; letter-spacing: 1px; }
   box-sizing: border-box;
 }
 
-#quickconnect input[type="text"]:focus, #quickconnect input[type="password"]:focus {
+#quickconnect input[type="text"]:focus,
+#quickconnect input[type="password"]:focus {
   background-color: #444;
   border: 2px solid #ff7700;
   outline: none;

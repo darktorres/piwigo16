@@ -3,50 +3,50 @@
  * which Template.php auto-registers from the manifest's "css" array. */
 
 ul.pwgtree-tree {
-    list-style: none outside;
-    margin-left: 0;
-    margin-bottom: 0;
-    padding: 0;
+  list-style: none outside;
+  margin-left: 0;
+  margin-bottom: 0;
+  padding: 0;
 }
 
-    ul.pwgtree-tree ul.pwgtree-common {
-        list-style: none outside;
-        margin-left: 12px;
-        margin-right: 0;
-        margin-bottom: 0;
-        padding: 0;
-        display: block;
-    }
+ul.pwgtree-tree ul.pwgtree-common {
+  list-style: none outside;
+  margin-left: 12px;
+  margin-right: 0;
+  margin-bottom: 0;
+  padding: 0;
+  display: block;
+}
 
-    ul.pwgtree-tree li.pwgtree-closed > ul.pwgtree-common {
-        display: none;
-    }
+ul.pwgtree-tree li.pwgtree-closed > ul.pwgtree-common {
+  display: none;
+}
 
-    ul.pwgtree-tree li.pwgtree-common {
-        clear: both;
-        list-style-type: none;
-    }
+ul.pwgtree-tree li.pwgtree-common {
+  clear: both;
+  list-style-type: none;
+}
 
-    ul.pwgtree-tree .pwgtree-element {
-        cursor: pointer;
-        position: relative;
-        display: flex;
-    }
+ul.pwgtree-tree .pwgtree-element {
+  cursor: pointer;
+  position: relative;
+  display: flex;
+}
 
-    ul.pwgtree-tree .pwgtree-title {
-        color: #1C4257;
-        vertical-align: middle;
-        margin-left: 1.5em;
-    }
+ul.pwgtree-tree .pwgtree-title {
+  color: #1c4257;
+  vertical-align: middle;
+  margin-left: 1.5em;
+}
 
-    ul.pwgtree-tree li.pwgtree-folder {
-        margin-bottom: 4px;
-    }
+ul.pwgtree-tree li.pwgtree-folder {
+  margin-bottom: 4px;
+}
 
-    ul.pwgtree-tree li.pwgtree-folder.pwgtree-closed {
-        margin-bottom: 1px;
-    }
+ul.pwgtree-tree li.pwgtree-folder.pwgtree-closed {
+  margin-bottom: 1px;
+}
 
-    ul.pwgtree-tree .pwgtree-moving > .pwgtree-element .pwgtree-title {
-        outline: dashed 1px #0000ff;
-    }
+ul.pwgtree-tree .pwgtree-moving > .pwgtree-element .pwgtree-title {
+  outline: dashed 1px #0000ff;
+}

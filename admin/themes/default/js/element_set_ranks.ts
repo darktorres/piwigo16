@@ -3,7 +3,9 @@ import 'tippy.js/dist/tippy.css';
 
 function checkOrderOptions(): void {
     const optionsDiv = document.getElementById('image_order_user_define_options');
-    const checked = document.querySelector<HTMLInputElement>('input[name=image_order_choice]:checked');
+    const checked = document.querySelector<HTMLInputElement>(
+        'input[name=image_order_choice]:checked'
+    );
     if (optionsDiv) {
         optionsDiv.style.display = checked?.value === 'user_define' ? '' : 'none';
     }
@@ -15,7 +17,7 @@ if (ul) {
 
     function updateRanks(): void {
         Array.from(ul!.querySelectorAll<HTMLLIElement>('li.rank-of-image')).forEach((li, i) => {
-            const input = li.querySelector<HTMLInputElement>("input[name^=rank_of_image]");
+            const input = li.querySelector<HTMLInputElement>('input[name^=rank_of_image]');
             if (input) input.value = String((i + 1) * 10);
         });
     }
@@ -34,7 +36,9 @@ if (ul) {
             li.style.opacity = '';
             draggingEl = null;
             updateRanks();
-            const imageOrderRank = document.getElementById('image_order_rank') as HTMLInputElement | null;
+            const imageOrderRank = document.getElementById(
+                'image_order_rank'
+            ) as HTMLInputElement | null;
             if (imageOrderRank) imageOrderRank.checked = true;
             checkOrderOptions();
         });

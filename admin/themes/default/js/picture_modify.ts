@@ -25,26 +25,30 @@ const pageData = getPageData<PictureModifyPageData>('pwg-picture-modify-data');
 const categoriesCache = new CategoriesCache({
     serverKey: pageData.CACHE_KEYS.categories,
     serverId: pageData.CACHE_KEYS._hash,
-    rootUrl: pageData.ROOT_URL
+    rootUrl: pageData.ROOT_URL,
 });
 
 const tagsCache = new TagsCache({
     serverKey: pageData.CACHE_KEYS.tags,
     serverId: pageData.CACHE_KEYS._hash,
-    rootUrl: pageData.ROOT_URL
+    rootUrl: pageData.ROOT_URL,
 });
 
 categoriesCache?.selectize(document.querySelector('[data-selectize=categories]'));
 
-tagsCache?.selectize(document.querySelector('[data-selectize=tags]'), { lang: {
-    'Add': pageData.str_create
-}});
+tagsCache?.selectize(document.querySelector('[data-selectize=tags]'), {
+    lang: {
+        Add: pageData.str_create,
+    },
+});
 
 document.addEventListener('DOMContentLoaded', () => {
     // Re-initialise datepickers with timepicker enabled (datepicker.ts auto-init
     // uses defaults; here we want time + a translated cancel button).
     document.querySelectorAll<HTMLElement>('[data-datepicker]').forEach((el) => {
-        (window as { pwgDatepicker?: (el: HTMLElement, opts: Record<string, unknown>) => void }).pwgDatepicker?.(el, {
+        (
+            window as { pwgDatepicker?: (el: HTMLElement, opts: Record<string, unknown>) => void }
+        ).pwgDatepicker?.(el, {
             showTimepicker: true,
             cancelButton: pageData.str_cancel,
         });
@@ -68,41 +72,79 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.querySelector('.linked-albums.add-item')?.addEventListener('click', () => ab.open());
 
-    document.querySelector('.related-categories-container')?.addEventListener('click', (e: Event) => {
-        const target = e.target as HTMLElement;
-        if (target.classList.contains('remove-item')) {
-            ab.remove_selected_album(target.id);
-        }
-    });
+    document
+        .querySelector('.related-categories-container')
+        ?.addEventListener('click', (e: Event) => {
+            const target = e.target as HTMLElement;
+            if (target.classList.contains('remove-item')) {
+                ab.remove_selected_album(target.id);
+            }
+        });
 
     let form_unsaved = false;
     let user_interacted = false;
 
-    document.querySelectorAll('#pictureModify input, #pictureModify textarea, #pictureModify select').forEach(el => {
-        el.addEventListener('focus', () => { user_interacted = true; });
-        el.addEventListener('change', () => { if (user_interacted) form_unsaved = true; });
-    });
+    document
+        .querySelectorAll('#pictureModify input, #pictureModify textarea, #pictureModify select')
+        .forEach((el) => {
+            el.addEventListener('focus', () => {
+                user_interacted = true;
+            });
+            el.addEventListener('change', () => {
+                if (user_interacted) form_unsaved = true;
+            });
+        });
 
     window.addEventListener('beforeunload', (e) => {
-        if (form_unsaved) { e.preventDefault(); e.returnValue = 'Some changes are not registered'; }
+        if (form_unsaved) {
+            e.preventDefault();
+            e.returnValue = 'Some changes are not registered';
+        }
     });
 
-    document.getElementById('pictureModify')?.addEventListener('submit', () => { form_unsaved = false; });
+    document.getElementById('pictureModify')?.addEventListener('submit', () => {
+        form_unsaved = false;
+    });
 });
 
-function remove_related_category({ id_album, getSelectedAlbum }: { id_album: string | number; getSelectedAlbum: () => (string | number)[] }): void {
-    document.querySelector<HTMLOptionElement>(`.invisible-related-categories-select option[value="${id_album}"]`)?.remove();
-    document.querySelector('.invisible-related-categories-select')?.dispatchEvent(new Event('change'));
+function remove_related_category({
+    id_album,
+    getSelectedAlbum,
+}: {
+    id_album: string | number;
+    getSelectedAlbum: () => (string | number)[];
+}): void {
+    document
+        .querySelector<HTMLOptionElement>(
+            `.invisible-related-categories-select option[value="${id_album}"]`
+        )
+        ?.remove();
+    document
+        .querySelector('.invisible-related-categories-select')
+        ?.dispatchEvent(new Event('change'));
     document.getElementById(String(id_album))?.parentElement?.remove();
     check_related_categories(getSelectedAlbum());
 }
 
-function add_related_category({ album, addSelectedAlbum, getSelectedAlbum }: { album: any; addSelectedAlbum: () => void; getSelectedAlbum: () => (string | number)[] }): void {
+function add_related_category({
+    album,
+    addSelectedAlbum,
+    getSelectedAlbum,
+}: {
+    album: any;
+    addSelectedAlbum: () => void;
+    getSelectedAlbum: () => (string | number)[];
+}): void {
     if (!getSelectedAlbum().includes(album.id)) {
-        document.querySelector('.related-categories-container')?.insertAdjacentHTML('beforeend',
-            `<div class="breadcrumb-item"><span class="link-path">${album.full_name_with_admin_links}</span><span id="${album.id}" class="icon-cancel-circled remove-item"></span></div>`
-        );
-        document.querySelector<HTMLElement>(`.search-result-item #${album.id}`)?.classList.add('notClickable');
+        document
+            .querySelector('.related-categories-container')
+            ?.insertAdjacentHTML(
+                'beforeend',
+                `<div class="breadcrumb-item"><span class="link-path">${album.full_name_with_admin_links}</span><span id="${album.id}" class="icon-cancel-circled remove-item"></span></div>`
+            );
+        document
+            .querySelector<HTMLElement>(`.search-result-item #${album.id}`)
+            ?.classList.add('notClickable');
         const sel = document.querySelector('.invisible-related-categories-select');
         sel?.insertAdjacentHTML('beforeend', `<option selected value="${album.id}"></option>`);
         sel?.dispatchEvent(new Event('change'));
@@ -112,15 +154,28 @@ function add_related_category({ album, addSelectedAlbum, getSelectedAlbum }: { a
 }
 
 function check_related_categories(selected_cat: (string | number)[]): void {
-    document.querySelectorAll<HTMLElement>('.linked-albums-badge').forEach(el => { el.innerHTML = String(selected_cat.length); });
+    document.querySelectorAll<HTMLElement>('.linked-albums-badge').forEach((el) => {
+        el.innerHTML = String(selected_cat.length);
+    });
     if (selected_cat.length === 0) {
-        document.querySelectorAll('.linked-albums-badge').forEach(el => el.classList.add('badge-red'));
-        document.querySelectorAll('.add-item').forEach(el => el.classList.add('highlight'));
-        document.querySelectorAll<HTMLElement>('.orphan-photo').forEach(el => { el.innerHTML = pageData.str_orphan; el.style.display = ''; });
+        document
+            .querySelectorAll('.linked-albums-badge')
+            .forEach((el) => el.classList.add('badge-red'));
+        document.querySelectorAll('.add-item').forEach((el) => el.classList.add('highlight'));
+        document.querySelectorAll<HTMLElement>('.orphan-photo').forEach((el) => {
+            el.innerHTML = pageData.str_orphan;
+            el.style.display = '';
+        });
     } else {
-        document.querySelectorAll('.linked-albums-badge.badge-red').forEach(el => el.classList.remove('badge-red'));
-        document.querySelectorAll('.add-item.highlight').forEach(el => el.classList.remove('highlight'));
-        document.querySelectorAll<HTMLElement>('.orphan-photo').forEach(el => { el.style.display = 'none'; });
+        document
+            .querySelectorAll('.linked-albums-badge.badge-red')
+            .forEach((el) => el.classList.remove('badge-red'));
+        document
+            .querySelectorAll('.add-item.highlight')
+            .forEach((el) => el.classList.remove('highlight'));
+        document.querySelectorAll<HTMLElement>('.orphan-photo').forEach((el) => {
+            el.style.display = 'none';
+        });
     }
 }
 

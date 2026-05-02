@@ -210,16 +210,16 @@ is always `{"stat":"ok","result":...}` or `{"stat":"fail","err":N,"message":"...
 This is a personal fork without enforced CI. Run these locally before
 landing significant changes:
 
-| Check | Command |
-|---|---|
-| PHP format | `vendor/bin/pint --test` |
-| Static analysis | `vendor/bin/phpstan analyse --no-progress` |
-| Conf shape drift | `php tools/check-conf-shape.php` |
-| TypeScript check | `npm run typecheck` |
-| JS build | `npm run build` |
-| Unit tests | `vendor/bin/phpunit --testsuite Unit` |
+| Check             | Command                                                           |
+| ----------------- | ----------------------------------------------------------------- |
+| PHP format        | `vendor/bin/pint --test`                                          |
+| Static analysis   | `vendor/bin/phpstan analyse --no-progress`                        |
+| Conf shape drift  | `php tools/check-conf-shape.php`                                  |
+| TypeScript check  | `npm run typecheck`                                               |
+| JS build          | `npm run build`                                                   |
+| Unit tests        | `vendor/bin/phpunit --testsuite Unit`                             |
 | Integration tests | `vendor/bin/phpunit --testsuite Integration` (needs `.env.local`) |
-| E2E tests | `npx playwright test` (needs `.env.local` + local Apache up) |
+| E2E tests         | `npx playwright test` (needs `.env.local` + local Apache up)      |
 
 ---
 
@@ -229,19 +229,19 @@ See **[ROADMAP.md](ROADMAP.md)** for the full breakdown of remaining work, with 
 
 Summary table:
 
-| # | Description | Size | Status |
-|---|---|---|---|
-| 1 | PHPStan level 9 / baseline elimination (625 errors remaining) | L | **WIP** |
-| 2 | Fix remaining `global` declarations inside `src/` | S | Verify/close |
-| 3 | Remove class duplication in `ws_core.inc.php` | M | Not started |
-| 4 | Unit test coverage expansion (229 tests → ≥40% coverage) | L | Not started |
-| 5 | PHP 8.1–8.5 features: readonly, enum, match | M | Not started |
-| 6 | `functions_user.inc.php` split into typed classes | L | Not started |
-| 7 | TypeScript `any` reduction (468 → ≤250) | M | Not started |
-| 8 | CSS design tokens + Stylelint | M | Not started |
-| 9 | jQuery upgrade / incremental replacement | XL | Planning only |
-| 10 | Overdue TODO cleanup (34 markers) | S | Not started |
-| 11 | Eliminate remaining `window.*` data-bridge globals (~20 assignments) | M | ✅ Done — see ROADMAP-TS.md #3 and PLAN-inline-assets-extraction.md |
+| #   | Description                                                          | Size | Status                                                              |
+| --- | -------------------------------------------------------------------- | ---- | ------------------------------------------------------------------- |
+| 1   | PHPStan level 9 / baseline elimination (625 errors remaining)        | L    | **WIP**                                                             |
+| 2   | Fix remaining `global` declarations inside `src/`                    | S    | Verify/close                                                        |
+| 3   | Remove class duplication in `ws_core.inc.php`                        | M    | Not started                                                         |
+| 4   | Unit test coverage expansion (229 tests → ≥40% coverage)             | L    | Not started                                                         |
+| 5   | PHP 8.1–8.5 features: readonly, enum, match                          | M    | Not started                                                         |
+| 6   | `functions_user.inc.php` split into typed classes                    | L    | Not started                                                         |
+| 7   | TypeScript `any` reduction (468 → ≤250)                              | M    | Not started                                                         |
+| 8   | CSS design tokens + Stylelint                                        | M    | Not started                                                         |
+| 9   | jQuery upgrade / incremental replacement                             | XL   | Planning only                                                       |
+| 10  | Overdue TODO cleanup (34 markers)                                    | S    | Not started                                                         |
+| 11  | Eliminate remaining `window.*` data-bridge globals (~20 assignments) | M    | ✅ Done — see ROADMAP-TS.md #3 and PLAN-inline-assets-extraction.md |
 
 Recommended sequence: 1 → 2 → 10 → 3 → 4 → 5 → 7 → 8 → 6 → 9 → 11.
 
@@ -276,13 +276,13 @@ causing an immediate fatal error.
 
 Voluntary migration to typed getters (use the FQN to avoid alias dependency):
 
-| Was | Now |
-|---|---|
-| `$conf['upload_dir']` | `\Piwigo\Core\Config::getString('upload_dir')` |
-| `$conf['max_file_size']` | `\Piwigo\Core\Config::getInt('max_file_size')` |
-| `$conf['enable_formats']` | `\Piwigo\Core\Config::getBool('enable_formats')` |
-| `$conf['key'] = $v` | `\Piwigo\Core\Config::override('key', $v)` (per-request) |
-| `conf_update_param(...)` | unchanged — still the right way to persist |
+| Was                       | Now                                                      |
+| ------------------------- | -------------------------------------------------------- |
+| `$conf['upload_dir']`     | `\Piwigo\Core\Config::getString('upload_dir')`           |
+| `$conf['max_file_size']`  | `\Piwigo\Core\Config::getInt('max_file_size')`           |
+| `$conf['enable_formats']` | `\Piwigo\Core\Config::getBool('enable_formats')`         |
+| `$conf['key'] = $v`       | `\Piwigo\Core\Config::override('key', $v)` (per-request) |
+| `conf_update_param(...)`  | unchanged — still the right way to persist               |
 
 ### Database layer
 
@@ -297,13 +297,13 @@ so existing `extends PluginMaintain` or `new PwgError(...)` calls continue to wo
 
 To opt into IDE tooling, use the namespaced names:
 
-| Old | New |
-|---|---|
+| Old              | New                           |
+| ---------------- | ----------------------------- |
 | `PluginMaintain` | `Piwigo\Admin\PluginMaintain` |
-| `ThemeMaintain` | `Piwigo\Admin\ThemeMaintain` |
-| `Template` | `Piwigo\Template\Template` |
-| `PwgError` | `Piwigo\Ws\PwgError` |
-| `PwgSession` | `Piwigo\Session\PwgSession` |
+| `ThemeMaintain`  | `Piwigo\Admin\ThemeMaintain`  |
+| `Template`       | `Piwigo\Template\Template`    |
+| `PwgError`       | `Piwigo\Ws\PwgError`          |
+| `PwgSession`     | `Piwigo\Session\PwgSession`   |
 
 ### PHP version
 

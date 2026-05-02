@@ -37,13 +37,32 @@ const {
     pwg_token,
     total,
     orphan_tag_names,
-    str_already_exist, str_and_others_tags, str_clear_selection, str_copy,
-    str_delete, str_delete_orphan_tags, str_delete_tags, str_delete_them,
-    str_keep_them, str_merged_into, str_no_delete_confirmation, str_no_photos,
-    str_number_photos, str_orphan_tags, str_other_copy, str_select_all_tag,
-    str_selection_done, str_tag_created, str_tag_deleted, str_tag_found,
-    str_tag_rename, str_tag_selected, str_tags_deleted, str_tags_found,
-    str_yes_delete_confirmation, str_yes_rename_confirmation,
+    str_already_exist,
+    str_and_others_tags,
+    str_clear_selection,
+    str_copy,
+    str_delete,
+    str_delete_orphan_tags,
+    str_delete_tags,
+    str_delete_them,
+    str_keep_them,
+    str_merged_into,
+    str_no_delete_confirmation,
+    str_no_photos,
+    str_number_photos,
+    str_orphan_tags,
+    str_other_copy,
+    str_select_all_tag,
+    str_selection_done,
+    str_tag_created,
+    str_tag_deleted,
+    str_tag_found,
+    str_tag_rename,
+    str_tag_selected,
+    str_tags_deleted,
+    str_tags_found,
+    str_yes_delete_confirmation,
+    str_yes_rename_confirmation,
 } = getPageData<TagsPageData>();
 
 // mutable state
@@ -70,10 +89,18 @@ let promises: any;
 let str_message: any;
 let tagBox: any;
 
-const qs = <T extends HTMLElement = HTMLElement>(sel: string, ctx: Element | Document = document) => ctx.querySelector<T>(sel);
-const qsa = <T extends HTMLElement = HTMLElement>(sel: string, ctx: Element | Document = document) => Array.from(ctx.querySelectorAll<T>(sel));
-const show = (el: HTMLElement | null | undefined) => { if (el) el.style.display = ''; };
-const hide = (el: HTMLElement | null | undefined) => { if (el) el.style.display = 'none'; };
+const qs = <T extends HTMLElement = HTMLElement>(sel: string, ctx: Element | Document = document) =>
+    ctx.querySelector<T>(sel);
+const qsa = <T extends HTMLElement = HTMLElement>(
+    sel: string,
+    ctx: Element | Document = document
+) => Array.from(ctx.querySelectorAll<T>(sel));
+const show = (el: HTMLElement | null | undefined) => {
+    if (el) el.style.display = '';
+};
+const hide = (el: HTMLElement | null | undefined) => {
+    if (el) el.style.display = 'none';
+};
 
 var dataTags: any[] = JSON.parse(qs('.tag-container')?.dataset['tags'] ?? '[]');
 
@@ -85,7 +112,9 @@ if (sel100) sel100.checked = true;
 qs('.info-warning p a')?.addEventListener('click', () => {
     const url = qs<HTMLAnchorElement>('.info-warning p a')!.dataset['url'] ?? '';
     const tags = orphan_tag_names;
-    const str_orphans = str_orphan_tags.replace('%s1', String(tags.length)).replace('%s2', tags.join(', '));
+    const str_orphans = str_orphan_tags
+        .replace('%s1', String(tags.length))
+        .replace('%s2', tags.join(', '));
     if (window.confirm(str_delete_orphan_tags + '\n\n' + str_orphans)) {
         window.location.href = url.replace(/amp;/g, '');
     } else {
@@ -95,12 +124,18 @@ qs('.info-warning p a')?.addEventListener('click', () => {
 
 /*------- Tag box creation / recycling -------*/
 
-function createTagBox(id: any, name: any, url_name: any, count: any, raw_name: any = null): HTMLElement {
+function createTagBox(
+    id: any,
+    name: any,
+    url_name: any,
+    count: any,
+    raw_name: any = null
+): HTMLElement {
     if (raw_name === null) raw_name = name;
     const u_edit = 'admin.php?page=batch_manager&filter=tag-' + id;
     const u_view = 'index.php?/tags/' + id + '-' + url_name;
-    let html = qs('.tag-template')!.innerHTML
-        .replace(/%name%/g, unescape(String(name)))
+    let html = qs('.tag-template')!
+        .innerHTML.replace(/%name%/g, unescape(String(name)))
         .replace('%U_VIEW%', u_view)
         .replace('%U_EDIT%', u_edit)
         .replace('%raw_name%', raw_name);
@@ -114,11 +149,15 @@ function createTagBox(id: any, name: any, url_name: any, count: any, raw_name: a
 
     if ((document.getElementById('toggleSelectionMode') as HTMLInputElement)?.checked) {
         div.classList.add('selection');
-        qsa('.in-selection-mode', div).forEach(el => { el.style.display = ''; });
+        qsa('.in-selection-mode', div).forEach((el) => {
+            el.style.display = '';
+        });
     }
     const headerI = qs('.tag-dropdown-header i', div);
     if (count > 0) {
-        qsa('.dropdown-option.view, .dropdown-option.manage', div).forEach(el => { el.style.display = 'block'; });
+        qsa('.dropdown-option.view, .dropdown-option.manage', div).forEach((el) => {
+            el.style.display = 'block';
+        });
         if (headerI) headerI.innerHTML = str_number_photos.replace('%d', count);
     } else {
         if (headerI) headerI.innerHTML = str_no_photos;
@@ -126,20 +165,37 @@ function createTagBox(id: any, name: any, url_name: any, count: any, raw_name: a
     return div;
 }
 
-function recycleTagBox(tagBox: HTMLElement, id: any, name: any, url_name: any, count: any, raw_name: any = null) {
+function recycleTagBox(
+    tagBox: HTMLElement,
+    id: any,
+    name: any,
+    url_name: any,
+    count: any,
+    raw_name: any = null
+) {
     if (raw_name === null) raw_name = name;
     tagBox.dataset['id'] = String(id);
-    qsa('.tag-name, .tag-dropdown-header b', tagBox).forEach(el => { el.innerHTML = name; });
-    const editable = qs<HTMLInputElement>('.tag-name-editable', tagBox); if (editable) editable.value = name;
+    qsa('.tag-name, .tag-dropdown-header b', tagBox).forEach((el) => {
+        el.innerHTML = name;
+    });
+    const editable = qs<HTMLInputElement>('.tag-name-editable', tagBox);
+    if (editable) editable.value = name;
     tagBox.dataset['selected'] = '0';
-    const nameEl = qs('.tag-name', tagBox); if (nameEl) nameEl.dataset['rawname'] = raw_name;
-    const viewEl = qs<HTMLAnchorElement>('.dropdown-option.view', tagBox); if (viewEl) viewEl.href = 'index.php?/tags/' + id + '-' + url_name;
-    const manageEl = qs<HTMLAnchorElement>('.dropdown-option.manage', tagBox); if (manageEl) manageEl.href = 'admin.php?page=batch_manager&filter=tag-' + id;
+    const nameEl = qs('.tag-name', tagBox);
+    if (nameEl) nameEl.dataset['rawname'] = raw_name;
+    const viewEl = qs<HTMLAnchorElement>('.dropdown-option.view', tagBox);
+    if (viewEl) viewEl.href = 'index.php?/tags/' + id + '-' + url_name;
+    const manageEl = qs<HTMLAnchorElement>('.dropdown-option.manage', tagBox);
+    if (manageEl) manageEl.href = 'admin.php?page=batch_manager&filter=tag-' + id;
     if (count > 0) {
-        qsa('.dropdown-option.view, .dropdown-option.manage', tagBox).forEach(el => { el.style.display = 'block'; });
-        const hi = qs('.tag-dropdown-header i', tagBox); if (hi) hi.innerHTML = str_number_photos.replace('%d', count);
+        qsa('.dropdown-option.view, .dropdown-option.manage', tagBox).forEach((el) => {
+            el.style.display = 'block';
+        });
+        const hi = qs('.tag-dropdown-header i', tagBox);
+        if (hi) hi.innerHTML = str_number_photos.replace('%d', count);
     } else {
-        const hi = qs('.tag-dropdown-header i', tagBox); if (hi) hi.innerHTML = str_no_photos;
+        const hi = qs('.tag-dropdown-header i', tagBox);
+        if (hi) hi.innerHTML = str_no_photos;
     }
 }
 
@@ -163,7 +219,7 @@ qs('#add-tag .icon-cancel-circled')?.addEventListener('click', () => {
     qsa('.tag-info').forEach(hide);
 });
 
-qsa('.tag-box').forEach(el => setupTagbox(el));
+qsa('.tag-box').forEach((el) => setupTagbox(el));
 
 document.addEventListener('DOMContentLoaded', () => {
     qs('.TagSubmit')?.addEventListener('click', () => {
@@ -172,24 +228,29 @@ document.addEventListener('DOMContentLoaded', () => {
         if (submitBtn) hide(submitBtn);
         if (loadingBtn) show(loadingBtn);
         $tagboxid = qs<HTMLElement>('.RenameTagPopInContainer .tag-property-input')!.id;
-        renameTag($tagboxid, (qs<HTMLInputElement>('.RenameTagPopInContainer .tag-property-input'))!.value).then(() => {
-            if (submitBtn) show(submitBtn);
-            if (loadingBtn) hide(loadingBtn);
-            rename_tag_close();
-            cleanCheckmark();
-            const el = qs(`[data-id="${$tagboxid}"]`)!;
-            const wrapper = document.createElement('div');
-            wrapper.className = 'tag-changed';
-            el.parentNode?.insertBefore(wrapper, el);
-            wrapper.appendChild(el);
-            const checkmark = document.createElement('i');
-            checkmark.className = 'icon-ok tag-checkmark';
-            wrapper.prepend(checkmark);
-        }).catch((message: any) => {
-            if (submitBtn) show(submitBtn);
-            if (loadingBtn) hide(loadingBtn);
-            console.error(message);
-        });
+        renameTag(
+            $tagboxid,
+            qs<HTMLInputElement>('.RenameTagPopInContainer .tag-property-input')!.value
+        )
+            .then(() => {
+                if (submitBtn) show(submitBtn);
+                if (loadingBtn) hide(loadingBtn);
+                rename_tag_close();
+                cleanCheckmark();
+                const el = qs(`[data-id="${$tagboxid}"]`)!;
+                const wrapper = document.createElement('div');
+                wrapper.className = 'tag-changed';
+                el.parentNode?.insertBefore(wrapper, el);
+                wrapper.appendChild(el);
+                const checkmark = document.createElement('i');
+                checkmark.className = 'icon-ok tag-checkmark';
+                wrapper.prepend(checkmark);
+            })
+            .catch((message: any) => {
+                if (submitBtn) show(submitBtn);
+                if (loadingBtn) hide(loadingBtn);
+                console.error(message);
+            });
     });
 });
 
@@ -202,18 +263,25 @@ document.addEventListener('DOMContentLoaded', () => {
     loadState.removeClass(iconValidate, 'icon-plus');
     loadState.changeHTML(iconValidate, "<i class='icon-spin6 animate-spin'> </i>");
     loadState.changeAttribute(iconValidate, 'style', 'pointer-event:none');
-    addTag(input.value).then(() => {
-        showMessage(str_tag_created.replace('%s', input.value));
-        input.value = '';
-        document.getElementById('add-tag')?.classList.remove('input-mode');
-        qs<HTMLInputElement>('#search-tag .search-input')?.dispatchEvent(new Event('input'));
-        loadState.reverse();
-    }).catch((message: any) => { loadState.reverse(); showError(message); });
+    addTag(input.value)
+        .then(() => {
+            showMessage(str_tag_created.replace('%s', input.value));
+            input.value = '';
+            document.getElementById('add-tag')?.classList.remove('input-mode');
+            qs<HTMLInputElement>('#search-tag .search-input')?.dispatchEvent(new Event('input'));
+            loadState.reverse();
+        })
+        .catch((message: any) => {
+            loadState.reverse();
+            showError(message);
+        });
 });
 
 qs('#add-tag .icon-validate')?.addEventListener('click', () => {
     if (document.getElementById('add-tag')?.classList.contains('input-mode')) {
-        (document.getElementById('add-tag') as HTMLFormElement)?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+        (document.getElementById('add-tag') as HTMLFormElement)?.dispatchEvent(
+            new Event('submit', { bubbles: true, cancelable: true })
+        );
     }
 });
 
@@ -221,19 +289,26 @@ function addTag(name: any): Promise<any> {
     return fetch('ws.php?format=json&method=pwg.tags.add', {
         method: 'POST',
         body: new URLSearchParams({ name }),
-    }).then(r => r.json()).then(rawData => {
-        data = rawData;
-        if (data.stat === 'ok') {
-            const tag = createTagBox(data.result.id, data.result.name, data.result.url_name, 0);
-            qs('.tag-container')?.prepend(tag);
-            setupTagbox(tag);
-            updateSearchInfo();
-            dataTags.unshift({ name: data.result.name, raw_name: data.result.name, id: data.result.id, url_name: data.result.url_name });
-            updateBadge();
-        } else {
-            throw str_already_exist.replace('%s', name);
-        }
-    });
+    })
+        .then((r) => r.json())
+        .then((rawData) => {
+            data = rawData;
+            if (data.stat === 'ok') {
+                const tag = createTagBox(data.result.id, data.result.name, data.result.url_name, 0);
+                qs('.tag-container')?.prepend(tag);
+                setupTagbox(tag);
+                updateSearchInfo();
+                dataTags.unshift({
+                    name: data.result.name,
+                    raw_name: data.result.name,
+                    id: data.result.id,
+                    url_name: data.result.url_name,
+                });
+                updateBadge();
+            } else {
+                throw str_already_exist.replace('%s', name);
+            }
+        });
 }
 
 /*------- Setup Tag Box -------*/
@@ -249,7 +324,7 @@ function setupTagbox(tagBox: HTMLElement) {
     document.addEventListener('mouseup', (e: MouseEvent) => {
         e.stopPropagation();
         const target = e.target as Element;
-        const optionClicked = qsa('.dropdown-option', tagBox).some(el => el.contains(target));
+        const optionClicked = qsa('.dropdown-option', tagBox).some((el) => el.contains(target));
         if (!optionClicked) hide(q('.tag-dropdown-block'));
     });
 
@@ -268,7 +343,7 @@ function setupTagbox(tagBox: HTMLElement) {
     });
 
     q('.dropdown-option.edit')?.addEventListener('click', (e: Event) => {
-        const id = ((e.currentTarget as HTMLElement).closest<HTMLElement>('.tag-box'))?.dataset['id'];
+        const id = (e.currentTarget as HTMLElement).closest<HTMLElement>('.tag-box')?.dataset['id'];
         const tagIndex = dataTags.findIndex((tag: any) => tag.id == id);
         const tagRawName = dataTags[tagIndex].raw_name ?? q('.tag-name')?.dataset['rawname'];
         const tagName = dataTags[tagIndex].name ?? q('.tag-name')?.innerHTML;
@@ -293,75 +368,119 @@ function setupTagbox(tagBox: HTMLElement) {
 function set_up_popin(id: any, tagRawName: any, tagName: any) {
     qs<HTMLElement>('.RenameTagPopInContainer .tag-property-input')!.id = String(id);
     qs('.AddIconTitle span')!.innerHTML = str_tag_rename.replace('%s', tagName);
-    qsa('.ClosePopIn, .TagCancel').forEach(el => { el.addEventListener('click', rename_tag_close); });
+    qsa('.ClosePopIn, .TagCancel').forEach((el) => {
+        el.addEventListener('click', rename_tag_close);
+    });
     qs('.TagSubmit')!.innerHTML = str_yes_rename_confirmation;
-    (qs<HTMLInputElement>('.RenameTagPopInContainer .tag-property-input'))!.value = tagRawName;
+    qs<HTMLInputElement>('.RenameTagPopInContainer .tag-property-input')!.value = tagRawName;
 }
 
-function rename_tag_close() { hide(document.getElementById('RenameTag')); }
+function rename_tag_close() {
+    hide(document.getElementById('RenameTag'));
+}
 function rename_tag_open() {
     show(document.getElementById('RenameTag'));
-    (qs<HTMLInputElement>('.tag-property-input'))?.focus();
+    qs<HTMLInputElement>('.tag-property-input')?.focus();
 }
 
 function cleanCheckmark() {
-    qsa('.tag-changed > *').forEach(el => el.parentElement?.replaceWith(el));
-    qsa('.tag-checkmark').forEach(el => el.remove());
+    qsa('.tag-changed > *').forEach((el) => el.parentElement?.replaceWith(el));
+    qsa('.tag-checkmark').forEach((el) => el.remove());
 }
 
 function removeTag(id: any, name: any) {
     const body = new URLSearchParams({ method: 'pwg.tags.delete', tag_id: id, pwg_token });
-    fetch('ws.php?format=json', { method: 'POST', body }).then(r => r.json()).then(rawData => {
-        data = rawData;
-        if (data.stat === 'ok') {
-            qs(`.tag-box[data-id="${id}"]`)?.remove();
-            dataTags = dataTags.filter((tag: any) => tag.id != id);
-            showMessage(str_tag_deleted.replace('%s', name));
-            updateBadge();
-            updateSearchInfo();
-            updatePaginationMenu();
-        } else { showError('A problem has occured'); }
-    });
+    fetch('ws.php?format=json', { method: 'POST', body })
+        .then((r) => r.json())
+        .then((rawData) => {
+            data = rawData;
+            if (data.stat === 'ok') {
+                qs(`.tag-box[data-id="${id}"]`)?.remove();
+                dataTags = dataTags.filter((tag: any) => tag.id != id);
+                showMessage(str_tag_deleted.replace('%s', name));
+                updateBadge();
+                updateSearchInfo();
+                updatePaginationMenu();
+            } else {
+                showError('A problem has occured');
+            }
+        });
 }
 
 function renameTag(id: any, new_name: any): Promise<any> {
-    const body = new URLSearchParams({ method: 'pwg.tags.rename', tag_id: id, new_name, pwg_token });
-    return fetch('ws.php?format=json', { method: 'POST', body }).then(r => r.json()).then(rawData => {
-        data = rawData;
-        if (data.stat === 'ok') {
-            qsa(`.tag-box[data-id="${id}"] p, .tag-box[data-id="${id}"] .tag-dropdown-header b`).forEach(el => { el.innerHTML = data.result.name; });
-            const editable = qs<HTMLInputElement>(`.tag-box[data-id="${id}"] .tag-name-editable`); if (editable) editable.value = data.result.name;
-            const nameEl = qs(`.tag-box[data-id="${id}"] .tag-name`); if (nameEl) nameEl.dataset['rawname'] = data.result.raw_name;
-            const viewEl = qs<HTMLAnchorElement>('.dropdown-option.view'); if (viewEl) viewEl.href = 'index.php?/tags/' + id + '-' + data.result.url_name;
-            index = dataTags.findIndex((tag: any) => tag.id == id);
-            dataTags[index].name = data.result.name;
-            dataTags[index].raw_name = data.result.raw_name;
-            dataTags[index].url_name = data.result.url_name;
-            return data;
-        } else { throw str_already_exist.replace('%s', new_name); }
+    const body = new URLSearchParams({
+        method: 'pwg.tags.rename',
+        tag_id: id,
+        new_name,
+        pwg_token,
     });
+    return fetch('ws.php?format=json', { method: 'POST', body })
+        .then((r) => r.json())
+        .then((rawData) => {
+            data = rawData;
+            if (data.stat === 'ok') {
+                qsa(
+                    `.tag-box[data-id="${id}"] p, .tag-box[data-id="${id}"] .tag-dropdown-header b`
+                ).forEach((el) => {
+                    el.innerHTML = data.result.name;
+                });
+                const editable = qs<HTMLInputElement>(
+                    `.tag-box[data-id="${id}"] .tag-name-editable`
+                );
+                if (editable) editable.value = data.result.name;
+                const nameEl = qs(`.tag-box[data-id="${id}"] .tag-name`);
+                if (nameEl) nameEl.dataset['rawname'] = data.result.raw_name;
+                const viewEl = qs<HTMLAnchorElement>('.dropdown-option.view');
+                if (viewEl) viewEl.href = 'index.php?/tags/' + id + '-' + data.result.url_name;
+                index = dataTags.findIndex((tag: any) => tag.id == id);
+                dataTags[index].name = data.result.name;
+                dataTags[index].raw_name = data.result.raw_name;
+                dataTags[index].url_name = data.result.url_name;
+                return data;
+            } else {
+                throw str_already_exist.replace('%s', new_name);
+            }
+        });
 }
 
 function duplicateTag(id: any, name: any): Promise<any> {
     copy_name = name + str_copy;
-    const name_exist = (n: string) => qsa('.tag-box .tag-name').some(el => el.innerHTML === n);
+    const name_exist = (n: string) => qsa('.tag-box .tag-name').some((el) => el.innerHTML === n);
     let i = 1;
     while (name_exist(copy_name)) copy_name = name + str_other_copy.replace('%s', String(i++));
 
-    const body = new URLSearchParams({ method: 'pwg.tags.duplicate', tag_id: id, copy_name, pwg_token });
-    return fetch('ws.php?format=json', { method: 'POST', body }).then(r => r.json()).then(rawData => {
-        data = rawData;
-        if (data.stat === 'ok') {
-            const tag = createTagBox(data.result.id, data.result.name, data.result.url_name, data.result.count);
-            const orig = qs(`.tag-box[data-id="${id}"]`); orig?.after(tag);
-            setupTagbox(tag);
-            index = dataTags.findIndex((t: any) => t.id == id);
-            dataTags.splice(index + 1, 0, { name: data.result.name, id: data.result.id, url_name: data.result.url_name, counter: data.result.count });
-            updateBadge();
-            updateSearchInfo();
-            return data;
-        }
+    const body = new URLSearchParams({
+        method: 'pwg.tags.duplicate',
+        tag_id: id,
+        copy_name,
+        pwg_token,
     });
+    return fetch('ws.php?format=json', { method: 'POST', body })
+        .then((r) => r.json())
+        .then((rawData) => {
+            data = rawData;
+            if (data.stat === 'ok') {
+                const tag = createTagBox(
+                    data.result.id,
+                    data.result.name,
+                    data.result.url_name,
+                    data.result.count
+                );
+                const orig = qs(`.tag-box[data-id="${id}"]`);
+                orig?.after(tag);
+                setupTagbox(tag);
+                index = dataTags.findIndex((t: any) => t.id == id);
+                dataTags.splice(index + 1, 0, {
+                    name: data.result.name,
+                    id: data.result.id,
+                    url_name: data.result.url_name,
+                    counter: data.result.count,
+                });
+                updateBadge();
+                updateSearchInfo();
+                return data;
+            }
+        });
 }
 
 /*------- Selection mode -------*/
@@ -369,22 +488,24 @@ function duplicateTag(id: any, name: any): Promise<any> {
 var selected: any[] = [];
 
 (document.getElementById('toggleSelectionMode') as HTMLInputElement).checked = false;
-document.getElementById('toggleSelectionMode')?.addEventListener('click', function(this: HTMLInputElement) {
-    selectionMode(this.checked);
-    qsa('.tag-info').forEach(hide);
-});
+document
+    .getElementById('toggleSelectionMode')
+    ?.addEventListener('click', function (this: HTMLInputElement) {
+        selectionMode(this.checked);
+        qsa('.tag-info').forEach(hide);
+    });
 
 function selectionMode(isSelection: boolean) {
     if (isSelection) {
-        qsa('.in-selection-mode').forEach(el => el.classList.add('show'));
-        qsa('.not-in-selection-mode').forEach(el => el.classList.add('hide'));
+        qsa('.in-selection-mode').forEach((el) => el.classList.add('show'));
+        qsa('.not-in-selection-mode').forEach((el) => el.classList.add('hide'));
         qs('.tag-container')?.classList.add('selection');
-        qsa('.tag-box').forEach(el => el.classList.remove('edit-name'));
+        qsa('.tag-box').forEach((el) => el.classList.remove('edit-name'));
     } else {
-        qsa('.in-selection-mode').forEach(el => el.classList.remove('show'));
-        qsa('.not-in-selection-mode').forEach(el => el.classList.remove('hide'));
+        qsa('.in-selection-mode').forEach((el) => el.classList.remove('show'));
+        qsa('.not-in-selection-mode').forEach((el) => el.classList.remove('hide'));
         qs('.tag-container')?.classList.remove('selection');
-        qsa('.tag-box').forEach(el => el.dataset['selected'] = '0');
+        qsa('.tag-box').forEach((el) => (el.dataset['selected'] = '0'));
         hide(qs<HTMLElement>('.tag-select-message'));
         clearSelection();
     }
@@ -392,7 +513,8 @@ function selectionMode(isSelection: boolean) {
 
 function clearSelection() {
     selected = [];
-    const list = qs('.selection-mode-tag .tag-list'); if (list) list.innerHTML = '';
+    const list = qs('.selection-mode-tag .tag-list');
+    if (list) list.innerHTML = '';
     hide(qs('.selection-other-tags'));
     updateSelectionContent();
 }
@@ -403,7 +525,12 @@ function addSelectedItem(id: any) {
     if (selected.length > maxItemDisplayed) {
         show(qs('.selection-other-tags'));
         const numDisplayed = qsa('.selection-mode-tag .tag-list div').length;
-        const othersEl = qs('.selection-other-tags'); if (othersEl) othersEl.innerHTML = str_and_others_tags.replace('%s', String(selected.length - numDisplayed));
+        const othersEl = qs('.selection-other-tags');
+        if (othersEl)
+            othersEl.innerHTML = str_and_others_tags.replace(
+                '%s',
+                String(selected.length - numDisplayed)
+            );
     } else {
         hide(qs('.selection-other-tags'));
         const found = dataTags.find((tag: any) => tag.id == id);
@@ -422,13 +549,15 @@ function createSelectionItem(id: any, name: any) {
 function removeSelectedItem(id: any) {
     if (!selected.find((tag: any) => tag == id)) return;
     selected = selected.filter((tag: any) => parseInt(tag) !== parseInt(id));
-    const tagEl = qs<HTMLElement>(`.tag-box[data-id="${id}"]`); if (tagEl) tagEl.dataset['selected'] = '0';
+    const tagEl = qs<HTMLElement>(`.tag-box[data-id="${id}"]`);
+    if (tagEl) tagEl.dataset['selected'] = '0';
 
     const selItem = qs(`.selection-mode-tag .tag-list div[data-id="${id}"]`);
     if (selItem) {
         selItem.remove();
         if (selected.length >= maxItemDisplayed) {
-            let i = 0; isNotCreate = true;
+            let i = 0;
+            isNotCreate = true;
             while (i < selected.length && isNotCreate) {
                 if (!qs(`.selection-mode-tag .tag-list div[data-id="${selected[i]}"]`)) {
                     isNotCreate = false;
@@ -441,13 +570,18 @@ function removeSelectedItem(id: any) {
     }
     const numDisplayed = qsa('.selection-mode-tag .tag-list div').length;
     const othersEl = qs('.selection-other-tags');
-    if (othersEl) othersEl.innerHTML = str_and_others_tags.replace('%s', String(selected.length - numDisplayed));
+    if (othersEl)
+        othersEl.innerHTML = str_and_others_tags.replace(
+            '%s',
+            String(selected.length - numDisplayed)
+        );
     if (selected.length - numDisplayed <= 0) hide(othersEl);
     hide(qs<HTMLElement>('.tag-select-message'));
 }
 
 function updateMergeItems() {
-    const opts = qs('#MergeOptionsChoices'); if (opts) opts.innerHTML = '';
+    const opts = qs('#MergeOptionsChoices');
+    if (opts) opts.innerHTML = '';
     selected.forEach((id: any) => {
         const found = dataTags.find((tag: any) => tag.id == id);
         const opt = document.createElement('option');
@@ -466,21 +600,37 @@ function updateSelectionContent() {
 
     if (number === 0) {
         mergeOption = false;
-        show(nothingSelected); hide(selectionMode_tag); hide(mergeOpts);
+        show(nothingSelected);
+        hide(selectionMode_tag);
+        hide(mergeOpts);
     } else if (number === 1) {
         mergeOption = false;
-        hide(nothingSelected); show(selectionMode_tag); hide(mergeOpts);
+        hide(nothingSelected);
+        show(selectionMode_tag);
+        hide(mergeOpts);
         mergeSel?.classList.add('unavailable');
     } else {
         hide(nothingSelected);
         mergeSel?.classList.remove('unavailable');
-        if (mergeOption) { show(mergeOpts); hide(selectionMode_tag); updateMergeItems(); }
-        else { hide(mergeOpts); show(selectionMode_tag); }
+        if (mergeOption) {
+            show(mergeOpts);
+            hide(selectionMode_tag);
+            updateMergeItems();
+        } else {
+            hide(mergeOpts);
+            show(selectionMode_tag);
+        }
     }
 }
 
-document.getElementById('MergeSelectionMode')?.addEventListener('click', () => { mergeOption = true; updateSelectionContent(); });
-document.getElementById('CancelMerge')?.addEventListener('click', () => { mergeOption = false; updateSelectionContent(); });
+document.getElementById('MergeSelectionMode')?.addEventListener('click', () => {
+    mergeOption = true;
+    updateSelectionContent();
+});
+document.getElementById('CancelMerge')?.addEventListener('click', () => {
+    mergeOption = false;
+    updateSelectionContent();
+});
 
 document.getElementById('selectAll')?.addEventListener('click', () => {
     selectAll(tagToDisplay());
@@ -490,15 +640,21 @@ document.getElementById('selectAll')?.addEventListener('click', () => {
             str_selection_done.replace('%d', String(qsa('.tag-box').length)),
             str_select_all_tag.replace('%d', String(dataTags.length)),
             () => {
-                const msgA = qs('.tag-select-message a'); if (msgA) msgA.innerHTML = '';
-                const msgDiv = qs('.tag-select-message div'); if (msgDiv) msgDiv.innerHTML = "<i class='icon-spin6 animate-spin'> </i>";
+                const msgA = qs('.tag-select-message a');
+                if (msgA) msgA.innerHTML = '';
+                const msgDiv = qs('.tag-select-message div');
+                if (msgDiv) msgDiv.innerHTML = "<i class='icon-spin6 animate-spin'> </i>";
                 setTimeout(() => {
                     selectAll(dataTags).then(() => {
                         updateSelectionContent();
-                        showSelectMessage(str_tag_selected.replace(/%d/g, String(selected.length)), str_clear_selection, () => {
-                            selectNone();
-                            hide(qs<HTMLElement>('.tag-select-message'));
-                        });
+                        showSelectMessage(
+                            str_tag_selected.replace(/%d/g, String(selected.length)),
+                            str_clear_selection,
+                            () => {
+                                selectNone();
+                                hide(qs<HTMLElement>('.tag-select-message'));
+                            }
+                        );
                     });
                 }, 5);
             }
@@ -509,11 +665,14 @@ document.getElementById('selectAll')?.addEventListener('click', () => {
 function selectAll(dataArr: any[]): Promise<any> {
     promises = [];
     dataArr.forEach((tag: any) => {
-        promises.push(new Promise<any>((res) => {
-            const el = qs<HTMLElement>(`.tag-box[data-id="${tag.id}"]`); if (el) el.dataset['selected'] = '1';
-            addSelectedItem(tag.id);
-            res(undefined);
-        }));
+        promises.push(
+            new Promise<any>((res) => {
+                const el = qs<HTMLElement>(`.tag-box[data-id="${tag.id}"]`);
+                if (el) el.dataset['selected'] = '1';
+                addSelectedItem(tag.id);
+                res(undefined);
+            })
+        );
     });
     return Promise.all(promises);
 }
@@ -521,22 +680,42 @@ function selectAll(dataArr: any[]): Promise<any> {
 function showSelectMessage(str1: any, str2: any, callback: any) {
     const msg = qs<HTMLElement>('.tag-select-message')!;
     show(msg);
-    const div = qs('.tag-select-message div'); if (div) div.innerHTML = str1;
-    const a = qs('.tag-select-message a'); if (a) { a.innerHTML = str2; }
+    const div = qs('.tag-select-message div');
+    if (div) div.innerHTML = str1;
+    const a = qs('.tag-select-message a');
+    if (a) {
+        a.innerHTML = str2;
+    }
     const newA = qs('.tag-select-message a')!.cloneNode(true) as HTMLElement;
     qs('.tag-select-message a')!.replaceWith(newA);
     newA.addEventListener('click', callback);
 }
 
-document.getElementById('selectNone')?.addEventListener('click', () => { hide(qs<HTMLElement>('.tag-select-message')); selectNone(); });
-function selectNone() { qsa('.tag-box').forEach(el => { el.dataset['selected'] = '0'; }); clearSelection(); }
+document.getElementById('selectNone')?.addEventListener('click', () => {
+    hide(qs<HTMLElement>('.tag-select-message'));
+    selectNone();
+});
+function selectNone() {
+    qsa('.tag-box').forEach((el) => {
+        el.dataset['selected'] = '0';
+    });
+    clearSelection();
+}
 
-document.getElementById('selectInvert')?.addEventListener('click', () => { hide(qs<HTMLElement>('.tag-select-message')); selectInvert(tagToDisplay()); });
+document.getElementById('selectInvert')?.addEventListener('click', () => {
+    hide(qs<HTMLElement>('.tag-select-message'));
+    selectInvert(tagToDisplay());
+});
 function selectInvert(dataArr: any[]) {
     dataArr.forEach((tag: any) => {
         tagBox = qs(`.tag-box[data-id="${tag.id}"]`);
-        if (tagBox?.dataset['selected'] == '1') { tagBox.dataset['selected'] = '0'; removeSelectedItem(tag.id); }
-        else { tagBox.dataset['selected'] = '1'; addSelectedItem(tag.id); }
+        if (tagBox?.dataset['selected'] == '1') {
+            tagBox.dataset['selected'] = '0';
+            removeSelectedItem(tag.id);
+        } else {
+            tagBox.dataset['selected'] = '1';
+            addSelectedItem(tag.id);
+        }
     });
     updateSelectionContent();
 }
@@ -545,72 +724,106 @@ function selectInvert(dataArr: any[]) {
 
 document.getElementById('DeleteSelectionMode')?.addEventListener('click', () => {
     const names: string[] = [];
-    selected.forEach((id: any) => { const found = dataTags.find((t: any) => t.id == id); if (found) names.push(found.name); });
+    selected.forEach((id: any) => {
+        const found = dataTags.find((t: any) => t.id == id);
+        if (found) names.push(found.name);
+    });
     if (!window.confirm(str_delete_tags.replace('%s', tagListToString(names)))) return;
     removeSelectedTags();
 });
 
 function removeSelectedTags() {
     const names: string[] = [];
-    selected.forEach((id: any) => { const f = dataTags.find((t: any) => t.id == id); if (f) names.push(f.name); });
+    selected.forEach((id: any) => {
+        const f = dataTags.find((t: any) => t.id == id);
+        if (f) names.push(f.name);
+    });
     const body = new URLSearchParams({ pwg_token });
     selected.forEach((id: any) => body.append('tag_id[]', id));
     body.append('method', 'pwg.tags.delete');
-    fetch('ws.php?format=json', { method: 'POST', body }).then(r => r.text()).then(rawText => {
-        const raw_data = rawText.slice(rawText.search('{'));
-        if (JSON.parse(raw_data).stat === 'ok') {
-            selected.forEach((id: any) => qs(`.tag-box[data-id="${id}"]`)?.remove());
-            dataTags = dataTags.filter((tag: any) => !selected.includes(tag.id));
-            clearSelection();
-            updatePaginationMenu();
-            updateBadge();
-            updateSearchInfo();
-            window.alert(str_tags_deleted.replace('%s', tagListToString(names)));
-        }
-    });
+    fetch('ws.php?format=json', { method: 'POST', body })
+        .then((r) => r.text())
+        .then((rawText) => {
+            const raw_data = rawText.slice(rawText.search('{'));
+            if (JSON.parse(raw_data).stat === 'ok') {
+                selected.forEach((id: any) => qs(`.tag-box[data-id="${id}"]`)?.remove());
+                dataTags = dataTags.filter((tag: any) => !selected.includes(tag.id));
+                clearSelection();
+                updatePaginationMenu();
+                updateBadge();
+                updateSearchInfo();
+                window.alert(str_tags_deleted.replace('%s', tagListToString(names)));
+            }
+        });
 }
 
 qs('.ConfirmMergeButton')?.addEventListener('click', () => {
-    dest_id = (qs<HTMLSelectElement>('#MergeOptionsChoices'))?.value;
+    dest_id = qs<HTMLSelectElement>('#MergeOptionsChoices')?.value;
     mergeGroups(dest_id, selected);
 });
 
 function mergeGroups(destination_id: any, merge_ids: any[]) {
-    destination_name = qs<HTMLElement>(`.tag-box[data-id="${destination_id}"] .tag-name`)?.innerHTML ?? '';
-    merge_name = merge_ids.map((id: any) => qs<HTMLElement>(`.tag-box[data-id="${id}"] .tag-name`)?.innerHTML ?? '');
-    str_message = str_merged_into.replace('%s1', tagListToString(merge_name)).replace('%s2', destination_name);
+    destination_name =
+        qs<HTMLElement>(`.tag-box[data-id="${destination_id}"] .tag-name`)?.innerHTML ?? '';
+    merge_name = merge_ids.map(
+        (id: any) => qs<HTMLElement>(`.tag-box[data-id="${id}"] .tag-name`)?.innerHTML ?? ''
+    );
+    str_message = str_merged_into
+        .replace('%s1', tagListToString(merge_name))
+        .replace('%s2', destination_name);
 
-    const body = new URLSearchParams({ pwg_token, destination_tag_id: destination_id, method: 'pwg.tags.merge' });
-    merge_ids.forEach((id: any) => body.append('merge_tag_id[]', id));
-    fetch('ws.php?format=json', { method: 'POST', body }).then(r => r.text()).then(rawText => {
-        const raw_data = rawText.slice(rawText.search('{'));
-        data = JSON.parse(raw_data);
-        if (data.stat === 'ok') {
-            data.result.deleted_tag.forEach((id: any) => {
-                if (data.result.destination_tag != id) {
-                    qs(`.tag-box[data-id="${id}"]`)?.remove();
-                    dataTags = dataTags.filter((t: any) => id != t.id);
-                }
-            });
-            if (data.result.images_in_merged_tag.length > 0) {
-                tagBox = qs(`.tag-box[data-id="${data.result.destination_tag}"]`);
-                qsa('.dropdown-option.view, .dropdown-option.manage, .tag-dropdown-header i', tagBox).forEach(el => show(el));
-                const hi = qs('.tag-dropdown-header i', tagBox); if (hi) hi.innerHTML = str_number_photos.replace('%d', data.result.images_in_merged_tag.length);
-                index = dataTags.findIndex((t: any) => t.id == data.result.destination_tag);
-                dataTags[index].counter = data.result.images_in_merged_tag.length;
-            }
-            qsa('.tag-box').forEach(el => { el.dataset['selected'] = '0'; });
-            clearSelection();
-            updatePaginationMenu();
-            updateBadge();
-            updateSearchInfo();
-            window.alert(str_message);
-        }
+    const body = new URLSearchParams({
+        pwg_token,
+        destination_tag_id: destination_id,
+        method: 'pwg.tags.merge',
     });
+    merge_ids.forEach((id: any) => body.append('merge_tag_id[]', id));
+    fetch('ws.php?format=json', { method: 'POST', body })
+        .then((r) => r.text())
+        .then((rawText) => {
+            const raw_data = rawText.slice(rawText.search('{'));
+            data = JSON.parse(raw_data);
+            if (data.stat === 'ok') {
+                data.result.deleted_tag.forEach((id: any) => {
+                    if (data.result.destination_tag != id) {
+                        qs(`.tag-box[data-id="${id}"]`)?.remove();
+                        dataTags = dataTags.filter((t: any) => id != t.id);
+                    }
+                });
+                if (data.result.images_in_merged_tag.length > 0) {
+                    tagBox = qs(`.tag-box[data-id="${data.result.destination_tag}"]`);
+                    qsa(
+                        '.dropdown-option.view, .dropdown-option.manage, .tag-dropdown-header i',
+                        tagBox
+                    ).forEach((el) => show(el));
+                    const hi = qs('.tag-dropdown-header i', tagBox);
+                    if (hi)
+                        hi.innerHTML = str_number_photos.replace(
+                            '%d',
+                            data.result.images_in_merged_tag.length
+                        );
+                    index = dataTags.findIndex((t: any) => t.id == data.result.destination_tag);
+                    dataTags[index].counter = data.result.images_in_merged_tag.length;
+                }
+                qsa('.tag-box').forEach((el) => {
+                    el.dataset['selected'] = '0';
+                });
+                clearSelection();
+                updatePaginationMenu();
+                updateBadge();
+                updateSearchInfo();
+                window.alert(str_message);
+            }
+        });
 }
 
 function tagListToString(list: any[]) {
-    if (list.length > 5) return list.slice(0, 5).join(', ') + ' ' + str_and_others_tags.replace('%s', String(list.length - 5));
+    if (list.length > 5)
+        return (
+            list.slice(0, 5).join(', ') +
+            ' ' +
+            str_and_others_tags.replace('%s', String(list.length - 5))
+        );
     return list.join(', ');
 }
 
@@ -620,31 +833,42 @@ var maxShown = 100;
 var searchTimeOut: ReturnType<typeof setTimeout> | null = null;
 var delaySearchInput = 300;
 
-qs<HTMLInputElement>('#search-tag .search-input')?.addEventListener('input', function(this: HTMLInputElement) {
-    actualPage = 1;
-    if (searchTimeOut) clearTimeout(searchTimeOut);
-    searchTimeOut = setTimeout(() => {
-        updatePaginationMenu();
-        hide(qs('.emptyResearch'));
-        if (dataTags.filter(isDataSearched).length === 0) show(qs('.emptyResearch'));
-    }, delaySearchInput);
-});
+qs<HTMLInputElement>('#search-tag .search-input')?.addEventListener(
+    'input',
+    function (this: HTMLInputElement) {
+        actualPage = 1;
+        if (searchTimeOut) clearTimeout(searchTimeOut);
+        searchTimeOut = setTimeout(() => {
+            updatePaginationMenu();
+            hide(qs('.emptyResearch'));
+            if (dataTags.filter(isDataSearched).length === 0) show(qs('.emptyResearch'));
+        }, delaySearchInput);
+    }
+);
 
 function isDataSearched(tagObj: any): boolean {
     const name = tagObj.raw_name.toLowerCase();
-    const searchStr = (qs<HTMLInputElement>('#search-tag .search-input'))?.value ?? '';
+    const searchStr = qs<HTMLInputElement>('#search-tag .search-input')?.value ?? '';
     return name.includes(searchStr.toLowerCase());
 }
 
 /*------- Show Info -------*/
 function showError(message: any) {
     const errEl = qs<HTMLElement>('.info-error');
-    if (errEl) { errEl.querySelector('p')!.innerHTML = message; errEl.title = message; errEl.style.display = 'flex'; }
+    if (errEl) {
+        errEl.querySelector('p')!.innerHTML = message;
+        errEl.title = message;
+        errEl.style.display = 'flex';
+    }
     hide(qs('.info-info'));
 }
 function showMessage(message: any) {
     const msgEl = qs<HTMLElement>('.info-message');
-    if (msgEl) { msgEl.querySelector('p')!.innerHTML = message; msgEl.title = message; msgEl.style.display = 'flex'; }
+    if (msgEl) {
+        msgEl.querySelector('p')!.innerHTML = message;
+        msgEl.title = message;
+        msgEl.style.display = 'flex';
+    }
     hide(qs('.info-info'));
 }
 
@@ -653,19 +877,33 @@ function showMessage(message: any) {
 var per_page = parseInt(qs('.tag-container')?.dataset['perPage'] ?? '20');
 const pageItem = '<a data-page="%d">%d</a>';
 const pageEllipsis = '<span>...</span>';
-var promisePending = false, delay = 100, updateAsk = false, actualPage = 1;
+var promisePending = false,
+    delay = 100,
+    updateAsk = false,
+    actualPage = 1;
 
 function askUpdatePage() {
-    if (!promisePending) { promisePending = true; updatePage().then(promiseFinish); }
-    else updateAsk = true;
+    if (!promisePending) {
+        promisePending = true;
+        updatePage().then(promiseFinish);
+    } else updateAsk = true;
 }
-function promiseFinish() { promisePending = false; if (updateAsk) { updateAsk = false; askUpdatePage(); } }
+function promiseFinish() {
+    promisePending = false;
+    if (updateAsk) {
+        updateAsk = false;
+        askUpdatePage();
+    }
+}
 
 function updatePaginationMenu() {
-    const container = qs('.pagination-item-container'); if (container) container.innerHTML = '';
+    const container = qs('.pagination-item-container');
+    if (container) container.innerHTML = '';
     actualPage = Math.min(actualPage, getNumberPages());
-    if (getNumberPages() > 1) { show(qs('.pagination-container')); createPaginationMenu(); }
-    else hide(qs('.pagination-container'));
+    if (getNumberPages() > 1) {
+        show(qs('.pagination-container'));
+        createPaginationMenu();
+    } else hide(qs('.pagination-container'));
     updateArrows();
     askUpdatePage();
     hide(qs<HTMLElement>('.tag-select-message'));
@@ -687,7 +925,10 @@ function appendPaginationItem(page: any = null) {
         div.innerHTML = pageItem.replace(/%d/g, String(page));
         const el = div.firstElementChild as HTMLElement;
         if (actualPage == page) el.classList.add('actual');
-        el.addEventListener('click', () => { actualPage = parseInt(el.dataset['page'] ?? '1'); updatePaginationMenu(); });
+        el.addEventListener('click', () => {
+            actualPage = parseInt(el.dataset['page'] ?? '1');
+            updatePaginationMenu();
+        });
         container.appendChild(el);
     } else {
         container.insertAdjacentHTML('beforeend', pageEllipsis);
@@ -705,9 +946,14 @@ function getNumberPages(): number {
 }
 
 function movePage(toRight = true) {
-    qsa('.tag-box').forEach(el => el.classList.remove('edit-name'));
-    if (toRight && actualPage < getNumberPages()) { actualPage++; updatePaginationMenu(); }
-    else if (!toRight && actualPage > 1) { actualPage--; updatePaginationMenu(); }
+    qsa('.tag-box').forEach((el) => el.classList.remove('edit-name'));
+    if (toRight && actualPage < getNumberPages()) {
+        actualPage++;
+        updatePaginationMenu();
+    } else if (!toRight && actualPage > 1) {
+        actualPage--;
+        updatePaginationMenu();
+    }
 }
 
 async function updatePage(): Promise<void> {
@@ -717,8 +963,11 @@ async function updatePage(): Promise<void> {
     cleanCheckmark();
 
     show(qs('.pageLoad'));
-    tagBoxEls.forEach(el => { el.style.transition = 'opacity 0.5s'; el.style.opacity = '0'; });
-    await new Promise(resolve => setTimeout(resolve, 500));
+    tagBoxEls.forEach((el) => {
+        el.style.transition = 'opacity 0.5s';
+        el.style.opacity = '0';
+    });
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
     boxToRecycle = Math.min(dataToDisplay.length, tagBoxEls.length);
     for (let i = 0; i < boxToRecycle; i++) {
@@ -737,30 +986,43 @@ async function updatePage(): Promise<void> {
         }
     }
     selected.forEach((id: any) => {
-        const el = qs<HTMLElement>(`.tag-box[data-id="${id}"]`); if (el) el.dataset['selected'] = '1';
+        const el = qs<HTMLElement>(`.tag-box[data-id="${id}"]`);
+        if (el) el.dataset['selected'] = '1';
     });
 
     hide(qs('.pageLoad'));
-    qsa('.tag-box').forEach(el => { el.style.transition = 'opacity 0.5s'; el.style.opacity = '1'; });
-    if (getNumberPages() > 1) qsa('.tag-pagination').forEach(el => { el.style.transition = 'opacity 0.5s'; el.style.opacity = '1'; });
+    qsa('.tag-box').forEach((el) => {
+        el.style.transition = 'opacity 0.5s';
+        el.style.opacity = '1';
+    });
+    if (getNumberPages() > 1)
+        qsa('.tag-pagination').forEach((el) => {
+            el.style.transition = 'opacity 0.5s';
+            el.style.opacity = '1';
+        });
     updateSearchInfo();
 }
 
 function tagToDisplay(): any[] {
-    return dataTags.filter(isDataSearched).slice((actualPage - 1) * per_page, actualPage * per_page);
+    return dataTags
+        .filter(isDataSearched)
+        .slice((actualPage - 1) * per_page, actualPage * per_page);
 }
 
 qs('.pagination-arrow.rigth')?.addEventListener('click', () => movePage());
 qs('.pagination-arrow.left')?.addEventListener('click', () => movePage(false));
 
-if (getNumberPages() > 1) { show(qs('.pagination-container')); createPaginationMenu(); updateArrows(); }
-else hide(qs('.pagination-container'));
+if (getNumberPages() > 1) {
+    show(qs('.pagination-container'));
+    createPaginationMenu();
+    updateArrows();
+} else hide(qs('.pagination-container'));
 
-qsa('.pagination-per-page a').forEach(a => {
-    a.addEventListener('click', function(this: HTMLElement) {
+qsa('.pagination-per-page a').forEach((a) => {
+    a.addEventListener('click', function (this: HTMLElement) {
         per_page = parseInt(this.innerHTML);
         updatePaginationMenu();
-        qsa('.pagination-per-page .selected').forEach(el => el.classList.remove('selected'));
+        qsa('.pagination-per-page .selected').forEach((el) => el.classList.remove('selected'));
         this.classList.add('selected');
         Cookies.set('pwg_tags_per_page', String(per_page));
     });
@@ -772,7 +1034,10 @@ function updateSearchInfo() {
     if (!infoEl) return;
     if (searchEl?.value) {
         const n = dataTags.filter(isDataSearched).length;
-        infoEl.innerHTML = n > 1 ? str_tags_found.replace('%d', String(n)) : str_tag_found.replace('%d', String(n));
+        infoEl.innerHTML =
+            n > 1
+                ? str_tags_found.replace('%d', String(n))
+                : str_tag_found.replace('%d', String(n));
     } else {
         infoEl.innerHTML = '';
     }
@@ -780,7 +1045,7 @@ function updateSearchInfo() {
 
 document.addEventListener('DOMContentLoaded', () => {
     const savedPerPage = Cookies.get('pwg_tags_per_page');
-    qsa('.pagination-per-page .selected').forEach(el => el.classList.remove('selected'));
+    qsa('.pagination-per-page .selected').forEach((el) => el.classList.remove('selected'));
     if (savedPerPage) document.getElementById(savedPerPage)?.click();
 });
 

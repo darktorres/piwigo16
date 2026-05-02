@@ -36,20 +36,20 @@ Enforce TypeScript code style and catch common mistakes via ESLint + Prettier as
    import prettierConfig from 'eslint-config-prettier';
 
    export default [
-       { ignores: ['dist/**', 'node_modules/**', '**/plugins/selectize.*'] },
-       {
-           files: ['**/*.ts'],
-           languageOptions: { parser: tsparser, parserOptions: { project: './tsconfig.json' } },
-           plugins: { '@typescript-eslint': tseslint, prettier },
-           rules: {
-               ...tseslint.configs.recommended.rules,
-               ...prettierConfig.rules,
-               'prettier/prettier': 'error',
-               '@typescript-eslint/no-explicit-any': 'warn',
-               '@typescript-eslint/explicit-function-return-type': 'off',
-               'no-console': ['warn', { allow: ['warn', 'error'] }],
-           },
+     { ignores: ['dist/**', 'node_modules/**', '**/plugins/selectize.*'] },
+     {
+       files: ['**/*.ts'],
+       languageOptions: { parser: tsparser, parserOptions: { project: './tsconfig.json' } },
+       plugins: { '@typescript-eslint': tseslint, prettier },
+       rules: {
+         ...tseslint.configs.recommended.rules,
+         ...prettierConfig.rules,
+         'prettier/prettier': 'error',
+         '@typescript-eslint/no-explicit-any': 'warn',
+         '@typescript-eslint/explicit-function-return-type': 'off',
+         'no-console': ['warn', { allow: ['warn', 'error'] }],
        },
+     },
    ];
    ```
 
@@ -102,11 +102,11 @@ Reduce `any` escapes in authored TypeScript from the current **468** to **≤250
 ```typescript
 // src/types/admin-globals.d.ts
 interface Window {
-    applyFontCheckbox(el: HTMLInputElement): void;
-    array_delete<T>(arr: T[], value: T): T[];
-    sprintf(format: string, ...args: unknown[]): string;
-    TemporaryState: typeof TemporaryState;
-    // …
+  applyFontCheckbox(el: HTMLInputElement): void;
+  array_delete<T>(arr: T[], value: T): T[];
+  sprintf(format: string, ...args: unknown[]): string;
+  TemporaryState: typeof TemporaryState;
+  // …
 }
 ```
 
@@ -116,7 +116,9 @@ With the interface in place, replace `(window as any).applyFontCheckbox` with `w
 
 ```typescript
 type PluginSaveCallback = (pictureId: number) => Promise<void> | void;
-const pluginSave = (window as Record<string, unknown>)[pluginId + '_save'] as PluginSaveCallback | undefined;
+const pluginSave = (window as Record<string, unknown>)[pluginId + '_save'] as
+  | PluginSaveCallback
+  | undefined;
 ```
 
 **Tier 3 — data shape unknowns (~100 instances).** `fetch()` responses typed as `any`. Replace with explicit interfaces for each WS method response shape. Start with the most-used: `pwg.images.search`, `pwg.categories.getList`, `pwg.tags.getList`.
@@ -165,12 +167,12 @@ grep -rn "{footer_script}" admin/themes/default/template/ themes/default/templat
 
 Initial inventory: **20 remaining assignments** in `admin/themes/default/template/` (0 in `themes/default/template/`). Key clusters:
 
-| Template | Globals | Migration |
-|----------|---------|-----------|
-| `batch_manager_global.tpl` | `window.lang`, `window.all_elements`, `window.str_*`, `nb_thumbs_page`, `nb_thumbs_set` | page-data JSON block |
-| `picture_modify.tpl` | `window.related_categories_ids`, `window.str_are_you_sure`, `window.url_delete`, `window.str_*` | mix of page-data + data-attrs |
-| `admin.tpl` | `window.str_root`, `window.pwg_token` | page-data JSON block |
-| `user_list.tpl` | `window.str_*` (user confirmation strings) | page-data JSON block |
+| Template                   | Globals                                                                                         | Migration                     |
+| -------------------------- | ----------------------------------------------------------------------------------------------- | ----------------------------- |
+| `batch_manager_global.tpl` | `window.lang`, `window.all_elements`, `window.str_*`, `nb_thumbs_page`, `nb_thumbs_set`         | page-data JSON block          |
+| `picture_modify.tpl`       | `window.related_categories_ids`, `window.str_are_you_sure`, `window.url_delete`, `window.str_*` | mix of page-data + data-attrs |
+| `admin.tpl`                | `window.str_root`, `window.pwg_token`                                                           | page-data JSON block          |
+| `user_list.tpl`            | `window.str_*` (user confirmation strings)                                                      | page-data JSON block          |
 
 Pattern applied per cluster: PHP controller pushes structured values into `page_data_json[$key]`; template emits one `<script type="application/json" id="pwg-<page>-data">` block; `.ts` module reads via `getPageData<PageData>('pwg-<page>-data')`. For single-element targets (e.g., `url_delete` used as an `href`), `data-*` on the triggering element was preferred over a JSON island.
 
@@ -204,18 +206,18 @@ Add a unit-test framework for non-DOM TypeScript logic. Today the only JS test i
    import { defineConfig } from 'vitest/config';
 
    export default defineConfig({
-       test: {
-           environment: 'node',
-           include: ['themes/default/js/**/*.test.ts', 'admin/themes/default/js/**/*.test.ts'],
-           environmentMatchGlobs: [['**/*.dom.test.ts', 'happy-dom']],
-           coverage: {
-               provider: 'v8',
-               reporter: ['text', 'html'],
-               include: ['themes/default/js/**/*.ts', 'admin/themes/default/js/**/*.ts'],
-               exclude: ['**/*.test.ts', '**/types/*.d.ts', '**/plugins/**'],
-               thresholds: { lines: 50, functions: 50, branches: 40 },
-           },
+     test: {
+       environment: 'node',
+       include: ['themes/default/js/**/*.test.ts', 'admin/themes/default/js/**/*.test.ts'],
+       environmentMatchGlobs: [['**/*.dom.test.ts', 'happy-dom']],
+       coverage: {
+         provider: 'v8',
+         reporter: ['text', 'html'],
+         include: ['themes/default/js/**/*.ts', 'admin/themes/default/js/**/*.ts'],
+         exclude: ['**/*.test.ts', '**/types/*.d.ts', '**/plugins/**'],
+         thresholds: { lines: 50, functions: 50, branches: 40 },
        },
+     },
    });
    ```
 
@@ -277,10 +279,14 @@ Per-entrypoint bundle size budgets gate every PR. Regressions block merge. Bundl
 
    ```json
    [
-     { "name": "admin/admin",          "path": "dist/assets/admin-*.js",          "limit": "85 kB" },
-     { "name": "admin/batchManager*",  "path": "dist/assets/batchManager*-*.js",  "limit": "60 kB" },
-     { "name": "admin/picture_modify", "path": "dist/assets/picture_modify-*.js", "limit": "55 kB" },
-     { "name": "themes/default/script","path": "dist/assets/script-*.js",         "limit": "45 kB" }
+     { "name": "admin/admin", "path": "dist/assets/admin-*.js", "limit": "85 kB" },
+     { "name": "admin/batchManager*", "path": "dist/assets/batchManager*-*.js", "limit": "60 kB" },
+     {
+       "name": "admin/picture_modify",
+       "path": "dist/assets/picture_modify-*.js",
+       "limit": "55 kB"
+     },
+     { "name": "themes/default/script", "path": "dist/assets/script-*.js", "limit": "45 kB" }
    ]
    ```
 

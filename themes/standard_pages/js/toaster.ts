@@ -5,13 +5,24 @@ interface ToasterInfo {
 }
 
 function pwgToaster(info: ToasterInfo): void {
-    if (!info.text || !info.icon) { console.log('set info.text or info.icon'); return; }
-    if (typeof info.text !== 'string') { console.log('info.text is not a string'); return; }
-    if (info.icon !== 'success' && info.icon !== 'error') { console.log('info.icon must be success or error'); return; }
+    if (!info.text || !info.icon) {
+        console.log('set info.text or info.icon');
+        return;
+    }
+    if (typeof info.text !== 'string') {
+        console.log('info.text is not a string');
+        return;
+    }
+    if (info.icon !== 'success' && info.icon !== 'error') {
+        console.log('info.icon must be success or error');
+        return;
+    }
 
     const template = document.getElementById('toast_template')!.cloneNode(true) as HTMLElement;
     template.querySelector<HTMLElement>('.toast_text')!.innerHTML = info.text;
-    template.querySelector<HTMLElement>('.toast_icon')!.classList.add(info.icon === 'success' ? 'icon-ok' : 'icon-cancel');
+    template
+        .querySelector<HTMLElement>('.toast_icon')!
+        .classList.add(info.icon === 'success' ? 'icon-ok' : 'icon-cancel');
     template.classList.add(info.icon === 'success' ? 'success' : 'error');
     template.classList.remove('template-pwg-toaster');
     document.getElementById('pwg_toaster')!.appendChild(template);

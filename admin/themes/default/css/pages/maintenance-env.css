@@ -3,14 +3,16 @@
   padding: 0;
 }
 
-.cache-size-text, .cache-size-value {
+.cache-size-text,
+.cache-size-value {
   font-size: 13px;
 }
 
-.cache-lastCalculated-text, .cache-lastCalculated-value {
+.cache-lastCalculated-text,
+.cache-lastCalculated-value {
   font-size: 10px;
 }
 
 .badge-number {
-  color:white;
+  color: white;
 }

@@ -16,20 +16,22 @@ declare class PwgWS {
             method?: string;
             onFailure?: (num: number, text: string) => void;
             onSuccess?: (result: unknown) => void;
-        },
+        }
     ): void;
 }
 
 const pageData = getPageData<RatingUserPageData>();
 
-document.querySelector('h1')?.insertAdjacentHTML(
-    'beforeend',
-    `<span class="badge-number">${pageData.nb_elements}</span>`,
-);
+document
+    .querySelector('h1')
+    ?.insertAdjacentHTML('beforeend', `<span class="badge-number">${pageData.nb_elements}</span>`);
 
 const oTable = new DataTable('#rateTable', {
     pageLength: 100,
-    lengthMenu: [[25, 50, 100, 500, -1], [25, 50, 100, 500, 'All']],
+    lengthMenu: [
+        [25, 50, 100, 500, -1],
+        [25, 50, 100, 500, 'All'],
+    ],
     order: [],
     autoWidth: false,
     columnDefs: [
@@ -77,7 +79,7 @@ document.getElementById('rateTable')?.addEventListener('click', (e) => {
                     alert(String(result));
                 }
             },
-        },
+        }
     );
 });
 

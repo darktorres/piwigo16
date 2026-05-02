@@ -1,15 +1,17 @@
 // ----- font-checkbox ---------------------------------------------------------
 
 function applyFontCheckbox(container: HTMLElement): void {
-    container.querySelectorAll<HTMLInputElement>('input[type=checkbox]').forEach(input => {
-        if (!input.checked) input.previousElementSibling?.classList.toggle('icon-check', false) || input.previousElementSibling?.classList.toggle('icon-check-empty', true);
+    container.querySelectorAll<HTMLInputElement>('input[type=checkbox]').forEach((input) => {
+        if (!input.checked)
+            input.previousElementSibling?.classList.toggle('icon-check', false) ||
+                input.previousElementSibling?.classList.toggle('icon-check-empty', true);
         input.addEventListener('change', () => {
             const prev = input.previousElementSibling as HTMLElement | null;
             if (!prev) return;
             prev.className = input.checked ? 'icon-check' : 'icon-check-empty';
         });
     });
-    container.querySelectorAll<HTMLInputElement>('input[type=radio]').forEach(input => {
+    container.querySelectorAll<HTMLInputElement>('input[type=radio]').forEach((input) => {
         const prev = input.previousElementSibling as HTMLElement | null;
         if (!input.checked) {
             prev?.classList.toggle('icon-dot-circled', false);
@@ -19,11 +21,16 @@ function applyFontCheckbox(container: HTMLElement): void {
         }
         input.addEventListener('change', () => {
             const name = input.name;
-            container.querySelectorAll<HTMLInputElement>(`.font-checkbox input[type=radio][name="${name}"]`).forEach(r => {
-                const rPrev = r.previousElementSibling as HTMLElement | null;
-                if (rPrev) rPrev.className = r.checked ? 'icon-dot-circled' : 'icon-circle-empty';
-                r.closest('label')?.classList.toggle('selected', r.checked);
-            });
+            container
+                .querySelectorAll<HTMLInputElement>(
+                    `.font-checkbox input[type=radio][name="${name}"]`
+                )
+                .forEach((r) => {
+                    const rPrev = r.previousElementSibling as HTMLElement | null;
+                    if (rPrev)
+                        rPrev.className = r.checked ? 'icon-dot-circled' : 'icon-circle-empty';
+                    r.closest('label')?.classList.toggle('selected', r.checked);
+                });
         });
     });
 }
@@ -60,23 +67,46 @@ function sprintf(format: string, ...args: unknown[]): string {
             o.push(m[0]);
         } else if ((m = /^\x25{2}/.exec(f))) {
             o.push('%');
-        } else if ((m = /^\x25(?:(\d+)\$)?(\+)?(0|'[^$])?(-)?(\d+)?(?:\.(\d+))?([b-fosuxX])/.exec(f))) {
+        } else if (
+            (m = /^\x25(?:(\d+)\$)?(\+)?(0|'[^$])?(-)?(\d+)?(?:\.(\d+))?([b-fosuxX])/.exec(f))
+        ) {
             let a: any = args[m[1] ? parseInt(m[1]) - 1 : i++];
             if (a == null) throw new Error('Too few arguments.');
-            if (/[^s]/.test(m[7]) && typeof a !== 'number') throw new Error('Expecting number but found ' + typeof a);
+            if (/[^s]/.test(m[7]) && typeof a !== 'number')
+                throw new Error('Expecting number but found ' + typeof a);
             switch (m[7]) {
-                case 'b': a = Number(a).toString(2); break;
-                case 'c': a = String.fromCharCode(Number(a)); break;
-                case 'd': a = parseInt(a); break;
-                case 'e': a = m[6] ? Number(a).toExponential(parseInt(m[6])) : Number(a).toExponential(); break;
-                case 'f': a = m[6] ? parseFloat(a).toFixed(parseInt(m[6])) : parseFloat(a); break;
-                case 'o': a = Number(a).toString(8); break;
-                case 's': a = m[6] ? String(a).substring(0, parseInt(m[6])) : String(a); break;
-                case 'u': a = Math.abs(Number(a)); break;
-                case 'x': a = Number(a).toString(16); break;
-                case 'X': a = Number(a).toString(16).toUpperCase(); break;
+                case 'b':
+                    a = Number(a).toString(2);
+                    break;
+                case 'c':
+                    a = String.fromCharCode(Number(a));
+                    break;
+                case 'd':
+                    a = parseInt(a);
+                    break;
+                case 'e':
+                    a = m[6] ? Number(a).toExponential(parseInt(m[6])) : Number(a).toExponential();
+                    break;
+                case 'f':
+                    a = m[6] ? parseFloat(a).toFixed(parseInt(m[6])) : parseFloat(a);
+                    break;
+                case 'o':
+                    a = Number(a).toString(8);
+                    break;
+                case 's':
+                    a = m[6] ? String(a).substring(0, parseInt(m[6])) : String(a);
+                    break;
+                case 'u':
+                    a = Math.abs(Number(a));
+                    break;
+                case 'x':
+                    a = Number(a).toString(16);
+                    break;
+                case 'X':
+                    a = Number(a).toString(16).toUpperCase();
+                    break;
             }
-            a = (/[def]/.test(m[7]) && m[2] && Number(a) >= 0 ? '+' + a : a);
+            a = /[def]/.test(m[7]) && m[2] && Number(a) >= 0 ? '+' + a : a;
             const c = m[3] ? (m[3] === '0' ? '0' : m[3].charAt(1)) : ' ';
             const x = (m[5] ? parseInt(m[5]) : 0) - String(a).length - s.length;
             const p = m[5] ? str_repeat(c, x) : '';
@@ -90,15 +120,18 @@ function sprintf(format: string, ...args: unknown[]): string {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll<HTMLElement>('.search-cancel').forEach(el => {
+    document.querySelectorAll<HTMLElement>('.search-cancel').forEach((el) => {
         el.addEventListener('click', () => {
             const input = document.querySelector<HTMLInputElement>('.search-input');
-            if (input) { input.value = ''; input.dispatchEvent(new Event('input')); }
+            if (input) {
+                input.value = '';
+                input.dispatchEvent(new Event('input'));
+            }
         });
     });
-    document.querySelectorAll<HTMLInputElement>('.search-input').forEach(el => {
-        el.addEventListener('input', function(this: HTMLInputElement) {
-            document.querySelectorAll<HTMLElement>('.search-cancel').forEach(c => {
+    document.querySelectorAll<HTMLInputElement>('.search-input').forEach((el) => {
+        el.addEventListener('input', function (this: HTMLInputElement) {
+            document.querySelectorAll<HTMLElement>('.search-cancel').forEach((c) => {
                 c.style.display = this.value === '' ? 'none' : '';
             });
         });
@@ -107,9 +140,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ----- TemporaryState --------------------------------------------------------
 
-interface AttrChange { element: HTMLElement; attribute: string; value: string | null }
-interface ClassChange { element: HTMLElement; state: boolean; cls: string }
-interface HtmlChange { element: HTMLElement; html: string }
+interface AttrChange {
+    element: HTMLElement;
+    attribute: string;
+    value: string | null;
+}
+interface ClassChange {
+    element: HTMLElement;
+    state: boolean;
+    cls: string;
+}
+interface HtmlChange {
+    element: HTMLElement;
+    html: string;
+}
 
 class TemporaryState {
     private attrChanges: AttrChange[] = [];
@@ -129,8 +173,12 @@ class TemporaryState {
         }
     }
 
-    addClass(el: HTMLElement, cls: string): void { this.changeClass(el, true, cls); }
-    removeClass(el: HTMLElement, cls: string): void { this.changeClass(el, false, cls); }
+    addClass(el: HTMLElement, cls: string): void {
+        this.changeClass(el, true, cls);
+    }
+    removeClass(el: HTMLElement, cls: string): void {
+        this.changeClass(el, false, cls);
+    }
 
     changeHTML(el: HTMLElement, html: string): void {
         this.htmlChanges.push({ element: el, html: el.innerHTML });
@@ -146,7 +194,9 @@ class TemporaryState {
             if (state) element.classList.add(cls);
             else element.classList.remove(cls);
         });
-        this.htmlChanges.forEach(({ element, html }) => { element.innerHTML = html; });
+        this.htmlChanges.forEach(({ element, html }) => {
+            element.innerHTML = html;
+        });
         this.attrChanges = [];
         this.classChanges = [];
         this.htmlChanges = [];
@@ -156,39 +206,76 @@ class TemporaryState {
 // ----- jConfirm option sets (kept for albums.ts and unconverted callers) -----
 
 const jConfirm_alert_options = {
-    icon: 'icon-ok', titleClass: 'jconfirmAlert', theme: 'modern',
-    closeIcon: true, draggable: false, animation: 'zoom', boxWidth: '20%',
-    useBootstrap: false, backgroundDismiss: true, animateFromElement: false, typeAnimated: false,
+    icon: 'icon-ok',
+    titleClass: 'jconfirmAlert',
+    theme: 'modern',
+    closeIcon: true,
+    draggable: false,
+    animation: 'zoom',
+    boxWidth: '20%',
+    useBootstrap: false,
+    backgroundDismiss: true,
+    animateFromElement: false,
+    typeAnimated: false,
 };
 
 const jConfirm_confirm_options = {
-    draggable: false, titleClass: 'jconfirmDeleteConfirm', theme: 'modern',
-    animation: 'zoom', boxWidth: '40%', useBootstrap: false, type: 'red',
-    animateFromElement: false, backgroundDismiss: true, typeAnimated: false,
+    draggable: false,
+    titleClass: 'jconfirmDeleteConfirm',
+    theme: 'modern',
+    animation: 'zoom',
+    boxWidth: '40%',
+    useBootstrap: false,
+    type: 'red',
+    animateFromElement: false,
+    backgroundDismiss: true,
+    typeAnimated: false,
 };
 
 const jConfirm_warning_options = {
-    icon: 'icon-attention', draggable: false,
-    titleClass: 'jconfirmWarning jconfirmAlert', theme: 'modern', type: 'orange',
-    closeIcon: true, animation: 'zoom', boxWidth: '20%', useBootstrap: false,
-    backgroundDismiss: true, animateFromElement: false, typeAnimated: false,
+    icon: 'icon-attention',
+    draggable: false,
+    titleClass: 'jconfirmWarning jconfirmAlert',
+    theme: 'modern',
+    type: 'orange',
+    closeIcon: true,
+    animation: 'zoom',
+    boxWidth: '20%',
+    useBootstrap: false,
+    backgroundDismiss: true,
+    animateFromElement: false,
+    typeAnimated: false,
 };
 
 const jConfirm_confirm_with_content_options = {
-    draggable: false, theme: 'modern', animation: 'zoom', boxWidth: '40%',
-    useBootstrap: false, type: 'red', animateFromElement: false,
-    backgroundDismiss: true, typeAnimated: false,
+    draggable: false,
+    theme: 'modern',
+    animation: 'zoom',
+    boxWidth: '40%',
+    useBootstrap: false,
+    type: 'red',
+    animateFromElement: false,
+    backgroundDismiss: true,
+    typeAnimated: false,
 };
 
 // ----- standalone pwg_jconfirm_follow_href -----------
 
-function pwg_jconfirm_follow_href_fn(el: HTMLElement, options: {
-    alert_title?: string; alert_confirm?: string; alert_cancel?: string; alert_content?: string;
-} = {}): void {
+function pwg_jconfirm_follow_href_fn(
+    el: HTMLElement,
+    options: {
+        alert_title?: string;
+        alert_confirm?: string;
+        alert_cancel?: string;
+        alert_content?: string;
+    } = {}
+): void {
     const href = el.getAttribute('href');
     el.addEventListener('click', (e) => {
         e.preventDefault();
-        const msg = (options.alert_title ?? 'TITLE') + (options.alert_content ? '\n\n' + options.alert_content : '');
+        const msg =
+            (options.alert_title ?? 'TITLE') +
+            (options.alert_content ? '\n\n' + options.alert_content : '');
         if (window.confirm(msg)) window.location.href = href!;
     });
 }

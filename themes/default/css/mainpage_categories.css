@@ -1,0 +1,7 @@
+.thumbnailCategories .thumbnailCategory .illustration {
+  width: var(--cat-illu-w);
+}
+
+.content .thumbnailCategories .thumbnailCategory .description {
+  height: var(--cat-desc-h);
+}

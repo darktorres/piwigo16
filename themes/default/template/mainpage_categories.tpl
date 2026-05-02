@@ -1,14 +1,6 @@
-{strip}{html_style}
-.thumbnailCategory .illustration{ldelim}
-	width: {$derivative_params->max_width()+5}px;
-}
-
-.content .thumbnailCategory .description{ldelim}
-	height: {$derivative_params->max_height()+5}px;
-}
-{/html_style}{/strip}
+{combine_css path="themes/default/css/mainpage_categories.css"}
 <div class="loader"><img src="{$ROOT_URL}{$themeconf.img_dir}/ajax_loader.gif"></div>
-<ul class="thumbnailCategories">
+<ul class="thumbnailCategories" style="--cat-illu-w:{$derivative_params->max_width()+5}px;--cat-desc-h:{$derivative_params->max_height()+5}px">
 {foreach from=$category_thumbnails item=cat name=cat_loop}
 {assign var=derivative value=$pwg->derivative($derivative_params, $cat.representative.src_image)}
 {if !$derivative->is_cached()}

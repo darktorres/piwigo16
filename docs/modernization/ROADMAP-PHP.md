@@ -746,23 +746,29 @@ npx playwright test                                        # green (no visual re
 
 ---
 
-## #15 — Plugin system modernization
+## #15 — Plugin and theme system modernization
 
 **Status:** Not started &nbsp;|&nbsp; **Size:** XL
 
 ### Goal
 
-Replace the procedural plugin API (`add_event_handler` / `trigger_change` over string event names) with a typed, DI-aware system: PSR-14 event dispatcher, typed event objects, `PluginInterface` lifecycle, declarative plugin manifests, and PSR-4-laid-out plugin source. Keep a thin compatibility layer so 3rd-party plugins still using the legacy API keep working through one major release of deprecation.
+Replace the procedural plugin and theme APIs (`add_event_handler` / `trigger_change` over string event names; `themeconf.inc.php` arrays + arbitrary side-effect code) with a typed, DI-aware system: PSR-14 event dispatcher, typed event objects, lifecycle interfaces (`PluginInterface`, `ThemeInterface`), declarative manifests, and PSR-4-laid-out source. Keep compatibility layers so 3rd-party plugins and themes using the legacy APIs keep working through one major release of deprecation.
 
-### Current state
+The work splits into two phases. Phase 1 lands the event-bus and plugin foundations; Phase 2 reuses those foundations to modernize themes (which hook through the same event mechanism today). Phase 2 cannot start until Phase 1 ships, but the bundled-asset migrations within each phase can run in parallel once the interfaces are in place.
+
+---
+
+### Phase 1 — Plugins
+
+#### Current state
 
 - **`include/functions_plugins.inc.php`** (12 free functions): `add_event_handler`, `remove_event_handler`, `trigger_change` (string event + variadic mixed args), `trigger_action`, `get_plugin_data`, `set_plugin_data`, plugin loader, etc.
 - **5 bundled plugins** under `plugins/`: `LocalFilesEditor`, `nbc_ThemeChanger`, `piwigo-openstreetmap`, `piwigo-videojs`, `user_tags`. Each has a `main.inc.php` with `add_event_handler('event_name', 'callback_function')` calls and a `maintain.inc.php` extending `PluginMaintain`.
-- **`src/Piwigo/Admin/PluginMaintain`** and **`ThemeMaintain`** are the only typed parts of the plugin API today.
+- **`src/Piwigo/Admin/PluginMaintain`** is the only typed part of the plugin API today.
 - **3rd-party plugins** in the wild rely on the global event API; breaking it shatters the ecosystem.
 - **No DI for plugin code** — plugins use `global $conf` etc.; covered for bundled plugins by item #4.
 
-### Steps
+#### Steps
 
 1. **Define `Piwigo\Plugin\PluginInterface`.**
    ```php
@@ -781,11 +787,11 @@ Replace the procedural plugin API (`add_event_handler` / `trigger_change` over s
    ```
 
 2. **Adopt PSR-14 events.** `composer require psr/event-dispatcher symfony/event-dispatcher`. Replace string events with typed event objects under `src/Piwigo/Event/`:
-   - `PictureRendered`, `CategoryRendered`, `UserAuthenticated`, `UserLoggedOut`, `CommentSubmitted`, `ImageUploaded`, `PluginActivated`, etc.
+   - `PictureRendered`, `CategoryRendered`, `UserAuthenticated`, `UserLoggedOut`, `CommentSubmitted`, `ImageUploaded`, `PluginActivated`, `ThemeActivated`, etc.
    - Event objects are `readonly` data classes (item #12). Listeners receive the typed object; can mutate `mixed $data` properties via `with*()` clone-and-modify methods for the `trigger_change` use case.
    - `Piwigo\Event\EventDispatcher` is registered in the DI container (item #10) as the `Psr\EventDispatcher\EventDispatcherInterface` implementation.
 
-3. **Build the legacy compatibility layer.** `add_event_handler('user_login', $callback)` keeps working. The legacy bridge maps the string event names to the new typed events; when a typed `UserAuthenticated` is dispatched, registered legacy listeners are also invoked with the bridged args. Document the deprecation in `src/Piwigo/Compat/LegacyEvents.php` with `trigger_error(E_USER_DEPRECATED, …)` on first call.
+3. **Build the legacy compatibility layer.** `add_event_handler('user_login', $callback)` keeps working — both for plugins and for themes that register handlers from `themeconf.inc.php`. The legacy bridge maps the string event names to the new typed events; when a typed `UserAuthenticated` is dispatched, registered legacy listeners are also invoked with the bridged args. Document the deprecation in `src/Piwigo/Compat/LegacyEvents.php` with `trigger_error(E_USER_DEPRECATED, …)` on first call.
 
 4. **Declarative plugin manifest.** Each plugin ships a `plugin.json` (or extends `composer.json`'s `extra` block):
    ```json
@@ -815,7 +821,7 @@ Replace the procedural plugin API (`add_event_handler` / `trigger_change` over s
 
 9. **Deprecation timeline.** Keep the legacy API working through the next minor release with `E_USER_DEPRECATED`. Plan removal one major release later.
 
-### Verification
+#### Verification
 
 ```bash
 # All bundled plugins use the new API:
@@ -830,6 +836,115 @@ vendor/bin/phpunit --filter LegacyEventBridgeTest
 php -r 'echo (new Piwigo\Event\EventDispatcher) instanceof Psr\EventDispatcher\EventDispatcherInterface ? "ok" : "fail";'
 
 # E2E with all plugins activated:
+npx playwright test
+```
+
+---
+
+### Phase 2 — Themes
+
+Themes hook into the same event bus as plugins, so most of the foundation from Phase 1 (PSR-14 dispatcher, legacy bridge, DI container access, manifest pattern) is reused. Phase 2 specializes the contract for theme concerns: parent-theme inheritance, asset directories, template overrides, and the `themeconf.inc.php` side-effect block (which today runs arbitrary PHP at load time).
+
+#### Current state
+
+- **`themes/<id>/themeconf.inc.php`** is the only required file. It declares `$themeconf = ['name' => …, 'parent' => …, 'icon_dir' => …, 'img_dir' => …, 'load_parent_css' => …, 'local_head' => …]` and may also run arbitrary code (template assigns, event-handler registrations, config reads). Example: `themes/standard_pages/themeconf.inc.php` calls `$this->assign(...)` and `conf_get_param(...)` directly at file load.
+- **2 frontend themes** bundled: `themes/default`, `themes/standard_pages` (the latter inherits from `default`).
+- **3 admin themes** bundled: `admin/themes/default`, `admin/themes/clear`, `admin/themes/roma` (clear and roma inherit from default).
+- **`src/Piwigo/Admin/ThemeMaintain`** is the only typed part of the theme API today.
+- **3rd-party themes** rely on `themeconf.inc.php` being `include`'d at load time; breaking that shatters the ecosystem.
+- **Inheritance** is resolved at load time by walking the `parent` chain and merging `$themeconf` arrays.
+- **CSS skin variants** for admin themes (covered by [ROADMAP-CSS.md](ROADMAP-CSS.md) item #1) consume from `$themeconf` colors today.
+
+#### Steps
+
+1. **Define `Piwigo\Theme\ThemeInterface`.** Mirrors `PluginInterface` with theme-specific methods:
+   ```php
+   interface ThemeInterface {
+       public function getId(): string;             // 'standard_pages'
+       public function getVersion(): string;
+       public function getName(): string;
+       public function getParentId(): ?string;      // null for root themes
+       public function loadParentCss(): bool;
+       public function getAssetDir(string $kind): string;   // 'img', 'icon', 'mime_icon'
+       public function getLocalHeadTemplate(): ?string;
+       public function boot(ContainerInterface $c): void;
+       public function install(): void;
+       public function activate(): void;
+       public function deactivate(): void;
+       public function uninstall(): void;
+       public function subscribedEvents(): array;
+   }
+   ```
+
+2. **Declarative `theme.json` manifest.** Replaces the static array part of `themeconf.inc.php`:
+   ```json
+   {
+     "id": "standard_pages",
+     "version": "1.0.0",
+     "name": "Standard Pages",
+     "parent": "default",
+     "loadParentCss": false,
+     "assets": {
+       "img":       "images",
+       "icon":      "icon",
+       "mimeIcon":  "icon/mimetypes"
+     },
+     "localHead": "local_head.tpl",
+     "main": "Piwigo\\Theme\\StandardPages\\Theme",
+     "autoload": { "psr-4": { "Piwigo\\Theme\\StandardPages\\": "src/" } }
+   }
+   ```
+
+3. **Move side-effect code to `Theme::boot()`.** Today, `themes/standard_pages/themeconf.inc.php` runs `$this->assign(...)` and `conf_get_param(...)` at load. That code moves into the `boot()` method, where it receives the container and can pull `Config`, the template registry, etc. via DI. Event handlers registered from `themeconf.inc.php` move into `subscribedEvents()`.
+
+4. **`Piwigo\Theme\ThemeRegistry`.** Parallel to `PluginRegistry`. Reads `theme.json`, resolves the parent chain, registers PSR-4 autoload, instantiates `Theme`, calls `boot()`. Caches the resolved chain to avoid re-walking on every request.
+
+5. **Inheritance via class hierarchy or composition.** Two viable approaches — pick one:
+   - *Class inheritance:* `class StandardPagesTheme extends DefaultTheme implements ThemeInterface` — overrides only what differs.
+   - *Composition:* `Theme` always has a `?ThemeInterface $parent` and methods walk up the chain (`getAssetDir()` falls back to parent if not declared). More flexible, but more boilerplate.
+
+   Recommendation: composition. It mirrors how `themeconf.inc.php` currently works (array merge along the chain) and avoids forcing 3rd-party themes to extend a base class.
+
+6. **Legacy `themeconf.inc.php` shim.** For themes that haven't migrated, the registry detects a missing `theme.json`, falls back to including `themeconf.inc.php`, and synthesizes a `LegacyTheme` instance from the resulting `$themeconf` array. The synthesized instance routes any registered legacy event handlers through the Phase 1 bridge.
+
+7. **Admin theme support.** Admin themes (`admin/themes/<id>/`) follow the same contract. The "Themes" admin page reads `theme.json` and walks the registry instead of grepping `themeconf.inc.php` headers.
+
+8. **Migrate the 5 bundled themes.** One theme per PR:
+   - Add `theme.json`.
+   - Add `Theme` class under `themes/<id>/src/` (or `admin/themes/<id>/src/`).
+   - Move `themeconf.inc.php` side-effects into `boot()`.
+   - Convert `ThemeMaintain` callers to the new lifecycle methods.
+   - Convert templates to Latte (item #14).
+   - Replace `themeconf.inc.php` with a one-liner that throws `E_USER_DEPRECATED` if any legacy code reaches for `$themeconf` directly.
+
+9. **`Piwigo\Theme\ThemeChanged` event.** Theme switch fires a typed event so plugins (and other themes) can react (rebuild combined CSS, invalidate template cache, etc.). The `nbc_ThemeChanger` plugin migrates from procedural hooks to listening for this event.
+
+10. **Document migration path** in `docs/THEME-DEVELOPMENT.md`. Side-by-side examples for each common pattern: parent inheritance, asset paths, local head template, runtime template assigns, event handler registration.
+
+11. **Deprecation timeline.** Same cadence as Phase 1 — legacy `themeconf.inc.php` keeps working through the next minor release with `E_USER_DEPRECATED`; planned removal one major release later.
+
+#### Verification
+
+```bash
+# All bundled themes have manifests:
+for t in themes/*/ admin/themes/*/; do
+  test -f "$t/theme.json" || echo "MISSING: $t"
+done
+
+# Inheritance chain resolves:
+php -r '
+  $r = new Piwigo\Theme\ThemeRegistry(...);
+  $sp = $r->get("standard_pages");
+  echo $sp->getParentId() === "default" ? "ok" : "fail";
+'
+
+# Legacy themeconf.inc.php shim still works:
+vendor/bin/phpunit --filter LegacyThemeAdapterTest
+
+# Theme switch fires the typed event:
+vendor/bin/phpunit --filter ThemeChangedEventTest
+
+# E2E across both frontend themes and all admin skins:
 npx playwright test
 ```
 

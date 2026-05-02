@@ -18,51 +18,7 @@ Array.from(document.querySelectorAll(".delete-theme-button")).forEach(function(b
 });
 {/footer_script}
 
-{footer_script}
-{literal}
-if (window.GLightbox) window.GLightbox({selector: 'a.preview-box'});
-{/literal}
-
-document.addEventListener('mouseup', function(e) {
-  e.stopPropagation();
-  if (!e.target.classList.contains('showInfo')) {
-    Array.from(document.querySelectorAll('.showInfo-dropdown')).forEach(function(el) { el.style.display = 'none'; });
-  }
-});
-
-Array.from(document.querySelectorAll('.themeBox')).forEach(function(box) {
-  var showInfoBtn = box.querySelector('.showInfo');
-  if (showInfoBtn) {
-    showInfoBtn.addEventListener('click', function() {
-      var dropdown = box.querySelector('.showInfo-dropdown');
-      Array.from(document.querySelectorAll('.showInfo-dropdown')).forEach(function(el) {
-        if (el !== dropdown) {
-          el.style.display = 'none';
-        }
-      });
-      if (dropdown) {
-        dropdown.style.display = dropdown.style.display === 'none' || dropdown.style.display === '' ? 'block' : 'none';
-      }
-    });
-  }
-
-  var screenImage = box.querySelector(".preview-box img");
-  var previewBox = box.querySelector(".preview-box");
-  if (screenImage && previewBox) {
-    var imageW = screenImage.offsetWidth;
-    var imageH = screenImage.offsetHeight;
-    var size = previewBox.offsetWidth;
-
-    if (imageW > imageH) {
-      screenImage.style.height = size + 'px';
-      screenImage.style.width = (imageW * size / imageH) + 'px';
-    } else {
-      screenImage.style.width = size + 'px';
-      screenImage.style.height = (imageH * size / imageW) + 'px';
-    }
-  }
-});
-{/footer_script}
+{combine_script id='themes_installed' load='footer' path='admin/themes/default/js/themes_installed.js'}
 
 <div id="themesContent">
 

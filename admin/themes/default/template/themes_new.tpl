@@ -1,25 +1,5 @@
-{include file='include/colorbox.inc.tpl'} 
-{footer_script}
-window.addEventListener("load", function() {
-  document.querySelectorAll('.themeBox').forEach(function(box) {
-    var screenImage = box.querySelector(".preview-box img");
-    var previewBox = box.querySelector(".preview-box");
-    if (!screenImage || !previewBox) return;
-
-    var imageW = screenImage.clientWidth;
-    var imageH = screenImage.clientHeight;
-    var size = previewBox.clientWidth;
-
-    if (imageW > imageH) {
-      screenImage.style.height = size + 'px';
-      screenImage.style.width = (imageW * size / imageH) + 'px';
-    } else {
-      screenImage.style.width = size + 'px';
-      screenImage.style.height = (imageH * size / imageW) + 'px';
-    }
-  });
-});
-{/footer_script}
+{include file='include/colorbox.inc.tpl'}
+{combine_script id='themes_new' load='footer' path='admin/themes/default/js/themes_new.js'}
 
 {if not empty($new_themes)}
 <div class="themeBoxes">

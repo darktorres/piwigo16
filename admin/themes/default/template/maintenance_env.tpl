@@ -43,22 +43,4 @@
   </ul>
 </fieldset>
 
-<style>
-
-.cache-size-value {
-  background: transparent;
-  padding: 0;
-}
-
-.cache-size-text, .cache-size-value {
-  font-size: 13px;
-}
-
-.cache-lastCalculated-text, .cache-lastCalculated-value {
-  font-size: 10px;
-}
-
-.badge-number {
-  color:white;
-}
-</style>
+{combine_css path="admin/themes/default/css/pages/maintenance-env.css"}

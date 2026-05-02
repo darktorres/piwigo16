@@ -56,12 +56,11 @@ CSS / theme modernization work. See [MODERNIZATION.md](MODERNIZATION.md) for arc
 
 **Out of scope (vendor):** `themes/bootstrap_darkroom/css/**`, fontello files, open-sans files, `themes/default/js/plugins/selectize.*.css`, `themes/elegant/admin/jquery.ui.button.css`.
 
-### Inline `<style>` block inventory
+### Inline `<style>` block inventory ✅ Extracted
 
-**Static blocks — safe to extract (no `{$var}` / `{if}` / `{cssResolution}` inside):**
-`album_notification.tpl`, `albums.tpl`, `batch_manager_unit.tpl`, `cat_list.tpl`, `cat_modify.tpl`, `cat_search.tpl`, `configuration_display.tpl`, `configuration_sizes.tpl`, `generate_thumbnails.tpl`, `generate_video_thumbnails.tpl`, `help.tpl`, `history.tpl`, `install.tpl` (+ `upgrade.tpl` — nearly identical), `intro.tpl`, `maintenance_actions.tpl`, `maintenance_env.tpl`, `menubar.tpl`, `permalinks.tpl`, `photos_add_applications.tpl`, `photos_add_direct.tpl`, `picture_modify.tpl`, `rating_user.tpl`, `site_update.tpl`, `updates_pwg.tpl`, `user_activity.tpl`, `user_list.tpl`, `batch_manager_global.tpl` (second block only), `themes/modus/admin/modus_admin.tpl` (75 lines static), `themes/smartpocket/admin/admin.tpl`, `themes/smartpocket/template/search.tpl`, plugin templates in AdminTools/GDThumb/LocalFilesEditor/TakeATour.
+All static `<style>` and `{html_style}` blocks were extracted to `css/pages/<name>.css` files via `{combine_css}`. The dynamic blocks initially flagged "must stay inline" — `batch_manager_global.tpl` (first block), `thumbnails.tpl`, `month_calendar.tpl`, `mainpage_categories.tpl`, `comment_list.tpl` — were also migrated using the **CSS custom property pattern**: the wrapper element carries `style="--var: value"` (governed by CSP `style-src-attr`, separate from `style-src`) while the consuming rules live in static CSS. See `PLAN-inline-assets-extraction.md` for the full record.
 
-**Dynamic blocks — must stay inline:** `batch_manager_global.tpl` (first block — thumb sizes), `thumbnails.tpl`, `month_calendar.tpl`, `mainpage_categories.tpl`, `comment_list.tpl` (all themes), `themes/default/template/mail/*/header.tpl` (email, must be inline).
+Result: **0 `<style>` tags and 0 `{html_style}` blocks remain** in `themes/default/`, `themes/standard_pages/`, `admin/themes/default/` (excluding `mail/text/html/` which intentionally keeps inline styles for email clients, and the `themes/modus/`/`themes/smartpocket/`/plugin templates which are out of the 16.x core scope).
 
 ### `!important` tier breakdown
 
@@ -309,8 +308,8 @@ Move the bodies of `plugins/TakeATour/css/clear.css` and `plugins/TakeATour/css/
 **Step 15 — `!important` final elimination pass.**
 Work through Tier 2 (tom-select: `batch_manager_unit.css`, `picture_modify.css`, `albums.css`) then Tier 3 file-by-file from largest to smallest. After each file: `bunx stylelint --fix <file>` + browser smoke-test of that admin page. Keep all Tier 1 instances; add `/* reason */` comment to any that are missing one.
 
-**Step 16 — Extract static inline `<style>` blocks.**
-For every static template in the inventory above: cut CSS into `css/pages/<name>.css`, replace `<style>` block with `{combine_css path="admin/themes/default/css/pages/<name>.css"}`. Merge `install.tpl` and `upgrade.tpl` into one shared CSS file (they are near-identical today).
+**Step 16 — Extract static inline `<style>` blocks.** ✅ Done.
+Every static template's CSS moved to `css/pages/<name>.css`, replaced with `{combine_css path="admin/themes/default/css/pages/<name>.css"}`. `install.tpl` and `upgrade.tpl` share `install-upgrade.css`. Plus the dynamic blocks (`thumbnails`, `mainpage_categories`, `comment_list`, `month_calendar`, `batch_manager_global` first block) migrated via CSS custom properties on the wrapping element. See `PLAN-inline-assets-extraction.md`.
 
 ### Verification
 

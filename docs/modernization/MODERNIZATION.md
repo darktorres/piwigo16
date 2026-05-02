@@ -241,7 +241,7 @@ Summary table:
 | 8 | CSS design tokens + Stylelint | M | Not started |
 | 9 | jQuery upgrade / incremental replacement | XL | Planning only |
 | 10 | Overdue TODO cleanup (34 markers) | S | Not started |
-| 11 | Eliminate remaining `window.*` data-bridge globals (~20 assignments) | M | Not started |
+| 11 | Eliminate remaining `window.*` data-bridge globals (~20 assignments) | M | ✅ Done — see ROADMAP-TS.md #3 and PLAN-inline-assets-extraction.md |
 
 Recommended sequence: 1 → 2 → 10 → 3 → 4 → 5 → 7 → 8 → 6 → 9 → 11.
 

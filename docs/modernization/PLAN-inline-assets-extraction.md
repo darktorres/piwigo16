@@ -1,8 +1,23 @@
 # Extract all inline CSS / JS from Smarty templates
 
-## Context
+**Status: ✅ Done.** All six phases landed across ~70 commits. Final structural counts (excluding `mail/` templates which intentionally keep inline styles):
 
-Today, 133 project Smarty templates (in `themes/default/`, `themes/standard_pages/`, `admin/themes/default/`) carry **~6,990 lines** of inline assets and **240 inline `style="…"` attributes**:
+| Kind                          | Blocks before | Blocks now |
+|-------------------------------|---------------|-----------:|
+| `<style>` tags                | 21            | **0**      |
+| `{html_style}` blocks         | 16            | **0**      |
+| `{footer_script}` blocks      | 52            | **0**      |
+| `{literal}` blocks            | 21            | **0**      |
+| `{html_head}` blocks          | 3             | 3 (intentional — CSS/JS aggregator hooks) |
+| Bare `<script>` (no src)      | 40            | **0** executable; only `<script type="application/json">` data islands and `<script src=…>` external refs remain |
+| Inline JS event-handler attrs | ~25+          | **0**      |
+| Inline `style="…"` attributes | 240           | 13 (all uniform `--var: value` shape, all PHP/Smarty-driven, covered by `style-src-attr`) |
+
+The 13 surviving `style=""` are CSS custom property assignments only — see `docs/modernization/ROADMAP-CSS.md` for the architectural rationale and the `{html_style}` + nonce path if a future stricter CSP requires `style-src-attr 'none'`.
+
+## Context (historical)
+
+Originally, 133 project Smarty templates (in `themes/default/`, `themes/standard_pages/`, `admin/themes/default/`) carried **~6,990 lines** of inline assets and **240 inline `style="…"` attributes**:
 
 | Kind                          | Blocks | Lines |
 |-------------------------------|--------|-------|
@@ -13,17 +28,17 @@ Today, 133 project Smarty templates (in `themes/default/`, `themes/standard_page
 | Bare `<script>` (no `src`)    | 40     | 125   |
 | `style="…"` attributes        | 240    | —     |
 
-This work already has homes in the roadmap:
+This work had homes in the roadmap:
 
 - **`docs/modernization/ROADMAP-CSS.md` #1 Step 16** — extract static `<style>` blocks to `css/pages/<name>.css` via `{combine_css}`.
 - **`docs/modernization/ROADMAP-TS.md` #3** — replace `window.*` data-bridges in `{footer_script}` with `<script type="application/json">` + `getPageData<T>()`.
 
-Two gaps the roadmap doesn't yet cover, found during this survey:
+Two gaps the roadmap didn't cover, found during the survey:
 
-1. **20 `{footer_script}` blocks (~815 lines)** are pure JS with no Smarty interpolation and no `window.*` globals — they can move straight to `.ts` files via `{combine_script}` without any data-bridge work.
-2. **`{literal}` blocks (708 lines)** and **240 inline `style=""` attributes** aren't itemized anywhere.
+1. **20 `{footer_script}` blocks (~815 lines)** were pure JS with no Smarty interpolation and no `window.*` globals — they moved straight to `.ts` files via `{combine_script}` without any data-bridge work.
+2. **`{literal}` blocks (708 lines)** and **240 inline `style=""` attributes** weren't itemized anywhere.
 
-This plan executes the two existing roadmap items and closes those gaps in one ordered sweep. The end-state goal is a CSP that drops `'unsafe-inline'` for `style-src` (called out in `docs/modernization/ROADMAP-PHP.md:1332`).
+This plan executed the two existing roadmap items and closed those gaps in one ordered sweep. The end-state goal — a CSP that drops `'unsafe-inline'` for `style-src` (called out in `docs/modernization/ROADMAP-PHP.md:1332`) — is now structurally unblocked.
 
 ## Scope
 
@@ -48,9 +63,9 @@ The five dynamic blocks (`batch_manager_global.tpl` first block, `thumbnails.tpl
 
 ## Phases
 
-The phases are ordered for risk: cheapest, highest-volume wins first; data-bridge refactors last.
+The phases were ordered for risk: cheapest, highest-volume wins first; data-bridge refactors last. **All six phases are complete.**
 
-### Phase 1 — Static `<style>` extraction (executes ROADMAP-CSS Step 16)
+### Phase 1 — Static `<style>` extraction (executes ROADMAP-CSS Step 16) ✅ Done
 
 Pure CSS, zero Smarty interpolation. Each file: cut the `<style>…</style>` block into the target `.css`, replace with one `{combine_css path=…}` call. Target paths follow the existing `admin/themes/default/css/pages/<name>.css` convention from ROADMAP-CSS.md:121-153.
 
@@ -71,9 +86,9 @@ Highest-impact files (line counts confirmed by inspection):
 | `themes/default/template/no_photo_yet.tpl` (8–116) | 109 | `themes/default/css/no-photo-yet.css` |
 | Remaining ~12 small static blocks (≤40 lines each) per ROADMAP-CSS.md:62 | ~250 | `…/css/pages/<name>.css` |
 
-Phase total: **~4,200 lines of CSS moved to disk, 21 `<style>` tags removed**.
+Phase total: **~4,200 lines of CSS moved to disk, 21 `<style>` tags removed**. Plus 16 `{html_style}` blocks were removed in the same shape — 10 to per-page CSS files, 5 via CSS-custom-property pattern (the dynamic ones initially declared "must stay inline" — see Scope above).
 
-### Phase 2 — Pure `{footer_script}` and `{literal}` extraction to `.ts`
+### Phase 2 — Pure `{footer_script}` and `{literal}` extraction to `.ts` ✅ Done
 
 20 admin `{footer_script}` blocks (815 lines) and most `{literal}` blocks (708 lines) are pure JS — no Smarty, no `window.*` globals. They move directly to `.ts` files in the existing `admin/themes/default/js/` and `themes/default/js/` trees and are loaded with `{combine_script id=… path=… load='footer'}`.
 
@@ -100,7 +115,7 @@ Replacement pattern in the template:
 
 Phase total: **~1,500 lines of JS moved to typed modules, 41 inline blocks removed**.
 
-### Phase 3 — `window.*` data-bridge migration (executes ROADMAP-TS #3)
+### Phase 3 — `window.*` data-bridge migration (executes ROADMAP-TS #3) ✅ Done
 
 15 admin `{footer_script}` blocks (849 lines) carry `window.foo = …` data-bridges. This is the existing TS#3 work, with the inventory already in `docs/modernization/ROADMAP-TS.md:153-163`. Per-cluster pattern (from `batch_manager_unit.php`):
 
@@ -113,7 +128,7 @@ Files: `batch_manager_global.tpl`, `picture_modify.tpl`, `admin.tpl`, `user_list
 
 Phase total: **~850 lines of JS moved, 20 `window.*` assignments deleted, `'unsafe-inline'` no longer needed for these.**
 
-### Phase 4 — Smarty-l10n footer scripts (the residual 2 blocks)
+### Phase 4 — Smarty-l10n footer scripts (the residual 2 blocks) ✅ Done
 
 2 admin `{footer_script}` blocks (~90 lines) contain Smarty interpolation that is exclusively translation strings (`{'…'|translate|escape:'javascript'}`) and no `window.*`. Treat each one of two ways:
 
@@ -122,7 +137,9 @@ Phase total: **~850 lines of JS moved, 20 `window.*` assignments deleted, `'unsa
 
 Examples: `intro.tpl` (72 lines), the small remainder.
 
-### Phase 5 — Inline `style=""` attributes (240 instances)
+In addition to the 2 `{footer_script}` blocks, 17 admin templates had `{footer_script}` blocks dominated by Smarty l10n string injection — all migrated to the `page_data_json` pattern. Includes `maintenance_actions`, `configuration_main`, `languages_installed`, `themes_installed`, `updates_pwg`, `site_manager`, `rating`, `permalinks`, `album_notification`, `cat_perm`, `configuration_watermark`, `admin`, `configuration_search`, `element_set_ranks`, `configuration_sizes`, `intro`. Plus public-theme `switchbox` auto-discovery refactor and `picture_nav_keys` keyboard navigation moved off `{footer_script}`.
+
+### Phase 5 — Inline `style=""` attributes (240 instances) ✅ Done
 
 For each attribute, three actions in priority order:
 
@@ -138,11 +155,22 @@ Heaviest concentrations (most files have ≤5 attrs):
 - `admin/themes/default/template/photos_add_direct.tpl` — 17
 - `admin/themes/default/template/batch_manager_global.tpl` — 16
 
-Phase total: **240 attrs → ~0**, modulo a handful of dynamic survivors.
+Phase total: **240 attrs → 13 dynamic survivors** (94% reduction). The 13 are uniform `--var: value` shape, all PHP/Smarty-driven (CSS variable assignments for thumbnail/category/comment dimensions, runtime URLs as background-image, intro chart cell sizes). One additional `<img>` width/height was eliminated outright by switching to the HTML `width=`/`height=` attributes.
 
-### Phase 6 (terminal) — Tighten CSP
+### Phase 6 (terminal) — Tighten CSP ⏳ Pending implementation in ROADMAP-PHP #23
 
-Once Phases 1–5 land, edit `docs/modernization/ROADMAP-PHP.md`'s CSP item to drop `'unsafe-inline'` from `style-src` and remove the residual `<style>` allowlist nonce path. Verify in browser dev console that no inline-style violations are reported on any admin or public page.
+Once a `SecurityHeadersMiddleware` lands (per ROADMAP-PHP #23), the CSP can be configured as:
+
+```text
+style-src 'self';
+style-src-elem 'self';
+style-src-attr 'unsafe-inline';   ← required for the 13 --var: value attrs
+script-src 'self' 'nonce-…';
+```
+
+This drops `'unsafe-inline'` from `style-src` outright. The 13 surviving inline `style="--var: value"` attrs are governed by the separate `style-src-attr` directive — `'unsafe-inline'` there is much narrower than on `style-src`/`<style>` (an attacker who injects HTML can only style what they injected, not the whole page).
+
+If a future stricter policy demands `style-src-attr 'none'`, the architectural answer is to resurrect Piwigo's existing `{html_style}` mechanism (still implemented in `Template.php:122,536-547,703-714`, all callers removed) and emit a single nonce'd `<style>` block per request with the runtime CSS rules keyed by data-attribute selectors. No further template changes required at that point.
 
 ## Conventions
 

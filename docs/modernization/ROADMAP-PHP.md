@@ -1329,7 +1329,9 @@ Depends on the front controller (#22) for middleware insertion; depends on the e
        ->withHeader('Content-Security-Policy',
            "default-src 'self'; "
            ."img-src 'self' data: blob:; "
-           ."style-src 'self' 'nonce-{$nonce}' 'unsafe-inline'; "  // until inline styles eliminated
+           ."style-src 'self'; "                  // 0 <style> blocks remain (PLAN-inline-assets-extraction)
+           ."style-src-elem 'self'; "             // explicit; matches style-src
+           ."style-src-attr 'unsafe-inline'; "    // 13 PHP-driven '--var: value' attrs (CSS custom props)
            ."script-src 'self' 'nonce-{$nonce}'; "
            ."frame-ancestors 'self'; "
            ."form-action 'self'")
@@ -1340,7 +1342,7 @@ Depends on the front controller (#22) for middleware insertion; depends on the e
        ->withHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
    ```
 
-   The per-request `$nonce` is also injected into `Template`/`Latte` so `<script>` tags in templates can render `nonce="{$nonce}"`. Pairs with [ROADMAP-TS.md](ROADMAP-TS.md) #3 (`{footer_script}` migration).
+   The per-request `$nonce` is also injected into `Template`/`Latte` so `<script>` tags in templates can render `nonce="{$nonce}"`. ROADMAP-TS.md #3 (`{footer_script}` migration) is already complete — 0 `{footer_script}` blocks, 0 inline-JS handlers, 0 bare executable `<script>` blocks remain. The 13 surviving inline `style="…"` attributes are uniform `--var: value` shape (CSS custom properties) and are covered by `style-src-attr`. If a future stricter policy demands `style-src-attr 'none'`, resurrect the existing `{html_style}` mechanism (`Template.php:122,536-547,703-714` — implementation intact, all callers removed) to emit a single nonce'd `<style>` tag per request with the runtime CSS rules keyed by data-attribute selectors.
 
 2. **Login rate limiting.** `composer require symfony/rate-limiter`. Token-bucket strategy:
    - 5 failed attempts per minute per IP → 429 response.
@@ -1405,7 +1407,7 @@ Migrate every template from Smarty 5 to [Nette Latte](https://latte.nette.org). 
   - **Modifiers:** `translate`, `translate_dec`, `sprintf`, `urlencode`, `intval`, `file_exists`, `constant`, `json_encode`, `json_decode`, `htmlspecialchars`, `implode`, `stripslashes`, `in_array`, `ucfirst`, `strstr`, `stristr`, `trim`, `md5`, `strtolower`, `str_ireplace`, `explode`, `ternary`, `get_extent`, `url_is_remote`, `is_null`, `l10n`, `str_replace`, `is_admin`, `is_classic_user`, `get_device`, `is_file`.
   - **Functions:** `combine_script`, `get_combined_scripts`, `combine_css`, `define_derivative`.
   - **Compilers:** `get_combined_css`.
-  - **Blocks:** `html_head`, `html_style`, `footer_script`.
+  - **Blocks:** `html_head`, `html_style`, `footer_script`. Of these, only `html_head` is currently called from a template (`themes/default/template/notification.tpl`). `html_style` and `footer_script` have zero in-scope callers — kept implemented in `Template.php` for the future `{html_style}` + nonce path described in `PLAN-inline-assets-extraction.md`.
   - **Filters:** `prefilter_white_space` (whitespace stripper).
 - **3rd-party plugins** (LocalFilesEditor, nbc_ThemeChanger, piwigo-openstreetmap, piwigo-videojs, user_tags) ship their own `.tpl` files and rely on the Smarty plugin API.
 - **Custom inline `<style>`/`<script>` blocks** with `{$skin.*}` Smarty variable injection (see `themes/modus/css/base.css.tpl`).
@@ -1428,7 +1430,8 @@ Migrate every template from Smarty 5 to [Nette Latte](https://latte.nette.org). 
    - **`l10n`** — same as translate; one filter, one alias.
    - **`combine_script`/`combine_css`/`get_combined_scripts`/`get_combined_css`** — Latte function tags. Implement as `Piwigo\Template\Latte\Extension\AssetExtension`.
    - **`define_derivative`** — Latte function tag in a `DerivativeExtension`.
-   - **`html_head`/`html_style`/`footer_script`** — Latte `{block}` extensions or custom tags. Wire to the existing buffering logic in `Template.php`.
+   - **`html_head`** — Latte `{block}` extension or custom tag. Wire to the existing buffering logic in `Template.php`. Only `themes/default/template/notification.tpl` uses it.
+   - **`html_style`/`footer_script`** — zero in-scope callers post-template-extraction; the Latte port can defer porting these until the `{html_style}` + nonce path (per `PLAN-inline-assets-extraction.md`) materializes.
    - **`prefilter_white_space`** — Latte template loader wrapper (run before compilation).
 
 5. **Convert templates in waves.** Order risk-low → risk-high:

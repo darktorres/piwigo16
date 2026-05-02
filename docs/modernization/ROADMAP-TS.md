@@ -142,46 +142,37 @@ npm run typecheck   # still zero errors
 
 ## #3 — Eliminate remaining `window.*` data-bridge globals in `{footer_script}` blocks
 
-**Status:** Not started &nbsp;|&nbsp; **Size:** M
+**Status:** ✅ Done &nbsp;|&nbsp; **Size:** M
 
-### Goal
+### Outcome
 
-Remove all `window.foo = value` data-bridge assignments in Smarty `{footer_script}` blocks. Each surviving assignment is a gap in the TypeScript module graph — the data is invisible to `tsc` and PHPStan. Replace each with either a `<script type="application/json">` page-data block (for structured data) or a `data-*` attribute (for single values).
+All `window.foo = value` data-bridge assignments in Smarty `{footer_script}` blocks are gone. The four clusters listed below (and all smaller satellite cases) migrated to `<script type="application/json" id="pwg-<page>-data">` page-data blocks consumed by `getPageData<T>()`, or to `data-*` attributes on triggering elements consumed via `dataset` in the corresponding `.ts`.
 
-### Current state
-
-**20 remaining assignments** in `admin/themes/default/template/` (0 in `themes/default/template/` — frontend is already clean).
-
-Key clusters:
-
-| Template | Globals | Pattern |
-|----------|---------|---------|
-| `batch_manager_global.tpl` | `window.lang`, `window.all_elements`, `window.str_*`, `nb_thumbs_page`, `nb_thumbs_set` | page-data JSON block |
-| `picture_modify.tpl` | `window.related_categories_ids`, `window.str_are_you_sure`, `window.url_delete`, `window.str_*` | mix of page-data + data-attrs |
-| `admin.tpl` | `window.str_root`, `window.pwg_token` | page-data JSON block |
-| `user_list.tpl` | `window.str_*` (user confirmation strings) | page-data JSON block |
-
-### Steps
-
-For each cluster:
-
-1. **Add a `<script type="application/json" id="pwg-<page>-data">` block** to the PHP controller's `page_data_json` array (pattern established in `batch_manager_unit.php`).
-
-2. **Read from `getPageData<T>('pwg-<page>-data')`** in the corresponding TS file.
-
-3. **Remove the `window.*` assignments** from the `{footer_script}` block. If the block becomes empty, remove the entire `{footer_script}` / `{/footer_script}` pair.
-
-4. For single-element targets (e.g., `window.url_delete` used as an `href`), prefer `data-url-delete="…"` on the triggering element and read it from `dataset` in the TS handler.
+The work expanded beyond the original 20 assignments: `{footer_script}` blocks themselves were eliminated codebase-wide as part of `PLAN-inline-assets-extraction.md` (Phases 2-4). Final count: **0 `{footer_script}` blocks** and **0 inline-JS event-handler attributes** across `admin/themes/default/`, `themes/default/`, `themes/standard_pages/`.
 
 ### Verification
 
 ```bash
 grep -rn "^window\." admin/themes/default/template/ --include="*.tpl" \
   | grep -v "window\.location\|window\.open\|window\.confirm"
-# must return empty
-npm run typecheck    # still zero errors
-npm run build        # clean
+# returns empty ✓
+
+grep -rn "{footer_script}" admin/themes/default/template/ themes/default/template/ themes/standard_pages/template/ --include="*.tpl"
+# returns empty ✓
 ```
+
+### Original plan (historical)
+
+Initial inventory: **20 remaining assignments** in `admin/themes/default/template/` (0 in `themes/default/template/`). Key clusters:
+
+| Template | Globals | Migration |
+|----------|---------|-----------|
+| `batch_manager_global.tpl` | `window.lang`, `window.all_elements`, `window.str_*`, `nb_thumbs_page`, `nb_thumbs_set` | page-data JSON block |
+| `picture_modify.tpl` | `window.related_categories_ids`, `window.str_are_you_sure`, `window.url_delete`, `window.str_*` | mix of page-data + data-attrs |
+| `admin.tpl` | `window.str_root`, `window.pwg_token` | page-data JSON block |
+| `user_list.tpl` | `window.str_*` (user confirmation strings) | page-data JSON block |
+
+Pattern applied per cluster: PHP controller pushes structured values into `page_data_json[$key]`; template emits one `<script type="application/json" id="pwg-<page>-data">` block; `.ts` module reads via `getPageData<PageData>('pwg-<page>-data')`. For single-element targets (e.g., `url_delete` used as an `href`), `data-*` on the triggering element was preferred over a JSON island.
 
 ---
 

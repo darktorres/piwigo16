@@ -617,7 +617,6 @@
   margin-top: 0;
   font-size: 1.1em;
   margin-bottom: 15px;
-  cursor:;
   border: none;
   margin-right: 0;
   font-weight: normal;
@@ -1262,13 +1261,6 @@
   margin-right: 15px !important;
   margin-top: 29px !important;
 }
-/* for firefox */
-@document url-prefix() {
-  .edit-user-tabsheet-plugins {
-    margin-top: 25px !important;
-  }
-}
-
 /* update */
 
 .update-user-button,

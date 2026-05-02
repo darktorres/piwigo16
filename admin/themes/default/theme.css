@@ -115,7 +115,6 @@
 ul.categoryActions {
   margin: 0 2px;
   width: auto;
-  list-style-position: outside;
   padding: 0;
   text-indent: 0;
   list-style: none;
@@ -2071,7 +2070,7 @@ li.plupload_delete a.remove-format:hover {
 
 html,
 body {
-  height: 100;
+  height: 100%;
   min-height: 100%;
   margin: 0;
   padding: 0;
@@ -2574,7 +2573,7 @@ h2:lang(en) {
 .errors ul,
 .warnings ul,
 .messages ul {
-  margin: 1_px 0;
+  margin: 1px 0;
   padding-left: 0;
 }
 
@@ -2628,7 +2627,7 @@ div.jGrowl div.jGrowl-notification.success {
   background-color: #d6ffcf;
   opacity: 1;
   text-align: left;
-  font-family: "Open Sans";
+  font-family: "Open Sans", sans-serif;
   box-shadow: 0 5px 10px 5px rgb(0, 0, 0, 0.1);
   margin-bottom: 1em;
 }
@@ -2644,7 +2643,7 @@ div.jGrowl div.jGrowl-notification.error {
   background-color: #ffc8c8;
   opacity: 1;
   text-align: left;
-  font-family: "Open Sans";
+  font-family: "Open Sans", sans-serif;
   box-shadow: 0 5px 10px 5px rgb(0, 0, 0, 0.1);
   margin-bottom: 1em;
 }
@@ -3080,8 +3079,6 @@ div.jGrowl div.jGrowl-notification {
   text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  -moz-box-orient: vertical;
-  -ms-box-orient: vertical;
 }
 
 .pluginMiniBox .pluginDesc {
@@ -3917,7 +3914,7 @@ legend span {
   position: absolute;
   bottom: 3px;
   right: 0;
-  align-items: right;
+  text-align: right;
   color: #7a7a7a89;
   font-size: 14px;
   padding: 14px 20px 14px 0;
@@ -3990,7 +3987,7 @@ legend span {
 .main-info-desc {
   color: #777;
   text-align: center;
-  font-family: "Open Sans";
+  font-family: "Open Sans", sans-serif;
   font-size: 12px;
   font-style: normal;
   font-weight: 400;
@@ -4464,7 +4461,6 @@ legend span {
 }
 #order_filters .transparent {
   opacity: 0.5;
-  filter: alpha(opacity=50);
 }
 #order_filters .order_by_is_custom {
   display: block;
@@ -5121,7 +5117,6 @@ a#showPermissions:hover {
   background-color: #ffa836;
   padding: 10px 20px;
   font-size: 1em;
-  margin-bottom: 0;
   margin: 0 15px;
 }
 .TagLoading {
@@ -6453,7 +6448,7 @@ form.properties .groups .GroupContainer,
 
 .slider::after {
   content: "\E81D";
-  font-family: fontello;
+  font-family: fontello, sans-serif;
   font-size: 15px;
   animation-name: spin;
   animation-duration: 0.5s;
@@ -7497,7 +7492,7 @@ table.qsearch_help_table {
   margin: 1em;
 }
 table.qsearch_help_table q {
-  font-family: Courier, Fixed;
+  font-family: Courier, monospace;
   font-weight: bold;
 }
 table.qsearch_help_table q::before {
@@ -8011,7 +8006,7 @@ li.plupload_delete a:hover {
   content: "\e835";
   font-size: 17px;
   position: absolute;
-  font-family: fontello;
+  font-family: fontello, sans-serif;
   color: #6e6e6e;
   pointer-events: none;
 }

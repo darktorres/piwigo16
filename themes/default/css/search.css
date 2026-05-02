@@ -96,7 +96,6 @@
 .albums-found-container .album-item {
   max-width: -moz-available;
   max-width: -webkit-fill-available;
-  max-width: fill-available;
 }
 
 .tags-found-container .tag-item a,

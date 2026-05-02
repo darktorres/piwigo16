@@ -121,7 +121,7 @@
 
 .flatpickr-weekday {
   flex: 1;
-  max-width: 43.857142857142854px;
+  max-width: 43.8571px;
   height: 28px;
   line-height: 28px;
   margin: 0;
@@ -152,11 +152,11 @@
   height: 39px;
   line-height: 39px;
   margin: 0;
-  max-width: 43.857142857142854px;
+  max-width: 43.8571px;
   padding: 0;
   position: relative;
   text-align: center;
-  width: 14.285714285714286%;
+  width: 14.2857%;
 }
 
 .flatpickr-day:hover {

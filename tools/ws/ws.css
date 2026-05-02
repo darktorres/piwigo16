@@ -642,7 +642,7 @@ select {
 
 #testForm .select::after {
   content: "\e835";
-  font-family: fontello;
+  font-family: fontello, sans-serif;
   font-size: 12px;
   color: var(--color-text);
   position: absolute;

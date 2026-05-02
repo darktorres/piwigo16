@@ -9,10 +9,100 @@ interface IntroTooltipsPageData {
     str_mb: string;
     translate_type: Record<string, string>;
     translate_files: string;
+    dashboard: {
+        check_for_updates: boolean;
+        storage_total: number;
+        str_gb_used: string;
+        str_mb_used: string;
+        str_piwigo_need_update: string;
+        str_ext_need_update: string;
+        newsletter?: {
+            email: string;
+            subscribe_base_url: string;
+            old_newsletters_url: string;
+            str_subscribe_title: string;
+            str_subscribe_button: string;
+            str_see_previous: string;
+            str_dismiss: string;
+        };
+    };
 }
 
-const { storage_details, str_gb, str_mb, translate_type, translate_files } =
+const { storage_details, str_gb, str_mb, translate_type, translate_files, dashboard } =
     getPageData<IntroTooltipsPageData>();
+
+/*---- Dashboard extras (migrated from intro.tpl {footer_script}) ----*/
+
+const piwigo_need_update_msg =
+    `<a href="admin.php?page=updates">${dashboard.str_piwigo_need_update} <i class="icon-right"></i></a>`;
+const ext_need_update_msg =
+    `<a href="admin.php?page=updates&tab=ext">${dashboard.str_ext_need_update} <i class="icon-right"></i></a>`;
+
+if (dashboard.check_for_updates) {
+    fetch('ws.php?format=json&method=pwg.extensions.checkUpdates', { signal: AbortSignal.timeout(5000) })
+        .then((r) => r.json())
+        .then((data: { stat?: string; result?: { piwigo_need_update?: boolean; ext_need_update?: boolean } }) => {
+            if (data.stat !== 'ok') return;
+            const piwigo_update = data.result?.piwigo_need_update;
+            const ext_update = data.result?.ext_need_update;
+            if ((piwigo_update || ext_update) && !document.querySelector('.warnings')) {
+                document.querySelector('.eiw')?.insertAdjacentHTML(
+                    'afterbegin',
+                    '<div class="warnings"><i class="eiw-icon icon-attention"></i><ul></ul></div>',
+                );
+            }
+            if (piwigo_update) {
+                document.querySelector('.warnings ul')?.insertAdjacentHTML('beforeend', '<li>' + piwigo_need_update_msg + '</li>');
+            }
+            if (ext_update) {
+                document.querySelector('.warnings ul')?.insertAdjacentHTML('beforeend', '<li>' + ext_need_update_msg + '</li>');
+            }
+        })
+        .catch(() => { /* best-effort */ });
+}
+
+if (dashboard.newsletter) {
+    const nl = dashboard.newsletter;
+    document.querySelector('.eiw')?.insertAdjacentHTML('afterbegin', `
+  <div class="promote-newsletter">
+    <div class="promote-content">
+      <img class="promote-image" src="admin/themes/default/images/promote-newsletter.png">
+      <div class="promote-newsletter-content">
+        <span class="promote-newsletter-title">${nl.str_subscribe_title}</span>
+        <div class="promote-content subscribe-newsletter">
+          <input type="text" id="newsletterSubscribeInput" value="${nl.email}" class="left-side">
+          <a href="${nl.subscribe_base_url}${nl.email}" id="newsletterSubscribeLink" class="right-side go-to-porg icon-thumbs-up newsletter-hide">${nl.str_subscribe_button}</a>
+        </div>
+        <a href="${nl.old_newsletters_url}" class="promote-link">${nl.str_see_previous}</a>
+      </div>
+    </div>
+    <a href="#" class="dont-show-again icon-cancel tiptip newsletter-hide" title="${nl.str_dismiss}"></a>
+  </div>`);
+
+    const nsi = document.getElementById('newsletterSubscribeInput') as HTMLInputElement | null;
+    nsi?.addEventListener('change', () => {
+        const link = document.getElementById('newsletterSubscribeLink');
+        if (link) link.setAttribute('href', nl.subscribe_base_url + nsi.value);
+    });
+
+    document.querySelectorAll<HTMLElement>('.newsletter-hide').forEach((el) => {
+        el.addEventListener('click', (e) => {
+            const promo = document.querySelector<HTMLElement>('.promote-newsletter');
+            if (promo) promo.style.display = 'none';
+            fetch('admin.php?action=hide_newsletter_subscription').catch(() => { /* best-effort */ });
+            if (el.classList.contains('newsletter-hide')) {
+                e.preventDefault();
+            }
+        });
+    });
+}
+
+const size_info = dashboard.storage_total > 1000000 ? dashboard.str_gb_used : dashboard.str_mb_used;
+const size_nb = dashboard.storage_total > 1000000
+    ? (dashboard.storage_total / 1000000).toFixed(2)
+    : (dashboard.storage_total / 1000).toFixed(0);
+const chartTitleEl = document.querySelector<HTMLElement>('.chart-title-infos');
+if (chartTitleEl) chartTitleEl.innerHTML = size_info.replace('%s', size_nb);
 
 function posLeft(el: HTMLElement): number {
     const rect = el.getBoundingClientRect();

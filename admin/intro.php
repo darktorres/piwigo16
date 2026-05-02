@@ -125,13 +125,17 @@ if (\Piwigo\Core\Config::showNewsletterSubscription() and userprefs_get_param('s
     // To see the newsletter promote, the account must have 2 weeks ancient, 3 albums created and 30 photos uploaded
 
     if (!$uagent_obj->DetectIos() and strtotime((string) $register_date) < strtotime('2 weeks ago') and $nb_cats >= 3 and $nb_images >= 30) {
-        $template->assign(
-            [
-        'EMAIL' => $user['email'],
-        'SUBSCRIBE_BASE_URL' => get_newsletter_subscribe_base_url($user['language']),
-        'OLD_NEWSLETTERS_URL' => get_old_newsletters_base_url($user['language']),
-        ]
-        );
+        $userLang = (is_array($user) && isset($user['language']) && is_string($user['language'])) ? $user['language'] : '';
+        $userEmail = (is_array($user) && isset($user['email']) && is_string($user['email'])) ? $user['email'] : '';
+        $intro_newsletter_data = [
+            'email'              => $userEmail,
+            'subscribe_base_url' => get_newsletter_subscribe_base_url($userLang),
+            'old_newsletters_url' => get_old_newsletters_base_url($userLang),
+            'str_subscribe_title' => l10n('Subscribe to our newsletter and stay updated!'),
+            'str_subscribe_button' => l10n('Sign up to the newsletter'),
+            'str_see_previous'   => l10n('See previous newsletters'),
+            'str_dismiss'        => l10n('Understood, do not show again'),
+        ];
     }
 
 }
@@ -438,12 +442,25 @@ $translate_type = [];
 foreach ($data_storage as $type => $_) {
     $translate_type[$type] = l10n($type);
 }
+$intro_dashboard_extras = [
+    'check_for_updates'       => (bool) \Piwigo\Core\Config::dashboardCheckForUpdates(),
+    'storage_total'           => $total_storage,
+    'str_gb_used'             => l10n('%s GB used'),
+    'str_mb_used'             => l10n('%s MB used'),
+    'str_piwigo_need_update'  => l10n('A new version of Piwigo is available.'),
+    'str_ext_need_update'     => l10n('Some upgrades are available for extensions.'),
+];
+if (isset($intro_newsletter_data)) {
+    $intro_dashboard_extras['newsletter'] = $intro_newsletter_data;
+}
+
 $template->assign('page_data_json', json_encode([
     'storage_details' => $data_storage,
     'str_gb'          => l10n('%sGB'),
     'str_mb'          => l10n('%sMB'),
     'translate_type'  => $translate_type,
     'translate_files'  => l10n('%d files'),
+    'dashboard'       => $intro_dashboard_extras,
 ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
 
 // +-----------------------------------------------------------------------+

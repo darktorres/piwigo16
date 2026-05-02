@@ -1,0 +1,7 @@
+.eiw .messages ul li {
+  list-style-type: none !important;
+}
+
+.eiw .messages .eiw-icon {
+  margin-right: 10px !important;
+}

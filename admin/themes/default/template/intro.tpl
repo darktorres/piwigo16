@@ -1,15 +1,7 @@
 <script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 {combine_script id='intro_tooltips' load='footer' path='admin/themes/default/js/intro_tooltips.js'}
 
-{html_style}
-.eiw .messages ul li {
-  list-style-type:none !important;
-}
-
-.eiw .messages .eiw-icon {
-  margin-right:10px !important;
-}
-{/html_style}
+{combine_css path="admin/themes/default/css/pages/intro.css"}
 
 <h2>{'Piwigo Administration'|@translate}</h2>
 

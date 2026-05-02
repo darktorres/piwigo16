@@ -1,10 +1,5 @@
 {include file='include/colorbox.inc.tpl'}
-
-{footer_script}
-{literal}
-GLightbox({selector: '.illustration a'});
-{/literal}
-{/footer_script}
+{combine_script id='photos_add_applications_glightbox' load='footer' path='admin/themes/default/js/photos_add_applications_glightbox.js'}
 
 {combine_css path="admin/themes/default/css/pages/photos-add-applications.css"}
 

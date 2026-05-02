@@ -1,28 +1,6 @@
 
 {include file='include/autosize.inc.tpl'}
-{footer_script}
-(function() {
-  var checkAllLink = document.getElementById("checkAllLink");
-  if (checkAllLink) {
-    checkAllLink.addEventListener('click', function(e) {
-      e.preventDefault();
-      document.querySelectorAll("#notification_by_mail input[type=checkbox]").forEach(function(cb) {
-        cb.checked = true;
-      });
-    });
-  }
-
-  var uncheckAllLink = document.getElementById("uncheckAllLink");
-  if (uncheckAllLink) {
-    uncheckAllLink.addEventListener('click', function(e) {
-      e.preventDefault();
-      document.querySelectorAll("#notification_by_mail input[type=checkbox]").forEach(function(cb) {
-        cb.checked = false;
-      });
-    });
-  }
-}());
-{/footer_script}
+{combine_script id='notification_by_mail' load='footer' path='admin/themes/default/js/notification_by_mail.js'}
 
 <form method="post" name="notification_by_mail" id="notification_by_mail" action="{$F_ACTION}">
   <input type="hidden" name="pwg_token" value="{$PWG_TOKEN}">

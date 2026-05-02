@@ -2,16 +2,6 @@
 
 {combine_script id='cat_list' load='footer' path='admin/themes/default/js/cat_list.js'}
 
-{footer_script}
-var addAlbumHead = document.querySelector(".addAlbumHead");
-if (addAlbumHead) {
-  addAlbumHead.addEventListener('click', function() {
-    var input = document.querySelector(".addAlbum input[name=virtual_name]");
-    if (input) input.focus();
-  });
-}
-{/footer_script}
-
 <div class="selectedAlbum cat-list-album-path">
   <span class="icon-sitemap selectedAlbum-first">{$CATEGORIES_NAV}</span>
   <div class="AlbumViewSelector">

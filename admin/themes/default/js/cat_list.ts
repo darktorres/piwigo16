@@ -244,4 +244,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+document.querySelector<HTMLElement>('.addAlbumHead')?.addEventListener('click', () => {
+    document.querySelector<HTMLInputElement>('.addAlbum input[name=virtual_name]')?.focus();
+});
+
 export {};

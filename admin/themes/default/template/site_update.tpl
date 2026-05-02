@@ -1,14 +1,4 @@
-{footer_script}
-document.querySelectorAll('#syncFiles label').forEach(function(label) {
-  label.addEventListener('click', function() {
-    var checked = document.querySelector("input[value='files']:checked");
-    var filesInput = document.querySelector("input[value='files']");
-    var ul = filesInput ? filesInput.closest('li') : null;
-    var subUl = ul ? ul.querySelector('ul') : null;
-    if (subUl) subUl.style.display = checked ? '' : 'none';
-  });
-});
-{/footer_script}
+{combine_script id='site_update' load='footer' path='admin/themes/default/js/site_update.js'}
 
 <div class="selectedAlbum site-url-path">
   <span class="icon-folder-open selectedAlbum-first">{$SITE_URL}</span>

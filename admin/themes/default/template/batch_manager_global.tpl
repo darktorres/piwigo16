@@ -555,34 +555,4 @@ UL.thumbnails SPAN.wrap2 {ldelim}
 </div> <!-- #batchManagerGlobal -->
 {include file='include/album_selector.inc.tpl'}
 
-<style>
-#action_move .selectize-input {
-  min-width: 500px;
-  height: 44px;
-}
-
-#action_add_tags .item,
-#action_add_tags .item.active {
-  background-image:none;
-  background-color: #ffa646;
-  border-color: transparent;
-  color: black;
-
-  border-radius: 20px;
-}
-
-#action_add_tags .item .remove,
-#action_add_tags .item .remove {
-  background-color: transparent;
-  border-top-right-radius: 20px;
-  border-bottom-right-radius: 20px;
-  color: black;
-  
-  border-left: 1px solid transparent;
-
-}
-#action_add_tags .item .remove:hover,
-#action_add_tags .item .remove:hover {
-  background-color: #ff7700;
-}
-</style>
+{combine_css path="admin/themes/default/css/pages/batch_manager_global.css"}

@@ -202,7 +202,7 @@ define('CURRENT_DATE', $dbnow);
 // |                        template initialization                        |
 // +-----------------------------------------------------------------------+
 
-$template = new Template(PHPWG_ROOT_PATH.'admin/themes', 'clear');
+$template = new Template(PHPWG_ROOT_PATH.'admin/themes', 'roma');
 $template->set_filenames(['upgrade' => 'upgrade.tpl']);
 $template->assign(
     [

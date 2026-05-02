@@ -131,7 +131,7 @@ if ($themes->get_server_themes(true)) { // only new themes
 
 $template->assign(
     'default_screenshot',
-    get_root_url().'admin/themes/'.(is_scalar(userprefs_get_param('admin_theme', 'clear')) ? (string) userprefs_get_param('admin_theme', 'clear') : 'clear').'/images/missing_screenshot.png'
+    get_root_url().'admin/themes/'.(is_scalar(userprefs_get_param('admin_theme', 'roma')) ? (string) userprefs_get_param('admin_theme', 'roma') : 'roma').'/images/missing_screenshot.png'
 );
 $template->assign('ADMIN_PAGE_TITLE', l10n('Themes'));
 

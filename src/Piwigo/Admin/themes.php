@@ -373,8 +373,8 @@ SELECT
                     if (file_exists($screenshot_path)) {
                         $theme['screenshot'] = $screenshot_path;
                     } else {
-                        $admin_theme = userprefs_get_param('admin_theme', 'clear');
-                        $admin_theme = is_scalar($admin_theme) ? (string) $admin_theme : 'clear';
+                        $admin_theme = userprefs_get_param('admin_theme', 'roma');
+                        $admin_theme = is_scalar($admin_theme) ? (string) $admin_theme : 'roma';
                         $theme['screenshot'] =
                           PHPWG_ROOT_PATH.'admin/themes/'
                           .$admin_theme

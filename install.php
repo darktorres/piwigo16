@@ -147,7 +147,7 @@ if (version_compare(PHP_VERSION, REQUIRED_PHP_VERSION, '<')) {
 }
 
 //----------------------------------------------------- template initialization
-$template = new Template(PHPWG_ROOT_PATH.'admin/themes', 'clear');
+$template = new Template(PHPWG_ROOT_PATH.'admin/themes', 'roma');
 $template->set_filenames(['install' => 'install.tpl']);
 if (!isset($step)) {
     $step = 1;

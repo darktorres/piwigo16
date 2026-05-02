@@ -64,7 +64,7 @@ if ($plugins_new_order !== null) {
 // theme changer
 if (input_string('change_theme', null, $_GET) !== null) {
     $admin_themes = array('roma', 'clear');
-    $admin_theme_array = array(userprefs_get_param('admin_theme', 'clear'));
+    $admin_theme_array = array(userprefs_get_param('admin_theme', 'roma'));
     $result = array_diff(
         $admin_themes,
         $admin_theme_array

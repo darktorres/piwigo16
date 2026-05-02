@@ -787,7 +787,7 @@ $conf['auth_key_duration'] = 3 * 24 * 60 * 60;
 // | Set admin layout                                                      |
 // +-----------------------------------------------------------------------+
 
-$conf['admin_theme'] = 'clear';
+$conf['admin_theme'] = 'roma';
 
 // should we load the active plugins ? true=Yes, false=No
 $conf['enable_plugins'] = true;

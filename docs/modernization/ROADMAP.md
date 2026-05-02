@@ -2,25 +2,9 @@
 
 Detailed breakdown of the remaining modernization work. See [MODERNIZATION.md](MODERNIZATION.md) for architecture context and completed phase summaries.
 
-Recommended sequence: 1 → 2 → 10 → 3 → 4 → 5 → 7 → 8 → 6 → 9 → 11.
+Recommended sequence: 2 → 10 → 3 → 4 → 5 → 7 → 8 → 6 → 11.
 
----
-
-## #1 — PHPStan level 9 / baseline elimination
-
-**Status:** Done &nbsp;|&nbsp; **Size:** L
-
-### Outcome
-
-`phpstan.neon` runs clean at `level: 9` (`treatPhpDocTypesAsCertain` implicit at this level) with zero errors and no baseline file. The dblayer mixed-chain narrowing, free-function PHPDoc tightening, and WS-layer cleanup all landed across the level-8 → level-9 sweep that closed out on `16.x-rewrite`. Subsequent re-runs at level 10 surface a new class of `mixed`-propagation errors driven by procedural `global` declarations — that work is tracked under #2 (eliminate globals), not as residual #1 work.
-
-### Verification
-
-```bash
-vendor/bin/phpstan analyse --no-progress   # [OK] No errors
-ls phpstan-baseline.neon                   # No such file or directory
-grep '^\s\+level:' phpstan.neon            # level: 9 (or higher)
-```
+Item numbers are stable identifiers — completed items are removed, but the remaining numbers do not shift. See [MODERNIZATION.md](MODERNIZATION.md) for the history of completed items (e.g., #1 PHPStan level 9, #9 jQuery removal).
 
 ---
 
@@ -594,31 +578,6 @@ grep -rn "clear-search\|dark-search" themes/               # empty
 wc -l admin/themes/default/theme.css                        # ≤ 30 (just @imports)
 wc -l themes/default/theme.css                             # ≤ 15 (just @imports)
 grep -rn "!important" themes/modus/css/skins/              # empty (after Step 8)
-```
-
----
-
-## #9 — jQuery upgrade / incremental replacement
-
-**Status:** Done &nbsp;|&nbsp; **Size:** XL
-
-### Outcome
-
-jQuery is no longer loaded in any first-party page Piwigo serves. The vendored chain is gone — no `themes/default/js/vendor/` or `admin/themes/default/js/vendor/` directories remain, and no template registers `{combine_script id='jquery'}`. Authored TypeScript is jQuery-free, and the previously jQuery-bound libraries (colorbox, selectize, jQuery Cookie, jqtree, plupload/moxie, dataTables) have been replaced with their vanilla / modern counterparts (`<dialog>`/GLightbox, TomSelect, native cookie helpers, vanilla tree, native chunked Fetch upload, Fetch-based tables).
-
-Plugins that still depend on jQuery are responsible for vendoring it themselves; the originally proposed conditional-load opt-in (Phase C) was unnecessary because no shipped plugin actually needed the runtime hook.
-
-### Residual
-
-- `admin/themes/default/template/photos_add_direct.tpl:62` still has a single inline `$('.switch .slider').addClass('loading')` call inside an `onClick`. Since jQuery is no longer loaded, this throws silently before the `window.location.replace()` navigation. Replace with `document.querySelector('.switch .slider')?.classList.add('loading')` (or drop, since the navigation immediately discards the DOM). Trivial — fold into next admin-template touch.
-
-### Verification
-
-```bash
-ls themes/default/js/vendor/jquery* admin/themes/default/js/vendor/jquery*  # No such file
-grep -rn "combine_script[^}]*id=['\"]jquery['\"]" themes/ admin/themes/ --include="*.tpl"  # 0 hits
-grep -rn "jQuery\b" admin/themes/default/js/ themes/default/js/ --include="*.ts"            # 0 hits
-grep -rn '\$(' admin/themes/default/template/ themes/default/template/ --include="*.tpl"    # 1 hit (residual above)
 ```
 
 ---

@@ -1,11 +1,7 @@
 {combine_script id="comments" load="footer" path="admin/themes/default/js/comments.js"}
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
 <script id="pwg-page-data" type="application/json">{$page_data_json}</script>
-<style>
-  #tabsheet {
-    margin: 0;
-  }
-</style>
+{combine_css path="admin/themes/default/css/pages/comments.css"}
 <div class="comments" id="comments">
   <div class="comments-filters">
     <div class="comments-tabs-filters">

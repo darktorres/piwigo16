@@ -32,6 +32,7 @@ export default defineConfig({
                 // ── Admin (admin/themes/default) ──────────────────────────
                 'common':             r('admin/themes/default/js/common.ts'),
                 'admin_footer':       r('admin/themes/default/js/admin_footer.ts'),
+                'admin':              r('admin/themes/default/js/admin.ts'),
                 'addAlbum':           r('admin/themes/default/js/addAlbum.ts'),
                 'albums':             r('admin/themes/default/js/albums.ts'),
                 'batchManagerGlobal': r('admin/themes/default/js/batchManagerGlobal.ts'),

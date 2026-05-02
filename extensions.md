@@ -15,7 +15,6 @@ Inventory of every entry in each sibling repo's `manifest.json`.
 
 | Key | Filename | Extension Name |
 | --- | --- | --- |
-| `2.7.2.1` | `2.7.2.1.zip` | Bootstrap Default Language Switch |
 | `3dhop_1.2` | `3dhop_1.2.zip` | 3dhop |
 | `About1menu_13.0.a` | `About1menu_13.0.a.zip` | About1menu |
 | `add_head_element_13.0.a` | `add_head_element_13.0.a.zip` | Add < head > Element |
@@ -41,7 +40,6 @@ Inventory of every entry in each sibling repo's `manifest.json`.
 | `AMenuManager_3.2.16` | `AMenuManager_3.2.16.zip` | Advanced Menu Manager |
 | `AMetaData_0.7.1` | `AMetaData_0.7.1.zip` | Advanced Metadata |
 | `AntiAspi_12.a` | `AntiAspi_12.a.zip` | AntiAspi |
-| `Archive` | `Archive.zip` | Social Connect (forked) |
 | `ASearchEngine_1.2.0` | `ASearchEngine_1.2.0.zip` | Advanced Search Engine |
 | `AStat_2.4.9` | `AStat_2.4.9.zip` | AStat |
 | `autocorrect_filename_1.1.1` | `autocorrect_filename_1.1.1.zip` | Autocorrect Filename |
@@ -66,6 +64,7 @@ Inventory of every entry in each sibling repo's `manifest.json`.
 | `BlocMenuAdd_1.7.g` | `BlocMenuAdd_1.7.g.zip` | BlocMenuAdd |
 | `bmp_description_15.a` | `bmp_description_15.a.zip` | Batch Manager, Photo Description |
 | `bmp_name` | `bmp_name.zip` | Batch Manager - Picture Name selector |
+| `BootstrapDefaultLanguageSwitch_2.7.2.1` | `BootstrapDefaultLanguageSwitch_2.7.2.1.zip` | Bootstrap Default Language Switch |
 | `bot_protection` | `bot_protection.zip` | BYB \| Bot Protection |
 | `bulk_manager_2.1b` | `bulk_manager_2.1b.zip` | Bulk Manager |
 | `c13y_upgrade_2.6.1` | `c13y_upgrade_2.6.1.zip` | Check upgrades |
@@ -104,6 +103,7 @@ Inventory of every entry in each sibling repo's `manifest.json`.
 | `CustomUsersFields v1.6` | `CustomUsersFields v1.6.zip` | Custom Users Fields |
 | `db_backup1.7.1` | `db_backup1.7.1.zip` | DB Backup |
 | `de_activate_all_languages_13.0.a` | `de_activate_all_languages_13.0.a.zip` | de_activate all languages |
+| `DefaultCreationDateToToday_1` | `DefaultCreationDateToToday_1.zip` | Default Creation Date To Today |
 | `delete_hd_2.3.a` | `delete_hd_2.3.a.zip` | Delete HD |
 | `delete_hit_2.1.b` | `delete_hit_2.1.b.zip` | Delete Hit |
 | `delete_hit_rate_14.0.a` | `delete_hit_rate_14.0.a.zip` | Delete Hit/Rate |
@@ -208,7 +208,6 @@ Inventory of every entry in each sibling repo's `manifest.json`.
 | `m365connect_15.c` | `m365connect_15.c.zip` | Microsoft 365 Connect |
 | `Mail_supervisor_2.0.1` | `Mail_supervisor_2.0.1.zip` | Mail_supervisor |
 | `manage_properties_photos_15.0.b` | `manage_properties_photos_15.0.b.zip` | Manage Properties Photos |
-| `master_1` | `master_1.zip` | Default Creation Date To Today |
 | `Media_Icon_16.a` | `Media_Icon_16.a.zip` | Media Icon |
 | `memories_12.0.a` | `memories_12.0.a.zip` | Memories |
 | `menalto2piwigo_13.a-beta` | `menalto2piwigo_13.a-beta.zip` | Menalto2Piwigo |
@@ -364,6 +363,7 @@ Inventory of every entry in each sibling repo's `manifest.json`.
 | `smileys_votes` | `smileys_votes.zip` | Smileys & Votes |
 | `SmiliesSupport_2.7` | `SmiliesSupport_2.7.zip` | Smilies Support |
 | `SocialButtons_14.e` | `SocialButtons_14.e.zip` | Social Buttons |
+| `SocialConnect_0.0.3` | `SocialConnect_0.0.3.zip` | Social Connect (forked) |
 | `SortOrders_1.3.1` | `SortOrders_1.3.1.zip` | SortOrders |
 | `spread_menus_2.1.d` | `spread_menus_2.1.d.zip` | Spread menus |
 | `square_thumbnails_2.2.c` | `square_thumbnails_2.2.c.zip` | Square Thumbnails |

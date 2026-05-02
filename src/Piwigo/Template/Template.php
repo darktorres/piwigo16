@@ -1157,10 +1157,13 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
     /**
      * Prefilter used to add theme local CSS files.
      *
-     * @param string $source
-     * @param Smarty $smarty
+     * Smarty 5 passes Smarty\Template here (not Smarty\Smarty); both
+     * extend Smarty\TemplateBase, which exposes getTemplateVars().
+     *
+     * @param string                $source
+     * @param \Smarty\TemplateBase  $smarty
      */
-    public static function prefilter_local_css(string $source, \Smarty\Smarty $smarty): string
+    public static function prefilter_local_css(string $source, \Smarty\TemplateBase $smarty): string
     {
         $css = [];
         $themes = $smarty->getTemplateVars('themes');

@@ -39,15 +39,7 @@
     <input type="hidden" name="whole_set" value="">
   </p>
 
-	<ul class="thumbnails">
-		{html_style}
-UL.thumbnails SPAN.wrap2{ldelim}
-  width: {$thumb_params->max_width()+2}px;
-}
-UL.thumbnails SPAN.wrap2 {ldelim}
-  height: {$thumb_params->max_height()+25}px;
-}
-		{/html_style}
+	<ul class="thumbnails" style="--bm-thumb-w:{$thumb_params->max_width()+2}px;--bm-thumb-h:{$thumb_params->max_height()+25}px">
 		{foreach from=$thumbnails item=thumbnail}
 		{assign var='isSelected' value=$thumbnail.id|@in_array:$selection}
 		<li{if $isSelected} class="thumbSelected"{/if}>

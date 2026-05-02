@@ -80,7 +80,7 @@
     <div 
       class="cat-modify-representative {if !isset($representant)}icon-file-image{elseif !isset($representant.picture)}icon-dice-solid{/if}" 
       {if !isset($representant)}title="{'No photos in the current album, no thumbnail available'|@translate}"{/if} 
-      {if isset($representant) && isset($representant.picture)}style="background-image:url('{$representant.picture.src}')"{/if}
+      {if isset($representant) && isset($representant.picture)}style="--bg-image:url('{$representant.picture.src}')"{/if}
       >
       {if isset($representant) and ($representant.ALLOW_SET_RANDOM || $representant.ALLOW_SET_RANDOM)}
       <div class="cat-modify-representative-actions">

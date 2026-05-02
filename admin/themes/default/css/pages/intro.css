@@ -5,3 +5,29 @@
 .eiw .messages .eiw-icon {
   margin-right: 10px !important;
 }
+
+/* Activity chart cells use CSS custom properties so the runtime-computed
+   row count, day-cell size, tooltip offset, divider height and storage
+   bar width compose into a uniform inline `style="--var: value"`
+   payload (covered by CSP style-src-attr) instead of arbitrary
+   inline declarations. */
+.activity-chart {
+  grid-template-rows: repeat(var(--chart-rows), 5vw);
+}
+
+.activity-day {
+  width: var(--day-size);
+  height: var(--day-size);
+}
+
+.activity_tooltips .tooltip {
+  transform: translate(-50%, var(--tooltip-y));
+}
+
+.col-legend .line-vertical {
+  height: var(--line-h);
+}
+
+.storage-chart > span[data-type^="storage-"] {
+  width: var(--storage-w);
+}

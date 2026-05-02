@@ -120,7 +120,7 @@
       {if $plugin.SCREENSHOT == ''}
         <span class="noImage {$color_tab[$plugin.ID%5]}"><i class="icon-puzzle"></i></span>
       {else}
-        <span class="screenshot" style="background-image: url({$plugin.SCREENSHOT});"></span>
+        <span class="screenshot" style="--bg-image:url('{$plugin.SCREENSHOT}')"></span>
       {/if}
     </div>
     <div class="pluginInfo">

@@ -604,6 +604,7 @@ LI.menuLi {
   font-size: 30px;
   background-position: center;
   background-size: cover;
+  background-image: var(--bg-image);
 }
 
 .cat-modify-representative-actions {
@@ -2621,8 +2622,8 @@ div.jGrowl div.jGrowl-notification{
 }
 
 .pluginImage .screenshot {
-  background-image: url(path-to-file/img.jpg);
-  background-repeat:no-repeat;
+  background-image: var(--bg-image);
+  background-repeat: no-repeat;
   background-position: center center;
   background-size: cover;
 }
@@ -4686,6 +4687,7 @@ a#showPermissions:hover {text-decoration: none;}
   width: 150px;
   height: 150px;
   background-size: cover;
+  background-image: var(--bg-image);
   margin-right: 20px;
   margin-bottom: 20px;
   position: relative;

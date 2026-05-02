@@ -10,7 +10,7 @@
     <ul class="thumbnails">
       {foreach from=$thumbnails item=thumbnail}
       <li class="rank-of-image">
-        <img src="{$thumbnail.TN_SRC}" class="thumbnail" alt="{$thumbnail.NAME|@replace:'"':' '}" title="{$thumbnail.NAME|@replace:'"':' '}"  style="width:{$thumbnail.SIZE[0]}px; height:{$thumbnail.SIZE[1]}px; ">
+        <img src="{$thumbnail.TN_SRC}" class="thumbnail" alt="{$thumbnail.NAME|@replace:'"':' '}" title="{$thumbnail.NAME|@replace:'"':' '}" width="{$thumbnail.SIZE[0]}" height="{$thumbnail.SIZE[1]}">
         <input type="text" name="rank_of_image[{$thumbnail.ID}]" value="{$thumbnail.RANK}" hidden>
       </li>
       {/foreach}

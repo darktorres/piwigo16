@@ -82,7 +82,7 @@
 <div class="intro-charts">
 
   <div class="chart-title"> {"Activity peak in the last weeks"|@translate}</div>
-  <div class="activity-chart" style="grid-template-rows: repeat({count($ACTIVITY_CHART_DATA) + 1}, 5vw);">
+  <div class="activity-chart" style="--chart-rows:{count($ACTIVITY_CHART_DATA) + 1}">
     {foreach from=$ACTIVITY_CHART_DATA item=WEEK_ACTIVITY key=WEEK_NUMBER}
       <div id="week-{$WEEK_NUMBER}-legend" class="row-legend"><div>{'Week %d'|@translate:$ACTIVITY_WEEK_NUMBER[$WEEK_NUMBER]}</div></div>
       {foreach from=$WEEK_ACTIVITY item=SIZE key=DAY_NUMBER}
@@ -90,9 +90,9 @@
           {if $SIZE != 0}
           {assign var='SIZE_IN_UNIT' value=$SIZE/$ACTIVITY_CHART_NUMBER_SIZES * 5 + 1}
           {assign var='OPACITY_IN_UNIT' value=$SIZE/$ACTIVITY_CHART_NUMBER_SIZES * 0.6 + 0.2}
-          <div id="day{$WEEK_NUMBER}-{$DAY_NUMBER}" style="height:{$SIZE_IN_UNIT}vw;width:{$SIZE_IN_UNIT}vw;"></div>
+          <div id="day{$WEEK_NUMBER}-{$DAY_NUMBER}" class="activity-day" style="--day-size:{$SIZE_IN_UNIT}vw"></div>
           {if $ACTIVITY_LAST_WEEKS[$WEEK_NUMBER][$DAY_NUMBER]["number"] != 0}     
-          <p class="tooltip" style="transform: translate(-50%,{$SIZE_IN_UNIT/2}vw);">
+          <p class="tooltip" style="--tooltip-y:{$SIZE_IN_UNIT/2}vw">
             <span class="tooltip-arrow"></span>
             <span class="tooltip-header"> 
               <span class="tooltip-title">{if $ACTIVITY_LAST_WEEKS[$WEEK_NUMBER][$DAY_NUMBER]["number"] > 1}{'%d Activities'|translate:$ACTIVITY_LAST_WEEKS[$WEEK_NUMBER][$DAY_NUMBER]["number"]}{else}{'%d Activity'|translate:$ACTIVITY_LAST_WEEKS[$WEEK_NUMBER][$DAY_NUMBER]["number"]}{/if}</span>
@@ -128,7 +128,7 @@
     {/foreach}
     <div></div>
     {foreach from=$DAY_LABELS item=day}
-      <div class="col-legend">{$day} <div class="line-vertical" style="height: {count($ACTIVITY_CHART_DATA)*100 - 50}%;"></div></div>
+      <div class="col-legend">{$day} <div class="line-vertical" style="--line-h:{count($ACTIVITY_CHART_DATA)*100 - 50}%"></div></div>
     {/foreach}
   </div>
 
@@ -136,7 +136,7 @@
 
   <div class="storage-chart">
     {foreach from=$STORAGE_CHART_DATA key=type item=details}
-      <span data-type="storage-{$type}" style="width:{if $STORAGE_TOTAL > 0}{$details.total.filesize/$STORAGE_TOTAL*100}{else}0{/if}%">
+      <span data-type="storage-{$type}" style="--storage-w:{if $STORAGE_TOTAL > 0}{$details.total.filesize/$STORAGE_TOTAL*100}{else}0{/if}%">
         <p>{if $STORAGE_TOTAL > 0}{round($details.total.filesize/$STORAGE_TOTAL*100)}{else}0{/if}%</p>
       </span>  
     {/foreach}

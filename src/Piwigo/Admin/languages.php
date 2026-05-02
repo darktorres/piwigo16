@@ -214,15 +214,16 @@ UPDATE '.USER_INFOS_TABLE.'
             }
             if (!preg_match('/^\d+\.\d+\.\d+$/', $version)) {
                 $pem_ver0 = $pem_versions[0] ?? null;
-                $version = is_array($pem_ver0) && isset($pem_ver0['name']) ? (string) $pem_ver0['name'] : $version;
+                $pem_ver0_name = is_array($pem_ver0) && isset($pem_ver0['name']) ? $pem_ver0['name'] : null;
+                $version = is_scalar($pem_ver0_name) ? (string) $pem_ver0_name : $version;
             }
             $branch = get_branch_from_version($version);
             foreach ($pem_versions as $pem_version) {
                 if (!is_array($pem_version) || !isset($pem_version['name'], $pem_version['id'])) {
                     continue;
                 }
-                $pemVerName = is_scalar($pem_version['name'] ?? null) ? (string) $pem_version['name'] : '';
-                $pemVerId = is_scalar($pem_version['id'] ?? null) ? (string) $pem_version['id'] : '';
+                $pemVerName = is_scalar($pem_version['name']) ? (string) $pem_version['name'] : '';
+                $pemVerId = is_scalar($pem_version['id']) ? (string) $pem_version['id'] : '';
                 if (str_starts_with($pemVerName, $branch)) {
                     $versions_to_check[] = $pemVerId;
                 }
@@ -268,14 +269,14 @@ UPDATE '.USER_INFOS_TABLE.'
                 if (!is_array($language) || !isset($language['extension_name'], $language['extension_id'])) {
                     continue;
                 }
-                $langExtName = is_scalar($language['extension_name'] ?? null) ? (string) $language['extension_name'] : '';
-                $langExtId = $language['extension_id'] ?? null;
+                $langExtName = is_scalar($language['extension_name']) ? (string) $language['extension_name'] : '';
+                $langExtId = $language['extension_id'];
                 if (preg_match('/^.*? \[[A-Z]{2}\]$/', $langExtName) && (is_string($langExtId) || is_int($langExtId))) {
                     $this->server_languages[$langExtId] = $language;
                 }
             }
             @uasort($this->server_languages, function (mixed $a, mixed $b): int {
-                return $this->extension_name_compare(is_array($a) ? $a : [], is_array($b) ? $b : []);
+                return $this->extension_name_compare($a, $b);
             });
             return true;
         }

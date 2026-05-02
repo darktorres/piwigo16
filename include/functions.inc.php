@@ -2361,7 +2361,7 @@ SELECT
     // \Piwigo\Core\Config::override('pem_plugins_category', 12);
     // \Piwigo\Core\Config::override('pem_themes_category', 10);
     $url = PEM_URL . '/api/get_extension_list.php';
-    $pem_extensions_raw = fetchRemote($url, $result) ? @unserialize(is_string($result) ? $result : '') : false;
+    $pem_extensions_raw = fetchRemote($url, $result) ? @unserialize($result) : false;
     $pem_extensions = is_array($pem_extensions_raw) ? $pem_extensions_raw : [];
     if ($pem_extensions !== []) {
         $official_exts = [];

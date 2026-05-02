@@ -728,7 +728,7 @@ function set_cat_visible(array|int|string $categories, bool|string $value, bool 
         $query = '
 UPDATE '.CATEGORIES_TABLE.'
   SET visible = \'true\'
-  WHERE id IN ('.implode(',', array_map('intval', $cats)).')';
+  WHERE id IN ('.implode(',', array_map(fn($v) => is_numeric($v) ? (int) $v : 0, $cats)).')';
         pwg_query($query);
     }
     // locking a category   => all its child categories become locked
@@ -764,7 +764,7 @@ function set_cat_status(array|int|string $categories, string $value): void
         $query = '
 UPDATE '.CATEGORIES_TABLE.'
   SET status = \'public\'
-  WHERE id IN ('.implode(',', array_map('intval', $uppercats)).')
+  WHERE id IN ('.implode(',', array_map(fn($v) => is_numeric($v) ? (int) $v : 0, $uppercats)).')
 ;';
         pwg_query($query);
     }
@@ -1666,7 +1666,7 @@ SELECT id
         if (count($existing_tags = query2array($query, null, 'id')) == 0) {
             // search by extended description (plugin sub name)
             $extra_where_clauses = trigger_change('get_tag_name_like_where', [], $tag_name);
-            if (is_array($extra_where_clauses) && count($extra_where_clauses) > 0) {
+            if (count($extra_where_clauses) > 0) {
                 $query = '
 SELECT id
   FROM '.TAGS_TABLE.'
@@ -2355,6 +2355,9 @@ function fetchRemote(string $src, mixed &$dest, array $get_data = [], array $pos
         $content = @file_get_contents($src);
         if ($content !== false) {
             is_resource($dest) ? @fwrite($dest, $content) : $dest = $content;
+            if (is_resource($dest)) {
+                $dest = '';
+            }
             return true;
         } else {
             return false;
@@ -2415,6 +2418,9 @@ function fetchRemote(string $src, mixed &$dest, array $get_data = [], array $pos
             }
             $content = substr($content, $header_length);
             is_resource($dest) ? @fwrite($dest, $content) : $dest = $content;
+            if (is_resource($dest)) {
+                $dest = '';
+            }
             return true;
         }
     }
@@ -2434,6 +2440,9 @@ function fetchRemote(string $src, mixed &$dest, array $get_data = [], array $pos
         $content = @file_get_contents($src, false, $context);
         if ($content !== false) {
             is_resource($dest) ? @fwrite($dest, $content) : $dest = $content;
+            if (is_resource($dest)) {
+                $dest = '';
+            }
             return true;
         }
     }
@@ -2500,6 +2509,9 @@ function fetchRemote(string $src, mixed &$dest, array $get_data = [], array $pos
         $i++;
     }
     fclose($s);
+    if (!is_string($dest)) {
+        $dest = '';
+    }
     return true;
 }
 
@@ -2781,7 +2793,7 @@ function add_permission_on_category(array|int|string $category_ids, array|int|st
     $query = '
 SELECT id
   FROM '.CATEGORIES_TABLE.'
-  WHERE id IN ('.implode(',', array_map('intval', $cat_ids)).')
+  WHERE id IN ('.implode(',', array_map(fn($v) => is_numeric($v) ? (int) $v : 0, $cat_ids)).')
     AND status = \'private\'
 ;';
     $private_cats = query2array($query, null, 'id');
@@ -3434,8 +3446,8 @@ SELECT
  *
  * @since 13
  */
-/** @return array<mixed>|false */
-function get_piwigo_news(): array|false
+/** @return array<mixed> */
+function get_piwigo_news(): array
 {
     global $lang_info;
 
@@ -3452,7 +3464,7 @@ function get_piwigo_news(): array|false
 
             if (is_array($porg_news_getLatest) && isset($porg_news_getLatest['result']) && is_array($porg_news_getLatest['result'])) {
                 $topic = $porg_news_getLatest['result'];
-                $posted_on = is_scalar($topic['posted_on'] ?? null) ? (string) ($topic['posted_on'] ?? '') : null;
+                $posted_on = is_scalar($topic['posted_on']) ? (string) $topic['posted_on'] : null;
 
                 $news = [
                   'id' => $topic['topic_id'] ?? null,
@@ -3477,7 +3489,7 @@ function get_piwigo_news(): array|false
         $news = is_array($unserialized) ? $unserialized : [];
     }
 
-    return is_array($news) ? $news : false;
+    return $news;
 }
 
 function get_graphics_library(): string

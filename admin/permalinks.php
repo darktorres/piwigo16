@@ -88,7 +88,7 @@ $selected_cat = [];
 if (isset($_POST['set_permalink']) and $_POST['cat_id'] > 0) {
     check_pwg_token();
     $permalink = is_scalar($_POST['permalink'] ?? null) ? (string) $_POST['permalink'] : '';
-    $postCatId = is_scalar($_POST['cat_id'] ?? null) ? (string) $_POST['cat_id'] : '';
+    $postCatId = is_scalar($_POST['cat_id']) ? (string) $_POST['cat_id'] : '';
     if (empty($permalink)) {
         delete_cat_permalink($postCatId, isset($_POST['save']));
     } else {
@@ -99,7 +99,7 @@ if (isset($_POST['set_permalink']) and $_POST['cat_id'] > 0) {
     check_pwg_token();
     $query = '
 DELETE FROM '.OLD_PERMALINKS_TABLE.'
-  WHERE permalink=\''.pwg_db_real_escape_string(is_scalar($_GET['delete_permanent'] ?? null) ? (string) $_GET['delete_permanent'] : '').'\'
+  WHERE permalink=\''.pwg_db_real_escape_string(is_scalar($_GET['delete_permanent']) ? (string) $_GET['delete_permanent'] : '').'\'
   LIMIT 1';
     $result = pwg_query($query);
     if (pwg_db_changes() == 0) {

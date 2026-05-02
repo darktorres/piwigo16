@@ -71,7 +71,10 @@ class image_imagick implements imageInterface
 
     public function compose(mixed $overlay, int $x, int $y, int $opacity): bool
     {
-        $ioverlay = $overlay->image->image;
+        if (!($overlay instanceof image_imagick)) {
+            return false;
+        }
+        $ioverlay = $overlay->image;
         /*if ($ioverlay->getImageAlphaChannel() !== \Imagick::ALPHACHANNEL_OPAQUE)
         {
           // Force the image to have an alpha channel

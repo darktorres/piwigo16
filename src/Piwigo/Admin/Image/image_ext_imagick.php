@@ -20,7 +20,8 @@ class image_ext_imagick implements imageInterface
     {
         $this->imagickdir = \Piwigo\Core\Config::extImagickDir();
 
-        if (str_starts_with((string) @$_SERVER['SCRIPT_FILENAME'], '/kunden/')) {  // 1and1
+        $script_filename = @$_SERVER['SCRIPT_FILENAME'];
+        if (is_string($script_filename) && str_starts_with($script_filename, '/kunden/')) {  // 1and1
             @putenv('MAGICK_THREAD_LIMIT=1');
         }
 
@@ -136,9 +137,12 @@ class image_ext_imagick implements imageInterface
 
     public function compose(mixed $overlay, int $x, int $y, int $opacity): bool
     {
+        if (!($overlay instanceof image_ext_imagick)) {
+            return false;
+        }
         $param = 'compose dissolve -define compose:args='.$opacity;
-        $overlay_path = realpath($overlay->image->source_filepath);
-        $param .= ' '.escapeshellarg($overlay_path !== false ? $overlay_path : $overlay->image->source_filepath);
+        $overlay_path = realpath($overlay->source_filepath);
+        $param .= ' '.escapeshellarg($overlay_path !== false ? $overlay_path : $overlay->source_filepath);
         $param .= ' -gravity NorthWest -geometry +'.$x.'+'.$y;
         $param .= ' -composite';
         $this->add_command($param);
@@ -171,7 +175,7 @@ class image_ext_imagick implements imageInterface
 
         foreach ($this->commands as $command => $params) {
             $exec .= ' -'.$command;
-            if (!empty($params)) {
+            if (!empty($params) && is_scalar($params)) {
                 $exec .= ' '.$params;
             }
         }

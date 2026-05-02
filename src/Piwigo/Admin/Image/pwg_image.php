@@ -86,10 +86,15 @@ class pwg_image
 
         // testing on height is useless in theory: if width is unchanged, there
         // should be no resize, because width/height ratio is not modified.
-        if ($resize_dimensions['width'] == $source_width and $resize_dimensions['height'] == $source_height) {
+        $rd_width = $resize_dimensions['width'];
+        $rd_height = $resize_dimensions['height'];
+        $rd_width = is_numeric($rd_width) ? (int) $rd_width : 0;
+        $rd_height = is_numeric($rd_height) ? (int) $rd_height : 0;
+
+        if ($rd_width == $source_width and $rd_height == $source_height) {
             // the image doesn't need any resize! We just copy it to the destination
             copy($this->source_filepath, $destination_filepath);
-            return $this->get_resize_result($destination_filepath, (int) $resize_dimensions['width'], (int) $resize_dimensions['height'], $starttime);
+            return $this->get_resize_result($destination_filepath, $rd_width, $rd_height, $starttime);
         }
 
         $this->image->set_compression_quality($quality);
@@ -101,15 +106,19 @@ class pwg_image
 
         if (isset($resize_dimensions['crop']) && is_array($resize_dimensions['crop'])) {
             $crop = $resize_dimensions['crop'];
+            $crop_width = $crop['width'] ?? 0;
+            $crop_height = $crop['height'] ?? 0;
+            $crop_x = $crop['x'] ?? 0;
+            $crop_y = $crop['y'] ?? 0;
             $this->image->crop(
-                (int) ($crop['width'] ?? 0),
-                (int) ($crop['height'] ?? 0),
-                (int) ($crop['x'] ?? 0),
-                (int) ($crop['y'] ?? 0)
+                is_numeric($crop_width) ? (int) $crop_width : 0,
+                is_numeric($crop_height) ? (int) $crop_height : 0,
+                is_numeric($crop_x) ? (int) $crop_x : 0,
+                is_numeric($crop_y) ? (int) $crop_y : 0
             );
         }
 
-        $this->image->resize((int) $resize_dimensions['width'], (int) $resize_dimensions['height']);
+        $this->image->resize($rd_width, $rd_height);
 
         if (!empty($rotation)) {
             $this->image->rotate($rotation);
@@ -118,7 +127,7 @@ class pwg_image
         $this->image->write($destination_filepath);
 
         // everything should be OK if we are here!
-        return $this->get_resize_result($destination_filepath, (int) $resize_dimensions['width'], (int) $resize_dimensions['height'], $starttime);
+        return $this->get_resize_result($destination_filepath, $rd_width, $rd_height, $starttime);
     }
 
     /** @return array<mixed> */

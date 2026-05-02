@@ -563,21 +563,19 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
         }
 
         $result = trigger_change('ws_invoke_allowed', true, $methodName, $params);
-        // $result is mixed: trigger_change may return a PwgError if a handler rejects the call
-        $resultMixed = (static function (mixed $v): mixed { return $v; })($result);
-
-        if (!($resultMixed instanceof \Piwigo\Ws\PwgError)) {
-            if (!empty($method['include'])) {
-                include_once($method['include']);
-            }
-            $callback = $method['callback'];
-            if (!is_callable($callback)) {
-                return new \Piwigo\Ws\PwgError(WS_ERR_INVALID_METHOD, 'Invalid method callback');
-            }
-            $resultMixed = call_user_func_array($callback, [$params, &$this]);
+        // A handler may return PwgError to block invocation; true means allowed
+        if ($result !== true) {
+            return new \Piwigo\Ws\PwgError(WS_ERR_INVALID_METHOD, 'Method invocation not allowed');
         }
 
-        return $resultMixed;
+        if (!empty($method['include'])) {
+            include_once($method['include']);
+        }
+        $callback = $method['callback'];
+        if (!is_callable($callback)) {
+            return new \Piwigo\Ws\PwgError(WS_ERR_INVALID_METHOD, 'Invalid method callback');
+        }
+        return call_user_func_array($callback, [$params, &$this]);
     }
 
     /**

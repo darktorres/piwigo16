@@ -98,7 +98,7 @@ SELECT
     id,
     name
   FROM ' . TAGS_TABLE . '
-  WHERE id IN (' . implode(',', $filter_tags_ids) . ')
+  WHERE id IN (' . implode(',', array_map(fn($v) => is_scalar($v) ? (string) $v : '0', $filter_tags_ids)) . ')
 ;';
 
     $filter_tags = get_taglist($query);
@@ -111,7 +111,7 @@ $selected_category = null;
 $selected_category_name = '';
 
 if (isset($bulk_manager_filter['category'])) {
-    $selected_category = intval($bulk_manager_filter['category']);
+    $selected_category = is_numeric($bulk_manager_filter['category']) ? (int) $bulk_manager_filter['category'] : 0;
     $selected_category_name = get_cat_display_name_from_id($selected_category);
 }
 

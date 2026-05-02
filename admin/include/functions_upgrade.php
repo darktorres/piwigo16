@@ -203,8 +203,8 @@ SELECT status
         return;
     }
 
-    $username = is_scalar($_POST['username'] ?? null) ? (string) $_POST['username'] : '';
-    $password = is_scalar($_POST['password'] ?? null) ? (string) $_POST['password'] : '';
+    $username = is_scalar($_POST['username']) ? (string) $_POST['username'] : '';
+    $password = is_scalar($_POST['password']) ? (string) $_POST['password'] : '';
 
     if (function_exists('get_magic_quotes_gpc') && !@get_magic_quotes_gpc()) {
         $username = pwg_db_real_escape_string($username);

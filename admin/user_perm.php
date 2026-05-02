@@ -48,16 +48,19 @@ if (isset($_POST['falsify'])
     and count($post_cat_true) > 0) {
     // if you forbid access to a category, all sub-categories become
     // automatically forbidden
-    $subcats = get_subcat_ids($post_cat_true);
+    $post_cat_true_ids = array_map(fn($v) => is_numeric($v) ? (int) $v : 0, $post_cat_true);
+    $subcats = get_subcat_ids($post_cat_true_ids);
+    $subcats_str = array_map(fn($v) => (string) $v, $subcats);
     $query = '
 DELETE FROM '.USER_ACCESS_TABLE.'
   WHERE user_id = '.$page['user'].'
-    AND cat_id IN ('.implode(',', $subcats).')
+    AND cat_id IN ('.implode(',', $subcats_str).')
 ;';
     pwg_query($query);
 } elseif (isset($_POST['trueify'])
     and count($post_cat_false) > 0) {
-    add_permission_on_category($post_cat_false, (int) $page['user']);
+    $post_cat_false_ids = array_map(fn($v) => is_numeric($v) ? (int) $v : 0, $post_cat_false);
+    add_permission_on_category($post_cat_false_ids, (int) $page['user']);
 }
 
 // +-----------------------------------------------------------------------+

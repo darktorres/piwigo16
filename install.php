@@ -93,7 +93,7 @@ include(PHPWG_ROOT_PATH . 'admin/include/functions.php');
 $languages = new languages('utf-8');
 
 if (isset($_GET['language'])) {
-    $language = strip_tags((string) $_GET['language']);
+    $language = strip_tags(is_scalar($_GET['language']) ? (string) $_GET['language'] : '');
 
     if (!in_array($language, array_keys($languages->fs_languages))) {
         $language = PHPWG_DEFAULT_LANGUAGE;
@@ -102,7 +102,7 @@ if (isset($_GET['language'])) {
     $language = 'en_UK';
     // Try to get browser language
     foreach ($languages->fs_languages as $language_code => $fs_language) {
-        if (substr((string) $language_code, 0, 2) == @substr((string) $_SERVER['HTTP_ACCEPT_LANGUAGE'], 0, 2)) {
+        if (substr((string) $language_code, 0, 2) == @substr(is_scalar($_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? null) ? (string) $_SERVER['HTTP_ACCEPT_LANGUAGE'] : '', 0, 2)) {
             $language = $language_code;
             break;
         }

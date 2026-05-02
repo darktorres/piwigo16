@@ -99,7 +99,10 @@ class image_gd implements imageInterface
 
     public function compose(mixed $overlay, int $x, int $y, int $opacity): bool
     {
-        $ioverlay = $overlay->image->image;
+        if (!($overlay instanceof image_gd)) {
+            return false;
+        }
+        $ioverlay = $overlay->image;
         /* A replacement for php's imagecopymerge() function that supports the alpha channel
         See php bug #23815:  http://bugs.php.net/bug.php?id=23815 */
 

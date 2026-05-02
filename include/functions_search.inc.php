@@ -1893,7 +1893,7 @@ function get_quick_search_results_no_cache(string $q, array $options): array
 
     // allow plugins to add their own scopes
     $scopes_result = trigger_change('qsearch_get_scopes', $scopes);
-    $scopes = is_array($scopes_result) ? array_values($scopes_result) : $scopes;
+    $scopes = $scopes_result;
     $expression = new \Piwigo\Search\QExpression($q, $scopes);
 
     // get inflections for terms

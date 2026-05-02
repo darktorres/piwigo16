@@ -4,6 +4,7 @@ parameters:
         - include
         - admin
         - src
+        - tools/phpstan
         - install.php
         - upgrade.php
         - index.php

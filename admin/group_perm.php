@@ -52,23 +52,27 @@ if (isset($_POST['falsify'])
     and count($post_cat_true) > 0) {
     // if you forbid access to a category, all sub-categories become
     // automatically forbidden
-    $subcats = get_subcat_ids($post_cat_true);
+    $post_cat_true_ids = array_map(fn($v) => is_numeric($v) ? (int) $v : 0, $post_cat_true);
+    $subcats = get_subcat_ids($post_cat_true_ids);
+    $subcats_str = array_map(fn($v) => (string) $v, $subcats);
     $query = '
 DELETE
   FROM '.GROUP_ACCESS_TABLE.'
   WHERE group_id = '.$group_id.'
-  AND cat_id IN ('.implode(',', $subcats).')
+  AND cat_id IN ('.implode(',', $subcats_str).')
 ;';
     pwg_query($query);
 } elseif (isset($_POST['trueify'])
          and count($post_cat_false) > 0) {
-    $uppercats = get_uppercat_ids($post_cat_false);
+    $post_cat_false_ids = array_map(fn($v) => is_numeric($v) ? (int) $v : 0, $post_cat_false);
+    $uppercats = get_uppercat_ids($post_cat_false_ids);
+    $uppercats_str = array_map(fn($v) => is_scalar($v) ? (string) $v : '', $uppercats);
     $private_uppercats = [];
 
     $query = '
 SELECT id
   FROM '.CATEGORIES_TABLE.'
-  WHERE id IN ('.implode(',', $uppercats).')
+  WHERE id IN ('.implode(',', $uppercats_str).')
   AND status = \'private\'
 ;';
     $result = pwg_query($query);

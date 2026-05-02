@@ -154,7 +154,7 @@ WHERE param = \'extents_for_templates\';';
 
 /* Clearing (remove old extents, add new ones) */
 foreach ($tpl_extension as $file => $conditions) {
-    $fileStr = is_scalar($file) ? (string) $file : '';
+    $fileStr = (string) $file;
     if (!in_array($fileStr, $new_extensions)) {
         unset($tpl_extension[$file]);
     } else {

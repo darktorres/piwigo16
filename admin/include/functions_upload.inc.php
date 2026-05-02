@@ -971,10 +971,9 @@ function convert_shorthand_notation_to_bytes(int|string $value): int
 function add_upload_error(string $upload_id, string $error_message): void
 {
     $uploadsError = is_array($_SESSION['uploads_error'] ?? null) ? $_SESSION['uploads_error'] : [];
-    if (!isset($uploadsError[$upload_id])) {
-        $uploadsError[$upload_id] = [];
-    }
-    $uploadsError[$upload_id][] = $error_message;
+    $slot = is_array($uploadsError[$upload_id] ?? null) ? $uploadsError[$upload_id] : [];
+    $slot[] = $error_message;
+    $uploadsError[$upload_id] = $slot;
     $_SESSION['uploads_error'] = $uploadsError;
 }
 

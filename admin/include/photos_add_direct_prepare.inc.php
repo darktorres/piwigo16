@@ -106,7 +106,7 @@ SELECT id, uppercats
         $selected_category = [$_GET['album']];
 
         $cat = pwg_db_fetch_assoc($result);
-        $template->assign('ADD_TO_ALBUM', get_cat_display_name_cache(is_scalar($cat['uppercats'] ?? null) ? (string)($cat['uppercats'] ?? '') : '', null));
+        $template->assign('ADD_TO_ALBUM', get_cat_display_name_cache(is_scalar($cat['uppercats']) ? (string) $cat['uppercats'] : '', null));
     } else {
         $album_id = is_scalar($_GET['album']) ? (string) $_GET['album'] : '';
         fatal_error('[Hacking attempt] the album id = "'.$album_id.'" is not valid');

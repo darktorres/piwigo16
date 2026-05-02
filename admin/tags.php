@@ -73,7 +73,7 @@ foreach ($orphan_tags as $tag) {
     }
     $tag_name = is_scalar($tag['name'] ?? null) ? (string) $tag['name'] : '';
     $rendered = trigger_change('render_tag_name', $tag_name, $tag);
-    $orphan_tag_names[] = is_scalar($rendered) ? (string) $rendered : $tag_name;
+    $orphan_tag_names[] = $rendered;
 }
 
 if (count($orphan_tag_names) > 0) {

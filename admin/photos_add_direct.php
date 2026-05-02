@@ -32,7 +32,7 @@ DELETE FROM '.CADDIE_TABLE.'
     pwg_query($query);
 
     $inserts = [];
-    foreach (array_unique(explode(',', is_scalar($_GET['batch'] ?? null) ? (string) $_GET['batch'] : '')) as $image_id) {
+    foreach (array_unique(explode(',', is_scalar($_GET['batch']) ? (string) $_GET['batch'] : '')) as $image_id) {
         $inserts[] = [
           'user_id' => $user['id'],
           'element_id' => $image_id,
@@ -92,7 +92,7 @@ $formats_ext_info = null;
 if ($display_formats && $_GET['formats']) {
     check_input_parameter('formats', $_GET, false, PATTERN_ID, false);
 
-    $formatsId = is_scalar($_GET['formats'] ?? null) ? (string) $_GET['formats'] : '';
+    $formatsId = is_scalar($_GET['formats']) ? (string) $_GET['formats'] : '';
     $formats_original_info = get_image_infos($formatsId);
     if ($formats_original_info) {
         $src_image = new SrcImage($formats_original_info);

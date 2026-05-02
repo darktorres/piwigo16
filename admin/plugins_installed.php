@@ -64,7 +64,7 @@ if (isset($_GET['incompatible_plugins'])) {
 //--------------------------------------------------------Get the menu with the depreciated version
 
 $plugin_menu_links_raw = trigger_change('get_admin_plugin_menu_links', []);
-$plugin_menu_links_deprec = is_array($plugin_menu_links_raw) ? $plugin_menu_links_raw : [];
+$plugin_menu_links_deprec = $plugin_menu_links_raw;
 
 $settings_url_for_plugin_deprec = [];
 

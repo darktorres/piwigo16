@@ -166,7 +166,7 @@ function parse_custom_params(array $tokens): \Piwigo\Image\DerivativeParams
     return new DerivativeParams(new SizingParams($size, $crop, $min_size));
 }
 
-function parse_request(): void
+function parse_request(): \Piwigo\Image\DerivativeParams
 {
     global $page;
 
@@ -256,6 +256,12 @@ function parse_request(): void
     $page['src_location'] = $req.$ext;
     $page['src_path'] = PHPWG_ROOT_PATH.$page['src_location'];
     $page['src_url'] = $page['root_path'].$page['src_location'];
+
+    $dp = $page['derivative_params'];
+    if (!($dp instanceof \Piwigo\Image\DerivativeParams)) {
+        ierror('Invalid derivative params', 400);
+    }
+    return $dp;
 }
 
 function try_switch_source(\Piwigo\Image\DerivativeParams $params, ?int $original_mtime): bool
@@ -438,14 +444,7 @@ $GLOBALS['conf'] = $confPatch;
 ImageStdParams::load_from_db();
 
 
-parse_request();
-//var_export($page);
-
-// parse_request() sets $page['derivative_params'] to a DerivativeParams instance
-$dpRaw = $page['derivative_params'];
-if (!($dpRaw instanceof \Piwigo\Image\DerivativeParams)) {
-    ierror('Invalid derivative params', 400);
-}
+$dpRaw = parse_request();
 $params = trigger_change('derivative_params_get', $dpRaw);
 if (!($params instanceof \Piwigo\Image\DerivativeParams)) {
     ierror('Invalid derivative params', 400);

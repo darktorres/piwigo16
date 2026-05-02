@@ -175,8 +175,8 @@ foreach ($by_user_ratings as $id => $rating) {
 
 
 /**
- * @param array<string, float|int|string|null> $a
- * @param array<string, float|int|string|null> $b
+ * @param array<string, mixed> $a
+ * @param array<string, mixed> $b
  */
 function avg_compare(array $a, array $b): int
 {
@@ -185,8 +185,8 @@ function avg_compare(array $a, array $b): int
 }
 
 /**
- * @param array<string, float|int|string|null> $a
- * @param array<string, float|int|string|null> $b
+ * @param array<string, mixed> $a
+ * @param array<string, mixed> $b
  */
 function count_compare(array $a, array $b): int
 {
@@ -195,8 +195,8 @@ function count_compare(array $a, array $b): int
 }
 
 /**
- * @param array<string, float|int|string|null> $a
- * @param array<string, float|int|string|null> $b
+ * @param array<string, mixed> $a
+ * @param array<string, mixed> $b
  */
 function cv_compare(array $a, array $b): int
 {
@@ -205,8 +205,8 @@ function cv_compare(array $a, array $b): int
 }
 
 /**
- * @param array<string, float|int|string|null> $a
- * @param array<string, float|int|string|null> $b
+ * @param array<string, mixed> $a
+ * @param array<string, mixed> $b
  */
 function consensus_dev_compare(array $a, array $b): int
 {
@@ -215,8 +215,8 @@ function consensus_dev_compare(array $a, array $b): int
 }
 
 /**
- * @param array<string, float|int|string|null> $a
- * @param array<string, float|int|string|null> $b
+ * @param array<string, mixed> $a
+ * @param array<string, mixed> $b
  */
 function last_rate_compare(array $a, array $b): int
 {

@@ -13,7 +13,7 @@ class updates
     public plugins $plugins;
     public themes $themes;
     public languages $languages;
-    /** @var array<mixed> */
+    /** @var array<string, array<mixed>> */
     public array $missing = [];
     /** @var string[] */
     public $default_plugins = [];
@@ -263,15 +263,16 @@ class updates
             }
             if (!preg_match('/^\d+\.\d+\.\d+$/', (string) $version)) {
                 $pem_ver0 = $pem_versions[0] ?? null;
-                $version = is_array($pem_ver0) && isset($pem_ver0['name']) ? (string) $pem_ver0['name'] : $version;
+                $pem_ver0_name = is_array($pem_ver0) && isset($pem_ver0['name']) ? $pem_ver0['name'] : null;
+                $version = is_scalar($pem_ver0_name) ? (string) $pem_ver0_name : $version;
             }
             $branch = get_branch_from_version($version);
             foreach ($pem_versions as $pem_version) {
                 if (!is_array($pem_version) || !isset($pem_version['name'], $pem_version['id'])) {
                     continue;
                 }
-                $pemVersionName = is_scalar($pem_version['name'] ?? null) ? (string) $pem_version['name'] : '';
-                $pemVersionId = is_scalar($pem_version['id'] ?? null) ? (string) $pem_version['id'] : '';
+                $pemVersionName = is_scalar($pem_version['name']) ? (string) $pem_version['name'] : '';
+                $pemVersionId = is_scalar($pem_version['id']) ? (string) $pem_version['id'] : '';
                 if (str_starts_with($pemVersionName, $branch)) {
                     $versions_to_check[] = $pemVersionId;
                 }
@@ -424,6 +425,9 @@ class updates
     public function check_missing_extensions(array $missing): void
     {
         foreach ($missing as $id => $type) {
+            if (!is_string($type)) {
+                continue;
+            }
             $fs = 'fs_'.$type;
             $default = 'default_'.$type;
             $defaultList = is_array($this->$default) ? $this->$default : [];
@@ -520,7 +524,8 @@ class updates
                             $end = true;
                         }
                         if ($zip !== false) {
-                            @fwrite($zip, base64_decode((string) ($input['data'] ?? '')));
+                            $inputData = $input['data'] ?? '';
+                            @fwrite($zip, base64_decode(is_scalar($inputData) ? (string) $inputData : ''));
                         }
                     }
                 } else {

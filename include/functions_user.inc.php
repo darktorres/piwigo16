@@ -1233,7 +1233,7 @@ function pwg_login(bool $success, string $username, string $password, bool $reme
     $state = trigger_change('finalize_login', $state_init, $user_found, $remember_me);
 
     if (!$state['can_login']) {
-        $state_reason = is_scalar($state['reason'] ?? null) ? (string) ($state['reason'] ?? '') : 'login_failure_before_log_user';
+        $state_reason = is_scalar($state['reason']) ? (string) $state['reason'] : 'login_failure_before_log_user';
         pwg_activity('user', $uf_id, $state_reason);
         trigger_notify('login_failure_before_log_user', stripslashes($username));
         return false;

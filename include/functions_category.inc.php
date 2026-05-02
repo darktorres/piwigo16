@@ -479,7 +479,7 @@ FROM '.CATEGORIES_TABLE.' as c
   LEFT JOIN '.IMAGE_CATEGORY_TABLE.' AS ic ON ic.category_id = c.id
   LEFT JOIN '.IMAGES_TABLE.' AS i
     ON ic.image_id = i.id
-      AND i.level<='.(int) $userdata['level'];
+      AND i.level<='.(is_numeric($userdata['level']) ? (int) $userdata['level'] : 0);
 
     if (isset($filter_days)) {
         $query .= ' AND i.date_available > '.pwg_db_get_recent_period_expression($filter_days);
@@ -487,7 +487,7 @@ FROM '.CATEGORIES_TABLE.' as c
 
     if (!empty($userdata['forbidden_categories'])) {
         $query .= '
-  WHERE c.id NOT IN ('.(string) $userdata['forbidden_categories'].')';
+  WHERE c.id NOT IN ('.(is_scalar($userdata['forbidden_categories']) ? (string) $userdata['forbidden_categories'] : '').')';
     }
 
     $query .= '
@@ -498,7 +498,7 @@ FROM '.CATEGORIES_TABLE.' as c
     $userdata['last_photo_date'] = null;
     $cats = [];
     while ($row = pwg_db_fetch_assoc($result)) {
-        $row['user_id'] = $userdata['id'];
+        $row['user_id'] = is_scalar($userdata['id']) ? $userdata['id'] : 0;
         $row['nb_categories'] = 0;
         $row['count_categories'] = 0;
         $row['count_images'] = is_numeric($row['nb_images']) ? (int) $row['nb_images'] : 0;
@@ -507,7 +507,7 @@ FROM '.CATEGORIES_TABLE.' as c
             $userdata['last_photo_date'] = $row['date_last'];
         }
 
-        $cats[(string) $row['cat_id']] = $row;
+        $cats[is_scalar($row['cat_id']) ? (string) $row['cat_id'] : ''] = $row;
     }
 
     // it is important to logically sort the albums because some operations
@@ -526,7 +526,7 @@ FROM '.CATEGORIES_TABLE.' as c
         //
         // TODO 2.7: add an upgrade script to repair permissions and remove this
         // test
-        $cat_uppercat_key = (string) $cat['id_uppercat'];
+        $cat_uppercat_key = is_scalar($cat['id_uppercat']) ? (string) $cat['id_uppercat'] : '';
         if (!isset($cats[$cat_uppercat_key])) {
             continue;
         }
@@ -545,7 +545,7 @@ FROM '.CATEGORIES_TABLE.' as c
             if (!isset($parent['id_uppercat'])) {
                 break;
             }
-            $parent = & $cats[(string) $parent['id_uppercat']];
+            $parent = & $cats[is_scalar($parent['id_uppercat']) ? (string) $parent['id_uppercat'] : ''];
         } while (true);
         unset($parent);
     }

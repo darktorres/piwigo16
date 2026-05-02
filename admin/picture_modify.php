@@ -114,7 +114,7 @@ if (isset($_POST['submit'])) {
         if (is_scalar($tags_post)) {
             $tag_ids = get_tag_ids((string) $tags_post);
         } elseif (is_array($tags_post)) {
-            $tag_ids = get_tag_ids(array_map('strval', $tags_post));
+            $tag_ids = get_tag_ids(array_map(fn($v) => is_scalar($v) ? (string) $v : '', $tags_post));
         }
     }
     set_tags($tag_ids, is_numeric($_GET['image_id'] ?? null) ? (int)$_GET['image_id'] : 0);
@@ -126,7 +126,7 @@ if (isset($_POST['submit'])) {
     check_input_parameter('associate', $_POST, true, PATTERN_ID);
     move_images_to_categories(
         [is_numeric($_GET['image_id'] ?? null) ? (int)$_GET['image_id'] : 0],
-        is_array($_POST['associate']) ? array_map('intval', $_POST['associate']) : []
+        is_array($_POST['associate']) ? array_map(fn($v) => is_numeric($v) ? (int) $v : 0, $_POST['associate']) : []
     );
 
     invalidate_user_cache();
@@ -137,7 +137,7 @@ if (isset($_POST['submit'])) {
     }
     check_input_parameter('represent', $_POST, true, PATTERN_ID);
 
-    $represented_albums_int = array_map('intval', $represented_albums);
+    $represented_albums_int = array_map(fn($v) => is_numeric($v) ? (int) $v : 0, $represented_albums);
     $represent_post_int = is_array($_POST['represent']) ? array_map('intval', $_POST['represent']) : [];
     $no_longer_thumbnail_for = array_diff($represented_albums_int, $represent_post_int);
     if (count($no_longer_thumbnail_for) > 0) {
@@ -149,12 +149,12 @@ if (isset($_POST['submit'])) {
         $query = '
 UPDATE '.CATEGORIES_TABLE.'
   SET representative_picture_id = '.(is_numeric($_GET['image_id'] ?? null) ? (int)$_GET['image_id'] : 0).'
-  WHERE id IN ('.implode(',', array_map('intval', $new_thumbnail_for)).')
+  WHERE id IN ('.implode(',', array_map(fn($v) => is_numeric($v) ? (int) $v : 0, $new_thumbnail_for)).')
 ;';
         pwg_query($query);
     }
 
-    $represented_albums = is_array($_POST['represent']) ? array_map('intval', $_POST['represent']) : [];
+    $represented_albums = is_array($_POST['represent']) ? array_map(fn($v) => is_numeric($v) ? (int) $v : 0, $_POST['represent']) : [];
 
     $template->assign(
         [

@@ -260,7 +260,7 @@ SELECT id, path, representative_ext
             continue;
         }
         // print_r($data);
-        $id = is_scalar($data['id'] ?? null) ? (string) $data['id'] : '';
+        $id = is_numeric($data['id'] ?? null) ? (int) $data['id'] : 0;
         foreach (['keywords', 'tags'] as $key) {
             if (isset($data[$key])) {
                 if (!isset($tags_of[$id])) {

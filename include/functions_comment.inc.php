@@ -341,7 +341,7 @@ function update_user_comment(array $comment, string $post_key): string
     if (!empty($comment['website_url'])) {
         $wUrl = is_scalar($comment['website_url']) ? (string) $comment['website_url'] : '';
         $comment['website_url'] = strip_tags($wUrl);
-        if (!preg_match('/^https?/i', is_scalar($comment['website_url']) ? (string) $comment['website_url'] : '')) {
+        if (!preg_match('/^https?/i', $comment['website_url'])) {
             $comment['website_url'] = 'http://'.$comment['website_url'];
         }
         if (!url_check_format($comment['website_url'])) {
@@ -374,7 +374,7 @@ $user_where_clause.'
             $comment_url = get_absolute_root_url().'comments.php?comment_id='. (is_scalar($comment['comment_id']) ? (string) $comment['comment_id'] : '0');
 
             $keyargs_content = [
-              get_l10n_args('Author: %s', stripslashes(is_scalar($GLOBALS['user']['username']) ? (string) $GLOBALS['user']['username'] : '')),
+              get_l10n_args('Author: %s', stripslashes(is_scalar($globalUser2['username'] ?? null) ? (string) $globalUser2['username'] : '')),
               get_l10n_args('Comment: %s', stripslashes(is_scalar($comment['content']) ? (string) $comment['content'] : '')),
               get_l10n_args(''),
               get_l10n_args('Manage this user comment: %s', $comment_url),
@@ -382,13 +382,13 @@ $user_where_clause.'
             ];
 
             pwg_mail_notification_admins(
-                get_l10n_args('Comment by %s', stripslashes(is_scalar($GLOBALS['user']['username']) ? (string) $GLOBALS['user']['username'] : '')),
+                get_l10n_args('Comment by %s', stripslashes(is_scalar($globalUser2['username'] ?? null) ? (string) $globalUser2['username'] : '')),
                 $keyargs_content
             );
         }
         // just mail admin
         elseif ($result) {
-            email_admin('edit', ['author' => is_scalar($GLOBALS['user']['username']) ? (string) $GLOBALS['user']['username'] : '',
+            email_admin('edit', ['author' => is_scalar($globalUser2['username'] ?? null) ? (string) $globalUser2['username'] : '',
                       'content' => stripslashes(is_scalar($comment['content']) ? (string) $comment['content'] : '')]);
         }
     }

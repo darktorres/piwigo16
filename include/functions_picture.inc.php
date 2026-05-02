@@ -16,7 +16,7 @@ declare(strict_types=1);
  * - repeat
  * - play
  */
-/** @return array<string,mixed> */
+/** @return array<string, bool|int> */
 function get_default_slideshow_params(): array
 {
     return [
@@ -30,8 +30,8 @@ function get_default_slideshow_params(): array
  * Checks and corrects slideshow params
  */
 /**
- * @param array<string,mixed> $params
- * @return array<string,mixed>
+ * @param array<string, bool|int> $params
+ * @return array<string, bool|int>
  */
 function correct_slideshow_params(array $params = []): array
 {

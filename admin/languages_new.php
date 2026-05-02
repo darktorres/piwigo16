@@ -76,7 +76,7 @@ if (isset($_GET['installstatus'])) {
             break;
 
         default:
-            $installStatus = is_scalar($_GET['installstatus'] ?? null) ? (string) $_GET['installstatus'] : '';
+            $installStatus = is_scalar($_GET['installstatus']) ? (string) $_GET['installstatus'] : '';
             \Piwigo\Core\PageState::current()->addError(l10n('An error occured during extraction (%s).', htmlspecialchars($installStatus)));
     }
 }

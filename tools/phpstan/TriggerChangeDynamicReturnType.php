@@ -7,9 +7,11 @@ namespace Piwigo\Tools\PhpStan;
 use PhpParser\Node\Expr\FuncCall;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\FunctionReflection;
+use PHPStan\Type\ArrayType;
 use PHPStan\Type\DynamicFunctionReturnTypeExtension;
 use PHPStan\Type\GeneralizePrecision;
 use PHPStan\Type\MixedType;
+use PHPStan\Type\NeverType;
 use PHPStan\Type\Type;
 
 /**
@@ -31,7 +33,13 @@ class TriggerChangeDynamicReturnType implements DynamicFunctionReturnTypeExtensi
     ): Type {
         $args = $functionCall->getArgs();
         if (count($args) >= 2) {
-            return $scope->getType($args[1]->value)->generalize(GeneralizePrecision::lessSpecific());
+            $type = $scope->getType($args[1]->value)->generalize(GeneralizePrecision::lessSpecific());
+            // Widen empty-array literals (array{} → array<never>) to array<mixed> so that
+            // conditions like count($result) > 0 are not folded to always-false by PHPStan.
+            if ($type->isArray()->yes() && $type->getIterableValueType() instanceof NeverType) {
+                return new ArrayType(new MixedType(), new MixedType());
+            }
+            return $type;
         }
         return new MixedType();
     }

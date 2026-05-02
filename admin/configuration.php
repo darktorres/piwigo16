@@ -362,11 +362,19 @@ switch ($page['section']) {
 
             function order_by_is_local(): bool
             {
+                /** @var array<string, mixed> $conf */
                 $conf = [];
                 include(PHPWG_ROOT_PATH . 'include/config_default.inc.php');
-                @include(PHPWG_ROOT_PATH. 'local/config/config.inc.php');
+
+                $localConfig = realpath(PHPWG_ROOT_PATH . 'local/config/config.inc.php');
+                if ($localConfig !== false) {
+                    include $localConfig;
+                }
                 if (\Piwigo\Core\Config::has('local_dir_site')) {
-                    @include(PHPWG_ROOT_PATH.PWG_LOCAL_DIR. 'config/config.inc.php');
+                    $siteConfig = realpath(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/config.inc.php');
+                    if ($siteConfig !== false) {
+                        include $siteConfig;
+                    }
                 }
 
                 return \Piwigo\Core\Config::has('order_by') or \Piwigo\Core\Config::has('order_by_inside_category');

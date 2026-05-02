@@ -21,12 +21,19 @@ require_once PHPWG_ROOT_PATH . 'vendor/autoload.php';
 
 // fast bootstrap - no db connection
 include(PHPWG_ROOT_PATH . 'include/config_default.inc.php');
-@include(PHPWG_ROOT_PATH. 'local/config/config.inc.php');
+
+$localConfig = realpath(PHPWG_ROOT_PATH . 'local/config/config.inc.php');
+if ($localConfig !== false) {
+    include $localConfig;
+}
 
 defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
 defined('PWG_DERIVATIVE_DIR') or define('PWG_DERIVATIVE_DIR', \Piwigo\Core\Config::dataLocation().'i/');
 
-@include(PHPWG_ROOT_PATH.PWG_LOCAL_DIR .'config/database.inc.php');
+$databaseConfig = realpath(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/database.inc.php');
+if ($databaseConfig !== false) {
+    include $databaseConfig;
+}
 
 $logger = new Logger(array(
   'directory' => PHPWG_ROOT_PATH . \Piwigo\Core\Config::dataLocation() . \Piwigo\Core\Config::logDir(),

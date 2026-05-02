@@ -10,7 +10,11 @@
 define('PHPWG_ROOT_PATH', './');
 
 include(PHPWG_ROOT_PATH . 'include/config_default.inc.php');
-@include(PHPWG_ROOT_PATH. 'local/config/config.inc.php');
+
+$localConfig = realpath(PHPWG_ROOT_PATH . 'local/config/config.inc.php');
+if ($localConfig !== false) {
+    include $localConfig;
+}
 defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
 
 include(PHPWG_ROOT_PATH.PWG_LOCAL_DIR .'config/database.inc.php');

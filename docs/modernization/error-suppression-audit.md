@@ -370,7 +370,7 @@ Total: 254 suppressions across 73 files (excludes `vendor/` and commented-out co
 
 ### `include/section_init.inc.php`
 
-- [ ] L324 — `@$page['super_order_by']`
+- [x] L324 — `@$page['super_order_by']`
 - [ ] L563 — `@$page['hit_by']['cat_url_name']`
 - [ ] L567 — `@$page['hit_by']['cat_permalink']`
 

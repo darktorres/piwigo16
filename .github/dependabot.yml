@@ -1,0 +1,56 @@
+version: 2
+
+# Roadmap #4: weekly cadence, minor/patch grouped, majors as separate PRs
+# requiring manual review. Security advisories are handled by Dependabot
+# alerts (enabled in repo settings, not here) and run independently of
+# this schedule.
+
+updates:
+  - package-ecosystem: composer
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: Etc/UTC
+    groups:
+      composer-minor-patch:
+        update-types:
+          - minor
+          - patch
+    labels:
+      - dependencies
+      - composer
+    open-pull-requests-limit: 10
+
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: Etc/UTC
+    groups:
+      npm-minor-patch:
+        update-types:
+          - minor
+          - patch
+    labels:
+      - dependencies
+      - npm
+    open-pull-requests-limit: 10
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: Etc/UTC
+    groups:
+      github-actions:
+        patterns:
+          - '*'
+    labels:
+      - dependencies
+      - github-actions

@@ -131,7 +131,7 @@ npx playwright test                   # green
 
 ## #4 — Composer audit + Renovate (or Dependabot)
 
-**Status:** Not started &nbsp;|&nbsp; **Size:** S
+**Status:** Dependabot live; audit CI step + CONTRIBUTING policy still pending &nbsp;|&nbsp; **Size:** S
 
 ### Goal
 
@@ -140,8 +140,8 @@ npx playwright test                   # green
 ### Current state
 
 - No `composer audit` step in CI; no `npm audit` step either.
-- No `renovate.json` and no `.github/dependabot.yml`.
-- Dependency updates today are manual — bumps land only when someone notices.
+- `.github/dependabot.yml` is live for the three present ecosystems (composer, npm, github-actions). Weekly Monday-morning runs; minor/patch grouped per ecosystem; majors arrive as separate PRs (default Dependabot behavior, which already requires manual merge — no `automerge` setting needed). Security alerts run independently via Dependabot vulnerability alerts (toggled in repo settings, not in the YAML).
+- No `renovate.json` (Dependabot was chosen instead).
 - `composer.lock` and `package-lock.json` exist (so audits will produce useful output).
 
 ### Steps
@@ -163,31 +163,7 @@ npx playwright test                   # green
        - run: npm audit --omit=dev --audit-level=high
    ```
 
-2. **Add Renovate config.** `renovate.json` at repo root:
-
-   ```json
-   {
-     "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-     "extends": ["config:recommended"],
-     "schedule": ["before 6am on monday"],
-     "packageRules": [
-       {
-         "matchUpdateTypes": ["minor", "patch"],
-         "groupName": "deps (non-major)",
-         "automerge": false
-       },
-       { "matchUpdateTypes": ["major"], "labels": ["dependencies", "needs-review"] },
-       {
-         "matchDepTypes": ["devDependencies"],
-         "matchUpdateTypes": ["minor", "patch"],
-         "automerge": true
-       }
-     ],
-     "vulnerabilityAlerts": { "labels": ["security"], "schedule": ["at any time"] }
-   }
-   ```
-
-   Alternative: use `.github/dependabot.yml` if Renovate isn't preferred.
+2. **Add dependency update bot.** ✅ Done — `.github/dependabot.yml` covers composer, npm, and github-actions, weekly on Monday at 06:00 UTC, with minor/patch grouped per ecosystem and labels (`dependencies` + ecosystem name). Majors fall outside the group and arrive as individual PRs requiring manual merge. Dev-dep auto-merge from the Renovate spec was not ported — Dependabot doesn't ship with auto-merge, and adding the corresponding workflow can be a follow-up if churn warrants it.
 
 3. **Document policy** in `CONTRIBUTING.md`: how to triage a vulnerability advisory, when to override (with rationale), how to bump a single dep manually.
 

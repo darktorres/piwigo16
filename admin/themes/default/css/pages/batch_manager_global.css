@@ -24,10 +24,10 @@
 }
 #action_add_tags .item .remove:hover,
 #action_add_tags .item .remove:hover {
-  background-color: #ff7700;
+  background-color: #f70;
 }
 
-UL.thumbnails SPAN.wrap2 {
+ul.thumbnails span.wrap2 {
   width: var(--bm-thumb-w);
   height: var(--bm-thumb-h);
 }
@@ -37,7 +37,7 @@ UL.thumbnails SPAN.wrap2 {
    inline rules are now the hidden attribute + utility classes; the
    following selectors carry the layout). */
 #applyActionBlock {
-  margin: 1em 0 0 0;
+  margin: 1em 0 0;
 }
 
 #regenerationMsg {

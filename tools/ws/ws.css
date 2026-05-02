@@ -109,10 +109,10 @@ blockquote,
 q {
   quotes: none;
 }
-blockquote:before,
-blockquote:after,
-q:before,
-q:after {
+blockquote::before,
+blockquote::after,
+q::before,
+q::after {
   content: "";
   content: none;
 }
@@ -125,19 +125,17 @@ table {
 #the_body,
 body {
   --color-bg: #e5e5e5;
-  --color-bg-secondary: #ffffff;
+  --color-bg-secondary: #fff;
   --color-text: #434343;
-  --color-action: #ff7700;
+  --color-action: #f70;
   --color-action-text: #fff;
   --color-action-hover: #ee4b00;
   --color-action-secondary: #eee;
   --color-action-secondary-text: var(--color-text);
   --color-action-secondary-hover: #ddd;
   --color-bg-nuance: #f7f7f7;
-
   --border-radius: 5px;
-  --box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.25);
-
+  --box-shadow: 0px 0px 4px rgb(0, 0, 0, 0.25);
   --header-heigth: 50px;
   --footer-heigth: 20px;
   --container-heigth: calc(100vh - var(--header-heigth) - var(--footer-heigth));
@@ -149,14 +147,13 @@ body {
   --color-bg: #393939;
   --color-bg-secondary: #242424;
   --color-text: #fff;
-  --color-action: #ff7700;
+  --color-action: #f70;
   --color-action-text: #fff;
   --color-action-hover: #ee4b00;
   --color-action-secondary: #181818;
   --color-action-secondary-text: #fff;
   --color-action-secondary-hover: #292929;
   --color-bg-nuance: #1e1e1e;
-
   --box-shadow: none;
 }
 
@@ -165,7 +162,7 @@ li {
 }
 
 html {
-  font-family: "Corbel", "Lucida Grande", "Verdana", sans-serif;
+  font-family: Corbel, "Lucida Grande", Verdana, sans-serif;
   color: #434343;
   font-size: 14px;
 }
@@ -219,7 +216,7 @@ h1 {
 
 h2 {
   font-size: 16px;
-  padding: 10px 10px 5px 10px;
+  padding: 10px 10px 5px;
 }
 
 h2#errorWrapper {
@@ -270,8 +267,7 @@ input[type="text"] {
 #the_methods,
 #the_page {
   height: var(--container-heigth);
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden auto;
 
   /* ScrollBar customization for firefox */
   scrollbar-width: thin;
@@ -328,12 +324,11 @@ input[type="text"] {
 
 .method-node label,
 .method-link {
-  margin: 5px 0px;
-  overflow-x: hidden;
+  margin: 5px 0;
+  overflow: hidden clip;
   white-space: nowrap;
   text-overflow: ellipsis;
   cursor: pointer;
-  overflow-y: clip;
 }
 
 .method-link {
@@ -400,7 +395,7 @@ input[type="text"] {
 
 #the_content {
   padding: 10px;
-  padding-top: 0px;
+  padding-top: 0;
 }
 
 #methodWrapper {
@@ -544,7 +539,7 @@ input[type="text"] {
 #methodParams tr td {
   display: flex;
   flex-wrap: nowrap;
-  padding: 0px 12px;
+  padding: 0 12px;
 }
 
 #methodParams tr .required {
@@ -647,7 +642,7 @@ select {
 
 #testForm .select::after {
   content: "\e835";
-  font-family: "fontello";
+  font-family: fontello;
   font-size: 12px;
   color: var(--color-text);
   position: absolute;
@@ -723,8 +718,8 @@ div.onlys {
 .darkModeButton {
   position: absolute;
   z-index: 11;
-  top: 0px;
-  right: 0px;
+  top: 0;
+  right: 0;
   width: var(--header-heigth);
   height: var(--header-heigth);
   display: flex;
@@ -757,7 +752,7 @@ div.onlys {
 
 /* Track */
 ::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.11);
+  background: rgb(0, 0, 0, 0.11);
 }
 
 /* Handle */

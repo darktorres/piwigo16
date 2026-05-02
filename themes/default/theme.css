@@ -67,9 +67,9 @@
   width: 18em;
 }
 
-#menubar DL,
-#menubar DT,
-#menubar DD {
+#menubar dl,
+#menubar dt,
+#menubar dd {
   margin: 0;
   padding: 0;
   display: block;
@@ -81,32 +81,32 @@
 }
 
 /* H2 properties copied here */
-#menubar DT {
+#menubar dt {
   font-weight: bold;
   padding: 5px;
   font-size: 120%;
   text-align: center;
 }
 
-#menubar UL,
-#menubar FORM,
-#menubar P {
+#menubar ul,
+#menubar form,
+#menubar p {
   font-size: 92%;
   margin: 10px 0 10px 5px;
 }
-#menubar UL {
+#menubar ul {
   list-style-type: square;
   list-style-position: inside;
   padding: 0 0 0 2px;
 }
-#menubar UL UL {
+#menubar ul ul {
   font-size: 100%;
   margin-top: 0;
   margin-bottom: 0;
 }
 
-/*IE6 needs override because of > selector*/
-#menubar LI.selected > A {
+/* IE6 needs override because of > selector */
+#menubar li.selected > a {
   font-weight: bold;
 }
 
@@ -115,22 +115,22 @@
   font-style: italic;
 }
 
-#mbCategories IMG {
-  vertical-align: bottom; /*otherwise line height changes*/
+#mbCategories img {
+  vertical-align: bottom; /* otherwise line height changes */
 }
 
-#menubar INPUT {
+#menubar input {
   text-indent: 2px;
 }
 
 /* quickconnect form */
 
-#quickconnect FIELDSET {
+#quickconnect fieldset {
   margin: 0 5px 0 0;
-  padding: 0; /*IE6 requires padding 0*/
+  padding: 0; /* IE6 requires padding 0 */
 }
 
-#quickconnect DIV {
+#quickconnect div {
   margin: 8px 5px;
   padding: 0;
 }
@@ -140,7 +140,7 @@
   margin: 5px 0;
 }
 
-#menuTagCloud SPAN {
+#menuTagCloud span {
   white-space: nowrap;
   margin-right: 5px;
 }
@@ -233,11 +233,11 @@
   float: right;
 }
 
-.categoryActions LI {
+.categoryActions li {
   display: inline;
 }
 
-/* begin chronology/calendar elements*/
+/* begin chronology/calendar elements */
 .calendarViews {
   float: right;
   margin: 5px 5px 0 0;
@@ -264,15 +264,15 @@
   margin: 0 2px;
 }
 
-/* nice looking month calendar*/
-TABLE.calMonth {
+/* nice looking month calendar */
+table.calMonth {
   border: 0;
   border-collapse: collapse;
-  margin-bottom: 10px; /*<-IE ignores this */
+  margin-bottom: 10px; /* <-IE ignores this */
 }
 
-TD.calDayCellFull,
-TD.calDayCellEmpty {
+td.calDayCellFull,
+td.calDayCellEmpty {
   vertical-align: top;
   font-weight: bold;
   font-size: 18px;
@@ -306,11 +306,11 @@ TD.calDayCellEmpty {
   width: 100%;
 }
 
-.thumbnailCategories LI {
+.thumbnailCategories li {
   margin: 0;
   padding: 0;
   float: left;
-  width: 49.7%; /* 49.7% for 2 per line, 33.2% for 3 per line*/
+  width: 49.7%; /* 49.7% for 2 per line, 33.2% for 3 per line */
 }
 
 .thumbnailCategory {
@@ -322,22 +322,22 @@ TD.calDayCellEmpty {
 .thumbnailCategory .description {
   font-size: 90%;
   overflow: auto;
-  /*width: inherit;*/
+  /* width: inherit; */
 }
 
-.thumbnailCategory .description H3 {
+.thumbnailCategory .description h3 {
   text-align: left;
   margin: 0;
   padding: 0.1em;
   font-size: 120%;
 }
 
-.thumbnailCategory .description P {
+.thumbnailCategory .description p {
   margin: 0;
 }
 
 .illustration {
-  /*also used by comment lists*/
+  /* also used by comment lists */
   text-align: left;
   margin: 2px 0 0 2px;
   float: left;
@@ -375,7 +375,7 @@ TD.calDayCellEmpty {
 
 .commentElement .description {
   overflow: auto;
-  /*width: inherit;*/
+  /* width: inherit; */
 }
 
 /* Thumbnails */
@@ -387,12 +387,12 @@ TD.calDayCellEmpty {
   list-style: none;
   text-align: center; /* to center the whole collection in .content */
 }
-.thumbnails LI {
+.thumbnails li {
   display: inline;
 }
 
 .thumbnails .wrap1 {
-  margin: 0 7px 5px 7px;
+  margin: 0 7px 5px;
   display: table-cell;
   display: inline-table;
   display: inline-block; /* Why 3 display option ??? */
@@ -406,19 +406,19 @@ TD.calDayCellEmpty {
   border-radius: 4px; /* round corners with CSS3 compliant browsers */
 }
 
-.thumbnails .wrap2 A {
+.thumbnails .wrap2 a {
   display: block;
   border-bottom: 0;
 }
-.thumbnails IMG {
+.thumbnails img {
   vertical-align: middle;
   max-width: 100%;
 }
 
-.thumbnails SPAN.thumbLegend {
+.thumbnails span.thumbLegend {
   overflow: hidden; /* oversized legend is clipped */
   display: block; /* display: none; if you don't want legend */
-  height: 4em; /* legend height (don't set auto to be Gecko friendly)*/
+  height: 4em; /* legend height (don't set auto to be Gecko friendly) */
 }
 
 /**
@@ -441,7 +441,7 @@ TD.calDayCellEmpty {
   margin: -20px 9px 0 0;
 }
 
-#imageHeaderBar H2 {
+#imageHeaderBar h2 {
   display: inline;
   text-align: center;
   padding: 0;
@@ -472,7 +472,7 @@ TD.calDayCellEmpty {
   display: none;
   position: absolute;
   left: 0;
-  top: 0; /*left, right set through js*/
+  top: 0; /* left, right set through js */
 }
 
 .switchBoxTitle {
@@ -501,7 +501,7 @@ TD.calDayCellEmpty {
 }
 
 #imageInfos {
-  position: relative; /*for IE7 positioning of "who can see this photo"*/
+  position: relative; /* for IE7 positioning of "who can see this photo" */
   min-height: 120px;
 }
 
@@ -522,8 +522,8 @@ TD.calDayCellEmpty {
   height: 50px;
 }
 
-DIV.thumbHover {
-  /*only first & last holders are divs*/
+div.thumbHover {
+  /* only first & last holders are divs */
   width: 108px;
   height: 118px;
   border: 1px solid gray;
@@ -531,8 +531,8 @@ DIV.thumbHover {
   line-height: 1.2;
 }
 
-.imageInfoTable UL {
-  /*this is the album list*/
+.imageInfoTable ul {
+  /* this is the album list */
   margin: 0;
   padding: 0 0 0 1em;
   list-style-type: square;
@@ -572,72 +572,72 @@ DIV.thumbHover {
 /**
  * Default Layout
  */
-BODY {
+body {
   margin: 5px;
   padding: 0;
   font-size: 0.8em;
   font-family: Arial, Helvetica, sans-serif;
-  min-width: 60em; /* ~ 3* #menubar width; width of the page before getting a scrollbar; IE6 doesn't get that*/
+  min-width: 60em; /* ~ 3* #menubar width; width of the page before getting a scrollbar; IE6 doesn't get that */
 }
 
-IMG {
-  border: 0; /*IE<=9 adds border for linked images*/
+img {
+  border: 0; /* IE<=9 adds border for linked images */
 }
 
 #thePopuphelpPage {
-  min-width: 0; /*reset the min width*/
+  min-width: 0; /* reset the min width */
 }
 
-H1 {
+h1 {
   text-align: center;
   font-size: 150%;
   font-weight: bold;
   padding: 0;
-  margin: 0.5em 0 1em 0;
+  margin: 0.5em 0 1em;
 }
 
-H2 {
+h2 {
   margin: 0;
   padding: 5px 0.5em;
   text-align: left;
   font-size: 120%;
 }
 
-A {
+a {
   text-decoration: none;
 }
-A:hover {
+a:hover {
   border-bottom: 1px solid #858460;
 }
-A.pwg-state-default:hover {
-  border-bottom: 0; /*reset above for icons*/
+a.pwg-state-default:hover {
+  border-bottom: 0; /* reset above for icons */
 }
 
 #copyright {
   clear: both;
   font-size: 83%;
   text-align: center;
-  margin: 0 0 10px 0;
+  margin: 0 0 10px;
 }
 
-INPUT,
-SELECT {
+input,
+select {
   margin: 0;
   font-size: 1em; /* <= some browsers don't set it correctly */
 }
 
-TABLE {
+table {
   /* horizontaly centered */
   margin-left: auto;
   margin-right: auto;
 }
 
-FORM {
+form {
   padding: 0;
   margin: 0;
 }
 
-FORM P {
+form p {
   text-align: center;
   margin-top: 2em;
   margin-bottom: 2em;
@@ -648,30 +648,30 @@ FORM P {
  * below the label. Use an UL to make a group (radiobox for instance).
  * Use a SPAN to group objects in line
  */
-FIELDSET {
+fieldset {
   padding: 1em;
   margin: 1em;
 }
 
-.filter UL {
+.filter ul {
   display: block;
   float: left;
   margin: 0 1em 1em 0;
   padding: 0;
 }
 
-.filter LI {
+.filter li {
   list-style: none;
   margin-bottom: 0.5em;
 }
 
-.filter FIELDSET {
+.filter fieldset {
   padding-bottom: 0;
 }
 
-.filter P {
+.filter p {
   text-align: left;
-  margin: 0 0 15px 0;
+  margin: 0 0 15px;
   line-height: 20px;
 }
 
@@ -681,8 +681,8 @@ FIELDSET {
   width: 500px;
 }
 
-.filter P input[type="checkbox"],
-.filter P input[type="radio"] {
+.filter p input[type="checkbox"],
+.filter p input[type="radio"] {
   vertical-align: middle;
   margin-top: -4px;
 }
@@ -691,24 +691,24 @@ FIELDSET {
   margin-left: 1em;
 }
 
-.filter P LABEL {
+.filter p label {
   margin-right: 1em;
 }
 
-.properties UL {
+.properties ul {
   list-style-type: none;
   margin: 0;
   padding: 0;
 }
 
-.properties LI {
+.properties li {
   margin-bottom: 0.5em;
   padding: 0;
   line-height: 1.8em;
   clear: left;
 }
 
-.properties SPAN.property {
+.properties span.property {
   font-weight: bold;
   float: left;
   width: 50%;
@@ -724,7 +724,7 @@ FIELDSET {
   margin: 1em;
 }
 
-#fullTagCloud SPAN {
+#fullTagCloud span {
   white-space: nowrap;
   margin: 0 2px;
 }
@@ -750,31 +750,31 @@ FIELDSET {
   display: none;
 }
 
-#thePopuphelpPage P {
+#thePopuphelpPage p {
   padding: 0.5em;
 }
 
-#thePopuphelpPage DL {
+#thePopuphelpPage dl {
   margin: 0 25px 25px;
 }
 
-TR.tagLine {
+tr.tagLine {
   border-bottom: 1px solid #ddd;
 }
-TD.nbEntries {
+td.nbEntries {
   text-align: right;
   font-style: italic;
   font-size: 90%;
 }
 
-FIELDSET.tagLetter {
+fieldset.tagLetter {
   border: 1px solid #d3d3d3;
   width: 200px;
   margin: 0.5em;
   padding: 10px;
 }
 
-LEGEND.tagLetterLegend {
+legend.tagLetterLegend {
   border: 1px solid #d3d3d3;
   font-size: 120%;
   font-weight: bold;
@@ -782,7 +782,7 @@ LEGEND.tagLetterLegend {
   font-style: normal;
 }
 
-TABLE.tagLetterContent {
+table.tagLetterContent {
   width: 100%;
   font-size: 80%;
   border-collapse: collapse;
@@ -798,38 +798,38 @@ TABLE.tagLetterContent {
 
 /* So that non-links are slightly greyed out */
 .content .navigationBar,
-SPAN.calItem,
-TD.calDayCellEmpty {
+span.calItem,
+td.calDayCellEmpty {
   color: #b0b0b0;
 }
 
 /* Tables & forms */
 /* IE <= 6 is so bad with this that you can't merge with the following rule */
-INPUT[type="text"],
-INPUT[type="password"],
-INPUT[type="button"],
-INPUT[type="submit"],
-INPUT[type="reset"],
-INPUT[type="file"] {
+input[type="text"],
+input[type="password"],
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+input[type="file"] {
   color: #000;
   background-color: #d3d3d3; /* lightgrey */
 }
 
-SELECT,
-TEXTAREA {
+select,
+textarea {
   color: #000;
   background-color: #d3d3d3; /* lightgrey */
 }
 
-INPUT:focus,
-SELECT:focus,
-TEXTAREA:focus {
+input:focus,
+select:focus,
+textarea:focus {
   background-color: #f5f5f5; /* whitesmoke */
 }
 
 /* some theme set a border on INPUT  which is not pretty for radio/checkbox */
-INPUT[type="radio"],
-INPUT[type="checkbox"] {
+input[type="radio"],
+input[type="checkbox"] {
   border: none; /* <= Opera needs this */
 }
 
@@ -845,19 +845,19 @@ INPUT[type="checkbox"] {
   font-weight: bold;
   margin: 5px;
   border: 1px solid red;
-  background: #ffe1e1 url(icon/errors.png) no-repeat center right;
+  background: #ffe1e1 url("icon/errors.png") no-repeat center right;
   padding: 10px 50px 10px 10px;
 }
 
 /* Informations box */
 .infos {
   color: #002000;
-  background: #98fb98 url(icon/infos.png) no-repeat center right;
+  background: #98fb98 url("icon/infos.png") no-repeat center right;
   margin: 5px;
   padding: 10px 50px 10px 10px;
 }
 
-/* Header message like upgrade*/
+/* Header message like upgrade */
 .header_msgs {
   text-align: center;
   font-weight: bold;
@@ -871,17 +871,17 @@ INPUT[type="checkbox"] {
 .header_notes {
   border: 1px solid #aaa;
   text-align: center;
-  background-image: url(icon/note.png);
+  background-image: url("icon/note.png");
   background-repeat: no-repeat;
   background-position: top left;
   font-weight: bold;
   margin: 14px;
-  padding: 5px 0 0 0;
+  padding: 5px 0 0;
 }
 
-LEGEND {
+legend {
   font-style: italic;
-  color: inherit; /*for IE*/
+  color: inherit; /* for IE */
 }
 
 #piwigoAbout {
@@ -897,9 +897,9 @@ LEGEND {
   color: #333;
   margin-bottom: 1em;
   padding: 12px;
-  -moz-border-radius: 3px;
-  -khtml-border-radius: 3px;
-  -webkit-border-radius: 3px;
+  border-radius: 3px;
+  border-radius: 3px;
+  border-radius: 3px;
   border-radius: 3px;
 }
 
@@ -924,7 +924,7 @@ LEGEND {
 }
 
 #commentAdd input[type="text"],
-#comments TEXTAREA {
+#comments textarea {
   max-width: 99%;
   width: 99%;
 }
@@ -948,7 +948,7 @@ LEGEND {
 #pictureComments h4 {
   margin: 0;
 }
-#comments FORM P {
+#comments form p {
   margin: 5px 0;
   text-align: left;
 }
@@ -978,7 +978,7 @@ LEGEND {
 /* Selectize */
 .selectize-dropdown [data-selectable],
 .selectize-dropdown .optgroup-header {
-  padding: 0px 5px !important;
+  padding: 0 5px !important;
 }
 
 /* Search in this set button CSS, 
@@ -986,7 +986,7 @@ Needs to be loaded here because we don't use it on the search pages but on other
 it won't be loaded if it goes in the search specific css
 because of this it needs to specifically be added to each theme */
 
-/*the related tags button also uses this css*/
+/* the related tags button also uses this css */
 .mcs-side-results.search-in-set-button p {
   margin: 0;
 }
@@ -1011,7 +1011,7 @@ because of this it needs to specifically be added to each theme */
 
 .mcs-side-results > div {
   background: #555;
-  box-shadow: 0px 2px #00000024;
+  box-shadow: 0 2px #00000024;
   position: relative;
   padding: 4px 10px;
   border-radius: 5px;
@@ -1087,7 +1087,7 @@ span.related-tags .tag-counter {
   font-weight: 700;
 }
 
-#relatedTagsBox.switchBox A {
+#relatedTagsBox.switchBox a {
   padding: unset;
   display: block;
 }
@@ -1100,8 +1100,8 @@ span.related-tags .tag-counter {
 
 #selected-tags-container .selected-related-tag {
   background-color: #fcead2;
-  border: 1px solid #ff7700;
-  color: #ff7700;
+  border: 1px solid #f70;
+  color: #f70;
   border-radius: 15px;
   padding: 2px 10px;
   padding-right: 5px;
@@ -1116,7 +1116,7 @@ span.related-tags .tag-counter {
   font-weight: 700;
   font-style: Bold;
   font-size: 12px;
-  color: #ff7700;
+  color: #f70;
 }
 
 #selected-tags-container .selected-related-tag a.selected-related-tag-remove:hover {
@@ -1130,7 +1130,7 @@ span.related-tags .tag-counter {
   font-weight: 900;
   font-size: 20px;
   padding: 0 5px;
-  color: #777777;
+  color: #777;
 }
 
 #breadcrumb {
@@ -1147,81 +1147,81 @@ span.related-tags .tag-counter {
 /**
  * Dark theme overrides
  */
-BODY {
+body {
   background-color: #1b1b1b;
   color: #c1c1c1;
 }
 
-A {
+a {
   color: #ffa646;
 }
-A:hover {
+a:hover {
   border-bottom-color: #ffa646;
-  color: #ff7700;
+  color: #f70;
 }
 
-H1,
-H2,
-H3 {
+h1,
+h2,
+h3 {
   color: #c1c1c1;
 }
 
-INPUT[type="text"],
-INPUT[type="password"],
-INPUT[type="file"],
-INPUT[type="button"],
-INPUT[type="submit"],
-INPUT[type="reset"],
-SELECT,
-TEXTAREA {
+input[type="text"],
+input[type="password"],
+input[type="file"],
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+select,
+textarea {
   color: #c1c1c1;
   background-color: #3c3c3c;
   border: 1px solid #555;
 }
 
-INPUT[type="submit"],
-INPUT[type="button"],
-INPUT[type="reset"] {
+input[type="submit"],
+input[type="button"],
+input[type="reset"] {
   background-color: #ffa646;
   color: #493c21;
   border: none;
   cursor: pointer;
 }
 
-INPUT[type="submit"]:hover,
-INPUT[type="button"]:hover,
-INPUT[type="reset"]:hover {
-  background-color: #ff7700;
+input[type="submit"]:hover,
+input[type="button"]:hover,
+input[type="reset"]:hover {
+  background-color: #f70;
   color: #493c21;
 }
 
-INPUT:focus,
-SELECT:focus,
-TEXTAREA:focus {
+input:focus,
+select:focus,
+textarea:focus {
   background-color: #444;
-  border-color: #ff7700;
+  border-color: #f70;
   outline: none;
 }
 
-INPUT[type="checkbox"],
-INPUT[type="radio"] {
+input[type="checkbox"],
+input[type="radio"] {
   accent-color: #ffa646;
 }
 
-FIELDSET {
+fieldset {
   border-color: #444;
 }
 
-FIELDSET.tagLetter,
-LEGEND.tagLetterLegend {
+fieldset.tagLetter,
+legend.tagLetterLegend {
   border-color: #555;
 }
 
-TR.tagLine {
+tr.tagLine {
   border-bottom-color: #444;
 }
 
-DIV.thumbHover {
+div.thumbHover {
   border-color: #555;
 }
 
@@ -1279,7 +1279,7 @@ span.related-tags .tag-counter {
 
 #selected-tags-container .selected-related-tag {
   background-color: #3a2800;
-  border-color: #ff7700;
+  border-color: #f70;
 }
 
 .calBackDate {
@@ -1291,16 +1291,16 @@ span.related-tags .tag-counter {
   border: 1px solid #444;
 }
 
-TD {
+td {
   color: #c1c1c1;
 }
-TABLE {
+table {
   color: #c1c1c1;
 }
 
 .content .navigationBar,
-SPAN.calItem,
-TD.calDayCellEmpty {
+span.calItem,
+td.calDayCellEmpty {
   color: #666;
 }
 

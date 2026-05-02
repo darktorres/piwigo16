@@ -23,14 +23,14 @@ h2,
 .throw,
 .content,
 label,
-LEGEND {
+legend {
   color: #777;
 }
 
 th {
   color: #888;
 }
-INPUT,
+input,
 select,
 textarea {
   color: #666;
@@ -44,26 +44,26 @@ input[type="checkbox"] {
   background-color: transparent;
 }
 
-INPUT[type="text"],
-INPUT[type="file"] {
+input[type="text"],
+input[type="file"] {
   background-color: #ddd;
 }
 
-SELECT,
-TEXTAREA {
+select,
+textarea {
   background-color: #ddd;
 }
 
-INPUT:focus,
-SELECT:focus,
-TEXTAREA:focus {
+input:focus,
+select:focus,
+textarea:focus {
   background-color: #eee;
   color: #666;
 }
 
-INPUT,
-SELECT,
-TEXTAREA {
+input,
+select,
+textarea {
   border: 1px solid #999;
 }
 
@@ -76,12 +76,12 @@ TEXTAREA {
 
 #copyright {
   color: #777;
-  margin: 5px auto 0px 240px;
+  margin: 5px auto 0 240px;
   text-align: center;
   padding-bottom: 15px;
 }
 .header_notes {
-  background: transparent url(../default/icon/note.png) no-repeat right top;
+  background: transparent url("../default/icon/note.png") no-repeat right top;
   border: none;
   min-height: 48px;
   padding: 15px 60px 0 0;
@@ -104,7 +104,7 @@ h3,
   background-color: #ddd;
 }
 .row2 {
-  background-color: #eeeeee;
+  background-color: #eee;
 }
 
 #content {
@@ -136,7 +136,7 @@ dd {
   margin: 5px;
 }
 
-UL.thumbnails span.wrap2 {
+ul.thumbnails span.wrap2 {
   background-color: transparent;
 }
 
@@ -149,17 +149,17 @@ fieldset.with-border {
   border: 2px solid #ddd;
 }
 
-TEXTAREA {
+textarea {
   cursor: text;
   font-size: 13px;
 }
 .tagSelection label {
   padding-right: 12px;
 }
-.tagSelection LI.tagSelected {
+.tagSelection li.tagSelected {
   background-color: #dbe8f3;
 }
-.tagSelected LABEL {
+.tagSelected label {
   color: black;
 }
 
@@ -197,8 +197,8 @@ a.Piwigo {
 a.Piwigo:hover span.Piwigo {
   border-bottom: 1px solid #0cc;
 }
-TABLE.table2 {
-  border: 2px solid #dddddd;
+table.table2 {
+  border: 2px solid #ddd;
 }
 
 *,
@@ -209,14 +209,14 @@ a:active,
 input:focus,
 a:focus {
   outline: none;
-  -moz-outline-width: 0px;
+  -moz-outline-width: 0;
 }
-A {
+a {
   color: #3a3a3a;
 }
 
-A:hover,
-A:active {
+a:hover,
+a:active {
   color: #ffa646;
   cursor: pointer;
 }
@@ -226,7 +226,7 @@ ul.actions,
   text-align: center;
 }
 
-INPUT[type="text"].large {
+input[type="text"].large {
   width: 317px;
 }
 
@@ -262,7 +262,7 @@ INPUT[type="text"].large {
 }
 * + html .bigbutton input,
 * html .bigbutton input {
-  left: 0px;
+  left: 0;
   position: relative;
   top: -40px;
 }
@@ -272,7 +272,7 @@ INPUT[type="text"].large {
 
 .themeBox {
   background-color: #fafafa;
-  box-shadow: 0px 0px 5px #acacac;
+  box-shadow: 0 0 5px #acacac;
 }
 .themeName {
   color: black;
@@ -280,7 +280,7 @@ INPUT[type="text"].large {
 .themeActions span {
   background-color: #ddd;
 }
-#themesContent H3 {
+#themesContent h3 {
   border-bottom: 1px solid #aaa;
 }
 .themeSelect {
@@ -300,12 +300,12 @@ INPUT[type="text"].large {
   color: #ccc;
 }
 
-#pwgHead A,
-#footer A {
+#pwgHead a,
+#footer a {
   color: #ccc;
 }
-#pwgHead A:hover,
-#footer A:hover {
+#pwgHead a:hover,
+#footer a:hover {
   color: white;
 }
 
@@ -329,7 +329,7 @@ INPUT[type="text"].large {
   background-color: #dbe8f3;
 }
 
-UL.thumbnails li.rank-of-image {
+ul.thumbnails li.rank-of-image {
   background-color: #ddd;
 }
 
@@ -343,7 +343,7 @@ UL.thumbnails li.rank-of-image {
   display: block;
 }
 
-#batchManagerGlobal UL.thumbnails li:hover .wrap2 {
+#batchManagerGlobal ul.thumbnails li:hover .wrap2 {
   background-color: transparent;
   color: #999;
 }
@@ -385,13 +385,13 @@ UL.thumbnails li.rank-of-image {
 }
 
 #batchManagerGlobal .addFilter-button.highlight:hover {
-  background-color: #ff7700;
+  background-color: #f70;
   color: white;
   text-decoration: none;
 }
 
 .slider-info {
-  color: #ff7700;
+  color: #f70;
   font-weight: bold;
 }
 
@@ -452,7 +452,7 @@ p.albumTitle img {
 .groups .GroupContainer,
 .groups .showCreateGroup,
 .groups .addGroupFormBlock {
-  box-shadow: 0px 2px 5px #00000024;
+  box-shadow: 0 2px 5px #00000024;
 }
 
 .groups #addGroupForm:hover #addGroup,
@@ -498,7 +498,7 @@ label > p.group_select {
   color: #e0e0e0;
 }
 
-/*Edit group name*/
+/* Edit group name */
 
 .groups .Group-name {
   color: #3c3c3c;
@@ -509,9 +509,9 @@ label > p.group_select {
   background-color: white;
 }
 
-/*Add Group */
+/* Add Group */
 
-.groups fieldset INPUT[type="text"]::placeholder {
+.groups fieldset input[type="text"]::placeholder {
   color: #d5d5d5;
 }
 
@@ -521,10 +521,10 @@ label > p.group_select {
 }
 
 .groups button.submit:hover {
-  background-color: #ff7700;
+  background-color: #f70;
 }
 
-/*Group manager buttons*/
+/* Group manager buttons */
 
 .groups .manage-users,
 .groups .manage-permissions {
@@ -539,7 +539,7 @@ label > p.group_select {
   cursor: pointer;
 }
 
-/*UserList Pop in*/
+/* UserList Pop in */
 
 .UserListPopInContainer {
   background-color: white;
@@ -552,7 +552,7 @@ label > p.group_select {
 }
 
 #UserList .AddUserBlock button:hover {
-  background-color: #ff7700;
+  background-color: #f70;
 }
 
 #UserList .AddUserBlock input,
@@ -570,7 +570,7 @@ label > p.group_select {
 }
 
 .UsersInGroupList .icon-cancel:hover {
-  color: #ff7700;
+  color: #f70;
 }
 
 .LinkUserManager {
@@ -586,8 +586,8 @@ label > p.group_select {
 }
 
 .activity-filter-container {
-  color: #777777;
-  background-color: #ffffff;
+  color: #777;
+  background-color: #fff;
 }
 
 .selectize-control.user-selecter.single .selectize-input,
@@ -601,7 +601,7 @@ label > p.group_select {
   background-color: #e0e0e0;
 }
 
-.slider:before {
+.slider::before {
   background-color: white;
 }
 
@@ -633,10 +633,10 @@ input:focus + .slider {
 }
 
 .OrangeFont {
-  color: #ff7700 !important;
+  color: #f70 !important;
 }
 
-/*Selection mode content*/
+/* Selection mode content */
 
 .SelectionModeGroupList {
   color: #a0a0a0;
@@ -665,7 +665,7 @@ input:focus + .slider {
   background-color: #ffa744;
 }
 
-/*Merge Options*/
+/* Merge Options */
 
 #MergeOptionsBlock p {
   color: #777;
@@ -675,7 +675,7 @@ input:focus + .slider {
   color: #3c3c3c;
 }
 
-/*Merge options Radio buttons*/
+/* Merge options Radio buttons */
 
 .ConfirmMergeButton {
   background-color: #ffa744;
@@ -686,7 +686,7 @@ input:focus + .slider {
   box-shadow: 0 0 2px #c5c5c5;
 }
 
-/*Group checkbox*/
+/* Group checkbox */
 
 .groups .group-checkmark {
   border: 2px solid #ffa646;
@@ -700,7 +700,7 @@ input:focus + .slider {
   background-color: #ffa646;
 }
 
-/*Group manager buttons*/
+/* Group manager buttons */
 
 .groups .manage-users,
 .groups .manage-users:hover,
@@ -709,7 +709,7 @@ input:focus + .slider {
   color: #3c3c3c;
 }
 
-/*UserList Pop in*/
+/* UserList Pop in */
 
 .CloseUserList,
 .CloseAddAlbum,
@@ -738,16 +738,16 @@ input:focus + .slider {
 
 .ValidationUserAssociated,
 .ValidationUserDissociated {
-  color: #00aa00 !important;
+  color: #0a0 !important;
   background-color: #c2f5c2;
 }
 
 .ValidationUserAssociated p,
 .ValidationUserDissociated p {
-  color: #00aa00 !important;
+  color: #0a0 !important;
 }
 
-/*------*/
+/* ------ */
 
 .userSeparator {
   visibility: hidden;
@@ -800,18 +800,18 @@ table.dataTable.no-footer {
   color: #444;
 }
 
-FORM#categoryOrdering p.albumTitle a {
+form#categoryOrdering p.albumTitle a {
   color: #5b5b5b;
 }
-FORM#categoryOrdering p.albumActions a {
+form#categoryOrdering p.albumActions a {
   border-left: 1px solid #d6d6d6;
   background-color: #e8e8e8;
 }
-FORM#categoryOrdering p.albumActions a:hover {
+form#categoryOrdering p.albumActions a:hover {
   background-color: #ffa844;
   color: #3a3a3a;
 }
-FORM#categoryOrdering p.albumActions .userSeparator {
+form#categoryOrdering p.albumActions .userSeparator {
   border: 1px solid #e1e1e1;
 }
 #addAlbumOpen,
@@ -831,7 +831,7 @@ FORM#categoryOrdering p.albumActions .userSeparator {
 }
 .afterUploadActions a:hover {
   text-decoration: none;
-  background-color: #ff7700;
+  background-color: #f70;
 }
 .afterUploadActions a.secondary_button {
   background-color: #ececec;
@@ -848,13 +848,13 @@ FORM#categoryOrdering p.albumActions .userSeparator {
 }
 .font-checkbox:hover .icon-check-empty,
 .font-checkbox:hover .icon-check {
-  color: #ff7700;
+  color: #f70;
 }
 .font-checkbox .icon-check {
   color: #ffa646;
 }
 
-LEGEND {
+legend {
   color: #3c3c3c;
 }
 a#showPermissions {
@@ -879,8 +879,8 @@ a#showPermissions:hover {
   border-color: #fac17e !important;
 }
 .plupload_filelist {
-  scrollbar-color: #cbcbcb #ffffff !important;
-  background-color: #ffffff !important;
+  scrollbar-color: #cbcbcb #fff !important;
+  background-color: #fff !important;
 }
 .plupload_filelist_footer {
   background-color: #f5f5f5 !important;
@@ -914,7 +914,7 @@ li.plupload_delete a.remove-format:hover {
   margin-top: 5px !important;
 }
 #addAlbumForm input[name="category_name"]:focus {
-  background-color: #dddddd;
+  background-color: #ddd;
 }
 .buttonSeparator {
   color: #3c3c3c;
@@ -1002,7 +1002,7 @@ li.plupload_delete a.remove-format:hover {
 .upload-options-content,
 .options-open::after {
   background-color: #f5f5f5;
-  color: #777777;
+  color: #777;
 }
 
 /* Category List */
@@ -1013,7 +1013,7 @@ li.plupload_delete a.remove-format:hover {
 .categoryBox,
 .addAlbum {
   background-color: #fafafa;
-  box-shadow: 0px 2px 5px #00000024;
+  box-shadow: 0 2px 5px #00000024;
 }
 
 .addAlbumHead p {
@@ -1077,7 +1077,7 @@ li.plupload_delete a.remove-format:hover {
 }
 
 .applicationCard {
-  box-shadow: 0px 0px 4px 4px #dbdbdb;
+  box-shadow: 0 0 4px 4px #dbdbdb;
 }
 
 .applicationCard .applicationName {
@@ -1090,13 +1090,13 @@ li.plupload_delete a.remove-format:hover {
 
 .breadcrumb-item {
   background-color: #fafafa;
-  box-shadow: 0px 2px #00000024;
+  box-shadow: 0 2px #00000024;
 }
 .breadcrumb-item:hover {
   background: #ffd7ad;
 }
 .breadcrumb-item .icon-cancel-circled:hover {
-  color: #ff7700;
+  color: #f70;
 }
 
 .linkedAlbumPopInContainer {
@@ -1108,7 +1108,7 @@ li.plupload_delete a.remove-format:hover {
 
 .search-result-item {
   background-color: #fafafa;
-  box-shadow: 0px 2px #00000024;
+  box-shadow: 0 2px #00000024;
   color: #777;
 }
 
@@ -1117,7 +1117,7 @@ li.plupload_delete a.remove-format:hover {
 }
 
 .search-result-item .icon-plus-circled:hover {
-  color: #ff7700;
+  color: #f70;
 }
 
 .breadcrumb-item.add-item.highlight {
@@ -1225,8 +1225,8 @@ span:has(+ .filters-icon-check:disabled) {
 }
 
 .filter-manager-options-container.selected-filter-container {
-  background-color: #777777;
-  color: #ffffff;
+  background-color: #777;
+  color: #fff;
 }
 
 .filter-manager-options-container.selected-filter-container:hover {

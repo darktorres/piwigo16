@@ -22,7 +22,7 @@ input[type="radio"] {
 }
 
 .btn-main:disabled {
-  background-color: #aaaaaa !important;
+  background-color: #aaa !important;
   color: #3c3c3c !important;
 }
 
@@ -53,14 +53,14 @@ input[type="radio"] {
 }
 
 .bg-modal {
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: rgb(0, 0, 0, 0.7);
 }
 
 .slider {
   background-color: #ccc;
 }
 
-.slider:before {
+.slider::before {
   background-color: white;
 }
 
@@ -77,10 +77,10 @@ input[type="radio"] {
 .light #password-form,
 .light #lang-select #other-languages,
 .light .profile-section,
-.light .slider:before,
+.light .slider::before,
 .light .body-modal,
 .light [data-tooltip]:hover::after {
-  background-color: #ffffff;
+  background-color: #fff;
 }
 
 #theIdentificationPage .light a,
@@ -127,7 +127,7 @@ input[type="radio"] {
 
 .light .input-container input:is(:-webkit-autofill, :autofill) {
   box-shadow: 0 0 0 100px #f0f0f0 inset;
-  -webkit-box-shadow: 0 0 0px 1000px #f0f0f0 inset !important;
+  box-shadow: 0 0 0 1000px #f0f0f0 inset !important;
   -webkit-text-fill-color: #3c3c3c;
   color: #3c3c3c;
 }
@@ -165,7 +165,7 @@ input[type="radio"] {
 }
 
 .light .slider {
-  background-color: #cccccc;
+  background-color: #ccc;
 }
 
 .light .api-list-body > div:nth-child(4n + 1),
@@ -182,7 +182,7 @@ input[type="radio"] {
 }
 
 .light .close-modal {
-  color: #ffffff;
+  color: #fff;
 }
 
 .light input[type="date"] {
@@ -260,7 +260,7 @@ input[type="radio"] {
 
 .dark .input-container input:is(:-webkit-autofill, :autofill) {
   box-shadow: 0 0 0 100px #303030 inset;
-  -webkit-box-shadow: 0 0 0px 1000px #303030 inset !important;
+  box-shadow: 0 0 0 1000px #303030 inset !important;
   -webkit-text-fill-color: #d6d6d6;
   color: #d6d6d6;
 }
@@ -275,7 +275,7 @@ input[type="radio"] {
 
 .dark #lang-select #other-languages,
 .dark .slider,
-.dark input:checked + .slider:before {
+.dark input:checked + .slider::before {
   background-color: #3c3c3c;
 }
 
@@ -304,8 +304,8 @@ input[type="radio"] {
   background-color: #ffa646;
 }
 
-.dark .slider:before {
-  background-color: #777777;
+.dark .slider::before {
+  background-color: #777;
 }
 
 .dark .api-list-head,
@@ -315,7 +315,7 @@ input[type="radio"] {
 
 .dark .api-list-body > div:nth-child(4n + 1),
 .dark .api-list-body > div:nth-child(4n + 2) {
-  background-color: #333333;
+  background-color: #333;
 }
 
 .dark .icon-collapse {

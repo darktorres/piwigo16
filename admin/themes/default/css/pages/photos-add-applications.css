@@ -1,8 +1,7 @@
 .applicationContainer {
   width: 100%;
   display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
+  flex-flow: row wrap;
 }
 
 .applicationCard {
@@ -27,7 +26,7 @@
 .applicationCard .applicationName {
   font-size: 15px;
   font-weight: bold;
-  margin: 20px 0 10px 0;
+  margin: 20px 0 10px;
   padding-right: 15px;
   text-align: left;
 }

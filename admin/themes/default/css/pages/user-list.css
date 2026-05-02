@@ -1,5 +1,5 @@
 .icon-help-circled {
-  color: #777777 !important;
+  color: #777 !important;
   cursor: help;
 }
 
@@ -143,7 +143,7 @@
   border-radius: 10px;
   margin-bottom: 10px;
   transition: background-color 500ms linear;
-  box-shadow: 0px 2px 2px #00000024;
+  box-shadow: 0 2px 2px #00000024;
 }
 
 .user-header-select,
@@ -186,7 +186,6 @@
 
 .user-header-status,
 .user-container-status {
-  width: 10%;
   max-width: 110px;
   width: auto;
 }
@@ -241,7 +240,7 @@
 }
 
 .user-container-checkbox.user-list-checkbox {
-  margin-bottom: 0px;
+  margin-bottom: 0;
 }
 
 .user-container-checkbox.user-list-checkbox .select-checkbox {
@@ -353,11 +352,10 @@
   width: 100%;
   height: 100%;
   overflow: auto;
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: rgb(0, 0, 0, 0.7);
 }
 
 .UserListPopInContainer {
-  display: block;
   position: absolute;
   left: 50%;
   top: 50%;
@@ -495,11 +493,10 @@
   left: 50%;
   transform: translate(-50%, -50%);
   background-color: #f0f0f0;
-  width: 0px;
-  height: 0px;
+  width: 0;
+  height: 0;
   border-radius: 100%;
   transition: ease-in-out 0.2s;
-  z-index: 0;
   opacity: 0;
   z-index: -1;
 }
@@ -517,7 +514,7 @@
   z-index: 1;
   top: 65px;
   right: 20px;
-  background: linear-gradient(130deg, #ff7700 0%, #ffa744 100%);
+  background: linear-gradient(130deg, #f70 0%, #ffa744 100%);
   color: white;
   border-radius: 10px;
 }
@@ -529,7 +526,7 @@
   left: 78%;
   border-width: 5px;
   border-style: solid;
-  border-color: transparent transparent #ff952a transparent;
+  border-color: transparent transparent #ff952a;
 }
 
 #dropdown_mores_plugins_content {
@@ -637,7 +634,7 @@
 
 .user-property-select {
   box-sizing: border-box;
-  -webkit-appearance: none;
+  appearance: none;
   border: none;
   width: 100%;
   padding: 10px;
@@ -747,7 +744,7 @@
   width: 100%;
   height: 100%;
   overflow: auto;
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: rgb(0, 0, 0, 0.7);
 }
 
 .user-property-username-change-content {
@@ -782,7 +779,7 @@
 }
 
 .user-property-password .icon-edit-pass:hover {
-  background-color: #ff7700;
+  background-color: #f70;
 }
 
 .user-property-password-change,
@@ -795,7 +792,7 @@
   width: 100%;
   height: 100%;
   overflow: auto;
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: rgb(0, 0, 0, 0.7);
 }
 
 .user-property-password-change-content {
@@ -804,7 +801,7 @@
   top: 50%;
   transform: translate(-50%, -48%);
   text-align: left;
-  padding: 40px 40px 40px 40px;
+  padding: 40px;
   border-radius: 10px;
   width: 280px;
 }
@@ -862,16 +859,16 @@
 
 .edit-password-success .edit-password-success-reset-link span:hover,
 .AddUserPasswordInputContainer span:hover {
-  color: #ffffff;
-  background-color: #ff7700;
+  color: #fff;
+  background-color: #f70;
 }
 
 #result_send_mail_copy {
-  margin-bottom: 0px;
+  margin-bottom: 0;
 }
 
 #edit_password_result_mail_copy {
-  padding-top: 0px;
+  padding-top: 0;
 }
 
 .update-password-success,
@@ -1182,7 +1179,7 @@
 }
 
 .properties-container p {
-  margin: 0 0 5px 0;
+  margin: 0 0 5px;
 }
 
 .properties-container .user-list-checkbox {
@@ -1225,7 +1222,7 @@
 }
 
 .preferencies-container p {
-  margin: 0 0 5px 0;
+  margin: 0 0 5px;
 }
 
 .preferences-container {
@@ -1266,7 +1263,7 @@
   margin-top: 29px !important;
 }
 /* for firefox */
-@-moz-document url-prefix() {
+@document url-prefix() {
   .edit-user-tabsheet-plugins {
     margin-top: 25px !important;
   }
@@ -1277,7 +1274,6 @@
 .update-user-button,
 .user-property-main-user-body .main-user-btn-validate {
   cursor: pointer;
-  color: #353535;
   padding: 10px 20px;
   font-size: 1.1em;
   font-weight: bold;
@@ -1287,7 +1283,7 @@
 
 .update-user-button:hover,
 .user-property-main-user-body .main-user-btn-rewrite:hover {
-  background-color: #ff7700;
+  background-color: #f70;
 }
 
 .update-user-button.can-update {
@@ -1336,7 +1332,7 @@
   width: 100%;
   height: 100%;
   overflow: auto;
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: rgb(0, 0, 0, 0.7);
 }
 
 .GuestUserListPopInContainer {
@@ -1387,8 +1383,7 @@
 }
 
 .AddUserScrollableContent {
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden auto;
   flex: 1;
   min-height: 0;
   width: 100%;
@@ -1419,7 +1414,7 @@
 }
 
 .AddUserTextField {
-  margin: 0 0 10px 0;
+  margin: 0 0 10px;
 }
 
 .AddIconContainer {
@@ -1443,7 +1438,7 @@
 .AddUserInputContainer {
   display: flex;
   flex-direction: column;
-  margin: 5px 0px;
+  margin: 5px 0;
   width: 100%;
 }
 
@@ -1524,12 +1519,12 @@
 #UserList .item .remove:hover,
 #GuestUserList .item .remove:hover,
 #AddUser .item .remove:hover {
-  background-color: #ff7700;
+  background-color: #f70;
 }
 
 /* selection panel */
 #permitActionUserList .user-list-checkbox i {
-  margin-left: 0px;
+  margin-left: 0;
 }
 
 .user-selected-item {
@@ -1555,7 +1550,7 @@
 }
 
 .user-action-select {
-  -webkit-appearance: none;
+  appearance: none;
   padding: 5px 10px;
   width: 100%;
 }
@@ -1569,9 +1564,9 @@
   z-index: 13;
 }
 
-/*----------------------
+/* ----------------------
 Advanced filter
-----------------------*/
+---------------------- */
 
 .filter-div {
   margin-left: 500px;
@@ -1627,7 +1622,7 @@ Advanced filter
 .advanced-filter-date {
   width: 52%;
   min-width: 330px;
-  margin: 0 auto 0 auto;
+  margin: 0 auto;
 
   display: flex;
   flex-direction: column;
@@ -1687,12 +1682,11 @@ Advanced filter
 
 .selectize-dropdown {
   height: 100%;
-  overflow-y: scroll;
-  overflow-x: hidden;
+  overflow: hidden scroll;
 }
 
 #permitActionUserList #applyActionBlock {
-  margin: 30px 0 0 0;
+  margin: 30px 0 0;
   display: flex;
   flex-direction: column;
 }
@@ -1714,15 +1708,15 @@ Advanced filter
   width: 10px;
 }
 
-/*View Selector*/
+/* View Selector */
 
 .selectedAlbum-first {
-  margin-left: 0px;
+  margin-left: 0;
 }
 
 .UserViewSelector {
-  padding: 6px 0px;
-  margin-right: 0px;
+  padding: 6px 0;
+  margin-right: 0;
   border-radius: 10px;
 
   position: absolute;
@@ -1762,9 +1756,7 @@ Advanced filter
 
 .tileView {
   display: flex;
-  flex-direction: row;
-
-  flex-wrap: wrap;
+  flex-flow: row wrap;
 
   margin-bottom: 20px;
 }
@@ -1818,11 +1810,11 @@ Advanced filter
 }
 
 .tileView .user-container-groups {
-  margin: auto auto 15px auto;
+  margin: auto auto 15px;
   justify-content: center;
   max-height: 40px;
   width: 90%;
-  min-width: 0px;
+  min-width: 0;
 }
 
 .tileView .group-primary {
@@ -1851,15 +1843,15 @@ Advanced filter
 }
 
 .tileView .user-container .user-container-checkbox {
-  transform: translate3d(-1px, 1px, 0px);
+  transform: translate3d(-1px, 1px, 0);
 }
 
 .tileView .user-container-initials-wrapper {
-  padding-left: 0px;
+  padding-left: 0;
 }
 
 .tileView .user-container-initials {
-  margin: -10px auto 0 auto;
+  margin: -10px auto 0;
   justify-content: center;
   max-height: 40px;
 }
@@ -1885,8 +1877,7 @@ Advanced filter
 .compactView {
   display: flex;
 
-  flex-direction: row;
-  flex-wrap: wrap;
+  flex-flow: row wrap;
 
   margin-bottom: 35px;
 }
@@ -1924,7 +1915,7 @@ Advanced filter
 .compactView .user-container .user-container-edit,
 .compactView .user-container .user-container-select {
   position: absolute;
-  right: 0px;
+  right: 0;
 
   height: 40px;
   width: 40px;
@@ -1940,7 +1931,7 @@ Advanced filter
 }
 
 .compactView .user-container .user-container-checkbox {
-  transform: translate3d(-1px, 1px, 0px);
+  transform: translate3d(-1px, 1px, 0);
 }
 
 .compactView .group-primary {
@@ -1967,7 +1958,7 @@ Advanced filter
 }
 
 .lineView .user-container-initials-wrapper > span {
-  padding: 0px;
+  padding: 0;
   height: 35px;
   width: 35px;
 
@@ -2051,7 +2042,7 @@ Advanced filter
   cursor: not-allowed;
 }
 
-.notClickableBefore:before {
+.notClickableBefore::before {
   color: #bbb;
 }
 

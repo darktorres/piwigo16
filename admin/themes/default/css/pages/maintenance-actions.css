@@ -4,7 +4,7 @@
 }
 
 .maintenance-action:hover {
-  color: #ff7700;
+  color: #f70;
   text-decoration: none;
 }
 
@@ -67,7 +67,7 @@
 }
 
 .delete-sizes:hover {
-  background-color: #ff7700;
+  background-color: #f70;
   color: #3c3c3c;
   text-decoration: none;
 }
@@ -78,7 +78,7 @@
 
 @keyframes spin {
   100% {
-    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
     transform: rotate(360deg);
   }
 }

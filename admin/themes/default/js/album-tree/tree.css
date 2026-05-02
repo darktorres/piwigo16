@@ -48,5 +48,5 @@ ul.pwgtree-tree li.pwgtree-folder.pwgtree-closed {
 }
 
 ul.pwgtree-tree .pwgtree-moving > .pwgtree-element .pwgtree-title {
-  outline: dashed 1px #0000ff;
+  outline: dashed 1px #00f;
 }

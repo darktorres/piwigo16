@@ -5,15 +5,15 @@
   position: relative;
   text-align: left;
 }
-.thumbnails .wrap2 A,
-.thumbnails .wrap2 SPAN {
+.thumbnails .wrap2 a,
+.thumbnails .wrap2 span {
   overflow: visible;
   position: absolute;
   top: 50%;
   text-align: center;
 }
 
-.thumbnails .wrap2 IMG {
+.thumbnails .wrap2 img {
   position: relative;
   top: -50%;
 }

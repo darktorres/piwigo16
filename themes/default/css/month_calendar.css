@@ -1,4 +1,4 @@
-.calMonth TD,
+.calMonth td,
 .calMonth .calImg {
   width: var(--cal-cell-w);
   height: var(--cal-cell-h);

@@ -3,15 +3,15 @@
   padding: 10px 0 10px 20px;
 }
 
-.dtBar DIV {
+.dtBar div {
   display: inline;
   padding-right: 5px;
 }
 
-.dataTables_paginate A {
+.dataTables_paginate a {
   padding-left: 3px;
 }
 
 .rating-user-submit-row {
-  margin: 10px 0 0 0;
+  margin: 10px 0 0;
 }

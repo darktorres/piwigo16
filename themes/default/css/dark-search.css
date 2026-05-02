@@ -6,7 +6,7 @@
 .filter-manager-popin,
 .tags-found-popin,
 .albums-found-popin {
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: rgb(0, 0, 0, 0.7);
 }
 
 .filter-manager-popin-container,
@@ -25,7 +25,7 @@
 .tags-found-popin .mcs-popin-title,
 .albums-found-popin .mcs-popin-title,
 .quick-search-headers .mcs-popin-title {
-  color: #ff7700bb;
+  color: #f70b;
 }
 
 .mcs-popin-desc {
@@ -55,13 +55,13 @@
 
 .filter-manager,
 .filter-validate {
-  background: #ff7700bb;
+  background: #f70b;
   color: #ffeacf;
 }
 
 .filter-manager:hover,
 .filter-validate:hover {
-  background: #ff7700bb;
+  background: #f70b;
 }
 
 .filter-cancel {
@@ -80,7 +80,7 @@
 
 .filter-form {
   background: #333;
-  box-shadow: 0px 5px 10px 0px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 5px 10px 0 rgb(0, 0, 0, 0.2);
   color: #bbb;
 }
 
@@ -93,7 +93,7 @@
 }
 
 .mcs-container .filter-filled {
-  background: #ff7700bb;
+  background: #f70b;
   border: none !important;
   color: #ffeacf !important;
 }
@@ -147,7 +147,7 @@
 .date_posted-badge,
 .ratios-option label .ratio-badge,
 .ratings-option label .ratings-badge {
-  background: #ff7700bb;
+  background: #f70b;
   color: white;
 }
 
@@ -171,13 +171,13 @@
 .date_posted-option .selected .accordion-toggle,
 .ratios-option input:checked + label,
 .ratings-option input:checked + label {
-  background: rgba(244, 171, 79, 0.17);
+  background: rgb(244, 171, 79, 0.17);
 }
 
 .head-button-2 {
   color: #777;
   background: #222;
-  box-shadow: 0px 2px #00000024;
+  box-shadow: 0 2px #00000024;
 }
 
 .head-button-2:hover {
@@ -202,7 +202,7 @@
 }
 
 .breadcrumb-item .icon-cancel-circled:hover {
-  color: #ff7700bb;
+  color: #f70b;
 }
 
 .linkedAlbumPopInContainer {
@@ -215,7 +215,7 @@
 
 .search-result-item {
   background-color: #fafafa;
-  box-shadow: 0px 2px #00000024;
+  box-shadow: 0 2px #00000024;
   color: #777;
 }
 
@@ -224,7 +224,7 @@
 }
 
 .clear-all.clickable {
-  color: #ff7700bb;
+  color: #f70b;
 }
 
 .ClosePopIn:hover {
@@ -232,7 +232,7 @@
 }
 
 .mcs-no-result .text span:first-child {
-  color: #ff7700bb;
+  color: #f70b;
 }
 
 .mcs-no-result .text span:last-child {
@@ -240,7 +240,7 @@
 }
 
 .filter-form .filter-form-title {
-  color: #ff7700bb;
+  color: #f70b;
 }
 
 .filter-tag-form .selectize-input,
@@ -303,7 +303,7 @@
 }
 
 .breadcrumb-item .link-path,
-.pwg-icon-cancel:before {
+.pwg-icon-cancel::before {
   color: black;
 }
 

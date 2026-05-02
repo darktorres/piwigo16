@@ -1,8 +1,7 @@
-/* Search specific CSS, colors are defined in seperate files*/
+/* Search specific CSS, colors are defined in seperate files */
 .filter-container {
   display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
+  flex-flow: row wrap;
   gap: 10px;
 }
 
@@ -45,7 +44,7 @@
   cursor: pointer;
 }
 
-.filter-manager-controller-container .mcs-icon:before {
+.filter-manager-controller-container .mcs-icon::before {
   margin-right: 5px;
 }
 
@@ -61,18 +60,17 @@
   width: 100%;
   font-size: 19px;
   font-weight: 700;
-  margin: 0 0 20px 0;
+  margin: 0 0 20px;
 }
 
 .mcs-popin-desc {
-  margin: 0 0 20px 0;
+  margin: 0 0 20px;
 }
 
 .tags-found-container,
 .albums-found-container {
   display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
+  flex-flow: row wrap;
   gap: 5px;
 }
 
@@ -108,9 +106,8 @@
 
 .filter-manager-popin .filter-manager-controller-container {
   display: flex;
-  flex-direction: row;
+  flex-flow: row wrap;
   gap: 15px;
-  flex-wrap: wrap;
   margin-bottom: 20px;
 }
 
@@ -146,10 +143,9 @@
 
 .mcs-container {
   display: flex;
-  flex-direction: row;
+  flex-flow: row wrap;
   gap: 10px 15px;
   align-items: center;
-  flex-wrap: wrap;
   margin: 0 15px;
   margin-top: 15px;
 }
@@ -248,7 +244,7 @@
 }
 
 #word-search {
-  margin: 0 0 10px 0;
+  margin: 0 0 10px;
   width: -moz-available;
   width: -webkit-fill-available;
   border-radius: 5px;
@@ -284,9 +280,8 @@
 
 .filter-word-form .search-params {
   display: flex;
-  flex-direction: row;
+  flex-flow: row wrap;
   gap: 5px 15px;
-  flex-wrap: wrap;
 }
 
 .filter-word-form span {
@@ -315,14 +310,14 @@
 .ratios-option-container .ratings-option-container {
   display: flex;
   flex-direction: column;
-  margin: 20px 0 20px 0;
+  margin: 20px 0;
   overflow: auto;
   max-height: 250px;
 }
 
 .date_posted-option-container,
 .date_created-option-container {
-  margin: 10px 0 10px 0;
+  margin: 10px 0;
 }
 
 .height-option-container,
@@ -480,7 +475,7 @@
 
 .date_posted-option .accordion-toggle:hover,
 .date_created-option .accordion-toggle:hover {
-  color: #ff7700;
+  color: #f70;
   cursor: pointer;
 }
 
@@ -523,8 +518,8 @@
   border-bottom: 0.3px solid #aaa;
 }
 
-.custom_posted_date_toggle .gallery-icon-up-open:before,
-.custom_created_date_toggle .gallery-icon-up-open:before {
+.custom_posted_date_toggle .gallery-icon-up-open::before,
+.custom_created_date_toggle .gallery-icon-up-open::before {
   rotate: -90deg;
 }
 
@@ -537,7 +532,7 @@
   width: 350px;
 }
 
-/*_____________________________*/
+/* _____________________________ */
 
 .head-button-2 {
   position: relative;
@@ -566,7 +561,7 @@
 }
 
 .breadcrumb-item {
-  margin: 0 10px 5px 0px;
+  margin: 0 10px 5px 0;
   padding: 4px 8px;
   border-radius: 5px;
   font-weight: bold;
@@ -623,7 +618,7 @@
 }
 
 .mcs-no-result {
-  margin: 30vh 0 0 0;
+  margin: 30vh 0 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -641,7 +636,7 @@
 .mcs-no-result .text span:first-child {
   font-size: 18px;
   font-weight: 700;
-  margin: 0 0 15px 0;
+  margin: 0 0 15px;
   max-width: 450px;
 }
 
@@ -672,15 +667,13 @@
   padding: 5px;
   width: 350px;
   display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
+  flex-flow: row wrap;
   gap: 5px;
 }
 
 .filter-tag-form .selectize-input input,
 .filter-author-form .selectize-input input,
 .filter-added_by-form .selectize-input input {
-  height: 16px;
   padding: 0;
   height: 26px;
   border: none;
@@ -876,7 +869,7 @@
 /* Slider css */
 
 .slider-info {
-  color: #ff7700;
+  color: #f70;
   font-weight: bold;
 }
 
@@ -925,7 +918,7 @@
 
 .no_filtered_photos {
   font-weight: 700;
-  color: #ee8800;
+  color: #e80;
   padding: 30px;
   text-align: center;
 }
@@ -944,7 +937,7 @@
   width: 100%;
   height: 100%;
   overflow: auto;
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: rgb(0, 0, 0, 0.7);
 }
 
 .close-modal {

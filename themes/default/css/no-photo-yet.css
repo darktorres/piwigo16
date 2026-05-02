@@ -4,10 +4,10 @@ body {
   background-color: #1b1b1b;
 }
 
-P {
+p {
   text-align: center;
 }
-TD {
+td {
   color: #c1c1c1;
   letter-spacing: 1px;
 }
@@ -49,7 +49,7 @@ TD {
 }
 
 .bigButton a:hover {
-  background-color: #ff7700;
+  background-color: #f70;
   outline: none;
   color: #493c21;
   border: none;
@@ -105,7 +105,7 @@ TD {
 #quickconnect input[type="text"]:focus,
 #quickconnect input[type="password"]:focus {
   background-color: #444;
-  border: 2px solid #ff7700;
+  border: 2px solid #f70;
   outline: none;
 }
 
@@ -122,6 +122,6 @@ TD {
 }
 
 #quickconnect input[type="submit"]:hover {
-  background-color: #ff7700;
+  background-color: #f70;
   color: #493c21;
 }

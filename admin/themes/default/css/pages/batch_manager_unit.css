@@ -17,7 +17,7 @@
 }
 #action_add_tags .item .remove:hover,
 #action_add_tags .item .remove:hover {
-  background-color: #ff7700;
+  background-color: #f70;
 }
 
 /* .selectize-input.items.not-full.has-options,
@@ -28,7 +28,7 @@
 } */
 
 .breadcrumb-item {
-  margin: 5px 0 5px 0 !important;
+  margin: 5px 0 !important;
 }
 
 /* Pagination row layout (rendered above and below the photo list). */

@@ -11,7 +11,7 @@
   position: absolute;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(130deg, #ff7700 0%, #ffa744 100%);
+  background: linear-gradient(130deg, #f70 0%, #ffa744 100%);
   right: -10px;
   top: 45px;
   width: max-content;
@@ -35,7 +35,7 @@
   transform: rotate(0deg);
   border-width: 5px;
   border-style: solid;
-  border-color: transparent transparent #ff7700 transparent;
+  border-color: transparent transparent #f70;
 }
 
 .comment-option span:first-child::before {

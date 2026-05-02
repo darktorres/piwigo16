@@ -1,13 +1,13 @@
-.thumbnails LI SPAN,
-.thumbnails LI .wrap2 A,
-.thumbnails LI LABEL {
+.thumbnails li span,
+.thumbnails li .wrap2 a,
+.thumbnails li label {
   width: var(--thumb-w);
 }
 
-.thumbnails LI .wrap2 {
+.thumbnails li .wrap2 {
   height: var(--thumb-h);
 }
 
-.thumbnails LI .thumbLegend {
+.thumbnails li .thumbLegend {
   font-size: var(--thumb-legend-fs);
 }

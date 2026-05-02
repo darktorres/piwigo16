@@ -127,9 +127,16 @@ final class WsApiTest extends IntegrationTestCase
         $list = $this->apiGet('pwg.categories.getAdminList');
         self::assertSame('ok', $list['stat']);
 
+        // pwg.categories.delete requires the per-session pwg_token to defeat
+        // CSRF on destructive admin ops.
+        $status = $this->apiGet('pwg.session.getStatus');
+        $pwg_token = is_array($status['result']) ? (string) ($status['result']['pwg_token'] ?? '') : '';
+        self::assertNotSame('', $pwg_token, 'session must expose pwg_token');
+
         $delete = $this->apiPost('pwg.categories.delete', [
             'category_id' => $id,
             'photo_deletion_mode' => 'delete_orphans',
+            'pwg_token' => $pwg_token,
         ]);
         self::assertSame('ok', $delete['stat']);
     }

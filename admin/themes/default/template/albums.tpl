@@ -1,13 +1,5 @@
 <script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 
-{footer_script}
-{* window.data kept for cat_search.ts which still reads it as a global *}
-window.data = {json_encode($album_data)};
-var str_albums_found = '{"<b>%d</b> albums found"|translate|escape:javascript}';
-var str_album_found = '{"<b>1</b> album found"|translate|escape:javascript}';
-var str_result_limit = '{"<b>%d+</b> albums found, try to refine the search"|translate|escape:javascript}';
-{/footer_script}
-
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
 {* tree.css is now bundled into albums.js via the album-tree module *}
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}

@@ -311,6 +311,9 @@ $template->assign(
         'add_album_root_title'       => l10n('Create a new album at root'),
         'add_sub_album_of'           => l10n('Create a sub-album of "%s"'),
         'tiptip_locked_album'        => l10n('Locked album'),
+        'str_albums_found'           => l10n('<b>%d</b> albums found'),
+        'str_album_found'            => l10n('<b>1</b> album found'),
+        'str_result_limit'           => l10n('<b>%d+</b> albums found, try to refine the search'),
     ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE),
   ]
 );

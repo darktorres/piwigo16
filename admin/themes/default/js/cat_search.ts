@@ -1,7 +1,23 @@
-declare var data: Array<{ id: string | number; name: string; children?: typeof data }>;
-declare var str_result_limit: string;
-declare var str_albums_found: string;
-declare var str_album_found: string;
+import { getPageData } from './page-data';
+
+interface AlbumNode {
+    id: string | number;
+    name: string;
+    children?: AlbumNode[];
+}
+
+interface CatSearchPageData {
+    data: AlbumNode[];
+    str_result_limit: string;
+    str_albums_found: string;
+    str_album_found: string;
+}
+
+const pageData = getPageData<CatSearchPageData>();
+const data = pageData.data;
+const str_result_limit = pageData.str_result_limit;
+const str_albums_found = pageData.str_albums_found;
+const str_album_found = pageData.str_album_found;
 
 const RESULT_LIMIT = 100;
 const editLink = 'admin.php?page=album-';

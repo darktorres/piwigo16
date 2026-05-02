@@ -6,7 +6,7 @@ Inventory of every entry in each sibling repo's `manifest.json`.
 | --- | ---: |
 | [`piwigo16-plugins`](#piwigo16-plugins) | 405 |
 | [`piwigo16-themes`](#piwigo16-themes) | 136 |
-| [`piwigo16-languages`](#piwigo16-languages) | 68 |
+| [`piwigo16-languages`](#piwigo16-languages) | 62 |
 | [`piwigo16-tools`](#piwigo16-tools) | 33 |
 
 ## piwigo16-plugins
@@ -566,7 +566,7 @@ Inventory of every entry in each sibling repo's `manifest.json`.
 
 ## piwigo16-languages
 
-68 entries.
+62 entries.
 
 | Key | Filename | Extension Name |
 | --- | --- | --- |
@@ -577,9 +577,7 @@ Inventory of every entry in each sibling repo's `manifest.json`.
 | `br_FR_16.3.0` | `br_FR_16.3.0.zip` | Brezhoneg [FR] |
 | `ca_ES_16.3.0` | `ca_ES_16.3.0.zip` | Catalan [CA] |
 | `cs_CZ_16.3.0` | `cs_CZ_16.3.0.zip` | Česky [CZ] |
-| `cz_CZ` | `cz_CZ.zip` | Czech language (Cestina) |
 | `da_DK_16.3.0` | `da_DK_16.3.0.zip` | Dansk [DK] |
-| `da_DK_ver_1` | `da_DK_ver_1.zip` | Danish translation |
 | `de_DE_16.3.0` | `de_DE_16.3.0.zip` | Deutsch [DE] |
 | `el_GR_16.3.0` | `el_GR_16.3.0.zip` | Ελληνικά [GR] |
 | `en_GB_16.3.0` | `en_GB_16.3.0.zip` | English [GB] |
@@ -604,7 +602,6 @@ Inventory of every entry in each sibling repo's `manifest.json`.
 | `is_IS_16.3.0` | `is_IS_16.3.0.zip` | Íslenska [IS] |
 | `it_IT_16.3.0` | `it_IT_16.3.0.zip` | Italiano [IT] |
 | `ja_JP_16.3.0` | `ja_JP_16.3.0.zip` | 日本語 [JP] |
-| `jp_JP_2.0.0` | `jp_JP_2.0.0.zip` | Japanese extentions for Piwigo |
 | `ka_GE_16.3.0` | `ka_GE_16.3.0.zip` | ქართული [GE] |
 | `km_KH_16.3.0` | `km_KH_16.3.0.zip` | ខ្មែរ [KH] |
 | `kn_IN_16.3.0` | `kn_IN_16.3.0.zip` | ಕನ್ನಡ [IN] |
@@ -617,13 +614,10 @@ Inventory of every entry in each sibling repo's `manifest.json`.
 | `nb_NO_16.3.0` | `nb_NO_16.3.0.zip` | Norsk bokmål [NO] |
 | `nl_NL_16.3.0` | `nl_NL_16.3.0.zip` | Nederlands [NL] |
 | `nn_NO_16.3.0` | `nn_NO_16.3.0.zip` | Norwegian nynorsk [NO] |
-| `pl_PL` | `pl_PL.zip` | Polish translation for Piwigo 2.0 |
 | `pl_PL_16.3.0` | `pl_PL_16.3.0.zip` | Polski [PL] |
 | `pt_BR_16.3.0` | `pt_BR_16.3.0.zip` | Brasil [BR] |
-| `pt_PT` | `pt_PT.zip` | Langue Portugaise |
 | `pt_PT_16.3.0` | `pt_PT_16.3.0.zip` | Português [PT] |
 | `ro_RO_16.3.0` | `ro_RO_16.3.0.zip` | Română [RO] |
-| `ru_RU` | `ru_RU.zip` | Russian translate (Русский) |
 | `ru_RU_16.3.0` | `ru_RU_16.3.0.zip` | Русский [RU] |
 | `sh_RS_16.3.0` | `sh_RS_16.3.0.zip` | Srpski [SR] |
 | `sk_SK_16.3.0` | `sk_SK_16.3.0.zip` | Slovensky [SK] |

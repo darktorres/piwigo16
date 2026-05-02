@@ -6,7 +6,8 @@
 // Originally derived from https://github.com/abodelot/jquery.json-viewer
 // (MIT, Alexandre Bodelot).
 
-const URL_RE = /^(https?:\/\/|ftps?:\/\/)?([a-z0-9%-]+\.){1,}([a-z0-9-]+)?(:(\d{1,5}))?(\/([a-z0-9\-._~:/?#[\]@!$&'()*+,;=%]+)?)?$/i;
+const URL_RE =
+    /^(https?:\/\/|ftps?:\/\/)?([a-z0-9%-]+\.){1,}([a-z0-9-]+)?(:(\d{1,5}))?(\/([a-z0-9\-._~:/?#[\]@!$&'()*+,;=%]+)?)?$/i;
 
 function isCollapsable(arg) {
     return arg instanceof Object && Object.keys(arg).length > 0;
@@ -54,9 +55,7 @@ function json2html(json, options) {
         for (let i = 0; i < keys.length; i++) {
             const key = keys[i];
             const value = json[key];
-            const keyRepr = options.withQuotes
-                ? `<span class="json-string">"${key}"</span>`
-                : key;
+            const keyRepr = options.withQuotes ? `<span class="json-string">"${key}"</span>` : key;
             html += '<li>';
             if (isCollapsable(value)) {
                 html += `<a href class="json-toggle">${keyRepr}</a>`;
@@ -90,7 +89,10 @@ export function renderJsonViewer(target, json, options = {}) {
     target.classList.add('json-document');
 
     target.addEventListener('click', (e) => {
-        const link = e.target instanceof Element ? e.target.closest('a.json-toggle, a.json-placeholder') : null;
+        const link =
+            e.target instanceof Element
+                ? e.target.closest('a.json-toggle, a.json-placeholder')
+                : null;
         if (!link || !target.contains(link)) return;
         e.preventDefault();
 
@@ -101,7 +103,9 @@ export function renderJsonViewer(target, json, options = {}) {
         }
 
         link.classList.toggle('collapsed');
-        const collection = link.parentElement?.querySelector(':scope > ul.json-dict, :scope > ol.json-array');
+        const collection = link.parentElement?.querySelector(
+            ':scope > ul.json-dict, :scope > ol.json-array'
+        );
         if (!collection) return;
 
         const willHide = collection.style.display !== 'none' && !collection.hidden;
@@ -115,7 +119,9 @@ export function renderJsonViewer(target, json, options = {}) {
             collection.after(placeholder);
         } else {
             collection.style.display = '';
-            const placeholder = collection.parentElement?.querySelector(':scope > a.json-placeholder');
+            const placeholder = collection.parentElement?.querySelector(
+                ':scope > a.json-placeholder'
+            );
             placeholder?.remove();
         }
     });

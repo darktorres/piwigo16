@@ -21,7 +21,7 @@ function lightAccordion(el: HTMLElement | null, options: Partial<AccordionOption
     });
 
     el.addEventListener('click', (e) => {
-        let header =
+        const header =
             (e.target as HTMLElement | null)?.closest<HTMLElement>(settings.header) ?? null;
         if (!header) return;
         let content = header.nextElementSibling as HTMLElement | null;

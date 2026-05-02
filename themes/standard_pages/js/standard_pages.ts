@@ -9,7 +9,7 @@ interface StandardPagesData {
 const { selected_language, url_logo_light, url_logo_dark } =
     getPageData<StandardPagesData>('pwg-std-pages-data');
 
-let modeCookie = getCookie('mode');
+const modeCookie = getCookie('mode');
 if (modeCookie !== '') {
     toggle_mode(modeCookie);
 } else {

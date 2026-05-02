@@ -2,9 +2,10 @@
 
 function applyFontCheckbox(container: HTMLElement): void {
     container.querySelectorAll<HTMLInputElement>('input[type=checkbox]').forEach((input) => {
-        if (!input.checked)
-            input.previousElementSibling?.classList.toggle('icon-check', false) ||
-                input.previousElementSibling?.classList.toggle('icon-check-empty', true);
+        if (!input.checked) {
+            input.previousElementSibling?.classList.toggle('icon-check', false);
+            input.previousElementSibling?.classList.toggle('icon-check-empty', true);
+        }
         input.addEventListener('change', () => {
             const prev = input.previousElementSibling as HTMLElement | null;
             if (!prev) return;
@@ -61,7 +62,7 @@ function sprintf(format: string, ...args: unknown[]): string {
     let f = format;
     const o: string[] = [];
     let m: RegExpExecArray | null;
-    let s = '';
+    const s = '';
     while (f) {
         if ((m = /^[^\x25]+/.exec(f))) {
             o.push(m[0]);

@@ -6,7 +6,9 @@ import { renderJsonViewer } from './json-viewer.js';
 
 // ─── tiny cookie helpers ──────────────────────────────────────────────────
 function getCookie(name) {
-    const match = document.cookie.match(new RegExp('(?:^|; )' + name.replace(/[.$?*|{}()[\]\\\/+^]/g, '\\$&') + '=([^;]*)'));
+    const match = document.cookie.match(
+        new RegExp('(?:^|; )' + name.replace(/[.$?*|{}()[\]\\/+^]/g, '\\$&') + '=([^;]*)')
+    );
     return match ? decodeURIComponent(match[1]) : null;
 }
 function setCookie(name, value) {
@@ -19,8 +21,12 @@ function removeCookie(name) {
 // ─── DOM helpers ──────────────────────────────────────────────────────────
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
-const show = (el) => { if (el) el.style.display = ''; };
-const hide = (el) => { if (el) el.style.display = 'none'; };
+const show = (el) => {
+    if (el) el.style.display = '';
+};
+const hide = (el) => {
+    if (el) el.style.display = 'none';
+};
 
 document.addEventListener('DOMContentLoaded', () => {
     const cachedMethods = Object.create(null);
@@ -79,12 +85,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // ── resizable iframe ────────────────────────────────────────────────
     $('#increaseIframe').addEventListener('click', (e) => {
         e.preventDefault();
-        resultWrapper.style.height = (resultWrapper.offsetHeight + 100) + 'px';
+        resultWrapper.style.height = resultWrapper.offsetHeight + 100 + 'px';
     });
     $('#decreaseIframe').addEventListener('click', (e) => {
         e.preventDefault();
         if (resultWrapper.offsetHeight > 200) {
-            resultWrapper.style.height = (resultWrapper.offsetHeight - 100) + 'px';
+            resultWrapper.style.height = resultWrapper.offsetHeight - 100 + 'px';
         }
     });
 
@@ -279,7 +285,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const content = node.querySelector(':scope > .method-node-content');
             const checkbox = node.querySelector(':scope > input');
             if (!content || !checkbox) return;
-            if (checkbox.checked) show(content); else hide(content);
+            if (checkbox.checked) show(content);
+            else hide(content);
         });
     }
 
@@ -346,18 +353,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 const acceptArray = param.acceptArray;
                 let defaultValue = param.defaultValue == null ? '' : param.defaultValue;
                 if (typeof defaultValue === 'object') defaultValue = defaultValue.join('|');
-                const info = param.info == null
-                    ? ''
-                    : `<i class="methodInfo icon-info-circled-1" title="${param.info.replace(/"/g, '&quot;')}"></i>`;
-                const optionalMark = '<span class="required" title="This parameter is required">*</span>';
-                const arrayMark = '<span class="type-badge icon-clone" title="Can be an array"></span>';
+                const info =
+                    param.info == null
+                        ? ''
+                        : `<i class="methodInfo icon-info-circled-1" title="${param.info.replace(/"/g, '&quot;')}"></i>`;
+                const optionalMark =
+                    '<span class="required" title="This parameter is required">*</span>';
+                const arrayMark =
+                    '<span class="type-badge icon-clone" title="Can be an array"></span>';
                 let type = '';
-                if (param.type.match(/bool/)) type += '<span class="type-badge" title="Boolean">B<span>';
-                if (param.type.match(/int/)) type += '<span class="type-badge" title="Integer">I</span>';
-                if (param.type.match(/float/)) type += '<span class="type-badge" title="Float">F</span>';
+                if (param.type.match(/bool/))
+                    type += '<span class="type-badge" title="Boolean">B<span>';
+                if (param.type.match(/int/))
+                    type += '<span class="type-badge" title="Integer">I</span>';
+                if (param.type.match(/float/))
+                    type += '<span class="type-badge" title="Float">F</span>';
                 let subtype = '';
-                if (param.type.match(/positive/)) subtype += '<span class="type-badge icon-plus" title="Positive"></span>';
-                if (param.type.match(/notnull/)) subtype += '<span class="type-badge" title="Not null"><span style="transform:translateY(-3px)">&oslash;</span></span>';
+                if (param.type.match(/positive/))
+                    subtype += '<span class="type-badge icon-plus" title="Positive"></span>';
+                if (param.type.match(/notnull/))
+                    subtype +=
+                        '<span class="type-badge" title="Not null"><span style="transform:translateY(-3px)">&oslash;</span></span>';
 
                 rows += `<tr>
                     <td>${param.name + (isOptional ? '' : optionalMark) + info}</td>

@@ -78,8 +78,8 @@ const selectedMessage_none = pageData.selectedMessage_none;
 const selectedMessage_all = pageData.selectedMessage_all;
 
 let elements: string[] = [];
-let i = 0;
-let input: HTMLInputElement | null = null;
+const i = 0;
+const input: HTMLInputElement | null = null;
 let percent = 0;
 let progressBar_max = 0;
 
@@ -210,24 +210,27 @@ document.querySelectorAll<HTMLElement>('[data-add-album]').forEach((el) => {
 qs<HTMLInputElement>('input[name=remove_author]')?.addEventListener(
     'click',
     function (this: HTMLInputElement) {
-        this.checked ? hide(qs('input[name=author]')) : show(qs('input[name=author]'));
+        if (this.checked) hide(qs('input[name=author]'));
+        else show(qs('input[name=author]'));
     }
 );
 qs<HTMLInputElement>('input[name=remove_title]')?.addEventListener(
     'click',
     function (this: HTMLInputElement) {
-        this.checked ? hide(qs('input[name=title]')) : show(qs('input[name=title]'));
+        if (this.checked) hide(qs('input[name=title]'));
+        else show(qs('input[name=title]'));
     }
 );
 qs<HTMLInputElement>('input[name=remove_date_creation]')?.addEventListener(
     'click',
     function (this: HTMLInputElement) {
-        this.checked ? hide(qs('#set_date_creation')) : show(qs('#set_date_creation'));
+        if (this.checked) hide(qs('#set_date_creation'));
+        else show(qs('#set_date_creation'));
     }
 );
 
 /*---- Derivatives ----*/
-var derivatives: { elements: any; done: number; total: number; finished: () => boolean } = {
+const derivatives: { elements: any; done: number; total: number; finished: () => boolean } = {
     elements: null,
     done: 0,
     total: 0,
@@ -577,15 +580,11 @@ function delete_orphans_block(blockSize: any) {
 declare function sprintf(fmt: string, ...args: unknown[]): string;
 
 function checkPermitAction(): void {
-    let nbSelected = 0;
     const setSelectedEl = qs<HTMLInputElement>('input[name=setSelected]');
-    if (setSelectedEl?.checked) {
-        nbSelected = nb_thumbs_set;
-    } else {
-        nbSelected = qsa<HTMLInputElement>('.thumbnails input[type=checkbox]').filter(
-            (el) => el.checked
-        ).length;
-    }
+    const nbSelected = setSelectedEl?.checked
+        ? nb_thumbs_set
+        : qsa<HTMLInputElement>('.thumbnails input[type=checkbox]').filter((el) => el.checked)
+              .length;
 
     const permitAction = qs('#permitAction');
     const forbidAction = qs('#forbidAction');

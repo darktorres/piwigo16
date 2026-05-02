@@ -21,6 +21,11 @@ declare function sprintf(fmt: string, ...args: any[]): string;
 
 let activeAlbumSelector: AlbumSelector | null = null;
 
+function setActiveAlbumSelector(selector: AlbumSelector): void {
+    if (activeAlbumSelector && activeAlbumSelector !== selector) activeAlbumSelector.close();
+    activeAlbumSelector = selector;
+}
+
 const sel = {
     addLinkedAlbum: () => document.getElementById('addLinkedAlbum') as HTMLElement,
     closeAlbumPopIn: () => document.getElementById('closeAlbumPopIn') as HTMLElement,
@@ -143,8 +148,6 @@ class AlbumSelector {
     }
 
     open() {
-        if (activeAlbumSelector && activeAlbumSelector !== this) activeAlbumSelector.close();
-        activeAlbumSelector = this;
         this.#open_album_selector();
     }
 
@@ -309,8 +312,7 @@ class AlbumSelector {
     }
 
     #setActive() {
-        if (activeAlbumSelector && activeAlbumSelector !== this) activeAlbumSelector.close();
-        activeAlbumSelector = this;
+        setActiveAlbumSelector(this);
     }
 
     #open_album_selector() {

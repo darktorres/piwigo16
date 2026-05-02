@@ -97,11 +97,11 @@ declare global {
         };
 
         // LocalStorageCache classes exposed by LocalStorageCache.ts
-        LocalStorageCache: Function;
-        CategoriesCache: Function;
-        TagsCache: Function;
-        GroupsCache: Function;
-        UsersCache: Function;
+        LocalStorageCache: new (...args: unknown[]) => unknown;
+        CategoriesCache: new (...args: unknown[]) => unknown;
+        TagsCache: new (...args: unknown[]) => unknown;
+        GroupsCache: new (...args: unknown[]) => unknown;
+        UsersCache: new (...args: unknown[]) => unknown;
     }
 
     // ── album_selector.ts — i18n strings emitted inline ─────────────────────

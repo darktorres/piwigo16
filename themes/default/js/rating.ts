@@ -21,7 +21,10 @@ function makeNiceRatingForm(options: Record<string, unknown>): void {
         (rateButton as any).initialRateValue = rateButton.value;
         try {
             rateButton.type = 'button';
-        } catch (e) {}
+        } catch {
+            // Legacy IE throws when changing the type of an already-rendered input;
+            // modern browsers tolerate it. Silently ignore for that one edge case.
+        }
 
         rateButton.value = ' ';
         rateButton.style.marginLeft = '0';

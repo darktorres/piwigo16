@@ -125,29 +125,29 @@ const status_arr = ['webmaster', 'admin', 'normal', 'generic', 'guest'];
 const level_arr = ['0', '1', '2', '4', '8'];
 const king_template = '<p class="icon-king" id="the_king"></p>';
 let current_users: any[] = [];
-let guest_id = _guest_id;
+const guest_id = _guest_id;
 let guest_user: any = {};
-let connected_user = _connected_user;
-let groups_arr: [number, string][] = _groups_arr;
+const connected_user = _connected_user;
+const groups_arr: [number, string][] = _groups_arr;
 let last_user_index: any = -1;
 let last_user_id = -1;
-let pwg_token = _pwg_token;
+const pwg_token = _pwg_token;
 let selection: any[] = [];
 let first_update = true;
 let total_users = 0;
 let filter_by = 'id DESC';
-let plugins_set_functions: Record<string, any> = {};
-let plugins_get_functions: Record<string, any> = {};
-let plugins_load: any[] = [];
-let plugins_users_infos_table: any[] = [];
+const plugins_set_functions: Record<string, any> = {};
+const plugins_get_functions: Record<string, any> = {};
+const plugins_load: any[] = [];
+const plugins_users_infos_table: any[] = [];
 let owner_username = _owner_username;
 let owner_id = _owner_id;
-let connected_user_status = _connected_user_status;
-let has_group = _has_group;
-let view_selector = _view_selector;
-let register_dates: string[] = _register_dates;
-let months: string[] = _months;
-let groupOptions = _groups_arr.map((x) => ({ value: x[0], label: x[1], isSelected: 0 }));
+const connected_user_status = _connected_user_status;
+const has_group = _has_group;
+const view_selector = _view_selector;
+const register_dates: string[] = _register_dates;
+const months: string[] = _months;
+const groupOptions = _groups_arr.map((x) => ({ value: x[0], label: x[1], isSelected: 0 }));
 let nb_filtered_users: number;
 let per_page = _pagination;
 
@@ -228,9 +228,9 @@ const tsOptions = {
     searchField: ['label'],
     plugins: { remove_button: {} },
 };
-let groupTs = groupSelectEls[0] ? new TomSelect(groupSelectEls[0], tsOptions) : null;
-let groupGuestTs = groupSelectEls[1] ? new TomSelect(groupSelectEls[1], tsOptions) : null;
-let groupAddUserTs = groupSelectEls[2] ? new TomSelect(groupSelectEls[2], tsOptions) : null;
+const groupTs = groupSelectEls[0] ? new TomSelect(groupSelectEls[0], tsOptions) : null;
+const groupGuestTs = groupSelectEls[1] ? new TomSelect(groupSelectEls[1], tsOptions) : null;
+const groupAddUserTs = groupSelectEls[2] ? new TomSelect(groupSelectEls[2], tsOptions) : null;
 
 function getPopInTs(popIn: HTMLElement): TomSelect | null {
     const sel = popIn.querySelector<HTMLElement>('.user-property-group select');
@@ -391,7 +391,7 @@ function initSliders() {
 }
 
 /*---- Pagination ----*/
-let actual_page = 1;
+const actual_page = 1;
 
 function update_pagination_menu() {
     const container = qs<HTMLElement>('.pagination-item-container');
@@ -795,7 +795,8 @@ function fill_user_edit_summary(user_to_edit: any, popIn: HTMLElement, isGuest: 
         tippy(usernameSpan, { content: user_to_edit.username });
     }
     const editSpec = q('.user-property-username .edit-username-specifier');
-    user_to_edit.id === connected_user || user_to_edit.id === 1 ? show(editSpec) : hide(editSpec);
+    if (user_to_edit.id === connected_user || user_to_edit.id === 1) show(editSpec);
+    else hide(editSpec);
     const unameInput = q<HTMLInputElement>('.user-property-username-change input');
     if (unameInput) unameInput.value = user_to_edit.username;
     const pwdInput = q<HTMLInputElement>('.user-property-password-change input');
@@ -1823,20 +1824,19 @@ function setDisplayCompact() {
 /*---- Generate user containers ----*/
 function user_container_click(this: HTMLElement) {
     if (!isSelectionMode()) return;
-    const container = this;
-    const key = parseInt(container.getAttribute('key') ?? '0');
+    const key = parseInt(this.getAttribute('key') ?? '0');
     const currUser = current_users[key] ?? { id: -1 };
-    const cb = container.querySelector<HTMLElement>('.user-list-checkbox');
+    const cb = this.querySelector<HTMLElement>('.user-list-checkbox');
     if (!cb) return;
     if (cb.dataset['selected'] === '1') {
         cb.dataset['selected'] = '0';
         hide(cb.querySelector('i'));
-        container.classList.remove('container-selected');
+        this.classList.remove('container-selected');
         selection = selection.filter((e) => e.id !== currUser.id);
     } else {
         cb.dataset['selected'] = '1';
         show(cb.querySelector('i'));
-        container.classList.add('container-selected');
+        this.classList.add('container-selected');
         selection.push({ id: currUser.id, username: currUser.username });
     }
     update_selection_content();
@@ -1874,7 +1874,7 @@ function generate_groups(container: HTMLElement, groups: any[]) {
         if (bonus) {
             bonus.innerHTML = '...';
             bonus.classList.add(color_icons[groups[2] % 5], 'tiptip');
-            let title = groups
+            const title = groups
                 .slice(2)
                 .map((id) => get_group_name_from_id(id))
                 .join(', ');
@@ -2049,9 +2049,8 @@ document.addEventListener('DOMContentLoaded', () => {
             qsa('#applyActionBlock .infos').forEach(hide);
             qsa('[id^=action_]').forEach(hide);
             show(document.getElementById('action_' + this.value));
-            this.value !== '-1'
-                ? show(document.getElementById('applyActionBlock'))
-                : hide(document.getElementById('applyActionBlock'));
+            if (this.value !== '-1') show(document.getElementById('applyActionBlock'));
+            else hide(document.getElementById('applyActionBlock'));
         }
     );
 
@@ -2151,7 +2150,8 @@ document.addEventListener('DOMContentLoaded', () => {
         qs('.search-input')?.dispatchEvent(new Event('input'));
     });
     qs('.search-input')?.addEventListener('input', function (this: HTMLInputElement) {
-        this.value === '' ? hide(qs('.search-cancel')) : show(qs('.search-cancel'));
+        if (this.value === '') hide(qs('.search-cancel'));
+        else show(qs('.search-cancel'));
     });
 
     const iconUser = document.getElementById('icon-usr-list-user');

@@ -41,7 +41,7 @@ const cacheData = getPageData<BatchManagerUnitCacheData>('pwg-batch-manager-unit
 
 // Map from element ID → related category ID array; built from DOM data-attrs in DOMContentLoaded.
 // Typed as any to accommodate the .cat_ids property that AlbumSelector attaches after add.
-let allRelatedCategoryIds: Record<string, any> = {};
+const allRelatedCategoryIds: Record<string, any> = {};
 
 // Initialize caches
 const tagsCache = new TagsCache({

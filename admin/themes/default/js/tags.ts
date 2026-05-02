@@ -79,7 +79,7 @@ let index: any;
 let indexOfTag: any;
 let isNotCreate: any;
 let loadState: any;
-let maxItemDisplayed = 5;
+const maxItemDisplayed = 5;
 let mergeOption: any = false;
 let merge_name: any;
 let nbPage: any;
@@ -102,7 +102,7 @@ const hide = (el: HTMLElement | null | undefined) => {
     if (el) el.style.display = 'none';
 };
 
-var dataTags: any[] = JSON.parse(qs('.tag-container')?.dataset['tags'] ?? '[]');
+let dataTags: any[] = JSON.parse(qs('.tag-container')?.dataset['tags'] ?? '[]');
 
 /*------- init select -------*/
 const sel100 = document.getElementById('select-100') as HTMLInputElement | null;
@@ -485,7 +485,7 @@ function duplicateTag(id: any, name: any): Promise<any> {
 
 /*------- Selection mode -------*/
 
-var selected: any[] = [];
+let selected: any[] = [];
 
 (document.getElementById('toggleSelectionMode') as HTMLInputElement).checked = false;
 document
@@ -829,9 +829,9 @@ function tagListToString(list: any[]) {
 
 /*------- Filter research -------*/
 
-var maxShown = 100;
-var searchTimeOut: ReturnType<typeof setTimeout> | null = null;
-var delaySearchInput = 300;
+const maxShown = 100;
+let searchTimeOut: ReturnType<typeof setTimeout> | null = null;
+const delaySearchInput = 300;
 
 qs<HTMLInputElement>('#search-tag .search-input')?.addEventListener(
     'input',
@@ -874,13 +874,12 @@ function showMessage(message: any) {
 
 /*------- Pagination -------*/
 
-var per_page = parseInt(qs('.tag-container')?.dataset['perPage'] ?? '20');
+let per_page = parseInt(qs('.tag-container')?.dataset['perPage'] ?? '20');
 const pageItem = '<a data-page="%d">%d</a>';
 const pageEllipsis = '<span>...</span>';
-var promisePending = false,
-    delay = 100,
-    updateAsk = false,
-    actualPage = 1;
+let promisePending = false;
+let updateAsk = false;
+let actualPage = 1;
 
 function askUpdatePage() {
     if (!promisePending) {

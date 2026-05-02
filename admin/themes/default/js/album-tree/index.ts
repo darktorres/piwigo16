@@ -61,10 +61,9 @@ class AlbumTreeImpl {
     }
 
     private buildNode(data: NodeData, parent: TreeNode | null): TreeNode {
-        // Capture `this` for the node methods to reach the tree's rootNodes
-        // when walking root-level siblings (which have no .parent).
-        const tree = this;
-
+        // The sibling walkers reach the tree's rootNodes for root-level nodes
+        // (which have no .parent). They use arrow functions so `this` resolves
+        // to the enclosing Tree instance, and close over `node` for self-reference.
         // Spread the data first so callers can read arbitrary fields off the
         // node directly, then attach the structural fields and methods.
         const node: TreeNode = {
@@ -81,14 +80,14 @@ class AlbumTreeImpl {
                 }
                 return depth + 1;
             },
-            getPreviousSibling(): TreeNode | null {
-                const siblings = this.parent ? this.parent.children : tree.rootNodes;
-                const i = siblings.indexOf(this);
+            getPreviousSibling: (): TreeNode | null => {
+                const siblings = node.parent ? node.parent.children : this.rootNodes;
+                const i = siblings.indexOf(node);
                 return i > 0 ? siblings[i - 1]! : null;
             },
-            getNextSibling(): TreeNode | null {
-                const siblings = this.parent ? this.parent.children : tree.rootNodes;
-                const i = siblings.indexOf(this);
+            getNextSibling: (): TreeNode | null => {
+                const siblings = node.parent ? node.parent.children : this.rootNodes;
+                const i = siblings.indexOf(node);
                 return i >= 0 && i < siblings.length - 1 ? siblings[i + 1]! : null;
             },
         };

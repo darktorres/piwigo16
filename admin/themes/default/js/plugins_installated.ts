@@ -52,9 +52,9 @@ const {
     x_plugins_found,
 } = getPageData<PluginsInstalledPageData>();
 
-let complete = false;
-let i = 0;
-let plugin_filter: string | null = new URLSearchParams(window.location.search).get('filter');
+const complete = false;
+const i = 0;
+const plugin_filter: string | null = new URLSearchParams(window.location.search).get('filter');
 
 const qsa = <T extends HTMLElement = HTMLElement>(sel: string) =>
     Array.from(document.querySelectorAll<T>(sel));

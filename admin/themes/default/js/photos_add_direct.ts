@@ -64,13 +64,13 @@ const {
     str_upload_in_progress,
 } = getPageData<PhotosAddDirectPageData>();
 
-let addedPhotos: any[] = [];
+const addedPhotos: any[] = [];
 let exts: any = {};
 let fileNames: any = {};
 let html: string = '';
-let updatedPhotos: any[] = [];
+const updatedPhotos: any[] = [];
 let uploadCategory: any = null;
-let uploadedPhotos: any[] = [];
+const uploadedPhotos: any[] = [];
 
 const qs = <T extends HTMLElement = HTMLElement>(sel: string) => document.querySelector<T>(sel);
 const qsa = <T extends HTMLElement = HTMLElement>(sel: string) =>

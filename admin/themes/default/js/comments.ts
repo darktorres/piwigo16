@@ -53,7 +53,7 @@ const commentsSelectedList =
     '<div class="comments-selected-item"><a class="icon-cancel comments-selected-remove" id="deletecomment_%d"></a> <p>#%d</p></div>';
 
 let commentsState: Record<string, any> = {};
-let commentsParams: Record<string, any> = { status: 'all', page: 0, per_page: 5 };
+const commentsParams: Record<string, any> = { status: 'all', page: 0, per_page: 5 };
 let updateAuthorId = true;
 let searchTimeOut: ReturnType<typeof setTimeout> | null = null;
 let selectionMode = false;

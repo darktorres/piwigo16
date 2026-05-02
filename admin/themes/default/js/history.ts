@@ -57,7 +57,7 @@ const {
 } = getPageData<HistoryPageData>();
 
 // Mutable state
-let current_param: Record<string, any> = {
+const current_param: Record<string, any> = {
     start: '',
     end: today,
     types: { 0: 'none', 1: 'picture', 2: 'high', 3: 'other' },
@@ -438,8 +438,8 @@ function lineConstructor(line: any, id: any, imageDisplay: any) {
             Object.keys(search_details).forEach((k) => {
                 if (search_details[k] !== null) active[k] = search_details[k];
             });
-            let count_item = 1,
-                active_more: string[] = [];
+            let count_item = 1;
+            const active_more: string[] = [];
             const active_items = Object.keys(active);
             if (active_items.length > 0) {
                 if (active.allwords) {

@@ -254,39 +254,4 @@
 
 {include file='include/album_selector.inc.tpl'}
 
-<style>
-#action_add_tags .item,
-#action_add_tags .item.active {
-  background-image:none;
-  background-color: #ffa646;
-  border-color: transparent;
-  color: black;
-  border-radius: 20px;
-}
-
-#action_add_tags .item .remove,
-#action_add_tags .item .remove {
-  background-color: transparent;
-  border-top-right-radius: 20px;
-  border-bottom-right-radius: 20px;
-  color: black;
-  border-left: 1px solid transparent;
-
-}
-#action_add_tags .item .remove:hover,
-#action_add_tags .item .remove:hover {
-  background-color: #ff7700;
-}
-
-/* .selectize-input.items.not-full.has-options,
-.selectize-input.items.not-full.has-options.focus.input-active.dropdown-active,
-.selectize-input.items.not-full, 
-.selectize-input.items.full{
-  border: 1px solid #D3D3D3 !important;
-} */
-
-.breadcrumb-item{
-  margin: 5px 0 5px 0 !important;
-}
-
-</style>
+{combine_css path="admin/themes/default/css/pages/batch_manager_unit.css"}

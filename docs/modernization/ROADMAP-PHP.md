@@ -670,7 +670,172 @@ npx playwright test
 
 ---
 
-## #14 — Unit test coverage expansion (13% → ≥40%)
+## #14 — Replace Smarty with Latte
+
+**Status:** Not started &nbsp;|&nbsp; **Size:** XL
+
+### Goal
+
+Migrate every template from Smarty 5 to [Nette Latte](https://latte.nette.org). Latte buys: native PHP expressions in the syntax, compile-time syntax checking, type-safe templates, escape-by-default with context-aware escaping, sandbox mode for untrusted templates, much better IDE support, and faster compilation. End state: zero `.tpl` files compiled by Smarty; `smarty/smarty` removed from `composer.json`; all templates are `.latte`.
+
+### Current state
+
+- **`smarty/smarty: ^5.0`** in `composer.json`.
+- **~170 `.tpl` files** across `themes/default/template/`, `themes/standard_pages/`, `admin/themes/<skin>/template/`, and `plugins/*/template/`.
+- **`src/Piwigo/Template/Template.php`** wraps Smarty and registers ~30+ custom plugins:
+  - **Modifiers:** `translate`, `translate_dec`, `sprintf`, `urlencode`, `intval`, `file_exists`, `constant`, `json_encode`, `json_decode`, `htmlspecialchars`, `implode`, `stripslashes`, `in_array`, `ucfirst`, `strstr`, `stristr`, `trim`, `md5`, `strtolower`, `str_ireplace`, `explode`, `ternary`, `get_extent`, `url_is_remote`, `is_null`, `l10n`, `str_replace`, `is_admin`, `is_classic_user`, `get_device`, `is_file`.
+  - **Functions:** `combine_script`, `get_combined_scripts`, `combine_css`, `define_derivative`.
+  - **Compilers:** `get_combined_css`.
+  - **Blocks:** `html_head`, `html_style`, `footer_script`.
+  - **Filters:** `prefilter_white_space` (whitespace stripper).
+- **3rd-party plugins** (LocalFilesEditor, nbc_ThemeChanger, piwigo-openstreetmap, piwigo-videojs, user_tags) ship their own `.tpl` files and rely on the Smarty plugin API.
+- **Custom inline `<style>`/`<script>` blocks** with `{$skin.*}` Smarty variable injection (see `themes/modus/css/base.css.tpl`).
+
+### Steps
+
+1. **Add `latte/latte` to `composer.json`.** Keep `smarty/smarty` for the transition window.
+
+2. **Define a `Piwigo\Template\TemplateEngine` interface** with the contract both engines must satisfy: `assign(string $name, mixed $value): void`, `render(string $template, array $params = []): string`, `parse(string $template): string`. Both `Piwigo\Template\SmartyEngine` (existing wrapper, renamed) and `Piwigo\Template\LatteEngine` (new) implement it. `TemplateRegistry::current()` returns the interface.
+
+3. **Implement `LatteEngine`.** Configure Latte with:
+   - Strict types in compiled templates (`Latte\Engine::setStrictTypes(true)`).
+   - Escape-by-default with HTML context inferred per attribute.
+   - Tempdir set to `_data/templates_c/latte/`.
+   - Sandbox mode + `Piwigo\Template\Latte\PiwigoPolicy` for plugin-supplied templates that come from untrusted sources.
+
+4. **Port Smarty extensions to Latte equivalents.** Map each registered Smarty plugin to a Latte filter/function/extension:
+   - **Most modifiers** (`sprintf`, `urlencode`, `intval`, `htmlspecialchars`, `trim`, `md5`, etc.) — Latte already has these built-in or via filter aliases.
+   - **`translate`/`translate_dec`** — Latte filter `|translate` backed by `Piwigo\Lang\Translator` (item #11 will likely create this).
+   - **`l10n`** — same as translate; one filter, one alias.
+   - **`combine_script`/`combine_css`/`get_combined_scripts`/`get_combined_css`** — Latte function tags. Implement as `Piwigo\Template\Latte\Extension\AssetExtension`.
+   - **`define_derivative`** — Latte function tag in a `DerivativeExtension`.
+   - **`html_head`/`html_style`/`footer_script`** — Latte `{block}` extensions or custom tags. Wire to the existing buffering logic in `Template.php`.
+   - **`prefilter_white_space`** — Latte template loader wrapper (run before compilation).
+
+5. **Convert templates in waves.** Order risk-low → risk-high:
+   - **Wave 1 — admin pages without dynamic CSS** (lowest risk, ~70 files in `admin/themes/default/template/`). Each `.tpl` → `.latte`. Smarty syntax → Latte syntax. Run the page in the browser after each conversion.
+   - **Wave 2 — public theme `default`** (~40 files in `themes/default/template/`).
+   - **Wave 3 — public theme `standard_pages`** and email templates.
+   - **Wave 4 — `.css.tpl` files** (`themes/modus/css/base.css.tpl` etc.). These need `Latte::setContentType('css')` per file.
+   - **Wave 5 — plugin templates** (3rd-party plugins). Each plugin gets its own commit/PR.
+
+6. **Mechanical conversion helpers.** Most Smarty-to-Latte syntax is regex-replaceable:
+   - `{if $foo}` → `{if $foo}` (compatible)
+   - `{foreach from=$arr item=x}` → `{foreach $arr as $x}`
+   - `{$x|escape}` → `{$x}` (Latte escapes by default)
+   - `{$x|escape:'none'}` → `{$x|noescape}`
+   - `{include file=foo.tpl}` → `{include 'foo.latte'}`
+   - `{$x|@count}` → `{count($x)}`
+   - `{section name=i loop=$arr}` → `{foreach $arr as $i => $val}`
+   - Build `tools/smarty-to-latte/convert.php` to apply these rewrites file-by-file. Hand-fix the residue.
+
+7. **Compatibility shim for 3rd-party plugins.** Plugins that haven't migrated their `.tpl` files yet still get rendered by `SmartyEngine`. The dispatcher in `TemplateRegistry::current()` picks the engine based on file extension (`.latte` vs `.tpl`).
+
+8. **Drop Smarty.** Once all bundled `.tpl` files are converted and at least the top-3 plugins have shipped Latte versions: remove `smarty/smarty` from `composer.json`, delete `Piwigo\Template\SmartyEngine`, mark plugins still using Smarty as legacy with a deprecation notice.
+
+### Verification
+
+```bash
+find . -name "*.tpl" -not -path "*/_data/*" -not -path "*/vendor/*" -not -path "*/node_modules/*" | wc -l
+# target: 0 (all converted to .latte) — or only inside legacy plugin directories during transition
+
+composer show smarty/smarty 2>&1 | grep "not installed"   # after final removal
+vendor/bin/phpunit                                         # green
+npx playwright test                                        # green (no visual regression)
+```
+
+---
+
+## #15 — Plugin system modernization
+
+**Status:** Not started &nbsp;|&nbsp; **Size:** XL
+
+### Goal
+
+Replace the procedural plugin API (`add_event_handler` / `trigger_change` over string event names) with a typed, DI-aware system: PSR-14 event dispatcher, typed event objects, `PluginInterface` lifecycle, declarative plugin manifests, and PSR-4-laid-out plugin source. Keep a thin compatibility layer so 3rd-party plugins still using the legacy API keep working through one major release of deprecation.
+
+### Current state
+
+- **`include/functions_plugins.inc.php`** (12 free functions): `add_event_handler`, `remove_event_handler`, `trigger_change` (string event + variadic mixed args), `trigger_action`, `get_plugin_data`, `set_plugin_data`, plugin loader, etc.
+- **5 bundled plugins** under `plugins/`: `LocalFilesEditor`, `nbc_ThemeChanger`, `piwigo-openstreetmap`, `piwigo-videojs`, `user_tags`. Each has a `main.inc.php` with `add_event_handler('event_name', 'callback_function')` calls and a `maintain.inc.php` extending `PluginMaintain`.
+- **`src/Piwigo/Admin/PluginMaintain`** and **`ThemeMaintain`** are the only typed parts of the plugin API today.
+- **3rd-party plugins** in the wild rely on the global event API; breaking it shatters the ecosystem.
+- **No DI for plugin code** — plugins use `global $conf` etc.; covered for bundled plugins by item #4.
+
+### Steps
+
+1. **Define `Piwigo\Plugin\PluginInterface`.**
+   ```php
+   interface PluginInterface {
+       public function getId(): string;             // 'piwigo-openstreetmap'
+       public function getVersion(): string;        // '1.4.0'
+       public function getName(): string;           // human-readable
+       public function boot(ContainerInterface $c): void;
+       public function shutdown(): void;
+       public function install(): void;
+       public function activate(): void;
+       public function deactivate(): void;
+       public function uninstall(): void;
+       public function subscribedEvents(): array;   // ['Piwigo\Event\PictureRendered' => 'onPictureRendered', …]
+   }
+   ```
+
+2. **Adopt PSR-14 events.** `composer require psr/event-dispatcher symfony/event-dispatcher`. Replace string events with typed event objects under `src/Piwigo/Event/`:
+   - `PictureRendered`, `CategoryRendered`, `UserAuthenticated`, `UserLoggedOut`, `CommentSubmitted`, `ImageUploaded`, `PluginActivated`, etc.
+   - Event objects are `readonly` data classes (item #12). Listeners receive the typed object; can mutate `mixed $data` properties via `with*()` clone-and-modify methods for the `trigger_change` use case.
+   - `Piwigo\Event\EventDispatcher` is registered in the DI container (item #10) as the `Psr\EventDispatcher\EventDispatcherInterface` implementation.
+
+3. **Build the legacy compatibility layer.** `add_event_handler('user_login', $callback)` keeps working. The legacy bridge maps the string event names to the new typed events; when a typed `UserAuthenticated` is dispatched, registered legacy listeners are also invoked with the bridged args. Document the deprecation in `src/Piwigo/Compat/LegacyEvents.php` with `trigger_error(E_USER_DEPRECATED, …)` on first call.
+
+4. **Declarative plugin manifest.** Each plugin ships a `plugin.json` (or extends `composer.json`'s `extra` block):
+   ```json
+   {
+     "id": "piwigo-openstreetmap",
+     "version": "1.4.0",
+     "name": "OpenStreetMap",
+     "minPiwigo": "16.0",
+     "main": "Piwigo\\Plugin\\OpenStreetMap\\Plugin",
+     "autoload": { "psr-4": { "Piwigo\\Plugin\\OpenStreetMap\\": "src/" } }
+   }
+   ```
+   `Piwigo\Plugin\PluginRegistry` reads the manifest, registers PSR-4 autoload, instantiates the main class, and calls `boot()`.
+
+5. **DI for plugins.** Plugins receive the container in `boot()`. They register their own services via `$container->set(...)`. Their event listener methods get auto-resolved dependencies.
+
+6. **Migrate the 5 bundled plugins.** One plugin per PR:
+   - Move source to `plugins/<id>/src/` under PSR-4 namespace `Piwigo\Plugin\<Pascal>\`.
+   - Convert `main.inc.php` event-handler registrations to a `Plugin` class with `subscribedEvents()`.
+   - Convert `maintain.inc.php` to `Maintain` class implementing the lifecycle methods.
+   - Add `plugin.json`.
+   - Convert templates to Latte (item #14).
+
+7. **Plugin admin UI.** The "Plugins" admin page reads `plugin.json` instead of parsing `main.inc.php` headers. Activation/deactivation calls the lifecycle methods.
+
+8. **Document migration path** in `docs/PLUGIN-DEVELOPMENT.md`. Include a side-by-side: "old API" vs "new API" for each common pattern (event handler, admin tab, WS method, language strings, asset injection).
+
+9. **Deprecation timeline.** Keep the legacy API working through the next minor release with `E_USER_DEPRECATED`. Plan removal one major release later.
+
+### Verification
+
+```bash
+# All bundled plugins use the new API:
+for p in plugins/*/; do
+  test -f "$p/plugin.json" || echo "MISSING: $p"
+done
+
+# Legacy bridge still works:
+vendor/bin/phpunit --filter LegacyEventBridgeTest
+
+# Event dispatcher conforms to PSR-14:
+php -r 'echo (new Piwigo\Event\EventDispatcher) instanceof Psr\EventDispatcher\EventDispatcherInterface ? "ok" : "fail";'
+
+# E2E with all plugins activated:
+npx playwright test
+```
+
+---
+
+## #16 — Unit test coverage expansion (13% → ≥40%)
 
 **Status:** Not started (continuous) &nbsp;|&nbsp; **Size:** L
 

@@ -20,7 +20,7 @@
         <span class="property">
           <label for="login">* {'Username'|@translate}</label>
         </span>
-        <input type="text" name="login" id="login" value="{$F_LOGIN}" >
+        <input type="text" name="login" id="login" value="{$F_LOGIN}" autofocus>
       </li>
       <li>
         <span class="property">
@@ -60,10 +60,6 @@
   </p>
 
 </form>
-
-<script type="text/javascript"><!--
-document.register_form.login.focus();
-//--></script>
 
 </div> <!-- content -->
 </div> <!-- registerPage -->

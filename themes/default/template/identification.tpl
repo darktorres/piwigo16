@@ -18,7 +18,7 @@
         <span class="property">
           <label for="username">{'Username'|@translate}</label>
         </span>
-        <input tabindex="1" class="login" type="text" name="username" id="username" size="25">
+        <input tabindex="1" class="login" type="text" name="username" id="username" size="25" autofocus>
       </li>
 
       <li>
@@ -58,9 +58,5 @@
 	</p>
 
 </form>
-
-<script type="text/javascript"><!--
-document.login_form.username.focus();
-//--></script>
 
 </div> <!-- content -->

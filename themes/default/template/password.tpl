@@ -22,7 +22,7 @@
     <label>
       {'Username or email'|@translate}
       <br>
-      <input type="text" id="username_or_email" name="username_or_email" size="100" maxlength="100"{if isset($username_or_email)} value="{$username_or_email}"{/if}>
+      <input type="text" id="username_or_email" name="username_or_email" size="100" maxlength="100"{if isset($username_or_email)} value="{$username_or_email}"{/if} autofocus>
     </label>
   </p>
 
@@ -33,7 +33,7 @@
       <label>
         {'Verification code'|@translate}
         <br>
-        <input type="text" id="user_code" name="user_code" size="100" />
+        <input type="text" id="user_code" name="user_code" size="100" autofocus />
       </label>
 
     <p class="bottomButtons"><input type="submit" name="submit" value="{'Verify'|@translate}"></p>
@@ -48,7 +48,7 @@
     <label>
         {if !isset($is_first_login)}{'New password'|@translate}{else}{'Password'|translate}{/if}
       <br>
-      <input type="password" name="use_new_pwd" id="use_new_pwd" value="">
+      <input type="password" name="use_new_pwd" id="use_new_pwd" value="" autofocus>
     </label>
   </p>
 
@@ -65,15 +65,5 @@
 
 </form>
 {/if} {* $action ne 'none' *}
-
-<script type="text/javascript">
-{if $action eq 'lost'}
-{literal}try{document.getElementById('username_or_email').focus();}catch(e){}{/literal}
-{elseif $action eq 'reset'}
-{literal}try{document.getElementById('use_new_pwd').focus();}catch(e){}{/literal}
-{elseif $action eq 'lost_code'}
-{literal}try{document.getElementById('user_code').focus();}catch(e){}{/literal}
-{/if}
-</script>
 
 </div> <!-- content -->

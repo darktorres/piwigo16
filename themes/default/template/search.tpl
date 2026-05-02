@@ -27,7 +27,7 @@
 <fieldset>
   <legend>{'Search for words'|@translate}</legend>
   <p>
-    <input type="text" name="search_allwords">
+    <input type="text" name="search_allwords" autofocus>
     <br>
     <label><input type="radio" name="mode" value="AND" checked="checked"> {'Search for all terms'|@translate}</label>
     <label><input type="radio" name="mode" value="OR"> {'Search for any term'|@translate}</label>
@@ -138,9 +138,5 @@
   <input type="reset" value="{'Reset'|@translate}">
 </p>
 </form>
-
-<script type="text/javascript"><!--
-document.search.search_allwords.focus();
-//--></script>
 
 </div> <!-- content -->

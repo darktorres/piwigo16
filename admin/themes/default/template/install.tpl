@@ -87,7 +87,7 @@
     <tr>
       <td style="width: 30%">{'Default gallery language'|@translate}</td>
       <td>
-    <select name="language" data-install-language>
+    <select name="language" data-language-select-redirect="install.php">
     {html_options options=$language_options selected=$language_selection}
     </select>
       </td>

@@ -14,12 +14,13 @@ if (adminMail) {
   });
 }
 
-const langSelect = document.querySelector<HTMLSelectElement>('select[data-install-language]');
-if (langSelect) {
-  langSelect.addEventListener('change', () => {
-    document.location.href = 'install.php?language=' + langSelect.value;
+document.querySelectorAll<HTMLSelectElement>('select[data-language-select-redirect]').forEach((sel) => {
+  const target = sel.getAttribute('data-language-select-redirect') || '';
+  if (!target) return;
+  sel.addEventListener('change', () => {
+    document.location.href = target + '?language=' + sel.value;
   });
-}
+});
 
 document.querySelectorAll<HTMLElement>('[data-install-download-config]').forEach((btn) => {
   btn.addEventListener('click', () => {

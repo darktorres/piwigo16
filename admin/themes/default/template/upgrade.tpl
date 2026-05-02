@@ -18,6 +18,8 @@
   <link rel="stylesheet" type="text/css" href="{$ROOT_URL}admin/themes/default/fix-ie7.css">
 <![endif]-->
 
+{combine_script id='install' load='footer' path='admin/themes/default/js/install.js'}
+
 <!-- BEGIN get_combined_scripts -->
 {get_combined_scripts load='header'}
 <!-- END get_combined_scripts -->
@@ -51,7 +53,7 @@
   <tr>
     <td>{'Language'|@translate}</td>
     <td>
-      <select name="language" onchange="document.location = 'upgrade.php?language='+this.options[this.selectedIndex].value;">
+      <select name="language" data-language-select-redirect="upgrade.php">
         {html_options options=$language_options selected=$language_selection}
       </select>
     </td>
@@ -117,5 +119,10 @@
 </div> {* content *}
 <div>{$L_UPGRADE_HELP}</div>
 </div> {* the_page *}
+
+<!-- BEGIN get_combined_scripts -->
+{get_combined_scripts load='footer'}
+<!-- END get_combined_scripts -->
+
 </body>
 </html>

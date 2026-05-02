@@ -431,6 +431,11 @@ switch ($page['section']) {
                     true
                 );
             }
+
+            $template->assign('page_data_json', json_encode([
+                'order_by_is_custom' => \Piwigo\Core\Config::has('order_by_custom') || \Piwigo\Core\Config::has('order_by_inside_category_custom'),
+                'order_by_options_count' => count($sort_fields),
+            ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
             break;
         }
     case 'comments':

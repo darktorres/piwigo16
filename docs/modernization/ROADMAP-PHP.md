@@ -2,13 +2,9 @@
 
 PHP-only modernization work. See [MODERNIZATION.md](MODERNIZATION.md) for architecture context and completed phase summaries; see [ROADMAP-TS.md](ROADMAP-TS.md) and [ROADMAP-CSS.md](ROADMAP-CSS.md) for the other tracks.
 
-Recommended sequence within this track: 2 → 10 → 3 → 4 → 5 → 6.
-
-Item numbers are stable identifiers — completed items are removed, but the remaining numbers do not shift. See [MODERNIZATION.md](MODERNIZATION.md) for the history of completed items (e.g., #1 PHPStan level 9, #9 jQuery removal).
-
 ---
 
-## #2 — Eliminate procedural `global` declarations across the codebase
+## #1 — Eliminate procedural `global` declarations across the codebase
 
 **Status:** In progress (`src/` done; `admin/` and `include/` remain) &nbsp;|&nbsp; **Size:** L
 
@@ -65,6 +61,47 @@ npx playwright test
 
 ---
 
+## #2 — Overdue TODO cleanup
+
+**Status:** Not started &nbsp;|&nbsp; **Size:** S
+
+### Goal
+
+Resolve or formally defer all `TODO`/`FIXME` markers in tracked PHP files. Current count: **34 markers** in `src/` and `include/`.
+
+### Current state (selected markers)
+
+| File | Line | Marker |
+|------|------|--------|
+| `include/common.inc.php` | 167 | `// TODO remove this data update as soon as 2025 arrives` — **past-due** |
+| `include/functions.inc.php` | 1832 | `return $str; // TODO` — stub return, function body missing |
+| `include/functions_category.inc.php` | 530 | `// TODO 2.7: add an upgrade script…` — pre-16 remnant |
+| `include/config_default.inc.php` | 990 | `//TODO: Put this in admin…` — design note |
+| `include/ws_functions/pwg.php` | 846 | `/*TODO - no need to get a huge number of rows…*/` — SQL optimization |
+| `include/search_filters.inc.php` | 71 | `// TODO calling get_available_tags()… may cost time` — performance note |
+| `src/Piwigo/Admin/updates.php` | 474 | `// TODO why redirect to a plugin page?` — logic question |
+
+### Steps
+
+1. **Triage each marker.** For each TODO: (a) fix it now, (b) open a dated tracking comment `// DEFERRED until X: reason`, or (c) delete the dead code it annotates.
+
+2. **`common.inc.php:167` — act first.** The 2025 past-due item is a data migration shim. Check whether the condition it guards is still reachable in 16.x; if not, delete the block.
+
+3. **`functions.inc.php:1832`** — identify what the function was supposed to do and either implement it or remove the function entirely if no call sites reference it.
+
+4. **`functions_category.inc.php:530`** — the 2.7 upgrade script it references is long gone (pre-16 floor). Delete the comment and the dead branch.
+
+5. **SQL optimization TODOs** — convert to `// PERF:` comments with a concrete ticket reference so they are not confused with unfinished code.
+
+### Verification
+
+```bash
+grep -rn "TODO\|FIXME" src/ include/ --include="*.php" | grep -v "vendor\|install/db" | wc -l
+# target: 0 actionable markers (DEFERRED/PERF markers are acceptable)
+```
+
+---
+
 ## #3 — Remove class duplication in `ws_core.inc.php`
 
 **Status:** Not started &nbsp;|&nbsp; **Size:** M
@@ -89,7 +126,7 @@ npx playwright test
 
 4. **Confirm `ws.php` still boots.** `ws.php` includes `ws_core.inc.php` before using any WS types. With the class bodies removed, it must receive the PSR-4 autoloaded versions instead. Run `npx playwright test tests/e2e/` — the `WsApiTest` exercises the live WS layer.
 
-5. **PHPStan.** Level-9 errors in the WS layer (from #1) should drop significantly once `src/Piwigo/Ws/` is the single source of truth.
+5. **PHPStan.** Level-9 errors in the WS layer should drop significantly once `src/Piwigo/Ws/` is the single source of truth.
 
 ### Verification
 
@@ -214,45 +251,4 @@ Break the 2,673-line `include/functions_user.inc.php` into focused, namespaced c
 vendor/bin/phpunit --testsuite Unit     # new class tests green
 npx playwright test                     # login/logout flows green
 grep -c "function " include/functions_user.inc.php   # shrinking per PR
-```
-
----
-
-## #10 — Overdue TODO cleanup
-
-**Status:** Not started &nbsp;|&nbsp; **Size:** S
-
-### Goal
-
-Resolve or formally defer all `TODO`/`FIXME` markers in tracked PHP files. Current count: **34 markers** in `src/` and `include/`.
-
-### Current state (selected markers)
-
-| File | Line | Marker |
-|------|------|--------|
-| `include/common.inc.php` | 167 | `// TODO remove this data update as soon as 2025 arrives` — **past-due** |
-| `include/functions.inc.php` | 1832 | `return $str; // TODO` — stub return, function body missing |
-| `include/functions_category.inc.php` | 530 | `// TODO 2.7: add an upgrade script…` — pre-16 remnant |
-| `include/config_default.inc.php` | 990 | `//TODO: Put this in admin…` — design note |
-| `include/ws_functions/pwg.php` | 846 | `/*TODO - no need to get a huge number of rows…*/` — SQL optimization |
-| `include/search_filters.inc.php` | 71 | `// TODO calling get_available_tags()… may cost time` — performance note |
-| `src/Piwigo/Admin/updates.php` | 474 | `// TODO why redirect to a plugin page?` — logic question |
-
-### Steps
-
-1. **Triage each marker.** For each TODO: (a) fix it now, (b) open a dated tracking comment `// DEFERRED until X: reason`, or (c) delete the dead code it annotates.
-
-2. **`common.inc.php:167` — act first.** The 2025 past-due item is a data migration shim. Check whether the condition it guards is still reachable in 16.x; if not, delete the block.
-
-3. **`functions.inc.php:1832`** — identify what the function was supposed to do and either implement it or remove the function entirely if no call sites reference it.
-
-4. **`functions_category.inc.php:530`** — the 2.7 upgrade script it references is long gone (pre-16 floor). Delete the comment and the dead branch.
-
-5. **SQL optimization TODOs** — convert to `// PERF:` comments with a concrete ticket reference so they are not confused with unfinished code.
-
-### Verification
-
-```bash
-grep -rn "TODO\|FIXME" src/ include/ --include="*.php" | grep -v "vendor\|install/db" | wc -l
-# target: 0 actionable markers (DEFERRED/PERF markers are acceptable)
 ```

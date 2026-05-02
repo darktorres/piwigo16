@@ -2,11 +2,9 @@
 
 CSS / theme modernization work. See [MODERNIZATION.md](MODERNIZATION.md) for architecture context and completed phase summaries; see [ROADMAP-PHP.md](ROADMAP-PHP.md) and [ROADMAP-TS.md](ROADMAP-TS.md) for the other tracks.
 
-Item numbers are stable identifiers — completed items are removed, but the remaining numbers do not shift. See [MODERNIZATION.md](MODERNIZATION.md) for the history of completed items (e.g., #1 PHPStan level 9, #9 jQuery removal).
-
 ---
 
-## #8 — CSS design tokens + Stylelint
+## #1 — CSS design tokens + Stylelint
 
 **Status:** Not started &nbsp;|&nbsp; **Size:** M
 

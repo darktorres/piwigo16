@@ -2,13 +2,9 @@
 
 TypeScript / frontend-glue modernization work. See [MODERNIZATION.md](MODERNIZATION.md) for architecture context and completed phase summaries; see [ROADMAP-PHP.md](ROADMAP-PHP.md) and [ROADMAP-CSS.md](ROADMAP-CSS.md) for the other tracks.
 
-Recommended sequence within this track: 7 → 11.
-
-Item numbers are stable identifiers — completed items are removed, but the remaining numbers do not shift. See [MODERNIZATION.md](MODERNIZATION.md) for the history of completed items (e.g., #1 PHPStan level 9, #9 jQuery removal).
-
 ---
 
-## #7 — TypeScript `any` reduction
+## #1 — TypeScript `any` reduction
 
 **Status:** Not started &nbsp;|&nbsp; **Size:** M
 
@@ -66,7 +62,7 @@ npm run typecheck   # still zero errors
 
 ---
 
-## #11 — Eliminate remaining `window.*` data-bridge globals in `{footer_script}` blocks
+## #2 — Eliminate remaining `window.*` data-bridge globals in `{footer_script}` blocks
 
 **Status:** Not started &nbsp;|&nbsp; **Size:** M
 

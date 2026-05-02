@@ -26,6 +26,7 @@ Enforce PSR-12 across the entire PHP codebase via Laravel Pint as a hard CI gate
 2. **Baseline-format all PHP.** Run `vendor/bin/pint` once across `admin/`, `include/`, `src/`, `tests/`, `tools/`. This produces a single large mechanical-format commit. Avoid mixing it with logic changes.
 
 3. **Add the CI job.** Append a `style` job to `.github/workflows/ci.yml`:
+
    ```yaml
    style:
      runs-on: ubuntu-latest
@@ -36,6 +37,7 @@ Enforce PSR-12 across the entire PHP codebase via Laravel Pint as a hard CI gate
        - run: composer install --no-progress
        - run: vendor/bin/pint --test
    ```
+
    `pint --test` exits non-zero on any style violation.
 
 4. **Add `.editorconfig`** at repo root with PSR-12 rules (LF, UTF-8, 4-space PHP indent, 2-space JSON/YAML, trim trailing whitespace, final newline).
@@ -97,6 +99,7 @@ Composer's `--strict-psr` mode passes clean. Every class in `src/` lives in a Pa
 ### Current state
 
 **Snake_case files in `src/` (8):**
+
 - `src/Piwigo/Admin/plugins.php` (class `plugins`)
 - `src/Piwigo/Admin/themes.php` (class `themes`)
 - `src/Piwigo/Admin/languages.php` (class `languages`)
@@ -107,11 +110,13 @@ Composer's `--strict-psr` mode passes clean. Every class in `src/` lives in a Pa
 - `src/Piwigo/Admin/Image/pwg_image.php`
 
 **Mixed-case violations (3):**
+
 - `src/Piwigo/Admin/Image/imageInterface.php` (interface should be `ImageInterface`)
 - `src/Piwigo/Admin/Integrity/c13y_internal.php`
 - `src/Piwigo/Admin/Integrity/check_integrity.php`
 
 **Legacy `.class.php` files in `include/` (9):**
+
 - `include/Logger.class.php` → `src/Piwigo/Log/Logger.php`
 - `include/block.class.php` → `src/Piwigo/Menu/Block.php`
 - `include/cache.class.php` → `src/Piwigo/Cache/Cache.php`
@@ -167,6 +172,7 @@ npx playwright test                   # green (plugin compat alias chain works)
 ### Steps
 
 1. **Add audit job to CI.** Append to `.github/workflows/ci.yml`:
+
    ```yaml
    audit:
      runs-on: ubuntu-latest
@@ -183,6 +189,7 @@ npx playwright test                   # green (plugin compat alias chain works)
    ```
 
 2. **Add Renovate config.** `renovate.json` at repo root:
+
    ```json
    {
      "$schema": "https://docs.renovatebot.com/renovate-schema.json",
@@ -196,6 +203,7 @@ npx playwright test                   # green (plugin compat alias chain works)
      "vulnerabilityAlerts": { "labels": ["security"], "schedule": ["at any time"] }
    }
    ```
+
    Alternative: use `.github/dependabot.yml` if Renovate isn't preferred.
 
 3. **Document policy** in `CONTRIBUTING.md`: how to triage a vulnerability advisory, when to override (with rationale), how to bump a single dep manually.
@@ -231,6 +239,7 @@ Every config key has a typed schema entry (name, type, default, description, val
 1. **Add `vlucas/phpdotenv`.** `composer require vlucas/phpdotenv`.
 
 2. **Define the schema.** `src/Piwigo/Config/ConfigSchema.php` is a class with one entry per config key:
+
    ```php
    public const SCHEMA = [
        'gallery_title'        => ['type' => 'string',  'default' => 'Piwigo gallery'],
@@ -453,6 +462,7 @@ Define a typed exception hierarchy under `Piwigo\Exception\`. Replace the 27 `di
 ### Steps
 
 1. **Define the hierarchy.** Under `src/Piwigo/Exception/`:
+
    ```php
    abstract class PiwigoException extends \RuntimeException {}
    class DbException         extends PiwigoException {}
@@ -545,6 +555,7 @@ Replace the static `ServiceLocator` registry with a real PSR-11 dependency-injec
 3. **Create `src/Piwigo/Bootstrap/Container.php`.** Factory that builds the container from `config/container.php` (definitions). Returns a `Psr\Container\ContainerInterface`.
 
 4. **Define services.** In `config/container.php`:
+
    ```php
    return [
        Piwigo\Core\Config::class      => DI\autowire(),
@@ -591,9 +602,11 @@ The Piwigo cache exposes both `Psr\Cache\CacheItemPoolInterface` (PSR-6) and `Ps
 ### Steps
 
 1. **Add dependencies.**
+
    ```bash
    composer require psr/cache psr/simple-cache symfony/cache
    ```
+
    `symfony/cache` provides PSR-6 + PSR-16 implementations and adapters for filesystem, APCu, Redis, PDO, chained, and tag-aware caching.
 
 2. **Refactor `PersistentFileCache`.** Make it a thin wrapper around `Symfony\Component\Cache\Adapter\FilesystemAdapter` — same on-disk layout (so existing caches don't need to be flushed), but the Symfony adapter handles serialization, locking, and PSR-6 compliance.
@@ -645,6 +658,7 @@ All user-facing file I/O goes through `League\Flysystem\Filesystem`. Named files
 ### Steps
 
 1. **Add dependencies.**
+
    ```bash
    composer require league/flysystem league/flysystem-local
    # Optional adapters added on demand:
@@ -655,6 +669,7 @@ All user-facing file I/O goes through `League\Flysystem\Filesystem`. Named files
 2. **Define `Piwigo\Storage\StorageRegistry`.** Exposes named filesystems via `StorageRegistry::get(string $name): FilesystemOperator`. Names: `uploads`, `derivatives`, `watermarks`, `themes`, `plugins`, `exports`, `temp`.
 
 3. **Configure in DI.** `config/storage.php`:
+
    ```php
    return [
        'uploads'      => fn () => new Filesystem(new LocalFilesystemAdapter('_data/i/upload')),
@@ -666,14 +681,17 @@ All user-facing file I/O goes through `League\Flysystem\Filesystem`. Named files
        'temp'         => fn () => new Filesystem(new LocalFilesystemAdapter(sys_get_temp_dir() . '/piwigo')),
    ];
    ```
+
    Each entry is a closure for lazy instantiation. To switch `uploads` to S3, the closure swaps the adapter — no callsite changes.
 
 4. **Migrate callsites.** Replace raw `move_uploaded_file($_FILES['x']['tmp_name'], $dest)` with:
+
    ```php
    $uploads = $storage->get('uploads');
    $stream = fopen($_FILES['x']['tmp_name'], 'r');
    $uploads->writeStream($relativePath, $stream);
    ```
+
    Same pattern for `unlink` → `delete()`, `rename` → `move()`, `mkdir` → adapter-managed, `is_writable` → adapter capability check.
 
 5. **Optional cloud adapters.** Document how to switch a single filesystem (e.g., `derivatives`) to S3 by editing `config/storage.php` and adding the S3 composer dependency. Filesystem names stay the same.
@@ -716,12 +734,15 @@ Replace the 22 hand-written `install/upgrade_*.php` scripts with versioned migra
 ### Steps
 
 1. **Add Doctrine Migrations.**
+
    ```bash
    composer require doctrine/migrations doctrine/dbal
    ```
+
    (DBAL is needed by both this item and item #16 — install once.)
 
 2. **Configure `migrations.php`** at the repo root:
+
    ```php
    return [
        'table_storage' => [
@@ -740,6 +761,7 @@ Replace the 22 hand-written `install/upgrade_*.php` scripts with versioned migra
    ```
 
 3. **Convert legacy upgrades.** Each `install/upgrade_*.php` becomes a `Version<YYYYMMDDHHMMSS>` class:
+
    ```php
    namespace Piwigo\Migrations;
 
@@ -803,6 +825,7 @@ Replace 583 raw `pwg_query()` calls with Doctrine DBAL's query builder. Reposito
    - `Piwigo\Notification\NotificationRepository`
 
 4. **Method-by-method, port the queries.** For each function in the per-module migration (item #17), the repository method that backs it uses DBAL's query builder:
+
    ```php
    public function findByIds(array $ids): array {
        return $this->conn->createQueryBuilder()
@@ -816,6 +839,7 @@ Replace 583 raw `pwg_query()` calls with Doctrine DBAL's query builder. Reposito
    ```
 
 5. **Declare row shapes.** Until DTO migration (deferred), use PHPStan array shapes:
+
    ```php
    /** @return list<array{id:int, name:string, date_creation:string}> */
    public function findByIds(array $ids): array { … }
@@ -944,10 +968,12 @@ Translation files move from `$lang['key'] = 'value';` PHP arrays to gettext PO/M
 2. **Build a converter.** `tools/i18n/php-to-po.php` reads a `.lang.php` file, extracts each `$lang['key'] = 'value'` assignment, and emits a `.po` entry. Output: `language/<locale>/<domain>.po`. Compile to `<domain>.mo` for runtime.
 
 3. **Implement `Piwigo\Lang\Translator`** in `src/Piwigo/Lang/Translator.php`:
+
    ```php
    public function translate(string $key, array $params = [], ?string $locale = null): string;
    public function translatePlural(string $key, string $keyPlural, int $count, array $params = [], ?string $locale = null): string;
    ```
+
    Backed by `Gettext\Translator` reading the compiled `.mo` files. Registered in DI.
 
 4. **Replace `l10n()` free function** with a one-line wrapper that delegates to the service. Same for `l10n_dec()`.
@@ -1032,6 +1058,7 @@ An OpenAPI 3.1 specification describes every method registered with `PwgServer::
 ### Steps
 
 1. **Typed registration.** Introduce `Piwigo\Ws\MethodDefinition` DTO:
+
    ```php
    final class MethodDefinition {
        public function __construct(
@@ -1044,6 +1071,7 @@ An OpenAPI 3.1 specification describes every method registered with `PwgServer::
        ) {}
    }
    ```
+
    `PwgServer::addMethod()` accepts both the legacy array shape (BC) and `MethodDefinition` (new). The legacy shape is internally normalized to a `MethodDefinition`.
 
 2. **`Piwigo\Ws\OpenApi\SpecBuilder`.** Walks the registered methods, emits an OpenAPI 3.1 document:
@@ -1054,6 +1082,7 @@ An OpenAPI 3.1 specification describes every method registered with `PwgServer::
 3. **Routes.** `/ws/openapi.json` returns `SpecBuilder::build()->json()`. `/ws/docs` serves the Swagger UI bundle (CDN or vendored).
 
 4. **Per-method enrichment.** PHP attribute on each handler:
+
    ```php
    #[OpenApi\Method(
        summary: 'Search images by tag, date, or filename.',
@@ -1096,9 +1125,11 @@ Long-running operations dispatch typed messages onto a queue; a worker process c
 ### Steps
 
 1. **Add dependencies.**
+
    ```bash
    composer require symfony/messenger symfony/doctrine-messenger
    ```
+
    Optional: `symfony/redis-messenger`, `symfony/amqp-messenger`.
 
 2. **Define typed messages** under `src/Piwigo/Job/`:
@@ -1109,6 +1140,7 @@ Long-running operations dispatch typed messages onto a queue; a worker process c
    - `ReindexImagesJob(?int $sinceId = null)`
 
 3. **Implement handlers** under `src/Piwigo/Job/Handler/`:
+
    ```php
    final class GenerateDerivativeHandler {
        public function __construct(private ImageRepository $images, private LoggerInterface $log) {}
@@ -1119,9 +1151,11 @@ Long-running operations dispatch typed messages onto a queue; a worker process c
        }
    }
    ```
+
    Handlers are auto-registered via `#[AsMessageHandler]` attribute.
 
 4. **Bus + transport config.** `config/messenger.php`:
+
    ```php
    return [
        'transports' => [
@@ -1139,6 +1173,7 @@ Long-running operations dispatch typed messages onto a queue; a worker process c
    ```
 
 5. **Refactor inline call sites.** Anywhere that today loops over images regenerating derivatives, replace with:
+
    ```php
    foreach ($imageIds as $id) {
        $bus->dispatch(new GenerateDerivativeJob($id, 'medium'));
@@ -1193,6 +1228,7 @@ This is the capstone item. It depends on items #1–#12 landing first — especi
 1. **Add PSR-7/15 dependencies.** `composer require nyholm/psr7 nyholm/psr7-server psr/http-message psr/http-server-middleware psr/http-server-handler nikic/fast-route` (or `symfony/routing`).
 
 2. **Create `public/index.php`.**
+
    ```php
    <?php
    declare(strict_types=1);
@@ -1209,6 +1245,7 @@ This is the capstone item. It depends on items #1–#12 landing first — especi
    - The repo's existing root files become eventual no-ops; for backwards compatibility during the transition, keep a few root shims (`index.php` → `require __DIR__ . '/public/index.php';`).
 
 4. **Route table.** `config/routes.php`:
+
    ```php
    return function (FastRoute\RouteCollector $r) {
        $r->addGroup('', function ($r) {
@@ -1286,6 +1323,7 @@ Depends on the front controller (#22) for middleware insertion; depends on the e
 ### Steps
 
 1. **`SecurityHeadersMiddleware`.** Adds to every response:
+
    ```php
    $response = $response
        ->withHeader('Content-Security-Policy',
@@ -1301,6 +1339,7 @@ Depends on the front controller (#22) for middleware insertion; depends on the e
        ->withHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
        ->withHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
    ```
+
    The per-request `$nonce` is also injected into `Template`/`Latte` so `<script>` tags in templates can render `nonce="{$nonce}"`. Pairs with [ROADMAP-TS.md](ROADMAP-TS.md) #3 (`{footer_script}` migration).
 
 2. **Login rate limiting.** `composer require symfony/rate-limiter`. Token-bucket strategy:
@@ -1313,6 +1352,7 @@ Depends on the front controller (#22) for middleware insertion; depends on the e
 4. **CSRF middleware.** `CsrfMiddleware` validates `pwg_token` on every state-changing request (POST, PUT, PATCH, DELETE). Replaces ad-hoc per-controller checks. The 257 existing `pwg_token` references collapse — most become no-ops after middleware adoption, since the middleware handles verification centrally.
 
 5. **Session hardening.** `SessionMiddleware` (item #22) sets:
+
    ```php
    session_set_cookie_params([
        'lifetime' => 0,
@@ -1322,6 +1362,7 @@ Depends on the front controller (#22) for middleware insertion; depends on the e
        'httponly' => true,
    ]);
    ```
+
    On successful login: `session_regenerate_id(true)` to rotate the session ID.
 
 6. **Document policy** in `docs/SECURITY.md`: threat model, CSP override procedure, account-lockout admin actions, how to report a vulnerability.
@@ -1449,6 +1490,7 @@ The work splits into two phases. Phase 1 lands the event-bus and plugin foundati
 #### Steps
 
 1. **Define `Piwigo\Plugin\PluginInterface`.**
+
    ```php
    interface PluginInterface {
        public function getId(): string;             // 'piwigo-openstreetmap'
@@ -1472,6 +1514,7 @@ The work splits into two phases. Phase 1 lands the event-bus and plugin foundati
 3. **Build the legacy compatibility layer.** `add_event_handler('user_login', $callback)` keeps working — both for plugins and for themes that register handlers from `themeconf.inc.php`. The legacy bridge maps the string event names to the new typed events; when a typed `UserAuthenticated` is dispatched, registered legacy listeners are also invoked with the bridged args. Document the deprecation in `src/Piwigo/Compat/LegacyEvents.php` with `trigger_error(E_USER_DEPRECATED, …)` on first call.
 
 4. **Declarative plugin manifest.** Each plugin ships a `plugin.json` (or extends `composer.json`'s `extra` block):
+
    ```json
    {
      "id": "piwigo-openstreetmap",
@@ -1482,6 +1525,7 @@ The work splits into two phases. Phase 1 lands the event-bus and plugin foundati
      "autoload": { "psr-4": { "Piwigo\\Plugin\\OpenStreetMap\\": "src/" } }
    }
    ```
+
    `Piwigo\Plugin\PluginRegistry` reads the manifest, registers PSR-4 autoload, instantiates the main class, and calls `boot()`.
 
 5. **DI for plugins.** Plugins receive the container in `boot()`. They register their own services via `$container->set(...)`. Their event listener methods get auto-resolved dependencies.
@@ -1536,6 +1580,7 @@ Themes hook into the same event bus as plugins, so most of the foundation from P
 #### Steps
 
 1. **Define `Piwigo\Theme\ThemeInterface`.** Mirrors `PluginInterface` with theme-specific methods:
+
    ```php
    interface ThemeInterface {
        public function getId(): string;             // 'standard_pages'
@@ -1555,6 +1600,7 @@ Themes hook into the same event bus as plugins, so most of the foundation from P
    ```
 
 2. **Declarative `theme.json` manifest.** Replaces the static array part of `themeconf.inc.php`:
+
    ```json
    {
      "id": "standard_pages",
@@ -1681,11 +1727,13 @@ Mutation testing runs in CI. Mutation Score Indicator (MSI) gated at ≥ 60% ove
 ### Steps
 
 1. **Install.**
+
    ```bash
    composer require --dev infection/infection
    ```
 
 2. **Configure `infection.json5`** at the repo root:
+
    ```json5
    {
        "$schema": "vendor/infection/infection/resources/schema.json",
@@ -1705,6 +1753,7 @@ Mutation testing runs in CI. Mutation Score Indicator (MSI) gated at ≥ 60% ove
 3. **Initial sweep.** Run `vendor/bin/infection --threads=4`. Triage the surviving mutants — most will be assertions that should be tightened (e.g., `assertNotEmpty($result)` → `assertSame($expected, $result)`).
 
 4. **CI job.** Mutation testing is slower than unit tests — run on `main` push (after merge), not on every PR:
+
    ```yaml
    mutation:
      runs-on: ubuntu-latest

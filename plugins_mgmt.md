@@ -71,7 +71,7 @@
           - generic [ref=e107]
     - generic [ref=e117]:
       - link [ref=e118] [cursor=pointer]:
-        - /url: https://piwigo.org
+        - /url: <https://piwigo.org>
         - img [ref=e119]
       - generic [ref=e121] [cursor=pointer]: 
   - text:   

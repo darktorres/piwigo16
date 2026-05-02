@@ -810,7 +810,7 @@
             - generic [ref=e6871]
     - generic [ref=e6873]:
       - link [ref=e6874] [cursor=pointer]:
-        - /url: https://piwigo.org
+        - /url: <https://piwigo.org>
         - img [ref=e6875]
       - generic [ref=e6877] [cursor=pointer]: 
   - text:   

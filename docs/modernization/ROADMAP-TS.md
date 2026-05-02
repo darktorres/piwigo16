@@ -21,12 +21,14 @@ Enforce TypeScript code style and catch common mistakes via ESLint + Prettier as
 ### Steps
 
 1. **Install.**
+
    ```bash
    npm i -D eslint @typescript-eslint/parser @typescript-eslint/eslint-plugin \
               prettier eslint-config-prettier eslint-plugin-prettier
    ```
 
 2. **`eslint.config.js`** (flat config, ESLint 9+):
+
    ```js
    import tseslint from '@typescript-eslint/eslint-plugin';
    import tsparser from '@typescript-eslint/parser';
@@ -54,6 +56,7 @@ Enforce TypeScript code style and catch common mistakes via ESLint + Prettier as
 3. **`.prettierrc`** matching Pint's PHP style choices: single quotes, 4-space indent for TS, trailing commas (`es5`), 100-char line width.
 
 4. **npm scripts.**
+
    ```json
    "scripts": {
        "lint": "eslint themes/default/js admin/themes/default/js tests/e2e --ext .ts",
@@ -199,11 +202,13 @@ Add a unit-test framework for non-DOM TypeScript logic. Today the only JS test i
 ### Steps
 
 1. **Install.**
+
    ```bash
    npm i -D vitest @vitest/coverage-v8 happy-dom
    ```
 
 2. **`vitest.config.ts`.**
+
    ```ts
    import { defineConfig } from 'vitest/config';
 
@@ -231,11 +236,13 @@ Add a unit-test framework for non-DOM TypeScript logic. Today the only JS test i
 4. **Second wave — state reducers.** `batchManagerGlobal.test.ts` covers the reducer-shaped functions that compute selection state, filter results, etc. These are pure given a snapshot.
 
 5. **CI job.** Append to `.github/workflows/ci.yml`:
+
    ```yaml
    - run: npm run test:unit -- --coverage
    ```
 
 6. **`npm scripts.**
+
    ```json
    "test:unit": "vitest run",
    "test:unit:watch": "vitest",
@@ -270,11 +277,13 @@ Per-entrypoint bundle size budgets gate every PR. Regressions block merge. Bundl
 ### Steps
 
 1. **Install.**
+
    ```bash
    npm i -D size-limit @size-limit/file vite-bundle-visualizer
    ```
 
 2. **`.size-limit.json`.** Per-entrypoint budgets (sizes are illustrative — set after a baseline build):
+
    ```json
    [
      { "name": "admin/admin",          "path": "dist/assets/admin-*.js",          "limit": "85 kB" },
@@ -283,15 +292,18 @@ Per-entrypoint bundle size budgets gate every PR. Regressions block merge. Bundl
      { "name": "themes/default/script","path": "dist/assets/script-*.js",         "limit": "45 kB" }
    ]
    ```
+
    `size-limit` measures gzipped size by default — that's the relevant transfer cost.
 
 3. **Baseline.** Run `npm run build && npx size-limit` once to record current sizes; set budgets ~5–10% above today's numbers to allow normal drift.
 
 4. **CI job.** After build:
+
    ```yaml
    - run: npm run build
    - run: npx size-limit
    ```
+
    Failure = PR cannot merge until either the budget is justified-and-raised in `.size-limit.json` (with rationale in the PR description) or the change is reworked.
 
 5. **Optional visualizer.** On the `main` push (not every PR), run `vite-bundle-visualizer` and upload the HTML as a workflow artifact. Use to debug regressions: which dep got pulled in, which module bloomed.

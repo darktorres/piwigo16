@@ -7,6 +7,7 @@ A real Piwigo 16.x database dump used by `UpgradeChainTest` to verify the upgrad
 ### What's in it
 
 A fully installed Piwigo 16.x database with representative data:
+
 - At least 2 albums (one root, one sub-album)
 - At least 5 uploaded photos with metadata
 - 3 users (admin + 2 regular users with different permission levels)

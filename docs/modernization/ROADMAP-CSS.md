@@ -36,17 +36,20 @@ CSS / theme modernization work. See [MODERNIZATION.md](MODERNIZATION.md) for arc
 ### File inventory (31 authored files in scope)
 
 **Frontend themes:**
+
 - `themes/modus/css/hf_base.css` (917 lines), `plugin_compatibility.css`, `tags.css`
 - `themes/modus/skins/*.css` — 11 skin files (avocado, blueberry, cafe_latte, glacier, neon_orange, neon_pink, newspaper, quartz, splash, strawberry_jam, swimming_pool)
 - `themes/default/theme.css`, `css/search.css`, `css/clear-search.css`, `css/dark-search.css`
 - `themes/elegant/theme.css`, `themes/smartpocket/theme.css`, `themes/bootstrap_darkroom/theme.css`
 
 **Admin themes:**
+
 - `admin/themes/default/theme.css`, `css/components/general.css`
 - `admin/themes/clear/theme.css`, `css/components/general.css`
 - `admin/themes/roma/theme.css`, `css/components/general.css`
 
 **Plugins:**
+
 - `plugins/GDThumb/css/gdthumb.css`, `admin.css`
 - `plugins/AdminTools/template/admin_style.css`, `public_style.css`
 - `plugins/language_switch/language_switch.css`, `style.css`
@@ -98,7 +101,8 @@ Approach per instance: (1) note the property + selector, (2) grep for conflictin
 ### Target directory layout
 
 **`admin/themes/default/css/`** (post-split):
-```
+
+```text
 base/
   reset-defaults.css       ← "General defaults", forms, "Tables & forms"
   typography.css
@@ -150,7 +154,8 @@ theme.css                  ← thin entry: @import the above in order
 ```
 
 **`themes/default/css/`** (post-split):
-```
+
+```text
 menubar.css
 content.css
 picture.css
@@ -173,6 +178,7 @@ Execute in this order (risk-free first):
 
 **Step 1 — Extend Stylelint coverage.**
 Update `.stylelintrc.json` `ignoreFiles` to exclude only vendor libraries:
+
 ```json
 "ignoreFiles": [
   "node_modules/**", "dist/**", "tests/**",
@@ -184,15 +190,19 @@ Update `.stylelintrc.json` `ignoreFiles` to exclude only vendor libraries:
   "themes/elegant/admin/**"
 ]
 ```
+
 Add new rules: `"declaration-no-important": [true, {"severity": "warning"}]`, `"custom-property-pattern": "^[a-z][a-z0-9-]*$"`, `"color-no-invalid-hex": true`, `"shorthand-property-no-redundant-values": true`. Record new baseline (expected: ~3,557 errors, 572 warnings across 31 files).
 
 **Step 2 — Mechanical auto-fix.**
+
 ```bash
 bunx stylelint --fix $(git ls-files '*.css' | grep -v node_modules | grep -v dist)
 ```
+
 Eliminates all auto-fixable formatting errors (empty lines, whitespace, shorthand redundancy, pseudo-element `::` notation) without touching logic. Rerun lint, record new baseline.
 
 **Step 3 — Delete the orphan.**
+
 ```bash
 git rm themes/default/fix-khtml.css
 ```
@@ -201,15 +211,18 @@ git rm themes/default/fix-khtml.css
 
 **Step 5 — Collapse search CSS variants.**
 Replace `search.css` + `clear-search.css` + `dark-search.css` with a single `search.css` using `--search-*` CSS variables:
+
 ```css
 /* search.css — variable-driven */
 .filter .filter-icon        { color: var(--search-icon); }
 .filter-manager-popin       { background-color: var(--search-popin-bg); }
 ```
+
 Each skin supplies its `--search-*` variable set (either in its `theme.css` `:root` block or a dedicated skin file). Drop the `{$themeconf.colorscheme}-search.css` load in `themes/default/template/inc/search_filters.inc.tpl:4`. Net savings: ~500 lines.
 
 **Step 6 — Non-color design tokens in `themes/modus/css/hf_base.css`.**
 Add at top:
+
 ```css
 :root {
   --space-xs: 5px;   --space-sm: 10px;  --space-md: 15px;
@@ -221,10 +234,12 @@ Add at top:
   --bp-sm: 576px;    --bp-md: 800px;    --bp-lg: 1100px;
 }
 ```
+
 Replace all hardcoded values throughout the file. Canonical breakpoints: `sm=576px md=800px lg=1100px` — adopt project-wide, add `/* Breakpoints: sm=576px md=800px lg=1100px */` header in every file that uses media queries.
 
 **Step 7 — Color tokens from PHP skin system in `themes/modus/css/base.css.tpl`.**
 Emit ALL `$skin` colors as CSS variables once at top:
+
 ```css
 :root {
   --color-bg:           {$skin.BODY.backgroundColor};
@@ -237,10 +252,12 @@ Emit ALL `$skin` colors as CSS variables once at top:
   /* … all $skin keys */
 }
 ```
+
 Replace all inline `{$skin.*}` injections in the rest of `base.css.tpl` with `var(--color-*)`.
 
 **Step 8 — Refactor modus skin files (eliminates 176 `!important`).**
 With the token system in place each skin's only job is to override variable values. Transform each from hundreds of element-level overrides to a single `:root {}` block:
+
 ```css
 /* avocado.css — before: 957 lines, 27× !important */
 /* avocado.css — after: ~40 lines, 0× !important */
@@ -249,6 +266,7 @@ With the token system in place each skin's only job is to override variable valu
   --color-accent-dark: #65a603;
 }
 ```
+
 The `!important` in skin files exists solely because they fight specificity with `hf_base.css`. Once both use the same variable names, there is nothing to fight.
 
 **Step 9 — Split `themes/modus/css/hf_base.css`** (917 lines) into four files loaded via `{combine_css}` in `themes/modus/template/header.tpl`:
@@ -262,6 +280,7 @@ The `!important` in skin files exists solely because they fight specificity with
 
 **Step 10 — Introduce CSS design tokens in admin parent.**
 Create `admin/themes/default/css/base.css.tpl` (Smarty-templated, following the modus pattern):
+
 ```smarty
 :root {
   --admin-bg:      {$admin_skin.page.backgroundColor};
@@ -270,6 +289,7 @@ Create `admin/themes/default/css/base.css.tpl` (Smarty-templated, following the 
   --admin-border:  {$admin_skin.border};
 }
 ```
+
 Each `themeconf.php` for `clear` and `roma` defines its `$admin_skin` array. `admin/themes/default/template/header.tpl` loads `base.css.tpl` with `template=true` before the split CSS.
 
 **Step 11 — Split `admin/themes/default/theme.css`** along its 60+ `/* name.css */` section markers into the target layout in the directory tree above. `admin/themes/default/theme.css` becomes an `@import` list.
@@ -278,6 +298,7 @@ Each `themeconf.php` for `clear` and `roma` defines its `$admin_skin` array. `ad
 With `var(--admin-*)` in place, `admin/themes/clear/theme.css` (1,392 lines) and `admin/themes/roma/theme.css` (2,716 lines) reduce to `:root {}` variable override blocks. Structural rules currently duplicated in both (borders, padding, grid, `@keyframes`) move up into the parent's split CSS.
 
 **Step 13 — Plugin CSS: remove `!important` (quick wins).**
+
 - `plugins/GDThumb/css/gdthumb.css:8` `background: inherit !important` — specificity of `ul.thumbnails .gdthumb` is sufficient, remove.
 - `plugins/GDThumb/css/admin.css:41,42,46` — raise selector to `.GDThumb_config input[type="text"]`.
 - Same treatment for `plugins/AdminTools/` and `plugins/language_switch/` instances.
@@ -294,6 +315,7 @@ For every static template in the inventory above: cut CSS into `css/pages/<name>
 ### Verification
 
 After each step:
+
 1. `bunx stylelint "**/*.css" --ignore-path .stylelintignore` — error/warning count decreasing.
 2. Visual smoke-test on the admin pages touched: dashboard, each sidebar section, toggle clear/roma via the head button, gallery index/category/picture, search popin (light + dark), 3+ modus skins.
 3. Network tab: confirm same or fewer CSS requests (the `{combine_css}` combiner bundles source files; more source files must not multiply requests).
@@ -328,11 +350,13 @@ Integrate `@axe-core/playwright` into the existing E2E suite. WCAG 2.1 AA violat
 ### Steps
 
 1. **Install dependencies.**
+
    ```bash
    npm i -D @axe-core/playwright axe-core
    ```
 
 2. **Helper at `tests/e2e/utils/a11y.ts`.**
+
    ```typescript
    import AxeBuilder from '@axe-core/playwright';
    import { expect, Page } from '@playwright/test';
@@ -371,4 +395,3 @@ npx playwright test --grep '@a11y'                          # focused a11y-only 
 echo '<button>X</button>' > /tmp/probe && \
   ! npx playwright test tests/e2e/probe.spec.ts             # exits non-zero
 ```
-

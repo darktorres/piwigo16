@@ -39,7 +39,7 @@ After boot, both `$conf['key']` and `Config::get('key')` return the same value. 
 
 ## Autoload layout
 
-```
+```text
 composer.json
 ├── autoload.psr-4  "Piwigo\\"  → src/Piwigo/
 ├── autoload.psr-4  "Smarty\\"  → include/smarty/src/
@@ -135,7 +135,7 @@ into `dev/fixtures/piwigo-16.x.sql`'s `piwigo_upgrade` table.
 
 Vite 5 with 39 entry points in `vite.config.ts`:
 
-```
+```text
 themes/default/js/*.ts          → core.scripts, mcs, switchbox, pngfix, rating, thumbnails.loader
 themes/standard_pages/js/*.ts   → toaster_js, standard_pages_js, standard_profile_js
 admin/themes/default/js/*.ts    → common, addAlbum, albums, batchManagerGlobal, … (30 files)
@@ -308,6 +308,7 @@ To opt into IDE tooling, use the namespaced names:
 ### PHP version
 
 PHP 8.5 is required. Key breakage points:
+
 - `curl_close()` is deprecated — use `unset($ch)`.
 - `mysql_*` functions are gone — use `pwg_query()` / `pwg_db_*`.
 - Undeclared dynamic properties emit `E_DEPRECATED` — add explicit declarations or

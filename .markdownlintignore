@@ -1,0 +1,6 @@
+node_modules/
+vendor/
+_data/
+dist/
+plugins/
+admin/themes/default/fonts/

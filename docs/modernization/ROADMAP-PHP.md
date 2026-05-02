@@ -16,7 +16,7 @@ Enforce PSR-12 across the entire PHP codebase via Laravel Pint as a hard CI gate
 
 - `vendor/bin/pint` installed (`composer.json` `require-dev`).
 - `pint.json` exists with `psr12` preset + project rules (`single_quote`, `ordered_imports`, `no_unused_imports`, `trailing_comma_in_multiline`, `declare_strict_types: false`); `_data`, `language`, `local`, `vendor` excluded. Codebase is baseline-formatted (`pint --test` is the working contract for any new style work).
-- `.github/workflows/ci.yml` exists with a `style` job running `vendor/bin/pint --test` on push/PR. This file is the home for the audit, PHPStan, Infection, and TS/CSS jobs added by later items.
+- `.github/workflows/ci.yml` runs two jobs on push/PR: `style` (Pint `--test`) and `phpstan` (`composer dump-autoload --strict-psr` + `vendor/bin/phpstan analyse`). Workflow-level `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true` keeps third-party actions ahead of the June 2026 Node-default switch; direct actions are pinned to current majors (`actions/checkout@v5`, `shivammathur/setup-php@v2`, `ramsey/composer-install@v3`). The audit job (#4 step 1), Infection job (#28), and TS/CSS jobs land here later.
 - `.editorconfig` at repo root pins LF, UTF-8, 4-space PHP indent, 2-space JSON/YAML, trim trailing whitespace, final newline (markdown opts out of trim, `*.bat` opts into CRLF).
 - `CONTRIBUTING.md` documents `vendor/bin/pint`, `--dirty`, `--test`, and the optional pre-commit hook.
 
@@ -26,7 +26,7 @@ Enforce PSR-12 across the entire PHP codebase via Laravel Pint as a hard CI gate
 
 2. **Baseline-format all PHP.** ✅ Done — current tree passes `vendor/bin/pint --test`.
 
-3. **Stand up `.github/workflows/`.** ✅ Done — `.github/workflows/ci.yml` runs `vendor/bin/pint --test` on push/PR (PHP 8.5, `ramsey/composer-install@v3` for cache). The same workflow file is the home for items #4 (audit), #27 (PHPStan level 10), #28 (Infection), and the test/lint jobs from ROADMAP-CSS.md and ROADMAP-TS.md.
+3. **Stand up `.github/workflows/`.** ✅ Done — `.github/workflows/ci.yml` runs `vendor/bin/pint --test` on push/PR (PHP 8.5, `ramsey/composer-install@v3` for cache). The PHPStan + `--strict-psr` job (#2 / #3) was added alongside it during the same build-out. Remaining future tenants of this file: audit (#4 step 1), Infection (#28), and TS/CSS jobs from ROADMAP-CSS.md and ROADMAP-TS.md.
 
 4. **Add `.editorconfig`.** ✅ Done — root file pins LF, UTF-8, 4-space PHP indent, 2-space JSON/YAML, trim trailing whitespace, final newline; markdown opts out of trim, `*.bat` opts into CRLF.
 

@@ -1,46 +1,7 @@
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_script id='cat_perm' load='footer' path='admin/themes/default/js/cat_perm.js'}
+{combine_script id='cat_perm' load='footer' require='common' path='admin/themes/default/js/cat_perm.js'}
 
 <script id="pwg-cat-perm-data" type="application/json">{$cat_perm_page_data_json}</script>
-
-{footer_script}
-const cat_nav = '{$CATEGORIES_NAV|escape:javascript}';
-(function(){
-{* <!-- TOGGLES --> *}
-function checkStatusOptions() {
-  var checkedStatus = document.querySelector("input[name=status]:checked");
-  var privateOptions = document.getElementById("privateOptions");
-  if (checkedStatus && checkedStatus.value == "private") {
-    if (privateOptions) privateOptions.style.display = '';
-  }
-  else {
-    if (privateOptions) privateOptions.style.display = 'none';
-  }
-}
-
-checkStatusOptions();
-var selectStatusEl = document.getElementById("selectStatus");
-if (selectStatusEl) {
-  selectStatusEl.addEventListener('change', function() {
-    checkStatusOptions();
-  });
-}
-
-{if isset($nb_users_granted_indirect) && $nb_users_granted_indirect>0}
-  Array.from(document.querySelectorAll(".toggle-indirectPermissions")).forEach(function(el) {
-    el.addEventListener('click', function(e) {
-      e.preventDefault();
-      Array.from(document.querySelectorAll(".toggle-indirectPermissions")).forEach(function(t) {
-        t.style.display = t.style.display === 'none' ? '' : 'none';
-      });
-      var details = document.getElementById("indirectPermissionsDetails");
-      if (details) details.style.display = details.style.display === 'none' ? '' : 'none';
-    });
-  });
-{/if}
-}());
-
-{/footer_script}
 
 <form action="{$F_ACTION}" method="post" id="categoryPermissions">
 

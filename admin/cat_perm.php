@@ -307,6 +307,7 @@ $cat_perm_page_data = [
   'CACHE_KEYS' => $cache_keys,
   'ROOT_URL' => get_root_url(),
   'str_create' => l10n('Create'),
+  'has_indirect_perms' => count($user_granted_indirect_ids) > 0,
 ];
 
 $template->assign([

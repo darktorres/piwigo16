@@ -41,7 +41,8 @@
 {/if}
 
 {if isset($chronology_calendar.month_view)}
-<table class="calMonth">
+{combine_css path="themes/default/css/month_calendar.css"}
+<table class="calMonth" style="--cal-cell-w:{$chronology_calendar.month_view.CELL_WIDTH}px;--cal-cell-h:{$chronology_calendar.month_view.CELL_HEIGHT}px">
  <thead>
  <tr>
  {foreach from=$chronology_calendar.month_view.wday_labels item=wday}
@@ -49,11 +50,6 @@
  {/foreach}
  </tr>
  </thead>
-{html_style}
-.calMonth TD, .calMonth .calImg{
-	width:{$chronology_calendar.month_view.CELL_WIDTH}px;height:{$chronology_calendar.month_view.CELL_HEIGHT}px
-}
-{/html_style}
  {foreach from=$chronology_calendar.month_view.weeks item=week}
  <tr>
  	{foreach from=$week item=day}

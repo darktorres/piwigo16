@@ -25,7 +25,7 @@ export default tseslint.config(
         ],
     },
     js.configs.recommended,
-    ...tseslint.configs.recommended,
+    ...tseslint.configs.recommendedTypeChecked,
     {
         files: ['**/*.{js,mjs,cjs}'],
         languageOptions: {
@@ -44,6 +44,9 @@ export default tseslint.config(
             'prettier/prettier': 'error',
             'no-console': ['warn', { allow: ['warn', 'error'] }],
             'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+            eqeqeq: 'error',
+            'no-implicit-coercion': 'error',
+            'no-param-reassign': ['warn', { props: false }],
         },
     },
     {
@@ -60,13 +63,21 @@ export default tseslint.config(
         rules: {
             ...prettierConfig.rules,
             'prettier/prettier': 'error',
-            '@typescript-eslint/no-explicit-any': 'warn',
+            '@typescript-eslint/no-explicit-any': 'error',
             '@typescript-eslint/explicit-function-return-type': 'off',
             '@typescript-eslint/no-unused-vars': [
                 'warn',
                 { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
             ],
+            '@typescript-eslint/strict-boolean-expressions': 'error',
+            '@typescript-eslint/no-unnecessary-condition': 'error',
+            '@typescript-eslint/prefer-nullish-coalescing': 'error',
+            '@typescript-eslint/prefer-optional-chain': 'error',
+            '@typescript-eslint/consistent-type-imports': 'error',
             'no-console': ['warn', { allow: ['warn', 'error'] }],
+            eqeqeq: 'error',
+            'no-implicit-coercion': 'error',
+            'no-param-reassign': ['warn', { props: false }],
         },
     }
 );

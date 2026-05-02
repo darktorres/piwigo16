@@ -2,83 +2,33 @@
 
 TypeScript / frontend-glue modernization work. See [MODERNIZATION.md](MODERNIZATION.md) for architecture context and completed phase summaries; see [ROADMAP-PHP.md](ROADMAP-PHP.md) and [ROADMAP-CSS.md](ROADMAP-CSS.md) for the other tracks.
 
+**Status snapshot (2026-05-02):** #1 ESLint + Prettier ✅ Done · #2 `any` reduction Not started (479 patterns) · #3 `window.*` data-bridge globals ✅ Done · #4 Vitest Not started · #5 Bundle size budgets Not started · #6 Vendored libs — Tier 2 ✅ Done, Tiers 1/3/4/5 Not started.
+
 ---
 
 ## #1 — ESLint + Prettier
 
-**Status:** Not started &nbsp;|&nbsp; **Size:** S
+**Status:** ✅ Done &nbsp;|&nbsp; **Size:** S
 
-### Goal
+### Outcome
 
-Enforce TypeScript code style and catch common mistakes via ESLint + Prettier as a CI gate. Foundation item — every subsequent TS change lands on a consistent baseline.
+ESLint flat config (`eslint.config.ts`) and Prettier (`.prettierrc.json`) are in place; the TS rule set goes beyond the original plan to `tseslint.configs.recommendedTypeChecked` (type-checked linting) plus `strict-boolean-expressions`, `no-unnecessary-condition`, `prefer-nullish-coalescing`, `prefer-optional-chain`, `consistent-type-imports`. `no-explicit-any` is `error` (stricter than the originally proposed `warn`). Prettier rules: 4-space TS indent, single quotes, 100-char width, `es5` trailing commas — matching Pint's PHP style choices.
 
-### Current state
-
-- `package.json` has Vite 5.4, TypeScript 5.6, Playwright 1.48 — no ESLint, no Prettier, no shared config.
-- Code style across `themes/default/js/` and `admin/themes/default/js/` is hand-formatted; drift is unbounded.
-- `tsc` catches type errors but not stylistic issues (unused vars, `console.log`, missing return types, etc.).
-
-### Steps
-
-1. **Install.**
-
-   ```bash
-   npm i -D eslint @typescript-eslint/parser @typescript-eslint/eslint-plugin \
-              prettier eslint-config-prettier eslint-plugin-prettier
-   ```
-
-2. **`eslint.config.js`** (flat config, ESLint 9+):
-
-   ```js
-   import tseslint from '@typescript-eslint/eslint-plugin';
-   import tsparser from '@typescript-eslint/parser';
-   import prettier from 'eslint-plugin-prettier';
-   import prettierConfig from 'eslint-config-prettier';
-
-   export default [
-     { ignores: ['dist/**', 'node_modules/**', '**/plugins/selectize.*'] },
-     {
-       files: ['**/*.ts'],
-       languageOptions: { parser: tsparser, parserOptions: { project: './tsconfig.json' } },
-       plugins: { '@typescript-eslint': tseslint, prettier },
-       rules: {
-         ...tseslint.configs.recommended.rules,
-         ...prettierConfig.rules,
-         'prettier/prettier': 'error',
-         '@typescript-eslint/no-explicit-any': 'warn',
-         '@typescript-eslint/explicit-function-return-type': 'off',
-         'no-console': ['warn', { allow: ['warn', 'error'] }],
-       },
-     },
-   ];
-   ```
-
-3. **`.prettierrc`** matching Pint's PHP style choices: single quotes, 4-space indent for TS, trailing commas (`es5`), 100-char line width.
-
-4. **npm scripts.**
-
-   ```json
-   "scripts": {
-       "lint": "eslint themes/default/js admin/themes/default/js tests/e2e --ext .ts",
-       "lint:fix": "npm run lint -- --fix",
-       "format": "prettier --write \"**/*.{ts,json,md,css}\"",
-       "format:check": "prettier --check \"**/*.{ts,json,md,css}\""
-   }
-   ```
-
-5. **Baseline format pass.** Run `prettier --write` once. Commit alone (mechanical, easy to review).
-
-6. **CI gate.** Add `lint` job to `.github/workflows/ci.yml` running `npm ci && npm run lint && npm run format:check`.
-
-7. **Document** in `CONTRIBUTING.md` — point at `npm run lint:fix` and the `format:check` gate.
+Recent commits `ba17576e8 build(lint): tighten ESLint and Stylelint rule sets` and `232066e55 fix(lint): scope tseslint type-checked preset to *.ts files` finalized the configuration.
 
 ### Verification
 
 ```bash
-npm run lint           # exits 0 on a clean tree
-npm run format:check   # exits 0
-# CI fails any PR with style violations
+npm run lint           # ESLint flat config runs across .js/.mjs/.cjs and .ts
+npm run lint:fix
+npm run format         # Prettier write
+npm run format:check   # Prettier check
 ```
+
+### Caveats / follow-ups
+
+- `no-explicit-any: error` is currently undermined by the existing **479** `any` patterns (see #2). `npm run lint` does not yet exit clean on the tree; the rule is enforced for new code via review, not gate.
+- No `.github/workflows/` directory exists (this is a personal fork — no CI). Lint is a local pre-commit / manual step, not a merge gate. The original CONTRIBUTING.md doc step is moot for the same reason.
 
 ---
 
@@ -88,12 +38,14 @@ npm run format:check   # exits 0
 
 ### Goal
 
-Reduce `any` escapes in authored TypeScript from the current **468** to **≤250**, focusing on `(window as any)` calls and untyped function parameters. Do not touch vendored `node_modules/` or generated `dist/`.
+Reduce `any` escapes in authored TypeScript from the current **479** to **≤250**, focusing on `(window as any)` calls and untyped function parameters. Do not touch vendored `node_modules/` or generated `dist/`.
 
 ### Current state
 
-- 468 total `any` patterns across `admin/themes/default/js/` and `themes/default/js/`.
-- Largest concentrations: `common.ts` (window globals for plugin interop), `batchManagerGlobal.ts` (legacy data shapes), `user_list.ts` (plugin tab API).
+- **479** `: any` / `as any` / `(window as any)` patterns: 440 in `admin/themes/default/js/` (24 files) + 39 in `themes/default/js/` (6 files). Slight increase from the original 468 baseline (drift since the roadmap was first written).
+- ESLint `@typescript-eslint/no-explicit-any` is set to `error` in `eslint.config.ts`, so each occurrence is a lint error today. Only one file has an `eslint-disable` for this rule (`group_list.ts`); the rest cause `npm run lint` to fail. Closing this item is what unlocks a clean lint baseline.
+- Largest concentrations: `tags.ts` (80), `user_list.ts` (58), `albums.ts` (52), `group_list.ts` (45), `album_selector.ts` (35), `batchManagerUnit.ts` (31), `batchManagerGlobal.ts` (27).
+- No `themes/default/js/types/` or `admin/themes/default/js/types/` declaration directory exists yet — Tier 1 hasn't started.
 
 ### Approach
 
@@ -136,8 +88,9 @@ const pluginSave = (window as Record<string, unknown>)[pluginId + '_save'] as
 
 ```bash
 grep -rn ": any\b\|as any\b\|(window as any)" admin/themes/default/js/ themes/default/js/ --include="*.ts" | wc -l
-# target: ≤ 250
+# current: 479 — target: ≤ 250
 npm run typecheck   # still zero errors
+npm run lint        # eventually exits 0 once `no-explicit-any` is satisfied
 ```
 
 ---
@@ -355,18 +308,9 @@ Replace 3rd-party JS/CSS libraries currently checked into the repo under `plugin
 3. `tablesorter` replaces `plugins/nbc_ThemeChanger/include/jquery.tablesorter.js`.
 4. **`tom-select` swap for `user_tags/jquery.addtags.js`** — already a Piwigo dep; deletes the jQuery dependency for that plugin entirely. Convert `init.php`/templates to load the Piwigo-shared tom-select bundle.
 
-**Tier 2 — Stylelint / ESLint scope cleanup (XS, parallel to Tier 1).**
+**Tier 2 — Stylelint / ESLint scope cleanup (XS, parallel to Tier 1). ✅ Done.**
 
-Until the vendor moves out, add these to `.stylelintrc.json` `ignoreFiles` so they stop polluting lint output:
-
-```json
-"plugins/piwigo-videojs/**",
-"plugins/piwigo-openstreetmap/leaflet/**",
-"plugins/piwigo-openstreetmap/fontello/**",
-"plugins/LocalFilesEditor/codemirror/**"
-```
-
-When Tier 3/4/5 land, the entries become unneeded and can be removed.
+`.stylelintrc.json` already ignores `plugins/**`, `admin/themes/default/fonts/**`, `themes/default/vendor/fontello/**`, and `themes/default/js/plugins/**`, which subsumes the originally-listed vendor paths (videojs / leaflet / codemirror / open-sans). `eslint.config.ts` likewise ignores `plugins/**`, `themes/default/js/plugins/selectize.*`, the bundled themes, and the PHP vendor paths. No further config additions are needed for this tier; when Tier 3/4/5 delete the vendor dirs the ignores can stay (they still cover Piwigo plugin code) or be narrowed.
 
 **Tier 3 — video.js consolidation (M).**
 

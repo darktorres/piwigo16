@@ -10,8 +10,8 @@
     "lint:fix": "npm run lint -- --fix",
     "lint:css": "stylelint \"**/*.css\"",
     "lint:css:fix": "npm run lint:css -- --fix",
-    "format": "prettier --write \"**/*.{ts,json,md,css}\"",
-    "format:check": "prettier --check \"**/*.{ts,json,md,css}\"",
+    "format": "prettier --check \"**/*.{ts,json,md,css}\"",
+    "format:fix": "prettier --write \"**/*.{ts,json,md,css}\"",
     "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true});require('fs').rmSync('_data/combined',{recursive:true,force:true})\"",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui"

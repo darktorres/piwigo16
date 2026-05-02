@@ -2,5 +2,10 @@ node_modules/
 vendor/
 _data/
 dist/
-plugins/
+plugins/LocalFilesEditor/codemirror/
+plugins/piwigo-openstreetmap/leaflet/
+plugins/piwigo-videojs/video-js-4/
+plugins/piwigo-videojs/video-js-5/
+plugins/piwigo-videojs/video-js-6/
+plugins/piwigo-videojs/video-js-7/
 admin/themes/default/fonts/

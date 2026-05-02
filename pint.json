@@ -1,23 +1,6 @@
 {
   "preset": "psr12",
-  "exclude": [
-    "_data",
-    "install/db",
-    "language",
-    "include/smarty",
-    "include/feedcreator.class.php",
-    "include/minify",
-    "include/phpmailer",
-    "include/jshrink.class.php",
-    "include/passwordhash.class.php",
-    "include/mdetect.php",
-    "include/emogrifier.class.php",
-    "include/phpqrcode.php",
-    "admin/include/pclzip.lib.php",
-    "local",
-    "themes",
-    "vendor"
-  ],
+  "exclude": ["_data", "language", "local", "vendor"],
   "rules": {
     "declare_strict_types": false,
     "single_quote": true,

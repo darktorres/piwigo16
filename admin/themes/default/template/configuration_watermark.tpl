@@ -1,52 +1,6 @@
+<script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-
-{footer_script}
-(function(){
-  function onWatermarkChange() {
-    var wSelect = document.getElementById("wSelect");
-    var wImg = document.getElementById("wImg");
-    if (!wSelect || !wImg) return;
-    var val = wSelect.value;
-    if (val.length) {
-      wImg.setAttribute('src', '{$ROOT_URL}' + val);
-      wImg.style.display = '';
-    }
-    else {
-      wImg.style.display = 'none';
-    }
-  }
-
-  onWatermarkChange();
-
-  var wSelect = document.getElementById("wSelect");
-  if (wSelect) wSelect.addEventListener("change", onWatermarkChange);
-
-  var checkedPosition = document.querySelector("input[name='w[position]']:checked");
-  if (checkedPosition && checkedPosition.value === 'custom') {
-    var posCustomDetails = document.getElementById("positionCustomDetails");
-    if (posCustomDetails) posCustomDetails.style.display = '';
-  }
-
-  document.querySelectorAll("input[name='w[position]']").forEach(function(radio) {
-    radio.addEventListener('change', function() {
-      var posCustomDetails = document.getElementById("positionCustomDetails");
-      if (posCustomDetails) {
-        posCustomDetails.style.display = (this.value === 'custom') ? '' : 'none';
-      }
-    });
-  });
-
-  document.querySelectorAll(".addWatermarkOpen").forEach(function(btn) {
-    btn.addEventListener('click', function(e) {
-      e.preventDefault();
-      ['addWatermark', 'selectWatermark'].forEach(function(id) {
-        var el = document.getElementById(id);
-        if (el) el.style.display = el.style.display === 'none' ? '' : 'none';
-      });
-    });
-  });
-}());
-{/footer_script}
+{combine_script id='configuration_watermark' load='footer' require='common' path='admin/themes/default/js/configuration_watermark.js'}
 
 <form method="post" action="{$F_ACTION}" class="properties" enctype="multipart/form-data">
 

@@ -633,6 +633,10 @@ switch ($page['section']) {
                 );
             }
 
+            $template->assign('page_data_json', json_encode([
+                'root_url' => get_root_url(),
+            ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
+
             break;
         }
     case 'search':

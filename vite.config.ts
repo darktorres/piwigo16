@@ -44,6 +44,7 @@ export default defineConfig({
                 'comments':           r('admin/themes/default/js/comments.ts'),
                 'configuration_comments': r('admin/themes/default/js/configuration_comments.ts'),
                 'configuration_main': r('admin/themes/default/js/configuration_main.ts'),
+                'configuration_watermark': r('admin/themes/default/js/configuration_watermark.ts'),
                 'languages_installed': r('admin/themes/default/js/languages_installed.ts'),
                 'updates_pwg':        r('admin/themes/default/js/updates_pwg.ts'),
                 'site_manager':       r('admin/themes/default/js/site_manager.ts'),

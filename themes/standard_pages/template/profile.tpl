@@ -420,11 +420,8 @@
           {include file=$plugin_block.template}
           {if $plugin_block.standard_show_save}
             <div class="save">
-              <button class="btn btn-main" id="save_{$k_block}">{'Submit'|translate}</button>
+              <button class="btn btn-main" id="save_{$k_block}" data-standard-save="{$k_block}">{'Submit'|translate}</button>
             </div>
-            {footer_script}
-            standardSaveSelector.push('#save_{$k_block}');
-            {/footer_script}
           {/if}
         </div>
       </section>

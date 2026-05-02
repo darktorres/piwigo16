@@ -152,10 +152,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    standardSaveSelector.forEach((selectorStr, i) => {
-        qs(selectorStr)?.addEventListener('click', () => {
+    // Plugins that opt into standard_show_save render their own
+    // <button id="save_<block>" data-standard-save="<block>">. Bind them all.
+    document.querySelectorAll<HTMLButtonElement>('button[data-standard-save]').forEach((btn) => {
+        const blockKey = btn.dataset['standardSave'] ?? '';
+        btn.addEventListener('click', () => {
             const values: Record<string, unknown> = {};
-            document.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(`#${i}-section input, #${i}-section textarea, #${i}-section select`).forEach(el => {
+            document.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(
+                `#${blockKey}-section input, #${blockKey}-section textarea, #${blockKey}-section select`,
+            ).forEach((el) => {
                 if (el.name) values[el.name] = el.value;
             });
             setInfos(values);

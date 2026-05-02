@@ -110,5 +110,8 @@ DELETE
 $template->assign('isWebmaster', (is_webmaster()) ? 1 : 0);
 $template->assign('ADMIN_PAGE_TITLE', l10n('Languages'));
 $template->assign('CONF_ENABLE_EXTENSIONS_INSTALL', \Piwigo\Core\Config::enableExtensionsInstall());
+$template->assign('page_data_json', json_encode([
+    'str_delete_language_confirm' => l10n('Are you sure you want to delete the language "%s"?'),
+], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
 
 $template->assign_var_from_handle('ADMIN_CONTENT', 'languages');

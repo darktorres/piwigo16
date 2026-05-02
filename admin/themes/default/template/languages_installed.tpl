@@ -1,18 +1,6 @@
+<script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{footer_script}
-document.querySelectorAll('.delete-lang-button').forEach(function(el) {
-  var title_msg = '{'Are you sure you want to delete the language "%s"?'|@translate|@escape:'javascript'}';
-  var confirm_msg = '{"Yes, I am sure"|@translate}';
-  var cancel_msg = '{"No, I have changed my mind"|@translate|@escape:'javascript'}';
-  var lang_name = el.closest('.languageBox').querySelector('.languageName').innerHTML;
-  el.addEventListener('click', function(e) {
-    e.preventDefault();
-    if (window.confirm(title_msg.replace('%s', lang_name))) {
-      window.location.href = el.getAttribute('href');
-    }
-  });
-});
-{/footer_script}
+{combine_script id='languages_installed' load='footer' require='common' path='admin/themes/default/js/languages_installed.js'}
 
 {foreach from=$language_states item=language_state}
 <fieldset>

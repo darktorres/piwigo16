@@ -364,7 +364,6 @@ switch ($page['section']) {
             {
                 /** @var array<string, mixed> $conf */
                 $conf = [];
-                include(PHPWG_ROOT_PATH . 'include/config_default.inc.php');
 
                 $localConfig = realpath(PHPWG_ROOT_PATH . 'local/config/config.inc.php');
                 if ($localConfig !== false) {
@@ -377,7 +376,7 @@ switch ($page['section']) {
                     }
                 }
 
-                return \Piwigo\Core\Config::has('order_by') or \Piwigo\Core\Config::has('order_by_inside_category');
+                return array_key_exists('order_by', $conf) || array_key_exists('order_by_inside_category', $conf);
             }
 
             if (order_by_is_local()) {

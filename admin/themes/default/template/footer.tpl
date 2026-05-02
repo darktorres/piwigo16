@@ -72,10 +72,6 @@
 </div>
 {/if}
 
-<style>
-
-
-</style>
 
 
 {footer_script}

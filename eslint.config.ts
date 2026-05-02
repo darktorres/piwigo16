@@ -1,12 +1,10 @@
-import type { Linter } from 'eslint';
 import js from '@eslint/js';
-import tsParser from '@typescript-eslint/parser';
-import tsPlugin from '@typescript-eslint/eslint-plugin';
+import tseslint from 'typescript-eslint';
 import prettierPlugin from 'eslint-plugin-prettier';
 import prettierConfig from 'eslint-config-prettier';
 import globals from 'globals';
 
-const config: Linter.Config[] = [
+export default tseslint.config(
     {
         ignores: [
             'dist/**',
@@ -26,6 +24,8 @@ const config: Linter.Config[] = [
             'themes/modus/**',
         ],
     },
+    js.configs.recommended,
+    ...tseslint.configs.recommended,
     {
         files: ['**/*.{js,mjs,cjs}'],
         languageOptions: {
@@ -40,31 +40,24 @@ const config: Linter.Config[] = [
             prettier: prettierPlugin,
         },
         rules: {
-            ...js.configs.recommended.rules,
             ...prettierConfig.rules,
             'prettier/prettier': 'error',
             'no-console': ['warn', { allow: ['warn', 'error'] }],
-            'no-unused-vars': [
-                'warn',
-                { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
-            ],
+            'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
         },
     },
     {
         files: ['**/*.ts'],
         languageOptions: {
-            parser: tsParser,
             parserOptions: {
                 projectService: true,
                 tsconfigRootDir: import.meta.dirname,
             },
         },
         plugins: {
-            '@typescript-eslint': tsPlugin,
             prettier: prettierPlugin,
         },
         rules: {
-            ...tsPlugin.configs.recommended.rules,
             ...prettierConfig.rules,
             'prettier/prettier': 'error',
             '@typescript-eslint/no-explicit-any': 'warn',
@@ -75,7 +68,5 @@ const config: Linter.Config[] = [
             ],
             'no-console': ['warn', { allow: ['warn', 'error'] }],
         },
-    },
-];
-
-export default config;
+    }
+);

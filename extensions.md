@@ -4,14 +4,14 @@ Inventory of every entry in each sibling repo's `manifest.json`.
 
 | Repo | Entries |
 | --- | ---: |
-| [`piwigo16-plugins`](#piwigo16-plugins) | 406 |
+| [`piwigo16-plugins`](#piwigo16-plugins) | 405 |
 | [`piwigo16-themes`](#piwigo16-themes) | 136 |
 | [`piwigo16-languages`](#piwigo16-languages) | 85 |
 | [`piwigo16-tools`](#piwigo16-tools) | 33 |
 
 ## piwigo16-plugins
 
-406 entries.
+405 entries.
 
 | Key | Filename | Extension Name |
 | --- | --- | --- |
@@ -131,7 +131,6 @@ Inventory of every entry in each sibling repo's `manifest.json`.
 | `event_cats_1.2.8` | `event_cats_1.2.8.zip` | Event Cats |
 | `event_tracer_12.a` | `event_tracer_12.a.zip` | Event tracer |
 | `Evil_Blog_1.2.4` | `Evil_Blog_1.2.4.zip` | Evil_Blog |
-| `evil_plugin` | `evil_plugin.zip` | RCE-POC |
 | `exif_view_16.a` | `exif_view_16.a.zip` | EXIF View |
 | `exiftool_gps_0.8` | `exiftool_gps_0.8.zip` | Exiftool GPS |
 | `exiftool_keywords_15.a` | `exiftool_keywords_15.a.zip` | Exiftool Keywords |

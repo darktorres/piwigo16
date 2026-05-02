@@ -2,9 +2,7 @@
 
 Audience: contributors and plugin authors working against the `16.x-rewrite` branch.
 
-**Current state:** Phases 0–6 and Phase 8 complete. PHP 8.5 strict, full TypeScript, PSR-4
-namespacing, typed services, 218 unit tests, 15 E2E specs. Active work is Phase 7
-(PHPStan baseline elimination).
+**Stack:** PHP 8.5 with `declare(strict_types=1)`, full TypeScript via Vite, PSR-4 namespacing under `src/Piwigo/`, typed services with reference-bridge globals, PHPStan level 9 clean, PHPUnit + Playwright test suites.
 
 ---
 

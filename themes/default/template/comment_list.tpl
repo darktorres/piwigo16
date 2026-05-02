@@ -1,16 +1,8 @@
 {if isset($comment_derivative_params)}
-{strip}{html_style}
-.commentElement .illustration{
-	width:{$comment_derivative_params->max_width()+5}px
-}
-
-.content .commentElement .description{
-	min-height:{$comment_derivative_params->max_height()+5}px
-}
-{/html_style}{/strip}
+{combine_css path="themes/default/css/comment_list.css"}
 <div class="loader"><img src="{$ROOT_URL}{$themeconf.img_dir}/ajax_loader.gif"></div>
 {/if}
-<ul class="commentsList">
+<ul class="commentsList"{if isset($comment_derivative_params)} style="--comment-illu-w:{$comment_derivative_params->max_width()+5}px;--comment-desc-h:{$comment_derivative_params->max_height()+5}px"{/if}>
 {foreach from=$comments item=comment name=comment_loop}
 <li class="commentElement {if $smarty.foreach.comment_loop.index is odd}odd{else}even{/if}">
 	{if isset($comment.src_image)}

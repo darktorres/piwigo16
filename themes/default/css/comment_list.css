@@ -1,0 +1,7 @@
+.commentsList .commentElement .illustration {
+  width: var(--comment-illu-w);
+}
+
+.content .commentsList .commentElement .description {
+  min-height: var(--comment-desc-h);
+}

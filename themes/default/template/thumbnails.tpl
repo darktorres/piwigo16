@@ -1,32 +1,17 @@
 {if !empty($thumbnails)}{strip}
 {*define_derivative name='derivative_params' width=160 height=90 crop=true*}
-{html_style}
-{*Set some sizes according to maximum thumbnail width and height*}
-.thumbnails SPAN,
-.thumbnails .wrap2 A,
-.thumbnails LABEL{ldelim}
-	width: {$derivative_params->max_width()+2}px;
-}
-
-.thumbnails .wrap2{ldelim}
-	height: {$derivative_params->max_height()+3}px;
-}
-{if $derivative_params->max_width() > 600}
-.thumbLegend {ldelim}font-size: 130%}
-{else}
-{if $derivative_params->max_width() > 400}
-.thumbLegend {ldelim}font-size: 110%}
-{else}
-.thumbLegend {ldelim}font-size: 90%}
-{/if}
-{/if}
-{/html_style}
+{combine_css path="themes/default/css/thumbnails.css"}
+{assign var='thumbW' value=$derivative_params->max_width()+2}
+{assign var='thumbH' value=$derivative_params->max_height()+3}
+{if $derivative_params->max_width() > 600}{assign var='thumbLegendFs' value='130%'}
+{elseif $derivative_params->max_width() > 400}{assign var='thumbLegendFs' value='110%'}
+{else}{assign var='thumbLegendFs' value='90%'}{/if}
 {foreach from=$thumbnails item=thumbnail}
 {assign var=derivative value=$pwg->derivative($derivative_params, $thumbnail.src_image)}
 {if !$derivative->is_cached()}
 {combine_script id='thumbnails.loader' path='themes/default/js/thumbnails.loader.js' load='footer'}
 {/if}
-<li>
+<li style="--thumb-w:{$thumbW}px;--thumb-h:{$thumbH}px;--thumb-legend-fs:{$thumbLegendFs}">
 	<span class="wrap1">
 		<span class="wrap2">
 		<a href="{$thumbnail.URL}">

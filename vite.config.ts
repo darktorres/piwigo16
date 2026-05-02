@@ -45,6 +45,7 @@ export default defineConfig({
                 'group_list':         r('admin/themes/default/js/group_list.ts'),
                 'history':            r('admin/themes/default/js/history.ts'),
                 'menubar':            r('admin/themes/default/js/menubar.ts'),
+                'themes_standard_pages': r('admin/themes/default/js/themes_standard_pages.ts'),
                 'intro_tooltips':     r('admin/themes/default/js/intro_tooltips.ts'),
                 'glightbox-admin':    r('admin/themes/default/js/glightbox-init.ts'),
                 'geoip':              r('admin/themes/default/js/geoip.ts'),

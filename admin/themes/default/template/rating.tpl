@@ -1,46 +1,7 @@
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_script id='rating_admin' load='footer' path='admin/themes/default/js/rating_admin.js'}
+{combine_script id='rating_admin' load='footer' require='common' path='admin/themes/default/js/rating_admin.js'}
 
 <script id="pwg-rating-data" type="application/json">{$rating_page_data_json}</script>
-
-{footer_script}
-var removeAlbumFilter = document.getElementById("removeAlbumFilter");
-if (removeAlbumFilter) {
-  removeAlbumFilter.addEventListener('click', function(e) {
-    e.preventDefault();
-    var catSelect = document.querySelector("select[name=cat]");
-    if (catSelect && catSelect.selectize) catSelect.selectize.setValue(null);
-  });
-}
-
-function checkCatFilter() {
-  var catSelect = document.querySelector("select[name=cat]");
-  var removeBtn = document.getElementById("removeAlbumFilter");
-  if (!catSelect || !removeBtn) return;
-  if (catSelect.value == "") {
-    removeBtn.style.display = 'none';
-  } else {
-    removeBtn.style.display = '';
-  }
-}
-
-checkCatFilter();
-var catSelectEl = document.querySelector("select[name=cat]");
-if (catSelectEl) {
-  catSelectEl.addEventListener('change', function() {
-    checkCatFilter();
-  });
-}
-
-var h1El = document.querySelector('h1');
-if (h1El) {
-  var badge = document.createElement('span');
-  badge.className = 'badge-number';
-  badge.textContent = '{$NB_ELEMENTS}';
-  h1El.appendChild(badge);
-}
-
-{/footer_script}
 
 <form action="{$F_ACTION}" method="GET" class="filter">
   <fieldset>
@@ -113,7 +74,7 @@ if (h1El) {
 	<td>{$rate.rate}</td>
 	<td><b>{$rate.USER}</b></td>
 	<td>{$rate.date}</td>
-	<td><a onclick="return del(this,{$image.id},{$rate.user_id}{if !empty({$rate.anonymous_id})},'{$rate.anonymous_id}'{/if})" class="icon-trash"> </a></td>
+	<td><a class="icon-trash rating-delete" data-image-id="{$image.id}" data-user-id="{$rate.user_id}"{if !empty($rate.anonymous_id)} data-anonymous-id="{$rate.anonymous_id}"{/if}> </a></td>
 </tr>
 {/foreach}{*rates*}
 		</table>
@@ -122,35 +83,5 @@ if (h1El) {
 {/foreach}{*images*}
 </table>
 {combine_script id='core.scripts' load='async' path='themes/default/js/scripts.js'}
-{footer_script}
-function del(node,id,uid,aid){
-  var tr = node.closest("tr");
-  if (tr) tr.style.opacity = '0.4';
-  var data = {
-    image_id: id,
-    user_id: uid
-  };
-  if (aid) data.anonymous_id = aid;
-
-  (new PwgWS('{$ROOT_URL|@escape:javascript}')).callService(
-    'pwg.rates.delete', data,
-    {
-      method: 'POST',
-      onFailure: function(num, text) {
-        if (tr) tr.style.opacity = '';
-        alert(num + " " + text);
-      },
-      onSuccess: function(result){
-        if (result) {
-          if (tr) tr.remove();
-        } else {
-          alert(result);
-        }
-      }
-    }
-  );
-  return false;
-}
-{/footer_script}
 
 {if !empty($navbar)}{include file='navigation_bar.tpl'|@get_extent:'navbar'}{/if}

@@ -115,6 +115,7 @@ $rating_page_data = [
   'CACHE_KEYS' => $cache_keys,
   'ROOT_URL' => get_root_url(),
   'str_create' => l10n('Create'),
+  'nb_elements' => $nb_elements,
 ];
 
 $template->assign(

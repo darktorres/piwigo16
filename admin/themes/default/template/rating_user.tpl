@@ -1,19 +1,8 @@
 <script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
 {combine_script id='rating_user' load='footer' require='common' path='admin/themes/default/js/rating_user.js'}
-{html_style}
-.dtBar {
-	text-align:left;
-	padding: 10px 0 10px 20px
-}
-.dtBar DIV{
-	display:inline;
-	padding-right: 5px;
-}
-.dataTables_paginate A {
-	padding-left: 3px;
-}
-{/html_style}
+
+{combine_css path="admin/themes/default/css/pages/rating_user.css"}
 
 <form action="{$F_ACTION}" method="GET">
 <fieldset>

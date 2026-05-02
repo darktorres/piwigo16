@@ -1,0 +1,13 @@
+.dtBar {
+  text-align: left;
+  padding: 10px 0 10px 20px;
+}
+
+.dtBar DIV {
+  display: inline;
+  padding-right: 5px;
+}
+
+.dataTables_paginate A {
+  padding-left: 3px;
+}

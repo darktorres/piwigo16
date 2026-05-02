@@ -1024,7 +1024,7 @@
           <div class="user-property-select-container user-property-group">
             <select class="user-property-select" data-selectize="groups"
               placeholder="{'Select groups or type them'|translate}" name="group_id[]" multiple
-              style="box-sizing:border-box;"></select>
+              ></select>
           </div>
         </div>
       </div>

@@ -126,9 +126,9 @@
           <span class="icon-check"></span>
           <input type="checkbox" name="confirm_deletion" value="1"> {'Are you sure?'|@translate}</input>
         </label><br/><br/>
-        <span class="errors" style="visibility:hidden;margin:0;">{"You need to confirm deletion"|translate}</span>
+        <span class="errors u-invisible u-m-0">{"You need to confirm deletion"|translate}</span>
       </p>
-      <p id="applyActionBlock" style="display:none;margin:1em 0 0 0;" class="actionButtons">
+      <p id="applyActionBlock" class="actionButtons" hidden>
         <button id="applyAction" name="submit" type="submit" class="buttonLike">
           <i class="icon-cog-alt"></i> {'Apply action'|translate}
         </button>
@@ -152,27 +152,27 @@
 
       <!-- move -->
       <div id="action_move" class="bulkAction">
-        <select data-selectize="categories" data-default="" name="move" style="width:600px" placeholder="{'Select an album... or type it!'|@translate}"></select>
+        <select data-selectize="categories" data-default="" name="move" class="u-w-600" placeholder="{'Select an album... or type it!'|@translate}"></select>
         <a href="#" data-add-album="move" title="{'create a new album'|@translate}" class="icon-plus"></a>
       </div>
 
       <!-- dissociate -->
       <div id="action_dissociate" class="bulkAction">
         <select data-selectize="categories" placeholder="{'Type in a search term'|translate}"
-          name="dissociate" style="width:600px"></select>
+          name="dissociate" class="u-w-600"></select>
       </div>
 
 
       <!-- add_tags -->
       <div id="action_add_tags" class="bulkAction">
         <select data-selectize="tags" data-create="true" placeholder="{'Type in a search term'|translate}"
-          name="add_tags[]" multiple style="width:400px;"></select>
+          name="add_tags[]" multiple class="u-w-400"></select>
       </div>
 
       <!-- del_tags -->
       <div id="action_del_tags" class="bulkAction">
   {if !empty($associated_tags)}
-        <select data-selectize="tags" name="del_tags[]" multiple style="width:400px;"
+        <select data-selectize="tags" name="del_tags[]" multiple class="u-w-400"
           placeholder="{'Type in a search term'|translate}">
         {foreach from=$associated_tags item=tag}
           <option value="{$tag.id}">{$tag.name}</option>
@@ -250,8 +250,8 @@
   {/if}
       </div>
     </div> <!-- #permitAction -->
-    <div id="regenerationMsg" class="bulkAction" style="display:none;margin-left:0;">
-        <div id="regenerationStatus" style="margin-bottom:10px;">
+    <div id="regenerationMsg" class="bulkAction" hidden>
+        <div id="regenerationStatus">
           <span id="regenerationText">{'Generate multiple size images'|@translate}</span>
           <span class="badge-number" style="font-size:12.8px"></span>
         </div>
@@ -260,7 +260,7 @@
       </div>
     <!-- progress bar -->
     <div id="uploadingActions" hidden>
-      <div class="big-progressbar" style="max-width:100%;margin-bottom: 10px;">
+      <div class="big-progressbar">
         <div class="progressbar"></div>
       </div>
     </div>

@@ -32,7 +32,7 @@
     <br>
     <select data-selectize="groups" data-value="{$groups_selected|@json_encode|escape:html}"
       placeholder="{'Type in a search term'|translate}"
-      name="groups[]" multiple style="width:600px;"></select>
+      name="groups[]" multiple class="u-w-600"></select>
 {else}
     {'There is no group in this gallery.'|@translate} <a href="admin.php?page=group_list" class="externalLink">{'Group management'|@translate}</a>
 {/if}
@@ -43,7 +43,7 @@
     <br>
     <select data-selectize="users" data-value="{$users_selected|@json_encode|escape:html}"
       placeholder="{'Type in a search term'|translate}"
-      name="users[]" multiple style="width:600px;"></select>
+      name="users[]" multiple class="u-w-600"></select>
   </p>
 
 {if isset($nb_users_granted_indirect) && $nb_users_granted_indirect>0}

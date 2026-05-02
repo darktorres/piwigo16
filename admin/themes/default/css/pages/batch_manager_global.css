@@ -32,3 +32,24 @@ UL.thumbnails SPAN.wrap2 {
   width: var(--bm-thumb-w);
   height: var(--bm-thumb-h);
 }
+
+/* Bulk-action confirmation/progress widgets that previously inlined
+   margins alongside their visibility toggle (display:none/visibility:hidden
+   inline rules are now the hidden attribute + utility classes; the
+   following selectors carry the layout). */
+#applyActionBlock {
+  margin: 1em 0 0 0;
+}
+
+#regenerationMsg {
+  margin-left: 0;
+}
+
+#regenerationStatus {
+  margin-bottom: 10px;
+}
+
+#batchManagerGlobal .big-progressbar {
+  max-width: 100%;
+  margin-bottom: 10px;
+}

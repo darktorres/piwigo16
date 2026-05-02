@@ -26,7 +26,7 @@
 
   <p class="who_option who_group">
 {if isset($group_mail_options)}
-    <select name="group" placeholder="{'Type in a search term'|translate}" style="width:524px;">
+    <select name="group" placeholder="{'Type in a search term'|translate}" class="u-w-524">
       {html_options options=$group_mail_options}
     </select>
 {elseif isset($no_group_in_gallery) and $no_group_in_gallery}
@@ -39,7 +39,7 @@
 
     <p class="who_option who_users">
 {if isset($user_options)}
-    <select name="users[]" multiple placeholder="{'Type in a search term'|translate}" style="width:524px;">
+    <select name="users[]" multiple placeholder="{'Type in a search term'|translate}" class="u-w-524">
       {html_options options=$user_options}
     </select>
 {else}

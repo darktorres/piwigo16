@@ -69,11 +69,11 @@
 <table>
   <tr>
     <td>{'Username'|@translate}</td>
-    <td><input type="text" name="username" id="username" size="20" maxlength="50" style="width: 150px;"></td>
+    <td><input type="text" name="username" id="username" size="20" maxlength="50" class="u-w-150"></td>
   </tr>
   <tr>
     <td>{'Password'|@translate}</td>
-    <td><input type="password" name="password" id="password" style="width: 150px;"></td>
+    <td><input type="password" name="password" id="password" class="u-w-150"></td>
   </tr>
 </table>
 {/if}

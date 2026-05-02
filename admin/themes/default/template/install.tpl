@@ -85,7 +85,7 @@
 
   <table class="table2">
     <tr>
-      <td style="width: 30%">{'Default gallery language'|@translate}</td>
+      <td class="u-w-30p">{'Default gallery language'|@translate}</td>
       <td>
     <select name="language" data-language-select-redirect="install.php">
     {html_options options=$language_options selected=$language_selection}
@@ -100,7 +100,7 @@
 
   <table class="table2">
     <tr>
-      <td style="width: 30%;" class="fieldname">{'Host'|@translate}</td>
+      <td class="fieldname u-w-30p">{'Host'|@translate}</td>
       <td><input type="text" name="dbhost" value="{$F_DB_HOST}" required></td>
       <td class="fielddesc">{'localhost or other, supplied by your host provider'|@translate}</td>
     </tr>
@@ -132,7 +132,7 @@
 
   <table class="table2">
     <tr>
-      <td style="width: 30%;" class="fieldname">{'Username'|@translate}</td>
+      <td class="fieldname u-w-30p">{'Username'|@translate}</td>
       <td><input type="text" name="admin_name" value="{$F_ADMIN}" required></td>
       <td class="fielddesc">{'It will be shown to the visitors. It is necessary for website administration'|@translate}</td>
     </tr>

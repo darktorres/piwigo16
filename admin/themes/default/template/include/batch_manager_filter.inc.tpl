@@ -78,7 +78,7 @@
       <a href="#" class="removeFilter" title="{'remove this filter'|translate}"><span>[x]</span></a>
       <select data-selectize="tags" data-value="{$filter_tags|@json_encode|escape:html}"
         placeholder="{'Type in a search term'|translate}"
-        name="filter_tags[]" multiple style="width:600px;"></select>
+        name="filter_tags[]" multiple class="u-w-600"></select>
       <label class="font-checkbox"><span class="icon-circle-empty"></span><span><input type="radio" name="tag_mode" value="AND" {if !isset($filter.tag_mode) or $filter.tag_mode eq 'AND'}checked="checked"{/if}> {'All tags'|@translate}</span></label>
       <label class="font-checkbox"><span class="icon-circle-empty"></span><span><input type="radio" name="tag_mode" value="OR" {if isset($filter.tag_mode) and $filter.tag_mode eq 'OR'}checked="checked"{/if}> {'Any tag'|@translate}</span></label>
     </li>

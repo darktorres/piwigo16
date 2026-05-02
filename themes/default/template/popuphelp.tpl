@@ -14,14 +14,7 @@
     <a href="#" onclick="window.close();">{'Close this window'|@translate}</a>
 </p>
 
-{footer_script}
-if (window.opener || window.name) {
-	var closeLink = document.getElementById("closeLink");
-	if (closeLink) closeLink.style.display = '';
-	var homeLink = document.getElementById("homeLink");
-	if (homeLink) homeLink.style.display = 'none';
-}
-{/footer_script}
+{combine_script id='popuphelp' load='footer' path='themes/default/js/popuphelp.js'}
 </div> <!-- content -->
 
 

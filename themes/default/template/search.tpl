@@ -1,12 +1,5 @@
 
-{footer_script}
-['authors', 'tags', 'categories'].forEach(function(id) {
-  var el = document.getElementById(id);
-  if (el && typeof (window as any).TomSelect !== 'undefined') {
-    new (window as any).TomSelect(el, { plugins: ['remove_button'], maxOptions: el.querySelectorAll('option').length });
-  }
-});
-{/footer_script}
+{combine_script id='search' load='footer' path='themes/default/js/search.js'}
 
 {if isset($MENUBAR)}{$MENUBAR}{/if}
 <div id="content" class="content{if isset($MENUBAR)} contentWithMenu{/if}">

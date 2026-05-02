@@ -43,6 +43,7 @@ export default defineConfig({
                 'cat_search':         r('admin/themes/default/js/cat_search.ts'),
                 'comments':           r('admin/themes/default/js/comments.ts'),
                 'configuration_comments': r('admin/themes/default/js/configuration_comments.ts'),
+                'updates_ext':        r('admin/themes/default/js/updates_ext.ts'),
                 'datepicker':         r('admin/themes/default/js/datepicker.ts'),
                 'group_list':         r('admin/themes/default/js/group_list.ts'),
                 'history':            r('admin/themes/default/js/history.ts'),

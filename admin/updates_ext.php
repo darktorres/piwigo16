@@ -90,11 +90,20 @@ foreach ($autoupdate->types as $type) {
 
 }
 
+$ext_type = $page['page'] == 'updates' ? 'extensions' : $page['page'];
 $template->assign('UPDATES_EXTENSION', $updates_extension);
 $template->assign('SHOW_RESET', $show_reset);
 $template->assign('PWG_TOKEN', get_pwg_token());
-$template->assign('EXT_TYPE', $page['page'] == 'updates' ? 'extensions' : $page['page']);
+$template->assign('EXT_TYPE', $ext_type);
 $template->assign('isWebmaster', (is_webmaster()) ? 1 : 0);
+$template->assign('page_data_json', json_encode([
+    'pwg_token'      => get_pwg_token(),
+    'ext_type'       => $ext_type,
+    'str_error_head' => l10n('ERROR'),
+    'str_error_msg'  => l10n('an error happened'),
+    'str_restore'    => l10n('Reset ignored updates'),
+    'str_confirm_update_all' => l10n('Are you sure you want to update all extensions?'),
+], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
 $template->set_filename('plugin_admin_content', 'updates_ext.tpl');
 $template->assign_var_from_handle('ADMIN_CONTENT', 'plugin_admin_content');
 $template->assign('ADMIN_PAGE_TITLE', l10n('Updates'));

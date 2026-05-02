@@ -32,8 +32,11 @@ This plan executes the two existing roadmap items and closes those gaps in one o
 **Out of scope (intentionally inline forever):**
 
 - Email templates: `themes/default/template/mail/text/html/*.tpl` — HTML email clients require inline styles.
-- Dynamic `<style>` blocks listed in ROADMAP-CSS.md:64 — `batch_manager_global.tpl` (first block, thumb sizes from PHP), `thumbnails.tpl`, `month_calendar.tpl`, `mainpage_categories.tpl`, `comment_list.tpl`. These compose CSS rules from PHP-side values and stay as `{html_style}` / inline by design.
 - `vendor/`, `plugins/` — explicitly excluded; reassessed only if the core pipeline changes the contract.
+
+**Previously declared "must stay inline" — reassessed and migrated:**
+
+The five dynamic blocks (`batch_manager_global.tpl` first block, `thumbnails.tpl`, `month_calendar.tpl`, `mainpage_categories.tpl`, `comment_list.tpl`) initially seemed to require inline `{html_style}` because their CSS values are PHP-computed from `$derivative_params`. They were migrated anyway via **CSS custom properties on a wrapper element** + static `.css` rules consuming `var(--…)`. Inline `style=""` HTML attributes are governed by `style-src-attr` (a separate CSP directive from `style-src`), so this approach removes them from `style-src 'unsafe-inline'` requirements while preserving the dynamic value.
 
 ## Pipeline references (already in place — reuse, don't reinvent)
 

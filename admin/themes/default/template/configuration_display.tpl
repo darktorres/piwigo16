@@ -1,21 +1,6 @@
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
 
-{html_style}
-/*
-.adminOnlyIcon::before {
-  content:"(";
-}
-.adminOnlyIcon::after {
-  content:")";
-}
-*/
-.adminOnlyIcon {
-  background-color:#ddd;
-  padding:2px 5px;
-  border-radius:5px;
-  font-size:90%;
-}
-{/html_style}
+{combine_css path="admin/themes/default/css/pages/configuration_display.css"}
 
 <form method="post" action="{$F_ACTION}" class="properties">
 

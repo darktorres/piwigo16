@@ -55,7 +55,7 @@ Every file under `src/`, `include/`, and `admin/` declares `strict_types=1`. A P
 
 - `grep -rL 'declare(strict_types=1);' src/ admin/ include/ --include='*.php'` is empty — every PHP file in scope has the declaration. No deferral to #17 was needed; the sweep was global.
 - `Piwigo\Tools\PhpStan\StrictTypesRequiredRule` lives at `tools/phpstan/StrictTypesRequiredRule.php` and is registered in `phpstan.neon` alongside `NoDynamicNewRule` and `NoGlobalInSrcRule`. It walks `FileNode` and flags any file under `src/`, `include/`, or `admin/` that lacks `declare(strict_types=1);`. PHPStan reports zero hits on the clean tree, and a probe file dropped under `src/Piwigo/` confirmed the rule fires on regression.
-- The CI side ("fails CI if a new file is added without it") depends on PHPStan being a CI job — that lands with #27.
+- CI enforcement is live: `.github/workflows/ci.yml` runs `vendor/bin/phpstan analyse` in the `phpstan` job, so the rule blocks any push that adds an unguarded file.
 
 ### Verification
 
@@ -68,7 +68,7 @@ vendor/bin/phpstan analyse --no-progress                     # green, including 
 
 ## #3 — PSR-4 strict layout + PascalCase normalization
 
-**Status:** ✅ Done (renames + callers); placeholder deletion deferred to #30 &nbsp;|&nbsp; **Size:** M
+**Status:** ✅ Done; placeholder deletion deferred to #30 &nbsp;|&nbsp; **Size:** M
 
 ### Goal
 
@@ -116,7 +116,7 @@ All 14 lowercase / mixed-case classes under `src/Piwigo/Admin/` have been rename
 
 4. **Run `composer dump-autoload --strict-psr`.** ✅ Clean.
 
-5. **PHPStan rule.** ⏭️ Optional. The roadmap allowed either a custom `Psr4StrictRule` or relying on `--strict-psr` in CI; the latter waits on #27 (PHPStan in CI) to be wired up alongside the existing Pint job.
+5. **PHPStan rule.** ✅ Done via CI — `.github/workflows/ci.yml`'s `phpstan` job runs `composer dump-autoload --strict-psr` before `vendor/bin/phpstan analyse`, so any PSR-4 violation fails the push. No custom `Psr4StrictRule` was needed.
 
 ### Verification
 
@@ -1745,11 +1745,7 @@ PHPStan analyse passes at level 10 with no baseline file. Level 10 enforces full
 
 5. **Drop the level-9 baseline file.** No baseline = no inherited debt.
 
-6. **Wire CI.** Add a `phpstan` job to `.github/workflows/ci.yml` alongside the existing `style` job. This job is the one that actually enforces:
-   - `StrictTypesRequiredRule` (registered for #2 — currently local-only)
-   - `composer dump-autoload --strict-psr` (verification step from #3 — currently local-only; this also satisfies #3's optional step 5 without needing a custom `Psr4StrictRule`)
-
-   Until this job lands, regressions for either invariant can slip past push without anyone noticing.
+6. **CI job already enforces level 9.** The `phpstan` job in `.github/workflows/ci.yml` (added during #1's CI build-out) runs `composer dump-autoload --strict-psr` and `vendor/bin/phpstan analyse` on every push, so it already enforces `StrictTypesRequiredRule` (#2), `NoGlobalInSrcRule`, `NoDynamicNewRule`, and PSR-4 layout (#3). When the level moves to 10 here, just bump `phpstan.neon` — the CI job picks it up automatically.
 
 ### Verification
 

@@ -20,6 +20,9 @@ export default defineConfig({
                 // ── Frontend (themes/default) ─────────────────────────────
                 'core.scripts':       r('themes/default/js/scripts.ts'),
                 'core.switchbox':     r('themes/default/js/switchbox.ts'),
+                'search':             r('themes/default/js/search.ts'),
+                'popuphelp':          r('themes/default/js/popuphelp.ts'),
+                'picture_nav_keys':   r('themes/default/js/picture_nav_keys.ts'),
                 'mcs':                r('themes/default/js/mcs.ts'),
                 'pngfix':             r('themes/default/js/pngfix.ts'),
                 'rating':             r('themes/default/js/rating.ts'),

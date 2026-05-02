@@ -16,12 +16,32 @@ A fully installed Piwigo 16.x database with representative data:
 
 ### How to regenerate
 
-1. Start the dev stack: `docker compose up -d --wait db web`
-2. Reset the database: `docker compose exec db mariadb -uroot -proot -e "DROP DATABASE piwigo; CREATE DATABASE piwigo CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"`
-3. Install Piwigo at http://localhost:8080/install.php (db host: `db`, user: `piwigo`, pass: `piwigo`, db: `piwigo`, admin: `fixture_admin`, pass: `fixture_admin`)
-4. Log in as `fixture_admin` and create the representative content listed above
-5. Dump: `docker compose exec db mysqldump -upiwigo -ppiwigo piwigo > dev/fixtures/piwigo-16.x.sql`
-6. Commit the new dump
+Uses the local Apache + MySQL serving this checkout (the same stack the
+integration tests target). Credentials live in `.env.local` (see
+`.env.example` for the variable list).
+
+1. Reset a scratch database — never use the production DB:
+   ```bash
+   mysql -u root -p"$PIWIGO_DB_PASSWORD" -e \
+     "DROP DATABASE IF EXISTS piwigo_fixture_build;
+      CREATE DATABASE piwigo_fixture_build CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+   ```
+2. Point Apache at the scratch DB by writing `local/config/database.inc.php`:
+   ```php
+   <?php
+   $conf['dblayer'] = 'mysqli';
+   $conf['db_host'] = '127.0.0.1:3306';
+   $conf['db_user'] = 'root';
+   $conf['db_password'] = '...';
+   $conf['db_base'] = 'piwigo_fixture_build';
+   $prefixeTable = 'piwigo_';
+   ```
+   Leave `PHPWG_INSTALLED` undefined so the next request hits `install.php`.
+3. Visit `http://localhost/piwigo16/install.php`. Admin: `fixture_admin` / `fixture_admin`.
+4. Log in as `fixture_admin` and create the representative content listed above.
+5. Dump: `mysqldump -u root -p"$PIWIGO_DB_PASSWORD" piwigo_fixture_build > dev/fixtures/piwigo-16.x.sql`
+6. Delete the scratch DB and `local/config/database.inc.php`.
+7. Commit the new dump.
 
 The fixture should be ≥ 200 KB to exercise representative tables.
 

@@ -7,8 +7,9 @@ namespace Piwigo\Tests\Integration;
 /**
  * Integration tests for the Piwigo web service API.
  *
- * Requires a running web server with the fixture database loaded.
- * Run after `docker compose up -d --wait db web`.
+ * Requires the local Apache instance at PIWIGO_BASE_URL (set via .env.local)
+ * to be running. Each test resets PIWIGO_DB_BASE and loads the 16.x fixture
+ * before exercising the WS endpoints.
  */
 final class WsApiTest extends IntegrationTestCase
 {

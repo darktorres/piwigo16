@@ -228,8 +228,9 @@ Three jobs per push; all must pass for merge.
 
 ### e2e + integration
 
-`docker compose up -d --wait db web` then `npx playwright test` (15 specs), then
-`vendor/bin/phpunit --testsuite Integration` (`UpgradeChainTest`).
+Run the local Apache + MySQL stack (`http://localhost/piwigo16` with credentials
+in `.env.local`), then `npx playwright test` (15 specs) and
+`vendor/bin/phpunit --testsuite Integration` (`UpgradeChainTest`, `WsApiTest`).
 
 ---
 
@@ -344,9 +345,7 @@ a photo page, and the admin dashboard. Check the PHP error log for any `Deprecat
   `include` so PHPStan can see the 70 `pwg_*` free functions.
 - **Delete `tests/e2e/global-setup.js`** — stale CJS leftover alongside the canonical
   `global-setup.ts`.
-- **Wire `check-baseline.sh` and `check-conf-shape.php` into CI** — both tools exist in
-  `tools/` but are not yet in `.github/workflows/ci.yml`.
-- **E2E TypeScript typecheck in CI** — `tests/e2e/` is excluded from `tsconfig.json`;
+- **E2E TypeScript typecheck** — `tests/e2e/` is excluded from `tsconfig.json`;
   add `tests/e2e/tsconfig.json` and `tsc --noEmit -p tests/e2e/tsconfig.json` to the
   `typecheck` npm script.
 

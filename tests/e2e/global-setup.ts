@@ -15,11 +15,11 @@ async function globalSetup(): Promise<void> {
         return;
     }
 
-    const host = process.env.PIWIGO_DB_HOST || '127.0.0.1';
-    const port = process.env.PIWIGO_DB_PORT || '3306';
-    const user = process.env.PIWIGO_DB_USER || 'piwigo';
-    const pass = process.env.PIWIGO_DB_PASSWORD || 'piwigo';
-    const db = process.env.PIWIGO_DB_BASE || 'piwigo';
+    const host = process.env.PIWIGO_DB_HOST ?? '127.0.0.1';
+    const port = process.env.PIWIGO_DB_PORT ?? '3306';
+    const user = process.env.PIWIGO_DB_USER ?? '';
+    const pass = process.env.PIWIGO_DB_PASSWORD ?? '';
+    const db = process.env.PIWIGO_DB_BASE ?? '';
 
     const dbConfig = path.resolve(__dirname, '../../local/config/database.inc.php');
     if (fs.existsSync(dbConfig)) {
@@ -29,9 +29,6 @@ async function globalSetup(): Promise<void> {
     await execAsync(
         `mysql -h${host} -P${port} -u${user} -p${pass} -e "DROP DATABASE IF EXISTS ${db}; CREATE DATABASE ${db} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"`
     );
-
-    // Allow Docker bind-mount to propagate the file deletion to the container.
-    await new Promise(resolve => setTimeout(resolve, 3000));
 }
 
 export default globalSetup;

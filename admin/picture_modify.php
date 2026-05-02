@@ -415,6 +415,13 @@ $picture_modify_page_data = [
   'associated_albums' => $associated_albums,
   'str_create' => l10n('Create'),
   'str_assoc_album_ab' => l10n('Associate to album'),
+  'related_categories_ids' => $related_categories_ids,
+  'str_orphan' => l10n('This photo is an orphan'),
+  'str_are_you_sure' => l10n('Are you sure?'),
+  'str_yes' => l10n('Yes, delete'),
+  'str_no' => l10n('No, I have changed my mind'),
+  'str_cancel' => l10n('Cancel'),
+  'url_delete' => $admin_url_start.'&delete=1&pwg_token='.get_pwg_token(),
 ];
 
 $template->assign([

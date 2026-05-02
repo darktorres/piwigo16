@@ -3,36 +3,6 @@
 
 <script id="pwg-picture-modify-data" type="application/json">{$picture_modify_page_data_json}</script>
 
-{footer_script}
-{* <!-- DATEPICKER --> *}
-document.querySelectorAll('[data-datepicker]').forEach(function(el) {
-  window.pwgDatepicker(el, {
-    showTimepicker: true,
-    cancelButton: '{'Cancel'|translate}'
-  });
-});
-
-{* <!-- THUMBNAILS --> *}
-{literal}
-GLightbox({selector: 'a.preview-box'});
-{/literal}
-
-window.str_are_you_sure = '{'Are you sure?'|translate|escape:javascript}';
-window.str_yes = '{'Yes, delete'|translate|escape:javascript}';
-window.str_no = '{'No, I have changed my mind'|translate|@escape:'javascript'}';
-window.url_delete = '{$U_DELETE}';
-window.str_orphan = '{'This photo is an orphan'|@translate|escape:javascript}';
-
-
-window.related_categories_ids = {$related_categories_ids|@json_encode};
-
-document.getElementById('action-delete-picture').addEventListener('click', function() {
-  if (window.confirm(str_are_you_sure)) {
-    window.location.href = url_delete.replaceAll('amp;', '');
-  }
-});
-{/footer_script}
-
 {combine_script id='picture_modify' load='footer' path='admin/themes/default/js/picture_modify.js'}
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
 

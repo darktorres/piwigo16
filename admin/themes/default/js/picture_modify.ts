@@ -1,6 +1,8 @@
 import { AlbumSelector } from './album_selector';
 import { TagsCache, CategoriesCache } from './LocalStorageCache';
 import { getPageData } from './page-data';
+import GLightbox from 'glightbox';
+import 'glightbox/dist/css/glightbox.css';
 
 interface PictureModifyPageData {
     CACHE_KEYS: { tags: string; categories: string; _hash: string };
@@ -8,6 +10,13 @@ interface PictureModifyPageData {
     associated_albums: Record<string, any>;
     str_create: string;
     str_assoc_album_ab: string;
+    related_categories_ids: (string | number)[];
+    str_orphan: string;
+    str_are_you_sure: string;
+    str_yes: string;
+    str_no: string;
+    str_cancel: string;
+    url_delete: string;
 }
 
 const pageData = getPageData<PictureModifyPageData>('pwg-picture-modify-data');
@@ -31,12 +40,26 @@ tagsCache?.selectize(document.querySelector('[data-selectize=tags]'), { lang: {
     'Add': pageData.str_create
 }});
 
-declare var related_categories_ids: (string | number)[];
-declare var str_orphan: string;
-
 document.addEventListener('DOMContentLoaded', () => {
+    // Re-initialise datepickers with timepicker enabled (datepicker.ts auto-init
+    // uses defaults; here we want time + a translated cancel button).
+    document.querySelectorAll<HTMLElement>('[data-datepicker]').forEach((el) => {
+        (window as { pwgDatepicker?: (el: HTMLElement, opts: Record<string, unknown>) => void }).pwgDatepicker?.(el, {
+            showTimepicker: true,
+            cancelButton: pageData.str_cancel,
+        });
+    });
+
+    GLightbox({ selector: 'a.preview-box' });
+
+    document.getElementById('action-delete-picture')?.addEventListener('click', () => {
+        if (window.confirm(pageData.str_are_you_sure)) {
+            window.location.href = pageData.url_delete;
+        }
+    });
+
     const ab = new AlbumSelector({
-        selectedCategoriesIds: related_categories_ids,
+        selectedCategoriesIds: pageData.related_categories_ids,
         selectAlbum: add_related_category,
         removeSelectedAlbum: remove_related_category,
         adminMode: true,
@@ -93,7 +116,7 @@ function check_related_categories(selected_cat: (string | number)[]): void {
     if (selected_cat.length === 0) {
         document.querySelectorAll('.linked-albums-badge').forEach(el => el.classList.add('badge-red'));
         document.querySelectorAll('.add-item').forEach(el => el.classList.add('highlight'));
-        document.querySelectorAll<HTMLElement>('.orphan-photo').forEach(el => { el.innerHTML = str_orphan; el.style.display = ''; });
+        document.querySelectorAll<HTMLElement>('.orphan-photo').forEach(el => { el.innerHTML = pageData.str_orphan; el.style.display = ''; });
     } else {
         document.querySelectorAll('.linked-albums-badge.badge-red').forEach(el => el.classList.remove('badge-red'));
         document.querySelectorAll('.add-item.highlight').forEach(el => el.classList.remove('highlight'));

@@ -3,7 +3,7 @@ import tippy from 'tippy.js';
 import { getPageData } from './page-data';
 import { pwgDoubleSlider } from './doubleSlider';
 
-declare var sprintf: (fmt: string, ...args: any[]) => string;
+declare let sprintf: (fmt: string, ...args: any[]) => string;
 
 interface SliderConfig {
     values: number[];
@@ -106,9 +106,6 @@ function toggleDisplay(el: HTMLElement): void {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    /** @type {AlbumSelector} */
-    let ab: any;
-
     document
         .querySelectorAll<HTMLElement>('.linkedAlbumPopInContainer .ClosePopIn')
         .forEach((el) => {
@@ -769,8 +766,6 @@ document.addEventListener('DOMContentLoaded', () => {
             .querySelectorAll<HTMLElement>('.filter-album .filter-actions .clear')
             .forEach((el) => {
                 el.addEventListener('click', () => {
-                    // (no-op selector retained as comment: .filter-album .search-params input[value='AND'])
-                    ab.resetAll();
                     const selCatsCont = document.querySelector<HTMLElement>(
                         '.selected-categories-container'
                     );
@@ -1983,12 +1978,11 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 filterAlbumEl.classList.remove('show-filter-dropdown');
                 global_params.fields.cat = {};
-                global_params.fields.cat.words = ab.get_selected_albums();
+                global_params.fields.cat.words = [];
                 global_params.fields.cat.sub_inc =
                     document.querySelectorAll("input[name='search-sub-cats']:checked").length != 0;
 
-                PS_params.categories =
-                    ab.get_selected_albums().length > 0 ? ab.get_selected_albums() : '';
+                PS_params.categories = '';
                 PS_params.categories_withsubs =
                     document.querySelectorAll("input[name='search-sub-cats']:checked").length != 0;
             }

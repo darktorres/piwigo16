@@ -13,10 +13,8 @@ use PhpParser\ParserFactory;
 
 $root = dirname(__DIR__);
 $globs = [
-    $root . '/include/*.class.php',
     $root . '/include/*.inc.php',
     $root . '/include/ws_protocols/*.php',
-    $root . '/admin/include/*.class.php',
     $root . '/admin/include/*.inc.php',
 ];
 

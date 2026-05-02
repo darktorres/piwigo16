@@ -68,7 +68,7 @@ vendor/bin/phpstan analyse --no-progress                     # green, including 
 
 ## #3 — PSR-4 strict layout + PascalCase normalization
 
-**Status:** ✅ Done; placeholder deletion deferred to #30 &nbsp;|&nbsp; **Size:** M
+**Status:** ✅ Done &nbsp;|&nbsp; **Size:** M
 
 ### Goal
 
@@ -112,7 +112,7 @@ All 14 lowercase / mixed-case classes under `src/Piwigo/Admin/` have been rename
 
 2. **Rename lowercase classes.** ✅ Done — class declarations, internal self-references, all first-party `use` and `new` sites, the FQN type hint inside `C13yInternal`, the `\Piwigo\Admin\Plugins`-style FQN constructions in `pwg.extensions.php`, and the doc strings in `tools/triggers_list.php` were all updated. Out-of-tree plugins were deliberately left untouched per the original plan; `rector.php`'s rename map points old keys at the new FQNs so any bare legacy reference still gets rewritten if rector runs on it.
 
-3. **Delete the empty `*.class.php` placeholders.** ⏭️ Defer to #30 — placeholders are inert and no first-party code requires them.
+3. **Delete the empty `*.class.php` placeholders.** ✅ Done as #30.
 
 4. **Run `composer dump-autoload --strict-psr`.** ✅ Clean.
 
@@ -1836,7 +1836,7 @@ vendor/bin/phpunit --testsuite Unit --coverage-text | grep "Lines:"
 
 ## #30 — Delete empty `*.class.php` stub shims
 
-**Status:** Not started &nbsp;|&nbsp; **Size:** XS
+**Status:** ✅ Done; manual plugin spot-check + `class_alias` decision deferred &nbsp;|&nbsp; **Size:** XS
 
 ### Goal
 
@@ -1844,24 +1844,25 @@ Delete the 17 five-line `*.class.php` files in `include/` and `admin/include/` t
 
 ### Current state
 
-- 9 stubs in `include/`: `block`, `cache`, `calendar_base`, `calendar_monthly`, `calendar_weekly`, `Logger`, `pwgsession`, `template`, `totp`.
-- 8 stubs in `admin/include/`: `c13y_internal`, `check_integrity`, `image`, `languages`, `plugins`, `tabsheet`, `themes`, `updates`.
-- Each is exactly 5 lines: `<?php`, `declare(strict_types=1);`, comment, blank.
-- `src/Piwigo/Compat/aliases.php` does **not** exist; the stubs are not backed by any `class_alias` chain. They are pure dead weight — every first-party caller already uses the namespaced `use Piwigo\…\…;` form.
-- `tools/triggers_list.php` mentions some of these paths in event-handler description strings (e.g. `'include\block.class.php (BlockManager::apply)'`, `'include\template.class.php (Template::flush)'`, `'admin\include\check_integrity.class.php …'`, `'admin\include\image.class.php …'`, `'include\tabsheet.class.php …'`) — at least 6 entries. Those are documentation strings, not includes, but should be updated to point at the `src/Piwigo/...` locations as part of this task.
+- All 17 stubs deleted (`git rm`). Autoload class count stayed at 2239, confirming the stubs contributed no symbols.
+- One additional cleanup beyond the original plan: `src/Piwigo/Admin/Updates.php` had a `foreach ($this->types as $type) { include_once(PHPWG_ROOT_PATH.'admin/include/'.$type.'.class.php'); ... }` loop loading three of the placeholders (`plugins.class.php`, `themes.class.php`, `languages.class.php`) — the autoloader handles the real classes, so the `include_once` was dead and now removed.
+- `tools/list-classes.php` glob list trimmed: `*.class.php` patterns dropped (those files no longer exist), `*.inc.php` patterns kept.
+- `tools/triggers_list.php` doc strings updated for `BlockManager`, `Template`, and `FileCombiner` (7 entries pointing at `src/Piwigo/Menu/...` and `src/Piwigo/Template/...`). The earlier entries for `tabsheet`, `pwg_image`, `check_integrity` were already fixed during #3.
+- `src/Piwigo/Compat/aliases.php` still does not exist; no first-party caller needs it.
 
 ### Steps
 
-1. `git rm` the 17 stub files.
-2. Run `vendor/bin/phpstan analyse --no-progress` and `vendor/bin/phpunit` to confirm nothing broke (autoload carries the namespaced names).
-3. Update the path strings in `tools/triggers_list.php` to reference the corresponding `src/Piwigo/...` files.
-4. Spot-check that a representative bundled plugin still loads (e.g. activate `nbc_ThemeChanger` in a test gallery).
-5. Decide whether to introduce `src/Piwigo/Compat/aliases.php` for 3rd-party-plugin compatibility (legacy plugins might reference unqualified `plugins`/`themes`/etc.). Defer until a concrete plugin breaks; today no first-party caller needs it.
+1. `git rm` the 17 stub files. ✅
+2. Run `vendor/bin/phpstan analyse --no-progress` and `vendor/bin/phpunit`. ✅ Both green.
+3. Update path strings in `tools/triggers_list.php`. ✅
+4. **Manual** — spot-check that a representative bundled plugin still loads (e.g. activate `nbc_ThemeChanger` in a test gallery). Cannot be done from this session; pending.
+5. Decision pending — introduce `src/Piwigo/Compat/aliases.php` only when a concrete 3rd-party plugin breaks on the missing unqualified names. Today no first-party caller needs it.
 
 ### Verification
 
 ```bash
 git ls-files 'include/*.class.php' 'admin/include/*.class.php'   # empty
+composer dump-autoload --strict-psr                              # clean
 vendor/bin/phpstan analyse --no-progress                         # green
 vendor/bin/phpunit                                               # green
 ```

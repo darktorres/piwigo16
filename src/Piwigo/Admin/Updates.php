@@ -36,7 +36,6 @@ class Updates
         $this->default_plugins = ['AdminTools', 'TakeATour', 'language_switch', 'LocalFilesEditor'];
 
         foreach ($this->types as $type) {
-            include_once(PHPWG_ROOT_PATH.'admin/include/'.$type.'.class.php');
             if ($type === 'plugins') {
                 $this->plugins = new Plugins();
             } elseif ($type === 'themes') {

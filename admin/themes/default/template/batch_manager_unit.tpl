@@ -8,7 +8,7 @@
 
 {combine_script id='batchManagerUnit' load='footer' path='admin/themes/default/js/batchManagerUnit.js'}
 <div id="batchManagerGlobal" style="margin-bottom: 80px;">
-	<div style="clear:both"></div>
+	<div class="u-clear-both"></div>
 	{if isset($ELEMENT_IDS)}
 	<div>
 		<input type="hidden" name="element_ids" value="{$ELEMENT_IDS}">
@@ -45,7 +45,7 @@
 		<i class="icon-ok" style="font-size: 20px;"></i>
 		<p>
 			&nbsp;{'Image'|@translate}&nbsp;
-			<p style="font-weight: bold;">
+			<p class="u-text-bold">
 				#{$element.ID} '{$element.FILE}'
 			</p>
 			&nbsp;{'was succesfully deleted'|@translate}

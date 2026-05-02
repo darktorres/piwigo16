@@ -6,7 +6,7 @@
 
 <fieldset id="environment">
   <legend><span class="icon-television icon-red"></span> {'Environment'|@translate}</legend>
-  <ul style="font-weight:bold">
+  <ul class="u-text-bold">
     <li><a href="{$PHPWG_URL}" class="externalLink">Piwigo</a> {$PWG_VERSION} <a href="{$U_CHECK_UPGRADE}&tab=env" class="icon-arrows-cw">{'Check for upgrade'|@translate}</a></li>
 {if isset($INSTALLED_ON)}
     <li>{'Installed on %s, %s'|translate:$INSTALLED_ON:$INSTALLED_SINCE}</li>
@@ -38,7 +38,7 @@
 
 <fieldset id="pluginList">
   <legend><span class="icon-puzzle icon-green"></span> {'Activated plugin list'|@translate} <span class="badge-number"></span></legend>
-  <ul style="font-weight:bold">
+  <ul class="u-text-bold">
     <i class="icon-spin6 animate-spin"></i>
   </ul>
 </fieldset>

@@ -20,7 +20,7 @@
           <img id="wImg"></img>
         </span>
 
-        <span id="addWatermark"{if isset($ferrors.watermarkImage)} style="display:inline"{/if}>
+        <span id="addWatermark"{if isset($ferrors.watermarkImage)} class="u-d-inline"{/if}>
           {'add a new watermark'|translate} {'... or '|translate}<a href="#" class="addWatermarkOpen">{'Select a file'|translate}</a>
 
           <br>

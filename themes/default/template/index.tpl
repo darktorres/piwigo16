@@ -46,7 +46,7 @@
 			{if $image_order.SELECTED}
 			<span>&#x2714; </span>{$image_order.DISPLAY}
 			{else}
-			<span style="visibility:hidden">&#x2714; </span><a href="{$image_order.URL}" rel="nofollow">{$image_order.DISPLAY}</a>
+			<span class="u-invisible">&#x2714; </span><a href="{$image_order.URL}" rel="nofollow">{$image_order.DISPLAY}</a>
 			{/if}
 			{/foreach}
 		</div>
@@ -62,7 +62,7 @@
 			{if $image_derivative.SELECTED}
 			<span>&#x2714; </span>{$image_derivative.DISPLAY}
 			{else}
-			<span style="visibility:hidden">&#x2714; </span><a href="{$image_derivative.URL}" rel="nofollow">{$image_derivative.DISPLAY}</a>
+			<span class="u-invisible">&#x2714; </span><a href="{$image_derivative.URL}" rel="nofollow">{$image_derivative.DISPLAY}</a>
 			{/if}
 			{/foreach}
 		</div>
@@ -128,7 +128,7 @@
 	</a>
 	<div id="calendarViewSwitchBox" class="switchBox">
 		{foreach from=$chronology_views item=view name=loop}{if !$smarty.foreach.loop.first}<br>{/if}
-		<span{if !$view.SELECTED} style="visibility:hidden"{/if}>&#x2714; </span><a href="{$view.VALUE}">{$view.CONTENT}</a>
+		<span{if !$view.SELECTED} class="u-invisible"{/if}>&#x2714; </span><a href="{$view.VALUE}">{$view.CONTENT}</a>
 		{/foreach}
 	</div>
 </div>

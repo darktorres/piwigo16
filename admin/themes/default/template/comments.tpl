@@ -88,7 +88,7 @@
 
       <div class="user-pagination">
         <div class="pagination-per-page" id="commentsNb">
-          <span class="thumbnailsActionsShow" style="font-weight: bold;">{"Display"|translate}</span>
+          <span class="thumbnailsActionsShow">{"Display"|translate}</span>
           <a id="pagination-per-page-5" class="selected-pagination">5</a>
           <a id="pagination-per-page-10">10</a>
           <a id="pagination-per-page-25">25</a>

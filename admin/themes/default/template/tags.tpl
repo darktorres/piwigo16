@@ -170,7 +170,7 @@
 <div class="emptyResearch"> {'No tag found'|@translate} </div>
 <div class="tag-pagination">
   <div class="pagination-per-page">
-    <span class="thumbnailsActionsShow" style="font-weight: bold;">{'Display'|@translate}</span>
+    <span class="thumbnailsActionsShow">{'Display'|@translate}</span>
     <a id="100"
   {if !isset($smarty.cookies.pwg_tags_per_page) || !$smarty.cookies.pwg_tags_per_page || $smarty.cookies.pwg_tags_per_page == 100} 
     class="selected"

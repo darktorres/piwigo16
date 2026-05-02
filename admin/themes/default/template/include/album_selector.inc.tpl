@@ -79,7 +79,7 @@
             <span class="slider round"></span>
           </label>
           <label class="switch-label" for="album-create-check"><span>{'Creation mode'|translate}</span> <i
-              class="icon-help-circled tiptip" style="cursor:help"
+              class="icon-help-circled tiptip"
               title="{"Activate create mode to create and select an album"|translate}"></i></label>
         </div>
         <p class="head-button-2 icon-plus-circled linked-add-album" id="linkedAddAlbum">

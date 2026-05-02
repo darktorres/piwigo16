@@ -78,12 +78,12 @@
 </table>
 {/if}
 </fieldset>
-<p style="text-align: center;">
+<p class="u-text-center">
 <input class="submit" type="submit" name="submit" value="{'Upgrade from version %s to %s'|@translate:$introduction.CURRENT_RELEASE:$RELEASE}">
 </p>
 </form>
 <!--
-<p style="text-align: center;">
+<p class="u-text-center">
 <a href="{$introduction.RUN_UPGRADE_URL}">{'Upgrade from version %s to %s'|@translate:$introduction.CURRENT_RELEASE:$RELEASE}</a>
 </p>
 -->

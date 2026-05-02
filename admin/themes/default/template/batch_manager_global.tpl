@@ -121,7 +121,7 @@
       {/if}
         </select>
       </div>
-      <p id="confirmDel" style="visibility:hidden">
+      <p id="confirmDel" class="u-invisible">
         <label class="font-checkbox">
           <span class="icon-check"></span>
           <input type="checkbox" name="confirm_deletion" value="1"> {'Are you sure?'|@translate}</input>

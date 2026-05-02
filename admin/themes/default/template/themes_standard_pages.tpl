@@ -13,7 +13,7 @@
               {'Use standard Piwigo template for common pages.'|translate}
           </label>
 
-          <span class="icon-help-circled tiptip" title="{'When enabled, a common template is used for the login, registration and forgotten password pages, regardless of the theme. Some themes might use these templates even if you uncheck this option'|translate}" style="cursor:help"></span>
+          <span class="icon-help-circled tiptip" title="{'When enabled, a common template is used for the login, registration and forgotten password pages, regardless of the theme. Some themes might use these templates even if you uncheck this option'|translate}"></span>
         </li>
       </ul>
     </fieldset>

@@ -44,7 +44,7 @@
 	</tr>
 {foreach from=$permalinks item=permalink name="permalink_loop"}
 	<tr class="{if $smarty.foreach.permalink_loop.index is odd}row1{else}row2{/if}" style="line-height:1.5em;">
-		<td style="text-align:center;">{$permalink.id}</td>
+		<td class="u-text-center">{$permalink.id}</td>
 		<td>{$permalink.name}</td>
 		<td>{$permalink.permalink}</td>
 	</tr>
@@ -66,7 +66,7 @@
 	</tr>
 {foreach from=$deleted_permalinks item=permalink}
 	<tr style="line-height:1.5em;">
-		<td style="text-align:center;">{$permalink.cat_id}</td>
+		<td class="u-text-center">{$permalink.cat_id}</td>
 		<td>{$permalink.name}</td>
 		<td>{$permalink.permalink}</td>
 		<td>{$permalink.date_deleted}</td>

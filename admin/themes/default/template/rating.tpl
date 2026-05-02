@@ -37,7 +37,7 @@
       ></select>
     </label>
 
-    <div style="clear:both"></div>
+    <div class="u-clear-both"></div>
 
     <p style="margin:10px 0 0 0">
       <button name="submit" type="submit" class="buttonLike">

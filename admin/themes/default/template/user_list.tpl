@@ -69,7 +69,7 @@
           {*This input (#user_search2) is used to bait the chrome autocomplete tool. It is hidden in navigator and is not meant to be seen.*}
           <input id="user_search2" class='search-input2' type='text' placeholder='{'Search'|@translate}'> 
           <span class='icon-search search-icon'> </span>
-          <span class="icon-cancel search-cancel"{if isset($search_input)} style="display:inline"{/if}></span>
+          <span class="icon-cancel search-cancel{if isset($search_input)} u-d-inline{/if}"></span>
           <input autocomplete="one-time-code" id="user_search" class='search-input' type='text' placeholder='{'Search'|@translate}'{if isset($search_input)} value="{$search_input}"{/if}>
         </div>
     <div class="advanced-filter">
@@ -172,7 +172,7 @@
     <!-- Pagination -->
     <div class="user-pagination">
       <div class="pagination-per-page">
-        <span class="thumbnailsActionsShow" style="font-weight: bold;">{'Display'|@translate}</span>
+        <span class="thumbnailsActionsShow">{'Display'|@translate}</span>
         <a id="pagination-per-page-5">5</a>
         <a id="pagination-per-page-10">10</a>
         <a id="pagination-per-page-25">25</a>
@@ -204,7 +204,7 @@
         <legend>{'Action'|@translate}</legend>
 
         <div id="forbidAction">{'No users selected, no actions possible.'|@translate}</div>
-        <div id="permitActionUserList" style="display:block">
+        <div id="permitActionUserList" class="u-d-block">
 
           <div class="user-action-select-container">
             <select class="user-action-select" name="selectAction">
@@ -542,7 +542,7 @@
                 <div class="user-property-select-container user-property-group">
                   <select class="user-property-select" data-selectize="groups"
                     placeholder="{'Select groups or type them'|translate}" name="group_id[]" multiple
-                    style="box-sizing:border-box;"></select>
+                    ></select>
                   <p class="user-property-group-text">
                     {* {'Some of these groups give access to notifications. To find out more, go to the Notifications tab.'|@translate} *}
                   </p>
@@ -851,7 +851,7 @@
                 <div class="user-property-select-container user-property-group">
                   <select class="user-property-select" data-selectize="groups"
                     placeholder="{'Select groups or type them'|translate}" name="group_id[]" multiple
-                    style="box-sizing:border-box;"></select>
+                    ></select>
                 </div>
               </div>
 

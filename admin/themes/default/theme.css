@@ -6,6 +6,20 @@
    stylesheet's [hidden] { display: none } at higher specificity. */
 [hidden] { display: none !important; }
 
+/* Atomic utility classes used across templates instead of inline style="". */
+.u-invisible { visibility: hidden; }
+.u-text-center { text-align: center; }
+.u-text-bold { font-weight: bold; }
+.u-d-inline { display: inline; }
+.u-d-block { display: block; }
+.u-clear-both { clear: both; }
+.u-box-border { box-sizing: border-box; }
+
+/* tiptip help icons get the help cursor implicitly so templates don't
+   have to repeat style="cursor:help" on every <i class="tiptip"> next to
+   the .icon-help-circled glyph. */
+.tiptip { cursor: help; }
+
 .showInfo { font-size:15px;cursor:pointer;line-height:15px; display: flex; align-items: center;}
 .showInfo:hover { text-decoration: none;}
 /* .Content  is on every pages so it is common and it will no longer be a specific css */
@@ -7368,8 +7382,13 @@ color:#FF7B00;
 }
 
 .user-property-select {
-  background-color:#F3F3F3; 
+  background-color:#F3F3F3;
   color:#353535;
+  box-sizing: border-box;
+}
+
+.thumbnailsActionsShow {
+  font-weight: bold;
 }
 
 .UserListPopInContainer {

@@ -5,6 +5,16 @@
    stylesheet's [hidden] { display: none } at higher specificity. */
 [hidden] { display: none !important; }
 
+/* Atomic utility classes used across templates instead of inline style="". */
+.u-cursor-help { cursor: help; }
+.u-invisible { visibility: hidden; }
+.u-text-center { text-align: center; }
+.u-text-bold { font-weight: bold; }
+.u-d-inline { display: inline; }
+.u-d-block { display: block; }
+.u-clear-both { clear: both; }
+.u-box-border { box-sizing: border-box; }
+
 /**
  * Menubar
  */

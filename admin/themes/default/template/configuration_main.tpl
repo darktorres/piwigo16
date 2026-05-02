@@ -166,7 +166,7 @@
           {'in administration'|translate}
         </label>
 
-        <span class="icon-help-circled tiptip-with-img show-mobile-app-banner-tooltip" title="{'Displays a banner to install or open the official Piwigo app'|translate}<br><img src='admin/themes/default/images/piwigo_app_banner.jpg' style='width:100%;margin-top:5px;'>" style="cursor:help"></span>
+        <span class="icon-help-circled tiptip-with-img show-mobile-app-banner-tooltip" title="{'Displays a banner to install or open the official Piwigo app'|translate}<br><img src='admin/themes/default/images/piwigo_app_banner.jpg' style='width:100%;margin-top:5px;'>"></span>
       </li>
 
       <li>
@@ -176,7 +176,7 @@
           {'Detect and avoid duplicates during upload'|translate}
         </label>
 
-        <span class="icon-help-circled tiptip" title="{'During upload, if Piwigo detects the photo already exists, associate the existing photo to the destination album, without duplicating file'|translate}" style="cursor:help"></span>
+        <span class="icon-help-circled tiptip" title="{'During upload, if Piwigo detects the photo already exists, associate the existing photo to the destination album, without duplicating file'|translate}"></span>
       </li>
 
       <li>

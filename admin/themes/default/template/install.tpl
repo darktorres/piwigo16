@@ -45,7 +45,7 @@
   <ul>
     <li>
       <p>{'You can download the config file and upload it to local/config directory of your installation.'|@translate}</p>
-      <p style="text-align:center">
+      <p class="u-text-center">
           <input type="button" value="{'Download the config file'|@translate}" data-install-download-config="{$config_url}">
       </p>
     </li>
@@ -179,7 +179,7 @@
 </p>
 {/if}
 </div> {* content *}
-<div style="text-align: center">{$L_INSTALL_HELP}</div>
+<div class="u-text-center">{$L_INSTALL_HELP}</div>
 </div> {* the_page *}
 
 <!-- BEGIN get_combined_scripts -->

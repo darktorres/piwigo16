@@ -126,7 +126,7 @@
             <span class="slider round"></span>
           </label>
         </div>
-        <label class="switch-label" for="cat-commentable"><span>{'Authorize comments'|@translate}</span> <i class="icon-help-circled tiptip" title="{'A photo can receive comments from your visitors if it belongs to an album with comments activated.'|@translate}" style="cursor:help"></i></label>
+        <label class="switch-label" for="cat-commentable"><span>{'Authorize comments'|@translate}</span> <i class="icon-help-circled tiptip" title="{'A photo can receive comments from your visitors if it belongs to an album with comments activated.'|@translate}"></i></label>
       </div>
       {/if}
 
@@ -138,7 +138,7 @@
           </label>
           
         </div>    
-        <label class="switch-label" for="cat-locked"><span>{'Locked album'|@translate}</span> <i class="icon-help-circled tiptip" title="{'Locked albums are disabled for maintenance. Only administrators can view them in the gallery. Lock this album will also lock his Sub-albums'|@translate}" style="cursor:help"></i></label>
+        <label class="switch-label" for="cat-locked"><span>{'Locked album'|@translate}</span> <i class="icon-help-circled tiptip" title="{'Locked albums are disabled for maintenance. Only administrators can view them in the gallery. Lock this album will also lock his Sub-albums'|@translate}"></i></label>
       </div>
     </div>
   </div>

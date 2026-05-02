@@ -80,17 +80,17 @@
         </td>
 
         <td>
-          <span class="sizeDetails"{if isset($ferrors)} style="display:inline"{/if}>{$d.w} x {$d.h} {'pixels'|translate}{if $d.crop}, {'Crop'|translate|lower}{/if}</span>
+          <span class="sizeDetails{if isset($ferrors)} u-d-inline{/if}">{$d.w} x {$d.h} {'pixels'|translate}{if $d.crop}, {'Crop'|translate|lower}{/if}</span>
         </td>
 
         <td>
-          <span class="sizeDetails"{if isset($ferrors) and !isset($ferrors.$type)} style="display:inline"{/if}>
+          <span class="sizeDetails{if isset($ferrors) and !isset($ferrors.$type)} u-d-inline{/if}">
             <a href="#" id="sizeEditOpen-{$type}" class="sizeEditOpen">{'edit'|translate}</a>
           </span>
         </td>
       </tr>
 
-      <tr id="sizeEdit-{$type}" class="sizeEdit" {if isset($ferrors.$type)} style="display:block"{/if}>
+      <tr id="sizeEdit-{$type}" class="sizeEdit{if isset($ferrors.$type)} u-d-block{/if}">
         <td colspan="3">
           <table class="sizeEditForm">
           {if !$d.must_square}

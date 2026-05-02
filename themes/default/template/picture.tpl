@@ -26,7 +26,7 @@
 <div id="derivativeSwitchBox" class="switchBox" data-cookie-path="{$COOKIE_PATH|escape}">
   <div class="switchBoxTitle">{'Photo sizes'|@translate}</div>
   {foreach from=$current.unique_derivatives item=derivative key=derivative_type}
-  <span class="switchCheck" id="derivativeChecked{$derivative->get_type()}"{if $derivative->get_type() ne $current.selected_derivative->get_type()} style="visibility:hidden"{/if}>&#x2714; </span>
+  <span class="switchCheck{if $derivative->get_type() ne $current.selected_derivative->get_type()} u-invisible{/if}" id="derivativeChecked{$derivative->get_type()}">&#x2714; </span>
   <a href="{$derivative->get_url()}" class="derivative-switch-item" data-type-save="{$derivative_type|escape}" data-type-map="{$derivative->get_type()|escape}">
     {$derivative->get_type()|@translate}<span class="derivativeSizeDetails"> ({$derivative->get_size_hr()})</span>
   </a><br>
@@ -305,7 +305,7 @@
 			{$COMMENT_LIST}
 		</div>
 		{/if}
-		<div style="clear:both"></div>
+		<div class="u-clear-both"></div>
 	</div>
 
 </div>

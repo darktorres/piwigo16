@@ -6,7 +6,7 @@ Inventory of every entry in each sibling repo's `manifest.json`.
 | --- | ---: |
 | [`piwigo16-plugins`](#piwigo16-plugins) | 405 |
 | [`piwigo16-themes`](#piwigo16-themes) | 136 |
-| [`piwigo16-languages`](#piwigo16-languages) | 85 |
+| [`piwigo16-languages`](#piwigo16-languages) | 68 |
 | [`piwigo16-tools`](#piwigo16-tools) | 33 |
 
 ## piwigo16-plugins
@@ -566,11 +566,10 @@ Inventory of every entry in each sibling repo's `manifest.json`.
 
 ## piwigo16-languages
 
-85 entries.
+68 entries.
 
 | Key | Filename | Extension Name |
 | --- | --- | --- |
-| `add_index_it` | `add_index_it.zip` | Italian translation : PWG Plugins |
 | `af_ZA_16.3.0` | `af_ZA_16.3.0.zip` | Afrikaans [ZA] |
 | `ar_EG_16.3.0` | `ar_EG_16.3.0.zip` | العربية (مصر) [EG] |
 | `ar_SA_16.3.0` | `ar_SA_16.3.0.zip` | العربية [AR] |
@@ -588,7 +587,6 @@ Inventory of every entry in each sibling repo's `manifest.json`.
 | `en_US_16.3.0` | `en_US_16.3.0.zip` | English [US] |
 | `eo_EO_16.3.0` | `eo_EO_16.3.0.zip` | Esperanto [EO] |
 | `es_AR_16.3.0` | `es_AR_16.3.0.zip` | Argentina [AR] |
-| `es_ES.iso-8859-1` | `es_ES.iso-8859-1.zip` | Spanish translation |
 | `es_ES_16.3.0` | `es_ES_16.3.0.zip` | Español [ES] |
 | `es_MX_16.3.0` | `es_MX_16.3.0.zip` | México [MX] |
 | `et_EE_16.3.0` | `et_EE_16.3.0.zip` | Estonian [EE] |
@@ -597,19 +595,14 @@ Inventory of every entry in each sibling repo's `manifest.json`.
 | `fi_FI_16.3.0` | `fi_FI_16.3.0.zip` | Finnish [FI] |
 | `fr_CA_16.3.0` | `fr_CA_16.3.0.zip` | Français [QC] |
 | `fr_FR_16.3.0` | `fr_FR_16.3.0.zip` | Français [FR] |
-| `french_utf8-1.7.1` | `french_utf8-1.7.1.zip` | french utf-8 |
 | `gl_ES_16.3.0` | `gl_ES_16.3.0.zip` | Galego [ES] |
 | `he_IL_16.3.0` | `he_IL_16.3.0.zip` | עברית [IL] |
-| `hr_HR.iso-8859-2` | `hr_HR.iso-8859-2.zip` | Hrvatski prijevod |
 | `hr_HR_16.3.0` | `hr_HR_16.3.0.zip` | Hrvatski [HR] |
-| `hu_HU.iso-8859-2` | `hu_HU.iso-8859-2.zip` | Hungarian translation |
 | `hu_HU_16.3.0` | `hu_HU_16.3.0.zip` | Magyar [HU] |
 | `hy_AM_16.3.0` | `hy_AM_16.3.0.zip` | Հայերեն (Hayerēn) [AM] |
 | `id_ID_16.3.0` | `id_ID_16.3.0.zip` | Bahasa Indonesia [ID] |
 | `is_IS_16.3.0` | `is_IS_16.3.0.zip` | Íslenska [IS] |
 | `it_IT_16.3.0` | `it_IT_16.3.0.zip` | Italiano [IT] |
-| `Italian_Language` | `Italian_Language.zip` | Italian Language |
-| `Italiano_1` | `Italiano_1.zip` | Italian translation (Italiano) |
 | `ja_JP_16.3.0` | `ja_JP_16.3.0.zip` | 日本語 [JP] |
 | `jp_JP_2.0.0` | `jp_JP_2.0.0.zip` | Japanese extentions for Piwigo |
 | `ka_GE_16.3.0` | `ka_GE_16.3.0.zip` | ქართული [GE] |
@@ -619,25 +612,16 @@ Inventory of every entry in each sibling repo's `manifest.json`.
 | `lb_LU_16.3.0` | `lb_LU_16.3.0.zip` | Lëtzebuergesch [LU] |
 | `lt_LT_16.3.0` | `lt_LT_16.3.0.zip` | Lietuvių [LT] |
 | `lv_LV_16.3.0` | `lv_LV_16.3.0.zip` | Latviešu [LV] |
-| `Macedonian` | `Macedonian.zip` | Macedonian language |
 | `mk_MK_16.3.0` | `mk_MK_16.3.0.zip` | Македонски [MK] |
 | `mn_MN_16.3.0` | `mn_MN_16.3.0.zip` | Монгол [MN] |
 | `nb_NO_16.3.0` | `nb_NO_16.3.0.zip` | Norsk bokmål [NO] |
-| `nbc_ThemeChanger` | `nbc_ThemeChanger.zip` | Traducción en español de plugins branch 1.7 |
-| `nl.iso-8859-1` | `nl.iso-8859-1.zip` | dutch translation |
 | `nl_NL_16.3.0` | `nl_NL_16.3.0.zip` | Nederlands [NL] |
 | `nn_NO_16.3.0` | `nn_NO_16.3.0.zip` | Norwegian nynorsk [NO] |
 | `pl_PL` | `pl_PL.zip` | Polish translation for Piwigo 2.0 |
-| `pl_PL.iso-8859-2` | `pl_PL.iso-8859-2.zip` | Polish translation |
 | `pl_PL_16.3.0` | `pl_PL_16.3.0.zip` | Polski [PL] |
-| `polish_language` | `polish_language.zip` | Polish language (Jezyk polski) |
 | `pt_BR_16.3.0` | `pt_BR_16.3.0.zip` | Brasil [BR] |
 | `pt_PT` | `pt_PT.zip` | Langue Portugaise |
 | `pt_PT_16.3.0` | `pt_PT_16.3.0.zip` | Português [PT] |
-| `PWG_cz_1_6_2_UTF_8` | `PWG_cz_1_6_2_UTF_8.zip` | czech language 1.6.2 |
-| `pwg_language_czech-2` | `pwg_language_czech-2.zip` | Czech |
-| `pwg_language_german-3` | `pwg_language_german-3.zip` | German |
-| `pwg_language_german-4` | `pwg_language_german-4.zip` | german translation (Deutsche Sprachdateien) |
 | `ro_RO_16.3.0` | `ro_RO_16.3.0.zip` | Română [RO] |
 | `ru_RU` | `ru_RU.zip` | Russian translate (Русский) |
 | `ru_RU_16.3.0` | `ru_RU_16.3.0.zip` | Русский [RU] |
@@ -650,7 +634,6 @@ Inventory of every entry in each sibling repo's `manifest.json`.
 | `th_TH_16.3.0` | `th_TH_16.3.0.zip` | ภาษาไทย [TH] |
 | `tr_TR_16.3.0` | `tr_TR_16.3.0.zip` | Türkçe [TR] |
 | `uk_UA_16.3.0` | `uk_UA_16.3.0.zip` | Українська [UA] |
-| `UpToDate_it` | `UpToDate_it.zip` | Italian translation : Plugins |
 | `vi_VN_16.3.0` | `vi_VN_16.3.0.zip` | Tiếng Việt [VN] |
 | `zh_CN_16.3.0` | `zh_CN_16.3.0.zip` | 简体中文 [CN] |
 | `zh_HK_16.3.0` | `zh_HK_16.3.0.zip` | 中文 (香港) [HK] |

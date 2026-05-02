@@ -6,7 +6,7 @@ PHP-only modernization work. See [MODERNIZATION.md](MODERNIZATION.md) for archit
 
 ## #1 — PSR-12 + Pint CI gate
 
-**Status:** In progress (config done; no CI) &nbsp;|&nbsp; **Size:** S
+**Status:** ✅ Done &nbsp;|&nbsp; **Size:** S
 
 ### Goal
 
@@ -14,10 +14,11 @@ Enforce PSR-12 across the entire PHP codebase via Laravel Pint as a hard CI gate
 
 ### Current state
 
-- `vendor/bin/pint` already installed (`composer.json` `require-dev`).
-- `pint.json` exists with `psr12` preset + project rules (`single_quote`, `ordered_imports`, `no_unused_imports`, `trailing_comma_in_multiline`, `declare_strict_types: false`); `_data`, `language`, `local`, `vendor` excluded. Codebase has been baseline-formatted (`pint --test` is the working contract for any new style work).
-- No `.github/` directory exists — **no CI workflow at all**, so neither the Pint check nor any other gate currently runs on push/PR. This is the actual blocker for items #1, #4, #27, #28, and the audit jobs throughout the roadmap.
-- No `.editorconfig`.
+- `vendor/bin/pint` installed (`composer.json` `require-dev`).
+- `pint.json` exists with `psr12` preset + project rules (`single_quote`, `ordered_imports`, `no_unused_imports`, `trailing_comma_in_multiline`, `declare_strict_types: false`); `_data`, `language`, `local`, `vendor` excluded. Codebase is baseline-formatted (`pint --test` is the working contract for any new style work).
+- `.github/workflows/ci.yml` exists with a `style` job running `vendor/bin/pint --test` on push/PR. This file is the home for the audit, PHPStan, Infection, and TS/CSS jobs added by later items.
+- `.editorconfig` at repo root pins LF, UTF-8, 4-space PHP indent, 2-space JSON/YAML, trim trailing whitespace, final newline (markdown opts out of trim, `*.bat` opts into CRLF).
+- `CONTRIBUTING.md` documents `vendor/bin/pint`, `--dirty`, `--test`, and the optional pre-commit hook.
 
 ### Steps
 
@@ -25,24 +26,11 @@ Enforce PSR-12 across the entire PHP codebase via Laravel Pint as a hard CI gate
 
 2. **Baseline-format all PHP.** ✅ Done — current tree passes `vendor/bin/pint --test`.
 
-3. **Stand up `.github/workflows/`.** Currently no CI exists at all. Create `.github/workflows/ci.yml` and add a `style` job:
+3. **Stand up `.github/workflows/`.** ✅ Done — `.github/workflows/ci.yml` runs `vendor/bin/pint --test` on push/PR (PHP 8.5, `ramsey/composer-install@v3` for cache). The same workflow file is the home for items #4 (audit), #27 (PHPStan level 10), #28 (Infection), and the test/lint jobs from ROADMAP-CSS.md and ROADMAP-TS.md.
 
-   ```yaml
-   style:
-     runs-on: ubuntu-latest
-     steps:
-       - uses: actions/checkout@v4
-       - uses: shivammathur/setup-php@v2
-         with: { php-version: '8.5' }
-       - run: composer install --no-progress
-       - run: vendor/bin/pint --test
-   ```
+4. **Add `.editorconfig`.** ✅ Done — root file pins LF, UTF-8, 4-space PHP indent, 2-space JSON/YAML, trim trailing whitespace, final newline; markdown opts out of trim, `*.bat` opts into CRLF.
 
-   `pint --test` exits non-zero on any style violation. The same workflow file is the home for items #4 (audit), #27 (PHPStan level 10), #28 (Infection), and the test/lint jobs from ROADMAP-CSS.md and ROADMAP-TS.md.
-
-4. **Add `.editorconfig`** at repo root with PSR-12 rules (LF, UTF-8, 4-space PHP indent, 2-space JSON/YAML, trim trailing whitespace, final newline).
-
-5. **Document.** Add a `Style` section to `CONTRIBUTING.md` (which doesn't exist yet either) pointing at `vendor/bin/pint` and the optional pre-commit hook (`pint --dirty`).
+5. **Document.** ✅ Done — `CONTRIBUTING.md` Style section covers `vendor/bin/pint`, `--dirty`, `--test`, the optional `pre-commit` hook, and the EditorConfig note.
 
 ### Verification
 

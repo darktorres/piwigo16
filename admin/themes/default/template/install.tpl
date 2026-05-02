@@ -17,27 +17,11 @@
   <link rel="stylesheet" type="text/css" href="{$ROOT_URL}admin/themes/default/fix-ie7.css">
 <![endif]-->
 
+{combine_script id='install' load='footer' path='admin/themes/default/js/install.js'}
+
 <!-- BEGIN get_combined_scripts -->
 {get_combined_scripts load='header'}
 <!-- END get_combined_scripts -->
-
-{literal}
-<script type="text/javascript">
-document.querySelectorAll("a.externalLink").forEach(function(el) {
-  el.addEventListener("click", function(e) {
-    e.preventDefault();
-    window.open(el.getAttribute("href") || '');
-  });
-});
-var adminMail = document.getElementById("admin_mail");
-if (adminMail) {
-  adminMail.addEventListener("keyup", function() {
-    var val = adminMail.value;
-    document.querySelectorAll(".adminEmail").forEach(function(el) { el.textContent = val; });
-  });
-}
-</script>
-{/literal}
 
 {combine_css path="admin/themes/default/css/pages/install-upgrade.css"}
 
@@ -62,7 +46,7 @@ if (adminMail) {
     <li>
       <p>{'You can download the config file and upload it to local/config directory of your installation.'|@translate}</p>
       <p style="text-align:center">
-          <input type="button" value="{'Download the config file'|@translate}" onClick="window.open('{$config_url}');">
+          <input type="button" value="{'Download the config file'|@translate}" data-install-download-config="{$config_url}">
       </p>
     </li>
     <li>
@@ -103,7 +87,7 @@ if (adminMail) {
     <tr>
       <td style="width: 30%">{'Default gallery language'|@translate}</td>
       <td>
-    <select name="language" onchange="document.location = 'install.php?language='+this.options[this.selectedIndex].value;">
+    <select name="language" data-install-language>
     {html_options options=$language_options selected=$language_selection}
     </select>
       </td>

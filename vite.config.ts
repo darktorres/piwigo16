@@ -87,6 +87,8 @@ export default defineConfig({
                 'tags':               r('admin/themes/default/js/tags.ts'),
                 'user_activity':      r('admin/themes/default/js/user_activity.ts'),
                 'user_list':          r('admin/themes/default/js/user_list.ts'),
+                'install':            r('admin/themes/default/js/install.ts'),
+                'check_integrity':    r('admin/themes/default/js/check_integrity.ts'),
             },
             output: {
                 entryFileNames: 'assets/[name]-[hash].js',

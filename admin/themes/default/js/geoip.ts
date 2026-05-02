@@ -4,6 +4,8 @@ interface GeoIpData {
     city?: string;
     region_name?: string;
     country_name?: string;
+    latitude?: number;
+    longitude?: number;
     fullName?: string;
 }
 
@@ -67,4 +69,5 @@ const GeoIp = {
 
 (window as any).GeoIp = GeoIp;
 
-export {};
+export { GeoIp };
+export type { GeoIpData };

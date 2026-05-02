@@ -2,14 +2,10 @@
 {include file='include/datepicker.inc.tpl'}
 
 <script id="pwg-page-data" type="application/json">{$page_data_json}</script>
-{footer_script}
-document.querySelectorAll('[data-datepicker]').forEach(function(el) {
-  window.pwgDatepicker(el, {});
-});
-{/footer_script}
 
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_script id='history' load='footer' path='admin/themes/default/js/history.js'}
+{combine_script id='history' load='footer' path='admin/themes/default/js/history.js' require='common,geoip'}
+{combine_script id='geoip' load='footer' path='admin/themes/default/js/geoip.js'}
 
 {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
 {combine_css path="themes/default/vendor/fontello/css/gallery-icon.css" order=-10}
@@ -189,53 +185,5 @@ document.querySelectorAll('[data-datepicker]').forEach(function(el) {
 </div>
 
 {if !empty($navbar) }{include file='navigation_bar.tpl'|@get_extent:'navbar'}{/if}
-
-{combine_script id='geoip' load='async'}
-
-{footer_script}
-Array.from(document.querySelectorAll(".IP")).forEach(function(ipEl) {
-  var handled = false;
-  ipEl.addEventListener('mouseenter', function onFirstEnter() {
-    if (handled) return;
-    handled = true;
-    var isOver = true;
-    ipEl.removeEventListener('mouseenter', onFirstEnter);
-    ipEl.addEventListener('mouseleave', function() { isOver = false; });
-
-    GeoIp.get(ipEl.textContent, function(data) {
-      if (!data.fullName) return;
-
-      var content = data.fullName;
-      if (data.latitude && data.region_name) {
-        content += '<br><a class="ipGeoOpen" data-lat="' + data.latitude + '" data-lon="' + data.longitude + '"';
-        content += ' href="#">show on a Google Map</a>';
-      }
-
-      ipEl.tipTip({
-        content: content,
-        keepAlive: true,
-        defaultPosition: "right",
-        maxWidth: 320,
-      });
-      if (isOver) ipEl.dispatchEvent(new Event('mouseenter'));
-    });
-  });
-});
-
-document.addEventListener('click', function(e) {
-  var target = e.target.closest('.ipGeoOpen');
-  if (!target) return;
-  e.preventDefault();
-  var lat = target.dataset.lat;
-  var lon = target.dataset.lon;
-  var parent = target.parentElement;
-  target.remove();
-
-  var append = '<br><img width=300 height=220 src="http://maps.googleapis.com/maps/api/staticmap';
-  append += '?sensor=false&size=300x220&zoom=6&markers=size:tiny%7C' + lat + ',' + lon + '">';
-
-  if (parent) parent.insertAdjacentHTML('beforeend', append);
-});
-{/footer_script}
 
 {combine_css path="admin/themes/default/css/pages/history.css"}

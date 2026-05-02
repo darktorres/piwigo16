@@ -1,6 +1,7 @@
 import tippy from 'tippy.js';
 import 'tippy.js/dist/tippy.css';
 import { getPageData } from './page-data';
+import { GeoIp } from './geoip';
 
 declare function sprintf(fmt: string, ...args: unknown[]): string;
 
@@ -481,5 +482,49 @@ function checkFilters() {
     const hasFilters = (document.querySelector('.filter-container')?.childElementCount ?? 0) - 1 > 0;
     document.querySelectorAll<HTMLElement>('.filter-tags label').forEach(el => { el.style.display = hasFilters ? '' : 'none'; });
 }
+
+// Hover-to-resolve IP geolocation popup (extracted from history.tpl footer_script).
+Array.from(document.querySelectorAll<HTMLElement>('.IP')).forEach((ipEl) => {
+    let handled = false;
+    const onFirstEnter = () => {
+        if (handled) return;
+        handled = true;
+        ipEl.removeEventListener('mouseenter', onFirstEnter);
+
+        GeoIp.get(ipEl.textContent ?? '', (data) => {
+            if (!data.fullName) return;
+
+            let content = data.fullName;
+            if (data.latitude && data.region_name) {
+                content += '<br><a class="ipGeoOpen" data-lat="' + data.latitude + '" data-lon="' + data.longitude + '"';
+                content += ' href="#">show on a Google Map</a>';
+            }
+
+            tippy(ipEl, {
+                content,
+                allowHTML: true,
+                placement: 'right',
+                maxWidth: 320,
+                trigger: 'mouseenter focus',
+            });
+        });
+    };
+    ipEl.addEventListener('mouseenter', onFirstEnter);
+});
+
+document.addEventListener('click', (e) => {
+    const target = (e.target as HTMLElement | null)?.closest<HTMLElement>('.ipGeoOpen');
+    if (!target) return;
+    e.preventDefault();
+    const lat = target.dataset['lat'];
+    const lon = target.dataset['lon'];
+    const parent = target.parentElement;
+    target.remove();
+
+    let append = '<br><img width=300 height=220 src="http://maps.googleapis.com/maps/api/staticmap';
+    append += '?sensor=false&size=300x220&zoom=6&markers=size:tiny%7C' + lat + ',' + lon + '">';
+
+    if (parent) parent.insertAdjacentHTML('beforeend', append);
+});
 
 export {};

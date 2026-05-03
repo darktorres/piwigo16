@@ -11,16 +11,23 @@ final class ConfigLoaderTest extends TestCase
 {
     private string $tmpDir = '';
 
+    /** @var array<string, string|false> */
+    private array $envBackup = [];
+
+    private const TOUCHED_VARS = ['PIWIGO_DB_HOST', 'PIWIGO_DB_USER', 'PIWIGO_DB_PASSWORD', 'PIWIGO_DB_BASE'];
+
     protected function setUp(): void
     {
         $this->tmpDir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'piwigo-config-loader-test-' . uniqid();
         mkdir($this->tmpDir, 0o755, true);
 
-        // Scrub env vars BEFORE each test. Necessary because (a) the test
-        // runner may have loaded its own .env / .env.local at bootstrap, and
-        // (b) phpdotenv's createImmutable mode refuses to overwrite already-
-        // set vars, so leftover state from a prior test breaks the next one.
-        foreach (['PIWIGO_DB_HOST', 'PIWIGO_DB_USER', 'PIWIGO_DB_PASSWORD', 'PIWIGO_DB_BASE'] as $k) {
+        // Snapshot pre-test env state so tearDown can restore it. The bootstrap
+        // (or a prior suite) may have set PIWIGO_DB_* via .env.local, and the
+        // integration suite expects them populated; we must not leak our
+        // test-only mutations across suite boundaries.
+        $this->envBackup = [];
+        foreach (self::TOUCHED_VARS as $k) {
+            $this->envBackup[$k] = getenv($k);
             putenv($k);
             unset($_ENV[$k], $_SERVER[$k]);
         }
@@ -34,6 +41,18 @@ final class ConfigLoaderTest extends TestCase
             }
         }
         @rmdir($this->tmpDir);
+
+        // Restore env vars to their pre-test values.
+        foreach (self::TOUCHED_VARS as $k) {
+            putenv($k);
+            unset($_ENV[$k], $_SERVER[$k]);
+            $original = $this->envBackup[$k] ?? false;
+            if ($original !== false) {
+                putenv("$k=$original");
+                $_ENV[$k]    = $original;
+                $_SERVER[$k] = $original;
+            }
+        }
     }
 
     public function test_loadEnv_is_a_noop_when_no_env_files_present(): void

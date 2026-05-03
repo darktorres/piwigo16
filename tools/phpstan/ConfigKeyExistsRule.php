@@ -78,6 +78,17 @@ final class ConfigKeyExistsRule implements Rule
         if ($className !== self::TARGET_CLASS) {
             return [];
         }
+        // Per-plugin Config classes (src/Piwigo/Plugins/X/Config.php) own their
+        // own SCHEMA and call Piwigo\Config\Config::override() with their plugin
+        // keys to keep the reference bridge in sync. Those keys are legitimately
+        // outside Piwigo's main SCHEMA — skip the rule for the plugin namespace.
+        $file = $scope->getFile();
+        if (
+            str_contains($file, DIRECTORY_SEPARATOR . 'Plugins' . DIRECTORY_SEPARATOR)
+            || str_contains($file, '/Plugins/')
+        ) {
+            return [];
+        }
         if (!$node->name instanceof Identifier) {
             return [];
         }

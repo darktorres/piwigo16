@@ -111,3 +111,26 @@ an unregistered key.
 A small curated subset of keys can be overridden at runtime via `.env`.
 The mapping lives in `ConfigLoader::ENV_MAPPING`; extend it (and validate
 the target key is in SCHEMA) when more keys need 12-factor injection.
+
+### Per-plugin Config classes
+
+Bundled plugins each ship their own typed Config class under
+`Piwigo\Plugins\<PluginName>\Config` (autoloaded from `src/Piwigo/Plugins/`).
+The pattern mirrors Piwigo's main Config: a `SCHEMA` constant for the
+plugin's owned keys, plus typed accessors. Reads narrow `$GLOBALS['conf']`
+to an array via a private `confArray()` helper; writes go through
+`ConfigStorage::persist()` for the DB and `Piwigo\Config\Config::override()`
+for the in-memory bridge.
+
+Existing examples:
+  - `Piwigo\Plugins\LocalFilesEditor\Config` — single string-list key
+  - `Piwigo\Plugins\NbcThemeChanger\Config` — semicolon-encoded list
+  - `Piwigo\Plugins\PiwigoOpenstreetmap\Config` — single deeply-nested
+    array stored serialized; section-level accessors
+  - `Piwigo\Plugins\PiwigoVideojs\Config` — five keys (player config,
+    sync probes, custom CSS, mediainfo/exiftool path overrides)
+
+The PHPStan `ConfigKeyExistsRule` skips files under `src/Piwigo/Plugins/`
+since plugin Config classes legitimately call
+`Piwigo\Config\Config::override()` with their plugin-owned keys (which
+aren't in Piwigo's main SCHEMA).

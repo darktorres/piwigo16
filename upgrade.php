@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-global $template, $user, $page, $persistent_cache, $lang, $prefixeTable;
+global $template, $user, $page, $persistent_cache, $lang, $prefixeTable, $conf;
 
 use Piwigo\Admin\Languages;
 use Piwigo\Admin\Updates;
@@ -45,6 +45,10 @@ if ($php_end_tag === false) {
 
 include($config_file);
 
+require_once PHPWG_ROOT_PATH . 'vendor/autoload.php';
+\Piwigo\Config\ConfigLoader::loadEnv(PHPWG_ROOT_PATH);
+\Piwigo\Config\ConfigLoader::applyEnvOverrides($conf);
+
 // $conf is not used for users tables - define cannot be re-defined
 define('USERS_TABLE', $prefixeTable.'users');
 include_once(PHPWG_ROOT_PATH.'include/constants.php');
@@ -53,7 +57,6 @@ define('UPGRADES_PATH', PHPWG_ROOT_PATH.'install/db');
 
 include_once(PHPWG_ROOT_PATH.'include/functions.inc.php');
 include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
-require_once PHPWG_ROOT_PATH . 'vendor/autoload.php';
 
 // +-----------------------------------------------------------------------+
 // |                              functions                                |

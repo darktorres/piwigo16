@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-global $template, $user, $page, $persistent_cache, $lang, $prefixeTable;
+global $template, $user, $page, $persistent_cache, $lang, $prefixeTable, $conf;
 
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Core\Logger;
@@ -34,6 +34,9 @@ $databaseConfig = realpath(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/database.in
 if ($databaseConfig !== false) {
     include $databaseConfig;
 }
+
+\Piwigo\Config\ConfigLoader::loadEnv(PHPWG_ROOT_PATH);
+\Piwigo\Config\ConfigLoader::applyEnvOverrides($conf);
 
 $logger = new Logger(array(
   'directory' => PHPWG_ROOT_PATH . \Piwigo\Config\Config::dataLocation() . \Piwigo\Config\Config::logDir(),

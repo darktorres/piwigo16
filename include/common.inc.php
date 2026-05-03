@@ -83,6 +83,10 @@ if (!\Piwigo\Core\Kernel::isBooted()) :
     if ($databaseConfig !== false) {
         include $databaseConfig;
     }
+
+    \Piwigo\Config\ConfigLoader::loadEnv(PHPWG_ROOT_PATH);
+    \Piwigo\Config\ConfigLoader::applyEnvOverrides($conf);
+
     if (!\Piwigo\Core\InstallSentinel::isInstalled()) {
         header('Location: install.php');
         exit;

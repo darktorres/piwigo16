@@ -39,6 +39,7 @@ dist/
 .playwright-mcp/
 .claude/worktrees/
 
-# Local env (test credentials, never commit)
+# Local env (DB credentials, never commit). .env.example is the committed template.
+.env
 .env.local
 .env.*.local

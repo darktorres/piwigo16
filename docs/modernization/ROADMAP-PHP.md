@@ -169,7 +169,24 @@ A PR introducing a vulnerable dep is blocked. Renovate opens grouped weekly PRs.
 
 ### What shipped (2026-05-03)
 
-Landed across 18 commits (`e8161cc58` → `45d72f9bd`). Net delta: -2200 / +1500 lines.
+Landed across 21 commits (`e8161cc58` → HEAD). Net delta ≈ -2200 / +1550 lines.
+
+Polish pass after the initial 18-commit landing fixed three downstream
+warnings the Apache error log surfaced once the .env-based bootstrap
+was actually exercised end-to-end:
+
+- `ConfigLoader::applyDefaults` now skips null-defaulted SCHEMA keys
+  (the 22 nullable-string cluster). Seeding literal null had flipped
+  `Config::has()` permanently true for those keys, breaking every
+  caller that uses `has()` to detect first-run state (maintenance
+  pages, admin/configuration first-run persist branches, etc.).
+- `admin/configuration.php` first-run `filters_views` persist now
+  serializes the array before storing — matches the `?string` shape
+  `Config::filtersViews()` returns, so this-request reads agree with
+  next-request reads.
+- `admin.php:353` coalesces `Config::lastMajorUpdate()` to `''` before
+  passing to `strtotime()` — pre-existing latent deprecation that the
+  applyDefaults change surfaced more often.
 
 - `Piwigo\Config\Config::SCHEMA` is the single source of truth for all 283
   config keys. Typed accessors below the `<<<CONFIG-ACCESSORS-BEGIN>>>` /

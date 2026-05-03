@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-global $template, $user, $page, $persistent_cache, $lang, $service;
+global $persistent_cache, $service;
 
 use Piwigo\Ws\PwgError;
 

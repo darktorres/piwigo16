@@ -22,7 +22,10 @@ initialize_menu();
  */
 function initialize_menu(): void
 {
-    global $page, $user, $template, $filter;
+    global $filter;
+    $template = \Piwigo\Template\TemplateRegistry::current();
+    $page = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
+    $user = \Piwigo\Users\CurrentUser::get()->rawAttributes;
 
     $menu = new BlockManager('menubar');
 
@@ -32,8 +35,9 @@ function initialize_menu(): void
     }
     $menu->prepare_display();
 
-    if (@$page['section'] == 'search' and isset($page['qsearch_details'])) {
-        $template->assign('QUERY_SEARCH', htmlspecialchars((string) $page['qsearch_details']['q']));
+    if (@$page['section'] == 'search' && isset($page['qsearch_details']) && is_array($page['qsearch_details'])) {
+        $qsearchQ = is_scalar($page['qsearch_details']['q'] ?? null) ? (string) $page['qsearch_details']['q'] : '';
+        $template->assign('QUERY_SEARCH', htmlspecialchars($qsearchQ));
     }
 
     //--------------------------------------------------------------- external links
@@ -81,7 +85,7 @@ function initialize_menu(): void
         } else {
             $template->assign(
                 'U_START_FILTER',
-                add_url_params(make_index_url([]), ['filter' => 'start-recent-'.$user['recent_period']])
+                add_url_params(make_index_url([]), ['filter' => 'start-recent-'.(is_scalar($user['recent_period'] ?? null) ? (string) $user['recent_period'] : '')])
             );
         }
     }
@@ -98,24 +102,29 @@ function initialize_menu(): void
     //------------------------------------------------------------ related categories
     $block = $menu->get_block('mbRelatedCategories');
 
+    $items = is_array($page['items'] ?? null) ? $page['items'] : [];
     if (
-        isset($page['items'])
-        and count($page['items']) < \Piwigo\Config\Config::relatedAlbumsMaximumItemsToCompute()
+        $items !== []
+        and count($items) < \Piwigo\Config\Config::relatedAlbumsMaximumItemsToCompute()
         and $block != null
-        and !empty($page['items'])
     ) {
+        /** @var list<int> $exclude_cat_ids */
         $exclude_cat_ids = [];
-        if (isset($page['category'])) {
-            $exclude_cat_ids = [$page['category']['id']];
-            if (isset($page['combined_categories'])) {
-                foreach ($page['combined_categories'] as $cat) {
-                    $exclude_cat_ids[] = $cat['id'];
+        $category = is_array($page['category'] ?? null) ? $page['category'] : null;
+        if ($category !== null) {
+            if (isset($category['id']) && is_numeric($category['id'])) {
+                $exclude_cat_ids[] = (int) $category['id'];
+            }
+            $combined = is_array($page['combined_categories'] ?? null) ? $page['combined_categories'] : [];
+            foreach ($combined as $cat) {
+                if (is_array($cat) && isset($cat['id']) && is_numeric($cat['id'])) {
+                    $exclude_cat_ids[] = (int) $cat['id'];
                 }
             }
         }
 
         $block->data = [
-          'MENU_CATEGORIES' => get_related_categories_menu($page['items'], $exclude_cat_ids),
+          'MENU_CATEGORIES' => get_related_categories_menu($items, $exclude_cat_ids),
         ];
 
         if (!empty($block->data['MENU_CATEGORIES'])) {
@@ -280,7 +289,7 @@ function initialize_menu(): void
             $template->assign('U_REGISTER', get_root_url().'register.php');
         }
     } else {
-        $template->assign('USERNAME', stripslashes((string) $user['username']));
+        $template->assign('USERNAME', stripslashes(\Piwigo\Users\CurrentUser::get()->username));
         if (is_autorize_status(ACCESS_CLASSIC)) {
             $template->assign('U_PROFILE', get_root_url().'profile.php');
         }

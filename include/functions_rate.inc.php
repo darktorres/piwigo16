@@ -23,7 +23,7 @@ declare(strict_types=1);
 /** @return array<mixed>|false */
 function rate_picture(int $image_id, float|int|null $rate): array|false
 {
-    global $user;
+    $userId = \Piwigo\Users\CurrentUser::get()->id;
 
     if (!isset($rate)
         or !\Piwigo\Config\Config::rateEnabled()
@@ -52,7 +52,7 @@ function rate_picture(int $image_id, float|int|null $rate): array|false
             $query = '
 SELECT element_id
   FROM '.RATE_TABLE.'
-  WHERE user_id = '.$user['id'].'
+  WHERE user_id = '.$userId.'
     AND anonymous_id = \''.$anonymous_id.'\'
 ;';
             $already_there = query2array($query, null, 'element_id');
@@ -61,7 +61,7 @@ SELECT element_id
                 $query = '
 DELETE
   FROM '.RATE_TABLE.'
-  WHERE user_id = '.$user['id'].'
+  WHERE user_id = '.$userId.'
     AND anonymous_id = \''.$save_anonymous_id.'\'
     AND element_id IN ('.implode(',', $already_there).')
 ;';
@@ -71,7 +71,7 @@ DELETE
             $query = '
 UPDATE '.RATE_TABLE.'
   SET anonymous_id = \'' .$anonymous_id.'\'
-  WHERE user_id = '.$user['id'].'
+  WHERE user_id = '.$userId.'
     AND anonymous_id = \'' . $save_anonymous_id.'\'
 ;';
             pwg_query($query);
@@ -84,7 +84,7 @@ UPDATE '.RATE_TABLE.'
 DELETE
   FROM '.RATE_TABLE.'
   WHERE element_id = '.$image_id.'
-    AND user_id = '.$user['id'].'
+    AND user_id = '.$userId.'
 ';
     if ($user_anonymous) {
         $query .= ' AND anonymous_id = \''.$anonymous_id.'\'';
@@ -96,7 +96,7 @@ INSERT
   (user_id,anonymous_id,element_id,rate,date)
   VALUES
   ('
-      .$user['id'].','
+      .$userId.','
       .'\''.$anonymous_id.'\','
       .$image_id.','
       .$rate

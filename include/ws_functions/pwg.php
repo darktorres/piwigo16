@@ -10,6 +10,29 @@ use Piwigo\Image\SrcImage;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 
+/**
+ * Returns the total byte size of a directory tree, or null if it is missing
+ * or unreadable. Pure-PHP replacement for `du -sk` — works on Windows where
+ * du is not available.
+ */
+function ws_directory_size_bytes(string $path): ?int
+{
+    if (!is_dir($path)) {
+        return null;
+    }
+    $bytes = 0;
+    $iterator = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($path, FilesystemIterator::SKIP_DOTS),
+        RecursiveIteratorIterator::LEAVES_ONLY
+    );
+    foreach ($iterator as $entry) {
+        if ($entry instanceof SplFileInfo && $entry->isFile()) {
+            $bytes += $entry->getSize();
+        }
+    }
+    return $bytes;
+}
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -213,16 +236,7 @@ function ws_getCacheSize(array $params, \Piwigo\Ws\PwgServer &$service): array
 {
     // Cache size
     $path_cache = \Piwigo\Config\Config::dataLocation();
-    $infos['cache_size'] = null;
-    if (function_exists('exec')) {
-        @exec('du -sk '.$path_cache, $return_array_cache);
-        if (
-            !empty($return_array_cache[0])
-            and preg_match('/^(\d+)\s/', $return_array_cache[0], $matches_cache)
-        ) {
-            $infos['cache_size'] = $matches_cache[1] * 1024;
-        }
-    }
+    $infos['cache_size'] = ws_directory_size_bytes($path_cache);
 
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
     // Multiples sizes size
@@ -241,16 +255,7 @@ function ws_getCacheSize(array $params, \Piwigo\Ws\PwgServer &$service): array
 
     // Compiled templates size
     $path_template_c = \Piwigo\Config\Config::dataLocation().'templates_c';
-    $infos['tsizes'] = null;
-    if (function_exists('exec')) {
-        @exec('du -sk '.$path_template_c, $return_array_template_c);
-        if (
-            !empty($return_array_template_c[0])
-            and preg_match('/^(\d+)\s/', $return_array_template_c[0], $matches_template_c)
-        ) {
-            $infos['tsizes'] = $matches_template_c[1] * 1024;
-        }
-    }
+    $infos['tsizes'] = ws_directory_size_bytes($path_template_c);
 
     $infos['last_date_calc'] = date('Y-m-d H:i:s');
 

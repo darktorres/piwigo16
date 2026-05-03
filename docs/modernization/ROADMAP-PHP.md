@@ -297,7 +297,41 @@ since they were tightly coupled.
     `KernelBootTest` updated to seed via `Config::loadArray()` and write
     via `Config::override()` instead of `$GLOBALS['conf']`.
 - ~~**Plugin internal `$conf['x']` reads.**~~ Migrated as part of the
-  bridge-removal sequence above.
+  bridge-removal sequence above (4 of the 5 bundled plugins; see
+  user_tags note in the activation pass below).
+
+**Closed in plugin-activation pass (commit `bc41a5379`).** First end-to-end
+exercise of the admin UI's Activate button surfaced three latent bugs not
+caught by SchemaIntegrityTest, the Kernel boot tests, or MCP-browser smoke
+runs (none of which actually invoke `Plugins::perform_action('activate', …)`):
+
+- ~~**Duplicate `\PluginMaintain` / `\ThemeMaintain` classes with `: void`
+  signatures.**~~ `include/functions_plugins.inc.php` defined a second
+  root-namespace `\PluginMaintain` (and `\ThemeMaintain`) with typed `: void`
+  return signatures. Vendor plugins do `class foo_maintain extends
+  PluginMaintain` with no namespace prefix, so they extended the legacy
+  duplicate — not the relaxed `\Piwigo\Admin\PluginMaintain` from the
+  PSR-4 layout. Result: every OO vendor plugin (piwigo-openstreetmap,
+  piwigo-videojs) fataled at file-load with an LSP signature mismatch.
+  Fix: deleted both legacy classes; added `class_alias()` so bare
+  `PluginMaintain` resolves to `\Piwigo\Admin\PluginMaintain`. Also
+  relaxed both src/ classes to drop param/return type declarations
+  (kept as `@param`/`@return` phpdoc for PHPStan) since vendor plugins
+  use pre-PHP-7 untyped signatures and LSP forbids the typed parent.
+- ~~**`DummyPluginMaintain` namespace-resolution bug.**~~ Bare
+  `plugin_install($this->plugin_id, …)` inside `namespace Piwigo\Admin`
+  resolved to `Piwigo\Admin\plugin_install`, never the global function
+  defined in the plugin's `maintain.inc.php`. Result: every procedural
+  vendor plugin (LocalFilesEditor, nbc_ThemeChanger) fataled with
+  "Call to undefined function Piwigo\Admin\plugin_install()". Fix:
+  qualify with leading backslash (`\plugin_install(…)`).
+- ~~**Procedural plugins missing some hooks.**~~ Old plugins commonly
+  define only a subset of `plugin_install` / `plugin_activate` /
+  `plugin_deactivate` / `plugin_uninstall` (LocalFilesEditor: only
+  `plugin_uninstall`; user_tags: no `maintain.inc.php` at all). The
+  Dummy*Maintain blindly called all four → undefined-function fatal
+  for the absent ones. Fix: each Dummy*Maintain method now guards with
+  `function_exists()` and no-ops if the global isn't defined.
 
 **Caveat — plugin source is gitignored on this fork.** `/plugins/*` is
 in `.gitignore` (only `plugins/index.php` is tracked), so the plugin
@@ -305,6 +339,17 @@ migration lives on disk only. If a bundled plugin is reinstalled from
 upstream, its raw `$conf['xxx_conf'][...]` reads will silently return
 empty (the bridge is gone). Either re-apply the migration after
 reinstalls or treat the plugin sources as a vendored fork.
+
+**Caveat — user_tags was excluded from the Stage-2 migration.** Step 9
+listed `user_tags` as "no Config class (no owned keys; only reads Piwigo
+core keys via the new typed accessors)" — but in practice its on-disk
+source still had one raw `$GLOBALS['conf']['data_location']` read in
+`plugins/user_tags/src/userTags/Config.php::get_config_file_dir()`,
+producing two warnings per plugin-list page load after the bridge was
+removed. Fixed on disk (rewritten to `\Piwigo\Config\Config::dataLocation()`)
+during the activation pass. Lesson: any 5th-plugin-class assertion ("only
+reads core keys, no migration needed") needs to be backed by a grep, not
+a code-reading judgment.
 
 Deferred design surface — should be tracked as separate small items if we
 want them, not held against #5:

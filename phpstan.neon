@@ -38,6 +38,7 @@ parameters:
                 - install.php
                 - upgrade.php
 rules:
+    - Piwigo\Tools\PhpStan\ConfigKeyExistsRule
     - Piwigo\Tools\PhpStan\NoDynamicNewRule
     - Piwigo\Tools\PhpStan\NoGlobalInSrcRule
     - Piwigo\Tools\PhpStan\StrictTypesRequiredRule

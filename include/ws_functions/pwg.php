@@ -994,7 +994,6 @@ SELECT
         $image_infos = query2array($query, 'id');
     }
 
-    global $name_of_tag; // used for preg_replace
     $name_of_tag = [];
     if ($has_tags > 0) {
         $query = '

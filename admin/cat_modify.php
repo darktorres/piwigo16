@@ -71,7 +71,6 @@ function get_local_dir(string $category_id): string
 // simply "./galleries/"
 function get_site_url(string $category_id): string
 {
-    global $page;
     $query = '
 SELECT galleries_url
   FROM '.SITES_TABLE.' AS s,'.CATEGORIES_TABLE.' AS c

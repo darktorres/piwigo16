@@ -587,7 +587,6 @@ function protect_column_name(string $column_name): string
 function do_maintenance_all_tables(): void
 {
     global $prefixeTable;
-    global $page;
     $all_tables = [];
 
     // List all tables

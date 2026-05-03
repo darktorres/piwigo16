@@ -644,7 +644,6 @@ SELECT id, id_uppercat, uppercats, `rank`, global_rank
   FROM '.CATEGORIES_TABLE.'
   ORDER BY id_uppercat, `rank`, name';
 
-    global $cat_map; // used in preg_replace callback
     $cat_map = [];
 
     $current_rank = 0;
@@ -1031,7 +1030,6 @@ function get_fulldirs(array|int|string $cat_ids): array
     }
 
     // caching directories of existing categories
-    global $cat_dirs; // used in preg_replace callback
     $query = '
 SELECT id, dir
   FROM '.CATEGORIES_TABLE.'

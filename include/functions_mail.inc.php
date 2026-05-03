@@ -232,8 +232,8 @@ function get_str_email_format($is_html): string
 function switch_lang_to($language): void
 {
     global $switch_lang, $lang_info, $language_files;
-    global $user;
     global $lang;
+    $currentLanguage = \Piwigo\Users\CurrentUser::get()->language;
     // explanation of switch_lang
     // $switch_lang['language'] contains data of language
     // $switch_lang['stack'] contains stack LIFO
@@ -241,15 +241,15 @@ function switch_lang_to($language): void
 
     // Treatment with current user
     // Language of current user is saved (it's considered OK on firt call)
-    if (!isset($switch_lang['initialisation']) and !isset($switch_lang['language'][$user['language']])) {
+    if (!isset($switch_lang['initialisation']) and !isset($switch_lang['language'][$currentLanguage])) {
         $switch_lang['initialisation'] = true;
-        $switch_lang['language'][$user['language']]['lang_info'] = $lang_info;
-        $switch_lang['language'][$user['language']]['lang'] = $lang;
+        $switch_lang['language'][$currentLanguage]['lang_info'] = $lang_info;
+        $switch_lang['language'][$currentLanguage]['lang'] = $lang;
     }
 
     // Change current infos
-    $switch_lang['stack'][] = $user['language'];
-    $user['language'] = $language;
+    $switch_lang['stack'][] = $currentLanguage;
+    \Piwigo\Users\CurrentUser::setLanguage($language);
 
     // Load new data if necessary
     if (!isset($switch_lang['language'][$language])) {
@@ -296,7 +296,6 @@ function switch_lang_to($language): void
 function switch_lang_back(): void
 {
     global $switch_lang, $lang_info;
-    global $user;
     global $lang;
     if (count($switch_lang['stack']) > 0) {
         // Get last value
@@ -307,7 +306,7 @@ function switch_lang_back(): void
             $lang_info = $switch_lang['language'][$language]['lang_info'];
             $lang = $switch_lang['language'][$language]['lang'];
         }
-        $user['language'] = $language;
+        \Piwigo\Users\CurrentUser::setLanguage(is_string($language) ? $language : '');
     }
 }
 

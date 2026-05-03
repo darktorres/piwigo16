@@ -45,6 +45,19 @@ final class CurrentUser
         self::$instance = $user;
     }
 
+    /**
+     * Updates the current user's language on both the typed entity and
+     * $GLOBALS['user']['language'], so legacy file-top consumers see the
+     * change. Used by switch_lang_to/back during NBM language stacking.
+     */
+    public static function setLanguage(string $language): void
+    {
+        self::get()->language = $language;
+        if (isset($GLOBALS['user']) && is_array($GLOBALS['user'])) {
+            $GLOBALS['user']['language'] = $language;
+        }
+    }
+
     // ---- Test helpers ----------------------------------------------------
 
     public static function reset(): void

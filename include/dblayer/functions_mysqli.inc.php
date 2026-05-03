@@ -112,29 +112,24 @@ function pwg_get_db_version()
 function pwg_query(string $query)
 {
     global $debug, $t2;
-    global $page;
     $mysqli = \Piwigo\Core\MysqliRegistry::current();
     $start = microtime(true);
     ($result = $mysqli->query($query)) or my_error($query, \Piwigo\Config\Config::dieOnSqlError());
 
     $time = microtime(true) - $start;
 
-    if (!isset($page['count_queries'])) {
-        $page['count_queries'] = 0;
-        $page['queries_time'] = 0;
-    }
-
-    $page['count_queries']++;
-    $page['queries_time'] += $time;
+    $pageState = \Piwigo\Core\PageState::current();
+    $pageState->countQueries++;
+    $pageState->queriesTime += $time;
 
     if (\Piwigo\Config\Config::showQueries()) {
         $output = '';
-        $output .= '<pre>['.$page['count_queries'].'] ';
+        $output .= '<pre>['.$pageState->countQueries.'] ';
         $output .= "\n".$query;
         $output .= "\n".'(this query time : ';
         $output .= '<b>'.number_format($time, 3, '.', ' ').' s)</b>';
         $output .= "\n".'(total SQL time  : ';
-        $output .= number_format($page['queries_time'], 3, '.', ' ').' s)';
+        $output .= number_format($pageState->queriesTime, 3, '.', ' ').' s)';
         $output .= "\n".'(total time      : ';
         $output .= number_format(($time + $start - $t2), 3, '.', ' ').' s)';
         if ($result != null and preg_match('/\s*SELECT\s+/i', $query)) {

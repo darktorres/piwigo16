@@ -624,19 +624,26 @@ function get_element_url_protection_handler(string $url, array $infos): string
 function flush_page_messages(): void
 {
     $template = \Piwigo\Template\TemplateRegistry::current();
-    global $page;
-    if ($template->get_template_vars('page_refresh') === null) {
-        foreach (['errors','infos','warnings', 'messages'] as $mode) {
-            if (isset($_SESSION['page_'.$mode])) {
-                $sessionArr = is_array($_SESSION['page_'.$mode]) ? $_SESSION['page_'.$mode] : [];
-                $pageArr = is_array($page[$mode] ?? null) ? $page[$mode] : [];
-                $page[$mode] = array_merge($pageArr, $sessionArr);
-                unset($_SESSION['page_'.$mode]);
-            }
-
-            if (!empty($page[$mode])) {
-                $template->assign($mode, $page[$mode]);
-            }
+    if ($template->get_template_vars('page_refresh') !== null) {
+        return;
+    }
+    $page = \Piwigo\Core\PageState::current();
+    foreach (['errors', 'infos', 'warnings', 'messages'] as $mode) {
+        $sessionKey = 'page_'.$mode;
+        $sessionArr = (isset($_SESSION[$sessionKey]) && is_array($_SESSION[$sessionKey]))
+            ? array_values(array_filter($_SESSION[$sessionKey], 'is_string'))
+            : [];
+        if ($sessionArr !== []) {
+            unset($_SESSION[$sessionKey]);
+        }
+        $current = match ($mode) {
+            'errors' => $page->errors = array_merge($page->errors, $sessionArr),
+            'infos' => $page->infos = array_merge($page->infos, $sessionArr),
+            'warnings' => $page->warnings = array_merge($page->warnings, $sessionArr),
+            'messages' => $page->messages = array_merge($page->messages, $sessionArr),
+        };
+        if ($current !== []) {
+            $template->assign($mode, $current);
         }
     }
 }

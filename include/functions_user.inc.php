@@ -972,14 +972,13 @@ WHERE '.\Piwigo\Config\Config::userFields()['id'].' = '.$user_id;
  */
 function log_user($user_id, $remember_me): void
 {
-    global $user;
     //New default login and register pages, if users changes languages and succesfully logs in
     //we want to update the userpref language stored in a cookie
 
     //TODO check value of cookie
 
     $cookie_lang = isset($_COOKIE['lang']) && is_scalar($_COOKIE['lang']) ? (string) $_COOKIE['lang'] : '';
-    if ($cookie_lang !== '' and ($user['language'] ?? null) != $cookie_lang) {
+    if ($cookie_lang !== '' and CurrentUser::get()->language != $cookie_lang) {
         if (!array_key_exists($cookie_lang, get_languages())) {
             fatal_error('[Hacking attempt] the input parameter "'.$cookie_lang.'" is not valid');
         }

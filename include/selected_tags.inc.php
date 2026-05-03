@@ -2,28 +2,39 @@
 
 declare(strict_types=1);
 
-global $template, $user, $page, $persistent_cache, $lang;
+global $persistent_cache;
+
+use Piwigo\Template\TemplateRegistry;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
 // | For copyright and license information, please view the COPYING.txt    |
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
-global $page;
+
+$template = TemplateRegistry::current();
+$pageRaw = $GLOBALS['page'] ?? [];
+$pageTagsRaw = is_array($pageRaw) ? ($pageRaw['tags'] ?? []) : [];
+$pageTags = is_array($pageTagsRaw) ? $pageTagsRaw : [];
 
 $selected_related_tags_info = [];
 
-foreach ($page['tags'] as $key => $tag) {
-    $other_tags = $page['tags'];
+foreach ($pageTags as $key => $tag) {
+    if (!is_array($tag)) {
+        continue;
+    }
+    $other_tags = $pageTags;
     unset($other_tags[$key]);
 
+    $tagName = is_string($tag['name'] ?? null) ? $tag['name'] : '';
     $selected_related_tags_info[$key] =
     [
-      'tag_name' => trigger_change('render_tag_name', $page['tags'][$key]['name'], $page['tags'][$key]),
+      'tag_name' => trigger_change('render_tag_name', $tagName, $tag),
       'item_count' => '',
       'index_url' => make_index_url(
           [
-          'tags' => [ $page['tags'][$key] ],
+          'tags' => [ $tag ],
       ]
       ),
       'remove_url' => make_index_url(

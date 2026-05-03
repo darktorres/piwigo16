@@ -2,9 +2,10 @@
 
 declare(strict_types=1);
 
-global $template, $user, $page, $persistent_cache, $lang, $title, $debug, $t2;
+global $persistent_cache, $title, $debug, $t2;
 
 use Piwigo\Admin\Updates;
+use Piwigo\Template\TemplateRegistry;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -12,6 +13,10 @@ use Piwigo\Admin\Updates;
 // | For copyright and license information, please view the COPYING.txt    |
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
+
+$template = TemplateRegistry::current();
+$page = &$GLOBALS['page'];
+
 $template->set_filenames(['tail' => 'footer.tpl']);
 
 trigger_notify('loc_begin_page_tail');
@@ -65,17 +70,14 @@ if (\Piwigo\Config\Config::showQueries()) {
 }
 
 if (\Piwigo\Config\Config::showGt()) {
-    if (!isset($page['count_queries'])) {
-        $page['count_queries'] = 0;
-        $page['queries_time'] = 0;
-    }
+    $pageState = \Piwigo\Core\PageState::current();
     $time = get_elapsed_time($t2, get_moment());
 
     $debug_vars = array_merge(
         $debug_vars,
         ['TIME' => $time,
-            'NB_QUERIES' => $page['count_queries'],
-            'SQL_TIME' => number_format($page['queries_time'], 3, '.', ' ').' s']
+            'NB_QUERIES' => $pageState->countQueries,
+            'SQL_TIME' => number_format($pageState->queriesTime, 3, '.', ' ').' s']
     );
 }
 

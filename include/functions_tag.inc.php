@@ -18,18 +18,22 @@ declare(strict_types=1);
  *
  * @return int
  */
-function get_nb_available_tags()
+function get_nb_available_tags(): int
 {
-    global $user;
+    $user = &$GLOBALS['user'];
+    if (!is_array($user)) {
+        $user = [];
+    }
     if (!isset($user['nb_available_tags'])) {
         $user['nb_available_tags'] = count(get_available_tags());
         single_update(
             USER_CACHE_TABLE,
             ['nb_available_tags' => $user['nb_available_tags']],
-            ['user_id' => $user['id']]
+            ['user_id' => \Piwigo\Users\CurrentUser::get()->id]
         );
     }
-    return $user['nb_available_tags'];
+    $nb = $user['nb_available_tags'];
+    return is_numeric($nb) ? (int) $nb : 0;
 }
 
 /**
@@ -45,7 +49,8 @@ function get_nb_available_tags()
  */
 function get_available_tags(array $tag_ids = []): array
 {
-    global $persistent_cache, $user;
+    global $persistent_cache;
+    $user = \Piwigo\Users\CurrentUser::get()->rawAttributes;
 
     $use_persistent_cache = true;
 
@@ -78,7 +83,9 @@ SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter
 ;';
 
     if ($use_persistent_cache) {
-        $cache_key = $persistent_cache->make_key(__FUNCTION__.$user['id'].$user['cache_update_time']);
+        $userId = \Piwigo\Users\CurrentUser::get()->id;
+        $cacheUpdate = is_scalar($user['cache_update_time'] ?? null) ? (string) $user['cache_update_time'] : '';
+        $cache_key = $persistent_cache->make_key(__FUNCTION__.$userId.$cacheUpdate);
         $tag_counters = [];
         if (!$persistent_cache->get($cache_key, $tag_counters)) {
             $tag_counters = query2array($query, 'tag_id', 'counter');

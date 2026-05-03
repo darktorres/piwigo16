@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-global $template, $user, $page, $persistent_cache, $lang;
+global $persistent_cache;
 
 use Piwigo\Ws\Protocol\PwgJsonEncoder;
 use Piwigo\Ws\Protocol\PwgRestEncoder;

@@ -169,9 +169,9 @@ A PR introducing a vulnerable dep is blocked. Renovate opens grouped weekly PRs.
 
 ### Goal
 
-`Piwigo\Config\Config` becomes the single source of truth for every config key. SCHEMA constant inside the class enumerates every key (type, default, optional `env` binding, optional `sensitive` flag, description). The ~140 simple typed accessors are generated from SCHEMA into the same file (between sentinels); the ~10 complex accessors stay hand-written and are flagged `'custom' => true` so the generator skips them. `Config::get('foo')` throws `UnknownConfigKeyException` on any key not in SCHEMA or registered at runtime — single mode, no warn/silent fallback. `vlucas/phpdotenv` supplies `.env` overrides for the SCHEMA entries with an `env` binding (DB credentials, SMTP creds, secret_key, proxy creds, db table prefix). Future plugins extend SCHEMA via `Config::register()` at activation. Install completion signal moves from `define('PHPWG_INSTALLED', true)` (inside `local/config/database.inc.php`) to an empty stamp file at `local/.installed`, decoupling install state from credential storage. `include/config_default.inc.php`, the `$conf` global, and the user PHP override file `local/config/config.inc.php` all stop being load-bearing and are removed from the boot path.
+`Piwigo\Config\Config` becomes the single source of truth for every Piwigo-core config key. SCHEMA constant inside the class enumerates every key (type, default, optional `env` binding, optional `sensitive` flag, description). The ~140 simple typed accessors are generated from SCHEMA into the same file (between sentinels); the ~10 complex accessors stay hand-written and are flagged `'custom' => true` so the generator skips them. The typed-getter family (`getString/getInt/getBool/getFloat/getArray`) is **private** — only the generated and custom accessors call it. **No `Config::get()` and no `Config::register()`**: every config read in the codebase happens through a typed accessor, and unknown keys at the private-getter layer throw `UnknownConfigKeyException`. `vlucas/phpdotenv` supplies `.env` overrides for the SCHEMA entries with an `env` binding (DB credentials, SMTP creds, secret_key, proxy creds, db table prefix). Install completion signal moves from `define('PHPWG_INSTALLED', true)` (inside `local/config/database.inc.php`) to an empty stamp file at `local/.installed`, decoupling install state from credential storage. `include/config_default.inc.php`, the `$conf` global, and the user PHP override file `local/config/config.inc.php` all stop being load-bearing and are removed from the boot path.
 
-This is a greenfield refactor — no compatibility shims for the legacy `$conf` global or the old `local/config/*.inc.php` files. Bundled extensions in `plugins/` and `themes/` get their config keys added directly to SCHEMA at compile time. `Config::register()` exists for **future** plugins/themes the project doesn't yet ship.
+This is a greenfield refactor — no compatibility shims for the legacy `$conf` global or the old `local/config/*.inc.php` files. Each bundled extension under `plugins/` and `themes/` that holds config keys gets its **own** typed Config class (e.g., `MyPlugin\Config`) following the same SCHEMA-constant + generated-accessors layout, backed by the shared `Piwigo\Config\ConfigStorage` helper with a plugin-namespaced key prefix. The same `tools/build-config-accessors.php` generator handles both Piwigo's Config and any plugin's Config via a `--target` flag. Plugin config never leaks into Piwigo's SCHEMA — clean separation, fully statically analyzable, no runtime extension API needed.
 
 ### Current state
 
@@ -188,14 +188,15 @@ This is a greenfield refactor — no compatibility shims for the legacy `$conf` 
 1. **Add the dependency.** `composer require vlucas/phpdotenv`.
 
 2. **Move and rewrite Config.** Relocate `src/Piwigo/Core/Config.php` → `src/Piwigo/Config/Config.php` (new namespace `Piwigo\Config\Config`). Reshape the file:
-   - SCHEMA constant at the top (~150 entries, one row per key with `type`, `default`, optional `env`, optional `sensitive`, optional `description`, optional `custom`).
-   - Hand-written runtime helpers: `get(string $key): mixed` (throws on unknown), `getString/getInt/getBool/getFloat`, `has`, `override`, `persist`, `dumpForLog` (sensitive masking), `register` (runtime extension API), and a private internal store.
-   - The ~10 custom accessors stay hand-written (e.g., `recentPostDates`, `passwordHash`, `pictureExtensions`, `userFields`).
+   - `public const SCHEMA` at the top (~150 entries, one row per key with `type`, `default`, optional `env`, optional `sensitive`, optional `description`, optional `custom`, optional `required`).
+   - **Public surface**: only typed accessors. The generated typed accessors and the ~10 custom hand-written ones (e.g., `recentPostDates`, `passwordHash`, `pictureExtensions`, `userFields`) plus state methods `has(string $key): bool`, `override(string $key, mixed $value): void`, `persist(string $key, mixed $value): void`, `dumpForLog(): array` (sensitive-masked), `raw(): array` (bulk read for internal/test use).
+   - **Private surface**: `getString/getInt/getBool/getFloat/getArray` typed-getter family — used only by the generated and custom accessors. Each throws `UnknownConfigKeyException` if the key isn't in SCHEMA.
+   - **No `Config::get()`**, no `Config::register()`. All config reads in the codebase go through a typed accessor.
    - Generated typed accessors live between sentinel comments (`// === GENERATED ACCESSORS START ===` … `// === GENERATED ACCESSORS END ===`).
    - Delete `attachGlobals()` and the `$conf` reference bridge.
    - Update every `use Piwigo\Core\Config;` callsite in the repo (mechanical sed pass).
 
-3. **Build the generator.** `tools/build-config-accessors.php` reads SCHEMA, regenerates only the section between the sentinels in Config.php. Skips entries with `'custom' => true`. Generates one method per simple SCHEMA entry: `public static function camelCaseKey(): T { return self::getT('key_string'); }`.
+3. **Build the generator.** `tools/build-config-accessors.php` accepts a `--target=<path>` flag (defaults to `src/Piwigo/Config/Config.php`). Reads the target class's `SCHEMA` constant via reflection, regenerates only the section between the sentinels. Skips entries with `'custom' => true`. Generates one method per simple SCHEMA entry: `public static function camelCaseKey(): T { return self::getT('key_string'); }`. The same tool is later used by plugins to regenerate their own Config classes.
 
 4. **Wire the boot path.** `src/Piwigo/Config/ConfigLoader.php` runs once during `Kernel::boot()`:
    1. Seed `Config::$data` with SCHEMA defaults.
@@ -204,37 +205,50 @@ This is a greenfield refactor — no compatibility shims for the legacy `$conf` 
    4. For each SCHEMA entry with `'env' => 'NAME'`, if `$_ENV['NAME']` is set, coerce to the entry's `type` and overwrite `Config::$data[$key]`.
    5. Validate `'required' => true` entries; throw `MissingRequiredConfigException` if any unset.
 
-5. **Install sentinel.** `src/Piwigo/Core/InstallSentinel.php` exposes `isInstalled(): bool` (file existence check on `local/.installed`), `markInstalled(): void` (touch), `markUninstalled(): void` (unlink, for tests). `install.php` calls `markInstalled()` at completion. `install.php`, `upgrade.php`, `i.php`, `index.php` all switch from `defined('PHPWG_INSTALLED')` checks to `InstallSentinel::isInstalled()`.
+5. **Shared storage helper for plugins.** `src/Piwigo/Config/ConfigStorage.php` is the SCHEMA-driven storage backend any Config class can use. Loads typed values from the shared DB `config` table by key (with optional namespace prefix), applies env bindings, masks sensitive values for logging. Piwigo's own Config delegates its load/persist plumbing here; bundled plugins use it to back their own Config classes. Plugins instantiate it (or call its statics) with their own SCHEMA + namespace prefix.
 
-6. **Drop the legacy file load.** Delete `include/config_default.inc.php` (1088 lines → SCHEMA defaults). Stop including `local/config/config.inc.php` from `include/common.inc.php`. Stop reading `local/config/database.inc.php`'s creds (only the install sentinel mattered there, now relocated). Hardcode UTF-8 / mysqli where the `PWG_CHARSET` / `DB_CHARSET` / `DB_COLLATE` / `dblayer` constants used to inject values, OR move them into SCHEMA — pick per-constant based on whether per-environment override is realistic. `prefixeTable` global becomes `Config::dbTablePrefix(): string` env-bound to `PIWIGO_DB_TABLE_PREFIX` (default `'piwigo_'`).
+6. **Install sentinel.** `src/Piwigo/Core/InstallSentinel.php` exposes `isInstalled(): bool` (file existence check on `local/.installed`), `markInstalled(): void` (touch), `markUninstalled(): void` (unlink, for tests). `install.php` calls `markInstalled()` at completion. `install.php`, `upgrade.php`, `i.php`, `index.php` all switch from `defined('PHPWG_INSTALLED')` checks to `InstallSentinel::isInstalled()`.
 
-7. **Migrate remaining `$conf` consumers.** The 2 raw `$conf['x']` accesses outside `config_default.inc.php` (`admin/user_list.php`, `include/functions.inc.php`) move to `Config::xxx()`. Drop every remaining `global $conf;` declaration in `admin/` and `include/` — they bind to nothing now. (Overlaps with #6's scope; do it here so the `$conf` removal lands in one shot.)
+7. **Drop the legacy file load.** Delete `include/config_default.inc.php` (1088 lines → SCHEMA defaults). Stop including `local/config/config.inc.php` from `include/common.inc.php`. Stop reading `local/config/database.inc.php`'s creds (only the install sentinel mattered there, now relocated). Hardcode UTF-8 / mysqli where the `PWG_CHARSET` / `DB_CHARSET` / `DB_COLLATE` / `dblayer` constants used to inject values, OR move them into SCHEMA — pick per-constant based on whether per-environment override is realistic. `prefixeTable` global becomes `Config::dbTablePrefix(): string` env-bound to `PIWIGO_DB_TABLE_PREFIX` (default `'piwigo_'`).
 
-8. **PHPStan rule.** `tools/phpstan/ConfigKeyExistsRule.php` reads `Config::SCHEMA` and flags any literal-string `Config::get('foo')` whose `'foo'` isn't a known key. Runtime-registered keys bypass static analysis (PHPStan can't see them); first-party code shouldn't reference plugin-defined keys, so this is fine.
+8. **Migrate remaining `$conf` consumers.** The 2 raw `$conf['x']` accesses outside `config_default.inc.php` (`admin/user_list.php`, `include/functions.inc.php`) move to `Config::xxx()`. The 12 raw `Config::get()` callers across 5 files migrate to the appropriate typed accessors (or get added as new SCHEMA entries with generated accessors if no clustered accessor fits). Drop every remaining `global $conf;` declaration in `admin/` and `include/` — they bind to nothing now. (Overlaps with #6's scope; do it here so the `$conf` removal lands in one shot.)
 
-9. **CI guard test.** `tests/Unit/Config/SchemaIntegrityTest.php` runs the generator into a tmp file and asserts the committed Config.php matches. Also asserts every SCHEMA entry has either a generated accessor or `'custom' => true`. Failure message points at `tools/build-config-accessors.php`.
+9. **Migrate bundled extensions to the per-plugin Config pattern.** Each bundled extension under `plugins/` and `themes/` that holds config keys gets its own typed Config class (e.g., `MyPlugin\Config`) following the same SCHEMA-constant + generated-accessors layout, backed by `ConfigStorage` with a plugin-namespaced key prefix. The generator (Step 3) is invoked per plugin via `--target=plugins/MyPlugin/src/Config.php`. No plugin keys leak into Piwigo's own SCHEMA — clean separation.
 
-10. **`.env.example`** at repo root with the env-bound keys (db cluster, secret_key, smtp cluster, proxy cluster, db_table_prefix), placeholder values, and one-line comments. `.gitignore` adds `.env` and `local/.installed`.
+10. **PHPStan rule.** `tools/phpstan/ConfigKeyExistsRule.php` reads `Config::SCHEMA` and flags any literal-string call to the **private** typed-getter family (`Config::getString/getInt/getBool/getFloat/getArray`) whose key isn't in SCHEMA. The rule's reach extends to any class with a `SCHEMA` constant: when called as `MyPlugin\Config::getString('foo')`, the rule looks up `MyPlugin\Config::SCHEMA`. (External callers can't reach the private getters anyway — the rule is a defense for code inside Config classes.)
 
-11. **`docs/config-reference.md`** generated from SCHEMA `description` fields. Same generator (or a sibling) writes it; committed to repo. Links from README.
+11. **CI guard test.** `tests/Unit/Config/SchemaIntegrityTest.php` runs the generator into a tmp file for every Config class (Piwigo's + each bundled plugin's) and asserts the committed file matches. Also asserts every SCHEMA entry has either a generated accessor or `'custom' => true`. Failure message points at `tools/build-config-accessors.php`.
 
-12. **README "Configuration" section** covering: load order (defaults → DB → .env), the install sentinel, the `Config::register()` plugin API, where secrets belong (`.env`), where admin-tunable values belong (DB).
+12. **`.env.example`** at repo root with the env-bound keys (db cluster, secret_key, smtp cluster, proxy cluster, db_table_prefix), placeholder values, and one-line comments. `.gitignore` adds `.env` and `local/.installed`.
 
-13. **Test infrastructure.** `tests/Integration/IntegrationTestCase.php` switches from writing `database.inc.php` to: writing `local/.installed` plus setting the DB-related env vars (`PIWIGO_DB_HOST`, etc.) for the test process. `phpunit.xml.dist` may set defaults via `<env>` entries.
+13. **`docs/config-reference.md`** generated from SCHEMA `description` fields across Piwigo's Config and every bundled plugin's Config. Same generator (or a sibling) writes it; committed to repo. Links from README.
+
+14. **README "Configuration" section** covering: load order (defaults → DB → .env), the install sentinel, where secrets belong (`.env`), where admin-tunable values belong (DB).
+
+15. **CONTRIBUTING.md "Plugin Config" section** with a worked example: how a plugin author defines its `Config` class, runs the generator, accesses values via typed accessors, and uses `ConfigStorage` for persistence. References the bundled plugins as examples.
+
+16. **Test infrastructure.** `tests/Integration/IntegrationTestCase.php` switches from writing `database.inc.php` to: writing `local/.installed` plus setting the DB-related env vars (`PIWIGO_DB_HOST`, etc.) for the test process. `phpunit.xml.dist` may set defaults via `<env>` entries.
 
 ### Out-of-scope clarifications
 
-- Three-mode strict (`strict`/`warn`/`silent`): rejected. Single mode (always throws) — the `register()` API is the proper escape valve for plugin-defined keys.
+- Three-mode strict (`strict`/`warn`/`silent`): rejected. Single mode (always throws). The plugin-Config pattern + `Config::register()`-removed design eliminates the use case for soft modes.
+- `Config::get()` (untyped escape hatch): rejected. Every read is typed via an accessor or the private typed-getter family.
+- `Config::register()` runtime extension API: rejected. Plugins ship their own typed Config class instead — symmetric with how Piwigo's Config is structured. Considered three workarounds and rejected each:
+  - Magic `__callStatic`: breaks PHPStan/IDE/autocomplete entirely.
+  - Eval / write-PHP-on-activation: filesystem writes from activation hooks are fragile and break read-only deployments.
+  - Build-time aggregation that scans plugins/*/schema.php and bakes plugin keys into Piwigo's Config.php: tightly couples core to the installed plugin set, breaks the "ship Piwigo as an immutable artifact" deployment story.
 - AST-harvest schema generation: rejected. Hand-written SCHEMA constant is more honest about what metadata we want to carry (`sensitive`, `env`, `description` aren't expressible from accessor signatures alone). The CI guard covers the drift risk.
-- `seal()` after plugin boot: deferred. Add only if late-registration becomes a footgun in practice.
-- Splitting into 5a/5b: rejected. One coherent shipment — strict mode and PHPStan rule both depend on SCHEMA, no benefit from staging.
+- Splitting into 5a/5b: rejected. One coherent shipment — strict mode, PHPStan rule, and the per-plugin Config pattern all depend on SCHEMA being the canonical surface, no benefit from staging.
 
 ### Verification
 
 ```bash
 vendor/bin/phpstan analyse --no-progress              # ConfigKeyExistsRule clean
 vendor/bin/phpunit                                    # SchemaIntegrityTest + ConfigLoaderTest green
-php tools/build-config-accessors.php --check         # generator produces no diff against committed Config.php
+
+# Generator produces no diff against any committed Config.php (core + plugins):
+php tools/build-config-accessors.php --check
+
 test ! -f include/config_default.inc.php             # legacy defaults file deleted
 test -f .env.example                                  # env template committed
 test -f docs/config-reference.md                      # generated docs committed
@@ -247,13 +261,20 @@ PIWIGO_DB_HOST=remote.example.com php -r "
 "
 # string(19) "remote.example.com"
 
-# Unknown-key strict throw:
+# Unknown-key strict throw (via a typed accessor that doesn't exist):
 php -r "
   require 'vendor/autoload.php';
   Piwigo\Config\ConfigLoader::load();
-  Piwigo\Config\Config::get('definitely_not_a_real_key');
+  Piwigo\Config\Config::definitelyNotARealAccessor();
 "
-# Fatal: Piwigo\Config\UnknownConfigKeyException
+# Fatal: Error  Call to undefined method Piwigo\Config\Config::definitelyNotARealAccessor()
+
+# Bundled plugin Config sanity:
+php -r "
+  require 'vendor/autoload.php';
+  Piwigo\Config\ConfigLoader::load();
+  var_dump(SomeBundledPlugin\Config::someTypedAccessor());
+"
 ```
 
 ---

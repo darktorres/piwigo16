@@ -64,6 +64,32 @@ final class Lang
         return isset(self::$data[$key]);
     }
 
+    /** Day name by day-of-week index (0 = Sunday). */
+    public static function day(int $dow): string
+    {
+        $raw = $GLOBALS['lang'] ?? [];
+        $lang = is_array($raw) ? $raw : [];
+        $days = $lang['day'] ?? [];
+        if (!is_array($days) || !isset($days[$dow])) {
+            return '';
+        }
+        $val = $days[$dow];
+        return is_scalar($val) ? (string) $val : '';
+    }
+
+    /** Month name by month number (1 = January). */
+    public static function month(int $m): string
+    {
+        $raw = $GLOBALS['lang'] ?? [];
+        $lang = is_array($raw) ? $raw : [];
+        $months = $lang['month'] ?? [];
+        if (!is_array($months) || !isset($months[$m])) {
+            return '';
+        }
+        $val = $months[$m];
+        return is_scalar($val) ? (string) $val : '';
+    }
+
     // ---- Test helpers ----------------------------------------------------
 
     /** @param array<string,string> $data */

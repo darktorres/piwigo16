@@ -150,8 +150,6 @@ order by';
  */
 function begin_users_env_nbm(bool $is_to_send_mail = false): void
 {
-    global $lang_info;
-    global $lang;
     $ctx = \Piwigo\Notification\MailNotificationContext::current();
     // Save $user, $lang_info and $lang arrays (include/user.inc.php has been executed)
     $ctx->saveUser = is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : [];
@@ -183,8 +181,6 @@ function begin_users_env_nbm(bool $is_to_send_mail = false): void
  */
 function end_users_env_nbm(): void
 {
-    global $lang_info;
-    global $lang;
     $ctx = \Piwigo\Notification\MailNotificationContext::current();
     // Restore $user, $lang_info and $lang arrays (include/user.inc.php has been executed)
     \Piwigo\Users\CurrentUser::setRawAttributes($ctx->saveUser);
@@ -213,8 +209,6 @@ function end_users_env_nbm(): void
 /** @param array<string, float|int|string|null> $nbm_user */
 function set_user_on_env_nbm(array &$nbm_user, bool $is_action_send): void
 {
-    global $lang_info;
-    global $lang;
     $ctx = \Piwigo\Notification\MailNotificationContext::current();
     $newUser = build_user(is_numeric($nbm_user['user_id']) ? (int)$nbm_user['user_id'] : 0, true);
     \Piwigo\Users\CurrentUser::setRawAttributes($newUser);

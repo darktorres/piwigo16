@@ -231,45 +231,31 @@ function get_str_email_format($is_html): string
  */
 function switch_lang_to($language): void
 {
-    global $switch_lang, $lang_info, $language_files;
-    global $lang;
     $currentLanguage = \Piwigo\Users\CurrentUser::get()->language;
-    // explanation of switch_lang
-    // $switch_lang['language'] contains data of language
-    // $switch_lang['stack'] contains stack LIFO
-    // $switch_lang['initialisation'] allow to know if it's first call
 
-    // Treatment with current user
-    // Language of current user is saved (it's considered OK on firt call)
-    if (!isset($switch_lang['initialisation']) and !isset($switch_lang['language'][$currentLanguage])) {
-        $switch_lang['initialisation'] = true;
-        $switch_lang['language'][$currentLanguage]['lang_info'] = $lang_info;
-        $switch_lang['language'][$currentLanguage]['lang'] = $lang;
+    // Save the current language state on first call
+    if (!\Piwigo\Core\LanguageStack::isSwitchInitialized()
+        && !\Piwigo\Core\LanguageStack::hasSavedState($currentLanguage)) {
+        \Piwigo\Core\LanguageStack::markSwitchInitialized();
+        \Piwigo\Core\LanguageStack::saveState($currentLanguage);
     }
 
-    // Change current infos
-    $switch_lang['stack'][] = $currentLanguage;
+    \Piwigo\Core\LanguageStack::pushStack($currentLanguage);
     \Piwigo\Users\CurrentUser::setLanguage($language);
 
-    // Load new data if necessary
-    if (!isset($switch_lang['language'][$language])) {
-        // Re-Init language arrays
-        $lang_info = [];
-        $lang  = [];
+    if (!\Piwigo\Core\LanguageStack::hasSavedState($language)) {
+        // Load language from scratch
+        \Piwigo\Core\LanguageStack::setLang([]);
+        \Piwigo\Core\LanguageStack::setInfo([]);
 
-        // language files
         load_language('common.lang', '', ['language' => $language]);
-        // No test admin because script is checked admin (user selected no)
-        // Translations are in admin file too
         load_language('admin.lang', '', ['language' => $language]);
 
-        // Reload all plugins files (see load_language declaration)
-        if (!empty($language_files)) {
-            foreach ($language_files as $dirname => $files) {
-                foreach ($files as $filename => $options) {
-                    $options['language'] = $language;
-                    load_language($filename, $dirname, $options);
-                }
+        $pluginFiles = \Piwigo\Core\LanguageStack::pluginFiles();
+        foreach ($pluginFiles as $dirname => $files) {
+            foreach ($files as $filename => $options) {
+                $options['language'] = $language;
+                load_language($filename, $dirname, $options);
             }
         }
 
@@ -280,11 +266,9 @@ function switch_lang_to($language): void
             ['language' => $language, 'no_fallback' => true, 'local' => true]
         );
 
-        $switch_lang['language'][$language]['lang_info'] = $lang_info;
-        $switch_lang['language'][$language]['lang'] = $lang;
+        \Piwigo\Core\LanguageStack::saveState($language);
     } else {
-        $lang_info = $switch_lang['language'][$language]['lang_info'];
-        $lang = $switch_lang['language'][$language]['lang'];
+        \Piwigo\Core\LanguageStack::restoreState($language);
     }
 }
 
@@ -295,18 +279,10 @@ function switch_lang_to($language): void
  */
 function switch_lang_back(): void
 {
-    global $switch_lang, $lang_info;
-    global $lang;
-    if (count($switch_lang['stack']) > 0) {
-        // Get last value
-        $language = array_pop($switch_lang['stack']);
-
-        // Change current infos
-        if (isset($switch_lang['language'][$language])) {
-            $lang_info = $switch_lang['language'][$language]['lang_info'];
-            $lang = $switch_lang['language'][$language]['lang'];
-        }
-        \Piwigo\Users\CurrentUser::setLanguage(is_string($language) ? $language : '');
+    $language = \Piwigo\Core\LanguageStack::popStack();
+    if ($language !== null) {
+        \Piwigo\Core\LanguageStack::restoreState($language);
+        \Piwigo\Users\CurrentUser::setLanguage($language);
     }
 }
 
@@ -583,8 +559,9 @@ SELECT
  */
 function pwg_mail(string|array $to, array $args = [], array $tpl = []): bool
 {
-    global $conf_mail, $lang_info;
+    global $conf_mail;
     $page = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
+    $lang_info = \Piwigo\Core\LanguageStack::info();
 
     if (empty($to) and empty($args['Cc']) and empty($args['Bcc'])) {
         return true;
@@ -684,7 +661,7 @@ function pwg_mail(string|array $to, array $args = [], array $tpl = []): bool
     $contents = [];
     foreach ($content_type_list as $content_type) {
         // key compose of indexes witch allow to cache mail data
-        $cache_key = $content_type.'-'.$lang_info['code'];
+        $cache_key = $content_type.'-'.(is_scalar($lang_info['code'] ?? null) ? (string) $lang_info['code'] : '');
         if (!empty($args['auth_key'])) {
             $cache_key .= '-'.$args['auth_key'];
         }
@@ -892,11 +869,12 @@ function move_css_to_body(string $content): string
 /** @param array<mixed> $args */
 function pwg_send_mail_test(bool $success, mixed $mail, array $args): void
 {
-    global $lang_info;
+    $info = \Piwigo\Core\LanguageStack::info();
+    $langCode = is_scalar($info['code'] ?? null) ? (string) $info['code'] : '';
 
     $dir = PHPWG_ROOT_PATH.\Piwigo\Config\Config::dataLocation().'tmp';
     if (mkgetdir($dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
-        $filename = $dir.'/mail.'.stripslashes(\Piwigo\Users\CurrentUser::get()->username).'.'.$lang_info['code'].'-'.date('YmdHis').($success ? '' : '.ERROR');
+        $filename = $dir.'/mail.'.stripslashes(\Piwigo\Users\CurrentUser::get()->username).'.'.$langCode.'-'.date('YmdHis').($success ? '' : '.ERROR');
         if ($args['content_format'] == 'text/plain') {
             $filename .= '.txt';
         } else {

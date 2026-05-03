@@ -6,6 +6,7 @@ namespace Piwigo\Core;
 
 use Piwigo\Config\Config;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Core\LanguageStack;
 
 /**
  * Single boot entry point for the typed-service layer (Phase 4, Wave A).
@@ -53,6 +54,7 @@ final class Kernel
         Config::reset();
         PageState::reset();
         Lang::reset();
+        LanguageStack::reset();
         CurrentUser::reset();
         ServiceLocator::reset();
     }

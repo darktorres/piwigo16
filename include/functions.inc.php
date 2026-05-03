@@ -756,7 +756,6 @@ function str2DateTime(int|string|null $original, $format = null)
 /** @param string[]|true|null $show */
 function format_date_legacy(int|string|\DateTime|null $original, array|bool|null $show = null, ?string $format = null): string
 {
-    global $lang;
     $date = ($original instanceof \DateTime) ? $original : str2DateTime($original, $format);
 
     if (!$date) {
@@ -769,7 +768,7 @@ function format_date_legacy(int|string|\DateTime|null $original, array|bool|null
 
     $print = '';
     if (in_array('day_name', $show)) {
-        $print .= $lang['day'][ $date->format('w') ].' ';
+        $print .= \Piwigo\Core\Lang::day((int) $date->format('w')).' ';
     }
 
     if (in_array('day', $show)) {
@@ -777,7 +776,7 @@ function format_date_legacy(int|string|\DateTime|null $original, array|bool|null
     }
 
     if (in_array('month', $show)) {
-        $print .= $lang['month'][ $date->format('n') ].' ';
+        $print .= \Piwigo\Core\Lang::month((int) $date->format('n')).' ';
     }
 
     if (in_array('year', $show)) {
@@ -1023,20 +1022,16 @@ function redirect_http($url): void
  */
 function redirect_html($url, $msg = '', $refresh_time = 0): void
 {
-    global $lang_info, $template, $t2, $debug;
-    global $user;
-    global $lang;
-    global $page;
-    if (!isset($lang_info) || !isset($template)) {
-        $user = build_user(\Piwigo\Config\Config::guestId(), true);
+    if (!\Piwigo\Core\LanguageStack::initialized() || !\Piwigo\Template\TemplateRegistry::isInitialized()) {
+        \Piwigo\Users\CurrentUser::setRawAttributes(build_user(\Piwigo\Config\Config::guestId(), true));
         load_language('common.lang');
         trigger_notify('loading_lang');
         load_language('lang', PHPWG_ROOT_PATH.PWG_LOCAL_DIR, ['no_fallback' => true, 'local' => true]);
-        $template = new Template(PHPWG_ROOT_PATH.'themes', get_default_theme());
-        \Piwigo\Template\TemplateRegistry::set($template);
+        $tpl = new Template(PHPWG_ROOT_PATH.'themes', get_default_theme());
+        \Piwigo\Template\TemplateRegistry::set($tpl);
     } elseif (defined('IN_ADMIN') and IN_ADMIN) {
-        $template = new Template(PHPWG_ROOT_PATH.'themes', get_default_theme());
-        \Piwigo\Template\TemplateRegistry::set($template);
+        $tpl = new Template(PHPWG_ROOT_PATH.'themes', get_default_theme());
+        \Piwigo\Template\TemplateRegistry::set($tpl);
     }
 
     if (empty($msg)) {
@@ -1047,14 +1042,15 @@ function redirect_html($url, $msg = '', $refresh_time = 0): void
     $url_link = $url;
     $title = 'redirection';
 
-    $template->set_filenames([ 'redirect' => 'redirect.tpl' ]);
+    $tpl = \Piwigo\Template\TemplateRegistry::current();
+    $tpl->set_filenames([ 'redirect' => 'redirect.tpl' ]);
 
     include(PHPWG_ROOT_PATH.'include/page_header.php');
 
-    $template->set_filenames([ 'redirect' => 'redirect.tpl' ]);
-    $template->assign('REDIRECT_MSG', $msg);
+    $tpl->set_filenames([ 'redirect' => 'redirect.tpl' ]);
+    $tpl->assign('REDIRECT_MSG', $msg);
 
-    $template->parse('redirect');
+    $tpl->parse('redirect');
 
     include(PHPWG_ROOT_PATH.'include/page_tail.php');
 
@@ -1242,12 +1238,13 @@ function l10n(?string $key): string
  */
 function l10n_dec($singular_key, $plural_key, $decimal): string
 {
-    global $lang_info;
+    $info = \Piwigo\Core\LanguageStack::info();
+    $zero_plural = !empty($info['zero_plural']);
 
     return
       sprintf(
           l10n((
-              (($decimal > 1) or ($decimal == 0 and $lang_info['zero_plural']))
+              (($decimal > 1) or ($decimal == 0 and $zero_plural))
           ? $plural_key
           : $singular_key
           )),
@@ -1618,8 +1615,9 @@ function get_pwg_charset(): string
 function get_parent_language($lang_id = null)
 {
     if (empty($lang_id)) {
-        global $lang_info;
-        return !empty($lang_info['parent']) ? $lang_info['parent'] : null;
+        $info = \Piwigo\Core\LanguageStack::info();
+        $parent = $info['parent'] ?? null;
+        return is_string($parent) && $parent !== '' ? $parent : null;
     } else {
         $f = PHPWG_ROOT_PATH.'language/'.$lang_id.'/common.lang.php';
         if (file_exists($f)) {
@@ -1648,15 +1646,14 @@ function get_parent_language($lang_id = null)
 /** @param array<mixed> $options */
 function load_language(string $filename, string $dirname = '', array $options = []): string|bool
 {
-    global $language_files;
     $user = \Piwigo\Users\CurrentUser::isInitialized()
         ? \Piwigo\Users\CurrentUser::get()->rawAttributes
         : (is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : []);
 
     // keep trace of plugins loaded files for switch_lang_to() function
     if (!empty($dirname) && !empty($filename) && !@$options['return']
-      && !isset($language_files[$dirname][$filename])) {
-        $language_files[$dirname][$filename] = $options;
+      && !\Piwigo\Core\LanguageStack::hasPluginFile($dirname, $filename)) {
+        \Piwigo\Core\LanguageStack::trackPluginFile($dirname, $filename, $options);
     }
 
     if (!@$options['return']) {
@@ -1713,43 +1710,32 @@ function load_language(string $filename, string $dirname = '', array $options = 
 
     if (!empty($source_file)) {
         if (!@$options['return']) {
-            // load forced fallback
+            // load forced fallback — sets local $lang/$lang_info which are reset below
             if (isset($options['force_fallback']) && $options['force_fallback'] != $selected_language) {
                 $forceFallback = is_scalar($options['force_fallback']) ? (string) $options['force_fallback'] : '';
                 @include(str_replace($selected_language, $forceFallback, $source_file));
             }
 
-            // load language content
+            // load language content into local variables
             $lang = null;
             $lang_info = null;
             @include($source_file);
             $load_lang = $lang;
             $load_lang_info = $lang_info;
 
-            // access already existing values
-            global $lang_info;
-            global $lang;
-            if (!isset($lang)) {
-                $lang = [];
-            }
-            if (!isset($lang_info)) {
-                $lang_info = [];
-            }
-
-            // load parent language content directly in global
-            if (!empty($lang_info['parent'])) {
-                $parent_language = $lang_info['parent'];
-            } else {
-                $parent_language = null;
-            }
+            // load parent language content into the global stack (preserves reference bridge)
+            $currentInfo = \Piwigo\Core\LanguageStack::info();
+            $parent_language = !empty($currentInfo['parent']) ? $currentInfo['parent'] : null;
 
             if (!empty($parent_language) && $parent_language != $selected_language) {
-                @include(str_replace($selected_language, is_scalar($parent_language) ? (string) $parent_language : '', $source_file));
+                \Piwigo\Core\LanguageStack::mergeFromFile(
+                    str_replace($selected_language, is_scalar($parent_language) ? (string) $parent_language : '', $source_file)
+                );
             }
 
-            // merge contents
-            $lang = array_merge($lang, (array)$load_lang);
-            $lang_info = array_merge($lang_info, (array)$load_lang_info);
+            // merge loaded content into global stack
+            \Piwigo\Core\LanguageStack::mergeLang((array)$load_lang);
+            \Piwigo\Core\LanguageStack::mergeInfo((array)$load_lang_info);
             return true;
         } else {
             $content = @file_get_contents($source_file);

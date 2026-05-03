@@ -247,21 +247,26 @@ if (userprefs_get_param('user-manager-view', 'line') == 'line') {
 
 function webmaster_id_is_local(): bool
 {
-    /** @var array<string, mixed> $conf */
-    $conf = [];
-    include(PHPWG_ROOT_PATH . 'include/config_default.inc.php');
-
-    $localConfig = realpath(PHPWG_ROOT_PATH . 'local/config/config.inc.php');
-    if ($localConfig !== false) {
-        include $localConfig;
-    }
-    if (\Piwigo\Config\Config::has('local_dir_site')) {
-        $siteConfig = realpath(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/config.inc.php');
-        if ($siteConfig !== false) {
-            include $siteConfig;
+    // Detects whether the user has set $conf['webmaster_id'] in their local
+    // config file. The previous implementation included config_default.inc.php
+    // (which always sets webmaster_id) into a fresh local $conf and then
+    // checked isset() — which was always true. Static text scan is cheaper and
+    // actually matches the warning's intent.
+    $candidates = [
+        PHPWG_ROOT_PATH . 'local/config/config.inc.php',
+        PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/config.inc.php',
+    ];
+    foreach ($candidates as $path) {
+        $real = realpath($path);
+        if ($real === false) {
+            continue;
+        }
+        $content = @file_get_contents($real);
+        if ($content !== false && preg_match('/\$conf\s*\[\s*[\'"]webmaster_id[\'"]\s*\]\s*=/', $content) === 1) {
+            return true;
         }
     }
-    return isset($conf['webmaster_id']);
+    return false;
 }
 
 if (webmaster_id_is_local()) {

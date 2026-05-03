@@ -28,7 +28,7 @@ use Piwigo\Menu\RegisteredBlock;
 /** @param array<mixed> $cat_informations */
 function get_cat_display_name(array $cat_informations, ?string $url = ''): string
 {
-    //$output = '<a href="'.get_absolute_root_url().\Piwigo\Core\Config::get('home_page').'">'.l10n('Home').'</a>';
+    //$output = '<a href="'.get_absolute_root_url().\Piwigo\Config\Config::get('home_page').'">'.l10n('Home').'</a>';
     $output = '';
     $is_first = true;
 
@@ -50,7 +50,7 @@ function get_cat_display_name(array $cat_informations, ?string $url = ''): strin
         if ($is_first) {
             $is_first = false;
         } else {
-            $output .= \Piwigo\Core\Config::levelSeparator();
+            $output .= \Piwigo\Config\Config::levelSeparator();
         }
 
         if (!isset($url)) {
@@ -129,7 +129,7 @@ SELECT id, name, permalink
         if ($is_first) {
             $is_first = false;
         } else {
-            $output .= '<span>'.\Piwigo\Core\Config::levelSeparator().'</span>';
+            $output .= '<span>'.\Piwigo\Config\Config::levelSeparator().'</span>';
         }
 
         $cat_name = $cat['name'];
@@ -566,7 +566,7 @@ function get_thumbnail_title(array $info, string $title, string $comment = ''): 
         $details[] = l10n('%d visits', $info['hit']);
     }
 
-    if (\Piwigo\Core\Config::rateEnabled() and !empty($info['rating_score'])) {
+    if (\Piwigo\Config\Config::rateEnabled() and !empty($info['rating_score'])) {
         $details[] = l10n('rating score %s', $info['rating_score']);
     }
 
@@ -611,9 +611,9 @@ function get_src_image_url_protection_handler($url, $src_image)
 /** @param array<string, mixed> $infos */
 function get_element_url_protection_handler(string $url, array $infos): string
 {
-    if ('images' == \Piwigo\Core\Config::originalUrlProtection()) {// protect only images and not other file types (for example large movies that we don't want to send through our file proxy)
+    if ('images' == \Piwigo\Config\Config::originalUrlProtection()) {// protect only images and not other file types (for example large movies that we don't want to send through our file proxy)
         $ext = get_extension(is_string($infos['path'] ?? null) ? $infos['path'] : '');
-        if (!in_array($ext, \Piwigo\Core\Config::pictureExtensions())) {
+        if (!in_array($ext, \Piwigo\Config\Config::pictureExtensions())) {
             return $url;
         }
     }

@@ -436,7 +436,7 @@ class CalendarMonthly extends CalendarBase
             $dayLabels = is_array($langArr['day'] ?? null) ? $langArr['day'] : [];
             $wday_labels = $dayLabels;
 
-            if ('monday' == \Piwigo\Core\Config::weekStartsOn()) {
+            if ('monday' == \Piwigo\Config\Config::weekStartsOn()) {
                 if ($first_day_dow == 0) {
                     $first_day_dow = 6;
                 } else {

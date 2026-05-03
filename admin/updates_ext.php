@@ -18,7 +18,7 @@ if (!defined('PHPWG_ROOT_PATH')) {
 global $template, $user, $page, $persistent_cache, $lang;
 
 
-if (!\Piwigo\Core\Config::enableExtensionsInstall()) {
+if (!\Piwigo\Config\Config::enableExtensionsInstall()) {
     die('Piwigo extensions install/update system is disabled');
 }
 
@@ -26,8 +26,8 @@ if (!is_webmaster()) {
     \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
 }
 
-$updates_ignored_raw = \Piwigo\Core\Config::get('updates_ignored');
-\Piwigo\Core\Config::override('updates_ignored', safe_unserialize(is_string($updates_ignored_raw) ? $updates_ignored_raw : ''));
+$updates_ignored_raw = \Piwigo\Config\Config::get('updates_ignored');
+\Piwigo\Config\Config::override('updates_ignored', safe_unserialize(is_string($updates_ignored_raw) ? $updates_ignored_raw : ''));
 
 $autoupdate = new Updates($page['page']);
 
@@ -63,7 +63,7 @@ foreach ($autoupdate->types as $type) {
 
         $ext_info = $server_ext[$fs_ext['extension']];
 
-        $updates_ignored = \Piwigo\Core\Config::get('updates_ignored');
+        $updates_ignored = \Piwigo\Config\Config::get('updates_ignored');
         $updates_ignored_arr = is_array($updates_ignored) ? $updates_ignored : [];
         $updates_ignored_for_type = is_array($updates_ignored_arr[$type] ?? null) ? $updates_ignored_arr[$type] : [];
         if (!safe_version_compare($fs_ext['version'], $ext_info['revision_name'], '>=')) {

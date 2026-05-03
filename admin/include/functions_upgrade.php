@@ -137,7 +137,7 @@ DELETE
         $query = '
 SELECT theme
   FROM '.PREFIX_TABLE.'user_infos
-  WHERE user_id = '.\Piwigo\Core\Config::defaultUserId().'
+  WHERE user_id = '.\Piwigo\Config\Config::defaultUserId().'
 ;';
         [$default_theme] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
@@ -161,7 +161,7 @@ SELECT
             $query = '
 UPDATE '.PREFIX_TABLE.'user_infos
   SET theme = \''.PHPWG_DEFAULT_TEMPLATE.'\'
-  WHERE user_id = '.\Piwigo\Core\Config::defaultUserId().'
+  WHERE user_id = '.\Piwigo\Config\Config::defaultUserId().'
 ;';
             pwg_query($query);
         }
@@ -226,13 +226,13 @@ WHERE username = \''.$username.'\'
 SELECT u.password, ui.status
 FROM '.USERS_TABLE.' AS u
 INNER JOIN '.USER_INFOS_TABLE.' AS ui
-ON u.'.\Piwigo\Core\Config::userFields()['id'].'=ui.user_id
-WHERE '.\Piwigo\Core\Config::userFields()['username'].'=\''.$username.'\'
+ON u.'.\Piwigo\Config\Config::userFields()['id'].'=ui.user_id
+WHERE '.\Piwigo\Config\Config::userFields()['username'].'=\''.$username.'\'
 ;';
     }
     $row = pwg_db_fetch_assoc(pwg_query($query));
 
-    if ($row === null || !\Piwigo\Core\Config::passwordVerify()($password, $row['password'])) {
+    if ($row === null || !\Piwigo\Config\Config::passwordVerify()($password, $row['password'])) {
         \Piwigo\Core\PageState::current()->addError(l10n('Invalid password!'));
     } elseif ($row['status'] != 'admin' and $row['status'] != 'webmaster') {
         \Piwigo\Core\PageState::current()->addError(l10n('You do not have access rights to run upgrade'));
@@ -288,10 +288,10 @@ function upgrade_db_connect(): void
 {
     try {
         pwg_db_connect(
-            \Piwigo\Core\Config::dbHost(),
-            \Piwigo\Core\Config::dbUser(),
-            \Piwigo\Core\Config::dbPassword(),
-            \Piwigo\Core\Config::dbName()
+            \Piwigo\Config\Config::dbHost(),
+            \Piwigo\Config\Config::dbUser(),
+            \Piwigo\Config\Config::dbPassword(),
+            \Piwigo\Config\Config::dbName()
         );
         pwg_db_check_version();
     } catch (Exception $e) {

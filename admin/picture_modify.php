@@ -90,7 +90,7 @@ if (isset($_POST['submit'])) {
     $to_sanitize_fields = ['name', 'author', 'comment'];
     foreach ($to_sanitize_fields as $field) {
         $post_field = @$_POST[$field];
-        $data[$field] = \Piwigo\Core\Config::allowHtmlDescriptions() ? $post_field : strip_tags(is_scalar($post_field) ? (string) $post_field : '');
+        $data[$field] = \Piwigo\Config\Config::allowHtmlDescriptions() ? $post_field : strip_tags(is_scalar($post_field) ? (string) $post_field : '');
     }
 
     if (!empty($_POST['date_creation'])) {
@@ -262,9 +262,9 @@ $template->assign(
 
 $added_by = 'N/A';
 $query = '
-SELECT '.\Piwigo\Core\Config::userFields()['username'].' AS username
+SELECT '.\Piwigo\Config\Config::userFields()['username'].' AS username
   FROM '.USERS_TABLE.'
-  WHERE '.\Piwigo\Core\Config::userFields()['id'].' = '.(is_numeric($row['added_by'] ?? null) ? (int)$row['added_by'] : 0).'
+  WHERE '.\Piwigo\Config\Config::userFields()['id'].' = '.(is_numeric($row['added_by'] ?? null) ? (int)$row['added_by'] : 0).'
 ;';
 $result = pwg_query($query);
 while ($user_row = pwg_db_fetch_assoc($result)) {
@@ -285,7 +285,7 @@ $intro_vars = [
   'is_svg' => (strtoupper(end($extTab)) == 'SVG'),
   ];
 
-if (\Piwigo\Core\Config::rateEnabled() and !empty($row['rating_score'])) {
+if (\Piwigo\Config\Config::rateEnabled() and !empty($row['rating_score'])) {
     $query = '
 SELECT
     COUNT(*)
@@ -317,7 +317,7 @@ if (!empty($formats)) {
 $template->assign('INTRO', $intro_vars);
 
 
-if (in_array(get_extension($row['path']), \Piwigo\Core\Config::pictureExtensions())) {
+if (in_array(get_extension($row['path']), \Piwigo\Config\Config::pictureExtensions())) {
     $template->assign('U_COI', get_root_url().'admin.php?page=picture_coi&amp;image_id='.(is_scalar($_GET['image_id'] ?? null) ? (string)$_GET['image_id'] : ''));
 }
 

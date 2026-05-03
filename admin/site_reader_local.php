@@ -13,11 +13,11 @@ class LocalSiteReader
 {
     public function __construct(public string $site_url)
     {
-        if (!\Piwigo\Core\Config::has('flip_file_ext')) {
-            \Piwigo\Core\Config::override('flip_file_ext', array_flip(\Piwigo\Core\Config::fileExtensions()));
+        if (!\Piwigo\Config\Config::has('flip_file_ext')) {
+            \Piwigo\Config\Config::override('flip_file_ext', array_flip(\Piwigo\Config\Config::fileExtensions()));
         }
-        if (!\Piwigo\Core\Config::has('flip_picture_ext')) {
-            \Piwigo\Core\Config::override('flip_picture_ext', array_flip(\Piwigo\Core\Config::pictureExtensions()));
+        if (!\Piwigo\Config\Config::has('flip_picture_ext')) {
+            \Piwigo\Config\Config::override('flip_picture_ext', array_flip(\Piwigo\Config\Config::pictureExtensions()));
         }
     }
 
@@ -54,8 +54,8 @@ class LocalSiteReader
     }
 
     /**
-     * Returns an array with all file system files according to \Piwigo\Core\Config::fileExtensions()
-     * and \Piwigo\Core\Config::pictureExtensions()
+     * Returns an array with all file system files according to \Piwigo\Config\Config::fileExtensions()
+     * and \Piwigo\Config\Config::pictureExtensions()
      * @param string $path recurse in this directory
      * @return array like "pic.jpg"=>array('representative_ext'=>'jpg' ... )
      */
@@ -74,15 +74,15 @@ class LocalSiteReader
                     $extension = strtolower(get_extension($node));
                     $filename_wo_ext = get_filename_wo_extension($node);
 
-                    if (isset(\Piwigo\Core\Config::flipFileExt()[$extension])) {
+                    if (isset(\Piwigo\Config\Config::flipFileExt()[$extension])) {
                         $representative_ext = null;
-                        if (! isset(\Piwigo\Core\Config::flipPictureExt()[$extension])) {
+                        if (! isset(\Piwigo\Config\Config::flipPictureExt()[$extension])) {
                             $representative_ext = $this->get_representative_ext($path, $filename_wo_ext);
                         }
 
                         $fs[ $path.'/'.$node ] = ['representative_ext' => $representative_ext];
 
-                        if (\Piwigo\Core\Config::isFormatsEnabled()) {
+                        if (\Piwigo\Config\Config::isFormatsEnabled()) {
                             $fs[ $path.'/'.$node ]['formats'] = $this->get_formats($path, $filename_wo_ext);
                         }
                     }
@@ -128,7 +128,7 @@ class LocalSiteReader
         $extension = get_extension($filename);
 
         $representative_ext = null;
-        if (! isset(\Piwigo\Core\Config::flipPictureExt()[$extension])) {
+        if (! isset(\Piwigo\Config\Config::flipPictureExt()[$extension])) {
             $dirname = dirname($file);
             $filename_wo_ext = get_filename_wo_extension($filename);
             $representative_ext = $this->get_representative_ext($dirname, $filename_wo_ext);
@@ -161,7 +161,7 @@ class LocalSiteReader
     public function get_representative_ext(string $path, string $filename_wo_ext): ?string
     {
         $base_test = $path.'/pwg_representative/'.$filename_wo_ext.'.';
-        foreach (\Piwigo\Core\Config::pictureExtensions() as $ext) {
+        foreach (\Piwigo\Config\Config::pictureExtensions() as $ext) {
             $test = $base_test.$ext;
             if (is_file($test)) {
                 return $ext;
@@ -179,7 +179,7 @@ class LocalSiteReader
 
         $base_test = $path.'/pwg_format/'.$filename_wo_ext.'.';
 
-        foreach (\Piwigo\Core\Config::formatExtensions() as $ext) {
+        foreach (\Piwigo\Config\Config::formatExtensions() as $ext) {
             $test = $base_test.$ext;
 
             if (is_file($test)) {

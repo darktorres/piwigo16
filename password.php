@@ -63,7 +63,7 @@ function process_verification_code(): bool
     // preventing username/email enumeration through timing or responses.
     $is_user_found = is_numeric($user_id);
     if (!$is_user_found) {
-        $user_id = \Piwigo\Core\Config::guestId();
+        $user_id = \Piwigo\Config\Config::guestId();
     }
 
     $userdata = getuserdata($user_id, false);
@@ -113,7 +113,7 @@ function process_verification_code(): bool
         'attempts' => 0,
         'user_id' => $is_user_found ? $user_id : null,
         'created_at' => time(),
-        'ttl' => min(\Piwigo\Core\Config::passwordResetCodeDuration(), 900), // max 15 min
+        'ttl' => min(\Piwigo\Config\Config::passwordResetCodeDuration(), 900), // max 15 min
       ];
 
     return true;
@@ -289,8 +289,8 @@ function reset_password(): bool
 
     single_update(
         USERS_TABLE,
-        [\Piwigo\Core\Config::userFields()['password'] => \Piwigo\Core\Config::passwordHash()($_POST['use_new_pwd'])],
-        [\Piwigo\Core\Config::userFields()['id'] => $user_id]
+        [\Piwigo\Config\Config::userFields()['password'] => \Piwigo\Config\Config::passwordHash()($_POST['use_new_pwd'])],
+        [\Piwigo\Config\Config::userFields()['id'] => $user_id]
     );
 
     /** @var array{user_id: int|null, username: string, email: string, language: string}|null $valid_reset_code */

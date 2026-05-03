@@ -33,7 +33,7 @@ class PwgImage
 
         $extension = strtolower(get_extension($this->source_filepath));
 
-        if (!in_array($extension, \Piwigo\Core\Config::pictureExtensions())) {
+        if (!in_array($extension, \Piwigo\Config\Config::pictureExtensions())) {
             die('[Image] unsupported file extension');
         }
 
@@ -367,7 +367,7 @@ class PwgImage
             $cmd_out = null;
             // check if magick is in path (command -v is bash-only; use where.exe on Windows)
             $find_cmd = PHP_OS_FAMILY === 'Windows' ? 'where' : 'command -v';
-            exec($find_cmd.' '.\Piwigo\Core\Config::extImagickDir().'magick', $cmd_out, $retval);
+            exec($find_cmd.' '.\Piwigo\Config\Config::extImagickDir().'magick', $cmd_out, $retval);
             if (0 == $retval) {
                 $page['ext_imagick_command'] = 'magick';
             } else {
@@ -384,7 +384,7 @@ class PwgImage
             return false;
         }
 
-        @exec(\Piwigo\Core\Config::extImagickDir().self::get_ext_imagick_command().' -version', $returnarray);
+        @exec(\Piwigo\Config\Config::extImagickDir().self::get_ext_imagick_command().' -version', $returnarray);
         if (!empty($returnarray[0]) and preg_match('/ImageMagick/i', $returnarray[0])) {
             if (preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray[0], $match)) {
                 self::$ext_imagick_version = $match[1];
@@ -402,7 +402,7 @@ class PwgImage
     public static function get_library(?string $library = null, ?string $extension = null): string|false
     {
         if (is_null($library)) {
-            $library = \Piwigo\Core\Config::graphicsLibrary();
+            $library = \Piwigo\Config\Config::graphicsLibrary();
         }
 
         // Choose image library

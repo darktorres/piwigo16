@@ -119,7 +119,7 @@ SELECT
 
             $query = '
 SELECT
-    '.\Piwigo\Core\Config::userFields()['id'].' AS id
+    '.\Piwigo\Config\Config::userFields()['id'].' AS id
   FROM '.USERS_TABLE.'
 ;';
             $all_user_ids = query2array($query, 'id', null);
@@ -296,12 +296,12 @@ $template->assign(
     'U_PHPINFO' => sprintf($url_format, 'phpinfo'),
     'PHP_DATATIME' => $php_current_timestamp,
     'DB_DATATIME' => $db_current_date,
-    'cache_sizes' => (\Piwigo\Core\Config::has('cache_sizes')) ? safe_unserialize((string)\Piwigo\Core\Config::cacheSizes()) : null,
+    'cache_sizes' => (\Piwigo\Config\Config::has('cache_sizes')) ? safe_unserialize((string)\Piwigo\Config\Config::cacheSizes()) : null,
     'time_elapsed_since_last_calc' => (function (): ?string {
-        if (!\Piwigo\Core\Config::has('cache_sizes')) {
+        if (!\Piwigo\Config\Config::has('cache_sizes')) {
             return null;
         }
-        $cs = safe_unserialize((string)\Piwigo\Core\Config::cacheSizes());
+        $cs = safe_unserialize((string)\Piwigo\Config\Config::cacheSizes());
         $entry = is_array($cs[3] ?? null) ? $cs[3] : [];
         return time_since(is_scalar($entry['value'] ?? null) ? (string)$entry['value'] : null, 'year');
     })(),
@@ -314,7 +314,7 @@ if (!empty($graphics_library)) {
     $template->assign('GRAPHICS_LIBRARY', $graphics_library);
 }
 
-if (\Piwigo\Core\Config::galleryLocked()) {
+if (\Piwigo\Config\Config::galleryLocked()) {
     $template->assign(
         [
         'U_MAINT_UNLOCK_GALLERY' => sprintf($url_format, 'unlock_gallery'),

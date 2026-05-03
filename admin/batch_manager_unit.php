@@ -61,7 +61,7 @@ SELECT id, date_creation
         $data['level'] = $_POST['level-'.$row['id']];
 
         $desc_key = 'description-'.(is_scalar($row['id']) ? (string) $row['id'] : '');
-        if (\Piwigo\Core\Config::allowHtmlDescriptions()) {
+        if (\Piwigo\Config\Config::allowHtmlDescriptions()) {
             $data['comment'] = @$_POST[$desc_key];
         } else {
             $desc_val = @$_POST[$desc_key];
@@ -173,10 +173,10 @@ $template->assign('ACTIVE_PLUGINS', array_keys($pwg_loaded_plugins));
 // how many items to display on this page
 if (!empty($_GET['display'])) {
     // conf_update_param('batch_manager_images_per_page_unit' , intval($_GET['display']));
-    // $page['nb_images'] = \Piwigo\Core\Config::batchManagerImagesPerPageUnit();
+    // $page['nb_images'] = \Piwigo\Config\Config::batchManagerImagesPerPageUnit();
     $page['nb_images'] = is_numeric($_GET['display']) ? (int) $_GET['display'] : 5;
-} elseif (in_array(\Piwigo\Core\Config::batchManagerImagesPerPageUnit(), [5, 10, 50])) {
-    $page['nb_images'] = \Piwigo\Core\Config::batchManagerImagesPerPageUnit();
+} elseif (in_array(\Piwigo\Config\Config::batchManagerImagesPerPageUnit(), [5, 10, 50])) {
+    $page['nb_images'] = \Piwigo\Config\Config::batchManagerImagesPerPageUnit();
 } else {
     $page['nb_images'] = 5;
 }
@@ -205,7 +205,7 @@ if (count($page['cat_elements_id']) > 0) {
 
     if (is_string($bmf['prefilter'] ?? null)
         and 'duplicates' == $bmf['prefilter']) {
-        \Piwigo\Core\Config::override('order_by', ' ORDER BY file, id');
+        \Piwigo\Config\Config::override('order_by', ' ORDER BY file, id');
     }
 
 
@@ -216,9 +216,9 @@ SELECT *
     if ($is_category) {
         $category_info = get_cat_info($bmf_category_val);
 
-        \Piwigo\Core\Config::override('order_by', \Piwigo\Core\Config::orderByInsideCategory());
+        \Piwigo\Config\Config::override('order_by', \Piwigo\Config\Config::orderByInsideCategory());
         if (!empty($category_info['image_order'])) {
-            \Piwigo\Core\Config::override('order_by', ' ORDER BY '.(is_scalar($category_info['image_order']) ? (string) $category_info['image_order'] : ''));
+            \Piwigo\Config\Config::override('order_by', ' ORDER BY '.(is_scalar($category_info['image_order']) ? (string) $category_info['image_order'] : ''));
         }
 
         $query .= '
@@ -234,7 +234,7 @@ SELECT *
     }
 
     $query .= '
-  '.\Piwigo\Core\Config::orderBy().'
+  '.\Piwigo\Config\Config::orderBy().'
   LIMIT '.$page['nb_images'].' OFFSET '.$page['start'].'
 ;';
     // $result = pwg_query($query);
@@ -243,10 +243,10 @@ SELECT *
     if (count($added_by_ids) > 0) {
         $query = '
 SELECT 
-    '.\Piwigo\Core\Config::userFields()['username'].' AS username,
-    '.\Piwigo\Core\Config::userFields()['id'].' AS id
+    '.\Piwigo\Config\Config::userFields()['username'].' AS username,
+    '.\Piwigo\Config\Config::userFields()['id'].' AS id
   FROM '.USERS_TABLE.'
-  WHERE '.\Piwigo\Core\Config::userFields()['id'].' IN ( '.implode(',', $added_by_ids).' )
+  WHERE '.\Piwigo\Config\Config::userFields()['id'].' IN ( '.implode(',', $added_by_ids).' )
 ;';
         $added_by_username_of = query2array($query, 'id', 'username');
     }

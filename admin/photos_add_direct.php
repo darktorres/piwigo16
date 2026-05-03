@@ -82,7 +82,7 @@ $template->assign('PHPWG_URL', PHPWG_URL);
 // |                             Formats Mode                              |
 // +-----------------------------------------------------------------------+
 
-$display_formats = \Piwigo\Core\Config::isFormatsEnabled() && isset($_GET['formats']);
+$display_formats = \Piwigo\Config\Config::isFormatsEnabled() && isset($_GET['formats']);
 
 $have_formats_original = false;
 $formats_original_info = [];
@@ -149,28 +149,28 @@ trigger_notify('loc_end_photo_add_direct');
 $unique_exts_for_json = array_unique(
     array_map(
         strtolower(...),
-        \Piwigo\Core\Config::uploadFormAllTypes() ? \Piwigo\Core\Config::fileExtensions() : \Piwigo\Core\Config::pictureExtensions()
+        \Piwigo\Config\Config::uploadFormAllTypes() ? \Piwigo\Config\Config::fileExtensions() : \Piwigo\Config\Config::pictureExtensions()
     )
 );
 
 $template->assign([
-  'ENABLE_FORMATS' => \Piwigo\Core\Config::isFormatsEnabled(),
+  'ENABLE_FORMATS' => \Piwigo\Config\Config::isFormatsEnabled(),
   'DISPLAY_FORMATS' => $display_formats,
   'HAVE_FORMATS_ORIGINAL' => $have_formats_original,
   'FORMATS_ORIGINAL_INFO' => $formats_original_info,
   'FORMATS_EXT_INFO' => $formats_ext_info,
   'SWITCH_FORMAT_MODE_URL' => get_root_url().'admin.php?page=photos_add'.($display_formats ? '' : '&formats'),
-  'format_ext' =>  implode(',', \Piwigo\Core\Config::formatExtensions()),
-  'str_format_ext' =>  implode(', ', \Piwigo\Core\Config::formatExtensions()),
+  'format_ext' =>  implode(',', \Piwigo\Config\Config::formatExtensions()),
+  'str_format_ext' =>  implode(', ', \Piwigo\Config\Config::formatExtensions()),
   'page_data_json' => json_encode([
       'pwg_token' => get_pwg_token(),
-      'chunk_size' => \Piwigo\Core\Config::uploadFormChunkSize().'kb',
-      'max_file_size' => \Piwigo\Core\Config::uploadFormMaxFileSize().'mb',
+      'chunk_size' => \Piwigo\Config\Config::uploadFormChunkSize().'kb',
+      'max_file_size' => \Piwigo\Config\Config::uploadFormMaxFileSize().'mb',
       'albumSummary_label' => l10n('Album "%s" now contains %d photos'),
       'batch_Label' => l10n('Manage this set of %d photos'),
       'file_ext' => implode(',', $unique_exts_for_json),
       'formatMode' => $display_formats,
-      'format_ext' => implode(',', \Piwigo\Core\Config::formatExtensions()),
+      'format_ext' => implode(',', \Piwigo\Config\Config::formatExtensions()),
       'format_remove' => l10n('Remove'),
       'format_update_warning' => l10n('This format already exists, it will be overwritten !'),
       'formatsAdded_label' => l10n('%d formats added for %d photos'),

@@ -192,7 +192,7 @@ $template->assign(
     ]
 );
 
-if (\Piwigo\Core\Config::activateComments()) {
+if (\Piwigo\Config\Config::activateComments()) {
     $template->assign('CAT_COMMENTABLE', boolean_to_string($category['commentable']));
 }
 
@@ -328,7 +328,7 @@ if (!$category['is_virtual']) {
     $template->assign('CAT_DIR_NAME', basename((string) $category_full_dir));
     $template->assign('CAT_MIN_DIR', get_min_local_dir($category_full_dir ?? ''));
 
-    if (\Piwigo\Core\Config::enableSynchronization()) {
+    if (\Piwigo\Config\Config::enableSynchronization()) {
         $template->assign(
             'U_SYNC',
             $base_url.'site_update&amp;site='.$category['site_id'].'&amp;cat_id='.$category['id']
@@ -353,7 +353,7 @@ if ($category['has_images'] or !empty($category['representative_picture_id'])) {
     // can the admin delete the current representant ?
     if (
         ($category['has_images']
-         and \Piwigo\Core\Config::allowRandomRepresentative())
+         and \Piwigo\Config\Config::allowRandomRepresentative())
         or
         (!$category['has_images']
          and !empty($category['representative_picture_id']))) {

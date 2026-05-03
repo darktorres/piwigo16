@@ -173,7 +173,7 @@ elseif (isset($_POST['submitAdd'])) {
 // +-----------------------------------------------------------------------+
 
 if (isset($_GET['parent_id'])) {
-    $navigation .= \Piwigo\Core\Config::levelSeparator();
+    $navigation .= \Piwigo\Config\Config::levelSeparator();
     $raw_parent_id = $_GET['parent_id'];
     $navigation .= get_cat_display_name_from_id(
         is_scalar($raw_parent_id) ? (int) $raw_parent_id : 0,
@@ -314,7 +314,7 @@ foreach ($categories as $category) {
         $tpl_cat['U_DELETE'] = $self_url.'&amp;delete='.$category['id'];
         $tpl_cat['U_DELETE'] .= '&amp;pwg_token='.get_pwg_token();
     } else {
-        if (\Piwigo\Core\Config::enableSynchronization()) {
+        if (\Piwigo\Config\Config::enableSynchronization()) {
             $tpl_cat['U_SYNC'] = $base_url.'site_update&amp;site=1&amp;cat_id='.$category['id'];
         }
     }

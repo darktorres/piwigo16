@@ -40,7 +40,7 @@ final class SrcImage
         $ext = strtolower(get_extension($path));
         $infos['file_ext'] = @strtolower(get_extension($file));
         $infos['path_ext'] = $ext;
-        if (in_array($ext, \Piwigo\Core\Config::pictureExtensions())) {
+        if (in_array($ext, \Piwigo\Config\Config::pictureExtensions())) {
             $this->rel_path = $path;
             $this->flags |= self::IS_ORIGINAL;
         } elseif (!empty($infos['representative_ext'])) {

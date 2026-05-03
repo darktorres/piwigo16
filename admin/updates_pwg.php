@@ -18,7 +18,7 @@ if (!defined('PHPWG_ROOT_PATH')) {
 global $template, $user, $page, $persistent_cache, $lang;
 
 
-if (!\Piwigo\Core\Config::enableCoreUpdate()) {
+if (!\Piwigo\Config\Config::enableCoreUpdate()) {
     die('Piwigo core update system is disabled');
 }
 

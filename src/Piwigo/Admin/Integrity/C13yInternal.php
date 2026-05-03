@@ -56,7 +56,7 @@ class C13yInternal
     public function c13y_exif(\Piwigo\Admin\Integrity\CheckIntegrity $c13y): void
     {
         foreach (['show_exif', 'use_exif'] as $value) {
-            if ((\Piwigo\Core\Config::get($value)) and (!function_exists('exif_read_data'))) {
+            if ((\Piwigo\Config\Config::get($value)) and (!function_exists('exif_read_data'))) {
                 $c13y->add_anomaly(
                     sprintf(l10n('%s value is not correct file because exif are not supported'), '$' . 'conf[\''.$value.'\']'),
                     null,
@@ -77,29 +77,29 @@ class C13yInternal
     public function c13y_user(\Piwigo\Admin\Integrity\CheckIntegrity $c13y): void
     {
         $c13y_users = [];
-        $c13y_users[\Piwigo\Core\Config::guestId()] = [
+        $c13y_users[\Piwigo\Config\Config::guestId()] = [
           'status' => 'guest',
           'l10n_non_existent' => 'Main "guest" user does not exist',
           'l10n_bad_status' => 'Main "guest" user status is incorrect'];
 
-        if (\Piwigo\Core\Config::guestId() != \Piwigo\Core\Config::defaultUserId()) {
-            $c13y_users[\Piwigo\Core\Config::defaultUserId()] = [
+        if (\Piwigo\Config\Config::guestId() != \Piwigo\Config\Config::defaultUserId()) {
+            $c13y_users[\Piwigo\Config\Config::defaultUserId()] = [
               'password' => null,
               'l10n_non_existent' => 'Default user does not exist'];
         }
 
-        $c13y_users[\Piwigo\Core\Config::webmasterId()] = [
+        $c13y_users[\Piwigo\Config\Config::webmasterId()] = [
           'status' => 'webmaster',
           'l10n_non_existent' => 'Main "webmaster" user does not exist',
           'l10n_bad_status' => 'Main "webmaster" user status is incorrect'];
 
         $query = '
-  select u.'.\Piwigo\Core\Config::userFields()['id'].' as id, ui.status
+  select u.'.\Piwigo\Config\Config::userFields()['id'].' as id, ui.status
   from '.USERS_TABLE.' as u
     left join '.USER_INFOS_TABLE.' as ui
-        on u.'.\Piwigo\Core\Config::userFields()['id'].' = ui.user_id
+        on u.'.\Piwigo\Config\Config::userFields()['id'].' = ui.user_id
   where
-    u.'.\Piwigo\Core\Config::userFields()['id'].' in ('.implode(',', array_keys($c13y_users)).')
+    u.'.\Piwigo\Config\Config::userFields()['id'].' in ('.implode(',', array_keys($c13y_users)).')
   ;';
 
 
@@ -144,11 +144,11 @@ class C13yInternal
             switch ($action) {
                 case 'creation':
                     $password = null;
-                    if ($id == \Piwigo\Core\Config::guestId()) {
+                    if ($id == \Piwigo\Config\Config::guestId()) {
                         $name = 'guest';
-                    } elseif ($id == \Piwigo\Core\Config::defaultUserId()) {
+                    } elseif ($id == \Piwigo\Config\Config::defaultUserId()) {
                         $name = 'guest';
-                    } elseif ($id == \Piwigo\Core\Config::webmasterId()) {
+                    } elseif ($id == \Piwigo\Config\Config::webmasterId()) {
                         $name = 'webmaster';
                         $password = generate_key(6);
                     }
@@ -179,11 +179,11 @@ class C13yInternal
                     }
                     break;
                 case 'status':
-                    if ($id == \Piwigo\Core\Config::guestId()) {
+                    if ($id == \Piwigo\Config\Config::guestId()) {
                         $status = 'guest';
-                    } elseif ($id == \Piwigo\Core\Config::defaultUserId()) {
+                    } elseif ($id == \Piwigo\Config\Config::defaultUserId()) {
                         $status = 'guest';
-                    } elseif ($id == \Piwigo\Core\Config::webmasterId()) {
+                    } elseif ($id == \Piwigo\Config\Config::webmasterId()) {
                         $status = 'webmaster';
                     }
 

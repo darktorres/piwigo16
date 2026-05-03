@@ -134,7 +134,7 @@ WHERE '.$where.'
             'IS_UPPERCAT' => ($selected_category !== null && $selected_category['id_uppercat'] == $row['id']) ? true : false,
             ]
         );
-        if (\Piwigo\Core\Config::indexNewIcon()) {
+        if (\Piwigo\Config\Config::indexNewIcon()) {
             $row['icon_ts'] = get_icon(is_string($row['max_date_last']) || is_null($row['max_date_last']) ? $row['max_date_last'] : (string) $row['max_date_last'], $child_date_last);
         }
         $cats[] = $row;
@@ -227,8 +227,8 @@ function get_category_preferred_image_orders(): array
       [l10n('Date created, old &rarr; new'),   'date_creation ASC',    true],
       [l10n('Date posted, new &rarr; old'),    'date_available DESC',  true],
       [l10n('Date posted, old &rarr; new'),    'date_available ASC',   true],
-      [l10n('Rating score, high &rarr; low'),  'rating_score DESC',    \Piwigo\Core\Config::rateEnabled()],
-      [l10n('Rating score, low &rarr; high'),  'rating_score ASC',     \Piwigo\Core\Config::rateEnabled()],
+      [l10n('Rating score, high &rarr; low'),  'rating_score DESC',    \Piwigo\Config\Config::rateEnabled()],
+      [l10n('Rating score, low &rarr; high'),  'rating_score ASC',     \Piwigo\Config\Config::rateEnabled()],
       [l10n('Visits, high &rarr; low'),        'hit DESC',             true],
       [l10n('Visits, low &rarr; high'),        'hit ASC',              true],
       [l10n('Permissions'),                    'level DESC',           is_admin()],
@@ -644,7 +644,7 @@ SELECT id
         $query .= '
   HAVING COUNT(DISTINCT category_id)='.count($cat_ids);
     }
-    $query .= "\n".(empty($order_by) ? \Piwigo\Core\Config::orderBy() : $order_by);
+    $query .= "\n".(empty($order_by) ? \Piwigo\Config\Config::orderBy() : $order_by);
 
     return array_map(fn ($v) => (int) $v, query2array($query, null, 'id'));
 }
@@ -723,7 +723,7 @@ function get_related_categories_menu(array $items, array $excluded_cat_ids = [])
 {
     global $page;
 
-    $common_cats = get_common_categories($items, \Piwigo\Core\Config::relatedAlbumsDisplayLimit(), $excluded_cat_ids);
+    $common_cats = get_common_categories($items, \Piwigo\Config\Config::relatedAlbumsDisplayLimit(), $excluded_cat_ids);
     // echo '<pre>'; print_r($common_cats); echo '</pre>';
 
     if (count($common_cats) == 0) {

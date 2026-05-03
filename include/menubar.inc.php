@@ -27,7 +27,7 @@ function initialize_menu(): void
     $menu = new BlockManager('menubar');
 
     // if guest_access is disabled, we only display the menus if the user is identified
-    if (\Piwigo\Core\Config::guestAccess() or !is_a_guest()) {
+    if (\Piwigo\Config\Config::guestAccess() or !is_a_guest()) {
         $menu->load_registered_blocks();
     }
     $menu->prepare_display();
@@ -37,9 +37,9 @@ function initialize_menu(): void
     }
 
     //--------------------------------------------------------------- external links
-    if (($block = $menu->get_block('mbLinks')) and !empty(\Piwigo\Core\Config::links())) {
+    if (($block = $menu->get_block('mbLinks')) and !empty(\Piwigo\Config\Config::links())) {
         $block->data = [];
-        foreach (\Piwigo\Core\Config::links() as $url => $url_data) {
+        foreach (\Piwigo\Config\Config::links() as $url => $url_data) {
             if (!is_array($url_data)) {
                 $url_data = ['label' => $url_data];
             }
@@ -72,7 +72,7 @@ function initialize_menu(): void
     //-------------------------------------------------------------- categories
     $block = $menu->get_block('mbCategories');
     //------------------------------------------------------------------------ filter
-    if (\Piwigo\Core\Config::menubarFilterIcon() and !empty(\Piwigo\Core\Config::filterPages()) and get_filter_page_value('used')) {
+    if (\Piwigo\Config\Config::menubarFilterIcon() and !empty(\Piwigo\Config\Config::filterPages()) and get_filter_page_value('used')) {
         if ($filter['enabled']) {
             $template->assign(
                 'U_STOP_FILTER',
@@ -100,7 +100,7 @@ function initialize_menu(): void
 
     if (
         isset($page['items'])
-        and count($page['items']) < \Piwigo\Core\Config::relatedAlbumsMaximumItemsToCompute()
+        and count($page['items']) < \Piwigo\Config\Config::relatedAlbumsMaximumItemsToCompute()
         and $block != null
         and !empty($page['items'])
     ) {
@@ -128,7 +128,7 @@ function initialize_menu(): void
     if ($block != null and 'picture' != script_basename()) {
         $tags = get_available_tags();
         usort($tags, fn (mixed $a, mixed $b): int => tags_counter_compare(is_array($a) ? $a : [], is_array($b) ? $b : []));
-        $tags = array_slice($tags, 0, \Piwigo\Core\Config::menubarTagCloudItemsNumber());
+        $tags = array_slice($tags, 0, \Piwigo\Config\Config::menubarTagCloudItemsNumber());
         foreach ($tags as $tag) {
             $tagArr = is_array($tag) ? $tag : [];
             $block->data[] = array_merge(
@@ -162,7 +162,7 @@ function initialize_menu(): void
             'NAME' => l10n('Most visited'),
           ];
 
-        if (\Piwigo\Core\Config::rateEnabled()) {
+        if (\Piwigo\Config\Config::rateEnabled()) {
             $block->data['best_rated'] =
              [
                'URL' => make_index_url(['section' => 'best_rated']),
@@ -198,7 +198,7 @@ function initialize_menu(): void
             'URL' =>
               make_index_url(
                   [
-                  'chronology_field' => (\Piwigo\Core\Config::calendarDatefield() == 'date_available'
+                  'chronology_field' => (\Piwigo\Config\Config::calendarDatefield() == 'date_available'
                                           ? 'posted' : 'created'),
                    'chronology_style' => 'monthly',
                    'chronology_view' => 'calendar',
@@ -236,7 +236,7 @@ function initialize_menu(): void
             'REL' => 'rel="search"',
           ];
 
-        if (\Piwigo\Core\Config::activateComments()) {
+        if (\Piwigo\Config\Config::activateComments()) {
             // comments link
             $block->data['comments'] =
               [
@@ -273,10 +273,10 @@ function initialize_menu(): void
             [
               'U_LOGIN' => get_root_url().'identification.php',
               'U_LOST_PASSWORD' => get_root_url().'password.php',
-              'AUTHORIZE_REMEMBERING' => \Piwigo\Core\Config::authorizeRemembering(),
+              'AUTHORIZE_REMEMBERING' => \Piwigo\Config\Config::authorizeRemembering(),
             ]
         );
-        if (\Piwigo\Core\Config::allowUserRegistration()) {
+        if (\Piwigo\Config\Config::allowUserRegistration()) {
             $template->assign('U_REGISTER', get_root_url().'register.php');
         }
     } else {
@@ -287,7 +287,7 @@ function initialize_menu(): void
 
         // the logout link has no meaning with Apache authentication : it is not
         // possible to logout with this kind of authentication.
-        if (!\Piwigo\Core\Config::apacheAuthentication()) {
+        if (!\Piwigo\Config\Config::apacheAuthentication()) {
             $template->assign('U_LOGOUT', get_root_url().'?act=logout');
         }
         if (is_admin()) {

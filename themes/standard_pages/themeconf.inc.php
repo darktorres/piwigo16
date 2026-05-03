@@ -12,7 +12,7 @@ $this->assign(
     array(
     'STD_PGS_SELECTED_SKIN' => conf_get_param('standard_pages_selected_skin', 'default'),
     'STD_PGS_SELECTED_LOGO' => conf_get_param('standard_pages_selected_logo', 'piwigo_logo'),
-    'GALLERY_TITLE' => isset($page['gallery_title']) ? $page['gallery_title'] : \Piwigo\Core\Config::galleryTitle(),
+    'GALLERY_TITLE' => isset($page['gallery_title']) ? $page['gallery_title'] : \Piwigo\Config\Config::galleryTitle(),
   )
 );
 

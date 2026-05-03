@@ -14,7 +14,7 @@ use Piwigo\Ws\PwgError;
 // +-----------------------------------------------------------------------+
 
 // by default we start with guest
-$user['id'] = \Piwigo\Core\Config::guestId();
+$user['id'] = \Piwigo\Config\Config::guestId();
 
 if (isset($_COOKIE[session_name()])) {
     if (isset($_GET['act']) and $_GET['act'] == 'logout') { // logout
@@ -26,12 +26,12 @@ if (isset($_COOKIE[session_name()])) {
 }
 
 // Now check the auto-login
-if ($user['id'] == \Piwigo\Core\Config::guestId()) {
+if ($user['id'] == \Piwigo\Config\Config::guestId()) {
     auto_login();
 }
 
 // using Apache authentication override the above user search
-if (\Piwigo\Core\Config::apacheAuthentication()) {
+if (\Piwigo\Config\Config::apacheAuthentication()) {
     $remote_user = null;
     foreach (['REMOTE_USER', 'REDIRECT_REMOTE_USER'] as $server_key) {
         if (isset($_SERVER[$server_key])) {
@@ -117,7 +117,7 @@ if (defined('IN_ADMIN') ? constant('IN_ADMIN') : false) {
 
 $user = build_user(is_numeric($user['id']) ? (int) $user['id'] : 0, $page['user_use_cache']);
 
-if (\Piwigo\Core\Config::browserLanguage() and (is_a_guest() or is_generic()) and $language = get_browser_language()) {
+if (\Piwigo\Config\Config::browserLanguage() and (is_a_guest() or is_generic()) and $language = get_browser_language()) {
     $user['language'] = $language;
 }
 trigger_notify('user_init', $user);

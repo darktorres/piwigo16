@@ -156,7 +156,7 @@ SELECT
   WHERE '.$where_separator.'
 ;';
 
-    // LIMIT '.\Piwigo\Core\Config::nbLogsPage().' OFFSET '.$page['start'].'
+    // LIMIT '.\Piwigo\Config\Config::nbLogsPage().' OFFSET '.$page['start'].'
 
     $result = pwg_query($query);
 
@@ -371,7 +371,7 @@ function history_autopurge(): void
 {
     global $logger;
 
-    if (0 == \Piwigo\Core\Config::historyAutopurgeKeepLines()) {
+    if (0 == \Piwigo\Config\Config::historyAutopurgeKeepLines()) {
         return;
     }
 
@@ -384,7 +384,7 @@ SELECT
 ;';
     [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
-    if ($count <= \Piwigo\Core\Config::historyAutopurgeKeepLines()) {
+    if ($count <= \Piwigo\Config\Config::historyAutopurgeKeepLines()) {
         history_remove_summarized_column();
         return; // no need to purge for now
     }
@@ -433,8 +433,8 @@ SELECT
 
     $search_min = [
       $history_id_last_summarized,
-      $history_id_latest - \Piwigo\Core\Config::historyAutopurgeKeepLines(),
-      $history_id_oldest + \Piwigo\Core\Config::historyAutopurgeBlocksize(),
+      $history_id_latest - \Piwigo\Config\Config::historyAutopurgeKeepLines(),
+      $history_id_oldest + \Piwigo\Config\Config::historyAutopurgeBlocksize(),
       ];
 
     $history_id_delete_before = min($search_min);
@@ -453,7 +453,7 @@ DELETE
 
 function history_remove_summarized_column(): void
 {
-    if (\Piwigo\Core\Config::has('history_summarized_dropped') and \Piwigo\Core\Config::historySummarizedDropped()) {
+    if (\Piwigo\Config\Config::has('history_summarized_dropped') and \Piwigo\Config\Config::historySummarizedDropped()) {
         return;
     }
 
@@ -464,7 +464,7 @@ SELECT
 ;';
     [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
-    if ($count > \Piwigo\Core\Config::historyAutopurgeKeepLines() + \Piwigo\Core\Config::historyAutopurgeBlocksize()) {
+    if ($count > \Piwigo\Config\Config::historyAutopurgeKeepLines() + \Piwigo\Config\Config::historyAutopurgeBlocksize()) {
         // it's not yet time to remove history.summarized
         return;
     }

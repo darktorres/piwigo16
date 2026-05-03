@@ -28,7 +28,7 @@ if ($localConfig !== false) {
 }
 
 defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
-defined('PWG_DERIVATIVE_DIR') or define('PWG_DERIVATIVE_DIR', \Piwigo\Core\Config::dataLocation().'i/');
+defined('PWG_DERIVATIVE_DIR') or define('PWG_DERIVATIVE_DIR', \Piwigo\Config\Config::dataLocation().'i/');
 
 $databaseConfig = realpath(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/database.inc.php');
 if ($databaseConfig !== false) {
@@ -36,12 +36,12 @@ if ($databaseConfig !== false) {
 }
 
 $logger = new Logger(array(
-  'directory' => PHPWG_ROOT_PATH . \Piwigo\Core\Config::dataLocation() . \Piwigo\Core\Config::logDir(),
-  'severity' => \Piwigo\Core\Config::logLevel(),
+  'directory' => PHPWG_ROOT_PATH . \Piwigo\Config\Config::dataLocation() . \Piwigo\Config\Config::logDir(),
+  'severity' => \Piwigo\Config\Config::logLevel(),
   // we use an hashed filename to prevent direct file access, and we salt with
   // the db_password instead of secret_key because the log must be usable in i.php
   // (secret_key is in the database)
-  'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . \Piwigo\Core\Config::dbPassword()) . '.txt',
+  'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . \Piwigo\Config\Config::dbPassword()) . '.txt',
   ));
 
 
@@ -74,7 +74,7 @@ function mkgetdir(string $dir, int $flags = 0): bool
             $dir = str_replace('/', DIRECTORY_SEPARATOR, $dir);
         }
         $umask = umask(0);
-        $mkd = @mkdir($dir, \Piwigo\Core\Config::chmodValue(), true);
+        $mkd = @mkdir($dir, \Piwigo\Config\Config::chmodValue(), true);
         umask($umask);
         if ($mkd == false && !is_dir($dir) /* retest existence because of potential concurrent i.php with slow file systems*/) {
             return false;
@@ -177,7 +177,7 @@ function parse_request(): \Piwigo\Image\DerivativeParams
 {
     global $page;
 
-    if (\Piwigo\Core\Config::questionMarkInUrls() == false and
+    if (\Piwigo\Config\Config::questionMarkInUrls() == false and
          isset($_SERVER['PATH_INFO']) and !empty($_SERVER['PATH_INFO'])) {
         $req = is_scalar($_SERVER['PATH_INFO']) ? (string) $_SERVER['PATH_INFO'] : '';
         $req = str_replace('//', '/', $req);
@@ -200,7 +200,7 @@ function parse_request(): \Piwigo\Image\DerivativeParams
     $req = ltrim($req, '/');
 
     foreach (preg_split('#/+#', $req) ?: [] as $token) {
-        preg_match(\Piwigo\Core\Config::syncCharsRegex(), $token) or ierror('Invalid chars in request', 400);
+        preg_match(\Piwigo\Config\Config::syncCharsRegex(), $token) or ierror('Invalid chars in request', 400);
     }
 
     $page['derivative_path'] = PHPWG_ROOT_PATH.PWG_DERIVATIVE_DIR.$req;
@@ -424,10 +424,10 @@ include_once(PHPWG_ROOT_PATH .'/include/derivative_std_params.inc.php');
 
 try {
     pwg_db_connect(
-        \Piwigo\Core\Config::dbHost(),
-        \Piwigo\Core\Config::dbUser(),
-        \Piwigo\Core\Config::dbPassword(),
-        \Piwigo\Core\Config::dbName()
+        \Piwigo\Config\Config::dbHost(),
+        \Piwigo\Config\Config::dbUser(),
+        \Piwigo\Config\Config::dbPassword(),
+        \Piwigo\Config\Config::dbName()
     );
 } catch (Exception $e) {
     $logger->error($e->getMessage(), 'i.php');
@@ -625,7 +625,7 @@ if (!$changes) {
     ierror($page['src_url'], 301);
 }
 
-if ($d_size[0] * $d_size[1] < \Piwigo\Core\Config::derivativesStripMetadataThreshold()) {// strip metadata for small images
+if ($d_size[0] * $d_size[1] < \Piwigo\Config\Config::derivativesStripMetadataThreshold()) {// strip metadata for small images
     $image->strip();
 }
 

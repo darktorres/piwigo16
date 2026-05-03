@@ -114,7 +114,7 @@ function get_regular_search_results(array $search, ?string $images_where = ''): 
 
     $image_ids_for_filter = [];
 
-    $display_filters = safe_unserialize(\Piwigo\Core\Config::filtersViews() ?? '');
+    $display_filters = safe_unserialize(\Piwigo\Config\Config::filtersViews() ?? '');
 
     foreach ($display_filters as $filt_name => $filt_conf) {
         $filt_conf = is_array($filt_conf) ? $filt_conf : [];
@@ -604,7 +604,7 @@ SELECT
     // ratings
     //
     $ratings_list = is_array($search_fields['ratings'] ?? null) ? $search_fields['ratings'] : [];
-    if (\Piwigo\Core\Config::rateEnabled() and !empty($search_fields['ratings']) and $rating_filter['access']) {
+    if (\Piwigo\Config\Config::rateEnabled() and !empty($search_fields['ratings']) and $rating_filter['access']) {
         $has_filters_filled = true;
 
         $filter_clauses = [];
@@ -742,7 +742,7 @@ SELECT
     id
   FROM '.IMAGES_TABLE.' i
   WHERE id IN ('.implode(',', $items).')
-  '.\Piwigo\Core\Config::orderBy();
+  '.\Piwigo\Config\Config::orderBy();
 
         $items = query2array($query, null, 'id');
     }
@@ -1705,7 +1705,7 @@ SELECT
         $token = $expr->stokens[$i];
 
         if (!empty($cat_ids)) {
-            if (\Piwigo\Core\Config::quickSearchIncludeSubAlbums()) {
+            if (\Piwigo\Config\Config::quickSearchIncludeSubAlbums()) {
                 $query = '
 SELECT
     id
@@ -1828,7 +1828,7 @@ function get_quick_search_results(string $q, array $options)
 
     $cache_key = $persistent_cache->make_key([
       strtolower($q),
-      \Piwigo\Core\Config::orderBy(),
+      \Piwigo\Config\Config::orderBy(),
       $user['id'],$user['cache_update_time'],
       isset($options['permissions']) ? (bool)$options['permissions'] : true,
       $options['images_where'] ?? '',
@@ -1883,7 +1883,7 @@ function get_quick_search_results_no_cache(string $q, array $options): array
 
     $createdDateAliases = ['taken', 'shot'];
     $postedDateAliases = ['added'];
-    if (\Piwigo\Core\Config::calendarDatefield() == 'date_creation') {
+    if (\Piwigo\Config\Config::calendarDatefield() == 'date_creation') {
         $createdDateAliases[] = 'date';
     } else {
         $postedDateAliases[] = 'date';
@@ -1987,7 +1987,7 @@ SELECT DISTINCT(id) FROM '.IMAGES_TABLE.' i';
     }
     $query .= '
   WHERE '.implode("\n AND ", $where_clauses)."\n".
-    \Piwigo\Core\Config::orderBy();
+    \Piwigo\Config\Config::orderBy();
 
     $ids = query2array($query, null, 'id');
 

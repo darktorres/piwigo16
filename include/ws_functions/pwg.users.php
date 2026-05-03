@@ -56,11 +56,11 @@ use Piwigo\Ws\PwgNamedStruct;
 
     if (!empty($params['user_id'])) {
         $user_id_arr = is_array($params['user_id']) ? $params['user_id'] : [];
-        $where_clauses[] = 'u.'.\Piwigo\Core\Config::userFields()['id'].' IN('. implode(',', array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $user_id_arr)) .')';
+        $where_clauses[] = 'u.'.\Piwigo\Config\Config::userFields()['id'].' IN('. implode(',', array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $user_id_arr)) .')';
     }
 
     if (!empty($params['username'])) {
-        $where_clauses[] = 'u.'.\Piwigo\Core\Config::userFields()['username'].' LIKE \''.pwg_db_real_escape_string(is_scalar($params['username']) ? (string) $params['username'] : '').'\'';
+        $where_clauses[] = 'u.'.\Piwigo\Config\Config::userFields()['username'].' LIKE \''.pwg_db_real_escape_string(is_scalar($params['username']) ? (string) $params['username'] : '').'\'';
     }
 
     $filtered_groups = [];
@@ -71,9 +71,9 @@ use Piwigo\Ws\PwgNamedStruct;
         while ($row = pwg_db_fetch_assoc($filtered_groups_res)) {
             $filtered_groups[] = $row['id'];
         }
-        $filter_where_clause = '('.'u.'.\Piwigo\Core\Config::userFields()['username'].' LIKE \'%'.
+        $filter_where_clause = '('.'u.'.\Piwigo\Config\Config::userFields()['username'].' LIKE \'%'.
         pwg_db_real_escape_string($filter_str).'%\' OR '
-        .'u.'.\Piwigo\Core\Config::userFields()['email'].' LIKE \'%'.
+        .'u.'.\Piwigo\Config\Config::userFields()['email'].' LIKE \'%'.
         pwg_db_real_escape_string($filter_str).'%\'';
 
         if (!empty($filtered_groups)) {
@@ -120,14 +120,14 @@ use Piwigo\Ws\PwgNamedStruct;
     }
 
     if (!empty($params['min_level'])) {
-        if (!in_array($params['min_level'], \Piwigo\Core\Config::availablePermissionLevels())) {
+        if (!in_array($params['min_level'], \Piwigo\Config\Config::availablePermissionLevels())) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid level');
         }
         $where_clauses[] = 'ui.level >= '.(is_numeric($params['min_level']) ? (int) $params['min_level'] : 0);
     }
 
     if (!empty($params['max_level'])) {
-        if (!in_array($params['max_level'], \Piwigo\Core\Config::availablePermissionLevels())) {
+        if (!in_array($params['max_level'], \Piwigo\Config\Config::availablePermissionLevels())) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid level');
         }
         $where_clauses[] = 'ui.level <= '.(is_numeric($params['max_level']) ? (int) $params['max_level'] : 0);
@@ -140,10 +140,10 @@ use Piwigo\Ws\PwgNamedStruct;
 
     if (!empty($params['exclude'])) {
         $exclude_arr = is_array($params['exclude']) ? $params['exclude'] : [];
-        $where_clauses[] = 'u.'.\Piwigo\Core\Config::userFields()['id'].' NOT IN('. implode(',', array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $exclude_arr)) .')';
+        $where_clauses[] = 'u.'.\Piwigo\Config\Config::userFields()['id'].' NOT IN('. implode(',', array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $exclude_arr)) .')';
     }
 
-    $display = ['u.'.\Piwigo\Core\Config::userFields()['id'] => 'id'];
+    $display = ['u.'.\Piwigo\Config\Config::userFields()['id'] => 'id'];
 
     $display_param = is_scalar($params['display']) ? (string) $params['display'] : 'none';
     if ($display_param != 'none') {
@@ -179,10 +179,10 @@ use Piwigo\Ws\PwgNamedStruct;
         }
 
         if (isset($params['display']['username'])) {
-            $display['u.'.\Piwigo\Core\Config::userFields()['username']] = 'username';
+            $display['u.'.\Piwigo\Config\Config::userFields()['username']] = 'username';
         }
         if (isset($params['display']['email'])) {
-            $display['u.'.\Piwigo\Core\Config::userFields()['email']] = 'email';
+            $display['u.'.\Piwigo\Config\Config::userFields()['email']] = 'email';
         }
 
         $ui_fields = [
@@ -222,9 +222,9 @@ SELECT DISTINCT ';
     $query .= '
   FROM '. USERS_TABLE .' AS u
     INNER JOIN '. USER_INFOS_TABLE .' AS ui
-      ON u.'. \Piwigo\Core\Config::userFields()['id'] .' = ui.user_id
+      ON u.'. \Piwigo\Config\Config::userFields()['id'] .' = ui.user_id
     LEFT JOIN '. USER_GROUP_TABLE .' AS ug
-      ON u.'. \Piwigo\Core\Config::userFields()['id'] .' = ug.user_id
+      ON u.'. \Piwigo\Config\Config::userFields()['id'] .' = ug.user_id
   WHERE
     '. implode(' AND ', $where_clauses) .'
   ORDER BY '. $order_str;
@@ -389,7 +389,7 @@ SELECT DISTINCT ';
         return new PwgError(WS_ERR_INVALID_PARAM, 'Name field must not be empty');
     }
 
-    if (\Piwigo\Core\Config::doublePasswordTypeInAdmin()) {
+    if (\Piwigo\Config\Config::doublePasswordTypeInAdmin()) {
         if ($params['password'] != $params['password_confirm']) {
             return new PwgError(WS_ERR_INVALID_PARAM, l10n('The passwords do not match'));
         }
@@ -463,9 +463,9 @@ SELECT DISTINCT ';
 
     $protected_users = [
       $user['id'],
-      \Piwigo\Core\Config::guestId(),
-      \Piwigo\Core\Config::defaultUserId(),
-      \Piwigo\Core\Config::webmasterId(),
+      \Piwigo\Config\Config::guestId(),
+      \Piwigo\Config\Config::defaultUserId(),
+      \Piwigo\Config\Config::webmasterId(),
       ];
 
     // an admin can't delete other admin/webmaster
@@ -575,12 +575,12 @@ SELECT
     global $user;
 
     // ACTIVATE_COMMENTS
-    if (!\Piwigo\Core\Config::activateComments()) {
+    if (!\Piwigo\Config\Config::activateComments()) {
         unset($params['show_nb_comments']);
     }
 
     // ALLOW_USER_CUSTOMIZATION
-    if (!\Piwigo\Core\Config::allowUserCustomization()) {
+    if (!\Piwigo\Config\Config::allowUserCustomization()) {
         unset(
             $params['nb_image_page'],
             $params['theme'],
@@ -593,7 +593,7 @@ SELECT
     }
 
     // SPECIAL_USER
-    $special_user = in_array($user['id'], [\Piwigo\Core\Config::guestId(), \Piwigo\Core\Config::defaultUserId()]);
+    $special_user = in_array($user['id'], [\Piwigo\Config\Config::guestId(), \Piwigo\Config\Config::defaultUserId()]);
     if ($special_user) {
         unset(
             $params['password'],
@@ -608,13 +608,13 @@ SELECT
         }
 
         $query = '
-SELECT '.\Piwigo\Core\Config::userFields()['password'].' AS password
+SELECT '.\Piwigo\Config\Config::userFields()['password'].' AS password
   FROM '.USERS_TABLE.'
-  WHERE '.\Piwigo\Core\Config::userFields()['id'].' = \''.$user['id'].'\'
+  WHERE '.\Piwigo\Config\Config::userFields()['id'].' = \''.$user['id'].'\'
 ;';
         [$current_password] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
-        if (!\Piwigo\Core\Config::passwordVerify()($params['password'], $current_password)) {
+        if (!\Piwigo\Config\Config::passwordVerify()($params['password'], $current_password)) {
             return new PwgError(403, l10n('Current password is wrong'));
         }
 
@@ -782,7 +782,7 @@ function ws_users_favorites_getList(array $params, \Piwigo\Ws\PwgServer &$servic
     check_user_favorites();
 
     $order_by = ws_std_image_sql_order($params, 'i.');
-    $order_by = empty($order_by) ? \Piwigo\Core\Config::orderBy() : 'ORDER BY '.$order_by;
+    $order_by = empty($order_by) ? \Piwigo\Config\Config::orderBy() : 'ORDER BY '.$order_by;
 
     $query = '
 SELECT
@@ -896,9 +896,9 @@ SELECT
     $gen_time_validation = is_string($generate_link['time_validation'] ?? null) ? $generate_link['time_validation'] : '';
     if ($params['send_by_mail'] and !empty($user_lost_email)) {
         if ($first_login) {
-            $email_params = pwg_generate_set_password_mail($user_lost_username, $gen_password_link, \Piwigo\Core\Config::galleryTitle(), $gen_time_validation);
+            $email_params = pwg_generate_set_password_mail($user_lost_username, $gen_password_link, \Piwigo\Config\Config::galleryTitle(), $gen_time_validation);
         } else {
-            $email_params = pwg_generate_reset_password_mail($user_lost_username, $gen_password_link, \Piwigo\Core\Config::galleryTitle(), $gen_time_validation);
+            $email_params = pwg_generate_reset_password_mail($user_lost_username, $gen_password_link, \Piwigo\Config\Config::galleryTitle(), $gen_time_validation);
         }
         // Here we remove the display of errors because they prevent the response from being parsed
         if (@pwg_mail($user_lost_email, $email_params)) {

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Unit\Menu;
 
 use PHPUnit\Framework\TestCase;
-use Piwigo\Core\Config;
+use Piwigo\Config\Config;
 use Piwigo\Menu\BlockManager;
 use Piwigo\Menu\DisplayBlock;
 use Piwigo\Menu\RegisteredBlock;

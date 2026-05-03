@@ -55,7 +55,7 @@ $menu = new BlockManager('menubar');
 $menu->load_registered_blocks();
 $reg_blocks = $menu->get_registered_blocks();
 
-$mb_conf = \Piwigo\Core\Config::get('blk_' . $menu->get_id());
+$mb_conf = \Piwigo\Config\Config::get('blk_' . $menu->get_id());
 if (is_string($mb_conf)) {
     $mb_conf = unserialize($mb_conf);
 }

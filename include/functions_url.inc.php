@@ -56,15 +56,15 @@ function get_absolute_root_url($with_scheme = true): string
 
             $url_port = null;
 
-            if ('none' == \Piwigo\Core\Config::urlPort()) {
+            if ('none' == \Piwigo\Config\Config::urlPort()) {
                 // do nothing
-            } elseif ('auto' == \Piwigo\Core\Config::urlPort()) {
+            } elseif ('auto' == \Piwigo\Config\Config::urlPort()) {
                 if ((!$is_https && $_SERVER['SERVER_PORT'] != 80) || ($is_https && $_SERVER['SERVER_PORT'] != 443)) {
                     $url_port = ':'.(is_scalar($_SERVER['SERVER_PORT']) ? (string) $_SERVER['SERVER_PORT'] : '');
                 }
             } else {
                 // we have a custom port
-                $url_port = ':'.\Piwigo\Core\Config::urlPort();
+                $url_port = ':'.\Piwigo\Config\Config::urlPort();
             }
 
             if (!empty($url_port) and strrchr($url, ':') != $url_port) {
@@ -117,10 +117,10 @@ function add_url_params(string $url, array $params, string $arg_separator = '&am
 function make_index_url(array $params = []): string
 {
     $url = get_root_url().'index';
-    if (\Piwigo\Core\Config::phpExtensionInUrls()) {
+    if (\Piwigo\Config\Config::phpExtensionInUrls()) {
         $url .= '.php';
     }
-    if (\Piwigo\Core\Config::questionMarkInUrls()) {
+    if (\Piwigo\Config\Config::questionMarkInUrls()) {
         $url .= '?';
     }
 
@@ -215,14 +215,14 @@ function duplicate_picture_url(array $redefined = [], array $removed = []): stri
 function make_picture_url(array $params): string
 {
     $url = get_root_url().'picture';
-    if (\Piwigo\Core\Config::phpExtensionInUrls()) {
+    if (\Piwigo\Config\Config::phpExtensionInUrls()) {
         $url .= '.php';
     }
-    if (\Piwigo\Core\Config::questionMarkInUrls()) {
+    if (\Piwigo\Config\Config::questionMarkInUrls()) {
         $url .= '?';
     }
     $url .= '/';
-    switch (\Piwigo\Core\Config::pictureUrlStyle()) {
+    switch (\Piwigo\Config\Config::pictureUrlStyle()) {
         case 'id-file':
             $url .= is_scalar($params['image_id']) ? (string) $params['image_id'] : '';
             if (isset($params['image_file'])) {
@@ -327,7 +327,7 @@ function make_section_in_url(array $params): string
                     $section_string .= '/category/';
                     if (empty($cat['permalink'])) {
                         $section_string .= is_scalar($cat['id']) ? (string) $cat['id'] : '';
-                        if (\Piwigo\Core\Config::categoryUrlStyle() == 'id-name') {
+                        if (\Piwigo\Config\Config::categoryUrlStyle() == 'id-name') {
                             $section_string .= '-'.str2url(is_scalar($cat['name']) ? (string) $cat['name'] : '');
                         }
                     } else {
@@ -343,7 +343,7 @@ function make_section_in_url(array $params): string
 
                             if (empty($category['permalink'])) {
                                 $section_string .= is_scalar($category['id']) ? (string) $category['id'] : '';
-                                if (\Piwigo\Core\Config::categoryUrlStyle() == 'id-name') {
+                                if (\Piwigo\Config\Config::categoryUrlStyle() == 'id-name') {
                                     $section_string .= '-'.str2url(is_scalar($category['name']) ? (string) $category['name'] : '');
                                 }
                             } else {
@@ -363,7 +363,7 @@ function make_section_in_url(array $params): string
                     if (!is_array($tag)) {
                         continue;
                     }
-                    switch (\Piwigo\Core\Config::tagUrlStyle()) {
+                    switch (\Piwigo\Config\Config::tagUrlStyle()) {
                         case 'id':
                             $section_string .= '/'. (is_scalar($tag['id']) ? (string) $tag['id'] : '');
                             break;
@@ -537,7 +537,7 @@ function parse_section_url(array $tokens, int &$next_token): array
                 break;
             }
 
-            if (\Piwigo\Core\Config::tagUrlStyle() != 'tag' and preg_match('/^(\d+)(?:-(.*)|)$/', $tokens[$i], $matches)) {
+            if (\Piwigo\Config\Config::tagUrlStyle() != 'tag' and preg_match('/^(\d+)(?:-(.*)|)$/', $tokens[$i], $matches)) {
                 $requested_tag_ids[] = $matches[1];
             } else {
                 $requested_tag_url_names[] = $tokens[$i];
@@ -771,11 +771,11 @@ function embellish_url(string|array $url): string|array
  */
 function get_gallery_home_url(): string
 {
-    if (!empty(\Piwigo\Core\Config::galleryUrl())) {
-        if (url_is_remote(\Piwigo\Core\Config::galleryUrl()) or \Piwigo\Core\Config::galleryUrl()[0] == '/') {
-            return \Piwigo\Core\Config::galleryUrl();
+    if (!empty(\Piwigo\Config\Config::galleryUrl())) {
+        if (url_is_remote(\Piwigo\Config\Config::galleryUrl()) or \Piwigo\Config\Config::galleryUrl()[0] == '/') {
+            return \Piwigo\Config\Config::galleryUrl();
         }
-        return get_root_url().\Piwigo\Core\Config::galleryUrl();
+        return get_root_url().\Piwigo\Config\Config::galleryUrl();
     } else {
         return make_index_url();
     }

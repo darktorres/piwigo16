@@ -280,7 +280,7 @@ function migrate_line(string $line): array
 {
     $original = $line;
 
-    // ---- (A) isset($conf['key']) → null !== \Piwigo\Core\Config::get / has()
+    // ---- (A) isset($conf['key']) → null !== \Piwigo\Config\Config::get / has()
     $line = preg_replace_callback(
         "/isset\(\s*\\\$conf\['([^']+)'\]\s*\)/",
         fn ($m) => "\\Piwigo\\Core\\Config::has('" . $m[1] . "')",

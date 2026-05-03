@@ -73,7 +73,7 @@ SELECT id, file, path, representative_ext
     }
 
     $args = [
-      'subject' => l10n('[%s] Visit album %s', \Piwigo\Core\Config::galleryTitle(), trigger_change('render_category_name', $category['name'], 'admin_cat_list')),
+      'subject' => l10n('[%s] Visit album %s', \Piwigo\Config\Config::galleryTitle(), trigger_change('render_category_name', $category['name'], 'admin_cat_list')),
       // TODO : change this language variable to 'Visit album %s'
       // TODO : 'language_selected' => ....
       ];
@@ -112,10 +112,10 @@ SELECT
     ui.user_id,
     ui.status,
     ui.language,
-    u.'.\Piwigo\Core\Config::userFields()['email'].' AS email,
-    u.'.\Piwigo\Core\Config::userFields()['username'].' AS username
+    u.'.\Piwigo\Config\Config::userFields()['email'].' AS email,
+    u.'.\Piwigo\Config\Config::userFields()['username'].' AS username
   FROM '.USER_INFOS_TABLE.' AS ui
-    JOIN '.USERS_TABLE.' AS u ON u.'.\Piwigo\Core\Config::userFields()['id'].' = ui.user_id
+    JOIN '.USERS_TABLE.' AS u ON u.'.\Piwigo\Config\Config::userFields()['id'].' = ui.user_id
   WHERE ui.user_id IN ('.implode(',', array_map(fn ($v) => is_scalar($v) ? (string) $v : '', (array) $_POST['users'])).')
 ;';
         $users = query2array($query);
@@ -201,11 +201,11 @@ $template->assign(
     ]
 );
 
-if (\Piwigo\Core\Config::authKeyDuration() > 0) {
+if (\Piwigo\Config\Config::authKeyDuration() > 0) {
     $template->assign(
         'auth_key_duration',
         time_since(
-            strtotime('now -'.\Piwigo\Core\Config::authKeyDuration().' second') ?: null,
+            strtotime('now -'.\Piwigo\Config\Config::authKeyDuration().' second') ?: null,
             'second',
             null,
             false
@@ -299,8 +299,8 @@ SELECT
 if (count($user_ids) > 0) {
     $query = '
 SELECT
-    '.\Piwigo\Core\Config::userFields()['id'].' AS id,
-    '.\Piwigo\Core\Config::userFields()['username'].' AS username
+    '.\Piwigo\Config\Config::userFields()['id'].' AS id,
+    '.\Piwigo\Config\Config::userFields()['username'].' AS username
   FROM '.USERS_TABLE.'
   WHERE id IN ('.implode(',', $user_ids).')
 ;';

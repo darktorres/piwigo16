@@ -33,7 +33,7 @@ $search = array(
 );
 
 // list of filters in user preferences
-$filters_views_raw = conf_get_param('filters_views', \Piwigo\Core\Config::defaultFiltersViews());
+$filters_views_raw = conf_get_param('filters_views', \Piwigo\Config\Config::defaultFiltersViews());
 $filters_views = safe_unserialize(is_scalar($filters_views_raw) ? (string) $filters_views_raw : '');
 
 //change the name of the keys so that they can be used with this part of the program

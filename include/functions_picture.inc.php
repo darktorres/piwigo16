@@ -20,8 +20,8 @@ declare(strict_types=1);
 function get_default_slideshow_params(): array
 {
     return [
-      'period' => \Piwigo\Core\Config::slideshowPeriod(),
-      'repeat' => \Piwigo\Core\Config::slideshowRepeat(),
+      'period' => \Piwigo\Config\Config::slideshowPeriod(),
+      'repeat' => \Piwigo\Config\Config::slideshowRepeat(),
       'play' => true,
       ];
 }
@@ -35,10 +35,10 @@ function get_default_slideshow_params(): array
  */
 function correct_slideshow_params(array $params = []): array
 {
-    if ($params['period'] < \Piwigo\Core\Config::slideshowPeriodMin()) {
-        $params['period'] = \Piwigo\Core\Config::slideshowPeriodMin();
-    } elseif ($params['period'] > \Piwigo\Core\Config::slideshowPeriodMax()) {
-        $params['period'] = \Piwigo\Core\Config::slideshowPeriodMax();
+    if ($params['period'] < \Piwigo\Config\Config::slideshowPeriodMin()) {
+        $params['period'] = \Piwigo\Config\Config::slideshowPeriodMin();
+    } elseif ($params['period'] > \Piwigo\Config\Config::slideshowPeriodMax()) {
+        $params['period'] = \Piwigo\Config\Config::slideshowPeriodMax();
     }
 
     return $params;

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
+use Piwigo\Config\Config;
+
 /**
  * Typed facade over the $lang global array.
  *

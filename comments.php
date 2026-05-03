@@ -20,7 +20,7 @@ include_once(PHPWG_ROOT_PATH.'include/common.inc.php');
 \Piwigo\Core\Kernel::boot();
 include_once(PHPWG_ROOT_PATH.'include/functions_comment.inc.php');
 
-if (!\Piwigo\Core\Config::activateComments()) {
+if (!\Piwigo\Config\Config::activateComments()) {
     page_not_found(null);
 }
 
@@ -47,14 +47,14 @@ $sort_by = array(
 $items_number = array(5,10,20,50,'all');
 
 // if the default value is not in the expected values, we add it in the $items_number array
-if (!in_array(\Piwigo\Core\Config::commentsPageNbComments(), $items_number)) {
+if (!in_array(\Piwigo\Config\Config::commentsPageNbComments(), $items_number)) {
     $items_number_new = array();
 
     $is_inserted = false;
 
     foreach ($items_number as $number) {
-        if ($number > \Piwigo\Core\Config::commentsPageNbComments() or ($number == 'all' and !$is_inserted)) {
-            $items_number_new[] = \Piwigo\Core\Config::commentsPageNbComments();
+        if ($number > \Piwigo\Config\Config::commentsPageNbComments() or ($number == 'all' and !$is_inserted)) {
+            $items_number_new[] = \Piwigo\Config\Config::commentsPageNbComments();
             $is_inserted = true;
         }
 
@@ -106,7 +106,7 @@ if ($get_sort_order !== null && isset($sort_order[$get_sort_order])) {
 
 // number of items to display
 //
-$page['items_number'] = \Piwigo\Core\Config::commentsPageNbComments();
+$page['items_number'] = \Piwigo\Config\Config::commentsPageNbComments();
 $get_items_number = input_string('items_number', null, $_GET);
 if ($get_items_number !== null) {
     $page['items_number'] = $get_items_number;
@@ -135,7 +135,7 @@ if ($get_cat !== null && 0 != $get_cat) {
 $get_author = input_string('author', null, $_GET);
 if (!empty($get_author)) {
     $page['where_clauses'][] =
-      '(u.'.\Piwigo\Core\Config::userFields()['username'].' = \''.$get_author.'\' OR author = \''.$get_author.'\')';
+      '(u.'.\Piwigo\Config\Config::userFields()['username'].' = \''.$get_author.'\' OR author = \''.$get_author.'\')';
 }
 
 // search a specific comment (if you're coming directly from an admin
@@ -356,7 +356,7 @@ SELECT SQL_CALC_FOUND_ROWS com.id AS comment_id,
        ic.category_id,
        com.author,
        com.author_id,
-       u.'.\Piwigo\Core\Config::userFields()['email'].' AS user_email,
+       u.'.\Piwigo\Config\Config::userFields()['email'].' AS user_email,
        com.email,
        com.date,
        com.website_url,
@@ -366,7 +366,7 @@ SELECT SQL_CALC_FOUND_ROWS com.id AS comment_id,
     INNER JOIN '.COMMENTS_TABLE.' AS com
     ON ic.image_id = com.image_id
     LEFT JOIN '.USERS_TABLE.' As u
-    ON u.'.\Piwigo\Core\Config::userFields()['id'].' = com.author_id
+    ON u.'.\Piwigo\Config\Config::userFields()['id'].' = com.author_id
   WHERE '.implode('
     AND ', $page['where_clauses']).'
   GROUP BY comment_id

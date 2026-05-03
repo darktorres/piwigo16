@@ -17,9 +17,9 @@ global $template, $user, $page, $persistent_cache, $lang, $url_self, $picture, $
 
 
 include_once(PHPWG_ROOT_PATH.'/include/functions_metadata.inc.php');
-if ((\Piwigo\Core\Config::showExif()) and (function_exists('exif_read_data'))) {
+if ((\Piwigo\Config\Config::showExif()) and (function_exists('exif_read_data'))) {
     $exif_mapping = [];
-    foreach (\Piwigo\Core\Config::showExifFields() as $field) {
+    foreach (\Piwigo\Config\Config::showExifFields() as $field) {
         $exif_mapping[$field] = $field;
     }
 
@@ -31,7 +31,7 @@ if ((\Piwigo\Core\Config::showExif()) and (function_exists('exif_read_data'))) {
             'lines' => [],
           ];
 
-        foreach (\Piwigo\Core\Config::showExifFields() as $field) {
+        foreach (\Piwigo\Config\Config::showExifFields() as $field) {
             if (!str_contains((string) $field, ';')) {
                 // template cannot deal with an array as value, we skip it
                 if (isset($exif[$field]) and !is_array($exif[$field])) {
@@ -57,8 +57,8 @@ if ((\Piwigo\Core\Config::showExif()) and (function_exists('exif_read_data'))) {
     }
 }
 
-if (\Piwigo\Core\Config::showIptc()) {
-    $iptc = get_iptc_data($picture['current']['src_image']->get_path(), \Piwigo\Core\Config::showIptcMapping(), ', ');
+if (\Piwigo\Config\Config::showIptc()) {
+    $iptc = get_iptc_data($picture['current']['src_image']->get_path(), \Piwigo\Config\Config::showIptcMapping(), ', ');
 
     if (count($iptc) > 0) {
         $tpl_meta = [

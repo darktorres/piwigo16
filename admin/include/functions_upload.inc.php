@@ -156,7 +156,7 @@ function add_uploaded_file(string $source_filepath, ?string $original_filename =
     }
 
     // we only try to detect duplicate on a new image, not when updating an existing image
-    if (!isset($image_id) and \Piwigo\Core\Config::uploadDetectDuplicate()) {
+    if (!isset($image_id) and \Piwigo\Config\Config::uploadDetectDuplicate()) {
         $query = '
 SELECT
     id
@@ -211,7 +211,7 @@ SELECT
 
         // upload directory hierarchy
         $upload_dir = sprintf(
-            PHPWG_ROOT_PATH.\Piwigo\Core\Config::uploadDir().'/%s/%s/%s',
+            PHPWG_ROOT_PATH.\Piwigo\Config\Config::uploadDir().'/%s/%s/%s',
             $year,
             $month,
             $day
@@ -234,7 +234,7 @@ SELECT
             $file_path .= 'jpg';
         } elseif (IMAGETYPE_WEBP == $type) {
             $file_path .= 'webp';
-        } elseif (\Piwigo\Core\Config::has('upload_form_all_types') and \Piwigo\Core\Config::uploadFormAllTypes()) {
+        } elseif (\Piwigo\Config\Config::has('upload_form_all_types') and \Piwigo\Config\Config::uploadFormAllTypes()) {
             $original_extension = strtolower(get_extension($original_filename ?? ''));
 
             $finfo = finfo_open(FILEINFO_MIME_TYPE);
@@ -252,7 +252,7 @@ SELECT
                 die($error_msg);
             }
 
-            if (in_array($original_extension, \Piwigo\Core\Config::fileExtensions())) {
+            if (in_array($original_extension, \Piwigo\Config\Config::fileExtensions())) {
                 $file_path .= $original_extension;
             } else {
                 unlink($source_filepath);
@@ -288,18 +288,18 @@ SELECT
     $logger->info('Handling ' . (string)$file_path . ' got ' . (string)$representative_ext);
 
     if (PwgImage::get_library() != 'gd') {
-        if (\Piwigo\Core\Config::originalResize()) {
-            $need_resize = need_resize($file_path, \Piwigo\Core\Config::originalResizeMaxwidth(), \Piwigo\Core\Config::originalResizeMaxheight());
+        if (\Piwigo\Config\Config::originalResize()) {
+            $need_resize = need_resize($file_path, \Piwigo\Config\Config::originalResizeMaxwidth(), \Piwigo\Config\Config::originalResizeMaxheight());
 
             if ($need_resize) {
                 $img = new PwgImage($file_path);
 
                 $img->pwg_resize(
                     $file_path,
-                    \Piwigo\Core\Config::originalResizeMaxwidth(),
-                    \Piwigo\Core\Config::originalResizeMaxheight(),
-                    \Piwigo\Core\Config::originalResizeQuality(),
-                    \Piwigo\Core\Config::uploadFormAutomaticRotation(),
+                    \Piwigo\Config\Config::originalResizeMaxwidth(),
+                    \Piwigo\Config\Config::originalResizeMaxheight(),
+                    \Piwigo\Config\Config::originalResizeQuality(),
+                    \Piwigo\Config\Config::uploadFormAutomaticRotation(),
                     false
                 );
 
@@ -368,8 +368,8 @@ SELECT
     add_uploaded_file_add_to_categories((int) $image_id, $categories);
 
     // update metadata from the uploaded file (exif/iptc)
-    if (\Piwigo\Core\Config::useExif() and !function_exists('exif_read_data')) {
-        \Piwigo\Core\Config::override('use_exif', false);
+    if (\Piwigo\Config\Config::useExif() and !function_exists('exif_read_data')) {
+        \Piwigo\Config\Config::override('use_exif', false);
     }
     sync_metadata([(int) $image_id]);
 
@@ -406,27 +406,27 @@ SELECT
 /** @param int[]|null $categories */
 function add_uploaded_file_add_to_categories(int $image_id, ?array $categories): void
 {
-    if (!\Piwigo\Core\Config::has('lounge_active')) {
+    if (!\Piwigo\Config\Config::has('lounge_active')) {
         conf_update_param('lounge_active', false, true);
     }
 
-    if (!\Piwigo\Core\Config::loungeActive()) {
+    if (!\Piwigo\Config\Config::loungeActive()) {
         // check if we need to use the lounge from now
         [$nb_photos] = pwg_db_fetch_row(pwg_query('SELECT COUNT(*) FROM '.IMAGES_TABLE.';')) ?? [null];
-        if ($nb_photos >= \Piwigo\Core\Config::loungeActivateThreshold()) {
+        if ($nb_photos >= \Piwigo\Config\Config::loungeActivateThreshold()) {
             conf_update_param('lounge_active', true, true);
         }
     }
 
     if (isset($categories) and count($categories) > 0) {
-        if (\Piwigo\Core\Config::loungeActive()) {
+        if (\Piwigo\Config\Config::loungeActive()) {
             fill_lounge([$image_id], $categories);
         } else {
             associate_images_to_categories([$image_id], $categories);
         }
     }
 
-    if (!\Piwigo\Core\Config::loungeActive()) {
+    if (!\Piwigo\Config\Config::loungeActive()) {
         invalidate_user_cache();
     }
 }
@@ -551,7 +551,7 @@ function upload_file_pdf(?string $representative_ext, string $file_path): ?strin
     $representative_file_path = original_to_representative($file_path, $ext);
     prepare_directory(dirname($representative_file_path));
 
-    $exec = \Piwigo\Core\Config::extImagickDir().PwgImage::get_ext_imagick_command();
+    $exec = \Piwigo\Config\Config::extImagickDir().PwgImage::get_ext_imagick_command();
     $exec .= ' "'.realpath($file_path).'"[0]';
     if ('jpg' == $ext) {
         $exec .= ' -quality '.$jpg_quality;
@@ -595,7 +595,7 @@ function upload_file_heic(?string $representative_ext, string $file_path): ?stri
 
     [$w, $h] = get_optimal_dimensions_for_representative();
 
-    $exec = \Piwigo\Core\Config::extImagickDir().PwgImage::get_ext_imagick_command();
+    $exec = \Piwigo\Config\Config::extImagickDir().PwgImage::get_ext_imagick_command();
     $exec .= ' "'.realpath($file_path).'"';
     $exec .= ' -sampling-factor 4:2:0 -quality 85 -interlace JPEG -colorspace sRGB -auto-orient +repage -resize "'.$w.'x'.$h.'>"';
     $exec .= ' "'.$representative_file_path.'"';
@@ -636,15 +636,15 @@ function upload_file_tiff(?string $representative_ext, string $file_path): ?stri
     $representative_file_path = dirname((string) $file_path).'/pwg_representative/';
     $representative_file_path .= get_filename_wo_extension(basename((string) $file_path)).'.';
 
-    $representative_ext = \Piwigo\Core\Config::tiffRepresentativeExt();
+    $representative_ext = \Piwigo\Config\Config::tiffRepresentativeExt();
     $representative_file_path .= $representative_ext;
 
     prepare_directory(dirname($representative_file_path));
 
-    $exec = \Piwigo\Core\Config::extImagickDir().PwgImage::get_ext_imagick_command();
+    $exec = \Piwigo\Config\Config::extImagickDir().PwgImage::get_ext_imagick_command();
     $exec .= ' "'.realpath($file_path).'"';
 
-    if ('jpg' == \Piwigo\Core\Config::tiffRepresentativeExt()) {
+    if ('jpg' == \Piwigo\Config\Config::tiffRepresentativeExt()) {
         $exec .= ' -quality 98';
     }
 
@@ -712,7 +712,7 @@ function upload_file_video(?string $representative_ext, string $file_path): ?str
     $logger->info(__FUNCTION__.', Poster at '.$second.'s');
 
     // Generate poster, see https://trac.ffmpeg.org/wiki/Seeking
-    $ffmpeg = \Piwigo\Core\Config::ffmpegDir().'ffmpeg';
+    $ffmpeg = \Piwigo\Config\Config::ffmpegDir().'ffmpeg';
     $ffmpeg .= ' -ss '.$second;  // Fast seeking
     $ffmpeg .= ' -i "'.$file_path.'"'; // Video file
     $ffmpeg .= ' -frames:v 1';  // Extract one frame
@@ -772,7 +772,7 @@ function upload_file_psd(?string $representative_ext, string $file_path): ?strin
 
     prepare_directory(dirname($representative_file_path));
 
-    $exec = \Piwigo\Core\Config::extImagickDir().PwgImage::get_ext_imagick_command();
+    $exec = \Piwigo\Config\Config::extImagickDir().PwgImage::get_ext_imagick_command();
 
     $exec .= ' "'.realpath($file_path).'"';
 
@@ -829,7 +829,7 @@ function upload_file_eps(?string $representative_ext, string $file_path): ?strin
 
     // convert -density 300 image.eps -resize 2048x2048 image.png
 
-    $exec = \Piwigo\Core\Config::extImagickDir().PwgImage::get_ext_imagick_command();
+    $exec = \Piwigo\Config\Config::extImagickDir().PwgImage::get_ext_imagick_command();
     $exec .= ' "'.realpath($file_path).'"';
     $exec .= ' -density 300';
     $exec .= ' -resize 2048x2048';
@@ -874,7 +874,7 @@ function need_resize(string $image_filepath, int|string $max_width, int|string $
 {
     global $logger;
 
-    if (!in_array(strtolower(get_extension($image_filepath)), \Piwigo\Core\Config::pictureExtensions())) {
+    if (!in_array(strtolower(get_extension($image_filepath)), \Piwigo\Config\Config::pictureExtensions())) {
         return false;
     }
 
@@ -907,10 +907,10 @@ function pwg_image_infos(string $path): array
 /** @return string[] */
 function is_valid_image_extension(string $extension): array
 {
-    if (\Piwigo\Core\Config::has('upload_form_all_types') and \Piwigo\Core\Config::uploadFormAllTypes()) {
-        $extensions = \Piwigo\Core\Config::fileExtensions();
+    if (\Piwigo\Config\Config::has('upload_form_all_types') and \Piwigo\Config\Config::uploadFormAllTypes()) {
+        $extensions = \Piwigo\Config\Config::fileExtensions();
     } else {
-        $extensions = \Piwigo\Core\Config::pictureExtensions();
+        $extensions = \Piwigo\Config\Config::pictureExtensions();
     }
 
     return array_unique(array_map(strtolower(...), $extensions));
@@ -979,21 +979,21 @@ function add_upload_error(string $upload_id, string $error_message): void
 
 function ready_for_upload_message(): ?string
 {
-    $relative_dir = preg_replace('#^'.PHPWG_ROOT_PATH.'#', '', (string) \Piwigo\Core\Config::uploadDir());
+    $relative_dir = preg_replace('#^'.PHPWG_ROOT_PATH.'#', '', (string) \Piwigo\Config\Config::uploadDir());
 
-    if (!is_dir(\Piwigo\Core\Config::uploadDir())) {
-        if (!is_writable(dirname((string) \Piwigo\Core\Config::uploadDir()))) {
+    if (!is_dir(\Piwigo\Config\Config::uploadDir())) {
+        if (!is_writable(dirname((string) \Piwigo\Config\Config::uploadDir()))) {
             return sprintf(
                 l10n('Create the "%s" directory at the root of your Piwigo installation'),
                 $relative_dir
             );
         }
     } else {
-        $upload_dir = \Piwigo\Core\Config::uploadDir();
+        $upload_dir = \Piwigo\Config\Config::uploadDir();
         if (!is_writable($upload_dir)) {
             @chmod($upload_dir, 0777);
         }
-        if (!is_writable(\Piwigo\Core\Config::uploadDir())) {
+        if (!is_writable(\Piwigo\Config\Config::uploadDir())) {
             return sprintf(
                 l10n('Give write access (chmod 777) to "%s" directory at the root of your Piwigo installation'),
                 $relative_dir

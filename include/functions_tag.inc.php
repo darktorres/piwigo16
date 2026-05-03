@@ -176,9 +176,9 @@ function add_level_to_tags(array $tags): array
     // tag levels threshold calculation: a tag with an average rate must have
     // the middle level.
     $threshold_of_level = [];
-    for ($i = 1; $i < \Piwigo\Core\Config::tagsLevels(); $i++) {
+    for ($i = 1; $i < \Piwigo\Config\Config::tagsLevels(); $i++) {
         $threshold_of_level[$i] =
-          2 * $i * $tag_average_count / \Piwigo\Core\Config::tagsLevels();
+          2 * $i * $tag_average_count / \Piwigo\Config\Config::tagsLevels();
     }
 
     // display sorted tags
@@ -189,7 +189,7 @@ function add_level_to_tags(array $tags): array
         $tag['level'] = 1;
 
         // based on threshold, determine current tag level
-        for ($i = \Piwigo\Core\Config::tagsLevels() - 1; $i >= 1; $i--) {
+        for ($i = \Piwigo\Config\Config::tagsLevels() - 1; $i >= 1; $i--) {
             if ((is_numeric($tag['counter']) ? (int) $tag['counter'] : 0) > $threshold_of_level[$i]) {
                 $tag['level'] = $i + 1;
                 break;
@@ -254,7 +254,7 @@ SELECT id
         $query .= '
   HAVING COUNT(DISTINCT tag_id)='.count($tag_ids);
     }
-    $query .= "\n".(empty($order_by) ? \Piwigo\Core\Config::orderBy() : $order_by);
+    $query .= "\n".(empty($order_by) ? \Piwigo\Config\Config::orderBy() : $order_by);
 
     return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, query2array($query, null, 'id'));
 }

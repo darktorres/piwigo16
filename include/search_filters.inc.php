@@ -10,7 +10,7 @@ global $template, $user, $page, $persistent_cache, $lang;
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-$filters_views_raw = conf_get_param('filters_views', \Piwigo\Core\Config::defaultFiltersViews());
+$filters_views_raw = conf_get_param('filters_views', \Piwigo\Config\Config::defaultFiltersViews());
 $filters_views_str = is_array($filters_views_raw) ? $filters_views_raw : (is_string($filters_views_raw) ? $filters_views_raw : '');
 /** @var array<string, array<string,mixed>> $filters_views */
 $filters_views = safe_unserialize($filters_views_str);
@@ -397,10 +397,10 @@ SELECT
 
             $query = '
 SELECT
-    '.\Piwigo\Core\Config::userFields()['id'].' AS id,
-    '.\Piwigo\Core\Config::userFields()['username'].' AS username
+    '.\Piwigo\Config\Config::userFields()['id'].' AS id,
+    '.\Piwigo\Config\Config::userFields()['username'].' AS username
   FROM '.USERS_TABLE.'
-  WHERE '.\Piwigo\Core\Config::userFields()['id'].' IN ('.implode(',', $user_ids).')
+  WHERE '.\Piwigo\Config\Config::userFields()['id'].' IN ('.implode(',', $user_ids).')
 ;';
             $username_of = query2array($query, 'id', 'username');
 
@@ -507,7 +507,7 @@ SELECT
     }
 
     // For rating
-    if (\Piwigo\Core\Config::rateEnabled()) {
+    if (\Piwigo\Config\Config::rateEnabled()) {
         $template->assign('SHOW_FILTER_RATINGS', true);
 
         if (isset($my_search['fields']['ratings']) and $display_filters['rating']['access']) {
@@ -816,7 +816,7 @@ SELECT
         'global_params'               => $my_search,
         'search_id'                   => $page['search'],
         'fullname_of_cat'             => $fullname_of ?? [],
-        'show_filter_ratings'         => \Piwigo\Core\Config::rateEnabled() ? true : false,
+        'show_filter_ratings'         => \Piwigo\Config\Config::rateEnabled() ? true : false,
         'sliders'                     => $sliders_data,
         'str_word_widget_label'       => l10n('Search for words'),
         'str_tags_widget_label'       => l10n('Tag'),

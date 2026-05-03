@@ -6,7 +6,7 @@ namespace Piwigo\Tests\Unit\Cache;
 
 use PHPUnit\Framework\TestCase;
 use Piwigo\Cache\PersistentFileCache;
-use Piwigo\Core\Config;
+use Piwigo\Config\Config;
 
 /**
  * Unit tests for PersistentFileCache.

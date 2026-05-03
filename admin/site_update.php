@@ -24,7 +24,7 @@ include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
 
-if (!\Piwigo\Core\Config::enableSynchronization()) {
+if (!\Piwigo\Config\Config::enableSynchronization()) {
     die('synchronization is disabled');
 }
 
@@ -225,16 +225,16 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
     // new categories are the directories not present yet in the database
     foreach (array_diff($fs_fulldirs, array_keys($db_fulldirs)) as $fulldir) {
         $dir = basename((string) $fulldir);
-        if (preg_match(\Piwigo\Core\Config::syncCharsRegex(), $dir)) {
+        if (preg_match(\Piwigo\Config\Config::syncCharsRegex(), $dir)) {
             $insert = [
               'id'          => $next_id++,
               'dir'         => $dir,
               'name'        => str_replace('_', ' ', $dir),
               'site_id'     => $site_id,
               'commentable' =>
-                boolean_to_string(\Piwigo\Core\Config::newcatDefaultCommentable()),
-              'status'      => \Piwigo\Core\Config::newcatDefaultStatus(),
-              'visible'     => boolean_to_string(\Piwigo\Core\Config::newcatDefaultVisible()),
+                boolean_to_string(\Piwigo\Config\Config::newcatDefaultCommentable()),
+              'status'      => \Piwigo\Config\Config::newcatDefaultStatus(),
+              'visible'     => boolean_to_string(\Piwigo\Config\Config::newcatDefaultVisible()),
               ];
 
             if (isset($db_fulldirs[dirname((string) $fulldir)])) {
@@ -305,7 +305,7 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
             pwg_activity('album', $category_ids, 'add', ['sync' => true]);
 
             $category_up = implode(',', array_unique($category_up));
-            if (\Piwigo\Core\Config::inheritanceByDefault() and !empty($category_up)) {
+            if (\Piwigo\Config\Config::inheritanceByDefault() and !empty($category_up)) {
                 $query = '
           SELECT *
           FROM '.GROUP_ACCESS_TABLE.'
@@ -471,7 +471,7 @@ SELECT id, path
             continue;
         }
         $filename = basename((string) $path);
-        if (!preg_match(\Piwigo\Core\Config::syncCharsRegex(), $filename)) {
+        if (!preg_match(\Piwigo\Config\Config::syncCharsRegex(), $filename)) {
             $errors[] = [
               'path' => $path,
               'type' => 'PWG-UPDATE-1',
@@ -507,7 +507,7 @@ SELECT id, path
           'info' => l10n('added'),
           ];
 
-        if (\Piwigo\Core\Config::isFormatsEnabled()) {
+        if (\Piwigo\Config\Config::isFormatsEnabled()) {
             $fs_path_formats = is_array($fs[$path]) && is_array($fs[$path]['formats'] ?? null) ? $fs[$path]['formats'] : [];
             foreach ($fs_path_formats as $ext => $filesize) {
                 $insert_formats[] = [
@@ -527,7 +527,7 @@ SELECT id, path
     }
 
     // search new/removed formats on photos already registered in database
-    if (\Piwigo\Core\Config::isFormatsEnabled()) {
+    if (\Piwigo\Config\Config::isFormatsEnabled()) {
         $db_elements_str = array_map(fn ($v) => is_scalar($v) ? (string) $v : '', $db_elements);
         $db_elements_flip = array_flip($db_elements_str);
 

@@ -25,7 +25,7 @@ include_once(PHPWG_ROOT_PATH.'/include/functions_metadata.inc.php');
 /** @return array<mixed> */
 function get_sync_iptc_data(string $file): array
 {
-    $map = \Piwigo\Core\Config::useIptcMapping();
+    $map = \Piwigo\Config\Config::useIptcMapping();
 
     $iptc = get_iptc_data($file, $map);
 
@@ -64,7 +64,7 @@ function get_sync_iptc_data(string $file): array
 /** @return array<mixed> */
 function get_sync_exif_data(string $file): array
 {
-    $exif = get_exif_data($file, \Piwigo\Core\Config::useExifMapping());
+    $exif = get_exif_data($file, \Piwigo\Config\Config::useExifMapping());
 
     foreach ($exif as $pwg_key => $value) {
         if (in_array($pwg_key, ['date_creation', 'date_available'])) {
@@ -106,20 +106,20 @@ function get_sync_metadata_attributes(): array
 {
     $update_fields = ['filesize', 'width', 'height'];
 
-    if (\Piwigo\Core\Config::useExif()) {
+    if (\Piwigo\Config\Config::useExif()) {
         $update_fields =
           array_merge(
               $update_fields,
-              array_keys(\Piwigo\Core\Config::useExifMapping()),
+              array_keys(\Piwigo\Config\Config::useExifMapping()),
               ['latitude', 'longitude']
           );
     }
 
-    if (\Piwigo\Core\Config::useIptc()) {
+    if (\Piwigo\Config\Config::useIptc()) {
         $update_fields =
           array_merge(
               $update_fields,
-              array_keys(\Piwigo\Core\Config::useIptcMapping())
+              array_keys(\Piwigo\Config\Config::useIptcMapping())
           );
     }
 
@@ -207,12 +207,12 @@ function get_sync_metadata(array $infos): array|false
         $file = PHPWG_ROOT_PATH.(is_scalar($infos['path'] ?? null) ? (string) $infos['path'] : '');
     }
 
-    if (\Piwigo\Core\Config::useExif()) {
+    if (\Piwigo\Config\Config::useExif()) {
         $exif = get_sync_exif_data($file);
         $infos = array_merge($infos, $exif);
     }
 
-    if (\Piwigo\Core\Config::useIptc()) {
+    if (\Piwigo\Config\Config::useIptc()) {
         $iptc = get_sync_iptc_data($file);
         $infos = array_merge($infos, $iptc);
     }
@@ -369,7 +369,7 @@ SELECT id, path, representative_ext
  */
 function metadata_normalize_keywords_string($keywords_string): string
 {
-    $keywords_string = preg_replace(\Piwigo\Core\Config::metadataKeywordSeparatorRegex(), ',', $keywords_string);
+    $keywords_string = preg_replace(\Piwigo\Config\Config::metadataKeywordSeparatorRegex(), ',', $keywords_string);
     // new lines are always considered as keyword separators
     $keywords_string = str_replace(["\r\n", "\n", "\r"], ',', $keywords_string ?? '');
     $keywords_string = preg_replace('/,+/', ',', $keywords_string);

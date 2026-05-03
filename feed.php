@@ -75,7 +75,7 @@ SELECT user_id,
 } else {
     $image_only = true;
     if (!is_a_guest()) {// auto session was created - so switch to guest
-        $user = build_user(\Piwigo\Core\Config::guestId(), true);
+        $user = build_user(\Piwigo\Config\Config::guestId(), true);
     }
 }
 
@@ -95,7 +95,7 @@ class PiwigoFeedCreator extends UniversalFeedCreator
 }
 $rss = new PiwigoFeedCreator();
 $rss->encoding = get_pwg_charset();
-$rss->title = \Piwigo\Core\Config::galleryTitle();
+$rss->title = \Piwigo\Config\Config::galleryTitle();
 $rss->title .= ' (as '.stripslashes($user['username']).')';
 
 $rss->link = get_gallery_home_url();
@@ -123,7 +123,7 @@ if (!$image_only) {
         $item->descriptionHtmlSyndicated = true;
 
         $item->date = ts_to_iso8601(datetime_to_ts($dbnow));
-        $item->author = \Piwigo\Core\Config::rssReedAuthor();
+        $item->author = \Piwigo\Config\Config::rssReedAuthor();
         $item->guid = sprintf('%s', $dbnow);
         ;
 
@@ -150,7 +150,7 @@ UPDATE '.USER_FEED_TABLE.'
     }
 }
 
-$dates = get_recent_post_dates_array(\Piwigo\Core\Config::recentPostDates()['RSS']);
+$dates = get_recent_post_dates_array(\Piwigo\Config\Config::recentPostDates()['RSS']);
 
 foreach ($dates as $date_detail) { // for each recent post date we create a feed item
     if (!is_array($date_detail)) {
@@ -169,21 +169,21 @@ foreach ($dates as $date_detail) { // for each recent post date we create a feed
     );
 
     $item->description .=
-      '<a href="'.make_index_url().'">'.\Piwigo\Core\Config::galleryTitle().'</a><br> ';
+      '<a href="'.make_index_url().'">'.\Piwigo\Config\Config::galleryTitle().'</a><br> ';
 
     $item->description .= get_html_description_recent_post_date($date_detail);
 
     $item->descriptionHtmlSyndicated = true;
 
     $item->date = ts_to_iso8601(datetime_to_ts($date));
-    $item->author = \Piwigo\Core\Config::rssReedAuthor();
+    $item->author = \Piwigo\Config\Config::rssReedAuthor();
     $item->guid = sprintf('%s', 'pics-'.$date);
     ;
 
     $rss->addItem($item);
 }
 
-$fileName = PHPWG_ROOT_PATH.\Piwigo\Core\Config::dataLocation().'tmp';
+$fileName = PHPWG_ROOT_PATH.\Piwigo\Config\Config::dataLocation().'tmp';
 mkgetdir($fileName); // just in case
 $fileName .= '/feed.xml';
 // send XML feed

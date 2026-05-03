@@ -114,7 +114,7 @@ SELECT
 
             $query = '
 SELECT
-    '.\Piwigo\Core\Config::userFields()['id'].' AS id
+    '.\Piwigo\Config\Config::userFields()['id'].' AS id
   FROM '.USERS_TABLE.'
 ;';
             $all_user_ids = query2array($query, 'id', null);
@@ -258,7 +258,7 @@ if ($register_activity) {
 
 $template->set_filenames(['maintenance' => 'maintenance_actions.tpl']);
 $pwg_token = get_pwg_token();
-$gallery_locked = \Piwigo\Core\Config::galleryLocked();
+$gallery_locked = \Piwigo\Config\Config::galleryLocked();
 $template->assign('page_data_json', json_encode([
     'unit_MB'                     => l10n('%s MB'),
     'no_time_elapsed'             => l10n('right now'),
@@ -318,12 +318,12 @@ $template->assign(
     'PHP_DATATIME' => $php_current_timestamp,
     'DB_DATATIME' => $db_current_date,
     'pwg_token' => $pwg_token,
-    'cache_sizes' => (\Piwigo\Core\Config::has('cache_sizes')) ? safe_unserialize((string)\Piwigo\Core\Config::cacheSizes()) : null,
+    'cache_sizes' => (\Piwigo\Config\Config::has('cache_sizes')) ? safe_unserialize((string)\Piwigo\Config\Config::cacheSizes()) : null,
     'time_elapsed_since_last_calc' => (function (): ?string {
-        if (!\Piwigo\Core\Config::has('cache_sizes')) {
+        if (!\Piwigo\Config\Config::has('cache_sizes')) {
             return null;
         }
-        $cs = safe_unserialize((string)\Piwigo\Core\Config::cacheSizes());
+        $cs = safe_unserialize((string)\Piwigo\Config\Config::cacheSizes());
         $entry = is_array($cs[3] ?? null) ? $cs[3] : [];
         return time_since(is_scalar($entry['value'] ?? null) ? (string)$entry['value'] : null, 'year');
     })(),
@@ -334,7 +334,7 @@ $template->assign(
 switch (PwgImage::get_library()) {
     case 'ext_imagick':
         $library = 'External ImageMagick';
-        exec(\Piwigo\Core\Config::extImagickDir().PwgImage::get_ext_imagick_command().' -version', $returnarray);
+        exec(\Piwigo\Config\Config::extImagickDir().PwgImage::get_ext_imagick_command().' -version', $returnarray);
         if (preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray[0], $match)) {
             $library .= ' ' . $match[1];
         }
@@ -357,7 +357,7 @@ switch (PwgImage::get_library()) {
         break;
 }
 
-if (\Piwigo\Core\Config::galleryLocked()) {
+if (\Piwigo\Config\Config::galleryLocked()) {
     $template->assign(
         [
         'U_MAINT_UNLOCK_GALLERY' => sprintf($url_format, 'unlock_gallery'),

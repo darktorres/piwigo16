@@ -22,7 +22,7 @@ check_status(ACCESS_FREE);
 
 //----------------------------------------------------------- user registration
 
-if (!\Piwigo\Core\Config::allowUserRegistration()) {
+if (!\Piwigo\Config\Config::allowUserRegistration()) {
     page_forbidden('User registration closed');
 }
 
@@ -95,7 +95,7 @@ $template->assign([
   'F_ACTION' => 'register.php',
   'F_LOGIN' => $login,
   'F_EMAIL' => $email,
-  'obligatory_user_mail_address' => \Piwigo\Core\Config::obligatoryUserMailAddress(),
+  'obligatory_user_mail_address' => \Piwigo\Config\Config::obligatoryUserMailAddress(),
 ]);
 
 // include menubar

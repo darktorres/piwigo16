@@ -25,15 +25,15 @@ if (defined('IN_ADMIN') ? constant('IN_ADMIN') : false) {
 $template->assign(
     [
     'GALLERY_TITLE' =>
-      $page['gallery_title'] ?? \Piwigo\Core\Config::galleryTitle(),
+      $page['gallery_title'] ?? \Piwigo\Config\Config::galleryTitle(),
 
     'PAGE_BANNER' =>
       trigger_change(
           'render_page_banner',
           str_replace(
               '%gallery_title%',
-              \Piwigo\Core\Config::galleryTitle(),
-              $page['page_banner'] ?? \Piwigo\Core\Config::pageBanner()
+              \Piwigo\Config\Config::galleryTitle(),
+              $page['page_banner'] ?? \Piwigo\Config\Config::pageBanner()
           )
       ),
 
@@ -45,7 +45,7 @@ $template->assign(
 
     'U_HOME' => get_gallery_home_url(),
 
-    'LEVEL_SEPARATOR' => \Piwigo\Core\Config::levelSeparator(),
+    'LEVEL_SEPARATOR' => \Piwigo\Config\Config::levelSeparator(),
 
     'SHOW_MOBILE_APP_BANNER' => $show_mobile_app_banner,
 
@@ -62,7 +62,7 @@ if (!empty($header_notes)) {
 }
 
 // No referencing is required
-if (!\Piwigo\Core\Config::metaRef()) {
+if (!\Piwigo\Config\Config::metaRef()) {
     $page['meta_robots']['noindex'] = 1;
     $page['meta_robots']['nofollow'] = 1;
 }

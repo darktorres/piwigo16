@@ -15,7 +15,7 @@ global $template, $user, $page, $persistent_cache, $lang, $url_self, $picture, $
  *
  */
 
-if (\Piwigo\Core\Config::rateEnabled()) {
+if (\Piwigo\Config\Config::rateEnabled()) {
     $rate_summary = [ 'count' => 0, 'score' => $picture['current']['rating_score'], 'average' => null ];
     if (null != $rate_summary['score']) {
         $query = '
@@ -29,7 +29,7 @@ SELECT COUNT(rate) AS count
     $template->assign('rate_summary', $rate_summary);
 
     $user_rate = null;
-    if (\Piwigo\Core\Config::rateAnonymous() or is_autorize_status(ACCESS_CLASSIC)) {
+    if (\Piwigo\Config\Config::rateAnonymous() or is_autorize_status(ACCESS_CLASSIC)) {
         if ($rate_summary['count'] > 0) {
             $query = 'SELECT rate
       FROM '.RATE_TABLE.'
@@ -60,7 +60,7 @@ SELECT COUNT(rate) AS count
                   ['action' => 'rate']
               ),
               'USER_RATE' => $user_rate,
-              'marks'    => \Piwigo\Core\Config::rateItems(),
+              'marks'    => \Piwigo\Config\Config::rateItems(),
             ]
         );
     }

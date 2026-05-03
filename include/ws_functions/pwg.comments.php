@@ -25,7 +25,7 @@ use Piwigo\Ws\PwgError;
  */
 function ws_userComments_getList(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
 {
-    if (!\Piwigo\Core\Config::activateComments()) {
+    if (!\Piwigo\Config\Config::activateComments()) {
         return new PwgError(403, 'Comments are disabled');
     }
 
@@ -107,7 +107,7 @@ SELECT
     c.date,
     c.author,
     c.author_id,
-    '.\Piwigo\Core\Config::userFields()['username'].' AS username,
+    '.\Piwigo\Config\Config::userFields()['username'].' AS username,
     ui.status,
     c.content,
     i.path,
@@ -120,7 +120,7 @@ SELECT
     INNER JOIN '.IMAGES_TABLE.' AS i
       ON i.id = c.image_id
     LEFT JOIN '.USERS_TABLE.' AS u
-      ON u.'.\Piwigo\Core\Config::userFields()['id'].' = c.author_id
+      ON u.'.\Piwigo\Config\Config::userFields()['id'].' = c.author_id
     LEFT JOIN '.USER_INFOS_TABLE.' AS ui
       ON ui.user_id = c.author_id
   WHERE '.implode(' AND ', $where_clauses).'
@@ -142,7 +142,7 @@ SELECT
         );
         $medium = $medium_derivative !== null ? $medium_derivative->get_url() : null;
 
-        if (empty($row['author_id']) or $row['author_id'] == \Piwigo\Core\Config::guestId()) {
+        if (empty($row['author_id']) or $row['author_id'] == \Piwigo\Config\Config::guestId()) {
             $author_name = $row['author'];
         } else {
             $author_name = stripslashes((string) ($row['username'] ?? $row['author'] ?? l10n('guest')));
@@ -155,7 +155,7 @@ SELECT
           'file' => $row['file'],
           'image_date_available' => format_date((string) $row['date_available'], ['day_name','day','month','year','time']),
           'author' => trigger_change('render_comment_author', $author_name),
-          'author_status' => \Piwigo\Core\Config::webmasterId() == $row['author_id'] ? 'main_user' : $row['status'],
+          'author_status' => \Piwigo\Config\Config::webmasterId() == $row['author_id'] ? 'main_user' : $row['status'],
           'date' => format_date((string) $row['date'], ['day_name','day','month','year','time']),
           'content' => trigger_change('render_comment_content', $row['content']),
           'raw_content' => $row['content'],

@@ -47,7 +47,7 @@ function get_iptc_data(string $filename, array $map, string $array_sep = ','): a
                     foreach (array_keys($map, $iptc_key) as $pwg_key) {
                         $result[$pwg_key] = $value;
 
-                        if (!\Piwigo\Core\Config::allowHtmlInMetadata()) {
+                        if (!\Piwigo\Config\Config::allowHtmlInMetadata()) {
                             // in case the origin of the photo is unsecure (user upload), we
                             // remove HTML tags to avoid XSS (malicious execution of
                             // javascript)
@@ -165,7 +165,7 @@ function get_exif_data(string $filename, array $map): array
         }
     }
 
-    if (!\Piwigo\Core\Config::allowHtmlInMetadata()) {
+    if (!\Piwigo\Config\Config::allowHtmlInMetadata()) {
         foreach ($result as $key => $value) {
             // in case the origin of the photo is unsecure (user upload), we remove
             // HTML tags to avoid XSS (malicious execution of javascript)

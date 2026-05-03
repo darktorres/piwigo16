@@ -67,7 +67,7 @@ abstract class CalendarBase
         $res = '';
 
         for ($i = 0; $i < count($chronologyDate); $i++) {
-            $res .= \Piwigo\Core\Config::levelSeparator();
+            $res .= \Piwigo\Config\Config::levelSeparator();
             $component = $chronologyDate[$i];
             $componentTyped = is_int($component) ? $component : (is_string($component) ? $component : '');
             if (isset($chronologyDate[$i + 1])) {
@@ -158,7 +158,7 @@ abstract class CalendarBase
     ): array {
         $nav_bar_datas = [];
 
-        if (\Piwigo\Core\Config::calendarShowEmpty() and $show_empty and !empty($labels)) {
+        if (\Piwigo\Config\Config::calendarShowEmpty() and $show_empty and !empty($labels)) {
             foreach ($labels as $item => $label) {
                 if (! isset($items[$item])) {
                     $items[$item] = -1;
@@ -193,7 +193,7 @@ abstract class CalendarBase
 
         }
 
-        if (\Piwigo\Core\Config::calendarShowAny() and $show_any and count($items) > 1 and
+        if (\Piwigo\Config\Config::calendarShowAny() and $show_any and count($items) > 1 and
               count($date_components) < count($this->calendar_levels) - 1) {
             $url = duplicate_index_url(
                 ['chronology_date' => array_merge($date_components, ['any'])],

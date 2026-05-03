@@ -56,7 +56,7 @@ class Themes
      */
     public function perform_action(string $action, string $theme_id): array
     {
-        if (!\Piwigo\Core\Config::enableExtensionsInstall() and 'delete' == $action) {
+        if (!\Piwigo\Config\Config::enableExtensionsInstall() and 'delete' == $action) {
             die('Piwigo extensions install/update/delete system is disabled');
         }
 
@@ -93,8 +93,8 @@ class Themes
                 }
 
                 if ($this->fs_themes[$theme_id]['mobile']
-                    and !empty(\Piwigo\Core\Config::mobilTheme())
-                    and \Piwigo\Core\Config::mobilTheme() != $theme_id) {
+                    and !empty(\Piwigo\Config\Config::mobilTheme())
+                    and \Piwigo\Config\Config::mobilTheme() != $theme_id) {
                     $errors[] = l10n('You can activate only one mobile theme.');
                     break;
                 }
@@ -259,7 +259,7 @@ SELECT
         $user_ids = array_unique(
             array_merge(
                 query2array($query, null, 'user_id'),
-                [\Piwigo\Core\Config::guestId(), \Piwigo\Core\Config::defaultUserId()]
+                [\Piwigo\Config\Config::guestId(), \Piwigo\Config\Config::defaultUserId()]
             )
         );
 
@@ -423,7 +423,7 @@ SELECT
     public function get_server_themes(bool $new = false): bool
     {
         $get_data = [
-          'category_id' => \Piwigo\Core\Config::pemThemesCategory(),
+          'category_id' => \Piwigo\Config\Config::pemThemesCategory(),
           'format' => 'php',
         ];
 

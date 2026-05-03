@@ -30,7 +30,7 @@ class CheckIntegrity
         global $header_notes;
 
         // Ignore list
-        $conf_c13y_ignore = unserialize(\Piwigo\Core\Config::c13yIgnore() ?? '');
+        $conf_c13y_ignore = unserialize(\Piwigo\Config\Config::c13yIgnore() ?? '');
         if (
             is_array($conf_c13y_ignore) and
             isset($conf_c13y_ignore['version']) and

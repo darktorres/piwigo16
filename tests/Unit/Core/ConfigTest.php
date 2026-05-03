@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Unit\Core;
 
 use PHPUnit\Framework\TestCase;
-use Piwigo\Core\Config;
+use Piwigo\Config\Config;
 
 final class ConfigTest extends TestCase
 {

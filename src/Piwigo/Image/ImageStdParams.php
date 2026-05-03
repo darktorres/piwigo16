@@ -64,7 +64,7 @@ final class ImageStdParams
         if (count(self::$disabled_type_map)) {
             return self::$disabled_type_map;
         }
-        return \Piwigo\Core\Config::disabledDerivatives() ?? '';
+        return \Piwigo\Config\Config::disabledDerivatives() ?? '';
     }
 
     /**
@@ -118,7 +118,7 @@ final class ImageStdParams
      */
     public static function load_from_db(): void
     {
-        $arr = @unserialize(\Piwigo\Core\Config::derivatives() ?? '');
+        $arr = @unserialize(\Piwigo\Config\Config::derivatives() ?? '');
         if (is_array($arr)) {
             $typeMapRaw = is_array($arr['d'] ?? null) ? $arr['d'] : [];
             $typeMap = [];

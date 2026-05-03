@@ -26,7 +26,7 @@ use Piwigo\Auth\PwgTOTP;
 function validate_mail_address(?int $user_id, ?string $mail_address)
 {
     if (empty($mail_address) and
-        !(\Piwigo\Core\Config::obligatoryUserMailAddress() and
+        !(\Piwigo\Config\Config::obligatoryUserMailAddress() and
         in_array(script_basename(), ['register', 'profile']))) {
         return '';
     }
@@ -39,8 +39,8 @@ function validate_mail_address(?int $user_id, ?string $mail_address)
         $query = '
 SELECT count(*)
 FROM '.USERS_TABLE.'
-WHERE upper('.\Piwigo\Core\Config::userFields()['email'].') = upper(\''.$mail_address.'\')
-'.(is_numeric($user_id) ? 'AND '.\Piwigo\Core\Config::userFields()['id'].' != \''.$user_id.'\'' : '').'
+WHERE upper('.\Piwigo\Config\Config::userFields()['email'].') = upper(\''.$mail_address.'\')
+'.(is_numeric($user_id) ? 'AND '.\Piwigo\Config\Config::userFields()['id'].' != \''.$user_id.'\'' : '').'
 ;';
         [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
         if ($count != 0) {
@@ -60,9 +60,9 @@ function validate_login_case($login)
 {
     if (defined('PHPWG_INSTALLED')) {
         $query = '
-SELECT '.\Piwigo\Core\Config::userFields()['username'].'
+SELECT '.\Piwigo\Config\Config::userFields()['username'].'
 FROM '.USERS_TABLE.'
-WHERE LOWER('.stripslashes((string) \Piwigo\Core\Config::userFields()['username']).") = '".strtolower($login)."'
+WHERE LOWER('.stripslashes((string) \Piwigo\Config\Config::userFields()['username']).") = '".strtolower($login)."'
 ;";
 
         $count = pwg_db_num_rows(pwg_query($query));
@@ -85,7 +85,7 @@ function search_case_username($username)
     $SCU_users = [];
 
     $q = pwg_query('
-    SELECT '.\Piwigo\Core\Config::userFields()['username'].' AS username
+    SELECT '.\Piwigo\Config\Config::userFields()['username'].' AS username
     FROM `'.USERS_TABLE.'`;
   ');
     while ($r = pwg_db_fetch_assoc($q)) {
@@ -138,7 +138,7 @@ function register_user(string $login, string $password, ?string $mail_address = 
         $errors[] = $mail_error;
     }
 
-    if (\Piwigo\Core\Config::insensitiveCaseLogon() == true) {
+    if (\Piwigo\Config\Config::insensitiveCaseLogon() == true) {
         $login_error = validate_login_case($login);
         if ($login_error != '') {
             $errors[] = $login_error;
@@ -158,9 +158,9 @@ function register_user(string $login, string $password, ?string $mail_address = 
     // if no error until here, registration of the user
     if (empty($errors)) {
         $insert = [
-          \Piwigo\Core\Config::userFields()['username'] => $login,
-          \Piwigo\Core\Config::userFields()['password'] => \Piwigo\Core\Config::passwordHash()($password),
-          \Piwigo\Core\Config::userFields()['email'] => $mail_address,
+          \Piwigo\Config\Config::userFields()['username'] => $login,
+          \Piwigo\Config\Config::userFields()['password'] => \Piwigo\Config\Config::passwordHash()($password),
+          \Piwigo\Config\Config::userFields()['email'] => $mail_address,
           ];
 
         single_insert(USERS_TABLE, $insert);
@@ -188,13 +188,13 @@ SELECT id
         }
 
         $override = [];
-        if (\Piwigo\Core\Config::browserLanguage() and $language = get_browser_language()) {
+        if (\Piwigo\Config\Config::browserLanguage() and $language = get_browser_language()) {
             $override['language'] = $language;
         }
 
         create_user_infos((int) $user_id, $override);
 
-        if ($notify_admin and 'none' != \Piwigo\Core\Config::emailAdminOnNewUser()) {
+        if ($notify_admin and 'none' != \Piwigo\Config\Config::emailAdminOnNewUser()) {
             include_once(PHPWG_ROOT_PATH.'include/functions_mail.inc.php');
             $admin_url = get_absolute_root_url().'admin.php?page=user_list&user_id='.(int) $user_id;
 
@@ -206,7 +206,7 @@ SELECT id
               ];
 
             $group_id = null;
-            if (preg_match('/^group:(\d+)$/', \Piwigo\Core\Config::emailAdminOnNewUser(), $matches)) {
+            if (preg_match('/^group:(\d+)$/', \Piwigo\Config\Config::emailAdminOnNewUser(), $matches)) {
                 $group_id = $matches[1];
             }
 
@@ -224,7 +224,7 @@ SELECT id
             $length = random_int(10, 15);
             $keyargs_content = [
               get_l10n_args('Hello %s,', stripslashes($login)),
-              get_l10n_args('Thank you for registering at %s!', \Piwigo\Core\Config::galleryTitle()),
+              get_l10n_args('Thank you for registering at %s!', \Piwigo\Config\Config::galleryTitle()),
               get_l10n_args('', ''),
               get_l10n_args('Here are your connection settings', ''),
               get_l10n_args('', ''),
@@ -239,7 +239,7 @@ SELECT id
             pwg_mail(
                 $mail_address ?? '',
                 [
-                'subject' => '['.\Piwigo\Core\Config::galleryTitle().'] '.l10n('Registration'),
+                'subject' => '['.\Piwigo\Config\Config::galleryTitle().'] '.l10n('Registration'),
                 'content' => l10n_args($keyargs_content),
                 'content_format' => 'text/plain',
                 ]
@@ -276,7 +276,7 @@ function build_user(int $user_id, bool $use_cache = true): array
     $user['id'] = $user_id;
     $user = array_merge($user, getuserdata($user_id, $use_cache) ?: []);
 
-    if ($user['id'] == \Piwigo\Core\Config::guestId() and $user['status'] <> 'guest') {
+    if ($user['id'] == \Piwigo\Config\Config::guestId() and $user['status'] <> 'guest') {
         $user['status'] = 'guest';
         if (!is_array($user['internal_status'])) {
             $user['internal_status'] = [];
@@ -311,7 +311,7 @@ function getuserdata(int $user_id, bool $use_cache = false): array|false
     $query = '
 SELECT ';
     $is_first = true;
-    foreach (\Piwigo\Core\Config::userFields() as $pwgfield => $dbfield) {
+    foreach (\Piwigo\Config\Config::userFields() as $pwgfield => $dbfield) {
         if ($is_first) {
             $is_first = false;
         } else {
@@ -322,12 +322,12 @@ SELECT ';
     }
     $query .= '
   FROM '.USERS_TABLE.'
-  WHERE '.\Piwigo\Core\Config::userFields()['id'].' = \''.$user_id.'\'';
+  WHERE '.\Piwigo\Config\Config::userFields()['id'].' = \''.$user_id.'\'';
 
     $row = pwg_db_fetch_assoc(pwg_query($query));
 
     // retrieve additional user data ?
-    if (\Piwigo\Core\Config::externalAuthentification()) {
+    if (\Piwigo\Config\Config::externalAuthentification()) {
         $query = '
 SELECT
     COUNT(1) AS counter
@@ -667,9 +667,9 @@ function get_userid(string $username): int|false
     $username = pwg_db_real_escape_string($username);
 
     $query = '
-SELECT '.\Piwigo\Core\Config::userFields()['id'].'
+SELECT '.\Piwigo\Config\Config::userFields()['id'].'
   FROM '.USERS_TABLE.'
-  WHERE '.\Piwigo\Core\Config::userFields()['username'].' = \''.$username.'\'
+  WHERE '.\Piwigo\Config\Config::userFields()['username'].' = \''.$username.'\'
 ;';
     $result = pwg_query($query);
 
@@ -692,9 +692,9 @@ function get_userid_by_email(string $email): int|false
 
     $query = '
 SELECT
-    '.\Piwigo\Core\Config::userFields()['id'].'
+    '.\Piwigo\Config\Config::userFields()['id'].'
   FROM '.USERS_TABLE.'
-  WHERE UPPER('.\Piwigo\Core\Config::userFields()['email'].') = UPPER(\''.$email.'\')
+  WHERE UPPER('.\Piwigo\Config\Config::userFields()['email'].') = UPPER(\''.$email.'\')
 ;';
     $result = pwg_query($query);
 
@@ -721,7 +721,7 @@ function get_default_user_info(bool $convert_str = true): ?array
         $query = '
 SELECT *
   FROM '.USER_INFOS_TABLE.'
-  WHERE user_id = '.\Piwigo\Core\Config::defaultUserId().'
+  WHERE user_id = '.\Piwigo\Config\Config::defaultUserId().'
 ;';
 
         $result = pwg_query($query);
@@ -907,11 +907,11 @@ function create_user_infos(array|int $user_ids, ?array $override_values = null):
 
         foreach ($user_ids as $user_id) {
             $level = $default_user['level'] ?? 0;
-            if ($user_id == \Piwigo\Core\Config::webmasterId()) {
+            if ($user_id == \Piwigo\Config\Config::webmasterId()) {
                 $status = 'webmaster';
-                $level = max(\Piwigo\Core\Config::availablePermissionLevels());
-            } elseif (($user_id == \Piwigo\Core\Config::guestId()) or
-                     ($user_id == \Piwigo\Core\Config::defaultUserId())) {
+                $level = max(\Piwigo\Config\Config::availablePermissionLevels());
+            } elseif (($user_id == \Piwigo\Config\Config::guestId()) or
+                     ($user_id == \Piwigo\Config\Config::defaultUserId())) {
                 $status = 'guest';
             } else {
                 $status = 'normal';
@@ -947,16 +947,16 @@ function create_user_infos(array|int $user_ids, ?array $override_values = null):
 function calculate_auto_login_key($user_id, $time, &$username): string|false
 {
     $query = '
-SELECT '.\Piwigo\Core\Config::userFields()['username'].' AS username
-  , '.\Piwigo\Core\Config::userFields()['password'].' AS password
+SELECT '.\Piwigo\Config\Config::userFields()['username'].' AS username
+  , '.\Piwigo\Config\Config::userFields()['password'].' AS password
 FROM '.USERS_TABLE.'
-WHERE '.\Piwigo\Core\Config::userFields()['id'].' = '.$user_id;
+WHERE '.\Piwigo\Config\Config::userFields()['id'].' = '.$user_id;
     $result = pwg_query($query);
     if (pwg_db_num_rows($result) > 0) {
         $row = pwg_db_fetch_assoc($result);
         $username = stripslashes((string) ($row['username'] ?? ''));
         $data = $time.$user_id.$username;
-        $key = base64_encode(hash_hmac('sha1', $data, \Piwigo\Core\Config::secretKey().($row['password'] ?? ''), true));
+        $key = base64_encode(hash_hmac('sha1', $data, \Piwigo\Config\Config::secretKey().($row['password'] ?? ''), true));
         return $key;
     }
     return false;
@@ -994,19 +994,19 @@ function log_user($user_id, $remember_me): void
         setcookie('lang', '', ['expires' => time() - 3600, 'samesite' => 'Strict']);
     }
 
-    if ($remember_me and \Piwigo\Core\Config::authorizeRemembering()) {
+    if ($remember_me and \Piwigo\Config\Config::authorizeRemembering()) {
         $now = time();
         $key = calculate_auto_login_key($user_id, $now, $username);
         if ($key !== false) {
             $cookie = $user_id.'-'.$now.'-'.$key;
             setcookie(
-                \Piwigo\Core\Config::rememberMeName(),
+                \Piwigo\Config\Config::rememberMeName(),
                 $cookie,
-                ['expires' => time() + \Piwigo\Core\Config::rememberMeLength(), 'path' => (string) cookie_path(), 'domain' => (string) ini_get('session.cookie_domain'), 'secure' => (bool) ini_get('session.cookie_secure'), 'httponly' => (bool) ini_get('session.cookie_httponly'), 'samesite' => 'Strict']
+                ['expires' => time() + \Piwigo\Config\Config::rememberMeLength(), 'path' => (string) cookie_path(), 'domain' => (string) ini_get('session.cookie_domain'), 'secure' => (bool) ini_get('session.cookie_secure'), 'httponly' => (bool) ini_get('session.cookie_httponly'), 'samesite' => 'Strict']
             );
         }
     } else { // make sure we clean any remember me ...
-        setcookie(\Piwigo\Core\Config::rememberMeName(), '', ['expires' => 0, 'path' => (string) cookie_path(), 'domain' => (string) ini_get('session.cookie_domain'), 'samesite' => 'Strict']);
+        setcookie(\Piwigo\Config\Config::rememberMeName(), '', ['expires' => 0, 'path' => (string) cookie_path(), 'domain' => (string) ini_get('session.cookie_domain'), 'samesite' => 'Strict']);
     }
     if (session_id() != '') { // we regenerate the session for security reasons
         // see http://www.acros.si/papers/session_fixation.pdf
@@ -1026,13 +1026,13 @@ function log_user($user_id, $remember_me): void
  */
 function auto_login(): bool
 {
-    $remember_cookie_raw = $_COOKIE[\Piwigo\Core\Config::rememberMeName()] ?? null;
+    $remember_cookie_raw = $_COOKIE[\Piwigo\Config\Config::rememberMeName()] ?? null;
     if (isset($remember_cookie_raw)) {
         $cookie = explode('-', stripslashes(is_scalar($remember_cookie_raw) ? (string) $remember_cookie_raw : ''));
         if (count($cookie) === 3
             and is_numeric(@$cookie[0]) /*user id*/
             and is_numeric(@$cookie[1]) /*time*/
-            and time() - \Piwigo\Core\Config::rememberMeLength() <= @$cookie[1]
+            and time() - \Piwigo\Config\Config::rememberMeLength() <= @$cookie[1]
             and time() >= @$cookie[1] /*cookie generated in the past*/) {
             $key = calculate_auto_login_key((int)$cookie[0], (int)$cookie[1], $username);
             if ($key !== false and $key === $cookie[2]) {
@@ -1046,7 +1046,7 @@ function auto_login(): bool
                 return true;
             }
         }
-        setcookie(\Piwigo\Core\Config::rememberMeName(), '', ['expires' => 0, 'path' => (string) cookie_path(), 'domain' => (string) ini_get('session.cookie_domain'), 'samesite' => 'Strict']);
+        setcookie(\Piwigo\Config\Config::rememberMeName(), '', ['expires' => 0, 'path' => (string) cookie_path(), 'domain' => (string) ini_get('session.cookie_domain'), 'samesite' => 'Strict']);
     }
     return false;
 }
@@ -1135,7 +1135,7 @@ function pwg_password_verify(string $password, string $hash, ?int $user_id = nul
         if (!phpass_verify($password, $hash)) {
             return false;
         }
-        if ($user_id !== null && !\Piwigo\Core\Config::externalAuthentification()) {
+        if ($user_id !== null && !\Piwigo\Config\Config::externalAuthentification()) {
             single_update(USERS_TABLE, ['password' => pwg_password_hash($password)], ['id' => $user_id]);
         }
         return true;
@@ -1192,7 +1192,7 @@ function pwg_login(bool $success, string $username, string $password, bool $reme
     $fake_user = generate_fake_user();
 
     // Verify password with fallback to fake user
-    $password_verify = \Piwigo\Core\Config::passwordVerify()(
+    $password_verify = \Piwigo\Config\Config::passwordVerify()(
         $password,
         $user_found['password'] ?? $fake_user['password'],
         is_numeric($user_found['id'] ?? null) ? (int) $user_found['id'] : null
@@ -1265,18 +1265,18 @@ function find_user_by_username_or_email(string $username_or_email): ?array
 
     $query = '
 SELECT 
-  '.\Piwigo\Core\Config::userFields()['id'].' AS id,
-  '.\Piwigo\Core\Config::userFields()['username'].' AS username,
-  '.\Piwigo\Core\Config::userFields()['email'].' AS email,
-  '.\Piwigo\Core\Config::userFields()['password'].' AS password,
+  '.\Piwigo\Config\Config::userFields()['id'].' AS id,
+  '.\Piwigo\Config\Config::userFields()['username'].' AS username,
+  '.\Piwigo\Config\Config::userFields()['email'].' AS email,
+  '.\Piwigo\Config\Config::userFields()['password'].' AS password,
   status
 FROM '.USERS_TABLE.' AS u
   LEFT JOIN '.USER_INFOS_TABLE.' AS i
-    ON u.'.\Piwigo\Core\Config::userFields()['id'].' = i.user_id
+    ON u.'.\Piwigo\Config\Config::userFields()['id'].' = i.user_id
   WHERE ';
 
-    $where_username = \Piwigo\Core\Config::userFields()['username'].' = \'' . $username_or_email . '\'';
-    $where_email = \Piwigo\Core\Config::userFields()['email'].' = \'' . $username_or_email . '\'';
+    $where_username = \Piwigo\Config\Config::userFields()['username'].' = \'' . $username_or_email . '\'';
+    $where_email = \Piwigo\Config\Config::userFields()['email'].' = \'' . $username_or_email . '\'';
 
     $user = pwg_db_fetch_assoc(pwg_query($query.$where_username))
       ?: pwg_db_fetch_assoc(pwg_query($query.$where_email));
@@ -1304,8 +1304,8 @@ FROM '.USERS_TABLE.' AS u
 function generate_fake_user(): array
 {
     // Check if password_hash or password_verify has been changed
-    $is_verify_hash_changed = 'pwg_password_hash' !== \Piwigo\Core\Config::passwordHash()
-      || 'pwg_password_verify' !== \Piwigo\Core\Config::passwordVerify();
+    $is_verify_hash_changed = 'pwg_password_hash' !== \Piwigo\Config\Config::passwordHash()
+      || 'pwg_password_verify' !== \Piwigo\Config\Config::passwordVerify();
 
     // Generate once per session to avoid repeated hashing overhead.
     // Uses current password_hash algorithm to match real user verification costs.
@@ -1313,7 +1313,7 @@ function generate_fake_user(): array
         $fake_password = bin2hex(random_bytes(10));
         $_SESSION['fake_user_cache'] = [
           'id' => null,
-          'password' => \Piwigo\Core\Config::passwordHash()($fake_password),
+          'password' => \Piwigo\Config\Config::passwordHash()($fake_password),
         ];
     }
 
@@ -1348,7 +1348,7 @@ function logout_user(): void
         '',
         ['expires' => 0, 'path' => (string) ini_get('session.cookie_path'), 'domain' => (string) ini_get('session.cookie_domain'), 'samesite' => 'Strict']
     );
-    setcookie(\Piwigo\Core\Config::rememberMeName(), '', ['expires' => 0, 'path' => (string) cookie_path(), 'domain' => (string) ini_get('session.cookie_domain'), 'samesite' => 'Strict']);
+    setcookie(\Piwigo\Config\Config::rememberMeName(), '', ['expires' => 0, 'path' => (string) cookie_path(), 'domain' => (string) ini_get('session.cookie_domain'), 'samesite' => 'Strict']);
 }
 
 /**
@@ -1384,7 +1384,7 @@ function get_access_type_status($user_status = ''): int
         case 'guest':
             {
                 $access_type_status =
-                  (\Piwigo\Core\Config::guestAccess() ? ACCESS_GUEST : ACCESS_FREE);
+                  (\Piwigo\Config\Config::guestAccess() ? ACCESS_GUEST : ACCESS_FREE);
                 break;
             }
         case 'generic':
@@ -1514,13 +1514,13 @@ function can_manage_comment($action, $comment_author_id): bool
         return true;
     }
 
-    if ('edit' == $action and \Piwigo\Core\Config::userCanEditComment()) {
+    if ('edit' == $action and \Piwigo\Config\Config::userCanEditComment()) {
         if ($comment_author_id == $user['id']) {
             return true;
         }
     }
 
-    if ('delete' == $action and \Piwigo\Core\Config::userCanDeleteComment()) {
+    if ('delete' == $action and \Piwigo\Config\Config::userCanDeleteComment()) {
         if ($comment_author_id == $user['id']) {
             return true;
         }
@@ -1656,14 +1656,14 @@ function auth_key_login(string $auth_key, bool $connection_by_header = false): b
     $query = '
 SELECT
     *,
-    '.\Piwigo\Core\Config::userFields()['username'].' AS username,
-    '.\Piwigo\Core\Config::userFields()['email'].' AS email,
+    '.\Piwigo\Config\Config::userFields()['username'].' AS username,
+    '.\Piwigo\Config\Config::userFields()['email'].' AS email,
     NOW() AS dbnow,
     DATEDIFF(uak.expired_on, NOW()) AS days_left,
     SUBDATE(NOW(), INTERVAL 48 HOUR) AS 48h_ago
   FROM '.USER_AUTH_KEYS_TABLE.' AS uak
     JOIN '.USER_INFOS_TABLE.' AS ui ON uak.user_id = ui.user_id
-    JOIN '.USERS_TABLE.' AS u ON u.'.\Piwigo\Core\Config::userFields()['id'].' = ui.user_id
+    JOIN '.USERS_TABLE.' AS u ON u.'.\Piwigo\Config\Config::userFields()['id'].' = ui.user_id
   WHERE auth_key = \''.$auth_key.'\'
 ;';
     $keys = query2array($query);
@@ -1757,7 +1757,7 @@ SELECT
 /** @return array<string,mixed>|false */
 function create_user_auth_key(int $user_id, ?string $user_status = null): array|false
 {
-    if (0 == \Piwigo\Core\Config::authKeyDuration()) {
+    if (0 == \Piwigo\Config\Config::authKeyDuration()) {
         return false;
     }
 
@@ -1788,7 +1788,7 @@ SELECT
 SELECT
     COUNT(*),
     NOW(),
-    ADDDATE(NOW(), INTERVAL '.\Piwigo\Core\Config::authKeyDuration().' SECOND)
+    ADDDATE(NOW(), INTERVAL '.\Piwigo\Config\Config::authKeyDuration().' SECOND)
   FROM '.USER_AUTH_KEYS_TABLE.'
   WHERE auth_key = \''.$candidate.'\'
 ;';
@@ -1798,7 +1798,7 @@ SELECT
           'auth_key' => $candidate,
           'user_id' => $user_id,
           'created_on' => $now,
-          'duration' => \Piwigo\Core\Config::authKeyDuration(),
+          'duration' => \Piwigo\Config\Config::authKeyDuration(),
           'expired_on' => $expiration,
           'key_type' => 'auth_key',
           ];
@@ -1863,8 +1863,8 @@ function generate_password_link(int $user_id, bool $first_login = false): array
     $activation_key = generate_key(20);
 
     $duration = $first_login
-    ? \Piwigo\Core\Config::passwordActivationDuration()
-    : \Piwigo\Core\Config::passwordResetDuration();
+    ? \Piwigo\Config\Config::passwordActivationDuration()
+    : \Piwigo\Config\Config::passwordResetDuration();
     [$expire] = pwg_db_fetch_row(pwg_query('SELECT ADDDATE(NOW(), INTERVAL '. $duration .' SECOND)')) ?? [null];
 
     single_update(
@@ -2111,7 +2111,7 @@ function check_and_save_user_infos(array $params): array
                   ],
                 ];
             }
-            $updates[ \Piwigo\Core\Config::userFields()['username'] ] = $params['username'];
+            $updates[ \Piwigo\Config\Config::userFields()['username'] ] = $params['username'];
         }
 
         if (!empty($params['email'])) {
@@ -2124,12 +2124,12 @@ function check_and_save_user_infos(array $params): array
                   ],
                 ];
             }
-            $updates[ \Piwigo\Core\Config::userFields()['email'] ] = $params['email'];
+            $updates[ \Piwigo\Config\Config::userFields()['email'] ] = $params['email'];
         }
 
         if (!empty($params['password'])) {
             if (!is_webmaster()) {
-                $password_protected_users = [\Piwigo\Core\Config::guestId()];
+                $password_protected_users = [\Piwigo\Config\Config::guestId()];
 
                 $query = '
 SELECT
@@ -2153,7 +2153,7 @@ SELECT
                 }
             }
 
-            $updates[ \Piwigo\Core\Config::userFields()['password'] ] = \Piwigo\Core\Config::passwordHash()($params['password']);
+            $updates[ \Piwigo\Config\Config::userFields()['password'] ] = \Piwigo\Config\Config::passwordHash()($params['password']);
         }
     }
 
@@ -2180,8 +2180,8 @@ SELECT
 
         $protected_users = [
           is_numeric($user['id']) ? (int) $user['id'] : 0,
-          \Piwigo\Core\Config::guestId(),
-          \Piwigo\Core\Config::webmasterId(),
+          \Piwigo\Config\Config::guestId(),
+          \Piwigo\Config\Config::webmasterId(),
           ];
 
         // an admin can't change status of other admin/webmaster
@@ -2203,7 +2203,7 @@ SELECT
     }
 
     if (!empty($params['level']) or @$params['level'] === 0) {
-        if (!in_array($params['level'], \Piwigo\Core\Config::availablePermissionLevels())) {
+        if (!in_array($params['level'], \Piwigo\Config\Config::availablePermissionLevels())) {
             // return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid level');
             return [
               'error' => [
@@ -2276,14 +2276,14 @@ SELECT
     single_update(
         USERS_TABLE,
         $updates,
-        [\Piwigo\Core\Config::userFields()['id'] => $param_uid_0]
+        [\Piwigo\Config\Config::userFields()['id'] => $param_uid_0]
     );
 
-    if (isset($updates[ \Piwigo\Core\Config::userFields()['password'] ])) {
+    if (isset($updates[ \Piwigo\Config\Config::userFields()['password'] ])) {
         deactivate_user_auth_keys($param_uid_0);
     }
 
-    if (isset($updates[ \Piwigo\Core\Config::userFields()['email'] ])) {
+    if (isset($updates[ \Piwigo\Config\Config::userFields()['email'] ])) {
         deactivate_password_reset_key($param_uid_0);
     }
 
@@ -2624,7 +2624,7 @@ function notification_api_key_expiration(string $username, string $email, int $d
     $result = @pwg_mail(
         $email,
         [
-        'subject' => '[' . \Piwigo\Core\Config::galleryTitle() . '] ' . l10n('Your API key will expire soon'),
+        'subject' => '[' . \Piwigo\Config\Config::galleryTitle() . '] ' . l10n('Your API key will expire soon'),
         'content' => $message,
         'content_format' => 'text/html',
     ]
@@ -2643,7 +2643,7 @@ function notification_api_key_expiration(string $username, string $email, int $d
 function generate_user_code(): array
 {
     $secret = PwgTOTP::generateSecret();
-    $code = PwgTOTP::generateCode($secret, min(\Piwigo\Core\Config::passwordResetCodeDuration(), 900)); // max 15 minutes
+    $code = PwgTOTP::generateCode($secret, min(\Piwigo\Config\Config::passwordResetCodeDuration(), 900)); // max 15 minutes
 
     return [
       'secret' => $secret,
@@ -2659,7 +2659,7 @@ function generate_user_code(): array
  */
 function verify_user_code(string $secret, string $code): bool
 {
-    return PwgTOTP::verifyCode($code, $secret, min(\Piwigo\Core\Config::passwordResetCodeDuration(), 900), 1);
+    return PwgTOTP::verifyCode($code, $secret, min(\Piwigo\Config\Config::passwordResetCodeDuration(), 900), 1);
 }
 
 /**

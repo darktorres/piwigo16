@@ -71,7 +71,7 @@ class BlockManager
     public function prepare_display(): void
     {
         $conf_id = 'blk_'.$this->id;
-        $mb_conf_raw = \Piwigo\Core\Config::get($conf_id);
+        $mb_conf_raw = \Piwigo\Config\Config::get($conf_id);
         if (is_array($mb_conf_raw)) {
             $mb_conf = $mb_conf_raw;
         } elseif (is_string($mb_conf_raw)) {

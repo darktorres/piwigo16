@@ -56,10 +56,10 @@ function add_core_tabs(array $sheets, string $tab_id): array
             global $link_start;
             $sheets['status'] = ['caption' => '<span class="icon-lock"></span>'.l10n('Public / Private'), 'url' => $link_start.'cat_options&amp;section=status'];
             $sheets['visible'] = ['caption' => '<span class="icon-block"></span>'.l10n('Lock'), 'url' => $link_start.'cat_options&amp;section=visible'];
-            if (\Piwigo\Core\Config::activateComments()) {
+            if (\Piwigo\Config\Config::activateComments()) {
                 $sheets['comments'] = ['caption' => '<span class="icon-chat"></span>'.l10n('Comments'), 'url' => $link_start.'cat_options&amp;section=comments'];
             }
-            if (\Piwigo\Core\Config::allowRandomRepresentative()) {
+            if (\Piwigo\Config\Config::allowRandomRepresentative()) {
                 $sheets['representative'] = ['caption' => l10n('Representative'), 'url' => $link_start.'cat_options&amp;section=representative'];
             }
             break;
@@ -108,7 +108,7 @@ function add_core_tabs(array $sheets, string $tab_id): array
         case 'languages':
             global $my_base_url;
             $sheets['installed'] = ['caption' => '<span class="icon-menu"></span>'.l10n('List'), 'url' => $my_base_url.'&amp;tab=installed'];
-            if (\Piwigo\Core\Config::enableExtensionsInstall()) {
+            if (\Piwigo\Config\Config::enableExtensionsInstall()) {
                 $sheets['update'] = ['caption' => '<span class="icon-arrows-cw"></span>'.l10n('Check for updates'), 'url' => $my_base_url.'&amp;tab=update'];
                 $sheets['new'] = ['caption' => '<span class="icon-plus-circled"></span>'.l10n('Add New Language'), 'url' => $my_base_url.'&amp;tab=new'];
             }
@@ -130,7 +130,7 @@ function add_core_tabs(array $sheets, string $tab_id): array
             global $admin_photo_base_url;
             $sheets['properties'] = ['caption' => '<span class="icon-file-image"></span>'.l10n('Properties'), 'url' => $admin_photo_base_url.'-properties'];
             $sheets['coi'] = ['caption' => '<span class="icon-crop"></span>'.l10n('Center of interest'), 'url' => $admin_photo_base_url.'-coi'];
-            if (\Piwigo\Core\Config::isFormatsEnabled()) {
+            if (\Piwigo\Config\Config::isFormatsEnabled()) {
                 $sheets['formats'] = ['caption' => '<span class="icon-docs"></span>'.l10n('Formats'), 'url' => $admin_photo_base_url.'-formats'];
             }
             break;
@@ -138,7 +138,7 @@ function add_core_tabs(array $sheets, string $tab_id): array
         case 'photos_add':
             $sheets['direct'] = ['caption' => '<span class="icon-upload"></span>'.l10n('Web Form'), 'url' => PHOTOS_ADD_BASE_URL.'&amp;section=direct'];
             $sheets['applications'] = ['caption' => '<span class="icon-network"></span>'.l10n('Applications'), 'url' => PHOTOS_ADD_BASE_URL.'&amp;section=applications'];
-            if (\Piwigo\Core\Config::enableSynchronization()) {
+            if (\Piwigo\Config\Config::enableSynchronization()) {
                 $sheets['ftp'] = ['caption' => '<span class="icon-exchange"></span>'.l10n('FTP + Synchronization'), 'url' => PHOTOS_ADD_BASE_URL.'&amp;section=ftp'];
             }
             break;
@@ -146,7 +146,7 @@ function add_core_tabs(array $sheets, string $tab_id): array
         case 'plugins':
             global $my_base_url;
             $sheets['installed'] = ['caption' => '<span class="icon-menu"></span>'.l10n('List'), 'url' => $my_base_url.'&amp;tab=installed'];
-            if (\Piwigo\Core\Config::enableExtensionsInstall()) {
+            if (\Piwigo\Config\Config::enableExtensionsInstall()) {
                 $sheets['update'] = ['caption' => '<span class="icon-arrows-cw"></span>'.l10n('Check for updates'), 'url' => $my_base_url.'&amp;tab=update'];
                 $sheets['new'] = ['caption' => '<span class="icon-plus-circled"></span>'.l10n('Add New Plugin'), 'url' => $my_base_url.'&amp;tab=new'];
             }
@@ -160,7 +160,7 @@ function add_core_tabs(array $sheets, string $tab_id): array
         case 'themes':
             global $my_base_url;
             $sheets['installed'] = ['caption' => '<span class="icon-menu"></span>'.l10n('List'), 'url' => $my_base_url.'&amp;tab=installed'];
-            if (\Piwigo\Core\Config::enableExtensionsInstall()) {
+            if (\Piwigo\Config\Config::enableExtensionsInstall()) {
                 $sheets['update'] = ['caption' => '<span class="icon-arrows-cw"></span>'.l10n('Check for updates'), 'url' => $my_base_url.'&amp;tab=update'];
                 $sheets['new'] = ['caption' => '<span class="icon-plus-circled"></span>'.l10n('Add New Theme'), 'url' => $my_base_url.'&amp;tab=new'];
             }
@@ -170,11 +170,11 @@ function add_core_tabs(array $sheets, string $tab_id): array
         case 'updates':
             global $my_base_url;
 
-            if (\Piwigo\Core\Config::enableCoreUpdate()) {
+            if (\Piwigo\Config\Config::enableCoreUpdate()) {
                 $sheets['pwg'] = ['caption' => l10n('Piwigo core'), 'url' => $my_base_url];
             }
 
-            if (\Piwigo\Core\Config::enableExtensionsInstall()) {
+            if (\Piwigo\Config\Config::enableExtensionsInstall()) {
                 $sheets['ext'] = ['caption' => l10n('Extensions'), 'url' => $my_base_url.'&amp;tab=ext'];
             }
             break;

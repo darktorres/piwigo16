@@ -58,9 +58,9 @@ use Piwigo\Ws\PwgNamedArray;
 
     $uid = '&b='.time();
 
-    \Piwigo\Core\Config::override('question_mark_in_urls', true);
-    \Piwigo\Core\Config::override('php_extension_in_urls', true);
-    \Piwigo\Core\Config::override('derivative_url_style', 2); //script
+    \Piwigo\Config\Config::override('question_mark_in_urls', true);
+    \Piwigo\Config\Config::override('php_extension_in_urls', true);
+    \Piwigo\Config\Config::override('derivative_url_style', 2); //script
 
     $qlimit = min(5000, (int) ceil(max($image_count_int / 500, $max_urls / count($types))));
     /** @var array<string> $where_clauses */
@@ -212,7 +212,7 @@ function ws_getInfos(array $params, \Piwigo\Ws\PwgServer &$service): array
 function ws_getCacheSize(array $params, \Piwigo\Ws\PwgServer &$service): array
 {
     // Cache size
-    $path_cache = \Piwigo\Core\Config::dataLocation();
+    $path_cache = \Piwigo\Config\Config::dataLocation();
     $infos['cache_size'] = null;
     if (function_exists('exec')) {
         @exec('du -sk '.$path_cache, $return_array_cache);
@@ -226,7 +226,7 @@ function ws_getCacheSize(array $params, \Piwigo\Ws\PwgServer &$service): array
 
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
     // Multiples sizes size
-    $path_msizes = \Piwigo\Core\Config::dataLocation().'i';
+    $path_msizes = \Piwigo\Config\Config::dataLocation().'i';
     $msizes = get_cache_size_derivatives($path_msizes);
 
     $infos['msizes'] = array_fill_keys(array_keys(ImageStdParams::get_defined_type_map()), 0);
@@ -240,7 +240,7 @@ function ws_getCacheSize(array $params, \Piwigo\Ws\PwgServer &$service): array
     $infos['msizes']['all'] = $all;
 
     // Compiled templates size
-    $path_template_c = \Piwigo\Core\Config::dataLocation().'templates_c';
+    $path_template_c = \Piwigo\Config\Config::dataLocation().'templates_c';
     $infos['tsizes'] = null;
     if (function_exists('exec')) {
         @exec('du -sk '.$path_template_c, $return_array_template_c);
@@ -429,12 +429,12 @@ function ws_session_getStatus($params, \Piwigo\Ws\PwgServer &$service): mixed
             array_unique(
                 array_map(
                     strtolower(...),
-                    \Piwigo\Core\Config::uploadFormAllTypes() ? \Piwigo\Core\Config::fileExtensions() : \Piwigo\Core\Config::pictureExtensions()
+                    \Piwigo\Config\Config::uploadFormAllTypes() ? \Piwigo\Config\Config::fileExtensions() : \Piwigo\Config\Config::pictureExtensions()
                 )
             )
         );
 
-        $res['upload_form_chunk_size'] = \Piwigo\Core\Config::uploadFormChunkSize();
+        $res['upload_form_chunk_size'] = \Piwigo\Config\Config::uploadFormChunkSize();
     }
 
     return $res;
@@ -517,10 +517,10 @@ function ws_session_getStatus($params, \Piwigo\Ws\PwgServer &$service): mixed
     AND object_id = '. (is_numeric($param['id']) ? (int) $param['id'] : 0);
     }
 
-    if ('none' == \Piwigo\Core\Config::activityDisplayConnections()) {
+    if ('none' == \Piwigo\Config\Config::activityDisplayConnections()) {
         $where .= '
     AND action NOT IN (\'login\', \'logout\')';
-    } elseif ('admins_only' == \Piwigo\Core\Config::activityDisplayConnections()) {
+    } elseif ('admins_only' == \Piwigo\Config\Config::activityDisplayConnections()) {
         include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
         $where .= '
     AND NOT (action IN (\'login\', \'logout\') AND object_id NOT IN ('.implode(',', get_admins()).'))';
@@ -629,10 +629,10 @@ SELECT
     if (count($user_ids) > 0) {
         $query = '
 SELECT
-    `'.\Piwigo\Core\Config::userFields()['id'].'` AS user_id,
-    `'.\Piwigo\Core\Config::userFields()['username'].'` AS username
+    `'.\Piwigo\Config\Config::userFields()['id'].'` AS user_id,
+    `'.\Piwigo\Config\Config::userFields()['username'].'` AS username
   FROM '.USERS_TABLE.'
-  WHERE `'.\Piwigo\Core\Config::userFields()['id'].'` IN ('.implode(',', array_keys($user_ids)).')
+  WHERE `'.\Piwigo\Config\Config::userFields()['id'].'` IN ('.implode(',', array_keys($user_ids)).')
 ;';
         $username_of = query2array($query, 'user_id', 'username');
     }
@@ -931,8 +931,8 @@ SELECT
 
     if (count($user_ids) > 0) {
         $query = '
-SELECT '.\Piwigo\Core\Config::userFields()['id'].' AS id
-     , '.\Piwigo\Core\Config::userFields()['username'].' AS username
+SELECT '.\Piwigo\Config\Config::userFields()['id'].' AS id
+     , '.\Piwigo\Config\Config::userFields()['username'].' AS username
   FROM '.USERS_TABLE.'
   WHERE id IN ('.implode(',', array_keys($user_ids)).')
 ;';
@@ -1012,7 +1012,7 @@ SELECT
 
     $i = 0;
     $first_line = $page['start'] + 1;
-    $last_line = $page['start'] + \Piwigo\Core\Config::nbLogsPage();
+    $last_line = $page['start'] + \Piwigo\Config\Config::nbLogsPage();
 
     $summary['total_filesize'] = 0;
     $summary['guests_IP'] = [];
@@ -1037,7 +1037,7 @@ SELECT
             $summary['total_filesize'] += @intval($image_infos[$line_image_id_str]['filesize'] ?? 0);
         }
 
-        if ($line_user_id_str === (string) \Piwigo\Core\Config::guestId()) {
+        if ($line_user_id_str === (string) \Piwigo\Config\Config::guestId()) {
             if (!isset($summary['guests_IP'][$line_IP])) {
                 $summary['guests_IP'][$line_IP] = 0;
             }
@@ -1185,7 +1185,7 @@ SELECT
 
         // we delete the "guest" from the $username_of hash so that it is
         // avoided in next steps
-        unset($username_of[ (string) \Piwigo\Core\Config::guestId() ]);
+        unset($username_of[ (string) \Piwigo\Config\Config::guestId() ]);
     }
 
     $summary['nb_members'] = count($username_of);

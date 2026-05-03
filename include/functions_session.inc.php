@@ -22,20 +22,20 @@ use Piwigo\Session\PwgSession;
 // PwgSession is autoloaded by Composer.
 
 // Config class may not be autoloaded yet during install.php bootstrap.
-if (class_exists(\Piwigo\Core\Config::class, false)
-  and \Piwigo\Core\Config::has('session_save_handler')
-  and (\Piwigo\Core\Config::sessionSaveHandler() == 'db')
+if (class_exists(\Piwigo\Config\Config::class, false)
+  and \Piwigo\Config\Config::has('session_save_handler')
+  and (\Piwigo\Config\Config::sessionSaveHandler() == 'db')
   and defined('PHPWG_INSTALLED')) {
     session_set_save_handler(new PwgSession());
 
     if (function_exists('ini_set')) {
-        ini_set('session.use_cookies', \Piwigo\Core\Config::sessionUseCookies());
-        ini_set('session.use_only_cookies', \Piwigo\Core\Config::sessionUseOnlyCookies());
-        ini_set('session.use_trans_sid', intval(\Piwigo\Core\Config::sessionUseTransSid()));
+        ini_set('session.use_cookies', \Piwigo\Config\Config::sessionUseCookies());
+        ini_set('session.use_only_cookies', \Piwigo\Config\Config::sessionUseOnlyCookies());
+        ini_set('session.use_trans_sid', intval(\Piwigo\Config\Config::sessionUseTransSid()));
         ini_set('session.cookie_httponly', 1);
     }
 
-    session_name(\Piwigo\Core\Config::sessionName());
+    session_name(\Piwigo\Config\Config::sessionName());
     session_set_cookie_params([
         'lifetime' => 0,
         'path' => cookie_path(),
@@ -95,7 +95,7 @@ function pwg_session_close(): bool
  */
 function get_remote_addr_session_hash(): string
 {
-    if (!\Piwigo\Core\Config::sessionUseIpAddress()) {
+    if (!\Piwigo\Config\Config::sessionUseIpAddress()) {
         return '';
     }
 
@@ -178,7 +178,7 @@ function pwg_session_gc(): bool
 DELETE
   FROM '.SESSIONS_TABLE.'
   WHERE '.pwg_db_date_to_ts('NOW()').' - '.pwg_db_date_to_ts('expiration').' > '
-    .\Piwigo\Core\Config::sessionLength().'
+    .\Piwigo\Config\Config::sessionLength().'
 ;';
     pwg_query($query);
     return true;

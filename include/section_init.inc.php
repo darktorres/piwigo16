@@ -36,7 +36,7 @@ $page['start'] = $page['startcat'] = 0;
 
 // some ISPs set PATH_INFO to empty string or to SCRIPT_FILENAME while in the
 // default apache implementation it is not set
-if (\Piwigo\Core\Config::questionMarkInUrls() == false and
+if (\Piwigo\Config\Config::questionMarkInUrls() == false and
      isset($_SERVER['PATH_INFO']) and !empty($_SERVER['PATH_INFO'])) {
     $rewritten = is_scalar($_SERVER['PATH_INFO']) ? (string) $_SERVER['PATH_INFO'] : '';
     $rewritten = str_replace('//', '/', $rewritten);
@@ -112,9 +112,9 @@ if (!isset($page['section'])) {
         case 'index':
             {
                 // No section defined, go to random url
-                if (!empty(\Piwigo\Core\Config::randomIndexRedirect()) and empty($tokens[$next_token])) {
+                if (!empty(\Piwigo\Config\Config::randomIndexRedirect()) and empty($tokens[$next_token])) {
                     $random_index_redirect = [];
-                    foreach (\Piwigo\Core\Config::randomIndexRedirect() as $random_url => $random_url_condition) {
+                    foreach (\Piwigo\Config\Config::randomIndexRedirect() as $random_url => $random_url_condition) {
                         if (empty($random_url_condition) or eval($random_url_condition)) {
                             $random_index_redirect[] = $random_url;
                         }
@@ -150,7 +150,7 @@ $page['nb_image_page'] = (int) $user['nb_image_page'];
 // and not as a category set because we can't use the #image_category.rank :
 // displayed images are not directly linked to the displayed category
 if ('categories' == $page['section'] and !isset($page['flat'])) {
-    \Piwigo\Core\Config::override('order_by', \Piwigo\Core\Config::orderByInsideCategory());
+    \Piwigo\Config\Config::override('order_by', \Piwigo\Config\Config::orderByInsideCategory());
 }
 
 if (pwg_get_session_var('image_order', 0) > 0) {
@@ -167,10 +167,10 @@ if (pwg_get_session_var('image_order', 0) > 0) {
     $order_entry = is_array($orders[$image_order_id_int]) ? $orders[$image_order_id_int] : [];
     if ($order_entry[2] ?? false) {
         $order_col = is_scalar($order_entry[1] ?? null) ? (string) $order_entry[1] : '';
-        \Piwigo\Core\Config::override('order_by', str_replace(
+        \Piwigo\Config\Config::override('order_by', str_replace(
             'ORDER BY ',
             'ORDER BY '.$order_col.',',
-            \Piwigo\Core\Config::orderBy()
+            \Piwigo\Config\Config::orderBy()
         ));
         $page['super_order_by'] = true;
     } else {
@@ -227,7 +227,7 @@ if ('categories' == $page['section']) {
         )
     ) {
         if (!empty($page['category']['image_order']) and !isset($page['super_order_by'])) {
-            \Piwigo\Core\Config::override('order_by', ' ORDER BY '.$page['category']['image_order']);
+            \Piwigo\Config\Config::override('order_by', ' ORDER BY '.$page['category']['image_order']);
         }
 
         // flat categories mode
@@ -256,7 +256,7 @@ SELECT id
                     'AND'
                 );
             } else {
-                $cache_key = $persistent_cache->make_key('all_iids'.$user['id'].$user['cache_update_time'].\Piwigo\Core\Config::orderBy());
+                $cache_key = $persistent_cache->make_key('all_iids'.$user['id'].$user['cache_update_time'].\Piwigo\Config\Config::orderBy());
                 unset($page['is_homepage']);
                 $where_sql = '1=1';
             }
@@ -275,7 +275,7 @@ SELECT DISTINCT(image_id)
   WHERE
     '.$where_sql.'
 '.$forbidden.'
-  '.\Piwigo\Core\Config::orderBy().'
+  '.\Piwigo\Config\Config::orderBy().'
 ;';
 
             $page['items'] = query2array($query, null, 'image_id');
@@ -372,7 +372,7 @@ SELECT image_id
         ],
                 'AND'
             ).'
-  '.\Piwigo\Core\Config::orderBy().'
+  '.\Piwigo\Config\Config::orderBy().'
 ;';
             $page = array_merge(
                 $page,
@@ -399,10 +399,10 @@ SELECT image_id
     // +-----------------------------------------------------------------------+
     elseif ($page['section'] == 'recent_pics') {
         if (!isset($page['super_order_by'])) {
-            \Piwigo\Core\Config::override('order_by', str_replace(
+            \Piwigo\Config\Config::override('order_by', str_replace(
                 'ORDER BY ',
                 'ORDER BY date_available DESC,',
-                \Piwigo\Core\Config::orderBy()
+                \Piwigo\Config\Config::orderBy()
             ));
         }
 
@@ -413,7 +413,7 @@ SELECT DISTINCT(id)
   WHERE '
   .get_recent_photos_sql('date_available').'
   '.$forbidden
-  .\Piwigo\Core\Config::orderBy().'
+  .\Piwigo\Config\Config::orderBy().'
 ;';
 
         $page = array_merge(
@@ -442,7 +442,7 @@ SELECT DISTINCT(id)
     // +-----------------------------------------------------------------------+
     elseif ($page['section'] == 'most_visited') {
         $page['super_order_by'] = true;
-        \Piwigo\Core\Config::override('order_by', ' ORDER BY hit DESC, id DESC');
+        \Piwigo\Config\Config::override('order_by', ' ORDER BY hit DESC, id DESC');
 
         $query = '
 SELECT DISTINCT(id)
@@ -450,15 +450,15 @@ SELECT DISTINCT(id)
     INNER JOIN '.IMAGE_CATEGORY_TABLE.' AS ic ON id = ic.image_id
   WHERE hit > 0
     '.$forbidden.'
-    '.\Piwigo\Core\Config::orderBy().'
-  LIMIT '.\Piwigo\Core\Config::topNumber().'
+    '.\Piwigo\Config\Config::orderBy().'
+  LIMIT '.\Piwigo\Config\Config::topNumber().'
 ;';
 
         $page = array_merge(
             $page,
             [
             'title' => '<a href="'.duplicate_index_url(['start' => 0]).'">'
-                        .\Piwigo\Core\Config::topNumber().' '.l10n('Most visited').'</a>',
+                        .\Piwigo\Config\Config::topNumber().' '.l10n('Most visited').'</a>',
             'items' => query2array($query, null, 'id'),
             ]
         );
@@ -468,7 +468,7 @@ SELECT DISTINCT(id)
     // +-----------------------------------------------------------------------+
     elseif ($page['section'] == 'best_rated') {
         $page['super_order_by'] = true;
-        \Piwigo\Core\Config::override('order_by', ' ORDER BY rating_score DESC, id DESC');
+        \Piwigo\Config\Config::override('order_by', ' ORDER BY rating_score DESC, id DESC');
 
         $query = '
 SELECT DISTINCT(id)
@@ -476,14 +476,14 @@ SELECT DISTINCT(id)
     INNER JOIN '.IMAGE_CATEGORY_TABLE.' AS ic ON id = ic.image_id
   WHERE rating_score IS NOT NULL
     '.$forbidden.'
-    '.\Piwigo\Core\Config::orderBy().'
-  LIMIT '.\Piwigo\Core\Config::topNumber().'
+    '.\Piwigo\Config\Config::orderBy().'
+  LIMIT '.\Piwigo\Config\Config::topNumber().'
 ;';
         $page = array_merge(
             $page,
             [
             'title' => '<a href="'.duplicate_index_url(['start' => 0]).'">'
-                        .\Piwigo\Core\Config::topNumber().' '.l10n('Best rated').'</a>',
+                        .\Piwigo\Config\Config::topNumber().' '.l10n('Best rated').'</a>',
             'items' => query2array($query, null, 'id'),
             ]
         );
@@ -498,7 +498,7 @@ SELECT DISTINCT(id)
     INNER JOIN '.IMAGE_CATEGORY_TABLE.' AS ic ON id = ic.image_id
   WHERE image_id IN ('.implode(',', $page['list']).')
     '.$forbidden.'
-  '.\Piwigo\Core\Config::orderBy().'
+  '.\Piwigo\Config\Config::orderBy().'
 ;';
 
         $page = array_merge(
@@ -525,7 +525,7 @@ if (isset($page['chronology_field'])) {
 if (isset($page['title'])) {
     $page['section_title'] = '<a href="'.get_gallery_home_url().'">'.l10n('Home').'</a>';
     if (!empty($page['title'])) {
-        $page['section_title'] .= \Piwigo\Core\Config::levelSeparator().$page['title'];
+        $page['section_title'] .= \Piwigo\Config\Config::levelSeparator().$page['title'];
     } else {
         $page['title'] = $page['section_title'];
     }
@@ -559,7 +559,7 @@ if ($filter['enabled']) {
 if ('categories' == $page['section'] and isset($page['category']) and !isset($page['combined_categories'])) {
     $need_redirect = false;
     if (empty($page['category']['permalink'])) {
-        if (\Piwigo\Core\Config::categoryUrlStyle() == 'id-name' and
+        if (\Piwigo\Config\Config::categoryUrlStyle() == 'id-name' and
             @$page['hit_by']['cat_url_name'] !== str2url($page['category']['name'])) {
             $need_redirect = true;
         }

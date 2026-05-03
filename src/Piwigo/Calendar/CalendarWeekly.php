@@ -46,7 +46,7 @@ class CalendarWeekly extends CalendarBase
          ];
         //Comment next lines for week starting on Sunday or if MySQL version<4.0.17
         //WEEK(date,5) = "0-53 - Week 1=the first week with a Monday in this year"
-        if ('monday' == \Piwigo\Core\Config::weekStartsOn()) {
+        if ('monday' == \Piwigo\Config\Config::weekStartsOn()) {
             $this->calendar_levels[CWEEK]['sql'] = pwg_db_get_week($this->date_field, 5).'+1';
             $this->calendar_levels[CDAY]['sql'] = pwg_db_get_weekday($this->date_field);
             $dayLabelsArr = $this->calendar_levels[CDAY]['labels'];

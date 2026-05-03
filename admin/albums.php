@@ -140,9 +140,9 @@ $template->assign(
     ]
 );
 
-$template->assign('delay_before_autoOpen', \Piwigo\Core\Config::albumMoveDelayBeforeAutoOpening());
+$template->assign('delay_before_autoOpen', \Piwigo\Config\Config::albumMoveDelayBeforeAutoOpening());
 
-$template->assign('POS_PREF', \Piwigo\Core\Config::newcatDefaultPosition()); //TODO use user pref if it exists
+$template->assign('POS_PREF', \Piwigo\Config\Config::newcatDefaultPosition()); //TODO use user pref if it exists
 
 // +-----------------------------------------------------------------------+
 // |                          Album display                                |
@@ -270,7 +270,7 @@ foreach ($subcats_of as $cat_id => $subcat_ids) {
 }
 
 $nb_albums = count($allAlbum);
-$light_album_manager = ($albums_counter > \Piwigo\Core\Config::lightAlbumManagerThreshold()) ? 1 : 0;
+$light_album_manager = ($albums_counter > \Piwigo\Config\Config::lightAlbumManagerThreshold()) ? 1 : 0;
 $album_tree = assocToOrderedTree($associatedTree);
 
 $template->assign(
@@ -286,7 +286,7 @@ $template->assign(
         'openCat'                    => (int) $open_cat,
         'nb_albums'                  => $nb_albums,
         'light_album_manager'        => (bool) $light_album_manager,
-        'delay_autoOpen'             => \Piwigo\Core\Config::albumMoveDelayBeforeAutoOpening(),
+        'delay_autoOpen'             => \Piwigo\Config\Config::albumMoveDelayBeforeAutoOpening(),
         'x_nb_subcats'               => l10n('%d sub-albums'),
         'x_nb_images'                => l10n('%d photos'),
         'x_nb_sub_photos'            => l10n('%d pictures in sub-albums'),

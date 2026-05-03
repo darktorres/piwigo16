@@ -211,7 +211,7 @@ $template->assign(
     'isWebmaster' => (is_webmaster()) ? 1 : 0,
     'ADMIN_PAGE_TITLE' => l10n('Plugins'),
     'view_selector' => userprefs_get_param('plugin-manager-view', 'classic'),
-    'CONF_ENABLE_EXTENSIONS_INSTALL' => \Piwigo\Core\Config::enableExtensionsInstall(),
+    'CONF_ENABLE_EXTENSIONS_INSTALL' => \Piwigo\Config\Config::enableExtensionsInstall(),
     'page_data_json' => json_encode([
         'pwg_token' => $pwg_token,
         'isWebmaster' => (is_webmaster()) ? 1 : 0,

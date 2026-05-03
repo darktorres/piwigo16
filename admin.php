@@ -35,10 +35,10 @@ check_input_parameter('section', $_GET, false, '/^[a-z]+[a-z_\/-]*(\.php)?$/i');
 // | Filesystem checks                                                     |
 // +-----------------------------------------------------------------------+
 
-if (\Piwigo\Core\Config::fsQuickCheckPeriod() > 0) {
+if (\Piwigo\Config\Config::fsQuickCheckPeriod() > 0) {
     $perform_fsqc = false;
-    if (\Piwigo\Core\Config::has('fs_quick_check_last_check')) {
-        if (strtotime((string) \Piwigo\Core\Config::fsQuickCheckLastCheck()) < strtotime(\Piwigo\Core\Config::fsQuickCheckPeriod().' seconds ago')) {
+    if (\Piwigo\Config\Config::has('fs_quick_check_last_check')) {
+        if (strtotime((string) \Piwigo\Config\Config::fsQuickCheckLastCheck()) < strtotime(\Piwigo\Config\Config::fsQuickCheckPeriod().' seconds ago')) {
             $perform_fsqc = true;
         }
     } else {
@@ -96,7 +96,7 @@ if (input_string('change_theme', null, $_GET) !== null) {
 // +-----------------------------------------------------------------------+
 
 // sync_user() is only useful when external authentication is activated
-if (\Piwigo\Core\Config::externalAuthentification()) {
+if (\Piwigo\Config\Config::externalAuthentification()) {
     sync_users();
 }
 
@@ -178,7 +178,7 @@ $template->set_filenames(array('admin' => 'admin.tpl'));
 $template->assign(
     array(
     'USERNAME' => $user['username'],
-    'ENABLE_SYNCHRONIZATION' => \Piwigo\Core\Config::enableSynchronization(),
+    'ENABLE_SYNCHRONIZATION' => \Piwigo\Config\Config::enableSynchronization(),
     'U_SITE_MANAGER' => $link_start.'site_manager',
     'U_HISTORY_STAT' => $link_start.'stats&amp;year='.date('Y').'&amp;month='.date('n'),
     'U_FAQ' => $link_start.'help',
@@ -210,16 +210,16 @@ $template->assign(
     'U_CHANGE_THEME' => $change_theme_url,
     'ADMIN_PAGE_TITLE' => 'Piwigo Administration Page',
     'ADMIN_PAGE_OBJECT_ID' => '',
-    'U_SHOW_TEMPLATE_TAB' => \Piwigo\Core\Config::showTemplateInSideMenu(),
-    'SHOW_RATING' => \Piwigo\Core\Config::rateEnabled(),
+    'U_SHOW_TEMPLATE_TAB' => \Piwigo\Config\Config::showTemplateInSideMenu(),
+    'SHOW_RATING' => \Piwigo\Config\Config::rateEnabled(),
     )
 );
 
-if (\Piwigo\Core\Config::enableCoreUpdate()) {
+if (\Piwigo\Config\Config::enableCoreUpdate()) {
     $template->assign('U_UPDATES', $link_start.'updates');
 }
 
-if (\Piwigo\Core\Config::activateComments()) {
+if (\Piwigo\Config\Config::activateComments()) {
     $template->assign('U_COMMENTS', $link_start.'comments');
 
     // pending comments
@@ -317,7 +317,7 @@ $show_whats_new = false;
 $whats_new_major_version = get_branch_from_version(PHPWG_VERSION);
 
 if (userprefs_get_param('show_whats_new_'.$whats_new_major_version, true) and pwg_is_dbconf_writeable()) {
-    if ($user['registration_date'] > \Piwigo\Core\Config::lastMajorUpdate()) {
+    if ($user['registration_date'] > \Piwigo\Config\Config::lastMajorUpdate()) {
         userprefs_update_param('show_whats_new_'.$whats_new_major_version, false);
     } else {
         // purge old whats_new_*
@@ -350,7 +350,7 @@ $whats_new_imgs = array(
 
 //If last major update conf is less than a month old then display bell for whats new popin
 $display_bell = false;
-if (strtotime(\Piwigo\Core\Config::lastMajorUpdate()) > strtotime('1 month ago')) {
+if (strtotime(\Piwigo\Config\Config::lastMajorUpdate()) > strtotime('1 month ago')) {
     $display_bell = true;
 }
 

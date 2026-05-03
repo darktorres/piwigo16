@@ -29,7 +29,7 @@ include_once(PHPWG_ROOT_PATH.'admin/include/functions_upgrade.php');
 // | Check Access and exit when it is not ok                               |
 // +-----------------------------------------------------------------------+
 
-if (!\Piwigo\Core\Config::checkUpgradeFeed()) {
+if (!\Piwigo\Config\Config::checkUpgradeFeed()) {
     die('upgrade feed is not active');
 }
 
@@ -43,10 +43,10 @@ define('UPGRADES_PATH', PHPWG_ROOT_PATH.'install/db');
 // +-----------------------------------------------------------------------+
 try {
     pwg_db_connect(
-        \Piwigo\Core\Config::dbHost(),
-        \Piwigo\Core\Config::dbUser(),
-        \Piwigo\Core\Config::dbPassword(),
-        \Piwigo\Core\Config::dbName()
+        \Piwigo\Config\Config::dbHost(),
+        \Piwigo\Config\Config::dbUser(),
+        \Piwigo\Config\Config::dbPassword(),
+        \Piwigo\Config\Config::dbName()
     );
 } catch (Exception $e) {
     my_error(l10n($e->getMessage(), true));

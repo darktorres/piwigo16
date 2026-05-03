@@ -90,7 +90,7 @@ class Updates
             $url = PHPWG_URL.'/download/all_versions.php';
             $url .= '?rand='.md5(uniqid((string) random_int(0, mt_getrandmax()), true)); // Avoid server cache
             $url .= ('Official' === $env) ? '&docker' : '&show_requirements'; // Check docker version if in container
-            $url .= '&origin_hash='.sha1(\Piwigo\Core\Config::secretKey().get_absolute_root_url());
+            $url .= '&origin_hash='.sha1(\Piwigo\Config\Config::secretKey().get_absolute_root_url());
 
             if (@fetchRemote($url, $result)) {
                 $all_versions = explode("\n", $result);
@@ -155,7 +155,7 @@ class Updates
 
     /**
      * Checks for new versions of Piwigo. Notify webmasters if new versions are available, but not too often, see
-     * \Piwigo\Core\Config::updateNotifyReminderPeriod() parameter.
+     * \Piwigo\Config\Config::updateNotifyReminderPeriod() parameter.
      *
      * @since 2.9
      */
@@ -189,18 +189,18 @@ class Updates
         // 3. no new versions but reminder needed
 
         $notify = false;
-        if (!\Piwigo\Core\Config::has('update_notify_last_notification')) {
+        if (!\Piwigo\Config\Config::has('update_notify_last_notification')) {
             $notify = true;
         } else {
-            $lastNotifArr = safe_unserialize(\Piwigo\Core\Config::updateNotifyLastNotification() ?? '');
+            $lastNotifArr = safe_unserialize(\Piwigo\Config\Config::updateNotifyLastNotification() ?? '');
             $last_notification = is_scalar($lastNotifArr['notified_on'] ?? null) ? (string) $lastNotifArr['notified_on'] : '';
             $last_notif_version = is_scalar($lastNotifArr['version'] ?? null) ? (string) $lastNotifArr['version'] : '';
 
             if ($new_versions_string != $last_notif_version) {
                 $notify = true;
             } elseif (
-                \Piwigo\Core\Config::updateNotifyReminderPeriod() > 0
-                and strtotime($last_notification) < strtotime(\Piwigo\Core\Config::updateNotifyReminderPeriod().' seconds ago')
+                \Piwigo\Config\Config::updateNotifyReminderPeriod() > 0
+                and strtotime($last_notification) < strtotime(\Piwigo\Config\Config::updateNotifyReminderPeriod().' seconds ago')
             ) {
                 $notify = true;
             }
@@ -368,7 +368,7 @@ class Updates
 
             $ignore_list = [];
 
-            $updatesIgnored = \Piwigo\Core\Config::get('updates_ignored');
+            $updatesIgnored = \Piwigo\Config\Config::get('updates_ignored');
             $updatesIgnoredArr = is_array($updatesIgnored) ? $updatesIgnored : [];
             $typeIgnoreList = is_array($updatesIgnoredArr[$type] ?? null) ? $updatesIgnoredArr[$type] : [];
 
@@ -391,9 +391,9 @@ class Updates
                 }
             }
             $updatesIgnoredArr[$type] = $ignore_list;
-            \Piwigo\Core\Config::override('updates_ignored', $updatesIgnoredArr);
+            \Piwigo\Config\Config::override('updates_ignored', $updatesIgnoredArr);
         }
-        conf_update_param('updates_ignored', pwg_db_real_escape_string(serialize(\Piwigo\Core\Config::get('updates_ignored'))));
+        conf_update_param('updates_ignored', pwg_db_real_escape_string(serialize(\Piwigo\Config\Config::get('updates_ignored'))));
         return [];
     }
 
@@ -504,7 +504,7 @@ class Updates
         $pageErrRaw = $page['errors'] ?? null;
         $pageErrors = is_array($pageErrRaw) ? $pageErrRaw : (is_scalar($pageErrRaw) ? [$pageErrRaw] : []);
         if (empty($pageErrors)) {
-            $path = PHPWG_ROOT_PATH.\Piwigo\Core\Config::dataLocation().'update';
+            $path = PHPWG_ROOT_PATH.\Piwigo\Config\Config::dataLocation().'update';
             $filename = $path.'/'.$code.'.zip';
             @mkgetdir($path);
 
@@ -582,7 +582,7 @@ class Updates
                             self::process_obsolete_list($obsolete_list);
                         }
 
-                        deltree(PHPWG_ROOT_PATH.\Piwigo\Core\Config::dataLocation().'update');
+                        deltree(PHPWG_ROOT_PATH.\Piwigo\Config\Config::dataLocation().'update');
                         invalidate_user_cache(true);
                         conf_update_param('piwigo_installed_version', $upgrade_to);
                         pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'update', ['from_version' => PHPWG_VERSION, 'to_version' => $upgrade_to]);
@@ -603,15 +603,15 @@ class Updates
                             redirect(PHPWG_ROOT_PATH.'upgrade.php?now=');
                         }
                     } else {
-                        file_put_contents(PHPWG_ROOT_PATH.\Piwigo\Core\Config::dataLocation().'update/log_error.txt', $error);
+                        file_put_contents(PHPWG_ROOT_PATH.\Piwigo\Config\Config::dataLocation().'update/log_error.txt', $error);
 
                         \Piwigo\Core\PageState::current()->addError(l10n(
                             'An error has occured during extract. Please check files permissions of your piwigo installation.<br><a href="%s">Click here to show log error</a>.',
-                            get_root_url().\Piwigo\Core\Config::dataLocation().'update/log_error.txt'
+                            get_root_url().\Piwigo\Config\Config::dataLocation().'update/log_error.txt'
                         ));
                     }
                 } else {
-                    deltree(PHPWG_ROOT_PATH.\Piwigo\Core\Config::dataLocation().'update');
+                    deltree(PHPWG_ROOT_PATH.\Piwigo\Config\Config::dataLocation().'update');
                     \Piwigo\Core\PageState::current()->addError(l10n('An error has occured during upgrade.'));
                 }
             } else {

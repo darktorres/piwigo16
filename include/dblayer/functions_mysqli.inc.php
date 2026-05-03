@@ -120,7 +120,7 @@ function pwg_query(string $query)
     global $mysqli, $page, $debug, $t2;
 
     $start = microtime(true);
-    ($result = $mysqli->query($query)) or my_error($query, \Piwigo\Core\Config::dieOnSqlError());
+    ($result = $mysqli->query($query)) or my_error($query, \Piwigo\Config\Config::dieOnSqlError());
 
     $time = microtime(true) - $start;
 
@@ -132,7 +132,7 @@ function pwg_query(string $query)
     $page['count_queries']++;
     $page['queries_time'] += $time;
 
-    if (\Piwigo\Core\Config::showQueries()) {
+    if (\Piwigo\Config\Config::showQueries()) {
         $output = '';
         $output .= '<pre>['.$page['count_queries'].'] ';
         $output .= "\n".$query;

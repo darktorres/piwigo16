@@ -72,7 +72,7 @@ if (isset($page['search_id'])) {
         get_root_url().'admin.php'.get_query_string_diff(['start']),
         $page['nb_lines'],
         $page['start'],
-        \Piwigo\Core\Config::nbLogsPage()
+        \Piwigo\Config\Config::nbLogsPage()
     );
 
     $template->assign('navbar', $navbar);
@@ -139,13 +139,13 @@ $template->assign(
 
 $template->assign('display_thumbnails', $display_thumbnails);
 $template->assign('display_thumbnail_selected', $form['display_thumbnail']);
-$template->assign('guest_id', \Piwigo\Core\Config::guestId());
+$template->assign('guest_id', \Piwigo\Config\Config::guestId());
 $template->assign('ADMIN_PAGE_TITLE', l10n('History'));
 
 $template->assign('page_data_json', json_encode([
     'API_METHOD'                  => 'ws.php?format=json&method=pwg.history.search',
     'filter_user_name'            => @$form_param['user_name'],
-    'guest_id'                    => \Piwigo\Core\Config::guestId(),
+    'guest_id'                    => \Piwigo\Config\Config::guestId(),
     'today'                       => date('Y-m-d'),
     'initial_user_id'             => $form_param['user_id'],
     'initial_image_id'            => $form_param['image_id'] ?? '',

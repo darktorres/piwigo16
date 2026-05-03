@@ -26,15 +26,15 @@ function rate_picture(int $image_id, float|int|null $rate): array|false
     global $user;
 
     if (!isset($rate)
-        or !\Piwigo\Core\Config::rateEnabled()
+        or !\Piwigo\Config\Config::rateEnabled()
         or !preg_match('/^[0-9]+$/', (string)$rate)
-        or !in_array($rate, \Piwigo\Core\Config::rateItems())) {
+        or !in_array($rate, \Piwigo\Config\Config::rateItems())) {
         return false;
     }
 
     $user_anonymous = is_autorize_status(ACCESS_CLASSIC) ? false : true;
 
-    if ($user_anonymous and !\Piwigo\Core\Config::rateAnonymous()) {
+    if ($user_anonymous and !\Piwigo\Config\Config::rateAnonymous()) {
         return false;
     }
 

@@ -158,7 +158,7 @@ if (isset($_POST['submitFilter'])) {
     if (isset($_POST['filter_level_use'])) {
         check_input_parameter('filter_level', $_POST, false, '/^\d+$/');
 
-        if (in_array($_POST['filter_level'], \Piwigo\Core\Config::availablePermissionLevels())) {
+        if (in_array($_POST['filter_level'], \Piwigo\Config\Config::availablePermissionLevels())) {
             $bmf['level'] = $_POST['filter_level'];
 
             if (isset($_POST['filter_level_include_lower'])) {
@@ -240,7 +240,7 @@ elseif (isset($_GET['filter'])) {
                 break;
 
             case 'level':
-                if (is_numeric($value) && in_array($value, \Piwigo\Core\Config::availablePermissionLevels())) {
+                if (is_numeric($value) && in_array($value, \Piwigo\Config\Config::availablePermissionLevels())) {
                     $bmf['level'] = $value;
                 }
                 break;
@@ -470,7 +470,7 @@ SELECT
                 $query = '
 SELECT id
   FROM '.IMAGES_TABLE.'
-  '.\Piwigo\Core\Config::orderBy();
+  '.\Piwigo\Config\Config::orderBy();
 
                 $filter_sets[] = query2array($query, null, 'id');
             }
@@ -523,7 +523,7 @@ if (isset($bmf['level'])) {
 SELECT id
   FROM '.IMAGES_TABLE.'
   WHERE level '.$operator.' '.$bmf_level.'
-  '.\Piwigo\Core\Config::orderBy();
+  '.\Piwigo\Config\Config::orderBy();
 
     $filter_sets[] = query2array($query, null, 'id');
 }
@@ -569,7 +569,7 @@ if (isset($bmf['dimension'])) {
 SELECT id
   FROM '.IMAGES_TABLE.'
   WHERE '.implode(' AND ', $where_clause).'
-  '.\Piwigo\Core\Config::orderBy();
+  '.\Piwigo\Config\Config::orderBy();
 
     $filter_sets[] = query2array($query, null, 'id');
 }
@@ -594,7 +594,7 @@ if (isset($bmf['filesize'])) {
 SELECT id
   FROM '.IMAGES_TABLE.'
   WHERE '.implode(' AND ', $where_clause).'
-  '.\Piwigo\Core\Config::orderBy();
+  '.\Piwigo\Config\Config::orderBy();
 
     $filter_sets[] = query2array($query, null, 'id');
 }

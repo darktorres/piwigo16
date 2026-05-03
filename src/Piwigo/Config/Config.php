@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Piwigo\Core;
+namespace Piwigo\Config;
 
 /**
  * Typed facade over the $conf global array.

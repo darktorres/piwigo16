@@ -460,8 +460,8 @@ if (!empty($_GET['display'])) {
     } else {
         $page['nb_images'] = is_numeric($_GET['display']) ? (int) $_GET['display'] : 20;
     }
-} elseif (in_array(\Piwigo\Core\Config::batchManagerImagesPerPageGlobal(), [20, 50, 100])) {
-    $page['nb_images'] = \Piwigo\Core\Config::batchManagerImagesPerPageGlobal();
+} elseif (in_array(\Piwigo\Config\Config::batchManagerImagesPerPageGlobal(), [20, 50, 100])) {
+    $page['nb_images'] = \Piwigo\Config\Config::batchManagerImagesPerPageGlobal();
 } else {
     $page['nb_images'] = 20;
 }
@@ -491,7 +491,7 @@ if (count($page['cat_elements_id']) > 0) {
         and isset($duplicates_on_fields)) {
         // The $duplicates_on_fields variable is defined in ./batch_manager.php
         $order_by_fields = array_merge($duplicates_on_fields, [ 'id' ]);
-        \Piwigo\Core\Config::override('order_by', ' ORDER BY '.join(', ', $order_by_fields));
+        \Piwigo\Config\Config::override('order_by', ' ORDER BY '.join(', ', $order_by_fields));
     }
 
     $query = '
@@ -501,9 +501,9 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
     if ($is_category) {
         $category_info = get_cat_info($bmf_category_val);
 
-        \Piwigo\Core\Config::override('order_by', \Piwigo\Core\Config::orderByInsideCategory());
+        \Piwigo\Config\Config::override('order_by', \Piwigo\Config\Config::orderByInsideCategory());
         if (!empty($category_info['image_order'])) {
-            \Piwigo\Core\Config::override('order_by', ' ORDER BY '.(is_scalar($category_info['image_order']) ? (string) $category_info['image_order'] : ''));
+            \Piwigo\Config\Config::override('order_by', ' ORDER BY '.(is_scalar($category_info['image_order']) ? (string) $category_info['image_order'] : ''));
         }
 
         $query .= '
@@ -519,7 +519,7 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
     }
 
     $query .= '
-  '.\Piwigo\Core\Config::orderBy().'
+  '.\Piwigo\Config\Config::orderBy().'
   LIMIT '.$page['nb_images'].' OFFSET '.$page['start'].'
 ;';
     $result = pwg_query($query);

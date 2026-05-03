@@ -48,9 +48,9 @@ SELECT
     ip_address,
     occured_on,
     details,
-    '.\Piwigo\Core\Config::userFields()['username'].' AS username
+    '.\Piwigo\Config\Config::userFields()['username'].' AS username
   FROM '.ACTIVITY_TABLE.'
-    JOIN '.USERS_TABLE.' AS u ON performed_by = u.'.\Piwigo\Core\Config::userFields()['id'].'
+    JOIN '.USERS_TABLE.' AS u ON performed_by = u.'.\Piwigo\Config\Config::userFields()['id'].'
     WHERE object = \'user\'
   ORDER BY activity_id DESC
 ;';
@@ -109,7 +109,7 @@ $user_activity_page_data = [
 
 $template->assign([
   'PWG_TOKEN' => get_pwg_token(),
-  'INHERIT' => \Piwigo\Core\Config::inheritanceByDefault(),
+  'INHERIT' => \Piwigo\Config\Config::inheritanceByDefault(),
   'CACHE_KEYS' => $cache_keys,
   'user_activity_page_data_json' => json_encode($user_activity_page_data),
   ]);
@@ -128,10 +128,10 @@ $nb_lines_for_user = query2array($query, 'performed_by', 'counter');
 if (count($nb_lines_for_user) > 0) {
     $query = '
   SELECT 
-      '.\Piwigo\Core\Config::userFields()['id'].' AS id, 
-      '.\Piwigo\Core\Config::userFields()['username'].' AS username 
+      '.\Piwigo\Config\Config::userFields()['id'].' AS id, 
+      '.\Piwigo\Config\Config::userFields()['username'].' AS username 
     FROM '.USERS_TABLE.' 
-    WHERE '.\Piwigo\Core\Config::userFields()['id'].' IN ('.implode(',', array_keys($nb_lines_for_user)).');';
+    WHERE '.\Piwigo\Config\Config::userFields()['id'].' IN ('.implode(',', array_keys($nb_lines_for_user)).');';
 }
 
 $username_of = query2array($query, 'id', 'username');

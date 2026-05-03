@@ -74,7 +74,7 @@ class Plugins
  */
     public function perform_action(string $action, string $plugin_id, array $options = []): mixed
     {
-        if (!\Piwigo\Core\Config::enableExtensionsInstall() and 'delete' == $action) {
+        if (!\Piwigo\Config\Config::enableExtensionsInstall() and 'delete' == $action) {
             die('Piwigo extensions install/update/delete system is disabled');
         }
 
@@ -373,7 +373,7 @@ DELETE FROM '. PLUGINS_TABLE .'
     public function get_versions_to_check(bool $beta_test = false, string $version = PHPWG_VERSION): array
     {
         $versions_to_check = [];
-        $url = PEM_URL . '/api/get_version_list.php?category_id='. \Piwigo\Core\Config::pemPluginsCategory() .'&format=php';
+        $url = PEM_URL . '/api/get_version_list.php?category_id='. \Piwigo\Config\Config::pemPluginsCategory() .'&format=php';
         if (fetchRemote($url, $result) and $pem_versions = @unserialize($result)) {
             if (!is_array($pem_versions)) {
                 return $versions_to_check;
@@ -440,7 +440,7 @@ DELETE FROM '. PLUGINS_TABLE .'
         // Retrieve PEM plugins infos
         $url = PEM_URL . '/api/get_revision_list-next.php';
         $get_data = [
-          'category_id' => \Piwigo\Core\Config::pemPluginsCategory(),
+          'category_id' => \Piwigo\Config\Config::pemPluginsCategory(),
           'format' => 'php',
           'last_revision_only' => 'true',
           'version' => implode(',', $versions_to_check),
@@ -498,7 +498,7 @@ DELETE FROM '. PLUGINS_TABLE .'
         // Retrieve PEM plugins infos
         $url = PEM_URL . '/api/get_revision_list.php';
         $get_data = [
-          'category_id' => \Piwigo\Core\Config::pemPluginsCategory(),
+          'category_id' => \Piwigo\Config\Config::pemPluginsCategory(),
           'format' => 'php',
           'version' => implode(',', $versions_to_check),
           'extension_include' => implode(',', $plugins_to_check),

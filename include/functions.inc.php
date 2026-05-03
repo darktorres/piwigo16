@@ -148,7 +148,7 @@ function mkgetdir($dir, $flags = MKGETDIR_DEFAULT): bool
             $dir = str_replace('/', DIRECTORY_SEPARATOR, $dir);
         }
         $umask = umask(0);
-        $mkd = @mkdir($dir, \Piwigo\Core\Config::chmodValue(), ($flags & MKGETDIR_RECURSIVE) ? true : false);
+        $mkd = @mkdir($dir, \Piwigo\Config\Config::chmodValue(), ($flags & MKGETDIR_RECURSIVE) ? true : false);
         umask($umask);
         if ($mkd == false) {
             !($flags & MKGETDIR_DIE_ON_ERROR) or fatal_error("$dir ".l10n('no write access'));
@@ -428,12 +428,12 @@ SELECT id, name
  */
 function do_log($image_id = null, $image_type = null)
 {
-    $do_log = \Piwigo\Core\Config::logConf();
+    $do_log = \Piwigo\Config\Config::logConf();
     if (is_admin()) {
-        $do_log = \Piwigo\Core\Config::historyAdmin();
+        $do_log = \Piwigo\Config\Config::historyAdmin();
     }
     if (is_a_guest()) {
-        $do_log = \Piwigo\Core\Config::historyGuest();
+        $do_log = \Piwigo\Config\Config::historyGuest();
     }
 
     return (bool) trigger_change('pwg_log_allowed', $do_log, $image_id, $image_type);
@@ -454,7 +454,7 @@ function pwg_log(int|string|null $image_id = null, ?string $image_type = null, ?
     }
 
     $update_last_visit = false;
-    if (empty($user['last_visit']) or strtotime((string) $user['last_visit']) < time() - \Piwigo\Core\Config::sessionLength()) {
+    if (empty($user['last_visit']) or strtotime((string) $user['last_visit']) < time() - \Piwigo\Config\Config::sessionLength()) {
         $update_last_visit = true;
     }
     $update_last_visit = trigger_change('pwg_log_update_last_visit', $update_last_visit);
@@ -499,12 +499,12 @@ UPDATE '.USER_INFOS_TABLE.'
     // If plugin developers add their own sections, Piwigo will automatically add it in the history.section enum column
     if (isset($page['section'])) {
         // set cache if not available
-        if (!\Piwigo\Core\Config::has('history_sections_cache')) {
+        if (!\Piwigo\Config\Config::has('history_sections_cache')) {
             conf_update_param('history_sections_cache', get_enums(HISTORY_TABLE, 'section'), true);
         }
 
-        $history_sections_cache = safe_unserialize(\Piwigo\Core\Config::historySectionsCache() ?? '');
-        \Piwigo\Core\Config::override('history_sections_cache', $history_sections_cache);
+        $history_sections_cache = safe_unserialize(\Piwigo\Config\Config::historySectionsCache() ?? '');
+        \Piwigo\Config\Config::override('history_sections_cache', $history_sections_cache);
         if (
             in_array($page['section'], $history_sections_cache)
             or in_array(strtolower($page['section']), array_map(static fn (mixed $s): string => strtolower(is_scalar($s) ? (string) $s : ''), $history_sections_cache))
@@ -564,7 +564,7 @@ INSERT INTO '.HISTORY_TABLE.'
         history_summarize(50000);
     }
 
-    if (\Piwigo\Core\Config::historyAutopurgeEvery() > 0 and $history_id % \Piwigo\Core\Config::historyAutopurgeEvery() == 0) {
+    if (\Piwigo\Config\Config::historyAutopurgeEvery() > 0 and $history_id % \Piwigo\Config\Config::historyAutopurgeEvery() == 0) {
         include_once(PHPWG_ROOT_PATH.'admin/include/functions_history.inc.php');
         history_autopurge();
     }
@@ -1014,7 +1014,7 @@ function redirect_html($url, $msg = '', $refresh_time = 0): void
     global $user, $template, $lang_info, $lang, $t2, $page, $debug;
 
     if (!isset($lang_info) || !isset($template)) {
-        $user = build_user(\Piwigo\Core\Config::guestId(), true);
+        $user = build_user(\Piwigo\Config\Config::guestId(), true);
         load_language('common.lang');
         trigger_notify('loading_lang');
         load_language('lang', PHPWG_ROOT_PATH.PWG_LOCAL_DIR, ['no_fallback' => true, 'local' => true]);
@@ -1057,7 +1057,7 @@ function redirect_html($url, $msg = '', $refresh_time = 0): void
 function redirect($url, $msg = '', $refresh_time = 0): void
 {
     // with RefeshTime <> 0, only html must be used
-    if (\Piwigo\Core\Config::defaultRedirectMethod() == 'http'
+    if (\Piwigo\Config\Config::defaultRedirectMethod() == 'http'
         and $refresh_time == 0
         and !headers_sent()
     ) {
@@ -1087,7 +1087,7 @@ SELECT
 ;';
     $result = pwg_query($query);
     while ($row = pwg_db_fetch_assoc($result)) {
-        if ($row['id'] == \Piwigo\Core\Config::mobilTheme()) {
+        if ($row['id'] == \Piwigo\Config\Config::mobilTheme()) {
             if (!$show_mobile) {
                 continue;
             }
@@ -1110,7 +1110,7 @@ SELECT
  */
 function check_theme_installed(string $theme_id): bool
 {
-    return file_exists(\Piwigo\Core\Config::themesDir().'/'.$theme_id.'/'.'themeconf.inc.php');
+    return file_exists(\Piwigo\Config\Config::themesDir().'/'.$theme_id.'/'.'themeconf.inc.php');
 }
 
 /**
@@ -1305,16 +1305,16 @@ function get_themeconf($key): mixed
 }
 
 /**
- * Returns webmaster mail address depending on \Piwigo\Core\Config::webmasterId()
+ * Returns webmaster mail address depending on \Piwigo\Config\Config::webmasterId()
  *
  * @return string
  */
 function get_webmaster_mail_address(): string
 {
     $query = '
-SELECT '.\Piwigo\Core\Config::userFields()['email'].'
+SELECT '.\Piwigo\Config\Config::userFields()['email'].'
   FROM '.USERS_TABLE.'
-  WHERE '.\Piwigo\Core\Config::userFields()['id'].' = '.\Piwigo\Core\Config::webmasterId().'
+  WHERE '.\Piwigo\Config\Config::userFields()['id'].' = '.\Piwigo\Config\Config::webmasterId().'
 ;';
     [$email] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
@@ -1352,7 +1352,7 @@ SELECT param, value
         // After Kernel::boot() the proxy is installed on $GLOBALS['conf'];
         // write directly to Config::$data to avoid emitting deprecation notices.
         if (\Piwigo\Core\Kernel::isBooted()) {
-            \Piwigo\Core\Config::override((string) $row['param'], $val);
+            \Piwigo\Config\Config::override((string) $row['param'], $val);
         } else {
             /** @var array<string, mixed> $conf */
             $conf = &$GLOBALS['conf'];
@@ -1411,7 +1411,7 @@ INSERT INTO
     pwg_query($query);
 
     if ($updateGlobal) {
-        \Piwigo\Core\Config::override($param, $value);
+        \Piwigo\Config\Config::override($param, $value);
     }
 }
 
@@ -1437,7 +1437,7 @@ DELETE FROM '.CONFIG_TABLE.'
     pwg_query($query);
 
     foreach ($params as $param) {
-        \Piwigo\Core\Config::delete($param);
+        \Piwigo\Config\Config::delete($param);
     }
 }
 
@@ -1452,7 +1452,7 @@ DELETE FROM '.CONFIG_TABLE.'
  */
 function conf_get_param($param, $default_value = null)
 {
-    return \Piwigo\Core\Config::get($param) ?? $default_value;
+    return \Piwigo\Config\Config::get($param) ?? $default_value;
 }
 
 
@@ -1558,7 +1558,7 @@ function script_basename(): string
     foreach (['SCRIPT_NAME', 'SCRIPT_FILENAME', 'PHP_SELF'] as $value) {
         if (!empty($_SERVER[$value])) {
             $filename = strtolower(is_scalar($_SERVER[$value]) ? (string) $_SERVER[$value] : '');
-            if (\Piwigo\Core\Config::phpExtensionInUrls() and get_extension($filename) !== 'php') {
+            if (\Piwigo\Config\Config::phpExtensionInUrls() and get_extension($filename) !== 'php') {
                 continue;
             }
             $basename = basename($filename, '.php');
@@ -1571,7 +1571,7 @@ function script_basename(): string
 }
 
 /**
- * Return \Piwigo\Core\Config::filterPages() value for the current page
+ * Return \Piwigo\Config\Config::filterPages() value for the current page
  *
  * @param string $value_name
  * @return mixed
@@ -1580,7 +1580,7 @@ function get_filter_page_value($value_name): mixed
 {
     $page_name = script_basename();
     /** @var array<string, array<string, mixed>> $filter_pages */
-    $filter_pages = \Piwigo\Core\Config::filterPages();
+    $filter_pages = \Piwigo\Config\Config::filterPages();
 
     if (isset($filter_pages[$page_name][$value_name])) {
         return $filter_pages[$page_name][$value_name];
@@ -1802,7 +1802,7 @@ function get_ephemeral_key(int $valid_after_seconds, string $aditionnal_data_to_
         .hash_hmac(
             'md5',
             $time.substr($remote_addr, 0, 5).$valid_after_seconds.$aditionnal_data_to_hash,
-            \Piwigo\Core\Config::secretKey()
+            \Piwigo\Config\Config::secretKey()
         );
 }
 
@@ -1822,7 +1822,7 @@ function verify_ephemeral_key(string $key, string $aditionnal_data_to_hash = '')
         or hash_hmac(
             'md5',
             $key[0].substr($remote_addr, 0, 5).$key[1].$aditionnal_data_to_hash,
-            \Piwigo\Core\Config::secretKey()
+            \Piwigo\Config\Config::secretKey()
         ) != $key[2]
     ) {
         return false;
@@ -1842,7 +1842,7 @@ function verify_ephemeral_key(string $key, string $aditionnal_data_to_hash = '')
 function create_navigation_bar(string $url, int $nb_element, int $start, int $nb_element_page, bool $clean_url = false, string $param_name = 'start'): array
 {
     $navbar = [];
-    $pages_around = \Piwigo\Core\Config::paginatePagesAround();
+    $pages_around = \Piwigo\Config\Config::paginatePagesAround();
     $start_str = $clean_url ? '/'.$param_name.'-' : (!str_contains($url, '?') ? '?' : '&amp;').$param_name.'=';
 
     if ($start < 0) {
@@ -1949,7 +1949,7 @@ function check_pwg_token(): void
  */
 function get_pwg_token(): string
 {
-    return hash_hmac('md5', (string) session_id(), (string) \Piwigo\Core\Config::secretKey());
+    return hash_hmac('md5', (string) session_id(), (string) \Piwigo\Config\Config::secretKey());
 }
 
 /*
@@ -2006,7 +2006,7 @@ function get_privacy_level_options(): array
 {
     $options = [];
     $label = '';
-    foreach (array_reverse(\Piwigo\Core\Config::availablePermissionLevels()) as $level) {
+    foreach (array_reverse(\Piwigo\Config\Config::availablePermissionLevels()) as $level) {
         if (0 == $level) {
             $label = l10n('Everybody');
         } else {
@@ -2065,7 +2065,7 @@ function get_device()
  */
 function mobile_theme()
 {
-    if (empty(\Piwigo\Core\Config::mobilTheme())) {
+    if (empty(\Piwigo\Config\Config::mobilTheme())) {
         return false;
     }
 
@@ -2189,7 +2189,7 @@ function safe_version_compare($a, $b, $op = null): int|bool
  */
 function check_lounge(): void
 {
-    if (!\Piwigo\Core\Config::has('lounge_active') or !\Piwigo\Core\Config::loungeActive()) {
+    if (!\Piwigo\Config\Config::has('lounge_active') or !\Piwigo\Config\Config::loungeActive()) {
         return;
     }
 
@@ -2213,7 +2213,7 @@ SELECT
         $voyager = $voyagers[0];
         $age = strtotime((string) $voyager['dbnow']) - strtotime((string) $voyager['date_available']);
 
-        if ($age > \Piwigo\Core\Config::loungeMaxDuration()) {
+        if ($age > \Piwigo\Config\Config::loungeMaxDuration()) {
             include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
             empty_lounge();
         }
@@ -2233,19 +2233,19 @@ function send_piwigo_infos(): void
 
     $start_time = get_moment();
 
-    if (!\Piwigo\Core\Config::sendPiwigoInfos()) {
+    if (!\Piwigo\Config\Config::sendPiwigoInfos()) {
         return;
     }
 
-    // \Piwigo\Core\Config::get('send_piwigo_infos_last_notice') has been loaded in include/common, maybe
+    // \Piwigo\Config\Config::get('send_piwigo_infos_last_notice') has been loaded in include/common, maybe
     // a few seconds earlier, we need a refreshed value from the database. Another
     // concurrent execution might have already performed send_piwigo_infos 3 seconds ago.
     load_conf_from_db('param = "send_piwigo_infos_last_notice"', false);
 
     $do_send = false;
-    if (\Piwigo\Core\Config::has('send_piwigo_infos_last_notice')) {
+    if (\Piwigo\Config\Config::has('send_piwigo_infos_last_notice')) {
         $period = conf_get_param('send_piwigo_infos_period', 7 * 24 * 60 * 60);
-        if (strtotime(\Piwigo\Core\Config::sendPiwigoInfosLastNotice() ?? '') < strtotime((is_scalar($period) ? (string) $period : '604800').' second ago')) {
+        if (strtotime(\Piwigo\Config\Config::sendPiwigoInfosLastNotice() ?? '') < strtotime((is_scalar($period) ? (string) $period : '604800').' second ago')) {
             $do_send = true;
         }
     } else {
@@ -2256,7 +2256,7 @@ function send_piwigo_infos(): void
         return;
     }
 
-    $logger->info('['.__FUNCTION__.'] current conf.send_piwigo_infos_last_notice='.(\Piwigo\Core\Config::sendPiwigoInfosLastNotice() ?? 'notFound').' => lets do it');
+    $logger->info('['.__FUNCTION__.'] current conf.send_piwigo_infos_last_notice='.(\Piwigo\Config\Config::sendPiwigoInfosLastNotice() ?? 'notFound').' => lets do it');
 
     if (!pwg_is_dbconf_writeable()) {
         $logger->info('['.__FUNCTION__.'] conf is not writeable, abort');
@@ -2273,14 +2273,14 @@ function send_piwigo_infos(): void
 
     [$db_current_date] = pwg_db_fetch_row(pwg_query('SELECT now();')) ?? [null];
 
-    if (!\Piwigo\Core\Config::has('send_piwigo_infos_origin_hash')) {
+    if (!\Piwigo\Config\Config::has('send_piwigo_infos_origin_hash')) {
         conf_update_param('send_piwigo_infos_origin_hash', sha1(random_bytes(1000)), true);
     }
 
     [$container_type, $container_version] = get_container_info();
 
     $piwigo_infos = [
-      'origin_hash' => \Piwigo\Core\Config::sendPiwigoInfosOriginHash(),
+      'origin_hash' => \Piwigo\Config\Config::sendPiwigoInfosOriginHash(),
       'technical' => [
         'php_version' => PHP_VERSION,
         'piwigo_version' => PHPWG_VERSION,
@@ -2358,8 +2358,8 @@ SELECT
         $piwigo_infos['file_extensions'] = query2array($query, 'ext');
     }
 
-    // \Piwigo\Core\Config::override('pem_plugins_category', 12);
-    // \Piwigo\Core\Config::override('pem_themes_category', 10);
+    // \Piwigo\Config\Config::override('pem_plugins_category', 12);
+    // \Piwigo\Config\Config::override('pem_themes_category', 10);
     $url = PEM_URL . '/api/get_extension_list.php';
     $pem_extensions_raw = fetchRemote($url, $result) ? @unserialize($result) : false;
     $pem_extensions = is_array($pem_extensions_raw) ? $pem_extensions_raw : [];
@@ -2402,7 +2402,7 @@ SELECT
             }
 
             if (empty($eid)) {
-                $eid = $official_exts[\Piwigo\Core\Config::pemPluginsCategory()][$pluginId] ?? null;
+                $eid = $official_exts[\Piwigo\Config\Config::pemPluginsCategory()][$pluginId] ?? null;
             }
 
             if (empty($eid)) {
@@ -2439,7 +2439,7 @@ SELECT
         }
 
         if (empty($eid)) {
-            $eid = $official_exts[\Piwigo\Core\Config::pemThemesCategory()][$themeId] ?? null;
+            $eid = $official_exts[\Piwigo\Config\Config::pemThemesCategory()][$themeId] ?? null;
         }
 
         if (empty($eid)) {
@@ -2632,7 +2632,7 @@ SELECT
     ];
 
     foreach ($features as $feature) {
-        $piwigo_infos['features'][$feature] = \Piwigo\Core\Config::get($feature) ? 'yes' : 'no';
+        $piwigo_infos['features'][$feature] = \Piwigo\Config\Config::get($feature) ? 'yes' : 'no';
     }
 
     $updateUrl = conf_get_param('send_piwigo_infos_update_url', PHPWG_URL);
@@ -2654,7 +2654,7 @@ SELECT
     } else {
         $last_notice = date('c');
         conf_update_param('send_piwigo_infos_last_notice', $last_notice, true);
-        $logger->info('['.__FUNCTION__.'][exec='.$exec_id.'] fetchRemote success, new send_piwigo_infos_last_notice='.\Piwigo\Core\Config::sendPiwigoInfosLastNotice());
+        $logger->info('['.__FUNCTION__.'][exec='.$exec_id.'] fetchRemote success, new send_piwigo_infos_last_notice='.\Piwigo\Config\Config::sendPiwigoInfosLastNotice());
     }
 
     pwg_unique_exec_ends('send_piwigo_infos');
@@ -2666,11 +2666,11 @@ function send_piwigo_infos_retry_later(int $wait_time): void
     global $logger;
 
     // let's fake a last_notice so that we only try 1 day later
-    $last_notice = \Piwigo\Core\Config::has('send_piwigo_infos_last_notice') ? strtotime(\Piwigo\Core\Config::sendPiwigoInfosLastNotice() ?? '') : time();
+    $last_notice = \Piwigo\Config\Config::has('send_piwigo_infos_last_notice') ? strtotime(\Piwigo\Config\Config::sendPiwigoInfosLastNotice() ?? '') : time();
     $last_notice += $wait_time;
 
     conf_update_param('send_piwigo_infos_last_notice', date('c', $last_notice), true);
-    $logger->info('['.__FUNCTION__.'] new send_piwigo_infos_last_notice='.\Piwigo\Core\Config::sendPiwigoInfosLastNotice());
+    $logger->info('['.__FUNCTION__.'] new send_piwigo_infos_last_notice='.\Piwigo\Config\Config::sendPiwigoInfosLastNotice());
 }
 
 function pwg_unique_exec_begins(string $token_name, int $timeout = 60): false|string
@@ -2680,8 +2680,8 @@ function pwg_unique_exec_begins(string $token_name, int $timeout = 60): false|st
     $exec_id = substr(sha1(random_bytes(1000)), 0, 8);
     $logger->info('['.$token_name.'][exec='.$exec_id.'] starts now');
 
-    if (\Piwigo\Core\Config::has($token_name . '_running')) {
-        $runningRaw = \Piwigo\Core\Config::get($token_name . '_running');
+    if (\Piwigo\Config\Config::has($token_name . '_running')) {
+        $runningRaw = \Piwigo\Config\Config::get($token_name . '_running');
         [$running_exec_id, $running_exec_start_time] = explode('-', is_scalar($runningRaw) ? (string) $runningRaw : '-');
         if (time() - (int)$running_exec_start_time > $timeout) {
             $logger->info('['.$token_name.'][exec='.$exec_id.'] exec='.$running_exec_id.', timeout stopped by another call to the function');

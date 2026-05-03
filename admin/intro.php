@@ -99,7 +99,7 @@ fs_quick_check();
 
 $template->set_filenames(['intro' => 'intro.tpl']);
 
-if (\Piwigo\Core\Config::showNewsletterSubscription() and userprefs_get_param('show_newsletter_subscription', true)) {
+if (\Piwigo\Config\Config::showNewsletterSubscription() and userprefs_get_param('show_newsletter_subscription', true)) {
     $query = '
   SELECT registration_date 
     FROM '.USER_INFOS_TABLE.'
@@ -162,11 +162,11 @@ $template->assign(
     'NB_PLUGINS' => count($pwg_loaded_plugins),
     'STORAGE_USED' => str_replace(' ', '&nbsp;', l10n('%sGB', number_format($du_gb, $du_decimals))),
     'U_QUICK_SYNC' => PHPWG_ROOT_PATH.'admin.php?page=site_update&amp;site=1&amp;quick_sync=1&amp;pwg_token='.get_pwg_token(),
-    'CHECK_FOR_UPDATES' => \Piwigo\Core\Config::dashboardCheckForUpdates(),
+    'CHECK_FOR_UPDATES' => \Piwigo\Config\Config::dashboardCheckForUpdates(),
     ]
 );
 
-if (\Piwigo\Core\Config::activateComments()) {
+if (\Piwigo\Config\Config::activateComments()) {
     $query = '
 SELECT COUNT(*)
   FROM '.COMMENTS_TABLE.'
@@ -177,7 +177,7 @@ SELECT COUNT(*)
     $template->assign('NB_COMMENTS', 0);
 }
 
-if (\Piwigo\Core\Config::showPiwigoLatestNews()) {
+if (\Piwigo\Config\Config::showPiwigoLatestNews()) {
     $latest_news = get_piwigo_news();
 
     if (isset($latest_news['id']) and $latest_news['posted_on'] > time() - 60 * 60 * 24 * 30) {
@@ -197,7 +197,7 @@ trigger_notify('loc_end_intro');
 // |                           get activity data                           |
 // +-----------------------------------------------------------------------+
 
-$nb_weeks = \Piwigo\Core\Config::dashboardActivityNbWeeks();
+$nb_weeks = \Piwigo\Config\Config::dashboardActivityNbWeeks();
 
 //Count mondays
 $mondays = 0;
@@ -379,7 +379,7 @@ $file_extensions = query2array($query, 'ext');
 
 foreach ($file_extensions as $ext => $ext_details) {
     $type = null;
-    if (in_array(strtolower((string) $ext), \Piwigo\Core\Config::pictureExtensions())) {
+    if (in_array(strtolower((string) $ext), \Piwigo\Config\Config::pictureExtensions())) {
         $type = 'Photos';
     } elseif (in_array(strtolower((string) $ext), $video_format)) {
         $type = 'Videos';
@@ -420,8 +420,8 @@ foreach ($file_extensions as $ext => $ext_details) {
 }
 
 // Add cache size if requested and known.
-if (\Piwigo\Core\Config::addCacheToStorageChart() && \Piwigo\Core\Config::has('cache_sizes')) {
-    $cache_sizes = unserialize((string)\Piwigo\Core\Config::cacheSizes());
+if (\Piwigo\Config\Config::addCacheToStorageChart() && \Piwigo\Config\Config::has('cache_sizes')) {
+    $cache_sizes = unserialize((string)\Piwigo\Config\Config::cacheSizes());
     if (is_array($cache_sizes) && isset($cache_sizes[0]) && is_array($cache_sizes[0]) && isset($cache_sizes[0]['value'])) {
         $cacheValue = is_numeric($cache_sizes[0]['value']) ? (float) $cache_sizes[0]['value'] : 0.0;
         @$data_storage['Cache']['total']['filesize'] = $cacheValue / 1024;
@@ -443,7 +443,7 @@ foreach ($data_storage as $type => $_) {
     $translate_type[$type] = l10n($type);
 }
 $intro_dashboard_extras = [
-    'check_for_updates'       => (bool) \Piwigo\Core\Config::dashboardCheckForUpdates(),
+    'check_for_updates'       => (bool) \Piwigo\Config\Config::dashboardCheckForUpdates(),
     'storage_total'           => $total_storage,
     'str_gb_used'             => l10n('%s GB used'),
     'str_mb_used'             => l10n('%s MB used'),

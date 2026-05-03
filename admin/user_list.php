@@ -78,8 +78,8 @@ $template->assign('register_dates', implode(',', $register_dates));
 $template->assign(
     [
     'ADMIN_PAGE_TITLE' => l10n('Users'),
-    'ACTIVATE_COMMENTS' => \Piwigo\Core\Config::activateComments(),
-    'Double_Password' => \Piwigo\Core\Config::doublePasswordTypeInAdmin(),
+    'ACTIVATE_COMMENTS' => \Piwigo\Config\Config::activateComments(),
+    'Double_Password' => \Piwigo\Config\Config::doublePasswordTypeInAdmin(),
   ]
 );
 
@@ -89,12 +89,12 @@ $default_user = get_default_user_info(true);
 
 $protected_users = [
   $user['id'],
-  \Piwigo\Core\Config::guestId(),
-  \Piwigo\Core\Config::defaultUserId(),
-  \Piwigo\Core\Config::webmasterId(),
+  \Piwigo\Config\Config::guestId(),
+  \Piwigo\Config\Config::defaultUserId(),
+  \Piwigo\Config\Config::webmasterId(),
   ];
 
-$password_protected_users = [\Piwigo\Core\Config::guestId()];
+$password_protected_users = [\Piwigo\Config\Config::guestId()];
 
 // an admin can't delete other admin/webmaster
 if ('admin' == $user['status']) {
@@ -114,9 +114,9 @@ SELECT
 
 $query = '
 SELECT
-    '.\Piwigo\Core\Config::userFields()['username'].' AS username
+    '.\Piwigo\Config\Config::userFields()['username'].' AS username
     FROM '.USERS_TABLE.'
-    WHERE '.\Piwigo\Core\Config::userFields()['id'].' = '.\Piwigo\Core\Config::webmasterId().'
+    WHERE '.\Piwigo\Config\Config::userFields()['id'].' = '.\Piwigo\Config\Config::webmasterId().'
 ;';
 
 $owner_username = query2array($query, null, 'username');
@@ -134,12 +134,12 @@ $template->assign(
     'association_options' => $groups,
     'protected_users' => implode(',', array_unique($protected_users)),
     'password_protected_users' => implode(',', array_unique($password_protected_users)),
-    'guest_user' => \Piwigo\Core\Config::guestId(),
+    'guest_user' => \Piwigo\Config\Config::guestId(),
     'filter_group' => ($_GET['group'] ?? null),
     'search_input' => (isset($_GET['user_id']) ? 'id:'.(is_scalar($_GET['user_id']) ? (string) $_GET['user_id'] : '') : null),
     'connected_user' => $user['id'],
     'connected_user_status' => $user['status'],
-    'owner' => \Piwigo\Core\Config::webmasterId(),
+    'owner' => \Piwigo\Config\Config::webmasterId(),
     'owner_username' => $owner_username[0],
     ]
 );
@@ -159,7 +159,7 @@ SELECT
     status,
     COUNT(*) AS nb_users_of
   FROM '. USER_INFOS_TABLE .'
-  WHERE user_id != '. \Piwigo\Core\Config::guestId() .'
+  WHERE user_id != '. \Piwigo\Config\Config::guestId() .'
   GROUP BY status
 ';
 
@@ -190,7 +190,7 @@ $template->assign('nb_users_by_status', $nb_users_by_status);
 
 // user level options
 $level_options = [];
-foreach (\Piwigo\Core\Config::availablePermissionLevels() as $level) {
+foreach (\Piwigo\Config\Config::availablePermissionLevels() as $level) {
     $level_options[$level] = l10n(sprintf('Level %d', $level));
 }
 
@@ -199,7 +199,7 @@ SELECT
     level,
     COUNT(*) AS nb_users_of
   FROM '. USER_INFOS_TABLE .'
-  WHERE user_id != '. \Piwigo\Core\Config::guestId() .'
+  WHERE user_id != '. \Piwigo\Config\Config::guestId() .'
   GROUP BY level
 ';
 
@@ -233,7 +233,7 @@ while ($row = pwg_db_fetch_assoc($result)) {
 
 $template->assign('groups_arr_id', implode(',', $groups_arr_id));
 $template->assign('groups_arr_name', implode(',', $groups_arr_name));
-$template->assign('guest_id', \Piwigo\Core\Config::guestId());
+$template->assign('guest_id', \Piwigo\Config\Config::guestId());
 
 $template->assign('view_selector', userprefs_get_param('user-manager-view', 'line'));
 
@@ -255,7 +255,7 @@ function webmaster_id_is_local(): bool
     if ($localConfig !== false) {
         include $localConfig;
     }
-    if (\Piwigo\Core\Config::has('local_dir_site')) {
+    if (\Piwigo\Config\Config::has('local_dir_site')) {
         $siteConfig = realpath(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/config.inc.php');
         if ($siteConfig !== false) {
             include $siteConfig;
@@ -277,9 +277,9 @@ $template->assign('page_data_json', json_encode([
     'pwg_token'                => get_pwg_token(),
     'connected_user'           => (int)$user['id'],
     'connected_user_status'    => $user['status'],
-    'owner_id'                 => (int)\Piwigo\Core\Config::webmasterId(),
+    'owner_id'                 => (int)\Piwigo\Config\Config::webmasterId(),
     'owner_username'           => $owner_username[0] ?? '',
-    'guest_id'                 => (int)\Piwigo\Core\Config::guestId(),
+    'guest_id'                 => (int)\Piwigo\Config\Config::guestId(),
     'has_group'                => $_GET['group'] ?? '',
     'view_selector'            => userprefs_get_param('user-manager-view', 'line'),
     'pagination'               => (function () {

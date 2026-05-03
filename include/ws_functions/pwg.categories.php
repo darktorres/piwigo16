@@ -105,7 +105,7 @@ SELECT
         ) {
             $order_by = (string) $cats[ $cat_ids[0] ]['image_order'];
         }
-        $order_by = empty($order_by) ? \Piwigo\Core\Config::orderBy() : 'ORDER BY '.$order_by;
+        $order_by = empty($order_by) ? \Piwigo\Config\Config::orderBy() : 'ORDER BY '.$order_by;
         $favorite_ids = get_user_favorites();
 
         $per_page = is_numeric($params['per_page']) ? (int) $params['per_page'] : 0;
@@ -295,7 +295,7 @@ SELECT
         $where[] = 'status = "public"';
         $where[] = 'visible = "true"';
 
-        $join_user = \Piwigo\Core\Config::guestId();
+        $join_user = \Piwigo\Config\Config::guestId();
     } elseif (is_admin()) {
         // in this very specific case, we don't want to hide empty
         // categories. Function calculate_permissions will only return
@@ -324,7 +324,7 @@ SELECT SQL_CALC_FOUND_ROWS
         $query .= '
     AND name LIKE \'%'.pwg_db_real_escape_string(is_scalar($params['search']) ? (string) $params['search'] : '').'%\'';
         if (!isset($params['limit'])) {
-            $query .= ' LIMIT '.\Piwigo\Core\Config::linkedAlbumSearchLimit();
+            $query .= ' LIMIT '.\Piwigo\Config\Config::linkedAlbumSearchLimit();
         }
     }
 
@@ -408,7 +408,7 @@ SELECT SQL_CALC_FOUND_ROWS
             $image_id = $row['user_representative_picture_id'];
         } elseif (!empty($row['representative_picture_id'])) { // if a representative picture is set, it has priority
             $image_id = $row['representative_picture_id'];
-        } elseif (\Piwigo\Core\Config::allowRandomRepresentative()) {
+        } elseif (\Piwigo\Config\Config::allowRandomRepresentative()) {
             // searching a random representant among elements in sub-categories
             $image_id = get_random_image_in_category($row);
         } else { // searching a random representant among representant of sub-categories
@@ -436,7 +436,7 @@ SELECT representative_picture_id
         }
 
         if (isset($image_id)) {
-            if (\Piwigo\Core\Config::representativeCacheOnSubcats() and $row['user_representative_picture_id'] != $image_id) {
+            if (\Piwigo\Config\Config::representativeCacheOnSubcats() and $row['user_representative_picture_id'] != $image_id) {
                 $user_representative_updates_for[ (int) $row['id'] ] = $image_id;
             }
 
@@ -448,7 +448,7 @@ SELECT representative_picture_id
         // management of the album thumbnail -- stops here
 
         if (empty($row['image_order'])) {
-            $row['image_order'] = str_replace('ORDER BY ', '', \Piwigo\Core\Config::orderBy());
+            $row['image_order'] = str_replace('ORDER BY ', '', \Piwigo\Config\Config::orderBy());
         }
 
         $cats[] = $row;
@@ -487,7 +487,7 @@ SELECT id, path, representative_ext, level
                         if (isset($image_id) and !in_array($image_id, $image_ids)) {
                             $new_image_ids[] = $image_id;
                         }
-                        if (\Piwigo\Core\Config::representativeCacheOnLevel()) {
+                        if (\Piwigo\Config\Config::representativeCacheOnLevel()) {
                             $user_representative_updates_for[ (int) $category['id'] ] = $image_id;
                         }
 
@@ -616,7 +616,7 @@ SELECT SQL_CALC_FOUND_ROWS id, name, comment, uppercats, global_rank, dir, statu
     if (isset($params['search']) and $params['search'] != '') {
         $query .= '
   AND name LIKE \'%'.pwg_db_real_escape_string(is_scalar($params['search']) ? (string) $params['search'] : '').'%\'
-  LIMIT '.\Piwigo\Core\Config::linkedAlbumSearchLimit();
+  LIMIT '.\Piwigo\Config\Config::linkedAlbumSearchLimit();
     }
 
     $query .= '
@@ -653,7 +653,7 @@ SELECT SQL_CALC_FOUND_ROWS id, name, comment, uppercats, global_rank, dir, statu
         );
 
         if (empty($row['image_order'])) {
-            $row['image_order'] = str_replace('ORDER BY ', '', \Piwigo\Core\Config::orderBy());
+            $row['image_order'] = str_replace('ORDER BY ', '', \Piwigo\Config\Config::orderBy());
         }
 
         if (in_array('full_name_with_admin_links', $params['additional_output'])) {
@@ -686,7 +686,7 @@ SELECT
     }
 
     $limit_reached = false;
-    if ($counter > \Piwigo\Core\Config::linkedAlbumSearchLimit()) {
+    if ($counter > \Piwigo\Config\Config::linkedAlbumSearchLimit()) {
         $limit_reached = true;
     }
 
@@ -697,7 +697,7 @@ SELECT
           'category',
           ['id', 'nb_images', 'name', 'uppercats', 'global_rank', 'status', 'test']
       ),
-      'limit' => \Piwigo\Core\Config::linkedAlbumSearchLimit(),
+      'limit' => \Piwigo\Config\Config::linkedAlbumSearchLimit(),
       'limit_reached' => $limit_reached,
       ];
 }
@@ -727,7 +727,7 @@ SELECT
 
     if (!empty($params['position']) and in_array($params['position'], ['first','last'])) {
         //TODO make persistent with user prefs
-        \Piwigo\Core\Config::override('newcat_default_position', is_scalar($params['position']) ? (string) $params['position'] : '');
+        \Piwigo\Config\Config::override('newcat_default_position', is_scalar($params['position']) ? (string) $params['position'] : '');
     }
 
     $options = [];
@@ -737,10 +737,10 @@ SELECT
 
     if (!empty($params['comment'])) {
         $comment_str = is_scalar($params['comment']) ? (string) $params['comment'] : '';
-        $options['comment'] = (!\Piwigo\Core\Config::allowHtmlDescriptions() or !isset($params['pwg_token'])) ? strip_tags($comment_str) : $comment_str;
+        $options['comment'] = (!\Piwigo\Config\Config::allowHtmlDescriptions() or !isset($params['pwg_token'])) ? strip_tags($comment_str) : $comment_str;
     }
 
-    $cat_name = (!\Piwigo\Core\Config::allowHtmlDescriptions() or !isset($params['pwg_token'])) ? strip_tags(is_scalar($params['name']) ? (string) $params['name'] : '') : (is_scalar($params['name']) ? (string) $params['name'] : '');
+    $cat_name = (!\Piwigo\Config\Config::allowHtmlDescriptions() or !isset($params['pwg_token'])) ? strip_tags(is_scalar($params['name']) ? (string) $params['name'] : '') : (is_scalar($params['name']) ? (string) $params['name'] : '');
     $cat_parent = is_numeric($params['parent']) ? (int) $params['parent'] : (is_string($params['parent']) ? $params['parent'] : null);
 
     $creation_output = create_virtual_category(
@@ -914,7 +914,7 @@ SELECT *
         if (isset($params[$key])) {
             $perform_update = true;
             $key_val_str = is_scalar($params[$key]) ? (string) $params[$key] : '';
-            $update[$key] = (!\Piwigo\Core\Config::allowHtmlDescriptions() or !isset($params['pwg_token'])) ? strip_tags($key_val_str) : $key_val_str;
+            $update[$key] = (!\Piwigo\Config\Config::allowHtmlDescriptions() or !isset($params['pwg_token'])) ? strip_tags($key_val_str) : $key_val_str;
         }
     }
 
@@ -1002,7 +1002,7 @@ UPDATE '. USER_CACHE_CATEGORIES_TABLE .'
  * API method
  *
  * Deletes the album thumbnail. Only possible if
- * \Piwigo\Core\Config::allowRandomRepresentative() or if the album has no direct photos.
+ * \Piwigo\Config\Config::allowRandomRepresentative() or if the album has no direct photos.
  *
  * @param mixed[] $params
  *    @option int category_id
@@ -1032,7 +1032,7 @@ SELECT COUNT(*)
 ;';
     [$nb_images] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
-    if (!\Piwigo\Core\Config::allowRandomRepresentative() and $nb_images != 0) {
+    if (!\Piwigo\Config\Config::allowRandomRepresentative() and $nb_images != 0) {
         return new PwgError(401, 'not permitted');
     }
 

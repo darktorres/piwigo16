@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
+use Piwigo\Config\Config;
+
 /**
  * Typed DTO wrapping the $page global array.
  *
@@ -134,7 +136,7 @@ final class PageState
     }
 
     /**
-     * Merges \Piwigo\Core\Config::headerNotes() (informational strings set by plugins or config)
+     * Merges \Piwigo\Config\Config::headerNotes() (informational strings set by plugins or config)
      * into the infos bucket so they appear in the page output.
      *
      * @param list<string> $headerNotes

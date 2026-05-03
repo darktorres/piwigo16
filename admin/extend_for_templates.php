@@ -35,7 +35,7 @@ global $template, $user, $page, $persistent_cache, $lang;
 include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 check_status(ACCESS_ADMINISTRATOR);
 
-$tpl_extension = safe_unserialize(\Piwigo\Core\Config::extentsForTemplates() ?? '');
+$tpl_extension = safe_unserialize(\Piwigo\Config\Config::extentsForTemplates() ?? '');
 $new_extensions = get_extents();
 
 /* Selective URLs keyword */
@@ -136,12 +136,12 @@ if (isset($_POST['submit'])) {
         }
         $i++;
     }
-    \Piwigo\Core\Config::override('extents_for_templates', serialize($replacements));
+    \Piwigo\Config\Config::override('extents_for_templates', serialize($replacements));
     $tpl_extension = $replacements;
     /* ecrire la nouvelle conf */
     $query = '
 UPDATE '.CONFIG_TABLE.'
-  SET value = \''. \Piwigo\Core\Config::extentsForTemplates() .'\'
+  SET value = \''. \Piwigo\Config\Config::extentsForTemplates() .'\'
 WHERE param = \'extents_for_templates\';';
     if (pwg_query($query)) {
         \Piwigo\Core\PageState::current()->addInfo(l10n('Templates configuration has been recorded.'));

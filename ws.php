@@ -20,7 +20,7 @@ include_once(PHPWG_ROOT_PATH.'include/common.inc.php');
 \Piwigo\Core\Kernel::boot();
 check_status(ACCESS_FREE);
 
-if (!\Piwigo\Core\Config::allowWebServices()) {
+if (!\Piwigo\Config\Config::allowWebServices()) {
     page_forbidden('Web services are disabled');
 }
 
@@ -139,7 +139,7 @@ function ws_addDefaultMethods(array $arr): void
           'recursive' =>  ['default' => false,
                                 'type' => WS_TYPE_BOOL],
           'per_page' =>   ['default' => 100,
-                                'maxValue' => \Piwigo\Core\Config::wsMaxImagesPerPage(),
+                                'maxValue' => \Piwigo\Config\Config::wsMaxImagesPerPage(),
                                 'type' => WS_TYPE_INT | WS_TYPE_POSITIVE],
           'page' =>       ['default' => 0,
                                 'type' => WS_TYPE_INT | WS_TYPE_POSITIVE],
@@ -222,8 +222,8 @@ function ws_addDefaultMethods(array $arr): void
           'image_id' =>           ['type' => WS_TYPE_ID],
           'comments_page' =>      ['default' => 0,
                                         'type' => WS_TYPE_INT | WS_TYPE_POSITIVE],
-          'comments_per_page' =>  ['default' => \Piwigo\Core\Config::nbCommentPage(),
-                                        'maxValue' => 2 * \Piwigo\Core\Config::nbCommentPage(),
+          'comments_per_page' =>  ['default' => \Piwigo\Config\Config::nbCommentPage(),
+                                        'maxValue' => 2 * \Piwigo\Config\Config::nbCommentPage(),
                                         'type' => WS_TYPE_INT | WS_TYPE_POSITIVE],
           ],
         'Returns information about an image.',
@@ -247,7 +247,7 @@ function ws_addDefaultMethods(array $arr): void
         array_merge([
           'query' =>        [],
           'per_page' =>     ['default' => 100,
-                                  'maxValue' => \Piwigo\Core\Config::wsMaxImagesPerPage(),
+                                  'maxValue' => \Piwigo\Config\Config::wsMaxImagesPerPage(),
                                   'type' => WS_TYPE_INT | WS_TYPE_POSITIVE],
           'page' =>         ['default' => 0,
                                   'type' => WS_TYPE_INT | WS_TYPE_POSITIVE],
@@ -264,7 +264,7 @@ function ws_addDefaultMethods(array $arr): void
         [
           'image_id' => ['flags' => WS_PARAM_FORCE_ARRAY,
                               'type' => WS_TYPE_ID],
-          'level' =>    ['maxValue' => max(\Piwigo\Core\Config::availablePermissionLevels()),
+          'level' =>    ['maxValue' => max(\Piwigo\Config\Config::availablePermissionLevels()),
                               'type' => WS_TYPE_INT | WS_TYPE_POSITIVE],
           ],
         'Sets the privacy levels for the images.',
@@ -393,7 +393,7 @@ function ws_addDefaultMethods(array $arr): void
           'tag_mode_and' => ['default' => false,
                                   'type' => WS_TYPE_BOOL],
           'per_page' =>     ['default' => 100,
-                                  'maxValue' => \Piwigo\Core\Config::wsMaxImagesPerPage(),
+                                  'maxValue' => \Piwigo\Config\Config::wsMaxImagesPerPage(),
                                   'type' => WS_TYPE_INT | WS_TYPE_POSITIVE],
           'page' =>         ['default' => 0,
                                   'type' => WS_TYPE_INT | WS_TYPE_POSITIVE],
@@ -453,7 +453,7 @@ function ws_addDefaultMethods(array $arr): void
           'tag_ids' =>            ['default' => null,
                                         'info' => 'Comma separated ids'],
           'level' =>              ['default' => 0,
-                                        'maxValue' => max(\Piwigo\Core\Config::availablePermissionLevels()),
+                                        'maxValue' => max(\Piwigo\Config\Config::availablePermissionLevels()),
                                         'type' => WS_TYPE_INT | WS_TYPE_POSITIVE],
           'check_uniqueness' =>   ['default' => true,
                                         'type' => WS_TYPE_BOOL],
@@ -478,7 +478,7 @@ function ws_addDefaultMethods(array $arr): void
           'author' =>   ['default' => null],
           'comment' =>  ['default' => null],
           'level' =>    ['default' => 0,
-                              'maxValue' => max(\Piwigo\Core\Config::availablePermissionLevels()),
+                              'maxValue' => max(\Piwigo\Config\Config::availablePermissionLevels()),
                               'type' => WS_TYPE_INT | WS_TYPE_POSITIVE],
           'tags' =>     ['default' => null,
                               'flags' => WS_PARAM_ACCEPT_ARRAY],
@@ -505,7 +505,7 @@ function ws_addDefaultMethods(array $arr): void
             ],
           'level' => [
             'default' => 0,
-            'maxValue' => max(\Piwigo\Core\Config::availablePermissionLevels()),
+            'maxValue' => max(\Piwigo\Config\Config::availablePermissionLevels()),
             'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
             ],
           'format_of' => [
@@ -543,7 +543,7 @@ function ws_addDefaultMethods(array $arr): void
           'author' => ['default' => null],
           'comment' => ['default' => null],
           'date_creation' => ['default' => null],
-          'level' => ['default' => 0, 'maxValue' => max(\Piwigo\Core\Config::availablePermissionLevels()), 'type' => WS_TYPE_INT | WS_TYPE_POSITIVE],
+          'level' => ['default' => 0, 'maxValue' => max(\Piwigo\Config\Config::availablePermissionLevels()), 'type' => WS_TYPE_INT | WS_TYPE_POSITIVE],
           'tag_ids' => ['default' => null, 'info' => 'Comma separated ids'],
           'image_id' => ['default' => null, 'type' => WS_TYPE_ID],
     ],
@@ -573,7 +573,7 @@ function ws_addDefaultMethods(array $arr): void
         'pwg.images.setMd5sum',
         'ws_images_setMd5sum',
         [
-          'block_size' => ['default' => \Piwigo\Core\Config::checksumComputeBlocksize(), 'type' => WS_TYPE_INT | WS_TYPE_POSITIVE],
+          'block_size' => ['default' => \Piwigo\Config\Config::checksumComputeBlocksize(), 'type' => WS_TYPE_INT | WS_TYPE_POSITIVE],
           'pwg_token' =>  [],
           ],
         'Set md5sum column, by blocks. Returns how many md5sums were added and how many are remaining.',
@@ -871,7 +871,7 @@ function ws_addDefaultMethods(array $arr): void
           'tag_ids' =>        ['default' => null,
                                     'info' => 'Comma separated ids'],
           'level' =>          ['default' => null,
-                                    'maxValue' => max(\Piwigo\Core\Config::availablePermissionLevels()),
+                                    'maxValue' => max(\Piwigo\Config\Config::availablePermissionLevels()),
                                     'type' => WS_TYPE_INT | WS_TYPE_POSITIVE],
           'single_value_mode' =>    ['default' => 'fill_if_empty'],
           'multiple_value_mode' =>  ['default' => 'append'],
@@ -1016,7 +1016,7 @@ function ws_addDefaultMethods(array $arr): void
           'name' =>     ['flags' => WS_PARAM_OPTIONAL,
                               'info' => 'Use "%" as wildcard.'],
           'per_page' => ['default' => 100,
-                              'maxValue' => \Piwigo\Core\Config::wsMaxUsersPerPage(),
+                              'maxValue' => \Piwigo\Config\Config::wsMaxUsersPerPage(),
                               'type' => WS_TYPE_INT | WS_TYPE_POSITIVE],
           'page' =>     ['default' => 0,
                               'type' => WS_TYPE_INT | WS_TYPE_POSITIVE],
@@ -1136,12 +1136,12 @@ function ws_addDefaultMethods(array $arr): void
           'status' =>     ['flags' => WS_PARAM_OPTIONAL | WS_PARAM_FORCE_ARRAY,
                                 'info' => 'guest,generic,normal,admin,webmaster'],
           'min_level' =>  ['default' => 0,
-                                'maxValue' => max(\Piwigo\Core\Config::availablePermissionLevels()),
+                                'maxValue' => max(\Piwigo\Config\Config::availablePermissionLevels()),
                                 'type' => WS_TYPE_INT | WS_TYPE_POSITIVE],
           'group_id' =>   ['flags' => WS_PARAM_OPTIONAL | WS_PARAM_FORCE_ARRAY,
                                 'type' => WS_TYPE_ID],
           'per_page' =>   ['default' => 100,
-                                'maxValue' => \Piwigo\Core\Config::wsMaxUsersPerPage(),
+                                'maxValue' => \Piwigo\Config\Config::wsMaxUsersPerPage(),
                                 'type' => WS_TYPE_INT | WS_TYPE_POSITIVE],
           'page' =>       ['default' => 0,
                                 'type' => WS_TYPE_INT | WS_TYPE_POSITIVE],
@@ -1230,7 +1230,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
           'status' =>           ['flags' => WS_PARAM_OPTIONAL,
                                       'info' => 'guest,generic,normal,admin,webmaster'],
           'level' =>             ['flags' => WS_PARAM_OPTIONAL,
-                                      'maxValue' => max(\Piwigo\Core\Config::availablePermissionLevels()),
+                                      'maxValue' => max(\Piwigo\Config\Config::availablePermissionLevels()),
                                       'type' => WS_TYPE_INT | WS_TYPE_POSITIVE],
           'language' =>         ['flags' => WS_PARAM_OPTIONAL],
           'theme' =>            ['flags' => WS_PARAM_OPTIONAL],
@@ -1375,7 +1375,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
         [
           'per_page' => [
             'default' => 100,
-            'maxValue' => \Piwigo\Core\Config::wsMaxImagesPerPage(),
+            'maxValue' => \Piwigo\Config\Config::wsMaxImagesPerPage(),
             'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
           ],
           'page' => [
@@ -1670,7 +1670,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
           'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
         ],
         'per_page' => [
-          'default' => \Piwigo\Core\Config::commentsPageNbComments(),
+          'default' => \Piwigo\Config\Config::commentsPageNbComments(),
           'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
         ],
       ],

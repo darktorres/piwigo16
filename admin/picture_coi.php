@@ -62,10 +62,10 @@ if (isset($_POST['submit'])) {
     }
     delete_element_derivatives($row, IMG_CUSTOM);
     $uid = '&b='.time();
-    \Piwigo\Core\Config::override('question_mark_in_urls', true);
-    \Piwigo\Core\Config::override('php_extension_in_urls', true);
-    if (\Piwigo\Core\Config::derivativeUrlStyle() == 1) {
-        \Piwigo\Core\Config::override('derivative_url_style', 0); //auto
+    \Piwigo\Config\Config::override('question_mark_in_urls', true);
+    \Piwigo\Config\Config::override('php_extension_in_urls', true);
+    if (\Piwigo\Config\Config::derivativeUrlStyle() == 1) {
+        \Piwigo\Config\Config::override('derivative_url_style', 0); //auto
     }
 } else {
     $uid = '';

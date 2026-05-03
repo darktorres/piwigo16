@@ -14,7 +14,7 @@ echo 'Username: ' . $user['username'] . "\n";
 echo 'Password hash: ' . $user['password'] . "\n";
 echo "\nPassword verification test:\n";
 
-$password_func = \Piwigo\Core\Config::passwordVerify();
+$password_func = \Piwigo\Config\Config::passwordVerify();
 $is_valid = $password_func('1234', $user['password']);
 echo "Does '1234' match? " . ($is_valid ? 'YES' : 'NO') . "\n";
 

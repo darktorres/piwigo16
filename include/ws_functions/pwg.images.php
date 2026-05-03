@@ -194,7 +194,7 @@ function merge_chunks(string $output_filepath, string $original_sum, string $typ
         }
     }
 
-    $upload_dir = \Piwigo\Core\Config::uploadDir().'/buffer';
+    $upload_dir = \Piwigo\Config\Config::uploadDir().'/buffer';
     $pattern = '/'.$original_sum.'-'.$type.'/';
     $chunks = [];
 
@@ -249,7 +249,7 @@ function merge_chunks(string $output_filepath, string $original_sum, string $typ
  */
 function remove_chunks(string $original_sum, string $type): void
 {
-    $upload_dir = \Piwigo\Core\Config::uploadDir().'/buffer';
+    $upload_dir = \Piwigo\Config\Config::uploadDir().'/buffer';
     $pattern = '/'.$original_sum.'-'.$type.'/';
     $chunks = [];
 
@@ -288,7 +288,7 @@ function remove_chunks(string $original_sum, string $type): void
  */
 function ws_images_addComment(array $params, \Piwigo\Ws\PwgServer $service): PwgError|array
 {
-    if (!\Piwigo\Core\Config::activateComments()) {
+    if (!\Piwigo\Config\Config::activateComments()) {
         return new PwgError(403, 'Comments are disabled');
     }
 
@@ -525,10 +525,10 @@ SELECT id, date, author, content
     }
 
     $comment_post_data = null;
-    if (\Piwigo\Core\Config::activateComments() and
+    if (\Piwigo\Config\Config::activateComments() and
         $is_commentable and
         (!is_a_guest()
-          or \Piwigo\Core\Config::commentsForall()
+          or \Piwigo\Config\Config::commentsForall()
         )
     ) {
         $comment_post_data['author'] = stripslashes((string) $user['username']);
@@ -623,7 +623,7 @@ SELECT DISTINCT id
     $res = rate_picture($p_image_id, $p_rate);
 
     if ($res == false) {
-        return new PwgError(403, 'Forbidden or rate not in '. implode(',', \Piwigo\Core\Config::rateItems()));
+        return new PwgError(403, 'Forbidden or rate not in '. implode(',', \Piwigo\Config\Config::rateItems()));
     }
     return $res;
 }
@@ -656,7 +656,7 @@ function ws_images_search(array $params, \Piwigo\Ws\PwgServer $service): array
 
     $super_order_by = false;
     if (!empty($order_by)) {
-        \Piwigo\Core\Config::override('order_by', 'ORDER BY '.$order_by);
+        \Piwigo\Config\Config::override('order_by', 'ORDER BY '.$order_by);
         $super_order_by = true; // quick_search_result might be faster
     }
 
@@ -982,7 +982,7 @@ function ws_images_filteredSearch_create(array $params, \Piwigo\Ws\PwgServer $se
         $search['fields']['expert'] = ['string' => $params['expert']];
     }
 
-    if (\Piwigo\Core\Config::rateEnabled() and isset($params['ratings'])) {
+    if (\Piwigo\Config\Config::rateEnabled() and isset($params['ratings'])) {
         $search['fields']['ratings'] = $params['ratings'];
     }
 
@@ -1032,7 +1032,7 @@ function ws_images_filteredSearch_create(array $params, \Piwigo\Ws\PwgServer $se
  */
 function ws_images_setPrivacyLevel(array $params, \Piwigo\Ws\PwgServer $service): mixed
 {
-    if (!in_array($params['level'], \Piwigo\Core\Config::availablePermissionLevels())) {
+    if (!in_array($params['level'], \Piwigo\Config\Config::availablePermissionLevels())) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid level');
     }
 
@@ -1199,7 +1199,7 @@ function ws_images_add_chunk(array $params, \Piwigo\Ws\PwgServer $service): mixe
         ), 'WS');
     }
 
-    $upload_dir = \Piwigo\Core\Config::uploadDir().'/buffer';
+    $upload_dir = \Piwigo\Config\Config::uploadDir().'/buffer';
 
     // create the upload directory tree if not exists
     if (!mkgetdir($upload_dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
@@ -1287,7 +1287,7 @@ SELECT
         $original_type = 'high';
     }
 
-    $file_path = \Piwigo\Core\Config::uploadDir().'/buffer/'.$image_md5sum.'-original';
+    $file_path = \Piwigo\Config\Config::uploadDir().'/buffer/'.$image_md5sum.'-original';
 
     merge_chunks($file_path, $image_md5sum, $original_type);
     chmod($file_path, 0644);
@@ -1377,10 +1377,10 @@ SELECT COUNT(*)
     // does the image already exists ?
     if ($params['check_uniqueness']) {
         $where_clause = '1=1';
-        if ('md5sum' == \Piwigo\Core\Config::uniquenessMode()) {
+        if ('md5sum' == \Piwigo\Config\Config::uniquenessMode()) {
             $where_clause = "md5sum = '".$p_original_sum."'";
         }
-        if ('filename' == \Piwigo\Core\Config::uniquenessMode()) {
+        if ('filename' == \Piwigo\Config\Config::uniquenessMode()) {
             $where_clause = "file = '".(is_scalar($params['original_filename']) ? (string) $params['original_filename'] : '')."'";
         }
 
@@ -1408,7 +1408,7 @@ SELECT COUNT(*)
         $original_type = 'file';
     }
 
-    $file_path = \Piwigo\Core\Config::uploadDir().'/buffer/'.$p_original_sum.'-original';
+    $file_path = \Piwigo\Config\Config::uploadDir().'/buffer/'.$p_original_sum.'-original';
 
     merge_chunks($file_path, $p_original_sum, $original_type);
     chmod($file_path, 0644);
@@ -1649,18 +1649,18 @@ function ws_images_upload(array $params, \Piwigo\Ws\PwgServer $service): mixed
     if (isset($params['format_of'])) {
 
         // are formats enabled?
-        if (!\Piwigo\Core\Config::isFormatsEnabled()) {
+        if (!\Piwigo\Config\Config::isFormatsEnabled()) {
             return new PwgError(401, 'formats are disabled');
         }
 
         // We must check if the extension is in the authorized list.
         $p_name = is_scalar($params['name']) ? (string) $params['name'] : '';
-        if (preg_match('/\.('.implode('|', \Piwigo\Core\Config::formatExtensions()).')$/', $p_name, $matches)) {
+        if (preg_match('/\.('.implode('|', \Piwigo\Config\Config::formatExtensions()).')$/', $p_name, $matches)) {
             $format_ext = $matches[1];
         }
 
         if (empty($format_ext)) {
-            return new PwgError(401, 'unexpected format extension of file "'.$p_name.'" (authorized extensions: '.implode(', ', \Piwigo\Core\Config::formatExtensions()).')');
+            return new PwgError(401, 'unexpected format extension of file "'.$p_name.'" (authorized extensions: '.implode(', ', \Piwigo\Config\Config::formatExtensions()).')');
         }
     }
 
@@ -1675,7 +1675,7 @@ function ws_images_upload(array $params, \Piwigo\Ws\PwgServer $service): mixed
     // file_put_contents('/tmp/plupload.log', '$_FILES = '.var_export($_FILES, true)."\n", FILE_APPEND);
     // file_put_contents('/tmp/plupload.log', '$_POST = '.var_export($_POST, true)."\n", FILE_APPEND);
 
-    $upload_dir = \Piwigo\Core\Config::uploadDir().'/buffer';
+    $upload_dir = \Piwigo\Config\Config::uploadDir().'/buffer';
 
     // create the upload directory tree if not exists
     if (!mkgetdir($upload_dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
@@ -1908,7 +1908,7 @@ SELECT COUNT(*)
     // if (isset($_FILES['image']['error']) && $_FILES['image']['error'] != 0)
 
     $p_user_id = is_scalar($user['id']) ? (string) $user['id'] : '';
-    $output_filepath_prefix = \Piwigo\Core\Config::uploadDir().'/buffer/'.$p_original_sum.'-u'.$p_user_id;
+    $output_filepath_prefix = \Piwigo\Config\Config::uploadDir().'/buffer/'.$p_original_sum.'-u'.$p_user_id;
     $chunkfile_path_pattern = $output_filepath_prefix.'-%03uof%03u.chunk';
 
     $chunkfile_path = sprintf($chunkfile_path_pattern, $p_chunk + 1, $p_chunks);
@@ -2090,7 +2090,7 @@ SELECT COUNT(*)
 
     // delete chunks older than a week
     $now = time();
-    foreach (glob(\Piwigo\Core\Config::uploadDir().'/buffer/'.'*.chunk') ?: [] as $file) {
+    foreach (glob(\Piwigo\Config\Config::uploadDir().'/buffer/'.'*.chunk') ?: [] as $file) {
         if (is_file($file)) {
             if ($now - filemtime($file) >= 60 * 60 * 24 * 7) { // 7 days
                 $logger->info(__FUNCTION__.' delete '.$file);
@@ -2102,7 +2102,7 @@ SELECT COUNT(*)
     }
 
     // delete merged older than a week
-    foreach (glob(\Piwigo\Core\Config::uploadDir().'/buffer/'.'*.merged') ?: [] as $file) {
+    foreach (glob(\Piwigo\Config\Config::uploadDir().'/buffer/'.'*.merged') ?: [] as $file) {
         if (is_file($file)) {
             if ($now - filemtime($file) >= 60 * 60 * 24 * 7) { // 7 days
                 $logger->info(__FUNCTION__.' delete '.$file);
@@ -2138,7 +2138,7 @@ function ws_images_exist(array $params, \Piwigo\Ws\PwgServer $service): array
     $split_pattern = '/[\s,;\|]/';
     $result = [];
 
-    if ('md5sum' == \Piwigo\Core\Config::uniquenessMode()) {
+    if ('md5sum' == \Piwigo\Config\Config::uniquenessMode()) {
         // search among photos the list of photos already added, based on md5sum list
         $md5sums = preg_split(
             $split_pattern,
@@ -2160,7 +2160,7 @@ SELECT id, md5sum
                 $result[$md5sum] = $id_of_md5[$md5sum];
             }
         }
-    } elseif ('filename' == \Piwigo\Core\Config::uniquenessMode()) {
+    } elseif ('filename' == \Piwigo\Config\Config::uniquenessMode()) {
         // search among photos the list of photos already added, based on
         // filename list
         $filenames = preg_split(
@@ -2223,7 +2223,7 @@ SELECT
     }
 
     // we want "long" format extensions first to match "cmyk.jpg" before "jpg" for example
-    $format_extensions = \Piwigo\Core\Config::formatExtensions();
+    $format_extensions = \Piwigo\Config\Config::formatExtensions();
     usort($format_extensions, fn ($a, $b): int => strlen((string) $b) - strlen((string) $a));
 
     $query = '
@@ -2249,7 +2249,7 @@ SELECT
         $format_filename_str = is_scalar($format_filename) ? (string) $format_filename : '';
         $candidate_filename_wo_ext = null;
 
-        if (preg_match('/^(.*?)\.('.implode('|', \Piwigo\Core\Config::formatExtensions()).')$/', $format_filename_str, $matches)) {
+        if (preg_match('/^(.*?)\.('.implode('|', \Piwigo\Config\Config::formatExtensions()).')$/', $format_filename_str, $matches)) {
             $candidate_filename_wo_ext = $matches[1];
         }
 
@@ -2522,7 +2522,7 @@ SELECT *
 
     foreach ($info_columns as $key) {
         if (isset($params[$key])) {
-            if (!\Piwigo\Core\Config::allowHtmlDescriptions() or !isset($params['pwg_token'])) {
+            if (!\Piwigo\Config\Config::allowHtmlDescriptions() or !isset($params['pwg_token'])) {
                 $params[$key] = strip_tags(is_scalar($params[$key]) ? (string) $params[$key] : '', '<b><strong><em><i>');
             }
 

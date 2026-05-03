@@ -427,7 +427,7 @@ function load_plugins(): void
 {
     global $pwg_loaded_plugins;
     $pwg_loaded_plugins = [];
-    if (\Piwigo\Core\Config::enablePlugins()) {
+    if (\Piwigo\Config\Config::enablePlugins()) {
         $plugins = get_db_plugins('active');
         foreach ($plugins as $plugin) {// include main from a function to avoid using same function context
             load_plugin($plugin);

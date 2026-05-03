@@ -230,8 +230,8 @@ $template->assign('groups_selected', $group_granted_ids);
 $users = [];
 
 $query = '
-SELECT '.\Piwigo\Core\Config::userFields()['id'].' AS id,
-       '.\Piwigo\Core\Config::userFields()['username'].' AS username
+SELECT '.\Piwigo\Config\Config::userFields()['id'].' AS id,
+       '.\Piwigo\Config\Config::userFields()['username'].' AS username
   FROM '.USERS_TABLE.'
 ;';
 $users = query2array($query, 'id', 'username');
@@ -312,7 +312,7 @@ $cat_perm_page_data = [
 
 $template->assign([
   'PWG_TOKEN' => get_pwg_token(),
-  'INHERIT' => \Piwigo\Core\Config::inheritanceByDefault(),
+  'INHERIT' => \Piwigo\Config\Config::inheritanceByDefault(),
   'CACHE_KEYS' => $cache_keys,
   'cat_perm_page_data_json' => json_encode($cat_perm_page_data),
   ]);

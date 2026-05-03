@@ -18,7 +18,7 @@ trigger_notify('loc_begin_page_tail');
 
 $template->assign(
     [
-    'VERSION' => \Piwigo\Core\Config::showVersion() ? PHPWG_VERSION : '',
+    'VERSION' => \Piwigo\Config\Config::showVersion() ? PHPWG_VERSION : '',
     'PHPWG_URL' => defined('PHPWG_URL') ? str_replace('http:', 'https:', PHPWG_URL) : '',
     ]
 );
@@ -33,10 +33,10 @@ if (!is_a_guest()) {
 }
 
 //--------------------------------------------------------- update notification
-if (\Piwigo\Core\Config::updateNotifyCheckPeriod() > 0) {
+if (\Piwigo\Config\Config::updateNotifyCheckPeriod() > 0) {
     $check_for_updates = false;
-    if (\Piwigo\Core\Config::has('update_notify_last_check')) {
-        if (strtotime((string) \Piwigo\Core\Config::updateNotifyLastCheck()) < strtotime(\Piwigo\Core\Config::updateNotifyCheckPeriod().' seconds ago')) {
+    if (\Piwigo\Config\Config::has('update_notify_last_check')) {
+        if (strtotime((string) \Piwigo\Config\Config::updateNotifyLastCheck()) < strtotime(\Piwigo\Config\Config::updateNotifyCheckPeriod().' seconds ago')) {
             $check_for_updates = true;
         }
     } else {
@@ -60,11 +60,11 @@ send_piwigo_infos();
 //------------------------------------------------------------- generation time
 $debug_vars = [];
 
-if (\Piwigo\Core\Config::showQueries()) {
+if (\Piwigo\Config\Config::showQueries()) {
     $debug_vars = array_merge($debug_vars, ['QUERIES_LIST' => $debug]);
 }
 
-if (\Piwigo\Core\Config::showGt()) {
+if (\Piwigo\Config\Config::showGt()) {
     if (!isset($page['count_queries'])) {
         $page['count_queries'] = 0;
         $page['queries_time'] = 0;
@@ -82,7 +82,7 @@ if (\Piwigo\Core\Config::showGt()) {
 $template->assign('debug', $debug_vars);
 
 //------------------------------------------------------------- mobile version
-if (!empty(\Piwigo\Core\Config::mobilTheme()) && (get_device() != 'desktop' || mobile_theme())) {
+if (!empty(\Piwigo\Config\Config::mobilTheme()) && (get_device() != 'desktop' || mobile_theme())) {
     $template->assign(
         'TOGGLE_MOBILE_THEME_URL',
         add_url_params(

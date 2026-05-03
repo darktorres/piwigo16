@@ -63,7 +63,7 @@ if ('recent_cats' != $page['section']) {
   ORDER BY `rank`';
 }
 
-$nb_cats_page = \Piwigo\Core\Config::nbCategoriesPage();
+$nb_cats_page = \Piwigo\Config\Config::nbCategoriesPage();
 $query .= '
   LIMIT '.$nb_cats_page.' OFFSET '.($page['startcat'] ?? 0).'
 ;';
@@ -85,7 +85,7 @@ while ($row = pwg_db_fetch_assoc($result)) {
         $image_id = $row['user_representative_picture_id'];
     } elseif (!empty($row['representative_picture_id'])) { // if a representative picture is set, it has priority
         $image_id = $row['representative_picture_id'];
-    } elseif (\Piwigo\Core\Config::allowRandomRepresentative()) { // searching a random representant among elements in sub-categories
+    } elseif (\Piwigo\Config\Config::allowRandomRepresentative()) { // searching a random representant among elements in sub-categories
         $image_id = get_random_image_in_category($row);
     } elseif ($row['count_categories'] > 0 and $row['count_images'] > 0) { // at this point, $row['count_images'] should always be >0 (used as condition in SQL)
         // searching a random representant among representant of sub-categories
@@ -112,7 +112,7 @@ SELECT representative_picture_id
 
 
     if (isset($image_id)) {
-        if (\Piwigo\Core\Config::representativeCacheOnSubcats() and $row['user_representative_picture_id'] != $image_id) {
+        if (\Piwigo\Config\Config::representativeCacheOnSubcats() and $row['user_representative_picture_id'] != $image_id) {
             $user_representative_updates_for[is_scalar($row['id'] ?? null) ? (string)$row['id'] : ''] = $image_id;
         }
 
@@ -132,7 +132,7 @@ SELECT representative_picture_id
     unset($image_id);
 }
 
-if (\Piwigo\Core\Config::displayFromto()) {
+if (\Piwigo\Config\Config::displayFromto()) {
     if (count($category_ids) > 0) {
         $query = '
 SELECT
@@ -190,7 +190,7 @@ SELECT *
                         $new_image_ids[] = $image_id;
                     }
 
-                    if (\Piwigo\Core\Config::representativeCacheOnLevel()) {
+                    if (\Piwigo\Config\Config::representativeCacheOnLevel()) {
                         $user_representative_updates_for[is_scalar($category['id'] ?? null) ? (string)$category['id'] : ''] = $image_id;
                     }
 
@@ -300,14 +300,14 @@ if (count($categories) > 0) {
                 ),
               'NAME'  => $name,
             ]);
-        if (\Piwigo\Core\Config::indexNewIcon()) {
+        if (\Piwigo\Config\Config::indexNewIcon()) {
             $tpl_var['icon_ts'] = get_icon(
                 is_scalar($category['max_date_last'] ?? null) ? (string)$category['max_date_last'] : null,
                 (bool)($category['is_child_date_last'] ?? false)
             );
         }
 
-        if (\Piwigo\Core\Config::displayFromto()) {
+        if (\Piwigo\Config\Config::displayFromto()) {
             if (isset($dates_of_category[ $category['id'] ])) {
                 $from = $dates_of_category[ $category['id'] ]['from'];
                 $to   = $dates_of_category[ $category['id'] ]['to'];
@@ -327,7 +327,7 @@ if (count($categories) > 0) {
     $derivative_params = trigger_change('get_index_album_derivative_params', ImageStdParams::get_by_type(IMG_THUMB));
     $tpl_thumbnails_var_selection = trigger_change('loc_end_index_category_thumbnails', $tpl_thumbnails_var_selection);
     $template->assign([
-      'maxRequests' => \Piwigo\Core\Config::maxRequests(),
+      'maxRequests' => \Piwigo\Config\Config::maxRequests(),
       'category_thumbnails' => $tpl_thumbnails_var_selection,
       'derivative_params' => $derivative_params,
       ]);
@@ -336,12 +336,12 @@ if (count($categories) > 0) {
 
     // navigation bar
     $page['cats_navigation_bar'] = [];
-    if ($page['total_categories'] > \Piwigo\Core\Config::nbCategoriesPage()) {
+    if ($page['total_categories'] > \Piwigo\Config\Config::nbCategoriesPage()) {
         $page['cats_navigation_bar'] = create_navigation_bar(
             duplicate_index_url([], ['startcat']),
             is_numeric($page['total_categories']) ? (int)$page['total_categories'] : 0,
             $page['startcat'],
-            \Piwigo\Core\Config::nbCategoriesPage(),
+            \Piwigo\Config\Config::nbCategoriesPage(),
             true,
             'startcat'
         );

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
+use Piwigo\Config\Config;
 use Piwigo\Users\CurrentUser;
 
 /**

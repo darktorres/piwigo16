@@ -15,7 +15,7 @@ if (!defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
 
-if (!\Piwigo\Core\Config::enableExtensionsInstall() and !\Piwigo\Core\Config::enableCoreUpdate()) {
+if (!\Piwigo\Config\Config::enableExtensionsInstall() and !\Piwigo\Config\Config::enableCoreUpdate()) {
     die('update system is disabled');
 }
 

@@ -31,7 +31,7 @@ $page['body_id'] = 'theTagsPage';
 
 $template->set_filenames(array('tags' => 'tags.tpl'));
 
-$page['display_mode'] = \Piwigo\Core\Config::tagsDefaultDisplayMode();
+$page['display_mode'] = \Piwigo\Config\Config::tagsDefaultDisplayMode();
 $display_mode = input_string('display_mode', null, $_GET);
 if ($display_mode !== null && in_array($display_mode, ['cloud', 'letters'])) {
     $page['display_mode'] = $display_mode;
@@ -40,7 +40,7 @@ if ($display_mode !== null && in_array($display_mode, ['cloud', 'letters'])) {
 foreach (array('cloud', 'letters') as $mode) {
     $template->assign(
         'U_'.strtoupper($mode),
-        get_root_url().'tags.php'. (\Piwigo\Core\Config::tagsDefaultDisplayMode() == $mode ? '' : '?display_mode='.$mode)
+        get_root_url().'tags.php'. (\Piwigo\Config\Config::tagsDefaultDisplayMode() == $mode ? '' : '?display_mode='.$mode)
     );
 }
 
@@ -77,8 +77,8 @@ if ($page['display_mode'] == 'letters') {
 
         //lettre precedente differente de la lettre suivante
         if ($tag_letter !== $current_letter) {
-            if ($current_column < \Piwigo\Core\Config::tagLettersColumnNumber()
-                and $current_tag_idx > $current_column * $nb_tags / \Piwigo\Core\Config::tagLettersColumnNumber()) {
+            if ($current_column < \Piwigo\Config\Config::tagLettersColumnNumber()
+                and $current_tag_idx > $current_column * $nb_tags / \Piwigo\Config\Config::tagLettersColumnNumber()) {
                 $letter['CHANGE_COLUMN'] = true;
                 $current_column++;
             }
@@ -122,7 +122,7 @@ if ($page['display_mode'] == 'letters') {
     // we want only the first most represented tags, so we sort them by counter
     // and take the first tags
     usort($tags, fn (mixed $a, mixed $b): int => tags_counter_compare(is_array($a) ? $a : [], is_array($b) ? $b : []));
-    $tags = array_slice($tags, 0, \Piwigo\Core\Config::fullTagCloudItemsNumber());
+    $tags = array_slice($tags, 0, \Piwigo\Config\Config::fullTagCloudItemsNumber());
 
     // depending on its counter and the other tags counter, each tag has a level
     $tags = add_level_to_tags($tags);

@@ -2,7 +2,10 @@
 
 declare(strict_types=1);
 
-global $template, $user, $page, $persistent_cache, $lang, $logger;
+global $persistent_cache, $logger;
+
+use Piwigo\Template\TemplateRegistry;
+use Piwigo\Users\CurrentUser;
 
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
@@ -20,6 +23,13 @@ use Piwigo\Image\SrcImage;
  *
  */
 
+$template = TemplateRegistry::current();
+$page = &$GLOBALS['page'];
+if (!is_array($page)) {
+    $page = [];
+}
+$currentUser = CurrentUser::get();
+$user = $currentUser->rawAttributes;
 
 // $user['forbidden_categories'] including with USER_CACHE_CATEGORIES_TABLE
 $query = '
@@ -35,7 +45,7 @@ SELECT SQL_CALC_FOUND_ROWS
   FROM '.CATEGORIES_TABLE.' c
     INNER JOIN '.USER_CACHE_CATEGORIES_TABLE.' ucc
     ON id = cat_id
-    AND user_id = '.$user['id'].'
+    AND user_id = '.$currentUser->id.'
   WHERE count_images > 0
 ';
 
@@ -44,7 +54,7 @@ if ('recent_cats' == $page['section']) {
   AND '.get_recent_photos_sql('date_last');
 } else {
     $query .= '
-  AND id_uppercat '.(!isset($page['category']) ? 'is NULL' : '= '.$page['category']['id']);
+  AND id_uppercat '.(!isset($page['category']) || !is_array($page['category']) ? 'is NULL' : '= '.(is_scalar($page['category']['id'] ?? null) ? (string) $page['category']['id'] : ''));
 }
 
 $query .= '
@@ -65,7 +75,7 @@ if ('recent_cats' != $page['section']) {
 
 $nb_cats_page = \Piwigo\Config\Config::nbCategoriesPage();
 $query .= '
-  LIMIT '.$nb_cats_page.' OFFSET '.($page['startcat'] ?? 0).'
+  LIMIT '.$nb_cats_page.' OFFSET '.(is_numeric($page['startcat'] ?? null) ? (int) $page['startcat'] : 0).'
 ;';
 
 $query = trigger_change('loc_begin_index_category_thumbnails_query', $query);
@@ -92,7 +102,7 @@ while ($row = pwg_db_fetch_assoc($result)) {
         $query = '
 SELECT representative_picture_id
   FROM '.CATEGORIES_TABLE.' INNER JOIN '.USER_CACHE_CATEGORIES_TABLE.'
-  ON id = cat_id and user_id = '.$user['id'].'
+  ON id = cat_id and user_id = '.$currentUser->id.'
   WHERE uppercats LIKE \''.$row['uppercats'].',%\'
     AND representative_picture_id IS NOT NULL'
   .get_sql_condition_FandF(
@@ -340,7 +350,7 @@ if (count($categories) > 0) {
         $page['cats_navigation_bar'] = create_navigation_bar(
             duplicate_index_url([], ['startcat']),
             is_numeric($page['total_categories']) ? (int)$page['total_categories'] : 0,
-            $page['startcat'],
+            is_numeric($page['startcat'] ?? null) ? (int) $page['startcat'] : 0,
             \Piwigo\Config\Config::nbCategoriesPage(),
             true,
             'startcat'

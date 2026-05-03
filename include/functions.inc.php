@@ -447,14 +447,20 @@ function do_log($image_id = null, $image_type = null)
  */
 function pwg_log(int|string|null $image_id = null, ?string $image_type = null, ?string $format_id = null): bool
 {
-    global $user, $page;
+    $user = &$GLOBALS['user'];
+    if (!is_array($user)) {
+        $user = [];
+    }
+    $page = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
 
     if ($image_id !== null) {
         $image_id = (int) $image_id;
     }
 
+    $userId = \Piwigo\Users\CurrentUser::get()->id;
+    $lastVisit = is_scalar($user['last_visit'] ?? null) ? (string) $user['last_visit'] : '';
     $update_last_visit = false;
-    if (empty($user['last_visit']) or strtotime((string) $user['last_visit']) < time() - \Piwigo\Config\Config::sessionLength()) {
+    if (empty($lastVisit) or strtotime($lastVisit) < time() - \Piwigo\Config\Config::sessionLength()) {
         $update_last_visit = true;
     }
     $update_last_visit = trigger_change('pwg_log_update_last_visit', $update_last_visit);
@@ -464,7 +470,7 @@ function pwg_log(int|string|null $image_id = null, ?string $image_type = null, ?
 UPDATE '.USER_INFOS_TABLE.'
   SET last_visit = NOW(),
       lastmodified = lastmodified
-  WHERE user_id = '.$user['id'].'
+  WHERE user_id = '.$userId.'
 ';
         pwg_query($query);
     }
@@ -474,8 +480,10 @@ UPDATE '.USER_INFOS_TABLE.'
     }
 
     $tags_string = null;
-    if ('tags' == @$page['section']) {
-        $tags_string = implode(',', $page['tag_ids']);
+    $pageSection = is_scalar($page['section'] ?? null) ? (string) $page['section'] : '';
+    if ('tags' == $pageSection) {
+        $tagIds = is_array($page['tag_ids'] ?? null) ? $page['tag_ids'] : [];
+        $tags_string = implode(',', array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $tagIds));
 
         if (strlen($tags_string) > 50) {
             // we need to truncate, mysql won't accept a too long string
@@ -497,7 +505,7 @@ UPDATE '.USER_INFOS_TABLE.'
     }
 
     // If plugin developers add their own sections, Piwigo will automatically add it in the history.section enum column
-    if (isset($page['section'])) {
+    if ($pageSection !== '') {
         // set cache if not available
         if (!\Piwigo\Config\Config::has('history_sections_cache')) {
             conf_update_param('history_sections_cache', get_enums(HISTORY_TABLE, 'section'), true);
@@ -506,13 +514,13 @@ UPDATE '.USER_INFOS_TABLE.'
         $history_sections_cache = safe_unserialize(\Piwigo\Config\Config::historySectionsCache() ?? '');
         \Piwigo\Config\Config::override('history_sections_cache', $history_sections_cache);
         if (
-            in_array($page['section'], $history_sections_cache)
-            or in_array(strtolower($page['section']), array_map(static fn (mixed $s): string => strtolower(is_scalar($s) ? (string) $s : ''), $history_sections_cache))
+            in_array($pageSection, $history_sections_cache)
+            or in_array(strtolower($pageSection), array_map(static fn (mixed $s): string => strtolower(is_scalar($s) ? (string) $s : ''), $history_sections_cache))
         ) {
-            $section = $page['section'];
-        } elseif (preg_match('/^[a-zA-Z0-9_-]+$/', $page['section'])) {
+            $section = $pageSection;
+        } elseif (preg_match('/^[a-zA-Z0-9_-]+$/', $pageSection)) {
             $history_sections = get_enums(HISTORY_TABLE, 'section');
-            $history_sections[] = $page['section'];
+            $history_sections[] = $pageSection;
 
             // alter history table structure, to include a new section
             pwg_query('ALTER TABLE '.HISTORY_TABLE.' CHANGE section section enum(\''.implode("','", array_unique($history_sections)).'\') DEFAULT NULL;');
@@ -520,10 +528,14 @@ UPDATE '.USER_INFOS_TABLE.'
             // and refresh cache
             conf_update_param('history_sections_cache', get_enums(HISTORY_TABLE, 'section'), true);
 
-            $section = $page['section'];
+            $section = $pageSection;
         }
     }
 
+    $category = is_array($page['category'] ?? null) ? $page['category'] : null;
+    $categoryId = $category !== null && is_scalar($category['id'] ?? null) ? (string) $category['id'] : 'NULL';
+    $searchId = is_scalar($page['search_id'] ?? null) ? (string) $page['search_id'] : 'NULL';
+    $authKeyId = is_scalar($page['auth_key_id'] ?? null) ? (string) $page['auth_key_id'] : 'NULL';
     $query = '
 INSERT INTO '.HISTORY_TABLE.'
   (
@@ -544,15 +556,15 @@ INSERT INTO '.HISTORY_TABLE.'
   (
     CURRENT_DATE,
     CURRENT_TIME,
-    '.$user['id'].',
+    '.$userId.',
     \''.$ip.'\',
     '.(isset($section) ? "'".$section."'" : 'NULL').',
-    '.($page['category']['id'] ?? 'NULL').',
-    '.($page['search_id'] ?? 'NULL').',
+    '.$categoryId.',
+    '.$searchId.',
     '.($image_id ?? 'NULL').',
     '.(isset($image_type) ? "'".$image_type."'" : 'NULL').',
     '.($format_id ?? 'NULL').',
-    '.($page['auth_key_id'] ?? 'NULL').',
+    '.$authKeyId.',
     '.(isset($tags_string) ? "'".$tags_string."'" : 'NULL').'
   )
 ;';
@@ -578,8 +590,6 @@ INSERT INTO '.HISTORY_TABLE.'
  */
 function pwg_activity(string $object, array|int|string $object_id, string $action, array $details = []): void
 {
-    global $user;
-
     // in case of uploadAsync, do not log the automatic login as an independant activity
     if (isset($_REQUEST['method']) and 'pwg.images.uploadAsync' == $_REQUEST['method'] and 'login' == $action) {
         return;
@@ -654,7 +664,9 @@ function pwg_activity(string $object, array|int|string $object_id, string $actio
     $session_id = !empty(session_id()) ? session_id() : 'none';
 
     foreach ($object_ids as $loop_object_id) {
-        $performed_by = $user['id'] ?? 0; // on a plugin autoupdate, $user is not yet loaded
+        $performed_by = \Piwigo\Users\CurrentUser::isInitialized()
+            ? \Piwigo\Users\CurrentUser::get()->id
+            : 0; // on a plugin autoupdate, $user is not yet loaded
 
         if ('logout' == $action) {
             $performed_by = $loop_object_id;
@@ -799,7 +811,9 @@ function format_date_legacy(int|string|\DateTime|null $original, array|bool|null
 /** @param string[]|true|null $show */
 function format_date(int|string|\DateTime|null $original, array|bool|null $show = null, ?string $format = null): string
 {
-    global $user;
+    $userLanguage = \Piwigo\Users\CurrentUser::isInitialized()
+        ? \Piwigo\Users\CurrentUser::get()->language
+        : 'en_UK';
 
     $date = ($original instanceof \DateTime) ? $original : str2DateTime($original, $format);
 
@@ -823,7 +837,7 @@ function format_date(int|string|\DateTime|null $original, array|bool|null $show 
             $dateType = IntlDateFormatter::LONG;
         }
 
-        $fmt = new IntlDateFormatter($user['language'], $dateType, $timeType);
+        $fmt = new IntlDateFormatter($userLanguage, $dateType, $timeType);
         $formatted = $fmt->format($date);
         return $formatted !== false ? $formatted : l10n('N/A');
     }
@@ -1167,12 +1181,12 @@ function get_element_path(array $element_info): string
  */
 function fill_caddie($elements_id): void
 {
-    global $user;
+    $userId = \Piwigo\Users\CurrentUser::get()->id;
 
     $query = '
 SELECT element_id
   FROM '.CADDIE_TABLE.'
-  WHERE user_id = '.$user['id'].'
+  WHERE user_id = '.$userId.'
 ;';
     $in_caddie = query2array($query, null, 'element_id');
 
@@ -1183,7 +1197,7 @@ SELECT element_id
     foreach ($caddiables as $caddiable) {
         $datas[] = [
           'element_id' => $caddiable,
-          'user_id' => $user['id'],
+          'user_id' => $userId,
           ];
     }
 
@@ -1634,7 +1648,10 @@ function get_parent_language($lang_id = null)
 /** @param array<mixed> $options */
 function load_language(string $filename, string $dirname = '', array $options = []): string|bool
 {
-    global $user, $language_files;
+    global $language_files;
+    $user = \Piwigo\Users\CurrentUser::isInitialized()
+        ? \Piwigo\Users\CurrentUser::get()->rawAttributes
+        : (is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : []);
 
     // keep trace of plugins loaded files for switch_lang_to() function
     if (!empty($dirname) && !empty($filename) && !@$options['return']
@@ -1676,12 +1693,13 @@ function load_language(string $filename, string $dirname = '', array $options = 
         $languages[] = $default_language;
     }
 
-    $languages = array_unique($languages);
+    /** @var list<string> $languages_typed */
+    $languages_typed = array_values(array_unique(array_filter($languages, 'is_string')));
 
     // find first existing
     $source_file       = '';
     $selected_language = '';
-    foreach ($languages as $language) {
+    foreach ($languages_typed as $language) {
         $f = @$options['local'] ?
           $dirname.$language.'.'.$filename :
           $dirname.$language.'/'.$filename;
@@ -1697,7 +1715,8 @@ function load_language(string $filename, string $dirname = '', array $options = 
         if (!@$options['return']) {
             // load forced fallback
             if (isset($options['force_fallback']) && $options['force_fallback'] != $selected_language) {
-                @include(str_replace($selected_language, is_scalar($options['force_fallback']) ? (string) $options['force_fallback'] : '', $source_file));
+                $forceFallback = is_scalar($options['force_fallback']) ? (string) $options['force_fallback'] : '';
+                @include(str_replace($selected_language, $forceFallback, $source_file));
             }
 
             // load language content
@@ -1724,7 +1743,7 @@ function load_language(string $filename, string $dirname = '', array $options = 
             }
 
             if (!empty($parent_language) && $parent_language != $selected_language) {
-                @include(str_replace($selected_language, $parent_language, $source_file));
+                @include(str_replace($selected_language, is_scalar($parent_language) ? (string) $parent_language : '', $source_file));
             }
 
             // merge contents
@@ -2108,9 +2127,12 @@ function email_check_format($mail_address): bool
  *
  * @return int
  */
-function get_nb_available_comments()
+function get_nb_available_comments(): int
 {
-    global $user;
+    $user = &$GLOBALS['user'];
+    if (!is_array($user)) {
+        $user = [];
+    }
     if (!isset($user['nb_available_comments'])) {
         $where = [];
         if (!is_admin()) {
@@ -2137,10 +2159,11 @@ SELECT COUNT(DISTINCT(com.id))
         single_update(
             USER_CACHE_TABLE,
             ['nb_available_comments' => $user['nb_available_comments']],
-            ['user_id' => $user['id']]
+            ['user_id' => \Piwigo\Users\CurrentUser::get()->id]
         );
     }
-    return $user['nb_available_comments'];
+    $nb = $user['nb_available_comments'];
+    return is_numeric($nb) ? (int) $nb : 0;
 }
 
 /**

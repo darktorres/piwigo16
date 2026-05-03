@@ -307,8 +307,6 @@ function autoupdate_plugin(array &$plugin): void
 
         // autoupdate is applicable only to plugins with 2.7 architecture
         if (file_exists($maintain_file)) {
-            global $page;
-
             // call update method
             include_once($maintain_file);
 
@@ -320,7 +318,8 @@ function autoupdate_plugin(array &$plugin): void
 
             if (class_exists($classname) && is_a($classname, \Piwigo\Admin\PluginMaintain::class, true)) {
                 $plugin_maintain = new $classname($plugin_id);
-                $plugin_maintain->update($old_version, $fs_version, $page['errors']);
+                $errors = &\Piwigo\Core\PageState::current()->errors;
+                $plugin_maintain->update($old_version, $fs_version, $errors);
             }
         }
 

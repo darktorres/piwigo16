@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-global $template, $user, $page, $persistent_cache, $lang;
+global $persistent_cache;
 
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
@@ -357,8 +357,6 @@ SELECT DISTINCT image_id
  */
 function ws_images_getInfo(array $params, \Piwigo\Ws\PwgServer $service): PwgError|array
 {
-    global $user;
-
     $p_image_id = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
     $query = '
 SELECT *
@@ -531,7 +529,7 @@ SELECT id, date, author, content
           or \Piwigo\Config\Config::commentsForall()
         )
     ) {
-        $comment_post_data['author'] = stripslashes((string) $user['username']);
+        $comment_post_data['author'] = stripslashes(\Piwigo\Users\CurrentUser::get()->username);
         $comment_post_data['key'] = get_ephemeral_key(2, (string) $p_image_id);
     }
 
@@ -743,8 +741,6 @@ SELECT *
  */
 function ws_images_filteredSearch_create(array $params, \Piwigo\Ws\PwgServer $service): PwgError|array
 {
-    global $user;
-
     include_once(PHPWG_ROOT_PATH.'include/functions_search.inc.php');
 
     // * check the search exists
@@ -1347,7 +1343,7 @@ SELECT
  */
 function ws_images_add(array $params, \Piwigo\Ws\PwgServer $service): PwgError|array
 {
-    global $user, $logger;
+    global $logger;
 
     foreach ($params as $param_key => $param_value) {
         $logger->debug(sprintf(
@@ -1877,7 +1873,7 @@ SELECT
  */
 function ws_images_uploadAsync(array $params, \Piwigo\Ws\PwgServer &$service): mixed
 {
-    global $user, $logger;
+    global $logger;
 
     // the username/password parameters have been used in include/user.inc.php
     // to authenticate the request (a much better time/place than here)
@@ -1907,7 +1903,7 @@ SELECT COUNT(*)
     // handle upload error as in ws_images_addSimple
     // if (isset($_FILES['image']['error']) && $_FILES['image']['error'] != 0)
 
-    $p_user_id = is_scalar($user['id']) ? (string) $user['id'] : '';
+    $p_user_id = (string) \Piwigo\Users\CurrentUser::get()->id;
     $output_filepath_prefix = \Piwigo\Config\Config::uploadDir().'/buffer/'.$p_original_sum.'-u'.$p_user_id;
     $chunkfile_path_pattern = $output_filepath_prefix.'-%03uof%03u.chunk';
 
@@ -2083,9 +2079,10 @@ SELECT COUNT(*)
     invalidate_user_cache();
 
     // trick to bypass get_sql_condition_FandF
-    if (!empty($params['level']) and $params['level'] > $user['level']) {
+    $userRef = &$GLOBALS['user'];
+    if (is_array($userRef) && !empty($params['level']) && $params['level'] > ($userRef['level'] ?? 0)) {
         // this will not persist
-        $user['level'] = $params['level'];
+        $userRef['level'] = $params['level'];
     }
 
     // delete chunks older than a week

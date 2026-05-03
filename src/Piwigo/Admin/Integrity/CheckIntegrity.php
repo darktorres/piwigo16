@@ -142,7 +142,7 @@ class CheckIntegrity
      */
     public function display(): void
     {
-        global $template;
+        $template = \Piwigo\Template\TemplateRegistry::current();
 
         $check_automatic_correction = false;
         $submit_automatic_correction = false;
@@ -207,7 +207,7 @@ class CheckIntegrity
             $template->assign('c13y_show_submit_automatic_correction', $submit_automatic_correction);
             $template->assign('c13y_show_submit_ignore', $submit_ignore);
 
-            $template->concat('ADMIN_CONTENT', $template->parse('check_integrity', true));
+            $template->concat('ADMIN_CONTENT', (string) $template->parse('check_integrity', true));
 
         }
     }

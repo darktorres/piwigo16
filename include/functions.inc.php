@@ -1019,8 +1019,10 @@ function redirect_html($url, $msg = '', $refresh_time = 0): void
         trigger_notify('loading_lang');
         load_language('lang', PHPWG_ROOT_PATH.PWG_LOCAL_DIR, ['no_fallback' => true, 'local' => true]);
         $template = new Template(PHPWG_ROOT_PATH.'themes', get_default_theme());
+        \Piwigo\Template\TemplateRegistry::set($template);
     } elseif (defined('IN_ADMIN') and IN_ADMIN) {
         $template = new Template(PHPWG_ROOT_PATH.'themes', get_default_theme());
+        \Piwigo\Template\TemplateRegistry::set($template);
     }
 
     if (empty($msg)) {

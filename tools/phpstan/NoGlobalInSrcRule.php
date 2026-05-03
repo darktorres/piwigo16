@@ -23,13 +23,14 @@ use PHPStan\Rules\RuleErrorBuilder;
  */
 final class NoGlobalInSrcRule implements Rule
 {
-    private const GUARDED = ['conf', 'page', 'user', 'lang'];
+    private const GUARDED = ['conf', 'page', 'user', 'lang', 'template'];
 
     private const REPLACEMENTS = [
         'conf' => 'Config typed accessor / Config::raw()',
         'page' => 'PageState::current()',
         'user' => 'CurrentUser::get()',
         'lang' => 'Lang::t()',
+        'template' => 'TemplateRegistry::current()',
     ];
 
     public function getNodeType(): string

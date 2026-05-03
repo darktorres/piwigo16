@@ -478,7 +478,7 @@ class Updates
         if (!is_array($page)) {
             $page = [];
         }
-        global $template;
+        $template = \Piwigo\Template\TemplateRegistry::current();
 
         if ($check_current_version and !version_compare($upgrade_to, PHPWG_VERSION, '>')) {
             // TODO why redirect to a plugin page? maybe a remaining code from when

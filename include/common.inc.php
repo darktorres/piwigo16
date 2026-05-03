@@ -277,6 +277,7 @@ if (defined('IN_ADMIN') ? constant('IN_ADMIN') : false) {// Admin template
     }
     $template = new Template(PHPWG_ROOT_PATH.'themes', $theme);
 }
+\Piwigo\Template\TemplateRegistry::set($template);
 
 if (!\Piwigo\Config\Config::has('no_photo_yet')) {
     include(PHPWG_ROOT_PATH.'include/no_photo_yet.inc.php');

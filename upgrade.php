@@ -198,6 +198,7 @@ define('CURRENT_DATE', $dbnow);
 // +-----------------------------------------------------------------------+
 
 $template = new Template(PHPWG_ROOT_PATH.'admin/themes', 'roma');
+\Piwigo\Template\TemplateRegistry::set($template);
 $template->set_filenames(['upgrade' => 'upgrade.tpl']);
 $template->assign(
     [

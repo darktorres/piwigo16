@@ -36,6 +36,7 @@ SELECT
         // make sure we don't use the mobile theme, which is not compatible with
         // the "no photo yet" feature
         $template = new Template(PHPWG_ROOT_PATH.'themes', $user['theme']);
+        \Piwigo\Template\TemplateRegistry::set($template);
 
         if (isset($_GET['no_photo_yet'])) {
             if ('browse' == $_GET['no_photo_yet']) {

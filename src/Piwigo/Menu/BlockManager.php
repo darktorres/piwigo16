@@ -163,7 +163,7 @@ class BlockManager
      */
     public function apply($var, $file): void
     {
-        global $template;
+        $template = \Piwigo\Template\TemplateRegistry::current();
 
         $template->set_filename('menubar', $file);
         trigger_notify('blockmanager_apply', [$this]);

@@ -113,7 +113,7 @@ class Tabsheet
      */
     public function assign(): void
     {
-        global $template;
+        $template = \Piwigo\Template\TemplateRegistry::current();
 
         $template->set_filename('tabsheet', 'tabsheet.tpl');
         $template->assign('tabsheet', $this->sheets);

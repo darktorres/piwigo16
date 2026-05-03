@@ -61,7 +61,7 @@ class CalendarMonthly extends CalendarBase
         $chronologyDate = is_array($pageArr['chronology_date'] ?? null) ? $pageArr['chronology_date'] : [];
 
         if ($view_type == CAL_VIEW_CALENDAR) {
-            global $template;
+            $template = \Piwigo\Template\TemplateRegistry::current();
             $tpl_var = [];
             if (count($chronologyDate) == 0) {//case A: no year given - display all years+months
                 if ($this->build_global_calendar($tpl_var)) {

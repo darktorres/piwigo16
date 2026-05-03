@@ -155,11 +155,12 @@ final class FileCombiner
                 }
             }
 
-            global $template;
+            $template = TemplateRegistry::current();
             $handle = $this->type. '.' .$combinable->id;
-            $template->set_filename($handle, realpath(PHPWG_ROOT_PATH.$combinable->path));
+            $resolved = realpath(PHPWG_ROOT_PATH.$combinable->path);
+            $template->set_filename($handle, $resolved !== false ? $resolved : PHPWG_ROOT_PATH.$combinable->path);
             trigger_notify('combinable_preparse', $template, $combinable, $this); //allow themes and plugins to set their own vars to template ...
-            $content = $template->parse($handle, true);
+            $content = (string) $template->parse($handle, true);
 
             if ($this->is_css) {
                 $content = self::process_css($content, $combinable->path, $header);

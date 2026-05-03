@@ -216,7 +216,7 @@ abstract class CalendarBase
     /** @param array<mixed>|null $labels */
     protected function build_nav_bar(int $level, ?array $labels = null): void
     {
-        global $template;
+        $template = \Piwigo\Template\TemplateRegistry::current();
         $page = &$GLOBALS['page'];
         $pageArr = is_array($page) ? $page : [];
 
@@ -280,7 +280,7 @@ $this->get_date_where($level).'
      */
     protected function build_next_prev(): void
     {
-        global $template;
+        $template = \Piwigo\Template\TemplateRegistry::current();
         $page = &$GLOBALS['page'];
         $pageArr = is_array($page) ? $page : [];
 
@@ -355,8 +355,10 @@ GROUP BY period';
 
         if (!empty($tpl_var)) {
             $existing = $template->smarty->getTemplateVars('chronology_navigation_bars');
-            if (!empty($existing)) {
-                $existing[ sizeof($existing) - 1 ] = array_merge($existing[ sizeof($existing) - 1 ], $tpl_var);
+            if (is_array($existing) && !empty($existing)) {
+                $lastIdx = count($existing) - 1;
+                $last = $existing[$lastIdx] ?? null;
+                $existing[$lastIdx] = is_array($last) ? array_merge($last, $tpl_var) : $tpl_var;
                 $template->assign('chronology_navigation_bars', $existing);
             } else {
                 $template->append('chronology_navigation_bars', $tpl_var);

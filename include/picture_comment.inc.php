@@ -2,7 +2,11 @@
 
 declare(strict_types=1);
 
-global $template, $user, $page, $persistent_cache, $lang, $url_self, $picture, $related_categories, $comment_action;
+global $persistent_cache, $url_self, $picture, $related_categories, $comment_action;
+
+use Piwigo\Template\TemplateRegistry;
+use Piwigo\Users\CurrentUser;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -14,6 +18,12 @@ global $template, $user, $page, $persistent_cache, $lang, $url_self, $picture, $
  * This file is included by the picture page to manage user comments
  *
  */
+
+$template = TemplateRegistry::current();
+$page = &$GLOBALS['page'];
+if (!is_array($page)) {
+    $page = [];
+}
 
 // the picture is commentable if it belongs at least to one category which
 // is commentable
@@ -41,7 +51,8 @@ if ($page['show_comments'] and isset($_POST['content'])) {
     include_once(PHPWG_ROOT_PATH.'include/functions_comment.inc.php');
 
     $post_key = $_POST['key'] ?? '';
-    $comment_action = insert_user_comment($comm, is_scalar($post_key) ? (string) $post_key : '', $page['errors']);
+    $pageStateErrors = &\Piwigo\Core\PageState::current()->errors;
+    $comment_action = insert_user_comment($comm, is_scalar($post_key) ? (string) $post_key : '', $pageStateErrors);
 
     switch ($comment_action) {
         case 'moderate':
@@ -75,27 +86,29 @@ if ($page['show_comments']) {
         $validated_clause = '';
     }
 
+    $imageId = is_numeric($page['image_id'] ?? null) ? (int) $page['image_id'] : 0;
     // number of comments for this picture
     $query = '
 SELECT
     COUNT(*) AS nb_comments
   FROM '.COMMENTS_TABLE.'
-  WHERE image_id = '.$page['image_id']
+  WHERE image_id = '.$imageId
     .$validated_clause.'
 ;';
     $row = pwg_db_fetch_assoc(pwg_query($query));
 
     // navigation bar creation
-    if (!isset($page['start'])) {
+    if (!isset($page['start']) || !is_numeric($page['start'])) {
         $page['start'] = 0;
     }
+    $startOffset = (int) $page['start'];
 
     $nb_comments = (int) ($row['nb_comments'] ?? 0);
 
     $navigation_bar = create_navigation_bar(
         duplicate_picture_url([], ['start']),
         $nb_comments,
-        $page['start'],
+        $startOffset,
         \Piwigo\Config\Config::nbCommentPage(),
         true // We want a clean URL
     );
@@ -136,10 +149,10 @@ SELECT
   FROM '.COMMENTS_TABLE.' AS com
   LEFT JOIN '.USERS_TABLE.' AS u
     ON u.'.\Piwigo\Config\Config::userFields()['id'].' = author_id
-  WHERE com.image_id = '.$page['image_id'].'
+  WHERE com.image_id = '.$imageId.'
     '.$validated_clause.'
   ORDER BY com.date '.$comments_order.'
-  LIMIT '.\Piwigo\Config\Config::nbCommentPage().' OFFSET '.$page['start'].'
+  LIMIT '.\Piwigo\Config\Config::nbCommentPage().' OFFSET '.$startOffset.'
 ;';
         $result = pwg_query($query);
 
@@ -184,7 +197,7 @@ SELECT
                 );
                 if (isset($edit_comment) and ($row['id'] == $edit_comment)) {
                     $tpl_comment['IN_EDIT'] = true;
-                    $key = get_ephemeral_key(2, $page['image_id']);
+                    $key = get_ephemeral_key(2, (string) $imageId);
                     $tpl_comment['KEY'] = $key;
                     $tpl_comment['CONTENT'] = $row['content'];
                     $tpl_comment['PWG_TOKEN'] = get_pwg_token();
@@ -218,7 +231,7 @@ SELECT
     }
 
     if ($show_add_comment_form) {
-        $key = get_ephemeral_key(3, $page['image_id']);
+        $key = get_ephemeral_key(3, (string) $imageId);
 
         $tpl_var =  [
             'F_ACTION' =>         $url_self,
@@ -228,7 +241,7 @@ SELECT
             'AUTHOR_MANDATORY' => \Piwigo\Config\Config::commentsAuthorMandatory(),
             'AUTHOR' =>           '',
             'WEBSITE_URL' =>      '',
-            'SHOW_EMAIL' =>       !is_classic_user() or empty($user['email']),
+            'SHOW_EMAIL' =>       !is_classic_user() or empty(CurrentUser::get()->email),
             'EMAIL_MANDATORY' =>  \Piwigo\Config\Config::commentsEmailMandatory(),
             'EMAIL' =>            '',
             'SHOW_WEBSITE' =>     \Piwigo\Config\Config::commentsEnableWebsite(),

@@ -2,7 +2,11 @@
 
 declare(strict_types=1);
 
-global $template, $user, $page, $persistent_cache, $lang, $url_self, $picture, $related_categories, $comment_action;
+global $persistent_cache, $url_self, $picture, $related_categories, $comment_action;
+
+use Piwigo\Template\TemplateRegistry;
+use Piwigo\Users\CurrentUser;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -16,6 +20,8 @@ global $template, $user, $page, $persistent_cache, $lang, $url_self, $picture, $
  */
 
 if (\Piwigo\Config\Config::rateEnabled()) {
+    $template = TemplateRegistry::current();
+    $page = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
     $rate_summary = [ 'count' => 0, 'score' => $picture['current']['rating_score'], 'average' => null ];
     if (null != $rate_summary['score']) {
         $query = '
@@ -31,10 +37,11 @@ SELECT COUNT(rate) AS count
     $user_rate = null;
     if (\Piwigo\Config\Config::rateAnonymous() or is_autorize_status(ACCESS_CLASSIC)) {
         if ($rate_summary['count'] > 0) {
+            $imageId = is_numeric($page['image_id'] ?? null) ? (int) $page['image_id'] : 0;
             $query = 'SELECT rate
       FROM '.RATE_TABLE.'
-      WHERE element_id = '.$page['image_id'] . '
-      AND user_id = '.$user['id'] ;
+      WHERE element_id = '.$imageId . '
+      AND user_id = '.CurrentUser::get()->id ;
 
             if (!is_autorize_status(ACCESS_CLASSIC)) {
                 $ip_components = explode('.', is_scalar($_SERVER['REMOTE_ADDR'] ?? null) ? (string) $_SERVER['REMOTE_ADDR'] : '');

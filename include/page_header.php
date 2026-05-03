@@ -2,13 +2,24 @@
 
 declare(strict_types=1);
 
-global $template, $user, $page, $persistent_cache, $lang, $title, $debug, $t2;
+global $persistent_cache, $title, $debug, $t2;
+
+use Piwigo\Core\PageState;
+use Piwigo\Template\TemplateRegistry;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
 // | For copyright and license information, please view the COPYING.txt    |
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
+
+$template = TemplateRegistry::current();
+$pageState = PageState::current();
+$page = &$GLOBALS['page'];
+if (!is_array($page)) {
+    $page = [];
+}
 
 //
 // Start output of page
@@ -22,6 +33,7 @@ if (defined('IN_ADMIN') ? constant('IN_ADMIN') : false) {
     $show_mobile_app_banner = conf_get_param('show_mobile_app_banner_in_admin', true);
 }
 
+$pageBanner = $page['page_banner'] ?? \Piwigo\Config\Config::pageBanner();
 $template->assign(
     [
     'GALLERY_TITLE' =>
@@ -33,7 +45,7 @@ $template->assign(
           str_replace(
               '%gallery_title%',
               \Piwigo\Config\Config::galleryTitle(),
-              $page['page_banner'] ?? \Piwigo\Config\Config::pageBanner()
+              is_string($pageBanner) ? $pageBanner : ''
           )
       ),
 
@@ -49,9 +61,9 @@ $template->assign(
 
     'SHOW_MOBILE_APP_BANNER' => $show_mobile_app_banner,
 
-    'BODY_CLASSES' => $page['body_classes'],
+    'BODY_CLASSES' => $pageState->bodyClasses,
 
-    'BODY_DATA' => json_encode($page['body_data']),
+    'BODY_DATA' => json_encode($pageState->bodyData),
   ]
 );
 
@@ -63,19 +75,23 @@ if (!empty($header_notes)) {
 
 // No referencing is required
 if (!\Piwigo\Config\Config::metaRef()) {
+    if (!isset($page['meta_robots']) || !is_array($page['meta_robots'])) {
+        $page['meta_robots'] = [];
+    }
     $page['meta_robots']['noindex'] = 1;
     $page['meta_robots']['nofollow'] = 1;
 }
 
-if (!empty($page['meta_robots'])) {
+$metaRobots = $page['meta_robots'] ?? null;
+if (is_array($metaRobots) && !empty($metaRobots)) {
     $template->append(
         'head_elements',
         '<meta name="robots" content="'
-          .implode(',', array_keys($page['meta_robots']))
+          .implode(',', array_keys($metaRobots))
           .'">'
     );
 }
-if (!isset($page['meta_robots']['noindex'])) {
+if (!is_array($metaRobots) || !isset($metaRobots['noindex'])) {
     $template->assign('meta_ref', 1);
 }
 

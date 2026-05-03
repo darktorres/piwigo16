@@ -2,10 +2,12 @@
 
 declare(strict_types=1);
 
-global $template, $user, $page, $persistent_cache, $lang;
+global $persistent_cache;
 
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
+use Piwigo\Template\TemplateRegistry;
+use Piwigo\Users\CurrentUser;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -20,15 +22,25 @@ use Piwigo\Image\SrcImage;
  *
  */
 
+$template = TemplateRegistry::current();
+$page = &$GLOBALS['page'];
+if (!is_array($page)) {
+    $page = [];
+}
+$user = CurrentUser::get()->rawAttributes;
+
 $pictures = [];
 
-$selection = array_slice(
-    $page['items'],
-    $page['start'],
-    $page['nb_image_page']
-);
-
-$selection = trigger_change('loc_index_thumbnails_selection', $selection);
+$pageItems = is_array($page['items'] ?? null) ? $page['items'] : [];
+$pageStart = is_numeric($page['start'] ?? null) ? (int) $page['start'] : 0;
+$pageNbImagePage = is_numeric($page['nb_image_page'] ?? null) ? (int) $page['nb_image_page'] : null;
+$selection = array_values(array_filter(
+    trigger_change(
+        'loc_index_thumbnails_selection',
+        array_slice($pageItems, $pageStart, $pageNbImagePage)
+    ),
+    fn ($v) => is_int($v) || is_string($v)
+));
 
 if (count($selection) > 0) {
     $rank_of = array_flip($selection);
@@ -36,7 +48,7 @@ if (count($selection) > 0) {
     $query = '
 SELECT *
   FROM '.IMAGES_TABLE.'
-  WHERE id IN ('.implode(',', $selection).')
+  WHERE id IN ('.implode(',', array_map(strval(...), $selection)).')
 ;';
     $result = pwg_query($query);
     while ($row = pwg_db_fetch_assoc($result)) {
@@ -69,7 +81,7 @@ if (count($pictures) > 0) {
 SELECT image_id, COUNT(*) AS nb_comments
   FROM '.COMMENTS_TABLE.'
   WHERE validated = \'true\'
-    AND image_id IN ('.implode(',', $selection).')
+    AND image_id IN ('.implode(',', array_map(strval(...), $selection)).')
   GROUP BY image_id
 ;';
         $nb_comments_of = query2array($query, 'image_id', 'nb_comments');

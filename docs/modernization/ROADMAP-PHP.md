@@ -506,7 +506,7 @@ php -r "
 
 ## #6 — Eliminate procedural `global` declarations across the codebase
 
-**Status:** In progress (`src/` done; `admin/` and `include/` remain) &nbsp;|&nbsp; **Size:** L
+**Status:** Done with caveat — `src/` is fully migrated and rule-enforced; `admin/` and `include/` have all *function-internal* `global $template|$user|$page|$lang;` migrated to typed accessors / `&$GLOBALS[…]` reference patterns. *File-top* `global` declarations in entry-scripts (admin/*.php, root *.php, pre-boot include/filter.inc.php and no_photo_yet.inc.php) are intentionally kept as PHPStan typing bridges to `tools/phpstan-bootstrap.php` — see project memory note `project_global_typing_bridge.md` for why. Steps 4 and 5 below were dropped in light of that constraint. &nbsp;|&nbsp; **Size:** L
 
 ### Goal
 
@@ -537,9 +537,9 @@ The reference-bridge pattern in `Config::attachGlobals()` and `PageState::attach
 
 3. **Migrate `admin/`** (72 files). Work top-down by error-count hot spots: `cat_modify.php`, `picture_modify.php`, `include/functions_notification_by_mail.inc.php`, `include/add_core_tabs.inc.php`, `include/functions.php` first — these five account for ~30% of the level-10 error report.
 
-4. **Extend the PHPStan rule.** Rename `NoGlobalInSrcRule` → `NoGlobalRule` (or add a sibling) covering `admin/` and `include/`. Activate as the last step so new `global` declarations fail CI.
+4. **Extend the PHPStan rule.** ~~Rename `NoGlobalInSrcRule` → `NoGlobalRule` covering `admin/` and `include/`.~~ **Dropped.** Extending the rule to flag file-top `global` declarations in entry-scripts breaks the typing bridge into `tools/phpstan-bootstrap.php` and surfaces ~hundreds of false-positive `mixed` errors in legacy body code that was previously clean. The project rule "do not use inline `@var` to override PHPStan's inferred type" closes off the only mitigation. Rule stays src/-only.
 
-5. **Drop the bootstrap stubs.** Once no caller references the globals, the `/** @var … */` annotations in `tools/phpstan-bootstrap.php` for `$conf`, `$user`, `$page`, `$lang`, `$template` (plus the auxiliary `$logger`, `$service`, etc. once their accessors land) can be removed. The bootstrap stays for `PHPWG_ROOT_PATH` and the plugin function signatures.
+5. **Drop the bootstrap stubs.** ~~Once no caller references the globals, the `/** @var … */` annotations can be removed.~~ **Dropped.** Same reason as step 4 — the file-top globals retained for typing reasons depend on the stubs.
 
 ### Out of scope (decide separately)
 

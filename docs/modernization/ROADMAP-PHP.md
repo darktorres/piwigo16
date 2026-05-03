@@ -165,7 +165,85 @@ A PR introducing a vulnerable dep is blocked. Renovate opens grouped weekly PRs.
 
 ## #5 — Config schema + `.env` support + install-sentinel relocation
 
-**Status:** Not started &nbsp;|&nbsp; **Size:** L
+**Status:** Done &nbsp;|&nbsp; **Size:** L
+
+### Outcome (2026-05-03)
+
+Landed across 18 commits (`e8161cc58` → `45d72f9bd`). Net delta: -2200 / +1500 lines.
+
+What shipped:
+
+- `Piwigo\Config\Config::SCHEMA` is the single source of truth for all 283
+  config keys. Typed accessors below the `<<<CONFIG-ACCESSORS-BEGIN>>>` /
+  `<<<CONFIG-ACCESSORS-END>>>` sentinels are generated from SCHEMA by
+  `tools/build-config-accessors.php`. Custom accessors with rich defaults
+  (`pictureExtensions`, `recentPostDates`, `defaultFiltersViews`,
+  `filterPages`, `apiKeyForbiddenMethods`, etc.) are flagged
+  `'custom' => true` and live below the END sentinel.
+- `getString` / `getInt` / `getBool` are **private**. They throw
+  `UnknownConfigKeyException` for keys not in SCHEMA.
+- `Config::get()` is gone; `Config::raw($key, $default)` is the single
+  public escape hatch for genuinely parametric keys (per-block menu
+  configs `blk_*`, `*_running` semaphores, derived `flip_picture_ext`
+  caches). `tools/phpstan/ConfigKeyExistsRule.php` flags any literal-key
+  call to `raw/has/override/persist/delete` whose key isn't in SCHEMA or
+  on its `ALLOWED_RUNTIME_KEYS` allow-list.
+- `Piwigo\Config\ConfigLoader` runs at every entry point's boot:
+  `applyDefaults($conf)` walks SCHEMA, then `loadEnv($repoRoot)` reads
+  `.env` (only — `.env.local` is opt-in for the test runner via
+  `tests/bootstrap.php`), then `applyEnvOverrides($conf)` applies the
+  curated `ENV_MAPPING` (5 DB vars: HOST/USER/PASSWORD/BASE/PREFIX).
+- `Piwigo\Config\ConfigStorage` is the thin OO facade over
+  `load_conf_from_db` / `conf_update_param` / `conf_delete_param`.
+- `Piwigo\Core\InstallSentinel`: empty stamp file at `local/.installed`
+  is the **sole** install signal. No `defined('PHPWG_INSTALLED')`
+  fallback. `markInstalled()` / `markUninstalled()` for
+  install.php / tests.
+- `install.php` writes `.env` atomically (tmp + rename) instead of
+  `local/config/database.inc.php`. Fails loudly via `fatal_error` on
+  write errors — fixes a long-standing silent-failure that left installs
+  half-broken.
+- `local/config/database.inc.php` and `include/config_default.inc.php`
+  **deleted**. No back-compat include path. The legacy
+  `PWG_CHARSET` / `DB_CHARSET` / `DB_COLLATE` constants deleted; literal
+  values inlined (utf-8 / utf8 / '') at the 6 use sites.
+- `pwg_password_hash` / `pwg_password_verify` / `phpass_verify` deleted.
+  `Config::passwordHash()` / `Config::passwordVerify()` accessors and
+  their SCHEMA entries deleted. All callsites use native `password_hash($pw,
+  PASSWORD_BCRYPT)` and `password_verify($pw, $hash)` directly. Legacy
+  `$P$` phpass support intentionally dropped (modernization upgrade
+  floor is 16.x; users with phpass hashes need a password reset).
+- 4 bundled plugins get per-plugin typed Config classes under
+  `src/Piwigo/Plugins/<PluginName>/Config.php` (autoload-friendly, not
+  `plugins/<name>/src/`): `LocalFilesEditor`, `NbcThemeChanger`,
+  `PiwigoOpenstreetmap`, `PiwigoVideojs`. Each owns its keys via a
+  local SCHEMA constant. `user_tags` correctly excluded (no owned keys).
+- `tests/Unit/Config/SchemaIntegrityTest` enforces SCHEMA ↔
+  generated-accessors sync on every CI run via the new `unit` job in
+  `.github/workflows/ci.yml`.
+- `docs/config-reference.md` generated from SCHEMA by
+  `tools/build-config-reference.php`. README + CONTRIBUTING updated.
+
+Notable scope changes from the original plan:
+
+- The generator does not yet take a `--target` flag — it only handles
+  `src/Piwigo/Config/Config.php`. Per-plugin Configs are hand-written
+  (small SCHEMAs make this fine; can templatize later if a plugin grows).
+- `db_prefix` SCHEMA key + `PIWIGO_DB_PREFIX` env mapping (plan said
+  `PIWIGO_DB_TABLE_PREFIX`).
+- `ConfigKeyExistsRule` covers the public `raw/has/override/persist/delete`
+  surface, not just the (now-private) typed-getter family — that's where
+  the actual typo risk lives.
+- `.env.local` is reserved for the test runner; runtime `loadEnv` only
+  reads `.env`. Standard phpdotenv layered convention deviates here
+  because this repo's prior `.env.local` semantics were test-only.
+
+Verification:
+- 250/250 PHPUnit tests pass (Unit + Integration combined, 1412 assertions)
+- PHPStan level 9 clean
+- Pint clean
+- Manual MCP-browser e2e: gallery, login, admin (configuration / cat_list /
+  user_list / batch_manager_global), profile.php — all 0 console errors
 
 ### Goal
 

@@ -7,9 +7,11 @@ namespace Piwigo\Tests\Integration;
 /**
  * Integration tests for the Piwigo web service API.
  *
- * Requires the local Apache instance at PIWIGO_BASE_URL (set via .env.local)
+ * Requires the local Apache instance at PIWIGO_BASE_URL (set via .env.test)
  * to be running. Each test resets PIWIGO_DB_BASE and loads the 16.x fixture
- * before exercising the WS endpoints.
+ * before exercising the WS endpoints. Every request carries the
+ * `X-Piwigo-Env: test` header so Apache reads .env.test (test DB) instead
+ * of .env (prod DB) — see TestMode.
  */
 final class WsApiTest extends IntegrationTestCase
 {
@@ -23,12 +25,11 @@ final class WsApiTest extends IntegrationTestCase
         $this->cookieJar = sys_get_temp_dir() . '/piwigo_ws_test_' . getmypid() . '.txt';
         $this->resetDatabase();
         $this->loadFixture(self::FIXTURE);
-        $this->writeRuntimeConfig();
+        $this->markTestInstalled();
     }
 
     protected function tearDown(): void
     {
-        $this->restoreRuntimeConfig();
         if (file_exists($this->cookieJar)) {
             unlink($this->cookieJar);
         }
@@ -92,7 +93,11 @@ final class WsApiTest extends IntegrationTestCase
         // Piwigo may return HTTP 401 or JSON stat='fail' for unauthenticated admin calls.
         $url = $this->baseUrl . '/ws.php?method=pwg.users.getList&format=json';
         $ch = curl_init($url);
-        curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_FOLLOWLOCATION => true]);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTPHEADER     => self::TEST_HEADER,
+        ]);
         $body   = (string) curl_exec($ch);
         $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
         unset($ch);
@@ -187,6 +192,7 @@ final class WsApiTest extends IntegrationTestCase
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_COOKIEFILE     => $this->cookieJar,
             CURLOPT_COOKIEJAR      => $this->cookieJar,
+            CURLOPT_HTTPHEADER     => self::TEST_HEADER,
         ];
         if ($post) {
             $opts[CURLOPT_POST] = true;

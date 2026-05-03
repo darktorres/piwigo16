@@ -22,7 +22,7 @@ final class ConfigLoaderTest extends TestCase
         mkdir($this->tmpDir, 0o755, true);
 
         // Snapshot pre-test env state so tearDown can restore it. The bootstrap
-        // (or a prior suite) may have set PIWIGO_DB_* via .env.local, and the
+        // (or a prior suite) may have set PIWIGO_DB_* via .env.test, and the
         // integration suite expects them populated; we must not leak our
         // test-only mutations across suite boundaries.
         $this->envBackup = [];
@@ -35,7 +35,7 @@ final class ConfigLoaderTest extends TestCase
 
     protected function tearDown(): void
     {
-        foreach (['.env', '.env.local'] as $f) {
+        foreach (['.env', '.env.test'] as $f) {
             if (is_file($this->tmpDir . DIRECTORY_SEPARATOR . $f)) {
                 unlink($this->tmpDir . DIRECTORY_SEPARATOR . $f);
             }
@@ -61,30 +61,32 @@ final class ConfigLoaderTest extends TestCase
         self::assertFalse(getenv('PIWIGO_DB_HOST'));
     }
 
-    public function test_loadEnv_reads_dotenv(): void
+    public function test_loadEnv_reads_dotenv_test_in_test_mode(): void
     {
-        file_put_contents($this->tmpDir . '/.env', "PIWIGO_DB_HOST=db.example.com\n");
+        // tests/bootstrap.php sets HTTP_X_PIWIGO_ENV=test → default reads .env.test.
+        file_put_contents($this->tmpDir . '/.env.test', "PIWIGO_DB_HOST=db.example.com\n");
         ConfigLoader::loadEnv($this->tmpDir);
         self::assertSame('db.example.com', getenv('PIWIGO_DB_HOST'));
     }
 
-    public function test_loadEnv_default_does_not_load_dotenv_local(): void
+    public function test_loadEnv_default_picks_dotenv_test_in_test_mode(): void
     {
-        // Runtime default: only .env is loaded. .env.local is reserved for
-        // the test runner and must NOT bleed into a real web request.
-        file_put_contents($this->tmpDir . '/.env', "PIWIGO_DB_USER=base\n");
-        file_put_contents($this->tmpDir . '/.env.local', "PIWIGO_DB_USER=overridden\n");
+        // tests/bootstrap.php sets HTTP_X_PIWIGO_ENV=test, so the default
+        // file argument resolves to .env.test (not .env). The two files
+        // are independent — .env is never read in test mode.
+        file_put_contents($this->tmpDir . '/.env', "PIWIGO_DB_USER=prod\n");
+        file_put_contents($this->tmpDir . '/.env.test', "PIWIGO_DB_USER=testing\n");
         ConfigLoader::loadEnv($this->tmpDir);
-        self::assertSame('base', getenv('PIWIGO_DB_USER'));
+        self::assertSame('testing', getenv('PIWIGO_DB_USER'));
     }
 
-    public function test_loadEnv_explicit_local_overrides_dotenv(): void
+    public function test_loadEnv_explicit_files_override_default(): void
     {
-        // Test bootstrap passes ['.env', '.env.local'] explicitly to opt in.
-        file_put_contents($this->tmpDir . '/.env', "PIWIGO_DB_USER=base\n");
-        file_put_contents($this->tmpDir . '/.env.local', "PIWIGO_DB_USER=overridden\n");
-        ConfigLoader::loadEnv($this->tmpDir, ['.env', '.env.local']);
-        self::assertSame('overridden', getenv('PIWIGO_DB_USER'));
+        // Callers that need to test a specific file list pass it explicitly.
+        file_put_contents($this->tmpDir . '/.env', "PIWIGO_DB_USER=prod\n");
+        file_put_contents($this->tmpDir . '/.env.test', "PIWIGO_DB_USER=testing\n");
+        ConfigLoader::loadEnv($this->tmpDir, ['.env']);
+        self::assertSame('prod', getenv('PIWIGO_DB_USER'));
     }
 
     public function test_applyEnvOverrides_writes_set_env_vars_into_conf(): void

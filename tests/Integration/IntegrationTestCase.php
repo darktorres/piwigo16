@@ -5,37 +5,39 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration;
 
 use PHPUnit\Framework\TestCase;
+use Piwigo\Core\InstallSentinel;
 use Symfony\Component\Process\Process;
 
 /**
  * Shared database infrastructure for integration tests.
  *
- * Requires these environment variables (set in shell or .env.local):
+ * Requires these environment variables (loaded from .env.test by
+ * tests/bootstrap.php):
  *
- *   PIWIGO_DB_HOST      MySQL host reachable by the test runner (default: 127.0.0.1)
+ *   PIWIGO_DB_HOST      MySQL host reachable by the test runner
  *   PIWIGO_DB_PORT      MySQL port (default: 3306)
  *   PIWIGO_DB_USER      MySQL user
  *   PIWIGO_DB_PASSWORD  MySQL password
- *   PIWIGO_DB_BASE      Test database name — never the production DB (default: piwigo_test)
+ *   PIWIGO_DB_BASE      Test database name — never the production DB
  *   PIWIGO_BASE_URL     Base URL of the running Apache Piwigo instance
  *
- * Each test class writes a fresh .env at the repo root pointing at the test
- * database and restores any pre-existing .env in tearDown, leaving a clean
- * slate. Apache reads .env on every request via Piwigo\Config\ConfigLoader,
- * so this is what flips the runtime DB pointer for the duration of a test.
+ * Apache request routing: every HTTP call from these tests carries the
+ * `X-Piwigo-Env: test` header (see TEST_HEADER), which makes the runtime
+ * read .env.test and use local/.installed.test instead of the prod
+ * counterparts. Tests therefore never swap files on disk — prod config
+ * stays untouched even if a test crashes.
  */
 abstract class IntegrationTestCase extends TestCase
 {
+    /** Header line array suitable for CURLOPT_HTTPHEADER. */
+    protected const TEST_HEADER = ['X-Piwigo-Env: test'];
+
     protected string $dbHost;
     protected int $dbPort;
     protected string $dbUser;
     protected string $dbPass;
     protected string $dbName;
     protected string $baseUrl;
-
-    private const ENV_PATH        = __DIR__ . '/../../.env';
-    private const ENV_BACKUP_PATH = __DIR__ . '/../../.env.test-backup';
-    private const STAMP_PATH      = __DIR__ . '/../../local/.installed';
 
     protected function setUpConnectionFromEnv(): void
     {
@@ -72,39 +74,18 @@ abstract class IntegrationTestCase extends TestCase
     }
 
     /**
-     * Writes a fresh .env pointing at the test DB and creates the install
-     * stamp. Backs up any pre-existing .env so the user's runtime config
-     * can be restored in tearDown.
+     * Marks the test runtime as installed so subsequent HTTP requests
+     * skip the install redirect. InstallSentinel writes
+     * `local/.installed.test` (TestMode is active in CLI bootstrap).
+     * Integration tests bypass the install.php form by loading SQL
+     * fixtures directly, so they own the sentinel lifecycle.
      */
-    protected function writeRuntimeConfig(): void
+    protected function markTestInstalled(): void
     {
-        if (file_exists(self::ENV_PATH) && !file_exists(self::ENV_BACKUP_PATH)) {
-            rename(self::ENV_PATH, self::ENV_BACKUP_PATH);
+        if (!defined('PHPWG_ROOT_PATH')) {
+            define('PHPWG_ROOT_PATH', __DIR__ . '/../../');
         }
-        $host = $this->dbPort ? "{$this->dbHost}:{$this->dbPort}" : $this->dbHost;
-        file_put_contents(self::ENV_PATH, sprintf(
-            "PIWIGO_DB_HOST=%s\nPIWIGO_DB_USER=%s\nPIWIGO_DB_PASSWORD=%s\nPIWIGO_DB_BASE=%s\nPIWIGO_DB_PREFIX=piwigo_\n",
-            $host,
-            $this->dbUser,
-            $this->dbPass,
-            $this->dbName,
-        ));
-
-        $stampDir = dirname(self::STAMP_PATH);
-        if (!is_dir($stampDir)) {
-            mkdir($stampDir, 0755, true);
-        }
-        touch(self::STAMP_PATH);
-    }
-
-    protected function restoreRuntimeConfig(): void
-    {
-        if (file_exists(self::ENV_PATH)) {
-            unlink(self::ENV_PATH);
-        }
-        if (file_exists(self::ENV_BACKUP_PATH)) {
-            rename(self::ENV_BACKUP_PATH, self::ENV_PATH);
-        }
+        InstallSentinel::markInstalled();
     }
 
     protected function queryScalar(string $sql): string

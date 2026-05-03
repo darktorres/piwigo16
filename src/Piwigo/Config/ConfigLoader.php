@@ -9,16 +9,18 @@ use Dotenv\Repository\Adapter\PutenvAdapter;
 use Dotenv\Repository\RepositoryBuilder;
 
 /**
- * Boot-time orchestration for Config: loads .env / .env.local from the repo
- * root and seeds Config::$data with SCHEMA defaults + env overrides.
+ * Boot-time orchestration for Config: loads the per-request env file from
+ * the repo root and seeds Config::$data with SCHEMA defaults + env overrides.
  *
- * Convention (matches vlucas/phpdotenv defaults):
- *   .env        — committed-template-derived runtime config (gitignored)
- *   .env.local  — local-only overrides (gitignored, loaded last so wins)
- *   .env.example — committed template, NOT loaded
+ * Two env files exist, fully independent (no inheritance, no merging):
+ *   .env        — production runtime config (gitignored)
+ *   .env.test   — test runtime config (gitignored), loaded only when the
+ *                 X-Piwigo-Env: test header is present (see TestMode)
+ *   .env.example — committed template documenting both
  *
- * Both files are optional. If neither is present, env-derived overrides are
- * skipped and the env vars stay at their SCHEMA defaults.
+ * The choice is made by TestMode::envFile() at every loadEnv() call. There
+ * is no swap-and-restore — prod and test config are physically separate
+ * files and the runtime picks one or the other per request.
  *
  * Env-var → conf-key mapping is hand-curated — currently only DB credentials,
  * which is the only sensitive runtime config that benefits from env injection.
@@ -48,16 +50,19 @@ final class ConfigLoader
      * EnvironmentFile=, Docker -e, or a parent shell export) win over the
      * file values — standard 12-factor precedence.
      *
-     * Default loads only `.env` at runtime — that's the committed-defaults
-     * file. `.env.local` is reserved for the test runner (loaded explicitly
-     * by tests/bootstrap.php), since it historically held test-only DB
-     * credentials in this repo and silently overriding runtime DB settings
-     * with test creds would break installs.
+     * When called with no `$files` argument, picks the file based on
+     * `TestMode::envFile()` — `.env.test` for test-mode requests, `.env`
+     * otherwise. The two files are fully independent; there is no
+     * inheritance or merging. Tests that exercise the loader directly
+     * pass an explicit file list to override this default.
      *
-     * @param list<string> $files filenames to attempt loading, in order
+     * @param list<string>|null $files filenames to attempt loading, in order; null = TestMode default
      */
-    public static function loadEnv(string $repoRoot, array $files = ['.env']): void
+    public static function loadEnv(string $repoRoot, ?array $files = null): void
     {
+        if ($files === null) {
+            $files = [TestMode::envFile()];
+        }
         $repoRoot = rtrim($repoRoot, '/\\');
         $present  = [];
         foreach ($files as $file) {

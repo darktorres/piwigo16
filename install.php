@@ -174,11 +174,13 @@ if (isset($_POST['install'])) {
     if (count($errors) == 0) {
         $step = 2;
 
-        // Persist DB credentials to .env. Atomic write (tmp + rename) so a
-        // half-written file can never break a subsequent boot. Fail loudly
-        // on write errors — silently continuing leaves the install
-        // half-broken (DB tables created, no config to point at them).
-        $envPath = PHPWG_ROOT_PATH . '.env';
+        // Persist DB credentials to the env file (`.env` for prod runs,
+        // `.env.test` when this install was triggered with X-Piwigo-Env: test).
+        // Atomic write (tmp + rename) so a half-written file can never break
+        // a subsequent boot. Fail loudly on write errors — silently continuing
+        // leaves the install half-broken (DB tables created, no config to
+        // point at them).
+        $envPath = PHPWG_ROOT_PATH . \Piwigo\Config\TestMode::envFile();
         $envBody = "PIWIGO_DB_HOST={$dbhost}\n"
                  . "PIWIGO_DB_USER={$dbuser}\n"
                  . "PIWIGO_DB_PASSWORD={$dbpasswd}\n"

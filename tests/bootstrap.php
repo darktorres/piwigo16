@@ -4,12 +4,24 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 
-// Load .env then .env.local (if present) into getenv() / $_ENV for the
-// test runner. The runtime loader at common.inc.php / install.php / etc.
-// only reads .env — .env.local is reserved for test-runner-specific
-// overrides like PIWIGO_DB_BASE=piwigo_test that must NOT bleed into a
-// real web request.
-\Piwigo\Config\ConfigLoader::loadEnv(dirname(__DIR__), ['.env', '.env.local']);
+// Mark this PHP process as a test-mode runtime BEFORE the loader reads
+// any env file. ConfigLoader / InstallSentinel / install.php all check
+// Piwigo\Config\TestMode, which inspects $_SERVER['HTTP_X_PIWIGO_ENV']
+// and is satisfied here in CLI mode. Result: every in-process runtime
+// invocation reads .env.test (not .env) and uses local/.installed.test
+// (not local/.installed).
+$_SERVER['HTTP_X_PIWIGO_ENV'] = 'test';
+
+// Required: a self-contained .env.test at the repo root. We do NOT fall
+// back to .env — silently inheriting prod credentials is exactly the
+// poisoning bug the two-file split is designed to prevent.
+$envTestPath = dirname(__DIR__) . '/.env.test';
+if (!is_file($envTestPath)) {
+    fwrite(STDERR, "tests/bootstrap.php: missing $envTestPath\n");
+    fwrite(STDERR, "Create it from .env.example and fill in test DB credentials.\n");
+    exit(1);
+}
+\Piwigo\Config\ConfigLoader::loadEnv(dirname(__DIR__), ['.env.test']);
 
 // Core Piwigo constants required by classes that reference them at parse time.
 if (!defined('PHPWG_VERSION')) {

@@ -14,12 +14,7 @@ final class UpgradeChainTest extends IntegrationTestCase
         $this->setUpConnectionFromEnv();
         $this->resetDatabase();
         $this->loadFixture(self::FIXTURE);
-        $this->writeRuntimeConfig();
-    }
-
-    protected function tearDown(): void
-    {
-        $this->restoreRuntimeConfig();
+        $this->markTestInstalled();
     }
 
     public function test_upgrade_from_pre15x_dump_returns_409(): void
@@ -31,6 +26,7 @@ final class UpgradeChainTest extends IntegrationTestCase
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_FOLLOWLOCATION => false,
+            CURLOPT_HTTPHEADER     => self::TEST_HEADER,
         ]);
         $body       = (string) curl_exec($ch);
         $statusCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -51,6 +47,7 @@ final class UpgradeChainTest extends IntegrationTestCase
             ]),
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTPHEADER     => self::TEST_HEADER,
         ]);
         $statusCode = (int) curl_getinfo(curl_exec($ch) !== false ? $ch : $ch, CURLINFO_HTTP_CODE);
         unset($ch); // curl_close() deprecated in PHP 8.5; unset triggers cleanup equivalently

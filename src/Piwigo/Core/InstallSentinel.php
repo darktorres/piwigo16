@@ -4,11 +4,18 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
+use Piwigo\Config\TestMode;
+
 /**
  * Authoritative answer to "is Piwigo installed on this filesystem?".
  *
- * Sole signal: an empty stamp file at local/.installed (created by
- * install.php at the end of a successful install).
+ * Sole signal: an empty stamp file under `local/` (created by install.php
+ * at the end of a successful install).
+ *
+ * The stamp filename depends on TestMode — production uses
+ * `local/.installed`, test runs use `local/.installed.test`. Tests
+ * therefore have their own install lifecycle and never affect the prod
+ * sentinel.
  *
  * Used by:
  *   - install.php   (refuse to re-install)
@@ -19,8 +26,6 @@ namespace Piwigo\Core;
  */
 final class InstallSentinel
 {
-    private const STAMP_PATH = 'local/.installed';
-
     public static function isInstalled(): bool
     {
         return file_exists(self::stampFile());
@@ -47,6 +52,6 @@ final class InstallSentinel
 
     private static function stampFile(): string
     {
-        return PHPWG_ROOT_PATH . self::STAMP_PATH;
+        return PHPWG_ROOT_PATH . 'local/' . TestMode::installedStamp();
     }
 }

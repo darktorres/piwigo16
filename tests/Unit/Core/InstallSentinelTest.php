@@ -16,7 +16,9 @@ final class InstallSentinelTest extends TestCase
         if (!defined('PHPWG_ROOT_PATH')) {
             define('PHPWG_ROOT_PATH', sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'piwigo-install-sentinel-test' . DIRECTORY_SEPARATOR);
         }
-        $this->stampPath = PHPWG_ROOT_PATH . 'local/.installed';
+        // tests/bootstrap.php sets test mode → InstallSentinel uses
+        // local/.installed.test instead of local/.installed.
+        $this->stampPath = PHPWG_ROOT_PATH . 'local/.installed.test';
         @mkdir(dirname($this->stampPath), 0o755, true);
         InstallSentinel::markUninstalled();
     }

@@ -1,3 +1,9 @@
+{if $COMMENTS_DISABLED}
+<div class="comments-disabled-notice" style="padding:1.5em;">
+  <p>{'User comments are disabled in the configuration.'|@translate}</p>
+  <p><a href="{$U_CONFIGURATION}">{'Enable user comments'|@translate}</a></p>
+</div>
+{else}
 {combine_script id="comments" load="footer" path="admin/themes/default/js/comments.js"}
 {combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
 <script id="pwg-page-data" type="application/json">{$page_data_json}</script>
@@ -193,3 +199,4 @@
     </div>
   </div>
 </div>
+{/if}

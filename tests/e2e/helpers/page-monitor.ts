@@ -31,6 +31,21 @@ export function attachMonitor(page: Page): PageMonitor {
     const consoleErrors: string[] = [];
     const failedRequests: Array<{ url: string; status: number; method: string }> = [];
 
+    // Track requests in flight so reset() can mark them as "ignore on
+    // failure". Without this, a navigation that cancels prior-page XHRs
+    // (e.g. gallery thumbnails fired by themes/default/js/thumbnails.loader.ts
+    // after loginAsAdmin lands on /) produces requestfailed events AFTER
+    // reset(), which then look like fresh failures of the next page.
+    const inFlight = new Set<PwRequest>();
+    let ignored = new Set<PwRequest>();
+
+    page.on('request', (req: PwRequest) => {
+        inFlight.add(req);
+    });
+    page.on('requestfinished', (req: PwRequest) => {
+        inFlight.delete(req);
+    });
+
     page.on('pageerror', (err: Error) => {
         pageErrors.push(err);
     });
@@ -42,6 +57,11 @@ export function attachMonitor(page: Page): PageMonitor {
     });
 
     page.on('requestfailed', (req: PwRequest) => {
+        inFlight.delete(req);
+        if (ignored.has(req)) {
+            ignored.delete(req);
+            return;
+        }
         failedRequests.push({
             url: req.url(),
             status: 0,
@@ -96,6 +116,9 @@ export function attachMonitor(page: Page): PageMonitor {
             pageErrors.length = 0;
             consoleErrors.length = 0;
             failedRequests.length = 0;
+            // Anything in flight at reset time should not count if it fails
+            // later — typically a prior-page XHR cancelled by the next nav.
+            ignored = new Set(inFlight);
         },
     };
 }

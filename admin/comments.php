@@ -32,10 +32,14 @@ check_status(ACCESS_ADMINISTRATOR);
 
 $template->set_filenames(['comments' => 'comments.tpl']);
 
+$comments_disabled = !\Piwigo\Config\Config::activateComments();
+
 $template->assign([
-    'F_ACTION'       => get_root_url().'admin.php?page=comments',
-    'PWG_TOKEN'      => get_pwg_token(),
-    'page_data_json' => json_encode([
+    'F_ACTION'           => get_root_url().'admin.php?page=comments',
+    'PWG_TOKEN'          => get_pwg_token(),
+    'COMMENTS_DISABLED'  => $comments_disabled,
+    'U_CONFIGURATION'    => get_root_url().'admin.php?page=configuration&amp;section=comments',
+    'page_data_json'     => json_encode([
         'pwg_token'                => get_pwg_token(),
         'str_yes_delete_confirmation' => l10n('Yes, delete'),
         'str_no_delete_confirmation'  => l10n('No, I have changed my mind'),

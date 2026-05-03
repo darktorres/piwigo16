@@ -143,8 +143,8 @@ function add_uploaded_file(string $source_filepath, ?string $original_filename =
     //
     // 3) register in database
 
-    global $user, $logger;
-
+    global $logger;
+    global $user;
     if (!is_null($original_filename)) {
         $original_filename = htmlspecialchars($original_filename);
     }

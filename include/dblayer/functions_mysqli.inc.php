@@ -116,8 +116,8 @@ function pwg_get_db_version()
  */
 function pwg_query(string $query)
 {
-    global $mysqli, $page, $debug, $t2;
-
+    global $mysqli, $debug, $t2;
+    global $page;
     $start = microtime(true);
     ($result = $mysqli->query($query)) or my_error($query, \Piwigo\Config\Config::dieOnSqlError());
 
@@ -586,8 +586,8 @@ function protect_column_name(string $column_name): string
  */
 function do_maintenance_all_tables(): void
 {
-    global $prefixeTable, $page;
-
+    global $prefixeTable;
+    global $page;
     $all_tables = [];
 
     // List all tables

@@ -12,8 +12,8 @@ use PHPStan\Rules\Rule;
 use PHPStan\Rules\RuleErrorBuilder;
 
 /**
- * Flags new `global $conf`, `global $page`, `global $user`, `global $lang`
- * declarations inside src/ — Phase 4 Wave A enforcement.
+ * Flags `global $conf`, `global $page`, `global $user`, `global $lang`,
+ * `global $template` declarations inside src/ — Phase 4 enforcement.
  *
  * Legacy code in include/ and admin/ is allowed to keep using globals; this
  * rule only prevents NEW typed-service code from pulling in the raw globals

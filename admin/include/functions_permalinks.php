@@ -54,7 +54,8 @@ SELECT c.id
  */
 function delete_cat_permalink(string $cat_id, $save): bool
 {
-    global $page, $cache;
+    global $cache;
+    global $page;
     $query = '
 SELECT permalink
   FROM '.CATEGORIES_TABLE.'
@@ -115,8 +116,8 @@ VALUES
  */
 function set_cat_permalink(string $cat_id, string $permalink, $save): bool
 {
-    global $page, $cache;
-
+    global $cache;
+    global $page;
     $sanitized_permalink = preg_replace('#[^a-zA-Z0-9_/-]#', '', (string) $permalink);
     $sanitized_permalink = trim((string) $sanitized_permalink, '/');
     $sanitized_permalink = str_replace('//', '/', $sanitized_permalink);

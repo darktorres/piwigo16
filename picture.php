@@ -170,8 +170,8 @@ function default_picture_content(string $content, array $element_info): string
         }
     }
 
-    global $page, $template;
-
+    global $page;
+    $template = \Piwigo\Template\TemplateRegistry::current();
     if ($show_original) {
         $template->assign('U_ORIGINAL', $element_info['element_url']);
     }
@@ -192,7 +192,7 @@ function default_picture_content(string $content, array $element_info): string
         'COOKIE_PATH' => cookie_path(),
         ]
     );
-    return $template->parse('default_content', true);
+    return (string) $template->parse('default_content', true);
 }
 
 // +-----------------------------------------------------------------------+

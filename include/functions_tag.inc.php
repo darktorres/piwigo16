@@ -20,10 +20,7 @@ declare(strict_types=1);
  */
 function get_nb_available_tags(): int
 {
-    $user = &$GLOBALS['user'];
-    if (!is_array($user)) {
-        $user = [];
-    }
+    global $user;
     if (!isset($user['nb_available_tags'])) {
         $user['nb_available_tags'] = count(get_available_tags());
         single_update(

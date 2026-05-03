@@ -35,18 +35,19 @@ function get_complete_dir(string $category_id): string
 function get_local_dir(string $category_id): string
 {
     global $page;
-
     $uppercats = '';
     $local_dir = '';
 
-    if (isset($page['plain_structure'][$category_id]['uppercats'])) {
-        $uppercats = $page['plain_structure'][$category_id]['uppercats'];
+    $plainStructure = is_array($page['plain_structure'] ?? null) ? $page['plain_structure'] : [];
+    $catEntry = is_array($plainStructure[$category_id] ?? null) ? $plainStructure[$category_id] : [];
+    if (isset($catEntry['uppercats']) && is_scalar($catEntry['uppercats'])) {
+        $uppercats = (string) $catEntry['uppercats'];
     } else {
         $query = 'SELECT uppercats';
         $query .= ' FROM '.CATEGORIES_TABLE.' WHERE id = '.$category_id;
         $query .= ';';
         $row = pwg_db_fetch_assoc(pwg_query($query));
-        $uppercats = $row['uppercats'] ?? '';
+        $uppercats = is_scalar($row['uppercats'] ?? null) ? (string) $row['uppercats'] : '';
     }
 
     $upper_array = explode(',', $uppercats);
@@ -71,7 +72,6 @@ function get_local_dir(string $category_id): string
 function get_site_url(string $category_id): string
 {
     global $page;
-
     $query = '
 SELECT galleries_url
   FROM '.SITES_TABLE.' AS s,'.CATEGORIES_TABLE.' AS c

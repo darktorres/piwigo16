@@ -22,8 +22,8 @@ use Piwigo\Admin\Tabsheet;
  */
 function history_tabsheet(): void
 {
-    global $page, $link_start;
-
+    global $link_start;
+    global $page;
     // TabSheet
     $tabsheet = new Tabsheet();
     $tabsheet->set_id('history');

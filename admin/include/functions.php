@@ -1286,7 +1286,6 @@ UPDATE '.IMAGES_TABLE.'
 function move_categories($category_ids, $new_parent = -1): void
 {
     global $page;
-
     if (count($category_ids) == 0) {
         return;
     }
@@ -1393,7 +1392,6 @@ SELECT status
 function create_virtual_category(string $category_name, int|string|null $parent_id = null, array $options = []): array
 {
     global $user;
-
     // is the given category name only containing blank spaces ?
     if (preg_match('/^\s*$/', $category_name)) {
         return ['error' => l10n('The name of an album must not be empty')];
@@ -1521,7 +1519,8 @@ SELECT id, uppercats, global_rank, visible, status
         $granted_users = array_map('intval', query2array($query, null, 'user_id'));
         add_permission_on_category($inserted_id, $granted_users);
     } elseif ('private' == $insert['status']) {
-        add_permission_on_category($inserted_id, array_unique(array_merge(get_admins(), [$user['id']])));
+        $userId = is_numeric($user['id'] ?? null) ? (int) $user['id'] : 0;
+        add_permission_on_category($inserted_id, array_unique(array_merge(get_admins(), [$userId])));
     }
 
     trigger_notify('create_virtual_category', array_merge(['id' => $inserted_id], $insert));
@@ -1643,10 +1642,14 @@ DELETE
 function tag_id_from_tag_name(string $tag_name): int|string
 {
     global $page;
-
     $tag_name = trim($tag_name);
-    if (isset($page['tag_id_from_tag_name_cache'][$tag_name])) {
-        return $page['tag_id_from_tag_name_cache'][$tag_name];
+    $cache = is_array($page['tag_id_from_tag_name_cache'] ?? null) ? $page['tag_id_from_tag_name_cache'] : [];
+    if (isset($cache[$tag_name])) {
+        $cached = $cache[$tag_name];
+        if (is_int($cached)) {
+            return $cached;
+        }
+        return is_scalar($cached) ? (string) $cached : '';
     }
 
     // search existing by exact name
@@ -1687,17 +1690,25 @@ SELECT id
                     ]
                 );
 
-                $page['tag_id_from_tag_name_cache'][$tag_name] = pwg_db_insert_id();
+                if (!isset($page['tag_id_from_tag_name_cache']) || !is_array($page['tag_id_from_tag_name_cache'])) {
+                    $page['tag_id_from_tag_name_cache'] = [];
+                }
+                $newId = pwg_db_insert_id();
+                $page['tag_id_from_tag_name_cache'][$tag_name] = $newId;
 
                 invalidate_user_cache_nb_tags();
 
-                return $page['tag_id_from_tag_name_cache'][$tag_name];
+                return $newId;
             }
         }
     }
 
-    $page['tag_id_from_tag_name_cache'][$tag_name] = is_numeric($existing_tags[0]) ? (int) $existing_tags[0] : (string) $existing_tags[0];
-    return $page['tag_id_from_tag_name_cache'][$tag_name];
+    if (!isset($page['tag_id_from_tag_name_cache']) || !is_array($page['tag_id_from_tag_name_cache'])) {
+        $page['tag_id_from_tag_name_cache'] = [];
+    }
+    $resolved = is_numeric($existing_tags[0]) ? (int) $existing_tags[0] : (string) $existing_tags[0];
+    $page['tag_id_from_tag_name_cache'][$tag_name] = $resolved;
+    return $resolved;
 }
 
 /**
@@ -2319,10 +2330,10 @@ SELECT id
 function cat_admin_access($category_id): bool
 {
     global $user;
-
     // $filter['visible_categories'] and $filter['visible_images']
     // are not used because it's not necessary (filter <> restriction)
-    if (in_array($category_id, @explode(',', (string) $user['forbidden_categories']))) {
+    $forbidden = is_scalar($user['forbidden_categories'] ?? null) ? (string) $user['forbidden_categories'] : '';
+    if (in_array($category_id, @explode(',', $forbidden))) {
         return false;
     }
     return true;
@@ -2650,7 +2661,10 @@ function get_old_newsletters_base_url($language = 'en_UK'): string
 function get_active_menu($menu_page)
 {
     global $page;
-    return $page['active_menu'] ?? match ($menu_page) {
+    if (isset($page['active_menu']) && is_int($page['active_menu'])) {
+        return $page['active_menu'];
+    }
+    return match ($menu_page) {
         'photo', 'photos_add', 'rating', 'tags', 'batch_manager' => 0,
         'album', 'cat_list', 'albums', 'cat_options', 'cat_search', 'permalinks' => 1,
         'user_list', 'user_perm', 'group_list', 'group_perm', 'notification_by_mail', 'user_activity' => 2,
@@ -3348,7 +3362,6 @@ function get_cache_size_derivatives(string $path): array
 function fs_quick_check(): void
 {
     global $page;
-
     if (\Piwigo\Config\Config::fsQuickCheckPeriod() == 0) {
         return;
     }
@@ -3399,8 +3412,7 @@ SELECT
 
     foreach ($fsqc_paths as $id => $path) {
         if (!file_exists((string)$path)) {
-            global $template;
-
+            $template = \Piwigo\Template\TemplateRegistry::current();
             $template->assign(
                 'header_msgs',
                 [
@@ -3423,8 +3435,7 @@ SELECT
     $duplicate_paths = query2array($query);
 
     if (count($duplicate_paths) > 0) {
-        global $template;
-
+        $template = \Piwigo\Template\TemplateRegistry::current();
         $template->assign(
             'header_msgs',
             [

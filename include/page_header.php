@@ -20,7 +20,6 @@ $page = &$GLOBALS['page'];
 if (!is_array($page)) {
     $page = [];
 }
-
 //
 // Start output of page
 //

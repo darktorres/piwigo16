@@ -691,11 +691,7 @@ SELECT
  */function ws_history_log(array $params, \Piwigo\Ws\PwgServer &$service): void
 {
     global $logger;
-    $page = &$GLOBALS['page'];
-    if (!is_array($page)) {
-        $page = [];
-    }
-
+    global $page;
     if (!empty($params['section']) and in_array($params['section'], get_enums(HISTORY_TABLE, 'section'))) {
         $page['section'] = $params['section'];
     }

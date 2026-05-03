@@ -171,7 +171,6 @@ function parse_custom_params(array $tokens): \Piwigo\Image\DerivativeParams
 function parse_request(): \Piwigo\Image\DerivativeParams
 {
     global $page;
-
     if (\Piwigo\Config\Config::questionMarkInUrls() == false and
          isset($_SERVER['PATH_INFO']) and !empty($_SERVER['PATH_INFO'])) {
         $req = is_scalar($_SERVER['PATH_INFO']) ? (string) $_SERVER['PATH_INFO'] : '';
@@ -342,7 +341,6 @@ function try_switch_source(\Piwigo\Image\DerivativeParams $params, ?int $origina
 function send_derivative(int|false $expires): void
 {
     global $page;
-
     if (isset($_GET['ajaxload']) and $_GET['ajaxload'] == 'true') {
         include_once(PHPWG_ROOT_PATH.'include/functions_cookie.inc.php');
         include_once(PHPWG_ROOT_PATH.'include/functions_url.inc.php');

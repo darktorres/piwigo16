@@ -38,8 +38,8 @@ check_input_parameter('action', $_GET, false, '/^(lost|reset|lost_code|reset_end
  */
 function process_verification_code(): bool
 {
-    global $page, $logger;
-
+    global $logger;
+    global $page;
     if (isset($_SESSION['reset_password_code'])) {
         return true;
     }
@@ -127,8 +127,8 @@ function process_verification_code(): bool
  */
 function process_password_request(): bool
 {
-    global $page, $user;
-
+    global $page;
+    global $user;
     /** @var array{secret: string, attempts: int, user_id: int|null, created_at: int, ttl: int}|null $state */
     $state = is_array($_SESSION['reset_password_code'] ?? null) ? $_SESSION['reset_password_code'] : null;
     if (!$state) {
@@ -225,7 +225,6 @@ function process_password_request(): bool
 function check_password_reset_key(string $reset_key): int|false
 {
     global $page;
-
     $key = $reset_key;
     if (!preg_match('/^[a-z0-9]{20}$/i', (string) $key)) {
         $page['errors']['password_page_error'] = l10n('Invalid key');
@@ -274,7 +273,6 @@ SELECT
 function reset_password(): bool
 {
     global $page;
-
     if ($_POST['use_new_pwd'] != $_POST['passwordConf']) {
         $page['errors']['password_form_error'] = l10n('The passwords do not match');
         return false;

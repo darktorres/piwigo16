@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Auth\PwgTOTP;
+use Piwigo\Users\CurrentUser;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -546,9 +547,10 @@ INSERT IGNORE INTO '.USER_CACHE_TABLE.'
  */
 function check_user_favorites(): void
 {
-    global $user;
+    $currentUser = CurrentUser::get();
+    $user = $currentUser->rawAttributes;
 
-    if ($user['forbidden_categories'] == '') {
+    if (($user['forbidden_categories'] ?? '') == '') {
         return;
     }
 
@@ -560,7 +562,7 @@ function check_user_favorites(): void
 SELECT DISTINCT f.image_id
   FROM '.FAVORITES_TABLE.' AS f INNER JOIN '.IMAGE_CATEGORY_TABLE.' AS ic
     ON f.image_id = ic.image_id
-  WHERE f.user_id = '.$user['id'].'
+  WHERE f.user_id = '.$currentUser->id.'
   '.get_sql_condition_FandF(
         [
           'forbidden_categories' => 'ic.category_id',
@@ -573,7 +575,7 @@ SELECT DISTINCT f.image_id
     $query = '
 SELECT image_id
   FROM '.FAVORITES_TABLE.'
-  WHERE user_id = '.$user['id'].'
+  WHERE user_id = '.$currentUser->id.'
 ;';
     $favorites = query2array($query, null, 'image_id');
 
@@ -582,7 +584,7 @@ SELECT image_id
         $query = '
 DELETE FROM '.FAVORITES_TABLE.'
   WHERE image_id IN ('.implode(',', $to_deletes).')
-    AND user_id = '.$user['id'].'
+    AND user_id = '.$currentUser->id.'
 ;';
         pwg_query($query);
     }
@@ -971,14 +973,13 @@ WHERE '.\Piwigo\Config\Config::userFields()['id'].' = '.$user_id;
 function log_user($user_id, $remember_me): void
 {
     global $user;
-
     //New default login and register pages, if users changes languages and succesfully logs in
     //we want to update the userpref language stored in a cookie
 
     //TODO check value of cookie
 
     $cookie_lang = isset($_COOKIE['lang']) && is_scalar($_COOKIE['lang']) ? (string) $_COOKIE['lang'] : '';
-    if ($cookie_lang !== '' and $user['language'] != $cookie_lang) {
+    if ($cookie_lang !== '' and ($user['language'] ?? null) != $cookie_lang) {
         if (!array_key_exists($cookie_lang, get_languages())) {
             fatal_error('[Hacking attempt] the input parameter "'.$cookie_lang.'" is not valid');
         }
@@ -1259,11 +1260,9 @@ function logout_user(): void
  */
 function get_user_status($user_status = '')
 {
-    global $user;
-
     if (empty($user_status)) {
-        if (isset($user['status'])) {
-            $user_status = $user['status'];
+        if (CurrentUser::isInitialized()) {
+            $user_status = CurrentUser::get()->status;
         } else {
             // swicth to default value
             $user_status = '';
@@ -1400,8 +1399,6 @@ function is_webmaster($user_status = ''): bool
  */
 function can_manage_comment($action, $comment_author_id): bool
 {
-    global $user;
-
     if (is_a_guest()) {
         return false;
     }
@@ -1414,14 +1411,16 @@ function can_manage_comment($action, $comment_author_id): bool
         return true;
     }
 
+    $currentUserId = CurrentUser::get()->id;
+
     if ('edit' == $action and \Piwigo\Config\Config::userCanEditComment()) {
-        if ($comment_author_id == $user['id']) {
+        if ($comment_author_id == $currentUserId) {
             return true;
         }
     }
 
     if ('delete' == $action and \Piwigo\Config\Config::userCanDeleteComment()) {
-        if ($comment_author_id == $user['id']) {
+        if ($comment_author_id == $currentUserId) {
             return true;
         }
     }
@@ -1447,7 +1446,9 @@ function get_sql_condition_FandF(
     ?string $prefix_condition = null,
     bool $force_one_condition = false
 ): string {
-    global $user, $filter;
+    global $filter;
+
+    $user = CurrentUser::get()->rawAttributes;
 
     $sql_list = [];
 
@@ -1457,7 +1458,7 @@ function get_sql_condition_FandF(
                 {
                     if (!empty($user['forbidden_categories'])) {
                         $sql_list[] =
-                          $field_name.' NOT IN ('.$user['forbidden_categories'].')';
+                          $field_name.' NOT IN ('.(is_scalar($user['forbidden_categories']) ? (string) $user['forbidden_categories'] : '').')';
                     }
                     break;
                 }
@@ -1479,7 +1480,7 @@ function get_sql_condition_FandF(
             case 'forbidden_images':
                 if (
                     !empty($user['image_access_list'])
-                    or $user['image_access_type'] != 'NOT IN'
+                    or ($user['image_access_type'] ?? null) != 'NOT IN'
                 ) {
                     $table_prefix = null;
                     if ($field_name == 'id') {
@@ -1488,10 +1489,10 @@ function get_sql_condition_FandF(
                         $table_prefix = 'i.';
                     }
                     if (isset($table_prefix)) {
-                        $sql_list[] = $table_prefix.'level<='.$user['level'];
+                        $sql_list[] = $table_prefix.'level<='.(is_scalar($user['level'] ?? null) ? (string) $user['level'] : '0');
                     } elseif (!empty($user['image_access_list']) and !empty($user['image_access_type'])) {
-                        $sql_list[] = $field_name.' '.$user['image_access_type']
-                            .' ('.$user['image_access_list'].')';
+                        $sql_list[] = $field_name.' '.(is_scalar($user['image_access_type']) ? (string) $user['image_access_type'] : '')
+                            .' ('.(is_scalar($user['image_access_list']) ? (string) $user['image_access_list'] : '').')';
                     }
                 }
                 break;
@@ -1520,13 +1521,15 @@ function get_sql_condition_FandF(
  */
 function get_recent_photos_sql(string $db_field): string
 {
-    global $user;
+    $user = CurrentUser::get()->rawAttributes;
     if (!isset($user['last_photo_date'])) {
         return '0=1';
     }
+    $recentPeriod = is_numeric($user['recent_period'] ?? null) ? (int) $user['recent_period'] : 0;
+    $lastPhotoDate = is_scalar($user['last_photo_date']) ? (string) $user['last_photo_date'] : '';
     return $db_field.'>=LEAST('
-      .pwg_db_get_recent_period_expression($user['recent_period'])
-      .','.pwg_db_get_recent_period_expression(1, $user['last_photo_date']).')';
+      .pwg_db_get_recent_period_expression($recentPeriod)
+      .','.pwg_db_get_recent_period_expression(1, $lastPhotoDate).')';
 }
 
 /**
@@ -1536,8 +1539,8 @@ function get_recent_photos_sql(string $db_field): string
  */
 function auth_key_login(string $auth_key, bool $connection_by_header = false): bool
 {
-    global $user, $page;
-
+    global $user;
+    global $page;
     $valid_key = false;
     $secret_key = null;
     if (preg_match('/^[a-z0-9]{30}$/i', (string) $auth_key)) {
@@ -1841,14 +1844,15 @@ UPDATE '.USER_INFOS_TABLE.'
  */
 function userprefs_save(): void
 {
-    global $user;
+    $user = is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : [];
+    $preferences = $user['preferences'] ?? [];
 
-    $dbValue = pwg_db_real_escape_string(serialize($user['preferences']));
+    $dbValue = pwg_db_real_escape_string(serialize($preferences));
 
     $query = '
 UPDATE '.USER_INFOS_TABLE.'
   SET preferences = \''.$dbValue.'\'
-  WHERE user_id = '.$user['id'].'
+  WHERE user_id = '.CurrentUser::get()->id.'
 ;';
     pwg_query($query);
 }
@@ -1863,7 +1867,6 @@ UPDATE '.USER_INFOS_TABLE.'
 function userprefs_update_param($param, $value): void
 {
     global $user;
-
     // If the field is true or false, the variable is transformed into a boolean value.
     if ('true' == $value) {
         $value = true;
@@ -1871,6 +1874,9 @@ function userprefs_update_param($param, $value): void
         $value = false;
     }
 
+    if (!isset($user['preferences']) || !is_array($user['preferences'])) {
+        $user['preferences'] = [];
+    }
     $user['preferences'][$param] = $value;
 
     userprefs_save();
@@ -1885,7 +1891,6 @@ function userprefs_update_param($param, $value): void
 function userprefs_delete_param($params): void
 {
     global $user;
-
     if (!is_array($params)) {
         $params = [$params];
     }
@@ -1893,6 +1898,9 @@ function userprefs_delete_param($params): void
         return;
     }
 
+    if (!isset($user['preferences']) || !is_array($user['preferences'])) {
+        $user['preferences'] = [];
+    }
     foreach ($params as $param) {
         if (isset($user['preferences'][$param])) {
             unset($user['preferences'][$param]);
@@ -1913,9 +1921,10 @@ function userprefs_delete_param($params): void
  */
 function userprefs_get_param($param, $default_value = null)
 {
-    global $user;
+    $user = is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : [];
+    $preferences = is_array($user['preferences'] ?? null) ? $user['preferences'] : [];
 
-    return $user['preferences'][$param] ?? $default_value;
+    return $preferences[$param] ?? $default_value;
 }
 
 /**
@@ -1971,7 +1980,9 @@ function check_and_save_user_infos(array $params): array
         ];
     }
 
-    global $user, $service;
+    global $service;
+
+    $currentUser = CurrentUser::get();
 
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
@@ -2040,7 +2051,7 @@ SELECT
                 $admin_ids = query2array($query, null, 'user_id');
 
                 // we add all admin+webmaster users BUT the user herself
-                $password_protected_users = array_merge($password_protected_users, array_diff($admin_ids, [$user['id']]));
+                $password_protected_users = array_merge($password_protected_users, array_diff($admin_ids, [$currentUser->id]));
 
                 if (in_array($param_user_id[0], $password_protected_users)) {
                     // return new PwgError(403, 'Only webmasters can change password of other "webmaster/admin" users');
@@ -2079,13 +2090,13 @@ SELECT
         }
 
         $protected_users = [
-          is_numeric($user['id']) ? (int) $user['id'] : 0,
+          $currentUser->id,
           \Piwigo\Config\Config::guestId(),
           \Piwigo\Config\Config::webmasterId(),
           ];
 
         // an admin can't change status of other admin/webmaster
-        if ('admin' == $user['status']) {
+        if ('admin' == $currentUser->status) {
             $query = '
 SELECT
     user_id
@@ -2569,7 +2580,7 @@ function verify_user_code(string $secret, string $code): bool
  */
 function save_edit_context(): void
 {
-    global $page;
+    $page = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
 
     if (!is_admin() or !isset($page['section_url']) or !isset($page['image_id'])) {
         return;
@@ -2590,7 +2601,9 @@ function save_edit_context(): void
 
     // let's add the item on top of previous registered values and keep only the last 10 values
     $existing_context = is_array($_SESSION['edit_context']) ? $_SESSION['edit_context'] : [];
-    $_SESSION['edit_context'] = array_slice([$page['image_id'] => $page['section_url']] + $existing_context, 0, 10, true);
+    $imageId = is_scalar($page['image_id']) ? (string) $page['image_id'] : '';
+    $sectionUrl = is_scalar($page['section_url']) ? (string) $page['section_url'] : '';
+    $_SESSION['edit_context'] = array_slice([$imageId => $sectionUrl] + $existing_context, 0, 10, true);
 }
 
 /**

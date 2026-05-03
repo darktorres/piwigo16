@@ -55,8 +55,8 @@ $must_repost = false;
 /** @param string[] $check_key_treated */
 function do_timeout_treatment(string $post_keyname, array $check_key_treated = []): bool
 {
-    global $env_nbm, $base_url, $page, $must_repost;
-
+    global $env_nbm, $base_url, $must_repost;
+    global $page;
     if ($env_nbm['is_sendmail_timeout']) {
         if (isset($_POST[$post_keyname])) {
             $post_keyname_val = is_array($_POST[$post_keyname]) ? array_map(fn (mixed $v): string => is_scalar($v) ? (string)$v : '', $_POST[$post_keyname]) : [];
@@ -102,8 +102,8 @@ function get_tab_status(string $mode): int
  */
 function insert_new_data_user_mail_notification(): void
 {
-    global $page, $env_nbm, $base_url;
-
+    global $env_nbm, $base_url;
+    global $page;
     // Set null mail_address empty
     $query = '
 update
@@ -210,7 +210,10 @@ function render_global_customize_mail_content(string|array $customize_mail_conte
  */
 function do_action_send_mail_notification(string $action = 'list_to_send', array $check_key_list = [], string $customize_mail_content = ''): array
 {
-    global $page, $user, $lang_info, $lang, $env_nbm;
+    global $lang_info, $env_nbm;
+    global $page;
+    global $user;
+    global $lang;
     $return_list = [];
 
     if (in_array($action, ['list_to_send', 'send'])) {

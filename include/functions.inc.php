@@ -447,10 +447,7 @@ function do_log($image_id = null, $image_type = null)
  */
 function pwg_log(int|string|null $image_id = null, ?string $image_type = null, ?string $format_id = null): bool
 {
-    $user = &$GLOBALS['user'];
-    if (!is_array($user)) {
-        $user = [];
-    }
+    global $user;
     $page = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
 
     if ($image_id !== null) {
@@ -760,7 +757,6 @@ function str2DateTime(int|string|null $original, $format = null)
 function format_date_legacy(int|string|\DateTime|null $original, array|bool|null $show = null, ?string $format = null): string
 {
     global $lang;
-
     $date = ($original instanceof \DateTime) ? $original : str2DateTime($original, $format);
 
     if (!$date) {
@@ -982,8 +978,8 @@ function transform_date($original, $format_in, $format_out, $default = null): ?s
  */
 function pwg_debug(string $string): void
 {
-    global $debug,$t2,$page;
-
+    global $debug, $t2;
+    global $page;
     $now = explode(' ', microtime());
     $now2 = explode('.', $now[0]);
     $now2 = $now[1].'.'.$now2[1];
@@ -1025,8 +1021,10 @@ function redirect_http($url): void
  */
 function redirect_html($url, $msg = '', $refresh_time = 0): void
 {
-    global $user, $template, $lang_info, $lang, $t2, $page, $debug;
-
+    global $lang_info, $template, $t2, $debug;
+    global $user;
+    global $lang;
+    global $page;
     if (!isset($lang_info) || !isset($template)) {
         $user = build_user(\Piwigo\Config\Config::guestId(), true);
         load_language('common.lang');
@@ -1727,7 +1725,8 @@ function load_language(string $filename, string $dirname = '', array $options = 
             $load_lang_info = $lang_info;
 
             // access already existing values
-            global $lang, $lang_info;
+            global $lang_info;
+            global $lang;
             if (!isset($lang)) {
                 $lang = [];
             }
@@ -1903,8 +1902,8 @@ function create_navigation_bar(string $url, int $nb_element, int $start, int $nb
  */
 function get_icon(?string $date, bool $is_child_date = false): false|array
 {
-    global $cache, $user;
-
+    global $cache;
+    global $user;
     if (empty($date)) {
         return false;
     }
@@ -2129,10 +2128,7 @@ function email_check_format($mail_address): bool
  */
 function get_nb_available_comments(): int
 {
-    $user = &$GLOBALS['user'];
-    if (!is_array($user)) {
-        $user = [];
-    }
+    global $user;
     if (!isset($user['nb_available_comments'])) {
         $where = [];
         if (!is_admin()) {

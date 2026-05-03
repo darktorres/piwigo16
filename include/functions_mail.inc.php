@@ -231,8 +231,9 @@ function get_str_email_format($is_html): string
  */
 function switch_lang_to($language): void
 {
-    global $switch_lang, $user, $lang, $lang_info, $language_files;
-
+    global $switch_lang, $lang_info, $language_files;
+    global $user;
+    global $lang;
     // explanation of switch_lang
     // $switch_lang['language'] contains data of language
     // $switch_lang['stack'] contains stack LIFO
@@ -294,8 +295,9 @@ function switch_lang_to($language): void
  */
 function switch_lang_back(): void
 {
-    global $switch_lang, $user, $lang, $lang_info;
-
+    global $switch_lang, $lang_info;
+    global $user;
+    global $lang;
     if (count($switch_lang['stack']) > 0) {
         // Get last value
         $language = array_pop($switch_lang['stack']);

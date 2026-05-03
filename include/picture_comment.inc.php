@@ -24,7 +24,6 @@ $page = &$GLOBALS['page'];
 if (!is_array($page)) {
     $page = [];
 }
-
 // the picture is commentable if it belongs at least to one category which
 // is commentable
 $page['show_comments'] = false;

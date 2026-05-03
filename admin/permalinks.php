@@ -23,8 +23,7 @@ function parse_sort_variables(
     ?string $template_var,
     string $anchor = ''
 ): array {
-    global $template;
-
+    $template = \Piwigo\Template\TemplateRegistry::current();
     $url_components = parse_url(is_scalar($_SERVER['REQUEST_URI'] ?? null) ? (string) $_SERVER['REQUEST_URI'] : '');
     if ($url_components === false) {
         $url_components = ['path' => '', 'query' => ''];

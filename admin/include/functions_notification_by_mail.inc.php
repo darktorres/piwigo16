@@ -160,8 +160,9 @@ order by';
  */
 function begin_users_env_nbm(bool $is_to_send_mail = false): void
 {
-    global $user, $lang, $lang_info, $env_nbm;
-
+    global $lang_info, $env_nbm;
+    global $user;
+    global $lang;
     // Save $user, $lang_info and $lang arrays (include/user.inc.php has been executed)
     $env_nbm['save_user'] = $user;
     // Save current language to stack, necessary because $user change during NBM
@@ -192,8 +193,9 @@ function begin_users_env_nbm(bool $is_to_send_mail = false): void
  */
 function end_users_env_nbm(): void
 {
-    global $user, $lang, $lang_info, $env_nbm;
-
+    global $lang_info, $env_nbm;
+    global $user;
+    global $lang;
     // Restore $user, $lang_info and $lang arrays (include/user.inc.php has been executed)
     $user = $env_nbm['save_user'];
     // Restore current language to stack, necessary because $user change during NBM
@@ -223,8 +225,9 @@ function end_users_env_nbm(): void
 /** @param array<string, float|int|string|null> $nbm_user */
 function set_user_on_env_nbm(array &$nbm_user, bool $is_action_send): void
 {
-    global $user, $lang, $lang_info, $env_nbm;
-
+    global $lang_info, $env_nbm;
+    global $user;
+    global $lang;
     $user = build_user(is_numeric($nbm_user['user_id']) ? (int)$nbm_user['user_id'] : 0, true);
 
     switch_lang_to(is_string($user['language'] ?? null) ? $user['language'] : '');
@@ -256,8 +259,8 @@ function unset_user_on_env_nbm(): void
 /** @param array<string, float|int|string|null> $nbm_user */
 function inc_mail_sent_success(array $nbm_user): void
 {
-    global $page, $env_nbm;
-
+    global $env_nbm;
+    global $page;
     $env_nbm['sent_mail_count'] += 1;
     \Piwigo\Core\PageState::current()->addInfo(sprintf($env_nbm['msg_info'], stripslashes((string) $nbm_user['username']), $nbm_user['mail_address']));
 }
@@ -270,8 +273,8 @@ function inc_mail_sent_success(array $nbm_user): void
 /** @param array<string, float|int|string|null> $nbm_user */
 function inc_mail_sent_failed(array $nbm_user): void
 {
-    global $page, $env_nbm;
-
+    global $env_nbm;
+    global $page;
     $env_nbm['error_on_mail_count'] += 1;
     \Piwigo\Core\PageState::current()->addError(sprintf($env_nbm['msg_error'], stripslashes((string) $nbm_user['username']), $nbm_user['mail_address']));
 }
@@ -283,8 +286,8 @@ function inc_mail_sent_failed(array $nbm_user): void
  */
 function display_counter_info(): void
 {
-    global $page, $env_nbm;
-
+    global $env_nbm;
+    global $page;
     if ($env_nbm['error_on_mail_count'] != 0) {
         \Piwigo\Core\PageState::current()->addError(l10n_dec(
             '%d mail was not sent.',
@@ -348,8 +351,8 @@ function assign_vars_nbm_mail_content(array $nbm_user): void
  */
 function do_subscribe_unsubscribe_notification_by_mail(bool $is_admin_request, bool $is_subscribe = false, array $check_key_list = []): array
 {
-    global $page, $env_nbm;
-
+    global $env_nbm;
+    global $page;
     set_make_full_url();
 
     $check_key_treated = [];

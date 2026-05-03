@@ -16,6 +16,9 @@ use Piwigo\Template\TemplateRegistry;
 
 $template = TemplateRegistry::current();
 $page = &$GLOBALS['page'];
+if (!is_array($page)) {
+    $page = [];
+}
 
 $template->set_filenames(['tail' => 'footer.tpl']);
 

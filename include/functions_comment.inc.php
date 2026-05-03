@@ -485,7 +485,7 @@ UPDATE '.COMMENTS_TABLE.'
  */
 function invalidate_user_cache_nb_comments(): void
 {
-    $user = &$GLOBALS['user'];
+    global $user;
     if (is_array($user)) {
         unset($user['nb_available_comments']);
     }

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use Piwigo\Calendar\CalendarMonthly;
 use Piwigo\Calendar\CalendarWeekly;
+use Piwigo\Template\TemplateRegistry;
+use Piwigo\Users\CurrentUser;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -33,20 +35,24 @@ define('CWEEK', 1);
  */
 function initialize_calendar(): void
 {
-    global $page, $user, $template, $persistent_cache, $filter;
+    global $persistent_cache, $filter;
 
+    $template = TemplateRegistry::current();
+    $currentUser = CurrentUser::get();
+    $user = $currentUser->rawAttributes;
+    global $page;
     //------------------ initialize the condition on items to take into account ---
     $inner_sql = ' FROM ' . IMAGES_TABLE;
 
-    if ($page['section'] == 'categories') { // we will regenerate the items by including subcats elements
+    if (($page['section'] ?? null) == 'categories') { // we will regenerate the items by including subcats elements
         $page['items'] = [];
         $inner_sql .= '
 INNER JOIN '.IMAGE_CATEGORY_TABLE.' ON id = image_id';
 
-        if (isset($page['category'])) {
+        if (isset($page['category']) && is_array($page['category'])) {
             $sub_ids = array_diff(
-                get_subcat_ids([$page['category']['id']]),
-                explode(',', (string) $user['forbidden_categories'])
+                get_subcat_ids([is_numeric($page['category']['id'] ?? null) ? (int) $page['category']['id'] : 0]),
+                explode(',', is_scalar($user['forbidden_categories'] ?? null) ? (string) $user['forbidden_categories'] : '')
             );
 
             if (empty($sub_ids)) {
@@ -78,8 +84,16 @@ WHERE category_id IN ('.implode(',', $sub_ids).')';
         if (empty($page['items'])) {
             return; // nothing to do
         }
+        $items = [];
+        if (is_array($page['items'])) {
+            foreach ($page['items'] as $item) {
+                if (is_int($item) || is_string($item)) {
+                    $items[] = (string) (int) $item;
+                }
+            }
+        }
         $inner_sql .= '
-WHERE id IN (' . implode(',', $page['items']) .')';
+WHERE id IN (' . implode(',', $items) .')';
     }
 
     //-------------------------------------- initialize the calendar parameters ---
@@ -112,13 +126,15 @@ WHERE id IN (' . implode(',', $page['items']) .')';
     $views = [CAL_VIEW_LIST,CAL_VIEW_CALENDAR];
 
     // Retrieve calendar field
-    isset($fields[ $page['chronology_field'] ]) or fatal_error('bad chronology field');
+    $chronologyField = is_scalar($page['chronology_field'] ?? null) ? (string) $page['chronology_field'] : '';
+    isset($fields[$chronologyField]) or fatal_error('bad chronology field');
 
     // Retrieve style
-    if (!isset($styles[ $page['chronology_style'] ])) {
+    $chronologyStyle = is_scalar($page['chronology_style'] ?? null) ? (string) $page['chronology_style'] : '';
+    if (!isset($styles[$chronologyStyle])) {
         $page['chronology_style'] = 'monthly';
     }
-    $cal_style = $page['chronology_style'];
+    $cal_style = is_scalar($page['chronology_style'] ?? null) ? (string) $page['chronology_style'] : 'monthly';
     $calendar = match($cal_style) {
         'monthly' => new CalendarMonthly(),
         default   => new CalendarWeekly(),
@@ -131,14 +147,16 @@ WHERE id IN (' . implode(',', $page['items']) .')';
         $page['chronology_view'] = CAL_VIEW_LIST;
     }
 
+    $styleEntry = $styles[$cal_style] ?? null;
     if (CAL_VIEW_CALENDAR == $page['chronology_view'] and
-          !$styles[$cal_style]['view_calendar']) {
+          is_array($styleEntry) and
+          !$styleEntry['view_calendar']) {
 
         $page['chronology_view'] = CAL_VIEW_LIST;
     }
 
     // perform a sanity check on $requested
-    if (!isset($page['chronology_date'])) {
+    if (!isset($page['chronology_date']) || !is_array($page['chronology_date'])) {
         $page['chronology_date'] = [];
     }
     while (count($page['chronology_date']) > 3) {
@@ -160,7 +178,8 @@ WHERE id IN (' . implode(',', $page['items']) .')';
                 array_pop($page['chronology_date']);
             }
         } else {
-            $page['chronology_date'][$i] = (int)$page['chronology_date'][$i];
+            $rawDate = $page['chronology_date'][$i];
+            $page['chronology_date'][$i] = is_scalar($rawDate) ? (int) $rawDate : 0;
         }
     }
     if ($any_count == 3) {
@@ -186,13 +205,14 @@ WHERE id IN (' . implode(',', $page['items']) .')';
                 if ($style_data['view_calendar'] or $view != CAL_VIEW_CALENDAR) {
                     $selected = false;
 
+                    $chronologyDateAll = $page['chronology_date'];
                     if ($style != $cal_style) {
                         $chronology_date = [];
-                        if (isset($page['chronology_date'][0])) {
-                            $chronology_date[] = $page['chronology_date'][0];
+                        if (isset($chronologyDateAll[0])) {
+                            $chronology_date[] = $chronologyDateAll[0];
                         }
                     } else {
-                        $chronology_date = $page['chronology_date'];
+                        $chronology_date = $chronologyDateAll;
                     }
                     $url = duplicate_index_url(
                         [
@@ -222,7 +242,7 @@ WHERE id IN (' . implode(',', $page['items']) .')';
             ['start', 'chronology_date']
         );
         $calendar_title = '<a href="'.$url.'">'
-            .$fields[$page['chronology_field']]['label'].'</a>';
+            .$fields[$chronologyField]['label'].'</a>';
         $calendar_title .= $calendar->get_display_name();
         $template->assign(
             'chronology',
@@ -233,11 +253,12 @@ WHERE id IN (' . implode(',', $page['items']) .')';
     } // end category calling
 
     if ($must_show_list) {
+        $chronologyDateList = $page['chronology_date'];
         if (isset($page['super_order_by'])) {
             $order_by = \Piwigo\Config\Config::orderBy();
         } else {
-            if (count($page['chronology_date']) == 0
-                 or in_array('any', $page['chronology_date'])) {// selected period is very big so we show newest first
+            if (count($chronologyDateList) == 0
+                 or in_array('any', $chronologyDateList)) {// selected period is very big so we show newest first
                 $order = ' DESC, ';
             } else {// selected period is small (month,week) so we show oldest first
                 $order = ' ASC, ';
@@ -249,11 +270,12 @@ WHERE id IN (' . implode(',', $page['items']) .')';
             );
         }
 
-        if ('categories' == $page['section'] && !isset($page['category'])
-          && (count($page['chronology_date']) == 0
-                or ($page['chronology_date'][0] == 'any' && count($page['chronology_date']) == 1))
+        if ('categories' == ($page['section'] ?? null) && !isset($page['category'])
+          && (count($chronologyDateList) == 0
+                or ($chronologyDateList[0] == 'any' && count($chronologyDateList) == 1))
         ) {
-            $cache_key = $persistent_cache->make_key($user['id'].$user['cache_update_time']
+            $cacheUpdateTime = is_scalar($user['cache_update_time'] ?? null) ? (string) $user['cache_update_time'] : '';
+            $cache_key = $persistent_cache->make_key($currentUser->id.$cacheUpdateTime
               .$calendar->date_field.$order_by);
         }
 

@@ -62,10 +62,7 @@ function check_restrictions($category_id): void
 function get_categories_menu(): array
 {
     global $filter;
-    $page = &$GLOBALS['page'];
-    if (!is_array($page)) {
-        $page = [];
-    }
+    global $page;
     $currentUser = \Piwigo\Users\CurrentUser::get();
     $userExpand = $currentUser->rawAttributes['expand'] ?? false;
 

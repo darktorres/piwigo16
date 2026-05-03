@@ -62,7 +62,6 @@ function prepare_conf_upgrade(): void
 function deactivate_non_standard_plugins(): void
 {
     global $page;
-
     $standard_plugins = [
       'AdminTools',
       'TakeATour',
@@ -100,7 +99,6 @@ WHERE id IN (\'' . implode('\',\'', $plugins) . '\')
 function deactivate_non_standard_themes(): void
 {
     global $page;
-
     $standard_themes = [
       'modus',
       'elegant',
@@ -177,8 +175,8 @@ function deactivate_templates(): void
 // Check access rights
 function check_upgrade_access_rights(): void
 {
-    global $page, $current_release;
-
+    global $current_release;
+    global $page;
     if (version_compare($current_release, '2.0', '>=') and isset($_COOKIE[session_name()])) {
         // Check if user is already connected as webmaster
         session_start();

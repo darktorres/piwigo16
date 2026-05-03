@@ -624,10 +624,7 @@ function get_element_url_protection_handler(string $url, array $infos): string
 function flush_page_messages(): void
 {
     $template = \Piwigo\Template\TemplateRegistry::current();
-    $page = &$GLOBALS['page'];
-    if (!is_array($page)) {
-        $page = [];
-    }
+    global $page;
     if ($template->get_template_vars('page_refresh') === null) {
         foreach (['errors','infos','warnings', 'messages'] as $mode) {
             if (isset($_SESSION['page_'.$mode])) {

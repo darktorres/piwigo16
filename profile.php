@@ -374,8 +374,8 @@ function save_profile_from_post(array $userdata, array &$errors): bool
 /** @param array<string,mixed> $userdata */
 function load_profile_in_template(string $url_action, string $url_redirect, array $userdata, ?string $template_prefixe = null): void
 {
-    global $template, $user;
-
+    $template = \Piwigo\Template\TemplateRegistry::current();
+    global $user;
     $template->assign(
         'radio_options',
         [

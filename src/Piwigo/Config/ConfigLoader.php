@@ -10,7 +10,7 @@ use Dotenv\Repository\RepositoryBuilder;
 
 /**
  * Boot-time orchestration for Config: loads .env / .env.local from the repo
- * root and applies env-var overrides into the $conf array.
+ * root and seeds Config::$data with SCHEMA defaults + env overrides.
  *
  * Convention (matches vlucas/phpdotenv defaults):
  *   .env        — committed-template-derived runtime config (gitignored)
@@ -18,15 +18,15 @@ use Dotenv\Repository\RepositoryBuilder;
  *   .env.example — committed template, NOT loaded
  *
  * Both files are optional. If neither is present, env-derived overrides are
- * skipped and the legacy database.inc.php is the sole source of DB credentials.
+ * skipped and the env vars stay at their SCHEMA defaults.
  *
  * Env-var → conf-key mapping is hand-curated — currently only DB credentials,
  * which is the only sensitive runtime config that benefits from env injection.
  * Extend ENV_MAPPING when more keys need env override (e.g., for 12-factor
  * deployments).
  *
- * Idempotent: subsequent calls are no-ops (Dotenv won't re-load already-set
- * vars; overrides only fire when the env var is non-empty).
+ * Idempotent: subsequent calls are no-ops (defaults skip already-populated
+ * keys; env overrides only fire when the env var is non-empty).
  */
 final class ConfigLoader
 {
@@ -79,7 +79,7 @@ final class ConfigLoader
     }
 
     /**
-     * Populates $conf with default values for every key in Config::SCHEMA
+     * Seeds Config::$data with default values for every key in Config::SCHEMA
      * that isn't already set. Replaces the legacy include/config_default.inc.php
      * file as the single source of compile-time defaults — SCHEMA itself
      * carries the simple-type defaults; for keys flagged 'custom' => true the
@@ -90,44 +90,41 @@ final class ConfigLoader
      * Idempotent: keys already populated (e.g., from an earlier call or
      * from .env via applyEnvOverrides) are skipped.
      *
+     * Null-defaulted keys (the nullable-string cluster — gallery_url,
+     * cache_sizes, filters_views, last_major_update, etc.) are intentionally
+     * NOT seeded. Their "default" is genuine absence: callers use
+     * Config::has() to detect first-run state, and seeding null would flip
+     * has() permanently to true and break that detection.
+     *
      * Call BEFORE applyEnvOverrides + load_conf_from_db so DB / env values
      * win over compile-time defaults.
-     *
-     * @param array<string, mixed> $conf
      */
-    public static function applyDefaults(array &$conf): void
+    public static function applyDefaults(): void
     {
         foreach (Config::SCHEMA as $key => $entry) {
-            if (array_key_exists($key, $conf)) {
+            if (Config::has($key)) {
                 continue;
             }
-            // Skip null-defaulted keys (the nullable-string cluster — gallery_url,
-            // cache_sizes, filters_views, last_major_update, etc.). Their
-            // "default" is genuine absence: callers use Config::has() to detect
-            // whether the user has ever set them, and seeding null would flip
-            // has() permanently to true and break that detection.
             if (!empty($entry['custom'])) {
-                // The accessor's body encodes the rich default; calling it
-                // with $conf empty for this key returns that fallback.
+                // Custom accessor encodes the rich default in its own body;
+                // invoking it with self::$data still empty for this key
+                // returns that hardcoded fallback.
                 $method = $entry['method'];
                 $value  = Config::$method();
                 if ($value !== null) {
-                    $conf[$key] = $value;
+                    Config::override($key, $value);
                 }
             } elseif ($entry['default'] !== null) {
-                $conf[$key] = $entry['default'];
+                Config::override($key, $entry['default']);
             }
         }
     }
 
     /**
-     * Applies ENV_MAPPING overrides into $conf. Env vars that are unset or
-     * empty are ignored — leaves the existing $conf value (the SCHEMA
-     * default seeded by applyDefaults) in place.
-     *
-     * @param array<string, mixed> $conf
+     * Applies ENV_MAPPING overrides to Config::$data. Env vars that are
+     * unset or empty are ignored — leaves the SCHEMA default in place.
      */
-    public static function applyEnvOverrides(array &$conf): void
+    public static function applyEnvOverrides(): void
     {
         foreach (self::ENV_MAPPING as $envKey => $confKey) {
             if (!array_key_exists($confKey, Config::SCHEMA)) {
@@ -140,7 +137,7 @@ final class ConfigLoader
                 $val = getenv($envKey);
             }
             if ($val !== false && $val !== '') {
-                $conf[$confKey] = $val;
+                Config::override($confKey, $val);
             }
         }
     }

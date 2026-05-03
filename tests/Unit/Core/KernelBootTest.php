@@ -156,7 +156,11 @@ final class KernelBootTest extends TestCase
     /** @param array<string,mixed> $overrides */
     private function simulateGlobals(array $overrides = []): void
     {
-        $GLOBALS['conf'] = $overrides['conf'] ?? ['upload_dir' => './upload'];
+        // Config is now the source of truth — seed it directly. The
+        // attachGlobals() bridge will re-bind $GLOBALS['conf'] to
+        // Config::$data once Kernel::boot() runs.
+        $confSeed = $overrides['conf'] ?? ['upload_dir' => './upload'];
+        Config::loadArray($confSeed);
         $GLOBALS['page'] = $overrides['page'] ?? ['errors' => [], 'warnings' => [], 'messages' => [], 'infos' => [], 'body_classes' => [], 'body_data' => [], 'execution_uuid' => 'test-uuid'];
         $GLOBALS['lang'] = $overrides['lang'] ?? [];
         $GLOBALS['user'] = $overrides['user'] ?? ['id' => 2, 'username' => 'guest', 'email' => '', 'language' => 'en_US', 'theme' => 'elegant', 'status' => 'guest', 'enabled_high' => false];

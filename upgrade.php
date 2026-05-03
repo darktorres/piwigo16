@@ -24,16 +24,14 @@ if (function_exists('ini_set')) {
 
 define('PHPWG_ROOT_PATH', './');
 
-$conf = [];
-
 defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
 
 require_once PHPWG_ROOT_PATH . 'vendor/autoload.php';
-\Piwigo\Config\ConfigLoader::applyDefaults($conf);
+\Piwigo\Config\ConfigLoader::applyDefaults();
 \Piwigo\Config\ConfigLoader::loadEnv(PHPWG_ROOT_PATH);
-\Piwigo\Config\ConfigLoader::applyEnvOverrides($conf);
+\Piwigo\Config\ConfigLoader::applyEnvOverrides();
 
-$prefixeTable = is_scalar($conf['db_prefix'] ?? null) ? (string) $conf['db_prefix'] : 'piwigo_';
+$prefixeTable = \Piwigo\Config\Config::dbPrefix();
 
 if (!\Piwigo\Core\InstallSentinel::isInstalled()) {
     die('Piwigo is not installed yet — run install.php first.');

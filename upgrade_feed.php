@@ -11,15 +11,14 @@ define('PHPWG_ROOT_PATH', './');
 
 require_once PHPWG_ROOT_PATH . 'vendor/autoload.php';
 
-$conf = [];
-\Piwigo\Config\ConfigLoader::applyDefaults($conf);
+\Piwigo\Config\ConfigLoader::applyDefaults();
 
 defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
 
 \Piwigo\Config\ConfigLoader::loadEnv(PHPWG_ROOT_PATH);
-\Piwigo\Config\ConfigLoader::applyEnvOverrides($conf);
+\Piwigo\Config\ConfigLoader::applyEnvOverrides();
 
-$prefixeTable = is_scalar($conf['db_prefix'] ?? null) ? (string) $conf['db_prefix'] : 'piwigo_';
+$prefixeTable = \Piwigo\Config\Config::dbPrefix();
 
 include(PHPWG_ROOT_PATH . 'include/dblayer/functions_mysqli.inc.php');
 

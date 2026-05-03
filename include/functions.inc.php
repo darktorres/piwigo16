@@ -1349,15 +1349,7 @@ SELECT param, value
         } elseif ($val == 'false') {
             $val = false;
         }
-        // After Kernel::boot() the proxy is installed on $GLOBALS['conf'];
-        // write directly to Config::$data to avoid emitting deprecation notices.
-        if (\Piwigo\Core\Kernel::isBooted()) {
-            \Piwigo\Config\Config::override((string) $row['param'], $val);
-        } else {
-            /** @var array<string, mixed> $conf */
-            $conf = &$GLOBALS['conf'];
-            $conf[(string) $row['param']] = $val;
-        }
+        \Piwigo\Config\Config::override((string) $row['param'], $val);
     }
 
     trigger_notify('load_conf', $condition);

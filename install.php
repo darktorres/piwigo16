@@ -30,14 +30,12 @@ if (isset($_POST['install'])) {
     $prefixeTable = DEFAULT_PREFIX_TABLE;
 }
 
-$conf = [];
-
 defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
 
 include(PHPWG_ROOT_PATH . 'include/functions.inc.php');
 require_once PHPWG_ROOT_PATH . 'vendor/autoload.php';
 
-\Piwigo\Config\ConfigLoader::applyDefaults($conf);
+\Piwigo\Config\ConfigLoader::applyDefaults();
 
 // Obtain various vars
 $dbhost   = is_scalar($_POST['dbhost'] ?? null) && !empty($_POST['dbhost']) ? (string) $_POST['dbhost'] : 'localhost';
@@ -192,13 +190,13 @@ if (isset($_POST['install'])) {
             fatal_error('Could not write ' . $envPath . ' — check filesystem permissions on the repository root.');
         }
 
-        // Mirror the same values into in-memory $conf so the rest of this
+        // Mirror the same values into Config::$data so the rest of this
         // request (table creation, admin insert) sees them.
-        $conf['db_host']     = $dbhost;
-        $conf['db_user']     = $dbuser;
-        $conf['db_password'] = $dbpasswd;
-        $conf['db_base']     = $dbname;
-        $conf['db_prefix']   = $prefixeTable;
+        \Piwigo\Config\Config::override('db_host', $dbhost);
+        \Piwigo\Config\Config::override('db_user', $dbuser);
+        \Piwigo\Config\Config::override('db_password', $dbpasswd);
+        \Piwigo\Config\Config::override('db_base', $dbname);
+        \Piwigo\Config\Config::override('db_prefix', $prefixeTable);
 
         // tables creation, based on piwigo_structure.sql
         execute_sqlfile(
@@ -232,7 +230,7 @@ INSERT INTO '.$prefixeTable.'config (param,value,comment)
         // fill languages table, only activate the current language
         $languages->perform_action('activate', $language);
 
-        // fill $conf global array
+        // load DB config into Config::$data
         load_conf_from_db();
 
         activate_core_themes();

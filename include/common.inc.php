@@ -50,10 +50,9 @@ if (!empty($_SERVER['PATH_INFO'])) {
 if (!\Piwigo\Core\Kernel::isBooted()) :
 
     //
-    // Define some basic configuration arrays this also prevents malicious
-    // rewriting of language and otherarray values via URI params
+    // Define some basic shared bootstrap arrays. Config no longer lives here
+    // — it's owned by Piwigo\Config\Config (seeded by ConfigLoader below).
     //
-    $conf = [];
     $page = [
       'infos' => [],
       'errors' => [],
@@ -70,14 +69,14 @@ if (!\Piwigo\Core\Kernel::isBooted()) :
     $header_notes = [];
     $filter = [];
 
-    \Piwigo\Config\ConfigLoader::applyDefaults($conf);
+    \Piwigo\Config\ConfigLoader::applyDefaults();
 
     defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
 
     \Piwigo\Config\ConfigLoader::loadEnv(PHPWG_ROOT_PATH);
-    \Piwigo\Config\ConfigLoader::applyEnvOverrides($conf);
+    \Piwigo\Config\ConfigLoader::applyEnvOverrides();
 
-    $prefixeTable = is_scalar($conf['db_prefix'] ?? null) ? (string) $conf['db_prefix'] : 'piwigo_';
+    $prefixeTable = \Piwigo\Config\Config::dbPrefix();
 
     if (!\Piwigo\Core\InstallSentinel::isInstalled()) {
         header('Location: install.php');

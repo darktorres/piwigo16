@@ -25,7 +25,6 @@ final class Config
 {
     /** @var array<string,mixed> */
     private static array $data = [];
-    private static bool $attached = false;
     private static ?self $singleton = null;
     /**
      * Source-of-truth registry of every Piwigo config key. The typed accessors
@@ -56,27 +55,24 @@ final class Config
         return self::$singleton ??= new self();
     }
     /**
-     * Called by Kernel::boot() after common.inc.php has fully populated $GLOBALS['conf'].
-     * Copies conf data into self::$data, then rebinds $GLOBALS['conf'] to reference it,
-     * so any subsequent $conf write is visible to typed accessors and Config::raw().
+     * Wave A residual: binds $GLOBALS['conf'] to reference self::$data so
+     * legacy procedural code that still reads $conf[...] (chiefly the
+     * bundled plugins in plugins/<X>/) sees the same data as the typed
+     * facade and writes propagate both ways. Called by Kernel::boot().
+     *
+     * Self::$data is the source of truth and is populated by ConfigLoader
+     * before this runs; the bridge here exists only to keep the legacy
+     * global in sync, not to seed Config from $conf. To be removed once
+     * all $conf readers/writers are migrated to the typed facade.
      */
     public static function attachGlobals(): void
     {
-        /** @var array<string,mixed> $conf */
-        $conf = $GLOBALS['conf'] ?? [];
-        self::$data = $conf;
         $GLOBALS['conf'] = & self::$data;
-        self::$attached = true;
     }
-    /** Returns the array backing this facade (for pre-boot reads). */
     /** @return array<string,mixed> */
     private static function src(): array
     {
-        if (self::$attached) {
-            return self::$data;
-        }
-        $g = $GLOBALS['conf'] ?? [];
-        return is_array($g) ? $g : [];
+        return self::$data;
     }
     /**
      * Public escape hatch for parametric / dynamic keys (per-block menu config,
@@ -1495,12 +1491,10 @@ final class Config
     public static function loadArray(array $data): void
     {
         self::$data = $data;
-        self::$attached = true;
     }
     public static function reset(): void
     {
         self::$data = [];
-        self::$attached = false;
         self::$singleton = null;
     }
 }

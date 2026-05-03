@@ -20,16 +20,15 @@ define('PHPWG_ROOT_PATH', './');
 require_once PHPWG_ROOT_PATH . 'vendor/autoload.php';
 
 // fast bootstrap - no db connection
-$conf = [];
-\Piwigo\Config\ConfigLoader::applyDefaults($conf);
+\Piwigo\Config\ConfigLoader::applyDefaults();
 
 defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
 defined('PWG_DERIVATIVE_DIR') or define('PWG_DERIVATIVE_DIR', \Piwigo\Config\Config::dataLocation().'i/');
 
 \Piwigo\Config\ConfigLoader::loadEnv(PHPWG_ROOT_PATH);
-\Piwigo\Config\ConfigLoader::applyEnvOverrides($conf);
+\Piwigo\Config\ConfigLoader::applyEnvOverrides();
 
-$prefixeTable = is_scalar($conf['db_prefix'] ?? null) ? (string) $conf['db_prefix'] : 'piwigo_';
+$prefixeTable = \Piwigo\Config\Config::dbPrefix();
 
 $logger = new Logger(array(
   'directory' => PHPWG_ROOT_PATH . \Piwigo\Config\Config::dataLocation() . \Piwigo\Config\Config::logDir(),
@@ -437,13 +436,11 @@ SELECT param, value
 ;';
 
 $result = pwg_query($query);
-$confPatch = is_array($GLOBALS['conf']) ? $GLOBALS['conf'] : [];
 while ($row = pwg_db_fetch_assoc($result)) {
     if (is_string($row['param'] ?? null)) {
-        $confPatch[$row['param']] = $row['value'];
+        \Piwigo\Config\Config::override($row['param'], $row['value']);
     }
 }
-$GLOBALS['conf'] = $confPatch;
 ImageStdParams::load_from_db();
 
 

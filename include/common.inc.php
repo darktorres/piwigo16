@@ -83,7 +83,7 @@ if (!\Piwigo\Core\Kernel::isBooted()) :
     if ($databaseConfig !== false) {
         include $databaseConfig;
     }
-    if (!defined('PHPWG_INSTALLED')) {
+    if (!\Piwigo\Core\InstallSentinel::isInstalled()) {
         header('Location: install.php');
         exit;
     }

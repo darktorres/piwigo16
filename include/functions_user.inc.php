@@ -35,7 +35,7 @@ function validate_mail_address(?int $user_id, ?string $mail_address)
         return l10n('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
     }
 
-    if (defined('PHPWG_INSTALLED') and !empty($mail_address)) {
+    if (\Piwigo\Core\InstallSentinel::isInstalled() and !empty($mail_address)) {
         $query = '
 SELECT count(*)
 FROM '.USERS_TABLE.'
@@ -58,7 +58,7 @@ WHERE upper('.\Piwigo\Config\Config::userFields()['email'].') = upper(\''.$mail_
  */
 function validate_login_case($login)
 {
-    if (defined('PHPWG_INSTALLED')) {
+    if (\Piwigo\Core\InstallSentinel::isInstalled()) {
         $query = '
 SELECT '.\Piwigo\Config\Config::userFields()['username'].'
 FROM '.USERS_TABLE.'

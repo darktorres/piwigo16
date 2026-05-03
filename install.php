@@ -85,10 +85,9 @@ $errors = [];
 $config_file = PHPWG_ROOT_PATH.PWG_LOCAL_DIR .'config/database.inc.php';
 if (@file_exists($config_file)) {
     include($config_file);
-    // Is Piwigo already installed ?
-    if (defined('PHPWG_INSTALLED')) {
-        die('Piwigo is already installed');
-    }
+}
+if (\Piwigo\Core\InstallSentinel::isInstalled()) {
+    die('Piwigo is already installed');
 }
 
 include(PHPWG_ROOT_PATH . 'include/constants.php');
@@ -327,6 +326,11 @@ INSERT INTO '.$prefixeTable.'config (param,value,comment)
                 $datas
             );
         }
+
+        // Modern install signal: empty stamp file at local/.installed.
+        // Legacy `define('PHPWG_INSTALLED', true)` in database.inc.php still
+        // works during the transitional period (InstallSentinel checks both).
+        \Piwigo\Core\InstallSentinel::markInstalled();
     }
 }
 

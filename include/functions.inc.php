@@ -1660,7 +1660,7 @@ function load_language(string $filename, string $dirname = '', array $options = 
     }
     $dirname .= 'language/';
 
-    $default_language = (defined('PHPWG_INSTALLED') and !defined('UPGRADES_PATH')) ?
+    $default_language = (\Piwigo\Core\InstallSentinel::isInstalled() and !defined('UPGRADES_PATH')) ?
         get_default_language() : PHPWG_DEFAULT_LANGUAGE;
 
     // construct list of potential languages

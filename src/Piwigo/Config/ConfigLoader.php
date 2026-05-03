@@ -42,22 +42,29 @@ final class ConfigLoader
     ];
 
     /**
-     * Loads .env then .env.local from the given repo root. Both optional.
+     * Loads the named env files from the given repo root. All optional.
      * Uses immutable mode so already-set process env vars (e.g., systemd
      * EnvironmentFile=, Docker -e, or a parent shell export) win over the
      * file values — standard 12-factor precedence.
+     *
+     * Default loads only `.env` at runtime — that's the committed-defaults
+     * file. `.env.local` is reserved for the test runner (loaded explicitly
+     * by tests/bootstrap.php), since it historically held test-only DB
+     * credentials in this repo and silently overriding runtime DB settings
+     * with test creds would break installs.
+     *
+     * @param list<string> $files filenames to attempt loading, in order
      */
-    public static function loadEnv(string $repoRoot): void
+    public static function loadEnv(string $repoRoot, array $files = ['.env']): void
     {
         $repoRoot = rtrim($repoRoot, '/\\');
-        $files = [];
-        if (is_file($repoRoot . DIRECTORY_SEPARATOR . '.env')) {
-            $files[] = '.env';
+        $present  = [];
+        foreach ($files as $file) {
+            if (is_file($repoRoot . DIRECTORY_SEPARATOR . $file)) {
+                $present[] = $file;
+            }
         }
-        if (is_file($repoRoot . DIRECTORY_SEPARATOR . '.env.local')) {
-            $files[] = '.env.local';
-        }
-        if ($files === []) {
+        if ($present === []) {
             return;
         }
         // Default phpdotenv writers populate only $_ENV + $_SERVER. Add
@@ -67,7 +74,7 @@ final class ConfigLoader
             ->addAdapter(PutenvAdapter::class)
             ->immutable()
             ->make();
-        Dotenv::create($repository, $repoRoot, $files, false)->safeLoad();
+        Dotenv::create($repository, $repoRoot, $present, false)->safeLoad();
     }
 
     /**

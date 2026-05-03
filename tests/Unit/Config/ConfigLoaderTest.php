@@ -49,11 +49,22 @@ final class ConfigLoaderTest extends TestCase
         self::assertSame('db.example.com', getenv('PIWIGO_DB_HOST'));
     }
 
-    public function test_loadEnv_local_overrides_dotenv(): void
+    public function test_loadEnv_default_does_not_load_dotenv_local(): void
     {
+        // Runtime default: only .env is loaded. .env.local is reserved for
+        // the test runner and must NOT bleed into a real web request.
         file_put_contents($this->tmpDir . '/.env', "PIWIGO_DB_USER=base\n");
         file_put_contents($this->tmpDir . '/.env.local', "PIWIGO_DB_USER=overridden\n");
         ConfigLoader::loadEnv($this->tmpDir);
+        self::assertSame('base', getenv('PIWIGO_DB_USER'));
+    }
+
+    public function test_loadEnv_explicit_local_overrides_dotenv(): void
+    {
+        // Test bootstrap passes ['.env', '.env.local'] explicitly to opt in.
+        file_put_contents($this->tmpDir . '/.env', "PIWIGO_DB_USER=base\n");
+        file_put_contents($this->tmpDir . '/.env.local', "PIWIGO_DB_USER=overridden\n");
+        ConfigLoader::loadEnv($this->tmpDir, ['.env', '.env.local']);
         self::assertSame('overridden', getenv('PIWIGO_DB_USER'));
     }
 

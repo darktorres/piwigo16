@@ -5,8 +5,11 @@ declare(strict_types=1);
 require __DIR__ . '/../vendor/autoload.php';
 
 // Load .env then .env.local (if present) into getenv() / $_ENV for the
-// test runner — same loader the runtime uses, kept in sync via phpdotenv.
-\Piwigo\Config\ConfigLoader::loadEnv(dirname(__DIR__));
+// test runner. The runtime loader at common.inc.php / install.php / etc.
+// only reads .env — .env.local is reserved for test-runner-specific
+// overrides like PIWIGO_DB_BASE=piwigo_test that must NOT bleed into a
+// real web request.
+\Piwigo\Config\ConfigLoader::loadEnv(dirname(__DIR__), ['.env', '.env.local']);
 
 // Core Piwigo constants required by classes that reference them at parse time.
 if (!defined('PHPWG_VERSION')) {

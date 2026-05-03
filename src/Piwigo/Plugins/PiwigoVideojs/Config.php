@@ -18,10 +18,9 @@ use Piwigo\Config\ConfigStorage;
  *   vjs_mediainfo_dir string optional path prefix for the mediainfo binary
  *   vjs_exiftool_dir  string optional path prefix for the exiftool binary
  *
- * vjs_conf and vjs_sync are stored serialized in the conf table; the plugin
- * boot path unserializes them into native arrays. This facade exposes the
- * top-level sections as typed array accessors plus the two scalar paths
- * and the customcss string.
+ * vjs_conf and vjs_sync are stored serialized in the conf table.
+ * playerConfig() and syncProbes() lazy-deserialize the raw DB value on
+ * first read, so callers always get a native array.
  */
 final class Config
 {
@@ -39,17 +38,35 @@ final class Config
     /** @return array<string, mixed> */
     public static function playerConfig(): array
     {
-        $conf = self::confArray();
-        $raw  = $conf['vjs_conf'] ?? [];
-        return is_array($raw) ? $raw : [];
+        return self::lazyArray('vjs_conf');
     }
 
     /** @return array<string, mixed> */
     public static function syncProbes(): array
     {
-        $conf = self::confArray();
-        $raw  = $conf['vjs_sync'] ?? [];
-        return is_array($raw) ? $raw : [];
+        return self::lazyArray('vjs_sync');
+    }
+
+    /**
+     * Returns an array-typed conf value, lazy-deserializing if the stored
+     * form is still the raw serialized string from load_conf_from_db.
+     *
+     * @return array<string, mixed>
+     */
+    private static function lazyArray(string $key): array
+    {
+        $raw = self::confArray()[$key] ?? [];
+        if (is_string($raw) && $raw !== '') {
+            $raw = @unserialize($raw);
+        }
+        if (!is_array($raw)) {
+            return [];
+        }
+        $out = [];
+        foreach ($raw as $k => $v) {
+            $out[(string) $k] = $v;
+        }
+        return $out;
     }
 
     public static function customCss(): string
@@ -76,8 +93,7 @@ final class Config
     /** @return array<string, mixed> */
     private static function confArray(): array
     {
-        $g = $GLOBALS['conf'] ?? [];
-        return is_array($g) ? $g : [];
+        return PiwigoConfig::all();
     }
 
     /**
@@ -87,6 +103,15 @@ final class Config
     {
         ConfigStorage::persist('vjs_conf', serialize($config));
         PiwigoConfig::override('vjs_conf', $config);
+    }
+
+    /**
+     * @param array<string, mixed> $sync
+     */
+    public static function persistSyncProbes(array $sync): void
+    {
+        ConfigStorage::persist('vjs_sync', serialize($sync));
+        PiwigoConfig::override('vjs_sync', $sync);
     }
 
     public static function persistCustomCss(string $css): void

@@ -10,11 +10,13 @@ use Piwigo\Users\CurrentUser;
 /**
  * Single boot entry point for the typed-service layer (Phase 4, Wave A).
  *
- * Call order: common.inc.php runs first (populates $conf/$page/$user/$lang via
- * the legacy bootstrap dance), then every root entry point calls Kernel::boot()
- * immediately after. boot() wires the typed facades — Config, PageState,
- * CurrentUser, Lang — to the already-loaded globals via reference bridges, so
- * both old code (global $conf) and new code (typed accessors / Config::raw()) read the same data.
+ * Call order: common.inc.php runs first (ConfigLoader populates Config::$data
+ * directly; legacy code populates $page/$user/$lang via the bootstrap dance),
+ * then every root entry point calls Kernel::boot() immediately after. boot()
+ * wires PageState / CurrentUser / Lang to their respective $GLOBALS via
+ * reference bridges so legacy procedural reads stay coherent with the typed
+ * facades. (Config no longer needs a bridge — ConfigLoader writes directly
+ * to Config::$data and all readers/writers are migrated.)
  *
  * The guard (self::$booted) makes the call idempotent: nested entry points that
  * include common.inc.php a second time will not re-wire and corrupt references.
@@ -30,7 +32,6 @@ final class Kernel
         }
         self::$booted = true;
 
-        Config::attachGlobals();
         PageState::attachGlobals();
         Lang::attachGlobals();
         CurrentUser::attachGlobals();

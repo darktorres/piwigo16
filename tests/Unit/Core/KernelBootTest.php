@@ -22,8 +22,8 @@ final class KernelBootTest extends TestCase
     protected function tearDown(): void
     {
         Kernel::reset();
-        // Clean up $GLOBALS side-effects from attachGlobals() calls
-        unset($GLOBALS['conf'], $GLOBALS['page'], $GLOBALS['lang'], $GLOBALS['user']);
+        // Clean up $GLOBALS side-effects from PageState/Lang/CurrentUser bridges.
+        unset($GLOBALS['page'], $GLOBALS['lang'], $GLOBALS['user']);
     }
 
     public function test_isBooted_false_before_boot(): void
@@ -39,7 +39,7 @@ final class KernelBootTest extends TestCase
         self::assertTrue(Kernel::isBooted());
     }
 
-    public function test_typed_accessor_reads_from_globals_after_boot(): void
+    public function test_typed_accessor_reads_from_loaded_data_after_boot(): void
     {
         $this->simulateGlobals(['conf' => ['upload_dir' => './myupload', 'gallery_title' => 'My Gallery']]);
         Kernel::boot();
@@ -48,12 +48,12 @@ final class KernelBootTest extends TestCase
         self::assertSame('My Gallery', Config::galleryTitle());
     }
 
-    public function test_conf_write_after_boot_visible_via_typed_accessor(): void
+    public function test_override_after_boot_visible_via_typed_accessor(): void
     {
         $this->simulateGlobals(['conf' => ['order_by' => 'ORDER BY id ASC']]);
         Kernel::boot();
 
-        $GLOBALS['conf']['order_by'] = 'ORDER BY date_creation DESC';
+        Config::override('order_by', 'ORDER BY date_creation DESC');
 
         self::assertSame('ORDER BY date_creation DESC', Config::orderBy());
     }
@@ -156,9 +156,9 @@ final class KernelBootTest extends TestCase
     /** @param array<string,mixed> $overrides */
     private function simulateGlobals(array $overrides = []): void
     {
-        // Config is now the source of truth — seed it directly. The
-        // attachGlobals() bridge will re-bind $GLOBALS['conf'] to
-        // Config::$data once Kernel::boot() runs.
+        // Config is the source of truth — seed it directly via loadArray.
+        // PageState / Lang / CurrentUser are still bridge-based, so we
+        // populate their respective $GLOBALS slots directly.
         $confSeed = $overrides['conf'] ?? ['upload_dir' => './upload'];
         Config::loadArray($confSeed);
         $GLOBALS['page'] = $overrides['page'] ?? ['errors' => [], 'warnings' => [], 'messages' => [], 'infos' => [], 'body_classes' => [], 'body_data' => [], 'execution_uuid' => 'test-uuid'];

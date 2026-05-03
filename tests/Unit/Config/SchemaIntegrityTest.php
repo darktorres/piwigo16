@@ -24,7 +24,7 @@ final class SchemaIntegrityTest extends TestCase
 {
     private const ALLOW_LIST = [
         // Preamble / framework
-        'instance', 'attachGlobals',
+        'instance',
         // Bulk reader
         'all',
         // Test helper

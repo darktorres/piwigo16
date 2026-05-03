@@ -43,53 +43,86 @@ final class Config
         ],
     ];
 
-    /** @return array<string, mixed> Full osm_conf array (post-unserialize). */
+    /**
+     * Returns the full osm_conf array, lazy-deserializing from the raw
+     * DB string on first read if needed.
+     *
+     * @return array<string, mixed>
+     */
     public static function all(): array
     {
-        $conf = self::confArray();
-        $raw  = $conf['osm_conf'] ?? [];
-        return is_array($raw) ? $raw : [];
-    }
-
-    /** @return array<string, mixed> */
-    private static function confArray(): array
-    {
-        $g = $GLOBALS['conf'] ?? [];
-        return is_array($g) ? $g : [];
+        $raw = PiwigoConfig::all()['osm_conf'] ?? [];
+        if (is_string($raw) && $raw !== '') {
+            $raw = @unserialize($raw);
+        }
+        if (!is_array($raw)) {
+            return [];
+        }
+        $out = [];
+        foreach ($raw as $k => $v) {
+            $out[(string) $k] = $v;
+        }
+        return $out;
     }
 
     /** @return array<string, mixed> */
     public static function leftMenu(): array
     {
-        $section = self::all()['left_menu'] ?? [];
-        return is_array($section) ? $section : [];
+        return self::section('left_menu');
     }
 
     /** @return array<string, mixed> */
     public static function mainMenu(): array
     {
-        $section = self::all()['main_menu'] ?? [];
-        return is_array($section) ? $section : [];
+        return self::section('main_menu');
     }
 
     /** @return array<string, mixed> */
     public static function rightPanel(): array
     {
-        $section = self::all()['right_panel'] ?? [];
-        return is_array($section) ? $section : [];
+        return self::section('right_panel');
     }
 
     /** @return array<string, mixed> */
     public static function categoryDescription(): array
     {
-        $section = self::all()['category_description'] ?? [];
-        return is_array($section) ? $section : [];
+        return self::section('category_description');
     }
 
     /** @return array<string, mixed> */
     public static function map(): array
     {
-        $section = self::all()['map'] ?? [];
+        return self::section('map');
+    }
+
+    /** @return array<string, mixed> */
+    public static function pin(): array
+    {
+        return self::section('pin');
+    }
+
+    /** @return array<string, mixed> */
+    public static function gpx(): array
+    {
+        return self::section('gpx');
+    }
+
+    /** @return array<string, mixed> */
+    public static function batch(): array
+    {
+        return self::section('batch');
+    }
+
+    /** @return array<string, mixed> */
+    public static function communityBm(): array
+    {
+        return self::section('community_bm');
+    }
+
+    /** @return array<string, mixed> */
+    private static function section(string $name): array
+    {
+        $section = self::all()[$name] ?? [];
         return is_array($section) ? $section : [];
     }
 

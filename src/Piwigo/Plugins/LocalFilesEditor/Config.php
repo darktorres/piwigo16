@@ -58,7 +58,6 @@ final class Config
     /** @return array<string, mixed> */
     private static function confArray(): array
     {
-        $g = $GLOBALS['conf'] ?? [];
-        return is_array($g) ? $g : [];
+        return PiwigoConfig::all();
     }
 }

@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Piwigo\Config;
 
 /**
- * Typed facade over the $conf global array.
+ * Typed facade over Piwigo's runtime configuration.
  *
  * The body of this class is split into three regions:
- *   1. Preamble — properties, SCHEMA constant, attach/get helpers.
+ *   1. Preamble — properties, SCHEMA constant, raw/has helpers.
  *   2. Generated accessors — between the <<<CONFIG-ACCESSORS-BEGIN>>> and
  *      <<<CONFIG-ACCESSORS-END>>> sentinels. Produced by
  *      tools/build-config-accessors.php from SCHEMA. DO NOT EDIT BY HAND.
@@ -16,10 +16,10 @@ namespace Piwigo\Config;
  *      for keys whose access logic doesn't fit the simple getString/getInt/
  *      getBool pattern.
  *
- * Wave A: self::$data IS the same array as $GLOBALS['conf'] (via reference
- * after attachGlobals()). Old code that writes $conf['x'] = $v mutates
- * self::$data and vice versa — no data divergence between the global and the
- * typed reader.
+ * self::$data is the single source of truth. ConfigLoader populates it at
+ * boot, callers mutate it via Config::override / Config::persist. The legacy
+ * $GLOBALS['conf'] reference bridge (attachGlobals) was retired once all
+ * core and bundled-plugin readers/writers were migrated to this facade.
  */
 final class Config
 {
@@ -53,21 +53,6 @@ final class Config
     public static function instance(): self
     {
         return self::$singleton ??= new self();
-    }
-    /**
-     * Wave A residual: binds $GLOBALS['conf'] to reference self::$data so
-     * legacy procedural code that still reads $conf[...] (chiefly the
-     * bundled plugins in plugins/<X>/) sees the same data as the typed
-     * facade and writes propagate both ways. Called by Kernel::boot().
-     *
-     * Self::$data is the source of truth and is populated by ConfigLoader
-     * before this runs; the bridge here exists only to keep the legacy
-     * global in sync, not to seed Config from $conf. To be removed once
-     * all $conf readers/writers are migrated to the typed facade.
-     */
-    public static function attachGlobals(): void
-    {
-        $GLOBALS['conf'] = & self::$data;
     }
     /** @return array<string,mixed> */
     private static function src(): array

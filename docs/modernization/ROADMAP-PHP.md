@@ -165,7 +165,7 @@ A PR introducing a vulnerable dep is blocked. Renovate opens grouped weekly PRs.
 
 ## #5 — Config schema + `.env` support + install-sentinel relocation
 
-**Status:** Done as far as is independently doable; remaining 2 gaps are gated on #6 and tracked there &nbsp;|&nbsp; **Size:** L
+**Status:** Done — bridge + plugin migration shipped &nbsp;|&nbsp; **Size:** L
 
 ### What shipped (2026-05-03)
 
@@ -257,45 +257,54 @@ was actually exercised end-to-end:
   move into SCHEMA — pick per-constant based on whether per-environment
   override is realistic." Inlining was the right call for all six.
 
-### Residual gaps (real work remaining)
+### Residual gaps — all closed
 
-Cleanup pass closed the 3 self-contained gaps; the other 2 are gated on #6
-and intentionally deferred there.
+All 5 of the originally-flagged gaps have shipped. The two that the
+prior pass deferred (bridge removal + plugin migration) landed together
+since they were tightly coupled.
 
-**Closed in cleanup pass:**
+**Closed in cleanup pass (commit `2b51d…` ish):**
 
 - ~~**`local/config/config.inc.php` is still loaded.**~~ Removed from all
-  5 runtime entry points (install.php, common.inc.php, i.php, upgrade.php,
-  upgrade_feed.php). `admin/configuration.php`'s `order_by_is_local()`
-  helper migrated to text-scan (matching `webmaster_id_is_local()`).
-  C13y exif-anomaly warning text reworded to point at the DB config table
-  instead of the now-defunct file. `install/upgrade_1.5.0.php` left alone
-  — dead code on 16.x (upgrade.php refuses anything older than 15.x).
-- ~~**`global $conf;` declarations in i.php / upgrade.php.**~~ `$conf`
-  removed from both files' multi-variable `global` lines. File-scope
-  `global` was a no-op anyway; removing it documents intent and does
-  not require gap 1.
+  5 runtime entry points. `admin/configuration.php`'s `order_by_is_local()`
+  helper migrated to text-scan. C13y exif-anomaly warning text reworded.
+- ~~**`global $conf;` declarations in i.php / upgrade.php.**~~ Removed.
 - ~~**`SchemaIntegrityTest` missing custom-flag assertion.**~~ Added
-  `test_custom_flag_matches_accessor_region`: parses the
-  `// <<<CONFIG-ACCESSORS-END>>>` sentinel line, then asserts every
-  SCHEMA entry's method either lives in the generated region (no
-  `'custom'` flag allowed) or below the sentinel (`'custom' => true`
-  required). Catches drift in either direction.
+  `test_custom_flag_matches_accessor_region`.
 
-**Deferred to #6 (procedural-`global` migration):**
+**Closed in bridge-removal pass:**
 
-1. **`Config::attachGlobals()` and the `$GLOBALS['conf']` reference bridge.**
-   Per the original plan note: removing the bridge requires landing #6's
-   residual `$conf` migration first.
-2. **Plugin internal `$conf['x']` reads.** Audit shows 151 access sites
-   across 4 bundled plugins (LocalFilesEditor 7, NbcThemeChanger 8,
-   PiwigoOpenstreetmap 97, PiwigoVideojs 39, user_tags 0). Migrating
-   these is purely cosmetic until the bridge in (1) goes away — the
-   bridge keeps `$GLOBALS['conf']` and `Config::$data` referentially
-   identical, so plugin reads/writes stay coherent with the typed
-   facade. Doing this migration standalone risks subtle write-path
-   regressions (e.g. `conf_update_param('osm_conf', serialize(...))`
-   sites) for zero runtime benefit.
+- ~~**`Config::attachGlobals()` + `$GLOBALS['conf']` reference bridge.**~~
+  Multi-stage migration:
+  - Stage 1: `ConfigLoader::applyDefaults()` / `applyEnvOverrides()` lose
+    their `$conf` parameter and write directly into `Config::$data`.
+    Bootstrap entry points stop creating `$conf = []` and use
+    `Config::dbPrefix()` for `$prefixeTable`. `install.php` uses
+    `Config::override()` to seed DB credentials. `i.php`'s DB-overlay
+    block uses `Config::override()` instead of `$GLOBALS['conf']`.
+    `load_conf_from_db()` always writes via `Config::override()`.
+  - Stage 2: All 151 plugin `$conf[...]` access sites migrated to the
+    per-plugin Config facades (LocalFilesEditor 7, NbcThemeChanger 8,
+    PiwigoVideojs 39, PiwigoOpenstreetmap 97). PiwigoVideojs and
+    PiwigoOpenstreetmap facades gained lazy-deserialize so the boot-time
+    `$conf['xxx_conf'] = safe_unserialize(…)` lines could be removed.
+    PiwigoOpenstreetmap facade gained `pin/gpx/batch/communityBm` section
+    accessors. `osm_get_js()` / `osm_gen_template()` lost their `$conf`
+    parameter and use the typed facades directly; all 12 callers updated.
+  - Stage 3: `Config::attachGlobals()` deleted, `Config::$attached` flag
+    deleted, `Config::src()` returns `self::$data` unconditionally,
+    `Kernel::boot()` no longer calls `Config::attachGlobals()`.
+    `KernelBootTest` updated to seed via `Config::loadArray()` and write
+    via `Config::override()` instead of `$GLOBALS['conf']`.
+- ~~**Plugin internal `$conf['x']` reads.**~~ Migrated as part of the
+  bridge-removal sequence above.
+
+**Caveat — plugin source is gitignored on this fork.** `/plugins/*` is
+in `.gitignore` (only `plugins/index.php` is tracked), so the plugin
+migration lives on disk only. If a bundled plugin is reinstalled from
+upstream, its raw `$conf['xxx_conf'][...]` reads will silently return
+empty (the bridge is gone). Either re-apply the migration after
+reinstalls or treat the plugin sources as a vendored fork.
 
 Deferred design surface — should be tracked as separate small items if we
 want them, not held against #5:

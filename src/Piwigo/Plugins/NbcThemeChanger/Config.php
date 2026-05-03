@@ -38,8 +38,7 @@ final class Config
     /** @return array<string, mixed> */
     private static function confArray(): array
     {
-        $g = $GLOBALS['conf'] ?? [];
-        return is_array($g) ? $g : [];
+        return PiwigoConfig::all();
     }
 
     /** @return list<string> Selected theme names, decoded from the semicolon-separated raw form. */
@@ -55,7 +54,16 @@ final class Config
     /** @param list<string> $themes */
     public static function setThemes(array $themes): void
     {
-        $raw = implode(';', $themes);
+        self::setThemesRaw(implode(';', $themes));
+    }
+
+    /**
+     * Persists the raw semicolon-separated theme string. The plugin admin
+     * code builds the string in-place during association add/remove flows
+     * and writes it back as a single blob.
+     */
+    public static function setThemesRaw(string $raw): void
+    {
         ConfigStorage::persist('nbc_ThemeChanger', $raw);
         PiwigoConfig::override('nbc_ThemeChanger', $raw);
     }

@@ -72,11 +72,6 @@ if (!\Piwigo\Core\Kernel::isBooted()) :
 
     \Piwigo\Config\ConfigLoader::applyDefaults($conf);
 
-    $localConfig = realpath(PHPWG_ROOT_PATH . 'local/config/config.inc.php');
-    if ($localConfig !== false) {
-        include $localConfig;
-    }
-
     defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
 
     \Piwigo\Config\ConfigLoader::loadEnv(PHPWG_ROOT_PATH);

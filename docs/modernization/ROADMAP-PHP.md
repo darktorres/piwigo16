@@ -165,7 +165,7 @@ A PR introducing a vulnerable dep is blocked. Renovate opens grouped weekly PRs.
 
 ## #5 — Config schema + `.env` support + install-sentinel relocation
 
-**Status:** Mostly done; gaps remain (overlaps with #6) &nbsp;|&nbsp; **Size:** L
+**Status:** Done as far as is independently doable; remaining 2 gaps are gated on #6 and tracked there &nbsp;|&nbsp; **Size:** L
 
 ### What shipped (2026-05-03)
 
@@ -259,27 +259,43 @@ was actually exercised end-to-end:
 
 ### Residual gaps (real work remaining)
 
-Small leftovers — finish in a follow-up before declaring #5 done:
+Cleanup pass closed the 3 self-contained gaps; the other 2 are gated on #6
+and intentionally deferred there.
 
-1. **`Config::attachGlobals()` and the `$GLOBALS['conf']` reference bridge
-   are still in `Config.php`.** Plan Step 2 said "Delete attachGlobals()
-   and the $conf reference bridge." They stayed because the still-present
-   legacy `global $conf;` reads/writes depend on them. Removing the bridge
-   requires landing #6's residual `$conf` migration first.
-2. **`local/config/config.inc.php` is still loaded** at runtime in 5 entry
-   points (install.php, common.inc.php, i.php, upgrade.php,
-   upgrade_feed.php). Plan Step 7 said stop including it.
-3. **`global $conf;` declarations remain.** I added two myself
-   (`i.php`, `upgrade.php`) so `ConfigLoader::applyEnvOverrides($conf)`
-   could pass PHPStan; they go away once the bridge does.
-4. **Plugin internal `$conf['x']` reads weren't migrated.** Per-plugin
-   Config *classes* shipped, but the plugins' procedural code in
-   `plugins/<X>/` still does `$conf['osm_conf']['main_menu']['enabled']`
-   etc. Plan Step 9 included this migration.
-5. **`SchemaIntegrityTest` doesn't assert "every SCHEMA entry has either
-   a generated accessor OR `'custom' => true`"** (Plan Step 11
-   sub-assertion). Currently only checks the bidirectional method
-   existence and the generator-in-sync invariant.
+**Closed in cleanup pass:**
+
+- ~~**`local/config/config.inc.php` is still loaded.**~~ Removed from all
+  5 runtime entry points (install.php, common.inc.php, i.php, upgrade.php,
+  upgrade_feed.php). `admin/configuration.php`'s `order_by_is_local()`
+  helper migrated to text-scan (matching `webmaster_id_is_local()`).
+  C13y exif-anomaly warning text reworded to point at the DB config table
+  instead of the now-defunct file. `install/upgrade_1.5.0.php` left alone
+  — dead code on 16.x (upgrade.php refuses anything older than 15.x).
+- ~~**`global $conf;` declarations in i.php / upgrade.php.**~~ `$conf`
+  removed from both files' multi-variable `global` lines. File-scope
+  `global` was a no-op anyway; removing it documents intent and does
+  not require gap 1.
+- ~~**`SchemaIntegrityTest` missing custom-flag assertion.**~~ Added
+  `test_custom_flag_matches_accessor_region`: parses the
+  `// <<<CONFIG-ACCESSORS-END>>>` sentinel line, then asserts every
+  SCHEMA entry's method either lives in the generated region (no
+  `'custom'` flag allowed) or below the sentinel (`'custom' => true`
+  required). Catches drift in either direction.
+
+**Deferred to #6 (procedural-`global` migration):**
+
+1. **`Config::attachGlobals()` and the `$GLOBALS['conf']` reference bridge.**
+   Per the original plan note: removing the bridge requires landing #6's
+   residual `$conf` migration first.
+2. **Plugin internal `$conf['x']` reads.** Audit shows 151 access sites
+   across 4 bundled plugins (LocalFilesEditor 7, NbcThemeChanger 8,
+   PiwigoOpenstreetmap 97, PiwigoVideojs 39, user_tags 0). Migrating
+   these is purely cosmetic until the bridge in (1) goes away — the
+   bridge keeps `$GLOBALS['conf']` and `Config::$data` referentially
+   identical, so plugin reads/writes stay coherent with the typed
+   facade. Doing this migration standalone risks subtle write-path
+   regressions (e.g. `conf_update_param('osm_conf', serialize(...))`
+   sites) for zero runtime benefit.
 
 Deferred design surface — should be tracked as separate small items if we
 want them, not held against #5:

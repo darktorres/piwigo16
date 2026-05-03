@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-global $template, $user, $page, $persistent_cache, $lang, $prefixeTable, $conf;
+global $template, $user, $page, $persistent_cache, $lang, $prefixeTable;
 
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Core\Logger;
@@ -22,11 +22,6 @@ require_once PHPWG_ROOT_PATH . 'vendor/autoload.php';
 // fast bootstrap - no db connection
 $conf = [];
 \Piwigo\Config\ConfigLoader::applyDefaults($conf);
-
-$localConfig = realpath(PHPWG_ROOT_PATH . 'local/config/config.inc.php');
-if ($localConfig !== false) {
-    include $localConfig;
-}
 
 defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
 defined('PWG_DERIVATIVE_DIR') or define('PWG_DERIVATIVE_DIR', \Piwigo\Config\Config::dataLocation().'i/');

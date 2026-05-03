@@ -61,7 +61,7 @@ class C13yInternal
                     sprintf(l10n('%s value is not correct file because exif are not supported'), '$' . 'conf[\''.$value.'\']'),
                     null,
                     null,
-                    sprintf(l10n('%s must be to set to false in your local/config/config.inc.php file'), '$' . 'conf[\''.$value.'\']')
+                    sprintf(l10n('Install the PHP exif extension, or set %s to false in the database config table'), '$' . 'conf[\''.$value.'\']')
           .'<br>'.
           $c13y->get_htlm_links_more_info()
                 );

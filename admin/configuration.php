@@ -365,21 +365,26 @@ switch ($page['section']) {
 
             function order_by_is_local(): bool
             {
-                /** @var array<string, mixed> $conf */
-                $conf = [];
-
-                $localConfig = realpath(PHPWG_ROOT_PATH . 'local/config/config.inc.php');
-                if ($localConfig !== false) {
-                    include $localConfig;
-                }
-                if (\Piwigo\Config\Config::has('local_dir_site')) {
-                    $siteConfig = realpath(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/config.inc.php');
-                    if ($siteConfig !== false) {
-                        include $siteConfig;
+                // Detects whether the user has set $conf['order_by'] or
+                // $conf['order_by_inside_category'] in any leftover local
+                // config file. The runtime no longer loads these files
+                // (see ROADMAP-PHP #5), so a static text scan is both
+                // sufficient and authoritative for the warning's intent.
+                $candidates = [
+                    PHPWG_ROOT_PATH . 'local/config/config.inc.php',
+                    PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/config.inc.php',
+                ];
+                foreach ($candidates as $path) {
+                    $real = realpath($path);
+                    if ($real === false) {
+                        continue;
+                    }
+                    $content = @file_get_contents($real);
+                    if ($content !== false && preg_match('/\$conf\s*\[\s*[\'"](order_by|order_by_inside_category)[\'"]\s*\]\s*=/', $content) === 1) {
+                        return true;
                     }
                 }
-
-                return array_key_exists('order_by', $conf) || array_key_exists('order_by_inside_category', $conf);
+                return false;
             }
 
             if (order_by_is_local()) {

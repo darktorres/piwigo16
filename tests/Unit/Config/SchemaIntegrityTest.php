@@ -81,4 +81,41 @@ final class SchemaIntegrityTest extends TestCase
             );
         }
     }
+
+    public function test_custom_flag_matches_accessor_region(): void
+    {
+        $reflection = new ReflectionClass(Config::class);
+        $sourceLines = file((string) $reflection->getFileName());
+        self::assertNotFalse($sourceLines, 'Could not read Config.php source.');
+        $endSentinelLine = null;
+        foreach ($sourceLines as $lineNo => $text) {
+            // Match the actual `// <<<CONFIG-ACCESSORS-END>>>` sentinel, not
+            // the docblock reference at the top of the file.
+            if (str_starts_with(ltrim($text), '// <<<CONFIG-ACCESSORS-END>>>')) {
+                $endSentinelLine = $lineNo + 1;
+                break;
+            }
+        }
+        self::assertNotNull($endSentinelLine, 'CONFIG-ACCESSORS-END sentinel not found in Config.php.');
+
+        foreach (Config::SCHEMA as $key => $entry) {
+            $method     = new ReflectionMethod(Config::class, $entry['method']);
+            $isCustom   = !empty($entry['custom']);
+            $belowSentinel = $method->getStartLine() > $endSentinelLine;
+
+            if ($belowSentinel) {
+                self::assertTrue(
+                    $isCustom,
+                    "SCHEMA entry '$key' resolves to hand-written method Config::{$entry['method']}() (line {$method->getStartLine()}) "
+                    . "but lacks 'custom' => true. Either add the flag, or move the method into the generated region above line $endSentinelLine."
+                );
+            } else {
+                self::assertFalse(
+                    $isCustom,
+                    "SCHEMA entry '$key' has 'custom' => true but Config::{$entry['method']}() (line {$method->getStartLine()}) "
+                    . "lives in the generated region. Either drop the flag, or move the method below line $endSentinelLine."
+                );
+            }
+        }
+    }
 }

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-global $template, $user, $page, $persistent_cache, $lang, $prefixeTable, $conf;
+global $template, $user, $page, $persistent_cache, $lang, $prefixeTable;
 
 use Piwigo\Admin\Languages;
 use Piwigo\Admin\Updates;
@@ -26,10 +26,6 @@ define('PHPWG_ROOT_PATH', './');
 
 $conf = [];
 
-$localConfig = realpath(PHPWG_ROOT_PATH . 'local/config/config.inc.php');
-if ($localConfig !== false) {
-    include $localConfig;
-}
 defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
 
 require_once PHPWG_ROOT_PATH . 'vendor/autoload.php';

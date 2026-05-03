@@ -33,6 +33,39 @@ The [piwigo.org](https://piwigo.org) website introduces you to Piwigo. You'll fi
 
 If you do not have your own server, consider the [piwigo.com](https://piwigo.com/) hosting solution.
 
+## Configuration
+
+Configuration values live in the `conf` database table and are read through typed
+accessors on `Piwigo\Config\Config`. The full key list is in
+[`docs/config-reference.md`](docs/config-reference.md) (285 keys, generated from
+`Config::SCHEMA`).
+
+### Database credentials via .env
+
+Copy `.env.example` to `.env` and fill in real DB credentials. The boot loader
+(`Piwigo\Config\ConfigLoader`) reads `.env` then `.env.local` and applies the
+`PIWIGO_DB_*` variables to `$conf` before the DB connection is opened. Env
+values win over the legacy `local/config/database.inc.php`.
+
+```bash
+# .env
+PIWIGO_DB_HOST=db.example.com
+PIWIGO_DB_USER=piwigo
+PIWIGO_DB_PASSWORD=secret
+PIWIGO_DB_BASE=piwigo
+```
+
+`.env` and `.env.local` are gitignored. Existing installs that rely solely on
+`database.inc.php` keep working unchanged when no `.env` is present.
+
+### Install detection
+
+`Piwigo\Core\InstallSentinel::isInstalled()` is the authoritative answer to
+"is Piwigo installed on this filesystem?". The modern signal is an empty stamp
+file at `local/.installed` (touched by `install.php` after a successful fresh
+install); the legacy `defined('PHPWG_INSTALLED')` check still works as a
+transitional fallback.
+
 ## Contributing
 
 Piwigo is widely driven by its community; if you want to improve the code, fork this repo and submit your changes to the `master` branch. See our [Contribution guide](https://github.com/Piwigo/Piwigo/blob/master/docs/CONTRIBUTING.md).

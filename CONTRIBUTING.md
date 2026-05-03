@@ -67,3 +67,47 @@ When triaging an advisory:
 2. Prefer the upstream-fixed version. If no fix exists, evaluate whether we use the affected API surface — many advisories cover code paths Piwigo never invokes.
 3. To override a finding (rare, requires written rationale in the commit message), suppress it narrowly: `composer audit --ignore=CVE-XXXX-YYYYY` for a one-shot, or pin via `roave/security-advisories` exclusions for the long-term. For npm, document the override in the commit; npm doesn't ship a per-CVE ignore.
 4. CVSS ≥ 7 with a known fix → patch within 48 hours. Lower severity or no fix → evaluate at the next dep-update cycle.
+
+## Config schema
+
+`Piwigo\Config\Config::SCHEMA` is the source-of-truth registry for every config
+key Piwigo recognises (285 entries; full list in
+[`docs/config-reference.md`](docs/config-reference.md)). The typed accessors
+below the `<<<CONFIG-ACCESSORS-BEGIN>>>` sentinel are **generated** by
+`tools/build-config-accessors.php` — never hand-edit anything between the
+BEGIN/END sentinels.
+
+### Adding a new key
+
+1. Add the entry to `Config::SCHEMA` (alphabetically, snake_case key, type +
+   default + camelCase method name).
+2. Run the generator:
+   ```bash
+   php tools/build-config-accessors.php
+   php tools/build-config-reference.php
+   ```
+3. CI's `SchemaIntegrityTest` enforces SCHEMA ↔ generated-accessors sync;
+   the build fails if you forget to re-run the generator.
+
+### Custom (hand-written) accessors
+
+If access logic doesn't fit `getString` / `getInt` / `getBool` (e.g., the value
+is a structured array, needs validation, or has cluster-specific defaults),
+mark the SCHEMA entry with `'custom' => true` and write the accessor by hand
+**below** the `<<<CONFIG-ACCESSORS-END>>>` sentinel. The generator skips custom
+entries.
+
+### Dynamic / parametric keys
+
+Keys computed at runtime (per-block menu config like `blk_*`, semaphores like
+`<token>_running`, derived caches like `flip_picture_ext`) cannot be expressed
+in SCHEMA. Use `Config::raw(string $key, mixed $default = null)` for those —
+it bypasses SCHEMA validation by design. Static keys MUST go through a typed
+accessor; the private getters throw `UnknownConfigKeyException` if called with
+an unregistered key.
+
+### Env-var overrides
+
+A small curated subset of keys can be overridden at runtime via `.env`.
+The mapping lives in `ConfigLoader::ENV_MAPPING`; extend it (and validate
+the target key is in SCHEMA) when more keys need 12-factor injection.

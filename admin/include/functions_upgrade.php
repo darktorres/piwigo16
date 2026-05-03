@@ -232,7 +232,7 @@ WHERE '.\Piwigo\Config\Config::userFields()['username'].'=\''.$username.'\'
     }
     $row = pwg_db_fetch_assoc(pwg_query($query));
 
-    if ($row === null || !\Piwigo\Config\Config::passwordVerify()($password, $row['password'])) {
+    if ($row === null || !password_verify($password, is_string($row['password']) ? $row['password'] : '')) {
         \Piwigo\Core\PageState::current()->addError(l10n('Invalid password!'));
     } elseif ($row['status'] != 'admin' and $row['status'] != 'webmaster') {
         \Piwigo\Core\PageState::current()->addError(l10n('You do not have access rights to run upgrade'));

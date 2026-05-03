@@ -249,7 +249,7 @@ function save_profile_from_post(array $userdata, array &$errors): bool
   ;';
             [$current_password] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
-            if (!\Piwigo\Config\Config::passwordVerify()($_POST['password'], $current_password)) {
+            if (!password_verify(is_scalar($_POST['password']) ? (string) $_POST['password'] : '', is_string($current_password) ? $current_password : '')) {
                 $errors[] = l10n('Current password is wrong');
             }
         }
@@ -272,8 +272,7 @@ function save_profile_from_post(array $userdata, array &$errors): bool
             // password is updated only if filled
             if (!empty($_POST['use_new_pwd'])) {
                 $fields[] = \Piwigo\Config\Config::userFields()['password'];
-                // password is hashed with function \Piwigo\Config\Config::passwordHash()
-                $data[ \Piwigo\Config\Config::userFields()['password'] ] = \Piwigo\Config\Config::passwordHash()($_POST['use_new_pwd']);
+                $data[ \Piwigo\Config\Config::userFields()['password'] ] = password_hash(is_scalar($_POST['use_new_pwd']) ? (string) $_POST['use_new_pwd'] : '', PASSWORD_BCRYPT);
 
                 deactivate_user_auth_keys(is_numeric($userdata['id'] ?? null) ? (int) $userdata['id'] : 0);
             }

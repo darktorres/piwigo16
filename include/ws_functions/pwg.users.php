@@ -614,7 +614,7 @@ SELECT '.\Piwigo\Config\Config::userFields()['password'].' AS password
 ;';
         [$current_password] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
-        if (!\Piwigo\Config\Config::passwordVerify()($params['password'], $current_password)) {
+        if (!password_verify(is_scalar($params['password']) ? (string) $params['password'] : '', is_string($current_password) ? $current_password : '')) {
             return new PwgError(403, l10n('Current password is wrong'));
         }
 

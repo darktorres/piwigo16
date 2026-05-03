@@ -3,7 +3,7 @@
 > **Generated** by `tools/build-config-reference.php` from `Piwigo\Config\Config::SCHEMA`.
 > Do not edit by hand — re-run the generator after editing SCHEMA.
 
-Total keys: **285**.
+Total keys: **283**.
 
 Access pattern:
 
@@ -192,10 +192,8 @@ with a key not in the table below.
 | `page_banner` | `string` | `(empty)` | `Config::pageBanner()` | — |
 | `paginate_pages_around` | `int` | `2` | `Config::paginatePagesAround()` | — |
 | `password_activation_duration` | `int` | `259200` | `Config::passwordActivationDuration()` | — |
-| `password_hash` | `string` | `pwg_password_hash` | `Config::passwordHash()` | custom accessor |
 | `password_reset_code_duration` | `int` | `300` | `Config::passwordResetCodeDuration()` | — |
 | `password_reset_duration` | `int` | `3600` | `Config::passwordResetDuration()` | — |
-| `password_verify` | `string` | `pwg_password_verify` | `Config::passwordVerify()` | custom accessor |
 | `pdf_viewer_filesize_threshold` | `int` | `5` | `Config::pdfViewerFilesizeThreshold()` | — |
 | `pem_languages_category` | `int` | `8` | `Config::pemLanguagesCategory()` | — |
 | `pem_plugins_category` | `int` | `12` | `Config::pemPluginsCategory()` | — |

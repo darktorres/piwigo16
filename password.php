@@ -246,7 +246,7 @@ SELECT
     while ($row = pwg_db_fetch_assoc($result)) {
         $activation_key = isset($row['activation_key']) ? (string)$row['activation_key'] : '';
         $row_status = isset($row['status']) ? (string)$row['status'] : '';
-        if (pwg_password_verify($key, $activation_key)) {
+        if (password_verify($key, $activation_key)) {
             if (is_a_guest($row_status) or is_generic($row_status)) {
                 $page['errors']['password_page_error'] = l10n('Password reset is not allowed for this user');
                 return false;
@@ -289,7 +289,7 @@ function reset_password(): bool
 
     single_update(
         USERS_TABLE,
-        [\Piwigo\Config\Config::userFields()['password'] => \Piwigo\Config\Config::passwordHash()($_POST['use_new_pwd'])],
+        [\Piwigo\Config\Config::userFields()['password'] => password_hash(is_scalar($_POST['use_new_pwd']) ? (string) $_POST['use_new_pwd'] : '', PASSWORD_BCRYPT)],
         [\Piwigo\Config\Config::userFields()['id'] => $user_id]
     );
 

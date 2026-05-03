@@ -191,7 +191,7 @@ Themes don't touch `$conf` and need no Config class. Extension code that lives i
 
 2. **Move and rewrite Config.** Relocate `src/Piwigo/Core/Config.php` → `src/Piwigo/Config/Config.php` (new namespace `Piwigo\Config\Config`). Reshape the file:
    - `public const SCHEMA` at the top (~150 entries, one row per key with `type`, `default`, optional `env`, optional `sensitive`, optional `description`, optional `custom`, optional `required`).
-   - **Public surface**: only typed accessors. The generated typed accessors and the ~10 custom hand-written ones (e.g., `recentPostDates`, `passwordHash`, `pictureExtensions`, `userFields`) plus state methods `has(string $key): bool`, `override(string $key, mixed $value): void`, `persist(string $key, mixed $value): void`, `dumpForLog(): array` (sensitive-masked), `raw(): array` (bulk read for internal/test use).
+   - **Public surface**: only typed accessors. The generated typed accessors and the ~10 custom hand-written ones (e.g., `recentPostDates`, `pictureExtensions`, `userFields`) plus state methods `has(string $key): bool`, `override(string $key, mixed $value): void`, `persist(string $key, mixed $value): void`, `dumpForLog(): array` (sensitive-masked), `raw(): array` (bulk read for internal/test use).
    - **Private surface**: `getString/getInt/getBool/getFloat/getArray` typed-getter family — used only by the generated and custom accessors. Each throws `UnknownConfigKeyException` if the key isn't in SCHEMA.
    - **No `Config::get()`**, no `Config::register()`. All config reads in the codebase go through a typed accessor.
    - Generated typed accessors live between sentinel comments (`// === GENERATED ACCESSORS START ===` … `// === GENERATED ACCESSORS END ===`).

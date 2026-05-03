@@ -296,7 +296,7 @@ INSERT INTO '.$prefixeTable.'config (param,value,comment)
           [
             'id'           => 1, // must be the same value as webmaster_id in config.sql
             'username'     => $admin_name,
-            'password'     => \Piwigo\Config\Config::passwordHash()((string) $admin_pass1),
+            'password'     => password_hash((string) $admin_pass1, PASSWORD_BCRYPT),
             'mail_address' => $admin_mail,
             ],
           [

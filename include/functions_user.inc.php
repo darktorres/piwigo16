@@ -159,7 +159,7 @@ function register_user(string $login, string $password, ?string $mail_address = 
     if (empty($errors)) {
         $insert = [
           \Piwigo\Config\Config::userFields()['username'] => $login,
-          \Piwigo\Config\Config::userFields()['password'] => \Piwigo\Config\Config::passwordHash()($password),
+          \Piwigo\Config\Config::userFields()['password'] => password_hash($password, PASSWORD_BCRYPT),
           \Piwigo\Config\Config::userFields()['email'] => $mail_address,
           ];
 
@@ -1052,99 +1052,6 @@ function auto_login(): bool
 }
 
 /**
- * Hashes a password using PHP's native bcrypt.
- *
- * @param string $password plain text
- * @return string
- */
-function pwg_password_hash(string $password): string
-{
-    return password_hash($password, PASSWORD_BCRYPT);
-}
-
-/**
- * Verifies a password against its stored hash.
- *
- * Supports bcrypt ($2y$) natively and upgrades legacy phpass ($P$) hashes
- * to bcrypt on first successful login.
- *
- * @param string $password plain text
- * @param string $hash bcrypt or legacy phpass hash
- * @return bool
- */
-function phpass_verify(string $password, string $hash): bool
-{
-    if (strlen($hash) != 34) {
-        return false;
-    }
-    $itoa64 = './0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
-    $count_log2 = strpos($itoa64, $hash[3]);
-    if ($count_log2 < 7 || $count_log2 > 30) {
-        return false;
-    }
-    $count = 1 << $count_log2;
-    $salt = substr($hash, 4, 8);
-    if (strlen($salt) != 8) {
-        return false;
-    }
-    $output_hash = md5($salt . $password, true);
-    for ($i = 0; $i < $count; $i++) {
-        $output_hash = md5($output_hash . $password, true);
-    }
-    $result = substr($hash, 0, 12);
-    $result_chars = '';
-    $i = 0;
-    do {
-        $value = ord($output_hash[$i]);
-        $i++;
-        $result_chars .= $itoa64[$value & 0x3f];
-        if ($i < 16) {
-            $value |= ord($output_hash[$i]) << 8;
-        }
-        $result_chars .= $itoa64[($value >> 6) & 0x3f];
-        if ($i >= 16) {
-            break;
-        }
-        $i++;
-        if ($i < 16) {
-            $value |= ord($output_hash[$i]) << 16;
-        }
-        $result_chars .= $itoa64[($value >> 12) & 0x3f];
-        if ($i >= 16) {
-            break;
-        }
-        $i++;
-        $result_chars .= $itoa64[($value >> 18) & 0x3f];
-    } while ($i < 16);
-    return $result . $result_chars === $hash;
-}
-
-function pwg_password_verify(string $password, string $hash, ?int $user_id = null): bool
-{
-    // Native bcrypt — fast path
-    if (str_starts_with($hash, '$2y$') || str_starts_with($hash, '$2b$')) {
-        $ok = password_verify($password, $hash);
-        if ($ok && $user_id !== null && password_needs_rehash($hash, PASSWORD_BCRYPT)) {
-            single_update(USERS_TABLE, ['password' => pwg_password_hash($password)], ['id' => $user_id]);
-        }
-        return $ok;
-    }
-
-    // Legacy phpass ($P$) — verify then upgrade to bcrypt on first login
-    if (str_starts_with($hash, '$P$') || str_starts_with($hash, '$H$')) {
-        if (!phpass_verify($password, $hash)) {
-            return false;
-        }
-        if ($user_id !== null && !\Piwigo\Config\Config::externalAuthentification()) {
-            single_update(USERS_TABLE, ['password' => pwg_password_hash($password)], ['id' => $user_id]);
-        }
-        return true;
-    }
-
-    return false;
-}
-
-/**
  * Tries to login a user given username and password (must be MySql escaped).
  *
  * @param string $username
@@ -1192,11 +1099,8 @@ function pwg_login(bool $success, string $username, string $password, bool $reme
     $fake_user = generate_fake_user();
 
     // Verify password with fallback to fake user
-    $password_verify = \Piwigo\Config\Config::passwordVerify()(
-        $password,
-        $user_found['password'] ?? $fake_user['password'],
-        is_numeric($user_found['id'] ?? null) ? (int) $user_found['id'] : null
-    );
+    $hash = $user_found['password'] ?? $fake_user['password'];
+    $password_verify = password_verify($password, is_string($hash) ? $hash : '');
 
     $uf_id = is_numeric($user_found['id'] ?? null) ? (int) $user_found['id'] : 0;
 
@@ -1303,17 +1207,13 @@ FROM '.USERS_TABLE.' AS u
 /** @return array<string,mixed> */
 function generate_fake_user(): array
 {
-    // Check if password_hash or password_verify has been changed
-    $is_verify_hash_changed = 'pwg_password_hash' !== \Piwigo\Config\Config::passwordHash()
-      || 'pwg_password_verify' !== \Piwigo\Config\Config::passwordVerify();
-
     // Generate once per session to avoid repeated hashing overhead.
-    // Uses current password_hash algorithm to match real user verification costs.
-    if (!isset($_SESSION['fake_user_cache']) || $is_verify_hash_changed) {
+    // Uses bcrypt to match real user verification timing.
+    if (!isset($_SESSION['fake_user_cache'])) {
         $fake_password = bin2hex(random_bytes(10));
         $_SESSION['fake_user_cache'] = [
           'id' => null,
-          'password' => \Piwigo\Config\Config::passwordHash()($fake_password),
+          'password' => password_hash($fake_password, PASSWORD_BCRYPT),
         ];
     }
 
@@ -1689,7 +1589,7 @@ SELECT
     if ('api_key' === $valid_key) {
         // check secret
         $apikey_secret = is_scalar($key['apikey_secret']) ? (string) $key['apikey_secret'] : '';
-        if (!pwg_password_verify((string) $secret_key, $apikey_secret)) {
+        if (!password_verify((string) $secret_key, $apikey_secret)) {
             return false;
         }
 
@@ -1870,7 +1770,7 @@ function generate_password_link(int $user_id, bool $first_login = false): array
     single_update(
         USER_INFOS_TABLE,
         [
-        'activation_key' => pwg_password_hash($activation_key),
+        'activation_key' => password_hash($activation_key, PASSWORD_BCRYPT),
         'activation_key_expire' => $expire,
         ],
         ['user_id' => $user_id]
@@ -2153,7 +2053,7 @@ SELECT
                 }
             }
 
-            $updates[ \Piwigo\Config\Config::userFields()['password'] ] = \Piwigo\Config\Config::passwordHash()($params['password']);
+            $updates[ \Piwigo\Config\Config::userFields()['password'] ] = password_hash(is_scalar($params['password']) ? (string) $params['password'] : '', PASSWORD_BCRYPT);
         }
     }
 
@@ -2391,7 +2291,7 @@ function create_api_key(int $user_id, int $duration, string $key_name): array
 
     $key = [
       'auth_key' => $key_id,
-      'apikey_secret' => pwg_password_hash($key_secret),
+      'apikey_secret' => password_hash($key_secret, PASSWORD_BCRYPT),
       'apikey_name' => $key_name,
       'user_id' => $user_id,
       'created_on' => $dbnow,

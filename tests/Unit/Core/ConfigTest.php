@@ -108,8 +108,6 @@ final class ConfigTest extends TestCase
         self::assertSame('', Config::secretKey());
         self::assertSame(3 * 24 * 60 * 60, Config::authKeyDuration());
         self::assertFalse(Config::apacheAuthentication());
-        self::assertSame('pwg_password_hash', Config::passwordHash());
-        self::assertSame('pwg_password_verify', Config::passwordVerify());
     }
 
     public function test_mail_cluster_defaults(): void

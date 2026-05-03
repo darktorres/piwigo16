@@ -87,8 +87,8 @@ final class ConfigLoader
      * hardcoded fallback in the accessor body, e.g., file_ext = picture_ext +
      * extras, recent_post_dates = nested RSS/NBM structure).
      *
-     * Idempotent: keys already populated (e.g., from database.inc.php, an
-     * earlier call, or .env via applyEnvOverrides) are skipped.
+     * Idempotent: keys already populated (e.g., from an earlier call or
+     * from .env via applyEnvOverrides) are skipped.
      *
      * Call BEFORE applyEnvOverrides + load_conf_from_db so DB / env values
      * win over compile-time defaults.
@@ -114,8 +114,8 @@ final class ConfigLoader
 
     /**
      * Applies ENV_MAPPING overrides into $conf. Env vars that are unset or
-     * empty are ignored — leaves the existing $conf value (typically from
-     * database.inc.php or SCHEMA defaults) in place.
+     * empty are ignored — leaves the existing $conf value (the SCHEMA
+     * default seeded by applyDefaults) in place.
      *
      * @param array<string, mixed> $conf
      */

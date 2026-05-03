@@ -7,11 +7,8 @@ namespace Piwigo\Core;
 /**
  * Authoritative answer to "is Piwigo installed on this filesystem?".
  *
- * Modern signal: an empty stamp file at local/.installed (created by
- * install.php at the end of a successful install). Transitional fallback:
- * the legacy `defined('PHPWG_INSTALLED')` constant, set by the include of
- * local/config/database.inc.php — keeps existing installs working without
- * a manual touch step.
+ * Sole signal: an empty stamp file at local/.installed (created by
+ * install.php at the end of a successful install).
  *
  * Used by:
  *   - install.php   (refuse to re-install)
@@ -26,12 +23,7 @@ final class InstallSentinel
 
     public static function isInstalled(): bool
     {
-        if (file_exists(self::stampFile())) {
-            return true;
-        }
-        // Transitional: existing installs from before the stamp file landed
-        // signal install state via the legacy define in database.inc.php.
-        return defined('PHPWG_INSTALLED');
+        return file_exists(self::stampFile());
     }
 
     public static function markInstalled(): void

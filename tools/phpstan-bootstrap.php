@@ -5,7 +5,6 @@ declare(strict_types=1);
 define('PHPWG_ROOT_PATH', __DIR__ . '/../');
 define('PHPWG_VERSION', '16.3.0');
 define('PWG_LOCAL_DIR', 'local/');
-define('PHPWG_INSTALLED', true);
 define('IN_ADMIN', false);
 
 // Database table-prefix constant defined in include/constants.php at runtime.

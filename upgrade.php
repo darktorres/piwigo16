@@ -32,19 +32,12 @@ if ($localConfig !== false) {
 }
 defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
 
-// Legacy: existing installs may have local/config/database.inc.php with their
-// DB credentials. New installs write .env instead. Either path works.
-$config_file = realpath(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/database.inc.php');
-if ($config_file !== false) {
-    include $config_file;
-}
-
 require_once PHPWG_ROOT_PATH . 'vendor/autoload.php';
 \Piwigo\Config\ConfigLoader::applyDefaults($conf);
 \Piwigo\Config\ConfigLoader::loadEnv(PHPWG_ROOT_PATH);
 \Piwigo\Config\ConfigLoader::applyEnvOverrides($conf);
 
-$prefixeTable ??= is_scalar($conf['db_prefix'] ?? null) ? (string) $conf['db_prefix'] : 'piwigo_';
+$prefixeTable = is_scalar($conf['db_prefix'] ?? null) ? (string) $conf['db_prefix'] : 'piwigo_';
 
 if (!\Piwigo\Core\InstallSentinel::isInstalled()) {
     die('Piwigo is not installed yet — run install.php first.');

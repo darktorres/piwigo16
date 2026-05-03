@@ -58,17 +58,11 @@ PIWIGO_DB_PREFIX=piwigo_
 `.env.local` is reserved for the test runner — it must NOT hold runtime DB
 credentials, since the test suite drops and recreates `PIWIGO_DB_BASE`.
 
-Existing installs that pre-date the migration and still have
-`local/config/database.inc.php` keep working unchanged — that include path
-remains as a back-compat read in `common.inc.php`.
-
 ### Install detection
 
 `Piwigo\Core\InstallSentinel::isInstalled()` is the authoritative answer to
-"is Piwigo installed on this filesystem?". The modern signal is an empty stamp
-file at `local/.installed` (touched by `install.php` after a successful fresh
-install). For installs that pre-date the stamp file, `defined('PHPWG_INSTALLED')`
-still works as a transitional fallback (set by the legacy `database.inc.php`).
+"is Piwigo installed on this filesystem?". The signal is an empty stamp file at
+`local/.installed`, touched by `install.php` after a successful fresh install.
 
 ## Contributing
 

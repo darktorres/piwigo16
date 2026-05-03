@@ -20,17 +20,10 @@ if ($localConfig !== false) {
 }
 defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
 
-// Legacy: existing installs may have local/config/database.inc.php with their
-// DB credentials. New installs write .env instead. Either path works.
-$databaseConfig = realpath(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/database.inc.php');
-if ($databaseConfig !== false) {
-    include $databaseConfig;
-}
-
 \Piwigo\Config\ConfigLoader::loadEnv(PHPWG_ROOT_PATH);
 \Piwigo\Config\ConfigLoader::applyEnvOverrides($conf);
 
-$prefixeTable ??= is_scalar($conf['db_prefix'] ?? null) ? (string) $conf['db_prefix'] : 'piwigo_';
+$prefixeTable = is_scalar($conf['db_prefix'] ?? null) ? (string) $conf['db_prefix'] : 'piwigo_';
 
 include(PHPWG_ROOT_PATH . 'include/dblayer/functions_mysqli.inc.php');
 

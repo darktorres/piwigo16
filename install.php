@@ -286,9 +286,7 @@ INSERT INTO '.$prefixeTable.'config (param,value,comment)
             );
         }
 
-        // Modern install signal: empty stamp file at local/.installed.
-        // Legacy `define('PHPWG_INSTALLED', true)` in database.inc.php still
-        // works during the transitional period (InstallSentinel checks both).
+        // Install signal: empty stamp file at local/.installed.
         \Piwigo\Core\InstallSentinel::markInstalled();
     }
 }

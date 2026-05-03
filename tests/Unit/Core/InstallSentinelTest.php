@@ -26,12 +26,8 @@ final class InstallSentinelTest extends TestCase
         InstallSentinel::markUninstalled();
     }
 
-    public function test_isInstalled_false_when_no_signal_present(): void
+    public function test_isInstalled_false_when_stamp_missing(): void
     {
-        // Guard: only meaningful when PHPWG_INSTALLED is not defined in this process.
-        if (defined('PHPWG_INSTALLED')) {
-            self::markTestSkipped('PHPWG_INSTALLED is defined in this test process');
-        }
         self::assertFalse(InstallSentinel::isInstalled());
     }
 

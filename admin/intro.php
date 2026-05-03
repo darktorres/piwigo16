@@ -352,9 +352,12 @@ $template->assign('ACTIVITY_CHART_DATA', $chart_data);
 $template->assign('ACTIVITY_CHART_NUMBER_SIZES', $size);
 
 $day_labels = [];
+$day_names = is_array($lang['day'] ?? null) ? $lang['day'] : [];
 for ($i = 0; $i <= 6; $i++) {
-    // first 3 letters of day name
-    $day_labels[] = mb_substr((string) $lang['day'][($i + 1) % 7], 0, 3);
+    // first 3 letters of day name; empty string if the active locale
+    // doesn't define $lang['day'] (e.g. en_GB without our patch).
+    $name = $day_names[($i + 1) % 7] ?? '';
+    $day_labels[] = mb_substr(is_string($name) ? $name : '', 0, 3);
 }
 $template->assign('DAY_LABELS', $day_labels);
 

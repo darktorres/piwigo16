@@ -210,7 +210,10 @@ elseif (isset($_GET['filter'])) {
     $bmf = [];
 
     foreach ($_GET['filter'] as $filter) {
-        [$type, $value] = explode('-', is_scalar($filter) ? (string) $filter : '', 2);
+        // explode returns 1 element when the filter has no '-' separator
+        // (e.g. ?filter=all from the test suite). Pad to 2 so the
+        // destructure doesn't warn on the missing offset.
+        [$type, $value] = explode('-', is_scalar($filter) ? (string) $filter : '', 2) + [1 => ''];
 
         switch ($type) {
             case 'prefilter':

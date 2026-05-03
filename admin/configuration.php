@@ -407,8 +407,8 @@ switch ($page['section']) {
                 'CONF_GALLERY_TITLE' => htmlspecialchars((string) \Piwigo\Config\Config::galleryTitle()),
                 'CONF_PAGE_BANNER' => htmlspecialchars((string) \Piwigo\Config\Config::pageBanner()),
                 'week_starts_on_options' => [
-                  'sunday' => $lang['day'][0],
-                  'monday' => $lang['day'][1],
+                  'sunday' => is_array($lang['day'] ?? null) ? ($lang['day'][0] ?? 'Sunday') : 'Sunday',
+                  'monday' => is_array($lang['day'] ?? null) ? ($lang['day'][1] ?? 'Monday') : 'Monday',
                   ],
                 'week_starts_on_options_selected' => \Piwigo\Config\Config::weekStartsOn(),
                 'mail_theme' => \Piwigo\Config\Config::mailTheme(),

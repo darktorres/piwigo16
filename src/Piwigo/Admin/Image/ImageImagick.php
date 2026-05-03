@@ -11,6 +11,8 @@ class ImageImagick implements ImageInterface
      */
     public \Imagick $image;
 
+    private bool $alphaRepeatApplied = false;
+
     public function __construct(string $source_filepath)
     {
         // A bug cause that Imagick class can not be extended
@@ -81,10 +83,9 @@ class ImageImagick implements ImageInterface
           $ioverlay->setImageAlphaChannel(\Imagick::ALPHACHANNEL_OPAQUE);
         }*/
 
-        global $dirty_trick_xrepeat;
-        if (!isset($dirty_trick_xrepeat) && $opacity < 100) {// NOTE: Using setImageOpacity will destroy current alpha channels!
+        if (!$this->alphaRepeatApplied && $opacity < 100) {// NOTE: Using setImageOpacity will destroy current alpha channels!
             $ioverlay->evaluateImage(\Imagick::EVALUATE_MULTIPLY, $opacity / 100, \Imagick::CHANNEL_ALPHA);
-            $dirty_trick_xrepeat = true;
+            $this->alphaRepeatApplied = true;
         }
 
         return $this->image->compositeImage($ioverlay, \Imagick::COMPOSITE_DISSOLVE, $x, $y);

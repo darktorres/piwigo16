@@ -35,13 +35,16 @@ define('CWEEK', 1);
  */
 function initialize_calendar(): void
 {
-    global $filter;
+    $filter = is_array($GLOBALS['filter'] ?? null) ? $GLOBALS['filter'] : [];
     $persistent_cache = \Piwigo\Cache\PersistentCacheRegistry::current();
 
     $template = TemplateRegistry::current();
     $currentUser = CurrentUser::get();
     $user = $currentUser->rawAttributes;
-    global $page;
+    $page = &$GLOBALS['page'];
+    if (!is_array($page)) {
+        $page = [];
+    }
     //------------------ initialize the condition on items to take into account ---
     $inner_sql = ' FROM ' . IMAGES_TABLE;
 

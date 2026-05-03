@@ -16,18 +16,28 @@ add_event_handler('tabsheet_before_select', 'add_core_tabs', 0);
  */
 function add_core_tabs(array $sheets, string $tab_id): array
 {
+    // Caller admin pages set these URL prefixes at file scope before triggering
+    // the 'tabsheet_before_select' event. Hoist them once at the top so each
+    // case can read without `global` declarations.
+    $my_base_url = is_string($GLOBALS['my_base_url'] ?? null) ? $GLOBALS['my_base_url'] : '';
+    $admin_album_base_url = is_string($GLOBALS['admin_album_base_url'] ?? null) ? $GLOBALS['admin_album_base_url'] : '';
+    $admin_photo_base_url = is_string($GLOBALS['admin_photo_base_url'] ?? null) ? $GLOBALS['admin_photo_base_url'] : '';
+    $manager_link = is_string($GLOBALS['manager_link'] ?? null) ? $GLOBALS['manager_link'] : '';
+    $link_start = is_string($GLOBALS['link_start'] ?? null) ? $GLOBALS['link_start'] : '';
+    $conf_link = is_string($GLOBALS['conf_link'] ?? null) ? $GLOBALS['conf_link'] : '';
+    $help_link = is_string($GLOBALS['help_link'] ?? null) ? $GLOBALS['help_link'] : '';
+    $base_url = is_string($GLOBALS['base_url'] ?? null) ? $GLOBALS['base_url'] : '';
+
     switch ($tab_id) {
         case 'admin_home':
             $sheets[''] = ['caption' => l10n('Administration Home'), 'url' => 'admin.php'];
             break;
 
         case 'tags':
-            global $my_base_url;
             $sheets[''] = ['caption' => '<span class="icon-menu"></span>'.l10n('List'), 'url' => $my_base_url.'tags'];
             break;
 
         case 'album':
-            global $admin_album_base_url;
             $sheets['properties'] = ['caption' => '<span class="icon-pencil"></span>'.l10n('Properties'), 'url' => $admin_album_base_url.'-properties'];
             $sheets['sort_order'] = ['caption' => '<span class="icon-shuffle"></span>'.l10n('Manage photo ranks'), 'url' => $admin_album_base_url.'-sort_order'];
             $sheets['permissions'] = ['caption' => '<span class="icon-lock"></span>'.l10n('Permissions'), 'url' => $admin_album_base_url.'-permissions'];
@@ -35,25 +45,21 @@ function add_core_tabs(array $sheets, string $tab_id): array
             break;
 
         case 'albums':
-            global $my_base_url;
             $sheets['list'] = ['caption' => '<span class="icon-menu"></span>'.l10n('List'), 'url' => $my_base_url.'albums'];
             $sheets['permalinks'] = ['caption' => '<span class="icon-link-1"></span>'.l10n('Permalinks'), 'url' => $my_base_url.'permalinks'];
             break;
 
         case 'users':
-            global $my_base_url;
             $sheets['user_list'] = ['caption' => '<span class="icon-menu"></span>'.l10n('List'), 'url' => $my_base_url.'user_list'];
             $sheets['user_activity'] = ['caption' => '<span class="icon-pulse"></span>'.l10n('Activity'), 'url' => $my_base_url.'user_activity'];
             break;
 
         case 'batch_manager':
-            global $manager_link;
             $sheets['global'] = ['caption' => '<span class="icon-th"></span>'.l10n('global mode'), 'url' => $manager_link.'global'];
             $sheets['unit'] = ['caption' => '<span class="icon-th-list"></span>'.l10n('unit mode'), 'url' => $manager_link.'unit'];
             break;
 
         case 'cat_options':
-            global $link_start;
             $sheets['status'] = ['caption' => '<span class="icon-lock"></span>'.l10n('Public / Private'), 'url' => $link_start.'cat_options&amp;section=status'];
             $sheets['visible'] = ['caption' => '<span class="icon-block"></span>'.l10n('Lock'), 'url' => $link_start.'cat_options&amp;section=visible'];
             if (\Piwigo\Config\Config::activateComments()) {
@@ -65,22 +71,14 @@ function add_core_tabs(array $sheets, string $tab_id): array
             break;
 
         case 'comments':
-            global $my_base_url;
             $sheets[''] = ['caption' => '<span class="icon-menu"></span>'.l10n('List'), 'url' => $my_base_url.'comments'];
             break;
 
-        case 'users':
-            global $my_base_url;
-            $sheets[''] = ['caption' => '<span class="icon-users"> </span>'.l10n('User list'), 'url' => $my_base_url.'user_list'];
-            break;
-
         case 'groups':
-            global $my_base_url;
             $sheets[''] = ['caption' => '<span class="icon-menu"> </span>'.l10n('List'), 'url' => $my_base_url.'group_list'];
             break;
 
         case 'configuration':
-            global $conf_link;
             $sheets['main'] = ['caption' => '<span class="icon-cog"></span>'.l10n('General'), 'url' => $conf_link.'main'];
             $sheets['sizes'] = ['caption' => '<span class="icon-zoom-square"></span>'.l10n('Photo sizes'), 'url' => $conf_link.'sizes'];
             $sheets['watermark'] = ['caption' => '<span class="icon-file-image"></span>'.l10n('Watermark'), 'url' => $conf_link.'watermark'];
@@ -91,7 +89,6 @@ function add_core_tabs(array $sheets, string $tab_id): array
             break;
 
         case 'help':
-            global $help_link;
             $sheets['add_photos'] = ['caption' => l10n('Add Photos'), 'url' => $help_link.'add_photos'];
             $sheets['permissions'] = ['caption' => l10n('Permissions'), 'url' => $help_link.'permissions'];
             $sheets['groups'] = ['caption' => l10n('Groups'), 'url' => $help_link.'groups'];
@@ -100,13 +97,11 @@ function add_core_tabs(array $sheets, string $tab_id): array
             break;
 
         case 'history':
-            global $link_start;
             $sheets['stats'] = ['caption' => '<span class="icon-signal"></span>'.l10n('Statistics'), 'url' => $link_start.'stats'];
             $sheets['history'] = ['caption' => '<span class="icon-search"></span>'.l10n('Search'), 'url' => $link_start.'history'];
             break;
 
         case 'languages':
-            global $my_base_url;
             $sheets['installed'] = ['caption' => '<span class="icon-menu"></span>'.l10n('List'), 'url' => $my_base_url.'&amp;tab=installed'];
             if (\Piwigo\Config\Config::enableExtensionsInstall()) {
                 $sheets['update'] = ['caption' => '<span class="icon-arrows-cw"></span>'.l10n('Check for updates'), 'url' => $my_base_url.'&amp;tab=update'];
@@ -115,19 +110,16 @@ function add_core_tabs(array $sheets, string $tab_id): array
             break;
 
         case 'menus':
-            global $my_base_url;
             $sheets[''] = ['caption' => '<span class="icon-menu"></span>'.l10n('List'), 'url' => $my_base_url.'menubar'];
             break;
 
         case 'nbm':
-            global $base_url;
             $sheets['param'] = ['caption' => l10n('Parameter'), 'url' => $base_url.'?page=notification_by_mail&amp;mode=param'];
             $sheets['subscribe'] = ['caption' => l10n('Subscribe'), 'url' => $base_url.'?page=notification_by_mail&amp;mode=subscribe'];
             $sheets['send'] = ['caption' => l10n('Send'), 'url' => $base_url.'?page=notification_by_mail&amp;mode=send'];
             break;
 
         case 'photo':
-            global $admin_photo_base_url;
             $sheets['properties'] = ['caption' => '<span class="icon-file-image"></span>'.l10n('Properties'), 'url' => $admin_photo_base_url.'-properties'];
             $sheets['coi'] = ['caption' => '<span class="icon-crop"></span>'.l10n('Center of interest'), 'url' => $admin_photo_base_url.'-coi'];
             if (\Piwigo\Config\Config::isFormatsEnabled()) {
@@ -144,7 +136,6 @@ function add_core_tabs(array $sheets, string $tab_id): array
             break;
 
         case 'plugins':
-            global $my_base_url;
             $sheets['installed'] = ['caption' => '<span class="icon-menu"></span>'.l10n('List'), 'url' => $my_base_url.'&amp;tab=installed'];
             if (\Piwigo\Config\Config::enableExtensionsInstall()) {
                 $sheets['update'] = ['caption' => '<span class="icon-arrows-cw"></span>'.l10n('Check for updates'), 'url' => $my_base_url.'&amp;tab=update'];
@@ -158,7 +149,6 @@ function add_core_tabs(array $sheets, string $tab_id): array
             break;
 
         case 'themes':
-            global $my_base_url;
             $sheets['installed'] = ['caption' => '<span class="icon-menu"></span>'.l10n('List'), 'url' => $my_base_url.'&amp;tab=installed'];
             if (\Piwigo\Config\Config::enableExtensionsInstall()) {
                 $sheets['update'] = ['caption' => '<span class="icon-arrows-cw"></span>'.l10n('Check for updates'), 'url' => $my_base_url.'&amp;tab=update'];
@@ -168,8 +158,6 @@ function add_core_tabs(array $sheets, string $tab_id): array
             break;
 
         case 'updates':
-            global $my_base_url;
-
             if (\Piwigo\Config\Config::enableCoreUpdate()) {
                 $sheets['pwg'] = ['caption' => l10n('Piwigo core'), 'url' => $my_base_url];
             }
@@ -179,12 +167,10 @@ function add_core_tabs(array $sheets, string $tab_id): array
             }
             break;
         case 'site_update':
-            global $my_base_url;
             $sheets['synchronization'] = ['caption' => '<span class="icon-exchange"></span>'.l10n('Synchronization'), 'url' => $my_base_url.'site_update&site=1'];
             $sheets['site_maager'] = ['caption' => '<span class="icon-flow-branch"></span>'.l10n('Site manager'), 'url' => $my_base_url.'site_manager'];
             break;
         case 'maintenance':
-            global $my_base_url;
             $sheets['actions'] = ['caption' => '<span class="icon-tools"></span>'.l10n('Actions'), 'url' => $my_base_url.'maintenance&tab=actions'];
             $sheets['env'] = ['caption' => '<span class="icon-television"></span>'.l10n('Environment'), 'url' => $my_base_url.'maintenance&tab=env'];
             $sheets['sys'] = ['caption' => '<span class="icon-pulse"></span>'.l10n('System Activities'), 'url' => $my_base_url.'maintenance&tab=sys'];

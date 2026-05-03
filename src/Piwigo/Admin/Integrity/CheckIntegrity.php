@@ -27,8 +27,6 @@ class CheckIntegrity
      */
     public function check(): void
     {
-        global $header_notes;
-
         // Ignore list
         $conf_c13y_ignore = unserialize(\Piwigo\Config\Config::c13yIgnore() ?? '');
         if (
@@ -52,7 +50,10 @@ class CheckIntegrity
 
         // Information
         if (count($this->retrieve_list) > 0) {
-            $header_notes[] = l10n_dec(
+            if (!isset($GLOBALS['header_notes']) || !is_array($GLOBALS['header_notes'])) {
+                $GLOBALS['header_notes'] = [];
+            }
+            $GLOBALS['header_notes'][] = l10n_dec(
                 '%d anomaly has been detected.',
                 '%d anomalies have been detected.',
                 count($this->retrieve_list)

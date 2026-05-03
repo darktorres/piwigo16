@@ -16,9 +16,9 @@ declare(strict_types=1);
 /** @param array<array<string, mixed>> $cats */
 function update_cats_with_filtered_data(array &$cats): void
 {
-    global $filter;
+    $filter = is_array($GLOBALS['filter'] ?? null) ? $GLOBALS['filter'] : [];
 
-    if ($filter['enabled']) {
+    if (!empty($filter['enabled'])) {
         $upd_fields = ['date_last', 'max_date_last', 'count_images', 'count_categories', 'nb_images'];
 
         $filter_categories = is_array($filter['categories']) ? $filter['categories'] : [];

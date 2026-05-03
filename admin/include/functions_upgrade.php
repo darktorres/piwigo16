@@ -22,7 +22,7 @@ function check_upgrade(): bool
 // concerning upgrade, we use the default tables
 function prepare_conf_upgrade(): void
 {
-    global $prefixeTable;
+    $prefixeTable = is_string($GLOBALS['prefixeTable'] ?? null) ? $GLOBALS['prefixeTable'] : 'piwigo_';
 
     // $conf is not used for users tables
     // define cannot be re-defined
@@ -173,7 +173,7 @@ function deactivate_templates(): void
 // Check access rights
 function check_upgrade_access_rights(): void
 {
-    global $current_release;
+    $current_release = is_string($GLOBALS['current_release'] ?? null) ? $GLOBALS['current_release'] : '';
     if (version_compare($current_release, '2.0', '>=') and isset($_COOKIE[session_name()])) {
         // Check if user is already connected as webmaster
         session_start();

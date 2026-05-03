@@ -26,7 +26,6 @@ if (!is_webmaster()) {
 /** @param string[] $list */
 function get_watermark_filename(array $list, string $candidate, int $step = 0): string
 {
-    global $change_name;
     $change_name = $candidate;
     if ($step != 0) {
         $change_name .= '-'.$step;

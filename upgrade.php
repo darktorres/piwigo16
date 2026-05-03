@@ -104,7 +104,7 @@ DESC `'.$table.'`
  */
 function print_time(string $message): void
 {
-    global $last_time;
+    $last_time = is_numeric($GLOBALS['last_time'] ?? null) ? (float) $GLOBALS['last_time'] : 0.0;
 
     $new_time = get_moment();
     echo '<pre>['.get_elapsed_time($last_time, $new_time).']';

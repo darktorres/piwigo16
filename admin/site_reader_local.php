@@ -28,10 +28,11 @@ class LocalSiteReader
      */
     public function open(): bool
     {
-        global $errors;
-
         if (!is_dir($this->site_url)) {
-            $errors[] = [
+            if (!isset($GLOBALS['errors']) || !is_array($GLOBALS['errors'])) {
+                $GLOBALS['errors'] = [];
+            }
+            $GLOBALS['errors'][] = [
               'path' => $this->site_url,
               'type' => 'PWG-ERROR-NO-FS',
               ];

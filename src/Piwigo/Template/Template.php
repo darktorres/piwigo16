@@ -55,7 +55,7 @@ class Template
      */
     public function __construct($root = '.', $theme = '', string $path = 'template')
     {
-        global $lang_info;
+        $lang_info = is_array($GLOBALS['lang_info'] ?? null) ? $GLOBALS['lang_info'] : [];
 
         // \Smarty\Exception::$escape = false;
 
@@ -461,8 +461,8 @@ class Template
         $save_compile_id = $this->smarty->compile_id;
         $this->load_external_filters($handle);
 
-        global $lang_info;
-        if (\Piwigo\Config\Config::compiledTemplateCacheLanguage() and isset($lang_info['code'])) {
+        $lang_info = is_array($GLOBALS['lang_info'] ?? null) ? $GLOBALS['lang_info'] : [];
+        if (\Piwigo\Config\Config::compiledTemplateCacheLanguage() and isset($lang_info['code']) && is_scalar($lang_info['code'])) {
             $this->smarty->compile_id .= '_'.$lang_info['code'];
         }
 
@@ -560,7 +560,7 @@ class Template
         $this->flush();
 
         if ($this->smarty->debugging) {
-            global $t2;
+            $t2 = is_numeric($GLOBALS['t2'] ?? null) ? (float) $GLOBALS['t2'] : 0.0;
             $this->smarty->assign(
                 [
         'AAAA_DEBUG_TOTAL_TIME__' => get_elapsed_time($t2, get_moment()),
@@ -632,13 +632,13 @@ class Template
     /** @param array<mixed> $params */
     public static function modcompiler_translate_dec(array $params): string
     {
-        global $lang_info;
+        $lang_info = is_array($GLOBALS['lang_info'] ?? null) ? $GLOBALS['lang_info'] : [];
         $p0 = is_string($params[0] ?? null) ? (string) $params[0] : '';
         $p1 = is_string($params[1] ?? null) ? (string) $params[1] : '';
         $p2 = is_string($params[2] ?? null) ? (string) $params[2] : '';
         if (\Piwigo\Config\Config::compiledTemplateCacheLanguage()) {
             $ret = 'sprintf(';
-            if ($lang_info['zero_plural']) {
+            if (!empty($lang_info['zero_plural'])) {
                 $ret .= '($tmp=('.$p0.'))>1||$tmp==0';
             } else {
                 $ret .= '($tmp=('.$p0.'))>1';
@@ -1198,7 +1198,10 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
     /** @return array<mixed> */
     public function load_themeconf(string $dir): array
     {
-        global $themeconfs;
+        $themeconfs = &$GLOBALS['themeconfs'];
+        if (!is_array($themeconfs)) {
+            $themeconfs = [];
+        }
 
         $dir = realpath($dir);
         if (!isset($themeconfs[$dir])) {
@@ -1207,7 +1210,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
             // Put themeconf in cache
             $themeconfs[$dir] = $themeconf;
         }
-        return $themeconfs[$dir];
+        return is_array($themeconfs[$dir]) ? $themeconfs[$dir] : [];
     }
 
     /**

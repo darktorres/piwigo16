@@ -22,7 +22,7 @@ initialize_menu();
  */
 function initialize_menu(): void
 {
-    global $filter;
+    $filter = is_array($GLOBALS['filter'] ?? null) ? $GLOBALS['filter'] : [];
     $template = \Piwigo\Template\TemplateRegistry::current();
     $page = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
     $user = \Piwigo\Users\CurrentUser::get()->rawAttributes;

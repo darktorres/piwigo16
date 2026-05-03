@@ -161,12 +161,11 @@ order by';
 function begin_users_env_nbm(bool $is_to_send_mail = false): void
 {
     global $lang_info, $env_nbm;
-    global $user;
     global $lang;
     // Save $user, $lang_info and $lang arrays (include/user.inc.php has been executed)
-    $env_nbm['save_user'] = $user;
+    $env_nbm['save_user'] = is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : [];
     // Save current language to stack, necessary because $user change during NBM
-    switch_lang_to($user['language']);
+    switch_lang_to(\Piwigo\Users\CurrentUser::get()->language);
 
     $env_nbm['is_to_send_mail'] = $is_to_send_mail;
 
@@ -194,10 +193,9 @@ function begin_users_env_nbm(bool $is_to_send_mail = false): void
 function end_users_env_nbm(): void
 {
     global $lang_info, $env_nbm;
-    global $user;
     global $lang;
     // Restore $user, $lang_info and $lang arrays (include/user.inc.php has been executed)
-    $user = $env_nbm['save_user'];
+    \Piwigo\Users\CurrentUser::setRawAttributes(is_array($env_nbm['save_user'] ?? null) ? $env_nbm['save_user'] : []);
     // Restore current language to stack, necessary because $user change during NBM
     switch_lang_back();
 
@@ -226,11 +224,11 @@ function end_users_env_nbm(): void
 function set_user_on_env_nbm(array &$nbm_user, bool $is_action_send): void
 {
     global $lang_info, $env_nbm;
-    global $user;
     global $lang;
-    $user = build_user(is_numeric($nbm_user['user_id']) ? (int)$nbm_user['user_id'] : 0, true);
+    $newUser = build_user(is_numeric($nbm_user['user_id']) ? (int)$nbm_user['user_id'] : 0, true);
+    \Piwigo\Users\CurrentUser::setRawAttributes($newUser);
 
-    switch_lang_to(is_string($user['language'] ?? null) ? $user['language'] : '');
+    switch_lang_to(is_string($newUser['language'] ?? null) ? $newUser['language'] : '');
 
     if ($is_action_send) {
         $env_nbm['mail_template'] = get_mail_template($env_nbm['email_format']);

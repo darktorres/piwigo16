@@ -178,7 +178,6 @@ SELECT '.implode(',', $fields).'
  */
 function save_profile_from_post(array $userdata, array &$errors): bool
 {
-    global $page;
     $errors = [];
 
     if (!isset($_POST['validate'])) {
@@ -375,7 +374,7 @@ function save_profile_from_post(array $userdata, array &$errors): bool
 function load_profile_in_template(string $url_action, string $url_redirect, array $userdata, ?string $template_prefixe = null): void
 {
     $template = \Piwigo\Template\TemplateRegistry::current();
-    global $user;
+    $user = is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : [];
     $template->assign(
         'radio_options',
         [

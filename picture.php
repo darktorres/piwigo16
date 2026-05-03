@@ -63,9 +63,10 @@ SELECT id, file, level
     $page['image_id'] = $row['id'];
     $page['image_file'] =  $row['file'];
     if (!isset($page['rank_of'][$page['image_id']])) {// the image can still be non accessible (filter/cat perm) and/or not in the set
-        global $filter;
-        if (!empty($filter['visible_images']) and
-          !in_array($page['image_id'], explode(',', (string) $filter['visible_images']))) {
+        $filter = is_array($GLOBALS['filter'] ?? null) ? $GLOBALS['filter'] : [];
+        $visibleImages = is_scalar($filter['visible_images'] ?? null) ? (string) $filter['visible_images'] : '';
+        if ($visibleImages !== '' and
+          !in_array($page['image_id'], explode(',', $visibleImages))) {
             page_not_found(
                 'The requested image is filtered',
                 duplicate_index_url()
@@ -170,7 +171,6 @@ function default_picture_content(string $content, array $element_info): string
         }
     }
 
-    global $page;
     $template = \Piwigo\Template\TemplateRegistry::current();
     if ($show_original) {
         $template->assign('U_ORIGINAL', $element_info['element_url']);

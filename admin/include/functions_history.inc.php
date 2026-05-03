@@ -22,7 +22,6 @@ use Piwigo\Admin\Tabsheet;
  */
 function history_tabsheet(): void
 {
-    global $link_start;
     $page = $GLOBALS['page'] ?? [];
     if (!is_array($page)) {
         $page = [];

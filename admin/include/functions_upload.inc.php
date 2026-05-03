@@ -144,7 +144,7 @@ function add_uploaded_file(string $source_filepath, ?string $original_filename =
     // 3) register in database
 
     $logger = \Piwigo\Core\LoggerRegistry::current();
-    global $user;
+    $userId = \Piwigo\Users\CurrentUser::get()->id;
     if (!is_null($original_filename)) {
         $original_filename = htmlspecialchars($original_filename);
     }
@@ -321,7 +321,7 @@ SELECT
           'width' => $file_infos['width'],
           'height' => $file_infos['height'],
           'md5sum' => $md5sum,
-          'added_by' => $user['id'],
+          'added_by' => $userId,
           'rotation' => $rotation,
           ];
 
@@ -346,7 +346,7 @@ SELECT
           'width' => $file_infos['width'],
           'height' => $file_infos['height'],
           'md5sum' => $md5sum,
-          'added_by' => $user['id'],
+          'added_by' => $userId,
           'rotation' => $rotation,
           ];
 

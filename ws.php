@@ -35,7 +35,7 @@ $service->run();
 /** @param array{0: PwgServer} $arr */
 function ws_addDefaultMethods(array $arr): void
 {
-    global $user;
+    $user = is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : [];
     $service = $arr[0];
 
     include_once(PHPWG_ROOT_PATH.'include/ws_functions.inc.php');

@@ -27,7 +27,10 @@ function get_search_id_pattern(int|string $candidate): ?string
 /** @return array<string,mixed>|null */
 function get_search_info(int|string $candidate): ?array
 {
-    global $page;
+    $page = &$GLOBALS['page'];
+    if (!is_array($page)) {
+        $page = [];
+    }
     // $candidate might be a search.id or a search_uuid
     $clause_pattern = get_search_id_pattern($candidate);
 
@@ -790,7 +793,10 @@ function get_clause_for_filter($filter_name): string
 function get_items_for_filter(string $filter_name)
 {
     $logger = \Piwigo\Core\LoggerRegistry::current();
-    global $page;
+    $page = &$GLOBALS['page'];
+    if (!is_array($page)) {
+        $page = [];
+    }
     $detailsRaw = $page['search_details'] ?? [];
     $details = is_array($detailsRaw) ? $detailsRaw : [];
     $imageIdsForFilter = is_array($details['image_ids_for_filter'] ?? null) ? $details['image_ids_for_filter'] : [];
@@ -1450,7 +1456,10 @@ class QResults
  */
 function qsearch_get_text_token_search_sql(\Piwigo\Search\QSingleToken $token, array $fields): array
 {
-    global $page;
+    $page = &$GLOBALS['page'];
+    if (!is_array($page)) {
+        $page = [];
+    }
     $clauses = [];
     $variants = array_merge([$token->term], $token->variants);
     $fts = [];

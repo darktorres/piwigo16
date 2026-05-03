@@ -447,7 +447,7 @@ function do_log($image_id = null, $image_type = null)
  */
 function pwg_log(int|string|null $image_id = null, ?string $image_type = null, ?string $format_id = null): bool
 {
-    global $user;
+    $user = is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : [];
     $page = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
 
     if ($image_id !== null) {
@@ -978,15 +978,18 @@ function transform_date($original, $format_in, $format_out, $default = null): ?s
  */
 function pwg_debug(string $string): void
 {
-    global $debug, $t2;
+    $t2 = is_numeric($GLOBALS['t2'] ?? null) ? (float) $GLOBALS['t2'] : 0.0;
     $now = explode(' ', microtime());
     $now2 = explode('.', $now[0]);
-    $now2 = $now[1].'.'.$now2[1];
-    $time = number_format($now2 - $t2, 3, '.', ' ').' s';
-    $debug .= '<p>';
-    $debug .= '['.$time.', ';
-    $debug .= \Piwigo\Core\PageState::current()->countQueries.' queries] : '.$string;
-    $debug .= "</p>\n";
+    $now2Float = (float) ($now[1].'.'.$now2[1]);
+    $time = number_format($now2Float - $t2, 3, '.', ' ').' s';
+    if (!isset($GLOBALS['debug']) || !is_string($GLOBALS['debug'])) {
+        $GLOBALS['debug'] = '';
+    }
+    $GLOBALS['debug'] .= '<p>';
+    $GLOBALS['debug'] .= '['.$time.', ';
+    $GLOBALS['debug'] .= \Piwigo\Core\PageState::current()->countQueries.' queries] : '.$string;
+    $GLOBALS['debug'] .= "</p>\n";
 }
 
 /**

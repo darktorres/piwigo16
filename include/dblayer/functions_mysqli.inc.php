@@ -111,7 +111,6 @@ function pwg_get_db_version()
  */
 function pwg_query(string $query)
 {
-    global $debug, $t2;
     $mysqli = \Piwigo\Core\MysqliRegistry::current();
     $start = microtime(true);
     ($result = $mysqli->query($query)) or my_error($query, \Piwigo\Config\Config::dieOnSqlError());
@@ -123,6 +122,7 @@ function pwg_query(string $query)
     $pageState->queriesTime += $time;
 
     if (\Piwigo\Config\Config::showQueries()) {
+        $t2 = is_numeric($GLOBALS['t2'] ?? null) ? (float) $GLOBALS['t2'] : 0.0;
         $output = '';
         $output .= '<pre>['.$pageState->countQueries.'] ';
         $output .= "\n".$query;
@@ -142,7 +142,10 @@ function pwg_query(string $query)
         }
         $output .= "</pre>\n";
 
-        $debug .= $output;
+        if (!isset($GLOBALS['debug']) || !is_string($GLOBALS['debug'])) {
+            $GLOBALS['debug'] = '';
+        }
+        $GLOBALS['debug'] .= $output;
     }
 
     return $result;
@@ -565,7 +568,7 @@ function protect_column_name(string $column_name): string
  */
 function do_maintenance_all_tables(): void
 {
-    global $prefixeTable;
+    $prefixeTable = is_string($GLOBALS['prefixeTable'] ?? null) ? $GLOBALS['prefixeTable'] : 'piwigo_';
     $all_tables = [];
 
     // List all tables

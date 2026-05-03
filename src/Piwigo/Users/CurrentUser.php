@@ -58,6 +58,19 @@ final class CurrentUser
         }
     }
 
+    /**
+     * Replaces both the typed User entity and $GLOBALS['user'] with a fresh
+     * raw-attribute array. Used by NBM begin/end/set helpers that swap the
+     * current user wholesale to send mail as different recipients.
+     *
+     * @param array<string,mixed> $attrs
+     */
+    public static function setRawAttributes(array $attrs): void
+    {
+        self::$instance = User::fromUserArray($attrs);
+        $GLOBALS['user'] = $attrs;
+    }
+
     // ---- Test helpers ----------------------------------------------------
 
     public static function reset(): void

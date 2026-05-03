@@ -1388,7 +1388,6 @@ SELECT status
  */
 function create_virtual_category(string $category_name, int|string|null $parent_id = null, array $options = []): array
 {
-    global $user;
     // is the given category name only containing blank spaces ?
     if (preg_match('/^\s*$/', $category_name)) {
         return ['error' => l10n('The name of an album must not be empty')];
@@ -1516,7 +1515,7 @@ SELECT id, uppercats, global_rank, visible, status
         $granted_users = array_map('intval', query2array($query, null, 'user_id'));
         add_permission_on_category($inserted_id, $granted_users);
     } elseif ('private' == $insert['status']) {
-        $userId = is_numeric($user['id'] ?? null) ? (int) $user['id'] : 0;
+        $userId = \Piwigo\Users\CurrentUser::get()->id;
         add_permission_on_category($inserted_id, array_unique(array_merge(get_admins(), [$userId])));
     }
 
@@ -1638,7 +1637,10 @@ DELETE
  */
 function tag_id_from_tag_name(string $tag_name): int|string
 {
-    global $page;
+    $page = &$GLOBALS['page'];
+    if (!is_array($page)) {
+        $page = [];
+    }
     $tag_name = trim($tag_name);
     $cache = is_array($page['tag_id_from_tag_name_cache'] ?? null) ? $page['tag_id_from_tag_name_cache'] : [];
     if (isset($cache[$tag_name])) {
@@ -2192,8 +2194,9 @@ UPDATE '.USER_CACHE_TABLE.'
  */
 function invalidate_user_cache_nb_tags(): void
 {
-    global $user;
-    unset($user['nb_available_tags']);
+    if (isset($GLOBALS['user']) && is_array($GLOBALS['user'])) {
+        unset($GLOBALS['user']['nb_available_tags']);
+    }
 
     $query = '
 UPDATE '.USER_CACHE_TABLE.'
@@ -2323,7 +2326,7 @@ SELECT id
  */
 function cat_admin_access($category_id): bool
 {
-    global $user;
+    $user = is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : [];
     // $filter['visible_categories'] and $filter['visible_images']
     // are not used because it's not necessary (filter <> restriction)
     $forbidden = is_scalar($user['forbidden_categories'] ?? null) ? (string) $user['forbidden_categories'] : '';
@@ -3358,7 +3361,10 @@ function get_cache_size_derivatives(string $path): array
  */
 function fs_quick_check(): void
 {
-    global $page;
+    $page = &$GLOBALS['page'];
+    if (!is_array($page)) {
+        $page = [];
+    }
     if (\Piwigo\Config\Config::fsQuickCheckPeriod() == 0) {
         return;
     }
@@ -3452,11 +3458,12 @@ SELECT
 /** @return array<mixed> */
 function get_piwigo_news(): array
 {
-    global $lang_info;
+    $lang_info = is_array($GLOBALS['lang_info'] ?? null) ? $GLOBALS['lang_info'] : [];
+    $langCode = is_scalar($lang_info['code'] ?? null) ? (string) $lang_info['code'] : '';
 
     $news = null;
 
-    $cache_path = PHPWG_ROOT_PATH.\Piwigo\Config\Config::dataLocation().'cache/piwigo_latest_news-'.$lang_info['code'].'.cache.php';
+    $cache_path = PHPWG_ROOT_PATH.\Piwigo\Config\Config::dataLocation().'cache/piwigo_latest_news-'.$langCode.'.cache.php';
     if (!is_file($cache_path) or filemtime($cache_path) < strtotime('24 hours ago')) {
         $url = PHPWG_URL.'/ws.php?method=porg.news.getLatest&format=json';
 

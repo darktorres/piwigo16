@@ -34,7 +34,10 @@ function get_complete_dir(string $category_id): string
 // get_local_dir(22) returns "pets/rex/1_year_old/"
 function get_local_dir(string $category_id): string
 {
-    global $page;
+    $page = &$GLOBALS['page'];
+    if (!is_array($page)) {
+        $page = [];
+    }
     $uppercats = '';
     $local_dir = '';
 

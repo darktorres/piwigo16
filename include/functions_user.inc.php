@@ -717,7 +717,10 @@ SELECT
 /** @return array<mixed,mixed>|null */
 function get_default_user_info(bool $convert_str = true): ?array
 {
-    global $cache;
+    $cache = &$GLOBALS['cache'];
+    if (!is_array($cache)) {
+        $cache = [];
+    }
 
     if (!isset($cache['default_user'])) {
         $query = '
@@ -1445,7 +1448,7 @@ function get_sql_condition_FandF(
     ?string $prefix_condition = null,
     bool $force_one_condition = false
 ): string {
-    global $filter;
+    $filter = is_array($GLOBALS['filter'] ?? null) ? $GLOBALS['filter'] : [];
 
     $user = CurrentUser::get()->rawAttributes;
 
@@ -1463,16 +1466,16 @@ function get_sql_condition_FandF(
                 }
             case 'visible_categories':
                 {
-                    if (!empty($filter['visible_categories'])) {
-                        $sql_list[] =
-                          $field_name.' IN ('.$filter['visible_categories'].')';
+                    $visibleCategories = is_scalar($filter['visible_categories'] ?? null) ? (string) $filter['visible_categories'] : '';
+                    if ($visibleCategories !== '') {
+                        $sql_list[] = $field_name.' IN ('.$visibleCategories.')';
                     }
                     break;
                 }
             case 'visible_images':
-                if (!empty($filter['visible_images'])) {
-                    $sql_list[] =
-                      $field_name.' IN ('.$filter['visible_images'].')';
+                $visibleImages = is_scalar($filter['visible_images'] ?? null) ? (string) $filter['visible_images'] : '';
+                if ($visibleImages !== '') {
+                    $sql_list[] = $field_name.' IN ('.$visibleImages.')';
                 }
                 // note there is no break - visible include forbidden
                 // no break
@@ -1538,8 +1541,14 @@ function get_recent_photos_sql(string $db_field): string
  */
 function auth_key_login(string $auth_key, bool $connection_by_header = false): bool
 {
-    global $user;
-    global $page;
+    $page = &$GLOBALS['page'];
+    if (!is_array($page)) {
+        $page = [];
+    }
+    $user = &$GLOBALS['user'];
+    if (!is_array($user)) {
+        $user = [];
+    }
     $valid_key = false;
     $secret_key = null;
     if (preg_match('/^[a-z0-9]{30}$/i', (string) $auth_key)) {
@@ -1619,6 +1628,7 @@ SELECT
     }
 
     $user['id'] = $key['user_id'];
+    CurrentUser::setRawAttributes($user);
 
     // update last used key
     single_update(
@@ -1865,7 +1875,10 @@ UPDATE '.USER_INFOS_TABLE.'
  */
 function userprefs_update_param($param, $value): void
 {
-    global $user;
+    $user = &$GLOBALS['user'];
+    if (!is_array($user)) {
+        $user = [];
+    }
     // If the field is true or false, the variable is transformed into a boolean value.
     if ('true' == $value) {
         $value = true;
@@ -1889,7 +1902,10 @@ function userprefs_update_param($param, $value): void
  */
 function userprefs_delete_param($params): void
 {
-    global $user;
+    $user = &$GLOBALS['user'];
+    if (!is_array($user)) {
+        $user = [];
+    }
     if (!is_array($params)) {
         $params = [$params];
     }

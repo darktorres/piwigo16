@@ -23,7 +23,10 @@ use PHPStan\Rules\RuleErrorBuilder;
  */
 final class NoGlobalInSrcRule implements Rule
 {
-    private const GUARDED = ['conf', 'page', 'user', 'lang', 'template', 'logger', 'mysqli', 'persistent_cache', 'service'];
+    private const GUARDED = [
+        'conf', 'page', 'user', 'lang', 'template', 'logger', 'mysqli', 'persistent_cache', 'service',
+        'pwg_event_handlers', 'pwg_loaded_plugins', 'env_nbm', 'header_notes', 'themeconfs', 'cache', 'filter',
+    ];
 
     private const REPLACEMENTS = [
         'conf' => 'Config typed accessor / Config::raw()',
@@ -35,6 +38,13 @@ final class NoGlobalInSrcRule implements Rule
         'mysqli' => 'MysqliRegistry::current()',
         'persistent_cache' => 'PersistentCacheRegistry::current()',
         'service' => 'PwgServerRegistry::current()',
+        'pwg_event_handlers' => '$GLOBALS[\'pwg_event_handlers\'] reference-bridge',
+        'pwg_loaded_plugins' => '$GLOBALS[\'pwg_loaded_plugins\'] reference-bridge',
+        'env_nbm' => '$GLOBALS[\'env_nbm\'] reference-bridge',
+        'header_notes' => '$GLOBALS[\'header_notes\'] reference-bridge',
+        'themeconfs' => 'instance property or $GLOBALS[\'themeconfs\'] reference-bridge',
+        'cache' => '$GLOBALS[\'cache\'] reference-bridge',
+        'filter' => '$GLOBALS[\'filter\'] read with is_array narrowing',
     ];
 
     public function getNodeType(): string

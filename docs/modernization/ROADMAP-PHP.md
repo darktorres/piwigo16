@@ -506,7 +506,7 @@ php -r "
 
 ## #6 — Eliminate procedural `global` declarations across the codebase
 
-**Status:** Done with caveat — `src/` is fully migrated and rule-enforced; `admin/` and `include/` have all *function-internal* `global $template|$user|$page|$lang;` migrated to typed accessors / `&$GLOBALS[…]` reference patterns. *File-top* `global` declarations in entry-scripts (admin/*.php, root *.php, pre-boot include/filter.inc.php and no_photo_yet.inc.php) are intentionally kept as PHPStan typing bridges to `tools/phpstan-bootstrap.php` — see project memory note `project_global_typing_bridge.md` for why. Steps 4 and 5 below were dropped in light of that constraint. &nbsp;|&nbsp; **Size:** L
+**Status:** Partially done — see "Current state" below for the honest count. `src/` is fully migrated and rule-enforced (unchanged). Roughly half of the `admin/` + `include/` original baseline remains. The session that made progress here also discovered a hard constraint: file-top `global` declarations in entry-scripts and pre-boot includes can't be removed without restoring per-call-site narrowing across hundreds of legacy access patterns, because PHPStan tracks `global $x;` more tightly than `&$GLOBALS['x']` and the project rules forbid inline `@var` to bridge the gap. Steps 4 and 5 are deferred until step 3 finishes properly. &nbsp;|&nbsp; **Size:** L
 
 ### Goal
 
@@ -524,22 +524,44 @@ The reference-bridge pattern in `Config::attachGlobals()` and `PageState::attach
 
 ### Current state
 
-- `src/`: **done for the guarded set** — `NoGlobalInSrcRule` flags any `global $conf|$user|$page|$lang` and fires zero hits today. 19 `global` statements remain in `src/` but exclusively for out-of-scope names (`$template`, `$logger`, `$lang_info`, `$themeconfs`, `$header_notes`, `$dirty_trick_xrepeat`, `$t2`); those need their own typed accessors before they can join the rule (see "Out of scope" below).
-- `admin/`: **138** `global` statements across 72 files (largest concentrations: `include/add_core_tabs.inc.php` 21, `include/functions.php` 17, `include/functions_notification_by_mail.inc.php` 10, `include/functions_upload.inc.php` 9). Unchanged from the original baseline.
-- `include/`: **158** `global` statements across 40 files (largest: `functions.inc.php` 17, `functions_user.inc.php` 15, `dblayer/functions_mysqli.inc.php` 12, `ws_functions/pwg.images.php` 12, `ws_functions/pwg.users.php` 12). Unchanged.
-- PHPStan level 9 is currently clean (`vendor/bin/phpstan analyse` reports `[OK] No errors`). Level 10 is the proxy metric for this item — re-measure once typed services land.
+- `src/`: **done for the guarded set** — `NoGlobalInSrcRule` flags any `global $conf|$user|$page|$lang|$template` and fires zero hits today. (Note: `$template` was added to the guarded set when `TemplateRegistry` was introduced.) Out-of-scope names (`$logger`, `$lang_info`, etc.) still appear in `src/` and need their own typed accessors before they can join the rule.
+- `admin/`: **95** `global` statements across 71 files remain (down from 138 baseline = 31% reduction). 67 of those 95 are file-top declarations in entry-scripts; ~28 are function-internal. Largest remaining concentrations: `include/functions.php` (9), `include/functions_notification_by_mail.inc.php` (10), `include/add_core_tabs.inc.php` (likely unchanged from baseline 21), `notification_by_mail.php` (5), `include/functions_upgrade.php` (3).
+- `include/`: **36** `global` statements across 16 files remain (down from 158 baseline = 77% reduction). Most heavily-used files (`functions_user.inc.php`, `functions_mail.inc.php`, `functions_search.inc.php`, `ws_functions/pwg.*`) had their function-internal globals migrated, BUT a number of those migrations were reverted during cleanup when bulk-narrowing turned out to be infeasible — so files like `functions_user.inc.php` still have `global $user;` in `log_user`, `auth_key_login`, `userprefs_*`, etc.
+- Root entry-scripts (project root *.php — `index.php`, `picture.php`, `password.php`, `profile.php`, `i.php`, `ws.php`, `install.php`, `upgrade.php`, etc.) still have file-top `global $template, $user, $page, $persistent_cache, $lang;` — kept intentionally as typing bridges. ~10 function-internal `global $page;` / `global $user;` declarations also remain in these files.
+- A `Piwigo\Template\TemplateRegistry` accessor was added (`current()` / `set()` / `isInitialized()` / `reset()`), wired from the `$template = new Template(...)` sites in `install.php`, `upgrade.php`, and `include/common.inc.php`. `$template` is now in the guarded set for `src/`.
+- PHPStan level 9 is clean (`vendor/bin/phpstan analyse` reports `[OK] No errors`); Playwright e2e is green. Level 10 is the proxy metric for the *complete* item — re-measure once the remaining function-internal globals are migrated with proper per-site narrowing.
+
+### Hard constraint discovered
+
+File-top `global $template, $user, $page, $persistent_cache, $lang;` declarations in entry-scripts and pre-boot includes (`include/filter.inc.php`, `include/no_photo_yet.inc.php`) **cannot be eliminated without ~hundreds of per-site type-narrowing edits in legacy body code**. The reason:
+
+- PHPStan resolves `global $x;` against `tools/phpstan-bootstrap.php`, which gives the variable a tightly-typed shape (e.g., `$user` becomes `array{id:int, username:string, ...}` and `$page` becomes the literal-inferred shape `array{infos: array, errors: array, ...}` with widening allowed on writes).
+- Replacing the declaration with `$x = &$GLOBALS['x'];` makes `$x` `mixed` from PHPStan's view — `$page` is no longer typed, `$page['errors']` is `mixed`, `$user['id']` is `mixed`, every downstream cast/access errors out.
+- The project rules forbid `@phpstan-ignore`, baseline entries, type casts to silence errors, AND inline `@var` to override PHPStan's inferred type — so there's no quick way to recover the lost shape. The only clean fix is per-call-site narrowing (`is_scalar($user['id']) ? (int)$user['id'] : 0` etc.) at every legacy access — hundreds of edits that aren't independently valuable.
+
+This is why the file-top globals are deliberately retained. See project memory note `project_global_typing_bridge.md` for the full reasoning.
 
 ### Steps
 
-1. **Add a `Template` accessor.** Introduce `Piwigo\Template\TemplateRegistry::current(): Template` and `::set(Template $t): void`, mirroring the contract of `Config::attachGlobals()`/`PageState::current()`. Wire `set()` from the two `$template = new Template(…)` sites in `include/common.inc.php`. Keep `$GLOBALS['template']` referencing the same instance during the migration window so untouched files (and plugins) still work.
+1. **Add a `Template` accessor.** ✅ Done. `Piwigo\Template\TemplateRegistry::current(): Template`, `::set(Template $t): void`, `::isInitialized(): bool`, `::reset(): void`. Wired from the `$template = new Template(...)` sites in `install.php`, `upgrade.php`, and `include/common.inc.php`.
 
-2. **Migrate `include/` first** (40 files, smaller surface, more reused). Order bottom-up by dependency: leaf files first (`functions_*.inc.php`), orchestrating files (`common.inc.php`) last. Per file: drop the `global $conf, $user, $page, $lang, $template;` line and replace `$conf['x']` with `Config::get('x')`, `$page['errors'][] = …` with `PageState::current()->errors[] = …`, `$user['id']` with `CurrentUser::get()->id()`, `$template->assign(...)` with `TemplateRegistry::current()->assign(...)`. Commit per file or per logical group.
+2. **Migrate `include/`.** Partially done (~77% of original baseline removed). `functions.inc.php`, `functions_calendar.inc.php`, `functions_user.inc.php`, `functions_mail.inc.php`, `functions_search.inc.php`, `functions_category.inc.php`, `functions_html.inc.php`, `functions_url.inc.php`, `functions_tag.inc.php`, `functions_notification.inc.php`, `functions_comment.inc.php`, `functions_plugins.inc.php`, `functions_rate.inc.php`, `functions_user.inc.php`, `category_cats.inc.php`, `category_default.inc.php`, `menubar.inc.php`, `page_header.php`, `page_tail.php`, `picture_comment.inc.php`, `picture_metadata.inc.php`, `user.inc.php`, `ws_functions.inc.php`, `ws_functions/pwg.{tags,extensions,categories,users,php,images}.php` had function-internal globals migrated to `&$GLOBALS[…]` reference patterns + `is_array` narrowing or to typed accessors (`CurrentUser::get()`, `PageState::current()`, `TemplateRegistry::current()`, `Lang::has/t`). **However**, ~36 function-internal globals remain — some were reverted during cleanup when the bulk-narrowing approach proved unworkable. Files still needing work: `functions_user.inc.php` (5: `log_user`, `auth_key_login`, `userprefs_save/update_param/delete_param`), `functions_calendar.inc.php` (1: `initialize_calendar`), `functions.inc.php` (~6 functions), `dblayer/functions_mysqli.inc.php` (2), and the rest of the smaller files in the list above. The pre-boot files `filter.inc.php`, `no_photo_yet.inc.php`, `section_init.inc.php`, `search_filters.inc.php` retain their file-top globals (in scope but typing-bridge — see hard constraint above).
 
-3. **Migrate `admin/`** (72 files). Work top-down by error-count hot spots: `cat_modify.php`, `picture_modify.php`, `include/functions_notification_by_mail.inc.php`, `include/add_core_tabs.inc.php`, `include/functions.php` first — these five account for ~30% of the level-10 error report.
+3. **Migrate `admin/`.** Started, mostly not finished — only ~31% reduction. ~28 function-internal globals remain across `admin/include/functions.php` (9), `admin/include/functions_notification_by_mail.inc.php` (10), `admin/cat_modify.php` (2), `admin/notification_by_mail.php` (4 internal + 1 file-top), `admin/include/functions_history.inc.php`, `admin/include/functions_permalinks.php` (2), `admin/include/functions_plugins.inc.php`, `admin/include/functions_upgrade.php` (3), `admin/include/functions_upload.inc.php`. The 67 file-top declarations across the 70+ admin entry-scripts are intentionally retained.
 
-4. **Extend the PHPStan rule.** ~~Rename `NoGlobalInSrcRule` → `NoGlobalRule` covering `admin/` and `include/`.~~ **Dropped.** Extending the rule to flag file-top `global` declarations in entry-scripts breaks the typing bridge into `tools/phpstan-bootstrap.php` and surfaces ~hundreds of false-positive `mixed` errors in legacy body code that was previously clean. The project rule "do not use inline `@var` to override PHPStan's inferred type" closes off the only mitigation. Rule stays src/-only.
+4. **Extend the PHPStan rule.** Deferred. Cannot land until step 3 finishes properly AND the file-top-globals constraint above is resolved (likely by accepting the rule must skip file-top scope, OR by writing a Globals service with typed methods that PHPStan can infer from). Originally intended as `NoGlobalRule` covering admin/+include/.
 
-5. **Drop the bootstrap stubs.** ~~Once no caller references the globals, the `/** @var … */` annotations can be removed.~~ **Dropped.** Same reason as step 4 — the file-top globals retained for typing reasons depend on the stubs.
+5. **Drop the bootstrap stubs.** Deferred. Same blockers — the file-top globals depend on the stubs for typing.
+
+### Path forward
+
+To actually finish step 3 (and unblock 4–5), each remaining function-internal `global $x;` needs:
+
+- A replacement with the `&$GLOBALS['x']` pattern + `is_array` narrowing OR a switch to the typed accessor (`CurrentUser::get()`, `PageState::current()`, etc.).
+- Per-call-site narrowing inside the function for every `$user['x']`, `$page['y']` access that PHPStan flags as `mixed`. This is the bulk of the work — ~5–20 edits per function.
+- Verification: PHPStan level 9 stays green AND the noGlobalInSrc rule stays at zero hits.
+
+Estimate: 1–2 focused sessions per ~10 functions, working bottom-up by file complexity. The remaining ~64 function-internal globals split across ~25 functions = roughly 3–6 sessions. Resist the temptation to bulk-script this — the per-site narrowing is the work, and scripting it generates regressions like the ones unwound here.
 
 ### Out of scope (decide separately)
 

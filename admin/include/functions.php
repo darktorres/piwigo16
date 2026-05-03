@@ -2654,7 +2654,10 @@ function get_old_newsletters_base_url($language = 'en_UK'): string
  */
 function get_active_menu($menu_page)
 {
-    global $page;
+    $page = &$GLOBALS['page'];
+    if (!is_array($page)) {
+        $page = [];
+    }
     if (isset($page['active_menu']) && is_int($page['active_menu'])) {
         return $page['active_menu'];
     }

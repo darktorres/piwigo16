@@ -23,11 +23,15 @@ use Piwigo\Admin\Tabsheet;
 function history_tabsheet(): void
 {
     global $link_start;
-    global $page;
+    $page = $GLOBALS['page'] ?? [];
+    if (!is_array($page)) {
+        $page = [];
+    }
+    $currentPage = is_scalar($page['page'] ?? null) ? (string) $page['page'] : '';
     // TabSheet
     $tabsheet = new Tabsheet();
     $tabsheet->set_id('history');
-    $tabsheet->select($page['page']);
+    $tabsheet->select($currentPage);
     $tabsheet->assign();
 }
 

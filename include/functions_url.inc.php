@@ -703,7 +703,10 @@ function get_element_url(array $element_info): string
  */
 function set_make_full_url(): void
 {
-    global $page;
+    $page = &$GLOBALS['page'];
+    if (!is_array($page)) {
+        $page = [];
+    }
     $save = isset($page['save_root_path']) && is_array($page['save_root_path'])
         ? $page['save_root_path']
         : null;
@@ -729,7 +732,10 @@ function set_make_full_url(): void
  */
 function unset_make_full_url(): void
 {
-    global $page;
+    $page = &$GLOBALS['page'];
+    if (!is_array($page)) {
+        $page = [];
+    }
     $save = isset($page['save_root_path']) && is_array($page['save_root_path'])
         ? $page['save_root_path']
         : null;

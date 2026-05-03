@@ -19,94 +19,13 @@ define('PHPWG_PLUGINS_PATH', PHPWG_ROOT_PATH.'plugins/');
 define('EVENT_HANDLER_PRIORITY_NEUTRAL', 50);
 
 
-/**
- * Used to declare maintenance methods of a plugin.
- */
-class PluginMaintain
-{
-    /**
-     * @param string $plugin_id
-     */
-    public function __construct(protected $plugin_id)
-    {
-    }
-
-    /**
-     * @param string $plugin_version
-     * @param array &$errors - used to return error messages
-     */
-    /** @param array<mixed> $errors */
-    public function install(string $plugin_version, array &$errors = []): void
-    {
-    }
-
-    /**
-     * @param string $plugin_version
-     * @param array &$errors - used to return error messages
-     */
-    /** @param array<mixed> $errors */
-    public function activate(string $plugin_version, array &$errors = []): void
-    {
-    }
-
-    public function deactivate(): void
-    {
-    }
-
-    public function uninstall(): void
-    {
-    }
-
-    /**
-     * @param string $old_version
-     * @param string $new_version
-     * @param array &$errors - used to return error messages
-     */
-    /** @param array<mixed> $errors */
-    public function update(string $old_version, string $new_version, array &$errors = []): void
-    {
-    }
-
-    /**
-     * @removed 2.7
-     */
-    public function autoUpdate(): void
-    {
-        if (is_admin() && !defined('IN_WS')) {
-            trigger_error('Function PluginMaintain::autoUpdate deprecated', E_USER_WARNING);
-        }
-    }
-}
-
-/**
- * Used to declare maintenance methods of a theme.
- */
-class ThemeMaintain
-{
-    /**
-     * @param string $theme_id
-     */
-    public function __construct(protected $theme_id)
-    {
-    }
-
-    /**
-     * @param string $theme_version
-     * @param array &$errors - used to return error messages
-     */
-    /** @param array<mixed> $errors */
-    public function activate(string $theme_version, array &$errors = []): void
-    {
-    }
-
-    public function deactivate(): void
-    {
-    }
-
-    public function delete(): void
-    {
-    }
-}
+// Vendor plugins/themes do `class foo_maintain extends PluginMaintain`
+// without a namespace prefix, so PluginMaintain must be reachable in the
+// global namespace. Aliases — not duplicate class definitions — keep the
+// signatures in lockstep with src/Piwigo/Admin/{Plugin,Theme}Maintain.php
+// so vendor LSP checks pass against the real (relaxed) parent.
+class_alias(\Piwigo\Admin\PluginMaintain::class, 'PluginMaintain');
+class_alias(\Piwigo\Admin\ThemeMaintain::class, 'ThemeMaintain');
 
 
 /**
@@ -399,7 +318,7 @@ function autoupdate_plugin(array &$plugin): void
             // name (=plugin_id) and a class name can't have a "-". So we have to replace with a "_"
             $classname = str_replace('-', '_', $classname);
 
-            if (class_exists($classname) && is_a($classname, PluginMaintain::class, true)) {
+            if (class_exists($classname) && is_a($classname, \Piwigo\Admin\PluginMaintain::class, true)) {
                 $plugin_maintain = new $classname($plugin_id);
                 $plugin_maintain->update($old_version, $fs_version, $page['errors']);
             }

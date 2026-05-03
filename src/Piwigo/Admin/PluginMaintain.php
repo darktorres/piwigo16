@@ -6,6 +6,11 @@ namespace Piwigo\Admin;
 
 /**
  * Used to declare maintenance methods of a plugin.
+ *
+ * Signatures are intentionally untyped because vendor plugins (e.g.
+ * piwigo-openstreetmap, piwigo-videojs) extend this class with
+ * pre-PHP-7 signatures (no parameter types, no return types). Adding
+ * declared types here breaks LSP and produces fatal-on-load.
  */
 class PluginMaintain
 {
@@ -16,41 +21,37 @@ class PluginMaintain
     {
     }
 
-    /**
-     * @param string $plugin_version
-     * @param array &$errors - used to return error messages
-     */
-    /** @param array<mixed> $errors */
-    public function install(string $plugin_version, array &$errors = []): mixed
+    /** @param string $plugin_version
+     *  @param array<mixed> $errors
+     *  @return mixed */
+    public function install($plugin_version, &$errors = [])
     {
         return null;
     }
 
-    /**
-     * @param string $plugin_version
-     * @param array &$errors - used to return error messages
-     */
-    /** @param array<mixed> $errors */
-    public function activate(string $plugin_version, array &$errors = []): mixed
+    /** @param string $plugin_version
+     *  @param array<mixed> $errors
+     *  @return mixed */
+    public function activate($plugin_version, &$errors = [])
     {
         return null;
     }
 
-    public function deactivate(): void
+    /** @return void */
+    public function deactivate()
     {
     }
 
-    public function uninstall(): void
+    /** @return void */
+    public function uninstall()
     {
     }
 
-    /**
-     * @param string $old_version
-     * @param string $new_version
-     * @param array &$errors - used to return error messages
-     */
-    /** @param array<mixed> $errors */
-    public function update(string $old_version, string $new_version, array &$errors = []): mixed
+    /** @param string $old_version
+     *  @param string $new_version
+     *  @param array<mixed> $errors
+     *  @return mixed */
+    public function update($old_version, $new_version, &$errors = [])
     {
         return null;
     }

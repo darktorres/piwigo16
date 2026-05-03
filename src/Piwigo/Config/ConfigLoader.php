@@ -101,12 +101,20 @@ final class ConfigLoader
             if (array_key_exists($key, $conf)) {
                 continue;
             }
+            // Skip null-defaulted keys (the nullable-string cluster — gallery_url,
+            // cache_sizes, filters_views, last_major_update, etc.). Their
+            // "default" is genuine absence: callers use Config::has() to detect
+            // whether the user has ever set them, and seeding null would flip
+            // has() permanently to true and break that detection.
             if (!empty($entry['custom'])) {
                 // The accessor's body encodes the rich default; calling it
                 // with $conf empty for this key returns that fallback.
-                $method     = $entry['method'];
-                $conf[$key] = Config::$method();
-            } else {
+                $method = $entry['method'];
+                $value  = Config::$method();
+                if ($value !== null) {
+                    $conf[$key] = $value;
+                }
+            } elseif ($entry['default'] !== null) {
                 $conf[$key] = $entry['default'];
             }
         }

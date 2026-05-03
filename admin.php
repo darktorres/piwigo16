@@ -350,7 +350,7 @@ $whats_new_imgs = array(
 
 //If last major update conf is less than a month old then display bell for whats new popin
 $display_bell = false;
-if (strtotime(\Piwigo\Config\Config::lastMajorUpdate()) > strtotime('1 month ago')) {
+if (strtotime(\Piwigo\Config\Config::lastMajorUpdate() ?? '') > strtotime('1 month ago')) {
     $display_bell = true;
 }
 

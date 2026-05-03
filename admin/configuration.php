@@ -116,7 +116,10 @@ $display_info_checkboxes = [
   ];
 
 if (!\Piwigo\Config\Config::has('filters_views')) {
-    \Piwigo\Config\Config::persist('filters_views', \Piwigo\Config\Config::defaultFiltersViews());
+    // Stored format is a serialized PHP array (Config::filtersViews() returns
+    // ?string and admin code calls safe_unserialize() on the result). Persist
+    // the serialized form so this-request reads and next-request reads agree.
+    \Piwigo\Config\Config::persist('filters_views', serialize(\Piwigo\Config\Config::defaultFiltersViews()));
 }
 
 $filters_views_raw = safe_unserialize(\Piwigo\Config\Config::filtersViews() ?? '');

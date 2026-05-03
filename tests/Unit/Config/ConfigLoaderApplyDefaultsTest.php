@@ -22,13 +22,31 @@ final class ConfigLoaderApplyDefaultsTest extends TestCase
         unset($GLOBALS['conf']);
     }
 
-    public function test_applyDefaults_populates_every_schema_key(): void
+    public function test_applyDefaults_seeds_only_non_null_values(): void
     {
         $conf = [];
         ConfigLoader::applyDefaults($conf);
 
-        foreach (array_keys(Config::SCHEMA) as $key) {
-            self::assertArrayHasKey($key, $conf, "applyDefaults() did not populate '$key'");
+        // Invariant: every value seeded into $conf is non-null. Null-defaulted
+        // keys (typically the nullable-string cluster: gallery_url,
+        // cache_sizes, last_major_update, etc.) are intentionally absent —
+        // their absence is the signal Config::has() consumers use to detect
+        // first-run state.
+        foreach ($conf as $key => $value) {
+            self::assertNotNull($value, "applyDefaults() seeded null for '$key'");
+        }
+
+        // Specific keys that MUST be populated (non-null defaults from SCHEMA
+        // or from a custom accessor that returns a non-null value).
+        $mustExist = ['admin_theme', 'gallery_title', 'session_length', 'picture_ext', 'api_key_duration'];
+        foreach ($mustExist as $key) {
+            self::assertArrayHasKey($key, $conf, "applyDefaults() must populate '$key'");
+        }
+
+        // Specific nullable keys that MUST be absent (else Config::has() breaks).
+        $mustBeAbsent = ['gallery_url', 'cache_sizes', 'filters_views', 'last_major_update', 'piwigo_db_version'];
+        foreach ($mustBeAbsent as $key) {
+            self::assertArrayNotHasKey($key, $conf, "applyDefaults() must NOT populate nullable key '$key'");
         }
     }
 

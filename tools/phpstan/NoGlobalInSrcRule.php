@@ -38,12 +38,12 @@ final class NoGlobalInSrcRule implements Rule
         'mysqli' => 'MysqliRegistry::current()',
         'persistent_cache' => 'PersistentCacheRegistry::current()',
         'service' => 'PwgServerRegistry::current()',
-        'pwg_event_handlers' => '$GLOBALS[\'pwg_event_handlers\'] reference-bridge',
-        'pwg_loaded_plugins' => '$GLOBALS[\'pwg_loaded_plugins\'] reference-bridge',
-        'env_nbm' => '$GLOBALS[\'env_nbm\'] reference-bridge',
+        'pwg_event_handlers' => 'EventDispatcher::addListener/dispatch/notify()',
+        'pwg_loaded_plugins' => 'LoadedPluginRegistry::register/get/all()',
+        'env_nbm' => 'MailNotificationContext::current()',
         'header_notes' => '$GLOBALS[\'header_notes\'] reference-bridge',
         'themeconfs' => 'instance property or $GLOBALS[\'themeconfs\'] reference-bridge',
-        'cache' => '$GLOBALS[\'cache\'] reference-bridge',
+        'cache' => 'RequestCache::remember/get/set/has()',
         'filter' => '$GLOBALS[\'filter\'] read with is_array narrowing',
     ];
 

@@ -150,6 +150,7 @@ if (!\Piwigo\Core\Kernel::isBooted()) :
     ImageStdParams::load_from_db();
 
     session_start();
+    \Piwigo\Plugins\EventDispatcher::init();
     load_plugins();
 
     if (!\Piwigo\Config\Config::has('piwigo_installed_version')) {

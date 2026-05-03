@@ -169,27 +169,21 @@ function parse_custom_params(array $tokens): \Piwigo\Image\DerivativeParams
     return new DerivativeParams(new SizingParams($size, $crop, $min_size));
 }
 
-function parse_request(): \Piwigo\Image\DerivativeParams
+function parse_request(\Piwigo\Image\ImageDerivativeContext $ctx): \Piwigo\Image\DerivativeParams
 {
-    global $page;
     if (\Piwigo\Config\Config::questionMarkInUrls() == false and
          isset($_SERVER['PATH_INFO']) and !empty($_SERVER['PATH_INFO'])) {
         $req = is_scalar($_SERVER['PATH_INFO']) ? (string) $_SERVER['PATH_INFO'] : '';
         $req = str_replace('//', '/', $req);
         $path_count = count(explode('/', $req));
-        $page['root_path'] = PHPWG_ROOT_PATH.str_repeat('../', $path_count - 1);
+        $ctx->rootPath = PHPWG_ROOT_PATH.str_repeat('../', $path_count - 1);
     } else {
         $req = is_scalar($_SERVER['QUERY_STRING'] ?? null) ? (string) $_SERVER['QUERY_STRING'] : '';
         if ($pos = strpos($req, '&')) {
             $req = substr($req, 0, $pos);
         }
         $req = rawurldecode($req);
-        /*foreach (array_keys($_GET) as $keynum => $key)
-        {
-          $req = $key;
-          break;
-        }*/
-        $page['root_path'] = PHPWG_ROOT_PATH;
+        $ctx->rootPath = PHPWG_ROOT_PATH;
     }
 
     $req = ltrim($req, '/');
@@ -198,12 +192,12 @@ function parse_request(): \Piwigo\Image\DerivativeParams
         preg_match(\Piwigo\Config\Config::syncCharsRegex(), $token) or ierror('Invalid chars in request', 400);
     }
 
-    $page['derivative_path'] = PHPWG_ROOT_PATH.PWG_DERIVATIVE_DIR.$req;
+    $ctx->derivativePath = PHPWG_ROOT_PATH.PWG_DERIVATIVE_DIR.$req;
 
     $pos = strrpos($req, '.');
     $pos !== false || ierror('Missing .', 400);
     $ext = substr($req, $pos);
-    $page['derivative_ext'] = $ext;
+    $ctx->derivativeExt = $ext;
     $req = substr($req, 0, $pos);
 
     $pos = strrpos($req, '-');
@@ -214,23 +208,23 @@ function parse_request(): \Piwigo\Image\DerivativeParams
     $deriv = explode('_', $deriv);
     foreach (ImageStdParams::get_defined_type_map() as $type => $params) {
         if (derivative_to_url($type) == $deriv[0]) {
-            $page['derivative_type'] = $type;
-            $page['derivative_params'] = $params;
+            $ctx->derivativeType = $type;
+            $ctx->derivativeParams = $params;
             break;
         }
     }
 
-    if (!isset($page['derivative_type'])) {
+    if ($ctx->derivativeType === null) {
         if (derivative_to_url(IMG_CUSTOM) == $deriv[0]) {
-            $page['derivative_type'] = IMG_CUSTOM;
+            $ctx->derivativeType = IMG_CUSTOM;
         } else {
             ierror('Unknown parsing type', 400);
         }
     }
     array_shift($deriv);
 
-    if ($page['derivative_type'] == IMG_CUSTOM) {
-        $params = $page['derivative_params'] = parse_custom_params($deriv);
+    if ($ctx->derivativeType == IMG_CUSTOM) {
+        $params = $ctx->derivativeParams = parse_custom_params($deriv);
         ImageStdParams::apply_global($params);
 
         if ($params->sizing->ideal_size[0] < 20 or $params->sizing->ideal_size[1] < 20) {
@@ -239,8 +233,6 @@ function parse_request(): \Piwigo\Image\DerivativeParams
         if ($params->sizing->max_crop < 0 or $params->sizing->max_crop > 1) {
             ierror('Invalid crop', 400);
         }
-        $greatest = ImageStdParams::get_by_type(IMG_4XLARGE);
-
         $key = array();
         $params->add_url_tokens($key);
         $key = implode('_', $key);
@@ -255,29 +247,26 @@ function parse_request(): \Piwigo\Image\DerivativeParams
         $req = '../'.$req;
     }
 
-    $page['src_location'] = $req.$ext;
-    $page['src_path'] = PHPWG_ROOT_PATH.$page['src_location'];
-    $page['src_url'] = $page['root_path'].$page['src_location'];
+    $ctx->srcLocation = $req.$ext;
+    $ctx->srcPath = PHPWG_ROOT_PATH.$ctx->srcLocation;
+    $ctx->srcUrl = $ctx->rootPath.$ctx->srcLocation;
 
-    $dp = $page['derivative_params'];
+    $dp = $ctx->derivativeParams;
     if (!($dp instanceof \Piwigo\Image\DerivativeParams)) {
         ierror('Invalid derivative params', 400);
     }
     return $dp;
 }
 
-function try_switch_source(\Piwigo\Image\DerivativeParams $params, ?int $original_mtime): bool
+function try_switch_source(\Piwigo\Image\DerivativeParams $params, ?int $original_mtime, \Piwigo\Image\ImageDerivativeContext $ctx): bool
 {
-    global $page;
-    if (!isset($page['original_size'])) {
+    if ($ctx->originalSize === null) {
         return false;
     }
 
-    $original_size = $page['original_size'];
-    if ($page['rotation_angle'] == 90 || $page['rotation_angle'] == 270) {
-        $tmp = $original_size[0];
-        $original_size[0] = $original_size[1];
-        $original_size[1] = $tmp;
+    $original_size = $ctx->originalSize;
+    if ($ctx->rotationAngle == 90 || $ctx->rotationAngle == 270) {
+        [$original_size[0], $original_size[1]] = [$original_size[1], $original_size[0]];
     }
     $dsize = $params->compute_final_size($original_size);
 
@@ -321,8 +310,7 @@ function try_switch_source(\Piwigo\Image\DerivativeParams $params, ?int $origina
     }
 
     foreach (array_reverse($candidates) as $candidate) {
-        $candidate_path = $page['derivative_path'];
-        $candidate_path = str_replace('-'.derivative_to_url($params->type), '-'.derivative_to_url($candidate->type), $candidate_path);
+        $candidate_path = str_replace('-'.derivative_to_url($params->type), '-'.derivative_to_url($candidate->type), $ctx->derivativePath);
         $candidate_mtime = @filemtime($candidate_path);
         if ($candidate_mtime === false
           || $candidate_mtime < $original_mtime
@@ -331,25 +319,24 @@ function try_switch_source(\Piwigo\Image\DerivativeParams $params, ?int $origina
         }
         $params->use_watermark = false;
         $params->sharpen = min(1, $params->sharpen);
-        $page['src_path'] = $candidate_path;
-        $page['src_url'] = $page['root_path'] . substr($candidate_path, strlen(PHPWG_ROOT_PATH));
-        $page['rotation_angle'] = 0;
+        $ctx->srcPath = $candidate_path;
+        $ctx->srcUrl = $ctx->rootPath . substr($candidate_path, strlen(PHPWG_ROOT_PATH));
+        $ctx->rotationAngle = 0;
         return true;
     }
     return false;
 }
 
-function send_derivative(int|false $expires): void
+function send_derivative(int|false $expires, \Piwigo\Image\ImageDerivativeContext $ctx): void
 {
-    global $page;
     if (isset($_GET['ajaxload']) and $_GET['ajaxload'] == 'true') {
         include_once(PHPWG_ROOT_PATH.'include/functions_cookie.inc.php');
         include_once(PHPWG_ROOT_PATH.'include/functions_url.inc.php');
 
-        echo json_encode(array( 'url' => embellish_url(get_absolute_root_url().$page['derivative_path']) ));
+        echo json_encode(array( 'url' => embellish_url(get_absolute_root_url().$ctx->derivativePath) ));
         return;
     }
-    $fp = fopen($page['derivative_path'], 'rb');
+    $fp = fopen($ctx->derivativePath, 'rb');
     if ($fp === false) {
         ierror('Cannot open derivative file', 500);
     }
@@ -362,7 +349,7 @@ function send_derivative(int|false $expires): void
     header('Connection: close');
 
     $ctype = 'application/octet-stream';
-    switch (strtolower($page['derivative_ext'])) {
+    switch (strtolower($ctx->derivativeExt)) {
         case '.jpe': case '.jpeg': case '.jpg': $ctype = 'image/jpeg';
             break;
         case '.png': $ctype = 'image/png';
@@ -391,21 +378,7 @@ function safe_unserialize(array|string $value): array
     return $value;
 }
 
-$page = [
-    'coi' => null,
-    'src_location' => '',
-    'src_path' => '',
-    'src_url' => '',
-    'derivative_path' => '',
-    'derivative_params' => null,
-    'derivative_type' => null,
-    'derivative_ext' => '',
-    'root_path' => '',
-    'original_size' => null,
-    'rotation_angle' => null,
-    'count_queries' => 0,
-    'queries_time' => 0,
-];
+$ctx = new \Piwigo\Image\ImageDerivativeContext();
 $begin = $step = microtime(true);
 $timing = array();
 foreach (explode(',', 'load,rotate,crop,scale,sharpen,watermark,save,send') as $k) {
@@ -443,16 +416,16 @@ while ($row = pwg_db_fetch_assoc($result)) {
 ImageStdParams::load_from_db();
 
 
-$dpRaw = parse_request();
+$dpRaw = parse_request($ctx);
 $params = trigger_change('derivative_params_get', $dpRaw);
 
-$src_mtime = @filemtime($page['src_path']);
+$src_mtime = @filemtime($ctx->srcPath);
 if ($src_mtime === false) {
     ierror('Source not found', 404);
 }
 
 $need_generate = false;
-$derivative_mtime = @filemtime($page['derivative_path']);
+$derivative_mtime = @filemtime($ctx->derivativePath);
 if ($derivative_mtime === false or
     $derivative_mtime < $src_mtime or
     $derivative_mtime < $params->last_mod_time) {
@@ -476,37 +449,37 @@ if (!$need_generate) {
         header('Expires: '.gmdate('D, d M Y H:i:s', time() + 10 * 24 * 3600).' GMT', true, 304);
         exit;
     }
-    send_derivative($expires);
+    send_derivative($expires, $ctx);
     exit;
 }
 
-$page['coi'] = null;
-if (strpos($page['src_location'], '/pwg_representative/') === false
-    && strpos($page['src_location'], 'themes/') === false
-    && strpos($page['src_location'], 'plugins/') === false) {
+$ctx->coi = null;
+if (strpos($ctx->srcLocation, '/pwg_representative/') === false
+    && strpos($ctx->srcLocation, 'themes/') === false
+    && strpos($ctx->srcLocation, 'plugins/') === false) {
     try {
         $query = '
 SELECT *
   FROM '.$prefixeTable.'images
-  WHERE path=\''.addslashes($page['src_location']).'\'
+  WHERE path=\''.addslashes($ctx->srcLocation).'\'
 ;';
 
         if (($row = pwg_db_fetch_assoc(pwg_query($query)))) {
             if (isset($row['width'])) {
-                $page['original_size'] = array($row['width'],$row['height']);
+                $ctx->originalSize = [is_numeric($row['width']) ? (int)$row['width'] : 0, is_numeric($row['height']) ? (int)$row['height'] : 0];
             }
-            $page['coi'] = $row['coi'];
+            $ctx->coi = is_string($row['coi'] ?? null) ? $row['coi'] : null;
 
             if (!isset($row['rotation'])) {
-                $page['rotation_angle'] = PwgImage::get_rotation_angle($page['src_path']);
+                $ctx->rotationAngle = PwgImage::get_rotation_angle($ctx->srcPath);
 
                 single_update(
                     $prefixeTable.'images',
-                    array('rotation' => PwgImage::get_rotation_code_from_angle($page['rotation_angle'] ?? 0)),
+                    array('rotation' => PwgImage::get_rotation_code_from_angle($ctx->rotationAngle ?? 0)),
                     array('id' => $row['id'])
                 );
             } else {
-                $page['rotation_angle'] = PwgImage::get_rotation_angle_from_code((int) $row['rotation']);
+                $ctx->rotationAngle = PwgImage::get_rotation_angle_from_code((int) $row['rotation']);
             }
         }
         if (!$row) {
@@ -516,11 +489,11 @@ SELECT *
         $logger->error($e->getMessage(), 'i.php');
     }
 } else {
-    $page['rotation_angle'] = 0;
+    $ctx->rotationAngle = 0;
 }
 pwg_db_close();
 
-if (!try_switch_source($params, $src_mtime) && $params->type == IMG_CUSTOM) {
+if (!try_switch_source($params, $src_mtime, $ctx) && $params->type == IMG_CUSTOM) {
     $sharpen = 0;
     foreach (ImageStdParams::get_defined_type_map() as $std_params) {
         $sharpen += $std_params->sharpen;
@@ -528,21 +501,21 @@ if (!try_switch_source($params, $src_mtime) && $params->type == IMG_CUSTOM) {
     $params->sharpen = round($sharpen / count(ImageStdParams::get_defined_type_map()));
 }
 
-if (!mkgetdir(dirname($page['derivative_path']))) {
+if (!mkgetdir(dirname($ctx->derivativePath))) {
     ierror('dir create error', 500);
 }
 
 ignore_user_abort(true);
 @set_time_limit(0);
 
-$image = new PwgImage($page['src_path']);
+$image = new PwgImage($ctx->srcPath);
 $timing['load'] = time_step($step);
 
 $changes = 0;
 
 // rotate
-if (0 != $page['rotation_angle']) {
-    $image->rotate($page['rotation_angle']);
+if (0 != $ctx->rotationAngle) {
+    $image->rotate((int) $ctx->rotationAngle);
     $changes++;
     $timing['rotate'] = time_step($step);
 }
@@ -551,7 +524,7 @@ if (0 != $page['rotation_angle']) {
 $o_size = $d_size = array($image->get_width(),$image->get_height());
 $crop_rect = null;
 $scaled_size = null;
-$params->sizing->compute($o_size, is_string($page['coi']) ? $page['coi'] : null, $crop_rect, $scaled_size);
+$params->sizing->compute($o_size, $ctx->coi, $crop_rect, $scaled_size);
 if ($crop_rect) {
     $changes++;
     $image->crop($crop_rect->width(), $crop_rect->height(), $crop_rect->l, $crop_rect->t);
@@ -614,7 +587,7 @@ if ($params->will_watermark($d_size)) {
 // no change required - redirect to source
 if (!$changes) {
     header('X-i: No change');
-    ierror($page['src_url'], 301);
+    ierror($ctx->srcUrl, 301);
 }
 
 if ($d_size[0] * $d_size[1] < \Piwigo\Config\Config::derivativesStripMetadataThreshold()) {// strip metadata for small images
@@ -624,24 +597,24 @@ if ($d_size[0] * $d_size[1] < \Piwigo\Config\Config::derivativesStripMetadataThr
 $compression_quality = ImageStdParams::$quality;
 
 // for big sizing never go beyond 75 quality
-if (in_array($page['derivative_type'], [IMG_4XLARGE, IMG_3XLARGE])) {
+if (in_array($ctx->derivativeType, [IMG_4XLARGE, IMG_3XLARGE])) {
     $compression_quality = min(ImageStdParams::$quality, 75);
 }
 
-$image->write($page['derivative_path']);
+$image->write($ctx->derivativePath);
 $image->destroy();
-@chmod($page['derivative_path'], 0644);
+@chmod($ctx->derivativePath, 0644);
 $timing['save'] = time_step($step);
 
-send_derivative($expires);
+send_derivative($expires, $ctx);
 $timing['send'] = time_step($step);
 
 $timing['total'] = time_step($begin);
 
 if ($logger->severity() >= Logger::DEBUG) {
     $logger->debug('', 'i.php', array(
-      'src_path' => basename($page['src_path']),
-      'derivative_path' => basename($page['derivative_path']),
+      'src_path' => basename($ctx->srcPath),
+      'derivative_path' => basename($ctx->derivativePath),
       'o_size' => $o_size[0] . ' ' . $o_size[1] . ' ' . ($o_size[0] * $o_size[1]),
       'd_size' => $d_size[0] . ' ' . $d_size[1] . ' ' . ($d_size[0] * $d_size[1]),
       'mem_usage' => function_exists('memory_get_peak_usage') ? round(memory_get_peak_usage() / (1024 * 1024), 1) : '',

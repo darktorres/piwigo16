@@ -43,23 +43,12 @@ function add_event_handler(
     $priority = EVENT_HANDLER_PRIORITY_NEUTRAL,
     $include_path = null
 ): bool {
-    global $pwg_event_handlers;
-
-    if (isset($pwg_event_handlers[$event][$priority])) {
-        foreach ($pwg_event_handlers[$event][$priority] as $handler) {
-            if ($handler['function'] == $func) {
-                return false;
-            }
-        }
-    }
-
-    $pwg_event_handlers[$event][$priority][] = [
-      'function' => $func,
-      'include_path' => is_string($include_path) ? $include_path : null,
-      ];
-
-    ksort($pwg_event_handlers[$event]);
-    return true;
+    return \Piwigo\Plugins\EventDispatcher::addListener(
+        (string) $event,
+        $func,
+        (int) $priority,
+        is_string($include_path) ? $include_path : null
+    );
 }
 
 /**
@@ -75,27 +64,7 @@ function remove_event_handler(
     $func,
     $priority = EVENT_HANDLER_PRIORITY_NEUTRAL
 ): bool {
-    global $pwg_event_handlers;
-
-    if (!isset($pwg_event_handlers[$event][$priority])) {
-        return false;
-    }
-    for ($i = 0; $i < count($pwg_event_handlers[$event][$priority]); $i++) {
-        if ($pwg_event_handlers[$event][$priority][$i]['function'] == $func) {
-            unset($pwg_event_handlers[$event][$priority][$i]);
-            $pwg_event_handlers[$event][$priority] =
-              array_values($pwg_event_handlers[$event][$priority]);
-
-            if (empty($pwg_event_handlers[$event][$priority])) {
-                unset($pwg_event_handlers[$event][$priority]);
-                if (empty($pwg_event_handlers[$event])) {
-                    unset($pwg_event_handlers[$event]);
-                }
-            }
-            return true;
-        }
-    }
-    return false;
+    return \Piwigo\Plugins\EventDispatcher::removeListener((string) $event, $func, (int) $priority);
 }
 
 /**
@@ -112,40 +81,7 @@ function remove_event_handler(
  */
 function trigger_change(string $event, mixed ...$args): mixed
 {
-    global $pwg_event_handlers;
-
-    $data = $args[0] ?? null;
-    if (isset($pwg_event_handlers['trigger'])) {// debugging
-        trigger_notify(
-            'trigger',
-            ['type' => 'event', 'event' => $event, 'data' => $data]
-        );
-    }
-
-    if (!isset($pwg_event_handlers[$event])) {
-        return $data;
-    }
-
-    foreach ($pwg_event_handlers[$event] as $priority => $handlers) {
-        foreach ($handlers as $handler) {
-            $args[0] = $data;
-
-            if (!empty($handler['include_path'])) {
-                include_once($handler['include_path']);
-            }
-
-            $data = call_user_func_array($handler['function'], $args);
-        }
-    }
-
-    if (isset($pwg_event_handlers['trigger'])) {// debugging
-        trigger_notify(
-            'trigger',
-            ['type' => 'post_event', 'event' => $event, 'data' => $data]
-        );
-    }
-
-    return $data;
+    return \Piwigo\Plugins\EventDispatcher::dispatch($event, ...$args);
 }
 
 /**
@@ -158,28 +94,7 @@ function trigger_change(string $event, mixed ...$args): mixed
  */
 function trigger_notify(string $event, mixed ...$args): void
 {
-    global $pwg_event_handlers;
-
-    if (isset($pwg_event_handlers['trigger']) and $event != 'trigger') {// debugging - avoid recursive calls
-        trigger_notify(
-            'trigger',
-            ['type' => 'action', 'event' => $event, 'data' => null]
-        );
-    }
-
-    if (!isset($pwg_event_handlers[$event])) {
-        return;
-    }
-
-    foreach ($pwg_event_handlers[$event] as $priority => $handlers) {
-        foreach ($handlers as $handler) {
-            if (!empty($handler['include_path'])) {
-                include_once($handler['include_path']);
-            }
-
-            call_user_func_array($handler['function'], $args);
-        }
-    }
+    \Piwigo\Plugins\EventDispatcher::notify($event, ...$args);
 }
 
 /**
@@ -192,12 +107,7 @@ function trigger_notify(string $event, mixed ...$args): void
  */
 function set_plugin_data($plugin_id, &$data): bool
 {
-    global $pwg_loaded_plugins;
-    if (isset($pwg_loaded_plugins[$plugin_id])) {
-        $pwg_loaded_plugins[$plugin_id]['plugin_data'] = &$data;
-        return true;
-    }
-    return false;
+    return \Piwigo\Plugins\LoadedPluginRegistry::setData((string) $plugin_id, $data);
 }
 
 /**
@@ -208,10 +118,9 @@ function set_plugin_data($plugin_id, &$data): bool
  * @param string $plugin_id
  * @return mixed
  */
-function &get_plugin_data($plugin_id)
+function &get_plugin_data($plugin_id): mixed
 {
-    global $pwg_loaded_plugins;
-    return $pwg_loaded_plugins[$plugin_id]['plugin_data'] ?? null;
+    return \Piwigo\Plugins\LoadedPluginRegistry::getData((string) $plugin_id);
 }
 
 /**
@@ -253,8 +162,7 @@ function load_plugin(array $plugin): void
     $file_name = PHPWG_PLUGINS_PATH.$plugin_id.'/main.inc.php';
     if (file_exists($file_name)) {
         autoupdate_plugin($plugin);
-        global $pwg_loaded_plugins;
-        $pwg_loaded_plugins[$plugin_id] = $plugin;
+        \Piwigo\Plugins\LoadedPluginRegistry::register($plugin_id, $plugin);
         include_once($file_name);
     }
 }
@@ -343,8 +251,7 @@ UPDATE '. PLUGINS_TABLE .'
  */
 function load_plugins(): void
 {
-    global $pwg_loaded_plugins;
-    $pwg_loaded_plugins = [];
+    \Piwigo\Plugins\LoadedPluginRegistry::init();
     if (\Piwigo\Config\Config::enablePlugins()) {
         $plugins = get_db_plugins('active');
         foreach ($plugins as $plugin) {// include main from a function to avoid using same function context

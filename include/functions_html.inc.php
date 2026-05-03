@@ -88,20 +88,20 @@ function get_cat_display_name_cache(
     ?string $link_class = null,
     ?string $auth_key = null
 ): string {
-    global $cache;
-
     $add_url_params = [];
     if (isset($auth_key)) {
         $add_url_params['auth'] = $auth_key;
     }
 
-    if (!isset($cache['cat_names'])) {
+    $catNamesRaw = \Piwigo\Cache\RequestCache::remember('cat_names', 'all', static function () {
         $query = '
 SELECT id, name, permalink
   FROM '.CATEGORIES_TABLE.'
 ;';
-        $cache['cat_names'] = query2array($query, 'id');
-    }
+        return query2array($query, 'id');
+    });
+    /** @var array<int|string, array<string,mixed>> $catNames */
+    $catNames = is_array($catNamesRaw) ? $catNamesRaw : [];
 
     $output = '';
     if ($single_link) {
@@ -115,7 +115,7 @@ SELECT id, name, permalink
     }
     $is_first = true;
     foreach (explode(',', $uppercats) as $category_id) {
-        $cat = $cache['cat_names'][$category_id];
+        $cat = $catNames[$category_id] ?? null;
         if (!is_array($cat)) {
             continue;
         }
@@ -236,18 +236,19 @@ function name_compare(array $a, array $b): int
  */
 function tag_alpha_compare(array $a, array $b): int
 {
-    global $cache;
-
     foreach ([$a, $b] as $tag) {
         $tag_name = is_scalar($tag['name']) ? (string) $tag['name'] : '';
-        if (!isset($cache[__FUNCTION__][$tag_name])) {
-            $cache[__FUNCTION__][$tag_name] = pwg_transliterate($tag_name);
-        }
+        \Piwigo\Cache\RequestCache::remember('tag_alpha', $tag_name, static fn () => pwg_transliterate($tag_name));
     }
 
     $a_name = is_scalar($a['name']) ? (string) $a['name'] : '';
     $b_name = is_scalar($b['name']) ? (string) $b['name'] : '';
-    return strcmp((string) $cache[__FUNCTION__][$a_name], (string) $cache[__FUNCTION__][$b_name]);
+    $a_slug = \Piwigo\Cache\RequestCache::get('tag_alpha', $a_name);
+    $b_slug = \Piwigo\Cache\RequestCache::get('tag_alpha', $b_name);
+    return strcmp(
+        is_string($a_slug) ? $a_slug : '',
+        is_string($b_slug) ? $b_slug : ''
+    );
 }
 
 /**

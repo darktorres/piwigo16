@@ -1904,36 +1904,37 @@ function create_navigation_bar(string $url, int $nb_element, int $start, int $nb
  */
 function get_icon(?string $date, bool $is_child_date = false): false|array
 {
-    global $cache;
-    global $user;
     if (empty($date)) {
         return false;
     }
 
-    if (!isset($cache['get_icon']['title'])) {
-        $cache['get_icon']['title'] = l10n(
-            'photos posted during the last %d days',
-            $user['recent_period']
-        );
-    }
+    $raw = \Piwigo\Users\CurrentUser::get()->rawAttributes;
+    $recentPeriod = is_scalar($raw['recent_period'] ?? null) ? (int) $raw['recent_period'] : 7;
+
+    $title = \Piwigo\Cache\RequestCache::remember('get_icon', 'title', static fn () => l10n(
+        'photos posted during the last %d days',
+        $recentPeriod
+    ));
 
     $icon = [
-      'TITLE' => $cache['get_icon']['title'],
+      'TITLE' => $title,
       'IS_CHILD_DATE' => $is_child_date,
       ];
 
-    if (isset($cache['get_icon'][$date])) {
-        return $cache['get_icon'][$date] ? $icon : [];
+    if (\Piwigo\Cache\RequestCache::has('get_icon', $date)) {
+        return \Piwigo\Cache\RequestCache::get('get_icon', $date) ? $icon : [];
     }
 
-    if (!isset($cache['get_icon']['sql_recent_date'])) {
-        // Use MySql date in order to standardize all recent "actions/queries"
-        $cache['get_icon']['sql_recent_date'] = pwg_db_get_recent_period($user['recent_period']);
-    }
+    $sqlRecentDate = \Piwigo\Cache\RequestCache::remember(
+        'get_icon',
+        'sql_recent_date',
+        static fn () => pwg_db_get_recent_period((string) $recentPeriod)
+    );
 
-    $cache['get_icon'][$date] = $date > $cache['get_icon']['sql_recent_date'];
+    $isRecent = $date > $sqlRecentDate;
+    \Piwigo\Cache\RequestCache::set('get_icon', $date, $isRecent);
 
-    return $cache['get_icon'][$date] ? $icon : [];
+    return $isRecent ? $icon : [];
 }
 
 /**
@@ -2130,8 +2131,7 @@ function email_check_format($mail_address): bool
  */
 function get_nb_available_comments(): int
 {
-    global $user;
-    if (!isset($user['nb_available_comments'])) {
+    $cached = \Piwigo\Cache\RequestCache::remember('user', 'nb_available_comments', static function () {
         $where = [];
         if (!is_admin()) {
             $where[] = 'validated=\'true\'';
@@ -2152,16 +2152,17 @@ SELECT COUNT(DISTINCT(com.id))
     ON ic.image_id = com.image_id
   WHERE '.implode('
     AND ', $where);
-        [$user['nb_available_comments']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+        [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+        $nb = is_numeric($count) ? (int) $count : 0;
 
         single_update(
             USER_CACHE_TABLE,
-            ['nb_available_comments' => $user['nb_available_comments']],
+            ['nb_available_comments' => $nb],
             ['user_id' => \Piwigo\Users\CurrentUser::get()->id]
         );
-    }
-    $nb = $user['nb_available_comments'];
-    return is_numeric($nb) ? (int) $nb : 0;
+        return $nb;
+    });
+    return is_int($cached) ? $cached : 0;
 }
 
 /**

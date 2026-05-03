@@ -9,15 +9,7 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 /* nbm_global_var */
-$env_nbm = [
-            'start_time' => get_moment(),
-            'sendmail_timeout' => (intval(ini_get('max_execution_time')) * \Piwigo\Config\Config::nbmMaxTreatmentTimeoutPercent()),
-            'is_sendmail_timeout' => false,
-          ];
-
-if ($env_nbm['sendmail_timeout'] <= 0) {
-    $env_nbm['sendmail_timeout'] = \Piwigo\Config\Config::nbmTreatmentTimeoutDefault();
-}
+\Piwigo\Notification\MailNotificationContext::init();
 
 /*
  * Search an available check_key
@@ -52,11 +44,9 @@ where
  */
 function check_sendmail_timeout(): bool
 {
-    global $env_nbm;
-
-    $env_nbm['is_sendmail_timeout'] = ((get_moment() - $env_nbm['start_time']) > $env_nbm['sendmail_timeout']);
-
-    return $env_nbm['is_sendmail_timeout'];
+    $ctx = \Piwigo\Notification\MailNotificationContext::current();
+    $ctx->isSendmailTimeout = ((get_moment() - $ctx->startTime) > $ctx->sendmailTimeout);
+    return $ctx->isSendmailTimeout;
 }
 
 
@@ -160,27 +150,28 @@ order by';
  */
 function begin_users_env_nbm(bool $is_to_send_mail = false): void
 {
-    global $lang_info, $env_nbm;
+    global $lang_info;
     global $lang;
+    $ctx = \Piwigo\Notification\MailNotificationContext::current();
     // Save $user, $lang_info and $lang arrays (include/user.inc.php has been executed)
-    $env_nbm['save_user'] = is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : [];
+    $ctx->saveUser = is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : [];
     // Save current language to stack, necessary because $user change during NBM
     switch_lang_to(\Piwigo\Users\CurrentUser::get()->language);
 
-    $env_nbm['is_to_send_mail'] = $is_to_send_mail;
+    $ctx->isToSendMail = $is_to_send_mail;
 
     if ($is_to_send_mail) {
         // Init mail configuration
-        $env_nbm['email_format'] = get_str_email_format(\Piwigo\Config\Config::nbmSendHtmlMail());
-        $env_nbm['send_as_name'] = ((\Piwigo\Config\Config::has('nbm_send_mail_as') and !empty(\Piwigo\Config\Config::nbmSendMailAs())) ? \Piwigo\Config\Config::nbmSendMailAs() : get_mail_sender_name());
-        $env_nbm['send_as_mail_address'] = get_webmaster_mail_address();
-        $env_nbm['send_as_mail_formated'] = format_email($env_nbm['send_as_name'], $env_nbm['send_as_mail_address']);
+        $ctx->emailFormat = get_str_email_format(\Piwigo\Config\Config::nbmSendHtmlMail());
+        $ctx->sendAsName = ((\Piwigo\Config\Config::has('nbm_send_mail_as') and !empty(\Piwigo\Config\Config::nbmSendMailAs())) ? \Piwigo\Config\Config::nbmSendMailAs() : get_mail_sender_name());
+        $ctx->sendAsMailAddress = get_webmaster_mail_address();
+        $ctx->sendAsMailFormated = format_email($ctx->sendAsName, $ctx->sendAsMailAddress);
         // Init mail counter
-        $env_nbm['error_on_mail_count'] = 0;
-        $env_nbm['sent_mail_count'] = 0;
+        $ctx->errorOnMailCount = 0;
+        $ctx->sentMailCount = 0;
         // Save sendmail message info and error in the original language
-        $env_nbm['msg_info'] = l10n('Mail sent to %s [%s].');
-        $env_nbm['msg_error'] = l10n('Error when sending email to %s [%s].');
+        $ctx->msgInfo = l10n('Mail sent to %s [%s].');
+        $ctx->msgError = l10n('Error when sending email to %s [%s].');
     }
 }
 
@@ -192,27 +183,26 @@ function begin_users_env_nbm(bool $is_to_send_mail = false): void
  */
 function end_users_env_nbm(): void
 {
-    global $lang_info, $env_nbm;
+    global $lang_info;
     global $lang;
+    $ctx = \Piwigo\Notification\MailNotificationContext::current();
     // Restore $user, $lang_info and $lang arrays (include/user.inc.php has been executed)
-    \Piwigo\Users\CurrentUser::setRawAttributes(is_array($env_nbm['save_user'] ?? null) ? $env_nbm['save_user'] : []);
+    \Piwigo\Users\CurrentUser::setRawAttributes($ctx->saveUser);
     // Restore current language to stack, necessary because $user change during NBM
     switch_lang_back();
 
-    if ($env_nbm['is_to_send_mail']) {
-        unset($env_nbm['email_format']);
-        unset($env_nbm['send_as_name']);
-        unset($env_nbm['send_as_mail_address']);
-        unset($env_nbm['send_as_mail_formated']);
-        // Don t unset counter
-        //unset($env_nbm['error_on_mail_count']);
-        //unset($env_nbm['sent_mail_count']);
-        unset($env_nbm['msg_info']);
-        unset($env_nbm['msg_error']);
+    if ($ctx->isToSendMail) {
+        $ctx->emailFormat = '';
+        $ctx->sendAsName = '';
+        $ctx->sendAsMailAddress = '';
+        $ctx->sendAsMailFormated = '';
+        // counters intentionally kept: errorOnMailCount, sentMailCount
+        $ctx->msgInfo = '';
+        $ctx->msgError = '';
     }
 
-    unset($env_nbm['save_user']);
-    unset($env_nbm['is_to_send_mail']);
+    $ctx->saveUser = [];
+    $ctx->isToSendMail = false;
 }
 
 /*
@@ -223,16 +213,17 @@ function end_users_env_nbm(): void
 /** @param array<string, float|int|string|null> $nbm_user */
 function set_user_on_env_nbm(array &$nbm_user, bool $is_action_send): void
 {
-    global $lang_info, $env_nbm;
+    global $lang_info;
     global $lang;
+    $ctx = \Piwigo\Notification\MailNotificationContext::current();
     $newUser = build_user(is_numeric($nbm_user['user_id']) ? (int)$nbm_user['user_id'] : 0, true);
     \Piwigo\Users\CurrentUser::setRawAttributes($newUser);
 
     switch_lang_to(is_string($newUser['language'] ?? null) ? $newUser['language'] : '');
 
     if ($is_action_send) {
-        $env_nbm['mail_template'] = get_mail_template($env_nbm['email_format']);
-        $env_nbm['mail_template']->set_filename('notification_by_mail', 'notification_by_mail.tpl');
+        $ctx->mailTemplate = get_mail_template($ctx->emailFormat);
+        $ctx->mailTemplate->set_filename('notification_by_mail', 'notification_by_mail.tpl');
     }
 }
 
@@ -243,10 +234,8 @@ function set_user_on_env_nbm(array &$nbm_user, bool $is_action_send): void
  */
 function unset_user_on_env_nbm(): void
 {
-    global $env_nbm;
-
     switch_lang_back();
-    unset($env_nbm['mail_template']);
+    \Piwigo\Notification\MailNotificationContext::current()->mailTemplate = null;
 }
 
 /*
@@ -257,9 +246,9 @@ function unset_user_on_env_nbm(): void
 /** @param array<string, float|int|string|null> $nbm_user */
 function inc_mail_sent_success(array $nbm_user): void
 {
-    global $env_nbm;
-    $env_nbm['sent_mail_count'] += 1;
-    \Piwigo\Core\PageState::current()->addInfo(sprintf($env_nbm['msg_info'], stripslashes((string) $nbm_user['username']), $nbm_user['mail_address']));
+    $ctx = \Piwigo\Notification\MailNotificationContext::current();
+    $ctx->sentMailCount += 1;
+    \Piwigo\Core\PageState::current()->addInfo(sprintf($ctx->msgInfo, stripslashes((string) $nbm_user['username']), $nbm_user['mail_address']));
 }
 
 /*
@@ -270,9 +259,9 @@ function inc_mail_sent_success(array $nbm_user): void
 /** @param array<string, float|int|string|null> $nbm_user */
 function inc_mail_sent_failed(array $nbm_user): void
 {
-    global $env_nbm;
-    $env_nbm['error_on_mail_count'] += 1;
-    \Piwigo\Core\PageState::current()->addError(sprintf($env_nbm['msg_error'], stripslashes((string) $nbm_user['username']), $nbm_user['mail_address']));
+    $ctx = \Piwigo\Notification\MailNotificationContext::current();
+    $ctx->errorOnMailCount += 1;
+    \Piwigo\Core\PageState::current()->addError(sprintf($ctx->msgError, stripslashes((string) $nbm_user['username']), $nbm_user['mail_address']));
 }
 
 /*
@@ -282,29 +271,29 @@ function inc_mail_sent_failed(array $nbm_user): void
  */
 function display_counter_info(): void
 {
-    global $env_nbm;
-    if ($env_nbm['error_on_mail_count'] != 0) {
+    $ctx = \Piwigo\Notification\MailNotificationContext::current();
+    if ($ctx->errorOnMailCount != 0) {
         \Piwigo\Core\PageState::current()->addError(l10n_dec(
             '%d mail was not sent.',
             '%d mails were not sent.',
-            $env_nbm['error_on_mail_count']
+            $ctx->errorOnMailCount
         ));
 
-        if ($env_nbm['sent_mail_count'] != 0) {
+        if ($ctx->sentMailCount != 0) {
             \Piwigo\Core\PageState::current()->addInfo(l10n_dec(
                 '%d mail was sent.',
                 '%d mails were sent.',
-                $env_nbm['sent_mail_count']
+                $ctx->sentMailCount
             ));
         }
     } else {
-        if ($env_nbm['sent_mail_count'] == 0) {
+        if ($ctx->sentMailCount == 0) {
             \Piwigo\Core\PageState::current()->addInfo(l10n('No mail to send.'));
         } else {
             \Piwigo\Core\PageState::current()->addInfo(l10n_dec(
                 '%d mail was sent.',
                 '%d mails were sent.',
-                $env_nbm['sent_mail_count']
+                $ctx->sentMailCount
             ));
         }
     }
@@ -313,19 +302,18 @@ function display_counter_info(): void
 /** @param array<string, float|int|string|null> $nbm_user */
 function assign_vars_nbm_mail_content(array $nbm_user): void
 {
-    global $env_nbm;
+    $ctx = \Piwigo\Notification\MailNotificationContext::current();
+    $tpl = $ctx->mailTemplate ?? throw new \LogicException('mail_template not set in assign_vars_nbm_mail_content');
 
     set_make_full_url();
 
-    $env_nbm['mail_template']->assign(
+    $tpl->assign(
         [
         'USERNAME' => stripslashes((string) $nbm_user['username']),
-
-        'SEND_AS_NAME' => $env_nbm['send_as_name'],
-
+        'SEND_AS_NAME' => $ctx->sendAsName,
         'UNSUBSCRIBE_LINK' => add_url_params(get_gallery_home_url().'/nbm.php', ['unsubscribe' => $nbm_user['check_key']]),
         'SUBSCRIBE_LINK' => add_url_params(get_gallery_home_url().'/nbm.php', ['subscribe' => $nbm_user['check_key']]),
-        'CONTACT_EMAIL' => $env_nbm['send_as_mail_address'],
+        'CONTACT_EMAIL' => $ctx->sendAsMailAddress,
     ]
     );
 
@@ -346,7 +334,6 @@ function assign_vars_nbm_mail_content(array $nbm_user): void
  */
 function do_subscribe_unsubscribe_notification_by_mail(bool $is_admin_request, bool $is_subscribe = false, array $check_key_list = []): array
 {
-    global $env_nbm;
     set_make_full_url();
 
     $check_key_treated = [];
@@ -394,7 +381,9 @@ function do_subscribe_unsubscribe_notification_by_mail(bool $is_admin_request, b
 
                 $section_action_by = ($is_subscribe ? 'subscribe_by_' : 'unsubscribe_by_');
                 $section_action_by .= ($is_admin_request ? 'admin' : 'himself');
-                $env_nbm['mail_template']->assign(
+                $ctx = \Piwigo\Notification\MailNotificationContext::current();
+                $tpl = $ctx->mailTemplate ?? throw new \LogicException('mail_template not set in do_subscribe_unsubscribe_notification_by_mail');
+                $tpl->assign(
                     [
                     $section_action_by => true,
                     'GOTO_GALLERY_TITLE' => \Piwigo\Config\Config::galleryTitle(),
@@ -408,11 +397,11 @@ function do_subscribe_unsubscribe_notification_by_mail(bool $is_admin_request, b
                     'email' => $nbm_user['mail_address'],
                     ],
                     [
-                    'from' => $env_nbm['send_as_mail_formated'],
+                    'from' => $ctx->sendAsMailFormated,
                     'subject' => $subject,
-                    'email_format' => $env_nbm['email_format'],
-                    'content' => $env_nbm['mail_template']->parse('notification_by_mail', true),
-                    'content_format' => $env_nbm['email_format'],
+                    'email_format' => $ctx->emailFormat,
+                    'content' => $tpl->parse('notification_by_mail', true),
+                    'content_format' => $ctx->emailFormat,
                     ]
                 );
 

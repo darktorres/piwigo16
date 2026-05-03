@@ -21,6 +21,8 @@ final class PageState
 
     /** @var list<string> */
     public array $errors = [];
+    /** @var array<string, string> */
+    public array $keyedErrors = [];
     /** @var list<string> */
     public array $warnings = [];
     /** @var list<string> */
@@ -91,6 +93,7 @@ final class PageState
         // Now re-assign $GLOBALS['page'] with reference bridges.
         $GLOBALS['page'] = [];
         $GLOBALS['page']['errors'] = &$inst->errors;
+        $GLOBALS['page']['keyed_errors'] = &$inst->keyedErrors;
         $GLOBALS['page']['warnings'] = &$inst->warnings;
         $GLOBALS['page']['messages'] = &$inst->messages;
         $GLOBALS['page']['infos'] = &$inst->infos;
@@ -113,6 +116,19 @@ final class PageState
     public function addError(string $msg): void
     {
         $this->errors[] = $msg;
+    }
+    public function addKeyedError(string $key, string $message): void
+    {
+        $this->keyedErrors[$key] = $message;
+    }
+    public function getKeyedError(string $key): ?string
+    {
+        return $this->keyedErrors[$key] ?? null;
+    }
+    /** @return array<string, string> */
+    public function getKeyedErrors(): array
+    {
+        return $this->keyedErrors;
     }
     public function addWarning(string $msg): void
     {

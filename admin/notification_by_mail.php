@@ -55,14 +55,14 @@ $must_repost = false;
 /** @param string[] $check_key_treated */
 function do_timeout_treatment(string $post_keyname, array $check_key_treated = []): bool
 {
-    global $env_nbm;
-    if ($env_nbm['is_sendmail_timeout']) {
+    $ctx = \Piwigo\Notification\MailNotificationContext::current();
+    if ($ctx->isSendmailTimeout) {
         if (isset($_POST[$post_keyname])) {
             $post_keyname_val = is_array($_POST[$post_keyname]) ? array_map(fn (mixed $v): string => is_scalar($v) ? (string)$v : '', $_POST[$post_keyname]) : [];
             $post_count = count($post_keyname_val);
             $treated_count = count($check_key_treated);
             if ($treated_count != 0) {
-                $time_refresh = ceil((get_moment() - $env_nbm['start_time']) * $post_count / $treated_count);
+                $time_refresh = ceil((get_moment() - $ctx->startTime) * $post_count / $treated_count);
             } else {
                 $time_refresh = 0;
             }
@@ -101,7 +101,8 @@ function get_tab_status(string $mode): int
  */
 function insert_new_data_user_mail_notification(): void
 {
-    global $env_nbm, $base_url;
+    global $base_url;
+    $ctx = \Piwigo\Notification\MailNotificationContext::current();
     // Set null mail_address empty
     $query = '
 update
@@ -163,7 +164,7 @@ order by
         );
 
         // On timeout simulate like tabsheet send
-        if ($env_nbm['is_sendmail_timeout']) {
+        if ($ctx->isSendmailTimeout) {
             $quoted_check_key_list = quote_check_key_list(array_diff($check_key_list, $check_key_treated));
             if (count($quoted_check_key_list) != 0) {
                 $query = 'delete from '.USER_MAIL_NOTIFICATION_TABLE.' where check_key in ('.implode(',', $quoted_check_key_list).');';
@@ -208,7 +209,7 @@ function render_global_customize_mail_content(string|array $customize_mail_conte
  */
 function do_action_send_mail_notification(string $action = 'list_to_send', array $check_key_list = [], string $customize_mail_content = ''): array
 {
-    global $env_nbm;
+    $ctx = \Piwigo\Notification\MailNotificationContext::current();
     $return_list = [];
 
     if (in_array($action, ['list_to_send', 'send'])) {
@@ -221,7 +222,7 @@ function do_action_send_mail_notification(string $action = 'list_to_send', array
         $data_users = get_user_notifications('send', $check_key_list);
 
         // List all if it's define on options or on timeout
-        $is_list_all_without_test = ($env_nbm['is_sendmail_timeout'] or \Piwigo\Config\Config::nbmListAllEnabledUsersToSend());
+        $is_list_all_without_test = ($ctx->isSendmailTimeout or \Piwigo\Config\Config::nbmListAllEnabledUsersToSend());
 
         // Check if exist news to list user or send mails
         if ((!$is_list_all_without_test) or ($is_action_send)) {
@@ -290,9 +291,10 @@ function do_action_send_mail_notification(string $action = 'list_to_send', array
 
                             // Assign current var for nbm mail
                             assign_vars_nbm_mail_content($nbm_user);
+                            $tpl = $ctx->mailTemplate ?? throw new \LogicException('mail_template not set in do_action_send_mail_notification');
 
                             if (!is_null($nbm_user['last_send'])) {
-                                $env_nbm['mail_template']->assign(
+                                $tpl->assign(
                                     'content_new_elements_between',
                                     [
                                     'DATE_BETWEEN_1' => $nbm_user['last_send'],
@@ -300,7 +302,7 @@ function do_action_send_mail_notification(string $action = 'list_to_send', array
                   ]
                                 );
                             } else {
-                                $env_nbm['mail_template']->assign(
+                                $tpl->assign(
                                     'content_new_elements_single',
                                     [
                                     'DATE_SINGLE' => $dbnow,
@@ -309,7 +311,7 @@ function do_action_send_mail_notification(string $action = 'list_to_send', array
                             }
 
                             if (\Piwigo\Config\Config::nbmSendDetailedContent()) {
-                                $env_nbm['mail_template']->assign('global_new_lines', $news);
+                                $tpl->assign('global_new_lines', $news);
                             }
 
                             $nbm_user_customize_mail_content =
@@ -319,7 +321,7 @@ function do_action_send_mail_notification(string $action = 'list_to_send', array
                                   $nbm_user
                               );
                             if (!empty($nbm_user_customize_mail_content)) {
-                                $env_nbm['mail_template']->assign(
+                                $tpl->assign(
                                     'custom_mail_content',
                                     $nbm_user_customize_mail_content
                                 );
@@ -329,7 +331,7 @@ function do_action_send_mail_notification(string $action = 'list_to_send', array
                                 $recent_post_dates = get_recent_post_dates_array(\Piwigo\Config\Config::recentPostDates()['NBM']);
                                 foreach ($recent_post_dates as $date_detail) {
                                     $date_detail_arr = is_array($date_detail) ? $date_detail : [];
-                                    $env_nbm['mail_template']->append(
+                                    $tpl->append(
                                         'recent_posts',
                                         [
                                         'TITLE' => get_title_recent_post_date($date_detail_arr),
@@ -339,11 +341,11 @@ function do_action_send_mail_notification(string $action = 'list_to_send', array
                                 }
                             }
 
-                            $env_nbm['mail_template']->assign(
+                            $tpl->assign(
                                 [
                                 'GOTO_GALLERY_TITLE' => \Piwigo\Config\Config::galleryTitle(),
                                 'GOTO_GALLERY_URL' => add_url_params(get_gallery_home_url(), $add_url_params),
-                                'SEND_AS_NAME'      => $env_nbm['send_as_name'],
+                                'SEND_AS_NAME'      => $ctx->sendAsName,
                 ]
                             );
 
@@ -353,11 +355,11 @@ function do_action_send_mail_notification(string $action = 'list_to_send', array
                                 'email' => is_scalar($nbm_user['mail_address']) ? (string) $nbm_user['mail_address'] : '',
                                 ],
                                 [
-                                'from' => $env_nbm['send_as_mail_formated'],
+                                'from' => $ctx->sendAsMailFormated,
                                 'subject' => $subject,
-                                'email_format' => $env_nbm['email_format'],
-                                'content' => $env_nbm['mail_template']->parse('notification_by_mail', true),
-                                'content_format' => $env_nbm['email_format'],
+                                'email_format' => $ctx->emailFormat,
+                                'content' => $tpl->parse('notification_by_mail', true),
+                                'content_format' => $ctx->emailFormat,
                                 'auth_key' => $auth,
                                 ]
                             );

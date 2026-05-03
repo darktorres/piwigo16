@@ -255,9 +255,7 @@ function tag_alpha_compare(array $a, array $b): int
  */
 function access_denied(): void
 {
-    global $user;
-
-    if (isset($user) and !is_a_guest()) {
+    if (\Piwigo\Users\CurrentUser::isInitialized() and !is_a_guest()) {
         set_status_header(401);
 
         echo '<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -385,9 +383,10 @@ $btrace_msg
  */
 function get_tags_content_title(): string
 {
-    global $page;
+    $page = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
+    $tags = is_array($page['tags'] ?? null) ? $page['tags'] : [];
     $title = '<a href="'.get_root_url().'tags.php" title="'.l10n('display available tags').'">'
-      . l10n(count($page['tags']) > 1 ? 'Tags' : 'Tag')
+      . l10n(count($tags) > 1 ? 'Tags' : 'Tag')
       . '</a> ';
 
     return $title;
@@ -398,12 +397,13 @@ function get_tags_content_title(): string
  */
 function get_combined_categories_content_title(): string
 {
-    global $page;
+    $page = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
 
     $title = l10n('Albums').' ';
 
     $is_first = true;
-    $all_categories = array_merge([$page['category']], $page['combined_categories']);
+    $combined = is_array($page['combined_categories'] ?? null) ? $page['combined_categories'] : [];
+    $all_categories = array_merge([$page['category'] ?? []], $combined);
     foreach ($all_categories as $idx => $category) {
         $title .= $is_first ? '' : ' + ';
         $is_first = false;
@@ -558,8 +558,6 @@ function render_element_description(array $info, string $param = ''): string
 /** @param array<string, mixed> $info */
 function get_thumbnail_title(array $info, string $title, string $comment = ''): string
 {
-    global $user;
-
     $details = [];
 
     if (!empty($info['hit'])) {
@@ -625,7 +623,11 @@ function get_element_url_protection_handler(string $url, array $infos): string
  */
 function flush_page_messages(): void
 {
-    global $template, $page;
+    $template = \Piwigo\Template\TemplateRegistry::current();
+    $page = &$GLOBALS['page'];
+    if (!is_array($page)) {
+        $page = [];
+    }
     if ($template->get_template_vars('page_refresh') === null) {
         foreach (['errors','infos','warnings', 'messages'] as $mode) {
             if (isset($_SESSION['page_'.$mode])) {

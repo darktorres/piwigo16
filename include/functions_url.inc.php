@@ -14,14 +14,16 @@ declare(strict_types=1);
  * and return an empty string for current path
  * @return string
  */
-function get_root_url()
+function get_root_url(): string
 {
-    global $page;
-    if (($root_url = @$page['root_path']) == null) {// TODO - add HERE the possibility to call PWG functions from external scripts
-        $root_url = PHPWG_ROOT_PATH;
-        if (str_starts_with($root_url, './')) {
-            return substr($root_url, 2);
-        }
+    $page = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
+    $rootPath = $page['root_path'] ?? null;
+    if (is_string($rootPath) && $rootPath !== '') {
+        return $rootPath;
+    }
+    $root_url = PHPWG_ROOT_PATH;
+    if (str_starts_with($root_url, './')) {
+        return substr($root_url, 2);
     }
     return $root_url;
 }
@@ -174,9 +176,7 @@ function duplicate_index_url(array $redefined = [], array $removed = []): string
  */
 function params_for_duplication(array $redefined, array $removed): array
 {
-    global $page;
-
-    $params = $page;
+    $params = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
 
     foreach ($removed as $param_key) {
         unset($params[$param_key]);
@@ -703,16 +703,26 @@ function get_element_url(array $element_info): string
  */
 function set_make_full_url(): void
 {
-    global $page;
+    $page = &$GLOBALS['page'];
+    if (!is_array($page)) {
+        $page = [];
+    }
 
-    if (!isset($page['save_root_path'])) {
+    $save = isset($page['save_root_path']) && is_array($page['save_root_path'])
+        ? $page['save_root_path']
+        : null;
+    if ($save === null) {
+        $newSave = [];
         if (isset($page['root_path'])) {
-            $page['save_root_path']['path'] = $page['root_path'];
+            $newSave['path'] = $page['root_path'];
         }
-        $page['save_root_path']['count'] = 1;
+        $newSave['count'] = 1;
+        $page['save_root_path'] = $newSave;
         $page['root_path'] = get_absolute_root_url();
     } else {
-        $page['save_root_path']['count'] += 1;
+        $count = is_numeric($save['count'] ?? null) ? (int) $save['count'] : 0;
+        $save['count'] = $count + 1;
+        $page['save_root_path'] = $save;
     }
 }
 
@@ -723,19 +733,28 @@ function set_make_full_url(): void
  */
 function unset_make_full_url(): void
 {
-    global $page;
+    $page = &$GLOBALS['page'];
+    if (!is_array($page)) {
+        $page = [];
+    }
 
-    if (isset($page['save_root_path'])) {
-        if ($page['save_root_path']['count'] == 1) {
-            if (isset($page['save_root_path']['path'])) {
-                $page['root_path'] = $page['save_root_path']['path'];
-            } else {
-                unset($page['root_path']);
-            }
-            unset($page['save_root_path']);
+    $save = isset($page['save_root_path']) && is_array($page['save_root_path'])
+        ? $page['save_root_path']
+        : null;
+    if ($save === null) {
+        return;
+    }
+    $count = is_numeric($save['count'] ?? null) ? (int) $save['count'] : 0;
+    if ($count == 1) {
+        if (isset($save['path'])) {
+            $page['root_path'] = $save['path'];
         } else {
-            $page['save_root_path']['count'] -= 1;
+            unset($page['root_path']);
         }
+        unset($page['save_root_path']);
+    } else {
+        $save['count'] = $count - 1;
+        $page['save_root_path'] = $save;
     }
 }
 
@@ -823,8 +842,6 @@ function url_is_remote($url): bool
 /** @return array<int,true> */
 function get_user_favorites(): array
 {
-    global $user;
-
     if (is_a_guest()) {
         return [];
     }
@@ -834,7 +851,7 @@ SELECT
     image_id,
     1 as fake_value
   FROM '.FAVORITES_TABLE.'
-  WHERE user_id = '.$user['id'].'
+  WHERE user_id = '.\Piwigo\Users\CurrentUser::get()->id.'
 ';
 
     $raw = query2array($query, 'image_id', 'fake_value');

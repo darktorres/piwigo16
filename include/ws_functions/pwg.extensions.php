@@ -2,11 +2,12 @@
 
 declare(strict_types=1);
 
-global $template, $user, $page, $persistent_cache, $lang;
+global $persistent_cache;
 
 use Piwigo\Admin\Plugins;
 use Piwigo\Admin\Themes;
 use Piwigo\Admin\Updates;
+use Piwigo\Template\TemplateRegistry;
 use Piwigo\Ws\PwgError;
 
 // +-----------------------------------------------------------------------+
@@ -60,7 +61,7 @@ use Piwigo\Ws\PwgError;
 /** @param array<mixed> $params */
 function ws_plugins_performAction(array $params, \Piwigo\Ws\PwgServer $service): PwgError|true
 {
-    global $template;
+    $template = TemplateRegistry::current();
 
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
@@ -102,7 +103,7 @@ function ws_plugins_performAction(array $params, \Piwigo\Ws\PwgServer $service):
 /** @param array<mixed> $params */
 function ws_themes_performAction(array $params, \Piwigo\Ws\PwgServer $service): PwgError|true
 {
-    global $template;
+    $template = TemplateRegistry::current();
 
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
@@ -218,8 +219,7 @@ function ws_extensions_update(array $params, \Piwigo\Ws\PwgServer $service): mix
         $extension_name = is_string($extension->fs_languages[$extension_id]['name'] ?? null) ? $extension->fs_languages[$extension_id]['name'] : '';
     }
 
-    global $template;
-    $template->delete_compiled_templates();
+    TemplateRegistry::current()->delete_compiled_templates();
 
     return match ($upgrade_status) {
         'ok' => l10n('%s has been successfully updated.', $extension_name),

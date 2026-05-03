@@ -50,8 +50,6 @@ function get_std_sql_where_restrict_filter(
 /** @return array<mixed>|int|string|float|null */
 function custom_notification_query(string $action, string $type, ?string $start = null, ?string $end = null): array|int|string|float|null
 {
-    global $user;
-
     switch ($type) {
         case 'new_comments':
             {
@@ -448,9 +446,13 @@ function news(?string $start = null, ?string $end = null, bool $exclude_img_cats
 /** @return array<mixed>|null */
 function get_recent_post_dates(int $max_dates, int $max_elements, int $max_cats): ?array
 {
-    global $user, $persistent_cache;
+    global $persistent_cache;
+    $userId = \Piwigo\Users\CurrentUser::get()->id;
+    $cacheUpdate = is_scalar(\Piwigo\Users\CurrentUser::get()->rawAttributes['cache_update_time'] ?? null)
+        ? (string) \Piwigo\Users\CurrentUser::get()->rawAttributes['cache_update_time']
+        : '';
 
-    $cache_key = $persistent_cache->make_key('recent_posts'.$user['id'].$user['cache_update_time'].$max_dates.$max_elements.$max_cats);
+    $cache_key = $persistent_cache->make_key('recent_posts'.$userId.$cacheUpdate.$max_dates.$max_elements.$max_cats);
     $cached = null;
     if ($persistent_cache->get($cache_key, $cached)) {
         return $cached;
@@ -603,12 +605,13 @@ function get_html_description_recent_post_date(array $date_detail, ?string $auth
 /** @param array<mixed> $date_detail */
 function get_title_recent_post_date(array $date_detail): string
 {
-    global $lang;
-
     $title = l10n_dec('%d new photo', '%d new photos', is_numeric($date_detail['nb_elements'] ?? null) ? (int) $date_detail['nb_elements'] : 0);
 
     if (preg_match('/^\d+-(\d+)-(\d+) /', is_scalar($date_detail['date_available'] ?? null) ? (string) $date_detail['date_available'] : '', $matches)) {
-        $title .= ' ('.$lang['month'][(int)$matches[1]].' '.$matches[2].')';
+        $lang = is_array($GLOBALS['lang'] ?? null) ? $GLOBALS['lang'] : [];
+        $months = is_array($lang['month'] ?? null) ? $lang['month'] : [];
+        $monthName = is_string($months[(int)$matches[1]] ?? null) ? $months[(int)$matches[1]] : '';
+        $title .= ' ('.$monthName.' '.$matches[2].')';
     }
 
     return $title;

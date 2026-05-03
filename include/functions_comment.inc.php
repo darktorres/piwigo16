@@ -26,8 +26,6 @@ add_event_handler('user_comment_check', 'user_comment_check');
 /** @param array<string,mixed> $comment */
 function user_comment_check(string $action, array $comment): string
 {
-    global $user;
-
     if ($action == 'reject') {
         return $action;
     }
@@ -77,8 +75,6 @@ function user_comment_check(string $action, array $comment): string
  */
 function insert_user_comment(array &$comm, string $key, array &$infos): string
 {
-    global $user;
-
     $comm = array_merge(
         $comm,
         [
@@ -118,8 +114,9 @@ SELECT COUNT(*) AS user_exists
             }
         }
     } else {
-        $comm['author'] = addslashes((string) $user['username']);
-        $comm['author_id'] = $user['id'];
+        $currentUser = \Piwigo\Users\CurrentUser::get();
+        $comm['author'] = addslashes($currentUser->username);
+        $comm['author_id'] = $currentUser->id;
     }
 
     if (empty($comm['content'])) { // empty comment content
@@ -143,7 +140,7 @@ SELECT COUNT(*) AS user_exists
             }
             $_POST['cr'][] = 'website_url';
         } else {
-            $comm['website_url'] = strip_tags((string) $comm['website_url']);
+            $comm['website_url'] = strip_tags(is_scalar($comm['website_url']) ? (string) $comm['website_url'] : '');
             if (!preg_match('/^https?/i', $comm['website_url'])) {
                 $comm['website_url'] = 'http://'.$comm['website_url'];
             }
@@ -156,13 +153,14 @@ SELECT COUNT(*) AS user_exists
 
     // email
     if (empty($comm['email'])) {
-        if (!empty($user['email'])) {
-            $comm['email'] = $user['email'];
+        $currentUserEmail = \Piwigo\Users\CurrentUser::get()->email;
+        if ($currentUserEmail !== '') {
+            $comm['email'] = $currentUserEmail;
         } elseif (\Piwigo\Config\Config::commentsEmailMandatory()) {
             $infos[] = l10n('Email address is missing. Please specify an email address.');
             $comment_action = 'reject';
         }
-    } elseif (!email_check_format($comm['email'])) {
+    } elseif (!email_check_format(is_scalar($comm['email']) ? (string) $comm['email'] : '')) {
         $infos[] = l10n('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
         $comment_action = 'reject';
     }
@@ -212,7 +210,7 @@ INSERT INTO '.COMMENTS_TABLE.'
   (author, author_id, anonymous_id, content, date, validated, validation_date, image_id, website_url, email)
   VALUES (
     \''. (is_scalar($comm['author']) ? (string) $comm['author'] : '') .'\',
-    '. (is_scalar($comm['author_id']) ? (string) $comm['author_id'] : '0') .',
+    '. (int) $comm['author_id'] .',
     \''. (is_scalar($comm['ip']) ? (string) $comm['ip'] : '') .'\',
     \''. (is_scalar($comm['content']) ? (string) $comm['content'] : '') .'\',
     NOW(),
@@ -313,8 +311,6 @@ $user_where_clause.'
 /** @param array<string,mixed> $comment */
 function update_user_comment(array $comment, string $post_key): string
 {
-    global $page;
-
     $comment_action = 'validate';
 
     if (!verify_ephemeral_key($post_key, is_scalar($comment['image_id']) ? (string) $comment['image_id'] : '')) {
@@ -489,9 +485,10 @@ UPDATE '.COMMENTS_TABLE.'
  */
 function invalidate_user_cache_nb_comments(): void
 {
-    global $user;
-
-    unset($user['nb_available_comments']);
+    $user = &$GLOBALS['user'];
+    if (is_array($user)) {
+        unset($user['nb_available_comments']);
+    }
 
     $query = '
 UPDATE '.USER_CACHE_TABLE.'

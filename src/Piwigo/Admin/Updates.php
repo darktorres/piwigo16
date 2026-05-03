@@ -368,7 +368,7 @@ class Updates
 
             $ignore_list = [];
 
-            $updatesIgnored = \Piwigo\Config\Config::get('updates_ignored');
+            $updatesIgnored = \Piwigo\Config\Config::raw('updates_ignored');
             $updatesIgnoredArr = is_array($updatesIgnored) ? $updatesIgnored : [];
             $typeIgnoreList = is_array($updatesIgnoredArr[$type] ?? null) ? $updatesIgnoredArr[$type] : [];
 
@@ -393,7 +393,7 @@ class Updates
             $updatesIgnoredArr[$type] = $ignore_list;
             \Piwigo\Config\Config::override('updates_ignored', $updatesIgnoredArr);
         }
-        conf_update_param('updates_ignored', pwg_db_real_escape_string(serialize(\Piwigo\Config\Config::get('updates_ignored'))));
+        conf_update_param('updates_ignored', pwg_db_real_escape_string(serialize(\Piwigo\Config\Config::raw('updates_ignored'))));
         return [];
     }
 

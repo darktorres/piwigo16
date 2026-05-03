@@ -69,7 +69,7 @@ if ($check) {
 
 file_put_contents($path, $rebuilt);
 $diff = strlen($rebuilt) - strlen($source);
-echo "Config.php updated (" . ($diff >= 0 ? '+' : '') . "$diff bytes)\n";
+echo 'Config.php updated (' . ($diff >= 0 ? '+' : '') . "$diff bytes)\n";
 
 /**
  * @param array{type: string, default: mixed, method: string, nullable?: bool, custom?: bool} $entry
@@ -112,10 +112,20 @@ PHP;
 
 function renderDefault(mixed $value): string
 {
-    if (is_string($value))     { return var_export($value, true); }
-    if (is_bool($value))       { return $value ? 'true' : 'false'; }
-    if (is_int($value))        { return (string) $value; }
-    if (is_float($value))      { return (string) $value; }
-    if ($value === null)       { return 'null'; }
+    if (is_string($value)) {
+        return var_export($value, true);
+    }
+    if (is_bool($value)) {
+        return $value ? 'true' : 'false';
+    }
+    if (is_int($value)) {
+        return (string) $value;
+    }
+    if (is_float($value)) {
+        return (string) $value;
+    }
+    if ($value === null) {
+        return 'null';
+    }
     throw new RuntimeException('unsupported default literal: ' . var_export($value, true));
 }

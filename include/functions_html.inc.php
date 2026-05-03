@@ -28,7 +28,7 @@ use Piwigo\Menu\RegisteredBlock;
 /** @param array<mixed> $cat_informations */
 function get_cat_display_name(array $cat_informations, ?string $url = ''): string
 {
-    //$output = '<a href="'.get_absolute_root_url().\Piwigo\Config\Config::get('home_page').'">'.l10n('Home').'</a>';
+    //$output = '<a href="'.get_absolute_root_url().\Piwigo\Config\Config::homePage().'">'.l10n('Home').'</a>';
     $output = '';
     $is_first = true;
 

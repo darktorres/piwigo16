@@ -39,23 +39,23 @@ final class KernelBootTest extends TestCase
         self::assertTrue(Kernel::isBooted());
     }
 
-    public function test_Config_get_reads_from_globals_after_boot(): void
+    public function test_typed_accessor_reads_from_globals_after_boot(): void
     {
         $this->simulateGlobals(['conf' => ['upload_dir' => './myupload', 'gallery_title' => 'My Gallery']]);
         Kernel::boot();
 
-        self::assertSame('./myupload', Config::get('upload_dir'));
+        self::assertSame('./myupload', Config::uploadDir());
         self::assertSame('My Gallery', Config::galleryTitle());
     }
 
-    public function test_conf_write_after_boot_visible_via_Config_get(): void
+    public function test_conf_write_after_boot_visible_via_typed_accessor(): void
     {
         $this->simulateGlobals(['conf' => ['order_by' => 'ORDER BY id ASC']]);
         Kernel::boot();
 
         $GLOBALS['conf']['order_by'] = 'ORDER BY date_creation DESC';
 
-        self::assertSame('ORDER BY date_creation DESC', Config::get('order_by'));
+        self::assertSame('ORDER BY date_creation DESC', Config::orderBy());
     }
 
     public function test_PageState_addError_visible_via_page_global_after_boot(): void

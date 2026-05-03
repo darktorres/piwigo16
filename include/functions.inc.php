@@ -1452,7 +1452,7 @@ DELETE FROM '.CONFIG_TABLE.'
  */
 function conf_get_param($param, $default_value = null)
 {
-    return \Piwigo\Config\Config::get($param) ?? $default_value;
+    return \Piwigo\Config\Config::raw($param) ?? $default_value;
 }
 
 
@@ -2237,7 +2237,7 @@ function send_piwigo_infos(): void
         return;
     }
 
-    // \Piwigo\Config\Config::get('send_piwigo_infos_last_notice') has been loaded in include/common, maybe
+    // \Piwigo\Config\Config::sendPiwigoInfosLastNotice() has been loaded in include/common, maybe
     // a few seconds earlier, we need a refreshed value from the database. Another
     // concurrent execution might have already performed send_piwigo_infos 3 seconds ago.
     load_conf_from_db('param = "send_piwigo_infos_last_notice"', false);
@@ -2632,7 +2632,7 @@ SELECT
     ];
 
     foreach ($features as $feature) {
-        $piwigo_infos['features'][$feature] = \Piwigo\Config\Config::get($feature) ? 'yes' : 'no';
+        $piwigo_infos['features'][$feature] = \Piwigo\Config\Config::raw($feature) ? 'yes' : 'no';
     }
 
     $updateUrl = conf_get_param('send_piwigo_infos_update_url', PHPWG_URL);
@@ -2681,7 +2681,7 @@ function pwg_unique_exec_begins(string $token_name, int $timeout = 60): false|st
     $logger->info('['.$token_name.'][exec='.$exec_id.'] starts now');
 
     if (\Piwigo\Config\Config::has($token_name . '_running')) {
-        $runningRaw = \Piwigo\Config\Config::get($token_name . '_running');
+        $runningRaw = \Piwigo\Config\Config::raw($token_name . '_running');
         [$running_exec_id, $running_exec_start_time] = explode('-', is_scalar($runningRaw) ? (string) $runningRaw : '-');
         if (time() - (int)$running_exec_start_time > $timeout) {
             $logger->info('['.$token_name.'][exec='.$exec_id.'] exec='.$running_exec_id.', timeout stopped by another call to the function');

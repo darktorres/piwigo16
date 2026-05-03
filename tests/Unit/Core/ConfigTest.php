@@ -6,6 +6,8 @@ namespace Piwigo\Tests\Unit\Core;
 
 use PHPUnit\Framework\TestCase;
 use Piwigo\Config\Config;
+use Piwigo\Config\UnknownConfigKeyException;
+use ReflectionMethod;
 
 final class ConfigTest extends TestCase
 {
@@ -19,43 +21,51 @@ final class ConfigTest extends TestCase
         Config::reset();
     }
 
-    public function test_get_returns_default_when_key_missing(): void
+    public function test_raw_returns_default_when_key_missing(): void
     {
-        self::assertNull(Config::get('nonexistent'));
-        self::assertSame('fallback', Config::get('nonexistent', 'fallback'));
+        self::assertNull(Config::raw('nonexistent'));
+        self::assertSame('fallback', Config::raw('nonexistent', 'fallback'));
     }
 
-    public function test_get_returns_value_after_loadArray(): void
+    public function test_raw_returns_value_after_loadArray(): void
     {
         Config::loadArray(['upload_dir' => './upload', 'enable_formats' => false]);
 
-        self::assertSame('./upload', Config::get('upload_dir'));
-        self::assertFalse(Config::get('enable_formats'));
+        self::assertSame('./upload', Config::raw('upload_dir'));
+        self::assertFalse(Config::raw('enable_formats'));
     }
 
-    public function test_getString_coerces_to_string(): void
+    public function test_typed_accessor_coerces_string_value(): void
     {
-        Config::loadArray(['some_int' => 42]);
+        Config::loadArray(['admin_theme' => 42]);
 
-        self::assertSame('42', Config::getString('some_int'));
-        self::assertSame('default', Config::getString('missing', 'default'));
+        self::assertSame('42', Config::adminTheme());
     }
 
-    public function test_getInt_coerces_to_int(): void
+    public function test_typed_accessor_int_returns_default_when_unset(): void
     {
-        Config::loadArray(['some_str' => '7']);
+        Config::loadArray([]);
 
-        self::assertSame(7, Config::getInt('some_str'));
-        self::assertSame(0, Config::getInt('missing'));
+        self::assertSame(20, Config::nbmTreatmentTimeoutDefault());
     }
 
-    public function test_getBool_coerces_to_bool(): void
+    public function test_typed_accessor_bool_coerces_truthy_values(): void
     {
-        Config::loadArray(['flag_true' => 1, 'flag_false' => 0]);
+        Config::loadArray(['activate_comments' => 1, 'allow_html_descriptions' => 0]);
 
-        self::assertTrue(Config::getBool('flag_true'));
-        self::assertFalse(Config::getBool('flag_false'));
-        self::assertFalse(Config::getBool('missing'));
+        self::assertTrue(Config::activateComments());
+        self::assertFalse(Config::allowHtmlDescriptions());
+    }
+
+    public function test_private_typed_getter_rejects_unknown_key(): void
+    {
+        Config::loadArray([]);
+        $getter = new ReflectionMethod(Config::class, 'getString');
+
+        $this->expectException(UnknownConfigKeyException::class);
+        $this->expectExceptionMessage("Config::getString('definitely_not_in_schema')");
+
+        $getter->invoke(null, 'definitely_not_in_schema', 'default');
     }
 
     public function test_paths_cluster_defaults(): void
@@ -197,12 +207,12 @@ final class ConfigTest extends TestCase
         self::assertSame(30, Config::logArchiveDays());
     }
 
-    public function test_override_updates_get_without_persisting(): void
+    public function test_override_updates_typed_accessor_without_persisting(): void
     {
         Config::loadArray(['order_by' => 'ORDER BY id ASC']);
         Config::override('order_by', 'ORDER BY date_creation DESC');
 
-        self::assertSame('ORDER BY date_creation DESC', Config::get('order_by'));
+        self::assertSame('ORDER BY date_creation DESC', Config::orderBy());
     }
 
     public function test_galleryUrl_returns_null_when_unset(): void

@@ -24,10 +24,10 @@ final class SchemaIntegrityTest extends TestCase
 {
     private const ALLOW_LIST = [
         // Preamble / framework
-        'instance', 'attachGlobals', 'src',
-        // Bulk + writers
-        'all', 'persist',
-        // Test helpers
+        'instance', 'attachGlobals',
+        // Bulk reader
+        'all',
+        // Test helper
         'reset',
         // Derived accessors (no SCHEMA key — call other accessors)
         'flipPictureExt', 'flipFileExt',
@@ -66,9 +66,9 @@ final class SchemaIntegrityTest extends TestCase
         }
 
         $reflection = new ReflectionClass(Config::class);
-        foreach ($reflection->getMethods(ReflectionMethod::IS_PUBLIC | ReflectionMethod::IS_STATIC) as $method) {
-            if ($method->getNumberOfParameters() !== 0) {
-                continue; // skip get/getString/getInt/getBool/has/delete/override/loadArray
+        foreach ($reflection->getMethods(ReflectionMethod::IS_STATIC) as $method) {
+            if (!$method->isPublic() || $method->getNumberOfParameters() !== 0) {
+                continue; // skip non-public methods + multi-param helpers (raw/has/delete/override/loadArray)
             }
             $name = $method->getName();
             if (in_array($name, self::ALLOW_LIST, true)) {

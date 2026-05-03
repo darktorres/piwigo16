@@ -151,7 +151,7 @@ if (empty($page['is_external'])) {
         } else {
             $chronology_field = 'created';
         }
-        if (\Piwigo\Config\Config::get('index_'.$chronology_field.'_date_icon')) {
+        if (\Piwigo\Config\Config::raw('index_'.$chronology_field.'_date_icon')) {
             $url = duplicate_index_url(
                 ['chronology_field' => $chronology_field ],
                 ['chronology_date', 'start', 'flat']

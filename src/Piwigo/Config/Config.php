@@ -58,7 +58,7 @@ final class Config
     /**
      * Called by Kernel::boot() after common.inc.php has fully populated $GLOBALS['conf'].
      * Copies conf data into self::$data, then rebinds $GLOBALS['conf'] to reference it,
-     * so any subsequent $conf write also updates Config::get().
+     * so any subsequent $conf write is visible to typed accessors and Config::raw().
      */
     public static function attachGlobals(): void
     {
@@ -78,12 +78,24 @@ final class Config
         $g = $GLOBALS['conf'] ?? [];
         return is_array($g) ? $g : [];
     }
-    public static function get(string $key, mixed $default = null): mixed
+    /**
+     * Public escape hatch for parametric / dynamic keys (per-block menu config,
+     * *_running semaphores, flip_picture_ext caches, DB row write loops, etc.).
+     * Bypasses SCHEMA validation by design.
+     *
+     * Static keys MUST go through a typed accessor — `raw()` is for cases where
+     * the key is computed at runtime and cannot be expressed via SCHEMA.
+     */
+    public static function raw(string $key, mixed $default = null): mixed
     {
         return self::src()[$key] ?? $default;
     }
-    public static function getString(string $key, string $default = ''): string
+
+    private static function getString(string $key, string $default = ''): string
     {
+        if (!array_key_exists($key, self::SCHEMA)) {
+            throw new UnknownConfigKeyException($key, 'getString');
+        }
         $v = self::src()[$key] ?? $default;
         if (is_string($v)) {
             return $v;
@@ -93,8 +105,12 @@ final class Config
         }
         return $default;
     }
-    public static function getInt(string $key, int $default = 0): int
+
+    private static function getInt(string $key, int $default = 0): int
     {
+        if (!array_key_exists($key, self::SCHEMA)) {
+            throw new UnknownConfigKeyException($key, 'getInt');
+        }
         $v = self::src()[$key] ?? $default;
         if (is_int($v)) {
             return $v;
@@ -104,8 +120,12 @@ final class Config
         }
         return $default;
     }
-    public static function getBool(string $key, bool $default = false): bool
+
+    private static function getBool(string $key, bool $default = false): bool
     {
+        if (!array_key_exists($key, self::SCHEMA)) {
+            throw new UnknownConfigKeyException($key, 'getBool');
+        }
         $v = self::src()[$key] ?? $default;
         return (bool) $v;
     }

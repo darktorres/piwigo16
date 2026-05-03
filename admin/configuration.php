@@ -433,7 +433,7 @@ switch ($page['section']) {
                 $template->append(
                     'main',
                     [
-                      $checkbox => \Piwigo\Config\Config::get($checkbox),
+                      $checkbox => \Piwigo\Config\Config::raw($checkbox),
                       ],
                     true
                 );
@@ -460,7 +460,7 @@ switch ($page['section']) {
                 $template->append(
                     'comments',
                     [
-                      $checkbox => \Piwigo\Config\Config::get($checkbox),
+                      $checkbox => \Piwigo\Config\Config::raw($checkbox),
                       ],
                     true
                 );
@@ -495,7 +495,7 @@ switch ($page['section']) {
                 $template->append(
                     'display',
                     [
-                      $checkbox => \Piwigo\Config\Config::get($checkbox),
+                      $checkbox => \Piwigo\Config\Config::raw($checkbox),
                       ],
                     true
                 );
@@ -530,7 +530,7 @@ switch ($page['section']) {
                     $template->append(
                         'sizes',
                         [
-                        $checkbox => \Piwigo\Config\Config::get($checkbox),
+                        $checkbox => \Piwigo\Config\Config::raw($checkbox),
                         ],
                         true
                     );

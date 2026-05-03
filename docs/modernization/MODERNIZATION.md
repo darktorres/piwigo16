@@ -30,8 +30,8 @@ of those globals via PHP reference bridges. The call is idempotent. Boot order:
 4. `CurrentUser::attachGlobals()` — binds `$GLOBALS['user']` keys
 5. `ServiceLocator::register()` — registers `Config` and `PageState` instances
 
-After boot, both `$conf['key']` and `Config::get('key')` return the same value. Legacy
-`include/` free-function libraries keep working unchanged.
+After boot, both `$conf['key']` and the typed `Config` accessors read the same backing
+storage. Legacy `include/` free-function libraries keep working unchanged.
 
 ---
 
@@ -56,23 +56,26 @@ classes migrate to `src/`; free functions stay.
 
 ### Config
 
-`Piwigo\Core\Config` is the typed reader over `$conf`. Legacy access still works:
+`Piwigo\Config\Config` is the typed reader over `$conf`. Legacy access still works:
 
 ```php
 global $conf;
 $dir = $conf['upload_dir'];       // still fine
 ```
 
-New code uses typed getters:
+New code uses typed accessors generated from `Config::SCHEMA`:
 
 ```php
-Config::getString('upload_dir', './upload')
-Config::getInt('upload_form_max_file_size', 100)
-Config::getBool('enable_formats')
-Config::get('any_key')            // returns mixed — fallback for dynamic keys
-Config::override('key', $value)   // per-request, not persisted
-conf_update_param('key', $value)  // DB-persisted (free function, unchanged)
+Config::uploadDir()                  // string
+Config::uploadFormMaxFileSize()      // int
+Config::isFormatsEnabled()           // bool
+Config::raw('blk_' . $id)            // mixed — escape hatch for parametric keys only
+Config::override('key', $value)      // per-request, not persisted
+conf_update_param('key', $value)     // DB-persisted (free function, unchanged)
 ```
+
+Static keys MUST go through a typed accessor. The private `getString`/`getInt`/`getBool`
+helpers throw `UnknownConfigKeyException` if called with a key not in `SCHEMA`.
 
 ### PageState
 
@@ -262,10 +265,10 @@ Voluntary migration to typed getters (use the FQN to avoid alias dependency):
 
 | Was                       | Now                                                      |
 | ------------------------- | -------------------------------------------------------- |
-| `$conf['upload_dir']`     | `\Piwigo\Core\Config::getString('upload_dir')`           |
-| `$conf['max_file_size']`  | `\Piwigo\Core\Config::getInt('max_file_size')`           |
-| `$conf['enable_formats']` | `\Piwigo\Core\Config::getBool('enable_formats')`         |
-| `$conf['key'] = $v`       | `\Piwigo\Core\Config::override('key', $v)` (per-request) |
+| `$conf['upload_dir']`     | `\Piwigo\Config\Config::uploadDir()`                     |
+| `$conf['max_file_size']`  | `\Piwigo\Config\Config::uploadFormMaxFileSize()`         |
+| `$conf['enable_formats']` | `\Piwigo\Config\Config::isFormatsEnabled()`              |
+| `$conf['key'] = $v`       | `\Piwigo\Config\Config::override('key', $v)` (per-request) |
 | `conf_update_param(...)`  | unchanged — still the right way to persist               |
 
 ### Database layer

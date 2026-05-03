@@ -253,13 +253,13 @@ function ws_extensions_ignoreupdate(array $params, \Piwigo\Ws\PwgServer $service
         return new PwgError(403, 'Invalid security token');
     }
 
-    $updates_ignored_raw = \Piwigo\Config\Config::get('updates_ignored');
+    $updates_ignored_raw = \Piwigo\Config\Config::raw('updates_ignored');
     $updates_ignored_unserialized = is_string($updates_ignored_raw) ? unserialize($updates_ignored_raw) : false;
     \Piwigo\Config\Config::override('updates_ignored', is_array($updates_ignored_unserialized) ? $updates_ignored_unserialized : []);
 
     // Reset ignored extension
     if ($params['reset']) {
-        $updates_ignored = \Piwigo\Config\Config::get('updates_ignored');
+        $updates_ignored = \Piwigo\Config\Config::raw('updates_ignored');
         $ignore_type = is_string($params['type'] ?? null) ? $params['type'] : '';
         if (!empty($ignore_type) and is_array($updates_ignored) and isset($updates_ignored[$ignore_type])) {
             $updates_ignored[$ignore_type] = [];
@@ -272,7 +272,7 @@ function ws_extensions_ignoreupdate(array $params, \Piwigo\Ws\PwgServer $service
             ]);
         }
 
-        conf_update_param('updates_ignored', pwg_db_real_escape_string(serialize(\Piwigo\Config\Config::get('updates_ignored'))));
+        conf_update_param('updates_ignored', pwg_db_real_escape_string(serialize(\Piwigo\Config\Config::raw('updates_ignored'))));
         unset($_SESSION['extensions_need_update']);
         return true;
     }
@@ -284,7 +284,7 @@ function ws_extensions_ignoreupdate(array $params, \Piwigo\Ws\PwgServer $service
     }
 
     // Add or remove extension from ignore list
-    $ignored_cfg_raw = \Piwigo\Config\Config::get('updates_ignored');
+    $ignored_cfg_raw = \Piwigo\Config\Config::raw('updates_ignored');
     $ignored_cfg = is_array($ignored_cfg_raw) ? $ignored_cfg_raw : [];
     $ignored_for_type = is_array($ignored_cfg[$ignore_type2] ?? null) ? $ignored_cfg[$ignore_type2] : [];
     if (!in_array($ignore_id, $ignored_for_type)) {
@@ -293,7 +293,7 @@ function ws_extensions_ignoreupdate(array $params, \Piwigo\Ws\PwgServer $service
         \Piwigo\Config\Config::override('updates_ignored', $ignored_cfg);
     }
 
-    conf_update_param('updates_ignored', pwg_db_real_escape_string(serialize(\Piwigo\Config\Config::get('updates_ignored'))));
+    conf_update_param('updates_ignored', pwg_db_real_escape_string(serialize(\Piwigo\Config\Config::raw('updates_ignored'))));
     unset($_SESSION['extensions_need_update']);
     return true;
 }
@@ -320,7 +320,7 @@ function ws_extensions_checkupdates(array $params, \Piwigo\Ws\PwgServer $service
 
     $result['piwigo_need_update'] = $_SESSION['need_update'.PHPWG_VERSION];
 
-    $cu_updates_ignored_raw = \Piwigo\Config\Config::get('updates_ignored');
+    $cu_updates_ignored_raw = \Piwigo\Config\Config::raw('updates_ignored');
     $cu_updates_ignored = is_string($cu_updates_ignored_raw) ? unserialize($cu_updates_ignored_raw) : false;
     \Piwigo\Config\Config::override('updates_ignored', is_array($cu_updates_ignored) ? $cu_updates_ignored : []);
 

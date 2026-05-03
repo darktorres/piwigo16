@@ -14,7 +14,7 @@ use Piwigo\Users\CurrentUser;
  * the legacy bootstrap dance), then every root entry point calls Kernel::boot()
  * immediately after. boot() wires the typed facades — Config, PageState,
  * CurrentUser, Lang — to the already-loaded globals via reference bridges, so
- * both old code (global $conf) and new code (Config::get()) read the same data.
+ * both old code (global $conf) and new code (typed accessors / Config::raw()) read the same data.
  *
  * The guard (self::$booted) makes the call idempotent: nested entry points that
  * include common.inc.php a second time will not re-wire and corrupt references.

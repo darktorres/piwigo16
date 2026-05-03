@@ -17,7 +17,7 @@ use PHPStan\Rules\RuleErrorBuilder;
  *
  * Legacy code in include/ and admin/ is allowed to keep using globals; this
  * rule only prevents NEW typed-service code from pulling in the raw globals
- * instead of calling Config::get(), PageState::current(), etc.
+ * instead of calling typed accessors / Config::raw(), PageState::current(), etc.
  *
  * @implements Rule<Global_>
  */
@@ -26,7 +26,7 @@ final class NoGlobalInSrcRule implements Rule
     private const GUARDED = ['conf', 'page', 'user', 'lang'];
 
     private const REPLACEMENTS = [
-        'conf' => 'Config::get()',
+        'conf' => 'Config typed accessor / Config::raw()',
         'page' => 'PageState::current()',
         'user' => 'CurrentUser::get()',
         'lang' => 'Lang::t()',

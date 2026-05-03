@@ -56,7 +56,7 @@ class C13yInternal
     public function c13y_exif(\Piwigo\Admin\Integrity\CheckIntegrity $c13y): void
     {
         foreach (['show_exif', 'use_exif'] as $value) {
-            if ((\Piwigo\Config\Config::get($value)) and (!function_exists('exif_read_data'))) {
+            if ((\Piwigo\Config\Config::raw($value)) and (!function_exists('exif_read_data'))) {
                 $c13y->add_anomaly(
                     sprintf(l10n('%s value is not correct file because exif are not supported'), '$' . 'conf[\''.$value.'\']'),
                     null,

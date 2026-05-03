@@ -165,13 +165,11 @@ A PR introducing a vulnerable dep is blocked. Renovate opens grouped weekly PRs.
 
 ## #5 — Config schema + `.env` support + install-sentinel relocation
 
-**Status:** Done &nbsp;|&nbsp; **Size:** L
+**Status:** Mostly done; gaps remain (overlaps with #6) &nbsp;|&nbsp; **Size:** L
 
-### Outcome (2026-05-03)
+### What shipped (2026-05-03)
 
 Landed across 18 commits (`e8161cc58` → `45d72f9bd`). Net delta: -2200 / +1500 lines.
-
-What shipped:
 
 - `Piwigo\Config\Config::SCHEMA` is the single source of truth for all 283
   config keys. Typed accessors below the `<<<CONFIG-ACCESSORS-BEGIN>>>` /
@@ -224,7 +222,7 @@ What shipped:
 - `docs/config-reference.md` generated from SCHEMA by
   `tools/build-config-reference.php`. README + CONTRIBUTING updated.
 
-Notable scope changes from the original plan:
+### Acknowledged scope changes from the original plan
 
 - The generator does not yet take a `--target` flag — it only handles
   `src/Piwigo/Config/Config.php`. Per-plugin Configs are hand-written
@@ -237,8 +235,59 @@ Notable scope changes from the original plan:
 - `.env.local` is reserved for the test runner; runtime `loadEnv` only
   reads `.env`. Standard phpdotenv layered convention deviates here
   because this repo's prior `.env.local` semantics were test-only.
+- Charset migration was "delete entirely; inline literals" (`utf-8` /
+  `utf8` / `''`) at the 6 use sites. Plan said "hardcode where used OR
+  move into SCHEMA — pick per-constant based on whether per-environment
+  override is realistic." Inlining was the right call for all six.
 
-Verification:
+### Residual gaps (real work remaining)
+
+Small leftovers — finish in a follow-up before declaring #5 done:
+
+1. **`Config::attachGlobals()` and the `$GLOBALS['conf']` reference bridge
+   are still in `Config.php`.** Plan Step 2 said "Delete attachGlobals()
+   and the $conf reference bridge." They stayed because the still-present
+   legacy `global $conf;` reads/writes depend on them. Removing the bridge
+   requires landing #6's residual `$conf` migration first.
+2. **`local/config/config.inc.php` is still loaded** at runtime in 5 entry
+   points (install.php, common.inc.php, i.php, upgrade.php,
+   upgrade_feed.php). Plan Step 7 said stop including it.
+3. **`global $conf;` declarations remain.** I added two myself
+   (`i.php`, `upgrade.php`) so `ConfigLoader::applyEnvOverrides($conf)`
+   could pass PHPStan; they go away once the bridge does.
+4. **Plugin internal `$conf['x']` reads weren't migrated.** Per-plugin
+   Config *classes* shipped, but the plugins' procedural code in
+   `plugins/<X>/` still does `$conf['osm_conf']['main_menu']['enabled']`
+   etc. Plan Step 9 included this migration.
+5. **`SchemaIntegrityTest` doesn't assert "every SCHEMA entry has either
+   a generated accessor OR `'custom' => true`"** (Plan Step 11
+   sub-assertion). Currently only checks the bidirectional method
+   existence and the generator-in-sync invariant.
+
+Deferred design surface — should be tracked as separate small items if we
+want them, not held against #5:
+
+6. No single `ConfigLoader::load()` orchestrator. Three separate methods
+   (`applyDefaults`, `loadEnv`, `applyEnvOverrides`) wired manually at
+   each of the 4 entry points.
+7. No `MissingRequiredConfigException`, no `'required' => true` SCHEMA
+   field (Plan Step 4 step 5).
+8. No `'description'` or `'sensitive'` SCHEMA fields. `docs/config-
+   reference.md` therefore has no descriptions, and there's no
+   sensitive-masking for logging.
+9. `Config::dumpForLog(): array` (sensitive-masked) listed in Plan
+   Step 2 — doesn't exist.
+10. DB-config-table overlay is in `load_conf_from_db()` (called from
+    `common.inc.php`), not in `ConfigLoader`. Plan Step 4 step 2
+    expected the loader to own all 5 layering steps.
+11. `ConfigStorage` doesn't take a namespace prefix for plugins (Plan
+    Step 5).
+12. `Config::raw()` semantic differs from plan. Plan said `raw(): array`
+    for bulk read. Shipped: `raw(string $key, mixed $default = null): mixed`
+    as the parametric escape hatch.
+
+### Verification of what shipped
+
 - 250/250 PHPUnit tests pass (Unit + Integration combined, 1412 assertions)
 - PHPStan level 9 clean
 - Pint clean

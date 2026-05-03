@@ -328,8 +328,6 @@ function pwg_mail_notification_admins(array|string $subject, array|string $conte
         return false;
     }
 
-    global $user;
-
     if (is_array($subject) or is_array($content)) {
         switch_lang_to(get_default_language());
 
@@ -346,7 +344,7 @@ function pwg_mail_notification_admins(array|string $subject, array|string $conte
     $tpl_vars = [];
     if ($send_technical_details) {
         $tpl_vars['TECHNICAL'] = [
-          'username' => stripslashes((string) $user['username']),
+          'username' => stripslashes(\Piwigo\Users\CurrentUser::get()->username),
           'ip' => $_SERVER['REMOTE_ADDR'],
           'user_agent' => $_SERVER['HTTP_USER_AGENT'],
           ];
@@ -389,7 +387,6 @@ function pwg_mail_admins(array $args = [], array $tpl = [], bool $exclude_curren
         return false;
     }
 
-    global $user;
     $return = true;
 
     $user_statuses = ['webmaster'];
@@ -424,7 +421,7 @@ SELECT
 
     if ($exclude_current_user) {
         $query .= '
-    AND i.user_id <> '.$user['id'];
+    AND i.user_id <> '.\Piwigo\Users\CurrentUser::get()->id;
     }
 
     $query .= '
@@ -585,7 +582,8 @@ SELECT
  */
 function pwg_mail(string|array $to, array $args = [], array $tpl = []): bool
 {
-    global $conf_mail, $lang_info, $page;
+    global $conf_mail, $lang_info;
+    $page = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
 
     if (empty($to) and empty($args['Cc']) and empty($args['Bcc'])) {
         return true;
@@ -893,11 +891,11 @@ function move_css_to_body(string $content): string
 /** @param array<mixed> $args */
 function pwg_send_mail_test(bool $success, mixed $mail, array $args): void
 {
-    global $user, $lang_info;
+    global $lang_info;
 
     $dir = PHPWG_ROOT_PATH.\Piwigo\Config\Config::dataLocation().'tmp';
     if (mkgetdir($dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
-        $filename = $dir.'/mail.'.stripslashes((string) $user['username']).'.'.$lang_info['code'].'-'.date('YmdHis').($success ? '' : '.ERROR');
+        $filename = $dir.'/mail.'.stripslashes(\Piwigo\Users\CurrentUser::get()->username).'.'.$lang_info['code'].'-'.date('YmdHis').($success ? '' : '.ERROR');
         if ($args['content_format'] == 'text/plain') {
             $filename .= '.txt';
         } else {

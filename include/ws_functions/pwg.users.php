@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
-global $template, $user, $page, $persistent_cache, $lang;
+global $persistent_cache;
 
+use Piwigo\Users\CurrentUser;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
@@ -457,19 +458,19 @@ SELECT DISTINCT ';
         return new PwgError(403, 'Invalid security token');
     }
 
-    global $user;
+    $currentUser = CurrentUser::get();
 
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
     $protected_users = [
-      $user['id'],
+      $currentUser->id,
       \Piwigo\Config\Config::guestId(),
       \Piwigo\Config\Config::defaultUserId(),
       \Piwigo\Config\Config::webmasterId(),
       ];
 
     // an admin can't delete other admin/webmaster
-    if ('admin' == $user['status']) {
+    if ('admin' == $currentUser->status) {
         $query = '
 SELECT
     user_id
@@ -572,7 +573,7 @@ SELECT
         return new PwgError(401, 'Access Denied');
     }
 
-    global $user;
+    $currentUser = CurrentUser::get();
 
     // ACTIVATE_COMMENTS
     if (!\Piwigo\Config\Config::activateComments()) {
@@ -593,7 +594,7 @@ SELECT
     }
 
     // SPECIAL_USER
-    $special_user = in_array($user['id'], [\Piwigo\Config\Config::guestId(), \Piwigo\Config\Config::defaultUserId()]);
+    $special_user = in_array($currentUser->id, [\Piwigo\Config\Config::guestId(), \Piwigo\Config\Config::defaultUserId()]);
     if ($special_user) {
         unset(
             $params['password'],
@@ -610,7 +611,7 @@ SELECT
         $query = '
 SELECT '.\Piwigo\Config\Config::userFields()['password'].' AS password
   FROM '.USERS_TABLE.'
-  WHERE '.\Piwigo\Config\Config::userFields()['id'].' = \''.$user['id'].'\'
+  WHERE '.\Piwigo\Config\Config::userFields()['id'].' = \''.$currentUser->id.'\'
 ;';
         [$current_password] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 
@@ -633,7 +634,7 @@ SELECT '.\Piwigo\Config\Config::userFields()['password'].' AS password
         $params['enabled_high']
     );
 
-    $params['user_id'] = [$user['id']];
+    $params['user_id'] = [$currentUser->id];
     $updated_users = check_and_save_user_infos($params);
 
     if (isset($updated_users['error'])) {
@@ -660,8 +661,6 @@ SELECT '.\Piwigo\Config\Config::userFields()['password'].' AS password
  * @param array<mixed> $params
  */function ws_users_preferences_set(array $params, \Piwigo\Ws\PwgServer &$service): mixed
 {
-    global $user;
-
     $pref_param = is_scalar($params['param']) ? (string) $params['param'] : '';
     if (!preg_match('/^[a-zA-Z0-9_-]+$/', $pref_param)) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid param name #'.$pref_param.'#');
@@ -674,7 +673,7 @@ SELECT '.\Piwigo\Config\Config::userFields()['password'].' AS password
 
     userprefs_update_param($pref_param, $value);
 
-    return $user['preferences'];
+    return CurrentUser::get()->rawAttributes['preferences'] ?? null;
 }
 
 /**
@@ -688,12 +687,11 @@ SELECT '.\Piwigo\Config\Config::userFields()['password'].' AS password
  * @param array<mixed> $params
  */function ws_users_favorites_add(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|true
 {
-    global $user;
-
     if (is_a_guest()) {
         return new PwgError(403, 'User must be logged in.');
     }
 
+    $userId = CurrentUser::get()->id;
     $fav_image_id = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
     // does the image really exist?
     $query = '
@@ -710,7 +708,7 @@ SELECT COUNT(*)
         FAVORITES_TABLE,
         [
         'image_id' => $fav_image_id,
-        'user_id' => $user['id'],
+        'user_id' => $userId,
     ],
         ['ignore' => true]
     );
@@ -729,12 +727,11 @@ SELECT COUNT(*)
  * @param array<mixed> $params
  */function ws_users_favorites_remove(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|true
 {
-    global $user;
-
     if (is_a_guest()) {
         return new PwgError(403, 'User must be logged in.');
     }
 
+    $userId = CurrentUser::get()->id;
     $rem_image_id = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
     // does the image really exist?
     $query = '
@@ -750,7 +747,7 @@ SELECT COUNT(*)
     $query = '
 DELETE
   FROM '.FAVORITES_TABLE.'
-  WHERE user_id = '.$user['id'].'
+  WHERE user_id = '.$userId.'
     AND image_id = '.$rem_image_id.'
 ;';
 
@@ -773,12 +770,11 @@ DELETE
  */
 function ws_users_favorites_getList(array $params, \Piwigo\Ws\PwgServer &$service): false|array
 {
-    global $user;
-
     if (is_a_guest()) {
         return false;
     }
 
+    $userId = CurrentUser::get()->id;
     check_user_favorites();
 
     $order_by = ws_std_image_sql_order($params, 'i.');
@@ -789,7 +785,7 @@ SELECT
     i.*
   FROM '.FAVORITES_TABLE.'
     INNER JOIN '.IMAGES_TABLE.' i ON image_id = i.id
-  WHERE user_id = '.$user['id'].'
+  WHERE user_id = '.$userId.'
 '.get_sql_condition_FandF(
         [
           'visible_images' => 'id',
@@ -852,7 +848,6 @@ SELECT
  * @param array<mixed> $params
  */function ws_users_generate_password_link(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
 {
-    global $user;
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
     include_once(PHPWG_ROOT_PATH.'include/functions_mail.inc.php');
 
@@ -878,7 +873,7 @@ SELECT
     }
 
     // Only webmaster can perform this action for another webmaster
-    if ('admin' === $user['status'] && 'webmaster' === $user_lost_status) {
+    if ('admin' === CurrentUser::get()->status && 'webmaster' === $user_lost_status) {
         return new PwgError(403, 'You cannot perform this action');
     }
 
@@ -973,7 +968,8 @@ SELECT
  * @param array<mixed> $params
  */function ws_create_api_key(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
 {
-    global $user, $logger;
+    global $logger;
+    $userId = CurrentUser::get()->id;
 
     if (is_a_guest() or !connected_with_pwg_ui()) {
         return new PwgError(401, 'Acces Denied');
@@ -995,9 +991,9 @@ SELECT
     $key_name = pwg_db_real_escape_string($api_key_name_raw);
     $duration = is_numeric($params['duration']) ? (0 == (int) $params['duration'] ? 1 : (int) $params['duration']) : 1;
 
-    $secret = create_api_key($user['id'], $duration, $key_name);
+    $secret = create_api_key($userId, $duration, $key_name);
 
-    $logger->info('[api_key][user_id='.$user['id'].'][action=create][key_name='.$api_key_name_raw.']');
+    $logger->info('[api_key][user_id='.$userId.'][action=create][key_name='.$api_key_name_raw.']');
 
     return $secret;
 }
@@ -1013,7 +1009,8 @@ SELECT
  * @param array<mixed> $params
  */function ws_revoke_api_key(array $params, \Piwigo\Ws\PwgServer &$service): mixed
 {
-    global $user, $logger;
+    global $logger;
+    $userId = CurrentUser::get()->id;
 
     if (is_a_guest() or !connected_with_pwg_ui()) {
         return new PwgError(401, 'Acces Denied');
@@ -1028,13 +1025,13 @@ SELECT
         return new PwgError(403, l10n('Invalid pkid format'));
     }
 
-    $revoked_key = revoke_api_key($user['id'], $revoke_pkid);
+    $revoked_key = revoke_api_key($userId, $revoke_pkid);
 
     if (true !== $revoked_key) {
         return new PwgError(403, is_string($revoked_key) ? $revoked_key : '');
     }
 
-    $logger->info('[api_key][user_id='.$user['id'].'][action=revoke][pkid='.$revoke_pkid.']');
+    $logger->info('[api_key][user_id='.$userId.'][action=revoke][pkid='.$revoke_pkid.']');
 
     return l10n('API Key has been successfully revoked.');
 }
@@ -1050,7 +1047,8 @@ SELECT
  * @param array<mixed> $params
  */function ws_edit_api_key(array $params, \Piwigo\Ws\PwgServer &$service): mixed
 {
-    global $user, $logger;
+    global $logger;
+    $userId = CurrentUser::get()->id;
 
     if (is_a_guest()) {
         return new PwgError(401, 'Acces Denied');
@@ -1070,13 +1068,13 @@ SELECT
     }
 
     $key_name = pwg_db_real_escape_string(is_scalar($params['key_name']) ? (string) $params['key_name'] : '');
-    $edited_key = edit_api_key($user['id'], $edit_pkid, $key_name);
+    $edited_key = edit_api_key($userId, $edit_pkid, $key_name);
 
     if (true !== $edited_key) {
         return new PwgError(403, $edited_key);
     }
 
-    $logger->info('[api_key][user_id='.$user['id'].'][action=edit][pkid='.$edit_pkid.'][new_name='.$key_name.']');
+    $logger->info('[api_key][user_id='.$userId.'][action=edit][pkid='.$edit_pkid.'][new_name='.$key_name.']');
 
     return l10n('API Key has been successfully edited.');
 }
@@ -1093,8 +1091,6 @@ SELECT
  * @param array<mixed> $params
  */function ws_get_api_key(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
 {
-    global $user;
-
     if (is_a_guest()) {
         return new PwgError(401, 'Acces Denied');
     }
@@ -1107,7 +1103,7 @@ SELECT
         return new PwgError(403, 'Invalid security token');
     }
 
-    $api_keys = get_api_key($user['id']);
+    $api_keys = get_api_key((string) CurrentUser::get()->id);
 
     return $api_keys ?: new PwgError(404, l10n('No API key found'));
 }

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-global $template, $user, $page, $persistent_cache, $lang;
+global $persistent_cache;
 
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
@@ -282,13 +282,13 @@ function ws_getCacheSize(array $params, \Piwigo\Ws\PwgServer &$service): array
  * @param array<mixed> $params
  */function ws_caddie_add(array $params, \Piwigo\Ws\PwgServer &$service): int
 {
-    global $user;
+    $userId = \Piwigo\Users\CurrentUser::get()->id;
 
     $query = '
 SELECT id
   FROM '. IMAGES_TABLE .'
       LEFT JOIN '. CADDIE_TABLE .'
-      ON id=element_id AND user_id='. $user['id'] .'
+      ON id=element_id AND user_id='. $userId .'
   WHERE id IN ('. implode(',', array_map(fn ($v) => is_numeric($v) ? (int) $v : 0, is_array($params['image_id']) ? $params['image_id'] : [])) .')
     AND element_id IS NULL
 ;';
@@ -298,7 +298,7 @@ SELECT id
     foreach ($result as $id) {
         $datas[] = [
           'element_id' => $id,
-          'user_id' => $user['id'],
+          'user_id' => $userId,
           ];
     }
     if (count($datas)) {
@@ -400,12 +400,11 @@ function ws_session_logout($params, \Piwigo\Ws\PwgServer &$service): PwgError|tr
  */
 function ws_session_getStatus($params, \Piwigo\Ws\PwgServer &$service): mixed
 {
-    global $user;
-
-    $res['username'] = is_a_guest() ? 'guest' : stripslashes((string) $user['username']);
-    foreach (['status', 'theme', 'language'] as $k) {
-        $res[$k] = $user[$k];
-    }
+    $currentUser = \Piwigo\Users\CurrentUser::get();
+    $res['username'] = is_a_guest() ? 'guest' : stripslashes($currentUser->username);
+    $res['status'] = $currentUser->status;
+    $res['theme'] = $currentUser->theme;
+    $res['language'] = $currentUser->language;
     $res['pwg_token'] = get_pwg_token();
     $res['charset'] = get_pwg_charset();
 
@@ -691,7 +690,11 @@ SELECT
  * @param array<mixed> $params
  */function ws_history_log(array $params, \Piwigo\Ws\PwgServer &$service): void
 {
-    global $logger, $page;
+    global $logger;
+    $page = &$GLOBALS['page'];
+    if (!is_array($page)) {
+        $page = [];
+    }
 
     if (!empty($params['section']) and in_array($params['section'], get_enums(HISTORY_TABLE, 'section'))) {
         $page['section'] = $params['section'];

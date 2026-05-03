@@ -45,11 +45,10 @@ function rank_compare(array $a, array $b): int
  */
 function check_restrictions($category_id): void
 {
-    global $user;
-
+    $forbidden = \Piwigo\Users\CurrentUser::get()->rawAttributes['forbidden_categories'] ?? '';
     // $filter['visible_categories'] and $filter['visible_images']
     // are not used because it's not necessary (filter <> restriction)
-    if (in_array($category_id, explode(',', (string) $user['forbidden_categories']))) {
+    if (in_array($category_id, explode(',', is_scalar($forbidden) ? (string) $forbidden : ''))) {
         access_denied();
     }
 }
@@ -62,7 +61,13 @@ function check_restrictions($category_id): void
 /** @return array<mixed> */
 function get_categories_menu(): array
 {
-    global $page, $user, $filter;
+    global $filter;
+    $page = &$GLOBALS['page'];
+    if (!is_array($page)) {
+        $page = [];
+    }
+    $currentUser = \Piwigo\Users\CurrentUser::get();
+    $userExpand = $currentUser->rawAttributes['expand'] ?? false;
 
     $query = '
 SELECT ';
@@ -73,17 +78,19 @@ SELECT ';
     $query .= '
   date_last, max_date_last, count_images, count_categories';
 
-    // $user['forbidden_categories'] including with USER_CACHE_CATEGORIES_TABLE
+    // forbidden_categories handled by USER_CACHE_CATEGORIES_TABLE join
     $query .= '
 FROM '.CATEGORIES_TABLE.' INNER JOIN '.USER_CACHE_CATEGORIES_TABLE.'
-  ON id = cat_id and user_id = '.$user['id'];
+  ON id = cat_id and user_id = '.$currentUser->id;
 
     // Always expand when filter is activated
-    if (!$user['expand'] and !$filter['enabled']) {
+    if (!$userExpand and !$filter['enabled']) {
         $where = '
 (id_uppercat is NULL';
-        if (isset($page['category'])) {
-            $where .= ' OR id_uppercat IN ('.$page['category']['uppercats'].')';
+        $category = is_array($page['category'] ?? null) ? $page['category'] : null;
+        if ($category !== null) {
+            $uppercats = is_scalar($category['uppercats'] ?? null) ? (string) $category['uppercats'] : '';
+            $where .= ' OR id_uppercat IN ('.$uppercats.')';
         }
         $where .= ')';
     } else {
@@ -100,7 +107,7 @@ FROM '.CATEGORIES_TABLE.' INNER JOIN '.USER_CACHE_CATEGORIES_TABLE.'
     $where = trigger_change(
         'get_categories_menu_sql_where',
         $where,
-        $user['expand'],
+        $userExpand,
         $filter['enabled']
     );
 
@@ -110,7 +117,7 @@ WHERE '.$where.'
 
     $result = pwg_query($query);
     $cats = [];
-    $selected_category = $page['category'] ?? null;
+    $selected_category = is_array($page['category'] ?? null) ? $page['category'] : null;
     while ($row = pwg_db_fetch_assoc($result)) {
         $child_date_last = @$row['max_date_last'] > @$row['date_last'];
         $row = array_merge(
@@ -138,8 +145,11 @@ WHERE '.$where.'
             $row['icon_ts'] = get_icon(is_string($row['max_date_last']) || is_null($row['max_date_last']) ? $row['max_date_last'] : (string) $row['max_date_last'], $child_date_last);
         }
         $cats[] = $row;
-        if ($row['id'] == @$page['category']['id']) { //save the number of subcats for later optim
-            $page['category']['count_categories'] = $row['count_categories'];
+        if ($selected_category !== null && $row['id'] == ($selected_category['id'] ?? null)) {
+            //save the number of subcats for later optim
+            $cat = is_array($page['category'] ?? null) ? $page['category'] : [];
+            $cat['count_categories'] = $row['count_categories'];
+            $page['category'] = $cat;
         }
     }
     usort($cats, global_rank_compare(...));
@@ -217,7 +227,7 @@ SELECT *
 /** @return array<mixed> */
 function get_category_preferred_image_orders(): array
 {
-    global $page;
+    $page = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
 
     $result = trigger_change('get_category_preferred_image_orders', [
       [l10n('Default'),                        '',                     true],
@@ -250,7 +260,7 @@ function display_select_categories(
     string $blockname,
     bool|string $fullname = true
 ): void {
-    global $template;
+    $template = \Piwigo\Template\TemplateRegistry::current();
 
     $tpl_cats = [];
     foreach ($categories as $category) {
@@ -721,7 +731,7 @@ SELECT
  */
 function get_related_categories_menu(array $items, array $excluded_cat_ids = []): array
 {
-    global $page;
+    $page = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
 
     $common_cats = get_common_categories($items, \Piwigo\Config\Config::relatedAlbumsDisplayLimit(), $excluded_cat_ids);
     // echo '<pre>'; print_r($common_cats); echo '</pre>';
@@ -769,8 +779,9 @@ SELECT
                 $url_params['category'] = $page['category'];
 
                 $url_params['combined_categories'] = [$cat];
-                if (isset($page['combined_categories'])) {
-                    $url_params['combined_categories'] = array_merge($page['combined_categories'], [$cat]);
+                $combined = is_array($page['combined_categories'] ?? null) ? $page['combined_categories'] : null;
+                if ($combined !== null) {
+                    $url_params['combined_categories'] = array_merge($combined, [$cat]);
                 }
             } else {
                 $url_params['category'] = $cat;

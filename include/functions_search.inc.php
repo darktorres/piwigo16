@@ -27,7 +27,10 @@ function get_search_id_pattern(int|string $candidate): ?string
 /** @return array<string,mixed>|null */
 function get_search_info(int|string $candidate): ?array
 {
-    global $page;
+    $page = &$GLOBALS['page'];
+    if (!is_array($page)) {
+        $page = [];
+    }
 
     // $candidate might be a search.id or a search_uuid
     $clause_pattern = get_search_id_pattern($candidate);
@@ -76,8 +79,6 @@ SELECT *
  */
 function get_search_array($search_id): array
 {
-    global $user;
-
     $search = get_search_info($search_id);
 
     if (empty($search)) {
@@ -767,11 +768,13 @@ SELECT
  */
 function get_clause_for_filter($filter_name): string
 {
-    global $page;
+    $page = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
 
     $other_filters_items = get_items_for_filter($filter_name);
     if (false === $other_filters_items) {
-        return '1=1'.$page['search_details']['forbidden'];
+        $details = is_array($page['search_details'] ?? null) ? $page['search_details'] : [];
+        $forbidden = is_string($details['forbidden'] ?? null) ? $details['forbidden'] : '';
+        return '1=1'.$forbidden;
     }
 
     return 'image_id IN ('.implode(',', $other_filters_items).')';
@@ -790,9 +793,16 @@ function get_clause_for_filter($filter_name): string
  */
 function get_items_for_filter(string $filter_name)
 {
-    global $page, $logger;
+    global $logger;
+    $page = &$GLOBALS['page'];
+    if (!is_array($page)) {
+        $page = [];
+    }
 
-    $other_filters = array_diff(array_keys($page['search_details']['image_ids_for_filter']), [$filter_name]);
+    $detailsRaw = $page['search_details'] ?? [];
+    $details = is_array($detailsRaw) ? $detailsRaw : [];
+    $imageIdsForFilter = is_array($details['image_ids_for_filter'] ?? null) ? $details['image_ids_for_filter'] : [];
+    $other_filters = array_diff(array_keys($imageIdsForFilter), [$filter_name]);
 
     if (empty($other_filters)) {
         return false;
@@ -800,15 +810,22 @@ function get_items_for_filter(string $filter_name)
 
     $cache_key = md5(implode(',', $other_filters));
 
-    if (!isset($page['search_details'][__FUNCTION__][$cache_key])) {
+    $details = is_array($page['search_details'] ?? null) ? $page['search_details'] : [];
+    $cache = is_array($details[__FUNCTION__] ?? null) ? $details[__FUNCTION__] : [];
+    if (!isset($cache[$cache_key])) {
         $function_start = get_moment();
 
-        $other_filters_items = $page['search_details']['image_ids_for_filter'][array_shift($other_filters)];
+        $first = $imageIdsForFilter[array_shift($other_filters)] ?? [];
+        $other_filters_items = is_array($first)
+            ? array_values(array_filter($first, fn ($v) => is_int($v) || is_string($v)))
+            : [];
         foreach ($other_filters as $other_filter) {
-            $other_filters_items = array_intersect($other_filters_items, $page['search_details']['image_ids_for_filter'][$other_filter]);
+            $nextRaw = is_array($imageIdsForFilter[$other_filter] ?? null) ? $imageIdsForFilter[$other_filter] : [];
+            $next = array_filter($nextRaw, fn ($v) => is_int($v) || is_string($v));
+            $other_filters_items = array_intersect($other_filters_items, $next);
         }
 
-        $other_filters_items = array_unique($other_filters_items);
+        $other_filters_items = array_values(array_unique($other_filters_items));
 
         $debug_msg = '['.__FUNCTION__.'] cache computed for '.(count($other_filters) + 1).' other filters';
         $debug_msg .= ' ('.count($other_filters_items).' items)';
@@ -819,10 +836,19 @@ function get_items_for_filter(string $filter_name)
             $other_filters_items = [-1];
         }
 
-        @$page['search_details'][__FUNCTION__][$cache_key] = $other_filters_items;
+        $cache[$cache_key] = $other_filters_items;
+        $details[__FUNCTION__] = $cache;
+        $page['search_details'] = $details;
     }
 
-    return $page['search_details'][__FUNCTION__][$cache_key];
+    $rawCached = is_array($cache[$cache_key]) ? $cache[$cache_key] : [];
+    $cached = [];
+    foreach ($rawCached as $v) {
+        if (is_int($v) || is_string($v)) {
+            $cached[] = (int) $v;
+        }
+    }
+    return $cached;
 }
 
 
@@ -1432,7 +1458,10 @@ class QResults
  */
 function qsearch_get_text_token_search_sql(\Piwigo\Search\QSingleToken $token, array $fields): array
 {
-    global $page;
+    $page = &$GLOBALS['page'];
+    if (!is_array($page)) {
+        $page = [];
+    }
 
     $clauses = [];
     $variants = array_merge([$token->term], $token->variants);
@@ -1657,7 +1686,7 @@ SELECT image_id FROM '.IMAGE_TAG_TABLE.'
 
 function qsearch_get_categories(\Piwigo\Search\QExpression $expr, \Piwigo\Search\QResults $qsr): void
 {
-    global $user;
+    $userId = \Piwigo\Users\CurrentUser::get()->id;
 
     $token_cat_ids = $qsr->cat_iids = array_fill(0, count($expr->stokens), []);
     $all_cats = [];
@@ -1676,7 +1705,7 @@ function qsearch_get_categories(\Piwigo\Search\QExpression $expr, \Piwigo\Search
 SELECT
     *
   FROM '.CATEGORIES_TABLE.'
-    INNER JOIN '.USER_CACHE_CATEGORIES_TABLE.' ON id = cat_id and user_id = '.$user['id'].'
+    INNER JOIN '.USER_CACHE_CATEGORIES_TABLE.' ON id = cat_id and user_id = '.$userId.'
   WHERE ('. implode("\n OR ", $clauses) .')';
         $result = pwg_query($query);
         while ($cat = pwg_db_fetch_assoc($result)) {
@@ -1710,7 +1739,7 @@ SELECT
 SELECT
     id
   FROM '.CATEGORIES_TABLE.'
-    INNER JOIN '.USER_CACHE_CATEGORIES_TABLE.' ON id = cat_id and user_id = '.$user['id'].'
+    INNER JOIN '.USER_CACHE_CATEGORIES_TABLE.' ON id = cat_id and user_id = '.$userId.'
   WHERE id IN ('.implode(',', get_subcat_ids($cat_ids)) .')
 ;';
                 $cat_ids = array_map('intval', query2array($query, null, 'id'));
@@ -1824,12 +1853,16 @@ function qsearch_eval(\Piwigo\Search\QMultiToken $expr, \Piwigo\Search\QResults 
  */
 function get_quick_search_results(string $q, array $options)
 {
-    global $persistent_cache, $user;
+    global $persistent_cache;
+    $currentUser = \Piwigo\Users\CurrentUser::get();
+    $cacheUpdate = is_scalar($currentUser->rawAttributes['cache_update_time'] ?? null)
+        ? (string) $currentUser->rawAttributes['cache_update_time']
+        : '';
 
     $cache_key = $persistent_cache->make_key([
       strtolower($q),
       \Piwigo\Config\Config::orderBy(),
-      $user['id'],$user['cache_update_time'],
+      $currentUser->id, $cacheUpdate,
       isset($options['permissions']) ? (bool)$options['permissions'] : true,
       $options['images_where'] ?? '',
       ]);
@@ -1953,11 +1986,9 @@ function get_quick_search_results_no_cache(string $q, array $options): array
     $extra_items = array_map(static fn (mixed $v): int => (int) $v, $search_results['items']);
     $ids = array_merge($ids, $extra_items);
 
-    global $template;
-
     if (empty($ids)) {
         $debug[] = '-->';
-        $template->append('footer_elements', implode("\n", $debug));
+        \Piwigo\Template\TemplateRegistry::current()->append('footer_elements', implode("\n", $debug));
         return $search_results;
     }
 
@@ -1992,7 +2023,7 @@ SELECT DISTINCT(id) FROM '.IMAGES_TABLE.' i';
     $ids = query2array($query, null, 'id');
 
     $debug[] = count($ids).' final photo count -->';
-    $template->append('footer_elements', implode("\n", $debug));
+    \Piwigo\Template\TemplateRegistry::current()->append('footer_elements', implode("\n", $debug));
 
     $search_results['items'] = $ids;
     return $search_results;
@@ -2069,7 +2100,7 @@ SELECT
  */
 function save_search(array $rules, int|string|null $forked_from = null): array
 {
-    global $user;
+    $createdBy = \Piwigo\Users\CurrentUser::get()->id;
 
     [$dbnow] = pwg_db_fetch_row(pwg_query('SELECT NOW()')) ?? [null];
     $search_uuid = get_available_search_uuid();
@@ -2079,7 +2110,7 @@ function save_search(array $rules, int|string|null $forked_from = null): array
         [
         'rules' => pwg_db_real_escape_string(serialize($rules)),
         'created_on' => $dbnow,
-        'created_by' => $user['user_id'],
+        'created_by' => $createdBy,
         'search_uuid' => $search_uuid,
         'forked_from' => $forked_from,
     ]

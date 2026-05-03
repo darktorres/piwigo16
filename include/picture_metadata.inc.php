@@ -2,7 +2,10 @@
 
 declare(strict_types=1);
 
-global $template, $user, $page, $persistent_cache, $lang, $url_self, $picture, $related_categories, $comment_action;
+global $persistent_cache, $url_self, $picture, $related_categories, $comment_action;
+
+use Piwigo\Core\Lang;
+use Piwigo\Template\TemplateRegistry;
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -36,8 +39,8 @@ if ((\Piwigo\Config\Config::showExif()) and (function_exists('exif_read_data')))
                 // template cannot deal with an array as value, we skip it
                 if (isset($exif[$field]) and !is_array($exif[$field])) {
                     $key = $field;
-                    if (isset($lang['exif_field_'.$field])) {
-                        $key = $lang['exif_field_'.$field];
+                    if (Lang::has('exif_field_'.$field)) {
+                        $key = Lang::t('exif_field_'.$field);
                     }
                     $tpl_meta['lines'][$key] = $exif[$field];
                 }
@@ -46,14 +49,14 @@ if ((\Piwigo\Config\Config::showExif()) and (function_exists('exif_read_data')))
                 // template cannot deal with an array as value, we skip it
                 if (isset($exif[$field]) and !is_array($exif[$field])) {
                     $key = $tokens[1];
-                    if (isset($lang['exif_field_'.$key])) {
-                        $key = $lang['exif_field_'.$key];
+                    if (Lang::has('exif_field_'.$key)) {
+                        $key = Lang::t('exif_field_'.$key);
                     }
                     $tpl_meta['lines'][$key] = $exif[$field];
                 }
             }
         }
-        $template->append('metadata', $tpl_meta);
+        TemplateRegistry::current()->append('metadata', $tpl_meta);
     }
 }
 
@@ -68,11 +71,11 @@ if (\Piwigo\Config\Config::showIptc()) {
 
         foreach ($iptc as $field => $value) {
             $key = $field;
-            if (isset($lang[$field])) {
-                $key = $lang[$field];
+            if (Lang::has((string) $field)) {
+                $key = Lang::t((string) $field);
             }
             $tpl_meta['lines'][$key] = $value;
         }
-        $template->append('metadata', $tpl_meta);
+        TemplateRegistry::current()->append('metadata', $tpl_meta);
     }
 }

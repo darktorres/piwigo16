@@ -94,6 +94,16 @@ if (isset($refresh) and intval($refresh) >= 0
 
 trigger_notify('loc_end_page_header');
 
+// Declare the favicon via an HTTP Link header (RFC 5988). Browsers parse
+// response headers before the body, so this fires BEFORE the in-document
+// <link rel="icon"> would be reachable — preventing Chrome's habit of
+// probing /favicon.ico on the bare origin during the navigation race.
+// In-document <link rel="icon"> tags in each theme's header.tpl remain
+// the primary declaration; this header is the universal fallback for
+// every theme + lifecycle moment.
+header(
+    'Link: <' . get_absolute_root_url() . 'themes/default/icon/favicon.ico>; rel="icon"; type="image/x-icon"'
+);
 header('Content-Type: text/html; charset='.get_pwg_charset());
 $template->parse('header');
 

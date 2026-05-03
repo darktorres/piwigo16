@@ -1,19 +1,19 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 import { pwgUrl } from './helpers/url';
+import { gotoOk, assertVisible } from './helpers/strict-assertions';
+import { attachMonitor } from './helpers/page-monitor';
 
 test('gallery home page loads without errors', async ({ page }) => {
-    const response = await page.goto(pwgUrl('/index.php'));
-    expect(response?.status()).toBe(200);
-    await expect(page).toHaveTitle(/.+/);
-    await expect(page.locator('body')).not.toContainText('Fatal error');
-    await expect(page.locator('body')).not.toContainText('Warning:');
-    await expect(page.locator('body')).not.toContainText('Parse error');
+    const monitor = attachMonitor(page);
+    await gotoOk(page, pwgUrl('/index.php'), 'gallery home');
+    monitor.assertClean('gallery home');
 });
 
 test('identification page renders login form', async ({ page }) => {
-    const response = await page.goto(pwgUrl('/identification.php'));
-    expect(response?.status()).toBe(200);
-    await expect(page.locator('input[name="username"]')).toBeVisible();
-    await expect(page.locator('input[name="password"]')).toBeVisible();
-    await expect(page.locator('input[name="login"]')).toBeVisible();
+    const monitor = attachMonitor(page);
+    await gotoOk(page, pwgUrl('/identification.php'), 'identification');
+    await assertVisible(page.locator('input[name="username"]'), 'identification: username field');
+    await assertVisible(page.locator('input[name="password"]'), 'identification: password field');
+    await assertVisible(page.locator('input[name="login"]'), 'identification: submit button');
+    monitor.assertClean('identification');
 });

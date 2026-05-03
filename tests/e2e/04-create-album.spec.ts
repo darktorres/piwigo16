@@ -12,12 +12,15 @@ test('create album via web service API', async ({ page, request }) => {
         headers: { Cookie: cookieHeader },
         form: {
             method: 'pwg.categories.add',
-            name: 'E2E Test Album',
+            name: `E2E Test Album ${Date.now()}`,
         },
     });
 
-    expect(response.status()).toBe(200);
+    expect(response.status(), 'pwg.categories.add HTTP status').toBe(200);
     const body = await response.json();
-    expect(body.stat).toBe('ok');
-    expect(body.result.id).toBeGreaterThan(0);
+    expect(
+        body.stat,
+        `pwg.categories.add stat (full body: ${JSON.stringify(body)})`
+    ).toBe('ok');
+    expect(body.result.id, 'pwg.categories.add returned id').toBeGreaterThan(0);
 });

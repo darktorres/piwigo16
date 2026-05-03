@@ -1,24 +1,40 @@
 import { test, expect } from '@playwright/test';
 import { loginAsAdmin } from './helpers/admin-login';
 import { pwgUrl } from './helpers/url';
+import { gotoOk, assertVisible } from './helpers/strict-assertions';
+import { attachMonitor } from './helpers/page-monitor';
 
 test('gallery title setting round-trips through $conf write path', async ({ page }) => {
+    const monitor = attachMonitor(page);
     await loginAsAdmin(page);
 
-    await page.goto(pwgUrl('/admin.php?page=configuration&section=main'));
-    await expect(page.locator('body')).not.toContainText('Fatal error');
+    await gotoOk(page, pwgUrl('/admin.php?page=configuration&section=main'), 'configuration page');
 
     const titleInput = page.locator('input[name="gallery_title"]');
-    await expect(titleInput).toBeVisible();
+    await assertVisible(titleInput, 'configuration: gallery_title input');
 
-    const newTitle = 'E2E Gallery Title';
+    const originalTitle = (await titleInput.inputValue()) || 'Piwigo';
+    const newTitle = `E2E Gallery Title ${Date.now()}`;
+
     await titleInput.fill(newTitle);
 
-    await page.click('button[name="submit"]');
+    const submitButton = page.locator('button[name="submit"]');
+    await assertVisible(submitButton, 'configuration: submit button');
+    await submitButton.click();
 
-    await page.goto(pwgUrl('/admin.php?page=configuration&section=main'));
-    await expect(page.locator('input[name="gallery_title"]')).toHaveValue(newTitle);
+    // Reload and verify the new value persisted.
+    await gotoOk(
+        page,
+        pwgUrl('/admin.php?page=configuration&section=main'),
+        'configuration page (after save)'
+    );
+    await expect(
+        page.locator('input[name="gallery_title"]'),
+        `gallery_title should round-trip to '${newTitle}'`
+    ).toHaveValue(newTitle, { timeout: 5000 });
 
-    await page.locator('input[name="gallery_title"]').fill('Piwigo');
-    await page.click('button[name="submit"]');
+    // Restore original
+    await page.locator('input[name="gallery_title"]').fill(originalTitle);
+    await page.locator('button[name="submit"]').click();
+    monitor.assertClean('configuration round-trip');
 });

@@ -1,7 +1,9 @@
 import { test, expect } from '@playwright/test';
-import { loginAsAdmin, attachErrorCollector } from './helpers/admin-login';
+import { loginAsAdmin } from './helpers/admin-login';
 import { getCookieHeader, getPwgToken } from './helpers/upload-photo';
 import { pwgUrl } from './helpers/url';
+import { gotoOk } from './helpers/strict-assertions';
+import { attachMonitor } from './helpers/page-monitor';
 
 test.describe('user management', () => {
     test('create and delete user lifecycle', async ({ page, request }) => {
@@ -25,27 +27,31 @@ test.describe('user management', () => {
                 pwg_token: pwgToken,
             },
         });
+        expect(createRes.status(), 'pwg.users.add HTTP status').toBe(200);
         const createBody = await createRes.json();
-        expect(createBody.stat).toBe('ok');
+        expect(
+            createBody.stat,
+            `pwg.users.add stat (body: ${JSON.stringify(createBody).slice(0, 400)})`
+        ).toBe('ok');
         const userId: number = createBody.result.users?.[0]?.id ?? createBody.result.id ?? 0;
-        expect(userId).toBeGreaterThan(0);
+        expect(userId, 'pwg.users.add returned user id').toBeGreaterThan(0);
 
         // User appears in list
         const listRes = await request.get(pwgUrl('/ws.php?format=json&method=pwg.users.getList'), {
             headers: { Cookie: cookie },
         });
         const listBody = await listRes.json();
-        expect(listBody.stat).toBe('ok');
+        expect(listBody.stat, 'pwg.users.getList stat').toBe('ok');
         const users = listBody.result.users._content ?? listBody.result.users ?? [];
         const usernames: string[] = users.map((u: { username: string }) => u.username);
-        expect(usernames).toContain(username);
+        expect(usernames, 'created user appears in list').toContain(username);
 
         // Delete user
         const deleteRes = await request.post(pwgUrl('/ws.php?format=json'), {
             headers: { Cookie: cookie },
             form: { method: 'pwg.users.delete', user_id: String(userId), pwg_token: pwgToken },
         });
-        expect((await deleteRes.json()).stat).toBe('ok');
+        expect((await deleteRes.json()).stat, 'pwg.users.delete stat').toBe('ok');
 
         // User no longer in list
         const afterDelete = await request.get(
@@ -56,30 +62,22 @@ test.describe('user management', () => {
         );
         const afterUsers = (await afterDelete.json()).result.users._content ?? [];
         const afterNames: string[] = afterUsers.map((u: { username: string }) => u.username);
-        expect(afterNames).not.toContain(username);
+        expect(afterNames, 'deleted user no longer in list').not.toContain(username);
     });
 
     test('admin user list page loads without JS errors', async ({ page }) => {
-        const getErrors = attachErrorCollector(page);
+        const monitor = attachMonitor(page);
         await loginAsAdmin(page);
-        await page.goto(pwgUrl('/admin.php?page=user_list'));
-        expect(
-            getErrors(),
-            `pageerrors: ${getErrors()
-                .map((e) => e.message)
-                .join('; ')}`
-        ).toHaveLength(0);
+        monitor.reset();
+        await gotoOk(page, pwgUrl('/admin.php?page=user_list'), 'admin user_list');
+        monitor.assertClean('admin user_list');
     });
 
     test('admin group list page loads without JS errors', async ({ page }) => {
-        const getErrors = attachErrorCollector(page);
+        const monitor = attachMonitor(page);
         await loginAsAdmin(page);
-        await page.goto(pwgUrl('/admin.php?page=group_list'));
-        expect(
-            getErrors(),
-            `pageerrors: ${getErrors()
-                .map((e) => e.message)
-                .join('; ')}`
-        ).toHaveLength(0);
+        monitor.reset();
+        await gotoOk(page, pwgUrl('/admin.php?page=group_list'), 'admin group_list');
+        monitor.assertClean('admin group_list');
     });
 });

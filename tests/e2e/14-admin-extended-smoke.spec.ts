@@ -1,15 +1,18 @@
 /**
  * Extended admin page smoke tests — one test per page not already covered in 07.
- * Verifies pages load without JS errors. A photo is created in beforeAll so
- * photo-editor routes have a valid ID to load.
+ * Verifies pages load with no JS errors, no failed XHRs, no server-error markers
+ * in the body. A photo is created in beforeAll so photo-editor routes have a
+ * valid ID to load.
  */
 
 import * as path from 'path';
 import { fileURLToPath } from 'url';
-import { test, expect } from '@playwright/test';
-import { loginAsAdmin, attachErrorCollector } from './helpers/admin-login';
+import { test } from '@playwright/test';
+import { loginAsAdmin } from './helpers/admin-login';
 import { getCookieHeader, createAlbum, uploadPhoto } from './helpers/upload-photo';
 import { pwgUrl } from './helpers/url';
+import { gotoOk } from './helpers/strict-assertions';
+import { attachMonitor } from './helpers/page-monitor';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const IMAGE = path.join(__dirname, '../../galleries/Wallpapers/007.jpg');
@@ -22,79 +25,26 @@ test.beforeAll(async ({ browser }) => {
     const cookie = await getCookieHeader(page);
     const request = page.context().request;
 
-    const albumId = await createAlbum(request, cookie, 'Smoke Test Album');
+    const albumId = await createAlbum(request, cookie, `Smoke Test Album ${Date.now()}`);
     sharedPhotoId = await uploadPhoto(request, cookie, IMAGE, albumId, 'Smoke Test Photo');
     await page.close();
 });
 
-test('admin photo editor page loads without JS errors', async ({ page }) => {
-    const getErrors = attachErrorCollector(page);
-    await loginAsAdmin(page);
-    await page.goto(pwgUrl(`/admin.php?page=photo&image_id=${sharedPhotoId}`));
-    expect(
-        getErrors(),
-        `pageerrors: ${getErrors()
-            .map((e) => e.message)
-            .join('; ')}`
-    ).toHaveLength(0);
-});
+const ROUTES: ReadonlyArray<{ name: string; path: () => string }> = [
+    { name: 'admin photo editor', path: () => `/admin.php?page=photo&image_id=${sharedPhotoId}` },
+    { name: 'admin comments', path: () => '/admin.php?page=comments' },
+    { name: 'admin batch_manager', path: () => '/admin.php?page=batch_manager' },
+    { name: 'admin stats', path: () => '/admin.php?page=stats' },
+    { name: 'admin rating', path: () => '/admin.php?page=rating' },
+    { name: 'admin permalinks', path: () => '/admin.php?page=permalinks' },
+];
 
-test('admin comments page loads without JS errors', async ({ page }) => {
-    const getErrors = attachErrorCollector(page);
-    await loginAsAdmin(page);
-    await page.goto(pwgUrl('/admin.php?page=comments'));
-    expect(
-        getErrors(),
-        `pageerrors: ${getErrors()
-            .map((e) => e.message)
-            .join('; ')}`
-    ).toHaveLength(0);
-});
-
-test('admin batch manager page loads without JS errors', async ({ page }) => {
-    const getErrors = attachErrorCollector(page);
-    await loginAsAdmin(page);
-    await page.goto(pwgUrl('/admin.php?page=batch_manager'));
-    expect(
-        getErrors(),
-        `pageerrors: ${getErrors()
-            .map((e) => e.message)
-            .join('; ')}`
-    ).toHaveLength(0);
-});
-
-test('admin stats page loads without JS errors', async ({ page }) => {
-    const getErrors = attachErrorCollector(page);
-    await loginAsAdmin(page);
-    await page.goto(pwgUrl('/admin.php?page=stats'));
-    expect(
-        getErrors(),
-        `pageerrors: ${getErrors()
-            .map((e) => e.message)
-            .join('; ')}`
-    ).toHaveLength(0);
-});
-
-test('admin rating page loads without JS errors', async ({ page }) => {
-    const getErrors = attachErrorCollector(page);
-    await loginAsAdmin(page);
-    await page.goto(pwgUrl('/admin.php?page=rating'));
-    expect(
-        getErrors(),
-        `pageerrors: ${getErrors()
-            .map((e) => e.message)
-            .join('; ')}`
-    ).toHaveLength(0);
-});
-
-test('admin permalinks page loads without JS errors', async ({ page }) => {
-    const getErrors = attachErrorCollector(page);
-    await loginAsAdmin(page);
-    await page.goto(pwgUrl('/admin.php?page=permalinks'));
-    expect(
-        getErrors(),
-        `pageerrors: ${getErrors()
-            .map((e) => e.message)
-            .join('; ')}`
-    ).toHaveLength(0);
-});
+for (const route of ROUTES) {
+    test(`${route.name} — clean (no JS errors, no failed XHRs)`, async ({ page }) => {
+        const monitor = attachMonitor(page);
+        await loginAsAdmin(page);
+        monitor.reset();
+        await gotoOk(page, pwgUrl(route.path()), route.name);
+        monitor.assertClean(route.name);
+    });
+}

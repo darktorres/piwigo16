@@ -2,179 +2,61 @@
  * Phase 5 exit signal: no console TypeError/SyntaxError on any entry-point route.
  * Verifies the Vite build is wired correctly (hashed dist URLs served) and that
  * none of the TS-compiled bundles throw at parse/eval time.
+ *
+ * Each route is asserted with the full error-monitor (pageerror + console.error
+ * + 4xx/5xx XHRs), not just the JS-pageerror collector — bundle eval failures,
+ * missing dist assets, and broken admin AJAX all need to fail this test.
  */
 
 import { test, expect } from '@playwright/test';
-import { loginAsAdmin, attachErrorCollector } from './helpers/admin-login';
+import { loginAsAdmin } from './helpers/admin-login';
 import { pwgUrl } from './helpers/url';
+import { gotoOk } from './helpers/strict-assertions';
+import { attachMonitor } from './helpers/page-monitor';
 
-// ── Gallery routes ──────────────────────────────────────────────────────────
+// ── Gallery (anonymous) routes ──────────────────────────────────────────────
 
-test('gallery home — no JS errors', async ({ page }) => {
-    const getErrors = attachErrorCollector(page);
-    await page.goto(pwgUrl('/index.php'));
-    expect(
-        getErrors(),
-        `pageerrors: ${getErrors()
-            .map((e) => e.message)
-            .join('; ')}`
-    ).toHaveLength(0);
-});
+const ANON_ROUTES = [
+    { name: 'gallery home', path: '/index.php' },
+    { name: 'identification', path: '/identification.php' },
+    { name: 'search', path: '/search.php' },
+    { name: 'tags', path: '/tags.php' },
+] as const;
 
-test('identification page — no JS errors', async ({ page }) => {
-    const getErrors = attachErrorCollector(page);
-    await page.goto(pwgUrl('/identification.php'));
-    expect(
-        getErrors(),
-        `pageerrors: ${getErrors()
-            .map((e) => e.message)
-            .join('; ')}`
-    ).toHaveLength(0);
-});
+for (const route of ANON_ROUTES) {
+    test(`${route.name} — clean (no JS errors, no failed XHRs)`, async ({ page }) => {
+        const monitor = attachMonitor(page);
+        await gotoOk(page, pwgUrl(route.path), route.name);
+        monitor.assertClean(route.name);
+    });
+}
 
-test('search page — no JS errors', async ({ page }) => {
-    const getErrors = attachErrorCollector(page);
-    await page.goto(pwgUrl('/search.php'));
-    expect(
-        getErrors(),
-        `pageerrors: ${getErrors()
-            .map((e) => e.message)
-            .join('; ')}`
-    ).toHaveLength(0);
-});
+// ── Admin (authenticated) routes ────────────────────────────────────────────
 
-test('tags page — no JS errors', async ({ page }) => {
-    const getErrors = attachErrorCollector(page);
-    await page.goto(pwgUrl('/tags.php'));
-    expect(
-        getErrors(),
-        `pageerrors: ${getErrors()
-            .map((e) => e.message)
-            .join('; ')}`
-    ).toHaveLength(0);
-});
+const ADMIN_ROUTES = [
+    { name: 'admin dashboard', path: '/admin.php' },
+    { name: 'admin albums', path: '/admin.php?page=albums' },
+    { name: 'admin batch_manager (filter=all)', path: '/admin.php?page=batch_manager&filter=all' },
+    { name: 'admin photos_add direct', path: '/admin.php?page=photos_add&section=direct' },
+    { name: 'admin configuration', path: '/admin.php?page=configuration' },
+    { name: 'admin history', path: '/admin.php?page=history' },
+    { name: 'admin plugins', path: '/admin.php?page=plugins' },
+    { name: 'admin languages', path: '/admin.php?page=languages' },
+    { name: 'admin themes', path: '/admin.php?page=themes' },
+    { name: 'admin maintenance', path: '/admin.php?page=maintenance' },
+] as const;
 
-// ── Admin routes (authenticated) ────────────────────────────────────────────
-
-test('admin dashboard — no JS errors', async ({ page }) => {
-    const getErrors = attachErrorCollector(page);
-    await loginAsAdmin(page);
-    await page.goto(pwgUrl('/admin.php'));
-    expect(
-        getErrors(),
-        `pageerrors: ${getErrors()
-            .map((e) => e.message)
-            .join('; ')}`
-    ).toHaveLength(0);
-});
-
-test('admin albums — no JS errors', async ({ page }) => {
-    const getErrors = attachErrorCollector(page);
-    await loginAsAdmin(page);
-    await page.goto(pwgUrl('/admin.php?page=albums'));
-    expect(
-        getErrors(),
-        `pageerrors: ${getErrors()
-            .map((e) => e.message)
-            .join('; ')}`
-    ).toHaveLength(0);
-});
-
-test('admin batch manager global — no JS errors', async ({ page }) => {
-    const getErrors = attachErrorCollector(page);
-    await loginAsAdmin(page);
-    await page.goto(pwgUrl('/admin.php?page=batch_manager&filter=all'));
-    expect(
-        getErrors(),
-        `pageerrors: ${getErrors()
-            .map((e) => e.message)
-            .join('; ')}`
-    ).toHaveLength(0);
-});
-
-test('admin photos_add_direct — no JS errors', async ({ page }) => {
-    const getErrors = attachErrorCollector(page);
-    await loginAsAdmin(page);
-    await page.goto(pwgUrl('/admin.php?page=photos_add&section=direct'));
-    expect(
-        getErrors(),
-        `pageerrors: ${getErrors()
-            .map((e) => e.message)
-            .join('; ')}`
-    ).toHaveLength(0);
-});
-
-test('admin configuration — no JS errors', async ({ page }) => {
-    const getErrors = attachErrorCollector(page);
-    await loginAsAdmin(page);
-    await page.goto(pwgUrl('/admin.php?page=configuration'));
-    expect(
-        getErrors(),
-        `pageerrors: ${getErrors()
-            .map((e) => e.message)
-            .join('; ')}`
-    ).toHaveLength(0);
-});
-
-test('admin history — no JS errors', async ({ page }) => {
-    const getErrors = attachErrorCollector(page);
-    await loginAsAdmin(page);
-    await page.goto(pwgUrl('/admin.php?page=history'));
-    expect(
-        getErrors(),
-        `pageerrors: ${getErrors()
-            .map((e) => e.message)
-            .join('; ')}`
-    ).toHaveLength(0);
-});
-
-test('admin plugins installed — no JS errors', async ({ page }) => {
-    const getErrors = attachErrorCollector(page);
-    await loginAsAdmin(page);
-    await page.goto(pwgUrl('/admin.php?page=plugins'));
-    expect(
-        getErrors(),
-        `pageerrors: ${getErrors()
-            .map((e) => e.message)
-            .join('; ')}`
-    ).toHaveLength(0);
-});
-
-test('admin languages — no JS errors', async ({ page }) => {
-    const getErrors = attachErrorCollector(page);
-    await loginAsAdmin(page);
-    await page.goto(pwgUrl('/admin.php?page=languages'));
-    expect(
-        getErrors(),
-        `pageerrors: ${getErrors()
-            .map((e) => e.message)
-            .join('; ')}`
-    ).toHaveLength(0);
-});
-
-test('admin themes — no JS errors', async ({ page }) => {
-    const getErrors = attachErrorCollector(page);
-    await loginAsAdmin(page);
-    await page.goto(pwgUrl('/admin.php?page=themes'));
-    expect(
-        getErrors(),
-        `pageerrors: ${getErrors()
-            .map((e) => e.message)
-            .join('; ')}`
-    ).toHaveLength(0);
-});
-
-test('admin maintenance — no JS errors', async ({ page }) => {
-    const getErrors = attachErrorCollector(page);
-    await loginAsAdmin(page);
-    await page.goto(pwgUrl('/admin.php?page=maintenance'));
-    expect(
-        getErrors(),
-        `pageerrors: ${getErrors()
-            .map((e) => e.message)
-            .join('; ')}`
-    ).toHaveLength(0);
-});
+for (const route of ADMIN_ROUTES) {
+    test(`${route.name} — clean (no JS errors, no failed XHRs)`, async ({ page }) => {
+        const monitor = attachMonitor(page);
+        await loginAsAdmin(page);
+        // Reset because loginAsAdmin's navigations may have triggered routine
+        // requests that we don't want to attribute to this route's check.
+        monitor.reset();
+        await gotoOk(page, pwgUrl(route.path), route.name);
+        monitor.assertClean(route.name);
+    });
+}
 
 // ── Verify hashed dist URLs are served when manifest exists ─────────────────
 
@@ -185,7 +67,7 @@ test('gallery home loads hashed dist script URL', async ({ page }) => {
     });
     // ?no_photo_yet=browse bypasses the "no photos yet" splash page and
     // loads the standard gallery template (which includes Vite-built scripts).
-    await page.goto(pwgUrl('/index.php?no_photo_yet=browse'));
+    await gotoOk(page, pwgUrl('/index.php?no_photo_yet=browse'), 'gallery home (browse)');
     // Scripts may be served directly from dist/assets/ or combined by FileCombiner
     // into _data/combined/. Either way the Vite manifest is being used.
     const viteUrls = scriptUrls.filter(

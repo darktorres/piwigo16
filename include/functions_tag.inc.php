@@ -46,7 +46,7 @@ function get_nb_available_tags(): int
  */
 function get_available_tags(array $tag_ids = []): array
 {
-    global $persistent_cache;
+    $persistent_cache = \Piwigo\Cache\PersistentCacheRegistry::current();
     $user = \Piwigo\Users\CurrentUser::get()->rawAttributes;
 
     $use_persistent_cache = true;
@@ -92,7 +92,7 @@ SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter
         $tag_counters = query2array($query, 'tag_id', 'counter');
     }
 
-    if (empty($tag_counters)) {
+    if (!is_array($tag_counters) || empty($tag_counters)) {
         return [];
     }
 
@@ -111,7 +111,7 @@ SELECT *
     while ($row = pwg_db_fetch_assoc($result)) {
         $row_id = is_numeric($row['id']) ? (int) $row['id'] : (is_scalar($row['id']) ? (string) $row['id'] : '');
         if (isset($tag_counters[$row_id])) {
-            $row['counter'] = intval($tag_counters[$row_id]);
+            $row['counter'] = is_scalar($tag_counters[$row_id]) ? intval($tag_counters[$row_id]) : 0;
             $row['name_raw'] = $row['name'];
             $row['name'] = trigger_change('render_tag_name', $row['name'], $row);
             $tags[] = $row;

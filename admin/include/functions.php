@@ -2163,7 +2163,7 @@ function pwg_URL(): array
  */
 function invalidate_user_cache(bool $full = true): void
 {
-    global $persistent_cache;
+    $persistent_cache = \Piwigo\Cache\PersistentCacheRegistry::current();
 
     if (\Piwigo\Core\LoggerRegistry::isInitialized()) {
         \Piwigo\Core\LoggerRegistry::current()->info(__FUNCTION__.' called');

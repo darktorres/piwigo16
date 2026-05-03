@@ -34,8 +34,6 @@ define('DB_RANDOM_FUNCTION', 'RAND');
  */
 function pwg_db_connect($host, $user, $password, $database): void
 {
-    global $mysqli;
-
     $port = null;
     $socket = null;
 
@@ -56,6 +54,7 @@ function pwg_db_connect($host, $user, $password, $database): void
     if (!$mysqli->select_db($database)) {
         throw new Exception('Connection to server succeed, but it was impossible to connect to database');
     }
+    \Piwigo\Core\MysqliRegistry::set($mysqli);
 
     // MySQL 5.7 default settings forbid to select a colum that is not in the
     // group by. We've used that in Piwigo, for years. As an immediate solution
@@ -75,9 +74,7 @@ function pwg_db_connect($host, $user, $password, $database): void
  */
 function pwg_db_check_charset(): void
 {
-    global $mysqli;
-
-    $mysqli->set_charset('utf8');
+    \Piwigo\Core\MysqliRegistry::current()->set_charset('utf8');
 }
 
 /**
@@ -104,9 +101,7 @@ function pwg_db_check_version(): void
  */
 function pwg_get_db_version()
 {
-    global $mysqli;
-
-    return $mysqli->server_info;
+    return \Piwigo\Core\MysqliRegistry::current()->server_info;
 }
 
 /**
@@ -116,8 +111,9 @@ function pwg_get_db_version()
  */
 function pwg_query(string $query)
 {
-    global $mysqli, $debug, $t2;
+    global $debug, $t2;
     global $page;
+    $mysqli = \Piwigo\Core\MysqliRegistry::current();
     $start = microtime(true);
     ($result = $mysqli->query($query)) or my_error($query, \Piwigo\Config\Config::dieOnSqlError());
 
@@ -174,9 +170,7 @@ SELECT IF(MAX('.$column.')+1 IS NULL, 1, MAX('.$column.')+1)
 
 function pwg_db_changes(): int
 {
-    global $mysqli;
-
-    return $mysqli->affected_rows;
+    return (int) \Piwigo\Core\MysqliRegistry::current()->affected_rows;
 }
 
 function pwg_db_num_rows(bool|mysqli_result $result): int
@@ -233,37 +227,27 @@ function pwg_db_free_result(bool|mysqli_result $result): void
 
 function pwg_db_real_escape_string(string $s): string
 {
-    global $mysqli;
-
-    return $mysqli->real_escape_string($s);
+    return \Piwigo\Core\MysqliRegistry::current()->real_escape_string($s);
 }
 
 function pwg_db_insert_id(): int|string
 {
-    global $mysqli;
-
-    return $mysqli->insert_id;
+    return \Piwigo\Core\MysqliRegistry::current()->insert_id;
 }
 
 function pwg_db_errno(): int
 {
-    global $mysqli;
-
-    return $mysqli->errno;
+    return \Piwigo\Core\MysqliRegistry::current()->errno;
 }
 
 function pwg_db_error(): string
 {
-    global $mysqli;
-
-    return $mysqli->error;
+    return \Piwigo\Core\MysqliRegistry::current()->error;
 }
 
 function pwg_db_close(): bool
 {
-    global $mysqli;
-
-    return $mysqli->close();
+    return \Piwigo\Core\MysqliRegistry::current()->close();
 }
 
 
@@ -780,8 +764,7 @@ function pwg_db_date_to_ts(string $date): string
  */
 function my_error(string $header, bool $die): void
 {
-    global $mysqli;
-
+    $mysqli = \Piwigo\Core\MysqliRegistry::current();
     $error = '[mysql error '.$mysqli->errno.'] '.$mysqli->error."\n";
     $error .= $header;
 

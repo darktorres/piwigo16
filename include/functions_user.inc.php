@@ -1980,8 +1980,6 @@ function check_and_save_user_infos(array $params): array
         ];
     }
 
-    global $service;
-
     $currentUser = CurrentUser::get();
 
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');

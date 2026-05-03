@@ -35,7 +35,8 @@ define('CWEEK', 1);
  */
 function initialize_calendar(): void
 {
-    global $persistent_cache, $filter;
+    global $filter;
+    $persistent_cache = \Piwigo\Cache\PersistentCacheRegistry::current();
 
     $template = TemplateRegistry::current();
     $currentUser = CurrentUser::get();

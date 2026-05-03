@@ -23,7 +23,7 @@ use PHPStan\Rules\RuleErrorBuilder;
  */
 final class NoGlobalInSrcRule implements Rule
 {
-    private const GUARDED = ['conf', 'page', 'user', 'lang', 'template', 'logger'];
+    private const GUARDED = ['conf', 'page', 'user', 'lang', 'template', 'logger', 'mysqli', 'persistent_cache', 'service'];
 
     private const REPLACEMENTS = [
         'conf' => 'Config typed accessor / Config::raw()',
@@ -32,6 +32,9 @@ final class NoGlobalInSrcRule implements Rule
         'lang' => 'Lang::t()',
         'template' => 'TemplateRegistry::current()',
         'logger' => 'LoggerRegistry::current()',
+        'mysqli' => 'MysqliRegistry::current()',
+        'persistent_cache' => 'PersistentCacheRegistry::current()',
+        'service' => 'PwgServerRegistry::current()',
     ];
 
     public function getNodeType(): string

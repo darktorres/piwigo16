@@ -1841,7 +1841,7 @@ function qsearch_eval(\Piwigo\Search\QMultiToken $expr, \Piwigo\Search\QResults 
  */
 function get_quick_search_results(string $q, array $options)
 {
-    global $persistent_cache;
+    $persistent_cache = \Piwigo\Cache\PersistentCacheRegistry::current();
     $currentUser = \Piwigo\Users\CurrentUser::get();
     $cacheUpdate = is_scalar($currentUser->rawAttributes['cache_update_time'] ?? null)
         ? (string) $currentUser->rawAttributes['cache_update_time']

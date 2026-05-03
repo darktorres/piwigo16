@@ -38,6 +38,7 @@ if (!isset($responseFormat)) {
 $responseFormat = (string) $responseFormat;
 
 $service = new PwgServer();
+\Piwigo\Ws\PwgServerRegistry::set($service);
 
 $handler = null;
 switch ($requestFormat) {

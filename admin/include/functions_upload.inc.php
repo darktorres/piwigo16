@@ -244,8 +244,7 @@ SELECT
                 unlink($source_filepath);
                 $error_msg = 'File extension "'.$original_extension.'" for file "'.$original_filename.'" does not match file MIME type "'.$finfo_type.'"';
                 if (defined('IN_WS')) {
-                    global $service;
-                    $service->sendResponse(new PwgError(415, $error_msg));
+                    \Piwigo\Ws\PwgServerRegistry::current()->sendResponse(new PwgError(415, $error_msg));
                     exit;
                 }
 

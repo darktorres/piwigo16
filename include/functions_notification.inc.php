@@ -446,7 +446,7 @@ function news(?string $start = null, ?string $end = null, bool $exclude_img_cats
 /** @return array<mixed>|null */
 function get_recent_post_dates(int $max_dates, int $max_elements, int $max_cats): ?array
 {
-    global $persistent_cache;
+    $persistent_cache = \Piwigo\Cache\PersistentCacheRegistry::current();
     $userId = \Piwigo\Users\CurrentUser::get()->id;
     $cacheUpdate = is_scalar(\Piwigo\Users\CurrentUser::get()->rawAttributes['cache_update_time'] ?? null)
         ? (string) \Piwigo\Users\CurrentUser::get()->rawAttributes['cache_update_time']
@@ -455,7 +455,7 @@ function get_recent_post_dates(int $max_dates, int $max_elements, int $max_cats)
     $cache_key = $persistent_cache->make_key('recent_posts'.$userId.$cacheUpdate.$max_dates.$max_elements.$max_cats);
     $cached = null;
     if ($persistent_cache->get($cache_key, $cached)) {
-        return $cached;
+        return is_array($cached) ? $cached : null;
     }
     $where_sql = get_std_sql_where_restrict_filter('WHERE', 'i.id', true);
 

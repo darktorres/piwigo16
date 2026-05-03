@@ -32,22 +32,23 @@ if ($localConfig !== false) {
 }
 defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
 
-$config_file = PHPWG_ROOT_PATH.PWG_LOCAL_DIR.'config/database.inc.php';
-$config_file_contents = @file_get_contents($config_file);
-if ($config_file_contents === false) {
-    die('Cannot load '.$config_file);
+// Legacy: existing installs may have local/config/database.inc.php with their
+// DB credentials. New installs write .env instead. Either path works.
+$config_file = realpath(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/database.inc.php');
+if ($config_file !== false) {
+    include $config_file;
 }
-$php_end_tag = strrpos($config_file_contents, '?'.'>');
-if ($php_end_tag === false) {
-    die('Cannot find php end tag in '.$config_file);
-}
-
-include($config_file);
 
 require_once PHPWG_ROOT_PATH . 'vendor/autoload.php';
 \Piwigo\Config\ConfigLoader::applyDefaults($conf);
 \Piwigo\Config\ConfigLoader::loadEnv(PHPWG_ROOT_PATH);
 \Piwigo\Config\ConfigLoader::applyEnvOverrides($conf);
+
+$prefixeTable ??= is_scalar($conf['db_prefix'] ?? null) ? (string) $conf['db_prefix'] : 'piwigo_';
+
+if (!\Piwigo\Core\InstallSentinel::isInstalled()) {
+    die('Piwigo is not installed yet — run install.php first.');
+}
 
 // $conf is not used for users tables - define cannot be re-defined
 define('USERS_TABLE', $prefixeTable.'users');

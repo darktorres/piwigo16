@@ -68,7 +68,7 @@ if ($page['display_mode'] == 'letters') {
 
     foreach ($tags as $tag) {
         $tagArr = is_array($tag) ? $tag : [];
-        $tag_letter = mb_strtoupper(mb_substr(pwg_transliterate(is_string($tagArr['name'] ?? null) ? $tagArr['name'] : ''), 0, 1, PWG_CHARSET), PWG_CHARSET);
+        $tag_letter = mb_strtoupper(mb_substr(pwg_transliterate(is_string($tagArr['name'] ?? null) ? $tagArr['name'] : ''), 0, 1, 'utf-8'), 'utf-8');
 
         if ($current_tag_idx == 0) {
             $current_letter = $tag_letter;

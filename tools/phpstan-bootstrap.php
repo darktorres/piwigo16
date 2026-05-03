@@ -8,10 +8,8 @@ define('PWG_LOCAL_DIR', 'local/');
 define('PHPWG_INSTALLED', true);
 define('IN_ADMIN', false);
 
-// Database constants defined by local/config/database.inc.php at runtime.
+// Database table-prefix constant defined in include/constants.php at runtime.
 define('PREFIX_TABLE', 'piwigo_');
-define('DB_CHARSET', 'utf8mb4');
-define('DB_COLLATE', 'utf8mb4_unicode_ci');
 
 // Calendar level indices — defined in include/functions_calendar.inc.php.
 // Redeclared here so analysis of src/Piwigo/Calendar/ finds them.

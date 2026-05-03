@@ -3,7 +3,7 @@
 > **Generated** by `tools/build-config-reference.php` from `Piwigo\Config\Config::SCHEMA`.
 > Do not edit by hand — re-run the generator after editing SCHEMA.
 
-Total keys: **283**.
+Total keys: **284**.
 
 Access pattern:
 
@@ -72,6 +72,7 @@ with a key not in the table below.
 | `db_base` | `string` | `(empty)` | `Config::dbName()` | — |
 | `db_host` | `string` | `localhost` | `Config::dbHost()` | — |
 | `db_password` | `string` | `(empty)` | `Config::dbPassword()` | — |
+| `db_prefix` | `string` | `piwigo_` | `Config::dbPrefix()` | — |
 | `db_user` | `string` | `(empty)` | `Config::dbUser()` | — |
 | `debug_l10n` | `bool` | `false` | `Config::debugL10n()` | — |
 | `debug_mail` | `bool` | `false` | `Config::debugMail()` | — |

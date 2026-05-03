@@ -14,12 +14,12 @@ final class UpgradeChainTest extends IntegrationTestCase
         $this->setUpConnectionFromEnv();
         $this->resetDatabase();
         $this->loadFixture(self::FIXTURE);
-        $this->writeDatabaseConfig();
+        $this->writeRuntimeConfig();
     }
 
     protected function tearDown(): void
     {
-        $this->removeDatabaseConfig();
+        $this->restoreRuntimeConfig();
     }
 
     public function test_upgrade_from_pre15x_dump_returns_409(): void

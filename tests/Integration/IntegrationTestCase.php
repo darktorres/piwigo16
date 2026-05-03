@@ -19,8 +19,10 @@ use Symfony\Component\Process\Process;
  *   PIWIGO_DB_BASE      Test database name — never the production DB (default: piwigo_test)
  *   PIWIGO_BASE_URL     Base URL of the running Apache Piwigo instance
  *
- * Each test class writes a fresh local/config/database.inc.php pointing at the
- * test database and deletes it in tearDown, leaving a clean slate.
+ * Each test class writes a fresh .env at the repo root pointing at the test
+ * database and restores any pre-existing .env in tearDown, leaving a clean
+ * slate. Apache reads .env on every request via Piwigo\Config\ConfigLoader,
+ * so this is what flips the runtime DB pointer for the duration of a test.
  */
 abstract class IntegrationTestCase extends TestCase
 {
@@ -30,6 +32,10 @@ abstract class IntegrationTestCase extends TestCase
     protected string $dbPass;
     protected string $dbName;
     protected string $baseUrl;
+
+    private const ENV_PATH        = __DIR__ . '/../../.env';
+    private const ENV_BACKUP_PATH = __DIR__ . '/../../.env.test-backup';
+    private const STAMP_PATH      = __DIR__ . '/../../local/.installed';
 
     protected function setUpConnectionFromEnv(): void
     {
@@ -65,28 +71,39 @@ abstract class IntegrationTestCase extends TestCase
         $proc->mustRun();
     }
 
-    protected function writeDatabaseConfig(): void
+    /**
+     * Writes a fresh .env pointing at the test DB and creates the install
+     * stamp. Backs up any pre-existing .env so the user's runtime config
+     * can be restored in tearDown.
+     */
+    protected function writeRuntimeConfig(): void
     {
-        $dir = __DIR__ . '/../../local/config';
-        if (!is_dir($dir)) {
-            mkdir($dir, 0755, true);
+        if (file_exists(self::ENV_PATH) && !file_exists(self::ENV_BACKUP_PATH)) {
+            rename(self::ENV_PATH, self::ENV_BACKUP_PATH);
         }
         $host = $this->dbPort ? "{$this->dbHost}:{$this->dbPort}" : $this->dbHost;
-        $d = '$';
-        file_put_contents($dir . '/database.inc.php', sprintf(
-            "<?php\n{$d}conf['dblayer'] = 'mysqli';\n{$d}conf['db_host'] = '%s';\n{$d}conf['db_user'] = '%s';\n{$d}conf['db_password'] = '%s';\n{$d}conf['db_base'] = '%s';\n{$d}prefixeTable = 'piwigo_';\ndefine('PHPWG_INSTALLED', true);\ndefine('PWG_CHARSET', 'utf-8');\ndefine('DB_CHARSET', 'utf8');\ndefine('DB_COLLATE', '');\n?>",
-            addslashes($host),
-            addslashes($this->dbUser),
-            addslashes($this->dbPass),
-            addslashes($this->dbName),
+        file_put_contents(self::ENV_PATH, sprintf(
+            "PIWIGO_DB_HOST=%s\nPIWIGO_DB_USER=%s\nPIWIGO_DB_PASSWORD=%s\nPIWIGO_DB_BASE=%s\nPIWIGO_DB_PREFIX=piwigo_\n",
+            $host,
+            $this->dbUser,
+            $this->dbPass,
+            $this->dbName,
         ));
+
+        $stampDir = dirname(self::STAMP_PATH);
+        if (!is_dir($stampDir)) {
+            mkdir($stampDir, 0755, true);
+        }
+        touch(self::STAMP_PATH);
     }
 
-    protected function removeDatabaseConfig(): void
+    protected function restoreRuntimeConfig(): void
     {
-        $path = __DIR__ . '/../../local/config/database.inc.php';
-        if (file_exists($path)) {
-            unlink($path);
+        if (file_exists(self::ENV_PATH)) {
+            unlink(self::ENV_PATH);
+        }
+        if (file_exists(self::ENV_BACKUP_PATH)) {
+            rename(self::ENV_BACKUP_PATH, self::ENV_PATH);
         }
     }
 

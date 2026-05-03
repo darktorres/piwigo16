@@ -23,12 +23,12 @@ final class WsApiTest extends IntegrationTestCase
         $this->cookieJar = sys_get_temp_dir() . '/piwigo_ws_test_' . getmypid() . '.txt';
         $this->resetDatabase();
         $this->loadFixture(self::FIXTURE);
-        $this->writeDatabaseConfig();
+        $this->writeRuntimeConfig();
     }
 
     protected function tearDown(): void
     {
-        $this->removeDatabaseConfig();
+        $this->restoreRuntimeConfig();
         if (file_exists($this->cookieJar)) {
             unlink($this->cookieJar);
         }

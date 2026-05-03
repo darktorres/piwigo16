@@ -2205,15 +2205,10 @@ UPDATE '.USER_CACHE_TABLE.'
  */
 function create_table_add_character_set($query)
 {
-    defined('DB_CHARSET') or fatal_error('create_table_add_character_set DB_CHARSET undefined');
     if (version_compare(pwg_get_db_version(), '4.1.0', '<')) {
         return $query;
     }
-    $charset_collate = ' DEFAULT CHARACTER SET '.DB_CHARSET;
-    $db_collate = defined('DB_COLLATE') ? (string)constant('DB_COLLATE') : '';
-    if ($db_collate !== '') {
-        $charset_collate .= ' COLLATE '.$db_collate;
-    }
+    $charset_collate = ' DEFAULT CHARACTER SET utf8';
     $query = trim($query);
     $query = trim($query, ';');
     if (preg_match('/^CREATE\s+TABLE/i', $query)) {

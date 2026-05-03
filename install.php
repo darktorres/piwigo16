@@ -43,22 +43,6 @@ require_once PHPWG_ROOT_PATH . 'vendor/autoload.php';
 
 \Piwigo\Config\ConfigLoader::applyDefaults($conf);
 
-// download database config file if exists
-check_input_parameter('dl', $_GET, false, '/^[a-f0-9]{32}$/');
-
-$dlParam = is_scalar($_GET['dl'] ?? null) ? (string) $_GET['dl'] : '';
-if (!empty($dlParam) && file_exists(PHPWG_ROOT_PATH.\Piwigo\Config\Config::dataLocation().'pwg_'.$dlParam)) {
-    $filename = PHPWG_ROOT_PATH.\Piwigo\Config\Config::dataLocation().'pwg_'.$dlParam;
-    header('Cache-Control: no-cache, must-revalidate');
-    header('Pragma: no-cache');
-    header('Content-Disposition: attachment; filename="database.inc.php"');
-    header('Content-Transfer-Encoding: binary');
-    header('Content-Length: '.filesize($filename));
-    echo file_get_contents($filename);
-    unlink($filename);
-    exit();
-}
-
 // Obtain various vars
 $dbhost   = is_scalar($_POST['dbhost'] ?? null) && !empty($_POST['dbhost']) ? (string) $_POST['dbhost'] : 'localhost';
 $dbuser   = is_scalar($_POST['dbuser'] ?? null) && !empty($_POST['dbuser']) ? (string) $_POST['dbuser'] : 'root';
@@ -84,10 +68,6 @@ if (isset($_POST['install'])) {
 $infos = [];
 $errors = [];
 
-$config_file = PHPWG_ROOT_PATH.PWG_LOCAL_DIR .'config/database.inc.php';
-if (@file_exists($config_file)) {
-    include($config_file);
-}
 if (\Piwigo\Core\InstallSentinel::isInstalled()) {
     die('Piwigo is already installed');
 }
@@ -199,48 +179,30 @@ if (isset($_POST['install'])) {
 
     if (count($errors) == 0) {
         $step = 2;
-        $dollar = '$';
-        $file_content = '<?php
-'.$dollar.'conf[\'dblayer\'] = \''.$dblayer.'\';
-'.$dollar.'conf[\'db_base\'] = \''.$dbname.'\';
-'.$dollar.'conf[\'db_user\'] = \''.$dbuser.'\';
-'.$dollar.'conf[\'db_password\'] = \''.$dbpasswd.'\';
-'.$dollar.'conf[\'db_host\'] = \''.$dbhost.'\';
 
-$prefixeTable = \''.$prefixeTable.'\';
-
-define(\'PHPWG_INSTALLED\', true);
-define(\'PWG_CHARSET\', \'utf-8\');
-define(\'DB_CHARSET\', \'utf8\');
-define(\'DB_COLLATE\', \'\');
-
-?'.'>';
-
-        @umask(0111);
-        // writing the configuration file
-        if (!($fp = @fopen($config_file, 'w'))) {
-            // make sure nobody can list files of _data directory
-            secure_directory(PHPWG_ROOT_PATH.\Piwigo\Config\Config::dataLocation());
-
-            $tmp_filename = md5(uniqid((string)time()));
-            $fh = @fopen(PHPWG_ROOT_PATH.\Piwigo\Config\Config::dataLocation() . 'pwg_' . $tmp_filename, 'w');
-            if ($fh !== false) {
-                @fputs($fh, $file_content, strlen($file_content));
-                @fclose($fh);
-            }
-
-            $template->assign(
-                [
-                'config_creation_failed' => true,
-                'config_url' => 'install.php?dl='.$tmp_filename,
-                'config_file_content' => $file_content,
-                ]
-            );
+        // Persist DB credentials to .env. Atomic write (tmp + rename) so a
+        // half-written file can never break a subsequent boot. Fail loudly
+        // on write errors — silently continuing leaves the install
+        // half-broken (DB tables created, no config to point at them).
+        $envPath = PHPWG_ROOT_PATH . '.env';
+        $envBody = "PIWIGO_DB_HOST={$dbhost}\n"
+                 . "PIWIGO_DB_USER={$dbuser}\n"
+                 . "PIWIGO_DB_PASSWORD={$dbpasswd}\n"
+                 . "PIWIGO_DB_BASE={$dbname}\n"
+                 . "PIWIGO_DB_PREFIX={$prefixeTable}\n";
+        $envTmp = $envPath . '.tmp.' . bin2hex(random_bytes(4));
+        if (file_put_contents($envTmp, $envBody) === false || !rename($envTmp, $envPath)) {
+            @unlink($envTmp);
+            fatal_error('Could not write ' . $envPath . ' — check filesystem permissions on the repository root.');
         }
-        if ($fp !== false) {
-            @fputs($fp, $file_content, strlen($file_content));
-            @fclose($fp);
-        }
+
+        // Mirror the same values into in-memory $conf so the rest of this
+        // request (table creation, admin insert) sees them.
+        $conf['db_host']     = $dbhost;
+        $conf['db_user']     = $dbuser;
+        $conf['db_password'] = $dbpasswd;
+        $conf['db_base']     = $dbname;
+        $conf['db_prefix']   = $prefixeTable;
 
         // tables creation, based on piwigo_structure.sql
         execute_sqlfile(
@@ -277,11 +239,6 @@ INSERT INTO '.$prefixeTable.'config (param,value,comment)
         // fill $conf global array
         load_conf_from_db();
 
-        // PWG_CHARSET is required for building the fs_themes array in the
-        // themes class
-        if (!defined('PWG_CHARSET')) {
-            define('PWG_CHARSET', 'utf-8');
-        }
         activate_core_themes();
         activate_core_plugins();
 

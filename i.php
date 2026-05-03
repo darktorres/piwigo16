@@ -39,6 +39,8 @@ if ($databaseConfig !== false) {
 \Piwigo\Config\ConfigLoader::loadEnv(PHPWG_ROOT_PATH);
 \Piwigo\Config\ConfigLoader::applyEnvOverrides($conf);
 
+$prefixeTable ??= is_scalar($conf['db_prefix'] ?? null) ? (string) $conf['db_prefix'] : 'piwigo_';
+
 $logger = new Logger(array(
   'directory' => PHPWG_ROOT_PATH . \Piwigo\Config\Config::dataLocation() . \Piwigo\Config\Config::logDir(),
   'severity' => \Piwigo\Config\Config::logLevel(),

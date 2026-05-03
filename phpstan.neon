@@ -28,15 +28,6 @@ parameters:
     bootstrapFiles:
         - tools/phpstan-bootstrap.php
         - tools/phpstan-types.php
-    ignoreErrors:
-        # local/config/database.inc.php is created by the installer, not committed.
-        # Both call sites guard the include with a file_exists() check.
-        -
-            identifier: include.fileNotFound
-            message: '#local/config/database\.inc\.php#'
-            paths:
-                - install.php
-                - upgrade.php
 rules:
     - Piwigo\Tools\PhpStan\ConfigKeyExistsRule
     - Piwigo\Tools\PhpStan\NoDynamicNewRule

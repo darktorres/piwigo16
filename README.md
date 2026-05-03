@@ -42,29 +42,33 @@ accessors on `Piwigo\Config\Config`. The full key list is in
 
 ### Database credentials via .env
 
-Copy `.env.example` to `.env` and fill in real DB credentials. The boot loader
-(`Piwigo\Config\ConfigLoader`) reads `.env` then `.env.local` and applies the
-`PIWIGO_DB_*` variables to `$conf` before the DB connection is opened. Env
-values win over the legacy `local/config/database.inc.php`.
+Fresh installs write `PIWIGO_DB_*` to a `.env` file at the repository root.
+`Piwigo\Config\ConfigLoader` reads it on every request and applies the values
+to `$conf` before the DB connection is opened.
 
 ```bash
-# .env
+# .env (gitignored; written by install.php on a fresh install)
 PIWIGO_DB_HOST=db.example.com
 PIWIGO_DB_USER=piwigo
 PIWIGO_DB_PASSWORD=secret
 PIWIGO_DB_BASE=piwigo
+PIWIGO_DB_PREFIX=piwigo_
 ```
 
-`.env` and `.env.local` are gitignored. Existing installs that rely solely on
-`database.inc.php` keep working unchanged when no `.env` is present.
+`.env.local` is reserved for the test runner — it must NOT hold runtime DB
+credentials, since the test suite drops and recreates `PIWIGO_DB_BASE`.
+
+Existing installs that pre-date the migration and still have
+`local/config/database.inc.php` keep working unchanged — that include path
+remains as a back-compat read in `common.inc.php`.
 
 ### Install detection
 
 `Piwigo\Core\InstallSentinel::isInstalled()` is the authoritative answer to
 "is Piwigo installed on this filesystem?". The modern signal is an empty stamp
 file at `local/.installed` (touched by `install.php` after a successful fresh
-install); the legacy `defined('PHPWG_INSTALLED')` check still works as a
-transitional fallback.
+install). For installs that pre-date the stamp file, `defined('PHPWG_INSTALLED')`
+still works as a transitional fallback (set by the legacy `database.inc.php`).
 
 ## Contributing
 

@@ -1189,6 +1189,28 @@ Counts re-measured against the current tree.
 
 7. **PHPStan.** New classes are clean at level 9 from day one — write them typed, don't retrofit.
 
+### Pre-boot and admin includes → services
+
+In addition to the `functions_*.inc.php` modules above, several `include/*.inc.php` and `admin/include/*.inc.php` files are procedural scripts that read file-top globals (`$template`, `$user`, `$page`, `$persistent_cache`, `$lang`). They're in scope for this item because the work is identical: extract the body into a typed service class, leave a one-line delegate behind. Once the service exists, the `global` declaration at the top of the file is replaced by constructor-injected (or `Kernel::container()->get(...)`) dependencies.
+
+| File | Becomes | Notes |
+|---|---|---|
+| `include/section_init.inc.php` | `Piwigo\Section\SectionInitializer::initialize()` | Owns the PATH_INFO / `$page['section']` parsing — also touched by item #22. |
+| `include/user.inc.php` | `Piwigo\Users\UserBootstrap` | Builds the `CurrentUser` from session + cookies on each request. |
+| `include/filter.inc.php` | `Piwigo\Filter\FilterResolver` | Resolves the active filter from session + URL. |
+| `include/ws_core.inc.php` | merge into `Piwigo\Ws\PwgServer` | Already partially classed (item #8). |
+| `include/ws_init.inc.php` | merge into `Piwigo\Ws\PwgServer::boot()` | |
+| `include/ws_functions/pwg.{categories,extensions,images,php,tags,users}.php` | `Piwigo\Ws\Method\{Categories,Extensions,Images,General,Tags,Users}Endpoints` | One class per file. Coordinate with item #20 if the OpenAPI work lands first. |
+| `admin/include/albums_tab.inc.php` | `Piwigo\Admin\Album\AlbumsTabRenderer` | |
+| `admin/include/batch_manager_filters.inc.php` | `Piwigo\Admin\BatchManager\FilterResolver` | |
+| `admin/include/configuration_sizes_process.inc.php` | `Piwigo\Admin\Config\SizesProcessor` | |
+| `admin/include/configuration_watermark_process.inc.php` | `Piwigo\Admin\Config\WatermarkProcessor` | |
+| `admin/include/photos_add_direct_prepare.inc.php` | `Piwigo\Admin\Upload\DirectPreparer` | |
+| `admin/include/user_tabs.inc.php` | `Piwigo\Admin\Users\UserTabRenderer` | |
+| `include/constants.php` | `Piwigo\Core\Config::dbPrefix()` | One typed accessor; `$prefixeTable` global retires. |
+
+Pure rendering includes (`include/page_header.php`, `include/page_tail.php`, `include/picture_comment.inc.php`, `include/picture_metadata.inc.php`, `include/picture_rate.inc.php`, `include/no_photo_yet.inc.php`, `include/search_filters.inc.php`, `include/selected_tags.inc.php`, `include/category_cats.inc.php`, `include/category_default.inc.php`) are **not** in scope here — they become Latte partials under item #24.
+
 ### Verification (per module)
 
 ```bash
@@ -1527,7 +1549,49 @@ This is the capstone item. It depends on items #1–#12 landing first — especi
    };
    ```
 
-5. **Controllers.** Move each root entrypoint into `app/Controller/<Name>Controller.php` as a class implementing `__invoke(ServerRequestInterface): ResponseInterface`. The body becomes the existing logic adapted to read from the request and return a response.
+5. **Controllers — Wave A: root entrypoints (15 files).** Move each repo-root `.php` file into `app/Controller/<Name>Controller.php` as a class implementing `__invoke(ServerRequestInterface): ResponseInterface`. The body becomes the existing logic adapted to read from the request and return a response.
+
+   | Entry-script | Becomes |
+   |---|---|
+   | `index.php` | `IndexController` (or `GalleryController`) |
+   | `picture.php` | `PictureController` |
+   | `password.php` | `PasswordController` |
+   | `profile.php` | `ProfileController` |
+   | `comments.php` | `CommentsController` |
+   | `feed.php` | `FeedController` |
+   | `i.php` | `ImageDerivativeController` |
+   | `identification.php` | `IdentificationController` |
+   | `install.php` | `InstallController` |
+   | `notification.php` | `NotificationController` |
+   | `register.php` | `RegisterController` |
+   | `search.php` | `SearchController` |
+   | `tags.php` | `TagsController` |
+   | `upgrade.php` | `UpgradeController` |
+   | `ws.php` | `WebServiceController` |
+
+5b. **Controllers — Wave B: admin entrypoints (57 files).** Same pattern under `app/Controller/Admin/`. Routed via the `/admin/...` prefix in step 4. One commit per logical cluster (album management, batch manager, configuration, plugins/themes, users/groups, maintenance, etc.) — not 57 separate commits and not one mega-commit.
+
+5c. **Per-page Context DTOs.** Each controller hands a single typed DTO to its template instead of pushing ~15 file-scope `$category`, `$collection`, `$base_url`, `$picture`, `$related_categories`, `$comment_action`, etc. variables. New DTOs under `src/Piwigo/Page/Context/`:
+
+   | DTO | Owning controller(s) | Properties |
+   |---|---|---|
+   | `AlbumPageContext` | `IndexController`, `CategoryController` | `category`, `subAlbums`, `photos`, `pagination`, `baseUrl` |
+   | `PicturePageContext` | `PictureController` | `picture`, `relatedCategories`, `commentAction`, `urlSelf` |
+   | `SearchPageContext` | `SearchController` | `query`, `filters`, `results`, `pagination` |
+   | `TagsPageContext` | `TagsController` | `tags`, `selectedTags`, `photos` |
+   | `CommentsPageContext` | `CommentsController` | `comments`, `pagination`, `filters` |
+   | `FeedPageContext` | `FeedController` | `items`, `feedMeta` |
+   | `IdentificationPageContext` | `IdentificationController`, `RegisterController`, `PasswordController` | `errors`, `redirectTo`, `formState` |
+   | `ProfilePageContext` | `ProfileController` | `user`, `prefs`, `themes`, `languages` |
+   | `NotificationPageContext` | `NotificationController` | `subscriptions`, `formState` |
+   | `AdminAlbumPageContext` | `Admin\AlbumController`, `Admin\CategoryModifyController`, `Admin\CategoryPermissionsController` | `category`, `adminBaseUrl`, `permissions` |
+   | `AdminPhotoPageContext` | `Admin\PhotoController`, `Admin\PictureModifyController` | `picture`, `adminPhotoBaseUrl` |
+   | `BatchManagerContext` | `Admin\BatchManager*Controller` | `collection`, `baseUrl`, `selectedFilters` |
+   | `MaintenanceContext` | `Admin\MaintenanceActionsController` | `maintActions`, `lastRun` |
+   | `AdminListContext` | generic — `Admin\UserListController`, `Admin\GroupListController`, `Admin\TagsController`, `Admin\PluginsController`, `Admin\ThemesController`, etc. | `items`, `pagination`, `filters`, `baseUrl` |
+   | `AdminPageContext` | base class — `pageTitle`, `pageMeta`, `themeAssets`, `flashMessages` | inherited by all admin contexts |
+
+   DTOs are built incrementally — each controller wave creates its own DTO, no need to ship all 15 up front. The Latte partials in item #24 receive these DTOs as `{templateType}` declarations.
 
 6. **Middleware pipeline.** `Piwigo\Http\MiddlewarePipeline` runs:
    1. `ExceptionHandlerMiddleware` (catches `PiwigoException`, renders error response — depends on item #10)
@@ -1696,6 +1760,7 @@ Migrate every template from Smarty 5 to [Nette Latte](https://latte.nette.org). 
    - **`prefilter_white_space`** — Latte template loader wrapper (run before compilation).
 
 5. **Convert templates in waves.** Order risk-low → risk-high:
+   - **Wave 0 — extract layout partials from `include/`.** Ten files in `include/` are pure-rendering procedural scripts that are `include`d for their output (`page_header.php`, `page_tail.php`, `picture_comment.inc.php`, `picture_metadata.inc.php`, `picture_rate.inc.php`, `no_photo_yet.inc.php`, `search_filters.inc.php`, `selected_tags.inc.php`, `category_cats.inc.php`, `category_default.inc.php`). Each becomes a `.latte` partial under `themes/default/template/_partials/`, declared `{templateType}` against the relevant Page Context DTO from item #22 step 5c. New `Piwigo\Page\PageRenderer` exposes `renderHeader(HeaderContext)` / `renderTail(TailContext)` / `renderPartial(string $name, object $ctx)` so callers stop `include`-ing PHP files. This wave unblocks the remaining `global $template, $user, $page, $lang;` declarations in those files and is a hard prerequisite for the controllers in item #22.
    - **Wave 1 — admin templates** (lowest risk, 69 files in `admin/themes/default/template/`). Each `.tpl` → `.latte`. Smarty syntax → Latte syntax. Run the page in the browser after each conversion.
    - **Wave 2 — public theme `default`** (55 files in `themes/default/template/`).
    - **Wave 3 — public theme `standard_pages`** (7 files) and email templates.

@@ -81,36 +81,21 @@ Root cause: `redirect_html()` does `include 'page_header.php'` and `include 'pag
 
 The real modernization. The reason every entry-script declares `global $template, $user, $page, $persistent_cache, $lang;` is that they are 200-2000-line procedural scripts reading those at file scope. The fix is MVC.
 
-### 3.1 — Front controller + routing
+Tier 3 is **distributed across `ROADMAP-PHP.md`** rather than executed as a single megacommit. Each bucket below is owned by a roadmap item; each wave that lands lets `tools/phpstan-bootstrap.php` shed one stub entry and unblocks step 4–5 of roadmap item #6 incrementally.
 
-- New `public/index.php` front controller (or extend the Kernel boot already present)
-- `Piwigo\Http\Router` mapping URLs to Controller classes
-- `Piwigo\Http\Request` and `Piwigo\Http\Response` value-objects (or pull in `symfony/http-foundation`)
+| Bucket | Owning roadmap item | What lands there |
+|---|---|---|
+| Front controller + PSR-7/15 routing | **#22** steps 1–4 | `public/index.php`, `Router`, middleware pipeline, route table |
+| Root controllers (15 files) | **#22** step 5 (Wave A) | One controller per repo-root entry-script |
+| Admin controllers (57 files) | **#22** step 5b (Wave B) | One controller per `admin/*.php` entry-script |
+| Per-page Context DTOs (~15) | **#22** step 5c | `AlbumPageContext`, `PicturePageContext`, etc. — built alongside their controllers |
+| Pre-boot includes that are *services* | **#17** ("Pre-boot and admin includes → services" sub-section) | `SectionInitializer`, `UserBootstrap`, `FilterResolver`, `PwgServer`, `Ws\Method\*Endpoints`, `Config::dbPrefix()` |
+| Admin includes that are *services* | **#17** | `AlbumsTabRenderer`, `BatchManager\FilterResolver`, `Config\SizesProcessor`, `Config\WatermarkProcessor`, `Upload\DirectPreparer`, `Users\UserTabRenderer` |
+| Pre-boot includes that are *pure rendering* | **#24** Wave 0 | `page_header`, `page_tail`, `picture_comment`, `picture_metadata`, `picture_rate`, `no_photo_yet`, `search_filters`, `selected_tags`, `category_cats`, `category_default` → `.latte` partials with typed context |
 
-### 3.2 — Controllers (one per entry-script, ~72 controllers)
+The inventory tables below remain the source of truth — cross rows off as each roadmap-item wave lands.
 
-Each entry-script becomes a Controller class. Controllers receive dependencies via constructor injection — no globals, no `Registry::current()` inside the body.
-
-- `Piwigo\Controller\IndexController::handle(Request): Response`
-- `Piwigo\Controller\PictureController::handle(Request): Response`
-- `Piwigo\Controller\PasswordController::handle(Request): Response`
-- ... and 69 admin controllers (`Piwigo\Controller\Admin\AlbumsController`, etc.)
-
-### 3.3 — Page-builder DTOs (~15 typed contexts)
-
-`$category`, `$collection`, `$base_url`, `$admin_album_base_url`, `$admin_photo_base_url`, `$maint_actions`, `$title`, `$url_self`, `$picture`, `$related_categories`, `$comment_action` become typed properties on per-page Context DTOs:
-
-- `AlbumPageContext` — `category`, `subAlbums`, `photos`, `pagination`, `baseUrl`
-- `PicturePageContext` — `picture`, `relatedCategories`, `commentAction`, `urlSelf`
-- `AdminAlbumPageContext` — extends with `adminBaseUrl`, `permissions`
-- `BatchManagerContext` — `collection`, `baseUrl`, `selectedFilters`
-- (etc.)
-
-### 3.4 — Includes become services or partial templates
-
-The 22 pre-boot includes and 7 admin includes become either services (if they contain logic) or partial templates (if they're pure rendering).
-
-### 3.5 — Inventory by directory
+### Inventory by directory
 
 #### Root entry-scripts (15 files)
 

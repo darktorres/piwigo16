@@ -115,10 +115,14 @@ foreach ($entries as $key => $entry) {
     if (!empty($entry['custom'])) {
         $extras .= ", 'custom' => true";
     }
-    printf("    %-46s => ['type' => %-9s, 'default' => %s%s],\n",
+    // Always emit method so SCHEMA is the unambiguous source of method-name truth;
+    // generator never needs snake→camel heuristics.
+    $methodRepr = "'{$entry['method']}'";
+    printf("    %-46s => ['type' => %-9s, 'default' => %-22s, 'method' => %s%s],\n",
         var_export($key, true),
         "'{$entry['type']}'",
         $defaultRepr,
+        $methodRepr,
         $extras
     );
 }

@@ -30,7 +30,7 @@ if (isset($_POST['install'])) {
     $prefixeTable = DEFAULT_PREFIX_TABLE;
 }
 
-include(PHPWG_ROOT_PATH . 'include/config_default.inc.php');
+$conf = [];
 
 $localConfig = realpath(PHPWG_ROOT_PATH . 'local/config/config.inc.php');
 if ($localConfig !== false) {
@@ -40,6 +40,8 @@ defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
 
 include(PHPWG_ROOT_PATH . 'include/functions.inc.php');
 require_once PHPWG_ROOT_PATH . 'vendor/autoload.php';
+
+\Piwigo\Config\ConfigLoader::applyDefaults($conf);
 
 // download database config file if exists
 check_input_parameter('dl', $_GET, false, '/^[a-f0-9]{32}$/');

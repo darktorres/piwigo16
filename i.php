@@ -20,7 +20,8 @@ define('PHPWG_ROOT_PATH', './');
 require_once PHPWG_ROOT_PATH . 'vendor/autoload.php';
 
 // fast bootstrap - no db connection
-include(PHPWG_ROOT_PATH . 'include/config_default.inc.php');
+$conf = [];
+\Piwigo\Config\ConfigLoader::applyDefaults($conf);
 
 $localConfig = realpath(PHPWG_ROOT_PATH . 'local/config/config.inc.php');
 if ($localConfig !== false) {

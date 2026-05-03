@@ -70,7 +70,7 @@ if (!\Piwigo\Core\Kernel::isBooted()) :
     $header_notes = [];
     $filter = [];
 
-    include(PHPWG_ROOT_PATH . 'include/config_default.inc.php');
+    \Piwigo\Config\ConfigLoader::applyDefaults($conf);
 
     $localConfig = realpath(PHPWG_ROOT_PATH . 'local/config/config.inc.php');
     if ($localConfig !== false) {

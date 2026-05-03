@@ -71,6 +71,40 @@ final class ConfigLoader
     }
 
     /**
+     * Populates $conf with default values for every key in Config::SCHEMA
+     * that isn't already set. Replaces the legacy include/config_default.inc.php
+     * file as the single source of compile-time defaults — SCHEMA itself
+     * carries the simple-type defaults; for keys flagged 'custom' => true the
+     * default comes from invoking the typed accessor (which encodes its
+     * hardcoded fallback in the accessor body, e.g., file_ext = picture_ext +
+     * extras, recent_post_dates = nested RSS/NBM structure).
+     *
+     * Idempotent: keys already populated (e.g., from database.inc.php, an
+     * earlier call, or .env via applyEnvOverrides) are skipped.
+     *
+     * Call BEFORE applyEnvOverrides + load_conf_from_db so DB / env values
+     * win over compile-time defaults.
+     *
+     * @param array<string, mixed> $conf
+     */
+    public static function applyDefaults(array &$conf): void
+    {
+        foreach (Config::SCHEMA as $key => $entry) {
+            if (array_key_exists($key, $conf)) {
+                continue;
+            }
+            if (!empty($entry['custom'])) {
+                // The accessor's body encodes the rich default; calling it
+                // with $conf empty for this key returns that fallback.
+                $method     = $entry['method'];
+                $conf[$key] = Config::$method();
+            } else {
+                $conf[$key] = $entry['default'];
+            }
+        }
+    }
+
+    /**
      * Applies ENV_MAPPING overrides into $conf. Env vars that are unset or
      * empty are ignored — leaves the existing $conf value (typically from
      * database.inc.php or SCHEMA defaults) in place.

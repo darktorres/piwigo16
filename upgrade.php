@@ -24,8 +24,7 @@ if (function_exists('ini_set')) {
 
 define('PHPWG_ROOT_PATH', './');
 
-// load config file
-include(PHPWG_ROOT_PATH . 'include/config_default.inc.php');
+$conf = [];
 
 $localConfig = realpath(PHPWG_ROOT_PATH . 'local/config/config.inc.php');
 if ($localConfig !== false) {
@@ -46,6 +45,7 @@ if ($php_end_tag === false) {
 include($config_file);
 
 require_once PHPWG_ROOT_PATH . 'vendor/autoload.php';
+\Piwigo\Config\ConfigLoader::applyDefaults($conf);
 \Piwigo\Config\ConfigLoader::loadEnv(PHPWG_ROOT_PATH);
 \Piwigo\Config\ConfigLoader::applyEnvOverrides($conf);
 

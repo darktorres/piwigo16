@@ -74,7 +74,7 @@ final class ConfigTest extends TestCase
 
         self::assertSame('_data/', Config::dataLocation());
         self::assertSame('./upload', Config::uploadDir());
-        self::assertSame('', Config::themesDir());
+        self::assertSame('./themes', Config::themesDir());
         self::assertSame('/logs', Config::logDir());
         self::assertNull(Config::galleryUrl());
         self::assertSame('', Config::alternativePemUrl());
@@ -95,7 +95,10 @@ final class ConfigTest extends TestCase
         self::assertTrue(Config::allowHtmlDescriptions());
         self::assertTrue(Config::activateComments());
         self::assertSame(['jpg', 'jpeg', 'png', 'gif', 'webp'], Config::pictureExtensions());
-        self::assertSame([], Config::fileExtensions()); // populated at runtime from picture_ext + more
+        self::assertSame(
+            ['jpg', 'jpeg', 'png', 'gif', 'webp', 'tiff', 'tif', 'mpg', 'zip', 'avi', 'mp3', 'ogg', 'pdf', 'svg', 'heic'],
+            Config::fileExtensions()
+        );
     }
 
     public function test_security_cluster_defaults(): void

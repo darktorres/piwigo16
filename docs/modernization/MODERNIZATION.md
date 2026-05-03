@@ -17,9 +17,11 @@ include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
 Kernel::boot();
 ```
 
-**`include/common.inc.php`** is the legacy bridge. It loads `config_default.inc.php`,
-`local/config/database.inc.php`, the mysqli dblayer free functions, `functions.inc.php`
-and friends, then bootstraps the session and current user into globals.
+**`include/common.inc.php`** is the legacy bridge. It calls
+`ConfigLoader::applyDefaults()` (replacing the deleted `config_default.inc.php`),
+loads `local/config/database.inc.php`, the mysqli dblayer free functions,
+`functions.inc.php` and friends, then bootstraps the session and current user
+into globals.
 
 **`Kernel::boot()`** (`src/Piwigo/Core/Kernel.php`) wires the typed service layer on top
 of those globals via PHP reference bridges. The call is idempotent. Boot order:

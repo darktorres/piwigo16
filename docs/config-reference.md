@@ -25,7 +25,7 @@ with a key not in the table below.
 | `activate_comments` | `bool` | `true` | `Config::activateComments()` | — |
 | `activity_display_connections` | `string` | `all` | `Config::activityDisplayConnections()` | — |
 | `add_cache_to_storage_chart` | `bool` | `true` | `Config::addCacheToStorageChart()` | — |
-| `admin_theme` | `string` | `clear` | `Config::adminTheme()` | — |
+| `admin_theme` | `string` | `roma` | `Config::adminTheme()` | — |
 | `album_description_on_all_pages` | `bool` | `false` | `Config::albumDescriptionOnAllPages()` | — |
 | `album_move_delay_before_auto_opening` | `int` | `3000` | `Config::albumMoveDelayBeforeAutoOpening()` | — |
 | `allow_html_descriptions` | `bool` | `true` | `Config::allowHtmlDescriptions()` | — |
@@ -278,7 +278,7 @@ with a key not in the table below.
 | `template_combine_files` | `bool` | `true` | `Config::templateCombineFiles()` | — |
 | `template_compile_check` | `bool` | `true` | `Config::templateCompileCheck()` | — |
 | `template_force_compile` | `bool` | `false` | `Config::templateForceCompile()` | — |
-| `themes_dir` | `string` | `(empty)` | `Config::themesDir()` | — |
+| `themes_dir` | `string` | `./themes` | `Config::themesDir()` | — |
 | `tiff_representative_ext` | `string` | `png` | `Config::tiffRepresentativeExt()` | — |
 | `top_number` | `int` | `15` | `Config::topNumber()` | — |
 | `uniqueness_mode` | `string` | `md5sum` | `Config::uniquenessMode()` | — |

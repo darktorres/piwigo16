@@ -38,7 +38,7 @@ check_input_parameter('action', $_GET, false, '/^(lost|reset|lost_code|reset_end
  */
 function process_verification_code(): bool
 {
-    global $logger;
+    $logger = \Piwigo\Core\LoggerRegistry::current();
     global $page;
     if (isset($_SESSION['reset_password_code'])) {
         return true;

@@ -306,7 +306,7 @@ function build_user(int $user_id, bool $use_cache = true): array
 /** @return array<string,mixed>|false */
 function getuserdata(int $user_id, bool $use_cache = false): array|false
 {
-    global $logger;
+    $logger = \Piwigo\Core\LoggerRegistry::current();
 
     // retrieve basic user data
     $query = '

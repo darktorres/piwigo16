@@ -1285,7 +1285,6 @@ UPDATE '.IMAGES_TABLE.'
  */
 function move_categories($category_ids, $new_parent = -1): void
 {
-    global $page;
     if (count($category_ids) == 0) {
         return;
     }
@@ -1720,9 +1719,9 @@ SELECT id
 function set_tags_of(array $tags_of): void
 {
     if (count($tags_of) > 0) {
+        $logger = \Piwigo\Core\LoggerRegistry::current();
         $taglist_before = get_image_tag_ids(array_keys($tags_of));
-        global $logger;
-        $logger->debug('taglist_before', $taglist_before);
+        $logger->debug('taglist_before', null, $taglist_before);
 
         $query = '
 DELETE
@@ -1751,12 +1750,10 @@ DELETE
         }
 
         $taglist_after = get_image_tag_ids(array_keys($tags_of));
-        global $logger;
-        $logger->debug('taglist_after', $taglist_after);
+        $logger->debug('taglist_after', null, $taglist_after);
         $images_to_update_raw = compare_image_tag_lists($taglist_before, $taglist_after);
         $images_to_update = array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $images_to_update_raw);
-        global $logger;
-        $logger->debug('$images_to_update', $images_to_update);
+        $logger->debug('$images_to_update', null, $images_to_update);
 
         update_images_lastmodified($images_to_update);
         invalidate_user_cache_nb_tags();
@@ -1873,7 +1870,7 @@ function fill_lounge(array $images, ?array $categories): void
 /** @return array<mixed>|null */
 function empty_lounge(bool $invalidate_user_cache = true): ?array
 {
-    global $logger;
+    $logger = \Piwigo\Core\LoggerRegistry::current();
 
     if (\Piwigo\Config\Config::has('empty_lounge_running')) {
         [$running_exec_id, $running_exec_start_time] = explode('-', (string) \Piwigo\Config\Config::emptyLoungeRunning());
@@ -2168,11 +2165,10 @@ function pwg_URL(): array
  */
 function invalidate_user_cache(bool $full = true): void
 {
-    /** @var \Piwigo\Core\Logger|null $logger */
-    global $persistent_cache, $logger;
+    global $persistent_cache;
 
-    if (isset($logger)) {
-        $logger->info(__FUNCTION__.' called');
+    if (\Piwigo\Core\LoggerRegistry::isInitialized()) {
+        \Piwigo\Core\LoggerRegistry::current()->info(__FUNCTION__.' called');
     }
 
     if ($full) {

@@ -573,7 +573,7 @@ DELETE FROM '. PLUGINS_TABLE .'
      */
     public function extract_plugin_files(string $action, string $revision, string $dest, ?string &$plugin_id = null): string
     {
-        global $logger;
+        $logger = \Piwigo\Core\LoggerRegistry::current();
 
         if ($archive = tempnam(PHPWG_PLUGINS_PATH, 'zip')) {
             $url = PEM_URL . '/download.php';

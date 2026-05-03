@@ -979,14 +979,13 @@ function transform_date($original, $format_in, $format_out, $default = null): ?s
 function pwg_debug(string $string): void
 {
     global $debug, $t2;
-    global $page;
     $now = explode(' ', microtime());
     $now2 = explode('.', $now[0]);
     $now2 = $now[1].'.'.$now2[1];
     $time = number_format($now2 - $t2, 3, '.', ' ').' s';
     $debug .= '<p>';
     $debug .= '['.$time.', ';
-    $debug .= $page['count_queries'].' queries] : '.$string;
+    $debug .= \Piwigo\Core\PageState::current()->countQueries.' queries] : '.$string;
     $debug .= "</p>\n";
 }
 
@@ -2238,7 +2237,7 @@ SELECT
  */
 function send_piwigo_infos(): void
 {
-    global $logger;
+    $logger = \Piwigo\Core\LoggerRegistry::current();
 
     $start_time = get_moment();
 
@@ -2672,7 +2671,7 @@ SELECT
 
 function send_piwigo_infos_retry_later(int $wait_time): void
 {
-    global $logger;
+    $logger = \Piwigo\Core\LoggerRegistry::current();
 
     // let's fake a last_notice so that we only try 1 day later
     $last_notice = \Piwigo\Config\Config::has('send_piwigo_infos_last_notice') ? strtotime(\Piwigo\Config\Config::sendPiwigoInfosLastNotice() ?? '') : time();
@@ -2684,7 +2683,7 @@ function send_piwigo_infos_retry_later(int $wait_time): void
 
 function pwg_unique_exec_begins(string $token_name, int $timeout = 60): false|string
 {
-    global $logger;
+    $logger = \Piwigo\Core\LoggerRegistry::current();
 
     $exec_id = substr(sha1(random_bytes(1000)), 0, 8);
     $logger->info('['.$token_name.'][exec='.$exec_id.'] starts now');
@@ -2733,7 +2732,7 @@ SELECT
 
 function pwg_unique_exec_ends(string $token_name): void
 {
-    global $logger;
+    $logger = \Piwigo\Core\LoggerRegistry::current();
 
     conf_delete_param($token_name.'_running');
     $logger->info('['.$token_name.'] ends now');

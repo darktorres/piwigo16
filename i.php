@@ -38,6 +38,7 @@ $logger = new Logger(array(
   // (secret_key is in the database)
   'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . \Piwigo\Config\Config::dbPassword()) . '.txt',
   ));
+\Piwigo\Core\LoggerRegistry::set($logger);
 
 
 // Subset of MKGETDIR_* constants normally defined in functions.inc.php.
@@ -88,7 +89,7 @@ function mkgetdir(string $dir, int $flags = 0): bool
 
 function ierror(string $msg, int $code): never
 {
-    global $logger;
+    $logger = \Piwigo\Core\LoggerRegistry::current();
     if ($code == 301 || $code == 302) {
         if (ob_get_length() !== false) {
             ob_clean();

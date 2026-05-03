@@ -528,7 +528,7 @@ SELECT
      */
     public function extract_theme_files(string $action, string $revision, string $dest, ?string &$theme_id = null): string
     {
-        global $logger;
+        $logger = \Piwigo\Core\LoggerRegistry::current();
 
         if ($archive = tempnam(PHPWG_THEMES_PATH, 'zip')) {
             $url = PEM_URL . '/download.php';

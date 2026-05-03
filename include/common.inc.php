@@ -138,6 +138,7 @@ if (!\Piwigo\Core\Kernel::isBooted()) :
       'globPattern' => 'log_*.txt',
       'archiveDays' => \Piwigo\Config\Config::logArchiveDays(),
       ]);
+    \Piwigo\Core\LoggerRegistry::set($logger);
 
     if (!\Piwigo\Config\Config::checkUpgradeFeed()) {
         if (!\Piwigo\Config\Config::has('piwigo_db_version') or \Piwigo\Config\Config::piwigoDbVersion() != get_branch_from_version(PHPWG_VERSION)) {

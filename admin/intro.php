@@ -255,7 +255,7 @@ if ($cached_activity === null or (is_numeric($cached_activity['calculated_on']) 
         @$activity_last_weeks[$week][$day_nb]['date'] = format_date($day_date->getTimestamp());
     }
 
-    $logger->debug('[admin/intro::'.__LINE__.'] recent activity calculated in '.get_elapsed_time($start_time, get_moment()));
+    \Piwigo\Core\LoggerRegistry::current()->debug('[admin/intro::'.__LINE__.'] recent activity calculated in '.get_elapsed_time($start_time, get_moment()));
 
     $_SESSION['cache_activity_last_weeks'] = [
       'calculated_on' => time(),

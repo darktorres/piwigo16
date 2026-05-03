@@ -151,7 +151,7 @@ class ImageExtImagick implements ImageInterface
 
     public function write(string $destination_filepath): bool
     {
-        global $logger;
+        $logger = \Piwigo\Core\LoggerRegistry::current();
 
         $this->add_command('interlace', 'line'); // progressive rendering
         // use 4:2:2 chroma subsampling (reduce file size by 20-30% with "almost" no human perception)

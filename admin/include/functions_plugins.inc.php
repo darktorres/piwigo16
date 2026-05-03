@@ -14,7 +14,6 @@ declare(strict_types=1);
  */
 function get_admin_plugin_menu_link(string $file): string
 {
-    global $page;
     $real_file = realpath($file);
     $url = get_root_url().'admin.php?page=plugin';
     if (false !== $real_file) {
@@ -22,7 +21,7 @@ function get_admin_plugin_menu_link(string $file): string
         $file = substr($real_file, strlen($real_plugin_path) + 1);
         $file = str_replace('\\', '/', $file);//Windows
         $url .= '&amp;section='.urlencode($file);
-    } elseif (isset($page['errors'])) {
+    } else {
         \Piwigo\Core\PageState::current()->addError('PLUGIN ERROR: "'.$file.'" is not a valid file');
     }
     return $url;

@@ -112,7 +112,7 @@ function clean_iptc_value($value)
  */
 function get_exif_data(string $filename, array $map): array
 {
-    global $logger;
+    $logger = \Piwigo\Core\LoggerRegistry::current();
 
     $result = [];
 

@@ -182,7 +182,7 @@ SELECT category_id, MAX(`rank`) AS max_rank
  */
 function merge_chunks(string $output_filepath, string $original_sum, string $type): mixed
 {
-    global $logger;
+    $logger = \Piwigo\Core\LoggerRegistry::current();
 
     $logger->debug('[merge_chunks] input parameter $output_filepath : '.$output_filepath, 'WS');
 
@@ -1181,7 +1181,7 @@ UPDATE '. IMAGE_CATEGORY_TABLE .'
  */
 function ws_images_add_chunk(array $params, \Piwigo\Ws\PwgServer $service): mixed
 {
-    global $logger;
+    $logger = \Piwigo\Core\LoggerRegistry::current();
 
     foreach ($params as $param_key => $param_value) {
         if ('data' == $param_key) {
@@ -1243,7 +1243,7 @@ function ws_images_add_chunk(array $params, \Piwigo\Ws\PwgServer $service): mixe
  */
 function ws_images_addFile(array $params, \Piwigo\Ws\PwgServer $service): mixed
 {
-    global $logger;
+    $logger = \Piwigo\Core\LoggerRegistry::current();
 
     $logger->debug(__FUNCTION__, 'WS', $params);
 
@@ -1343,7 +1343,7 @@ SELECT
  */
 function ws_images_add(array $params, \Piwigo\Ws\PwgServer $service): PwgError|array
 {
-    global $logger;
+    $logger = \Piwigo\Core\LoggerRegistry::current();
 
     foreach ($params as $param_key => $param_value) {
         $logger->debug(sprintf(
@@ -1500,7 +1500,7 @@ SELECT id, name, permalink
  */
 function ws_images_addSimple(array $params, \Piwigo\Ws\PwgServer $service): PwgError|array
 {
-    global $logger;
+    $logger = \Piwigo\Core\LoggerRegistry::current();
 
     if (!isset($_FILES['image'])) {
         return new PwgError(405, 'The image (file) is missing');
@@ -1873,7 +1873,7 @@ SELECT
  */
 function ws_images_uploadAsync(array $params, \Piwigo\Ws\PwgServer &$service): mixed
 {
-    global $logger;
+    $logger = \Piwigo\Core\LoggerRegistry::current();
 
     // the username/password parameters have been used in include/user.inc.php
     // to authenticate the request (a much better time/place than here)
@@ -2128,7 +2128,7 @@ SELECT COUNT(*)
  */
 function ws_images_exist(array $params, \Piwigo\Ws\PwgServer $service): array
 {
-    global $logger;
+    $logger = \Piwigo\Core\LoggerRegistry::current();
 
     $logger->debug(__FUNCTION__, 'WS', $params);
 
@@ -2199,7 +2199,7 @@ SELECT id, file
  */
 function ws_images_formats_searchImage(array $params, \Piwigo\Ws\PwgServer $service): mixed
 {
-    global $logger;
+    $logger = \Piwigo\Core\LoggerRegistry::current();
 
     $logger->debug(__FUNCTION__, 'WS', $params);
 
@@ -2412,7 +2412,7 @@ DELETE FROM '.IMAGE_FORMAT_TABLE.'
  */
 function ws_images_checkFiles(array $params, \Piwigo\Ws\PwgServer $service): PwgError|array
 {
-    global $logger;
+    $logger = \Piwigo\Core\LoggerRegistry::current();
 
     $logger->debug(__FUNCTION__, 'WS', $params);
 

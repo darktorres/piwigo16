@@ -260,7 +260,6 @@ function unset_user_on_env_nbm(): void
 function inc_mail_sent_success(array $nbm_user): void
 {
     global $env_nbm;
-    global $page;
     $env_nbm['sent_mail_count'] += 1;
     \Piwigo\Core\PageState::current()->addInfo(sprintf($env_nbm['msg_info'], stripslashes((string) $nbm_user['username']), $nbm_user['mail_address']));
 }
@@ -274,7 +273,6 @@ function inc_mail_sent_success(array $nbm_user): void
 function inc_mail_sent_failed(array $nbm_user): void
 {
     global $env_nbm;
-    global $page;
     $env_nbm['error_on_mail_count'] += 1;
     \Piwigo\Core\PageState::current()->addError(sprintf($env_nbm['msg_error'], stripslashes((string) $nbm_user['username']), $nbm_user['mail_address']));
 }
@@ -287,7 +285,6 @@ function inc_mail_sent_failed(array $nbm_user): void
 function display_counter_info(): void
 {
     global $env_nbm;
-    global $page;
     if ($env_nbm['error_on_mail_count'] != 0) {
         \Piwigo\Core\PageState::current()->addError(l10n_dec(
             '%d mail was not sent.',
@@ -352,7 +349,6 @@ function assign_vars_nbm_mail_content(array $nbm_user): void
 function do_subscribe_unsubscribe_notification_by_mail(bool $is_admin_request, bool $is_subscribe = false, array $check_key_list = []): array
 {
     global $env_nbm;
-    global $page;
     set_make_full_url();
 
     $check_key_treated = [];

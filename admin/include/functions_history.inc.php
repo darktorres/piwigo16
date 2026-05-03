@@ -369,7 +369,7 @@ SELECT *
  */
 function history_autopurge(): void
 {
-    global $logger;
+    $logger = \Piwigo\Core\LoggerRegistry::current();
 
     if (0 == \Piwigo\Config\Config::historyAutopurgeKeepLines()) {
         return;

@@ -289,7 +289,7 @@ UPDATE '.USER_INFOS_TABLE.'
      */
     public function extract_language_files(string $action, string $revision, string $dest = ''): string
     {
-        global $logger;
+        $logger = \Piwigo\Core\LoggerRegistry::current();
 
         if ($archive = tempnam(PHPWG_ROOT_PATH.'language', 'zip')) {
             $url = PEM_URL . '/download.php';

@@ -143,7 +143,7 @@ function add_uploaded_file(string $source_filepath, ?string $original_filename =
     //
     // 3) register in database
 
-    global $logger;
+    $logger = \Piwigo\Core\LoggerRegistry::current();
     global $user;
     if (!is_null($original_filename)) {
         $original_filename = htmlspecialchars($original_filename);
@@ -526,7 +526,7 @@ SELECT
 add_event_handler('upload_file', 'upload_file_pdf');
 function upload_file_pdf(?string $representative_ext, string $file_path): ?string
 {
-    global $logger;
+    $logger = \Piwigo\Core\LoggerRegistry::current();
 
     $logger->info(__FUNCTION__.', $file_path = '.$file_path.', $representative_ext = '.$representative_ext);
 
@@ -571,7 +571,7 @@ function upload_file_pdf(?string $representative_ext, string $file_path): ?strin
 add_event_handler('upload_file', 'upload_file_heic');
 function upload_file_heic(?string $representative_ext, string $file_path): ?string
 {
-    global $logger;
+    $logger = \Piwigo\Core\LoggerRegistry::current();
 
     $logger->info(__FUNCTION__.', $file_path = '.$file_path.', $representative_ext = '.$representative_ext);
 
@@ -616,7 +616,7 @@ function upload_file_heic(?string $representative_ext, string $file_path): ?stri
 add_event_handler('upload_file', 'upload_file_tiff');
 function upload_file_tiff(?string $representative_ext, string $file_path): ?string
 {
-    global $logger;
+    $logger = \Piwigo\Core\LoggerRegistry::current();
 
     $logger->info(__FUNCTION__.', $file_path = '.$file_path.', $representative_ext = '.$representative_ext);
 
@@ -675,7 +675,7 @@ function upload_file_tiff(?string $representative_ext, string $file_path): ?stri
 add_event_handler('upload_file', 'upload_file_video');
 function upload_file_video(?string $representative_ext, string $file_path): ?string
 {
-    global $logger;
+    $logger = \Piwigo\Core\LoggerRegistry::current();
 
     $logger->info(__FUNCTION__.', $file_path = '.$file_path.', $representative_ext = '.$representative_ext);
 
@@ -747,7 +747,7 @@ function upload_file_video(?string $representative_ext, string $file_path): ?str
 add_event_handler('upload_file', 'upload_file_psd');
 function upload_file_psd(?string $representative_ext, string $file_path): ?string
 {
-    global $logger;
+    $logger = \Piwigo\Core\LoggerRegistry::current();
 
     $logger->info(__FUNCTION__.', $file_path = '.$file_path.', $representative_ext = '.$representative_ext);
 
@@ -804,7 +804,7 @@ function upload_file_psd(?string $representative_ext, string $file_path): ?strin
 add_event_handler('upload_file', 'upload_file_eps');
 function upload_file_eps(?string $representative_ext, string $file_path): ?string
 {
-    global $logger;
+    $logger = \Piwigo\Core\LoggerRegistry::current();
 
     $logger->info(__FUNCTION__.', $file_path = '.$file_path.', $representative_ext = '.$representative_ext);
 
@@ -872,7 +872,7 @@ function prepare_directory(string $directory): void
 
 function need_resize(string $image_filepath, int|string $max_width, int|string $max_height): bool
 {
-    global $logger;
+    $logger = \Piwigo\Core\LoggerRegistry::current();
 
     if (!in_array(strtolower(get_extension($image_filepath)), \Piwigo\Config\Config::pictureExtensions())) {
         return false;

@@ -74,9 +74,7 @@ if (
         // set pwg_token for api_key request
         $_POST['pwg_token'] = $_GET['pwg_token'] = get_pwg_token();
 
-        // logger
-        global $logger;
-        $logger->info('[api_key][pkid='.explode(':', (string) $auth_header)[0].'][method='.(is_scalar($_REQUEST['method']) ? (string) $_REQUEST['method'] : '').']');
+        \Piwigo\Core\LoggerRegistry::current()->info('[api_key][pkid='.explode(':', (string) $auth_header)[0].'][method='.(is_scalar($_REQUEST['method']) ? (string) $_REQUEST['method'] : '').']');
     }
 }
 

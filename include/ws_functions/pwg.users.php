@@ -968,7 +968,7 @@ SELECT
  * @param array<mixed> $params
  */function ws_create_api_key(array $params, \Piwigo\Ws\PwgServer &$service): PwgError|array
 {
-    global $logger;
+    $logger = \Piwigo\Core\LoggerRegistry::current();
     $userId = CurrentUser::get()->id;
 
     if (is_a_guest() or !connected_with_pwg_ui()) {
@@ -1009,7 +1009,7 @@ SELECT
  * @param array<mixed> $params
  */function ws_revoke_api_key(array $params, \Piwigo\Ws\PwgServer &$service): mixed
 {
-    global $logger;
+    $logger = \Piwigo\Core\LoggerRegistry::current();
     $userId = CurrentUser::get()->id;
 
     if (is_a_guest() or !connected_with_pwg_ui()) {
@@ -1047,7 +1047,7 @@ SELECT
  * @param array<mixed> $params
  */function ws_edit_api_key(array $params, \Piwigo\Ws\PwgServer &$service): mixed
 {
-    global $logger;
+    $logger = \Piwigo\Core\LoggerRegistry::current();
     $userId = CurrentUser::get()->id;
 
     if (is_a_guest()) {

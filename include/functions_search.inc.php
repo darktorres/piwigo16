@@ -94,7 +94,7 @@ function get_search_array($search_id): array
  */
 function get_regular_search_results(array $search, ?string $images_where = ''): array
 {
-    global $logger;
+    $logger = \Piwigo\Core\LoggerRegistry::current();
 
     $logger->debug(__FUNCTION__, 'search', $search);
 
@@ -789,7 +789,7 @@ function get_clause_for_filter($filter_name): string
  */
 function get_items_for_filter(string $filter_name)
 {
-    global $logger;
+    $logger = \Piwigo\Core\LoggerRegistry::current();
     global $page;
     $detailsRaw = $page['search_details'] ?? [];
     $details = is_array($detailsRaw) ? $detailsRaw : [];

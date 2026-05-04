@@ -99,7 +99,7 @@ function get_regular_search_results(array $search, ?string $images_where = ''): 
 {
     $logger = \Piwigo\Core\LoggerRegistry::current();
 
-    $logger->debug(__FUNCTION__, 'search', $search);
+    $logger->debug(__FUNCTION__, $search);
 
     $has_filters_filled = false;
 

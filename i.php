@@ -108,7 +108,7 @@ function ierror(string $msg, int $code): never
         }
         // default url is on html format
         $url = html_entity_decode($msg);
-        $logger->debug($code . ' ' . $url, 'i.php', array(
+        $logger->debug($code . ' ' . $url, array(
           'url' => $_SERVER['REQUEST_URI'],
           ));
         header('Request-URI: '.$url);
@@ -127,7 +127,7 @@ function ierror(string $msg, int $code): never
     }
     //todo improve
     echo $msg;
-    $logger->error($code . ' ' . $msg, 'i.php', array(
+    $logger->error($code . ' ' . $msg, array(
         'url' => $_SERVER['REQUEST_URI'],
         ));
     exit;
@@ -409,7 +409,7 @@ try {
         \Piwigo\Config\Config::dbName()
     );
 } catch (Exception $e) {
-    $logger->error($e->getMessage(), 'i.php');
+    $logger->error($e->getMessage());
 }
 pwg_db_check_charset();
 
@@ -498,7 +498,7 @@ SELECT *
             ierror('Db file path not found', 404);
         }
     } catch (Exception $e) {
-        $logger->error($e->getMessage(), 'i.php');
+        $logger->error($e->getMessage());
     }
 } else {
     $ctx->rotationAngle = 0;
@@ -626,7 +626,7 @@ $timing['send'] = time_step($step);
 $timing['total'] = time_step($begin);
 
 if ($logger->severity() >= Logger::DEBUG) {
-    $logger->debug('', 'i.php', array(
+    $logger->debug('image timing', array(
       'src_path' => basename($ctx->srcPath),
       'derivative_path' => basename($ctx->derivativePath),
       'o_size' => $o_size[0] . ' ' . $o_size[1] . ' ' . ($o_size[0] * $o_size[1]),

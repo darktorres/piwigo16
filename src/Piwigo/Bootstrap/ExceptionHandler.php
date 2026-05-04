@@ -16,8 +16,7 @@ class ExceptionHandler
         if (\Piwigo\Core\LoggerRegistry::isInitialized()) {
             \Piwigo\Core\LoggerRegistry::current()->error(
                 $e->getMessage(),
-                'exception',
-                ['file' => $e->getFile(), 'line' => $e->getLine(), 'code' => $e->getCode()]
+                ['file' => $e->getFile() . ':' . $e->getLine(), 'code' => $e->getCode()]
             );
         }
 

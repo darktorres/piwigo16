@@ -186,7 +186,7 @@ function merge_chunks(string $output_filepath, string $original_sum, string $typ
 {
     $logger = \Piwigo\Core\LoggerRegistry::current();
 
-    $logger->debug('[merge_chunks] input parameter $output_filepath : '.$output_filepath, 'WS');
+    $logger->debug('[merge_chunks] input parameter $output_filepath : '.$output_filepath);
 
     if (is_file($output_filepath)) {
         unlink($output_filepath);
@@ -203,7 +203,7 @@ function merge_chunks(string $output_filepath, string $original_sum, string $typ
     if ($handle = opendir($upload_dir)) {
         while (false !== ($file = readdir($handle))) {
             if (preg_match($pattern, $file)) {
-                $logger->debug($file, 'WS');
+                $logger->debug($file);
                 $chunks[] = $upload_dir.'/'.$file;
             }
         }
@@ -213,7 +213,7 @@ function merge_chunks(string $output_filepath, string $original_sum, string $typ
     sort($chunks);
 
     if (function_exists('memory_get_usage')) {
-        $logger->debug('[merge_chunks] memory_get_usage before loading chunks: '.memory_get_usage(), 'WS');
+        $logger->debug('[merge_chunks] memory_get_usage before loading chunks: '.memory_get_usage());
     }
 
     $i = 0;
@@ -222,7 +222,7 @@ function merge_chunks(string $output_filepath, string $original_sum, string $typ
         $string = file_get_contents($chunk);
 
         if (function_exists('memory_get_usage')) {
-            $logger->debug('[merge_chunks] memory_get_usage on chunk '.++$i.': '.memory_get_usage(), 'WS');
+            $logger->debug('[merge_chunks] memory_get_usage on chunk '.++$i.': '.memory_get_usage());
         }
 
         if (!file_put_contents($output_filepath, $string, FILE_APPEND)) {
@@ -233,7 +233,7 @@ function merge_chunks(string $output_filepath, string $original_sum, string $typ
     }
 
     if (function_exists('memory_get_usage')) {
-        $logger->debug('[merge_chunks] memory_get_usage after loading chunks: '.memory_get_usage(), 'WS');
+        $logger->debug('[merge_chunks] memory_get_usage after loading chunks: '.memory_get_usage());
     }
     return null;
 }
@@ -1194,7 +1194,7 @@ function ws_images_add_chunk(array $params, \Piwigo\Ws\PwgServer $service): mixe
             '[ws_images_add_chunk] input param "%s" : "%s"',
             $param_key,
             is_scalar($param_value) ? (string) $param_value : 'NULL'
-        ), 'WS');
+        ));
     }
 
     $upload_dir = \Piwigo\Config\Config::uploadDir().'/buffer';
@@ -1215,7 +1215,7 @@ function ws_images_add_chunk(array $params, \Piwigo\Ws\PwgServer $service): mixe
         $p_position
     );
 
-    $logger->debug('[ws_images_add_chunk] data length : '.strlen($p_data), 'WS');
+    $logger->debug('[ws_images_add_chunk] data length : '.strlen($p_data));
 
     $bytes_written = file_put_contents(
         $upload_dir.'/'.$filename,
@@ -1247,7 +1247,7 @@ function ws_images_addFile(array $params, \Piwigo\Ws\PwgServer $service): mixed
 {
     $logger = \Piwigo\Core\LoggerRegistry::current();
 
-    $logger->debug(__FUNCTION__, 'WS', $params);
+    $logger->debug(__FUNCTION__, $params);
 
     $p_image_id = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
     $p_type_af = is_scalar($params['type']) ? (string) $params['type'] : '';
@@ -1352,7 +1352,7 @@ function ws_images_add(array $params, \Piwigo\Ws\PwgServer $service): PwgError|a
             '[pwg.images.add] input param "%s" : "%s"',
             $param_key,
             is_scalar($param_value) ? (string) $param_value : 'NULL'
-        ), 'WS');
+        ));
     }
 
     $p_image_id = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
@@ -2138,7 +2138,7 @@ function ws_images_exist(array $params, \Piwigo\Ws\PwgServer $service): array
 {
     $logger = \Piwigo\Core\LoggerRegistry::current();
 
-    $logger->debug(__FUNCTION__, 'WS', $params);
+    $logger->debug(__FUNCTION__, $params);
 
     $split_pattern = '/[\s,;\|]/';
     $result = [];
@@ -2209,7 +2209,7 @@ function ws_images_formats_searchImage(array $params, \Piwigo\Ws\PwgServer $serv
 {
     $logger = \Piwigo\Core\LoggerRegistry::current();
 
-    $logger->debug(__FUNCTION__, 'WS', $params);
+    $logger->debug(__FUNCTION__, $params);
 
     $candidates = json_decode(stripslashes(is_scalar($params['filename_list']) ? (string) $params['filename_list'] : ''), true);
 
@@ -2422,7 +2422,7 @@ function ws_images_checkFiles(array $params, \Piwigo\Ws\PwgServer $service): Pwg
 {
     $logger = \Piwigo\Core\LoggerRegistry::current();
 
-    $logger->debug(__FUNCTION__, 'WS', $params);
+    $logger->debug(__FUNCTION__, $params);
 
     $check_image_id = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
     $query = '
@@ -2456,7 +2456,7 @@ SELECT path
     }
 
     if (isset($compare_type)) {
-        $logger->debug(__FUNCTION__.', md5_file($path) = '.md5_file($path), 'WS');
+        $logger->debug(__FUNCTION__.', md5_file($path) = '.md5_file($path));
         if (md5_file($path) != $params[$compare_type.'_sum']) {
             $ret[$compare_type] = 'differs';
         } else {
@@ -2464,7 +2464,7 @@ SELECT path
         }
     }
 
-    $logger->debug(__FUNCTION__, 'WS', $ret);
+    $logger->debug(__FUNCTION__, $ret);
 
     return $ret;
 }

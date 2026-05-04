@@ -756,7 +756,7 @@ vendor/bin/phpstan analyse                                        # green
 
 ## #11 — PSR-3 Logger
 
-**Status:** Not started &nbsp;|&nbsp; **Size:** S
+**Status:** Done &nbsp;|&nbsp; **Size:** S
 
 ### Goal
 

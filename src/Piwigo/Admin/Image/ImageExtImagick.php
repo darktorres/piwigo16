@@ -184,11 +184,11 @@ class ImageExtImagick implements ImageInterface
         $dest = pathinfo((string) $destination_filepath);
         $dirname = isset($dest['dirname']) ? (realpath($dest['dirname']) ?: $dest['dirname']) : '';
         $exec .= ' "'.$dirname.'/'.$dest['basename'].'" 2>&1';
-        $logger->debug($exec, 'i.php');
+        $logger->debug($exec);
         exec($exec, $returnarray);
 
         if (count($returnarray) > 0) {
-            $logger->error('', 'i.php', $returnarray);
+            $logger->error('imagick exec error', $returnarray);
             foreach ($returnarray as $line) {
                 trigger_error($line, E_USER_WARNING);
             }

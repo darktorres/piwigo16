@@ -4,20 +4,20 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
+use Psr\Log\LoggerInterface;
+
 /**
- * Static accessor for the active Logger singleton.
+ * Static accessor for the active PSR-3 logger singleton.
  *
- * Mirrors TemplateRegistry: every entry-point that constructs `$logger = new
- * Logger(...)` (include/common.inc.php, i.php) calls LoggerRegistry::set() so
- * that $GLOBALS['logger'] and LoggerRegistry::current() return the same
- * instance. Migrated call sites use the typed accessor instead of `global
- * $logger;`.
+ * Accepts any LoggerInterface implementation so the concrete class
+ * (currently Logger, backed by Monolog) can be swapped at boot time
+ * without touching call sites.
  */
 final class LoggerRegistry
 {
-    private static ?Logger $instance = null;
+    private static ?LoggerInterface $instance = null;
 
-    public static function set(Logger $logger): void
+    public static function set(LoggerInterface $logger): void
     {
         self::$instance = $logger;
         $GLOBALS['logger'] = $logger;
@@ -28,7 +28,7 @@ final class LoggerRegistry
         return self::$instance !== null;
     }
 
-    public static function current(): Logger
+    public static function current(): LoggerInterface
     {
         if (self::$instance === null) {
             throw new \LogicException('LoggerRegistry not initialised — no global Logger has been constructed yet.');

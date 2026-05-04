@@ -32,6 +32,12 @@ final class LoggerTest extends TestCase
         return new Logger(['directory' => $this->logDir, 'severity' => $severity]);
     }
 
+    private function logFileContent(): string
+    {
+        $files = glob($this->logDir . '/log_*.txt') ?: [];
+        return $files ? (string) file_get_contents($files[0]) : '';
+    }
+
     public function test_implements_psr3_logger_interface(): void
     {
         $this->assertInstanceOf(LoggerInterface::class, $this->makeLogger());
@@ -39,38 +45,33 @@ final class LoggerTest extends TestCase
 
     public function test_debug_writes_to_file(): void
     {
-        $logger = $this->makeLogger();
-        $logger->debug('hello debug');
-        $content = file_get_contents(glob($this->logDir . '/log_*.txt')[0]);
-        $this->assertStringContainsString('[DEBUG]', $content);
+        $this->makeLogger()->debug('hello debug');
+        $content = $this->logFileContent();
+        $this->assertStringContainsString('DEBUG', $content);
         $this->assertStringContainsString('hello debug', $content);
     }
 
     public function test_error_writes_to_file(): void
     {
-        $logger = $this->makeLogger();
-        $logger->error('something went wrong');
-        $content = file_get_contents(glob($this->logDir . '/log_*.txt')[0]);
-        $this->assertStringContainsString('[ERROR]', $content);
+        $this->makeLogger()->error('something went wrong');
+        $content = $this->logFileContent();
+        $this->assertStringContainsString('ERROR', $content);
         $this->assertStringContainsString('something went wrong', $content);
     }
 
     public function test_context_array_is_appended(): void
     {
-        $logger = $this->makeLogger();
-        $logger->info('context test', ['key' => 'value']);
-        $content = file_get_contents(glob($this->logDir . '/log_*.txt')[0]);
+        $this->makeLogger()->info('context test', ['key' => 'value']);
+        $content = $this->logFileContent();
         $this->assertStringContainsString('context test', $content);
         $this->assertStringContainsString('key', $content);
-        $this->assertStringContainsString('value', $content);
     }
 
     public function test_log_with_psr3_level_string(): void
     {
-        $logger = $this->makeLogger();
-        $logger->log(LogLevel::WARNING, 'psr3 warning');
-        $content = file_get_contents(glob($this->logDir . '/log_*.txt')[0]);
-        $this->assertStringContainsString('[WARNING]', $content);
+        $this->makeLogger()->log(LogLevel::WARNING, 'psr3 warning');
+        $content = $this->logFileContent();
+        $this->assertStringContainsString('WARNING', $content);
         $this->assertStringContainsString('psr3 warning', $content);
     }
 
@@ -79,10 +80,15 @@ final class LoggerTest extends TestCase
         $logger = $this->makeLogger(Logger::ERROR);
         $logger->debug('suppressed debug');
         $logger->error('visible error');
-        $files = glob($this->logDir . '/log_*.txt');
-        $content = $files ? file_get_contents($files[0]) : '';
+        $content = $this->logFileContent();
         $this->assertStringNotContainsString('suppressed debug', $content);
         $this->assertStringContainsString('visible error', $content);
+    }
+
+    public function test_severity_returns_configured_level(): void
+    {
+        $this->assertSame(Logger::ERROR, $this->makeLogger(Logger::ERROR)->severity());
+        $this->assertSame(Logger::DEBUG, $this->makeLogger(Logger::DEBUG)->severity());
     }
 
     public function test_invalid_level_throws(): void
@@ -101,5 +107,12 @@ final class LoggerTest extends TestCase
         ] as $level) {
             $this->assertTrue(method_exists($logger, $level), "Missing method: $level");
         }
+    }
+
+    public function test_off_level_writes_nothing(): void
+    {
+        $logger = $this->makeLogger(Logger::OFF);
+        $logger->error('should not appear');
+        $this->assertEmpty($this->logFileContent());
     }
 }

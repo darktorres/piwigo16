@@ -31,7 +31,7 @@ $page = ['infos' => [], 'errors' => [], 'warnings' => [], 'messages' => [], 'bod
 $lang = [];
 /** @var \Piwigo\Template\Template|null $template */
 $template = null;
-/** @var \Piwigo\Core\Logger|null $logger */
+/** @var \Psr\Log\LoggerInterface|null $logger */
 $logger = null;
 /** @var array<string,mixed> $filter */
 $filter = [];

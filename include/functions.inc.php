@@ -529,7 +529,10 @@ function pwg_log(int|string|null $image_id = null, ?string $image_type = null, ?
             $history_sections[] = $pageSection;
 
             // alter history table structure, to include a new section
-            pwg_query('ALTER TABLE '.HISTORY_TABLE.' CHANGE section section enum(\''.implode("','", array_unique($history_sections)).'\') DEFAULT NULL;');
+            \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)->executeStatement(
+                "ALTER TABLE " . HISTORY_TABLE . " CHANGE section section enum('" .
+                implode("','", array_unique($history_sections)) . "') DEFAULT NULL"
+            );
 
             // and refresh cache
             conf_update_param('history_sections_cache', get_enums(HISTORY_TABLE, 'section'), true);
@@ -1366,7 +1369,9 @@ function pwg_is_dbconf_writeable(): bool
     [$param, $value] = ['pwg_is_dbconf_writeable_'.generate_key(12), date('c').' '.generate_key(20)];
 
     conf_update_param($param, $value);
-    [$dbvalue] = pwg_db_fetch_row(pwg_query('SELECT value FROM '.CONFIG_TABLE.' WHERE param = \''.$param.'\'')) ?? [null];
+    $dbvalue = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+        ->executeQuery('SELECT value FROM ' . CONFIG_TABLE . ' WHERE param = ?', [$param])
+        ->fetchOne();
 
     if ($dbvalue != $value) {
         return false;
@@ -1394,14 +1399,16 @@ function conf_update_param(string $param, mixed $value, bool $updateGlobal = fal
         $dbValue = boolean_to_string(is_bool($value) ? $value : (is_scalar($value) ? (string) $value : ''));
     }
 
-    $query = '
-INSERT INTO
-  '.CONFIG_TABLE.' (param, value)
-  VALUES(\''.$param.'\', \''.$dbValue.'\')
-  ON DUPLICATE KEY UPDATE value = \''.$dbValue.'\'
-;';
-
-    pwg_query($query);
+    if (\Piwigo\Core\ServiceLocator::has(\Doctrine\DBAL\Connection::class)) {
+        \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)->executeStatement(
+            'INSERT INTO ' . CONFIG_TABLE . ' (param, value) VALUES (?, ?) ON DUPLICATE KEY UPDATE value = ?',
+            [$param, $dbValue, $dbValue]
+        );
+    } else {
+        pwg_query('INSERT INTO ' . CONFIG_TABLE . ' (param, value)' .
+            " VALUES('" . $param . "', '" . $dbValue . "')" .
+            " ON DUPLICATE KEY UPDATE value = '" . $dbValue . "'");
+    }
 
     if ($updateGlobal) {
         \Piwigo\Config\Config::override($param, $value);
@@ -1423,11 +1430,15 @@ function conf_delete_param($params): void
         return;
     }
 
-    $query = '
-DELETE FROM '.CONFIG_TABLE.'
-  WHERE param IN(\''. implode('\',\'', $params) .'\')
-;';
-    pwg_query($query);
+    if (\Piwigo\Core\ServiceLocator::has(\Doctrine\DBAL\Connection::class)) {
+        $qb = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)->createQueryBuilder()
+            ->delete(CONFIG_TABLE);
+        $qb->where($qb->expr()->in('param', ':params'))
+           ->setParameter('params', $params, \Doctrine\DBAL\ArrayParameterType::STRING);
+        $qb->executeStatement();
+    } else {
+        pwg_query("DELETE FROM " . CONFIG_TABLE . " WHERE param IN('" . implode("','", $params) . "')");
+    }
 
     foreach ($params as $param) {
         \Piwigo\Config\Config::delete($param);

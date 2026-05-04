@@ -227,6 +227,19 @@ final class ImageRepository extends AbstractRepository
         return $qb->executeQuery()->fetchAllAssociative();
     }
 
+    /**
+     * Increment the hit counter for the given image without touching lastmodified.
+     * The `lastmodified = lastmodified` trick prevents MySQL auto-update.
+     */
+    public function incrementHit(int $id): void
+    {
+        // Raw SQL: `lastmodified = lastmodified` suppresses MySQL's ON UPDATE CURRENT_TIMESTAMP.
+        $this->conn->executeStatement(
+            'UPDATE ' . $this->table('images') . ' SET hit = hit + 1, lastmodified = lastmodified WHERE id = ?',
+            [$id]
+        );
+    }
+
     /** Return true if an image with the given id exists. */
     public function existsById(int $id): bool
     {

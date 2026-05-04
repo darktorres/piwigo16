@@ -108,13 +108,8 @@ function encode_slideshow_params(array $decode_params = []): string
 function increase_image_visit_counter($image_id): void
 {
     // avoiding auto update of "lastmodified" field
-    $query = '
-UPDATE
-  '.IMAGES_TABLE.'
-  SET hit = hit+1, lastmodified = lastmodified
-  WHERE id = '.$image_id.'
-;';
-    pwg_query($query);
+    \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
+        ->incrementHit(is_numeric($image_id) ? (int) $image_id : 0);
 }
 
 /**

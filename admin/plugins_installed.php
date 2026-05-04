@@ -134,8 +134,8 @@ foreach ($plugins->fs_plugins as $plugin_id => $fs_plugin) {
     $fsExtId = $fs_plugin['extension'] ?? null;
     if (isset($fsExtId) && (is_string($fsExtId) || is_int($fsExtId)) && isset($merged_extensions[$fsExtId])) {
         // Deactivate manually plugin from database
-        $query = 'UPDATE '.PLUGINS_TABLE.' SET state=\'inactive\' WHERE id=\''.$plugin_id.'\'';
-        pwg_query($query);
+        \Piwigo\Core\ServiceLocator::get(\Piwigo\Plugin\PluginRepository::class)
+            ->updateState($plugin_id, 'inactive');
 
         $tpl_plugin['STATE'] = 'merged';
         $tpl_plugin['DESC'] = l10n('THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW.');

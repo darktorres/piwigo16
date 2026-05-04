@@ -26,12 +26,7 @@ if (
     and (is_a_guest() or is_admin())          // normal users are not concerned by no_photo_yet
     and !isset($_SESSION['no_photo_yet'])     // temporary hide
 ) {
-    $query = '
-SELECT
-    COUNT(*)
-  FROM '.IMAGES_TABLE.'
-;';
-    [$nb_photos] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+    $nb_photos = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)->countAll();
     if (0 == $nb_photos) {
         // make sure we don't use the mobile theme, which is not compatible with
         // the "no photo yet" feature

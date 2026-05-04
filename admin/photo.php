@@ -35,12 +35,8 @@ $page['image'] = get_image_infos($image_id_str, true);
 
 if (isset($_GET['cat_id'])) {
     $cat_id_val = $_GET['cat_id'];
-    $query = '
-SELECT *
-  FROM '.CATEGORIES_TABLE.'
-  WHERE id = '.(is_scalar($cat_id_val) ? (int) $cat_id_val : 0).'
-;';
-    $category = pwg_db_fetch_assoc(pwg_query($query));
+    $category = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+        ->findCategoryById(is_scalar($cat_id_val) ? (int) $cat_id_val : 0);
 }
 
 // +-----------------------------------------------------------------------+

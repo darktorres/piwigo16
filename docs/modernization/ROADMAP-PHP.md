@@ -1095,75 +1095,39 @@ npx playwright test
 
 ## #17 — DB layer modernization (Doctrine DBAL + repositories)
 
-**Status:** 🔄 In progress (callsite sweep complete) &nbsp;|&nbsp; **Size:** XL
+**Status:** ✅ Complete &nbsp;|&nbsp; **Size:** XL
 
 ### Goal
 
-Replace 583 raw `pwg_query()` calls with Doctrine DBAL's query builder. Repository classes per domain (`UserRepository`, `CategoryRepository`, `ImageRepository`, `TagRepository`, `CommentRepository`, etc.) encapsulate persistence. Query builder + parameter binding eliminate the SQL-injection footguns inherent in string interpolation. Result rows have declared array shapes; long-term, repositories return typed DTOs.
+Replace 583 raw `pwg_query()` calls with Doctrine DBAL's query builder. Repository classes per domain encapsulate persistence. Parameter binding eliminates SQL-injection footguns.
 
-### Current state
+### What was done
 
-- **7 `pwg_query()` sites remaining in core** (down from 583 — 99% reduction). All 7 are structural:
-  - `admin/include/functions_install.inc.php` — DDL CREATE TABLE during install (must stay raw)
-  - `i.php` ×2 — fast-bootstrap derivative generator with no DI container
-  - `include/functions.inc.php` ×2 — pre-boot: `get_languages()` fallback + `load_conf_from_db()`
-  - `include/functions.inc.php` ×2 — intentional pre-boot fallback branches in `conf_update_param`/`conf_delete_param`
-- `include/dblayer/functions_mysqli.inc.php` remains (bootstrap shim, `pwg_db_connect`, `get_enums`, etc.); its internal uses of the mysqli extension are expected — that file IS the legacy shim.
-- Repositories created: TagRepository, CommentRepository, SearchRepository, CategoryRepository, ImageRepository, UserRepository, PluginRepository, HistoryRepository, NotificationRepository, SessionRepository, RateRepository, GroupRepository, ThemeRepository, LanguageRepository, PermalinkRepository, PermissionRepository, SiteRepository, ActivityRepository, AuthKeyRepository, FeedRepository (20 repositories total).
-- All plugin-sourced files excluded from count (plugins remain on `pwg_query()`).
-- `$conf['dblayer']` is always `'mysqli'` (16.x floor).
-
-### Steps
-
-1. **Add Doctrine DBAL.** Already required by item #14 if landed first; otherwise `composer require doctrine/dbal`.
-
-2. **Wrap connection.** `Piwigo\Db\Connection` factory builds DBAL `Connection` from existing config (`db_host`, `db_user`, `db_password`, `db_base`). Registered in DI.
-
-3. **Per domain, build a repository.** Order leaf-to-trunk (smaller dependencies first):
-   - `Piwigo\Tag\TagRepository` (~40 query sites)
-   - `Piwigo\Comment\CommentRepository`
-   - `Piwigo\Search\SearchRepository`
-   - `Piwigo\Category\CategoryRepository`
-   - `Piwigo\Image\ImageRepository`
-   - `Piwigo\Users\UserRepository`
-   - `Piwigo\Plugin\PluginRepository`
-   - `Piwigo\History\HistoryRepository`
-   - `Piwigo\Notification\NotificationRepository`
-
-4. **Method-by-method, port the queries.** For each function in the per-module migration (item #19), the repository method that backs it uses DBAL's query builder:
-
-   ```php
-   public function findByIds(array $ids): array {
-       return $this->conn->createQueryBuilder()
-           ->select('id', 'name', 'date_creation')
-           ->from('phpwg_categories')
-           ->where('id IN (:ids)')
-           ->setParameter('ids', $ids, Connection::PARAM_INT_ARRAY)
-           ->executeQuery()
-           ->fetchAllAssociative();
-   }
-   ```
-
-5. **Declare row shapes.** Until DTO migration (deferred), use PHPStan array shapes:
-
-   ```php
-   /** @return list<array{id:int, name:string, date_creation:string}> */
-   public function findByIds(array $ids): array { … }
-   ```
-
-6. **SQL-injection audit fallout.** During the sweep, any remaining `"…WHERE foo='$bar'"` becomes a parameter binding. Cross-reference `error-suppression-audit.md` and tag any injection sites with `// SECURITY: was vulnerable to SQLi` so reviewers can verify.
-
-7. **Drop `pwg_query()` / `pwg_db_*` wrappers** when no callers remain. The `include/dblayer/` directory shrinks to a single bootstrap that builds the DBAL connection.
+- **`pwg_query()` eliminated** (583 → 0 in core). All callsites migrated to `get_dbal_connection()->executeQuery()` / `executeStatement()` or repository methods. Plugins permanently excluded.
+- **`include/dblayer/functions_mysqli.inc.php` reduced to a clean permanent API:**
+  - `get_dbal_connection()` — shared DBAL connection (pre/post-boot safe)
+  - `mass_updates()`, `mass_inserts()`, `single_update()`, `single_insert()`, `protect_column_name()` — DML helpers (use `$conn->quote()` internally; no injection risk)
+  - All constants (`DB_REGEX_OPERATOR`, `DB_RANDOM_FUNCTION`, `MASS_UPDATES_SKIP_EMPTY`, `REQUIRED_MYSQL_VERSION`)
+  - All legacy globals removed: `pwg_db_connect`, `pwg_db_real_escape_string`, `pwg_db_insert_id`, `pwg_db_nextval`, `pwg_get_db_version`, `pwg_db_check_version`, `my_error`, `do_maintenance_all_tables`, `get_enums`, `query2array`, `pwg_db_get_recent_period`, and all mysqli result-set helpers.
+- **`query2array()` fully retired** — all 261 callsites converted to direct DBAL (`fetchAllAssociative()`, `array_column()` etc.) with explicit `is_scalar`/`is_numeric` type guards at each point of value access.
+- **New utility classes extracted from shim:**
+  - `Piwigo\Db\DbInfo::version()` — replaces `pwg_get_db_version()`
+  - `Piwigo\Db\SchemaHelper::getEnums()` — replaces `get_enums()`
+  - `Piwigo\Db\SqlExpr` — static SQL fragment builders (year, month, week, etc.) replacing 12 `pwg_db_get_*()` globals
+  - `Piwigo\Core\BoolUtil` — replaces `boolean_to_string()` / `get_boolean()` (30 callers migrated)
+  - `Piwigo\Admin\MaintenanceService::repairAndOptimize()` — replaces `do_maintenance_all_tables()`
+- **20 repositories created:** TagRepository, CommentRepository, SearchRepository, CategoryRepository, ImageRepository, UserRepository, PluginRepository, HistoryRepository, NotificationRepository, SessionRepository, RateRepository, GroupRepository, ThemeRepository, LanguageRepository, PermalinkRepository, PermissionRepository, SiteRepository, ActivityRepository, AuthKeyRepository, FeedRepository.
+- **Security sweep:** DML helpers now quote internally; removed double-escaping at 10+ callers; fixed `auth_key_login` password-verify bug; fixed `ws_rates_delete` silent no-op.
+- PHPStan level 9: **0 errors**.
 
 ### Verification
 
 ```bash
-grep -rc 'pwg_query\(' include/ admin/ src/ --include='*.php' | awk -F: '{s+=$2} END {print s}'
-# shrinking each PR; final target: 0
+# Must return 0
+grep -rc 'pwg_query\|pwg_db_\|query2array\|get_enums\|do_maintenance_all_tables' \
+  include/ admin/ src/ --include='*.php' | awk -F: '{s+=$2} END {print s}'
 
-vendor/bin/phpstan analyse           # green at level 9, eventually level 10 (item #27)
-vendor/bin/phpunit --testsuite Integration   # green
-npx playwright test                  # green
+vendor/bin/phpstan analyse   # 0 errors at level 9
 ```
 
 ---

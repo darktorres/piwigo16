@@ -209,7 +209,7 @@ function ws_getInfos(array $params, \Piwigo\Ws\PwgServer &$service): array
     }
 
     // Cache size
-    // TODO for real later
+    // DEFERRED: compute actual derivative cache size by scanning the cache directory.
     $infos['cache_size'] = 4242;
 
     foreach ($infos as $name => $value) {
@@ -821,8 +821,7 @@ SELECT
 
     pwg_set_cookie_var('display_thumbnail', $cookie_val, strtotime('+1 month'));
 
-    // TODO manage inconsistency of having $_POST['image_id'] and
-    // $_POST['filename'] simultaneously
+    // DEFERRED: define precedence when both image_id and filename are provided simultaneously.
 
     // store seach in database
     // register search rules in database, then they will be available on
@@ -849,7 +848,7 @@ SELECT rules
     $page['search'] = unserialize(is_string($serialized_rules) ? $serialized_rules : '');
 
 
-    /*TODO - no need to get a huge number of rows from db (should take only what needed for display + SQL_CALC_FOUND_ROWS*/
+    // PERF: fetches all matching rows then counts in PHP; use SQL_CALC_FOUND_ROWS + LIMIT to fetch only the display page.
     /** @var list<array<string, mixed>> $data */
     $data = trigger_change('get_history', [], $page['search'], $types);
     usort($data, history_compare(...));

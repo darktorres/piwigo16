@@ -296,7 +296,10 @@ SELECT t.*, count(*) AS counter
     $query .= '
   GROUP BY t.id
   ORDER BY ';
-    if ($max_tags > 0) { // TODO : why ORDER field is in the if ?
+    if ($max_tags > 0) {
+        // When a limit is requested, sort by usage count descending.
+        // When all tags are requested ($max_tags == 0), ORDER BY NULL suppresses
+        // MySQL's implicit filesort and lets the engine return rows in any order.
         $query .= 'counter DESC
   LIMIT '.$max_tags;
     } else {

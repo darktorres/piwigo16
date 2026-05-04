@@ -481,8 +481,9 @@ class Updates
         $template = \Piwigo\Template\TemplateRegistry::current();
 
         if ($check_current_version and !version_compare($upgrade_to, PHPWG_VERSION, '>')) {
-            // TODO why redirect to a plugin page? maybe a remaining code from when
-            // the update system was provided as a plugin?
+            // DEFERRED: redirect target uses basename(__DIR__) = "Admin", producing
+            // "page=plugin-Admin" — a leftover from when the updater was a plugin.
+            // Revisit when the admin updates page URL is finalised (#7 cleanup).
             redirect(get_root_url().'admin.php?page=plugin-'.basename(__DIR__));
         }
 

@@ -451,7 +451,7 @@ SELECT DISTINCT(id)
             if (empty($forbidden_ids)) {
                 $forbidden_ids[] = 0;
             }
-            $userdata['image_access_type'] = 'NOT IN'; //TODO maybe later
+            $userdata['image_access_type'] = 'NOT IN';
             $userdata['image_access_list'] = implode(',', array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $forbidden_ids));
 
 
@@ -975,11 +975,7 @@ WHERE '.\Piwigo\Config\Config::userFields()['id'].' = '.$user_id;
  */
 function log_user($user_id, $remember_me): void
 {
-    //New default login and register pages, if users changes languages and succesfully logs in
-    //we want to update the userpref language stored in a cookie
-
-    //TODO check value of cookie
-
+    // If the user changed language on the login page, sync the stored preference.
     $cookie_lang = isset($_COOKIE['lang']) && is_scalar($_COOKIE['lang']) ? (string) $_COOKIE['lang'] : '';
     if ($cookie_lang !== '' and CurrentUser::get()->language != $cookie_lang) {
         if (!array_key_exists($cookie_lang, get_languages())) {

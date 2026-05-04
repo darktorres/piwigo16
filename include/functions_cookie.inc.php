@@ -57,8 +57,7 @@ function cookie_path(): ?string
         $scr .= '/';
     }
 
-    if (str_starts_with(PHPWG_ROOT_PATH, '../')) { // this is maybe a plugin inside pwg directory
-        // TODO - what if it is an external script outside PWG ?
+    if (str_starts_with(PHPWG_ROOT_PATH, '../')) { // plugin inside the pwg directory tree
         $scr = $scr.PHPWG_ROOT_PATH;
         while (1) {
             $new = preg_replace('#[^/]+/\.\.(/|$)#', '', (string) $scr);

@@ -725,7 +725,7 @@ SELECT
     }
 
     if (!empty($params['position']) and in_array($params['position'], ['first','last'])) {
-        //TODO make persistent with user prefs
+        // DEFERRED: persist position choice to user preferences instead of only overriding for this request.
         \Piwigo\Config\Config::override('newcat_default_position', is_scalar($params['position']) ? (string) $params['position'] : '');
     }
 

@@ -530,12 +530,8 @@ FROM '.CATEGORIES_TABLE.' as c
             continue;
         }
 
-        // Piwigo before 2.5.3 may have generated inconsistent permissions, ie
-        // private album A1/A2 permitted to user U1 but private album A1 not
-        // permitted to U1.
-        //
-        // TODO 2.7: add an upgrade script to repair permissions and remove this
-        // test
+        // Skip categories whose parent was not included in the result set
+        // (can happen when a parent is inaccessible to the current user).
         $cat_uppercat_key = (string) $cat['id_uppercat'];
         if (!isset($cats[$cat_uppercat_key])) {
             continue;

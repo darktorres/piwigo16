@@ -404,8 +404,9 @@ SELECT
             // searching all the categories id of sub-categories
             $cat_ids = get_subcat_ids($cat_words);
         } else {
-            // TODO we take the list of cat_ids "as is", we should check they still
-            // exist and are browseable to the user
+            // DEFERRED: cat_ids are used as-is without checking existence or user
+            // access — the SQL safely returns empty results for missing categories,
+            // but forbidden categories may still be matched.
             $cat_ids = $cat_words;
         }
 

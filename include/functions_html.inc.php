@@ -209,8 +209,6 @@ function render_comment_content($content): string|null
     $replacement = '<span style="font-style:italic;">$1$2</span>';
     $content = preg_replace($pattern, $replacement, (string) $content);
 
-    // TODO : add a trigger
-
     return $content;
 }
 

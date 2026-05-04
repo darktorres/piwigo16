@@ -69,8 +69,8 @@ if ('search' == $page['section'] and isset($page['search_details'])) {
     if (isset($my_search['fields']['tags']) and $display_filters['tags']['access']) {
         $filter_tags = [];
 
-        // TODO calling get_available_tags(), with lots of photos/albums/tags may cost time,
-        // we should reuse the result if already executed (for building the menu for example)
+        // PERF: get_available_tags() can be expensive with many tags; consider sharing
+        // the result with the menu builder to avoid a second identical query.
 
         $other_filters_items = get_items_for_filter('tags');
         if (false === $other_filters_items) {
@@ -441,7 +441,7 @@ SELECT
                 $uppercats_val = $row['uppercats'];
                 $cat_display_name = get_cat_display_name_cache(
                     is_scalar($uppercats_val) ? (string) $uppercats_val : '',
-                    'admin.php?page=album-' // TODO not sure it's relevant to link to admin pages
+                    'admin.php?page=album-' // DEFERRED: admin URL may be inappropriate in gallery context
                 );
                 $row['fullname'] = strip_tags($cat_display_name);
 

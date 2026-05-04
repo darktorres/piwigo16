@@ -1771,7 +1771,7 @@ function convert_charset(string $str, string $source_charset, string $dest_chars
         $result = mb_convert_encoding($str, $dest_charset, $source_charset);
         return $result !== false ? $result : $str;
     }
-    return $str; // TODO
+    return $str; // fallback: return unchanged if neither iconv nor mbstring is available
 }
 
 /**

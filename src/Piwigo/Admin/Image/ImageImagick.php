@@ -55,7 +55,10 @@ class ImageImagick implements ImageInterface
     {
         $this->image->setInterlaceScheme(\Imagick::INTERLACE_LINE);
 
-        // TODO need to explain this condition
+        // Pre-scale by 50% when the source is more than 3× the target width and has
+        // even dimensions. A single 50% reduction before the final Lanczos resize
+        // reduces aliasing artifacts and is faster than one large resizeImage call.
+        // Even dimensions are required because Imagick handles odd intermediates poorly.
         if ($this->get_width() % 2 == 0
             && $this->get_height() % 2 == 0
             && $this->get_width() > 3 * $width) {

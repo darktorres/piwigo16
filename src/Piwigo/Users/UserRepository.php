@@ -185,6 +185,23 @@ final class UserRepository extends AbstractRepository
         return is_numeric($value) ? (int) $value : 0;
     }
 
+    /**
+     * Return the earliest registration_date among all users (excluding NULL rows),
+     * ordered by user_id ascending. Returns null if no rows found.
+     */
+    public function findEarliestRegistrationDate(): ?string
+    {
+        $value = $this->conn->createQueryBuilder()
+            ->select('registration_date')
+            ->from($this->table('user_infos'))
+            ->where('registration_date IS NOT NULL')
+            ->orderBy('user_id', 'ASC')
+            ->setMaxResults(1)
+            ->executeQuery()
+            ->fetchOne();
+        return is_string($value) ? $value : null;
+    }
+
     /** Delete notification feed rows that were never used (last_check IS NULL). */
     public function deleteNeverUsedFeeds(): void
     {

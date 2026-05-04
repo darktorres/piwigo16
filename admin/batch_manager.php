@@ -41,11 +41,8 @@ check_input_parameter('display', $_REQUEST, false, '/^(\d+|all)$/');
 
 if (isset($_GET['action'])) {
     if ('empty_caddie' == $_GET['action']) {
-        $query = '
-DELETE FROM '.CADDIE_TABLE.'
-  WHERE user_id = '.$user['id'].'
-;';
-        pwg_query($query);
+        \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
+            ->deleteUserCaddie(is_numeric($user['id']) ? (int) $user['id'] : 0);
 
         $_SESSION['page_infos'] = [
           l10n('Information data registered in database'),
@@ -349,13 +346,10 @@ SELECT image_id
             break;
 
         case 'last_import':
-            $query = '
-SELECT MAX(date_available) AS date
-  FROM '.IMAGES_TABLE.'
-;';
-            $row = pwg_db_fetch_assoc(pwg_query($query));
-            if (!empty($row['date'])) {
-                $last_import_date = (string) $row['date'];
+            $last_import_date_raw = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
+                ->findMaxDateAvailable();
+            if (!empty($last_import_date_raw)) {
+                $last_import_date = $last_import_date_raw;
                 $query = '
 SELECT id
   FROM '.IMAGES_TABLE.'
@@ -490,13 +484,7 @@ if (isset($bmf['category'])) {
     $bmf_category = is_numeric($bmf['category']) ? (int) $bmf['category'] : 0;
 
     // we need to check the category still exists (it may have been deleted since it was added in the session)
-    $query = '
-SELECT COUNT(*)
-  FROM '.CATEGORIES_TABLE.'
-  WHERE id = '.$bmf_category.'
-;';
-    [$counter] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-    if (0 == $counter) {
+    if (!\Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)->existsById($bmf_category)) {
         unset($_SESSION['bulk_manager_filter']);
         redirect(get_root_url().'admin.php?page='.(is_scalar($_GET['page']) ? (string) $_GET['page'] : ''));
     }
@@ -677,24 +665,13 @@ $ratios = [];
 $dimensions = [];
 
 // get all width, height and ratios
-$query = '
-SELECT
-  DISTINCT width, height
-  FROM '.IMAGES_TABLE.'
-  WHERE width IS NOT NULL
-    AND height IS NOT NULL
-;';
-$result = pwg_query($query);
-
-if (pwg_db_num_rows($result)) {
-    while ($row = pwg_db_fetch_assoc($result)) {
-        $row_width = is_numeric($row['width']) ? (int) $row['width'] : 0;
-        $row_height = is_numeric($row['height']) ? (int) $row['height'] : 0;
-        if ($row_width > 0 && $row_height > 0) {
-            $widths[] = $row_width;
-            $heights[] = $row_height;
-            $ratios[] = floor($row_width / $row_height * 100) / 100;
-        }
+foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)->findDistinctDimensions() as $row) {
+    $row_width  = $row['width'];
+    $row_height = $row['height'];
+    if ($row_width > 0 && $row_height > 0) {
+        $widths[]  = $row_width;
+        $heights[] = $row_height;
+        $ratios[]  = floor($row_width / $row_height * 100) / 100;
     }
 }
 if (empty($widths)) { // arbitrary values, only used when no photos on the gallery
@@ -763,17 +740,8 @@ $template->assign('dimensions', $dimensions);
 $filesizes = [];
 $filesize = [];
 
-$query = '
-SELECT
-  filesize
-  FROM '.IMAGES_TABLE.'
-  WHERE filesize IS NOT NULL
-  GROUP BY filesize
-;';
-$result = pwg_query($query);
-
-while ($row = pwg_db_fetch_assoc($result)) {
-    $filesizes[] = sprintf('%.1f', (is_numeric($row['filesize']) ? (float) $row['filesize'] : 0.0) / 1024);
+foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)->findDistinctFilesizes() as $filesize_kb) {
+    $filesizes[] = sprintf('%.1f', $filesize_kb / 1024);
 }
 
 if (empty($filesizes)) { // arbitrary values, only used when no photos on the gallery

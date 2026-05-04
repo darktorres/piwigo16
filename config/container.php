@@ -10,6 +10,7 @@ use Piwigo\Comment\CommentRepository;
 use Piwigo\Config\Config;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Language\LanguageRepository;
+use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permalink\PermalinkRepository;
 use Piwigo\Theme\ThemeRepository;
 use Piwigo\Core\LoggerRegistry;
@@ -59,4 +60,5 @@ return [
     ThemeRepository::class        => factory(static fn (Connection $conn): ThemeRepository        => new ThemeRepository($conn, Config::dbPrefix())),
     LanguageRepository::class     => factory(static fn (Connection $conn): LanguageRepository     => new LanguageRepository($conn, Config::dbPrefix())),
     PermalinkRepository::class    => factory(static fn (Connection $conn): PermalinkRepository    => new PermalinkRepository($conn, Config::dbPrefix())),
+    PermissionRepository::class   => factory(static fn (Connection $conn): PermissionRepository   => new PermissionRepository($conn, Config::dbPrefix())),
 ];

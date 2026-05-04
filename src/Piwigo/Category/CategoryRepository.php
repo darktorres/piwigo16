@@ -178,6 +178,123 @@ final class CategoryRepository extends AbstractRepository
         return is_numeric($value) ? (int) $value : 0;
     }
 
+    /** Count hidden (locked) albums (visible = 'false'). */
+    public function countHidden(): int
+    {
+        $value = $this->conn->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from($this->table('categories'))
+            ->where("visible = 'false'")
+            ->executeQuery()
+            ->fetchOne();
+        return is_numeric($value) ? (int) $value : 0;
+    }
+
+    /** Return true if a category with the given id exists. */
+    public function existsById(int $id): bool
+    {
+        $count = $this->conn->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from($this->table('categories'))
+            ->where('id = :id')
+            ->setParameter('id', $id)
+            ->executeQuery()
+            ->fetchOne();
+        return (int) $count > 0;
+    }
+
+    /**
+     * Return the uppercats string for a single category, or null if not found.
+     * Used by admin/cat_modify.php get_local_dir().
+     */
+    public function findUppercatsStringById(int $id): ?string
+    {
+        $value = $this->conn->createQueryBuilder()
+            ->select('uppercats')
+            ->from($this->table('categories'))
+            ->where('id = :id')
+            ->setParameter('id', $id)
+            ->executeQuery()
+            ->fetchOne();
+        return is_string($value) ? $value : null;
+    }
+
+    /**
+     * Return a map of category id → dir for the given ids.
+     *
+     * @param int[] $ids
+     * @return array<int, string|null>
+     */
+    public function findIdDirMap(array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->select('id', 'dir')
+            ->from($this->table('categories'));
+        $qb->where($qb->expr()->in('id', ':ids'))
+           ->setParameter('ids', $ids, \Doctrine\DBAL\ArrayParameterType::INTEGER);
+        $result = [];
+        foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
+            $result[(int) $row['id']] = is_string($row['dir']) ? $row['dir'] : null;
+        }
+        return $result;
+    }
+
+    /**
+     * Return the galleries_url from the site linked to the given category.
+     * Returns null if the category has no site association.
+     */
+    public function findGalleriesUrlByCategoryId(int $catId): ?string
+    {
+        $value = $this->conn->executeQuery(
+            'SELECT s.galleries_url FROM ' . $this->table('sites') . ' AS s
+             JOIN ' . $this->table('categories') . ' AS c ON s.id = c.site_id
+             WHERE c.id = ?',
+            [$catId]
+        )->fetchOne();
+        return is_string($value) ? $value : null;
+    }
+
+    /**
+     * Return true if the given category has at least one image linked to it.
+     */
+    public function hasCategoryImages(int $catId): bool
+    {
+        $value = $this->conn->createQueryBuilder()
+            ->select('DISTINCT category_id')
+            ->from($this->table('image_category'))
+            ->where('category_id = :catId')
+            ->setParameter('catId', $catId)
+            ->setMaxResults(1)
+            ->executeQuery()
+            ->fetchOne();
+        return $value !== false;
+    }
+
+    /**
+     * Return (image_count, min_date, max_date) for images in the given category.
+     *
+     * @return array{0: int, 1: string|null, 2: string|null}
+     */
+    public function findImageStats(int $catId): array
+    {
+        $row = $this->conn->executeQuery(
+            'SELECT COUNT(image_id), MIN(DATE(date_available)), MAX(DATE(date_available))
+             FROM ' . $this->table('images') . '
+             JOIN ' . $this->table('image_category') . ' ON image_id = id
+             WHERE category_id = ?',
+            [$catId]
+        )->fetchNumeric();
+
+        return [
+            is_numeric($row[0] ?? null) ? (int) $row[0] : 0,
+            isset($row[1]) && is_string($row[1]) ? $row[1] : null,
+            isset($row[2]) && is_string($row[2]) ? $row[2] : null,
+        ];
+    }
+
     /** Count virtual albums (dir IS NULL). */
     public function countVirtual(): int
     {

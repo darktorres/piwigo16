@@ -11,6 +11,67 @@ use Doctrine\DBAL\ArrayParameterType;
 /** Persistence layer for the image domain. */
 final class ImageRepository extends AbstractRepository
 {
+    /**
+     * Delete all caddie entries for the given user.
+     * The caddie is a temporary selection basket in the admin batch manager.
+     */
+    public function deleteUserCaddie(int $userId): void
+    {
+        $this->conn->createQueryBuilder()
+            ->delete($this->table('caddie'))
+            ->where('user_id = :userId')
+            ->setParameter('userId', $userId)
+            ->executeStatement();
+    }
+
+    /** Return the maximum date_available among all images, or null if none. */
+    public function findMaxDateAvailable(): ?string
+    {
+        $value = $this->conn->createQueryBuilder()
+            ->select('MAX(date_available)')
+            ->from($this->table('images'))
+            ->executeQuery()
+            ->fetchOne();
+        return is_string($value) ? $value : null;
+    }
+
+    /**
+     * Return all distinct (width, height) combinations for images with known dimensions.
+     *
+     * @return list<array{width: int, height: int}>
+     */
+    public function findDistinctDimensions(): array
+    {
+        $rows = $this->conn->createQueryBuilder()
+            ->select('DISTINCT width', 'height')
+            ->from($this->table('images'))
+            ->where('width IS NOT NULL')
+            ->andWhere('height IS NOT NULL')
+            ->executeQuery()
+            ->fetchAllAssociative();
+        return array_map(
+            fn (array $r): array => ['width' => (int) $r['width'], 'height' => (int) $r['height']],
+            $rows
+        );
+    }
+
+    /**
+     * Return all distinct filesize values (in KB) for images with known size.
+     *
+     * @return list<float|int>
+     */
+    public function findDistinctFilesizes(): array
+    {
+        $rows = $this->conn->createQueryBuilder()
+            ->select('filesize')
+            ->from($this->table('images'))
+            ->where('filesize IS NOT NULL')
+            ->groupBy('filesize')
+            ->executeQuery()
+            ->fetchFirstColumn();
+        return array_map(fn (mixed $v): float => is_numeric($v) ? (float) $v : 0.0, $rows);
+    }
+
     /** Count images currently sitting in the upload lounge. */
     public function countLoungeImages(): int
     {

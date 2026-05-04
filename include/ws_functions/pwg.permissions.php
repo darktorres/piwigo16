@@ -38,17 +38,15 @@ function ws_permissions_getList(array $params, \Piwigo\Ws\PwgServer &$service): 
         $cat_filter = 'WHERE cat_id IN('. implode(',', $cat_id_arr_str) .')';
     }
 
+    $permRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Permission\PermissionRepository::class);
+    $catIdsFilter = !empty($params['cat_id'])
+        ? array_map('intval', is_array($params['cat_id']) ? $params['cat_id'] : [])
+        : null;
+
     $perms = [];
 
     // direct users
-    $query = '
-SELECT user_id, cat_id
-  FROM '. USER_ACCESS_TABLE .'
-  '. $cat_filter .'
-;';
-    $result = pwg_query($query);
-
-    while ($row = pwg_db_fetch_assoc($result)) {
+    foreach ($permRepo->findUserCategoryAccess($catIdsFilter) as $row) {
         $cat_id = (int)$row['cat_id'];
         if (!isset($perms[ $cat_id ])) {
             $perms[ $cat_id ]['id'] = $cat_id;
@@ -57,16 +55,7 @@ SELECT user_id, cat_id
     }
 
     // indirect users
-    $query = '
-SELECT ug.user_id, ga.cat_id
-  FROM '. USER_GROUP_TABLE .' AS ug
-    INNER JOIN '. GROUP_ACCESS_TABLE .' AS ga
-    ON ug.group_id = ga.group_id
-  '. $cat_filter .'
-;';
-    $result = pwg_query($query);
-
-    while ($row = pwg_db_fetch_assoc($result)) {
+    foreach ($permRepo->findGroupUserCategoryAccess($catIdsFilter) as $row) {
         $cat_id = (int)$row['cat_id'];
         if (!isset($perms[ $cat_id ])) {
             $perms[ $cat_id ]['id'] = $cat_id;
@@ -75,14 +64,7 @@ SELECT ug.user_id, ga.cat_id
     }
 
     // groups
-    $query = '
-SELECT group_id, cat_id
-  FROM '. GROUP_ACCESS_TABLE .'
-  '. $cat_filter .'
-;';
-    $result = pwg_query($query);
-
-    while ($row = pwg_db_fetch_assoc($result)) {
+    foreach ($permRepo->findGroupCategoryAccess($catIdsFilter) as $row) {
         $cat_id = (int)$row['cat_id'];
         if (!isset($perms[ $cat_id ])) {
             $perms[ $cat_id ]['id'] = $cat_id;
@@ -220,28 +202,23 @@ function ws_permissions_remove(array $params, \Piwigo\Ws\PwgServer &$service): m
     $cat_ids = get_subcat_ids($cat_id_param3_int);
     $cat_ids_str = array_map(fn ($v) => (string) $v, $cat_ids);
 
+    $permRepo2 = \Piwigo\Core\ServiceLocator::get(\Piwigo\Permission\PermissionRepository::class);
+    $cat_ids_int = array_map('intval', $cat_ids_str);
+
     if (!empty($params['group_id'])) {
         $group_id_rem = is_array($params['group_id']) ? $params['group_id'] : [];
-        $group_id_rem_str = array_map(fn ($v) => is_scalar($v) ? (string) $v : '', $group_id_rem);
-        $query = '
-DELETE
-  FROM '. GROUP_ACCESS_TABLE .'
-  WHERE group_id IN ('. implode(',', $group_id_rem_str).')
-    AND cat_id IN ('. implode(',', $cat_ids_str).')
-;';
-        pwg_query($query);
+        $permRepo2->deleteGroupAccess(
+            array_map('intval', $group_id_rem),
+            $cat_ids_int
+        );
     }
 
     if (!empty($params['user_id'])) {
         $user_id_rem = is_array($params['user_id']) ? $params['user_id'] : [];
-        $user_id_rem_str = array_map(fn ($v) => is_scalar($v) ? (string) $v : '', $user_id_rem);
-        $query = '
-DELETE
-  FROM '. USER_ACCESS_TABLE .'
-  WHERE user_id IN ('. implode(',', $user_id_rem_str) .')
-    AND cat_id IN ('. implode(',', $cat_ids_str) .')
-;';
-        pwg_query($query);
+        $permRepo2->deleteUserAccess(
+            array_map('intval', $user_id_rem),
+            $cat_ids_int
+        );
     }
 
     return $service->invoke('pwg.permissions.getList', ['cat_id' => $params['cat_id']]);

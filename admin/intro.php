@@ -75,12 +75,7 @@ if ($nb_orphans > 0) {
 }
 
 // locked album ?
-$query = '
-SELECT COUNT(*)
-  FROM '.CATEGORIES_TABLE.'
-  WHERE visible =\'false\'
-;';
-[$locked_album] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+$locked_album = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)->countHidden();
 if ($locked_album > 0) {
     $locked_album_url = PHPWG_ROOT_PATH.'admin.php?page=cat_options&section=visible';
 
@@ -100,26 +95,10 @@ fs_quick_check();
 $template->set_filenames(['intro' => 'intro.tpl']);
 
 if (\Piwigo\Config\Config::showNewsletterSubscription() and userprefs_get_param('show_newsletter_subscription', true)) {
-    $query = '
-  SELECT registration_date 
-    FROM '.USER_INFOS_TABLE.'
-    WHERE registration_date IS NOT NULL  
-    ORDER BY user_id ASC
-    LIMIT 1
-  ;';
-    [$register_date] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-
-    $query = '
-  SELECT COUNT(*)
-    FROM '.CATEGORIES_TABLE.'
-  ;';
-    [$nb_cats] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-
-    $query = '
-  SELECT COUNT(*)
-    FROM '.IMAGES_TABLE.'
-  ;';
-    [$nb_images] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+    $register_date = \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
+        ->findEarliestRegistrationDate();
+    $nb_cats   = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)->countAll();
+    $nb_images = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)->countAll();
 
     $uagent_obj = new uagent_info();
     // To see the newsletter promote, the account must have 2 weeks ancient, 3 albums created and 30 photos uploaded
@@ -167,11 +146,7 @@ $template->assign(
 );
 
 if (\Piwigo\Config\Config::activateComments()) {
-    $query = '
-SELECT COUNT(*)
-  FROM '.COMMENTS_TABLE.'
-;';
-    [$nb_comments] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+    $nb_comments = \Piwigo\Core\ServiceLocator::get(\Piwigo\Comment\CommentRepository::class)->countAll();
     $template->assign('NB_COMMENTS', $nb_comments);
 } else {
     $template->assign('NB_COMMENTS', 0);

@@ -46,23 +46,14 @@ function get_local_dir(string $category_id): string
     if (isset($catEntry['uppercats']) && is_scalar($catEntry['uppercats'])) {
         $uppercats = (string) $catEntry['uppercats'];
     } else {
-        $query = 'SELECT uppercats';
-        $query .= ' FROM '.CATEGORIES_TABLE.' WHERE id = '.$category_id;
-        $query .= ';';
-        $row = pwg_db_fetch_assoc(pwg_query($query));
-        $uppercats = is_scalar($row['uppercats'] ?? null) ? (string) $row['uppercats'] : '';
+        $catRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class);
+        $uppercats = $catRepo->findUppercatsStringById((int) $category_id) ?? '';
     }
 
     $upper_array = explode(',', $uppercats);
 
-    $database_dirs = [];
-    $query = 'SELECT id,dir';
-    $query .= ' FROM '.CATEGORIES_TABLE.' WHERE id IN ('.$uppercats.')';
-    $query .= ';';
-    $result = pwg_query($query);
-    while ($row = pwg_db_fetch_assoc($result)) {
-        $database_dirs[(int)$row['id']] = $row['dir'];
-    }
+    $catRepo2 = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class);
+    $database_dirs = $catRepo2->findIdDirMap(array_map('intval', $upper_array));
     foreach ($upper_array as $id) {
         $local_dir .= $database_dirs[$id].'/';
     }
@@ -74,14 +65,8 @@ function get_local_dir(string $category_id): string
 // simply "./galleries/"
 function get_site_url(string $category_id): string
 {
-    $query = '
-SELECT galleries_url
-  FROM '.SITES_TABLE.' AS s,'.CATEGORIES_TABLE.' AS c
-  WHERE s.id = c.site_id
-    AND c.id = '.$category_id.'
-;';
-    $row = pwg_db_fetch_assoc(pwg_query($query));
-    return (string)($row['galleries_url'] ?? '');
+    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+        ->findGalleriesUrlByCategoryId((int) $category_id) ?? '';
 }
 
 function get_min_local_dir(string $local_dir): string
@@ -124,12 +109,8 @@ foreach (['comment','dir','site_id', 'id_uppercat'] as $nullable) {
 
 $category['is_virtual'] = empty($category['dir']) ? true : false;
 
-$query = 'SELECT DISTINCT category_id
-  FROM '.IMAGE_CATEGORY_TABLE.'
-  WHERE category_id = '.$_GET['cat_id'].'
-  LIMIT 1';
-$result = pwg_query($query);
-$category['has_images'] = pwg_db_num_rows($result) > 0 ? true : false;
+$category['has_images'] = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+    ->hasCategoryImages(is_numeric($_GET['cat_id']) ? (int) $_GET['cat_id'] : 0);
 
 // number of sub-categories
 $subcat_ids = get_subcat_ids([$category['id']]);
@@ -207,16 +188,8 @@ if ($category['has_images']) {
         $base_url.'batch_manager&amp;filter=album-'.$category['id']
     );
 
-    $query = '
-SELECT
-    COUNT(image_id),
-    MIN(DATE(date_available)),
-    MAX(DATE(date_available))
-  FROM '.IMAGES_TABLE.'
-    JOIN '.IMAGE_CATEGORY_TABLE.' ON image_id = id
-  WHERE category_id = '.$category['id'].'
-;';
-    [$image_count, $min_date, $max_date] = pwg_db_fetch_row(pwg_query($query)) ?? [null, null, null];
+    [$image_count, $min_date, $max_date] = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+        ->findImageStats(is_numeric($category['id']) ? (int) $category['id'] : 0);
     $min_date = (string)$min_date;
     $max_date = (string)$max_date;
 

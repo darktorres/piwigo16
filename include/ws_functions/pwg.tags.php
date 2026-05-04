@@ -132,18 +132,11 @@ function ws_tags_getAdminList(array $params, \Piwigo\Ws\PwgServer &$service): ar
     $image_tag_map = [];
     // build list of image ids with associated tags per image
     if (!empty($image_ids) and !$params['tag_mode_and']) {
-        $query = '
-SELECT image_id, GROUP_CONCAT(tag_id) AS tag_ids
-  FROM '. IMAGE_TAG_TABLE .'
-  WHERE tag_id IN ('. implode(',', $tag_ids) .')
-    AND image_id IN ('. implode(',', $image_ids) .')
-  GROUP BY image_id
-;';
-        $result = pwg_query($query);
-
-        while ($row = pwg_db_fetch_assoc($result)) {
-            $row['image_id'] = (int)$row['image_id'];
-            $image_tag_map[ $row['image_id'] ] = explode(',', (string) $row['tag_ids']);
+        $tagMapRows = \Piwigo\Core\ServiceLocator::get(\Piwigo\Tag\TagRepository::class)
+            ->findImageTagMap($tag_ids, $image_ids);
+        foreach ($tagMapRows as $row) {
+            $imgId = is_numeric($row['image_id']) ? (int) $row['image_id'] : 0;
+            $image_tag_map[$imgId] = explode(',', is_scalar($row['tag_ids']) ? (string) $row['tag_ids'] : '');
         }
     }
 
@@ -152,14 +145,9 @@ SELECT image_id, GROUP_CONCAT(tag_id) AS tag_ids
         $rank_of = array_flip($image_ids);
         $favorite_ids = get_user_favorites();
 
-        $query = '
-SELECT *
-  FROM '. IMAGES_TABLE .'
-  WHERE id IN ('. implode(',', $image_ids) .')
-;';
-        $result = pwg_query($query);
-
-        while ($row = pwg_db_fetch_assoc($result)) {
+        $imageRows = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
+            ->findByIds($image_ids);
+        foreach ($imageRows as $row) {
             $image = [];
             $row_id_key = is_scalar($row['id']) ? (string) $row['id'] : '';
             $image['rank'] = $rank_of[$row_id_key] ?? 0;
@@ -167,14 +155,14 @@ SELECT *
 
             foreach (['id', 'width', 'height', 'hit'] as $k) {
                 if (isset($row[$k])) {
-                    $image[$k] = (int)$row[$k];
+                    $image[$k] = is_numeric($row[$k]) ? (int) $row[$k] : 0;
                 }
             }
             foreach (['file', 'name', 'comment', 'date_creation', 'date_available'] as $k) {
                 $image[$k] = $row[$k];
             }
 
-            $img_name_str = (string)($image['name'] ?? '');
+            $img_name_str = is_scalar($image['name'] ?? null) ? (string) $image['name'] : '';
             $rendered_tag_name = trigger_change('render_element_name', $img_name_str, __FUNCTION__);
             $image['name'] = strip_tags($rendered_tag_name);
             $image['comment'] = trigger_change('render_element_description', $image['comment'] ?? null, __FUNCTION__);
@@ -254,18 +242,14 @@ SELECT *
     $tag_add_id = is_numeric($creation_output['id'] ?? null) ? (int) $creation_output['id'] : (is_scalar($creation_output['id'] ?? null) ? (string) $creation_output['id'] : 0);
     pwg_activity('tag', $tag_add_id, 'add');
 
-    $query = '
-SELECT name, url_name
-FROM `'.TAGS_TABLE.'`
-WHERE id = '.$tag_add_id.';';
-
-    $new_tag = query2array($query);
+    $new_tag_row = \Piwigo\Core\ServiceLocator::get(\Piwigo\Tag\TagRepository::class)
+        ->findById((int) $tag_add_id);
 
     return [
       'info' => $creation_output['info'],
       'id' => $creation_output['id'],
-      'name' => $new_tag[0]['name'],
-      'url_name' => $new_tag[0]['url_name'],
+      'name' => $new_tag_row['name'] ?? '',
+      'url_name' => $new_tag_row['url_name'] ?? '',
     ];
 }
 
@@ -285,12 +269,8 @@ WHERE id = '.$tag_add_id.';';
     /** @var int[] $tag_ids_del */
     $tag_ids_del = array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $tag_ids_raw);
 
-    $query = '
-SELECT COUNT(*)
-  FROM `'. TAGS_TABLE .'`
-  WHERE id in ('.implode(',', $tag_ids_del) .')
-;';
-    [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+    $count = \Piwigo\Core\ServiceLocator::get(\Piwigo\Tag\TagRepository::class)
+        ->countByIds($tag_ids_del);
     if ($count != count($tag_ids_del)) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'All tags does not exist.');
     }
@@ -317,23 +297,14 @@ SELECT COUNT(*)
     $tag_id = is_numeric($params['tag_id']) ? (int) $params['tag_id'] : (is_scalar($params['tag_id']) ? (string) $params['tag_id'] : 0);
     $tag_name = strip_tags(stripslashes(is_scalar($params['new_name']) ? (string) $params['new_name'] : ''));
 
+    $tagRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Tag\TagRepository::class);
+
     // does the tag exist ?
-    $query = '
-SELECT COUNT(*)
-  FROM `'. TAGS_TABLE .'`
-  WHERE id = '. $tag_id .'
-;';
-    [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-    if ($count == 0) {
+    if ($tagRepo->countById((int) $tag_id) === 0) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'This tag does not exist.');
     }
 
-    $query = '
-SELECT name
-  FROM '.TAGS_TABLE.'
-  WHERE id != '.$tag_id.'
-;';
-    $existing_names = query2array($query, null, 'name');
+    $existing_names = $tagRepo->findNamesExcluding((int) $tag_id);
 
     $update = [];
 
@@ -355,17 +326,8 @@ SELECT name
         ['id' => $tag_id]
     );
 
-    $query = '
-SELECT
-    id,
-    name,
-    url_name
-  FROM '.TAGS_TABLE.'
-  WHERE id = '.$tag_id.'
-;';
-
-    $tag = query2array($query)[0];
-    $tag['raw_name'] = $tag['name'];
+    $tag = $tagRepo->findById((int) $tag_id) ?? [];
+    $tag['raw_name'] = $tag['name'] ?? '';
     $tag['name'] = trigger_change('render_tag_name', $tag['raw_name'], $tag);
     $tag['alt_names'] = trigger_change('get_tag_alt_names', [], $tag['raw_name']);
     return $tag;
@@ -385,27 +347,17 @@ SELECT
         return new PwgError(403, 'Invalid security token');
     }
 
-    $dup_tag_id = is_numeric($params['tag_id']) ? (int) $params['tag_id'] : (is_scalar($params['tag_id']) ? (string) $params['tag_id'] : 0);
+    $dup_tag_id = is_numeric($params['tag_id']) ? (int) $params['tag_id'] : 0;
     $dup_copy_name = is_scalar($params['copy_name']) ? (string) $params['copy_name'] : '';
 
+    $dupTagRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Tag\TagRepository::class);
+
     // does the tag exist ?
-    $query = '
-SELECT COUNT(*)
-  FROM `'. TAGS_TABLE .'`
-  WHERE id = '. $dup_tag_id .'
-;';
-    [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-    if ($count == 0) {
+    if ($dupTagRepo->countById($dup_tag_id) === 0) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'This tag does not exist.');
     }
 
-    $query = '
-SELECT COUNT(*)
-  FROM `'. TAGS_TABLE .'`
-  WHERE name = "'. $dup_copy_name .'"
-;';
-    [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-    if ($count != 0) {
+    if ($dupTagRepo->countByExactName($dup_copy_name) !== 0) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'This name is already taken.');
     }
 
@@ -420,22 +372,16 @@ SELECT COUNT(*)
 
     pwg_activity('tag', $destination_tag_id, 'add', ['action' => 'duplicate', 'source_tag' => $dup_tag_id]);
 
-    $query = '
-SELECT image_id
-  FROM '.IMAGE_TAG_TABLE.'
-  WHERE tag_id = '.$dup_tag_id.'
-;';
-    $destination_tag_image_ids = query2array($query, null, 'image_id');
+    $destination_tag_image_ids = $dupTagRepo->findImageIdsByTagId($dup_tag_id);
 
     $inserts = [];
 
     foreach ($destination_tag_image_ids as $image_id) {
-        $img_id_val = is_numeric($image_id) ? (int) $image_id : (is_scalar($image_id) ? (string) $image_id : 0);
         $inserts[] = [
           'tag_id' => $destination_tag_id,
-          'image_id' => $img_id_val,
+          'image_id' => $image_id,
         ];
-        pwg_activity('photo', $img_id_val, 'edit', ['add-tag' => $destination_tag_id]);
+        pwg_activity('photo', $image_id, 'edit', ['add-tag' => $destination_tag_id]);
     }
 
     if (count($inserts) > 0) {
@@ -465,7 +411,7 @@ SELECT image_id
         return new PwgError(403, 'Invalid security token');
     }
 
-    $merge_dest_id = is_numeric($params['destination_tag_id']) ? (int) $params['destination_tag_id'] : (is_scalar($params['destination_tag_id']) ? (string) $params['destination_tag_id'] : 0);
+    $merge_dest_id = is_numeric($params['destination_tag_id']) ? (int) $params['destination_tag_id'] : 0;
     $merge_tag_ids_raw = is_array($params['merge_tag_id']) ? $params['merge_tag_id'] : [];
     $merge_tag_ids = array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $merge_tag_ids_raw);
 
@@ -474,31 +420,14 @@ SELECT image_id
     $all_tags = array_unique($all_tags);
     $merge_tag = array_diff($merge_tag_ids, [$merge_dest_id]);
 
-    $query = '
-SELECT COUNT(*)
-  FROM `'. TAGS_TABLE .'`
-  WHERE id in ('.implode(',', $all_tags) .')
-;';
-    [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-    if ($count != count($all_tags)) {
+    $mergeTagRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Tag\TagRepository::class);
+
+    if ($mergeTagRepo->countByIds($all_tags) != count($all_tags)) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'All tags does not exist.');
     }
 
-    $query = '
-SELECT DISTINCT(image_id)
-  FROM `'. IMAGE_TAG_TABLE .'`
-  WHERE
-    tag_id IN ('.implode(',', $merge_tag) .')
-;';
-    $image_in_merge_tags = query2array($query, null, 'image_id');
-
-    $query = '
-SELECT image_id
-  FROM `'. IMAGE_TAG_TABLE .'`
-  WHERE tag_id = '.$merge_dest_id.'
-;';
-
-    $image_in_dest = query2array($query, null, 'image_id');
+    $image_in_merge_tags = $mergeTagRepo->findDistinctImageIdsByTagIds($merge_tag);
+    $image_in_dest        = $mergeTagRepo->findImageIdsByTagId($merge_dest_id);
 
     $image_to_add = array_diff($image_in_merge_tags, $image_in_dest);
 
@@ -519,8 +448,7 @@ SELECT image_id
 
     pwg_activity('tag', $merge_dest_id, 'edit');
     foreach ($image_to_add as $image_id) {
-        $img_id_val = is_numeric($image_id) ? (int) $image_id : (is_scalar($image_id) ? (string) $image_id : 0);
-        pwg_activity('photo', $img_id_val, 'edit', ['tag-add' => $merge_dest_id]);
+        pwg_activity('photo', $image_id, 'edit', ['tag-add' => $merge_dest_id]);
     }
 
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');

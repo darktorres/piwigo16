@@ -103,12 +103,11 @@ function insert_user_comment(array &$comm, string $key, array &$infos): string
         // if a guest try to use the name of an already existing user, he must be
         // rejected
         if ($comm['author'] != 'guest') {
-            $query = '
-SELECT COUNT(*) AS user_exists
-  FROM '.USERS_TABLE.'
-  WHERE '.\Piwigo\Config\Config::userFields()['username']." = '".addslashes(is_scalar($comm['author']) ? (string) $comm['author'] : '')."'";
-            $row = pwg_db_fetch_assoc(pwg_query($query));
-            if (($row['user_exists'] ?? 0) == 1) {
+            $usernameField = \Piwigo\Config\Config::userFields()['username'];
+            $authorStr     = is_scalar($comm['author']) ? (string) $comm['author'] : '';
+            $count = \Piwigo\Core\ServiceLocator::get(\Piwigo\Comment\CommentRepository::class)
+                ->countByUsername($usernameField, $authorStr);
+            if ($count > 0) {
                 $infos[] = l10n('This login is already used by another user');
                 $comment_action = 'reject';
             }
@@ -173,20 +172,12 @@ SELECT COUNT(*) AS user_exists
     $anonymous_id = implode('.', $ip_components);
 
     if ($comment_action != 'reject' and \Piwigo\Config\Config::antiFloodTime() > 0 and !is_admin()) { // anti-flood system
-        $reference_date = pwg_db_get_flood_period_expression(\Piwigo\Config\Config::antiFloodTime());
-
-        $query = '
-SELECT count(1) FROM '.COMMENTS_TABLE.'
-  WHERE date > '.$reference_date.'
-    AND author_id = '.$comm['author_id'];
-        if (!is_classic_user()) {
-            $query .= '
-      AND anonymous_id LIKE "'.$anonymous_id.'.%"';
-        }
-        $query .= '
-;';
-
-        [$counter] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+        $counter = \Piwigo\Core\ServiceLocator::get(\Piwigo\Comment\CommentRepository::class)
+            ->countRecentByAuthor(
+                (int) $comm['author_id'],
+                \Piwigo\Config\Config::antiFloodTime(),
+                is_classic_user() ? '' : $anonymous_id
+            );
         if ($counter > 0) {
             $infos[] = l10n('Anti-flood system : please wait for a moment before trying to post another comment');
             $comment_action = 'reject';
@@ -205,24 +196,17 @@ SELECT count(1) FROM '.COMMENTS_TABLE.'
     );
 
     if ($comment_action != 'reject') {
-        $query = '
-INSERT INTO '.COMMENTS_TABLE.'
-  (author, author_id, anonymous_id, content, date, validated, validation_date, image_id, website_url, email)
-  VALUES (
-    \''. (is_scalar($comm['author']) ? (string) $comm['author'] : '') .'\',
-    '. (int) $comm['author_id'] .',
-    \''. (is_scalar($comm['ip']) ? (string) $comm['ip'] : '') .'\',
-    \''. (is_scalar($comm['content']) ? (string) $comm['content'] : '') .'\',
-    NOW(),
-    \''.($comment_action == 'validate' ? 'true' : 'false').'\',
-    '.($comment_action == 'validate' ? 'NOW()' : 'NULL').',
-    '. (is_scalar($comm['image_id']) ? (string) $comm['image_id'] : '0') .',
-    '.(!empty($comm['website_url']) ? '\''. (is_scalar($comm['website_url']) ? (string) $comm['website_url'] : '') .'\'' : 'NULL').',
-    '.(!empty($comm['email']) ? '\''. (is_scalar($comm['email']) ? (string) $comm['email'] : '') .'\'' : 'NULL').'
-  )
-';
-        pwg_query($query);
-        $comm['id'] = pwg_db_insert_id();
+        $comm['id'] = \Piwigo\Core\ServiceLocator::get(\Piwigo\Comment\CommentRepository::class)
+            ->insert([
+                'author'      => is_scalar($comm['author']) ? (string) $comm['author'] : '',
+                'author_id'   => (int) $comm['author_id'],
+                'anonymous_id'=> is_scalar($comm['ip']) ? (string) $comm['ip'] : '',
+                'content'     => is_scalar($comm['content']) ? (string) $comm['content'] : '',
+                'validated'   => $comment_action === 'validate',
+                'image_id'    => is_scalar($comm['image_id']) ? (int) $comm['image_id'] : 0,
+                'website_url' => !empty($comm['website_url']) ? (is_scalar($comm['website_url']) ? (string) $comm['website_url'] : null) : null,
+                'email'       => !empty($comm['email']) ? (is_scalar($comm['email']) ? (string) $comm['email'] : null) : null,
+            ]);
 
         invalidate_user_cache_nb_comments();
 
@@ -276,13 +260,11 @@ function delete_user_comment($comment_id): bool
         $where_clause = 'id = '.$comment_id;
     }
 
-    $query = '
-DELETE FROM '.COMMENTS_TABLE.'
-  WHERE '.$where_clause.
-$user_where_clause.'
-;';
+    $authorId = is_admin() ? null : (is_numeric($globalUser['id'] ?? null) ? (int) $globalUser['id'] : 0);
+    $affected = \Piwigo\Core\ServiceLocator::get(\Piwigo\Comment\CommentRepository::class)
+        ->delete($comment_id, $authorId);
 
-    if (pwg_db_changes()) {
+    if ($affected > 0) {
         invalidate_user_cache_nb_comments();
 
         email_admin(
@@ -347,21 +329,17 @@ function update_user_comment(array $comment, string $post_key): string
     }
 
     if ($comment_action != 'reject') {
-        $user_where_clause = '';
-        if (!is_admin()) {
-            $user_where_clause = '   AND author_id = \''. (is_scalar($globalUser2['id'] ?? null) ? (string) $globalUser2['id'] : '0') .'\'';
-        }
-
-        $query = '
-UPDATE '.COMMENTS_TABLE.'
-  SET content = \''. (is_scalar($comment['content']) ? (string) $comment['content'] : '') .'\',
-      website_url = '.(!empty($comment['website_url']) ? '\''. (is_scalar($comment['website_url']) ? (string) $comment['website_url'] : '') .'\'' : 'NULL').',
-      validated = \''.($comment_action == 'validate' ? 'true' : 'false').'\',
-      validation_date = '.($comment_action == 'validate' ? 'NOW()' : 'NULL').'
-  WHERE id = '. (is_scalar($comment['comment_id']) ? (string) $comment['comment_id'] : '0') .
-$user_where_clause.'
-;';
-        $result = pwg_query($query);
+        $updateAuthorId = is_admin() ? null : (is_numeric($globalUser2['id'] ?? null) ? (int) $globalUser2['id'] : null);
+        $result = \Piwigo\Core\ServiceLocator::get(\Piwigo\Comment\CommentRepository::class)
+            ->update(
+                (int) (is_scalar($comment['comment_id']) ? $comment['comment_id'] : 0),
+                [
+                    'content'     => is_scalar($comment['content']) ? (string) $comment['content'] : '',
+                    'website_url' => !empty($comment['website_url']) ? (is_scalar($comment['website_url']) ? (string) $comment['website_url'] : null) : null,
+                    'validated'   => $comment_action === 'validate',
+                ],
+                $updateAuthorId
+            );
 
         // mail admin and ask to validate the comment
         if ($result and \Piwigo\Config\Config::emailAdminOnCommentValidation() and 'moderate' == $comment_action) {
@@ -435,14 +413,10 @@ function email_admin(string $action, array $comment): void
  */
 function get_comment_author_id($comment_id, $die_on_error = true)
 {
-    $query = '
-SELECT
-    author_id
-  FROM '.COMMENTS_TABLE.'
-  WHERE id = '.$comment_id.'
-;';
-    $result = pwg_query($query);
-    if (pwg_db_num_rows($result) == 0) {
+    $authorId = \Piwigo\Core\ServiceLocator::get(\Piwigo\Comment\CommentRepository::class)
+        ->getAuthorId((int) $comment_id);
+
+    if ($authorId === null) {
         if ($die_on_error) {
             fatal_error('Unknown comment identifier');
         } else {
@@ -450,9 +424,7 @@ SELECT
         }
     }
 
-    [$author_id] = pwg_db_fetch_row($result) ?? [null];
-
-    return is_int($author_id) ? $author_id : (is_numeric($author_id) ? (int) $author_id : false);
+    return $authorId;
 }
 
 /**
@@ -462,19 +434,8 @@ SELECT
  */
 function validate_user_comment($comment_id): void
 {
-    if (is_array($comment_id)) {
-        $where_clause = 'id IN('.implode(',', $comment_id).')';
-    } else {
-        $where_clause = 'id = '.$comment_id;
-    }
-
-    $query = '
-UPDATE '.COMMENTS_TABLE.'
-  SET validated = \'true\'
-    , validation_date = NOW()
-  WHERE '.$where_clause.'
-;';
-    pwg_query($query);
+    \Piwigo\Core\ServiceLocator::get(\Piwigo\Comment\CommentRepository::class)
+        ->setValidated($comment_id);
 
     invalidate_user_cache_nb_comments();
     trigger_notify('user_comment_validation', $comment_id);
@@ -489,9 +450,6 @@ function invalidate_user_cache_nb_comments(): void
         unset($GLOBALS['user']['nb_available_comments']);
     }
 
-    $query = '
-UPDATE '.USER_CACHE_TABLE.'
-  SET nb_available_comments = NULL
-;';
-    pwg_query($query);
+    \Piwigo\Core\ServiceLocator::get(\Piwigo\Comment\CommentRepository::class)
+        ->clearNbAvailableCommentsCache();
 }

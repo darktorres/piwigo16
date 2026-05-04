@@ -45,14 +45,8 @@ if (isset($_POST['submit'])) {
 
     $datas = [];
 
-    $query = '
-SELECT id, date_creation
-  FROM '.IMAGES_TABLE.'
-  WHERE id IN ('.implode(',', $collection).')
-;';
-    $result = pwg_query($query);
-
-    while ($row = pwg_db_fetch_assoc($result)) {
+    foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
+        ->findByIds(array_map('intval', $collection)) as $row) {
         $data = [];
 
         $data['id'] = $row['id'];
@@ -283,21 +277,13 @@ SELECT
 
         // categories
 
-        $query = '
-    SELECT category_id, uppercats, dir
-      FROM '.IMAGE_CATEGORY_TABLE.' AS ic
-        INNER JOIN '.CATEGORIES_TABLE.' AS c
-          ON c.id = ic.category_id
-      WHERE image_id = '.$row['id'].'
-    ;';
-
-        $sub_result = pwg_query($query);
         $related_categories = [];
         $related_category_ids = [];
         $row_id_int = is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0;
         $media['image'] = get_image_infos($row_id_int, true);
 
-        while ($item = pwg_db_fetch_assoc($sub_result)) {
+        foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+            ->findCategoryInfosByImageId($row_id_int) as $item) {
             $item_uppercats = is_scalar($item['uppercats'] ?? null) ? (string) $item['uppercats'] : '';
             $name =
               get_cat_display_name_cache(

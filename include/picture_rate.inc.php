@@ -24,13 +24,9 @@ if (\Piwigo\Config\Config::rateEnabled()) {
     $page = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
     $rate_summary = [ 'count' => 0, 'score' => $picture['current']['rating_score'], 'average' => null ];
     if (null != $rate_summary['score']) {
-        $query = '
-SELECT COUNT(rate) AS count
-     , ROUND(AVG(rate),2) AS average
-  FROM '.RATE_TABLE.'
-  WHERE element_id = '.$picture['current']['id'].'
-;';
-        [$rate_summary['count'], $rate_summary['average']] = pwg_db_fetch_row(pwg_query($query)) ?? [null, null];
+        [$rate_summary['count'], $rate_summary['average']] =
+            \Piwigo\Core\ServiceLocator::get(\Piwigo\Rate\RateRepository::class)
+                ->findCountAndAvgByElementId(is_numeric($picture['current']['id'] ?? null) ? (int) $picture['current']['id'] : 0);
     }
     $template->assign('rate_summary', $rate_summary);
 
@@ -38,25 +34,16 @@ SELECT COUNT(rate) AS count
     if (\Piwigo\Config\Config::rateAnonymous() or is_autorize_status(ACCESS_CLASSIC)) {
         if ($rate_summary['count'] > 0) {
             $imageId = is_numeric($page['image_id'] ?? null) ? (int) $page['image_id'] : 0;
-            $query = 'SELECT rate
-      FROM '.RATE_TABLE.'
-      WHERE element_id = '.$imageId . '
-      AND user_id = '.CurrentUser::get()->id ;
-
+            $anonId = null;
             if (!is_autorize_status(ACCESS_CLASSIC)) {
                 $ip_components = explode('.', is_scalar($_SERVER['REMOTE_ADDR'] ?? null) ? (string) $_SERVER['REMOTE_ADDR'] : '');
                 if (count($ip_components) > 3) {
                     array_pop($ip_components);
                 }
-                $anonymous_id = implode('.', $ip_components);
-                $query .= ' AND anonymous_id = \''.$anonymous_id . '\'';
+                $anonId = implode('.', $ip_components);
             }
-
-            $result = pwg_query($query);
-            if (pwg_db_num_rows($result) > 0) {
-                $row = pwg_db_fetch_assoc($result);
-                $user_rate = $row['rate'] ?? null;
-            }
+            $user_rate = \Piwigo\Core\ServiceLocator::get(\Piwigo\Rate\RateRepository::class)
+                ->findRateByUserAndElement($imageId, CurrentUser::get()->id, $anonId);
         }
 
         $template->assign(

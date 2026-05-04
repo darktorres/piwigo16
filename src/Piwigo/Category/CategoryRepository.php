@@ -256,6 +256,25 @@ final class CategoryRepository extends AbstractRepository
     }
 
     /**
+     * Set the commentable flag on the given category ids.
+     *
+     * @param int[] $ids
+     */
+    public function setCommentable(array $ids, bool $commentable): void
+    {
+        if ($ids === []) {
+            return;
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->update($this->table('categories'))
+            ->set('commentable', ':val')
+            ->setParameter('val', $commentable ? 'true' : 'false');
+        $qb->where($qb->expr()->in('id', ':ids'))
+           ->setParameter('ids', $ids, \Doctrine\DBAL\ArrayParameterType::INTEGER);
+        $qb->executeStatement();
+    }
+
+    /**
      * Return ids from the given list that belong to private categories.
      *
      * @param int[] $ids

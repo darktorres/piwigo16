@@ -47,12 +47,8 @@ if (isset($_POST['falsify'])
     switch ($current_section) {
         case 'comments':
             {
-                $query = '
-UPDATE '.CATEGORIES_TABLE.'
-  SET commentable = \'false\'
-  WHERE id IN ('.implode(',', $cat_true).')
-;';
-                pwg_query($query);
+                \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+                    ->setCommentable($cat_true, false);
                 break;
             }
         case 'visible':
@@ -67,12 +63,8 @@ UPDATE '.CATEGORIES_TABLE.'
             }
         case 'representative':
             {
-                $query = '
-UPDATE '.CATEGORIES_TABLE.'
-  SET representative_picture_id = NULL
-  WHERE id IN ('.implode(',', $cat_true).')
-;';
-                pwg_query($query);
+                \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+                    ->clearRepresentatives($cat_true);
                 break;
             }
     }
@@ -88,12 +80,8 @@ UPDATE '.CATEGORIES_TABLE.'
     switch ($current_section) {
         case 'comments':
             {
-                $query = '
-UPDATE '.CATEGORIES_TABLE.'
-  SET commentable = \'true\'
-  WHERE id IN ('.implode(',', $cat_false).')
-;';
-                pwg_query($query);
+                \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+                    ->setCommentable($cat_false, true);
                 break;
             }
         case 'visible':

@@ -100,6 +100,47 @@ final class RateRepository extends AbstractRepository
     }
 
     /**
+     * Return (count, average) for a given element's rates.
+     * Used by picture_rate.inc.php to display rating summary.
+     *
+     * @return array{0: int, 1: float|null}
+     */
+    public function findCountAndAvgByElementId(int $elementId): array
+    {
+        $row = $this->conn->executeQuery(
+            'SELECT COUNT(rate), ROUND(AVG(rate),2) FROM ' . $this->table('rate') . ' WHERE element_id = ?',
+            [$elementId]
+        )->fetchNumeric();
+        return [
+            is_numeric($row[0] ?? null) ? (int) $row[0] : 0,
+            is_numeric($row[1] ?? null) ? (float) $row[1] : null,
+        ];
+    }
+
+    /**
+     * Return the rate value a specific user gave to a specific element, or null if not rated.
+     * $anonId is only passed for anonymous users.
+     */
+    public function findRateByUserAndElement(int $elementId, int $userId, ?string $anonId = null): ?float
+    {
+        $qb = $this->conn->createQueryBuilder()
+            ->select('rate')
+            ->from($this->table('rate'))
+            ->where('element_id = :elementId')
+            ->andWhere('user_id = :userId')
+            ->setParameter('elementId', $elementId)
+            ->setParameter('userId', $userId);
+
+        if ($anonId !== null) {
+            $qb->andWhere('anonymous_id = :anonId')
+               ->setParameter('anonId', $anonId);
+        }
+
+        $value = $qb->executeQuery()->fetchOne();
+        return is_numeric($value) ? (float) $value : null;
+    }
+
+    /**
      * Return all rate rows for the given element, ordered by date descending.
      *
      * @return list<array<string, mixed>>

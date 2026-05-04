@@ -104,13 +104,8 @@ if (isset($_POST['submit'])) {
     $redirect = false;
 
     if ('remove_from_caddie' == $action) {
-        $query = '
-DELETE
-  FROM '.CADDIE_TABLE.'
-  WHERE element_id IN ('.implode(',', $collection_int).')
-    AND user_id = '.$user['id'].'
-;';
-        pwg_query($query);
+        \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
+            ->deleteUserCaddieByImageIds(is_numeric($user['id']) ? (int) $user['id'] : 0, $collection_int);
 
         // remove from caddie action available only in caddie so reload content
         $redirect = true;
@@ -352,10 +347,8 @@ DELETE
     elseif ('metadata' == $action) {
         \Piwigo\Core\PageState::current()->addInfo(l10n('Metadata synchronized from file').' <span class="badge">'.count($collection_int).'</span>');
     } elseif ('delete_derivatives' == $action && !empty($_POST['del_derivatives_type'])) {
-        $query = 'SELECT path,representative_ext FROM '.IMAGES_TABLE.'
-  WHERE id IN ('.implode(',', $collection_int).')';
-        $result = pwg_query($query);
-        while ($info = pwg_db_fetch_assoc($result)) {
+        foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
+            ->findPathsAndRepresentativesByIds($collection_int) as $info) {
             $del_types = is_array($_POST['del_derivatives_type']) ? $_POST['del_derivatives_type'] : [];
             foreach ($del_types as $type) {
                 $type_str = is_scalar($type) ? (string) $type : '';

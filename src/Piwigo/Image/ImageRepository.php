@@ -72,6 +72,45 @@ final class ImageRepository extends AbstractRepository
         return array_map(fn (mixed $v): float => is_numeric($v) ? (float) $v : 0.0, $rows);
     }
 
+    /**
+     * Delete caddie rows for the given image ids and user.
+     *
+     * @param int[] $imageIds
+     */
+    public function deleteUserCaddieByImageIds(int $userId, array $imageIds): void
+    {
+        if ($imageIds === []) {
+            return;
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->delete($this->table('caddie'))
+            ->where('user_id = :userId')
+            ->setParameter('userId', $userId);
+        $qb->andWhere($qb->expr()->in('element_id', ':imageIds'))
+           ->setParameter('imageIds', $imageIds, ArrayParameterType::INTEGER);
+        $qb->executeStatement();
+    }
+
+    /**
+     * Return (path, representative_ext) for the given image ids.
+     * Used by batch_manager_global to delete specific derivatives.
+     *
+     * @param int[] $ids
+     * @return list<array<string, mixed>>
+     */
+    public function findPathsAndRepresentativesByIds(array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->select('path', 'representative_ext')
+            ->from($this->table('images'));
+        $qb->where($qb->expr()->in('id', ':ids'))
+           ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
+        return $qb->executeQuery()->fetchAllAssociative();
+    }
+
     /** Return true if an image with the given id exists. */
     public function existsById(int $id): bool
     {

@@ -85,6 +85,26 @@ final class GroupRepository extends AbstractRepository
     }
 
     /**
+     * Return (user_id, group_id) rows for the given group ids.
+     * Used by cat_perm.php to find indirect user grants via group membership.
+     *
+     * @param int[] $groupIds
+     * @return list<array<string, mixed>>
+     */
+    public function findUserGroupMembersByGroupIds(array $groupIds): array
+    {
+        if ($groupIds === []) {
+            return [];
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->select('user_id', 'group_id')
+            ->from($this->table('user_group'));
+        $qb->where($qb->expr()->in('group_id', ':groupIds'))
+           ->setParameter('groupIds', $groupIds, \Doctrine\DBAL\ArrayParameterType::INTEGER);
+        return $qb->executeQuery()->fetchAllAssociative();
+    }
+
+    /**
      * Return ids of groups whose name matches the given LIKE pattern.
      *
      * @return int[]

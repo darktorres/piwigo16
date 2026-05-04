@@ -82,15 +82,12 @@ SELECT group_id
         //
         $deny_groups = array_diff($groups_granted_int, $post_groups);
         if (count($deny_groups) > 0) {
-            // if you forbid access to an album, all sub-albums become
-            // automatically forbidden
-            $query = '
-DELETE
-  FROM '.GROUP_ACCESS_TABLE.'
-  WHERE group_id IN ('.implode(',', $deny_groups).')
-    AND cat_id IN ('.implode(',', get_subcat_ids([$pageCat])).')
-;';
-            pwg_query($query);
+            // if you forbid access to an album, all sub-albums become automatically forbidden
+            \Piwigo\Core\ServiceLocator::get(\Piwigo\Permission\PermissionRepository::class)
+                ->deleteGroupAccess(
+                    array_map('intval', $deny_groups),
+                    array_map('intval', get_subcat_ids([$pageCat]))
+                );
         }
 
         //
@@ -153,15 +150,12 @@ SELECT user_id
         //
         $deny_users = array_diff($users_granted_int, $post_users);
         if (count($deny_users) > 0) {
-            // if you forbid access to an album, all sub-album become automatically
-            // forbidden
-            $query = '
-DELETE
-  FROM '.USER_ACCESS_TABLE.'
-  WHERE user_id IN ('.implode(',', $deny_users).')
-    AND cat_id IN ('.implode(',', get_subcat_ids([$pageCat])).')
-;';
-            pwg_query($query);
+            // if you forbid access to an album, all sub-album become automatically forbidden
+            \Piwigo\Core\ServiceLocator::get(\Piwigo\Permission\PermissionRepository::class)
+                ->deleteUserAccess(
+                    array_map('intval', $deny_users),
+                    array_map('intval', get_subcat_ids([$pageCat]))
+                );
         }
 
         //
@@ -251,13 +245,8 @@ $user_granted_indirect_ids = [];
 if (count($group_granted_ids) > 0) {
     $granted_groups = [];
 
-    $query = '
-SELECT user_id, group_id
-  FROM '.USER_GROUP_TABLE.'
-  WHERE group_id IN ('.implode(',', $group_granted_ids).')
-';
-    $result = pwg_query($query);
-    while ($row = pwg_db_fetch_assoc($result)) {
+    foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Group\GroupRepository::class)
+        ->findUserGroupMembersByGroupIds(array_map('intval', $group_granted_ids)) as $row) {
         $row_group_id = (string) $row['group_id'];
         if (!isset($granted_groups[$row_group_id])) {
             $granted_groups[$row_group_id] = [];

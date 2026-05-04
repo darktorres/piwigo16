@@ -66,13 +66,8 @@ if (isset($_POST['submit']) and !empty($_POST['galleries_url'])) {
     }
 
     // site must not exists
-    $query = '
-SELECT COUNT(id) AS count
-  FROM '.SITES_TABLE.'
-  WHERE galleries_url = \''.$url.'\'
-;';
-    $row = pwg_db_fetch_assoc(pwg_query($query));
-    if (($row['count'] ?? 0) > 0) {
+    $siteRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Site\SiteRepository::class);
+    if ($siteRepo->countByUrl($url) > 0) {
         \Piwigo\Core\PageState::current()->addError(l10n('This site already exists').' ['.$url.']');
     }
     if (count($page['errors']) == 0) {
@@ -82,13 +77,7 @@ SELECT COUNT(id) AS count
     }
 
     if (count($page['errors']) == 0) {
-        $query = '
-INSERT INTO '.SITES_TABLE.'
-  (galleries_url)
-  VALUES
-  (\''.$url.'\')
-;';
-        pwg_query($query);
+        $siteRepo->insert($url);
         \Piwigo\Core\PageState::current()->addInfo($url.' '.l10n('created'));
     }
 }
@@ -100,12 +89,8 @@ if (isset($_GET['site']) and is_numeric($_GET['site'])) {
     $page['site'] = $_GET['site'];
 }
 if (isset($_GET['action']) and isset($page['site'])) {
-    $query = '
-SELECT galleries_url
-  FROM '.SITES_TABLE.'
-  WHERE id = '.$page['site'].'
-;';
-    [$galleries_url] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+    $galleries_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Site\SiteRepository::class)
+        ->findGalleriesUrlById((int) $page['site']);
     switch ($_GET['action']) {
         case 'delete':
             {
@@ -136,13 +121,7 @@ SELECT c.site_id, COUNT(DISTINCT c.id) AS nb_categories, COUNT(i.id) AS nb_image
 ;';
 $sites_detail = query2array($query, 'site_id');
 
-$query = '
-SELECT *
-  FROM '.SITES_TABLE.'
-;';
-$result = pwg_query($query);
-
-while ($row = pwg_db_fetch_assoc($result)) {
+foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Site\SiteRepository::class)->findAll() as $row) {
     $is_remote = url_is_remote((string)$row['galleries_url']);
     $base_url = PHPWG_ROOT_PATH.'admin.php';
     $base_url .= '?page=site_manager';

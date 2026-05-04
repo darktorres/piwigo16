@@ -99,6 +99,19 @@ final class RateRepository extends AbstractRepository
         ]);
     }
 
+    /** Count how many times the given image has been rated. */
+    public function countByElementId(int $elementId): int
+    {
+        $value = $this->conn->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from($this->table('rate'))
+            ->where('element_id = :elementId')
+            ->setParameter('elementId', $elementId)
+            ->executeQuery()
+            ->fetchOne();
+        return is_numeric($value) ? (int) $value : 0;
+    }
+
     /**
      * Return (element_id, rcount, rsum) for every element that has at least one rate.
      * Used by the Bayesian average recalculation in update_rating_score().

@@ -150,31 +150,12 @@ foreach ($nb_lines_for_user as $id => $nb_line) {
 }
 $template->assign('ulist', $filterable_users);
 
-$query = '
-SELECT COUNT(*)
-  FROM '.USERS_TABLE.'
-;';
-
-[$nb_users] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+$nb_users = \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)->countAll(USERS_TABLE);
 $template->assign('nb_users', $nb_users);
 
-$query = '
-SELECT
-    occured_on
-  FROM '.ACTIVITY_TABLE.'
-  ORDER BY activity_id ASC
-  LIMIT 1
-;';
-[$min_date] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-
-$query = '
-SELECT
-    occured_on
-  FROM '.ACTIVITY_TABLE.'
-  ORDER BY activity_id DESC
-  LIMIT 1
-;';
-[$max_date] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+$actRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Activity\ActivityRepository::class);
+$min_date = $actRepo->findOldestDate();
+$max_date = $actRepo->findNewestDate();
 
 $template->assign(
     'ACTIVITY_DATES',

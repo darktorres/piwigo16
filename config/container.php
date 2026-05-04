@@ -9,9 +9,11 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Config\Config;
 use Piwigo\Group\GroupRepository;
+use Piwigo\Activity\ActivityRepository;
 use Piwigo\Language\LanguageRepository;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permalink\PermalinkRepository;
+use Piwigo\Site\SiteRepository;
 use Piwigo\Theme\ThemeRepository;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\PageState;
@@ -61,4 +63,6 @@ return [
     LanguageRepository::class     => factory(static fn (Connection $conn): LanguageRepository     => new LanguageRepository($conn, Config::dbPrefix())),
     PermalinkRepository::class    => factory(static fn (Connection $conn): PermalinkRepository    => new PermalinkRepository($conn, Config::dbPrefix())),
     PermissionRepository::class   => factory(static fn (Connection $conn): PermissionRepository   => new PermissionRepository($conn, Config::dbPrefix())),
+    SiteRepository::class         => factory(static fn (Connection $conn): SiteRepository         => new SiteRepository($conn, Config::dbPrefix())),
+    ActivityRepository::class     => factory(static fn (Connection $conn): ActivityRepository     => new ActivityRepository($conn, Config::dbPrefix())),
 ];

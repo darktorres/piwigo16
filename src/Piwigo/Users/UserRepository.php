@@ -309,6 +309,23 @@ final class UserRepository extends AbstractRepository
     }
 
     /**
+     * Return the username for a single user id, or null if not found.
+     * $usernameField, $idField, $usersTable are admin-configured — not user-supplied.
+     */
+    public function findUsernameById(
+        string $idField, string $usernameField, string $usersTable, int $userId
+    ): ?string {
+        $value = $this->conn->createQueryBuilder()
+            ->select($usernameField)
+            ->from($usersTable)
+            ->where("$idField = :userId")
+            ->setParameter('userId', $userId)
+            ->executeQuery()
+            ->fetchOne();
+        return is_string($value) ? $value : null;
+    }
+
+    /**
      * Return a map of user_id → username for the given ids.
      * Column names come from admin config — not user-supplied.
      *

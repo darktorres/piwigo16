@@ -101,20 +101,15 @@ if (isset($_POST['submit'])) {
         $message = l10n('Images manual order was saved');
     }
     $category_id_int = (int) $page['category_id'];
-    $query = '
-UPDATE '.CATEGORIES_TABLE.'
-  SET image_order = '.(isset($image_order) ? '\''.$image_order.'\'' : 'NULL').'
-  WHERE id='.$category_id_int;
-    pwg_query($query);
+    $catRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class);
+    $catRepo->updateImageOrder($category_id_int, isset($image_order) ? $image_order : null);
 
     if (isset($_POST['image_order_subcats'])) {
         $cat_info = get_cat_info((string) $category_id_int);
-
-        $query = '
-UPDATE '.CATEGORIES_TABLE.'
-  SET image_order = '.(isset($image_order) ? '\''.$image_order.'\'' : 'NULL').'
-  WHERE uppercats LIKE \''.(is_scalar($cat_info['uppercats'] ?? null) ? (string) $cat_info['uppercats'] : '').',%\'';
-        pwg_query($query);
+        $catRepo->updateImageOrderForSubcats(
+            is_scalar($cat_info['uppercats'] ?? null) ? (string) $cat_info['uppercats'] : '',
+            isset($image_order) ? $image_order : null
+        );
     }
 
     $template->assign(
@@ -133,12 +128,8 @@ $template->set_filenames(
 
 $base_url = get_root_url().'admin.php';
 
-$query = '
-SELECT *
-  FROM '.CATEGORIES_TABLE.'
-  WHERE id = '.$page['category_id'].'
-;';
-$category = pwg_db_fetch_assoc(pwg_query($query));
+$category = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+    ->findCategoryById(is_numeric($page['category_id']) ? (int) $page['category_id'] : 0);
 
 if ($category !== null && ($category['image_order'] == 'rank ASC' or $category['image_order'] == '`rank` ASC')) {
     $image_order_choice = 'rank';
@@ -163,26 +154,13 @@ $template->assign(
 // |                              thumbnails                               |
 // +-----------------------------------------------------------------------+
 
-$query = '
-SELECT
-    id,
-    file,
-    path,
-    representative_ext,
-    width, height, rotation,
-    name,
-    `rank`
-  FROM '.IMAGES_TABLE.'
-    JOIN '.IMAGE_CATEGORY_TABLE.' ON image_id = id
-  WHERE category_id = '.$page['category_id'].'
-  ORDER BY `rank`
-;';
-$result = pwg_query($query);
-if (pwg_db_num_rows($result) > 0) {
+$imgRows = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
+    ->findByCategoryIdOrdered(is_numeric($page['category_id']) ? (int) $page['category_id'] : 0);
+if (count($imgRows) > 0) {
     // template thumbnail initialization
     $current_rank = 1;
     $derivativeParams = ImageStdParams::get_by_type(IMG_SQUARE);
-    while ($row = pwg_db_fetch_assoc($result)) {
+    foreach ($imgRows as $row) {
         $derivative = new DerivativeImage($derivativeParams, new SrcImage($row));
 
         if (!empty($row['name'])) {

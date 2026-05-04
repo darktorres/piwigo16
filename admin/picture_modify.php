@@ -146,12 +146,11 @@ if (isset($_POST['submit'])) {
 
     $new_thumbnail_for = array_diff($represent_post_int, $represented_albums_int);
     if (count($new_thumbnail_for) > 0) {
-        $query = '
-UPDATE '.CATEGORIES_TABLE.'
-  SET representative_picture_id = '.(is_numeric($_GET['image_id'] ?? null) ? (int)$_GET['image_id'] : 0).'
-  WHERE id IN ('.implode(',', array_map(fn ($v) => (int) $v, $new_thumbnail_for)).')
-;';
-        pwg_query($query);
+        \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+            ->setRepresentativePicture(
+                array_map(fn ($v) => (int) $v, $new_thumbnail_for),
+                is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0
+            );
     }
 
     $represented_albums = is_array($_POST['represent']) ? array_map(fn ($v) => is_numeric($v) ? (int) $v : 0, $_POST['represent']) : [];
@@ -256,14 +255,16 @@ $template->assign(
 );
 
 $added_by = 'N/A';
-$query = '
-SELECT '.\Piwigo\Config\Config::userFields()['username'].' AS username
-  FROM '.USERS_TABLE.'
-  WHERE '.\Piwigo\Config\Config::userFields()['id'].' = '.(is_numeric($row['added_by'] ?? null) ? (int)$row['added_by'] : 0).'
-;';
-$result = pwg_query($query);
-while ($user_row = pwg_db_fetch_assoc($result)) {
-    $row['added_by'] = $user_row['username'];
+$userFields = \Piwigo\Config\Config::userFields();
+$foundUsername = \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
+    ->findUsernameById(
+        $userFields['id'],
+        $userFields['username'],
+        USERS_TABLE,
+        is_numeric($row['added_by'] ?? null) ? (int) $row['added_by'] : 0
+    );
+if ($foundUsername !== null) {
+    $row['added_by'] = $foundUsername;
 }
 
 $extTab = explode('.', (string) $row['file']);
@@ -281,13 +282,8 @@ $intro_vars = [
   ];
 
 if (\Piwigo\Config\Config::rateEnabled() and !empty($row['rating_score'])) {
-    $query = '
-SELECT
-    COUNT(*)
-  FROM '.RATE_TABLE.'
-  WHERE element_id = '.(is_numeric($_GET['image_id'] ?? null) ? (int)$_GET['image_id'] : 0).'
-;';
-    [$row['nb_rates']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+    $row['nb_rates'] = \Piwigo\Core\ServiceLocator::get(\Piwigo\Rate\RateRepository::class)
+        ->countByElementId(is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0);
 
     $intro_vars['stats'] .= ', '.sprintf(l10n('Rated %d times, score : %.2f'), $row['nb_rates'], $row['rating_score']);
 }
@@ -326,19 +322,11 @@ $template->assign(
 );
 
 // categories
-$query = '
-SELECT category_id, uppercats, dir
-  FROM '.IMAGE_CATEGORY_TABLE.' AS ic
-    INNER JOIN '.CATEGORIES_TABLE.' AS c
-      ON c.id = ic.category_id
-  WHERE image_id = '.(is_numeric($_GET['image_id'] ?? null) ? (int)$_GET['image_id'] : 0).'
-;';
-$result = pwg_query($query);
-
 $related_categories = [];
 $related_categories_ids = [];
 
-while ($row = pwg_db_fetch_assoc($result)) {
+foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+    ->findCategoryInfosByImageId(is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0) as $row) {
     $name =
       get_cat_display_name_cache(
           is_scalar($row['uppercats'] ?? null) ? (string)$row['uppercats'] : '',

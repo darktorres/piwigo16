@@ -179,6 +179,83 @@ final class CategoryRepository extends AbstractRepository
     }
 
     /**
+     * Update the image_order column for a single category.
+     * $imageOrder = null clears the custom order (resets to default).
+     */
+    public function updateImageOrder(int $catId, ?string $imageOrder): void
+    {
+        $qb = $this->conn->createQueryBuilder()
+            ->update($this->table('categories'))
+            ->where('id = :id')
+            ->setParameter('id', $catId);
+
+        if ($imageOrder === null) {
+            $qb->set('image_order', 'NULL');
+        } else {
+            $qb->set('image_order', ':order')
+               ->setParameter('order', $imageOrder);
+        }
+
+        $qb->executeStatement();
+    }
+
+    /**
+     * Update image_order for all sub-categories of $uppercats
+     * (i.e. whose uppercats starts with the given prefix).
+     */
+    public function updateImageOrderForSubcats(string $uppercats, ?string $imageOrder): void
+    {
+        $qb = $this->conn->createQueryBuilder()
+            ->update($this->table('categories'))
+            ->where('uppercats LIKE :pattern')
+            ->setParameter('pattern', $uppercats . ',%');
+
+        if ($imageOrder === null) {
+            $qb->set('image_order', 'NULL');
+        } else {
+            $qb->set('image_order', ':order')
+               ->setParameter('order', $imageOrder);
+        }
+
+        $qb->executeStatement();
+    }
+
+    /**
+     * Set representative_picture_id for the given category ids.
+     *
+     * @param int[] $ids
+     */
+    public function setRepresentativePicture(array $ids, int $imageId): void
+    {
+        if ($ids === []) {
+            return;
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->update($this->table('categories'))
+            ->set('representative_picture_id', ':imageId')
+            ->setParameter('imageId', $imageId);
+        $qb->where($qb->expr()->in('id', ':ids'))
+           ->setParameter('ids', $ids, \Doctrine\DBAL\ArrayParameterType::INTEGER);
+        $qb->executeStatement();
+    }
+
+    /**
+     * Return (category_id, uppercats, dir) for all categories linked to the given image.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findCategoryInfosByImageId(int $imageId): array
+    {
+        return $this->conn->executeQuery(
+            'SELECT ic.category_id, c.uppercats, c.dir
+             FROM ' . $this->table('image_category') . ' ic
+             INNER JOIN ' . $this->table('categories') . ' c ON c.id = ic.category_id
+             WHERE ic.image_id = ?',
+            [$imageId]
+        )->fetchAllAssociative();
+    }
+
+    /**
      * Return ids from the given list that belong to private categories.
      *
      * @param int[] $ids

@@ -72,6 +72,25 @@ final class ImageRepository extends AbstractRepository
         return array_map(fn (mixed $v): float => is_numeric($v) ? (float) $v : 0.0, $rows);
     }
 
+    /**
+     * Return images for the given category, ordered by rank.
+     * Used by element_set_ranks.php for the reorder UI.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findByCategoryIdOrdered(int $categoryId): array
+    {
+        return $this->conn->executeQuery(
+            'SELECT i.id, i.file, i.path, i.representative_ext,
+                    i.width, i.height, i.rotation, i.name, ic.`rank`
+             FROM ' . $this->table('images') . ' i
+             JOIN ' . $this->table('image_category') . ' ic ON ic.image_id = i.id
+             WHERE ic.category_id = ?
+             ORDER BY ic.`rank`',
+            [$categoryId]
+        )->fetchAllAssociative();
+    }
+
     /** Count images currently sitting in the upload lounge. */
     public function countLoungeImages(): int
     {

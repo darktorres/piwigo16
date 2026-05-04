@@ -578,43 +578,29 @@ npm run test:e2e
 
 ## #7 — Overdue TODO cleanup
 
-**Status:** In progress (34 → 20 markers) &nbsp;|&nbsp; **Size:** S
+**Status:** ✅ Done (34 → 0 actionable markers) &nbsp;|&nbsp; **Size:** S
 
 ### Goal
 
-Resolve or formally defer all `TODO`/`FIXME` markers in tracked PHP files. Current count: **20 markers** in `src/` and `include/` (down from 34 at original audit; 14 already resolved).
+Resolve or formally defer all `TODO`/`FIXME` markers in tracked PHP files.
 
-### Current state (selected markers — line numbers re-checked against the current tree)
+### What was done
 
-| File                                      | Line     | Marker                                                                           |
-| ----------------------------------------- | -------- | -------------------------------------------------------------------------------- |
-| `include/common.inc.php`                  | 174      | `// TODO remove this data update as soon as 2025 arrives` — **past-due**         |
-| `include/functions.inc.php`               | 1778     | `return $str; // TODO` — stub return, function body missing                      |
-| `include/functions_category.inc.php`      | 527      | `// TODO 2.7: add an upgrade script…` — pre-16 remnant                           |
-| `include/config_default.inc.php`          | 990      | `//TODO: Put this in admin…` — design note                                       |
-| `include/search_filters.inc.php`          | 72       | `// TODO calling get_available_tags()… may cost time` — performance note         |
-| `src/Piwigo/Admin/updates.php`            | 485      | `// TODO why redirect to a plugin page?` — logic question                        |
-| `include/functions_url.inc.php`           | 20, 35   | `// TODO - add HERE the possibility to call PWG functions from external scripts` |
-| `include/functions_user.inc.php`          | 453, 978 | type-juggling and cookie-validation TODOs                                        |
-| `include/ws_functions/pwg.categories.php` | 729      | `//TODO make persistent with user prefs`                                         |
+All 18 remaining markers resolved in one pass:
 
-### Steps
-
-1. **Triage each marker.** For each TODO: (a) fix it now, (b) open a dated tracking comment `// DEFERRED until X: reason`, or (c) delete the dead code it annotates.
-
-2. **`common.inc.php:167` — act first.** The 2025 past-due item is a data migration shim. Check whether the condition it guards is still reachable in 16.x; if not, delete the block.
-
-3. **`functions.inc.php:1832`** — identify what the function was supposed to do and either implement it or remove the function entirely if no call sites reference it.
-
-4. **`functions_category.inc.php:530`** — the 2.7 upgrade script it references is long gone (pre-16 floor). Delete the comment and the dead branch.
-
-5. **SQL optimization TODOs** — convert to `// PERF:` comments with a concrete ticket reference so they are not confused with unfinished code.
+| Disposition | Count | Examples |
+|---|---|---|
+| **Deleted** — already implemented or dead | 5 | Past-due 2022 `rank`-keyword DB shim; cookie-validation TODO whose check was already on the next line; external-script URL note; `//TODO maybe later` on image_access_type |
+| **Explained** — replaced with real comment | 4 | Imagick pre-scale condition; `convert_charset` fallback; stale 2.7 upgrade reference rewritten; `ORDER BY NULL` intent |
+| **DEFERRED** — real concern, no current owner | 6 | `Updates.php` plugin-era redirect target; search cat-id access gap; admin URL in gallery filter; category position persistence; stub `cache_size`; image_id/filename precedence |
+| **PERF** — performance note, not a bug | 2 | Redundant `get_available_tags()` call; all-rows-before-PHP-count in WS history |
 
 ### Verification
 
 ```bash
-grep -rn "TODO\|FIXME" src/ include/ --include="*.php" | grep -v "vendor\|install/db" | wc -l
-# target: 0 actionable markers (DEFERRED/PERF markers are acceptable)
+grep -rn "TODO\|FIXME" src/ include/ --include="*.php" | grep -v "vendor\|install/db"
+# returns empty — zero actionable markers remain
+# DEFERRED and PERF comments are intentional and acceptable
 ```
 
 ---

@@ -2163,78 +2163,7 @@ open build/infection/report.html   # visualize surviving mutants per file
 
 ---
 
-## #29 — Unit test coverage expansion (13% → ≥40%)
-
-**Status:** Not started (continuous) &nbsp;|&nbsp; **Size:** L
-
-### Goal
-
-Raise PHPUnit unit-test coverage from the current level to ≥40% of `src/` statements. Runs in parallel with every other item — not gated. Do not add DB/HTTP-dependent tests to the Unit suite; those belong in Integration or E2E.
-
-### Current state
-
-- **218 test methods** across `tests/Unit/` (Auth, Cache, Core, Image, Menu, Search, Session, Template, Users, Ws). 28 test files.
-- Largest untested areas in `src/`: `Admin/` (image backends, `plugins`, `themes`, `updates`), `Calendar/`. (The `Db/` namespace doesn't exist yet — gated by item #17.)
-
-### Steps
-
-1. **Establish a coverage baseline.** Run `vendor/bin/phpunit --testsuite Unit --coverage-html coverage/` and open `coverage/index.html`. Record which namespaces are below 20% — those drive priority.
-
-2. **`src/Piwigo/Core/` — typed services.** `Config`, `PageState`, `Lang`, `CurrentUser`, `Kernel`, `ServiceLocator`. These are the highest-leverage tests: they underpin every other component. Target: 90%+ coverage on each.
-
-3. **`src/Piwigo/Ws/` — encoders and server.** `PwgJsonEncoder`, `PwgRestEncoder`, `PwgXmlWriter`, `PwgServer::addMethod()` / `::verifyParams()`. Pure logic with no DB dependency. Target: 85%+.
-
-4. **`src/Piwigo/Search/` and `src/Piwigo/Calendar/`.** Search Q-classes are already partially covered. Calendar classes require a DB stub — add `AbstractDbStub` to `tests/Unit/stubs/` returning canned result sets.
-
-5. **`src/Piwigo/Template/` — ScriptLoader and manifest logic.** `ScriptLoader::add()` with and without `dist/manifest.json` present. Create a temp directory fixture in `setUp/tearDown`.
-
-6. **`src/Piwigo/Admin/Image/` — GD backend only.** GD is always available in the test container. `ImageGd::resize()`, `::rotate()`, `::flip()` against `dev/fixtures/sample.jpg`. Imagick/ext_imagick backends are integration-only.
-
-### Verification
-
-```bash
-vendor/bin/phpunit --testsuite Unit --coverage-text | grep "Lines:"
-# Target: ≥ 40.00%
-```
-
----
-
-## #30 — Delete empty `*.class.php` stub shims
-
-**Status:** ✅ Done; manual plugin spot-check + `class_alias` decision deferred &nbsp;|&nbsp; **Size:** XS
-
-### Goal
-
-Delete the 17 five-line `*.class.php` files in `include/` and `admin/include/` that exist only as `// Class moved to src/Piwigo/ — autoloaded by Composer.` placeholders. Composer PSR-4 autoload already resolves the namespaced classes (`Piwigo\Admin\plugins`, etc.), and every first-party caller has been updated to `use Piwigo\…\…;` — the stubs themselves include nothing and have no real callers.
-
-### Current state
-
-- All 17 stubs deleted (`git rm`). Autoload class count stayed at 2239, confirming the stubs contributed no symbols.
-- One additional cleanup beyond the original plan: `src/Piwigo/Admin/Updates.php` had a `foreach ($this->types as $type) { include_once(PHPWG_ROOT_PATH.'admin/include/'.$type.'.class.php'); ... }` loop loading three of the placeholders (`plugins.class.php`, `themes.class.php`, `languages.class.php`) — the autoloader handles the real classes, so the `include_once` was dead and now removed.
-- `tools/list-classes.php` glob list trimmed: `*.class.php` patterns dropped (those files no longer exist), `*.inc.php` patterns kept.
-- `tools/triggers_list.php` doc strings updated for `BlockManager`, `Template`, and `FileCombiner` (7 entries pointing at `src/Piwigo/Menu/...` and `src/Piwigo/Template/...`). The earlier entries for `tabsheet`, `pwg_image`, `check_integrity` were already fixed during #3.
-- `src/Piwigo/Compat/aliases.php` still does not exist; no first-party caller needs it.
-
-### Steps
-
-1. `git rm` the 17 stub files. ✅
-2. Run `vendor/bin/phpstan analyse --no-progress` and `vendor/bin/phpunit`. ✅ Both green.
-3. Update path strings in `tools/triggers_list.php`. ✅
-4. **Manual** — spot-check that a representative bundled plugin still loads (e.g. activate `nbc_ThemeChanger` in a test gallery). Cannot be done from this session; pending.
-5. Decision pending — introduce `src/Piwigo/Compat/aliases.php` only when a concrete 3rd-party plugin breaks on the missing unqualified names. Today no first-party caller needs it.
-
-### Verification
-
-```bash
-git ls-files 'include/*.class.php' 'admin/include/*.class.php'   # empty
-composer dump-autoload --strict-psr                              # clean
-vendor/bin/phpstan analyse --no-progress                         # green
-vendor/bin/phpunit                                               # green
-```
-
----
-
-## #31 — Migrate to Pest (unified PHP + browser test suite)
+## #29 — Migrate to Pest (unified PHP + browser test suite)
 
 **Status:** Not started &nbsp;|&nbsp; **Size:** M
 
@@ -2333,4 +2262,75 @@ vendor/bin/pest --group=browser          # only browser tests
 vendor/bin/pest --group=unit             # only unit tests
 find tests/e2e -name '*.spec.ts' | wc -l   # 0 — all ported
 find tests/Browser -name '*.php' | wc -l   # 51 — one per original spec
+```
+
+---
+
+## #30 — Unit test coverage expansion (13% → ≥40%)
+
+**Status:** Not started (continuous) &nbsp;|&nbsp; **Size:** L
+
+### Goal
+
+Raise PHPUnit unit-test coverage from the current level to ≥40% of `src/` statements. Runs in parallel with every other item — not gated. Do not add DB/HTTP-dependent tests to the Unit suite; those belong in Integration or E2E.
+
+### Current state
+
+- **218 test methods** across `tests/Unit/` (Auth, Cache, Core, Image, Menu, Search, Session, Template, Users, Ws). 28 test files.
+- Largest untested areas in `src/`: `Admin/` (image backends, `plugins`, `themes`, `updates`), `Calendar/`. (The `Db/` namespace doesn't exist yet — gated by item #17.)
+
+### Steps
+
+1. **Establish a coverage baseline.** Run `vendor/bin/phpunit --testsuite Unit --coverage-html coverage/` and open `coverage/index.html`. Record which namespaces are below 20% — those drive priority.
+
+2. **`src/Piwigo/Core/` — typed services.** `Config`, `PageState`, `Lang`, `CurrentUser`, `Kernel`, `ServiceLocator`. These are the highest-leverage tests: they underpin every other component. Target: 90%+ coverage on each.
+
+3. **`src/Piwigo/Ws/` — encoders and server.** `PwgJsonEncoder`, `PwgRestEncoder`, `PwgXmlWriter`, `PwgServer::addMethod()` / `::verifyParams()`. Pure logic with no DB dependency. Target: 85%+.
+
+4. **`src/Piwigo/Search/` and `src/Piwigo/Calendar/`.** Search Q-classes are already partially covered. Calendar classes require a DB stub — add `AbstractDbStub` to `tests/Unit/stubs/` returning canned result sets.
+
+5. **`src/Piwigo/Template/` — ScriptLoader and manifest logic.** `ScriptLoader::add()` with and without `dist/manifest.json` present. Create a temp directory fixture in `setUp/tearDown`.
+
+6. **`src/Piwigo/Admin/Image/` — GD backend only.** GD is always available in the test container. `ImageGd::resize()`, `::rotate()`, `::flip()` against `dev/fixtures/sample.jpg`. Imagick/ext_imagick backends are integration-only.
+
+### Verification
+
+```bash
+vendor/bin/phpunit --testsuite Unit --coverage-text | grep "Lines:"
+# Target: ≥ 40.00%
+```
+
+---
+
+## #31 — Delete empty `*.class.php` stub shims
+
+**Status:** ✅ Done; manual plugin spot-check + `class_alias` decision deferred &nbsp;|&nbsp; **Size:** XS
+
+### Goal
+
+Delete the 17 five-line `*.class.php` files in `include/` and `admin/include/` that exist only as `// Class moved to src/Piwigo/ — autoloaded by Composer.` placeholders. Composer PSR-4 autoload already resolves the namespaced classes (`Piwigo\Admin\plugins`, etc.), and every first-party caller has been updated to `use Piwigo\…\…;` — the stubs themselves include nothing and have no real callers.
+
+### Current state
+
+- All 17 stubs deleted (`git rm`). Autoload class count stayed at 2239, confirming the stubs contributed no symbols.
+- One additional cleanup beyond the original plan: `src/Piwigo/Admin/Updates.php` had a `foreach ($this->types as $type) { include_once(PHPWG_ROOT_PATH.'admin/include/'.$type.'.class.php'); ... }` loop loading three of the placeholders (`plugins.class.php`, `themes.class.php`, `languages.class.php`) — the autoloader handles the real classes, so the `include_once` was dead and now removed.
+- `tools/list-classes.php` glob list trimmed: `*.class.php` patterns dropped (those files no longer exist), `*.inc.php` patterns kept.
+- `tools/triggers_list.php` doc strings updated for `BlockManager`, `Template`, and `FileCombiner` (7 entries pointing at `src/Piwigo/Menu/...` and `src/Piwigo/Template/...`). The earlier entries for `tabsheet`, `pwg_image`, `check_integrity` were already fixed during #3.
+- `src/Piwigo/Compat/aliases.php` still does not exist; no first-party caller needs it.
+
+### Steps
+
+1. `git rm` the 17 stub files. ✅
+2. Run `vendor/bin/phpstan analyse --no-progress` and `vendor/bin/phpunit`. ✅ Both green.
+3. Update path strings in `tools/triggers_list.php`. ✅
+4. **Manual** — spot-check that a representative bundled plugin still loads (e.g. activate `nbc_ThemeChanger` in a test gallery). Cannot be done from this session; pending.
+5. Decision pending — introduce `src/Piwigo/Compat/aliases.php` only when a concrete 3rd-party plugin breaks on the missing unqualified names. Today no first-party caller needs it.
+
+### Verification
+
+```bash
+git ls-files 'include/*.class.php' 'admin/include/*.class.php'   # empty
+composer dump-autoload --strict-psr                              # clean
+vendor/bin/phpstan analyse --no-progress                         # green
+vendor/bin/phpunit                                               # green
 ```

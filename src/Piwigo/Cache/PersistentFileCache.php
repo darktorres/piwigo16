@@ -6,6 +6,7 @@ namespace Piwigo\Cache;
 
 use Psr\Cache\CacheItemPoolInterface;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
+use Symfony\Component\Cache\PruneableInterface;
 use Piwigo\Config\Config;
 
 /**
@@ -57,7 +58,7 @@ class PersistentFileCache extends PersistentCache
         if ($all) {
             return $this->pool->clear();
         }
-        if ($this->pool instanceof \Symfony\Component\Cache\PruneableInterface) {
+        if ($this->pool instanceof PruneableInterface) {
             return $this->pool->prune();
         }
         return $this->pool->clear();

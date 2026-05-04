@@ -171,6 +171,23 @@ final class GroupRepository extends AbstractRepository
     }
 
     /**
+     * Delete user_group rows for the given user ids.
+     *
+     * @param int[] $userIds
+     */
+    public function deleteUserGroupByUserIds(array $userIds): void
+    {
+        if ($userIds === []) {
+            return;
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->delete($this->table('user_group'));
+        $qb->where($qb->expr()->in('user_id', ':userIds'))
+           ->setParameter('userIds', $userIds, \Doctrine\DBAL\ArrayParameterType::INTEGER);
+        $qb->executeStatement();
+    }
+
+    /**
      * Return ids of groups whose name matches the given LIKE pattern.
      *
      * @return int[]

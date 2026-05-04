@@ -10,6 +10,7 @@ use Piwigo\Comment\CommentRepository;
 use Piwigo\Config\Config;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Activity\ActivityRepository;
+use Piwigo\Auth\AuthKeyRepository;
 use Piwigo\Language\LanguageRepository;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permalink\PermalinkRepository;
@@ -65,4 +66,5 @@ return [
     PermissionRepository::class   => factory(static fn (Connection $conn): PermissionRepository   => new PermissionRepository($conn, Config::dbPrefix())),
     SiteRepository::class         => factory(static fn (Connection $conn): SiteRepository         => new SiteRepository($conn, Config::dbPrefix())),
     ActivityRepository::class     => factory(static fn (Connection $conn): ActivityRepository     => new ActivityRepository($conn, Config::dbPrefix())),
+    AuthKeyRepository::class      => factory(static fn (Connection $conn): AuthKeyRepository      => new AuthKeyRepository($conn, Config::dbPrefix())),
 ];

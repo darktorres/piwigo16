@@ -267,6 +267,63 @@ final class UserRepository extends AbstractRepository
     }
 
     /**
+     * Update status to $status for the given user ids.
+     * Called by check_and_save_user_infos() when changing user status.
+     *
+     * @param int[] $userIds
+     */
+    public function updateStatusForUsers(string $status, array $userIds): void
+    {
+        if ($userIds === []) {
+            return;
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->update($this->table('user_infos'))
+            ->set('status', ':status')
+            ->setParameter('status', $status);
+        $qb->where($qb->expr()->in('user_id', ':userIds'))
+           ->setParameter('userIds', $userIds, \Doctrine\DBAL\ArrayParameterType::INTEGER);
+        $qb->executeStatement();
+    }
+
+    /**
+     * Update last_visit and last_visit_from_history for a user.
+     * Called by get_last_visit_from_history() after reading from the history table.
+     */
+    public function updateLastVisitFromHistory(int $userId, ?string $lastVisit): void
+    {
+        $qb = $this->conn->createQueryBuilder()
+            ->update($this->table('user_infos'))
+            ->set('last_visit_from_history', "'true'")
+            ->set('lastmodified', 'lastmodified')
+            ->where('user_id = :userId')
+            ->setParameter('userId', $userId);
+
+        if ($lastVisit === null) {
+            $qb->set('last_visit', 'NULL');
+        } else {
+            $qb->set('last_visit', ':lastVisit')->setParameter('lastVisit', $lastVisit);
+        }
+
+        $qb->executeStatement();
+    }
+
+    /**
+     * Persist serialized user preferences to user_infos.
+     * Called by userprefs_save() after updating the in-memory preferences array.
+     */
+    public function updatePreferences(int $userId, string $serializedPreferences): void
+    {
+        $this->conn->createQueryBuilder()
+            ->update($this->table('user_infos'))
+            ->set('preferences', ':prefs')
+            ->where('user_id = :userId')
+            ->setParameter('prefs', $serializedPreferences)
+            ->setParameter('userId', $userId)
+            ->executeStatement();
+    }
+
+    /**
      * Return the status field from user_infos for the given user, or null if not found.
      * Used by the upgrade access check to verify webmaster status.
      */

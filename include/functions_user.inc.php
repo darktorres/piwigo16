@@ -1639,21 +1639,16 @@ SELECT
 
     $candidate = generate_key(30);
 
-    $query = '
-SELECT
-    COUNT(*),
-    NOW(),
-    ADDDATE(NOW(), INTERVAL '.\Piwigo\Config\Config::authKeyDuration().' SECOND)
-  FROM '.USER_AUTH_KEYS_TABLE.'
-  WHERE auth_key = \''.$candidate.'\'
-;';
-    [$counter, $now, $expiration] = pwg_db_fetch_row(pwg_query($query)) ?? [null, null, null];
-    if (0 == $counter) {
+    $authKeyRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Auth\AuthKeyRepository::class);
+    if (!$authKeyRepo->existsByKey($candidate)) {
+        $now = (new \DateTimeImmutable())->format('Y-m-d H:i:s');
+        $duration = \Piwigo\Config\Config::authKeyDuration();
+        $expiration = (new \DateTimeImmutable())->modify('+' . $duration . ' seconds')->format('Y-m-d H:i:s');
         $key = [
           'auth_key' => $candidate,
           'user_id' => $user_id,
           'created_on' => $now,
-          'duration' => \Piwigo\Config\Config::authKeyDuration(),
+          'duration' => $duration,
           'expired_on' => $expiration,
           'key_type' => 'auth_key',
           ];
@@ -1676,14 +1671,8 @@ SELECT
  */
 function deactivate_user_auth_keys($user_id): void
 {
-    $query = '
-UPDATE '.USER_AUTH_KEYS_TABLE.'
-  SET expired_on = NOW()
-  WHERE user_id = '.$user_id.'
-    AND expired_on > NOW()
-    AND key_type = \'auth_key\'
-;';
-    pwg_query($query);
+    \Piwigo\Core\ServiceLocator::get(\Piwigo\Auth\AuthKeyRepository::class)
+        ->deactivateForUser((int) $user_id);
 }
 
 /**
@@ -1720,7 +1709,7 @@ function generate_password_link(int $user_id, bool $first_login = false): array
     $duration = $first_login
     ? \Piwigo\Config\Config::passwordActivationDuration()
     : \Piwigo\Config\Config::passwordResetDuration();
-    [$expire] = pwg_db_fetch_row(pwg_query('SELECT ADDDATE(NOW(), INTERVAL '. $duration .' SECOND)')) ?? [null];
+    $expire = (new \DateTimeImmutable())->modify('+' . $duration . ' seconds')->format('Y-m-d H:i:s');
 
     single_update(
         USER_INFOS_TABLE,
@@ -1771,20 +1760,15 @@ FROM '.HISTORY_TABLE.'
   ORDER BY id DESC
   LIMIT 1
 ;';
-    $result = pwg_query($query);
-    while ($row = pwg_db_fetch_assoc($result)) {
-        $last_visit = $row['date'].' '.$row['time'];
+    $histRow = \Piwigo\Core\ServiceLocator::get(\Piwigo\History\HistoryRepository::class)
+        ->findLastVisitByUserId((int) $user_id);
+    if ($histRow !== null) {
+        $last_visit = $histRow['date'] . ' ' . $histRow['time'];
     }
 
     if ($save_in_user_infos) {
-        $query = '
-UPDATE '.USER_INFOS_TABLE.'
-  SET last_visit = '.(is_null($last_visit) ? 'NULL' : "'".$last_visit."'").',
-      last_visit_from_history = \'true\',
-      lastmodified = lastmodified
-  WHERE user_id = '.$user_id.'
-';
-        pwg_query($query);
+        \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
+            ->updateLastVisitFromHistory((int) $user_id, $last_visit ?? null);
     }
 
     return $last_visit;
@@ -1799,14 +1783,8 @@ function userprefs_save(): void
     $user = is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : [];
     $preferences = $user['preferences'] ?? [];
 
-    $dbValue = pwg_db_real_escape_string(serialize($preferences));
-
-    $query = '
-UPDATE '.USER_INFOS_TABLE.'
-  SET preferences = \''.$dbValue.'\'
-  WHERE user_id = '.CurrentUser::get()->id.'
-;';
-    pwg_query($query);
+    \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
+        ->updatePreferences(CurrentUser::get()->id, serialize($preferences));
 }
 
 /**
@@ -1894,16 +1872,8 @@ function userprefs_get_param($param, $default_value = null)
  */
 function has_already_logged_in($user_id): bool
 {
-    $query = '
-SELECT COUNT(*)
-  FROM '.ACTIVITY_TABLE.'
-  WHERE action = \'login\' and performed_by = '.$user_id.'';
-
-    [$logged_in] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-    if ($logged_in > 0) {
-        return false;
-    }
-    return true;
+    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Activity\ActivityRepository::class)
+        ->hasLoggedIn((int) $user_id);
 }
 
 /**
@@ -2157,12 +2127,11 @@ SELECT
     $param_user_id_for_status = is_array($params['user_id_for_status'] ?? null) ? $params['user_id_for_status'] : [];
     if (isset($update_status) and count($param_user_id_for_status) > 0) {
         $update_status_str = is_scalar($update_status) ? (string) $update_status : '';
-        $query = '
-UPDATE '. USER_INFOS_TABLE .' SET
-    status = "'. $update_status_str .'"
-  WHERE user_id IN('. implode(',', array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $param_user_id_for_status)) .')
-;';
-        pwg_query($query);
+        \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
+            ->updateStatusForUsers(
+                $update_status_str,
+                array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $param_user_id_for_status)
+            );
 
         // we delete sessions, ie disconnect, for users if status becomes "guest".
         // It's like deactivating the user.
@@ -2195,12 +2164,8 @@ UPDATE '. USER_INFOS_TABLE .' SET ';
 
     // manage association to groups
     if (!empty($param_group_id)) {
-        $query = '
-DELETE
-  FROM '.USER_GROUP_TABLE.'
-  WHERE user_id IN ('.implode(',', array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $param_user_id)).')
-;';
-        pwg_query($query);
+        \Piwigo\Core\ServiceLocator::get(\Piwigo\Group\GroupRepository::class)
+            ->deleteUserGroupByUserIds(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $param_user_id));
 
         // we remove all provided groups that do not really exist
         $query = '
@@ -2254,7 +2219,7 @@ function create_api_key(int $user_id, int $duration, string $key_name): array
     $key_id = 'pkid-'.date('Ymd').'-'.generate_key(20);
     $key_secret = generate_key(40);
 
-    [$dbnow] = pwg_db_fetch_row(pwg_query('SELECT NOW();')) ?? [null];
+    $dbnow = (new \DateTimeImmutable())->format('Y-m-d H:i:s');
 
     $key = [
       'auth_key' => $key_id,
@@ -2267,11 +2232,7 @@ function create_api_key(int $user_id, int $duration, string $key_name): array
 
     $expiration = null;
     if (!empty($duration)) {
-        $query = '
-SELECT
-  ADDDATE(NOW(), INTERVAL '.($duration * 60 * 60 * 24).' SECOND)
-;';
-        [$expiration] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+        $expiration = (new \DateTimeImmutable())->modify('+' . ($duration * 86400) . ' seconds')->format('Y-m-d H:i:s');
         $key['duration'] = $duration;
     }
     $key['expired_on'] = $expiration;
@@ -2291,23 +2252,14 @@ SELECT
  */
 function revoke_api_key($user_id, string $pkid)
 {
-    $query = '
-SELECT 
-  COUNT(*),
-  NOW()
-  FROM `'.USER_AUTH_KEYS_TABLE.'`
-  WHERE auth_key = "'.$pkid.'"
-  AND user_id = '.$user_id.'
-;';
-
-    [$key, $now] = pwg_db_fetch_row(pwg_query($query)) ?? [null, null];
-    if ($key == 0) {
+    $authKeyRepo2 = \Piwigo\Core\ServiceLocator::get(\Piwigo\Auth\AuthKeyRepository::class);
+    if (!$authKeyRepo2->existsByKeyAndUser($pkid, $user_id)) {
         return l10n('API Key not found');
     }
 
     single_update(
         USER_AUTH_KEYS_TABLE,
-        ['revoked_on' => $now],
+        ['revoked_on' => (new \DateTimeImmutable())->format('Y-m-d H:i:s')],
         [
         'auth_key' => $pkid,
         'user_id' => $user_id,
@@ -2326,16 +2278,7 @@ SELECT
  */
 function edit_api_key(int $user_id, string $pkid, string $api_name): string|true
 {
-    $query = '
-SELECT 
-  COUNT(*)
-  FROM `'.USER_AUTH_KEYS_TABLE.'`
-  WHERE auth_key = "'.$pkid.'"
-  AND user_id = '.$user_id.'
-;';
-
-    [$key] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-    if ($key == 0) {
+    if (!\Piwigo\Core\ServiceLocator::get(\Piwigo\Auth\AuthKeyRepository::class)->existsByKeyAndUser($pkid, $user_id)) {
         return l10n('API Key not found');
     }
 
@@ -2372,11 +2315,7 @@ SELECT *
         return false;
     }
 
-    $query = '
-SELECT
-  NOW()
-;';
-    [$now] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+    $now = (new \DateTimeImmutable())->format('Y-m-d H:i:s');
 
     foreach ($api_keys as $i => $api_key) {
         $api_key['apikey_secret'] = str_repeat('*', 40);

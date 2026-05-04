@@ -10,6 +10,23 @@ use Piwigo\Db\AbstractRepository;
 final class ActivityRepository extends AbstractRepository
 {
     /**
+     * Return true if the given user has at least one 'login' activity entry.
+     * Used by has_already_logged_in() to check first-time login for onboarding.
+     */
+    public function hasLoggedIn(int $userId): bool
+    {
+        $count = $this->conn->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from($this->table('activity'))
+            ->where("action = 'login'")
+            ->andWhere('performed_by = :userId')
+            ->setParameter('userId', $userId)
+            ->executeQuery()
+            ->fetchOne();
+        return (int) $count > 0;
+    }
+
+    /**
      * Return the occurred_on value of the oldest activity entry, or null if none.
      * Used by user_activity.php to set the date-range minimum.
      */

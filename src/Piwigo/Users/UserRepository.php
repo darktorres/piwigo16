@@ -12,6 +12,18 @@ use Doctrine\DBAL\ArrayParameterType;
 final class UserRepository extends AbstractRepository
 {
     /**
+     * Delete all favorites for the given user (when removing all at once from the favorites page).
+     */
+    public function deleteAllFavoritesByUserId(int $userId): void
+    {
+        $this->conn->createQueryBuilder()
+            ->delete($this->table('favorites'))
+            ->where('user_id = :userId')
+            ->setParameter('userId', $userId)
+            ->executeStatement();
+    }
+
+    /**
      * Delete favorites entries for the given image ids.
      *
      * @param int[] $imageIds

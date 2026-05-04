@@ -231,7 +231,6 @@ SELECT *
   '.\Piwigo\Config\Config::orderBy().'
   LIMIT '.$page['nb_images'].' OFFSET '.$page['start'].'
 ;';
-    // $result = pwg_query($query);
     $images = query2array($query);
     $added_by_ids = array_unique(array_column($images, 'added_by'));
     if (count($added_by_ids) > 0) {

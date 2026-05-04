@@ -354,11 +354,8 @@ else {
         );
 
         if (!empty($_GET['action']) && ($_GET['action'] == 'remove_all_from_favorites')) {
-            $query = '
-DELETE FROM '.FAVORITES_TABLE.'
-  WHERE user_id = '.$user['id'].'
-;';
-            pwg_query($query);
+            \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
+                ->deleteAllFavoritesByUserId(is_numeric($user['id']) ? (int) $user['id'] : 0);
             redirect(make_index_url(['section' => 'favorites']));
         } else {
             $query = '

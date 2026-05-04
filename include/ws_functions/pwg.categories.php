@@ -920,12 +920,9 @@ SELECT *
     if (isset($params['commentable']) && isset($params['apply_commentable_to_subalbums']) && $params['apply_commentable_to_subalbums']) {
         $subcats = get_subcat_ids([$category_id]);
         if (count($subcats) > 0) {
-            $query = '
-UPDATE '.CATEGORIES_TABLE.'
-  SET commentable = \''.(is_scalar($params['commentable']) ? (string) $params['commentable'] : '').'\'
-  WHERE id IN ('.implode(',', $subcats).')
-;';
-            pwg_query($query);
+            $commentableVal = is_scalar($params['commentable']) ? (string) $params['commentable'] : 'false';
+            \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+                ->setCommentable(array_map('intval', $subcats), $commentableVal === 'true');
         }
     }
 
@@ -956,42 +953,24 @@ UPDATE '.CATEGORIES_TABLE.'
     $category_id = is_numeric($params['category_id']) ? (int) $params['category_id'] : 0;
     $image_id = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
 
+    $catRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class);
+    $imgRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class);
+
     // does the category really exist?
-    $query = '
-SELECT COUNT(*)
-  FROM '. CATEGORIES_TABLE .'
-  WHERE id = '. $category_id .'
-;';
-    [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-    if ($count == 0) {
+    if (!$catRepo->existsById($category_id)) {
         return new PwgError(404, 'category_id not found');
     }
 
     // does the image really exist?
-    $query = '
-SELECT COUNT(*)
-  FROM '. IMAGES_TABLE .'
-  WHERE id = '. $image_id .'
-;';
-    [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-    if ($count == 0) {
+    if (!$imgRepo->existsById($image_id)) {
         return new PwgError(404, 'image_id not found');
     }
 
     // apply change
-    $query = '
-UPDATE '. CATEGORIES_TABLE .'
-  SET representative_picture_id = '. $image_id .'
-  WHERE id = '. $category_id .'
-;';
-    pwg_query($query);
+    $catRepo->setRepresentativePicture([$category_id], $image_id);
 
-    $query = '
-UPDATE '. USER_CACHE_CATEGORIES_TABLE .'
-  SET user_representative_picture_id = NULL
-  WHERE cat_id = '. $category_id .'
-;';
-    pwg_query($query);
+    \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
+        ->clearUserRepresentativeForCategory($category_id);
 
     pwg_activity('album', $category_id, 'edit', ['image_id' => $image_id]);
     return null;
@@ -1013,34 +992,20 @@ UPDATE '. USER_CACHE_CATEGORIES_TABLE .'
 {
     $category_id = is_numeric($params['category_id']) ? (int) $params['category_id'] : 0;
 
+    $catRepo2 = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class);
+
     // does the category really exist?
-    $query = '
-SELECT id
-  FROM '. CATEGORIES_TABLE .'
-  WHERE id = '. $category_id .'
-;';
-    $result = pwg_query($query);
-    if (pwg_db_num_rows($result) == 0) {
+    if (!$catRepo2->existsById($category_id)) {
         return new PwgError(404, 'category_id not found');
     }
 
-    $query = '
-SELECT COUNT(*)
-  FROM '.IMAGE_CATEGORY_TABLE.'
-  WHERE category_id = '.$category_id.'
-;';
-    [$nb_images] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+    $nb_images = $catRepo2->countImagesByCategoryId($category_id);
 
     if (!\Piwigo\Config\Config::allowRandomRepresentative() and $nb_images != 0) {
         return new PwgError(401, 'not permitted');
     }
 
-    $query = '
-UPDATE '.CATEGORIES_TABLE.'
-  SET representative_picture_id = NULL
-  WHERE id = '.$category_id.'
-;';
-    pwg_query($query);
+    $catRepo2->clearRepresentatives([$category_id]);
 
     pwg_activity('album', $category_id, 'edit');
     return null;
@@ -1062,28 +1027,14 @@ UPDATE '.CATEGORIES_TABLE.'
 {
     $category_id = is_numeric($params['category_id']) ? (int) $params['category_id'] : 0;
 
+    $catRepo3 = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class);
+
     // does the category really exist?
-    $query = '
-SELECT id
-  FROM '. CATEGORIES_TABLE .'
-  WHERE id = '. $category_id .'
-;';
-    $result = pwg_query($query);
-    if (pwg_db_num_rows($result) == 0) {
+    if (!$catRepo3->existsById($category_id)) {
         return new PwgError(404, 'category_id not found');
     }
 
-    $query = '
-SELECT
-    DISTINCT category_id
-  FROM '.IMAGE_CATEGORY_TABLE.'
-  WHERE category_id = '.$category_id.'
-  LIMIT 1
-;';
-    $result = pwg_query($query);
-    $has_images = pwg_db_num_rows($result) > 0 ? true : false;
-
-    if (!$has_images) {
+    if (!$catRepo3->hasCategoryImages($category_id)) {
         return new PwgError(401, 'not permitted');
     }
 

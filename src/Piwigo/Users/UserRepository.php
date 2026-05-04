@@ -266,6 +266,20 @@ final class UserRepository extends AbstractRepository
         return is_string($value) ? $value : null;
     }
 
+    /**
+     * Clear user_representative_picture_id for the given category in user cache.
+     * Called when the category's representative is changed via WS.
+     */
+    public function clearUserRepresentativeForCategory(int $catId): void
+    {
+        $this->conn->createQueryBuilder()
+            ->update($this->table('user_cache_categories'))
+            ->set('user_representative_picture_id', 'NULL')
+            ->where('cat_id = :catId')
+            ->setParameter('catId', $catId)
+            ->executeStatement();
+    }
+
     /** Delete notification feed rows that were never used (last_check IS NULL). */
     public function deleteNeverUsedFeeds(): void
     {

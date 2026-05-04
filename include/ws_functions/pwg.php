@@ -66,8 +66,8 @@ function ws_directory_size_bytes(string $path): ?int
     }
 
     $max_urls = is_numeric($params['max_urls']) ? (int) $params['max_urls'] : 0;
-    $query = 'SELECT MAX(id)+1, COUNT(*) FROM '. IMAGES_TABLE .';';
-    [$max_id, $image_count] = pwg_db_fetch_row(pwg_query($query)) ?? [null, null];
+    [$max_id, $image_count] = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
+        ->findMaxIdAndCount();
 
     if (0 == $image_count) {
         return [];
@@ -166,46 +166,31 @@ function ws_getInfos(array $params, \Piwigo\Ws\PwgServer &$service): array
 {
     $infos['version'] = PHPWG_VERSION;
 
-    $query = 'SELECT COUNT(*) FROM '.IMAGES_TABLE.';';
-    [$infos['nb_elements']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+    $imgRepo  = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class);
+    $catRepo  = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class);
+    $tagRepo  = \Piwigo\Core\ServiceLocator::get(\Piwigo\Tag\TagRepository::class);
+    $userRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class);
+    $comRepo  = \Piwigo\Core\ServiceLocator::get(\Piwigo\Comment\CommentRepository::class);
 
-    $query = 'SELECT COUNT(*) FROM '.CATEGORIES_TABLE.';';
-    [$infos['nb_categories']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-
-    $query = 'SELECT COUNT(*) FROM '.CATEGORIES_TABLE.' WHERE dir IS NULL;';
-    [$infos['nb_virtual']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-
-    $query = 'SELECT COUNT(*) FROM '.CATEGORIES_TABLE.' WHERE dir IS NOT NULL;';
-    [$infos['nb_physical']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-
-    $query = 'SELECT COUNT(*) FROM '.IMAGE_CATEGORY_TABLE.';';
-    [$infos['nb_image_category']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-
-    $query = 'SELECT COUNT(*) FROM '.TAGS_TABLE.';';
-    [$infos['nb_tags']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-
-    $query = 'SELECT COUNT(*) FROM '.IMAGE_TAG_TABLE.';';
-    [$infos['nb_image_tag']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-
-    $query = 'SELECT COUNT(*) FROM '.USERS_TABLE.';';
-    [$infos['nb_users']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-
-    $query = 'SELECT COUNT(*) FROM `'.GROUPS_TABLE.'`;';
-    [$infos['nb_groups']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-
-    $query = 'SELECT COUNT(*) FROM '.COMMENTS_TABLE.';';
-    [$infos['nb_comments']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+    $infos['nb_elements']       = $imgRepo->countAll();
+    $infos['nb_categories']     = $catRepo->countAll();
+    $infos['nb_virtual']        = $catRepo->countVirtual();
+    $infos['nb_physical']       = $catRepo->countPhysical();
+    $infos['nb_image_category'] = $catRepo->countImageCategoryLinks();
+    $infos['nb_tags']           = $tagRepo->countAll();
+    $infos['nb_image_tag']      = $tagRepo->countImageTags();
+    $infos['nb_users']          = $userRepo->countAll(USERS_TABLE);
+    $infos['nb_groups']         = $userRepo->countGroups();
+    $infos['nb_comments']       = $comRepo->countAll();
 
     // first element
     if ($infos['nb_elements'] > 0) {
-        $query = 'SELECT MIN(date_available) FROM '.IMAGES_TABLE.';';
-        [$infos['first_date']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+        $infos['first_date'] = $imgRepo->findEarliestDate();
     }
 
     // unvalidated comments
     if ($infos['nb_comments'] > 0) {
-        $query = 'SELECT COUNT(*) FROM '.COMMENTS_TABLE.' WHERE validated=\'false\';';
-        [$infos['nb_unvalidated_comments']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+        $infos['nb_unvalidated_comments'] = $comRepo->countUnvalidated();
     }
 
     // Cache size
@@ -408,8 +393,7 @@ function ws_session_getStatus($params, \Piwigo\Ws\PwgServer &$service): mixed
     $res['pwg_token'] = get_pwg_token();
     $res['charset'] = get_pwg_charset();
 
-    [$dbnow] = pwg_db_fetch_row(pwg_query('SELECT NOW();')) ?? [null];
-    $res['current_datetime'] = $dbnow;
+    $res['current_datetime'] = (new \DateTimeImmutable())->format('Y-m-d H:i:s');
     $res['version'] = PHPWG_VERSION;
     $res['save_visits'] = do_log();
     $res['connected_with'] = $_SESSION['connected_with'] ?? null;
@@ -822,28 +806,14 @@ SELECT
 
     // DEFERRED: define precedence when both image_id and filename are provided simultaneously.
 
-    // store seach in database
+    // store search in database
     // register search rules in database, then they will be available on
     // thumbnails page and picture page.
-    $query = '
-  INSERT INTO '.SEARCH_TABLE.'
-  (rules)
-  VALUES
-  (\''.pwg_db_real_escape_string(serialize($search)).'\')
-  ;';
-
-    pwg_query($query);
-
-    $search_id = pwg_db_insert_id();
+    $searchRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Search\SearchRepository::class);
+    $search_id = $searchRepo->insertSearch(serialize($search));
 
     // what are the lines to display in reality ?
-    $query = '
-SELECT rules
-  FROM '.SEARCH_TABLE.'
-  WHERE id = '.$search_id.'
-;';
-    [$serialized_rules] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-
+    $serialized_rules = $searchRepo->findRulesById($search_id);
     $page['search'] = unserialize(is_string($serialized_rules) ? $serialized_rules : '');
 
 
@@ -934,20 +904,18 @@ SELECT
     }
 
     if (count($user_ids) > 0) {
-        $query = '
-SELECT '.\Piwigo\Config\Config::userFields()['id'].' AS id
-     , '.\Piwigo\Config\Config::userFields()['username'].' AS username
-  FROM '.USERS_TABLE.'
-  WHERE id IN ('.implode(',', array_keys($user_ids)).')
-;';
-        $result = pwg_query($query);
+        $userFields = \Piwigo\Config\Config::userFields();
+        $rawMap = \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
+            ->findUsernamesByIds(
+                $userFields['id'],
+                $userFields['username'],
+                USERS_TABLE,
+                array_map('intval', array_keys($user_ids))
+            );
 
         $username_of = [];
-        while ($row = pwg_db_fetch_assoc($result)) {
-            $row_id_key = is_scalar($row['id']) ? (string) $row['id'] : '';
-            if ($row_id_key !== '') {
-                $username_of[$row_id_key] = stripslashes((string) $row['username']);
-            }
+        foreach ($rawMap as $id => $username) {
+            $username_of[$id] = stripslashes($username);
         }
     }
 
@@ -997,15 +965,8 @@ SELECT
 
     $name_of_tag = [];
     if ($has_tags > 0) {
-        $query = '
-SELECT
-    id,
-    name, url_name
-  FROM '.TAGS_TABLE;
-
         $name_of_tag = [];
-        $result = pwg_query($query);
-        while ($row = pwg_db_fetch_assoc($result)) {
+        foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Tag\TagRepository::class)->findAll() as $row) {
             $tag_id_key = is_scalar($row['id']) ? (string) $row['id'] : '';
             if ($tag_id_key !== '') {
                 $name_of_tag[$tag_id_key] = trigger_change('render_tag_name', $row['name'], $row);

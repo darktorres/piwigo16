@@ -215,6 +215,29 @@ final class CommentRepository extends AbstractRepository
         $qb->executeStatement();
     }
 
+    /** Total number of comments (validated and unvalidated). */
+    public function countAll(): int
+    {
+        $value = $this->conn->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from($this->table('comments'))
+            ->executeQuery()
+            ->fetchOne();
+        return is_numeric($value) ? (int) $value : 0;
+    }
+
+    /** Count comments awaiting validation. */
+    public function countUnvalidated(): int
+    {
+        $value = $this->conn->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from($this->table('comments'))
+            ->where("validated = 'false'")
+            ->executeQuery()
+            ->fetchOne();
+        return is_numeric($value) ? (int) $value : 0;
+    }
+
     /**
      * Clear the nb_available_comments cache for all users so the next
      * request recomputes it from the live comment count.

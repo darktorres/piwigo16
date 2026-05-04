@@ -12,6 +12,38 @@ use Doctrine\DBAL\ArrayParameterType;
 final class ImageRepository extends AbstractRepository
 {
     /**
+     * Return (MAX(id)+1, COUNT(*)) for the images table.
+     * Used by ws_getMissingDerivatives() to page through image ids.
+     *
+     * @return array{0: int, 1: int}
+     */
+    public function findMaxIdAndCount(): array
+    {
+        $row = $this->conn->createQueryBuilder()
+            ->select('MAX(id) + 1', 'COUNT(*)')
+            ->from($this->table('images'))
+            ->executeQuery()
+            ->fetchNumeric();
+        return [
+            is_numeric($row[0] ?? null) ? (int) $row[0] : 0,
+            is_numeric($row[1] ?? null) ? (int) $row[1] : 0,
+        ];
+    }
+
+    /**
+     * Return the earliest date_available among all images, or null if no images exist.
+     */
+    public function findEarliestDate(): ?string
+    {
+        $value = $this->conn->createQueryBuilder()
+            ->select('MIN(date_available)')
+            ->from($this->table('images'))
+            ->executeQuery()
+            ->fetchOne();
+        return is_string($value) ? $value : null;
+    }
+
+    /**
      * Return image rows for the given ids.
      *
      * @param int[] $ids

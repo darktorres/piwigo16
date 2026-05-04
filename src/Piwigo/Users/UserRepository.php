@@ -186,6 +186,31 @@ final class UserRepository extends AbstractRepository
     }
 
     /**
+     * Return a map of user_id → username for the given ids.
+     * Column names come from admin config — not user-supplied.
+     *
+     * @param  int[]  $ids
+     * @return array<string, string>  keyed by string user_id
+     */
+    public function findUsernamesByIds(
+        string $idField, string $usernameField, string $usersTable, array $ids
+    ): array {
+        if ($ids === []) {
+            return [];
+        }
+        $rows = $this->conn->executeQuery(
+            "SELECT $idField AS id, $usernameField AS username FROM $usersTable WHERE $idField IN (?)",
+            [$ids],
+            [\Doctrine\DBAL\ArrayParameterType::INTEGER]
+        )->fetchAllAssociative();
+        $result = [];
+        foreach ($rows as $row) {
+            $result[(string) $row['id']] = (string) $row['username'];
+        }
+        return $result;
+    }
+
+    /**
      * Count users whose email (case-insensitive) matches $email, optionally excluding $excludeUserId.
      * $emailField, $idField, $usersTable are admin-configured — not user-supplied.
      */

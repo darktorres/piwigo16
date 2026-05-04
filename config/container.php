@@ -8,6 +8,7 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Config\Config;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\PageState;
 use Piwigo\Db\DbConnection;
@@ -51,4 +52,5 @@ return [
     NotificationRepository::class => factory(static fn (Connection $conn): NotificationRepository => new NotificationRepository($conn, Config::dbPrefix())),
     SessionRepository::class      => factory(static fn (Connection $conn): SessionRepository      => new SessionRepository($conn, Config::dbPrefix())),
     RateRepository::class         => factory(static fn (Connection $conn): RateRepository         => new RateRepository($conn, Config::dbPrefix())),
+    GroupRepository::class        => factory(static fn (Connection $conn): GroupRepository        => new GroupRepository($conn, Config::dbPrefix())),
 ];

@@ -80,16 +80,11 @@ SELECT
 /** @param array<mixed> $params */
 function ws_groups_add(array $params, \Piwigo\Ws\PwgServer &$service): mixed
 {
-    $params['name'] = pwg_db_real_escape_string(strip_tags(stripslashes(is_scalar($params['name']) ? (string) $params['name'] : '')));
+    $params['name'] = strip_tags(stripslashes(is_scalar($params['name']) ? (string) $params['name'] : ''));
 
     // is the name not already used ?
-    $query = '
-SELECT COUNT(*)
-  FROM `'.GROUPS_TABLE.'`
-  WHERE name = \''.$params['name'].'\'
-;';
-    [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-    if ($count != 0) {
+    $groupRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Group\GroupRepository::class);
+    if ($groupRepo->countByName($params['name']) != 0) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'This name is already used by another group.');
     }
 
@@ -162,28 +157,16 @@ function ws_groups_setInfo(array $params, \Piwigo\Ws\PwgServer &$service): mixed
     $setinfo_group_id = is_numeric($params['group_id']) ? (int) $params['group_id'] : 0;
 
     // does the group exist ?
-    $query = '
-SELECT COUNT(*)
-  FROM `'. GROUPS_TABLE .'`
-  WHERE id = '. $setinfo_group_id .'
-;';
-    [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-    if ($count == 0) {
+    $groupRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Group\GroupRepository::class);
+    if (!$groupRepo->existsById($setinfo_group_id)) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'This group does not exist.');
     }
 
     if (!empty($params['name'])) {
-        $params['name'] = pwg_db_real_escape_string(strip_tags(stripslashes(is_scalar($params['name']) ? (string) $params['name'] : '')));
+        $params['name'] = strip_tags(stripslashes(is_scalar($params['name']) ? (string) $params['name'] : ''));
 
         // is the name not already used ?
-        $query = '
-SELECT COUNT(*)
-  FROM `'. GROUPS_TABLE .'`
-  WHERE name = \''. $params['name'] .'\'
-  AND id != '.$setinfo_group_id.'
-;';
-        [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-        if ($count != 0) {
+        if ($groupRepo->countByNameExcludingId($params['name'], $setinfo_group_id) != 0) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'This name is already used by another group.');
         }
 
@@ -223,13 +206,7 @@ function ws_groups_addUser(array $params, \Piwigo\Ws\PwgServer &$service): mixed
     $adduser_group_id = is_numeric($params['group_id']) ? (int) $params['group_id'] : 0;
 
     // does the group exist ?
-    $query = '
-SELECT COUNT(*)
-  FROM `'. GROUPS_TABLE .'`
-  WHERE id = '. $adduser_group_id .'
-;';
-    [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-    if ($count == 0) {
+    if (!\Piwigo\Core\ServiceLocator::get(\Piwigo\Group\GroupRepository::class)->existsById($adduser_group_id)) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'This group does not exist.');
     }
 
@@ -286,13 +263,8 @@ function ws_groups_merge(array $params, \Piwigo\Ws\PwgServer &$service): PwgErro
     $merge_group = array_diff($merge_group_ids, [$dest_group_id]);
     $merge_group_object = $service->invoke('pwg.groups.getList', ['group_id' => $merge_group_ids]);
 
-    $query = '
-SELECT COUNT(*)
-  FROM `'. GROUPS_TABLE .'`
-  WHERE id in ('.implode(',', $all_groups) .')
-;';
-    [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-    if ($count != count($all_groups)) {
+    $groupRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Group\GroupRepository::class);
+    if ($groupRepo->countByIds($all_groups) != count($all_groups)) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'All groups does not exist.');
     }
 
@@ -364,33 +336,16 @@ function ws_groups_duplicate(array $params, \Piwigo\Ws\PwgServer &$service): mix
     $dup_group_id = is_numeric($params['group_id']) ? (int) $params['group_id'] : 0;
     $copy_name_str = is_scalar($params['copy_name']) ? (string) $params['copy_name'] : '';
 
-    $query = '
-SELECT COUNT(*)
-  FROM `'.GROUPS_TABLE.'`
-  WHERE name = \''.pwg_db_real_escape_string($copy_name_str).'\'
-;';
-    [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-    if ($count != 0) {
+    $groupRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Group\GroupRepository::class);
+    if ($groupRepo->countByName($copy_name_str) != 0) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'This name is already used by another group.');
     }
 
-    $query = '
-SELECT COUNT(*)
-  FROM `'. GROUPS_TABLE .'`
-  WHERE id = '.$dup_group_id.'
-;';
-    [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-    if ($count == 0) {
+    if (!$groupRepo->existsById($dup_group_id)) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'This group does not exist.');
     }
 
-    $query = '
-SELECT is_default
-  FROM `'. GROUPS_TABLE .'`
-  WHERE id = '.$dup_group_id.'
-;';
-
-    [$is_default] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+    $is_default = $groupRepo->findIsDefault($dup_group_id);
 
     // creating the group
     single_insert(
@@ -456,23 +411,15 @@ function ws_groups_deleteUser(array $params, \Piwigo\Ws\PwgServer &$service): mi
     $deluser_user_ids = is_array($params['user_id']) ? $params['user_id'] : [];
 
     // does the group exist ?
-    $query = '
-SELECT COUNT(*)
-  FROM `'. GROUPS_TABLE .'`
-  WHERE id = '. $deluser_group_id .'
-;';
-    [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-    if ($count == 0) {
+    $groupRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Group\GroupRepository::class);
+    if (!$groupRepo->existsById($deluser_group_id)) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'This group does not exist.');
     }
 
-    $query = '
-DELETE FROM '. USER_GROUP_TABLE .'
-  WHERE
-    group_id = '. $deluser_group_id .'
-    AND user_id IN('. implode(',', array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $deluser_user_ids)) .')
-;';
-    pwg_query($query);
+    $groupRepo->deleteUserGroupMembers(
+        $deluser_group_id,
+        array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $deluser_user_ids)
+    );
 
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
     invalidate_user_cache();

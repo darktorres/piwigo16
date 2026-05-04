@@ -178,6 +178,41 @@ final class CategoryRepository extends AbstractRepository
         return is_numeric($value) ? (int) $value : 0;
     }
 
+    /** Count virtual albums (dir IS NULL). */
+    public function countVirtual(): int
+    {
+        $value = $this->conn->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from($this->table('categories'))
+            ->where('dir IS NULL')
+            ->executeQuery()
+            ->fetchOne();
+        return is_numeric($value) ? (int) $value : 0;
+    }
+
+    /** Count physical albums (dir IS NOT NULL). */
+    public function countPhysical(): int
+    {
+        $value = $this->conn->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from($this->table('categories'))
+            ->where('dir IS NOT NULL')
+            ->executeQuery()
+            ->fetchOne();
+        return is_numeric($value) ? (int) $value : 0;
+    }
+
+    /** Total number of image–category association rows. */
+    public function countImageCategoryLinks(): int
+    {
+        $value = $this->conn->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from($this->table('image_category'))
+            ->executeQuery()
+            ->fetchOne();
+        return is_numeric($value) ? (int) $value : 0;
+    }
+
     /** Return a single category row by id, or null if not found. */
     /** @return array<string, mixed>|null */
     public function findCategoryById(int $id): ?array

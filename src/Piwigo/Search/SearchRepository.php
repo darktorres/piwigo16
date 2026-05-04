@@ -26,4 +26,28 @@ final class SearchRepository extends AbstractRepository
             ->fetchOne();
         return is_numeric($value) ? (int) $value : 0;
     }
+
+    /**
+     * Insert a new search row with the given serialized rules and return its id.
+     */
+    public function insertSearch(string $serializedRules): int
+    {
+        $this->conn->insert($this->table('search'), ['rules' => $serializedRules]);
+        return (int) $this->conn->lastInsertId();
+    }
+
+    /**
+     * Return the serialized rules string for a search by id, or null if not found.
+     */
+    public function findRulesById(int $id): ?string
+    {
+        $value = $this->conn->createQueryBuilder()
+            ->select('rules')
+            ->from($this->table('search'))
+            ->where('id = :id')
+            ->setParameter('id', $id)
+            ->executeQuery()
+            ->fetchOne();
+        return is_string($value) ? $value : null;
+    }
 }

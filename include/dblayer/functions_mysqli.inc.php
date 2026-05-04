@@ -165,18 +165,18 @@ function mass_updates(string $tablename, array $dbfields, array $datas, int $fla
             if (!in_array($row['Field'], $all_fields)) {
                 continue;
             }
-            $col = '`' . $row['Field'] . '` ' . $row['Type'];
+            $col = '`' . (is_scalar($row['Field']) ? (string) $row['Field'] : '') . '` ' . (is_scalar($row['Type']) ? (string) $row['Type'] : '');
             $nullable = !isset($row['Null']) || $row['Null'] === '' || $row['Null'] === 'NO' ? false : true;
             if (!$nullable) {
                 $col .= ' NOT NULL';
             }
             if (isset($row['Default'])) {
-                $col .= " default '" . $row['Default'] . "'";
+                $col .= " default '" . (is_scalar($row['Default']) ? (string) $row['Default'] : '') . "'";
             } elseif ($nullable) {
                 $col .= ' default NULL';
             }
             if (isset($row['Collation']) && $row['Collation'] !== 'NULL') {
-                $col .= " collate '" . $row['Collation'] . "'";
+                $col .= " collate '" . (is_scalar($row['Collation']) ? (string) $row['Collation'] : '') . "'";
             }
             $columns[] = $col;
         }
@@ -265,7 +265,7 @@ function mass_inserts(string $table_name, array $dbfields, array $datas, array $
     $conn = get_dbal_connection();
 
     $packetRow = $conn->executeQuery("SHOW VARIABLES LIKE 'max_allowed_packet'")->fetchAssociative();
-    $packetSize = (int) ($packetRow['Value'] ?? 1048576) - 2000;
+    $packetSize = (is_array($packetRow) && is_numeric($packetRow['Value'] ?? null) ? (int) $packetRow['Value'] : 1048576) - 2000;
 
     $first = true;
     $query = '';
@@ -297,9 +297,7 @@ function mass_inserts(string $table_name, array $dbfields, array $datas, array $
         $query .= '(' . implode(',', $vals) . ')';
     }
 
-    if (!$first && $query !== '') {
-        $conn->executeStatement($query);
-    }
+    $conn->executeStatement($query);
 }
 
 /**
@@ -360,13 +358,14 @@ function do_maintenance_all_tables(): void
 
     $success = true;
     try {
-        $conn->executeStatement('REPAIR TABLE ' . implode(', ', $allTables));
+        $allTablesStr = array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '', $allTables);
+        $conn->executeStatement('REPAIR TABLE ' . implode(', ', $allTablesStr));
 
-        foreach ($allTables as $tableName) {
+        foreach ($allTablesStr as $tableName) {
             $primaryKeys = [];
             foreach ($conn->executeQuery('DESC ' . $tableName)->fetchAllAssociative() as $row) {
                 if ($row['Key'] === 'PRI') {
-                    $primaryKeys[] = $row['Field'];
+                    $primaryKeys[] = is_scalar($row['Field']) ? (string) $row['Field'] : '';
                 }
             }
             if ($primaryKeys !== []) {
@@ -374,7 +373,7 @@ function do_maintenance_all_tables(): void
             }
         }
 
-        $conn->executeStatement('OPTIMIZE TABLE ' . implode(', ', $allTables));
+        $conn->executeStatement('OPTIMIZE TABLE ' . implode(', ', $allTablesStr));
     } catch (\Exception) {
         $success = false;
     }
@@ -401,7 +400,7 @@ function get_enums(string $table, string $field): array
     foreach (get_dbal_connection()->executeQuery('DESC ' . $table)->fetchAllAssociative() as $row) {
         if ($row['Field'] === $field) {
             // parse enum('blue','green','black')
-            $raw = explode(',', substr((string) $row['Type'], 5, -1));
+            $raw = explode(',', substr(is_scalar($row['Type']) ? (string) $row['Type'] : '', 5, -1));
             foreach ($raw as $option) {
                 $options[] = str_replace("'", '', $option);
             }
@@ -536,23 +535,27 @@ function query2array(string $query, ?string $key_name = null, ?string $value_nam
     $rows = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
     $data = [];
 
+    $sv = fn(mixed $v): float|int|string|null => (is_float($v) || is_int($v) || is_string($v)) ? $v : null;
+    /** @param array<string,mixed> $row @return array<string,float|int|string|null> */
+    $sr = fn(array $row): array => array_map($sv, $row);
+
     if (isset($key_name)) {
         if (isset($value_name)) {
             foreach ($rows as $row) {
-                $data[(string) $row[$key_name]] = $row[$value_name];
+                $data[is_scalar($row[$key_name]) ? (string) $row[$key_name] : ''] = $sv($row[$value_name]);
             }
         } else {
             foreach ($rows as $row) {
-                $data[(string) $row[$key_name]] = $row;
+                $data[is_scalar($row[$key_name]) ? (string) $row[$key_name] : ''] = $sr($row);
             }
         }
     } else {
         if (isset($value_name)) {
             foreach ($rows as $row) {
-                $data[] = $row[$value_name];
+                $data[] = $sv($row[$value_name]);
             }
         } else {
-            $data = $rows;
+            $data = array_map($sr, $rows);
         }
     }
 

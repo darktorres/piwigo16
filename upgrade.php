@@ -57,8 +57,9 @@ function get_tables(): array
 {
     $tables = [];
     foreach (get_dbal_connection()->executeQuery('SHOW TABLES')->fetchFirstColumn() as $tableName) {
-        if (preg_match('/^' . PREFIX_TABLE . '/', (string) $tableName)) {
-            $tables[] = (string) $tableName;
+        $tableNameStr = is_scalar($tableName) ? (string) $tableName : '';
+        if (preg_match('/^' . PREFIX_TABLE . '/', $tableNameStr)) {
+            $tables[] = $tableNameStr;
         }
     }
     return $tables;
@@ -78,9 +79,10 @@ function get_columns_of(array $tables): array
     $columns_of = [];
 
     foreach ($tables as $table) {
-        $columns_of[$table] = get_dbal_connection()
-            ->executeQuery('DESC `' . $table . '`')
-            ->fetchFirstColumn();
+        $columns_of[$table] = array_map(
+            fn(mixed $v): string => is_scalar($v) ? (string) $v : '',
+            get_dbal_connection()->executeQuery('DESC `' . $table . '`')->fetchFirstColumn()
+        );
     }
 
     return $columns_of;

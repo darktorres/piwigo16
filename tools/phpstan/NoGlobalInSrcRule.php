@@ -37,6 +37,7 @@ final class NoGlobalInSrcRule implements Rule
         'logger' => 'LoggerRegistry::current()',
         'persistent_cache' => 'PersistentCacheRegistry::current()',
         'service' => 'PwgServerRegistry::current()',
+        'mysqli' => 'get_dbal_connection() or ServiceLocator::get(Connection::class)',
         'pwg_event_handlers' => 'EventDispatcher::addListener/dispatch/notify()',
         'pwg_loaded_plugins' => 'LoadedPluginRegistry::register/get/all()',
         'env_nbm' => 'MailNotificationContext::current()',

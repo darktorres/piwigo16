@@ -12,7 +12,7 @@ use Piwigo\Admin\Tabsheet;
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    die('Hacking attempt!');
+    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang, $logger, $pwg_loaded_plugins;
@@ -25,13 +25,13 @@ include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 // +-----------------------------------------------------------------------+
 
 if (!\Piwigo\Config\Config::enableSynchronization()) {
-    die('synchronization is disabled');
+    throw new \Piwigo\Exception\ConfigException('synchronization is disabled');
 }
 
 check_status(ACCESS_ADMINISTRATOR);
 
 if (!is_numeric($_GET['site'])) {
-    die('site param missing or invalid');
+    throw new \Piwigo\Exception\ValidationException('site param missing or invalid');
 }
 $site_id = $_GET['site'];
 
@@ -41,7 +41,7 @@ SELECT galleries_url
   WHERE id = '.$site_id;
 [$site_url] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 if (!isset($site_url)) {
-    die('site '.$site_id.' does not exist');
+    throw new \Piwigo\Exception\NotFoundException('site '.$site_id.' does not exist');
 }
 $site_url_str = (string) $site_url;
 $site_is_remote = url_is_remote($site_url_str);

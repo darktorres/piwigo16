@@ -59,11 +59,13 @@ class PwgServer
     {
         if (is_null($this->_responseEncoder)) {
             set_status_header(400);
-            @header('Content-Type: text/plain');
+            if (!headers_sent()) {
+                header('Content-Type: text/plain');
+            }
             echo('Cannot process your request. Unknown response format.
-Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseFormat."\n");
+Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFormat."\n");
             var_export($this);
-            die(0);
+            throw new \Piwigo\Exception\ConfigException('Cannot process request: unknown response format');
         }
 
         $handler = $this->_requestHandler;
@@ -99,7 +101,9 @@ Request format: '.@$this->_requestFormat.' Response format: '.@$this->_responseF
         $encodedResponse = $this->_responseEncoder->encodeResponse($response);
         $contentType = $this->_responseEncoder->getContentType();
 
-        @header('Content-Type: '.$contentType.'; charset='.get_pwg_charset());
+        if (!headers_sent()) {
+            header('Content-Type: '.$contentType.'; charset='.get_pwg_charset());
+        }
         print_r($encodedResponse);
         trigger_notify('sendResponse', $encodedResponse);
     }

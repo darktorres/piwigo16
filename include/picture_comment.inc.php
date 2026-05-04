@@ -36,7 +36,7 @@ foreach ($related_categories as $category) {
 
 if ($page['show_comments'] and isset($_POST['content'])) {
     if (is_a_guest() and !\Piwigo\Config\Config::commentsForall()) {
-        die('Session expired');
+        throw new \Piwigo\Exception\AuthException('Session expired');
     }
 
     $comm = [
@@ -75,7 +75,7 @@ if ($page['show_comments'] and isset($_POST['content'])) {
     );
 } elseif (isset($_POST['content'])) {
     set_status_header(403);
-    die('ugly spammer');
+    throw new \Piwigo\Exception\AuthException('ugly spammer');
 }
 
 if ($page['show_comments']) {
@@ -246,7 +246,7 @@ SELECT
             'SHOW_WEBSITE' =>     \Piwigo\Config\Config::commentsEnableWebsite(),
           ];
 
-        if ('reject' == @$comment_action) {
+        if ('reject' == ($comment_action ?? null)) {
             foreach (['content', 'author', 'website_url', 'email'] as $k) {
                 $post_val = $_POST[$k] ?? null;
                 $tpl_var[strtoupper($k)] = isset($post_val) ? htmlspecialchars(stripslashes(is_scalar($post_val) ? (string) $post_val : '')) : '';

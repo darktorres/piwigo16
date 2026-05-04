@@ -9,7 +9,7 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    die('Hacking attempt!');
+    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang, $collection, $base_url;

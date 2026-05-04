@@ -12,7 +12,7 @@ use Piwigo\Admin\Tabsheet;
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    die('Hacking attempt!');
+    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang;
@@ -136,9 +136,9 @@ while ($tag = pwg_db_fetch_assoc($result)) {
     $tag['raw_name'] = $raw_name;
     $tag['name'] = trigger_change('render_tag_name', $raw_name, $tag);
     $tag_id_key = is_scalar($tag['id']) ? (string) $tag['id'] : '';
-    $counter = intval(@$tag_counters[$tag_id_key]);
+    $counter = intval($tag_counters[$tag_id_key] ?? 0);
     if ($counter > 0) {
-        $tag['counter'] = intval(@$tag_counters[$tag_id_key]);
+        $tag['counter'] = $counter;
     }
 
     $alt_names = trigger_change('get_tag_alt_names', [], $raw_name);

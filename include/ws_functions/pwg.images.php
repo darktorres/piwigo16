@@ -54,7 +54,9 @@ DELETE
     }
     $tokens = explode(';', $categories_string);
     foreach ($tokens as $token) {
-        @[$cat_id, $rank] = explode(',', $token);
+        $parts = explode(',', $token);
+        $cat_id = $parts[0];
+        $rank = $parts[1] ?? null;
 
         if (!preg_match('/^\d+$/', $cat_id)) {
             continue;
@@ -907,7 +909,7 @@ function ws_images_filteredSearch_create(array $params, \Piwigo\Ws\PwgServer $se
                 return new PwgError(WS_ERR_INVALID_PARAM, 'date_posted_custom, invalid option '.$date_str);
             }
 
-            @$search['fields']['date_posted']['custom'][] = $date_str;
+            $search['fields']['date_posted']['custom'][] = $date_str;
         }
     }
 
@@ -917,7 +919,7 @@ function ws_images_filteredSearch_create(array $params, \Piwigo\Ws\PwgServer $se
             return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter date_created_preset');
         }
 
-        @$search['fields']['date_created']['preset'] = $p_date_created_preset;
+        $search['fields']['date_created']['preset'] = $p_date_created_preset;
 
         if ('custom' == $p_date_created_preset and empty($params['date_created_custom'])) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'date_created_custom is missing');
@@ -959,7 +961,7 @@ function ws_images_filteredSearch_create(array $params, \Piwigo\Ws\PwgServer $se
                 return new PwgError(WS_ERR_INVALID_PARAM, 'date_created_custom, invalid option '.$date_str);
             }
 
-            @$search['fields']['date_created']['custom'][] = $date_str;
+            $search['fields']['date_created']['custom'][] = $date_str;
         }
     }
 
@@ -1701,8 +1703,8 @@ function ws_images_upload(array $params, \Piwigo\Ws\PwgServer $service): mixed
     // file_put_contents('/tmp/plupload.log', "[".date('c')."] ".__FUNCTION__.', '.$fileName.' '.($chunk+1).'/'.$chunks."\n", FILE_APPEND);
 
     // Open temp file
-    if (!$out = @fopen("{$filePath}.part", $chunks ? 'ab' : 'wb')) {
-        die('{"jsonrpc" : "2.0", "error" : {"code": 102, "message": "Failed to open output stream."}, "id" : "id"}');
+    if (!$out = \Piwigo\Core\Filesystem::tryFopen("{$filePath}.part", $chunks ? 'ab' : 'wb')) {
+        return new PwgError(102, 'Failed to open output stream.');
     }
 
     if (!empty($_FILES)) {
@@ -1710,25 +1712,31 @@ function ws_images_upload(array $params, \Piwigo\Ws\PwgServer $service): mixed
         $filesFileError = is_scalar($filesFile['error'] ?? null) ? $filesFile['error'] : 0;
         $filesFileTmpName = is_scalar($filesFile['tmp_name'] ?? null) ? (string) $filesFile['tmp_name'] : '';
         if ($filesFileError || !is_uploaded_file($filesFileTmpName)) {
-            die('{"jsonrpc" : "2.0", "error" : {"code": 103, "message": "Failed to move uploaded file."}, "id" : "id"}');
+            return new PwgError(103, 'Failed to move uploaded file.');
         }
 
         // Read binary input stream and append it to temp file
-        if (!$in = @fopen($filesFileTmpName, 'rb')) {
-            die('{"jsonrpc" : "2.0", "error" : {"code": 101, "message": "Failed to open input stream."}, "id" : "id"}');
+        if (!$in = \Piwigo\Core\Filesystem::tryFopen($filesFileTmpName, 'rb')) {
+            return new PwgError(101, 'Failed to open input stream.');
         }
     } else {
-        if (!$in = @fopen('php://input', 'rb')) {
-            die('{"jsonrpc" : "2.0", "error" : {"code": 101, "message": "Failed to open input stream."}, "id" : "id"}');
+        if (!$in = \Piwigo\Core\Filesystem::tryFopen('php://input', 'rb')) {
+            return new PwgError(101, 'Failed to open input stream.');
         }
     }
 
-    while ($buff = fread($in, 4096)) {
-        fwrite($out, $buff);
+    if (is_resource($in) && is_resource($out)) {
+        while ($buff = fread($in, 4096)) {
+            fwrite($out, $buff);
+        }
     }
 
-    @fclose($out);
-    @fclose($in);
+    if (is_resource($out)) {
+        fclose($out);
+    }
+    if (is_resource($in)) {
+        fclose($in);
+    }
 
     $add_status = 'add';
     // Check if file has been uploaded
@@ -1998,7 +2006,7 @@ SELECT COUNT(*)
             fclose($fp);
 
             // delete merge file without returning an error
-            @unlink($output_filepath);
+            \Piwigo\Core\Filesystem::tryUnlink($output_filepath);
             return new PwgError(500, 'error while merging chunk '.$chunk_id);
         }
 
@@ -2216,7 +2224,7 @@ SELECT
     $result = pwg_query($query);
     while ($row = pwg_db_fetch_assoc($result)) {
         $filename_wo_ext = get_filename_wo_extension((string) ($row['file'] ?? ''));
-        @$unique_filenames_db[ $filename_wo_ext ][] = $row['id'];
+        $unique_filenames_db[$filename_wo_ext][] = $row['id'];
     }
 
     // we want "long" format extensions first to match "cmyk.jpg" before "jpg" for example

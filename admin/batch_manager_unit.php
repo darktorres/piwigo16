@@ -19,7 +19,7 @@ use Piwigo\Image\SrcImage;
  */
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    die('Hacking attempt!');
+    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang, $pwg_loaded_plugins, $cache;
@@ -62,9 +62,9 @@ SELECT id, date_creation
 
         $desc_key = 'description-'.(is_scalar($row['id']) ? (string) $row['id'] : '');
         if (\Piwigo\Config\Config::allowHtmlDescriptions()) {
-            $data['comment'] = @$_POST[$desc_key];
+            $data['comment'] = $_POST[$desc_key] ?? null;
         } else {
-            $desc_val = @$_POST[$desc_key];
+            $desc_val = $_POST[$desc_key] ?? null;
             $data['comment'] = strip_tags(is_scalar($desc_val) ? (string) $desc_val : '');
         }
 
@@ -381,7 +381,7 @@ SELECT
         'TAGS' => $tag_selection,
         'is_svg' => (strtoupper(end($extTab)) == 'SVG'),
         'TITLE' => render_element_name($row),
-        'DIMENSIONS' => @$row['width'].'x'.@$row['height'].' px',
+        'DIMENSIONS' => ($row['width'] ?? '').'x'.($row['height'] ?? '').' px',
         'FORMAT' => ($row['width'] >= $row['height']) ? 1 : 0,//0:horizontal, 1:vertical
         'FILESIZE' => l10n('%.2f MB', (is_numeric($row['filesize'] ?? null) ? (float) $row['filesize'] : 0.0) / 1024),
         'REGISTRATION_DATE' => format_date(is_string($row['date_available'] ?? null) ? $row['date_available'] : (is_int($row['date_available'] ?? null) ? $row['date_available'] : null)),

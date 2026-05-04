@@ -9,7 +9,7 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    die('Hacking attempt!');
+    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang;
@@ -59,7 +59,7 @@ $sort_orders = [
 if (isset($_POST['simpleAutoOrder']) || isset($_POST['recursiveAutoOrder'])) {
 
     if (!in_array($_POST['order'], $sort_orders)) {
-        die('Invalid sort order');
+        throw new \Piwigo\Exception\ValidationException('Invalid sort order');
     }
     check_input_parameter('id', $_POST, false, '/^-?\d+$/');
 
@@ -176,7 +176,7 @@ foreach ($allAlbum as $album) {
 // of an album or change permissions, this variable is reset and not recalculated until
 // you open the gallery. As this situation doesn't occur each time you use the
 // administration, it's quite reliable but not as much as on gallery side.
-$is_forbidden = array_fill_keys(@explode(',', (string) $user['forbidden_categories']), 1);
+$is_forbidden = array_fill_keys(explode(',', (string) ($user['forbidden_categories'] ?? '')), 1);
 
 //Make an ordered tree
 /**
@@ -255,7 +255,7 @@ $subcats_of = [];
 
 foreach ($all_categories as $id => $uppercats) {
     foreach (array_slice(explode(',', (string) $uppercats), 0, -1) as $uppercat_id) {
-        @$subcats_of[$uppercat_id][] = $id;
+        $subcats_of[$uppercat_id][] = $id;
     }
 }
 

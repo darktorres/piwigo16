@@ -11,7 +11,7 @@ global $template, $user, $page, $persistent_cache, $lang;
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHOTOS_ADD_BASE_URL')) {
-    die('Hacking attempt!');
+    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
 }
 
 // +-----------------------------------------------------------------------+

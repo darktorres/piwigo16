@@ -14,7 +14,7 @@ use Piwigo\Image\ImageStdParams;
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    die('Hacking attempt!');
+    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang;
@@ -379,7 +379,7 @@ switch ($page['section']) {
                     if ($real === false) {
                         continue;
                     }
-                    $content = @file_get_contents($real);
+                    $content = is_readable($real) ? file_get_contents($real) : false;
                     if ($content !== false && preg_match('/\$conf\s*\[\s*[\'"](order_by|order_by_inside_category)[\'"]\s*\]\s*=/', $content) === 1) {
                         return true;
                     }
@@ -511,7 +511,7 @@ switch ($page['section']) {
             $template->append(
                 'display',
                 [
-                  'picture_informations' => @unserialize(is_string(\Piwigo\Config\Config::pictureInformations()) ? \Piwigo\Config\Config::pictureInformations() : ''),
+                  'picture_informations' => safe_unserialize(is_string(\Piwigo\Config\Config::pictureInformations()) ? \Piwigo\Config\Config::pictureInformations() : ''),
                   'NB_CATEGORIES_PAGE' => \Piwigo\Config\Config::nbCategoriesPage(),
                   ],
                 true

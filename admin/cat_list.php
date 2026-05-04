@@ -9,7 +9,7 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    die('Hacking attempt!');
+    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang;
@@ -246,7 +246,7 @@ SELECT
 
     foreach ($all_categories as $id => $uppercats) {
         foreach (array_slice(explode(',', is_scalar($uppercats) ? (string)$uppercats : ''), 0, -1) as $uppercat_id) {
-            @$subcats_of[$uppercat_id][] = $id;
+            $subcats_of[$uppercat_id][] = $id;
         }
     }
 

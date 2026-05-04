@@ -13,7 +13,7 @@ use Piwigo\Image\ImageStdParams;
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-defined('PHPWG_ROOT_PATH') or die('Hacking attempt!');
+defined('PHPWG_ROOT_PATH') or throw new \Piwigo\Exception\AuthException('Hacking attempt!');
 
 global $template, $user, $page, $persistent_cache, $lang;
 

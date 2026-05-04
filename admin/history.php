@@ -21,7 +21,7 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    die('Hacking attempt!');
+    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang;
@@ -128,12 +128,12 @@ if ($form_param['user_id'] != '-1') {
 $template->assign(
     [
     'USER_ID' => $form_param['user_id'],
-    'USER_NAME' => @$form_param['user_name'],
+    'USER_NAME' => $form_param['user_name'] ?? null,
     'IMAGE_ID' => $form_param['image_id'],
     'FILENAME' => $form['filename'],
     'IP' => $form_param['ip'],
-    'START' => @$form['start'],
-    'END' => @$form['end'],
+    'START' => $form['start'] ?? null,
+    'END' => $form['end'] ?? null,
     ]
 );
 
@@ -144,7 +144,7 @@ $template->assign('ADMIN_PAGE_TITLE', l10n('History'));
 
 $template->assign('page_data_json', json_encode([
     'API_METHOD'                  => 'ws.php?format=json&method=pwg.history.search',
-    'filter_user_name'            => @$form_param['user_name'],
+    'filter_user_name'            => $form_param['user_name'] ?? null,
     'guest_id'                    => \Piwigo\Config\Config::guestId(),
     'today'                       => date('Y-m-d'),
     'initial_user_id'             => $form_param['user_id'],

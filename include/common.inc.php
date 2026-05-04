@@ -18,6 +18,8 @@ defined('PHPWG_ROOT_PATH') or trigger_error('Hacking attempt!', E_USER_ERROR);
 
 require_once PHPWG_ROOT_PATH . 'vendor/autoload.php';
 
+\Piwigo\Bootstrap\ExceptionHandler::register();
+
 // determine the initial instant to indicate the generation time of this page
 $t2 = microtime(true);
 
@@ -27,19 +29,15 @@ $t2 = microtime(true);
 // addslashes to vars if magic_quotes_gpc is off this is a security
 // precaution to prevent someone trying to break out of a SQL statement.
 //
-// The magic quote feature has been disabled since php 5.4
-// but function get_magic_quotes_gpc was always replying false.
-// Since php 8 the function get_magic_quotes_gpc is also removed
-// but we stil want to sanitize user input variables.
-if (!function_exists('get_magic_quotes_gpc') or !@get_magic_quotes_gpc()) {
-    function sanitize_mysql_kv(mixed &$v, string $k): void
-    {
-        $v = addslashes(is_scalar($v) ? (string) $v : '');
-    }
-    array_walk_recursive($_GET, sanitize_mysql_kv(...));
-    array_walk_recursive($_POST, sanitize_mysql_kv(...));
-    array_walk_recursive($_COOKIE, sanitize_mysql_kv(...));
+// The magic quote feature was removed in PHP 8.0 (function `get_magic_quotes_gpc`
+// no longer exists). We unconditionally sanitize user input variables.
+function sanitize_mysql_kv(mixed &$v, string $k): void
+{
+    $v = addslashes(is_scalar($v) ? (string) $v : '');
 }
+array_walk_recursive($_GET, sanitize_mysql_kv(...));
+array_walk_recursive($_POST, sanitize_mysql_kv(...));
+array_walk_recursive($_COOKIE, sanitize_mysql_kv(...));
 if (!empty($_SERVER['PATH_INFO'])) {
     $path_info = $_SERVER['PATH_INFO'];
     $_SERVER['PATH_INFO'] = addslashes(is_scalar($path_info) ? (string) $path_info : '');
@@ -86,16 +84,16 @@ if (!\Piwigo\Core\Kernel::isBooted()) :
     // dynamic include are gone; functions_mysqli.inc.php is the only dblayer.
     include(PHPWG_ROOT_PATH . 'include/dblayer/functions_mysqli.inc.php');
 
-    if (\Piwigo\Config\Config::has('show_php_errors') && !empty(\Piwigo\Config\Config::showPhpErrors())) {
-        @ini_set('error_reporting', \Piwigo\Config\Config::showPhpErrors());
+    if (\Piwigo\Config\Config::has('show_php_errors') && !empty(\Piwigo\Config\Config::showPhpErrors()) && function_exists('ini_set')) {
+        ini_set('error_reporting', (string) \Piwigo\Config\Config::showPhpErrors());
         if (\Piwigo\Config\Config::showPhpErrorsOnFrontend()) {
-            @ini_set('display_errors', true);
+            ini_set('display_errors', '1');
         }
     }
 
-    if (\Piwigo\Config\Config::sessionGcProbability() > 0) {
-        @ini_set('session.gc_divisor', 100);
-        @ini_set('session.gc_probability', min((int)\Piwigo\Config\Config::sessionGcProbability(), 100));
+    if (\Piwigo\Config\Config::sessionGcProbability() > 0 && function_exists('ini_set')) {
+        ini_set('session.gc_divisor', '100');
+        ini_set('session.gc_probability', (string) min((int) \Piwigo\Config\Config::sessionGcProbability(), 100));
     }
 
     include(PHPWG_ROOT_PATH . 'include/constants.php');
@@ -289,7 +287,9 @@ if (\Piwigo\Config\Config::galleryLocked()) {
 
     if (script_basename() != 'identification' and !is_admin()) {
         set_status_header(503, 'Service Unavailable');
-        @header('Retry-After: 900');
+        if (!headers_sent()) {
+            header('Retry-After: 900');
+        }
         header('Content-Type: text/html; charset='.get_pwg_charset());
         echo '<a href="'.get_absolute_root_url(false).'identification.php">'.l10n('The gallery is locked for maintenance. Please, come back later.').'</a>';
         echo str_repeat(' ', 512); //IE6 doesn't error output if below a size

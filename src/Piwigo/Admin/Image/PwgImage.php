@@ -212,12 +212,12 @@ class PwgImage
 
         $fp = fopen($source_filepath, 'rb');
         if (!$fp) {
-            throw new \Exception("webp_info(): fopen($source_filepath): Failed");
+            throw new \RuntimeException("webp_info(): fopen($source_filepath): Failed");
         }
         $buf = fread($fp, 25);
         fclose($fp);
         if ($buf === false) {
-            throw new \Exception("webp_info(): fread($source_filepath): Failed");
+            throw new \RuntimeException("webp_info(): fread($source_filepath): Failed");
         }
 
         switch (true) {
@@ -225,7 +225,7 @@ class PwgImage
             case !str_starts_with($buf, 'RIFF'):
             case substr($buf, 8, 4) != 'WEBP':
             case substr($buf, 12, 3) != 'VP8':
-                throw new \Exception('webp_info(): not a valid webp image');
+                throw new \RuntimeException('webp_info(): not a valid webp image');
 
             case $buf[15] == ' ':
                 // Simple File Format (Lossy)
@@ -253,7 +253,7 @@ class PwgImage
                 ];
 
             default:
-                throw new \Exception('webp_info(): could not detect webp type');
+                throw new \RuntimeException('webp_info(): could not detect webp type');
         }
     }
 
@@ -274,9 +274,9 @@ class PwgImage
 
         $rotation = 0;
 
-        $exif = @exif_read_data($source_filepath);
+        $exif = pwg_safe_exif_read_data($source_filepath);
 
-        if (isset($exif['Orientation']) and preg_match('/^\s*(\d)/', (string) $exif['Orientation'], $matches)) {
+        if (isset($exif['Orientation']) and is_scalar($exif['Orientation']) and preg_match('/^\s*(\d)/', (string) $exif['Orientation'], $matches)) {
             $orientation = $matches[1];
             if (in_array($orientation, [3, 4])) {
                 $rotation = 180;
@@ -384,7 +384,7 @@ class PwgImage
             return false;
         }
 
-        @exec(\Piwigo\Config\Config::extImagickDir().self::get_ext_imagick_command().' -version', $returnarray);
+        exec(\Piwigo\Config\Config::extImagickDir().self::get_ext_imagick_command().' -version', $returnarray);
         if (!empty($returnarray[0]) and preg_match('/ImageMagick/i', $returnarray[0])) {
             if (preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray[0], $match)) {
                 self::$ext_imagick_version = $match[1];

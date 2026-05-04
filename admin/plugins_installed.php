@@ -12,7 +12,7 @@ use Piwigo\Admin\Plugins;
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    die('Hacking attempt!');
+    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang;
@@ -120,7 +120,7 @@ foreach ($plugins->fs_plugins as $plugin_id => $fs_plugin) {
       'VERSION' => $fs_plugin['version'],
       'DESC' => $fs_plugin['description'],
       'AUTHOR' => $fs_plugin['author'],
-      'AUTHOR_URL' => @$fs_plugin['author uri'],
+      'AUTHOR_URL' => $fs_plugin['author uri'] ?? null,
       'U_ACTION' => sprintf($action_url, $plugin_id),
       'SETTINGS_URL' => $setting_url,
       ];

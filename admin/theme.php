@@ -12,19 +12,19 @@ use Piwigo\Admin\Themes;
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    die('Hacking attempt!');
+    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
 }
 
 include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 check_status(ACCESS_ADMINISTRATOR);
 
 if (empty($_GET['theme'])) {
-    die('Invalid theme URL');
+    throw new \Piwigo\Exception\ValidationException('Invalid theme URL');
 }
 
 $themes = new Themes();
 if (!in_array($_GET['theme'], array_keys($themes->fs_themes))) {
-    die('Invalid theme');
+    throw new \Piwigo\Exception\ValidationException('Invalid theme');
 }
 
 $theme_name = is_scalar($_GET['theme']) ? (string) $_GET['theme'] : '';
@@ -32,5 +32,5 @@ $filename = PHPWG_THEMES_PATH.$theme_name.'/admin/admin.inc.php';
 if (is_file($filename)) {
     include_once($filename);
 } else {
-    die('Missing file '.$filename);
+    throw new \Piwigo\Exception\NotFoundException('Missing file '.$filename);
 }

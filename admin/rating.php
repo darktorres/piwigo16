@@ -13,7 +13,7 @@ use Piwigo\Image\DerivativeImage;
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    die('Hacking attempt!');
+    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang;
@@ -164,7 +164,7 @@ $user_options = [
   ];
 
 $template->assign('user_options', $user_options);
-$template->assign('user_options_selected', [@$_GET['users']]);
+$template->assign('user_options_selected', [$_GET['users'] ?? null]);
 $template->assign('ADMIN_PAGE_TITLE', l10n('Rating'));
 
 $query = '

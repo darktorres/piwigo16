@@ -35,7 +35,7 @@ function get_search_info(int|string $candidate): ?array
     $clause_pattern = get_search_id_pattern($candidate);
 
     if (empty($clause_pattern)) {
-        die('Invalid search identifier');
+        throw new \Piwigo\Exception\ValidationException('Invalid search identifier');
     }
 
     $query = '
@@ -899,10 +899,10 @@ class QNumericRangeScope extends \Piwigo\Search\QSearchScope
         $range_requested = true;
         if (($pos = strpos((string) $str, '..')) !== false) {
             $range = [ substr((string) $str, 0, $pos), substr((string) $str, $pos + 2)];
-        } elseif ('>' == @$str[0]) {// ratio:>1
+        } elseif ('>' === ($str[0] ?? '')) {// ratio:>1
             $range = [ substr((string) $str, 1), ''];
             $strict[0] = 1;
-        } elseif ('<' == @$str[0]) { // size:<5mp
+        } elseif ('<' === ($str[0] ?? '')) { // size:<5mp
             $range = ['', substr((string) $str, 1)];
             $strict[1] = 1;
         } elseif (($token->modifier & QST_WILDCARD_BEGIN)) {
@@ -1000,10 +1000,10 @@ class QDateRangeScope extends \Piwigo\Search\QSearchScope
         $strict = [0,0];
         if (($pos = strpos((string) $str, '..')) !== false) {
             $range = [ substr((string) $str, 0, $pos), substr((string) $str, $pos + 2)];
-        } elseif ('>' == @$str[0]) {
+        } elseif ('>' === ($str[0] ?? '')) {
             $range = [ substr((string) $str, 1), ''];
             $strict[0] = 1;
-        } elseif ('<' == @$str[0]) {
+        } elseif ('<' === ($str[0] ?? '')) {
             $range = ['', substr((string) $str, 1)];
             $strict[1] = 1;
         } elseif (($token->modifier & QST_WILDCARD_BEGIN)) {

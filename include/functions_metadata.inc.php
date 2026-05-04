@@ -25,11 +25,11 @@ function get_iptc_data(string $filename, array $map, string $array_sep = ','): a
     $result = [];
 
     $imginfo = [];
-    if (false == @getimagesize($filename, $imginfo)) {
+    if (false === pwg_safe_getimagesize($filename, $imginfo)) {
         return $result;
     }
 
-    if (isset($imginfo['APP13'])) {
+    if (isset($imginfo['APP13']) && is_string($imginfo['APP13'])) {
         $iptc = iptcparse($imginfo['APP13']);
         if (is_array($iptc)) {
             $rmap = array_flip($map);
@@ -117,11 +117,11 @@ function get_exif_data(string $filename, array $map): array
     $result = [];
 
     if (!function_exists('exif_read_data')) {
-        die('Exif extension not available, admin should disable exif use');
+        throw new \Piwigo\Exception\ConfigException('Exif extension not available, admin should disable exif use');
     }
 
     // Read EXIF data
-    $exif = @exif_read_data($filename) ?: null;
+    $exif = pwg_safe_exif_read_data($filename) ?: null;
     $exif = trigger_change('format_exif_data', $exif, $filename, $map);
     if (!empty($exif)) {
 
@@ -133,8 +133,9 @@ function get_exif_data(string $filename, array $map): array
                 }
             } else {
                 $tokens = explode(';', (string) $field);
-                if (isset($exif[$tokens[0]][$tokens[1]])) {
-                    $result[$key] = $exif[$tokens[0]][$tokens[1]];
+                $exif_section = $exif[$tokens[0]] ?? null;
+                if (is_array($exif_section) && isset($exif_section[$tokens[1]])) {
+                    $result[$key] = $exif_section[$tokens[1]];
                 }
             }
         }
@@ -172,7 +173,7 @@ function get_exif_data(string $filename, array $map): array
             if (is_array($value)) {
                 array_walk_recursive($value, strip_html_in_metadata(...));
             } else {
-                $result[$key] = strip_tags((string) $value);
+                $result[$key] = strip_tags(is_scalar($value) ? (string) $value : '');
             }
         }
     }

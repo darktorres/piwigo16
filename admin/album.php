@@ -12,7 +12,7 @@ use Piwigo\Admin\Tabsheet;
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    die('Hacking attempt!');
+    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang;
@@ -37,7 +37,7 @@ SELECT *
 $category = pwg_db_fetch_assoc(pwg_query($query));
 
 if (!isset($category['id'])) {
-    die('unknown album');
+    throw new \Piwigo\Exception\NotFoundException('unknown album');
 }
 
 // +-----------------------------------------------------------------------+

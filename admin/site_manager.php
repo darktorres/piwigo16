@@ -12,7 +12,7 @@ use Piwigo\Admin\Tabsheet;
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    die('Hacking attempt!');
+    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang;
@@ -25,7 +25,7 @@ include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 // +-----------------------------------------------------------------------+
 
 if (!\Piwigo\Config\Config::enableSynchronization()) {
-    die('synchronization is disabled');
+    throw new \Piwigo\Exception\ConfigException('synchronization is disabled');
 }
 
 check_status(ACCESS_ADMINISTRATOR);
@@ -159,8 +159,8 @@ while ($row = pwg_db_fetch_assoc($result)) {
       [
         'NAME' => $row['galleries_url'],
         'TYPE' => l10n($is_remote ? 'Remote' : 'Local'),
-        'CATEGORIES' => (int)@$sites_detail[(string)$site_id]['nb_categories'],
-        'IMAGES' => (int)@$sites_detail[(string)$site_id]['nb_images'],
+        'CATEGORIES' => (int) ($sites_detail[(string) $site_id]['nb_categories'] ?? 0),
+        'IMAGES' => (int) ($sites_detail[(string) $site_id]['nb_images'] ?? 0),
         'U_SYNCHRONIZE' => $update_url,
        ];
 

@@ -285,7 +285,7 @@ function add_well_known_params_in_url(string $url, array $params): string
 function make_section_in_url(array $params): string
 {
     $section_string = '';
-    $section = @$params['section'];
+    $section = $params['section'] ?? null;
     if (!isset($section)) {
         $section_of = [
           'category' => 'categories',
@@ -429,7 +429,7 @@ function parse_section_url(array $tokens, int &$next_token): array
 
         while (isset($tokens[$next_token])) {
             if ($loop_counter++ > count($tokens) + 10) {
-                die('infinite loop?');
+                throw new \LogicException('infinite loop?');
             }
 
             if (
@@ -518,7 +518,7 @@ function parse_section_url(array $tokens, int &$next_token): array
 
             $page['combined_categories'] = $combined_categories;
         }
-    } elseif ('tags' == @$tokens[$next_token]) {
+    } elseif ('tags' == ($tokens[$next_token] ?? null)) {
         $page['section'] = 'tags';
         $page['tags'] = [];
 
@@ -552,28 +552,28 @@ function parse_section_url(array $tokens, int &$next_token): array
         if (empty($page['tags'])) {
             page_not_found(l10n('Requested tag does not exist'), get_root_url().'tags.php');
         }
-    } elseif ('favorites' == @$tokens[$next_token]) {
+    } elseif ('favorites' == ($tokens[$next_token] ?? null)) {
         $page['section'] = 'favorites';
         $next_token++;
-    } elseif ('most_visited' == @$tokens[$next_token]) {
+    } elseif ('most_visited' == ($tokens[$next_token] ?? null)) {
         $page['section'] = 'most_visited';
         $next_token++;
-    } elseif ('best_rated' == @$tokens[$next_token]) {
+    } elseif ('best_rated' == ($tokens[$next_token] ?? null)) {
         $page['section'] = 'best_rated';
         $next_token++;
-    } elseif ('recent_pics' == @$tokens[$next_token]) {
+    } elseif ('recent_pics' == ($tokens[$next_token] ?? null)) {
         $page['section'] = 'recent_pics';
         $next_token++;
-    } elseif ('recent_cats' == @$tokens[$next_token]) {
+    } elseif ('recent_cats' == ($tokens[$next_token] ?? null)) {
         $page['section'] = 'recent_cats';
         $next_token++;
-    } elseif ('search' == @$tokens[$next_token]) {
+    } elseif ('search' == ($tokens[$next_token] ?? null)) {
         $page['section'] = 'search';
         $next_token++;
 
-        preg_match('/^(psk-\d{8}-[a-zA-Z0-9]{10})$/', (string) @$tokens[$next_token], $matches);
+        preg_match('/^(psk-\d{8}-[a-zA-Z0-9]{10})$/', (string) ($tokens[$next_token] ?? ''), $matches);
         if (!isset($matches[1])) {
-            preg_match('/(\d+)/', (string) @$tokens[$next_token], $matches);
+            preg_match('/(\d+)/', (string) ($tokens[$next_token] ?? ''), $matches);
             if (!isset($matches[1])) {
                 bad_request('search identifier is missing');
                 return $page;
@@ -581,7 +581,7 @@ function parse_section_url(array $tokens, int &$next_token): array
         }
         $page['search'] = $matches[1];
         $next_token++;
-    } elseif ('list' == @$tokens[$next_token]) {
+    } elseif ('list' == ($tokens[$next_token] ?? null)) {
         $page['section'] = 'list';
         $next_token++;
 

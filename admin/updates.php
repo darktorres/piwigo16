@@ -12,11 +12,11 @@ use Piwigo\Admin\Tabsheet;
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    die('Hacking attempt!');
+    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
 }
 
 if (!\Piwigo\Config\Config::enableExtensionsInstall() and !\Piwigo\Config\Config::enableCoreUpdate()) {
-    die('update system is disabled');
+    throw new \Piwigo\Exception\ConfigException('update system is disabled');
 }
 
 $my_base_url = get_root_url().'admin.php?page=updates';

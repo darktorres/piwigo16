@@ -9,7 +9,7 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    die('Hacking attempt!');
+    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang, $category, $admin_album_base_url;
@@ -29,12 +29,12 @@ check_status(ACCESS_ADMINISTRATOR);
 check_input_parameter('cat_id', $_GET, false, PATTERN_ID);
 $cat_id = is_scalar($_GET['cat_id'] ?? null) ? (string)$_GET['cat_id'] : '';
 if (empty($cat_id)) {
-    die('No category selected');
+    throw new \Piwigo\Exception\ValidationException('No category selected');
 }
 
 $category = get_cat_info((int)$cat_id);
 if ($category === null) {
-    die('Invalid category');
+    throw new \Piwigo\Exception\ValidationException('Invalid category');
 }
 $pageCat = $category['id'];
 $pageCat = is_numeric($pageCat ?? null) ? (int) $pageCat : 0;

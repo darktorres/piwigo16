@@ -9,7 +9,7 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    die('Hacking attempt!');
+    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang, $category, $admin_album_base_url;
@@ -174,8 +174,8 @@ $template->assign(
     'CATEGORIES_PARENT_NAV' => preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $parent_navigation)),
     'PARENT_CAT_ID'      => !empty($category['id_uppercat']) ? $category['id_uppercat'] : 0,
     'CAT_ID'             => $category['id'],
-    'CAT_NAME'           => @htmlspecialchars((string) $category['name']),
-    'CAT_COMMENT'        => @htmlspecialchars((string) $category['comment']),
+    'CAT_NAME'           => htmlspecialchars((string) $category['name']),
+    'CAT_COMMENT'        => htmlspecialchars((string) $category['comment']),
     'IS_VISIBLE'          => boolean_to_string($category['visible']),
     'CAT_ADMIN_ACCESS'   => cat_admin_access($category['id']),
 

@@ -197,7 +197,7 @@ SELECT
         }
 
         if (!isset($file_path)) {
-            die('['.__FUNCTION__.'] this photo does not exist in the database');
+            throw new \Piwigo\Exception\NotFoundException('['.__FUNCTION__.'] this photo does not exist in the database');
         }
 
         // delete all physical files related to the photo (thumbnail, web site, HD)
@@ -248,18 +248,18 @@ SELECT
                     exit;
                 }
 
-                die($error_msg);
+                throw new \Piwigo\Exception\ValidationException($error_msg);
             }
 
             if (in_array($original_extension, \Piwigo\Config\Config::fileExtensions())) {
                 $file_path .= $original_extension;
             } else {
                 unlink($source_filepath);
-                die('unexpected file type');
+                throw new \Piwigo\Exception\ValidationException('unexpected file type');
             }
         } else {
             unlink($source_filepath);
-            die('forbidden file type');
+            throw new \Piwigo\Exception\ValidationException('forbidden file type');
         }
 
         prepare_directory($upload_dir);
@@ -278,7 +278,7 @@ SELECT
     } else {
         rename($source_filepath, $file_path);
     }
-    @chmod($file_path, 0644);
+    \Piwigo\Core\Filesystem::tryChmod($file_path, 0644);
 
     // handle the uploaded file type by potentially making a
     // pwg_representative file.
@@ -439,7 +439,7 @@ function add_format(string $source_filepath, string $format_ext, string $format_
     // 3) register in database
 
     if (!conf_get_param('enable_formats', false)) {
-        die('['.__FUNCTION__.'] formats are disabled');
+        throw new \Piwigo\Exception\ConfigException('['.__FUNCTION__.'] formats are disabled');
     }
 
     $format_ext_list = conf_get_param('format_ext', ['cr2']);
@@ -448,7 +448,7 @@ function add_format(string $source_filepath, string $format_ext, string $format_
     }
     if (!in_array($format_ext, $format_ext_list)) {
         $extList = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $format_ext_list);
-        die('['.__FUNCTION__.'] unexpected format extension "'.$format_ext.'" (authorized extensions: '.implode(', ', $extList).')');
+        throw new \Piwigo\Exception\ValidationException('['.__FUNCTION__.'] unexpected format extension "'.$format_ext.'" (authorized extensions: '.implode(', ', $extList).')');
     }
 
     $query = '
@@ -460,7 +460,7 @@ SELECT
     $images = query2array($query);
 
     if (!isset($images[0])) {
-        die('['.__FUNCTION__.'] this photo does not exist in the database');
+        throw new \Piwigo\Exception\NotFoundException('['.__FUNCTION__.'] this photo does not exist in the database');
     }
 
     $format_path = dirname((string) $images[0]['path']).'/pwg_format/';
@@ -474,7 +474,7 @@ SELECT
     } else {
         rename($source_filepath, $format_path);
     }
-    @chmod($format_path, 0644);
+    \Piwigo\Core\Filesystem::tryChmod($format_path, 0644);
 
     $file_infos = pwg_image_infos($format_path);
 
@@ -557,7 +557,7 @@ function upload_file_pdf(?string $representative_ext, string $file_path): ?strin
     }
     $exec .= ' "'.$representative_file_path.'"';
     $exec .= ' 2>&1';
-    @exec($exec, $returnarray);
+    exec($exec, $returnarray);
 
     // Return the extension (if successful) or false (if failed)
     if (file_exists($representative_file_path)) {
@@ -602,7 +602,7 @@ function upload_file_heic(?string $representative_ext, string $file_path): ?stri
 
     $logger->info(__FUNCTION__.', exec = '.$exec);
 
-    @exec($exec, $returnarray);
+    exec($exec, $returnarray);
 
     // Return the extension (if successful) or false (if failed)
     if (file_exists($representative_file_path)) {
@@ -651,7 +651,7 @@ function upload_file_tiff(?string $representative_ext, string $file_path): ?stri
     $exec .= ' "'.realpath($dest['dirname']).'/'.$dest['basename'].'"';
 
     $exec .= ' 2>&1';
-    @exec($exec, $returnarray);
+    exec($exec, $returnarray);
 
     // sometimes ImageMagick creates file-0.jpg (full size) + file-1.jpg
     // (thumbnail). I don't know how to avoid it.
@@ -717,7 +717,7 @@ function upload_file_video(?string $representative_ext, string $file_path): ?str
     $ffmpeg .= ' -frames:v 1';  // Extract one frame
     $ffmpeg .= ' "'.$representative_file_path.'"'; // Output file
 
-    @exec($ffmpeg.' 2>&1', $FO, $FS);
+    exec($ffmpeg.' 2>&1', $FO, $FS);
     if (!empty($FO[0])) {
         $logger->debug(__FUNCTION__.', Tried '.$ffmpeg);
         $logger->debug($FO[0]);
@@ -727,7 +727,7 @@ function upload_file_video(?string $representative_ext, string $file_path): ?str
     if (!file_exists($representative_file_path)) {
         // Let's try with avconv if ffmpeg unavailable
         $avconv = str_replace('ffmpeg', 'avconv', $ffmpeg);
-        @exec($avconv.' 2>&1', $AO, $AS);
+        exec($avconv.' 2>&1', $AO, $AS);
 
         if (!empty($AO[0])) {
             $logger->debug(__FUNCTION__.', Tried '.$avconv);
@@ -780,7 +780,7 @@ function upload_file_psd(?string $representative_ext, string $file_path): ?strin
 
     $exec .= ' 2>&1';
     $logger->info(__FUNCTION__.', exec = '.$exec);
-    @exec($exec, $returnarray);
+    exec($exec, $returnarray);
 
     // sometimes ImageMagick creates file-0.png + file-1.png + file-2.png...
     // It seems we can't avoid it.
@@ -835,7 +835,7 @@ function upload_file_eps(?string $representative_ext, string $file_path): ?strin
     $exec .= ' "'.$representative_file_path.'"';
     $exec .= ' 2>&1';
     $logger->info(__FUNCTION__.', $exec = '.$exec);
-    @exec($exec, $returnarray);
+    exec($exec, $returnarray);
 
     // Return the extension (if successful) or false (if failed)
     if (file_exists($representative_file_path)) {
@@ -852,18 +852,23 @@ function prepare_directory(string $directory): void
             $directory = str_replace('/', DIRECTORY_SEPARATOR, $directory);
         }
         umask(0000);
-        $recursive = true;
-        if (!@mkdir($directory, 0777, $recursive)) {
-            die('[prepare_directory] cannot create directory "'.$directory.'"');
+        set_error_handler(static fn (): bool => true);
+        try {
+            $ok = mkdir($directory, 0777, true);
+        } finally {
+            restore_error_handler();
+        }
+        if (!$ok) {
+            throw new \Piwigo\Exception\ConfigException('[prepare_directory] cannot create directory "'.$directory.'"');
         }
     }
 
     if (!is_writable($directory)) {
         // last chance to make the directory writable
-        @chmod($directory, 0777);
+        \Piwigo\Core\Filesystem::tryChmod($directory, 0777);
     }
     if (!is_writable($directory)) {
-        die('[prepare_directory] directory "'.$directory.'" has no write access');
+        throw new \Piwigo\Exception\ConfigException('[prepare_directory] directory "'.$directory.'" has no write access');
     }
 
     secure_directory($directory);
@@ -990,7 +995,7 @@ function ready_for_upload_message(): ?string
     } else {
         $upload_dir = \Piwigo\Config\Config::uploadDir();
         if (!is_writable($upload_dir)) {
-            @chmod($upload_dir, 0777);
+            \Piwigo\Core\Filesystem::tryChmod($upload_dir, 0777);
         }
         if (!is_writable(\Piwigo\Config\Config::uploadDir())) {
             return sprintf(

@@ -9,7 +9,7 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    die('Hacking attempt!');
+    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
 }
 
 include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
@@ -25,27 +25,27 @@ for ($i = 0; $i < count($sections); $i++) {
     }
 
     if ($sections[$i] == '..' or !preg_match('/^[a-zA-Z0-9_\.-]+$/', $sections[$i])) {
-        die('invalid section token ['.htmlentities($sections[$i]).']');
+        throw new \Piwigo\Exception\ValidationException('invalid section token ['.htmlentities($sections[$i]).']');
     }
 }
 
 if (count($sections) < 2) {
-    die('Invalid plugin URL');
+    throw new \Piwigo\Exception\ValidationException('Invalid plugin URL');
 }
 
 $plugin_id = $sections[0];
 
 if (!preg_match('/^[\w-]+$/', $plugin_id)) {
-    die('Invalid plugin identifier');
+    throw new \Piwigo\Exception\ValidationException('Invalid plugin identifier');
 }
 
 if (!isset($pwg_loaded_plugins[$plugin_id])) {
-    die('Invalid URL - plugin '.$plugin_id.' not active');
+    throw new \Piwigo\Exception\AuthException('Invalid URL - plugin '.$plugin_id.' not active');
 }
 
 $filename = PHPWG_PLUGINS_PATH.implode('/', $sections);
 if (is_file($filename)) {
     include_once($filename);
 } else {
-    die('Missing file '.htmlentities($filename));
+    throw new \Piwigo\Exception\NotFoundException('Missing file '.htmlentities($filename));
 }

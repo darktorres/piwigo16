@@ -30,7 +30,7 @@ define('DB_RANDOM_FUNCTION', 'RAND');
  * @param string $password
  * @param string $database
  *
- * @throws Exception
+ * @throws \Piwigo\Exception\DbException
  */
 function pwg_db_connect($host, $user, $password, $database): void
 {
@@ -49,10 +49,10 @@ function pwg_db_connect($host, $user, $password, $database): void
 
     $mysqli = new mysqli($host, $user, $password, $dbname, $port, $socket);
     if (mysqli_connect_error()) {
-        throw new Exception("Can't connect to server");
+        throw new \Piwigo\Exception\DbException("Can't connect to server");
     }
     if (!$mysqli->select_db($database)) {
-        throw new Exception('Connection to server succeed, but it was impossible to connect to database');
+        throw new \Piwigo\Exception\DbException('Connection to server succeed, but it was impossible to connect to database');
     }
     \Piwigo\Core\MysqliRegistry::set($mysqli);
 

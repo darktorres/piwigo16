@@ -110,10 +110,17 @@ function install_db_connect(array &$infos, array &$errors): void
     }
 
     // Drop and recreate the database so every install starts from a clean slate.
+    // Connection probing legitimately fails on bad credentials — silence the
+    // PHP warning so the catch block can surface a clean error message.
     try {
-        $tmp = @new mysqli($h, $user, $pass, '', $port, $socket);
+        set_error_handler(static fn (): bool => true);
+        try {
+            $tmp = new mysqli($h, $user, $pass, '', $port, $socket);
+        } finally {
+            restore_error_handler();
+        }
         if ($tmp->connect_error) {
-            throw new Exception($tmp->connect_error);
+            throw new \Piwigo\Exception\DbException($tmp->connect_error);
         }
         $safe = $tmp->real_escape_string($dbname);
         $tmp->query("DROP DATABASE IF EXISTS `{$safe}`");

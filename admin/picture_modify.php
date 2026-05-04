@@ -13,7 +13,7 @@ use Piwigo\Image\SrcImage;
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    die('Hacking attempt!');
+    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang, $admin_photo_base_url, $cache;
@@ -89,7 +89,7 @@ if (isset($_POST['submit'])) {
 
     $to_sanitize_fields = ['name', 'author', 'comment'];
     foreach ($to_sanitize_fields as $field) {
-        $post_field = @$_POST[$field];
+        $post_field = $_POST[$field] ?? null;
         $data[$field] = \Piwigo\Config\Config::allowHtmlDescriptions() ? $post_field : strip_tags(is_scalar($post_field) ? (string) $post_field : '');
     }
 
@@ -227,15 +227,15 @@ $template->assign(
 
     'NAME' =>
       isset($_POST['name']) ?
-        stripslashes(is_scalar($_POST['name']) ? (string) $_POST['name'] : '') : @$row['name'],
+        stripslashes(is_scalar($_POST['name']) ? (string) $_POST['name'] : '') : ($row['name'] ?? null),
 
     'TITLE' => render_element_name($row),
 
-    'DIMENSIONS' => @$row['width'].' * '.@$row['height'],
+    'DIMENSIONS' => ($row['width'] ?? '').' * '.($row['height'] ?? ''),
 
     'FORMAT' => ($row['width'] >= $row['height']) ? 1 : 0,//0:horizontal, 1:vertical
 
-    'FILESIZE' => @$row['filesize'].' KB',
+    'FILESIZE' => ($row['filesize'] ?? '').' KB',
 
     'REGISTRATION_DATE' => format_date($row['date_available']),
 

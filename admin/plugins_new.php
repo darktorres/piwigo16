@@ -12,14 +12,14 @@ use Piwigo\Admin\Plugins;
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    die('Hacking attempt!');
+    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang;
 
 
 if (!\Piwigo\Config\Config::enableExtensionsInstall()) {
-    die('Piwigo extensions install/update system is disabled');
+    throw new \Piwigo\Exception\ConfigException('Piwigo extensions install/update system is disabled');
 }
 
 $template->set_filenames(['plugins' => 'plugins_new.tpl']);

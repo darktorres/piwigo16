@@ -628,44 +628,87 @@ Enum conversion of `WS_TYPE_*` / `WS_PARAM_*` constants deferred to task #19.
 
 ## #9 — `@` error-suppression cleanup
 
-**Status:** In progress (254 → 136 sites, ~46% done) &nbsp;|&nbsp; **Size:** M
+**Status:** Done (2026-05-03) &nbsp;|&nbsp; **Size:** M
 
 ### Goal
 
-Eliminate the 254 `@` error-suppression sites across 73 files inventoried in [`error-suppression-audit.md`](error-suppression-audit.md). Each `@` is a hidden contract: it implies the call can fail and the failure is intentionally ignored. Replace with explicit handling or, where appropriate, document the suppression as deliberate.
+Eliminate every `@` error-suppression site, replacing each with explicit
+handling. Each `@` is a hidden contract: it implies the call can fail and
+the failure is intentionally ignored. The result is code that is honest
+about its failure modes and PHPStan-friendly.
 
-### Current state
+### What was done
 
-- **136 `@` sites** across 32 files (down from 254 / 73). Breakdown: `include/` 37, `admin/` 51, `src/` 48.
-- Top hot spots: `admin/include/functions.php` (29), `admin/include/functions_upload.inc.php` (12), `src/Piwigo/Admin/updates.php` (11), `include/functions.inc.php` (10), `src/Piwigo/Admin/languages.php` (7), `src/Piwigo/Admin/plugins.php` (6), `include/ws_functions/pwg.images.php` (6).
-- Remaining categories: file ops (`@unlink`, `@mkdir`, `@chmod`), network calls (`@fsockopen`, `@file_get_contents` over HTTP), deprecated function shims. Most type-juggling defenses (covered by strict_types under #2 ✅) are already gone.
+A fresh inventory at the start counted **263 actionable `@` sites across
+51 files** (the prior audit doc was stale at "136 / 32"). All 263 were
+removed in eight tiered commits. Remaining count: **0**.
 
-### Steps
+Replacement patterns by tier:
 
-1. **Categorize from the audit doc.** Group sites into tiers:
-   - **File ops** (~80 sites) — `@unlink`, `@mkdir`, `@rename`, `@chmod`. Replace with `if (!@unlink(...))` → `if (!is_writable(...) || !unlink(...))` plus typed exception throw.
-   - **Network ops** (~40 sites) — wrap in try/catch with explicit timeout + error-handler set/restore.
-   - **Type-juggling defenses** (~60 sites) — already unnecessary under strict_types (item #2). Drop the `@`.
-   - **Deprecated function calls** (~30 sites) — replace the underlying call with the modern equivalent.
-   - **Justified suppressions** (~40 sites) — keep, but add an explanatory comment: `/** @suppress: reason */`.
+1. **Array / object key access (~110 sites).** `@$arr['k']` → `$arr['k']
+   ?? null`. Accumulators like `@$arr[$k]++` and `@$arr[$k] += $v` rewritten
+   as `$arr[$k] = ($arr[$k] ?? 0) + …`. Nested-array assignments dropped
+   the `@` entirely (PHP auto-vivifies on assignment).
+2. **Local file ops (~60 sites).** Introduced
+   `src/Piwigo/Core/Filesystem.php` — small static helpers
+   (`tryUnlink`, `tryRmdir`, `tryFileMtime`, `tryFilesize`, `tryRename`,
+   `tryChmod`, `tryFopen`) that combine an `is_file`/`is_dir` preflight
+   with a tightly scoped `set_error_handler` / `restore_error_handler`
+   pair. Inlined the same pattern in low-level helpers (`mkgetdir`,
+   InstallSentinel, the upload-prep mkdir).
+3. **Network / HTTP (~20 sites).** Rewrote `fetchRemote()` to wrap
+   curl, fsockopen, and stream-context `file_get_contents` in scoped
+   `set_error_handler` blocks instead of `@`-prefixing each call. Caller
+   sites dropped `@`. `@pwg_mail(...)` → `pwg_mail(...)` (function
+   already returns `bool`).
+4. **Optional includes (~3 sites).** `@include($path)` →
+   `if (is_readable($path)) { include $path; }`.
+5. **`unserialize` (~15 sites).** All `@unserialize(...)` calls now go
+   through `safe_unserialize()` (`include/functions.inc.php`), which
+   returns an array (or `[]` on parse failure).
+6. **Deprecated / conditional functions (~12 sites).** `@get_magic_quotes_gpc()`
+   deleted (the function no longer exists in PHP 8). `@set_time_limit`,
+   `@putenv`, `@ini_set` gated with `function_exists`. `@exec(...)`
+   simplified to `exec(...)` (function-disabled hosts surface a real
+   warning instead of silently broken pipelines).
+7. **Image / metadata + headers (~10 sites).** Added
+   `pwg_safe_getimagesize()` and `pwg_safe_exif_read_data()` helpers
+   alongside `safe_unserialize`. `@header(...)` /
+   `@set_status_header(...)` gated with `if (!headers_sent())`.
+8. **Residue + lint rule.** The single legitimate edge case
+   (install-time `new mysqli()` connection probe in
+   `admin/include/functions_install.inc.php`) wraps the call in a tight
+   `set_error_handler`/`restore_error_handler` block instead of `@`.
+   Added `tools/phpstan/NoErrorSuppressionRule.php` (wired into
+   `phpstan.neon`) — fails on any future `@` use, with no allowlist.
 
-2. **One commit per tier.** Each tier is bounded enough to review in isolation.
+Helpers introduced or extended:
 
-3. **Lint rule.** After cleanup, add a PHPStan rule (`Piwigo\Phpstan\Rules\NoErrorSuppressionRule`) that fails on any new `@` outside files explicitly listed in a small allowlist.
+- `src/Piwigo/Core/Filesystem.php` (new) — `tryUnlink`, `tryRmdir`,
+  `tryFileMtime`, `tryFilesize`, `tryRename`, `tryChmod`, `tryFopen`.
+- `pwg_safe_getimagesize()`, `pwg_safe_exif_read_data()` (new) in
+  `include/functions.inc.php`.
+- `tools/phpstan/NoErrorSuppressionRule.php` (new) — implements
+  `PHPStan\Rules\Rule<ErrorSuppress>`.
 
 ### Verification
 
 ```bash
-grep -rn '@\(' src/ include/ admin/ --include='*.php' | wc -l
-# target: ≤ 40 (the justified set, all commented)
-vendor/bin/phpstan analyse           # NoErrorSuppressionRule green
+# Count actionable @ suppressions (excludes PHPDoc/comments, language/, vendor/)
+perl -ne 'next if m{^\s*[*/]}; while(m{(?:[\s=(\[,;!&|?:]|^|return\s)\@(\$|[a-zA-Z_]\w*\s*\()}gx){$c++} END{print "TOTAL: $c\n"}' \
+  $(find src include admin tools tests -name '*.php') \
+  action.php i.php index.php install.php profile.php upgrade.php upgrade_feed.php ws.php feed.php password.php notification.php picture.php comments.php
+# Result: 0
+
+vendor/bin/phpstan analyse           # green at level 9 (NoErrorSuppressionRule active)
+vendor/bin/phpunit                   # 256 tests / 1693 assertions, all green
 ```
 
 ---
 
 ## #10 — Exception hierarchy + eliminate `die()`
 
-**Status:** Not started &nbsp;|&nbsp; **Size:** M
+**Status:** Done &nbsp;|&nbsp; **Size:** M
 
 ### Goal
 

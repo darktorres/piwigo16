@@ -13,7 +13,7 @@ use Piwigo\Image\SrcImage;
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHOTOS_ADD_BASE_URL')) {
-    die('Hacking attempt!');
+    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang, $logger, $pwg_loaded_plugins;

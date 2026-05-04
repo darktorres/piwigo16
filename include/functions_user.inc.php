@@ -417,7 +417,9 @@ SELECT
 
                 $logger->info($logger_msg_prefix.'user_cache generation waiting has timed out after '.get_elapsed_time($user_cache_waiting_start_time, get_moment()));
                 set_status_header(503, 'Service Unavailable');
-                @header('Retry-After: 900');
+                if (!headers_sent()) {
+                    header('Retry-After: 900');
+                }
                 header('Content-Type: text/html; charset='.get_pwg_charset());
                 echo l10n('Rebuilding user cache takes long. Please, come back later.');
                 echo str_repeat(' ', 512); //IE6 doesn't error output if below a size
@@ -814,7 +816,7 @@ function get_default_language(): string
  */
 function get_browser_language(): false|int|string
 {
-    $language_header_raw = @$_SERVER['HTTP_ACCEPT_LANGUAGE'];
+    $language_header_raw = $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? null;
     $language_header = is_scalar($language_header_raw) ? (string) $language_header_raw : '';
     if ($language_header == '') {
         return false;
@@ -1029,10 +1031,10 @@ function auto_login(): bool
     if (isset($remember_cookie_raw)) {
         $cookie = explode('-', stripslashes(is_scalar($remember_cookie_raw) ? (string) $remember_cookie_raw : ''));
         if (count($cookie) === 3
-            and is_numeric(@$cookie[0]) /*user id*/
-            and is_numeric(@$cookie[1]) /*time*/
-            and time() - \Piwigo\Config\Config::rememberMeLength() <= @$cookie[1]
-            and time() >= @$cookie[1] /*cookie generated in the past*/) {
+            and is_numeric($cookie[0]) /*user id*/
+            and is_numeric($cookie[1]) /*time*/
+            and time() - \Piwigo\Config\Config::rememberMeLength() <= $cookie[1]
+            and time() >= $cookie[1] /*cookie generated in the past*/) {
             $key = calculate_auto_login_key((int)$cookie[0], (int)$cookie[1], $username);
             if ($key !== false and $key === $cookie[2]) {
                 // Since Piwigo 16, 'connected_with' in the session defines the authentication context (UI, API, etc).
@@ -1496,7 +1498,7 @@ function get_sql_condition_FandF(
                 break;
             default:
                 {
-                    die('Unknow condition');
+                    throw new \LogicException('Unknown condition');
                 }
         }
     }
@@ -2122,7 +2124,7 @@ SELECT
         $update_status = $params['status'];
     }
 
-    if (!empty($params['level']) or @$params['level'] === 0) {
+    if (!empty($params['level']) or ($params['level'] ?? null) === 0) {
         if (!in_array($params['level'], \Piwigo\Config\Config::availablePermissionLevels())) {
             // return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid level');
             return [
@@ -2165,26 +2167,26 @@ SELECT
         $updates_infos['nb_image_page'] = $params['nb_image_page'];
     }
 
-    if (!empty($params['recent_period']) or @$params['recent_period'] === 0) {
+    if (!empty($params['recent_period']) or ($params['recent_period'] ?? null) === 0) {
         $updates_infos['recent_period'] = $params['recent_period'];
     }
 
-    if (!empty($params['expand']) or @$params['expand'] === false) {
+    if (!empty($params['expand']) or ($params['expand'] ?? null) === false) {
         $v = $params['expand'];
         $updates_infos['expand'] = boolean_to_string(is_bool($v) ? $v : (is_string($v) ? $v : ''));
     }
 
-    if (!empty($params['show_nb_comments']) or @$params['show_nb_comments'] === false) {
+    if (!empty($params['show_nb_comments']) or ($params['show_nb_comments'] ?? null) === false) {
         $v = $params['show_nb_comments'];
         $updates_infos['show_nb_comments'] = boolean_to_string(is_bool($v) ? $v : (is_string($v) ? $v : ''));
     }
 
-    if (!empty($params['show_nb_hits']) or @$params['show_nb_hits'] === false) {
+    if (!empty($params['show_nb_hits']) or ($params['show_nb_hits'] ?? null) === false) {
         $v = $params['show_nb_hits'];
         $updates_infos['show_nb_hits'] = boolean_to_string(is_bool($v) ? $v : (is_string($v) ? $v : ''));
     }
 
-    if (!empty($params['enabled_high']) or @$params['enabled_high'] === false) {
+    if (!empty($params['enabled_high']) or ($params['enabled_high'] ?? null) === false) {
         $v = $params['enabled_high'];
         $updates_infos['enabled_high'] = boolean_to_string(is_bool($v) ? $v : (is_string($v) ? $v : ''));
     }
@@ -2541,7 +2543,7 @@ function notification_api_key_expiration(string $username, string $email, int $d
     $message .= '<p style="margin: 20px 0">' . l10n('To continue using the API, please renew your key before it expires.') . '</p>';
     $message .= '<p style="margin: 20px 0">' . l10n('You can manage your API keys in your <a href="%s">account settings.</a>', get_absolute_root_url().'profile.php') . '</p>';
 
-    $result = @pwg_mail(
+    $result = pwg_mail(
         $email,
         [
         'subject' => '[' . \Piwigo\Config\Config::galleryTitle() . '] ' . l10n('Your API key will expire soon'),

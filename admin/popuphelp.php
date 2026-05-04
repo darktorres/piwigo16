@@ -65,7 +65,7 @@ if (
 
     $help_content = trigger_change('get_popup_help_content', $help_content, $_GET['page']);
 } else {
-    die('Hacking attempt!');
+    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
 }
 
 $template->set_filename('popuphelp', 'popuphelp.tpl');

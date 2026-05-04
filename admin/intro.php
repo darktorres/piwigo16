@@ -14,7 +14,7 @@ use Piwigo\Admin\Tabsheet;
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    die('Hacking attempt!');
+    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang, $logger, $pwg_loaded_plugins;
@@ -250,9 +250,9 @@ if ($cached_activity === null or (is_numeric($cached_activity['calculated_on']) 
         }
         $day_nb = $day_date->format('N');
 
-        @$activity_last_weeks[$week][$day_nb]['details'][ucfirst((string) $action['object'])][ucfirst((string) $action['action'])] = $action['activity_counter'];
+        $activity_last_weeks[$week][$day_nb]['details'][ucfirst((string) $action['object'])][ucfirst((string) $action['action'])] = $action['activity_counter'];
         $activity_last_weeks[$week][$day_nb]['number'] = ($activity_last_weeks[$week][$day_nb]['number'] ?? 0) + $action['activity_counter'];
-        @$activity_last_weeks[$week][$day_nb]['date'] = format_date($day_date->getTimestamp());
+        $activity_last_weeks[$week][$day_nb]['date'] = format_date($day_date->getTimestamp());
     }
 
     \Piwigo\Core\LoggerRegistry::current()->debug('[admin/intro::'.__LINE__.'] recent activity calculated in '.get_elapsed_time($start_time, get_moment()));
@@ -390,10 +390,10 @@ foreach ($file_extensions as $ext => $ext_details) {
         $type = 'Other';
     }
 
-    @$data_storage[$type]['total']['filesize'] += $ext_details['filesize'];
+    $data_storage[$type]['total']['filesize'] = ($data_storage[$type]['total']['filesize'] ?? 0) + $ext_details['filesize'];
     $data_storage[$type]['total']['nb_files'] = ($data_storage[$type]['total']['nb_files'] ?? 0) + $ext_details['ext_counter'];
 
-    @$data_storage[$type]['details'][strtoupper((string) $ext)] = [
+    $data_storage[$type]['details'][strtoupper((string) $ext)] = [
       'filesize' => $ext_details['filesize'],
       'nb_files' => $ext_details['ext_counter'],
     ];
@@ -413,10 +413,10 @@ $file_extensions = query2array($query, 'ext');
 foreach ($file_extensions as $ext => $ext_details) {
     $type = 'Formats';
 
-    @$data_storage[$type]['total']['filesize'] += $ext_details['filesize'];
+    $data_storage[$type]['total']['filesize'] = ($data_storage[$type]['total']['filesize'] ?? 0) + $ext_details['filesize'];
     $data_storage[$type]['total']['nb_files'] = ($data_storage[$type]['total']['nb_files'] ?? 0) + $ext_details['ext_counter'];
 
-    @$data_storage[$type]['details'][strtoupper((string) $ext)] = [
+    $data_storage[$type]['details'][strtoupper((string) $ext)] = [
       'filesize' => $ext_details['filesize'],
       'nb_files' => $ext_details['ext_counter'],
     ];
@@ -427,7 +427,7 @@ if (\Piwigo\Config\Config::addCacheToStorageChart() && \Piwigo\Config\Config::ha
     $cache_sizes = unserialize((string)\Piwigo\Config\Config::cacheSizes());
     if (is_array($cache_sizes) && isset($cache_sizes[0]) && is_array($cache_sizes[0]) && isset($cache_sizes[0]['value'])) {
         $cacheValue = is_numeric($cache_sizes[0]['value']) ? (float) $cache_sizes[0]['value'] : 0.0;
-        @$data_storage['Cache']['total']['filesize'] = $cacheValue / 1024;
+        $data_storage['Cache']['total']['filesize'] = $cacheValue / 1024;
     }
 }
 

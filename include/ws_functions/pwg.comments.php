@@ -44,11 +44,11 @@ function ws_userComments_getList(array $params, \Piwigo\Ws\PwgServer &$service):
     $where_clauses = ['1=1'];
 
     if (isset($params['author_id']) and !empty($params['author_id'])) {
-        $where_clauses['author_id'] = 'author_id = \''. pwg_db_real_escape_string(is_scalar($params['author_id']) ? (string) $params['author_id'] : '') .'\'';
+        $where_clauses['author_id'] = 'author_id = ' . (is_numeric($params['author_id']) ? (int) $params['author_id'] : 0);
     }
 
     if (isset($params['image_id']) and !empty($params['image_id'])) {
-        $where_clauses[] = 'image_id = \''. pwg_db_real_escape_string(is_scalar($params['image_id']) ? (string) $params['image_id'] : '') .'\'';
+        $where_clauses[] = 'image_id = ' . (is_numeric($params['image_id']) ? (int) $params['image_id'] : 0);
     }
 
     if (!empty($params['f_min_date'])) {

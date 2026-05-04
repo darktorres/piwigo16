@@ -181,7 +181,7 @@ function get_cat_info(int|string $id): ?array
         // If the field is true or false, the variable is transformed into a
         // boolean value.
         if ($cat[$k] == 'true' or $cat[$k] == 'false') {
-            $cat[$k] = get_boolean($cat[$k]);
+            $cat[$k] = \Piwigo\Core\BoolUtil::fromMixed($cat[$k]);
         }
     }
 
@@ -485,7 +485,7 @@ FROM '.CATEGORIES_TABLE.' as c
       AND i.level<='.(is_numeric($userdata['level']) ? (int) $userdata['level'] : 0);
 
     if (isset($filter_days)) {
-        $query .= ' AND i.date_available > '.pwg_db_get_recent_period_expression($filter_days);
+        $query .= ' AND i.date_available > '.\Piwigo\Db\SqlExpr::recentPeriodExpr($filter_days);
     }
 
     if (!empty($userdata['forbidden_categories'])) {

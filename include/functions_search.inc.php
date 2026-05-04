@@ -2096,7 +2096,7 @@ function save_search(array $rules, int|string|null $forked_from = null): array
     single_insert(
         SEARCH_TABLE,
         [
-        'rules' => pwg_db_real_escape_string(serialize($rules)),
+        'rules' => serialize($rules),
         'created_on' => $dbnow,
         'created_by' => $createdBy,
         'search_uuid' => $search_uuid,

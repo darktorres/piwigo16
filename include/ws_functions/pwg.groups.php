@@ -99,7 +99,7 @@ function ws_groups_add(array $params, \Piwigo\Ws\PwgServer &$service): mixed
         GROUPS_TABLE,
         [
         'name' => $params['name'],
-        'is_default' => boolean_to_string($is_default_val),
+        'is_default' => \Piwigo\Core\BoolUtil::toString($is_default_val),
         ]
     );
     $inserted_id = pwg_db_insert_id();
@@ -175,7 +175,7 @@ function ws_groups_setInfo(array $params, \Piwigo\Ws\PwgServer &$service): mixed
 
     if (!empty($params['is_default']) or ($params['is_default'] ?? null) === false) {
         $is_default_upd = $params['is_default'];
-        $updates['is_default'] = boolean_to_string(is_bool($is_default_upd) ? $is_default_upd : (is_string($is_default_upd) ? $is_default_upd : ''));
+        $updates['is_default'] = \Piwigo\Core\BoolUtil::toString(is_bool($is_default_upd) ? $is_default_upd : (is_string($is_default_upd) ? $is_default_upd : ''));
     }
 
     single_update(
@@ -352,7 +352,7 @@ function ws_groups_duplicate(array $params, \Piwigo\Ws\PwgServer &$service): mix
         GROUPS_TABLE,
         [
         'name' => $copy_name_str,
-        'is_default' => boolean_to_string(is_string($is_default) ? $is_default : ''),
+        'is_default' => \Piwigo\Core\BoolUtil::toString(is_string($is_default) ? $is_default : ''),
         ]
     );
     $inserted_id = pwg_db_insert_id();

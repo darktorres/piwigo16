@@ -89,7 +89,7 @@ function save_upload_form_config(array $data, array &$errors = [], array &$form_
 
             $updates[] = [
               'param' => $field,
-              'value' => boolean_to_string($value),
+              'value' => \Piwigo\Core\BoolUtil::toString($value),
               ];
         } elseif ($upload_form_config[$field]['can_be_null'] and empty($value)) {
             $updates[] = [
@@ -313,7 +313,7 @@ SELECT
 
     if (isset($image_id)) {
         $update = [
-          'file' => pwg_db_real_escape_string($original_filename ?? basename($file_path)),
+          'file' => $original_filename ?? basename($file_path),
           'filesize' => $file_infos['filesize'],
           'width' => $file_infos['width'],
           'height' => $file_infos['height'],
@@ -333,7 +333,7 @@ SELECT
         );
     } else {
         // database registration
-        $file = pwg_db_real_escape_string($original_filename ?? basename($file_path));
+        $file = $original_filename ?? basename($file_path);
         $insert = [
           'file' => $file,
           'name' => get_name_from_file($file),

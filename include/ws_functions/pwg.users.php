@@ -285,7 +285,7 @@ SELECT DISTINCT ';
                 $last_visit = $cur_user['last_visit'] ?? null;
                 $users[$cur_uid]['last_visit'] = $last_visit;
 
-                if (!get_boolean($cur_user['last_visit_from_history'] ?? null) and empty($last_visit)) {
+                if (!\Piwigo\Core\BoolUtil::fromMixed($cur_user['last_visit_from_history'] ?? null) and empty($last_visit)) {
                     $last_visit = get_user_last_visit_from_history($cur_uid, true);
                     $users[$cur_uid]['last_visit'] = $last_visit;
                 }
@@ -326,7 +326,7 @@ SELECT DISTINCT ';
             $last_visit = $cur_user['last_visit'];
             $users[ $cur_user['id'] ]['last_visit'] = $last_visit;
 
-            if (!get_boolean($cur_user['last_visit_from_history']) and empty($last_visit))
+            if (!\Piwigo\Core\BoolUtil::fromMixed($cur_user['last_visit_from_history']) and empty($last_visit))
             {
               $last_visit = get_user_last_visit_from_history($cur_user['id'], true);
               $users[ $cur_user['id'] ]['last_visit'] = $last_visit;

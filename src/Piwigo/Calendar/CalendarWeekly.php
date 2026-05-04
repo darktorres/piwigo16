@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Calendar;
 
+use Piwigo\Db\SqlExpr;
 use Piwigo\Config\Config;
 
 /**
@@ -33,23 +34,23 @@ class CalendarWeekly extends CalendarBase
         $dayLabels = is_array($langArr['day'] ?? null) ? $langArr['day'] : [];
         $this->calendar_levels = [
           [
-              'sql' => pwg_db_get_year($this->date_field),
+              'sql' => SqlExpr::year($this->date_field),
               'labels' => null,
             ],
           [
-              'sql' => pwg_db_get_week($this->date_field).'+1',
+              'sql' => SqlExpr::week($this->date_field).'+1',
               'labels' => $week_no_labels,
             ],
           [
-              'sql' => pwg_db_get_dayofweek($this->date_field).'-1',
+              'sql' => SqlExpr::dayOfWeek($this->date_field).'-1',
               'labels' => $dayLabels,
             ],
          ];
         //Comment next lines for week starting on Sunday or if MySQL version<4.0.17
         //WEEK(date,5) = "0-53 - Week 1=the first week with a Monday in this year"
         if ('monday' == Config::weekStartsOn()) {
-            $this->calendar_levels[CWEEK]['sql'] = pwg_db_get_week($this->date_field, 5).'+1';
-            $this->calendar_levels[CDAY]['sql'] = pwg_db_get_weekday($this->date_field);
+            $this->calendar_levels[CWEEK]['sql'] = SqlExpr::week($this->date_field, 5).'+1';
+            $this->calendar_levels[CDAY]['sql'] = SqlExpr::weekday($this->date_field);
             $dayLabelsArr = $this->calendar_levels[CDAY]['labels'];
             $dayLabelsArr[] = array_shift($dayLabelsArr);
             $this->calendar_levels[CDAY]['labels'] = $dayLabelsArr;

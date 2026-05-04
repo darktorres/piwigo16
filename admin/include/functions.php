@@ -1183,7 +1183,7 @@ function create_virtual_category(string $category_name, int|string|null $parent_
     } else {
         $insert['commentable'] = \Piwigo\Config\Config::newcatDefaultCommentable();
     }
-    $insert['commentable'] = boolean_to_string($insert['commentable']);
+    $insert['commentable'] = \Piwigo\Core\BoolUtil::toString($insert['commentable']);
 
     // is the album temporarily locked? (only visible by administrators,
     // whatever permissions) (may be overwritten if parent album is not
@@ -1193,7 +1193,7 @@ function create_virtual_category(string $category_name, int|string|null $parent_
     } else {
         $insert['visible'] = \Piwigo\Config\Config::newcatDefaultVisible();
     }
-    $insert['visible'] = boolean_to_string($insert['visible']);
+    $insert['visible'] = \Piwigo\Core\BoolUtil::toString($insert['visible']);
 
     // is the album private? (may be overwritten if parent album is private)
     if (isset($options['status']) and 'private' == $options['status']) {

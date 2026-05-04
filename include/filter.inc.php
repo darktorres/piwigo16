@@ -71,7 +71,7 @@ WHERE ';
   category_id  IN ('.$filter['visible_categories'].') and';
         }
         $query .= '
-    date_available >= '.pwg_db_get_recent_period_expression($filter['recent_period']);
+    date_available >= '.\Piwigo\Db\SqlExpr::recentPeriodExpr($filter['recent_period']);
 
         $filter['visible_images'] = implode(',', query2array($query, null, 'image_id'));
 

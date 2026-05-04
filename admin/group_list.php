@@ -120,7 +120,7 @@ foreach ($groupRepo->findAllOrdered() as $row) {
         [
         'NAME' => $row['name'],
         'ID' => $row['id'],
-        'IS_DEFAULT' => (get_boolean($row['is_default']) ? ' ['.l10n('default').']' : ''),
+        'IS_DEFAULT' => (\Piwigo\Core\BoolUtil::fromMixed($row['is_default']) ? ' ['.l10n('default').']' : ''),
         'NB_MEMBERS' => count($members),
         'L_MEMBERS' => implode(' <span class="userSeparator">&middot;</span> ', $members),
         'MEMBERS' => l10n_dec('%d member', '%d members', count($members)),

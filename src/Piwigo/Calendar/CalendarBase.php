@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Calendar;
 
+use Piwigo\Db\SqlExpr;
 use Piwigo\Config\Config;
 use Piwigo\Template\TemplateRegistry;
 
@@ -295,10 +296,10 @@ $this->get_date_where($level).'
             } else {
                 $level_data = $this->calendar_levels[$i] ?? [];
                 $levelSql = is_array($level_data) ? (is_string($level_data['sql'] ?? null) ? $level_data['sql'] : '') : '';
-                $sub_queries[] = pwg_db_cast_to_text($levelSql);
+                $sub_queries[] = ($levelSql);
             }
         }
-        $query = 'SELECT '.pwg_db_concat_ws($sub_queries, '-').' AS period';
+        $query = 'SELECT '.SqlExpr::concatWs($sub_queries, '-').' AS period';
         $query .= $this->inner_sql .'
 AND ' . $this->date_field . ' IS NOT NULL
 GROUP BY period';

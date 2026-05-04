@@ -128,7 +128,7 @@ function mass_updates(string $tablename, array $dbfields, array $datas, int $fla
                 $separator = $is_first ? '' : ",\n    ";
                 if (isset($data[$key]) and $data[$key] != '') {
                     $val = $data[$key];
-                    $query .= $separator . protect_column_name($key) . " = '" . (is_scalar($val) ? $val : '') . "'";
+                    $query .= $separator . protect_column_name($key) . ' = ' . $conn->quote(is_scalar($val) ? (string) $val : '');
                 } else {
                     if ($flags & MASS_UPDATES_SKIP_EMPTY) {
                         continue;
@@ -147,7 +147,7 @@ function mass_updates(string $tablename, array $dbfields, array $datas, int $fla
                     }
                     if (isset($data[$key])) {
                         $kval = $data[$key];
-                        $query .= protect_column_name($key) . " = '" . (is_scalar($kval) ? $kval : '') . "'";
+                        $query .= protect_column_name($key) . ' = ' . $conn->quote(is_scalar($kval) ? (string) $kval : '');
                     } else {
                         $query .= protect_column_name($key) . ' IS NULL';
                     }
@@ -217,10 +217,12 @@ function single_update(string $tablename, array $datas, array $where, int $flags
     $is_first = true;
     $query = 'UPDATE ' . protect_column_name($tablename) . ' SET ';
 
+    $conn = get_dbal_connection();
+
     foreach ($datas as $key => $value) {
         $separator = $is_first ? '' : ",\n    ";
         if (isset($value) and $value !== '') {
-            $query .= $separator . protect_column_name($key) . " = '" . (is_scalar($value) ? $value : '') . "'";
+            $query .= $separator . protect_column_name($key) . ' = ' . $conn->quote(is_scalar($value) ? (string) $value : '');
         } else {
             if ($flags & MASS_UPDATES_SKIP_EMPTY) {
                 continue;
@@ -238,13 +240,13 @@ function single_update(string $tablename, array $datas, array $where, int $flags
                 $query .= ' AND ';
             }
             if (isset($value)) {
-                $query .= protect_column_name($key) . " = '" . (is_scalar($value) ? $value : '') . "'";
+                $query .= protect_column_name($key) . ' = ' . $conn->quote(is_scalar($value) ? (string) $value : '');
             } else {
                 $query .= protect_column_name($key) . ' IS NULL';
             }
             $is_first = false;
         }
-        get_dbal_connection()->executeStatement($query);
+        $conn->executeStatement($query);
     }
 }
 
@@ -291,7 +293,7 @@ function mass_inserts(string $table_name, array $dbfields, array $datas, array $
                 $vals[] = 'NULL';
             } else {
                 $dbVal = $insert[$dbfield];
-                $vals[] = "'" . (is_scalar($dbVal) ? $dbVal : '') . "'";
+                $vals[] = $conn->quote(is_scalar($dbVal) ? (string) $dbVal : '');
             }
         }
         $query .= '(' . implode(',', $vals) . ')';
@@ -326,7 +328,7 @@ function single_insert(string $table_name, array $data, array $options = []): vo
         if ($value === '' || $value === null) {
             $query .= 'NULL';
         } else {
-            $query .= "'" . (is_scalar($value) ? $value : '') . "'";
+            $query .= get_dbal_connection()->quote(is_scalar($value) ? (string) $value : '');
         }
     }
     $query .= ')';
@@ -410,111 +412,15 @@ function get_enums(string $table, string $field): array
 }
 
 // ---------------------------------------------------------------------------
-// Pure-SQL expression builders (unchanged — return SQL fragments, no DB I/O)
+// Date-range helper that executes a query (kept for 1 remaining caller).
 // ---------------------------------------------------------------------------
-
-/** @param string[] $array */
-function pwg_db_concat(array $array): string
-{
-    return 'CONCAT(' . implode(',', $array) . ')';
-}
-
-/** @param string[] $array */
-function pwg_db_concat_ws(array $array, string $separator): string
-{
-    return 'CONCAT_WS(\'' . $separator . '\',' . implode(',', $array) . ')';
-}
-
-function pwg_db_cast_to_text(string $string): string
-{
-    return $string;
-}
-
-function get_boolean(mixed $input): bool
-{
-    if (is_scalar($input) && 'false' === strtolower((string) $input)) {
-        return false;
-    }
-    return (bool) $input;
-}
-
-function boolean_to_string(bool|string $var): string
-{
-    if (is_bool($var)) {
-        return $var ? 'true' : 'false';
-    }
-    return $var;
-}
-
-function pwg_db_get_recent_period_expression(int|string $period, string $date = 'CURRENT_DATE'): string
-{
-    if ($date !== 'CURRENT_DATE') {
-        $date = "'" . $date . "'";
-    }
-    return 'SUBDATE(' . $date . ', INTERVAL ' . $period . ' DAY)';
-}
 
 function pwg_db_get_recent_period(string $period, string $date = 'CURRENT_DATE'): string
 {
     $d = get_dbal_connection()
-        ->executeQuery('SELECT ' . pwg_db_get_recent_period_expression($period, $date))
+        ->executeQuery('SELECT ' . \Piwigo\Db\SqlExpr::recentPeriodExpr($period, $date))
         ->fetchOne();
     return is_scalar($d) ? (string) $d : '';
-}
-
-function pwg_db_get_flood_period_expression(int|string $seconds): string
-{
-    return 'SUBDATE(NOW(), INTERVAL ' . $seconds . ' SECOND)';
-}
-
-function pwg_db_get_hour(string $date): string
-{
-    return 'HOUR(' . $date . ')';
-}
-
-function pwg_db_get_date_YYYYMM(string $date): string
-{
-    return "DATE_FORMAT($date, '%Y%m')";
-}
-
-function pwg_db_get_date_MMDD(string $date): string
-{
-    return "DATE_FORMAT($date, '%m%d')";
-}
-
-function pwg_db_get_year(string $date): string
-{
-    return 'YEAR(' . $date . ')';
-}
-
-function pwg_db_get_month(string $date): string
-{
-    return 'MONTH(' . $date . ')';
-}
-
-function pwg_db_get_week(string $date, ?int $mode = null): string
-{
-    return $mode !== null ? "WEEK($date, $mode)" : "WEEK($date)";
-}
-
-function pwg_db_get_dayofmonth(string $date): string
-{
-    return 'DAYOFMONTH(' . $date . ')';
-}
-
-function pwg_db_get_dayofweek(string $date): string
-{
-    return 'DAYOFWEEK(' . $date . ')';
-}
-
-function pwg_db_get_weekday(string $date): string
-{
-    return 'WEEKDAY(' . $date . ')';
-}
-
-function pwg_db_date_to_ts(string $date): string
-{
-    return 'UNIX_TIMESTAMP(' . $date . ')';
 }
 
 // ---------------------------------------------------------------------------

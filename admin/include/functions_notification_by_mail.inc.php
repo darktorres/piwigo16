@@ -284,7 +284,7 @@ function do_subscribe_unsubscribe_notification_by_mail(bool $is_admin_request, b
 
     if (count($check_key_list) != 0) {
         $updates = [];
-        $enabled_value = boolean_to_string($is_subscribe);
+        $enabled_value = \Piwigo\Core\BoolUtil::toString($is_subscribe);
         $data_users = get_user_notifications('subscribe', $check_key_list, !$is_subscribe);
 
         // Prepare message after change language

@@ -394,7 +394,7 @@ class Updates
             $updatesIgnoredArr[$type] = $ignore_list;
             Config::override('updates_ignored', $updatesIgnoredArr);
         }
-        conf_update_param('updates_ignored', pwg_db_real_escape_string(serialize(Config::raw('updates_ignored'))));
+        conf_update_param('updates_ignored', serialize(Config::raw('updates_ignored')));
         return [];
     }
 

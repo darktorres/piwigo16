@@ -222,9 +222,9 @@ SELECT id, uppercats, global_rank, status, visible
               'name'        => str_replace('_', ' ', $dir),
               'site_id'     => $site_id,
               'commentable' =>
-                boolean_to_string(\Piwigo\Config\Config::newcatDefaultCommentable()),
+                \Piwigo\Core\BoolUtil::toString(\Piwigo\Config\Config::newcatDefaultCommentable()),
               'status'      => \Piwigo\Config\Config::newcatDefaultStatus(),
-              'visible'     => boolean_to_string(\Piwigo\Config\Config::newcatDefaultVisible()),
+              'visible'     => \Piwigo\Core\BoolUtil::toString(\Piwigo\Config\Config::newcatDefaultVisible()),
               ];
 
             if (isset($db_fulldirs[dirname((string) $fulldir)])) {
@@ -465,10 +465,10 @@ SELECT id, path
 
         $insert = [
           'id'             => $next_element_id++,
-          'file'           => pwg_db_real_escape_string($filename),
-          'name'           => pwg_db_real_escape_string(get_name_from_file($filename)),
+          'file'           => $filename,
+          'name'           => get_name_from_file($filename),
           'date_available' => CURRENT_DATE,
-          'path'           => pwg_db_real_escape_string($path),
+          'path'           => $path,
           'representative_ext'  => is_array($fs[$path]) ? ($fs[$path]['representative_ext'] ?? null) : null,
           'storage_category_id' => $db_fulldirs[$dirname],
           'added_by'       => $user['id'],

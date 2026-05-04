@@ -312,7 +312,7 @@ function ws_tags_getAdminList(array $params, \Piwigo\Ws\PwgServer &$service): ar
         return new PwgError(WS_ERR_INVALID_PARAM, 'This name is already token');
     } elseif (!empty($tag_name)) {
         $update = [
-          'name' => pwg_db_real_escape_string($tag_name),
+          'name' => $tag_name,
           'url_name' => trigger_change('render_tag_url', $tag_name),
         ];
 

@@ -1664,7 +1664,7 @@ SELECT *
             ];
         }
 
-        $name = pwg_db_real_escape_string(stripslashes(is_scalar($params['name']) ? (string) $params['name'] : ''));
+        $name = stripslashes(is_scalar($params['name']) ? (string) $params['name'] : '');
         $id_image = null; //null by default
 
         $p_category = is_array($params['category']) ? $params['category'] : [];
@@ -1677,7 +1677,7 @@ SELECT
   id
   FROM '.IMAGES_TABLE.' AS i
     INNER JOIN '.IMAGE_CATEGORY_TABLE.' as ic ON ic.image_id = i.id
-  WHERE i.file = \''.$name.'\'
+  WHERE i.file = '.get_dbal_connection()->quote($name).'
   AND ic.category_id = '.$p_category_first.'
 ;';
             $images = query2array($query);
@@ -2454,7 +2454,7 @@ function ws_images_setInfo(array $params, \Piwigo\Ws\PwgServer $service): mixed
         // clean user input
         $request_tag_list = is_array($_REQUEST['tag_list']) ? $_REQUEST['tag_list'] : [];
         foreach ($request_tag_list as $idx => $tag_candidate) {
-            $request_tag_list[$idx] = pwg_db_real_escape_string(strip_tags(stripslashes(is_scalar($tag_candidate) ? (string) $tag_candidate : '')));
+            $request_tag_list[$idx] = strip_tags(stripslashes(is_scalar($tag_candidate) ? (string) $tag_candidate : ''));
         }
 
         $tag_list = get_tag_ids($request_tag_list);

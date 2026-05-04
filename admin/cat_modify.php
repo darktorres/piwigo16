@@ -157,7 +157,7 @@ $template->assign(
     'CAT_ID'             => $category['id'],
     'CAT_NAME'           => htmlspecialchars((string) $category['name']),
     'CAT_COMMENT'        => htmlspecialchars((string) $category['comment']),
-    'IS_VISIBLE'          => boolean_to_string($category['visible']),
+    'IS_VISIBLE'          => \Piwigo\Core\BoolUtil::toString($category['visible']),
     'CAT_ADMIN_ACCESS'   => cat_admin_access($category['id']),
 
     'U_DELETE' => $base_url.'albums',
@@ -176,7 +176,7 @@ $template->assign(
 );
 
 if (\Piwigo\Config\Config::activateComments()) {
-    $template->assign('CAT_COMMENTABLE', boolean_to_string($category['commentable']));
+    $template->assign('CAT_COMMENTABLE', \Piwigo\Core\BoolUtil::toString($category['commentable']));
 }
 
 // manage album elements link
@@ -349,7 +349,7 @@ $template->assign('page_data_json', json_encode([
     'album_id'                            => (int) $category['id'],
     'album_name'                          => $category['name'] ?? '',
     'default_parent_album'                => $parent_cat_id,
-    'is_visible'                          => boolean_to_string($category['visible']),
+    'is_visible'                          => \Piwigo\Core\BoolUtil::toString($category['visible']),
     'nb_sub_albums'                       => $category['nb_subcats'],
     'parent_album'                        => $parent_cat_id,
     'related_categories_ids'              => [(string) $category['id'], (string) $parent_cat_id],

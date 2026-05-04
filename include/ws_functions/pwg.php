@@ -349,8 +349,7 @@ DELETE FROM '. RATE_TABLE .'
     $username = is_scalar($params['username']) ? (string) $params['username'] : '';
     $password = is_scalar($params['password']) ? (string) $params['password'] : '';
     if (preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', $username)) {
-        $secret = pwg_db_real_escape_string($password);
-        $authenticate = auth_key_login($username.':'.$secret);
+        $authenticate = auth_key_login($username . ':' . $password);
         if ($authenticate) {
             $_SESSION['connected_with'] = 'ws_session_login_api_key';
             return true;

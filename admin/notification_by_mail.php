@@ -588,7 +588,7 @@ switch ($page['mode']) {
             $cat_false_post = is_array($_POST['cat_false'] ?? null) ? array_map(fn (mixed $v): string => is_scalar($v) ? (string)$v : '', $_POST['cat_false']) : [];
             foreach ($data_users as $nbm_user) {
                 $ck = (string) $nbm_user['check_key'];
-                if (get_boolean($nbm_user['enabled'])) {
+                if (\Piwigo\Core\BoolUtil::fromMixed($nbm_user['enabled'])) {
                     $opt_true[$ck] = stripslashes((string) $nbm_user['username']).'['.(string)$nbm_user['mail_address'].']';
                     if (isset($_POST['falsify']) and in_array($ck, $cat_true_post)) {
                         $opt_true_selected[] = $ck;

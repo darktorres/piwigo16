@@ -866,7 +866,7 @@ function create_user_infos(array|int $user_ids, ?array $override_values = null):
 
             $insert = array_merge(
                 array_map(static function (mixed $v): string {
-                    return pwg_db_real_escape_string(is_scalar($v) ? (string) $v : '');
+                    return is_scalar($v) ? (string) $v : '';
                 }, $default_user),
                 [
                 'user_id' => $user_id,
@@ -1460,8 +1460,8 @@ function get_recent_photos_sql(string $db_field): string
     $recentPeriod = is_numeric($user['recent_period'] ?? null) ? (int) $user['recent_period'] : 0;
     $lastPhotoDate = is_scalar($user['last_photo_date']) ? (string) $user['last_photo_date'] : '';
     return $db_field.'>=LEAST('
-      .pwg_db_get_recent_period_expression($recentPeriod)
-      .','.pwg_db_get_recent_period_expression(1, $lastPhotoDate).')';
+      .\Piwigo\Db\SqlExpr::recentPeriodExpr($recentPeriod)
+      .','.\Piwigo\Db\SqlExpr::recentPeriodExpr(1, $lastPhotoDate).')';
 }
 
 /**
@@ -2075,22 +2075,22 @@ SELECT
 
     if (!empty($params['expand']) or ($params['expand'] ?? null) === false) {
         $v = $params['expand'];
-        $updates_infos['expand'] = boolean_to_string(is_bool($v) ? $v : (is_string($v) ? $v : ''));
+        $updates_infos['expand'] = \Piwigo\Core\BoolUtil::toString(is_bool($v) ? $v : (is_string($v) ? $v : ''));
     }
 
     if (!empty($params['show_nb_comments']) or ($params['show_nb_comments'] ?? null) === false) {
         $v = $params['show_nb_comments'];
-        $updates_infos['show_nb_comments'] = boolean_to_string(is_bool($v) ? $v : (is_string($v) ? $v : ''));
+        $updates_infos['show_nb_comments'] = \Piwigo\Core\BoolUtil::toString(is_bool($v) ? $v : (is_string($v) ? $v : ''));
     }
 
     if (!empty($params['show_nb_hits']) or ($params['show_nb_hits'] ?? null) === false) {
         $v = $params['show_nb_hits'];
-        $updates_infos['show_nb_hits'] = boolean_to_string(is_bool($v) ? $v : (is_string($v) ? $v : ''));
+        $updates_infos['show_nb_hits'] = \Piwigo\Core\BoolUtil::toString(is_bool($v) ? $v : (is_string($v) ? $v : ''));
     }
 
     if (!empty($params['enabled_high']) or ($params['enabled_high'] ?? null) === false) {
         $v = $params['enabled_high'];
-        $updates_infos['enabled_high'] = boolean_to_string(is_bool($v) ? $v : (is_string($v) ? $v : ''));
+        $updates_infos['enabled_high'] = \Piwigo\Core\BoolUtil::toString(is_bool($v) ? $v : (is_string($v) ? $v : ''));
     }
 
     $param_uid_0 = is_numeric($param_user_id[0]) ? (int) $param_user_id[0] : 0;

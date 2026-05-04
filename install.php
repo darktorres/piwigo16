@@ -221,11 +221,11 @@ if (isset($_POST['install'])) {
         ]);
 
         conf_update_param('piwigo_db_version', get_branch_from_version(PHPWG_VERSION));
-        conf_update_param('gallery_title', pwg_db_real_escape_string(l10n('Just another Piwigo gallery')));
+        conf_update_param('gallery_title', l10n('Just another Piwigo gallery'));
 
         conf_update_param(
             'page_banner',
-            '<h1>%gallery_title%</h1>'."\n\n<p>".pwg_db_real_escape_string(l10n('Welcome to my photo gallery')).'</p>'
+            '<h1>%gallery_title%</h1>'."\n\n<p>".l10n('Welcome to my photo gallery').'</p>'
         );
 
         // fill languages table, only activate the current language

@@ -646,7 +646,7 @@ function pwg_activity(string $object, array|int|string $object_id, string $actio
     }
 
     $inserts = [];
-    $details_insert = pwg_db_real_escape_string(serialize($details));
+    $details_insert = serialize($details);
     $ip_address = $_SERVER['REMOTE_ADDR'] ?? null;
     $session_id = !empty(session_id()) ? session_id() : 'none';
 
@@ -667,7 +667,7 @@ function pwg_activity(string $object, array|int|string $object_id, string $actio
           'session_idx' => $session_id,
           'ip_address' => $ip_address,
           'details' => $details_insert,
-          'user_agent' => pwg_db_real_escape_string($user_agent ?? ''),
+          'user_agent' => $user_agent ?? '',
         ];
     }
 
@@ -1400,7 +1400,7 @@ function conf_update_param(string $param, mixed $value, bool $updateGlobal = fal
     } elseif (is_array($value) || is_object($value)) {
         $dbValue = addslashes(serialize($value));
     } else {
-        $dbValue = boolean_to_string(is_bool($value) ? $value : (is_scalar($value) ? (string) $value : ''));
+        $dbValue = \Piwigo\Core\BoolUtil::toString(is_bool($value) ? $value : (is_scalar($value) ? (string) $value : ''));
     }
 
     if (\Piwigo\Core\ServiceLocator::has(\Doctrine\DBAL\Connection::class)) {
@@ -2122,7 +2122,7 @@ function mobile_theme()
     }
 
     if (isset($_GET['mobile'])) {
-        $is_mobile_theme = get_boolean($_GET['mobile']);
+        $is_mobile_theme = \Piwigo\Core\BoolUtil::fromMixed($_GET['mobile']);
         pwg_set_session_var('mobile_theme', $is_mobile_theme);
     } else {
         $is_mobile_theme = pwg_get_session_var('mobile_theme');

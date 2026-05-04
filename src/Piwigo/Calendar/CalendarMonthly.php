@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Calendar;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Db\SqlExpr;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\DerivativeImage;
@@ -35,15 +36,15 @@ class CalendarMonthly extends CalendarBase
         $dayLabels = is_array($langArr['day'] ?? null) ? $langArr['day'] : null;
         $this->calendar_levels = [
           [
-              'sql' => pwg_db_get_year($this->date_field),
+              'sql' => SqlExpr::year($this->date_field),
               'labels' => null,
             ],
           [
-          'sql' => pwg_db_get_month($this->date_field),
+          'sql' => SqlExpr::month($this->date_field),
           'labels' => $monthLabels,
             ],
           [
-              'sql' => pwg_db_get_dayofmonth($this->date_field),
+              'sql' => SqlExpr::dayOfMonth($this->date_field),
               'labels' => null,
             ],
          ];
@@ -222,13 +223,13 @@ class CalendarMonthly extends CalendarBase
 
         assert(count($chronologyDate) == 0);
         $query = '
-  SELECT '.pwg_db_get_date_YYYYMM($this->date_field).' as period,
+  SELECT '.SqlExpr::dateYYYYMM($this->date_field).' as period,
     COUNT(distinct id) as count';
         $query .= $this->inner_sql;
         $query .= $this->get_date_where();
         $query .= '
     GROUP BY period
-    ORDER BY '.pwg_db_get_year($this->date_field).' DESC, '.pwg_db_get_month($this->date_field).' ASC';
+    ORDER BY '.SqlExpr::year($this->date_field).' DESC, '.SqlExpr::month($this->date_field).' ASC';
 
         $items = [];
         foreach (ServiceLocator::get(Connection::class)->executeQuery($query)->fetchAllAssociative() as $row) {
@@ -298,7 +299,7 @@ class CalendarMonthly extends CalendarBase
         $chronologyDate = is_array($pageArr['chronology_date'] ?? null) ? $pageArr['chronology_date'] : [];
 
         assert(count($chronologyDate) == 1);
-        $query = 'SELECT '.pwg_db_get_date_MMDD($this->date_field).' as period,
+        $query = 'SELECT '.SqlExpr::dateMMDD($this->date_field).' as period,
               COUNT(DISTINCT id) as count';
         $query .= $this->inner_sql;
         $query .= $this->get_date_where();
@@ -372,7 +373,7 @@ class CalendarMonthly extends CalendarBase
         $lang = &$GLOBALS['lang'];
         $langArr = is_array($lang) ? $lang : [];
 
-        $query = 'SELECT '.pwg_db_get_dayofmonth($this->date_field).' as period,
+        $query = 'SELECT '.SqlExpr::dayOfMonth($this->date_field).' as period,
               COUNT(DISTINCT id) as count';
         $query .= $this->inner_sql;
         $query .= $this->get_date_where();
@@ -395,7 +396,7 @@ class CalendarMonthly extends CalendarBase
                 $page['chronology_date'] = $cdTmp;
             }
             $query = '
-  SELECT id, file,representative_ext,path,width,height,rotation, '.pwg_db_get_dayofweek($this->date_field).'-1 as dow';
+  SELECT id, file,representative_ext,path,width,height,rotation, '.SqlExpr::dayOfWeek($this->date_field).'-1 as dow';
             $query .= $this->inner_sql;
             $query .= $this->get_date_where();
             $query .= '

@@ -209,7 +209,7 @@ SELECT
     $query = '
 SELECT
     date,
-    '.pwg_db_get_hour('time').' AS hour,
+    '.\Piwigo\Db\SqlExpr::hour('time').' AS hour,
     MIN(id) AS min_id,
     MAX(id) AS max_id,
     COUNT(*) AS nb_pages

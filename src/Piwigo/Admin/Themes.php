@@ -10,6 +10,7 @@ use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Theme\ThemeRepository;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Core\BoolUtil;
 
 class Themes
 {
@@ -306,13 +307,13 @@ class Themes
                         $theme['parent'] = $val[1];
                     }
                     if (preg_match('/["\']activable["\'].*?(true|false)/i', $theme_data, $val)) {
-                        $theme['activable'] = get_boolean($val[1]);
+                        $theme['activable'] = BoolUtil::fromMixed($val[1]);
                     }
                     if (preg_match('/["\']mobile["\'].*?(true|false)/i', $theme_data, $val)) {
-                        $theme['mobile'] = get_boolean($val[1]);
+                        $theme['mobile'] = BoolUtil::fromMixed($val[1]);
                     }
                     if (preg_match('/["\']use_standard_pages["\'].*?(true|false)/i', $theme_data, $val)) {
-                        $theme['use_standard_pages'] = get_boolean($val[1]);
+                        $theme['use_standard_pages'] = BoolUtil::fromMixed($val[1]);
                     }
 
                     // screenshot

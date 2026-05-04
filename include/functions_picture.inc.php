@@ -68,7 +68,7 @@ function decode_slideshow_params(?string $encode_params = null): array
         if (preg_match_all('/([a-z]+)-(true|false)/', (string) $encode_params, $matches)) {
             $matchcount = count($matches[1]);
             for ($i = 0; $i < $matchcount; $i++) {
-                $result[$matches[1][$i]] = get_boolean($matches[2][$i]);
+                $result[$matches[1][$i]] = \Piwigo\Core\BoolUtil::fromMixed($matches[2][$i]);
             }
         }
     }
@@ -91,7 +91,7 @@ function encode_slideshow_params(array $decode_params = []): string
             continue;
         }
         $bool_val = is_bool($value) ? $value : (is_string($value) ? $value : '');
-        $result .= '+'.$name.'-'.boolean_to_string($bool_val);
+        $result .= '+'.$name.'-'.\Piwigo\Core\BoolUtil::toString($bool_val);
     }
 
     return $result;

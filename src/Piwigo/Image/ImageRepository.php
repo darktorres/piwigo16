@@ -455,21 +455,40 @@ final class ImageRepository extends AbstractRepository
     }
 
     /**
-     * Return (id, representative_ext, path) for a single image, or null if not found.
-     * Used by get_category_representant_properties().
+     * Return all columns for a single image, or null if not found.
      *
      * @return array<string, mixed>|null
      */
     public function findById(int $id): ?array
     {
         $row = $this->conn->createQueryBuilder()
-            ->select('id', 'representative_ext', 'path')
+            ->select('*')
             ->from($this->table('images'))
             ->where('id = :id')
             ->setParameter('id', $id)
             ->executeQuery()
             ->fetchAssociative();
         return $row !== false ? $row : null;
+    }
+
+    /**
+     * Update the crop-on-interest (coi) column for a single image.
+     * $coi = null clears the crop box.
+     */
+    public function updateCoi(int $id, ?string $coi): void
+    {
+        $qb = $this->conn->createQueryBuilder()
+            ->update($this->table('images'))
+            ->where('id = :id')
+            ->setParameter('id', $id);
+
+        if ($coi === null) {
+            $qb->set('coi', 'NULL');
+        } else {
+            $qb->set('coi', ':coi')->setParameter('coi', $coi);
+        }
+
+        $qb->executeStatement();
     }
 
     /**

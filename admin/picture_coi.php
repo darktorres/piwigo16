@@ -28,24 +28,22 @@ check_status(ACCESS_ADMINISTRATOR);
 check_input_parameter('image_id', $_GET, false, PATTERN_ID);
 
 $imageIdCoi = is_scalar($_GET['image_id'] ?? null) ? (string) $_GET['image_id'] : '0';
+$imgRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class);
+
 if (isset($_POST['submit'])) {
     $lRaw = $_POST['l'] ?? null;
-    $query = 'UPDATE '.IMAGES_TABLE;
     if (strlen(is_scalar($lRaw) ? (string) $lRaw : '') == 0) {
-        $query .= ' SET coi=NULL';
+        $imgRepo->updateCoi((int) $imageIdCoi, null);
     } else {
         $coi = fraction_to_char(is_numeric($lRaw) ? (float) $lRaw : 0)
           .fraction_to_char(is_numeric($_POST['t'] ?? null) ? (float) $_POST['t'] : 0)
           .fraction_to_char(is_numeric($_POST['r'] ?? null) ? (float) $_POST['r'] : 0)
           .fraction_to_char(is_numeric($_POST['b'] ?? null) ? (float) $_POST['b'] : 0);
-        $query .= ' SET coi=\''.$coi.'\'';
+        $imgRepo->updateCoi((int) $imageIdCoi, $coi);
     }
-    $query .= ' WHERE id='.$imageIdCoi;
-    pwg_query($query);
 }
 
-$query = 'SELECT * FROM '.IMAGES_TABLE.' WHERE id='.$imageIdCoi;
-$image_infos = pwg_db_fetch_assoc(pwg_query($query));
+$image_infos = $imgRepo->findById((int) $imageIdCoi);
 
 if ($image_infos === null) {
     page_not_found('The requested image does not exist');

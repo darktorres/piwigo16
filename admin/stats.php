@@ -28,68 +28,8 @@ include_once(PHPWG_ROOT_PATH.'admin/include/functions_history.inc.php');
 /** @return array<mixed> */
 function get_last(int $last_number = 60, string $type = 'year'): array
 {
-    $query = '
-SELECT
-    year,
-    month,
-    day,
-    hour,
-    nb_pages
-  FROM '.HISTORY_SUMMARY_TABLE;
-
-    if ($type === 'hour') {
-        $query .= '
-  WHERE year IS NOT NULL
-    AND month IS NOT NULL
-    AND day IS NOT NULL
-    AND hour IS NOT NULL
-  ORDER BY
-    year DESC,
-    month DESC,
-    day DESC,
-    hour DESC
-  LIMIT '.$last_number.'
-;';
-    } elseif ($type === 'day') {
-        $query .= '
-  WHERE year IS NOT NULL
-    AND month IS NOT NULL
-    AND day IS NOT NULL
-    AND hour IS NULL
-  ORDER BY
-    year DESC,
-    month DESC,
-    day DESC
-  LIMIT '.$last_number.'
-;';
-    } elseif ($type === 'month') {
-        $query .= '
-  WHERE year IS NOT NULL
-    AND month IS NOT NULL
-    AND day IS NULL
-  ORDER BY
-    year DESC,
-    month DESC
-  LIMIT '.$last_number.'
-;';
-    } else {
-        $query .= '
-  WHERE year IS NOT NULL
-    AND month IS NULL
-  ORDER BY
-    year DESC
-  LIMIT '.$last_number.'
-;';
-    }
-
-    $result = pwg_query($query);
-
-    $output = [];
-    while ($row = pwg_db_fetch_assoc($result)) {
-        $output[] = $row;
-    }
-
-    return $output;
+    return \Piwigo\Core\ServiceLocator::get(\Piwigo\History\HistoryRepository::class)
+        ->findSummaryByType($type, $last_number);
 }
 
 /** @return array<mixed> */
@@ -191,23 +131,8 @@ ORDER BY
         $result['month'][] = set_missing_values('day', $val, new DateTime($key), $lastDate);
     }
 
-    $query = '
-SELECT
-  AVG(nb_pages)
-FROM '.HISTORY_SUMMARY_TABLE.'
-WHERE 
-  (
-  year = '.$date->format('Y').' OR
-  (year = '.($date->format('Y') - 1).' and month > '.$date->format('n').')
-  ) 
-  AND day IS NOT NULL
-  AND hour IS NULL
-ORDER BY
-  year DESC,
-  month DESC
-;';
-
-    [$result['avg']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+    $result['avg'] = \Piwigo\Core\ServiceLocator::get(\Piwigo\History\HistoryRepository::class)
+        ->findCurrentPeriodDailyAvg((int) $date->format('Y'), (int) $date->format('n'));
 
     return $result;
 }

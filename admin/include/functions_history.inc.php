@@ -380,12 +380,8 @@ function history_autopurge(): void
 
     // we want to purge only if there are too many lines and if the lines are summarized
 
-    $query = '
-SELECT
-    COUNT(*)
-  FROM '.HISTORY_TABLE.'
-;';
-    [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+    $histRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\History\HistoryRepository::class);
+    $count = $histRepo->countAll();
 
     if ($count <= \Piwigo\Config\Config::historyAutopurgeKeepLines()) {
         history_remove_summarized_column();
@@ -444,12 +440,7 @@ SELECT
 
     $logger->debug(__FUNCTION__.', '.join('/', $search_min));
 
-    $query = '
-DELETE
-  FROM '.HISTORY_TABLE.'
-  WHERE id < '.$history_id_delete_before.'
-;';
-    pwg_query($query);
+    $histRepo->deleteBeforeId($history_id_delete_before);
 
     history_remove_summarized_column();
 }
@@ -460,12 +451,7 @@ function history_remove_summarized_column(): void
         return;
     }
 
-    $query = '
-SELECT
-    COUNT(*)
-  FROM '.HISTORY_TABLE.'
-;';
-    [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+    $count = \Piwigo\Core\ServiceLocator::get(\Piwigo\History\HistoryRepository::class)->countAll();
 
     if ($count > \Piwigo\Config\Config::historyAutopurgeKeepLines() + \Piwigo\Config\Config::historyAutopurgeBlocksize()) {
         // it's not yet time to remove history.summarized

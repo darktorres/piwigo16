@@ -11,6 +11,53 @@ use Piwigo\Db\AbstractRepository;
 /** Persistence layer for the notification domain. */
 final class NotificationRepository extends AbstractRepository
 {
+    /**
+     * Set email to NULL for users whose email is blank after trimming.
+     * $emailField and $usersTable are admin-configured — not user-supplied.
+     */
+    public function clearEmptyEmails(string $emailField, string $usersTable): void
+    {
+        $this->conn->executeStatement(
+            "UPDATE $usersTable SET $emailField = NULL WHERE TRIM($emailField) = ''"
+        );
+    }
+
+    /**
+     * Return users who have an email address but no notification subscription yet.
+     * Column names are admin-configured — not user-supplied.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findUsersWithoutNotification(
+        string $idField, string $usernameField, string $emailField, string $usersTable
+    ): array {
+        return $this->conn->executeQuery(
+            "SELECT u.$idField AS user_id, u.$usernameField AS username, u.$emailField AS mail_address
+             FROM $usersTable AS u
+             LEFT JOIN " . $this->table('user_mail_notification') . " AS m ON u.$idField = m.user_id
+             WHERE u.$emailField IS NOT NULL
+               AND m.user_id IS NULL
+             ORDER BY user_id"
+        )->fetchAllAssociative();
+    }
+
+    /**
+     * Delete notification subscriptions for the given check_keys.
+     *
+     * @param string[] $checkKeys
+     */
+    public function deleteByCheckKeys(array $checkKeys): void
+    {
+        if ($checkKeys === []) {
+            return;
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->delete($this->table('user_mail_notification'));
+        $qb->where($qb->expr()->in('check_key', ':keys'))
+           ->setParameter('keys', $checkKeys, \Doctrine\DBAL\ArrayParameterType::STRING);
+        $qb->executeStatement();
+    }
+
     /** Return true when the given check_key already exists in user_mail_notification. */
     public function checkKeyExists(string $key): bool
     {

@@ -31,16 +31,7 @@ global $template, $user, $page, $persistent_cache, $lang;
 $groups = [];
 $groups_for_filter = [];
 
-$query = '
-SELECT id, name, COUNT(ug.user_id) as nb_users_of
-  FROM `'.GROUPS_TABLE.'`
-    LEFT JOIN `'. USER_GROUP_TABLE .'` ug ON id = ug.group_id
-  GROUP BY name
-  ORDER BY name ASC
-;';
-$result = pwg_query($query);
-
-while ($row = pwg_db_fetch_assoc($result)) {
+foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Group\GroupRepository::class)->findWithMemberCounts() as $row) {
     $groups[(int)$row['id']] = $row['name'];
     $groups_for_filter[] = [
       'id' => $row['id'],
@@ -55,18 +46,9 @@ $template->assign('groups_for_filter', $groups_for_filter);
 // |                              Dates for filtering                      |
 // +-----------------------------------------------------------------------+
 
-$query = '
-SELECT DISTINCT
-      month(registration_date) as registration_month,
-      year(registration_date) as registration_year
-FROM '.USER_INFOS_TABLE.'
-ORDER BY registration_date
-;';
-$result = pwg_query($query);
-
 $register_dates = [];
-while ($row = pwg_db_fetch_assoc($result)) {
-    $register_dates[] = $row['registration_year'].'-'.sprintf('%02u', $row['registration_month']);
+foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)->findRegistrationMonthsYears() as $row) {
+    $register_dates[] = $row['registration_year'] . '-' . sprintf('%02u', $row['registration_month']);
 }
 
 $template->assign('register_dates', implode(',', $register_dates));
@@ -154,22 +136,12 @@ foreach (get_enums(USER_INFOS_TABLE, 'status') as $status) {
     $label_of_status[$status] = l10n('user_status_'.$status);
 }
 
-$query = '
-SELECT
-    status,
-    COUNT(*) AS nb_users_of
-  FROM '. USER_INFOS_TABLE .'
-  WHERE user_id != '. \Piwigo\Config\Config::guestId() .'
-  GROUP BY status
-';
-
 $nb_users_by_status = [];
-$result = pwg_query($query);
-while ($row = pwg_db_fetch_assoc($result)) {
-    $status = (string)$row['status'];
+foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
+    ->findStatusDistribution(\Piwigo\Config\Config::guestId()) as $status => $count) {
     $nb_users_by_status[$status] = [
-      'name' => l10n('user_status_'.$status),
-      'counter' => $row['nb_users_of'],
+        'name'    => l10n('user_status_' . $status),
+        'counter' => $count,
     ];
 }
 
@@ -194,22 +166,12 @@ foreach (\Piwigo\Config\Config::availablePermissionLevels() as $level) {
     $level_options[$level] = l10n(sprintf('Level %d', $level));
 }
 
-$query = '
-SELECT
-    level,
-    COUNT(*) AS nb_users_of
-  FROM '. USER_INFOS_TABLE .'
-  WHERE user_id != '. \Piwigo\Config\Config::guestId() .'
-  GROUP BY level
-';
-
-$result = pwg_query($query);
 $nb_users_by_level = $level_options;
-while ($row = pwg_db_fetch_assoc($result)) {
-    $level = (int)$row['level'];
+foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
+    ->findLevelDistribution(\Piwigo\Config\Config::guestId()) as $level => $count) {
     $nb_users_by_level[$level] = [
-      'name' => l10n(sprintf('Level %d', $level)),
-      'counter' => $row['nb_users_of'],
+        'name'    => l10n(sprintf('Level %d', $level)),
+        'counter' => $count,
     ];
 }
 
@@ -217,17 +179,10 @@ $template->assign('level_options', $level_options);
 $template->assign('level_selected', $default_user['level'] ?? 0);
 $template->assign('nb_users_by_level', $nb_users_by_level);
 
-$query = '
-SELECT id, name, is_default
-  FROM `'.GROUPS_TABLE.'`
-  ORDER BY name ASC
-;';
-$result = pwg_query($query);
-
 $groups_arr_id = [];
 $groups_arr_name = [];
-while ($row = pwg_db_fetch_assoc($result)) {
-    $groups_arr_name[] = '"'.pwg_db_real_escape_string((string)$row['name']).'"';
+foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Group\GroupRepository::class)->findAllOrdered() as $row) {
+    $groups_arr_name[] = '"' . addslashes((string) $row['name']) . '"';
     $groups_arr_id[] = $row['id'];
 }
 

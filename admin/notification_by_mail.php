@@ -103,37 +103,25 @@ function insert_new_data_user_mail_notification(): void
 {
     global $base_url;
     $ctx = \Piwigo\Notification\MailNotificationContext::current();
+    $notifRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Notification\NotificationRepository::class);
+    $userFields = \Piwigo\Config\Config::userFields();
+
     // Set null mail_address empty
-    $query = '
-update
-  '.USERS_TABLE.'
-set
-  '.\Piwigo\Config\Config::userFields()['email'].' = null
-where
-  trim('.\Piwigo\Config\Config::userFields()['email'].') = \'\';';
-    pwg_query($query);
+    $notifRepo->clearEmptyEmails($userFields['email'], USERS_TABLE);
 
     // null mail_address are not selected in the list
-    $query = '
-select
-  u.'.\Piwigo\Config\Config::userFields()['id'].' as user_id,
-  u.'.\Piwigo\Config\Config::userFields()['username'].' as username,
-  u.'.\Piwigo\Config\Config::userFields()['email'].' as mail_address
-from
-  '.USERS_TABLE.' as u left join '.USER_MAIL_NOTIFICATION_TABLE.' as m on u.'.\Piwigo\Config\Config::userFields()['id'].' = m.user_id
-where
-  u.'.\Piwigo\Config\Config::userFields()['email'].' is not null and
-  m.user_id is null
-order by
-  user_id;';
+    $users_without_notif = $notifRepo->findUsersWithoutNotification(
+        $userFields['id'],
+        $userFields['username'],
+        $userFields['email'],
+        USERS_TABLE
+    );
 
-    $result = pwg_query($query);
-
-    if (pwg_db_num_rows($result) > 0) {
+    if (count($users_without_notif) > 0) {
         $inserts = [];
         $check_key_list = [];
 
-        while ($nbm_user = pwg_db_fetch_assoc($result)) {
+        foreach ($users_without_notif as $nbm_user) {
             // Calculate key
             $nbm_user['check_key'] = find_available_check_key();
 
@@ -165,10 +153,10 @@ order by
 
         // On timeout simulate like tabsheet send
         if ($ctx->isSendmailTimeout) {
-            $quoted_check_key_list = quote_check_key_list(array_diff($check_key_list, $check_key_treated));
-            if (count($quoted_check_key_list) != 0) {
-                $query = 'delete from '.USER_MAIL_NOTIFICATION_TABLE.' where check_key in ('.implode(',', $quoted_check_key_list).');';
-                $result = pwg_query($query);
+            $untreated_keys = array_diff($check_key_list, $check_key_treated);
+            if (count($untreated_keys) != 0) {
+                \Piwigo\Core\ServiceLocator::get(\Piwigo\Notification\NotificationRepository::class)
+                    ->deleteByCheckKeys(array_values($untreated_keys));
 
                 redirect($base_url.get_query_string_diff([], false), l10n('Operation in progress')."\n".l10n('Please wait...'));
             }
@@ -213,8 +201,7 @@ function do_action_send_mail_notification(string $action = 'list_to_send', array
     $return_list = [];
 
     if (in_array($action, ['list_to_send', 'send'])) {
-        [$dbnow] = pwg_db_fetch_row(pwg_query('SELECT NOW();')) ?? [null];
-        $dbnow = $dbnow ? (string)$dbnow : null;
+        $dbnow = (new \DateTimeImmutable())->format('Y-m-d H:i:s');
 
         $is_action_send = ($action == 'send');
 

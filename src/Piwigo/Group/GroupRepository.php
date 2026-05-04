@@ -85,6 +85,37 @@ final class GroupRepository extends AbstractRepository
     }
 
     /**
+     * Return all groups with their member counts.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findWithMemberCounts(): array
+    {
+        return $this->conn->executeQuery(
+            'SELECT g.id, g.name, COUNT(ug.user_id) AS nb_users_of
+             FROM ' . $this->table('groups') . ' g
+             LEFT JOIN ' . $this->table('user_group') . ' ug ON g.id = ug.group_id
+             GROUP BY g.id, g.name
+             ORDER BY g.name ASC'
+        )->fetchAllAssociative();
+    }
+
+    /**
+     * Return all groups ordered by name (id, name, is_default).
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findAllOrdered(): array
+    {
+        return $this->conn->createQueryBuilder()
+            ->select('id', 'name', 'is_default')
+            ->from($this->table('groups'))
+            ->orderBy('name', 'ASC')
+            ->executeQuery()
+            ->fetchAllAssociative();
+    }
+
+    /**
      * Remove the given users from a specific group.
      *
      * @param int[] $userIds

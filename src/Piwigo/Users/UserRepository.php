@@ -186,6 +186,70 @@ final class UserRepository extends AbstractRepository
     }
 
     /**
+     * Return distinct (registration_year, registration_month) rows ordered by
+     * registration_date. Uses MySQL MONTH()/YEAR() — project is MySQL-only.
+     *
+     * @return list<array{registration_month: int, registration_year: int}>
+     */
+    public function findRegistrationMonthsYears(): array
+    {
+        $rows = $this->conn->executeQuery(
+            'SELECT DISTINCT MONTH(registration_date) AS registration_month,
+                    YEAR(registration_date) AS registration_year
+             FROM ' . $this->table('user_infos') . '
+             ORDER BY registration_date'
+        )->fetchAllAssociative();
+        return array_map(fn (array $r): array => [
+            'registration_month' => (int) $r['registration_month'],
+            'registration_year'  => (int) $r['registration_year'],
+        ], $rows);
+    }
+
+    /**
+     * Return (status → count) distribution for all users except the guest.
+     *
+     * @return array<string, int>
+     */
+    public function findStatusDistribution(int $guestId): array
+    {
+        $rows = $this->conn->createQueryBuilder()
+            ->select('status', 'COUNT(*) AS nb_users_of')
+            ->from($this->table('user_infos'))
+            ->where('user_id != :guestId')
+            ->setParameter('guestId', $guestId)
+            ->groupBy('status')
+            ->executeQuery()
+            ->fetchAllAssociative();
+        $result = [];
+        foreach ($rows as $row) {
+            $result[(string) $row['status']] = (int) $row['nb_users_of'];
+        }
+        return $result;
+    }
+
+    /**
+     * Return (level → count) distribution for all users except the guest.
+     *
+     * @return array<int, int>
+     */
+    public function findLevelDistribution(int $guestId): array
+    {
+        $rows = $this->conn->createQueryBuilder()
+            ->select('level', 'COUNT(*) AS nb_users_of')
+            ->from($this->table('user_infos'))
+            ->where('user_id != :guestId')
+            ->setParameter('guestId', $guestId)
+            ->groupBy('level')
+            ->executeQuery()
+            ->fetchAllAssociative();
+        $result = [];
+        foreach ($rows as $row) {
+            $result[(int) $row['level']] = (int) $row['nb_users_of'];
+        }
+        return $result;
+    }
+
+    /**
      * Return the earliest registration_date among all users (excluding NULL rows),
      * ordered by user_id ascending. Returns null if no rows found.
      */

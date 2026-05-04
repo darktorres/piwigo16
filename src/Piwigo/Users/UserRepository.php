@@ -266,6 +266,36 @@ final class UserRepository extends AbstractRepository
         return is_string($value) ? $value : null;
     }
 
+    /** Truncate user_cache_categories (full cache invalidation). */
+    public function truncateCategoryCache(): void
+    {
+        $this->conn->executeStatement('TRUNCATE TABLE ' . $this->table('user_cache_categories'));
+    }
+
+    /** Truncate user_cache (full cache invalidation). */
+    public function truncateUserCache(): void
+    {
+        $this->conn->executeStatement('TRUNCATE TABLE ' . $this->table('user_cache'));
+    }
+
+    /** Mark all user cache entries as needing update (soft invalidation). */
+    public function markAllCachesForUpdate(): void
+    {
+        $this->conn->createQueryBuilder()
+            ->update($this->table('user_cache'))
+            ->set('need_update', "'true'")
+            ->executeStatement();
+    }
+
+    /** Clear nb_available_tags for all users. */
+    public function clearNbAvailableTags(): void
+    {
+        $this->conn->createQueryBuilder()
+            ->update($this->table('user_cache'))
+            ->set('nb_available_tags', 'NULL')
+            ->executeStatement();
+    }
+
     /**
      * Clear user_representative_picture_id for the given category in user cache.
      * Called when the category's representative is changed via WS.

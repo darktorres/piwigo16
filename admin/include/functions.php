@@ -1081,13 +1081,8 @@ function move_categories($category_ids, $new_parent = -1): void
 
     $categories = [];
 
-    $query = '
-SELECT id, id_uppercat, status, uppercats
-  FROM '.CATEGORIES_TABLE.'
-  WHERE id IN ('.implode(',', $category_ids).')
-;';
-    $result = pwg_query($query);
-    while ($row = pwg_db_fetch_assoc($result)) {
+    $catRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class);
+    foreach ($catRepo->findByIds(array_map('intval', $category_ids)) as $row) {
         $row_id_key = is_scalar($row['id']) ? (string) $row['id'] : '0';
         $categories[$row_id_key] =
           [
@@ -1100,13 +1095,8 @@ SELECT id, id_uppercat, status, uppercats
     // is the movement possible? The movement is impossible if you try to move
     // a category in a sub-category or itself
     if ('NULL' != $new_parent) {
-        $query = '
-SELECT uppercats
-  FROM '.CATEGORIES_TABLE.'
-  WHERE id = '.$new_parent.'
-;';
-        [$new_parent_uppercats] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-        $new_parent_uppercats_str = is_scalar($new_parent_uppercats) ? (string) $new_parent_uppercats : '';
+        $new_parent_uppercats_str = $catRepo->findUppercatsStringById((int) $new_parent) ?? '';
+        $new_parent_uppercats = $new_parent_uppercats_str ?: null;
 
         foreach ($categories as $category) {
             // technically, you can't move a category with uppercats 12,125,13,14
@@ -1124,12 +1114,10 @@ SELECT uppercats
       GROUP_ACCESS_TABLE => 'group_id',
       ];
 
-    $query = '
-UPDATE '.CATEGORIES_TABLE.'
-  SET id_uppercat = '.$new_parent.'
-  WHERE id IN ('.implode(',', $category_ids).')
-;';
-    pwg_query($query);
+    $catRepo->updateParent(
+        array_map('intval', $category_ids),
+        $new_parent === 'NULL' ? null : (int) $new_parent
+    );
 
     update_uppercats();
     update_global_rank();
@@ -1138,12 +1126,7 @@ UPDATE '.CATEGORIES_TABLE.'
     if ('NULL' == $new_parent) {
         $parent_status = 'public';
     } else {
-        $query = '
-SELECT status
-  FROM '.CATEGORIES_TABLE.'
-  WHERE id = '.$new_parent.'
-;';
-        [$parent_status] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+        $parent_status = $catRepo->findStatusById((int) $new_parent) ?? 'public';
     }
 
     if ('private' == $parent_status) {
@@ -1186,15 +1169,10 @@ function create_virtual_category(string $category_name, int|string|null $parent_
     $rank = 0;
     if ('last' == \Piwigo\Config\Config::newcatDefaultPosition()) {
         //what is the current higher rank for this parent?
-        $query = '
-SELECT MAX(`rank`) AS max_rank
-  FROM '. CATEGORIES_TABLE .'
-  WHERE id_uppercat '.(empty($parent_id) ? 'IS NULL' : '= '.$parent_id).' 
-;';
-        $row = pwg_db_fetch_assoc(pwg_query($query));
-
-        if ($row !== null && is_numeric($row['max_rank'])) {
-            $rank = $row['max_rank'] + 1;
+        $createCatRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class);
+        $max_rank = $createCatRepo->findMaxRankForParent(empty($parent_id) ? null : (int) $parent_id);
+        if ($max_rank !== null) {
+            $rank = $max_rank + 1;
         }
     }
 
@@ -1236,12 +1214,8 @@ SELECT MAX(`rank`) AS max_rank
     }
 
     if (!empty($parent_id) and is_numeric($parent_id)) {
-        $query = '
-SELECT id, uppercats, global_rank, visible, status
-  FROM '.CATEGORIES_TABLE.'
-  WHERE id = '.$parent_id.'
-;';
-        $parent = pwg_db_fetch_assoc(pwg_query($query));
+        $parent = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+            ->findCategoryById((int) $parent_id);
 
         if ($parent !== null) {
             $insert['id_uppercat'] = $parent['id'];
@@ -1685,12 +1659,8 @@ SELECT
         }
     }
 
-    $query = '
-DELETE
-  FROM '.LOUNGE_TABLE.'
-  WHERE image_id <= '.$max_image_id.'
-;';
-    pwg_query($query);
+    \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
+        ->deleteLoungeBeforeId($max_image_id);
 
     if ($invalidate_user_cache) {
         invalidate_user_cache();
@@ -1913,18 +1883,12 @@ function invalidate_user_cache(bool $full = true): void
         \Piwigo\Core\LoggerRegistry::current()->info(__FUNCTION__.' called');
     }
 
+    $userRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class);
     if ($full) {
-        $query = '
-TRUNCATE TABLE '.USER_CACHE_CATEGORIES_TABLE.';';
-        pwg_query($query);
-        $query = '
-TRUNCATE TABLE '.USER_CACHE_TABLE.';';
-        pwg_query($query);
+        $userRepo->truncateCategoryCache();
+        $userRepo->truncateUserCache();
     } else {
-        $query = '
-UPDATE '.USER_CACHE_TABLE.'
-  SET need_update = \'true\';';
-        pwg_query($query);
+        $userRepo->markAllCachesForUpdate();
     }
     $persistent_cache->purge(true);
     conf_delete_param('count_orphans');
@@ -1940,10 +1904,7 @@ function invalidate_user_cache_nb_tags(): void
         unset($GLOBALS['user']['nb_available_tags']);
     }
 
-    $query = '
-UPDATE '.USER_CACHE_TABLE.'
-  SET nb_available_tags = NULL';
-    pwg_query($query);
+    \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)->clearNbAvailableTags();
 }
 
 /**

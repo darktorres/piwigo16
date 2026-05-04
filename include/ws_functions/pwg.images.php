@@ -462,18 +462,9 @@ SELECT id, name, permalink, uppercats, global_rank, commentable
     'average' => null,
     ];
     if (isset($rating['score'])) {
-        $query = '
-SELECT COUNT(rate) AS count, ROUND(AVG(rate),2) AS average
-  FROM '. RATE_TABLE .'
-  WHERE element_id = '. $image_row_id .'
-;';
-        $row = pwg_db_fetch_assoc(pwg_query($query));
-
+        [$rating['count'], $rating['average']] = \Piwigo\Core\ServiceLocator::get(\Piwigo\Rate\RateRepository::class)
+            ->findCountAndAvgByElementId($image_row_id);
         $rating['score'] = is_numeric($rating['score']) ? (float) $rating['score'] : 0.0;
-        if ($row !== null) {
-            $rating['average'] = is_numeric($row['average']) ? (float) $row['average'] : null;
-            $rating['count'] = is_numeric($row['count']) ? (int) $row['count'] : 0;
-        }
     }
 
     //---------------------------------------------------------- related comments

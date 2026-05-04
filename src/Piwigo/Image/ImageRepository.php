@@ -124,6 +124,19 @@ final class ImageRepository extends AbstractRepository
     }
 
     /**
+     * Delete lounge rows with image_id <= $maxId.
+     * Called by empty_lounge() after moving all images to their categories.
+     */
+    public function deleteLoungeBeforeId(int $maxId): void
+    {
+        $this->conn->createQueryBuilder()
+            ->delete($this->table('lounge'))
+            ->where('image_id <= :maxId')
+            ->setParameter('maxId', $maxId)
+            ->executeStatement();
+    }
+
+    /**
      * Return all (image_id, ext) rows from image_format.
      * Used to build a map of alternate format extensions per image.
      *

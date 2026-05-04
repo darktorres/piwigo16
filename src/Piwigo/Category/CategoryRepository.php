@@ -305,6 +305,64 @@ final class CategoryRepository extends AbstractRepository
     }
 
     /**
+     * Update id_uppercat for the given category ids.
+     * $parentId = null means root-level (id_uppercat IS NULL).
+     *
+     * @param int[] $ids
+     */
+    public function updateParent(array $ids, ?int $parentId): void
+    {
+        if ($ids === []) {
+            return;
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->update($this->table('categories'));
+
+        if ($parentId === null) {
+            $qb->set('id_uppercat', 'NULL');
+        } else {
+            $qb->set('id_uppercat', ':parentId')->setParameter('parentId', $parentId);
+        }
+
+        $qb->where($qb->expr()->in('id', ':ids'))
+           ->setParameter('ids', $ids, \Doctrine\DBAL\ArrayParameterType::INTEGER);
+        $qb->executeStatement();
+    }
+
+    /** Return the status of a single category, or null if not found. */
+    public function findStatusById(int $id): ?string
+    {
+        $value = $this->conn->createQueryBuilder()
+            ->select('status')
+            ->from($this->table('categories'))
+            ->where('id = :id')
+            ->setParameter('id', $id)
+            ->executeQuery()
+            ->fetchOne();
+        return is_string($value) ? $value : null;
+    }
+
+    /**
+     * Return the maximum rank for siblings of a given parent.
+     * $parentId = null means top-level categories (id_uppercat IS NULL).
+     */
+    public function findMaxRankForParent(?int $parentId): ?int
+    {
+        $qb = $this->conn->createQueryBuilder()
+            ->select('MAX(`rank`)')
+            ->from($this->table('categories'));
+
+        if ($parentId === null) {
+            $qb->where('id_uppercat IS NULL');
+        } else {
+            $qb->where('id_uppercat = :parentId')->setParameter('parentId', $parentId);
+        }
+
+        $value = $qb->executeQuery()->fetchOne();
+        return is_numeric($value) ? (int) $value : null;
+    }
+
+    /**
      * Return the maximum rank in the given category, or null if empty.
      */
     public function findMaxRankInCategory(int $catId): ?int

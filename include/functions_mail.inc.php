@@ -104,13 +104,16 @@ function format_email($name, $email): string
  * @param string|array<mixed> $input
  * @return array<string,mixed>
  */
-function unformat_email(string|array $input): array
+/**
+ * @param string|array<mixed> $input
+ * @return array{email: string, name: string}
+ */
+function unformat_email(string|array $input)
 {
     if (is_array($input)) {
-        if (!isset($input['name'])) {
-            $input['name'] = '';
-        }
-        return $input;
+        $email = is_scalar($input['email'] ?? null) ? (string) $input['email'] : '';
+        $name  = is_scalar($input['name']  ?? null) ? (string) $input['name']  : '';
+        return ['email' => $email, 'name' => $name];
     }
 
     if (preg_match('/(.*)<(.*)>.*/', $input, $matches)) {
@@ -559,16 +562,11 @@ SELECT
  */
 function pwg_mail(string|array $to, array $args = [], array $tpl = []): bool
 {
-    global $conf_mail;
     $page = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
     $lang_info = \Piwigo\Core\LanguageStack::info();
 
     if (empty($to) and empty($args['Cc']) and empty($args['Bcc'])) {
         return true;
-    }
-
-    if (!isset($conf_mail)) {
-        $conf_mail = get_mail_configuration();
     }
 
     $mail = new PHPMailer();
@@ -585,15 +583,17 @@ function pwg_mail(string|array $to, array $args = [], array $tpl = []): bool
 
     if (empty($args['from'])) {
         $from = [
-          'email' => $conf_mail['email_webmaster'],
-          'name' => $conf_mail['name_webmaster'],
+          'email' => get_mail_sender_email(),
+          'name' => get_mail_sender_name(),
           ];
     } else {
         $from_raw = $args['from'];
         $from = unformat_email(is_array($from_raw) || is_string($from_raw) ? $from_raw : '');
     }
     $mail->setFrom($from['email'], $from['name']);
-    $mail->addReplyTo($args['reply_to_mail_address'] ?? $from['email'], $args['reply_to_name'] ?? $from['name']);
+    $replyEmail = is_string($args['reply_to_mail_address'] ?? null) ? $args['reply_to_mail_address'] : $from['email'];
+    $replyName  = is_string($args['reply_to_name']         ?? null) ? $args['reply_to_name']         : $from['name'];
+    $mail->addReplyTo($replyEmail, $replyName);
 
     // Subject
     if (empty($args['subject'])) {
@@ -611,7 +611,7 @@ function pwg_mail(string|array $to, array $args = [], array $tpl = []): bool
 
     // Bcc
     $Bcc = get_clean_recipients_list(@$args['Bcc']);
-    if ($conf_mail['send_bcc_mail_webmaster']) {
+    if (\Piwigo\Config\Config::sendBccMailWebmaster()) {
         $Bcc[] = [
           'email' => get_webmaster_mail_address(),
           'name' => '',
@@ -625,7 +625,7 @@ function pwg_mail(string|array $to, array $args = [], array $tpl = []): bool
 
     // theme
     if (empty($args['theme']) or !in_array($args['theme'], ['clear','dark'])) {
-        $args['theme'] = $conf_mail['mail_theme'];
+        $args['theme'] = \Piwigo\Config\Config::mailTheme();
     }
 
     // content
@@ -653,60 +653,61 @@ function pwg_mail(string|array $to, array $args = [], array $tpl = []): bool
     }
 
     $content_type_list = [];
-    if ($conf_mail['mail_allow_html'] and @$args['email_format'] != 'text/plain') {
+    if (\Piwigo\Config\Config::mailAllowHtml() and @$args['email_format'] != 'text/plain') {
         $content_type_list[] = 'text/html';
     }
     $content_type_list[] = 'text/plain';
 
     $contents = [];
     foreach ($content_type_list as $content_type) {
-        // key compose of indexes witch allow to cache mail data
+        // key compose of indexes which allow to cache mail data
         $cache_key = $content_type.'-'.(is_scalar($lang_info['code'] ?? null) ? (string) $lang_info['code'] : '');
         if (!empty($args['auth_key'])) {
-            $cache_key .= '-'.$args['auth_key'];
+            $cache_key .= '-'.(is_scalar($args['auth_key']) ? (string) $args['auth_key'] : '');
         }
 
-        if (!isset($conf_mail[$cache_key])) {
-            // instanciate a new Template
-            if (!isset($conf_mail[$cache_key]['theme'])) {
-                $conf_mail[$cache_key]['theme'] = get_mail_template($content_type);
-                trigger_notify('before_parse_mail_template', $cache_key, $content_type);
-            }
-            $template = &$conf_mail[$cache_key]['theme'];
+        if (!\Piwigo\Cache\RequestCache::has('mail_tpl', $cache_key)) {
+            $mailTpl = get_mail_template($content_type);
+            \Piwigo\Cache\RequestCache::set('mail_tpl', $cache_key, $mailTpl);
+            trigger_notify('before_parse_mail_template', $cache_key, $content_type);
 
-            $template->set_filename('mail_header', 'header.tpl');
-            $template->set_filename('mail_footer', 'footer.tpl');
+            $mailTpl->set_filename('mail_header', 'header.tpl');
+            $mailTpl->set_filename('mail_footer', 'footer.tpl');
 
             $add_url_params = [];
             if (!empty($args['auth_key'])) {
                 $add_url_params['auth'] = $args['auth_key'];
             }
 
-            $template->assign(
+            $mailTpl->assign(
                 [
                 'GALLERY_URL' => add_url_params(get_gallery_home_url(), $add_url_params),
                 'GALLERY_TITLE' => $page['gallery_title'] ?? \Piwigo\Config\Config::galleryTitle(),
                 'VERSION' => \Piwigo\Config\Config::showVersion() ? PHPWG_VERSION : '',
                 'PHPWG_URL' => defined('PHPWG_URL') ? PHPWG_URL : '',
                 'CONTENT_ENCODING' => get_pwg_charset(),
-                'CONTACT_MAIL' => $conf_mail['email_webmaster'],
+                'CONTACT_MAIL' => get_mail_sender_email(),
                 ]
             );
 
             if ($content_type == 'text/html') {
-                if ($template->smarty->templateExists('global-mail-css.tpl')) {
-                    $template->set_filename('global-css', 'global-mail-css.tpl');
-                    $template->assign_var_from_handle('GLOBAL_MAIL_CSS', 'global-css');
+                if ($mailTpl->smarty->templateExists('global-mail-css.tpl')) {
+                    $mailTpl->set_filename('global-css', 'global-mail-css.tpl');
+                    $mailTpl->assign_var_from_handle('GLOBAL_MAIL_CSS', 'global-css');
                 }
 
-                if ($template->smarty->templateExists('mail-css-'. $args['theme'] .'.tpl')) {
-                    $template->set_filename('css', 'mail-css-'. $args['theme'] .'.tpl');
-                    $template->assign_var_from_handle('MAIL_CSS', 'css');
+                $mailTheme = is_scalar($args['theme']) ? (string) $args['theme'] : '';
+                if ($mailTpl->smarty->templateExists('mail-css-'. $mailTheme .'.tpl')) {
+                    $mailTpl->set_filename('css', 'mail-css-'. $mailTheme .'.tpl');
+                    $mailTpl->assign_var_from_handle('MAIL_CSS', 'css');
                 }
             }
         }
 
-        $template = &$conf_mail[$cache_key]['theme'];
+        $cachedTpl = \Piwigo\Cache\RequestCache::get('mail_tpl', $cache_key);
+        $template = $cachedTpl instanceof Template
+            ? $cachedTpl
+            : throw new \LogicException('mail template not in cache for key '.$cache_key);
         $template->assign(
             [
             'MAIL_TITLE' => $args['mail_title'],
@@ -715,11 +716,12 @@ function pwg_mail(string|array $to, array $args = [], array $tpl = []): bool
         );
 
         // Header
-        $contents[$content_type] = $template->parse('mail_header', true);
+        $contents[$content_type] = $template->parse('mail_header', true) ?? '';
 
         // Content
         // Stored in a temp variable, if a content template is used it will be assigned
         // to the $CONTENT template variable, otherwise it will be appened to the mail
+        $contentStr = is_scalar($args['content']) ? (string) $args['content'] : '';
         if ($args['content_format'] == 'text/plain' and $content_type == 'text/html') {
             // convert plain text to html
             $mail_content =
@@ -728,15 +730,15 @@ function pwg_mail(string|array $to, array $args = [], array $tpl = []): bool
                   (string) preg_replace(
                       '/(https?:\/\/([-\w\.]+[-\w])+(:\d+)?(\/([\w\/_\.\#-]*(\?\S+)?[^\.\s])?)?)/i',
                       '<a href="$1">$1</a>',
-                      htmlspecialchars((string) $args['content'])
+                      htmlspecialchars($contentStr)
                   )
               ).
               '</p>';
         } elseif ($args['content_format'] == 'text/html' and $content_type == 'text/plain') {
             // convert html text to plain text
-            $mail_content = strip_tags((string) $args['content']);
+            $mail_content = strip_tags($contentStr);
         } else {
-            $mail_content = $args['content'];
+            $mail_content = $contentStr;
         }
 
         // Runtime template
@@ -747,11 +749,17 @@ function pwg_mail(string|array $to, array $args = [], array $tpl = []): bool
             $tplFilename = is_scalar($tpl['filename']) ? (string) $tpl['filename'] : '';
             if ($template->smarty->templateExists($tplFilename .'.tpl')) {
                 $template->set_filename($tplFilename, $tplFilename .'.tpl');
-                if (!empty($tpl['assign'])) {
-                    $template->assign($tpl['assign']);
+                if (!empty($tpl['assign']) && is_array($tpl['assign'])) {
+                    $safeAssign = [];
+                    foreach ($tpl['assign'] as $k => $v) {
+                        if (is_string($k)) {
+                            $safeAssign[$k] = $v;
+                        }
+                    }
+                    $template->assign($safeAssign);
                 }
                 $template->assign('CONTENT', $mail_content);
-                $contents[$content_type] .= $template->parse($tplFilename, true);
+                $contents[$content_type] .= $template->parse($tplFilename, true) ?? '';
             } else {
                 $contents[$content_type] .= $mail_content;
             }
@@ -760,31 +768,34 @@ function pwg_mail(string|array $to, array $args = [], array $tpl = []): bool
         }
 
         // Footer
-        $contents[$content_type] .= $template->parse('mail_footer', true);
+        $contents[$content_type] .= $template->parse('mail_footer', true) ?? '';
     }
 
     // Undo Compute root_path in order have complete path
     unset_make_full_url();
 
     // Send content to PHPMailer
-    if (isset($contents['text/html'])) {
+    $htmlContent = is_string($contents['text/html'] ?? null) ? $contents['text/html'] : null;
+    $plainContent = is_string($contents['text/plain'] ?? null) ? $contents['text/plain'] : '';
+    if ($htmlContent !== null) {
         $mail->isHTML(true);
-        $mail->Body = move_css_to_body($contents['text/html']);
+        $mail->Body = move_css_to_body($htmlContent);
 
-        if (isset($contents['text/plain'])) {
-            $mail->AltBody = $contents['text/plain'];
+        if ($plainContent !== '') {
+            $mail->AltBody = $plainContent;
         }
     } else {
         $mail->isHTML(false);
-        $mail->Body = $contents['text/plain'];
+        $mail->Body = $plainContent;
     }
 
-    if ($conf_mail['use_smtp']) {
+    $smtpHost = \Piwigo\Config\Config::smtpHost();
+    if (!empty($smtpHost)) {
         // now we need to split port number
-        if (str_contains((string) $conf_mail['smtp_host'], ':')) {
-            [$smtp_host, $smtp_port] = explode(':', (string) $conf_mail['smtp_host']);
+        if (str_contains($smtpHost, ':')) {
+            [$smtp_host, $smtp_port] = explode(':', $smtpHost);
         } else {
-            $smtp_host = $conf_mail['smtp_host'];
+            $smtp_host = $smtpHost;
             $smtp_port = 25;
         }
 
@@ -796,14 +807,16 @@ function pwg_mail(string|array $to, array $args = [], array $tpl = []): bool
         $mail->Host = $smtp_host;
         $mail->Port = (int) $smtp_port;
 
-        if (!empty($conf_mail['smtp_secure']) and in_array($conf_mail['smtp_secure'], ['ssl', 'tls'])) {
-            $mail->SMTPSecure = $conf_mail['smtp_secure'];
+        $smtpSecure = \Piwigo\Config\Config::smtpSecure();
+        if (!empty($smtpSecure) and in_array($smtpSecure, ['ssl', 'tls'])) {
+            $mail->SMTPSecure = $smtpSecure;
         }
 
-        if (!empty($conf_mail['smtp_user'])) {
+        $smtpUser = \Piwigo\Config\Config::smtpUser();
+        if (!empty($smtpUser)) {
             $mail->SMTPAuth = true;
-            $mail->Username = $conf_mail['smtp_user'];
-            $mail->Password = $conf_mail['smtp_password'];
+            $mail->Username = $smtpUser;
+            $mail->Password = \Piwigo\Config\Config::smtpPassword();
         }
     }
 

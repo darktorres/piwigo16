@@ -73,6 +73,25 @@ final class ImageRepository extends AbstractRepository
     }
 
     /**
+     * Set the privacy level for the given image ids and return the number of affected rows.
+     *
+     * @param int[] $ids
+     */
+    public function setLevelForIds(int $level, array $ids): int
+    {
+        if ($ids === []) {
+            return 0;
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->update($this->table('images'))
+            ->set('level', ':level')
+            ->setParameter('level', $level);
+        $qb->where($qb->expr()->in('id', ':ids'))
+           ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
+        return (int) $qb->executeStatement();
+    }
+
+    /**
      * Delete caddie rows for the given image ids and user.
      *
      * @param int[] $imageIds

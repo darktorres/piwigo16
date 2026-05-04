@@ -114,15 +114,19 @@ if (isset($_GET['filter_ip']) or isset($_GET['filter_image_id']) or isset($_GET[
 }
 
 if ($form_param['user_id'] != '-1') {
-    $query = '
-  SELECT
-      username
-    FROM '.USERS_TABLE.'
-    WHERE id = '.$form_param['user_id'].'
-  ;';
-
-    [$form_param['user_name']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-    $form_param['user_id'] = empty(pwg_db_fetch_row(pwg_query($query))) ? '-1' : $form_param['user_id'];
+    $userFields = \Piwigo\Config\Config::userFields();
+    $foundUsername = \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
+        ->findUsernameById(
+            $userFields['id'],
+            $userFields['username'],
+            USERS_TABLE,
+            (int) $form_param['user_id']
+        );
+    if ($foundUsername !== null) {
+        $form_param['user_name'] = $foundUsername;
+    } else {
+        $form_param['user_id'] = '-1';
+    }
 }
 
 $template->assign(

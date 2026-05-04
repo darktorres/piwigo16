@@ -1023,16 +1023,10 @@ function ws_images_setPrivacyLevel(array $params, \Piwigo\Ws\PwgServer $service)
 
     $p_level = is_numeric($params['level']) ? (int) $params['level'] : 0;
     $p_image_ids = is_array($params['image_id']) ? array_map(fn ($v) => is_numeric($v) ? (int) $v : 0, $params['image_id']) : [];
-    $query = '
-UPDATE '. IMAGES_TABLE .'
-  SET level='. $p_level .'
-  WHERE id IN ('. implode(',', $p_image_ids) .')
-;';
-    $result = pwg_query($query);
+    $affected_rows = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
+        ->setLevelForIds($p_level, $p_image_ids);
 
     pwg_activity('photo', $p_image_ids, 'edit');
-
-    $affected_rows = pwg_db_changes();
     if ($affected_rows) {
         include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
         invalidate_user_cache();
@@ -1210,20 +1204,8 @@ function ws_images_addFile(array $params, \Piwigo\Ws\PwgServer $service): mixed
     $p_image_id = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
     $p_type_af = is_scalar($params['type']) ? (string) $params['type'] : '';
     // what is the path and other infos about the photo?
-    $query = '
-SELECT
-    path, file, md5sum,
-    width, height, filesize
-  FROM '. IMAGES_TABLE .'
-  WHERE id = '. $p_image_id .'
-;';
-    $result = pwg_query($query);
-
-    if (pwg_db_num_rows($result) == 0) {
-        return new PwgError(404, 'image_id not found');
-    }
-
-    $image = pwg_db_fetch_assoc($result);
+    $image = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
+        ->findById($p_image_id);
     if ($image === null) {
         return new PwgError(404, 'image_id not found');
     }
@@ -1318,16 +1300,8 @@ function ws_images_add(array $params, \Piwigo\Ws\PwgServer $service): PwgError|a
     $p_original_filename = is_scalar($params['original_filename']) ? (string) $params['original_filename'] : null;
     $p_level = isset($params['level']) && is_numeric($params['level']) ? (int) $params['level'] : null;
 
-    if ($p_image_id > 0) {
-        $query = '
-SELECT COUNT(*)
-  FROM '. IMAGES_TABLE .'
-  WHERE id = '. $p_image_id .'
-;';
-        [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-        if ($count == 0) {
-            return new PwgError(404, 'image_id not found');
-        }
+    if ($p_image_id > 0 && !\Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)->existsById($p_image_id)) {
+        return new PwgError(404, 'image_id not found');
     }
 
     // does the image already exists ?
@@ -1412,13 +1386,8 @@ SELECT COUNT(*)
         if (preg_match('/^\d+/', $p_categories_str, $matches)) {
             $category_id = $matches[0];
 
-            $query = '
-SELECT id, name, permalink
-  FROM '. CATEGORIES_TABLE .'
-  WHERE id = '. $category_id .'
-;';
-            $result = pwg_query($query);
-            $category = pwg_db_fetch_assoc($result);
+            $category = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+                ->findCategoryById((int) $category_id);
 
             $url_params['section'] = 'categories';
             $url_params['category'] = $category;
@@ -1488,16 +1457,8 @@ function ws_images_addSimple(array $params, \Piwigo\Ws\PwgServer $service): PwgE
 
     $p_image_id_as = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
     $p_category_as = array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, is_array($params['category']) ? $params['category'] : []);
-    if ($p_image_id_as > 0) {
-        $query = '
-SELECT COUNT(*)
-  FROM '. IMAGES_TABLE .'
-  WHERE id = '. $p_image_id_as .'
-;';
-        [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-        if ($count == 0) {
-            return new PwgError(404, 'image_id not found');
-        }
+    if ($p_image_id_as > 0 && !\Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)->existsById($p_image_id_as)) {
+        return new PwgError(404, 'image_id not found');
     }
 
     include_once(PHPWG_ROOT_PATH.'admin/include/functions_upload.inc.php');
@@ -1854,16 +1815,8 @@ function ws_images_uploadAsync(array $params, \Piwigo\Ws\PwgServer &$service): m
     $p_chunk = is_numeric($params['chunk']) ? (int) $params['chunk'] : 0;
     $p_chunks = is_numeric($params['chunks']) ? (int) $params['chunks'] : 0;
 
-    if ($p_image_id_async > 0) {
-        $query = '
-SELECT COUNT(*)
-  FROM '. IMAGES_TABLE .'
-  WHERE id = '. $p_image_id_async .'
-;';
-        [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-        if ($count == 0) {
-            return new PwgError(404, __FUNCTION__.' : image_id not found');
-        }
+    if ($p_image_id_async > 0 && !\Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)->existsById($p_image_id_async)) {
+        return new PwgError(404, __FUNCTION__.' : image_id not found');
     }
 
     // handle upload error as in ws_images_addSimple

@@ -185,18 +185,10 @@ SELECT
 
     if (isset($image_id)) {
         // this photo already exists, we update it
-        $query = '
-SELECT
-    path
-  FROM '.IMAGES_TABLE.'
-  WHERE id = '.$image_id.'
-;';
-        $result = pwg_query($query);
-        while ($row = pwg_db_fetch_assoc($result)) {
-            $file_path = (string)$row['path'];
-        }
+        $file_path = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
+            ->findPathById((int) $image_id);
 
-        if (!isset($file_path)) {
+        if ($file_path === null) {
             throw new \Piwigo\Exception\NotFoundException('['.__FUNCTION__.'] this photo does not exist in the database');
         }
 
@@ -206,8 +198,8 @@ SELECT
         // this photo is new
 
         // current date
-        [$dbnow] = pwg_db_fetch_row(pwg_query('SELECT NOW();')) ?? [null];
-        [$year, $month, $day] = preg_split('/[^\d]/', (string) $dbnow, 4) ?: ['', '', ''];
+        $dbnow = (new \DateTimeImmutable())->format('Y-m-d H:i:s');
+        [$year, $month, $day] = preg_split('/[^\d]/', $dbnow, 4) ?: ['', '', ''];
 
         // upload directory hierarchy
         $upload_dir = sprintf(
@@ -378,15 +370,8 @@ SELECT
     sync_metadata([(int) $image_id]);
 
     // cache a derivative
-    $query = '
-SELECT
-    id,
-    path,
-    representative_ext
-  FROM '.IMAGES_TABLE.'
-  WHERE id = '.$image_id.'
-;';
-    $image_infos = pwg_db_fetch_assoc(pwg_query($query));
+    $image_infos = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
+        ->findById((int) $image_id);
     if ($image_infos === null) {
         return (int) $image_id;
     }
@@ -416,7 +401,7 @@ function add_uploaded_file_add_to_categories(int $image_id, ?array $categories):
 
     if (!\Piwigo\Config\Config::loungeActive()) {
         // check if we need to use the lounge from now
-        [$nb_photos] = pwg_db_fetch_row(pwg_query('SELECT COUNT(*) FROM '.IMAGES_TABLE.';')) ?? [null];
+        $nb_photos = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)->countAll();
         if ($nb_photos >= \Piwigo\Config\Config::loungeActivateThreshold()) {
             conf_update_param('lounge_active', true, true);
         }

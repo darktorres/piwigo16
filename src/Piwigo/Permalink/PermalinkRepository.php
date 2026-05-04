@@ -97,6 +97,21 @@ final class PermalinkRepository extends AbstractRepository
         ]);
     }
 
+    /**
+     * Delete an old_permalink entry by permalink value only (used by admin/permalinks.php).
+     * Returns true if a row was deleted.
+     */
+    public function deleteOldPermalinkByValue(string $permalink): bool
+    {
+        // DBAL doesn't support LIMIT on DELETE in a platform-agnostic way;
+        // use raw SQL since the project is MySQL-only.
+        $affected = $this->conn->executeStatement(
+            'DELETE FROM ' . $this->table('old_permalinks') . " WHERE permalink = ? LIMIT 1",
+            [$permalink]
+        );
+        return $affected > 0;
+    }
+
     /** Delete an old_permalink entry (when reactivating that permalink). */
     public function deleteOldPermalink(int $catId, string $permalink): void
     {

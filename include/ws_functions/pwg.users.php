@@ -67,11 +67,8 @@ use Piwigo\Ws\PwgNamedStruct;
     $filtered_groups = [];
     if (!empty($params['filter'])) {
         $filter_str = is_scalar($params['filter']) ? (string) $params['filter'] : '';
-        $filter_query = 'SELECT id FROM `'. GROUPS_TABLE .'` WHERE name LIKE \'%'. pwg_db_real_escape_string($filter_str) . '%\';';
-        $filtered_groups_res = pwg_query($filter_query);
-        while ($row = pwg_db_fetch_assoc($filtered_groups_res)) {
-            $filtered_groups[] = $row['id'];
-        }
+        $filtered_groups = \Piwigo\Core\ServiceLocator::get(\Piwigo\Group\GroupRepository::class)
+            ->findIdsByNameLike($filter_str);
         $filter_where_clause = '('.'u.'.\Piwigo\Config\Config::userFields()['username'].' LIKE \'%'.
         pwg_db_real_escape_string($filter_str).'%\' OR '
         .'u.'.\Piwigo\Config\Config::userFields()['email'].' LIKE \'%'.
@@ -608,12 +605,14 @@ SELECT
             return new PwgError(403, l10n('The passwords do not match'));
         }
 
-        $query = '
-SELECT '.\Piwigo\Config\Config::userFields()['password'].' AS password
-  FROM '.USERS_TABLE.'
-  WHERE '.\Piwigo\Config\Config::userFields()['id'].' = \''.$currentUser->id.'\'
-;';
-        [$current_password] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+        $userFields = \Piwigo\Config\Config::userFields();
+        $current_password = \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
+            ->findPasswordById(
+                $userFields['password'],
+                $userFields['id'],
+                USERS_TABLE,
+                (int) $currentUser->id
+            );
 
         if (!password_verify(is_scalar($params['password']) ? (string) $params['password'] : '', is_string($current_password) ? $current_password : '')) {
             return new PwgError(403, l10n('Current password is wrong'));
@@ -694,13 +693,7 @@ SELECT '.\Piwigo\Config\Config::userFields()['password'].' AS password
     $userId = CurrentUser::get()->id;
     $fav_image_id = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
     // does the image really exist?
-    $query = '
-SELECT COUNT(*)
-  FROM '. IMAGES_TABLE .'
-  WHERE id = '. $fav_image_id .'
-;';
-    [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-    if ($count == 0) {
+    if (!\Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)->existsById($fav_image_id)) {
         return new PwgError(404, 'image_id not found');
     }
 
@@ -734,24 +727,12 @@ SELECT COUNT(*)
     $userId = CurrentUser::get()->id;
     $rem_image_id = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
     // does the image really exist?
-    $query = '
-SELECT COUNT(*)
-  FROM '. IMAGES_TABLE .'
-  WHERE id = '. $rem_image_id .'
-;';
-    [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-    if ($count == 0) {
+    if (!\Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)->existsById($rem_image_id)) {
         return new PwgError(404, 'image_id not found');
     }
 
-    $query = '
-DELETE
-  FROM '.FAVORITES_TABLE.'
-  WHERE user_id = '.$userId.'
-    AND image_id = '.$rem_image_id.'
-;';
-
-    pwg_query($query);
+    \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
+        ->deleteFavorite($userId, $rem_image_id);
 
     return true;
 }

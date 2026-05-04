@@ -309,6 +309,71 @@ final class UserRepository extends AbstractRepository
     }
 
     /**
+     * Return a map of user_id → username for all users.
+     * $idField, $usernameField, $usersTable are admin-configured — not user-supplied.
+     *
+     * @return array<int, string>
+     */
+    public function findAllUserIdNameMap(string $idField, string $usernameField, string $usersTable): array
+    {
+        $rows = $this->conn->executeQuery(
+            "SELECT $idField AS id, $usernameField AS username FROM $usersTable"
+        )->fetchAllAssociative();
+        $result = [];
+        foreach ($rows as $row) {
+            $result[(int) $row['id']] = (string) $row['username'];
+        }
+        return $result;
+    }
+
+    /**
+     * Return all users with their status from user_infos.
+     * Used by admin/rating_user.php to build the user filter.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findAllWithStatus(string $idField, string $usernameField, string $usersTable): array
+    {
+        return $this->conn->executeQuery(
+            "SELECT DISTINCT u.$idField AS id, u.$usernameField AS username, ui.status
+             FROM $usersTable AS u
+             JOIN " . $this->table('user_infos') . " AS ui ON u.$idField = ui.user_id"
+        )->fetchAllAssociative();
+    }
+
+    /**
+     * Return the hashed password for a single user, or null if not found.
+     * Used by pwg.users.php to verify the current password before changing it.
+     */
+    public function findPasswordById(
+        string $passwordField, string $idField, string $usersTable, int $userId
+    ): ?string {
+        $value = $this->conn->createQueryBuilder()
+            ->select($passwordField)
+            ->from($usersTable)
+            ->where("$idField = :userId")
+            ->setParameter('userId', $userId)
+            ->executeQuery()
+            ->fetchOne();
+        return is_string($value) ? $value : null;
+    }
+
+    /**
+     * Delete a single favorite entry for the given user+image combination.
+     * Used by pwg.users.favorites_remove.
+     */
+    public function deleteFavorite(int $userId, int $imageId): void
+    {
+        $this->conn->createQueryBuilder()
+            ->delete($this->table('favorites'))
+            ->where('user_id = :userId')
+            ->andWhere('image_id = :imageId')
+            ->setParameter('userId', $userId)
+            ->setParameter('imageId', $imageId)
+            ->executeStatement();
+    }
+
+    /**
      * Return the username for a single user id, or null if not found.
      * $usernameField, $idField, $usersTable are admin-configured — not user-supplied.
      */

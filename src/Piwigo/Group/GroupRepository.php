@@ -85,6 +85,23 @@ final class GroupRepository extends AbstractRepository
     }
 
     /**
+     * Return ids of groups whose name matches the given LIKE pattern.
+     *
+     * @return int[]
+     */
+    public function findIdsByNameLike(string $nameLike): array
+    {
+        $rows = $this->conn->createQueryBuilder()
+            ->select('id')
+            ->from($this->table('groups'))
+            ->where('name LIKE :pattern')
+            ->setParameter('pattern', '%' . $nameLike . '%')
+            ->executeQuery()
+            ->fetchFirstColumn();
+        return array_map('intval', $rows);
+    }
+
+    /**
      * Return all groups with their member counts.
      *
      * @return list<array<string, mixed>>

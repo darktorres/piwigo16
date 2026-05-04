@@ -70,14 +70,12 @@ if (isset($_GET['cat']) and is_numeric($_GET['cat'])) {
     }
 }
 
+$userFields = \Piwigo\Config\Config::userFields();
+$rawUsers = \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
+    ->findAllUserIdNameMap($userFields['id'], $userFields['username'], USERS_TABLE);
 $users = [];
-$query = '
-SELECT '.\Piwigo\Config\Config::userFields()['username'].' as username, '.\Piwigo\Config\Config::userFields()['id'].' as id
-  FROM '.USERS_TABLE.'
-;';
-$result = pwg_query($query);
-while ($row = pwg_db_fetch_assoc($result)) {
-    $users[(int)$row['id']] = stripslashes((string) $row['username']);
+foreach ($rawUsers as $id => $username) {
+    $users[$id] = stripslashes($username);
 }
 
 
@@ -97,12 +95,7 @@ WHERE 1=1'. $page['user_filter'];
 [$nb_images] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
 $nb_images = (int)$nb_images;
 
-$query = '
-SELECT
-    COUNT(*)
-  FROM '.RATE_TABLE.
-';';
-[$nb_elements] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+$nb_elements = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)->countRatings();
 
 // +-----------------------------------------------------------------------+
 // |                             template init                             |
@@ -209,12 +202,9 @@ foreach ($images as $image) {
 
     $image_url = get_root_url().'admin.php?page=photo-'.$image['id'];
 
-    $query = 'SELECT *
-FROM '.RATE_TABLE.' AS r
-WHERE r.element_id='.$image['id'] . '
-ORDER BY date DESC;';
-    $result = pwg_query($query);
-    $nb_rates = pwg_db_num_rows($result);
+    $all_rates = \Piwigo\Core\ServiceLocator::get(\Piwigo\Rate\RateRepository::class)
+        ->findByElementId((int) $image['id']);
+    $nb_rates = count($all_rates);
 
     $tpl_image =
       [
@@ -230,7 +220,7 @@ ORDER BY date DESC;';
          'rates'  => [],
      ];
 
-    while ($row = pwg_db_fetch_assoc($result)) {
+    foreach ($all_rates as $row) {
         $user_id = (int)$row['user_id'];
         if (isset($users[$user_id])) {
             $user_rate = $users[$user_id];

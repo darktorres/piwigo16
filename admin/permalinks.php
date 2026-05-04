@@ -96,12 +96,9 @@ if (isset($_POST['set_permalink']) and $_POST['cat_id'] > 0) {
     $selected_cat = [(int) $postCatId];
 } elseif (isset($_GET['delete_permanent'])) {
     check_pwg_token();
-    $query = '
-DELETE FROM '.OLD_PERMALINKS_TABLE.'
-  WHERE permalink=\''.pwg_db_real_escape_string(is_scalar($_GET['delete_permanent']) ? (string) $_GET['delete_permanent'] : '').'\'
-  LIMIT 1';
-    $result = pwg_query($query);
-    if (pwg_db_changes() == 0) {
+    $deleted = \Piwigo\Core\ServiceLocator::get(\Piwigo\Permalink\PermalinkRepository::class)
+        ->deleteOldPermalinkByValue(is_scalar($_GET['delete_permanent']) ? (string) $_GET['delete_permanent'] : '');
+    if (!$deleted) {
         \Piwigo\Core\PageState::current()->addError(l10n('Cannot delete the old permalink !'));
     }
 }

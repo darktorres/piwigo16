@@ -72,6 +72,54 @@ final class ImageRepository extends AbstractRepository
         return array_map(fn (mixed $v): float => is_numeric($v) ? (float) $v : 0.0, $rows);
     }
 
+    /** Return true if an image with the given id exists. */
+    public function existsById(int $id): bool
+    {
+        $count = $this->conn->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from($this->table('images'))
+            ->where('id = :id')
+            ->setParameter('id', $id)
+            ->executeQuery()
+            ->fetchOne();
+        return (int) $count > 0;
+    }
+
+    /**
+     * Return the path column for a single image, or null if not found.
+     * Used by functions_upload.inc.php to check whether the image file exists.
+     */
+    public function findPathById(int $id): ?string
+    {
+        $value = $this->conn->createQueryBuilder()
+            ->select('path')
+            ->from($this->table('images'))
+            ->where('id = :id')
+            ->setParameter('id', $id)
+            ->executeQuery()
+            ->fetchOne();
+        return is_string($value) ? $value : null;
+    }
+
+    /**
+     * Return the category_id and uppercats of the category that holds the most recently uploaded image.
+     * Used by photos_add_direct_prepare.inc.php to pre-select the last-used album.
+     *
+     * @return array{category_id: int, uppercats: string}|null
+     */
+    public function findLastUploadedCategoryInfo(): ?array
+    {
+        $row = $this->conn->executeQuery(
+            'SELECT ic.category_id, c.uppercats
+             FROM ' . $this->table('images') . ' i
+             JOIN ' . $this->table('image_category') . ' ic ON ic.image_id = i.id
+             JOIN ' . $this->table('categories') . ' c ON c.id = ic.category_id
+             ORDER BY i.id DESC
+             LIMIT 1'
+        )->fetchAssociative();
+        return $row !== false ? $row : null;
+    }
+
     /**
      * Return images for the given category, ordered by rank.
      * Used by element_set_ranks.php for the reorder UI.

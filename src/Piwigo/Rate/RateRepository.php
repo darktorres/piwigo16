@@ -99,6 +99,55 @@ final class RateRepository extends AbstractRepository
         ]);
     }
 
+    /**
+     * Return all rate rows for the given element, ordered by date descending.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findByElementId(int $elementId): array
+    {
+        return $this->conn->createQueryBuilder()
+            ->select('*')
+            ->from($this->table('rate'))
+            ->where('element_id = :elementId')
+            ->setParameter('elementId', $elementId)
+            ->orderBy('date', 'DESC')
+            ->executeQuery()
+            ->fetchAllAssociative();
+    }
+
+    /**
+     * Return all rate rows ordered by date descending.
+     * Used by admin/rating_user.php.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findAllOrderedByDate(): array
+    {
+        return $this->conn->createQueryBuilder()
+            ->select('*')
+            ->from($this->table('rate'))
+            ->orderBy('date', 'DESC')
+            ->executeQuery()
+            ->fetchAllAssociative();
+    }
+
+    /**
+     * Return (element_id, avg_rate) for all elements.
+     * Used by admin/rating_user.php to compute per-image average.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findAverageByElement(): array
+    {
+        return $this->conn->createQueryBuilder()
+            ->select('element_id', 'AVG(rate) AS avg_rate')
+            ->from($this->table('rate'))
+            ->groupBy('element_id')
+            ->executeQuery()
+            ->fetchAllAssociative();
+    }
+
     /** Count how many times the given image has been rated. */
     public function countByElementId(int $elementId): int
     {

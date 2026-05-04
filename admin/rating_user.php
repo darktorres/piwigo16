@@ -35,19 +35,13 @@ if (isset($_GET['consensus_top_number'])) {
 }
 
 // build users
-$query = 'SELECT DISTINCT
-  u.'.\Piwigo\Config\Config::userFields()['id'].' AS id,
-  u.'.\Piwigo\Config\Config::userFields()['username'].' AS name,
-  ui.status
-  FROM '.USERS_TABLE.' AS u INNER JOIN '.USER_INFOS_TABLE.' AS ui
-    ON u.'.\Piwigo\Config\Config::userFields()['id'].' = ui.user_id';
-
+$userFields = \Piwigo\Config\Config::userFields();
 $users_by_id = [];
-$result = pwg_query($query);
-while ($row = pwg_db_fetch_assoc($result)) {
+foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
+    ->findAllWithStatus($userFields['id'], $userFields['username'], USERS_TABLE) as $row) {
     $users_by_id[(int)$row['id']] = [
-      'name' => (string)$row['name'],
-      'anon' => is_autorize_status(ACCESS_CLASSIC, (string)$row['status']) ? false : true,
+        'name' => (string) $row['username'],
+        'anon' => is_autorize_status(ACCESS_CLASSIC, (string) $row['status']) ? false : true,
     ];
 }
 
@@ -59,10 +53,7 @@ foreach (\Piwigo\Config\Config::rateItems() as $rate) {
 // by user aggregation
 $image_ids = [];
 $by_user_ratings = [];
-$query = '
-SELECT * FROM '.RATE_TABLE.' ORDER by date DESC';
-$result = pwg_query($query);
-while ($row = pwg_db_fetch_assoc($result)) {
+foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Rate\RateRepository::class)->findAllOrderedByDate() as $row) {
     $user_id = (int)$row['user_id'];
     if (!isset($users_by_id[$user_id])) {
         $users_by_id[$user_id] = ['name' => '???'.$user_id, 'anon' => false];
@@ -95,29 +86,21 @@ while ($row = pwg_db_fetch_assoc($result)) {
 // get image tn urls
 $image_urls = [];
 if (count($image_ids) > 0) {
-    $query = 'SELECT id, name, file, path, representative_ext, level
-  FROM '.IMAGES_TABLE.'
-  WHERE id IN ('.implode(',', array_keys($image_ids)).')';
-    $result = pwg_query($query);
     $params = ImageStdParams::get_by_type(IMG_SQUARE);
-    while ($row = pwg_db_fetch_assoc($result)) {
-        $id = (int)$row['id'];
-        $image_urls[ $id ] = [
-          'tn' => DerivativeImage::url($params, $row),
-          'page' => make_picture_url(['image_id' => $row['id'], 'image_file' => $row['file']]),
+    foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
+        ->findByIds(array_map('intval', array_keys($image_ids))) as $row) {
+        $id = (int) $row['id'];
+        $image_urls[$id] = [
+            'tn'   => DerivativeImage::url($params, $row),
+            'page' => make_picture_url(['image_id' => $row['id'], 'image_file' => $row['file']]),
         ];
     }
 }
 
 //all image averages
-$query = 'SELECT element_id,
-    AVG(rate) AS avg
-  FROM '.RATE_TABLE.'
-  GROUP BY element_id';
 $all_img_sum = [];
-$result = pwg_query($query);
-while ($row = pwg_db_fetch_assoc($result)) {
-    $all_img_sum[(int)$row['element_id']] = [ 'avg' => (float)$row['avg'] ];
+foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Rate\RateRepository::class)->findAverageByElement() as $row) {
+    $all_img_sum[(int) $row['element_id']] = ['avg' => (float) $row['avg_rate']];
 }
 
 $query = 'SELECT id
@@ -248,12 +231,7 @@ $template->assign('order_by_options_selected', [$order_by_index]);
 
 $x = uasort($by_user_ratings, $available_order_by[$order_by_index][1]);
 
-$query = '
-SELECT
-    COUNT(*)
-  FROM '.RATE_TABLE.
-';';
-[$nb_elements] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+$nb_elements = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)->countRatings();
 
 $template->assign([
   'F_ACTION' => get_root_url().'admin.php',

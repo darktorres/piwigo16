@@ -95,43 +95,24 @@ if (isset($_GET['album'])) {
     check_input_parameter('album', $_GET, false, PATTERN_ID);
 
     // test if album really exists
-    $album_id_str = is_scalar($_GET['album']) ? (string) $_GET['album'] : '0';
-    $query = '
-SELECT id, uppercats
-  FROM '.CATEGORIES_TABLE.'
-  WHERE id = '.$album_id_str.'
-;';
-    $result = pwg_query($query);
-    if (pwg_db_num_rows($result) == 1) {
+    $album_id_int = is_scalar($_GET['album']) ? (int) $_GET['album'] : 0;
+    $cat = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+        ->findCategoryById($album_id_int);
+    if ($cat !== null) {
         $selected_category = [$_GET['album']];
-
-        $cat = pwg_db_fetch_assoc($result);
-        if ($cat !== null) {
-            $template->assign('ADD_TO_ALBUM', get_cat_display_name_cache(is_scalar($cat['uppercats']) ? (string) $cat['uppercats'] : '', null));
-        }
+        $template->assign('ADD_TO_ALBUM', get_cat_display_name_cache(is_scalar($cat['uppercats']) ? (string) $cat['uppercats'] : '', null));
     } else {
         $album_id = is_scalar($_GET['album']) ? (string) $_GET['album'] : '';
         fatal_error('[Hacking attempt] the album id = "'.$album_id.'" is not valid');
     }
 } else {
     // we need to know the category in which the last photo was added
-    $query = '
-SELECT category_id, c.uppercats
-  FROM '.IMAGES_TABLE.' AS i
-    JOIN '.IMAGE_CATEGORY_TABLE.' AS ic ON image_id = i.id
-    JOIN '.CATEGORIES_TABLE.' AS c ON category_id = c.id
-  ORDER BY i.id DESC
-  LIMIT 1
-;
-';
-    $result = pwg_query($query);
-    if (pwg_db_num_rows($result) > 0) {
-        $row = pwg_db_fetch_assoc($result);
-        if ($row !== null) {
-            $selected_category = [$row['category_id']];
-            $selected_category_name = get_cat_display_name_cache((string)$row['uppercats'], null);
-            $template->assign('selected_category_name', $selected_category_name);
-        }
+    $last_cat = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
+        ->findLastUploadedCategoryInfo();
+    if ($last_cat !== null) {
+        $selected_category = [$last_cat['category_id']];
+        $selected_category_name = get_cat_display_name_cache((string) $last_cat['uppercats'], null);
+        $template->assign('selected_category_name', $selected_category_name);
     }
 }
 
@@ -139,12 +120,7 @@ SELECT category_id, c.uppercats
 $template->assign('selected_category', $selected_category);
 
 // how many existing albums?
-$query = '
-SELECT
-    COUNT(*)
-  FROM '.CATEGORIES_TABLE.'
-;';
-[$nb_albums] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+$nb_albums = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)->countAll();
 // $nb_albums = 0;
 $template->assign('NB_ALBUMS', $nb_albums);
 

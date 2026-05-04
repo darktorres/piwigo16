@@ -1357,7 +1357,7 @@ function load_conf_from_db(?string $condition = '', bool $die_on_condition_with_
         } elseif ($val == 'false') {
             $val = false;
         }
-        \Piwigo\Config\Config::override((string) $row['param'], $val);
+        \Piwigo\Config\Config::override(is_scalar($row['param']) ? (string) $row['param'] : '', $val);
     }
 
     trigger_notify('load_conf', $condition);

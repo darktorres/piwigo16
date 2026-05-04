@@ -477,7 +477,7 @@ SELECT *
                     ['id' => $row['id']]
                 );
             } else {
-                $ctx->rotationAngle = PwgImage::get_rotation_angle_from_code((int) $row['rotation']);
+                $ctx->rotationAngle = PwgImage::get_rotation_angle_from_code(is_numeric($row['rotation']) ? (int) $row['rotation'] : 0);
             }
         }
         if (!$row) {

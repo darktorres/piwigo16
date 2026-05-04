@@ -1486,7 +1486,7 @@ function qsearch_get_text_token_search_sql(\Piwigo\Search\QSingleToken $token, a
                 // Prior to MySQL 8.0.4, MySQL used the Henry Spencer regular expression library to support
                 // regular expression operations, rather than International Components for Unicode (ICU)
                 $page['use_regexp_ICU'] = false;
-                $db_version = pwg_get_db_version();
+                $db_version = \Piwigo\Db\DbInfo::version();
                 if (!preg_match('/mariadb/i', $db_version) and version_compare($db_version, '8.0.4', '>')) {
                     $page['use_regexp_ICU'] = true;
                 }

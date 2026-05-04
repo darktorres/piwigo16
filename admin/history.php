@@ -30,7 +30,7 @@ global $template, $user, $page, $persistent_cache, $lang;
 include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 include_once(PHPWG_ROOT_PATH.'admin/include/functions_history.inc.php');
 
-$types = array_merge(['none'], get_enums(HISTORY_TABLE, 'image_type'));
+$types = array_merge(['none'], \Piwigo\Db\SchemaHelper::getEnums(HISTORY_TABLE, 'image_type'));
 
 $display_thumbnails = ['no_display_thumbnail' => l10n('No display'),
                             'display_thumbnail_classic' => l10n('Classic display'),

@@ -483,12 +483,12 @@ function ws_session_getStatus($params, \Piwigo\Ws\PwgServer &$service): mixed
 
     if (isset($param['action'])) {
         $where .= '
-    AND action = "'.pwg_db_real_escape_string(is_scalar($param['action']) ? (string) $param['action'] : '').'"';
+    AND action = '.get_dbal_connection()->quote(is_scalar($param['action']) ? (string) $param['action'] : '');
     }
 
     if (isset($param['object'])) {
         $where .= '
-    AND object = "'.pwg_db_real_escape_string(is_scalar($param['object']) ? (string) $param['object'] : '').'"';
+    AND object = '.get_dbal_connection()->quote(is_scalar($param['object']) ? (string) $param['object'] : '');
     }
 
     if (!empty($param['date_min'])) {
@@ -678,7 +678,7 @@ SELECT
     if (!is_array($page)) {
         $page = [];
     }
-    if (!empty($params['section']) and in_array($params['section'], get_enums(HISTORY_TABLE, 'section'))) {
+    if (!empty($params['section']) and in_array($params['section'], \Piwigo\Db\SchemaHelper::getEnums(HISTORY_TABLE, 'section'))) {
         $page['section'] = $params['section'];
     }
 
@@ -730,7 +730,7 @@ SELECT
         $page['start'] = 0;
     }
 
-    $types = array_merge(['none'], get_enums(HISTORY_TABLE, 'image_type'));
+    $types = array_merge(['none'], \Piwigo\Db\SchemaHelper::getEnums(HISTORY_TABLE, 'image_type'));
 
     $display_thumbnails = ['no_display_thumbnail' => l10n('No display'),
                                 'display_thumbnail_classic' => l10n('Classic display'),
@@ -777,7 +777,7 @@ SELECT
         $search['fields']['filename'] = str_replace(
             '*',
             '%',
-            pwg_db_real_escape_string(is_scalar($param['filename']) ? (string) $param['filename'] : '')
+            is_scalar($param['filename']) ? (string) $param['filename'] : ''
         );
     }
 
@@ -786,7 +786,7 @@ SELECT
         $search['fields']['ip'] = str_replace(
             '*',
             '%',
-            pwg_db_real_escape_string(is_scalar($param['ip']) ? (string) $param['ip'] : '')
+            is_scalar($param['ip']) ? (string) $param['ip'] : ''
         );
     }
 

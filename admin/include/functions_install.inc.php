@@ -145,7 +145,14 @@ function install_db_connect(array &$infos, array &$errors): void
 
     try {
         get_dbal_connection();
-        pwg_db_check_version();
+        $dbVersion = \Piwigo\Db\DbInfo::version();
+        if (version_compare($dbVersion, REQUIRED_MYSQL_VERSION, '<')) {
+            $errors[] = sprintf(
+                'your MySQL version is too old, you have "%s" and you need at least "%s"',
+                $dbVersion,
+                REQUIRED_MYSQL_VERSION
+            );
+        }
     } catch (Exception $e) {
         $errors[] = l10n($e->getMessage());
     }

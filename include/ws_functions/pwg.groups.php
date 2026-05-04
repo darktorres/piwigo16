@@ -34,7 +34,7 @@ function ws_groups_getList(array $params, \Piwigo\Ws\PwgServer &$service): PwgEr
     $where_clauses = ['1=1'];
 
     if (!empty($params['name'])) {
-        $where_clauses[] = 'LOWER(name) LIKE \''. pwg_db_real_escape_string(is_scalar($params['name']) ? (string) $params['name'] : '') .'\'';
+        $where_clauses[] = 'LOWER(name) LIKE '.get_dbal_connection()->quote(is_scalar($params['name']) ? (string) $params['name'] : '');
     }
 
     if (!empty($params['group_id'])) {
@@ -102,7 +102,7 @@ function ws_groups_add(array $params, \Piwigo\Ws\PwgServer &$service): mixed
         'is_default' => \Piwigo\Core\BoolUtil::toString($is_default_val),
         ]
     );
-    $inserted_id = pwg_db_insert_id();
+    $inserted_id = (int) get_dbal_connection()->lastInsertId();
 
     pwg_activity('group', $inserted_id, 'add');
 
@@ -355,7 +355,7 @@ function ws_groups_duplicate(array $params, \Piwigo\Ws\PwgServer &$service): mix
         'is_default' => \Piwigo\Core\BoolUtil::toString(is_string($is_default) ? $is_default : ''),
         ]
     );
-    $inserted_id = pwg_db_insert_id();
+    $inserted_id = (int) get_dbal_connection()->lastInsertId();
 
     pwg_activity('group', $inserted_id, 'add');
 

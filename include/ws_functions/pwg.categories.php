@@ -321,7 +321,7 @@ SELECT SQL_CALC_FOUND_ROWS
 
     if (isset($params['search']) and '' != $params['search']) {
         $query .= '
-    AND name LIKE \'%'.pwg_db_real_escape_string(is_scalar($params['search']) ? (string) $params['search'] : '').'%\'';
+    AND name LIKE '.get_dbal_connection()->quote('%'.(is_scalar($params['search']) ? (string) $params['search'] : '').'%');
         if (!isset($params['limit'])) {
             $query .= ' LIMIT '.\Piwigo\Config\Config::linkedAlbumSearchLimit();
         }
@@ -602,7 +602,7 @@ SELECT SQL_CALC_FOUND_ROWS id, name, comment, uppercats, global_rank, dir, statu
 
     if (isset($params['search']) and $params['search'] != '') {
         $query .= '
-  AND name LIKE \'%'.pwg_db_real_escape_string(is_scalar($params['search']) ? (string) $params['search'] : '').'%\'
+  AND name LIKE '.get_dbal_connection()->quote('%'.(is_scalar($params['search']) ? (string) $params['search'] : '').'%').'
   LIMIT '.\Piwigo\Config\Config::linkedAlbumSearchLimit();
     }
 

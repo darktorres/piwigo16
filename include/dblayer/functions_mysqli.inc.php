@@ -12,9 +12,9 @@ declare(strict_types=1);
  * @package functions\mysql
  *
  * Compatibility shim — all functions are now backed by Doctrine DBAL.
- * pwg_query(), pwg_db_connect(), and the mysqli result-set helpers have
- * been removed.  Callers of query2array / mass_inserts / mass_updates /
- * single_update / single_insert are unaffected.
+ * Legacy globals (pwg_query, pwg_db_*, mysqli helpers) are fully removed.
+ * Permanent API: get_dbal_connection(), query2array(), mass_inserts(),
+ * mass_updates(), single_insert(), single_update(), protect_column_name().
  */
 
 define('DB_ENGINE', 'MySQL');
@@ -42,63 +42,6 @@ function get_dbal_connection(): \Doctrine\DBAL\Connection
         $conn = \Piwigo\Db\DbConnection::build();
     }
     return $conn;
-}
-
-// ---------------------------------------------------------------------------
-// DB version / error reporting
-// ---------------------------------------------------------------------------
-
-function pwg_get_db_version(): string
-{
-    $v = get_dbal_connection()->executeQuery('SELECT VERSION()')->fetchOne();
-    return is_string($v) ? $v : '';
-}
-
-function pwg_db_check_version(): void
-{
-    $current = pwg_get_db_version();
-    if (version_compare($current, REQUIRED_MYSQL_VERSION, '<')) {
-        fatal_error(sprintf(
-            'your MySQL version is too old, you have "%s" and you need at least "%s"',
-            $current,
-            REQUIRED_MYSQL_VERSION
-        ));
-    }
-}
-
-function my_error(string $header, bool $die): void
-{
-    if ($die) {
-        fatal_error($header);
-    }
-    echo '<pre>';
-    trigger_error($header, E_USER_WARNING);
-    echo '</pre>';
-}
-
-// ---------------------------------------------------------------------------
-// Escaping / last-insert-id / next-value helpers
-// ---------------------------------------------------------------------------
-
-function pwg_db_real_escape_string(string $s): string
-{
-    // Connection::quote() returns 'value' (with surrounding quotes); strip them.
-    $quoted = get_dbal_connection()->quote($s);
-    return substr($quoted, 1, -1);
-}
-
-function pwg_db_insert_id(): int|string
-{
-    $id = get_dbal_connection()->lastInsertId();
-    return is_numeric($id) ? (int) $id : (string) $id;
-}
-
-function pwg_db_nextval(string $column, string $table): int
-{
-    $value = get_dbal_connection()
-        ->executeQuery("SELECT IF(MAX($column)+1 IS NULL, 1, MAX($column)+1) FROM $table")
-        ->fetchOne();
-    return is_numeric($value) ? (int) $value : 1;
 }
 
 // ---------------------------------------------------------------------------
@@ -342,85 +285,6 @@ function protect_column_name(string $column_name): string
         $column_name = '`' . $column_name . '`';
     }
     return $column_name;
-}
-
-// ---------------------------------------------------------------------------
-// Maintenance
-// ---------------------------------------------------------------------------
-
-function do_maintenance_all_tables(): void
-{
-    $prefixeTable = is_string($GLOBALS['prefixeTable'] ?? null) ? $GLOBALS['prefixeTable'] : 'piwigo_';
-    $conn = get_dbal_connection();
-
-    $allTables = $conn->executeQuery("SHOW TABLES LIKE '" . $prefixeTable . "%'")->fetchFirstColumn();
-    if ($allTables === []) {
-        return;
-    }
-
-    $success = true;
-    try {
-        $allTablesStr = array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '', $allTables);
-        $conn->executeStatement('REPAIR TABLE ' . implode(', ', $allTablesStr));
-
-        foreach ($allTablesStr as $tableName) {
-            $primaryKeys = [];
-            foreach ($conn->executeQuery('DESC ' . $tableName)->fetchAllAssociative() as $row) {
-                if ($row['Key'] === 'PRI') {
-                    $primaryKeys[] = is_scalar($row['Field']) ? (string) $row['Field'] : '';
-                }
-            }
-            if ($primaryKeys !== []) {
-                $conn->executeStatement('ALTER TABLE ' . $tableName . ' ORDER BY ' . implode(', ', $primaryKeys));
-            }
-        }
-
-        $conn->executeStatement('OPTIMIZE TABLE ' . implode(', ', $allTablesStr));
-    } catch (\Exception) {
-        $success = false;
-    }
-
-    if ($success) {
-        \Piwigo\Core\PageState::current()->addInfo(l10n('All optimizations have been successfully completed.'));
-    } else {
-        \Piwigo\Core\PageState::current()->addError(l10n('Optimizations have been completed with some errors.'));
-    }
-}
-
-// ---------------------------------------------------------------------------
-// Schema helpers
-// ---------------------------------------------------------------------------
-
-/**
- * Returns the possible values of an enum column.
- *
- * @return string[]
- */
-function get_enums(string $table, string $field): array
-{
-    $options = [];
-    foreach (get_dbal_connection()->executeQuery('DESC ' . $table)->fetchAllAssociative() as $row) {
-        if ($row['Field'] === $field) {
-            // parse enum('blue','green','black')
-            $raw = explode(',', substr(is_scalar($row['Type']) ? (string) $row['Type'] : '', 5, -1));
-            foreach ($raw as $option) {
-                $options[] = str_replace("'", '', $option);
-            }
-        }
-    }
-    return $options;
-}
-
-// ---------------------------------------------------------------------------
-// Date-range helper that executes a query (kept for 1 remaining caller).
-// ---------------------------------------------------------------------------
-
-function pwg_db_get_recent_period(string $period, string $date = 'CURRENT_DATE'): string
-{
-    $d = get_dbal_connection()
-        ->executeQuery('SELECT ' . \Piwigo\Db\SqlExpr::recentPeriodExpr($period, $date))
-        ->fetchOne();
-    return is_scalar($d) ? (string) $d : '';
 }
 
 // ---------------------------------------------------------------------------

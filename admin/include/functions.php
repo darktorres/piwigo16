@@ -1240,7 +1240,7 @@ function create_virtual_category(string $category_name, int|string|null $parent_
 
     // we have then to add the virtual category
     single_insert(CATEGORIES_TABLE, $insert);
-    $inserted_id = pwg_db_insert_id();
+    $inserted_id = (int) get_dbal_connection()->lastInsertId();
 
     single_update(
         CATEGORIES_TABLE,
@@ -1429,7 +1429,7 @@ SELECT id
                 if (!isset($page['tag_id_from_tag_name_cache']) || !is_array($page['tag_id_from_tag_name_cache'])) {
                     $page['tag_id_from_tag_name_cache'] = [];
                 }
-                $newId = pwg_db_insert_id();
+                $newId = (int) get_dbal_connection()->lastInsertId();
                 $page['tag_id_from_tag_name_cache'][$tag_name] = $newId;
 
                 invalidate_user_cache_nb_tags();
@@ -1911,7 +1911,7 @@ function invalidate_user_cache_nb_tags(): void
  */
 function create_table_add_character_set($query)
 {
-    if (version_compare(pwg_get_db_version(), '4.1.0', '<')) {
+    if (version_compare(\Piwigo\Db\DbInfo::version(), '4.1.0', '<')) {
         return $query;
     }
     $charset_collate = ' DEFAULT CHARACTER SET utf8';
@@ -1998,7 +1998,7 @@ function create_tag(string $tag_name): array
             ]
         );
 
-        $inserted_id = pwg_db_insert_id();
+        $inserted_id = (int) get_dbal_connection()->lastInsertId();
 
         return [
           'info' => l10n('Tag "%s" was added', stripslashes($tag_name)),

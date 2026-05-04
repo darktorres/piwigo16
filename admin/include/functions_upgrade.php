@@ -168,29 +168,19 @@ function check_upgrade_access_rights(): void
     $username = is_scalar($_POST['username']) ? (string) $_POST['username'] : '';
     $password = is_scalar($_POST['password']) ? (string) $_POST['password'] : '';
 
-    $username = pwg_db_real_escape_string($username);
-
     if (version_compare($current_release, '2.0', '<')) {
         $username = mb_convert_encoding($username, 'ISO-8859-1', 'UTF-8');
         $password = mb_convert_encoding($password, 'ISO-8859-1', 'UTF-8');
     }
 
     if (version_compare($current_release, '1.5', '<')) {
-        $query = '
-SELECT password, status
-FROM '.USERS_TABLE.'
-WHERE username = \''.$username.'\'
-;';
+        $query = 'SELECT password, status FROM '.USERS_TABLE.' WHERE username = ?';
     } else {
-        $query = '
-SELECT u.password, ui.status
-FROM '.USERS_TABLE.' AS u
-INNER JOIN '.USER_INFOS_TABLE.' AS ui
-ON u.'.\Piwigo\Config\Config::userFields()['id'].'=ui.user_id
-WHERE '.\Piwigo\Config\Config::userFields()['username'].'=\''.$username.'\'
-;';
+        $query = 'SELECT u.password, ui.status FROM '.USERS_TABLE.' AS u'
+            .' INNER JOIN '.USER_INFOS_TABLE.' AS ui ON u.'.\Piwigo\Config\Config::userFields()['id'].'=ui.user_id'
+            .' WHERE '.\Piwigo\Config\Config::userFields()['username'].' = ?';
     }
-    $row = get_dbal_connection()->executeQuery($query)->fetchAssociative() ?: null;
+    $row = get_dbal_connection()->executeQuery($query, [$username])->fetchAssociative() ?: null;
 
     if ($row === null || !password_verify($password, is_string($row['password']) ? $row['password'] : '')) {
         \Piwigo\Core\PageState::current()->addError(l10n('Invalid password!'));

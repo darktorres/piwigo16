@@ -68,7 +68,7 @@ function ws_userComments_getList(array $params, \Piwigo\Ws\PwgServer &$service):
     // reset all filters during search
     if (!empty($params['search'])) {
         $where_clauses = ['1=1'];
-        $where_clauses[] = 'content LIKE "%'. pwg_db_real_escape_string(is_scalar($params['search']) ? (string) $params['search'] : '') .'%"';
+        $where_clauses[] = 'content LIKE '.get_dbal_connection()->quote('%'.(is_scalar($params['search']) ? (string) $params['search'] : '').'%');
     }
 
     // summary

@@ -73,7 +73,7 @@ function get_history(array $data, array $search, array|string $types): array
 SELECT
     id
   FROM '.IMAGES_TABLE.'
-  WHERE file LIKE \''.(is_scalar($fields['filename']) ? (string)$fields['filename'] : '').'\'
+  WHERE file LIKE '.get_dbal_connection()->quote(is_scalar($fields['filename']) ? (string)$fields['filename'] : '').'
 ;';
         $search['image_ids'] = query2array($query, null, 'id');
     }
@@ -132,7 +132,7 @@ SELECT
     }
 
     if (isset($fields['ip'])) {
-        $clauses[] = 'IP LIKE "'.(is_scalar($fields['ip']) ? (string)$fields['ip'] : '').'"';
+        $clauses[] = 'IP LIKE '.get_dbal_connection()->quote(is_scalar($fields['ip']) ? (string)$fields['ip'] : '');
     }
 
     $clauses = prepend_append_array_items($clauses, '(', ')');

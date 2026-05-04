@@ -514,7 +514,7 @@ function pwg_log(int|string|null $image_id = null, ?string $image_type = null, ?
     if ($pageSection !== '') {
         // set cache if not available
         if (!\Piwigo\Config\Config::has('history_sections_cache')) {
-            conf_update_param('history_sections_cache', get_enums(HISTORY_TABLE, 'section'), true);
+            conf_update_param('history_sections_cache', \Piwigo\Db\SchemaHelper::getEnums(HISTORY_TABLE, 'section'), true);
         }
 
         $history_sections_cache = safe_unserialize(\Piwigo\Config\Config::historySectionsCache() ?? '');
@@ -525,7 +525,7 @@ function pwg_log(int|string|null $image_id = null, ?string $image_type = null, ?
         ) {
             $section = $pageSection;
         } elseif (preg_match('/^[a-zA-Z0-9_-]+$/', $pageSection)) {
-            $history_sections = get_enums(HISTORY_TABLE, 'section');
+            $history_sections = \Piwigo\Db\SchemaHelper::getEnums(HISTORY_TABLE, 'section');
             $history_sections[] = $pageSection;
 
             // alter history table structure, to include a new section
@@ -535,7 +535,7 @@ function pwg_log(int|string|null $image_id = null, ?string $image_type = null, ?
             );
 
             // and refresh cache
-            conf_update_param('history_sections_cache', get_enums(HISTORY_TABLE, 'section'), true);
+            conf_update_param('history_sections_cache', \Piwigo\Db\SchemaHelper::getEnums(HISTORY_TABLE, 'section'), true);
 
             $section = $pageSection;
         }
@@ -1969,7 +1969,10 @@ function get_icon(?string $date, bool $is_child_date = false): false|array
     $sqlRecentDate = \Piwigo\Cache\RequestCache::remember(
         'get_icon',
         'sql_recent_date',
-        static fn () => pwg_db_get_recent_period((string) $recentPeriod)
+        static function () use ($recentPeriod): string {
+            $v = get_dbal_connection()->executeQuery('SELECT '.\Piwigo\Db\SqlExpr::recentPeriodExpr((string) $recentPeriod))->fetchOne();
+            return is_scalar($v) ? (string) $v : '';
+        }
     );
 
     $isRecent = $date > $sqlRecentDate;
@@ -2337,7 +2340,7 @@ function send_piwigo_infos(): void
         'os_version' => PHP_OS,
         'container_type' => $container_type,
         'container_version' => $container_version,
-        'db_version' => pwg_get_db_version(),
+        'db_version' => \Piwigo\Db\DbInfo::version(),
         'php_datetime' => date('Y-m-d H:i:s'),
         'db_datetime' => $db_current_date,
         'graphics_library' => get_graphics_library(),

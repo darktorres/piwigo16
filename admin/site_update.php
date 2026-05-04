@@ -194,7 +194,8 @@ SELECT id, uppercats, global_rank, status, visible
     }
 
     // next category id available
-    $next_id = pwg_db_nextval('id', CATEGORIES_TABLE);
+    $next_id_raw = get_dbal_connection()->executeQuery('SELECT IF(MAX(id)+1 IS NULL, 1, MAX(id)+1) FROM `'.CATEGORIES_TABLE.'`')->fetchOne();
+    $next_id = is_numeric($next_id_raw) ? (int) $next_id_raw : 1;
 
     // retrieve sub-directories fulldirs from the site reader
     $fs_fulldirs = $site_reader->get_full_directories($basedir);
@@ -437,7 +438,8 @@ SELECT id, path
     }
 
     // next element id available
-    $next_element_id = pwg_db_nextval('id', IMAGES_TABLE);
+    $next_element_id_raw = get_dbal_connection()->executeQuery('SELECT IF(MAX(id)+1 IS NULL, 1, MAX(id)+1) FROM `'.IMAGES_TABLE.'`')->fetchOne();
+    $next_element_id = is_numeric($next_element_id_raw) ? (int) $next_element_id_raw : 1;
 
     $start = get_moment();
 

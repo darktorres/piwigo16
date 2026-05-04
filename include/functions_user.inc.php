@@ -164,7 +164,7 @@ function register_user(string $login, string $password, ?string $mail_address = 
           ];
 
         single_insert(USERS_TABLE, $insert);
-        $user_id = pwg_db_insert_id();
+        $user_id = (int) get_dbal_connection()->lastInsertId();
 
         // Assign by default groups
         $inserts = [];
@@ -1505,7 +1505,7 @@ SELECT
   FROM '.USER_AUTH_KEYS_TABLE.' AS uak
     JOIN '.USER_INFOS_TABLE.' AS ui ON uak.user_id = ui.user_id
     JOIN '.USERS_TABLE.' AS u ON u.'.\Piwigo\Config\Config::userFields()['id'].' = ui.user_id
-  WHERE auth_key = \''.$auth_key.'\'
+  WHERE auth_key = '.get_dbal_connection()->quote((string) $auth_key).'
 ;';
     $keys = query2array($query);
 
@@ -1642,7 +1642,7 @@ SELECT
 
         single_insert(USER_AUTH_KEYS_TABLE, $key);
 
-        $key['auth_key_id'] = pwg_db_insert_id();
+        $key['auth_key_id'] = (int) get_dbal_connection()->lastInsertId();
 
         return $key;
     } else {

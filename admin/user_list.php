@@ -132,7 +132,7 @@ if (isset($_GET['show_add_user'])) {
 
 // Status options
 $label_of_status = [];
-foreach (get_enums(USER_INFOS_TABLE, 'status') as $status) {
+foreach (\Piwigo\Db\SchemaHelper::getEnums(USER_INFOS_TABLE, 'status') as $status) {
     $label_of_status[$status] = l10n('user_status_'.$status);
 }
 

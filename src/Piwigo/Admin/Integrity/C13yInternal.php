@@ -9,6 +9,7 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\DbInfo;
 
 class C13yInternal
 {
@@ -36,7 +37,7 @@ class C13yInternal
 
         $check_list[] = [
             'type' => 'MySQL',
-            'current' => pwg_get_db_version(),
+            'current' => DbInfo::version(),
             'required' => REQUIRED_MYSQL_VERSION,
             ];
 

@@ -357,7 +357,7 @@ SELECT
 
         single_insert(IMAGES_TABLE, $insert);
 
-        $image_id = pwg_db_insert_id();
+        $image_id = (int) get_dbal_connection()->lastInsertId();
         pwg_activity('photo', $image_id, 'add');
     }
 
@@ -504,7 +504,7 @@ SELECT
         $add_status = 'update';
     } else {
         single_insert(IMAGE_FORMAT_TABLE, $insert);
-        $format_id = pwg_db_insert_id();
+        $format_id = (int) get_dbal_connection()->lastInsertId();
         $add_status = 'add';
     }
 

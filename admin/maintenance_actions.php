@@ -128,7 +128,7 @@ switch ($action) {
         }
     case 'database':
         {
-            do_maintenance_all_tables();
+            \Piwigo\Admin\MaintenanceService::repairAndOptimize();
             break;
         }
     case 'c13y':
@@ -256,7 +256,7 @@ foreach (ImageStdParams::get_defined_type_map() as $params) {
 $purge_urls[ l10n(IMG_CUSTOM) ] = IMG_CUSTOM;
 
 $php_current_timestamp = date('Y-m-d H:i:s');
-$db_version = pwg_get_db_version();
+$db_version = \Piwigo\Db\DbInfo::version();
 $db_current_date = (new \DateTimeImmutable())->format('Y-m-d H:i:s');
 
 $template->assign(

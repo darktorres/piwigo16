@@ -85,6 +85,7 @@ final class SqlExpr
     }
 
     /** Returns CONCAT_WS('sep', col1, col2, …). */
+    /** @param string[] $columns */
     public static function concatWs(array $columns, string $separator): string
     {
         return "CONCAT_WS('$separator'," . implode(',', $columns) . ')';

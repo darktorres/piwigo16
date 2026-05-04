@@ -61,7 +61,7 @@ use Piwigo\Ws\PwgNamedStruct;
     }
 
     if (!empty($params['username'])) {
-        $where_clauses[] = 'u.'.\Piwigo\Config\Config::userFields()['username'].' LIKE \''.pwg_db_real_escape_string(is_scalar($params['username']) ? (string) $params['username'] : '').'\'';
+        $where_clauses[] = 'u.'.\Piwigo\Config\Config::userFields()['username'].' LIKE '.get_dbal_connection()->quote(is_scalar($params['username']) ? (string) $params['username'] : '');
     }
 
     $filtered_groups = [];
@@ -69,10 +69,10 @@ use Piwigo\Ws\PwgNamedStruct;
         $filter_str = is_scalar($params['filter']) ? (string) $params['filter'] : '';
         $filtered_groups = \Piwigo\Core\ServiceLocator::get(\Piwigo\Group\GroupRepository::class)
             ->findIdsByNameLike($filter_str);
-        $filter_where_clause = '('.'u.'.\Piwigo\Config\Config::userFields()['username'].' LIKE \'%'.
-        pwg_db_real_escape_string($filter_str).'%\' OR '
-        .'u.'.\Piwigo\Config\Config::userFields()['email'].' LIKE \'%'.
-        pwg_db_real_escape_string($filter_str).'%\'';
+        $filter_quoted = get_dbal_connection()->quote('%'.$filter_str.'%');
+        $filter_where_clause = '('
+            .'u.'.\Piwigo\Config\Config::userFields()['username'].' LIKE '.$filter_quoted.' OR '
+            .'u.'.\Piwigo\Config\Config::userFields()['email'].' LIKE '.$filter_quoted;
 
         if (!empty($filtered_groups)) {
             $filter_where_clause .= 'OR ug.group_id IN ('. implode(',', array_map(fn (int $v): string => (string) $v, $filtered_groups)).')';
@@ -111,7 +111,7 @@ use Piwigo\Ws\PwgNamedStruct;
     if (!empty($params['status'])) {
         $status_arr = is_array($params['status']) ? $params['status'] : [];
         $status_arr = array_map(fn ($v) => is_scalar($v) ? (string) $v : '', $status_arr);
-        $status_arr = array_intersect($status_arr, get_enums(USER_INFOS_TABLE, 'status'));
+        $status_arr = array_intersect($status_arr, \Piwigo\Db\SchemaHelper::getEnums(USER_INFOS_TABLE, 'status'));
         if (count($status_arr) > 0) {
             $where_clauses[] = 'ui.status IN("'. implode('","', $status_arr) .'")';
         }
@@ -969,10 +969,9 @@ SELECT
         return new PwgError(400, 'Key name is too long');
     }
 
-    $key_name = pwg_db_real_escape_string($api_key_name_raw);
     $duration = is_numeric($params['duration']) ? (0 == (int) $params['duration'] ? 1 : (int) $params['duration']) : 1;
 
-    $secret = create_api_key($userId, $duration, $key_name);
+    $secret = create_api_key($userId, $duration, $api_key_name_raw);
 
     $logger->info('[api_key][user_id='.$userId.'][action=create][key_name='.$api_key_name_raw.']');
 
@@ -1048,7 +1047,7 @@ SELECT
         return new PwgError(403, l10n('Invalid pkid format'));
     }
 
-    $key_name = pwg_db_real_escape_string(is_scalar($params['key_name']) ? (string) $params['key_name'] : '');
+    $key_name = is_scalar($params['key_name']) ? (string) $params['key_name'] : '';
     $edited_key = edit_api_key($userId, $edit_pkid, $key_name);
 
     if (true !== $edited_key) {

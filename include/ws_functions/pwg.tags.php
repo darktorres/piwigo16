@@ -368,7 +368,7 @@ function ws_tags_getAdminList(array $params, \Piwigo\Ws\PwgServer &$service): ar
         'url_name' => trigger_change('render_tag_url', $dup_copy_name),
     ]
     );
-    $destination_tag_id = pwg_db_insert_id();
+    $destination_tag_id = (int) get_dbal_connection()->lastInsertId();
 
     pwg_activity('tag', $destination_tag_id, 'add', ['action' => 'duplicate', 'source_tag' => $dup_tag_id]);
 

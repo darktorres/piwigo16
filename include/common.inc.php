@@ -110,7 +110,7 @@ if (!\Piwigo\Core\Kernel::isBooted()) :
     try {
         get_dbal_connection();
     } catch (Exception $e) {
-        my_error(l10n($e->getMessage()), true);
+        fatal_error(l10n($e->getMessage()));
     }
 
     // in Piwigo 15, configuration setting webmaster_id is moved from config files

@@ -2110,13 +2110,7 @@ function ws_images_formats_searchImage(array $params, \Piwigo\Ws\PwgServer $serv
     $unique_filenames_db = [];
 
     $query = '
-SELECT
-    id,
-    file
-  FROM '.IMAGES_TABLE.'
-;';
-    $result = pwg_query($query);
-    while ($row = pwg_db_fetch_assoc($result)) {
+foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)->findAllIdFilename() as $row) {
         $filename_wo_ext = get_filename_wo_extension((string) ($row['file'] ?? ''));
         $unique_filenames_db[$filename_wo_ext][] = $row['id'];
     }
@@ -2218,19 +2212,12 @@ function ws_images_formats_delete(array $params, \Piwigo\Ws\PwgServer $service):
     //Delete physical file
     $ok = true;
 
-    $query = '
-SELECT
-    image_id,
-    ext
-  FROM '.IMAGE_FORMAT_TABLE.'
-  WHERE format_id IN ('.implode(',', $format_ids).')
-;';
-    $result = pwg_query($query);
+    $imgRepoFmt = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class);
     /** @var array<string, list<string>> $formats_of */
     $formats_of = [];
     /** @var list<string> $image_ids */
     $image_ids = [];
-    while ($row = pwg_db_fetch_assoc($result)) {
+    foreach ($imgRepoFmt->findFormatsByFormatIds(array_map('intval', $format_ids)) as $row) {
         $row_image_id = is_scalar($row['image_id'] ?? null) ? (string) $row['image_id'] : '';
         $row_ext = is_scalar($row['ext'] ?? null) ? (string) $row['ext'] : '';
 
@@ -2246,16 +2233,7 @@ SELECT
         return new PwgError(404, 'No format found for the id(s) given');
     }
 
-    $query = '
-SELECT
-    id,
-    path,
-    representative_ext
-  FROM '.IMAGES_TABLE.'
-  WHERE id IN ('.implode(',', $image_ids).')
-;';
-    $result = pwg_query($query);
-    while ($row = pwg_db_fetch_assoc($result)) {
+    foreach ($imgRepoFmt->findByIds(array_map('intval', $image_ids)) as $row) {
         $row_path = is_scalar($row['path'] ?? null) ? (string) $row['path'] : '';
         $row_id = is_scalar($row['id'] ?? null) ? (string) $row['id'] : '';
         if (url_is_remote($row_path)) {
@@ -2282,11 +2260,8 @@ SELECT
 
 
     //Delete format in the database
-    $query = '
-DELETE FROM '.IMAGE_FORMAT_TABLE.'
-  WHERE format_id IN ('.implode(',', $format_ids).')
-;';
-    pwg_query($query);
+    \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
+        ->deleteFormatsByFormatIds(array_map('intval', $format_ids));
 
     invalidate_user_cache();
 
@@ -2312,19 +2287,11 @@ function ws_images_checkFiles(array $params, \Piwigo\Ws\PwgServer $service): Pwg
     $logger->debug(__FUNCTION__, $params);
 
     $check_image_id = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
-    $query = '
-SELECT path
-  FROM '. IMAGES_TABLE .'
-  WHERE id = '. $check_image_id .'
-;';
-    $result = pwg_query($query);
-
-    if (pwg_db_num_rows($result) == 0) {
+    $path = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
+        ->findPathById($check_image_id);
+    if ($path === null) {
         return new PwgError(404, 'image_id not found');
     }
-
-    [$path_raw] = pwg_db_fetch_row($result) ?? [null];
-    $path = is_scalar($path_raw) ? (string) $path_raw : '';
 
     $ret = [];
 
@@ -2385,18 +2352,11 @@ function ws_images_setInfo(array $params, \Piwigo\Ws\PwgServer $service): mixed
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
     $set_image_id = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
-    $query = '
-SELECT *
-  FROM '. IMAGES_TABLE .'
-  WHERE id = '. $set_image_id .'
-;';
-    $result = pwg_query($query);
-
-    if (pwg_db_num_rows($result) == 0) {
+    $image_row = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
+        ->findById($set_image_id);
+    if ($image_row === null) {
         return new PwgError(404, 'image_id not found');
     }
-
-    $image_row = pwg_db_fetch_assoc($result);
 
     // database registration
     $update = [];
@@ -2646,13 +2606,8 @@ function ws_images_uploadCompleted(array $params, \Piwigo\Ws\PwgServer $service)
     // $image_ids (canbe a subset or more image_ids from another upload too)
     $moved_from_lounge = empty_lounge();
 
-    $query = '
-SELECT
-    COUNT(*) AS nb_photos
-  FROM '.IMAGE_CATEGORY_TABLE.'
-  WHERE category_id = '.$uc_category_id.'
-;';
-    $category_infos = pwg_db_fetch_assoc(pwg_query($query));
+    $category_infos = ['nb_photos' => \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+        ->countImagesByCategoryId($uc_category_id)];
     $category_name = get_cat_display_name_from_id($uc_category_id, null);
 
     trigger_notify(

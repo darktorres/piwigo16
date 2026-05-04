@@ -460,14 +460,8 @@ SELECT representative_picture_id
         $new_image_ids = [];
 
         $thumbnail_size = is_scalar($params['thumbnail_size']) ? (string) $params['thumbnail_size'] : '';
-        $query = '
-SELECT id, path, representative_ext, level
-  FROM '. IMAGES_TABLE .'
-  WHERE id IN ('. implode(',', $image_ids) .')
-;';
-        $result = pwg_query($query);
-
-        while ($row = pwg_db_fetch_assoc($result)) {
+        $imgRepoWsCats = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class);
+        foreach ($imgRepoWsCats->findByIds(array_map('intval', $image_ids)) as $row) {
             if ($row['level'] <= $user['level']) {
                 $thumbnail_src_of[(string) $row['id']] = DerivativeImage::url($thumbnail_size, $row);
             } else {
@@ -498,14 +492,7 @@ SELECT id, path, representative_ext, level
         }
 
         if (count($new_image_ids) > 0) {
-            $query = '
-SELECT id, path, representative_ext
-  FROM '. IMAGES_TABLE .'
-  WHERE id IN ('. implode(',', $new_image_ids) .')
-;';
-            $result = pwg_query($query);
-
-            while ($row = pwg_db_fetch_assoc($result)) {
+            foreach ($imgRepoWsCats->findByIds(array_map('intval', $new_image_ids)) as $row) {
                 $thumbnail_src_of[(string) $row['id']] = DerivativeImage::url($thumbnail_size, $row);
             }
         }

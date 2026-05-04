@@ -73,6 +73,57 @@ final class ImageRepository extends AbstractRepository
     }
 
     /**
+     * Return (id, file) rows for all images.
+     * Used by ws_images_addFormat() to build a unique-filenames map.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findAllIdFilename(): array
+    {
+        return $this->conn->createQueryBuilder()
+            ->select('id', 'file')
+            ->from($this->table('images'))
+            ->executeQuery()
+            ->fetchAllAssociative();
+    }
+
+    /**
+     * Return (image_id, ext) rows for specific format ids.
+     *
+     * @param int[] $formatIds
+     * @return list<array<string, mixed>>
+     */
+    public function findFormatsByFormatIds(array $formatIds): array
+    {
+        if ($formatIds === []) {
+            return [];
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->select('image_id', 'ext')
+            ->from($this->table('image_format'));
+        $qb->where($qb->expr()->in('format_id', ':formatIds'))
+           ->setParameter('formatIds', $formatIds, ArrayParameterType::INTEGER);
+        return $qb->executeQuery()->fetchAllAssociative();
+    }
+
+    /**
+     * Delete format rows by their format_id values.
+     *
+     * @param int[] $formatIds
+     */
+    public function deleteFormatsByFormatIds(array $formatIds): void
+    {
+        if ($formatIds === []) {
+            return;
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->delete($this->table('image_format'));
+        $qb->where($qb->expr()->in('format_id', ':formatIds'))
+           ->setParameter('formatIds', $formatIds, ArrayParameterType::INTEGER);
+        $qb->executeStatement();
+    }
+
+    /**
      * Return all (image_id, ext) rows from image_format.
      * Used to build a map of alternate format extensions per image.
      *

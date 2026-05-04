@@ -91,20 +91,10 @@ $missing_language_ids = array_diff(
     array_keys($languages->fs_languages)
 );
 
+$langRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Language\LanguageRepository::class);
 foreach ($missing_language_ids as $language_id) {
-    $query = '
-UPDATE '.USER_INFOS_TABLE.'
-  SET language = \''.get_default_language().'\'
-  WHERE language = \''.$language_id.'\'
-;';
-    pwg_query($query);
-
-    $query = '
-DELETE
-  FROM '.LANGUAGES_TABLE.'
-  WHERE id= \''.$language_id.'\'
-;';
-    pwg_query($query);
+    $langRepo->reassignUsers((string) $language_id, get_default_language());
+    $langRepo->deactivate((string) $language_id);
 }
 
 $template->assign('isWebmaster', (is_webmaster()) ? 1 : 0);

@@ -24,6 +24,42 @@ final class HistoryRepository extends AbstractRepository
         return is_numeric($value) ? (int) $value : 0;
     }
 
+    /**
+     * Insert a page-view log entry and return the new row's id.
+     * Called by pwg_log() on every page view when history logging is enabled.
+     *
+     * $section, $categoryId, $searchId, $imageId, $imageType, $formatId,
+     * $authKeyId, $tagsString may all be null (logged as SQL NULL).
+     */
+    public function insertLog(
+        int $userId,
+        string $ip,
+        ?string $section,
+        ?string $categoryId,
+        ?string $searchId,
+        ?int $imageId,
+        ?string $imageType,
+        ?string $formatId,
+        ?string $authKeyId,
+        ?string $tagsString
+    ): int {
+        $this->conn->insert($this->table('history'), [
+            'date'        => (new \DateTimeImmutable())->format('Y-m-d'),
+            'time'        => (new \DateTimeImmutable())->format('H:i:s'),
+            'user_id'     => $userId,
+            'IP'          => $ip,
+            'section'     => $section,
+            'category_id' => $categoryId,
+            'search_id'   => $searchId,
+            'image_id'    => $imageId,
+            'image_type'  => $imageType,
+            'format_id'   => $formatId,
+            'auth_key_id' => $authKeyId,
+            'tag_ids'     => $tagsString,
+        ]);
+        return (int) $this->conn->lastInsertId();
+    }
+
     /** Total number of history rows (used to decide if autopurge is needed). */
     public function countAll(): int
     {

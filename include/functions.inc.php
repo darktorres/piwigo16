@@ -406,13 +406,19 @@ function str2url(string $str): string
  */
 function get_languages(): array
 {
-    $query = '
-SELECT id, name
-  FROM '.LANGUAGES_TABLE.'
-  ORDER BY name ASC
-;';
-    $result = pwg_query($query);
+    if (\Piwigo\Core\ServiceLocator::has(\Piwigo\Language\LanguageRepository::class)) {
+        $languages = [];
+        foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Language\LanguageRepository::class)->findIdNameMap() as $id => $name) {
+            if (is_dir(PHPWG_ROOT_PATH . 'language/' . $id)) {
+                $languages[$id] = $name;
+            }
+        }
+        return $languages;
+    }
 
+    // Fallback for pre-boot context (install, early bootstrap)
+    $query = 'SELECT id, name FROM ' . LANGUAGES_TABLE . ' ORDER BY name ASC;';
+    $result = pwg_query($query);
     $languages = [];
     while ($row = pwg_db_fetch_assoc($result)) {
         $lang_id = is_scalar($row['id']) ? (string) $row['id'] : '';
@@ -421,7 +427,6 @@ SELECT id, name
             $languages[$lang_id] = $lang_name;
         }
     }
-
     return $languages;
 }
 
@@ -537,41 +542,19 @@ function pwg_log(int|string|null $image_id = null, ?string $image_type = null, ?
     $categoryId = $category !== null && is_scalar($category['id'] ?? null) ? (string) $category['id'] : 'NULL';
     $searchId = is_scalar($page['search_id'] ?? null) ? (string) $page['search_id'] : 'NULL';
     $authKeyId = is_scalar($page['auth_key_id'] ?? null) ? (string) $page['auth_key_id'] : 'NULL';
-    $query = '
-INSERT INTO '.HISTORY_TABLE.'
-  (
-    date,
-    time,
-    user_id,
-    IP,
-    section,
-    category_id,
-    search_id,
-    image_id,
-    image_type,
-    format_id,
-    auth_key_id,
-    tag_ids
-  )
-  VALUES
-  (
-    CURRENT_DATE,
-    CURRENT_TIME,
-    '.$userId.',
-    \''.$ip.'\',
-    '.(isset($section) ? "'".$section."'" : 'NULL').',
-    '.$categoryId.',
-    '.$searchId.',
-    '.($image_id ?? 'NULL').',
-    '.(isset($image_type) ? "'".$image_type."'" : 'NULL').',
-    '.($format_id ?? 'NULL').',
-    '.$authKeyId.',
-    '.(isset($tags_string) ? "'".$tags_string."'" : 'NULL').'
-  )
-;';
-    pwg_query($query);
-
-    $history_id = (int) pwg_db_insert_id();
+    $history_id = \Piwigo\Core\ServiceLocator::get(\Piwigo\History\HistoryRepository::class)
+        ->insertLog(
+            $userId,
+            $ip,
+            isset($section) ? $section : null,
+            $categoryId !== 'NULL' ? $categoryId : null,
+            $searchId !== 'NULL' ? $searchId : null,
+            $image_id,
+            isset($image_type) ? $image_type : null,
+            $format_id ?? null,
+            $authKeyId !== 'NULL' ? $authKeyId : null,
+            isset($tags_string) ? $tags_string : null
+        );
     if ($history_id % 1000 == 0) {
         include_once(PHPWG_ROOT_PATH.'admin/include/functions_history.inc.php');
         history_summarize(50000);
@@ -1094,15 +1077,14 @@ function get_pwg_themes(bool $show_mobile = false): array
 {
     $themes = [];
 
-    $query = '
-SELECT
-    id,
-    name
-  FROM '.THEMES_TABLE.'
-  ORDER BY name ASC
-;';
-    $result = pwg_query($query);
-    while ($row = pwg_db_fetch_assoc($result)) {
+    if (\Piwigo\Core\ServiceLocator::has(\Piwigo\Theme\ThemeRepository::class)) {
+        $rows = \Piwigo\Core\ServiceLocator::get(\Piwigo\Theme\ThemeRepository::class)->findAll();
+    } else {
+        // Fallback for pre-boot context
+        $rows = query2array('SELECT id, name FROM ' . THEMES_TABLE . ' ORDER BY name ASC;');
+    }
+
+    foreach ($rows as $row) {
         if ($row['id'] == \Piwigo\Config\Config::mobilTheme()) {
             if (!$show_mobile) {
                 continue;

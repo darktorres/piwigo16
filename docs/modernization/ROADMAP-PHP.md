@@ -1173,7 +1173,7 @@ Translation files move from `$lang['key'] = 'value';` PHP arrays to gettext PO/M
 
 7. **Document the translator workflow** in `CONTRIBUTING.md` and a new `docs/I18N.md`. Cover: how to add a new key, how to push/pull from Crowdin (or chosen platform), how to compile MO files locally for testing.
 
-8. **Decommission `.lang.php`.** After one full release with both formats supported (translator can submit PO; runtime serves PO/MO), delete the legacy files.
+8. **Decommission `.lang.php`.** Delete the legacy PHP files immediately once the converter has run and parity is verified — no transitional release window.
 
 ### Verification
 

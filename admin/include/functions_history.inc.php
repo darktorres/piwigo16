@@ -458,9 +458,9 @@ function history_remove_summarized_column(): void
         return;
     }
 
-    $result = pwg_query('SHOW COLUMNS FROM `'.HISTORY_TABLE.'` LIKE "summarized";');
-    if (pwg_db_num_rows($result)) {
-        pwg_query('ALTER TABLE `'.HISTORY_TABLE.'` DROP COLUMN `summarized`;');
+    $histRepoAlter = \Piwigo\Core\ServiceLocator::get(\Piwigo\History\HistoryRepository::class);
+    if ($histRepoAlter->summarizedColumnExists()) {
+        $histRepoAlter->dropSummarizedColumn();
     }
 
     conf_update_param('history_summarized_dropped', true);

@@ -138,6 +138,28 @@ final class HistoryRepository extends AbstractRepository
     }
 
     /**
+     * Return true if the history table still has the legacy 'summarized' column.
+     * Used by history_remove_summarized_column() to check before dropping.
+     */
+    public function summarizedColumnExists(): bool
+    {
+        $sm = $this->conn->createSchemaManager();
+        $columns = $sm->listTableColumns($this->table('history'));
+        return isset($columns['summarized']);
+    }
+
+    /**
+     * Drop the legacy 'summarized' column from the history table.
+     * This is a one-time migration step in history_remove_summarized_column().
+     */
+    public function dropSummarizedColumn(): void
+    {
+        $this->conn->executeStatement(
+            'ALTER TABLE `' . $this->table('history') . '` DROP COLUMN `summarized`'
+        );
+    }
+
+    /**
      * Return AVG(nb_pages) for days in the current year or the previous year
      * after the current month (rolling 12-month window).
      * Used by admin/stats.php for the daily-average badge.

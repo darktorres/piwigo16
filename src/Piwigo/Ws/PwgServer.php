@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws;
 
-use Piwigo\Ws\Encoder\PwgResponseEncoder;
-use Piwigo\Exception\ConfigException;
 use Piwigo\Config\Config;
+use Piwigo\Exception\ConfigException;
+use Piwigo\Ws\Encoder\PwgResponseEncoder;
 
 /**
  * @phpstan-type WsParamDef array{flags: int, type: int, default?: mixed, maxValue?: int|float, info?: string, chooseList?: list<mixed>}

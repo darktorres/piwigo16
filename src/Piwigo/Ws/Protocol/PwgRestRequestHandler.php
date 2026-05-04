@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Protocol;
 
-use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgRequestHandler;
+use Piwigo\Ws\PwgServer;
 
 class PwgRestRequestHandler extends PwgRequestHandler
 {

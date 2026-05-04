@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Config\Config;
-use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\Filesystem;
+use Piwigo\Core\LoggerRegistry;
 use Piwigo\Users\CurrentUser;
 
 class Languages
@@ -275,7 +275,7 @@ UPDATE '.USER_INFOS_TABLE.'
                     $this->server_languages[$langExtId] = $language;
                 }
             }
-            uasort($this->server_languages, fn(mixed $a, mixed $b): int => $this->extension_name_compare($a, $b));
+            uasort($this->server_languages, fn (mixed $a, mixed $b): int => $this->extension_name_compare($a, $b));
             return true;
         }
         return false;

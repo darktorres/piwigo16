@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Config\Config;
-use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\Filesystem;
+use Piwigo\Core\LoggerRegistry;
 use Piwigo\Users\CurrentUser;
 
 class Themes

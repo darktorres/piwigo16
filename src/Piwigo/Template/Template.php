@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Piwigo\Template;
 
 use Piwigo\Config\Config;
-use Smarty\Debug;
 use Piwigo\Core\Lang;
-use Smarty\TemplateBase;
 use Piwigo\Image\ImageStdParams;
+use Smarty\Debug;
 use Smarty\Smarty;
+use Smarty\TemplateBase;
 
 /** default rank for buttons */
 define('BUTTONS_RANK_NEUTRAL', 50);

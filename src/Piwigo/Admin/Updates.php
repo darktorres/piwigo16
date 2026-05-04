@@ -6,8 +6,8 @@ namespace Piwigo\Admin;
 
 use Piwigo\Config\Config;
 use Piwigo\Core\Filesystem;
-use Piwigo\Template\TemplateRegistry;
 use Piwigo\Core\PageState;
+use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\CurrentUser;
 
 class Updates

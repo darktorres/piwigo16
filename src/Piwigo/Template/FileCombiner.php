@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Template;
 
-use Piwigo\Config\Config;
-use Piwigo\Core\Filesystem;
 use JShrink\Minifier;
 use MatthiasMullie\Minify\CSS;
+use Piwigo\Config\Config;
+use Piwigo\Core\Filesystem;
 
 /**
  * Allows merging of javascript and css files into a single one.

@@ -62,7 +62,8 @@ final class SrcImage
             if ($size === false) {
                 $this->size = null;
             } else {
-                $w = $size[0]; $h = $size[1];
+                $w = $size[0];
+                $h = $size[1];
                 $this->size = [is_int($w) ? $w : (int) (is_scalar($w) ? $w : 0), is_int($h) ? $h : (int) (is_scalar($h) ? $h : 0)];
             }
         }
@@ -135,7 +136,8 @@ final class SrcImage
             // returning record only carries id, not width/height.
             $path = $this->get_path();
             if (is_readable($path) && ($size = pwg_safe_getimagesize($path)) !== false) {
-                $w = $size[0]; $h = $size[1];
+                $w = $size[0];
+                $h = $size[1];
                 $wi = is_int($w) ? $w : (int) (is_scalar($w) ? $w : 0);
                 $hi = is_int($h) ? $h : (int) (is_scalar($h) ? $h : 0);
                 $this->size = [$wi, $hi];

@@ -40,8 +40,8 @@ final class NoErrorSuppressionRule implements Rule
         return [
             RuleErrorBuilder::message(
                 "Do not use the '@' error-suppression operator. "
-                . "Replace with explicit handling — see "
-                . "tools/phpstan/NoErrorSuppressionRule.php for the migration map."
+                . 'Replace with explicit handling — see '
+                . 'tools/phpstan/NoErrorSuppressionRule.php for the migration map.'
             )
                 ->identifier('piwigo.noErrorSuppression')
                 ->build(),

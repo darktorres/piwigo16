@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Protocol;
 
-use Piwigo\Ws\PwgNamedArray;
-use Piwigo\Ws\PwgNamedStruct;
 use Piwigo\Ws\Encoder\PwgResponseEncoder;
 use Piwigo\Ws\PwgError;
+use Piwigo\Ws\PwgNamedArray;
+use Piwigo\Ws\PwgNamedStruct;
 
 class PwgRestEncoder extends PwgResponseEncoder
 {

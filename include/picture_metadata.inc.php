@@ -6,6 +6,7 @@ global $persistent_cache, $url_self, $picture, $related_categories, $comment_act
 
 use Piwigo\Core\Lang;
 use Piwigo\Template\TemplateRegistry;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |

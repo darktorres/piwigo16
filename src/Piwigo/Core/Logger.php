@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
-use Psr\Log\InvalidArgumentException;
 use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\StreamHandler;
 use Monolog\Level as MonologLevel;
 use Monolog\Logger as MonologLogger;
 use Monolog\LogRecord;
 use Psr\Log\AbstractLogger;
+use Psr\Log\InvalidArgumentException;
 use Psr\Log\LogLevel;
 
 /**

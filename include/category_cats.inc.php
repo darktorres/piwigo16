@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 global $persistent_cache, $logger;
 
-use Piwigo\Template\TemplateRegistry;
-use Piwigo\Users\CurrentUser;
-
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
+use Piwigo\Template\TemplateRegistry;
+use Piwigo\Users\CurrentUser;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |

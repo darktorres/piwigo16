@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Calendar;
 
-use Piwigo\Template\TemplateRegistry;
 use Piwigo\Config\Config;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
+use Piwigo\Template\TemplateRegistry;
 
 /**
  * @package functions\calendar

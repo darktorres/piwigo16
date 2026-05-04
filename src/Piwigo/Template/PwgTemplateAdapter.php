@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Template;
 
-use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\SrcImage;
 
 /**

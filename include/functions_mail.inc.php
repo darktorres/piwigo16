@@ -112,7 +112,7 @@ function unformat_email(string|array $input)
 {
     if (is_array($input)) {
         $email = is_scalar($input['email'] ?? null) ? (string) $input['email'] : '';
-        $name  = is_scalar($input['name']  ?? null) ? (string) $input['name']  : '';
+        $name  = is_scalar($input['name']  ?? null) ? (string) $input['name'] : '';
         return ['email' => $email, 'name' => $name];
     }
 
@@ -592,7 +592,7 @@ function pwg_mail(string|array $to, array $args = [], array $tpl = []): bool
     }
     $mail->setFrom($from['email'], $from['name']);
     $replyEmail = is_string($args['reply_to_mail_address'] ?? null) ? $args['reply_to_mail_address'] : $from['email'];
-    $replyName  = is_string($args['reply_to_name']         ?? null) ? $args['reply_to_name']         : $from['name'];
+    $replyName  = is_string($args['reply_to_name']         ?? null) ? $args['reply_to_name'] : $from['name'];
     $mail->addReplyTo($replyEmail, $replyName);
 
     // Subject

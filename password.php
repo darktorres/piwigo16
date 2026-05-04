@@ -195,7 +195,7 @@ function process_password_request(): bool
     userprefs_delete_param('reset_password_forbidden_until');
 
     $temp_username = is_scalar($temp_user['username'] ?? null) ? (string)$temp_user['username'] : '';
-    $temp_email    = is_scalar($temp_user['email']    ?? null) ? (string)$temp_user['email']    : '';
+    $temp_email    = is_scalar($temp_user['email']    ?? null) ? (string)$temp_user['email'] : '';
     $temp_language = is_scalar($temp_user['language'] ?? null) ? (string)$temp_user['language'] : '';
     $status = is_scalar($temp_user['status'] ?? null) ? (string)$temp_user['status'] : '';
     $has_no_email = empty($temp_email);

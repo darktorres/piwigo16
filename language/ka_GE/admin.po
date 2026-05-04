@@ -1,0 +1,2337 @@
+# Piwigo translation — ka_GE
+# Source: admin.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ka_GE\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "%d association"
+msgstr "%d კავშირი"
+
+msgid "%d associations"
+msgstr "%d კავშირი"
+
+msgid "%d album including"
+msgstr "%d კატეგორია დამატებულია "
+
+msgid "%d albums including"
+msgstr "დამატებული კატეგორიები: %d"
+
+msgid "%d physical"
+msgstr "%d რეალური"
+
+msgid "%d physicals"
+msgstr "%d რეალური"
+
+msgid " and %d virtual"
+msgstr " და %d ვირტუალური"
+
+msgid " and %d virtuals"
+msgstr " და %d ვირტუალური"
+
+msgid "%d album moved"
+msgid_plural "%d albums moved"
+msgstr[0] "%d კატეგორია გადატანილია"
+msgstr[1] "%d კატეგორია გადატანილია"
+
+msgid "%d group"
+msgstr "%d ჯგუფი"
+
+msgid "%d groups"
+msgstr "%d ჯგუფი"
+
+msgid "%d member"
+msgid_plural "%d members"
+msgstr[0] "%d მონაწილე"
+msgstr[1] "%d მონაწილე"
+
+msgid "%d tag"
+msgstr "%d სიტყვა"
+
+msgid "%d tags"
+msgstr "%d სიტყვები"
+
+msgid "%d user comment rejected"
+msgstr "%d მომხმარებლის კომენტარი აცილებულია"
+
+msgid "%d user comments rejected"
+msgstr "%d მომხმარებლის კომენტარები აცილებულია"
+
+msgid "%d user comment validated"
+msgstr "%d მომხმარებლის კომენტარი მიღებულია"
+
+msgid "%d user comments validated"
+msgstr "%d მომხმარებლის კომენტარები მიღებული"
+
+msgid "%d user deleted"
+msgid_plural "%d users deleted"
+msgstr[0] "%d მომხმარებელი წაშლილია"
+msgstr[1] "%d მომხმარებელი წაშლილია"
+
+msgid "%d user"
+msgid_plural "%d users"
+msgstr[0] "%d მომხმარებელი"
+msgstr[1] "%d მომხმარებელი"
+
+msgid "%d waiting for validation"
+msgstr "%d უცდის შემოწმებას"
+
+msgid "Actions"
+msgstr "მოქმედება"
+
+msgid "Activate"
+msgstr "აქტივაცია"
+
+msgid "Add/delete a permalink"
+msgstr "დავამატოთ/წავშალოთ მუდმივი ბმული"
+
+msgid "Add a tag"
+msgstr "დავამატოთ სიტყვა"
+
+msgid "Add a user"
+msgstr "დავამატოთ მომხმარებელი"
+
+msgid "Add group"
+msgstr "დავამატოთ ჯგუფი"
+
+msgid "Add"
+msgstr "დავამატოთ"
+
+msgid "Allow user registration"
+msgstr "დაუშვათ მომხმარებლების რეგისტრაცია"
+
+msgid "Apply to sub-albums"
+msgstr "გამოვიყენოთ ქვეკატეგორიებისთვისაც"
+
+msgid "Associated"
+msgstr "დაკავშირებული"
+
+msgid "Caddie management"
+msgstr "კალათის მართვა"
+
+msgid "Caddie"
+msgstr "კალათა"
+
+msgid "Albums authorized thanks to group associations"
+msgstr "კატეგორიები, რომლებიც დაშვებულია ჯგუფთან კავშირის გამო"
+
+msgid "Album manual order was saved"
+msgstr "კატეგორიების განსაკუთრებული წყობა შენახულია"
+
+msgid "Check for upgrade failed for unknown reasons."
+msgstr "განახლების შემოწმება უცნობი მიზეზების გამო არ შესრულდა."
+
+msgid "Check for upgrade"
+msgstr "განახლების შემოწმება"
+
+msgid "Comments for all"
+msgstr "კომენტარები ყველასათვის"
+
+msgid "Current name"
+msgstr "მიმდინარე სახელი"
+
+msgid "Database"
+msgstr "მონაცემთა ბაზა"
+
+msgid "Deactivate"
+msgstr "გამორთვა"
+
+msgid "Delete Representant"
+msgstr "წარმომადგენლის წაშლა"
+
+msgid "Delete selected tags"
+msgstr "არჩეული სიტყვების წაშლა"
+
+msgid "Delete selected users"
+msgstr "არჩეული მომხმარებლების წაშლა"
+
+msgid "Deletions"
+msgstr "წაშლები"
+
+msgid "Deny selected groups"
+msgstr "უარი ჯგუფის არჩევაზე"
+
+msgid "Deny selected users"
+msgstr "უარი მომხმარებილს არჩევაზე"
+
+msgid "Description"
+msgstr "აღწერა"
+
+msgid "Display options"
+msgstr "ნახვის ვარიანტები"
+
+msgid "Dissociated"
+msgstr "დაუკავშირებლები"
+
+msgid "Does not represent"
+msgstr "წარმომადგენელი არ არის"
+
+msgid "Edit selected tags"
+msgstr "გამოყოფილი სიტყვების რედაქტირება"
+
+msgid "Edit tags"
+msgstr "სიტყვების რედაქტირება"
+
+msgid "Email admins when a new user registers"
+msgstr "შევატყობინოთ ადმინისტრატორს ახალი მომხმარებლის რეგისტრაცია"
+
+msgid "Email admins when a valid comment is entered"
+msgstr "შევატყობინოთ ადმინისტრატორს ახალი კომენტარის შესახებ"
+
+msgid "Email admins when a comment requires validation"
+msgstr "შევატყობინოთ ადმინისტრატორს შესამოწმებელი კომანტარის შესახებ"
+
+msgid "Environment"
+msgstr "გარემოცვა"
+
+msgid "Form"
+msgstr "მოქმედებები"
+
+msgid "Gallery title"
+msgstr "გალერეის სახელი"
+
+msgid "Grant selected groups"
+msgstr "ნება დავრთოთ რჩეულ ჯგუფებს"
+
+msgid "Grant selected users"
+msgstr "ნება დავრთოთ რჩეულ მომხმარებლებს"
+
+msgid "Group name"
+msgstr "ჯგუფის სახელი"
+
+msgid "Groups"
+msgstr "ჯგუფები"
+
+msgid "Guests"
+msgstr "სტუმრები"
+
+msgid "History"
+msgstr "ისტორია"
+
+msgid "Informations"
+msgstr "ინფორმაცია"
+
+msgid "Install"
+msgstr "დავაყენოთ"
+
+msgid "Link all album photos to a new album"
+msgstr "დაუკავშიროთ ამ კატეგორიის ყველა ელემენტი ახალს"
+
+msgid "Link all album photos to some existing albums"
+msgstr "დაუკავშიროთ ამ კატეგორიის ყველა ელემენტი ერთ ერთ არსებულს"
+
+msgid "Linked albums"
+msgstr "დაკავშირებული კატეგორიები"
+
+msgid "Lock gallery"
+msgstr "დავბლოკოთ გალერეა"
+
+msgid "Maintenance"
+msgstr "მომსახურება"
+
+msgid "Edit album permissions"
+msgstr "ნებართვების მართვა კატეგორიებისათვის"
+
+msgid "Manage permissions for group \"%s\""
+msgstr "ნებართვების მართვა ჯგუფისთვის  \"%s\""
+
+msgid "Manage permissions for user \"%s\""
+msgstr "ნებართვების მართვა მომხმარებლებისათვის  \"%s\""
+
+msgid "Manage tags"
+msgstr "სიტყვების მართვა"
+
+msgid "Members"
+msgstr "მონაწილეები"
+
+msgid "Metadata synchronized from file"
+msgstr "მეტამონაცემები სინქრონიზირებულია ფაილთან"
+
+msgid "Move albums"
+msgstr "კატეგორიის გადატანა"
+
+msgid "Move"
+msgstr "გადატანა"
+
+msgid "Name"
+msgstr "სახელი"
+
+msgid "New name"
+msgstr "ახალი სახელი"
+
+msgid "New parent album"
+msgstr "ახალი მშობლიური კატეგორია"
+
+msgid "New tag"
+msgstr "ახალი სიტყვა"
+
+msgid "Number of comments per page"
+msgstr "კომენტარების რაოდენობა გვერდზე"
+
+msgid "Number of rates"
+msgstr "შეფასების რაოდენობა"
+
+msgid "Number of thumbnails to create"
+msgstr "შესაქმნელი ინიატურების რაოდენობა"
+
+msgid "Only private albums are listed"
+msgstr "მხოლოდ დაფარული კატეგორიების ჩვენება"
+
+msgid "Operating system"
+msgstr "ოპერატიული სისტემა"
+
+msgid "Options"
+msgstr "პარამეტრები"
+
+msgid "Other private albums"
+msgstr "პრივატულ კატეგორიებთან დაშვება"
+
+msgid "Page banner"
+msgstr "წარწერა ბანერზე"
+
+msgid "Parent album"
+msgstr "მშობლიური კატეგორია"
+
+msgid "Path"
+msgstr "გზა"
+
+msgid "Permalink"
+msgstr "მუდმივი მისამართი"
+
+msgid "Permalink %s has been previously used by album %s. Delete from the permalink history first"
+msgstr "მუდმივი მისამართი %s ადრე გამოიყენებოდა კატეგორიისთვის %s. წაშალეთ იგი მანამდე მუდმივი მისამართების ისტორიიდან"
+
+msgid "The permalink name must be composed of a-z, A-Z, 0-9, \"-\", \"_\" or \"/\". It must not be numeric or start with number followed by \"-\""
+msgstr "მუდმივი მისამართი უნდა შედგებოდეს  a-z, A-Z, 0-9, \"-\" ან\"_\". იგი არ უნდა იყოს რიცხობრივი და არ უნდა იწყებოდეს რიცხვით \"-\""
+
+msgid "Permalink %s is already used by album %s"
+msgstr "მუდმივი მისამართი %s უკვე გამოიყენება კატეგორიისათვის %s"
+
+msgid "Permalink history"
+msgstr "მუდმივი მისამართების სია"
+
+msgid "Permalinks"
+msgstr "მუდმივი მისამართი"
+
+msgid "Permission denied"
+msgstr "დაშვება აკრძალულია"
+
+msgid "Permission granted thanks to a group"
+msgstr "ჯგუფისთვის დაშვება შესაძლებელია"
+
+msgid "Permission granted"
+msgstr "დაშვება შესაძლებელია"
+
+msgid "Photo informations updated"
+msgstr "ინფორმაცია ფოტოსთვის განახლებულია"
+
+msgid "Plugins"
+msgstr "პლაგინები"
+
+msgid "Position"
+msgstr "ნომერი"
+
+msgid "Preferences"
+msgstr "გასწორება"
+
+msgid "Properties"
+msgstr "თვისება"
+
+msgid "Random photo"
+msgstr "შემთხვევითი ფოტო"
+
+msgid "Rate date"
+msgstr "თარიღი"
+
+msgid "Rating by guests"
+msgstr "სტუმრების შეფასება"
+
+msgid "Rating"
+msgstr "შეფასება"
+
+msgid "Reject"
+msgstr "უარი"
+
+msgid "Representant"
+msgstr "წარმომადგენელი"
+
+msgid "Representation of albums"
+msgstr "წარმოდგენილი კატეგორიები"
+
+msgid "Representative"
+msgstr "წარმომადგენელი"
+
+msgid "Represents"
+msgstr "წარმოადგენს"
+
+msgid "Save order"
+msgstr "შევინახოთ წყობა"
+
+msgid "Save to permalink history"
+msgstr "შევინახოთ მუდმვი მისამართების ისტორია"
+
+msgid "Select at least one album"
+msgstr "აირჩიეთ ერთი კატეგორია მაინც"
+
+msgid "Select at least one photo"
+msgstr "აირჩიეთ ერთი ფოტო მაინც"
+
+msgid "Select at least one user"
+msgstr "აირჩიეთ ერთი მომხმარებელი მაინც"
+
+msgid "Show info"
+msgstr "ვნახოთ ინფორმაცია"
+
+msgid "Site manager"
+msgstr "საიტების მართვა"
+
+msgid "Status"
+msgstr "სტატუსი"
+
+msgid "Statistics"
+msgstr "სტატისტიკა"
+
+msgid "Storage album"
+msgstr "შენახვის კატეგორია"
+
+msgid "Sum of rates"
+msgstr "მთლიანი შეფასება"
+
+msgid "Tag \"%s\" already exists"
+msgstr "სიტყვა \"%s\" უკვე არის"
+
+msgid "Tag \"%s\" was added"
+msgstr "სიტყვა \"%s\" დამატებულია"
+
+msgid "Tag selection"
+msgstr "სიტყვების არჩევა"
+
+msgid "The %d following tags were deleted"
+msgstr "%d მითითებული სიტყვა წაშლილია"
+
+msgid "Uninstall"
+msgstr "დეინსტალაცია"
+
+msgid "Use the default photo sort order"
+msgstr "სურათების სორტირება ძირითადად"
+
+msgid "User comments validation"
+msgstr "მომხმარებლების კომენტარების შემოწმება"
+
+msgid "Users"
+msgstr "მომხმარებლები"
+
+msgid "Validate"
+msgstr "მივიღოთ"
+
+msgid "Validation"
+msgstr "შემოწმება"
+
+msgid "Version"
+msgstr "ვერსია"
+
+msgid "Virtual albums to move"
+msgstr "ვირტუალური კატეგორიები გადასატანად"
+
+msgid "Virtual album name"
+msgstr "ვირტუალური კატეგორიების სახელები"
+
+msgid "Webmaster cannot be deleted"
+msgstr "ვებმასტერის წაშლა არ შეიძლება"
+
+msgid "You are running on development sources, no check possible."
+msgstr "მუშაობს დამუშავების პროცესში, შემოწმწბა შეუძლებელია."
+
+msgid "You cannot delete your account"
+msgstr "თქვენ არ შეგიძლიათ თქვენი აკკაუნთის წაშლა"
+
+msgid "You cannot move an album in its own sub album"
+msgstr "თქვენ არ შეგიძლიათ გადააადგილოთ კატეგორია მის ქვეკატერორიაში"
+
+msgid "You need to confirm deletion"
+msgstr "თქვენ უნდა დაადასტუროთ წაშლა"
+
+msgid "Associate to album"
+msgstr "მივამაგროთ კატეგორიას"
+
+msgid "associate to group"
+msgstr "მივამაგროთ ჯგუფს"
+
+msgid "Authorized"
+msgstr "დასაშვებია"
+
+msgid "Add a virtual album"
+msgstr "დავამატოთ ვირტუალური კატეგორია"
+
+msgid "Authorize users to add comments on selected albums"
+msgstr "ნება დავრთოთ მომხმარებლებს დაამატონ კომენტარები არჩეულ კატეგორიებს"
+
+msgid "The name of an album must not be empty"
+msgstr "კატეგორიის სახელი ცარიელი არ უნდა იყოს"
+
+msgid "Lock albums"
+msgstr "დავბლოკოთ კატეგორიები"
+
+msgid "Private"
+msgstr "პირადი(პრივატული) კატეგორია"
+
+msgid "Public"
+msgstr "საერთო კატეგორია"
+
+msgid "Find a new representant by random"
+msgstr "ვიპოვოტ ახალი წარმომადგენელი შემთხვევითი მეთოდით"
+
+msgid "Public / Private"
+msgstr "საერთო / პრივატული"
+
+msgid "Manage authorizations for selected albums"
+msgstr "ავტორიზაციის მართვა არჩეული კატეგორიებისათვის"
+
+msgid "Virtual album added"
+msgstr "ვირტუალური კატეგორია დამატებულია"
+
+msgid "Virtual album deleted"
+msgstr "ვირტუალური კატეგორია წაშლილია"
+
+msgid "Access type"
+msgstr "დაშვების ტიპი"
+
+msgid "Information data registered in database"
+msgstr "ინფორმაცია დარეგისტრირებულია მონაცემთა ბაზაში"
+
+msgid "Default display"
+msgstr "ძირითადი სახე"
+
+msgid "The gallery URL is not valid."
+msgstr "არაკორექტული URL გალერეისათვის"
+
+msgid "Main"
+msgstr "მთავარი"
+
+msgid "The number of comments a page must be between 5 and 50 included."
+msgstr "გვერდზე შეიძლება იყოს 5 დან 50 კომენტარამდე."
+
+msgid "Configuration"
+msgstr "გასწორება"
+
+msgid "confirm"
+msgstr "დასტური"
+
+msgid "delete album"
+msgstr "წავშალოთ კატეგორია"
+
+msgid "Dissociate from album"
+msgstr "მოვაშოროთ კატეგორიას"
+
+msgid "dissociate from group"
+msgstr "მოვაშოროთ ჯგუფს"
+
+msgid "Album updated successfully"
+msgstr "ინფორმაცია კატეგორიაზე წარმატებით განახლებულია."
+
+msgid "photos per page"
+msgstr "მინიატურები გვერდზე"
+
+msgid "High definition enabled"
+msgstr "არსებობს დიდი გაფართოებით"
+
+msgid "File"
+msgstr "ფაილი"
+
+msgid "first photo added on %s"
+msgstr "პირველი ელემენტი დამატებულია %s"
+
+msgid "Forbidden"
+msgstr "აკრძალულია"
+
+msgid "global mode"
+msgstr "ჯგუფური რეჟიმი"
+
+msgid "group \"%s\" added"
+msgstr "ჯგუფი \"%s\" დამატებულია"
+
+msgid "group \"%s\" deleted"
+msgstr "ჯგუფი \"%s\" წაშლილია"
+
+msgid "group \"%s\" updated"
+msgstr "ჯგუფი \"%s\" განახლებულია"
+
+msgid "The name of a group must not contain \" or ' or be empty."
+msgstr "ჯგუფის სახელი არ უნდა შეიცავდეს  \" ან ' და არ უნდა იყოს ცარიელი."
+
+msgid "This name is already used by another group."
+msgstr "ეს სახელი უკვე გამოყენებულია სხვა ჯგუფის მიერ."
+
+msgid "High definition"
+msgstr "დიდი გაფართოება"
+
+msgid "jump to album"
+msgstr "კატეგორიაში გადასვლა"
+
+msgid "jump to photo"
+msgstr "ფოტოებში გადასვლა"
+
+msgid "leave"
+msgstr "დავტოვოთ"
+
+msgid "Lock"
+msgstr "ბლოკირება"
+
+msgid "Locked"
+msgstr "დაბლოკილია"
+
+msgid "manage album photos"
+msgstr "კატეგორიის ფოტოების მართვა"
+
+msgid "manage sub-albums"
+msgstr "ქვეკატეგორიების მართვა"
+
+msgid "Manage"
+msgstr "მართვა"
+
+msgid "Execution time is out, treatment must be continue [Estimated time: %d second]."
+msgid_plural "Execution time is out, treatment must be continue [Estimated time: %d seconds]."
+msgstr[0] "შესრულების დრო ამოიწურა, დამუშავება უნდა გაგრძელდეს [დაახლოებითი დრო: %d წამი]."
+msgstr[1] "შესრულების დრო ამოიწურა, დამუშავება უნდა გაგრძელდეს [დაახლოებითი დრო: %d წამი]."
+
+msgid "Prepared time for list of users to send mail is limited. Others users are not listed."
+msgstr "მომხმარებელთა სიის მომზადების დრო დასაგზავნად შეზრუდულია. დარჩენილი მომხმარებლები არ არიან სიაში."
+
+msgid "Time to send mail is limited. Others mails are skipped."
+msgstr "ფოსტის გაგზავნის დრო შეზღუდულია. სხვა წერილები გამოტოვებულია."
+
+msgid "To send ?"
+msgstr "გავგზავნოთ?"
+
+msgid "Last send"
+msgstr "ბოლო გაგზავნილები"
+
+msgid "Email"
+msgstr "email"
+
+msgid "User"
+msgstr "მომხმარებელი"
+
+msgid "See you soon,"
+msgstr "ნახვამდის,"
+
+msgid "Go to"
+msgstr "გადავიდეთ "
+
+msgid "Hello"
+msgstr "გამარჯობა "
+
+msgid "New photos were added"
+msgstr "ახალი ელემენტები დამატებულია "
+
+msgid "on"
+msgstr " ში "
+
+msgid "between"
+msgstr "შორის "
+
+msgid "and"
+msgstr " და "
+
+msgid "The webmaster has subscribed you to receiving notifications by mail."
+msgstr "ადმინისტრატორმა მოგცათ უფლება მიიღოთ  შეტყობინები ფოსტის საშუალებით."
+
+msgid "You have subscribed to receiving notifications by mail."
+msgstr "თქვენ  დაადასტურეთ ხელმოწერა შეტყობინებების ფოსტით მიღებაზე."
+
+msgid "To subscribe"
+msgstr "ხელმოწერა"
+
+msgid "If you encounter problems or have any question, please send a message to"
+msgstr "თუკი გაგიჩნდებათ რაიმე პრობლემა ან კითხვები, მოგვწერეთ "
+
+msgid "[NBM] Problems or questions"
+msgstr "პრობლემები და შეკითხვები"
+
+msgid "The webmaster has unsubscribed you from receiving notifications by mail."
+msgstr "ადმინისტრატორმა დაბლოკა უფლება მიიღოთ  შეტყობინები ფოსტის საშუალებით."
+
+msgid "You have unsubscribed from receiving notifications by mail."
+msgstr "თქვენ წაშალეთ ხელმოწერა შეტყობინებების ფოსტის მიღებაზე."
+
+msgid ", click on"
+msgstr ", დაწკაპეთ "
+
+msgid "To unsubscribe"
+msgstr "რათა გააუქმოთ ხელმოწერა"
+
+msgid "With blank value, gallery title will be used"
+msgstr "თუკი არ არის შევსებული, გამოყენებული იქნება გალერეის სახელი"
+
+msgid "Notification"
+msgstr "შეტყობინებები"
+
+msgid "Error when sending email to %s [%s]."
+msgstr "ფოსტის გაგზავნის შეცდომა %s [%s] თვის."
+
+msgid "Mail sent to %s [%s]."
+msgstr "წერილი გაგზავნილია %s [%s] თვის."
+
+msgid "%d mail was sent."
+msgid_plural "%d mails were sent."
+msgstr[0] "გაგზავნილია წერილი: %d."
+msgstr[1] "გაგზავნილია წერილები: %d."
+
+msgid "%d mail was not sent."
+msgid_plural "%d mails were not sent."
+msgstr[0] "გაუგზავნელი წერილი: %d."
+msgstr[1] "გაუგზავნელი წერილები: %d."
+
+msgid "No mail to send."
+msgstr "არ არის გასაგზავნი წერილები."
+
+msgid "There is no available subscribers to mail."
+msgstr "არ არიან მომხმარებლები, ვისთვისაც შეიძლება წერილის გაგზავნა."
+
+msgid "Subscribers could be listed (available) only if there is new elements to notify."
+msgstr "მომხმარებლები არსებობენ, თუკი არის ახალი შეტყობინების ელემენტები."
+
+msgid "Anyway only webmasters can see this tab and never administrators."
+msgstr "შესაძლებელია ,არ არიან ხელმომწერები (მხოლოდ ადმინისტრატორი ხედავს ამას)."
+
+msgid "No user to send notifications by mail."
+msgstr "არ არიან მომხმარებლები, რომ გაუგზავნოთ სეტყობინება ფოსტით.."
+
+msgid "New photos added"
+msgstr "დამატებულია ახალი ელემენტი"
+
+msgid "Subscribe to notification by mail"
+msgstr "ხელმოწერა ფოსტით შეტყობინებაზე"
+
+msgid "Unsubscribe from notification by mail"
+msgstr "ხელმოწერის გაუქმება ფოსტით შეტყობინებაზე"
+
+msgid "Parameter"
+msgstr "პარამეტრები"
+
+msgid "Continue processing treatment"
+msgstr "გავაგრძელოთ მიმართვის დამუშავება"
+
+msgid "Complementary mail content"
+msgstr "წერილის დამატებითი შემადგენლობა"
+
+msgid "Add detailed content"
+msgstr "დავამატოთ დამატებითი შემადგენლობა"
+
+msgid "Send mail as"
+msgstr "გავაგზავნოთ წერილი"
+
+msgid "Send mail to users"
+msgstr "გაუგზავნოთ წერილი მომხმარებელს"
+
+msgid "Send"
+msgstr "გაგზავნა"
+
+msgid "Subscribed"
+msgstr "დასაგზავნთა სიაში"
+
+msgid "Subscribe"
+msgstr "დაგზავნის სია"
+
+msgid "Parameters"
+msgstr "პარამეტრები"
+
+msgid "Select recipients"
+msgstr "ავირჩიოთ მიმღებები"
+
+msgid "Subscribe/unsubscribe users"
+msgstr "მონაწილეთა დამატება/წაშლა დაგზავნის სიაში"
+
+msgid "Unsubscribed"
+msgstr "არ არის დაგზავნის სიაში"
+
+msgid "%d parameter was updated."
+msgid_plural "%d parameters were updated."
+msgstr[0] "%d პარამეტრი განახლებულია."
+msgstr[1] "%d პარამეტრი განახლებულია."
+
+msgid "%d user was not updated."
+msgid_plural "%d users were not updated."
+msgstr[0] "%d მომხმარებელი არ არის განახლებული."
+msgstr[1] "%d მომხმარებელი არ არის განახლებული."
+
+msgid "User %s [%s] was removed from the subscription list."
+msgstr "Пользователь %s [%s] წაშლილია დაგზავნის სიიდან."
+
+msgid "User %s [%s] was added to the subscription list."
+msgstr "Пользователь %s [%s] დამატებულია დაგზავნის სიაში."
+
+msgid "%d user was updated."
+msgid_plural "%d users were updated."
+msgstr[0] "%d მომხმარებელი შეცვლილია."
+msgstr[1] "%d მომხმარებელი შეცვლილია."
+
+msgid "User %s [%s] was not removed from the subscription list."
+msgstr "მომხმარებელი %s [%s] არ არის წაშლილი დაგზავნის სიიდან."
+
+msgid "User %s [%s] was not added to the subscription list."
+msgstr "მომხმარებელი %s [%s] არ არის დამატებული დაგზავნის სიაში."
+
+msgid "User %s [%s] added."
+msgstr "მომხმარებელი %s [%s] დამატებულია."
+
+msgid "Warning: subscribing or unsubscribing will send mails to users"
+msgstr "ყურადღება: დაგზავნის სიაში დამატება/წაშლისას მომხმარებლებს გეაგზავნებათ შეტყობინება"
+
+msgid "Send mail on HTML format"
+msgstr "გავაგზავნოთ წერილი HTML ფორმატში"
+
+msgid "Include display of recent photos grouped by dates"
+msgstr "ჩავრთოთ თარიღის მიხედვით დაწყობილი ბოლო ფოტოების გამოსახვა"
+
+msgid "Available only with HTML format"
+msgstr "შესაძლებელია მხოლოდ HTML ფორმატში"
+
+msgid "no write access"
+msgstr "ჩაწერაზე დაშვება არ არის"
+
+msgid "Permissions"
+msgstr "დაშვებები"
+
+msgid "private"
+msgstr "პრივატული"
+
+msgid "public"
+msgstr "საერთო"
+
+msgid "Purge never used notification feeds"
+msgstr "გავწმინდოთ გამოუყენებელი შეტყობინებების არხები"
+
+msgid "Purge sessions"
+msgstr "გავწმინდოთ სესიები"
+
+msgid "randomly represented"
+msgstr "შემთხვევითი წარმომადგენელი"
+
+msgid "registration date"
+msgstr "რეგისტრაციის თარიღი"
+
+msgid "clean"
+msgstr "გავწმინდოთ"
+
+msgid "Create this site"
+msgstr "შევქმნათ ეს საიტი"
+
+msgid "test"
+msgstr "ტესტი"
+
+msgid "test this remote site"
+msgstr "დავტესტოთ ეს დაშორებული საიტი"
+
+msgid "remove tags"
+msgstr "წავშალოთ სიტყვები"
+
+msgid "Repair and optimize database"
+msgstr "მონაცემთა ბაზის გასწორება და ოპტიმიზაცია"
+
+msgid "selection"
+msgstr "აღნიშნულები"
+
+msgid "set to"
+msgstr "შევცვალოთ"
+
+msgid "singly represented"
+msgstr "აღნიშნული წარმომადგენელი"
+
+msgid "This site already exists"
+msgstr "ასეთი საიტი უკვე არის"
+
+msgid "Create a new site : (give its URL to create_listing_file.php)"
+msgstr "შევქმნათ ახალი საიტი: (ჩაწერეთ URL  create_listing_file.php -ში)"
+
+msgid "created"
+msgstr "შექმნილია"
+
+msgid "delete"
+msgstr "წაშლილია"
+
+msgid "delete this site and all its attached elements"
+msgstr "წავშალოთ ეს საიტი და ყველა მიმაგრებული ელემენტი"
+
+msgid "an error happened"
+msgstr "მოხდა შეცდომა"
+
+msgid "Local"
+msgstr "ლოკალური"
+
+msgid "Remote"
+msgstr "დაშორებული"
+
+msgid "update the database from files"
+msgstr "განვაახლოთ მონაცემების გბაზა ფაილებიდან"
+
+msgid "status"
+msgstr "სტატუსი"
+
+msgid "Directory"
+msgstr "ფოლდერი"
+
+msgid "sub-albums"
+msgstr "ქვეკატეგორიები"
+
+msgid "Synchronize metadata"
+msgstr "მეტამონაცემების სინქრონიზაცია"
+
+msgid "target"
+msgstr "შევცვალოთ"
+
+msgid "Thumbnail"
+msgstr "მინიატურა"
+
+msgid "Title"
+msgstr "სათაური"
+
+msgid "Album list management"
+msgstr "კატეგორიების მართვა"
+
+msgid "Piwigo configuration"
+msgstr " PhpWebGallery მართვა"
+
+msgid "Edit album"
+msgstr "კატეგორიების რედაქტირება"
+
+msgid "Group management"
+msgstr "ჯგუფების მართვა"
+
+msgid "User list"
+msgstr "მომხმარებლების სია"
+
+msgid "Database synchronization with files"
+msgstr "მონაცემთა ბაზის სინქრონიზაცია ფაილებთან"
+
+msgid "all"
+msgstr "ყველა"
+
+msgid "height must be a number superior to"
+msgstr "სიმაღლე უნდა იყოს მეტი რიცხვი"
+
+msgid "width must be a number superior to"
+msgstr "სიგანე უნდა იყოს მეტი რიცხვი"
+
+msgid "for the file format"
+msgstr "ფაილის ფორმატისათვის"
+
+msgid "Photo unreachable or no support"
+msgstr "ფოტო მიუწვდომელია ან არ არის მისი ფორმატის მხარდაჭერა"
+
+msgid "GD version"
+msgstr "ვერსია GD"
+
+msgid "General statistics"
+msgstr "საერთო სტატისტიკა"
+
+msgid "average time"
+msgstr "საშუალო დრო"
+
+msgid "number of miniaturized photos"
+msgstr "შემცირებული ფოტოების რაოდენობა"
+
+msgid "total time"
+msgstr "საერთო დრო"
+
+msgid "for this file format"
+msgstr "ამ ფაილის ფორმატისათვის"
+
+msgid "unit mode"
+msgstr "ერთეული რეჟიმი"
+
+msgid "Unlocked"
+msgstr "ბლოკის მოხსნა"
+
+msgid "unset"
+msgstr "გავასუფთაოთ"
+
+msgid "Update albums informations"
+msgstr "განვაახლოთ ინფორმაცია კატეგორიებზე"
+
+msgid "Update photos information"
+msgstr "განვაახლოთ ინფორმაცია ფოტოებზე"
+
+msgid "Synchronize"
+msgstr "სინქრონიზაცია"
+
+msgid "reduce to single existing albums"
+msgstr "შევამოწმოთ მხოლოდ კატეგორია"
+
+msgid "Choose an option"
+msgstr "აირჩიეთ პარამეტრები"
+
+msgid "display maximum informations (added albums and photos, deleted albums and photos)"
+msgstr "ვნახოთ ინფორმაციის მაქსიმუმი (დამატებული კატეგორიები და ფოტოები, წაშლილი ფოტოები და ელემენტები)"
+
+msgid "Error list"
+msgstr "შეცდომების სია"
+
+msgid "Errors caption"
+msgstr "შეცდომების განმარტება"
+
+msgid "Detailed informations"
+msgstr "დეტალური ინფორმაცია"
+
+msgid "File/directory read error"
+msgstr "შეცდომია ფაილის/პაპკის კითხვისას"
+
+msgid "The file or directory cannot be accessed (either it does not exist or the access is denied)"
+msgstr "ფაილთან ან ფოლდერთან დაკავშირება არ მოხერხდა.(შესაძლებელია არ გაქვთ დაშვების უფლება ან მათთან დაშვება აკრძალულია)"
+
+msgid "albums deleted in the database"
+msgstr "კატეგორია წაშლილია მონაცემთა ბაზიდან"
+
+msgid "photos deleted from the database"
+msgstr "ელემენტი წაშლილია მონაცემთა ბაზიდან"
+
+msgid "photos candidates for metadata synchronization"
+msgstr "სურათი მეტამონაცემების სინქრონიზაციისათვის"
+
+msgid "photos informations synchronized with files metadata"
+msgstr "ინფორმაცია ელემენტებზე სინქრონირებულია ფაილების მეტამონაცემებთან"
+
+msgid "errors during synchronization"
+msgstr "სინქრონიზაციის შეცდომები"
+
+msgid "albums added in the database"
+msgstr "კატეგორიები დამატებულია მონაცემთა ბაზაში"
+
+msgid "photos added in the database"
+msgstr "ელემენტები დამატებულია მონაცემთა ბაზაში"
+
+msgid "photos updated in the database"
+msgstr "ელემანტები განახლებულია მონაცემთა ბაზაში"
+
+msgid "Search for new images in the directories"
+msgstr "ახალი ფოტოების ძებნა პაპკებში"
+
+msgid "added"
+msgstr "დამატებულია"
+
+msgid "deleted"
+msgstr "წაშლილია"
+
+msgid "Metadata synchronization results"
+msgstr "მეტამონაცემების სინქრონიზაციის შედეგები"
+
+msgid "only perform a simulation (no change in database will be made)"
+msgstr "მხოლოდ ტესტირება (არ შევიტანოთ ცვლილებები მონაცემთა ბაზაში)"
+
+msgid "Simulation"
+msgstr "ტესტი"
+
+msgid "directories + files"
+msgstr "ფაილები და ფოლდერები"
+
+msgid "only directories"
+msgstr "მხოლოდ ფოლდერები"
+
+msgid "synchronize files structure with database"
+msgstr "ფაილების სტრუქტურის სინქრონიზაცია მონაცემთა ბაზასთან"
+
+msgid "synchronize files metadata with database photos informations"
+msgstr "ფაილების მეტამონაცემების სინქრონიზაცია მონაცემთა ბაზასთან"
+
+msgid "even already synchronized photos"
+msgstr "ყველა, ადრე სინქრონიზებულის ჩათვლით"
+
+msgid "Used metadata"
+msgstr "გამოYენებული მეტამონაცემები"
+
+msgid "The name of directories and files must be composed of letters, numbers, \"-\", \"_\" or \".\""
+msgstr "ფაილების ან ფოლდერების სახელი უნდა შედგებოდეს ასოების,ციფრების \"-\", \"_\" და \".\" სგან"
+
+msgid "wrong filename"
+msgstr "ფაილის არასწორი სახელი"
+
+msgid "Upload"
+msgstr "ატვირთვები"
+
+msgid "user \"%s\" added"
+msgstr "მომხმარებელი \"%s\" დამატებულია"
+
+msgid "User status"
+msgstr "მომხმარებლის სტატუსი"
+
+msgid "user_status_admin"
+msgstr "ადმინისტრატორი"
+
+msgid "user_status_generic"
+msgstr "საერთო"
+
+msgid "user_status_guest"
+msgstr "სტუმარი"
+
+msgid "user_status_webmaster"
+msgstr "ვებდიზაინერი"
+
+msgid "Virtual album"
+msgstr "ვირტუალური კატეგორია"
+
+msgid "Waiting"
+msgstr "მოცდის პროცესში"
+
+msgid "default"
+msgstr "ძირითადად"
+
+msgid "Toggle 'default group' property"
+msgstr "შევქმათ/მოვაშოროთ  'ძირითადად'"
+
+msgid "Advanced features"
+msgstr "გაფართოებული ფუნქციები"
+
+msgid "Overall"
+msgstr "ყველა"
+
+msgid "Year"
+msgstr "წელი"
+
+msgid "Month"
+msgstr "თვე"
+
+msgid "Day"
+msgstr "დღე"
+
+msgid "Pages seen"
+msgstr "გვერდია ნანახი"
+
+msgid "Time"
+msgstr "დრო"
+
+msgid "IP"
+msgstr "IP"
+
+msgid "Element"
+msgstr ""
+
+msgid "Section"
+msgstr "განყოფილება"
+
+msgid "An information email was sent to group \"%s\""
+msgstr "საინფორმაციო წერილი გაგზავნილია \"%s\" ჯგუფისთვის"
+
+msgid "Send an information email to group members"
+msgstr "გავაგზავნოთ საინფორმაციო წერილი ჯგუფისთვის"
+
+msgid "Group"
+msgstr "ჯგუფი"
+
+msgid "[%s] Visit album %s"
+msgstr "[%s] გიწვევთ %s კატეგორიაში"
+
+msgid "Hello,"
+msgstr "გამარჯობა,"
+
+msgid "See you soon."
+msgstr "ნახვამდისД."
+
+msgid "Discover album:"
+msgstr "მობრძანდით კატეგორიში:"
+
+msgid "Mail content"
+msgstr "შინაარსი"
+
+msgid "none"
+msgstr "არა"
+
+msgid "high"
+msgstr "დიდი"
+
+msgid "other"
+msgstr "სხვა"
+
+msgid "Element type"
+msgstr "ელემენტის ტიპი"
+
+msgid "Image id"
+msgstr "ფოტოს id"
+
+msgid "Summary"
+msgstr "სუმარულად"
+
+msgid "%d line filtered"
+msgid_plural "%d lines filtered"
+msgstr[0] "%d ხაზი გაფილტრულია"
+msgstr[1] "%d ხაზი გაფილტრულია"
+
+msgid "%d guest"
+msgid_plural "%d guests"
+msgstr[0] "%d სტუმარი"
+msgstr[1] "%d სტუმრები"
+
+msgid "Hour"
+msgstr "საათი"
+
+msgid "guest"
+msgstr "სტუმარი"
+
+msgid "default values"
+msgstr "ძირითAდი მნიშვნელობა"
+
+msgid "Guest cannot be deleted"
+msgstr "შტუმრის წაშლა არ შეიძლება"
+
+msgid "Default user cannot be deleted"
+msgstr "ძირითადი მომხმარებელის წაშლა არ შეიძლება"
+
+msgid "Purge history detail"
+msgstr "გავასუფთაოთ ისტორია"
+
+msgid "Purge history summary"
+msgstr "გავასუფთაოთ მთელი ისტორია"
+
+msgid "Check integrity"
+msgstr "შესაბამისობის შემოწმება"
+
+msgid "Anomaly"
+msgstr "გაუმართაობა"
+
+msgid "Correction"
+msgstr "კორექტირება"
+
+msgid "Automatic correction"
+msgstr "ავტომატური კორექტირება"
+
+msgid "Impossible automatic correction"
+msgstr "ავტომატური კორექტირება შეუძლებელია"
+
+msgid "Correction applied with success"
+msgstr "კორექტირებამ წარმატებით ჩაიარა"
+
+msgid "Correction applied with error"
+msgstr "კორექციამ შეცდომებით ჩაიარა"
+
+msgid "%d anomaly has been detected."
+msgid_plural "%d anomalies have been detected."
+msgstr[0] "აღმოჩენილია %d გაუმართაობა."
+msgstr[1] "აღმოჩენილია %d გაუმართაობები."
+
+msgid "%d anomaly has been corrected."
+msgid_plural "%d anomalies have been detected corrected."
+msgstr[0] "კორექტირებულია %d გაუმართაობა."
+msgstr[1] "კორექტირებულია %d გაუმართაობები."
+
+msgid "%d anomaly has not been corrected."
+msgid_plural "%d anomalies have not been corrected."
+msgstr[0] "არ არის კორექტირებული %d გაუმართაობა."
+msgstr[1] "არ არის კორექტირებული %d გაუმართაობები."
+
+msgid "Go to %s or %s for more informations"
+msgstr "ნახეთ %s ან %s დამატებითი ინფორმაციის მისაღებად"
+
+msgid "the forum"
+msgstr "ფორუმი"
+
+msgid "the wiki"
+msgstr "wiki"
+
+msgid "%s value is not correct file because exif are not supported"
+msgstr "მნიშვნელობა %s ფაილში არა სწორია,რადგან exif მხარდაჭერა არაა"
+
+msgid "%s must be to set to false in your local/config/config.inc.php file"
+msgstr "%s საჭიროა გათიშოთ ფაილში config_local.inc.php"
+
+msgid "Main \"guest\" user does not exist"
+msgstr "მომხმარებლის სტატუსი \"სტუმარი\" აღარ არსებობს"
+
+msgid "Main \"guest\" user status is incorrect"
+msgstr "მომხმარებლის სტატუსი \"სტუმარი\" არა კორექტულია"
+
+msgid "Default user does not exist"
+msgstr "ძირითადი მომხმარებელი აღარ არსებობს"
+
+msgid "Main \"webmaster\" user does not exist"
+msgstr "მომხმარებელი \"ვებდიზაინერი\" აღარ არსებობს"
+
+msgid "Main \"webmaster\" user status is incorrect"
+msgstr "მომხმარებლის სახელი \"ვებდიზაინერი\" არა კორექტულია"
+
+msgid "User \"%s\" created with \"%s\" like password"
+msgstr "მომხმარებელი \"%s\" შექმნილია პაროლით \"%s\""
+
+msgid "Status of user \"%s\" updated"
+msgstr "მომხმარებელი \"%s\" სტატუსი განახლებულია"
+
+msgid "add new photos to caddie"
+msgstr "დავამატოთ ახალი ფოტოები კალათაში"
+
+msgid "No display"
+msgstr "არ ვანახოთ"
+
+msgid "Classic display"
+msgstr "კლასიკური სახე"
+
+msgid "Hoverbox display"
+msgstr "სახე Hoverbox"
+
+msgid "Mail address is obligatory for all users"
+msgstr "ელ. ფოსტის მისამართი აუცილებელია ყველა მომხმარებლისათვის"
+
+msgid "Minimum privacy level"
+msgstr "დაცვის მინიმალური დონე"
+
+msgid "Privacy level"
+msgstr "დაცვის დონე"
+
+msgid "Level 0"
+msgstr "---"
+
+msgid "Level 1"
+msgstr "კონტაქტი"
+
+msgid "Level 2"
+msgstr "მეგობრები"
+
+msgid "Level 4"
+msgstr "ოჯახი"
+
+msgid "Level 8"
+msgstr "ადმინისტრაცია"
+
+msgid "Reinitialize check integrity"
+msgstr "გავიმეოროთ მთლიანობის შემოწმება"
+
+msgid "Check all"
+msgstr "ავღნიშნოთ ყველა"
+
+msgid "Uncheck all"
+msgstr "მოვხსნათ ყველა აღნიშვნა"
+
+msgid "Check automatic corrections"
+msgstr "აღვნიშნოთ ავტოკორექცია"
+
+msgid "Apply selected corrections"
+msgstr "გამოვიყენოთ აღნიშნული კორექციები"
+
+msgid "Ignore selected anomalies"
+msgstr "აღნიშნული გაუმართაობების იგნორირება"
+
+msgid "Refresh"
+msgstr "განვაახლოთ"
+
+msgid "The anomaly will be ignored until next application version"
+msgstr "გაუმართაობები იგნორირებული იქნება სკრიპტის შემდგომი ვერსიის დაყენებამდე"
+
+msgid "Correction the anomaly will cancel the fact that it's ignored"
+msgstr "გაუმართაობის კორექტირება გათიშავს მათ იგნორირებას"
+
+msgid "%d anomaly has been ignored."
+msgid_plural "%d anomalies have been ignored."
+msgstr[0] "%d გაუმართაობა იგნორირებულია."
+msgstr[1] "იგნორირებული იქნა გაუმართაობები: %d"
+
+msgid "Plugins which need upgrade"
+msgstr "პლაგინები, რომლებიც ითხხოვენ განახლებას"
+
+msgid "Plugin list"
+msgstr "პლაგინების სია"
+
+msgid "Check for updates"
+msgstr "განახლების შემოწმება"
+
+msgid "Other plugins"
+msgstr "სხვა პლაგინები"
+
+msgid "Last revisions"
+msgstr "ბოლო ცვლილებები"
+
+msgid "Are you sure you want to delete this plugin?"
+msgstr "დარწმუნებული ხართ, რომ გინდათ წაშალოთ ეს პლაგინი?"
+
+msgid "Are you sure you want to install this plugin?"
+msgstr "დარწმუნებული ხართ, რომ გინდათ დააყენოთ ეს პლაგინი?"
+
+msgid "Are you sure to install this upgrade? You must verify if this version does not need uninstallation."
+msgstr "დარწმუნებული ხართ, რომ გინდათ განაახლოთ? შეამოწმეთ, ხომ არ ჭირდება ამ ვერსიას დეინსტალაცია."
+
+msgid "Plugin has been successfully copied"
+msgstr "პლაგინი წარმატებით იქნა კოპირებული"
+
+msgid "You might go to plugin list to install and activate it."
+msgstr "შეგიძლიათ გადახვიდეთ პლაგინების სიასთან მის დასაყენებლად და აქტივაციისათვის."
+
+msgid "Can't create temporary file."
+msgstr "შეუძლებელია დროებითი ფაილის შექმნა."
+
+msgid "Can't download archive."
+msgstr "შეუძლებელია არქივის ჩამოტვირთვა."
+
+msgid "Can't read or extract archive."
+msgstr "შეუძლებელია არქივის წაკითხვა."
+
+msgid "An error occured during extraction (%s)."
+msgstr "შეცდომაა გახსნის პროცესშიО (%s)."
+
+msgid "Please check \"plugins\" folder and sub-folders permissions (CHMOD)."
+msgstr "გთხოვთ, შეამოწმოთ ფოლდერ \"plugins\"-ის და მისი ქვეფოლდერების უფლებები (CHMOD)."
+
+msgid "Can't connect to server."
+msgstr "სერვერთან დაკავშირება შეუძლებელია."
+
+msgid "Purge compiled templates"
+msgstr "გავასუფთაოთ შექმნილი შაბლონები"
+
+msgid "ACCESS_0"
+msgstr "თავისუფალი დაშვება"
+
+msgid "ACCESS_1"
+msgstr "დაშვებულია ყველასთვის"
+
+msgid "ACCESS_2"
+msgstr "დაშვებულია რჩეულებისათვის"
+
+msgid "ACCESS_3"
+msgstr "დაშვებულია ადმინისტრატორებისთვის"
+
+msgid "ACCESS_4"
+msgstr "დაშვებულია ვებდიზაინერისათვის"
+
+msgid "ACCESS_5"
+msgstr "დაუშვებელია"
+
+msgid "Support"
+msgstr "მხარდაჭერა"
+
+msgid "Documentation"
+msgstr "დოკუმენტაცია"
+
+msgid "A new version of Piwigo is available."
+msgstr "ხელმისაწვდომია Piwigo-ს ახალი ვერსია."
+
+msgid "Piwigo Administration"
+msgstr "Piwigo-ს ადმინისტრაცია"
+
+msgid "Piwigo version"
+msgstr "Piwigo-ს ვერსია"
+
+msgid "You are running the latest version of Piwigo."
+msgstr "გაშვებულია Piwigo-ს ბოლო ვერსია."
+
+msgid "The version of %s [%s] installed is not compatible with the version required [%s]"
+msgstr "დაყენებული ვერსია %s [%s] შეუსაბამოა [%s] ვერსიასთან"
+
+msgid "You need to upgrade your system to take full advantage of the application else the application will not work correctly, or not at all"
+msgstr "რათა გამოიყენოთ სკრიპტის მტელი შესაძლებლობები, განაახლეთ სისტემა, წინააღმდეგ შემთხვევაში სკრიპტმა შესაძლოა შეცდომებით იმუშაოს"
+
+msgid "Deleted on"
+msgstr "წაშლილია"
+
+msgid "Last hit"
+msgstr "ბოლო ნაჩვენები"
+
+msgid "GD library is missing"
+msgstr "GD ბიბლიოთეკა არ არსებობს"
+
+msgid "Templates"
+msgstr "შაბლონები"
+
+msgid "Extend for templates"
+msgstr "გაფართოებები შაბლონებისათვის"
+
+msgid "Replacement of original templates by customized templates from template-extension subfolder"
+msgstr "შევცვალოთ ორიგინალი შაბლონები მომხმარებლის შაბლონებით ქვეფოლდერიდანtemplate-extension"
+
+msgid "Replacers (customized templates)"
+msgstr "შემცვლელი (მომხმარებლის შაბლონი)"
+
+msgid "Original templates"
+msgstr "ორიგინალი შაბლონი"
+
+msgid "Optional URL keyword"
+msgstr "ოპციონალური URL საკვანძო სიტყვა"
+
+msgid "Templates configuration has been recorded."
+msgstr "შაბლონის კონფიგურაცის გადაწერილია."
+
+msgid "All optimizations have been successfully completed."
+msgstr "ყველა ოპტიმიზაციამ წარმატებით ჩაიარა."
+
+msgid "Optimizations have been completed with some errors."
+msgstr "ოპტიმიზაცია დასრულდა შეცდომებით."
+
+msgid "Modify information"
+msgstr "ინფორმაცია ცვლილებების შესახებ"
+
+msgid "nothing"
+msgstr "არაფერი"
+
+msgid "overrides existing values with empty ones"
+msgstr "შევცვალოთ არსებული მნიშვნელობები ცარიელით"
+
+msgid "Manage photo ranks"
+msgstr "ფოტოების მართვის წესი"
+
+msgid "Edit ranks"
+msgstr "შევცვალოთ წესი"
+
+msgid "No photo in this album"
+msgstr "ცარიელი კატეგორია"
+
+msgid "Images manual order was saved"
+msgstr "ფოტოებისთვის აღნიშნული წესი შენახულია"
+
+msgid "ranks"
+msgstr "წესი"
+
+msgid "Drag to re-order"
+msgstr "გადმოიტანეთ რათა შეცვალოთ წესი"
+
+msgid "Quick Local Synchronization"
+msgstr "ჩქარი სინქრონიზაცია"
+
+msgid "No photo can be deleted"
+msgstr "არ არის ფოტო წასაშლელად"
+
+msgid "Delete selected photos"
+msgstr "წავშალოთ არჩეული ფოტოები"
+
+msgid "%d photo was deleted"
+msgid_plural "%d photos were deleted"
+msgstr[0] "%d ფოტო წაშლილია"
+msgstr[1] "%d ფოტო წაშლილია"
+
+msgid "Unable to check for upgrade."
+msgstr "შეუძლებელია განახლების შემოწმება."
+
+msgid "Date"
+msgstr "თარიღი"
+
+msgid "Operation in progress"
+msgstr "მიმართვის დამუშავება."
+
+msgid "Please wait..."
+msgstr "გთხოვთ მოიცადოთ..."
+
+msgid "Downloads"
+msgstr "ჩამოტვირთვები"
+
+msgid "Released on"
+msgstr "გამოშვება"
+
+msgid "Number of downloads"
+msgstr "ჩამოტვირთვების რაოდენობა"
+
+msgid "Piwigo Announcements Newsletter"
+msgstr "Piwigo საინფორმაციო დაგზავნა"
+
+msgid "Keep in touch with Piwigo project, subscribe to Piwigo Announcement Newsletter. You will receive emails when a new release is available (sometimes including a security bug fix, it's important to know and upgrade) and when major events happen to the project. Only a few emails a year."
+msgstr "იყავით კავშირზე პროექტ Piwigo სთან ერთად, თქვენ მიიღებთ შეტყობინებას როგორც კი გამოვა ახალი გამოცემა (ზოგჯერ წერილი შეიცავს შეცდომების გამოსწორებას, უსაფრთხოების ზომების შესახებ და თქვენ უნდა იცოდეთ ეს), ან როცა იქნება რამე მნიშვნელოვანი მოვლენა ან პროექტი. ეს მხოლოდ რამდენიმე წერილია წელიწადში."
+
+msgid "Subscribe %s"
+msgstr "ხელმოწერა %s"
+
+msgid "Subscribe %s to Piwigo Announcements Newsletter"
+msgstr "ხელმოწერა %s Piwigo საინფორმაციო დაგზავნაზე"
+
+msgid "Purge search history"
+msgstr "გავასუფთაოთ ძებნის ისტორია"
+
+msgid "Hide"
+msgstr "დავფაროთ"
+
+msgid "Password is missing. Please enter the password."
+msgstr "პაროლი არა სწორია. გთხოვთ გაიმეოროთ."
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "პაროლის დადასტურება არ არის. გთხოვთ დაადასტურეთ არჩეული პაროლი."
+
+msgid "Allow users to edit their own comments"
+msgstr "ნება დავრთოთ მომხმარებლებს თავიანთი კომენტარის რედაქტირებაზე"
+
+msgid "Allow users to delete their own comments"
+msgstr "ნება დავრთოთ მომხმარებელს წაშალოს თავისი კომენტარი"
+
+msgid "Email administrators when a comment is modified"
+msgstr "შევატყობინოთ ადმინისტრატორს ელ.ფოსტით, როცა კომენტარი შეიცვლება"
+
+msgid "Email administrators when a comment is deleted"
+msgstr "შევატყობინოთ ადმინისტრატორს ელ.ფოსტით, როცა კომენტარი წაიშლება"
+
+msgid "Cannot delete the old permalink !"
+msgstr "ძველი მუდმივი ბმული არ შეიძლება წაიშალოს!"
+
+msgid "Hit"
+msgstr "პოპულარული"
+
+msgid "Tools"
+msgstr "ინსტრუმენტები"
+
+msgid "Photos"
+msgstr "ფოტოები"
+
+msgid "Themes"
+msgstr "თემები"
+
+msgid "Instructions to use Piwigo"
+msgstr "Piwigo მოხმარების ინსტრუქცია"
+
+msgid "Installed Themes"
+msgstr "დაყენებული თემები"
+
+msgid "Add New Theme"
+msgstr "დავამატოთ ახალი თემა"
+
+msgid "Forbid this theme to users"
+msgstr "აუკრზალოთ მომხმარებელს ამ თემის გამოყენება"
+
+msgid "Set as default theme for unregistered and new users"
+msgstr "დავაყენოთ ეს თემა ახალი და დაურეგისტრირებელი მომხმარებელისათვის ძირითადად"
+
+msgid "unknown"
+msgstr "უცნობია"
+
+msgid "Upload Photos"
+msgstr "ავტვირთოთ ფოტოები"
+
+msgid "Drop into album"
+msgstr "ავტვირთოთ კატეგორიაში"
+
+msgid "+ Add an upload box"
+msgstr "+ დავამატოთ ასატვირთი ველი"
+
+msgid "Create the \"%s\" directory at the root of your Piwigo installation"
+msgstr "შექმენით \"%s\" კატალოგი თქვენს მიერ დაყენებული Piwigo-ს ფუძეში"
+
+msgid "Give write access (chmod 777) to \"%s\" directory at the root of your Piwigo installation"
+msgstr "მიეცით ჩაწერაზე დაშვება (chmod 777)  \"%s\" კატალოგს, თქვენს მიერ დაყენებული Piwigo-ს ფუძეში"
+
+msgid "existing album"
+msgstr "არსებული კატეგორია"
+
+msgid "create a new album"
+msgstr "შევქმნათ ახალი კატეგორია"
+
+msgid "Album name"
+msgstr "კატეგორიის სახელი"
+
+msgid "Album \"%s\" has been added"
+msgstr "კატეგორია \"%s\" დამატებულია"
+
+msgid "Uploaded Photos"
+msgstr "ატვირთული ფოტოები"
+
+msgid "%d photos uploaded"
+msgstr "%d ფოტოები ატვირთულია"
+
+msgid "Privacy level set to \"%s\""
+msgstr "დავაყენოთ დაშვების უფლება \"%s\""
+
+msgid "Album \"%s\" now contains %d photos"
+msgstr "კატეგორია \"%s\" შეიცავს ამჟამად %d ფოტოს"
+
+msgid "Manage this set of %d photos"
+msgstr "ამ კრებულის რედაქტირება, შემცველობით %d Fოტო"
+
+msgid "Select files"
+msgstr "ავირჩიოთ ფაილები"
+
+msgid "Everybody"
+msgstr "ყველა"
+
+msgid "Who can see these photos?"
+msgstr "ვის შეუძლია ნახოს ეს ფოტოები?"
+
+msgid "Settings"
+msgstr "პარამეტრები"
+
+msgid "Resize"
+msgstr "ზომების შეცვლა"
+
+msgid "Maximum width"
+msgstr "მაქსიმალური სიგანე"
+
+msgid "pixels"
+msgstr "პიქსელი"
+
+msgid "Maximum height"
+msgstr "მაქსიმალური სიმაღლე"
+
+msgid "Image Quality"
+msgstr "ფოტოს ხარისხი"
+
+msgid "Save Settings"
+msgstr "შევინახოთ პარამეტრები"
+
+msgid "Your configuration settings are saved"
+msgstr "თქვენი კონფიგურაცია შენახულია"
+
+msgid "Active Themes"
+msgstr "აქტიური თემები"
+
+msgid "Add write access to the \"%s\" directory"
+msgstr "დაამატეთ ჩაწერის უფლება \"%s\" დირექტორიისათვის"
+
+msgid "Administration Home"
+msgstr "ადმინისტრირება"
+
+msgid "Change Admin Colors"
+msgstr "შევცვალოთ ადმინისტრირების პანელის ფერები"
+
+msgid "Delete this theme"
+msgstr "წავშალოთ ეს თემა"
+
+msgid "Directory does not exist"
+msgstr "დირექტორია არ არსებობს"
+
+msgid "Download,"
+msgstr "ჩამოვტვირთოთ,"
+
+msgid "FTP + Synchronization"
+msgstr "FTP + სინქრონიზაცია"
+
+msgid "Get Support on Piwigo Forum"
+msgstr "მიმართეთ დახმარებისათვის Piwigo-ს ფორუმს"
+
+msgid "Help Me"
+msgstr "დამეხმარეთ"
+
+msgid "Impossible to activate this theme, the parent theme is missing: %s"
+msgstr "ამ თემის აქტივაცია არ შეიძლება, რადგან მშობლიური თემა %s არ არსებობს"
+
+msgid "Impossible to delete this theme. Other themes depends on it: %s"
+msgstr "ამ თემის წაშლა არ შეიზლება, რადგან სხვა თემები %s დამოკიდებულნი არიან მასზე"
+
+msgid "Inactive Themes"
+msgstr "არა აქტიური თემები"
+
+msgid "Install on your computer,"
+msgstr "დააყენეთ თქვენს კომპიუტერზე,"
+
+msgid "Make this theme available to users"
+msgstr "გავხადოთ ეს თემა მომხმარებლებისთვის ხელმისაწვდომი"
+
+msgid "Page end"
+msgstr "გვერდის დასასრული"
+
+msgid "Piwigo Uploader"
+msgstr "Piwigo ამტვირთავი"
+
+msgid "Read Piwigo Documentation"
+msgstr "წაიკითხეთ Piwigo დოკუმენტაცია"
+
+msgid "Start pLoader and add your photos."
+msgstr "გახსენით pLoader და დაამატეთ თქვენი ფოტოები."
+
+msgid "Switch to clear or dark colors for administration"
+msgstr "ღია და მუქი ტონების არჩევა ადმინისტრირების პანელისათვის"
+
+msgid "Theme has been successfully installed"
+msgstr "თემა წარმატებით არის დაყენებული"
+
+msgid "Visit Gallery"
+msgstr "ნახეთ გალერეა"
+
+msgid "Visit Piwigo project website"
+msgstr "ნახეთ პროექტ Piwigo-ს საიტი "
+
+msgid "Guest Settings"
+msgstr "სტუმრის პარამეტრები"
+
+msgid "Main Page"
+msgstr "მთავარი გვერდი"
+
+msgid "Photo Page"
+msgstr "ფოტოების გვერდი"
+
+msgid "Activate Navigation Bar"
+msgstr "სანავიგაციო პანელის აქტივაცია"
+
+msgid "Activate Navigation Thumbnails"
+msgstr "მინიატურებში ნავიგაციის აქტივაცია"
+
+msgid "Activate icon \"%s\""
+msgstr "გავააქტიუროთ ხატულა \"%s\""
+
+msgid "Photo Properties"
+msgstr "ფოტოს თვისება"
+
+msgid "Allow user customization"
+msgstr "ნება დავრთოთ მომხმარებლებს შეცვალონ გალერეის სახე"
+
+msgid "Languages"
+msgstr "ენები"
+
+msgid "Installed Languages"
+msgstr "დაყენებული ენები"
+
+msgid "Add New Language"
+msgstr "დავამატოთ ახალი ენა"
+
+msgid "Language has been successfully installed"
+msgstr "ენა წარმატებით დაყენდა"
+
+msgid "Select:"
+msgstr "ავირჩიოთ:"
+
+msgid "None"
+msgstr "არც ერთი"
+
+msgid "Invert"
+msgstr "გადავწიოთ"
+
+msgid "Impossible to deactivate this theme, you need at least one theme."
+msgstr "შეუძლებელია ამ თემის დეაქტივაცია, თქვენ ერთი თემა მაინც უნდა გქონდეთ."
+
+msgid "Webmaster status is required."
+msgstr "საჭიროა ადმინისტრატორის სტატუსი."
+
+msgid "Bound Theme"
+msgstr "დაკავშირებული თემა"
+
+msgid "Allow rating"
+msgstr "ნება დავრთოთ შეაფასონ"
+
+msgid "Select at least one comment"
+msgstr "აირჩიეთ ერთი კომენტარი მაინც"
+
+msgid "Active Plugins"
+msgstr "გავააქტიუროოთ პლაგინი"
+
+msgid "Inactive Plugins"
+msgstr "პლაგინის დეაქტივაცია"
+
+msgid "Missing Plugins"
+msgstr "დაკარგული პლაგინები"
+
+msgid "Uninstalled Plugins"
+msgstr "წაშლილი პლაგინები"
+
+msgid "By %s"
+msgstr " %s"
+
+msgid "Visit plugin site"
+msgstr "ვეწვიოთ პლაგინის საიტს"
+
+msgid "Active Languages"
+msgstr "გავააქტიუროთ ენები"
+
+msgid "Delete this language"
+msgstr "წავსალოთ ეს ენა"
+
+msgid "Forbid this language to users"
+msgstr "გავხადოთ ეს ენა მომხმარებლისათვის ხელმიუწვდომელი"
+
+msgid "Impossible to deactivate this language, first set another language as default."
+msgstr "შეუყძლებელია ამ ენის დეაქტივაცია, დააყენეთ ძირითად ენად სხვა მანამდე."
+
+msgid "Impossible to deactivate this language, you need at least one language."
+msgstr "შეუძლებელია ამ ენის დეაქტივაცია, თქვენ ერთი ენა მაინც უნდა გქონდეთ."
+
+msgid "Inactive Languages"
+msgstr "ენის დეაქტივაცია"
+
+msgid "Make this language available to users"
+msgstr "გავხადოთ ეს ენა მომხმარებლებისათვის ხელმისაწვდომი"
+
+msgid "Set as default language for unregistered and new users"
+msgstr "დავაყენოთ ეს ენა დაურეგისტრირებელი მომხმარებლებისათვის ძირითადად"
+
+msgid "Add Photos"
+msgstr "ფოტოს დამატება"
+
+msgid "The following tag was deleted"
+msgstr "შემდეგი ნიშნულები წაშლილია"
+
+msgid "Miscellaneous"
+msgstr "სხვა და სხვა"
+
+msgid "Virtual Links"
+msgstr "ვირტ.ბმულები"
+
+msgid "There is no other language available."
+msgstr "არ არის სხვა ენები."
+
+msgid "There is no other plugin available."
+msgstr "არ არის სხვა პლაგინები."
+
+msgid "There is no other theme available."
+msgstr "არ არის სხვა თემები."
+
+msgid "By rank"
+msgstr "რეიტინგით"
+
+msgid "Manual order"
+msgstr "დავალაგოთ ხელით"
+
+msgid "Add another set of photos"
+msgstr "დავამატოთ ფოტოები"
+
+msgid "Order of menubar items has been updated successfully."
+msgstr "მენიუში განლაგების წესი წარმატებით შეიცვალა."
+
+msgid "This theme was not designed to be directly activated"
+msgstr "ამ თემაში არ არის გათვლილი პირდაპირი აქტივაცია"
+
+msgid "Who can see this photo?"
+msgstr "ვის შეუძლია ამ ფოტოს ნახვა?"
+
+msgid "Pending Comments"
+msgstr "კომენტარის მოლოდინში"
+
+msgid "Menu Management"
+msgstr "მენიუ"
+
+msgid "In your php.ini file, the upload_max_filesize (%sB) is bigger than post_max_size (%sB), you should change this setting"
+msgstr "თქვენს php.ini ფაილში, upload_max_filesize (%sB) მეტია ვიდრე post_max_size (%sB), თქვენ უნდა შეცვალოთ ეს პარამეტრი "
+
+msgid "Exif extension not available, admin should disable exif use"
+msgstr "Exif გაფართოება არ არის ხელმისაწვდომი, ადმინისტრატორმა უნდა გამორთოს exif–ის გამოყენება"
+
+msgid "The uploaded file exceeds the upload_max_filesize directive in php.ini: %sB"
+msgstr "ასატვირთი ფაილის ზომა აღემატება upload_max_filesize დირექტივას ფაილში php.ini: %sB"
+
+msgid "The uploaded files exceed the post_max_size directive in php.ini: %sB"
+msgstr "ატვირთული ფაილების ზომა აღემატება post_max_size დირექტივას ფაილში php.ini: %sB"
+
+msgid "The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form"
+msgstr "ასატვირთი ფაილის ზომა აღემატება MAX_FILE_SIZE დირექტივას მითითებულს HTML ფორმაში"
+
+msgid "The uploaded file was only partially uploaded"
+msgstr "ასატვირთი ფაილი მოლოდ ნაწილობრივ აიტვირთა"
+
+msgid "No file was uploaded"
+msgstr "ფაილი არ არის ატვირთული"
+
+msgid "Missing a temporary folder"
+msgstr "არ არსებობს დროებითი ფოლდერი"
+
+msgid "Failed to write file to disk"
+msgstr "ფაილის დისკზე ჩაწერა არ მოხერხდა"
+
+msgid "File upload stopped by extension"
+msgstr "ფაილის ატვირთვა შეჩერებულია გაფართოების გამო"
+
+msgid "Unknown upload error"
+msgstr "უცნობი ატვირთვის შეცდომა"
+
+msgid "Error on file \"%s\" : %s"
+msgstr "შეცდომაა ფაილში \"%s\" : %s"
+
+msgid "automatic order"
+msgstr "ავტომატურად განლაგება"
+
+msgid "manual order"
+msgstr "ხელით განლაგება"
+
+msgid "Albums automatically sorted"
+msgstr "ალბომები ავტომატურად დალაგებულია"
+
+msgid "Batch Manager"
+msgstr "სურათების მენეჯერი"
+
+msgid "include child albums"
+msgstr "მოიცავს ბავშვის ალბომებს"
+
+msgid "Selection"
+msgstr "არჩევა"
+
+msgid "Action"
+msgstr "მოქმედება"
+
+msgid "Set author"
+msgstr "ავტორი"
+
+msgid "Set title"
+msgstr "სათაური"
+
+msgid "Set creation date"
+msgstr "შექმნის თარიღი"
+
+msgid "Apply action"
+msgstr "არჩევანის დადასტურება"
+
+msgid "on the %d selected photos"
+msgstr "%d მონიშნული ფოტო"
+
+msgid "%d of %d photos selected"
+msgstr "%d დან %d ფოტოა შერჩეული"
+
+msgid "No photo selected, %d photos in current set"
+msgstr "ფოტო არ არის არჩეული, %d ფოტოა მიმდინარე კრებულში"
+
+msgid "All %d photos are selected"
+msgstr "ყველა %d ფოტოა არჩეული"
+
+msgid "remove this filter"
+msgstr "გამოვრთოთ ეს ფილტრი"
+
+msgid "Duplicates"
+msgstr "დუბლიკატები"
+
+msgid "Add a filter"
+msgstr "დავამატოთ ფილტრი"
+
+msgid "Remove all filters"
+msgstr "გავაუქმოთ ყველა ფილტრი"
+
+msgid "Refresh photo set"
+msgstr "განვაახლოთ ფოტოები"
+
+msgid "The whole page"
+msgstr "მთელი გვერდი"
+
+msgid "The whole set"
+msgstr "მთელი რიგი"
+
+msgid "No photo in the current set."
+msgstr "არ არის სურათი მიმდინარე ნაკრებში."
+
+msgid "No photos selected, no actions possible."
+msgstr "არ არის არჩეული არც ერთი ფოტო, მოქმედება შეუძლებელია."
+
+msgid "Choose an action"
+msgstr "აირჩიეთ მოქმედება"
+
+msgid "remove author"
+msgstr "წავშალოთ ავტორი"
+
+msgid "Type here the author name"
+msgstr "ჩაწერეთ აქ ავტორის სახელი"
+
+msgid "remove title"
+msgstr "წავშალოთ სათური"
+
+msgid "Type here the title"
+msgstr "ჩაწერეთ აქ სათაური"
+
+msgid "remove creation date"
+msgstr "წავშალოთ შექმნის თარიღი"
+
+msgid "Album photos associated to the following albums: %s"
+msgstr "ალბომის ფოტო ასოცირებულია შემდეგ ალბომთან: %s"
+
+msgid "Delete orphan tags"
+msgstr "დაობლებული ტეგების წაშლა"
+
+msgid "delete photo"
+msgstr "ფოტოს წაშლა"
+
+msgid "Orphan tags deleted"
+msgstr "დაობლებული ტეგები წაშლილია"
+
+msgid "Remove from caddie"
+msgstr "Remove from caddie"
+
+msgid "Week starts on"
+msgstr "კვირა იწყება"
+
+msgid "You have %d orphan tags: %s."
+msgstr "თქვენ გაქვთ %d დაობლებული ტეგი: %s."
+
+msgid "Themes which need upgrade"
+msgstr "თემები, რომელთაც სჭირდებათ განახლება"
+
+msgid "Languages which need upgrade"
+msgstr "ენები, რომელთაც სჭირდება განახლება"
+
+msgid "All themes are up to date."
+msgstr "ყველა თემა განახლებულია."
+
+msgid "All plugins are up to date."
+msgstr "ყველა პლაგინი განახლებულია."
+
+msgid "All languages are up to date."
+msgstr "ყველა ენა განახლებულია."
+
+msgid "Visit theme site"
+msgstr "ეწვიეთ თემის ვებ გვერდს"
+
+msgid "Visit language site"
+msgstr "ეწვიეთ ენის ვებ გვერდს"
+
+msgid "New Version"
+msgstr "ახალი ვერსია"
+
+msgid "Obsolete Plugins"
+msgstr "მოძველებული პლაგინები"
+
+msgid "WARNING! This plugin does not seem to be compatible with this version of Piwigo."
+msgstr "გართხილება! ამ პლაგინს არ აქვს Piwigo–ს ამ ვერსიის მხარაჭერა."
+
+msgid "Do you want to activate anyway?"
+msgstr "თქვენ მაინც გინდათ გაააქტიუროთ?"
+
+msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
+msgstr "ეს პლაგინი უკვე PIWIGO–ს ბირთვის ნაწილია! წაშალეთ იგი!"
+
+msgid "ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW."
+msgstr "შეცდომაა: ეს პლაგინი აკლია, მაგრამ იგი დაყენებულია! წაშალეთ იგი."
+
+msgid "display"
+msgstr "ნახვა"
+
+msgid "new"
+msgstr "ახალი"
+
+msgid "No results"
+msgstr "შედეგი არ არის"
+
+msgid "Searching..."
+msgstr "ძიება..."
+
+msgid "Type in a search term"
+msgstr "ჩაწერეთ მოსაძებნი სიტყვა"
+
+msgid "Learn more"
+msgstr "გავიგოთ მეტი"
+
+msgid "Rate"
+msgstr "შეფასება"
+
+msgid "Average rate"
+msgstr "საშუალო ქულა"
+
+msgid "An error has occured during upgrade."
+msgstr "განახლების დროს მოხდა შეცდომა."
+
+msgid "An error has occured during extract. Please check files permissions of your piwigo installation.<br><a href=\"%s\">Click here to show log error</a>."
+msgstr "ამოარქივების დროს მოხდა შეცდომა. გთხოვთ, შეამოწმეთ დაშვების უფლება piwigo–ს ფოლდერთან.<br><a href=\"%s\">დაკლიკეთ, რათა ნახოთ ინფორმაცია შეცდომაზე</a>."
+
+msgid "Piwigo cannot retrieve upgrade file from server"
+msgstr "Piwigo ვერ იღებს განახლების ფაილებს სერვერიდან"
+
+msgid "Save Template Directory"
+msgstr "შევინახოთ დირექტორიის შაბლონი"
+
+msgid "Dump Database"
+msgstr "მონაცემთა ბაზის წაშლა"
+
+msgid "Include history data (Warning: server memory limit may be exceeded)"
+msgstr "ჩავრთოთ ისტორიის მონაცემები (გაფრთხილება: შესაძლებელია სერვერზე მეხსიერების ლიმიტის  გადაჭარბება)"
+
+msgid "Unable to dump database."
+msgstr "შეუძლებელია მონაცემთა ბაზის წაშლა."
+
+msgid "Update in progress... Please wait."
+msgstr "მიმდინარეობს განახლების პროცესი... გთხოვთ დაიცადოთ."
+
+msgid "Update to Piwigo %s"
+msgstr "განაახლეთ Piwigo %s"
+
+msgid "Two updates are available"
+msgstr "ორი განახლებაა ხელმისაწვდომი"
+
+msgid "This is a minor update, with only bug corrections."
+msgstr "ეს მცირე განახლებაა, მხოლოდ შეცდომების შესწორება."
+
+msgid "This is a major update, with <a href=\"%s\">new exciting features</a>."
+msgstr "ეს ძალიან დიდი განახლებაა <a href=\"%s\">საინტერესო სიახლეებით</a>."
+
+msgid "Some themes and plugins may be not available yet."
+msgstr "თემების და პლაგინების ნაწილი ჯერჯერობით არ არის ხელმისაწვდომი."
+
+msgid "You can update to Piwigo %s directly, without upgrading to Piwigo %s (recommended)."
+msgstr "თქვენ პირდაპირ შეგიძლიათ  Piwigo %s გადახვიდეთ,  Piwigo %s განახლების გარეშე(რეკომენდირებულია)."
+
+msgid "%s has been successfully updated."
+msgstr "%s წარმატებით განახლდა"
+
+msgid "%s photos can not be regenerated"
+msgstr "%s ფოტო არ არის რეგენერირებილი"
+
+msgid "%s photos have been regenerated"
+msgstr "%s ფოტო გენერირებულია"
+
+msgid "(this tag will be deleted)"
+msgstr "( ეს ტეგი წაშლილია)"
+
+msgid "... or "
+msgstr "... ან"
+
+msgid "Activate comments"
+msgstr "კომენტარების გააქტიურება"
+
+msgid "Activate icon \"new\" next to albums and pictures"
+msgstr "ააქტიურებს ხატულას \"ახალი\" ალბომისა და ფოტოების გვერდით"
+
+msgid "Add a criteria"
+msgstr "კრიტერიუმის დამატება"
+
+msgid "Add tags"
+msgstr "ტეგების დამატება"
+
+msgid "All extensions are up to date."
+msgstr "ყველა გაფართოება განახლებულია."
+
+msgid "Allowed file types: %s."
+msgstr "დაშვებული ფაილის გაფართოებებია: %"
+
+msgid "Approximate maximum resolution: %dM pixels (that's %dx%d pixels)."
+msgstr "დაახლოებით მაქსიმალური რეზოლუციაა: %dM პიქსელი (ესაა %dx%d პიქსელი)."
+
+msgid "By default, Piwigo will create a new websize from the HD (high definition) version of your photo."
+msgstr "ნაგულისხმევია ის რომ, Piwigo შექმნის თქვენი ფოტოს ახალ HD (High Definition) ვერსიას."
+
+msgid "Cancel"
+msgstr "დასრულება"
+
+msgid "Confirm merge"
+msgstr "დაადასტურეთ გაერთიანება"
+
+msgid "Create"
+msgstr "შექმნა"
+
+msgid "Crop"
+msgstr "ჩამოჭრა"
+
+msgid "Deactivate all"
+msgstr "გამოვრთოთ ყველა"
+
+msgid "Default comments order"
+msgstr "კომენტარების განლაგების წესი"
+
+msgid "Default photos order"
+msgstr "ფოტოების განლაგების წესი"
+
+msgid "Move to album"
+msgstr "გადავიტანოთ ალბომში"
+
+msgid "Not cropped correctly?"
+msgstr "არ ჩამოიჭრა სწორედ?"
+
+msgid "Photo name"
+msgstr "ფოტოს სახელი"
+
+msgid "Photos generation in progress..."
+msgstr "მიმდინარეობს ფოტოების გენერაცია..."
+
+msgid "Piwigo Update"
+msgstr "Piwigo განახლებულია"
+
+msgid "Predefined filter"
+msgstr "სტანდარტული ფილტრები"
+
+msgid "Reset ignored updates"
+msgstr "გავაუქმოთ იგნორირებული განახლებები"
+
+msgid "Restore default configuration. You will lose your plugin settings!"
+msgstr "აღვადგინოთ ძირითადი კონფიგურაცია. თქვენ დაკარგავთ პლაგინების პარამეტრებს!"
+
+msgid "Restore"
+msgstr "აღდგენა"
+
+msgid "Save visits in history for"
+msgstr "შევინახოთ ნახვები ისტორიაში"
+
+msgid "Select an album"
+msgstr "აირჩიეთ ალბომი"
+
+msgid "Select at least two tags for merging"
+msgstr "აირჩიეთ ორი ტეგი მაინც გასაერთიენებლად"
+
+msgid "Select the destination tag"
+msgstr "აირჩიეთ დანიშნულების ტეგი"
+
+msgid "Send connection settings by email"
+msgstr "პირადი პარამეტრების ელ-ფოსტაზე გაგზავნა"
+
+msgid "Show menubar"
+msgstr "ვაჩვენოთ მენიუ"
+
+msgid "Some upgrades are available for extensions."
+msgstr "ზოგიერთი გაფართოებისათვის განახლება ხელმისაწვდომია."
+
+msgid "Start Upload"
+msgstr "დავიწყოთ ატვირთვა"
+
+msgid "Tags <em>%s</em> merged into tag <em>%s</em>"
+msgstr "ტეგი <em>%s</em> გაერთიანდება ტეგთან <em>%s</em>"
+
+msgid "The original image quality must be a number between %d and %d"
+msgstr "გამოსახულების თავდაპირველი ხარისხი უნდა იყოს ციფრი %d და %d"
+
+msgid "The original maximum height must be a number between %d and %d"
+msgstr "ორიგინალური მაქსიმალური სიმაღლე უნდა იყოს %d და %d"
+
+msgid "The original maximum width must be a number between %d and %d"
+msgstr "ორიგინალური მაქსიმალური სიგანე უნდა იყოს %d და %d"
+
+msgid "This album contains %d photos, added between %s and %s."
+msgstr "ეს ალბომი შეიცავს %d ფოტოს, დამატებულია %s და %s შორის"
+
+msgid "This album contains %d photos, added on %s."
+msgstr "ეს ალბომი შეიცავს %d ფოტოს, დამატებულია %s"
+
+msgid "This album contains no photo."
+msgstr "ამ ალბომში ფოტო არ არის."
+
+msgid "Thumbnails generation in progress..."
+msgstr "მიმდინარეობს ხატულების გენერაცია..."
+
+msgid "You can activate only one mobile theme."
+msgstr "თქვენ უნდა გაააქტიუროთ მხოლოდ ერთი მობილური თემა."
+
+msgid "administrators"
+msgstr "ადმინისტრატორები"
+
+msgid "registered users"
+msgstr "დარეგისტრირებული მომხმარებლები"
+
+msgid "show details"
+msgstr "ვნახოთ დეტალები"
+
+msgid "simple visitors"
+msgstr "უბრალო მნახველები"
+
+msgid "%d day"
+msgstr "%d დღე"
+
+msgid "%d days"
+msgstr "%d დღე"
+
+msgid "%d hour"
+msgstr "%d საათი"
+
+msgid "%d hours"
+msgstr "%d საათი"
+
+msgid "%d minute"
+msgstr "%d წუთი"
+
+msgid "%d minutes"
+msgstr "%d წუთი"
+
+msgid "%d month"
+msgstr "%d თვე"
+
+msgid "%d months"
+msgstr "%d თვე"
+
+msgid "%d second"
+msgstr "%d წამი"
+
+msgid "%d seconds"
+msgstr "%d წამი"
+
+msgid "%d week"
+msgstr "%d კვირა"
+
+msgid "%d weeks"
+msgstr "%d კვირა"
+
+msgid "%d year"
+msgstr "%d წელი"
+
+msgid "%d years"
+msgstr "%d წელი"
+
+msgid "Added by %s"
+msgstr "დამატებულია %s"
+
+msgid "Edit photo"
+msgstr "ფოტოს რედაქტირება"
+
+msgid "Original file : %s"
+msgstr "ორიგინალი ფაილი: %d"
+
+msgid "Posted %s on %s"
+msgstr "გამოქვეყნებულია %s %s -ში"
+
+msgid "Sharpen"
+msgstr "სიმკვეთრე"
+

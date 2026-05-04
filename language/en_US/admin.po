@@ -1,0 +1,17 @@
+# Piwigo translation — en_US
+# Source: admin.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: en_US\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "iPhoto is the default photo manager on MacOSX. The Piwigo export plugin let you create new albums and export your photos directly from iPhoto to your Piwigo photo gallery."
+msgstr "iPhoto is the default photo manager on MacOSX. The Piwigo export plugin lets you create new albums and export your photos directly from iPhoto to your Piwigo photo gallery."
+
+msgid "Allow rating"
+msgstr "Allow rating"
+

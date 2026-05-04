@@ -1,0 +1,3876 @@
+# Piwigo translation — ja_JP
+# Source: admin.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ja_JP\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "%d associations"
+msgstr "関連:%d"
+
+msgid "%d album including"
+msgstr "アルバム: %d  - "
+
+msgid "%d albums including"
+msgstr "アルバム: %d  - "
+
+msgid "%d physical"
+msgstr "物理ディレクトリー:%d "
+
+msgid "%d physicals"
+msgstr "物理ディレクトリー:%d "
+
+msgid " and %d virtual"
+msgstr "バーチャルディレクトリー:%d"
+
+msgid " and %d virtuals"
+msgstr "バーチャルディレクトリー:%d "
+
+msgid "%d album moved"
+msgid_plural "%d albums moved"
+msgstr[0] "%d個のアルバムが移動されました"
+msgstr[1] "%d個のアルバムが移動されました。"
+
+msgid "%d group"
+msgstr "グループ:%d"
+
+msgid "%d groups"
+msgstr "グループ:%d"
+
+msgid "%d member"
+msgid_plural "%d members"
+msgstr[0] "メンバー:%d"
+msgstr[1] "メンバー:%d"
+
+msgid "%d tag"
+msgstr "タグ:%d"
+
+msgid "%d tags"
+msgstr "タグ:%d"
+
+msgid "%d user comment rejected"
+msgstr "%d人のユーザーコメントが拒否されました。"
+
+msgid "%d user comments rejected"
+msgstr "%d人のユーザーコメントが拒否されました。"
+
+msgid "%d user comment validated"
+msgstr "%d人のユーザーコメントが承認されました。"
+
+msgid "%d user comments validated"
+msgstr "%d人のユーザーコメントが承認されました。"
+
+msgid "%d user deleted"
+msgid_plural "%d users deleted"
+msgstr[0] "%d ユーザーが削除されました。"
+msgstr[1] "%d人のユーザーが削除されました。"
+
+msgid "%d user"
+msgid_plural "%d users"
+msgstr[0] "ユーザー:%d"
+msgstr[1] "ユーザー:%d"
+
+msgid "%d waiting for validation"
+msgstr "承認待ち: %d 件"
+
+msgid "Actions"
+msgstr "アクション"
+
+msgid "Activate"
+msgstr "有効化"
+
+msgid "Add/delete a permalink"
+msgstr "パーマネントリンクを追加/削除する"
+
+msgid "Add a tag"
+msgstr "タグを追加する"
+
+msgid "Add a user"
+msgstr "ユーザーを追加する"
+
+msgid "Add group"
+msgstr "グループを追加する"
+
+msgid "Add"
+msgstr "追加"
+
+msgid "Allow user registration"
+msgstr "ユーザー登録を許可する"
+
+msgid "Apply to sub-albums"
+msgstr "サブアルバムに適用する"
+
+msgid "Associated"
+msgstr "関連"
+
+msgid "Caddie management"
+msgstr "キャディー管理"
+
+msgid "Caddie"
+msgstr "キャディー"
+
+msgid "Albums authorized thanks to group associations"
+msgstr "グループの関連付けによりアルバムが許可されました。"
+
+msgid "Album manual order was saved"
+msgstr "アルバムの手動並び順が保存されました。"
+
+msgid "Check for upgrade failed for unknown reasons."
+msgstr "不明な理由により、アップグレードのチェックが失敗しました。"
+
+msgid "Check for upgrade"
+msgstr "アップグレードをチェックする"
+
+msgid "Comments for all"
+msgstr "すべてのユーザーにコメントを許可する"
+
+msgid "Current name"
+msgstr "現在の名称"
+
+msgid "Database"
+msgstr "データベース"
+
+msgid "Deactivate"
+msgstr "無効化"
+
+msgid "Delete Representant"
+msgstr "アルバムのサムネイルを削除する"
+
+msgid "Delete selected tags"
+msgstr "選択したタグを削除する"
+
+msgid "Delete selected users"
+msgstr "選択したユーザーを削除する"
+
+msgid "Deletions"
+msgstr "削除"
+
+msgid "Deny selected groups"
+msgstr "選択したグループを拒否する"
+
+msgid "Deny selected users"
+msgstr "選択したユーザーを拒否する"
+
+msgid "Description"
+msgstr "説明"
+
+msgid "Display options"
+msgstr "表示オプション"
+
+msgid "Dissociated"
+msgstr "関連なし"
+
+msgid "Does not represent"
+msgstr "非表示"
+
+msgid "Edit selected tags"
+msgstr "選択したタグを編集する"
+
+msgid "Edit tags"
+msgstr "タグを編集する"
+
+msgid "Email admins when a new user registers"
+msgstr "新しいユーザーの登録時に管理者にメールする"
+
+msgid "Email admins when a valid comment is entered"
+msgstr "有効なコメントが入力された場合、管理者にメールする"
+
+msgid "Email admins when a comment requires validation"
+msgstr "コメントの承認が必要な場合、管理者にメールする"
+
+msgid "Environment"
+msgstr "環境"
+
+msgid "Form"
+msgstr "フォーム"
+
+msgid "Gallery title"
+msgstr "ギャラリータイトル"
+
+msgid "Grant selected groups"
+msgstr "選択したグループに付与する"
+
+msgid "Grant selected users"
+msgstr "選択したユーザーに付与する"
+
+msgid "Group name"
+msgstr "グループ名"
+
+msgid "Groups"
+msgstr "グループ"
+
+msgid "Guests"
+msgstr "ゲスト"
+
+msgid "History"
+msgstr "履歴"
+
+msgid "Informations"
+msgstr "情報"
+
+msgid "Install"
+msgstr "インストール"
+
+msgid "Link all album photos to a new album"
+msgstr "すべてのアルバムの写真を、新しいアルバムにリンクする"
+
+msgid "Link all album photos to some existing albums"
+msgstr "すべてのアルバムの写真を、既存のアルバムにリンクする"
+
+msgid "Linked albums"
+msgstr "リンクされたアルバム"
+
+msgid "Lock gallery"
+msgstr "ギャラリーをロックする"
+
+msgid "Maintenance"
+msgstr "メンテナンス"
+
+msgid "Edit album permissions"
+msgstr "アルバムのパーミッションを管理する"
+
+msgid "Manage permissions for group \"%s\""
+msgstr "グループ「 %s 」のパーミッションを管理する"
+
+msgid "Manage permissions for user \"%s\""
+msgstr "ユーザー「 %s 」のパーミッションを管理する"
+
+msgid "Manage tags"
+msgstr "タグを管理する"
+
+msgid "Members"
+msgstr "メンバー"
+
+msgid "Metadata synchronized from file"
+msgstr "ファイルからメタデータを同期する"
+
+msgid "Move albums"
+msgstr "アルバムを移動する"
+
+msgid "Move"
+msgstr "移動"
+
+msgid "Name"
+msgstr "名称"
+
+msgid "New name"
+msgstr "新しい名称"
+
+msgid "New parent album"
+msgstr "新しい親アルバム"
+
+msgid "New tag"
+msgstr "新しいタグ"
+
+msgid "Number of comments per page"
+msgstr "1ページあたりのコメント数"
+
+msgid "Number of rates"
+msgstr "評価数"
+
+msgid "Only private albums are listed"
+msgstr "プライベートアルバムのみ表示されています。"
+
+msgid "Operating system"
+msgstr "オペレーティングシステム"
+
+msgid "Options"
+msgstr "オプション"
+
+msgid "Other private albums"
+msgstr "他のプライベートアルバム"
+
+msgid "Page banner"
+msgstr "ページバナー"
+
+msgid "Parent album"
+msgstr "親アルバム"
+
+msgid "Path"
+msgstr "パス"
+
+msgid "Permalink"
+msgstr "パーマリンク"
+
+msgid "Permalink %s has been previously used by album %s. Delete from the permalink history first"
+msgstr "パーマリンク %s は、すでにアルバム %s で使用されています。最初にパーマリンク履歴を削除してください。"
+
+msgid "The permalink name must be composed of a-z, A-Z, 0-9, \"-\", \"_\" or \"/\". It must not be numeric or start with number followed by \"-\""
+msgstr "パーマリンク名は、a-z、A-Z、0-9、「-」、「_」、「/」で構成される必要があります。数字または「-」が続く数字を使用することはできません。"
+
+msgid "Permalink %s is already used by album %s"
+msgstr "パーマリンク %s は、すでにアルバム %s で使用されています。"
+
+msgid "Permalink history"
+msgstr "パーマリンク履歴"
+
+msgid "Permalinks"
+msgstr "パーマリンク"
+
+msgid "Permission denied"
+msgstr "パーミッション拒否"
+
+msgid "Permission granted thanks to a group"
+msgstr "グループにパーミッションが付与されました。"
+
+msgid "Permission granted"
+msgstr "パーミッション付与"
+
+msgid "Photo informations updated"
+msgstr "写真情報が更新されました。"
+
+msgid "Plugins"
+msgstr "プラグイン"
+
+msgid "Position"
+msgstr "位置"
+
+msgid "Preferences"
+msgstr "プリファレンス"
+
+msgid "Properties"
+msgstr "プロパティ"
+
+msgid "Random photo"
+msgstr "ランダム写真"
+
+msgid "Rate date"
+msgstr "評価日"
+
+msgid "Rating by guests"
+msgstr "ゲストによる評価"
+
+msgid "Rating"
+msgstr "評価"
+
+msgid "Reject"
+msgstr "拒否"
+
+msgid "Representant"
+msgstr "見本"
+
+msgid "Representation of albums"
+msgstr "アルバム見本"
+
+msgid "Representative"
+msgstr "見本"
+
+msgid "Represents"
+msgstr "表示"
+
+msgid "Save order"
+msgstr "表示順を保存する"
+
+msgid "Save to permalink history"
+msgstr "パーマネントリンク履歴に保存する"
+
+msgid "Select at least one album"
+msgstr "少なくとも1つのアルバムを選択してください。"
+
+msgid "Select at least one photo"
+msgstr "少なくとも1枚の写真を選択してください。"
+
+msgid "Select at least one user"
+msgstr "少なくとも1人のユーザーを選択してください。"
+
+msgid "Show info"
+msgstr "情報を表示する"
+
+msgid "Site manager"
+msgstr "サイトマネージャ"
+
+msgid "Status"
+msgstr "ステータス"
+
+msgid "Statistics"
+msgstr "統計"
+
+msgid "Storage album"
+msgstr "保存アルバム"
+
+msgid "Sum of rates"
+msgstr "評価の合計"
+
+msgid "Tag \"%s\" already exists"
+msgstr "タグ \"%s\" は、すでに登録されています。"
+
+msgid "Tag \"%s\" was added"
+msgstr "タグ \"%s\" が追加されました。"
+
+msgid "Tag selection"
+msgstr "タグ選択"
+
+msgid "The %d following tags were deleted"
+msgstr "次の %d 件のタグが削除されました。"
+
+msgid "Uninstall"
+msgstr "アンインストール"
+
+msgid "Use the default photo sort order"
+msgstr "デフォルトの写真の並び順を使用する"
+
+msgid "User comments validation"
+msgstr "ユーザーコメント承認"
+
+msgid "Users"
+msgstr "ユーザー"
+
+msgid "Validate"
+msgstr "承認"
+
+msgid "Validation"
+msgstr "承認する"
+
+msgid "Version"
+msgstr "バージョン"
+
+msgid "Virtual albums to move"
+msgstr "移動するバーチャルアルバム"
+
+msgid "Virtual album name"
+msgstr "バーチャルアルバム名"
+
+msgid "Webmaster cannot be deleted"
+msgstr "サイト管理者は削除できません。"
+
+msgid "You are running on development sources, no check possible."
+msgstr "あなたは開発版を使用しているため、チェックすることはできません。"
+
+msgid "You cannot delete your account"
+msgstr "あなた自身のアカウントを削除できません。"
+
+msgid "You cannot move an album in its own sub album"
+msgstr "あなたは、アルバムをサブアルバムに移動できません。"
+
+msgid "You need to confirm deletion"
+msgstr "あなたは、削除を確認する必要があります。"
+
+msgid "Associate to album"
+msgstr "アルバムに関連付ける"
+
+msgid "associate to group"
+msgstr "グループに関連付ける"
+
+msgid "Authorized"
+msgstr "承認"
+
+msgid "Add a virtual album"
+msgstr "バーチャルアルバムを追加する"
+
+msgid "Authorize users to add comments on selected albums"
+msgstr "選択されたアルバムにユーザーのコメント追加を許可する"
+
+msgid "The name of an album must not be empty"
+msgstr "アルバム名を空白にすることはできません。"
+
+msgid "Lock albums"
+msgstr "アルバムをロックする"
+
+msgid "Private"
+msgstr "プライベートアルバム"
+
+msgid "Public"
+msgstr "パブリックアルバム"
+
+msgid "Find a new representant by random"
+msgstr "新しいサムネイルをランダムに探す"
+
+msgid "Public / Private"
+msgstr "パブリック / プライベート"
+
+msgid "Manage authorizations for selected albums"
+msgstr "選択したアルバムの権限を管理する"
+
+msgid "Virtual album added"
+msgstr "バーチャルアルバムが追加されました"
+
+msgid "Virtual album deleted"
+msgstr "バーチャルアルバムが削除されました"
+
+msgid "Access type"
+msgstr "アクセスタイプ"
+
+msgid "Information data registered in database"
+msgstr "データベースに保存されました"
+
+msgid "Default display"
+msgstr "デフォルト表示"
+
+msgid "The gallery URL is not valid."
+msgstr "ギャラリーURIが有効ではありません。"
+
+msgid "The number of comments a page must be between 5 and 50 included."
+msgstr "1ページあたりのコメント数は、5から50の間にしてください。"
+
+msgid "Configuration"
+msgstr "設定"
+
+msgid "confirm"
+msgstr "確認"
+
+msgid "Date"
+msgstr "日付"
+
+msgid "delete album"
+msgstr "アルバムを削除する"
+
+msgid "Dissociate from album"
+msgstr "アルバムから関連付けを解除する"
+
+msgid "dissociate from group"
+msgstr "グループから関連付けを解除する"
+
+msgid "Album updated successfully"
+msgstr "アルバム情報が正常に更新されました。"
+
+msgid "photos per page"
+msgstr "1ページあたりの写真数"
+
+msgid "High definition enabled"
+msgstr "ダウンロードを有効にする"
+
+msgid "File"
+msgstr "ファイル"
+
+msgid "Forbidden"
+msgstr "禁止"
+
+msgid "global mode"
+msgstr "グローバルモード"
+
+msgid "group \"%s\" added"
+msgstr "グループ \"%s\" が追加されました。"
+
+msgid "group \"%s\" deleted"
+msgstr "グループ \"%s\" が削除されました。"
+
+msgid "group \"%s\" updated"
+msgstr "グループ \"%s\" が更新されました。"
+
+msgid "The name of a group must not contain \" or ' or be empty."
+msgstr "グループ名には「\"」または「'」を含んだり、空白にしないでください。"
+
+msgid "This name is already used by another group."
+msgstr "このグループ名は、すでに別のグループで使用されています。"
+
+msgid "High definition"
+msgstr "高解像度"
+
+msgid "jump to album"
+msgstr "アルバムにジャンプする"
+
+msgid "jump to photo"
+msgstr "写真にジャンプする"
+
+msgid "leave"
+msgstr "変更なし"
+
+msgid "Lock"
+msgstr "ロック"
+
+msgid "Locked"
+msgstr "ロック済み"
+
+msgid "manage album photos"
+msgstr "アルバム内の写真を管理する"
+
+msgid "manage sub-albums"
+msgstr "サブアルバムを管理する"
+
+msgid "Manage"
+msgstr "管理"
+
+msgid "Execution time is out, treatment must be continue [Estimated time: %d second]."
+msgid_plural "Execution time is out, treatment must be continue [Estimated time: %d seconds]."
+msgstr[0] "実行時間が終了しました。処理を継続します [予想時間: %d 秒]。"
+msgstr[1] "実行時間が終了しました。処理を継続します  [予想時間: %d 秒]."
+
+msgid "Prepared time for list of users to send mail is limited. Others users are not listed."
+msgstr "メール送信するユーザリストのユーザー数が制限されています。他のユーザーは、リストに含まれていません。"
+
+msgid "Time to send mail is limited. Others mails are skipped."
+msgstr "メール送信時間が制限されています。他のメールはスキップされます。"
+
+msgid "To send ?"
+msgstr "送信しますか?"
+
+msgid "Last send"
+msgstr "最終送信"
+
+msgid "User"
+msgstr "ユーザー"
+
+msgid "See you soon,"
+msgstr "それでは "
+
+msgid "Go to"
+msgstr "移動 "
+
+msgid "Hello"
+msgstr "こんにちは "
+
+msgid "New photos were added"
+msgstr "新しい写真が追加されました"
+
+msgid "on"
+msgstr " "
+
+msgid "between"
+msgstr " "
+
+msgid "and"
+msgstr " - "
+
+msgid "The webmaster has subscribed you to receiving notifications by mail."
+msgstr "あなたが通知メールを受信するよう、サイト管理者が購読登録しました。"
+
+msgid "You have subscribed to receiving notifications by mail."
+msgstr "通知メールを購読登録しました。"
+
+msgid "To subscribe"
+msgstr "購読登録するには、"
+
+msgid "If you encounter problems or have any question, please send a message to"
+msgstr "あなたが問題に遭遇した場合、質問がある場合、次の宛先にメール送信してください:"
+
+msgid "[NBM] Problems or questions"
+msgstr "[NBM] 問題または質問"
+
+msgid "The webmaster has unsubscribed you from receiving notifications by mail."
+msgstr "あなたの通知メール購読をサイト管理者が解除しました。"
+
+msgid "You have unsubscribed from receiving notifications by mail."
+msgstr "通知メールを購読を解除しました。"
+
+msgid ", click on"
+msgstr "次のリンクをクリックしてください:"
+
+msgid "To unsubscribe"
+msgstr "受講解除するには、"
+
+msgid "With blank value, gallery title will be used"
+msgstr "空白の場合、ギャラリータイトルが使用されます。"
+
+msgid "Notification"
+msgstr "通知"
+
+msgid "Error when sending email to %s [%s]."
+msgstr "%s [%s] にメール送信中、エラーが発生しました。"
+
+msgid "Mail sent to %s [%s]."
+msgstr "メールが %s [%s] に送信されました。"
+
+msgid "%d mail was sent."
+msgid_plural "%d mails were sent."
+msgstr[0] "%d メールが送信されました。"
+msgstr[1] "%d メールが送信されました。"
+
+msgid "%d mail was not sent."
+msgid_plural "%d mails were not sent."
+msgstr[0] "%d メールは送信されませんでした。"
+msgstr[1] "%d メールは送信されませんでした。"
+
+msgid "No mail to send."
+msgstr "送信すべきメールがありません。"
+
+msgid "There is no available subscribers to mail."
+msgstr "メールを送信できるユーザは存在しません。"
+
+msgid "Subscribers could be listed (available) only if there is new elements to notify."
+msgstr "通知する新しいエレメントがある場合、ユーザーが利用できます。"
+
+msgid "Anyway only webmasters can see this tab and never administrators."
+msgstr "ユーザーはメール購読できません (このタブは、ウェブマスタにのみ表示されます)。"
+
+msgid "No user to send notifications by mail."
+msgstr "通知メールを送信できるユーザーは存在しません。"
+
+msgid "New photos added"
+msgstr "新しい写真が追加されました"
+
+msgid "Subscribe to notification by mail"
+msgstr "通知メールを購読する"
+
+msgid "Unsubscribe from notification by mail"
+msgstr "通知メールを購読解除する"
+
+msgid "Parameter"
+msgstr "パラメータ"
+
+msgid "Continue processing treatment"
+msgstr "処理を続ける"
+
+msgid "Complementary mail content"
+msgstr "補足メールコンテンツ"
+
+msgid "Add detailed content"
+msgstr "詳細情報を追加する"
+
+msgid "Send mail as"
+msgstr "送信者名"
+
+msgid "Send mail to users"
+msgstr "ユーザーにメールを送信する"
+
+msgid "Send"
+msgstr "送信"
+
+msgid "Subscribed"
+msgstr "購読中"
+
+msgid "Subscribe"
+msgstr "購読"
+
+msgid "Parameters"
+msgstr "パラメータ"
+
+msgid "Select recipients"
+msgstr "受信者の選択"
+
+msgid "Subscribe/unsubscribe users"
+msgstr "ユーザーの購読登録/購読解除"
+
+msgid "Unsubscribed"
+msgstr "購読解除"
+
+msgid "%d parameter was updated."
+msgid_plural "%d parameters were updated."
+msgstr[0] "%d 件のパラメータが更新されました。"
+msgstr[1] "%d 件のパラメータが更新されました。"
+
+msgid "%d user was not updated."
+msgid_plural "%d users were not updated."
+msgstr[0] "%d人のユーザーが更新されませんでした。"
+msgstr[1] "%d人のユーザーが更新されませんでした。"
+
+msgid "User %s [%s] was removed from the subscription list."
+msgstr "ユーザー %s [%s] は、購読リストから削除されました。"
+
+msgid "User %s [%s] was added to the subscription list."
+msgstr "ユーザー %s [%s] は、購読リストに追加されました。"
+
+msgid "%d user was updated."
+msgid_plural "%d users were updated."
+msgstr[0] "%d人のユーザーが更新されました。"
+msgstr[1] "%d人ののユーザーが更新されました。"
+
+msgid "User %s [%s] was not removed from the subscription list."
+msgstr "ユーザー %s [%s] は、購読リストから削除されませんでした。"
+
+msgid "User %s [%s] was not added to the subscription list."
+msgstr "ユーザー %s [%s] は、購読リストに追加されませんでした。"
+
+msgid "User %s [%s] added."
+msgstr "ユーザー %s [%s] が追加されました。"
+
+msgid "Warning: subscribing or unsubscribing will send mails to users"
+msgstr "注意: 購読登録または購読解除の設定は、ユーザー宛にメール通知されます。"
+
+msgid "Send mail on HTML format"
+msgstr "HTML形式でメールを送信する"
+
+msgid "Include display of recent photos grouped by dates"
+msgstr "最近の写真を日付でグループ化して表示する"
+
+msgid "Available only with HTML format"
+msgstr "HTMLフォーマットのみ利用可"
+
+msgid "no write access"
+msgstr "書き込み権限なし"
+
+msgid "Permissions"
+msgstr "パーミッション"
+
+msgid "private"
+msgstr "プライベート"
+
+msgid "public"
+msgstr "パブリック"
+
+msgid "Purge never used notification feeds"
+msgstr "未使用の通知フィードを削除する"
+
+msgid "Purge sessions"
+msgstr "セッションを削除する"
+
+msgid "randomly represented"
+msgstr "ランダム表示"
+
+msgid "registration date"
+msgstr "登録日"
+
+msgid "clean"
+msgstr "クリーン"
+
+msgid "Create this site"
+msgstr "このサイトを作成する"
+
+msgid "test"
+msgstr "テスト"
+
+msgid "test this remote site"
+msgstr "このリモートサイトをテストします。"
+
+msgid "remove tags"
+msgstr "タグを削除する"
+
+msgid "Repair and optimize database"
+msgstr "データベースを修復および最適化する"
+
+msgid "selection"
+msgstr "選択"
+
+msgid "set to"
+msgstr "設定"
+
+msgid "singly represented"
+msgstr "単独表示"
+
+msgid "This site already exists"
+msgstr "このサイトは、すでに登録されています。"
+
+msgid "created"
+msgstr "が作成されました。"
+
+msgid "delete"
+msgstr "削除"
+
+msgid "delete this site and all its attached elements"
+msgstr "このサイトおよびすべてに添付ファイルを削除します。"
+
+msgid "deleted"
+msgstr "削除済み"
+
+msgid "an error happened"
+msgstr "エラーが発生しました。"
+
+msgid "Local"
+msgstr "ローカル"
+
+msgid "Remote"
+msgstr "リモート"
+
+msgid "update the database from files"
+msgstr "ファイルからデータベースを更新します。"
+
+msgid "status"
+msgstr "ステータス"
+
+msgid "Directory"
+msgstr "ディレクトリー"
+
+msgid "sub-albums"
+msgstr "サブアルバム"
+
+msgid "Synchronize metadata"
+msgstr "メタデータを同期する"
+
+msgid "target"
+msgstr "ターゲット"
+
+msgid "Thumbnail"
+msgstr "サムネイル"
+
+msgid "Title"
+msgstr "タイトル"
+
+msgid "Album list management"
+msgstr "アルバム管理"
+
+msgid "Piwigo configuration"
+msgstr "Piwigo設定"
+
+msgid "Edit album"
+msgstr "アルバムを編集する"
+
+msgid "Group management"
+msgstr "グループ管理"
+
+msgid "User list"
+msgstr "ユーザーリスト"
+
+msgid "Database synchronization with files"
+msgstr "ファイルおよびデータベースの同期"
+
+msgid "all"
+msgstr "すべてを選択"
+
+msgid "height must be a number superior to"
+msgstr "高さは、次の値より大きくしてください:"
+
+msgid "width must be a number superior to"
+msgstr "幅は、次の値より大きくしてください:"
+
+msgid "for the file format"
+msgstr "ファイルフォーマット"
+
+msgid "Photo unreachable or no support"
+msgstr "写真にアクセスできないか、次の内容がサポートされていません:"
+
+msgid "GD version"
+msgstr "GDバージョン"
+
+msgid "General statistics"
+msgstr "一般統計"
+
+msgid "average time"
+msgstr "平均時間"
+
+msgid "total time"
+msgstr "合計時間"
+
+msgid "for this file format"
+msgstr "このファイルフォーマット"
+
+msgid "unit mode"
+msgstr "ユニットモード"
+
+msgid "Unlocked"
+msgstr "未ロック"
+
+msgid "unset"
+msgstr "設定解除"
+
+msgid "Update albums informations"
+msgstr "アルバム情報を更新する"
+
+msgid "Update photos information"
+msgstr "写真の情報を更新する"
+
+msgid "Synchronize"
+msgstr "同期する"
+
+msgid "reduce to single existing albums"
+msgstr "既存アルバムを1つに統合する"
+
+msgid "Choose an option"
+msgstr "オプションの選択"
+
+msgid "display maximum informations (added albums and photos, deleted albums and photos)"
+msgstr "最大限の情報を表示する (追加されたアルバムおよび写真、削除されたアルバムおよび写真)"
+
+msgid "Error list"
+msgstr "エラーリスト"
+
+msgid "Errors caption"
+msgstr "エラーの凡例"
+
+msgid "Detailed informations"
+msgstr "詳細情報"
+
+msgid "File/directory read error"
+msgstr "ファイル/ディレクトリー読み込みエラー"
+
+msgid "The file or directory cannot be accessed (either it does not exist or the access is denied)"
+msgstr "ファイルまたはディレクトリーにアクセスできません (存在していないか、アクセスが拒否されています)。"
+
+msgid "albums deleted in the database"
+msgstr "アルバムがデータベースから削除されました。"
+
+msgid "photos deleted from the database"
+msgstr "写真がデータベースから削除されました。"
+
+msgid "photos candidates for metadata synchronization"
+msgstr "メタデータ同期候補の写真"
+
+msgid "photos informations synchronized with files metadata"
+msgstr "ファイルメタデータに同期された写真の情報"
+
+msgid "errors during synchronization"
+msgstr "同期中にエラーが発生しました。"
+
+msgid "albums added in the database"
+msgstr "アルバムがデータベースに追加されました。"
+
+msgid "photos added in the database"
+msgstr "データベースに写真が追加されました。"
+
+msgid "photos updated in the database"
+msgstr "データベースの写真が更新されました。"
+
+msgid "Search for new images in the directories"
+msgstr "ディレクトリー内の新しいイメージを検索する"
+
+msgid "added"
+msgstr "追加済み"
+
+msgid "Metadata synchronization results"
+msgstr "メタデータ同期結果"
+
+msgid "only perform a simulation (no change in database will be made)"
+msgstr "シミュレーションのみ実行する (データベースは更新されません)"
+
+msgid "Simulation"
+msgstr "シミュレーション"
+
+msgid "directories + files"
+msgstr "ディレクトリーとファイル"
+
+msgid "only directories"
+msgstr "ディレクトリーのみ"
+
+msgid "synchronize files structure with database"
+msgstr "ファイル構造とデータベースを同期する"
+
+msgid "synchronize files metadata with database photos informations"
+msgstr "ファイルメタデータとデータベース写真を同期する"
+
+msgid "even already synchronized photos"
+msgstr "すでに同期されている写真も同期する"
+
+msgid "Used metadata"
+msgstr "使用済みメタデータ"
+
+msgid "The name of directories and files must be composed of letters, numbers, \"-\", \"_\" or \".\""
+msgstr "ディレクトリー名およびファイル名は、文字および記号「-」「_」「.」で構成される必要があります。"
+
+msgid "wrong filename"
+msgstr "ファイル名が正しくありません。"
+
+msgid "Upload"
+msgstr "アップロード"
+
+msgid "user \"%s\" added"
+msgstr "ユーザ \"%s\" が追加されました。"
+
+msgid "User status"
+msgstr "ユーザーステータス"
+
+msgid "user_status_admin"
+msgstr "管理者"
+
+msgid "user_status_generic"
+msgstr "一般"
+
+msgid "user_status_guest"
+msgstr "ゲスト"
+
+msgid "user_status_webmaster"
+msgstr "サイト管理者"
+
+msgid "Virtual album"
+msgstr "バーチャルアルバム"
+
+msgid "Waiting"
+msgstr "承認待ち"
+
+msgid "default"
+msgstr "デフォルト"
+
+msgid "Toggle 'default group' property"
+msgstr "「デフォルトグループ」属性に切り替える"
+
+msgid "Advanced features"
+msgstr "高度な機能"
+
+msgid "Overall"
+msgstr "全体"
+
+msgid "Year"
+msgstr "年"
+
+msgid "Month"
+msgstr "月"
+
+msgid "Day"
+msgstr "曜日"
+
+msgid "Pages seen"
+msgstr "ページ閲覧回数"
+
+msgid "Time"
+msgstr "時間"
+
+msgid "IP"
+msgstr "IP"
+
+msgid "Element"
+msgstr "エレメント"
+
+msgid "Section"
+msgstr "セクション"
+
+msgid "An information email was sent to group \"%s\""
+msgstr "グループ %s に情報メールが送信されました。"
+
+msgid "Send an information email to group members"
+msgstr "グループメンバーに情報メールを送信する"
+
+msgid "Group"
+msgstr "グループ"
+
+msgid "[%s] Visit album %s"
+msgstr "[%s]  %s を訪問してください。"
+
+msgid "Hello,"
+msgstr "こんにちは。"
+
+msgid "See you soon."
+msgstr "さようなら。"
+
+msgid "Discover album:"
+msgstr "アルバムを見つけてください:"
+
+msgid "Mail content"
+msgstr "メールの内容"
+
+msgid "none"
+msgstr "なし"
+
+msgid "high"
+msgstr "高"
+
+msgid "other"
+msgstr "その他"
+
+msgid "Element type"
+msgstr "エレメントタイプ"
+
+msgid "Image id"
+msgstr "イメージID"
+
+msgid "Summary"
+msgstr "サマリー"
+
+msgid "%d line filtered"
+msgid_plural "%d lines filtered"
+msgstr[0] "%d行がフィルターされました。"
+msgstr[1] "%d行がフィルターされました。"
+
+msgid "%d guest"
+msgid_plural "%d guests"
+msgstr[0] "%d 訪問者"
+msgstr[1] "%d 訪問者"
+
+msgid "Hour"
+msgstr "時間"
+
+msgid "guest"
+msgstr "ゲスト"
+
+msgid "default values"
+msgstr "デフォルト値"
+
+msgid "Guest cannot be deleted"
+msgstr "ゲストは削除できません。"
+
+msgid "Default user cannot be deleted"
+msgstr "デフォルトユーザーは削除できません。"
+
+msgid "Purge history detail"
+msgstr "履歴詳細を消去する"
+
+msgid "Purge history summary"
+msgstr "履歴サマリーを消去する"
+
+msgid "Check integrity"
+msgstr "整合性の確認"
+
+msgid "Anomaly"
+msgstr "例外"
+
+msgid "Correction"
+msgstr "修正"
+
+msgid "Automatic correction"
+msgstr "自動修正"
+
+msgid "Impossible automatic correction"
+msgstr "自動修正できません。"
+
+msgid "Correction applied with success"
+msgstr "正常に修正が適用されました。"
+
+msgid "Correction applied with error"
+msgstr "修正の適用にエラーが発生しました。"
+
+msgid "%d anomaly has been detected."
+msgid_plural "%d anomalies have been detected."
+msgstr[0] "%d 件の例外が検出されました。"
+msgstr[1] "%d 件の例外が検出されました。"
+
+msgid "%d anomaly has been corrected."
+msgid_plural "%d anomalies have been detected corrected."
+msgstr[0] "%d 件の例外が訂正されました。"
+msgstr[1] "%d 件の例外が訂正されました。"
+
+msgid "%d anomaly has not been corrected."
+msgid_plural "%d anomalies have not been corrected."
+msgstr[0] "%d 件の例外が訂正されませんでした。"
+msgstr[1] "%d 件の例外が訂正されませんでした。"
+
+msgid "Go to %s or %s for more informations"
+msgstr "%s へアクセスするか、%s で詳細情報をご覧ください。"
+
+msgid "the forum"
+msgstr "フォーラム"
+
+msgid "the wiki"
+msgstr "Wiki"
+
+msgid "%s value is not correct file because exif are not supported"
+msgstr "exifがサポートされていないため、%s の値は正しくありません。"
+
+msgid "%s must be to set to false in your local/config/config.inc.php file"
+msgstr "local/config/config.inc.phpファイルでは、%s をfalseに設定してください。"
+
+msgid "Main \"guest\" user does not exist"
+msgstr "メイン「ゲスト」ユーザーは存在しません。"
+
+msgid "Main \"guest\" user status is incorrect"
+msgstr "メイン「ゲスト」ユーザーステータスが正しくありません。"
+
+msgid "Default user does not exist"
+msgstr "デフォルトユーザーが設定されていません。"
+
+msgid "Main \"webmaster\" user does not exist"
+msgstr "メイン「サイト管理者」ユーザーは存在しません。"
+
+msgid "Main \"webmaster\" user status is incorrect"
+msgstr "メイン「サイト管理者」ユーザーステータスが正しくありません。"
+
+msgid "User \"%s\" created with \"%s\" like password"
+msgstr "ユーザー「 %s 」がパスワード「 %s 」で作成されました。"
+
+msgid "Status of user \"%s\" updated"
+msgstr "ユーザ \"%s\" のステータスが更新されました。"
+
+msgid "add new photos to caddie"
+msgstr "キャディーに新しい写真を追加する"
+
+msgid "No display"
+msgstr "表示なし"
+
+msgid "Classic display"
+msgstr "クラシック表示"
+
+msgid "Hoverbox display"
+msgstr "ホバーボックス表示"
+
+msgid "Minimum privacy level"
+msgstr "最小プライバシーレベル"
+
+msgid "Privacy level"
+msgstr "プライバシーレベル"
+
+msgid "Level 0"
+msgstr "---"
+
+msgid "Level 1"
+msgstr "連絡先"
+
+msgid "Level 2"
+msgstr "友だち"
+
+msgid "Level 4"
+msgstr "家族"
+
+msgid "Level 8"
+msgstr "管理者"
+
+msgid "Reinitialize check integrity"
+msgstr "整合性チェックを再初期化する"
+
+msgid "Check all"
+msgstr "すべてをチェックする"
+
+msgid "Uncheck all"
+msgstr "すべてを選択解除する"
+
+msgid "Check automatic corrections"
+msgstr "自動修正をチェックする"
+
+msgid "Apply selected corrections"
+msgstr "選択した修正を適用する"
+
+msgid "Ignore selected anomalies"
+msgstr "選択した例外を無視する"
+
+msgid "Refresh"
+msgstr "リフレッシュ"
+
+msgid "The anomaly will be ignored until next application version"
+msgstr "次のバージョンまで、例外は無視されます。"
+
+msgid "Correction the anomaly will cancel the fact that it's ignored"
+msgstr "例外を修正したため無視されなくなりました。"
+
+msgid "%d anomaly has been ignored."
+msgid_plural "%d anomalies have been ignored."
+msgstr[0] "%d 件の例外が無視されました。"
+msgstr[1] "%d 件の例外が無視されました。"
+
+msgid "Plugins which need upgrade"
+msgstr "アップグレードが必要なプラグイン"
+
+msgid "Plugin list"
+msgstr "プラグインリスト"
+
+msgid "Check for updates"
+msgstr "アップデートをチェックする"
+
+msgid "Other plugins"
+msgstr "他のプラグイン"
+
+msgid "Last revisions"
+msgstr "最新のリビジョン"
+
+msgid "Are you sure you want to delete this plugin?"
+msgstr "本当にこのプラグインを削除してもよろしいですか?"
+
+msgid "Are you sure you want to install this plugin?"
+msgstr "本当にこのプラグインをインストールしてもよろしいですか?"
+
+msgid "Are you sure to install this upgrade? You must verify if this version does not need uninstallation."
+msgstr "本当にアップグレードを実行してもよろしいですか? このバージョンをアンインストールする必要があるかどうか確認してください。"
+
+msgid "Plugin has been successfully copied"
+msgstr "プラグインが正常にコピーされました。"
+
+msgid "Can't create temporary file."
+msgstr "一時ファイルを作成できません。"
+
+msgid "Can't download archive."
+msgstr "アーカイブをダウンロードできません。"
+
+msgid "Can't read or extract archive."
+msgstr "アーカイブを読めないか、展開できません。"
+
+msgid "An error occured during extraction (%s)."
+msgstr "展開中にエラーが発生しました (%s)。"
+
+msgid "Please check \"plugins\" folder and sub-folders permissions (CHMOD)."
+msgstr "「plugins」フォルダーおよびサブフォルダーのパーミッションをチェックしてください(CHMOD)。"
+
+msgid "Can't connect to server."
+msgstr "サーバに接続できません。"
+
+msgid "Purge compiled templates"
+msgstr "コンパイル済みテンプレートを削除する"
+
+msgid "ACCESS_0"
+msgstr "フリーアクセス"
+
+msgid "ACCESS_1"
+msgstr "すべてのユーザーがアクセスできる"
+
+msgid "ACCESS_2"
+msgstr "登録ユーザのみアクセスできる"
+
+msgid "ACCESS_3"
+msgstr "管理者にアクセスする"
+
+msgid "ACCESS_4"
+msgstr "ウェブマスタにアクセスする"
+
+msgid "ACCESS_5"
+msgstr "アクセスなし"
+
+msgid "Support"
+msgstr "サポート"
+
+msgid "Documentation"
+msgstr "ドキュメンテーション"
+
+msgid "A new version of Piwigo is available."
+msgstr "新しいバージョンのPiwigoが利用可能です。"
+
+msgid "Piwigo Administration"
+msgstr "Piwigo管理"
+
+msgid "Piwigo version"
+msgstr "Piwigoバージョン"
+
+msgid "You are running the latest version of Piwigo."
+msgstr "あなたは最新バージョンのPiwigoを使用しています。"
+
+msgid "The version of %s [%s] installed is not compatible with the version required [%s]"
+msgstr "インストールされている %s [%s] のバージョンは、必須バージョン [%s] に互換性がありません。"
+
+msgid "You need to upgrade your system to take full advantage of the application else the application will not work correctly, or not at all"
+msgstr "アプリケーションを十分に活用するには、あなたのシステムをアップグレードする必要があります。そうでない場合、アプリケーションは正常に動作しません。"
+
+msgid "Deleted on"
+msgstr "削除日時"
+
+msgid "Last hit"
+msgstr "最新ヒット数"
+
+msgid "GD library is missing"
+msgstr "GDライブラリがありません。"
+
+msgid "Templates"
+msgstr "テンプレート"
+
+msgid "Extend for templates"
+msgstr "テンプレートの拡張"
+
+msgid "Replacement of original templates by customized templates from template-extension subfolder"
+msgstr "template-extensionサブフォルダーのテンプレートをカスタマイズして、オリジナルのテンプレートと置換します。"
+
+msgid "Replacers (customized templates)"
+msgstr "置換テンプレート (カスタマイズ済みテンプレート)"
+
+msgid "Original templates"
+msgstr "オリジナルテンプレート"
+
+msgid "Optional URL keyword"
+msgstr "任意のURIキーワード"
+
+msgid "Templates configuration has been recorded."
+msgstr "テンプレート設定が保存されました。"
+
+msgid "All optimizations have been successfully completed."
+msgstr "すべての最適化が正常に完了しました。"
+
+msgid "Optimizations have been completed with some errors."
+msgstr "いくつかのエラーを含んで最適化が完了しました。"
+
+msgid "Modify information"
+msgstr "情報を修正する"
+
+msgid "nothing"
+msgstr "なし"
+
+msgid "overrides existing values with empty ones"
+msgstr "既存の値を空白にする"
+
+msgid "Manage photo ranks"
+msgstr "写真のランクを管理する"
+
+msgid "Edit ranks"
+msgstr "ランクを編集する"
+
+msgid "No photo in this album"
+msgstr "このアルバムには、写真がありません。"
+
+msgid "Images manual order was saved"
+msgstr "イメージ手動並び替えが保存されました。"
+
+msgid "ranks"
+msgstr "ランク"
+
+msgid "Drag to re-order"
+msgstr "ドラッグして並び替え"
+
+msgid "Quick Local Synchronization"
+msgstr "クイックローカル同期"
+
+msgid "No photo can be deleted"
+msgstr "削除できる写真はありません"
+
+msgid "Delete selected photos"
+msgstr "選択した写真を削除する"
+
+msgid "%d photo was deleted"
+msgid_plural "%d photos were deleted"
+msgstr[0] "%d 写真が削除されました。"
+msgstr[1] "%d 写真が削除されました。"
+
+msgid "Unable to check for upgrade."
+msgstr "アップグレードを確認できません。"
+
+msgid "Operation in progress"
+msgstr "処理中"
+
+msgid "Please wait..."
+msgstr "しばらくお待ち下さい..."
+
+msgid "Downloads"
+msgstr "ダウンロード"
+
+msgid "Released on"
+msgstr "発行"
+
+msgid "Number of downloads"
+msgstr "ダウンロードの件数"
+
+msgid "Piwigo Announcements Newsletter"
+msgstr "Piwigoのアナウンスニュースレター"
+
+msgid "Keep in touch with Piwigo project, subscribe to Piwigo Announcement Newsletter. You will receive emails when a new release is available (sometimes including a security bug fix, it's important to know and upgrade) and when major events happen to the project. Only a few emails a year."
+msgstr "Piwigoプロジェクトにつながりましょう。Piwigoのアナウンスニュースレターを購読してください。新しいリリースが入手可能になった際や、プロジェクトに大きなイベントがある際に、ニュースレターをお送りします(セキュリティーバグの修正を含みます。把握しアップグレードすることが重要です)。"
+
+msgid "Subscribe %s"
+msgstr "加入 %s"
+
+msgid "Subscribe %s to Piwigo Announcements Newsletter"
+msgstr " %s Piwigoのアナウンスニュースレターを購読する"
+
+msgid "Purge search history"
+msgstr "検索履歴を一括削除する"
+
+msgid "Hide"
+msgstr "隠す"
+
+msgid "Password is missing. Please enter the password."
+msgstr "パスワードがありません。パスワードを入力して下さい。"
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "パスワードの再確認がありません。パスワードの再確認を確認して下さい。"
+
+msgid "Allow users to edit their own comments"
+msgstr "ユーザーは自分のコメントを編集できるようにする"
+
+msgid "Allow users to delete their own comments"
+msgstr "ユーザーは自分のコメントを削除できるようにする"
+
+msgid "Email administrators when a comment is modified"
+msgstr "コメントが変更された時、管理者にメールを送信する"
+
+msgid "Email administrators when a comment is deleted"
+msgstr "コメントが削除された時、管理者にメールを送信する"
+
+msgid "Cannot delete the old permalink !"
+msgstr "旧パーマリンクを削除できません!"
+
+msgid "Hit"
+msgstr "ヒット"
+
+msgid "Tools"
+msgstr "ツール"
+
+msgid "Photos"
+msgstr "写真"
+
+msgid "Themes"
+msgstr "テーマ"
+
+msgid "Instructions to use Piwigo"
+msgstr "Piwigoの使い方"
+
+msgid "Installed Themes"
+msgstr "インストールされたテーマ"
+
+msgid "Add New Theme"
+msgstr "新しいテーマを追加する"
+
+msgid "Forbid this theme to users"
+msgstr "このテーマをユーザーに禁止する"
+
+msgid "Set as default theme for unregistered and new users"
+msgstr "新しいユーザーや登録されてないユーザーにデフォルトのテーマを設定する"
+
+msgid "unknown"
+msgstr "不明"
+
+msgid "Upload Photos"
+msgstr "写真をアップロードする"
+
+msgid "Drop into album"
+msgstr "アルバムの選択"
+
+msgid "+ Add an upload box"
+msgstr "+ アップロード・ボックスを追加する"
+
+msgid "Create the \"%s\" directory at the root of your Piwigo installation"
+msgstr "Piwigoのインストールされている場所の\"%s\" というディレクトリーに作成してください。"
+
+msgid "Give write access (chmod 777) to \"%s\" directory at the root of your Piwigo installation"
+msgstr "Piwigoにインストールされている場所の \"%s\" というディレクトリーに書き込み(chmod 777)アクセスをする。"
+
+msgid "existing album"
+msgstr "存在しているアルバム"
+
+msgid "create a new album"
+msgstr "新しいアルバムを作成する"
+
+msgid "Album name"
+msgstr "アルバム名"
+
+msgid "Album \"%s\" has been added"
+msgstr "アルバム\"%s\"が追加されました。"
+
+msgid "Uploaded Photos"
+msgstr "アップロードされた写真"
+
+msgid "%d photos uploaded"
+msgstr "%d枚の写真がアップロードされました"
+
+msgid "Privacy level set to \"%s\""
+msgstr "プライバシー設定: \"%s\""
+
+msgid "Album \"%s\" now contains %d photos"
+msgstr "アルバム \"%s\" には現在　%d枚の写真があります。"
+
+msgid "Manage this set of %d photos"
+msgstr "%d枚の写真を管理する"
+
+msgid "Select files"
+msgstr "ファイルを選択する"
+
+msgid "Everybody"
+msgstr "全員"
+
+msgid "Who can see these photos?"
+msgstr "この写真の閲覧可能者"
+
+msgid "Settings"
+msgstr "設定"
+
+msgid "Resize"
+msgstr "拡大・縮小"
+
+msgid "Maximum width"
+msgstr "最大の幅"
+
+msgid "pixels"
+msgstr "ピクセル"
+
+msgid "Maximum height"
+msgstr "最大の高さ"
+
+msgid "Image Quality"
+msgstr "画質"
+
+msgid "Save Settings"
+msgstr "設定を保存"
+
+msgid "Your configuration settings are saved"
+msgstr "あなたの設定は保存されました"
+
+msgid "Active Themes"
+msgstr "有効なテーマ"
+
+msgid "Add write access to the \"%s\" directory"
+msgstr "\"%s\" ディレクトリーに書き込みアクセスを追加"
+
+msgid "Administration Home"
+msgstr "管理用ホーム"
+
+msgid "Change Admin Colors"
+msgstr "管理用ホームの色を変更"
+
+msgid "Delete this theme"
+msgstr "このテーマを削除"
+
+msgid "Directory does not exist"
+msgstr "ディレクトリーは存在しません"
+
+msgid "Download,"
+msgstr "ダウンロード,"
+
+msgid "FTP + Synchronization"
+msgstr "FTP + 同期"
+
+msgid "Get Support on Piwigo Forum"
+msgstr "Piwigoフォーラムでサポートを入手"
+
+msgid "Help Me"
+msgstr "ヘルプ"
+
+msgid "Impossible to activate this theme, the parent theme is missing: %s"
+msgstr "このテーマを有効にできません。親テーマがありません: %s"
+
+msgid "Impossible to delete this theme. Other themes depends on it: %s"
+msgstr "その他のテーマはこのテーマが必要なので、テーマを削除できません: %s"
+
+msgid "Inactive Themes"
+msgstr "無効なテーマ"
+
+msgid "Install on your computer,"
+msgstr "あなたのパソコンにインストールする,"
+
+msgid "Make this theme available to users"
+msgstr "このテーマをユーザーが利用できるようにする"
+
+msgid "Page end"
+msgstr "ページの終わり"
+
+msgid "Piwigo Uploader"
+msgstr "Piwigo アップローダ"
+
+msgid "Read Piwigo Documentation"
+msgstr "Piwigoの説明書を読む"
+
+msgid "Start pLoader and add your photos."
+msgstr "pLoader を起動し、写真を追加する"
+
+msgid "Switch to clear or dark colors for administration"
+msgstr "アドミニストレーションのために、透明色又は、暗い色に変更"
+
+msgid "Theme has been successfully installed"
+msgstr "テーマのインストールは成功しました"
+
+msgid "Visit Gallery"
+msgstr "ギャラリーへ"
+
+msgid "Visit Piwigo project website"
+msgstr "Piwigo のホームページへ"
+
+msgid "Guest Settings"
+msgstr "ゲストの設定"
+
+msgid "Main Page"
+msgstr "メインページ"
+
+msgid "Photo Page"
+msgstr "写真のページ"
+
+msgid "Activate Navigation Bar"
+msgstr "ナビゲーション・バーを有効にする"
+
+msgid "Activate Navigation Thumbnails"
+msgstr "ナビゲーションのサムネイルを有効化する"
+
+msgid "Activate icon \"%s\""
+msgstr "\"%s\"のアイコンを有効にする"
+
+msgid "Photo Properties"
+msgstr "写真のプロパティ"
+
+msgid "Allow user customization"
+msgstr "ユーザーのカスタマイズを許可する"
+
+msgid "Miscellaneous"
+msgstr "その他の情報"
+
+msgid "Virtual Links"
+msgstr "バーチャルリンク"
+
+msgid "Languages"
+msgstr "言語"
+
+msgid "Installed Languages"
+msgstr "インストールされた言語"
+
+msgid "Add New Language"
+msgstr "新しい言語を追加する"
+
+msgid "Language has been successfully installed"
+msgstr "言語のインストールは成功しました"
+
+msgid "Select:"
+msgstr "選択:"
+
+msgid "None"
+msgstr "すべてを選択解除"
+
+msgid "Invert"
+msgstr "選択を反転"
+
+msgid "Impossible to deactivate this theme, you need at least one theme."
+msgstr "このテーマは無効になりません。少なくとも一つのテーマが必要です。"
+
+msgid "Webmaster status is required."
+msgstr "サイト管理者のステータスが必要"
+
+msgid "Bound Theme"
+msgstr "テーマを割り当てる"
+
+msgid "Allow rating"
+msgstr "評価を許可する"
+
+msgid "Select at least one comment"
+msgstr "少なくとも1つのコメントを選択して下さい"
+
+msgid "Active Plugins"
+msgstr "有効なプラグイン"
+
+msgid "Inactive Plugins"
+msgstr "無効なプラグイン"
+
+msgid "Missing Plugins"
+msgstr "見つからないプラグイン"
+
+msgid "Uninstalled Plugins"
+msgstr "インストールされてないプラグイン"
+
+msgid "By %s"
+msgstr "著作 %s"
+
+msgid "Visit plugin site"
+msgstr "プラグインのサイトを訪問する"
+
+msgid "Active Languages"
+msgstr "有効な言語"
+
+msgid "Delete this language"
+msgstr "この言語を削除する"
+
+msgid "Forbid this language to users"
+msgstr "この言語をユーザーに禁止する"
+
+msgid "Impossible to deactivate this language, first set another language as default."
+msgstr "この言語を無効になれません。まず、その他の言語をデフォルトを設定して下さい。"
+
+msgid "Impossible to deactivate this language, you need at least one language."
+msgstr "この言語を無効になれません。少なくとも一つの言語が必要です。"
+
+msgid "Inactive Languages"
+msgstr "無効な言語"
+
+msgid "Make this language available to users"
+msgstr "この言語をユーザーが利用できるようにする"
+
+msgid "Set as default language for unregistered and new users"
+msgstr "登録されてないユーザーと新しいユーザーのためにデフォルト言語を設定する。"
+
+msgid "Add Photos"
+msgstr "写真を追加する"
+
+msgid "The following tag was deleted"
+msgstr "次のタグは削除されました。"
+
+msgid "There is no other language available."
+msgstr "その他の言語がありません。"
+
+msgid "There is no other plugin available."
+msgstr "その他のプラグインがありません。"
+
+msgid "There is no other theme available."
+msgstr "その他のテーマがありません。"
+
+msgid "By rank"
+msgstr "順番"
+
+msgid "Manual order"
+msgstr "手動で並び順を設定する"
+
+msgid "Add another set of photos"
+msgstr "別の写真を追加する"
+
+msgid "Order of menubar items has been updated successfully."
+msgstr "メニューバーの表示順は正常に更新されました。"
+
+msgid "This theme was not designed to be directly activated"
+msgstr "このテーマは直接有効化になりません。"
+
+msgid "Pending Comments"
+msgstr "コメントを確認待ち"
+
+msgid "Menu Management"
+msgstr "メニュー"
+
+msgid "%d of %d photos selected"
+msgstr "%d 枚中 %d 枚の写真が選択されています。"
+
+msgid "Action"
+msgstr "アクション"
+
+msgid "Add a filter"
+msgstr "フィルター追加"
+
+msgid "Album photos associated to the following albums: %s"
+msgstr "連携されていた写真アルバム: %s"
+
+msgid "Albums automatically sorted"
+msgstr "アルバムを自動的に並び替えました"
+
+msgid "All %d photos are selected"
+msgstr "全ての写真（ %d 枚）が選択されました"
+
+msgid "Apply action"
+msgstr "アクションを実行する"
+
+msgid "automatic order"
+msgstr "自動の並び順"
+
+msgid "Batch Manager"
+msgstr "バッチ・マネージャー"
+
+msgid "Choose an action"
+msgstr "アクションを選択して下さい"
+
+msgid "Activate icon \"new\" next to albums and pictures"
+msgstr "アルバムと写真のとなりに新規アイコンを表示させる"
+
+msgid "Deactivate all"
+msgstr "全て非活性する"
+
+msgid "Default photos order"
+msgstr "デフォルトの写真の並び順"
+
+msgid "Delete orphan tags"
+msgstr "使われていないタグを削除する"
+
+msgid "delete photo"
+msgstr "写真を削除する"
+
+msgid "Duplicates"
+msgstr "重複"
+
+msgid "Error on file \"%s\" : %s"
+msgstr "\"%s\"　のファイル・エラー : %s"
+
+msgid "Exif extension not available, admin should disable exif use"
+msgstr "Exif 拡張機能がありません。管理者がexifの使用を中止すべきです。"
+
+msgid "Failed to write file to disk"
+msgstr "ディスクへの書き込みが失敗しました"
+
+msgid "File upload stopped by extension"
+msgstr "拡張機能による、ファイル・アップロードを中止しました。"
+
+msgid "In your php.ini file, the upload_max_filesize (%sB) is bigger than post_max_size (%sB), you should change this setting"
+msgstr "あなたのphp.ini ファイルで、upload_max_filesize (%sB) (一回のアップロードの最大容量)が、post_max_size (%sB) (一回の投稿の最大容量)より大きいです。設定を変える必要があります。"
+
+msgid "Average rate"
+msgstr "平均評価"
+
+msgid "Rate"
+msgstr "評価"
+
+msgid "Learn more"
+msgstr "詳細はこちら"
+
+msgid "An error has occured during upgrade."
+msgstr "アップグレード中にエラーが発生しました。"
+
+msgid "An error has occured during extract. Please check files permissions of your piwigo installation.<br><a href=\"%s\">Click here to show log error</a>."
+msgstr "展開中にエラーが発生しました。あなたのPiwigoインストールのパーミッションを確認してください。<br /><a href=\"%s\">ログエラーを表示するには、ここをクリックしてください</a>。"
+
+msgid "Piwigo cannot retrieve upgrade file from server"
+msgstr "Piwigoは、アップグレードファイルをサーバから検索できません。"
+
+msgid "Save Template Directory"
+msgstr "テンプレートディレクトリー保存"
+
+msgid "Update in progress... Please wait."
+msgstr "アップグレード処理中 ... お待ちください。"
+
+msgid "Update to Piwigo %s"
+msgstr "Piwigo %s にアップグレード"
+
+msgid "Two updates are available"
+msgstr "2個のアップグレードがあります"
+
+msgid "This is a minor update, with only bug corrections."
+msgstr "これはマイナーアップグレードだけバグ修正しています。"
+
+msgid "This is a major update, with <a href=\"%s\">new exciting features</a>."
+msgstr "これはメジャーアップグレードで、 いろいろな楽しい<a href=\"%s\">新機能がついています。</a>."
+
+msgid "Some themes and plugins may be not available yet."
+msgstr "一部のテーマとプラグインはまだ利用できません。"
+
+msgid "You can update to Piwigo %s directly, without upgrading to Piwigo %s (recommended)."
+msgstr "Piwigo %sにアップグレードせずに、直接Piwigo %s にアップグレードすることができます（推進）。"
+
+msgid "Add to caddie"
+msgstr "キャディーに追加する"
+
+msgid "(this tag will be deleted)"
+msgstr "(このタグは削除される)"
+
+msgid "... or "
+msgstr "・・・または"
+
+msgid "Activate comments"
+msgstr "コメントを有効化する"
+
+msgid "Add a criteria"
+msgstr "条件を追加"
+
+msgid "Add tags"
+msgstr "タグを追加する"
+
+msgid "All extensions are up to date."
+msgstr "全ての拡張機能が最新です"
+
+msgid "All languages are up to date."
+msgstr "全ての言語が最新です"
+
+msgid "All plugins are up to date."
+msgstr "全てのプラグインが最新です。"
+
+msgid "All themes are up to date."
+msgstr "全てのテーマが最新です"
+
+msgid "Allowed file types: %s."
+msgstr "使用可能なファイル：%s。"
+
+msgid "Confirm merge"
+msgstr "マージを確認して下さい"
+
+msgid "Create"
+msgstr "作成"
+
+msgid "Default comments order"
+msgstr "デフォルトのコメント順"
+
+msgid "display"
+msgstr "表示"
+
+msgid "Height"
+msgstr "高さ"
+
+msgid "%d association"
+msgstr "関連:%d"
+
+msgid "%s has been successfully updated."
+msgstr "%sのアップデートは成功しました。"
+
+msgid "Cancel"
+msgstr "キャンセル"
+
+msgid "ERROR"
+msgstr "エラー"
+
+msgid "Extensions Update"
+msgstr "拡張機能のアップデート"
+
+msgid "Ignore All"
+msgstr "全てを無視する"
+
+msgid "Ignore this update"
+msgstr "このアップデートを無視する"
+
+msgid "List"
+msgstr "一覧"
+
+msgid "Manage Permissions"
+msgstr "権限管理"
+
+msgid "Merge selected tags"
+msgstr "選択したタグを統合する"
+
+msgid "Merge tags"
+msgstr "タグを統合する"
+
+msgid "Move to album"
+msgstr "アルバムへ移動する"
+
+msgid "Original Size"
+msgstr "オリジナルサイズ"
+
+msgid "Permission management"
+msgstr "権限管理"
+
+msgid "Remove all filters"
+msgstr "全てのフィルターを削除"
+
+msgid "Remove from caddie"
+msgstr "キャディーから削除"
+
+msgid "Restore"
+msgstr "復元"
+
+msgid "Set author"
+msgstr "作者を設定する"
+
+msgid "Some upgrades are available for extensions."
+msgstr "拡張機能のアップグレードがあります。"
+
+msgid "Type here the author name"
+msgstr "作者名を入力してください"
+
+msgid "Update All"
+msgstr "全てをアップデート"
+
+msgid "Update Complete"
+msgstr "アップデート完了"
+
+msgid "Updates"
+msgstr "アップデート"
+
+msgid "Watermark"
+msgstr "透かし"
+
+msgid "Width"
+msgstr "幅"
+
+msgid "Zoom"
+msgstr "拡大する"
+
+msgid "add a new watermark"
+msgstr "新しい透かしを追加"
+
+msgid "custom"
+msgstr "カスタム"
+
+msgid "hide details"
+msgstr "詳細を隠す"
+
+msgid "modified"
+msgstr "変更"
+
+msgid "remove author"
+msgstr "作者を削除する"
+
+msgid "remove creation date"
+msgstr "作成日を削除する"
+
+msgid "remove this filter"
+msgstr "フィルターを削除"
+
+msgid "remove title"
+msgstr "タイトルを削除する"
+
+msgid "show details"
+msgstr "詳細表示"
+
+msgid "Crop"
+msgstr "トリミングする"
+
+msgid "Resize after upload"
+msgstr "アップロード後にサイズを変更する"
+
+msgid "Searching..."
+msgstr "検索中..."
+
+msgid "Set title"
+msgstr "タイトルを設定する"
+
+msgid "Show menubar"
+msgstr "メニューを表示する"
+
+msgid "Start Upload"
+msgstr "アップロード開始"
+
+msgid "Themes which need upgrade"
+msgstr "テーマの更新が必要です。"
+
+msgid "Thumbnails generation in progress..."
+msgstr "サムネイル作成中..."
+
+msgid "Type here the title"
+msgstr "タイトルを入力して下さい"
+
+msgid "Unknown upload error"
+msgstr "不明なアップロードエラー"
+
+msgid "Visit language site"
+msgstr "言語サイトへ移動"
+
+msgid "Visit theme site"
+msgstr "テーマのサイトへ移動"
+
+msgid "Week starts on"
+msgstr "週の始まり"
+
+msgid "administrators"
+msgstr "管理者"
+
+msgid "Missing a temporary folder"
+msgstr "一時フォルダーが見つかりません。"
+
+msgid "No file was uploaded"
+msgstr "アップロードされたファイルはありません。"
+
+msgid "Piwigo Update"
+msgstr "Piwigo をアップデート"
+
+msgid "Select a file"
+msgstr "ファイル選択"
+
+msgid "Select an album"
+msgstr "アルバムを選択する"
+
+msgid "bottom left corner"
+msgstr "左下"
+
+msgid "bottom right corner"
+msgstr "右下"
+
+msgid "middle"
+msgstr "中央"
+
+msgid "top left corner"
+msgstr "左上"
+
+msgid "top right corner"
+msgstr "右上"
+
+msgid "%s photos can not be regenerated"
+msgstr "%s 更新できなかった写真。"
+
+msgid "%s photos have been regenerated"
+msgstr "%s 更新できた写真。"
+
+msgid "Approximate maximum resolution: %dM pixels (that's %dx%d pixels)."
+msgstr "おおよその最大解像度：%dM ピクセル (%dx%d ピクセルである)."
+
+msgid "By default, Piwigo will create a new websize from the HD (high definition) version of your photo."
+msgstr "デフォルトで、PiwigoはHD(高品質)版の写真から新しくウェブサイズ版を生成します。"
+
+msgid "Do you want to activate anyway?"
+msgstr "とにかく有効化したいですか？"
+
+msgid "ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW."
+msgstr "エラー：このプラグインがありませんが、インストールされています！すぐアンインストールして下さい。"
+
+msgid "Follow Orientation"
+msgstr "配向進み"
+
+msgid "Following plugins may not be compatible with the new version of Piwigo:"
+msgstr "次のプラグインは、Piwigoの最新版で使えない可能性があります。"
+
+msgid "Following themes may not be compatible with the new version of Piwigo:"
+msgstr "次のテーマは、Piwigoの最新版で使えない可能性があります。"
+
+msgid "Graphics Library"
+msgstr "画像ライブラリー"
+
+msgid "I decide to update anyway"
+msgstr "とにかくアップデートすることにします。"
+
+msgid "Languages which need upgrade"
+msgstr "アップグレードの必要な言語"
+
+msgid "Last import"
+msgstr "最新のインポート"
+
+msgid "Maximum file size: %sB."
+msgstr "最大ファイル・サイズ：%sB."
+
+msgid "New Version"
+msgstr "新しいバージョン"
+
+msgid "Photo %s of %s"
+msgstr "写真%sの%s"
+
+msgid "Photo name"
+msgstr "写真名"
+
+msgid "Selection"
+msgstr "選択"
+
+msgid "Send connection settings by email"
+msgstr "接続設定をメールで送って下さい"
+
+msgid "include child albums"
+msgstr "子アルバムを含める"
+
+msgid "manual order"
+msgstr "手動の並び順"
+
+msgid "new"
+msgstr "最新"
+
+msgid "%d day"
+msgstr "%d 日"
+
+msgid "%d days"
+msgstr "%d 日間"
+
+msgid "%d hour"
+msgstr "%d 時"
+
+msgid "%d hours"
+msgstr "%d 時間"
+
+msgid "%d minute"
+msgstr "%d 分"
+
+msgid "%d minutes"
+msgstr "%d 分間"
+
+msgid "%d month"
+msgstr "%d 月"
+
+msgid "%d months"
+msgstr "%d ヶ月間"
+
+msgid "%d second"
+msgstr "%d 秒"
+
+msgid "%d seconds"
+msgstr "%d 秒間"
+
+msgid "%d week"
+msgstr "%d 週"
+
+msgid "%d weeks"
+msgstr "%d 週間"
+
+msgid "%d year"
+msgstr "%d 年"
+
+msgid "%d years"
+msgstr "%d 年間"
+
+msgid "%s ago"
+msgstr "%s 前"
+
+msgid "%s in the future"
+msgstr "%s 先"
+
+msgid "A locked gallery is only visible to administrators"
+msgstr "ロックされたギャラリーは管理者にのみ表示されます。"
+
+msgid "Applications"
+msgstr "アプリケーション"
+
+msgid "Available on"
+msgstr "入手可能: "
+
+msgid "Edit photo"
+msgstr "写真を編集"
+
+msgid "Gallery unlocked"
+msgstr "ギャラリーのロック解除"
+
+msgid "Groups and users"
+msgstr "グループとユーザー"
+
+msgid "Multiple Size"
+msgstr "複数のサイズ"
+
+msgid "Piwigo Publish plugin for Lightroom"
+msgstr "Lightroom用Piwigoエクスポートプラグイン"
+
+msgid "Piwigo export plugin for Aperture"
+msgstr "Aperture 用 Piwigo エクスポートプラグイン"
+
+msgid "Piwigo export plugin for iPhoto"
+msgstr "iPhoto 用 Piwigo エクスポートプラグイン"
+
+msgid "Piwigo for Android"
+msgstr "Piwigo for Android"
+
+msgid "Piwigo for iOS (iPhone, iPad, iPod Touch)"
+msgstr "iOS用Piwigo(iPhone, iPad, iPod Touch)"
+
+msgid "Piwigo publish plugin for Shotwell"
+msgstr "Shotwell用Piwigo 公開プラグイン"
+
+msgid "Piwigo publish plugin for digiKam"
+msgstr "digiKam用Piwigo公開プラグイン"
+
+msgid "Predefined filter"
+msgstr "定義済みフィルター"
+
+msgid "Select groups..."
+msgstr "グループを選択..."
+
+msgid "Select users..."
+msgstr "ユーザーを選択..."
+
+msgid "Set creation date"
+msgstr "作成日を設定する"
+
+msgid "Sharpen"
+msgstr "シャープにする"
+
+msgid "The whole page"
+msgstr "ページ全体"
+
+msgid "The whole set"
+msgstr "セット全体"
+
+msgid "This album contains no photo."
+msgstr "このアルバムには写真がありません。"
+
+msgid "Unlock gallery"
+msgstr "未ロックのギャラリー"
+
+msgid "Web Form"
+msgstr "ウェブフォーム"
+
+msgid "X Position"
+msgstr "X ポジション"
+
+msgid "X Repeat"
+msgstr "X リピート"
+
+msgid "Y Position"
+msgstr "Y ポジション"
+
+msgid "any visitor can see this album"
+msgstr "誰でもこのアルバムを見ることができます。"
+
+msgid "create a new site"
+msgstr "新規サイト作成"
+
+msgid "pending validation"
+msgstr "検証待ち"
+
+msgid "Delete multiple size images"
+msgstr "複数サイズのイメージを削除する"
+
+msgid "Generate multiple size images"
+msgstr "複数サイズのイメージを作成する"
+
+msgid "Original file : %s"
+msgstr "オリジナルファイル : %s"
+
+msgid "Added by %s"
+msgstr "%sで追加されました。"
+
+msgid "Automatic sort order"
+msgstr "自動並べ替え"
+
+msgid "By default, the center of interest is placed in the middle of the photo."
+msgstr "デフォルトで、関心の中心は写真の中央です。"
+
+msgid "Center of interest"
+msgstr "中心"
+
+msgid "No destination tag selected"
+msgstr "行き先タグが選択されていません"
+
+msgid "No group is permitted to see this private album"
+msgstr "このプライベートなアルバムを見ることのできるグループはありません"
+
+msgid "No photo in the current set."
+msgstr "現在のセットには写真がありません。"
+
+msgid "No photo selected, %d photos in current set"
+msgstr "写真が選択されていません。現在のセットに%d枚写真があります。"
+
+msgid "Orphan tags deleted"
+msgstr "使われていないタグが削除されました"
+
+msgid "Photos generation in progress..."
+msgstr "写真作成中・・・"
+
+msgid "Posted %s on %s"
+msgstr "%sの%s投稿されました。"
+
+msgid "Save manual order"
+msgstr "手動の並び順を保存する"
+
+msgid "Select the destination tag"
+msgstr "タグの行き先を選択します。"
+
+msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
+msgstr "このプラグインは現在PIWIGO本ソフトに含まれています！今すぐアンインストールしてください！"
+
+msgid "The uploaded file was only partially uploaded"
+msgstr "アップロードされたファイルが途中失敗しました。"
+
+msgid "There is no group in this gallery."
+msgstr "このギャラリーにはグループがありません。"
+
+msgid "Type in a search term"
+msgstr "検索アイテムを入力してください。"
+
+msgid "Visited %d times"
+msgstr "%d回見られました。"
+
+msgid "WARNING! This plugin does not seem to be compatible with this version of Piwigo."
+msgstr "注意！このプラグインはPiwigoのバージョンに合っていません。"
+
+msgid "Who can see this photo?"
+msgstr "この写真の閲覧可能者"
+
+msgid "With no album"
+msgstr "アルバムに入っていないもの"
+
+msgid "With no tag"
+msgstr "タグのないもの"
+
+msgid "With no virtual album"
+msgstr "バーチャルアルバムがないもの"
+
+msgid "You can activate only one mobile theme."
+msgstr "モバイル・テーマは1つしか有効化できません。"
+
+msgid "cancel manual order"
+msgstr "手動の並び順を中止します。"
+
+msgid "registered users"
+msgstr "登録されているユーザー"
+
+msgid "simple visitors"
+msgstr "単なる訪問者"
+
+msgid "Obsolete Plugins"
+msgstr "サポートされないプラグイン"
+
+msgid "Opacity"
+msgstr "不透明度"
+
+msgid "No results"
+msgstr "結果なし"
+
+msgid "No photos selected, no actions possible."
+msgstr "写真が選択されていないので、なにもできません。"
+
+msgid "Not cropped correctly?"
+msgstr "正しくトリミングできませんでしたか?"
+
+msgid "Notify administrators when a comment is"
+msgstr "コメントされた際に管理者へ知らせる"
+
+msgid "Name of the duplicate"
+msgstr "重複の名前"
+
+msgid "No groups selected, no actions possible."
+msgstr "グループが選択されていないので、何もできません。"
+
+msgid "No members to manage"
+msgstr "管理すべきメンバーがいません"
+
+msgid "No order field selected"
+msgstr "順序フィールドが選択されていません"
+
+msgid "Merge selected groups"
+msgstr "選択されたグループを統合する"
+
+msgid "Minimum height"
+msgstr "最小高さ"
+
+msgid "Minimum width"
+msgstr "最小幅\r\n"
+
+msgid "Manage photos"
+msgstr "写真を管理する"
+
+msgid "Manage the members"
+msgstr "メンバーを管理する"
+
+msgid "Landscape"
+msgstr "横置"
+
+msgid "For photo sizes with crop, such as \"Square\", Piwigo will do its best to include the center of interest."
+msgstr "トリミングする大きさを四角で指定してください。Piwigoは対象の中心を含むように最善を尽くします。"
+
+msgid "Features include gallery browsing, album creation and photo upload."
+msgstr "ギャラリーの閲覧、アルバムの作成、写真のアップロードの機能"
+
+msgid "Duplicate"
+msgstr "重複"
+
+msgid "Duplicate selected tags"
+msgstr "選択したタグを複製します"
+
+msgid "Apply watermark if height is bigger than"
+msgstr "これ以上の高さの場合に透かしを付ける"
+
+msgid "Apply watermark if width is bigger than"
+msgstr "これ以上の幅の場合に透かしを付ける"
+
+msgid "Adobe Photoshop Lightroom is a photography software designed to manage large quantities of digital images and doing post production work."
+msgstr "Adobe Photoshop Lightroomは、大量のデジタル画像の管理と、撮影後の仕事のために設計された写真用ソフトウェアです。"
+
+msgid "Permission granted for groups"
+msgstr "グループ権限"
+
+msgid "Panorama"
+msgstr "パノラマ"
+
+msgid "Number of albums per page"
+msgstr "１ページ当りのアルバム数"
+
+msgid "Please select at least two groups"
+msgstr "グループを２つ以上選んで下さい。"
+
+msgid "Permission granted for users"
+msgstr "ユーザー権限"
+
+msgid "Basic settings"
+msgstr "基本設定"
+
+msgid "General"
+msgstr "全般"
+
+msgid "Ratio"
+msgstr "比率"
+
+msgid "Portrait"
+msgstr "ポートレート"
+
+msgid "Purge user cache"
+msgstr "ユーザーのキャッシュを削除する"
+
+msgid "Photo sizes with crop"
+msgstr "写真サイズ"
+
+msgid "Mail theme"
+msgstr "メールのテーマ"
+
+msgid "Numeric identifier : %d"
+msgstr "割り当てる数値 : 整数 : %d"
+
+msgid "Loading..."
+msgstr "ロード中 ..."
+
+msgid "Change password"
+msgstr "パスワードを変える"
+
+msgid "Change username"
+msgstr "ユーザー名を変える"
+
+msgid "Tag \"%s\" is now a duplicate of \"%s\""
+msgstr "タグ \"%s\"は、現在 \"%s\"と重複しています"
+
+msgid "Allow users to add a link to their website"
+msgstr "ユーザーは自分のウェブサイトへのリンクを追加できるようにする"
+
+msgid "All %d users are selected"
+msgstr "全てのユーザー(%d人)が選択されました"
+
+msgid "<em>Piwigo for iOS</em> application empowers you to connect to your Piwigo gallery from your iPhone, iPad or iPod Touch, create some albums and upload several photos at once."
+msgstr "<em>Piwigo for iOS</em>アプリは、iPhone、iPad、iPod Touchから、Piwigoギャラリーに接続し、アルバムを作成したり、複数の写真を一括でアップロードしたりできます。"
+
+msgid "Activate it now"
+msgstr "今すぐ有効にする"
+
+msgid "(filtered from %s total users)"
+msgstr "(%s ユーザーから、フィルタリングされました)"
+
+msgid "<em>Piwigo for Android</em> application empowers you to connect your Android phone or table to your Piwigo gallery, create some albums and upload several photos at once."
+msgstr "<em>Piwigo for Android</em>アプリは、Androidスマートフォンやタブレットから、Piwigoギャラリーに接続し、アルバムを作成したり、複数の写真を一括でアップロードしたりできます。"
+
+msgid "%d of %d users selected"
+msgstr "%d人(%d人中)のユーザーが選択されました。"
+
+msgid "You are using the Browser uploader. Try the <a href=\"%s\">Flash uploader</a> instead."
+msgstr "現在、Browser アップローダを使っています。代わりに、 <a href=\"%s\">Flash アップローダ</a>をお試し下さい。"
+
+msgid "You are using the Flash uploader. Problems? Try the <a href=\"%s\">Browser uploader</a> instead."
+msgstr "Flash アップローダで問題がおきましたか? 代わりに <a href=\"%s\">Browser アップローダ</a>をお試し下さい。"
+
+msgid "apply automatic sort order"
+msgstr "自動の並び順を適用"
+
+msgid "between %.2f and %.2f"
+msgstr "%.2f から %.2fの間で"
+
+msgid "between %d and %d pixels"
+msgstr "%d から %d ピクセルの間で"
+
+msgid "file name"
+msgstr "ファイル名"
+
+msgid "date & time"
+msgstr "日付と時刻"
+
+msgid "No matching user found"
+msgstr "一致するユーザーはみつかりませんでした"
+
+msgid "ReGalAndroid (RemoteGallery client for Android) is an open source (GPL v3) Piwigo client for the Android platform."
+msgstr "ReGalAndroid (RemoteGallery client for Android)は、Android携帯/タブレット向けのオープンソース(GPL v3)クライアントソフトです"
+
+msgid "Rename"
+msgstr "リネーム"
+
+msgid "Select at least one tag"
+msgstr "最低1つのタグを選択してください"
+
+msgid "width & height"
+msgstr "幅と高さ"
+
+msgid "close"
+msgstr "閉じる"
+
+msgid "User %s added"
+msgstr "ユーザー %s を追加しました"
+
+msgid "User %s updated"
+msgstr "ユーザー %s を更新しました"
+
+msgid "Users modified"
+msgstr "ユーザーの変更"
+
+msgid "Update user"
+msgstr "ユーザーの更新"
+
+msgid "Upload in progress"
+msgstr "アップロード状況"
+
+msgid "Refresh photo set"
+msgstr "フォトセットをリフレッシュ"
+
+msgid "Password updated"
+msgstr "パスワードを更新しました"
+
+msgid "Open user details"
+msgstr "ユーザー詳細情報を開く"
+
+msgid "Close user details"
+msgstr "ユーザー詳細情報を閉じる"
+
+msgid "Mail address is mandatory for registration"
+msgstr "登録のためにはメールアドレスを必須にする"
+
+msgid "Empty caddie"
+msgstr "空のキャディー"
+
+msgid "%u users have automatic permission because they belong to a granted group."
+msgstr "%u ユーザーは、承認されたグループに所属していますので、自動的にパーミッションが付与されます"
+
+msgid "visitors need to login and have the appropriate permissions to see this album"
+msgstr "このアルバムを見るためには、ログインをして、許可を得る必要があります。"
+
+msgid "View in gallery"
+msgstr "ギャラリーで見る"
+
+msgid "Tags <em>%s</em> merged into tag <em>%s</em>"
+msgstr "タグ　<em>%s</em>は、<em>%s</em>に統合されました"
+
+msgid "digiKam is designed for photographers who want to view, manage, edit, enhance, organize, tag, and share photographs."
+msgstr "digiKamは、写真を見たり、管理したり、編集したり、拡張したり、管理したり、タグ付けしたり、シェアしたりしたい人向けのソフトです。"
+
+msgid "digiKam is an advanced digital photo management free software for Linux, Windows, and MacOSX."
+msgstr "digiKamは、洗練された写真管理ソフト(フリーソフト)です。Linux, Windows, macOSで動作します。"
+
+msgid "Shotwell is an open source digital photo organizer that runs on Linux. It is the default photo manager in Ubuntu and Fedora."
+msgstr "Shotwellは、Linux上で動作するオープンソースな写真管理ソフトです。UbuntuやFedoraではデフォルトの写真管理ソフトウェアになっています。"
+
+msgid "Select at least two tags for merging"
+msgstr "統合するタグを2つ以上選択して下さい"
+
+msgid "Select a zone with your mouse to define a new center of interest."
+msgstr "マウスを使って、必要な領域を選択して下さい。"
+
+msgid "include photos with lower privacy level"
+msgstr "プライバシーレベルの低い写真が、含まれています"
+
+msgid "The uploaded file exceeds the upload_max_filesize directive in php.ini: %sB"
+msgstr "アップロードされたファイルは、php.iniに定められたupload_max_sizeを超過しています: %sB"
+
+msgid "The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form"
+msgstr "アップロードされたファイルは、HTMLフォームで指定されたMAX_FILE_SIZEディレクティブを超過しています"
+
+msgid "The settings for the guest are from the %s user"
+msgstr "ゲストの設定は、%sユーザーから設定されています"
+
+msgid "The picture dimensions will be reduced to %dx%d pixels."
+msgstr "写真は、%dx%dピクセルに縮小されます"
+
+msgid "The original maximum width must be a number between %d and %d"
+msgstr "元の最大の幅は、%dから%dの間の数で指定しなくてはいけません"
+
+msgid "The original maximum height must be a number between %d and %d"
+msgstr "元の最大の高さは、%dから%dの間の数で指定しなくてはいけません"
+
+msgid "The original image quality must be a number between %d and %d"
+msgstr "元の写真の品質は、%dから%dの間の数で指定しなくてはいけません"
+
+msgid "on the %d selected users"
+msgstr "%d人の選択されたユーザー"
+
+msgid "on the %d selected photos"
+msgstr "%d枚の選択された写真"
+
+msgid "iPhoto is the default photo manager on MacOSX. The Piwigo export plugin let you create new albums and export your photos directly from iPhoto to your Piwigo photo gallery."
+msgstr "iPhotoはmacOSのデフォルトの写真管理ソフトウェアです。Piwigoエクスポートプラグインにより、新しいアルバムを作成し、iPhotoからPiwigoギャラリーに直接エクスポートすることができます。"
+
+msgid "between %s and %s MB"
+msgstr "%sから%s MBの間で"
+
+msgid "based on"
+msgstr "元"
+
+msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
+msgstr "ローカルの設定ファイルで<i>$conf['order_by']</i>が指定されています。このパラメーターは古く推奨されません。削除するか、<i>$conf['order_by_custom']</i>に置き換えてください!"
+
+msgid "You can't define a default photo order because you have a custom setting in your local configuration."
+msgstr "ローカルの設定により、デフォルトの写真の並び順を設定できません"
+
+msgid "Y Repeat"
+msgstr "Y リピート"
+
+msgid "Type here the name of the new group"
+msgstr "新しいグループ名を入力してください"
+
+msgid "To export your photos from digiKam to Piwigo, simply install digiKam and the Kipi-plugins."
+msgstr "digiKamkからPiwigoに写真をエクスポートするには、digiKamとKipiプラグインをインストールしてください"
+
+msgid "This group will be unset to default"
+msgstr "このグループはデフォルトでは使われなくなります"
+
+msgid "This group will be set to default"
+msgstr "デフォルトでこのグループが使われます"
+
+msgid "This album contains %d photos, added on %s."
+msgstr "このアルバムは%d枚の写真を含んでいます。%sに追加しました"
+
+msgid "This album contains %d photos, added between %s and %s."
+msgstr "このアルバムは%d枚の写真を含んでいます。%sと%sの間に追加しました"
+
+msgid "The uploaded files exceed the post_max_size directive in php.ini: %sB"
+msgstr "アップロードされたファイルは、php.iniに定められたpost_max_sizeを超過しています: %sB"
+
+msgid "The center of interest is the most meaningful zone in the photo."
+msgstr "関心の中心は、写真で最も重要な意味を持つ領域です。"
+
+msgid "The Piwigo publish Plug-in allows you to export and synchronize photos from Lightroom directly to your Piwigo photo gallery."
+msgstr "LightroomのPiwigo公開プラグインにより、Piwigoのギャラリーを直接エクスポートし同期させることができます"
+
+msgid "The Piwigo export plugin allows you to create albums and export photos."
+msgstr "Piwigoエクスポートプラグインにより、アルバムを作成しエクスポートすることができます"
+
+msgid "Source tag"
+msgstr "ソースタグ"
+
+msgid "Showing %s to %s of %s users"
+msgstr "%sから%sのユーザーを表示する(全%sユーザー)"
+
+msgid "Show %s users"
+msgstr "%sのユーザーを表示する"
+
+msgid "Save visits in history for"
+msgstr "訪問の履歴を保存する"
+
+msgid "Restore default configuration. You will lose your plugin settings!"
+msgstr "デフォルトの設定を復元します。プラグインに関する設定は失われます"
+
+msgid "Resize after upload disabled due to the use of GD as graphic library"
+msgstr "GDを画像ライブラリーとして使用しているためアップロードして拡大縮小する機能は無効化されています"
+
+msgid "Reset ignored updates"
+msgstr "無視したアップデートをリセットする"
+
+msgid "Registered on %s, %s."
+msgstr "登録日: %s, %s"
+
+msgid "Rated %d times, score : %.2f"
+msgstr "%d回評価され、評価は%.2fです"
+
+msgid "Recipients"
+msgstr "受信者"
+
+msgid "No recipient selected"
+msgstr "受信者が選ばれていません"
+
+msgid "No user is permitted to see this private album"
+msgstr "このプライベートアルバムを見ることのできるユーザーはいません"
+
+msgid "No user selected of %d users"
+msgstr "%d人のユーザーからユーザーが選ばれていません"
+
+msgid "No users selected, no actions possible."
+msgstr "ユーザーが選択されていないので、操作できません"
+
+msgid "On your Linux, simply install Shotwell with your package manager and the activate Piwigo publishing option."
+msgstr "Linuxでは、Shotwellをパッケージ管理ソフトウェアからインストールすることで、Piwigoに公開するオプションを使うことができます"
+
+msgid "No and unlock sub-albums"
+msgstr "いいえ。サブアルバムのロックを解除します"
+
+msgid "Last visit on %s, %s."
+msgstr "最新の訪問日: %s, %s"
+
+msgid "Impossible to deactivate the default theme."
+msgstr "デフォルトのテーマを無効化することはできません"
+
+msgid "If no HD is available and if the current websize is bigger than resize dimensions, Piwigo will move it as HD and create a downsized websize photo from it."
+msgstr "HD版がない、または、現在のウェブサイズ版がサイズ変更後より大きい場合、Piwigoは、それをHD版とし、それから縮小したウェブサイズ版を作成します"
+
+msgid "For security reason, authentication keys do not work for administrators."
+msgstr "セキュリティー上の理由により、管理者は認証キーを使うことはできません。"
+
+msgid "Edit user"
+msgstr "ユーザーを編集する"
+
+msgid "Each email sent will contain its own automatic authentication key on links, valid for %s."
+msgstr "電子メールには自動認証キーのリンクが含まれます。%s有効です。"
+
+msgid "Delete %d orphan photos"
+msgstr "%d枚の迷子の写真を削除します"
+
+msgid "Orphans"
+msgstr "迷子"
+
+msgid "You have %d orphan tags: %s."
+msgstr "%d個の使われていないタグがあります: %s"
+
+msgid "Aperture is designed for professional photographers with iPhoto simplicity."
+msgstr "Apartureは、iPhotoのシンプルさを持ったプロの写真家用に設計されたソフトウェアです。"
+
+msgid "Aperture is a powerful tool to refine images and manage massive libraries on Mac."
+msgstr "Apartureは、Mac上で写真を調整し、大規模なライブラリーを管理するための強力なツールです。"
+
+msgid "Dashboard"
+msgstr "ダッシュボード"
+
+msgid "Confirm deletion"
+msgstr "削除を確認"
+
+msgid "(determined from photos)"
+msgstr "(写真から決定する)"
+
+msgid "delete album and all %d photos, even the %d associated to other albums"
+msgstr "アルバムと%d枚の写真を削除します。ただし、%d枚は他のアルバムに関連付けられています。"
+
+msgid "Delete album \"%s\" and its %d sub-albums."
+msgstr "アルバム \"%s\" と、%d個のサブアルバムを削除する。"
+
+msgid "delete album and the %d orphan photos"
+msgstr "アルバムと %d枚の使われていない写真を削除する"
+
+msgid "Piwigo Remote Sync is able to upload a whole folder hierarchy. If you run it again, only new photos will be uploaded."
+msgstr "Piwigo Remote Syncは、全フォルダー階層のアップロードが可能です。再度実行した場合には、新しい写真だけがアップロードされます。"
+
+msgid "No filter on album. Select one or type to search"
+msgstr "アルバムにフィルターがありません。検索するためにはフィルターを選択するか、入力して下さい"
+
+msgid "Time has come to update your Piwigo with version %s, go to %s"
+msgstr "あなたの Piwigo をバージョン %s にアップデートすべき時です。%s にする"
+
+msgid "delete only album, not photos"
+msgstr "写真はそのままに、アルバムだけを削除する"
+
+msgid "Share / Send your photos directly from your Mac Os X (10.10 and following) to Piwigo"
+msgstr "あなたのmacOS(10.10以上)からPiwigoへ直接写真を共有・送信"
+
+msgid "Storage used"
+msgstr "使用ストレージ"
+
+msgid "orphans to delete"
+msgstr "削除する迷子"
+
+msgid "Display form"
+msgstr "フォームを表示"
+
+msgid "Piwigo %s is available, please update"
+msgstr "Piwigo %s が利用可能です。アップデートして下さい"
+
+msgid "Running on an up-to-date Piwigo is important for security."
+msgstr "セキュリティのために最新のPiwigoを実行することが重要です。"
+
+msgid "Select tags"
+msgstr "タグを選択"
+
+msgid "checksum"
+msgstr "チェックサム"
+
+msgid "Delete album \"%s\"."
+msgstr "アルバム \"%s\" を削除する。"
+
+msgid "It only takes a few clicks."
+msgstr "数クリックするだけです。"
+
+msgid "%d checksums were added"
+msgstr "%d個のチェックサムが追加されました"
+
+msgid "... or hide this link"
+msgstr "... またはこのリンクを隠す"
+
+msgid "Compute %d missing checksums"
+msgstr "%d個の欠けているチェックサムを計算する"
+
+msgid "Create a first album"
+msgstr "最初のアルバムを作成する"
+
+msgid "Deletion in progress"
+msgstr "削除中"
+
+msgid "Display album date period"
+msgstr "それぞれのアルバムに関する日付期間を表示する、例≪2018年7月12日から15日≫"
+
+msgid "Display category date"
+msgstr "カテゴリ日を表示する"
+
+msgid "Piwigo requires an album to add photos."
+msgstr "写真を追加するアルバムが必要です"
+
+msgid "Some checksums are missing."
+msgstr "チェックサムがないものがあります"
+
+msgid "Synchronization in progress"
+msgstr "同期中"
+
+msgid "Visit"
+msgstr "ギャラリーへ"
+
+msgid "Welcome!"
+msgstr "ようこそ！"
+
+msgid "With no checksum"
+msgstr "チェックサムのないもの"
+
+msgid "checksums to add"
+msgstr "追加すべきチェックサム"
+
+msgid "or"
+msgstr "または"
+
+msgid "The %d tags on this page are selected"
+msgstr "このページ上の%d個のタグを選択しました"
+
+msgid "The other tags will be removed"
+msgstr "他のタグは削除されます"
+
+msgid "Yes, I am sure"
+msgstr "はい。確かに実行します"
+
+msgid "Yes, delete"
+msgstr "はい。削除します。"
+
+msgid "You have %d orphan tags %s"
+msgstr "%d個の未使用のタグ%sがあります"
+
+msgid "You have %s1 orphan : %s2"
+msgstr "%s1の未使用があります: %s2"
+
+msgid "and %s others"
+msgstr "さらに%sあります"
+
+msgid "in administration"
+msgstr "管理画面で"
+
+msgid "in gallery"
+msgstr "ギャラリーで"
+
+msgid "no photo"
+msgstr "写真なし"
+
+msgid "No tags selected, no actions possible."
+msgstr "タグが選択されていないため、実行できるアクションがありません。"
+
+msgid "No, I have changed my mind"
+msgstr "実行しません。気持ちが変わりました。"
+
+msgid "Open in gallery"
+msgstr "ギャラリーで開く"
+
+msgid "Please upgrade your PHP version before any update."
+msgstr "アップデートをする前にPHPのバージョンをアップグレードしてください。"
+
+msgid "Portraits"
+msgstr "ポートレート"
+
+msgid "Posted %s"
+msgstr "投稿済み %s"
+
+msgid "Promote mobile app on mobile devices"
+msgstr "モバイル機器ではモバイルアプリを推奨する"
+
+msgid "Requires PHP %s"
+msgstr "PHP %sが必要です"
+
+msgid "Review"
+msgstr "レビュー"
+
+msgid "Search albums"
+msgstr "アルバムを検索する"
+
+msgid "Search tips"
+msgstr "ティップスを検索する"
+
+msgid "Select"
+msgstr "選択"
+
+msgid "Select all %d tags"
+msgstr "全てのタグ(%d個)を選択する"
+
+msgid "Selection mode"
+msgstr "選択モード"
+
+msgid "Tag \"%s\" created"
+msgstr "%sタグを作成しました"
+
+msgid "Tag \"%s\" succesfully deleted"
+msgstr "%sタグを削除しました"
+
+msgid "Tag \"%s1\" renamed in \"%s2\""
+msgstr "%s1タグを%s2タグに名称変更しました"
+
+msgid "Tag Manager"
+msgstr "タグマネージャー"
+
+msgid "Tag(s) \\{%s1\\} succesfully merged into \"%s2\""
+msgstr "\\{%s1\\}のタグを%s2タグにマージしました"
+
+msgid "Tags \\{%s\\} succesfully deleted"
+msgstr "\\{%s\\}タグを削除しました"
+
+msgid "Are you sure you want to restore the plugin \"%s\"?"
+msgstr "本当に%sプラグインをリストアしますか?"
+
+msgid "Are you sure you want to restore this plugin?"
+msgstr "本当にこのプラグインをリストアしますか?"
+
+msgid "Are you sure you want to restore to default settings?"
+msgstr "本当に既定の設定をリストアしますか?"
+
+msgid "Are you sure you want to update all extensions?"
+msgstr "本当に全ての拡張機能をアップデートしますか?"
+
+msgid "At least 2 selected tags are needed to merge"
+msgstr "少なくとも2つのタグを選択しないとマージできません"
+
+msgid "Choose which tag to merge these tags into"
+msgstr "以下のタグにマージするタグを選択してください"
+
+msgid "Clear Selection"
+msgstr "選択を解除する"
+
+msgid "Delete album"
+msgstr "アルバムを削除する"
+
+msgid "Delete orphan tags ?"
+msgstr "使われていないタグを削除しますか?"
+
+msgid "Delete tag \"%s\"?"
+msgstr "%sタグを削除しますか?"
+
+msgid "Delete tags \\{%s\\}?"
+msgstr "\\{%s\\}のタグを削除しますか?"
+
+msgid "Delete them"
+msgstr "削除する"
+
+msgid "Display"
+msgstr "表示"
+
+msgid "Displays a banner to install or open the official Piwigo app"
+msgstr "Piwigoの公式アプリをインストールまたは開くバナーを表示する"
+
+msgid "File type: %s"
+msgstr "ファイル形式: %s"
+
+msgid "Keep them"
+msgstr "保持する"
+
+msgid "Manage album photos"
+msgstr "アルバムの写真を管理する"
+
+msgid "Manage sub-albums"
+msgstr "サブアルバムを管理する"
+
+msgid "Merge"
+msgstr "マージ"
+
+msgid "No tag found"
+msgstr "タグが見つかりません"
+
+msgid "%s other tags available.."
+msgstr "%sの他のタグが利用可能です"
+
+msgid " (copy %s)"
+msgstr "(コピー %s)"
+
+msgid " (copy)"
+msgstr "(コピー)"
+
+msgid "%d photos"
+msgstr "%d枚の写真"
+
+msgid "%s GB used"
+msgstr "%s GBを利用中"
+
+msgid "%s MB used"
+msgstr "%s MBを利用中"
+
+msgid "<b>%d</b> tag found"
+msgstr "<b>%d</b>個のタグが見つかりました"
+
+msgid "<b>%d</b> tag selected"
+msgstr "<b>%d</b>個のタグを選択しました"
+
+msgid "<b>%d</b> tags found"
+msgstr "<b>%d</b>個のタグが見つかりました"
+
+msgid "Are you sure you want to delete all sizes?"
+msgstr "本当に全てのサイズを削除しますか?"
+
+msgid "Are you sure you want to delete the language \"%s\"?"
+msgstr "本当に%s言語を削除しますか?"
+
+msgid "Are you sure you want to delete the plugin \"%s\"?"
+msgstr "本当に%sプラグインを削除しますか?"
+
+msgid "Are you sure you want to delete the ratings of the user \"%s\"?"
+msgstr "本当に%sユーザーの行った評価を削除しますか?"
+
+msgid "Are you sure you want to delete the theme \"%s\"?"
+msgstr "本当に%sテーマを削除しますか?"
+
+msgid "Are you sure you want to delete the user \"%s\"?"
+msgstr "本当に%sユーザーを削除しますか?"
+
+msgid "Are you sure you want to delete this site?"
+msgstr "本当にこのサイトを削除しますか?"
+
+msgid "Are you sure you want to delete this theme?"
+msgstr "本当にこのテーマを削除しますか?"
+
+msgid "Are you sure you want to delete this?"
+msgstr "本当にこれを削除しますか?"
+
+msgid "Are you sure you want to install the plugin \"%s\"?"
+msgstr "本当に%sプラグインをインストールしますか?"
+
+msgid "Are you sure you want to lock the gallery?"
+msgstr "本当にギャラリーをロックしますか?"
+
+msgid "Showing %s users out of %s"
+msgstr "%sユーザーを表示(%s中)"
+
+msgid "Storage"
+msgstr "記憶域"
+
+msgid "This is already the default theme"
+msgstr "これは既に既定のテーマです"
+
+msgid "Unset as group for new users"
+msgstr "新しいユーザーのためのグループに設定しない"
+
+msgid "User \"%s\" dissociated from this group"
+msgstr "ユーザー「%s」はこのグループから削除されました"
+
+msgid "User associated"
+msgstr "加入しているユーザー"
+
+msgid "Videos"
+msgstr "ビデオ"
+
+msgid "You don't have access to this photo"
+msgstr "あなたはこの写真を参照する権限がありません"
+
+msgid "You have %s inactive plugins"
+msgstr "あなたは%sの不活性なプラグインを持っています"
+
+msgid "%s file type"
+msgstr "ファイル形式: %s"
+
+msgid "Group(s) \\{%s1\\} succesfully merged into \"%s2\""
+msgstr "グループ\\{%s1\\}を「%s2」へと統合しました"
+
+msgid "Groups \\{%s\\} succesfully deleted"
+msgstr "グループ\\{%s\\}を削除しました"
+
+msgid "Manage users with user manager"
+msgstr "ユーザー管理画面でユーザーを管理する"
+
+msgid "Name is already taken"
+msgstr "名前が既に取得されています"
+
+msgid "No albums found"
+msgstr "アルバムがありません"
+
+msgid "No plugins found"
+msgstr "プラグインがありません"
+
+msgid "Other"
+msgstr "その他"
+
+msgid "Page Visited"
+msgstr "ページ訪問済み"
+
+msgid "Page Visited in %s"
+msgstr "%sにページを訪問済み"
+
+msgid "Refresh thumbnail"
+msgstr "サムネイルを更新する"
+
+msgid "Set as default"
+msgstr "既定値に設定する"
+
+msgid "Set as group for new users"
+msgstr "新しいユーザーのためのグループに設定する"
+
+msgid "Show inactive plugins"
+msgstr "不活性なプラグインを表示する"
+
+msgid "%d Activities"
+msgstr "%d件のアクティビティー"
+
+msgid "%d Activity"
+msgstr "%d件のアクティビティー"
+
+msgid "%d sub-albums"
+msgstr "%d個のサブアルバム"
+
+msgid "<b>%d</b> albums found"
+msgstr "<b>%d個</b>のアルバムが見つかりました"
+
+msgid "<b>1</b> album found"
+msgstr "<b>1個</b>のアルバムが見つかりました"
+
+msgid "Activity peak in the last weeks"
+msgstr "先週のアクティビティーのピーク"
+
+msgid "Album search tool"
+msgstr "アルバム検索ツール"
+
+msgid "Are you sure you want to delete group \"%s\"?"
+msgstr "本当に、グループ「%s」を削除してよろしいですか?"
+
+msgid "Associate User"
+msgstr "関連するユーザー"
+
+msgid "Average last 12 months"
+msgstr "過去12カ月の平均"
+
+msgid "Cache"
+msgstr "キャッシュ"
+
+msgid "Compare mode"
+msgstr "モードを比較する"
+
+msgid "Created on %s"
+msgstr "作成: %s"
+
+msgid "Dissociate user from this group"
+msgstr "このグループからユーザーを削除する"
+
+msgid "Edited on %s"
+msgstr "編集: %s"
+
+msgid "Formats"
+msgstr "表示形式"
+
+msgid "Group \"%s\" succesfully deleted"
+msgstr "グループ「%s」の削除に成功しました"
+
+msgid "Group added"
+msgstr "グループが追加されました"
+
+msgid "Group renamed"
+msgstr "グループの名前を変更しました"
+
+msgid "Add Album"
+msgstr "アルバムを追加"
+
+msgid "Apply an automatic order to root albums"
+msgstr "ルートアルバムに自動的に順番をつける"
+
+msgid "Apply to the whole hierarchy"
+msgstr "階層全体に適用する"
+
+msgid "Compact View"
+msgstr "コンパクトビュー"
+
+msgid "Drag and drop to reorder albums"
+msgstr "ドラッグアンドドロップでアルバムの並び替え"
+
+msgid "Hide sub-albums"
+msgstr "サブアルバムを非表示にする"
+
+msgid "Line View"
+msgstr "ラインビュー"
+
+msgid "Name field must not be empty"
+msgstr "名前の欄は入力必須です"
+
+msgid "Root"
+msgstr "ルート"
+
+msgid "Select an album... or type it!"
+msgstr "アルバムを選択するか入力して下さい"
+
+msgid "Show sub-albums"
+msgstr "サブアルバムを表示する"
+
+msgid "Tile View"
+msgstr "タイトルビュー"
+
+msgid "<b>%d+</b> albums found, try to refine the search"
+msgstr "<b>%d+</b>アルバムが見つかりました。絞り込み検索をお試しください。"
+
+msgid "Apply to direct sub-albums"
+msgstr "直下のサブアルバムに適用する"
+
+msgid "%d photos edited"
+msgstr "%d枚の写真が編集されました"
+
+msgid "%d photos moved"
+msgstr "%d枚の写真が移動されました"
+
+msgid "Photos per page"
+msgstr "ページごとの写真"
+
+msgid "%d album added"
+msgstr "%d個のアルバムが追加されました"
+
+msgid "%d album deleted"
+msgstr "%d個のアルバムが削除されました"
+
+msgid "%d album edited"
+msgstr "%d個のアルバムが編集されました"
+
+msgid "%d albums added"
+msgstr "%d個のアルバムが追加されました"
+
+msgid "%d albums deleted"
+msgstr "%d個のアルバムが削除されました"
+
+msgid "%d albums edited"
+msgstr "%d個のアルバムが編集されました"
+
+msgid "%d group added"
+msgstr "%d のグループが追加されました"
+
+msgid "%d group deleted"
+msgstr "%d のグループが削除されました"
+
+msgid "%d group edited"
+msgstr "%d のグループが編集されました"
+
+msgid "%d group moved"
+msgstr "%d のグループが移動されました"
+
+msgid "%d groups added"
+msgstr "%d のグループが追加されました"
+
+msgid "%d groups deleted"
+msgstr "%d のグループが削除されました"
+
+msgid "%d groups edited"
+msgstr "%d のグループが編集されました"
+
+msgid "%d groups moved"
+msgstr "%d のグループが移動されました"
+
+msgid "%d photo added"
+msgstr "%d枚の写真が追加されました"
+
+msgid "%d photo deleted"
+msgstr "%d枚の写真が削除されました"
+
+msgid "%d photo edited"
+msgstr "%d枚の写真が編集されました"
+
+msgid "%d photo moved"
+msgstr "%d枚の写真が移動されました"
+
+msgid "%d photos added"
+msgstr "%d枚の写真が追加されました"
+
+msgid "%d photos deleted"
+msgstr "%d枚の写真が削除されました"
+
+msgid "%d tag added"
+msgstr "%d タグが追加されました"
+
+msgid "%d tag deleted"
+msgstr "%d タグが削除されました"
+
+msgid "%d tag edited"
+msgstr "%d タグが編集されました"
+
+msgid "%d tag moved"
+msgstr "%d タグが移動されました"
+
+msgid "%d tags added"
+msgstr "%d タグが追加されました"
+
+msgid "%d tags deleted"
+msgstr "%d タグが削除されました"
+
+msgid "%d tags edited"
+msgstr "%d タグが編集されました"
+
+msgid "%d tags moved"
+msgstr "%d タグが移動されました"
+
+msgid "%d user added"
+msgstr "%d人のユーザーが追加されました"
+
+msgid "%d user edited"
+msgstr "%d ユーザーが編集されました"
+
+msgid "%d user logged in"
+msgstr "%d ユーザーがログインしました"
+
+msgid "%d user logged out"
+msgstr "%d ユーザーがログアウトしました"
+
+msgid "%d users added"
+msgstr "%d ユーザーが追加されました"
+
+msgid "%d users edited"
+msgstr "%d ユーザーが編集されました"
+
+msgid "%d users logged in"
+msgstr "%d ユーザーがログインしました"
+
+msgid "%d users logged out"
+msgstr "%d ユーザーがログアウトしました"
+
+msgid "%s MB"
+msgstr "%s MB"
+
+msgid "Activated"
+msgstr "有効"
+
+msgid "Activated plugin list"
+msgstr "有効化されているプラグイン一覧"
+
+msgid "Activity"
+msgstr "アクティビティ"
+
+msgid "Add User"
+msgstr "ユーザーの追加"
+
+msgid "Add a new user"
+msgstr "新規ユーザーの追加"
+
+msgid "Advanced filters"
+msgstr "フィルターオプション"
+
+msgid "Apr"
+msgstr "4月"
+
+msgid "Aug"
+msgstr "8月"
+
+msgid "Cache size"
+msgstr "キャッシュサイズ"
+
+msgid "Change Password"
+msgstr "パスワードの変更"
+
+msgid "Close"
+msgstr "閉じる"
+
+msgid "Deactivated"
+msgstr "無効"
+
+msgid "Dec"
+msgstr "12月"
+
+msgid "Delete user"
+msgstr "ユーザーの削除"
+
+msgid "Download all activities"
+msgstr "全てのアクティビティーをダウンロード"
+
+msgid "Edit"
+msgstr "編集"
+
+msgid "Edit guest user"
+msgstr "ゲストユーザーの編集"
+
+msgid "Email"
+msgstr "Eメール"
+
+msgid "Email Adress"
+msgstr "メールアドレス"
+
+msgid "Equivalent to deactivation. The user is still in the list, but can no longer log in."
+msgstr "無効化と同等です。ユーザーはリストに残っていますが、ログインはできません。"
+
+msgid "Feb"
+msgstr "2月"
+
+msgid "Filters"
+msgstr "フィルター"
+
+msgid "Generate random password"
+msgstr "ランダムなパスワードを生成する"
+
+msgid "Jan"
+msgstr "1月"
+
+msgid "Jul"
+msgstr "7月"
+
+msgid "Jun"
+msgstr "6月"
+
+msgid "Language"
+msgstr "言語"
+
+msgid "Last visit"
+msgstr "最終アクセス"
+
+msgid "Manage users"
+msgstr "ユーザーの管理"
+
+msgid "Mar"
+msgstr "3月"
+
+msgid "May"
+msgstr "5月"
+
+msgid "New user added"
+msgstr "新規ユーザーが追加されました"
+
+msgid "No plugin activated"
+msgstr "有効化されているプラグインはありません"
+
+msgid "Nov"
+msgstr "11月"
+
+msgid "Oct"
+msgstr "10月"
+
+msgid "Plugin \"%s\" deleted!"
+msgstr "プラグイン \"%s\" が削除されました！"
+
+msgid "Plugin \"%s\" has been activated!"
+msgstr "プラグイン \"%s\" が有効化されました！"
+
+msgid "Registered"
+msgstr "登録済み"
+
+msgid "Select groups or type them"
+msgstr "グループを選択または入力"
+
+msgid "Selected user"
+msgstr "選択されたユーザー"
+
+msgid "Sep"
+msgstr "9月"
+
+msgid "Show"
+msgstr "表示"
+
+msgid "Synchronization"
+msgstr "同期"
+
+msgid "Theme"
+msgstr "テーマ"
+
+msgid "Update"
+msgstr "アップデート"
+
+msgid "User updated"
+msgstr "ユーザーが更新されました"
+
+msgid "Users not logged in will have these settings applied, these settings are used by default for new users"
+msgstr "ログインしていないユーザーにはこれらの設定が適用され、新規ユーザーにはこれらの設定がデフォルトで使用されます。"
+
+msgid "add"
+msgstr "追加"
+
+msgid "between %s and %s"
+msgstr "%sと%sの間"
+
+msgid "deletion"
+msgstr "削除"
+
+msgid "edit"
+msgstr "編集"
+
+msgid "login"
+msgstr "ログイン"
+
+msgid "logout"
+msgstr "ログアウト"
+
+msgid "months ago"
+msgstr "ヵ月前"
+
+msgid "move"
+msgstr "移動"
+
+msgid "right now"
+msgstr "今すぐ"
+
+msgid "Currently running version %s"
+msgstr "現在使用中のバージョン：%s"
+
+msgid "Are you sure you want to uninstall the plugin \"%s\"?"
+msgstr "「%s」プラグインを本当にアンインストールしてもよろしいですか？"
+
+msgid "Always have a backup of your database and files."
+msgstr "データベースとファイルのバックアップを常に持っておくようにしてください。"
+
+msgid "Add New Plugin"
+msgstr "新しいプラグインを追加する"
+
+msgid "%sMB"
+msgstr "%sMB"
+
+msgid "%sGB"
+msgstr "%sGB"
+
+msgid "Install Piwigo on mobile"
+msgstr "モバイルデバイスにPiwigoをインストールする"
+
+msgid "Piwigo is also on mobile."
+msgstr "Piwigoにはモバイル版もあります。"
+
+msgid "Try now !"
+msgstr "試してみましょう！"
+
+msgid "This plugin has no recent update"
+msgstr "このプラグインは最近アップデートがされていません。"
+
+msgid "This plugin have been updated recently"
+msgstr "このプラグインは最近アップデートされました。"
+
+msgid "This plugin have no update since 3 years ! It may be outdated"
+msgstr "このプラグインは3年以上アップデートがありません！すでに古くなっています"
+
+msgid "This plugin is incompatible with your version"
+msgstr "このプラグインはあなたがお使いのバージョンと互換性がありません"
+
+msgid "This plugin was updated less than 6 months ago"
+msgstr "このプラグインは6か月以内にアップデートされています"
+
+msgid "Understood, do not show again"
+msgstr "わかりました。もう表示しないでください"
+
+msgid "Piwigo core"
+msgstr "Piwigoコア"
+
+msgid "This albums is already in related categories list"
+msgstr "このアルバムは既に関連アルバムリストに入っています。"
+
+msgid "Details"
+msgstr "詳細"
+
+msgid "If anything bad happens during the update, you would be able to restore a backup."
+msgstr "アップデートの途中で何か悪いことが起きた場合、バックアップから復元できるようになります。"
+
+msgid "Latest Piwigo news"
+msgstr "最新のPiwigoニュース"
+
+msgid "Current Version"
+msgstr "最新バージョン"
+
+msgid "Are you sure you want to unlock the gallery?"
+msgstr "本当にギャラリーのロックを外してもよろしいですか？"
+
+msgid "Place last"
+msgstr "最後尾に配置"
+
+msgid "Place first"
+msgstr "先頭に配置"
+
+msgid "Create a sub-album of \"%s\""
+msgstr "\"%s\"のサブアルバムを作成する"
+
+msgid "Add as filter"
+msgstr "フィルターとして追加"
+
+msgid "%d files"
+msgstr "%d個のファイル"
+
+msgid "Activate button \"%s\""
+msgstr "\"%s\"のボタンを有効化する"
+
+msgid "Detect and avoid duplicates during upload"
+msgstr "アップロード中に重複を検出し、重複を排除する"
+
+msgid "Album name must not be empty"
+msgstr "アルバム名は空白にできません"
+
+msgid "Apply to root albums"
+msgstr "ルートアルバムに適用する"
+
+msgid "%s line"
+msgstr "%s行"
+
+msgid "Upload Formats"
+msgstr "アップロードする形式"
+
+msgid "Version %s"
+msgstr "バージョン%s"
+
+msgid "was succesfully deleted"
+msgstr "は削除できました"
+
+msgid "Save"
+msgstr "保存"
+
+msgid "Select or create an album"
+msgstr "アルバムを選択あるいは作成する"
+
+msgid "Shrink"
+msgstr "縮小する"
+
+msgid "Auto-update"
+msgstr "自動アップデート"
+
+msgid "<b>%d</b> filtered user"
+msgstr "<b>%d</b>人のフィルターされたユーザー"
+
+msgid "<b>%d</b> filtered users"
+msgstr "<b>%d</b>人のフィルターされたユーザー"
+
+msgid "%s lines"
+msgstr "%s行"
+
+msgid "System Activities"
+msgstr "システムのアクティビティー"
+
+msgid "level of confidentiality"
+msgstr "秘密にするレベル"
+
+msgid "Who can see ?"
+msgstr "誰が見ることができますか?"
+
+msgid "No search in progress"
+msgstr "検索中ではありません"
+
+msgid "Downloaded"
+msgstr "ダウンロードしました"
+
+msgid "Tag name"
+msgstr "タグ名"
+
+msgid "This photo no longer exists"
+msgstr "この写真は既に存在しません"
+
+msgid "Unlocked album"
+msgstr "ロックされていないアルバム"
+
+msgid "Visit history"
+msgstr "履歴を参照する"
+
+msgid "Locked album"
+msgstr "ロックされたアルバム"
+
+msgid "Core"
+msgstr "コア"
+
+msgid "Create a root album"
+msgstr "ルートアルバムを作成する"
+
+msgid "Create your first album"
+msgstr "あなたの最初のアルバムを作成する"
+
+msgid "Creation mode"
+msgstr "作成モード"
+
+msgid "Delete these sizes"
+msgstr "これらのサイズを削除する"
+
+msgid "Changes saved"
+msgstr "変更を保存する"
+
+msgid "Authorize comments"
+msgstr "コメントを許可する"
+
+msgid "All admins"
+msgstr "全ての管理者"
+
+msgid "An error has occured"
+msgstr "エラーが発生しました"
+
+msgid "Additional filters"
+msgstr "追加のフィルター"
+
+msgid "Create and select"
+msgstr "作成して選択する"
+
+msgid "Activate create mode to create and select an album"
+msgstr "アルバムを作成し選択するために、作成モードを有効化する"
+
+msgid "Extensions"
+msgstr "拡張機能"
+
+msgid "never calculated"
+msgstr "一度も計算されたことがありません"
+
+msgid "Purge Cache"
+msgstr "キャッシュの削除"
+
+msgid "Purge Actions"
+msgstr "削除操作"
+
+msgid "Global Gallery Actions"
+msgstr "ギャラリー全体に対する操作"
+
+msgid "Show plugins compatible with previous version of Piwigo"
+msgstr "以前のバージョンのPiwigoと互換性のあるプラグインを表示する"
+
+msgid "Show beta test plugins"
+msgstr "ベータ版のテスト用プラグインを表示する"
+
+msgid "Create a new album at root"
+msgstr "ルートに新しいアルバムを作成する"
+
+msgid "Rename \"%s\""
+msgstr "「%s」をリネーム"
+
+msgid "Yes, rename"
+msgstr "はい、リネームします"
+
+msgid "Locked albums are disabled for maintenance. Only administrators can view them in the gallery. Lock this album will also lock his Sub-albums"
+msgstr "ロックされたアルバムはメンテナンスのため使用不可にされています。管理者のみがギャラリー上でこのアルバムを閲覧できます。このアルバムをロックすることでアルバム内のサブアルバムもロックされます。"
+
+msgid "Modified"
+msgstr "編集時期"
+
+msgid "Created"
+msgstr "作成時期"
+
+msgid "This album is currently locked, visible only to administrators."
+msgstr "このアルバムは現在ロックされており、管理者のみ閲覧できます。"
+

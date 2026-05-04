@@ -1,0 +1,2949 @@
+# Piwigo translation — vi_VN
+# Source: admin.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: vi_VN\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "%d association"
+msgstr "%d kết hợp"
+
+msgid "%d associations"
+msgstr "%d kết hợp"
+
+msgid "%d album including"
+msgstr "%d đề mục bao gồm "
+
+msgid "%d albums including"
+msgstr "%d đề mục bao gồm "
+
+msgid " and %d virtual"
+msgstr " và %d thư mục ảo"
+
+msgid " and %d virtuals"
+msgstr " và %d thư mục ảo"
+
+msgid "%d album moved"
+msgid_plural "%d albums moved"
+msgstr[0] "%d đề mục đã được chuyển"
+msgstr[1] "%d đề mục đã được chuyển"
+
+msgid "%d group"
+msgstr "%d nhóm"
+
+msgid "%d groups"
+msgstr "%d nhóm"
+
+msgid "%d member"
+msgid_plural "%d members"
+msgstr[0] "%d thành viên"
+msgstr[1] "%d thành viên"
+
+msgid "%d tag"
+msgstr "%d thẻ"
+
+msgid "%d tags"
+msgstr "%d thẻ"
+
+msgid "%d user comment rejected"
+msgstr "%d lời bình của thành viên dùng đã bị từ chối"
+
+msgid "%d user comments rejected"
+msgstr "%d lời bình của thành viên dùng đã bị từ chối"
+
+msgid "%d user comment validated"
+msgstr "%d lời bình của thành viên dùng đã được xác nhận"
+
+msgid "%d user comments validated"
+msgstr "%d lời bình của thành viên dùng đã được xác nhận"
+
+msgid "%d user deleted"
+msgid_plural "%d users deleted"
+msgstr[0] "%d tên thành viên đã được xóa"
+msgstr[1] "%d tên thành viên đã được xóa"
+
+msgid "%d user"
+msgid_plural "%d users"
+msgstr[0] "%d thành viên"
+msgstr[1] "%d thành viên"
+
+msgid "%d waiting for validation"
+msgstr "Có %d hình đang đợi xác nhận"
+
+msgid "Actions"
+msgstr "Hành động"
+
+msgid "Activate"
+msgstr "Kích hoạt"
+
+msgid "Add/delete a permalink"
+msgstr "Thêm/xoá một link cố định"
+
+msgid "Add a tag"
+msgstr "Thêm một tag"
+
+msgid "Add a user"
+msgstr "Thêm một thành viên"
+
+msgid "Add group"
+msgstr "Thêm nhóm"
+
+msgid "Add"
+msgstr "Thêm"
+
+msgid "Allow user registration"
+msgstr "Cho phép đăng ký"
+
+msgid "Apply to sub-albums"
+msgstr "Áp dụng cho các đề mục nhỏ"
+
+msgid "Associated"
+msgstr "Được kết hợp"
+
+msgid "Caddie management"
+msgstr "Quản lý Caddie "
+
+msgid "Caddie"
+msgstr "Caddie"
+
+msgid "Albums authorized thanks to group associations"
+msgstr "Đề mục đã được cho phép nhờ vào kết hợp nhóm"
+
+msgid "Album manual order was saved"
+msgstr "Sắp xếp thủ công đề mục đã được lưu"
+
+msgid "Check for upgrade failed for unknown reasons."
+msgstr "Quá trình dò tìm phiên bản nâng cấp bị lỗi, không xác định được nguyên nhân."
+
+msgid "Check for upgrade"
+msgstr "Dò tìm phiên bản mới"
+
+msgid "Comments for all"
+msgstr "Cho mọi đối tượng được phép gởi bình luận"
+
+msgid "Current name"
+msgstr "Tên hiện tại"
+
+msgid "Database"
+msgstr "Cơ sở dữ liệu"
+
+msgid "Deactivate"
+msgstr "Bỏ kích hoạt"
+
+msgid "Delete Representant"
+msgstr "Xoá mục đại diện"
+
+msgid "Delete selected tags"
+msgstr "Xoá những tag đã chọn"
+
+msgid "Delete selected users"
+msgstr "Xoá những thành viên đã chọn"
+
+msgid "Deletions"
+msgstr "Xoá bỏ"
+
+msgid "Deny selected groups"
+msgstr "Từ chối nhóm đã chọn"
+
+msgid "Deny selected users"
+msgstr "Từ chối thành viên đã chọn"
+
+msgid "Description"
+msgstr "Miêu tả"
+
+msgid "Display options"
+msgstr "Hiển thị tuỳ chọn"
+
+msgid "Dissociated"
+msgstr "Không kết hợp"
+
+msgid "Does not represent"
+msgstr "Không làm đại diện"
+
+msgid "Edit selected tags"
+msgstr "Biên tập các tag đã chọn"
+
+msgid "Edit tags"
+msgstr "Biên tập tags"
+
+msgid "Email admins when a new user registers"
+msgstr "Gởi email cho quản trị khi có một thành viên mới đăng ký"
+
+msgid "Email admins when a valid comment is entered"
+msgstr "Gởi email cho quản trị khi có một lời bình đã xác nhận được gởi lên gallery."
+
+msgid "Email admins when a comment requires validation"
+msgstr "Gởi email cho quản trị khi có một mời bình cần được xác nhận"
+
+msgid "Environment"
+msgstr "Môi trường"
+
+msgid "Form"
+msgstr "Form"
+
+msgid "Gallery title"
+msgstr "Tiêu đề của gallery"
+
+msgid "Grant selected groups"
+msgstr "Cấp cho các nhóm đã chọn"
+
+msgid "Grant selected users"
+msgstr "Cấp cho các thành viên đã chọn"
+
+msgid "Group name"
+msgstr "Tên nhóm"
+
+msgid "Groups"
+msgstr "Nhóm người dùng"
+
+msgid "Guests"
+msgstr "Khách"
+
+msgid "History"
+msgstr "Bản ghi"
+
+msgid "Informations"
+msgstr "Thông tin"
+
+msgid "Install"
+msgstr "Cài đặt"
+
+msgid "Link all album photos to a new album"
+msgstr "Liên kết tất cả các thành phần của đề mục này với một đề mục mới"
+
+msgid "Link all album photos to some existing albums"
+msgstr "Liên kết tất cả các thành phần của đề mục này với một số đề mục trước"
+
+msgid "Linked albums"
+msgstr "Đã liên kết các đề mục trên"
+
+msgid "Lock gallery"
+msgstr "Tạm khoá gallery"
+
+msgid "Maintenance"
+msgstr "Bảo trì"
+
+msgid "Edit album permissions"
+msgstr "Quản lý quyền truy xuất của một đề mục"
+
+msgid "Manage permissions for group \"%s\""
+msgstr "Quản lý quyền truy xuất của nhóm \"%s\""
+
+msgid "Manage permissions for user \"%s\""
+msgstr "Quản lý quyền truy xuất của thành viên \"%s\""
+
+msgid "Manage tags"
+msgstr "Quản lý tags"
+
+msgid "Members"
+msgstr "Thành viên"
+
+msgid "Metadata synchronized from file"
+msgstr "Metadata đã được đồng bộ hoá từ file"
+
+msgid "Move albums"
+msgstr "Di chuyển đề mục"
+
+msgid "Move"
+msgstr "Di chuyển"
+
+msgid "Name"
+msgstr "Tên"
+
+msgid "New name"
+msgstr "Tên mới"
+
+msgid "New parent album"
+msgstr "Đề mục ngoài mới"
+
+msgid "New tag"
+msgstr "Tag mới"
+
+msgid "Number of comments per page"
+msgstr "Số lời bình trên một trang"
+
+msgid "Number of rates"
+msgstr "Số lần đánh giá"
+
+msgid "Only private albums are listed"
+msgstr "Chỉ những đề mục riêng tư mới được liệt kê"
+
+msgid "Operating system"
+msgstr "Hệ điều hành"
+
+msgid "Options"
+msgstr "Tuỳ chọn"
+
+msgid "Other private albums"
+msgstr "Các đề mục riêng tư khác"
+
+msgid "Page banner"
+msgstr "Banner của trang"
+
+msgid "Parent album"
+msgstr "Đề mục ngoài"
+
+msgid "Path"
+msgstr "Đường dẫn"
+
+msgid "Permalink"
+msgstr "Liên kết cố định"
+
+msgid "Permalink %s has been previously used by album %s. Delete from the permalink history first"
+msgstr "Có %s liên kết cố định đã được dùng trước đó bởi đề mục %s. Hãy xoá liên kết cố định này từ bảng ghi trước."
+
+msgid "The permalink name must be composed of a-z, A-Z, 0-9, \"-\", \"_\" or \"/\". It must not be numeric or start with number followed by \"-\""
+msgstr "The permalink name must be composed of a-z, A-Z, 0-9, \"-\", \"_\" or \"/\". It must not be numeric or start with number followed by \"-\""
+
+msgid "Permalink %s is already used by album %s"
+msgstr "Liên kết cố định %s được sử dụng bởi đề mục %s"
+
+msgid "Permalink history"
+msgstr "Permalink history"
+
+msgid "Permalinks"
+msgstr "Liên kết cố định"
+
+msgid "Permission denied"
+msgstr "Sự chấp nhận đã bị từ chối"
+
+msgid "Permission granted thanks to a group"
+msgstr "Chấp nhận đã được công nhân nhờ vào một nhóm người dùng"
+
+msgid "Permission granted"
+msgstr "Sự chấp nhận đã được công nhận"
+
+msgid "Photo informations updated"
+msgstr "Thông tin của hình đã được cập nhật"
+
+msgid "Plugins"
+msgstr "Plugins"
+
+msgid "Position"
+msgstr "Vị trí"
+
+msgid "Preferences"
+msgstr "Tuỳ chỉnh"
+
+msgid "Properties"
+msgstr "Thuộc tính"
+
+msgid "Random photo"
+msgstr "Hình ngẫu nhiên"
+
+msgid "Rate date"
+msgstr "Ngày tháng đánh giá"
+
+msgid "Rating by guests"
+msgstr "Đánh giá bởi khách"
+
+msgid "Rating"
+msgstr "Đánh giá"
+
+msgid "Reject"
+msgstr "Từ chối"
+
+msgid "Representant"
+msgstr "Hình đại diện"
+
+msgid "Representation of albums"
+msgstr "Hình đại diện cho các đề mục"
+
+msgid "Representative"
+msgstr "Đại diện"
+
+msgid "Represents"
+msgstr "Hình đại diện"
+
+msgid "Save order"
+msgstr "Lưu vị trí sắp xếp"
+
+msgid "Save to permalink history"
+msgstr "Lưu vào bảng ghi cố định"
+
+msgid "Select at least one album"
+msgstr "Chọn ít nhất một đề mục"
+
+msgid "Select at least one photo"
+msgstr "Chọn ít nhất một hình ảnh"
+
+msgid "Select at least one user"
+msgstr "Chọn ít nhất một người dùng"
+
+msgid "Show info"
+msgstr "Hiển thị thông tin"
+
+msgid "Site manager"
+msgstr "Quản lý site"
+
+msgid "Status"
+msgstr "Trạng thái"
+
+msgid "Statistics"
+msgstr "Thống kê"
+
+msgid "Storage album"
+msgstr "Đề mục lưu trữ"
+
+msgid "Sum of rates"
+msgstr "Tổng hợp đánh giá"
+
+msgid "Tag \"%s\" already exists"
+msgstr "Tag \"%s\" đã có đó"
+
+msgid "Tag \"%s\" was added"
+msgstr "Tag \"%s\" đã được thêm vào"
+
+msgid "Tag selection"
+msgstr "Chọn tag"
+
+msgid "The %d following tags were deleted"
+msgstr "Các tag %d sau đã bị xoá"
+
+msgid "Unable to check for upgrade."
+msgstr "Không thể dò tìm bản nâng cấp."
+
+msgid "Uninstall"
+msgstr "Tháo bỏ"
+
+msgid "Use the default photo sort order"
+msgstr "Sử dụng tính năng sắp xếp vị trí hình ảnh mặc định"
+
+msgid "User comments validation"
+msgstr "Xác nhận lời bình của thành viên"
+
+msgid "Users"
+msgstr "Thành viên"
+
+msgid "Validate"
+msgstr "Xác nhận"
+
+msgid "Validation"
+msgstr "Xác nhận"
+
+msgid "Version"
+msgstr "Phiên bản"
+
+msgid "Virtual albums to move"
+msgstr "Đề mục ảo cần di chuyển"
+
+msgid "Virtual album name"
+msgstr "Tên đề mục ảo"
+
+msgid "Webmaster cannot be deleted"
+msgstr "Webmaster không thể xoá được"
+
+msgid "You are running on development sources, no check possible."
+msgstr "Bạn đang sử dụng mã nguồn dạng phát triển, không thể kiểm tra được."
+
+msgid "You cannot delete your account"
+msgstr "Bạn không thể tự xoá tài khoản của mình được"
+
+msgid "You cannot move an album in its own sub album"
+msgstr "Bạn không thể dời một đề mục vào trong đề mục con của chính nó."
+
+msgid "You need to confirm deletion"
+msgstr "Bạn cần được xác nhận để xoá"
+
+msgid "Associate to album"
+msgstr "Kết hợp với đề mục"
+
+msgid "associate to group"
+msgstr "kết hợp với nhóm người dùng"
+
+msgid "Authorized"
+msgstr "Được cho phép"
+
+msgid "Add a virtual album"
+msgstr "Thêm vào một đề mục ảo"
+
+msgid "Authorize users to add comments on selected albums"
+msgstr "Cho phép người dùng có thể gởi bình luận ở các đề mục được chọn"
+
+msgid "The name of an album must not be empty"
+msgstr "Tên của đề mục không được để trống"
+
+msgid "Lock albums"
+msgstr "Những đề mục bị khoá"
+
+msgid "Private"
+msgstr "Đề mục riêng"
+
+msgid "Public"
+msgstr "Đề mục chung (công cộng)"
+
+msgid "Find a new representant by random"
+msgstr "Tìm ngẫu nhiên hình ảnh đại diện mới"
+
+msgid "Public / Private"
+msgstr "Chung / Riêng tư"
+
+msgid "Manage authorizations for selected albums"
+msgstr "Quản lý sự cho phép đối với những đề mục được chọn"
+
+msgid "Virtual album added"
+msgstr "Đề mục ảo đã được thêm vào"
+
+msgid "Virtual album deleted"
+msgstr "Đề mục ảo đã bị xoá"
+
+msgid "Access type"
+msgstr "Kiểu truy cập"
+
+msgid "Information data registered in database"
+msgstr "Dữ liệu thông tin đã thêm vào cơ sở dữ liệu"
+
+msgid "Default display"
+msgstr "Hiển thị theo mặc định"
+
+msgid "The gallery URL is not valid."
+msgstr "Địa chỉ của gallery không tồn tại."
+
+msgid "The number of comments a page must be between 5 and 50 included."
+msgstr "Số lời bình trên một trang phải từ 5 đến 50."
+
+msgid "Configuration"
+msgstr "Cấu hình"
+
+msgid "confirm"
+msgstr "xác nhận"
+
+msgid "Date"
+msgstr "Ngày tháng"
+
+msgid "delete album"
+msgstr "xoá bỏ đề mục"
+
+msgid "Dissociate from album"
+msgstr "không kết hợp với đề mục"
+
+msgid "dissociate from group"
+msgstr "Không kết hợp với nhóm người dùng"
+
+msgid "Album updated successfully"
+msgstr "Thông tin của đề mục đã được cập nhập thành công."
+
+msgid "photos per page"
+msgstr "thành phần trên mỗi trang"
+
+msgid "High definition enabled"
+msgstr "Bật chế độ xem hình lớn"
+
+msgid "File"
+msgstr "Tệp tin"
+
+msgid "first photo added on %s"
+msgstr "thành phần đầu tiên đã được thêm vào %s"
+
+msgid "Forbidden"
+msgstr "Bị cấm"
+
+msgid "global mode"
+msgstr "chế độ tổng thể"
+
+msgid "group \"%s\" added"
+msgstr "nhóm người dùng tên \"%s\" đã được thêm vào"
+
+msgid "group \"%s\" deleted"
+msgstr "nhóm người dùng tên \"%s\" đã được xoá"
+
+msgid "group \"%s\" updated"
+msgstr "nhóm người dùng tên \"%s\" đã được cập nhật"
+
+msgid "The name of a group must not contain \" or ' or be empty."
+msgstr "Tên của nhóm người dùng không có ký tự \"' hoặc bỏ trống."
+
+msgid "This name is already used by another group."
+msgstr "Tên nhóm đã được đặt cho nhóm người dùng trước đó."
+
+msgid "High definition"
+msgstr "Định dạng cao"
+
+msgid "jump to album"
+msgstr "nhảy đến đề mục"
+
+msgid "jump to photo"
+msgstr "nhảy đến hình"
+
+msgid "leave"
+msgstr "để"
+
+msgid "Lock"
+msgstr "Khoá"
+
+msgid "Locked"
+msgstr "Đã khoá"
+
+msgid "manage album photos"
+msgstr "quản lý các thành phần đề mục"
+
+msgid "manage sub-albums"
+msgstr "quản lý các đề mục con"
+
+msgid "Manage"
+msgstr "Quản lý"
+
+msgid "Execution time is out, treatment must be continue [Estimated time: %d second]."
+msgid_plural "Execution time is out, treatment must be continue [Estimated time: %d seconds]."
+msgstr[0] "Thời gian xử lý đã hết, quá trình xử lý cần phải được tiếp tục [Trong khoảng: %d giây]."
+msgstr[1] "Thời gian xử lý đã hết, quá trình xử lý cần phải được tiếp tục [Trong khoảng: %d giây]."
+
+msgid "Prepared time for list of users to send mail is limited. Others users are not listed."
+msgstr "Thời gian chuẩn bị cho danh sách người dùng cần gởi email là có giới hạn. Các thành viên khác không được liệt kê ra."
+
+msgid "Time to send mail is limited. Others mails are skipped."
+msgstr "Thời gian gởi mail là có giới hạn. Các email khác đã được bỏ qua."
+
+msgid "To send ?"
+msgstr "Để gởi ?"
+
+msgid "Last send"
+msgstr "Gởi lần cuối"
+
+msgid "User"
+msgstr "Người dùng"
+
+msgid "See you soon,"
+msgstr "Hẹn gặp lại bạn,"
+
+msgid "Go to"
+msgstr "Đi đến "
+
+msgid "Hello"
+msgstr "Xin chào "
+
+msgid "New photos were added"
+msgstr "Thành phần mới đã được thêm "
+
+msgid "on"
+msgstr " vào "
+
+msgid "between"
+msgstr "giữa "
+
+msgid "and"
+msgstr " và "
+
+msgid "The webmaster has subscribed you to receiving notifications by mail."
+msgstr "Webmaster đã đăng ký bạn nhận thông báo qua email."
+
+msgid "You have subscribed to receiving notifications by mail."
+msgstr "Bạn đã đăng ký nhận thông báo qua email."
+
+msgid "To subscribe"
+msgstr "Đăng ký"
+
+msgid "If you encounter problems or have any question, please send a message to"
+msgstr "Nếu bạn bắt gặp lỗi hoặc cần hỏi điều gì liên quan đến site, vui lòng gởi email liên hệ"
+
+msgid "[NBM] Problems or questions"
+msgstr "[NBM] Lỗi hoặc câu hỏi"
+
+msgid "The webmaster has unsubscribed you from receiving notifications by mail."
+msgstr "Webmaster đã xoá email của bạn ra khỏi danh sách nhận thông báo qua email."
+
+msgid "You have unsubscribed from receiving notifications by mail."
+msgstr "Bạn đã xoá email của mình ra khỏi danh sách nhận thông báo qua email."
+
+msgid ", click on"
+msgstr ", click vào "
+
+msgid "To unsubscribe"
+msgstr "Không đăng ký"
+
+msgid "With blank value, gallery title will be used"
+msgstr "Với giá trị nhập vào để trống, thì tiêu đề của gallery sẽ được sử dụng thay thế"
+
+msgid "Notification"
+msgstr "Thông báo"
+
+msgid "Error when sending email to %s [%s]."
+msgstr "Có lỗi khi gởi email đến %s [%s]."
+
+msgid "Mail sent to %s [%s]."
+msgstr "Email đã được gởi tới %s [%s]."
+
+msgid "%d mail was sent."
+msgid_plural "%d mails were sent."
+msgstr[0] "Có %d mail đã được gởi."
+msgstr[1] "Có %d mails đã được gởi."
+
+msgid "%d mail was not sent."
+msgid_plural "%d mails were not sent."
+msgstr[0] "Có %d mail không gởi được."
+msgstr[1] "Có %d mails không gởi được."
+
+msgid "No mail to send."
+msgstr "Không có mail nào được gởi đi."
+
+msgid "There is no available subscribers to mail."
+msgstr "Không có đăng ký nhận email nào."
+
+msgid "Subscribers could be listed (available) only if there is new elements to notify."
+msgstr "Người đăng ký có thể được liệt kê ra nếu như chỉ gởi thông báo khi có thành phần mới thêm vào."
+
+msgid "Anyway only webmasters can see this tab and never administrators."
+msgstr "Dù sao thì chỉ có webmasters có thể xem được tab này còn đối với quản trị thì không."
+
+msgid "No user to send notifications by mail."
+msgstr "Không có người dùng nào cần gởi email thông báo."
+
+msgid "New photos added"
+msgstr "Thành phần mới đã được thêm"
+
+msgid "Subscribe to notification by mail"
+msgstr "Đăng ký nhận thông báo qua email"
+
+msgid "Unsubscribe from notification by mail"
+msgstr "Bỏ đăng ký nhận thông báo qua email"
+
+msgid "Parameter"
+msgstr "Tham số"
+
+msgid "Continue processing treatment"
+msgstr "Tiếp tục quá trình xử lý"
+
+msgid "Complementary mail content"
+msgstr "Nội dung email bổ sung"
+
+msgid "Add detailed content"
+msgstr "Thêm vào nội dung chi tiết"
+
+msgid "Send mail as"
+msgstr "Gởi mail như"
+
+msgid "Send mail to users"
+msgstr "Gởi mail đến người dùng"
+
+msgid "Send"
+msgstr "Gởi"
+
+msgid "Subscribed"
+msgstr "Đăng ký nhận tin"
+
+msgid "Subscribe"
+msgstr "Đăng ký"
+
+msgid "Parameters"
+msgstr "Tham số"
+
+msgid "Select recipients"
+msgstr "Chọn người nhận"
+
+msgid "Subscribe/unsubscribe users"
+msgstr "Người dùng có đăng ký/bỏ đăng ký"
+
+msgid "Unsubscribed"
+msgstr "Bỏ đăng ký"
+
+msgid "%d parameter was updated."
+msgid_plural "%d parameters were updated."
+msgstr[0] "Có %d tham số đã được cập nhật."
+msgstr[1] "Có %d tham số đã được cập nhật."
+
+msgid "%d user was not updated."
+msgid_plural "%d users were not updated."
+msgstr[0] "Có %d người dùng không được cập nhật."
+msgstr[1] "Có %d người dùng không được cập nhật."
+
+msgid "User %s [%s] was removed from the subscription list."
+msgstr "Người dùng %s [%s] đã được xoá khỏi danh sách đăng ký nhận tin."
+
+msgid "User %s [%s] was added to the subscription list."
+msgstr "Người dùng %s [%s] đã được thêm vào danh sách đăng ký nhận tin."
+
+msgid "%d user was updated."
+msgid_plural "%d users were updated."
+msgstr[0] "Có %d người dùng được cập nhật."
+msgstr[1] "Có %d người dùng được cập nhật."
+
+msgid "User %s [%s] was not removed from the subscription list."
+msgstr "Người dùng %s [%s] đã không xoá khỏi danh sách đăng ký nhận tin."
+
+msgid "User %s [%s] was not added to the subscription list."
+msgstr "Người dùng %s [%s] đã không thêm vào danh sách đăng ký nhận tin."
+
+msgid "User %s [%s] added."
+msgstr "Thành viên %s [%s] đã được thêm."
+
+msgid "Warning: subscribing or unsubscribing will send mails to users"
+msgstr "Cảnh báo: đăng ký hoặc không đăng ký gởi email đến cho các thành viên."
+
+msgid "Send mail on HTML format"
+msgstr "Gởi mail với định dạng HTML"
+
+msgid "Include display of recent photos grouped by dates"
+msgstr "Bao gồm cả việc hiển thị những hình ảnh gần đây được nhóm lại theo ngày tháng."
+
+msgid "Available only with HTML format"
+msgstr "Chỉ dùng được với định dạng HTML"
+
+msgid "no write access"
+msgstr "không được phép ghi"
+
+msgid "Permissions"
+msgstr "Quyền truy xuất"
+
+msgid "private"
+msgstr "riêng tư"
+
+msgid "public"
+msgstr "công cộng"
+
+msgid "Purge never used notification feeds"
+msgstr "Việc dọn dẹp hệ thống không bao giờ sử dụng các feed thông báo."
+
+msgid "Purge sessions"
+msgstr "Phiên dọn dẹp"
+
+msgid "randomly represented"
+msgstr "đại diện ngẫu nhiên"
+
+msgid "registration date"
+msgstr "ngày tháng đăng ký"
+
+msgid "clean"
+msgstr "dọn dẹp"
+
+msgid "Create this site"
+msgstr "Khởi tạo site này"
+
+msgid "test"
+msgstr "kiểm tra"
+
+msgid "test this remote site"
+msgstr "kiểm tra site truy xuất từ xa này"
+
+msgid "remove tags"
+msgstr "bỏ tags"
+
+msgid "Repair and optimize database"
+msgstr "Sửa chữa và tối ưu hóa cơ sở dữ liệu"
+
+msgid "selection"
+msgstr "chọn lựa"
+
+msgid "set to"
+msgstr "cài đặt thành"
+
+msgid "singly represented"
+msgstr "đại diện đơn"
+
+msgid "This site already exists"
+msgstr "Site này đã có trước đó"
+
+msgid "created"
+msgstr "đã được tạo"
+
+msgid "delete"
+msgstr "xóa bỏ"
+
+msgid "delete this site and all its attached elements"
+msgstr "xóa site này và tất cả các thành phần đính kèm"
+
+msgid "deleted"
+msgstr "đã xóa"
+
+msgid "an error happened"
+msgstr "có một lỗi xuất hiện"
+
+msgid "Local"
+msgstr "Cục bộ"
+
+msgid "Remote"
+msgstr "Từ xa"
+
+msgid "update the database from files"
+msgstr "cập nhật cơ sở dữ liệu từ file"
+
+msgid "status"
+msgstr "trạng thái"
+
+msgid "Directory"
+msgstr "Thư mục"
+
+msgid "sub-albums"
+msgstr "đề mục con"
+
+msgid "Synchronize metadata"
+msgstr "đồng bộ hóa metadata"
+
+msgid "target"
+msgstr "mục tiêu"
+
+msgid "Thumbnail"
+msgstr "Hình thu nhỏ"
+
+msgid "Title"
+msgstr "Tiêu đề"
+
+msgid "Album list management"
+msgstr "Quản lý đề mục"
+
+msgid "Piwigo configuration"
+msgstr "Cấu hình Piwigo"
+
+msgid "Edit album"
+msgstr "Biên tập một đề mục"
+
+msgid "Group management"
+msgstr "Quản lý nhóm"
+
+msgid "User list"
+msgstr "Danh sách thành viên"
+
+msgid "Database synchronization with files"
+msgstr "Đồng bộ hóa cơ sở dữ liệu với tệp tin"
+
+msgid "all"
+msgstr "tất cả"
+
+msgid "height must be a number superior to"
+msgstr "chiều cao hình phải là số lớn hơn"
+
+msgid "width must be a number superior to"
+msgstr "chiều rộng hình phải là số lớn hơn"
+
+msgid "for the file format"
+msgstr "dành cho định dạng file"
+
+msgid "Photo unreachable or no support"
+msgstr "Hình không đọc được hoặc định dạng không được hỗ trợ"
+
+msgid "GD version"
+msgstr "Phiên bản GD"
+
+msgid "General statistics"
+msgstr "Thống kê tổng quát"
+
+msgid "average time"
+msgstr "thời gian trung bình"
+
+msgid "total time"
+msgstr "thời gian tổng cộng"
+
+msgid "for this file format"
+msgstr "dành cho định dạng file này"
+
+msgid "unit mode"
+msgstr "chế độ đơn vị hình"
+
+msgid "Unlocked"
+msgstr "Bỏ khóa"
+
+msgid "unset"
+msgstr "không đặt"
+
+msgid "Update albums informations"
+msgstr "Cập nhật thông tin của đề mục"
+
+msgid "Update photos information"
+msgstr "Cập nhật thông tin của hình ảnh"
+
+msgid "Synchronize"
+msgstr "Đồng bộ hóa"
+
+msgid "reduce to single existing albums"
+msgstr "rút gọn về đề mục đơn đang tồn tại"
+
+msgid "Choose an option"
+msgstr "Chọn một tùy chọn"
+
+msgid "display maximum informations (added albums and photos, deleted albums and photos)"
+msgstr "hiển thi thông tin tối đa (thành phần và đề mục được thêm vào hoặc bị xóa đi)"
+
+msgid "Error list"
+msgstr "Danh sách lỗi"
+
+msgid "Errors caption"
+msgstr "Ghi chú lỗi"
+
+msgid "Detailed informations"
+msgstr "Thông tin chi tiết"
+
+msgid "File/directory read error"
+msgstr "Lỗi đọc file/thư mục"
+
+msgid "The file or directory cannot be accessed (either it does not exist or the access is denied)"
+msgstr "Tệp tin hoặc thư mục không truy xuất được (có thê nó không tồn tại hoặc bị từ chối truy cập)"
+
+msgid "albums deleted in the database"
+msgstr "đã xóa các đề mục trong cơ sở dữ liệu"
+
+msgid "photos deleted from the database"
+msgstr "đã xóa các thành phần trong cơ sở dữ liệu"
+
+msgid "photos candidates for metadata synchronization"
+msgstr "hình ảnh được bình chọn cho việc đồng bộ hóa metadata"
+
+msgid "photos informations synchronized with files metadata"
+msgstr "thông tin những thành phần được đồng bộ hóa với metadata của file"
+
+msgid "errors during synchronization"
+msgstr "lỗi xuất hiện trong quá trình đồng bộ hóa"
+
+msgid "albums added in the database"
+msgstr "đề mục được thêm vào cơ sở dữ liệu"
+
+msgid "photos added in the database"
+msgstr "thành phần được thêm vào cơ sở dữ liệu"
+
+msgid "photos updated in the database"
+msgstr "thành phần được cập nhật vào cơ sở dữ liệu"
+
+msgid "Search for new images in the directories"
+msgstr "Tìm kiếm hình mới trong thư mục"
+
+msgid "added"
+msgstr "đã thêm vào"
+
+msgid "Metadata synchronization results"
+msgstr "Kết quả đồng bộ hóa metadata"
+
+msgid "only perform a simulation (no change in database will be made)"
+msgstr "chỉ thực hiện công đoạn giả lập (không có sự thay đổi nào đối với cơ sở dữ liệu)"
+
+msgid "Simulation"
+msgstr "Giả lập"
+
+msgid "directories + files"
+msgstr "thư mục + tệp tin"
+
+msgid "only directories"
+msgstr "chỉ áp dụng cho các thư mục"
+
+msgid "synchronize files structure with database"
+msgstr "đồng bộ hóa cấu trúc file với cơ sở dữ liệu"
+
+msgid "synchronize files metadata with database photos informations"
+msgstr "đồng bộ hóa metadata của file với thông tin các thành phần cơ sở dữ liệu"
+
+msgid "even already synchronized photos"
+msgstr "ngay cả những thành phần đã được đồng bộ hóa"
+
+msgid "Used metadata"
+msgstr "Metadata được sử dụng"
+
+msgid "The name of directories and files must be composed of letters, numbers, \"-\", \"_\" or \".\""
+msgstr "Tên thư mục và phải là chữ hoặc số, \"-\", \"_\" hoặc \".\""
+
+msgid "wrong filename"
+msgstr "sai tên file"
+
+msgid "Upload"
+msgstr "Gởi hình"
+
+msgid "user \"%s\" added"
+msgstr "thành viên \"%s\" đã được thêm"
+
+msgid "User status"
+msgstr "Trạng thái của thành viên"
+
+msgid "user_status_admin"
+msgstr "Quản trị"
+
+msgid "user_status_generic"
+msgstr "Chung"
+
+msgid "user_status_guest"
+msgstr "Khách"
+
+msgid "user_status_webmaster"
+msgstr "Webmaster"
+
+msgid "Virtual album"
+msgstr "Đề mục ảo"
+
+msgid "Waiting"
+msgstr "Đang đợi"
+
+msgid "default"
+msgstr "mặc định"
+
+msgid "Toggle 'default group' property"
+msgstr "Dịch chuyển 'nhóm mặc định' thuộc tính"
+
+msgid "Advanced features"
+msgstr "Đặc điểm vượt trội"
+
+msgid "Overall"
+msgstr "Toàn bộ"
+
+msgid "Year"
+msgstr "Năm"
+
+msgid "Month"
+msgstr "Tháng"
+
+msgid "Day"
+msgstr "Ngày"
+
+msgid "Pages seen"
+msgstr "Những trang được xem"
+
+msgid "Time"
+msgstr "Thời gian"
+
+msgid "IP"
+msgstr "Địa chỉ IP"
+
+msgid "Element"
+msgstr "Thành phần"
+
+msgid "Section"
+msgstr "Mục"
+
+msgid "An information email was sent to group \"%s\""
+msgstr "Một thư thông báo đã được gởi đến nhóm người dùng \"%s\""
+
+msgid "Send an information email to group members"
+msgstr "Gởi thư thông báo đến nhóm thành viên"
+
+msgid "Group"
+msgstr "Nhóm"
+
+msgid "[%s] Visit album %s"
+msgstr "[%s] Đến để xem đề mục %s"
+
+msgid "Hello,"
+msgstr "Xin chào,"
+
+msgid "See you soon."
+msgstr "Hẹn gặp lại bạn."
+
+msgid "Discover album:"
+msgstr "Đến để khám phá đề mục:"
+
+msgid "Mail content"
+msgstr "Nội dung thư gởi"
+
+msgid "none"
+msgstr "không"
+
+msgid "high"
+msgstr "chiều cao"
+
+msgid "other"
+msgstr "khác"
+
+msgid "Element type"
+msgstr "Loại thành phần"
+
+msgid "Image id"
+msgstr "Id của hình"
+
+msgid "Summary"
+msgstr "Tóm tắt"
+
+msgid "%d line filtered"
+msgid_plural "%d lines filtered"
+msgstr[0] "Có %d hành được lọc ra"
+msgstr[1] "Có %d hành được lọc ra"
+
+msgid "%d guest"
+msgid_plural "%d guests"
+msgstr[0] "Có %d khách"
+msgstr[1] "Có %d khách"
+
+msgid "Hour"
+msgstr "Giờ"
+
+msgid "guest"
+msgstr "khách"
+
+msgid "default values"
+msgstr "giá trị mặc định"
+
+msgid "Guest cannot be deleted"
+msgstr "Tài khoản khách không thể bị xóa"
+
+msgid "Default user cannot be deleted"
+msgstr "Người dùng mặc định không thể bị xóa"
+
+msgid "Purge history detail"
+msgstr "Dọn dẹp bản ghi chi tiết"
+
+msgid "Purge history summary"
+msgstr "Dọn dẹp tóm tắt bản ghi"
+
+msgid "Check integrity"
+msgstr "Kiểm tra tính nguyên vẹn"
+
+msgid "Anomaly"
+msgstr "Bất thường"
+
+msgid "Correction"
+msgstr "Sửa đổi"
+
+msgid "Automatic correction"
+msgstr "Sửa đổi tự động"
+
+msgid "Impossible automatic correction"
+msgstr "Không thể sửa đổi tự động"
+
+msgid "Correction applied with success"
+msgstr "Sửa đổi được áp dụng với những thành công"
+
+msgid "Correction applied with error"
+msgstr "Sửa đổi được áp dụng với những lỗi"
+
+msgid "%d anomaly has been detected."
+msgid_plural "%d anomalies have been detected."
+msgstr[0] "Có %d bất thường được nhận dạng."
+msgstr[1] "Có %d bất thường được nhận dạng."
+
+msgid "%d anomaly has been corrected."
+msgid_plural "%d anomalies have been detected corrected."
+msgstr[0] "Có %d bất thường đã được sửa đổi."
+msgstr[1] "Có %d bất thường đã được nhận dạng sửa đổi."
+
+msgid "%d anomaly has not been corrected."
+msgid_plural "%d anomalies have not been corrected."
+msgstr[0] "Có %d bất thường không được sửa đổi."
+msgstr[1] "Có %d bất thường không được sửa đổi."
+
+msgid "Go to %s or %s for more informations"
+msgstr "Chuyển đến %s hoặc %s để có thêm thông tin"
+
+msgid "the forum"
+msgstr "diễn đàn"
+
+msgid "the wiki"
+msgstr "thư viện wiki"
+
+msgid "%s value is not correct file because exif are not supported"
+msgstr "Có %s giá trị không phải là kiểu file đúng bởi vì exif không được hỗ trợ"
+
+msgid "%s must be to set to false in your local/config/config.inc.php file"
+msgstr "Có %s phải được thiết lập là false trong file config_local.inc.php của bạn"
+
+msgid "Main \"guest\" user does not exist"
+msgstr "Nhóm người dùng \"khách chính\" không tồn tại"
+
+msgid "Main \"guest\" user status is incorrect"
+msgstr "Trạng thái nhóm người dùng \"khách chính\" không đúng"
+
+msgid "Default user does not exist"
+msgstr "Người dùng mặc định không tồn tại"
+
+msgid "Main \"webmaster\" user does not exist"
+msgstr "Nhóm \"webmaster chính\" không tồn tại"
+
+msgid "Main \"webmaster\" user status is incorrect"
+msgstr "Trạng thái nhóm \"webmaster chính\" không đúng"
+
+msgid "User \"%s\" created with \"%s\" like password"
+msgstr "Người dùng \"%s\" được tạo ra với cùng mật khẩu \"%s\""
+
+msgid "Status of user \"%s\" updated"
+msgstr "Trạng thái của người dùng \"%s\" đã được cập nhật"
+
+msgid "add new photos to caddie"
+msgstr "thêm thành phần mới vào caddie"
+
+msgid "No display"
+msgstr "Không hiển thị"
+
+msgid "Classic display"
+msgstr "Hiển thị kiểu classic"
+
+msgid "Hoverbox display"
+msgstr "Hiển thị  kiểu hoverbox"
+
+msgid "Minimum privacy level"
+msgstr "Mức độ riêng tư tối thiểu"
+
+msgid "Privacy level"
+msgstr "Mức độ riêng tư"
+
+msgid "Level 0"
+msgstr "---"
+
+msgid "Level 1"
+msgstr "Liên hệ"
+
+msgid "Level 2"
+msgstr "Bạn bè"
+
+msgid "Level 4"
+msgstr "Gia đình"
+
+msgid "Level 8"
+msgstr "Quản trị"
+
+msgid "Reinitialize check integrity"
+msgstr "Tái khởi động quá trình kiểm tra tính nguyên vẹn"
+
+msgid "Check all"
+msgstr "Chọn tất cả"
+
+msgid "Uncheck all"
+msgstr "Bỏ chọn tất cả"
+
+msgid "Check automatic corrections"
+msgstr "Kiểm tra sửa lỗi tự động"
+
+msgid "Apply selected corrections"
+msgstr "Áp dụng những sửa lỗi đã chọn"
+
+msgid "Ignore selected anomalies"
+msgstr "Bỏ qua những bất thường đã chọn"
+
+msgid "Refresh"
+msgstr "Làm tươi lại"
+
+msgid "The anomaly will be ignored until next application version"
+msgstr "Bất thường sẽ bị bỏ qua cho đến khi phiên bản tiếp theo của ứng dụng."
+
+msgid "Correction the anomaly will cancel the fact that it's ignored"
+msgstr "Sửa đổi những bất thường sẽ hủy bỏ vấ đề chính mà nó bị bỏ qua"
+
+msgid "%d anomaly has been ignored."
+msgid_plural "%d anomalies have been ignored."
+msgstr[0] "Có %d báo cáo bất thường đã được bỏ qua."
+msgstr[1] "Có %d báo cáo bất thường đã được bỏ qua."
+
+msgid "Plugins which need upgrade"
+msgstr "Plugins cần được nâng cấp"
+
+msgid "Plugin list"
+msgstr "Danh sách plugin"
+
+msgid "Check for updates"
+msgstr "Dò tìm bản bâng cấp"
+
+msgid "Other plugins"
+msgstr "Các plugins khác"
+
+msgid "Last revisions"
+msgstr "Lần sửa đổi cuối"
+
+msgid "Are you sure you want to delete this plugin?"
+msgstr "Bạn có chắc là muốn xóa bỏ plugin này không?"
+
+msgid "Are you sure you want to install this plugin?"
+msgstr "Bạn có chắc là muốn cài đặt plugin này không?"
+
+msgid "Are you sure to install this upgrade? You must verify if this version does not need uninstallation."
+msgstr "Bạn có chắc là muốn cài đặt bản nâng cấp này? Bạn phải xác nhận nếu phiên bản này không yêu cầu phải tháo bỏ phiên bản cũ."
+
+msgid "Plugin has been successfully copied"
+msgstr "Plugin đã được copy xong"
+
+msgid "Can't create temporary file."
+msgstr "Không thể tạo ra file tạm."
+
+msgid "Can't download archive."
+msgstr "Không thể tải xuống tệp lưu trữ."
+
+msgid "Can't read or extract archive."
+msgstr "Không thể đọc hoặc trích xuất tệp lưu trữ."
+
+msgid "An error occured during extraction (%s)."
+msgstr "Có lỗi xuất hiện trong quá trình trích xuất (%s)."
+
+msgid "Please check \"plugins\" folder and sub-folders permissions (CHMOD)."
+msgstr "Vui lòng kiểm tra quyền truy xuất của thư mục \"plugins\" và thư mục con (CHMOD)."
+
+msgid "Can't connect to server."
+msgstr "Không thể kết nối với máy chủ."
+
+msgid "Purge compiled templates"
+msgstr "Don dẹp những template kết hợp"
+
+msgid "ACCESS_0"
+msgstr "Truy xuất tự to"
+
+msgid "ACCESS_1"
+msgstr "Truy xuất vào tất cả"
+
+msgid "ACCESS_2"
+msgstr "Truy xuất vào mục đăng ký nhân bản tin"
+
+msgid "ACCESS_3"
+msgstr "Truy xuất vào phần quản trị"
+
+msgid "ACCESS_4"
+msgstr "Truy xuất vào webmasters"
+
+msgid "ACCESS_5"
+msgstr "Không được phép truy xuất"
+
+msgid "Support"
+msgstr "Hỗ trợ"
+
+msgid "Documentation"
+msgstr "Tài liệu tham khảo"
+
+msgid "A new version of Piwigo is available."
+msgstr "Đã có phiên bản Piwigo mới."
+
+msgid "Piwigo Administration"
+msgstr "Quản trị Piwigo"
+
+msgid "Piwigo version"
+msgstr "Phiên bản Piwigo"
+
+msgid "You are running the latest version of Piwigo."
+msgstr "Bạn đang sử dụng phiên bản mới nhất của Piwigo."
+
+msgid "The version of %s [%s] installed is not compatible with the version required [%s]"
+msgstr "Phiên bản %s [%s] đã cài đặt không tương thích với phiên bản được yêu cầu là [%s]"
+
+msgid "You need to upgrade your system to take full advantage of the application else the application will not work correctly, or not at all"
+msgstr "Bạn cần nâng cấp hệ thống để tận dụng hết các chức năng của ứng dụng, nếu không ứng dụng sẽ không hoạt động chính xác, hoặc sẽ không vận hành được"
+
+msgid "Deleted on"
+msgstr "Xóa vào"
+
+msgid "Last hit"
+msgstr "Lần xem cuối"
+
+msgid "GD library is missing"
+msgstr "Thư viện GD bị thiếu"
+
+msgid "Templates"
+msgstr "Templates"
+
+msgid "Extend for templates"
+msgstr "Mở rộng cho template"
+
+msgid "Replacement of original templates by customized templates from template-extension subfolder"
+msgstr "Việc thay đổi các templates gốc bằng những templates tùy biến từ thư mục con chứa thành phần template mở rộng"
+
+msgid "Replacers (customized templates)"
+msgstr "Thay thế (templates được tùy biến)"
+
+msgid "Original templates"
+msgstr "Templates gốc"
+
+msgid "Optional URL keyword"
+msgstr "Từ khóa URL tùy chọn"
+
+msgid "Templates configuration has been recorded."
+msgstr "Cầu hình tempalte đã được ghi."
+
+msgid "All optimizations have been successfully completed."
+msgstr "Tất cả quá trình tối ưu hóa đã hoàn thành xong."
+
+msgid "Optimizations have been completed with some errors."
+msgstr "Quá trình tối ưu hóa đã hoàn thành với một vài lỗi."
+
+msgid "Modify information"
+msgstr "Hiệu chỉnh thông tin"
+
+msgid "nothing"
+msgstr "không có gì"
+
+msgid "overrides existing values with empty ones"
+msgstr "ghi đè giá trị đang tồn tại bằng giá trị rỗng"
+
+msgid "Manage photo ranks"
+msgstr "Quản lý xếp hạng hình ảnh"
+
+msgid "Edit ranks"
+msgstr "Biên tập xếp hạng"
+
+msgid "No photo in this album"
+msgstr "Không có thành phần nào trong đề mục này"
+
+msgid "Images manual order was saved"
+msgstr "Sắp xếp hình ảnh thủ công đã được lưu"
+
+msgid "ranks"
+msgstr "xếp hạng"
+
+msgid "Drag to re-order"
+msgstr "Kéo rê để sắp xếp lại"
+
+msgid "Quick Local Synchronization"
+msgstr "Đồng bộ hóa cục bộ nhanh"
+
+msgid "No photo can be deleted"
+msgstr "Không có hình nào có thể bị xóa"
+
+msgid "Delete selected photos"
+msgstr "Xóa các hình được chọn"
+
+msgid "%d photo was deleted"
+msgid_plural "%d photos were deleted"
+msgstr[0] "%d hình đã được xóa"
+msgstr[1] "Có %d hình đã được xóa"
+
+msgid "Downloads"
+msgstr "Tải xuống"
+
+msgid "Released on"
+msgstr "Phát hành vào"
+
+msgid "Number of downloads"
+msgstr "Số lần download"
+
+msgid "Piwigo Announcements Newsletter"
+msgstr "Bản tin Piwigo"
+
+msgid "Keep in touch with Piwigo project, subscribe to Piwigo Announcement Newsletter. You will receive emails when a new release is available (sometimes including a security bug fix, it's important to know and upgrade) and when major events happen to the project. Only a few emails a year."
+msgstr "Giữ liên lạc với Piwigo Project, đăng ký nhận bản tin từ Piwigo. Bạn sẽ nhận được email mỗi khi phiên bản mới được phát hành (đôi khi cũng bao gồm bản sửa lỗi, cần thiết để biết và cập nhật) và khi sự kiện chính xảy ra đối với dự án. Chỉ có vài email trong một năm."
+
+msgid "Subscribe %s"
+msgstr "Đăng ký nhận tin %s"
+
+msgid "Subscribe %s to Piwigo Announcements Newsletter"
+msgstr "Đăng ký %s nhận bản tin của Piwigo"
+
+msgid "Purge search history"
+msgstr "Dọn dẹp bản ghi tìm kiếm"
+
+msgid "Hide"
+msgstr "Ẩn"
+
+msgid "Menu Management"
+msgstr "Trình đơn"
+
+msgid "Operation in progress"
+msgstr "Đang tiến hành xử lý."
+
+msgid "Please wait..."
+msgstr "Vui lòng đợi..."
+
+msgid "By rank"
+msgstr "Theo hạng"
+
+msgid "Manual order"
+msgstr "Sắp xếp thủ công"
+
+msgid "Password is missing. Please enter the password."
+msgstr "Thiếu mật khẩu. Vui lòng nhập mật khẩu."
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "Xác nhận mật khẩu bị thiếu. Vui lòng xác nhận lại mật khẩu đã chọn."
+
+msgid "Allow users to edit their own comments"
+msgstr "Cho phép người dùng chỉnh sửa lời bình luận riêng của họ"
+
+msgid "Allow users to delete their own comments"
+msgstr "Cho phép người dùng xóa lời bình luận riêng của họ"
+
+msgid "Email administrators when a comment is modified"
+msgstr "Gởi email cho Quản trị viên có một lời bình luận được chỉnh sửa"
+
+msgid "Email administrators when a comment is deleted"
+msgstr "Gởi email cho Quản trị viên có một lời bình luận bị xóa"
+
+msgid "Cannot delete the old permalink !"
+msgstr "Liên kết cố định cũ thì không thể bị xóa!"
+
+msgid "Hit"
+msgstr "Lần xem"
+
+msgid "Tools"
+msgstr "Công cụ"
+
+msgid "Photos"
+msgstr "Ảnh"
+
+msgid "Themes"
+msgstr "Giao diện"
+
+msgid "Instructions to use Piwigo"
+msgstr "Hướng dẫn sử dụng Piwigo"
+
+msgid "Installed Themes"
+msgstr "Giao diện đã được cài đặt"
+
+msgid "Add New Theme"
+msgstr "Thêm một giao diện mới"
+
+msgid "Forbid this theme to users"
+msgstr "Cấm người dùng sử dụng giao diện này"
+
+msgid "Set as default theme for unregistered and new users"
+msgstr "Đặt làm giao diện mặt định cho tất cả người dùng chưa đăng ký và thành viên mới"
+
+msgid "unknown"
+msgstr "không xác định"
+
+msgid "Upload Photos"
+msgstr "Tải ảnh lên"
+
+msgid "Drop into album"
+msgstr "Chuyển vào đề mục"
+
+msgid "+ Add an upload box"
+msgstr "+ Thêm một mục gởi hình "
+
+msgid "Create the \"%s\" directory at the root of your Piwigo installation"
+msgstr "Tạo ra \"%s\" thư mục ở cùng thư mục cài đặt Piwigo của bạn"
+
+msgid "Give write access (chmod 777) to \"%s\" directory at the root of your Piwigo installation"
+msgstr "Gán quyền được ghi (chmod 777) cho \"%s\" thư mục ở cùng thư mục cài đặt Piwigo của bạn"
+
+msgid "existing album"
+msgstr "đề mục hiện có"
+
+msgid "create a new album"
+msgstr "tạo một đề mục mới"
+
+msgid "Album name"
+msgstr "Tên đề mục"
+
+msgid "Album \"%s\" has been added"
+msgstr "Đề mục \"%s\" đã được thêm vào"
+
+msgid "Uploaded Photos"
+msgstr "Ảnh đã được gởi lên"
+
+msgid "%d photos uploaded"
+msgstr "Đã có %d ảnh được gởi"
+
+msgid "Privacy level set to \"%s\""
+msgstr "Mức độ riêng tư đã được thiết lập ở mức \"%s\""
+
+msgid "Album \"%s\" now contains %d photos"
+msgstr "Đề mục \"%s\" hiện tại chứa %d bức ảnh"
+
+msgid "Manage this set of %d photos"
+msgstr "Quản lý bộ gồm %d ảnh"
+
+msgid "Select files"
+msgstr "Chọn tệp tin"
+
+msgid "Everybody"
+msgstr "Mọi người"
+
+msgid "Who can see these photos?"
+msgstr "Ai có thể xem được những bức ảnh này?"
+
+msgid "Who can see this photo?"
+msgstr "Ai có thể xem được bức ảnh này?"
+
+msgid "Settings"
+msgstr "Cài đặt"
+
+msgid "Resize"
+msgstr "Định dạng lại kích thước"
+
+msgid "Maximum width"
+msgstr "Chiều rộng lớn nhất"
+
+msgid "pixels"
+msgstr "pixels"
+
+msgid "Maximum height"
+msgstr "Chiều cao lớn nhất"
+
+msgid "Image Quality"
+msgstr "Chất lượng hình"
+
+msgid "Save Settings"
+msgstr "Lưu cài đặt"
+
+msgid "Your configuration settings are saved"
+msgstr "Thiết lập cấu hình của bạn đã được lưu"
+
+msgid "Active Themes"
+msgstr "Kích hoạt giao diện"
+
+msgid "Add write access to the \"%s\" directory"
+msgstr "Gán quyền được ghi cho thư mục \"%s\""
+
+msgid "Administration Home"
+msgstr "Trang chủ của Quản trị"
+
+msgid "Change Admin Colors"
+msgstr "Thay đổi màu trang Quản trị"
+
+msgid "Delete this theme"
+msgstr "Xóa giao diện này"
+
+msgid "Directory does not exist"
+msgstr "Thư mục không tồn tại"
+
+msgid "Download,"
+msgstr "Tải xuống,"
+
+msgid "FTP + Synchronization"
+msgstr "FTP + Đồng bộ hóa"
+
+msgid "Get Support on Piwigo Forum"
+msgstr "Nhận hỗ trợ từ diễn đàn Piwigo"
+
+msgid "Help Me"
+msgstr "Xin giúp tôi"
+
+msgid "Impossible to activate this theme, the parent theme is missing: %s"
+msgstr "Giao diện này không thể kích hoạt được, một khi giao diện chủ bị thiếu: %s"
+
+msgid "Impossible to delete this theme. Other themes depends on it: %s"
+msgstr "Giao diện này không thể bị xóa bởi vì có một hay một vài giao diện khác phụ thuộc vào nó: %s"
+
+msgid "Inactive Themes"
+msgstr "Giao diện không được kích hoạt"
+
+msgid "Install on your computer,"
+msgstr "Cài đặt trên máy của bạn,"
+
+msgid "Make this theme available to users"
+msgstr "Thiết lập cho những tài khoản người dùng có thể sử dụng được"
+
+msgid "Page end"
+msgstr "Kết thúc trang"
+
+msgid "Piwigo Uploader"
+msgstr "Công cụ gởi hình Piwigo"
+
+msgid "Read Piwigo Documentation"
+msgstr "Tham khảo tài liệu về Piwigo"
+
+msgid "Start pLoader and add your photos."
+msgstr "Bắt đầu sử dụng pLoader và gởi ảnh của bạn."
+
+msgid "Switch to clear or dark colors for administration"
+msgstr "Chuyển sang màu sáng hoặc tối đối với Quản trị viên"
+
+msgid "Theme has been successfully installed"
+msgstr "Giao diện đã được cài đặt thành công"
+
+msgid "Visit Gallery"
+msgstr "Ghé xem thư viện hình"
+
+msgid "Visit Piwigo project website"
+msgstr "Ghé vào trang chủ của Dự án Piwigo"
+
+msgid "Guest Settings"
+msgstr "Thiết lập cho tài khoản khách"
+
+msgid "Main Page"
+msgstr "Trang chính"
+
+msgid "Photo Page"
+msgstr "Trang ảnh"
+
+msgid "Activate Navigation Bar"
+msgstr "Kích hoạt thanh điều hướng trang"
+
+msgid "Activate Navigation Thumbnails"
+msgstr "Kích hoạt hình thu nhỏ điều hướng trang"
+
+msgid "Activate icon \"%s\""
+msgstr "Kích hoạt biểu tượng \"%s\""
+
+msgid "Photo Properties"
+msgstr "Thuộc tính ảnh"
+
+msgid "Allow user customization"
+msgstr "Cho phép người dùng tùy biến "
+
+msgid "Languages"
+msgstr "Ngôn ngữ"
+
+msgid "Installed Languages"
+msgstr "Gói ngôn ngữ đã được cài"
+
+msgid "Add New Language"
+msgstr "Thêm gói ngôn ngữ mới"
+
+msgid "Language has been successfully installed"
+msgstr "Gói ngôn ngữ đã được cài đặt thành công"
+
+msgid "Select:"
+msgstr "Chọn:"
+
+msgid "None"
+msgstr "Không"
+
+msgid "Invert"
+msgstr "Đảo ngược"
+
+msgid "Impossible to deactivate this theme, you need at least one theme."
+msgstr "Không thể vô hiệu hóa giao diện này, bạn cần ít nhất một giao diện."
+
+msgid "Webmaster status is required."
+msgstr "Trạng thái của Webmaster cần phải có."
+
+msgid "Bound Theme"
+msgstr "Giao diện biên"
+
+msgid "Allow rating"
+msgstr "Cho phép xếp hạng"
+
+msgid "Select at least one comment"
+msgstr "Chọn ít nhất một lời bình"
+
+msgid "Active Plugins"
+msgstr "Plugin đang sử dụng"
+
+msgid "Inactive Plugins"
+msgstr "Plugin không được sử dụng"
+
+msgid "Missing Plugins"
+msgstr "Plugin bị thiếu"
+
+msgid "Uninstalled Plugins"
+msgstr "Plugin đã được gỡ bỏ"
+
+msgid "By %s"
+msgstr "Bởi %s"
+
+msgid "Visit plugin site"
+msgstr "Xem trang web chứa plugin"
+
+msgid "Active Languages"
+msgstr "Ngôn ngữ hiện đang sử dụng"
+
+msgid "Delete this language"
+msgstr "Xóa gói ngôn ngữ này"
+
+msgid "Forbid this language to users"
+msgstr "Cấm người dùng sử dụng gói ngôn ngữ này."
+
+msgid "Impossible to deactivate this language, first set another language as default."
+msgstr "Không thể tắt gói ngôn ngữ này, trước tiên cần phải thiết lập gói ngôn ngữ mặc định khác."
+
+msgid "Impossible to deactivate this language, you need at least one language."
+msgstr "Không thể tắt gói ngôn ngữ này, bạn cần ít nhất một gói ngôn ngữ."
+
+msgid "Inactive Languages"
+msgstr "Ngôn ngữ hiện không sử dụng"
+
+msgid "Make this language available to users"
+msgstr "Thiết lập cho phép sử dụng gói ngôn ngữ này cho mọi người dùng."
+
+msgid "Set as default language for unregistered and new users"
+msgstr "Thiết lập là ngôn ngữ mặc định cho nhóm người dùng mới và nhóm chưa đăng ký."
+
+msgid "Add Photos"
+msgstr "Thêm ảnh"
+
+msgid "The following tag was deleted"
+msgstr "Thẻ sau đây đã bị xóa"
+
+msgid "Miscellaneous"
+msgstr "Linh tinh"
+
+msgid "Virtual Links"
+msgstr "Liên kết ảo"
+
+msgid "There is no other language available."
+msgstr "Không có gói ngôn ngữ nào có thể dùng được."
+
+msgid "There is no other plugin available."
+msgstr "Không có plugin nào có thể dùng được."
+
+msgid "There is no other theme available."
+msgstr "Không có gói giao diện nào có thể dùng được."
+
+msgid "Add another set of photos"
+msgstr "Thêm vào bộ ảnh khác"
+
+msgid "Order of menubar items has been updated successfully."
+msgstr "Vị trí của các mục trong thanh menubar đã được cập nhật thành công."
+
+msgid "This theme was not designed to be directly activated"
+msgstr "Giao diện này không được thiết kế để có thể kích hoạt trực tiếp"
+
+msgid "Pending Comments"
+msgstr "Lời bình đang chờ"
+
+msgid "In your php.ini file, the upload_max_filesize (%sB) is bigger than post_max_size (%sB), you should change this setting"
+msgstr "Trong tệp tin php.ini, biến upload_max_filesize (%sB) thì lớn hơn biến post_max_size (%sB), bạn nên thay đổi thiết lập này"
+
+msgid "Exif extension not available, admin should disable exif use"
+msgstr "Nếu phần mở rộng Exif không tồn tại thì Quản trị viên nên vô hiệu hóa việc sử dụng Exif"
+
+msgid "The uploaded file exceeds the upload_max_filesize directive in php.ini: %sB"
+msgstr "Tệp tin gởi lên đã vượt quá giá trị hướng dẫn của biến upload_max_filesize ở tệp tin php.ini: %sB"
+
+msgid "The uploaded files exceed the post_max_size directive in php.ini: %sB"
+msgstr "Tệp tin gởi lên đã vượt quá giá trị hướng dẫn của biến post_max_size ở tệp tin php.ini: %sB"
+
+msgid "The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form"
+msgstr "Tệp tin gởi lên đã vượt quá giá trị hướng dẫn của biến MAX_FILE_SIZE đã được định ra trong form HTML"
+
+msgid "The uploaded file was only partially uploaded"
+msgstr "Tệp tin gởi lên chỉ được gởi một phần (không hoàn chỉnh)"
+
+msgid "No file was uploaded"
+msgstr "Không có tệp tin nào được gởi lên"
+
+msgid "Missing a temporary folder"
+msgstr "Còn thiếu một thư mục tạm"
+
+msgid "Failed to write file to disk"
+msgstr "Bị lỗi khi ghi tệp tin lên đĩa"
+
+msgid "File upload stopped by extension"
+msgstr "Quá trình gởi tệp tin đã dừng lại bởi phần mở rộng của tệp tin"
+
+msgid "Unknown upload error"
+msgstr "Lỗi gởi hình không xác định được"
+
+msgid "Error on file \"%s\" : %s"
+msgstr "Có lỗi ở tệp tin \"%s\" : %s"
+
+msgid "automatic order"
+msgstr "sắp xếp tự động"
+
+msgid "manual order"
+msgstr "sắp xếp thủ công"
+
+msgid "Albums automatically sorted"
+msgstr "Albums đã được phân loại tự động"
+
+msgid "Batch Manager"
+msgstr "Quản lý khối"
+
+msgid "include child albums"
+msgstr "bao gồm các albums con"
+
+msgid "Selection"
+msgstr "Lựa chọn"
+
+msgid "Action"
+msgstr "Thực thi"
+
+msgid "Set author"
+msgstr "Thiết lập tác giả"
+
+msgid "Set title"
+msgstr "Thiết lập tiêu đề"
+
+msgid "Set creation date"
+msgstr "Thiết lập ngày tháng khởi tạo"
+
+msgid "Apply action"
+msgstr "Xác nhận thay đổi"
+
+msgid "on the %d selected photos"
+msgstr "trên %d hình được chọn"
+
+msgid "%d of %d photos selected"
+msgstr "%d trong %d hình được chọn"
+
+msgid "No photo selected, %d photos in current set"
+msgstr "Không có hình nào được chọn, có %d hình trong bộ hiện tại"
+
+msgid "All %d photos are selected"
+msgstr "Tất cả %d hình đều được chọn"
+
+msgid "remove this filter"
+msgstr "bỏ bộ lọc này"
+
+msgid "Duplicates"
+msgstr "trùng"
+
+msgid "Add a filter"
+msgstr "thêm bộ lọc"
+
+msgid "Remove all filters"
+msgstr "Bỏ tất cả các bộ lọc"
+
+msgid "Refresh photo set"
+msgstr "Cập nhật bộ hình"
+
+msgid "The whole page"
+msgstr "Nguyên cả trang"
+
+msgid "The whole set"
+msgstr "Nguyên cả bộ"
+
+msgid "No photo in the current set."
+msgstr "Không có hình nào trong bộ hiện tại."
+
+msgid "No photos selected, no actions possible."
+msgstr "Không có hình nào được chọn, không tác vụ nào được thực hiện."
+
+msgid "Choose an action"
+msgstr "Chọn một tác vụ"
+
+msgid "remove author"
+msgstr "bỏ tác giả"
+
+msgid "Type here the author name"
+msgstr "Nhập tên tác giả vào đây"
+
+msgid "remove title"
+msgstr "bỏ tiêu đề"
+
+msgid "Type here the title"
+msgstr "Nhập tiêu đề vào đây"
+
+msgid "remove creation date"
+msgstr "bỏ ngày tháng khởi tạo"
+
+msgid "Album photos associated to the following albums: %s"
+msgstr "Ảnh được kết hợp với những albums sau: %s"
+
+msgid "Delete orphan tags"
+msgstr "Xóa các thẻ riêng lẽ"
+
+msgid "delete photo"
+msgstr "xóa ảnh"
+
+msgid "Orphan tags deleted"
+msgstr "Thẻ riêng lẽ đã được xóa"
+
+msgid "Week starts on"
+msgstr "Tuần lễ bắt đầu vào"
+
+msgid "You have %d orphan tags: %s."
+msgstr "Bạn có %d thẻ riêng lẽ: %s."
+
+msgid "Remove from caddie"
+msgstr "Bỏ ra khỏi caddie"
+
+msgid "Themes which need upgrade"
+msgstr "Giao diện cần bản nâng cấp"
+
+msgid "Languages which need upgrade"
+msgstr "Ngôn ngữ cần nâng cấp"
+
+msgid "All themes are up to date."
+msgstr "Tất cả giao diện đều được cập nhật."
+
+msgid "All plugins are up to date."
+msgstr "Tất cả plugins đều được cập nhật."
+
+msgid "All languages are up to date."
+msgstr "Tất cả ngôn ngữ đều được cập nhật."
+
+msgid "Visit theme site"
+msgstr "Đến trang web của giao diện"
+
+msgid "Visit language site"
+msgstr "Đến trang web của của ngôn ngữ"
+
+msgid "New Version"
+msgstr "Phiên bản Mới"
+
+msgid "Obsolete Plugins"
+msgstr "Những plugins đã cũ"
+
+msgid "WARNING! This plugin does not seem to be compatible with this version of Piwigo."
+msgstr "CẢNH BÁO! Plugin này có thể không tương thích với phiên bản Piwigo hiện tại."
+
+msgid "Do you want to activate anyway?"
+msgstr "Bạn vẫn muốn kích hoạt?"
+
+msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
+msgstr "PLUGIN NÀY GIỜ LÀ MỘT PHẦN CỦA NHÂN PIWIGO! GỠ BỎ NGAY!"
+
+msgid "ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW."
+msgstr "LỖI: PLUGIN NÀY BỊ THIẾU NHƯNG NÓ ĐÃ ĐƯỢC CÀI ĐẶT! GỠ BỎ NGAY."
+
+msgid "Thumbnails generation in progress..."
+msgstr "Quá trình khởi tạo hình thu nhỏ đang được thực hiện..."
+
+msgid "Photos generation in progress..."
+msgstr "Quá trình khởi tạo ảnh web đang được thực hiện..."
+
+msgid "%s photos have been regenerated"
+msgstr "có %s ảnh đã được tạo ra"
+
+msgid "%s photos can not be regenerated"
+msgstr "Có %s ảnh không thể tạo ra được"
+
+msgid "new"
+msgstr "mới"
+
+msgid "No results"
+msgstr "Không có kết quả nào"
+
+msgid "Searching..."
+msgstr "Đang tìm kiếm..."
+
+msgid "Type in a search term"
+msgstr "Nhập vào trong mục tìm kiếm"
+
+msgid "display"
+msgstr "hiển thị"
+
+msgid "Deactivate all"
+msgstr "Bỏ kích hoạt tất cả"
+
+msgid "Restore"
+msgstr "Phục hồi"
+
+msgid "Restore default configuration. You will lose your plugin settings!"
+msgstr "Khôi phục lại cấu hình mặc định. Các thiết lập cho plugin sẽ bị mất!"
+
+msgid "Show menubar"
+msgstr "Hiển thị thanh trình đơn"
+
+msgid "Updates"
+msgstr "Bản cập nhật"
+
+msgid "Update in progress... Please wait."
+msgstr "Đang tiến hành cập nhật... Vui lòng đợi."
+
+msgid "Ignore this update"
+msgstr "Bỏ qua bản cập nhật này"
+
+msgid "Reset ignored updates"
+msgstr "Cài đặt lại những bản cập nhật đã bỏ qua"
+
+msgid "Update All"
+msgstr "Cập nhật Tất cả"
+
+msgid "ERROR"
+msgstr "CÓ LỖI"
+
+msgid "Update Complete"
+msgstr "Cập nhật Hoàn thành"
+
+msgid "Piwigo Update"
+msgstr "Cập nhật Piwigo"
+
+msgid "Extensions Update"
+msgstr "Cập nhật thành phần mở rộng"
+
+msgid "All extensions are up to date."
+msgstr "Tất cả thành phần mở rộng đều được cập nhật."
+
+msgid "Following plugins may not be compatible with the new version of Piwigo:"
+msgstr "Plugins sau đây có thể không tương thích với phiên bản mới của Piwigo:"
+
+msgid "Following themes may not be compatible with the new version of Piwigo:"
+msgstr "Giao diện sau đây có thể không tương thích với phiên bản mới của Piwigo:"
+
+msgid "I decide to update anyway"
+msgstr "Dù gì tôi cũng quyết định cập nhật"
+
+msgid "Update to Piwigo %s"
+msgstr "Cập nhật Piwigo lên phiên bản %s"
+
+msgid "Two updates are available"
+msgstr "Có hai bản cập nhật"
+
+msgid "This is a minor update, with only bug corrections."
+msgstr "Đây là bản nâng cấp phụ, với các bản sửa lỗi."
+
+msgid "This is a major update, with <a href=\"%s\">new exciting features</a>."
+msgstr "Đây là bản cập nhật chính, với nhiều <a href=\"%s\">tính năng mới thú vị</a>."
+
+msgid "Some themes and plugins may be not available yet."
+msgstr "Một số giao diện và plugins có thể chưa sử dụng được."
+
+msgid "You can update to Piwigo %s directly, without upgrading to Piwigo %s (recommended)."
+msgstr "Bạn có thể cập nhật trực tiếp Piwigo lên phiên bản %s, mà không cần phải nâng cấp lên phiên bản %s (khuyến cáo)."
+
+msgid "Save Template Directory"
+msgstr "Lưu thư mục khuôn mẫu"
+
+msgid "Dump Database"
+msgstr "Kết xuất Cơ sở dữ liệu"
+
+msgid "Include history data (Warning: server memory limit may be exceeded)"
+msgstr "Bao gồm dữ liệu lược sử (Cảnh báo: giới hạn bộ nhớ máy chủ có thể bị vượt quá)"
+
+msgid "Unable to dump database."
+msgstr "Không thể kết xuất cơ sở dữ liệu."
+
+msgid "Some upgrades are available for extensions."
+msgstr "Một số bản nâng cấp có thể áp dụng được cho các thành phần mở rộng."
+
+msgid "Ignore All"
+msgstr "Bỏ qua Tất cả"
+
+msgid "Crop"
+msgstr "Xén"
+
+msgid "Width"
+msgstr "Chiều rộng"
+
+msgid "Height"
+msgstr "Chiều cao"
+
+msgid "Follow Orientation"
+msgstr "Định hướng Dõi theo"
+
+msgid "Graphics Library"
+msgstr "Thư viện Đồ họa"
+
+msgid "Activate icon \"new\" next to albums and pictures"
+msgstr "Kích hoạt biểu tượng \"ảnh mới\" kế bên albums ảnh và hình"
+
+msgid "Add a criteria"
+msgstr "Thêm một tiêu chí"
+
+msgid "Default photos order"
+msgstr "Thứ tự ảnh mặc định"
+
+msgid "You can't define a default photo order because you have a custom setting in your local configuration."
+msgstr "Bạn không thể định ra một thứ tự ảnh mặc định vì đã có một thiết lập tùy chọn trong cấu hình cục bộ."
+
+msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
+msgstr "Bạn đã định ra <i>$conf['order_by']</i> trong tệp tin cấu hình cục bộ của bạn, tham số này không được chấp nhận, hãy xóa bỏ hoặc đổi tên trong mục <i>$conf['order_by_custom']</i> !"
+
+msgid "Average rate"
+msgstr "Xếp hạng trung bình"
+
+msgid "Rate"
+msgstr "Xếp hạng"
+
+msgid "... or "
+msgstr "... hoặc "
+
+msgid "Create"
+msgstr "Khởi tạo"
+
+msgid "Start Upload"
+msgstr "Bắt đầu Tải lên"
+
+msgid "You are using the Flash uploader. Problems? Try the <a href=\"%s\">Browser uploader</a> instead."
+msgstr "Bạn hiện đang dùng Flash Uploader. Nếu có trục trặc? Thì dùng <a href=\"%s\">Web Uploader</a> thay thế."
+
+msgid "You are using the Browser uploader. Try the <a href=\"%s\">Flash uploader</a> instead."
+msgstr "Bạn hiện đang dùng Browser uploader. Hãy dùng <a href=\"%s\">Flash uploader</a> thay thế."
+
+msgid "Maximum file size: %sB."
+msgstr "Kích thước file lớn nhất: %sB."
+
+msgid "Allowed file types: %s."
+msgstr "Loại file cho phép dùng: %s."
+
+msgid "Approximate maximum resolution: %dM pixels (that's %dx%d pixels)."
+msgstr "Độ phân giải lớn nhất ước chừng: %dM pixels (đó là %dx%d pixels)."
+
+msgid "Manage Permissions"
+msgstr "Quản lý Quyền Hạn"
+
+msgid "Learn more"
+msgstr "Tìm hiểu thêm"
+
+msgid "Photo %s of %s"
+msgstr "Ảnh %s của %s"
+
+msgid "show details"
+msgstr "hiện chi tiết"
+
+msgid "hide details"
+msgstr "ẩn chi tiết"
+
+msgid "Merge tags"
+msgstr "Sáp nhập nhãn"
+
+msgid "Select the destination tag"
+msgstr "Chọn nhãn đích"
+
+msgid "(this tag will be deleted)"
+msgstr "(nhãn này sẽ bị xóa)"
+
+msgid "Confirm merge"
+msgstr "Xác nhận sáp nhập"
+
+msgid "Merge selected tags"
+msgstr "Sáp nhập những thẻ được chọn"
+
+msgid "No destination tag selected"
+msgstr "Không có nhãn đích nào được chọn"
+
+msgid "Tags <em>%s</em> merged into tag <em>%s</em>"
+msgstr "Nhãn <em>%s</em> được sáp nhập vào nhãn <em>%s</em>"
+
+msgid "Select at least two tags for merging"
+msgstr "Chọn ít nhất hai nhãn để sáp nhập"
+
+msgid "Select an album"
+msgstr "Chọn một album ảnh"
+
+msgid "By default, Piwigo will create a new websize from the HD (high definition) version of your photo."
+msgstr "Theo mặc định, Piwigo sẽ tạo ra một kích thước web từ ảnh định dạng cao của bản."
+
+msgid "If no HD is available and if the current websize is bigger than resize dimensions, Piwigo will move it as HD and create a downsized websize photo from it."
+msgstr "Nếu không có định dạng cao nào và nếu kích thước web hiện tại lớn hơn kích thước đã điều chỉnh, Piwigo sẽ chuyển nó thành định dạng cao và tạo ra một ảnh có kích thước web đã thu nhỏ từ ảnh gốc."
+
+msgid "An error has occured during upgrade."
+msgstr "Có một lỗi xuất hiện trong quá trình nâng cấp."
+
+msgid "An error has occured during extract. Please check files permissions of your piwigo installation.<br><a href=\"%s\">Click here to show log error</a>."
+msgstr "Có một lỗi xuất hiện trong quá trình trích xuất tệp tin. Vui lòng kiểm tra quyền hiệu chỉnh tệp tin gói cài đặt Piwigo của bạn.<br><a href=\"%s\">Click vào đây để xem lỗi.</a>."
+
+msgid "Piwigo cannot retrieve upgrade file from server"
+msgstr "Piwigo không thể nhận được tệp tin nâng cấp từ  máy chủ"
+
+msgid "Zoom"
+msgstr "Phóng to ảnh"
+
+msgid "Add to caddie"
+msgstr "thêm vào caddie"
+
+msgid "%s has been successfully updated."
+msgstr "%s cập nhật thành công."
+
+msgid "Activate comments"
+msgstr "Kích hoạt lời bình"
+
+msgid "Add tags"
+msgstr "Bổ sung thẻ"
+
+msgid "Default comments order"
+msgstr "Sắp xếp lời bình theo mặc định"
+
+msgid "Last import"
+msgstr "Nhập sau cùng"
+
+msgid "Photo name"
+msgstr "Tên ảnh"
+
+msgid "Predefined filter"
+msgstr "Bộ lọc được định nghĩa trước"
+
+msgid "Send connection settings by email"
+msgstr "Gởi thiết lập kết nối qua email"
+
+msgid "The original image quality must be a number between %d and %d"
+msgstr "Chất lượng hình gốc phải là một số nằm giữa %d và %d"
+
+msgid "The original maximum height must be a number between %d and %d"
+msgstr "Chiều cao gốc tối đa phải là một số nằm giữa %d và %d"
+
+msgid "The original maximum width must be a number between %d and %d"
+msgstr "Chiều rộng gốc tối đa phải là một số nằm giữa %d và %d"
+
+msgid "With no album"
+msgstr "Không kèm theo album ảnh"
+
+msgid "With no tag"
+msgstr "Không kèm theo thẻ"
+
+msgid "With no virtual album"
+msgstr "Không kèm theo album ảnh ảo"
+
+msgid "Resize after upload"
+msgstr "Điều chỉnh kích thước sau khi gởi ảnh"
+
+msgid "Original Size"
+msgstr "Kích thước gốc"
+
+msgid "A locked gallery is only visible to administrators"
+msgstr "Thư viện ảnh đã khóa chỉ có thể xem được bởi Quản trị viên"
+
+msgid "Unlock gallery"
+msgstr "Mở khóa thư viện ảnh"
+
+msgid "Gallery unlocked"
+msgstr "Thư viện ảnh đã được mở khóa"
+
+msgid "Notify administrators when a comment is"
+msgstr "Thông báo cho Quản trị viện khi có lời bình"
+
+msgid "modified"
+msgstr "đã được hiệu chỉnh"
+
+msgid "pending validation"
+msgstr "đang chờ xác nhận"
+
+msgid "Save visits in history for"
+msgstr "Lưu giữ lượt khách trong bản ghi để"
+
+msgid "simple visitors"
+msgstr "khách thăm quan bình thường"
+
+msgid "registered users"
+msgstr "người dùng đã đăng ký"
+
+msgid "administrators"
+msgstr "quản trị viên"
+
+msgid "This album contains %d photos, added on %s."
+msgstr "Album ảnh này có chứa %d ảnh, thêm vào %s."
+
+msgid "This album contains %d photos, added between %s and %s."
+msgstr "Album ảnh này có chứa %d ảnh, thêm vào từ %s đến %s."
+
+msgid "This album contains no photo."
+msgstr "Album ảnh này không chứa ảnh nào."
+
+msgid "Not cropped correctly?"
+msgstr "Ảnh không được cắt chính xách?"
+
+msgid "Center of interest"
+msgstr "Tâm điểm chú ý"
+
+msgid "Move to album"
+msgstr "Chuyển đến album"
+
+msgid "You can activate only one mobile theme."
+msgstr "Bạn chỉ có thể một giao diện cho phiên bản di động."
+
+msgid "Automatic sort order"
+msgstr "Tự động sắp xếp vị trí"
+
+msgid "apply automatic sort order"
+msgstr "áp dụng sắp xếp vị trí tự động"
+
+msgid "Save manual order"
+msgstr "Lưu vị trí sắp xếp thủ công"
+
+msgid "cancel manual order"
+msgstr "hủy vị trí sắp xếp thủ công"
+
+msgid "Cancel"
+msgstr "Hủy bỏ"
+
+msgid "List"
+msgstr "Dach sách"
+
+msgid "Web Form"
+msgstr "Mẫu Web"
+
+msgid "Applications"
+msgstr "Các ứng dụng"
+
+msgid "Available on"
+msgstr "Có thể dùng được vào"
+
+msgid "Piwigo for iOS (iPhone, iPad, iPod Touch)"
+msgstr "Phiên bản Piwigo cho iOS (iPhone, iPad, iPod Touch)"
+
+msgid "<em>Piwigo for iOS</em> application empowers you to connect to your Piwigo gallery from your iPhone, iPad or iPod Touch, create some albums and upload several photos at once."
+msgstr "<em>Phiên bản Piwigo cho iOS</em> ứng dụng cho phép bạn kết nối Piwigo của mình từ iPhone, iPad hoặc iPod Touch, tạo albums ảnh và tải lên máy chủ lưu trữ ảnh ngay lập tức."
+
+msgid "Piwigo for Android"
+msgstr "Phiên bản Piwigo cho Android"
+
+msgid "<em>Piwigo for Android</em> application empowers you to connect your Android phone or table to your Piwigo gallery, create some albums and upload several photos at once."
+msgstr "<em>Phiên bản Piwigo cho  Android</em> ứng dụng cho phép bạn kết nối Piwigo của mình từ điện thoại chạy Android hoặc máy tính bảng, tạo albums ảnh và tải lên máy chủ lưu trữ ảnh ngay lập tức."
+
+msgid "Piwigo Publish plugin for Lightroom"
+msgstr "Plugin Publish của Piwigo cho Lightroom"
+
+msgid "%d day"
+msgstr "%d ngày"
+
+msgid "%d days"
+msgstr "%d ngày"
+
+msgid "%d hour"
+msgstr "%d giờ"
+
+msgid "%d hours"
+msgstr "%d giờ"
+
+msgid "%d minute"
+msgstr "%d phút"
+
+msgid "%d minutes"
+msgstr "%d phút"
+
+msgid "%d month"
+msgstr "%d tháng"
+
+msgid "%d months"
+msgstr "%d tháng"
+
+msgid "%d physical"
+msgstr " %d vật lý"
+
+msgid "%d physicals"
+msgstr " %d vật lý"
+
+msgid "%d second"
+msgstr "%d giây"
+
+msgid "%d seconds"
+msgstr "%d giây"
+
+msgid "%d week"
+msgstr "%d tuần"
+
+msgid "%d weeks"
+msgstr "%d tuần"
+
+msgid "%d year"
+msgstr "%d năm"
+
+msgid "%d years"
+msgstr "%d năm"
+
+msgid "%s ago"
+msgstr "cách đây %s"
+
+msgid "%s in the future"
+msgstr "%s trong tương lai"
+
+msgid "%u users have automatic permission because they belong to a granted group."
+msgstr "có %u người dùng được tự động cấp quyền bởi vì họ nằm trong nhóm đã được xác nhận."
+
+msgid "add a new watermark"
+msgstr "thêm vào một hình mờ"
+
+msgid "Added by %s"
+msgstr "Được thêm bởi %s"
+
+msgid "Adobe Photoshop Lightroom is a photography software designed to manage large quantities of digital images and doing post production work."
+msgstr "Adobe Photoshop Lightroom là một phần mềm nhiếp ảnh được thiết kế để quản lý ảnh kỹ thuật số với số lượng lớn thực hiện các chế tác về sản xuất."
+
+msgid "any visitor can see this album"
+msgstr "bất kỳ người nào cũng có thể xem được album này"
+
+msgid "Aperture is a powerful tool to refine images and manage massive libraries on Mac."
+msgstr "Aperture là một công cụ  mạnh dùng để làm mịn ảnh và quản lý thư viện ảnh lớn trên nền Mac."
+
+msgid "Aperture is designed for professional photographers with iPhoto simplicity."
+msgstr "Aperture được thiết kế cho nhiếp ảnh gia chuyên nghiệp với ứng dụng iPhoto đơn giản."
+
+msgid "Apply watermark if height is bigger than"
+msgstr "Gắn hình mờ nếu chiều cao ảnh lớn hơn"
+
+msgid "Apply watermark if width is bigger than"
+msgstr "Gắn hình mờ nếu chiều rộng ảnh lớn hơn"
+
+msgid "between %d and %d pixels"
+msgstr "giữa khoảng %d và %d pixels"
+
+msgid "between %.2f and %.2f"
+msgstr "giữa khoảng %.2f và %.2f"
+
+msgid "bottom left corner"
+msgstr "góc trái phía dưới"
+
+msgid "bottom right corner"
+msgstr "góc phải phía dưới"
+
+msgid "By default, the center of interest is placed in the middle of the photo."
+msgstr "Theo mặc định, trung tâm của sự chú ý được đặt vào giữa bức ảnh."
+
+msgid "create a new site"
+msgstr "tạo ra một site mới"
+
+msgid "custom"
+msgstr "Tùy chỉnh"
+
+msgid "Delete multiple size images"
+msgstr "Xóa những hình đa kích cỡ"
+
+msgid "digiKam is an advanced digital photo management free software for Linux, Windows, and MacOSX."
+msgstr "digiKam là một phần mềm quản lý ảnh kỹ thuật số miễn phí và tiên tiến cho các hệ điều hành Linux, Windows và MacOSX."
+
+msgid "digiKam is designed for photographers who want to view, manage, edit, enhance, organize, tag, and share photographs."
+msgstr "digiKam được thiết kế cho các nhiếp ảnh gia trong việc duyệt ảnh, quản lý ảnh, biên tập, cải tiến chất lượng ảnh, tổ chức và chia sẻ ảnh."
+
+msgid "Duplicate selected tags"
+msgstr "Nhân đôi thẻ đã chọn"
+
+msgid "Duplicate"
+msgstr "Nhân đôii"
+
+msgid "Edit photo"
+msgstr "Chỉnh sửa ảnh"
+
+msgid "Features include gallery browsing, album creation and photo upload."
+msgstr "Những tính năng gồm có duyệt thư viện ảnh, tạo album ảnh và tải ảnh."
+
+msgid "For photo sizes with crop, such as \"Square\", Piwigo will do its best to include the center of interest."
+msgstr "Đối với ảnh điều chỉnh kích thước bằng cách xén ảnh, như \"Hình vuông\", Piwigo sẽ cố tập trung phần nổi bật nhất vào ngay trong ảnh."
+
+msgid "Generate multiple size images"
+msgstr "Tạo ra những ảnh đa kích cỡ"
+
+msgid "Groups and users"
+msgstr "Nhóm người dùng và người dùng"
+
+msgid "include photos with lower privacy level"
+msgstr "bao gồm những ảnh với múc độ riêng tư thấp"
+
+msgid "iPhoto is the default photo manager on MacOSX. The Piwigo export plugin let you create new albums and export your photos directly from iPhoto to your Piwigo photo gallery."
+msgstr "iPhoto là chương trình quản lý ảnh mặc định trong MacOSX. Plugin xuất ảnh của Piwwigo cho phép bạn tạo ra album mới và xuất ảnh trực tiếp từ iPhoto đến thư viện ảnh Piwigocủa bạn."
+
+msgid "Landscape"
+msgstr "Phong cảnh"
+
+msgid "Manage photos"
+msgstr "Quản lý ảnh"
+
+msgid "Manage the members"
+msgstr "Quản lý thành viên"
+
+msgid "Merge selected groups"
+msgstr "Trộn chung các nhóm được chọn"
+
+msgid "middle"
+msgstr "giữa"
+
+msgid "Minimum width"
+msgstr "Bề rộng tối thiểu"
+
+msgid "Minimum height"
+msgstr "Chiều cao tối thiểu"
+
+msgid "Multiple Size"
+msgstr "Đa kích thước"
+
+msgid "Name of the duplicate"
+msgstr "Tên của phần trùng lặp"
+
+msgid "No group is permitted to see this private album"
+msgstr "Không nhóm nào được phép xem album loại riêng tư"
+
+msgid "No groups selected, no actions possible."
+msgstr "Không nhóm nào được chọn, không thể thực thi được tác vụ nào."
+
+msgid "No members to manage"
+msgstr "Không có thành viên nào để quản lý"
+
+msgid "No order field selected"
+msgstr "Không có tham số vị trí nào được chọn"
+
+msgid "Number of albums per page"
+msgstr "Số album ảnh trên một trang"
+
+msgid "Numeric identifier : %d"
+msgstr "Ký hiệu nhận dạng số : %d"
+
+msgid "On your Linux, simply install Shotwell with your package manager and the activate Piwigo publishing option."
+msgstr "Trong Linux, đơn giản chỉ cài đặt Shotwell bằng ứng dụng quản lý gói cài đặt và kích hoạt tùy chọn xuất bản ảnh Piwigo."
+
+msgid "Opacity"
+msgstr "Làm mờ"
+
+msgid "Original file : %s"
+msgstr "Tệp tin gốc : %s"
+
+msgid "Panorama"
+msgstr "Toàn cảnh"
+
+msgid "Permission granted for groups"
+msgstr "Quyền hạn được cấp cho nhóm"
+
+msgid "Permission granted for users"
+msgstr "Quyền hạn được cấp cho người dùng"
+
+msgid "Permission management"
+msgstr "Quản lý quyền hạn"
+
+msgid "Photo sizes with crop"
+msgstr "Ảnh được điều chỉnh kích cỡ bằng cách xén ảnh"
+
+msgid "Piwigo export plugin for Aperture"
+msgstr "Plugin xuất ảnh của Piwigo cho Aperture"
+
+msgid "Piwigo export plugin for iPhoto"
+msgstr "Plugin xuất ảnh của Piwigo cho iPhoto"
+
+msgid "Piwigo publish plugin for digiKam"
+msgstr "Plugin xuất ảnh của Piwigo cho digiKam"
+
+msgid "Piwigo publish plugin for Shotwell"
+msgstr "Plugin xuất ảnh của Piwigo cho Shotwell"
+
+msgid "Please select at least two groups"
+msgstr "Hãy chọn ít nhất 2 nhóm"
+
+msgid "Portrait"
+msgstr "Chân dung"
+
+msgid "Ratio"
+msgstr "Tỉ lệ"
+
+msgid "Rename"
+msgstr "Đổi tên"
+
+msgid "Select a file"
+msgstr "Chọn một tệp tin"
+
+msgid "Select a zone with your mouse to define a new center of interest."
+msgstr "Chọn một vùng bằng chuột để vạch ra tâm điểm của sự chú ý."
+
+msgid "Select groups..."
+msgstr "Chọn nhóm..."
+
+msgid "Select users..."
+msgstr "Chọn người dùng..."
+
+msgid "Sharpen"
+msgstr "Độ nét"
+
+msgid "Source tag"
+msgstr "Thẻ gốc"
+
+msgid "Tag \"%s\" is now a duplicate of \"%s\""
+msgstr "Thẻ \"%s\" giờ là bản sao của thẻ \"%s\""
+
+msgid "The center of interest is the most meaningful zone in the photo."
+msgstr "Tâm điểm của sự chú ý là phần có ý nghĩa nhất của bức ảnh."
+
+msgid "The picture dimensions will be reduced to %dx%d pixels."
+msgstr "Kích thước ảnh sẽ bị giảm xuống %dx%d pixels."
+
+msgid "The Piwigo export plugin allows you to create albums and export photos."
+msgstr "Plugin xuất ảnh của Piwigo cho phép bạn tạo ra albums ảnh và xuất hình."
+
+msgid "There is no group in this gallery."
+msgstr "Không có nhóm nào trong thư viện ảnh này."
+
+msgid "This group will be set to default"
+msgstr "Nhóm này sẽ được dùng mặc định"
+
+msgid "This group will be unset to default"
+msgstr "Nhóm này sẽ không còn được dùng mặc định nữa"
+
+msgid "top left corner"
+msgstr "góc trái trên cùng"
+
+msgid "top right corner"
+msgstr "góc phải trên cùng"
+
+msgid "Type here the name of the new group"
+msgstr "Nhập tên của nhóm mới ở đây"
+
+msgid "View in gallery"
+msgstr "Xem trong thư viện ảnh"
+
+msgid "Visited %d times"
+msgstr "Đã được xem %d lần"
+
+msgid "visitors need to login and have the appropriate permissions to see this album"
+msgstr "khách thăm quan cần phải đăng nhập và được phân quyền phù hợp để xem album ảnh này"
+
+msgid "Watermark"
+msgstr "Ảnh mờ"
+
+msgid "X Position"
+msgstr "Vị trí X"
+
+msgid "X Repeat"
+msgstr "Lặp lại X"
+
+msgid "Y Position"
+msgstr "Vị trí Y"
+
+msgid "Purge user cache"
+msgstr "Lọc bộ nhớ đệm của người dùng"
+
+msgid "Posted %s on %s"
+msgstr "Gửi %s vào %s"
+
+msgid "Rated %d times, score : %.2f"
+msgstr "Đã được đánh giá %d lần, điểm số : %.2f"
+
+msgid "ReGalAndroid (RemoteGallery client for Android) is an open source (GPL v3) Piwigo client for the Android platform."
+msgstr "ReGalAndroid (RemoteGallery client cho Android) là một phần mềm máy khách Piwigo mã mở (GPL v3)cho nền tảng Android."
+
+msgid "Resize after upload disabled due to the use of GD as graphic library"
+msgstr "Đổi kích thước sau khi tải lên bị vô hiệu vì sử dụng thư viện đồ họa GD"
+
+msgid "Shotwell is an open source digital photo organizer that runs on Linux. It is the default photo manager in Ubuntu and Fedora."
+msgstr "Shotwell là một trình quản lý ảnh số mã mở và là trình quản lý ảnh mặc định trong Ubuntu và Fedora."
+
+msgid "The Piwigo publish Plug-in allows you to export and synchronize photos from Lightroom directly to your Piwigo photo gallery."
+msgstr "Piwigo phát hành các plug-in cho phép đồng bộ hóa và xuất trực tiếp các ảnh từ Lightroom vào trong thư viện ảnh Piwigo."
+
+msgid "To export your photos from digiKam to Piwigo, simply install digiKam and the Kipi-plugins."
+msgstr "Để xuất các ảnh từ digiKam vào Piwigo, đơn giản hãy cài đặt digiKam và Kipi-plugins."
+
+msgid "Select at least one tag"
+msgstr "Hãy chọn ít nhất một tag"
+
+msgid "Basic settings"
+msgstr "Thiết lập cơ bản"
+
+msgid "General"
+msgstr "Tổng quát"
+
+msgid "Mail theme"
+msgstr "Chủ đề mail"
+
+msgid "%d of %d users selected"
+msgstr "%d trong số %d người dùng được chọn"
+
+msgid "(filtered from %s total users)"
+msgstr "(lọc từ %s tổng số người dùng)"
+
+msgid "All %d users are selected"
+msgstr "Tất cả %d người dùng được chọn"
+
+msgid "Change password"
+msgstr "Đổi mật khẩu"
+
+msgid "Change username"
+msgstr "Đổi tên người dùng"
+
+msgid "Last visit on %s, %s."
+msgstr "Xem lần cuối vào lúc %s, %s."
+
+msgid "Loading..."
+msgstr "Đang tải..."
+
+msgid "No matching user found"
+msgstr "Không tìm thấy người dùng nào phù hợp"
+
+msgid "No user selected of %d users"
+msgstr "Không có người dùng nào được chọn trong số %d người dùng"
+
+msgid "No users selected, no actions possible."
+msgstr "Không có người dùng nào được chọn nên không thể làm tiếp"
+
+msgid "Password updated"
+msgstr "Mật khẩu đã được cập nhật"
+
+msgid "Registered on %s, %s."
+msgstr "Đã đăng ký vào lúc %s, %s."
+
+msgid "Show %s users"
+msgstr "Hiển thị %s người dùng"
+
+msgid "Showing %s to %s of %s users"
+msgstr "Hiển thị %s đến %s trong %s người dùng"
+
+msgid "Update user"
+msgstr "Cập nhật người dùng"
+
+msgid "User %s added"
+msgstr "Người dùng %s đã được thêm"
+
+msgid "User %s updated"
+msgstr "Người dùng %s đã được cập nhật"
+
+msgid "Users modified"
+msgstr "Người dùng đã được chỉnh sửa"
+
+msgid "on the %d selected users"
+msgstr "trên %d người dùng được chọn"
+
+msgid "Close user details"
+msgstr "Đóng chi tiết người dùng"
+
+msgid "Open user details"
+msgstr "Mở chi tiết người dùng"
+
+msgid "close"
+msgstr "đóng"
+
+msgid "Activate it now"
+msgstr "Kích hoạt ngay"
+
+msgid "Allow users to add a link to their website"
+msgstr "Cho phép người dùng thêm một liên kết đến website"
+
+msgid "Empty caddie"
+msgstr "Xóa giỏ tạm"
+
+msgid "Impossible to deactivate the default theme."
+msgstr "Không thể vô hiệu giao diện mặc định"
+
+msgid "Mail address is mandatory for registration"
+msgstr "Bắt buộc phải có địa chỉ email để đăng ký"
+
+msgid "No and unlock sub-albums"
+msgstr "Không và mở khóa các album con"
+
+msgid "The settings for the guest are from the %s user"
+msgstr "Thiết lập cho khách được lấy từ %s người dùng"
+
+msgid "based on"
+msgstr "dựa trên"
+
+msgid "between %s and %s MB"
+msgstr "giữa %s và %s MB"
+
+msgid "date & time"
+msgstr "ngày tháng & thời gian"
+
+msgid "file name"
+msgstr "tên file"
+
+msgid "width & height"
+msgstr "chiều rộng & chiều cao"
+
+msgid "Upload in progress"
+msgstr "Đang trong quá trình tải lên "
+
+msgid "(determined from photos)"
+msgstr "(được quyết định bởi các ảnh)"
+
+msgid "Piwigo Remote Sync is able to upload a whole folder hierarchy. If you run it again, only new photos will be uploaded."
+msgstr "Piwigo Remote Sync được dùng để tải lên toàn bộ một thư mục. Nếu bạn thực hiện thêm lần nữa thì chỉ có các ảnh mới được tải lên."
+
+msgid "Share / Send your photos directly from your Mac Os X (10.10 and following) to Piwigo"
+msgstr "Gửi / Chia sẻ ảnh của bạn trực tiếp từ hđh macOS (10.10 hoặc mới hơn) đến Piwigo"
+
+msgid "Each email sent will contain its own automatic authentication key on links, valid for %s."
+msgstr "Mỗi email được gởi sẽ chứa khóa nhận dạng trong các đường link, hợp lệ cho %s."
+
+msgid "For security reason, authentication keys do not work for administrators."
+msgstr "Vì lý do bảo mật, các khóa nhận dạng không hoạt động với các quản trị viên."
+
+msgid "Running on an up-to-date Piwigo is important for security."
+msgstr "Vận hành Piwigo phiên bản mới nhất rất quan trọng đối với vấn đề bảo mật."
+
+msgid "Time has come to update your Piwigo with version %s, go to %s"
+msgstr "Đã đến lúc cập nhật Piwigo %s của bạn lên phiên bản %s"
+
+msgid "Y Repeat"
+msgstr "Lặp lại Y"
+
+msgid "Select tags"
+msgstr "Chọn các từ khóa"
+
+msgid "Storage used"
+msgstr "Dung lượng đã sử dụng"
+
+msgid "checksum"
+msgstr "kiểm lỗi"
+
+msgid "delete album and all %d photos, even the %d associated to other albums"
+msgstr "xóa bộ ảnh và tất cả %d ảnh, bao gồm cả %d gắn với các bộ ảnh khác"
+
+msgid "delete album and the %d orphan photos"
+msgstr "xóa bộ ảnh và %d ảnh mồ côi"
+
+msgid "delete only album, not photos"
+msgstr "chỉ xóa bộ ảnh, không xóa ảnh"
+
+msgid "orphans to delete"
+msgstr "các ảnh mồ côi cần xóa"
+
+msgid "Confirm deletion"
+msgstr "Xác nhận xóa"
+
+msgid "Dashboard"
+msgstr "Bảng điều khiển"
+
+msgid "Delete %d orphan photos"
+msgstr "Xóa %d ảnh mồ côi"
+
+msgid "Delete album \"%s\" and its %d sub-albums."
+msgstr "Xóa bộ ảnh \"%s\" và các %d bộ ảnh con."
+
+msgid "Delete album \"%s\"."
+msgstr "Xóa bộ ảnh \"%s\"."
+
+msgid "Display form"
+msgstr "Mẫu hiển thị"
+
+msgid "Edit user"
+msgstr "Sửa người dùng"
+
+msgid "First photo added"
+msgstr "Anhr đầu tiên đã được thêm"
+
+msgid "It only takes a few clicks."
+msgstr "Chỉ tốn vài cú click chuột."
+
+msgid "No filter on album. Select one or type to search"
+msgstr "Khong có bộ lọc bộ ảnh. Chọn một hoặc nhập để tìm kiếm"
+
+msgid "No recipient selected"
+msgstr "Chưa chọn người nhận"
+
+msgid "No tags selected, no actions possible."
+msgstr "Chưa chọn từ khóa nên không thể  tiến hành"
+
+msgid "No user is permitted to see this private album"
+msgstr "Không có người dùng nào được phép xem bộ ảnh riêng tư này"
+
+msgid "Orphans"
+msgstr "Các ảnh mồ côi"
+
+msgid "Piwigo %s is available, please update"
+msgstr "Piwigo %s đã có, vui lòng cập nhật"
+
+msgid "Recipients"
+msgstr "Các người nhận"
+

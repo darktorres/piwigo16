@@ -1,0 +1,146 @@
+# Piwigo translation — zh_TW
+# Source: install.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: zh_TW\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Installation"
+msgstr "安裝"
+
+msgid "Basic configuration"
+msgstr "基本設置"
+
+msgid "Default gallery language"
+msgstr "圖庫默認語言"
+
+msgid "Database configuration"
+msgstr "數據庫設置"
+
+msgid "Admin configuration"
+msgstr "管理員帳戶設定"
+
+msgid "Start Install"
+msgstr "開始安裝"
+
+msgid "It will be shown to the visitors. It is necessary for website administration"
+msgstr "所有用戶都能看到此帳戶。必須提供此帳戶來管理網站"
+
+msgid "Connection to server succeed, but it was impossible to connect to database"
+msgstr "服務器連接正常，但是無法連接到數據庫"
+
+msgid "Can't connect to server"
+msgstr "無法連接到服務器"
+
+msgid "Host"
+msgstr "MySQL主機地址"
+
+msgid "User"
+msgstr "用戶"
+
+msgid "user login given by your host provider"
+msgstr "主機用戶名"
+
+msgid "user password given by your host provider"
+msgstr "主機用戶密碼"
+
+msgid "Database name"
+msgstr "數據庫名稱"
+
+msgid "also given by your host provider"
+msgstr "在主機設定的數據庫名稱"
+
+msgid "Database table prefix"
+msgstr "表名稱前綴"
+
+msgid "database tables names will be prefixed with it (enables you to manage better your tables)"
+msgstr "所有的表名稱都加此前綴(有利於數據庫管理)"
+
+msgid "enter a login for webmaster"
+msgstr "請輸入網管名"
+
+msgid "webmaster login can't contain characters ' or \""
+msgstr "網管名不應包含字符 \" 和 '"
+
+msgid "please enter your password again"
+msgstr "請再次輸入密碼"
+
+msgid "Keep it confidential, it enables you to access administration panel"
+msgstr "請小心保管好此密碼，它允許你操作管理板塊。"
+
+msgid "Password [confirm]"
+msgstr "密碼 [ 確認 ]"
+
+msgid "verification"
+msgstr "核實"
+
+msgid "Need help ? Ask your question on <a href=\"%s\">Piwigo message board</a>."
+msgstr "需要幫助？ 請到<a href=\"%s\">Piwigo論壇</a>提出你的問題."
+
+msgid "Visitors will be able to contact site administrator with this mail"
+msgstr "遊客通過此Email跟你聯繫"
+
+msgid "PHP 5 is required"
+msgstr "必須PHP 5.2版本"
+
+msgid "It appears your webhost is currently running PHP %s."
+msgstr "你主機PHP版本好像是PHP %s."
+
+msgid "Piwigo may try to switch your configuration to PHP 5 by creating or modifying a .htaccess file."
+msgstr "Piwigo試著創建或修改.htaccess文件來轉換到PHP 5.2。"
+
+msgid "Note you can change your configuration by yourself and restart Piwigo after that."
+msgstr "注意；你也可以自己修改設置PHP然後重新啟動Piwigo。"
+
+msgid "Try to configure PHP 5"
+msgstr "試試配置PHP 5.2"
+
+msgid "Sorry!"
+msgstr "對不起!"
+
+msgid "Piwigo was not able to configure PHP 5."
+msgstr "Piwigo不能設置PHP 5.2"
+
+msgid "You may referer to your hosting provider's support and see how you could switch to PHP 5 by yourself."
+msgstr "你應該聯繫你的主機管理員並向其請教如何設置PHP 5.2"
+
+msgid "Hope to see you back soon."
+msgstr "希望下次再見到你..."
+
+msgid "Congratulations, Piwigo installation is completed"
+msgstr "恭喜，Piwigo 已安裝完成。"
+
+msgid "An alternate solution is to copy the text in the box above and paste it into the file \"local/config/database.inc.php\" (Warning : database.inc.php must only contain what is in the textarea, no line return or space character)"
+msgstr "另一個解決辦法是，將以上文本框裡的文本拷貝到 \"local/config/database.inc.php\" 文件裡（注意：database.inc.php 必須只能包含此文本框裡的內容，沒有換行或者空格字符）"
+
+msgid "Creation of config file local/config/database.inc.php failed."
+msgstr "創建 local/config/database.inc.php 文件失敗."
+
+msgid "Download the config file"
+msgstr "下載配置文件"
+
+msgid "You can download the config file and upload it to local/config directory of your installation."
+msgstr "您可以下載配置文件，然後上傳到 local/config 目錄以完成您的安裝."
+
+msgid "Just another Piwigo gallery"
+msgstr "另一本Piwigo相片集"
+
+msgid "Welcome to my photo gallery"
+msgstr "歡迎進入我的相片集"
+
+msgid "Welcome to your new installation of Piwigo!"
+msgstr "歡迎安裝Piwigo!"
+
+msgid "Don't hesitate to consult our forums for any help : %s"
+msgstr "如有任何問題，請至我們的論壇提出：%s "
+
+msgid "localhost or other, supplied by your host provider"
+msgstr "本地主機或其它，由你的主機提供商提供"
+
+msgid "PHP version %s required (you are running on PHP %s)"
+msgstr "需要 PHP %s 以上的版本（目前執行中的是 PHP %s）"
+

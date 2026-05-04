@@ -35,28 +35,9 @@ final class Lang
 
     public static function t(string $key, mixed ...$args): string
     {
-        // Before attachGlobals() self::$data is empty; fall back to the raw global
-        // so l10n() calls during common.inc.php bootstrap still return translations.
-        // After attachGlobals() $GLOBALS['lang'] IS self::$data via reference, so
-        // the result is identical either way.
-        $rawGlobal = $GLOBALS['lang'] ?? [];
-        /** @var array<string,string> $langGlobal */
-        $langGlobal = is_array($rawGlobal) ? $rawGlobal : [];
-        $src = self::$data !== [] ? self::$data : $langGlobal;
-
-        if (!isset($src[$key])) {
-            if (!empty($key) && Config::debugL10n()) {
-                trigger_error('[l10n] language key "' . $key . '" not defined', E_USER_WARNING);
-            }
-            $val = $key;
-        } else {
-            $val = $src[$key];
-        }
-        if (!empty($args)) {
-            $scalarArgs = array_map(static fn (mixed $a): string => is_scalar($a) || $a === null ? (string) $a : '', $args);
-            return vsprintf($val, $scalarArgs);
-        }
-        return $val;
+        // Delegate to Translator when PO files are loaded; it falls back to $lang
+        // array internally so both pre-boot PHP-file loads and post-boot PO loads work.
+        return \Piwigo\Lang\Translator::get()->translate($key, ...$args);
     }
 
     public static function has(string $key): bool

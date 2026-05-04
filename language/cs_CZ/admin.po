@@ -1,0 +1,4245 @@
+# Piwigo translation — cs_CZ
+# Source: admin.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: cs_CZ\n"
+"Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "%d association"
+msgstr "%d spojení"
+
+msgid "%d associations"
+msgstr "%d spojení"
+
+msgid "%d album including"
+msgstr "%d album"
+
+msgid "%d albums including"
+msgstr "%d alb"
+
+msgid "%d physical"
+msgstr "%d fyzický"
+
+msgid "%d physicals"
+msgstr "%d fyzických"
+
+msgid " and %d virtual"
+msgstr "a %d virtuální"
+
+msgid " and %d virtuals"
+msgstr "a %d virtuálních"
+
+msgid "%d album moved"
+msgid_plural "%d albums moved"
+msgstr[0] "%d album přesunuto"
+msgstr[1] "%d alb přesunuto"
+
+msgid "%d group"
+msgstr "%d skupina"
+
+msgid "%d groups"
+msgstr "%d skupin"
+
+msgid "%d member"
+msgid_plural "%d members"
+msgstr[0] "%d účastník"
+msgstr[1] "%d účastníků"
+
+msgid "%d tag"
+msgstr "%d štítek"
+
+msgid "%d tags"
+msgstr "%d štítků"
+
+msgid "%d user comment rejected"
+msgstr "%d komentář uživatele odmítnut"
+
+msgid "%d user comments rejected"
+msgstr "%d komentářů uživatelů odmítnuto"
+
+msgid "%d user comment validated"
+msgstr "%d komentář uživatele schválen"
+
+msgid "%d user comments validated"
+msgstr "%d komentářů uživatelů schváleno"
+
+msgid "%d user deleted"
+msgid_plural "%d users deleted"
+msgstr[0] "%d uživatel smazán"
+msgstr[1] "%d uživatelů smazáno"
+
+msgid "%d user"
+msgid_plural "%d users"
+msgstr[0] "%d uživatel"
+msgstr[1] "%d uživatelů"
+
+msgid "%d waiting for validation"
+msgstr "%d čeká na schválení"
+
+msgid "Actions"
+msgstr "Akce"
+
+msgid "Activate"
+msgstr "Aktivovat"
+
+msgid "Add/delete a permalink"
+msgstr "Přidat/odebrat trvalý odkaz"
+
+msgid "Add a tag"
+msgstr "Přidat štítek"
+
+msgid "Add a user"
+msgstr "Přidat uživatele"
+
+msgid "Add group"
+msgstr "Přidat skupinu"
+
+msgid "Add"
+msgstr "Přidat"
+
+msgid "Allow user registration"
+msgstr "Povolit registraci uživatelů"
+
+msgid "Apply to sub-albums"
+msgstr "Použít na podalba"
+
+msgid "Associated"
+msgstr "Přiřazeno"
+
+msgid "Caddie management"
+msgstr "Správa košíku"
+
+msgid "Caddie"
+msgstr "Košík"
+
+msgid "Albums authorized thanks to group associations"
+msgstr "Alba autorizována díky skupinovému sloučení"
+
+msgid "Album manual order was saved"
+msgstr "Alba s ručním vyběrem byla uložena"
+
+msgid "Check for upgrade failed for unknown reasons."
+msgstr "Zjištění možnosti aktualizace se nezdařilo"
+
+msgid "Check for upgrade"
+msgstr "Zkontroluj nové aktualizace"
+
+msgid "Comments for all"
+msgstr "Komentáře pro všechny"
+
+msgid "Current name"
+msgstr "Současný název"
+
+msgid "Database"
+msgstr "Databáze"
+
+msgid "Deactivate"
+msgstr "Deaktivovat"
+
+msgid "Delete Representant"
+msgstr "Smazat reprezentativní obrázek"
+
+msgid "Delete selected tags"
+msgstr "Smazat vybrané štítky"
+
+msgid "Delete selected users"
+msgstr "Smazat vybrané uživatele"
+
+msgid "Deletions"
+msgstr "Smazání"
+
+msgid "Deny selected groups"
+msgstr "Zakázat vybraným skupinám"
+
+msgid "Deny selected users"
+msgstr "Zakázat vybraným uživatelům"
+
+msgid "Description"
+msgstr "Popis"
+
+msgid "Display options"
+msgstr "Nastavení zobrazení"
+
+msgid "Dissociated"
+msgstr "Vazba zrušena"
+
+msgid "Does not represent"
+msgstr "Nereprezentuje"
+
+msgid "Edit selected tags"
+msgstr "Upravit vybrané štítky"
+
+msgid "Edit tags"
+msgstr "Upravit štítky"
+
+msgid "Email admins when a new user registers"
+msgstr "Poslat e-mail administrátorovi při registraci nového uživatele"
+
+msgid "Email admins when a valid comment is entered"
+msgstr "Poslat e-mail administrátorovi při vložení nového komentáře"
+
+msgid "Email admins when a comment requires validation"
+msgstr "Poslat e-mail administrátorovi při vložení nového komentáře vyžadujícího schválení."
+
+msgid "Environment"
+msgstr "Prostředí"
+
+msgid "Form"
+msgstr "Formulář"
+
+msgid "Gallery title"
+msgstr "Název galerie"
+
+msgid "Grant selected groups"
+msgstr "Povolit vybrané skupiny"
+
+msgid "Grant selected users"
+msgstr "Povolit vybrané uživatele"
+
+msgid "Group name"
+msgstr "Jméno skupiny"
+
+msgid "Groups"
+msgstr "Skupiny"
+
+msgid "Guests"
+msgstr "Hosté"
+
+msgid "History"
+msgstr "Historie"
+
+msgid "Informations"
+msgstr "Informace"
+
+msgid "Install"
+msgstr "Instalovat"
+
+msgid "Link all album photos to a new album"
+msgstr "Napojí všechny fotky do nového alba"
+
+msgid "Link all album photos to some existing albums"
+msgstr "Napojí všechny fotky na existující alba"
+
+msgid "Linked albums"
+msgstr "Propojená alba"
+
+msgid "Lock gallery"
+msgstr "Zamknout galerii"
+
+msgid "Maintenance"
+msgstr "Údržba"
+
+msgid "Edit album permissions"
+msgstr "Editace oprávnění pro dané album"
+
+msgid "Manage permissions for group \"%s\""
+msgstr "Nastavit práva pro skupinu \"%s\""
+
+msgid "Manage permissions for user \"%s\""
+msgstr "Nastavit práva pro uživatele \"%s\""
+
+msgid "Manage tags"
+msgstr "Správa štítků"
+
+msgid "Members"
+msgstr "Členové"
+
+msgid "Metadata synchronized from file"
+msgstr "Metadata synchronizována ze souboru"
+
+msgid "Move albums"
+msgstr "Přesun alb"
+
+msgid "Move"
+msgstr "Přesunout"
+
+msgid "Name"
+msgstr "Jméno"
+
+msgid "New name"
+msgstr "Nové jméno"
+
+msgid "New parent album"
+msgstr "Nové hlavní album"
+
+msgid "New tag"
+msgstr "Nový štítek"
+
+msgid "Number of comments per page"
+msgstr "Počet komentářů na stránce"
+
+msgid "Number of rates"
+msgstr "Počet hodnocení"
+
+msgid "Only private albums are listed"
+msgstr "Pouze soukromá alba jsou uvedena"
+
+msgid "Operating system"
+msgstr "Operační systém"
+
+msgid "Options"
+msgstr "Volby"
+
+msgid "Other private albums"
+msgstr "Ostatní soukromá alba"
+
+msgid "Page banner"
+msgstr "Banner stránky"
+
+msgid "Parent album"
+msgstr "Hlavní album"
+
+msgid "Path"
+msgstr "Cesta"
+
+msgid "Permalink"
+msgstr "Trvalý odkaz"
+
+msgid "Permalink %s has been previously used by album %s. Delete from the permalink history first"
+msgstr "Trvalý odkaz %s byl dříve používán albem %s. Nejprve ho vymažte z historie trvalých odkazů"
+
+msgid "The permalink name must be composed of a-z, A-Z, 0-9, \"-\", \"_\" or \"/\". It must not be numeric or start with number followed by \"-\""
+msgstr "Trvalý odkaz musí být složen ze znaků a-z, A-Z, 0-9, \"-\", \"_\" nebo \"/\". Nelze použít pouze číslo nebo číslo následované \"-\""
+
+msgid "Permalink %s is already used by album %s"
+msgstr "Trvalý odkaz %s již používá album %s"
+
+msgid "Permalink history"
+msgstr "Historie trvalých odkazů"
+
+msgid "Permalinks"
+msgstr "Trvalé odkazy"
+
+msgid "Permission denied"
+msgstr "Přístup zamítnut"
+
+msgid "Permission granted thanks to a group"
+msgstr "Přístup povolen díky skupině"
+
+msgid "Permission granted"
+msgstr "Přístup povolen"
+
+msgid "Photo informations updated"
+msgstr "Informace o fotografiích aktualizovány"
+
+msgid "Plugins"
+msgstr "Doplňky"
+
+msgid "Position"
+msgstr "Pozice"
+
+msgid "Preferences"
+msgstr "Nastavení"
+
+msgid "Properties"
+msgstr "Vlastnosti"
+
+msgid "Random photo"
+msgstr "Náhodná fotografie"
+
+msgid "Rate date"
+msgstr "Datum hodnocení"
+
+msgid "Rating by guests"
+msgstr "Hodnocení hosty"
+
+msgid "Rating"
+msgstr "Hodnocení"
+
+msgid "Reject"
+msgstr "Zamítnout"
+
+msgid "Representant"
+msgstr "Reprezentant"
+
+msgid "Representation of albums"
+msgstr "Alba reprezentace"
+
+msgid "Representative"
+msgstr "Reprezentativní fotografie"
+
+msgid "Represents"
+msgstr "Reprezentativní fotografie"
+
+msgid "Save order"
+msgstr "Uložit pořadí"
+
+msgid "Save to permalink history"
+msgstr "Uložit do historie trvalých odkazů"
+
+msgid "Select at least one album"
+msgstr "Vyberte alespoň jedno album"
+
+msgid "Select at least one photo"
+msgstr "Je nutné zvolit alespoň jednu fotografii"
+
+msgid "Select at least one user"
+msgstr "Je nutné zvolit alespoň jednoho uživatele"
+
+msgid "Show info"
+msgstr "Zobrazit informace"
+
+msgid "Site manager"
+msgstr "Správce stránky"
+
+msgid "Status"
+msgstr "Stav"
+
+msgid "Statistics"
+msgstr "Statistiky"
+
+msgid "Storage album"
+msgstr "Uložené album"
+
+msgid "Sum of rates"
+msgstr "Součet hodnot"
+
+msgid "Tag \"%s\" already exists"
+msgstr "Štítek \"%\" už existuje"
+
+msgid "Tag \"%s\" was added"
+msgstr "\"%\" štítků bylo přidáno"
+
+msgid "Tag selection"
+msgstr "Výběr štítků"
+
+msgid "The %d following tags were deleted"
+msgstr "Následujících %d štítků bylo odstraněno"
+
+msgid "Unable to check for upgrade."
+msgstr "Není možno ověřit zda exituje nová verze."
+
+msgid "Uninstall"
+msgstr "Odinstalovat"
+
+msgid "Use the default photo sort order"
+msgstr "Použít výchozí řazení"
+
+msgid "User comments validation"
+msgstr "Schválení komentářů uživatelů"
+
+msgid "Users"
+msgstr "Uživatelé"
+
+msgid "Validate"
+msgstr "Schválit"
+
+msgid "Validation"
+msgstr "Schválení"
+
+msgid "Version"
+msgstr "Verze"
+
+msgid "Virtual albums to move"
+msgstr "Virtuální alba k přesunu"
+
+msgid "Virtual album name"
+msgstr "Název virtuálního alba"
+
+msgid "Webmaster cannot be deleted"
+msgstr "Administrátor nemůže být smazán"
+
+msgid "You are running on development sources, no check possible."
+msgstr "Jsou používány vývojové zdrojové kódy, zjištění není možné."
+
+msgid "You cannot delete your account"
+msgstr "Nemůžete smazat svůj účet"
+
+msgid "You cannot move an album in its own sub album"
+msgstr "Nemůžete přesunout album do jeho vlastního pod-alba"
+
+msgid "You need to confirm deletion"
+msgstr "Je nutné potvrdit vymazání"
+
+msgid "Associate to album"
+msgstr "Přiřadit k albu"
+
+msgid "associate to group"
+msgstr "Přiřadit ke skupině"
+
+msgid "Authorized"
+msgstr "Autorizováno"
+
+msgid "Add a virtual album"
+msgstr "Přidat virtuální album"
+
+msgid "Authorize users to add comments on selected albums"
+msgstr "Povolit uživatelům přidávat komentáře k vybraným albám"
+
+msgid "The name of an album must not be empty"
+msgstr "Název alba nesmí být prázdný"
+
+msgid "Lock albums"
+msgstr "Zamknout alba"
+
+msgid "Private"
+msgstr "Privátní album"
+
+msgid "Public"
+msgstr "Veřejné album"
+
+msgid "Find a new representant by random"
+msgstr "Najít reprezentativní obrázek pomocí náhodného výběru"
+
+msgid "Public / Private"
+msgstr "Veřejná / Soukromá"
+
+msgid "Manage authorizations for selected albums"
+msgstr "Nastavit oprávnění pro vybraná alba"
+
+msgid "Virtual album added"
+msgstr "Virtuální album přidáno"
+
+msgid "Virtual album deleted"
+msgstr "Virtuální album odstraněno"
+
+msgid "Access type"
+msgstr "Druh přístupu"
+
+msgid "Information data registered in database"
+msgstr "Data byla uložena do databáze"
+
+msgid "Default display"
+msgstr "Výchozí zobrazení"
+
+msgid "The gallery URL is not valid."
+msgstr "URL galerie není platné"
+
+msgid "The number of comments a page must be between 5 and 50 included."
+msgstr "Počet komentářů na stránku musí být číslo mezi 5 a 50 včetně"
+
+msgid "Configuration"
+msgstr "Konfigurace"
+
+msgid "confirm"
+msgstr "Potvrdit"
+
+msgid "Date"
+msgstr "Datum"
+
+msgid "delete album"
+msgstr "smazat album"
+
+msgid "Dissociate from album"
+msgstr "Odebrat z alba"
+
+msgid "dissociate from group"
+msgstr "Odebrat ze skupiny"
+
+msgid "Album updated successfully"
+msgstr "Informace o album uloženy."
+
+msgid "photos per page"
+msgstr "Položek na stránce"
+
+msgid "High definition enabled"
+msgstr "Vysoké rozlišení povoleno"
+
+msgid "File"
+msgstr "Soubor"
+
+msgid "Forbidden"
+msgstr "Zakázáno"
+
+msgid "global mode"
+msgstr "Více najednou"
+
+msgid "group \"%s\" added"
+msgstr "skupina \"%s\" přidána"
+
+msgid "group \"%s\" deleted"
+msgstr "skupina \"%s\" vymazána"
+
+msgid "group \"%s\" updated"
+msgstr "skupina \"%s\" aktualizována"
+
+msgid "The name of a group must not contain \" or ' or be empty."
+msgstr "Název skupiny nesmí obsahovat \" nebo ' nebo být prázdný."
+
+msgid "This name is already used by another group."
+msgstr "Toto jméno je již používáno pro jinou skupinu."
+
+msgid "High definition"
+msgstr "Vysoké rozlišení"
+
+msgid "jump to album"
+msgstr "přejít na album"
+
+msgid "jump to photo"
+msgstr "Přejít na obrázek"
+
+msgid "leave"
+msgstr "Ponechat"
+
+msgid "Lock"
+msgstr "Zamknout"
+
+msgid "Locked"
+msgstr "Uzamknuto"
+
+msgid "manage album photos"
+msgstr "Spravuj fotky alba"
+
+msgid "manage sub-albums"
+msgstr "Správa podalb"
+
+msgid "Manage"
+msgstr "Správa"
+
+msgid "Execution time is out, treatment must be continue [Estimated time: %d second]."
+msgid_plural "Execution time is out, treatment must be continue [Estimated time: %d seconds]."
+msgstr[0] "Vykonávání operace překročilo povolený čas, zvolte jestli chcete pokračovat [očekávaný čas: %d sekund]."
+msgstr[1] "Vykonávání překročilo maximální čas, zvolte jestli chcete pokračovat [očekávaný čas: %d sekund]."
+
+msgid "Prepared time for list of users to send mail is limited. Others users are not listed."
+msgstr "Nastavený čas pro zobrazení seznamu uživatelů byl překročen. Další uživatelé nebudou zobrazeni."
+
+msgid "Time to send mail is limited. Others mails are skipped."
+msgstr "Nastavený čas pro odeslání zprávy byl překročen. Další zprávy nebudou odeslány."
+
+msgid "To send ?"
+msgstr "Odeslat?"
+
+msgid "Last send"
+msgstr "Naposledy odesláno"
+
+msgid "User"
+msgstr "Uživatel"
+
+msgid "See you soon,"
+msgstr "Nashledanou"
+
+msgid "Go to"
+msgstr "Přejít na"
+
+msgid "Hello"
+msgstr "Dobrý den "
+
+msgid "New photos were added"
+msgstr "Byly přidány nové fotografie"
+
+msgid "on"
+msgstr " v "
+
+msgid "between"
+msgstr "mezi "
+
+msgid "and"
+msgstr " a "
+
+msgid "The webmaster has subscribed you to receiving notifications by mail."
+msgstr "Administrátor Vás přihlásil k odběru novinek e-mailem."
+
+msgid "You have subscribed to receiving notifications by mail."
+msgstr "Přihlášení k odběru novinek e-mailem proběhlo úspěšně."
+
+msgid "To subscribe"
+msgstr "Pro přihlášení klikněte na %s ."
+
+msgid "If you encounter problems or have any question, please send a message to"
+msgstr "V případě problémů nebo dotazů kontaktujte "
+
+msgid "[NBM] Problems or questions"
+msgstr "[NBM] Problémy a dotazy"
+
+msgid "The webmaster has unsubscribed you from receiving notifications by mail."
+msgstr "Administrátor Vás odhlásil z odběru novinek e-mailem."
+
+msgid "You have unsubscribed from receiving notifications by mail."
+msgstr "Odhlášení od odebírání novinek e-mailem proběhlo úspěšně."
+
+msgid ", click on"
+msgstr ", klikněte na "
+
+msgid "To unsubscribe"
+msgstr "Pro odhlášení klikněte na %s ."
+
+msgid "With blank value, gallery title will be used"
+msgstr "Pokud není zadáno, použije se název galerie"
+
+msgid "Notification"
+msgstr "Upozornění"
+
+msgid "Error when sending email to %s [%s]."
+msgstr "Chyba při odesílání zprávy příjemci %s [%s]."
+
+msgid "Mail sent to %s [%s]."
+msgstr "Zpráva odeslána příjemci %s [%s]."
+
+msgid "%d mail was sent."
+msgid_plural "%d mails were sent."
+msgstr[0] "%d zpráva odeslána."
+msgstr[1] "%d zpráv odesláno."
+
+msgid "%d mail was not sent."
+msgid_plural "%d mails were not sent."
+msgstr[0] "%d zpráva nebyla odeslána."
+msgstr[1] "%d zpráv nebylo odesláno."
+
+msgid "No mail to send."
+msgstr "Žádná zpráva k odeslání."
+
+msgid "There is no available subscribers to mail."
+msgstr "Nejsou žádní odběratelé přihlášení pro příjem zprávy."
+
+msgid "Subscribers could be listed (available) only if there is new elements to notify."
+msgstr "Přihlášení odběratelé mohou být zobrazeni pouze pokud existují novinky k upozornění."
+
+msgid "Anyway only webmasters can see this tab and never administrators."
+msgstr "Tato záložka se zobrazuje pouze administrátorovi."
+
+msgid "No user to send notifications by mail."
+msgstr "Nebyl nalezen žádný uživatel pro odebírání novinek e-mailem."
+
+msgid "New photos added"
+msgstr "Nové položky byly přidány"
+
+msgid "Subscribe to notification by mail"
+msgstr "Přihlásit k odběru novinek e-mailem"
+
+msgid "Unsubscribe from notification by mail"
+msgstr "Odhlásit od odebírání novinek e-mailem"
+
+msgid "Parameter"
+msgstr "Parametr"
+
+msgid "Continue processing treatment"
+msgstr "Pokračovat v údržbě"
+
+msgid "Complementary mail content"
+msgstr "Doplňkový obsah zprávy"
+
+msgid "Add detailed content"
+msgstr "Odeslat obsah"
+
+msgid "Send mail as"
+msgstr "Odeslat zprávu jako"
+
+msgid "Send mail to users"
+msgstr "Odeslat e-mail uživateli"
+
+msgid "Send"
+msgstr "Odeslat"
+
+msgid "Subscribed"
+msgstr "Přihlášení uživatelé"
+
+msgid "Subscribe"
+msgstr "Přihlásit"
+
+msgid "Parameters"
+msgstr "Parametry"
+
+msgid "Select recipients"
+msgstr "Zvolte příjemce"
+
+msgid "Subscribe/unsubscribe users"
+msgstr "Přihlásit/odhlásit uživatele"
+
+msgid "Unsubscribed"
+msgstr "Nepřihlášení uživatelé"
+
+msgid "%d parameter was updated."
+msgid_plural "%d parameters were updated."
+msgstr[0] "%d parametrů aktualizováno."
+msgstr[1] "%d parametrů aktualizováno."
+
+msgid "%d user was not updated."
+msgid_plural "%d users were not updated."
+msgstr[0] "%d uživatel(ů) nebylo aktualizováno."
+msgstr[1] "%d uživatelů nebylo aktualizováno."
+
+msgid "User %s [%s] was removed from the subscription list."
+msgstr "Uživatel %s [%s] byl odhlášen od odebírání novinek e-mailem."
+
+msgid "User %s [%s] was added to the subscription list."
+msgstr "Uživatel %s [%s] byl přihlášen k odebírání novinek e-mailem."
+
+msgid "%d user was updated."
+msgid_plural "%d users were updated."
+msgstr[0] "%d uživatel(ů) aktualizováno."
+msgstr[1] "%d uživatel(ů) aktualizováno."
+
+msgid "User %s [%s] was not removed from the subscription list."
+msgstr "Uživatel %s [%s] nebyl odebrán ze seznamu přihlášených k odebírání novinek."
+
+msgid "User %s [%s] was not added to the subscription list."
+msgstr "Uživatel %s [%s] nebyl přidán do seznamu přihlášených  k odebírání novinek."
+
+msgid "User %s [%s] added."
+msgstr "Uživatel %s [%s] přidán."
+
+msgid "Warning: subscribing or unsubscribing will send mails to users"
+msgstr "Upozornění: přihlášení nebo odhlášení má za následek odeslání e-mailů uživatelům"
+
+msgid "Send mail on HTML format"
+msgstr "Odesílat zprávy v HTML formátu"
+
+msgid "Include display of recent photos grouped by dates"
+msgstr "Zahrnout nové skupiny fotografií podle data"
+
+msgid "Available only with HTML format"
+msgstr "Dostupné pouze pro zprávy ve formátu HTML"
+
+msgid "no write access"
+msgstr "nemáte přístupová práva"
+
+msgid "Permissions"
+msgstr "Oprávnění"
+
+msgid "private"
+msgstr "soukromé"
+
+msgid "public"
+msgstr "veřejné"
+
+msgid "Purge never used notification feeds"
+msgstr "Provést údržbu nepoužitých RSS vláken"
+
+msgid "Purge sessions"
+msgstr "Provést údržbu relací"
+
+msgid "randomly represented"
+msgstr "náhodný náhled alba"
+
+msgid "registration date"
+msgstr "datum registrace"
+
+msgid "clean"
+msgstr "Vyčistit"
+
+msgid "Create this site"
+msgstr "Vytvořit tuto stránku"
+
+msgid "test"
+msgstr "Test"
+
+msgid "test this remote site"
+msgstr "Otestovat vzdálenou stránku"
+
+msgid "remove tags"
+msgstr "Odebrat štítky"
+
+msgid "Repair and optimize database"
+msgstr "Opravit a optimalizovat databázi"
+
+msgid "selection"
+msgstr "Výběr"
+
+msgid "set to"
+msgstr "Nastavit "
+
+msgid "singly represented"
+msgstr "stálý náhled alba"
+
+msgid "This site already exists"
+msgstr "Tato stránka již existuje"
+
+msgid "created"
+msgstr "Vytvořeno"
+
+msgid "delete"
+msgstr "Vymazat"
+
+msgid "delete this site and all its attached elements"
+msgstr "Vymazat tuto stránku a všechny související položky"
+
+msgid "deleted"
+msgstr "smazáno"
+
+msgid "an error happened"
+msgstr "Došlo k chybě"
+
+msgid "Local"
+msgstr "Místní"
+
+msgid "Remote"
+msgstr "Vzdálený"
+
+msgid "update the database from files"
+msgstr "Aktualizovat databázi ze souborů"
+
+msgid "status"
+msgstr "Stav"
+
+msgid "Directory"
+msgstr "Adresář"
+
+msgid "sub-albums"
+msgstr "podalba"
+
+msgid "Synchronize metadata"
+msgstr "Synchronizovat metadata"
+
+msgid "target"
+msgstr "Cíl"
+
+msgid "Thumbnail"
+msgstr "Náhled"
+
+msgid "Title"
+msgstr "Název"
+
+msgid "Album list management"
+msgstr "Správa alb"
+
+msgid "Piwigo configuration"
+msgstr "Nastavení aplikace Piwigo"
+
+msgid "Edit album"
+msgstr "Edituj album"
+
+msgid "Group management"
+msgstr "Správa skupin"
+
+msgid "User list"
+msgstr "Seznam uživatelů"
+
+msgid "Database synchronization with files"
+msgstr "Synchronizace databáze se soubory"
+
+msgid "all"
+msgstr "Vše"
+
+msgid "height must be a number superior to"
+msgstr "Výška musí být větší než"
+
+msgid "width must be a number superior to"
+msgstr "Šířka musí být větší než"
+
+msgid "for the file format"
+msgstr "pro formát souboru"
+
+msgid "Photo unreachable or no support"
+msgstr "Fotografie není dostupná nebo podporovaná"
+
+msgid "GD version"
+msgstr "Verze GD knihovny"
+
+msgid "General statistics"
+msgstr "Všeobecné statistiky"
+
+msgid "average time"
+msgstr "průměrný čas"
+
+msgid "total time"
+msgstr "celkový čas"
+
+msgid "for this file format"
+msgstr "pro tento formát souboru"
+
+msgid "unit mode"
+msgstr "jednotlivě"
+
+msgid "Unlocked"
+msgstr "Odemknuto"
+
+msgid "unset"
+msgstr "Nenastavovat"
+
+msgid "Update albums informations"
+msgstr "Aktualizuj informace alb"
+
+msgid "Update photos information"
+msgstr "Aktualizovat informace o fotografiích"
+
+msgid "Synchronize"
+msgstr "Synchronizace"
+
+msgid "reduce to single existing albums"
+msgstr "zredukuj na stávající alba"
+
+msgid "Choose an option"
+msgstr "Zvolit nastavení"
+
+msgid "display maximum informations (added albums and photos, deleted albums and photos)"
+msgstr "zobrazit maximum informací (přidaná alba a elementy, odstraněná alba a elementy)"
+
+msgid "Error list"
+msgstr "Seznam chyb"
+
+msgid "Errors caption"
+msgstr "Chyby - legenda"
+
+msgid "Detailed informations"
+msgstr "Detailní informace"
+
+msgid "File/directory read error"
+msgstr "Chyba při čtení souboru/adresáře"
+
+msgid "The file or directory cannot be accessed (either it does not exist or the access is denied)"
+msgstr "Soubor nebo adresář není přístupný nebo neexistuje"
+
+msgid "albums deleted in the database"
+msgstr "alba odstraněna v databázi"
+
+msgid "photos deleted from the database"
+msgstr "položek odstraněno z databáze"
+
+msgid "photos candidates for metadata synchronization"
+msgstr "fotografií pro synchronizaci metadat"
+
+msgid "photos informations synchronized with files metadata"
+msgstr "informace synchronizované z metadat souborů"
+
+msgid "errors during synchronization"
+msgstr "chyb během synchronizace"
+
+msgid "albums added in the database"
+msgstr "alba vložena do databáze"
+
+msgid "photos added in the database"
+msgstr "položek přidáno do databáze"
+
+msgid "photos updated in the database"
+msgstr "položek aktualizováno v databázi"
+
+msgid "Search for new images in the directories"
+msgstr "Hledat nové obrázky v kategoriích"
+
+msgid "added"
+msgstr "přidáno"
+
+msgid "Metadata synchronization results"
+msgstr "Výsledky synchronizace metadat"
+
+msgid "only perform a simulation (no change in database will be made)"
+msgstr "pouze simulace přidání (nebudou učiněny žádné změny v databázi)"
+
+msgid "Simulation"
+msgstr "Simulace"
+
+msgid "directories + files"
+msgstr "adresáře + soubory"
+
+msgid "only directories"
+msgstr "pouze adresáře"
+
+msgid "synchronize files structure with database"
+msgstr "synchronizovat strukturu souborů s databází"
+
+msgid "synchronize files metadata with database photos informations"
+msgstr "synchronizovat metadata souborů s databází"
+
+msgid "even already synchronized photos"
+msgstr "zahrnout i dříve synchronizované položky"
+
+msgid "Used metadata"
+msgstr "Použitá metadata"
+
+msgid "The name of directories and files must be composed of letters, numbers, \"-\", \"_\" or \".\""
+msgstr "Název adresářů a souborů musí být tvořen písmeny, čísly, \"-\", \"_\" nebo \".\""
+
+msgid "wrong filename"
+msgstr "chybný název souboru"
+
+msgid "Upload"
+msgstr "Nahrát fotografie"
+
+msgid "user \"%s\" added"
+msgstr "uživatel \"%s\" přidán"
+
+msgid "User status"
+msgstr "Stav uživatele"
+
+msgid "user_status_admin"
+msgstr "Administrátor"
+
+msgid "user_status_generic"
+msgstr "Všeobecné"
+
+msgid "user_status_guest"
+msgstr "Host"
+
+msgid "user_status_webmaster"
+msgstr "Administrátor"
+
+msgid "Virtual album"
+msgstr "Virtuální album"
+
+msgid "Waiting"
+msgstr "Ke schválení"
+
+msgid "default"
+msgstr "výchozí"
+
+msgid "Toggle 'default group' property"
+msgstr "Přepnout vlastnost 'základní skupina'"
+
+msgid "Advanced features"
+msgstr "Rozšířené vlastnosti"
+
+msgid "Overall"
+msgstr "Celkově"
+
+msgid "Year"
+msgstr "Rok"
+
+msgid "Month"
+msgstr "Měsíc"
+
+msgid "Day"
+msgstr "Den"
+
+msgid "Pages seen"
+msgstr "Prohlédnuto stránek"
+
+msgid "Time"
+msgstr "čas"
+
+msgid "IP"
+msgstr "IP"
+
+msgid "Element"
+msgstr "Fotografie"
+
+msgid "Section"
+msgstr "sekce"
+
+msgid "An information email was sent to group \"%s\""
+msgstr "Informační e-mail byl poslán skupině \"%s"
+
+msgid "Send an information email to group members"
+msgstr "Poslat informační e-mail uživatelům skupiny"
+
+msgid "Group"
+msgstr "Skupina"
+
+msgid "[%s] Visit album %s"
+msgstr "[%s] Navštivte album %s"
+
+msgid "Hello,"
+msgstr "Dobrý den,"
+
+msgid "See you soon."
+msgstr "Nashledanou."
+
+msgid "Discover album:"
+msgstr "Objevit album:"
+
+msgid "Mail content"
+msgstr "Obsah e-mailu"
+
+msgid "none"
+msgstr "žádný"
+
+msgid "high"
+msgstr "vysoký"
+
+msgid "other"
+msgstr "jiný"
+
+msgid "Element type"
+msgstr "Typ položky"
+
+msgid "Image id"
+msgstr "ID fotografie"
+
+msgid "Summary"
+msgstr "Souhrn"
+
+msgid "%d line filtered"
+msgid_plural "%d lines filtered"
+msgstr[0] "%d řádka filtrována"
+msgstr[1] "%d řádek filtrováno"
+
+msgid "%d guest"
+msgid_plural "%d guests"
+msgstr[0] "%d host"
+msgstr[1] "%d hostů"
+
+msgid "Hour"
+msgstr "Hodina"
+
+msgid "guest"
+msgstr "host"
+
+msgid "default values"
+msgstr "výchozí hodnoty"
+
+msgid "Guest cannot be deleted"
+msgstr "Uživatele host nelze vymazat"
+
+msgid "Default user cannot be deleted"
+msgstr "Výchozího uživatele nelze vymazat"
+
+msgid "Purge history detail"
+msgstr "Provést údržbu detailů historie"
+
+msgid "Purge history summary"
+msgstr "Provést údržbu celé historie"
+
+msgid "Check integrity"
+msgstr "Zkontrolovat integritu"
+
+msgid "Anomaly"
+msgstr "Anomálie"
+
+msgid "Correction"
+msgstr "Oprava"
+
+msgid "Automatic correction"
+msgstr "Automatická oprava"
+
+msgid "Impossible automatic correction"
+msgstr "Automatická oprava není možná"
+
+msgid "Correction applied with success"
+msgstr "Oprava úspěšně provedena"
+
+msgid "Correction applied with error"
+msgstr "Oprava se nezdařila"
+
+msgid "%d anomaly has been detected."
+msgid_plural "%d anomalies have been detected."
+msgstr[0] "%d anomálie detekována."
+msgstr[1] "%d anomálií detekováno."
+
+msgid "%d anomaly has been corrected."
+msgid_plural "%d anomalies have been detected corrected."
+msgstr[0] "%d anomálie byla opravena."
+msgstr[1] "%d anomálií bylo opraveno."
+
+msgid "%d anomaly has not been corrected."
+msgid_plural "%d anomalies have not been corrected."
+msgstr[0] "%d anomálie byla opravena."
+msgstr[1] "%d anomálií nebylo opraveno."
+
+msgid "Go to %s or %s for more informations"
+msgstr "Více informací naleznete na %s a %s"
+
+msgid "the forum"
+msgstr "fórum"
+
+msgid "the wiki"
+msgstr "wiki"
+
+msgid "%s value is not correct file because exif are not supported"
+msgstr "%s není korektní soubor - EXIF není podporován"
+
+msgid "%s must be to set to false in your local/config/config.inc.php file"
+msgstr "%s musí být nastaven na false v souboru config_local.inc.php"
+
+msgid "Main \"guest\" user does not exist"
+msgstr "Hlavní uživatel \"host\" neexistuje"
+
+msgid "Main \"guest\" user status is incorrect"
+msgstr "Stav hlavního uživatele \"host\" je chybný"
+
+msgid "Default user does not exist"
+msgstr "Výchozí hlavní uživatel neexistuje"
+
+msgid "Main \"webmaster\" user does not exist"
+msgstr "Hlavní uživatel \"administrátor\" neexistuje"
+
+msgid "Main \"webmaster\" user status is incorrect"
+msgstr "Stav hlavního uživatele \"administrátor\" je chybný"
+
+msgid "User \"%s\" created with \"%s\" like password"
+msgstr "Uživatel \"%s\" vytvořen s heslem \"%s\""
+
+msgid "Status of user \"%s\" updated"
+msgstr "Stav uživatele \"%s\" aktualizován"
+
+msgid "add new photos to caddie"
+msgstr "přidat nové položky do košíku"
+
+msgid "No display"
+msgstr "Bez zobrazení"
+
+msgid "Classic display"
+msgstr "Běžné zobrazení"
+
+msgid "Hoverbox display"
+msgstr "Zobrazit při najetí myší"
+
+msgid "Minimum privacy level"
+msgstr "Nejnižší stupeň ochrany soukromí"
+
+msgid "Privacy level"
+msgstr "Stupeň ochrany soukromí"
+
+msgid "Level 0"
+msgstr "---"
+
+msgid "Level 1"
+msgstr "Kontakty"
+
+msgid "Level 2"
+msgstr "Přátelé"
+
+msgid "Level 4"
+msgstr "Rodina"
+
+msgid "Level 8"
+msgstr "Administrátoři"
+
+msgid "Reinitialize check integrity"
+msgstr "Znovu spustit kontrolu integrity"
+
+msgid "Check all"
+msgstr "Vybrat vše"
+
+msgid "Uncheck all"
+msgstr "Zrušit výběr"
+
+msgid "Check automatic corrections"
+msgstr "Vybrat automatické opravy"
+
+msgid "Apply selected corrections"
+msgstr "Provést vybrané opravy"
+
+msgid "Ignore selected anomalies"
+msgstr "Ignorovat vybrané anomálie"
+
+msgid "Refresh"
+msgstr "Aktualizovat"
+
+msgid "The anomaly will be ignored until next application version"
+msgstr "Anomálie bude ignorována do nové verze aplikace"
+
+msgid "Correction the anomaly will cancel the fact that it's ignored"
+msgstr "Provedením opravy anomálie se zruší její ignorace"
+
+msgid "%d anomaly has been ignored."
+msgid_plural "%d anomalies have been ignored."
+msgstr[0] "%d anomálie byla ignorována."
+msgstr[1] "%d anomálií bylo ignorováno."
+
+msgid "Plugins which need upgrade"
+msgstr "Doplňky vyžadující aktualizaci"
+
+msgid "Plugin list"
+msgstr "Seznam doplňků"
+
+msgid "Check for updates"
+msgstr "Zkontrolovat aktualizace"
+
+msgid "Other plugins"
+msgstr "Další doplňky"
+
+msgid "Last revisions"
+msgstr "Poslední revize"
+
+msgid "Are you sure you want to delete this plugin?"
+msgstr "Přejete si odstranit tento doplněk?"
+
+msgid "Are you sure you want to install this plugin?"
+msgstr "Přejete si nainstalovat tento doplněk?"
+
+msgid "Are you sure to install this upgrade? You must verify if this version does not need uninstallation."
+msgstr "Přejete si nainstalovat tuto aktualizaci? Je potřeba ověřit, jestli stávající verzi není nutné nejdříve odinstalovat."
+
+msgid "Plugin has been successfully copied"
+msgstr "Doplněk byl úspěšně nainstalován"
+
+msgid "Can't create temporary file."
+msgstr "Nelze vytvořit dočasný soubor."
+
+msgid "Can't download archive."
+msgstr "Nelze stáhnout archiv."
+
+msgid "Can't read or extract archive."
+msgstr "Archiv nelze rozbalit nebo přečíst."
+
+msgid "An error occured during extraction (%s)."
+msgstr "Během rozbalování došlo k chybě (%s)."
+
+msgid "Please check \"plugins\" folder and sub-folders permissions (CHMOD)."
+msgstr "Prosím zkontrolujte oprávnění pro adresář \"plugins\" včetně podadresářů (CHMOD)."
+
+msgid "Can't connect to server."
+msgstr "Nelze se připojit k serveru."
+
+msgid "Purge compiled templates"
+msgstr "Provést údržbu šablon"
+
+msgid "ACCESS_0"
+msgstr "Volný přístup"
+
+msgid "ACCESS_1"
+msgstr "Přístupné všem"
+
+msgid "ACCESS_2"
+msgstr "Přístupné přihlášeným"
+
+msgid "ACCESS_3"
+msgstr "Přístupné administrátorům"
+
+msgid "ACCESS_4"
+msgstr "Přístupné správcům"
+
+msgid "ACCESS_5"
+msgstr "Nepřístupné"
+
+msgid "Support"
+msgstr "Podpora"
+
+msgid "Documentation"
+msgstr "Dokumentace"
+
+msgid "A new version of Piwigo is available."
+msgstr "Je dostupná nová verze Piwigo."
+
+msgid "Piwigo Administration"
+msgstr "Administrace Piwigo"
+
+msgid "Piwigo version"
+msgstr "Verze Piwigo"
+
+msgid "You are running the latest version of Piwigo."
+msgstr "Používáte nejnovější verzi Piwigo."
+
+msgid "The version of %s [%s] installed is not compatible with the version required [%s]"
+msgstr "Používaná verze %s [%s] není kompatibilní s požadovanou verzí [%s]"
+
+msgid "You need to upgrade your system to take full advantage of the application else the application will not work correctly, or not at all"
+msgstr "Je nutné aktualizovat systém pokud chcete využívat všechny funkce aplikace - jinak nemusí aplikace pracovat správně nebo vůbec"
+
+msgid "Deleted on"
+msgstr "Vymazáno"
+
+msgid "Last hit"
+msgstr "Poslední zobrazení"
+
+msgid "GD library is missing"
+msgstr "GD knihovna neexistuje"
+
+msgid "Templates"
+msgstr "Šablony"
+
+msgid "Extend for templates"
+msgstr "Rozšířit pro šablony"
+
+msgid "Replacement of original templates by customized templates from template-extension subfolder"
+msgstr "Nahradit původní šablony uživatelskými z podadresáře template-extension"
+
+msgid "Replacers (customized templates)"
+msgstr "Nahradit uživatelskými šablonami"
+
+msgid "Original templates"
+msgstr "Původní šablony"
+
+msgid "Optional URL keyword"
+msgstr "Volitelné klíčové slovo URL"
+
+msgid "Templates configuration has been recorded."
+msgstr "Nastavení šablon bylo uloženo."
+
+msgid "All optimizations have been successfully completed."
+msgstr "Všechny změny byly úspěšně dokončeny."
+
+msgid "Optimizations have been completed with some errors."
+msgstr "Změny byly dokončeny s několika chybami."
+
+msgid "Modify information"
+msgstr "Upravit informace"
+
+msgid "nothing"
+msgstr "prázdné"
+
+msgid "overrides existing values with empty ones"
+msgstr "nahradit stávající hodnoty prázdnými"
+
+msgid "Manage photo ranks"
+msgstr "Spravovat řazení fotografií"
+
+msgid "Edit ranks"
+msgstr "Upravit pozice"
+
+msgid "No photo in this album"
+msgstr "Žádný element v tomto albu"
+
+msgid "Images manual order was saved"
+msgstr "Pořadí fotografií bylo uloženo"
+
+msgid "ranks"
+msgstr "pozice"
+
+msgid "Drag to re-order"
+msgstr "Pořadí změníte táhnutím myši"
+
+msgid "Quick Local Synchronization"
+msgstr "Rychlá místní synchronizace"
+
+msgid "No photo can be deleted"
+msgstr "Fotografie nemůže být vymazána"
+
+msgid "Delete selected photos"
+msgstr "Vymazat vybrané fotografie"
+
+msgid "%d photo was deleted"
+msgid_plural "%d photos were deleted"
+msgstr[0] "%d fotografie vymazána"
+msgstr[1] "%d fotografií vymazáno"
+
+msgid "Downloads"
+msgstr "Staženo"
+
+msgid "Released on"
+msgstr "Vydáno"
+
+msgid "Number of downloads"
+msgstr "Počet stažení"
+
+msgid "Upload Photos"
+msgstr "Nahrát fotografie"
+
+msgid "Drop into album"
+msgstr "Vyber album"
+
+msgid "+ Add an upload box"
+msgstr "+ Přidat pole"
+
+msgid "Create the \"%s\" directory at the root of your Piwigo installation"
+msgstr "Vytvořte \"%s\" adresáře v kořenovém adresáři instalace Piwigo"
+
+msgid "Give write access (chmod 777) to \"%s\" directory at the root of your Piwigo installation"
+msgstr "Povolte zápis (chmod 777,644,atd.) do \"%s\" adresáře v kořenovém adresáři instalace Piwigo"
+
+msgid "existing album"
+msgstr "existující album"
+
+msgid "create a new album"
+msgstr "vytvořit nové album"
+
+msgid "Album name"
+msgstr "Název alba"
+
+msgid "Album \"%s\" has been added"
+msgstr "Kategorie \"%s\" přidána"
+
+msgid "Uploaded Photos"
+msgstr "Nahrát fotografie"
+
+msgid "%d photos uploaded"
+msgstr "%d fotografií nahráno"
+
+msgid "Privacy level set to \"%s\""
+msgstr "Uroveň soukromí údajú nastaven na \"%s\""
+
+msgid "Album \"%s\" now contains %d photos"
+msgstr "Kategorie \"%s\" nyní obsahuje %d fotografií"
+
+msgid "Manage this set of %d photos"
+msgstr "Spravovat tento soubor %d fotografií"
+
+msgid "Select files"
+msgstr "Výběr souborů"
+
+msgid "Operation in progress"
+msgstr "Provádím údržbu."
+
+msgid "Please wait..."
+msgstr "Prosím počkejte..."
+
+msgid "Piwigo Announcements Newsletter"
+msgstr "Piwigo Zpravodaj"
+
+msgid "Keep in touch with Piwigo project, subscribe to Piwigo Announcement Newsletter. You will receive emails when a new release is available (sometimes including a security bug fix, it's important to know and upgrade) and when major events happen to the project. Only a few emails a year."
+msgstr "Přihlaste se k odběru Piwigo zpravodaje, abyste byli informování o novinkách. Dostanete tak e-mail, když bude k dispozici nová verze Piwigo (která může obsahovat bezpečnostní záplatu, o čemž je důležité být informován) a nebo v případě důležitých novinek v projektu. Jedná se jen o několik e-mailů ročně."
+
+msgid "Subscribe %s"
+msgstr "Přihlásit %s"
+
+msgid "Subscribe %s to Piwigo Announcements Newsletter"
+msgstr "Přihlásit %s k Zpravodaji Piwigo"
+
+msgid "Purge search history"
+msgstr "Odstranit historii hledání"
+
+msgid "Hide"
+msgstr "Skrýt"
+
+msgid "Password is missing. Please enter the password."
+msgstr "Chybí heslo. Prosím napište heslo."
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "Chybí potvrzení hesla. Prosím potvrďte vybrané heslo."
+
+msgid "Allow users to edit their own comments"
+msgstr "Povolit uzivatelům upravovat jejich vlastní komentáře"
+
+msgid "Allow users to delete their own comments"
+msgstr "Povolit uzivatelům mazat jejich vlastní komentáře"
+
+msgid "Email administrators when a comment is modified"
+msgstr "Informovat e-mailem administrátory, když je upraven komentář"
+
+msgid "Email administrators when a comment is deleted"
+msgstr "Informovat e-mailem administrátory, když je smazán komentář"
+
+msgid "Cannot delete the old permalink !"
+msgstr "Starý travlý odkaz nemůže být smazán!"
+
+msgid "Hit"
+msgstr "Zobrazení"
+
+msgid "Tools"
+msgstr "Nástroje"
+
+msgid "Photos"
+msgstr "Fotografie"
+
+msgid "Themes"
+msgstr "Témata"
+
+msgid "Instructions to use Piwigo"
+msgstr "Informace jak používat Piwigo"
+
+msgid "Installed Themes"
+msgstr "Instalovaná témata"
+
+msgid "Add New Theme"
+msgstr "Přidat nové téma"
+
+msgid "Forbid this theme to users"
+msgstr "Zakázat použití tohoto tématu uživatelům"
+
+msgid "Set as default theme for unregistered and new users"
+msgstr "Nastavit výchozí téma pro nezaregistrované a nové uživatele"
+
+msgid "unknown"
+msgstr "neznámý"
+
+msgid "Everybody"
+msgstr "Každý"
+
+msgid "Who can see these photos?"
+msgstr "Kdo může vidět tyto fotografie?"
+
+msgid "Who can see this photo?"
+msgstr "Kdo může vidět tuto fotografii?"
+
+msgid "Pending Comments"
+msgstr "Nevyřízené komentáře"
+
+msgid "Settings"
+msgstr "Nastavení"
+
+msgid "Resize"
+msgstr "Změnit velikost"
+
+msgid "Maximum width"
+msgstr "Maximální šířka"
+
+msgid "pixels"
+msgstr "bodů"
+
+msgid "Maximum height"
+msgstr "Maximální výška"
+
+msgid "Image Quality"
+msgstr "Kvalita fotografie"
+
+msgid "Save Settings"
+msgstr "Uložit nastavení"
+
+msgid "Your configuration settings are saved"
+msgstr "Vaše nastavení bylo uloženo"
+
+msgid "Active Themes"
+msgstr "Aktivní témata"
+
+msgid "Add write access to the \"%s\" directory"
+msgstr "nastavte přístup pro zápis do adresáře \"%s\""
+
+msgid "Administration Home"
+msgstr "Úvodní stránka administrace"
+
+msgid "Change Admin Colors"
+msgstr "Změňte barvy administrace"
+
+msgid "Delete this theme"
+msgstr "Zrušte toto téma"
+
+msgid "Directory does not exist"
+msgstr "Adresář neexistuje"
+
+msgid "Download,"
+msgstr "Stáhnout,"
+
+msgid "FTP + Synchronization"
+msgstr "FTP + Synchronizace"
+
+msgid "Get Support on Piwigo Forum"
+msgstr "Získat podporu na fóru Piwigo"
+
+msgid "Help Me"
+msgstr "Pomoc"
+
+msgid "Impossible to activate this theme, the parent theme is missing: %s"
+msgstr "Toto téma nemůže být aktivováno, protože chybí rodičovské téma: %s"
+
+msgid "Impossible to delete this theme. Other themes depends on it: %s"
+msgstr "Toto téma nemůže být zrušeno, protože na něm závisí další témata: %s"
+
+msgid "Inactive Themes"
+msgstr "Neaktivní témata"
+
+msgid "Install on your computer,"
+msgstr "Instalovat na Váš počítač,"
+
+msgid "Make this theme available to users"
+msgstr "Zpřístupnit uživatelům"
+
+msgid "Page end"
+msgstr "Konec stránky"
+
+msgid "Piwigo Uploader"
+msgstr "Piwigo nahrávání fotografií"
+
+msgid "Read Piwigo Documentation"
+msgstr "Čtěte Piwigo dokumentaci"
+
+msgid "Start pLoader and add your photos."
+msgstr "Spusťte pLoader a přidejte Vaše fotografie."
+
+msgid "Switch to clear or dark colors for administration"
+msgstr "Přepnout na světlé nebo tmavé barvy pro administraci"
+
+msgid "Theme has been successfully installed"
+msgstr "Téma bylo úspěšně nainstalováno"
+
+msgid "Visit Gallery"
+msgstr "Navštívit galerii"
+
+msgid "Visit Piwigo project website"
+msgstr "Navštívit Piwigo projektový web portál"
+
+msgid "Guest Settings"
+msgstr "Nastavení pro hosty"
+
+msgid "Main Page"
+msgstr "Hlavní strana"
+
+msgid "Photo Page"
+msgstr "Strana fotografie"
+
+msgid "Activate Navigation Bar"
+msgstr "Aktivovat navigační lištu"
+
+msgid "Activate Navigation Thumbnails"
+msgstr "Aktivovat navigační náhledy"
+
+msgid "Activate icon \"%s\""
+msgstr "Aktivovat ikonu \"%s\""
+
+msgid "Photo Properties"
+msgstr "Vlastnosti fotografie"
+
+msgid "Allow user customization"
+msgstr "Povolit uživatelskou úpravu nastavení"
+
+msgid "Languages"
+msgstr "Jazyky"
+
+msgid "Installed Languages"
+msgstr "Instalované jazyky"
+
+msgid "Add New Language"
+msgstr "Přidat nový jazyk"
+
+msgid "Language has been successfully installed"
+msgstr "Jazyk byl úspěšně nainstalován"
+
+msgid "Select:"
+msgstr "Vybrat:"
+
+msgid "None"
+msgstr "Žádný"
+
+msgid "Invert"
+msgstr "Obrátit"
+
+msgid "Impossible to deactivate this theme, you need at least one theme."
+msgstr "Není možno deaktivovat toto téma, potřebujete alespoň jedno téma."
+
+msgid "Webmaster status is required."
+msgstr "Je požadován status správce stránky."
+
+msgid "Bound Theme"
+msgstr "Svázat téma"
+
+msgid "Allow rating"
+msgstr "Povolit hodnocení"
+
+msgid "Select at least one comment"
+msgstr "Vyberte alespoň jeden komentář"
+
+msgid "Active Plugins"
+msgstr "Aktivní doplňky"
+
+msgid "Inactive Plugins"
+msgstr "Deaktivované doplňky"
+
+msgid "Missing Plugins"
+msgstr "Chybějící doplňky"
+
+msgid "Uninstalled Plugins"
+msgstr "Nenainstalované doplňky"
+
+msgid "By %s"
+msgstr "od %s"
+
+msgid "Visit plugin site"
+msgstr "navštivte web portál doplňku"
+
+msgid "Active Languages"
+msgstr "Aktivní jazyky"
+
+msgid "Delete this language"
+msgstr "Odstranit tento jazyk"
+
+msgid "Forbid this language to users"
+msgstr "Znepřístupnit tento jazyk uživatelům"
+
+msgid "Impossible to deactivate this language, first set another language as default."
+msgstr "Není možné deaktivovat tento jazyk, nejprve vyberte jiný výchozí jazyk."
+
+msgid "Impossible to deactivate this language, you need at least one language."
+msgstr "Není možné deaktivovat tento jazyk, potřebujete alespoň jeden jazyk."
+
+msgid "Inactive Languages"
+msgstr "Deaktivované jazyky"
+
+msgid "Make this language available to users"
+msgstr "Zpřístupnit tento jazyk uživatelům"
+
+msgid "Set as default language for unregistered and new users"
+msgstr "Nastavit jako výchozí jazyk pro nezaregistrované a nové uživatele"
+
+msgid "Add Photos"
+msgstr "Přidat fotografie"
+
+msgid "The following tag was deleted"
+msgstr "Následující štítek byl odstraněn"
+
+msgid "Miscellaneous"
+msgstr "Různé"
+
+msgid "Virtual Links"
+msgstr "Virtuální odkazy"
+
+msgid "There is no other language available."
+msgstr "Není dostupný žádný další jazyk."
+
+msgid "There is no other plugin available."
+msgstr "Není dostupný žádný další doplněk."
+
+msgid "There is no other theme available."
+msgstr "Není dostupné žádné další téma."
+
+msgid "Add another set of photos"
+msgstr "Přidat další množinu fotografií"
+
+msgid "By rank"
+msgstr "Podle hodnoceni"
+
+msgid "Manual order"
+msgstr "Řazeno ručně"
+
+msgid "Order of menubar items has been updated successfully."
+msgstr "Pořadí položek v menu bylo úspěšně aktualizováno."
+
+msgid "This theme was not designed to be directly activated"
+msgstr "Toto téma nebylo navrženo tak, aby bylo přímo aktivovatelné"
+
+msgid "Menu Management"
+msgstr "Další funkce"
+
+msgid "In your php.ini file, the upload_max_filesize (%sB) is bigger than post_max_size (%sB), you should change this setting"
+msgstr "Ve vašem souboru php.ini, je nastavení upload_max_filesize (%sB) větší než nastavení post_max_size (%sB), "
+
+msgid "Exif extension not available, admin should disable exif use"
+msgstr "PHP rozšíření Exif není dostupné, admininstrátor by měl vypnout použití exif"
+
+msgid "The uploaded file exceeds the upload_max_filesize directive in php.ini: %sB"
+msgstr "Velikost nahraváného souboru je větší než nastavení upload_max_filesize ve Vašem souboru php.ini: %sB"
+
+msgid "The uploaded files exceed the post_max_size directive in php.ini: %sB"
+msgstr "Velikost nahraváného souboru je větší než nastavení post_max_size directive ve Vašem souboru php.ini: %sB"
+
+msgid "The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form"
+msgstr "Velikost nahraváného souboru je větší než nastavení MAX_FILE_SIZE definovaná v HTML form"
+
+msgid "The uploaded file was only partially uploaded"
+msgstr "Nahrávaný soubor byl nahrán pouze částečně"
+
+msgid "No file was uploaded"
+msgstr "Žádný soubor nebyl nahrán"
+
+msgid "Missing a temporary folder"
+msgstr "Chybějící dočasný adresář"
+
+msgid "Failed to write file to disk"
+msgstr "Nepodařilo se zapsat soubor na disk"
+
+msgid "File upload stopped by extension"
+msgstr "Nahrávání souboru bylo zastaveno kvůli příponě"
+
+msgid "Unknown upload error"
+msgstr "Neznámá chyba při nahrávání"
+
+msgid "Error on file \"%s\" : %s"
+msgstr "Chyba souboru \"%s\" : %s"
+
+msgid "automatic order"
+msgstr "automatické řazení"
+
+msgid "manual order"
+msgstr "ruční řazení"
+
+msgid "Albums automatically sorted"
+msgstr "Alba jsou řazena automaticky"
+
+msgid "Batch Manager"
+msgstr "Dávkové zpracování"
+
+msgid "include child albums"
+msgstr "zahrnout podřízená alba"
+
+msgid "Selection"
+msgstr "Výběr"
+
+msgid "Action"
+msgstr "Akce"
+
+msgid "Set author"
+msgstr "Nastavit autora"
+
+msgid "Set title"
+msgstr "Nastavit název"
+
+msgid "Set creation date"
+msgstr "Nastavit datum vytvoření"
+
+msgid "Apply action"
+msgstr "Provést akci"
+
+msgid "on the %d selected photos"
+msgstr "na %d vybraných fotografiích"
+
+msgid "%d of %d photos selected"
+msgstr "%d z %d fotografií vybráno"
+
+msgid "No photo selected, %d photos in current set"
+msgstr "Žádná fotografie nebyla vybrána, %d fotografií v množině"
+
+msgid "All %d photos are selected"
+msgstr "Všech %d fotografií bylo vybráno"
+
+msgid "remove this filter"
+msgstr "smazat tento filtr"
+
+msgid "Duplicates"
+msgstr "Duplikáty"
+
+msgid "Add a filter"
+msgstr "Přidat filtr"
+
+msgid "Remove all filters"
+msgstr "Smazat všechny filtry"
+
+msgid "Refresh photo set"
+msgstr "Obnovit množinu fotografií"
+
+msgid "The whole page"
+msgstr "Celou stránku"
+
+msgid "The whole set"
+msgstr "Celou množinu"
+
+msgid "No photo in the current set."
+msgstr "Žádná fotografie v aktuální množině."
+
+msgid "No photos selected, no actions possible."
+msgstr "Žádná fotografie není vybrána, žádná akce není možná."
+
+msgid "Choose an action"
+msgstr "Vyberte akci"
+
+msgid "remove author"
+msgstr "smazat autora"
+
+msgid "Type here the author name"
+msgstr "Napište zde jmého autora"
+
+msgid "remove title"
+msgstr "smazat název"
+
+msgid "Type here the title"
+msgstr "Napište zde název"
+
+msgid "remove creation date"
+msgstr "smazat datum vytvoření"
+
+msgid "Album photos associated to the following albums: %s"
+msgstr "Fotky alba přiřazeny k následujícím albům: %s"
+
+msgid "Delete orphan tags"
+msgstr "Smazat osiřelé štítky"
+
+msgid "delete photo"
+msgstr "smazat fotku"
+
+msgid "Orphan tags deleted"
+msgstr "Štítky odstraněny"
+
+msgid "Remove from caddie"
+msgstr "Odebrat z košíku"
+
+msgid "Week starts on"
+msgstr "Týden začíná v"
+
+msgid "You have %d orphan tags: %s."
+msgstr "Máte %d štítků: %s."
+
+msgid "Themes which need upgrade"
+msgstr "Šablony, které potřebují aktualizovat"
+
+msgid "Languages which need upgrade"
+msgstr "Jazyky které potřebují aktualizovat"
+
+msgid "All themes are up to date."
+msgstr "Všechny šablony jsou akuální."
+
+msgid "All plugins are up to date."
+msgstr "Všechny doplňky jsou akuální."
+
+msgid "All languages are up to date."
+msgstr "Všechny překlady jsou akuální."
+
+msgid "Visit theme site"
+msgstr "Navštívit web šablony"
+
+msgid "Visit language site"
+msgstr "Navštívit web překladu"
+
+msgid "New Version"
+msgstr "Nová verze"
+
+msgid "Obsolete Plugins"
+msgstr "Zastaralé doplňky"
+
+msgid "WARNING! This plugin does not seem to be compatible with this version of Piwigo."
+msgstr "POZOR! Tento plugin se zdá nekompatibilní s touto verzí Piwigo."
+
+msgid "Do you want to activate anyway?"
+msgstr "Přejete si je přesto aktivovat?"
+
+msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
+msgstr "TENTO PLUGIN JE NYNÍ SOUČÁSTÍ JÁDRA PIWIGO! ODINSTALUJTE HO!"
+
+msgid "ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW."
+msgstr "CHYBA: TENTO PLUGIN CHYBÍ, ALE JE NAINSTALOVÁN! ODINSTALUJTE HO."
+
+msgid "display"
+msgstr "zobrazit"
+
+msgid "new"
+msgstr "nové"
+
+msgid "No results"
+msgstr "Žádný výsledek"
+
+msgid "Searching..."
+msgstr "Hledám..."
+
+msgid "Type in a search term"
+msgstr "Zadejte hledaný výraz"
+
+msgid "Activate icon \"new\" next to albums and pictures"
+msgstr "Aktivovat ikonu \"nové\" vedle alb a obrázků"
+
+msgid "Deactivate all"
+msgstr "Deaktivovat vše"
+
+msgid "Default photos order"
+msgstr "Výchozí pořadí fotografií"
+
+msgid "Restore"
+msgstr "Obnovit"
+
+msgid "Restore default configuration. You will lose your plugin settings!"
+msgstr "Obnovit výchozí konfiguraci. Přijdete o nastavení v pluginech!"
+
+msgid "Show menubar"
+msgstr "Zobrazit menu"
+
+msgid "Thumbnails generation in progress..."
+msgstr "Generování náhledů v přípravě..."
+
+msgid "Photos generation in progress..."
+msgstr "Generování fotek v přípravě..."
+
+msgid "%s photos have been regenerated"
+msgstr "%s fotek bylo regenerováno"
+
+msgid "%s photos can not be regenerated"
+msgstr "%s fotek nemohlo být regenerováno"
+
+msgid "Updates"
+msgstr "Aktualizace"
+
+msgid "Update in progress... Please wait."
+msgstr "Probíhá aktualizace... Prosím čekejte."
+
+msgid "Ignore this update"
+msgstr "Ignoruj tuto aktualizaci"
+
+msgid "Reset ignored updates"
+msgstr "Resetuj ignorované aktualizace"
+
+msgid "Update All"
+msgstr "Aktualizuj vše"
+
+msgid "ERROR"
+msgstr "CHYBA"
+
+msgid "Update Complete"
+msgstr "Aktualizace kompletní"
+
+msgid "Piwigo Update"
+msgstr "Piwigo Aktualizace"
+
+msgid "Extensions Update"
+msgstr "Aktualizace Doplňků"
+
+msgid "All extensions are up to date."
+msgstr "Všechny doplňky jsou aktuální."
+
+msgid "Following plugins may not be compatible with the new version of Piwigo:"
+msgstr "Následující pluginy nemusejí být kompatibilní s novou verzí Piwigo:"
+
+msgid "Following themes may not be compatible with the new version of Piwigo:"
+msgstr "Následující šablony vzhledu nemusejí být kompatibilní s novou verzí Piwigo:"
+
+msgid "I decide to update anyway"
+msgstr "Rozhodl jsem se aktualizovat"
+
+msgid "Update to Piwigo %s"
+msgstr "Aktualizace na Piwigo %s"
+
+msgid "Two updates are available"
+msgstr "dvě aktualizace jsou k dispozici"
+
+msgid "This is a minor update, with only bug corrections."
+msgstr "Toto je minoritní aktualizace, opravuje zejména chyby."
+
+msgid "This is a major update, with <a href=\"%s\">new exciting features</a>."
+msgstr "Toto je velká aktualizace, s <a href=\"%s\">novými funkcemi</a>."
+
+msgid "Some themes and plugins may be not available yet."
+msgstr "Některé šablony vzhledu a pluginy nemusejí být dostupné."
+
+msgid "You can update to Piwigo %s directly, without upgrading to Piwigo %s (recommended)."
+msgstr "Můžete aktualizovat na vyšší verzi Piwigo %s přímo, bez nutnosti upgradu na Piwigo %s (doporučeno)."
+
+msgid "Save Template Directory"
+msgstr "Uložit složku šablony"
+
+msgid "Some upgrades are available for extensions."
+msgstr "Pro některý z doplňků je připravena aktualizace."
+
+msgid "Ignore All"
+msgstr "Ignoruj Vše"
+
+msgid "Crop"
+msgstr "Ořez"
+
+msgid "Width"
+msgstr "Šířka"
+
+msgid "Height"
+msgstr "Výška"
+
+msgid "Follow Orientation"
+msgstr "Postupuj podle orientace"
+
+msgid "Graphics Library"
+msgstr "Grafická knihovna"
+
+msgid "Average rate"
+msgstr "Průměrné hodnocení"
+
+msgid "Rate"
+msgstr "Hodnocení"
+
+msgid "Add a criteria"
+msgstr "Přidání kritéria"
+
+msgid "You can't define a default photo order because you have a custom setting in your local configuration."
+msgstr "Nemužete definovat výchozí pořadí fotografií, protože máte nadefinováno vlastní nastavení v konfiguraci"
+
+msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
+msgstr "Specifikovali jste <i>$conf['order_by']</i> v konfiguračním souboru, tento parametr je zastaralý, prosím odstraňte ho nebo přejmenujte na <i>$conf['order_by_custom']</i> !"
+
+msgid "Learn more"
+msgstr "Zjistit více"
+
+msgid "... or "
+msgstr "... nebo "
+
+msgid "Create"
+msgstr "Vytvořit"
+
+msgid "Start Upload"
+msgstr "Zahájit Upload"
+
+msgid "You are using the Flash uploader. Problems? Try the <a href=\"%s\">Browser uploader</a> instead."
+msgstr "Nyní používáte Flash uploader. Problémy? Zkuste <a href=\"%s\">Browser uploader</a> místo něj."
+
+msgid "You are using the Browser uploader. Try the <a href=\"%s\">Flash uploader</a> instead."
+msgstr "Používáte Browser uploader. Můžete zkusit <a href=\"%s\">Flash uploader</a> místo něj."
+
+msgid "Maximum file size: %sB."
+msgstr "Maximální velikost souboru: %sB."
+
+msgid "Allowed file types: %s."
+msgstr "Povolené typy souborů: %s."
+
+msgid "Approximate maximum resolution: %dM pixels (that's %dx%d pixels)."
+msgstr "Aproximované max. rozlišení: %dM pixelů (to je %dx%d pixelů)."
+
+msgid "Manage Permissions"
+msgstr "Nastavení oprávnění"
+
+msgid "Photo %s of %s"
+msgstr "Fotografií %s ze %s"
+
+msgid "show details"
+msgstr "zobrazit detaily"
+
+msgid "hide details"
+msgstr "skrýt detaily"
+
+msgid "Merge tags"
+msgstr "Sloučit štítky"
+
+msgid "Select the destination tag"
+msgstr "Vyberte cílový štítek"
+
+msgid "(this tag will be deleted)"
+msgstr "(tento štítek bude vymazán)"
+
+msgid "Confirm merge"
+msgstr "Potvrdit sloučení"
+
+msgid "Merge selected tags"
+msgstr "Sloučit vybrané štítky"
+
+msgid "No destination tag selected"
+msgstr "Cílový štítek nebyl vybrán"
+
+msgid "Tags <em>%s</em> merged into tag <em>%s</em>"
+msgstr "Štítky <em>%s</em> sloučeny do štítku <em>%s</em>"
+
+msgid "Select at least two tags for merging"
+msgstr "Vyberte alespoň 2 štítky pro sloučení"
+
+msgid "Select an album"
+msgstr "Vyberte album"
+
+msgid "An error has occured during upgrade."
+msgstr "Během aktualizace došlo k chybě."
+
+msgid "An error has occured during extract. Please check files permissions of your piwigo installation.<br><a href=\"%s\">Click here to show log error</a>."
+msgstr "K chybě došlo během rozbalování. Prosím ověřte oprávnění na soubory Vaší instalace Piwigo.<br><a href=\"%s\">Pro zobrazení chybového logu klikněte zde</a>."
+
+msgid "Piwigo cannot retrieve upgrade file from server"
+msgstr "Piwigo nemùže získat novou verzi ze serveru"
+
+msgid "By default, Piwigo will create a new websize from the HD (high definition) version of your photo."
+msgstr "Jako výchozí, Piwigo vytvoří nový rozměr(upraví rozlišení) vašich nahrávaných fotografií v HD rozlišení."
+
+msgid "If no HD is available and if the current websize is bigger than resize dimensions, Piwigo will move it as HD and create a downsized websize photo from it."
+msgstr "Pokud nemáte obrázek v HD rozlišení a pokud stávající webové rozlišení je větší než nastavené rozsahy dimenzí obrázku, Piwigo fotku vezme jako HD a vytvoří zmenšenou verzi obrázku pro web z originálu."
+
+msgid "Zoom"
+msgstr "Přiblížit"
+
+msgid "Add to caddie"
+msgstr "Přidat do košíku"
+
+msgid "%s has been successfully updated."
+msgstr "%s: úspěšně aktualizováno."
+
+msgid "Add tags"
+msgstr "Přidat štítky"
+
+msgid "Last import"
+msgstr "Poslední import"
+
+msgid "Photo name"
+msgstr "Název fotografie"
+
+msgid "Predefined filter"
+msgstr "Předdefinovaný filtr"
+
+msgid "With no album"
+msgstr "Bez alba"
+
+msgid "With no tag"
+msgstr "Bez štítku"
+
+msgid "With no virtual album"
+msgstr "Bez virtuálního alba"
+
+msgid "Activate comments"
+msgstr "Aktivovat komentáře"
+
+msgid "Default comments order"
+msgstr "Výchozí řazení komentářů"
+
+msgid "Send connection settings by email"
+msgstr "Zaslat přístupové údaje emailem"
+
+msgid "The original image quality must be a number between %d and %d"
+msgstr "Původní kvalita obrázku musí být mezi %d a %d"
+
+msgid "The original maximum height must be a number between %d and %d"
+msgstr "Výška originálu musí být mezi %d a %d"
+
+msgid "The original maximum width must be a number between %d and %d"
+msgstr "Šířka originálu musí být mezi %d a %d"
+
+msgid "Resize after upload"
+msgstr "Změnit velikost po uploadu"
+
+msgid "Original Size"
+msgstr "Původní velikost"
+
+msgid "A locked gallery is only visible to administrators"
+msgstr "Zamčenou galerii může zobrazovat pouze administrátor"
+
+msgid "Unlock gallery"
+msgstr "Odemknout galerii"
+
+msgid "Gallery unlocked"
+msgstr "Galerie je odemčena"
+
+msgid "Notify administrators when a comment is"
+msgstr "Upozornit administrátora na komentář když je"
+
+msgid "modified"
+msgstr "modifikován"
+
+msgid "pending validation"
+msgstr "čekající na ověření"
+
+msgid "Save visits in history for"
+msgstr "Uložit historii návštěv pro"
+
+msgid "simple visitors"
+msgstr "jednotlivé návštěvy"
+
+msgid "registered users"
+msgstr "registrované uživatele"
+
+msgid "administrators"
+msgstr "administrátory"
+
+msgid "This album contains %d photos, added on %s."
+msgstr "Album obsahuje %d fotek, přidaných v %s."
+
+msgid "This album contains %d photos, added between %s and %s."
+msgstr "Album obsahuje %d fotek, přidáno mezi %s a %s."
+
+msgid "This album contains no photo."
+msgstr "Album neobsahuje žádné fotografie."
+
+msgid "Not cropped correctly?"
+msgstr "Je ořez v pořádku?"
+
+msgid "Center of interest"
+msgstr "Střed zájmu"
+
+msgid "Move to album"
+msgstr "Přesunout do alba"
+
+msgid "You can activate only one mobile theme."
+msgstr "Jde aktivovat pouze v mobilním zobrazení."
+
+msgid "Automatic sort order"
+msgstr "Automatické pořadí"
+
+msgid "apply automatic sort order"
+msgstr "Použij automatické pořadí"
+
+msgid "Save manual order"
+msgstr "Ulož ruční uspořádání"
+
+msgid "cancel manual order"
+msgstr "zruš ruční uspořádání"
+
+msgid "Cancel"
+msgstr "Zruš"
+
+msgid "List"
+msgstr "Přehled"
+
+msgid "Web Form"
+msgstr "Webový Formulář"
+
+msgid "Applications"
+msgstr "Aplikace"
+
+msgid "Available on"
+msgstr "K dispozici na"
+
+msgid "Piwigo for iOS (iPhone, iPad, iPod Touch)"
+msgstr "Piwigo pro iOS (iPhone, iPad, iPod Touch)"
+
+msgid "<em>Piwigo for iOS</em> application empowers you to connect to your Piwigo gallery from your iPhone, iPad or iPod Touch, create some albums and upload several photos at once."
+msgstr "<em>Piwigo pro iOS</em> aplikace vám dává možnost se připojit do galerie Piwigo z vašeho iPhone, iPad nebo iPod Touch, vytvořit nějaké alba a nahrávat více fotografií najednou."
+
+msgid "Piwigo for Android"
+msgstr "Piwigo pro Android"
+
+msgid "<em>Piwigo for Android</em> application empowers you to connect your Android phone or table to your Piwigo gallery, create some albums and upload several photos at once."
+msgstr "<em>Piwigo pro Android</em> aplikace vám dává možnost se připojit do galerie Piwigo z vašeho Android telefonu nebo tabletu, vytvořit nějaké alba a nahrávat více fotografií najednou."
+
+msgid "Piwigo Publish plugin for Lightroom"
+msgstr "Piwigo Publikační plugin pro Lightroom"
+
+msgid "Adobe Photoshop Lightroom is a photography software designed to manage large quantities of digital images and doing post production work."
+msgstr "Adobe Photoshop Lightroom je fotografický software určený ke správě velkého množství digitálních fotografií a jejich postprodukcí."
+
+msgid "The Piwigo publish Plug-in allows you to export and synchronize photos from Lightroom directly to your Piwigo photo gallery."
+msgstr "Piwigo publikační Plug-in umožňuje export a synchronizaci fotek z Lightroom přímo do vaší Piwigo fotogalerie."
+
+msgid "Piwigo publish plugin for Shotwell"
+msgstr "Piwigo publikační plugin pro Shotwell"
+
+msgid "Shotwell is an open source digital photo organizer that runs on Linux. It is the default photo manager in Ubuntu and Fedora."
+msgstr "Shotwell je open source digitalní foto organizér pro Linux. Je to základní foto manažer v  distribucích Ubuntu a Fedora."
+
+msgid "On your Linux, simply install Shotwell with your package manager and the activate Piwigo publishing option."
+msgstr "Na linuxu, jednoduše nainstalujte Shotwell s pomocí vašeho správce balíčků a potom aktivujte Piwigo publikační volbu."
+
+msgid "Piwigo publish plugin for digiKam"
+msgstr "Piwigo publikační plugin pro digiKam"
+
+msgid "digiKam is an advanced digital photo management free software for Linux, Windows, and MacOSX."
+msgstr "digiKam je pokročilý správce fotografií free software pro Linux, Windows, and MacOSX."
+
+msgid "digiKam is designed for photographers who want to view, manage, edit, enhance, organize, tag, and share photographs."
+msgstr "digiKam je určen pro fotografy, kteří chtějí prohlížet, spravovat, upravovat, zlepšovat, uspořádávat, označovat a sdílet fotografie."
+
+msgid "To export your photos from digiKam to Piwigo, simply install digiKam and the Kipi-plugins."
+msgstr "Chcete-li exportovat své fotografie z Digikam do Piwigo, jednoduše nainstalujte digiKam a Kipi-plugin."
+
+msgid "Piwigo export plugin for iPhoto"
+msgstr "Piwigo exportní plugin pro iPhoto"
+
+msgid "iPhoto is the default photo manager on MacOSX. The Piwigo export plugin let you create new albums and export your photos directly from iPhoto to your Piwigo photo gallery."
+msgstr "iPhoto je výchozí správce fotografií na MacOSX. Exportní Piwigo plugin vám umožní vytvořit nová alba a exportovat své fotografie přímo z iPhoto do fotogalerie Piwigo."
+
+msgid "Piwigo export plugin for Aperture"
+msgstr "Piwigo exportní plugin pro Aperture"
+
+msgid "Aperture is a powerful tool to refine images and manage massive libraries on Mac."
+msgstr "Aperture je výkonný nástroj pro zdokonalení snímků a správu obrovských knihoven na Mac."
+
+msgid "Aperture is designed for professional photographers with iPhoto simplicity."
+msgstr "Aperture je navržen pro profesionální fotografy s jednoduchostí iPhoto."
+
+msgid "The Piwigo export plugin allows you to create albums and export photos."
+msgstr "Piwigo exportní plugin umožňuje vytvářet alba a exportovat fotografie."
+
+msgid "ReGalAndroid (RemoteGallery client for Android) is an open source (GPL v3) Piwigo client for the Android platform."
+msgstr "ReGalAndroid (RemoteGallery klient pro Android) je open source (GPL v3) Piwigo klient pro Android platformu."
+
+msgid "Features include gallery browsing, album creation and photo upload."
+msgstr "Funkce obsahuje prohlížení galerie, tvorbu alb a upload fotografií."
+
+msgid "Generate multiple size images"
+msgstr "Generovat více velikostí obrázků"
+
+msgid "Delete multiple size images"
+msgstr "Odstranění více velikostí obrázků"
+
+msgid "any visitor can see this album"
+msgstr "každý návštěvník může prohlížet toto album"
+
+msgid "visitors need to login and have the appropriate permissions to see this album"
+msgstr "návštěvník se musí přihlásit a mít přidělena vhodná oprávnění pro prohlížení tohoto album"
+
+msgid "Groups and users"
+msgstr "Skupiny a uživatelé"
+
+msgid "Permission granted for groups"
+msgstr "Oprávnění udělená pro skupiny"
+
+msgid "Select groups..."
+msgstr "Výběr skupiny..."
+
+msgid "There is no group in this gallery."
+msgstr "Nemáte žádnou skupinu v této galerii."
+
+msgid "Permission granted for users"
+msgstr "Oprávnění udělená pro uživatele"
+
+msgid "Select users..."
+msgstr "Výběr uživatelů..."
+
+msgid "%u users have automatic permission because they belong to a granted group."
+msgstr "%u uživatelé mají automatické oprávnění, protože patří do vybrané skupiny."
+
+msgid "include photos with lower privacy level"
+msgstr "zahrnuje fotky s nižší úrovní soukromí "
+
+msgid "custom"
+msgstr "Vlastní"
+
+msgid "No group is permitted to see this private album"
+msgstr "Žádná ze skupin nemá oprávnění prohlížet toto soukromé album"
+
+msgid "Permission management"
+msgstr "Správa pravidel přístupu"
+
+msgid "add a new watermark"
+msgstr "Přidej vodoznak"
+
+msgid "Apply watermark if height is bigger than"
+msgstr "Vlož vodoznak pokud je výška delší než"
+
+msgid "Apply watermark if width is bigger than"
+msgstr "Vlož vodoznak pokud je šířka delší než"
+
+msgid "bottom left corner"
+msgstr "Levý spodní roh"
+
+msgid "bottom right corner"
+msgstr "Pravý spodní roh"
+
+msgid "By default, the center of interest is placed in the middle of the photo."
+msgstr "Podle púuvodního nastavení je střed zájmu umístěn doprostřed fotografie."
+
+msgid "For photo sizes with crop, such as \"Square\", Piwigo will do its best to include the center of interest."
+msgstr "Pro fotografie s ořezem, jako třeba \"čtverec\", se Piwigo pokusí umístit střed zájmu do vysledného ořezu."
+
+msgid "middle"
+msgstr "střední"
+
+msgid "Opacity"
+msgstr "Průhlednost"
+
+msgid "Photo sizes with crop"
+msgstr "Fotografie s ořezem"
+
+msgid "Select a file"
+msgstr "Vyber soubor"
+
+msgid "Select a zone with your mouse to define a new center of interest."
+msgstr "Vyber myší zónu nového středu zájmu"
+
+msgid "The center of interest is the most meaningful zone in the photo."
+msgstr "Střed zájmu je nejdůležitější část(zóna) fotky"
+
+msgid "top left corner"
+msgstr "Levý horní roh"
+
+msgid "top right corner"
+msgstr "Pravý horní roh"
+
+msgid "X Position"
+msgstr "pozice X"
+
+msgid "X Repeat"
+msgstr "X opakování"
+
+msgid "Y Position"
+msgstr "pozice Y"
+
+msgid "Multiple Size"
+msgstr "Více velikostí"
+
+msgid "%d day"
+msgstr "%d den"
+
+msgid "%d days"
+msgstr "%d dní"
+
+msgid "%d hour"
+msgstr "%d hodina"
+
+msgid "%d hours"
+msgstr "%d hodin"
+
+msgid "%d minute"
+msgstr "%d minuta"
+
+msgid "%d minutes"
+msgstr "%d minut"
+
+msgid "%d month"
+msgstr "%d měsíc"
+
+msgid "%d months"
+msgstr "%d měsíců"
+
+msgid "%d second"
+msgstr "%d vteřin"
+
+msgid "%d seconds"
+msgstr "%d vteřin"
+
+msgid "%d year"
+msgstr "%d rok"
+
+msgid "%d years"
+msgstr "%d let"
+
+msgid "%s ago"
+msgstr "před %s"
+
+msgid "%s in the future"
+msgstr "%s v budoucnosti"
+
+msgid "Added by %s"
+msgstr "Přidal %s"
+
+msgid "Numeric identifier : %d"
+msgstr "Číselný identifikátor: %d"
+
+msgid "Original file : %s"
+msgstr "Původní soubor: %s"
+
+msgid "Posted %s on %s"
+msgstr "Posláno %s na %s"
+
+msgid "Rated %d times, score : %.2f"
+msgstr "Hodnoceno %d-krát, hodnocení: %.2f"
+
+msgid "Sharpen"
+msgstr "Doostřit"
+
+msgid "Visited %d times"
+msgstr "Navštíveno %d-krát"
+
+msgid "Watermark"
+msgstr "Vodoznak"
+
+msgid "%d week"
+msgstr "%d. týden"
+
+msgid "%d weeks"
+msgstr "%d týdny"
+
+msgid "Edit photo"
+msgstr "Upravit foto"
+
+msgid "create a new site"
+msgstr "vytvoř nové místo"
+
+msgid "No order field selected"
+msgstr "Není vybráno pole řazení"
+
+msgid "Duplicate selected tags"
+msgstr "Duplikuj vybrané štítky"
+
+msgid "Name of the duplicate"
+msgstr "Název duplikátu"
+
+msgid "Source tag"
+msgstr "Zdrojový štítek"
+
+msgid "Tag \"%s\" is now a duplicate of \"%s\""
+msgstr "Štítek \"%s\" je nyní duplikátem \"%s\""
+
+msgid "Landscape"
+msgstr "Naležato"
+
+msgid "Manage photos"
+msgstr "Spravovat fotografie"
+
+msgid "Minimum height"
+msgstr "Minimální výška"
+
+msgid "Minimum width"
+msgstr "Minimální šířka"
+
+msgid "Number of albums per page"
+msgstr "Počet alb na stránku"
+
+msgid "Panorama"
+msgstr "Panoráma"
+
+msgid "Portrait"
+msgstr "Na výšku"
+
+msgid "View in gallery"
+msgstr "Zobrazit v galerii"
+
+msgid "Ratio"
+msgstr "Poměr"
+
+msgid "between %.2f and %.2f"
+msgstr "mezi %.2f a %.2f"
+
+msgid "between %d and %d pixels"
+msgstr "mezi %d a %d pixely"
+
+msgid "Duplicate"
+msgstr "Duplikovat"
+
+msgid "Manage the members"
+msgstr "Organizovat členy"
+
+msgid "Merge selected groups"
+msgstr "Spojit vybrané skupiny"
+
+msgid "No groups selected, no actions possible."
+msgstr "Není vybrána žádná skupina, není možná řádná akce"
+
+msgid "No members to manage"
+msgstr "Žádní členové k organizování"
+
+msgid "Please select at least two groups"
+msgstr "Prosím vyberte nejméně dvě skupiny"
+
+msgid "Rename"
+msgstr "Přejmenovat"
+
+msgid "This group will be set to default"
+msgstr "Tato skupina bude použita jako defaultní"
+
+msgid "This group will be unset to default"
+msgstr "Tato skupina nebude dále použita jako defaultní"
+
+msgid "Type here the name of the new group"
+msgstr "Napište sem jméno nové skupiny"
+
+msgid "Purge user cache"
+msgstr "Provést údržbu uživatelské mezipaměťi"
+
+msgid "The picture dimensions will be reduced to %dx%d pixels."
+msgstr "Rozměry obrázku budou zmenšeny na %dx%d pixelů."
+
+msgid "Resize after upload disabled due to the use of GD as graphic library"
+msgstr "Změna velikosti po uploadu není aktivní, kvůli používání GD jako grafické knihovny."
+
+msgid "Select at least one tag"
+msgstr "vyberte alespoň jeden tag"
+
+msgid "Mail theme"
+msgstr "E-mailové téma"
+
+msgid "%d of %d users selected"
+msgstr "%d z %d uživatelů vybráno"
+
+msgid "(filtered from %s total users)"
+msgstr "(vyfiltrováno z celkového počtu %s uživatelů)"
+
+msgid "All %d users are selected"
+msgstr "Všech %d uživatelů bylo vybráno"
+
+msgid "No user selected of %d users"
+msgstr "Nebyl vybrán žádny z %d uživatelů"
+
+msgid "Showing %s to %s of %s users"
+msgstr "Jsou zobrazeni %s až %s z %s uživatelů"
+
+msgid "Basic settings"
+msgstr "Základní nastavení"
+
+msgid "Change password"
+msgstr "Změnit heslo"
+
+msgid "Change username"
+msgstr "Změnit jméno uživatele"
+
+msgid "General"
+msgstr "Všeobecné"
+
+msgid "Last visit on %s, %s."
+msgstr "Poslední návštěva v %s, %s."
+
+msgid "Loading..."
+msgstr "Nahrává se..."
+
+msgid "No matching user found"
+msgstr "Uživatel odpovídající dotazu hledání nenalezen"
+
+msgid "No users selected, no actions possible."
+msgstr "Nebyl zvolen uživatel, akce není možná."
+
+msgid "Password updated"
+msgstr "Heslo aktualizováno"
+
+msgid "Registered on %s, %s."
+msgstr "Zaregistrován v %s, %s."
+
+msgid "Show %s users"
+msgstr "Zobraz %s uživatele"
+
+msgid "Update user"
+msgstr "Aktualizuj uživatele"
+
+msgid "User %s added"
+msgstr "Uživatel %s přidán"
+
+msgid "User %s updated"
+msgstr "Uživatel %s aktualizován"
+
+msgid "Users modified"
+msgstr "Uživatelé pozměněni"
+
+msgid "on the %d selected users"
+msgstr "na %d vybraných uživatelích"
+
+msgid "Close user details"
+msgstr "Zavřít detajly uživatele"
+
+msgid "Open user details"
+msgstr "Otevřít detajly uživatele"
+
+msgid "close"
+msgstr "Zavřít"
+
+msgid "Activate it now"
+msgstr "Teď spustit"
+
+msgid "Allow users to add a link to their website"
+msgstr "Umožnuje uživatelům přidat odkaz na jejich stránky"
+
+msgid "between %s and %s MB"
+msgstr "mezi %s a %s MB"
+
+msgid "Impossible to deactivate the default theme."
+msgstr "Nelze deaktivovat výchozí vzhled."
+
+msgid "Mail address is mandatory for registration"
+msgstr "Emailová adresa je pro registraci vyžadována"
+
+msgid "Upload in progress"
+msgstr "Probíhá nahrávání"
+
+msgid "date & time"
+msgstr "datum & čas"
+
+msgid "file name"
+msgstr "jméno souboru"
+
+msgid "width & height"
+msgstr "šířka & výška"
+
+msgid "Empty caddie"
+msgstr "Vyprázdnit košík"
+
+msgid "No and unlock sub-albums"
+msgstr "Ne a odemknout podalba"
+
+msgid "The settings for the guest are from the %s user"
+msgstr "Nastavení pro hosta je od uživatele %s"
+
+msgid "based on"
+msgstr "založeno na"
+
+msgid "No recipient selected"
+msgstr "Žádní adresáti nevybráni"
+
+msgid "Recipients"
+msgstr "Adresáti"
+
+msgid "Y Repeat"
+msgstr "Y opakování"
+
+msgid "Orphans"
+msgstr "Sirotci"
+
+msgid "No user is permitted to see this private album"
+msgstr "Žádní uživatelé nejsou oprávněni vidět toto soukromé album"
+
+msgid "For security reason, authentication keys do not work for administrators."
+msgstr "Z bezpečnostních důvodů, ověřovací klíče nefungují pro administrátory."
+
+msgid "Edit user"
+msgstr "Upravit uživatele"
+
+msgid "Each email sent will contain its own automatic authentication key on links, valid for %s."
+msgstr "Každý odeslaný email bude obsahovat vlastní odkaz obsahující ověřovací klíč, který je platný po %s."
+
+msgid "Delete %d orphan photos"
+msgstr "Smazání %d fotografií bez rodiče"
+
+msgid "Display form"
+msgstr "Formulář zobrazení"
+
+msgid "(determined from photos)"
+msgstr "(určeno z fotografií)"
+
+msgid "No filter on album. Select one or type to search"
+msgstr "Žádný filtr na albu. Vyberte jeden, nebo pište pro vyhledávání"
+
+msgid "Piwigo Remote Sync is able to upload a whole folder hierarchy. If you run it again, only new photos will be uploaded."
+msgstr "Vzdálená synchronizace je schopna nahrát celou hierarchii složek. Pokud ji znovu spustíte, budou nahrány pouze nové fotografie."
+
+msgid "Running on an up-to-date Piwigo is important for security."
+msgstr "Aktuální piwigo je důležité pro bezpečnost."
+
+msgid "Share / Send your photos directly from your Mac Os X (10.10 and following) to Piwigo"
+msgstr "Sdílejte / Odesílejte své fotografie přímo z macOS (10.10 a novější) do Piwigo"
+
+msgid "Time has come to update your Piwigo with version %s, go to %s"
+msgstr "Nastal čas aktualizovat Vaše Piwigo verze %s na %s"
+
+msgid "orphans to delete"
+msgstr "sirotci, které chcete smazat"
+
+msgid "delete only album, not photos"
+msgstr "smazat pouze album, fotografie ponechat"
+
+msgid "delete album and all %d photos, even the %d associated to other albums"
+msgstr "smazat album a všech %d fotografií, včetně %d přiřazených k jiným albům"
+
+msgid "delete album and the %d orphan photos"
+msgstr "smazat album a %d osiřelé fotografie"
+
+msgid "checksum"
+msgstr "kontrolní součet"
+
+msgid "Storage used"
+msgstr "Využití úložiště"
+
+msgid "Select tags"
+msgstr "Vyberte štítky"
+
+msgid "Piwigo %s is available, please update"
+msgstr "Piwigo %s je k dispozici, prosím aktualizujte"
+
+msgid "No tags selected, no actions possible."
+msgstr "Není vybrán žádný štítek, není možná žádná akce."
+
+msgid "It only takes a few clicks."
+msgstr "Trvá to jen několik kliknutí."
+
+msgid "Delete album \"%s\"."
+msgstr "Smazat album \"%s\"."
+
+msgid "Delete album \"%s\" and its %d sub-albums."
+msgstr "Smazat album \"%s\" a jeho %d podalba."
+
+msgid "Dashboard"
+msgstr "Nástěnka"
+
+msgid "Confirm deletion"
+msgstr "Potvrďte smazání"
+
+msgid "Visit"
+msgstr "Navštívit"
+
+msgid "Display album date period"
+msgstr "Zobraz čas přiřazený ke každému album, např. od 12. do 15. Června 2020"
+
+msgid "%d checksums were added"
+msgstr "%d kontrolních součtů bylo přidáno"
+
+msgid "Compute %d missing checksums"
+msgstr "Vypočítávám %d chybějících kontrolních součtů"
+
+msgid "Some checksums are missing."
+msgstr "Některá data scházejí."
+
+msgid "Piwigo requires an album to add photos."
+msgstr "Nejprve vytvořte nějaké album aby mohli být vloženy obrázky."
+
+msgid "Display category date"
+msgstr "Zobrazit čas pro kategorie"
+
+msgid "Synchronization in progress"
+msgstr "Probíhá synchronizace"
+
+msgid "Welcome!"
+msgstr "Vítejte!"
+
+msgid "checksums to add"
+msgstr "ke kontrole"
+
+msgid "With no checksum"
+msgstr "Bez kontroly"
+
+msgid "or"
+msgstr "nebo "
+
+msgid "Deletion in progress"
+msgstr "Odstraňuji..."
+
+msgid "Create a first album"
+msgstr "Vytvořit první album"
+
+msgid "... or hide this link"
+msgstr "... nebo skrýt tento odkaz"
+
+msgid "<b>%d</b> tag selected"
+msgstr "Vybráno <b>%d</b> klíčových slov"
+
+msgid "<b>%d</b> tags found"
+msgstr "Nalezeno <b>%d</b> klíčových slov "
+
+msgid "<b>1</b> album found"
+msgstr "Nalezeno <b>1</b> album"
+
+msgid "Activity peak in the last weeks"
+msgstr "Vrchol aktivity v posledních týdnech"
+
+msgid "Album search tool"
+msgstr "Vyhledávání alb"
+
+msgid "Are you sure you want to delete all sizes?"
+msgstr "Jste si jisti, že chcete smazat všechny velikosti?"
+
+msgid "Are you sure you want to delete group \"%s\"?"
+msgstr "Jste si jisti, že chcete smazat skupinu \"%s\"?"
+
+msgid "Are you sure you want to delete the language \"%s\"?"
+msgstr "Jste si jisti, že chcete smazat jazyk \"%s\"?"
+
+msgid "Name is already taken"
+msgstr "Toto jméno bylo přijato"
+
+msgid "Merge"
+msgstr "Sloučit"
+
+msgid "%s file type"
+msgstr "%s soubor typ"
+
+msgid "Keep them"
+msgstr "Uložit je"
+
+msgid "Formats"
+msgstr "Formáty"
+
+msgid "Group \"%s\" succesfully deleted"
+msgstr "Skupina \"%s\" úspěšně vymazána"
+
+msgid "Group renamed"
+msgstr "Skupina přejmenována"
+
+msgid "Group added"
+msgstr "Skupina přidána"
+
+msgid "Are you sure you want to update all extensions?"
+msgstr "Chcete aktualizovat všechny doplňky?"
+
+msgid "File type: %s"
+msgstr "Typ souboru: %s"
+
+msgid "Edited on %s"
+msgstr "Upraveno %s"
+
+msgid "Dissociate user from this group"
+msgstr "Odebrat uživatele z této skupiny"
+
+msgid "Display"
+msgstr "Zobrazit"
+
+msgid "Delete them"
+msgstr "Odstranit je"
+
+msgid "%d sub-albums"
+msgstr "%d vnořených podalb"
+
+msgid "<b>%d</b> albums found"
+msgstr "nalezeno <b>%d</b> alb "
+
+msgid "Are you sure you want to lock the gallery?"
+msgstr "Opravdu chcete galerii zamknout?"
+
+msgid "Associate User"
+msgstr "Přidružit uživatele"
+
+msgid "Clear Selection"
+msgstr "Vyprázdnit výběr"
+
+msgid "Average last 12 months"
+msgstr "Průměr za posledních 12 měsíců"
+
+msgid "Created on %s"
+msgstr "Vytvořeno %s"
+
+msgid "Delete album"
+msgstr "smazat album"
+
+msgid "Cache"
+msgstr "Mezipamět"
+
+msgid "%d photos"
+msgstr "%d fotek"
+
+msgid "%d Activity"
+msgstr "%d Aktivita"
+
+msgid "%d Activities"
+msgstr "%d Aktivity"
+
+msgid "%s MB used"
+msgstr "%s MB použito "
+
+msgid "%s GB used"
+msgstr "%s GB použito "
+
+msgid " (copy %s)"
+msgstr "(zkopírujte %s)"
+
+msgid " (copy)"
+msgstr "(kopie)"
+
+msgid "Are you sure you want to delete the plugin \"%s\"?"
+msgstr "Opravdu chcete smazat doplněk \"%s\"?"
+
+msgid "Are you sure you want to delete the ratings of the user \"%s\"?"
+msgstr "Opravdu chcete odstranit hodnocení uživatele \"%s\"?"
+
+msgid "Are you sure you want to delete the theme \"%s\"?"
+msgstr "Opravdu chcete odstranit téma \"%s?"
+
+msgid "Are you sure you want to delete the user \"%s\"?"
+msgstr "Opravdu chcete odstranit uživatele \"%s\"?"
+
+msgid "Are you sure you want to delete this site?"
+msgstr "Opravdu chcete tuto stránku smazat?"
+
+msgid "Are you sure you want to delete this theme?"
+msgstr "Opravdu chcete toto téma smazat?"
+
+msgid "Are you sure you want to delete this?"
+msgstr "Opravdu to chcete smazat?"
+
+msgid "You have %d orphan tags %s"
+msgstr "máte %d osiřelých štítků %s"
+
+msgid "The other tags will be removed"
+msgstr "Ostatní štítky budou odstraněny"
+
+msgid "The %d tags on this page are selected"
+msgstr "Je vybráno %d štítků na této stránce"
+
+msgid "Tags \\{%s\\} succesfully deleted"
+msgstr "Štítky \\{%s\\} byly úspěšně smazány"
+
+msgid "Select all %d tags"
+msgstr "Vyberte všech %d štítků"
+
+msgid "Delete orphan tags ?"
+msgstr "Smazat osiřelé štítky?"
+
+msgid "Are you sure you want to install the plugin \"%s\"?"
+msgstr "Opravdu chcete nainstalovat doplněk \"%s\"?"
+
+msgid "Are you sure you want to restore the plugin \"%s\"?"
+msgstr "Opravdu chcete přeinstalovat doplněk \"%s\"?"
+
+msgid "Are you sure you want to restore this plugin?"
+msgstr "Opravdu chcete přeinstalovat tento doplněk?"
+
+msgid "No plugins found"
+msgstr "Nebyly nalezeny žádné doplňky"
+
+msgid "You have %s inactive plugins"
+msgstr "Máte %s neaktivních doplňky"
+
+msgid "Show inactive plugins"
+msgstr "Zobrazit neaktivní doplňky"
+
+msgid "%s other tags available.."
+msgstr "Máte k dispozici dalších %s štítků"
+
+msgid "<b>%d</b> tag found"
+msgstr "Nalezeno <b>%d</b> štítků"
+
+msgid "Delete tag \"%s\"?"
+msgstr "Smazat štítek \"%s\"?"
+
+msgid "Delete tags \\{%s\\}?"
+msgstr "Smazat štítky \\{%s\\}?"
+
+msgid "No tag found"
+msgstr "Nebyly nalezeny žádné štítky"
+
+msgid "Open in gallery"
+msgstr "Otevřít v galerii"
+
+msgid "Please upgrade your PHP version before any update."
+msgstr "Musíte vylepšit PHP před aktualizací"
+
+msgid "Search tips"
+msgstr "Tipy pro vyhledávání"
+
+msgid "Set as default"
+msgstr "Nastavit jako výchozí"
+
+msgid "Other"
+msgstr "Ostatní"
+
+msgid "Requires PHP %s"
+msgstr "Vyžaduje PHP %s"
+
+msgid "You don't have access to this photo"
+msgstr "K této fotce nemáte přístup"
+
+msgid "and %s others"
+msgstr "a %s dalších"
+
+msgid "Videos"
+msgstr "Videa"
+
+msgid "Yes, I am sure"
+msgstr "Ano, jsem si jistý"
+
+msgid "Yes, delete"
+msgstr "Ano, smazat"
+
+msgid "in gallery"
+msgstr "v galerii"
+
+msgid "no photo"
+msgstr "žádné fotky"
+
+msgid "Page Visited"
+msgstr "Stránka navštívena"
+
+msgid "Page Visited in %s"
+msgstr "Stránka navštívena %s"
+
+msgid "Portraits"
+msgstr "Portréty"
+
+msgid "Review"
+msgstr "Revidovat"
+
+msgid "Search albums"
+msgstr "Prohledat alba"
+
+msgid "Select"
+msgstr "Vybrat"
+
+msgid "Storage"
+msgstr "Úložiště"
+
+msgid "No, I have changed my mind"
+msgstr "Ne, změnil jsem své rozhodnutí"
+
+msgid "No albums found"
+msgstr "Nebyla nalezena žádná alba"
+
+msgid "Tag \"%s\" created"
+msgstr "Štítek \"%s\" vytvořen"
+
+msgid "Tag \"%s\" succesfully deleted"
+msgstr "Štítek \\\"%s\\\" vymazán"
+
+msgid "Tag \"%s1\" renamed in \"%s2\""
+msgstr "Štítek \\\"%s1\\\" byl přejmenován na \\\"%s2\\\""
+
+msgid "Tag(s) \\{%s1\\} succesfully merged into \"%s2\""
+msgstr "Štítky \\{%s1\\} byly sloučeny do \"%s2\""
+
+msgid "Manage users with user manager"
+msgstr "Ovládat uživatele pomocí správce uživatelů"
+
+msgid "User associated"
+msgstr "Uživatel byl propojen"
+
+msgid "Tag Manager"
+msgstr "Správce štítků"
+
+msgid "Posted %s"
+msgstr "Zveřejněno %s"
+
+msgid "Refresh thumbnail"
+msgstr "Obnovte miniatury"
+
+msgid "Manage album photos"
+msgstr "Ovládat fotografie v albu"
+
+msgid "Choose which tag to merge these tags into"
+msgstr "Vyberte přijímající štítek pro sloučení těchto štítků"
+
+msgid "Displays a banner to install or open the official Piwigo app"
+msgstr "Zobrazí plakát k instalaci nebo otevření oficiální aplikace Piwigo"
+
+msgid "Promote mobile app on mobile devices"
+msgstr "Propagovat mobilní aplikaci na mobilních zařízeních"
+
+msgid "At least 2 selected tags are needed to merge"
+msgstr "Pro sloučení musí být vybrány alespoň dva štítky"
+
+msgid "Manage sub-albums"
+msgstr "Spravovat podalba"
+
+msgid "Group(s) \\{%s1\\} succesfully merged into \"%s2\""
+msgstr "Skupina \\{%s1\\}  sloučena do \"%s2\""
+
+msgid "Groups \\{%s\\} succesfully deleted"
+msgstr "Skupiny \\{%s\\} byly smazány"
+
+msgid "Set as group for new users"
+msgstr "Nastavit jako skupinu pro nové uživatele"
+
+msgid "Unset as group for new users"
+msgstr "Odstranit jako skupinu pro nové uživatele"
+
+msgid "User \"%s\" dissociated from this group"
+msgstr "Uživatel \"%s\" odpojen od této skupiny"
+
+msgid "Are you sure you want to restore to default settings?"
+msgstr "Jste si jisti, že se chcete vrátit k výchozímu nastavení?"
+
+msgid "This is already the default theme"
+msgstr "Toto je již výchozí šablona"
+
+msgid "Compare mode"
+msgstr "Komparativní způsob"
+
+msgid "Selection mode"
+msgstr "Pro vybrané"
+
+msgid "in administration"
+msgstr "v administraci"
+
+msgid "Showing %s users out of %s"
+msgstr "Zobrazeno %s uživatelů z %s"
+
+msgid "You have %s1 orphan : %s2"
+msgstr "Máte %s1 sirotků : %s2"
+
+msgid "<b>%d+</b> albums found, try to refine the search"
+msgstr "<b>%d+</b> galerií nalezeno, zkuste upřesnit hledání"
+
+msgid "Add Album"
+msgstr "Přidat album"
+
+msgid "Apply an automatic order to root albums"
+msgstr "Použít automatické řazení na hlavní alba"
+
+msgid "Apply to direct sub-albums"
+msgstr "Použít na přímá podalba"
+
+msgid "Apply to the whole hierarchy"
+msgstr "Použít na celou hierarchii"
+
+msgid "Compact View"
+msgstr "Kompaktní zobrazení"
+
+msgid "Drag and drop to reorder albums"
+msgstr "Drag and drop pro přeskládání galerií"
+
+msgid "Hide sub-albums"
+msgstr "Skrýt podalba"
+
+msgid "Line View"
+msgstr "Řádkové zobrazení"
+
+msgid "Name field must not be empty"
+msgstr "Pole název nemůže být prázdný"
+
+msgid "Root"
+msgstr "Hlavní"
+
+msgid "Select an album... or type it!"
+msgstr "Vyberte album nebo jej napište! "
+
+msgid "Show sub-albums"
+msgstr "Zobraz podalba"
+
+msgid "Tile View"
+msgstr "Dlaždicové zobrazení"
+
+msgid "logout"
+msgstr "odhlášení"
+
+msgid "months ago"
+msgstr "minulý měsíc"
+
+msgid "move"
+msgstr "přesun"
+
+msgid "never calculated"
+msgstr "nikdy nespočteno"
+
+msgid "right now"
+msgstr "nyní"
+
+msgid "to"
+msgstr "à"
+
+msgid "Photos per page"
+msgstr "Fotek na stránku"
+
+msgid "Plugin \"%s\" deleted!"
+msgstr "Plugin \"%s\" odstraněn!"
+
+msgid "Plugin \"%s\" has been activated!"
+msgstr "Plugin \"%s\" byl aktivován!"
+
+msgid "Registered"
+msgstr "Registrován"
+
+msgid "Restored"
+msgstr "Obnoven"
+
+msgid "Select groups or type them"
+msgstr "Vyberte skupiny nebo je vypište"
+
+msgid "Selected user"
+msgstr "Vybraní uživatelé"
+
+msgid "Sep"
+msgstr "Zář"
+
+msgid "Show"
+msgstr "Zobraz"
+
+msgid "Synchronization"
+msgstr "Synchronizace"
+
+msgid "Theme"
+msgstr "Šablona vzhledu"
+
+msgid "Update"
+msgstr "Aktualizace"
+
+msgid "User updated"
+msgstr "Uživatel aktualizován"
+
+msgid "Users not logged in will have these settings applied, these settings are used by default for new users"
+msgstr "Tato nastavení budou použita pro nepřihlášené uživatele a jako výchozí pro nové uživatele."
+
+msgid "add"
+msgstr "přidat"
+
+msgid "between %s and %s"
+msgstr "mezi %s a %s"
+
+msgid "calculated"
+msgstr "vypočteno"
+
+msgid "deletion"
+msgstr "odstraňování"
+
+msgid "edit"
+msgstr "editace"
+
+msgid "login"
+msgstr "přihlášení"
+
+msgid "Email Adress"
+msgstr "Email adresa"
+
+msgid "Equivalent to deactivation. The user is still in the list, but can no longer log in."
+msgstr "Podobné jako deaktivace. Uživatel je nadále v seznamu, ale nemůže se přihlásit."
+
+msgid "Feb"
+msgstr "Úno"
+
+msgid "Filters"
+msgstr "Filtry"
+
+msgid "Generate random password"
+msgstr "Generuj náhodné heslo"
+
+msgid "Has access to administration. Can only manage content: photos/albums/users/tags/groups."
+msgstr "Má přístup do administrace. Může pouze spravovat obsah: fotky/alba/uživatele/štítky/skupiny."
+
+msgid "Has access to all administration functionnalities. Can manage both configuration and content."
+msgstr "Má přístup k celé administraci. Může spravovat jak obsah tak nastavení."
+
+msgid "Jan"
+msgstr "Led"
+
+msgid "Jul"
+msgstr "Červc"
+
+msgid "Jun"
+msgstr "Červ"
+
+msgid "Language"
+msgstr "Jazyk"
+
+msgid "Last visit"
+msgstr "Poslední návštěva"
+
+msgid "Manage users"
+msgstr "Správa uživatelů"
+
+msgid "Mar"
+msgstr "Bře"
+
+msgid "May"
+msgstr "Kvě"
+
+msgid "New user added"
+msgstr "Nový uživatel přidán"
+
+msgid "No access to administration, can see private content with appropriate permissions."
+msgstr "Bez přístupu do administrace, může vidět soukromý obsahjen s příslušným oprávněním."
+
+msgid "No plugin activated"
+msgstr "Žádný plugin není aktivní"
+
+msgid "Nov"
+msgstr "Lis"
+
+msgid "Oct"
+msgstr "Říj"
+
+msgid "Activated plugin list"
+msgstr "Výpis aktivních pluginů"
+
+msgid "Activity"
+msgstr "Aktivita"
+
+msgid "Activity time from"
+msgstr "Aktivní od"
+
+msgid "Add User"
+msgstr "Přidat uživatele"
+
+msgid "Add a new user"
+msgstr "Založit nového uživatele"
+
+msgid "Advanced filters"
+msgstr "Pokročilé filtry"
+
+msgid "Apr"
+msgstr "Dub"
+
+msgid "Aug"
+msgstr "Srp"
+
+msgid "Cache size"
+msgstr "Velikost cache"
+
+msgid "Can be shared by several individuals without conflict (they cannot change the password)."
+msgstr "Lze sdílet mezi vícero individualit bez konfliktu (nemohou změnit heslo)."
+
+msgid "Change Password"
+msgstr "Změnit heslo"
+
+msgid "Close"
+msgstr "Zavřít"
+
+msgid "Deactivated"
+msgstr "Deaktivované"
+
+msgid "Dec"
+msgstr "Pros"
+
+msgid "Delete these sizes"
+msgstr "Smazat tyto velikosti"
+
+msgid "Delete user"
+msgstr "Odstranit uživatele"
+
+msgid "Download all activities"
+msgstr "Uložit všechny aktivity"
+
+msgid "Edit"
+msgstr "Editovat"
+
+msgid "Edit guest user"
+msgstr "Upravit guest uživatele"
+
+msgid "Email"
+msgstr "Email"
+
+msgid "%d photos edited"
+msgstr "%d fotek upraveno"
+
+msgid "%d photos moved"
+msgstr "%d fotek přesunuto"
+
+msgid "%d tag added"
+msgstr "%d štítek přidán"
+
+msgid "%d tag deleted"
+msgstr "%d štítek odstraněn"
+
+msgid "%d tag edited"
+msgstr "%d štítek editován"
+
+msgid "%d tag moved"
+msgstr "%d štítek přesunut"
+
+msgid "%d tags added"
+msgstr "%d štítky přidány"
+
+msgid "%d tags deleted"
+msgstr "%d štítky odstraněn"
+
+msgid "%d tags edited"
+msgstr "%d štítky editovány"
+
+msgid "%d tags moved"
+msgstr "%d štítky přesunuty"
+
+msgid "%d user added"
+msgstr "%d uživatel přidán"
+
+msgid "%d user edited"
+msgstr "%d uživatel editován"
+
+msgid "%d user logged in"
+msgstr "%d uživatel přihlášen"
+
+msgid "%d user logged out"
+msgstr "%d uživatel odhlášen"
+
+msgid "%d users added"
+msgstr "%d uživatelé přidáni"
+
+msgid "%d users edited"
+msgstr "%d uživatelé editováni"
+
+msgid "%d users logged in"
+msgstr "%d uživatelé přihlášeni"
+
+msgid "%d users logged out"
+msgstr "%d uživatelé odhlášeni"
+
+msgid "%s MB"
+msgstr "%s MB"
+
+msgid "Activated"
+msgstr "Aktivní"
+
+msgid "%d album added"
+msgstr "%d album přidáno"
+
+msgid "%d album deleted"
+msgstr "%d album odstraněno"
+
+msgid "%d album edited"
+msgstr "%d album editováno"
+
+msgid "%d albums added"
+msgstr "%d alba přidána"
+
+msgid "%d albums deleted"
+msgstr "%d alba odstraněna"
+
+msgid "%d albums edited"
+msgstr "%d alba editována"
+
+msgid "%d group added"
+msgstr "%d skupina přidána"
+
+msgid "%d group deleted"
+msgstr "%d skupina odstraněna"
+
+msgid "%d group edited"
+msgstr "%d skupina editována"
+
+msgid "%d group moved"
+msgstr "%d skupina přesunuta"
+
+msgid "%d groups added"
+msgstr "%d skupiny přidány"
+
+msgid "%d groups deleted"
+msgstr "%d skupiny odstraněny"
+
+msgid "%d groups edited"
+msgstr "%d skupiny editovány"
+
+msgid "%d groups moved"
+msgstr "%d skupiny přesunuty"
+
+msgid "%d photo added"
+msgstr "%d fotka přidána"
+
+msgid "%d photo deleted"
+msgstr "%d fotka odstraněna"
+
+msgid "%d photo edited"
+msgstr "%d fotka editována"
+
+msgid "%d photo moved"
+msgstr "%d fotka přesunuta"
+
+msgid "%d photos added"
+msgstr "%d fotek přidáno"
+
+msgid "%d photos deleted"
+msgstr "%d fotek odstraněno"
+
+msgid "%s line"
+msgstr "%s řádek"
+
+msgid "%s lines"
+msgstr "%s řádků"
+
+msgid "%s plugin found"
+msgstr "<b>%s</b> plugin nalezen"
+
+msgid "%s plugins found"
+msgstr "<b>%s</b> pluginů nalezeno"
+
+msgid "%s status is required to edit parameters."
+msgstr "%s oprávnění je požadováno pro úpravy parametrů."
+
+msgid "Edit photo #%s"
+msgstr "Editace fotky #%s"
+
+msgid "Locked albums are disabled for maintenance. Only administrators can view them in the gallery. Lock this album will also lock his Sub-albums"
+msgstr "Zamknutá alba nelze spravovat. Pouze administrátoři je mohou vidět v galerii. Zamknutí tohoto alba omezí i jeho podalba."
+
+msgid "Webmaster status required"
+msgstr "Je vyžadováno oprávnění Webmaster"
+
+msgid "Your selection"
+msgstr "Váš výběr"
+
+msgid "action successfully performed."
+msgstr "akce úspěšně provedena."
+
+msgid "Global Gallery Actions"
+msgstr "Hromadné akce alba"
+
+msgid "Purge Actions"
+msgstr "Úklidové akce"
+
+msgid "Purge Cache"
+msgstr "Vyčistit cache"
+
+msgid "Are you sure you want to uninstall the plugin \"%s\"?"
+msgstr "Opravdu chcete odinstalovat plugin plugin \"%s\"?"
+
+msgid "Are you sure you want to unlock the gallery?"
+msgstr "Opravdu chcete odemknout galerii?"
+
+msgid "%sGB"
+msgstr "%s GB"
+
+msgid "%sMB"
+msgstr "%s MB"
+
+msgid "Last revision date is newer than"
+msgstr "Poslední revize je novější než"
+
+msgid "Visited"
+msgstr "Navštíveno"
+
+msgid "Yes, rename"
+msgstr "Ano, přejmenovat"
+
+msgid "and %d more"
+msgstr "přidat %d dalších"
+
+msgid "since the beginning"
+msgstr "od začátku"
+
+msgid "Show beta test plugins"
+msgstr "Zobrazit rozšíření v betatestu"
+
+msgid "Show plugins compatible with previous version of Piwigo"
+msgstr "Zobrazit rozšíření kompatibilní s předchozími verzemi Piwigo"
+
+msgid "Tag name"
+msgstr "Název značky"
+
+msgid "The original picture will be detected with the filename (without extension)."
+msgstr "Originální obrázek bude hledán podle názvu souboru (bez přípony)."
+
+msgid "There is multiple image in the database with the following names : %s."
+msgstr "V databázi je více obrázků s následujícími jméne: %s."
+
+msgid "This albums is already in related categories list"
+msgstr "Toto album již je v seznamu souvisejících alb."
+
+msgid "This photo is an orphan"
+msgstr "Tato fotografie je sirotek"
+
+msgid "This plugin has no recent update"
+msgstr "Rozšíření nemá nedávné aktualizace"
+
+msgid "This plugin have been updated recently"
+msgstr "Rozšíření bylo nedávno aktualizované"
+
+msgid "This plugin have no update since 3 years ! It may be outdated"
+msgstr "Rozšíření nebylo v posledních 3 letech aktualizováno. Může být zastaralé!"
+
+msgid "This plugin is incompatible with your version"
+msgstr "Toto rozšíření není kompatibilní s Vaší verzí"
+
+msgid "This plugin was updated less than 6 months ago"
+msgstr "Toto rozšíření bylo aktualizováno před méně než 6 měsíci"
+
+msgid "Try now !"
+msgstr "Vyzkoušet"
+
+msgid "Understood, do not show again"
+msgstr "Rozumím, již nezobrazovat"
+
+msgid "Upload Formats"
+msgstr "Nahrát formáty"
+
+msgid "Version %s"
+msgstr "Verze %s"
+
+msgid "Latest Piwigo news"
+msgstr "Poslední novinky z Piwigo"
+
+msgid "Memories"
+msgstr "Vzpomínky"
+
+msgid "More information"
+msgstr "Více informací"
+
+msgid "No format for this picture"
+msgstr "Žádné formáty pro tento obrázek"
+
+msgid "No picture found with the following name : %s."
+msgstr "Pod názvem %s nebyl nalezen žádný obrázek."
+
+msgid "No research in progress"
+msgstr "Neprobíhá žádný průzkum"
+
+msgid "No search in progress"
+msgstr "Neprobíhá žádné vyhledávání"
+
+msgid "Object"
+msgstr "Objekt"
+
+msgid "Picture to associate formats with"
+msgstr "Obrázek pro připojení formátů"
+
+msgid "Piwigo core"
+msgstr "jádro Piwigo"
+
+msgid "Piwigo is also on mobile."
+msgstr "Piwigo je i pro mobily."
+
+msgid "Properties of abums"
+msgstr "Vlastnosti alb"
+
+msgid "Rating greater than"
+msgstr "Hodnocení vyšší než"
+
+msgid "Rename \"%s\""
+msgstr "Přejmenovat \"%s\""
+
+msgid "%d formats uploaded for %d photos"
+msgstr "%d formátů nahráno pro %d fotografií"
+
+msgid "%s pixels, %.2f MB"
+msgstr "%s pixelů, %.2f MB"
+
+msgid "Add New Plugin"
+msgstr "Přidat nový plugin"
+
+msgid "Add another set of formats"
+msgstr "Přidat další sadu formátů"
+
+msgid "Add as filter"
+msgstr "Přidat jako filtr"
+
+msgid "Add formats"
+msgstr "Přidat formáty"
+
+msgid "Additional filters"
+msgstr "Další filtry"
+
+msgid "Certification higher or equal to"
+msgstr "Certifikace vyšší nebo rovná"
+
+msgid "Create a new album at root"
+msgstr "Vytvořit nové album v kořenu"
+
+msgid "Create a sub-album of \"%s\""
+msgstr "Vytvořit podalba \"%s\""
+
+msgid "Current Version"
+msgstr "Aktuální verze"
+
+msgid "Currently running version %s"
+msgstr "Provozovaná verze %s"
+
+msgid "Delete %s format ?"
+msgstr "Smazat formát %s ?"
+
+msgid "Discover"
+msgstr "Objevovat"
+
+msgid "Downloaded"
+msgstr "Staženo"
+
+msgid "Error when trying to detect formats"
+msgstr "Chyba při pokusu o detekci formátů"
+
+msgid "Extensions"
+msgstr "Doplňky"
+
+msgid "Install Piwigo on mobile"
+msgstr "Instalovat Piwigo na mobil"
+
+msgid "Installed on %s, %s"
+msgstr "Nainstalováno %s, %s"
+
+msgid "Place first"
+msgstr "Jako první"
+
+msgid "Place last"
+msgstr "Jako poslední"
+
+msgid "This picture is physically linked to this album, you can't dissociate them"
+msgstr "Obrázek je fyzicky spojen s albem, nelze jej odpojit."
+
+msgid "While restoring this plugin, it will be reset to its original parameters and associated data is going to be reset"
+msgstr "Během obnovení modulu bude resetováno jeho nastavení a související data budou odstraněna"
+
+msgid "Always have a backup of your database and files."
+msgstr "Vždy si zálohujte databázi a soubory."
+
+msgid "Details"
+msgstr "Podrobnosti"
+
+msgid "If anything bad happens during the update, you would be able to restore a backup."
+msgstr "Pokud se během aktualizace stane něco špatného, budete moci obnovit ze zálohy."
+
+msgid "On %d rating(s)"
+msgstr "Na %d hodnocení"
+
+msgid "The best is to have them made automatically on a regular basis."
+msgstr "Nejlepší je nechat je pravidelně automaticky provádět."
+
+msgid "This photo no longer exists"
+msgstr "Tato fotografie již neexistuje"
+
+msgid "Apply to root albums"
+msgstr "Použít na hlavní alba"
+
+msgid "Visit history"
+msgstr "Historie návštěv"
+
+msgid "Album name must not be empty"
+msgstr "Název alba nesmí být prázdný"
+
+msgid "Some photos are missing from your file system. Details provided by plugin Check Uploads"
+msgstr "V souborovém systému chybí některé fotografie. Podrobnosti poskytl plugin Check Uploads"
+
+msgid "<b>%d</b> filtered user"
+msgstr "<b>%d</b> vyfiltrovaný uživatel"
+
+msgid "<b>%d</b> filtered users"
+msgstr "<b>%d</b> vyfiltrovaných uživatelů"
+
+msgid "%d pictures in sub-albums"
+msgstr "%d obrázků v podalbech"
+
+msgid "%d in whole branch"
+msgstr "%d v celé větvi"
+
+msgid "%d including sub-albums"
+msgstr "%d včetně podalb"
+
+msgid "Activate button \"%s\""
+msgstr "Aktivace tlačítka \"%s\""
+
+msgid "During upload, if Piwigo detects the photo already exists, associate the existing photo to the destination album, without duplicating file"
+msgstr "Pokud Piwigo během nahrávání zjistí, že fotografie již existuje, přiřadí ji k cílovému albu, aniž by došlo k duplikaci souboru."
+
+msgid "All admins"
+msgstr "Všichni správci"
+
+msgid "Allow comments for sub-albums"
+msgstr "Povolit komentáře pro podalba"
+
+msgid "Authorize comments"
+msgstr "Autorizovat komentáře"
+
+msgid "Comments allowed for sub-albums"
+msgstr "Komentáře povolené pro podalba"
+
+msgid "Comments disallowed for sub-albums"
+msgstr "Komentáře zakázané pro podalba"
+
+msgid "Created"
+msgstr "Vytvořeno"
+
+msgid "Detect and avoid duplicates during upload"
+msgstr "Detekce a zamezení duplicit při nahrávání"
+
+msgid "Disallow comments for sub-albums"
+msgstr "Zakázat komentáře pro podalba"
+
+msgid "Locked album"
+msgstr "Uzamčené album"
+
+msgid "Modified"
+msgstr "Upraveno"
+
+msgid "Only admins in a specific group"
+msgstr "Pouze správci v určité skupině"
+
+msgid "Put at the root"
+msgstr "Vložit do kořene"
+
+msgid "Remove thumbnail"
+msgstr "Odstranit náhled"
+
+msgid "This album is currently locked, visible only to administrators."
+msgstr "Toto album je v současné době uzamčené, viditelné pouze pro správce."
+
+msgid "Unlock it"
+msgstr "Odemknout"
+
+msgid "Unlocked album"
+msgstr "Odemčené album"
+
+msgid "%d files"
+msgstr "%d souborů"
+
+msgid "Expand"
+msgstr "Rozšířit"
+
+msgid "Shrink"
+msgstr "Zmenšit"
+
+msgid "Core"
+msgstr "Core"
+
+msgid "between %d and %d"
+msgstr "mezi %d a %d"
+
+msgid "image(s) contains unsaved changes"
+msgstr "fotka(y) obsahují neuložené změny"
+
+msgid "level of confidentiality"
+msgstr "úroveň důvěry"
+
+msgid "was succesfully deleted"
+msgstr "úspěšně odstraněno"
+
+msgid "Activate create mode to create and select an album"
+msgstr "Aktivujte režim vytváření pro vytvoření a výběr alba"
+
+msgid "Add a sub-album to “%s”"
+msgstr "Vložit sub-album do “%s”"
+
+msgid "Added on %s"
+msgstr "Přidáno k %s"
+
+msgid "An error has occured"
+msgstr "Stala se chyba"
+
+msgid "Auto-update"
+msgstr "Auto-update"
+
+msgid "Changes saved"
+msgstr "Změny uloženy"
+
+msgid "Create a root album"
+msgstr "Vytvořit výchozí album"
+
+msgid "Create and select"
+msgstr "Vytvořit a vybrat"
+
+msgid "Create your first album"
+msgstr "Vytvořit první album"
+
+msgid "Creation mode"
+msgstr "Režim vytvoření"
+
+msgid "First choose an album, then add your files"
+msgstr "Nejprve vyber album, pak vlož soubory"
+
+msgid "Image"
+msgstr "Obrázek"
+
+msgid "Metadata sync complete"
+msgstr "Synchronizace metadat dokončena"
+
+msgid "Pagination has changed and needs to be reloaded !"
+msgstr "Stránkování bylo změněno a je potřeba jej obnovit !"
+
+msgid "Save"
+msgstr "Uložit"
+
+msgid "Select or create an album"
+msgstr "Vyberte nebo vytvořte nové album"
+
+msgid "System Activities"
+msgstr "Systémové aktivity"
+
+msgid "Who can see ?"
+msgstr "Kdo si může zobrazit?"
+
+msgid "You have unsaved changes"
+msgstr "Máte neuložené změny"
+
+msgid "You cannot copy the password if the connection to this site is not secure."
+msgstr "Nemůžete kopírovat heslo pokud není přípojení k tomuto webu bezpečné."
+
+msgid "You are not authorised to change the main user, please ask your webmaster"
+msgstr "Nemáte oprávnění měnit hlavního uživatele, zeptejte se prosím svého webmastera"
+
+msgid "You can now change the main user from %s to %s."
+msgstr "Nyní můžete změnit hlavního uživatele z %s na %s."
+
+msgid "%s is the new main user"
+msgstr "%s je nový hlavní uživatel"
+
+msgid "Cannot send an email to this user because he doesn't have an email address"
+msgstr "Tomuto uživateli nelze odeslat e-mail, protože žádný nemá nastaven."
+
+msgid "Changing the main user"
+msgstr "Změna hlavního uživatele"
+
+msgid "Copied link"
+msgstr "Kopírovaný odkaz"
+
+msgid "Copy password"
+msgstr "Zkopírovat heslo"
+
+msgid "Copy the link below and send it to the user so the password can be set."
+msgstr "Zkopírujte odkaz níže a pošlete ho uživateli, aby mohlo být nastaveno heslo."
+
+msgid "Copy the password link"
+msgstr "Odkaz na zkopírování hesla"
+
+msgid "Main user"
+msgstr "Hlavní uživatel"
+
+msgid "Password copied"
+msgstr "Heslo zkopírováno"
+
+msgid "Please complete all fields"
+msgstr "Vyplňte všechna pole, prosím"
+
+msgid "Resend password link"
+msgstr "Odkaz na znovu zaslání hesla"
+
+msgid "Set as main user"
+msgstr "Nastavit jako hlavní uživatel"
+
+msgid "The passwords do not match"
+msgstr "Heslo se neshoduje"
+
+msgid "This user must first be defined as the webmaster before it can be upgraded to the main user"
+msgstr "Tento uživatel musí být nejprve definován jako webmaster, než může být změněn na hlavního uživatele."
+
+msgid "To be sure, please rewrite the word “%s” below"
+msgstr "Pro jistotu prosím níže přepište slovo “%s”"
+
+msgid "Username successfully modified"
+msgstr "Jméno uživatele úspěšně upraveno"
+
+msgid "You are about to set %s as main user instead of %s, do you wish to continue ?"
+msgstr "Nastavujete %s jako hlavního uživatele místo %s, přejete si pokračovat?"
+
+msgid "Yes, let's proceed"
+msgstr "Ano, pokračujme."
+
+msgid "Ok, got it!"
+msgstr "Hotovo!"
+
+msgid "Read the release note"
+msgstr "Zobrazit poznámky o verzi"
+
+msgid "What's new in version %s"
+msgstr "Novinky ve verzi %s?"
+
+msgid "A photo library administrator has created the following account for you:"
+msgstr "Správce fotogalerie pro vás vytvořil následující uživ. účty:"
+
+msgid "An activation link valid for %s has been sent to \"%s\". If the user doesn't receive the link, you can generate and copy a new one by editing the user and managing her password."
+msgstr "Aktivační odkaz pro %s byl odeslán na \"%s\". Pokud nebude potvrzen lze si vygenerovat nový skrze editaci uživatele a správu jeho hesla."
+
+msgid "An activation link valid for %s was created but could not be sent. You can now copy the link below and send it to the user."
+msgstr "Odkaz na aktivaci účtu pro %s byl vytvořen, ale nemohl být odeslán. Zkopírujte nyní ručně tento odkaz níže a zašlete jej tomuto uživateli."
+
+msgid "This link is valid for %s. After this time, you will need to request a new link."
+msgstr "Odkaz je validní po dobu %s. Po uplynutí tohoto času je potřeba vygenerovat nový odkaz."
+
+msgid "To set your password, visit the following address:"
+msgstr "Pro nastavení hesla klikněte na následující odkaz:"
+
+msgid "Welcome to %s"
+msgstr "Vítejte na %s"
+
+msgid "We have found %d duplicate paths. Details provided by plugin Check Uploads"
+msgstr "Nalezli jsme %d duplicitních cest. Detaily posktyuje plugin Kontrola uploadů Check Uploads"
+
+msgid "There is currently %d photos in the lounge (upload buffer)"
+msgstr "V současné době je v salonku (vyrovnávací paměti pro nahrávání) %d fotografií."
+
+msgid "%d photos were moved from the upload lounge to their albums"
+msgstr "%d fotografií bylo přesunuto z nahrávacího salonku do jejich alb."
+
+msgid "Empty lounge"
+msgstr "Prázdný salónek"
+
+msgid "If a photo in this album has the same filename, update the file without changing the photo's properties"
+msgstr "Pokud má fotografie v tomto albu stejný název souboru, aktualizuj soubor, aniž by se změnily vlastnosti fotografie."
+
+msgid "When enabled, a common template is used for the login, registration and forgotten password pages, regardless of the theme. Some themes might use these templates even if you uncheck this option"
+msgstr "Pokud je tato možnost povolena, použije se společná šablona pro stránky přihlášení, registrace a zapomenutého hesla, bez ohledu na zvolenou šablonu vzhledu. Některé šablony mohou tyto stránky používat i v případě, že tuto volbu vypnete."
+
+msgid "No comments selected, no actions possible."
+msgstr "Nejsou vybrané komentáře, není možné provést akce."
+
+msgid "The comments have been validated."
+msgstr "Komentáře byly schváleny."
+
+msgid "Use standard Piwigo template for common pages."
+msgstr "Použít standardní Piwigo šablonu pro obecné stránky."
+
+msgid "The comment has been validated."
+msgstr "Komentář byl schválen."
+
+msgid "Save all photos"
+msgstr "Uložit všechny fotky"
+
+msgid "Are you sure you want to delete comment #%s?"
+msgstr "Jste si jistí že chcete smazat komentář #%s?"
+
+msgid "Are you sure you want to delete \"%d\" comments?"
+msgstr "Opravdu chcete smazat \"%d\" komentáře?"
+
+msgid "Admins only"
+msgstr "Pouze administrátoři"
+
+msgid "user_status_normal"
+msgstr "Základní"
+
+msgid "Light mode"
+msgstr "Světlý motiv"
+
+msgid "Personalization settings"
+msgstr "Nastavení personalizace"
+
+msgid "Select a color theme for standard pages"
+msgstr "Výběr vzhledu pro obecné stránky"
+
+msgid "Standard pages"
+msgstr "Standardní stránky"
+
+msgid "Standard pages aren't activated, however you have %d active themes that will still use them. These themes are:"
+msgstr "Standardní stránky nejsou aktivované, ale máte %d aktivních motivů, které je budou stále používat. Tyto motivy jsou:"
+
+msgid "Standard pages header"
+msgstr "Záhlaví standardních stránek"
+
+msgid "Use Piwigo logo"
+msgstr "Použít Piwigo logo"
+
+msgid "Use custom logo (png, jpeg or svg)"
+msgstr "Použít vlastní logo (png, jpeg or svg)"
+
+msgid "Change logo"
+msgstr "Změna loga"
+
+msgid "Dark mode"
+msgstr "Tmavý motiv"
+
+msgid "Display Gallery title"
+msgstr "Zobrazit nadpis Galerie"
+

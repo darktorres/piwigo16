@@ -1,0 +1,65 @@
+# Piwigo translation — bg_BG
+# Source: upgrade.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: bg_BG\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Only administrator can run upgrade: please sign in below."
+msgstr "Само администратор може да стартира обновяване: моля, влезте в профила си."
+
+msgid "SQL queries"
+msgstr "SQL заявки"
+
+msgid "Statistics"
+msgstr "Статистика"
+
+msgid "total SQL time"
+msgstr "общо време за SQL заявки"
+
+msgid "total upgrade time"
+msgstr "общо време за обновяване"
+
+msgid "Upgrade"
+msgstr "Обновяване"
+
+msgid "Upgrade from version %s to %s"
+msgstr "Обновяване от версия %s към %s"
+
+msgid "Upgrade informations"
+msgstr "Информация за обновяването"
+
+msgid "You do not have access rights to run upgrade"
+msgstr "Вие нямате права, за да стартирате обновяване"
+
+msgid "All sub-albums of private albums become private"
+msgstr "Всички под-албуми на личните албуми стават също лични"
+
+msgid "As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:"
+msgstr "Като предпазна мярка, следните разширения са деактивирани. Трябва да проверите за ъпгрейд на разширенията преди да ги активирате отново:"
+
+msgid "As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:"
+msgstr "Като предпазна мярка, следните теми са деактивирани. Трябва да проверите за ъпгрейд на темите преди да ги активирате отново:"
+
+msgid "In <i>%s</i>, before <b>?></b>, insert:"
+msgstr "В <i>%s</i>, преди <b>?></b>, добавете:"
+
+msgid "Only thumbnails prefix and webmaster mail address have been saved from previous configuration"
+msgstr "Само префикса на миниатюрите и имейл адреса на уебмастера са запазени от предишната конфигурация"
+
+msgid "Perform a maintenance check in [Administration>Tools>Maintenance] if you encounter any problem."
+msgstr "Направете проверка за профилактика в  [Администрация>Инструменти>Поддръжка] ако имате някакви проблеми."
+
+msgid "This page proposes to upgrade your database corresponding to your old version of Piwigo to the current version. The upgrade assistant thinks you are currently running a <strong>release %s</strong> (or equivalent)."
+msgstr "Тази страница предлага да актуализира базата данни от стара версия към новата версия. Считаме, че в момента използвате <strong>версия %s</ strong> (или подобна)."
+
+msgid "User permissions and group permissions have been erased"
+msgstr "Правата на потребителите и групите са изтрити"
+
+msgid "Discover what's new in Piwigo %s"
+msgstr "Какви са новостите във Piwigo %s"
+

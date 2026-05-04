@@ -1,0 +1,20 @@
+# Piwigo translation — hu_HU
+# Source: whats_new_16.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: hu_HU\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "UI redesigns that make a difference"
+msgstr "Felhasználói felület újragondolva – érezhető különbséggel"
+
+msgid "Two factor authentication is here"
+msgstr "Megérkezett a kétlépcsős hitelesítés"
+
+msgid "Brand new login & preferences with Standard pages !"
+msgstr "Teljesen új bejelentkezés és beállítások a Standard oldalakkal!"
+

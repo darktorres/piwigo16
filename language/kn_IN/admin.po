@@ -1,0 +1,2021 @@
+# Piwigo translation — kn_IN
+# Source: admin.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: kn_IN\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Manage the members"
+msgstr "ಸದಸ್ಯರನ್ನು ನಿರ್ವಹಿಸಿ"
+
+msgid "Manage this set of %d photos"
+msgstr " ಈ %d ಚಿತ್ರಗಳ ಕಟ್ಟನ್ನು ನಿರ್ವಹಿಸಿ"
+
+msgid "Maximum file size: %sB."
+msgstr "ಗರಿಷ್ಠ ಕಡತದ ಗಾತ್ರ  : %sB."
+
+msgid "Maximum height"
+msgstr "ಗರಿಷ್ಠ ಎತ್ತರ"
+
+msgid "Maximum width"
+msgstr "ಗರಿಷ್ಠ ಅಗಲ"
+
+msgid "Members"
+msgstr "ಸದಸ್ಯರು"
+
+msgid "Menu Management"
+msgstr "ಆಯ್ಕೆಪಟ್ಟಿಗಳು"
+
+msgid "Merge selected groups"
+msgstr "ಆರಿಸಿದ ಗುಂಪುಗಳನ್ನು ನಿರ್ವಹಿಸಿ"
+
+msgid "Maintenance"
+msgstr "ನಿರ್ವಹಣೆ"
+
+msgid "Make this language available to users"
+msgstr "ಈ ಭಾಷೆಯನ್ನು ಎಲ್ಲಾ ಬಳಕೆದಾರರಿಗೆ ಲಭ್ಯವಿರುವಂತೆ ಮಾಡು"
+
+msgid "Make this theme available to users"
+msgstr "ಈ ಥೀಮ್ ಅನ್ನು ಎಲ್ಲಾ ಬಳಕೆದಾರರಿಗೆ ಲಭ್ಯವಿರುವಂತೆ ಮಾಡು"
+
+msgid "Manage"
+msgstr "ನಿರ್ವಹಿಸು"
+
+msgid "Manage Permissions"
+msgstr "ಅನುಮತಿಗಳನ್ನು ನಿರ್ವಹಿಸಿ"
+
+msgid "Manage permissions for group \"%s\""
+msgstr "\"%s\" ಗುಂಪುಗಳ ಅನುಮತಿಗಳನ್ನು ನಿರ್ವಹಿಸಿ"
+
+msgid "Manage permissions for user \"%s\""
+msgstr "\"%s\" ಬಳಕೆದಾರರ ಅನುಮತಿಗಳನ್ನು ನಿರ್ವಹಿಸಿ"
+
+msgid "Manage photos"
+msgstr "ಚಿತ್ರಗಳನ್ನು  ನಿರ್ವಹಿಸಿ"
+
+msgid "Manage tags"
+msgstr "ಟ್ಯಾಗ್ ಗಳನ್ನು  ನಿರ್ವಹಿಸಿ"
+
+msgid "List"
+msgstr "ಪಟ್ಟಿ"
+
+msgid "Local"
+msgstr "ಸ್ಥಳೀಯ"
+
+msgid "Mail content"
+msgstr "ಮಿಂಚೆ ವಸ್ತುವಿಷಯ"
+
+msgid "Mail sent to %s [%s]."
+msgstr "%s [%s] ರವರಿಗೆ ಮಿಂಚೆ ಕಳುಹಿಸಲಾಗಿದೆ."
+
+msgid "Main \"guest\" user does not exist"
+msgstr "ಪ್ರಮುಖ \"ಅತಿಥಿ\" ಬಳಕೆದಾರರು ಅಸ್ತಿತ್ವದಲ್ಲಿಲ್ಲ"
+
+msgid "Main \"guest\" user status is incorrect"
+msgstr "ಪ್ರಮುಖ \"ಅತಿಥಿ\" ಬಳಕೆದಾರರ ಸ್ಥಿತಿಗತಿ ಸರಿಯಾಗಿಲ್ಲ"
+
+msgid "Main \"webmaster\" user does not exist"
+msgstr "ಪ್ರಮುಖ \"ವೆಬ್ ಮಾಸ್ಟರ್\" ಬಳಕೆದಾರರು ಅಸ್ತಿತ್ವದಲ್ಲಿಲ್ಲ"
+
+msgid "Main \"webmaster\" user status is incorrect"
+msgstr "ಪ್ರಮುಖ \"ವೆಬ್ ಮಾಸ್ಟರ್\" ಬಳಕೆದಾರರ ಸ್ಥಿತಿಗತಿ ಸರಿಯಾಗಿಲ್ಲ"
+
+msgid "Main Page"
+msgstr "ಮುಖ ಪುಟ"
+
+msgid "Language has been successfully installed"
+msgstr "ಭಾಷೆಯನ್ನು ಯಶಸ್ವಿಯಾಗಿ ಸ್ಥಾಪಿಸಲಾಗಿದೆ"
+
+msgid "Languages"
+msgstr "ಭಾಷೆಗಳು"
+
+msgid "Languages which need upgrade"
+msgstr "ನವೀಕರಣದ ಅಗತ್ಯವಿರವ ಭಾಷೆಗಳು"
+
+msgid "Last import"
+msgstr "ಕೊನೆಯ ಆಮದು"
+
+msgid "Last revisions"
+msgstr "ಕೊನೆಯ ಪರಿಷ್ಕರಣಗಳು"
+
+msgid "Last send"
+msgstr "ಕೊನೆಯದಾಗಿ ಕಳುಹಿಸಿದ್ದು"
+
+msgid "Learn more"
+msgstr "ಹೆಚ್ಚು ತಿಳಿಯಿರಿ"
+
+msgid "Level 0"
+msgstr "---"
+
+msgid "Level 1"
+msgstr "ಸಂಪರ್ಕಗಳು"
+
+msgid "Level 2"
+msgstr "ಸ್ನೇಹಿತರು"
+
+msgid "Level 4"
+msgstr "ಬಳಗ"
+
+msgid "Level 8"
+msgstr "ನಿರ್ವಹಣೆಗಾರರು"
+
+msgid "Link all album photos to a new album"
+msgstr "ಎಲ್ಲಾ ಸಂಪುಟದ ಚಿತ್ರಗಳನ್ನು ಹೊಸ ಸಂಪುಟಕ್ಕೆ ಲಿಂಕ್ ಮಾಡಿ"
+
+msgid "Link all album photos to some existing albums"
+msgstr "ಎಲ್ಲಾ ಸಂಪುಟದ ಚಿತ್ರಗಳನ್ನು ಕೆಲವು ಅಸ್ತಿತ್ವದಲ್ಲಿರುವ ಸಂಪುಟಗಳಿಗೆ ಲಿಂಕ್ ಮಾಡಿ"
+
+msgid "Linked albums"
+msgstr "ಲಿಂಕ್ ಆದ ಸಂಪುಟಗಳು "
+
+msgid "Hoverbox display"
+msgstr "ಹೋವರ್ ಬಾಕ್ಸ್ ಪ್ರದರ್ಶನ"
+
+msgid "If you encounter problems or have any question, please send a message to"
+msgstr "ನೀವು ತೊಂದರೆಗಳನ್ನು ಎದುರಿಸುತ್ತಿದ್ದಲ್ಲಿ  ಅಥವಾ ನಿಮಗೆ ಯಾವುದೇ ಪ್ರಶ್ನೆಗಳಿದ್ದಲ್ಲಿ, ದಯವಿಟ್ಟು ಅವರಿಗೆ ಸಂದೇಶವನ್ನು ಕಳುಹಿಸಿ"
+
+msgid "Inactive Languages"
+msgstr "ನಿಷ್ಕ್ರಿಯ ಭಾಷೆಗಳು"
+
+msgid "Inactive Plugins"
+msgstr "ನಿಷ್ಕ್ರಿಯ ಪ್ಲಗ್ ಇನ್ ಗಳು"
+
+msgid "Inactive Themes"
+msgstr "ನಿಷ್ಕ್ರಿಯ  ಥೀಮ್ ಗಳು"
+
+msgid "Graphics Library"
+msgstr "ಚಿತ್ರಿಕೆ ಸಂಗ್ರಹ"
+
+msgid "I decide to update anyway"
+msgstr "ನಾನು ಹೇಗಿದ್ದರೂ ನವೀಕರಣಕ್ಕೆ ಒಪ್ಪಿದ್ದೇನೆ"
+
+msgid "IP"
+msgstr "IP"
+
+msgid "Ignore All"
+msgstr "ಎಲ್ಲಾವನ್ನೂ ನಿರ್ಲಕ್ಷಿಸಿ"
+
+msgid "Ignore selected anomalies"
+msgstr "ಆರಿಸಿದ ಅಸಮಂಜಸತೆಗಳನ್ನು ನಿರ್ಲಕ್ಷಿಸಿ"
+
+msgid "Ignore this update"
+msgstr "ಈ ನವೀಕರಣವನ್ನು ನಿರ್ಲಕ್ಷಿಸಿ"
+
+msgid "Image Quality"
+msgstr "ಚಿತ್ರದ ಗುಣ"
+
+msgid "Image id"
+msgstr "ಚಿತ್ರದ ಐಡಿ"
+
+msgid "Impossible automatic correction"
+msgstr "ಸ್ವಯಂಚಾಲಿತ ತಿದ್ದುಪಡಿ ಅಸಾಧ್ಯ"
+
+msgid "Group"
+msgstr "ಗುಂಪು"
+
+msgid "Group management"
+msgstr "ಗುಂಪುಗಳ ನಿರ್ವಹಣೆ"
+
+msgid "Group name"
+msgstr "ಗುಂಪಿನ ಹೆಸರು"
+
+msgid "Groups"
+msgstr "ಗುಂಪುಗಳು"
+
+msgid "Groups and users"
+msgstr "ಗುಂಪುಗಳು ಮತ್ತು ಬಳಕೆದಾರರು"
+
+msgid "Guest Settings"
+msgstr "ಅತಿಥಿಗಳ ಸಂಯೋಜನೆ"
+
+msgid "Guest cannot be deleted"
+msgstr "ಅತಿಥಿಗಳನ್ನು ಅಳಿಸಲಾಗುವುದಿಲ್ಲ"
+
+msgid "Guests"
+msgstr "ಅತಿಥಿಗಳು"
+
+msgid "Height"
+msgstr "ಎತ್ತರ"
+
+msgid "Hello"
+msgstr "ನಮಸ್ತೆ"
+
+msgid "Hello,"
+msgstr "ನಮಸ್ತೆ,"
+
+msgid "Help Me"
+msgstr "ನನಗೆ ಸಹಾಯಮಾಡಿ"
+
+msgid "Hide"
+msgstr "ಬಚ್ಚಿಡಿ"
+
+msgid "History"
+msgstr "ಇತಿಹಾಸ"
+
+msgid "Hour"
+msgstr "ಗಂಟೆ"
+
+msgid "Edit album permissions"
+msgstr "ಸಂಪುಟದ ಅನುಮತಿಗಳನ್ನು ಸಂಪಾದಿಸಿ"
+
+msgid "Edit photo"
+msgstr "ಚಿತ್ರವನ್ನು ಸಂಪಾದಿಸಿ"
+
+msgid "Edit ranks"
+msgstr "ದರ್ಜೆಗಳನ್ನು ಸಂಪಾದಿಸಿ"
+
+msgid "Edit selected tags"
+msgstr "ಆರಿಸಿದ ಟ್ಯಾಗ್ ಗಳನ್ನು ಸಂಪಾದಿಸಿ"
+
+msgid "Edit tags"
+msgstr "ಟ್ಯಾಗ್ ಗಳನ್ನು ಸಂಪಾದಿಸಿ"
+
+msgid "Error list"
+msgstr "ಗಳ ಪಟ್ಟಿ"
+
+msgid "Error on file \"%s\" : %s"
+msgstr "ಕಡತದ ಮೇಲಿನ ದೋಷ \"%s\" : %s"
+
+msgid "Error when sending email to %s [%s]."
+msgstr "%s [%s]ರಿಗೆ ಮಿಂಚೆ ಕಳುಹಿಸುವಾಗಿನ ದೋಷ. "
+
+msgid "Everybody"
+msgstr "ಎಲ್ಲಾರೂ"
+
+msgid "Directory"
+msgstr "ಡೈರೆಕ್ಟರಿ"
+
+msgid "Directory does not exist"
+msgstr "ಡೈರೆಕ್ಟರಿ ಅಸ್ತಿತ್ವದಲ್ಲಿಲ್ಲ"
+
+msgid "Display options"
+msgstr "ಪ್ರದರ್ಶನದ ಆಯ್ಕೆಗಳು"
+
+msgid "Do you want to activate anyway?"
+msgstr "ನೀವು ಹೇಗಿದ್ದರೂ ಸಕ್ರಿಯಗೊಳಿಸಲು ಬಯಸುತ್ತೀರಾ?"
+
+msgid "Documentation"
+msgstr "ದಾಖಲಾತಿ"
+
+msgid "Does not represent"
+msgstr "ಗೆ ಇದು ಕಿರುಚಿತ್ರವಲ್ಲ"
+
+msgid "Download,"
+msgstr "ಇಳಿಸಿಕೊಳ್ಳಿ,"
+
+msgid "Downloads"
+msgstr "ವರ್ಗಾವಣೆಗಳು"
+
+msgid "Delete orphan tags"
+msgstr "ಅನಾಥ ಟ್ಯಾಗ್ ಗಳನ್ನು ಅಳಿಸಿ"
+
+msgid "Delete selected photos"
+msgstr "ಆರಿಸಿದ ಚಿತ್ರಗಳನ್ನು ಅಳಿಸಿ"
+
+msgid "Delete selected tags"
+msgstr " ಟ್ಯಾಗ್ ಗಳನ್ನು ಅಳಿಸಿ"
+
+msgid "Delete selected users"
+msgstr "ಆರಿಸಿದ ಬಳಕೆದಾರರನ್ನು ಅಳಿಸಿ"
+
+msgid "Delete this language"
+msgstr "ಈ ಭಾಷೆಯನ್ನು ಅಳಿಸಿ"
+
+msgid "Delete this theme"
+msgstr "ಈ ಥೀಮ್ ಅನ್ನು ಅಳಿಸಿ"
+
+msgid "Deleted on"
+msgstr "ರಂದು ಅಳಿಸಿದ್ದು"
+
+msgid "Deletions"
+msgstr "ಅಳಿಸುವಿಕೆಗಳು"
+
+msgid "Deny selected groups"
+msgstr "ಆರಿಸಿದ ಗುಂಪುಗಳನ್ನು ನಿರ್ಭಂಧಿಸಿ"
+
+msgid "Deny selected users"
+msgstr "ಆರಿಸಿದ ಬಳಕೆದಾರರನ್ನು ನಿರ್ಭಂಧಿಸಿ"
+
+msgid "Description"
+msgstr "ವಿವರಗಳು"
+
+msgid "Detailed informations"
+msgstr "ವಿವರವಾದ ಮಾಹಿತಿಗಳು"
+
+msgid "Current name"
+msgstr "ಪ್ರಸ್ತುತ ಹೆಸರು"
+
+msgid "Database"
+msgstr "ಡೇಟಾಬೇಸ್"
+
+msgid "Date"
+msgstr "ದಿನಾಂಕೆ"
+
+msgid "Day"
+msgstr "ದಿನ"
+
+msgid "Deactivate"
+msgstr "ನಿಷ್ಕ್ರಿಯಗೊಳಿಸಿ"
+
+msgid "Deactivate all"
+msgstr "ಎಲ್ಲವನ್ನೂ ನಿಷ್ಕ್ರಿಯಗೊಳಿಸಿ"
+
+msgid "Default comments order"
+msgstr "ಪೂರ್ವನಿಯೋಜಿತ ಟಿಪ್ಪಣಿ ಕ್ರಮ"
+
+msgid "Default display"
+msgstr "ಪೂರ್ವನಿಯೋಜಿತ ಪ್ರದರ್ಶನ"
+
+msgid "Default photos order"
+msgstr "ಪೂರ್ವನಿಯೋಜಿತ ಚಿತ್ರಗಳ ಕ್ರಮ"
+
+msgid "Default user cannot be deleted"
+msgstr "ಪೂರ್ವನಿಯೋಜಿತ ಬಳಕೆದಾರರನ್ನು ಅಳಿಸಲಾಗುವುದಿಲ್ಲ"
+
+msgid "Default user does not exist"
+msgstr "ಪೂರ್ವನಿಯೋಜಿತ ಬಳಕೆದಾರರು ಅಸ್ತಿತ್ವದಲ್ಲಿಲ್ಲ"
+
+msgid "Delete Representant"
+msgstr "ಸಂಪುಟದ ಕಿರುಚಿತ್ರವನ್ನು ಅಳಿಸಿ"
+
+msgid "Check for updates"
+msgstr "ನವೀಕರಣಕಗಳಿಗಾಗಿ ಪರೀಕ್ಷಿಸಿ"
+
+msgid "Check for upgrade"
+msgstr "ನವೀಕರಣಕ್ಕಾಗಿ ಪರೀಕ್ಷಿಸಿ"
+
+msgid "Check for upgrade failed for unknown reasons."
+msgstr "ಅನಾಮಿಕ ಕಾರಣಗಳಿಂದಾದ ನವೀಕರಣ ವಿಫಲತೆಯನ್ನು ಪರೀಕ್ಷಿಸಿ."
+
+msgid "Check integrity"
+msgstr "ಸಮಗ್ರತೆಯ ಪರೀಕ್ಷೆ"
+
+msgid "Choose an action"
+msgstr "ಕ್ರಿಯೆಯನ್ನು ಆರಿಸಿರಿ"
+
+msgid "Choose an option"
+msgstr "ಆಯ್ಕೆಯನ್ನು ಆರಿಸಿರಿ"
+
+msgid "Comments for all"
+msgstr "ಎಲ್ಲರಿಗಾಗಿ ಟಿಪ್ಪಣಿ"
+
+msgid "Confirm merge"
+msgstr "ಕೂಡಿಸುವಿಕೆಯನ್ನು ಖಾತ್ರಿಗೊಳಿಸಿ"
+
+msgid "Correction"
+msgstr "ತಿದ್ದುಪಡಿ"
+
+msgid "Correction applied with error"
+msgstr "ತಿದ್ದುಪಡಿಯನ್ನು ದೋಷದೊಂದಿಗೆ ಅನ್ವಯಿಸಲಾಗಿದೆ"
+
+msgid "Correction applied with success"
+msgstr "ತಿದ್ದುಪಡಿಯನ್ನು ಯಶಸ್ವಿಯಾಗಿ ಅನ್ವಯಿಸಲಾಗಿದೆ"
+
+msgid "Create"
+msgstr "ರಚಿಸಿ"
+
+msgid "Create this site"
+msgstr "ಈ ಜಾಲತಾಣವನ್ನು ರಚಿಸಿ"
+
+msgid "Crop"
+msgstr "ಮುಂಡನ"
+
+msgid "Apply action"
+msgstr "ಕ್ರಿಯೆಯನ್ನು ಅನ್ವಯಿಸಿ"
+
+msgid "Apply selected corrections"
+msgstr "ಆರಿಸಿದ ತಿದ್ದುಪಡಿಗಳನ್ನು ಅನ್ವಯಿಸಿ"
+
+msgid "Apply to sub-albums"
+msgstr "ಉಪ-ಸಂಪುಟಗಳಿಗೆ ಅನ್ವಯಿಸಿ"
+
+msgid "Apply watermark if height is bigger than"
+msgstr "ಎತ್ತರ ಗಿಂತ ಹೆಚ್ಚಿದ್ದರೆ ನೀರ್ಕಲೆಯನ್ನು ಅನ್ವಯಿಸಿ"
+
+msgid "Apply watermark if width is bigger than"
+msgstr "ಅಗಲ ಗಿಂತ ಹೆಚ್ಚಿದ್ದರೆ ನೀರ್ಕಲೆಯನ್ನು ಅನ್ವಯಿಸಿ"
+
+msgid "Are you sure you want to delete this plugin?"
+msgstr "ಈ ಪ್ಲಗ್ ಇನ್ ಅನ್ನು ಅಳಿಸುವ ನಿಮ್ಮ ಇಚ್ಛೆ ನಿಮಗೆ ಸಮ್ಮತವೇ?"
+
+msgid "Are you sure you want to install this plugin?"
+msgstr "ಈ ಪ್ಲಗ್ ಇನ್ ಅನ್ನು ಸ್ಥಾಪಿಸುವ ನಿಮ್ಮ ಇಚ್ಛೆ ನಿಮಗೆ ಸಮ್ಮತವೇ?"
+
+msgid "Associate to album"
+msgstr "ಸಂಪುಟಕ್ಕೆ ಹೊಂದಿಸಿ"
+
+msgid "Associated"
+msgstr "ಹೊಂದಿಸಿದ್ದು"
+
+msgid "Authorized"
+msgstr "ಅಧಿಕೃತ"
+
+msgid "Automatic correction"
+msgstr "ಸ್ವಯಂಚಾಲಿತ  ತಿದ್ದುಪಡಿ"
+
+msgid "Automatic sort order"
+msgstr "ಸ್ವಯಂಚಾಲಿತ ಅನುಕ್ರಮಣಿಕೆ ಕ್ರಮ"
+
+msgid "Available on"
+msgstr "ನಲ್ಲಿ ಲಭ್ಯವಿದೆ"
+
+msgid "Available only with HTML format"
+msgstr "HTML ನಮೂನೆಯಲ್ಲಿ ಮಾತ್ರ "
+
+msgid "Average rate"
+msgstr "ಸಾಧಾರಣ ದರ್ಜೆ"
+
+msgid "Batch Manager"
+msgstr "ಸಗಟು ನಿರ್ವಾಹಕ"
+
+msgid "Active Languages"
+msgstr "ಸಕ್ರಿಯ ಭಾಷೆಗಳು"
+
+msgid "Active Plugins"
+msgstr "ಸಕ್ರಿಯ ಪ್ಲಗ್ ಇನ್ ಗಳು"
+
+msgid "Active Themes"
+msgstr "ಸಕ್ರಿಯ ಥೀಮ್ ಗಳು"
+
+msgid "Add"
+msgstr "ಸೇರಿಸಿ"
+
+msgid "Add New Language"
+msgstr "ಹೊಸ ಭಾಷೆಯನ್ನು ಸೇರಿಸಿ"
+
+msgid "Add New Theme"
+msgstr "ಹೊಸ ಥೀಮ್ ಅನ್ನು ಸೇರಿಸಿ"
+
+msgid "Add Photos"
+msgstr "ಚಿತ್ರಗಳನ್ನು ಸೇರಿಸಿ"
+
+msgid "Add a filter"
+msgstr "ಶೋಧಕ ವನ್ನು ಸೇರಿಸಿ"
+
+msgid "Add a tag"
+msgstr "ಟ್ಯಾಗ್ ಅನ್ನು ಸೇರಿಸಿ"
+
+msgid "Add a user"
+msgstr "ಬಳಕೆದಾರರನ್ನು ಸೇರಿಸಿ"
+
+msgid "Add group"
+msgstr "ಗುಂಪನ್ನು ಸೇರಿಸಿ"
+
+msgid "Add tags"
+msgstr "ಟ್ಯಾಗ್ ಗಳನ್ನು ಸೇರಿಸಿ"
+
+msgid "Added by %s"
+msgstr "%s ರಿಂದ ಸೇರಿಸಿದ್ದು"
+
+msgid "%d week"
+msgstr "%d ವಾರ"
+
+msgid "%d weeks"
+msgstr "%d ವಾರ"
+
+msgid "%d year"
+msgstr "%d ವರ್ಷ"
+
+msgid "%d years"
+msgstr "%d ವರ್ಷಗಳು"
+
+msgid "%s ago"
+msgstr "%s ರ ಹಿಂದೆ"
+
+msgid "%s has been successfully updated."
+msgstr "%s ರನ್ನು ಯಶಸ್ವಿಯಾಗಿ ನವೀಕರಿಸಲಾಗಿದೆ."
+
+msgid "Used metadata"
+msgstr "ಬಳಸಿದ ಮೆಟಾಡೇಟಾ"
+
+msgid "User"
+msgstr "ಕೆದಾರ"
+
+msgid "User list"
+msgstr "ಬಳಕೆದಾರರ ಪಟ್ಟಿ"
+
+msgid "User status"
+msgstr "ಬಳಕೆದಾರರ ಸ್ಥಿತಿಗತಿ"
+
+msgid "Users"
+msgstr "ಬಳಕೆದಾರರು"
+
+msgid "Version"
+msgstr "ಆವೃತ್ತಿ"
+
+msgid "View in gallery"
+msgstr "ಚಿತ್ರಾಂಗಣದಲ್ಲಿ ನೋಡಿ"
+
+msgid "Visit Gallery"
+msgstr "ಚಿತ್ರಾಂಗಣಕ್ಕೆ ಭೇಟಿಕೊಡಿ"
+
+msgid "Visit Piwigo project website"
+msgstr "ಪಿವಿಗೋ ಪ್ರಾಜೆಕ್ಟ್ ಜಾಲತಾಣಕ್ಕೆ ಭೇಟಿಕೊಡಿ"
+
+msgid "Visit language site"
+msgstr "ಭಾಷಾತಾಣಕ್ಕೆ ಭೇಟಿಕೊಡಿ"
+
+msgid "Visit plugin site"
+msgstr "ಪ್ಲಗ್ ಇನ್ "
+
+msgid "Visit theme site"
+msgstr "ಥೀಮ್ ತಾಣಕ್ಕೆ ಭೇಟಿಕೊಡಿ"
+
+msgid "Watermark"
+msgstr "ನೀರ್ಕಲೆ"
+
+msgid "Web Form"
+msgstr "ಜಾಲತಾಣ ನಮೂನೆ"
+
+msgid "Webmaster cannot be deleted"
+msgstr "ವೆಬ್ ಮಾಸ್ಟರ್ ರನ್ನು ಅಳಿಸಲಾಗುವುದಿಲ್ಲ"
+
+msgid "Webmaster status is required."
+msgstr "ವೆಬ್ ಮಾಸ್ಟರ್ ರ ಸ್ಥಿತಿಗತಿ ಯ ಅಗತ್ಯವಿದೆ."
+
+msgid "Week starts on"
+msgstr "ವಾರ ಶುರುವಾಗುವುದು"
+
+msgid "Who can see these photos?"
+msgstr "ಈ ಚಿತ್ರಗಳನ್ನು ಯಾರು ನೋಡಬಹುದು?"
+
+msgid "Who can see this photo?"
+msgstr "ಈ ಚಿತ್ರವನ್ನು ಯಾರು ನೋಡಬಹುದು?"
+
+msgid "Width"
+msgstr "ಅಗಲ"
+
+msgid "With no album"
+msgstr "ಸಂಪುಟ ರಹಿತ"
+
+msgid "With no tag"
+msgstr "ಟ್ಯಾಗ್ ರಹಿತ"
+
+msgid "X Position"
+msgstr "X ಸ್ಥಾನ"
+
+msgid "Y Position"
+msgstr "Y ಸ್ಥಾನ"
+
+msgid "Year"
+msgstr "ವರ್ಷ"
+
+msgid "You need to confirm deletion"
+msgstr "ನೀವು ಅಳಿಸುವಿಕೆಯನ್ನು ಖಾತ್ರಿಮಾಡಲೇಬೇಕು"
+
+msgid "[%s] Visit album %s"
+msgstr "[%s] ಸಂಪುಟವನ್ನು ನೋಡಿ  %s"
+
+msgid "add a new watermark"
+msgstr "ಹೊಸ ನೀರ್ಕಲೆಯನ್ನು ಸೇರಿಸಿ"
+
+msgid "added"
+msgstr "ಸೇರಿಸಲಾಗಿದೆ"
+
+msgid "all"
+msgstr "ಎಲ್ಲಾ"
+
+msgid "and"
+msgstr "ಮತ್ತು"
+
+msgid "any visitor can see this album"
+msgstr "ಯಾವುದೇ ಸಂದರ್ಶಕರು ಈ ಸಂಪುಟವನ್ನು ನೋಡಬಹುದು"
+
+msgid "associate to group"
+msgstr "ಗುಂಪಿಗೆ ಹೊಂದಿಸಿ"
+
+msgid "high"
+msgstr "ಹೆಚ್ಚು"
+
+msgid "jump to album"
+msgstr "ಸಂಪುಟಕ್ಕೆ ಹೋಗಿ"
+
+msgid "jump to photo"
+msgstr "ಚಿತ್ರಕ್ಕೆ ಹೋಗಿ"
+
+msgid "leave"
+msgstr "ತೊರೆ"
+
+msgid "manage album photos"
+msgstr "ಸಂಪುಟದ ಚಿತ್ರಗಳನ್ನು ನಿರ್ವಹಿಸಿ"
+
+msgid "manage sub-albums"
+msgstr "ಉಪ-ಸಂಪುಟಗಳನ್ನು ನಿರ್ವಹಿಸಿ"
+
+msgid "middle"
+msgstr "ಮಧ್ಯೆ"
+
+msgid "modified"
+msgstr "ಬದಲಾಯಿಸಲಾದ"
+
+msgid "new"
+msgstr "ಹೊಸ"
+
+msgid "none"
+msgstr "ಯಾವುದೂ ಇಲ್ಲ"
+
+msgid "nothing"
+msgstr "ಏನೂ ಇಲ್ಲ"
+
+msgid "on"
+msgstr "ಮೇಲೆ"
+
+msgid "only directories"
+msgstr "ಡೈರೆಕ್ಟರಿಗಳು ಮಾತ್ರ"
+
+msgid "%d of %d photos selected"
+msgstr "%d ರ %d ಚಿತ್ರಗಳನ್ನು ಆರಿಸಲಾಗಿದೆ"
+
+msgid "%d parameter was updated."
+msgid_plural "%d parameters were updated."
+msgstr[0] "%d ನಿಯತಾಂಕ ನವೀಕರಿಸಿದೆ."
+msgstr[1] "%d ನಿಯತಾಂಕಗಳನ್ನು ನವೀಕರಿಸಿದೆ."
+
+msgid "%d photo was deleted"
+msgid_plural "%d photos were deleted"
+msgstr[0] "%d ಚಿತ್ರವನ್ನು ಅಳಿಸಲಾಗಿದೆ. "
+msgstr[1] "%d ಚಿತ್ರಗಳನ್ನು ಅಳಿಸಲಾಗಿದೆ. "
+
+msgid "%d photos uploaded"
+msgstr "%d ಚಿತ್ರಗಳನ್ನು ನವೀಕರಿಸಿದೆ. "
+
+msgid "%d second"
+msgstr "%d ಸೆಕೆಂಡು"
+
+msgid "%d seconds"
+msgstr "%d ಸೆಕೆಂಡುಗಳು"
+
+msgid "%d tag"
+msgstr "%d ಟ್ಯಾಗ್"
+
+msgid "%d tags"
+msgstr "%d ಟ್ಯಾಗ್ ಗಳು"
+
+msgid "%d user"
+msgid_plural "%d users"
+msgstr[0] "%d ಬಳಕೆದಾರ"
+msgstr[1] "%d ಬಳಕೆದಾರರು"
+
+msgid "%d user deleted"
+msgid_plural "%d users deleted"
+msgstr[0] "%d ಬಳಕೆದಾರರನ್ನು ಅಳಿಸಲಾಗಿದೆ."
+msgstr[1] "%d ಬಳಕೆದಾರರನ್ನು ಅಳಿಸಲಾಗಿದೆ"
+
+msgid "%d user was not updated."
+msgid_plural "%d users were not updated."
+msgstr[0] "%d ಬಳಕೆದಾರರನ್ನು ನವೀಕರಿಸಲಾಗಿಲ್ಲ."
+msgstr[1] "%d users were not updated."
+
+msgid "%d user was updated."
+msgid_plural "%d users were updated."
+msgstr[0] "%d ಬಳಕೆದಾರರನ್ನು ನವೀಕರಿಸಿದೆ."
+msgstr[1] "%d ಬಳಕೆದಾರರು ನವೀಕರಣಗೊಂಡಿದ್ದಾರೆ."
+
+msgid "%d member"
+msgid_plural "%d members"
+msgstr[0] "%d ಸದಸ್ಯ"
+msgstr[1] "%d ಸದಸ್ಯರು"
+
+msgid "%d line filtered"
+msgid_plural "%d lines filtered"
+msgstr[0] "%d ಸಾಲು ಶೋಧಿಸಿದೆ"
+msgstr[1] "%d ಸಾಲುಗಳನ್ನು ಶೋಧಿಸಿದೆ"
+
+msgid "%d mail was not sent."
+msgid_plural "%d mails were not sent."
+msgstr[0] "%d ಮಿಂಚೆಯನ್ನು ಕಳುಹಿಸಲಾಗಿಲ್ಲ."
+msgstr[1] "%d ಮಿಂಚೆಗಳನ್ನು ಕಳುಹಿಸಲಾಗಿಲ್ಲ."
+
+msgid "%d mail was sent."
+msgid_plural "%d mails were sent."
+msgstr[0] "%d ಮಿಂಚೆಯನ್ನು ಕಳುಹಿಸಲಾಗಿದೆ."
+msgstr[1] "%d ಮಿಂಚೆಗಳನ್ನು ಕಳುಹಿಸಲಾಗಿದೆ."
+
+msgid "%d guest"
+msgid_plural "%d guests"
+msgstr[0] "%d ಅತಿಥಿ"
+msgstr[1] "%d ಅತಿಥಿಗಳು"
+
+msgid "%d hour"
+msgstr "%d ಗಂಟೆ"
+
+msgid "%d hours"
+msgstr "%d ಗಂಟೆಗಳು"
+
+msgid "%d day"
+msgstr "%d ದಿನ"
+
+msgid "%d days"
+msgstr "%d ದಿನಗಳು"
+
+msgid "%d group"
+msgstr "%d ಗುಂಪು"
+
+msgid "%d groups"
+msgstr "%d ಗುಂಪುಗಳು"
+
+msgid "Private"
+msgstr "ಖಾಸಗಿ"
+
+msgid "Piwigo for iOS (iPhone, iPad, iPod Touch)"
+msgstr "iOS (iPhone, iPad, iPod Touch) ಗಾಗಿ Piwigo"
+
+msgid "Piwigo for Android"
+msgstr "ಆಂಡ್ರಾಯಿಡ್ ಗಾಗಿ Piwigo"
+
+msgid "Piwigo version"
+msgstr "Piwigo ಆವೃತ್ತಿ"
+
+msgid "Please wait..."
+msgstr "ದಯವಿಟ್ಟು ಕಾಯಿರಿ..."
+
+msgid "Photo %s of %s"
+msgstr "ಚಿತ್ರ  %s ರಲ್ಲಿ %s"
+
+msgid "Photos generation in progress..."
+msgstr "ಚಿತ್ರಗಳ ರಚನೆ ಪ್ರಗತಿಯಲ್ಲಿದೆ..."
+
+msgid "Photos"
+msgstr "ಚಿತ್ರಗಳು"
+
+msgid "Photo Page"
+msgstr "ಚಿತ್ರ ಪುಟ"
+
+msgid "Photo name"
+msgstr "ಚಿತ್ರದ ಹೆಸರು"
+
+msgid "Overall"
+msgstr "ಮುನ್ನೋಟ"
+
+msgid "Other"
+msgstr "ಇತರೆ"
+
+msgid "Orphans"
+msgstr "ಅನಾಥರು"
+
+msgid "Open in gallery"
+msgstr "ಚಿತ್ರಾಂಗಣದಲ್ಲಿ ತೆರೆಯಿರಿ"
+
+msgid "Notification"
+msgstr "ಅಧಿಸೂಚನೆ"
+
+msgid "Opacity"
+msgstr "ಪಾರದರ್ಶಕತೆ"
+
+msgid "New photos were added"
+msgstr "ಯಾವುದೇ ಚಿತ್ರಗಳನ್ನು ಸೇರಿಸಲಾಗಿಲ್ಲ"
+
+msgid "No albums found"
+msgstr "ಯಾವುದೇ ಸಂಪುಟಗಳು ಕಂಡುಬಂದಿಲ್ಲ"
+
+msgid "New name"
+msgstr "ಹೊಸ ಹೆಸರು"
+
+msgid "New Version"
+msgstr "ಹೊಸ ಆವೃತ್ತಿ"
+
+msgid "Move to album"
+msgstr "ಸಂಪುಟಕ್ಕೆ ಸರಿಸಿ"
+
+msgid "Move"
+msgstr "ಸರಿಸಿ"
+
+msgid "Move albums"
+msgstr "ಸಂಪುಟಗಳನ್ನು ಸರಿಸಿ"
+
+msgid "Month"
+msgstr "ತಿಂಗಳು"
+
+msgid "Name"
+msgstr "ಹೆಸರು"
+
+msgid "Informations"
+msgstr "ವಿವರ"
+
+msgid "Hide sub-albums"
+msgstr "ಉಪ-ಸಂಪುಟಗಳನ್ನು ಮರೆಮಾಡಿ"
+
+msgid "Group renamed"
+msgstr "ಗುಂಪನ್ನು ಮರುಹೆಸರಿಸಲಾಗಿದೆ"
+
+msgid "Group added"
+msgstr "ಗುಂಪನ್ನು ಸೇರಿಸಲಾಗಿದೆ"
+
+msgid "Gallery title"
+msgstr "ಚಿತ್ರಾಂಗಣದ ಹೆಸರು"
+
+msgid "General"
+msgstr "ಸಾಮಾನ್ಯ"
+
+msgid "File"
+msgstr "ಕಡತ"
+
+msgid "Display"
+msgstr "ಪ್ರದರ್ಶನ"
+
+msgid "Delete %d orphan photos"
+msgstr "%d ಅನಾಥ ಚಿತ್ರಗಳನ್ನು ಅಳಿಸಿ"
+
+msgid "Created on %s"
+msgstr "%s ರಂದು ರಚಿಸಲಾಗಿದೆ"
+
+msgid "Confirm deletion"
+msgstr "ಅಳಿಸುವಿಕೆಯನ್ನು ಧೃಢೀಕರಿಸಿ"
+
+msgid "Deletion in progress"
+msgstr "ಅಳಿಸುವಿಕೆ ಪ್ರಗತಿಯಲ್ಲಿದೆ"
+
+msgid "Delete them"
+msgstr "ಅವುಗಳನ್ನು ಅಳಿಸಿ"
+
+msgid "Delete orphan tags ?"
+msgstr "ಅನಾಥ ಟ್ಯಾಗ್ ಗಳನ್ನು ಅಳಿಸಬೇಕೆ?"
+
+msgid "Delete album \"%s\"."
+msgstr "\"%s\" ಸಂಪುಟವನ್ನು ಅಳಿಸಿ."
+
+msgid "Delete album"
+msgstr "ಸಂಪುಟವನ್ನು ಅಳಿಸಿ"
+
+msgid "Create a first album"
+msgstr "ಮೊದಲ ಸಂಪುಟವನ್ನು ರಚಿಸಿ"
+
+msgid "By rank"
+msgstr "ದರ್ಜೆಯಂತೆ"
+
+msgid "Change username"
+msgstr "ಬಳಕೆದಾರರ ಹೆಸರನ್ನು ಬದಲಿಸಿ"
+
+msgid "Change password"
+msgstr "ಗುಪ್ತಪದವನ್ನು ಬದಲಿಸಿ"
+
+msgid "Center of interest"
+msgstr "ಆಕರ್ಷಣೆಯ ಕೇಂದ್ರ"
+
+msgid "Cancel"
+msgstr "ರದ್ದುಗೊಳಿಸಿ"
+
+msgid "Are you sure you want to lock the gallery?"
+msgstr "ಚಿತ್ರಾಂಗಣವನ್ನು ನಿರ್ಬಂಧಿಸಲು ನೀವು ಖಚಿತವಾಗಿ ಬಯಸುವಿರಾ?"
+
+msgid "Are you sure you want to install the plugin \"%s\"?"
+msgstr "\"%s\" ಪ್ಲಗ್ಗಿನ್ ಅನ್ನು ನೀವು ಸ್ಥಾಪಿಸಲು ಖಚಿತವಾಗಿ ಬಯಸುವಿರಾ?"
+
+msgid "Are you sure you want to delete all sizes?"
+msgstr "ಎಲ್ಲಾ ಅಳತೆಗಳನ್ನು ನೀವು ಅಳಿಸಲು ಖಚಿತವಾಗಿ ಬಯಸುವಿರಾ?"
+
+msgid "Are you sure you want to delete group \"%s\"?"
+msgstr "\"%s\" ಗುಂಪನ್ನು ನೀವು ಅಳಿಸಲು ಖಚಿತವಾಗಿ ಬಯಸುವಿರಾ?"
+
+msgid "Are you sure you want to delete the language \"%s\"?"
+msgstr "\"%s\" ಭಾಷೆಯನ್ನು ನೀವು ಅಳಿಸಲು ಖಚಿತವಾಗಿ ಬಯಸುವಿರಾ?"
+
+msgid "Are you sure you want to delete the plugin \"%s\"?"
+msgstr "\"%s\" ಪ್ಲಗ್ಗಿನ್ ಅನ್ನು ನೀವು ಅಳಿಸಲು ಖಚಿತವಾಗಿ ಬಯಸುವಿರಾ?"
+
+msgid "Are you sure you want to delete the theme \"%s\"?"
+msgstr "\"%s\" ಥೀಮ್ ಅನ್ನು ನೀವು ಅಳಿಸಲು ಖಚಿತವಾಗಿ ಬಯಸುವಿರಾ?"
+
+msgid "Are you sure you want to delete this theme?"
+msgstr "ಈ ಥೀಮ್ ಅನ್ನು ನೀವು ಅಳಿಸಲು ಖಚಿತವಾಗಿ ಬಯಸುವಿರಾ?"
+
+msgid "Are you sure you want to delete the user \"%s\"?"
+msgstr "\"%s\" ಬಳಕೆದಾರರನ್ನು ನೀವು ಅಳಿಸಲು ಖಚಿತವಾಗಿ ಬಯಸುವಿರಾ?"
+
+msgid "Are you sure you want to delete this site?"
+msgstr "ಈ ತಾಣವನ್ನು ನೀವು ಅಳಿಸಲು ಖಚಿತವಾಗಿ ಬಯಸುವಿರಾ?"
+
+msgid "Are you sure you want to delete this?"
+msgstr "ಇದನ್ನು ನೀವು ಅಳಿಸಲು ಖಚಿತವಾಗಿ ಬಯಸುವಿರಾ?"
+
+msgid "Album list management"
+msgstr "ಸಂಪುಟ ಪಟ್ಟಿ ನಿರ್ವಹಣೆ"
+
+msgid "Album \"%s\" now contains %d photos"
+msgstr "ಸಂಪುಟ \"%s\" ಈಗ %d ಚಿತ್ರಗಳನ್ನು ಹೊಂದಿದೆ"
+
+msgid "Album \"%s\" has been added"
+msgstr "ಸಂಪುಟ \"%s\" ವನ್ನು ಸೇರಿಸಲಾಗಿದೆ"
+
+msgid "Album name"
+msgstr "ಸಂಪುಟದ ಹೆಸರು"
+
+msgid "Administration Home"
+msgstr "ನಿರ್ವಹಣಾ ಮುಖಪುಟ"
+
+msgid "Add another set of photos"
+msgstr "ಇನ್ನೊಂದು ಚಿತ್ರಗಳ ಕಟ್ಟನ್ನು ಸೇರಿಸಿ"
+
+msgid "Activate it now"
+msgstr "ಇದನ್ನು ಈಗ ಸಕ್ರಿಯಗೊಳಿಸಿ"
+
+msgid "Add Album"
+msgstr "ಸಂಪುಟ ಸೇರಿಸಿ"
+
+msgid "%d sub-albums"
+msgstr "%d ಉಪ-ಸಂಪುಟಗಳು"
+
+msgid "%d photos"
+msgstr "%d ಚಿತ್ರಗಳು"
+
+msgid "%d months"
+msgstr "%d ತಿಂಗಳುಗಳು"
+
+msgid "%d month"
+msgstr "%d ತಿಂಗಳು"
+
+msgid "%d minutes"
+msgstr "%d ನಿಮಿಷಗಳು"
+
+msgid "%d minute"
+msgstr "%d ನಿಮಿಷ"
+
+msgid " (copy %s)"
+msgstr " (ನಕಲಿಸಿ %s)"
+
+msgid " (copy)"
+msgstr " (ನಕಲಿಸಿ)"
+
+msgid "%d Activities"
+msgstr "%d ಚಟುವಟಿಕೆಗಳು"
+
+msgid "%d Activity"
+msgstr "%d ಚಟುವಟಿಕೆ"
+
+msgid "%d album including"
+msgstr "%d ಸಂಪುಟದ ಸಹಿತ"
+
+msgid "%d album moved"
+msgid_plural "%d albums moved"
+msgstr[0] "%d ಸಂಪುಟವನ್ನು ಸರಿಸಲಾಗಿದೆ"
+msgstr[1] "%d ಸಂಪುಟಗಳನ್ನು ಸರಿಸಲಾಗಿದೆ"
+
+msgid "%d albums including"
+msgstr "%d ಸಂಪುಟಗಳ ಸಹಿತ"
+
+msgid "Tools"
+msgstr "ಉಪಕರಣಗಳು"
+
+msgid "Two updates are available"
+msgstr "ಎರಡು ಉನ್ನತಿಗಳು ಲಭ್ಯವಿವೆ"
+
+msgid "Type here the author name"
+msgstr "ಲೇಖಕರ ಹೆಸರನ್ನು ಇಲ್ಲಿ ನಮೂದಿಸಿ"
+
+msgid "Type here the name of the new group"
+msgstr "ಹೊಸ ಗುಂಪಿನ ಹೆಸರನ್ನು ಇಲ್ಲಿ ನಮೂದಿಸಿ"
+
+msgid "Type here the title"
+msgstr "ಶೀರ್ಷಿಕೆಯನ್ನು ಇಲ್ಲಿ ನಮೂದಿಸಿ"
+
+msgid "Type in a search term"
+msgstr "ಹುಡುಕು ಪದವನ್ನು ಇಲ್ಲಿ ನಮೂದಿಸಿ"
+
+msgid "Unlock gallery"
+msgstr "ಚಿತ್ರಾಂಗಣವನ್ನು ಅನಿರ್ಬಂಧಿಸಿ"
+
+msgid "Unlocked"
+msgstr "ಅನಿರ್ಬಂಧಿಸಿಲಾಗಿದೆ"
+
+msgid "Update All"
+msgstr "ಎಲ್ಲವನ್ನೂ ಉನ್ನತೀಕರಿಸಿ"
+
+msgid "Update Complete"
+msgstr "ಉನ್ನತೀಕರಣ ಸಂಪನ್ನವಾಗಿದೆ"
+
+msgid "Update albums informations"
+msgstr "ಸಂಪುಟಗಳ ವಿವರಗಳನ್ನು ಉನ್ನತೀಕರಿಸಿ"
+
+msgid "Update in progress... Please wait."
+msgstr "ಉನ್ನತಿಕರಿಸಲಾಗುತ್ತಿದೆ... ದಯವಿಟ್ಟು ಕಾಯಿರಿ"
+
+msgid "Videos"
+msgstr "ವಿಡಿಯೋಗಳು"
+
+msgid "Visit"
+msgstr "ಭೇಟಿ ನೀಡಿ"
+
+msgid "Welcome!"
+msgstr "ಸುಸ್ವಾಗತ!"
+
+msgid "Yes, I am sure"
+msgstr "ಹೌದು, ನನಗೆ ಖಾತ್ರಿಯಿದೆ"
+
+msgid "Yes, delete"
+msgstr "ಹೌದು, ಅಳಿಸಿ"
+
+msgid "You cannot delete your account"
+msgstr "ನೀವು ನಿಮ್ಮ ಖಾತೆಯನ್ನು ಅಳಿಸಲಾಗುವುದಿಲ್ಲ"
+
+msgid "between"
+msgstr "ನಡುವೆ"
+
+msgid "between %s and %s MB"
+msgstr " %s ಮತ್ತು %s MBಗಳ ನಡುವೆ"
+
+msgid "bottom left corner"
+msgstr "ಕೆಳಗಿನ ಎಡ ಮೂಲೆ"
+
+msgid "bottom right corner"
+msgstr "ಕೆಳಗಿನ ಬಲ ಮೂಲೆ"
+
+msgid "based on"
+msgstr "ಆಧಾರಿತ"
+
+msgid "average time"
+msgstr "ಸರಾಸರಿ ಸಮಯ"
+
+msgid "deleted"
+msgstr "ಅಳಿಸಲಾಗಿದೆ"
+
+msgid "clean"
+msgstr "ಸ್ವಚ್ಛಗೊಳಿಸಿ"
+
+msgid "create a new site"
+msgstr "ಹೊಸ ತಾಣವನ್ನು ರಚಿಸಿ"
+
+msgid "created"
+msgstr "ರಚಿಸಲಾಗಿದೆ"
+
+msgid "custom"
+msgstr "ಒಗ್ಗಿಸಿದ"
+
+msgid "delete album and the %d orphan photos"
+msgstr "ಸಂಪುಟವನ್ನು ಮತ್ತು %d ಅನಾಥ ಚಿತ್ರಗಳನ್ನು ಅಳಿಸಿ"
+
+msgid "delete only album, not photos"
+msgstr "ಸಂಪುಟವನ್ನು ಮಾತ್ರ ಅಳಿಸಿ, ಚಿತ್ರವನ್ನಲ್ಲ"
+
+msgid "delete photo"
+msgstr "ಚಿತ್ರವನ್ನು ಅಳಿಸಿ"
+
+msgid "directories + files"
+msgstr "ಡೈರೆಕ್ಟರಿಗಳು + ಕಡತಗಳು"
+
+msgid "dissociate from group"
+msgstr "ಗುಂಪಿನಿಂದ ಬೇರ್ಪಡಿಸಿ"
+
+msgid "delete album"
+msgstr "ಸಂಪುಟ ಅಳಿಸಿ"
+
+msgid "delete"
+msgstr "ಅಳಿಸಿ"
+
+msgid "date & time"
+msgstr "ದಿನಾಂಕ & ಸಮಯ"
+
+msgid "create a new album"
+msgstr "ಹೊಸ ಸಂಪುಟ ರಚಿಸಿ"
+
+msgid "confirm"
+msgstr "ಧೃಢೀಕರಿಸಿ"
+
+msgid "close"
+msgstr "ಮುಚ್ಚಿರಿ"
+
+msgid "existing album"
+msgstr "ಅಸ್ತಿತ್ವದಲ್ಲಿರುವ ಸಂಪುಟ"
+
+msgid "guest"
+msgstr "ಅತಿಥಿ"
+
+msgid "file name"
+msgstr "ಕಡತದ ಹೆಸರು"
+
+msgid "display"
+msgstr "ಪ್ರದರ್ಶನ"
+
+msgid "include child albums"
+msgstr "ಕಿರು ಸಂಪುಟಗಳನ್ನು "
+
+msgid "other"
+msgstr "ಇತರೆ"
+
+msgid "or"
+msgstr "ಅಥವಾ"
+
+msgid "in gallery"
+msgstr "ಚಿತ್ರಾಂಗಣದಲ್ಲಿ"
+
+msgid "hide details"
+msgstr "ವಿವರಗಳನ್ನು ಮರೆಮಾಡಿ"
+
+msgid "show details"
+msgstr "ವಿವರಗಳನ್ನು ಪ್ರದರ್ಶಿಸಿ"
+
+msgid "remove title"
+msgstr "ಶೀರ್ಷಿಕೆಯನ್ನು ತೆಗೆದುಹಾಕಿ"
+
+msgid "remove this filter"
+msgstr "ಈ ಶೋಧಕವನ್ನು ತೆಗೆದುಹಾಕಿ"
+
+msgid "remove tags"
+msgstr "ಟ್ಯಾಗ್ ಗಳನ್ನು ತೆಗೆದುಹಾಕಿ"
+
+msgid "remove creation date"
+msgstr "ರಚಿಸಿದ ದಿನಾಂಕವನ್ನು ತೆಗೆದುಹಾಕಿ"
+
+msgid "remove author"
+msgstr "ಲೇಖಕರನ್ನು ತೆಗೆದುಹಾಕಿ"
+
+msgid "registration date"
+msgstr "ನೋಂದಣಿ ದಿನಾಂಕ"
+
+msgid "registered users"
+msgstr "ನೋಂದಾಯಿತ ಬಳಕೆದಾರರು"
+
+msgid "ranks"
+msgstr "ದರ್ಜೆಗಳು"
+
+msgid "private"
+msgstr "ಖಾಸಗಿ"
+
+msgid "pixels"
+msgstr "ಪಿಕ್ಸೆಲ್ ಗಳು"
+
+msgid "photos per page"
+msgstr "ಪ್ರತಿಪುಟಕ್ಕೆ ಚಿತ್ರಗಳು"
+
+msgid "user_status_generic"
+msgstr "ಸಾಮಾನ್ಯ"
+
+msgid "user_status_admin"
+msgstr "ನಿರ್ವಾಹಕರು"
+
+msgid "unknown"
+msgstr "ಅನಾಮಿಕ"
+
+msgid "total time"
+msgstr "ಒಟ್ಟು ಸಮಯ"
+
+msgid "top right corner"
+msgstr "ಮೇಲಿನ ಬಲ ಮೂಲೆ"
+
+msgid "top left corner"
+msgstr "ಮೇಲಿನ ಎಡ ಮೂಲೆ"
+
+msgid "test"
+msgstr "ಪರೀಕ್ಷೆ"
+
+msgid "target"
+msgstr "ಗುರಿ"
+
+msgid "sub-albums"
+msgstr "ಉಪ-ಸಂಪುಟಗಳು"
+
+msgid "status"
+msgstr "ಸ್ಥಿತಿಗತಿ"
+
+msgid "user_status_webmaster"
+msgstr "ವೆಬ್ ಮಾಸ್ಟರ್"
+
+msgid "user_status_guest"
+msgstr "ಅತಿಥಿ"
+
+msgid "width & height"
+msgstr "ಉದ್ದ & ಎತ್ತರ"
+
+msgid "wrong filename"
+msgstr "ತಪ್ಪಾದ ಕಡತದ ಹೆಸರು"
+
+msgid "Representative"
+msgstr "ಭಾವಚಿತ್ರ"
+
+msgid "Representation of albums"
+msgstr "ಭಾವಚಿತ್ರ"
+
+msgid "Representant"
+msgstr "ಸಂಪುಟದ ಕಿರುಚಿತ್ರ"
+
+msgid "Rename"
+msgstr "ಮರುಹೆಸರಿಸಿ"
+
+msgid "Reject"
+msgstr "ನಿರಾಕರಿಸಿ"
+
+msgid "Position"
+msgstr "ಸ್ಥಾನ"
+
+msgid "Portraits"
+msgstr "ಭಾವಚಿತ್ರಗಳು"
+
+msgid "Portrait"
+msgstr "ಭಾವಚಿತ್ರ"
+
+msgid "Plugin list"
+msgstr "ಪ್ಲಗ್ಗಿನ್ ಗಳ ಪಟ್ಟಿ"
+
+msgid "Plugins"
+msgstr "ಪ್ಲಗ್ಗಿನ್ ಗಳು"
+
+msgid "Piwigo Update"
+msgstr "Piwigo ನವೀಕರಣ"
+
+msgid "Photo informations updated"
+msgstr "ಚಿತ್ರದ ಮಾಹಿತಿಯನ್ನು ನವೀಕರಿಸಲಾಗಿದೆ"
+
+msgid "Permission denied"
+msgstr "ಅನುಮತಿಯನ್ನು ನಿರಾಕರಿಸಲಾಗಿದೆ"
+
+msgid "Permission granted"
+msgstr "ಅನುಮತಿಯನ್ನು ಅನುಮೋದಿಸಲಾಗಿದೆ"
+
+msgid "Permission granted for groups"
+msgstr "ಗುಂಪುಗಳಿಗೆ ಅನುಮತಿಯನ್ನು ಅನುಮೋದಿಸಲಾಗಿದೆ"
+
+msgid "Permission granted for users"
+msgstr "ಬಳಕೆದಾರರಿಗೆ ಅನುಮತಿಯನ್ನು ಅನುಮೋದಿಸಲಾಗಿದೆ"
+
+msgid "Permission management"
+msgstr "ಅನುಮತಿಗಳ ನಿರ್ವಹಣೆ"
+
+msgid "Permissions"
+msgstr "ಅನುಮತಿಗಳು"
+
+msgid "Operation in progress"
+msgstr "ಚಿಕಿತ್ಸೆ ಪ್ರಗತಿಯಲ್ಲಿದೆ."
+
+msgid "Other private albums"
+msgstr "ಇತರೆ ಖಾಸಗಿ ಸಂಪುಟಗಳು"
+
+msgid "Page Visited"
+msgstr "ಭೇಟಿನೀಡಿದ ಪುಟ"
+
+msgid "Original file : %s"
+msgstr "ಮೂಲ ಕಡತ :  %s"
+
+msgid "Original Size"
+msgstr "ಮೂಲ ಗಾತ್ರ"
+
+msgid "Number of rates"
+msgstr "ದರ್ಜೆಗಳ ಸಂಖ್ಯೆ"
+
+msgid "None"
+msgstr "ಯಾವುದೂ ಇಲ್ಲ"
+
+msgid "Number of albums per page"
+msgstr "ಪ್ರತಿ ಪುಟದಲ್ಲಿ ಸಂಪುಟಗಳ ಸಂಖ್ಯೆ"
+
+msgid "Number of comments per page"
+msgstr "ಪ್ರತಿ ಪುಟದಲ್ಲಿ ಟಿಪ್ಪಣಿಗಳ ಸಂಖ್ಯೆ"
+
+msgid "Number of downloads"
+msgstr "ಇಳಿಕೆಗಳ ಸಂಖ್ಯೆ"
+
+msgid "Only private albums are listed"
+msgstr "ಕೇವಲ ಖಾಸಗಿ ಸಂಪುಟಗಳನ್ನು ಪಟ್ಟಿಮಾಡಲಾಗಿದೆ"
+
+msgid "Open user details"
+msgstr "ಬಳಕೆದಾರರ ವಿವರಗಳನ್ನು ತೆರೆಯಿರಿ"
+
+msgid "Options"
+msgstr "ಆಯ್ಕೆಗಳು"
+
+msgid "No tag found"
+msgstr "ಯಾವುದೇ ಟ್ಯಾಗ್ ಕಂಡುಬಂದಿಲ್ಲ"
+
+msgid "No results"
+msgstr "ಯಾವುದೇ ಫಲಿತಾಂಶಗಳಿಲ್ಲ"
+
+msgid "No user is permitted to see this private album"
+msgstr "ಈ ಖಾಸಗಿ ಸಂಪುಟವನ್ನು ವೀಕ್ಷಿಸಲು ಯಾವುದೇ ಬಳಕೆದಾರರಿಗೆ ಅನುಮತಿಯಿಲ್ಲ"
+
+msgid "Name field must not be empty"
+msgstr "ಹೆಸರಿನ ನಮೂದು ಖಾಲಿಬಿಡಲಾಗುವುದಿಲ್ಲ"
+
+msgid "Name is already taken"
+msgstr "ಹೆಸರನ್ನು ಈಗಾಗಲೇ ಬಳಸಲಾಗಿದೆ"
+
+msgid "Name of the duplicate"
+msgstr "ನಕಲಿನ ಹೆಸರು"
+
+msgid "New photos added"
+msgstr "ಹೊಸ ಚಿತ್ರವನ್ನು ಸೇರಿಸಲಾಗಿದೆ"
+
+msgid "New tag"
+msgstr "ಹೊಸ ಟ್ಯಾಗ್"
+
+msgid "No display"
+msgstr "ಪ್ರದರ್ಶನವಿಲ್ಲ"
+
+msgid "No photo in this album"
+msgstr "ಈ ಸಂಪುಟದಲ್ಲಿ ಯಾವುದೇ ಚಿತ್ರವಿಲ್ಲ"
+
+msgid "No photo can be deleted"
+msgstr "ಯಾವುದೇ ಚಿತ್ರಗಳನ್ನು ಅಳಿಸಲಾಗಿಲ್ಲ"
+
+msgid "No members to manage"
+msgstr "ನಿರ್ವಹಿಸಲು ಯಾವುದೇ ಸದಸ್ಯರಿಲ್ಲ"
+
+msgid "Minimum width"
+msgstr "ಕನಿಷ್ಟ ಉದ್ದ"
+
+msgid "Minimum height"
+msgstr "ಕನಿಷ್ಟ ಎತ್ತರ"
+
+msgid "Locked"
+msgstr "ನಿರ್ಬಂಧಿಸಲಾಗಿದೆ"
+
+msgid "Merge"
+msgstr "ವಿಲೀನಗೊಳಿಸಿ"
+
+msgid "Manage sub-albums"
+msgstr "ಉಪ-ಸಂಪುಟಗಳನ್ನು ನಿರ್ವಹಿಸಿ"
+
+msgid "Manage album photos"
+msgstr "ಸಂಪುಟದ ಚಿತ್ರಗಳನ್ನು ನಿರ್ವಹಿಸಿ"
+
+msgid "Mail address is mandatory for registration"
+msgstr "ನೋಂದಣಿಗೆ ಮಿಂಚೆ ವಿಳಾಸ ಅತ್ಯಗತ್ಯವಾಗಿದೆ."
+
+msgid "Mail theme"
+msgstr "ಮಿಂಚೆ ಥೀಮ್"
+
+msgid "Lock gallery"
+msgstr "ಚಿತ್ರಾಂಗಣವನ್ನು ನಿರ್ಬಂಧಿಸಿ"
+
+msgid "Lock albums"
+msgstr "ಸಂಪುಟಗಳನ್ನು ನಿರ್ಬಂಧಿಸಿ"
+
+msgid "Lock"
+msgstr "ನಿರ್ಬಂಧಿಸಿ"
+
+msgid "Loading..."
+msgstr "ತುಂಬಲಾಗುತ್ತಿದೆ..."
+
+msgid "Installed Themes"
+msgstr "ಸ್ಥಾಪಿತವಾಗಿರುವ ಥೀಮ್ ಗಳು"
+
+msgid "Instructions to use Piwigo"
+msgstr "Piwigo ಬಳಸಲು ಸೂಚನೆಗಳು"
+
+msgid "Install on your computer,"
+msgstr "ನಿಮ್ಮ ಗಣಕದಲ್ಲಿ ಸ್ಥಾಪಿಸಿ,"
+
+msgid "Installed Languages"
+msgstr "ಸ್ಥಾಪನೆಯಾಗಿರುವ ಭಾಷೆಗಳು"
+
+msgid "Include display of recent photos grouped by dates"
+msgstr "ದಿನಾಂಕದಂತೆ ಗುಂಪುಗೂಡಿಸಿದ ಇತ್ತೀಚಿನ ಚಿತ್ರಗಳನ್ನು ಪ್ರದರ್ಶನಕ್ಕೆ ಸೇರಿಸಿ"
+
+msgid "Install"
+msgstr "ಸ್ಥಾಪಿಸಿ"
+
+msgid "Go to %s or %s for more informations"
+msgstr "ಹೆಚ್ಚಿನ ಮಾಹಿತಿಗಾಗಿ  %s ಅಥವಾ %s ಗೆ ಭೇಟಿನೀಡಿ"
+
+msgid "Groups \\{%s\\} succesfully deleted"
+msgstr "\\{%s\\} ಗುಂಪುಗಳನ್ನು ಯಶಸ್ವಿಯಾಗಿ ಅಳಿಸಲಾಗಿದೆ"
+
+msgid "Group \"%s\" succesfully deleted"
+msgstr "\"%s\" ಗುಂಪನ್ನು ಯಶಸ್ವಿಯಾಗಿ ಅಳಿಸಲಾಗಿದೆ"
+
+msgid "Forbid this theme to users"
+msgstr "ಈ ಥೀಮ್ ಅನ್ನು ಬಳಕೆದಾರರಿಗೆ ನಿರ್ಬಂಧಿಸಿ"
+
+msgid "Forbidden"
+msgstr "ನಿರ್ಬಂಧಿಸಿದೆ"
+
+msgid "First photo added"
+msgstr "ಮೊದಲ ಚಿತ್ರವನ್ನು ಸೇರಿಸಲಾಗಿದೆ"
+
+msgid "File type: %s"
+msgstr "ಕಡತದ ವಿಧ:%s"
+
+msgid "Drop into album"
+msgstr "ಸಂಪುಟವೊಂದನ್ನು ಆರಿಸಿ"
+
+msgid "Edit user"
+msgstr "ಬಳಕೆದಾರರನ್ನು ಸಂಪಾದಿಸಿ"
+
+msgid "Edit album"
+msgstr "ಸಂಪುಟ ಸಂಪಾದಿಸಿ"
+
+msgid "ERROR"
+msgstr "ದೋಷ"
+
+msgid "Duplicates"
+msgstr "ನಕಲುಗಳು"
+
+msgid "Duplicate selected tags"
+msgstr "ಆರಿಸಿದ ಟ್ಯಾಗ್ ಗಳನ್ನು ನಕಲಿಸಿ"
+
+msgid "Duplicate"
+msgstr "ನಕಲಿಸಿ"
+
+msgid "Display category date"
+msgstr "ವಿಭಾಗದ ದಿನಾಂಕವನ್ನು ಪ್ರದರ್ಶಿಸಿ"
+
+msgid "Discover album:"
+msgstr "ಸಂಪುಟವನ್ನು ಅನ್ವೇಷಿಸಿ:"
+
+msgid "Delete tags \\{%s\\}?"
+msgstr "\\{%s\\} ಟ್ಯಾಗ್ ಗಳನ್ನು ಅಳಿಸುವುದೇ?"
+
+msgid "Delete tag \"%s\"?"
+msgstr "\"%s\" ಟ್ಯಾಗನ್ನು ಅಳಿಸುವುದೇ?"
+
+msgid "Close user details"
+msgstr "ಬಳಕೆದಾರರ ವಿವರಗಳನ್ನು ಮುಚ್ಚಿ"
+
+msgid "Can't connect to server."
+msgstr "ಸಂಪರ್‍ ನೊಂದಿಗೆ ಸಂಪರ್ಕ ಲಭ್ಯವಿಲ್ಲ."
+
+msgid "Caddie management"
+msgstr "ಕ್ಯಾಡಿ ನಿರ್ವಹಣೆ"
+
+msgid "Cache"
+msgstr "ಕ್ಯಾಶೆ"
+
+msgid "Caddie"
+msgstr "ಕ್ಯಾಡಿ"
+
+msgid "By %s"
+msgstr "%s ನಂತೆ"
+
+msgid "Basic settings"
+msgstr "ಸರಳ ಅಳವಡಿಕೆಗಳು"
+
+msgid "Average last 12 months"
+msgstr "ಸರಾಸರಿ ಕಳೆದ 12 ತಿಂಗಳುಗಳು"
+
+msgid "Associate User"
+msgstr "ಬಳಕೆದಾರರನ್ನು ಒಗ್ಗೂಡಿಸಿ"
+
+msgid "All themes are up to date."
+msgstr "ಎಲ್ಲಾ ಥೀಮ್ ಗಳು ನವೀಕರಣಗೊಂಡಿವೆ"
+
+msgid "All extensions are up to date."
+msgstr "ಎಲ್ಲಾ ವಿಸ್ತರಣಿಕೆಗಳು ನವೀಕರಣಗೊಂಡಿವೆ"
+
+msgid "All plugins are up to date."
+msgstr "ಎಲ್ಲಾ ಪ್ಲಗ್ಗಿನ್ ಗಳು ನವೀಕರಣಗೊಂಡಿವೆ"
+
+msgid "All languages are up to date."
+msgstr "ಎಲ್ಲಾ ಭಾಷೆಗಳು ನವೀಕರಣಗೊಂಡಿವೆ"
+
+msgid "All %d users are selected"
+msgstr "ಎಲ್ಲಾ  %d ಬಳಕೆದಾರರು ಆಯ್ಕೆಯಾಗಿದ್ದಾರೆ"
+
+msgid "All %d photos are selected"
+msgstr "ಎಲ್ಲಾ  %d ಚಿತ್ರಗಳು ಆಯ್ಕೆಯಾಗಿವೆ"
+
+msgid "Activate comments"
+msgstr "ಟಿಪ್ಪಣಿಗಳನ್ನು ಸಕ್ರಿಯಗೊಳಿಸಿ"
+
+msgid "Activate icon \"%s\""
+msgstr "\"%s\" ಐಕಾನನ್ನು ಸಕ್ರಿಯಗೊಳಿಸಿ"
+
+msgid "Activate"
+msgstr "ಸಕ್ರಿಯಗೊಳಿಸಿ"
+
+msgid "ACCESS_5"
+msgstr "ಪ್ರವೇಶವಿಲ್ಲ"
+
+msgid "<b>1</b> album found"
+msgstr "<b>1</b> ಸಂಪುಟ ಕಂಡುಬಂದಿದೆ"
+
+msgid "ACCESS_1"
+msgstr "ಎಲ್ಲರಿಗೂ ಪ್ರವೇಶ"
+
+msgid "ACCESS_0"
+msgstr "ಉಚಿತ ಪ್ರವೇಶ"
+
+msgid "A new version of Piwigo is available."
+msgstr "Piwigo ದ ಒಂದು ಹೊಸ ಆವೃತ್ತಿ ಲಭ್ಯವಿದೆ."
+
+msgid "<b>%d</b> tag found"
+msgstr "<b>%d</b> ಟ್ಯಾಗ್ ಕಂಡುಬಂದಿದೆ"
+
+msgid "<b>%d</b> tag selected"
+msgstr "<b>%d</b> ಟ್ಯಾಗ್ ಆರಿಸಲಾಗಿದೆ"
+
+msgid "<b>%d</b> tags found"
+msgstr "<b>%d</b> ಟ್ಯಾಗ್ ಗಳು ಕಂಡುಬಂದಿವೆ"
+
+msgid "<b>%d</b> albums found"
+msgstr "<b>%d</b> ಸಂಪುಟಗಳು ಕಂಡುಬಂದಿವೆ"
+
+msgid "... or "
+msgstr "... ಅಥವಾ"
+
+msgid "... or hide this link"
+msgstr "... ಅಥವಾ ಈ ಕೊಂಡಿಯನ್ನು ಮರೆಮಾಡಿ"
+
+msgid "%s MB used"
+msgstr "%s MB ಬಳಕೆಯಾಗಿದೆ"
+
+msgid "%s GB used"
+msgstr "%s GB ಬಳಕೆಯಾಗಿದೆ"
+
+msgid "%d user comments validated"
+msgstr "%d ಬಳಕೆದಾರರ ಟಿಪ್ಪಣಿಗಳನ್ನು ಊರ್ಜಿತಗೊಳಿಲಾಗಿದೆ"
+
+msgid "%d user comment validated"
+msgstr "%d ಬಳಕೆದಾರರ ಟಿಪ್ಪಣಿಯನ್ನು ಊರ್ಜಿತಗೊಳಿಲಾಗಿದೆ"
+
+msgid "%d user comments rejected"
+msgstr "%d ಬಳಕೆದಾರರ ಟಿಪ್ಪಣಿಗಳನ್ನು ತಿರಸ್ಕರಿಸಲಾಗಿದೆ"
+
+msgid "%d user comment rejected"
+msgstr "%d ಬಳಕೆದಾರರ ಟಿಪ್ಪಣಿಯನ್ನು ತಿರಸ್ಕರಿಸಲಾಗಿದೆ"
+
+msgid "The gallery URL is not valid."
+msgstr "ಚಿತ್ರಾಂಗಣದ URL ಅಸಿಂಧುವಾಗಿದೆ."
+
+msgid "Templates"
+msgstr "ಟೆಂಪ್ಲೇಟುಗಳು"
+
+msgid "Tag Manager"
+msgstr "ಟ್ಯಾಗ್ ನಿರ್ವಾಹಕ"
+
+msgid "Summary"
+msgstr "ಸಾರಾಂಶ"
+
+msgid "Support"
+msgstr "ಸಹಾಯ"
+
+msgid "Start Upload"
+msgstr "ಅಪ್ಲೋಡ್ ಪ್ರಾರಂಭಿಸಿ"
+
+msgid "Storage used"
+msgstr "ಬಳಕೆಯಾದ ಸಂಗ್ರಹಣೆ"
+
+msgid "Storage"
+msgstr "ಸಂಗ್ರಹಣೆ"
+
+msgid "Storage album"
+msgstr "ಸಂಗ್ರಹಣಾ ಸಂಪುಟ"
+
+msgid "Subscribe"
+msgstr "ಚಂದಾದಾರರಾಗಿ"
+
+msgid "Set creation date"
+msgstr "ರಚನೆಯ ದಿನಾಂಕ ಹೊಂದಿಸಿ"
+
+msgid "Show %s users"
+msgstr "%s ಬಳಕೆದಾರರನ್ನು ಪ್ರದರ್ಶಿಸಿ"
+
+msgid "Set as group for new users"
+msgstr "ಹೊಸ ಬಳಕೆದಾರರಿಗೆ ಗುಂಪಿನಂತೆ ಹೊಂದಿಸಿ"
+
+msgid "Set author"
+msgstr "ಲೇಖಕರನ್ನು ಹೊಂದಿಸಿ"
+
+msgid "Statistics"
+msgstr "ಅಂಕಿಅಂಶಗಳು"
+
+msgid "Status"
+msgstr "ಸ್ಥಿತಿಗತಿ"
+
+msgid "Site manager"
+msgstr "ತಾಣ ನಿರ್ವಾಹಕ"
+
+msgid "Show sub-albums"
+msgstr "ಉಪ-ಸಂಪುಟಗಳನ್ನು ಪ್ರದರ್ಶಿಸಿ"
+
+msgid "Show inactive plugins"
+msgstr "ನಿಷ್ಕ್ರಿಯ ಪ್ಲಗ್ಗಿನ್ ಗಳನ್ನು ಪ್ರದರ್ಶಿಸಿ"
+
+msgid "Show info"
+msgstr "ಮಾಹಿತಿ ಪ್ರದರ್ಶಿಸಿ"
+
+msgid "Settings"
+msgstr "ಸಂಯೋಜನೆಗಳು"
+
+msgid "Set title"
+msgstr "ಶೀರ್ಷಿಕೆ ಹೊಂದಿಸಿ"
+
+msgid "Public / Private"
+msgstr "ಸಾರ್ವಜನಿಕ / ಖಾಸಗಿ"
+
+msgid "Public"
+msgstr "ಸಾರ್ವಜನಿಕ"
+
+msgid "Album updated successfully"
+msgstr "ಸಂಪುಟವು ಯಶಸ್ವಿಯಾಗಿ ನವಿಕರಣಗೊಂಡಿದೆ"
+
+msgid "Advanced features"
+msgstr "ಸುಧಾರಿತ ವೈಶಿಷ್ಟ್ಯಗಳು"
+
+msgid "Delete album \"%s\" and its %d sub-albums."
+msgstr "ಸಂಪುಟ \"%s\" ಮತ್ತು ಅದರ %d ಉಪ-ಸಂಪುಟಗಳನ್ನು ಅಳಿಸಿ."
+
+msgid "user \"%s\" added"
+msgstr "\"%s\" ಬಳಕೆದಾರರನ್ನು ಸೇರಿಸಲಾಗಿದೆ"
+
+msgid "The other tags will be removed"
+msgstr "ಇತರೇ ಟ್ಯಾಗ್ ಗಳನ್ನು ತೆಗೆದುಹಾಕಲಾಗುತ್ತದೆ"
+
+msgid "There is no other theme available."
+msgstr "ಇನ್ಯಾವುದೇ ಥೀಮ್ ಗಳು ಲಭ್ಯವಿಲ್ಲ."
+
+msgid "Theme has been successfully installed"
+msgstr "ಥೀಮ್ ಅನ್ನು ಯಶಸ್ವಿಯಾಗಿ ಸ್ಥಾಪಿಸಲಾಗಿದೆ"
+
+msgid "The whole page"
+msgstr "ಇಡೀ ಪುಟ"
+
+msgid "There is no other plugin available."
+msgstr "ಇನ್ಯಾವುದೇ ಪ್ಲಗ್ಗಿನ್ ಗಳು ಲಭ್ಯವಿಲ್ಲ."
+
+msgid "There is no other language available."
+msgstr "ಇನ್ಯಾವುದೇ ಭಾಷೆಗಳು ಲಭ್ಯವಿಲ್ಲ."
+
+msgid "There is no group in this gallery."
+msgstr "ಈ ಚಿತ್ರಾಂಗಣದಲ್ಲಿ ಯಾವುದೇ ಗುಂಪುಗಳಿಲ್ಲ."
+
+msgid "Themes which need upgrade"
+msgstr "ನವೀಕರಣವಾಗಬೇಕಿರುವ ಥೀಮ್ ಗಳು"
+
+msgid "Themes"
+msgstr "ಥೀಮ್ ಗಳು"
+
+msgid "Title"
+msgstr "ಶೀರ್ಷಿಕೆ"
+
+msgid "Time has come to update your Piwigo with version %s, go to %s"
+msgstr "Piwigo %s ಆವೃತ್ತಿಗೆ ನವೀಕರಣಗೊಳ್ಳಲು ನಿಮಗೀಗ ಸಮಯ ಬಂದಿದೆ,  %s ಗೆ ಭೇಟಿಕೊಡಿ"
+
+msgid "Thumbnails generation in progress..."
+msgstr "ಕಿರುಚಿತ್ರಗಳ ರಚನೆ ಪ್ರಗತಿಯಲ್ಲಿದೆ..."
+
+msgid "This album contains %d photos, added on %s."
+msgstr "ಈ ಸಂಪುಟವು %s ರಂದು ಸೇರಿಸಲಾದ %d ಚಿತ್ರಗಳನ್ನು ಹೊಂದಿದೆ."
+
+msgid "This album contains %d photos, added between %s and %s."
+msgstr "ಈ ಸಂಪುಟವು %s ಮತ್ತು %s ರ ನಡುವೆ ಸೇರಿಸಲಾದ %d ಚಿತ್ರಗಳನ್ನು ಹೊಂದಿದೆ."
+
+msgid "This album contains no photo."
+msgstr "ಈ ಸಂಪುಟ ಯಾವುದೇ ಚಿತ್ರವನ್ನು ಹೊಂದಿಲ್ಲ."
+
+msgid "This is already the default theme"
+msgstr "ಇದು ಈಗಾಗಲೇ ನಿಯೋಜಿತ ಥೀಮ್ ಆಗಿದೆ"
+
+msgid "This name is already used by another group."
+msgstr "ಈ ಹೆಸರು ಇನ್ನೊಂದು ಗುಂಪಿನಿಂದ ಬಳಕೆಯಾಗಿದೆ."
+
+msgid "This site already exists"
+msgstr "ಈ ಜಾಲತಾಣ ಈಗಾಗಲೇ ಅಸ್ತಿತ್ವದಲ್ಲಿದೆ"
+
+msgid "Thumbnail"
+msgstr "ಕಿರುಚಿತ್ರ"
+
+msgid "Time"
+msgstr "ಸಮಯ"
+
+msgid "Uploaded Photos"
+msgstr "ಅಪ್ಲೋಡ್ ಆಗಿರುವ ಚಿತ್ರಗಳು"
+
+msgid "Upload in progress"
+msgstr "ಅಪ್ಲೋಡ್ ಪ್ರಗತಿಯಲ್ಲಿದೆ"
+
+msgid "Upload Photos"
+msgstr "ಚಿತ್ರಗಳನ್ನು ಅಪ್ಲೋಡ್ ಮಾಡಿ"
+
+msgid "Upload"
+msgstr "ಅಪ್ಲೋಡ್"
+
+msgid "Update photos information"
+msgstr "ಚಿತ್ರದ ಮಾಹಿತಿಯನ್ನು ನವೀಕರಿಸಿ"
+
+msgid "Update to Piwigo %s"
+msgstr "Piwigo %s ಗೆ ನವೀಕರಿಸಿ"
+
+msgid "Update user"
+msgstr "ಬಳಕೆದಾರರನ್ನು ನವೀಕರಿಸಿ"
+
+msgid "Updates"
+msgstr "ನವೀಕರಣಗಳು"
+
+msgid "Uninstall"
+msgstr "ಅನುಸ್ಥಾಪಿಸಿ"
+
+msgid "User %s [%s] was added to the subscription list."
+msgstr "%s [%s] ಬಳಕೆದಾರರನ್ನು ಚಂದಾದಾರಿಕೆ ಪಟ್ಟಿಗೆ ಸೇರಿಸಲಾಗಿದೆ."
+
+msgid "Users modified"
+msgstr "ಬಳಕೆದಾರರನ್ನು ನವೀಕರಿಸಲಾಗಿದೆ"
+
+msgid "User \"%s\" dissociated from this group"
+msgstr "\"%s\" ಬಳಕೆದಾರರನ್ನು ಈ ಗುಂಪಿನಿಂದ ಬೇರ್ಪಡಿಸಲಾಗಿದೆ."
+
+msgid "User \"%s\" created with \"%s\" like password"
+msgstr "\"%s\" ಬಳಕೆದಾರರನ್ನು \"%s\" ಗುಪ್ತಪದದ ಜೊತೆ ರಚಿಸಲಾಗಿದೆ."
+
+msgid "User %s [%s] added."
+msgstr "%s [%s] ಬಳಕೆದಾರರನ್ನು ಸೇರಿಸಲಾಗಿದೆ."
+
+msgid "User %s [%s] was not added to the subscription list."
+msgstr "%s [%s] ಬಳಕೆದಾರರನ್ನು ಚಂದಾದಾರಿಕೆ ಪಟ್ಟಿಗೆ ಸೇರಿಸಲಾಗಿಲ್ಲ."
+
+msgid "User %s [%s] was not removed from the subscription list."
+msgstr "%s [%s] ಬಳಕೆದಾರರನ್ನು ಚಂದಾದಾರಿಕೆ ಪಟ್ಟಿಯಿಂದ ತೆಗೆಯಲಾಗಿಲ್ಲ."
+
+msgid "User %s [%s] was removed from the subscription list."
+msgstr "%s [%s] ಬಳಕೆದಾರರನ್ನು ಚಂದಾದಾರಿಕೆ ಪಟ್ಟಿಯಿಂದ ತೆಗೆಯಲಾಗಿದೆ."
+
+msgid "User %s added"
+msgstr "%s ಬಳಕೆದಾರರನ್ನು ಸೇರಿಸಲಾಗಿದೆ"
+
+msgid "User %s updated"
+msgstr "%s ಬಳಕೆದಾರರನ್ನು ನವೀಕರಿಸಲಾಗಿದೆ"
+
+msgid "You have %s inactive plugins"
+msgstr "ನೀವು %s ನಿಷ್ಕ್ರಿಯ ಪ್ಲಗ್ಗಿನ್ ಗಳನ್ನು ಹೊಂದಿದ್ದೀರಿ"
+
+msgid "You don't have access to this photo"
+msgstr "ನಿಮಗೆ ಈ ಚಿತ್ರಕ್ಕೆ ಅನುಮತಿಯಿಲ್ಲ"
+
+msgid "You cannot move an album in its own sub album"
+msgstr "ನೀವು ಸಂಪುಟವನ್ನು ಅದರದ್ದೇ ಉಪ-ಸಂಪುಟಕ್ಕೆ ಸರಿಸಲಾಗುವುದಿಲ್ಲ"
+
+msgid "You are running the latest version of Piwigo."
+msgstr "ನೀವು ಪಿವಿಗೋ ಹೊಚ್ಚ ಹೊಸ ಆವೃತ್ತಿಯನ್ನು ಬಳಸುತಿದ್ದೀರಿ."
+
+msgid "Waiting"
+msgstr "ಬಾಕಿ ಉಳಿದಿರುವ"
+
+msgid "between %.2f and %.2f"
+msgstr " %.2f ಮತ್ತು %.2f ರ ನಡುವೆ"
+
+msgid "between %d and %d pixels"
+msgstr " %d ಮತ್ತು %d ಪಿಕ್ಸೆಲ್ ಗಳ ನಡುವೆ"
+
+msgid "and %s others"
+msgstr "ಮತ್ತು ಇತರೆ  %s"
+
+msgid "an error happened"
+msgstr "ದೋಷವೊಂದು ಸಂಭವಿಸಿದೆ"
+
+msgid "Zoom"
+msgstr "ಝೂಮ್"
+
+msgid "group \"%s\" updated"
+msgstr "\"%s\" ಗುಂಪನ್ನು ನವೀಕರಿಸಲಾಗಿದೆ"
+
+msgid "group \"%s\" deleted"
+msgstr "\"%s\" ಗುಂಪನ್ನು ಅಳಿಸಲಾಗಿದೆ"
+
+msgid "group \"%s\" added"
+msgstr "\"%s\" ಗುಂಪನ್ನು ಸೇರಿಸಲಾಗಿದೆ"
+
+msgid "first photo added on %s"
+msgstr "ಮೊದಲ ಚಿತ್ರ ಸೇರಿಸಿದ ದಿನಾಂಕ  %s"
+
+msgid "photos updated in the database"
+msgstr "ಡೇಟಾಬೇಸಿನಲ್ಲಿ ನವೀಕರಣವಾಗಿರುವ ಚಿತ್ರಗಳು"
+
+msgid "photos deleted from the database"
+msgstr "ಡೇಟಾಬೇಸಿನಿಂದ ಅಳಿಸಲಾಗಿರುವ ಚಿತ್ರಗಳು"
+
+msgid "photos added in the database"
+msgstr "ಡೇಟಾಬೇಸಿನಲ್ಲಿ ಸೇರಿಸಲಾಗಿರುವ ಚಿತ್ರಗಳು"
+
+msgid "no photo"
+msgstr "ಚಿತ್ರವಿಲ್ಲ"
+
+msgid "orphans to delete"
+msgstr "ಅಳಿಸಬೇಕಾಗಿರುವ ಅನಾಥರು"
+
+msgid "public"
+msgstr "ಸಾರ್ವಜನಿಕ"
+
+msgid "Section"
+msgstr "ವಿಭಾಗ"
+
+msgid "Save Settings"
+msgstr "ಸಂಯೋಜನೆಗಳನ್ನು ಉಳಿಸಿ"
+
+msgid "Select a file"
+msgstr "ಕಡತವೊಂದನ್ನು ಆರಿಸಿ"
+
+msgid "Select"
+msgstr "ಆರಿಸಿ"
+
+msgid "See you soon,"
+msgstr "ಮತ್ತೆ ಸಿಗೋಣ,"
+
+msgid "Searching..."
+msgstr "ಹುಡುಕಲಾಗುತ್ತಿದೆ..."
+
+msgid "Search albums"
+msgstr "ಸಂಪುಟಗಳನ್ನು ಹುಡುಕಿ"
+
+msgid "Review"
+msgstr "ಪರಿಶೀಲಿಸಿ"
+
+msgid "Remove all filters"
+msgstr "ಎಲ್ಲಾ ಶೋಧಕಗಳನ್ನು ತೆಗೆದುಹಾಕಿ"
+
+msgid "Recipients"
+msgstr "ಸ್ವೀಕೃತಿದಾರರು"
+
+msgid "Privacy level set to \"%s\""
+msgstr "ಸುರಕ್ಷತಾ ಮಟ್ಟವನ್ನು \"%s\" ಕ್ಕೆ ಇರಿಸಲಾಗಿದೆ"
+
+msgid "Plugins which need upgrade"
+msgstr "ನವೀಕೃತವಾಗಬೇಕಿರುವ ಪ್ಲಗಿನ್ ಗಳು"
+
+msgid "Plugin has been successfully copied"
+msgstr "ಪ್ಲಗಿನ್ ಅನ್ನು ಯಶಸ್ವಿಯಾಗಿ ನಕಲಿಸಲಾಗಿದೆ"
+
+msgid "Promote mobile app on mobile devices"
+msgstr "ಮೊಬೈಲ್ ಸಾಧನಗಳಲ್ಲಿ ಮೊಬೈಲ್ ಆಪ್ ಅನ್ನು ಬೆಂಬಲಿಸಿ"
+
+msgid "Properties"
+msgstr "ಗುಣವಿಶೇಷಗಳು"
+
+msgid "Privacy level"
+msgstr "ಸುರಕ್ಷತಾ ಮಟ್ಟ"
+
+msgid "Preferences"
+msgstr "ಆದ್ಯತೆಗಳು"
+
+msgid "Please select at least two groups"
+msgstr "ದಯವಿಟ್ಟು ಕನಿಷ್ಟ ಎರಡು ಗುಂಪುಗಳನ್ನು ಆರಿಸಿರಿ"
+
+msgid "Piwigo requires an album to add photos."
+msgstr "ಚಿತ್ರಗಳನ್ನು ಸೇರಿಸಲು Piwigo ಗೆ ಒಂದು ಸಂಪುಟದ ಆಗತ್ಯವಿದೆ."
+
+msgid "Piwigo configuration"
+msgstr "Piwigo ಸಂಯೋಜನೆಗಳು"
+
+msgid "Piwigo Announcements Newsletter"
+msgstr "Piwigo ಪ್ರಕಟಣಾ ಸುದ್ದಿಪತ್ರಿಕೆ"
+
+msgid "Piwigo %s is available, please update"
+msgstr "Piwigo %s ಲಭ್ಯವಿದೆ, ದಯವಿಟ್ಟು ನವೀಕರಿಸಿ"
+
+msgid "Piwigo Administration"
+msgstr "Piwigo ನಿರ್ವಹಣೆ"
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "ಗುಪ್ತಪದ ಧೃಢೀಕರಣ ಕಾಣೆಯಾಗಿದೆ, ದಯವಿಟ್ಟು ಆರಿಸಿದ ಗುಪ್ತಪದವನ್ನು ಧೃಢೀಕರಿಸಿ."
+
+msgid "Password is missing. Please enter the password."
+msgstr "ಗುಪ್ತಪದ ಕಾಣೆಯಾಗಿದೆ, ದಯವಿಟ್ಟು ಗುಪ್ತಪದವನ್ನು ನಮೂದಿಸಿ."
+
+msgid "Photo Properties"
+msgstr "ಚಿತ್ರದ ಗುಣವಿಶೇಷಗಳು"
+
+msgid "Pending Comments"
+msgstr "ಬಾಕಿಯಿರುವ ಟಿಪ್ಪಣಿಗಳು"
+
+msgid "Password updated"
+msgstr "ಗುಪ್ತಪದ ನವೀಕರಣಗೊಂಡಿದೆ"
+
+msgid "Panorama"
+msgstr "ಪನೋರಮಾ"
+
+msgid "Parameter"
+msgstr "ಸಂಯೋಜನೆಗಳು"
+
+msgid "No plugins found"
+msgstr "ಯಾವುದೇ ಪ್ಲಗಿನ್ ಗಳು ಕಂಡುಬಂದಿಲ್ಲ"
+
+msgid "No group is permitted to see this private album"
+msgstr "ಈ ಖಾಸಗಿ ಸಂಪುಟವನ್ನು ವೀಕ್ಷಿಸಲು ಯಾವುದೇ ಗುಂಪಿಗೆ ಅನುಮತಿಯಿಲ್ಲ"
+
+msgid "No and unlock sub-albums"
+msgstr "ಇಲ್ಲ ಮತ್ತು ಉಪ-ಸಂಪುಟಗಳನ್ನು ಅನಿರ್ಬಂಧಿಸಿ"
+
+msgid "Missing Plugins"
+msgstr "ಕಳೆದುಹೋದ ಪ್ಲಗಿನ್ ಗಳು"
+
+msgid "Minimum privacy level"
+msgstr "ಕನಿಷ್ಟ ಸುರಕ್ಷತಾ ಮಿತಿ"
+
+msgid "No recipient selected"
+msgstr "ಯಾವುದೇ ಸ್ವೀಕೃತಿದಾರರು ಆಯ್ಕೆಯಾಗಿಲ್ಲ"
+
+msgid "No user selected of %d users"
+msgstr "%d ರಲ್ಲಿ ಯಾವುದೇ ಬಳಕೆದಾರರು ಆಯ್ಕೆಯಾಗಿಲ್ಲ"
+
+msgid "No, I have changed my mind"
+msgstr "ಇಲ್ಲ, ನಾನು ಮನಸ್ಸು ಬದಲಿಸಿದ್ದೇನೆ"
+
+msgid "No users selected, no actions possible."
+msgstr "ಯಾವುದೇ ಬಳಕೆದಾರರು ಆಯ್ಕೆಯಾಗಿಲ್ಲ, ಯಾವುದೇ ಕ್ರಿಯೆ ಸಾಧ್ಯವಿಲ್ಲ."
+
+msgid "Miscellaneous"
+msgstr "ಇತ್ಯಾದಿ"
+
+msgid "Modify information"
+msgstr "ಮಾಹಿತಿ ಬದಲಿಸಿ"
+
+msgid "Extensions Update"
+msgstr "ವಿಸ್ತರಣಿಕೆಗಳ ನವೀಕರಣ"
+
+msgid "No photos selected, no actions possible."
+msgstr "ಯಾವುದೇ ಚಿತ್ರಗಳು ಆಯ್ಕೆಯಾಗಿಲ್ಲ, ಯಾವುದೇ ಕ್ರಿಯೆ ಸಾಧ್ಯವಿಲ್ಲ."
+
+msgid "No photo selected, %d photos in current set"
+msgstr "ಯಾವುದೇ ಚಿತ್ರಗಳು ಆಯ್ಕೆಯಾಗಿಲ್ಲ, ಪ್ರಸ್ತುತ ಕಟ್ಟಿನಲ್ಲಿ %d ಚಿತ್ರಗಳು"
+
+msgid "No photo in the current set."
+msgstr "ಪ್ರಸ್ತುತ ಕಟ್ಟಿನಲ್ಲಿ ಯಾವುದೇ ಚಿತ್ರಗಳಿಲ್ಲ."
+
+msgid "No file was uploaded"
+msgstr "ಯಾವುದೇ ಕಡತ ಅಪ್ಲೋಡ್ ಆಗಿಲ್ಲ"
+
+msgid "No groups selected, no actions possible."
+msgstr "ಯಾವುದೇ ಗುಂಪು ಆಯ್ಕೆಯಾಗಿಲ್ಲ, ಯಾವುದೇ ಕ್ರಿಯೆ ಸಾಧ್ಯವಿಲ್ಲ."
+
+msgid "No mail to send."
+msgstr "ಯಾವುದೇ ಮಿಂಚೆ ಕಳುಹಿಸಬೇಕಾಗಿಲ್ಲ."
+
+msgid "No matching user found"
+msgstr "ಹೊಂದಿಕೆಯಾಗುವ ಬಳಕೆದಾರರು ಕಂಡುಬಂದಿಲ್ಲ"
+
+msgid "General statistics"
+msgstr "ಸಾಮಾನ್ಯ ಅಂಕಿಅಂಶಗಳು"
+
+msgid "Forbid this language to users"
+msgstr "ಈ ಭಾಷೆಯನ್ನು ಬಳಕೆದಾರರಿಗೆ ನಿರ್ಬಂಧಿಸಿ"
+
+msgid "Formats"
+msgstr "ರೂಪುರೇಷೆಗಳು"
+
+msgid "Email administrators when a comment is deleted"
+msgstr "ಟಿಪ್ಪಣಿಯನ್ನು ಅಳಿಸಿದಾಗ ನಿರ್ವಾಹಕರಿಗೆ ಮಿಂಚೆ ಕಳುಹಿಸಿ"
+
+msgid "Email admins when a valid comment is entered"
+msgstr "ಯೋಗ್ಯವಾದ ಟಿಪ್ಪಣಿ ನಮೂದಾದಾಗ ನಿರ್ವಾಹಕರಿಗೆ ಮಿಂಚೆ ಕಳುಹಿಸಿ"
+
+msgid "Email admins when a new user registers"
+msgstr "ಹೊಸ ಬಳಕೆದಾರರು ನೋಂದಣಿಯಾದಾಗ ನಿರ್ವಾಹಕರಿಗೆ ಮಿಂಚೆ ಕಳುಹಿಸಿ"
+
+msgid "Email admins when a comment requires validation"
+msgstr "ದೃಢೀಕರಣದ ಅಗತ್ಯವಿರುವಾಗ ನಿರ್ವಾಹಕರಿಗೆ ಮಿಂಚೆ ಕಳುಹಿಸಿ"
+
+msgid "Email administrators when a comment is modified"
+msgstr "ಟಿಪ್ಪಣಿಯನ್ನು ಮಾರ್ಪಡಿಸಿದಾಗ ನಿರ್ವಾಹಕರಿಗೆ ಮಿಂಚೆ ಕಳುಹಿಸಿ"
+
+msgid "Element type"
+msgstr "ಘಟಕದ ವಿಧ"
+
+msgid "Element"
+msgstr "ಘಟಕ"
+
+msgid "Edited on %s"
+msgstr "%s ರ ಮೇಲೆ ಸಂಪಾದಿಸಿದೆ"
+
+msgid "Configuration"
+msgstr "ವಿನ್ಯಾಸ"
+
+msgid "Dashboard"
+msgstr "ತೋರುಹಲಗೆ"
+
+msgid "Compact View"
+msgstr "ಅಡಕವಾದ ನೋಟ"
+
+msgid "Clear Selection"
+msgstr "ಆಯ್ಕೆಯನ್ನು ತೆರವುಗೊಳಿಸಿ"
+
+msgid "Classic display"
+msgstr "ಶ್ರೇಷ್ಠ ಪ್ರದರ್ಶನ"
+
+msgid "Can't create temporary file."
+msgstr "ತಾತ್ಕಾಲಿಕ ಕಡತವನ್ನು ರಚಿಸಲಾಗಲಿಲ್ಲ."
+
+msgid "Are you sure you want to update all extensions?"
+msgstr "ಎಲ್ಲಾ ವಿಸ್ತರಣಿಕೆಗಳ ನವೀಕರಣದ ಅಗತ್ಯ ನಿಮಗೆ ಖಚಿತವಿದೆಯೇ?"
+
+msgid "Add detailed content"
+msgstr "ಕೆಲವು ವಿವರವಾದ ವಿಷಯಗಳನ್ನು ಸೇರಿಸಿ"
+
+msgid "%s photos have been regenerated"
+msgstr "%s ಚಿತ್ರಗಳನ್ನು ನೋಂದಾಯಿಸಲಾಗಿದೆ"
+
+msgid "%s photos can not be regenerated"
+msgstr "%s ಚಿತ್ರಗಳನ್ನು ನೋಂದಾಯಿಸಲಾಗುವುದಿಲ್ಲ"
+
+msgid "Activity peak in the last weeks"
+msgstr "ಕಳೆದ ವಾರಗಳಲ್ಲಿನ ಚಟುವಟಿಕೆಯ ಉತ್ತುಂಗ "
+
+msgid "Actions"
+msgstr "ಕ್ರಿಯೆಗಳು"
+
+msgid "A locked gallery is only visible to administrators"
+msgstr "ನಿರ್ಬಂಧಿತ ಚಿತ್ರಾಂಗಣ ಕೇವಲ ನಿರ್ವಾಹಕರುಗಳಿಗೆ ಲಭ್ಯವಿರುತ್ತದೆ"
+
+msgid "ACCESS_3"
+msgstr "ನಿರ್ವಾಹಕರುಗಳಿಗೆ ಪ್ರವೇಶ"
+
+msgid "ACCESS_2"
+msgstr "ನೋಂದಾಯಿತ ಬಳಕೆದಾರರಿಗೆ ಪ್ರವೇಶ"
+
+msgid "ACCESS_4"
+msgstr "ವೆಬ್ ಮಾಸ್ಟರ್ ಗಳಿಗೆ ಪ್ರವೇಶ"
+
+msgid "Access type"
+msgstr "ಪ್ರವೇಶದ ವಿಧ"
+
+msgid "Action"
+msgstr "ಕ್ರಿಯೆ"
+

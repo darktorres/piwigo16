@@ -1,0 +1,1486 @@
+# Piwigo translation — pt_BR
+# Source: common.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: pt_BR\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Piwigo-Language-Name: Português\n"
+"X-Piwigo-Country: Brasil\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Code: pt\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "%d Kb"
+msgstr "%d Kb"
+
+msgid "%d album updated"
+msgid_plural "%d albums updated"
+msgstr[0] "%d álbum atualizado"
+msgstr[1] "%d álbuns atualizados"
+
+msgid "%d comment to validate"
+msgstr "%d comentário para aprovar"
+
+msgid "%d comments to validate"
+msgstr "%d comentários para serem aprovados"
+
+msgid "%d new comment"
+msgstr "%d novo comentário"
+
+msgid "%d new comments"
+msgstr "%d novos comentários"
+
+msgid "%d comment"
+msgid_plural "%d comments"
+msgstr[0] "%d comentário"
+msgstr[1] "%d comentários"
+
+msgid "%d hit"
+msgstr "visto %d vez"
+
+msgid "%d hits"
+msgstr "visto %d vezes"
+
+msgid "%d new photo"
+msgid_plural "%d new photos"
+msgstr[0] "%d imagem nova"
+msgstr[1] "%d imagens novas"
+
+msgid "%d new user"
+msgstr "%d usuário novo"
+
+msgid "%d new users"
+msgstr "%d usuários novos"
+
+msgid "About"
+msgstr "Sobre"
+
+msgid "All tags"
+msgstr "Todas as tags"
+
+msgid "Any tag"
+msgstr "Qualquer tag"
+
+msgid "Author"
+msgstr "Autor"
+
+msgid "Albums"
+msgstr "Álbuns"
+
+msgid "Album"
+msgstr "Álbum"
+
+msgid "Close this window"
+msgstr "Fechar esta janela"
+
+msgid "Complete RSS feed (photos, comments)"
+msgstr "RSS completo"
+
+msgid "Confirm Password"
+msgstr "Confirmar senha"
+
+msgid "Connection settings"
+msgstr "Configurações de conexão"
+
+msgid "Login"
+msgstr "autenticar"
+
+msgid "Contact webmaster"
+msgstr "Contatar o webmaster"
+
+msgid "Create a new account"
+msgstr "Criar uma nova conta"
+
+msgid "Created on"
+msgstr "Criada em"
+
+msgid "Creation date"
+msgstr "Data de criação"
+
+msgid "Current password is wrong"
+msgstr "A senha atual está errada"
+
+msgid "Dimensions"
+msgstr "Dimensões"
+
+msgid "Display"
+msgstr "Mostrar"
+
+msgid "Email address is missing. Please specify an email address."
+msgstr "Está faltando o endereço de email"
+
+msgid "Email address"
+msgstr "Endereço de email"
+
+msgid "Enter your personnal informations"
+msgstr "Introduza suas informações pessoais"
+
+msgid "Error sending email"
+msgstr "Erro durante o envio do email"
+
+msgid "File name"
+msgstr "Nome do arquivo"
+
+msgid "File"
+msgstr "Arquivo"
+
+msgid "Filesize"
+msgstr "Tamanho do arquivo"
+
+msgid "Filter and display"
+msgstr "Filtrar e mostrar"
+
+msgid "Filter"
+msgstr "Filtro"
+
+msgid "Forgot your password?"
+msgstr "Esqueceu sua senha?"
+
+msgid "Go through the gallery as a visitor"
+msgstr "Percorer a galeria como visitante"
+
+msgid "Help"
+msgstr "Ajuda"
+
+msgid "Identification"
+msgstr "Identificação"
+
+msgid "Photos only RSS feed"
+msgstr "RSS das imagens"
+
+msgid "Keyword"
+msgstr "Palavra chave"
+
+msgid "Links"
+msgstr "Links"
+
+msgid "N/A"
+msgstr "Não disponível"
+
+msgid "New on %s"
+msgstr "Novo em %s"
+
+msgid "Notification"
+msgstr "Notificação"
+
+msgid "Number of items"
+msgstr "Número de itens"
+
+msgid "Original dimensions"
+msgstr "Dimensão original"
+
+msgid "Password forgotten"
+msgstr "Senha perdida"
+
+msgid "Password"
+msgstr "Senha"
+
+msgid "Post date"
+msgstr "Data de envio"
+
+msgid "Posted on"
+msgstr "Enviado em"
+
+msgid "Profile"
+msgstr "Perfil"
+
+msgid "Quick connect"
+msgstr "Conexão rápida"
+
+msgid "RSS feed"
+msgstr "fluxo RSS"
+
+msgid "Register"
+msgstr "Registrar-se"
+
+msgid "Registration"
+msgstr "Registro"
+
+msgid "Related tags"
+msgstr "Tags relacionadas"
+
+msgid "Reset"
+msgstr "Cancelar"
+
+msgid "Retrieve password"
+msgstr "Recuperar a senha"
+
+msgid "Search tags"
+msgstr "Pesquisar as tags"
+
+msgid "Search"
+msgstr "Pesquisa"
+
+msgid "display available tags"
+msgstr "ver as tags disponíveis"
+
+msgid "Since"
+msgstr "Desde "
+
+msgid "Sort by"
+msgstr "Listado por"
+
+msgid "Sort order"
+msgstr "Ordem de exibição"
+
+msgid "Tag"
+msgstr "Tag"
+
+msgid "Tags"
+msgstr "Tags"
+
+msgid "The RSS notification feed provides notification on news from this website : new photos, updated albums, new comments. Use a RSS feed reader."
+msgstr "O RSS notifica sobre os eventos da galeria: novas imagens, álbuns atualizados, novos comentários de usuários. Use um leitor de fluxos RSS."
+
+msgid "Unknown feed identifier"
+msgstr "identificador de fluxo RSS desconhecido"
+
+msgid "User comments"
+msgstr "Comentários de usuário"
+
+msgid "Username"
+msgstr "Nome de usuário"
+
+msgid "Visits"
+msgstr "Visitas"
+
+msgid "Webmaster"
+msgstr "Webmaster"
+
+msgid "Week %d"
+msgstr "Semana %d"
+
+msgid "About Piwigo"
+msgstr "Sobre Piwigo"
+
+msgid "You are not authorized to access the requested page"
+msgstr "Acesso proibido"
+
+msgid "add this photo to your favorites"
+msgstr "Acrescentar aos favoritos"
+
+msgid "Administration"
+msgstr "Administração"
+
+msgid "all"
+msgstr "tudo"
+
+msgid "ascending"
+msgstr "crescente"
+
+msgid "Expand all albums"
+msgstr "Expandir todos os álbuns"
+
+msgid "posted after %s (%s)"
+msgstr "disponível depois de %s (%s)"
+
+msgid "posted before %s (%s)"
+msgstr "disponível antes de %s (%s)"
+
+msgid "posted between %s (%s) and %s (%s)"
+msgstr "disponível entre o %s (%s) e o %s (%s)"
+
+msgid "posted on %s"
+msgstr "disponível em %s"
+
+msgid "Best rated"
+msgstr "Com a melhor pontuação"
+
+msgid "display best rated photos"
+msgstr "Mostrar as imagens com as notas mais altas"
+
+msgid "Calendar"
+msgstr "Calendário"
+
+msgid "All"
+msgstr "Todos"
+
+msgid "display each day with photos, month per month"
+msgstr "Mostrar ano por ano, mês por mês, dia por dia"
+
+msgid "View"
+msgstr "Vista"
+
+msgid "chronology_monthly_calendar"
+msgstr "Calendário mensal"
+
+msgid "chronology_monthly_list"
+msgstr "Lista mensal"
+
+msgid "chronology_weekly_list"
+msgstr "Lista semanal"
+
+msgid "Click here if your browser does not automatically forward you"
+msgstr "Clique aqui se o seu browser não o redirecionar automaticamente."
+
+msgid "comment date"
+msgstr "data do comentário"
+
+msgid "Comment"
+msgstr "comentário"
+
+msgid "Your comment has been registered"
+msgstr "O seu comentário foi registrado."
+
+msgid "Anti-flood system : please wait for a moment before trying to post another comment"
+msgstr "Sistema contra abuso : Por favor, espere um momento antes de tentar escrever um novo comentario"
+
+msgid "Your comment has NOT been registered because it did not pass the validation rules"
+msgstr "O seu comentário não pôde ser registado porque não passou pelas regras de validação"
+
+msgid "An administrator must authorize your comment before it is visible."
+msgstr "Um administrador deve autorizar o seu comentário para que ele seja visível por todos."
+
+msgid "This login is already used by another user"
+msgstr "Este login já está sendo usado por outro usuário."
+
+msgid "Comments"
+msgstr "Comentários"
+
+msgid "Add a comment"
+msgstr "Adicionar um comentário"
+
+msgid "created after %s (%s)"
+msgstr "criado depois de %s (%s)"
+
+msgid "created before %s (%s)"
+msgstr "criado antes de %s (%s)"
+
+msgid "created between %s (%s) and %s (%s)"
+msgstr "Criada entre  %s (%s) e  %s (%s)"
+
+msgid "created on %s"
+msgstr "criado em %s"
+
+msgid "Your Gallery Customization"
+msgstr "Personalização Da Sua Galeria"
+
+msgid "Default"
+msgstr "Padrão"
+
+msgid "delete this photo from your favorites"
+msgstr "Apague esta imagem de seus favoritos"
+
+msgid "Delete"
+msgstr "Apagar"
+
+msgid "descending"
+msgstr "decrescente"
+
+msgid "Download"
+msgstr "baixar"
+
+msgid "Download this file"
+msgstr "baixar este arquivo"
+
+msgid "edit"
+msgstr "editar"
+
+msgid "wrong date"
+msgstr "data errada"
+
+msgid "excluded"
+msgstr "excluídos"
+
+msgid "Your favorites"
+msgstr "Meus favoritos"
+
+msgid "display your favorites photos"
+msgstr "Mostrar minhas imagens favoritas"
+
+msgid "Favorites"
+msgstr "Favoritas"
+
+msgid "First"
+msgstr "Primeira página"
+
+msgid "The gallery is locked for maintenance. Please, come back later."
+msgstr "A galeria está bloqueada para manutenção. Por favor, volte mais tarde."
+
+msgid "Page generated in"
+msgstr "Página gerada em"
+
+msgid "guest"
+msgstr "visitante"
+
+msgid "Hello"
+msgstr "Olá"
+
+msgid "available for administrators only"
+msgstr "disponível apenas para os administradores"
+
+msgid "display this album"
+msgstr "mostra as imagens da pasta raíz deste álbum"
+
+msgid "display last user comments"
+msgstr "Ver os últimos comentários de usuários"
+
+msgid "search"
+msgstr "Pesquisar"
+
+msgid "Home"
+msgstr "Início"
+
+msgid "in this album"
+msgstr "neste álbum"
+
+msgid "in %d sub-album"
+msgid_plural "in %d sub-albums"
+msgstr[0] "em %d sub-álbuns"
+msgstr[1] "em %d sub-álbuns"
+
+msgid "included"
+msgstr "incluídos"
+
+msgid "Invalid password!"
+msgstr "Senha inválida!"
+
+msgid "Language"
+msgstr "Idioma"
+
+msgid "last %d days"
+msgstr "%d últimos dias"
+
+msgid "Last"
+msgstr "Última página"
+
+msgid "Logout"
+msgstr "Desconectar (logout)"
+
+msgid "obligatory"
+msgstr "obrigatório"
+
+msgid "display a calendar by creation date"
+msgstr "Mostra um calendário ordenado pela data de criação"
+
+msgid "display all photos in all sub-albums"
+msgstr "Mostra todos os elementos em todos os sub-álbuns"
+
+msgid "return to normal view mode"
+msgstr "voltar à exibição normal"
+
+msgid "display a calendar by posted date"
+msgstr "Mostrar um calendário por data de envio das imagens"
+
+msgid "Most visited"
+msgstr "Mais visitadas"
+
+msgid "display most visited photos"
+msgstr "Mostra as imagens mais visitadas"
+
+msgid "The number of photos per page must be a not null scalar"
+msgstr "O número de imagens por página deve ser inteiro e não nulo"
+
+msgid "Number of photos per page"
+msgstr "Número de imagens por página"
+
+msgid "Unknown identifier"
+msgstr "Origem desconhecida"
+
+msgid "New password"
+msgstr "Senha nova"
+
+msgid "Rate this photo"
+msgstr "Dê uma nota a esta imagem"
+
+msgid "Next"
+msgstr "Página seguinte"
+
+msgid "no rate"
+msgstr "nenhuma nota"
+
+msgid "Photos posted within the last %d day."
+msgid_plural "Photos posted within the last %d days."
+msgstr[0] "Imagens adicionadas a partir do últimos %d dia."
+msgstr[1] "Imagens adicionadas a partir dos últimos %d dias"
+
+msgid "password updated"
+msgstr "senha atualizada"
+
+msgid "Recent period must be a positive integer value"
+msgstr "O período deve ser um número inteiro positivo"
+
+msgid "photo"
+msgstr "imagem"
+
+msgid "Click on the photo to see it in high definition"
+msgstr "Clique na imagem para vê-la em alta definição"
+
+msgid "Show file metadata"
+msgstr "Mostrar os metadados do arquivo."
+
+msgid "Powered by"
+msgstr "Powered by"
+
+msgid "Preferences"
+msgstr "Preferências"
+
+msgid "Previous"
+msgstr "Página anterior"
+
+msgid "Random photos"
+msgstr "Imagens aleatórias"
+
+msgid "display a set of random photos"
+msgstr "exibir um grupo aleatório de imagens"
+
+msgid "Recent albums"
+msgstr "Álbuns recentes"
+
+msgid "display recently updated albums"
+msgstr "exibir álbuns atualizados recentemente"
+
+msgid "Recent period"
+msgstr "Período recente"
+
+msgid "Recent photos"
+msgstr "Imagens recentes"
+
+msgid "display most recent photos"
+msgstr "Mostrar as imagens mais recentes"
+
+msgid "Redirection..."
+msgstr "Redirecionamento..."
+
+msgid "Please, enter a login"
+msgstr "Por favor, entre com um nome de usuário"
+
+msgid "login mustn't end with a space character"
+msgstr "O nome de usuário não deve terminar com um espaço"
+
+msgid "login mustn't start with a space character"
+msgstr "O nome de usuário não deve começar com um espaço"
+
+msgid "this login is already used"
+msgstr "Este nome de usuário já existe"
+
+msgid "mail address must be like xxx@yyy.eee (example : jack@altern.org)"
+msgstr "O formato do email deve ser do tipo: xxx@yyy.eee (exemplo : jack@altern.org)"
+
+msgid "Auto login"
+msgstr "Auto login (autenticação automática)"
+
+msgid "remove this tag from the list"
+msgstr "remover esta tag da lista"
+
+msgid "representative"
+msgstr "representante"
+
+msgid "Search for Author"
+msgstr "Pesquisar por autor"
+
+msgid "Search in albums"
+msgstr "Pesquisar nos álbuns"
+
+msgid "Search by date"
+msgstr "Pesquisar por data"
+
+msgid "Date"
+msgstr "Data"
+
+msgid "End-Date"
+msgstr "Data final"
+
+msgid "Kind of date"
+msgstr "Tipo de data"
+
+msgid "Search for words"
+msgstr "Pesquisar por palavras"
+
+msgid "Search for all terms"
+msgstr "Pesquisar todos os termos"
+
+msgid "Search for any term"
+msgstr "Pesquisar qualquer um dos termos"
+
+msgid "Empty query. No criteria has been entered."
+msgstr "Pesquisa vazia. Nenhum critério fornecido."
+
+msgid "Search results"
+msgstr "Resultados da pesquisa"
+
+msgid "Search in sub-albums"
+msgstr "Pesquisar nos sub-álbuns"
+
+msgid "Contact"
+msgstr "Contatar"
+
+msgid "set as album representative"
+msgstr "eleger para representar este álbum"
+
+msgid "Show number of comments"
+msgstr "Exibir o número de comentários"
+
+msgid "Show number of hits"
+msgstr "Exibir o número de visualizações"
+
+msgid "slideshow"
+msgstr "Slideshow"
+
+msgid "stop the slideshow"
+msgstr "interromper o Slideshow"
+
+msgid "Specials"
+msgstr "Ferramentas"
+
+msgid "SQL queries in"
+msgstr "Pesquisa SQL em"
+
+msgid "display only recently posted photos"
+msgstr "exibir apenas as imagens enviadas recentemente"
+
+msgid "return to the display of all photos"
+msgstr "voltar a exibir todas as imagens"
+
+msgid "the beginning"
+msgstr "o início"
+
+msgid "Thumbnails"
+msgstr "Miniaturas"
+
+msgid "Menu"
+msgstr "Menu"
+
+msgid "A comment on your site"
+msgstr "Um comentário no seu site"
+
+msgid "today"
+msgstr "hoje"
+
+msgid "Update your rating"
+msgstr "atualizar nota"
+
+msgid "the username must be given"
+msgstr "Entre com o nome de usuário"
+
+msgid "useful when password forgotten"
+msgstr "útil em caso de senha esquecida"
+
+msgid "Quick search"
+msgstr "Pesquisa Rápida"
+
+msgid "Connected user: %s"
+msgstr "Usuário conectado: %s"
+
+msgid "IP: %s"
+msgstr "IP: %s"
+
+msgid "Browser: %s"
+msgstr "Navegador: %s"
+
+msgid "Author: %s"
+msgstr "Autor: %s"
+
+msgid "Comment: %s"
+msgstr "Comentário: %s"
+
+msgid "Comment by %s"
+msgstr "Comentário de %s"
+
+msgid "User: %s"
+msgstr "Usuário: %s"
+
+msgid "Email: %s"
+msgstr "Email: %s"
+
+msgid "Admin: %s"
+msgstr "Administração: %s"
+
+msgid "Registration of %s"
+msgstr "Registro de %s"
+
+msgid "Album: %s"
+msgstr "Álbum: %s"
+
+msgid "Bad status for user \"guest\", using default status. Please notify the webmaster."
+msgstr "Status ruim para o usuário \"convidado\", será usado status padrão. Por favor, avise o administrador do site."
+
+msgid "this email address is already in use"
+msgstr "um outro usuário já utiliza este email"
+
+msgid "Album results for"
+msgstr "Resultados do álbum para"
+
+msgid "Tag results for"
+msgstr "Resultados da tag para"
+
+msgid "from %s to %s"
+msgstr "de %s ao %s"
+
+msgid "Play of slideshow"
+msgstr "Iniciar o Slideshow"
+
+msgid "Pause of slideshow"
+msgstr "Parar o Slideshow"
+
+msgid "Repeat the slideshow"
+msgstr "Repetir o Slideshow"
+
+msgid "Not repeat the slideshow"
+msgstr "Não repetir o Slideshow"
+
+msgid "Reduce diaporama speed"
+msgstr "Diminuir a velocidade do Slideshow"
+
+msgid "Accelerate diaporama speed"
+msgstr "Aumentar a velocidade do Slideshow"
+
+msgid "Submit"
+msgstr "Ok"
+
+msgid "Yes"
+msgstr "Sim"
+
+msgid "No"
+msgstr "Não"
+
+msgid "%d photo"
+msgid_plural "%d photos"
+msgstr[0] "%d imagem"
+msgstr[1] "%d imagens"
+
+msgid "%d photo is also linked to current tags"
+msgid_plural "%d photos are also linked to current tags"
+msgstr[0] "%d imagem está também ligada às tags correntes"
+msgstr[1] "%d imagens estão também ligadas às tags correntes"
+
+msgid "display photos linked to this tag"
+msgstr "ver as imagens ligadas apenas a esta tag"
+
+msgid "photos posted during the last %d days"
+msgstr "imagens enviadas durante os últimos %d dias"
+
+msgid "Piwigo Help"
+msgstr "Piwigo Help"
+
+msgid "Rank"
+msgstr "Fila (Rank)"
+
+msgid "group by letters"
+msgstr "agrupar por letras"
+
+msgid "letters"
+msgstr "letras"
+
+msgid "show tag cloud"
+msgstr "mostar a nuvem de tags"
+
+msgid "cloud"
+msgstr "nuvem"
+
+msgid "Are you sure?"
+msgstr "Você tem certeza?"
+
+msgid "%d rates"
+msgstr "%d taxas"
+
+msgid "(!) This comment requires validation"
+msgstr "(!) Este comentário necessita aprovação"
+
+msgid "... or browse your empty gallery"
+msgstr "... ou procure sua galeria vazia"
+
+msgid "... or please deactivate this message, I will find my way by myself"
+msgstr "... ou, por favor, desative esta mensagem, encontrarei minha maneira por mim mesmo"
+
+msgid "Change my password"
+msgstr "Alterar minha senha"
+
+msgid "Check your email for the confirmation link"
+msgstr "Verifique em seu email o link de confirmação"
+
+msgid "Cookies are blocked or not supported by your browser. You must enable cookies to connect."
+msgstr "Cookies estão bloqueados ou não são suportados pelo seu navegador. Você deve ativar os cookies para entrar no sistema."
+
+msgid "delete all photos from your favorites"
+msgstr "Exclua todas as fotos do seu Favoritos"
+
+msgid "Edit a comment"
+msgstr "Editar um comentário"
+
+msgid "Edit"
+msgstr "Editar"
+
+msgid "Enter your new password below."
+msgstr "Insira sua nova senha abaixo."
+
+msgid "EXIF Metadata"
+msgstr "Metadados EXIF"
+
+msgid "Hello %s, your Piwigo photo gallery is empty!"
+msgstr "Olá %s, sua galeria de fotos Piwigo está vazia!"
+
+msgid "Hello %s,"
+msgstr "Olá %s,"
+
+msgid "html tags are not allowed in login"
+msgstr "marcadores html não são permitidas na autenticação"
+
+msgid "I want to add photos"
+msgstr "Eu quero inserir fotos"
+
+msgid "If this was a mistake, just ignore this email and nothing will happen."
+msgstr "Se isto foi um engano, apenas ignore esta mensagem e nada acontecerá."
+
+msgid "Invalid key"
+msgstr "Chave inválida"
+
+msgid "Invalid username or email"
+msgstr "Nome de usuário ou email inválido"
+
+msgid "IPTC Metadata"
+msgstr "Metadados IPTC"
+
+msgid "Manage this user comment: %s"
+msgstr "Gerenciar o comentário deste usuário: %s"
+
+msgid "Password reset is not allowed for this user"
+msgstr "Não é permitido a este usuário redefinir senha"
+
+msgid "Password Reset"
+msgstr "Redefinir senha"
+
+msgid "Please enter your username or email address."
+msgstr "Por favor, insira seu nome de usuário ou email."
+
+msgid "Rating score"
+msgstr "Avaliação"
+
+msgid "Reset to default values"
+msgstr "Voltar aos valores padrão"
+
+msgid "Return to home page"
+msgstr "Voltar à página inicial"
+
+msgid "Sent by"
+msgstr "Enviado por"
+
+msgid "Send my connection settings by email"
+msgstr "Enviar minhas configurações de conexão por email"
+
+msgid "Show oldest comments first"
+msgstr "Mostrar comentários antigos primeiro"
+
+msgid "Show latest comments first"
+msgstr "Mostrar comentários recentes primeiro"
+
+msgid "Someone requested that the password be reset for the following user account:"
+msgstr "Alguém solicitou que a senha do seguinte usuário seja redefinida:"
+
+msgid "Successfully registered, you will soon receive an email with your connection settings. Welcome!"
+msgstr "Registrado com sucesso. Em breve você receberá um email com suas configurações de conexão. Bem-vindo!"
+
+msgid "The passwords do not match"
+msgstr "As senhas não combinam"
+
+msgid "This author modified following comment:"
+msgstr "Este autor alterou o seguinte comentário:"
+
+msgid "This author removed the comment with id %d"
+msgstr "Este autor removeu o comentário com id %d"
+
+msgid "To reset your password, visit the following address:"
+msgstr "Para redefinir sua senha, visite o seguinte endereço:"
+
+msgid "User \"%s\" has no email address, password reset is not possible"
+msgstr "O usuário \"%s\" não possui endereço de email, não é possível redefinir a senha"
+
+msgid "Username \"%s\" on gallery %s"
+msgstr "Nome de usuário \"%s\" na galeria %s"
+
+msgid "Username or email"
+msgstr "Nome de usuário ou email"
+
+msgid "Username modification"
+msgstr "Alteração do nome de usuário"
+
+msgid "Welcome to your Piwigo photo gallery!"
+msgstr "Bem-vindo à sua galeria de fotos Piwigo!"
+
+msgid "Welcome"
+msgstr "Bem-vindo"
+
+msgid "You will receive a link to create a new password via email."
+msgstr "Você receberá, via email, um link para criar uma nova senha."
+
+msgid "Your username has been successfully changed to : %s"
+msgstr "Seu nome de usuário foi alterado com sucesso para: %s"
+
+msgid "Your password has been reset"
+msgstr "Sua senha foi redefinida"
+
+msgid "square"
+msgstr "quadrado"
+
+msgid "thumb"
+msgstr "miniatura"
+
+msgid "2small"
+msgstr "XXS - minúscula"
+
+msgid "xsmall"
+msgstr "XS - extra pequeno"
+
+msgid "small"
+msgstr "S - pequeno"
+
+msgid "medium"
+msgstr "M - médio"
+
+msgid "large"
+msgstr "L - grande"
+
+msgid "xlarge"
+msgstr "XL - extra grande"
+
+msgid "xxlarge"
+msgstr "XXL - enorme"
+
+msgid "Original"
+msgstr "Original"
+
+msgid "Thank you for registering at %s!"
+msgstr "Obrigado por registrar-se em %s!"
+
+msgid "Here are your connection settings"
+msgstr "Aqui estão suas configurações de conexão"
+
+msgid "Password: %s"
+msgstr "Senha: %s"
+
+msgid "Username: %s"
+msgstr "Nome de usuário: %s"
+
+msgid "If you think you've received this email in error, please contact us at %s"
+msgstr "Se você acha que recebeu este email por engano, por favor nos contacte em %s"
+
+msgid "Photo sizes"
+msgstr "Tamanhos da foto"
+
+msgid "View in"
+msgstr "Ver em"
+
+msgid "Mobile"
+msgstr "Móvel"
+
+msgid "Desktop"
+msgstr "Área de trabalho"
+
+msgid "File name, A &rarr; Z"
+msgstr "Nome do arquivo, A &rarr; Z"
+
+msgid "File name, Z &rarr; A"
+msgstr "Nome do arquivo, Z &rarr; A"
+
+msgid "Photo title, A &rarr; Z"
+msgstr "Título da foto, A &rarr; Z"
+
+msgid "Photo title, Z &rarr; A"
+msgstr "Título da foto, Z &rarr; A"
+
+msgid "Date created, new &rarr; old"
+msgstr "Data de criação, nova &rarr; antiga"
+
+msgid "Date created, old &rarr; new"
+msgstr "Data de criação, antiga &rarr; nova"
+
+msgid "Date posted, new &rarr; old"
+msgstr "Data de publicação, nova &rarr; antiga"
+
+msgid "Date posted, old &rarr; new"
+msgstr "Data de publicação, antiga &rarr; nova"
+
+msgid "Rating score, high &rarr; low"
+msgstr "Avaliação, alta &rarr; baixa"
+
+msgid "Rating score, low &rarr; high"
+msgstr "Avaliação, baixa &rarr; alta"
+
+msgid "Visits, high &rarr; low"
+msgstr "Visitas, alta &rarr; baixa"
+
+msgid "Visits, low &rarr; high"
+msgstr "Visitas, baixa &rarr; alta"
+
+msgid "Numeric identifier, 1 &rarr; 9"
+msgstr "Identificador numérico, 1 &rarr; 9"
+
+msgid "Numeric identifier, 9 &rarr; 1"
+msgstr "Identificador numérico, 9 &rarr; 1"
+
+msgid "Manual sort order"
+msgstr "Ordem de classificação manual"
+
+msgid "%d rate"
+msgstr "%d Avaliação"
+
+msgid "Bad request"
+msgstr "Solicitação Imprópria"
+
+msgid "Forbidden"
+msgstr "Proibido"
+
+msgid "Page not found"
+msgstr "Página não encontrada"
+
+msgid "Permalink for album not found"
+msgstr "Link permanente para o álbum não encontrado "
+
+msgid "Piwigo encountered a non recoverable error"
+msgstr "Piwigo encontrou um erro não recuperável"
+
+msgid "Requested album does not exist"
+msgstr "Álbum requerido não existe"
+
+msgid "Requested tag does not exist"
+msgstr "Tag requerida não existe"
+
+msgid "Email address is mandatory"
+msgstr "Endereço de e-mail obrigatório"
+
+msgid "Username is mandatory"
+msgstr "nome de usuário obrigatório"
+
+msgid "mandatory"
+msgstr "obrigatório"
+
+msgid "Website"
+msgstr "Website"
+
+msgid "Your website URL is invalid"
+msgstr "Seu endereço de site é inválido"
+
+msgid "Email"
+msgstr "Email"
+
+msgid "First Page"
+msgstr "Primeira Página"
+
+msgid "Go back to the album"
+msgstr "Retornar para o album"
+
+msgid "Last Page"
+msgstr "Última página"
+
+msgid "Password is missing. Please enter the password."
+msgstr "Senha perdida. Por favor entre com a senha."
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "Confirmação de senhas perdida. Por favor confirme a senha escolhida."
+
+msgid "%d photos per page"
+msgstr "%d fotos por página"
+
+msgid "Theme"
+msgstr "Tema"
+
+msgid "No results for"
+msgstr "Nenhum resultado para"
+
+msgid "Apply on properties"
+msgstr "Aplicar em propriedades"
+
+msgid "Photo description"
+msgstr "Descrição da foto"
+
+msgid "Photo title"
+msgstr "Título da foto"
+
+msgid "Album name, A &rarr; Z"
+msgstr "Nome do álbum, A &rarr; Z"
+
+msgid "Album name, Z &rarr; A"
+msgstr "Nome do álbum, Z &rarr; A"
+
+msgid "Link: %s"
+msgstr "Link: %s"
+
+msgid "Your authentication key is no longer valid."
+msgstr "Sua chave de autenticação não é mais válida."
+
+msgid "Invalid username or password!"
+msgstr "Senha ou nome de usuário inválido!"
+
+msgid "generate random password"
+msgstr "gerar senha aleatória"
+
+msgid "Password: ********** (no copy by email)"
+msgstr "Senha: ********** (sem cópia por e-mail)"
+
+msgid "Related albums"
+msgstr "Álbuns relacionados"
+
+msgid "Album name, 1 &rarr; 5 &rarr; 10 &rarr; 100"
+msgstr "Nome do Album, 1 &rarr; 5 &rarr; 10 &rarr; 100"
+
+msgid "Album name, 100 &rarr; 10 &rarr; 5 &rarr; 1"
+msgstr "Nome do Album, 100 &rarr; 10 &rarr; 5 &rarr; 1"
+
+msgid "Start-Date"
+msgstr "Data de início"
+
+msgid "year %d"
+msgstr "ano %d"
+
+msgid "Validate"
+msgstr "Validar"
+
+msgid "You can try to edit your filters and perform a new search."
+msgstr "Você pode tentar editar seus filtros e realizar uma nova pesquisa."
+
+msgid "last 24 hours"
+msgstr "últimas 24 horas"
+
+msgid "last 3 months"
+msgstr "Últimos 3 meses"
+
+msgid "last 30 days"
+msgstr "Últimos 30 dias"
+
+msgid "last 6 months"
+msgstr "Últimos 6 meses"
+
+msgid "last 7 days"
+msgstr "Últimos 7 dias"
+
+msgid "last year"
+msgstr "Ano passado"
+
+msgid "rating score %s"
+msgstr "pontuação de avaliação %s"
+
+msgid "%d visits"
+msgstr "%d visitas"
+
+msgid "Added by"
+msgstr "Adicionado por"
+
+msgid "Album description"
+msgstr "Descrição do álbum"
+
+msgid "Album title"
+msgstr "Título do álbum"
+
+msgid "Albums found"
+msgstr "Álbuns encontrados"
+
+msgid "Albums listed here match your search by word. Click on one to browse by album."
+msgstr "Os álbuns listados aqui correspondem à sua pesquisa por palavra. Clique em um para navegar por álbum."
+
+msgid "Cancel"
+msgstr "Cancelar"
+
+msgid "Choose filters"
+msgstr "Escolha filtros"
+
+msgid "Clear"
+msgstr "Claro"
+
+msgid "Empty filters"
+msgstr "Filtros vazios"
+
+msgid "File type"
+msgstr "Tipo de arquivo"
+
+msgid "Fill in the filters to start a search"
+msgstr "Preencha os filtros para iniciar uma pesquisa"
+
+msgid "Filters"
+msgstr "Filtros"
+
+msgid "No results are available."
+msgstr "Nenhum resultado está disponível."
+
+msgid "Pre-established filters are proposed, but you can add or remove them using the \"Choose filters\" button."
+msgstr "São propostos filtros pré-estabelecidos, mas você pode adicioná-los ou removê-los através do botão \"Escolher filtros\"."
+
+msgid "Search in :"
+msgstr "Procure em :"
+
+msgid "Search in this set"
+msgstr "Pesquisar neste conjunto"
+
+msgid "Tags found"
+msgstr "Etiquetas encontradas"
+
+msgid "Tags listed here match your search by word. Click on one to browse by tag."
+msgstr "As etiquetass listadas aqui correspondem à sua pesquisa por palavra. Clique em um para navegar por etiqueta."
+
+msgid "Unknown time period"
+msgstr "Período de tempo desconhecido"
+
+msgid "Album already selected"
+msgstr "Álbum já selecionado"
+
+msgid "Click here to display it"
+msgstr "Clique aqui para exibi-lo"
+
+msgid "Only the first %d albums are displayed, out of %d."
+msgstr "Somente os primeiros %d álbuns são exibidos, de %d."
+
+msgid "Pages"
+msgstr "Páginas"
+
+msgid "The PDF you requested is too large to display on this page."
+msgstr "O PDF solicitado é muito grande para ser exibido nesta página."
+
+msgid "There are no creation dates available for the photos currently filtered"
+msgstr "Não há datas de criação disponíveis para as fotos atualmente filtradas"
+
+msgid "last 12 months"
+msgstr "Últimos 12 meses"
+
+msgid "There are no tags available for the photos currently filtered"
+msgstr "Não há tags disponíveis para as fotos atualmente filtradas"
+
+msgid "There are no authors available for the photos currently filtered"
+msgstr "Não há autores disponíveis para as fotos atualmente filtradas"
+
+msgid "Custom dates"
+msgstr "Datas personalizadas"
+
+msgid "Set your password below."
+msgstr "Defina sua senha abaixo."
+
+msgid "Your API key will expire in %d day."
+msgstr "Sua chave de API irá expirar em %d dia."
+
+msgid "Your API key will expire in %d days."
+msgstr "Sua chave de API irá expirar em %d dias."
+
+msgid "Your API key will expire soon"
+msgstr "Sua chave de API irá expirar em breve"
+
+msgid "Your changes have been applied."
+msgstr "Suas alterações foram aplicadas."
+
+msgid "Your password was successfully reset"
+msgstr "Sua senha foi redefinida com sucesso"
+
+msgid "Your password was successfully set"
+msgstr "Sua senha foi definida com sucesso"
+
+msgid "must not be empty"
+msgstr "não deve estar vazio"
+
+msgid "you must choose a date"
+msgstr "você deve escolher uma data"
+
+msgid "Options"
+msgstr "Opções"
+
+msgid "Return to <a href=\"identification.php\" title=\"Sign in\">Sign in</a>"
+msgstr "Voltar para <a href=\"identification.php\" title=\"Entrar\">Entrar</a>"
+
+msgid "Return to the gallery"
+msgstr "Voltar para a galeria"
+
+msgid "Revoke"
+msgstr "Revogar"
+
+msgid "Revoked"
+msgstr "Revogado"
+
+msgid "Set my password"
+msgstr "Definir minha senha"
+
+msgid "Show expired keys"
+msgstr "Mostrar chaves expiradas"
+
+msgid "The api key has been successfully created."
+msgstr "A chave de API foi criada com sucesso."
+
+msgid "The email %s will be used to notify you when your API key is about to expire."
+msgstr "O e-mail %s será usado para notificá-lo quando sua chave de API estiver prestes a expirar."
+
+msgid "The secret key can no longer be displayed."
+msgstr "A chave secreta não pode mais ser exibida."
+
+msgid "This API key was manually revoked on %s"
+msgstr "Esta chave de API foi revogada manualmente em %s"
+
+msgid "To continue using the API, please renew your key before it expires."
+msgstr "Para continuar usando a API, renove sua chave antes que ela expire."
+
+msgid "To manage your API keys, please log in with your username/password."
+msgstr "Para gerenciar suas chaves de API, faça login com seu nome de usuário/senha."
+
+msgid "When enabled, a common template is used for the login and registration pages, regardless of the theme."
+msgstr "Quando ativado, um modelo comum é usado para as páginas de login e registro, independentemente do tema."
+
+msgid "You can manage your API keys in your <a href=\"%s\">account settings.</a>"
+msgstr "Você pode gerenciar suas chaves de API nas <a href=\"%s\">configurações da sua conta.</a>"
+
+msgid "You have no email address, so you will not be notified when your API key is about to expire."
+msgstr "Você não tem endereço de e-mail, então não será notificado quando sua chave de API estiver prestes a expirar."
+
+msgid "Custom date"
+msgstr "Data personalizada"
+
+msgid "Do you really want to revoke the \"%s\" API key?"
+msgstr "Você realmente deseja revogar a chave de API \"%s\"?"
+
+msgid "Don't have an account yet ?"
+msgstr "Ainda não tem uma conta?"
+
+msgid "Duration"
+msgstr "Duração"
+
+msgid "Edit API Key"
+msgstr "Editar chave de API"
+
+msgid "Expert mode"
+msgstr "Modo especialista"
+
+msgid "Expired"
+msgstr "Expirado"
+
+msgid "Expired on"
+msgstr "Expirado em"
+
+msgid "Expires in"
+msgstr "Expira em"
+
+msgid "Generate API Key"
+msgstr "Gerar chave de API"
+
+msgid "Generate key"
+msgstr "Gerar chave"
+
+msgid "Hello <em>%s</em>, enter your new password below."
+msgstr "Olá <em>%s</em>, digite sua nova senha abaixo."
+
+msgid "Hide expired keys"
+msgstr "Ocultar chaves expiradas"
+
+msgid "Impossible to copy automatically. Please copy manually."
+msgstr "Impossível copiar automaticamente. Copie manualmente."
+
+msgid "Last use"
+msgstr "Último uso"
+
+msgid "Manage your account"
+msgstr "Gerencie sua conta"
+
+msgid "Never"
+msgstr "Nunca"
+
+msgid "New API Key"
+msgstr "Nova chave de API"
+
+msgid "No expiration"
+msgstr "Não vencida"
+
+msgid "Done"
+msgstr "Feito"
+
+msgid "3xlarge"
+msgstr "3XL - extra grande"
+
+msgid "4xlarge"
+msgstr "4XL - gigantesco"
+
+msgid "API Key has been successfully edited."
+msgstr "A chave de API foi editada com sucesso."
+
+msgid "API Key has been successfully revoked."
+msgstr "A chave de API foi revogada com sucesso."
+
+msgid "API Key name"
+msgstr "Nome da chave da API"
+
+msgid "API Key not found"
+msgstr "Chave API não encontrada"
+
+msgid "API Keys"
+msgstr "Chaves de API"
+
+msgid "Account"
+msgstr "Conta"
+
+msgid "Already have an account ?"
+msgstr "Já tem uma conta?"
+
+msgid "An email has been sent with a link to reset your password"
+msgstr "Um e-mail foi enviado com um link para redefinir sua senha"
+
+msgid "An error has occured please got back to <a href=\"identification.php\" title=\"Sign in\">Sign in</a> or <a href=\"register.php\">Register</a>"
+msgstr "Ocorreu um erro. Volte para <a href=\"identification.php\" title=\"Entrar\">Entrar</a> ou <a href=\"register.php\">Registrar</a>"
+
+msgid "Change your password"
+msgstr "Alterar sua senha"
+
+msgid "Check your inbox"
+msgstr "Verifique sua caixa de entrada"
+
+msgid "Choose how you want to see your gallery"
+msgstr "Escolha como você quer ver sua galeria"
+
+msgid "Confirm my new password"
+msgstr "Confirmar minha nova senha"
+
+msgid "Confirm new password"
+msgstr "Confirmar nova senha"
+
+msgid "Create API Keys to secure your acount"
+msgstr "Crie chaves de API para proteger sua conta"
+
+msgid "Create a new API key to secure your account."
+msgstr "Crie uma nova chave de API para proteger sua conta."
+
+msgid "Create an account"
+msgstr "Criar uma conta"
+
+msgid "Created at"
+msgstr "Criado em"
+
+msgid "An email has been sent with a verification code"
+msgstr "Um e-mail com um código de verificação foi enviado."
+
+msgid "Here is your verification code:"
+msgstr "Aqui está seu código de verificação:"
+
+msgid "ID copied."
+msgstr "Documento de identidade copiado."
+
+msgid "If this wasn't you, please change your password immediately or contact your webmaster."
+msgstr "Se não foi você, altere sua senha imediatamente ou entre em contato com o administrador do site."
+
+msgid "If you changed your password because you think it was stolen, we recommend revoking your %d API keys <a href=\"%s\">in your profile</a>."
+msgstr "Se você alterou sua senha porque acha que ela foi roubada, recomendamos revogar suas chaves de API %d <a href=\"%s\">em seu perfil</a>."
+
+msgid "If you do not receive the email, please contact your webmaster."
+msgstr "Caso não receba o e-mail, entre em contato com o administrador do site."
+
+msgid "Invalid verification code"
+msgstr "Código de verificação inválido"
+
+msgid "Save your ID and secret"
+msgstr "Guarde seu ID e segredo"
+
+msgid "Secret copied. Keep it in a safe place."
+msgstr "Segredo copiado. Guarde em local seguro."
+
+msgid "The secret will no longer be displayed. You must copy it to continue."
+msgstr "O segredo não será mais exibido. Você precisa copiá-lo para continuar."
+
+msgid "Too many attempts, please try later.."
+msgstr "Muitas tentativas foram feitas. Por favor, tente novamente mais tarde."
+
+msgid "Verification code"
+msgstr "Código de verificação"
+
+msgid "Verification successful! You can now choose a new password."
+msgstr "Verificação concluída com sucesso! Agora você pode escolher uma nova senha."
+
+msgid "Verify"
+msgstr "Verificar"
+
+msgid "Your verification code"
+msgstr "Seu código de verificação"
+
+msgid "edit user preferences"
+msgstr "editar preferências do usuário"
+

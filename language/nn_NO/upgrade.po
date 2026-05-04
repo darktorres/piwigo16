@@ -1,0 +1,62 @@
+# Piwigo translation — nn_NO
+# Source: upgrade.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: nn_NO\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "All sub-albums of private albums become private"
+msgstr "Alle underalbum av private album blir private"
+
+msgid "As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:"
+msgstr "For å vera sikker så er fylgjande tilleggsmodular deaktivera. Du må sjekke for oppgraderingar for tilleggsmodular før du kan aktivere dei att."
+
+msgid "As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:"
+msgstr "For å vera sikker så er fylgjande tema deaktivera. Du må sjekke for oppgraderingar for tema før du kan aktivere dei att."
+
+msgid "In <i>%s</i>, before <b>?></b>, insert:"
+msgstr "I <i>%s</i>, før <b>?></b>, sett inn:"
+
+msgid "Only administrator can run upgrade: please sign in below."
+msgstr "Bare administrator kan utføre ei oppgradering: logg inn under."
+
+msgid "Only thumbnails prefix and webmaster mail address have been saved from previous configuration"
+msgstr "Bare miniatyrbilete-prefix og webmaster e-postadresse har blitt teke vare på frå den tidlegare versjonen"
+
+msgid "Perform a maintenance check in [Administration>Tools>Maintenance] if you encounter any problem."
+msgstr "Utfør ein vedlikehaldssjekk i [Administrasjon>Verktøy>Vedlikehald] om du oppdagar eit problem."
+
+msgid "SQL queries"
+msgstr "SQL-spørjingar"
+
+msgid "This page proposes to upgrade your database corresponding to your old version of Piwigo to the current version. The upgrade assistant thinks you are currently running a <strong>release %s</strong> (or equivalent)."
+msgstr "Denne sida føreslår å oppgradere databasen frå din gamle Piwigo-versjon til den nye versjonen. Oppgraderingsassistenten meiner du kjøyrer <strong>versjon %s</strong> (eller ein samsvarande versjon)"
+
+msgid "User permissions and group permissions have been erased"
+msgstr "Rettar til brukarar og grupper har blitt sletta"
+
+msgid "You do not have access rights to run upgrade"
+msgstr "Du har ikkje løyve til å starte oppgradering"
+
+msgid "total SQL time"
+msgstr "total SQL-tid"
+
+msgid "total upgrade time"
+msgstr "total tid for oppgradering"
+
+msgid "Statistics"
+msgstr "Statistikk"
+
+msgid "Upgrade"
+msgstr "Oppgradering"
+
+msgid "Upgrade from version %s to %s"
+msgstr "Oppgrader frå vesjon %s til %s"
+
+msgid "Upgrade informations"
+msgstr "Oppgraderingsinformasjon"
+

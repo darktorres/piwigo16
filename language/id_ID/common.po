@@ -1,0 +1,1117 @@
+# Piwigo translation — id_ID
+# Source: common.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: id_ID\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Piwigo-Language-Name: Bahasa Indonesia\n"
+"X-Piwigo-Country: Indonesia\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Code: id\n"
+"X-Piwigo-Zero-Plural: true\n"
+
+msgid "%d hit"
+msgstr "%d pengunjung"
+
+msgid "%d hits"
+msgstr "%d pengunjung"
+
+msgid "%d Kb"
+msgstr "%d Kb"
+
+msgid "%d new comment"
+msgstr "%d komentar baru"
+
+msgid "%d new comments"
+msgstr "%d komentar baru"
+
+msgid "%d new photo"
+msgid_plural "%d new photos"
+msgstr[0] "%d foto baru"
+msgstr[1] "%d foto baru"
+
+msgid "%d new user"
+msgstr "%d pengguna baru"
+
+msgid "%d new users"
+msgstr "%d pengguna baru"
+
+msgid "Date"
+msgstr "Tanggal"
+
+msgid "xlarge"
+msgstr "XL - ekstra besar"
+
+msgid "xsmall"
+msgstr "XS - ekstra kecil"
+
+msgid "xxlarge"
+msgstr "XXL - besar sekali"
+
+msgid "Thumbnails"
+msgstr "Tampilan besar"
+
+msgid "representative"
+msgstr "tampilan besar album"
+
+msgid "return to normal view mode"
+msgstr "kembali ke mode tampilan normal"
+
+msgid "return to the display of all photos"
+msgstr "kembali ke tampilan semua foto"
+
+msgid "search"
+msgstr "mencari"
+
+msgid "searched words : %s"
+msgstr "kata-kata yang dicari: %s"
+
+msgid "set as album representative"
+msgstr "setel album ini sebagai tampilan besar"
+
+msgid "show tag cloud"
+msgstr "tunjukkan awan kata kunci"
+
+msgid "slideshow"
+msgstr "gulir foto"
+
+msgid "small"
+msgstr "S - Kecil"
+
+msgid "square"
+msgstr "Kotak"
+
+msgid "stop the slideshow"
+msgstr "hentikan pengguliran foto"
+
+msgid "the beginning"
+msgstr "awal"
+
+msgid "the username must be given"
+msgstr "nama pengguna diperlukan"
+
+msgid "this email address is already in use"
+msgstr "alamat email ini telah digunakan"
+
+msgid "this login is already used"
+msgstr "nama pengguna ini telah digunakan"
+
+msgid "thumb"
+msgstr "Tampilan besar"
+
+msgid "today"
+msgstr "hari ini"
+
+msgid "useful when password forgotten"
+msgstr "berguna jika kata sandi terlupakan"
+
+msgid "wrong date"
+msgstr "tanggal salah"
+
+msgid "large"
+msgstr "L - Besar"
+
+msgid "last %d days"
+msgstr "terakhir %d hari"
+
+msgid "letters"
+msgstr "huruf"
+
+msgid "login mustn't end with a space character"
+msgstr "nama pengguna tidak boleh berakhir dengan spasi"
+
+msgid "login mustn't start with a space character"
+msgstr "nama pengguna tidak boleh diawali dengan spasi"
+
+msgid "mail address must be like xxx@yyy.eee (example : jack@altern.org)"
+msgstr "alamat email haruslah seperti ini : namakamu@alamatemailkamu.com"
+
+msgid "mandatory"
+msgstr "diperlukan"
+
+msgid "medium"
+msgstr "M - Menengah"
+
+msgid "no rate"
+msgstr "tidak diperingkat"
+
+msgid "obligatory"
+msgstr "diperlukan"
+
+msgid "password updated"
+msgstr "kata sandi diperbaharui"
+
+msgid "photo"
+msgstr "foto"
+
+msgid "photos posted during the last %d days"
+msgstr "foto dipublikasikan dalam %d hari terakhir"
+
+msgid "posted after %s (%s)"
+msgstr "dipublikasikan setelah %s (%s)"
+
+msgid "posted before %s (%s)"
+msgstr "dipublikasikan sebelum %s (%s)"
+
+msgid "posted between %s (%s) and %s (%s)"
+msgstr "dipublikasikan diantara  %s (%s) dan  %s (%s)"
+
+msgid "posted on %s"
+msgstr "dipublikasikan pada %s"
+
+msgid "remove this tag from the list"
+msgstr "buang kata kunci ini dari daftar"
+
+msgid "Email address is mandatory"
+msgstr "Memerlukan alamat email"
+
+msgid "Username is mandatory"
+msgstr "Memerlukan nama pengguna"
+
+msgid "display most recent photos"
+msgstr "tampilkan foto terbaru"
+
+msgid "display most visited photos"
+msgstr "tampilkan foto paling dikunjungi"
+
+msgid "display only recently posted photos"
+msgstr "tampilkan hanya foto yang diposting terbaru"
+
+msgid "display photos linked to this tag"
+msgstr "tampilkan foto yang terlink pada kata kunci ini"
+
+msgid "display recently updated albums"
+msgstr "tampilkan album terbaru"
+
+msgid "display this album"
+msgstr "tampilkan album ini"
+
+msgid "display your favorites photos"
+msgstr "tampilkan foto favorit anda"
+
+msgid "edit"
+msgstr "ubah"
+
+msgid "excluded"
+msgstr "tidak termasuk"
+
+msgid "from %s to %s"
+msgstr "dari %s ke %s"
+
+msgid "group by letters"
+msgstr "kelompokkan berdasarkan huruf"
+
+msgid "guest"
+msgstr "tamu"
+
+msgid "html tags are not allowed in login"
+msgstr "kata kunci html tidak diperbolehkan"
+
+msgid "in %d sub-album"
+msgid_plural "in %d sub-albums"
+msgstr[0] "dalam %d sub-album"
+msgstr[1] "dalam %d sub-album"
+
+msgid "in this album"
+msgstr "dalam album ini"
+
+msgid "included"
+msgstr "termasuk"
+
+msgid "comment date"
+msgstr "Tanggal komentar"
+
+msgid "created after %s (%s)"
+msgstr "dibuat setelah %s (%s)"
+
+msgid "created before %s (%s)"
+msgstr "dibuat sebelum %s (%s)"
+
+msgid "created between %s (%s) and %s (%s)"
+msgstr "dibuat diantara %s (%s) dan  %s (%s)"
+
+msgid "created on %s"
+msgstr "dibuat pada  %s"
+
+msgid "delete all photos from your favorites"
+msgstr "hapus semua foto dari favorit"
+
+msgid "delete this photo from your favorites"
+msgstr "hapus foto ini dari favorit"
+
+msgid "descending"
+msgstr "meningkat"
+
+msgid "display a calendar by creation date"
+msgstr "tampilkan kalender melalui tanggal pembuatan"
+
+msgid "display a calendar by posted date"
+msgstr "tampilkan kalender melalui tanggal publikasi"
+
+msgid "display a set of random photos"
+msgstr "tampilkan susunan foto secara sembarangan"
+
+msgid "display all photos in all sub-albums"
+msgstr "tampilkan semua foto di semua sub-album"
+
+msgid "display available tags"
+msgstr "tampilkan kata kunci yang tersedia"
+
+msgid "display best rated photos"
+msgstr "tampilkan foto dengan peringkat terbaik"
+
+msgid "display each day with photos, month per month"
+msgstr "tampilkan tiap foto per hari, bulan per bulan "
+
+msgid "display last user comments"
+msgstr "tampilkan komentar pengguna terakhir"
+
+msgid "Username \"%s\" on gallery %s"
+msgstr "Pengguna \"%s\" di galeri %s"
+
+msgid "Your Gallery Customization"
+msgstr "Kostumisasi galeri anda"
+
+msgid "Your comment has NOT been registered because it did not pass the validation rules"
+msgstr "Komentar anda BELUM didaftarkan karena tidak lolos dari peraturan validasi"
+
+msgid "Your comment has been registered"
+msgstr "Komentar anda telah didaftarkan"
+
+msgid "Your favorites"
+msgstr "Favorit anda"
+
+msgid "Your password has been reset"
+msgstr "Kata sandi anda telah di setel ulang"
+
+msgid "Your username has been successfully changed to : %s"
+msgstr "Nama pengguna anda telah berhasil diubah menjadi: %s"
+
+msgid "Your website URL is invalid"
+msgstr "URL situs web anda tidak valid"
+
+msgid "add this photo to your favorites"
+msgstr "tambahkan foto ini ke favorit anda"
+
+msgid "all"
+msgstr "semua"
+
+msgid "ascending"
+msgstr "susun"
+
+msgid "author(s) : %s"
+msgstr "penulis: %s"
+
+msgid "available for administrators only"
+msgstr "tersedia hanya untuk pengelola"
+
+msgid "chronology_monthly_calendar"
+msgstr "Kalender bulanan"
+
+msgid "chronology_monthly_list"
+msgstr "Daftar bulanan"
+
+msgid "chronology_weekly_list"
+msgstr "Daftar mingguan"
+
+msgid "cloud"
+msgstr "awan"
+
+msgid "Username modification"
+msgstr "Modifikasi nama pengguna"
+
+msgid "Username or email"
+msgstr "Nama pengguna atau email"
+
+msgid "Username: %s"
+msgstr "Nama pengguna : %s"
+
+msgid "View"
+msgstr "Lihat"
+
+msgid "View in"
+msgstr "Lihat di"
+
+msgid "Visits"
+msgstr "Kunjungi"
+
+msgid "Visits, high &rarr; low"
+msgstr "Kunjungi, tinggi &rarr; rendah"
+
+msgid "Visits, low &rarr; high"
+msgstr "Kunjungi, rendah &rarr; tinggi"
+
+msgid "Webmaster"
+msgstr "Webmaster"
+
+msgid "Website"
+msgstr "Situs web"
+
+msgid "Week %d"
+msgstr "Pekan %s"
+
+msgid "Welcome"
+msgstr "Selamat datang"
+
+msgid "Welcome to your Piwigo photo gallery!"
+msgstr "Selamat datang ke galeri foto Piwigo anda!"
+
+msgid "Yes"
+msgstr "Ya"
+
+msgid "You are not authorized to access the requested page"
+msgstr "Anda tidak diijinkan mengakses halama yang diminta"
+
+msgid "You will receive a link to create a new password via email."
+msgstr "Anda akan menerima sebuah link untuk membuat sebuah kata sandi baru melalui email. "
+
+msgid "Tag results for"
+msgstr "Hasil dari kata kunci"
+
+msgid "Tags"
+msgstr "Kata kunci"
+
+msgid "Thank you for registering at %s!"
+msgstr "Terima kasih telah mendaftar di %s!"
+
+msgid "The RSS notification feed provides notification on news from this website : new photos, updated albums, new comments. Use a RSS feed reader."
+msgstr "Langganan RSS menyediakan pemberitahuan pada peristiwa terbaru dari situs web: dengan foto terbaru, album yang diperbaharui dan komentar baru. Digunakan bersama pembaca langganan RSS"
+
+msgid "The gallery is locked for maintenance. Please, come back later."
+msgstr "Galeri ini terkunci karena ada perbaikan, harap balik nanti."
+
+msgid "The number of photos per page must be a not null scalar"
+msgstr "Jumlah foto per halaman haruslah tidak boleh kurang dari nol"
+
+msgid "The passwords do not match"
+msgstr "Kata sandi anda tidak cocok"
+
+msgid "This author modified following comment:"
+msgstr "Penulis ini memodifikasi komentar berikut:"
+
+msgid "This author removed the comment with id %d"
+msgstr "Penulis ini menghapus komentar dengan id %d"
+
+msgid "This login is already used by another user"
+msgstr "Nama ini sudah digunakan oleh pengguna lain"
+
+msgid "To reset your password, visit the following address:"
+msgstr "Untuk menyetel ulang kata sandi, harap kunjungi alamat berikut ini:"
+
+msgid "Unknown feed identifier"
+msgstr "Pengenalan langganan yang tidak diketahui"
+
+msgid "Unknown identifier"
+msgstr "Pengenalan tidak diketahui"
+
+msgid "Update your rating"
+msgstr "Perbaharui rating anda"
+
+msgid "User \"%s\" has no email address, password reset is not possible"
+msgstr "Pengguna \"%s\" tidak memiliki alamat email, pembaharuan kata sandi tidak memungkinkan"
+
+msgid "User comments"
+msgstr "Komentar pengguna"
+
+msgid "User: %s"
+msgstr "Pengguna: %s"
+
+msgid "Username"
+msgstr "Nama pengguna"
+
+msgid "Search in sub-albums"
+msgstr "Pencarian di sub-album"
+
+msgid "Search results"
+msgstr "Hasil pencarian"
+
+msgid "Search rules"
+msgstr "Kriteria pencarian"
+
+msgid "Search tags"
+msgstr "Pencarian kata kunci"
+
+msgid "Send my connection settings by email"
+msgstr "Kirim koneksi setelan melalui email"
+
+msgid "Sent by"
+msgstr "Terkirim oleh"
+
+msgid "Show file metadata"
+msgstr "Tunjukkan metadata dokumen"
+
+msgid "Show latest comments first"
+msgstr "Tunjukkan komentar terbaru, paling awal"
+
+msgid "Show number of comments"
+msgstr "Tunjukkan jumlah komentar"
+
+msgid "Show number of hits"
+msgstr "Tunjukkan jumlah kunjungan"
+
+msgid "Show oldest comments first"
+msgstr "Tunjukkan komentar lama, paling awal"
+
+msgid "Since"
+msgstr "Sejak"
+
+msgid "Someone requested that the password be reset for the following user account:"
+msgstr "Seseorang sedang meminta kata sandi dari pengguna ini akan diubah :"
+
+msgid "Sort by"
+msgstr "Penyusunan"
+
+msgid "Sort order"
+msgstr "Disusun berdasarkan"
+
+msgid "Specials"
+msgstr "Khusus"
+
+msgid "Submit"
+msgstr "Kirim"
+
+msgid "Successfully registered, you will soon receive an email with your connection settings. Welcome!"
+msgstr "Berhasil terdaftar, sebentar lagi anda akan menerima konfirmasi dan pengaturan koneksi anda di email, Selamat Datang!"
+
+msgid "Tag"
+msgstr "Kata kunci"
+
+msgid "Date created, new &rarr; old"
+msgstr "Tanggal dibuat, baru &rarr; lama"
+
+msgid "Date created, old &rarr; new"
+msgstr "Tanggal dibuat, lama &rarr; baru"
+
+msgid "Date posted, new &rarr; old"
+msgstr "Tanggal dipublikasi, baru &rarr; lama"
+
+msgid "Date posted, old &rarr; new"
+msgstr "Tanggal dipublikasi, lama &rarr; baru"
+
+msgid "File name, A &rarr; Z"
+msgstr "Nama dokumen, A &rarr; Z"
+
+msgid "File name, Z &rarr; A"
+msgstr "Nama dokumen, Z &rarr; A"
+
+msgid "Numeric identifier, 1 &rarr; 9"
+msgstr "Penomoran, 1 &rarr; 9"
+
+msgid "Numeric identifier, 9 &rarr; 1"
+msgstr "Penomoran, 9 &rarr; 1"
+
+msgid "Photo title, A &rarr; Z"
+msgstr "Judul foto, A &rarr; Z"
+
+msgid "Photo title, Z &rarr; A"
+msgstr "Judul foto, Z &rarr; A"
+
+msgid "Rating score, high &rarr; low"
+msgstr "Hasil peringkat, tinggi &rarr; rendah"
+
+msgid "Rating score, low &rarr; high"
+msgstr "Hasil peringkat, rendah &rarr; tinggi"
+
+msgid "Search"
+msgstr "Mencari"
+
+msgid "Search by date"
+msgstr "Pencarian berdasar tanggal"
+
+msgid "Search for Author"
+msgstr "Pencarian penulis"
+
+msgid "Search for all terms"
+msgstr "Pencarian semuanya"
+
+msgid "Search for any term"
+msgstr "Pencarian tertentu"
+
+msgid "Search for words"
+msgstr "Pencarian kata-kata"
+
+msgid "Search in albums"
+msgstr "Pencarian album"
+
+msgid "Reduce diaporama speed"
+msgstr "Kurangi kecepatan gulir gambar"
+
+msgid "Requested tag does not exist"
+msgstr "Permintaan kata kunci tidak tersedia"
+
+msgid "Reset"
+msgstr "Setel ulang"
+
+msgid "Reset to default values"
+msgstr "Setel ulang ke pengaturan standar"
+
+msgid "Retrieve password"
+msgstr "Kembalikan kata sandi"
+
+msgid "Return to home page"
+msgstr "Kembali ke halaman utama "
+
+msgid "SQL queries in"
+msgstr "Kueri SQL di"
+
+msgid "Register"
+msgstr "Mendaftar"
+
+msgid "Registration"
+msgstr "Pendaftaran"
+
+msgid "Registration of %s"
+msgstr "Pendaftaran dari %s"
+
+msgid "Related tags"
+msgstr "Kata kunci yang berkaitan"
+
+msgid "Repeat the slideshow"
+msgstr "Ulangi gulir gambar"
+
+msgid "Requested album does not exist"
+msgstr "Permintaan album belum ada"
+
+msgid "Rate this photo"
+msgstr "Peringkatkan foto ini"
+
+msgid "Rating score"
+msgstr "Skor peringkat"
+
+msgid "Recent albums"
+msgstr "Album terakhir"
+
+msgid "Recent period"
+msgstr "Periode terakhir"
+
+msgid "Recent period must be a positive integer value"
+msgstr "Periode terakhir haruslah miliki nilai tambahan"
+
+msgid "Recent photos"
+msgstr "Gambar terakhir"
+
+msgid "Redirection..."
+msgstr "Mengarahkan..."
+
+msgid "Manage this user comment: %s"
+msgstr "Atur komentar pengguna ini: %s"
+
+msgid "Permalink for album not found"
+msgstr "Link permanen untuk album belum ditemukan"
+
+msgid "Photos only RSS feed"
+msgstr "Berlangganan RSS khusus untuk foto"
+
+msgid "Photos posted within the last %d day."
+msgid_plural "Photos posted within the last %d days."
+msgstr[0] "Foto dipublikasikan hanya dalam akhir %d hari"
+msgstr[1] "Foto dipublikasikan hanya dalam akhir %d hari"
+
+msgid "Quick search"
+msgstr "Pencarian cepat"
+
+msgid "RSS feed"
+msgstr "Langganan RSS"
+
+msgid "Random photos"
+msgstr "Gambar sembarangan"
+
+msgid "Rank"
+msgstr "Peringkat"
+
+msgid "Preferences"
+msgstr "Preferensi"
+
+msgid "Previous"
+msgstr "Sebelumnya"
+
+msgid "Profile"
+msgstr "Profil"
+
+msgid "Quick connect"
+msgstr "Penyambungan cepat"
+
+msgid "Please, enter a login"
+msgstr "Mohon, pergi ke halaman masuk"
+
+msgid "Post date"
+msgstr "Tanggal publikasi"
+
+msgid "Posted on"
+msgstr "Dipulikasikan pada"
+
+msgid "Powered by"
+msgstr "Didukung oleh"
+
+msgid "Piwigo Help"
+msgstr "Bantuan Piwigo"
+
+msgid "Piwigo encountered a non recoverable error"
+msgstr "Piwigo mengalami kesalahan yang belum dipulihkan"
+
+msgid "Play of slideshow"
+msgstr "Mainkan gulir gambar"
+
+msgid "Please enter your username or email address."
+msgstr "Mohon masukkan nama pengguna atau alamat email"
+
+msgid "IP: %s"
+msgstr "IP: %s"
+
+msgid "New on %s"
+msgstr "Baru di %s"
+
+msgid "Pause of slideshow"
+msgstr "Rehat menggulir gambar"
+
+msgid "Photo sizes"
+msgstr "Ukuran foto"
+
+msgid "Original dimensions"
+msgstr "Dimensi asli"
+
+msgid "Page generated in"
+msgstr "Halaman dibuat di"
+
+msgid "Page not found"
+msgstr "Halaman tidak ditemukan"
+
+msgid "Password"
+msgstr "Kata sandi"
+
+msgid "Password Reset"
+msgstr "Setel ulang kata sandi"
+
+msgid "Password forgotten"
+msgstr "Lupa kata sandi"
+
+msgid "Password reset is not allowed for this user"
+msgstr "Penyetelan ulang kata sandi tidak diperbolehkan kepada pengguna ini"
+
+msgid "Password: %s"
+msgstr "Kata sandi %s"
+
+msgid "New password"
+msgstr "Kata sandi berikutnya"
+
+msgid "Next"
+msgstr "Berikutnya"
+
+msgid "No"
+msgstr "Tidak"
+
+msgid "Not repeat the slideshow"
+msgstr "Jangan mengulangi gulir gambar "
+
+msgid "Notification"
+msgstr "Pemberitahuan"
+
+msgid "Number of items"
+msgstr "Jumlah dari benda"
+
+msgid "Number of photos per page"
+msgstr "Jumlah dari foto per halaman"
+
+msgid "Original"
+msgstr "Asal"
+
+msgid "Language"
+msgstr "Bahasa"
+
+msgid "Last"
+msgstr "Terakhir"
+
+msgid "Last Page"
+msgstr "Halaman terakhir"
+
+msgid "Links"
+msgstr "Link"
+
+msgid "Login"
+msgstr "Masuk"
+
+msgid "Logout"
+msgstr "Keluar"
+
+msgid "Manual sort order"
+msgstr "Pengaturan secara manual"
+
+msgid "Menu"
+msgstr "Menu"
+
+msgid "Mobile"
+msgstr "Ponsel"
+
+msgid "Most visited"
+msgstr "Paling banyak dikunjungi"
+
+msgid "N/A"
+msgstr "Tidak tersedia"
+
+msgid "Home"
+msgstr "Beranda"
+
+msgid "I want to add photos"
+msgstr "Saya ingin menambahkan sebuah foto"
+
+msgid "IPTC Metadata"
+msgstr "IPTC Metadata"
+
+msgid "Identification"
+msgstr "Identifikasi"
+
+msgid "If this was a mistake, just ignore this email and nothing will happen."
+msgstr "Jika ini adalah sebuah kesalahan, harap abaikan email ini dan tidak ada perubahan yang terjadi"
+
+msgid "If you think you've received this email in error, please contact us at %s"
+msgstr "Jika anda menerima email ini akibat sebuah kesalahan, harap hubungi webmaster di %s"
+
+msgid "Invalid key"
+msgstr "Kata kunci salah"
+
+msgid "Invalid password!"
+msgstr "Kata sandi salah"
+
+msgid "Invalid username or email"
+msgstr "Kata sandi atau email yang salah"
+
+msgid "Keyword"
+msgstr "Huruf"
+
+msgid "Kind of date"
+msgstr "Jenis tanggal"
+
+msgid "Filter"
+msgstr "Saring"
+
+msgid "Filter and display"
+msgstr "Saring dan tampilkan"
+
+msgid "First"
+msgstr "Pertama"
+
+msgid "First Page"
+msgstr "Halaman pertama"
+
+msgid "Forbidden"
+msgstr "Terlarang"
+
+msgid "Forgot your password?"
+msgstr "Lupa kata sandi anda?"
+
+msgid "Go back to the album"
+msgstr "Kembali ke album"
+
+msgid "Go through the gallery as a visitor"
+msgstr "Navigasi galeri ini sebagai pengunjung"
+
+msgid "Hello"
+msgstr "Halo"
+
+msgid "Hello %s,"
+msgstr "Halo %s"
+
+msgid "Hello %s, your Piwigo photo gallery is empty!"
+msgstr "Halo %s, galeri foto Piwigo anda masih kosong!"
+
+msgid "Help"
+msgstr "Bantuan"
+
+msgid "Here are your connection settings"
+msgstr "Ini adalah pengaturan koneksi anda"
+
+msgid "Default"
+msgstr "Kembali ke standar"
+
+msgid "Email address is missing. Please specify an email address."
+msgstr "Alamat email ini hilang, mohon berikan email yang aktif"
+
+msgid "Email: %s"
+msgstr "Email: %s"
+
+msgid "Empty query. No criteria has been entered."
+msgstr "Kolom kosong. Belum ada kriteria yang dimasukan"
+
+msgid "End-Date"
+msgstr "Kadaluarsa"
+
+msgid "Enter your new password below."
+msgstr "Masukkan kata sandi baru anda di bawah ini"
+
+msgid "Enter your personnal informations"
+msgstr "Masukkan data pribadi anda"
+
+msgid "Error sending email"
+msgstr "Kesalahan ketika mengirimkan email"
+
+msgid "Expand all albums"
+msgstr "Lebarkan semua album"
+
+msgid "Favorites"
+msgstr "Favorit"
+
+msgid "File"
+msgstr "Dokumen"
+
+msgid "File name"
+msgstr "Nama dokumen"
+
+msgid "Filesize"
+msgstr "Ukuran dokumen"
+
+msgid "Current password is wrong"
+msgstr "Kata sandi sat ini salah"
+
+msgid "Delete"
+msgstr "Hapus"
+
+msgid "Desktop"
+msgstr "Deskop"
+
+msgid "Dimensions"
+msgstr "Dimensi"
+
+msgid "Display"
+msgstr "Tampilkan"
+
+msgid "Download"
+msgstr "unggah"
+
+msgid "Download this file"
+msgstr "Unggah dokumen ini"
+
+msgid "EXIF Metadata"
+msgstr "EXIF Metadata"
+
+msgid "Each listed rule must be satisfied."
+msgstr "Tiap kriteria yang terdaftar harus disempurnakan"
+
+msgid "Edit"
+msgstr "Ubah"
+
+msgid "Edit a comment"
+msgstr "Ubah sebuah komentar"
+
+msgid "Email"
+msgstr "Email"
+
+msgid "Email address"
+msgstr "Alamat email"
+
+msgid "Calendar"
+msgstr "Kalender"
+
+msgid "Change my password"
+msgstr "Ubah kata sandi saya"
+
+msgid "Check your email for the confirmation link"
+msgstr "Periksa email anda untuk link konfirmasi"
+
+msgid "Click here if your browser does not automatically forward you"
+msgstr "Klik disini jika browser anda tidak menuju langsung ke situs anda"
+
+msgid "Click on the photo to see it in high definition"
+msgstr "Klik pada foto untuk melihat gambar versi kualitas tinggi"
+
+msgid "Close this window"
+msgstr "Tutup jendela ini"
+
+msgid "Comment"
+msgstr "Komentar"
+
+msgid "Comment by %s"
+msgstr "Komentar oleh %s"
+
+msgid "Comment: %s"
+msgstr "Komentar: %s"
+
+msgid "Comments"
+msgstr "Komentar"
+
+msgid "Complete RSS feed (photos, comments)"
+msgstr "Berlangganan RSS Feed (foto dan komentar)"
+
+msgid "Confirm Password"
+msgstr "Konfirmasi kata sandi"
+
+msgid "Connected user: %s"
+msgstr "Pengguna yang terhubung : %s"
+
+msgid "Connection settings"
+msgstr "Pengaturan koneksi"
+
+msgid "Contact"
+msgstr "Kontak"
+
+msgid "Contact webmaster"
+msgstr "Hubungi Webmaster"
+
+msgid "Cookies are blocked or not supported by your browser. You must enable cookies to connect."
+msgstr "Kuki anda diblokir atau ini tidak didukung oleh browser anda. Anda diharuskan mengaktifkan kuki untuk masuk."
+
+msgid "Create a new account"
+msgstr "Buat akun baru"
+
+msgid "Created on"
+msgstr "Terbuat"
+
+msgid "Creation date"
+msgstr "Tanggal pembuatan"
+
+msgid "Admin: %s"
+msgstr "Admin %s"
+
+msgid "Administration"
+msgstr "Administrasi"
+
+msgid "Album"
+msgstr "Album"
+
+msgid "Album results for"
+msgstr "Hasil album untuk"
+
+msgid "Album: %s"
+msgstr "Album %s"
+
+msgid "Albums"
+msgstr "Album"
+
+msgid "All"
+msgstr "Semua"
+
+msgid "All tags"
+msgstr "Semua kata kunci"
+
+msgid "An administrator must authorize your comment before it is visible."
+msgstr "Seorang administrator harus mengijinkan komentar anda sebelum terlihat oleh publik"
+
+msgid "Anti-flood system : please wait for a moment before trying to post another comment"
+msgstr "Sistem anti multi-komentar : harap tunggu sebentar sebelum anda mencoba menulis komentar yang baru "
+
+msgid "Any tag"
+msgstr "Kata kunci lain"
+
+msgid "Are you sure?"
+msgstr "Apakah anda yakin?"
+
+msgid "At least one listed rule must be satisfied."
+msgstr "Sekurangnya satu kategori didaftarkan"
+
+msgid "Author"
+msgstr "Penulis"
+
+msgid "Author: %s"
+msgstr "Penulis %s"
+
+msgid "Auto login"
+msgstr "Masuk otomatis"
+
+msgid "Bad request"
+msgstr "Kesalahan permintaan "
+
+msgid "Bad status for user \"guest\", using default status. Please notify the webmaster."
+msgstr "Kesalahan status untuk pengguna \"tamu\", status standar akan digunakan. Harap memberitahukan webmaster "
+
+msgid "Best rated"
+msgstr "Rating terbaik"
+
+msgid "Browser: %s"
+msgstr "Cari: %s"
+
+msgid "%d album updated"
+msgid_plural "%d albums updated"
+msgstr[0] "%d album diperbaharui"
+msgstr[1] "%d album diperbaharui"
+
+msgid "%d comment"
+msgid_plural "%d comments"
+msgstr[0] "%d komentar"
+msgstr[1] "%d komentar"
+
+msgid "%d comment to validate"
+msgstr "%d komentar untuk divalidasi"
+
+msgid "%d comments to validate"
+msgstr "%d komentar untuk divalidasi"
+
+msgid "%d photo"
+msgid_plural "%d photos"
+msgstr[0] "%d foto"
+msgstr[1] "%d foto"
+
+msgid "%d photo is also linked to current tags"
+msgid_plural "%d photos are also linked to current tags"
+msgstr[0] "%d foto juga dikaitkan dengan kata kunci yang ada"
+msgstr[1] "%d foto juga dikaitkan dengan kata kunci yang ada"
+
+msgid "%d rate"
+msgstr "%d peringkat"
+
+msgid "%d rates"
+msgstr "%d peringkat"
+
+msgid "(!) This comment requires validation"
+msgstr "(!) Komentar ini memerlukan validasi"
+
+msgid "... or browse your empty gallery"
+msgstr "... atau cari di galeri kosong anda"
+
+msgid "... or please deactivate this message, I will find my way by myself"
+msgstr "... atau nonaktifkan pesan ini, saya akan mencarinya sendiri"
+
+msgid "2small"
+msgstr "XXS - kecil"
+
+msgid "A comment on your site"
+msgstr "Sebuah komentar di situs anda"
+
+msgid "About"
+msgstr "Tentang"
+
+msgid "About Piwigo"
+msgstr "Tentang Piwigo"
+
+msgid "Accelerate diaporama speed"
+msgstr "Tingkatkan kecepatan guliran gambar "
+
+msgid "Add a comment"
+msgstr "Tambahkan sebuah komentar"
+
+msgid "%d photos per page"
+msgstr "%d foto per halaman"
+
+msgid "Album name, A &rarr; Z"
+msgstr "Nama album, A &arr; Z"
+
+msgid "Album name, Z &rarr; A"
+msgstr "Nama album, Z &arr; A"
+
+msgid "Apply on properties"
+msgstr "Terapkan ke properti"
+
+msgid "Link: %s"
+msgstr "Tautan: %s"
+
+msgid "No results for"
+msgstr "Tidak ada hasil untuk"
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "Konfirmasi kata sandi terlewatkan. Harap konfirmasi kata sandi yang dipilih."
+
+msgid "Password is missing. Please enter the password."
+msgstr "Kata sandi terlewat. Harap masukkan kata sandi."
+
+msgid "Photo description"
+msgstr "Deskripsi Foto"
+
+msgid "Photo title"
+msgstr "Judul foto"
+
+msgid "Theme"
+msgstr "Tema"
+
+msgid "Your authentication key is no longer valid."
+msgstr "Kunci otentikasi tidak lagi berlaku."
+

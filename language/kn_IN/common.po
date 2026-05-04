@@ -1,0 +1,1129 @@
+# Piwigo translation — kn_IN
+# Source: common.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: kn_IN\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Language-Name: ಕನ್ನಡ\n"
+"X-Piwigo-Country: ಭಾರತ\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Code: kn\n"
+"X-Piwigo-Zero-Plural: true\n"
+
+msgid "%d album updated"
+msgid_plural "%d albums updated"
+msgstr[0] "%d ಸಂಪುಟ ಸಂಪನ್ನವಾಗಿದೆ"
+msgstr[1] "%d ಸಂಪುಟಗಳು ಸಂಪನ್ನವಾಗಿವೆ"
+
+msgid "%d comment to validate"
+msgstr "ಪರಿಶೀಲನೆಗಾಗಿ %d ಟಿಪ್ಪಣಿ "
+
+msgid "%d comment"
+msgid_plural "%d comments"
+msgstr[0] "%d ಟಿಪ್ಪಣಿ"
+msgstr[1] "%d ಟಿಪ್ಪಣಿಗಳು"
+
+msgid "%d comments to validate"
+msgstr "ಪರಿಶೀಲನೆಗಾಗಿ %d ಟಿಪ್ಪಣಿಗಳು "
+
+msgid "%d hit"
+msgstr "%d ಭೇಟಿ"
+
+msgid "%d hits"
+msgstr "%d ಭೇಟಿಗಳು"
+
+msgid "%d new comment"
+msgstr "%d ಹೊಸ ಟಿಪ್ಪಣಿ"
+
+msgid "%d new comments"
+msgstr "%d ಹೊಸ ಟಿಪ್ಪಣಿಗಳು"
+
+msgid "%d new photo"
+msgid_plural "%d new photos"
+msgstr[0] "%d ಹೊಸ ಚಿತ್ರ"
+msgstr[1] "%d ಹೊಸ ಚಿತ್ರಗಳು"
+
+msgid "%d new user"
+msgstr "%d ಹೊಸ ಬಳಕೆದಾರ"
+
+msgid "%d new users"
+msgstr "%d ಹೊಸ ಬಳಕೆದಾರರು"
+
+msgid "%d photo is also linked to current tags"
+msgid_plural "%d photos are also linked to current tags"
+msgstr[0] "%d ಚಿತ್ರವು ಕೂಡ ಈ ಟ್ಯಾಗ್ ನ ಜೊತೆ ಜೋಡಿಸಲ್ಪಟ್ಟಿದೆ."
+msgstr[1] "%d ಚಿತ್ರಗಳು ಕೂಡ ಈ ಟ್ಯಾಗ್ ಗಳ ಜೊತೆ ಜೋಡಿಸಲ್ಪಟ್ಟಿವೆ. "
+
+msgid "%d photo"
+msgid_plural "%d photos"
+msgstr[0] "%d ಚಿತ್ರ"
+msgstr[1] "%d ಚಿತ್ರಗಳು"
+
+msgid "%d rate"
+msgstr "%d ಗುಣದರ್ಜೆ"
+
+msgid "%d rates"
+msgstr "%d ಗುಣದರ್ಜೆಗಳು"
+
+msgid "(!) This comment requires validation"
+msgstr "(!) ಈ ಟಿಪ್ಪಣಿಯನ್ನು ಪರಿಶೀಲಿಸಬೇಕಾಗಿದೆ"
+
+msgid "... or browse your empty gallery"
+msgstr "... ಅಥವಾ ನಿಮ್ಮ ಖಾಲಿ ಚಿತ್ರಶಾಲೆ (ಗ್ಯಾಲರಿ) ಯನ್ನು ವೀಕ್ಷಿಸಿ "
+
+msgid "2small"
+msgstr "XXS - ಅತಿ ಸಣ್ಣದು"
+
+msgid "A comment on your site"
+msgstr "ನಿಮ್ಮ ಜಾಲತಾಣದ ಬಗ್ಗೆ ಒಂದು ಟಿಪ್ಪಣಿ"
+
+msgid "About Piwigo"
+msgstr "Piwigo ದ ಬಗ್ಗೆ"
+
+msgid "About"
+msgstr "ಬಗ್ಗೆ"
+
+msgid "Accelerate diaporama speed"
+msgstr "ಪ್ರದರ್ಶಿಕೆಯ ವೇಗ ಹೆಚ್ಚಿಸಿ"
+
+msgid "Add a comment"
+msgstr "ಟಿಪ್ಪಣಿ ಸೇರಿಸಿರಿ"
+
+msgid "add this photo to your favorites"
+msgstr "ಈ ಚಿತ್ರವನ್ನು ನಿಮ್ಮ ಅಚ್ಚುಮೆಚ್ಚಿನ ಪಟ್ಟಿಗೆ ಸೇರಿಸಿ"
+
+msgid "Admin: %s"
+msgstr "ಅಡ್ಮಿನ್: %s"
+
+msgid "Administration"
+msgstr "ನಿರ್ವಹಣೆ"
+
+msgid "Album results for"
+msgstr "ಸಂಪುಟದ ಫಲಿತಾಂಶಗಳು"
+
+msgid "Album"
+msgstr "ಸಂಪುಟ"
+
+msgid "Album: %s"
+msgstr "ಸಂಪುಟ: %s"
+
+msgid "Albums"
+msgstr "ಸಂಪುಟಗಳು"
+
+msgid "All tags"
+msgstr "ಎಲ್ಲಾ ಟ್ಯಾಗ್ ಗಳು"
+
+msgid "all"
+msgstr "ಎಲ್ಲಾ"
+
+msgid "All"
+msgstr "ಎಲ್ಲಾ"
+
+msgid "An administrator must authorize your comment before it is visible."
+msgstr "ನಿರ್ವಹಣೆಗಾರರು ನಿಮ್ಮ ಟಿಪ್ಪಣಿ ಯನ್ನು ಪರಿಶೀಲಿಸಿದ ನಂತರ ಅದು ನಿಮಗೆ ಲಭ್ಯವಾಗುವುದು."
+
+msgid "Any tag"
+msgstr "ಯಾವುದೇ ಟ್ಯಾಗ್"
+
+msgid "Are you sure?"
+msgstr "ನಿಮಗೆ ಒಪ್ಪಿಗೆಯೇ?"
+
+msgid "ascending"
+msgstr "ಆರೋಹಣ ಕ್ರಮ"
+
+msgid "At least one listed rule must be satisfied."
+msgstr "ಕೊನೇ ಪಕ್ಷ ಮಾನದಂಡಗಳ ಪಟ್ಟಿಯಲ್ಲಿರುವ ಒಂದಾದರೂ ಸಮ್ಮತವಾಗಬೇಕು."
+
+msgid "Author"
+msgstr "ಲೇಖಕ"
+
+msgid "author(s) : %s"
+msgstr "ಲೇಖಕ(ರು): %s"
+
+msgid "Author: %s"
+msgstr "ಲೇಖಕ: %s"
+
+msgid "Auto login"
+msgstr "ಆಟೋ ಲಾಗಿನ್"
+
+msgid "available for administrators only"
+msgstr "ನಿರ್ವಹಣೆಗಾರರ (ಅಡ್ಮಿನ್ ಗಳ) ಉಪಯೋಗಕ್ಕೆ ಮಾತ್ರ"
+
+msgid "Bad request"
+msgstr "ಕೋರಿಕೆ ತಪ್ಪಾಗಿದೆ"
+
+msgid "Best rated"
+msgstr "ಅತ್ಯುತ್ತಮವಾದವು"
+
+msgid "Browser: %s"
+msgstr "ಬ್ರೌಸರ್: %s"
+
+msgid "Calendar"
+msgstr "ದಿನದರ್ಶಿಕೆ"
+
+msgid "Change my password"
+msgstr "ನನ್ನ ಪ್ರವೇಶಪದವನ್ನು ಬದಲಿಸು"
+
+msgid "Check your email for the confirmation link"
+msgstr "ಒಪ್ಪಿಗೆಯ ಲಿಂಕ್ ಗಾಗಿ  ನಿಮ್ಮ ಮಿಂಚೆಯನ್ನು ನೋಡಿ"
+
+msgid "chronology_monthly_calendar"
+msgstr "ತಿಂಗಳಿನ ದಿನದರ್ಶಿಕೆ"
+
+msgid "chronology_monthly_list"
+msgstr "ತಿಂಗಳಿನ ಪಟ್ಟಿ"
+
+msgid "chronology_weekly_list"
+msgstr "ವಾರದ ಪಟ್ಟಿ"
+
+msgid "Click here if your browser does not automatically forward you"
+msgstr "ನಿಮ್ಮ ಬ್ರೌಸರ್ ಆಯಾಚಿತವಾಗಿ ಮುಂದುವರೆಯದಿದ್ದಲ್ಲಿ, ಇಲ್ಲಿ ಕ್ಲಿಕ್ ಮಾಡಿ. Click here if your browser does not automatically forward you"
+
+msgid "Click on the photo to see it in high definition"
+msgstr "ಉನ್ನತ ದರ್ಜೆಯಲ್ಲಿ ವೀಕ್ಷಿಸಲು ಚಿತ್ರದ ಮೇಲೆ ಕ್ಲಿಕ್ ಮಾಡಿ"
+
+msgid "Close this window"
+msgstr "ಈ ವಿಂಡೋ ಅನ್ನು ಮುಚ್ಚಿರಿ"
+
+msgid "cloud"
+msgstr "ಕ್ಲೌಡ್"
+
+msgid "Comment by %s"
+msgstr "%s ರವರ ಟಿಪ್ಪಣಿ "
+
+msgid "comment date"
+msgstr "ಟಿಪ್ಪಣಿಯ ದಿನಾಂಕ"
+
+msgid "Comment"
+msgstr "ಟಿಪ್ಪಣಿ"
+
+msgid "Comment: %s"
+msgstr "ಟಿಪ್ಪಣಿ: %s"
+
+msgid "Comments"
+msgstr "ಟಿಪ್ಪಣಿಗಳು"
+
+msgid "Complete RSS feed (photos, comments)"
+msgstr "ಸಂಪೂರ್ಣ RSS feed (ಚಿತ್ರಗಳು, ಟಿಪ್ಪಣಿಗಳು)"
+
+msgid "Confirm Password"
+msgstr "ಪ್ರವೇಶಪದವನ್ನು ಖಾತ್ರಿಗೊಳಿಸಿ."
+
+msgid "Connected user: %s"
+msgstr "ಸಂಪರ್ಕಿತವಾದ ಬಳಕೆದಾರ: %s"
+
+msgid "Connection settings"
+msgstr "ಸಂಪರ್ಕದ ವಿವರಗಳು"
+
+msgid "Contact webmaster"
+msgstr "ವೆಬ್ ಮಾಸ್ಟರ್ ಅವರನ್ನು ಸಂಪರ್ಕಿಸಿ"
+
+msgid "Contact"
+msgstr "ಸಂಪರ್ಕಿಸಿ"
+
+msgid "Create a new account"
+msgstr "ಹೊಸ ಖಾತೆಯನ್ನು ತೆರೆಯಿರಿ"
+
+msgid "created after %s (%s)"
+msgstr "%s (%s) ರ ನಂತರ ರಚಿಸಲಾಗಿದೆ "
+
+msgid "created before %s (%s)"
+msgstr "%s (%s) ರ ಮುಂಚೆ ರಚಿಸಲಾಗಿದೆ "
+
+msgid "created between %s (%s) and %s (%s)"
+msgstr "%s (%s) ರ ಮತ್ತು  %s (%s) ರ ನಡುವೆ ರಚಿಸಲಾಗಿದೆ"
+
+msgid "created on %s"
+msgstr "%s ರಂದು ತೆರೆಯಲಾಗಿದೆ"
+
+msgid "Created on"
+msgstr "ರಂದು ರಚಿಸಲಾಗಿದೆ"
+
+msgid "Creation date"
+msgstr "ರಚಿಸಲಾದ ದಿನಾಂಕ"
+
+msgid "Current password is wrong"
+msgstr "ಈಗಿನ ಗುಪ್ತಪದ ತಪ್ಪಾಗಿದೆ"
+
+msgid "Date created, new &rarr; old"
+msgstr "ರಚಿಸಲಾದ ದಿನಾಂಕ, ಹೊಸ &rarr; ಹಳೆಯ"
+
+msgid "Date created, old &rarr; new"
+msgstr "ರಚಿಸಲಾದ ದಿನಾಂಕ, ಹಳೆಯ &rarr; ಹೊಸ"
+
+msgid "Date posted, new &rarr; old"
+msgstr "ದಿನಾಂಕ, ಹೊಸ &rarr; ಹಳೆಯ"
+
+msgid "Date posted, old &rarr; new"
+msgstr "ದಿನಾಂಕ, ಹಳೆಯ &rarr; ಹೊಸ"
+
+msgid "Date"
+msgstr "ದಿನಾಂಕ"
+
+msgid "delete all photos from your favorites"
+msgstr "ನಿಮ್ಮ ಅಚ್ಚುಮೆಚ್ಚಿನ ಪಟ್ಟಿಯಿಂದ ಎಲ್ಲಾ ಚಿತ್ರಗಳನ್ನು ಅಳಿಸಿ."
+
+msgid "delete this photo from your favorites"
+msgstr "ಈ ಚಿತ್ರವನ್ನು ನಿಮ್ಮ ಅಚ್ಚುಮೆಚ್ಚಿನ ಪಟ್ಟಿಯಿಂದ ಅಳಿಸಿ"
+
+msgid "Delete"
+msgstr "ಅಳಿಸಿ"
+
+msgid "descending"
+msgstr "ಅವರೋಹಣ ಕ್ರಮ"
+
+msgid "Desktop"
+msgstr "ಡೆಸ್ಕ್ ಟಾಪ್"
+
+msgid "Dimensions"
+msgstr "ಅಳತೆ"
+
+msgid "display a calendar by creation date"
+msgstr "ದಿನದರ್ಶಿಕೆಯನ್ನು ರಚಿತವಾದ ದಿನಾಂಕದಂತೆ ಪ್ರದರ್ಶಿಸಿ"
+
+msgid "display a calendar by posted date"
+msgstr "ದಿನದರ್ಶಿಕೆಯನ್ನು ಪ್ರಕಟಣೆಯ ದಿನಾಂಕದಂತೆ ಪ್ರದರ್ಶಿಸಿ"
+
+msgid "display a set of random photos"
+msgstr "a set of random ಚಿತ್ರಗಳನ್ನು ಪ್ರದರ್ಶಿಸಿ"
+
+msgid "display all photos in all sub-albums"
+msgstr "ಎಲ್ಲಾ ಉಪ-ಸಂಪುಟಗಳಲ್ಲಿನ ಎಲ್ಲಾ ಚಿತ್ರಗಳನ್ನು ಪ್ರದರ್ಶಿಸಿ"
+
+msgid "display available tags"
+msgstr "ಲಭ್ಯವಿರುವ ಎಲ್ಲಾ ಟ್ಯಾಗ್ ಗಳನ್ನು  ಪ್ರದರ್ಶಿಸಿ"
+
+msgid "display best rated photos"
+msgstr "ಅತ್ಯುತ್ತಮ ಗುಣದರ್ಜೆಯ ಚಿತ್ರಗಳನ್ನು ಪ್ರದರ್ಶಿಸಿ"
+
+msgid "display each day with photos, month per month"
+msgstr "ತಿಂಗಳಿನ ನಂತರ ತಿಂಗಳಿನಂತೆ, ಪ್ರತಿ ದಿನವನ್ನೂ ಚಿತ್ರಗಳೊಂದಿಗೆ ಪ್ರದರ್ಶಿಸಿ"
+
+msgid "display last user comments"
+msgstr "ಕೊನೆಯ ಬಳಕೆದಾರರ ಟಿಪ್ಪಣಿಗಳನ್ನು ಪ್ರದರ್ಶಿಸಿ"
+
+msgid "display most recent photos"
+msgstr "ಇತ್ತೀಚಿನ ಚಿತ್ರಗಳನ್ನು ಪ್ರದರ್ಶಿಸಿ"
+
+msgid "display most visited photos"
+msgstr "ಅತಿ ಹೆಚ್ಚು ಕೋರಿಕೆಯ  ಚಿತ್ರಗಳನ್ನು ಪ್ರದರ್ಶಿಸಿ"
+
+msgid "display only recently posted photos"
+msgstr "ಇತ್ತೀಚೆಗೆ ಸೇರಿಸಿದ ಚಿತ್ರಗಳನ್ನು ಮಾತ್ರ ಪ್ರದರ್ಶಿಸಿ"
+
+msgid "display photos linked to this tag"
+msgstr "ಈ ಟ್ಯಾಗ್ ನೊಂದಿಗೆ ಜೋಡಣೆಯಾದ ಚಿತ್ರಗಳನ್ನು ಪ್ರದರ್ಶಿಸಿ"
+
+msgid "display recently updated albums"
+msgstr "ಇತ್ತೀಚಿಗೆ ಉನ್ನತೀಕರಿಸಿದ ಸಂಪುಟಗಳನ್ನು ಪ್ರದರ್ಶಿಸಿ"
+
+msgid "display this album"
+msgstr "ಈ ಸಂಪುಟವನ್ನು ಪ್ರದರ್ಶಿಸಿ"
+
+msgid "display your favorites photos"
+msgstr "ನಿಮ್ಮ ಅಚ್ಚುಮೆಚ್ಚಿನ ಚಿತ್ರಗಳನ್ನು ಪ್ರದರ್ಶಿಸಿ"
+
+msgid "Display"
+msgstr "ಪ್ರದರ್ಶಿಸಿ"
+
+msgid "Download this file"
+msgstr "ಈ ಕಡತ (ಫೈಲ್)ಆನ್ನು ಡೌನ್ ಲೋಡ್ ಮಾಡಿ"
+
+msgid "Download"
+msgstr "ಡೌನ್ ಲೋಡ್ ಮಾಡಿ"
+
+msgid "Each listed rule must be satisfied."
+msgstr "ಪಟ್ಟಿಮಾಡಿರುವ ಪ್ರತಿಯೊಂದು ಮಾನದಂಡವೂ ಸಮ್ಮತವಾಗಬೇಕು."
+
+msgid "Edit a comment"
+msgstr "ಟಿಪ್ಪಣಿಯನ್ನು ಸರಿಪಡಿಸಿ"
+
+msgid "edit"
+msgstr "ಸಂಪಾದಿಸಿ"
+
+msgid "Edit"
+msgstr "ಸಂಪಾದಿಸಿ"
+
+msgid "Email address is missing. Please specify an email address."
+msgstr "ದಯವಿಟ್ಟು ಮಿಂಚೆ ವಿಳಾಸವನ್ನು ನಮೂದಿಸಿ."
+
+msgid "Email address"
+msgstr "ಮಿಂಚೆ ವಿಳಾಸ"
+
+msgid "Email address is mandatory"
+msgstr "ಮಿಂಚೆ ವಿಳಾಸ ಕಡ್ಡಾಯವಾಗಿದೆ"
+
+msgid "Email: %s"
+msgstr "ಮಿಂಚೆ: %s"
+
+msgid "End-Date"
+msgstr "ಕೊನೆಯ ದಿನಾಂಕ"
+
+msgid "Enter your new password below."
+msgstr "ನಿಮ್ಮ ಹೊಸ ಪ್ರವೇಶಪದವನ್ನು ಈ ಕೆಳಗೆ ನಮೂದಿಸಿ."
+
+msgid "Enter your personnal informations"
+msgstr "ನಿಮ್ಮ ಸ್ವವಿವರಗಳನ್ನು ನಮೂದಿಸಿ"
+
+msgid "Error sending email"
+msgstr "ಮಿಂಚೆ ಕಳುಹಿಸುವಾಗ ತಪ್ಪಾಗಿದೆ"
+
+msgid "excluded"
+msgstr "ಹೊರತಾದ"
+
+msgid "EXIF Metadata"
+msgstr "EXIF ವಿವರಗಳು"
+
+msgid "Expand all albums"
+msgstr "ಎಲ್ಲಾ ಸಂಪುಟಗಳನ್ನು ವಿಸ್ತರಿಸಿ"
+
+msgid "Favorites"
+msgstr "ಅಚ್ಚುಮೆಚ್ಚಿನವು"
+
+msgid "File name"
+msgstr "ಕಡತದ (ಫೈಲ್ ನ) ಹೆಸರು"
+
+msgid "File name, A &rarr; Z"
+msgstr "ಕಡತದ (ಫೈಲ್ ನ) ಹೆಸರು, A &rarr; Z"
+
+msgid "File name, Z &rarr; A"
+msgstr "ಕಡತದ (ಫೈಲ್ ನ) ಹೆಸರು, Z &rarr; A"
+
+msgid "File"
+msgstr "ಕಡತ (ಫೈಲ್)"
+
+msgid "Filesize"
+msgstr "ಕಡತದ (ಫೈಲ್ ನ) ಗಾತ್ರ"
+
+msgid "Filter and display"
+msgstr "ಶೋಧಿಸಿ ಮತ್ತು ಪ್ರದರ್ಶಿಸಿ"
+
+msgid "Filter"
+msgstr "ಶೋಧನೆ"
+
+msgid "First"
+msgstr "ಮೊದಲಿನ"
+
+msgid "Forbidden"
+msgstr "ನಿರ್ಬಂಧಿತ"
+
+msgid "Forgot your password?"
+msgstr "ನಿಮ್ಮ ಪ್ರವೇಶಪದ ಮರೆತು ಹೋಗಿದೆಯೆ?"
+
+msgid "from %s to %s"
+msgstr "ಇಂದ  %s ಗೆ %s"
+
+msgid "Go through the gallery as a visitor"
+msgstr "ಸಂದರ್ಶಕರಂತೆ ಚಿತ್ರಶಾಲೆ (ಗ್ಯಾಲರಿ)ಯನ್ನು ವೀಕ್ಷಿಸಿ"
+
+msgid "group by letters"
+msgstr "ಪತ್ರಗಳಂತೆ ವಿಂಗಡಿಸಿ"
+
+msgid "guest"
+msgstr "ಅತಿಥಿ"
+
+msgid "Hello %s, your Piwigo photo gallery is empty!"
+msgstr "ನಮಸ್ತೆ %s ಅವರೆ, ನಿಮ್ಮ Piwigo ಚಿತ್ರಶಾಲೆ (ಗ್ಯಾಲರಿ) ಖಾಲಿ ಇದೆ!"
+
+msgid "Hello %s,"
+msgstr "ನಮಸ್ಕಾರ %s ಅವರೆ,"
+
+msgid "Hello"
+msgstr "ನಮಸ್ಕಾರ"
+
+msgid "Help"
+msgstr "ಸಹಾಯ"
+
+msgid "Here are your connection settings"
+msgstr "ನಿಮ್ಮ ಸಂಪರ್ಕದ ವಿವರಗಳು ಇಲ್ಲಿವೆ "
+
+msgid "Home"
+msgstr "ಮುಖಪುಟ"
+
+msgid "html tags are not allowed in login"
+msgstr "html ಟ್ಯಾಗ್ ಗಳನ್ನು ಲಾಗಿನ್ ನಲ್ಲಿ ಉಪಯೋಗಿಸುವಂತಿಲ್ಲ"
+
+msgid "I want to add photos"
+msgstr "ನಾನು ಚಿತ್ರಗಳನ್ನು ಸೇರಿಸಬೇಕು"
+
+msgid "Identification"
+msgstr "ಗುರುತು"
+
+msgid "If this was a mistake, just ignore this email and nothing will happen."
+msgstr "ಈ ಮಿಂಚೆ ಕಣ್ತಪ್ಪಿನಿಂದ ಬಂದಿರಬಹುದು ಎಂದು ನಿಮಗನ್ನಿಸಿದ್ದಲ್ಲಿ, ಇದನ್ನು ನಿರ್ಲಕ್ಷಿಸಿ, ಇದರಿಂದ ಯಾವ ತೊಂದರೆಯೂ ಉಂಟಾಗದು."
+
+msgid "If you think you've received this email in error, please contact us at %s"
+msgstr "ಈ ಮಿಂಚೆ ಕಣ್ತಪ್ಪಿನಿಂದ ಬಂದಿರಬಹುದು ಎಂದು ನಿಮಗನ್ನಿಸಿದ್ದಲ್ಲಿ, ದಯವಿಟ್ಟು ನಮ್ಮನ್ನು  %s ರಲ್ಲಿ ಸಂಪರ್ಕಿಸಿ."
+
+msgid "in %d sub-album"
+msgid_plural "in %d sub-albums"
+msgstr[0] "%d ಉಪ-ಸಂಪುಟ ದಲ್ಲಿ"
+msgstr[1] "%d ಉಪ-ಸಂಪುಟಗಳಲ್ಲಿ"
+
+msgid "in this album"
+msgstr "ಈ ಸಂಪುಟದಲ್ಲಿ"
+
+msgid "included"
+msgstr "ಸೇರಿಸಲಾದವು"
+
+msgid "Invalid key"
+msgstr "ಅಸಿಂಧುವಾದ ಕೀ"
+
+msgid "Invalid password!"
+msgstr "ತಪ್ಪಾದ ಪ್ರವೇಶಪದ!"
+
+msgid "Invalid username or email"
+msgstr "ತಪ್ಪಾದ ಬಳಕೆದಾರರ ಹೆಸರು ಅಥವಾ ಮಿಂಚೆ ವಿಳಾಸ"
+
+msgid "IPTC Metadata"
+msgstr "IPTC ಮೆಟಾಡೇಟಾ"
+
+msgid "Keyword"
+msgstr "ಮುಖ್ಯ ಪದ (ಕೀ ವರ್ಡ್)"
+
+msgid "Kind of date"
+msgstr "ದಿನಾಂಕದ ಬಗೆ"
+
+msgid "Language"
+msgstr "ಭಾಷೆ"
+
+msgid "large"
+msgstr "L - ದೊಡ್ಡದಾದ"
+
+msgid "last %d days"
+msgstr "ಕೊನೆಯ %d ದಿನಗಳು"
+
+msgid "Last"
+msgstr "ಕೊನೆಯ"
+
+msgid "letters"
+msgstr "ಪದಗಳು - ಪತ್ರಗಳು"
+
+msgid "Links"
+msgstr "ಲಿಂಕ್ ಗಳು"
+
+msgid "login mustn't end with a space character"
+msgstr "ಲಾಗಿನ್, ಸ್ಪೇಸ್ ಅಕ್ಷರಗಳಿಂದ ಕೊನೆಯಾಗಬಾರದು"
+
+msgid "login mustn't start with a space character"
+msgstr "ಲಾಗಿನ್, ಸ್ಪೇಸ್ ಅಕ್ಷರಗಳಿಂದ ಶುರುವಾಗಬಾರದು"
+
+msgid "Login"
+msgstr "ಲಾಗಿನ್"
+
+msgid "Logout"
+msgstr "ಲಾಗೌಟ್"
+
+msgid "mail address must be like xxx@yyy.eee (example : jack@altern.org)"
+msgstr "ಮಿಂಚೆ ವಿಳಾಸ ಈ ರೀತಿಯಾಗಿರಲಿ : xxx@yyy.eee (example: jack@altern.org)"
+
+msgid "Manage this user comment: %s"
+msgstr "ಈ ಬಳಕೆದಾರರ ಟಿಪ್ಪಣಿ ಯನ್ನು ನಿರ್ವಹಿಸಿ: %s"
+
+msgid "Manual sort order"
+msgstr "Manual ಅನುಕ್ರಮಣಿಕೆಯ ಕ್ರಮ"
+
+msgid "medium"
+msgstr "M - ಮಧ್ಯಮ"
+
+msgid "Menu"
+msgstr "ಪಟ್ಟಿ"
+
+msgid "Mobile"
+msgstr "ಮೊಬೈಲ್"
+
+msgid "Most visited"
+msgstr "ಅತಿ ಹೆಚ್ಚು ಕೋರಿಕೆಯ"
+
+msgid "New on %s"
+msgstr "ಹೊಸತು %s"
+
+msgid "New password"
+msgstr "ಹೊಸ ಪ್ರವೇಶಪದ"
+
+msgid "Next"
+msgstr "ಮುಂದೆ"
+
+msgid "no rate"
+msgstr "ಯಾವುದೇ ಗುಣದರ್ಜೆ ಇಲ್ಲ"
+
+msgid "No"
+msgstr "ಇಲ್ಲ"
+
+msgid "Not repeat the slideshow"
+msgstr "ಪ್ರದರ್ಶಿಕೆಯ ಪುನರಾವರ್ತನೆ ಬೇಡ"
+
+msgid "Notification"
+msgstr "ತಿಳುವಳಿಕೆ (Notification)"
+
+msgid "Number of items"
+msgstr "ವಸ್ತುಗಳ ಸಂಖ್ಯೆ"
+
+msgid "Number of photos per page"
+msgstr "ಪ್ರತಿ ಪುಟಕ್ಕೆ ಚಿತ್ರಗಳ ಸಂಖ್ಯೆ"
+
+msgid "Numeric identifier, 1 &rarr; 9"
+msgstr "ಸಂಖ್ಯಾ ಗುರುತು, 1 &rarr; 9"
+
+msgid "Numeric identifier, 9 &rarr; 1"
+msgstr "ಸಂಖ್ಯಾ ಗುರುತು, 9 &rarr; 1"
+
+msgid "obligatory"
+msgstr "ಕಡ್ಡಾಯ"
+
+msgid "Original dimensions"
+msgstr "ಮೂಲ ಅಳತೆಗಳು"
+
+msgid "Original"
+msgstr "ಮೂಲ"
+
+msgid "Page generated in"
+msgstr "ದಲ್ಲಿ  ಪುಟ ಪುನರ್ರಚಿಸಲಾಗಿದೆ"
+
+msgid "Page not found"
+msgstr "ಪುಟ ಸಿಗುತ್ತಿಲ್ಲ"
+
+msgid "Password forgotten"
+msgstr "ಪ್ರವೇಶಪದಮರೆತಿದೆ"
+
+msgid "Password reset is not allowed for this user"
+msgstr "ಈ ಬಳಕೆದಾರರ ಪ್ರವೇಶಪದವನ್ನು ಸರಿಪಡಿಸಲಾಗುವುದಿಲ್ಲ"
+
+msgid "Password Reset"
+msgstr "ಪ್ರವೇಶಪದವನ್ನು ಸರಿಪಡಿಸಿ"
+
+msgid "password updated"
+msgstr "ಪ್ರವೇಶಪದವನ್ನು ತಿದ್ದುಪಡಿಸಲಾಗಿದೆ"
+
+msgid "Password"
+msgstr "ಪ್ರವೇಶಪದ"
+
+msgid "Password: %s"
+msgstr "ಪ್ರವೇಶಪದ: %s"
+
+msgid "Pause of slideshow"
+msgstr "ಪ್ರದರ್ಶಿಕೆಯನ್ನು ತಡೆಹಿಡಿ"
+
+msgid "Permalink for album not found"
+msgstr "ಸಂಪುಟದ Permalink ಸಿಗುತ್ತಿಲ್ಲ"
+
+msgid "Photo sizes"
+msgstr "ಚಿತ್ರದ ಗಾತ್ರ"
+
+msgid "Photo title, A &rarr; Z"
+msgstr "ಚಿತ್ರದ ಶೀರ್ಷಿಕೆ, A &rarr; Z"
+
+msgid "Photo title, Z &rarr; A"
+msgstr "ಚಿತ್ರದ ಶೀರ್ಷಿಕೆ, Z &rarr; A"
+
+msgid "photo"
+msgstr "ಚಿತ್ರ"
+
+msgid "Photos only RSS feed"
+msgstr "'ಚಿತ್ರಗಳು ಮಾತ್ರ' ದ   RSS feed (Photos only RSS feed)"
+
+msgid "photos posted during the last %d days"
+msgstr "ಕಳೆದ %d ದಿನಗಳ ಅವಧಿಯಲ್ಲಿ ಪ್ರಕಟವಾದ ಚಿತ್ರಗಳು"
+
+msgid "Photos posted within the last %d day."
+msgid_plural "Photos posted within the last %d days."
+msgstr[0] "ಕಳೆದ %d ದಿನಗಳ ಅವಧಿಯೊಳಗೆ ಮಾತ್ರ ಪ್ರಕಟವಾದ ಚಿತ್ರಗಳು"
+msgstr[1] "ಕಳೆದ %d ದಿನಗಳ ಅವಧಿಯೊಳಗೆ ಮಾತ್ರ ಪ್ರಕಟವಾದ ಚಿತ್ರಗಳು"
+
+msgid "Piwigo encountered a non recoverable error"
+msgstr "Piwigo ದಲ್ಲಿ ಮರುಸರಿಪಡಿಸಲಾಗದ ಒಂದು ತಪ್ಪು ಉಂಟಾಗಿದೆ"
+
+msgid "Piwigo Help"
+msgstr "Piwigo ಸಹಾಯ"
+
+msgid "Play of slideshow"
+msgstr "ಪ್ರದರ್ಶಿಕೆಯನ್ನು ಚಾಲಿಸಿ"
+
+msgid "Please enter your username or email address."
+msgstr "ದಯವಿಟ್ಟು ನಿಮ್ಮ ಬಳಕೆದಾರರ ಹೆಸರು ಅಥವಾ ಮಿಂಚೆ ವಿಳಾಸವನ್ನು ನಮೂದಿಸಿ"
+
+msgid "Please, enter a login"
+msgstr "ದಯವಿಟ್ಟು ಲಾಗಿನ್ ಅನ್ನು ನಮೂದಿಸಿ"
+
+msgid "Post date"
+msgstr "ಪ್ರಕಟಣೆಯ ದಿನಾಂಕ"
+
+msgid "posted after %s (%s)"
+msgstr "%s (%s) ರ ನಂತರ"
+
+msgid "posted before %s (%s)"
+msgstr "%s (%s) ಕ್ಕೆ ಮುನ್ನ ಪ್ರಕಟವಾದವು."
+
+msgid "posted between %s (%s) and %s (%s)"
+msgstr "%s (%s) ಮತ್ತು %s (%s) ರ ಮಧ್ಯೆ ಪ್ರಕಟವಾದವು"
+
+msgid "posted on %s"
+msgstr "%s ರಂದು ಪ್ರಕಟವಾದವು"
+
+msgid "Posted on"
+msgstr "ರಲ್ಲಿ ಪ್ರಕಟವಾಗಿದ್ದು"
+
+msgid "Preferences"
+msgstr "ಆದ್ಯತೆಗಳು"
+
+msgid "Previous"
+msgstr "ಹಿಂದೆ"
+
+msgid "Profile"
+msgstr "ಸ್ವವಿವರ"
+
+msgid "Quick connect"
+msgstr "ವೇಗದ ಸಂಪರ್ಕ"
+
+msgid "Quick search"
+msgstr "ವೇಗದ ಹುಡುಕಾಟ"
+
+msgid "Random photos"
+msgstr "ಯಾವುದಾದೊರೊಂದು ಚಿತ್ರ"
+
+msgid "Rank"
+msgstr "ದರ್ಜೆ"
+
+msgid "Rate this photo"
+msgstr "ಈ ಚಿತ್ರದ ಗುಣದರ್ಜೆಯನ್ನು ಹೊಂದಿಸಿ"
+
+msgid "Rating score"
+msgstr "ಗುಣದರ್ಜೆಯ ಅಂಕ"
+
+msgid "Rating score, high &rarr; low"
+msgstr "ಗುಣದರ್ಜೆಯ ಅಂಕ, ಹೆಚ್ಚು &rarr; ಕಡಿಮೆ"
+
+msgid "Rating score, low &rarr; high"
+msgstr "ಗುಣದರ್ಜೆಯ ಅಂಕ, ಕಡಿಮೆ &rarr; ಹೆಚ್ಚು"
+
+msgid "Recent albums"
+msgstr "ಇತ್ತೀಚಿನ ಸಂಪುಟಗಳು"
+
+msgid "Recent period must be a positive integer value"
+msgstr "ಇತ್ತೀಚಿನ ಅವಧಿಯ   "
+
+msgid "Recent period"
+msgstr "ಇತ್ತೀಚಿನ ಅವಧಿ"
+
+msgid "Recent photos"
+msgstr "ಇತ್ತೀಚಿನ ಚಿತ್ರಗಳು"
+
+msgid "Redirection..."
+msgstr "ಮರುನಿರ್ದೇಶನ..."
+
+msgid "Reduce diaporama speed"
+msgstr "ಪ್ರದರ್ಶಿಕೆಯ ವೇಗವನ್ನು ಕಡಿಮೆಗೊಳಿಸಿ"
+
+msgid "Register"
+msgstr "ನೋಂದಾಯಿಸಿ"
+
+msgid "Registration of %s"
+msgstr " %s ರ ನೋಂದಣಿ"
+
+msgid "Registration"
+msgstr "ನೋಂದಣಿ"
+
+msgid "Related tags"
+msgstr "ಸಂಬಂಧಿಸಿದ ಟ್ಯಾಗ್ ಗಳು"
+
+msgid "remove this tag from the list"
+msgstr "ಪಟ್ಟಿಯಿಂದ ಈ ಟ್ಯಾಗ್ ಅನ್ನು ತೆಗೆಯಿರಿ"
+
+msgid "Repeat the slideshow"
+msgstr "ಪ್ರದರ್ಶಿಕೆಯನ್ನು ಪುನರಾವರ್ತಿಸಿ"
+
+msgid "representative"
+msgstr "ಸಂಪುಟದ ಕಿರುಚಿತ್ರ"
+
+msgid "Requested album does not exist"
+msgstr "ಕೋರಿಕೆಯ ಸಂಪುಟ ಅಸ್ತಿತ್ವದಲ್ಲಿಲ್ಲ."
+
+msgid "Requested tag does not exist"
+msgstr "ಕೋರಿಕೆಯ ಟ್ಯಾಗ್  ಅಸ್ತಿತ್ವದಲ್ಲಿಲ್ಲ"
+
+msgid "Reset to default values"
+msgstr "ಪೂರ್ವನಿಯೋಜಿತ ಮೌಲ್ಯಗಳಿಗೆ ಮರುಹೊಂದಿಸಿ"
+
+msgid "Reset"
+msgstr "ಮರುಹೊಂದಿಸಿ"
+
+msgid "Retrieve password"
+msgstr "ಗುಪ್ತಪದವನ್ನು ಮರಳಿ ಪಡೆಯಿರಿ"
+
+msgid "Return to home page"
+msgstr "ಮರಳಿ ಮುಖಪುಟಕ್ಕೆ"
+
+msgid "return to normal view mode"
+msgstr "ಸಾಮಾನ್ಯ ವೀಕ್ಷಣೆಗೆ ಮರಳಿ"
+
+msgid "return to the display of all photos"
+msgstr "ಎಲ್ಲಾ ಚಿತ್ರಗಳ ಪ್ರದರ್ಶನಕ್ಕೆ ಮರಳಿ"
+
+msgid "Search by date"
+msgstr "ದಿನಾಂಕದಂತೆ ಹುಡುಕಿ"
+
+msgid "Search for all terms"
+msgstr "ಎಲ್ಲಾ ಪದಗಳಿಗಾಗಿ ಹುಡುಕಿ"
+
+msgid "Search for any term"
+msgstr "ಯಾವುದಾದರೊಂದು ಪದಕ್ಕಾಗಿ ಹುಡುಕಿ"
+
+msgid "Search for Author"
+msgstr "ಲೇಖಕರ ಹೆಸರಿನಂತೆ ಹುಡುಕಿ"
+
+msgid "Search for words"
+msgstr "ಪದಗಳಂತೆ ಹುಡುಕಿ"
+
+msgid "Search in albums"
+msgstr "ಸಂಪುಟಗಳಲ್ಲಿ ಹುಡುಕಿ"
+
+msgid "Search in sub-albums"
+msgstr "ಉಪ-ಸಂಪುಟಗಳಲ್ಲಿ ಹುಡುಕಿ"
+
+msgid "Search results"
+msgstr "ಹುಡುಕಾಟದ ಫಲಿತಾಂಶಗಳು"
+
+msgid "Search rules"
+msgstr "ಹುಡುಕಾಟದ ಮಾನದಂಡಗಳು"
+
+msgid "Search tags"
+msgstr "ಟ್ಯಾಗ್ ಗಳನ್ನು ಹುಡುಕಿ"
+
+msgid "Search"
+msgstr "ಹುಡುಕಿ"
+
+msgid "search"
+msgstr "ಹುಡುಕಿ"
+
+msgid "searched words : %s"
+msgstr "ಹುಡುಕಲ್ಪಟ್ಟ ಪದಗಳು: %s"
+
+msgid "Send my connection settings by email"
+msgstr "ನನ್ನ ಸಂಪರ್ಕದ ವಿವರಗಳನ್ನು ಮಿಂಚೆಯ ಜೊತೆ ಕಳುಹಿಸಿ."
+
+msgid "Sent by"
+msgstr "ಇವರಿಂದ ಕಳುಹಿಸಲಾಗಿದೆ"
+
+msgid "set as album representative"
+msgstr "ಸಂಪುಟದ thumbnail ನಂತೆ ಹೊಂದಿಸಿ"
+
+msgid "Show file metadata"
+msgstr "ಕಡತದ ಮೆಟಾಡೇಟಾ ವನ್ನು ತೋರಿಸಿ"
+
+msgid "Show latest comments first"
+msgstr "ಇತ್ತೀಚಿನ ಟಿಪ್ಪಣಿಗಳನ್ನು ಮೊದಲು ತೋರಿಸಿ"
+
+msgid "Show number of comments"
+msgstr "ಟಿಪ್ಪಣಿಗಳ ಸಂಖ್ಯೆಯನ್ನು ತೋರಿಸಿ"
+
+msgid "Show number of hits"
+msgstr "ಭೇಟಿಗಳ ಸಂಖ್ಯೆಯನ್ನು ತೋರಿಸಿ"
+
+msgid "Show oldest comments first"
+msgstr "ಹಳೆಯ ಟಿಪ್ಪಣಿಗಳನ್ನು ಮೊದಲು ತೋರಿಸಿ"
+
+msgid "show tag cloud"
+msgstr "ಟ್ಯಾಗ್ ಕ್ಲೌಡ್ ಅನ್ನು ತೋರಿಸಿ"
+
+msgid "Since"
+msgstr "ತರುವಾಯ"
+
+msgid "slideshow"
+msgstr "ಚಿತ್ರ ಪ್ರದರ್ಶಿಕೆ"
+
+msgid "small"
+msgstr "S - ಚಿಕ್ಕದಾದ"
+
+msgid "Someone requested that the password be reset for the following user account:"
+msgstr "ಈ ಕೆಳಗಿನ ಬಳಕೆದಾರರ  ಖಾತೆಯ ಗುಪ್ತಪದವನ್ನು ಬದಲಾಯಿಸಲು ಮನವಿ ಸಲ್ಲಿಸಿದ್ದಾರೆ:"
+
+msgid "Sort order"
+msgstr "ಅನುಕ್ರಮಣಿಕೆಯ ಕ್ರಮ"
+
+msgid "Specials"
+msgstr "ವಿಶೇಷವಾದವುಗಳು"
+
+msgid "stop the slideshow"
+msgstr "ಪ್ರದರ್ಶಿಕೆಯನ್ನು ನಿಲ್ಲಿಸಿ"
+
+msgid "Submit"
+msgstr "ಸಲ್ಲಿಸಿ"
+
+msgid "Successfully registered, you will soon receive an email with your connection settings. Welcome!"
+msgstr "ಯಶಸ್ವಿಯಾಗಿ ನೋಂದಾಯಿಸಲಾಗಿದೆ, ನಿಮ್ಮ ಸಂಪರ್ಕದ ವಿವರಗಳಿರುವ ಮಿಂಚೆ ಸಧ್ಯದಲ್ಲೇ ನಿಮಗೆ ಸೇರಲಿದೆ. ಸುಸ್ವಾಗತ!"
+
+msgid "Tag results for"
+msgstr "ಟ್ಯಾಗ್ ನ ಫಲಿತಾಂಶಗಳು :"
+
+msgid "Tag"
+msgstr "ಟ್ಯಾಗ್"
+
+msgid "Tags"
+msgstr "ಟ್ಯಾಗ್ ಗಳು"
+
+msgid "Thank you for registering at %s!"
+msgstr "%s ರಲ್ಲಿ ನೋಂದಾಯಿಕೊಂಡಿದ್ದಕ್ಕಾಗಿ ಧನ್ಯವಾದಗಳು !"
+
+msgid "the beginning"
+msgstr "ಆರಂಭ"
+
+msgid "The gallery is locked for maintenance. Please, come back later."
+msgstr "ಚಿತ್ರಶಾಲೆ (ಗ್ಯಾಲರಿ) ಯನ್ನು ನಿರ್ವಹಣೆಗಾಗಿ ತಾತ್ಕಾಲಿಕವಾಗಿ ತಡೆಹಿಡಿಯಲಾಗಿದೆ. ದಯವಿಟ್ಟು ನಂತರ ಮತ್ತೊಮ್ಮೆ ಭೇಟಿ ಕೊಡಿ."
+
+msgid "The number of photos per page must be a not null scalar"
+msgstr "ಪ್ರತಿ ಪುಟದಲ್ಲಿನ  ಚಿತ್ರಗಳ ಸಂಖ್ಯೆ  ಶೂನ್ಯಕ್ಕಿಂತ ಹೆಚ್ಚು ಇರಬೇಕು"
+
+msgid "The passwords do not match"
+msgstr "ಪ್ರವೇಶಪದಗಳು ಹೊಂದಿಕೆಯಾಗುತ್ತಿಲ್ಲ"
+
+msgid "The RSS notification feed provides notification on news from this website : new photos, updated albums, new comments. Use a RSS feed reader."
+msgstr "ಈ RSS feed ಈ ಜಾಲತಾಣದ ಆ ಎಲ್ಲಾ  ಹೊಸ ಸಂಗತಿಗಳ ತಿಳುವಳಿಕೆ ನೀಡುತ್ತದೆ : ಹೊಸ ಚಿತ್ರಗಳು, ಉನ್ನತೀಕರಿಸಿದ ಸಂಪುಟಗಳು,ಹೊಸ ಟಿಪ್ಪಣಿಗಳು. RSS feed reader ನ ಜೊತೆ ಉಪಯೋಗಿಸಿ. (The RSS notification feed provides notification on news from this website : new photos, updated albums, new comments. Use a RSS feed reader.)"
+
+msgid "the username must be given"
+msgstr "ಬಳಕೆದಾರರ ಹೆಸರು ಕಡ್ಡಾಯ"
+
+msgid "This author modified following comment:"
+msgstr "ಈ ಲೇಖಕರು ಈ ಕೆಳಗಿನ ಟಿಪ್ಪಣಿಯನ್ನು ತಿದ್ದುಪಡಿಮಾಡಿದ್ದಾರೆ:"
+
+msgid "This author removed the comment with id %d"
+msgstr "ಈ ಲೇಖಕರು ಟಿಪ್ಪಣಿ ಯನ್ನು ತೆಗೆದಿದ್ದಾರೆ, ಟಿಪ್ಪಣಿ id : %d"
+
+msgid "this email address is already in use"
+msgstr "ಈ ಮಿಂಚೆ ವಿಳಾಸ ಈಗಾಗಲೇ ಬಳಕೆಯಲ್ಲಿದೆ"
+
+msgid "This login is already used by another user"
+msgstr "ಈ ಲಾಗಿನ್ ಅನ್ನು ಈಗಾಗಲೇ ಇನ್ನೊಬ್ಬ ಬಳಕೆದಾರರು ಬಳಸುತ್ತಿದ್ದಾರೆ "
+
+msgid "this login is already used"
+msgstr "ಈ ಲಾಗಿನ್ ಈಗಾಗಲೇ ಬಳಕೆಯಲ್ಲಿದೆ"
+
+msgid "To reset your password, visit the following address:"
+msgstr "ನಿಮ್ಮ ಪ್ರವೇಶಪದವನ್ನು ಬದಲಾಯಿಸಲು ಈ ವಿಳಾಸಕ್ಕೆ ಭೇಟಿ ಕೊಡಿ :"
+
+msgid "today"
+msgstr "ಇಂದು"
+
+msgid "Unknown feed identifier"
+msgstr "ಅನಾಮಿಕ feed ಗುರುತು"
+
+msgid "Unknown identifier"
+msgstr "ಅನಾಮಿಕ ಗುರುತು"
+
+msgid "Update your rating"
+msgstr "ನಿಮ್ಮ ದರ್ಜೆಯನ್ನು ಉನ್ನತೀಕರಿಸಿ"
+
+msgid "useful when password forgotten"
+msgstr "ಈ ಮಾಹಿತಿ, ಪ್ರವೇಶಪದ ಮರೆತುಹೋದ ಸಂದರ್ಭದಲ್ಲಿ ಉಪಯುಕ್ತ"
+
+msgid "User \"%s\" has no email address, password reset is not possible"
+msgstr "ಬಳಕೆದಾರ \"%s\" ಮಿಂಚೆ ವಿಳಾಸ ನಮೂದಿಸಿಲ್ಲ, ಪ್ರವೇಶಪದ ಬದಲಾವಣೆ ಸಾಧ್ಯವಿಲ್ಲ"
+
+msgid "User comments"
+msgstr "ಬಳಕೆದಾರರ ಟಿಪ್ಪಣಿಗಳು"
+
+msgid "User: %s"
+msgstr "ಬಳಕೆದಾರ: %s"
+
+msgid "Username \"%s\" on gallery %s"
+msgstr "%s ಚಿತ್ರಶಾಲೆ (ಗ್ಯಾಲರಿ)ಯಲ್ಲಿ  \"%s\" ಬಳಕೆದಾರ  "
+
+msgid "Username modification"
+msgstr "ಬಳಕೆದಾರರ ತಿದ್ದುಪಡಿ"
+
+msgid "Username or email"
+msgstr "ಬಳಕೆದಾರರ ಹೆಸರು ಅಥವಾ ಮಿಂಚೆ ವಿಳಾಸ"
+
+msgid "Username"
+msgstr "ಬಳಕೆದಾರರ ಹೆಸರು"
+
+msgid "Username is mandatory"
+msgstr "ಬಳಕೆದಾರರ ಹೆಸರು ಕಡ್ಡಾಯ"
+
+msgid "Username: %s"
+msgstr "ಬಳಕೆದಾರರ ಹೆಸರು: %s"
+
+msgid "View in"
+msgstr "ರ ದರ್ಶನ"
+
+msgid "View"
+msgstr "ದರ್ಶನ"
+
+msgid "Visits"
+msgstr "ಭೇಟಿಗಳು"
+
+msgid "Visits, high &rarr; low"
+msgstr "ಭೇಟಿಗಳು, ಹೆಚ್ಚು  &rarr; ಕಡಿಮೆ"
+
+msgid "Visits, low &rarr; high"
+msgstr "ಭೇಟಿಗಳು, ಕಡಿಮೆ &rarr; ಹೆಚ್ಚು"
+
+msgid "Website"
+msgstr "ಜಾಲತಾಣ"
+
+msgid "Webmaster"
+msgstr "ವೆಬ್ ಮಾಸ್ಟರ್"
+
+msgid "Week %d"
+msgstr "ವಾರ : %d"
+
+msgid "Welcome to your Piwigo photo gallery!"
+msgstr "ನಿಮ್ಮ Piwigo ಚಿತ್ರ ಶಾಲೆ (ಗ್ಯಾಲರಿ) ಗೆ ಸ್ವಾಗತ!"
+
+msgid "Welcome"
+msgstr "ಸ್ವಾಗತ"
+
+msgid "wrong date"
+msgstr "ದಿನಾಂಕ ತಪ್ಪಾಗಿದೆ"
+
+msgid "xlarge"
+msgstr "XL - ಅತಿ ದೊಡ್ಡದು"
+
+msgid "xsmall"
+msgstr "XS - ಅತಿ ಚಿಕ್ಕದು"
+
+msgid "xxlarge"
+msgstr "XXL - ದೊಡ್ಡದು"
+
+msgid "Yes"
+msgstr "ಹೌದು"
+
+msgid "You are not authorized to access the requested page"
+msgstr "ನೀವು ಬಯಸುತ್ತಿಯರುವ ಪುಟವನ್ನು ತಲುಪಲು ನಿಮಗೆ ಸಮ್ಮತಿಯಿಲ್ಲ. "
+
+msgid "You will receive a link to create a new password via email."
+msgstr "ಹೊಸ ಪ್ರವೇಶಪದ ವನ್ನು ರಚಿಸುವ ಲಿಂಕ್ ಅನ್ನು  ನಿಮಗೆ ಮಿಂಚೆಯ ಮೂಲಕ ಕಳುಹಿಸಲಾಗುತ್ತದೆ."
+
+msgid "Your comment has been registered"
+msgstr "ನಿಮ್ಮ ಟಿಪ್ಪಣಿಯನ್ನು ನೋಂದಾಯಿಸಲಾಗಿದೆ "
+
+msgid "Your comment has NOT been registered because it did not pass the validation rules"
+msgstr "ನೋಂದಾವಣೆಯ ಮಾನದಂಡಗಳನ್ನು ನಿಮ್ಮ ಟಿಪ್ಪಣಿ ಪೂರೈಸಿಲ್ಲವಾದ್ದರಿಂದ ಅದನ್ನು ನೋದಾಯಿಸಲಾಗಿಲ್ಲ."
+
+msgid "Your favorites"
+msgstr "ನಿಮ್ಮ ಅಚ್ಚುಮೆಚ್ಚಿನವುಗಳು"
+
+msgid "Your Gallery Customization"
+msgstr "ನಿಮ್ಮ ಚಿತ್ರಶಾಲೆ (ಗ್ಯಾಲರಿ) ಯ ವಿನ್ಯಾಸ"
+
+msgid "Your password has been reset"
+msgstr "ನಿಮ್ಮ ಗುಪ್ತಪದವನ್ನು ಬದಲಾಯಿಸಲಾಗಿದೆ"
+
+msgid "Your username has been successfully changed to : %s"
+msgstr "ನಿಮ್ಮ ಬಳಕೆದಾರರ ಹೆಸರನ್ನು  %s ಗೆ ಬದಲಾಯಿಸಲಾಗಿದೆ"
+
+msgid "Your website URL is invalid"
+msgstr "ನಿಮ್ಮ ಜಾಲತಾಣ ಪುಟದ ವಿಳಾಸ (URL) ಅಸಿಂಧುವಾಗಿದೆ"
+
+msgid "mandatory"
+msgstr "ಕಡ್ಡಾಯ"
+
+msgid "... or please deactivate this message, I will find my way by myself"
+msgstr "... or please deactivate this message, I will find my way by myself"
+
+msgid "Anti-flood system : please wait for a moment before trying to post another comment"
+msgstr "Anti-flood system: please wait a moment before trying to post another comment"
+
+msgid "Bad status for user \"guest\", using default status. Please notify the webmaster."
+msgstr "Bad status for user \"guest\", default status will be used. Please notify the webmaster."
+
+msgid "Cookies are blocked or not supported by your browser. You must enable cookies to connect."
+msgstr "Cookies are blocked or not supported by your browser. You must enable cookies to log in."
+
+msgid "Default"
+msgstr "ಪೂರ್ವನಿಯೋಜಿತ"
+
+msgid "Empty query. No criteria has been entered."
+msgstr "Empty query. No criteria have been entered."
+
+msgid "IP: %s"
+msgstr "IP: %s"
+
+msgid "%d Kb"
+msgstr "%d Kb"
+
+msgid "thumb"
+msgstr "ಕಿರುಚಿತ್ರ"
+
+msgid "square"
+msgstr "ಚೌಕಟ್ಟು"
+
+msgid "Thumbnails"
+msgstr "ಕಿರುಚಿತ್ರಗಳು"
+
+msgid "Sort by"
+msgstr "ಈ ಅನುಕ್ರಮಣಿಕೆಯಂತೆ"
+
+msgid "SQL queries in"
+msgstr "SQL queries in"
+
+msgid "RSS feed"
+msgstr "RSS feed"
+
+msgid "Powered by"
+msgstr "Powered by"
+
+msgid "N/A"
+msgstr "N/A"
+
+msgid "Email"
+msgstr "ಮಿಂಚೆ"
+
+msgid "First Page"
+msgstr "ಮೊದಲ ಪುಟ"
+
+msgid "Go back to the album"
+msgstr "ಸಂಪುಟಕ್ಕೆ ಹಿಂತಿರುಗಿ"
+
+msgid "Last Page"
+msgstr "ಕೊನೆಯ ಪುಟ"
+
+msgid "%d photos per page"
+msgstr "%d ಚಿತ್ರಗಳು ಪ್ರತಿ ಪುಟಕ್ಕೆ"
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "ಪ್ರವೇಶಪದದ ಅನುಮೋದನೆ ಕಾಣೆಯಾಗಿದೆ. ದಯವಿಟ್ಟು ನಿಮ್ಮ ಆಯ್ಕೆಯ ಪ್ರವೇಶಪದವನ್ನು ಅನುಮೋದಿಸಿ."
+
+msgid "Password is missing. Please enter the password."
+msgstr "ಪ್ರವೇಶಪದ ಕಾಣೆಯಾಗಿದೆ. ದಯವಿಟ್ಟು ಪ್ರವೇಶಪದವನ್ನು ನಮೂದಿಸಿ."
+
+msgid "Theme"
+msgstr "ಥೀಮ್"
+
+msgid "generate random password"
+msgstr "ಯಾವುದೋ ಒಂದು ಗುಪ್ತಪದವನ್ನು ರಚಿಸಿ"
+
+msgid "Related albums"
+msgstr "ಸಂಬಂಧಿತ ಸಂಪುಟಗಳು"
+
+msgid "Photo title"
+msgstr "ಚಿತ್ರದ ಶೀರ್ಷಿಕೆ"
+
+msgid "Photo description"
+msgstr "ಚಿತ್ರದ ವಿವರಣೆ"
+
+msgid "Password: ********** (no copy by email)"
+msgstr "ಗುಪ್ತಪದ: ********** (no copy by email)"
+
+msgid "No results for"
+msgstr "ಯಾವುದೇ ಫಲಿತಾಂಶಗಳಿಲ್ಲ"
+
+msgid "Link: %s"
+msgstr "ಕೊಂಡಿ :  %s"
+
+msgid "Invalid username or password!"
+msgstr "ಅಸಿಂಧುವಾದ ಬಳಕೆದಾರರ ಹೆಸರು ಅಥವಾ ಗುಪ್ತಪದ!"
+
+msgid "Album name, Z &rarr; A"
+msgstr "ಸಂಪುಟದ ಹೆಸರು, Z &rarr; A"
+
+msgid "Album name, A &rarr; Z"
+msgstr "ಸಂಪುಟದ ಹೆಸರು, A &rarr; Z"
+
+msgid "Apply on properties"
+msgstr "ಗುಣವಿಶೇಷಗಳ ಮೇಲೆ ಅನ್ವಯಿಸಿ"
+
+msgid "Your authentication key is no longer valid."
+msgstr "ನಿಮ್ಮ ಧೃಢೀಕರಣದ ಕೀ ಅಸಿಂಧುವಾಗಿದೆ"
+

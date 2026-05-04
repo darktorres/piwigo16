@@ -1,0 +1,90 @@
+# Piwigo translation — bn_IN
+# Source: common.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: bn_IN\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Language-Name: বাংলা\n"
+"X-Piwigo-Country: ভারত\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Code: bn\n"
+"X-Piwigo-Zero-Plural: true\n"
+
+msgid "%d album updated"
+msgid_plural "%d albums updated"
+msgstr[0] "%d অ্যালবাম আপডেট হয়েছে"
+msgstr[1] "%d অ্যালবামগুলি আপডেট হয়েছে"
+
+msgid "%d comment to validate"
+msgstr "%d সক্রিয় করতে মন্তব্য"
+
+msgid "%d comment"
+msgid_plural "%d comments"
+msgstr[0] "%d মন্তব্য"
+msgstr[1] "%d মন্তব্যগুলি"
+
+msgid "%d comments to validate"
+msgstr "%d সক্রিয় করতে মন্তব্যগুলি"
+
+msgid "%d hit"
+msgstr "%d hit"
+
+msgid "%d hits"
+msgstr "%d hits"
+
+msgid "%d Kb"
+msgstr "%d Kb"
+
+msgid "%d new comment"
+msgstr "%d নূতন মন্তব্য"
+
+msgid "%d new comments"
+msgstr "%d নূতন মন্তব্যসমূহ"
+
+msgid "%d new photo"
+msgid_plural "%d new photos"
+msgstr[0] "%d নূতন ছবি"
+msgstr[1] "%d নূতন ছবিসমূহ"
+
+msgid "%d new user"
+msgstr "%d নূতন গ্রাহক"
+
+msgid "%d new users"
+msgstr "%d নূতন গ্রাহকগণ"
+
+msgid "%d photo is also linked to current tags"
+msgid_plural "%d photos are also linked to current tags"
+msgstr[0] "%d বর্তমান ট্যাগের সাথে ছবি সংযোজিত আছে"
+msgstr[1] "%d বর্তমান ট্যাগের সাথে ছবি সংযোজিত আছে"
+
+msgid "%d photo"
+msgid_plural "%d photos"
+msgstr[0] "%d ছবি"
+msgstr[1] "%d ছবিসমূহ"
+
+msgid "%d rates"
+msgstr "%d rates"
+
+msgid "(!) This comment requires validation"
+msgstr "(!) মন্তব্য বৈধ করতে হবে"
+
+msgid "... or browse your empty gallery"
+msgstr "... অথবা আপনার খালি গ্যালারী দেখুন"
+
+msgid "... or please deactivate this message, I will find my way by myself"
+msgstr "... অথবা মন্তব্যটি নিষ্ক্রিয় করুন, আমি আমার করণীয় নিজেই করতে পারব"
+
+msgid "A comment on your site"
+msgstr "আপনার সাইটে একটি মন্তব্য"
+
+msgid "About Piwigo"
+msgstr "পিউইগো বিষয়ক"
+
+msgid "About"
+msgstr "বিষয়ক"
+
+msgid "Date"
+msgstr "তারিখ"
+

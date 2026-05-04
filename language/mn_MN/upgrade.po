@@ -1,0 +1,65 @@
+# Piwigo translation — mn_MN
+# Source: upgrade.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: mn_MN\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "You do not have access rights to run upgrade"
+msgstr "Уучлаарай, Танд программыг шинэчлэх эрх байхгүй байна."
+
+msgid "Only administrator can run upgrade: please sign in below."
+msgstr "Уучлаарай, зөвхөн админ шинэчлэх эрхтэй. Админы эрхээр системд нэвтэрнэ үү."
+
+msgid "total upgrade time"
+msgstr "Зарцуулсан хугацаа"
+
+msgid "Upgrade from version %s to %s"
+msgstr "%s-с %s хувилбар уруу шинэчлэх"
+
+msgid "Upgrade"
+msgstr "Шинэчлэх"
+
+msgid "Upgrade informations"
+msgstr "Шинэчилсэн мэдээлэл"
+
+msgid "total SQL time"
+msgstr "SQL ажилласан хугацаа"
+
+msgid "Statistics"
+msgstr "Статистик"
+
+msgid "SQL queries"
+msgstr "SQL комманд"
+
+msgid "Perform a maintenance check in [Administration>Tools>Maintenance] if you encounter any problem."
+msgstr "Хэрвээ ямар нэгэн асуудал гарвал [Удирдлага>Tools>Засвар үйлчилгээ] хэсэгээс шалгаж үзнэ үү"
+
+msgid "User permissions and group permissions have been erased"
+msgstr "Хэрэглэгч болон бүлгүүдийн эрхийг цуцаллаа"
+
+msgid "All sub-albums of private albums become private"
+msgstr "Хувийн цомогт хамаарагдах дэд цомогууд мөн \"хувийн\" байх болно"
+
+msgid "As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:"
+msgstr "Алдаа гарахаас сэргийлж дараахь нэмэлт өргөтгөлүүдийг идэвхгүй болголоо. Дахин идэвхжүүлэхээсээ өмнө тохирох эсэхийг нь нягталж шалгана уу."
+
+msgid "In <i>%s</i>, before <b>?></b>, insert:"
+msgstr "<i>%s</i> дотор, before <b>?></b>-н урд дараахь утгыг оруулах:"
+
+msgid "Only thumbnails prefix and webmaster mail address have been saved from previous configuration"
+msgstr "Өмнөх тохиргооноос зөвхөн вэбмастерийн и-мэйл хаягыг л хадгалж үлдээлээ."
+
+msgid "This page proposes to upgrade your database corresponding to your old version of Piwigo to the current version. The upgrade assistant thinks you are currently running a <strong>release %s</strong> (or equivalent)."
+msgstr "Энэхүү хуудас Танд Piwigo-н мэдээллийн сангаа шинэ хувилбараар сайжруулахад тань туслах болно. Та одоо <strong>%s</strong> (буюу түүнтэй адилтгах) хувилбарыг ашиглаж байна."
+
+msgid "As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:"
+msgstr "Алдаа гарахаас сэргийлж дараахь загвар (theme)-г идэвхгүй болголоо. Дахин идэвхжүүлэхийн өмнө сайжруулсан хувилбар нь гарсан эсэхийг шалгана уу:"
+
+msgid "Discover what's new in Piwigo %s"
+msgstr "Piwigo %s -д юу шинээр нэмэгдэв..."
+

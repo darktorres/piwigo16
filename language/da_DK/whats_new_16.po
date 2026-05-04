@@ -1,0 +1,20 @@
+# Piwigo translation — da_DK
+# Source: whats_new_16.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: da_DK\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Brand new login & preferences with Standard pages !"
+msgstr "Helt nyt login og indstillinger med standardsider!"
+
+msgid "Two factor authentication is here"
+msgstr "Tofaktor-autentifikation er tilgængelig"
+
+msgid "UI redesigns that make a difference"
+msgstr "Brugerfladeredesign som gør en forskel"
+

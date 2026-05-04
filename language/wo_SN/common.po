@@ -1,0 +1,17 @@
+# Piwigo translation — wo_SN
+# Source: common.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: wo_SN\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Piwigo-Language-Name: Wolof\n"
+"X-Piwigo-Country: Sénégal\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Code: wo\n"
+"X-Piwigo-Zero-Plural: true\n"
+
+msgid "All"
+msgstr "toute 2"
+

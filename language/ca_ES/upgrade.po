@@ -1,0 +1,65 @@
+# Piwigo translation — ca_ES
+# Source: upgrade.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ca_ES\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Upgrade"
+msgstr "Actualització"
+
+msgid "This page proposes to upgrade your database corresponding to your old version of Piwigo to the current version. The upgrade assistant thinks you are currently running a <strong>release %s</strong> (or equivalent)."
+msgstr "Aquesta pàgina actualitza la base de dades de la teva antiga galeria Piwigo a la nova versió. L'assistent d'actualització detecta que esteu executant la <strong>versió %s</strong> (o equivalent)."
+
+msgid "Upgrade from version %s to %s"
+msgstr "Actualitzar la versió %s a la %s"
+
+msgid "Statistics"
+msgstr "Estadístiques"
+
+msgid "total upgrade time"
+msgstr "temps total d'actualització"
+
+msgid "total SQL time"
+msgstr "temps total SQL "
+
+msgid "SQL queries"
+msgstr "consultes SQL"
+
+msgid "Upgrade informations"
+msgstr "Informació de l'actualització"
+
+msgid "Perform a maintenance check in [Administration>Tools>Maintenance] if you encounter any problem."
+msgstr "Si trobeu algun problema realitzeu una revisió de manteniment [Administració>Eines>Manteniment]."
+
+msgid "As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:"
+msgstr "Com a precaució, els següents connectors s'han desactivat. Haureu de revisar les actualitzacions dels connectors abans de reactivar-los:"
+
+msgid "Only administrator can run upgrade: please sign in below."
+msgstr "Únicament un usuari administrador pot executar l'actualització: si us plau, inicieu la sessió a sota."
+
+msgid "You do not have access rights to run upgrade"
+msgstr "No teniu drets d'accés per executar l'actualització"
+
+msgid "All sub-albums of private albums become private"
+msgstr "Tots els sub-àlbums dels àlbums privats esdeveneixen privats"
+
+msgid "User permissions and group permissions have been erased"
+msgstr "S'han eliminat els permisos d'usuaris i de grups"
+
+msgid "Only thumbnails prefix and webmaster mail address have been saved from previous configuration"
+msgstr "Només s'ha guardat de l'anterior configuració els prefixos de les miniatures i l'adreça de correu electrònic de l'administrador de la web"
+
+msgid "In <i>%s</i>, before <b>?></b>, insert:"
+msgstr "En <i>%s</i>, abans <b>?></b>, insertar:"
+
+msgid "As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:"
+msgstr "Com a precaució, els següents tempes s'han desactivat. Haureu de revisar les actualitzacions dels temes abans de reactivar-los:"
+
+msgid "Discover what's new in Piwigo %s"
+msgstr "Descobriu les novetats de Piwigo %s"
+

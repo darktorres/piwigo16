@@ -1,0 +1,89 @@
+# Piwigo translation — id_ID
+# Source: install.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: id_ID\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "verification"
+msgstr "Verifikasi"
+
+msgid "Need help ? Ask your question on <a href=\"%s\">Piwigo message board</a>."
+msgstr "Butuh bantuan? Ajukan pertannyaan anda ke <a href=\"%s\">Piwigo message board</a>."
+
+msgid "Note you can change your configuration by yourself and restart Piwigo after that."
+msgstr "Catat bahwa anda dapat mengubah pengaturan anda sendiri kemudian mulai ulang Piwigo."
+
+msgid "PHP 5 is required"
+msgstr "PHP 5.2 diperlukan"
+
+msgid "Piwigo may try to switch your configuration to PHP 5 by creating or modifying a .htaccess file."
+msgstr "Piwigo mungkin akan mencoba mengganti pengaturan anda ke PHP 5.2 dengan membuat atau mengubah sebuah berkan .httaccess"
+
+msgid "Piwigo was not able to configure PHP 5."
+msgstr "Piwigo tidak dapat mengatur PHP 5.2"
+
+msgid "Sorry!"
+msgstr "Maaf!"
+
+msgid "Start Install"
+msgstr "Mulai pemasangan"
+
+msgid "Try to configure PHP 5"
+msgstr "Cobalah untuk mengatur PHP 5.2"
+
+msgid "User"
+msgstr "Pengguna"
+
+msgid "Visitors will be able to contact site administrator with this mail"
+msgstr "Pengunjung akan dapat menggunakan email ini untuk menghubungi administrator situs"
+
+msgid "Welcome to my photo gallery"
+msgstr "Selamat datang ke foto galeriku"
+
+msgid "Welcome to your new installation of Piwigo!"
+msgstr "Selamat datang ke instalasi baru dari Piwigo!"
+
+msgid "Admin configuration"
+msgstr "Pengaturan administrasi"
+
+msgid "Basic configuration"
+msgstr "Pengaturan dasar"
+
+msgid "Can't connect to server"
+msgstr "Tidak dapat terhubung ke server"
+
+msgid "Congratulations, Piwigo installation is completed"
+msgstr "Selamat, Instalasi piwigo telah selesai"
+
+msgid "Connection to server succeed, but it was impossible to connect to database"
+msgstr "Koneksi ke server berhasil, tetapi koneksi ke database tidak memungkinkan."
+
+msgid "Creation of config file local/config/database.inc.php failed."
+msgstr "Pembuatan berkas pengaturan local/config.database.inc.php gagal."
+
+msgid "Database configuration"
+msgstr "Pengaturan database"
+
+msgid "Database name"
+msgstr "Nama database"
+
+msgid "Database table prefix"
+msgstr "Prefiks tabel database"
+
+msgid "Don't hesitate to consult our forums for any help : %s"
+msgstr "Jangan ragu untuk berkosultasi ke forum kami untuk bantuan apapun: %s"
+
+msgid "Download the config file"
+msgstr "Unduh berkas pengaturan"
+
+msgid "Hope to see you back soon."
+msgstr "Berharap akan bertemu anda kembali."
+
+msgid "Installation"
+msgstr "Pemasangan"
+

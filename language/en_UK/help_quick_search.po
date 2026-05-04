@@ -1,0 +1,161 @@
+# Piwigo translation — en_UK
+# Source: help_quick_search.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: en_UK\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Search using extended syntax"
+msgstr "Search using extended syntax"
+
+msgid "The quick search engine allows you to use boolean operators to refine your search. By default, the search applies to all keywords. Searches are not case sensitive."
+msgstr "The quick search engine allows you to use boolean operators to refine your search. By default, the search applies to all keywords. Searches are not case sensitive."
+
+msgid "Here is a list of actions you can perform:"
+msgstr "Here is a list of actions you can perform:"
+
+msgid "Exact search"
+msgstr "Exact search"
+
+msgid "Use quotes to search for an exact keyword or phrase."
+msgstr "Use quotes to search for an exact keyword or phrase."
+
+msgid "OR inclusive"
+msgstr "OR inclusive"
+
+msgid "Add an OR between words."
+msgstr "Add an OR between words."
+
+msgid "Exclude"
+msgstr "Exclude"
+
+msgid "Add a dash (-) or NOT before a word to exclude from search. Note that NOT acts as a filtering operator so you cannot have a search containing only NOT operators. You cannot combine OR with NOT (john OR NOT bill is not valid)"
+msgstr "Add a dash (-) or NOT before a word to exclude from search. Note that NOT acts as a filtering operator so you cannot have a search containing only NOT operators. You cannot combine OR with NOT (john OR NOT bill is not valid)"
+
+msgid "Grouping"
+msgstr "Grouping"
+
+msgid "Searches only in tag names without looking at photo titles or descriptions."
+msgstr "Searches only in tag names without looking at photo titles or descriptions."
+
+msgid "Searches only for photos with the given words in title or description."
+msgstr "Searches only for photos with the given words in title or description."
+
+msgid "Searches by file name."
+msgstr "Searches by file name."
+
+msgid "Searches by author."
+msgstr "Searches by author."
+
+msgid "photos taken in 2003"
+msgstr "photos taken in 2003"
+
+msgid "photos from may 2003"
+msgstr "photos from may 2003"
+
+msgid "photos from 2003 to 2008"
+msgstr "photos from 2003 to 2008"
+
+msgid "photos after Jan 1st 2008"
+msgstr "photos after Jan 1st 2008"
+
+msgid "Searches photos by taken date."
+msgstr "Searches photos by taken date."
+
+msgid "Searches photos by posted date."
+msgstr "Searches photos by posted date."
+
+msgid "Searches photos with a given width or height."
+msgstr "Searches photos with a given width or height."
+
+msgid "returns photos of 5 megapixels"
+msgstr "returns photos of 5 megapixels"
+
+msgid "returns photos of 12 megapixels or more"
+msgstr "returns photos of 12 megapixels or more"
+
+msgid "Searches photos by size in pixels."
+msgstr "Searches photos by size in pixels."
+
+msgid "finds photos from compact cameras in portrait or landscape modes"
+msgstr "finds photos from compact cameras in portrait or landscape modes"
+
+msgid "finds panoramas"
+msgstr "finds panoramas"
+
+msgid "Searches photos by width/height ratio."
+msgstr "Searches photos by width/height ratio."
+
+msgid "will give you all photos with at least one note."
+msgstr "will give you all photos with at least one note."
+
+msgid "will give you photos without notes."
+msgstr "will give you photos without notes."
+
+msgid "finds files between 1MB and 10MB."
+msgstr "finds files between 1MB and 10MB."
+
+msgid "Searches photos by file size."
+msgstr "Searches photos by file size."
+
+msgid "finds photo 123 to 126 (it may find between 0 and 4 photos, because photos can be deleted)"
+msgstr "finds photo 123 to 126 (it may find between 0 and 4 photos, because photos can be deleted)"
+
+msgid "Searches photos by its numeric identifier in Piwigo."
+msgstr "Searches photos by its numeric identifier in Piwigo."
+
+msgid "Same principle as for"
+msgstr "Same principle as for"
+
+msgid "photos posted in 2003"
+msgstr "photos posted in 2003"
+
+msgid "return photos wider than 500px"
+msgstr "photos wider than 500px"
+
+msgid "return photos less than 700px high"
+msgstr "photos less than 700px high"
+
+msgid "return photos with at least 1,000 views"
+msgstr "return photos with at least 1,000 views"
+
+msgid "Searches photos by rating."
+msgstr "Searches photos by rating."
+
+msgid "Searches for photos by number of views."
+msgstr "Searches for photos by number of views."
+
+msgid "With keywords"
+msgstr "With keywords"
+
+msgid "Supported numeric operators"
+msgstr "Supported numeric operators"
+
+msgid "equals 100"
+msgstr "equals 100"
+
+msgid "greater than 100"
+msgstr "greater than 100"
+
+msgid "less than 100"
+msgstr "less than 100"
+
+msgid "between 10 and 100 (inclusive)"
+msgstr "between 10 and 100 (inclusive)"
+
+msgid "up to 100 (inclusive)"
+msgstr "up to 100 (inclusive)"
+
+msgid "from 100 and above"
+msgstr "from 100 and above"
+
+msgid "These operators can be used with numeric fields such as"
+msgstr "These operators can be used with numeric fields such as"
+
+msgid "Others"
+msgstr "Others"
+

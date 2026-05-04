@@ -1,0 +1,23 @@
+# Piwigo translation — tr_TR
+# Source: whats_new_15.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: tr_TR\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Even more filters for the gallery search engine"
+msgstr "Galeri arama motoru için daha fazla filtre"
+
+msgid "Enhanced interface for batch manager and album selector"
+msgstr "Toplu yönetici ve albüm seçici için geliştirilmiş arayüz"
+
+msgid "Brand new features : Activities logs and PDF reader"
+msgstr "Yeni özellikler: Etkinlik kayıtları ve PDF okuyucu"
+
+msgid "A new interface for user management"
+msgstr "Kullanıcı yönetimi için yeni arayüz"
+

@@ -1,0 +1,140 @@
+# Piwigo translation — eo_EO
+# Source: install.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: eo_EO\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "webmaster login can't contain characters ' or \""
+msgstr "la retejestra salutnomo ne devas enteni la signoj ' aŭ \""
+
+msgid "user password given by your host provider"
+msgstr "uzanto-pasvorto provizita de via provizanto de gastigo"
+
+msgid "user login given by your host provider"
+msgstr "uzanto-salutnomo provizita de via provizanto de gastigo"
+
+msgid "please enter your password again"
+msgstr "bonvolu tajpi vian pasvorton denove"
+
+msgid "enter a login for webmaster"
+msgstr "entajpu retestran salutnomon"
+
+msgid "database tables names will be prefixed with it (enables you to manage better your tables)"
+msgstr "per ĝi, prefiksoj aldoniĝos sur la nomojn de la datumtabelo (ebligas al vi pli bone mastrumi viajn tabelojn)"
+
+msgid "You may referer to your hosting provider's support and see how you could switch to PHP 5 by yourself."
+msgstr "Vi devus vin direkti al la subtenoservo de via provizanto de gastigo, kaj serĉi kiel vi mem povas interŝanĝi al PHP 5.2"
+
+msgid "You can download the config file and upload it to local/config directory of your installation."
+msgstr "Vi povas elŝuti la agordan dosieron kaj alŝuti ĝin al la dosierujo \"local/config\" dum via instalado."
+
+msgid "Just another Piwigo gallery"
+msgstr "Nur alia bildogalerio ĉe Piwigo"
+
+msgid "Piwigo may try to switch your configuration to PHP 5 by creating or modifying a .htaccess file."
+msgstr "Eblas, ke Piwigo provos interŝanĝi vian agordon al PHP 5.2 kreante aŭ modifiante iun .htaccess-dosieron."
+
+msgid "Note you can change your configuration by yourself and restart Piwigo after that."
+msgstr "Notu, ke eblas ŝanĝi vian agordon mem kaj poste restartigi Piwigo."
+
+msgid "Keep it confidential, it enables you to access administration panel"
+msgstr "Gardu ĝin sekreta, ĝi ebligas al vi aliri la administran panelon"
+
+msgid "It will be shown to the visitors. It is necessary for website administration"
+msgstr "Ĝi montriĝos al vizitantoj. Necesas por reteja administrado"
+
+msgid "It appears your webhost is currently running PHP %s."
+msgstr "Ŝajnas, ke via retejgastiganto nuntempe funkciigas PHP %s."
+
+msgid "Welcome to your new installation of Piwigo!"
+msgstr "Bonvenon al via nova instalado de Piwigo!"
+
+msgid "also given by your host provider"
+msgstr "ankaŭ provizita de via provizanto de gastigo"
+
+msgid "Need help ? Ask your question on <a href=\"%s\">Piwigo message board</a>."
+msgstr "Ĉu vi bezonas helpon? Starigu demandon ĉe la <a href=\"%s\">mesaĝtabulo de Piwigo</a>."
+
+msgid "Try to configure PHP 5"
+msgstr "Provu agordi PHP 5.2"
+
+msgid "Sorry!"
+msgstr "Pardonu!"
+
+msgid "Visitors will be able to contact site administrator with this mail"
+msgstr "La vizitantoj povos uzi tiun retadreson por kontakti la retestron"
+
+msgid "Welcome to my photo gallery"
+msgstr "Bonvenon al mia foto-galerio"
+
+msgid "Piwigo was not able to configure PHP 5."
+msgstr "Piwigo ne kapablis agordi PHP 5.2"
+
+msgid "verification"
+msgstr "kontrolado"
+
+msgid "Hope to see you back soon."
+msgstr "Ĝis baldaŭa vizito via."
+
+msgid "Start Install"
+msgstr "Komenci la instaladon"
+
+msgid "PHP 5 is required"
+msgstr "Necesas PHP 5.2"
+
+msgid "User"
+msgstr "Uzanto"
+
+msgid "Download the config file"
+msgstr "Elŝuti la agordan dosieron"
+
+msgid "Database table prefix"
+msgstr "Prefikso de datumtabeloj"
+
+msgid "Host"
+msgstr "Gastiga komputilo"
+
+msgid "Installation"
+msgstr "Instalado"
+
+msgid "Don't hesitate to consult our forums for any help : %s"
+msgstr "Ne hezitu viziti niajn forumojn por obteni helpon: %s"
+
+msgid "Default gallery language"
+msgstr "Apriora galeri-lingvo"
+
+msgid "Database name"
+msgstr "Nomo de datumbazo"
+
+msgid "Database configuration"
+msgstr "Agordo de datumbazo"
+
+msgid "An alternate solution is to copy the text in the box above and paste it into the file \"local/config/database.inc.php\" (Warning : database.inc.php must only contain what is in the textarea, no line return or space character)"
+msgstr "Anstataŭa solvo estas kopii la tekston en la ĉisupra tekstujo kaj alglui ĝin al la dosiero \"local/config/database.inc.php\" (Averto: nepras ke database.inc.php nur entenu tion, kio ĉeestas en la tekstujo, sen alineo nek spaceto)"
+
+msgid "Creation of config file local/config/database.inc.php failed."
+msgstr "La kreado de local/config/database.inc.php malsukcesis."
+
+msgid "Connection to server succeed, but it was impossible to connect to database"
+msgstr "Sukcesis kontektado kun la servilo, sed ne eblis konektado kun la datumbazo"
+
+msgid "Congratulations, Piwigo installation is completed"
+msgstr "Gratulon, la instalado de Piwigo plenumiĝis"
+
+msgid "Can't connect to server"
+msgstr "Ne eblas konekti kun la servilo"
+
+msgid "Basic configuration"
+msgstr "Baza agordo"
+
+msgid "Admin configuration"
+msgstr "Administra agordo"
+
+msgid "localhost or other, supplied by your host provider"
+msgstr "loka gasto (localhost) aŭ alia, provizita de via provizanto de gastigo"
+

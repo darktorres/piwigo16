@@ -1,0 +1,161 @@
+# Piwigo translation — sv_SE
+# Source: help_quick_search.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: sv_SE\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "photos posted in 2003"
+msgstr "foton publicerade 2003"
+
+msgid "photos taken in 2003"
+msgstr "foton tagna 2003"
+
+msgid "return photos less than 700px high"
+msgstr "foton mindre än 700px hög"
+
+msgid "return photos wider than 500px"
+msgstr "foton bredare än 500px"
+
+msgid "return photos with at least 1,000 views"
+msgstr "returnera foton med minst 1000 visningar"
+
+msgid "returns photos of 12 megapixels or more"
+msgstr "returnerar foton med 12 megapixlar eller mera"
+
+msgid "returns photos of 5 megapixels"
+msgstr "returnerar foton med 5 megapixlar"
+
+msgid "up to 100 (inclusive)"
+msgstr "upp till 100 (inklusive)"
+
+msgid "will give you all photos with at least one note."
+msgstr "ger dig alla foton med minst en notering."
+
+msgid "will give you photos without notes."
+msgstr "ger dig foton utan notering."
+
+msgid "Searches photos by taken date."
+msgstr "Söker foton efter tagningsdatum."
+
+msgid "Searches photos by width/height ratio."
+msgstr "Söker foton efter vidd/höjd förhållande."
+
+msgid "Searches photos with a given width or height."
+msgstr "Söker foton med en given vidd eller bredd."
+
+msgid "Supported numeric operators"
+msgstr "Numeriska operatorer som stöds"
+
+msgid "The quick search engine allows you to use boolean operators to refine your search. By default, the search applies to all keywords. Searches are not case sensitive."
+msgstr "Snabbsökmotorn låter dig använda booleska operatorer för att förfina din sökning. Som standard gäller sökningen för alla nyckelord. Sökningar är inte skiftlägeskänsliga."
+
+msgid "These operators can be used with numeric fields such as"
+msgstr "Dessa operatorer kan användas med numeriska fält som"
+
+msgid "Use quotes to search for an exact keyword or phrase."
+msgstr "Använd citattecken för att söka efter ett exakt nyckelord eller en fras."
+
+msgid "With keywords"
+msgstr "Med nyckelord"
+
+msgid "between 10 and 100 (inclusive)"
+msgstr "mellan 10 och 100 (inklusive)"
+
+msgid "equals 100"
+msgstr "lika med 100"
+
+msgid "finds files between 1MB and 10MB."
+msgstr "hittar filer mellan 1MB och 10MB."
+
+msgid "finds panoramas"
+msgstr "hittar panoramabilder"
+
+msgid "finds photo 123 to 126 (it may find between 0 and 4 photos, because photos can be deleted)"
+msgstr "hittar foto 123 till 126 (kan hitta mellan 0 och 4 foton, då foton kan raderas)"
+
+msgid "finds photos from compact cameras in portrait or landscape modes"
+msgstr "hittar foton från kompaktkameror i porträtt eller landskapsläge"
+
+msgid "from 100 and above"
+msgstr "från 100 och uppåt"
+
+msgid "greater than 100"
+msgstr "större än 100"
+
+msgid "less than 100"
+msgstr "mindre än 100"
+
+msgid "photos after Jan 1st 2008"
+msgstr "foton efter 1 Jan 2008"
+
+msgid "photos from 2003 to 2008"
+msgstr "foton från 2003 till 2008"
+
+msgid "photos from may 2003"
+msgstr "foton från maj 2003"
+
+msgid "Add a dash (-) or NOT before a word to exclude from search. Note that NOT acts as a filtering operator so you cannot have a search containing only NOT operators. You cannot combine OR with NOT (john OR NOT bill is not valid)"
+msgstr "Lägg till ett bindestreck (-) eller INTE före ett ord som ska exkluderas från sökningen. Observera att INTE fungerar som en filtreringsoperator så du kan inte ha en sökning som bara innehåller INTE-operatorerna. Du kan inte kombinera ELLER med INTE (john ELLER INTE bill är inte giltigt)"
+
+msgid "Add an OR between words."
+msgstr "Lägg till ett ELLER mellan ord."
+
+msgid "Exact search"
+msgstr "Exakt sökning"
+
+msgid "Exclude"
+msgstr "Exkludera"
+
+msgid "Grouping"
+msgstr "Gruppering"
+
+msgid "Here is a list of actions you can perform:"
+msgstr "Här är en lista över åtgärder du kan utföra:"
+
+msgid "OR inclusive"
+msgstr "ELLER inklusive"
+
+msgid "Others"
+msgstr "Andra"
+
+msgid "Same principle as for"
+msgstr "Samma princip som för"
+
+msgid "Search using extended syntax"
+msgstr "Sök med utökad syntax"
+
+msgid "Searches by author."
+msgstr "Söker efter författare."
+
+msgid "Searches by file name."
+msgstr "Söker efter filnamn."
+
+msgid "Searches for photos by number of views."
+msgstr "Söker efter foton efter antal visningar."
+
+msgid "Searches only for photos with the given words in title or description."
+msgstr "Söker bara efter foton med de angivna orden i titel eller beskrivning."
+
+msgid "Searches only in tag names without looking at photo titles or descriptions."
+msgstr "Söker bara i taggnamn utan att titta på fototitlar eller beskrivningar."
+
+msgid "Searches photos by file size."
+msgstr "Söker foton efter filstorlek."
+
+msgid "Searches photos by its numeric identifier in Piwigo."
+msgstr "Söker foton efter dess numeriska identifierare i Piwigo."
+
+msgid "Searches photos by posted date."
+msgstr "Söker foton efter publiceringsdatum."
+
+msgid "Searches photos by rating."
+msgstr "Söker foton efter betyg."
+
+msgid "Searches photos by size in pixels."
+msgstr "Söker foton efter dess storlek i pixlar."
+

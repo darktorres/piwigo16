@@ -1,0 +1,23 @@
+# Piwigo translation — cs_CZ
+# Source: whats_new_15.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: cs_CZ\n"
+"Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "A new interface for user management"
+msgstr "Nové rozhraní pro správu uživatelů"
+
+msgid "Brand new features : Activities logs and PDF reader"
+msgstr "Nové funkce : Záznamy aktivit a čtečka PDF"
+
+msgid "Enhanced interface for batch manager and album selector"
+msgstr "Vylepšené rozhraní pro dávkového manažera a výběr alba"
+
+msgid "Even more filters for the gallery search engine"
+msgstr "Ještě více filtrů pro vyhledávání v galerii"
+

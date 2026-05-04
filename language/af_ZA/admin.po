@@ -1,0 +1,2880 @@
+# Piwigo translation — af_ZA
+# Source: admin.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: af_ZA\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Average rate"
+msgstr "Gemiddelde tempo"
+
+msgid "Rate"
+msgstr "Gradeer"
+
+msgid "Access type"
+msgstr "Toegangstipe"
+
+msgid "ACCESS_0"
+msgstr "Vry toegang"
+
+msgid "ACCESS_1"
+msgstr "Toegang tot alles"
+
+msgid "ACCESS_2"
+msgstr "Toegang aan geregistreerde gebruikers"
+
+msgid "ACCESS_3"
+msgstr "Toegang aan administrateurs"
+
+msgid "ACCESS_4"
+msgstr "Toegang aan webmeesters"
+
+msgid "ACCESS_5"
+msgstr "Geen toegang"
+
+msgid " and %d virtual"
+msgstr "en %d virtuele"
+
+msgid "%d album including"
+msgstr "%d album ingesluit"
+
+msgid "%d album moved"
+msgid_plural "%d albums moved"
+msgstr[0] "%d album geskuif"
+msgstr[1] "%d albums geskuif"
+
+msgid "%d albums including"
+msgstr "%d albums insluitend"
+
+msgid "%d anomaly has been corrected."
+msgid_plural "%d anomalies have been detected corrected."
+msgstr[0] "%d onreëlmatigheid is reggemaak"
+msgstr[1] "%d onreëlmatighede is gevind en reggemaak"
+
+msgid "%d anomaly has been detected."
+msgid_plural "%d anomalies have been detected."
+msgstr[0] "%d onreëlmatigheid is gevind"
+msgstr[1] "%d onreëlmatighede is gevind"
+
+msgid "%d anomaly has been ignored."
+msgid_plural "%d anomalies have been ignored."
+msgstr[0] "%d onreëlmatigheid is geignoreer"
+msgstr[1] "%d onreëlmatighede is geignoreer"
+
+msgid "%d anomaly has not been corrected."
+msgid_plural "%d anomalies have not been corrected."
+msgstr[0] "%d onreëlmatigheid is nie reggemaak nie"
+msgstr[1] "%d onreëlmatighede is nie reggemaak nie"
+
+msgid "%d association"
+msgstr "%d assosiasie"
+
+msgid "%d associations"
+msgstr "%d assosiasies"
+
+msgid "%d group"
+msgstr "%d groep"
+
+msgid "%d groups"
+msgstr "%d groepe"
+
+msgid "%d guest"
+msgid_plural "%d guests"
+msgstr[0] "%d gas"
+msgstr[1] "%d gaste"
+
+msgid "%d line filtered"
+msgid_plural "%d lines filtered"
+msgstr[0] "%d lyn gefilter"
+msgstr[1] "%d lyne gefilter"
+
+msgid "%d mail was not sent."
+msgid_plural "%d mails were not sent."
+msgstr[0] "%d e-pos is nie gestuur nie"
+msgstr[1] "%d e-posse is nie gestuur nie"
+
+msgid "%d mail was sent."
+msgid_plural "%d mails were sent."
+msgstr[0] "%d e-pos is gestuur"
+msgstr[1] "%d e-posse is gestuur"
+
+msgid "%d member"
+msgid_plural "%d members"
+msgstr[0] "%d lid"
+msgstr[1] "%d lede"
+
+msgid "%d of %d photos selected"
+msgstr "%d van %d fotos gekies"
+
+msgid "%d parameter was updated."
+msgid_plural "%d parameters were updated."
+msgstr[0] "%d parameter is opgedateer"
+msgstr[1] "%d parameters is opgedateer"
+
+msgid "%d photo was deleted"
+msgid_plural "%d photos were deleted"
+msgstr[0] "%d foto is verwyder"
+msgstr[1] "%d fotos verwyder"
+
+msgid "%d photos uploaded"
+msgstr "%d fotos opgelaai"
+
+msgid "%d physical"
+msgstr "%d fisies"
+
+msgid "%d tag"
+msgstr "%d etiket"
+
+msgid "%d tags"
+msgstr "%d etikette"
+
+msgid "%d user"
+msgid_plural "%d users"
+msgstr[0] "%d gebruiker "
+msgstr[1] "%d gebruikers "
+
+msgid "%d user comment rejected"
+msgstr "%d gebruikerskommentaar verwerp"
+
+msgid "%d user comment validated"
+msgstr "%d gebruikerskommentaar aanvaar"
+
+msgid "%d user comments rejected"
+msgstr "%d gebruikerskommentare verwerp "
+
+msgid "%d user comments validated"
+msgstr "%d gebruikerskommentare aanvaar"
+
+msgid "%d user deleted"
+msgid_plural "%d users deleted"
+msgstr[0] "%d gebruikers verwyder"
+msgstr[1] "%d gebruikers verwyder "
+
+msgid "%d user was not updated."
+msgid_plural "%d users were not updated."
+msgstr[0] "%d gebruiker is nie opgedateer nie"
+msgstr[1] "%d gebruikers is nie opgedateer nie"
+
+msgid "%d user was updated."
+msgid_plural "%d users were updated."
+msgstr[0] "%d gebruikers is opgedateer "
+msgstr[1] "%d gebruikers is opgedateer "
+
+msgid "%d waiting for validation"
+msgstr "%d wag vir bekragtiging"
+
+msgid "%s must be to set to false in your local/config/config.inc.php file"
+msgstr "%s moet as \"false\" gemerk word in jou local/config/config.inc.php lêer"
+
+msgid "%s value is not correct file because exif are not supported"
+msgstr "%s waarde is nie regte lêer nie want exif word nie ondersteun nie"
+
+msgid "+ Add an upload box"
+msgstr "+ Voeg oplaai vakkie by"
+
+msgid ", click on"
+msgstr ", kliek op"
+
+msgid "A new version of Piwigo is available."
+msgstr "'n Nuwe weergawe van Piwigo is beskikbaar."
+
+msgid "Action"
+msgstr "Aksie"
+
+msgid "Actions"
+msgstr "Aksies"
+
+msgid "Activate"
+msgstr "Aktiveer "
+
+msgid "Activate icon \"%s\""
+msgstr "Aktiveer ikoon \"%s\""
+
+msgid "Activate icon \"new\" next to albums and pictures"
+msgstr "Aktiveer ikoon \"nuut\" langs albums en prentjies"
+
+msgid "Activate Navigation Bar"
+msgstr "Aktiveer Navigasie Staaf"
+
+msgid "Activate Navigation Thumbnails"
+msgstr "Aktiveer Navigasie Duimnaels"
+
+msgid "Active Languages"
+msgstr "Aktiveer Tale"
+
+msgid "Active Plugins"
+msgstr "Aktiveer Invoegsels"
+
+msgid "Active Themes"
+msgstr "Aktiveer Temas"
+
+msgid "... or "
+msgstr "... of"
+
+msgid "Add"
+msgstr "Voeg by"
+
+msgid "Add a criteria"
+msgstr "Voeg kriteria by"
+
+msgid "Add a filter"
+msgstr "Voeg filter by"
+
+msgid "Add a tag"
+msgstr "Voeg sleutelwoord by"
+
+msgid "Add a user"
+msgstr "Voeg gebruiker by"
+
+msgid "Add a virtual album"
+msgstr "Voeg virtuele album by"
+
+msgid "Add another set of photos"
+msgstr "Voeg nog 'n stel fotos by"
+
+msgid "Add group"
+msgstr "Voeg groep by"
+
+msgid "Add New Language"
+msgstr "Voeg Nuwe Taal by"
+
+msgid "add new photos to caddie"
+msgstr "plaas nuwe fotos in mandjie"
+
+msgid "Add New Theme"
+msgstr "Voeg Nuwe Tema by"
+
+msgid "Add Photos"
+msgstr "Voeg fotos by"
+
+msgid "Add tags"
+msgstr "Voeg sleutels by"
+
+msgid "Add/delete a permalink"
+msgstr "Voeg by/verwyder permanente skakel"
+
+msgid "added"
+msgstr "bygevoeg"
+
+msgid "Album \"%s\" has been added"
+msgstr "Album \"%s\" is bygevoeg"
+
+msgid "Album \"%s\" now contains %d photos"
+msgstr "Album \"%s\" bevat nou %d fotos"
+
+msgid "Album name"
+msgstr "Album naam"
+
+msgid "Album updated successfully"
+msgstr "Album opdatering suksesvol"
+
+msgid "all"
+msgstr "alles"
+
+msgid "an error happened"
+msgstr "'n fout het voorgekom"
+
+msgid "An error occured during extraction (%s)."
+msgstr "'n fout het voorgekom met ontbondeling (%s)."
+
+msgid "and"
+msgstr "en"
+
+msgid "Anomaly"
+msgstr "Anomalie"
+
+msgid "Create"
+msgstr "Skep"
+
+msgid "Crop"
+msgstr "Snoei"
+
+msgid "GD version"
+msgstr "GD-biblioteek weergawe"
+
+msgid "General statistics"
+msgstr "Algemene statistiek"
+
+msgid "Get Support on Piwigo Forum"
+msgstr "Kry hulp op die Piwigo Forum"
+
+msgid "Go to"
+msgstr "Gaan na"
+
+msgid "Group name"
+msgstr "Groep naam"
+
+msgid "Groups"
+msgstr "Groepe"
+
+msgid "guest"
+msgstr "gas"
+
+msgid "Guest cannot be deleted"
+msgstr "Gaste kan nie verwyder word nie"
+
+msgid "Guest Settings"
+msgstr "Gas Instellings"
+
+msgid "Guests"
+msgstr "Gaste"
+
+msgid "Height"
+msgstr "Hoogte"
+
+msgid "height must be a number superior to"
+msgstr "hoogte moet 'n getal groter wees as"
+
+msgid "Hello"
+msgstr "Hallo"
+
+msgid "Hello,"
+msgstr "Hallo,"
+
+msgid "Help Me"
+msgstr "Help My"
+
+msgid "Hide"
+msgstr "Steek weg"
+
+msgid "high"
+msgstr "hoog"
+
+msgid "High definition"
+msgstr "Hoë skerpheid"
+
+msgid "History"
+msgstr "Geskiedenis"
+
+msgid "Hour"
+msgstr "Uur"
+
+msgid "Ignore All"
+msgstr "Ignoreer Almal"
+
+msgid "Image id"
+msgstr "Beeld id"
+
+msgid "Image Quality"
+msgstr "Beeld kwaliteit"
+
+msgid "Inactive Languages"
+msgstr "Onaktiewe Tale"
+
+msgid "Inactive Plugins"
+msgstr "Onaktiewe Byvoegsels"
+
+msgid "Inactive Themes"
+msgstr "Onaktiewe Temas"
+
+msgid "Install"
+msgstr "Installeer"
+
+msgid "Install on your computer,"
+msgstr "Installeer op jou rekenaar,"
+
+msgid "Installed Languages"
+msgstr "Geïnstalleerde Tale"
+
+msgid "Installed Themes"
+msgstr "Geïnstalleerde Temas"
+
+msgid "Instructions to use Piwigo"
+msgstr "Instruksies in die gebruik van Piwigo"
+
+msgid "IP"
+msgstr "IP"
+
+msgid "jump to album"
+msgstr "spring na album"
+
+msgid "jump to photo"
+msgstr "spring na foto"
+
+msgid "Languages"
+msgstr "Tale"
+
+msgid "Last import"
+msgstr "Laaste invoer"
+
+msgid "Last revisions"
+msgstr "Laaste wysigings"
+
+msgid "Last send"
+msgstr "Laaste stuur"
+
+msgid "leave"
+msgstr "verlaat"
+
+msgid "Level 0"
+msgstr "Vlak 0"
+
+msgid "Level 1"
+msgstr "Vlak 1"
+
+msgid "Level 2"
+msgstr "Vlak 2"
+
+msgid "Level 4"
+msgstr "Vlak 4"
+
+msgid "Level 8"
+msgstr "Vlak 8"
+
+msgid "Main Page"
+msgstr "Hoofblad"
+
+msgid "Width"
+msgstr "Wydte"
+
+msgid "Add to caddie"
+msgstr "plaas in mandjie"
+
+msgid "Caddie"
+msgstr "Mandjie"
+
+msgid "%s photos can not be regenerated"
+msgstr "%s fotos kan nie herskep word nie"
+
+msgid "%s photos have been regenerated"
+msgstr "%s fotos is herskep"
+
+msgid "(this tag will be deleted)"
+msgstr "(hierdie sleutel gaan verwyder word)"
+
+msgid "Add detailed content"
+msgstr "Voeg detail inhoud by"
+
+msgid "Add write access to the \"%s\" directory"
+msgstr "Voeg skryfregte by die \"%s\" gids"
+
+msgid "Administration Home"
+msgstr "Administrasie Tuiste"
+
+msgid "Advanced features"
+msgstr "Gevorderde kenmerke"
+
+msgid "Album list management"
+msgstr "Album lys bestuur"
+
+msgid "Album manual order was saved"
+msgstr "Album handroliese rangskikking is gebêre"
+
+msgid "Album photos associated to the following albums: %s"
+msgstr "Album fotos geassosieer met die volgende albums: %s"
+
+msgid "albums added in the database"
+msgstr "albums bygevoeg tot die databasis"
+
+msgid "Albums authorized thanks to group associations"
+msgstr "Albums bevestig aan die hand van groep verbintenis"
+
+msgid "Albums automatically sorted"
+msgstr "Albums outomaties gesorteer"
+
+msgid "albums deleted in the database"
+msgstr "albums verwyder uit databasis"
+
+msgid "%d day"
+msgstr "%d dag"
+
+msgid "%d days"
+msgstr "%d dae"
+
+msgid "%d hour"
+msgstr "%d uur"
+
+msgid "%d hours"
+msgstr "%d ure"
+
+msgid "%d minute"
+msgstr "%d minuut"
+
+msgid "%d minutes"
+msgstr "%d minute"
+
+msgid "%d month"
+msgstr "%d maand"
+
+msgid "%d months"
+msgstr "%d maande"
+
+msgid "%d second"
+msgstr "%d sekonde"
+
+msgid "%d seconds"
+msgstr "%d sekondes"
+
+msgid "%d year"
+msgstr "%d jaar"
+
+msgid "%d years"
+msgstr "%d jare"
+
+msgid "%s has been successfully updated."
+msgstr "%s is suksesvol opgedateer."
+
+msgid "A locked gallery is only visible to administrators"
+msgstr "'n Geslote gallery is slegs sigbaar vir administrateurs"
+
+msgid "Activate comments"
+msgstr "Aktiveer opmerkings"
+
+msgid "Added by %s"
+msgstr "Bygevoeg deur %s"
+
+msgid "All %d photos are selected"
+msgstr "Al %d fotos is geselekteer"
+
+msgid "All extensions are up to date."
+msgstr "Alle uitbreidings is op datum."
+
+msgid "All languages are up to date."
+msgstr "Alle tale is op datum."
+
+msgid "All optimizations have been successfully completed."
+msgstr "Alle optimalisasies is suksesvol voltooi."
+
+msgid "All plugins are up to date."
+msgstr "Alle inpropsels is op datum."
+
+msgid "All themes are up to date."
+msgstr "Alle temas is op datum."
+
+msgid "Allow rating"
+msgstr "Laat gradering toe"
+
+msgid "Allow user customization"
+msgstr "Laat gebruiker aanpassing toe"
+
+msgid "Allow user registration"
+msgstr "Laat gebruiker registrasie toe"
+
+msgid "Allow users to delete their own comments"
+msgstr "Laat gebruikers to om eie opmerkings te verwyder"
+
+msgid "Allow users to edit their own comments"
+msgstr "Laat gebruikers to om eie opmerkings te verander"
+
+msgid "Allowed file types: %s."
+msgstr "Toegelate lêertipes: %s"
+
+msgid "An error has occured during extract. Please check files permissions of your piwigo installation.<br><a href=\"%s\">Click here to show log error</a>."
+msgstr "Daar was 'n fout tydens ontrekking. Gaan asseblief lêer toestemmings van jou Piwigo installasie na. <br><a href=\"%s\">Kliek hier om die loglêer te wys</a>."
+
+msgid "An error has occured during upgrade."
+msgstr "Daar was 'n fout tydens opgradering."
+
+msgid "An information email was sent to group \"%s\""
+msgstr "Al %d fotos is geselekteer"
+
+msgid "Anyway only webmasters can see this tab and never administrators."
+msgstr "Slegs webmeesters, nie administrateurs, kan hierdie lip sien."
+
+msgid "Apply action"
+msgstr "Voer aksie uit"
+
+msgid "Apply selected corrections"
+msgstr "Maak geselekteerde korreksies"
+
+msgid "Apply to sub-albums"
+msgstr "Pas toe op sub-albums"
+
+msgid "Approximate maximum resolution: %dM pixels (that's %dx%d pixels)."
+msgstr "Naastenbye maksimum resolusie: %dM piksels (dis %dx%d piksels)."
+
+msgid "Are you sure to install this upgrade? You must verify if this version does not need uninstallation."
+msgstr "Is jy seker jy wil hierdie opgradering installeer? Jy moet verseker dat hierdie weergawe nie vooraf verwyder moet word nie."
+
+msgid "Are you sure you want to delete this plugin?"
+msgstr "Is jy seker jy wil hierdie invoegsel verwyder?"
+
+msgid "Are you sure you want to install this plugin?"
+msgstr "Is jy seker jy wil hierdie invoegsel installeer?"
+
+msgid "Associate to album"
+msgstr "Assosieer met album"
+
+msgid "Associated"
+msgstr "Geassosieer"
+
+msgid "Automatic sort order"
+msgstr "Outomatiese sorteer volgorde"
+
+msgid "Available on"
+msgstr "Beskikbaar op"
+
+msgid "By %s"
+msgstr "Deur %s"
+
+msgid "Can't download archive."
+msgstr "Argief kan nie afgelaai word nie."
+
+msgid "Can't read or extract archive."
+msgstr "Argief kan nie gelees of onttrek word nie."
+
+msgid "Cancel"
+msgstr "Kanselleer"
+
+msgid "Choose an option"
+msgstr "Kies 'n opsie"
+
+msgid "Classic display"
+msgstr "Klassieke vertoon"
+
+msgid "Comments for all"
+msgstr "Opmerkings vir almal"
+
+msgid "Configuration"
+msgstr "Konfigurasie"
+
+msgid "Confirm merge"
+msgstr "Bevestig versmelting"
+
+msgid "Correction the anomaly will cancel the fact that it's ignored"
+msgstr "Reggestelde onreëlmatigheid sal nie verder geïgnoreer word nie"
+
+msgid "Correction"
+msgstr "Regstelling"
+
+msgid "Create this site"
+msgstr "Skep hierdie webtuiste"
+
+msgid "Current name"
+msgstr "Huidige naam"
+
+msgid "Database synchronization with files"
+msgstr "Sinkroniseer databasis met lêers"
+
+msgid "Delete Representant"
+msgstr "Verwyder album duimnael"
+
+msgid "Delete selected photos"
+msgstr "Verwyder geselekteerde fotos"
+
+msgid "Delete selected users"
+msgstr "Verwyder geselekteerde gebruikers"
+
+msgid "Delete this language"
+msgstr "Verwyder hierdie taal"
+
+msgid "Delete this theme"
+msgstr "Verwyder hierdie tema"
+
+msgid "Deleted on"
+msgstr "Verwyder op"
+
+msgid "Description"
+msgstr "Beskrywing"
+
+msgid "Directory does not exist"
+msgstr "Subgids bestaan nie"
+
+msgid "Directory"
+msgstr "Subgids"
+
+msgid "Discover album:"
+msgstr "Ontdek album:"
+
+msgid "Gallery unlocked"
+msgstr "Gallery ontsluit"
+
+msgid "List"
+msgstr "Lys"
+
+msgid "Move to album"
+msgstr "Skuif na album"
+
+msgid "Not cropped correctly?"
+msgstr "Nie korrek gesny nie?"
+
+msgid "Notify administrators when a comment is"
+msgstr "Stel administrateurs in kennis as 'n opmerking"
+
+msgid "Opacity"
+msgstr "Deursigtigheid"
+
+msgid "Original Size"
+msgstr "Oorspronklike grootte"
+
+msgid "Original file : %s"
+msgstr "Oorspronklike lêer: %s"
+
+msgid "Piwigo for Android"
+msgstr "Piwigo vir Android"
+
+msgid "Piwigo for iOS (iPhone, iPad, iPod Touch)"
+msgstr "Piwigo vir iOS (iPhone, iPad, iPod Touch)10217569"
+
+msgid "Posted %s on %s"
+msgstr "Gepos %s op %s"
+
+msgid "Select a file"
+msgstr "Kies 'n lêer"
+
+msgid "Select groups..."
+msgstr "Kies groepe..."
+
+msgid "Select users..."
+msgstr "Kies gebruikers..."
+
+msgid "Sharpen"
+msgstr "Verskerp"
+
+msgid "There is no group in this gallery."
+msgstr "Daar is nie 'n groep in hierdie gallery nie."
+
+msgid "This album contains %d photos, added between %s and %s."
+msgstr "Hierdie album bevat %d fotos, bygevoeg tussen %s en %s."
+
+msgid "This album contains %d photos, added on %s."
+msgstr "Hierdie album bevat %d fotos, bygevoeg op %s."
+
+msgid "This album contains no photo."
+msgstr "Hierdie album bevat geen fotos."
+
+msgid "Unlock gallery"
+msgstr "Ontsluit gallery"
+
+msgid "Update All"
+msgstr "Opdateer alles"
+
+msgid "Update Complete"
+msgstr "Opdatering Voltooi"
+
+msgid "Update albums informations"
+msgstr "Opdateer album inligting"
+
+msgid "Update in progress... Please wait."
+msgstr "Opdatering besig... Wag asseblief."
+
+msgid "Update photos information"
+msgstr "Opdateer foto inligting"
+
+msgid "Update to Piwigo %s"
+msgstr "Opdateer na Piwigo %s"
+
+msgid "Updates"
+msgstr "Opdaterings"
+
+msgid "Upload Photos"
+msgstr "Laai fotos op"
+
+msgid "Upload"
+msgstr "Laai op"
+
+msgid "Uploaded Photos"
+msgstr "Opgelaaide Fotos"
+
+msgid "Used metadata"
+msgstr "Metadata gebruik"
+
+msgid "User \"%s\" created with \"%s\" like password"
+msgstr "Gebruiker \"%s\" geskep met \"%s\" as wagwoord"
+
+msgid "User %s [%s] added."
+msgstr "Gebruiker %s [%s] bygevoeg."
+
+msgid "User %s [%s] was added to the subscription list."
+msgstr "Gebruiker %s [%s] bygevoeg by intekenaar lys."
+
+msgid "User %s [%s] was not added to the subscription list."
+msgstr "Gebruiker %s [%s] nie by intekenaar lys gevoeg nie."
+
+msgid "User %s [%s] was not removed from the subscription list."
+msgstr "Gebruiker %s [%s] nie verwyder van intekenaar lys nie."
+
+msgid "User %s [%s] was removed from the subscription list."
+msgstr "Gebruiker %s [%s] verwyder van intekenaar lys"
+
+msgid "User comments validation"
+msgstr "Gebruiker kommentaar bekragtiging"
+
+msgid "User list"
+msgstr "Gebruikerslys"
+
+msgid "User status"
+msgstr "Gebruikerstatus"
+
+msgid "User"
+msgstr "Gebruiker"
+
+msgid "Users"
+msgstr "Gebruikers"
+
+msgid "Validate"
+msgstr "Bekragtig"
+
+msgid "Validation"
+msgstr "Bekragtiging"
+
+msgid "Version"
+msgstr "Weergawe"
+
+msgid "Virtual Links"
+msgstr "Virtuele skakels"
+
+msgid "Virtual album added"
+msgstr "Virtuele album bygevoeg"
+
+msgid "Virtual album deleted"
+msgstr "Virtuele album verwyder"
+
+msgid "Virtual album name"
+msgstr "Virtuele album naam"
+
+msgid "Virtual album"
+msgstr "Virtuele album "
+
+msgid "Virtual albums to move"
+msgstr "Virtuele album om te skuif"
+
+msgid "Visit Gallery"
+msgstr "Besoek die gallery"
+
+msgid "Visit Piwigo project website"
+msgstr "Besoek Piwigo projek webblad"
+
+msgid "Visit language site"
+msgstr "Besoek taal blad"
+
+msgid "Visit plugin site"
+msgstr "Besoek invoegsel blad"
+
+msgid "Visit theme site"
+msgstr "Besoek tema blad"
+
+msgid "Visited %d times"
+msgstr "%d kere besoek"
+
+msgid "WARNING! This plugin does not seem to be compatible with this version of Piwigo."
+msgstr "WAARSKUWING! Hierdie invoegsel is moontlik nie aanpasbaar met hierdie weergawe van Piwigo nie."
+
+msgid "Waiting"
+msgstr "Wagtend"
+
+msgid "Watermark"
+msgstr "Watermerk"
+
+msgid "Web Form"
+msgstr "Web Vorm"
+
+msgid "Webmaster cannot be deleted"
+msgstr "Webmeester kan nie verwyder word nie"
+
+msgid "Webmaster status is required."
+msgstr "Webmeester status word benodig."
+
+msgid "Week starts on"
+msgstr "Week begin op"
+
+msgid "Who can see these photos?"
+msgstr "Wie kan hierdie fotos sien?"
+
+msgid "Who can see this photo?"
+msgstr "Wie kan hierdie foto sien?"
+
+msgid "With blank value, gallery title will be used"
+msgstr "Indien leeg, sal die gallery titel gebruik word"
+
+msgid "With no album"
+msgstr "Met geen album"
+
+msgid "With no tag"
+msgstr "Met geen etiket"
+
+msgid "With no virtual album"
+msgstr "Met geen virtuele album"
+
+msgid "X Position"
+msgstr "X Posisie"
+
+msgid "X Repeat"
+msgstr "X Herhaling"
+
+msgid "Y Position"
+msgstr "Y Posisie"
+
+msgid "Year"
+msgstr "Jaar"
+
+msgid "You are running the latest version of Piwigo."
+msgstr "Jy gebruik die nuutste weergawe van Piwigo."
+
+msgid "You are using the Browser uploader. Try the <a href=\"%s\">Flash uploader</a> instead."
+msgstr "Jy gebruik die Webleser oplaaier. Probeer die <a href=\"%s\">Flash oplaaier</a>."
+
+msgid "You are using the Flash uploader. Problems? Try the <a href=\"%s\">Browser uploader</a> instead."
+msgstr "Jy gebruik die Flash oplaaier. Probleme? Probeer die <a href=\"%s\">Webleser oplaaier</a>."
+
+msgid "You can activate only one mobile theme."
+msgstr "Jy kan slegs een mobiele tema aktiveer."
+
+msgid "You can update to Piwigo %s directly, without upgrading to Piwigo %s (recommended)."
+msgstr "Jy kan direk na Piwigo %s opgradeer, sonder opgradering na Piwigo %s (aanbeveel)."
+
+msgid "You cannot delete your account"
+msgstr "Jy kan nie jou rekenaar verwyder nie"
+
+msgid "You cannot move an album in its own sub album"
+msgstr "Jy kan nie 'n album as sy eie subalbum skuif nie"
+
+msgid "You have %d orphan tags: %s."
+msgstr "Jy het %d los etikette: %s."
+
+msgid "Your configuration settings are saved"
+msgstr "Jou konfigurasie verstellings is gebêre"
+
+msgid "Zoom"
+msgstr "Zoem"
+
+msgid "add a new watermark"
+msgstr "voeg 'n nuwe watermerk by"
+
+msgid "administrators"
+msgstr "administrateurs"
+
+msgid "associate to group"
+msgstr "assosieer met groep"
+
+msgid "automatic order"
+msgstr "outomatiese volgorde"
+
+msgid "average time"
+msgstr "gemiddelde tyd"
+
+msgid "between"
+msgstr "tussen"
+
+msgid "bottom left corner"
+msgstr "onderste linker hoek"
+
+msgid "bottom right corner"
+msgstr "onderste regter hoek"
+
+msgid "clean"
+msgstr "maak skoon"
+
+msgid "confirm"
+msgstr "bevestig"
+
+msgid "create a new album"
+msgstr "skep nuwe album"
+
+msgid "created"
+msgstr "geskep"
+
+msgid "delete photo"
+msgstr "verwyder foto"
+
+msgid "delete this site and all its attached elements"
+msgstr "verwyder hierdie blad en alle verwante inligting"
+
+msgid "delete"
+msgstr "verwyder"
+
+msgid "deleted"
+msgstr "verwyder"
+
+msgid "directories + files"
+msgstr "subgidse + lêers"
+
+msgid "middle"
+msgstr "middel"
+
+msgid "modified"
+msgstr "verander"
+
+msgid "registered users"
+msgstr "geregistreerde gebruikers"
+
+msgid "simple visitors"
+msgstr "eenvoudige besoeker"
+
+msgid "top left corner"
+msgstr "boonste linker hoek"
+
+msgid "top right corner"
+msgstr "boonste regter hoek"
+
+msgid "update the database from files"
+msgstr "opdateer die databasis met lêers"
+
+msgid "user \"%s\" added"
+msgstr "gebruiker \"%s\" bygevoeg"
+
+msgid "user_status_admin"
+msgstr "Administrateur"
+
+msgid "user_status_generic"
+msgstr "Generies"
+
+msgid "user_status_guest"
+msgstr "Gas"
+
+msgid "user_status_webmaster"
+msgstr "Webmeester"
+
+msgid "width must be a number superior to"
+msgstr "wydte moet 'n getal groter wees as"
+
+msgid "wrong filename"
+msgstr "verkeerde lêernaam"
+
+msgid "Summary"
+msgstr "Opsomming"
+
+msgid "Support"
+msgstr "Ondersteuning"
+
+msgid "Switch to clear or dark colors for administration"
+msgstr "Skakel na skoon of donker kleure vir administrasie"
+
+msgid "Synchronize metadata"
+msgstr "Sinchroniseer metadata"
+
+msgid "Synchronize"
+msgstr "Sinchroniseer"
+
+msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
+msgstr "HIERDIE INVOEGSEL IS NOU DEEL VAN DIE PIWIGO KERN! VERWYDER ONMIDDELIK!"
+
+msgid "Templates"
+msgstr "Template"
+
+msgid "The %d following tags were deleted"
+msgstr "Die volgende %d etikette is verwyder"
+
+msgid "The anomaly will be ignored until next application version"
+msgstr "Die anomalie sal geignoreer word tot die volgende toepassing weergawe"
+
+msgid "The file or directory cannot be accessed (either it does not exist or the access is denied)"
+msgstr "Die lêer of gids kan nie bereik word nie (dit bestaan nie of toegang is gewyer)"
+
+msgid "The following tag was deleted"
+msgstr "Die volgende etiket is verwyder"
+
+msgid "The gallery URL is not valid."
+msgstr "Die gallery URL is nie geldig nie."
+
+msgid "The name of a group must not contain \" or ' or be empty."
+msgstr "Die naam van 'n groep mag nie \" of ' bevat nie of leeg wees nie."
+
+msgid "The name of an album must not be empty"
+msgstr "Die naam van 'n album kan nie leeg wees nie"
+
+msgid "The original image quality must be a number between %d and %d"
+msgstr "Die oorspronklike beeld kwaliteit moet 'n getal tussen %d en %d wees"
+
+msgid "The original maximum height must be a number between %d and %d"
+msgstr "Die oorspronklike maksimum hoogte moet 'n getal tussen %d en %d wees"
+
+msgid "The original maximum width must be a number between %d and %d"
+msgstr "Die oorspronklike maksimum wydte moet 'n getal tussen %d en %d wees"
+
+msgid "The whole page"
+msgstr "Die hele blad"
+
+msgid "The whole set"
+msgstr "Die hele stel"
+
+msgid "Theme has been successfully installed"
+msgstr "Tema is suksesvol geinstalleer"
+
+msgid "Themes which need upgrade"
+msgstr "Tema wat opgradeer moet word"
+
+msgid "Themes"
+msgstr "Temas"
+
+msgid "There is no available subscribers to mail."
+msgstr "Daar is nie intekenaars wat per epos in kennis gestel moet word nie."
+
+msgid "There is no other language available."
+msgstr "Daar is nie ander tale beskikbaar nie."
+
+msgid "There is no other plugin available."
+msgstr "Daar is nie ander invoegsels beskikbaar nie."
+
+msgid "There is no other theme available."
+msgstr "Daar is nie ander temas beskikbaar nie."
+
+msgid "This is a major update, with <a href=\"%s\">new exciting features</a>."
+msgstr "Hierdie is 'n groot opdatering, met <a href=\"%s\">nuwe opwindende kenmerke</a>."
+
+msgid "This is a minor update, with only bug corrections."
+msgstr "Hierdie is 'n klein opdatering, met slegs goggas verwyder."
+
+msgid "This name is already used by another group."
+msgstr "Hierdie naam is reeds ingebruik deur 'n ander groep."
+
+msgid "This site already exists"
+msgstr "Hierdie blad bestaan alreeds."
+
+msgid "This theme was not designed to be directly activated"
+msgstr "Hierdie tema was nie ontwerp om direk geaktiveer te word nie."
+
+msgid "Thumbnail"
+msgstr "Duimnael"
+
+msgid "Thumbnails generation in progress..."
+msgstr "Besig met duimnael skepping..."
+
+msgid "Time"
+msgstr "Tyd"
+
+msgid "Title"
+msgstr "titel"
+
+msgid "To send ?"
+msgstr "Om te stuur?"
+
+msgid "To subscribe"
+msgstr "Om in te teken?"
+
+msgid "To unsubscribe"
+msgstr "Om af te teken"
+
+msgid "Tools"
+msgstr "Gereedskap"
+
+msgid "Two updates are available"
+msgstr "Twee opdaterings beskikbaar"
+
+msgid "Type here the author name"
+msgstr "Tik hier die outeur se naam"
+
+msgid "Type here the title"
+msgstr "Tik hier die titel"
+
+msgid "Type in a search term"
+msgstr "Tik hier 'n soekterm"
+
+msgid "Unable to check for upgrade."
+msgstr "Nie in staat om vir opgradering te soek nie."
+
+msgid "Unable to dump database."
+msgstr "Nie in staat om databasis te stort nie."
+
+msgid "Uninstall"
+msgstr "Oninstalleer"
+
+msgid "Unknown upload error"
+msgstr "Onbekende oplaai fout"
+
+msgid "Unlocked"
+msgstr "Ontsluit"
+
+msgid "Unsubscribe from notification by mail"
+msgstr "Afteken van kennisgewing deur epos"
+
+msgid "Unsubscribed"
+msgstr "Afgeteken"
+
+msgid "synchronize files metadata with database photos informations"
+msgstr "sinchroniseer databasis fotos met lêer metadata"
+
+msgid "synchronize files structure with database"
+msgstr "sinchroniseer lêer struktuur met databasis"
+
+msgid "target"
+msgstr "teiken"
+
+msgid "test this remote site"
+msgstr "toets hierdie buite blad"
+
+msgid "test"
+msgstr "toets"
+
+msgid "the forum"
+msgstr "die forum"
+
+msgid "the wiki"
+msgstr "die wiki"
+
+msgid "total time"
+msgstr "totale tyd"
+
+msgid "unit mode"
+msgstr "enkel modus"
+
+msgid "unknown"
+msgstr "onbekend"
+
+msgid "Authorize users to add comments on selected albums"
+msgstr "Magtig gebruikers om kommentaar te lewer op geselekteerde albums"
+
+msgid "Authorized"
+msgstr "Gemagtig"
+
+msgid "Automatic correction"
+msgstr "Outomatiese korreksie"
+
+msgid "Available only with HTML format"
+msgstr "Slegs beskikbaar met HTML formaat"
+
+msgid "Batch Manager"
+msgstr "Bondelbestuurder"
+
+msgid "Can't connect to server."
+msgstr "Verbinding met bediener onmoontlik."
+
+msgid "Can't create temporary file."
+msgstr "Tydelike lêer kan nie geskep word nie."
+
+msgid "Change Admin Colors"
+msgstr "Ruil administrateur kleure"
+
+msgid "Check all"
+msgstr "Gaan alles na"
+
+msgid "Check automatic corrections"
+msgstr "Gaan outomatiese korreksies na"
+
+msgid "Check for updates"
+msgstr "Soek vir opdaterings"
+
+msgid "Check for upgrade failed for unknown reasons."
+msgstr "Opgraderingsoektog faal vir onbekende redes."
+
+msgid "Check for upgrade"
+msgstr "Soek vir opgradering"
+
+msgid "Check integrity"
+msgstr "Gaan integriteit na"
+
+msgid "Choose an action"
+msgstr "Kies 'n aksie"
+
+msgid "Database"
+msgstr "Databasis"
+
+msgid "Date"
+msgstr "Datum"
+
+msgid "Day"
+msgstr "Dag"
+
+msgid "Deactivate all"
+msgstr "Deaktiveer alles"
+
+msgid "Deactivate"
+msgstr "Deaktiveer"
+
+msgid "Default comments order"
+msgstr "Standaard kommentaar volgorde"
+
+msgid "Default display"
+msgstr "Verstek vertoon"
+
+msgid "Default photos order"
+msgstr "Standaard foto volgorde"
+
+msgid "Default user cannot be deleted"
+msgstr "Verstek gebruiker kan nie verwyder word nie"
+
+msgid "Groups and users"
+msgstr "Groepe en gebruikers"
+
+msgid "Multiple Size"
+msgstr "Verskeie groottes"
+
+msgid "Permission granted for groups"
+msgstr "Regte toegeken aan groepe"
+
+msgid "Permission granted for users"
+msgstr "Regte toegeken aan gebruikers"
+
+msgid "Search for new images in the directories"
+msgstr "Soek vir nuwe beelde in subgidse"
+
+msgid "Searching..."
+msgstr "Soek..."
+
+msgid "Section"
+msgstr "Gedeelte"
+
+msgid "See you soon,"
+msgstr "Totsiens,"
+
+msgid "See you soon."
+msgstr "Totsiens."
+
+msgid "Select an album"
+msgstr "Kies 'n album"
+
+msgid "Select at least one album"
+msgstr "Kies tenminste een album"
+
+msgid "Select at least one comment"
+msgstr "Kies tenminste een opmerking"
+
+msgid "Select at least one photo"
+msgstr "Kies tenminste een foto"
+
+msgid "Select at least one user"
+msgstr "Kies tenminste een gebruiker"
+
+msgid "Select files"
+msgstr "Kies lêers"
+
+msgid "Select recipients"
+msgstr "Kies ontvangers"
+
+msgid "Select:"
+msgstr "Kies:"
+
+msgid "Selection"
+msgstr "Keuse"
+
+msgid "Send mail as"
+msgstr "Stuur epos as"
+
+msgid "Send mail on HTML format"
+msgstr "Stuur epos in HTML formaat"
+
+msgid "Send mail to users"
+msgstr "Stuur epos na gebruikers"
+
+msgid "Send"
+msgstr "Stuur"
+
+msgid "Set as default language for unregistered and new users"
+msgstr "Kies as verstek taal vir ongeregistreerde en nuwe gebruikers"
+
+msgid "Set as default theme for unregistered and new users"
+msgstr "Kies as verstek tema vir ongeregistreerde en nuwe gebruikers"
+
+msgid "Set author"
+msgstr "Verstel outeur"
+
+msgid "Set title"
+msgstr "Verstel titel"
+
+msgid "Settings"
+msgstr "Verstellings"
+
+msgid "Show info"
+msgstr "Wys inligting"
+
+msgid "Simulation"
+msgstr "Simulasie"
+
+msgid "Some themes and plugins may be not available yet."
+msgstr "Sommige temas en invoegsels is moontlik nog nie beskikbaar nie."
+
+msgid "Some upgrades are available for extensions."
+msgstr "Sommige opgraderings beskikbaar vir uitbreidings."
+
+msgid "selection"
+msgstr "keuse"
+
+msgid "show details"
+msgstr "wys detail"
+
+msgid "Default user does not exist"
+msgstr "Verstekgebruiker bestaan nie"
+
+msgid "Delete orphan tags"
+msgstr "Verwyder wees etikette"
+
+msgid "Delete selected tags"
+msgstr "Verwyder gekose etikette"
+
+msgid "ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW."
+msgstr "FOUT: HIERDIE BYVOEGSEL WORD VERMIS, MAAR IS GEINSTALLEER! VERWYDER DIT NOU."
+
+msgid "ERROR"
+msgstr "FOUT"
+
+msgid "Environment"
+msgstr "Omgewing"
+
+msgid "Error list"
+msgstr "Lys van foute"
+
+msgid "Error on file \"%s\" : %s"
+msgstr "Fout met lêer \"%s\" : %s"
+
+msgid "Error when sending email to %s [%s]."
+msgstr "Fout met stuur van e-pos na %s [%s]."
+
+msgid "Errors caption"
+msgstr "Foute byskrifte"
+
+msgid "Everybody"
+msgstr "Almal"
+
+msgid "Extend for templates"
+msgstr "Brei sjabloon uit"
+
+msgid "Extensions Update"
+msgstr "Dateer uitbreidings op"
+
+msgid "Ignore this update"
+msgstr "Ignoreer hierdie opdatering"
+
+msgid "Impossible automatic correction"
+msgstr "Outomatiese verbetering onmoontlik"
+
+msgid "Informations"
+msgstr "Inligting"
+
+msgid "Manage Permissions"
+msgstr "Organiseer magtigings"
+
+msgid "Manage tags"
+msgstr "Organiseer etikette"
+
+msgid "Manage this set of %d photos"
+msgstr "Organiseer hierdie stel van %d fotos"
+
+msgid "Manage"
+msgstr "Organiseer"
+
+msgid "Manual order"
+msgstr "Handroliese rangskikking"
+
+msgid "Maximum height"
+msgstr "Maksimum hoogte"
+
+msgid "Maximum width"
+msgstr "Maksimum Wydte"
+
+msgid "Members"
+msgstr "Lede"
+
+msgid "Menu Management"
+msgstr "Kieskaarte"
+
+msgid "Merge selected tags"
+msgstr "Versmelt geselekteerde etikette"
+
+msgid "Merge tags"
+msgstr "Versmelt etikette"
+
+msgid "Minimum privacy level"
+msgstr "Minimum privaatvlak"
+
+msgid "default values"
+msgstr "verstekwaardes"
+
+msgid "default"
+msgstr "verstek"
+
+msgid "delete album"
+msgstr "verwyder album"
+
+msgid "errors during synchronization"
+msgstr "foute gedurende sinchronisasie"
+
+msgid "existing album"
+msgstr "Bestaande album"
+
+msgid "include child albums"
+msgstr "sluit subalbums in"
+
+msgid "manage sub-albums"
+msgstr "organiseer subalbums"
+
+msgid "manual order"
+msgstr "handroliese rangskikking"
+
+msgid "Mail content"
+msgstr "Epos inhoud"
+
+msgid "Mail sent to %s [%s]."
+msgstr "Epos gestuur na %s [%s]."
+
+msgid "Main \"guest\" user does not exist"
+msgstr "Die hoof \"gas\" gebruiker bestaan nie"
+
+msgid "Main \"guest\" user status is incorrect"
+msgstr "Die hoof \"gas\" gebruiker se status is verkeerd"
+
+msgid "Main \"webmaster\" user does not exist"
+msgstr "Die hoof \"webmeester\" bestaan nie"
+
+msgid "Main \"webmaster\" user status is incorrect"
+msgstr "Die hoof \"webmeester\" gebruiker se status is verkeerd"
+
+msgid "Maintenance"
+msgstr "Onderhoud"
+
+msgid "Make this language available to users"
+msgstr "Maak hierdie taal beskikbaar aan gebruikers"
+
+msgid "Make this theme available to users"
+msgstr "Maak hierdie tema beskikbaar aan gebruikers"
+
+msgid "Month"
+msgstr "Maand"
+
+msgid "Move albums"
+msgstr "Skuif albums"
+
+msgid "Move"
+msgstr "Skuif"
+
+msgid "Name"
+msgstr "Naam"
+
+msgid "New Version"
+msgstr "Nuwe Weergawe"
+
+msgid "New name"
+msgstr "Nuwe naam"
+
+msgid "New parent album"
+msgstr "Nuwe ouer album"
+
+msgid "New photos added"
+msgstr "Nuwe fotos bygevoeg"
+
+msgid "New photos were added"
+msgstr "Nuwe fotos is bygevoeg"
+
+msgid "New tag"
+msgstr "Nuwe etiket"
+
+msgid "No display"
+msgstr "Geen vertoon"
+
+msgid "No file was uploaded"
+msgstr "Geen lêer is opgelaai nie"
+
+msgid "No mail to send."
+msgstr "Geen epos is gestuur nie."
+
+msgid "No photo can be deleted"
+msgstr "Geen foto kan verwyder word nie"
+
+msgid "No photo in the current set."
+msgstr "Geen foto in die huidige stel nie."
+
+msgid "No photo in this album"
+msgstr "Geen foto in hierdie album nie"
+
+msgid "None"
+msgstr "Geen"
+
+msgid "Number of comments per page"
+msgstr "Aantal opmerkings per blad"
+
+msgid "new"
+msgstr "nuut"
+
+msgid "none"
+msgstr "geen"
+
+msgid "nothing"
+msgstr "niks"
+
+msgid "Modify information"
+msgstr "Verander inligting"
+
+msgid "No photo selected, %d photos in current set"
+msgstr "Geen foto gekies, %d fotos in huidige stel"
+
+msgid "                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           "
+msgstr "Geen foto gekies, geen aksie moontlik."
+
+msgid "No results"
+msgstr "Geen resultate"
+
+msgid "Notification"
+msgstr "Kennisgewing"
+
+msgid "Obsolete Plugins"
+msgstr "Verouderde invoegsels"
+
+msgid "Only private albums are listed"
+msgstr "Slegs privaat albums is gelys"
+
+msgid "Photo Page"
+msgstr "Foto blad"
+
+msgid "Photo Properties"
+msgstr "Foto eienskappe"
+
+msgid "Photo name"
+msgstr "Foto naam"
+
+msgid "Photos"
+msgstr "Fotos"
+
+msgid "Piwigo Administration"
+msgstr "Piwigo Administrasie"
+
+msgid "Piwigo Announcements Newsletter"
+msgstr "Piwigo Aankondigings Nuusbrief"
+
+msgid "Piwigo Update"
+msgstr "Piwigo opdatering"
+
+msgid "Piwigo Uploader"
+msgstr "Piwigo Oplaaier"
+
+msgid "Piwigo configuration"
+msgstr "Piwigo opstelling"
+
+msgid "Private"
+msgstr "Privaat"
+
+msgid "Properties"
+msgstr "Kenmerke"
+
+msgid "Random photo"
+msgstr "Lukraak foto"
+
+msgid "Representant"
+msgstr "Album duimnael"
+
+msgid "Representation of albums"
+msgstr "Album duimnael"
+
+msgid "Representative"
+msgstr "Album duimnael"
+
+msgid "Represents"
+msgstr "Is duimnael vir"
+
+msgid "Tag \"%s\" already exists"
+msgstr "Etiket \"%s\" bestaan alreeds"
+
+msgid "on"
+msgstr "op"
+
+msgid "only directories"
+msgstr "slegs subgidse"
+
+msgid "photos added in the database"
+msgstr "fotos bygevoeg in databasis"
+
+msgid "photos deleted from the database"
+msgstr "fotos verwyder van databasis"
+
+msgid "photos per page"
+msgstr "fotos per blad"
+
+msgid "photos updated in the database"
+msgstr "fotos opgedateer in databasis"
+
+msgid "private"
+msgstr "privaat"
+
+msgid "randomly represented"
+msgstr "lukraak album duimnael"
+
+msgid "remove tags"
+msgstr "verwyder etikette"
+
+msgid "remove this filter"
+msgstr "verwyder hierdie filter"
+
+msgid "remove title"
+msgstr "verwyder titel"
+
+msgid "%d physicals"
+msgstr "%d fisiese"
+
+msgid "%d week"
+msgstr "%d week"
+
+msgid "%d weeks"
+msgstr "%d weke"
+
+msgid "%s ago"
+msgstr "%s terug"
+
+msgid "%s in the future"
+msgstr "%s in die toekoms"
+
+msgid "%u users have automatic permission because they belong to a granted group."
+msgstr "%u gebruikers het outomaties toegang omdat hulle aan 'n toegelate groep behoort."
+
+msgid "Apply watermark if height is bigger than"
+msgstr "Voeg 'n watermerk by as die hoogte groter is as"
+
+msgid "Apply watermark if width is bigger than"
+msgstr "Voeg 'n watermerk by as die breedte groter is as"
+
+msgid "By default, Piwigo will create a new websize from the HD (high definition) version of your photo."
+msgstr "Standaard sal Piwigo 'n nuwe kleiner weergawe van die foto maak om op die web te vertoon."
+
+msgid "By default, the center of interest is placed in the middle of the photo."
+msgstr "Standaard word die middel van die foto gekies as die gebied om op te fokus."
+
+msgid "Caddie management"
+msgstr "Bewerk mandjie"
+
+msgid "Correction applied with error"
+msgstr "Fout tydens regstelling"
+
+msgid "Correction applied with success"
+msgstr "Regstelling suksesvol gemaak"
+
+msgid "Delete multiple size images"
+msgstr "Verwyder multi-grootte beelde"
+
+msgid "Deletions"
+msgstr "Verwyderings"
+
+msgid "Deny selected groups"
+msgstr "Verbied geselekteerde groepe"
+
+msgid "Deny selected users"
+msgstr "Verbied geselekteerde gebruiker"
+
+msgid "Detailed informations"
+msgstr "Gedetailleerde inligting"
+
+msgid "Display options"
+msgstr "Vertoon keuses"
+
+msgid "Dissociate from album"
+msgstr "verwyder vanuit album"
+
+msgid "Dissociated"
+msgstr "verwyder"
+
+msgid "Do you want to activate anyway?"
+msgstr "Wil jy inelkgeval aktiveer?"
+
+msgid "Documentation"
+msgstr "Dokumentasie"
+
+msgid "Does not represent"
+msgstr "Nie 'n voorbeeld van"
+
+msgid "Download,"
+msgstr "Laai af,"
+
+msgid "Downloads"
+msgstr "Aflaai"
+
+msgid "Drag to re-order"
+msgstr "Kliek-en-skuif om volgeorde te verander"
+
+msgid "Drop into album"
+msgstr "Kies 'n album"
+
+msgid "Dump Database"
+msgstr "Stort databasis"
+
+msgid "Duplicates"
+msgstr "Kopieë"
+
+msgid "Edit album permissions"
+msgstr "Verander album toegang"
+
+msgid "Edit album"
+msgstr "Verander album"
+
+msgid "Edit photo"
+msgstr "Bewerk foto"
+
+msgid "Edit ranks"
+msgstr "Verander range"
+
+msgid "Edit selected tags"
+msgstr "Verander geselekteerde etikette"
+
+msgid "Edit tags"
+msgstr "Verander etikette"
+
+msgid "Email administrators when a comment is deleted"
+msgstr "E-pos die administrateur as kommentaar verwyder is"
+
+msgid "Email administrators when a comment is modified"
+msgstr "E-pos die administrateur as kommentaar verander is"
+
+msgid "Email admins when a comment requires validation"
+msgstr "E-pos die administrateurs as kommentaar nagegaan moet word"
+
+msgid "Email admins when a new user registers"
+msgstr "E-pos die administrateurs as 'n nuwe gebruiker registreer"
+
+msgid "Email admins when a valid comment is entered"
+msgstr "E-pos die administrateurs as daar geldige kommentaar gelaat is"
+
+msgid "Exif extension not available, admin should disable exif use"
+msgstr "Exif-aanvullings is nie beskikbaar nie. Die administrateur moet die gebruik van exif afskakel."
+
+msgid "FTP + Synchronization"
+msgstr "FTP + Sinkronisasie"
+
+msgid "Failed to write file to disk"
+msgstr "Fout met skryf van lêers na hardeskyf"
+
+msgid "Features include gallery browsing, album creation and photo upload."
+msgstr "Funksionaliteit sluit in gallery besigtiging, die skep van albums en die oplaai van foto's."
+
+msgid "File upload stopped by extension"
+msgstr "Oplaai van lêer is deur 'n uitbreiding gestop"
+
+msgid "File/directory read error"
+msgstr "Fout met lees van lêer/gids"
+
+msgid "File"
+msgstr "Lêer"
+
+msgid "Find a new representant by random"
+msgstr "Kies 'n willekeurige album voorbeeldfoto"
+
+msgid "Following plugins may not be compatible with the new version of Piwigo:"
+msgstr "Hierdie uitbreidings mag onversoenbaar wees met die nuwe weergawe van Piwigo:"
+
+msgid "Following themes may not be compatible with the new version of Piwigo:"
+msgstr "Hierdie temas mag onversoenbaar wees met die nuwe weergawe van Piwigo:"
+
+msgid "For photo sizes with crop, such as \"Square\", Piwigo will do its best to include the center of interest."
+msgstr "Piwigo sal sy bes probeer om die area van fokus in die middel te plaas wanneer die foto gesnoei word. (Soos na 'n vierkant.)"
+
+msgid "Forbid this language to users"
+msgstr "Steek hierdie taal vir gebruikers weg"
+
+msgid "Forbid this theme to users"
+msgstr "Steek hierdie tema vir gebruikers weg"
+
+msgid "Forbidden"
+msgstr "Ongemagtig"
+
+msgid "Form"
+msgstr "Vorm"
+
+msgid "GD library is missing"
+msgstr "GD-biblioteek is nie beskikbaar nie"
+
+msgid "Gallery title"
+msgstr "Titel van gallery"
+
+msgid "Generate multiple size images"
+msgstr "Skep multi-grootte beelde"
+
+msgid "Go to %s or %s for more informations"
+msgstr "Gaan na %S of %s vir meet inligting"
+
+msgid "Grant selected groups"
+msgstr "Ken geselekteerde groepe toe"
+
+msgid "Grant selected users"
+msgstr "Ken geselekteerde gebruikers toe"
+
+msgid "Graphics Library"
+msgstr "Grafika-biblioteek"
+
+msgid "Group management"
+msgstr "Bestuur groepe"
+
+msgid "Group"
+msgstr "Groep"
+
+msgid "High definition enabled"
+msgstr "Hoë skerpheid is aktief"
+
+msgid "Hoverbox display"
+msgstr "Sweefskerm"
+
+msgid "I decide to update anyway"
+msgstr "Ek wil inelkgeval opdateer"
+
+msgid "If no HD is available and if the current websize is bigger than resize dimensions, Piwigo will move it as HD and create a downsized websize photo from it."
+msgstr "As hoë resolusie nie beskikbaar is nie, en die huidige webgrootte-kopie groter is as die normale webgrootte, sal Piwigo die huidige kopie as hoë resolusie gebruik en 'n nuwe webgrootte-kopie maak."
+
+msgid "If you encounter problems or have any question, please send a message to"
+msgstr "Indien jy enige probleme, klagtes of kommentaar het, stuur 'n e-pos aan"
+
+msgid "Ignore selected anomalies"
+msgstr "Ignoreer geselekteerde onreëlmatighede"
+
+msgid "Images manual order was saved"
+msgstr "Stoor handmatig-gekose volgorde"
+
+msgid "Impossible to activate this theme, the parent theme is missing: %s"
+msgstr "Hierdie tema kan nie geaktiveer word nie aangesien die basis-tema \"%s\" nie beskikbaar is nie."
+
+msgid "Impossible to deactivate this language, first set another language as default."
+msgstr "Kies eers 'n ander taal as standaard voor hierdie taal gedeaktiveer kan word."
+
+msgid "Impossible to deactivate this language, you need at least one language."
+msgstr "Hierdie is die enigste taal en kan dus nie gedeaktiveer word nie."
+
+msgid "Impossible to deactivate this theme, you need at least one theme."
+msgstr "Hierdie is die enigste tema en kan dus ne gedeaktiveer word nie."
+
+msgid "Impossible to delete this theme. Other themes depends on it: %s"
+msgstr "Hierdie tema kan nie verwyder word nie aangesien ander (%s) dit as basis gebruik."
+
+msgid "No group is permitted to see this private album"
+msgstr "Geen groep mag hierdie private album sien nie"
+
+msgid "Numeric identifier : %d"
+msgstr "Numeriese id : %d"
+
+msgid "Permission management"
+msgstr "Bestuur toegangsregte"
+
+msgid "Photo sizes with crop"
+msgstr "Foto groottes tydens snoei."
+
+msgid "Piwigo export plugin for iPhoto"
+msgstr "Piwigo uitvoer uitbreiding vir iPhoto."
+
+msgid "Rated %d times, score : %.2f"
+msgstr "%d stemme met 'n gemiddelde telling van: %.2f"
+
+msgid "Select a zone with your mouse to define a new center of interest."
+msgstr "Kies 'n gebied met die muis om 'n area van fokus aan te dui."
+
+msgid "The center of interest is the most meaningful zone in the photo."
+msgstr "Die area van fokus is die gebied of deel van die foto wat die meeste sê."
+
+msgid "To export your photos from digiKam to Piwigo, simply install digiKam and the Kipi-plugins."
+msgstr "Om jou foto's vanaf digiKam na Piwigo te stuur, installeer die digiKam- en Kipi-uitbreidings."
+
+msgid "any visitor can see this album"
+msgstr "enige besoeker kan hierdie album sien"
+
+msgid "digiKam is designed for photographers who want to view, manage, edit, enhance, organize, tag, and share photographs."
+msgstr "digiKam is ontwerp vir fotograwe wat foto's wil bekyk, bestuur, bewerk, verbeter, organiseer, deel en etikette daaraan wil toevoeg."
+
+msgid "display maximum informations (added albums and photos, deleted albums and photos)"
+msgstr "vertoon alle inligting (toegevoegde albums en foto's, verwyderde albums en foto's)"
+
+msgid "display"
+msgstr "skerm"
+
+msgid "dissociate from group"
+msgstr "verwyder vanuit groep"
+
+msgid "even already synchronized photos"
+msgstr "selfs reeds gesinkroniseerde foto's"
+
+msgid "first photo added on %s"
+msgstr "eerste foto toegevoeg op %s"
+
+msgid "for the file format"
+msgstr "vir die lêer-tipe"
+
+msgid "for this file format"
+msgstr "vir die lêer-tipe"
+
+msgid "group \"%s\" added"
+msgstr "groep \"%s\" is toegevoeg"
+
+msgid "group \"%s\" deleted"
+msgstr "groep \"%s\" is verwyder"
+
+msgid "group \"%s\" updated"
+msgstr "die groep \"%s\" is opgedateer"
+
+msgid "hide details"
+msgstr "steek details weg"
+
+msgid "include photos with lower privacy level"
+msgstr "sluit foto's met laer toegangsregte in"
+
+msgid "visitors need to login and have the appropriate permissions to see this album"
+msgstr "besoekers moet aanteken en voldoende regte hê om hierdie album te kan sien"
+
+msgid "Applications"
+msgstr "Toepassings"
+
+msgid "Piwigo Publish plugin for Lightroom"
+msgstr "Piwigo Publiseer hegstuk vir Lightroom"
+
+msgid "Piwigo publish plugin for Shotwell"
+msgstr "Piwigo Publiseer hegstuk vir Shotwell"
+
+msgid "Piwigo publish plugin for digiKam"
+msgstr "Piwigo Publiseer hegstuk vir digiKam"
+
+msgid "Refresh"
+msgstr "Verfris"
+
+msgid "Reject"
+msgstr "Verwerp"
+
+msgid "Released on"
+msgstr "Vrygestel op"
+
+msgid "Remove all filters"
+msgstr "Verwyder alle filters"
+
+msgid "Repair and optimize database"
+msgstr "Herstel en optimaliseer databasis"
+
+msgid "Storage album"
+msgstr "Stoor album"
+
+msgid "Subscribe %s to Piwigo Announcements Newsletter"
+msgstr "Teken %s in op Piwigo Aankondigings Nuusbrief"
+
+msgid "Subscribe %s"
+msgstr "Inteken %s"
+
+msgid "Subscribe to notification by mail"
+msgstr "Teken in op kennisgewings per epos"
+
+msgid "Subscribe"
+msgstr "Inteken"
+
+msgid "Subscribed"
+msgstr "Ingeteken"
+
+msgid "Tag \"%s\" was added"
+msgstr "Etiket \"%s\" is bygevoeg"
+
+msgid "Tag selection"
+msgstr "Kies etikette"
+
+msgid "Templates configuration has been recorded."
+msgstr "Templaat konfigurasie is aangeteken."
+
+msgid "The name of directories and files must be composed of letters, numbers, \"-\", \"_\" or \".\""
+msgstr "Die name van gidse en lêers mag net bestaan uit letters, nommers, \"-\", \"_\" of \".\""
+
+msgid "The number of comments a page must be between 5 and 50 included."
+msgstr "Die aantal opmerkings per bladsy moet tussen 5 en 50 ingesluit wees."
+
+msgid "The permalink name must be composed of a-z, A-Z, 0-9, \"-\", \"_\" or \"/\". It must not be numeric or start with number followed by \"-\""
+msgstr "Die permaskakel naam moet opgemaak word van a-z, A-Z, 0-9, \"-\", \"_\" of \"/\". Dit mag nie numeries wees of begin met 'n nommer gevolg deur 'n \"-\""
+
+msgid "The uploaded file was only partially uploaded"
+msgstr "Die opgelaaide lêer is slegs gedeeltelik opgelaai"
+
+msgid "registration date"
+msgstr "registrasie datum"
+
+msgid "remove author"
+msgstr "verwyder outeur"
+
+msgid "remove creation date"
+msgstr "verwyder skeppingsdatum"
+
+msgid "sub-albums"
+msgstr "sub-albums"
+
+msgid "Orphan tags deleted"
+msgstr "Weesetikette verwyder"
+
+msgid "Other private albums"
+msgstr "Ander privaat albums"
+
+msgid "Overall"
+msgstr "Oorsig"
+
+msgid "Page banner"
+msgstr "Blad banier"
+
+msgid "Page end"
+msgstr "Bladsy einde"
+
+msgid "Pages seen"
+msgstr "Bladsye gesien"
+
+msgid "Parameter"
+msgstr "Verstellings"
+
+msgid "Parameters"
+msgstr "Parameters"
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "Wagwoord bevestiging nie gedoen. Bevestig asseblief die gekose wagwoord."
+
+msgid "Password is missing. Please enter the password."
+msgstr "Wagwoord nie ingevul nie. Vul asseblief die wagwoord in."
+
+msgid "Path"
+msgstr "Pad"
+
+msgid "Permission denied"
+msgstr "Regte geweier"
+
+msgid "Permission granted thanks to a group"
+msgstr "Regte gekoppel aan 'n groep toegeken "
+
+msgid "Permission granted"
+msgstr "Regte toegeken"
+
+msgid "Permissions"
+msgstr "Regte"
+
+msgid "Photo %s of %s"
+msgstr "Foto %s van %s"
+
+msgid "Photo informations updated"
+msgstr "Foto inligting opgedateer"
+
+msgid "Photo unreachable or no support"
+msgstr "Foto onbereikbaar of formaat nie ondersteun nie"
+
+msgid "Piwigo version"
+msgstr "Piwigo weergawe"
+
+msgid "Please wait..."
+msgstr "Wag asseblief..."
+
+msgid "Plugin has been successfully copied"
+msgstr "Die invoegsel is suksesvol gekopieër"
+
+msgid "Plugin list"
+msgstr "Invoegsel lys"
+
+msgid "Plugins which need upgrade"
+msgstr "Invoegsels wat opgradeer gaan word"
+
+msgid "Show menubar"
+msgstr "Wys keuserak"
+
+msgid "Start Upload"
+msgstr "Begin Oplaai"
+
+msgid "Statistics"
+msgstr "Statistiek"
+
+msgid "Status"
+msgstr "Status"
+
+msgid "You need to confirm deletion"
+msgstr "Jy moet verwyderings bevestig"
+
+msgid "[%s] Visit album %s"
+msgstr "[%s] Besoek album %s"
+
+msgid "[NBM] Problems or questions"
+msgstr "[NBM] Probleme of vrae"
+
+msgid "other"
+msgstr "ander"
+
+msgid "pixels"
+msgstr "piksels"
+
+msgid "set to"
+msgstr "stel na"
+
+msgid "status"
+msgstr "status"
+
+msgid "Cannot delete the old permalink !"
+msgstr "Die ou permaskakel kan nie verwyder word nie!"
+
+msgid "Center of interest"
+msgstr "Fokusmiddelpunt"
+
+msgid "Keep in touch with Piwigo project, subscribe to Piwigo Announcement Newsletter. You will receive emails when a new release is available (sometimes including a security bug fix, it's important to know and upgrade) and when major events happen to the project. Only a few emails a year."
+msgstr "Bly betrokke by die Piwigo-projek deur in te skryf vir die Piwigo Afkondingings-nuusbrief. Jy sal 'n e-pos ontvang as 'n nuwe weergawe uitgegee word of as daar enige ander groot nuus rakende die projek is. Dit is gewoonlik net enkele e-posse per jaar."
+
+msgid "Languages which need upgrade"
+msgstr "Tale wat opgedateer moet word"
+
+msgid "Last hit"
+msgstr "Onlangste besoek"
+
+msgid "Learn more"
+msgstr "Ek wil meer weet"
+
+msgid "Lock albums"
+msgstr "Sluit album"
+
+msgid "Lock gallery"
+msgstr "Sluit gallery"
+
+msgid "Lock"
+msgstr "Sluit"
+
+msgid "Locked"
+msgstr "Geslote"
+
+msgid "Other plugins"
+msgstr "Ander uitbreidings is beskikbaar"
+
+msgid "Parent album"
+msgstr "Ouer-album"
+
+msgid "Pending Comments"
+msgstr "Kommentaar om nog na te gaan"
+
+msgid "Permalink %s has been previously used by album %s. Delete from the permalink history first"
+msgstr "Permaskakel %s is voorheen deur die album %s gebruik. Verwyder dit eers van die permaskakel-geskiedenis."
+
+msgid "Permalink %s is already used by album %s"
+msgstr "Permaskakel %s is alreeds in gebruik deur die album %s"
+
+msgid "Permalink history"
+msgstr "Permaskakel-geskiedenis"
+
+msgid "Permalink"
+msgstr "Permaskakel"
+
+msgid "Permalinks"
+msgstr "Permaskakels"
+
+msgid "Plugins"
+msgstr "Uitbreidings"
+
+msgid "Position"
+msgstr "Posisie"
+
+msgid "Preferences"
+msgstr "Instellings"
+
+msgid "Privacy level set to \"%s\""
+msgstr "Privaatheidsvlak is op %s"
+
+msgid "Privacy level"
+msgstr "Privaatheidsvlak"
+
+msgid "Public / Private"
+msgstr "Publiek / Privaat"
+
+msgid "Public"
+msgstr "Publiek"
+
+msgid "Purge compiled templates"
+msgstr "Verwyder opgeboude sjablone"
+
+msgid "Purge history detail"
+msgstr "Verwyder gedetailleerde geskiedenis"
+
+msgid "Purge history summary"
+msgstr "Verwyder opsommende geskiedenis"
+
+msgid "Purge search history"
+msgstr "Verwyder soek-geskiedenis"
+
+msgid "Read Piwigo Documentation"
+msgstr "Lees Piwigo dokumentasie"
+
+msgid "Replacers (customized templates)"
+msgstr "Vervang (aangemete sjablone)"
+
+msgid "Reset ignored updates"
+msgstr "Hou op opdaterings ignoreer"
+
+msgid "Resize"
+msgstr "Verander grootte"
+
+msgid "Restore default configuration. You will lose your plugin settings!"
+msgstr "Herstel standaard-opstelling. Jy sal jou uitbreidings se instellings verloor."
+
+msgid "Restore"
+msgstr "Herstel"
+
+msgid "Save Settings"
+msgstr "Stoor instellings"
+
+msgid "Save Template Directory"
+msgstr "Stoor sjabloon-gids"
+
+msgid "Save manual order"
+msgstr "Stoor handmatige volgorde"
+
+msgid "Save order"
+msgstr "Stoor volgorde"
+
+msgid "Save to permalink history"
+msgstr "Stoor in permaskakel-geskiedenis"
+
+msgid "Save visits in history for"
+msgstr "Stoor geskiedenis van besoeke vir"
+
+msgid "Select at least two tags for merging"
+msgstr "Kies twee etikette om saam te smelt"
+
+msgid "Select the destination tag"
+msgstr "Kies die eindbestemming-etiket"
+
+msgid "Site manager"
+msgstr "Webmeester"
+
+msgid "Start pLoader and add your photos."
+msgstr "Voer pLoader uit en voeg jou fotos by."
+
+msgid "Tags <em>%s</em> merged into tag <em>%s</em>"
+msgstr "Etiket <em>%s</em> is saamgesmelt met etiket <em>%s</em>"
+
+msgid "The webmaster has subscribed you to receiving notifications by mail."
+msgstr "Die webmeester het jou ingeskryf vir kennisgewings per e-pos."
+
+msgid "The webmaster has unsubscribed you from receiving notifications by mail."
+msgstr "Die webmeester het jou inskrywing vir kennisgewings per e-pos gekanselleer."
+
+msgid "Uncheck all"
+msgstr "Kies geen"
+
+msgid "Uninstalled Plugins"
+msgstr "Verwyder uitbreidings"
+
+msgid "Use the default photo sort order"
+msgstr "Gebruik die standaard fotovolgorde"
+
+msgid "You have subscribed to receiving notifications by mail."
+msgstr "Jy is ingeskryf vir kennisgewings per e-pos."
+
+msgid "You have unsubscribed from receiving notifications by mail."
+msgstr "Jou inskrywing vir kennisgewings per e-pos is gekanselleer."
+
+msgid "You need to upgrade your system to take full advantage of the application else the application will not work correctly, or not at all"
+msgstr "Jy moet verkieslik jou stelsel opdateer om die program ten volle te kan gebruik, anders kan daar nie probleme voorkom nie."
+
+msgid "apply automatic sort order"
+msgstr "Sorteer outomaties"
+
+msgid "cancel manual order"
+msgstr "Kanselleer handmatige volgorde"
+
+msgid "custom"
+msgstr "Aangemeet"
+
+msgid "overrides existing values with empty ones"
+msgstr "vervang bestaande waardes met leë waardes"
+
+msgid "pending validation"
+msgstr "wag vir goedkeuring"
+
+msgid "public"
+msgstr "publiek"
+
+msgid "ranks"
+msgstr "range"
+
+msgid "singly represented"
+msgstr "album voorbeeldfoto is reggemaak"
+
+msgid " and %d virtuals"
+msgstr "en %d virtuele"
+
+msgid "Complementary mail content"
+msgstr "Ekstra e-pos inhoud"
+
+msgid "Continue processing treatment"
+msgstr "Gaan voort met huidige behandeling"
+
+msgid "Create the \"%s\" directory at the root of your Piwigo installation"
+msgstr "Skep 'n vouer genaamd \"%s\" in die basis pad van jou Piwigo-installasie"
+
+msgid "Element type"
+msgstr "Element tipe"
+
+msgid "Element"
+msgstr "Element"
+
+msgid "Execution time is out, treatment must be continue [Estimated time: %d second]."
+msgid_plural "Execution time is out, treatment must be continue [Estimated time: %d seconds]."
+msgstr[0] "Maksimum uitvoertyd is bereik, maar behandeling moet voortgaan [Tyd om te gaan: %d sekondes]"
+msgstr[1] "Maksimum uitvoertyd is verby, maar behandeling moet voortgaan [Tyd om te gaan: %d sekondes]"
+
+msgid "Give write access (chmod 777) to \"%s\" directory at the root of your Piwigo installation"
+msgstr "Gee skryfregte (chmod 777) aan die vouer \"%s\" in die basis pad van jou Piwigo-installasie"
+
+msgid "Information data registered in database"
+msgstr "Inligting aangeteken in databasis"
+
+msgid "Invert"
+msgstr "Keer om"
+
+msgid "Language has been successfully installed"
+msgstr "Taal is suksesvol geïnstalleer"
+
+msgid "<em>Piwigo for Android</em> application empowers you to connect your Android phone or table to your Piwigo gallery, create some albums and upload several photos at once."
+msgstr "<em>Piwigo vir Android</em> toepassing stel jou in staat om met jou Android foon of tablet aan jou Piwigo gallery te verbind, albums te skep en fotos op te laai."
+
+msgid "<em>Piwigo for iOS</em> application empowers you to connect to your Piwigo gallery from your iPhone, iPad or iPod Touch, create some albums and upload several photos at once."
+msgstr "<em>Piwigo vir iOS</em> toepassing stel jou in staat om met jou iPhone, iPad of iPad touch aan jou Piwigo gallery te verbind, albums te skep en fotos op te laai."
+
+msgid "Adobe Photoshop Lightroom is a photography software designed to manage large quantities of digital images and doing post production work."
+msgstr "Adobe Photoshop Lightroom is fotografie sagteware wat ontwerp is om groot hoeveelhede digitale beelde te administreer en postproduksie werk te doen."
+
+msgid "Aperture is a powerful tool to refine images and manage massive libraries on Mac."
+msgstr "Aperture is 'n kragtige pakket om beelde te verwerk en groot biblioteke op Mac te hanteer."
+
+msgid "Aperture is designed for professional photographers with iPhoto simplicity."
+msgstr "Aperture is ontwerk vir professionele fotograwe met iPhoto eenvoudigheid."
+
+msgid "Bound Theme"
+msgstr "Gebonde tema"
+
+msgid "By rank"
+msgstr "Volgens rangorde"
+
+msgid "Follow Orientation"
+msgstr "Volg oriëntasie"
+
+msgid "Hit"
+msgstr "Tref"
+
+msgid "In your php.ini file, the upload_max_filesize (%sB) is bigger than post_max_size (%sB), you should change this setting"
+msgstr "In jou php.ini lêer is die upload_max_filesize (%sB) groter as die post_max_size (%sB). Jy moet hierdie verstelling verander"
+
+msgid "Include display of recent photos grouped by dates"
+msgstr "Sluit in die vertoon van onlangse fotos gegroepeer volgens datum"
+
+msgid "Include history data (Warning: server memory limit may be exceeded)"
+msgstr "Sluit geskiedkundige data in (Waarskuwing: bediener geheue limiet kan oorskrei word)"
+
+msgid "Link all album photos to a new album"
+msgstr "Koppel alle album fotos aan 'n nuwe album"
+
+msgid "Link all album photos to some existing albums"
+msgstr "Koppel alle album fotos aan sommige bestaande albums"
+
+msgid "Linked albums"
+msgstr "Gekoppelde albums"
+
+msgid "Local"
+msgstr "Plaaslik"
+
+msgid "Manage authorizations for selected albums"
+msgstr "Beheer regte vir gekose albums"
+
+msgid "Manage permissions for group \"%s\""
+msgstr "Bheer regte vir die groep \"%s\""
+
+msgid "Manage permissions for user \"%s\""
+msgstr "Bheer regte vir die gebruiker \"%s\""
+
+msgid "Manage photo ranks"
+msgstr "Beheer foto rangordes"
+
+msgid "Maximum file size: %sB."
+msgstr "Maksimum lêer groote: %sB"
+
+msgid "Metadata synchronization results"
+msgstr "Metadata sinchronisasie resultate"
+
+msgid "Metadata synchronized from file"
+msgstr "Metadata sinchronisasie vanaf lêer"
+
+msgid "Miscellaneous"
+msgstr "Allerlei"
+
+msgid "Missing Plugins"
+msgstr "Vermiste Invoegsels"
+
+msgid "Missing a temporary folder"
+msgstr "Vermis 'n tydelike gids"
+
+msgid "No destination tag selected"
+msgstr "Geen bestemming etiket gekies nie"
+
+msgid "No user to send notifications by mail."
+msgstr "Geen gebruikers vir epos inkennisstelling"
+
+msgid "Number of downloads"
+msgstr "Aantal aflaaie"
+
+msgid "Number of rates"
+msgstr "Aantal graderings"
+
+msgid "On your Linux, simply install Shotwell with your package manager and the activate Piwigo publishing option."
+msgstr "Op jou Linux, installeer eenvoudig Shotwell met jou pakketbeheerder en aktiveer die Piwigo publikasie opsie."
+
+msgid "Operating system"
+msgstr "Bedryfstelsel"
+
+msgid "Operation in progress"
+msgstr "Behandeling onderweg."
+
+msgid "Optimizations have been completed with some errors."
+msgstr "Optimalisasies is met 'n paar foute voltooi."
+
+msgid "Optional URL keyword"
+msgstr "Opsionele URL sleutelwoord"
+
+msgid "Options"
+msgstr "Keuses"
+
+msgid "Order of menubar items has been updated successfully."
+msgstr "Volgorde van kieslys items is suksesvol opgedateer."
+
+msgid "Original templates"
+msgstr "Oorspronklike template"
+
+msgid "Photos generation in progress..."
+msgstr "Besig met fotoskepping..."
+
+msgid "Piwigo cannot retrieve upgrade file from server"
+msgstr "Piwigo kan nie opgraderingslêer van bediener verkry nie"
+
+msgid "Piwigo export plugin for Aperture"
+msgstr "Piwigo uitvoer invoeging vir Aperture"
+
+msgid "Please check \"plugins\" folder and sub-folders permissions (CHMOD)."
+msgstr "Gaan asseblief \"plugins\" subgids se toestemmings na (CHMOD)."
+
+msgid "Predefined filter"
+msgstr "Voorafopgestelde filter"
+
+msgid "Prepared time for list of users to send mail is limited. Others users are not listed."
+msgstr "Die tyd om die lys van gebruikers vir wie epos gestuur word voor te berei, is beperk. Ander gebruikers word nie gelys nie."
+
+msgid "Purge never used notification feeds"
+msgstr "Maak ongebruikte kennisname strome skoon"
+
+msgid "Purge sessions"
+msgstr "Maak sessies skoon"
+
+msgid "Quick Local Synchronization"
+msgstr "Vinnige Plaaslike Sinchronisasie"
+
+msgid "Rate date"
+msgstr "Gradeer datum"
+
+msgid "Rating by guests"
+msgstr "Gradering deur gaste"
+
+msgid "Rating"
+msgstr "Gradering"
+
+msgid "ReGalAndroid (RemoteGallery client for Android) is an open source (GPL v3) Piwigo client for the Android platform."
+msgstr "ReGalAndroid (RemoteGallery client for Android) is 'n oopbron (GPL v3) Piwigo kliënt vir die Android dek."
+
+msgid "Refresh photo set"
+msgstr "Herlaai fotostel"
+
+msgid "Reinitialize check integrity"
+msgstr "Hervat integriteit nasiening"
+
+msgid "Remote"
+msgstr "Afstand"
+
+msgid "Remove from caddie"
+msgstr "Verwyder uit mandjie"
+
+msgid "Replacement of original templates by customized templates from template-extension subfolder"
+msgstr "Vervanging van oorspronklike sjablone deur aangemete sjablone uit die sjabloon-uitbreidings subgids"
+
+msgid "Resize after upload"
+msgstr "Verander grootte na oplaai"
+
+msgid "Send an information email to group members"
+msgstr "Stuur 'n inligtings-epos aan groep lede"
+
+msgid "Send connection settings by email"
+msgstr "Stuur verbindingsverstellings deur epos"
+
+msgid "Set creation date"
+msgstr "Stel skeppingsdatum"
+
+msgid "Shotwell is an open source digital photo organizer that runs on Linux. It is the default photo manager in Ubuntu and Fedora."
+msgstr "Shotwell is 'n oopbron digitale fotobeheerder wat op Linux loop. Dit is die verstek fotobeheerder in Ubuntu en Fedora."
+
+msgid "Status of user \"%s\" updated"
+msgstr "Gebruiker \"%s\" status opdateer"
+
+msgid "Subscribe/unsubscribe users"
+msgstr "Gebruikers Inteken/afteken "
+
+msgid "Subscribers could be listed (available) only if there is new elements to notify."
+msgstr "Intekenaars kan slegs gelys word (beskikbaar) as daar nuwe elemente is om in kennis te stel."
+
+msgid "Sum of rates"
+msgstr "Totaal van graderings"
+
+msgid "The Piwigo export plugin allows you to create albums and export photos."
+msgstr "Die Piwigo uitvoer invoegsel laat jou toe om albums te skep en fotos uit te voer."
+
+msgid "The Piwigo publish Plug-in allows you to export and synchronize photos from Lightroom directly to your Piwigo photo gallery."
+msgstr "Die Piwigo publiseer invoegsel laat jou toe om fotos direk uit Lightroom na jou Piwigo gallery op te laai en te sinchroniseer."
+
+msgid "The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form"
+msgstr "Die opgelaaide lêer is groter as die MAX_FILE_SIZE opdrag wat in die HTML vorm gespesifiseer is"
+
+msgid "The uploaded file exceeds the upload_max_filesize directive in php.ini: %sB"
+msgstr "Die opgelaaide lêer is groter as die upload_max_filesize opdrag in php.ini: %sB"
+
+msgid "The uploaded files exceed the post_max_size directive in php.ini: %sB"
+msgstr "Die opgelaaide lêers is groter as die upload_max_filesize opdrag in php.ini: %sB"
+
+msgid "Time to send mail is limited. Others mails are skipped."
+msgstr "Die beskikbare tyd om epos te stuur is beperk. Ander eposse is oorgeslaan."
+
+msgid "Toggle 'default group' property"
+msgstr "Draai 'verstek groep' eienskap om"
+
+msgid "Warning: subscribing or unsubscribing will send mails to users"
+msgstr "Waarskuwing: inteken of afteken sal epos na gebruikers stuur"
+
+msgid "You are running on development sources, no check possible."
+msgstr "Jy gebruik ontwikkelaarskode, geen nasiening moontlik nie."
+
+msgid "You can't define a default photo order because you have a custom setting in your local configuration."
+msgstr "Jy kan nie 'n verstek foto volgorde kies nie want jy het 'n aangemete verstelling in jou lokale konfigurasie."
+
+msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
+msgstr "Jy het <i>$conf['order_by']</i> in jou lokale konfigurasie gespesifiseer. Hierdie parameter is afgekeur. Verwyder dit of vernoem dit na <i>$conf['order_by_custom']</i>!"
+
+msgid "create a new site"
+msgstr "skep 'n nuwe werf"
+
+msgid "digiKam is an advanced digital photo management free software for Linux, Windows, and MacOSX."
+msgstr "digiKam is 'n gevorderde gratis foto hanteringsagteware pakket vir Linux, Windows en MacOSX."
+
+msgid "global mode"
+msgstr "globale modus"
+
+msgid "iPhoto is the default photo manager on MacOSX. The Piwigo export plugin let you create new albums and export your photos directly from iPhoto to your Piwigo photo gallery."
+msgstr "iPhoto is die verstek fotohanteringsagteware op MacOSX. Die Piwigo uitvoer invoegsel laat jou nuwe albums skep en direk fotos van iPhoto na jou Piwigo gallery oplaai."
+
+msgid "manage album photos"
+msgstr "beheer album fotos"
+
+msgid "no write access"
+msgstr "geen skryf regte"
+
+msgid "on the %d selected photos"
+msgstr "op die %d gekose fotos"
+
+msgid "only perform a simulation (no change in database will be made)"
+msgstr "doen net 'n simulasie (niks sal in die databasis verander word nie)"
+
+msgid "photos candidates for metadata synchronization"
+msgstr "foto kandidate vir metadata sinchronisasie"
+
+msgid "photos informations synchronized with files metadata"
+msgstr "foto inligting gesinchroniseerd met lêer metadata"
+
+msgid "reduce to single existing albums"
+msgstr "verminder na enkel bestaande albums"
+
+msgid "unset"
+msgstr "onstel"
+
+msgid "No order field selected"
+msgstr "Geen veld om volgens te sorteer is gekies nie"
+
+msgid "Duplicate selected tags"
+msgstr "Dupliseer gekose etikette"
+
+msgid "Name of the duplicate"
+msgstr "Naam van die duplikaat"
+
+msgid "Source tag"
+msgstr "Bron etiket"
+
+msgid "Tag \"%s\" is now a duplicate of \"%s\""
+msgstr "Etiket \"%s\" is nou 'n duplikaat van \"%s\""
+
+msgid "between %d and %d pixels"
+msgstr "tussen %d en %d piksels"
+
+msgid "Duplicate"
+msgstr "Duplikaat"
+
+msgid "Landscape"
+msgstr "Landskap"
+
+msgid "Manage photos"
+msgstr "Administreer fotos"
+
+msgid "Manage the members"
+msgstr "Administreer lede"
+
+msgid "Merge selected groups"
+msgstr "Versmelt gekose groepe"
+
+msgid "Minimum height"
+msgstr "Minimum hoogte"
+
+msgid "Minimum width"
+msgstr "Minimum wydte"
+
+msgid "No groups selected, no actions possible."
+msgstr "Geen groep gekies, geen aksies moontlik"
+
+msgid "No members to manage"
+msgstr "Geen lede"
+
+msgid "Number of albums per page"
+msgstr "Aantal albums per blad"
+
+msgid "Panorama"
+msgstr "Panorama"
+
+msgid "Please select at least two groups"
+msgstr "Kies asseblief ten minste twee groepe"
+
+msgid "Portrait"
+msgstr "Potret"
+
+msgid "Ratio"
+msgstr "Verhouding"
+
+msgid "Rename"
+msgstr "Vernoem"
+
+msgid "This group will be set to default"
+msgstr "Hierdie groep sal by verstek gebruik word"
+
+msgid "This group will be unset to default"
+msgstr "Hierdie groep sal nie meer by verstek gebruik word nie"
+
+msgid "Type here the name of the new group"
+msgstr "Tik hier die naam van die nuwe groep"
+
+msgid "View in gallery"
+msgstr "Wys in gallery"
+
+msgid "between %.2f and %.2f"
+msgstr "tussen %.2f en %.2f"
+
+msgid "Purge user cache"
+msgstr "Maak pakstoor leeg"
+
+msgid "Select at least one tag"
+msgstr "Kies ten minste een etiket"
+
+msgid "The picture dimensions will be reduced to %dx%d pixels."
+msgstr "Die beeld se grootte sal verminder word tot %dx%d piksels."
+
+msgid "User %s updated"
+msgstr "Gebruiker %s opgedateer"
+
+msgid "between %s and %s MB"
+msgstr "tussen %s en %s MB"
+
+msgid "on the %d selected users"
+msgstr "op die %d gekose gebruikers"
+
+msgid "Show %s users"
+msgstr "Wys %s gebruikers"
+
+msgid "Showing %s to %s of %s users"
+msgstr "Wys %s tot %s van %s gebruikers"
+
+msgid "The settings for the guest are from the %s user"
+msgstr "Die verstellings vir die gas is van die %s gebruiker"
+
+msgid "Update user"
+msgstr "Opdateer gebruiker"
+
+msgid "Upload in progress"
+msgstr "Besig met oplaai"
+
+msgid "User %s added"
+msgstr "Gebruiker %s bygevoeg"
+
+msgid "Users modified"
+msgstr "Gebruikers aangepas"
+
+msgid "Y Repeat"
+msgstr "Y herhaling"
+
+msgid "based on"
+msgstr "gebaseer op"
+
+msgid "close"
+msgstr "sluit"
+
+msgid "date & time"
+msgstr "datum en tyd"
+
+msgid "file name"
+msgstr "leêrnaam"
+
+msgid "width & height"
+msgstr "wydte & hoogte"
+
+msgid "Resize after upload disabled due to the use of GD as graphic library"
+msgstr "Verstelling na oplaai nie beskikbaar as gevolg van gebruik van GD as grafiese biblioteek"
+
+msgid "Loading..."
+msgstr "Laai..."
+
+msgid "No and unlock sub-albums"
+msgstr "Nee en ontsluit sub-albums"
+
+msgid "No matching user found"
+msgstr "Geen passende gebruiker gevind"
+
+msgid "No recipient selected"
+msgstr "Geen ontvanger gekies"
+
+msgid "No user is permitted to see this private album"
+msgstr "Geen gebruiker word toegelaat om 'n privaat album te sien nie"
+
+msgid "No user selected of %d users"
+msgstr "Geen gebruiker uit %d gebruikers gekies"
+
+msgid "No users selected, no actions possible."
+msgstr "Geen gebuiker gekies, geen aksie moontlik."
+
+msgid "Open user details"
+msgstr "Vertoon gebruikersinligting"
+
+msgid "Orphans"
+msgstr "Wese"
+
+msgid "Password updated"
+msgstr "Wagwoord opgedateer"
+
+msgid "Recipients"
+msgstr "Ontvangers"
+
+msgid "Registered on %s, %s."
+msgstr "Geregistreer op %s, %s."
+
+msgid "Empty caddie"
+msgstr "Maak mandjie leeg"
+
+msgid "For security reason, authentication keys do not work for administrators."
+msgstr "Vir sekuriteitsredes, werk bekragtigingsleutels nie vir administrateurs nie."
+
+msgid "Impossible to deactivate the default theme."
+msgstr "Onmoontlik om die verstek tema te onaktiveer."
+
+msgid "(filtered from %s total users)"
+msgstr "(gefilter uit %s totale gebruikers)"
+
+msgid "Activate it now"
+msgstr "Aktiveer dit nou"
+
+msgid "All %d users are selected"
+msgstr "Al %d gebruikers is gekies"
+
+msgid "Allow users to add a link to their website"
+msgstr "Laat gebruikers to om 'n skakel na hul webblad by te voeg"
+
+msgid "Basic settings"
+msgstr "Basiese verstellings"
+
+msgid "Change password"
+msgstr "Verander wagwoord"
+
+msgid "Change username"
+msgstr "Verander gebruikersnaam"
+
+msgid "Close user details"
+msgstr "Sluit gebruikersinligting"
+
+msgid "Delete %d orphan photos"
+msgstr "Skrap %d wees fotos"
+
+msgid "Each email sent will contain its own automatic authentication key on links, valid for %s."
+msgstr "Elke epos gestuur sal sy eie bekragtigingsleutel bevat op skakels, geldig vir %s."
+
+msgid "Edit user"
+msgstr "Redigeer gebruiker"
+
+msgid "General"
+msgstr "Algemeen"
+
+msgid "Last visit on %s, %s."
+msgstr "Laaste besoek op %s, %s."
+
+msgid "Mail address is mandatory for registration"
+msgstr "Posadres is verpligtend vir registrasie"
+
+msgid "Mail theme"
+msgstr "Postema"
+
+msgid "%d of %d users selected"
+msgstr "%d van %d gebruikers gekies"
+

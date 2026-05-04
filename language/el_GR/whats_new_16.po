@@ -1,0 +1,20 @@
+# Piwigo translation — el_GR
+# Source: whats_new_16.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: el_GR\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Brand new login & preferences with Standard pages !"
+msgstr "Εντελώς νέα διαδικασία σύνδεσης και προτιμήσεις με τις Τυπικές σελίδες!"
+
+msgid "Two factor authentication is here"
+msgstr "Η επαλήθευση δύο παραγόντων είναι εδώ"
+
+msgid "UI redesigns that make a difference"
+msgstr "Επανασχεδιασμοί του Γραφικού Περιβάλλοντος που κάνουν τη διαφορά"
+

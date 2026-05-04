@@ -1,0 +1,65 @@
+# Piwigo translation — nl_NL
+# Source: upgrade.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: nl_NL\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Upgrade"
+msgstr "Upgrade"
+
+msgid "This page proposes to upgrade your database corresponding to your old version of Piwigo to the current version. The upgrade assistant thinks you are currently running a <strong>release %s</strong> (or equivalent)."
+msgstr "Deze pagina stelt voor om je\r\nhuidige Piwigo-database te converteren naar de nieuwe versie. De upgrade-assistent denkt dat je momenteel gebruik maakt van <strong>release %s</strong> (of equivalent)."
+
+msgid "Upgrade from version %s to %s"
+msgstr "Upgrade van versie %s naar versie %s"
+
+msgid "Statistics"
+msgstr "Statistieken"
+
+msgid "total upgrade time"
+msgstr "totale upgrade tijd"
+
+msgid "total SQL time"
+msgstr "totale SQL tijd"
+
+msgid "SQL queries"
+msgstr "SQL queries"
+
+msgid "Upgrade informations"
+msgstr "Upgrade informatie"
+
+msgid "Perform a maintenance check in [Administration>Tools>Maintenance] if you encounter any problem."
+msgstr "Voer een onderhoudscontrole uit [Beheer>Hulpmiddelen>Onderhoud] indien je problemen ondervindt."
+
+msgid "As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:"
+msgstr "Als voorzorgsmaatregel zijn de volgende plug-ins gedeactiveerd. Voordat je ze reactiveert moet je deze plug-ins op upgrades controleren:"
+
+msgid "Only administrator can run upgrade: please sign in below."
+msgstr "Alleen een beheerder kan een upgrade uitvoeren: hieronder kun je inloggen."
+
+msgid "You do not have access rights to run upgrade"
+msgstr "Je bent niet bevoegd om een upgrade uit te voeren"
+
+msgid "All sub-albums of private albums become private"
+msgstr "Alle sub-albums van privé-albums worden privé"
+
+msgid "User permissions and group permissions have been erased"
+msgstr "Gebruikers- en groepsrechten zijn verwijderd"
+
+msgid "Only thumbnails prefix and webmaster mail address have been saved from previous configuration"
+msgstr "Alleen het voorvoegsel (prefix) van de klikplaatjes en het e-mail-adres van de webbeheerder van de vorige configuratie zijn bewaard gebleven "
+
+msgid "In <i>%s</i>, before <b>?></b>, insert:"
+msgstr "In <i>%s</i>, voor <b>?></b>, voeg tussen:"
+
+msgid "As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:"
+msgstr "Als voorzorgsmaatregel zijn de volgende thema's gedeactiveerd. Controleer of er nieuwe versies van deze thema's bestaan, voordat je ze reactiveert:"
+
+msgid "Discover what's new in Piwigo %s"
+msgstr "Ontdek wat er nieuw is in Piwigo %s"
+

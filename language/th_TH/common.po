@@ -1,0 +1,1123 @@
+# Piwigo translation — th_TH
+# Source: common.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: th_TH\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Piwigo-Language-Name: ภาษาไทย\n"
+"X-Piwigo-Country: ประเทศไทย\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Code: th\n"
+"X-Piwigo-Zero-Plural: true\n"
+
+msgid "%d album updated"
+msgid_plural "%d albums updated"
+msgstr[0] "%d อัลบั้มได้อัพเดตแล้ว"
+msgstr[1] "%d อัลบั้มที่ได้อัพเดตแล้ว"
+
+msgid "%d comment to validate"
+msgstr "%d ความเห็นรอการตรวจสอบ"
+
+msgid "%d comment"
+msgid_plural "%d comments"
+msgstr[0] "%d ความคิดเห็น"
+msgstr[1] "%d ความคิดเห็น"
+
+msgid "%d comments to validate"
+msgstr "%d ความเห็นรอการตรวจสอบ"
+
+msgid "%d hit"
+msgstr "%d hit"
+
+msgid "%d hits"
+msgstr "%d hits"
+
+msgid "%d Kb"
+msgstr "%d กิโลไบต์ (Kb)"
+
+msgid "%d new comment"
+msgstr "%d ความคิดเห็นใหม่"
+
+msgid "%d new comments"
+msgstr "%d ความคิดเห็นใหม่"
+
+msgid "%d new photo"
+msgid_plural "%d new photos"
+msgstr[0] "%d รูปภาพใหม่"
+msgstr[1] "%d รูปภาพใหม่"
+
+msgid "%d new user"
+msgstr "%d ผู้ใช้งานใหม่"
+
+msgid "%d new users"
+msgstr "%d ผู้ใช้งานใหม่"
+
+msgid "%d rates"
+msgstr "%d คะแนนนิยม"
+
+msgid "About"
+msgstr "ข้อมูลที่เกี่ยวข้อง"
+
+msgid "All tags"
+msgstr "แทคทั้งหมด"
+
+msgid "Any tag"
+msgstr "แท็คใดๆ"
+
+msgid "At least one listed rule must be satisfied."
+msgstr "ต้องมีกฏของลำดับอย่างน้อยหนึ่งกฏเพื่อยอมรับ."
+
+msgid "Author"
+msgstr "เจ้าของ"
+
+msgid "Albums"
+msgstr "อัลบั้ม"
+
+msgid "Album"
+msgstr "อัลบั้ม"
+
+msgid "Close this window"
+msgstr "ปิดหน้าต่างนี้"
+
+msgid "Complete RSS feed (photos, comments)"
+msgstr "RSS feed เสร็จสมบูรณ์ (รูปภาพ, ความคิดเห็น)"
+
+msgid "Confirm Password"
+msgstr "ยืนยันรหัสผ่าน"
+
+msgid "Connection settings"
+msgstr "ตั้งค่าการเชื่อมต่อ"
+
+msgid "Login"
+msgstr "เข้าสู่ระบบ"
+
+msgid "Contact webmaster"
+msgstr "ติดต่อผู้เว็บมาสเตอร์"
+
+msgid "Create a new account"
+msgstr "สร้างบัญชีผู้ใช้งานใหม่"
+
+msgid "Created on"
+msgstr "สร้างเมื่อ"
+
+msgid "Creation date"
+msgstr "วันที่สร้าง"
+
+msgid "Current password is wrong"
+msgstr "รหัสผ่านเดิมไม่ถูกต้อง"
+
+msgid "Dimensions"
+msgstr "ขนาด"
+
+msgid "Display"
+msgstr "การแสดงผล"
+
+msgid "Each listed rule must be satisfied."
+msgstr "กฏของลำดับแต่ละกฏต้องได้รับการยอมรับ."
+
+msgid "Email address"
+msgstr "อี-เมล์"
+
+msgid "Enter your personnal informations"
+msgstr "กรอกข้อมูลส่วนตัว"
+
+msgid "Error sending email"
+msgstr "เกิดข้อผิดพลาดขณะส่งเมล์"
+
+msgid "File name"
+msgstr "ชื่อไฟล์"
+
+msgid "File"
+msgstr "ไฟล์"
+
+msgid "Filesize"
+msgstr "ขนาดไฟล์"
+
+msgid "Filter and display"
+msgstr "ตัวกรอง และ การแสดงผล"
+
+msgid "Filter"
+msgstr "ตัวกรอง"
+
+msgid "Forgot your password?"
+msgstr "ลืมรหัสผ่าน?"
+
+msgid "Go through the gallery as a visitor"
+msgstr "เข้าชมแกเลอรีเหมือนผู้เยี่ชมทั่วไป"
+
+msgid "Help"
+msgstr "ช่วยเหลือ"
+
+msgid "Identification"
+msgstr "เมนูสมาชิก"
+
+msgid "Photos only RSS feed"
+msgstr "RSS feed สำหรับภาพเท่านั้น"
+
+msgid "Keyword"
+msgstr "คำค้น"
+
+msgid "Links"
+msgstr "การเชื่อมโยง"
+
+msgid "N/A"
+msgstr "ไม่ปรากฎ"
+
+msgid "New on %s"
+msgstr "ใหม่เมื่อ %s"
+
+msgid "Notification"
+msgstr "การแจ้งเตือน"
+
+msgid "Number of items"
+msgstr "จำนวนรายการ"
+
+msgid "Original dimensions"
+msgstr "ขนาดดั้งเดิม"
+
+msgid "Password forgotten"
+msgstr "ลืมรหัสผ่าน"
+
+msgid "Password"
+msgstr "รหัสผ่าน"
+
+msgid "Post date"
+msgstr "วันที่โพสต์"
+
+msgid "Posted on"
+msgstr "โพสต์ไว้เมื่อ"
+
+msgid "Profile"
+msgstr "ข้อมูลส่วนตัว"
+
+msgid "Quick connect"
+msgstr "เชื่อมต่ออย่างเร็ว"
+
+msgid "RSS feed"
+msgstr "RSS feed"
+
+msgid "Rating score"
+msgstr "คะแนนนิยม"
+
+msgid "Register"
+msgstr "สมัครสมาชิก"
+
+msgid "Registration"
+msgstr "การสมัครสมาชิก"
+
+msgid "Related tags"
+msgstr "แท็กใกล้เคียง"
+
+msgid "Reset"
+msgstr "เริ่มใหม่"
+
+msgid "Retrieve password"
+msgstr "Retrieve password"
+
+msgid "Search rules"
+msgstr "ขอบเขตการค้นหา"
+
+msgid "Search tags"
+msgstr "ค้นหาแท็ค"
+
+msgid "Search"
+msgstr "ค้นหา"
+
+msgid "display available tags"
+msgstr "แสดงแท็คที่ใช้ได้"
+
+msgid "Since"
+msgstr "ตั้งแต่"
+
+msgid "Sort by"
+msgstr "จัดเรียงโดย"
+
+msgid "Sort order"
+msgstr "ลำดับการจัดเรียง"
+
+msgid "Tag"
+msgstr "แท็ค"
+
+msgid "Tags"
+msgstr "แท็ค"
+
+msgid "The RSS notification feed provides notification on news from this website : new photos, updated albums, new comments. Use a RSS feed reader."
+msgstr "RSS feed แสดงความเคลื่อนไหวต่างๆจากเว็บ: ภาพใหม่, เปลี่ยนแปลงอัลบั้ม, ความเห็นใหม่ เพื่อใช้สำหรับ RSS feed reader."
+
+msgid "Unknown feed identifier"
+msgstr "feed ที่ไม่รู้จัก"
+
+msgid "User comments"
+msgstr "ความคิดเห็นของผู้ใช้งาน"
+
+msgid "Username"
+msgstr "ชื่อผู้ใช้งาน"
+
+msgid "Visits"
+msgstr "เข้าชม"
+
+msgid "Webmaster"
+msgstr "เว็บมาสเตอร์"
+
+msgid "Week %d"
+msgstr "สัปดาห์ %d"
+
+msgid "About Piwigo"
+msgstr "เกี่ยวกับ Piwigo"
+
+msgid "You are not authorized to access the requested page"
+msgstr "คุณไม่มีสิทธิหรืไม่ได้รับอนุญาตให้เข้าใช้งานหน้านี้"
+
+msgid "add this photo to your favorites"
+msgstr "เพิ่มรูปภาพนี้เป็นภาพโปรด"
+
+msgid "Administration"
+msgstr "จัดการระบบ"
+
+msgid "all"
+msgstr "ทั้งหมด"
+
+msgid "ascending"
+msgstr "น้อยไปหามาก"
+
+msgid "author(s) : %s"
+msgstr "เจ้าของ : %s"
+
+msgid "Expand all albums"
+msgstr "แสดงทุกอัลบั้ม"
+
+msgid "posted after %s (%s)"
+msgstr "โพสต์ไว้หลังจาก %s (%s)"
+
+msgid "posted before %s (%s)"
+msgstr "โพสต์ไว้ก่อน %s (%s)"
+
+msgid "posted between %s (%s) and %s (%s)"
+msgstr "โพสต์ระหว่าง %s (%s) และ %s (%s)"
+
+msgid "posted on %s"
+msgstr "โพสต์เมื่อ %s"
+
+msgid "Best rated"
+msgstr "คะแนนนิยมที่มากสุด"
+
+msgid "display best rated photos"
+msgstr "แสดงรูปภาพที่มีคะแนนนิยมมากที่สุด"
+
+msgid "Calendar"
+msgstr "ปฏิทิน"
+
+msgid "All"
+msgstr "ทั้งหมด"
+
+msgid "display each day with photos, month per month"
+msgstr "แสดงภาพในแต่ละวัน, เดือนต่อเดือน"
+
+msgid "View"
+msgstr "เข้าชม"
+
+msgid "chronology_monthly_calendar"
+msgstr "ปฏิทินแสดงเป็นเดือน"
+
+msgid "chronology_monthly_list"
+msgstr "แสดงรายเดือน"
+
+msgid "chronology_weekly_list"
+msgstr "แสดงรายสัปดาห์"
+
+msgid "Click here if your browser does not automatically forward you"
+msgstr "คลิกที่นี่ หากบราวเวอร์ของคุณไม่ดำเนินการโดยอัติโนมัติ"
+
+msgid "comment date"
+msgstr "ความคิดเห็นวันที่"
+
+msgid "Comment"
+msgstr "ความคิดเห็น"
+
+msgid "Your comment has been registered"
+msgstr "ความคิดเห็นของคุณได้ถูกบันทึกแล้ว"
+
+msgid "Anti-flood system : please wait for a moment before trying to post another comment"
+msgstr "ป้องกันการล่ม ของระบบ : กรุณารอสักครู่ ก่อนลองโพสความคิดเห็นอื่นอีก"
+
+msgid "Your comment has NOT been registered because it did not pass the validation rules"
+msgstr "ความคิดเห็นของคุณไม่ได้ถูกบันทึก เพราะว่ามันอาจไม่ถูกต้องตามกฎที่กำหนดไว้"
+
+msgid "An administrator must authorize your comment before it is visible."
+msgstr "จะต้องให้ผู้ดูแลระบบตรวจสอบความเห็นของท่านก่อน."
+
+msgid "This login is already used by another user"
+msgstr "ื่อเข้าสู่ระบบนี้ถูกใช้ไปแล้ว โดยผู้ใช้งานอีกคน"
+
+msgid "Comments"
+msgstr "ความคิดเห็น"
+
+msgid "Add a comment"
+msgstr "เพิ่มความคิดเห็น"
+
+msgid "created after %s (%s)"
+msgstr "สร้างขึ้นหลังจาก %s (%s)"
+
+msgid "created before %s (%s)"
+msgstr "สร้างขึ้นก่อน %s (%s)"
+
+msgid "created between %s (%s) and %s (%s)"
+msgstr "สร้างขึ้นระหว่าง %s (%s) และ %s (%s)"
+
+msgid "created on %s"
+msgstr "สร้างขึ้นเมื่อ %s"
+
+msgid "Your Gallery Customization"
+msgstr "การปรับแต่งแกลอรี่ของคุณ"
+
+msgid "Default"
+msgstr "ค่าปกติ"
+
+msgid "delete this photo from your favorites"
+msgstr "ลบรูปภาพนี้ออกจากรายการโปรด"
+
+msgid "Delete"
+msgstr "ลบ"
+
+msgid "descending"
+msgstr "มาก-น้อย"
+
+msgid "edit"
+msgstr "แก้ไข"
+
+msgid "wrong date"
+msgstr "วันที่ไม่ถูกต้อง"
+
+msgid "excluded"
+msgstr "ได้ถูกแยกออกไป"
+
+msgid "Your favorites"
+msgstr "รายการโปรดของคุณ"
+
+msgid "display your favorites photos"
+msgstr "แสดงรูปภาพในรายการโปรดของคุณ"
+
+msgid "Favorites"
+msgstr "รายการโปรด"
+
+msgid "First"
+msgstr "ลำดับแรก"
+
+msgid "The gallery is locked for maintenance. Please, come back later."
+msgstr "The gallery is locked for maintenance. Please, come back later."
+
+msgid "Page generated in"
+msgstr "เวลาในการสร้างหน้านี้"
+
+msgid "guest"
+msgstr "ผู้เยี่ยมชม"
+
+msgid "Hello"
+msgstr "สวัสดี"
+
+msgid "available for administrators only"
+msgstr "สำหรับผู้ดูแลระบบเท่านั้น"
+
+msgid "display this album"
+msgstr "แสดงอัลบั้มนี้"
+
+msgid "display last user comments"
+msgstr "แสดงความเห็นล่าสุด"
+
+msgid "search"
+msgstr "ค้นหา"
+
+msgid "Home"
+msgstr "หน้าหลัก"
+
+msgid "in this album"
+msgstr "ในอัลบั้มนี้"
+
+msgid "in %d sub-album"
+msgid_plural "in %d sub-albums"
+msgstr[0] "ใน %d อัลบั้มย่อย"
+msgstr[1] "ใน %d อัลบั้มย่อย"
+
+msgid "included"
+msgstr "รวม"
+
+msgid "Invalid password!"
+msgstr "ชื่อผู้ใช้งาน หรือ รหัสผ่านไม่ถูกต้อง!"
+
+msgid "Language"
+msgstr "ภาษา"
+
+msgid "last %d days"
+msgstr "ล่าสุด %d วัน"
+
+msgid "Last"
+msgstr "ล่าสุด"
+
+msgid "Logout"
+msgstr "ออกจากระบบ"
+
+msgid "obligatory"
+msgstr "จำเป็น"
+
+msgid "display a calendar by creation date"
+msgstr "แสดงปฏิทินตามวันที่สร้างอัลบั้ม"
+
+msgid "display all photos in all sub-albums"
+msgstr "แสดงรูปภาพทั้งหมดในอัลบั้มย่อย"
+
+msgid "return to normal view mode"
+msgstr "กลับไปยังโหมดการดูปกติ"
+
+msgid "display a calendar by posted date"
+msgstr "แสดงปฏิทินตามวันที่โพส"
+
+msgid "Most visited"
+msgstr "เข้าชมสูงสุด"
+
+msgid "display most visited photos"
+msgstr "แสดงรูปภาพที่เข้าชมสูงสุด"
+
+msgid "The number of photos per page must be a not null scalar"
+msgstr "จำนวนของการแสดงภาพถ่ายต่อหนึ่งหน้า จะต้องเป็นเลขจำนวนเต็ม"
+
+msgid "Number of photos per page"
+msgstr "จำนวนรูปภาพต่อหนึ่งหน้า"
+
+msgid "Unknown identifier"
+msgstr "ไม่ได้ระบุตัวตน"
+
+msgid "New password"
+msgstr "รหัสผ่านใหม่"
+
+msgid "Rate this photo"
+msgstr "คะแนนนิยมรูปภาพนี้"
+
+msgid "Next"
+msgstr "ภาพต่อไป"
+
+msgid "no rate"
+msgstr "ไม่มี คะแนนนิยม"
+
+msgid "Photos posted within the last %d day."
+msgid_plural "Photos posted within the last %d days."
+msgstr[0] "รูปภาพที่ถูกโพสเมื่อ %d วันก่อนนี้."
+msgstr[1] "รูปภาพที่ถูกโพสเมื่อ %d วันก่อนนี้."
+
+msgid "password updated"
+msgstr "รหัสผ่านได้ถูกอัพเดตแล้ว"
+
+msgid "Recent period must be a positive integer value"
+msgstr "ช่วงระยะเวลาจะต้องเป็นค่าจำนวนเต็มบวก"
+
+msgid "photo"
+msgstr "รูปภาพ"
+
+msgid "Click on the photo to see it in high definition"
+msgstr "คลิกที่รูปภาพเพื่อดูขนาดใหญ่กว่า"
+
+msgid "Show file metadata"
+msgstr "แสดงข้อมูลไฟล์"
+
+msgid "Powered by"
+msgstr "พัฒนาโดย"
+
+msgid "Preferences"
+msgstr "การตั้งค่า"
+
+msgid "Previous"
+msgstr "ก่อนหน้า"
+
+msgid "Random photos"
+msgstr "สุ่มรูปภาพ"
+
+msgid "display a set of random photos"
+msgstr "แสดงรูปภาพโดยการสุ่ม"
+
+msgid "Recent albums"
+msgstr "อัลบั้มล่าสุด"
+
+msgid "display recently updated albums"
+msgstr "แสดงอัลบั้มที่ได้อัพเดตล่าสุด"
+
+msgid "Recent period"
+msgstr "ช่วงเวลาล่าสุด"
+
+msgid "Recent photos"
+msgstr "ภาพถ่ายล่าสุด"
+
+msgid "display most recent photos"
+msgstr "แสดงภาพถ่ายล่าสุด"
+
+msgid "Redirection..."
+msgstr "กำลังเรียกไปยัง..."
+
+msgid "Please, enter a login"
+msgstr "กรุณากรอกชื่อและรหัสผ่านเพื่อเข้าสู่ระบบ"
+
+msgid "login mustn't end with a space character"
+msgstr "ชื่อเข้าสู่ระบบต้องไม่ลงท้ายด้วยอักขระช่องว่าง"
+
+msgid "login mustn't start with a space character"
+msgstr "ชื่อเข้าสู่ระบบไม่ต้องเริ่มต้นด้วยอักขระช่องว่าง"
+
+msgid "this login is already used"
+msgstr "ชื่อเข้าสู่ระบบนี้ถูกใช้ไปแล้ว"
+
+msgid "mail address must be like xxx@yyy.eee (example : jack@altern.org)"
+msgstr "ที่อยู่อีเมลจะต้องมีลักษณะ xxx@yyy.eee (ตัวอย่าง : jack@altern.org)"
+
+msgid "Auto login"
+msgstr "เข้าสู่ระบบอัตโนมัติ"
+
+msgid "remove this tag from the list"
+msgstr "ลบแท็กนี้จากรายการ"
+
+msgid "representative"
+msgstr "รูปภาพขนาดย่อประจำอัลบั้ม"
+
+msgid "Search for Author"
+msgstr "ค้นหาช่างภาพ"
+
+msgid "Search in albums"
+msgstr "ค้นหาในอัลบั้ม"
+
+msgid "Date"
+msgstr "วันที่"
+
+msgid "End-Date"
+msgstr "วันสุดท้าย"
+
+msgid "Kind of date"
+msgstr "ชนิดของวันที่"
+
+msgid "Search for words"
+msgstr "ค้นหาคำ"
+
+msgid "Search for all terms"
+msgstr "ค้นหาคำทั้งหมด"
+
+msgid "Empty query. No criteria has been entered."
+msgstr "คำถามว่างเปล่า. ไม่มีคำถามนี้ปรากฎอยู่."
+
+msgid "Search results"
+msgstr "ผลการค้นหา"
+
+msgid "Search in sub-albums"
+msgstr "ค้นหาในอัลบั้มย่อย"
+
+msgid "searched words : %s"
+msgstr "คำที่ค้นหาได้ : %s"
+
+msgid "Contact"
+msgstr "ติดต่อ"
+
+msgid "set as album representative"
+msgstr "ตั้งรูปภาพนี้เป็นปกอัลบั้ม"
+
+msgid "Show number of comments"
+msgstr "แสดงจำนวนของความคิดเห็น"
+
+msgid "Show number of hits"
+msgstr "แสดงจำนวนครั้งที่เข้าชม"
+
+msgid "slideshow"
+msgstr "สไลด์โชว์"
+
+msgid "stop the slideshow"
+msgstr "หยุดการสไลด์โชว์"
+
+msgid "Specials"
+msgstr "เมนูพิเศษ"
+
+msgid "SQL queries in"
+msgstr "SQL queries ใน"
+
+msgid "display only recently posted photos"
+msgstr "แสดงเฉพาะรูปภาพที่เพิ่งถูกโพสเมื่อเร็วๆ นี้"
+
+msgid "return to the display of all photos"
+msgstr "กลับไปแสดงรูปภาพทั้งหมด"
+
+msgid "the beginning"
+msgstr "การเริ่มต้น"
+
+msgid "Thumbnails"
+msgstr "รูปภาพขนาดย่อ"
+
+msgid "Menu"
+msgstr "เมนู"
+
+msgid "A comment on your site"
+msgstr "แสดงความคิดเห็นถึงคุณ"
+
+msgid "today"
+msgstr "วันนี้"
+
+msgid "Update your rating"
+msgstr "อัพเดตคะแนนิยมของคุณ"
+
+msgid "the username must be given"
+msgstr "จำเป็นต้องกรอกชื่อผู้ใช้"
+
+msgid "useful when password forgotten"
+msgstr "ใช้ในกรณีที่ลืมรหัสผ่าน"
+
+msgid "Quick search"
+msgstr "ค้นหาแบบเร็ว..."
+
+msgid "Connected user: %s"
+msgstr "ได้เชื่อมต่อไปยังผู้ใช้งาน: %s"
+
+msgid "IP: %s"
+msgstr "ไอพี: %s"
+
+msgid "Browser: %s"
+msgstr "บราวเซอร์: %s"
+
+msgid "Author: %s"
+msgstr "ช่างภาพ: %s"
+
+msgid "Comment: %s"
+msgstr "ความคิดเห็น: %s"
+
+msgid "Comment by %s"
+msgstr "แสดงความคิดเห็นโดย %s"
+
+msgid "User: %s"
+msgstr "ผู้ใช้งาน: %s"
+
+msgid "Email: %s"
+msgstr "อีเมล: %s"
+
+msgid "Admin: %s"
+msgstr "ผู้ดูแลระบบ: %s"
+
+msgid "Registration of %s"
+msgstr "การสมัครสมาชิกของ %s"
+
+msgid "Album: %s"
+msgstr "อัลบั้ม: %s"
+
+msgid "Bad status for user \"guest\", using default status. Please notify the webmaster."
+msgstr "สถานะไม่เป็นที่ยอมรับ \"ผู้เยี่ยมชม\", ปกติสถานะนี้จะถูกใช้. กรุณาแจ้งไปยังเว็บมาสเตอร์."
+
+msgid "this email address is already in use"
+msgstr "อีเมลนี้ได้ถูกใข้ไปแล้ว"
+
+msgid "Album results for"
+msgstr "ผลการค้นหาอัลบั้มสำหรับ"
+
+msgid "Tag results for"
+msgstr "ผลการค้นหา"
+
+msgid "from %s to %s"
+msgstr "จาก %s ถึง %s"
+
+msgid "Play of slideshow"
+msgstr "เล่น สไลด์โชว์"
+
+msgid "Pause of slideshow"
+msgstr "พักการเล่น สไลด์โชว์"
+
+msgid "Repeat the slideshow"
+msgstr "เล่นซ้ำ สไลด์โชว์"
+
+msgid "Not repeat the slideshow"
+msgstr "ไม่ต้องเล่นซ้ำ สไลด์โชว์"
+
+msgid "Reduce diaporama speed"
+msgstr "ลดความเร็ว การเล่นสไลด์โชว์"
+
+msgid "Accelerate diaporama speed"
+msgstr "เพิ่มความเร็ว การเล่นสไลด์โชว์"
+
+msgid "Submit"
+msgstr "ยอมรับ"
+
+msgid "Yes"
+msgstr "ใช่"
+
+msgid "No"
+msgstr "ไม่"
+
+msgid "%d photo"
+msgid_plural "%d photos"
+msgstr[0] "%d รูปภาพ"
+msgstr[1] "%d รูปภาพ"
+
+msgid "%d photo is also linked to current tags"
+msgid_plural "%d photos are also linked to current tags"
+msgstr[0] "%d ภาพได้ถูกเชื่อมโยงไปยังแท็กปัจจุบัน"
+msgstr[1] "%d ภาพได้ถูกเชื่อมโยงไปยังแท็กปัจจุบัน"
+
+msgid "display photos linked to this tag"
+msgstr "แสดงภาพถ่ายที่ได้เชื่อมโยงกับแท็กนี้"
+
+msgid "photos posted during the last %d days"
+msgstr "รูปภาพที่ได้ถูกโพสในช่วง %d วันก่อน"
+
+msgid "Piwigo Help"
+msgstr "ช่วยเหลือ"
+
+msgid "Rank"
+msgstr "อันดับ"
+
+msgid "group by letters"
+msgstr "กลุ่มตามตัวอักษร"
+
+msgid "letters"
+msgstr "ตัวอักษร"
+
+msgid "show tag cloud"
+msgstr "แสดงแท็กคลาวด์"
+
+msgid "cloud"
+msgstr "คลาวด์"
+
+msgid "Reset to default values"
+msgstr "กลับไปใช้งานค่าเริ่มต้น"
+
+msgid "delete all photos from your favorites"
+msgstr "ลบภาพทั้งหมดออกจากรายการโปรดของคุณ"
+
+msgid "Sent by"
+msgstr "ถูกส่งโดย"
+
+msgid "Cookies are blocked or not supported by your browser. You must enable cookies to connect."
+msgstr "คุกกี้ถูกบล็อกหรือไม่สนับสนุนในเบราว์เซอร์ของคุณ คุณต้องเปิดใช้งานคุกกี้เพื่อเข้าสู่ระบบ."
+
+msgid "Edit a comment"
+msgstr "แก้ไขความคิดเห็น"
+
+msgid "Are you sure?"
+msgstr "คุณแน่ใจหรือไม่?"
+
+msgid "(!) This comment requires validation"
+msgstr "(!) ความคิดเห็นนี้จำเป็นต้องใได้รับการตรวจสอบก่อน"
+
+msgid "Welcome"
+msgstr "ยินดีต้อนรับ"
+
+msgid "Welcome to your Piwigo photo gallery!"
+msgstr "ยินดีต้อนรับสู่ Piwigo แกลลอรี่!"
+
+msgid "... or browse your empty gallery"
+msgstr "... หรือเลือกแกลลอรี่ที่ว่าง"
+
+msgid "... or please deactivate this message, I will find my way by myself"
+msgstr "... ฉันยังไม่ต้องการเพิ่มรูปถ่ายในตอนนี้ (ซึ่งคุณสามารถเพิ่มรูปถ่ายได้ในภายหลัง) คลิกเพื่อเข้าชมหน้า Piwigo แกลลอรี่ของคุณ"
+
+msgid "Hello %s, your Piwigo photo gallery is empty!"
+msgstr "สวัสดี %s, Piwigo แกลลอรี่ของคุณตอนนี้ว่างเปล่า!"
+
+msgid "I want to add photos"
+msgstr "ฉันต้องการเพิ่มรูปภาพตอนนี้"
+
+msgid "Manage this user comment: %s"
+msgstr "จัดการความคิดเห็นของผู้ใช้งานคนนี้: %s"
+
+msgid "Email address is missing. Please specify an email address."
+msgstr "คุณยังไม่ได้ระบุอยู่อีเมล. กรุณาระบุที่อยู่อีเมล์."
+
+msgid "This author modified following comment:"
+msgstr "ผู้เขียนได้แก้ไขความคิดเห็นดังต่อไปนี้:"
+
+msgid "This author removed the comment with id %d"
+msgstr "ผู้เขียนได้ลบความคิดเห็นโดย ไอดี %d"
+
+msgid "html tags are not allowed in login"
+msgstr "html แท็ก นี้จะไม่ได้รับอนุญาตในการเข้าสู่ระบบ"
+
+msgid "Invalid username or email"
+msgstr "ชื่อผู้ใช้ หรือ ที่อยู่อีเมล์ไม่ถูกต้อง"
+
+msgid "Password reset is not allowed for this user"
+msgstr "การีเซ็ตรหัสผ่าน หรือการตั้งรหัสผ่านใหม่ไม่อนุญาตให้ผู้ใช้งานนี้ทำได้"
+
+msgid "User \"%s\" has no email address, password reset is not possible"
+msgstr "ผู้ใช้งาน \"%s\" ไม่มีที่อยู่อีเมล์,ไม่สามารถรีเซ็ตรหัสผ่านได้"
+
+msgid "Someone requested that the password be reset for the following user account:"
+msgstr "มีบางคนได้ร้องขอการรีเซ็ตรหัสผ่าน ดังต่อไปนี้:"
+
+msgid "Username \"%s\" on gallery %s"
+msgstr "ชื่อผู้ใช้งาน \"%s\" ในแกลลอรี่ %s"
+
+msgid "To reset your password, visit the following address:"
+msgstr "เพื่อรีเซ็ตรหัสผ่านของคุณ, ให้เข้าไปที่:"
+
+msgid "If this was a mistake, just ignore this email and nothing will happen."
+msgstr "ถ้านี้คือความผิดพลาด, อีเมล์ฉบับนี้จะไม่มีผลอะไรเลย."
+
+msgid "Password Reset"
+msgstr "รีเซ็ตรหัสผ่าน"
+
+msgid "Check your email for the confirmation link"
+msgstr "กรุณาตรวจสอบอีเมล์ของคุณสำหรับการยืนยันการใช้งาน"
+
+msgid "Invalid key"
+msgstr "คีย์ไม่ถูกต้อง"
+
+msgid "The passwords do not match"
+msgstr "รหัสผ่านไม่ตรงกัน"
+
+msgid "Your password has been reset"
+msgstr "รหัสผ่านของคุณได้รับการรีเซ็ตใหม่"
+
+msgid "Return to home page"
+msgstr "กลับไปยังหน้าหลัก"
+
+msgid "Please enter your username or email address."
+msgstr "กรุณาใส่ชื่อผู้ใช้หรือที่อยู่อีเมลของคุณ."
+
+msgid "You will receive a link to create a new password via email."
+msgstr "คุณจะได้รับลิงค์เพื่อสร้างรหัสผ่านใหม่ทางอีเมลของคุณ."
+
+msgid "Username or email"
+msgstr "ชื่อผู้ใช้งานหรืออีเมล"
+
+msgid "Change my password"
+msgstr "เปลี่ยนรหัสผ่านของฉัน"
+
+msgid "Enter your new password below."
+msgstr "กำหนดรหัสผ่านใหม่ของคุณด้านล่าง."
+
+msgid "EXIF Metadata"
+msgstr "ข้อมูล EXIF"
+
+msgid "IPTC Metadata"
+msgstr "ข้อมูล IPTC"
+
+msgid "Download this file"
+msgstr "ดาวน์โหลดไฟล์นี้"
+
+msgid "Download"
+msgstr "ดาวน์โหลด"
+
+msgid "Edit"
+msgstr "แก้ไข"
+
+msgid "Hello %s,"
+msgstr "สวัสดี %s,"
+
+msgid "Search by date"
+msgstr "ค้นหาตามวัน"
+
+msgid "Search for any term"
+msgstr "ค้นหาคำใด ๆ"
+
+msgid "Send my connection settings by email"
+msgstr "ส่งการตั้งค่าการเชื่อมต่อของฉันโดยทางอีเมล์"
+
+msgid "Successfully registered, you will soon receive an email with your connection settings. Welcome!"
+msgstr "การลงทะเบียนสำเร็จแล้ว, และคุณจะได้รับอีเมลที่มีการตั้งค่าการเชื่อมต่อของคุณ ยินดีต้อนรับ!"
+
+msgid "Username modification"
+msgstr "การปรับเปลี่ยนชื่อผู้ใช้"
+
+msgid "Your username has been successfully changed to : %s"
+msgstr "ชื่อผู้ใช้งานคุณได้ถูกเปลี่ยนเป็น : %s เรียบร้อยแล้ว"
+
+msgid "square"
+msgstr "สี่เหลี่ยม"
+
+msgid "thumb"
+msgstr "ภาพตัวอย่าง"
+
+msgid "small"
+msgstr "เล็ก"
+
+msgid "medium"
+msgstr "กลาง"
+
+msgid "large"
+msgstr "ใหญ่"
+
+msgid "xlarge"
+msgstr "ใหญ่กว่า"
+
+msgid "xxlarge"
+msgstr "ใหญ่มาก"
+
+msgid "Original"
+msgstr "ขนาดดั้งเดิม"
+
+msgid "Thank you for registering at %s!"
+msgstr "ขอบคุณสำหรับการลงทะเบียนที่ %s!"
+
+msgid "Here are your connection settings"
+msgstr "นี่คือการตั้งค่าการเชื่อมต่อของคุณ"
+
+msgid "Password: %s"
+msgstr "รหัสผ่าน: %s"
+
+msgid "Username: %s"
+msgstr "ชื่อผู้ใช้งาน: %s"
+
+msgid "If you think you've received this email in error, please contact us at %s"
+msgstr "ถ้าคุณไม่ได้รับอีเมล์ หรือหากได้รับอีเมล์ที่ไม่ถูกต้อง, โปรดติดต่อเราที่ %s"
+
+msgid "%d rate"
+msgstr "%d คะแนน"
+
+msgid "Bad request"
+msgstr "หน้าที่เรียก ไม่ถูกต้อง"
+
+msgid "Desktop"
+msgstr "เดสก์ท็อป"
+
+msgid "Forbidden"
+msgstr "ปฏิเสธการเข้าถึง"
+
+msgid "Mobile"
+msgstr "โมบาย"
+
+msgid "Page not found"
+msgstr "ไม่พบหน้าที่เรียก"
+
+msgid "Photo sizes"
+msgstr "ขนาดรูปภาพ"
+
+msgid "Show latest comments first"
+msgstr "แสดงคอมเม้นต์ล่าสุดขึ้นก่อน"
+
+msgid "Show oldest comments first"
+msgstr "แสดงคอมเม้นต์หลังสุดขึ้นก่อน"
+
+msgid "View in"
+msgstr "ดูใน"
+
+msgid "2small"
+msgstr "เล็กสุด"
+
+msgid "Date created, new &rarr; old"
+msgstr "วันที่สร้างใหม่ &rarr; เก่า"
+
+msgid "Date created, old &rarr; new"
+msgstr "วันที่สร้างเก่า &rarr; ใหม่"
+
+msgid "Date posted, new &rarr; old"
+msgstr "วันที่โพสใหม่ &rarr; เก่า"
+
+msgid "Date posted, old &rarr; new"
+msgstr "วันที่โพสเก่า &rarr; ใหม่"
+
+msgid "File name, A &rarr; Z"
+msgstr "ชื่อไฟล์ A &rarr; Z"
+
+msgid "File name, Z &rarr; A"
+msgstr "ชื่อไฟล์ Z &rarr; A"
+
+msgid "Manual sort order"
+msgstr "จัดเรียงตามคำสั่ง"
+
+msgid "Numeric identifier, 1 &rarr; 9"
+msgstr "ระบุตัวเลข 1 &rarr; 9"
+
+msgid "Numeric identifier, 9 &rarr; 1"
+msgstr "ระบุตัวเลข 9 &rarr; 1"
+
+msgid "Permalink for album not found"
+msgstr "ไม่พบลิงค์ที่เชื่อมโยงมายังอัลบั้มนี้"
+
+msgid "Photo title, A &rarr; Z"
+msgstr "ชื่อรูปภาพ A &rarr; Z"
+
+msgid "Photo title, Z &rarr; A"
+msgstr "ชื่อรูปภาพ Z &rarr; A"
+
+msgid "Piwigo encountered a non recoverable error"
+msgstr "Piwigo พบข้อผิดพลาดที่ไม่สามารถกู้คืนได้"
+
+msgid "Rating score, high &rarr; low"
+msgstr "อันดับคะแนน สูง &rarr; ต่ำ"
+
+msgid "Rating score, low &rarr; high"
+msgstr "อันดับคะแนน ต่ำ &rarr; สูง"
+
+msgid "Requested album does not exist"
+msgstr "ไม่พบอัลบั้มที่ร้องขอ"
+
+msgid "Requested tag does not exist"
+msgstr "ไม่พบป้ายชื่อที่ร้องขอ"
+
+msgid "Visits, high &rarr; low"
+msgstr "เข้าชม สูง &rarr; ต่ำ"
+
+msgid "Visits, low &rarr; high"
+msgstr "เข้าชม ต่ำ &rarr; สูง"
+
+msgid "xsmall"
+msgstr "XS - เล็กพิเศษ"
+
+msgid "Email address is mandatory"
+msgstr "จำเป็นต้องมีที่อยู่อีเมล์"
+
+msgid "Username is mandatory"
+msgstr "จำเป็นต้องมีชื่อผู้ใช้งาน"
+
+msgid "mandatory"
+msgstr "จำเป็น"
+
+msgid "Website"
+msgstr "เว็บไซต์"
+
+msgid "Your website URL is invalid"
+msgstr "ที่อยู่เว็บไซต์ของคุณไม่ถูกต้อง"
+
+msgid "Email"
+msgstr "อีเมล"
+
+msgid "First Page"
+msgstr "หน้าแรก"
+
+msgid "Go back to the album"
+msgstr "กลับไปยังอัลบั้ม"
+
+msgid "Last Page"
+msgstr "หน้าสุดท้าย"
+
+msgid "Password is missing. Please enter the password."
+msgstr "คุณยังไม่ได้กำหนดรหัสผ่าน. กรุณากรอรหัสผ่าน."
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "คุณยังไม่ได้ยืนยันรหัสผ่าน. กรุณายืนยันรหัสผ่านเดิมอีกครั้ง."
+
+msgid "%d photos per page"
+msgstr "จำนวน %d รูปภาพต่อหน้า"
+
+msgid "Theme"
+msgstr "ธีม"
+
+msgid "Album name, A &rarr; Z"
+msgstr "ชื่ออัลบั้มe, A &rarr; Z"
+
+msgid "Album name, Z &rarr; A"
+msgstr "ชื่ออัลบั้มe, Z &rarr; A"
+
+msgid "Apply on properties"
+msgstr "นำไปใช้กับคุณสมบัติ"
+
+msgid "Link: %s"
+msgstr "ลิ้งค์: %s"
+
+msgid "No results for"
+msgstr "ไม่มีผลลัพธ์การค้นหาสำหรับ"
+
+msgid "Photo description"
+msgstr "รายละเอียดรูปภาพ"
+
+msgid "Photo title"
+msgstr "ชื่อรูปภาพ"
+
+msgid "Your authentication key is no longer valid."
+msgstr "รหัสในการตรวจสอบสิทธิ์ของคุณไม่ถูกต้อง"
+
+msgid "Invalid username or password!"
+msgstr "ชื่อผู้ใช้ หรือ ไรหัสผ่านไม่ถูกต้อง!"
+
+msgid "generate random password"
+msgstr "สุ่มการสร้างรหัส"
+

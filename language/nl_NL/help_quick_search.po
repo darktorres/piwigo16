@@ -1,0 +1,161 @@
+# Piwigo translation — nl_NL
+# Source: help_quick_search.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: nl_NL\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Searches for photos by number of views."
+msgstr "Zoekt naar foto's op basis van het aantal weergaven."
+
+msgid "Searches only for photos with the given words in title or description."
+msgstr "Zoekt alleen naar foto's met de opgegeven woorden in de titel of beschrijving."
+
+msgid "Searches only in tag names without looking at photo titles or descriptions."
+msgstr "Zoekt alleen op tagnamen, zonder te kijken naar fototitels of -beschrijvingen."
+
+msgid "Searches photos by file size."
+msgstr "Zoekt foto's op bestandsgrote"
+
+msgid "Searches photos by its numeric identifier in Piwigo."
+msgstr "Zoekt foto's op de numerieke identificatie in Piwigo"
+
+msgid "Searches photos by posted date."
+msgstr "Zoekt foto's op datum geplaatst"
+
+msgid "Searches photos by rating."
+msgstr "Zoekt foto's naar waardering"
+
+msgid "Searches photos by size in pixels."
+msgstr "Zoekt foto's op maat in pixels"
+
+msgid "Add a dash (-) or NOT before a word to exclude from search. Note that NOT acts as a filtering operator so you cannot have a search containing only NOT operators. You cannot combine OR with NOT (john OR NOT bill is not valid)"
+msgstr "Voeg een streepje (-) of NOT toe voor een woord dat u wilt uitsluiten van de zoekopdracht. Let op: NOT fungeert als een filteroperator, dus u kunt geen zoekopdracht uitvoeren met alleen NOT-operatoren. U kunt OR niet combineren met NOT (john OR NOT bill is niet geldig)."
+
+msgid "Add an OR between words."
+msgstr "Voeg een OR tussen worden in."
+
+msgid "Exact search"
+msgstr "Exact zoeken"
+
+msgid "Exclude"
+msgstr "Uitgezonderd"
+
+msgid "Grouping"
+msgstr "Groeperen"
+
+msgid "Here is a list of actions you can perform:"
+msgstr "Hier is een lijst van acties die je kan uitvoeren"
+
+msgid "OR inclusive"
+msgstr "OR inclusief"
+
+msgid "Others"
+msgstr "Anderen"
+
+msgid "Same principle as for"
+msgstr "Zelfde principe als voor"
+
+msgid "Search using extended syntax"
+msgstr "Zoeken met uitgebreide syntax"
+
+msgid "Searches by author."
+msgstr "Zoeken op auteur."
+
+msgid "Searches by file name."
+msgstr "Zoeken op bestandsnaam"
+
+msgid "These operators can be used with numeric fields such as"
+msgstr "Deze operatoren kunnen gebruikt worden met numerieke velden zoals"
+
+msgid "finds photo 123 to 126 (it may find between 0 and 4 photos, because photos can be deleted)"
+msgstr "vindt foto 123 tot 126 (het kan tussen de 0 en 4 foto's vinden, omdat foto's kunnen worden verwijderd)"
+
+msgid "finds photos from compact cameras in portrait or landscape modes"
+msgstr "vindt foto's van compact camera's in portret of landschap's modus"
+
+msgid "photos after Jan 1st 2008"
+msgstr "foto's na 1 januari 2008"
+
+msgid "photos from 2003 to 2008"
+msgstr "foto's van mei 2003 tot 2008"
+
+msgid "photos from may 2003"
+msgstr "foto's van mei 2003"
+
+msgid "The quick search engine allows you to use boolean operators to refine your search. By default, the search applies to all keywords. Searches are not case sensitive."
+msgstr "Met de snelle zoekmachine kunt u Booleaanse operatoren gebruiken om uw zoekopdracht te verfijnen. Standaard wordt de zoekopdracht toegepast op alle trefwoorden. Zoekopdrachten zijn niet hoofdlettergevoelig."
+
+msgid "from 100 and above"
+msgstr "van 100 en erboven"
+
+msgid "greater than 100"
+msgstr "groter dan 100"
+
+msgid "less than 100"
+msgstr "minder dan 100"
+
+msgid "Searches photos by taken date."
+msgstr "Zoekt foto's op datum genomen"
+
+msgid "Searches photos by width/height ratio."
+msgstr "Zoekt foto's op breedte/hoogte verhouding"
+
+msgid "Searches photos with a given width or height."
+msgstr "Zoekt foto's met een bepaalde hoogte of breedte"
+
+msgid "Supported numeric operators"
+msgstr "Ondersteunde numerieke operatoren"
+
+msgid "Use quotes to search for an exact keyword or phrase."
+msgstr "Gebruikt quotes om te zoeken naar een exact sleutelwoord of zin"
+
+msgid "With keywords"
+msgstr "Met sleutelwoorden"
+
+msgid "between 10 and 100 (inclusive)"
+msgstr "tussen 10 en 100 (inclusief)"
+
+msgid "equals 100"
+msgstr "gelijk aan 100"
+
+msgid "finds files between 1MB and 10MB."
+msgstr "vindt bestanden tussen 1MB en 10 MB"
+
+msgid "finds panoramas"
+msgstr "vindt panorama's"
+
+msgid "photos posted in 2003"
+msgstr "foto's geplaatst in 2003"
+
+msgid "photos taken in 2003"
+msgstr "foto's gemaakt in 2003"
+
+msgid "return photos less than 700px high"
+msgstr "foto's minder dan 700 pixel hoog"
+
+msgid "return photos wider than 500px"
+msgstr "foto's breder dan 500 pixels"
+
+msgid "return photos with at least 1,000 views"
+msgstr "geeft foto's met minstens 1.000 vertoningen"
+
+msgid "returns photos of 12 megapixels or more"
+msgstr "geeft foto's van 12 megapixels of meer"
+
+msgid "returns photos of 5 megapixels"
+msgstr "geeft foto's van 5 megapixels"
+
+msgid "up to 100 (inclusive)"
+msgstr "tot 100 (inclusief)"
+
+msgid "will give you all photos with at least one note."
+msgstr "geeft je foto's met tenminste één opmerking"
+
+msgid "will give you photos without notes."
+msgstr "geeft je foto's zonder opmerking"
+

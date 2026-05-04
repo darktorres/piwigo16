@@ -1,0 +1,65 @@
+# Piwigo translation — en_UK
+# Source: upgrade.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: en_UK\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Upgrade"
+msgstr "Upgrade"
+
+msgid "This page proposes to upgrade your database corresponding to your old version of Piwigo to the current version. The upgrade assistant thinks you are currently running a <strong>release %s</strong> (or equivalent)."
+msgstr "This page proposes to upgrade the database from your old Piwigo version to the new version. The upgrade assistant thinks you are currently running <strong>release %s</strong> (or equivalent)."
+
+msgid "Upgrade from version %s to %s"
+msgstr "Upgrade from version %s to %s"
+
+msgid "Statistics"
+msgstr "Statistics"
+
+msgid "total upgrade time"
+msgstr "total upgrade time"
+
+msgid "total SQL time"
+msgstr "total SQL time"
+
+msgid "SQL queries"
+msgstr "SQL queries"
+
+msgid "Upgrade informations"
+msgstr "Upgrade information"
+
+msgid "Perform a maintenance check in [Administration>Tools>Maintenance] if you encounter any problem."
+msgstr "Perform a maintenance check in [Administration>Tools>Maintenance] if you encounter any problem."
+
+msgid "As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:"
+msgstr "As a precaution, the following plugins have been deactivated. You must check for upgradable plugins before reactivating them:"
+
+msgid "Only administrator can run upgrade: please sign in below."
+msgstr "Only an administrator can run an upgrade: please sign in below."
+
+msgid "You do not have access rights to run upgrade"
+msgstr "You do not have access rights to run upgrade"
+
+msgid "All sub-albums of private albums become private"
+msgstr "All sub-albums of private albums become private"
+
+msgid "User permissions and group permissions have been erased"
+msgstr "Users and groups permissions have been erased"
+
+msgid "Only thumbnails prefix and webmaster mail address have been saved from previous configuration"
+msgstr "Only thumbnails prefix and webmaster mail address have been saved from previous configuration"
+
+msgid "In <i>%s</i>, before <b>?></b>, insert:"
+msgstr "In <i>%s</i>, before <b>?></b>, insert:"
+
+msgid "As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:"
+msgstr "As a precaution, the following themes have been deactivated. You must check for upgradable themes before reactivating them:"
+
+msgid "Discover what's new in Piwigo %s"
+msgstr "Discover what's new in Piwigo %s"
+

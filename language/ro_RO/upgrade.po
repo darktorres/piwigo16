@@ -1,0 +1,65 @@
+# Piwigo translation — ro_RO
+# Source: upgrade.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ro_RO\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : (n==0 || (n%100>0 && n%100<20)) ? 1 : 2);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "All sub-albums of private albums become private"
+msgstr "Toate sub-albumele ale albumelor private devin private"
+
+msgid "As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:"
+msgstr "Ca precatuie urmatoarele pluginuri au fost dezactivate. Trebuie sa le verifici de actualizari inainte de a le activa"
+
+msgid "As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:"
+msgstr "Ca precautie urmatoarele teme au fost dezactivate. Trebuie sa verifici de actualizari inainte de a le activa."
+
+msgid "In <i>%s</i>, before <b>?></b>, insert:"
+msgstr "In <i>%s</i>, inainte de <b>?></b>, insert:"
+
+msgid "Only administrator can run upgrade: please sign in below."
+msgstr "Numai un administrator poate face upgrade. Te rog logheaza-te mai jos."
+
+msgid "Only thumbnails prefix and webmaster mail address have been saved from previous configuration"
+msgstr "Numai prefixurile thumbnailurilor si adresa de mail a webmasterului au fost salvate"
+
+msgid "Perform a maintenance check in [Administration>Tools>Maintenance] if you encounter any problem."
+msgstr "Ruleaza o verificare de mentenanta in [Administration>Tools>Maintenance] daca intampini probleme"
+
+msgid "SQL queries"
+msgstr "Interogari SQL"
+
+msgid "Statistics"
+msgstr "Statistici"
+
+msgid "This page proposes to upgrade your database corresponding to your old version of Piwigo to the current version. The upgrade assistant thinks you are currently running a <strong>release %s</strong> (or equivalent)."
+msgstr "Aceasta pagina upgradeaza baza de date de la o versiunea mai veche de Piwigo la cea noua.\r\nIn acest moment rulezi <strong>release %s</strong>"
+
+msgid "total SQL time"
+msgstr "timpul total SQL"
+
+msgid "total upgrade time"
+msgstr "Timpul total pentru upgrade"
+
+msgid "Upgrade from version %s to %s"
+msgstr "Upgradeaza de la versiunea  %s la %s"
+
+msgid "Upgrade informations"
+msgstr "Informatiile pentru upgrade"
+
+msgid "Upgrade"
+msgstr "Upgradeaza"
+
+msgid "User permissions and group permissions have been erased"
+msgstr "Userii si permisiunile grupurilor au fost sterse"
+
+msgid "You do not have access rights to run upgrade"
+msgstr "Nu ai acces pentru a face upgrade"
+
+msgid "Discover what's new in Piwigo %s"
+msgstr "Descopera ce este nou in Piwigo %s"
+

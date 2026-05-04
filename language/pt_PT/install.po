@@ -1,0 +1,146 @@
+# Piwigo translation — pt_PT
+# Source: install.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: pt_PT\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Installation"
+msgstr "Instalação"
+
+msgid "Basic configuration"
+msgstr "Configuração Básica"
+
+msgid "Default gallery language"
+msgstr "Idioma padrão da galeria"
+
+msgid "Database configuration"
+msgstr "Configuração da base de dados"
+
+msgid "Admin configuration"
+msgstr "Configuração da administração"
+
+msgid "Start Install"
+msgstr "Iniciar a instalação"
+
+msgid "It will be shown to the visitors. It is necessary for website administration"
+msgstr "Será mostrado aos visitantes. É necessário para a administração do sitio"
+
+msgid "Connection to server succeed, but it was impossible to connect to database"
+msgstr "A ligação ao servidor foi bem sucedida, mas foi impossível ligar à base de dados"
+
+msgid "Can't connect to server"
+msgstr "Não foi possível ligar ao servidor"
+
+msgid "Host"
+msgstr "Servidor MySQL"
+
+msgid "User"
+msgstr "Utilizador"
+
+msgid "user login given by your host provider"
+msgstr "Login de utilizador fornecido pelo seu fornecedor de alojamento"
+
+msgid "user password given by your host provider"
+msgstr "Palavra-passe fornecida pelo seu fornecedor de alojamento"
+
+msgid "Database name"
+msgstr "Nome da base de dados"
+
+msgid "also given by your host provider"
+msgstr "Também fornecido pelo seu fornecedor de alojamento"
+
+msgid "Database table prefix"
+msgstr "Prefixo da tabela da base de dados"
+
+msgid "database tables names will be prefixed with it (enables you to manage better your tables)"
+msgstr "Os nomes das tabelas da base de dados terão este prefixo (isto possibilita uma melhor gestão das tabelas)"
+
+msgid "enter a login for webmaster"
+msgstr "Introduza um nome para o webmaster"
+
+msgid "webmaster login can't contain characters ' or \""
+msgstr "O nome do webmaster não pode conter os caracteres ' ou \""
+
+msgid "please enter your password again"
+msgstr "Por favor, escreva a sua senha novamente"
+
+msgid "Keep it confidential, it enables you to access administration panel"
+msgstr "Mantenha-a bem guardada, é ela que lhe permite aceder ao painel administrativo"
+
+msgid "Password [confirm]"
+msgstr "Palavra-passe [confirmação]"
+
+msgid "verification"
+msgstr "Verificar Senha inserida"
+
+msgid "Need help ? Ask your question on <a href=\"%s\">Piwigo message board</a>."
+msgstr "Precisa de ajuda? Faça a sua pergunta no <a href=\"%s\">Fórum Piwigo</a>."
+
+msgid "Visitors will be able to contact site administrator with this mail"
+msgstr "Os visitantes poderão entrar em contacto com o administrador da galeria através deste email"
+
+msgid "PHP 5 is required"
+msgstr "PHP 5.2 é necessário"
+
+msgid "It appears your webhost is currently running PHP %s."
+msgstr "Parece que o seu provedor de hospedagem usa actualmente PHP %s."
+
+msgid "Piwigo may try to switch your configuration to PHP 5 by creating or modifying a .htaccess file."
+msgstr "Piwigo pode tentar mudar a sua configuração para PHP 5.2 através da criação ou modificação de um arquivo .htaccess."
+
+msgid "Note you can change your configuration by yourself and restart Piwigo after that."
+msgstr "Note que você pode alterar sua configuração por conta própria e reiniciar o Piwigo depois disso."
+
+msgid "Try to configure PHP 5"
+msgstr "Tentar configurar PHP 5.2"
+
+msgid "Sorry!"
+msgstr "Lamentamos!"
+
+msgid "Piwigo was not able to configure PHP 5."
+msgstr "Piwigo não pôde configurar o PHP 5.2"
+
+msgid "You may referer to your hosting provider's support and see how you could switch to PHP 5 by yourself."
+msgstr "Você deve entrar em contacto com o suporte do seu fornecedor de alojamento e saber como pode mudar para PHP 5.2"
+
+msgid "Hope to see you back soon."
+msgstr "Desejamos volte em breve."
+
+msgid "Congratulations, Piwigo installation is completed"
+msgstr "Parabéns, a sua instalação Piwigo está completa"
+
+msgid "An alternate solution is to copy the text in the box above and paste it into the file \"local/config/database.inc.php\" (Warning : database.inc.php must only contain what is in the textarea, no line return or space character)"
+msgstr "Uma solução alternativa será copiar o texto na caixa supra e colá-lo no ficheiro \"local/config/database.inc.php\" (Atenção : database.inc.php apenas deverá conter o que está na área de texto, não insira nenhuma linha nova ou espaço em branco)"
+
+msgid "Creation of config file local/config/database.inc.php failed."
+msgstr "A criação do ficheiro de configuração local/config/database.inc.php falhou."
+
+msgid "Download the config file"
+msgstr "Guardar ficheiro de configuração"
+
+msgid "You can download the config file and upload it to local/config directory of your installation."
+msgstr "Pode guardar o ficheiro de configuração no seu computador e de seguida enviá-lo para a pasta /local/config da sua instalação."
+
+msgid "Just another Piwigo gallery"
+msgstr "Apenas mais uma galeria Piwigo"
+
+msgid "Welcome to my photo gallery"
+msgstr "Bem-vindo à minha galeria de fotos"
+
+msgid "Welcome to your new installation of Piwigo!"
+msgstr "Bem-vindo à sua nova instalação do Piwigo!"
+
+msgid "Don't hesitate to consult our forums for any help : %s"
+msgstr "Não hesite em visitar nossos foruns para qualquer ajuda: %s"
+
+msgid "localhost or other, supplied by your host provider"
+msgstr "hospedeiro local ou outro, fornecido pelo seu alojador"
+
+msgid "PHP version %s required (you are running on PHP %s)"
+msgstr "Versão do PHP %s necessária (você está executando em PHP %s)"
+

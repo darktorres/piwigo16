@@ -1,0 +1,65 @@
+# Piwigo translation — lt_LT
+# Source: upgrade.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: lt_LT\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:"
+msgstr "Saugumo sumetimais toliau išvardinti priedai buvo išjungti. Prieš įjungiant priedus vėl, patikrinkite, ar nėra jų atnaujinimų:"
+
+msgid "As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:"
+msgstr "Saugumo sumetimais toliau išvardintos temos buvo išjungtos. Prieš įjungiant temas vėl, patikrinkite, ar nėra jų atnaujinimų:"
+
+msgid "This page proposes to upgrade your database corresponding to your old version of Piwigo to the current version. The upgrade assistant thinks you are currently running a <strong>release %s</strong> (or equivalent)."
+msgstr "Šis puslapis siųlo atnaujinti duomenų bazę iš senosios Piwigo versijos į naująją. Atnaujinimo asistentas mano, kad Jūs dabar naudojate <strong>leidimą %s</strong> (arba analogišką)."
+
+msgid "Perform a maintenance check in [Administration>Tools>Maintenance] if you encounter any problem."
+msgstr "Profilaktiškai peržiūrėkite [Administration>Tools>Maintenance], jei atsirado kokių nors netikėtumų."
+
+msgid "Only thumbnails prefix and webmaster mail address have been saved from previous configuration"
+msgstr "Iš buvusios konfigūracijos išsaugoti tik miniatiūrų prefiksai ir webmasterio el-pašto adresas"
+
+msgid "Only administrator can run upgrade: please sign in below."
+msgstr "Tik administratorius gali pradėti atnaujinimą - prašome prisijungti žemiau."
+
+msgid "In <i>%s</i>, before <b>?></b>, insert:"
+msgstr "<i>%s</i> viduje, prieš <b>?></b>, įterpkite:"
+
+msgid "All sub-albums of private albums become private"
+msgstr "Visi privačių albumų subalbumai tampa privatūs"
+
+msgid "total upgrade time"
+msgstr "bendras atnaujinimo laikas"
+
+msgid "total SQL time"
+msgstr "bendras SQL laikas"
+
+msgid "You do not have access rights to run upgrade"
+msgstr "Jūs neturite leidimo pradėti atnaujinimo"
+
+msgid "User permissions and group permissions have been erased"
+msgstr "Vartotojų ir grupių leidimai buvo ištrinti"
+
+msgid "Upgrade informations"
+msgstr "Atnaujinimo informacija"
+
+msgid "Upgrade from version %s to %s"
+msgstr "Atnaujinti iš %s versijos į %s"
+
+msgid "Upgrade"
+msgstr "Atnaujinimas"
+
+msgid "Statistics"
+msgstr "Statistika"
+
+msgid "SQL queries"
+msgstr "SQL Užklausos"
+
+msgid "Discover what's new in Piwigo %s"
+msgstr "Atraskite kas naujo Piwigo %s"
+

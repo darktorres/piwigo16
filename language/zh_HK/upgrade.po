@@ -1,0 +1,65 @@
+# Piwigo translation — zh_HK
+# Source: upgrade.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: zh_HK\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "All sub-albums of private albums become private"
+msgstr "所有私有子相簿,設定為只允許私有觀看"
+
+msgid "As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:"
+msgstr "作為預防措施，以下插件已被停用。請檢查有沒有插件更新版本,然後再啟用它："
+
+msgid "As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:"
+msgstr "作為預防措施，以下主題已被停用。請檢查有沒有主題更新版本,然後再啟用它："
+
+msgid "In <i>%s</i>, before <b>?></b>, insert:"
+msgstr "在<i>%s</i>之前<b>?></b>，插入："
+
+msgid "Only administrator can run upgrade: please sign in below."
+msgstr "只有管理員才能執行升級：請在下面登錄。"
+
+msgid "Only thumbnails prefix and webmaster mail address have been saved from previous configuration"
+msgstr "只有縮圖的前綴和網站管理員的郵件地址可以從舊版設定中保存"
+
+msgid "Perform a maintenance check in [Administration>Tools>Maintenance] if you encounter any problem."
+msgstr "如果您遇到任何問題, 請執行維護檢查[管理>工具>維護]。"
+
+msgid "SQL queries"
+msgstr "SQL查詢"
+
+msgid "Statistics"
+msgstr "統計"
+
+msgid "This page proposes to upgrade your database corresponding to your old version of Piwigo to the current version. The upgrade assistant thinks you are currently running a <strong>release %s</strong> (or equivalent)."
+msgstr "本頁建議數據庫從舊的Piwigo版本升級到新版本。升級助手認為你正在運行的<strong>版本％s</strong>（或同等版本）。"
+
+msgid "Upgrade"
+msgstr "升級"
+
+msgid "Upgrade from version %s to %s"
+msgstr "從版本%s升級到%s"
+
+msgid "Upgrade informations"
+msgstr "升級信息"
+
+msgid "User permissions and group permissions have been erased"
+msgstr "使用者和群組的權限已被刪除"
+
+msgid "You do not have access rights to run upgrade"
+msgstr "您沒有權限執行升級"
+
+msgid "total SQL time"
+msgstr "總SQL執行時間"
+
+msgid "total upgrade time"
+msgstr "總升級時間"
+
+msgid "Discover what's new in Piwigo %s"
+msgstr "發現Piwigo %s的最新動態"
+

@@ -1,0 +1,65 @@
+# Piwigo translation — is_IS
+# Source: upgrade.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: is_IS\n"
+"Plural-Forms: nplurals=2; plural=(n%10!=1 || n%100==11);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "All sub-albums of private albums become private"
+msgstr "Öll undiralbúm einkaalbúma verða einkaalbúm"
+
+msgid "As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:"
+msgstr "Í varúðarskyni hafa eftirfarandi viðbætur verið gerðar óvirkar.  Þú verður að athuga með uppfæranlegar viðbætur áður en þú virkjar þær aftur:"
+
+msgid "As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:"
+msgstr "Í varúðarskyni hafa eftirfarandi þemur verið gerðar óvirkar. Þú verður að athuga með uppfæranlegar þemur áður en þú virkjar þær aftur:"
+
+msgid "Discover what's new in Piwigo %s"
+msgstr "Uppgötvaðu hvað er nýtt í Piwigo %s"
+
+msgid "In <i>%s</i>, before <b>?></b>, insert:"
+msgstr "Í <i>%s</i>, áður <b>?></b>, setja inn:"
+
+msgid "Only administrator can run upgrade: please sign in below."
+msgstr "Aðeins stjórnandi getur keyrt uppfærslu: vinsamlegast skráðu þig inn hér að neðan."
+
+msgid "Only thumbnails prefix and webmaster mail address have been saved from previous configuration"
+msgstr "Aðeins forskeyti smámynda og netfang vefstjóra hafa verið vistuð frá fyrri uppsetningu"
+
+msgid "Perform a maintenance check in [Administration>Tools>Maintenance] if you encounter any problem."
+msgstr "Framkvæmdu viðhaldsskoðun í [Stjórnun>Verkfæri>Viðhald] ef þú lendir í einhverjum vandamálum."
+
+msgid "SQL queries"
+msgstr "SQL fyrirspurnir"
+
+msgid "Statistics"
+msgstr "Tölfræði"
+
+msgid "This page proposes to upgrade your database corresponding to your old version of Piwigo to the current version. The upgrade assistant thinks you are currently running a <strong>release %s</strong> (or equivalent)."
+msgstr "Þessi síða leggur til að uppfæra gagnagrunninn úr gömlu Piwigo útgáfunni þinni í nýju útgáfuna. Uppfærsluaðstoðarmaðurinn heldur að þú sért að keyra <strong>útgáfu %s</strong> (eða samsvarandi)."
+
+msgid "Upgrade"
+msgstr "Uppfæra"
+
+msgid "Upgrade from version %s to %s"
+msgstr "Uppfæra frá útgáfu %s í %s"
+
+msgid "Upgrade informations"
+msgstr "Uppfærslu upplýsingar"
+
+msgid "User permissions and group permissions have been erased"
+msgstr "Heimildum notenda og hópa hefur verið eytt"
+
+msgid "You do not have access rights to run upgrade"
+msgstr "Þú hefur ekki réttindi til að keyra uppfærslu"
+
+msgid "total SQL time"
+msgstr "samtals SQL tími"
+
+msgid "total upgrade time"
+msgstr "samtals uppfærslutími"
+

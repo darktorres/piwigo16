@@ -1,0 +1,65 @@
+# Piwigo translation — zh_CN
+# Source: upgrade.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: zh_CN\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Upgrade"
+msgstr "更新"
+
+msgid "This page proposes to upgrade your database corresponding to your old version of Piwigo to the current version. The upgrade assistant thinks you are currently running a <strong>release %s</strong> (or equivalent)."
+msgstr "这个页面试图更新你的与Piwigo相关的数据库。 更新助手发现您现在正在运行的<strong>版本为 %s</strong> （或同等的版本）。"
+
+msgid "Upgrade from version %s to %s"
+msgstr "从 %s 版本更新到 %s 版本"
+
+msgid "Statistics"
+msgstr "统计"
+
+msgid "total upgrade time"
+msgstr "总更新用时"
+
+msgid "total SQL time"
+msgstr "总 SQL 用时"
+
+msgid "SQL queries"
+msgstr "SQL 查询"
+
+msgid "Upgrade informations"
+msgstr "更新信息"
+
+msgid "Perform a maintenance check in [Administration>Tools>Maintenance] if you encounter any problem."
+msgstr "如果你遇上任何问题请到 [管理>工具>维护] 运行一次维护检查。"
+
+msgid "As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:"
+msgstr "保险起见，以下插件已被停用。您在重新启用它们之前，必须先检查插件的更新版本："
+
+msgid "Only administrator can run upgrade: please sign in below."
+msgstr "只有站长才能运行更新，请在下面登入："
+
+msgid "You do not have access rights to run upgrade"
+msgstr "你没有权限运行更新"
+
+msgid "All sub-albums of private albums become private"
+msgstr "所有非公开相册的子相册均变为非公开"
+
+msgid "User permissions and group permissions have been erased"
+msgstr "用户权限和组权限已经删除"
+
+msgid "Only thumbnails prefix and webmaster mail address have been saved from previous configuration"
+msgstr "之前的设置只有缩略图前缀和站长电子邮件地址被保存"
+
+msgid "In <i>%s</i>, before <b>?></b>, insert:"
+msgstr "在<i>%s</i>中，<b>?></b>之前，插入："
+
+msgid "As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:"
+msgstr "保险起见，以下主题已被停用。您在重新启用它们之前，必须先检查主题的更新版本："
+
+msgid "Discover what's new in Piwigo %s"
+msgstr "了解 Piwigo %s 的新功能"
+

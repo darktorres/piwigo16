@@ -1,0 +1,62 @@
+# Piwigo translation — gl_ES
+# Source: upgrade.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: gl_ES\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "You do not have access rights to run upgrade"
+msgstr "Non tes dereitos de acceso para actualizar"
+
+msgid "Upgrade informations"
+msgstr "Actualizar información"
+
+msgid "User permissions and group permissions have been erased"
+msgstr "Borráronse os permisos dos usuarios e grupos"
+
+msgid "total SQL time"
+msgstr "tempo total de SQL"
+
+msgid "total upgrade time"
+msgstr "tempo total da actualización"
+
+msgid "Upgrade"
+msgstr "Actualizar"
+
+msgid "Upgrade from version %s to %s"
+msgstr "Actualizar da versión %s para a versión %s"
+
+msgid "This page proposes to upgrade your database corresponding to your old version of Piwigo to the current version. The upgrade assistant thinks you are currently running a <strong>release %s</strong> (or equivalent)."
+msgstr "Esta páxina proponche pór ó día a base de datos da túa antiga versión de Piwigo cara a nova versión. O asistente de actualización detectou a túa <strong>versión como a %s</strong> (ou equivalente)."
+
+msgid "Perform a maintenance check in [Administration>Tools>Maintenance] if you encounter any problem."
+msgstr "Executa unha comprobación de mantemento en [Administración>Ferramentas>Mantemento] se atopas algún problema."
+
+msgid "SQL queries"
+msgstr "Consultas SQL"
+
+msgid "Statistics"
+msgstr "Estatísticas"
+
+msgid "Only thumbnails prefix and webmaster mail address have been saved from previous configuration"
+msgstr "Da anterior configuración só se salvaron os prefixos das miniaturas e o correo do administrador web"
+
+msgid "Only administrator can run upgrade: please sign in below."
+msgstr "Só o administrador pode efectuar actualizacións: inicia sesión no formulario de abaixo."
+
+msgid "In <i>%s</i>, before <b>?></b>, insert:"
+msgstr "En <i>%s</i>, antes de <b>?></b>, insira:"
+
+msgid "As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:"
+msgstr "Por precaución, os seguintes engadidos foron desactivados. Tes que comprobar se teñen actualización antes de reactivalos:"
+
+msgid "As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:"
+msgstr "Por precaución, os seguintes temas foron desactivados. Tes que comprobar se teñen actualización antes de reactivalos:"
+
+msgid "All sub-albums of private albums become private"
+msgstr "Tódolos sub-álbums de álbums privados tórnanse privados"
+

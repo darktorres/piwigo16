@@ -1,0 +1,4017 @@
+# Piwigo translation — hu_HU
+# Source: admin.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: hu_HU\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "%d association"
+msgstr "%d hozzárendelés (fizikai és virtuális)"
+
+msgid "%d associations"
+msgstr "%d hozzárendelés (fizikai és virtuális)"
+
+msgid "%d album including"
+msgstr "%d album "
+
+msgid "%d albums including"
+msgstr "%d album "
+
+msgid "%d physical"
+msgstr "%d fizikai"
+
+msgid " and %d virtual"
+msgstr " és %d virtuális"
+
+msgid "%d album moved"
+msgid_plural "%d albums moved"
+msgstr[0] "%d Album áthelyezése"
+msgstr[1] "%d Album áthelyezése"
+
+msgid "%d group"
+msgstr "%d csoport"
+
+msgid "%d groups"
+msgstr "%d csoport"
+
+msgid "%d member"
+msgid_plural "%d members"
+msgstr[0] "%d tag"
+msgstr[1] "%d tag"
+
+msgid "%d tag"
+msgstr "%d címke"
+
+msgid "%d tags"
+msgstr "%d címke"
+
+msgid "%d user comment rejected"
+msgstr "%d elutasított hozzászólás"
+
+msgid "%d user comments rejected"
+msgstr "%d elutasított hozzászólás"
+
+msgid "%d user comment validated"
+msgstr "%d jóváhagyott hozzászólás"
+
+msgid "%d user comments validated"
+msgstr "%d jóváhagyott hozzászólás"
+
+msgid "%d user deleted"
+msgid_plural "%d users deleted"
+msgstr[0] "%d törölt felhasználó"
+msgstr[1] "%d törölt felhasználó"
+
+msgid "%d user"
+msgid_plural "%d users"
+msgstr[0] "%d felhasználó"
+msgstr[1] "%d felhasználó"
+
+msgid "%d waiting for validation"
+msgstr "%d vár elfogadásra"
+
+msgid "Actions"
+msgstr "Műveletek"
+
+msgid "Activate"
+msgstr "Bekapcsolás"
+
+msgid "Add/delete a permalink"
+msgstr "Közvetlen link hozzáadása/törlése"
+
+msgid "Add a tag"
+msgstr "Címke hozzáadása"
+
+msgid "Add a user"
+msgstr "Felhasználó hozzáadása"
+
+msgid "Add group"
+msgstr "Csoport hozzáadása"
+
+msgid "Add"
+msgstr "Hozzáadás"
+
+msgid "Allow user registration"
+msgstr "Regisztráció engedélyezése"
+
+msgid "Apply to sub-albums"
+msgstr "Belső albumokra is"
+
+msgid "Associated"
+msgstr "Hozzárendelve"
+
+msgid "Caddie management"
+msgstr "Kosár kezelése"
+
+msgid "Caddie"
+msgstr "Kosár"
+
+msgid "Albums authorized thanks to group associations"
+msgstr "Az albumok csoport tagsága"
+
+msgid "Album manual order was saved"
+msgstr "Albumok sorrendjének mentése megtörtént"
+
+msgid "Check for upgrade failed for unknown reasons."
+msgstr "A program frissítése ismeretlen okból nem sikerült."
+
+msgid "Check for upgrade"
+msgstr "Frissítés keresése"
+
+msgid "Comments for all"
+msgstr "Bárki hozzászólhat"
+
+msgid "Current name"
+msgstr "Név"
+
+msgid "Database"
+msgstr "Adatbázis"
+
+msgid "Deactivate"
+msgstr "Kikapcsolás"
+
+msgid "Delete Representant"
+msgstr "Album képviselő törlése"
+
+msgid "Delete selected tags"
+msgstr "Kiválasztott címkék törlése"
+
+msgid "Delete selected users"
+msgstr "Kiválasztott felhasználók törlése"
+
+msgid "Deletions"
+msgstr "Törlések"
+
+msgid "Deny selected groups"
+msgstr "Kiválasztott csoportok elutasítása"
+
+msgid "Deny selected users"
+msgstr "Kiválasztott felhasználók elutasítása"
+
+msgid "Description"
+msgstr "Leírás"
+
+msgid "Display options"
+msgstr "Megjelenítés beállításai"
+
+msgid "Dissociated"
+msgstr "Nincs hozzárendelve"
+
+msgid "Does not represent"
+msgstr "Nem képviseli"
+
+msgid "Edit selected tags"
+msgstr "Kiválasztott címkék szerkesztése"
+
+msgid "Edit tags"
+msgstr "Címkék szerkesztése"
+
+msgid "Email admins when a new user registers"
+msgstr "Email-küldés, ha egy új felhasználó regisztrál"
+
+msgid "Email admins when a valid comment is entered"
+msgstr "Email-küldés, ha egy érvényes hozzászólás érkezik "
+
+msgid "Email admins when a comment requires validation"
+msgstr "Email-küldés, ha egy hozzászólás jóváhagyásra vár "
+
+msgid "Environment"
+msgstr "Környezet"
+
+msgid "Form"
+msgstr "Űrlap"
+
+msgid "Gallery title"
+msgstr "Galéria címe"
+
+msgid "Grant selected groups"
+msgstr "Kiválasztott csoportok részére jogosultság adása"
+
+msgid "Grant selected users"
+msgstr "Kiválasztott felhasználók részére jogosultság adása"
+
+msgid "Group name"
+msgstr "Csoport neve"
+
+msgid "Groups"
+msgstr "Csoportok"
+
+msgid "Guests"
+msgstr "Vendégek"
+
+msgid "History"
+msgstr "Statisztikák"
+
+msgid "Informations"
+msgstr "Információk"
+
+msgid "Install"
+msgstr "Telepítés"
+
+msgid "Link all album photos to a new album"
+msgstr "Az album összes elemének új albumhoz rendelése"
+
+msgid "Link all album photos to some existing albums"
+msgstr "Az album összes elemének már meglévő albumhoz rendelése"
+
+msgid "Linked albums"
+msgstr "A képhez rendelt albumok"
+
+msgid "Lock gallery"
+msgstr "Galéria lezárása"
+
+msgid "Maintenance"
+msgstr "Karbantartás"
+
+msgid "Edit album permissions"
+msgstr "Album jogosultságainak kezelése"
+
+msgid "Manage permissions for group \"%s\""
+msgstr "\"%s\" csoport jogosultságainak kezelése"
+
+msgid "Manage permissions for user \"%s\""
+msgstr "\"%s\" felhasználó jogosultságainak kezelése"
+
+msgid "Manage tags"
+msgstr "Címkék kezelése"
+
+msgid "Members"
+msgstr "Tagok"
+
+msgid "Metadata synchronized from file"
+msgstr "Meta adatok fájlból történő szinkronizálása"
+
+msgid "Move albums"
+msgstr "Albumok áthelyezése"
+
+msgid "Move"
+msgstr "Áthelyezés"
+
+msgid "Name"
+msgstr "Név"
+
+msgid "New name"
+msgstr "Új név"
+
+msgid "New parent album"
+msgstr "Új szülő album"
+
+msgid "New tag"
+msgstr "Új címke"
+
+msgid "Number of comments per page"
+msgstr "Hozzászólások száma oldalanként"
+
+msgid "Number of rates"
+msgstr "Értékelések száma"
+
+msgid "Only private albums are listed"
+msgstr "Csak privát albumok megjelenítése"
+
+msgid "Operating system"
+msgstr "Operációs rendszer"
+
+msgid "Options"
+msgstr "Lehetőségek"
+
+msgid "Other private albums"
+msgstr "Más privát albumok"
+
+msgid "Page banner"
+msgstr "Oldal fejléc"
+
+msgid "Parent album"
+msgstr "Szülő album"
+
+msgid "Path"
+msgstr "Elérési út"
+
+msgid "Permalink"
+msgstr "Közvetlen link"
+
+msgid "Permalink %s has been previously used by album %s. Delete from the permalink history first"
+msgstr "A(z) %s közvetlen link név korábban létrehozva a(z) %s album számára. Törölni kell a közvetlen link előzményekből."
+
+msgid "The permalink name must be composed of a-z, A-Z, 0-9, \"-\", \"_\" or \"/\". It must not be numeric or start with number followed by \"-\""
+msgstr "A közvetlen linkek a következő karakterekből állhatnak: a-z, A-Z, 0-9, \"-\" vagy \"_\". Nem kezdődhetnek számmal vagy \"-\" karakterrel"
+
+msgid "Permalink %s is already used by album %s"
+msgstr "A(z) %s közvetlen link név a(z) %s album számára lefoglalva. Válasszon másikat!"
+
+msgid "Permalink history"
+msgstr "Közvetlen link előzmények"
+
+msgid "Permalinks"
+msgstr "Közvetlen linkek"
+
+msgid "Permission denied"
+msgstr "Hozzáférés megtagadva"
+
+msgid "Permission granted thanks to a group"
+msgstr "Hozzáférés engedélyezve, köszöntünk a csoportban"
+
+msgid "Permission granted"
+msgstr "Hozzáférés engedélyezve"
+
+msgid "Photo informations updated"
+msgstr "Kép információi frissítve"
+
+msgid "Plugins"
+msgstr "Bővítmények"
+
+msgid "Position"
+msgstr "Pozíció"
+
+msgid "Preferences"
+msgstr "Beállítások"
+
+msgid "Properties"
+msgstr "Tulajdonságok"
+
+msgid "Random photo"
+msgstr "Véletlen kép"
+
+msgid "Rate date"
+msgstr "Értékelés időpontja"
+
+msgid "Rating by guests"
+msgstr "Vendégek által értékelhető"
+
+msgid "Rating"
+msgstr "Értékelés"
+
+msgid "Reject"
+msgstr "Elvetés"
+
+msgid "Representant"
+msgstr "Képviseli"
+
+msgid "Representation of albums"
+msgstr "Albumok képviselete"
+
+msgid "Representative"
+msgstr "Reprezentatív"
+
+msgid "Represents"
+msgstr "Képviseli"
+
+msgid "Save order"
+msgstr "Sorrend mentése"
+
+msgid "Save to permalink history"
+msgstr "Közvetlen link előzmények mentése"
+
+msgid "Select at least one album"
+msgstr "Legalább egy albumot ki kell választani"
+
+msgid "Select at least one photo"
+msgstr "Legalább egy képet ki kell választani"
+
+msgid "Select at least one user"
+msgstr "Legalább egy felhasználót ki kell választani"
+
+msgid "Show info"
+msgstr "Információ megjelenítése"
+
+msgid "Site manager"
+msgstr "Oldalak"
+
+msgid "Status"
+msgstr "Státusz"
+
+msgid "Statistics"
+msgstr "Statisztika"
+
+msgid "Storage album"
+msgstr "Album"
+
+msgid "Sum of rates"
+msgstr "Pontszámok összege"
+
+msgid "Tag \"%s\" already exists"
+msgstr "\"%s\" címke már létezik!"
+
+msgid "Tag \"%s\" was added"
+msgstr "\"%s\" címke hozzáadva"
+
+msgid "Tag selection"
+msgstr "Címke kiválasztása"
+
+msgid "The %d following tags were deleted"
+msgstr "A következő %d címke törölve : %s"
+
+msgid "Uninstall"
+msgstr "Eltávolítás"
+
+msgid "Use the default photo sort order"
+msgstr "Alapértelmezett kép sorrend"
+
+msgid "User comments validation"
+msgstr "Felhasználói hozzászólások engedélyezése"
+
+msgid "Users"
+msgstr "Felhasználók"
+
+msgid "Validate"
+msgstr "Engedélyezés"
+
+msgid "Validation"
+msgstr "Engedélyezés szükséges"
+
+msgid "Version"
+msgstr "Verzió"
+
+msgid "Virtual albums to move"
+msgstr "Virtuális albumok kijelölése áthelyezésre"
+
+msgid "Virtual album name"
+msgstr "Virtuális album neve"
+
+msgid "Webmaster cannot be deleted"
+msgstr "Na jó...azért a webmestert ne töröljük..."
+
+msgid "You are running on development sources, no check possible."
+msgstr "Ez egy fejlesztői változat, keresés lehetetlen."
+
+msgid "You cannot delete your account"
+msgstr "Nem törölheti a fiókját"
+
+msgid "You cannot move an album in its own sub album"
+msgstr "Az albumot lehetetlen a belső albumjába helyezni"
+
+msgid "You need to confirm deletion"
+msgstr "A törléshez megerősítés szükséges"
+
+msgid "Associate to album"
+msgstr "Hozzárendelés albumhoz"
+
+msgid "associate to group"
+msgstr "Hozzárendelés csoporthoz"
+
+msgid "Authorized"
+msgstr "Engedélyezve"
+
+msgid "Add a virtual album"
+msgstr "Virtuális album hozzáadása"
+
+msgid "Authorize users to add comments on selected albums"
+msgstr "Hozzászólás engedélyezése a kiválasztott albumokhoz"
+
+msgid "The name of an album must not be empty"
+msgstr "Az album nevét meg kell adni"
+
+msgid "Lock albums"
+msgstr "Album lezárása"
+
+msgid "Private"
+msgstr "Privát album"
+
+msgid "Public"
+msgstr "Nyilvános album"
+
+msgid "Find a new representant by random"
+msgstr "Új album-képviselő véletlenszerű kiválasztása"
+
+msgid "Public / Private"
+msgstr "Nyilvános / Privát"
+
+msgid "Manage authorizations for selected albums"
+msgstr "A kiválasztott albumok engedélyeinek kezelése"
+
+msgid "Virtual album added"
+msgstr "Virtuális album hozzáadva"
+
+msgid "Virtual album deleted"
+msgstr "Virtuális album törölve"
+
+msgid "Access type"
+msgstr "Hozzáférés típusa"
+
+msgid "Information data registered in database"
+msgstr "Az információk bekerültek az adatbázisba"
+
+msgid "Default display"
+msgstr "Alapértelmezett megjelenítés"
+
+msgid "The gallery URL is not valid."
+msgstr "A galéria URL nem létezik."
+
+msgid "The number of comments a page must be between 5 and 50 included."
+msgstr "A felhasználói hozzászólások száma egy oldalon 5 és  50 között."
+
+msgid "Configuration"
+msgstr "Beállítások"
+
+msgid "confirm"
+msgstr "Megerősítés"
+
+msgid "Date"
+msgstr "Dátum"
+
+msgid "delete album"
+msgstr "Album törlése"
+
+msgid "Dissociate from album"
+msgstr "Eltávolítás az albumból"
+
+msgid "dissociate from group"
+msgstr "Eltávolítás a csoportból"
+
+msgid "Album updated successfully"
+msgstr "Az album információinak módosítása megtörtént."
+
+msgid "photos per page"
+msgstr "Képek száma oldalanként"
+
+msgid "High definition enabled"
+msgstr "Kiemelt hozzáférés engedélyezése"
+
+msgid "File"
+msgstr "Fájl"
+
+msgid "Forbidden"
+msgstr "Tiltva"
+
+msgid "global mode"
+msgstr "Globális mód"
+
+msgid "group \"%s\" added"
+msgstr "\"%s\" csoport hozzáadva"
+
+msgid "group \"%s\" deleted"
+msgstr "\"%s\" törölve"
+
+msgid "group \"%s\" updated"
+msgstr "\"%s\" frissítve"
+
+msgid "The name of a group must not contain \" or ' or be empty."
+msgstr "A csoportnév nem tartalmazhat \" vagy ' karaktert, vagy nem lehet üres."
+
+msgid "This name is already used by another group."
+msgstr "Ez a név már használatban van a másik csoportban."
+
+msgid "High definition"
+msgstr "Kiemelt hozzáférés"
+
+msgid "jump to album"
+msgstr "Albumhoz ugrás"
+
+msgid "jump to photo"
+msgstr "Képhez ugrás"
+
+msgid "leave"
+msgstr "Nem változtat"
+
+msgid "Lock"
+msgstr "Lezárás"
+
+msgid "Locked"
+msgstr "Lezárt"
+
+msgid "manage album photos"
+msgstr "Album elemeinek kezelése"
+
+msgid "manage sub-albums"
+msgstr "Belső albumok kezelése"
+
+msgid "Manage"
+msgstr "Kezelés"
+
+msgid "Execution time is out, treatment must be continue [Estimated time: %d second]."
+msgid_plural "Execution time is out, treatment must be continue [Estimated time: %d seconds]."
+msgstr[0] "Az átfutási idő lejárt, a műveletet folytatni kell [Idő: %d másodperc]."
+msgstr[1] "Időtúllépés esetén a műveletet folytatni kell [Becsült idő: %d másodperc]."
+
+msgid "Prepared time for list of users to send mail is limited. Others users are not listed."
+msgstr "A listán szereplő felhasználóknak küldendő e-mail előkészítési ideje véges. Más felhasználók nem lesznek a listában."
+
+msgid "Time to send mail is limited. Others mails are skipped."
+msgstr "Az e-mail küldési idő korlátozott. További e-mail küldés megszakításra kerül."
+
+msgid "To send ?"
+msgstr "Elküldjük?"
+
+msgid "Last send"
+msgstr "Utolsó küldése"
+
+msgid "User"
+msgstr "Felhasználó"
+
+msgid "See you soon,"
+msgstr "Viszont látásra,"
+
+msgid "Go to"
+msgstr "Ugrás "
+
+msgid "Hello"
+msgstr "Helló "
+
+msgid "New photos were added"
+msgstr "Új elem került hozzáadásra."
+
+msgid "on"
+msgstr " Küldés időpontja "
+
+msgid "between"
+msgstr "között "
+
+msgid "and"
+msgstr " és "
+
+msgid "The webmaster has subscribed you to receiving notifications by mail."
+msgstr "Ezt az e-mailt a webmester küldte (nem automatikusan generált) mert értesítést kapott az egyik albumból/galériából.\"."
+
+msgid "You have subscribed to receiving notifications by mail."
+msgstr "Feliratkozott a bejelentések fogadására levélben."
+
+msgid "To subscribe"
+msgstr "Feliratkozáshoz"
+
+msgid "If you encounter problems or have any question, please send a message to"
+msgstr "Ha problémát észlel, vagy bármilyen kérdése van, kérjük, küldjön egy üzenetet "
+
+msgid "[NBM] Problems or questions"
+msgstr "[NBM] Problémák és kérdések"
+
+msgid "The webmaster has unsubscribed you from receiving notifications by mail."
+msgstr "A webmester a leiratkozást érvényesítette"
+
+msgid "You have unsubscribed from receiving notifications by mail."
+msgstr "Leiratkozott az e-mail értesítésről."
+
+msgid ", click on"
+msgstr " kattintson erre a linkre:"
+
+msgid "To unsubscribe"
+msgstr "Leiratkozáshoz"
+
+msgid "With blank value, gallery title will be used"
+msgstr "Ha nincs megadva, a galéria címét fogja használni"
+
+msgid "Notification"
+msgstr "Értesítés"
+
+msgid "Error when sending email to %s [%s]."
+msgstr "Hiba a %s [%s] levél küldése közben."
+
+msgid "Mail sent to %s [%s]."
+msgstr "E-mail elküldve %s [%s]."
+
+msgid "%d mail was sent."
+msgid_plural "%d mails were sent."
+msgstr[0] "%d levelet küldtünk el."
+msgstr[1] "%d levelet küldtünk el."
+
+msgid "%d mail was not sent."
+msgid_plural "%d mails were not sent."
+msgstr[0] "%d levelet nem küldtünk el."
+msgstr[1] "%d levelet nem küldtünk el."
+
+msgid "No mail to send."
+msgstr "Nem kell e-mailt küldeni."
+
+msgid "There is no available subscribers to mail."
+msgstr "Nincs feliratkozott felhasználó akinek küldenünk kellene e-mailt."
+
+msgid "Subscribers could be listed (available) only if there is new elements to notify."
+msgstr "Csak azok a feliratkozott felhasználók jelennek meg a listában, akik még nem kaptak értesítést az új elemekről."
+
+msgid "Anyway only webmasters can see this tab and never administrators."
+msgstr "Egyébként csak az adminisztrátori jogkörrel nem rendelkező webmesterek láthatók ezen a lapon."
+
+msgid "No user to send notifications by mail."
+msgstr "Nincs felhasználó akinek a frissítéseket el lehetne küldeni."
+
+msgid "New photos added"
+msgstr "Új elemekkel bővült a galéria"
+
+msgid "Subscribe to notification by mail"
+msgstr "Feliratkozás e-mail értesítőre"
+
+msgid "Unsubscribe from notification by mail"
+msgstr "Leiratkozás e-mail értesítőről"
+
+msgid "Parameter"
+msgstr "Paraméterek"
+
+msgid "Continue processing treatment"
+msgstr "Tovább - feldolgozás"
+
+msgid "Complementary mail content"
+msgstr "Kiegészítő E-mail tartalom"
+
+msgid "Add detailed content"
+msgstr "Részletes tartalom hozzáadása"
+
+msgid "Send mail as"
+msgstr "E-mail küldése, mint"
+
+msgid "Send mail to users"
+msgstr "Levél a felhasználónak"
+
+msgid "Send"
+msgstr "Küld"
+
+msgid "Subscribed"
+msgstr "Feliratkozott"
+
+msgid "Subscribe"
+msgstr "Feliratkozás"
+
+msgid "Parameters"
+msgstr "Paraméterek"
+
+msgid "Select recipients"
+msgstr "Válassza ki a címzetteket"
+
+msgid "Subscribe/unsubscribe users"
+msgstr "Feliratkozás/Leiratkozás (felhasználók)"
+
+msgid "Unsubscribed"
+msgstr "Leiratkozott"
+
+msgid "%d parameter was updated."
+msgid_plural "%d parameters were updated."
+msgstr[0] "%d paraméter frissítve."
+msgstr[1] "%d paraméter frissítve."
+
+msgid "%d user was not updated."
+msgid_plural "%d users were not updated."
+msgstr[0] "%d felhasználót nem frissítettünk."
+msgstr[1] "%d felhasználót nem frissítettünk."
+
+msgid "User %s [%s] was removed from the subscription list."
+msgstr "%s [%s] felhasználót töröltük az előfizetői listáról."
+
+msgid "User %s [%s] was added to the subscription list."
+msgstr "%s [%s] felhasználót felvettük az előfizetői listára."
+
+msgid "%d user was updated."
+msgid_plural "%d users were updated."
+msgstr[0] "%d felhasználót frissítettünk."
+msgstr[1] "%d felhasználót frissítettünk."
+
+msgid "User %s [%s] was not removed from the subscription list."
+msgstr "%s [%s] felhasználót nem töröltük az előfizetői listáról."
+
+msgid "User %s [%s] was not added to the subscription list."
+msgstr "%s [%s] felhasználót nem adtuk hozzá az előfizetői listához."
+
+msgid "User %s [%s] added."
+msgstr "%s [%s] felhasználó hozzáadva."
+
+msgid "Warning: subscribing or unsubscribing will send mails to users"
+msgstr "Figyelem: Feliratkozás vagy Leiratkozás levelet küld a felhasználóknak"
+
+msgid "Send mail on HTML format"
+msgstr "Levél küldése HTML formátumban"
+
+msgid "Include display of recent photos grouped by dates"
+msgstr "Jelenítse meg a legújabb képeket, dátum szerint csoportosítva"
+
+msgid "Available only with HTML format"
+msgstr "Csak HTML formátum"
+
+msgid "no write access"
+msgstr "Nem írható"
+
+msgid "Permissions"
+msgstr "Engedélyek"
+
+msgid "private"
+msgstr "Privát"
+
+msgid "public"
+msgstr "Nyilvános"
+
+msgid "Purge never used notification feeds"
+msgstr "Nem használatos RSS-feedek törlése"
+
+msgid "Purge sessions"
+msgstr "Folyamatok törlése"
+
+msgid "randomly represented"
+msgstr "Randommódon képviselt"
+
+msgid "registration date"
+msgstr "Regisztráció dátuma"
+
+msgid "clean"
+msgstr "tiszta"
+
+msgid "Create this site"
+msgstr "Oldal létrehozása"
+
+msgid "test"
+msgstr "Teszt"
+
+msgid "test this remote site"
+msgstr "Tesztelés távoli kiszolgálón"
+
+msgid "remove tags"
+msgstr "Címkék eltávolítása"
+
+msgid "Repair and optimize database"
+msgstr "Adatbázis javítása és optimalizálása"
+
+msgid "selection"
+msgstr "kiválasztás"
+
+msgid "set to"
+msgstr "Beállítás"
+
+msgid "singly represented"
+msgstr "rögzített képviselője"
+
+msgid "This site already exists"
+msgstr "Ilyen oldal már van"
+
+msgid "created"
+msgstr "létrehozva"
+
+msgid "delete"
+msgstr "törlés"
+
+msgid "delete this site and all its attached elements"
+msgstr "oldal és elemeinek törlése"
+
+msgid "an error happened"
+msgstr "hiba történt"
+
+msgid "Local"
+msgstr "Helyi"
+
+msgid "Remote"
+msgstr "Távoli"
+
+msgid "update the database from files"
+msgstr "adatbázis frissítése fájlokból"
+
+msgid "status"
+msgstr "Státusz"
+
+msgid "Directory"
+msgstr "Könyvtár"
+
+msgid "sub-albums"
+msgstr "Belső albumok"
+
+msgid "Synchronize metadata"
+msgstr "Meta adatok szinkronizálása"
+
+msgid "target"
+msgstr "Cél"
+
+msgid "Title"
+msgstr "Cím"
+
+msgid "Album list management"
+msgstr "Albumok kezelése"
+
+msgid "Piwigo configuration"
+msgstr "Piwigo konfiguráció"
+
+msgid "Edit album"
+msgstr "Album szerkesztése"
+
+msgid "Group management"
+msgstr "Csoportok kezelése"
+
+msgid "User list"
+msgstr "Felhasználók listája"
+
+msgid "Database synchronization with files"
+msgstr "Adatbázis szinkronizálása ezzel a mappával"
+
+msgid "all"
+msgstr "összes"
+
+msgid "height must be a number superior to"
+msgstr "a magasságnak ennél nagyobbnak kell lennie:"
+
+msgid "width must be a number superior to"
+msgstr "a szélességnek ennél nagyobbnak kell lennie:"
+
+msgid "for the file format"
+msgstr "fájl formátum"
+
+msgid "Photo unreachable or no support"
+msgstr "Kép nem elérhető, vagy formátuma nem támogatott"
+
+msgid "GD version"
+msgstr "GD verzió"
+
+msgid "General statistics"
+msgstr "Általános statisztika"
+
+msgid "average time"
+msgstr "átlagos idő"
+
+msgid "total time"
+msgstr "teljes idő"
+
+msgid "for this file format"
+msgstr "formátum"
+
+msgid "unit mode"
+msgstr "Képenként"
+
+msgid "Unlocked"
+msgstr "Zárolatlan"
+
+msgid "unset"
+msgstr "Eltávolítás"
+
+msgid "Update albums informations"
+msgstr "Albumok információinak frissítése"
+
+msgid "Update photos information"
+msgstr "Képek információinak frissítése"
+
+msgid "Synchronize"
+msgstr "Szinkronizálás"
+
+msgid "reduce to single existing albums"
+msgstr "Szűkítés egy már meglévő albumra"
+
+msgid "Choose an option"
+msgstr "Válasszon az alábbi lehetőségek közül"
+
+msgid "display maximum informations (added albums and photos, deleted albums and photos)"
+msgstr "Összes információ megjelenítése (hozzáadott albumok és elemek, törölt albumok és elemek)"
+
+msgid "Error list"
+msgstr "Hibalista"
+
+msgid "Errors caption"
+msgstr "Címsor hiba"
+
+msgid "Detailed informations"
+msgstr "Részletes információk"
+
+msgid "File/directory read error"
+msgstr "Fájl/Mappa olvasási hiba"
+
+msgid "The file or directory cannot be accessed (either it does not exist or the access is denied)"
+msgstr "A fájl vagy mappa hozzáférhetetlen (vagy nem létezik, vagy hozzáférés megtagadva)"
+
+msgid "albums deleted in the database"
+msgstr "album törölve az adatbázisból"
+
+msgid "photos deleted from the database"
+msgstr "adatbázisból törölt elem"
+
+msgid "photos candidates for metadata synchronization"
+msgstr "kép meta adatainak szinkronizálása"
+
+msgid "photos informations synchronized with files metadata"
+msgstr "elem meta adatainak szinkronizálása"
+
+msgid "errors during synchronization"
+msgstr "hiba történt a szinkronizálás során"
+
+msgid "albums added in the database"
+msgstr "album hozzáadva az adatbázishoz"
+
+msgid "photos added in the database"
+msgstr "elem hozzáadva az adatbázishoz"
+
+msgid "photos updated in the database"
+msgstr "elem frissítve az adatbázisban"
+
+msgid "Search for new images in the directories"
+msgstr "Új képek keresése a mappákban"
+
+msgid "added"
+msgstr "hozzáadva"
+
+msgid "deleted"
+msgstr "törölve"
+
+msgid "Metadata synchronization results"
+msgstr "Meta adatok szinkronizálásának eredménye"
+
+msgid "only perform a simulation (no change in database will be made)"
+msgstr "Csak szimuláció végrehajtása (az adatbázisban nem történik változás)"
+
+msgid "Simulation"
+msgstr "Szimuláció"
+
+msgid "directories + files"
+msgstr "Mappák + fájlok"
+
+msgid "only directories"
+msgstr "Csak mappák"
+
+msgid "synchronize files structure with database"
+msgstr "Fájlok-mappák szinkronizálása az adatbázissal"
+
+msgid "synchronize files metadata with database photos informations"
+msgstr "Fájlok meta adatainak szinkronizálása az adatbázissal"
+
+msgid "even already synchronized photos"
+msgstr "A korábban szinkronizáltakat is"
+
+msgid "Used metadata"
+msgstr "Használt meta adatok"
+
+msgid "The name of directories and files must be composed of letters, numbers, \"-\", \"_\" or \".\""
+msgstr "A könyvtár és fájlnevek betűket, számokat valamint \"-\", \"_\" vagy \".\" -ot tartalmazhatnak"
+
+msgid "wrong filename"
+msgstr "rossz fájlnév"
+
+msgid "Upload"
+msgstr "Feltöltés"
+
+msgid "user \"%s\" added"
+msgstr "\"%s\" felhasználó hozzáadva"
+
+msgid "User status"
+msgstr "Felhasználói státusz"
+
+msgid "user_status_admin"
+msgstr "Adminisztrátor"
+
+msgid "user_status_generic"
+msgstr "Átlagos"
+
+msgid "user_status_guest"
+msgstr "Vendég"
+
+msgid "user_status_webmaster"
+msgstr "Webmester"
+
+msgid "Virtual album"
+msgstr "Virtuális album"
+
+msgid "Waiting"
+msgstr "Várakozó elemek"
+
+msgid "default"
+msgstr "Alapértelmezett"
+
+msgid "Toggle 'default group' property"
+msgstr "'Alapértelmezett csoport' tulajdonság megfordítása"
+
+msgid "Advanced features"
+msgstr "Speciális funkciók"
+
+msgid "Overall"
+msgstr "Teljes"
+
+msgid "Year"
+msgstr "Év"
+
+msgid "Month"
+msgstr "Hónap"
+
+msgid "Day"
+msgstr "Nap"
+
+msgid "Pages seen"
+msgstr "Megtekintett oldalak"
+
+msgid "Time"
+msgstr "Idő"
+
+msgid "IP"
+msgstr "IP cím"
+
+msgid "Element"
+msgstr "Elem"
+
+msgid "Section"
+msgstr "Szakasz"
+
+msgid "An information email was sent to group \"%s\""
+msgstr "Tájékoztató e-mailt küldtünk a következő csoportnak: \"%s"
+
+msgid "Send an information email to group members"
+msgstr "Küldjön egy információs e-mailt a csoport tagjainak"
+
+msgid "Group"
+msgstr "Csoport"
+
+msgid "[%s] Visit album %s"
+msgstr "[%s] Új képek vannak az albumban %s"
+
+msgid "Hello,"
+msgstr "Helló,"
+
+msgid "See you soon."
+msgstr "A mielőbbi viszont látásra."
+
+msgid "Discover album:"
+msgstr "Kövesse a linket és nézze meg a képeket az albumban:"
+
+msgid "Mail content"
+msgstr "E-mail tartalma"
+
+msgid "none"
+msgstr "nincs"
+
+msgid "high"
+msgstr "magas"
+
+msgid "other"
+msgstr "egyéb"
+
+msgid "Element type"
+msgstr "Elem típus"
+
+msgid "Image id"
+msgstr "Elem-ID"
+
+msgid "Summary"
+msgstr "Összefoglaló"
+
+msgid "%d line filtered"
+msgid_plural "%d lines filtered"
+msgstr[0] "%d szűrt sor"
+msgstr[1] "%d szűrt sor"
+
+msgid "%d guest"
+msgid_plural "%d guests"
+msgstr[0] "%d vendég"
+msgstr[1] "%d vendég"
+
+msgid "Hour"
+msgstr "Óra"
+
+msgid "guest"
+msgstr "Vendég"
+
+msgid "default values"
+msgstr "Alapértelmezett érték"
+
+msgid "Guest cannot be deleted"
+msgstr "A \"vendég\" felhasználót nem lehet törölni"
+
+msgid "Default user cannot be deleted"
+msgstr "Alapértelmezett felhasználót nem lehet törölni"
+
+msgid "Purge history detail"
+msgstr "Részletes előzmények törlése"
+
+msgid "Purge history summary"
+msgstr "Összes előzmény törlése"
+
+msgid "Check integrity"
+msgstr "integritás ellenőrzése"
+
+msgid "Anomaly"
+msgstr "Rendellenesség"
+
+msgid "Correction"
+msgstr "Hibajavítás"
+
+msgid "Automatic correction"
+msgstr "Automatikus hibajavítás"
+
+msgid "Impossible automatic correction"
+msgstr "Az automatikus hibajavítás nem lehetséges"
+
+msgid "Correction applied with success"
+msgstr "A hibajavítás sikeres"
+
+msgid "Correction applied with error"
+msgstr "A hibajavítás sikertelen"
+
+msgid "%d anomaly has been detected."
+msgid_plural "%d anomalies have been detected."
+msgstr[0] "%d rendellenességet mutatott ki."
+msgstr[1] "%d rendellenességet találtam."
+
+msgid "%d anomaly has been corrected."
+msgid_plural "%d anomalies have been detected corrected."
+msgstr[0] "%d rendellenesség javítva."
+msgstr[1] "%d észlelt rendellenesség kijavítva."
+
+msgid "%d anomaly has not been corrected."
+msgid_plural "%d anomalies have not been corrected."
+msgstr[0] "%d rendellenesség nem került javításra."
+msgstr[1] "%d észlelt rendellenesség javítása nem sikerült."
+
+msgid "Go to %s or %s for more informations"
+msgstr "Ugrás %s-ra vagy %s oldalra további információkért"
+
+msgid "the forum"
+msgstr "a fórum"
+
+msgid "the wiki"
+msgstr "a wiki"
+
+msgid "%s value is not correct file because exif are not supported"
+msgstr "%s érték helytelen, mert az EXIF nem támogatott"
+
+msgid "%s must be to set to false in your local/config/config.inc.php file"
+msgstr "%s állítsa false értékre a local/config/config.inc.php fájlban"
+
+msgid "Main \"guest\" user does not exist"
+msgstr "A \"vendég\" felhasználó nem létezik"
+
+msgid "Main \"guest\" user status is incorrect"
+msgstr "A \"vendég\" felhasználó státusz hibás"
+
+msgid "Default user does not exist"
+msgstr "Alapértelmezett felhasználó nem létezik"
+
+msgid "Main \"webmaster\" user does not exist"
+msgstr "A \"webmester\" felhasználó nem létezik"
+
+msgid "Main \"webmaster\" user status is incorrect"
+msgstr "A \"webmester\" felhasználó státusz hibás"
+
+msgid "User \"%s\" created with \"%s\" like password"
+msgstr "\"%s\" felhasználó által létrehozott jelszó: \"%s\""
+
+msgid "Status of user \"%s\" updated"
+msgstr "\"%s\" felhasználói státuszának aktualizálása"
+
+msgid "add new photos to caddie"
+msgstr "Az új elemeket gyűjtse a kosárba"
+
+msgid "No display"
+msgstr "Nincs kijelzés"
+
+msgid "Classic display"
+msgstr "Hagyományos nézet"
+
+msgid "Hoverbox display"
+msgstr "Hoverbox nézet"
+
+msgid "Minimum privacy level"
+msgstr "Minimum hozzáférési szint"
+
+msgid "Privacy level"
+msgstr "Hozzáférési szint"
+
+msgid "Level 0"
+msgstr "---"
+
+msgid "Level 1"
+msgstr "Kapcsolattartók"
+
+msgid "Level 2"
+msgstr "Barátok"
+
+msgid "Level 4"
+msgstr "Család"
+
+msgid "Level 8"
+msgstr "Adminisztrátor"
+
+msgid "Reinitialize check integrity"
+msgstr "Integritások felülvizsgálata, Újrainicializálás"
+
+msgid "Check all"
+msgstr "Összes kijelölése"
+
+msgid "Uncheck all"
+msgstr "Összes kijelölés megszüntetése"
+
+msgid "Check automatic corrections"
+msgstr "Automatikus hibajavítás a kijelölteken"
+
+msgid "Apply selected corrections"
+msgstr "A kiválasztott hibajavítás alkalmazása"
+
+msgid "Ignore selected anomalies"
+msgstr "Hagyja figyelmen kívül a kijelölt rendellenességeket"
+
+msgid "Refresh"
+msgstr "Frissítés"
+
+msgid "The anomaly will be ignored until next application version"
+msgstr "A rendellenesség figyelmen kívül hagyva a következő verzió alkalmazásáig"
+
+msgid "Correction the anomaly will cancel the fact that it's ignored"
+msgstr "Korrigált rendellenesség, már nem lehet figyelmen kívül hagyni"
+
+msgid "%d anomaly has been ignored."
+msgid_plural "%d anomalies have been ignored."
+msgstr[0] "%d rendellenességet hagytunk figyelmen kívül."
+msgstr[1] "%d rendellenesség figyelmen kívül hagyva."
+
+msgid "Plugins which need upgrade"
+msgstr "Az alábbi bővítményekhez frissítés érhető el"
+
+msgid "Plugin list"
+msgstr "Bővítmény lista"
+
+msgid "Check for updates"
+msgstr "Frissíthető"
+
+msgid "Other plugins"
+msgstr "Telepíthető bővítmények"
+
+msgid "Last revisions"
+msgstr "Utolsó módosítás"
+
+msgid "Are you sure you want to install this plugin?"
+msgstr "Biztos, hogy telepíteni akarja a bővítményt?"
+
+msgid "Are you sure you want to delete this plugin?"
+msgstr "Biztos, hogy törölni akarja a bővítményt?"
+
+msgid "Are you sure to install this upgrade? You must verify if this version does not need uninstallation."
+msgstr "Biztos, hogy telepíteni akarja a frissítést? Győződjön meg arról, hogy a korábbi verzió eltávolítható."
+
+msgid "Plugin has been successfully copied"
+msgstr "A bővítmény másolása sikeres."
+
+msgid "Can't create temporary file."
+msgstr "Temp fájl nem hozható létre ."
+
+msgid "Can't download archive."
+msgstr "Nem sikerült letölteni az Archívumot."
+
+msgid "Can't read or extract archive."
+msgstr "Nem sikerült olvasni vagy kicsomagolni az Archívumot."
+
+msgid "An error occured during extraction (%s)."
+msgstr "Nem sikerült kitömöríteni az Archívumot(%s)."
+
+msgid "Please check \"plugins\" folder and sub-folders permissions (CHMOD)."
+msgstr "Ellenőrizze a \"Plugins\" mappa és az almappák jogosultságait (CHMOD)."
+
+msgid "Can't connect to server."
+msgstr "Nem sikerült csatlakozni a szerverhez."
+
+msgid "Purge compiled templates"
+msgstr "Összeállított sablonok törlése"
+
+msgid "Support"
+msgstr "Támogatás"
+
+msgid "Documentation"
+msgstr "Dokumentációk"
+
+msgid "ACCESS_0"
+msgstr "Ingyenes hozzáférés"
+
+msgid "ACCESS_1"
+msgstr "Mindenki"
+
+msgid "ACCESS_2"
+msgstr "Regisztráltak"
+
+msgid "ACCESS_3"
+msgstr "Adminisztrátorok"
+
+msgid "ACCESS_4"
+msgstr "Webmester"
+
+msgid "ACCESS_5"
+msgstr "Nincs hozzáférés"
+
+msgid "A new version of Piwigo is available."
+msgstr "Új Piwigo verzió érhető el."
+
+msgid "Piwigo Administration"
+msgstr "Piwigo adminisztráció"
+
+msgid "Piwigo version"
+msgstr "Piwigo verzió"
+
+msgid "You are running the latest version of Piwigo."
+msgstr "A legújabb verziójú Piwigo fut."
+
+msgid "The version of %s [%s] installed is not compatible with the version required [%s]"
+msgstr "Jelenleg a %s [%s] verzió van telepítve, mely nem kompatibilis ezzel: [%s]"
+
+msgid "You need to upgrade your system to take full advantage of the application else the application will not work correctly, or not at all"
+msgstr "Frissíteni kell a rendszert az alkalmazás adta lehetőségek teljes kihasználásához, ellenkező esetben az alkalmazás hibásan, vagy egyáltalán nem működik"
+
+msgid "Deleted on"
+msgstr "Törölve"
+
+msgid "Last hit"
+msgstr "Utolsó használat"
+
+msgid "GD library is missing"
+msgstr "GD könyvtár hiányzik"
+
+msgid "Templates"
+msgstr "Témák (Sablonok)"
+
+msgid "Extend for templates"
+msgstr "Kiterjesztett témák"
+
+msgid "Replacement of original templates by customized templates from template-extension subfolder"
+msgstr "Az eredeti sablon helyettesítése almappákra"
+
+msgid "Replacers (customized templates)"
+msgstr "Módosított (testre-szabott) sablonok"
+
+msgid "Original templates"
+msgstr "Eredeti sablonok"
+
+msgid "Optional URL keyword"
+msgstr "Opcionális URL szerint"
+
+msgid "Templates configuration has been recorded."
+msgstr "Sablon konfiguráció rögzítve."
+
+msgid "All optimizations have been successfully completed."
+msgstr "Minden optimalizálás sikeres."
+
+msgid "Optimizations have been completed with some errors."
+msgstr "Néhány hiba fordult elő az optimalizáláskor."
+
+msgid "Modify information"
+msgstr "Információk módosítása"
+
+msgid "nothing"
+msgstr "Nem"
+
+msgid "overrides existing values with empty ones"
+msgstr "Felülírja a meglévő üres értékeket"
+
+msgid "Manage photo ranks"
+msgstr "Kép rangok kezelése"
+
+msgid "Edit ranks"
+msgstr "Rangok módosítása"
+
+msgid "No photo in this album"
+msgstr "Nincs elem ebben az albumban"
+
+msgid "Images manual order was saved"
+msgstr "Kép információk mentve"
+
+msgid "ranks"
+msgstr "Rangok"
+
+msgid "Drag to re-order"
+msgstr "Húzással átrendezheti"
+
+msgid "Quick Local Synchronization"
+msgstr "Szinkronizálás"
+
+msgid "No photo can be deleted"
+msgstr "Nincs törölhető kép"
+
+msgid "Delete selected photos"
+msgstr "Kijelölt képek törlése"
+
+msgid "%d photo was deleted"
+msgid_plural "%d photos were deleted"
+msgstr[0] "%d fotó törölve"
+msgstr[1] "%d fotó törölve"
+
+msgid "Released on"
+msgstr "Felszabadítva"
+
+msgid "Number of downloads"
+msgstr "Letöltések száma"
+
+msgid "Piwigo Announcements Newsletter"
+msgstr "Piwigo Hirdetmények Hírlevél"
+
+msgid "Keep in touch with Piwigo project, subscribe to Piwigo Announcement Newsletter. You will receive emails when a new release is available (sometimes including a security bug fix, it's important to know and upgrade) and when major events happen to the project. Only a few emails a year."
+msgstr "Tartsa a kapcsolatot Piwigo projekttel, iratkozzon fel a Piwigo Hírlevélre. Levélben értesítjük ha újabb kiadás érhető el, (beleértve a biztonsági hibák javítását, valamint a frissítéseket) valamint ha nagyobb esemény történik a projektben. Csak néhány levél évente."
+
+msgid "Subscribe %s"
+msgstr "Feliratkozás %s"
+
+msgid "Subscribe %s to Piwigo Announcements Newsletter"
+msgstr "Feliratkozás %s e-mail címmel a Piwigo hirdetésekre, hírlevelekre"
+
+msgid "Purge search history"
+msgstr "Keresési előzmények törlése"
+
+msgid "Hide"
+msgstr "Elrejt"
+
+msgid "Cannot delete the old permalink !"
+msgstr "A régi közvetlen link nem törölhető !"
+
+msgid "Hit"
+msgstr "Alkalommal"
+
+msgid "Password is missing. Please enter the password."
+msgstr "Jelszó hiányzik. Kérem írja be a jelszót."
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "Jelszó megerősítése hiányzik. Kérem erősítse meg a választott jelszót."
+
+msgid "Allow users to edit their own comments"
+msgstr "A felhasználók módosíthatják a hozzászólásaikat"
+
+msgid "Allow users to delete their own comments"
+msgstr "A felhasználók törölhetik a hozzászólásaikat"
+
+msgid "Email administrators when a comment is modified"
+msgstr "Email az adminisztrátornak, ha egy hozzászólást módosítottak"
+
+msgid "Email administrators when a comment is deleted"
+msgstr "Email az adminisztrátornak, ha egy hozzászólást töröltek"
+
+msgid "Upload Photos"
+msgstr "Képek feltöltése"
+
+msgid "Drop into album"
+msgstr "Album választás:"
+
+msgid "+ Add an upload box"
+msgstr "+ További képek feltöltése..."
+
+msgid "Create the \"%s\" directory at the root of your Piwigo installation"
+msgstr "\"%s\" könyvtár létrehozása a telepített Piwigo galériában."
+
+msgid "Give write access (chmod 777) to \"%s\" directory at the root of your Piwigo installation"
+msgstr "Adjon írási jogot (chmod 777) a(z) \"%s\" gyökerének a telepített Piwigo galériában"
+
+msgid "existing album"
+msgstr "létező album"
+
+msgid "create a new album"
+msgstr " új album létrehozása"
+
+msgid "Album name"
+msgstr "Album neve"
+
+msgid "Album \"%s\" has been added"
+msgstr "'%s' album hozzáadva"
+
+msgid "Uploaded Photos"
+msgstr "Feltöltött képek"
+
+msgid "%d photos uploaded"
+msgstr "%d fotó feltöltve"
+
+msgid "Privacy level set to \"%s\""
+msgstr "Minimum hozzáférési szint itt: \"%s\""
+
+msgid "Album \"%s\" now contains %d photos"
+msgstr "'%s' albumban már %d kép található"
+
+msgid "Manage this set of %d photos"
+msgstr "Szerkessze a készlet (%d elem) képeit"
+
+msgid "Select files"
+msgstr "Képek kiválasztása"
+
+msgid "Everybody"
+msgstr "Mindenki"
+
+msgid "Who can see these photos?"
+msgstr "Ki láthatja a képeket?"
+
+msgid "Settings"
+msgstr "Képméret beállítás"
+
+msgid "Resize"
+msgstr "Átméretezés"
+
+msgid "Maximum width"
+msgstr "Legnagyobb szélesség"
+
+msgid "pixels"
+msgstr "pixel"
+
+msgid "Maximum height"
+msgstr "Legnagyobb magasság"
+
+msgid "Image Quality"
+msgstr "Kép minőség"
+
+msgid "Thumbnail"
+msgstr "Bélyegkép"
+
+msgid "Save Settings"
+msgstr "Beállítások mentése"
+
+msgid "Your configuration settings are saved"
+msgstr "A beállítások mentése sikeres"
+
+msgid "Unable to check for upgrade."
+msgstr "A frissítés sikertelen."
+
+msgid "Operation in progress"
+msgstr "Feldolgozás."
+
+msgid "Please wait..."
+msgstr "Kérem várjon..."
+
+msgid "Tools"
+msgstr "Eszközök"
+
+msgid "Photos"
+msgstr "Képek"
+
+msgid "Themes"
+msgstr "Témák"
+
+msgid "Instructions to use Piwigo"
+msgstr "A Piwigo használata"
+
+msgid "Installed Themes"
+msgstr "Telepített témák"
+
+msgid "Add New Theme"
+msgstr "Új téma hozzáadása"
+
+msgid "Forbid this theme to users"
+msgstr "A téma tiltása felhasználók részére"
+
+msgid "Set as default theme for unregistered and new users"
+msgstr "Téma beállítása alapértelmezettként nem regisztrált és új felhasználók részére"
+
+msgid "unknown"
+msgstr "ismeretlen"
+
+msgid "Active Themes"
+msgstr "Aktív témák"
+
+msgid "Add write access to the \"%s\" directory"
+msgstr "Adjon írási jogot a(z) \"%s\" könyvtárnak"
+
+msgid "Administration Home"
+msgstr "Adminisztrációs oldal"
+
+msgid "Change Admin Colors"
+msgstr "Adminisztrációs oldal színe"
+
+msgid "Delete this theme"
+msgstr "Téma törlése"
+
+msgid "Directory does not exist"
+msgstr "Könyvtár nem található"
+
+msgid "FTP + Synchronization"
+msgstr "FTP + Szinkronizálás"
+
+msgid "Get Support on Piwigo Forum"
+msgstr "Támogatást kap a Piwigo fórumon"
+
+msgid "Help Me"
+msgstr "Segítség"
+
+msgid "Impossible to activate this theme, the parent theme is missing: %s"
+msgstr "Ez a téma nem aktiválható, mert a szülő téma nem létezik: %s"
+
+msgid "Impossible to delete this theme. Other themes depends on it: %s"
+msgstr "Ez a téma nem törölhető, mert egy másik téma függ tőle: %s"
+
+msgid "Inactive Themes"
+msgstr "Inaktív témák"
+
+msgid "Install on your computer,"
+msgstr "Telepítse számítógépére,"
+
+msgid "Make this theme available to users"
+msgstr "A téma elérhetővé tétele a felhasználók számára"
+
+msgid "Page end"
+msgstr "Oldal vége"
+
+msgid "Piwigo Uploader"
+msgstr "Piwigo Feltöltő"
+
+msgid "Read Piwigo Documentation"
+msgstr "A Piwigo Dokumentációját itt érheti el"
+
+msgid "Start pLoader and add your photos."
+msgstr "Indítsa el a pLoader programot és töltse fel képeit."
+
+msgid "Switch to clear or dark colors for administration"
+msgstr "Átváltás a világos és sötét szín között"
+
+msgid "Theme has been successfully installed"
+msgstr "A téma telepítése sikeresen megtörtént"
+
+msgid "Visit Gallery"
+msgstr "Galéria megtekintése"
+
+msgid "Visit Piwigo project website"
+msgstr "Ugrás a Piwigo projekt hivatalos oldalára"
+
+msgid "Guest Settings"
+msgstr "Vendég beállításai"
+
+msgid "Main Page"
+msgstr "Főoldal"
+
+msgid "Photo Page"
+msgstr "Kép oldal"
+
+msgid "Activate Navigation Bar"
+msgstr "Navigációs sáv bekapcsolása"
+
+msgid "Activate Navigation Thumbnails"
+msgstr "Navigációs bélyegképek bekapcsolása"
+
+msgid "Activate icon \"%s\""
+msgstr "Ikon bekapcsolása \"%s\""
+
+msgid "Photo Properties"
+msgstr "Kép tulajdonságok"
+
+msgid "Allow user customization"
+msgstr "Testreszabás engedélyezése a felhasználóknak"
+
+msgid "Languages"
+msgstr "Nyelvek"
+
+msgid "Installed Languages"
+msgstr "Telepített nyelvek"
+
+msgid "Add New Language"
+msgstr "Új nyelv hozzáadása"
+
+msgid "Language has been successfully installed"
+msgstr "A nyelv telepítése sikeresen megtörtént"
+
+msgid "Select:"
+msgstr "Kiválaszt:"
+
+msgid "None"
+msgstr "Egyik sem"
+
+msgid "Invert"
+msgstr "Felcserél"
+
+msgid "Impossible to deactivate this theme, you need at least one theme."
+msgstr "Nem lehet kikapcsolni ezt a témát, szükség van legalább még egy aktív témára."
+
+msgid "Webmaster status is required."
+msgstr "Webmester jogosultság szükséges."
+
+msgid "Bound Theme"
+msgstr "Fix Téma"
+
+msgid "Allow rating"
+msgstr "Értékelés engedélyezése"
+
+msgid "Select at least one comment"
+msgstr "Legalább egy hozzászólást ki kell választani"
+
+msgid "Active Plugins"
+msgstr "Bekapcsolt bővítmények"
+
+msgid "Inactive Plugins"
+msgstr "Kikapcsolt Bővítmények"
+
+msgid "Missing Plugins"
+msgstr "Hiányzó bővítmények"
+
+msgid "Uninstalled Plugins"
+msgstr "Törölt bővítmények"
+
+msgid "By %s"
+msgstr "Szerző: %s"
+
+msgid "Visit plugin site"
+msgstr "Ugrás a bővítmények weboldalra"
+
+msgid "Active Languages"
+msgstr "Bekapcsolt nyelvek"
+
+msgid "Delete this language"
+msgstr "Nyelv törlése"
+
+msgid "Forbid this language to users"
+msgstr "A nyelv tiltása"
+
+msgid "Impossible to deactivate this language, first set another language as default."
+msgstr "Ezt a nyelvet jelenleg nem lehet kikapcsolni, előbb válasszon egy másik nyelvet alapértelmezettnek."
+
+msgid "Impossible to deactivate this language, you need at least one language."
+msgstr "Ezt a nyelvet jelenleg nem lehet kikapcsolni, legalább egy nyelvre szükség van."
+
+msgid "Inactive Languages"
+msgstr "Kikapcsolt nyelvek"
+
+msgid "Make this language available to users"
+msgstr "A nyelv engedélyezése"
+
+msgid "Set as default language for unregistered and new users"
+msgstr "Nyelv beállítása alapértelmezettként nem regisztrált és új felhasználók részére"
+
+msgid "Add Photos"
+msgstr "Képek hozzáadása"
+
+msgid "The following tag was deleted"
+msgstr "Címke törlése sikeres"
+
+msgid "Miscellaneous"
+msgstr "Egyéb"
+
+msgid "Virtual Links"
+msgstr "Virtuális linkek"
+
+msgid "There is no other language available."
+msgstr "Egyéb nyelv nem áll rendelkezésre."
+
+msgid "There is no other plugin available."
+msgstr "Egyéb bővítmény nem áll rendelkezésre."
+
+msgid "There is no other theme available."
+msgstr "Egyéb téma nem áll rendelkezésre."
+
+msgid "Add another set of photos"
+msgstr "További fotók hozzáadása"
+
+msgid "By rank"
+msgstr "Értékelés szerint"
+
+msgid "Manual order"
+msgstr "Kézi rendezés"
+
+msgid "Order of menubar items has been updated successfully."
+msgstr "A menüsor elemei sikeresen frissítve."
+
+msgid "This theme was not designed to be directly activated"
+msgstr "Ezt a témát úgy tervezték, hogy közvetlenül nem aktiválható"
+
+msgid "Pending Comments"
+msgstr "Hozzászólások (függőben)"
+
+msgid "Who can see this photo?"
+msgstr "Ki láthatja ezt a képet?"
+
+msgid "Menu Management"
+msgstr "Menü"
+
+msgid "In your php.ini file, the upload_max_filesize (%sB) is bigger than post_max_size (%sB), you should change this setting"
+msgstr "A php.ini fájlban az upload_max_filesize (%sB) nagyobb, mint a post_max_size (%sB), módosítania kell a beállítást"
+
+msgid "Exif extension not available, admin should disable exif use"
+msgstr "Exif-kiterjesztés nem érhető el, az adminisztrátor tiltsa le az exif használatát"
+
+msgid "The uploaded file exceeds the upload_max_filesize directive in php.ini: %sB"
+msgstr "A feltöltendő fájl meghaladja a php.ini-ben megadott upload_max_filesize értéket: %sB"
+
+msgid "The uploaded files exceed the post_max_size directive in php.ini: %sB"
+msgstr "A feltöltendő fájlok meghaladják a php.ini-ben megadott post_max_size értéket: %sB"
+
+msgid "The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form"
+msgstr "A feltöltendő fájl meghaladja a HTML formában megadott MAX_FILE_SIZE értéket"
+
+msgid "The uploaded file was only partially uploaded"
+msgstr "A feltöltendő fájl csak részben töltődött fel"
+
+msgid "No file was uploaded"
+msgstr "A feltöltés sikertelen"
+
+msgid "Missing a temporary folder"
+msgstr "Hiányzik a temporary mappa"
+
+msgid "Failed to write file to disk"
+msgstr "Nem sikerült a fájlt a lemezre írni"
+
+msgid "File upload stopped by extension"
+msgstr "Fájlfeltöltést leállította a kiterjesztés"
+
+msgid "Unknown upload error"
+msgstr "Ismeretlen feltöltési hiba"
+
+msgid "Error on file \"%s\" : %s"
+msgstr "Hibás a fájl \"%s\" : %s"
+
+msgid "automatic order"
+msgstr "Automatikus rendezés"
+
+msgid "manual order"
+msgstr "Kézi rendezés"
+
+msgid "Albums automatically sorted"
+msgstr "Automatikusan rendezett albumok"
+
+msgid "Batch Manager"
+msgstr "Kötegelt kezelés"
+
+msgid "include child albums"
+msgstr "belső albumok is"
+
+msgid "Selection"
+msgstr "Kiválasztás"
+
+msgid "Action"
+msgstr "Művelet"
+
+msgid "Set author"
+msgstr "Szerző hozzáadása"
+
+msgid "Set title"
+msgstr "Cím hozzáadása"
+
+msgid "Set creation date"
+msgstr "Készítés dátumának hozzáadása"
+
+msgid "Apply action"
+msgstr "Művelet végrehajtása"
+
+msgid "on the %d selected photos"
+msgstr "a kiválasztott %d képen"
+
+msgid "%d of %d photos selected"
+msgstr "%d kép kiválasztva, összes kép %d"
+
+msgid "No photo selected, %d photos in current set"
+msgstr "Nincs kép kiválasztva, összes kép %d"
+
+msgid "All %d photos are selected"
+msgstr "Összes, %d kép kiválasztva"
+
+msgid "remove this filter"
+msgstr "a szűrő eltávolítása"
+
+msgid "Duplicates"
+msgstr "Duplikált"
+
+msgid "Add a filter"
+msgstr "Szűrő hozzáadása"
+
+msgid "Remove all filters"
+msgstr "Összes szűrő törlése"
+
+msgid "Refresh photo set"
+msgstr "Képek frissítése"
+
+msgid "The whole page"
+msgstr "Összes kép az oldalon"
+
+msgid "The whole set"
+msgstr "A teljes képkészlet"
+
+msgid "No photo in the current set."
+msgstr "Nem található a feltételnek megfelelő kép."
+
+msgid "No photos selected, no actions possible."
+msgstr "Nincs kép kiválasztva, nem lehet műveletet végezni."
+
+msgid "Choose an action"
+msgstr "Művelet kiválasztása"
+
+msgid "remove author"
+msgstr "szerző törlése"
+
+msgid "Type here the author name"
+msgstr "Írja be a szerző nevét"
+
+msgid "remove title"
+msgstr "cím törlése"
+
+msgid "Type here the title"
+msgstr "Írja be a kép címét"
+
+msgid "remove creation date"
+msgstr "készítés időpontjának törlése"
+
+msgid "Album photos associated to the following albums: %s"
+msgstr "Az albumban lévő képek hozzárendelve a következő albumokhoz: %s"
+
+msgid "Delete orphan tags"
+msgstr "Árva címkék törlése"
+
+msgid "delete photo"
+msgstr "Kép törlése"
+
+msgid "Orphan tags deleted"
+msgstr "Árva címkék törölve"
+
+msgid "Week starts on"
+msgstr "A hét első napja"
+
+msgid "You have %d orphan tags: %s."
+msgstr "%d árva címke található: %s."
+
+msgid "Remove from caddie"
+msgstr "Eltávolítás a kosárból"
+
+msgid "Themes which need upgrade"
+msgstr "Frissítést igénylő témák"
+
+msgid "Languages which need upgrade"
+msgstr "Frissítést igénylő nyelvek"
+
+msgid "All themes are up to date."
+msgstr "Minden téma naprakész."
+
+msgid "All plugins are up to date."
+msgstr "Minden bővítmény naprakész."
+
+msgid "All languages are up to date."
+msgstr "Minden nyelv naprakész."
+
+msgid "Visit theme site"
+msgstr "Téma oldal meglátogatása"
+
+msgid "Visit language site"
+msgstr "Nyelv oldal meglátogatása"
+
+msgid "New Version"
+msgstr "Új verzió"
+
+msgid "Obsolete Plugins"
+msgstr "Elavult bővítmények"
+
+msgid "WARNING! This plugin does not seem to be compatible with this version of Piwigo."
+msgstr "FIGYELEM! Ez a bővítmény nem kompatibilis a Piwigo jelenleg futó verziójával."
+
+msgid "Do you want to activate anyway?"
+msgstr "Aktiváljuk mindenképp?"
+
+msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
+msgstr "EZ A BŐVÍTMÉNY MÁR BE VAN ÉPÍTVE A PIWIGO RENDSZERBE! ELTÁVOLÍTANDÓ!"
+
+msgid "ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW."
+msgstr "HIBA: EZ A BŐVÍTMÉNY NEM ELÉRHETŐ, DE TELEPÍTVE VAN! ELTÁVOLÍTANDÓ!"
+
+msgid "display"
+msgstr "kijelző"
+
+msgid "Thumbnails generation in progress..."
+msgstr "Bélyegképek generálása folyamatban..."
+
+msgid "new"
+msgstr "új"
+
+msgid "No results"
+msgstr "Nincs találat"
+
+msgid "Searching..."
+msgstr "Keresés..."
+
+msgid "Type in a search term"
+msgstr "Írja be a keresett kifejezést"
+
+msgid "Deactivate all"
+msgstr "Összes kikapcsolása"
+
+msgid "Restore"
+msgstr "Visszaállítás"
+
+msgid "Restore default configuration. You will lose your plugin settings!"
+msgstr "Alapértelmezett beállítások visszaállítása. Figyelem, a bővítmény módosításai elvesznek!"
+
+msgid "Show menubar"
+msgstr "Menüsáv megjelenítése"
+
+msgid "Photos generation in progress..."
+msgstr "Képek újragenerálása folyamatban..."
+
+msgid "%s photos have been regenerated"
+msgstr "%s kép újragenerálva"
+
+msgid "%s photos can not be regenerated"
+msgstr "%s képet nem lehet újragenerálni"
+
+msgid "Updates"
+msgstr "Frissítések"
+
+msgid "Update in progress... Please wait."
+msgstr "Frissítés folyamatban... Kérem várjon."
+
+msgid "Ignore this update"
+msgstr "Hagyja figyelmen kívül"
+
+msgid "Reset ignored updates"
+msgstr "Mellőzés törlése"
+
+msgid "Update All"
+msgstr "Összes frissítése"
+
+msgid "ERROR"
+msgstr "HIBA"
+
+msgid "Update Complete"
+msgstr "Frissítés kész"
+
+msgid "Piwigo Update"
+msgstr "Piwigo frissítés"
+
+msgid "Extensions Update"
+msgstr "Bővítmény frissítés"
+
+msgid "All extensions are up to date."
+msgstr "Az összes bővítmény naprakész."
+
+msgid "Following plugins may not be compatible with the new version of Piwigo:"
+msgstr "A következő bővítmények nem kompatibilisek az új Piwigo verzióval:"
+
+msgid "Following themes may not be compatible with the new version of Piwigo:"
+msgstr "A következő témák nem kompatibilisek az új Piwigo verzióval:"
+
+msgid "I decide to update anyway"
+msgstr "Határozhat úgy, hogy frissít mindenképp"
+
+msgid "Update to Piwigo %s"
+msgstr "Frissítés a Piwigo %s verziójára"
+
+msgid "Two updates are available"
+msgstr "Kétféle frissítés érhető el"
+
+msgid "This is a minor update, with only bug corrections."
+msgstr "Egy kisebb frissítés, kizárólag hibajavítás."
+
+msgid "This is a major update, with <a href=\"%s\">new exciting features</a>."
+msgstr "Egy jelentős frissítés, <a href=\"%s\">új, kibővített funkciókkal</a>."
+
+msgid "Some themes and plugins may be not available yet."
+msgstr "Lehet, hogy néhány téma és bővítmény még nem áll rendelkezésre."
+
+msgid "You can update to Piwigo %s directly, without upgrading to Piwigo %s (recommended)."
+msgstr "Lehetőség van közvetlenül frissíteni a Piwigo %s verziójára, kihagyva a Piwigo %s verzióját (ajánlott)."
+
+msgid "Save Template Directory"
+msgstr "Template könyvtár mentése"
+
+msgid "Some upgrades are available for extensions."
+msgstr "Frissítéseket találtam egyes kiterjesztésekhez."
+
+msgid "Ignore All"
+msgstr "Összes mellőzése"
+
+msgid "Crop"
+msgstr "Körbevágás"
+
+msgid "Width"
+msgstr "Szélesség"
+
+msgid "Height"
+msgstr "Magasság"
+
+msgid "Follow Orientation"
+msgstr "Elforgatható"
+
+msgid "Graphics Library"
+msgstr "Grafikus könyvtár"
+
+msgid "Activate icon \"new\" next to albums and pictures"
+msgstr "\"új\" ikon aktiválása az albumok és képek mellett"
+
+msgid "Default photos order"
+msgstr "Alapértelmezett kép sorrend"
+
+msgid "You can't define a default photo order because you have a custom setting in your local configuration."
+msgstr "Az alapértelmezett kép sorrend nem határozható meg a helyi konfigurációban található egyéni beállítás miatt."
+
+msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
+msgstr "A helyi konfigurációs fájlban lévő <i>$conf['order_by']</i> paraméter elavult, távolítsa el, vagy nevezze át <i>$conf['order_by_custom']</i>-ra !"
+
+msgid "Add a criteria"
+msgstr "Feltétel hozzáadása"
+
+msgid "Average rate"
+msgstr "Átlagos pontszám"
+
+msgid "Rate"
+msgstr "Érték"
+
+msgid "... or "
+msgstr "... vagy"
+
+msgid "Create"
+msgstr "Létrehoz"
+
+msgid "Start Upload"
+msgstr "Feltöltés indítása"
+
+msgid "You are using the Flash uploader. Problems? Try the <a href=\"%s\">Browser uploader</a> instead."
+msgstr "Jelenleg a Flash alapú feltöltőt használja. Ha problémát észlel váltson át a <a href=\"%s\">Böngésző alapú feltöltésre</a>."
+
+msgid "You are using the Browser uploader. Try the <a href=\"%s\">Flash uploader</a> instead."
+msgstr "Jelenleg a Böngésző alapú feltöltőt használja. Próbálja ki a <a href=\"%s\">Flash alapú feltöltőt</a>."
+
+msgid "Maximum file size: %sB."
+msgstr "Maximális fájlméret: %sB."
+
+msgid "Allowed file types: %s."
+msgstr "Engedélyezett fájltípusok: %s."
+
+msgid "Approximate maximum resolution: %dM pixels (that's %dx%d pixels)."
+msgstr "Becsült maximális felbontás: %dMpixel (%dx%d pixel)."
+
+msgid "Manage Permissions"
+msgstr "Jogosultságok kezelése"
+
+msgid "Photo %s of %s"
+msgstr "%s kép feltöltése, összes kép %s"
+
+msgid "show details"
+msgstr "részletek megjelenítése"
+
+msgid "hide details"
+msgstr "részletek elrejtése"
+
+msgid "Merge tags"
+msgstr "Címkék összevonása"
+
+msgid "Select the destination tag"
+msgstr "Válassza ki a kívánt címkét"
+
+msgid "(this tag will be deleted)"
+msgstr "(ez a címke törlésre kerül)"
+
+msgid "Confirm merge"
+msgstr "Összevonás megerősítése"
+
+msgid "Merge selected tags"
+msgstr "Kiválasztott címkék összevonása"
+
+msgid "No destination tag selected"
+msgstr "Nincs kijelölt címke"
+
+msgid "Tags <em>%s</em> merged into tag <em>%s</em>"
+msgstr "<em>%s</em> címke (címkék) összevonva a(z) <em>%s</em> címkével"
+
+msgid "Select at least two tags for merging"
+msgstr "Válasszon ki legalább két címkét"
+
+msgid "Learn more"
+msgstr "Bővebben"
+
+msgid "Select an album"
+msgstr "Válasszon ki egy albumot"
+
+msgid "By default, Piwigo will create a new websize from the HD (high definition) version of your photo."
+msgstr "Alapértelmezésben a Piwigo a HD (high definition) képből létrehoz egy web méretű képet."
+
+msgid "If no HD is available and if the current websize is bigger than resize dimensions, Piwigo will move it as HD and create a downsized websize photo from it."
+msgstr "Amennyiben nincs HD kép és a rendelkezésre álló web méretű kép nagyobb mint az aktuális átméretezett kép méretek, a jelenlegi képet a rendszer átmozgatja HD képnek és létrehoz egy új web méretű képet."
+
+msgid "An error has occured during upgrade."
+msgstr "Hiba történt frissítés közben."
+
+msgid "An error has occured during extract. Please check files permissions of your piwigo installation.<br><a href=\"%s\">Click here to show log error</a>."
+msgstr "Hibajelentés (Információ). Kérjük ellenőrizze a telepített fájlok jogosultságait.<br><a href=\"%s\">További információkért kattintson ide</a>."
+
+msgid "Piwigo cannot retrieve upgrade file from server"
+msgstr "Nem tudom letölteni a frissítést a Piwigo fájl szerverről"
+
+msgid "Zoom"
+msgstr "Zoom"
+
+msgid "Downloads"
+msgstr "Letöltés"
+
+msgid "Photo name"
+msgstr "Képnév"
+
+msgid "Download,"
+msgstr "Letöltés,"
+
+msgid "Activate comments"
+msgstr "Hozzászólások aktiválása"
+
+msgid "Original Size"
+msgstr "Eredeti méret"
+
+msgid "Resize after upload"
+msgstr "Feltöltés után átméretezés"
+
+msgid "Send connection settings by email"
+msgstr "Kapcsolat beállításainak küldése e-mailben"
+
+msgid "The original image quality must be a number between %d and %d"
+msgstr "Az eredeti kép minősége %d és %d között lehet"
+
+msgid "The original maximum height must be a number between %d and %d"
+msgstr "Az eredeti magasság %d és %d között lehet"
+
+msgid "The original maximum width must be a number between %d and %d"
+msgstr "Az eredeti szélesség %d és %d között lehet"
+
+msgid "Default comments order"
+msgstr "Alapértelmezett hozzászólás-rend"
+
+msgid "administrators"
+msgstr "adminisztrátorok"
+
+msgid "registered users"
+msgstr "regisztrált felhasználók"
+
+msgid "Save visits in history for"
+msgstr "Látogatások előzményeinek mentése"
+
+msgid "simple visitors"
+msgstr "egyszerű látogatók"
+
+msgid "A locked gallery is only visible to administrators"
+msgstr "A lezárt galériát csak az adminisztrátorok láthatják"
+
+msgid "Gallery unlocked"
+msgstr "Galéria feloldva"
+
+msgid "Notify administrators when a comment is"
+msgstr "Adminisztrátor értesítése hozzászólás érkezésekor"
+
+msgid "Unlock gallery"
+msgstr "Galéria lezárásának feloldása"
+
+msgid "modified"
+msgstr "módosítva"
+
+msgid "pending validation"
+msgstr "jóváhagyásra váró"
+
+msgid "This album contains no photo."
+msgstr "Ez az album nem tartalmaz képeket."
+
+msgid "This album contains %d photos, added between %s and %s."
+msgstr "Az albumban %d kép található. Feltöltés időpontja: %s és %s."
+
+msgid "This album contains %d photos, added on %s."
+msgstr "Az albumban %d kép található. Feltöltés időpontja: %s."
+
+msgid "%s has been successfully updated."
+msgstr "%s frissítése sikeres"
+
+msgid "Applications"
+msgstr "Alkalmazások"
+
+msgid "apply automatic sort order"
+msgstr "automatikus rendezés alkalmazása"
+
+msgid "Automatic sort order"
+msgstr "Automatikus rendezés"
+
+msgid "Cancel"
+msgstr "Mégse"
+
+msgid "List"
+msgstr "Lista"
+
+msgid "Move to album"
+msgstr "Áthelyezés másik albumba"
+
+msgid "Web Form"
+msgstr "Webes űrlap"
+
+msgid "Add tags"
+msgstr "Címkék hozzáadása"
+
+msgid "Add to caddie"
+msgstr "Kosárba tesz"
+
+msgid "Last import"
+msgstr "Utolsó import"
+
+msgid "Predefined filter"
+msgstr "Előre definiált szűrők"
+
+msgid "With no album"
+msgstr "Nem albumban"
+
+msgid "With no tag"
+msgstr "Nem címkézett"
+
+msgid "With no virtual album"
+msgstr "Nem virtuális albumban"
+
+msgid "Center of interest"
+msgstr "Fókuszban"
+
+msgid "custom"
+msgstr "Egyéni"
+
+msgid "Delete multiple size images"
+msgstr "Eltérő méretű képek törlése"
+
+msgid "Generate multiple size images"
+msgstr "Eltérő méretű képek létrehozása"
+
+msgid "any visitor can see this album"
+msgstr "mindenki láthatja az albumot"
+
+msgid "Groups and users"
+msgstr "Csoportok és felhasználók"
+
+msgid "Permission granted for groups"
+msgstr "Engedéllyel rendelkező csoportok"
+
+msgid "Permission granted for users"
+msgstr "Engedéllyel rendelkező felhasználók"
+
+msgid "Select groups..."
+msgstr "Csoportok kiválasztása..."
+
+msgid "Select users..."
+msgstr "Felhasználók kiválasztása..."
+
+msgid "There is no group in this gallery."
+msgstr "Nincs csoport ebben a galériában."
+
+msgid "visitors need to login and have the appropriate permissions to see this album"
+msgstr "a látogatóknak be kell jelentkezniük és megfelelő engedéllyel kell rendelkezniük az album megtekintéséhez"
+
+msgid "Apply watermark if height is bigger than"
+msgstr "Vízjel alkalmazása, ha a magasság nagyobb mint"
+
+msgid "Apply watermark if width is bigger than"
+msgstr "Vízjel alkalmazása, ha a szélesség nagyobb mint"
+
+msgid "bottom left corner"
+msgstr "bal alsó sarokban"
+
+msgid "bottom right corner"
+msgstr "jobb alsó sarokban"
+
+msgid "middle"
+msgstr "középen"
+
+msgid "Opacity"
+msgstr "Áttetszőség"
+
+msgid "Permission management"
+msgstr "Engedélyek kezelése"
+
+msgid "Select a file"
+msgstr "Válasszon ki egy fájlt"
+
+msgid "top left corner"
+msgstr "bal felső sarokban"
+
+msgid "top right corner"
+msgstr "jobb felső sarokban"
+
+msgid "X Position"
+msgstr "X pozíció"
+
+msgid "X Repeat"
+msgstr "X ismétlődés"
+
+msgid "Y Position"
+msgstr "Y pozíció"
+
+msgid "Available on"
+msgstr "Elérhető"
+
+msgid "add a new watermark"
+msgstr "új vízjel hozzáadása"
+
+msgid "<em>Piwigo for Android</em> application empowers you to connect your Android phone or table to your Piwigo gallery, create some albums and upload several photos at once."
+msgstr "A <em>Piwigo for Android</em> alkalmazás segítségével csatlakozhat Piwigo galériájához telefonjával vagy táblagépével, létrehozhat új albumokat, feltölthet képeket (egyszerre akár többet is) képgalériájába."
+
+msgid "<em>Piwigo for iOS</em> application empowers you to connect to your Piwigo gallery from your iPhone, iPad or iPod Touch, create some albums and upload several photos at once."
+msgstr "A <em>Piwigo for iOS</em> alkalmazás segítségével csatlakozhat Piwigo galériájához iPhone, iPad vagy iPod Touch eszközével, létrehozhat új albumokat, feltölthet képeket (egyszerre akár többet is) képgalériájába."
+
+msgid "Adobe Photoshop Lightroom is a photography software designed to manage large quantities of digital images and doing post production work."
+msgstr "Az Adobe Photoshop Lightroom egy képkezelő program, melyet nagy mennyiségű digitális kép utómunkálataihoz és kezeléséhez terveztek."
+
+msgid "Features include gallery browsing, album creation and photo upload."
+msgstr "Jellemzői: galéria böngészés, album létrehozás, képek feltöltése."
+
+msgid "Multiple Size"
+msgstr "Kép méretek"
+
+msgid "No group is permitted to see this private album"
+msgstr "Nincs engedélyezett csoport a privát albumhoz"
+
+msgid "On your Linux, simply install Shotwell with your package manager and the activate Piwigo publishing option."
+msgstr "Egyszerűen telepítheti a Linux csomagkezelője segítségével, majd könnyedén beállíthatja Piwigo galériájának eléréséhez."
+
+msgid "Piwigo Publish plugin for Lightroom"
+msgstr "Piwigo Lightroom feltöltő"
+
+msgid "Piwigo export plugin for iPhoto"
+msgstr "Piwigo iPhoto feltöltő"
+
+msgid "Piwigo for Android"
+msgstr "Piwigo Androidon"
+
+msgid "Piwigo for iOS (iPhone, iPad, iPod Touch)"
+msgstr "Piwigo iOS-en (iPhone, iPad, iPod Touch)"
+
+msgid "Piwigo publish plugin for Shotwell"
+msgstr "Piwigo Shotwell feltöltő"
+
+msgid "Piwigo publish plugin for digiKam"
+msgstr "Piwigo digiKam feltöltő"
+
+msgid "ReGalAndroid (RemoteGallery client for Android) is an open source (GPL v3) Piwigo client for the Android platform."
+msgstr "A ReGalAndroid (RemoteGallery kliens Androidra) egy nyílt forráskódú (GPL v3) Piwigo kliens Android platformra."
+
+msgid "Shotwell is an open source digital photo organizer that runs on Linux. It is the default photo manager in Ubuntu and Fedora."
+msgstr "A Shotwell egy nyílt forráskódú képszerkesztő, melyet Linux alapú rendszerekhez terveztek. Alapértelmezett szerkesztő Ubuntuban és Fedoraban."
+
+msgid "The Piwigo export plugin allows you to create albums and export photos."
+msgstr "A Piwigo export bővítmény lehetővé teszi albumok, képek feltöltését."
+
+msgid "The Piwigo publish Plug-in allows you to export and synchronize photos from Lightroom directly to your Piwigo photo gallery."
+msgstr "A Piwigo publish Plug-in lehetőséget biztosít arra, hogy a Lightroom program segítségével töltsön fel képeket, szinkronizálja képeit Piwigo galériájába."
+
+msgid "To export your photos from digiKam to Piwigo, simply install digiKam and the Kipi-plugins."
+msgstr "Ahhoz, hogy Piwigo rendszerébe exportálhassa fotóit a digiKam segítségével, telepítenie kell a KIPI-plugins csomagot."
+
+msgid "digiKam is an advanced digital photo management free software for Linux, Windows, and MacOSX."
+msgstr "A digiKam egy fejlett, ingyenes képkezelő program Linux, Windows és MacOSX alá."
+
+msgid "digiKam is designed for photographers who want to view, manage, edit, enhance, organize, tag, and share photographs."
+msgstr "A digiKam programot fotósoknak tervezték, megtekintheti, kezelheti, szerkesztheti, javíthatja, rendszerezheti, címkézheti és megoszthatja képeit."
+
+msgid "iPhoto is the default photo manager on MacOSX. The Piwigo export plugin let you create new albums and export your photos directly from iPhoto to your Piwigo photo gallery."
+msgstr "Az iPhoto a MacOSX rendszer alapértelmezett képszerkesztője. A Piwigo feltöltő modul segítségével létrehozhat új albumokat és feltöltheti képeit a Piwigo galériába."
+
+msgid "By default, the center of interest is placed in the middle of the photo."
+msgstr "Alapértelmezésben a kivágás középpontja az adott kép középpontja."
+
+msgid "Select a zone with your mouse to define a new center of interest."
+msgstr "Az egérrel kijelölhető az a rész, amellyel a számunkra fontos részt állítjuk a középpontba."
+
+msgid "The center of interest is the most meaningful zone in the photo."
+msgstr "Az érdeklődés középpontjában leggyakrabban a kép egyik részlete áll."
+
+msgid "%u users have automatic permission because they belong to a granted group."
+msgstr "%u felhasználónak van automatikus engedélye, mert egy megadott csoporthoz tartoznak."
+
+msgid "Aperture is a powerful tool to refine images and manage massive libraries on Mac."
+msgstr "Az Aperture egy Mac rendszerre fejlesztett professzionális eszköz képek szerkesztéséhez, nagy méretű könyvtárak kezeléséhez."
+
+msgid "Aperture is designed for professional photographers with iPhoto simplicity."
+msgstr "Az Aperture az Iphoto logikus felépítését biztosítja profi fotósoknak."
+
+msgid "For photo sizes with crop, such as \"Square\", Piwigo will do its best to include the center of interest."
+msgstr "Egy kép kivágásakor, mint pl. a \"Négyzet\" alakú kivágásnál, a Piwigo lehetőséget biztosít a megfelelő rész kiemeléséhez."
+
+msgid "Not cropped correctly?"
+msgstr "Nem vágott helyesen?"
+
+msgid "Photo sizes with crop"
+msgstr "Kép méretek körbevágáshoz"
+
+msgid "Piwigo export plugin for Aperture"
+msgstr "Aperture Piwigo export bővítmény"
+
+msgid "Save manual order"
+msgstr "Egyéni beállítások mentése"
+
+msgid "You can activate only one mobile theme."
+msgstr "Aktiválhatja csak a mobil témát."
+
+msgid "cancel manual order"
+msgstr "Egyéni beállítások elvetése"
+
+msgid "include photos with lower privacy level"
+msgstr "alacsonyabb adatvédelmi szinttel rendelkező képeket tartalmaz"
+
+msgid "%d day"
+msgstr "%d nappal"
+
+msgid "%d days"
+msgstr "%d nappal"
+
+msgid "%d hour"
+msgstr "%d órával"
+
+msgid "%d hours"
+msgstr "%d órával"
+
+msgid "%d minute"
+msgstr "%d perccel"
+
+msgid "%d minutes"
+msgstr "%d perccel"
+
+msgid "%d month"
+msgstr "%d hónappal"
+
+msgid "%d months"
+msgstr "%d hónappal"
+
+msgid "%d second"
+msgstr "%d másodperccel"
+
+msgid "%d seconds"
+msgstr "%d másodperccel"
+
+msgid "%d year"
+msgstr "%d évvel"
+
+msgid "%d years"
+msgstr "%d évvel"
+
+msgid "%s ago"
+msgstr "%s ezelőtt,"
+
+msgid "%s in the future"
+msgstr "%s a jövőben"
+
+msgid "Added by %s"
+msgstr "Feltöltötte: %s"
+
+msgid "Numeric identifier : %d"
+msgstr "Azonosító szám(ID) : %d"
+
+msgid "Original file : %s"
+msgstr "Eredeti fájl : %s"
+
+msgid "Posted %s on %s"
+msgstr "Közzétéve %s ekkor: %s"
+
+msgid "Rated %d times, score : %.2f"
+msgstr "Értékelve %d alkalommal, pontszám : %.2f"
+
+msgid "Sharpen"
+msgstr "Élesítés"
+
+msgid "Visited %d times"
+msgstr "Megtekintve %d alkalommal"
+
+msgid "Watermark"
+msgstr "Vízjel"
+
+msgid " and %d virtuals"
+msgstr " és %d virtuális"
+
+msgid "%d physicals"
+msgstr "%d fizikai"
+
+msgid "%d week"
+msgstr "%d hét"
+
+msgid "%d weeks"
+msgstr "%d hét"
+
+msgid "Edit photo"
+msgstr "Kép szerkesztése"
+
+msgid "create a new site"
+msgstr "új honlap létrehozása"
+
+msgid "No order field selected"
+msgstr "Nincs rendezési mező kiválasztva"
+
+msgid "Duplicate selected tags"
+msgstr "Kiválasztott címkék kettőzése"
+
+msgid "Name of the duplicate"
+msgstr "A kettőzött címke neve"
+
+msgid "Source tag"
+msgstr "Forrás címke"
+
+msgid "Tag \"%s\" is now a duplicate of \"%s\""
+msgstr "\"%s\" címke kettőzve \"%s\" néven"
+
+msgid "Landscape"
+msgstr "Tájkép"
+
+msgid "Minimum height"
+msgstr "Legkisebb magasság"
+
+msgid "Minimum width"
+msgstr "Legkisebb szélesség"
+
+msgid "Panorama"
+msgstr "Panoráma"
+
+msgid "Portrait"
+msgstr "Portré"
+
+msgid "Manage photos"
+msgstr "Képek kezelése"
+
+msgid "View in gallery"
+msgstr "Megtekintés a galériában"
+
+msgid "Number of albums per page"
+msgstr "Albumok száma oldalanként"
+
+msgid "Ratio"
+msgstr "Arány"
+
+msgid "between %.2f and %.2f"
+msgstr "%.2f és %.2f között"
+
+msgid "between %d and %d pixels"
+msgstr "%d és %d pixel között"
+
+msgid "Duplicate"
+msgstr "Másolat"
+
+msgid "Manage the members"
+msgstr "Tagok kezelése"
+
+msgid "Merge selected groups"
+msgstr "Kiválasztott csoportok egyesítése"
+
+msgid "No groups selected, no actions possible."
+msgstr "Nincs kiválasztott csoport, művelet nem lehetséges."
+
+msgid "No members to manage"
+msgstr "Nem tagok kezelése"
+
+msgid "Please select at least two groups"
+msgstr "Jelöljön ki legalább két csoport"
+
+msgid "Rename"
+msgstr "Átnevezés"
+
+msgid "This group will be set to default"
+msgstr "Ez a csoport lesz az alapértelmezett"
+
+msgid "This group will be unset to default"
+msgstr "Ez a csoport nem lesz az alapértelmezett"
+
+msgid "Type here the name of the new group"
+msgstr "Ide írja be az új csoport nevét"
+
+msgid "Purge user cache"
+msgstr "Felhasználói gyorsítótár ürítése"
+
+msgid "The picture dimensions will be reduced to %dx%d pixels."
+msgstr "A kép mérete csökken %dx%d pixel-re."
+
+msgid "Resize after upload disabled due to the use of GD as graphic library"
+msgstr "A feltöltés utáni átméretezés kikapcsolva, oka: a GD, mint grafikuskönyvtár használata"
+
+msgid "Select at least one tag"
+msgstr "Válassz ki legalább egy cimkét"
+
+msgid "Basic settings"
+msgstr "Alapbeállítások"
+
+msgid "General"
+msgstr "Általános"
+
+msgid "Mail theme"
+msgstr "Levelező-sablon"
+
+msgid "Show %s users"
+msgstr "%s felhasználó megjelenítése"
+
+msgid "All %d users are selected"
+msgstr "Összes, %d felhasználó kiválasztva\n\n"
+
+msgid "Change password"
+msgstr "Jelszó módosítása"
+
+msgid "Change username"
+msgstr "Felhasználónév módosítása"
+
+msgid "Loading..."
+msgstr "Töltés..."
+
+msgid "No matching user found"
+msgstr "Felhasználó nem található"
+
+msgid "No users selected, no actions possible."
+msgstr "Választott felhasználó nem található, művelet nem lehetséges"
+
+msgid "Password updated"
+msgstr "Jelszó frissítve"
+
+msgid "Update user"
+msgstr "Felhasználó frissítése"
+
+msgid "User %s added"
+msgstr "%s felhasználó hozzáadva"
+
+msgid "User %s updated"
+msgstr "%s felhasználó frissítve"
+
+msgid "Users modified"
+msgstr "Felhasználók módosítva"
+
+msgid "on the %d selected users"
+msgstr "a %d. kijelölet felhasználó"
+
+msgid "%d of %d users selected"
+msgstr "%d / %d felhasználó kijelölve"
+
+msgid "(filtered from %s total users)"
+msgstr "(kiszűrve %s felhasználóból)"
+
+msgid "Activate it now"
+msgstr "Aktiváljuk most"
+
+msgid "Close user details"
+msgstr "Felhasználó adatainak bezárása"
+
+msgid "Last visit on %s, %s."
+msgstr "Legutóbbi látogatás:  %s, %s."
+
+msgid "No user selected of %d users"
+msgstr "Nincs felhasználó kijelölve a %d közül. "
+
+msgid "Open user details"
+msgstr "Felhasználó adatainak megnyitása"
+
+msgid "Registered on %s, %s."
+msgstr "Regisztrálva: %s, %s."
+
+msgid "Showing %s to %s of %s users"
+msgstr "%s - %s felhasználó látható a %s közül"
+
+msgid "close"
+msgstr "bezárás"
+
+msgid "Impossible to deactivate the default theme."
+msgstr "Az alapértelmezett sablon nem kapcsolható ki"
+
+msgid "Mail address is mandatory for registration"
+msgstr "Az e-mail cím kötelező a regisztrációhoz"
+
+msgid "Allow users to add a link to their website"
+msgstr "Felhasználók tehessenek egy linket a honlapjukra"
+
+msgid "between %s and %s MB"
+msgstr "%s és %s MB között"
+
+msgid "date & time"
+msgstr "dátum és idő"
+
+msgid "file name"
+msgstr "fájlnév"
+
+msgid "width & height"
+msgstr "szélesség és magasság"
+
+msgid "Empty caddie"
+msgstr "Üres kosár"
+
+msgid "The settings for the guest are from the %s user"
+msgstr "A vendég beállításai a %s fekhasználótól"
+
+msgid "Upload in progress"
+msgstr "Feltöltés folyamatban"
+
+msgid "based on"
+msgstr "erre alapozva:"
+
+msgid "No and unlock sub-albums"
+msgstr "Nem és al-albumok feloldása"
+
+msgid "Delete %d orphan photos"
+msgstr "Az %d árva képek törlése"
+
+msgid "Each email sent will contain its own automatic authentication key on links, valid for %s."
+msgstr "Minden küldött e-mail tartalmazni fogja a saját automatikus érvényesítő kulcsát hivatkozásként. Eddig érvényes: %s."
+
+msgid "Edit user"
+msgstr "Felhasználó szerkesztése"
+
+msgid "For security reason, authentication keys do not work for administrators."
+msgstr "Biztonsági okok miatt az érvényesítő kulcsok nem működnek az adminisztrátoroknál."
+
+msgid "No recipient selected"
+msgstr "Nincs címzett kiválasztva"
+
+msgid "No user is permitted to see this private album"
+msgstr "Nincs felhasználó, aki láthatná ezt a személyes albumot."
+
+msgid "Orphans"
+msgstr "Árvák"
+
+msgid "Recipients"
+msgstr "Címzettek"
+
+msgid "Y Repeat"
+msgstr "Y ismétlődés"
+
+msgid "Dashboard"
+msgstr "Vezérlőpult"
+
+msgid "Piwigo Remote Sync is able to upload a whole folder hierarchy. If you run it again, only new photos will be uploaded."
+msgstr "Piwigo Remote Sync képes egy egész dosszié-struktúra feltöltésére. Ha újra futtatod, csak új képek kerülnek feltöltésre. "
+
+msgid "Share / Send your photos directly from your Mac Os X (10.10 and following) to Piwigo"
+msgstr "Osszed meg / köldjed el fotóidat egyenesen a macOS gépedről (10.10 and later) a Piwigo-nak."
+
+msgid "Storage used"
+msgstr "Tár használva"
+
+msgid "Time has come to update your Piwigo with version %s, go to %s"
+msgstr "Itt az idő, hogy frissítsd a Piwigo-t a %s verzióra, menj ide: %s"
+
+msgid "checksum"
+msgstr "checksum (ellenörzőszám)"
+
+msgid "delete album and all %d photos, even the %d associated to other albums"
+msgstr "Töröld az albumot az összes %d fotóval, sőt a %d, más albumban lévőket is."
+
+msgid "delete album and the %d orphan photos"
+msgstr "Töröld az albumot és a %d árva fotót"
+
+msgid "delete only album, not photos"
+msgstr "csak az albumot töröld, a képeket ne"
+
+msgid "orphans to delete"
+msgstr "törlendő árvák"
+
+msgid "(determined from photos)"
+msgstr "(a fotók határozzák meg)"
+
+msgid "Confirm deletion"
+msgstr "Törlés megerősítése"
+
+msgid "Delete album \"%s\" and its %d sub-albums."
+msgstr "Az album \"%s\" és %d al-albumok törlése."
+
+msgid "Delete album \"%s\"."
+msgstr "A(z) \"%s\" album törlése."
+
+msgid "Display form"
+msgstr "kérdőív megjelenítése"
+
+msgid "It only takes a few clicks."
+msgstr "Csak néhány kattintás."
+
+msgid "No filter on album. Select one or type to search"
+msgstr "Nincs az albumon szűrő. Válassz egyet, vagy írj be valamit, a kereséshez"
+
+msgid "No tags selected, no actions possible."
+msgstr "Nincs cimke választva, nincs mit tenni."
+
+msgid "Piwigo %s is available, please update"
+msgstr "Piwigo %s már elérhető, kérlek, frissíts"
+
+msgid "Running on an up-to-date Piwigo is important for security."
+msgstr "A legfrisebb Piwigo-t futtatni biztonsági okok miatt fontos."
+
+msgid "Select tags"
+msgstr "Válassz cimkéket"
+
+msgid "Synchronization in progress"
+msgstr "Zajlik a szinkronizálás"
+
+msgid "Visit"
+msgstr "Látogatás"
+
+msgid "Welcome!"
+msgstr "Helló!"
+
+msgid "With no checksum"
+msgstr "Ellenőrzőszám nélkül"
+
+msgid "checksums to add"
+msgstr "ellenőrzőszámokat kell hozzáadni"
+
+msgid "or"
+msgstr "vagy"
+
+msgid "%d checksums were added"
+msgstr "%d ellenőrzőszám került hozzáadásra"
+
+msgid "... or hide this link"
+msgstr "... vagy rejtsük el ezt a hivatkozást (linket)"
+
+msgid "Compute %d missing checksums"
+msgstr "Számítsuk ki a %d hiányzó ellenőrzőszámot"
+
+msgid "Create a first album"
+msgstr "Készítsük el az első albumot"
+
+msgid "Deletion in progress"
+msgstr "A törlés folyamatban van"
+
+msgid "Display album date period"
+msgstr "Mutasd minden albumnál a hozzá tartozó dátumokat, pl. \"2018 július 12-től 15-ig\""
+
+msgid "Display category date"
+msgstr "Mutasd a kategória dátumát"
+
+msgid "Piwigo requires an album to add photos."
+msgstr "Piwigo-nak szükséges van egy albumra, hogy képeket lehessen hozzáadni."
+
+msgid "Some checksums are missing."
+msgstr "Néhány ellenőrzőszám hiányzik."
+
+msgid "Add Album"
+msgstr "Album hozzáadása"
+
+msgid "Album search tool"
+msgstr "Album kereső eszköz"
+
+msgid "Are you sure you want to delete all sizes?"
+msgstr "Biztosan törölni akarsz minden méretet?"
+
+msgid "Are you sure you want to delete group \"%s\"?"
+msgstr "Biztosan törölni akarod ezt a csoportot: %s?"
+
+msgid "Are you sure you want to delete the language \"%s\"?"
+msgstr "Biztosan törölni akarod ezt a nyelvet: %s?"
+
+msgid "Are you sure you want to delete the plugin \"%s\"?"
+msgstr "Biztosan törölni akarod ezt a bővítményt: %s?"
+
+msgid "Are you sure you want to delete the user \"%s\"?"
+msgstr "Biztosan törölni akarod ezt a felhasználót: %s?"
+
+msgid "Are you sure you want to delete this site?"
+msgstr "Biztosan törölni akarod ezt a site-ot?"
+
+msgid "Are you sure you want to delete this theme?"
+msgstr "Biztosan törölni akarod ezt a sablont (theme)?"
+
+msgid "Are you sure you want to delete this?"
+msgstr "Biztosan törölni akarod ezt?"
+
+msgid "%d sub-albums"
+msgstr "%d al-albumok"
+
+msgid "%s GB used"
+msgstr "%s GB felhasználva"
+
+msgid "%s MB used"
+msgstr "%s MB felhasználva"
+
+msgid "%s file type"
+msgstr "%s fájltípus"
+
+msgid "%s other tags available.."
+msgstr "%s további elérhető címkék"
+
+msgid "<b>%d+</b> albums found, try to refine the search"
+msgstr "<b>%d+</b> albumot találtunk, próbáld finomítani a keresést"
+
+msgid "<b>%d</b> albums found"
+msgstr "<b>%d</b> albumot találtunk"
+
+msgid " (copy %s)"
+msgstr "(másold %s)"
+
+msgid " (copy)"
+msgstr "(másold)"
+
+msgid "%d Activities"
+msgstr "%d Események"
+
+msgid "%d Activity"
+msgstr "%d Esemény"
+
+msgid "%d photos"
+msgstr "%d fotók"
+
+msgid "Are you sure you want to delete the ratings of the user \"%s\"?"
+msgstr "Biztosan törölni akarod \"%s\" fejeznek felhasználó értékeléseit?"
+
+msgid "Are you sure you want to delete the theme \"%s\"?"
+msgstr "Biztosan törölni akarod \"%s\" sablont?"
+
+msgid "Are you sure you want to install the plugin \"%s\"?"
+msgstr "Biztosan telepíteni akarod \"%s\" bővítményt?"
+
+msgid "Are you sure you want to lock the gallery?"
+msgstr "Biztosan blokkolni akarod a galériát?"
+
+msgid "<b>%d</b> tag found"
+msgstr "<b>%d</b> címkét találtunk"
+
+msgid "<b>%d</b> tag selected"
+msgstr "<b>%d</b> címke van kiválasztva"
+
+msgid "<b>%d</b> tags found"
+msgstr "<b>%d</b> címkét találtunk"
+
+msgid "No, I have changed my mind"
+msgstr "Nem, meggondoltam magam"
+
+msgid "Open in gallery"
+msgstr "Megnyitás a galériában"
+
+msgid "Keep them"
+msgstr "Tartsuk meg őket"
+
+msgid "Manage album photos"
+msgstr "Az album fotóinak kezelése"
+
+msgid "Manage sub-albums"
+msgstr "Az al-albumok kezelése"
+
+msgid "Name field must not be empty"
+msgstr "A Név mező nem lehet üres"
+
+msgid "Name is already taken"
+msgstr "A név már foglalt"
+
+msgid "Clear Selection"
+msgstr "Kijelölés törlése"
+
+msgid "Compact View"
+msgstr "Kompakt nézet"
+
+msgid "Compare mode"
+msgstr "Összehasonlító mód"
+
+msgid "Delete album"
+msgstr "Töröljük az albumot"
+
+msgid "Search albums"
+msgstr "Albumok keresése"
+
+msgid "Search tips"
+msgstr "Keresési tanácsok"
+
+msgid "Select"
+msgstr "Válaszd"
+
+msgid "Selection mode"
+msgstr "Kiválasztási mód"
+
+msgid "Set as default"
+msgstr "Állítsuk be alapértelmezettnek"
+
+msgid "Show inactive plugins"
+msgstr "Nézzük a kikapcsolt bővítményeket"
+
+msgid "Show sub-albums"
+msgstr "Lássuk az al-albumokat"
+
+msgid "Storage"
+msgstr "Tár"
+
+msgid "Tag Manager"
+msgstr "Címke kezelő"
+
+msgid "The other tags will be removed"
+msgstr "A többi címke eltávolításra kerül"
+
+msgid "Tile View"
+msgstr "Csempe (tile) nézet"
+
+msgid "Videos"
+msgstr "Videók"
+
+msgid "Yes, I am sure"
+msgstr "Igen, biztos vagyok benne"
+
+msgid "Yes, delete"
+msgstr "Igen, töröljük"
+
+msgid "This is already the default theme"
+msgstr "Már ez az alapértelmezett sablon"
+
+msgid "You don't have access to this photo"
+msgstr "Nincs hozzáférésed ehhez a fotóhoz"
+
+msgid "You have %s inactive plugins"
+msgstr "%s kikapcsolt bővítményed (plugin) van"
+
+msgid "and %s others"
+msgstr "és %s másik"
+
+msgid "in administration"
+msgstr "adminisztrációban"
+
+msgid "in gallery"
+msgstr "galériában"
+
+msgid "no photo"
+msgstr "nincs fotó"
+
+msgid "Requires PHP %s"
+msgstr "PHP %s szükséges"
+
+msgid "Select an album... or type it!"
+msgstr "Válassz egy albumot... vagy írd be!"
+
+msgid "File type: %s"
+msgstr "File-típus:  %s"
+
+msgid "Group \"%s\" succesfully deleted"
+msgstr "Az %s csoport sikeresen törölve"
+
+msgid "Manage users with user manager"
+msgstr "Kezeljük a felhasználókat a felhasználó-kezelővel"
+
+msgid "Portraits"
+msgstr "Portré"
+
+msgid "Refresh thumbnail"
+msgstr "Bélyegkép-frissítés"
+
+msgid "Review"
+msgstr "Áttekintés"
+
+msgid "Root"
+msgstr "Gyökér"
+
+msgid "Formats"
+msgstr "Formátumok"
+
+msgid "Group added"
+msgstr "Csoport hozzáadva"
+
+msgid "Group renamed"
+msgstr "Csoport átnevezve"
+
+msgid "Hide sub-albums"
+msgstr "Rejtsük el az al-albumokat"
+
+msgid "Merge"
+msgstr "Egyesítés"
+
+msgid "No albums found"
+msgstr "Nem találtunk albumot"
+
+msgid "No plugins found"
+msgstr "Nem találtunk bővítményt"
+
+msgid "No tag found"
+msgstr "Nem találtunk címkét"
+
+msgid "Other"
+msgstr "Más"
+
+msgid "Are you sure you want to restore this plugin?"
+msgstr "Biztosan vissza akarod állítani ezt a bővítményt?"
+
+msgid "Are you sure you want to restore to default settings?"
+msgstr "Biztosan vissza akarod állítani az alapértelmezett beállításokat?"
+
+msgid "Are you sure you want to update all extensions?"
+msgstr "Biztosan frissíteni akarsz minden bővítményt?"
+
+msgid "Delete them"
+msgstr "Töröljük őket"
+
+msgid "<b>1</b> album found"
+msgstr "<b>1</b> albumot találtunk"
+
+msgid "Delete tags \\{%s\\}?"
+msgstr "Töröljük a \\{%s\\} címkéket?"
+
+msgid "Created on %s"
+msgstr "Létrehozva: %s"
+
+msgid "Delete orphan tags ?"
+msgstr "Töröljük az árva címkéket?"
+
+msgid "Delete tag \"%s\"?"
+msgstr "Töröljük a %s címkét?"
+
+msgid "The %d tags on this page are selected"
+msgstr "A %d címke kiválasztva ezen az oldalon"
+
+msgid "Unset as group for new users"
+msgstr "Nincs beállítva, mint csoport új  felhasználóknak"
+
+msgid "User \"%s\" dissociated from this group"
+msgstr "\"%s\" leválasztva a csoporttól"
+
+msgid "You have %s1 orphan : %s2"
+msgstr "%s1 árvád van: %s2"
+
+msgid "User associated"
+msgstr "Felhasználó hozzárendelve"
+
+msgid "You have %d orphan tags %s"
+msgstr "%d árva címkéd van: %s"
+
+msgid "Apply an automatic order to root albums"
+msgstr "Használunk automatikus rendezést a gyökér-albumoknál"
+
+msgid "Apply to direct sub-albums"
+msgstr "Használjuk a közvetlen al-albumoknál"
+
+msgid "Apply to the whole hierarchy"
+msgstr "Használjuk a teljes hierarchiában"
+
+msgid "Are you sure you want to restore the plugin \"%s\"?"
+msgstr "Tényleg vissza akarod állítani a %s bővítményt?"
+
+msgid "Associate User"
+msgstr "Rendeljük hozzá a Felhasználót"
+
+msgid "At least 2 selected tags are needed to merge"
+msgstr "Az összes uttatáshoz (merge) legalább két címke szükséges"
+
+msgid "Average last 12 months"
+msgstr "Az utolsó 12 hónapi átlag"
+
+msgid "Display"
+msgstr "Megjelenítés"
+
+msgid "Dissociate user from this group"
+msgstr "Válasszuk le a felhasználót a csoporttól"
+
+msgid "Edited on %s"
+msgstr "Ekkor volt szerkesztve: %s"
+
+msgid "Select all %d tags"
+msgstr "Jelöljük ki valamennyi %d címkét"
+
+msgid "Line View"
+msgstr "Sor-nézet"
+
+msgid "Page Visited"
+msgstr "Oldal meglátogatva"
+
+msgid "Page Visited in %s"
+msgstr "Oldal meglátogatva %s-ben"
+
+msgid "Please upgrade your PHP version before any update."
+msgstr "Kérjük, frissítsd a PHP változatodat, mielőtt update-t végzel"
+
+msgid "Posted %s"
+msgstr "Közzétéve: %s"
+
+msgid "never calculated"
+msgstr "még nem került kiszámításra"
+
+msgid "right now"
+msgstr "most"
+
+msgid "to"
+msgstr "ide:"
+
+msgid "Showing %s users out of %s"
+msgstr "%s / %s felhasználó"
+
+msgid "Synchronization"
+msgstr "Szinkronizálás"
+
+msgid "Tag \"%s\" created"
+msgstr "\"%s\" címke létrehozva"
+
+msgid "Tag \"%s\" succesfully deleted"
+msgstr "\"%s\" címke sikeresen törölve"
+
+msgid "Tag \"%s1\" renamed in \"%s2\""
+msgstr "\"%s\" címke sikeresen átnevezésre került erre: \\\"%s2\\\""
+
+msgid "Tag(s) \\{%s1\\} succesfully merged into \"%s2\""
+msgstr "\\{%s1\\} címke(k) sikeresen összevonásra került(ek) ebbe: \"%s2\""
+
+msgid "Tags \\{%s\\} succesfully deleted"
+msgstr "\\{%s\\} címkék sikeresen törlésre kerültek"
+
+msgid "Theme"
+msgstr "Téma"
+
+msgid "Update"
+msgstr "Mentés"
+
+msgid "User updated"
+msgstr "Felhasználó adatai frissítve"
+
+msgid "Users not logged in will have these settings applied, these settings are used by default for new users"
+msgstr "Ezek lesznek az új, és a még be nem jelentkezett felhasználók alapértelmezett beállításai"
+
+msgid "add"
+msgstr "új"
+
+msgid "between %s and %s"
+msgstr "%s és %s között"
+
+msgid "calculated"
+msgstr "számított"
+
+msgid "deletion"
+msgstr "törlés"
+
+msgid "edit"
+msgstr "szerkesztés"
+
+msgid "login"
+msgstr "bejelentkezés"
+
+msgid "logout"
+msgstr "kijelentkezés"
+
+msgid "months ago"
+msgstr "hónapja"
+
+msgid "move"
+msgstr "mozgatás"
+
+msgid "Last visit"
+msgstr "Utolsó látogatás"
+
+msgid "Manage users"
+msgstr "Felhasználók menedzselése"
+
+msgid "Mar"
+msgstr "Már"
+
+msgid "May"
+msgstr "Máj"
+
+msgid "New user added"
+msgstr "Felhasználó felvéve"
+
+msgid "No access to administration, can see private content with appropriate permissions."
+msgstr "Nincs adminisztratív hozzáférés. Látja a privát tartalmakat, megfelelő jogosultságokkal."
+
+msgid "No plugin activated"
+msgstr "Nincs aktív bővítmény"
+
+msgid "Nov"
+msgstr "Nov"
+
+msgid "Oct"
+msgstr "Okt"
+
+msgid "Photos per page"
+msgstr "Fotók oldalanként"
+
+msgid "Plugin \"%s\" deleted!"
+msgstr "\"%s\" bővítmény törölve!"
+
+msgid "Plugin \"%s\" has been activated!"
+msgstr "\"%s\" bővítmény aktiválva!"
+
+msgid "Promote mobile app on mobile devices"
+msgstr "Mobil alkalmazás reklámozása mobileszközökön"
+
+msgid "Registered"
+msgstr "Regisztrált"
+
+msgid "Restored"
+msgstr "Visszaállítva"
+
+msgid "Select groups or type them"
+msgstr "Válassz csoportot, vagy kezdj el írni"
+
+msgid "Selected user"
+msgstr "Válassz felhasználót"
+
+msgid "Sep"
+msgstr "Szep"
+
+msgid "Set as group for new users"
+msgstr "Új felhasználók alapértelmezett csoportja"
+
+msgid "Show"
+msgstr "Mutat"
+
+msgid "Activity peak in the last weeks"
+msgstr "Tevékenységcsúcs az elmúlt hetekben"
+
+msgid "Activity time from"
+msgstr "Aktivitás kezdőideje"
+
+msgid "Download all activities"
+msgstr "Összes aktivitás letöltése"
+
+msgid "Drag and drop to reorder albums"
+msgstr "Albumok rendezése áthúzással"
+
+msgid "Edit"
+msgstr "Szerkesztés"
+
+msgid "Edit guest user"
+msgstr "Vendégfelhasználó szerkesztése"
+
+msgid "Email"
+msgstr "E-mail"
+
+msgid "Email Adress"
+msgstr "E-mail cím"
+
+msgid "Equivalent to deactivation. The user is still in the list, but can no longer log in."
+msgstr "Deaktiválással egyenértékű. A felhasználó a listában marad, de nem tud belépni."
+
+msgid "Feb"
+msgstr "Feb"
+
+msgid "Filters"
+msgstr "Szűrők"
+
+msgid "Generate random password"
+msgstr "Véletlenszerű jelszó generálása"
+
+msgid "Group(s) \\{%s1\\} succesfully merged into \"%s2\""
+msgstr "\\{%s1\\} csoportok sikeresen összevonásra kerültek ide: \"%s2\""
+
+msgid "Groups \\{%s\\} succesfully deleted"
+msgstr "\\{%s\\} csoport(ok) törlése sikeres"
+
+msgid "Has access to administration. Can only manage content: photos/albums/users/tags/groups."
+msgstr "Joga van adminisztrátori felületekhez. Csak tartalmat menedzselhet: fotókat, albumokat, felhasználókat, címkéket, és csoportokat."
+
+msgid "Has access to all administration functionnalities. Can manage both configuration and content."
+msgstr "Minden adminisztratív funkció elérhető. Beállításokat és tartalmat is szerkeszthet."
+
+msgid "Jan"
+msgstr "Jan"
+
+msgid "Jul"
+msgstr "Júl"
+
+msgid "Jun"
+msgstr "Jún"
+
+msgid "Language"
+msgstr "Nyelv"
+
+msgid "Activated plugin list"
+msgstr "Aktivált bővítmények listája"
+
+msgid "Activity"
+msgstr "Tevékenység"
+
+msgid "Add User"
+msgstr "Új felhasználó"
+
+msgid "Add a new user"
+msgstr "Új felhasználó felvétele"
+
+msgid "Advanced filters"
+msgstr "Speciális szűrők"
+
+msgid "Apr"
+msgstr "Ápr"
+
+msgid "Aug"
+msgstr "Aug"
+
+msgid "Cache"
+msgstr "Gyorsítótár"
+
+msgid "Cache size"
+msgstr "Gyorsítótár mérete"
+
+msgid "Can be shared by several individuals without conflict (they cannot change the password)."
+msgstr "Többen is használhatják problémamentesen (de nem tudnak majd jelszót változtatni)."
+
+msgid "Change Password"
+msgstr "Jelszó változtatása"
+
+msgid "Choose which tag to merge these tags into"
+msgstr "Melyik címkével egyesítsük ezeket a címkéket?"
+
+msgid "Close"
+msgstr "Bezárás"
+
+msgid "Deactivated"
+msgstr "Deaktivált"
+
+msgid "Dec"
+msgstr "Dec"
+
+msgid "Delete these sizes"
+msgstr "Méretek törlése"
+
+msgid "Delete user"
+msgstr "Felhasználó törlése"
+
+msgid "Displays a banner to install or open the official Piwigo app"
+msgstr "Szalagcímben felajánlja a hivatalos Piwigo app telepítésének lehetőségét"
+
+msgid "%d photos edited"
+msgstr "%d fotó szerkesztve"
+
+msgid "%d photos moved"
+msgstr "%d fotó mozgatva"
+
+msgid "%d tag added"
+msgstr "%d címke felvéve"
+
+msgid "%d tag deleted"
+msgstr "%d címke törölve"
+
+msgid "%d tag edited"
+msgstr "%d címke szerkesztve"
+
+msgid "%d tag moved"
+msgstr "%d címke mozgatva"
+
+msgid "%d tags added"
+msgstr "%d címke felvéve"
+
+msgid "%d tags deleted"
+msgstr "%d címke törölve"
+
+msgid "%d tags edited"
+msgstr "%d címke szerkesztve"
+
+msgid "%d tags moved"
+msgstr "%d címke mozgatva"
+
+msgid "%d user added"
+msgstr "%d felhasználó felvéve"
+
+msgid "%d user edited"
+msgstr "%d felhasználó szerkesztve"
+
+msgid "%d user logged in"
+msgstr "%d bejelentkezett felhasználó"
+
+msgid "%d user logged out"
+msgstr "%d kijelentkezett felhasználó"
+
+msgid "%d users added"
+msgstr "%d felhasználó felvéve"
+
+msgid "%d users edited"
+msgstr "%d felhasználó szerkesztve"
+
+msgid "%d users logged in"
+msgstr "%d bejelentkezett felhasználó"
+
+msgid "%d users logged out"
+msgstr "%d kijelentkezett felhasználó"
+
+msgid "%s MB"
+msgstr "%s MB"
+
+msgid "Activated"
+msgstr "Aktivált"
+
+msgid "%d album added"
+msgstr "%d album felvéve"
+
+msgid "%d album deleted"
+msgstr "%d album törölve"
+
+msgid "%d album edited"
+msgstr "%d album szerkesztve"
+
+msgid "%d albums added"
+msgstr "%d album felvéve"
+
+msgid "%d albums deleted"
+msgstr "%d album törölve"
+
+msgid "%d albums edited"
+msgstr "%d album szerkesztve"
+
+msgid "%d group added"
+msgstr "%d csoport felvéve"
+
+msgid "%d group deleted"
+msgstr "%d csoport törölve"
+
+msgid "%d group edited"
+msgstr "%d csoport szerkesztve"
+
+msgid "%d group moved"
+msgstr "%d csoport mozgatva"
+
+msgid "%d groups added"
+msgstr "%d csoport felvéve"
+
+msgid "%d groups deleted"
+msgstr "%d csoport törölve"
+
+msgid "%d groups edited"
+msgstr "%d csoport szerkesztve"
+
+msgid "%d groups moved"
+msgstr "%d csoport mozgatva"
+
+msgid "%d photo added"
+msgstr "%d fotó felvéve"
+
+msgid "%d photo deleted"
+msgstr "%d fotó törölve"
+
+msgid "%d photo edited"
+msgstr "%d fotó szerkesztve"
+
+msgid "%d photo moved"
+msgstr "%d fotó mozgatva"
+
+msgid "%d photos added"
+msgstr "%d fotó felvéve"
+
+msgid "%d photos deleted"
+msgstr "%d fotó törölve"
+
+msgid "Extensions"
+msgstr "Bővítmények"
+
+msgid "Global Gallery Actions"
+msgstr "Általános galéria műveletek"
+
+msgid "Install Piwigo on mobile"
+msgstr "Telepítsük a Piwigo-t mobilra"
+
+msgid "Latest Piwigo news"
+msgstr "Legfrissebb Piwigo hírek"
+
+msgid "No search in progress"
+msgstr "Jelenleg nem fut keresés "
+
+msgid "Object"
+msgstr "Tárgy"
+
+msgid "Memories"
+msgstr "Emlékek "
+
+msgid "More information"
+msgstr "További információ "
+
+msgid "No format for this picture"
+msgstr "Ehhez a képhez nincs formátum "
+
+msgid "No picture found with the following name : %s."
+msgstr "Nem található kép ezzel a névvel: %s."
+
+msgid "Are you sure you want to uninstall the plugin \"%s\"?"
+msgstr "Biztosan el akarod távolítani a bővítményt \"%s\"?"
+
+msgid "%s plugin found"
+msgstr "<b>%s</b> bővítményt találtunk"
+
+msgid "%s plugins found"
+msgstr "<b>%s</b> bővítményt találtunk"
+
+msgid "Add another set of formats"
+msgstr "Újabb forma-készlet hozzáadása"
+
+msgid "Add as filter"
+msgstr "Hozzáadás szűrőként"
+
+msgid "Add formats"
+msgstr "Forma hozzáadása "
+
+msgid "Additional filters"
+msgstr "További szűrők"
+
+msgid "Are you sure you want to unlock the gallery?"
+msgstr "Biztosan fel akarod oldani a galériát?"
+
+msgid "Create a new album at root"
+msgstr "Új album készítése a gyökérnél"
+
+msgid "Current Version"
+msgstr "Jelenlegi verzió"
+
+msgid "Downloaded"
+msgstr "Letöltve"
+
+msgid "%s line"
+msgstr "%s sor"
+
+msgid "%s lines"
+msgstr "%s sorok"
+
+msgid "%sGB"
+msgstr "%s GB"
+
+msgid "%sMB"
+msgstr "%s MB"
+
+msgid "Add New Plugin"
+msgstr "Új bővítmény hozzáadása "
+
+msgid "Place first"
+msgstr "Tedd az első helyre"
+
+msgid "Place last"
+msgstr "Tedd az utolsó helyre"
+
+msgid "Properties of abums"
+msgstr "Az albumok tulajdonságai"
+
+msgid "Album name must not be empty"
+msgstr "Az Album név nem lehet üres"
+
+msgid "Always have a backup of your database and files."
+msgstr "Mindig legyen mentésed az adatbázisról és a file-okról"
+
+msgid "Apply to root albums"
+msgstr "Alkalmazzuk a gyökér albumokra "
+
+msgid "Create a sub-album of \"%s\""
+msgstr "Készítsünk egy szubalbumot \"%s\" alá "
+
+msgid "Currently running version %s"
+msgstr "Jelenleg ez a verzió fut: %s"
+
+msgid "Details"
+msgstr "Részletek"
+
+msgid "Discover"
+msgstr "Felfedezés "
+
+msgid "Error when trying to detect formats"
+msgstr "A formátum törlése közben hiba "
+
+msgid "If anything bad happens during the update, you would be able to restore a backup."
+msgstr "Ha bármi hiba történik a frissítés alatt, vissza tudsz állítani egy mentést"
+
+msgid "No research in progress"
+msgstr "Jelenleg nem fut keresés"
+
+msgid "Copied link"
+msgstr "Másolt link"
+
+msgid "Copy password"
+msgstr "Jelszó másolása"
+
+msgid "Changes saved"
+msgstr "Módosítások mentve"
+
+msgid "Change logo"
+msgstr "Logó módosítása"
+
+msgid "Cannot send an email to this user because he doesn't have an email address"
+msgstr "Nem lehet e-mailt küldeni ennek a felhasználónak, mert nincs e-mail címe"
+
+msgid "Auto-update"
+msgstr "Automatikus frissítés"
+
+msgid "An error has occured"
+msgstr "Hiba történt"
+
+msgid "Activate create mode to create and select an album"
+msgstr "Aktiválja a létrehozási módot az album létrehozásához és kiválasztásához"
+
+msgid "%s pixels, %.2f MB"
+msgstr "%s pixel, %.2fMB"
+
+msgid "%s is the new main user"
+msgstr "%s az új fő felhasználó"
+
+msgid "%d files"
+msgstr "%d fájl"
+
+msgid "Tag name"
+msgstr "Címke név"
+
+msgid "Show plugins compatible with previous version of Piwigo"
+msgstr "Előző verziójú Piwigo-val kompatibilis plug-inok megjelenítése"
+
+msgid "Show beta test plugins"
+msgstr "Béta teszt plug-inok megjelenítése"
+
+msgid "Set as main user"
+msgstr "Beállítás fő felhasználóként"
+
+msgid "Save all photos"
+msgstr "Minden fotó mentése"
+
+msgid "Save"
+msgstr "Mentés"
+
+msgid "Purge Cache"
+msgstr "Cache ürítése"
+
+msgid "Piwigo is also on mobile."
+msgstr "Piwigo mobilon is elérhető."
+
+msgid "Please complete all fields"
+msgstr "Kérem minden mezőt töltsön ki"
+
+msgid "Personalization settings"
+msgstr "Testreszabási beállítások"
+
+msgid "Password copied"
+msgstr "Jelszó másolva"
+
+msgid "No comments selected, no actions possible."
+msgstr "Nincs hozzászólás kiválasztva, tevékenység nem lehetséges."
+
+msgid "Main user"
+msgstr "Fő felhasználó"
+
+msgid "Metadata sync complete"
+msgstr "Metaadat szinkronizáció kész"
+
+msgid "Edit photo #%s"
+msgstr "#%s kép szerkesztése"
+
+msgid "Locked album"
+msgstr "Album zárolva"
+
+msgid "Light mode"
+msgstr "Világos mód"
+
+msgid "First choose an album, then add your files"
+msgstr "Először válassza ki az albumot, utána adja hozzá a fájljait"
+
+msgid "Delete %s format ?"
+msgstr "%s formátum törlése?"
+
+msgid "Create your first album"
+msgstr "Hozza létre első albumát"
+
+msgid "Created"
+msgstr "Létrehozva"
+
+msgid "Creation mode"
+msgstr "Létrehozás mód"
+
+msgid "Dark mode"
+msgstr "Sötét mód"
+
+msgid "Copy the link below and send it to the user so the password can be set."
+msgstr "Másolja ki az alábbi linket, és küldje el a felhasználónak, hogy beállíthassa a jelszót."
+
+msgid "Are you sure you want to delete \"%d\" comments?"
+msgstr "Biztosan törölni szeretne \"%d\" hozzászólást?"
+
+msgid "Are you sure you want to delete comment #%s?"
+msgstr "Biztosan törölni szeretné a(z) #%s hozzászólást?"
+
+msgid "Changing the main user"
+msgstr "Fő felhasználó módosítása"
+
+msgid "Certification higher or equal to"
+msgstr "Tanúsítvány nagyobb vagy egyenlő, mint"
+
+msgid "%d photos were moved from the upload lounge to their albums"
+msgstr "%d fotót áthelyeztünk a feltöltési váróból az albumokba"
+
+msgid "Authorize comments"
+msgstr "Hozzászólások jóváhagyása"
+
+msgid "Added on %s"
+msgstr "Hozzáadva ekkor: %s"
+
+msgid "Admins only"
+msgstr "Csak adminoknak"
+
+msgid "was succesfully deleted"
+msgstr "sikeresen törölve"
+
+msgid "Read the release note"
+msgstr "Olvassa el a kiadási jegyzéket"
+
+msgid "System Activities"
+msgstr "Rendszeraktivitások"
+
+msgid "The best is to have them made automatically on a regular basis."
+msgstr "A legjobb, ha ezeket rendszeresen, automatikusan készítik el."
+
+msgid "Use Piwigo logo"
+msgstr "Piwigo logó használata"
+
+msgid "This plugin was updated less than 6 months ago"
+msgstr "Ez a plug-in kevesebb, mint 6 hónapja frissült"
+
+msgid "This plugin is incompatible with your version"
+msgstr "Ez a plug-in nem kompatibilis az Ön verziójával"
+
+msgid "This photo no longer exists"
+msgstr "Ez a fotó már nem létezik"
+
+msgid "Use custom logo (png, jpeg or svg)"
+msgstr "Egyedi logó használata (png, jpeg vagy svg)"
+
+msgid "A photo library administrator has created the following account for you:"
+msgstr "A fotókönyvtár adminisztrátora létrehozta Önnek a következő fiókot:"
+
+msgid "%s status is required to edit parameters."
+msgstr "A paraméterek szerkesztéséhez %s állapot szükséges."
+
+msgid "%d formats uploaded for %d photos"
+msgstr "%d formátum feltöltve %d fotóhoz"
+
+msgid "Resend password link"
+msgstr "Jelszó link újraküldése"
+
+msgid "Expand"
+msgstr "Kibontás"
+
+msgid "Detect and avoid duplicates during upload"
+msgstr "Duplikátumok észlelése és elkerülése feltöltés közben"
+
+msgid "Create and select"
+msgstr "Létrehozás és kiválasztás"
+
+msgid "action successfully performed."
+msgstr "művelet sikeresen végrehajtva."
+
+msgid "and %d more"
+msgstr "és %d több"
+
+msgid "level of confidentiality"
+msgstr "titoktartási szint"
+
+msgid "since the beginning"
+msgstr "kezdetektől fogva"
+
+msgid "You have unsaved changes"
+msgstr "Nem mentett módosításai vannak"
+
+msgid "What's new in version %s"
+msgstr "Újdonságok a %s verzióban"
+
+msgid "Visited"
+msgstr "Megtekintve"
+
+msgid "Visit history"
+msgstr "Megtekintési előzmény"
+
+msgid "Version %s"
+msgstr "%s verzió"
+
+msgid "Understood, do not show again"
+msgstr "Megértve, nem lesz megjelenítve még egyszer"
+
+msgid "Try now !"
+msgstr "Próbálja meg most!"
+
+msgid "This album is currently locked, visible only to administrators."
+msgstr "Ez az album jelenleg zárolt, csak az adminisztrátok számára látható."
+
+msgid "The passwords do not match"
+msgstr "A jelszavak nem egyeznek"
+
+msgid "Standard pages"
+msgstr "Standard oldalak"
+
+msgid "Ok, got it!"
+msgstr "Ok, megértve!"
+
+msgid "Modified"
+msgstr "Módosítva"
+
+msgid "Display Gallery title"
+msgstr "Galéria címének megjelenítése"
+

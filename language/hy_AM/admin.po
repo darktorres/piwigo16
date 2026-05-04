@@ -1,0 +1,1135 @@
+# Piwigo translation — hy_AM
+# Source: admin.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: hy_AM\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Add tags"
+msgstr "Ավելացնել պիտակ"
+
+msgid "Add to caddie"
+msgstr "Ավելացնել caddie-ին"
+
+msgid "Add write access to the \"%s\" directory"
+msgstr "Ավելացնել գրելու հնարավորություն «%s» գրացուցակում"
+
+msgid "Add/delete a permalink"
+msgstr "Ավելացնել/ջնջել մշտական հղումը"
+
+msgid "Added by %s"
+msgstr "Ավելացվել է %s-ի կողմից"
+
+msgid "Additional filters"
+msgstr "Հավելյալ զտիչներ"
+
+msgid "Administration Home"
+msgstr "Ադմինիստրացիայի Գլխավոր"
+
+msgid "Adobe Photoshop Lightroom is a photography software designed to manage large quantities of digital images and doing post production work."
+msgstr "Adobe Photoshop Lightroom-ը լուսանկարչական ծրագիր է, որը նախատեսված է մեծ քանակությամբ թվային պատկերներ կառավարելու և հետարտադրական աշխատանք կատարելու համար:"
+
+msgid "Advanced features"
+msgstr "Ընդլայնված առանձնահատկություններ"
+
+msgid "Advanced filters"
+msgstr "Ընդլայնված զտիչներ"
+
+msgid "Album \"%s\" has been added"
+msgstr "«%s» ալբոմն ավելացվել է"
+
+msgid "Album \"%s\" now contains %d photos"
+msgstr "«%s» ալբոմն այժմ պարունակում է %d լուսանկար"
+
+msgid "Album list management"
+msgstr "Ալբոմների ցուցակի կառավարում"
+
+msgid "Album manual order was saved"
+msgstr "Ալբոմի ձեռադիր կարգը պահպանվել է"
+
+msgid "Album name"
+msgstr "Ալբոմի անուն"
+
+msgid "Album name must not be empty"
+msgstr "Ալբոմի անունը դատարկ չի կարող լինել"
+
+msgid "Album photos associated to the following albums: %s"
+msgstr "Ալբոմի լուսանկարներ՝ կապված հետևյալ ալբոմների հետ՝ %s"
+
+msgid "Album search tool"
+msgstr "Ալբոմի որոնման գործիք"
+
+msgid "Album updated successfully"
+msgstr "Ալբոմը հաջողությամբ թարմացվել է"
+
+msgid "Albums authorized thanks to group associations"
+msgstr "Ալբոմներ, որոնք լիազորված են խմբային ասոցիացիաների շնորհիվ"
+
+msgid "Activity time from"
+msgstr "Ակտիվության ժամանակը սկսած"
+
+msgid "Add"
+msgstr "Ավելացնել"
+
+msgid "Add Album"
+msgstr "Ավելացնել ալբոմ"
+
+msgid "Add New Language"
+msgstr "Ավելացնել նոր լեզու"
+
+msgid "Add New Plugin"
+msgstr "Ավելացնել նոր հավելում"
+
+msgid "Add New Theme"
+msgstr "Ավելացնել նոր թեմա"
+
+msgid "Add Photos"
+msgstr "Ավելացնել լուսանկար"
+
+msgid "Add User"
+msgstr "Ավելացնել օգտատեր"
+
+msgid "Add a criteria"
+msgstr "Ավելացնել չափանիշ"
+
+msgid "Add a filter"
+msgstr "Ավելացնել զտիչ"
+
+msgid "Add a new user"
+msgstr "Ավելացնել նոր օգտատեր"
+
+msgid "Add a tag"
+msgstr "Ավելացնել պիտակ"
+
+msgid "Add a user"
+msgstr "Ավելացնել օգտատեր"
+
+msgid "Add a virtual album"
+msgstr "Ավելացնել վիրտուալ ալբոմ"
+
+msgid "Add another set of formats"
+msgstr "Ավելացնել ձևաչափերի հավաքածու"
+
+msgid "Add another set of photos"
+msgstr "Ավելացնել լուսանկարների հավաքածու"
+
+msgid "Add as filter"
+msgstr "Ավելացնել որպես զտիչ"
+
+msgid "Add detailed content"
+msgstr "Ավելացնել որոշ մանրամասն բովանդակություն"
+
+msgid "Add formats"
+msgstr "Ավելացնել ձևաչափեր"
+
+msgid "Add group"
+msgstr "Ավելացնել խումբ"
+
+msgid "ACCESS_4"
+msgstr "Մուտքի հասանելիություն տեխ. մասնագետներին"
+
+msgid "ACCESS_5"
+msgstr "Մուտքի հասանելիություն չկա"
+
+msgid "Access type"
+msgstr "Մուտքի հասանելիության տեսակ"
+
+msgid "Action"
+msgstr "Գործողություն"
+
+msgid "Actions"
+msgstr "Գործողություն"
+
+msgid "Activate"
+msgstr "Ակտիվացնել"
+
+msgid "Activate Navigation Bar"
+msgstr "Ակտիվացնել ուղղորդիչ վահանակը"
+
+msgid "Activate Navigation Thumbnails"
+msgstr "Ակտիվացնել ուղղորդիչ մանրապատկերները"
+
+msgid "Activate button \"%s\""
+msgstr "Ակտիվացնել \"%s\" կոճակը"
+
+msgid "Activate comments"
+msgstr "Ակտիվացնել մեկնաբանությունները"
+
+msgid "Activate icon \"%s\""
+msgstr "Ակտիվացնել \"%s\" պատկերակ"
+
+msgid "Activate icon \"new\" next to albums and pictures"
+msgstr "Ակտիվացնել «նոր» պատկերակը ալբոմների և նկարների կողքին"
+
+msgid "Activate it now"
+msgstr "Ակտիվացնել հիմա"
+
+msgid "Activated"
+msgstr "Ակտիվ"
+
+msgid "Activated plugin list"
+msgstr "Ակտիվ հավելումների ցուցակ"
+
+msgid "Active Languages"
+msgstr "Ակտիվ լեզուներ"
+
+msgid "Active Plugins"
+msgstr "Ակտիվ հավելումներ"
+
+msgid "Active Themes"
+msgstr "Ակտիվ թեմաներ"
+
+msgid "Activity"
+msgstr "Ակտիվություն"
+
+msgid "Activity peak in the last weeks"
+msgstr "Ակտիվության գագաթնակետ վերջին շաբաթների ընթացքում"
+
+msgid "<b>1</b> album found"
+msgstr "<b>1</b> ալբոմ գտնվեց"
+
+msgid "+ Add an upload box"
+msgstr "+ Ավելացնել ներբեռնման տուփ"
+
+msgid ", click on"
+msgstr ", սեղմեք"
+
+msgid "... or "
+msgstr "... կամ"
+
+msgid "... or hide this link"
+msgstr "... թաքցնել այս հղումը"
+
+msgid "<b>%d+</b> albums found, try to refine the search"
+msgstr "<b>%d+</b> ալբոմ գտնվեց, փորձեք կատարելագործել որոնումը"
+
+msgid "<b>%d</b> albums found"
+msgstr "<b>%d</b> ալբոմ գտնվեց"
+
+msgid "<b>%d</b> filtered user"
+msgstr "<b>%d</b> զտված օգտատեր"
+
+msgid "<b>%d</b> filtered users"
+msgstr "<b>%d</b> զտված օգտատեր"
+
+msgid "<b>%d</b> tag found"
+msgstr "<b>%d</b> պիտակ գտնվեց"
+
+msgid "<b>%d</b> tag selected"
+msgstr "<b>%d</b> պիտակ ընտրվեց"
+
+msgid "<b>%d</b> tags found"
+msgstr "<b>%d</b> պիտակ ընտրվեց"
+
+msgid "<em>Piwigo for Android</em> application empowers you to connect your Android phone or table to your Piwigo gallery, create some albums and upload several photos at once."
+msgstr "<em>Piwigo Android</em> հավելվածը հնարավորություն է տալիս միացնել  հեռախոսը կամ պլանշետը Ձեր Piwigo պատկերասրահին, ստեղծել  ալբոմներ և ներբեռնել միանգամից մի քանի լուսանկար:"
+
+msgid "<em>Piwigo for iOS</em> application empowers you to connect to your Piwigo gallery from your iPhone, iPad or iPod Touch, create some albums and upload several photos at once."
+msgstr "<em>Piwigo iOS </em> հավելվածը հնարավորություն է տալիս միացնել  հեռախոսը կամ պլանշետը Ձեր Piwigo պատկերասրահին, ստեղծել  ալբոմներ և ներբեռնել միանգամից մի քանի լուսանկար:"
+
+msgid "A locked gallery is only visible to administrators"
+msgstr "Փակ պատկերասրահը հասանելի է միայն ադմինիստրատորներին"
+
+msgid "A new version of Piwigo is available."
+msgstr "Piwigo-ի նոր տարբերակը հասանելի է:"
+
+msgid "ACCESS_0"
+msgstr "Ազատ մուտք"
+
+msgid "ACCESS_1"
+msgstr "Մուտքի հասանելիություն բոլորին"
+
+msgid "ACCESS_2"
+msgstr "Մուտքի հասանելիություն գրանցված օգտատերերին"
+
+msgid "ACCESS_3"
+msgstr "Մուտքի հասանելիություն ադմինիստրատորներին"
+
+msgid "%s file type"
+msgstr "%s ֆայլի տիպ"
+
+msgid "%s has been successfully updated."
+msgstr "%s հաջողությամբ թարմացվել է:"
+
+msgid "%s in the future"
+msgstr "%s ապագայում"
+
+msgid "%s line"
+msgstr "%s տող"
+
+msgid "%s lines"
+msgstr "%s տող"
+
+msgid "%s must be to set to false in your local/config/config.inc.php file"
+msgstr "local/config/config.inc.php ֆայլում %s-ին պետք է վերագրել false"
+
+msgid "%s other tags available.."
+msgstr "%s այլ պիտակներ հասանելի են..."
+
+msgid "%s photos can not be regenerated"
+msgstr "%s լուսանկար չեն կարող վերականգնվել"
+
+msgid "%s photos have been regenerated"
+msgstr "%s լուսանկար վերականգնվեց"
+
+msgid "%s pixels, %.2f MB"
+msgstr "%s պիքսել, %.2f ՄԲ"
+
+msgid "%s plugin found"
+msgstr "Գտնվել է <b>%s</b> հավելված"
+
+msgid "%s plugins found"
+msgstr "Գտնվել է <b>%s</b> հավելված"
+
+msgid "%s status is required to edit parameters."
+msgstr "Պարամետրերը խմբագրելու համար պահանջվում է %s կարգավիճակ:"
+
+msgid "%s value is not correct file because exif are not supported"
+msgstr "%s արժեքը սխալ է, քանի որ exif-ը չի աջակցվում"
+
+msgid "%sGB"
+msgstr "%s ԳԲ"
+
+msgid "%sMB"
+msgstr "%s ՄԲ"
+
+msgid "%u users have automatic permission because they belong to a granted group."
+msgstr "%u օգտատեր ունեն ավտոմատ թույլտվություն, քանի որ նրանք պատկանում են տրամադրված խմբին:"
+
+msgid "(determined from photos)"
+msgstr "(որոշվում է լուսանկարներից)"
+
+msgid "(filtered from %s total users)"
+msgstr "(զտված է %s ընդհանուր օգտատերից)"
+
+msgid "(this tag will be deleted)"
+msgstr "(այս պիտակը կջնջվի)"
+
+msgid "%d users logged in"
+msgstr "%d օգտատեր մուտք է գործել"
+
+msgid "%d waiting for validation"
+msgstr "%d սպասում է վավերացման"
+
+msgid "%d week"
+msgstr "%d շաբաթ"
+
+msgid "%d weeks"
+msgstr "%d շաբաթ"
+
+msgid "%d year"
+msgstr "%d տարի"
+
+msgid "%d years"
+msgstr "%d տարի"
+
+msgid "%s GB used"
+msgstr "%s ԳԲ օգտագործված"
+
+msgid "%s MB"
+msgstr "%s ՄԲ"
+
+msgid "%s MB used"
+msgstr "%s ՄԲ օգտագործված"
+
+msgid "%s ago"
+msgstr "%s առաջ"
+
+msgid "%d user logged out"
+msgstr "%d օգտատեր դուրս է եկել"
+
+msgid "%d user was not updated."
+msgid_plural "%d users were not updated."
+msgstr[0] "%d օգտատեր չի թարմացվել"
+msgstr[1] "%d օգտատեր չի թարմացվել"
+
+msgid "%d user was updated."
+msgid_plural "%d users were updated."
+msgstr[0] "%d օգտատեր թարմացվել է"
+msgstr[1] "%d օգտատեր թարմացվել է"
+
+msgid "%d users added"
+msgstr "%d օգտատեր ավելացվեց"
+
+msgid "%d users edited"
+msgstr "%d օգտատեր խմբագրվեց"
+
+msgid "%d users logged out"
+msgstr "%d օգտատեր դուրս է եկել"
+
+msgid "%d sub-albums"
+msgstr "%d ենթալբոմ"
+
+msgid "%d tag"
+msgstr "%d պիտակ"
+
+msgid "%d tag added"
+msgstr "%d պիտակ ավելացվեց"
+
+msgid "%d tag deleted"
+msgstr "%d պիտակ ջնջվեց"
+
+msgid "%d tag edited"
+msgstr "%d պիտակ խմբագրվեց"
+
+msgid "%d tag moved"
+msgstr "%d պիտակ տեղափոխվեց"
+
+msgid "%d tags"
+msgstr "%d պիտակ"
+
+msgid "%d tags added"
+msgstr "%d պիտակ ավելացվեց"
+
+msgid "%d tags deleted"
+msgstr "%d պիտակ ջնջվեց"
+
+msgid "%d tags edited"
+msgstr "%d պիտակ խմբագրվեց"
+
+msgid "%d tags moved"
+msgstr "%d պիտակ տեղափոխվեց"
+
+msgid "%d user"
+msgid_plural "%d users"
+msgstr[0] "%d օգտատեր"
+msgstr[1] "%d օգտատեր"
+
+msgid "%d user added"
+msgstr "%d օգտատեր ավելացվեց"
+
+msgid "%d user comment rejected"
+msgstr "%d մեկնաբանություն մերժվեց"
+
+msgid "%d user comment validated"
+msgstr "%d մեկնաբանություն վավերացվեց"
+
+msgid "%d user comments rejected"
+msgstr "%d մեկնաբանություն մերժվեց"
+
+msgid "%d user comments validated"
+msgstr "%d մեկնաբանություն վավերացվեց"
+
+msgid "%d user deleted"
+msgid_plural "%d users deleted"
+msgstr[0] "%d օգտատեր ջնջվեց"
+msgstr[1] "%d օգտատեր ջնջվեց"
+
+msgid "%d user edited"
+msgstr "%d օգտատեր խմբագրվեց"
+
+msgid "%d user logged in"
+msgstr "%d օգտատեր մուտք է գործել"
+
+msgid "%d photo added"
+msgstr "%d լուսանկար ավելացվեց"
+
+msgid "%d photo deleted"
+msgstr "%d լուսանկար ջնջվեց"
+
+msgid "%d photo edited"
+msgstr "%d լուսանկար խմբագրվեց"
+
+msgid "%d photo moved"
+msgstr "%d լուսանկար տեղափոխվեց"
+
+msgid "%d photo was deleted"
+msgid_plural "%d photos were deleted"
+msgstr[0] "%d լուսանկար ջնջվեց"
+msgstr[1] "%d լուսանկար ջնջվեց"
+
+msgid "%d photos"
+msgstr "%d լուսանկար"
+
+msgid "%d photos added"
+msgstr "%d լուսանկար ավելացվեց"
+
+msgid "%d photos deleted"
+msgstr "%d լուսանկար ջնջվեց"
+
+msgid "%d photos edited"
+msgstr "%d լուսանկար խմբագրվեց"
+
+msgid "%d photos moved"
+msgstr "%d լուսանկար տեղափոխվեց"
+
+msgid "%d photos uploaded"
+msgstr "%d լուսանկար ներբեռնվեց"
+
+msgid "%d physical"
+msgstr "%d ֆիզիկական"
+
+msgid "%d physicals"
+msgstr "%d ֆիզիկական"
+
+msgid "%d pictures in sub-albums"
+msgstr "%d նկար ենթալբոմում"
+
+msgid "%d second"
+msgstr "%d վայրկյան"
+
+msgid "%d seconds"
+msgstr "%d վայրկյան"
+
+msgid "%d of %d users selected"
+msgstr "%d-ից %d օգտատեր ընտրված է"
+
+msgid "%d parameter was updated."
+msgid_plural "%d parameters were updated."
+msgstr[0] "%d պարամետր թարմացվել է:"
+msgstr[1] "%d պարամետր թարմացվել է:"
+
+msgid "%d groups moved"
+msgstr "%d խումբ տեղափոխվեց"
+
+msgid "%d guest"
+msgid_plural "%d guests"
+msgstr[0] "%d հյուր"
+msgstr[1] "%d հյուր"
+
+msgid "%d hour"
+msgstr "%d ժամ"
+
+msgid "%d hours"
+msgstr "%d ժամ"
+
+msgid "%d in whole branch"
+msgstr "%d ամբողջ մասնաճյուղում"
+
+msgid "%d including sub-albums"
+msgstr "%d, ներառյալ ենթալբոմները"
+
+msgid "%d line filtered"
+msgid_plural "%d lines filtered"
+msgstr[0] "%d տող զտվեց"
+msgstr[1] "%d տող զտվեց"
+
+msgid "%d mail was not sent."
+msgid_plural "%d mails were not sent."
+msgstr[0] "%d նամակ չի ուղարկվել:"
+msgstr[1] "%d նամակ չի ուղարկվել:"
+
+msgid "%d mail was sent."
+msgid_plural "%d mails were sent."
+msgstr[0] "%d նամակ ուղարկվել է:"
+msgstr[1] "%d նամակ ուղարկվել է:"
+
+msgid "%d member"
+msgid_plural "%d members"
+msgstr[0] "%d անդամ"
+msgstr[1] "%d անդամ"
+
+msgid "%d minute"
+msgstr "%d րոպե"
+
+msgid "%d minutes"
+msgstr "%d րոպե"
+
+msgid "%d month"
+msgstr "%d ամիս"
+
+msgid "%d months"
+msgstr "%d ամիս"
+
+msgid "%d of %d photos selected"
+msgstr "%d-ից %d լուսանկար ընտրված է"
+
+msgid "%d anomaly has been corrected."
+msgid_plural "%d anomalies have been detected corrected."
+msgstr[0] "%d անոմալիաներ շտկվել են:"
+msgstr[1] "%d անոմալիաներ հայտնաբերվել և շտկվել են:"
+
+msgid "%d anomaly has been detected."
+msgid_plural "%d anomalies have been detected."
+msgstr[0] "%d անոմալիաներ հայտնաբերվել են:"
+msgstr[1] "%d անոմալիաներ հայտնաբերվեցին:"
+
+msgid "%d anomaly has been ignored."
+msgid_plural "%d anomalies have been ignored."
+msgstr[0] "%d անոմալիաներ անտեսվել են:"
+msgstr[1] "%d անոմալիաներ անտեսվել են:"
+
+msgid "%d anomaly has not been corrected."
+msgid_plural "%d anomalies have not been corrected."
+msgstr[0] "%d անոմալիաներ չեն շտկվել:"
+msgstr[1] "%d անոմալիաներ չեն շտկվել:"
+
+msgid "%d association"
+msgstr "%d ասոցիացիա"
+
+msgid "%d associations"
+msgstr "%d ասոցիացիա"
+
+msgid "%d checksums were added"
+msgstr "%d ստուգիչ գումար ավելացվեց"
+
+msgid "%d day"
+msgstr "%d օր"
+
+msgid "%d days"
+msgstr "%d օր"
+
+msgid "%d files"
+msgstr "%d ֆայլ"
+
+msgid "%d formats uploaded for %d photos"
+msgstr "%d ձևաչափ ներբեռնվեցին %d լուսանկարի համար"
+
+msgid "%d group"
+msgstr "%d խումբ"
+
+msgid "%d group added"
+msgstr "%d խումբ ավելացվեց"
+
+msgid "%d group deleted"
+msgstr "%d խումբ ջնջվեց"
+
+msgid "%d group edited"
+msgstr "%d խումբ խմբագրվեց"
+
+msgid "%d group moved"
+msgstr "%d խումբ տեղափոխվեց"
+
+msgid "%d groups"
+msgstr "%d խումբ"
+
+msgid "%d groups added"
+msgstr "%d խումբ ավելացվեց"
+
+msgid "%d groups deleted"
+msgstr "%d խումբ ջնջվեց"
+
+msgid "%d groups edited"
+msgstr "%d խումբ խմբագրվեց"
+
+msgid " (copy %s)"
+msgstr "(պատճենել %s)"
+
+msgid " (copy)"
+msgstr "պատճենել"
+
+msgid " and %d virtual"
+msgstr "և %d վիրտուալ"
+
+msgid " and %d virtuals"
+msgstr "և %d վիրտուալ"
+
+msgid "%d Activities"
+msgstr "%d գործունեություն"
+
+msgid "%d Activity"
+msgstr "%d գործունեություն"
+
+msgid "%d album added"
+msgstr "%d ալբոմ ավելացվեց"
+
+msgid "%d album deleted"
+msgstr "%d ալբոմ ջնջվեց"
+
+msgid "%d album edited"
+msgstr "%d ալբոմ խմբագրվեց"
+
+msgid "%d album including"
+msgstr "%d ալբոմ ներառյալ"
+
+msgid "%d album moved"
+msgid_plural "%d albums moved"
+msgstr[0] "%d ալբոմ տեղափոխվեց"
+msgstr[1] "%d ալբոմ տեղափոխվեց"
+
+msgid "%d albums added"
+msgstr "%d ալբոմ ավելացվեց"
+
+msgid "%d albums deleted"
+msgstr "%d ալբոմ ջնջվեց"
+
+msgid "%d albums edited"
+msgstr "%d ալբոմ խմբագրվեց"
+
+msgid "%d albums including"
+msgstr "%d ալբոմ ներառյալ"
+
+msgid "Check for upgrade"
+msgstr "Ստուգել թարմացումները"
+
+msgid "Check for upgrade failed for unknown reasons."
+msgstr "Թարմացման ստուգումը ձախողվեց անհայտ պատճառներով:"
+
+msgid "Check integrity"
+msgstr "Ամբողջականության ստուգում"
+
+msgid "Choose an action"
+msgstr "Ընտրել գործողություն"
+
+msgid "Choose an option"
+msgstr "Ընտրել տարբերակ"
+
+msgid "Choose which tag to merge these tags into"
+msgstr "Ընտրել, թե որ պիտակում միավորել այս պիտակները"
+
+msgid "Classic display"
+msgstr "Դասական ցուցադրում"
+
+msgid "Clear Selection"
+msgstr "Մաքրել ընտրությունը"
+
+msgid "Close"
+msgstr "Փակել"
+
+msgid "Close user details"
+msgstr "Փակել օգտատիրոջ մանրամասները"
+
+msgid "Comments allowed for sub-albums"
+msgstr "Մեկնաբանությունները թույլատրվում են ենթալբոմների համար"
+
+msgid "Comments disallowed for sub-albums"
+msgstr "Մեկնաբանությունները չեն թույլատրվում ենթալբոմների համար"
+
+msgid "Comments for all"
+msgstr "Մեկնաբանություններ բոլորի համար"
+
+msgid "Compact View"
+msgstr "Կոմպակտ տեսք"
+
+msgid "Compare mode"
+msgstr "Համեմատության ռեժիմ"
+
+msgid "Complementary mail content"
+msgstr "Լրացուցիչ էլ-նամակի բովանդակություն"
+
+msgid "Compute %d missing checksums"
+msgstr "Հաշվել %d բացակայող ստուգաչափեր"
+
+msgid "Configuration"
+msgstr "Կազմաձև"
+
+msgid "Confirm deletion"
+msgstr "Հաստատել ջնջումը"
+
+msgid "Confirm merge"
+msgstr "Հաստատել միավորումը"
+
+msgid "Cache"
+msgstr "Քեշ"
+
+msgid "Cache size"
+msgstr "Քեշի չափը"
+
+msgid "Caddie"
+msgstr "Caddie"
+
+msgid "Caddie management"
+msgstr "Caddie-ի Կառավարում"
+
+msgid "Can be shared by several individuals without conflict (they cannot change the password)."
+msgstr "Կարող է օգտագործվել բազմաթիվ անձանց կողմից առանց կոնֆլիկտների (նրանք չեն կարող փոխել գաղտնաբառը):"
+
+msgid "Can't connect to server."
+msgstr "Սերվերի հետ կապը հասանելի չէ:"
+
+msgid "Can't create temporary file."
+msgstr "Ժամանակավոր ֆայլ չի կարող ստեղծվել:"
+
+msgid "Can't download archive."
+msgstr "Արխիվը հնարավոր չէ ներբեռնել:"
+
+msgid "Can't read or extract archive."
+msgstr "Արխիվը հնարավոր չէ կարդալ կամ հանել:"
+
+msgid "Cancel"
+msgstr "Չեղարկել"
+
+msgid "Cannot delete the old permalink !"
+msgstr "Հին մշտական հղումը չի կարող ջնջվել:"
+
+msgid "Center of interest"
+msgstr "Հետաքրքրության կենտրոն"
+
+msgid "Certification higher or equal to"
+msgstr "Հավաստագրումը ավելի բարձր է կամ հավասար"
+
+msgid "Change Admin Colors"
+msgstr "Փոխել ադմինիստրացիայի գույները"
+
+msgid "Change Password"
+msgstr "Փոխել Գաղտնաբառը"
+
+msgid "Change password"
+msgstr "Փոխել գաղտնաբառը"
+
+msgid "Change username"
+msgstr "Փոխել օգտանունը"
+
+msgid "Check all"
+msgstr "Ստուգել բոլորը"
+
+msgid "Check automatic corrections"
+msgstr "Ստուգել ավտոմատ շտկումները"
+
+msgid "Check for updates"
+msgstr "Ստուգել թարմացումները"
+
+msgid "Apr"
+msgstr "Ապր."
+
+msgid "Associate to album"
+msgstr "Ասոցացնել ալբոմի հետ"
+
+msgid "Associated"
+msgstr "Ասոցացնել"
+
+msgid "At least 2 selected tags are needed to merge"
+msgstr "Միավորելու համար անհրաժեշտ է առնվազն 2 ընտրված պիտակ"
+
+msgid "Aug"
+msgstr "Օգս."
+
+msgid "Authorize comments"
+msgstr "Լիազորել մեկնաբանությունները"
+
+msgid "Authorize users to add comments on selected albums"
+msgstr "Լիազորել օգտատերերին մեկնաբանություններ ավելացնել ընտրված ալբոմներում"
+
+msgid "Authorized"
+msgstr "Լիազորված"
+
+msgid "Automatic correction"
+msgstr "Ավտոմատ ուղղում"
+
+msgid "Automatic sort order"
+msgstr "Ավտոմատ սորտավորում"
+
+msgid "Available on"
+msgstr "Հասանելի է"
+
+msgid "Available only with HTML format"
+msgstr "Հասանելի է միայն HTML ձևաչափով"
+
+msgid "Average last 12 months"
+msgstr "Վերջին 12 ամիսների միջին ցուցանիշը"
+
+msgid "Average rate"
+msgstr "Միջինը"
+
+msgid "Basic settings"
+msgstr "Հիմնական կարգավորումներ"
+
+msgid "Batch Manager"
+msgstr "Խմբաքանակի կառավարիչ"
+
+msgid "Bound Theme"
+msgstr "Կապված թեման"
+
+msgid "By %s"
+msgstr "%s-ի կողմից"
+
+msgid "By default, Piwigo will create a new websize from the HD (high definition) version of your photo."
+msgstr "default-ով, Piwigo-ն Ձեր լուսանկարի HD (բարձր հստակության) տարբերակից կստեղծի նոր վեբ չափ:"
+
+msgid "By default, the center of interest is placed in the middle of the photo."
+msgstr "default-ով, հետաքրքրության կենտրոնը լուսանկարի մեջտեղում է:"
+
+msgid "By rank"
+msgstr "Ըստ կոչման"
+
+msgid "Are you sure you want to delete group \"%s\"?"
+msgstr "Վստա՞հ եք, որ ցանկանում եք ջնջել \"%s\" խումբը:"
+
+msgid "Are you sure you want to delete the language \"%s\"?"
+msgstr "Վստա՞հ եք, որ ցանկանում եք ջնջել \"%s\" լեզուն:"
+
+msgid "Are you sure you want to delete the plugin \"%s\"?"
+msgstr "Վստա՞հ եք, որ ցանկանում եք ջնջել \"%s\" պլագինը:"
+
+msgid "Are you sure you want to delete the ratings of the user \"%s\"?"
+msgstr "Վստա՞հ եք, որ ցանկանում եք ջնջել \"%s\" օգտատիրոջ գնահատականները:"
+
+msgid "Are you sure you want to delete the theme \"%s\"?"
+msgstr "Վստա՞հ եք, որ ցանկանում եք ջնջել \"%s\" թեման:"
+
+msgid "Are you sure you want to delete the user \"%s\"?"
+msgstr "Վստա՞հ եք, որ ցանկանում եք ջնջել \"%s\" օգտատիրոջը:"
+
+msgid "Are you sure you want to delete this plugin?"
+msgstr "Վստա՞հ եք, որ ցանկանում եք ջնջել այս պլագինը:"
+
+msgid "Are you sure you want to delete this site?"
+msgstr "Վստա՞հ եք, որ ցանկանում եք ջնջել այս կայքը:"
+
+msgid "Are you sure you want to delete this theme?"
+msgstr "Վստա՞հ եք, որ ցանկանում եք ջնջել այս թեման:"
+
+msgid "Are you sure you want to delete this?"
+msgstr "Վստա՞հ եք, որ ցանկանում եք ջնջել այս:"
+
+msgid "Are you sure you want to install the plugin \"%s\"?"
+msgstr "Վստա՞հ եք, որ ցանկանում եք տեղադրել \"%s\" պլագինը:"
+
+msgid "Are you sure you want to install this plugin?"
+msgstr "Վստա՞հ եք, որ ցանկանում եք տեղադրել այս պլագինը:"
+
+msgid "Are you sure you want to lock the gallery?"
+msgstr "Վստա՞հ եք, որ ցանկանում եք կողպել պատկերասրահը:"
+
+msgid "Are you sure you want to restore the plugin \"%s\"?"
+msgstr "Վստա՞հ եք, որ ցանկանում եք վերականգնել \"%s\" պլագինը:"
+
+msgid "Are you sure you want to restore this plugin?"
+msgstr "Վստա՞հ եք, որ ցանկանում եք վերականգնել այս պլագինը:"
+
+msgid "Are you sure you want to restore to default settings?"
+msgstr "Վստա՞հ եք, որ ցանկանում եք վերականգնել default կարգավորումները:"
+
+msgid "Are you sure you want to uninstall the plugin \"%s\"?"
+msgstr "Վստա՞հ եք, որ ցանկանում եք ջնջել \"%s\" պլագինը:"
+
+msgid "Are you sure you want to unlock the gallery?"
+msgstr "Վստա՞հ եք, որ ցանկանում եք բացել պատկերասրահը:"
+
+msgid "Are you sure you want to update all extensions?"
+msgstr "Վստա՞հ եք, որ ցանկանում եք թարմացնել բոլոր հավելվածները:"
+
+msgid "Associate User"
+msgstr "Ասոցացված օգտատեր"
+
+msgid "Are you sure to install this upgrade? You must verify if this version does not need uninstallation."
+msgstr "Վստա՞հ եք, որ ցանկանում եք տեղադրել այս թարմացումը: Դուք պետք է ստուգեք, արդյոք այս տարբերակը նախնական տեղահանման կարիք չունի:"
+
+msgid "Are you sure you want to delete all sizes?"
+msgstr "Վստա՞հ եք, որ ցանկանում եք ջնջել բոլոր չափերը:"
+
+msgid "Allow user customization"
+msgstr "Թույլատրել օգտատիրոջ կարգավորումը"
+
+msgid "Allow user registration"
+msgstr "Թույլատրել օգտատիրոջ գրանցումը"
+
+msgid "An error occured during extraction (%s)."
+msgstr "Տեղի է ունեցել սխալ: Ստուգել ֆայլերը՝ %s:"
+
+msgid "An information email was sent to group \"%s\""
+msgstr "Տեղեկատվական էլ-նամակը ուղարկվել է \"%s\" խմբին:"
+
+msgid "Anomaly"
+msgstr "Անոմալիա"
+
+msgid "Anyway only webmasters can see this tab and never administrators."
+msgstr "Այս թաբը կարող են տեսնել միայն վեբ մասնագետները, բայց ոչ ադմինիստրատորները:"
+
+msgid "Aperture is a powerful tool to refine images and manage massive libraries on Mac."
+msgstr "Aperture-ը հզոր գործիք է Mac-ում պատկերները բարելավելու և հսկայական գրադարանները կառավարելու համար:"
+
+msgid "Aperture is designed for professional photographers with iPhoto simplicity."
+msgstr "Aperture-ը նախատեսված է պրոֆեսիոնալ լուսանկարիչների համար՝ iPhoto-ի պարզությամբ:"
+
+msgid "Applications"
+msgstr "Ծրագրեր"
+
+msgid "Apply action"
+msgstr "Կիրառել գործողությունը"
+
+msgid "Apply an automatic order to root albums"
+msgstr "Կիրառել ավտոմատ կարգավորվածությունը root ալբոմների վրա"
+
+msgid "Apply selected corrections"
+msgstr "Կիրառել ընտրված ուղղումները"
+
+msgid "Apply to direct sub-albums"
+msgstr "Կիրառել ուղղակի ենթալբոմների վրա"
+
+msgid "Apply to root albums"
+msgstr "Կիրառել root ալբոմների վրա"
+
+msgid "Apply to sub-albums"
+msgstr "Կիրառել ենթալբոմների վրա"
+
+msgid "Apply to the whole hierarchy"
+msgstr "Կիրառել ամբողջ հիերարխիայի վրա"
+
+msgid "Apply watermark if height is bigger than"
+msgstr "Կիրառել ջրանիշ, եթե բարձրությունը ավելի մեծ է, քան"
+
+msgid "Apply watermark if width is bigger than"
+msgstr "Կիրառել ջրանիշ, եթե լայնությունը ավելի մեծ է, քան"
+
+msgid "Approximate maximum resolution: %dM pixels (that's %dx%d pixels)."
+msgstr "Մոտավոր առավելագույն թույլատրելիությունը՝ %dM պիքսել (այսինքն՝ %dx%d պիքսել):"
+
+msgid "Albums automatically sorted"
+msgstr "Ալբոմները ավտոմատ տեսակավորվել են"
+
+msgid "All %d photos are selected"
+msgstr "Բոլոր %d լուսանկարը ընտրված է"
+
+msgid "All %d users are selected"
+msgstr "Բոլոր %d օգտատերը ընտրված է"
+
+msgid "All admins"
+msgstr "Բոլոր ադմինները"
+
+msgid "All extensions are up to date."
+msgstr "Բոլոր հավելվածները թարմացված են"
+
+msgid "All languages are up to date."
+msgstr "Բոլոր լեզուները թարմացված են"
+
+msgid "All optimizations have been successfully completed."
+msgstr "Բոլոր օպտիմալացումները հաջողությամբ ավարտված են:"
+
+msgid "All plugins are up to date."
+msgstr "Բոլոր plugin-ները թարմացված են"
+
+msgid "All themes are up to date."
+msgstr "Բոլոր թեմաները թարմացված են"
+
+msgid "Allow comments for sub-albums"
+msgstr "Թույլատրել ենթալբոմների մեկնաբանությունները"
+
+msgid "Allow rating"
+msgstr "Թույլատրել գնահատումը"
+
+msgid "Allow users to add a link to their website"
+msgstr "Թույլատրել օգտատերերին հղում ավելացնել իրենց կայքին"
+
+msgid "Allow users to delete their own comments"
+msgstr "Թույլատրել օգտատերերին ջնջել իրենց մեկնաբանությունները"
+
+msgid "Allow users to edit their own comments"
+msgstr "Թույլատրել օգտատերերին խմբագրել իրենց մեկնաբանությունները"
+
+msgid "Allowed file types: %s."
+msgstr "Թույլատրելի ֆայլերի տիպեր՝ %s:"
+
+msgid "Always have a backup of your database and files."
+msgstr "Միշտ պահել տվյալների բազայի և ֆայլերի կրկնօրինակը:"
+
+msgid "An error has occured during extract. Please check files permissions of your piwigo installation.<br><a href=\"%s\">Click here to show log error</a>."
+msgstr "Տեղի է ունեցել սխալ: Խնդրում ենք ստուգել piwigo տեղադրման ֆայլի թույլտվությունները:<br> <a href=\"%s\">Սեղմեք այստեղ՝ լոգերը տեսնելու համար</a>:"
+
+msgid "An error has occured during upgrade."
+msgstr "Թարմացման ընթացքում տեղի է ունեցել սխալ:"
+
+msgid "Date"
+msgstr "Ամսաթիվ"
+
+msgid "Day"
+msgstr "Օր"
+
+msgid "Deactivate"
+msgstr "Ապաակտիվացնել"
+
+msgid "Deactivate all"
+msgstr "Ապաակտիվացնել բոլորը"
+
+msgid "Deactivated"
+msgstr "Ապաակտիվացված"
+
+msgid "Dec"
+msgstr "Դեկ"
+
+msgid "Default comments order"
+msgstr "Default մեկնաբանությունների կարգը"
+
+msgid "Default display"
+msgstr "Default ցուցադրում"
+
+msgid "Default photos order"
+msgstr "Լուսանկարների default կարգը"
+
+msgid "Default user cannot be deleted"
+msgstr "Default օգտատերը չի կարող ջնջվել"
+
+msgid "Default user does not exist"
+msgstr "Default օգտատերը գոյություն չունի"
+
+msgid "Delete %d orphan photos"
+msgstr "Ջնջել %d անտեր լուսանկարները"
+
+msgid "Delete %s format ?"
+msgstr "Ջնջե՞լ %s ձևաչափը:"
+
+msgid "Delete Representant"
+msgstr "Ջնջել ալբոմի մանրապատկերը"
+
+msgid "Delete album"
+msgstr "Ջնջել ալբոմը"
+
+msgid "Delete album \"%s\" and its %d sub-albums."
+msgstr "Ջնջել \"%s\" ալբոմը և դրա %d ենթալբոմը"
+
+msgid "Delete album \"%s\"."
+msgstr "Ջնջել \"%s\" ալբոմը։"
+
+msgid "Delete multiple size images"
+msgstr "Ջնջել տարբեր չափերի պատկերները"
+
+msgid "Delete orphan tags"
+msgstr "Ջնջել անտեր պիտակները"
+
+msgid "Delete orphan tags ?"
+msgstr "Ջնջե՞լ անտեր պիտակները"
+
+msgid "Continue processing treatment"
+msgstr "Շարունակել"
+
+msgid "Correction"
+msgstr "Ուղղում"
+
+msgid "Correction applied with error"
+msgstr "Ուղղումը կիրառվել է սխալով"
+
+msgid "Correction applied with success"
+msgstr "Ուղղումը հաջողությամբ կիրառվեց"
+
+msgid "Correction the anomaly will cancel the fact that it's ignored"
+msgstr "Ուղղված անոմալիան այլևս չի անտեսվի"
+
+msgid "Create"
+msgstr "Ստեղծել"
+
+msgid "Create a first album"
+msgstr "Ստեղծել առաջին ալբոմը"
+
+msgid "Create a new album at root"
+msgstr "Ստեղծել նոր ալբոմ արմատում"
+
+msgid "Create a sub-album of \"%s\""
+msgstr "Ստեղծել \"%s\"-ի ենթալբոմ"
+
+msgid "Create the \"%s\" directory at the root of your Piwigo installation"
+msgstr "Ստեղծել \"%s\" գրացուցակը Ձեր Piwigo-ի տեղադրման սկզբում"
+
+msgid "Create this site"
+msgstr "Ստեղծել այս կայքը"
+
+msgid "Created"
+msgstr "Ստեղծվեց"
+
+msgid "Created on %s"
+msgstr "Ստեղծվեց %s-ի վրա"
+
+msgid "Crop"
+msgstr "Կտրել"
+
+msgid "Current Version"
+msgstr "Ընթացիկ տարբերակ"
+
+msgid "Current name"
+msgstr "Ընթացիկ անուն"
+
+msgid "Currently running version %s"
+msgstr "Ներկայումս գործում է %s տարբերակը"
+
+msgid "Dashboard"
+msgstr "Վահանակ"
+
+msgid "Database"
+msgstr "Տվյալների բազա"
+
+msgid "Database synchronization with files"
+msgstr "Տվյալների բազայի սինխրոնիզացիա ֆայլերի հետ"
+

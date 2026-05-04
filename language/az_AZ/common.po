@@ -1,0 +1,144 @@
+# Piwigo translation — az_AZ
+# Source: common.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: az_AZ\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Language-Name: Azərbaycanca\n"
+"X-Piwigo-Country: Azərbaycan\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Code: az\n"
+"X-Piwigo-Zero-Plural: true\n"
+
+msgid "%d album updated"
+msgid_plural "%d albums updated"
+msgstr[0] "%d albom yeniləndi"
+msgstr[1] "%d albomlar yeniləndi"
+
+msgid "%d comment to validate"
+msgstr "%d təsdiqlənməli şərh"
+
+msgid "%d comment"
+msgid_plural "%d comments"
+msgstr[0] "%d şərh"
+msgstr[1] "%d şərhlər"
+
+msgid "%d comments to validate"
+msgstr "%d təsdiqlənməli şərhlər"
+
+msgid "%d hit"
+msgstr "%d keçid"
+
+msgid "%d hits"
+msgstr "%d keçidlər"
+
+msgid "%d Kb"
+msgstr "%d Kb"
+
+msgid "%d new comment"
+msgstr "%d yeni şərh"
+
+msgid "%d new comments"
+msgstr "%d yeni şərhlər"
+
+msgid "%d new photo"
+msgid_plural "%d new photos"
+msgstr[0] "%d yeni foto"
+msgstr[1] "%d yeni fotolar"
+
+msgid "%d new user"
+msgstr "%d yeni istifadəçi"
+
+msgid "%d new users"
+msgstr "%d yeni istifadəçilər"
+
+msgid "%d photo is also linked to current tags"
+msgid_plural "%d photos are also linked to current tags"
+msgstr[0] "%d foto həmçinin bu etiketlərlə əlaqələndirilmişdir"
+msgstr[1] "%d fotolar həmçinin bu etiketlərlə əlaqələndirilmişdir"
+
+msgid "%d photo"
+msgid_plural "%d photos"
+msgstr[0] "%d foto"
+msgstr[1] "%d foto"
+
+msgid "%d rates"
+msgstr "%d qiymətlər"
+
+msgid "(!) This comment requires validation"
+msgstr "(!) Şərh təsdiq olunmalıdır"
+
+msgid "... or browse your empty gallery"
+msgstr "... ya da boş qalereyanızı gözdən keçirdin"
+
+msgid "... or please deactivate this message, I will find my way by myself"
+msgstr "... ya da zəhmət olmasa bu mesajı deaktiv edin, mən özüm yolu tapacam"
+
+msgid "A comment on your site"
+msgstr "Saytınızdakı şərh"
+
+msgid "About Piwigo"
+msgstr "Piwigo haqqında"
+
+msgid "About"
+msgstr "Haqqında"
+
+msgid "Album"
+msgstr "albom"
+
+msgid "File"
+msgstr "fayl"
+
+msgid "Display"
+msgstr "göstər"
+
+msgid "Delete"
+msgstr "sil"
+
+msgid "Date"
+msgstr "tarix"
+
+msgid "Contact"
+msgstr "təmas"
+
+msgid "Calendar"
+msgstr "təqvim"
+
+msgid "Are you sure?"
+msgstr "əminsinizmi?"
+
+msgid "All"
+msgstr "Bütün"
+
+msgid "Author"
+msgstr "Müəllif"
+
+msgid "Album: %s"
+msgstr "Albom: %5"
+
+msgid "Administration"
+msgstr "Müdiriyyət"
+
+msgid "Accelerate diaporama speed"
+msgstr "Sürətin artır"
+
+msgid "Add a comment"
+msgstr "Geyd əlavə et"
+
+msgid "Admin: %s"
+msgstr "Müdir: %5"
+
+msgid "%d rate"
+msgstr "%d norma"
+
+msgid "2small"
+msgstr "XXS-bapbalaca"
+
+msgid "Comment"
+msgstr "qeyd"
+
+msgid "Albums"
+msgstr "Albomlar"
+

@@ -1,0 +1,23 @@
+# Piwigo translation — hy_AM
+# Source: whats_new_15.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: hy_AM\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "A new interface for user management"
+msgstr "Օգտագործողների կառավարման նոր ինտերֆեյս"
+
+msgid "Brand new features : Activities logs and PDF reader"
+msgstr "Բոլորովին նոր առանձնահատկություններ. Գործողությունների տեղեկամատյաններ և PDF ընթերցող"
+
+msgid "Enhanced interface for batch manager and album selector"
+msgstr "Բարելավված ինտերֆեյս խմբաքանակի կառավարչի և ալբոմների ընտրության համար"
+
+msgid "Even more filters for the gallery search engine"
+msgstr "Ավելի շատ զտիչներ պատկերասրահի որոնիչի համար"
+

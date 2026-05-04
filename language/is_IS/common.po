@@ -1,0 +1,1486 @@
+# Piwigo translation — is_IS
+# Source: common.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: is_IS\n"
+"Plural-Forms: nplurals=2; plural=(n%10!=1 || n%100==11);\n"
+"X-Piwigo-Language-Name: Íslenska\n"
+"X-Piwigo-Country: Ísland\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Code: is\n"
+"X-Piwigo-Zero-Plural: true\n"
+
+msgid "%d Kb"
+msgstr "%d Kb"
+
+msgid "%d comment to validate"
+msgstr "%d umsögn til að staðfesta"
+
+msgid "%d comments to validate"
+msgstr "%d umsagnir til að staðfesta"
+
+msgid "%d new comment"
+msgstr "%d ný athugasemd"
+
+msgid "%d new comments"
+msgstr "%d nýar athugasemdir"
+
+msgid "%d comment"
+msgid_plural "%d comments"
+msgstr[0] "%d umsögn"
+msgstr[1] "%d umsagnir"
+
+msgid "%d hit"
+msgstr "%d ýtt á"
+
+msgid "%d hits"
+msgstr "%d ýtt á"
+
+msgid "%d new user"
+msgstr "%d nýr notandi"
+
+msgid "%d new users"
+msgstr "%d nýir notendur"
+
+msgid "About"
+msgstr "Um hugbúnaðinn"
+
+msgid "All tags"
+msgstr "Öll merki"
+
+msgid "Any tag"
+msgstr "Hvaða merki sem er"
+
+msgid "Author"
+msgstr "Höfundur"
+
+msgid "Close this window"
+msgstr "Loka þessum glugga"
+
+msgid "Confirm Password"
+msgstr "Staðfesta lykilorð"
+
+msgid "Connection settings"
+msgstr "Stillingar fyrir innskráningu"
+
+msgid "Login"
+msgstr "Innskráning"
+
+msgid "Contact webmaster"
+msgstr "Hafa samband við vefstjóra"
+
+msgid "Create a new account"
+msgstr "Stofna nýjan aðgang"
+
+msgid "Created on"
+msgstr "Stofnað á"
+
+msgid "Creation date"
+msgstr "Stofndagur"
+
+msgid "Current password is wrong"
+msgstr "Núverandi lykilorð er rangt"
+
+msgid "Dimensions"
+msgstr "Stærðir"
+
+msgid "Display"
+msgstr "Birta"
+
+msgid "Email address"
+msgstr "Netfang"
+
+msgid "Enter your personnal informations"
+msgstr "Settu inn persónuupplýsingar þínar"
+
+msgid "Error sending email"
+msgstr "Villa við sendingu tölvupósts"
+
+msgid "File name"
+msgstr "Nafn skráar"
+
+msgid "File"
+msgstr "Skrá"
+
+msgid "Filesize"
+msgstr "Stærð skráar"
+
+msgid "Filter and display"
+msgstr "Sía og birta"
+
+msgid "Filter"
+msgstr "Sía"
+
+msgid "Forgot your password?"
+msgstr "Gleymt lykilorð?"
+
+msgid "Go through the gallery as a visitor"
+msgstr "Skoða myndasafn sem gestur"
+
+msgid "Help"
+msgstr "Hjálp"
+
+msgid "Identification"
+msgstr "Auðkenni"
+
+msgid "Keyword"
+msgstr "Stikkorð"
+
+msgid "Links"
+msgstr "Hlekkir"
+
+msgid "N/A"
+msgstr "E/T"
+
+msgid "Complete RSS feed (photos, comments)"
+msgstr "Klára RSS-streymi (myndir, umsagnir)"
+
+msgid "Photos only RSS feed"
+msgstr "RSS-streymi aðeins með myndum"
+
+msgid "New on %s"
+msgstr "Nýtt á %s"
+
+msgid "Notification"
+msgstr "Tilkynning"
+
+msgid "Number of items"
+msgstr "Fjöldi atriða"
+
+msgid "Original dimensions"
+msgstr "Upprunaleg stærðir"
+
+msgid "Password forgotten"
+msgstr "Gleymt lykilorð"
+
+msgid "Password"
+msgstr "Lykilorð"
+
+msgid "Post date"
+msgstr "Birt á"
+
+msgid "Posted on"
+msgstr "Birt á"
+
+msgid "Profile"
+msgstr "Síðan mín"
+
+msgid "Quick connect"
+msgstr "Flýtitenging"
+
+msgid "RSS feed"
+msgstr "RSS-streymi"
+
+msgid "Register"
+msgstr "Nýskrá"
+
+msgid "Registration"
+msgstr "Nýskráning"
+
+msgid "Related tags"
+msgstr "Svipuð merki"
+
+msgid "Reset"
+msgstr "Endurstilla"
+
+msgid "Retrieve password"
+msgstr "Sækja lykilorð"
+
+msgid "Search tags"
+msgstr "Leita að merkjum"
+
+msgid "Search"
+msgstr "Leita"
+
+msgid "display available tags"
+msgstr "birta tiltæk merki"
+
+msgid "Since"
+msgstr "Frá"
+
+msgid "Sort by"
+msgstr "Flokka eftir"
+
+msgid "Sort order"
+msgstr "Flokkunarröð"
+
+msgid "Tag"
+msgstr "Merki"
+
+msgid "Tags"
+msgstr "Merki"
+
+msgid "The RSS notification feed provides notification on news from this website : new photos, updated albums, new comments. Use a RSS feed reader."
+msgstr "RSS-streymið tilkynnir um nýja atburði á þessari vefsíðu:  nýjar myndir, uppfærslur albúma, nýjar umsagnir. Notist með RSS-streymislesara."
+
+msgid "Unknown feed identifier"
+msgstr "Óþekkt auðkenni streymis"
+
+msgid "User comments"
+msgstr "Umsagnir notenda"
+
+msgid "Username"
+msgstr "Notandanafn"
+
+msgid "Visits"
+msgstr "Heimsóknir"
+
+msgid "Webmaster"
+msgstr "Vefstjóri"
+
+msgid "Week %d"
+msgstr "Vika %d"
+
+msgid "About Piwigo"
+msgstr "Um Piwigo"
+
+msgid "You are not authorized to access the requested page"
+msgstr "Þú hefur ekki heimild til að fá aðgang að umbeðinni síðu"
+
+msgid "add this photo to your favorites"
+msgstr "bæta þessari mynd við eftirlæti"
+
+msgid "Administration"
+msgstr "Stjórnun"
+
+msgid "all"
+msgstr "allt"
+
+msgid "%d album updated"
+msgid_plural "%d albums updated"
+msgstr[0] "%d albúm uppfært"
+msgstr[1] "%d albúm uppfærð"
+
+msgid "%d new photo"
+msgid_plural "%d new photos"
+msgstr[0] "%d ný mynd"
+msgstr[1] "%d nýjar myndir"
+
+msgid "Albums"
+msgstr "Albúm"
+
+msgid "Album"
+msgstr "Albúm"
+
+msgid "ascending"
+msgstr "hækkandi"
+
+msgid "Expand all albums"
+msgstr "Fletta út öllum albúmum"
+
+msgid "posted after %s (%s)"
+msgstr "sett inn eftir %s (%s)"
+
+msgid "posted before %s (%s)"
+msgstr "sett inn fyrir %s (%s)"
+
+msgid "posted between %s (%s) and %s (%s)"
+msgstr "sett inn milli %s (%s) og %s (%s)"
+
+msgid "posted on %s"
+msgstr "sett inn þann %s"
+
+msgid "Best rated"
+msgstr "Besta einkunn"
+
+msgid "display best rated photos"
+msgstr "birta myndir með bestu einkunn"
+
+msgid "Calendar"
+msgstr "Dagatal"
+
+msgid "All"
+msgstr "Allt"
+
+msgid "display each day with photos, month per month"
+msgstr "birta hvern dag með myndum, mánuð eftir mánuð"
+
+msgid "View"
+msgstr "Skoða"
+
+msgid "chronology_monthly_calendar"
+msgstr "Mánaðardagatal"
+
+msgid "chronology_monthly_list"
+msgstr "Mánaðarlisti"
+
+msgid "chronology_weekly_list"
+msgstr "Vikulisti"
+
+msgid "Click here if your browser does not automatically forward you"
+msgstr "Smelltu hér ef vafrinn sendir þig ekki áfram sjálfkrafa"
+
+msgid "comment date"
+msgstr "dagsetning umsagnar"
+
+msgid "Comment"
+msgstr "Umsögn"
+
+msgid "Your comment has been registered"
+msgstr "Umsögnin þín hefur verið skráð"
+
+msgid "Anti-flood system : please wait for a moment before trying to post another comment"
+msgstr "Vörn gegn ruslpósti : bíddu augnablik áður en þú reynir að birta aðra umsögn"
+
+msgid "Your comment has NOT been registered because it did not pass the validation rules"
+msgstr "Umsögnin þín hefur ekki verið skráð vegna þess að hún stóðst ekki reglur"
+
+msgid "An administrator must authorize your comment before it is visible."
+msgstr "Stjórnandi verður að samþykkja umsögn þína áður en hún verður sýnileg."
+
+msgid "This login is already used by another user"
+msgstr "Þetta notandanafn er nú þegar í notkun"
+
+msgid "Comments"
+msgstr "Umsagnir"
+
+msgid "Add a comment"
+msgstr "Bæta við umsögn"
+
+msgid "created after %s (%s)"
+msgstr "búið til eftir %s (%s)"
+
+msgid "created before %s (%s)"
+msgstr "búið til fyrir %s (%s)"
+
+msgid "created between %s (%s) and %s (%s)"
+msgstr "búið til milli %s (%s) og %s (%s)"
+
+msgid "created on %s"
+msgstr "búið til þann %s"
+
+msgid "Your Gallery Customization"
+msgstr "Aðlögun á myndasafninu þínu"
+
+msgid "Default"
+msgstr "Sjálfgefið"
+
+msgid "delete this photo from your favorites"
+msgstr "eyða þessari mynd úr eftirlætum"
+
+msgid "Delete"
+msgstr "Eyða"
+
+msgid "descending"
+msgstr "lækkandi"
+
+msgid "Download"
+msgstr "niðurhal"
+
+msgid "Download this file"
+msgstr "sækja þessa skrá"
+
+msgid "edit"
+msgstr "breyta"
+
+msgid "wrong date"
+msgstr "röng dagsetning"
+
+msgid "excluded"
+msgstr "útilokað"
+
+msgid "Your favorites"
+msgstr "Eftirlætin þín"
+
+msgid "display your favorites photos"
+msgstr "birta eftirlætismyndirnar þínar"
+
+msgid "Favorites"
+msgstr "Eftirlæti"
+
+msgid "First"
+msgstr "Fyrsta"
+
+msgid "The gallery is locked for maintenance. Please, come back later."
+msgstr "Myndasafnið er lokað vegna viðhalds. Reyndu aftur síðar."
+
+msgid "Page generated in"
+msgstr "Síða útbúin á"
+
+msgid "guest"
+msgstr "gestur"
+
+msgid "Hello"
+msgstr "Halló"
+
+msgid "available for administrators only"
+msgstr "Aðeins í boði fyrir stjórnendur"
+
+msgid "display this album"
+msgstr "birta þetta albúm"
+
+msgid "display last user comments"
+msgstr "birta umsagnir síðasta notenda"
+
+msgid "search"
+msgstr "leita"
+
+msgid "Home"
+msgstr "Heim"
+
+msgid "in this album"
+msgstr "í þessu albúmi"
+
+msgid "in %d sub-album"
+msgid_plural "in %d sub-albums"
+msgstr[0] "í %d undiralbúmi"
+msgstr[1] "í %d undiralbúmum"
+
+msgid "included"
+msgstr "innifalið"
+
+msgid "Invalid password!"
+msgstr "Ógilt lykilorð!"
+
+msgid "Language"
+msgstr "Tungumál"
+
+msgid "last %d days"
+msgstr "síðustu %d daga"
+
+msgid "Last"
+msgstr "Síðasta"
+
+msgid "Logout"
+msgstr "Skrá út"
+
+msgid "obligatory"
+msgstr "skilyrði"
+
+msgid "display a calendar by creation date"
+msgstr "birta dagatal eftir upprunadagsetningu"
+
+msgid "display all photos in all sub-albums"
+msgstr "birta allar myndir í öllum undiralbúmum"
+
+msgid "return to normal view mode"
+msgstr "aftur í venjulegan skjá"
+
+msgid "display a calendar by posted date"
+msgstr "birta dagatal eftir birtingardagsetningu"
+
+msgid "Most visited"
+msgstr "Oftast heimsótt"
+
+msgid "display most visited photos"
+msgstr "birta mest skoðuðu myndir"
+
+msgid "Unknown identifier"
+msgstr "Óþekkt auðkenni"
+
+msgid "New password"
+msgstr "Nýtt lykilorð"
+
+msgid "Rate this photo"
+msgstr "Gefa þessari mynd einkunn"
+
+msgid "Next"
+msgstr "Næsta"
+
+msgid "no rate"
+msgstr "engin einkunn"
+
+msgid "Photos posted within the last %d day."
+msgid_plural "Photos posted within the last %d days."
+msgstr[0] "Aðeins myndir birtar á síðasta %d degi."
+msgstr[1] "Aðeins myndir birtar á síðustu %d dögum."
+
+msgid "password updated"
+msgstr "lykilorð uppfært"
+
+msgid "Recent period must be a positive integer value"
+msgstr "Nýlegt tímabil verður að vera jákvætt heiltölugildi"
+
+msgid "photo"
+msgstr "mynd"
+
+msgid "Click on the photo to see it in high definition"
+msgstr "Smelltu á myndina til að sjá hana í háskerpu"
+
+msgid "Show file metadata"
+msgstr "Sýna lýsigögn skráar"
+
+msgid "Powered by"
+msgstr "Keyrt með"
+
+msgid "Preferences"
+msgstr "Valmöguleikar"
+
+msgid "Previous"
+msgstr "Fyrri"
+
+msgid "Random photos"
+msgstr "Myndir af handahófi"
+
+msgid "display a set of random photos"
+msgstr "birta handahófskennt sett af myndum"
+
+msgid "Recent albums"
+msgstr "Nýleg albúm"
+
+msgid "display recently updated albums"
+msgstr "birta nýlega uppfærð albúm"
+
+msgid "Recent period"
+msgstr "Nýlegt tímabil"
+
+msgid "Recent photos"
+msgstr "Nýlegar myndir"
+
+msgid "display most recent photos"
+msgstr "birta nýlegustu myndirnar"
+
+msgid "Redirection..."
+msgstr "Áframsending…"
+
+msgid "Please, enter a login"
+msgstr "Settu inn notandanafn"
+
+msgid "login mustn't end with a space character"
+msgstr "notandanafn má ekki enda á bili"
+
+msgid "login mustn't start with a space character"
+msgstr "notandanafn má ekki byrja á bili"
+
+msgid "this login is already used"
+msgstr "þetta notandanafn er nú þegar í notkun"
+
+msgid "mail address must be like xxx@yyy.eee (example : jack@altern.org)"
+msgstr "netfang verður að vera xxx@yyy.eee (dæmi : jack@altern.org)"
+
+msgid "Auto login"
+msgstr "Sjálfvirk innskráning"
+
+msgid "remove this tag from the list"
+msgstr "fjarlægja þetta merki úr listanum"
+
+msgid "representative"
+msgstr "smámynd albúms"
+
+msgid "Search for Author"
+msgstr "Leita að höfundi"
+
+msgid "Search in albums"
+msgstr "Leita í albúmum"
+
+msgid "Search by date"
+msgstr "Leita eftir dagsetningu"
+
+msgid "Date"
+msgstr "Dagsetning"
+
+msgid "End-Date"
+msgstr "Lokadagsetning"
+
+msgid "Kind of date"
+msgstr "Hvers konar dagsetning"
+
+msgid "Search for words"
+msgstr "Leita að orðum"
+
+msgid "Search for all terms"
+msgstr "Leita að öllum hugtökum"
+
+msgid "Search for any term"
+msgstr "Leita að hvaða hugtökum sem er"
+
+msgid "Empty query. No criteria has been entered."
+msgstr "Tóm fyrirspurn. Engin skilyrði hafa verið skráð."
+
+msgid "Search results"
+msgstr "Leitarniðurstöður"
+
+msgid "Search in sub-albums"
+msgstr "Leita í undiralbúmum"
+
+msgid "Contact"
+msgstr "Hafa samband"
+
+msgid "set as album representative"
+msgstr "setja sem smámynd á albúmi"
+
+msgid "Show number of comments"
+msgstr "Sýna fjölda umsagna"
+
+msgid "Show number of hits"
+msgstr "Sýna fjölda niðurstaða"
+
+msgid "slideshow"
+msgstr "myndasýning"
+
+msgid "stop the slideshow"
+msgstr "stöðva myndasýningu"
+
+msgid "Specials"
+msgstr "Meira"
+
+msgid "SQL queries in"
+msgstr "SQL-fyrirspurnir í"
+
+msgid "display only recently posted photos"
+msgstr "birta aðeins myndir sem nýlega voru settar inn"
+
+msgid "return to the display of all photos"
+msgstr "aftur í sýningu á öllum myndum"
+
+msgid "the beginning"
+msgstr "upphafið"
+
+msgid "Thumbnails"
+msgstr "Smámyndir"
+
+msgid "Menu"
+msgstr "Valmynd"
+
+msgid "A comment on your site"
+msgstr "Umsögn á síðuni þinni"
+
+msgid "today"
+msgstr "í dag"
+
+msgid "Update your rating"
+msgstr "Uppfæra einkunn þína"
+
+msgid "the username must be given"
+msgstr "notandanafnsins er krafist"
+
+msgid "useful when password forgotten"
+msgstr "gagnlegt ef lykilorð gleymist"
+
+msgid "Quick search"
+msgstr "Hraðleit"
+
+msgid "Connected user: %s"
+msgstr "Tengdur notandi: %s"
+
+msgid "IP: %s"
+msgstr "IP: %s"
+
+msgid "Browser: %s"
+msgstr "Vafri: %s"
+
+msgid "Author: %s"
+msgstr "Höfundur: %s"
+
+msgid "Comment: %s"
+msgstr "Umsögn: %s"
+
+msgid "Comment by %s"
+msgstr "Umsögn eftir %s"
+
+msgid "User: %s"
+msgstr "Notandi: %s"
+
+msgid "Email: %s"
+msgstr "Netfang: %s"
+
+msgid "Admin: %s"
+msgstr "Stjórnandi: %s"
+
+msgid "Registration of %s"
+msgstr "Nýskráning %s"
+
+msgid "Album: %s"
+msgstr "Albúm: %s"
+
+msgid "Bad status for user \"guest\", using default status. Please notify the webmaster."
+msgstr "Röng staða fyrir notandann \"gestur\", sjálfgefin staða verður notuð. Endilega tilkynntu þetta til vefstjóra."
+
+msgid "this email address is already in use"
+msgstr "þetta netfang er nú þegar í notkun"
+
+msgid "Album results for"
+msgstr "Niðurstöðu albúma fyrir"
+
+msgid "Tag results for"
+msgstr "Merkja niðurstöður fyrir"
+
+msgid "from %s to %s"
+msgstr "frá %s til %s"
+
+msgid "Play of slideshow"
+msgstr "Spila myndasýningu"
+
+msgid "Pause of slideshow"
+msgstr "Gera hlé á myndasýningu"
+
+msgid "Repeat the slideshow"
+msgstr "Endurtaka myndasýningu"
+
+msgid "Not repeat the slideshow"
+msgstr "Ekki endurtaka myndasýningu"
+
+msgid "Reduce diaporama speed"
+msgstr "Minnka hraða á myndasýningu"
+
+msgid "Accelerate diaporama speed"
+msgstr "Auka hraða á myndasýningu"
+
+msgid "Submit"
+msgstr "Senda"
+
+msgid "Yes"
+msgstr "Já"
+
+msgid "No"
+msgstr "Nei"
+
+msgid "%d photo"
+msgid_plural "%d photos"
+msgstr[0] "%d mynd"
+msgstr[1] "%d myndir"
+
+msgid "%d photo is also linked to current tags"
+msgid_plural "%d photos are also linked to current tags"
+msgstr[0] "%d mynd er einnig tengd við fyrirliggjandi merki"
+msgstr[1] "%d myndir eru einnig tengdar við fyrirliggjandi merki"
+
+msgid "display photos linked to this tag"
+msgstr "birta myndir tengdar við þetta merki"
+
+msgid "photos posted during the last %d days"
+msgstr "myndir birtar síðustu %d daga"
+
+msgid "Piwigo Help"
+msgstr "Aðstoð fyrir Piwigo"
+
+msgid "Rank"
+msgstr "Staða"
+
+msgid "group by letters"
+msgstr "hópa eftir bókstöfum"
+
+msgid "letters"
+msgstr "bókstafir"
+
+msgid "show tag cloud"
+msgstr "sýna merkjaský"
+
+msgid "cloud"
+msgstr "ský"
+
+msgid "Reset to default values"
+msgstr "Endurstilla á sjálfgefin gildi"
+
+msgid "delete all photos from your favorites"
+msgstr "eyða öllum myndum úr eftirlætum"
+
+msgid "Sent by"
+msgstr "Sent af"
+
+msgid "Cookies are blocked or not supported by your browser. You must enable cookies to connect."
+msgstr "Lokað er fyrir vefkökur eða ekki stuðningur við þær í vafranum þínum. Þú verður að virkja vefkökur til að tengjast."
+
+msgid "Edit a comment"
+msgstr "Breyta umsögn"
+
+msgid "Are you sure?"
+msgstr "Ertu viss?"
+
+msgid "(!) This comment requires validation"
+msgstr "(!) Þessi umsögn krefst staðfestingar"
+
+msgid "Welcome"
+msgstr "Velkomin"
+
+msgid "Welcome to your Piwigo photo gallery!"
+msgstr "Velkomin í Piwigo-myndasafnið þitt!"
+
+msgid "... or browse your empty gallery"
+msgstr "... eða skoða tóma myndasafnið þitt"
+
+msgid "... or please deactivate this message, I will find my way by myself"
+msgstr "... eða slökkva á þessum skilaboðum, ég mun rata sjálf/ur"
+
+msgid "Hello %s, your Piwigo photo gallery is empty!"
+msgstr "Hæ %s, Piwigo-myndasafnið þitt er tómt!"
+
+msgid "I want to add photos"
+msgstr "Ég vil bæta við myndum"
+
+msgid "Manage this user comment: %s"
+msgstr "Stjórna umsögn þessa notenda: %s"
+
+msgid "Email address is missing. Please specify an email address."
+msgstr "Netfang vantar. Tilgreindu netfang."
+
+msgid "This author modified following comment:"
+msgstr "Þessi höfundur breytti eftirfarandi umsögn:"
+
+msgid "This author removed the comment with id %d"
+msgstr "Þessi höfundur fjarlægði umsögnina með auðkenninu %d"
+
+msgid "html tags are not allowed in login"
+msgstr "html-merkingar eru ekki leyfilegar við innskráningu"
+
+msgid "Desktop"
+msgstr "Tölvuskjá"
+
+msgid "Mobile"
+msgstr "Farsíma"
+
+msgid "Photo title, A &rarr; Z"
+msgstr "Titill myndar, A &rarr; Ö"
+
+msgid "Photo title, Z &rarr; A"
+msgstr "Titill myndar, Ö &rarr; A"
+
+msgid "Edit"
+msgstr "Breyta"
+
+msgid "Email"
+msgstr "Tölvupóstur"
+
+msgid "EXIF Metadata"
+msgstr "EXIF-lýsigögn"
+
+msgid "Date posted, old &rarr; new"
+msgstr "Dagsetning birt, eldra &rarr; nýtt"
+
+msgid "Date posted, new &rarr; old"
+msgstr "Dagsetning birt, nýtt &rarr; eldra"
+
+msgid "Date created, old &rarr; new"
+msgstr "Dagsetning stofnað, eldra &rarr; nýtt"
+
+msgid "Date created, new &rarr; old"
+msgstr "Dagsetning stofnað, nýtt &rarr; eldra"
+
+msgid "Check your email for the confirmation link"
+msgstr "Athugaðu tölvupóstinn þinn með staðfestingartengilinn"
+
+msgid "Change my password"
+msgstr "Breyta lykilorðinu mínu"
+
+msgid "Bad request"
+msgstr "Röng beiðni"
+
+msgid "Apply on properties"
+msgstr "Setja á eigindi"
+
+msgid "Album name, Z &rarr; A"
+msgstr "Albúmsheiti, Ö &rarr; A"
+
+msgid "Album name, A &rarr; Z"
+msgstr "Albúmsheiti, A &rarr; Ö"
+
+msgid "Album name, 100 &rarr; 10 &rarr; 5 &rarr; 1"
+msgstr "Albúmsheiti, 100 &rarr; 10 &rarr; 5 &rarr; 1"
+
+msgid "Album name, 1 &rarr; 5 &rarr; 10 &rarr; 100"
+msgstr "Albúmsheiti, 1 &rarr; 5 &rarr; 10 &rarr; 100"
+
+msgid "2small"
+msgstr "XXS - pínulítið"
+
+msgid "%d rates"
+msgstr "%d einkunnir"
+
+msgid "%d rate"
+msgstr "%d einkunn"
+
+msgid "%d photos per page"
+msgstr "%d myndir á síðu"
+
+msgid "No results for"
+msgstr "Engar niðurstöður fyrir"
+
+msgid "Manual sort order"
+msgstr "Handvirk flokkunarröð"
+
+msgid "Link: %s"
+msgstr "Hlekkur: %s"
+
+msgid "Last Page"
+msgstr "Síðasta síða"
+
+msgid "Invalid username or password!"
+msgstr "Ógilt notandanafn eða lykilorð!"
+
+msgid "Invalid username or email"
+msgstr "Ógilt notandanafn eða netfang"
+
+msgid "Invalid key"
+msgstr "Ógildur lykill"
+
+msgid "If you think you've received this email in error, please contact us at %s"
+msgstr "Ef þú heldur að þú hafir fengið þennan tölvupóst fyrir mistök, þá ættirðu að hafa samband við okkur á %s"
+
+msgid "If this was a mistake, just ignore this email and nothing will happen."
+msgstr "Ef þetta voru mistök þá skaltu bara hunsa þennan tölvupóst og ekkert mun gerast."
+
+msgid "IPTC Metadata"
+msgstr "IPTC-lýsigögn"
+
+msgid "Here are your connection settings"
+msgstr "Hér eru tengistillingar þínar"
+
+msgid "Hello %s,"
+msgstr "Hæ %s,"
+
+msgid "Go back to the album"
+msgstr "Fara aftur í albúmið"
+
+msgid "Forbidden"
+msgstr "Óheimilt"
+
+msgid "First Page"
+msgstr "Fyrsta síða"
+
+msgid "File name, A &rarr; Z"
+msgstr "Skráaheiti, A &rarr; Ö"
+
+msgid "File name, Z &rarr; A"
+msgstr "Skráaheiti, Ö &rarr; A"
+
+msgid "Enter your new password below."
+msgstr "Settu inn nýja lykilorðið þitt hér að neðan."
+
+msgid "Email address is mandatory"
+msgstr "Netfang er nauðsynlegt"
+
+msgid "Rating score"
+msgstr "Einkunnastig"
+
+msgid "Please enter your username or email address."
+msgstr "Settu inn notandanafn eða netfang."
+
+msgid "Piwigo encountered a non recoverable error"
+msgstr "Piwigo varð fyrir óafturkræfri villu"
+
+msgid "Photo description"
+msgstr "Lýsing myndar"
+
+msgid "Photo sizes"
+msgstr "Stærð myndar"
+
+msgid "Photo title"
+msgstr "Titill myndar"
+
+msgid "Permalink for album not found"
+msgstr "Föst krækja fyrir albúm fannst ekki"
+
+msgid "Password: ********** (no copy by email)"
+msgstr "Lykilorð: ********** (ekkert afrit með tölvupósti)"
+
+msgid "Password: %s"
+msgstr "Lykilorð: %s"
+
+msgid "Password reset is not allowed for this user"
+msgstr "Endurstilling lykilorðs er ekki leyfð fyrir þennan notanda"
+
+msgid "Password is missing. Please enter the password."
+msgstr "Lykilorð vantar. Settu inn lykilorðið."
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "Staðfestingu lykilorðs vantar. Staðfestu valið lykilorð."
+
+msgid "Password Reset"
+msgstr "Endurstilla lykilorð"
+
+msgid "Page not found"
+msgstr "Síða fannst ekki"
+
+msgid "Original"
+msgstr "Upprunaleg"
+
+msgid "Numeric identifier, 9 &rarr; 1"
+msgstr "Tölulegt auðkenni, 9 &rarr; 1"
+
+msgid "Numeric identifier, 1 &rarr; 9"
+msgstr "Tölulegt auðkenni, 1 &rarr; 9"
+
+msgid "Number of photos per page"
+msgstr "Fjöldi mynda á hverri síðu"
+
+msgid "Username modification"
+msgstr "Breyting á notandanafni"
+
+msgid "Username is mandatory"
+msgstr "Notandanafn er skilyrt"
+
+msgid "Username \"%s\" on gallery %s"
+msgstr "Notandanafn \"%s\" á myndasafni %s"
+
+msgid "User \"%s\" has no email address, password reset is not possible"
+msgstr "Notandinn \"%s\" er ekki með netfang, endurstilling lykilorðs er ekki möguleg"
+
+msgid "To reset your password, visit the following address:"
+msgstr "Til að endurstilla lykilorðið þitt skaltu fara á eftirfarandi vistfang:"
+
+msgid "Theme"
+msgstr "Þema"
+
+msgid "The passwords do not match"
+msgstr "Lykilorðin passa ekki saman"
+
+msgid "The number of photos per page must be a not null scalar"
+msgstr "Fjöldi mynda á hverri síðu verður að vera heiltala sem ekki er núll"
+
+msgid "Thank you for registering at %s!"
+msgstr "Takk fyrir að skrá þig hjá %s!"
+
+msgid "Successfully registered, you will soon receive an email with your connection settings. Welcome!"
+msgstr "Skráning tókst, þú munt fljótlega fá tölvupóst með þínum tengistillingum. Velkomin/n!"
+
+msgid "Someone requested that the password be reset for the following user account:"
+msgstr "Einhver bað um að lykilorðið yrði endurstillt fyrir eftirfarandi notandareikning:"
+
+msgid "Show latest comments first"
+msgstr "Sýna nýjustu umsagnir fyrst"
+
+msgid "Show oldest comments first"
+msgstr "Sýna elstu umsagnir fyrst"
+
+msgid "Send my connection settings by email"
+msgstr "Senda tengistillingar mínar með tölvupósti"
+
+msgid "Return to home page"
+msgstr "Fara aftur á forsíðuna"
+
+msgid "Requested tag does not exist"
+msgstr "Umbeðið merki er ekki til"
+
+msgid "Requested album does not exist"
+msgstr "Umbeðið albúm er ekki til"
+
+msgid "Related albums"
+msgstr "Tengd albúm"
+
+msgid "Rating score, low &rarr; high"
+msgstr "Einkunn, lágt &rarr; hátt"
+
+msgid "Rating score, high &rarr; low"
+msgstr "Einkunn, hátt &rarr; lágt"
+
+msgid "Visits, high &rarr; low"
+msgstr "Heimsóknir, hátt &rarr; lágt"
+
+msgid "Visits, low &rarr; high"
+msgstr "Heimsóknir, lágt &rarr; hátt"
+
+msgid "xxlarge"
+msgstr "XXL - risastórt"
+
+msgid "View in"
+msgstr "Skoða í"
+
+msgid "Username: %s"
+msgstr "Notandanafn: %s"
+
+msgid "Username or email"
+msgstr "Notandanafn eða netfang"
+
+msgid "xsmall"
+msgstr "XS - auka lítil"
+
+msgid "xlarge"
+msgstr "XL - auka stór"
+
+msgid "thumb"
+msgstr "Smámynd"
+
+msgid "square"
+msgstr "Ferningslaga"
+
+msgid "small"
+msgstr "S - lítil"
+
+msgid "medium"
+msgstr "M - miðlungs"
+
+msgid "mandatory"
+msgstr "skilyrt"
+
+msgid "large"
+msgstr "L - stór"
+
+msgid "Website"
+msgstr "Vefsíða"
+
+msgid "You will receive a link to create a new password via email."
+msgstr "Þú færð hlekk til að búa til nýtt lykilorð með tölvupósti."
+
+msgid "Your authentication key is no longer valid."
+msgstr "Auðkenningarlykillinn þinn er ekki lengur gildur."
+
+msgid "Your password has been reset"
+msgstr "Lykilorðið þitt hefur verið endurstillt"
+
+msgid "Your username has been successfully changed to : %s"
+msgstr "Notandanafni þínu hefur verið breytt í: %s"
+
+msgid "Your website URL is invalid"
+msgstr "Vefslóðin að vefsvæðinu þínu er ógild"
+
+msgid "generate random password"
+msgstr "útbúa handahófskennt lykilorð"
+
+msgid "Start-Date"
+msgstr "Upphafsdagur"
+
+msgid "%d visits"
+msgstr "%d heimsóknir"
+
+msgid "Added by"
+msgstr "Bætt við af"
+
+msgid "Album description"
+msgstr "Lýsing á albúmi"
+
+msgid "Album title"
+msgstr "Heiti albúms"
+
+msgid "Albums found"
+msgstr "Albúm fundust"
+
+msgid "Albums listed here match your search by word. Click on one to browse by album."
+msgstr "Albúm sem eru tilgreind hér samsvara við leit þína með orði. Smelltu á eitt til að fletta eftir albúmi."
+
+msgid "Cancel"
+msgstr "Hætta við"
+
+msgid "Choose filters"
+msgstr "Velja síur"
+
+msgid "Clear"
+msgstr "Hreinsa"
+
+msgid "Empty filters"
+msgstr "Tæma síur"
+
+msgid "File type"
+msgstr "Skráartegund"
+
+msgid "Fill in the filters to start a search"
+msgstr "Veldu síur til að hefja leit"
+
+msgid "Filters"
+msgstr "Síur"
+
+msgid "No results are available."
+msgstr "Engar niðurstöður liggja fyrir."
+
+msgid "Pre-established filters are proposed, but you can add or remove them using the \"Choose filters\" button."
+msgstr "Boðið er upp á forskrifaðar síur, en þú getur bætt við eða fjarlægt þær með því að nota hnappinn „Veldu síur“."
+
+msgid "Search in :"
+msgstr "Leita í :"
+
+msgid "Search in this set"
+msgstr "Leita í þessu setti"
+
+msgid "Tags found"
+msgstr "Merki fundust"
+
+msgid "Tags listed here match your search by word. Click on one to browse by tag."
+msgstr "Merki sem skráð eru hér passa við leit þína með orði. Smelltu á eitt til að fletta eftir merki."
+
+msgid "Unknown time period"
+msgstr "Óþekkt tímabil"
+
+msgid "Validate"
+msgstr "Staðfesta"
+
+msgid "You can try to edit your filters and perform a new search."
+msgstr "Þú getur prófað að breyta síunum þínum og framkvæma nýja leit."
+
+msgid "last 24 hours"
+msgstr "síðastu 24 klst."
+
+msgid "last 3 months"
+msgstr "Síðustu 3 mánuði"
+
+msgid "last 30 days"
+msgstr "Síðustu 30 daga"
+
+msgid "last 6 months"
+msgstr "Síðustu 6 mánuði"
+
+msgid "last 7 days"
+msgstr "Síðustu 7 daga"
+
+msgid "last year"
+msgstr "Síðasta ár"
+
+msgid "rating score %s"
+msgstr "einkunnastig %s"
+
+msgid "year %d"
+msgstr "ár %d"
+
+msgid "Album already selected"
+msgstr "Albúm þegar valið"
+
+msgid "Click here to display it"
+msgstr "Smelltu hér til að birta það"
+
+msgid "Only the first %d albums are displayed, out of %d."
+msgstr "Aðeins fyrstu %d albúmin eru birt, af %d."
+
+msgid "Pages"
+msgstr "Síður"
+
+msgid "The PDF you requested is too large to display on this page."
+msgstr "PDF-skjalið sem þú baðst um er of stórt til að birta á þessari síðu."
+
+msgid "Custom dates"
+msgstr "Sérsniðnar dagsetningar"
+
+msgid "last 12 months"
+msgstr "Síðustu 12 mánuði"
+
+msgid "There are no authors available for the photos currently filtered"
+msgstr "Það eru engir höfundar tiltækir fyrir síuðu myndirnar"
+
+msgid "There are no creation dates available for the photos currently filtered"
+msgstr "Það eru engar upprunadagsetningar í boði fyrir síuðu myndirnar"
+
+msgid "There are no tags available for the photos currently filtered"
+msgstr "Það eru engin merki tiltæk fyrir síuðu myndirnar"
+
+msgid "Set your password below."
+msgstr "Stilltu lykilorðið þitt hér að neðan."
+
+msgid "Custom date"
+msgstr "Sérsniðin dagsetning"
+
+msgid "Do you really want to revoke the \"%s\" API key?"
+msgstr "Viltu virkilega afturkalla API lykilinn “%s“?"
+
+msgid "3xlarge"
+msgstr "3XL - extra stór"
+
+msgid "4xlarge"
+msgstr "4XL - risastór"
+
+msgid "API Key has been successfully edited."
+msgstr "API-lyklinum hefur verið breytt."
+
+msgid "API Key has been successfully revoked."
+msgstr "API-lykillinn hefur verið afturkallaður."
+
+msgid "API Key name"
+msgstr "Heiti API-lykils"
+
+msgid "API Key not found"
+msgstr "API-lykill fannst ekki"
+
+msgid "API Keys"
+msgstr "API-lyklar"
+
+msgid "Account"
+msgstr "Aðgangur"
+
+msgid "Already have an account ?"
+msgstr "Ertu nú þegar með aðgang?"
+
+msgid "An email has been sent with a link to reset your password"
+msgstr "Tölvupóstur hefur verið sendur með tengli til að endurstilla lykilorðið þitt"
+
+msgid "An error has occured please got back to <a href=\"identification.php\" title=\"Sign in\">Sign in</a> or <a href=\"register.php\">Register</a>"
+msgstr "Villa kom upp, farðu aftur í <a href=\"identification.php\" title=\"Innskráningu\">Innskráningu</a> eða <a href=\"register.php\">Skráningu</a>"
+
+msgid "Change your password"
+msgstr "Breyttu lykilorðinu"
+
+msgid "Check your inbox"
+msgstr "Athugaðu innhólf póstfoprritsins"
+
+msgid "Choose how you want to see your gallery"
+msgstr "Veldu hvernig þú vilt sjá myndasafnið þitt"
+
+msgid "Confirm my new password"
+msgstr "Staðfesta nýja lykilorðið mitt"
+
+msgid "Confirm new password"
+msgstr "Staðfestu nýtt lykilorð"
+
+msgid "Create API Keys to secure your acount"
+msgstr "Búðu til API-lykla til að tryggja reikninginn þinn"
+
+msgid "Create a new API key to secure your account."
+msgstr "Búðu til nýjan API-lykil til að tryggja reikninginn þinn."
+
+msgid "Create an account"
+msgstr "Stofna reikning"
+
+msgid "Created at"
+msgstr "Búið til kl."
+
+msgid "This API key was manually revoked on %s"
+msgstr "Þessi API-lykill var afturkallaður handvirkt þann %s"
+
+msgid "To continue using the API, please renew your key before it expires."
+msgstr "Til að halda áfram að nota þetta API-beiðnakerfi, þá ættirðu að endurnýja lykilinn þinn áður en hann rennur út."
+
+msgid "To manage your API keys, please log in with your username/password."
+msgstr "Til að sýsla með API-lyklana þínua skaltu skrá þig inn með notandanafni/lykilorði."
+
+msgid "When enabled, a common template is used for the login and registration pages, regardless of the theme."
+msgstr "Þegar þetta er virkjað er sameiginlegt sniðmát notað fyrir innskráningar- og skráningarsíður, óháð þema."
+
+msgid "You can manage your API keys in your <a href=\"%s\">account settings.</a>"
+msgstr "Þú getur stjórnað API-lyklunum þínum í <a href=\"%s\">reikningsstillingunum þínum.</a>"
+
+msgid "You have no email address, so you will not be notified when your API key is about to expire."
+msgstr "Þú ert ekki með netfang, þannig að þú færð ekki tilkynningu þegar API-lykillinn þinn er að renna út."
+
+msgid "Your API key will expire in %d day."
+msgstr "API-lykillinn þinn rennur út eftir %d dag."
+
+msgid "Your API key will expire in %d days."
+msgstr "API-lykillinn þinn rennur út eftir %d daga."
+
+msgid "Your API key will expire soon"
+msgstr "API-lykillinn þinn rennur bráðum út"
+
+msgid "Your changes have been applied."
+msgstr "Breytingarnar þínar hafa verið virkjaðar."
+
+msgid "Your password was successfully reset"
+msgstr "Lykilorðið þitt var endurstillt"
+
+msgid "Your password was successfully set"
+msgstr "Lykilorðið þitt hefur verið stillt"
+
+msgid "must not be empty"
+msgstr "má ekki vera tómt"
+
+msgid "you must choose a date"
+msgstr "þú verður að velja dagsetningu"
+
+msgid "Hide expired keys"
+msgstr "Fela útrunna lykla"
+
+msgid "Impossible to copy automatically. Please copy manually."
+msgstr "Ekki er hægt að afrita sjálfvirkt. Afritaðu frekar handvirkt."
+
+msgid "Last use"
+msgstr "Síðasta notkun"
+
+msgid "Manage your account"
+msgstr "Stjórnaðu reikningnum þínum"
+
+msgid "Never"
+msgstr "Aldrei"
+
+msgid "New API Key"
+msgstr "Nýr API-lykill"
+
+msgid "No expiration"
+msgstr "Engin gildistími"
+
+msgid "Options"
+msgstr "Valmöguleikar"
+
+msgid "Return to <a href=\"identification.php\" title=\"Sign in\">Sign in</a>"
+msgstr "Til baka á <a href=\"identification.php\" title=\"Innskráning\">Innskráning</a>"
+
+msgid "Return to the gallery"
+msgstr "Til baka í myndasafnið"
+
+msgid "Revoke"
+msgstr "Afturkalla"
+
+msgid "Revoked"
+msgstr "Afturkallað"
+
+msgid "Set my password"
+msgstr "Skrá lykilorðið mitt"
+
+msgid "Show expired keys"
+msgstr "Sýna útrunna lykla"
+
+msgid "The api key has been successfully created."
+msgstr "API-lykillinn hefur verið útbúinn."
+
+msgid "The email %s will be used to notify you when your API key is about to expire."
+msgstr "Netfangið %s verður notað til að láta þig vita þegar API lykillinn þinn er að renna út."
+
+msgid "The secret key can no longer be displayed."
+msgstr "Ekki er lengur hægt að birta leynilykilinn."
+
+msgid "Don't have an account yet ?"
+msgstr "Ertu ekki ennþá með aðgang?"
+
+msgid "Done"
+msgstr "Lokið"
+
+msgid "Duration"
+msgstr "Tímalengd"
+
+msgid "Edit API Key"
+msgstr "Breyta API-lykli"
+
+msgid "Expert mode"
+msgstr "Sérfræðingshamur"
+
+msgid "Expired"
+msgstr "Útrunnið"
+
+msgid "Expired on"
+msgstr "Útrunnið þann"
+
+msgid "Expires in"
+msgstr "Rennur út eftir"
+
+msgid "Generate API Key"
+msgstr "Búa til API-lykil"
+
+msgid "Generate key"
+msgstr "Búa til lykil"
+
+msgid "Hello <em>%s</em>, enter your new password below."
+msgstr "Hæ <em>%s</em>, settu inn nýja lykilorðið þitt hér að neðan."
+
+msgid "An email has been sent with a verification code"
+msgstr "Tölvupóstur hefur verið sendur með staðfestingarkóða"
+
+msgid "ID copied."
+msgstr "Auðkenni afritað."
+
+msgid "If you do not receive the email, please contact your webmaster."
+msgstr "Ef þú færð ekki tölvupóstinn, vinsamlegast hafðu samband við vefstjóra þinn."
+
+msgid "Invalid verification code"
+msgstr "Ógildur staðfestingarkóði"
+
+msgid "Save your ID and secret"
+msgstr "Vistaðu auðkennið og leyndarmálið"
+
+msgid "Secret copied. Keep it in a safe place."
+msgstr "Leyndarmálið afritað. Geymið það á öruggum stað."
+
+msgid "The secret will no longer be displayed. You must copy it to continue."
+msgstr "Leyndarmálið verður ekki lengur birt. Þú verður að afrita það til að halda áfram."
+
+msgid "Verification code"
+msgstr "Staðfestingarkóði"
+
+msgid "Verify"
+msgstr "Staðfesta"
+
+msgid "Here is your verification code:"
+msgstr "Hér er staðfestingarkóðinn þinn:"
+
+msgid "If this wasn't you, please change your password immediately or contact your webmaster."
+msgstr "Ef þetta varst ekki þú, vinsamlegast breyttu lykilorðinu þínu strax eða hafðu samband við vefstjórann þinn."
+
+msgid "If you changed your password because you think it was stolen, we recommend revoking your %d API keys <a href=\"%s\">in your profile</a>."
+msgstr "Ef þú breyttir lykilorðinu þínu vegna þess að þú telur að það hafi verið stolið, mælum við með að þú afturkallir %d API lykla <a href=\"%s\">í prófílnum þínum</a>."
+
+msgid "Too many attempts, please try later.."
+msgstr "Of margar tilraunir, vinsamlegast reynið síðar.."
+
+msgid "Verification successful! You can now choose a new password."
+msgstr "Staðfesting tókst! Þú getur nú valið nýtt lykilorð."
+
+msgid "Your verification code"
+msgstr "Staðfestingarkóðinn þinn"
+
+msgid "edit user preferences"
+msgstr "breyta notandastillingum"
+

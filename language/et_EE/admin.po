@@ -1,0 +1,4164 @@
+# Piwigo translation — et_EE
+# Source: admin.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: et_EE\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Add to caddie"
+msgstr "lisa korvi"
+
+msgid "Average rate"
+msgstr "Keskmine hinne"
+
+msgid "Rate"
+msgstr "Hinda"
+
+msgid "Caddie"
+msgstr "Korv"
+
+msgid " and %d virtual"
+msgstr "ning %d virtuaalne"
+
+msgid " and %d virtuals"
+msgstr "ning %d virtuaalseid"
+
+msgid "%d album including"
+msgstr "üks album, mille juures"
+
+msgid "%d album moved"
+msgid_plural "%d albums moved"
+msgstr[0] "üks album teiseldatud"
+msgstr[1] "%d albumit teiseldatud"
+
+msgid "%d albums including"
+msgstr "%d albumeid, mille juures"
+
+msgid "%d anomaly has been corrected."
+msgid_plural "%d anomalies have been detected corrected."
+msgstr[0] "üks tehniline hälve parandati ära."
+msgstr[1] "%d tehnilist hälvet leiti ja parandati ära."
+
+msgid "%d anomaly has been detected."
+msgid_plural "%d anomalies have been detected."
+msgstr[0] "üks tehniline hälve leiti."
+msgstr[1] "%d tehnilist hälvet leiti."
+
+msgid "%d anomaly has been ignored."
+msgid_plural "%d anomalies have been ignored."
+msgstr[0] "ühte tehnilist hälvet ignoreeritakse."
+msgstr[1] "%d tehnilist hälvet ignoreeritakse."
+
+msgid "%d anomaly has not been corrected."
+msgid_plural "%d anomalies have not been corrected."
+msgstr[0] "üks tehniline hälve on parandamata."
+msgstr[1] "%d tehnilist hälvet on parandamata."
+
+msgid "%d association"
+msgstr "üks assotsiatsioon"
+
+msgid "%d associations"
+msgstr "%d assotsiatsiooni"
+
+msgid "%d day"
+msgstr "üks päev"
+
+msgid "%d days"
+msgstr "%d päeva"
+
+msgid "%d group"
+msgstr "üks grupp"
+
+msgid "%d groups"
+msgstr "%d gruppi"
+
+msgid "%d guest"
+msgid_plural "%d guests"
+msgstr[0] "%d külaline"
+msgstr[1] "%d külalist"
+
+msgid "%d hour"
+msgstr "%d tund"
+
+msgid "%d hours"
+msgstr "%d tundi"
+
+msgid "%d line filtered"
+msgid_plural "%d lines filtered"
+msgstr[0] "%d rida filtreeritud"
+msgstr[1] "%d rida filtreeritud"
+
+msgid "%d mail was not sent."
+msgid_plural "%d mails were not sent."
+msgstr[0] "%d meil jäi saatmata."
+msgstr[1] "%d meili jäi saatmata."
+
+msgid "%d mail was sent."
+msgid_plural "%d mails were sent."
+msgstr[0] "%d meil saadetud."
+msgstr[1] "%d meili ära saadetud."
+
+msgid "%d member"
+msgid_plural "%d members"
+msgstr[0] "%d liige"
+msgstr[1] "%d liiget"
+
+msgid "%d minute"
+msgstr "%d minut"
+
+msgid "%d minutes"
+msgstr "%d minutit"
+
+msgid "%d month"
+msgstr "%d kuu"
+
+msgid "%d months"
+msgstr "%d kuud"
+
+msgid "%d of %d photos selected"
+msgstr "%d foto valitud %d-st"
+
+msgid "%d parameter was updated."
+msgid_plural "%d parameters were updated."
+msgstr[0] "%d parameeter muudetud."
+msgstr[1] "%d parameetrit muudetud."
+
+msgid "%d photo was deleted"
+msgid_plural "%d photos were deleted"
+msgstr[0] "%d foto kustutatud"
+msgstr[1] "%d fotot kustutatud"
+
+msgid "%d photos uploaded"
+msgstr "%d fotot üles laaditud"
+
+msgid "%d physical"
+msgstr "%d füüsiline"
+
+msgid "%d physicals"
+msgstr "%d füüsilist"
+
+msgid "%d second"
+msgstr "%d sekund"
+
+msgid "%d seconds"
+msgstr "%d sekundit"
+
+msgid "%d tag"
+msgstr "%d märksõna"
+
+msgid "%d tags"
+msgstr "%d märksõna"
+
+msgid "%d user comment rejected"
+msgstr "%d-st kommentaarist keelduti"
+
+msgid "%d user comment validated"
+msgstr "%d kommentaar kinnitatud"
+
+msgid "%d user comments rejected"
+msgstr "%d kommentaari tagasi lükatud"
+
+msgid "%d user comments validated"
+msgstr "%d kommentaari kinnitatud"
+
+msgid "%d user deleted"
+msgid_plural "%d users deleted"
+msgstr[0] "%d kasutaja kustutatud"
+msgstr[1] "%d kasutajat kustutatud"
+
+msgid "%d user was not updated."
+msgid_plural "%d users were not updated."
+msgstr[0] "%d kasutajat ei uuendatud."
+msgstr[1] "%d kasutajat ei uuendatud."
+
+msgid "%d user was updated."
+msgid_plural "%d users were updated."
+msgstr[0] "%d kasutaja uuendatud."
+msgstr[1] "%d kasutajat uuendatud."
+
+msgid "%d user"
+msgid_plural "%d users"
+msgstr[0] "%d kasutaja"
+msgstr[1] "%d kasutajat"
+
+msgid "%d waiting for validation"
+msgstr "%d ootab kinnitamist"
+
+msgid "%d week"
+msgstr "%d nädal"
+
+msgid "%d weeks"
+msgstr "%d nädalat"
+
+msgid "%d year"
+msgstr "%d aasta"
+
+msgid "%d years"
+msgstr "%d aastat"
+
+msgid "%s ago"
+msgstr "%s tagasi"
+
+msgid "%s has been successfully updated."
+msgstr "%s on edukalt uuendatud."
+
+msgid "%s in the future"
+msgstr "%s tulevikus"
+
+msgid "%s photos can not be regenerated"
+msgstr "%s fotot ei saa taastata"
+
+msgid "%s photos have been regenerated"
+msgstr "%s fotot taastati"
+
+msgid "+ Add an upload box"
+msgstr "+ Lisa üleslaaditava"
+
+msgid ", click on"
+msgstr ", klõpsa"
+
+msgid "... or "
+msgstr "... või"
+
+msgid "ACCESS_0"
+msgstr "Vaba ligipääs"
+
+msgid "ACCESS_1"
+msgstr "Ligipääs kõigile"
+
+msgid "ACCESS_2"
+msgstr "Ligipääs registreerinuile"
+
+msgid "ACCESS_3"
+msgstr "Ligipääs administraatoritele"
+
+msgid "ACCESS_4"
+msgstr "Veebimeistrite ligipääs"
+
+msgid "ACCESS_5"
+msgstr "Pole ligipääsu"
+
+msgid "Access type"
+msgstr "Ligipääsu tüüp"
+
+msgid "Action"
+msgstr "Tegevus"
+
+msgid "Actions"
+msgstr "Tegevusi"
+
+msgid "Add New Language"
+msgstr "Lisa keel"
+
+msgid "Add Photos"
+msgstr "Lisa fotosid"
+
+msgid "Add a criteria"
+msgstr "Lisa kriteerium"
+
+msgid "Add a filter"
+msgstr "Lisa filter"
+
+msgid "Add a tag"
+msgstr "Lisa märksõna"
+
+msgid "Add a user"
+msgstr "Lisa kasutaja"
+
+msgid "Add"
+msgstr "Lisa"
+
+msgid "%s must be to set to false in your local/config/config.inc.php file"
+msgstr "%s peab olema määratud vääraks (false) failis \"local/config/config.inc.php\""
+
+msgid "%s value is not correct file because exif are not supported"
+msgstr "%s väärtus on vale, kuna Exif metaandmeid ei toetata"
+
+msgid "%u users have automatic permission because they belong to a granted group."
+msgstr "%u kasutajatel on automaatselt luba, kuna nad kuuluvad loaga gruppi."
+
+msgid "(this tag will be deleted)"
+msgstr "(see märksõna kustutakse)"
+
+msgid "<em>Piwigo for Android</em> application empowers you to connect your Android phone or table to your Piwigo gallery, create some albums and upload several photos at once."
+msgstr "<em>Piwigo for Android</em> on programm mis võimaldab sul ühenduda Android telefoni või tahvelarvutiga su Piwigo galleriisse, toimetada albumeid ja laadida üles fotosid."
+
+msgid "<em>Piwigo for iOS</em> application empowers you to connect to your Piwigo gallery from your iPhone, iPad or iPod Touch, create some albums and upload several photos at once."
+msgstr "<em>Piwigo for iOS</em> on programm mis võimaldab sul ühenduda iPhone, iPad või iPod Touch-iga su Piwigo galleriisse, toimetada albumeid ja laadida üles fotosid."
+
+msgid "A locked gallery is only visible to administrators"
+msgstr "Lukustatud galleriid on ainult nähtavad administraatoritele"
+
+msgid "A new version of Piwigo is available."
+msgstr "Piwigo uus versioon on saadaval."
+
+msgid "Activate Navigation Bar"
+msgstr "Aktiveeri navigatsiooniriba"
+
+msgid "Activate Navigation Thumbnails"
+msgstr "Aktiveeri navigeerimiseks pisipildid"
+
+msgid "Activate comments"
+msgstr "Aktiveeri kommentaarid"
+
+msgid "Activate icon \"%s\""
+msgstr "Aktiveeri ikoon \"%s\""
+
+msgid "Activate icon \"new\" next to albums and pictures"
+msgstr "Aktiveeri ikoon \"uus\" albumite ja fotode juures"
+
+msgid "Activate"
+msgstr "Aktiveeri"
+
+msgid "Active Languages"
+msgstr "Aktiivsed keeled"
+
+msgid "Active Plugins"
+msgstr "Aktiivsed pluginad"
+
+msgid "Active Themes"
+msgstr "Aktiivsed teemad"
+
+msgid "Add New Theme"
+msgstr "Lisa uus teema"
+
+msgid "Add a virtual album"
+msgstr "Lisa virtuaalne album"
+
+msgid "Add another set of photos"
+msgstr "Lisa fotode komplekt"
+
+msgid "Add detailed content"
+msgstr "Lisa detailne sisu"
+
+msgid "Add group"
+msgstr "Lisa grupp"
+
+msgid "Add tags"
+msgstr "Lisa märksõnu"
+
+msgid "Add write access to the \"%s\" directory"
+msgstr "Lisa kirjutamisõigused kaustale \"%s\""
+
+msgid "Add/delete a permalink"
+msgstr "Lisa või kustuta püsilink"
+
+msgid "Added by %s"
+msgstr "Lisas %s"
+
+msgid "Administration Home"
+msgstr "Administreerimine"
+
+msgid "Adobe Photoshop Lightroom is a photography software designed to manage large quantities of digital images and doing post production work."
+msgstr "Adobe Photoshop Lightroom on fotograafia arvutiprogramm, mis on mõeldud haldamaks suuri fotode kogusid ning fotode järeltöötluseks."
+
+msgid "Album \"%s\" has been added"
+msgstr "Lisati album \"%s\""
+
+msgid "Album \"%s\" now contains %d photos"
+msgstr "Album \"%s\" sisaldab nüüd %d fotot"
+
+msgid "Album list management"
+msgstr "Albumite haldamine"
+
+msgid "Album manual order was saved"
+msgstr "Albumite järjekord salvestati"
+
+msgid "Album name"
+msgstr "Albumi nimi"
+
+msgid "Album photos associated to the following albums: %s"
+msgstr "Albumis sisalduvad fotod on seotud veel järgmiste albumitega: %s"
+
+msgid "Album updated successfully"
+msgstr "Album uuendati"
+
+msgid "Albums automatically sorted"
+msgstr "Albumeid sorteeritakse automaatselt"
+
+msgid "All %d photos are selected"
+msgstr "Kõik %d fotod on valitud"
+
+msgid "All extensions are up to date."
+msgstr "Kõik laiendused on uuendatud ja ajakohased."
+
+msgid "All languages are up to date."
+msgstr "Kõik keeled on uuendatud ja ajakohased."
+
+msgid "All plugins are up to date."
+msgstr "Kõik pluginad on uuendatud ja ajakohased."
+
+msgid "All themes are up to date."
+msgstr "Kõik teemad on uuendatud ja ajakohased."
+
+msgid "Allow rating"
+msgstr "Luba fotode hindamine"
+
+msgid "Allow user customization"
+msgstr "Luba kasutajatel muuta kujundust"
+
+msgid "Allow user registration"
+msgstr "Luba kasutajatel registreeruda"
+
+msgid "Allow users to delete their own comments"
+msgstr "Luba kasutajatel kustutada oma kommentaare"
+
+msgid "Allow users to edit their own comments"
+msgstr "Luba kasutajatel toimetada oma kommentaare"
+
+msgid "Allowed file types: %s."
+msgstr "Lubatud faililaiendid: %s"
+
+msgid "An error has occured during extract. Please check files permissions of your piwigo installation.<br><a href=\"%s\">Click here to show log error</a>."
+msgstr "Lahtipakkimisel tekkis viga. Palun vaata üle Piwigo failide kirjutamisõigused.<br><a href=\"%s\">Näita logifaili</a>."
+
+msgid "An error has occured during upgrade."
+msgstr "Uuendamisel tekkis viga."
+
+msgid "An error occured during extraction (%s)."
+msgstr "Faili lahtipakkimisel tekkis viga (%s)."
+
+msgid "An information email was sent to group \"%s\""
+msgstr "Epost informatsiooniga saadeti grupile \"%s\""
+
+msgid "Anomaly"
+msgstr "Hälve"
+
+msgid "Anyway only webmasters can see this tab and never administrators."
+msgstr "Siiski, see kaart on ainult veebimeistritele nähtav, mitte administraatoritele."
+
+msgid "Applications"
+msgstr "Rakendused"
+
+msgid "Apply action"
+msgstr "Rakenda tegevused"
+
+msgid "Apply selected corrections"
+msgstr "Rakenda valitud parandused"
+
+msgid "Apply to sub-albums"
+msgstr "Rakenda alam-albumitele"
+
+msgid "Apply watermark if height is bigger than"
+msgstr "Lisa vesimärk juhul kui foto kõrgus on suurem kui"
+
+msgid "Apply watermark if width is bigger than"
+msgstr "Lisa vesimärk juhul kui foto laius on suurem kui"
+
+msgid "Approximate maximum resolution: %dM pixels (that's %dx%d pixels)."
+msgstr "Lahutuse ligilähedane maksimum: %dM pikslit (see on %dx%d pikslit)."
+
+msgid "Are you sure to install this upgrade? You must verify if this version does not need uninstallation."
+msgstr "Tahad sa kindlasti paigaldada seda uuendust? Sa pead kinnitama kas see versioon ei vaja eelnevalt kõrvaldamist."
+
+msgid "Are you sure you want to delete this plugin?"
+msgstr "Kas sa kindlasti tahad kustutada selle plugina?"
+
+msgid "Are you sure you want to install this plugin?"
+msgstr "Kas sa kindlasti tahad paigaldada selle plugina?"
+
+msgid "Associate to album"
+msgstr "Seo albumiga"
+
+msgid "Associated"
+msgstr "Seotud"
+
+msgid "Authorize users to add comments on selected albums"
+msgstr "Luba kasutajatel kommenteerida valtiduid albumeid"
+
+msgid "Authorized"
+msgstr "Lubatud"
+
+msgid "Automatic correction"
+msgstr "Automaatne parandamine"
+
+msgid "Automatic sort order"
+msgstr "Automaatne sortimine"
+
+msgid "By rank"
+msgstr "Hinde järgi"
+
+msgid "Can't connect to server."
+msgstr "Ei olnud võimalik ühenduda serveriga."
+
+msgid "Can't create temporary file."
+msgstr "Ajutise faili loomine ebaõnnestus."
+
+msgid "Can't download archive."
+msgstr "Arhiivi ei õnnestunud alla laadida."
+
+msgid "Can't read or extract archive."
+msgstr "Arhiivi ei õnnestunud lugeda või lahti pakkida."
+
+msgid "Cancel"
+msgstr "Katkesta"
+
+msgid "Cannot delete the old permalink !"
+msgstr "Polnud võimalik kustutada vana püsilinki"
+
+msgid "Change Admin Colors"
+msgstr "Vaheta halduse värvid"
+
+msgid "Check all"
+msgstr "Vali kõik"
+
+msgid "Check automatic corrections"
+msgstr "Vaata automaatseid parandusi"
+
+msgid "Check for updates"
+msgstr "Otsi uuendusi"
+
+msgid "Check for upgrade failed for unknown reasons."
+msgstr "Versiooni uuenduse otsimine nurjus teadmata põhjustel."
+
+msgid "Check for upgrade"
+msgstr "Otsi versiooni uuendust"
+
+msgid "Check integrity"
+msgstr "Vaata terviklikkust"
+
+msgid "Choose an action"
+msgstr "Vali tegevus"
+
+msgid "Choose an option"
+msgstr "Vali valik"
+
+msgid "Classic display"
+msgstr "Klassikaline kuvamine"
+
+msgid "Comments for all"
+msgstr "Kommentaarid kõigile"
+
+msgid "Configuration"
+msgstr "Seadistamine"
+
+msgid "Confirm merge"
+msgstr "Kinnita kokkusulatamist"
+
+msgid "Continue processing treatment"
+msgstr "Jätka praegust käsitlust"
+
+msgid "Correction"
+msgstr "Parandus"
+
+msgid "Email administrators when a comment is deleted"
+msgstr "Saada epost administraatoritele kommentaari kustutamise puhul"
+
+msgid "Email administrators when a comment is modified"
+msgstr "Saada epost administraatoritele kommentaari toimetamise puhul"
+
+msgid "Main \"webmaster\" user does not exist"
+msgstr "Peamine veebimeister puudub"
+
+msgid "Main \"webmaster\" user status is incorrect"
+msgstr "Peamise veebimeistri kasutajaolek on vigane"
+
+msgid "Notify administrators when a comment is"
+msgstr "Anna administraatoritele teada kui kommentaari"
+
+msgid "The webmaster has subscribed you to receiving notifications by mail."
+msgstr "Veebimeister on sulle ette määranud teadaannete saamise meili teel."
+
+msgid "The webmaster has unsubscribed you from receiving notifications by mail."
+msgstr "Veebimeister on tühistanud su teadaannete saamise meili peale."
+
+msgid "Webmaster cannot be deleted"
+msgstr "Veebimeistrit ei saa kustutada"
+
+msgid "Webmaster status is required."
+msgstr "Veebimeistrile on olek nõutav"
+
+msgid "administrators"
+msgstr "administraatorid"
+
+msgid "user_status_admin"
+msgstr "Administraator"
+
+msgid "user_status_webmaster"
+msgstr "Veebimeister"
+
+msgid "Advanced features"
+msgstr "Täiendatud võimalusi"
+
+msgid "All optimizations have been successfully completed."
+msgstr "Kõik optimeeringud on edukalt läbi viidud."
+
+msgid "Aperture is a powerful tool to refine images and manage massive libraries on Mac."
+msgstr "<em>Aperture</em> on üks võimas fototöötlusprogram <em>Macidele</em>."
+
+msgid "Aperture is designed for professional photographers with iPhoto simplicity."
+msgstr "<em>Aperture</em> on mõeldud professionaalsetele fotograafidele ent <em>iPhoto</em> kasutajasõbralikkusega."
+
+msgid "Available on"
+msgstr "Saadaval"
+
+msgid "Available only with HTML format"
+msgstr "Ainult saadaval HTML vormingus"
+
+msgid "Batch Manager"
+msgstr "Pakktöötluse haldur"
+
+msgid "Bound Theme"
+msgstr "Bound Theme"
+
+msgid "By %s"
+msgstr "Autor: %s"
+
+msgid "By default, Piwigo will create a new websize from the HD (high definition) version of your photo."
+msgstr "Piwigo loob vaikimisi uue, veebile mõeldud suuruses foto kõrge lahutusega versioonist."
+
+msgid "By default, the center of interest is placed in the middle of the photo."
+msgstr "Huvikeskpunkt pannakse vaikimisi keset fotot."
+
+msgid "Caddie management"
+msgstr "Korvi haldamine"
+
+msgid "Center of interest"
+msgstr "Huvikeskpunkt"
+
+msgid "Complementary mail content"
+msgstr "Täiendav meilisisu"
+
+msgid "Correction applied with error"
+msgstr "Parandust rakendamisel esines viga"
+
+msgid "Correction applied with success"
+msgstr "Parandati edukalt"
+
+msgid "Correction the anomaly will cancel the fact that it's ignored"
+msgstr "Parandatud anomaaliat ei ignoreerita edaspidi"
+
+msgid "Create the \"%s\" directory at the root of your Piwigo installation"
+msgstr "Loo kaust \"%s\" paigaldatud Piwigo juurikasse"
+
+msgid "Create this site"
+msgstr "Loo gallerii"
+
+msgid "Create"
+msgstr "Loo"
+
+msgid "Crop"
+msgstr "Kärbi"
+
+msgid "Current name"
+msgstr "Praegune nimi"
+
+msgid "Database synchronization with files"
+msgstr "Andmebaasi sünkroniseerimine failide kaudu"
+
+msgid "Database"
+msgstr "Andmebaas"
+
+msgid "Date"
+msgstr "Kuupäev"
+
+msgid "Day"
+msgstr "Päev"
+
+msgid "Deactivate all"
+msgstr "Deaktiveeri kõik"
+
+msgid "Deactivate"
+msgstr "Deaktiveeri"
+
+msgid "Default comments order"
+msgstr "Kommentaaride vaikimisi järjestus"
+
+msgid "Default display"
+msgstr "Vaikimisi kuvamine"
+
+msgid "Default photos order"
+msgstr "Fotode vaikimisi järjestus"
+
+msgid "Default user cannot be deleted"
+msgstr "Vaikekasutajat ei saa kustutada"
+
+msgid "Default user does not exist"
+msgstr "Vaikekasutaja ei eksisteeri"
+
+msgid "Delete Representant"
+msgstr "Kustuta albumi pisipilt"
+
+msgid "Delete multiple size images"
+msgstr "Kustuta mitmesuuruslike pilte"
+
+msgid "Delete orphan tags"
+msgstr "Kustuta orvuks jäänud märksõnad"
+
+msgid "Delete selected photos"
+msgstr "Kustuta valitud fotod"
+
+msgid "Delete selected tags"
+msgstr "Kustuta valitud märksõnad"
+
+msgid "Delete selected users"
+msgstr "Kustuta valitud kasutajad"
+
+msgid "Delete this language"
+msgstr "Kustuta see keel"
+
+msgid "Delete this theme"
+msgstr "Kustuta see teema"
+
+msgid "Deleted on"
+msgstr "Kustutatud"
+
+msgid "Deletions"
+msgstr "Kustutamised"
+
+msgid "Deny selected groups"
+msgstr "Keela valitud grupid"
+
+msgid "Deny selected users"
+msgstr "Keela valitud kasutajad"
+
+msgid "Description"
+msgstr "Kirjeldus"
+
+msgid "Detailed informations"
+msgstr "Täiendatud informatsioon"
+
+msgid "Directory does not exist"
+msgstr "Kaust ei eksisteeri"
+
+msgid "Directory"
+msgstr "Kaust"
+
+msgid "Discover album:"
+msgstr "Avasta album:"
+
+msgid "Display options"
+msgstr "Kuvamisvalikud"
+
+msgid "Dissociate from album"
+msgstr "Eralda sellest albumist"
+
+msgid "Dissociated"
+msgstr "Eraldatud"
+
+msgid "Do you want to activate anyway?"
+msgstr "Kas sa tahad selle siiski aktiveerida?"
+
+msgid "Documentation"
+msgstr "Dokumentatsioon"
+
+msgid "Does not represent"
+msgstr "Puuduvad pisipildid"
+
+msgid "Download,"
+msgstr "Laadi alla,"
+
+msgid "Downloads"
+msgstr "Allalaadimised"
+
+msgid "Drag to re-order"
+msgstr "Klõpsa ja lohista ümberjärjestamiseks"
+
+msgid "Drop into album"
+msgstr "Vali album"
+
+msgid "Duplicate selected tags"
+msgstr "Dubleeri valitud märksõnad"
+
+msgid "Duplicates"
+msgstr "Duplikaadid"
+
+msgid "ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW."
+msgstr "VIGA: PLUGIN PUUDUB ENT ON INSTALLITUD! KÕRVALDA SEE KOHE!"
+
+msgid "ERROR"
+msgstr "VIGA"
+
+msgid "Edit album permissions"
+msgstr "Toimeta albumi ligipääsuluba"
+
+msgid "Edit album"
+msgstr "Toimeta albumit"
+
+msgid "Edit photo"
+msgstr "Toimeta fotot"
+
+msgid "Edit ranks"
+msgstr "Toimeta hinnanguid"
+
+msgid "Edit selected tags"
+msgstr "Toimeta valitud märksõnu"
+
+msgid "Edit tags"
+msgstr "Toimeta märksõnu"
+
+msgid "Element type"
+msgstr "Elemendi tüüp"
+
+msgid "Element"
+msgstr "Element"
+
+msgid "Email admins when a comment requires validation"
+msgstr "Teavita administraatoreid epostiga kui kommentaar vajab kinnitamist"
+
+msgid "Email admins when a new user registers"
+msgstr "Teavita administraatoreid epostiga kui uus kasutaja registreerus"
+
+msgid "Email admins when a valid comment is entered"
+msgstr "Teavita administraatoreid epostiga kui kehtiv kommentaar sisestati"
+
+msgid "Environment"
+msgstr "Keskkond"
+
+msgid "Error list"
+msgstr "Vigade nimekiri"
+
+msgid "Error on file \"%s\" : %s"
+msgstr "Viga faili \"%s\" puhul : %s"
+
+msgid "Error when sending email to %s [%s]."
+msgstr "Viga eposti saatmisel saajale %s [%s]."
+
+msgid "Errors caption"
+msgstr "Vigade seletuskiri"
+
+msgid "Everybody"
+msgstr "Kõik"
+
+msgid "Execution time is out, treatment must be continue [Estimated time: %d second]."
+msgid_plural "Execution time is out, treatment must be continue [Estimated time: %d seconds]."
+msgstr[0] "Täitmisaeg lõppes, hooldust peab siiski lõpuni viima [Arvestatud aeg: %d sekundit]."
+msgstr[1] "Täitmisaeg lõppes, hooldust peab siiski lõpuni viima [Arvestatud aeg: %d sekundit]."
+
+msgid "Exif extension not available, admin should disable exif use"
+msgstr "Exif laiendus ei ole saadaval, administraator peaks selle kasutamise deaktiveerima"
+
+msgid "Extend for templates"
+msgstr "Laienda malle"
+
+msgid "Extensions Update"
+msgstr "Laienduste uuendused"
+
+msgid "FTP + Synchronization"
+msgstr "FTP + Sünkroniseerimine"
+
+msgid "Failed to write file to disk"
+msgstr "Faili kirjutamine kettale nurjus"
+
+msgid "Features include gallery browsing, album creation and photo upload."
+msgstr "Võimalusi nagu gallerii kuvamine, albumite loomine ja fotode üles laadimine."
+
+msgid "File upload stopped by extension"
+msgstr "Faili üleslaadimine lõpetati laienduse poolt"
+
+msgid "File/directory read error"
+msgstr "Faili või kausta lugemisviga"
+
+msgid "File"
+msgstr "Fail"
+
+msgid "Find a new representant by random"
+msgstr "Vaheta albumi pisipilt juhuslikult valitu vastu"
+
+msgid "Follow Orientation"
+msgstr "Järgi orientatsiooni"
+
+msgid "Following plugins may not be compatible with the new version of Piwigo:"
+msgstr "Järgmised pluginad võib-olla ei ühildu uue Piwigo versiooniga:"
+
+msgid "Following themes may not be compatible with the new version of Piwigo:"
+msgstr "Järgmised teemad võib-olla ei ühildu uue Piwigo versiooniga:"
+
+msgid "For photo sizes with crop, such as \"Square\", Piwigo will do its best to include the center of interest."
+msgstr "Fotosuurustega, mis nõuavad kärpimist (nagu nt \"Ruut\"), püüab Piwigo võimalikult hästi arvestada foto huvikeskpunktiga."
+
+msgid "Forbid this language to users"
+msgstr "Keela kasutajatel seda keelt kasutada"
+
+msgid "Forbid this theme to users"
+msgstr "Keela kasutajatel seda teemad kasutada"
+
+msgid "Forbidden"
+msgstr "Keelatud"
+
+msgid "Form"
+msgstr "Kuju"
+
+msgid "GD library is missing"
+msgstr "GD teek on puuduv"
+
+msgid "GD version"
+msgstr "GD teegi versioon"
+
+msgid "Gallery title"
+msgstr "Gallerii nimi"
+
+msgid "Gallery unlocked"
+msgstr "Gallerii lukustamata"
+
+msgid "General statistics"
+msgstr "Üldine statistika"
+
+msgid "Generate multiple size images"
+msgstr "Genereeri fotole mitmes suuruses variandid"
+
+msgid "Get Support on Piwigo Forum"
+msgstr "Leia abi Piwigo foorumist"
+
+msgid "Give write access (chmod 777) to \"%s\" directory at the root of your Piwigo installation"
+msgstr "Anna kirjutamisõigused (chmod 777) kaustale \"%s\", mis asub Piwigo juurkataloogis"
+
+msgid "Go to %s or %s for more informations"
+msgstr "Vaata %s või %s lisa informatsiooni saamiseks"
+
+msgid "Go to"
+msgstr "Mine"
+
+msgid "Grant selected groups"
+msgstr "Luba valitud grupidele"
+
+msgid "Grant selected users"
+msgstr "Luba valitud kasutajatele"
+
+msgid "Graphics Library"
+msgstr "<em>Graphics Library</em>"
+
+msgid "Group management"
+msgstr "Grupide haldamine"
+
+msgid "Group name"
+msgstr "Grupi nimi"
+
+msgid "Group"
+msgstr "Grupp"
+
+msgid "Groups and users"
+msgstr "Grupid ja kasutajad"
+
+msgid "Groups"
+msgstr "Grupid"
+
+msgid "Guest Settings"
+msgstr "Külalise valikud"
+
+msgid "Guest cannot be deleted"
+msgstr "Külaliskasutajat ei saa kustutada"
+
+msgid "Guests"
+msgstr "Külalised"
+
+msgid "Height"
+msgstr "Kõrgus"
+
+msgid "Hello,"
+msgstr "Tere tulemast"
+
+msgid "Hello"
+msgstr "Tere tulemast"
+
+msgid "Help Me"
+msgstr "Aita mind"
+
+msgid "Hide"
+msgstr "Peida"
+
+msgid "High definition enabled"
+msgstr "Kõrge lahutus võimaldatud"
+
+msgid "High definition"
+msgstr "Kõrge lahutus"
+
+msgid "high"
+msgstr "kõrge"
+
+msgid "History"
+msgstr "Ajalugu"
+
+msgid "Hit"
+msgstr "Tabamus"
+
+msgid "Hour"
+msgstr "Tund"
+
+msgid "Hoverbox display"
+msgstr "Hõljukkasti kuvamine"
+
+msgid "I decide to update anyway"
+msgstr "Ma valin siiski uuendada"
+
+msgid "IP"
+msgstr "IP"
+
+msgid "If no HD is available and if the current websize is bigger than resize dimensions, Piwigo will move it as HD and create a downsized websize photo from it."
+msgstr "Juhul kui puudub kõrge lahutusega foto, ja praegune veebile mõeldud suurus (nn veebi-suurus) on suurem kui uus valitud suurus, siis märgib Piwigo suurima foto kui kõrge lahutusega, ja väiksemad, veebile mõeldud versioonid tehakse sellest. (See kõik tähendab lihtsalt, et Piwigo on nutikas.)"
+
+msgid "If you encounter problems or have any question, please send a message to"
+msgstr "Kui satud probleemi otsa, või sul tekib mõni küsimus, saatke sõnumiga aadressile"
+
+msgid "Ignore All"
+msgstr "Eira kõike"
+
+msgid "Ignore selected anomalies"
+msgstr "Eira valitud hälbeid"
+
+msgid "Ignore this update"
+msgstr "Eira seda uuendust"
+
+msgid "Image Quality"
+msgstr "Foto kvaliteet"
+
+msgid "Image id"
+msgstr "Foto id"
+
+msgid "Images manual order was saved"
+msgstr "Fotode valitud järjestus salvestati"
+
+msgid "Impossible automatic correction"
+msgstr "Automaatne parandamine ei ole võimalik"
+
+msgid "Impossible to activate this theme, the parent theme is missing: %s"
+msgstr "Teemat ei saa aktiveerida, kuna puudub selle üldteema: %s"
+
+msgid "Impossible to deactivate this language, first set another language as default."
+msgstr "Vaikekeelt ei saa deaktiveerida, vali kõigepealt teine vaikekeel."
+
+msgid "Impossible to deactivate this language, you need at least one language."
+msgstr "Viimast ja ainsat keelt ei saa deaktiveerida, vähemalt nõutakse vähemalt üht keelt."
+
+msgid "Impossible to deactivate this theme, you need at least one theme."
+msgstr "Viimast ja ainsat teemat ei saa deaktiveerida, nõutakse vähemalt üht teemat."
+
+msgid "Impossible to delete this theme. Other themes depends on it: %s"
+msgstr "Teemat ei saa kustutada, kuna teised teemad kasutavad seda: %s"
+
+msgid "In your php.ini file, the upload_max_filesize (%sB) is bigger than post_max_size (%sB), you should change this setting"
+msgstr "Initsialiseerimisfailis \"php.ini\" on <em>upload_max_filesize</em> (%sB) suurem kui <em>post_max_size</em> (%sB), sa peaksid muutma need võrdväärseteks"
+
+msgid "Inactive Languages"
+msgstr "Deaktiveeritud keeled"
+
+msgid "Inactive Plugins"
+msgstr "Deaktiveeritud pluginad"
+
+msgid "Inactive Themes"
+msgstr "Deaktiveeritud teemad"
+
+msgid "Include display of recent photos grouped by dates"
+msgstr "Kuva hiljutisi fotosid kuupäevade kaupa"
+
+msgid "Information data registered in database"
+msgstr "Informatsiooniandmed registreeriti andmebaasis"
+
+msgid "Informations"
+msgstr "Informatsioon"
+
+msgid "Install on your computer,"
+msgstr "Paigalda su arvutisse,"
+
+msgid "Installed Languages"
+msgstr "Paigaldatud keeled"
+
+msgid "Installed Themes"
+msgstr "Paigaldatud teemad"
+
+msgid "Install"
+msgstr "Paigalda"
+
+msgid "Instructions to use Piwigo"
+msgstr "Piwigo kasutusjuhendeid"
+
+msgid "Invert"
+msgstr "Inverteeri"
+
+msgid "Language has been successfully installed"
+msgstr "Keel on paigaldatud"
+
+msgid "Languages which need upgrade"
+msgstr "Uuendamist vajavad keeled"
+
+msgid "Languages"
+msgstr "Keeled"
+
+msgid "Last hit"
+msgstr "Viimane tabamus"
+
+msgid "Last import"
+msgstr "Viimane sisestus"
+
+msgid "Last revisions"
+msgstr "Viimane revisjon"
+
+msgid "Last send"
+msgstr "Viimati saadetud"
+
+msgid "Learn more"
+msgstr "Õpi rohkem"
+
+msgid "Level 0"
+msgstr "—"
+
+msgid "Level 1"
+msgstr "Kontaktid"
+
+msgid "Level 2"
+msgstr "Sõbrad"
+
+msgid "Level 4"
+msgstr "Perekond"
+
+msgid "Level 8"
+msgstr "Administraatorid"
+
+msgid "Link all album photos to a new album"
+msgstr "Seo kõik albumi fotod uude albumisse"
+
+msgid "Link all album photos to some existing albums"
+msgstr "Seo kõik albumi fotod teise albumiga"
+
+msgid "Linked albums"
+msgstr "Seotud albumid"
+
+msgid "List"
+msgstr "Nimekiri"
+
+msgid "Local"
+msgstr "Lokaalne"
+
+msgid "Lock albums"
+msgstr "Lukusta albumid"
+
+msgid "Lock gallery"
+msgstr "Lukusta gallerii"
+
+msgid "Locked"
+msgstr "Lukustatud"
+
+msgid "Lock"
+msgstr "Lukk"
+
+msgid "Mail content"
+msgstr "Eposti sisu"
+
+msgid "Mail sent to %s [%s]."
+msgstr "Epost saadetud aadressile %s [%s]."
+
+msgid "Main \"guest\" user does not exist"
+msgstr "Külaliskasutaja puudub"
+
+msgid "Main \"guest\" user status is incorrect"
+msgstr "Külaliskasutaja olek on vigane"
+
+msgid "Main Page"
+msgstr "Avaleht"
+
+msgid "Maintenance"
+msgstr "Hooldamine"
+
+msgid "Make this language available to users"
+msgstr "Tee see keel saadavaks kasutajatele"
+
+msgid "Make this theme available to users"
+msgstr "Tee see teema saadavaks kasutajatele"
+
+msgid "Manage Permissions"
+msgstr "Halda pääsuõigusi"
+
+msgid "Manage authorizations for selected albums"
+msgstr "Halda valitud albumite volitusi"
+
+msgid "Manage permissions for group \"%s\""
+msgstr "Halda grupi \"%s\" pääsuõigusi"
+
+msgid "Manage permissions for user \"%s\""
+msgstr "Halda kasutaja \"%s\" pääsuõigusi"
+
+msgid "Manage photo ranks"
+msgstr "Halda foto hinnanguid"
+
+msgid "Manage tags"
+msgstr "Halda märksõnu"
+
+msgid "Manage this set of %d photos"
+msgstr "Halda seda %d foto kogu"
+
+msgid "Manage"
+msgstr "Halda"
+
+msgid "Manual order"
+msgstr "Käsijärjestus\r\n"
+
+msgid "Maximum height"
+msgstr "Maksimum kõrgus"
+
+msgid "Maximum width"
+msgstr "Maksimum laius"
+
+msgid "Maximum file size: %sB."
+msgstr "Maksimum faili suurus: %sB."
+
+msgid "Members"
+msgstr "Liikmed"
+
+msgid "Menu Management"
+msgstr "Menüüd"
+
+msgid "Merge selected tags"
+msgstr "Liida valitud märksõnad"
+
+msgid "Merge tags"
+msgstr "Liida märksõnad"
+
+msgid "Metadata synchronization results"
+msgstr "Metaandmete sünkroniseerimise tulemused"
+
+msgid "Metadata synchronized from file"
+msgstr "Metaandmed sünkroniseeritud failist"
+
+msgid "Minimum privacy level"
+msgstr "Madalaim privaatsuse tase"
+
+msgid "Miscellaneous"
+msgstr "Nipet-näpet"
+
+msgid "Missing Plugins"
+msgstr "Puuduvad pluginad"
+
+msgid "Missing a temporary folder"
+msgstr "Puudub ajutiste failide kataloog"
+
+msgid "Modify information"
+msgstr "Muuda informatsiooni"
+
+msgid "Month"
+msgstr "Kuu"
+
+msgid "Move albums"
+msgstr "Liiguta albumeid"
+
+msgid "Move to album"
+msgstr "Liiguta albumisse"
+
+msgid "Move"
+msgstr "Liiguta"
+
+msgid "Multiple Size"
+msgstr "Mitmed suurused"
+
+msgid "Name of the duplicate"
+msgstr "Duplikaadi nimi"
+
+msgid "Name"
+msgstr "Nimi"
+
+msgid "New Version"
+msgstr "Uus versioon"
+
+msgid "New name"
+msgstr "Uus nimi"
+
+msgid "New parent album"
+msgstr "Uus kõrgema taseme album"
+
+msgid "New photos added"
+msgstr "Uusi fotosid lisatud"
+
+msgid "New photos were added"
+msgstr "Uusi fotosid on lisatud"
+
+msgid "New tag"
+msgstr "Uus märksõna"
+
+msgid "No destination tag selected"
+msgstr "Sihtmärksõna puudub"
+
+msgid "No display"
+msgstr "Kuvamine puudub"
+
+msgid "No file was uploaded"
+msgstr "Ühtki faili ei laaditud üles"
+
+msgid "No group is permitted to see this private album"
+msgstr "Ükski grupp ei ole lubatud vaadata seda privaatset albumit"
+
+msgid "No mail to send."
+msgstr "Ühtki meili pole saata."
+
+msgid "No order field selected"
+msgstr "Järjestuskriteerium on valimata"
+
+msgid "No photo can be deleted"
+msgstr "Ühtki fotot ei saa kustutada"
+
+msgid "No photo in the current set."
+msgstr "Fotod puuduvad valitud kogumikus."
+
+msgid "No photo in this album"
+msgstr "Selles albumis pole ühtki fotot"
+
+msgid "No photo selected, %d photos in current set"
+msgstr "Ühtki fotot pole valitud, selles kogumikus on %d fotot."
+
+msgid "No photos selected, no actions possible."
+msgstr "Ühtki fotot pole valitud, ükski tegevus pole võimalik"
+
+msgid "No results"
+msgstr "Ei leidnud vasteid"
+
+msgid "No user to send notifications by mail."
+msgstr "Ühtki kasutajat pole, keda teavitada epostiga."
+
+msgid "None"
+msgstr "Mitte ükski"
+
+msgid "Not cropped correctly?"
+msgstr "Ei kärbitud õigesti?"
+
+msgid "Notification"
+msgstr "Teatamine"
+
+msgid "Number of comments per page"
+msgstr "Kommentaaride arv lehekülje kohta"
+
+msgid "Number of downloads"
+msgstr "Allalaadimiste arv"
+
+msgid "Number of rates"
+msgstr "Hinnangute arv"
+
+msgid "Numeric identifier : %d"
+msgstr "ID-number: %d"
+
+msgid "Obsolete Plugins"
+msgstr "Iganenud pluginad"
+
+msgid "On your Linux, simply install Shotwell with your package manager and the activate Piwigo publishing option."
+msgstr "GNU/Linuksi kasutajana, lihtsalt paigalda rakendus <em>Shotwell</em> kasutades paketihaldurit, ning aktiveeri Piwigo avaldamisvõimaluse."
+
+msgid "Only private albums are listed"
+msgstr "Ainult privaatsed albumid on loendatud"
+
+msgid "Opacity"
+msgstr "Läbipaistmatus"
+
+msgid "Operating system"
+msgstr "operatsioonisüsteem"
+
+msgid "Optional URL keyword"
+msgstr "Valikulised URL võtmesõnad"
+
+msgid "Options"
+msgstr "Valikud"
+
+msgid "Original Size"
+msgstr "Originaal suurus"
+
+msgid "Original file : %s"
+msgstr "Originaalfail: %s"
+
+msgid "Original templates"
+msgstr "Originaalmallid"
+
+msgid "Other plugins"
+msgstr "Teisi pluginaid"
+
+msgid "Other private albums"
+msgstr "Teisi privaatseid albumeid"
+
+msgid "Overall"
+msgstr "Ülevaade"
+
+msgid "Page banner"
+msgstr "Lehekülje päistiitel"
+
+msgid "Page end"
+msgstr "Lehekülje jalus"
+
+msgid "Pages seen"
+msgstr "Lehti nähtud"
+
+msgid "Parameter"
+msgstr "Seadistused"
+
+msgid "Parameters"
+msgstr "Parameetrid"
+
+msgid "Parent album"
+msgstr "Kõrgema tasandi album"
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "Parooli kinnitus puudub. Palun kinnita valitud parool."
+
+msgid "Password is missing. Please enter the password."
+msgstr "Parool puudub. Palun sisesta parool."
+
+msgid "Path"
+msgstr "Asukoht"
+
+msgid "Pending Comments"
+msgstr "Ootel kommentaarid"
+
+msgid "Permalink %s has been previously used by album %s. Delete from the permalink history first"
+msgstr "Püsilinki \"%s\" on juba kasutusel albumi \"%s\" jaoks. Kustuta see püsilinkide ajaloost."
+
+msgid "Permalink %s is already used by album %s"
+msgstr "Püsilinki \"%s\" on juba kasutusel albumi \"%s\" jaoks"
+
+msgid "Permalink history"
+msgstr "Püsilinkide ajalugu"
+
+msgid "Permalink"
+msgstr "Püsilink"
+
+msgid "Permalinks"
+msgstr "Püsilingid"
+
+msgid "Permission denied"
+msgstr "Ligipääs keelatud"
+
+msgid "Permission granted for groups"
+msgstr "Ligipääsuluba antud grupidele"
+
+msgid "Permission granted for users"
+msgstr "Ligipääsuluba antud kasutajatele"
+
+msgid "Permission granted thanks to a group"
+msgstr "Ligipääsuluba antud tänu grupile"
+
+msgid "Permission granted"
+msgstr "ligipääsuluba antud"
+
+msgid "Permission management"
+msgstr "Ligipääsulubade haldamine"
+
+msgid "Permissions"
+msgstr "Ligipääsuload"
+
+msgid "Photo %s of %s"
+msgstr "Foto %d %d-st"
+
+msgid "Photo Page"
+msgstr "Foto lehekülg"
+
+msgid "Photo Properties"
+msgstr "Foto omadused"
+
+msgid "Photo informations updated"
+msgstr "Foto info uuendatud"
+
+msgid "Photo name"
+msgstr "Foto nimi"
+
+msgid "Photo sizes with crop"
+msgstr "Foto suurused kärpimisega"
+
+msgid "Photo unreachable or no support"
+msgstr "Fotole puudub ligipääs või on see toetamata vormingus"
+
+msgid "Photos generation in progress..."
+msgstr "Fotode genereerimine edenemisel..."
+
+msgid "Photos"
+msgstr "Fotod"
+
+msgid "Piwigo Administration"
+msgstr "Piwigo administratsioon"
+
+msgid "Piwigo Announcements Newsletter"
+msgstr "Piwigo teadaannete infoleht"
+
+msgid "Piwigo Publish plugin for Lightroom"
+msgstr "Piwigo avaldamisplugin <em>Lightroom</em>i jaoks"
+
+msgid "Piwigo Update"
+msgstr "Piwigo uuendus"
+
+msgid "Piwigo Uploader"
+msgstr "Piwigo üleslaadija"
+
+msgid "Piwigo cannot retrieve upgrade file from server"
+msgstr "Piwigo ei suutnud saada kätte uuendusfaili serverilt"
+
+msgid "Piwigo configuration"
+msgstr "Piwigo seadistused"
+
+msgid "Piwigo export plugin for Aperture"
+msgstr "Piwigo eksportimisplugin Aperturele"
+
+msgid "Piwigo export plugin for iPhoto"
+msgstr "Piwigo eksportimisplugin iPhotole"
+
+msgid "Piwigo for Android"
+msgstr "Piwigo Androidile"
+
+msgid "Piwigo for iOS (iPhone, iPad, iPod Touch)"
+msgstr "Piwigo iOS-ile (iPhone, iPad, iPod Touch)"
+
+msgid "Piwigo publish plugin for Shotwell"
+msgstr "Piwigo avaldamisplugin rakendusele Shotwell"
+
+msgid "Piwigo publish plugin for digiKam"
+msgstr "Piwigo avaldamisplugin rakendusele digiKam"
+
+msgid "Piwigo version"
+msgstr "Piwigo versioon"
+
+msgid "Please check \"plugins\" folder and sub-folders permissions (CHMOD)."
+msgstr "Palun vaata kausta \"plugins\" ja selle alam-kaustade ligipääsulube (CHMOD)."
+
+msgid "Please wait..."
+msgstr "Palun oota..."
+
+msgid "Plugin has been successfully copied"
+msgstr "Plugin on edukalt kopeeritud"
+
+msgid "Private"
+msgstr "Privaatne"
+
+msgid "Public / Private"
+msgstr "Avalik / Privaatne"
+
+msgid "Public"
+msgstr "Avalik"
+
+msgid "Rating by guests"
+msgstr "Külaliste hinnangud"
+
+msgid "Restore default configuration. You will lose your plugin settings!"
+msgstr "Taasta vaikeseadistused. Hoiatus! kõik pluginate seadistused taastatakse ka."
+
+msgid "Templates configuration has been recorded."
+msgstr "Malli seadistused on salvestatud"
+
+msgid "Use the default photo sort order"
+msgstr "Kasuta fotode järjestamise vaikeväärtust"
+
+msgid "You can't define a default photo order because you have a custom setting in your local configuration."
+msgstr "Fotode järjestamise vaikeväärtus pole võimalik siin valida, kuna sul on kohandatud väärtus oma seadistusfailis."
+
+msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
+msgstr "Sa oled valinud <i>$conf['order_by']</i> su seadistusfailis, see väärtus on iganenud, palun kustuta see või nimeta see ümber väärtuseks <i>$conf['order_by_custom']</i>."
+
+msgid "Your configuration settings are saved"
+msgstr "Sinu seadistused on salvestatud"
+
+msgid "guest"
+msgstr "külaline"
+
+msgid "user_status_guest"
+msgstr "Külaline"
+
+msgid "visitors need to login and have the appropriate permissions to see this album"
+msgstr "Külalised peavad logima sisse ja omama õiged ligipääsuload, et kuvada seda albumit"
+
+msgid "Optimizations have been completed with some errors."
+msgstr "Optimeeringud on läbiviidud mõne veaga."
+
+msgid "Order of menubar items has been updated successfully."
+msgstr "Menüüde järjestus on muudetud"
+
+msgid "Plugin list"
+msgstr "Pluginate nimekiri"
+
+msgid "Plugins which need upgrade"
+msgstr "Uuendatavad pluginad"
+
+msgid "Plugins"
+msgstr "Pluginad"
+
+msgid "Position"
+msgstr "Asukoht"
+
+msgid "Posted %s on %s"
+msgstr "Saadetud %s %s"
+
+msgid "Predefined filter"
+msgstr "Eelnevalt määratud filter"
+
+msgid "Preferences"
+msgstr "Eelistused"
+
+msgid "Privacy level set to \"%s\""
+msgstr "Privaatsustase kohandati tasemele \"%s\""
+
+msgid "Privacy level"
+msgstr "Privaatsustase"
+
+msgid "Properties"
+msgstr "Omadused"
+
+msgid "Purge compiled templates"
+msgstr "Kõrvalda kompileeritud mallid"
+
+msgid "Purge history detail"
+msgstr "Kõrvalda ajaloo detailid"
+
+msgid "Purge history summary"
+msgstr "Kõrvalda ajaloo kokkuvõte"
+
+msgid "Purge never used notification feeds"
+msgstr "Kõrvalda mitte kunagi kasutatud teatevoogud"
+
+msgid "Purge search history"
+msgstr "Kõrvalda otsingute ajalugu"
+
+msgid "Purge sessions"
+msgstr "Kõrvalda seanssid"
+
+msgid "Quick Local Synchronization"
+msgstr "Kohalik kiirsünkroniseerimine"
+
+msgid "Random photo"
+msgstr "Juhufoto"
+
+msgid "Rate date"
+msgstr "Hinnangu kuupäev"
+
+msgid "Rated %d times, score : %.2f"
+msgstr "Hinnatud %d korda, skoor: %.2f"
+
+msgid "Rating"
+msgstr "Hinnang"
+
+msgid "Read Piwigo Documentation"
+msgstr "Loe Piwigo dokumentatsiooni"
+
+msgid "Refresh photo set"
+msgstr "Uuenda fotokogu"
+
+msgid "Refresh"
+msgstr "Laadi uuesti"
+
+msgid "Reinitialize check integrity"
+msgstr "Algväärtusta terviklikkuskontroll"
+
+msgid "Reject"
+msgstr "Lükka tagasi"
+
+msgid "Released on"
+msgstr "Väljalastud"
+
+msgid "Remote"
+msgstr "Kauge"
+
+msgid "Remove all filters"
+msgstr "Eemalda kõik filtrid"
+
+msgid "Remove from caddie"
+msgstr "Eemalda korvist"
+
+msgid "Repair and optimize database"
+msgstr "Paranda ja optimeeri andmebaasi"
+
+msgid "Replacers (customized templates)"
+msgstr "Asendajaid (kohandatud mallid)"
+
+msgid "Representant"
+msgstr "Albumi pisipilt"
+
+msgid "Representation of albums"
+msgstr "Albumi pisipilt"
+
+msgid "Representative"
+msgstr "Albumi pisipilt"
+
+msgid "Represents"
+msgstr "Kasutatakse pisipildina järgmistes kohtades"
+
+msgid "Reset ignored updates"
+msgstr "Algväärtusta uuenduste eiramised"
+
+msgid "Resize after upload"
+msgstr "Suurenda pärast üleslaadimist"
+
+msgid "Resize"
+msgstr "Suurenda"
+
+msgid "Restore"
+msgstr "Taasta"
+
+msgid "Save Settings"
+msgstr "Salvesta seadistused"
+
+msgid "Save Template Directory"
+msgstr "Salvesta mallide kaust"
+
+msgid "Save manual order"
+msgstr "Salvesta käsijärjestus"
+
+msgid "Save order"
+msgstr "Salvesta järjestus"
+
+msgid "Save to permalink history"
+msgstr "Salvesta püsilinkide ajalukku"
+
+msgid "Save visits in history for"
+msgstr "Salvesta külastused ajaloos kuniks"
+
+msgid "Search for new images in the directories"
+msgstr "Otsi uusi fotosid kaustadest"
+
+msgid "Searching..."
+msgstr "Otsin..."
+
+msgid "Section"
+msgstr "Sektsioon"
+
+msgid "See you soon,"
+msgstr "Nägemiseni!"
+
+msgid "See you soon."
+msgstr "Nägemiseni!"
+
+msgid "Select a file"
+msgstr "Vali fail"
+
+msgid "Select a zone with your mouse to define a new center of interest."
+msgstr "Vali huvipunkti asukoht"
+
+msgid "Select an album"
+msgstr "Vali album"
+
+msgid "Select at least one album"
+msgstr "Vali vähemalt üks album"
+
+msgid "Select at least one comment"
+msgstr "Vali vähemalt üks kommentaar"
+
+msgid "Select at least one photo"
+msgstr "Vali vähemalt üks foto"
+
+msgid "Select at least one user"
+msgstr "Vali vähemalt üks kasutaja"
+
+msgid "Select at least two tags for merging"
+msgstr "Vali vähemalt kaks märksõna mida mestida"
+
+msgid "Select files"
+msgstr "Vali faile"
+
+msgid "Select groups..."
+msgstr "Vali gruppe..."
+
+msgid "Select recipients"
+msgstr "Vali saajad"
+
+msgid "Select the destination tag"
+msgstr "Vali sihtmärksõna"
+
+msgid "Select users..."
+msgstr "Vali kasutajaid..."
+
+msgid "Select:"
+msgstr "Vali:"
+
+msgid "Selection"
+msgstr "Valik"
+
+msgid "Send an information email to group members"
+msgstr "Saada teavitusepost grupi liikmetele"
+
+msgid "Send connection settings by email"
+msgstr "Saada ühenduse üksikasjade kirjeldus epostiga"
+
+msgid "Send mail as"
+msgstr "Saada kui"
+
+msgid "Send mail on HTML format"
+msgstr "Saada epost HTML-vormingus"
+
+msgid "Send mail to users"
+msgstr "Saada epost kasutajatele"
+
+msgid "Send"
+msgstr "Saada"
+
+msgid "Set as default language for unregistered and new users"
+msgstr "Vali vaikekeeleks külalistele ja uutele kasutajatele"
+
+msgid "Set as default theme for unregistered and new users"
+msgstr "Vali vaiketeemaks külalistele ja uutele kasutajatele"
+
+msgid "Set author"
+msgstr "Seadista autor"
+
+msgid "Set creation date"
+msgstr "Seadista loomise kuupäev"
+
+msgid "Set title"
+msgstr "Seadista pealkiri"
+
+msgid "Settings"
+msgstr "Seadistused"
+
+msgid "Sharpen"
+msgstr "Teravusta"
+
+msgid "Shotwell is an open source digital photo organizer that runs on Linux. It is the default photo manager in Ubuntu and Fedora."
+msgstr "Shotwell on vabatarkvaraline digifoto korraldaja mis jookseb GNU/Linuxi peal. See on vaikekorraldajaks määratud Ubuntu ja Fedora süsteemides."
+
+msgid "Show info"
+msgstr "Näita üksikasju"
+
+msgid "Show menubar"
+msgstr "Näita menüüd"
+
+msgid "Simulation"
+msgstr "Simuleeri"
+
+msgid "Site manager"
+msgstr "Saidi administratsioon"
+
+msgid "Some themes and plugins may be not available yet."
+msgstr "Mõnda teemat ja pluginat võib-olla puuduvad veel."
+
+msgid "Some upgrades are available for extensions."
+msgstr "Mõnel laiendusel on uuendusi saadaval"
+
+msgid "Source tag"
+msgstr "Lähtemärksõna"
+
+msgid "Start Upload"
+msgstr "Alusta üleslaadimine"
+
+msgid "Start pLoader and add your photos."
+msgstr "Käivita pLoader ja lisa fotod."
+
+msgid "Statistics"
+msgstr "Statistika"
+
+msgid "Status of user \"%s\" updated"
+msgstr "Kasutaja \"%s\" olek uuendati"
+
+msgid "Status"
+msgstr "Olek"
+
+msgid "Storage album"
+msgstr "Ladustamisalbum"
+
+msgid "Subscribe %s to Piwigo Announcements Newsletter"
+msgstr "Telli Piwigo kuulutuste uudiskiri kasutajale %s"
+
+msgid "Subscribe %s"
+msgstr "Telli %s"
+
+msgid "Subscribe to notification by mail"
+msgstr "Telli teavitusi"
+
+msgid "Subscribe/unsubscribe users"
+msgstr "Esita või tühista tellimus kasutajatele"
+
+msgid "Subscribed"
+msgstr "Tellitud"
+
+msgid "Subscribe"
+msgstr "Telli"
+
+msgid "Sum of rates"
+msgstr "Hinnangute summa"
+
+msgid "Summary"
+msgstr "Kokkuvõtt"
+
+msgid "Support"
+msgstr "Tugi"
+
+msgid "Switch to clear or dark colors for administration"
+msgstr "Vaheta administratsiooni värvid tumedaks või heledaks"
+
+msgid "Synchronize metadata"
+msgstr "Sünkroniseeri metaandmed"
+
+msgid "Synchronize"
+msgstr "Sünkroniseerimine"
+
+msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
+msgstr "SEE PLUGIN ON NÜÜD OSA PÄRIS PIWIGOST, KÕRVALDA SEE KOHE!"
+
+msgid "Tag \"%s\" already exists"
+msgstr "Märksõna \"%s\" on juba olemas"
+
+msgid "Tag \"%s\" is now a duplicate of \"%s\""
+msgstr "Märksõna \"%s\" dubleerib nüüdsest märksõna \"%s\""
+
+msgid "Tag \"%s\" was added"
+msgstr "Märksõna \"%s\" lisati"
+
+msgid "Tag selection"
+msgstr "Märksõnade valimine"
+
+msgid "Tags <em>%s</em> merged into tag <em>%s</em>"
+msgstr "Märksõnad <em>%s</em> mestiti märksõnadega <em>%s</em>"
+
+msgid "Templates"
+msgstr "Mallid"
+
+msgid "The %d following tags were deleted"
+msgstr "Järgmised %d märksõna on kustutatud"
+
+msgid "The Piwigo export plugin allows you to create albums and export photos."
+msgstr "Piwigo eksportimisplugin võimaldab sul luua albumeid ja eksportida fotosid."
+
+msgid "The Piwigo publish Plug-in allows you to export and synchronize photos from Lightroom directly to your Piwigo photo gallery."
+msgstr "Piwigo avaldamisplugin võimaldab sul eksportida ja sünkroniseerida fotosid Lightroomist otse su Piwigo galleriisse."
+
+msgid "The anomaly will be ignored until next application version"
+msgstr "Hälvet eiratakse kuni järgmise Piwigo versioonini"
+
+msgid "The center of interest is the most meaningful zone in the photo."
+msgstr "Huvikeskpunkt on foto kõige olulisem koht."
+
+msgid "The file or directory cannot be accessed (either it does not exist or the access is denied)"
+msgstr "Failile või kaustale ei saada ligi (see kas ei eksisteeri või puuduvad ligipääsuõigused sellele)"
+
+msgid "The following tag was deleted"
+msgstr "Järgmine märksõna kustutati"
+
+msgid "The gallery URL is not valid."
+msgstr "Selline gallerii aadress on vigane."
+
+msgid "The name of a group must not contain \" or ' or be empty."
+msgstr "Grupi nimi ei saa sisaldada jutumärke ega olla tühi."
+
+msgid "The name of an album must not be empty"
+msgstr "Albumi nimi ei saa olla tühi"
+
+msgid "Orphan tags deleted"
+msgstr "Kasutamata jäänud märksõnad kustutati"
+
+msgid "The name of directories and files must be composed of letters, numbers, \"-\", \"_\" or \".\""
+msgstr "Kaustade ja failide nimetused saavad ainult sisaldada tähti, numbreid ning märke \"-\", \"_\" ja \".\""
+
+msgid "The number of comments a page must be between 5 and 50 included."
+msgstr "Kommentaaride arv lehekülje kohta peab jääma 5 ja 50 vahel."
+
+msgid "The original image quality must be a number between %d and %d"
+msgstr "Originaalfoto kvaliteedimäärang peab olema number %d ja %d vahel"
+
+msgid "The original maximum height must be a number between %d and %d"
+msgstr "Originaalfoto suurim kõrgus peab olema number %d ja %d vahel"
+
+msgid "The original maximum width must be a number between %d and %d"
+msgstr "Originaalfoto suurim laius peab olema number %d ja %d vahel"
+
+msgid "The permalink name must be composed of a-z, A-Z, 0-9, \"-\", \"_\" or \"/\". It must not be numeric or start with number followed by \"-\""
+msgstr "Püsilingi nimi saab sisaldada ainult a-z, A-z, 0-9, \"-\", \"_\" ja \"/\". See ei saa olla number ega algada numbriga millele järgneb \"-\""
+
+msgid "The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form"
+msgstr "Üleslaaditava faili suurus ületab määratud MAX_FILE_SIZE, mis on antud HTML formularis"
+
+msgid "The uploaded file exceeds the upload_max_filesize directive in php.ini: %sB"
+msgstr "Üleslaaditava faili suurus ületab määratud MAX_FILE_SIZE, mis on antud failis php.ini: %sB"
+
+msgid "The uploaded file was only partially uploaded"
+msgstr "Üleslaaditud fail jäi poolikuks"
+
+msgid "The uploaded files exceed the post_max_size directive in php.ini: %sB"
+msgstr "Üleslaaditava faili suurus ületab määratud POST_FILE_SIZE, mis on antud failis php.ini: %sB"
+
+msgid "The whole page"
+msgstr "Terve lehekülg"
+
+msgid "The whole set"
+msgstr "Terve kogu"
+
+msgid "Theme has been successfully installed"
+msgstr "Teema installiti edukalt"
+
+msgid "Themes which need upgrade"
+msgstr "Uuendamist vajavad teemad"
+
+msgid "Themes"
+msgstr "Teemasid"
+
+msgid "There is no available subscribers to mail."
+msgstr "Pole tellijaid kellele saata teatiseid."
+
+msgid "There is no group in this gallery."
+msgstr "Sel galleriil puuduvad üldse grupid."
+
+msgid "There is no other language available."
+msgstr "Pole teisi keeli saadaval."
+
+msgid "There is no other plugin available."
+msgstr "Pole teisi pluginaid saadaval."
+
+msgid "There is no other theme available."
+msgstr "Pole teisi teemasid saadaval."
+
+msgid "This album contains %d photos, added between %s and %s."
+msgstr "Album sisaldab %d fotot, lisatud %s ja %s vahel."
+
+msgid "This album contains %d photos, added on %s."
+msgstr "Album sisaldab %d fotot, lisatud %s."
+
+msgid "This album contains no photo."
+msgstr "Album ei sisalda ühtki fotot."
+
+msgid "This is a major update, with <a href=\"%s\">new exciting features</a>."
+msgstr "See on suurem väljalase <a href=\"%s\">uute põnevate võimalustega</a>."
+
+msgid "This is a minor update, with only bug corrections."
+msgstr "See uuendus koosneb peamiselt vaid veaparandustest."
+
+msgid "This name is already used by another group."
+msgstr "Teine grupp on juba sama nimega olemas."
+
+msgid "This site already exists"
+msgstr "Selline sait on juba olemas"
+
+msgid "This theme was not designed to be directly activated"
+msgstr "Seda teemat ei saa otse aktiveerida"
+
+msgid "Thumbnail"
+msgstr "Pisipilt"
+
+msgid "Thumbnails generation in progress..."
+msgstr "Pisipiltide tekitamine..."
+
+msgid "Time to send mail is limited. Others mails are skipped."
+msgstr "Epostide saatmise aeg on piiratud. Teised epostid jäid saatmata."
+
+msgid "Time"
+msgstr "Aeg"
+
+msgid "Title"
+msgstr "pealkiri"
+
+msgid "To send ?"
+msgstr "Saada?"
+
+msgid "To subscribe"
+msgstr "Tellimuse esitamiseks"
+
+msgid "To unsubscribe"
+msgstr "Tellimuse tühistamiseks"
+
+msgid "Tools"
+msgstr "Tööriistad"
+
+msgid "Two updates are available"
+msgstr "Kaks uuendust on saadaval"
+
+msgid "Type here the author name"
+msgstr "Autori nimi"
+
+msgid "Type here the title"
+msgstr "Pealkiri"
+
+msgid "Type in a search term"
+msgstr "Otsisõna"
+
+msgid "Unable to check for upgrade."
+msgstr "Uuenduste otsimine nurjus."
+
+msgid "Uncheck all"
+msgstr "Tühista valik"
+
+msgid "Uninstalled Plugins"
+msgstr "Kustutatud pluginad"
+
+msgid "Uninstall"
+msgstr "Kustuta"
+
+msgid "Unknown upload error"
+msgstr "Teadmatu viga üleslaadimisel"
+
+msgid "Unlock gallery"
+msgstr "Lukusta gallerii lahti"
+
+msgid "Unlocked"
+msgstr "Lukustamata"
+
+msgid "Unsubscribe from notification by mail"
+msgstr "Tühista teatiste tellimus"
+
+msgid "Unsubscribed"
+msgstr "Tellimus tühistatud"
+
+msgid "Update All"
+msgstr "Uuenda kõik"
+
+msgid "Update Complete"
+msgstr "Uuendus valmis"
+
+msgid "Update albums informations"
+msgstr "Uuenda albumi infot"
+
+msgid "Update in progress... Please wait."
+msgstr "Uuendamine käib... Palun oota."
+
+msgid "Update photos information"
+msgstr "Uuenda foto infot"
+
+msgid "Update to Piwigo %s"
+msgstr "Uuenda Piwigo versioonile %s"
+
+msgid "Updates"
+msgstr "Uuendused"
+
+msgid "Upload Photos"
+msgstr "Laadi üles fotosid"
+
+msgid "Uploaded Photos"
+msgstr "Üleslaaditud fotod"
+
+msgid "Upload"
+msgstr "Laadi üles"
+
+msgid "Used metadata"
+msgstr "Kasutatud metaandmeid"
+
+msgid "User \"%s\" created with \"%s\" like password"
+msgstr "Kasutaja \"%s\" loodud parooliga \"%s\""
+
+msgid "User %s [%s] added."
+msgstr "Kasutaja %s [%s] lisatud."
+
+msgid "User %s [%s] was added to the subscription list."
+msgstr "Kasutaja %s [%s] lisatud tellijaks."
+
+msgid "User %s [%s] was not added to the subscription list."
+msgstr "Kasutajat %s [%s] ei lisatud tellijaks."
+
+msgid "User %s [%s] was not removed from the subscription list."
+msgstr "Kasutaja %s [%s] tellimust ei tühistatud."
+
+msgid "User %s [%s] was removed from the subscription list."
+msgstr "Kasutaja %s [%s] tellimus on tühistatud."
+
+msgid "User comments validation"
+msgstr "Kommentaaride kinnitamine"
+
+msgid "User list"
+msgstr "Kasutajate nimekiri"
+
+msgid "User status"
+msgstr "Kasutaja olek"
+
+msgid "User"
+msgstr "Kasutaja"
+
+msgid "Users"
+msgstr "Kasutajad"
+
+msgid "Validate"
+msgstr "Kinnita"
+
+msgid "Validation"
+msgstr "Kinnitamine"
+
+msgid "Version"
+msgstr "Versioon"
+
+msgid "Virtual Links"
+msgstr "Virtuaalsed lingid"
+
+msgid "Virtual album added"
+msgstr "Virtuaalne album lisatud"
+
+msgid "Virtual album deleted"
+msgstr "Virtuaalne album kustutatud"
+
+msgid "Virtual album name"
+msgstr "Virtuaalse albumi nimi"
+
+msgid "Virtual album"
+msgstr "Virtuaalne album"
+
+msgid "Virtual albums to move"
+msgstr "Virtuaalseid albumeid mida liigutada"
+
+msgid "Visit Gallery"
+msgstr "Külasta galeriid"
+
+msgid "Visit Piwigo project website"
+msgstr "Külasta Piwigo projekti lehekülge"
+
+msgid "Visit language site"
+msgstr "Külasta keelte lehekülge"
+
+msgid "Visit plugin site"
+msgstr "Külasta pluginate lehekülge"
+
+msgid "Visit theme site"
+msgstr "Külasta teemade lehekülge"
+
+msgid "Visited %d times"
+msgstr "Külastatud %d korda"
+
+msgid "WARNING! This plugin does not seem to be compatible with this version of Piwigo."
+msgstr "NB! See plugin ei paista olevat ühilduv praeguse Piwigo versiooniga."
+
+msgid "Waiting"
+msgstr "Ootel"
+
+msgid "Warning: subscribing or unsubscribing will send mails to users"
+msgstr "NB! tellimuste esitamine ja tühistamine saadab kasutajatele eposti"
+
+msgid "Watermark"
+msgstr "Vesimärk"
+
+msgid "Web Form"
+msgstr "Veebiformular"
+
+msgid "Week starts on"
+msgstr "Nädala esimene päev on"
+
+msgid "Who can see these photos?"
+msgstr "Kes saab neid fotosid vaadata?"
+
+msgid "Who can see this photo?"
+msgstr "Kes saab seda fotot vaadata?"
+
+msgid "Width"
+msgstr "Laius"
+
+msgid "With blank value, gallery title will be used"
+msgstr "Kui tühi, siis kasutatakse galerii pealkirja"
+
+msgid "With no album"
+msgstr "Ühegi albumiga"
+
+msgid "With no tag"
+msgstr "Ühegi märksõnaga"
+
+msgid "With no virtual album"
+msgstr "Ühegi virtuaalse albumiga"
+
+msgid "X Position"
+msgstr "X-positsioon"
+
+msgid "X Repeat"
+msgstr "X-kordumine"
+
+msgid "Y Position"
+msgstr "Y-positsioon"
+
+msgid "Year"
+msgstr "Aasta"
+
+msgid "You are running on development sources, no check possible."
+msgstr "Sa jooksutad arenduslähtekoodi, kontroll ei ole võimaldatud."
+
+msgid "You are running the latest version of Piwigo."
+msgstr "Sa jooksutad kõige värskeimat Piwigo versiooni."
+
+msgid "You are using the Browser uploader. Try the <a href=\"%s\">Flash uploader</a> instead."
+msgstr "Sa kasutad brauser-üleslaadijat. Proovi üleslaadija <a href=\"%s\">Flash versiooni</a>."
+
+msgid "You are using the Flash uploader. Problems? Try the <a href=\"%s\">Browser uploader</a> instead."
+msgstr "Sa kasutad üleslaadija Flash versiooni. Probleeme? Proovi <a href=\"%s\">brauser versiooni</a>."
+
+msgid "You can activate only one mobile theme."
+msgstr "Ainult üks mobiilteema võib korraga olla aktiveeritud."
+
+msgid "You can update to Piwigo %s directly, without upgrading to Piwigo %s (recommended)."
+msgstr "Sa võid uuendada Piwigo %s otse, ilma uuendamata versioonile %s (see on soovituslik)."
+
+msgid "You cannot delete your account"
+msgstr "Sa ei saa kustutada seda kontot"
+
+msgid "You cannot move an album in its own sub album"
+msgstr "Album ei saa asuda selle enda sees"
+
+msgid "You have %d orphan tags: %s."
+msgstr "Sul on %d kasutamata jäänud märksõna: %s."
+
+msgid "You have subscribed to receiving notifications by mail."
+msgstr "Sa tellid teavituste saamist epostile."
+
+msgid "You have unsubscribed from receiving notifications by mail."
+msgstr "Sa enam ei telli teavituste saamist epostile."
+
+msgid "You need to confirm deletion"
+msgstr "Sa pead kinnitama kustutuse"
+
+msgid "Zoom"
+msgstr "Suurendus"
+
+msgid "[%s] Visit album %s"
+msgstr "[%s] külastab albumit %s"
+
+msgid "[NBM] Problems or questions"
+msgstr "[NBM] Probleeme või küsimusi"
+
+msgid "add a new watermark"
+msgstr "Lisa uus vesimärk"
+
+msgid "add new photos to caddie"
+msgstr "Lisa fotosid korvisse"
+
+msgid "added"
+msgstr "lisatud"
+
+msgid "albums added in the database"
+msgstr "albumid lisatud andmebaasi"
+
+msgid "albums deleted in the database"
+msgstr "albumid kustutatud andmebaasist"
+
+msgid "all"
+msgstr "kõik"
+
+msgid "an error happened"
+msgstr "Viga tekkis"
+
+msgid "and"
+msgstr "ja"
+
+msgid "any visitor can see this album"
+msgstr "iga külaline võib vaadata seda albumit"
+
+msgid "apply automatic sort order"
+msgstr "rakenda automaatset järjestust"
+
+msgid "associate to group"
+msgstr "seosta rühmaga"
+
+msgid "automatic order"
+msgstr "automaatne järjestus"
+
+msgid "average time"
+msgstr "keskmine aeg"
+
+msgid "between"
+msgstr "vahel"
+
+msgid "bottom left corner"
+msgstr "alumine vasakpoolne nurk"
+
+msgid "bottom right corner"
+msgstr "alumine parempoolne nurk"
+
+msgid "cancel manual order"
+msgstr "ära rakenda automaatset järjestamist"
+
+msgid "clean"
+msgstr "korista"
+
+msgid "confirm"
+msgstr "kinnita"
+
+msgid "create a new album"
+msgstr "loo uus album"
+
+msgid "create a new site"
+msgstr "loo uus sait"
+
+msgid "created"
+msgstr "loodud"
+
+msgid "custom"
+msgstr "Kohandatud"
+
+msgid "default values"
+msgstr "vaikimisi valikud"
+
+msgid "default"
+msgstr "vaikimisi valik"
+
+msgid "delete album"
+msgstr "kustuta album"
+
+msgid "delete photo"
+msgstr "kustuta foto"
+
+msgid "delete this site and all its attached elements"
+msgstr "kustuta see sait ja kõik sellega seotud informatsioon"
+
+msgid "deleted"
+msgstr "kustutatud"
+
+msgid "delete"
+msgstr "kustuta"
+
+msgid "directories + files"
+msgstr "kaustad + failid"
+
+msgid "display maximum informations (added albums and photos, deleted albums and photos)"
+msgstr "kuva võimalikult palju informatsiooni (lisatud albumid ja fotod, kustutad albumid ja fotod)"
+
+msgid "display"
+msgstr "kuva"
+
+msgid "dissociate from group"
+msgstr "eralda rühmast"
+
+msgid "errors during synchronization"
+msgstr "vigu sünkroniseerimisel"
+
+msgid "even already synchronized photos"
+msgstr "juba sünkroniseeritud fotod"
+
+msgid "existing album"
+msgstr "olemas-olev album"
+
+msgid "for the file format"
+msgstr "failivormingule"
+
+msgid "for this file format"
+msgstr "selle failivormingule"
+
+msgid "global mode"
+msgstr "globaalne režiim"
+
+msgid "group \"%s\" added"
+msgstr "grupp \"%s\" lisatud"
+
+msgid "group \"%s\" deleted"
+msgstr "grupp \"%s\" kustutatud"
+
+msgid "group \"%s\" updated"
+msgstr "grupp \"%s\" uuendatud"
+
+msgid "height must be a number superior to"
+msgstr "kõrgus peab olema suurem kui"
+
+msgid "hide details"
+msgstr "peida detailid"
+
+msgid "include child albums"
+msgstr "kaasa alam-albumid"
+
+msgid "include photos with lower privacy level"
+msgstr "kaasa fotod madalama privaatsustasemega"
+
+msgid "jump to album"
+msgstr "mine albumisse"
+
+msgid "jump to photo"
+msgstr "mine fotole"
+
+msgid "leave"
+msgstr "välju"
+
+msgid "manage album photos"
+msgstr "halda albumi fotosid"
+
+msgid "manage sub-albums"
+msgstr "halda alam-albumeid"
+
+msgid "manual order"
+msgstr "käsitsi järjestamine"
+
+msgid "middle"
+msgstr "keskmine"
+
+msgid "modified"
+msgstr "muudatud"
+
+msgid "new"
+msgstr "uus"
+
+msgid "no write access"
+msgstr "puudub kirjutamisõigus"
+
+msgid "none"
+msgstr "puudub"
+
+msgid "nothing"
+msgstr "ei midagi"
+
+msgid "on the %d selected photos"
+msgstr "%d-le valitud fotole"
+
+msgid "on"
+msgstr "nendele"
+
+msgid "only directories"
+msgstr "ainult kaustasid"
+
+msgid "only perform a simulation (no change in database will be made)"
+msgstr "ainult simuleeri (midagi ei muudeta andmebaasis)"
+
+msgid "other"
+msgstr "muu"
+
+msgid "overrides existing values with empty ones"
+msgstr "tühistab praegused väärtused tühjadega"
+
+msgid "pending validation"
+msgstr "kinnituse ootel"
+
+msgid "photos added in the database"
+msgstr "fotosid lisatud andmebaasi"
+
+msgid "photos candidates for metadata synchronization"
+msgstr "kandideerivad fotod metaandmete sünkroniseerimiseks"
+
+msgid "photos deleted from the database"
+msgstr "fotosid kustutatud andmebaasist"
+
+msgid "photos informations synchronized with files metadata"
+msgstr "fotode info sünkroniseeritud failide metaandmetega"
+
+msgid "photos per page"
+msgstr "fotot ühel leheküljel"
+
+msgid "photos updated in the database"
+msgstr "fotosid uuendatud andmebaasis"
+
+msgid "pixels"
+msgstr "piksleid"
+
+msgid "private"
+msgstr "privaatne"
+
+msgid "public"
+msgstr "avalik"
+
+msgid "randomly represented"
+msgstr "albumi juhuslik pisipilt"
+
+msgid "ranks"
+msgstr "hinnanguid"
+
+msgid "registered users"
+msgstr "registreeritud kasutajaid"
+
+msgid "registration date"
+msgstr "registreerimise kuupäev"
+
+msgid "remove author"
+msgstr "kõrvalda autor"
+
+msgid "remove creation date"
+msgstr "kõrvalda loomise kuupäev"
+
+msgid "remove tags"
+msgstr "kõrvalda märksõnad"
+
+msgid "remove this filter"
+msgstr "kõrvalda filter"
+
+msgid "remove title"
+msgstr "kõrvalda pealkiri"
+
+msgid "selection"
+msgstr "valik"
+
+msgid "set to"
+msgstr "sea selleks"
+
+msgid "show details"
+msgstr "näita detaile"
+
+msgid "simple visitors"
+msgstr "lihtsaid külastajaid"
+
+msgid "singly represented"
+msgstr "fikseeritud albumi pisipilt"
+
+msgid "status"
+msgstr "olek"
+
+msgid "sub-albums"
+msgstr "alam-albumid"
+
+msgid "synchronize files metadata with database photos informations"
+msgstr "Sünkroniseeri andmebaasis olevad fotod failide metaandmetega"
+
+msgid "synchronize files structure with database"
+msgstr "Sünkroniseeri failistruktuur andmebaasiga"
+
+msgid "target"
+msgstr "siht"
+
+msgid "test this remote site"
+msgstr "proovi seda kaug-saiti"
+
+msgid "test"
+msgstr "test"
+
+msgid "the forum"
+msgstr "foorum"
+
+msgid "the wiki"
+msgstr "viki"
+
+msgid "top left corner"
+msgstr "ülemine vasakpoolne nurk"
+
+msgid "top right corner"
+msgstr "ülemine parempoolne nurk"
+
+msgid "total time"
+msgstr "aeg kokku"
+
+msgid "unit mode"
+msgstr "üksik-režiim"
+
+msgid "unknown"
+msgstr "tundmatu"
+
+msgid "unset"
+msgstr "tühista"
+
+msgid "update the database from files"
+msgstr "uuenda andmebaas failidega"
+
+msgid "user \"%s\" added"
+msgstr "kasutaja \"%s\" lisati"
+
+msgid "user_status_generic"
+msgstr "Üldine"
+
+msgid "width must be a number superior to"
+msgstr "laius peab olema suurem kui"
+
+msgid "wrong filename"
+msgstr "vigane failinimi"
+
+msgid "Albums authorized thanks to group associations"
+msgstr "Autoriseeritud ligipääs kaustadele kuna oled grupiliige"
+
+msgid "Landscape"
+msgstr "Maastik"
+
+msgid "Manage photos"
+msgstr "Halda fotosid"
+
+msgid "Minimum height"
+msgstr "Miinimum kõrgus"
+
+msgid "Minimum width"
+msgstr "Miinimum laius"
+
+msgid "Number of albums per page"
+msgstr "Albumeid lehekülje kohta"
+
+msgid "Panorama"
+msgstr "Panoraama"
+
+msgid "Portrait"
+msgstr "Portree"
+
+msgid "View in gallery"
+msgstr "Vaata galeriis"
+
+msgid "Ratio"
+msgstr "Suhe"
+
+msgid "Operation in progress"
+msgstr "Kohandusi viiakse läbi.\r\n"
+
+msgid "Keep in touch with Piwigo project, subscribe to Piwigo Announcement Newsletter. You will receive emails when a new release is available (sometimes including a security bug fix, it's important to know and upgrade) and when major events happen to the project. Only a few emails a year."
+msgstr "Hoia end Piwigo projektiga kursis! Telli Piwigo teadaannete infolehte. Sulle saadetakse meilile teadaanne kui uus Piwigo väljalase on saadaval (teinekord teavitatakse tähtsatest turvaparandustest) või muu suur sündmus toimub. Ainult paar infolehte aastas."
+
+msgid "ReGalAndroid (RemoteGallery client for Android) is an open source (GPL v3) Piwigo client for the Android platform."
+msgstr "ReGalAndroid (RemoteGallery client for Android) on vaba tarkvara litsentsiga (GPL v3) Piwigo klient Android süsteemile."
+
+msgid "Prepared time for list of users to send mail is limited. Others users are not listed."
+msgstr "Teavitusmeilide saatmise aeg on piiratud. Ainult saadetud kasutajad loetletakse."
+
+msgid "reduce to single existing albums"
+msgstr "kahanda ainult olemasolevateks albumiteks"
+
+msgid "iPhoto is the default photo manager on MacOSX. The Piwigo export plugin let you create new albums and export your photos directly from iPhoto to your Piwigo photo gallery."
+msgstr "iPhoto on MacOSX-i vaikimisi fotohaldur. Piwigo eksport plugin võimaldab sul luua uusi albumeid ja laadida üles oma fotod otse iPhotost."
+
+msgid "digiKam is designed for photographers who want to view, manage, edit, enhance, organize, tag, and share photographs."
+msgstr "digiKam on mõeldud fotograafidele, kes tahavad vaadata, hallata, töödelda, toimetada, parandada, organiseerida ning jagada oma pilte."
+
+msgid "digiKam is an advanced digital photo management free software for Linux, Windows, and MacOSX."
+msgstr "digiKam on vaba tarkvaraline rakendus digipiltide haldamiseks, saadaval nii GNU/Linuxile, Windowsile kui ka MacOSX-ile."
+
+msgid "You need to upgrade your system to take full advantage of the application else the application will not work correctly, or not at all"
+msgstr "Uuendamine on soovitatud rakendusest parima saamiseks"
+
+msgid "Toggle 'default group' property"
+msgstr "Pööra 'default group' omadus ümber"
+
+msgid "To export your photos from digiKam to Piwigo, simply install digiKam and the Kipi-plugins."
+msgstr "Võimaldada lihtsat eksportimist digiKamist Piwigosse, paigalda laiendused digiKam ja Kipi-plugins."
+
+msgid "Subscribers could be listed (available) only if there is new elements to notify."
+msgstr "Tellijate loetelu on võimalik ainult siis, kui on uusi teavitusi. "
+
+msgid "Replacement of original templates by customized templates from template-extension subfolder"
+msgstr "Asenda originaalšabloonid kohandatud šablooniga (template-extension kaustast)"
+
+msgid "between %.2f and %.2f"
+msgstr "%.2f ja %.2f vahel"
+
+msgid "between %d and %d pixels"
+msgstr "%d ja %d pikslite vahel"
+
+msgid "This group will be unset to default"
+msgstr "Seda rühma ei kasutata edaspidi vaikerühmana"
+
+msgid "Type here the name of the new group"
+msgstr "Nimeta uus rühm"
+
+msgid "Merge selected groups"
+msgstr "Liida valitud rühmad"
+
+msgid "No groups selected, no actions possible."
+msgstr "Ühtegi rühma pole valitud, seega ei saa midagi teha."
+
+msgid "No members to manage"
+msgstr "Puudub liikmeid keda hallata"
+
+msgid "Please select at least two groups"
+msgstr "Vali vähemalt kaks rühma"
+
+msgid "Rename"
+msgstr "Nimeta ümber"
+
+msgid "This group will be set to default"
+msgstr "See rühm valitakse vaikerühmaks"
+
+msgid "Manage the members"
+msgstr "Halda liikmeid"
+
+msgid "Duplicate"
+msgstr "Tee koopia"
+
+msgid "Purge user cache"
+msgstr "Tühjenda vahemälu"
+
+msgid "The picture dimensions will be reduced to %dx%d pixels."
+msgstr "Pildi mõõtmed kahanetakse %dx%d piksli peale."
+
+msgid "Resize after upload disabled due to the use of GD as graphic library"
+msgstr "Pildu suuruse muutmine pärast üles laadimist on välja lülitatud, sest kasutusel on GD graafika arhiiv."
+
+msgid "Select at least one tag"
+msgstr "Vali vähemalt üks märksõna"
+
+msgid "Basic settings"
+msgstr "Põhilised seaded"
+
+msgid "General"
+msgstr "Üldine"
+
+msgid "Mail theme"
+msgstr "Maili teema"
+
+msgid "on the %d selected users"
+msgstr "valitud %d kasutajatest"
+
+msgid "Showing %s to %s of %s users"
+msgstr "Kuvatakse kasutjatest %s kasutajad alates %s kuni %s"
+
+msgid "Update user"
+msgstr "Uuenda kasutaja"
+
+msgid "User %s added"
+msgstr "Kasutja %s lisatud"
+
+msgid "User %s updated"
+msgstr "Ksautaja %s uuendatud"
+
+msgid "Users modified"
+msgstr "Kasutaja muudetud"
+
+msgid "%d of %d users selected"
+msgstr "kasutajaid %d kasutajatest %d valitud"
+
+msgid "(filtered from %s total users)"
+msgstr "(filtreeritud %s kasutajatest)"
+
+msgid "All %d users are selected"
+msgstr "Kõik %d kasutajad on valitud"
+
+msgid "Change password"
+msgstr "Muuda salasõna"
+
+msgid "Change username"
+msgstr "Muuda kasutajanime"
+
+msgid "Last visit on %s, %s."
+msgstr "Viimane külastus %s, %s."
+
+msgid "Loading..."
+msgstr "Laadimine..."
+
+msgid "No matching user found"
+msgstr "Vastet ei leitud"
+
+msgid "No user selected of %d users"
+msgstr "Kasutajat ei valitud etteantud %d kasutajatest"
+
+msgid "No users selected, no actions possible."
+msgstr "Kasutajaid pole valitud, ei saa midagi teha"
+
+msgid "Password updated"
+msgstr "Parool uuendatud"
+
+msgid "Registered on %s, %s."
+msgstr "Registreeritud %s, %s."
+
+msgid "Show %s users"
+msgstr "Näita %s kasutajaid"
+
+msgid "Close user details"
+msgstr "Peida kasutaja üksikasjad"
+
+msgid "Open user details"
+msgstr "Ava kasutaja üksikasjad"
+
+msgid "close"
+msgstr "sulge"
+
+msgid "Activate it now"
+msgstr "Aktiveeri nüüd"
+
+msgid "Allow users to add a link to their website"
+msgstr "Luba kasutajatel lisada linke nende netilehtedele"
+
+msgid "Empty caddie"
+msgstr "Tühi korv"
+
+msgid "Impossible to deactivate the default theme."
+msgstr "Võimatu vaiketeemat välja lülitada"
+
+msgid "Mail address is mandatory for registration"
+msgstr "Registreerimiseks on e-maili aadress kohustuslik"
+
+msgid "No and unlock sub-albums"
+msgstr "Nimeta ja ava alam-albumid"
+
+msgid "The settings for the guest are from the %s user"
+msgstr "Külalise seaded on kasutajalt %s"
+
+msgid "based on"
+msgstr "põhineb"
+
+msgid "Upload in progress"
+msgstr "Laeb üles"
+
+msgid "between %s and %s MB"
+msgstr "%s ja %s MB vahel"
+
+msgid "date & time"
+msgstr "kuupäev ja kellaaeg"
+
+msgid "file name"
+msgstr "faili nimi"
+
+msgid "width & height"
+msgstr "laius ja kõrgus"
+
+msgid "Share / Send your photos directly from your Mac Os X (10.10 and following) to Piwigo"
+msgstr "Jaga / Saada oma fotod Piwigosse otse süsteemist MAC OS X (10.10 ja hilisemad) "
+
+msgid "Storage used"
+msgstr "Kasutatud maht"
+
+msgid "Time has come to update your Piwigo with version %s, go to %s"
+msgstr "On tulnud aeg uuendada Piwigo versiooniga %s, liigu edasi %s"
+
+msgid "Y Repeat"
+msgstr "Y Korda"
+
+msgid "checksum"
+msgstr "kontrollsumma"
+
+msgid "delete album and all %d photos, even the %d associated to other albums"
+msgstr "kustuta album ja kõik %d fotot, isegi teiste albumitega seotud %d"
+
+msgid "delete album and the %d orphan photos"
+msgstr "kustuta album ja %d orvuks jäänud fotot"
+
+msgid "delete only album, not photos"
+msgstr "kustuta ainult album, kuid mitte fotod"
+
+msgid "orphans to delete"
+msgstr "orvuks jäänud fotod kustutamiseks"
+
+msgid "Confirm deletion"
+msgstr "Kinnita kustutamine"
+
+msgid "Dashboard"
+msgstr "Töölaud"
+
+msgid "Delete %d orphan photos"
+msgstr "Kustuta orvuks jäänud %d fotot"
+
+msgid "Delete album \"%s\" and its %d sub-albums."
+msgstr "Kustuta album \"%s\" ja tema %d all-album."
+
+msgid "Delete album \"%s\"."
+msgstr "Kustuta album \"%s\"."
+
+msgid "Display form"
+msgstr "Näita vormi"
+
+msgid "Edit user"
+msgstr "Muuda kasutaja andmeid"
+
+msgid "It only takes a few clicks."
+msgstr "vaid mõni klikk"
+
+msgid "No filter on album. Select one or type to search"
+msgstr "Albumis puudub filter. Vali üks või kirjuta otsingureale"
+
+msgid "No recipient selected"
+msgstr "Adressaate ei ole valitud"
+
+msgid "No user is permitted to see this private album"
+msgstr "Ükski kasutaja ei näe seda privaat albumit"
+
+msgid "Orphans"
+msgstr "Orvuks jäänud fotod"
+
+msgid "Piwigo %s is available, please update"
+msgstr "Piwigo %s on saadaval, palun uuenda"
+
+msgid "Piwigo Remote Sync is able to upload a whole folder hierarchy. If you run it again, only new photos will be uploaded."
+msgstr "Piwigo Remote Sync saab üles laadida kogu kausta hierarhia. Kui käivitad selle uuesti, siis laetakse ainult uued fotod"
+
+msgid "Recipients"
+msgstr "Saajad"
+
+msgid "Running on an up-to-date Piwigo is important for security."
+msgstr "Värske Piwigo versiooni kasutamine on turvalisuse huvides oluline"
+
+msgid "No tags selected, no actions possible."
+msgstr "Silti ei ole valitud, toiming ei ole võimalik"
+
+msgid "Select tags"
+msgstr "Vali sildid"
+
+msgid "For security reason, authentication keys do not work for administrators."
+msgstr "Turvalisuse huvides autenteerimise võti administraatorite puhul ei toimi."
+
+msgid "(determined from photos)"
+msgstr "(määratud fotode järgi)"
+
+msgid "or"
+msgstr "või"
+
+msgid "Welcome!"
+msgstr "Tere tulemast!"
+
+msgid "Synchronization in progress"
+msgstr "Toimub sünkroniseerimine"
+
+msgid "Piwigo requires an album to add photos."
+msgstr "Fotode lisamiseks on vaja luua album"
+
+msgid "Display category date"
+msgstr "Näita kategooria kuupäeva"
+
+msgid "Deletion in progress"
+msgstr "Toimub kustutamine"
+
+msgid "Create a first album"
+msgstr "Loo esimene album"
+
+msgid "... or hide this link"
+msgstr "... või peida see link"
+
+msgid "Name is already taken"
+msgstr "Nimi on juba kasutuses"
+
+msgid "No albums found"
+msgstr "Albumeid ei leidnud"
+
+msgid "No, I have changed my mind"
+msgstr "Ei, muutsin meelt"
+
+msgid "Open in gallery"
+msgstr "Ava galerii"
+
+msgid "Other"
+msgstr "Muu"
+
+msgid "Please upgrade your PHP version before any update."
+msgstr "Palun uuenda oma PHP versioon enne muid uuendusi"
+
+msgid "Portraits"
+msgstr "Portreed"
+
+msgid "Search albums"
+msgstr "Otsi albumites"
+
+msgid "in gallery"
+msgstr "galeriis"
+
+msgid "Yes, delete"
+msgstr "Jah, kustuta"
+
+msgid "Yes, I am sure"
+msgstr "Jah, olen kindel"
+
+msgid "You don't have access to this photo"
+msgstr "Sul puudub fotole juurdepääs"
+
+msgid "Are you sure you want to delete the language \"%s\"?"
+msgstr "Kas oled kindel, et soovid kustutada \"%s\" keele?"
+
+msgid "Are you sure you want to delete this?"
+msgstr "Kas oled kindel, et soovid seda kustutada? "
+
+msgid "Are you sure you want to delete the theme \"%s\"?"
+msgstr "Kas oled kindel, et soovid kustutada teema \"%s\"?"
+
+msgid "Are you sure you want to delete this theme?"
+msgstr "Kas oled kindel, et soovid kustutada selle teema?"
+
+msgid "Are you sure you want to delete the user \"%s\"?"
+msgstr "Kas oled kindel, et soovid kustutada kasutaja \"%s\"?"
+
+msgid "Select"
+msgstr "Vali"
+
+msgid "No plugins found"
+msgstr "Ei leitud ühtegi pluginat"
+
+msgid "You have %s inactive plugins"
+msgstr "Sul on %s aktiveerimata pluginat"
+
+msgid "Show inactive plugins"
+msgstr "Näita aktiveerimata pluginaid"
+
+msgid "Are you sure you want to delete group \"%s\"?"
+msgstr "Oled sa kindel, et soovid kustutada grupi \"%s\"?"
+
+msgid "Are you sure you want to delete all sizes?"
+msgstr "Oled sa kindel, et soovid kustutada kõik suurused?"
+
+msgid "<b>%d</b> tags found"
+msgstr "Leitud <b>%d</b> märksõna"
+
+msgid "<b>%d</b> tag selected"
+msgstr "Valitud <b>%d</b> märksõna"
+
+msgid "<b>%d</b> tag found"
+msgstr "Leitud <b>%d</b> märksõna"
+
+msgid "<b>%d</b> albums found"
+msgstr "Leiti <b>%d</b> albumit"
+
+msgid "<b>1</b> album found"
+msgstr "Leiti <b>1</b> album"
+
+msgid "%s file type"
+msgstr "%s faili tüüp"
+
+msgid "Album search tool"
+msgstr "Albumi otsimise tööriist"
+
+msgid "Add Album"
+msgstr "Lisa album"
+
+msgid "%d sub-albums"
+msgstr "%d alam-albumit"
+
+msgid "%s GB used"
+msgstr "%s GB kasutatud"
+
+msgid "%s MB used"
+msgstr "%s MB kasutatud"
+
+msgid "%d checksums were added"
+msgstr "lisati %d kontrollsummat"
+
+msgid "%d photos"
+msgstr "%d fotot"
+
+msgid " (copy %s)"
+msgstr "(koopia %s)"
+
+msgid " (copy)"
+msgstr "(koopia)"
+
+msgid "You have %d orphan tags %s"
+msgstr "Sul on %d kasutamata jäänud märksõna: %s"
+
+msgid "Delete orphan tags ?"
+msgstr "Kustuta orvuks jäänud märksõnad?"
+
+msgid "Delete album"
+msgstr "Kustuta album"
+
+msgid "Average last 12 months"
+msgstr "Viimase 12 kuu keskmine"
+
+msgid "Choose which tag to merge these tags into"
+msgstr "Vali millisesse märksõnasse need märksõnad mestitakse"
+
+msgid "The %d tags on this page are selected"
+msgstr "Sellel lehel on valitud märksõnad %d"
+
+msgid "Tags \\{%s\\} succesfully deleted"
+msgstr "Märksõnad \\{%s\\} edukalt kustutatud"
+
+msgid "Tag \"%s1\" renamed in \"%s2\""
+msgstr "Märksõna \\\"%s1\\\" ümbernimetatud \\\"%s2\\\""
+
+msgid "Tag(s) \\{%s1\\} succesfully merged into \"%s2\""
+msgstr "Märksõna(d) \\{%s1\\} edukalt mestitud \"%s2\"'sse"
+
+msgid "Tag Manager"
+msgstr "Märksõnade haldur"
+
+msgid "Tag \"%s\" created"
+msgstr "Märksõna \"%s\" loodud"
+
+msgid "Tag \"%s\" succesfully deleted"
+msgstr "Märksõna \\\"%s\\\" kustutatud"
+
+msgid "Selection mode"
+msgstr "Valiku režiim"
+
+msgid "Compare mode"
+msgstr "Võrdlus režiim"
+
+msgid "Compact View"
+msgstr "Kompaktvaade"
+
+msgid "Storage"
+msgstr "Salvestusmaht"
+
+msgid "Compute %d missing checksums"
+msgstr "Arvuta %d puuduvat kontrollsummat"
+
+msgid "checksums to add"
+msgstr "kontrollsummat lisada"
+
+msgid "With no checksum"
+msgstr "Ilma kontrollsummata"
+
+msgid "Some checksums are missing."
+msgstr "Mõned kontrollsummad on puudu."
+
+msgid "Are you sure you want to update all extensions?"
+msgstr "Oled sa kindel, et soovid uuendada kõik laiendused?"
+
+msgid "Clear Selection"
+msgstr "Tühjenda valik"
+
+msgid "Cache"
+msgstr "Vahemälu"
+
+msgid "Are you sure you want to delete this site?"
+msgstr "Oled sa kindel, et soovid kustutada selle terve saidi?"
+
+msgid "Are you sure you want to delete the ratings of the user \"%s\"?"
+msgstr "Oled sa kindel, et soovid kustutada kasutaja \"%s\" pandud hinded?"
+
+msgid "Are you sure you want to install the plugin \"%s\"?"
+msgstr "Oled sa kindel, et soovid paigaldada plugina \"%s\"?"
+
+msgid "Are you sure you want to lock the gallery?"
+msgstr "Oled sa kindel, et soovid galerii lukustada?"
+
+msgid "This is already the default theme"
+msgstr "See juba on vaike teema."
+
+msgid "in administration"
+msgstr "administreerimisel"
+
+msgid "Close"
+msgstr "Sulge"
+
+msgid "Email Adress"
+msgstr "E-posti aadress"
+
+msgid "Email"
+msgstr "E-post"
+
+msgid "Always have a backup of your database and files."
+msgstr "Veendu, et sul oleks alati varundus andmebaasist ja failidest"
+
+msgid "Apply an automatic order to root albums"
+msgstr "Rakenda automaatset järjestust juuralbumitele"
+
+msgid "Apply to direct sub-albums"
+msgstr "Rakenda otsestele alamalbumitele"
+
+msgid "Apply to root albums"
+msgstr "Rakenda juuralbumitele"
+
+msgid "Apply to the whole hierarchy"
+msgstr "Rakenda tervele hierarhiale"
+
+msgid "Apr"
+msgstr "apr"
+
+msgid "Are you sure you want to delete the plugin \"%s\"?"
+msgstr "Kas oled kindel, et tahad kustutada plugina \"%s\"?"
+
+msgid "Are you sure you want to restore the plugin \"%s\"?"
+msgstr "Kas oled kindel, et tahad taastada plugina \"%s\"?"
+
+msgid "Are you sure you want to restore this plugin?"
+msgstr "Kas oled kindel, et tahad taastada selle plugina?"
+
+msgid "Are you sure you want to restore to default settings?"
+msgstr "Kas oled kindel, et tahad taastada vaikeseadistuse?"
+
+msgid "Are you sure you want to uninstall the plugin \"%s\"?"
+msgstr "Kas oled kindel, et tahad eemaldada plugina \"%s\"?"
+
+msgid "Are you sure you want to unlock the gallery?"
+msgstr "Kas oled kindel, et tahad avada galerii?"
+
+msgid "Associate User"
+msgstr "Kaaskasutaja"
+
+msgid "At least 2 selected tags are needed to merge"
+msgstr "Vähemalt 2 märksõna peab liitmiseks olema valitud"
+
+msgid "Aug"
+msgstr "aug"
+
+msgid "Cache size"
+msgstr "Vahemälu suurus"
+
+msgid "Can be shared by several individuals without conflict (they cannot change the password)."
+msgstr "Võimalik jagada mitme isiku poolt ilma konfliktideta(nad ei saa muuta parooli)"
+
+msgid "Certification higher or equal to"
+msgstr "Suurem või võrdne sertifikaat"
+
+msgid "Change Password"
+msgstr "Vaheta parool"
+
+msgid "Album name must not be empty"
+msgstr "Albumil peab olema nimi"
+
+msgid "Activated"
+msgstr "Aktiveeritud"
+
+msgid "Activated plugin list"
+msgstr "Aktiveeritud pluginate loetelu"
+
+msgid "Add New Plugin"
+msgstr "Lisa uus plugin"
+
+msgid "Add User"
+msgstr "Lisa kasutaja"
+
+msgid "Add a new user"
+msgstr "Lisa uus kasutaja"
+
+msgid "Current Version"
+msgstr "Praegune versioon"
+
+msgid "Deactivated"
+msgstr "Deaktiveeritud"
+
+msgid "Dec"
+msgstr "dets"
+
+msgid "Advanced filters"
+msgstr "Täpsemad filtrid"
+
+msgid "Delete these sizes"
+msgstr "Kustuta need suurused"
+
+msgid "Delete user"
+msgstr "Kustuta kasutaja"
+
+msgid "Selected user"
+msgstr "Valitud kasutaja"
+
+msgid "Show"
+msgstr "Näita"
+
+msgid "User associated"
+msgstr "Kasutaja seotud"
+
+msgid "User updated"
+msgstr "Kasutaja uuendatud"
+
+msgid "Version %s"
+msgstr "Versioon %s"
+
+msgid "Videos"
+msgstr "Videod"
+
+msgid "Visit"
+msgstr "Külastus"
+
+msgid "Visit history"
+msgstr "Külastusajalugu"
+
+msgid "Visited"
+msgstr "Külastanud"
+
+msgid "Yes, rename"
+msgstr "Jah, nimeta ümber"
+
+msgid "Your selection"
+msgstr "Sinu valik"
+
+msgid "add"
+msgstr "lisama"
+
+msgid "and %d more"
+msgstr "ja %d veel"
+
+msgid "and %s others"
+msgstr "ja %s teist"
+
+msgid "%d tags deleted"
+msgstr "%d märksõnad kustutatud"
+
+msgid "%d tags edited"
+msgstr "%d märksõnad muudetud"
+
+msgid "%d tags moved"
+msgstr "%d märksõnad liigutatud"
+
+msgid "%d user added"
+msgstr "%d kasutaja lisatud"
+
+msgid "%d user edited"
+msgstr "%d kasutaja muudetud"
+
+msgid "%d user logged in"
+msgstr "%d kasutaja logis sisse"
+
+msgid "%d user logged out"
+msgstr "%d kasutaja logis välja"
+
+msgid "%d users added"
+msgstr "%d kasutajat lisatud"
+
+msgid "%d users edited"
+msgstr "%d kasutajat muudetud"
+
+msgid "%d album added"
+msgstr "%d album lisatud"
+
+msgid "%d album deleted"
+msgstr "%d album kustutatud"
+
+msgid "%d album edited"
+msgstr "%d album muudetud"
+
+msgid "%d albums added"
+msgstr "%d albumid lisatud"
+
+msgid "%d albums deleted"
+msgstr "%d albumid kustatud"
+
+msgid "%d albums edited"
+msgstr "%d albumid muudetud"
+
+msgid "%d group added"
+msgstr "%d grupp lisatud"
+
+msgid "%d group deleted"
+msgstr "%d grupp kustutatud"
+
+msgid "%d group edited"
+msgstr "%d grupp muudetud"
+
+msgid "%d group moved"
+msgstr "%d grupp liigutatud"
+
+msgid "%d groups added"
+msgstr "%d grupid lisatud"
+
+msgid "%d groups deleted"
+msgstr "%d grupid kustatud"
+
+msgid "%d groups edited"
+msgstr "%d grupid muudetud"
+
+msgid "%d groups moved"
+msgstr "%d grupid liigutatud"
+
+msgid "%d tag edited"
+msgstr "%d märksõna muudetud"
+
+msgid "%d tag moved"
+msgstr "%d märksõna liigutatud"
+
+msgid "%d tags added"
+msgstr "%d märksõna lisatud"
+
+msgid "%d photos moved"
+msgstr "%d fotot liigutatud"
+
+msgid "%d photo added"
+msgstr "%d foto lisatud"
+
+msgid "%d photo deleted"
+msgstr "%d foto kustatud"
+
+msgid "%d photo edited"
+msgstr "%d foto muudetud"
+
+msgid "%d photo moved"
+msgstr "%d foto liigutatud"
+
+msgid "%d photos added"
+msgstr "%d fotot lisatud"
+
+msgid "%d photos deleted"
+msgstr "%d fotot kustutatud"
+
+msgid "%d photos edited"
+msgstr "%d fotot muudetud"
+
+msgid "%d tag added"
+msgstr "%d märksõna lisatud"
+
+msgid "%d tag deleted"
+msgstr "%d märksõna kustutatud"
+
+msgid "Set as default"
+msgstr "Sea vaikimisi"
+
+msgid "This photo no longer exists"
+msgstr "Seda fotot enam ei eksisteeri"
+
+msgid "Theme"
+msgstr "Teema"
+
+msgid "Sep"
+msgstr "sept"
+
+msgid "Downloaded"
+msgstr "Allalaetud"
+
+msgid "Edit"
+msgstr "Muuda"
+
+msgid "Edit guest user"
+msgstr "Muuda külaliskasutajat"
+
+msgid "Edit photo #%s"
+msgstr "Muuda fotot #%s"
+
+msgid "Edited on %s"
+msgstr "Muudetud %s"
+
+msgid "Equivalent to deactivation. The user is still in the list, but can no longer log in."
+msgstr "Võrde deaktiveerimisega. Kasutaja on nimekirjas, kuid ei saa enam sisselogida."
+
+msgid "Extensions"
+msgstr "Lisad"
+
+msgid "Feb"
+msgstr "veebr"
+
+msgid "File type: %s"
+msgstr "Failitüüp: %s"
+
+msgid "Filters"
+msgstr "Filtrid"
+
+msgid "Generate random password"
+msgstr "Genereeri juhuslik salasõna"
+
+msgid "Group \"%s\" succesfully deleted"
+msgstr "Grupi \"%s\" kustutamine oli edukas"
+
+msgid "Group added"
+msgstr "Grupp lisatud"
+
+msgid "Group renamed"
+msgstr "Grupp on ümber nimetatud"
+
+msgid "Hide sub-albums"
+msgstr "Peida alamalbumid"
+
+msgid "Install Piwigo on mobile"
+msgstr "Paigalda Piwigo mobiilile"
+
+msgid "Jan"
+msgstr "jaan"
+
+msgid "Jul"
+msgstr "juuli"
+
+msgid "Jun"
+msgstr "juuni"
+
+msgid "Language"
+msgstr "Keel"
+
+msgid "Last visit"
+msgstr "Viimane külastus"
+
+msgid "Latest Piwigo news"
+msgstr "Hiljutised Piwigo uudised"
+
+msgid "Manage album photos"
+msgstr "Halda albumi fotosid "
+
+msgid "Manage sub-albums"
+msgstr "Halda alamalbumeid"
+
+msgid "Manage users"
+msgstr "Halda kasutajaid"
+
+msgid "Manage users with user manager"
+msgstr "Halda kasutajaid kasutajahalduse abil"
+
+msgid "Merge"
+msgstr "Liitma"
+
+msgid "More information"
+msgstr "Lisainformatsioon"
+
+msgid "Name field must not be empty"
+msgstr "Nime väli ei tohi olla tühi"
+
+msgid "No format for this picture"
+msgstr "Sellel pildil puudub suurus"
+
+msgid "No plugin activated"
+msgstr "Ükski plugin ei ole aktiveeritud"
+
+msgid "No tag found"
+msgstr "Märksõna ei leitud"
+
+msgid "No picture found with the following name : %s."
+msgstr "Pilti nimega %s ei leitud"
+
+msgid "New user added"
+msgstr "Uus kasutaja lisatud"
+
+msgid "Nov"
+msgstr "nov"
+
+msgid "Oct"
+msgstr "okt"
+
+msgid "May"
+msgstr "mai"
+
+msgid "Mar"
+msgstr "märts"
+
+msgid "edit"
+msgstr "muuda"
+
+msgid "Created"
+msgstr "Loodud"
+
+msgid "Requires PHP %s"
+msgstr "Nõuab PHP %s"
+
+msgid "Rename \"%s\""
+msgstr "Nimeta \"%s\" ümber"
+
+msgid "Remove thumbnail"
+msgstr "Eemalda pisipilt"
+
+msgid "Registered"
+msgstr "Registreeritud"
+
+msgid "Purge Cache"
+msgstr "Puhasta vahemälu"
+
+msgid "%s MB"
+msgstr "%s MB"
+
+msgid "%sMB"
+msgstr "%s MB"
+
+msgid "%sGB"
+msgstr "%s GB"
+
+msgid "Each email sent will contain its own automatic authentication key on links, valid for %s."
+msgstr "Iga saadetud e-kiri sisaldab linkidel oma automaatset autentimisvõtit, mis kehtib %s jaoks."
+
+msgid "Error when trying to detect formats"
+msgstr "Viga vormingute tuvastamisel"
+
+msgid "Formats"
+msgstr "Vormingud"
+
+msgid "Expand"
+msgstr "Laienda"
+
+msgid "Global Gallery Actions"
+msgstr "Globaalsed galeriitoimingud"
+
+msgid "Details"
+msgstr "Detailid"
+
+msgid "login"
+msgstr "Logi sisse"
+
+msgid "move"
+msgstr "liiguta"
+
+msgid "months ago"
+msgstr "kuid tagasi"
+
+msgid "logout"
+msgstr "Logi välja"
+
+msgid "While restoring this plugin, it will be reset to its original parameters and associated data is going to be reset"
+msgstr "Selle pistikprogrammi taastamise ajal lähtestatakse selle algsed parameetrid ja seotud andmed lähtestatakse"
+
+msgid "You have %s1 orphan : %s2"
+msgstr "Teil on %s1 orb: %s2"
+
+msgid "between %s and %s"
+msgstr "%s ja %s vahel"
+
+msgid "deletion"
+msgstr "kustutamine"
+
+msgid "calculated"
+msgstr "arvutatud"
+
+msgid "action successfully performed."
+msgstr "toiming edukalt sooritatud."
+
+msgid "%d files"
+msgstr "%d faili"
+
+msgid "%d Activities"
+msgstr "%d tegevust"
+
+msgid "Modified"
+msgstr "Muudetud"
+
+msgid "%d Activity"
+msgstr "%d tegevus"
+
+msgid "%d formats uploaded for %d photos"
+msgstr "%d foto jaoks on üles laaditud %d vormingut"
+
+msgid "%d in whole branch"
+msgstr "%d terves harus"
+
+msgid "<b>%d+</b> albums found, try to refine the search"
+msgstr "Leiti <b>%d+</b> albumit, proovige otsingut täpsustada"
+
+msgid "<b>%d</b> filtered user"
+msgstr "<b>%d</b> filtreeritud kasutaja"
+
+msgid "<b>%d</b> filtered users"
+msgstr "<b>%d</b> filtreeritud kasutajat"
+
+msgid "Activate button \"%s\""
+msgstr "Aktiveeri nupp \"%s\""
+
+msgid "Activity peak in the last weeks"
+msgstr "Viimaste nädalate aktiivsuse tipp"
+
+msgid "Activity time from"
+msgstr "Tegevusaeg alates"
+
+msgid "Add another set of formats"
+msgstr "Lisage veel üks vormingute komplekt"
+
+msgid "Add as filter"
+msgstr "Lisa filtrina"
+
+msgid "Add formats"
+msgstr "Lisage vorminguid"
+
+msgid "Additional filters"
+msgstr "Täiendavad filtrid"
+
+msgid "All admins"
+msgstr "Kõik administraatorid"
+
+msgid "Allow comments for sub-albums"
+msgstr "Alamalbumite kommentaaride lubamine"
+
+msgid "Authorize comments"
+msgstr "Luba kommentaarid"
+
+msgid "Comments allowed for sub-albums"
+msgstr "Kommentaarid on alamalbumite jaoks lubatud"
+
+msgid "Comments disallowed for sub-albums"
+msgstr "Kommentaarid on alamalbumite puhul keelatud"
+
+msgid "Create a sub-album of \"%s\""
+msgstr "Loo albumist \"%s\" alamalbum"
+
+msgid "Create a new album at root"
+msgstr "Loo uus album juurkausta"
+
+msgid "%d including sub-albums"
+msgstr "%d, sealhulgas alamalbumid"
+
+msgid "%d pictures in sub-albums"
+msgstr "%d pilti alamalbumis"
+
+msgid "%d users logged in"
+msgstr "%d kasutajat logisid sisse"
+
+msgid "%d users logged out"
+msgstr "%d kasutajat logisid välja"
+
+msgid "%s line"
+msgstr "%s rida"
+
+msgid "%s lines"
+msgstr "%s rida"
+
+msgid "%s other tags available.."
+msgstr "Saadaval on veel %s silti..."
+
+msgid "%s status is required to edit parameters."
+msgstr "Parameetrite muutmiseks on vajalik %s olek."
+
+msgid "%s plugins found"
+msgstr "Leiti <b>%s</b> pistikprogrammi"
+
+msgid "%s plugin found"
+msgstr "Leiti pistikprogramm <b>%s</b>"
+
+msgid "%s pixels, %.2f MB"
+msgstr "%s pikslit, %.2f MB"
+
+msgid "Activity"
+msgstr "Tegevus"
+
+msgid "Locked album"
+msgstr "Lukustatud album"
+
+msgid "Keep them"
+msgstr "Hoia neid"
+
+msgid "Groups \\{%s\\} succesfully deleted"
+msgstr "Grupid \\{%s\\} on edukalt kustutatud"
+
+msgid "Detect and avoid duplicates during upload"
+msgstr "Tuvastage ja vältige üleslaadimise ajal duplikaate"
+
+msgid "Disallow comments for sub-albums"
+msgstr "Keela alamalbumite kommentaarid"
+
+msgid "Dissociate user from this group"
+msgstr "Eralda kasutaja sellest grupist"
+
+msgid "Piwigo is also on mobile."
+msgstr "Piwigo on ka mobiilis."
+
+msgid "User \"%s\" dissociated from this group"
+msgstr "Kasutaja \"%s\" eemaldati sellest grupist"
+
+msgid "never calculated"
+msgstr "pole kunagi arvutatud"
+
+msgid "Unlocked album"
+msgstr "Avatud album"
+
+msgid "Webmaster status required"
+msgstr "Nõutav veebihalduri staatus"
+
+msgid "If anything bad happens during the update, you would be able to restore a backup."
+msgstr "Kui värskendamise ajal midagi juhtub, siis saate varukoopiast taastada."
+
+msgid "Download all activities"
+msgstr "Laadige alla kõik tegevused"
+
+msgid "Displays a banner to install or open the official Piwigo app"
+msgstr "Kuvab bänneri ametliku Piwigo rakenduse installimiseks või avamiseks"
+
+msgid "Display album date period"
+msgstr "Kuva iga albumiga seotud kuupäevaperiood, nt « 12.–15. juuli 2018 »"
+
+msgid "Delete tags \\{%s\\}?"
+msgstr "Kas kustutada sildid \\{%s\\}?"
+
+msgid "Has access to all administration functionnalities. Can manage both configuration and content."
+msgstr "Juurdepääs kõikidele haldusfunktsioonidele. Saab hallata nii konfiguratsiooni kui ka sisu."
+
+msgid "since the beginning"
+msgstr "algusest peale"
+
+msgid "right now"
+msgstr "praegu"
+
+msgid "no photo"
+msgstr "fotot pole"
+
+msgid "Update"
+msgstr "Väskenda"
+
+msgid "Try now !"
+msgstr "Proovige nüüd!"
+
+msgid "This plugin was updated less than 6 months ago"
+msgstr "Seda pistikprogrammi värskendati vähem kui 6 kuud tagasi"
+
+msgid "This album is currently locked, visible only to administrators."
+msgstr "See album on praegu lukus ja nähtav ainult administraatoritele."
+
+msgid "There is multiple image in the database with the following names : %s."
+msgstr "Andmebaasis on mitu pilti järgmiste nimedega: %s."
+
+msgid "Show plugins compatible with previous version of Piwigo"
+msgstr "Kuva Piwigo eelmise versiooniga ühilduvad pistikprogrammid"
+
+msgid "Restored"
+msgstr "Taastatud"
+
+msgid "Refresh thumbnail"
+msgstr "Värskenda pisipilti"
+
+msgid "Rating greater than"
+msgstr "Reiting suurem kui"
+
+msgid "Put at the root"
+msgstr "Pane juurkataloogi"
+
+msgid "Purge Actions"
+msgstr "Puhastustoimingud"
+
+msgid "Properties of abums"
+msgstr "Albumi omadused"
+
+msgid "Promote mobile app on mobile devices"
+msgstr "Mobiilirakenduse reklaamimine mobiilseadmetes"
+
+msgid "Posted %s"
+msgstr "Postitatud %s"
+
+msgid "Plugin \"%s\" has been activated!"
+msgstr "Plugin \"%s\" on aktiveeritud!"
+
+msgid "Plugin \"%s\" deleted!"
+msgstr "Plugin \"%s\" on kustutatud!"
+
+msgid "Place last"
+msgstr "Viimane koht"
+
+msgid "Place first"
+msgstr "Esimene koht"
+
+msgid "Added on %s"
+msgstr "Lisatud %s"
+
+msgid "Activate create mode to create and select an album"
+msgstr "Albumi loomiseks ja valimiseks aktiveerige loomisrežiim"
+
+msgid "Select or create an album"
+msgstr "Valige või looge album"
+
+msgid "Select groups or type them"
+msgstr "Valige rühmad või tippige need"
+
+msgid "Select an album... or type it!"
+msgstr "Valige album... või tippige see!"
+
+msgid "Select all %d tags"
+msgstr "Valige kõik %d silti"
+
+msgid "Search tips"
+msgstr "Otsimise näpunäited"
+
+msgid "Save"
+msgstr "Salvesta"
+
+msgid "Root"
+msgstr "Juur"
+
+msgid "Review"
+msgstr "Ülevaade"
+
+msgid "Resend password link"
+msgstr "Saada parooli link uuesti"
+
+msgid "Read the release note"
+msgstr "Lugege väljalaskemärkust"
+
+msgid "Please complete all fields"
+msgstr "Palun täitke kõik väljad"
+
+msgid "Group(s) \\{%s1\\} succesfully merged into \"%s2\""
+msgstr "Grupp(id) \\{%s1\\} ühendati edukalt rühmaga \"%s2\""
+
+msgid "Has access to administration. Can only manage content: photos/albums/users/tags/groups."
+msgstr "Juurdepääs administratsioonile. Saab hallata ainult sisu: fotod/albumid/kasutajad/sildid/rühmad."
+
+msgid "Installed on %s, %s"
+msgstr "Installitud: %s, %s"
+
+msgid "Last revision date is newer than"
+msgstr "Viimase läbivaatamise kuupäev on uuem kui"
+
+msgid "Locked albums are disabled for maintenance. Only administrators can view them in the gallery. Lock this album will also lock his Sub-albums"
+msgstr "Lukustatud albumid on hoolduseks keelatud. Ainult administraatorid saavad neid galeriis vaadata. Selle albumi lukustamisel lukustatakse ka selle alamalbumid."
+
+msgid "No research in progress"
+msgstr "Uuringuid pole pooleli"
+
+msgid "No access to administration, can see private content with appropriate permissions."
+msgstr "Juurdepääs administratsioonile puudub, näeb privaatset sisu sobivate lubadega."
+
+msgid "Metadata sync complete"
+msgstr "Metaandmete sünkroonimine on lõpetatud"
+
+msgid "Memories"
+msgstr "Suveniirid"
+
+msgid "Main user"
+msgstr "Peamine kasutaja"
+
+msgid "No search in progress"
+msgstr "Otsingut pole pooleli"
+
+msgid "Ok, got it!"
+msgstr "Ok, sain aru!"
+
+msgid "Object"
+msgstr "Objekt"
+
+msgid "Line View"
+msgstr "Joonvaade"
+
+msgid "Image"
+msgstr "Pilt"
+
+msgid "First choose an album, then add your files"
+msgstr "Esmalt valige album ja seejärel lisage failid"
+
+msgid "During upload, if Piwigo detects the photo already exists, associate the existing photo to the destination album, without duplicating file"
+msgstr "Kui Piwigo tuvastab üleslaadimise ajal, et foto on juba olemas, seostage olemasolev foto sihtalbumiga ilma faili dubleerimata"
+
+msgid "Drag and drop to reorder albums"
+msgstr "Albumite ümberjärjestamiseks pukseerige"
+
+msgid "Display"
+msgstr "Ekraan"
+
+msgid "Discover"
+msgstr "Avastage"
+
+msgid "Delete them"
+msgstr "Kustutage need"
+
+msgid "Delete tag \"%s\"?"
+msgstr "Kas kustutada silt \"%s\"?"
+
+msgid "Delete %s format ?"
+msgstr "Kas kustutada %s vorming?"
+
+msgid "Currently running version %s"
+msgstr "Praegu töötab versioon %s"
+
+msgid "Creation mode"
+msgstr "Loomisrežiim"
+
+msgid "Created on %s"
+msgstr "Loodi %s"
+
+msgid "Create your first album"
+msgstr "Looge oma esimene album"
+
+msgid "Create and select"
+msgstr "Looge ja valige"
+
+msgid "Create a root album"
+msgstr "Loo juuralbum"
+
+msgid "Cannot send an email to this user because he doesn't have an email address"
+msgstr "Sellele kasutajale ei saa meili saata, kuna tal pole meiliaadressi"
+
+msgid "Copy the link below and send it to the user so the password can be set."
+msgstr "Kopeerige allolev link ja saatke see kasutajale, et saaks parooli määrata."
+
+msgid "Copy the password link"
+msgstr "Kopeerige parooli link"
+
+msgid "Core"
+msgstr "Tuum"
+
+msgid "Copy password"
+msgstr "Kopeeri parool"
+
+msgid "Copied link"
+msgstr "Kopeeritud link"
+
+msgid "Changing the main user"
+msgstr "Peakasutaja muutmine"
+
+msgid "Changes saved"
+msgstr "Muudatused salvestatud"
+
+msgid "%s is the new main user"
+msgstr "%s on uus põhikasutaja"
+
+msgid "Add a sub-album to “%s”"
+msgstr "Lisa alamalbum albumisse “%s”"
+
+msgid "An error has occured"
+msgstr "Ilmnes viga"
+
+msgid "Auto-update"
+msgstr "Automaatne värskendus"
+
+msgid "The other tags will be removed"
+msgstr "Ülejäänud sildid eemaldatakse"
+
+msgid "The passwords do not match"
+msgstr "Paroolid ei ühti"
+
+msgid "This albums is already in related categories list"
+msgstr "See album on juba seotud albumite loendis"
+
+msgid "This link is valid for %s. After this time, you will need to request a new link."
+msgstr "See link kehtib %s. Pärast seda aega peate taotlema uut linki."
+
+msgid "This photo is an orphan"
+msgstr "See foto on üksik"
+
+msgid "The best is to have them made automatically on a regular basis."
+msgstr "Parim on lasta neid regulaarselt teha automaatselt."
+
+msgid "The original picture will be detected with the filename (without extension)."
+msgstr "Algne pilt tuvastatakse failinimega (ilma laiendita)."
+
+msgid "Tag name"
+msgstr "Sildi nimi"
+
+msgid "System Activities"
+msgstr "Süsteemi tegevused"
+
+msgid "Some photos are missing from your file system. Details provided by plugin Check Uploads"
+msgstr "Mõned fotod puuduvad teie failisüsteemist. Üksikasjad, mida pakub pistikprogramm, Kontrolli üleslaadimisi"
+
+msgid "Synchronization"
+msgstr "Sünkroonimine"
+
+msgid "Shrink"
+msgstr "Kahanema"
+
+msgid "Showing %s users out of %s"
+msgstr "Kuvatakse %s kasutajat %s-st"
+
+msgid "Show sub-albums"
+msgstr "Kuva alamalbumid"
+
+msgid "Show beta test plugins"
+msgstr "Kuva beetatesti pistikprogrammid"
+
+msgid "Set as main user"
+msgstr "Määra põhikasutajaks"
+
+msgid "Set as group for new users"
+msgstr "Määra uute kasutajate rühmaks"
+
+msgid "Piwigo core"
+msgstr "Piwigo tuum"
+
+msgid "Picture to associate formats with"
+msgstr "Pilt, millega vorminguid seostada"
+
+msgid "Photos per page"
+msgstr "Fotosid lehel"
+
+msgid "This user must first be defined as the webmaster before it can be upgraded to the main user"
+msgstr "See kasutaja tuleb esmalt määratleda veebihaldurina, enne kui seda saab põhikasutajaks täiendada"
+
+msgid "Tile View"
+msgstr "Plaadivaade"
+
+msgid "To be sure, please rewrite the word “%s” below"
+msgstr "Et olla kindel, kirjutage sõna \"%s\" allpool ümber"
+
+msgid "To set your password, visit the following address:"
+msgstr "Parooli määramiseks külastage järgmist aadressi:"
+
+msgid "Understood, do not show again"
+msgstr "Sai aru, enam ei näita"
+
+msgid "Unlock it"
+msgstr "Avage see"
+
+msgid "Unset as group for new users"
+msgstr "Tühista uute kasutajate grupiks määramine"
+
+msgid "Upload Formats"
+msgstr "Laadi vormingud üles"
+
+msgid "Username successfully modified"
+msgstr "Kasutajanime muutmine õnnestus"
+
+msgid "Users not logged in will have these settings applied, these settings are used by default for new users"
+msgstr "Kasutajatele, kes pole sisse logitud, rakendatakse neid sätteid. Neid seadeid kasutatakse vaikimisi uute kasutajate puhul"
+
+msgid "This plugin is incompatible with your version"
+msgstr "See pistikprogramm ei ühildu teie versiooniga"
+
+msgid "This plugin have no update since 3 years ! It may be outdated"
+msgstr "Sellel pistikprogrammil pole värskendusi 3 aastat! See võib olla aegunud"
+
+msgid "This plugin have been updated recently"
+msgstr "Seda pistikprogrammi on hiljuti värskendatud"
+
+msgid "This plugin has no recent update"
+msgstr "Sellel pistikprogrammil pole uusi värskendusi"
+
+msgid "This picture is physically linked to this album, you can't dissociate them"
+msgstr "See pilt on selle albumiga füüsiliselt lingitud, te ei saa neid lahutada."
+
+msgid "You are not authorised to change the main user, please ask your webmaster"
+msgstr "Teil ei ole õigust põhikasutajat vahetada, küsige oma veebihaldurilt"
+
+msgid "You are about to set %s as main user instead of %s, do you wish to continue ?"
+msgstr "Seadistate peakasutajaks %s, mitte %s, kas soovite jätkata?"
+
+msgid "Yes, let's proceed"
+msgstr "Jah, jätkame"
+
+msgid "Who can see ?"
+msgstr "Kes näeb?"
+
+msgid "What's new in version %s"
+msgstr "Mis on uut versioonis %s?"
+
+msgid "You can now change the main user from %s to %s."
+msgstr "Nüüd saate muuta põhikasutaja %s kasutajaks %s."
+
+msgid "You cannot copy the password if the connection to this site is not secure."
+msgstr "Te ei saa parooli kopeerida, kui ühendus selle saidiga pole turvaline."
+
+msgid "You have unsaved changes"
+msgstr "Teil on salvestamata muudatusi"
+
+msgid "between %d and %d"
+msgstr "vahemikus %d kuni %d"
+
+msgid "level of confidentiality"
+msgstr "konfidentsiaalsuse tase"
+
+msgid "image(s) contains unsaved changes"
+msgstr "pilt sisaldab salvestamata muudatusi"
+
+msgid "to"
+msgstr "to"
+
+msgid "was succesfully deleted"
+msgstr "kustutati edukalt"
+
+msgid "Password copied"
+msgstr "Parool kopeeritud"
+
+msgid "Pagination has changed and needs to be reloaded !"
+msgstr "Leheküljed on muutunud ja tuleb uuesti laadida!"
+
+msgid "Page Visited"
+msgstr "Lehekülge külastatud"
+
+msgid "Page Visited in %s"
+msgstr "Lehekülge külastatud %s"
+
+msgid "Only admins in a specific group"
+msgstr "Ainult teatud grupi administraatorid"
+
+msgid "On %d rating(s)"
+msgstr "%d hinnangul"
+
+msgid "An activation link valid for %s was created but could not be sent. You can now copy the link below and send it to the user."
+msgstr "Loodi %s kehtiv aktiveerimislink, kuid seda ei saanud saata. Nüüd saate kopeerida alloleva lingi ja saata selle kasutajale."
+
+msgid "An activation link valid for %s has been sent to \"%s\". If the user doesn't receive the link, you can generate and copy a new one by editing the user and managing her password."
+msgstr "Kehtiv aktiveerimislink %s jaoks on saadetud aadressile \"%s\". Kui linki ei saa, saab kasutajat muutes ja parooli haldades uue genereerida ja kopeerida."
+
+msgid "A photo library administrator has created the following account for you:"
+msgstr "Fototeegi administraator on loonud teile järgmise konto:"
+
+msgid "Welcome to %s"
+msgstr "Tere tulemast %s"
+

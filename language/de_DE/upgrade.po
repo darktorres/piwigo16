@@ -1,0 +1,65 @@
+# Piwigo translation — de_DE
+# Source: upgrade.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: de_DE\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Upgrade"
+msgstr "Aktualisierung"
+
+msgid "Upgrade from version %s to %s"
+msgstr "Aktualisierung von Version %s auf %s"
+
+msgid "Statistics"
+msgstr "Statistik"
+
+msgid "total upgrade time"
+msgstr "benötigte Aktualisierungsdauer"
+
+msgid "total SQL time"
+msgstr "gesamte SQL-Zeit"
+
+msgid "SQL queries"
+msgstr "SQL-Anfragen"
+
+msgid "Upgrade informations"
+msgstr "Aktualisierungs-Informationen"
+
+msgid "Perform a maintenance check in [Administration>Tools>Maintenance] if you encounter any problem."
+msgstr "Führen Sie eine Datenbanküberprüfung durch [Verwaltung>Werkzeuge>Wartung], falls Probleme auftreten sollten"
+
+msgid "Only administrator can run upgrade: please sign in below."
+msgstr "Nur Administratoren dürfen eine Aktualisierung durchführen. Bitte melden Sie sich unten an."
+
+msgid "You do not have access rights to run upgrade"
+msgstr "Sie haben nicht die erforderlichen Rechte, um eine Aktualisierung durchzuführen"
+
+msgid "All sub-albums of private albums become private"
+msgstr "Alle Unteralben von privaten Alben werden als privat gekennzeichnet"
+
+msgid "User permissions and group permissions have been erased"
+msgstr "Alle Benutzer- und Gruppenberechtigungen wurden entfernt"
+
+msgid "Only thumbnails prefix and webmaster mail address have been saved from previous configuration"
+msgstr "Es wurden nur das Vorschaubilder-Präfix und die E-Mail-Adresse des Webmasters aus der vorherigen Konfiguration übernommen"
+
+msgid "This page proposes to upgrade your database corresponding to your old version of Piwigo to the current version. The upgrade assistant thinks you are currently running a <strong>release %s</strong> (or equivalent)."
+msgstr "Diese Seite schlägt vor, die Datenbank Ihrer alten Piwigo-Version zu aktualisieren. Der Aktualisierungs-Assistent hat festgestellt, dass Sie gegenwärtig Version <strong>%s</strong> (oder eine gleichwertige Version) benutzen."
+
+msgid "As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:"
+msgstr "Als Vorsichtsmaßnahme wurden folgende Plugins deaktiviert. Überprüfen Sie, ob Plugin-Aktualisierungen verfügbar sind, bevor Sie die Plugins erneut aktivieren:"
+
+msgid "In <i>%s</i>, before <b>?></b>, insert:"
+msgstr "In der Datei <i>%s</i> vor <b>?></b> Folgendes einfügen:"
+
+msgid "As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:"
+msgstr "Als Vorsichtsmaßnahme wurden folgende Themes deaktiviert. Überprüfen Sie, ob Themes-Aktualisierungen verfügbar sind, bevor Sie die Themes erneut aktivieren:"
+
+msgid "Discover what's new in Piwigo %s"
+msgstr "Entdecke die Neuigkeiten in Piwigo %s"
+

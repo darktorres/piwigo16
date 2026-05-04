@@ -1,0 +1,1135 @@
+# Piwigo translation — mn_MN
+# Source: common.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: mn_MN\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Language-Name: Монгол\n"
+"X-Piwigo-Country: Монгол улс\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Code: mn\n"
+"X-Piwigo-Zero-Plural: true\n"
+
+msgid "%d hit"
+msgstr "%d удаа үзсэн"
+
+msgid "%d hits"
+msgstr "%d удаа үзсэн"
+
+msgid "%d Kb"
+msgstr "%d KB"
+
+msgid "%d new comment"
+msgstr "%d сэтгэгдэл"
+
+msgid "%d new comments"
+msgstr "%d сэтгэгдэл"
+
+msgid "%d new photo"
+msgid_plural "%d new photos"
+msgstr[0] "%d шинэ зураг"
+msgstr[1] "%d шинэ зураг"
+
+msgid "%d new user"
+msgstr "%d шинэ хэрэглэгч"
+
+msgid "%d new users"
+msgstr "%d шинэ хэрэглэгч"
+
+msgid "Date"
+msgstr "Огноо"
+
+msgid "comment date"
+msgstr "бичсэн огноогоор"
+
+msgid "Creation date"
+msgstr "Авсан огноо"
+
+msgid "Post date"
+msgstr "Нийтэлсэн огноо"
+
+msgid "Search"
+msgstr "Хайлт"
+
+msgid "Search for all terms"
+msgstr "Бүгдийг оруулж хайх"
+
+msgid "Search for any term"
+msgstr "Дурын үгийг хайх"
+
+msgid "Search for words"
+msgstr "Хайх үг"
+
+msgid "Search in albums"
+msgstr "Цомогноос хайх"
+
+msgid "searched words : %s"
+msgstr "хайсан үг: %s"
+
+msgid "Search by date"
+msgstr "Огноогоор хайх"
+
+msgid "Search in sub-albums"
+msgstr "Дэд цомогноос хайх"
+
+msgid "Quick search"
+msgstr "хайх үгээ бичнэ үү"
+
+msgid "Reset"
+msgstr "Цуцлах"
+
+msgid "Original dimensions"
+msgstr "Үндсэн хэмжээ"
+
+msgid "Kind of date"
+msgstr "Хамаарах огноо"
+
+msgid "End-Date"
+msgstr "Дуусах огноо"
+
+msgid "Date created, old &rarr; new"
+msgstr "Авсан огноогоор, хуучин &rarr; шинэ"
+
+msgid "Browser: %s"
+msgstr "Вэб хөтөч: %s"
+
+msgid "Albums"
+msgstr "Цомог"
+
+msgid "2small"
+msgstr "XXS - жоохон"
+
+msgid "small"
+msgstr "S - жижэг"
+
+msgid "stop the slideshow"
+msgstr "зогсоох"
+
+msgid "today"
+msgstr "өнөөдөр"
+
+msgid "useful when password forgotten"
+msgstr "Нууц үгээ мартсан үед хэрэг болно"
+
+msgid "wrong date"
+msgstr "огноо буруу байна"
+
+msgid "xlarge"
+msgstr "XL - маш том"
+
+msgid "xsmall"
+msgstr "XS - жижэгхэн"
+
+msgid "xxlarge"
+msgstr "XXL - асар том"
+
+msgid "search"
+msgstr "хайх"
+
+msgid "medium"
+msgstr "M - дундаж"
+
+msgid "no rate"
+msgstr "үнэлгээ байхгүй"
+
+msgid "password updated"
+msgstr "нууц үг шиэчлэгдлээ"
+
+msgid "large"
+msgstr "L - том"
+
+msgid "photo"
+msgstr "зураг"
+
+msgid "edit"
+msgstr "засах"
+
+msgid "guest"
+msgstr "зочин"
+
+msgid "Username"
+msgstr "Хэрэглэгчийн нэр"
+
+msgid "Username or email"
+msgstr "Хэрэглэгчийн нэр буюу имэйл хаяг"
+
+msgid "Username: %s"
+msgstr "Хэрэглэгчийн нэр: %s"
+
+msgid "Website"
+msgstr "Вэбсайт"
+
+msgid "Welcome"
+msgstr "Тавтай морилно уу"
+
+msgid "Yes"
+msgstr "Тийм"
+
+msgid "Sort by"
+msgstr "Эрэмблэх"
+
+msgid "Submit"
+msgstr "OK"
+
+msgid "Tag"
+msgstr "Түлхүүр үг"
+
+msgid "Tags"
+msgstr "Түлхүүр үгс"
+
+msgid "The passwords do not match"
+msgstr "Нууц үг хоорондоо тохирохгүй байна"
+
+msgid "Show latest comments first"
+msgstr "Шинээр оруулсаныг эхэнд нь"
+
+msgid "Show number of comments"
+msgstr "Сэтгэгдэлийн тоог харуулах"
+
+msgid "Search results"
+msgstr "Хайлтын үр дүн"
+
+msgid "Register"
+msgstr "Бүртгүүлэх"
+
+msgid "Registration"
+msgstr "Бүртгэл"
+
+msgid "Random photos"
+msgstr "Дурын зураг"
+
+msgid "Rating score, low &rarr; high"
+msgstr "Үнэлгээгээр, бага &rarr; их"
+
+msgid "Rank"
+msgstr "Үнэлгээ"
+
+msgid "Rate this photo"
+msgstr "Үнэлэх"
+
+msgid "Rating score"
+msgstr "Үнэлгээ оноо"
+
+msgid "Rating score, high &rarr; low"
+msgstr "Үнэлгээгээр, их &rarr; бага"
+
+msgid "Manage this user comment: %s"
+msgstr "Дараахь сэдгэгдэлийг засварлах: %s"
+
+msgid "Manual sort order"
+msgstr "Гараараа эрэмблэх"
+
+msgid "Piwigo Help"
+msgstr "Piwigo тусламж"
+
+msgid "Password reset is not allowed for this user"
+msgstr "Танд нууц үгээ солих эрх байхгүй байна"
+
+msgid "Password: %s"
+msgstr "Нууц үг: %s"
+
+msgid "Pause of slideshow"
+msgstr "Зогсоох"
+
+msgid "Photo title, Z &rarr; A"
+msgstr "Зургийн нэрээр, Z &rarr; A "
+
+msgid "Photo sizes"
+msgstr "Зургийн хэмжээ"
+
+msgid "Photo title, A &rarr; Z"
+msgstr "Зургийн нэрээр, A &rarr; Z"
+
+msgid "Invalid password!"
+msgstr "Хэрэглэгчийн нэр эсвэл нууц үг буруу байна."
+
+msgid "Invalid username or email"
+msgstr "Хэрэглэгчийн нэр эсвэл имэйл хаяг буруу байна."
+
+msgid "Keyword"
+msgstr "Түлхүүр үг"
+
+msgid "Password"
+msgstr "Нууц үг"
+
+msgid "Password Reset"
+msgstr "Нууц үгээ солих"
+
+msgid "Password forgotten"
+msgstr "Нууц үгээ мартсан"
+
+msgid "Most visited"
+msgstr "Их үзсэн"
+
+msgid "Original"
+msgstr "Эх хувь"
+
+msgid "Page not found"
+msgstr "Ийм хуудас олдсонгүй"
+
+msgid "Language"
+msgstr "Хэл"
+
+msgid "Login"
+msgstr "Нэвтрэх"
+
+msgid "Logout"
+msgstr "Гарах"
+
+msgid "Menu"
+msgstr "Цэс"
+
+msgid "Mobile"
+msgstr "Гар утас"
+
+msgid "New password"
+msgstr "Шинэ нууц үг"
+
+msgid "Next"
+msgstr "Дараахь"
+
+msgid "No"
+msgstr "Үгүй"
+
+msgid "Links"
+msgstr "Холбоос"
+
+msgid "Hello %s,"
+msgstr "%s Та сайн байна уу?"
+
+msgid "Hello %s, your Piwigo photo gallery is empty!"
+msgstr "Сайн байна уу %s, Таны Piwigo гэрэл зургын галерей хоосон байна!"
+
+msgid "IP: %s"
+msgstr "IP: %s"
+
+msgid "Home"
+msgstr "Нүүр хуудас"
+
+msgid "Email: %s"
+msgstr "Имэйл: %s"
+
+msgid "Enter your new password below."
+msgstr "Шинэ нууц үгээ оруулна уу"
+
+msgid "File name, A &rarr; Z"
+msgstr "Файлын нэрээр A &rarr; Z"
+
+msgid "File name, Z &rarr; A"
+msgstr "Файлын нэрээр Z &rarr; A"
+
+msgid "Hello"
+msgstr "Сайн байна уу"
+
+msgid "Help"
+msgstr "Тусламж"
+
+msgid "Filesize"
+msgstr "Файлын хэмжээ"
+
+msgid "Filter"
+msgstr "Сонголт"
+
+msgid "Forbidden"
+msgstr "Хориотой"
+
+msgid "Forgot your password?"
+msgstr "Нууц үгээ мартсан уу?"
+
+msgid "Check your email for the confirmation link"
+msgstr "Баталгаажуулсан захиаг имэйл хаягнаасаа шалгана уу"
+
+msgid "Click on the photo to see it in high definition"
+msgstr "Өндөр нарийвчлалтай харахыг хүсвэл зураг дээр дарна уу"
+
+msgid "Close this window"
+msgstr "Цонхыг хаах"
+
+msgid "Comment"
+msgstr "Сэтгэгдэл"
+
+msgid "Comment by %s"
+msgstr "Сэтгэгдэл бичсэн %s"
+
+msgid "Album"
+msgstr "Цомог"
+
+msgid "File"
+msgstr "Файл"
+
+msgid "File name"
+msgstr "Файлын нэр"
+
+msgid "Enter your personnal informations"
+msgstr "Мэдээллээ оруулна уу"
+
+msgid "Error sending email"
+msgstr "И-мэйлийг илгээхэд алдаа гарлаа"
+
+msgid "Expand all albums"
+msgstr "Бүх цомгийг дэлгэх"
+
+msgid "Display"
+msgstr "Харуулах"
+
+msgid "Download"
+msgstr "татах"
+
+msgid "Download this file"
+msgstr "Татаж авах"
+
+msgid "EXIF Metadata"
+msgstr "EXIF мэдээлэл"
+
+msgid "Edit"
+msgstr "Засах"
+
+msgid "Edit a comment"
+msgstr "Сэтгэгдэлийг засах"
+
+msgid "Email address"
+msgstr "И-мэйл хаяг"
+
+msgid "Dimensions"
+msgstr "Зургийн хэмжээ"
+
+msgid "Comments"
+msgstr "Сэтгэгдэл"
+
+msgid "Connection settings"
+msgstr "Холбогдох тохиргоо"
+
+msgid "Create a new account"
+msgstr "Шинээр бүртгүүлэх"
+
+msgid "Current password is wrong"
+msgstr "Нууц үг буруу байна"
+
+msgid "Delete"
+msgstr "Устгах"
+
+msgid "Contact"
+msgstr "Холбоо барих"
+
+msgid "Contact webmaster"
+msgstr "Вебмастертай холбогдох"
+
+msgid "Confirm Password"
+msgstr "Нууц үгээ давтах"
+
+msgid "Connected user: %s"
+msgstr "Холбогдсон хэрэглэгч: %s"
+
+msgid "Comment: %s"
+msgstr "Сэтгэгдэл: %s"
+
+msgid "Are you sure?"
+msgstr "Та итгэлтэй байна уу?"
+
+msgid "Auto login"
+msgstr "Санах"
+
+msgid "Change my password"
+msgstr "Нууц үгээ шинэчлэе"
+
+msgid "Calendar"
+msgstr "Огноогоор"
+
+msgid "About Piwigo"
+msgstr "Piwigo-н тухай"
+
+msgid "Add a comment"
+msgstr "Сэтгэгдэл нэмэх"
+
+msgid "%d comment"
+msgid_plural "%d comments"
+msgstr[0] "%d сэтгэгдэл"
+msgstr[1] "%d сэтгэгдэл"
+
+msgid "remove this tag from the list"
+msgstr "жагсаалтаас энэ үгийг хасах"
+
+msgid "this email address is already in use"
+msgstr "энэ имэйл хаягаар бүртгүүлсэн байна"
+
+msgid "the beginning"
+msgstr "эхнээс нь"
+
+msgid "the username must be given"
+msgstr "хэрэглэгчийн нэр заавал шаардлагатай"
+
+msgid "created after %s (%s)"
+msgstr "%s (%s)-с хойш авсан"
+
+msgid "created before %s (%s)"
+msgstr "%s (%s)-с өмнө авсан"
+
+msgid "created on %s"
+msgstr "%s-нд авсан"
+
+msgid "created between %s (%s) and %s (%s)"
+msgstr "%s (%s)-с %s (%s)-н хооронд авсан"
+
+msgid "all"
+msgstr "бүх"
+
+msgid "Your website URL is invalid"
+msgstr "Вэб сайтын холбоос тань буруу байна."
+
+msgid "Your username has been successfully changed to : %s"
+msgstr "Таны хэрэглэгчийн нэр %s болж шинэчлэгдлээ"
+
+msgid "Your password has been reset"
+msgstr "Нууц үг тань шинэчлэгдлээ"
+
+msgid "Week %d"
+msgstr "%d дэхь(дахь) долоо хоног"
+
+msgid "View"
+msgstr "Харах"
+
+msgid "User: %s"
+msgstr "Хэрэглэгч: %s"
+
+msgid "User comments"
+msgstr "Хэрэглэгчийн сэтгэгдэл"
+
+msgid "Show oldest comments first"
+msgstr "Хуучныг эхэнд нь"
+
+msgid "Sent by"
+msgstr "Илгээсэн"
+
+msgid "Search tags"
+msgstr "Хайх үг"
+
+msgid "Search rules"
+msgstr "Хайх утга"
+
+msgid "Return to home page"
+msgstr "Нүүр хуудас уруу буцах"
+
+msgid "Desktop"
+msgstr "Ердийн"
+
+msgid "All"
+msgstr "Бүгдийг"
+
+msgid "%d rate"
+msgstr "%d үнэлгээ"
+
+msgid "%d rates"
+msgstr "%d үнэлгээ"
+
+msgid "display each day with photos, month per month"
+msgstr "зураг авсан өдрөөр нь ангилж харах"
+
+msgid "return to the display of all photos"
+msgstr "бүх зургийг харуулах"
+
+msgid "Welcome to your Piwigo photo gallery!"
+msgstr "Piwigo гэрэл зургын галерейд тавтай морилно уу!"
+
+msgid "add this photo to your favorites"
+msgstr "таалагдсан зургын жагсаалтанд нэмэх"
+
+msgid "delete all photos from your favorites"
+msgstr "таалагдсан зурагнуудаа бүгдийг нь хасах"
+
+msgid "delete this photo from your favorites"
+msgstr "таалагдсан зурагнаасаа хасах"
+
+msgid "display your favorites photos"
+msgstr "таалагдсан зурагнуудаа харах"
+
+msgid "The number of photos per page must be a not null scalar"
+msgstr "Нэг хуудсанд харуулах зургийн тоо 0-с их байх ёстой"
+
+msgid "I want to add photos"
+msgstr "Би зураг оруулмаар байна"
+
+msgid "Number of photos per page"
+msgstr "Нэг хуудсанд харагдах зургын тоо"
+
+msgid "%d photo is also linked to current tags"
+msgid_plural "%d photos are also linked to current tags"
+msgstr[0] "%d зураг энэ түлхүүр үгтэй холбоотой байна"
+msgstr[1] "%d зураг энэ түлхүүр үгтэй холбоотой байна"
+
+msgid "Update your rating"
+msgstr "Үнэлгээгээ шинэчлэх"
+
+msgid "%d comment to validate"
+msgstr "баталгаажуулалт хүлээж буй сэтгэгдэл %d"
+
+msgid "%d comments to validate"
+msgstr "баталгаажуулалт хүлээж буй сэтгэгдэл %d"
+
+msgid "Visits"
+msgstr "Үзсэн"
+
+msgid "Visits, high &rarr; low"
+msgstr "Үзсэн тоогоор, их &rarr; бага"
+
+msgid "Visits, low &rarr; high"
+msgstr "Үзсэн тоогоор, бага &rarr; их"
+
+msgid "display all photos in all sub-albums"
+msgstr "Дэд цомогт байгаа бүх зургийг харуулах"
+
+msgid "in %d sub-album"
+msgid_plural "in %d sub-albums"
+msgstr[0] "%d дэд цомогт байна"
+msgstr[1] "%d дэд цомогт байна"
+
+msgid "Identification"
+msgstr "Бүртгэл"
+
+msgid "Send my connection settings by email"
+msgstr "Тохиргоог имэйл хаягаараа хүлээн авъя"
+
+msgid "Quick connect"
+msgstr "Нэвтрэх"
+
+msgid "Last"
+msgstr "Сүүлийн хуудас"
+
+msgid "RSS feed"
+msgstr "Шинэчлэл тандагч"
+
+msgid "Complete RSS feed (photos, comments)"
+msgstr "-Бүх шинэчлэлийг тандах (зураг, бичлэг, сэтгэгдэл)"
+
+msgid "Photos only RSS feed"
+msgstr "-Зөвхөн шинэ зургуудыг тандах"
+
+msgid "The RSS notification feed provides notification on news from this website : new photos, updated albums, new comments. Use a RSS feed reader."
+msgstr "﻿﻿RSS буюу шинэчлэл тандагчийг идэвхжүүлж энэ блог/сайтийн шинэ зураг, бичлэг, сэтгэгдэл, шинэчлэлтийн талаарх мэдээллийг тодорхой давтамжаар тоймлон хүлээж аваарай."
+
+msgid "Notification"
+msgstr "Шинэчлэл тандагч"
+
+msgid "display a calendar by posted date"
+msgstr "Нийтэлсэн огноогоор"
+
+msgid "display a calendar by creation date"
+msgstr "Зураг авсан огноогоор"
+
+msgid "display available tags"
+msgstr "боломжтой түлхүүр үгсийг харуулах"
+
+msgid "display a set of random photos"
+msgstr "дурын зургуудыг түүж харуулах"
+
+msgid "display last user comments"
+msgstr "сүүлд бичсэн сэтгэгдэлийг харуулах"
+
+msgid "display only recently posted photos"
+msgstr "зөвхөн саяхан нийтэлсэн зургийг харуулах"
+
+msgid "display photos linked to this tag"
+msgstr "энэ түлхүүр үгтэй холбоотой зургийг харуулах"
+
+msgid "display this album"
+msgstr "энэ цомгийг харуулах"
+
+msgid "display most visited photos"
+msgstr "хамгийн их үзсэн зургийг харуулах"
+
+msgid "display best rated photos"
+msgstr "өндөр үнэлгээтэй зургийг харуулах"
+
+msgid "Recent albums"
+msgstr "Шинэчилсэн цомог"
+
+msgid "display most recent photos"
+msgstr "саяхан нийтэлсэн зургийг харуулах"
+
+msgid "Recent photos"
+msgstr "Саяхан нийтэлсэн"
+
+msgid "First"
+msgstr "Эхний хуудас"
+
+msgid "Email address is missing. Please specify an email address."
+msgstr "Имэйл хаягаа заавал оруулна уу"
+
+msgid "About"
+msgstr "Программийн тухайд"
+
+msgid "%d album updated"
+msgid_plural "%d albums updated"
+msgstr[0] "%d цомог шинэчлэгдлээ"
+msgstr[1] "%d цомог шинэчлэгдлээ"
+
+msgid "Photos posted within the last %d day."
+msgid_plural "Photos posted within the last %d days."
+msgstr[0] "Зөвхөн сүүлийн %d хоногт нийтэлсэн зурагнууд."
+msgstr[1] "Зөвхөн сүүлийн %d хоногт нийтэлсэн зурагнууд."
+
+msgid "posted between %s (%s) and %s (%s)"
+msgstr "%s (%s)-с %s (%s)-н хооронд нийтэлсэн"
+
+msgid "posted after %s (%s)"
+msgstr "%s (%s)-с дараа нийтэлсэн"
+
+msgid "posted before %s (%s)"
+msgstr "%s (%s)-с өмнө нийтэлсэн"
+
+msgid "posted on %s"
+msgstr "%s (%s)-д нийтэлсэн"
+
+msgid "photos posted during the last %d days"
+msgstr "сүүлийн %d хоногт нийтэлсэн зурагнууд"
+
+msgid "Posted on"
+msgstr "Нийтэлсэн огноо"
+
+msgid "Date posted, new &rarr; old"
+msgstr "Нийтэлсэн огноогоор, шинэ &rarr; хуучин"
+
+msgid "Date posted, old &rarr; new"
+msgstr "Нийтэлсэн огноогоор, хуучин &rarr; шинэ"
+
+msgid "display recently updated albums"
+msgstr "сүүлд шинэчилсэн цомгыг харуулах"
+
+msgid "Filter and display"
+msgstr "Шүүгээд харуулах"
+
+msgid "Number of items"
+msgstr "Харуулах тоо"
+
+msgid "Sort order"
+msgstr "Эрэмблэх"
+
+msgid "ascending"
+msgstr "өгсөх"
+
+msgid "descending"
+msgstr "уруудах"
+
+msgid "Date created, new &rarr; old"
+msgstr "Авсан огноогоор, шинэ &rarr; хуучин"
+
+msgid "Created on"
+msgstr "Үүсгэсэн огноо"
+
+msgid "Cookies are blocked or not supported by your browser. You must enable cookies to connect."
+msgstr "Таны вэб хөтөч \"cookie\" дэмжихгүй байна. Нэвтэрч орохын тулд вэб хөтөчийнхөө \"cookie\"-г идэвхжүүлнэ үү."
+
+msgid "Any tag"
+msgstr "Дурын түлхүүр үг"
+
+msgid "Album: %s"
+msgstr "Цомог"
+
+msgid "%d photo"
+msgid_plural "%d photos"
+msgstr[0] "%d зураг"
+msgstr[1] "%d зураг"
+
+msgid "Click here if your browser does not automatically forward you"
+msgstr "Автоматаар шилжэхгүй бол энд дарна уу"
+
+msgid "Best rated"
+msgstr "Өндөр үнэлгээтэй"
+
+msgid "Here are your connection settings"
+msgstr "Таны бүртгэлийн тохиргоо"
+
+msgid "(!) This comment requires validation"
+msgstr "(!) Тухайн сэтгэгдэлийг "
+
+msgid "A comment on your site"
+msgstr "Танай сайтын талаархи сэтгэгдэл"
+
+msgid "Username is mandatory"
+msgstr "Хэрэглэгчийн нэр заавал шаардлагатай"
+
+msgid "Email address is mandatory"
+msgstr "Имэйл хаяг заавал шаардлагатай"
+
+msgid "Previous"
+msgstr "Өмнөх"
+
+msgid "Show file metadata"
+msgstr "Дэлгэрэнгүй мэдээллийг харуулах"
+
+msgid "Specials"
+msgstr "Сонгож харах"
+
+msgid "this login is already used"
+msgstr "Уучлаарай, ийм нэрээр бүртгүүлэх боломжгүй."
+
+msgid "obligatory"
+msgstr "шаардлагатай"
+
+msgid "mandatory"
+msgstr "шаардлагатай"
+
+msgid "mail address must be like xxx@yyy.eee (example : jack@altern.org)"
+msgstr "имэйл хаяг xxx@yyy.eee хэлбэртэй байх ёстой (жишээ нь: jack@altern.org)"
+
+msgid "login mustn't start with a space character"
+msgstr "Хэрэглэгчийн нэр сул зайгаар эхлэх ёсгүй"
+
+msgid "last %d days"
+msgstr "сүүлийн %d хоног"
+
+msgid "in this album"
+msgstr "энэ цомогт"
+
+msgid "Your comment has been registered"
+msgstr "Таны сэтгэгдэлийг бүртгэж авлаа."
+
+msgid "Webmaster"
+msgstr "Вэбмастер"
+
+msgid "User \"%s\" has no email address, password reset is not possible"
+msgstr "Уучлаарай. Хэрэглэгч \"%s\" Та имэйл хаягаа бүртгүүлээгүй учир нууц үгээ сэргээх боломжгүй."
+
+msgid "Successfully registered, you will soon receive an email with your connection settings. Welcome!"
+msgstr "Бүртгүүлсэнд тань баярлалаа. Тохиргооны холбоотой мэдээлэлийг имэйл хаяг уруу тань илгээлээ. "
+
+msgid "Thank you for registering at %s!"
+msgstr "Манай %s сайтад бүртгүүлсэн Танд баярлалаа! Сайтын зохицуулагч Таны эрхийг идэвхжүүлж, хариу өгтөл түр хүлээнэ үү."
+
+msgid "Show number of hits"
+msgstr "Үзсэн тоог харуулах"
+
+msgid "Requested tag does not exist"
+msgstr "Ийм түлхүүр үг байхгүй байна"
+
+msgid "Requested album does not exist"
+msgstr "Ийм цомог байхгүй байна"
+
+msgid "Repeat the slideshow"
+msgstr "Давтах"
+
+msgid "Reduce diaporama speed"
+msgstr "Хурдыг нь багасгах"
+
+msgid "All tags"
+msgstr "Бүх түлхүүр үгс"
+
+msgid "login mustn't end with a space character"
+msgstr "Хэрэглэгчийн нэр сул зайгаар төгсөх ёсгүй"
+
+msgid "chronology_monthly_list"
+msgstr "Сараар"
+
+msgid "chronology_weekly_list"
+msgstr "Долоо хоногоор"
+
+msgid "Each listed rule must be satisfied."
+msgstr "Шаардлагатай бүх талбарыг гүйцэд бөглөнө үү"
+
+msgid "from %s to %s"
+msgstr "%s-с %s хүртэл"
+
+msgid "You are not authorized to access the requested page"
+msgstr "Уучлаарай. Танд энэ хуудсыг үзэх эрхгүй байна."
+
+msgid "Username modification"
+msgstr "Хэрэглэгчийн нэрээ засах"
+
+msgid "To reset your password, visit the following address:"
+msgstr "Нууц үгээ сэргээхийн тулд дараахь хаягаар хандана уу:"
+
+msgid "Since"
+msgstr "Эхлэх"
+
+msgid "Reset to default values"
+msgstr "Үндсэн утгыг сэргээх"
+
+msgid "Please enter your username or email address."
+msgstr "Хэрэглэгчийн нэр эсвэл имэйл хаягаа оруулна уу."
+
+msgid "Retrieve password"
+msgstr "Нууц үгээ сэргээх"
+
+msgid "Not repeat the slideshow"
+msgstr "Давтахгүй байх"
+
+msgid "New on %s"
+msgstr "%s-д шинээр нэмэгдсэн"
+
+msgid "If you think you've received this email in error, please contact us at %s"
+msgstr "Хэрвээ танд энэ имэйл ирэх ёсгүй гэж үзэж байгаа бол %s хаягаар холбоо барина уу."
+
+msgid "Default"
+msgstr "Үндсэн"
+
+msgid "Admin: %s"
+msgstr "Зохицуулагч: %s"
+
+msgid "Accelerate diaporama speed"
+msgstr "Хурдыг нь нэмэх"
+
+msgid "The gallery is locked for maintenance. Please, come back later."
+msgstr "Уучлаарай манай сайт засвартай байна. Дараа эргэн зочилно уу."
+
+msgid "Author"
+msgstr "Зураг авсан"
+
+msgid "Author: %s"
+msgstr "Зураг авсан: %s"
+
+msgid "Please, enter a login"
+msgstr "Уучлаарай, шаардлагатай талбаруудыг гүйцэд бөглөнө үү."
+
+msgid "Page generated in"
+msgstr "Хуудсыг ачаалсан хугацаа:"
+
+msgid "This author removed the comment with id %d"
+msgstr "%d сэтгэгдэлийг бичэгч нь устгасан байна"
+
+msgid "Tag results for"
+msgstr "Хайлтын үр дүн:"
+
+msgid "Someone requested that the password be reset for the following user account:"
+msgstr "Дараахь хэрэглэгчийн нууц үгийг сэргээх хүсэлт ирлээ:"
+
+msgid "Registration of %s"
+msgstr "%s-н бүртгэл"
+
+msgid "Powered by"
+msgstr "Вэб хөгжүүлэгч"
+
+msgid "... or browse your empty gallery"
+msgstr "... эсвэл хоосон галерейгаа үзнэ үү"
+
+msgid "set as album representative"
+msgstr "цомогны дүрс зураг болгох"
+
+msgid "representative"
+msgstr "цомогны дүрс зураг"
+
+msgid "return to normal view mode"
+msgstr "Энгийн горимд шилжэх"
+
+msgid "author(s) : %s"
+msgstr "Бичэгч: %s"
+
+msgid "Related tags"
+msgstr "Холбоотой түлхүүр үгс"
+
+msgid "At least one listed rule must be satisfied."
+msgstr "Дор хаяж нэг утга оруулна уу"
+
+msgid "Permalink for album not found"
+msgstr "Уучлаарай. Ийм холбоос бүхий цомог олдсонгүй"
+
+msgid "letters"
+msgstr "үсэг"
+
+msgid "group by letters"
+msgstr "үсгээр нь бүлэглэх"
+
+msgid "Invalid key"
+msgstr "Буруу түлхүүр байна"
+
+msgid "Go through the gallery as a visitor"
+msgstr "Зочин маягаар үзэх"
+
+msgid "slideshow"
+msgstr "Слайд-шоу"
+
+msgid "This author modified following comment:"
+msgstr "Дараахь сэтгэдлийг бичсэн хүн нь засав:"
+
+msgid "SQL queries in"
+msgstr "SQL ачаалсан хугацаа"
+
+msgid "Play of slideshow"
+msgstr "Слайд-шоу эхлүүлэх"
+
+msgid "Album results for"
+msgstr "Дараахь хайлтын үр дүн:"
+
+msgid "Thumbnails"
+msgstr "Дүрс зураг"
+
+msgid "thumb"
+msgstr "Дүрс зураг"
+
+msgid "This login is already used by another user"
+msgstr "Тухайн эрхээр өөр хэрэглэгч нэвтэрсэн байна"
+
+msgid "Recent period"
+msgstr "\"Шинэ\" хоног хугацаа"
+
+msgid "Administration"
+msgstr "Удирдлагын хэсэг"
+
+msgid "Numeric identifier, 1 &rarr; 9"
+msgstr "Тоон дараалал: 1 &rarr; 9"
+
+msgid "Numeric identifier, 9 &rarr; 1"
+msgstr "Тоон дараалал: 9 &rarr; 1"
+
+msgid "An administrator must authorize your comment before it is visible."
+msgstr "Таны бичсэн сэтгэгдэл админ хянаж, зөвшшөрсөний дараа нийтлэгдэх болно. "
+
+msgid "Anti-flood system : please wait for a moment before trying to post another comment"
+msgstr "Уучлаарай. Системийн ачаалал өндөр байгаа тул сэтгэгдэл бичихээ түр хүлээнэ үү."
+
+msgid "Recent period must be a positive integer value"
+msgstr "Сүүлийн үеийн хоногын тоо эерэг утгатай байх ёстой"
+
+msgid "Profile"
+msgstr "Бүртгэл"
+
+msgid "Preferences"
+msgstr "Тохиргоо"
+
+msgid "excluded"
+msgstr "хасагдсан"
+
+msgid "available for administrators only"
+msgstr "зөвхөн админууд хандах эрхтэй"
+
+msgid "Your favorites"
+msgstr "Таалагдсан зурагнууд"
+
+msgid "Piwigo encountered a non recoverable error"
+msgstr "Сэргээх боломжгүй ноцтой алдаа гарлаа!!!"
+
+msgid "You will receive a link to create a new password via email."
+msgstr "Шинэ нууц үг үүсгэх холбоос имэйл хаяг уруу тань очих болно."
+
+msgid "chronology_monthly_calendar"
+msgstr "Сарын хуанли"
+
+msgid "Favorites"
+msgstr "Таалагдсан зурагнууд"
+
+msgid "... or please deactivate this message, I will find my way by myself"
+msgstr "... би өөрөө тохиргоогоо хийх тул энэ мэдээллийг дахин битгий харуул."
+
+msgid "Empty query. No criteria has been entered."
+msgstr "Хайлтын утгаа оруулна уу"
+
+msgid "Redirection..."
+msgstr "Шилжүүлэх..."
+
+msgid "Search for Author"
+msgstr "Зохиогчийг хайх"
+
+msgid "square"
+msgstr "Жижэг дөрвөлжин"
+
+msgid "Bad request"
+msgstr "Алдаатай хүсэлт байна"
+
+msgid "IPTC Metadata"
+msgstr "IPTC Metadata"
+
+msgid "If this was a mistake, just ignore this email and nothing will happen."
+msgstr "Хэрвээ ийм мэйл ирэх ёсгүй гэж үзэж байгаа бол хэрэгсэхгүй орхино уу."
+
+msgid "html tags are not allowed in login"
+msgstr "нэвтрэх хэсэгт html tag ашиглах боломжгүй"
+
+msgid "Your comment has NOT been registered because it did not pass the validation rules"
+msgstr "Уучлаарай Таны бичсэн сэтгэгдэлийг нийтлэх боломжгүй байна. "
+
+msgid "View in"
+msgstr "Харах хувилбар"
+
+msgid "Your Gallery Customization"
+msgstr "Цомогны тохиргоо"
+
+msgid "Unknown feed identifier"
+msgstr "Үлмэдэгдэх ID дугаар байна"
+
+msgid "Unknown identifier"
+msgstr "Ийм бүртгэл байхгүй байна"
+
+msgid "Bad status for user \"guest\", using default status. Please notify the webmaster."
+msgstr "\"guest\" хэрэглэгчийн тохиргоо эвдэрсэн түл үндсэн тохиргоог ашиглалаа. Вэбмастерт мэдэгдэнэ үү."
+
+msgid "N/A"
+msgstr "боломжгүй"
+
+msgid "Username \"%s\" on gallery %s"
+msgstr "%s цомог дахь хэрэглэгч \"%s\" "
+
+msgid "show tag cloud"
+msgstr "түлхүүр үгсийг харуулах"
+
+msgid "included"
+msgstr "агуулсан"
+
+msgid "cloud"
+msgstr "үүлэн тооцоолол"
+
+msgid "Email"
+msgstr "и-мэйл"
+
+msgid "First Page"
+msgstr "эхний хуудас"
+
+msgid "Go back to the album"
+msgstr "Цомог уруу буцах"
+
+msgid "Last Page"
+msgstr "сүүлийн хуудас"
+
+msgid "Password is missing. Please enter the password."
+msgstr "Уучлаарай. Нууц үгээ оруулна уу."
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "Нууц үгээ баталгаажуулж давтан оруулна уу."
+
+msgid "%d photos per page"
+msgstr "Нэг хуудсанд %d зураг"
+
+msgid "Theme"
+msgstr "Загвар"
+
+msgid "Photo description"
+msgstr "Зургийн тайлбар"
+
+msgid "Photo title"
+msgstr "Зургийн нэр"
+
+msgid "Apply on properties"
+msgstr "Тохиргоог хадгалах"
+
+msgid "No results for"
+msgstr "Ийм үр дүн олдсонгүй"
+
+msgid "Album name, A &rarr; Z"
+msgstr "Цомогын нэр, A &rarr; Z"
+
+msgid "Album name, Z &rarr; A"
+msgstr "Цомогын нэр, Z &rarr; A"
+
+msgid "Link: %s"
+msgstr "Холбоос: %s"
+
+msgid "Your authentication key is no longer valid."
+msgstr "Хүчингүй болсон баталгаажуулах код байна"
+
+msgid "Invalid username or password!"
+msgstr "Хэрэглэгчийн нэр/ нууц үг буруу байна "
+
+msgid "generate random password"
+msgstr "Дурын нууц үг үүсгэх"
+
+msgid "Album name, 1 &rarr; 5 &rarr; 10 &rarr; 100"
+msgstr "Цомгийн нэр, 1 &rarr; 5 &rarr; 10 &rarr; 100\r\n"
+
+msgid "Album name, 100 &rarr; 10 &rarr; 5 &rarr; 1"
+msgstr "Цомгийн нэр, 100 &rarr; 10 &rarr; 5 &rarr; 1\r\n"
+
+msgid "Related albums"
+msgstr "Холбоотой цомог"
+
+msgid "Password: ********** (no copy by email)"
+msgstr "Нууц үг: ********** (имэйлээр очихгүй)"
+

@@ -1,0 +1,1135 @@
+# Piwigo translation — lv_LV
+# Source: common.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: lv_LV\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n != 0 ? 1 : 2);\n"
+"X-Piwigo-Language-Name: Latvian\n"
+"X-Piwigo-Country: Latvia\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Code: lv\n"
+"X-Piwigo-Zero-Plural: true\n"
+
+msgid "%d Kb"
+msgstr "%d Kb"
+
+msgid "%d album updated"
+msgid_plural "%d albums updated"
+msgstr[0] "%d albūms atjaunināts"
+msgstr[1] "%d albūmi atjaunināti"
+
+msgid "%d comment to validate"
+msgstr "%d apstiprināt komentāru"
+
+msgid "%d comments to validate"
+msgstr "%d apstiprināt komentarus"
+
+msgid "%d new comment"
+msgstr "%d jauns komentārs"
+
+msgid "%d new comments"
+msgstr "%d jauni komentāri"
+
+msgid "%d comment"
+msgid_plural "%d comments"
+msgstr[0] "%d komentārs"
+msgstr[1] "%d komentāri"
+
+msgid "%d hit"
+msgstr "%d skatījums"
+
+msgid "%d hits"
+msgstr "%d skatījumi"
+
+msgid "%d new photo"
+msgid_plural "%d new photos"
+msgstr[0] "%d jauns foto"
+msgstr[1] "%d jauni foto"
+
+msgid "%d new user"
+msgstr "%d jauns lietotājs"
+
+msgid "%d new users"
+msgstr "%d jauni lietotāji"
+
+msgid "About"
+msgstr "Par"
+
+msgid "All tags"
+msgstr "Visi tagi"
+
+msgid "Any tag"
+msgstr "Jabkurš tags"
+
+msgid "At least one listed rule must be satisfied."
+msgstr "Ir jāizpildās vismaz vienam piedāvātais kritērijs."
+
+msgid "Author"
+msgstr "Autors"
+
+msgid "Albums"
+msgstr "Albūmi"
+
+msgid "Album"
+msgstr "Albūms"
+
+msgid "Close this window"
+msgstr "Aizveriet šo logu"
+
+msgid "Complete RSS feed (photos, comments)"
+msgstr "Pilnīga RSS padeve (foto, komentāri)"
+
+msgid "Confirm Password"
+msgstr "Apstiprināt paroli"
+
+msgid "Connection settings"
+msgstr "Savienojuma iestatījumi"
+
+msgid "Login"
+msgstr "Ielogoties"
+
+msgid "Contact webmaster"
+msgstr "Savienot ar webmaster"
+
+msgid "Create a new account"
+msgstr "Izveidot jaunu kontu"
+
+msgid "Created on"
+msgstr "Izveidots"
+
+msgid "Creation date"
+msgstr "Izveidošanas datums"
+
+msgid "Current password is wrong"
+msgstr "Patrreizējā parole ir nepareiza"
+
+msgid "Dimensions"
+msgstr "Izmēri"
+
+msgid "Display"
+msgstr "Displejs"
+
+msgid "Each listed rule must be satisfied."
+msgstr "Ir jāapmierina visus piedāvātos kritērijus."
+
+msgid "Email address"
+msgstr "E-pasta adrese"
+
+msgid "Enter your personnal informations"
+msgstr "Ievadiet savus datus"
+
+msgid "Error sending email"
+msgstr "Kļūda nosūtot e-pastu"
+
+msgid "File name"
+msgstr "Faila vārds"
+
+msgid "File"
+msgstr "Fails"
+
+msgid "Filesize"
+msgstr "Faila izmērs"
+
+msgid "Filter and display"
+msgstr "Filtrēt un attēlot"
+
+msgid "Filter"
+msgstr "Filtrs"
+
+msgid "Forgot your password?"
+msgstr "Aizmirsāt paroli?"
+
+msgid "Go through the gallery as a visitor"
+msgstr "Skatīt galeriju ka apmeklētājam"
+
+msgid "Help"
+msgstr "Palīgs"
+
+msgid "Identification"
+msgstr "Identifikācija"
+
+msgid "Photos only RSS feed"
+msgstr "foto tikai ar RSS padevi"
+
+msgid "Keyword"
+msgstr "Atslēgvārds"
+
+msgid "Links"
+msgstr "Saites"
+
+msgid "N/A"
+msgstr "N/A"
+
+msgid "New on %s"
+msgstr "Jauns %s"
+
+msgid "Notification"
+msgstr "Paziņojums"
+
+msgid "Number of items"
+msgstr "Vienību skaits"
+
+msgid "Original dimensions"
+msgstr "Oriģinālie izmēri"
+
+msgid "Password forgotten"
+msgstr "Aizmirsta parole"
+
+msgid "Password"
+msgstr "Parole"
+
+msgid "Post date"
+msgstr "Ievietošanas datums"
+
+msgid "Posted on"
+msgstr "Ievietots"
+
+msgid "Profile"
+msgstr "Profils"
+
+msgid "Quick connect"
+msgstr "Ātrais savienojums"
+
+msgid "RSS feed"
+msgstr "RSS padeve"
+
+msgid "Register"
+msgstr "Reģistrs"
+
+msgid "Registration"
+msgstr "Reģistrācija"
+
+msgid "Related tags"
+msgstr "Radniecīgie tagi"
+
+msgid "Reset"
+msgstr "Restartēt"
+
+msgid "Retrieve password"
+msgstr "Iegūt paroli"
+
+msgid "Search rules"
+msgstr "Meklēšanas kritēriji"
+
+msgid "Search tags"
+msgstr "Meklēt tagus"
+
+msgid "Search"
+msgstr "Meklēt"
+
+msgid "display available tags"
+msgstr "Skatīt pieejamos tagus"
+
+msgid "Since"
+msgstr "Kopš"
+
+msgid "Sort by"
+msgstr "Sarindot pēc"
+
+msgid "Sort order"
+msgstr "Rindošanas secība"
+
+msgid "Tag"
+msgstr "Tags"
+
+msgid "Tags"
+msgstr "Tagi"
+
+msgid "The RSS notification feed provides notification on news from this website : new photos, updated albums, new comments. Use a RSS feed reader."
+msgstr "RSS paziņojumu kanāls sniedz paziņojumus šis vietnes jaunumiem: jauni foto, atjaunināti albūmi, jauni komentāri. Lietot RSS piegādes kanāla lasītāju."
+
+msgid "Unknown feed identifier"
+msgstr "Nezināms piegādes identifikators"
+
+msgid "User comments"
+msgstr "Lietotāja komentāri"
+
+msgid "Username"
+msgstr "Lietotājvārds"
+
+msgid "Visits"
+msgstr "Apmeklējumi"
+
+msgid "Webmaster"
+msgstr "Webmasters"
+
+msgid "Week %d"
+msgstr "Nedēļa %d"
+
+msgid "About Piwigo"
+msgstr "Par Piwigo"
+
+msgid "You are not authorized to access the requested page"
+msgstr "Jūs neēsat autorizējies, lai piekļūtu šai lapai"
+
+msgid "add this photo to your favorites"
+msgstr "pievienot šo foto pie jūsu favorītiem"
+
+msgid "Administration"
+msgstr "Administrēšana"
+
+msgid "all"
+msgstr "visi"
+
+msgid "ascending"
+msgstr "augšupejošs"
+
+msgid "author(s) : %s"
+msgstr "autors(i) : %s"
+
+msgid "Expand all albums"
+msgstr "Izvērst visus albūmus"
+
+msgid "posted after %s (%s)"
+msgstr "ievietots pēc %s (%s)"
+
+msgid "posted before %s (%s)"
+msgstr "ievietots pirms %s (%s)"
+
+msgid "posted between %s (%s) and %s (%s)"
+msgstr "ievietots starp %s (%s) un %s (%s)"
+
+msgid "posted on %s"
+msgstr "ievietots %s"
+
+msgid "Best rated"
+msgstr "Vislabāk novērtētais"
+
+msgid "display best rated photos"
+msgstr "parādīt visaugstāk novērtētos foto"
+
+msgid "Calendar"
+msgstr "Kalendārs"
+
+msgid "All"
+msgstr "Visi"
+
+msgid "display each day with photos, month per month"
+msgstr "rādīt katru dienu ar fotogrāfijām mēnesi pēc mēneša"
+
+msgid "View"
+msgstr "Skatīt"
+
+msgid "chronology_monthly_calendar"
+msgstr "Mēnesis"
+
+msgid "chronology_monthly_list"
+msgstr "Datums"
+
+msgid "chronology_weekly_list"
+msgstr "Nedēļas diena"
+
+msgid "Click here if your browser does not automatically forward you"
+msgstr "Klikšķiniet šeit, ja pārlūks jūs automatiksti nepārslēdz"
+
+msgid "comment date"
+msgstr "komentāra datums"
+
+msgid "Comment"
+msgstr "Komentārs"
+
+msgid "Your comment has been registered"
+msgstr "Jūsu komentārs ir reģistrēts"
+
+msgid "Anti-flood system : please wait for a moment before trying to post another comment"
+msgstr "Antipārpildīšanās : lūdzu pagaidiet pirms sūtīt jaunu komentāru"
+
+msgid "Your comment has NOT been registered because it did not pass the validation rules"
+msgstr "Jūsu komentārs nav reģistrēts, jo neatbilst nosacījumiem"
+
+msgid "An administrator must authorize your comment before it is visible."
+msgstr "Administrātoram ir jāpārbauda jūsu komentārs pirms tas tiks parādīts."
+
+msgid "This login is already used by another user"
+msgstr "Šo loginu jau izmanto cits lietotājs"
+
+msgid "Comments"
+msgstr "Komentāri"
+
+msgid "Add a comment"
+msgstr "Pievienot komentāru"
+
+msgid "created after %s (%s)"
+msgstr "izveidots pēc %s (%s)"
+
+msgid "created before %s (%s)"
+msgstr "izveidots pirms %s (%s)"
+
+msgid "created between %s (%s) and %s (%s)"
+msgstr "izveidots starp %s (%s) and %s (%s)"
+
+msgid "created on %s"
+msgstr "izveidots %s"
+
+msgid "Your Gallery Customization"
+msgstr "Jūs Galerijas pielāgošana"
+
+msgid "Default"
+msgstr "Noklusējums"
+
+msgid "delete this photo from your favorites"
+msgstr "dzēst šo foto no jūsu favorītiem"
+
+msgid "Delete"
+msgstr "Dzēst"
+
+msgid "descending"
+msgstr "lejupejošs"
+
+msgid "Download"
+msgstr "Lejupielādēt"
+
+msgid "Download this file"
+msgstr "Lejupielādēt šo failu"
+
+msgid "edit"
+msgstr "labot"
+
+msgid "wrong date"
+msgstr "nepareizs datums"
+
+msgid "excluded"
+msgstr "izņemtais"
+
+msgid "Your favorites"
+msgstr "Mani izvēlētie"
+
+msgid "display your favorites photos"
+msgstr "rādīt jūsu iemīļotos fotoattēlus (favorītus)"
+
+msgid "Favorites"
+msgstr "Izvēlētie"
+
+msgid "First"
+msgstr "Pirmais"
+
+msgid "The gallery is locked for maintenance. Please, come back later."
+msgstr "Galerija slēgta apkopei, lūdzu apmeklējiet to vēlāk."
+
+msgid "Page generated in"
+msgstr "Uzģenerēta lappuse"
+
+msgid "guest"
+msgstr "viesis"
+
+msgid "Hello"
+msgstr "Sveiki"
+
+msgid "available for administrators only"
+msgstr "pieeja tikai administratoriem"
+
+msgid "display this album"
+msgstr "rādīt šo albūmu"
+
+msgid "display last user comments"
+msgstr "Apskatīt pēdējos lietotāju komentārus"
+
+msgid "search"
+msgstr "meklēt"
+
+msgid "Home"
+msgstr "Sākums"
+
+msgid "in this album"
+msgstr "šajā albūmā"
+
+msgid "in %d sub-album"
+msgid_plural "in %d sub-albums"
+msgstr[0] "%d apakšalbūmā"
+msgstr[1] "%d apakšalbūmos"
+
+msgid "included"
+msgstr "iekļauts"
+
+msgid "Invalid password!"
+msgstr "Nepareiza parole!"
+
+msgid "Language"
+msgstr "Valoda"
+
+msgid "last %d days"
+msgstr "pēdējās %d dienas"
+
+msgid "Last"
+msgstr "Pēdējais"
+
+msgid "Logout"
+msgstr "Iziet"
+
+msgid "obligatory"
+msgstr "obligāts"
+
+msgid "display a calendar by creation date"
+msgstr "rāda kalendārā izveides datumu"
+
+msgid "display all photos in all sub-albums"
+msgstr "rādīt visus apakšalbūmu (sub-albums) attēlus"
+
+msgid "return to normal view mode"
+msgstr "atgriezties normālajā apskates režīmā"
+
+msgid "display a calendar by posted date"
+msgstr "rāda kalendārā iesniegšanas datumu"
+
+msgid "Most visited"
+msgstr "Visapmeklētākie"
+
+msgid "display most visited photos"
+msgstr "parādīt visapmeklētākos fotoattēlus"
+
+msgid "The number of photos per page must be a not null scalar"
+msgstr "Foto skaits lapā nedrīkst būt nulle skalārs lielums"
+
+msgid "Number of photos per page"
+msgstr "Foto skaits lapā"
+
+msgid "Unknown identifier"
+msgstr "Nezināms identifikators"
+
+msgid "New password"
+msgstr "Jauna parole"
+
+msgid "Rate this photo"
+msgstr "Vērtēt šo foto"
+
+msgid "Next"
+msgstr "Nākamais"
+
+msgid "no rate"
+msgstr "nav vērtējuma"
+
+msgid "Photos posted within the last %d day."
+msgid_plural "Photos posted within the last %d days."
+msgstr[0] "Pēdējās %d dienas laikā atsūtītie foto."
+msgstr[1] "Pēdējo %d dienu laikā atsūtītie foto."
+
+msgid "password updated"
+msgstr "parole izmainīta"
+
+msgid "Recent period must be a positive integer value"
+msgstr "Tekošajam periodam jābūt veselam skaitlim"
+
+msgid "photo"
+msgstr "foto"
+
+msgid "Click on the photo to see it in high definition"
+msgstr "Klikšķināt uz foto, lai redzētu to lielā izšķirtspējā"
+
+msgid "Show file metadata"
+msgstr "Parādīt faila metadatus"
+
+msgid "Powered by"
+msgstr "Skripts"
+
+msgid "Preferences"
+msgstr "Izvēles"
+
+msgid "Previous"
+msgstr "Iepriekšējais"
+
+msgid "Random photos"
+msgstr "Gadījuma fotoattēli"
+
+msgid "display a set of random photos"
+msgstr "rādīt gadījuma attēlu kopumu"
+
+msgid "Recent albums"
+msgstr "Jaunākie albūmi"
+
+msgid "display recently updated albums"
+msgstr "parādīt jaunākos atjauninātos albūmus"
+
+msgid "Recent period"
+msgstr "Jauninājumu periods"
+
+msgid "Recent photos"
+msgstr "Jaunākie foto"
+
+msgid "display most recent photos"
+msgstr "rādīt visjaunākos fotoattēlus"
+
+msgid "Redirection..."
+msgstr "Pāradresē..."
+
+msgid "Please, enter a login"
+msgstr "Lūdzu ielogojietis"
+
+msgid "login mustn't end with a space character"
+msgstr "logins nedrīkst beigties ar tukšumu - spacebar"
+
+msgid "login mustn't start with a space character"
+msgstr "logins nedrīkst sākties ar tukšumu - spacebar"
+
+msgid "this login is already used"
+msgstr "šo loginu jau lieto"
+
+msgid "mail address must be like xxx@yyy.eee (example : jack@altern.org)"
+msgstr "e-pasta adresei jāizskatās xxx@yyy.eee (piemēram : jack@altern.org)"
+
+msgid "Auto login"
+msgstr "Auto logins"
+
+msgid "remove this tag from the list"
+msgstr "izņemt šo tagu no saraksta"
+
+msgid "representative"
+msgstr "pārstāvis"
+
+msgid "Search for Author"
+msgstr "Meklēšana pēc autora"
+
+msgid "Search in albums"
+msgstr "Meklēt albūmos"
+
+msgid "Search by date"
+msgstr "Meklēšana pēc datuma"
+
+msgid "Date"
+msgstr "Datums"
+
+msgid "End-Date"
+msgstr "Beigu datums"
+
+msgid "Kind of date"
+msgstr "Datuma tips"
+
+msgid "Search for words"
+msgstr "Meklēt pēc vārdiem"
+
+msgid "Search for all terms"
+msgstr "Meklēt pēc visiem kritērijiem"
+
+msgid "Search for any term"
+msgstr "Meklēt pēc jebkura kritērija"
+
+msgid "Empty query. No criteria has been entered."
+msgstr "Tukšs saraksts. Nav ievadīts neviens kritērijs."
+
+msgid "Search results"
+msgstr "Meklēšanas rezultāti"
+
+msgid "Search in sub-albums"
+msgstr "Meklēt apakšalbūmos"
+
+msgid "searched words : %s"
+msgstr "meklējamie vārdi : %s"
+
+msgid "Contact"
+msgstr "Kontakts"
+
+msgid "set as album representative"
+msgstr "iestatīt kā albūma pārstāvi"
+
+msgid "Show number of comments"
+msgstr "Parādīt komentāru skaitu"
+
+msgid "Show number of hits"
+msgstr "Parādīt apskates skaitu"
+
+msgid "slideshow"
+msgstr "slaidšovs"
+
+msgid "stop the slideshow"
+msgstr "pārtraukt slaidšovu"
+
+msgid "Specials"
+msgstr "Speciālie"
+
+msgid "SQL queries in"
+msgstr "SQL pieprasījums"
+
+msgid "display only recently posted photos"
+msgstr "rādīt tikai tagad ievietotos fotoattēlus"
+
+msgid "return to the display of all photos"
+msgstr "atgriezties pie visu foto rādīšanas režīma"
+
+msgid "the beginning"
+msgstr "sākums"
+
+msgid "Thumbnails"
+msgstr "Sīkbildes"
+
+msgid "Menu"
+msgstr "Izvēlne"
+
+msgid "A comment on your site"
+msgstr "Jūsu vietnes komentārs"
+
+msgid "today"
+msgstr "šodien"
+
+msgid "Update your rating"
+msgstr "Atjaunojiet savu vērtējumu"
+
+msgid "the username must be given"
+msgstr "nepieciešams lietotāja vārds"
+
+msgid "useful when password forgotten"
+msgstr "derīgi, ja aizmirsta parole"
+
+msgid "Quick search"
+msgstr "Ātrā meklēšana"
+
+msgid "Connected user: %s"
+msgstr "Pievienotais lietotājs: %s"
+
+msgid "IP: %s"
+msgstr "IP: %s"
+
+msgid "Browser: %s"
+msgstr "Pārlūks: %s"
+
+msgid "Author: %s"
+msgstr "Autors: %s"
+
+msgid "Comment: %s"
+msgstr "Komentārs: %s"
+
+msgid "Comment by %s"
+msgstr "Komentējis %s"
+
+msgid "User: %s"
+msgstr "Lietotājs: %s"
+
+msgid "Email: %s"
+msgstr "E-pasts: %s"
+
+msgid "Admin: %s"
+msgstr "Admins: %s"
+
+msgid "Registration of %s"
+msgstr "Reģistrācija %s"
+
+msgid "Album: %s"
+msgstr "Albūms: %s"
+
+msgid "Bad status for user \"guest\", using default status. Please notify the webmaster."
+msgstr "Lietotāja \"viesis\" nepareizs satuss, lietojiet statusu pēc noklusējuma. Lūdzu informējiet webmasteru."
+
+msgid "this email address is already in use"
+msgstr "cits lietotājs jau lieto šo pasta adresi"
+
+msgid "Album results for"
+msgstr "Albūma rezultāti priekš"
+
+msgid "Tag results for"
+msgstr "Tagu rezultāti priekš"
+
+msgid "from %s to %s"
+msgstr "no %s līdz %s"
+
+msgid "Play of slideshow"
+msgstr "Attēlot slaidšovu"
+
+msgid "Pause of slideshow"
+msgstr "Pauzēt slaidšovu"
+
+msgid "Repeat the slideshow"
+msgstr "Atkārtot slaidšovu"
+
+msgid "Not repeat the slideshow"
+msgstr "Neatkārtot slaidšovu"
+
+msgid "Reduce diaporama speed"
+msgstr "Samazināt slaidšova ātrumu"
+
+msgid "Accelerate diaporama speed"
+msgstr "Palielināt slaidšova ātrumu"
+
+msgid "Submit"
+msgstr "Sūtīt"
+
+msgid "Yes"
+msgstr "Jā"
+
+msgid "No"
+msgstr "Nē"
+
+msgid "%d photo"
+msgid_plural "%d photos"
+msgstr[0] "%d foto"
+msgstr[1] "%d foto"
+
+msgid "%d photo is also linked to current tags"
+msgid_plural "%d photos are also linked to current tags"
+msgstr[0] "%d fotogrāfija ir sasaistīts arī ar tekošo tagu "
+msgstr[1] "%d fotogrāfijas ir sasaistītas arī ar tekošiem tagiem"
+
+msgid "display photos linked to this tag"
+msgstr "rādīt fotogrāfijas, kas saistītas ar šo tagu"
+
+msgid "photos posted during the last %d days"
+msgstr "pēdējo %d dienu laikā ievietotie foto"
+
+msgid "Piwigo Help"
+msgstr "Piwigo palīgs"
+
+msgid "Rank"
+msgstr "Rinda"
+
+msgid "group by letters"
+msgstr "grupēt pēc burtiem"
+
+msgid "letters"
+msgstr "burti"
+
+msgid "show tag cloud"
+msgstr "parādīt tagu mākoni"
+
+msgid "cloud"
+msgstr "mākonis"
+
+msgid "Reset to default values"
+msgstr "Iestatīt noklusējuma vērtības"
+
+msgid "delete all photos from your favorites"
+msgstr "dzēst visus fotoattēlus no favorītiem"
+
+msgid "Sent by"
+msgstr "Aizūtījis"
+
+msgid "Cookies are blocked or not supported by your browser. You must enable cookies to connect."
+msgstr "Jūsu pārlūks ir bloķējis sīklietotnes - cookies. Lai varētu ielogoties ir jāaktevizē sīklietotnes."
+
+msgid "Edit a comment"
+msgstr "Labot komentāru"
+
+msgid "Are you sure?"
+msgstr "Esat pārliecināts?"
+
+msgid "(!) This comment requires validation"
+msgstr "(!) Šis komentārs prasa apstiprinājumu"
+
+msgid "Welcome"
+msgstr "Laipni lūdzam"
+
+msgid "Welcome to your Piwigo photo gallery!"
+msgstr "Lapni lūgti Jūsu Piwigo foto galerijā!"
+
+msgid "... or browse your empty gallery"
+msgstr "... vai pārlūkot jūsu tukšo galeriju"
+
+msgid "... or please deactivate this message, I will find my way by myself"
+msgstr "... vai nerādied lūdzu šo ziņojumu. Es pats tikšu galā ar to"
+
+msgid "Hello %s, your Piwigo photo gallery is empty!"
+msgstr "Sveiki %s, Jūsu Piwigo foto galerija ir tukša!"
+
+msgid "I want to add photos"
+msgstr "Es gribu pievienot attēlus"
+
+msgid "Manage this user comment: %s"
+msgstr "Pārvaldīt šo lietotāja komentāriju: %s"
+
+msgid "Email address is missing. Please specify an email address."
+msgstr "Trūkst e-pasta adreses. Lūdzu norādiet e-pasta adresi."
+
+msgid "This author modified following comment:"
+msgstr "Šis autors modificējis sekojošu komentāru:"
+
+msgid "This author removed the comment with id %d"
+msgstr "Šis autors izdz;esis komentāru ar id %d"
+
+msgid "html tags are not allowed in login"
+msgstr "html tagi loginā nav atļauti"
+
+msgid "%d rates"
+msgstr "%d vērtējumi"
+
+msgid "Rating score"
+msgstr "Rezultējošais vērtējums"
+
+msgid "Invalid username or email"
+msgstr "Kļūdains lietotājvārds vai e-pasta adrese"
+
+msgid "Password reset is not allowed for this user"
+msgstr "Paroles atgūšana šim lietotājam nav atļauta"
+
+msgid "User \"%s\" has no email address, password reset is not possible"
+msgstr "\"%s\" Lietotājiem nav e-pasta adreses, paroles atgūšana nav iespējama"
+
+msgid "Someone requested that the password be reset for the following user account:"
+msgstr "Kāds pieprasījis atgūt paroli sekojošam lietotāja kontam:"
+
+msgid "Username \"%s\" on gallery %s"
+msgstr "Lietotājvārds \"%s\" galerijā %s"
+
+msgid "To reset your password, visit the following address:"
+msgstr " Lai atgūtu savu paroli, apmeklējiet sekojošu adresi:"
+
+msgid "If this was a mistake, just ignore this email and nothing will happen."
+msgstr "Ja tā ir bijusi kļūda, ignorējiet šo e-pastu un nekas nenotiks."
+
+msgid "Password Reset"
+msgstr "Paroles Atgūšana (reset)"
+
+msgid "Check your email for the confirmation link"
+msgstr "Apskatiet savā e-pastā apstiprināšanas saiti"
+
+msgid "Invalid key"
+msgstr "Kļūdaina atslēga (key)"
+
+msgid "The passwords do not match"
+msgstr "Paroles nesakrīt"
+
+msgid "Your password has been reset"
+msgstr "Jūsu parole ir atgūta (atiestatīta)"
+
+msgid "Return to home page"
+msgstr "Atgriezties mājas lapā"
+
+msgid "Please enter your username or email address."
+msgstr "Lūdzu ievadiet lietotājvārdu vai e-pasta adresi."
+
+msgid "You will receive a link to create a new password via email."
+msgstr "Jūs ar e-pastu saņemsiet saiti, lai izveidotu jaunu paroli."
+
+msgid "Username or email"
+msgstr "Lietotājvārds vai e-pasta adrese"
+
+msgid "Change my password"
+msgstr "Nomainīt manu paroli"
+
+msgid "Enter your new password below."
+msgstr "Ievadiet savu jauno paroli zemāk."
+
+msgid "EXIF Metadata"
+msgstr "EXIF Metadati"
+
+msgid "IPTC Metadata"
+msgstr "IPTC Metadati"
+
+msgid "Edit"
+msgstr "Rediģēt"
+
+msgid "Hello %s,"
+msgstr "Sveiki %s,"
+
+msgid "Send my connection settings by email"
+msgstr "Nosūtīt manus konekcijas datus ar e-pastu"
+
+msgid "Successfully registered, you will soon receive an email with your connection settings. Welcome!"
+msgstr "Veiksmīgi piereģistrēts, drīz ar e-pastu saņemsiet savus konekcijas iestatījumus. Esat laipni gaidīti!"
+
+msgid "Username modification"
+msgstr "Lietotājvārda modofikācija"
+
+msgid "Your username has been successfully changed to : %s"
+msgstr "Jūsu lietotājvārds tika sekmīgi izmainīts uz: %s"
+
+msgid "square"
+msgstr "Kvadrāts"
+
+msgid "thumb"
+msgstr "Sīks"
+
+msgid "small"
+msgstr "S - Mazs"
+
+msgid "medium"
+msgstr "M - Vidējs"
+
+msgid "large"
+msgstr "L - Liels"
+
+msgid "xlarge"
+msgstr "XL - Liels"
+
+msgid "xxlarge"
+msgstr "XXL - ļoti liels"
+
+msgid "Original"
+msgstr "Oriģināls"
+
+msgid "Thank you for registering at %s!"
+msgstr "Paldies par reģistrēšanos %s!"
+
+msgid "Here are your connection settings"
+msgstr "Šeit ir Jūsu konekcijas iestatījumi"
+
+msgid "Password: %s"
+msgstr "Parole: %s"
+
+msgid "Username: %s"
+msgstr "Lietotājvārds: %s"
+
+msgid "If you think you've received this email in error, please contact us at %s"
+msgstr "Ja uzskatāt, ka saņēmāt kļūdainu e-pastu, lūdzu sazinieties ar mums %s"
+
+msgid "Photo sizes"
+msgstr "Foto izmēri"
+
+msgid "Show oldest comments first"
+msgstr "Vecāku saturu rādīt vispirms"
+
+msgid "Show latest comments first"
+msgstr "Jaunākos komentārus rādīt vispirms"
+
+msgid "View in"
+msgstr "Skatīties kā"
+
+msgid "Mobile"
+msgstr "Mobilo"
+
+msgid "Desktop"
+msgstr "Desktopu"
+
+msgid "2small"
+msgstr "XXS - sīks"
+
+msgid "xsmall"
+msgstr "XS - ļoti mazs"
+
+msgid "File name, A &rarr; Z"
+msgstr "Faila nosaukums, A &rarr; Z"
+
+msgid "File name, Z &rarr; A"
+msgstr "Faila nosaukums, Z &rarr; A"
+
+msgid "Photo title, A &rarr; Z"
+msgstr "Foto nosaukums, A &rarr; Z"
+
+msgid "Photo title, Z &rarr; A"
+msgstr "Foto nosaukums, Z &rarr; A"
+
+msgid "Date created, new &rarr; old"
+msgstr "Izveides datums jaunais &rarr; vecais"
+
+msgid "Date created, old &rarr; new"
+msgstr "Izveides datums, vecais &rarr; jaunais"
+
+msgid "Date posted, new &rarr; old"
+msgstr "Publicēšanas datums, jaunais &rarr; vecais"
+
+msgid "Date posted, old &rarr; new"
+msgstr "Publicēšanas datums, vecais &rarr; jaunais"
+
+msgid "Rating score, high &rarr; low"
+msgstr "Novērtējums, augsts &rarr; zems"
+
+msgid "Rating score, low &rarr; high"
+msgstr "Novērtējums, zems &rarr; augsts"
+
+msgid "Visits, high &rarr; low"
+msgstr "Apmeklējums, augsts &rarr; zems"
+
+msgid "Visits, low &rarr; high"
+msgstr "Apmeklējums, zems &rarr; augsts"
+
+msgid "Numeric identifier, 1 &rarr; 9"
+msgstr "Ciparu identifikators, 1 &rarr; 9"
+
+msgid "Numeric identifier, 9 &rarr; 1"
+msgstr "Ciparu identifikators, 9 &rarr; 1"
+
+msgid "Manual sort order"
+msgstr "Lietotāja izvēlētais kārtojums"
+
+msgid "%d rate"
+msgstr "%d vērtējums"
+
+msgid "Page not found"
+msgstr "Lapa nav atrasta"
+
+msgid "Bad request"
+msgstr "Kļūdains pieprasījums"
+
+msgid "Forbidden"
+msgstr "Aizliegts"
+
+msgid "Piwigo encountered a non recoverable error"
+msgstr "Piwigo piemeklējusi neatrisināma kļūme"
+
+msgid "Requested album does not exist"
+msgstr "Pieprasītais albūms neeksistē"
+
+msgid "Permalink for album not found"
+msgstr "Albūma permalinks nav atrasts"
+
+msgid "Requested tag does not exist"
+msgstr "Pieprasītā cilne neeksistē"
+
+msgid "mandatory"
+msgstr "obligāts"
+
+msgid "Username is mandatory"
+msgstr "Lietotājvārds ir obligāts"
+
+msgid "Email address is mandatory"
+msgstr "E-pasta adrese ir obligāta"
+
+msgid "Website"
+msgstr "Interneta vietne"
+
+msgid "Your website URL is invalid"
+msgstr "Jūsu interneta vietnes URL ir kļūdains"
+
+msgid "Email"
+msgstr "e-pasts"
+
+msgid "Go back to the album"
+msgstr "Iet atpakaļ uz albūmu"
+
+msgid "Last Page"
+msgstr "Pēdējā lapa"
+
+msgid "First Page"
+msgstr "Pirmā lapa"
+
+msgid "Password is missing. Please enter the password."
+msgstr "Nepareiza parole. Lūdzu atkārtojiet mēģinājumu."
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "Trūkst paroles apstiprinājuma. Lūdzu apstipriniet izvēlēto paroli."
+
+msgid "%d photos per page"
+msgstr "%d fotogrāfiju lapā"
+
+msgid "Theme"
+msgstr "Tēma"
+
+msgid "No results for"
+msgstr "Nav rezultātu"
+
+msgid "Apply on properties"
+msgstr "Pielietot īpašībām"
+
+msgid "Photo title"
+msgstr "Foto nosaukums"
+
+msgid "Photo description"
+msgstr "Foto apraksts"
+
+msgid "Album name, A &rarr; Z"
+msgstr "Albūma nosaukums, A &rarr; Z "
+
+msgid "Album name, Z &rarr; A"
+msgstr "Albūma nosaukums, Z &rarr; A "
+
+msgid "Link: %s"
+msgstr "Saite: %s"
+
+msgid "Your authentication key is no longer valid."
+msgstr "Jūsu autentifikācijas atslēga vairs nav derīga"
+
+msgid "generate random password"
+msgstr "ģenerēt gadījumveida paroli"
+
+msgid "Invalid username or password!"
+msgstr "Nepareizs lietotjvārds vai parole"
+
+msgid "Password: ********** (no copy by email)"
+msgstr "Parole: ********** (ne e-pasta kopija)"
+
+msgid "Related albums"
+msgstr "Saistītie albūmi"
+
+msgid "Album name, 1 &rarr; 5 &rarr; 10 &rarr; 100"
+msgstr "Aibūma nosaukums,1 &rarr; 5 &rarr; 10 &rarr; 100"
+
+msgid "Album name, 100 &rarr; 10 &rarr; 5 &rarr; 1"
+msgstr "Aibūma nosaukums, 100 &rarr; 10 &rarr; 5 &rarr; 1"
+

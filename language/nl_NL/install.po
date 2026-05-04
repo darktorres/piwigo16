@@ -1,0 +1,146 @@
+# Piwigo translation — nl_NL
+# Source: install.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: nl_NL\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Installation"
+msgstr "Installatie"
+
+msgid "Basic configuration"
+msgstr "Basis-configuratie"
+
+msgid "Default gallery language"
+msgstr "Standaard galerie-taal"
+
+msgid "Database configuration"
+msgstr "Database-configuratie"
+
+msgid "Admin configuration"
+msgstr "Beheer configuratie"
+
+msgid "Start Install"
+msgstr "Start Installatie"
+
+msgid "It will be shown to the visitors. It is necessary for website administration"
+msgstr "Het wordt getoond aan de bezoekers. Het is ook noodzakelijk voor het beheer van de website"
+
+msgid "Connection to server succeed, but it was impossible to connect to database"
+msgstr "De verbinding met de server is geslaagd, maar het is niet mogelijk om verbinding te krijgen met de database"
+
+msgid "Can't connect to server"
+msgstr "Geen verbinding met de server"
+
+msgid "Host"
+msgstr "MySQL host"
+
+msgid "User"
+msgstr "Gebruiker"
+
+msgid "user login given by your host provider"
+msgstr "De gebruikersnaam die door jouw provider is gegeven"
+
+msgid "user password given by your host provider"
+msgstr "Wachtwoord dat door jouw provider is gegeven"
+
+msgid "Database name"
+msgstr "Database-naam"
+
+msgid "also given by your host provider"
+msgstr "Ook deze is door jouw provider gegeven"
+
+msgid "Database table prefix"
+msgstr "Database-tabel voorvoegsel"
+
+msgid "database tables names will be prefixed with it (enables you to manage better your tables)"
+msgstr "Tabellen in de database worden voorzien van dit voorvoegsel (dit maakt een beter beheer van de database mogelijk) ook wel prefix genoemd"
+
+msgid "enter a login for webmaster"
+msgstr "Geef de gebruikersnaam voor de beheerder"
+
+msgid "webmaster login can't contain characters ' or \""
+msgstr "De gebruikersnaam mag geen ' of \" bevatten"
+
+msgid "please enter your password again"
+msgstr "Vul a.u.b. nog een keer jouw wachtwoord in"
+
+msgid "Keep it confidential, it enables you to access administration panel"
+msgstr "Houd dit vertrouwelijk. Het geeft toegang tot de beheermodule"
+
+msgid "Password [confirm]"
+msgstr "Bevestig wachtwoord"
+
+msgid "verification"
+msgstr "controle"
+
+msgid "Need help ? Ask your question on <a href=\"%s\">Piwigo message board</a>."
+msgstr "Hulp nodig ? Stel je vraag op het <a href=\"%s\" target=\"_blank\">Piwigo forum</a>."
+
+msgid "Visitors will be able to contact site administrator with this mail"
+msgstr "Met dit email-adres kunnen bezoekers contact opnemen met de beheerder"
+
+msgid "PHP 5 is required"
+msgstr "PHP 5.2 is vereist"
+
+msgid "It appears your webhost is currently running PHP %s."
+msgstr "Het lijkt er op dat je webhost momenteel gebruik maakt van PHP %s."
+
+msgid "Piwigo may try to switch your configuration to PHP 5 by creating or modifying a .htaccess file."
+msgstr "Piwigo kan proberen je configuratie om te zetten naar PHP 5.2 door het aanmaken of wijzigen van een .htaccess bestand."
+
+msgid "Note you can change your configuration by yourself and restart Piwigo after that."
+msgstr "Opmerking: je kunt je configuratie ook zelf aanpassen en daarna Piwigo opnieuw opstarten."
+
+msgid "Try to configure PHP 5"
+msgstr "Probeer PHP 5.2 te configureren"
+
+msgid "Sorry!"
+msgstr "Sorry!"
+
+msgid "Piwigo was not able to configure PHP 5."
+msgstr "Piwigo kon PHP 5.2 niet configureren."
+
+msgid "You may referer to your hosting provider's support and see how you could switch to PHP 5 by yourself."
+msgstr "Neem contact op met de support van je hosting provider en probeer met hen te bepalen hoe je kunt omschakelen naar PHP 5.2"
+
+msgid "Hope to see you back soon."
+msgstr "Hoop je snel weer te zien op deze site!"
+
+msgid "Congratulations, Piwigo installation is completed"
+msgstr "Gefeliciteerd, de Piwigo installatie is afgerond"
+
+msgid "An alternate solution is to copy the text in the box above and paste it into the file \"local/config/database.inc.php\" (Warning : database.inc.php must only contain what is in the textarea, no line return or space character)"
+msgstr "Als alternatieve oplossing kun je de tekst in de bovenstaande box kopiëren en plakken in bestand \"local/config/database.inc.php\" (Opgelet : in database.inc.php mag alleen datgene staan dat in het tekstgebied staat, geen return- of spatie-tekens)"
+
+msgid "Creation of config file local/config/database.inc.php failed."
+msgstr "Het aanmaken van config-bestand local/config/database.inc.php is mislukt."
+
+msgid "Download the config file"
+msgstr "Download het config-bestand"
+
+msgid "You can download the config file and upload it to local/config directory of your installation."
+msgstr "Je kunt het config-bestand downloaden en het uploaden naar de local/config directory van jouw Piwigo-installatie."
+
+msgid "Just another Piwigo gallery"
+msgstr "Alweer een Piwigo galerie"
+
+msgid "Welcome to my photo gallery"
+msgstr "Welkom bij mijn fotogalerie"
+
+msgid "Welcome to your new installation of Piwigo!"
+msgstr "Welkom bij jouw nieuwe installatie van Piwigo!"
+
+msgid "Don't hesitate to consult our forums for any help : %s"
+msgstr "Aarzel niet om onze forums te raadplegen voor hulp: %s"
+
+msgid "localhost or other, supplied by your host provider"
+msgstr "localhost of andere, geleverd door je provider"
+
+msgid "PHP version %s required (you are running on PHP %s)"
+msgstr "PHP-versie %s vereist (je draait op PHP %s)"
+

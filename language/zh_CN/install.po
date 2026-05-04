@@ -1,0 +1,146 @@
+# Piwigo translation — zh_CN
+# Source: install.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: zh_CN\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Installation"
+msgstr "安装程序"
+
+msgid "Basic configuration"
+msgstr "基本设置"
+
+msgid "Default gallery language"
+msgstr "图库默认语言"
+
+msgid "Database configuration"
+msgstr "数据库设置"
+
+msgid "Admin configuration"
+msgstr "管理员帐户设置"
+
+msgid "Start Install"
+msgstr "开始安装"
+
+msgid "It will be shown to the visitors. It is necessary for website administration"
+msgstr "此帐户用于管理网站，所有访问者都能看到此帐户。"
+
+msgid "Connection to server succeed, but it was impossible to connect to database"
+msgstr "服务器连接成功，但是无法连接到数据库。"
+
+msgid "Can't connect to server"
+msgstr "无法连接到服务器"
+
+msgid "Host"
+msgstr "MySQL 主机地址"
+
+msgid "User"
+msgstr "用户名"
+
+msgid "user login given by your host provider"
+msgstr "数据库用户名（由主机服务商提供）"
+
+msgid "user password given by your host provider"
+msgstr "数据库密码（由主机服务商提供）"
+
+msgid "Database name"
+msgstr "数据库名称"
+
+msgid "also given by your host provider"
+msgstr "也由您的主机供应商提供"
+
+msgid "Database table prefix"
+msgstr "数据库表名称前缀"
+
+msgid "database tables names will be prefixed with it (enables you to manage better your tables)"
+msgstr "本程序建立的所有表名都将加此前缀，以便您管理数据库"
+
+msgid "enter a login for webmaster"
+msgstr "请输入站长的用户名"
+
+msgid "webmaster login can't contain characters ' or \""
+msgstr "用户名不能包含字符 ' 或 \""
+
+msgid "please enter your password again"
+msgstr "请再次输入密码"
+
+msgid "Keep it confidential, it enables you to access administration panel"
+msgstr "请小心保管好此密码，您需要用此密码进入管理面板。"
+
+msgid "Password [confirm]"
+msgstr "密码 [ 确认 ]"
+
+msgid "verification"
+msgstr "请再次输入您的密码"
+
+msgid "Need help ? Ask your question on <a href=\"%s\">Piwigo message board</a>."
+msgstr "需要帮助吗？请到<a href=\"%s\">Piwigo 论坛</a>提出您的问题。"
+
+msgid "Visitors will be able to contact site administrator with this mail"
+msgstr "访问者将可通过此邮箱与站长取得联系"
+
+msgid "PHP 5 is required"
+msgstr "需使用 PHP 5.3 版本"
+
+msgid "It appears your webhost is currently running PHP %s."
+msgstr "您主机上的 PHP 版本是 %s。"
+
+msgid "Piwigo may try to switch your configuration to PHP 5 by creating or modifying a .htaccess file."
+msgstr "Piwigo 会尝试创建或修改 .htaccess 文件以切换到 PHP 5.3。"
+
+msgid "Note you can change your configuration by yourself and restart Piwigo after that."
+msgstr "注意：你也可以自己修改设置 PHP 然后重新启动 Piwigo。"
+
+msgid "Try to configure PHP 5"
+msgstr "尝试切换到 PHP 5.3"
+
+msgid "Sorry!"
+msgstr "对不起!"
+
+msgid "Piwigo was not able to configure PHP 5."
+msgstr "Piwigo 无法切换到 PHP 5.3。"
+
+msgid "You may referer to your hosting provider's support and see how you could switch to PHP 5 by yourself."
+msgstr "您需要联系您的主机供应商，向其咨询如何自行切换为 PHP 5.3。"
+
+msgid "Hope to see you back soon."
+msgstr "稍后再会！"
+
+msgid "Congratulations, Piwigo installation is completed"
+msgstr "恭喜，Piwigo 已安装完成"
+
+msgid "An alternate solution is to copy the text in the box above and paste it into the file \"local/config/database.inc.php\" (Warning : database.inc.php must only contain what is in the textarea, no line return or space character)"
+msgstr "另一个解决办法是，将以上文本框里的文本拷贝到 \"local/config/database.inc.php\" 文件里（注意：database.inc.php 必须只能包含此文本框里的内容，没有换行或者空格字符）"
+
+msgid "Creation of config file local/config/database.inc.php failed."
+msgstr "创建 local/config/database.inc.php 配置文件失败。"
+
+msgid "Download the config file"
+msgstr "下载配置文件"
+
+msgid "You can download the config file and upload it to local/config directory of your installation."
+msgstr "您可以下载配置文件，并上传到 local/config 目录以完成您的安装。"
+
+msgid "Welcome to my photo gallery"
+msgstr "欢迎来到我的图库"
+
+msgid "Just another Piwigo gallery"
+msgstr "一个崭新的 Piwigo 图库"
+
+msgid "Don't hesitate to consult our forums for any help : %s"
+msgstr "欢迎来我们的论坛咨询任何 Piwigo 相关问题：%s"
+
+msgid "Welcome to your new installation of Piwigo!"
+msgstr "欢迎安装 Piwigo！"
+
+msgid "localhost or other, supplied by your host provider"
+msgstr "数据库服务器的地址，由主机供应商提供"
+
+msgid "PHP version %s required (you are running on PHP %s)"
+msgstr "需要 PHP %s 以上的版本（目前使用的是 PHP %s）"
+

@@ -1,0 +1,1246 @@
+# Piwigo translation — eu_ES
+# Source: common.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: eu_ES\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Language-Name: Euskara\n"
+"X-Piwigo-Country: Euskadi\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Code: eus\n"
+"X-Piwigo-Zero-Plural: true\n"
+
+msgid "%d album updated"
+msgid_plural "%d albums updated"
+msgstr[0] "eguneratutako album %d"
+msgstr[1] "eguneratutako %d album"
+
+msgid "%d comment to validate"
+msgstr "onartzeko iruzkin %d"
+
+msgid "%d comments to validate"
+msgstr "onartzeko %d iruzkin"
+
+msgid "%d new comment"
+msgstr "iruzkin berri %d"
+
+msgid "%d new comments"
+msgstr "%d iruzkin berri"
+
+msgid "%d comment"
+msgid_plural "%d comments"
+msgstr[0] "iruzkin %d"
+msgstr[1] "%d iruzkin"
+
+msgid "%d hit"
+msgstr "bisita %d"
+
+msgid "%d hits"
+msgstr "%d bisita"
+
+msgid "%d Kb"
+msgstr "%d Kb"
+
+msgid "Albums"
+msgstr "Albumak"
+
+msgid "All"
+msgstr "Dena"
+
+msgid "Album"
+msgstr "Albuma"
+
+msgid "Album: %s"
+msgstr "Albuma: %s"
+
+msgid "%d new user"
+msgstr "erabiltzaile berri %d"
+
+msgid "%d new users"
+msgstr "%d erabiltzaile berri"
+
+msgid "%d photo"
+msgid_plural "%d photos"
+msgstr[0] "argazki %d "
+msgstr[1] "%d argazki"
+
+msgid "%d new photo"
+msgid_plural "%d new photos"
+msgstr[0] "argazki berri %d"
+msgstr[1] "%d argazki berri"
+
+msgid "Comment by %s"
+msgstr "%s-ek Esanda"
+
+msgid "Change my password"
+msgstr "Pasahitza lehengoratzea"
+
+msgid "Check your email for the confirmation link"
+msgstr "Egiazta dezan baieztapenaren lotura hartu duen haren posta elektronikoan"
+
+msgid "Click here if your browser does not automatically forward you"
+msgstr "Hemen saka dezan bere nabigatzaileak eskatutako orrialdea ez badio birbideratzen."
+
+msgid "Click on the photo to see it in high definition"
+msgstr "Klika egin ezazu argazkian kalitate handian ikusteko"
+
+msgid "Close this window"
+msgstr "Leihoa ixtea"
+
+msgid "Comment"
+msgstr "Iruzkina"
+
+msgid "Comment: %s"
+msgstr "Iruzkina: %s"
+
+msgid "(!) This comment requires validation"
+msgstr "(!) Iruzkin hau baliestatu behar da"
+
+msgid "2small"
+msgstr "ñimiñoa"
+
+msgid "Anti-flood system : please wait for a moment before trying to post another comment"
+msgstr "Anti-kolapsoa prebentzio sistema aktibatu da. Mesedez, itxaron dezan une bat beste iruzkin bat gehitu baino lehen. Orain zerbitzaria prozesatzen ari da beste erabiltzaile batzuen eskaera ugariak."
+
+msgid "Any tag"
+msgstr "Edozein etiketa"
+
+msgid "Are you sure?"
+msgstr "Ekintza hau aurrera eraman nahi duzula baieztatu"
+
+msgid "Author"
+msgstr "Egilea"
+
+msgid "Author: %s"
+msgstr "Egilea: %s"
+
+msgid "Auto login"
+msgstr "Gogoratzea"
+
+msgid "Bad request"
+msgstr "Eskaera okerra"
+
+msgid "Bad status for user \"guest\", using default status. Please notify the webmaster."
+msgstr "Erroneo-a \"gonbidatutako\" erabiltzailearen egoera. Lehenetsitako egoera erabiltzen ari da. Mesedez, informa beza webeko administratzaileari"
+
+msgid "Best rated"
+msgstr "Hobeto balioetsita"
+
+msgid "Browser: %s"
+msgstr "Nabigatzailea: %s"
+
+msgid "Calendar"
+msgstr "Egutegia"
+
+msgid "%d rates"
+msgstr "%d balorazio"
+
+msgid "A comment on your site"
+msgstr "Zure webgunearen iruzkina"
+
+msgid "About"
+msgstr "Buruz"
+
+msgid "About Piwigo"
+msgstr "Piwigo-ri buruz"
+
+msgid "Accelerate diaporama speed"
+msgstr "Diapositiba-baimenaren abiadura handitzea"
+
+msgid "Add a comment"
+msgstr "Iruzkina gehitzea"
+
+msgid "Admin: %s"
+msgstr "Admin: %s"
+
+msgid "Administration"
+msgstr "Administrazioa"
+
+msgid "Album results for"
+msgstr "Albumen emaitzak"
+
+msgid "All tags"
+msgstr "Etiketa guztiak"
+
+msgid "An administrator must authorize your comment before it is visible."
+msgstr "Administratzaile batek bere iruzkina ikusgaia izan baino lehen baliozkotu behar du."
+
+msgid "%d rate"
+msgstr "balorazio %d"
+
+msgid "... or browse your empty gallery"
+msgstr "... edo nabiga ezazu galeriatik (momentu honetan hutsik)"
+
+msgid "... or please deactivate this message, I will find my way by myself"
+msgstr "... edo mesedez, mezu hau desaktiba ezazu hura nire kontura egiteko modua aurkitzeko"
+
+msgid "%d photo is also linked to current tags"
+msgid_plural "%d photos are also linked to current tags"
+msgstr[0] "argazki %d etiketa hauekin lotuta"
+msgstr[1] "%d argazki etiketa hauekin lotuta"
+
+msgid "%d photos per page"
+msgstr "%d argazki orrialdeko"
+
+msgid "Connected user: %s"
+msgstr "Konektatutako erabiltzailea: %s"
+
+msgid "Date created, new &rarr; old"
+msgstr "Kreazio data, berria &rarr; zaharra"
+
+msgid "Date created, old &rarr; new"
+msgstr "Kreazio data, zaharra &rarr; berria"
+
+msgid "Default"
+msgstr "Lehenetsi"
+
+msgid "Delete"
+msgstr "Kentzea"
+
+msgid "Date"
+msgstr "Hasierako data"
+
+msgid "Connection settings"
+msgstr "Konexio-parametroak"
+
+msgid "Contact"
+msgstr "Harremanetan jartzea"
+
+msgid "Contact webmaster"
+msgstr "Webmasterarekin harremanetan jartzea"
+
+msgid "Cookies are blocked or not supported by your browser. You must enable cookies to connect."
+msgstr "Cookieak blokeatuta daude edo nabigatzaileak ez du bere erabilerarik baimentzen. Konektatu ahal izateko aktibatu behar ditu."
+
+msgid "Create a new account"
+msgstr "Kontu berria sortzea"
+
+msgid "Creation date"
+msgstr "Kreazio data"
+
+msgid "Current password is wrong"
+msgstr "Pasahitza okerra"
+
+msgid "Complete RSS feed (photos, comments)"
+msgstr "RSS osoa (argazkiak eta iruzkinak)"
+
+msgid "Comments"
+msgstr "Iruzkinak"
+
+msgid "Confirm Password"
+msgstr "Pasahitza beretsi"
+
+msgid "Notification"
+msgstr "RSS"
+
+msgid "Password"
+msgstr "Pasahitza"
+
+msgid "If you think you've received this email in error, please contact us at %s"
+msgstr "Mesedez, email hau jaso duela akatsagatik uste badu, gurekin harremanetan jar zaitez %s"
+
+msgid "Links"
+msgstr "Loturak"
+
+msgid "Login"
+msgstr "Identifikatzea"
+
+msgid "Logout"
+msgstr "Deskonexioa"
+
+msgid "Manage this user comment: %s"
+msgstr "Iruzkinak kudeatu: %s"
+
+msgid "Manual sort order"
+msgstr "Eskuzko ordena"
+
+msgid "Menu"
+msgstr "Menua"
+
+msgid "Invalid key"
+msgstr "Pasahitz baliogabea"
+
+msgid "Invalid password!"
+msgstr "Pasahitz baliogabea"
+
+msgid "Invalid username or email"
+msgstr "Erabiltzaile-izena edo helbide elektroniko baliogabea"
+
+msgid "Keyword"
+msgstr "Gako-hitza"
+
+msgid "Kind of date"
+msgstr "Zein?"
+
+msgid "Language"
+msgstr "Hizkuntza"
+
+msgid "Last"
+msgstr "Azkena"
+
+msgid "Last Page"
+msgstr "Azken orrialdea"
+
+msgid "File name, Z &rarr; A"
+msgstr "Artxibo izena, Z &rrar; A"
+
+msgid "I want to add photos"
+msgstr "Argazkiak gehitu nahi ditut"
+
+msgid "IP: %s"
+msgstr "IP: %s"
+
+msgid "IPTC Metadata"
+msgstr "IPTC Metadatak "
+
+msgid "Identification"
+msgstr "Autentifikazioa"
+
+msgid "If this was a mistake, just ignore this email and nothing will happen."
+msgstr "Akatsa bat izanez gero, mezu hau ezikusi. Zure eskaera ukatu egingo da."
+
+msgid "Filesize"
+msgstr "Tamaina"
+
+msgid "Filter"
+msgstr "Iragaztea"
+
+msgid "Filter and display"
+msgstr "Iragazkia ematea"
+
+msgid "First"
+msgstr "Lehen"
+
+msgid "First Page"
+msgstr "Lehen orrialdea"
+
+msgid "Forbidden"
+msgstr "Debekatuta"
+
+msgid "Forgot your password?"
+msgstr "Bere pasahitza ahaztu du?"
+
+msgid "Go back to the album"
+msgstr "Albumera itzultzea"
+
+msgid "Go through the gallery as a visitor"
+msgstr "Bisitari bezala galeriara sartzea"
+
+msgid "Hello"
+msgstr "Kaixo"
+
+msgid "Hello %s,"
+msgstr "Kaixo &s,"
+
+msgid "Hello %s, your Piwigo photo gallery is empty!"
+msgstr "Kaixo %s, galeria hutsik dago"
+
+msgid "Help"
+msgstr "Laguntza"
+
+msgid "Here are your connection settings"
+msgstr "Bere konexio-parametroak hemen ditu"
+
+msgid "Home"
+msgstr "Hasiera"
+
+msgid "Created on"
+msgstr "Sortuta"
+
+msgid "Date posted, new &rarr; old"
+msgstr "Argitalpen-data, berria &rrar; zaharra"
+
+msgid "Date posted, old &rarr; new"
+msgstr "Argitalpen-data, zaharra &rrar; berria"
+
+msgid "Favorites"
+msgstr "Gogokoak"
+
+msgid "File"
+msgstr "Artxibo"
+
+msgid "File name"
+msgstr "Artxibo izena"
+
+msgid "File name, A &rarr; Z"
+msgstr "Artxibo izena, A &rrar; Z"
+
+msgid "Email address is mandatory"
+msgstr "Posta elektronikoa helbidea beharrezkoa da"
+
+msgid "Email address is missing. Please specify an email address."
+msgstr "Zure posta elektronikoaren helbidea falta da. Mesedez sar ezazu."
+
+msgid "Email: %s"
+msgstr "Email: %s"
+
+msgid "Empty query. No criteria has been entered."
+msgstr "Ez duzu inongo bilaketa-irizpiderik sartu"
+
+msgid "End-Date"
+msgstr "Azkeneko data"
+
+msgid "Enter your new password below."
+msgstr "Pasahitz berria sar ezazu"
+
+msgid "Enter your personnal informations"
+msgstr "Bere informazio pertsonala sar ezazu"
+
+msgid "Error sending email"
+msgstr "Error posta elektronikoa bidaliz"
+
+msgid "Expand all albums"
+msgstr "Album guztiak hedatzea"
+
+msgid "Desktop"
+msgstr "Mahaigaina"
+
+msgid "Dimensions"
+msgstr "Dimentsioak"
+
+msgid "Display"
+msgstr "Ikusi"
+
+msgid "Download"
+msgstr "Deskargatu"
+
+msgid "Download this file"
+msgstr "Deskargatu"
+
+msgid "EXIF Metadata"
+msgstr "Kamera digitala"
+
+msgid "Edit"
+msgstr "Editatzea"
+
+msgid "Edit a comment"
+msgstr "Iruzkina editatzea"
+
+msgid "Email"
+msgstr "Posta elektronikoa"
+
+msgid "Email address"
+msgstr "Posta elektronikoa"
+
+msgid "Mobile"
+msgstr "Mobilak"
+
+msgid "Most visited"
+msgstr "Bisitatuenak"
+
+msgid "N/A"
+msgstr "ez erabilgarria"
+
+msgid "New on %s"
+msgstr "Berria %s"
+
+msgid "New password"
+msgstr "Pasahitza berria"
+
+msgid "Next"
+msgstr "Hurrengoa"
+
+msgid "No"
+msgstr "Ez"
+
+msgid "Not repeat the slideshow"
+msgstr "Errepikapena desaktibatzea"
+
+msgid "Original"
+msgstr "Originala"
+
+msgid "Page not found"
+msgstr "Ez aurkitatuko orrialdea"
+
+msgid "Password Reset"
+msgstr "PAsahitz berria ezarri"
+
+msgid "Search"
+msgstr "Bilatzea"
+
+msgid "Search by date"
+msgstr "Dataren arabera bilatzea"
+
+msgid "Search for Author"
+msgstr "Egilearen arabera bilatzea"
+
+msgid "Piwigo Help"
+msgstr "Laguntza"
+
+msgid "in this album"
+msgstr "album honetan"
+
+msgid "letters"
+msgstr "hizkiak"
+
+msgid "large"
+msgstr "L - haundia"
+
+msgid "last %d days"
+msgstr "Azken %d egunak"
+
+msgid "all"
+msgstr "Dena"
+
+msgid "posted after %s (%s)"
+msgstr "%s (%s) ondoren argitaratuak"
+
+msgid "posted before %s (%s)"
+msgstr "%s (%s) baino lehen argitaratuak"
+
+msgid "posted between %s (%s) and %s (%s)"
+msgstr "%s (%s) eta %s (%s)artean argitaratuak"
+
+msgid "posted on %s"
+msgstr "%s argitaratuak"
+
+msgid "search"
+msgstr "Bilatu"
+
+msgid "slideshow"
+msgstr "Aurkezpena"
+
+msgid "square"
+msgstr "Karratua"
+
+msgid "xxlarge"
+msgstr "izugarria"
+
+msgid "mail address must be like xxx@yyy.eee (example : jack@altern.org)"
+msgstr "Posta elektroniko-helbidearen formatuak xxx@yyy.eee (adibidea: jack@altern.org) izan behar du"
+
+msgid "mandatory"
+msgstr "derrigorrezkoa"
+
+msgid "medium"
+msgstr "ertaina"
+
+msgid "no rate"
+msgstr "baloratu gabe"
+
+msgid "obligatory"
+msgstr "derrigorrezkoa"
+
+msgid "password updated"
+msgstr "Pasahitza eguneratua"
+
+msgid "photo"
+msgstr "Argazki"
+
+msgid "photos posted during the last %d days"
+msgstr "Azken %d egunetan argitaratu diren argazkiak"
+
+msgid "small"
+msgstr "txiki"
+
+msgid "the beginning"
+msgstr "Hasiera"
+
+msgid "today"
+msgstr "Gaur"
+
+msgid "xlarge"
+msgstr "oso haundia"
+
+msgid "xsmall"
+msgstr "oso txikia"
+
+msgid "Your favorites"
+msgstr "Gogokoak"
+
+msgid "View in"
+msgstr "Web diseinua egokituta"
+
+msgid "Visits, high &rarr; low"
+msgstr "Bisitak, gehio &rarr; gutxi"
+
+msgid "Webmaster"
+msgstr "Webmaster"
+
+msgid "Website"
+msgstr "Web orria"
+
+msgid "Welcome to your Piwigo photo gallery!"
+msgstr "¡Ongi etorri zure Piwigo argazki galeriara!"
+
+msgid "Username or email"
+msgstr "Erabiltzaile izena edo posta elektronikoa"
+
+msgid "View"
+msgstr "Begiratu"
+
+msgid "Visits"
+msgstr "Bisitak"
+
+msgid "Visits, low &rarr; high"
+msgstr "Bisitak, gutxi &rarr; gehio"
+
+msgid "Welcome"
+msgstr "Kaixo"
+
+msgid "Yes"
+msgstr "Bai"
+
+msgid "guest"
+msgstr "gonbidatua"
+
+msgid "thumb"
+msgstr "Diapositiba"
+
+msgid "Password: %s"
+msgstr "Pasahitza: %s"
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "Pasahitza ez da egiaztatu. Mesedez, aukeratutako pasahitza egiazta ezazu."
+
+msgid "Password forgotten"
+msgstr "Saio-hasiera-egiaztagiriak gogoratzea"
+
+msgid "Password is missing. Please enter the password."
+msgstr "Pasahitza falta da. Mesedez, sar ezazu."
+
+msgid "Password reset is not allowed for this user"
+msgstr "Erabiltzaile honentzat ez dago sarbide gakoa indarberritzea baimenduta"
+
+msgid "Pause of slideshow"
+msgstr "Etenaldia"
+
+msgid "Permalink for album not found"
+msgstr "Ez du lotura iraunkorra aurkitzen albumerako"
+
+msgid "Photo sizes"
+msgstr "Neurriak aldatzea"
+
+msgid "Photo title, A &rarr; Z"
+msgstr "Argazkiko titulua, A&rarr;Z"
+
+msgid "Photo title, Z &rarr; A"
+msgstr "Argazkiko titulua, Z&rarr;A"
+
+msgid "Photos only RSS feed"
+msgstr "RSS-a soilik argazkietarako kanala"
+
+msgid "Photos posted within the last %d day."
+msgid_plural "Photos posted within the last %d days."
+msgstr[0] "Argitaratutako argazkia %d hau."
+msgstr[1] "Azken %d egunetan zehar argitaratutako irudiak erakusten dira soilik."
+
+msgid "Piwigo encountered a non recoverable error"
+msgstr "Piwigo-k akats konponezina antzeman du"
+
+msgid "Play of slideshow"
+msgstr "Erreproduzitzea"
+
+msgid "Please enter your username or email address."
+msgstr "Bere erabiltzaile-izena edo erregistratzeko erabili zenuen posta elektronikoa sar ezazu."
+
+msgid "Please, enter a login"
+msgstr "Mesedez, bere autentifikazio-egiaztagiriak sar itzazu"
+
+msgid "Post date"
+msgstr "Argitalpen-data"
+
+msgid "Posted on"
+msgstr "Argitaratuta"
+
+msgid "No results for"
+msgstr "Emaitzarik ez dago"
+
+msgid "Number of items"
+msgstr "Elementu kopurua"
+
+msgid "Number of photos per page"
+msgstr "Orrialdeagatiko miniaturetako kopurua"
+
+msgid "Numeric identifier, 1 &rarr; 9"
+msgstr "Identifikazio zenbakia, 1&rarr;9"
+
+msgid "Numeric identifier, 9 &rarr; 1"
+msgstr "Identifikazio zenbakia, 9&rarr;1"
+
+msgid "Original dimensions"
+msgstr "Original dimentsioak"
+
+msgid "Page generated in"
+msgstr "Sortutako orrialdea"
+
+msgid "Username: %s"
+msgstr "Erabiltzaile-izena: %s"
+
+msgid "Week %d"
+msgstr "Astea %d"
+
+msgid "You are not authorized to access the requested page"
+msgstr "Orrialde honetara sartzeko ez dago baimenduta"
+
+msgid "You will receive a link to create a new password via email."
+msgstr "Bere pasahitz berria sortzea baimenduko dion posta elektronikorako lotura jasoko du."
+
+msgid "Your Gallery Customization"
+msgstr "Galeria neurrira egitea"
+
+msgid "Your comment has NOT been registered because it did not pass the validation rules"
+msgstr "Abisua: Bere iruzkina ez da argitaratuko balidatze-erregelak ez dituelako gainditu"
+
+msgid "Your comment has been registered"
+msgstr "Bere iruzkina zuzen erregistratu da"
+
+msgid "Your password has been reset"
+msgstr "Bere pasahitza arrakastarekin indarberritu da."
+
+msgid "display each day with photos, month per month"
+msgstr "Argazkiak egunean, hilabeterako hilabetean, ikustea"
+
+msgid "display last user comments"
+msgstr "Erabiltzaileen azken iruzkinak ikustea"
+
+msgid "display most recent photos"
+msgstr "Argazkirik berrienak ikustea"
+
+msgid "display most visited photos"
+msgstr "Argazki bisitatuenak ikustea"
+
+msgid "display only recently posted photos"
+msgstr "Oraintsu argitaratutako argazkiak ikustea"
+
+msgid "display photos linked to this tag"
+msgstr "Etiketa honekin argazki erlazionatuak erakustea"
+
+msgid "display recently updated albums"
+msgstr "Oraintsu eguneratutako albumak ikustea"
+
+msgid "delete all photos from your favorites"
+msgstr "Bere argazki gogokoen guztiak ezabatzea"
+
+msgid "delete this photo from your favorites"
+msgstr "Bere gustukoenen argazki hau ezabatzea"
+
+msgid "descending"
+msgstr "Beheranzkoa"
+
+msgid "display a calendar by creation date"
+msgstr "Sorrera-dataren arabera egutegia"
+
+msgid "display a calendar by posted date"
+msgstr "Argitalpen-dataren arabera egutegia"
+
+msgid "display a set of random photos"
+msgstr "Ausazko argazki bilduma bat ikustea"
+
+msgid "display all photos in all sub-albums"
+msgstr "Miniaturengatiko bista"
+
+msgid "display available tags"
+msgstr "Etiketa libreak erakustea"
+
+msgid "display best rated photos"
+msgstr "Hobeto balioetsitako argazkiak ikustea"
+
+msgid "display this album"
+msgstr "Album honen edukia ikustea"
+
+msgid "display your favorites photos"
+msgstr "Nire argazki gogokoenak ikustea"
+
+msgid "edit"
+msgstr "Editatzea"
+
+msgid "excluded"
+msgstr "Bastertuen"
+
+msgid "from %s to %s"
+msgstr "%s-tik %s-ra"
+
+msgid "group by letters"
+msgstr "Letrengatik elkartzea"
+
+msgid "html tags are not allowed in login"
+msgstr "Html-a etiketarik saio hasiera datuetan ez da baimentzen"
+
+msgid "in %d sub-album"
+msgid_plural "in %d sub-albums"
+msgstr[0] "azpi album %d-ean"
+msgstr[1] "%d azpi-albumetan"
+
+msgid "included"
+msgstr "sartuta"
+
+msgid "login mustn't end with a space character"
+msgstr "Erabiltzaile-izena 'espazio' karaktereaz ezin da amaitu"
+
+msgid "login mustn't start with a space character"
+msgstr "Erabiltzaile-izena 'espazio' karaktereaz ezin da hasi"
+
+msgid "the username must be given"
+msgstr "Erabiltzaile-izena jarri behar du"
+
+msgid "this email address is already in use"
+msgstr "Beste erbiltzaile batek posta elektroniko hau darabil"
+
+msgid "this login is already used"
+msgstr "Beste erabiltzaile batek erabiltzaile-izen hau erabiltzen du"
+
+msgid "useful when password forgotten"
+msgstr "Erabilgarria egiaztagiri-galerarik egotekotan"
+
+msgid "stop the slideshow"
+msgstr "Aurkezpena gelditzea"
+
+msgid "show tag cloud"
+msgstr "Etiketa-hodeia erakustea"
+
+msgid "set as album representative"
+msgstr "Album honetako ikono bezala argazki hau ezartzea"
+
+msgid "representative"
+msgstr "Irudikatzea"
+
+msgid "return to the display of all photos"
+msgstr "Irudi guztiak berriro ikustea"
+
+msgid "return to normal view mode"
+msgstr "Albumengatiko bista"
+
+msgid "remove this tag from the list"
+msgstr "Etiketa honek zerrendatik kendu"
+
+msgid "wrong date"
+msgstr "Data okerra"
+
+msgid "Search tags"
+msgstr "Etiketak bilatzea"
+
+msgid "Registration of %s"
+msgstr "Erregistroa %s"
+
+msgid "Someone requested that the password be reset for the following user account:"
+msgstr "Norbaitek eskatu du bere pasahitza indarberri dezan hurrengo erabiltzaile-kontuetarako:"
+
+msgid "Sort by"
+msgstr "Ordenatzea"
+
+msgid "Sort order"
+msgstr "Ordenatzea"
+
+msgid "Specials"
+msgstr "Bereziak"
+
+msgid "Submit"
+msgstr "Baliozkotzea"
+
+msgid "Tag"
+msgstr "Etiketa"
+
+msgid "Tag results for"
+msgstr "Etiketaren emaitzak"
+
+msgid "Tags"
+msgstr "Etiketak"
+
+msgid "Thank you for registering at %s!"
+msgstr "Eskerrik asko %s-an erregistra ezazu!"
+
+msgid "Reduce diaporama speed"
+msgstr "Abiadura gutxitzea"
+
+msgid "Register"
+msgstr "Erregistratzea"
+
+msgid "Registration"
+msgstr "Erregistroa"
+
+msgid "Related tags"
+msgstr "Erlazionatuta etiketak"
+
+msgid "Repeat the slideshow"
+msgstr "Errepikapena aktibatzea"
+
+msgid "Requested album does not exist"
+msgstr "Eskatutako albuma ez dago"
+
+msgid "Requested tag does not exist"
+msgstr "Eskatutako etiketa ez dago"
+
+msgid "Reset"
+msgstr "Leheneratu"
+
+msgid "Reset to default values"
+msgstr "Lehenetsitako balioak zaharberritzea"
+
+msgid "Retrieve password"
+msgstr "Pasahitza berreskuratzea"
+
+msgid "Return to home page"
+msgstr "Hasierako orrialdea itzultzea"
+
+msgid "SQL queries in"
+msgstr "SQL kosultak"
+
+msgid "Search for all terms"
+msgstr "Termino guztiak bilatzea"
+
+msgid "Search for any term"
+msgstr "Edozein terminoa bilatzea"
+
+msgid "Search for words"
+msgstr "Hitzengatik bilatzea"
+
+msgid "Search in albums"
+msgstr "Albumetan bilatzea"
+
+msgid "Search in sub-albums"
+msgstr "Azpi-albumetan bilatzea"
+
+msgid "Search results"
+msgstr "Bilaketaren emaitzak"
+
+msgid "Apply on properties"
+msgstr "Jabetzak ematea"
+
+msgid "Photo description"
+msgstr "Argazkiko deskribapena"
+
+msgid "Photo title"
+msgstr "Argazkiko titulua"
+
+msgid "Powered by"
+msgstr "Garatzailea:"
+
+msgid "Preferences"
+msgstr "Lehentasunak"
+
+msgid "Previous"
+msgstr "Aurrekoa"
+
+msgid "Profile"
+msgstr "Profila"
+
+msgid "Quick connect"
+msgstr "Konexio azkarra"
+
+msgid "Quick search"
+msgstr "Bilaketa azkarra"
+
+msgid "Random photos"
+msgstr "Ausazko argazkiak"
+
+msgid "Rank"
+msgstr "Hobeto balioetsitak"
+
+msgid "Rate this photo"
+msgstr "Balioestea"
+
+msgid "Rating score"
+msgstr "Kalifikazioa"
+
+msgid "Rating score, high &rarr; low"
+msgstr "Kalifikazio, altuago &rarr; txikiago"
+
+msgid "Rating score, low &rarr; high"
+msgstr "Kalifikazio, txikiago &rarr; altuago"
+
+msgid "Recent albums"
+msgstr "Album berriak"
+
+msgid "Recent period"
+msgstr "Aldi berria (egunak)"
+
+msgid "Recent period must be a positive integer value"
+msgstr "Aldiak zenbaki positiboa izan behar du"
+
+msgid "Recent photos"
+msgstr "Argazki berriak"
+
+msgid "Redirection..."
+msgstr "Birhelbidea..."
+
+msgid "RSS feed"
+msgstr "RSS Kanala"
+
+msgid "Thumbnails"
+msgstr "Diapositibak"
+
+msgid "created before %s (%s)"
+msgstr "%s(%s)-etatik baino lehenago sortuta"
+
+msgid "created between %s (%s) and %s (%s)"
+msgstr "%s(%s)-etatik eta %s(%s)-etara artean sortuta"
+
+msgid "created on %s"
+msgstr "%s sortuta"
+
+msgid "Username modification"
+msgstr "Erabiltzaile izena aldatzea"
+
+msgid "Username"
+msgstr "Eraibiltzaile izena"
+
+msgid "Username \"%s\" on gallery %s"
+msgstr "Eraibiltzaile izena \"%s\" galerian %s"
+
+msgid "Username is mandatory"
+msgstr "Eraibiltzaile izena nahitaezkoa da"
+
+msgid "Sent by"
+msgstr "Mandataria"
+
+msgid "Show file metadata"
+msgstr "Erakutsi / ezkutatu kamera gain (Exif metadatuak)"
+
+msgid "The passwords do not match"
+msgstr "Pasahitzak ex datoz"
+
+msgid "Theme"
+msgstr "Gaia"
+
+msgid "This author modified following comment:"
+msgstr "Egile honek hurrengo iruzkina aldatu zuen:"
+
+msgid "This author removed the comment with id %d"
+msgstr "Egile honek iruzkina  zenbakizko %d identifikatzailearekin ezabatu du"
+
+msgid "This login is already used by another user"
+msgstr "Erabiltzaile izen hau beste batek du"
+
+msgid "The number of photos per page must be a not null scalar"
+msgstr "Orrialdeagatik argazki kantitateak zero baino gehiagoko zenbaki osoa izan behar du"
+
+msgid "The gallery is locked for maintenance. Please, come back later."
+msgstr "Galeria mantenu-lanek aldi baterako itxita dago . Eragozpenak barka itzazu. Minutu batzuetan Galeria eraginkor berriro egongo da."
+
+msgid "The RSS notification feed provides notification on news from this website : new photos, updated albums, new comments. Use a RSS feed reader."
+msgstr "RSS-a formatuarekin birzabalkunde iturriak webgune honen berritasunen jakinarazpen automatikoak ematen ditu: argazki berriak, albumen gaurkotzeak, iruzkin berrien... RSS-a kanal irakurle bat erabili behar du.\r\n\r\nFeeds-ak zer diren eta erabil ditzakeenez gero?\r\nUn Feed da webguneko berrietako eguneratuta egon ahal izateko eguneratzen ari den laburpeneko sistema.\r\n\r\nArreta: Feed batera harpidetzeko Feeds-eko irakurle bat beharrezkoa da. Feeds-eko irakurlerik gabeko Feed bat clicar-tzerakoan, nabigatzaileak formaturik gabeko testua erakutsiko du.\r\n\r\nRSS-a eta Atom zer dira?\r\nFeeds-en bi formatu dira. Feeds-irakurle askok bi formatuak jasaten dituzte."
+
+msgid "Successfully registered, you will soon receive an email with your connection settings. Welcome!"
+msgstr "Zuzen erregistratu da. Email bat jasoko du laster bere kredentzialekin. Ongi etorria!"
+
+msgid "Since"
+msgstr "Etatik"
+
+msgid "Show oldest comments first"
+msgstr "Erakutsi lehen iruzkin zaharrak"
+
+msgid "Show number of hits"
+msgstr "Ikusi-kopurua erakustea"
+
+msgid "Show number of comments"
+msgstr "Iruzkin-kopurua erakustea"
+
+msgid "Show latest comments first"
+msgstr "Erakutsi lehen iruzkin berriak"
+
+msgid "Send my connection settings by email"
+msgstr "Kredentzialak nire posta elektronikora bidaltzea"
+
+msgid "Link: %s"
+msgstr "Esteka: %s"
+
+msgid "Album name, A &rarr; Z"
+msgstr "Albuma izena, A &rarr;Z"
+
+msgid "Album name, Z &rarr; A"
+msgstr "Albuma izena, Z &rarr;A"
+
+msgid "Unknown feed identifier"
+msgstr "Kanaleko identifikatzailea ezezaguna"
+
+msgid "Unknown identifier"
+msgstr "Identifikatzaile ezezaguna"
+
+msgid "To reset your password, visit the following address:"
+msgstr "Bere pasahitza indarberritzeko, hurrengo loturan klika egin ezazu:"
+
+msgid "Update your rating"
+msgstr "Balioespena aldatzea"
+
+msgid "User \"%s\" has no email address, password reset is not possible"
+msgstr "\"%s\" erabiltzaileak ez du inongo helbide elektronikorik erregistratu. Bere pasahitza ezin da indarberritu."
+
+msgid "User comments"
+msgstr "Erabiltzaileen iruzkinak"
+
+msgid "User: %s"
+msgstr "Erabiltzailea: %s"
+
+msgid "Your username has been successfully changed to : %s"
+msgstr "Bere erabiltzaile-izena arrakastarekin aldatu du: %s"
+
+msgid "Your website URL is invalid"
+msgstr "Zure web-orriko url-a okerra da"
+
+msgid "add this photo to your favorites"
+msgstr "Gustukoenak gehitzea"
+
+msgid "ascending"
+msgstr "Goranzkoa"
+
+msgid "available for administrators only"
+msgstr "Librea administratzaileentzat soilik"
+
+msgid "chronology_monthly_calendar"
+msgstr "Hileroko egutegia"
+
+msgid "chronology_monthly_list"
+msgstr "Hileroko zerrenda"
+
+msgid "chronology_weekly_list"
+msgstr "Asteroko zerrenda"
+
+msgid "cloud"
+msgstr "hodeia"
+
+msgid "comment date"
+msgstr "Iruzkinaren data"
+
+msgid "created after %s (%s)"
+msgstr "%s-aren (%s-en) ondoren sortuta"
+
+msgid "Your authentication key is no longer valid."
+msgstr "Zure autentifikazio gakoa ez da luzaroago baliozkoa"
+
+msgid "generate random password"
+msgstr "Sortu ausazko pasahitza"
+
+msgid "Invalid username or password!"
+msgstr "Erabiltzaile-izen edo pasahitz baliogabea!"
+
+msgid "Password: ********** (no copy by email)"
+msgstr "Pasahitza: ********** (ez da kopiarik bidaliko posta elektronikoz)"
+
+msgid "Related albums"
+msgstr "Erlazionatutako albumak"
+
+msgid "Album name, 1 &rarr; 5 &rarr; 10 &rarr; 100"
+msgstr "Albumaren izena, 1 &rarr; 5 &rarr; 10 &rarr; 100"
+
+msgid "Album name, 100 &rarr; 10 &rarr; 5 &rarr; 1"
+msgstr "Albumaren izena, 100 &rarr; 10 &rarr; 5 &rarr; 1"
+
+msgid "Start-Date"
+msgstr "Hasiera data"
+
+msgid "Validate"
+msgstr "Balioztatu"
+
+msgid "You can try to edit your filters and perform a new search."
+msgstr "Iragazkiak editatu eta bilaketa berri bat saia dezakezu"
+
+msgid "last 24 hours"
+msgstr "Azken 24 orduak"
+
+msgid "last 3 months"
+msgstr "Azken 3 hilabeteak"
+
+msgid "last 30 days"
+msgstr "Azken 30 egunak"
+
+msgid "last 6 months"
+msgstr "Azken 6 hilabeteak"
+
+msgid "last 7 days"
+msgstr "Azken 7 egunak"
+
+msgid "last year"
+msgstr "Azken urtea"
+
+msgid "rating score %s"
+msgstr "puntuazioa %s"
+
+msgid "year %d"
+msgstr "urtea %d"
+
+msgid "%d visits"
+msgstr "%d bisita"
+
+msgid "Added by"
+msgstr "Honek gehitua"
+
+msgid "Album description"
+msgstr "Albumaren deskribapena"
+
+msgid "Album title"
+msgstr "Albumaren izenburua"
+
+msgid "Albums found"
+msgstr "Aurkitutako albumak"
+
+msgid "Albums listed here match your search by word. Click on one to browse by album."
+msgstr "Zerrendako albumak bilaketarako erabili duzun hitzarekin bat datoz. Egin klik albumen batean albumagatik bilatzeko. "
+
+msgid "Cancel"
+msgstr "Ezabatu"
+
+msgid "Choose filters"
+msgstr "Aukeratu iragazkiak"
+
+msgid "Clear"
+msgstr "Garbitu"
+
+msgid "Empty filters"
+msgstr "Ezabatu iragazkiak"
+
+msgid "File type"
+msgstr "Fitxategi mota"
+
+msgid "Fill in the filters to start a search"
+msgstr "Bete iragazkiak bilaketa hasteko"
+
+msgid "Filters"
+msgstr "Iragazkiak"
+
+msgid "No results are available."
+msgstr "Ez dago emaitzarik."
+
+msgid "Pre-established filters are proposed, but you can add or remove them using the \"Choose filters\" button."
+msgstr "Lehenetsitako iragazkiak proposatzen dira baina kendu edo gehitu egin ditzakezu \"Aukeratu iragazkiak\" botoia erabiliz. "
+
+msgid "Search in :"
+msgstr "Bilatu hemen:"
+
+msgid "Search in this set"
+msgstr "Multzo honetan bilatu"
+
+msgid "Tags found"
+msgstr "Aurkitutako etiketak"
+
+msgid "Tags listed here match your search by word. Click on one to browse by tag."
+msgstr "Zerrendako etiketak bilaketarako erabili duzun hitzarekin bat datoz. Egin klik etiketaren batean etiketagatik bilatzeko."
+
+msgid "Unknown time period"
+msgstr "Denbora-arte ezezaguna"
+
+msgid "Album already selected"
+msgstr "Albuma dagoeneko aukeratutako dago"
+
+msgid "Click here to display it"
+msgstr "Egin klik hemen erakusteko"
+
+msgid "Custom dates"
+msgstr "Data pertsonalizatuak"
+
+msgid "Only the first %d albums are displayed, out of %d."
+msgstr "%d (e)tik, lehenengo %d albumak baino ez dira erakutsiko"
+
+msgid "Pages"
+msgstr "Orriak"
+
+msgid "The PDF you requested is too large to display on this page."
+msgstr "Eskatuko PDFa handiegia da orrian erakusteko"
+
+msgid "last 12 months"
+msgstr "Azkenengo 12 hilabeteak"
+
+msgid "Set your password below."
+msgstr "Ezarri pasahitza behealdean"
+
+msgid "There are no authors available for the photos currently filtered"
+msgstr "Ez dago egilerik eskuragarri iragazitako argazkientarako"
+
+msgid "There are no creation dates available for the photos currently filtered"
+msgstr "Ez dago sortze-datarik eskuragarri iragazitako argazkietarako"
+
+msgid "There are no tags available for the photos currently filtered"
+msgstr "Ez dago etiketarik eskuragarri iragazitako argazkietarako"
+

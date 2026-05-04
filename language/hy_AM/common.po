@@ -1,0 +1,1243 @@
+# Piwigo translation — hy_AM
+# Source: common.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: hy_AM\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Language-Name: Հայերեն\n"
+"X-Piwigo-Country: Հայաստան\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Code: hy\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Mobile"
+msgstr "Mobile"
+
+msgid "Desktop"
+msgstr "Desktop"
+
+msgid "Pause of slideshow"
+msgstr "Դադարեցնել ցուցադրումը"
+
+msgid "Play of slideshow"
+msgstr "Միացնել ցուցադրումը"
+
+msgid "Not repeat the slideshow"
+msgstr "Չկրկնել ցուցադրումը"
+
+msgid "Forgot your password?"
+msgstr "Մոռացե՞լ եք Ձեր գաղտնաբառը:"
+
+msgid "IPTC Metadata"
+msgstr "IPTC մետատվյալներ"
+
+msgid "EXIF Metadata"
+msgstr "EXIF մետատվյալներ"
+
+msgid "Change my password"
+msgstr "Փոխել գաղտնաբառը"
+
+msgid "%d rate"
+msgstr "%d rate"
+
+msgid "%d rates"
+msgstr "%d rate"
+
+msgid "... or please deactivate this message, I will find my way by myself"
+msgstr "... կամ անջատել այս հաղորդագրությունը. Ես ինքս կգտնեմ ճանապարհը"
+
+msgid "2small"
+msgstr "XXS - tiny"
+
+msgid "Accelerate diaporama speed"
+msgstr "Շատացնել ցուցադրման արագությունը"
+
+msgid "Administration"
+msgstr "Administration"
+
+msgid "%d comment to validate"
+msgstr "%d մեկնաբանություն վավերացնելու համար"
+
+msgid "%d comments to validate"
+msgstr "%d մեկնաբանություն վավերացնելու համար"
+
+msgid "%d photo is also linked to current tags"
+msgid_plural "%d photos are also linked to current tags"
+msgstr[0] "%d լուսանկար նույնպես կցված է ընթացիկ պիտակներին"
+msgstr[1] "%d լուսանկար նույնպես կցված է ընթացիկ պիտակներին"
+
+msgid "xsmall"
+msgstr "XS - extra small"
+
+msgid "xxlarge"
+msgstr "XXL - huge"
+
+msgid "year %d"
+msgstr "տարի %d"
+
+msgid "remove this tag from the list"
+msgstr "հեռացնել պիտակը ցուցակից"
+
+msgid "representative"
+msgstr "ալբոմի մանրապատկեր"
+
+msgid "return to normal view mode"
+msgstr "վերադառնալ դիտման նորմալ ռեժիմին"
+
+msgid "return to the display of all photos"
+msgstr "վերադառնալ բոլոր լուսանկարների ցուցադրությանը"
+
+msgid "search"
+msgstr "որոնում"
+
+msgid "set as album representative"
+msgstr "տեղադրել որպես ալբոմի մանրապատկեր"
+
+msgid "show tag cloud"
+msgstr "ցուցադրել պիտակների ամպը"
+
+msgid "slideshow"
+msgstr "slideshow"
+
+msgid "small"
+msgstr "S - small"
+
+msgid "square"
+msgstr "Քառակուսի"
+
+msgid "stop the slideshow"
+msgstr "Կանգնեցնել"
+
+msgid "the beginning"
+msgstr "Սկիզբը"
+
+msgid "the username must be given"
+msgstr "օգտանունը պարտադիր է"
+
+msgid "this email address is already in use"
+msgstr "էլ. հասցեն արդեն օգտագործվում է"
+
+msgid "this login is already used"
+msgstr "օգտանունն արդեն օգտագործվում է"
+
+msgid "thumb"
+msgstr "Մանրապատկեր"
+
+msgid "today"
+msgstr "այսօր"
+
+msgid "useful when password forgotten"
+msgstr "օգտակար է գաղտնաբառը մոռանալու դեպքում"
+
+msgid "wrong date"
+msgstr "սխալ ամսաթիվ"
+
+msgid "xlarge"
+msgstr "XL - extra large"
+
+msgid "no rate"
+msgstr "Գնահատված չէ"
+
+msgid "obligatory"
+msgstr "պարտադիր"
+
+msgid "password updated"
+msgstr "գաղտնաբառը թարմացվել է"
+
+msgid "photo"
+msgstr "լուսանկար"
+
+msgid "photos posted during the last %d days"
+msgstr "վերջին %d օրվա հրապարակված լուսանկարները"
+
+msgid "posted after %s (%s)"
+msgstr "Հրապարակվել է  %s (%s)-ից հետո"
+
+msgid "posted before %s (%s)"
+msgstr "Հրապարակվել է  %s (%s)-ից առաջ"
+
+msgid "posted between %s (%s) and %s (%s)"
+msgstr "Հրապարակվել է  %s (%s)-ից մինչև %s (%s)"
+
+msgid "posted on %s"
+msgstr "Հրապարակվել է  %s-ին"
+
+msgid "rating score %s"
+msgstr "վարկանիշային միավոր  %s"
+
+msgid "in %d sub-album"
+msgid_plural "in %d sub-albums"
+msgstr[0] "%d ենթալբոմում"
+msgstr[1] "%d ենթալբոմում"
+
+msgid "in this album"
+msgstr "այս ալբոմում"
+
+msgid "included"
+msgstr "ներառված"
+
+msgid "large"
+msgstr "L - large"
+
+msgid "last %d days"
+msgstr "Վերջին %d օրը"
+
+msgid "last 24 hours"
+msgstr "Վերջին 24 ժամը"
+
+msgid "last 3 months"
+msgstr "Վերջին 3 ամիսը"
+
+msgid "last 30 days"
+msgstr "Վերջին 30 օրը"
+
+msgid "last 6 months"
+msgstr "Վերջին 6 ամիսը"
+
+msgid "last 7 days"
+msgstr "Վերջին 7 օրը"
+
+msgid "last year"
+msgstr "Անցած տարի"
+
+msgid "letters"
+msgstr "տառեր"
+
+msgid "login mustn't end with a space character"
+msgstr "Օգտանունը չպետք է ավարտվի բացատով"
+
+msgid "login mustn't start with a space character"
+msgstr "Օգտանունը չպետք է սկսվի բացատով"
+
+msgid "mail address must be like xxx@yyy.eee (example : jack@altern.org)"
+msgstr "էլ. փոստի հասցեն պետք է լինի xxx@yyy.eee-ի նման (օրինակ՝ jack@altern.org)"
+
+msgid "mandatory"
+msgstr "պարտադիր"
+
+msgid "medium"
+msgstr "M - medium"
+
+msgid "display your favorites photos"
+msgstr "Ցուցադրել նախընտրածները"
+
+msgid "edit"
+msgstr "Խմբագրել"
+
+msgid "excluded"
+msgstr "Բացառված"
+
+msgid "from %s to %s"
+msgstr "%s-ից մինչև %s"
+
+msgid "generate random password"
+msgstr "ստեղծել պատահական գաղտնաբառ"
+
+msgid "group by letters"
+msgstr "խմբավորել ըստ տառերի"
+
+msgid "guest"
+msgstr "հյուր"
+
+msgid "html tags are not allowed in login"
+msgstr "html tag-եր չեն թույլատրվում օգտանվան մեջ"
+
+msgid "display a set of random photos"
+msgstr "Ցուցադրել պատահական լուսանկարների հավաքածու"
+
+msgid "display all photos in all sub-albums"
+msgstr "Ցուցադրել բոլոր ենթաալբոմների լուսանկարները"
+
+msgid "display available tags"
+msgstr "Ցուցադրել հասանելի պիտակները"
+
+msgid "display best rated photos"
+msgstr "Ցուցադրել ամենաբարձր գնահատված լուսանկարները"
+
+msgid "display each day with photos, month per month"
+msgstr "Ցուցադրել ամեն օրը լուսանկարներով, ամիս առ ամիս"
+
+msgid "display last user comments"
+msgstr "Ցուցադրել վերջին մեկնաբանությունները"
+
+msgid "display most recent photos"
+msgstr "Ցուցադրել ամենավերջին լուսանկարները"
+
+msgid "display most visited photos"
+msgstr "Ցուցադրել ամենաշատ դիտված լուսանկարները"
+
+msgid "display only recently posted photos"
+msgstr "Ցուցադրել միայն վերջերս տեղադրված լուսանկարները"
+
+msgid "display photos linked to this tag"
+msgstr "Ցուցադրել այս պիտակին կցված լուսանկարները"
+
+msgid "display recently updated albums"
+msgstr "Ցուցադրել վերջերս թարմացված ալբոմները"
+
+msgid "display this album"
+msgstr "Ցուցադրել այս ալբոմը"
+
+msgid "delete all photos from your favorites"
+msgstr "Ջնջել բոլոր լուսանկարները նախընտրածներից"
+
+msgid "delete this photo from your favorites"
+msgstr "Ջնջել այս լուսանկարը նախընտրածներից"
+
+msgid "descending"
+msgstr "Նվազող"
+
+msgid "display a calendar by creation date"
+msgstr "ցուցադրել օրացույցը ըստ ստեղծման ամսաթվի"
+
+msgid "display a calendar by posted date"
+msgstr "ցուցադրել օրացույցը ըստ հրապարակման ամսաթվի"
+
+msgid "chronology_weekly_list"
+msgstr "Շաբաթական ցուցակ"
+
+msgid "cloud"
+msgstr "cloud"
+
+msgid "comment date"
+msgstr "մեկնաբանության ամսաթիվը"
+
+msgid "created after %s (%s)"
+msgstr "ստեղծվել է %s (%s)-ից հետո"
+
+msgid "created before %s (%s)"
+msgstr "ստեղծվել է %s (%s)-ից առաջ"
+
+msgid "created between %s (%s) and %s (%s)"
+msgstr "ստեղծվել է %s (%s)-ից մինչև %s (%s)"
+
+msgid "created on %s"
+msgstr "ստեղծվել է %s-ին"
+
+msgid "Welcome"
+msgstr "Բարի գալուստ"
+
+msgid "Welcome to your Piwigo photo gallery!"
+msgstr "Բարի գալուստ Ձեր Piwigo պատկերասրահ:"
+
+msgid "Yes"
+msgstr "Այո"
+
+msgid "You are not authorized to access the requested page"
+msgstr "Դուք լիազորված չեք մուտք գործել պահանջվող էջ:"
+
+msgid "You can try to edit your filters and perform a new search."
+msgstr "Փորձեք խմբագրել Ձեր զտիչները և կատարել նոր որոնում"
+
+msgid "You will receive a link to create a new password via email."
+msgstr "էլ. փոստի միջոցով կստանաք հղում ՝ նոր գաղտնաբառ ստեղծելու համար:"
+
+msgid "Your Gallery Customization"
+msgstr "Ձեր պատկերասրահի անհատականացումը"
+
+msgid "Your authentication key is no longer valid."
+msgstr "Ձեր նույնականացման բանալին այլևս անվավեր է:"
+
+msgid "Your comment has NOT been registered because it did not pass the validation rules"
+msgstr "Ձեր մեկնաբանությունը ՉԻ գրանցվել, քանի որ այն չի անցել վավերացման կանոնները"
+
+msgid "Your comment has been registered"
+msgstr "Ձեր մեկնաբանությունը գրանցվել է"
+
+msgid "Your favorites"
+msgstr "Ձեր նախընտրածները"
+
+msgid "Your password has been reset"
+msgstr "Ձեր գաղտնաբառը վերականգնվել է"
+
+msgid "Your username has been successfully changed to : %s"
+msgstr "Ձեր օգտանունը հաջողությամբ փոխվել է՝ %s"
+
+msgid "Your website URL is invalid"
+msgstr "Ձեր կայքի հասցեն անվավեր է"
+
+msgid "add this photo to your favorites"
+msgstr "Ավելացնել այս լուսանկարը նախընտրածներին"
+
+msgid "all"
+msgstr "բոլորը"
+
+msgid "ascending"
+msgstr "աճող"
+
+msgid "available for administrators only"
+msgstr "հասանելի է միայն ադմինիստրատորների համար"
+
+msgid "chronology_monthly_calendar"
+msgstr "Ամսական օրացույց"
+
+msgid "chronology_monthly_list"
+msgstr "Ամսական ցուցակ"
+
+msgid "Unknown time period"
+msgstr "Անհայտ ժամանակահատված"
+
+msgid "Update your rating"
+msgstr "Թարմացնել"
+
+msgid "User \"%s\" has no email address, password reset is not possible"
+msgstr "%s օգտատերը չունի էլ. հասցե, գաղտնաբառը հնարավոր չէ վերականգնել"
+
+msgid "User comments"
+msgstr "Օգտատիրոջ մեկնաբանությունները"
+
+msgid "User: %s"
+msgstr "Օգտատեր: %s"
+
+msgid "Username"
+msgstr "Օգտանուն"
+
+msgid "Username \"%s\" on gallery %s"
+msgstr "Օգտանուն \"%s\" %s պատկերասրահում"
+
+msgid "Username is mandatory"
+msgstr "Օգտանունը պարտադիր է"
+
+msgid "Username modification"
+msgstr "Օգտանվան փոփոխություն"
+
+msgid "Username or email"
+msgstr "Օգտանուն կամ էլ. հասցե"
+
+msgid "Username: %s"
+msgstr "Օգտանուն: %s"
+
+msgid "Validate"
+msgstr "Վավերացնել"
+
+msgid "View"
+msgstr "Դիտել"
+
+msgid "View in"
+msgstr "Դիտել"
+
+msgid "Visits"
+msgstr "Այցելություններ"
+
+msgid "Visits, high &rarr; low"
+msgstr "Այցելություններ, բարձր &rarr; ցածր"
+
+msgid "Visits, low &rarr; high"
+msgstr "Այցելություններ, ցածր &rarr; բարձր"
+
+msgid "Webmaster"
+msgstr "Տեխ. մասնագետ"
+
+msgid "Website"
+msgstr "Կայք"
+
+msgid "Week %d"
+msgstr "Շաբաթ %d"
+
+msgid "Submit"
+msgstr "Հաստատել"
+
+msgid "Successfully registered, you will soon receive an email with your connection settings. Welcome!"
+msgstr "Հաջողությամբ գրանցված, շուտով կստանաք նամակ կապի կարգավորումներով: Բարի գալուստ:"
+
+msgid "Tag"
+msgstr "Պիտակ"
+
+msgid "Tag results for"
+msgstr "Պիտակավորման արդյունքները"
+
+msgid "Tags"
+msgstr "Պիտակներ"
+
+msgid "Tags found"
+msgstr "Գտնված պիտակներ"
+
+msgid "Tags listed here match your search by word. Click on one to browse by tag."
+msgstr "Ցուցադրված պիտակները համապատասխանում են Ձեր որոնմանը ըստ բառի:"
+
+msgid "Thank you for registering at %s!"
+msgstr "Շնորհակալություն %s-ում գրանցվելու համար:"
+
+msgid "The RSS notification feed provides notification on news from this website : new photos, updated albums, new comments. Use a RSS feed reader."
+msgstr "RSS-ը տրամադրում է ծանուցումներ կայքի նոր իրադարձությունների մասին՝ նոր լուսանկարներ, թարմացված ալբոմներ, Նոր մեկնաբանություններ:"
+
+msgid "The gallery is locked for maintenance. Please, come back later."
+msgstr "Պատկերասրահը փակ է սպասարկման կարգավորումների նպատակով։ Խնդրում ենք վերադառնալ ավելի ուշ:"
+
+msgid "The number of photos per page must be a not null scalar"
+msgstr "Էջի լուսանկարների քանակը պետք է լինի ոչ զրոյական ամբողջ թիվ"
+
+msgid "The passwords do not match"
+msgstr "Գաղտնաբառերը չեն համընկնում"
+
+msgid "Theme"
+msgstr "Թեմա"
+
+msgid "This author modified following comment:"
+msgstr "Այս հեղինակը փոփոխել է հետևյալ մեկնաբանությունը."
+
+msgid "This author removed the comment with id %d"
+msgstr "Այս հեղինակը ջնջել է %d ID-ով մեկնաբանությունը"
+
+msgid "This login is already used by another user"
+msgstr "Տվյալ օգտանունն արդեն օգտագործվում"
+
+msgid "Thumbnails"
+msgstr "Մանրապատկերներ"
+
+msgid "To reset your password, visit the following address:"
+msgstr "Գաղտնաբառը վերականգնելու համար անցեք հետևյալ հասցեով"
+
+msgid "Unknown feed identifier"
+msgstr "Անհայտ հոսքի նույնացուցիչ"
+
+msgid "Unknown identifier"
+msgstr "Անհայտ նույնացուցիչ"
+
+msgid "Search for words"
+msgstr "Բառերի որոնում"
+
+msgid "Search in :"
+msgstr "Որոնել:"
+
+msgid "Search in albums"
+msgstr "Որոնել ալբոմներում"
+
+msgid "Search in sub-albums"
+msgstr "Որոնել ենթալբոմներում"
+
+msgid "Search in this set"
+msgstr "Որոնել այս խմբում"
+
+msgid "Search results"
+msgstr "Որոնման արդյունքներ"
+
+msgid "Search tags"
+msgstr "Պիտակների որոնում"
+
+msgid "Send my connection settings by email"
+msgstr "Ուղարկել կապի կարգավորումները էլ. փոստով"
+
+msgid "Sent by"
+msgstr "Ուղարկող"
+
+msgid "Show file metadata"
+msgstr "Ցույց տալ ֆայլի մետատվյալները"
+
+msgid "Show latest comments first"
+msgstr "Նոր մեկնաբանությունները սկզբում"
+
+msgid "Show number of comments"
+msgstr "Ցույց տալ մեկնաբանությունների քանակը"
+
+msgid "Show number of hits"
+msgstr "Ցույց տալ հիթերի քանակը"
+
+msgid "Show oldest comments first"
+msgstr "Հին մեկնաբանությունները սկզբում"
+
+msgid "Since"
+msgstr "Since"
+
+msgid "Someone requested that the password be reset for the following user account:"
+msgstr "Ինչ-որ մեկը խնդրել է վերականգնել գաղտնաբառը տվյալ օգատիրոջ համար:"
+
+msgid "Sort by"
+msgstr "Տեսակավորել ըստ"
+
+msgid "Sort order"
+msgstr "Տեսակավորման կարգ"
+
+msgid "Specials"
+msgstr "Հատընտիրներ"
+
+msgid "Start-Date"
+msgstr "Մեկնարկի ամսաթիվ"
+
+msgid "Registration of %s"
+msgstr "Գրանցում %s"
+
+msgid "Reduce diaporama speed"
+msgstr "Քչացնել ցուցադրման արագությունը"
+
+msgid "Register"
+msgstr "Գրանցվել"
+
+msgid "Registration"
+msgstr "Գրանցում"
+
+msgid "Related albums"
+msgstr "Նմանատիպ ալբոմներ"
+
+msgid "Related tags"
+msgstr "Նմանատիպ պիտակներ"
+
+msgid "Repeat the slideshow"
+msgstr "Կրկնել ցուցադրումը"
+
+msgid "Requested album does not exist"
+msgstr "Պահանջվող ալբոմը գոյություն չունի"
+
+msgid "Requested tag does not exist"
+msgstr "Պահանջվող պիտակը գոյություն չունի"
+
+msgid "Reset"
+msgstr "Վերականգնել"
+
+msgid "Reset to default values"
+msgstr "Վերականգնել default արժեքներով"
+
+msgid "Retrieve password"
+msgstr "Գաղտնաբառի ստացում"
+
+msgid "Return to home page"
+msgstr "Վերադառնալ Գլխավոր էջ"
+
+msgid "SQL queries in"
+msgstr "SQL հարցումներ"
+
+msgid "Search"
+msgstr "Որոնել"
+
+msgid "Search by date"
+msgstr "Որոնում ամսաթվով"
+
+msgid "Search for Author"
+msgstr "Հեղինակի որոնում"
+
+msgid "Search for all terms"
+msgstr "Որոնել բոլոր տերմիններով"
+
+msgid "Search for any term"
+msgstr "Որոնել ցանկացած տերմինով"
+
+msgid "Redirection..."
+msgstr "Վերաուղղորդում..."
+
+msgid "Post date"
+msgstr "Գրառման ամսաթիվը"
+
+msgid "Posted on"
+msgstr "Տեղադրվել է"
+
+msgid "Powered by"
+msgstr "Powered by"
+
+msgid "Pre-established filters are proposed, but you can add or remove them using the \"Choose filters\" button."
+msgstr "Առաջարկվում են նախապես տեղադրված զտիչներ, որոնք կարող եք ավելացնել կամ հեռացնել՝ օգտագործելով \"Ընտրել զտիչներ\" կոճակը:"
+
+msgid "Preferences"
+msgstr "Նախընտրություններ"
+
+msgid "Previous"
+msgstr "Նախորդ"
+
+msgid "Profile"
+msgstr "Profile"
+
+msgid "Quick connect"
+msgstr "Արագ միացում"
+
+msgid "Quick search"
+msgstr "Արագ որոնում"
+
+msgid "RSS feed"
+msgstr "RSS հոսք"
+
+msgid "Random photos"
+msgstr "Պատահական լուսանկարներ"
+
+msgid "Rank"
+msgstr "Վարկանիշ"
+
+msgid "Rate this photo"
+msgstr "Գնահատել այս լուսանկարը"
+
+msgid "Rating score"
+msgstr "Վարկանիշային միավոր"
+
+msgid "Rating score, high &rarr; low"
+msgstr "Վարկանիշային միավոր, բարձր &rarr; ցածր"
+
+msgid "Rating score, low &rarr; high"
+msgstr "Վարկանիշային միավոր, ցածր &rarr; բարձր"
+
+msgid "Recent albums"
+msgstr "Վերջին ալբոմները"
+
+msgid "Recent period"
+msgstr "Վերջին ժամանակահատված"
+
+msgid "Recent period must be a positive integer value"
+msgstr "Վերջին ժամանակահատվածը պետք է լինի դրական, ամբողջ թիվ"
+
+msgid "Recent photos"
+msgstr "Վերջին լուսանկարներ"
+
+msgid "Permalink for album not found"
+msgstr "Ալբոմի մշտական հղումը չի գտնվել"
+
+msgid "Photo description"
+msgstr "Լուսանկարի նկարագրություն"
+
+msgid "Photo sizes"
+msgstr "Լուսանկարների չափերը"
+
+msgid "Photo title"
+msgstr "Լուսանկարի վերնագիր"
+
+msgid "Photo title, A &rarr; Z"
+msgstr "Լուսանկարի վերնագիր, A &rarr; Z"
+
+msgid "Photo title, Z &rarr; A"
+msgstr "Լուսանկարի վերնագիր, Z &rarr; A"
+
+msgid "Photos only RSS feed"
+msgstr "Լուսանկարներ միայն RSS հոսք"
+
+msgid "Photos posted within the last %d day."
+msgid_plural "Photos posted within the last %d days."
+msgstr[0] "Լուսանկարներ տեղադրված վերջին %d օրվա ընթացքում։"
+msgstr[1] "Լուսանկարներ տեղադրված վերջին %d օրվա ընթացքում։"
+
+msgid "Piwigo Help"
+msgstr "Piwigo օգնություն"
+
+msgid "Piwigo encountered a non recoverable error"
+msgstr "Piwigo-ն հայտնաբերել է անդառնալի սխալ"
+
+msgid "Please enter your username or email address."
+msgstr "Մուտքագրեք Ձեր օգտանունը կամ էլ. փոստի հասցեն"
+
+msgid "Please, enter a login"
+msgstr "Մուտքագրեք Ձեր օգտանունը"
+
+msgid "Password forgotten"
+msgstr "Գաղտնաբառը մոռացվել է"
+
+msgid "Password is missing. Please enter the password."
+msgstr "Գաղտնաբառը բացակայում է: Խնդրում ենք մուտքագրել գաղտնաբառը:"
+
+msgid "Password reset is not allowed for this user"
+msgstr "Այս օգտատիրոջ համար գաղտնաբառի վերականգնումն արգելված է:"
+
+msgid "Password: %s"
+msgstr "Գաղտնաբառ: %s"
+
+msgid "Password: ********** (no copy by email)"
+msgstr "Գաղտնաբառ: ********** (էլ. փոստով պատճեն չկա)"
+
+msgid "N/A"
+msgstr "N/A"
+
+msgid "New on %s"
+msgstr "Նոր %s"
+
+msgid "New password"
+msgstr "Նոր գաղտնաբառ"
+
+msgid "Next"
+msgstr "Հաջորդ"
+
+msgid "No"
+msgstr "Ոչ"
+
+msgid "No results are available."
+msgstr "Արդյունքներ չկան"
+
+msgid "No results for"
+msgstr "Արդյունքներ չկան"
+
+msgid "Notification"
+msgstr "Ծանուցում"
+
+msgid "Number of items"
+msgstr "Տարրերի քանակը"
+
+msgid "Number of photos per page"
+msgstr "Լուսանկարների քանակը մեկ էջում"
+
+msgid "Numeric identifier, 1 &rarr; 9"
+msgstr "Թվային նույնացուցիչ, 1 &rarr; 9"
+
+msgid "Numeric identifier, 9 &rarr; 1"
+msgstr "Թվային նույնացուցիչ, 9 &rarr; 1"
+
+msgid "Original"
+msgstr "Բնօրինակ"
+
+msgid "Original dimensions"
+msgstr "Բնօրինակ չափսեր"
+
+msgid "Page generated in"
+msgstr "Էջը ստեղծվել է"
+
+msgid "Page not found"
+msgstr "Էջը չի գտնվել"
+
+msgid "Password"
+msgstr "Գաղտնաբառ"
+
+msgid "Password Reset"
+msgstr "Գաղտնաբառի վերականգնում"
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "Գաղտնաբառի հաստատումը բացակայում է: Խնդրում ենք հաստատել ընտրված գաղտնաբառը:"
+
+msgid "Links"
+msgstr "Հղումներ"
+
+msgid "If this was a mistake, just ignore this email and nothing will happen."
+msgstr "Եթե սա սխալ էր, պարզապես անտեսեք այս նամակը, և ոչինչ չի պատահի:"
+
+msgid "If you think you've received this email in error, please contact us at %s"
+msgstr "Եթե կարծում եք, որ այս էլ. փոստը սխալմամբ եք ստացել, խնդրում ենք, կապ հաստատել մեզ հետ %s հասցեով:"
+
+msgid "Invalid key"
+msgstr "Անվավեր բանալի"
+
+msgid "Invalid password!"
+msgstr "Անվավեր գաղտնաբառ"
+
+msgid "Invalid username or email"
+msgstr "Անվավեր օգտանուն կամ էլ. հասցե"
+
+msgid "Invalid username or password!"
+msgstr "Անվավեր օգտանուն կամ գաղտնաբառ"
+
+msgid "Keyword"
+msgstr "Հիմնաբառ"
+
+msgid "Kind of date"
+msgstr "Ամսաթվի տեսակ"
+
+msgid "Language"
+msgstr "Լեզու"
+
+msgid "Last"
+msgstr "Վերջին"
+
+msgid "Last Page"
+msgstr "Վերջին էջ"
+
+msgid "Link: %s"
+msgstr "Հղում: %s"
+
+msgid "Login"
+msgstr "Մուտք գործել"
+
+msgid "Logout"
+msgstr "Դուրս գալ"
+
+msgid "Manage this user comment: %s"
+msgstr "Կառավարել այս օգտատիրոջ մեկնաբանությունը: %s"
+
+msgid "Manual sort order"
+msgstr "Ձեռքով տեսակավորման կարգը"
+
+msgid "Menu"
+msgstr "Մենյու"
+
+msgid "Most visited"
+msgstr "Ամենաշատ այցելված"
+
+msgid "Fill in the filters to start a search"
+msgstr "Լրացրեք զտիչները՝ որոնումը սկսելու համար"
+
+msgid "Filter"
+msgstr "Զտիչ"
+
+msgid "Filter and display"
+msgstr "Զտել և ցուցադրել"
+
+msgid "Filters"
+msgstr "Զտիչներ"
+
+msgid "First"
+msgstr "Առաջին"
+
+msgid "First Page"
+msgstr "Առաջին էջ"
+
+msgid "Forbidden"
+msgstr "Արգելված"
+
+msgid "Go back to the album"
+msgstr "Վերադառնալ ալբոմ"
+
+msgid "Go through the gallery as a visitor"
+msgstr "Դիտել պատկերասրահը որպես այցելու"
+
+msgid "Hello"
+msgstr "Ողջույն"
+
+msgid "Hello %s,"
+msgstr "Ողջույն %s,"
+
+msgid "Hello %s, your Piwigo photo gallery is empty!"
+msgstr "Ողջույն %s, Ձեր Piwigo պատկերասրահը դատարկ է:"
+
+msgid "Help"
+msgstr "Օգնություն"
+
+msgid "Here are your connection settings"
+msgstr "Ահա Ձեր կապի կարգավորումները"
+
+msgid "Home"
+msgstr "Գլխավոր"
+
+msgid "I want to add photos"
+msgstr "Ցանկանում եմ լուսանկարներ ավելացնել"
+
+msgid "IP: %s"
+msgstr "IP: %s"
+
+msgid "Identification"
+msgstr "Նույնականացում"
+
+msgid "Edit a comment"
+msgstr "Խմբագրել մեկնաբանությունը"
+
+msgid "Email"
+msgstr "Էլ. փոստ"
+
+msgid "Email address"
+msgstr "Էլ. փոստի հասցե"
+
+msgid "Email address is mandatory"
+msgstr "Էլ. փոստի հասցեն պարտադիր է"
+
+msgid "Email address is missing. Please specify an email address."
+msgstr "Էլ. փոստի հասցեն բացակայում է: Խնդրում ենք տրամադրել էլեկտրոնային հասցեն:"
+
+msgid "Email: %s"
+msgstr "Էլ. փոստ: %s"
+
+msgid "Empty filters"
+msgstr "Դատարկ զտիչներ"
+
+msgid "Empty query. No criteria has been entered."
+msgstr "Դատարկ հարցում։ Չափանիշները չեն մուտքագրվել:"
+
+msgid "End-Date"
+msgstr "Ավարտի ամսաթիվ"
+
+msgid "Enter your new password below."
+msgstr "Մուտքագրեք Ձեր նոր գաղտնաբառը:"
+
+msgid "Enter your personnal informations"
+msgstr "Մուտքագրեք Ձեր անձնական տվյալները"
+
+msgid "Error sending email"
+msgstr "Սխալ՝ էլ-նամակ ուղարկելիս"
+
+msgid "Expand all albums"
+msgstr "Ընդլայնել բոլոր ալբոմները"
+
+msgid "Favorites"
+msgstr "Նախընտրածներ"
+
+msgid "File"
+msgstr "Ֆայլ"
+
+msgid "File name"
+msgstr "Ֆայլի անունը"
+
+msgid "File name, A &rarr; Z"
+msgstr "Ֆայլի անունը, A &rarr; Z"
+
+msgid "File name, Z &rarr; A"
+msgstr "Ֆայլի անունը, Z &rarr; A"
+
+msgid "File type"
+msgstr "Ֆայլի տեսակը"
+
+msgid "Filesize"
+msgstr "Ֆայլի չափը"
+
+msgid "Cookies are blocked or not supported by your browser. You must enable cookies to connect."
+msgstr "Քուքիներն արգելափակված են կամ չեն աջակցվում ձեր բրաուզերի կողմից: Անհրաժեշտ է ակտիվացնել քուքիները մուտք գործելու համար:"
+
+msgid "Create a new account"
+msgstr "Ստեղծել նոր հաշիվ"
+
+msgid "Created on"
+msgstr "Ստեղծվել է"
+
+msgid "Creation date"
+msgstr "Ստեղծման ամսաթիվը"
+
+msgid "Current password is wrong"
+msgstr "Ընթացիկ գաղտնաբառը սխալ է"
+
+msgid "Date"
+msgstr "Ամսաթիվ"
+
+msgid "Date created, new &rarr; old"
+msgstr "Ստեղծման ամսաթիվ, նոր &rarr; հին"
+
+msgid "Date created, old &rarr; new"
+msgstr "Ստեղծման ամսաթիվ, հին &rarr; նոր"
+
+msgid "Date posted, new &rarr; old"
+msgstr "Տեղադրման ամսաթիվ, նոր &rarr; հին"
+
+msgid "Date posted, old &rarr; new"
+msgstr "Տեղադրման ամսաթիվ, հին &rarr; նոր"
+
+msgid "Default"
+msgstr "Default"
+
+msgid "Delete"
+msgstr "Ջնջել"
+
+msgid "Dimensions"
+msgstr "Չափերը"
+
+msgid "Display"
+msgstr "Ցուցադրել"
+
+msgid "Download"
+msgstr "Ներբեռնել"
+
+msgid "Download this file"
+msgstr "Ներբեռնել այս ֆայլը"
+
+msgid "Edit"
+msgstr "Խմբագրել"
+
+msgid "Browser: %s"
+msgstr "Բրաուզեր: %s"
+
+msgid "Calendar"
+msgstr "Օրացույց"
+
+msgid "Cancel"
+msgstr "Չեղարկել"
+
+msgid "Check your email for the confirmation link"
+msgstr "Ստուգեք Ձեր էլ. փոստը հաստատման հղման համար"
+
+msgid "Choose filters"
+msgstr "Ընտրել զտիչներ"
+
+msgid "Clear"
+msgstr "Մաքրել"
+
+msgid "Click here if your browser does not automatically forward you"
+msgstr "Սեղմեք այստեղ, եթե Ձեր բրաուզերը ավտոմատ կերպով չի տեղափոխում"
+
+msgid "Click on the photo to see it in high definition"
+msgstr "Սեղմեք լուսանկարի վրա՝ այն բարձր հստակությամբ տեսնելու համար"
+
+msgid "Close this window"
+msgstr "Փակել այս պատուհանը"
+
+msgid "Comment"
+msgstr "Մեկնաբանություն"
+
+msgid "Comment by %s"
+msgstr "Մեկնաբանությունը թողել է՝ %s"
+
+msgid "Comment: %s"
+msgstr "Մեկնաբանություն: %s"
+
+msgid "Comments"
+msgstr "Մեկնաբանություններ"
+
+msgid "Complete RSS feed (photos, comments)"
+msgstr "Լրացրեք RSS հոսքը (լուսանկարներ, մեկնաբանություններ)"
+
+msgid "Confirm Password"
+msgstr "Հաստատել գաղտնաբառը"
+
+msgid "Connected user: %s"
+msgstr "Միացված օգտատեր: %s"
+
+msgid "Connection settings"
+msgstr "Միացման կարգավորումներ"
+
+msgid "Contact"
+msgstr "Կապ"
+
+msgid "Contact webmaster"
+msgstr "Կապ հաստատել տեխ. մասնագետի հետ"
+
+msgid "Album name, Z &rarr; A"
+msgstr "Ալբոմի անունը, Z &rarr; A"
+
+msgid "Album results for"
+msgstr "Ալբոմի որոնման արդյունքները"
+
+msgid "Album title"
+msgstr "Ալբոմի անվանումը"
+
+msgid "Album: %s"
+msgstr "Ալբոմ: %s"
+
+msgid "Albums"
+msgstr "Ալբոմներ"
+
+msgid "Albums found"
+msgstr "Գտնված ալբոմներ"
+
+msgid "Albums listed here match your search by word. Click on one to browse by album."
+msgstr "Ցուցադրված են որոնվող բառին համապատասխանող ալբոմները"
+
+msgid "All"
+msgstr "Բոլորը"
+
+msgid "All tags"
+msgstr "Բոլոր պիտակները"
+
+msgid "An administrator must authorize your comment before it is visible."
+msgstr "Ադմինիստրատորը պետք է հաստատի ձեր մեկնաբանությունը, որպեսզի այն տեսանելի դառնա:"
+
+msgid "Anti-flood system : please wait for a moment before trying to post another comment"
+msgstr "Anti-flood պաշտպանության համակարգ. խնդրում ենք մի փոքր սպասել ևս մեկ մեկնաբանություն թողնելու համար"
+
+msgid "Any tag"
+msgstr "Ցանկացած պիտակ"
+
+msgid "Apply on properties"
+msgstr "Կիրառել հատկությունները"
+
+msgid "Are you sure?"
+msgstr "Դուք վստա՞հ եք:"
+
+msgid "Author"
+msgstr "Հեղինակ"
+
+msgid "Author: %s"
+msgstr "Հեղինակ: %s"
+
+msgid "Auto login"
+msgstr "Ավտոմատ մուտք"
+
+msgid "Bad request"
+msgstr "Վատ հարցում"
+
+msgid "Bad status for user \"guest\", using default status. Please notify the webmaster."
+msgstr "Վատ կարգավիճակ \"հյուր\" օգտատերի համար: Խնդրում ենք տեղեկացնել տեխ. մասնագետին:"
+
+msgid "Best rated"
+msgstr "Լավագույն գնահատված"
+
+msgid "%d visits"
+msgstr "%d այցելություն"
+
+msgid "(!) This comment requires validation"
+msgstr "(!) Այս մեկնաբանությունը վավերացման կարիք ունի"
+
+msgid "... or browse your empty gallery"
+msgstr "... կամ դիտեք Ձեր դատարկ պատկերասրահը"
+
+msgid "A comment on your site"
+msgstr "Մեկնաբանություն Ձեր կայքում"
+
+msgid "About"
+msgstr "Մասին"
+
+msgid "About Piwigo"
+msgstr "Piwigo-ի մասին"
+
+msgid "Add a comment"
+msgstr "Ավելացնել մեկնաբանություն"
+
+msgid "Added by"
+msgstr "Ավելացրել է"
+
+msgid "Admin: %s"
+msgstr "Ադմին: %s"
+
+msgid "Album"
+msgstr "Ալբոմ"
+
+msgid "Album description"
+msgstr "Ալբոմի նկարագրություն"
+
+msgid "Album name, 1 &rarr; 5 &rarr; 10 &rarr; 100"
+msgstr "Ալբոմի անունը, 1 &rarr; 5 &rarr; 10 &rarr; 100"
+
+msgid "Album name, 100 &rarr; 10 &rarr; 5 &rarr; 1"
+msgstr "Ալբոմի անունը, 100 &rarr; 10 &rarr; 5 &rarr; 1"
+
+msgid "Album name, A &rarr; Z"
+msgstr "Ալբոմի անունը, A &rarr; Z"
+
+msgid "%d album updated"
+msgid_plural "%d albums updated"
+msgstr[0] "%d ալբոմ թարմացվել է"
+msgstr[1] "%d ալբոմ թարմացվել է"
+
+msgid "%d hits"
+msgstr "%d հիթ"
+
+msgid "%d new comments"
+msgstr "%d նոր մեկնաբանություն"
+
+msgid "%d Kb"
+msgstr "%d ԿԲ"
+
+msgid "%d new user"
+msgstr "%d նոր օգտատեր"
+
+msgid "%d new users"
+msgstr "%d նոր օգտատեր"
+
+msgid "%d photo"
+msgid_plural "%d photos"
+msgstr[0] "%d լուսանկար"
+msgstr[1] "%d լուսանկար"
+
+msgid "%d photos per page"
+msgstr "%d լուսանկար էջում"
+
+msgid "%d new photo"
+msgid_plural "%d new photos"
+msgstr[0] "%d նոր լուսանկար"
+msgstr[1] "%d նոր լուսանկար"
+
+msgid "%d new comment"
+msgstr "%d նոր մեկնաբանություն"
+
+msgid "%d hit"
+msgstr "%d հիթ"
+
+msgid "%d comment"
+msgid_plural "%d comments"
+msgstr[0] "%d մեկնաբանություն"
+msgstr[1] "%d մեկնաբանություն"
+
+msgid "Album already selected"
+msgstr "Ալբոմը արդեն ընտրված է"
+
+msgid "Click here to display it"
+msgstr "Սեղմեք այստեղ, ցուցադրելու համար"
+
+msgid "Custom dates"
+msgstr "Անձնականացված ամսաթվեր"
+
+msgid "Only the first %d albums are displayed, out of %d."
+msgstr "Միայն առաջին %d ալբոմներն են ցուցադրվում, ընդհանուրում %d-ից:"
+
+msgid "Pages"
+msgstr "Էջեր"
+
+msgid "The PDF you requested is too large to display on this page."
+msgstr "Ձեր խնդրած PDF-ը չափազանց մեծ է, որպեսզի ցուցադրվի այս էջում:"
+
+msgid "There are no authors available for the photos currently filtered"
+msgstr "Ֆիլտրված լուսանկարների համար հեղինակներ չկան"
+
+msgid "There are no creation dates available for the photos currently filtered"
+msgstr "Ֆիլտրված լուսանկարների համար ստեղծման ամսաթվեր չկան"
+
+msgid "There are no tags available for the photos currently filtered"
+msgstr "Ֆիլտրված լուսանկարների համար տեգեր չկան"
+
+msgid "last 12 months"
+msgstr "Վերջին 12 ամիսը"
+

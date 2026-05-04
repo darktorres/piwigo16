@@ -1,0 +1,4245 @@
+# Piwigo translation — sv_SE
+# Source: admin.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: sv_SE\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "%d association"
+msgstr "%d association"
+
+msgid "%d associations"
+msgstr "%d associationer"
+
+msgid "%d album including"
+msgstr "%d album inklusive"
+
+msgid "%d albums including"
+msgstr "%d album inklusive"
+
+msgid "%d physical"
+msgstr " %d fysisk"
+
+msgid " and %d virtual"
+msgstr " och %d virtuell"
+
+msgid "%d album moved"
+msgid_plural "%d albums moved"
+msgstr[0] "%d album flyttat"
+msgstr[1] "%d album flyttade"
+
+msgid "%d group"
+msgstr "%d grupp"
+
+msgid "%d groups"
+msgstr "%d grupper"
+
+msgid "%d member"
+msgid_plural "%d members"
+msgstr[0] "%d medlem"
+msgstr[1] "%d medlemmar"
+
+msgid "%d tag"
+msgstr "%d tagg"
+
+msgid "%d tags"
+msgstr "%d taggar"
+
+msgid "%d user comment rejected"
+msgstr "%d användares kommentar nekad"
+
+msgid "%d user comments rejected"
+msgstr "%d användares kommentarer nekade"
+
+msgid "%d user comment validated"
+msgstr "%d användares kommentar godkänd"
+
+msgid "%d user comments validated"
+msgstr "%d användares kommentarer godkända"
+
+msgid "%d user deleted"
+msgid_plural "%d users deleted"
+msgstr[0] "%d användare borttagen"
+msgstr[1] "%d användare borttagna"
+
+msgid "%d user"
+msgid_plural "%d users"
+msgstr[0] "%d användare"
+msgstr[1] "%d användare"
+
+msgid "%d waiting for validation"
+msgstr "%d väntar på godkännande"
+
+msgid "Actions"
+msgstr "Åtgärder"
+
+msgid "Activate"
+msgstr "Aktivera"
+
+msgid "Add/delete a permalink"
+msgstr "Lägg till/Ta bort en permalänk"
+
+msgid "Add a tag"
+msgstr "Lägg till en tagg"
+
+msgid "Add a user"
+msgstr "Lägg till en användare"
+
+msgid "Add group"
+msgstr "Lägg till grupp"
+
+msgid "Add"
+msgstr "Lägg till"
+
+msgid "Allow user registration"
+msgstr "Tillåt användarregistrering"
+
+msgid "Apply to sub-albums"
+msgstr "Använd på underalbum"
+
+msgid "Associated"
+msgstr "Associerad"
+
+msgid "Caddie management"
+msgstr "Korghantering"
+
+msgid "Caddie"
+msgstr "Korg"
+
+msgid "Albums authorized thanks to group associations"
+msgstr "Album auktoriserade tack vare grupp associationer"
+
+msgid "Album manual order was saved"
+msgstr "Albums manuella ordningsföljd sparades"
+
+msgid "Check for upgrade failed for unknown reasons."
+msgstr "Sök efter uppdatering misslyckades av okänd anledning."
+
+msgid "Check for upgrade"
+msgstr "Sök efter uppdatering"
+
+msgid "Comments for all"
+msgstr "Kommentarer för alla"
+
+msgid "Current name"
+msgstr "Aktuellt namn"
+
+msgid "Database"
+msgstr "Databas"
+
+msgid "Deactivate"
+msgstr "Avaktivera"
+
+msgid "Delete Representant"
+msgstr "Ta bort albumminiatyr"
+
+msgid "Delete selected tags"
+msgstr "Ta bort markerade taggar"
+
+msgid "Delete selected users"
+msgstr "Ta bort markerade användare"
+
+msgid "Deletions"
+msgstr "Borttagna"
+
+msgid "Deny selected groups"
+msgstr "Neka markerade grupper"
+
+msgid "Deny selected users"
+msgstr "Neka markerad användare"
+
+msgid "Description"
+msgstr "Beskrivning"
+
+msgid "Display options"
+msgstr "Visa alternativ"
+
+msgid "Dissociated"
+msgstr "Avassocierad"
+
+msgid "Does not represent"
+msgstr "Är inte miniatyr för"
+
+msgid "Edit selected tags"
+msgstr "Redigera markerade taggar"
+
+msgid "Edit tags"
+msgstr "Redigera taggar"
+
+msgid "Email admins when a new user registers"
+msgstr "Sänd mail till admin när en ny användare registreras"
+
+msgid "Email admins when a valid comment is entered"
+msgstr "Sänd mail till admin när en giltig kommentar är inlagd"
+
+msgid "Email admins when a comment requires validation"
+msgstr "Sänd mail till admin när en kommentar väntar på godkännande"
+
+msgid "Environment"
+msgstr "Miljö"
+
+msgid "Form"
+msgstr "Formulär"
+
+msgid "Gallery title"
+msgstr "Galleri titel"
+
+msgid "Grant selected groups"
+msgstr "Tillåt markerade grupper"
+
+msgid "Grant selected users"
+msgstr "Tillåt markerade användare"
+
+msgid "Group name"
+msgstr "Grupp namn"
+
+msgid "Groups"
+msgstr "Grupper"
+
+msgid "Guests"
+msgstr "Gäster"
+
+msgid "History"
+msgstr "Historik"
+
+msgid "Informations"
+msgstr "Information"
+
+msgid "Install"
+msgstr "Installera"
+
+msgid "Link all album photos to a new album"
+msgstr "Länka alla albumbilder till ett nytt album"
+
+msgid "Link all album photos to some existing albums"
+msgstr "Länka alla albumbilder till något existerande album"
+
+msgid "Linked albums"
+msgstr "Länkade album"
+
+msgid "Lock gallery"
+msgstr "Lås galleri"
+
+msgid "Maintenance"
+msgstr "Underhåll"
+
+msgid "Edit album permissions"
+msgstr "Redigera albumbehörigheter"
+
+msgid "Manage permissions for group \"%s\""
+msgstr "Hantera behörigheter för grupp \"%s\""
+
+msgid "Manage permissions for user \"%s\""
+msgstr "Hantera behörigheter för användare \"%s\""
+
+msgid "Manage tags"
+msgstr "Hantera taggar"
+
+msgid "Members"
+msgstr "Medlemmar"
+
+msgid "Metadata synchronized from file"
+msgstr "Metadata synkroniserad från fil"
+
+msgid "Move albums"
+msgstr "Flytta album"
+
+msgid "Move"
+msgstr "Flytta"
+
+msgid "Name"
+msgstr "Namn"
+
+msgid "New name"
+msgstr "Nytt namn"
+
+msgid "New parent album"
+msgstr "Nytt föräldraalbum"
+
+msgid "New tag"
+msgstr "Ny tagg"
+
+msgid "Number of comments per page"
+msgstr "Antal kommentarer per sida"
+
+msgid "Number of rates"
+msgstr "Antal betyg"
+
+msgid "Only private albums are listed"
+msgstr "Enbart privata album är listade"
+
+msgid "Operating system"
+msgstr "Operativsystem"
+
+msgid "Options"
+msgstr "Alternativ"
+
+msgid "Other private albums"
+msgstr "Andra privata album"
+
+msgid "Page banner"
+msgstr "Sidans banner"
+
+msgid "Parent album"
+msgstr "Föräldraalbum"
+
+msgid "Path"
+msgstr "Sökväg"
+
+msgid "Permalink"
+msgstr "Permalänk"
+
+msgid "Permalink %s has been previously used by album %s. Delete from the permalink history first"
+msgstr "Permalänk %s har tidigare varit använd av album %s. Ta bort från permalänkshistoriken först"
+
+msgid "The permalink name must be composed of a-z, A-Z, 0-9, \"-\", \"_\" or \"/\". It must not be numeric or start with number followed by \"-\""
+msgstr "Permalänkens namn får endast innehålla följande tecken: a-z, A-Z, 0-9, \"-\", \"_\" eller \"/\". Den får inte vara numerisk eller börja med ett nummer följt av \"-\""
+
+msgid "Permalink %s is already used by album %s"
+msgstr "Permalänk %s används redan av album %s"
+
+msgid "Permalink history"
+msgstr "Permalänkshistorik"
+
+msgid "Permalinks"
+msgstr "Permalänkar"
+
+msgid "Permission denied"
+msgstr "Tillstånd nekat"
+
+msgid "Permission granted thanks to a group"
+msgstr "Tillstånd beviljat tack vare en grupp"
+
+msgid "Permission granted"
+msgstr "Tillstånd beviljat"
+
+msgid "Photo informations updated"
+msgstr "Fotoinformation uppdaterad"
+
+msgid "Plugins"
+msgstr "Insticksmoduler"
+
+msgid "Position"
+msgstr "Position"
+
+msgid "Preferences"
+msgstr "Inställningar"
+
+msgid "Properties"
+msgstr "Egenskaper"
+
+msgid "Random photo"
+msgstr "Slumpad bild"
+
+msgid "Rate date"
+msgstr "Betygsdatum"
+
+msgid "Rating by guests"
+msgstr "Betyg av gäster"
+
+msgid "Rating"
+msgstr "Betyg"
+
+msgid "Reject"
+msgstr "Neka"
+
+msgid "Representant"
+msgstr "Miniatyr för album"
+
+msgid "Representation of albums"
+msgstr "Miniatyr för album"
+
+msgid "Representative"
+msgstr "Miniatyr för album"
+
+msgid "Represents"
+msgstr "Är miniatyr för"
+
+msgid "Save order"
+msgstr "Spara ordning"
+
+msgid "Save to permalink history"
+msgstr "Spara i permalänkshistoriken"
+
+msgid "Select at least one album"
+msgstr "Markera minst ett album"
+
+msgid "Select at least one photo"
+msgstr "Markera minst en bild"
+
+msgid "Select at least one user"
+msgstr "Markera minst en användare"
+
+msgid "Show info"
+msgstr "Visa info"
+
+msgid "Site manager"
+msgstr "Hantera sidor"
+
+msgid "Status"
+msgstr "Status"
+
+msgid "Statistics"
+msgstr "Statistik"
+
+msgid "Storage album"
+msgstr "Lagringsalbum"
+
+msgid "Sum of rates"
+msgstr "Summa av betyg"
+
+msgid "Tag \"%s\" already exists"
+msgstr "Taggen \"%s\" existerar redan"
+
+msgid "Tag \"%s\" was added"
+msgstr "Tagg \"%s\" har lagts till"
+
+msgid "Tag selection"
+msgstr "Tagg markering"
+
+msgid "The %d following tags were deleted"
+msgstr "Följande %d taggar har blivit borttagna"
+
+msgid "Unable to check for upgrade."
+msgstr "Fel uppstod vid sökning efter uppdatering."
+
+msgid "Uninstall"
+msgstr "Avinstallera"
+
+msgid "Use the default photo sort order"
+msgstr "Använd standardordning för bildsortering"
+
+msgid "User comments validation"
+msgstr "Validera användarkommentarer"
+
+msgid "Users"
+msgstr "Användare"
+
+msgid "Validate"
+msgstr "Bekräfta"
+
+msgid "Validation"
+msgstr "Bekräftning"
+
+msgid "Version"
+msgstr "Version"
+
+msgid "Virtual albums to move"
+msgstr "Virtuella album att flytta"
+
+msgid "Virtual album name"
+msgstr "Namn på virtuellt album"
+
+msgid "Webmaster cannot be deleted"
+msgstr "Kan inte ta bort Webmaster"
+
+msgid "You are running on development sources, no check possible."
+msgstr "Du kör på utvecklingskällor, ingen kontroll möjlig."
+
+msgid "You cannot delete your account"
+msgstr "Du kan inte ta bort ditt konto"
+
+msgid "You cannot move an album in its own sub album"
+msgstr "Du kan inte flytta ett album till sitt eget underalbum"
+
+msgid "You need to confirm deletion"
+msgstr "Du måste godkänna borttagning"
+
+msgid "Associate to album"
+msgstr "Associera till album"
+
+msgid "associate to group"
+msgstr "associera till grupp"
+
+msgid "Authorized"
+msgstr "Befogad"
+
+msgid "Add a virtual album"
+msgstr "Lägg till ett virtuell album"
+
+msgid "Authorize users to add comments on selected albums"
+msgstr "Tillåt användare att lägga till kommentarer på markerade album"
+
+msgid "The name of an album must not be empty"
+msgstr "Namnet på en kategori kan inte vara blankt"
+
+msgid "Lock albums"
+msgstr "Lås album"
+
+msgid "Private"
+msgstr "Privat"
+
+msgid "Public"
+msgstr "Allmänn "
+
+msgid "Find a new representant by random"
+msgstr "Hitta en ny slumpad miniatyr för album"
+
+msgid "Public / Private"
+msgstr "Allmän / Privat"
+
+msgid "Manage authorizations for selected albums"
+msgstr "Hantera behörigheter för markerade album"
+
+msgid "Virtual album added"
+msgstr "Virtuellt album tillagt"
+
+msgid "Virtual album deleted"
+msgstr "Virtuellt album borttaget"
+
+msgid "Access type"
+msgstr "Typ av åtkomst"
+
+msgid "Information data registered in database"
+msgstr "Informationsdata registrerad i databas"
+
+msgid "Default display"
+msgstr "Standardvy"
+
+msgid "The gallery URL is not valid."
+msgstr "Adressen till galleriet är ogiltig."
+
+msgid "The number of comments a page must be between 5 and 50 included."
+msgstr "Antalet kommentarer per sida måste vara mellan 5 och 50."
+
+msgid "Configuration"
+msgstr "Inställningar"
+
+msgid "confirm"
+msgstr "bekräfta"
+
+msgid "Date"
+msgstr "Datum"
+
+msgid "delete album"
+msgstr "ta bort album"
+
+msgid "Dissociate from album"
+msgstr "Avassociera från album"
+
+msgid "dissociate from group"
+msgstr "skilj från grupp"
+
+msgid "Album updated successfully"
+msgstr "Albuminformationen har uppdaterats"
+
+msgid "photos per page"
+msgstr "bilder per sida"
+
+msgid "High definition enabled"
+msgstr "Tillåt nedladdning"
+
+msgid "File"
+msgstr "Fil"
+
+msgid "Forbidden"
+msgstr "Förbjudet"
+
+msgid "global mode"
+msgstr "globalt läge"
+
+msgid "group \"%s\" added"
+msgstr "grupp \"%s\" tillagd"
+
+msgid "group \"%s\" deleted"
+msgstr "grupp \"%s\" borttagen"
+
+msgid "group \"%s\" updated"
+msgstr "grupp \"%s\" uppdaterad"
+
+msgid "The name of a group must not contain \" or ' or be empty."
+msgstr "Namnet på en grupp får inte innehålla symbolerna \" eller ' eller vara blank."
+
+msgid "This name is already used by another group."
+msgstr "Det här namnet används redan av en annan grupp."
+
+msgid "High definition"
+msgstr "Hög definition"
+
+msgid "jump to album"
+msgstr "gå till album"
+
+msgid "jump to photo"
+msgstr "gå till bild"
+
+msgid "leave"
+msgstr "lämna"
+
+msgid "Lock"
+msgstr "Lås"
+
+msgid "Locked"
+msgstr "Låst"
+
+msgid "manage album photos"
+msgstr "hantera albumfoton"
+
+msgid "manage sub-albums"
+msgstr "hantera underalbum"
+
+msgid "Manage"
+msgstr "Hantera"
+
+msgid "Execution time is out, treatment must be continue [Estimated time: %d second]."
+msgid_plural "Execution time is out, treatment must be continue [Estimated time: %d seconds]."
+msgstr[0] "Processen svarar inte, behandling måste fortsätta [Uppskattad tid: %d sekund]."
+msgstr[1] "Processen svarar inte, behandling måste fortsätta [Uppskattad tid: %d sekunder]."
+
+msgid "Prepared time for list of users to send mail is limited. Others users are not listed."
+msgstr "Tid att förbereda listan för användare som ska skickas e-mail är begränsad. Andra användare är inte listade."
+
+msgid "Time to send mail is limited. Others mails are skipped."
+msgstr "Tiden att skicka e-mail är begränsad. Andras e-mail hoppas över."
+
+msgid "To send ?"
+msgstr "Att skicka?"
+
+msgid "Last send"
+msgstr "Senast skickat"
+
+msgid "User"
+msgstr "Användare"
+
+msgid "Complementary mail content"
+msgstr "Kompletterande mailinnehåll"
+
+msgid "See you soon,"
+msgstr "Vi ses,"
+
+msgid "Go to"
+msgstr "Gå till"
+
+msgid "Hello"
+msgstr "Hej"
+
+msgid "New photos were added"
+msgstr "Nya foton har blivit tillagda"
+
+msgid "on"
+msgstr "på"
+
+msgid "between"
+msgstr "mellan"
+
+msgid "and"
+msgstr "och"
+
+msgid "The webmaster has subscribed you to receiving notifications by mail."
+msgstr "Webmaster har lagt till dig så att du får notifikationer via e-mail."
+
+msgid "You have subscribed to receiving notifications by mail."
+msgstr "Du har lagts till och kommer nu får notifikationer via e-mail."
+
+msgid "To subscribe"
+msgstr "Till prenumerera"
+
+msgid "If you encounter problems or have any question, please send a message to"
+msgstr "Om du stöter på problem eller har frågor, vänligen skicka ett meddelande till"
+
+msgid "[NBM] Problems or questions"
+msgstr "[NBM] Problem eller frågor"
+
+msgid "The webmaster has unsubscribed you from receiving notifications by mail."
+msgstr "Webmaster har tagit bort dig från listan, du kommer nu inte få några notifikationer via e-mail."
+
+msgid "You have unsubscribed from receiving notifications by mail."
+msgstr "Du har blivit borttagen från notifikations e-mail listan."
+
+msgid ", click on"
+msgstr ", klicka på"
+
+msgid "To unsubscribe"
+msgstr "Till avsluta prenumeration"
+
+msgid "With blank value, gallery title will be used"
+msgstr "Om lämnad tom kommer galleriets titel att användas"
+
+msgid "Notification"
+msgstr "Notifikation"
+
+msgid "Error when sending email to %s [%s]."
+msgstr "Ett fel uppstod när e-post skickades till %s [%s]."
+
+msgid "Mail sent to %s [%s]."
+msgstr "E-mail skickat till %s [%s]."
+
+msgid "%d mail was sent."
+msgid_plural "%d mails were sent."
+msgstr[0] "%d e-mail har skickats."
+msgstr[1] "%d e-mail har skickats."
+
+msgid "%d mail was not sent."
+msgid_plural "%d mails were not sent."
+msgstr[0] "%d e-mail skickades inte."
+msgstr[1] "%d e-mail skickades inte."
+
+msgid "No mail to send."
+msgstr "Inga e-mail att skicka."
+
+msgid "There is no available subscribers to mail."
+msgstr "Det finns inga prenumeranter att skicka notifikationer till."
+
+msgid "Subscribers could be listed (available) only if there is new elements to notify."
+msgstr "Prenumeranter kan listas (tillgänglig) enbart om det finns nya element att meddela."
+
+msgid "Anyway only webmasters can see this tab and never administrators."
+msgstr "I vilket fall som helst kan enbart webbansvarig se denna flik, inte administratörer."
+
+msgid "No user to send notifications by mail."
+msgstr "Ingen användare att meddela via e-mail."
+
+msgid "New photos added"
+msgstr "Nya foton tillagda"
+
+msgid "Subscribe to notification by mail"
+msgstr "Anmäl till notifikation via e-mail"
+
+msgid "Unsubscribe from notification by mail"
+msgstr "Avanmäl notifikation via e-mail"
+
+msgid "Parameter"
+msgstr "Inställningar"
+
+msgid "Operation in progress"
+msgstr "Behandling av bearbetning."
+
+msgid "Continue processing treatment"
+msgstr "Fortsätt med pågående behandling"
+
+msgid "Add detailed content"
+msgstr "Lägg till detaljerad information"
+
+msgid "Send mail as"
+msgstr "Skicka e-mail som"
+
+msgid "Send mail to users"
+msgstr "Skicka e-mail till användare"
+
+msgid "Send"
+msgstr "Skicka"
+
+msgid "Subscribed"
+msgstr "Anmäld"
+
+msgid "Subscribe"
+msgstr "Anmäl"
+
+msgid "Parameters"
+msgstr "Parameter"
+
+msgid "Select recipients"
+msgstr "Välj mottagare"
+
+msgid "Subscribe/unsubscribe users"
+msgstr "Anmäl/Avanmäl användare"
+
+msgid "Unsubscribed"
+msgstr "Avanmäld"
+
+msgid "%d parameter was updated."
+msgid_plural "%d parameters were updated."
+msgstr[0] "%d parameter uppdaterad."
+msgstr[1] "%d parametrar uppdaterade."
+
+msgid "%d user was not updated."
+msgid_plural "%d users were not updated."
+msgstr[0] "%d användare uppdaterades inte."
+msgstr[1] "%d användare uppdaterades inte."
+
+msgid "User %s [%s] was removed from the subscription list."
+msgstr "Användare %s [%s] borttagen från prenumerationslistan."
+
+msgid "User %s [%s] was added to the subscription list."
+msgstr "Användare %s [%s] tillagd till prenumerationslistan."
+
+msgid "%d user was updated."
+msgid_plural "%d users were updated."
+msgstr[0] "%d användare uppdaterad."
+msgstr[1] "%d användare uppdaterade."
+
+msgid "User %s [%s] was not removed from the subscription list."
+msgstr "Användare %s [%s] inte borttagen från prenumerationslistan."
+
+msgid "User %s [%s] was not added to the subscription list."
+msgstr "Användare %s [%s] inte tillagd till prenumerationslistan."
+
+msgid "User %s [%s] added."
+msgstr "Användare %s [%s] tillagd."
+
+msgid "Warning: subscribing or unsubscribing will send mails to users"
+msgstr "Varning: anmälning eller avanmälning kommer att skicka e-mail till användare"
+
+msgid "Send mail on HTML format"
+msgstr "Skicka e-mail i HTML format"
+
+msgid "Include display of recent photos grouped by dates"
+msgstr "Inkludera visning av tidigare bilder grupperat efter datum"
+
+msgid "Available only with HTML format"
+msgstr "Endast tillgänglig med HTML format"
+
+msgid "no write access"
+msgstr "inte tillåtelse att skriva"
+
+msgid "Permissions"
+msgstr "Behörigheter"
+
+msgid "private"
+msgstr "privat"
+
+msgid "public"
+msgstr "allmänt"
+
+msgid "Purge never used notification feeds"
+msgstr "Rensa aldrig använda aviseringsflöden"
+
+msgid "Purge sessions"
+msgstr "Rensa sessioner"
+
+msgid "randomly represented"
+msgstr "slumpmässig miniatyr för album"
+
+msgid "registration date"
+msgstr "registreringsdatum"
+
+msgid "clean"
+msgstr "rensa upp"
+
+msgid "Create this site"
+msgstr "Skapa denna sida"
+
+msgid "test"
+msgstr "test"
+
+msgid "test this remote site"
+msgstr "testa fjärrsidan"
+
+msgid "remove tags"
+msgstr "Ta bort taggar"
+
+msgid "Repair and optimize database"
+msgstr "Reparera och optimera databas"
+
+msgid "selection"
+msgstr "markering"
+
+msgid "set to"
+msgstr "inställd på"
+
+msgid "singly represented"
+msgstr "fast miniatyr för album"
+
+msgid "This site already exists"
+msgstr "Sidan existerar redan"
+
+msgid "created"
+msgstr "skapad"
+
+msgid "delete"
+msgstr "ta bort"
+
+msgid "delete this site and all its attached elements"
+msgstr "ta bort denna sida och all relaterad information"
+
+msgid "deleted"
+msgstr "borttagen"
+
+msgid "an error happened"
+msgstr "ett fel uppstod"
+
+msgid "Local"
+msgstr "Lokal"
+
+msgid "Remote"
+msgstr "Fjärrsida"
+
+msgid "update the database from files"
+msgstr "uppdatera databasen med filer"
+
+msgid "status"
+msgstr "status"
+
+msgid "Directory"
+msgstr "Katalog"
+
+msgid "sub-albums"
+msgstr "underalbum"
+
+msgid "Synchronize metadata"
+msgstr "Synkronisera metadata"
+
+msgid "target"
+msgstr "mål"
+
+msgid "Title"
+msgstr "Titel"
+
+msgid "Album list management"
+msgstr "Hantera albumlista"
+
+msgid "Piwigo configuration"
+msgstr "Piwigo konfiguration"
+
+msgid "Edit album"
+msgstr "Redigera album"
+
+msgid "Group management"
+msgstr "Grupp hantering"
+
+msgid "User list"
+msgstr "Användarlista"
+
+msgid "Database synchronization with files"
+msgstr "Synkronisera databas med filer"
+
+msgid "all"
+msgstr "alla"
+
+msgid "height must be a number superior to"
+msgstr "bildens höjd måste vara större än"
+
+msgid "width must be a number superior to"
+msgstr "bildens bredd måste vara större än"
+
+msgid "for the file format"
+msgstr "för filformatet"
+
+msgid "Photo unreachable or no support"
+msgstr "Bilden kunde inte nås eller filformatet stöds inte"
+
+msgid "GD version"
+msgstr "GD version"
+
+msgid "General statistics"
+msgstr "Generell statistik"
+
+msgid "average time"
+msgstr "snitt tid"
+
+msgid "total time"
+msgstr "total tid"
+
+msgid "for this file format"
+msgstr "för detta filformat"
+
+msgid "unit mode"
+msgstr "enkelt läge"
+
+msgid "Unlocked"
+msgstr "Upplåst"
+
+msgid "unset"
+msgstr "stäng av"
+
+msgid "Update albums informations"
+msgstr "Uppdatera information för album"
+
+msgid "Update photos information"
+msgstr "Uppdatera information för bilder"
+
+msgid "Synchronize"
+msgstr "Synkronisera"
+
+msgid "reduce to single existing albums"
+msgstr "reducera till enstaka existerande album"
+
+msgid "Choose an option"
+msgstr "Välj ett alternativ"
+
+msgid "display maximum informations (added albums and photos, deleted albums and photos)"
+msgstr "visa maximal information (tillagda album och foton, borttagna album och foton)"
+
+msgid "Error list"
+msgstr "Fellista"
+
+msgid "Errors caption"
+msgstr "Felbeskrivningar"
+
+msgid "Detailed informations"
+msgstr "Detaljerad information"
+
+msgid "File/directory read error"
+msgstr "Läsfel i fil/katalog"
+
+msgid "The file or directory cannot be accessed (either it does not exist or the access is denied)"
+msgstr "Filen eller katalogen kan inte nås (antigen existerar den inte eller tillträde nekat)"
+
+msgid "albums deleted in the database"
+msgstr "album borttagna ur databasen"
+
+msgid "photos deleted from the database"
+msgstr "foton borttagna ur databasen"
+
+msgid "photos candidates for metadata synchronization"
+msgstr "fotokandidater för metadata synkronisering"
+
+msgid "photos informations synchronized with files metadata"
+msgstr "fotoinformation synkroniserat med filernas metadata"
+
+msgid "errors during synchronization"
+msgstr "fel uppstod under synkronisering"
+
+msgid "albums added in the database"
+msgstr "album tillagda i databas"
+
+msgid "photos added in the database"
+msgstr "foton tillagda i databasen"
+
+msgid "photos updated in the database"
+msgstr "foton i databasen uppdaterade"
+
+msgid "Search for new images in the directories"
+msgstr "Sök i katalogerna efter nya bilder"
+
+msgid "added"
+msgstr "tillagd"
+
+msgid "Metadata synchronization results"
+msgstr "Resultat för synkronisering av metadata"
+
+msgid "only perform a simulation (no change in database will be made)"
+msgstr "utför enbart simulering (inget kommer att ändras i databasen)"
+
+msgid "Simulation"
+msgstr "Simulering"
+
+msgid "directories + files"
+msgstr "kataloger + filer"
+
+msgid "only directories"
+msgstr "bara kataloger"
+
+msgid "synchronize files structure with database"
+msgstr "synkronisera filstruktur med databas"
+
+msgid "synchronize files metadata with database photos informations"
+msgstr "synkronisera foton i databas med filernas metadata"
+
+msgid "even already synchronized photos"
+msgstr "även redan synkroniserade foton"
+
+msgid "Used metadata"
+msgstr "Metadata som används"
+
+msgid "The name of directories and files must be composed of letters, numbers, \"-\", \"_\" or \".\""
+msgstr "Namn på kataloger och filer får enbart innehålla bokstäver, siffror samt följande symboler: \"-\", \"_\" eller \".\""
+
+msgid "wrong filename"
+msgstr "ogiltigt filnamn"
+
+msgid "Upload"
+msgstr "Ladda upp"
+
+msgid "user \"%s\" added"
+msgstr "användare \"%s\" tillagd"
+
+msgid "User status"
+msgstr "Status för användare"
+
+msgid "user_status_admin"
+msgstr "Administratör"
+
+msgid "user_status_generic"
+msgstr "Generisk"
+
+msgid "user_status_guest"
+msgstr "Gäst"
+
+msgid "user_status_webmaster"
+msgstr "Webmaster"
+
+msgid "Virtual album"
+msgstr "Virtuellt album"
+
+msgid "Waiting"
+msgstr "Väntande"
+
+msgid "default"
+msgstr "standard"
+
+msgid "Toggle 'default group' property"
+msgstr "Omvänd egenskap för 'standard grupp' "
+
+msgid "Advanced features"
+msgstr "Avancerade funktioner"
+
+msgid "Overall"
+msgstr "Översikt"
+
+msgid "Year"
+msgstr "År"
+
+msgid "Month"
+msgstr "Månad"
+
+msgid "Day"
+msgstr "Dag"
+
+msgid "Pages seen"
+msgstr "Sidor sedda"
+
+msgid "Time"
+msgstr "Tid"
+
+msgid "IP"
+msgstr "IP"
+
+msgid "Element"
+msgstr "Element"
+
+msgid "Section"
+msgstr "Sektion"
+
+msgid "An information email was sent to group \"%s\""
+msgstr "E-mail med information skickat till grupp \"%s\""
+
+msgid "Send an information email to group members"
+msgstr "Skicka e-mail med information till gruppmedlemmar"
+
+msgid "Group"
+msgstr "Grupp"
+
+msgid "[%s] Visit album %s"
+msgstr "[%s] Besök album %s"
+
+msgid "Hello,"
+msgstr "Hej,"
+
+msgid "See you soon."
+msgstr "Vi ses."
+
+msgid "Discover album:"
+msgstr "Utforska album:"
+
+msgid "Mail content"
+msgstr "E-mail innehåll"
+
+msgid "none"
+msgstr "inga"
+
+msgid "high"
+msgstr "hög"
+
+msgid "other"
+msgstr "annan"
+
+msgid "Element type"
+msgstr "Typ av element"
+
+msgid "Image id"
+msgstr "Bild id"
+
+msgid "Summary"
+msgstr "Sammanfattning"
+
+msgid "%d line filtered"
+msgid_plural "%d lines filtered"
+msgstr[0] "%d rad filtrerad"
+msgstr[1] "%d rader filtrerade"
+
+msgid "%d guest"
+msgid_plural "%d guests"
+msgstr[0] "%d gäst"
+msgstr[1] "%d gäster"
+
+msgid "Hour"
+msgstr "Timme"
+
+msgid "guest"
+msgstr "gäst"
+
+msgid "default values"
+msgstr "standardvärden"
+
+msgid "Guest cannot be deleted"
+msgstr "Gäst kan inte tas bort"
+
+msgid "Default user cannot be deleted"
+msgstr "Standardanvändare kan inte tas bort"
+
+msgid "Purge history detail"
+msgstr "Rensa historikdetaljer"
+
+msgid "Purge history summary"
+msgstr "Rensa historiksammanfattning"
+
+msgid "Check integrity"
+msgstr "Integritetskontroll"
+
+msgid "Anomaly"
+msgstr "Avvikelse"
+
+msgid "Correction"
+msgstr "Rättning"
+
+msgid "Automatic correction"
+msgstr "Automatisk rättning"
+
+msgid "Impossible automatic correction"
+msgstr "Automatisk rättning var inte möjlig"
+
+msgid "Correction applied with success"
+msgstr "Rättning utfördes med framgång"
+
+msgid "Correction applied with error"
+msgstr "Rättning utfördes men med fel"
+
+msgid "%d anomaly has been detected."
+msgid_plural "%d anomalies have been detected."
+msgstr[0] "%d avvikelse har upptäckts."
+msgstr[1] "%d avvikelser har upptäckts."
+
+msgid "%d anomaly has been corrected."
+msgid_plural "%d anomalies have been detected corrected."
+msgstr[0] "%d avvikelse har rättats."
+msgstr[1] "%d avvikelser har upptäckts och rättats."
+
+msgid "%d anomaly has not been corrected."
+msgid_plural "%d anomalies have not been corrected."
+msgstr[0] "%d avvikelse kunde inte rättas."
+msgstr[1] "%d avvikelser kunde inte rättas."
+
+msgid "Go to %s or %s for more informations"
+msgstr "Gå till %s eller %s för mer information"
+
+msgid "the forum"
+msgstr "forumet"
+
+msgid "the wiki"
+msgstr "wiki"
+
+msgid "%s value is not correct file because exif are not supported"
+msgstr "%s värde är inkorrekt eftersom att exif inte stöds"
+
+msgid "%s must be to set to false in your local/config/config.inc.php file"
+msgstr "%s måste ställas in som falsk i din konfigurationsfil i local/config/config.inc.php"
+
+msgid "Main \"guest\" user does not exist"
+msgstr "Huvudanvändaren \"gäst\" finns inte"
+
+msgid "Main \"guest\" user status is incorrect"
+msgstr "Huvudanvändaren \"gäst\" status är inte korrekt"
+
+msgid "Default user does not exist"
+msgstr "Standardanvändare existerar inte"
+
+msgid "Main \"webmaster\" user does not exist"
+msgstr "Huvudanvändaren \"webmaster\" existerar inte"
+
+msgid "Main \"webmaster\" user status is incorrect"
+msgstr "Huvudanvändaren \"webmaster\" status är inte korrekt"
+
+msgid "User \"%s\" created with \"%s\" like password"
+msgstr "Användare \"%s\" skapades med \"%s\" som lösenord"
+
+msgid "Status of user \"%s\" updated"
+msgstr "Status för användare \"%s\" uppdaterad"
+
+msgid "add new photos to caddie"
+msgstr "lägg till nya foton till korg"
+
+msgid "No display"
+msgstr "Inget att visa"
+
+msgid "Classic display"
+msgstr "Klassisk visning"
+
+msgid "Hoverbox display"
+msgstr "Hoverbox visning"
+
+msgid "Minimum privacy level"
+msgstr "Lägsta integritetsnivå"
+
+msgid "Privacy level"
+msgstr "Sekretessnivå"
+
+msgid "Level 0"
+msgstr "---"
+
+msgid "Level 1"
+msgstr "Kontakter"
+
+msgid "Level 2"
+msgstr "Vänner"
+
+msgid "Level 4"
+msgstr "Familj"
+
+msgid "Level 8"
+msgstr "Administratörer"
+
+msgid "Reinitialize check integrity"
+msgstr "Återinitialisera integritetskontroll"
+
+msgid "Check all"
+msgstr "Kontrollera alla"
+
+msgid "Uncheck all"
+msgstr "Avmarkera alla"
+
+msgid "Check automatic corrections"
+msgstr "Kontrollera automatiska rättningar"
+
+msgid "Apply selected corrections"
+msgstr "Tillämpa valda korrigeringar"
+
+msgid "Ignore selected anomalies"
+msgstr "Ignorera markerade avvikelser"
+
+msgid "Refresh"
+msgstr "Uppdatera"
+
+msgid "The anomaly will be ignored until next application version"
+msgstr "Avvikelsen kommer att ignoreras tills nästa version av applikationen"
+
+msgid "Correction the anomaly will cancel the fact that it's ignored"
+msgstr "Rättad avvikelse kommer inte längre att ignoreras"
+
+msgid "%d anomaly has been ignored."
+msgid_plural "%d anomalies have been ignored."
+msgstr[0] "%d avvikelse ignorerades."
+msgstr[1] "%d avvikelser ignorerades."
+
+msgid "Plugins which need upgrade"
+msgstr "Insticksmoduler som behöver uppdateras"
+
+msgid "Plugin list"
+msgstr "Lista över insticksmoduler"
+
+msgid "Check for updates"
+msgstr "Sök efter uppdateringar"
+
+msgid "Other plugins"
+msgstr "Andra insticksmoduler tillgängliga"
+
+msgid "Last revisions"
+msgstr "Senaste ändringar"
+
+msgid "Are you sure you want to delete this plugin?"
+msgstr "Är du säker på att du vill ta bort denna insticksmodul?"
+
+msgid "Are you sure you want to install this plugin?"
+msgstr "Är du säker på att du vill installera denna insticksmodul?"
+
+msgid "Are you sure to install this upgrade? You must verify if this version does not need uninstallation."
+msgstr "Är du säker på att du vill installera den här uppgraderingen? Du måste kontrollera om den här versionen inte behöver avinstalleras innan."
+
+msgid "Plugin has been successfully copied"
+msgstr "Kopiering av denna insticksmodul utfördes med framgång"
+
+msgid "Can't create temporary file."
+msgstr "Tillfällig fil kunde inte skapas."
+
+msgid "Can't download archive."
+msgstr "Arkiv kan inte laddas ner."
+
+msgid "Can't read or extract archive."
+msgstr "Arkiv kunde inte läsas eller extraheras."
+
+msgid "An error occured during extraction (%s)."
+msgstr "Ett fel uppstod när följande filer packades upp: (%s)."
+
+msgid "Please check \"plugins\" folder and sub-folders permissions (CHMOD)."
+msgstr "Kontrollera insticksmodulmappen och eventuella undermappars behörigheter (CHMOD)."
+
+msgid "Can't connect to server."
+msgstr "Kunde inte ansluta till servern."
+
+msgid "Purge compiled templates"
+msgstr "Rensa sammanställda mallar"
+
+msgid "ACCESS_0"
+msgstr "Fritt tillträde"
+
+msgid "ACCESS_1"
+msgstr "Åtkomst för alla"
+
+msgid "ACCESS_2"
+msgstr "Åtkomst för registrerade användare"
+
+msgid "ACCESS_3"
+msgstr "Åtkomst för administratörer"
+
+msgid "ACCESS_4"
+msgstr "Åtkomst för webmasters"
+
+msgid "ACCESS_5"
+msgstr "Ingen åtkomst"
+
+msgid "Support"
+msgstr "Hjälp"
+
+msgid "Documentation"
+msgstr "Dokumentation"
+
+msgid "A new version of Piwigo is available."
+msgstr "En ny version av Piwigo finns nu tillgänglig."
+
+msgid "Piwigo Administration"
+msgstr "Piwigo Administration"
+
+msgid "Piwigo version"
+msgstr "Piwigo version"
+
+msgid "You are running the latest version of Piwigo."
+msgstr "Du använder senaste versionen av Piwigo."
+
+msgid "The version of %s [%s] installed is not compatible with the version required [%s]"
+msgstr "Versionen av %s [%s] installerad är inte kompatibel med versionen som krävs [%s]"
+
+msgid "You need to upgrade your system to take full advantage of the application else the application will not work correctly, or not at all"
+msgstr "För att utnyttja alla fördelar av programmet, uppdatera ditt system, annars kan det resultera i att programmet inte fungerar korrekt eller inte alls"
+
+msgid "Deleted on"
+msgstr "Borttagen den"
+
+msgid "Last hit"
+msgstr "Senaste träff"
+
+msgid "GD library is missing"
+msgstr "GD bibliotek saknas"
+
+msgid "Templates"
+msgstr "Mallar"
+
+msgid "Extend for templates"
+msgstr "Utöka mallar"
+
+msgid "Replacement of original templates by customized templates from template-extension subfolder"
+msgstr "Ersättning av originalmallar med specialanpassade mallar från  undermappen mall-tillägg (template-extension)"
+
+msgid "Replacers (customized templates)"
+msgstr "Ersättningar (anpassade mallar)"
+
+msgid "Original templates"
+msgstr "Standardmallar"
+
+msgid "Optional URL keyword"
+msgstr "Standard URL nyckelord"
+
+msgid "Templates configuration has been recorded."
+msgstr "Inställning av mallar har registrerats."
+
+msgid "All optimizations have been successfully completed."
+msgstr "Alla optimeringar har slutförts."
+
+msgid "Optimizations have been completed with some errors."
+msgstr "Optimeringar har slutförts, men fel uppstod."
+
+msgid "Modify information"
+msgstr "Modifiera information"
+
+msgid "nothing"
+msgstr "inget"
+
+msgid "overrides existing values with empty ones"
+msgstr "skriver över existerande värden med tomma värden"
+
+msgid "Manage photo ranks"
+msgstr "Sorteringsordning för foton"
+
+msgid "Edit ranks"
+msgstr "Redigera betygsättning"
+
+msgid "No photo in this album"
+msgstr "Inget foto i detta album"
+
+msgid "Images manual order was saved"
+msgstr "Manuell bildordning sparad"
+
+msgid "ranks"
+msgstr "betyg"
+
+msgid "By rank"
+msgstr "Efter betyg"
+
+msgid "Manual order"
+msgstr "Manuell ordning"
+
+msgid "Drag to re-order"
+msgstr "Klicka-och-dra för att ändra ordning"
+
+msgid "Quick Local Synchronization"
+msgstr "Snabb Lokal Synkronisering"
+
+msgid "No photo can be deleted"
+msgstr "Inga foton kan tas bort"
+
+msgid "Delete selected photos"
+msgstr "Ta bort markerade foton"
+
+msgid "%d photo was deleted"
+msgid_plural "%d photos were deleted"
+msgstr[0] "%d foto borttaget"
+msgstr[1] "%d foton borttagna"
+
+msgid "Downloads"
+msgstr "Nerladdningar"
+
+msgid "Released on"
+msgstr "Släppt den"
+
+msgid "Number of downloads"
+msgstr "Antal nerladdningar"
+
+msgid "Piwigo Announcements Newsletter"
+msgstr "Piwigo Nyhetsbrev"
+
+msgid "Keep in touch with Piwigo project, subscribe to Piwigo Announcement Newsletter. You will receive emails when a new release is available (sometimes including a security bug fix, it's important to know and upgrade) and when major events happen to the project. Only a few emails a year."
+msgstr "Håll dig uppdaterad om Piwigo projektet, prenumerera på Piwigos nyhetsbrev. Ett e-mail kommer att skickas till dig så fort en ny uppdatering är tillgänglig (innehållande säkerhetsuppdateringar, felkorrigerringar och saker som är viktiga för säkerheten av ditt galleri) och vid viktiga händelser. Enbart några få e-mail varje år."
+
+msgid "Subscribe %s"
+msgstr "Anmäl %s"
+
+msgid "Subscribe %s to Piwigo Announcements Newsletter"
+msgstr "Anmäl dig %s till Piwigo Nyhetsbrev"
+
+msgid "Purge search history"
+msgstr "Rensa sökhistorik"
+
+msgid "Hide"
+msgstr "Göm"
+
+msgid "Password is missing. Please enter the password."
+msgstr "Lösenord saknas. Ange lösenord."
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "Bekräftelse av lösenord saknas. Vänligen bekräfta ditt valda lösenord."
+
+msgid "Allow users to edit their own comments"
+msgstr "Tillåt användare att ändra egna kommentarer"
+
+msgid "Allow users to delete their own comments"
+msgstr "Tillåt användare att ta bort egna kommentarer"
+
+msgid "Email administrators when a comment is modified"
+msgstr "Notifiera administratör när en kommentar läggs till"
+
+msgid "Email administrators when a comment is deleted"
+msgstr "Notifiera administratör när kommentar tas bort"
+
+msgid "Cannot delete the old permalink !"
+msgstr "Kan inte ta bort gammal permalänk!"
+
+msgid "Hit"
+msgstr "Träff"
+
+msgid "Tools"
+msgstr "Verktyg"
+
+msgid "Photos"
+msgstr "Foton"
+
+msgid "Themes"
+msgstr "Teman"
+
+msgid "Instructions to use Piwigo"
+msgstr "Instruktioner för användning av Piwigo"
+
+msgid "Installed Themes"
+msgstr "Installerade Teman"
+
+msgid "Add New Theme"
+msgstr "Lägg till nytt tema"
+
+msgid "Forbid this theme to users"
+msgstr "Förbjud detta tema för användare"
+
+msgid "Set as default theme for unregistered and new users"
+msgstr "Ange som standard tema för oregistrerade och nya användare"
+
+msgid "unknown"
+msgstr "okänd"
+
+msgid "Upload Photos"
+msgstr "Ladda upp foton"
+
+msgid "Drop into album"
+msgstr "Välj ett album"
+
+msgid "+ Add an upload box"
+msgstr "+ Lägg till en uppladdningsruta"
+
+msgid "Create the \"%s\" directory at the root of your Piwigo installation"
+msgstr "Skapa mappen \"%s\" i rotkatalogen för din Piwigo installation"
+
+msgid "Give write access (chmod 777) to \"%s\" directory at the root of your Piwigo installation"
+msgstr "Ge tillåtelse att skriva (chmod 777) i mappen \"%s\" i rotkatalogen för din Piwigo installation"
+
+msgid "existing album"
+msgstr "existerande album"
+
+msgid "create a new album"
+msgstr "skapa ett nytt album"
+
+msgid "Album name"
+msgstr "Namn på album"
+
+msgid "Album \"%s\" has been added"
+msgstr "Album \"%s\" har lagts till"
+
+msgid "Uploaded Photos"
+msgstr "Uppladdade Foton"
+
+msgid "%d photos uploaded"
+msgstr "%d foton uppladdade"
+
+msgid "Privacy level set to \"%s\""
+msgstr "Sekretessnivå inställd på \"%s\""
+
+msgid "Album \"%s\" now contains %d photos"
+msgstr "Album \"%s\" innehåller nu %d foton"
+
+msgid "Manage this set of %d photos"
+msgstr "Hantera uppsättningen om %d foton"
+
+msgid "Select files"
+msgstr "Välj filer"
+
+msgid "Everybody"
+msgstr "Alla"
+
+msgid "Who can see these photos?"
+msgstr "Vem kan se dessa foton?"
+
+msgid "Who can see this photo?"
+msgstr "Vem kan se detta foto?"
+
+msgid "Settings"
+msgstr "Inställningar"
+
+msgid "Resize"
+msgstr "Ändra storlek"
+
+msgid "Maximum width"
+msgstr "Maximal bredd"
+
+msgid "pixels"
+msgstr "pixlar"
+
+msgid "Maximum height"
+msgstr "Maximal höjd"
+
+msgid "Image Quality"
+msgstr "Bildkvalitet"
+
+msgid "Thumbnail"
+msgstr "Miniatyrbild"
+
+msgid "Save Settings"
+msgstr "Spara inställningar"
+
+msgid "Your configuration settings are saved"
+msgstr "Dina inställningar är nu sparade"
+
+msgid "Active Themes"
+msgstr "Aktiva teman"
+
+msgid "Add write access to the \"%s\" directory"
+msgstr "Lägg till skrivrättigheter till \"%s\" katalogen"
+
+msgid "Administration Home"
+msgstr "Administration Hem"
+
+msgid "Change Admin Colors"
+msgstr "Ändra administrationsfärger"
+
+msgid "Delete this theme"
+msgstr "Ta bort temat"
+
+msgid "Directory does not exist"
+msgstr "Katalog existerar inte"
+
+msgid "Download,"
+msgstr "Ladda ner,"
+
+msgid "FTP + Synchronization"
+msgstr "FTP + Synkronisering"
+
+msgid "Get Support on Piwigo Forum"
+msgstr "Support hittar du på Piwigo forumet"
+
+msgid "Help Me"
+msgstr "Hjälp mig"
+
+msgid "Impossible to activate this theme, the parent theme is missing: %s"
+msgstr "Temat kunde inte aktiveras, följande tema verkar inte existera: %s"
+
+msgid "Impossible to delete this theme. Other themes depends on it: %s"
+msgstr "Temat kunde inte tas bort, andra teman är beroende av det: %s"
+
+msgid "Inactive Themes"
+msgstr "Inaktivera teman"
+
+msgid "Install on your computer,"
+msgstr "Installera på din dator,"
+
+msgid "Make this theme available to users"
+msgstr "Gör temat tillgängligt för användare"
+
+msgid "Page end"
+msgstr "Slutet av sidan"
+
+msgid "Piwigo Uploader"
+msgstr "Piwigo Uppladdare"
+
+msgid "Please wait..."
+msgstr "Vänligen vänta..."
+
+msgid "Read Piwigo Documentation"
+msgstr "Läs Piwigo Dokumentationen"
+
+msgid "Start pLoader and add your photos."
+msgstr "Starta pLoader och lägg till dina bilder."
+
+msgid "Switch to clear or dark colors for administration"
+msgstr "Byt till klara eller mörka färger för administration"
+
+msgid "Theme has been successfully installed"
+msgstr "Temat har installerats"
+
+msgid "Visit Gallery"
+msgstr "Besök galleriet"
+
+msgid "Visit Piwigo project website"
+msgstr "Besök Piwigo projektets hemsida"
+
+msgid "Guest Settings"
+msgstr "Gästinställningar"
+
+msgid "Main Page"
+msgstr "Huvudsida"
+
+msgid "Photo Page"
+msgstr "Fotosida"
+
+msgid "Activate Navigation Bar"
+msgstr "Aktivera navigeringsfältet"
+
+msgid "Activate Navigation Thumbnails"
+msgstr "Aktivera navigationsminiatyrer"
+
+msgid "Activate icon \"%s\""
+msgstr "Aktivera ikon \"%s\""
+
+msgid "Photo Properties"
+msgstr "Fotoinställningar"
+
+msgid "Allow user customization"
+msgstr "Tillåt användaranpassning"
+
+msgid "Languages"
+msgstr "Språk"
+
+msgid "Installed Languages"
+msgstr "Installerade Språk"
+
+msgid "Add New Language"
+msgstr "Lägg till nytt språk"
+
+msgid "Language has been successfully installed"
+msgstr "Språket har installerats"
+
+msgid "Select:"
+msgstr "Markera:"
+
+msgid "None"
+msgstr "Ingen"
+
+msgid "Invert"
+msgstr "Invertera"
+
+msgid "Impossible to deactivate this theme, you need at least one theme."
+msgstr "Det går inte att inaktivera detta tema, minst ett tema måste vara aktiverat."
+
+msgid "Webmaster status is required."
+msgstr "Webmaster status krävs."
+
+msgid "Bound Theme"
+msgstr "Bound tema"
+
+msgid "Allow rating"
+msgstr "Tillåt betyg"
+
+msgid "Select at least one comment"
+msgstr "Markera minst en kommentar"
+
+msgid "Active Plugins"
+msgstr "Aktiva insticksmoduler"
+
+msgid "Inactive Plugins"
+msgstr "Inaktivera insticksmoduler"
+
+msgid "Missing Plugins"
+msgstr "Saknade insticksmoduler"
+
+msgid "Uninstalled Plugins"
+msgstr "Avinstallerade insticksmoduler"
+
+msgid "By %s"
+msgstr "Av %s"
+
+msgid "Visit plugin site"
+msgstr "Besök webbplats för insticksmodul"
+
+msgid "Active Languages"
+msgstr "Aktiva språk"
+
+msgid "Delete this language"
+msgstr "Ta bort det här språket"
+
+msgid "Forbid this language to users"
+msgstr "Förbjud språket för användare"
+
+msgid "Impossible to deactivate this language, first set another language as default."
+msgstr "Det är inte möjligt att inaktivera detta språk, först ange ett annat språk som standard."
+
+msgid "Impossible to deactivate this language, you need at least one language."
+msgstr "Det är inte möjligt att inaktivera detta språk, du måste ha minst ett språk."
+
+msgid "Inactive Languages"
+msgstr "Inaktivera språk"
+
+msgid "Make this language available to users"
+msgstr "Gör detta språk tillgängligt för användare"
+
+msgid "Set as default language for unregistered and new users"
+msgstr "Ange som standard språk för oregistrerade och nya användare"
+
+msgid "Add Photos"
+msgstr "Lägg till foton"
+
+msgid "The following tag was deleted"
+msgstr "Följande tagg blev borttagen"
+
+msgid "Miscellaneous"
+msgstr "Diverse"
+
+msgid "Virtual Links"
+msgstr "Virtuella Länkar"
+
+msgid "There is no other language available."
+msgstr "Det finns inget annat språk tillgängligt."
+
+msgid "There is no other plugin available."
+msgstr "Det finns ingen annan insticksmodul tillgänglig."
+
+msgid "There is no other theme available."
+msgstr "Det finns inget annat tema tillgängligt."
+
+msgid "Add another set of photos"
+msgstr "Lägg till en ny uppsättning foton"
+
+msgid "Order of menubar items has been updated successfully."
+msgstr "Ordningen för objekt i menyraden har blivit uppdaterad."
+
+msgid "This theme was not designed to be directly activated"
+msgstr "Detta tema är inte anpassat för att bli direkt aktiverat"
+
+msgid "Pending Comments"
+msgstr "Väntande kommentarer"
+
+msgid "In your php.ini file, the upload_max_filesize (%sB) is bigger than post_max_size (%sB), you should change this setting"
+msgstr "I din php.ini fil, upload_max_filesize (%sB) är större än post_max_size (%sB), du rekomenderas att ändra detta"
+
+msgid "Exif extension not available, admin should disable exif use"
+msgstr "Exif tillägget är inte tillgängligt, admin borde avaktivera användandet av exif"
+
+msgid "The uploaded file exceeds the upload_max_filesize directive in php.ini: %sB"
+msgstr "Den uppladdade filen överskrider upload_max_filesize direktivet i php.ini: %sB"
+
+msgid "The uploaded files exceed the post_max_size directive in php.ini: %sB"
+msgstr "Den uppladdade filen överskrider post_max_size direktivet i php.ini: %sB"
+
+msgid "The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form"
+msgstr "Den uppladdade filen överskrider MAX_FILE_SIZE direktivet som var specifierat i HTML formuläret"
+
+msgid "The uploaded file was only partially uploaded"
+msgstr "Den uppladdade filen blev bara delvis uppladdad"
+
+msgid "No file was uploaded"
+msgstr "Ingen fil laddades upp"
+
+msgid "Missing a temporary folder"
+msgstr "Saknar en temporär mapp"
+
+msgid "Failed to write file to disk"
+msgstr "Kunde inte skriva filen till disk"
+
+msgid "File upload stopped by extension"
+msgstr "Uppladdning av filen stoppades av ett tillägg"
+
+msgid "Unknown upload error"
+msgstr "Okänt uppladdningsfel"
+
+msgid "Error on file \"%s\" : %s"
+msgstr "Fel på fil \"%s\" : %s"
+
+msgid "Menu Management"
+msgstr "Menyer"
+
+msgid "automatic order"
+msgstr "automatisk ordning"
+
+msgid "manual order"
+msgstr "manuell ordning"
+
+msgid "Albums automatically sorted"
+msgstr "Album sorteras automatiskt"
+
+msgid "Batch Manager"
+msgstr "Batchhanteraren"
+
+msgid "include child albums"
+msgstr "inkluder underalbum"
+
+msgid "Selection"
+msgstr "Urval"
+
+msgid "Action"
+msgstr "Åtgärd"
+
+msgid "Set author"
+msgstr "Ange författare"
+
+msgid "Set title"
+msgstr "Sätt rubriken"
+
+msgid "Set creation date"
+msgstr "Sätt datum för skapande"
+
+msgid "Apply action"
+msgstr "Utför åtgärder"
+
+msgid "on the %d selected photos"
+msgstr "på %d valda bilder"
+
+msgid "%d of %d photos selected"
+msgstr "%d av %d markerade bilder"
+
+msgid "No photo selected, %d photos in current set"
+msgstr "Inga foton markerade, %d foton i aktuella uppsättningen"
+
+msgid "All %d photos are selected"
+msgstr "Alla %d bilder är valda"
+
+msgid "remove this filter"
+msgstr "ta bort det här filtret"
+
+msgid "Duplicates"
+msgstr "Dubbletter"
+
+msgid "Add a filter"
+msgstr "Lägg till ett filter"
+
+msgid "Remove all filters"
+msgstr "Ta bort alla filter"
+
+msgid "Refresh photo set"
+msgstr "Uppdatera bilder"
+
+msgid "The whole page"
+msgstr "Hela sidan"
+
+msgid "The whole set"
+msgstr "Hela markeringen"
+
+msgid "No photo in the current set."
+msgstr "Inga bilder i den aktuella markeringen."
+
+msgid "No photos selected, no actions possible."
+msgstr "Inga foton är valda, inga åtgärder är möjliga."
+
+msgid "Choose an action"
+msgstr "Välj en åtgärd"
+
+msgid "remove author"
+msgstr "ta bort författare"
+
+msgid "Type here the author name"
+msgstr "Skriv författarens namn här"
+
+msgid "remove title"
+msgstr "ta bort rubriken"
+
+msgid "Type here the title"
+msgstr "Skriv rubriken här"
+
+msgid "remove creation date"
+msgstr "ta bort skapande datum "
+
+msgid "Album photos associated to the following albums: %s"
+msgstr "Album bilder associerade till följande album: %s"
+
+msgid "Delete orphan tags"
+msgstr "Radera föräldralösa taggar"
+
+msgid "delete photo"
+msgstr "ta bort foto"
+
+msgid "Orphan tags deleted"
+msgstr "Föräldralösa taggar raderade"
+
+msgid "Week starts on"
+msgstr "Veckan börjar på"
+
+msgid "You have %d orphan tags: %s."
+msgstr "Du har %d föräldralösa taggar: %s."
+
+msgid "Remove from caddie"
+msgstr "Ta bort från korg"
+
+msgid "Themes which need upgrade"
+msgstr "Teman som behöver uppgraderas"
+
+msgid "Languages which need upgrade"
+msgstr "Språk som behöver uppgraderas"
+
+msgid "All themes are up to date."
+msgstr "Alla teman är uppdaterade."
+
+msgid "All plugins are up to date."
+msgstr "Alla insticksmoduler är uppdaterade."
+
+msgid "All languages are up to date."
+msgstr "Alla språk är uppdaterade."
+
+msgid "Visit theme site"
+msgstr "Besök webbplats för temat"
+
+msgid "Visit language site"
+msgstr "Besök webbplats för språket"
+
+msgid "New Version"
+msgstr "Ny version"
+
+msgid "Obsolete Plugins"
+msgstr "Föråldrade insticksmoduler"
+
+msgid "WARNING! This plugin does not seem to be compatible with this version of Piwigo."
+msgstr "VARNING! Denna insticksmodul verkar inte vara kompatibel med denna version av Piwigo."
+
+msgid "Do you want to activate anyway?"
+msgstr "Vill du aktivera ändå?"
+
+msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
+msgstr "Dennna insticksmodul är nu del av PIWIGO CORE! Avinstallera det NU!"
+
+msgid "ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW."
+msgstr "FEL: Denna insticksmodul saknas men är installerad! Avinstallera den nu!"
+
+msgid "display"
+msgstr "visa"
+
+msgid "Thumbnails generation in progress..."
+msgstr "Generering av miniatyrbilder pågår..."
+
+msgid "Photos generation in progress..."
+msgstr "Bildgenerering pågår..."
+
+msgid "%s photos have been regenerated"
+msgstr "%s foton har skapats"
+
+msgid "%s photos can not be regenerated"
+msgstr "%s foton har inte skapats"
+
+msgid "new"
+msgstr "ny"
+
+msgid "No results"
+msgstr "Inga poster hittades"
+
+msgid "Searching..."
+msgstr "Söker..."
+
+msgid "Type in a search term"
+msgstr "Ange nytt sökord"
+
+msgid "Activate icon \"new\" next to albums and pictures"
+msgstr "Aktivera ikonen \"ny\" intill album och bilder"
+
+msgid "Deactivate all"
+msgstr "Avaktivera allt"
+
+msgid "Default photos order"
+msgstr "Standardordning för bilder"
+
+msgid "Restore"
+msgstr "Återställ"
+
+msgid "Restore default configuration. You will lose your plugin settings!"
+msgstr "Återställ standardkonfiguration. Du kommer att förlora inställingarna för dina insticksmoduler!"
+
+msgid "Show menubar"
+msgstr "Visa verktygsfält"
+
+msgid "Updates"
+msgstr "Uppdateringar"
+
+msgid "Update in progress... Please wait."
+msgstr "Uppdatering körs... Var vänlig vänta."
+
+msgid "Ignore this update"
+msgstr "Ignorera denna uppdatering"
+
+msgid "Reset ignored updates"
+msgstr "Nollställ ignorerade uppdateringar"
+
+msgid "Update All"
+msgstr "Uppdatera allt"
+
+msgid "ERROR"
+msgstr "FEL"
+
+msgid "Update Complete"
+msgstr "Uppdatering avslutad"
+
+msgid "Piwigo Update"
+msgstr "Piwigo Uppdatering"
+
+msgid "Extensions Update"
+msgstr "Uppdatering av tillägg"
+
+msgid "Rate"
+msgstr "Betygsätt"
+
+msgid "Average rate"
+msgstr "Genomsnittligt betyg"
+
+msgid "Learn more"
+msgstr "Läs mer"
+
+msgid "Some upgrades are available for extensions."
+msgstr "Några uppgraderingar finns för tillägg."
+
+msgid "Ignore All"
+msgstr "Ignorera alla"
+
+msgid "Crop"
+msgstr "Beskär"
+
+msgid "Width"
+msgstr "Bredd"
+
+msgid "Height"
+msgstr "Höjd"
+
+msgid "Follow Orientation"
+msgstr "Följ orientering"
+
+msgid "Graphics Library"
+msgstr "Grafikbibliotek"
+
+msgid "... or "
+msgstr "... eller "
+
+msgid "Create"
+msgstr "Skapa"
+
+msgid "Start Upload"
+msgstr "Börja uppladdning"
+
+msgid "You are using the Flash uploader. Problems? Try the <a href=\"%s\">Browser uploader</a> instead."
+msgstr "Du använder Flash-uppladaren. Har du problem, försök med <a href=\"%s\">webbläsaruppladdaren</a> istället."
+
+msgid "You are using the Browser uploader. Try the <a href=\"%s\">Flash uploader</a> instead."
+msgstr "Du använder webbläsaruppladdaren, prova gärna <a href=\"%s\">Flash-uppladdaren</a> istället."
+
+msgid "Maximum file size: %sB."
+msgstr "Maximal filstorlek: %sB."
+
+msgid "Allowed file types: %s."
+msgstr "Tillåtna filtyper: %s."
+
+msgid "Approximate maximum resolution: %dM pixels (that's %dx%d pixels)."
+msgstr "Ungefärlig maximal upplösning: %dM pixlar (motsvarande %dx%d pixlar)."
+
+msgid "Manage Permissions"
+msgstr "Hantera rättigheter"
+
+msgid "Photo %s of %s"
+msgstr "Foto %s av %s"
+
+msgid "show details"
+msgstr "visa detaljer"
+
+msgid "hide details"
+msgstr "dölj detaljer"
+
+msgid "Merge tags"
+msgstr "Sammanfoga taggar"
+
+msgid "Select the destination tag"
+msgstr "Välj mål-tagg"
+
+msgid "(this tag will be deleted)"
+msgstr "(den här taggen kommer raderas)"
+
+msgid "Confirm merge"
+msgstr "Bekräfta sammanfogning"
+
+msgid "Merge selected tags"
+msgstr "Sammanfoga valda taggar"
+
+msgid "No destination tag selected"
+msgstr "Ingen mål-tagg har valts"
+
+msgid "Tags <em>%s</em> merged into tag <em>%s</em>"
+msgstr "Taggar <em>%s</em> sammanfogade som <em>%s</em>"
+
+msgid "Select at least two tags for merging"
+msgstr "Välj minst två taggar för sammanfogning"
+
+msgid "Select an album"
+msgstr "Välj ett album"
+
+msgid "Add a criteria"
+msgstr "Lägg till ett kriterium"
+
+msgid "You can't define a default photo order because you have a custom setting in your local configuration."
+msgstr "Du kan inte ange en standardsortering för foton på grund av en vald inställning i din lokala konfiguration."
+
+msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
+msgstr "Du har specifierat <i>$conf['order_by']</i> i din lokala konfigurationsfil, den här parametern är ersatt. Ta bort den eller döpom till <i>$conf['order_by_custom']</i> !"
+
+msgid "All extensions are up to date."
+msgstr "Alla tillägg är uppdaterade."
+
+msgid "Following plugins may not be compatible with the new version of Piwigo:"
+msgstr "Följande insticksmoduler kan vara inkompatibla med senaste Piwigo:"
+
+msgid "Following themes may not be compatible with the new version of Piwigo:"
+msgstr "Följande teman kan vara inkompatibla med senaste Piwigo:"
+
+msgid "I decide to update anyway"
+msgstr "Jag uppdaterar ändå"
+
+msgid "Update to Piwigo %s"
+msgstr "Uppdatera till Piwigo %s"
+
+msgid "Two updates are available"
+msgstr "Två uppdateringar är tillgängliga"
+
+msgid "This is a minor update, with only bug corrections."
+msgstr "Det här är en mindre uppdatering med bug-fixar."
+
+msgid "This is a major update, with <a href=\"%s\">new exciting features</a>."
+msgstr "Det här är en stor uppdatering med <a href=\"%s\">nya spännande funktioner</a>."
+
+msgid "Some themes and plugins may be not available yet."
+msgstr "Några teman och insticksmoduler kan vara otillgängliga ännu."
+
+msgid "You can update to Piwigo %s directly, without upgrading to Piwigo %s (recommended)."
+msgstr "Du kan uppdatera till Piwigo %s direkt, utan att uppgradera till Piwigo %s (rekommenderat)."
+
+msgid "Save Template Directory"
+msgstr "Spara mallkatalogen"
+
+msgid "By default, Piwigo will create a new websize from the HD (high definition) version of your photo."
+msgstr "Som standard kommer Piwigo skapa en ny webbstorlek från HD (high definition) versionen av din bild."
+
+msgid "If no HD is available and if the current websize is bigger than resize dimensions, Piwigo will move it as HD and create a downsized websize photo from it."
+msgstr "Om ingen HD-bild är tillgänglig och den nuvarande webbstorleken är större än skalningsdimensionerna så kommer Piwigo flytta bilden som HD och skapa en nedskalad version av den."
+
+msgid "An error has occured during upgrade."
+msgstr "Det uppstod ett fel under uppgraderingen."
+
+msgid "An error has occured during extract. Please check files permissions of your piwigo installation.<br><a href=\"%s\">Click here to show log error</a>."
+msgstr "Ett fel uppstod vid dekomprimeringen. Kontrollera rättigheterna på din Piwigo-installation och försök igen.<br><a href=\"%s\">Klicka här för att visa felloggen</a>."
+
+msgid "Piwigo cannot retrieve upgrade file from server"
+msgstr "Piwigo kan inte hämta uppgraderingen från servern"
+
+msgid "Zoom"
+msgstr "Förstora"
+
+msgid "Add to caddie"
+msgstr "Lägg till i korgen"
+
+msgid "%s has been successfully updated."
+msgstr "%s har uppdaterats."
+
+msgid "Add tags"
+msgstr "Lägg till taggar"
+
+msgid "Last import"
+msgstr "Senaste import"
+
+msgid "Predefined filter"
+msgstr "Fördefinierat filter"
+
+msgid "With no album"
+msgstr "Utan album"
+
+msgid "With no tag"
+msgstr "Utan tagg"
+
+msgid "With no virtual album"
+msgstr "Utan virtuellt album"
+
+msgid "Activate comments"
+msgstr "Aktivera komentarer"
+
+msgid "Default comments order"
+msgstr "Standardordning för kommentarer"
+
+msgid "Photo name"
+msgstr "Fotonamn"
+
+msgid "Send connection settings by email"
+msgstr "Skicka anslutningsinställningar med e-post"
+
+msgid "The original image quality must be a number between %d and %d"
+msgstr "Originalets bildkvalitet måste vara ett nummer mellan %d och %d"
+
+msgid "The original maximum height must be a number between %d and %d"
+msgstr "Originalets maxhöjd måste vara ett nummer mellan %d och %d"
+
+msgid "The original maximum width must be a number between %d and %d"
+msgstr "Originalets maxbredd måste vara ett nummer mellan %d och %d"
+
+msgid "Resize after upload"
+msgstr "Ändra storlek efter upppladdning"
+
+msgid "Original Size"
+msgstr "Originalstorlek"
+
+msgid "A locked gallery is only visible to administrators"
+msgstr "Ett låst galleri är bara synligt för administratörer"
+
+msgid "Unlock gallery"
+msgstr "Lås upp galleri"
+
+msgid "Gallery unlocked"
+msgstr "Galleri upplåst"
+
+msgid "Notify administrators when a comment is"
+msgstr "Meddela administratörer när en kommentar är"
+
+msgid "modified"
+msgstr "ändrad"
+
+msgid "pending validation"
+msgstr "väntar på validering"
+
+msgid "Save visits in history for"
+msgstr "Spara besök i historiken för"
+
+msgid "simple visitors"
+msgstr "enkla besökare"
+
+msgid "registered users"
+msgstr "registrerade användare"
+
+msgid "administrators"
+msgstr "administratörer"
+
+msgid "This album contains %d photos, added on %s."
+msgstr "Det här albumet innehåller %d foton, tillagda på %s."
+
+msgid "This album contains %d photos, added between %s and %s."
+msgstr "Det här albumet innehåller %d foton, tillagda mellan %s och %s."
+
+msgid "This album contains no photo."
+msgstr "Det här albumet innehåller inga foton."
+
+msgid "Not cropped correctly?"
+msgstr "Ej beskuren korrekt?"
+
+msgid "Center of interest"
+msgstr "Intressefokus"
+
+msgid "Move to album"
+msgstr "Flytta till album"
+
+msgid "You can activate only one mobile theme."
+msgstr "Du kan enbart aktivera ett mobilt tema."
+
+msgid "Automatic sort order"
+msgstr "Automatisk sorteringsordning"
+
+msgid "apply automatic sort order"
+msgstr "tillämpa automatisk sorteringsordning"
+
+msgid "Save manual order"
+msgstr "Spara manuell sorteringsordning"
+
+msgid "cancel manual order"
+msgstr "avbryt manuell sorteringsordning"
+
+msgid "Cancel"
+msgstr "Avbryt"
+
+msgid "List"
+msgstr "Lista"
+
+msgid "Web Form"
+msgstr "Webbformulär"
+
+msgid "Applications"
+msgstr "Applikationer"
+
+msgid "Available on"
+msgstr "Tillgängliga på"
+
+msgid "Piwigo for iOS (iPhone, iPad, iPod Touch)"
+msgstr "Piwigo för iOS (iPhone, iPad, iPod Touch)"
+
+msgid "<em>Piwigo for iOS</em> application empowers you to connect to your Piwigo gallery from your iPhone, iPad or iPod Touch, create some albums and upload several photos at once."
+msgstr "<em>Piwigo för iOS</em> applikationen tillåter dig ansluta till ditt Piwigo galleri från din iPhone, iPad eller iPod Touch, skapa några album och ladda upp flera bilder på en gång."
+
+msgid "Piwigo for Android"
+msgstr "Piwigo för Android"
+
+msgid "<em>Piwigo for Android</em> application empowers you to connect your Android phone or table to your Piwigo gallery, create some albums and upload several photos at once."
+msgstr "<em>Piwigo för Android</em> applikationen tillåter dig ansluta till ditt Piwigo galleri från din Android telefon eller tablet, skapa några album och ladda upp flera bilder på en gång."
+
+msgid "Piwigo Publish plugin for Lightroom"
+msgstr "Piwigo Publish insticksmodul för Lightroom"
+
+msgid "Adobe Photoshop Lightroom is a photography software designed to manage large quantities of digital images and doing post production work."
+msgstr "Adobe Photoshop Lightroom är en fotoredigeringsmjukvara designad för att hantera stora mängder bilder och göra efterredigering."
+
+msgid "The Piwigo publish Plug-in allows you to export and synchronize photos from Lightroom directly to your Piwigo photo gallery."
+msgstr "Insticksmodulen för Piwigo publicering möjliggör export och synkronisering av bilder mellan Lightroom och ditt bildgalleri."
+
+msgid "Piwigo publish plugin for Shotwell"
+msgstr "Insticksmodul för Piwigo publicering via Shotwell"
+
+msgid "Shotwell is an open source digital photo organizer that runs on Linux. It is the default photo manager in Ubuntu and Fedora."
+msgstr "Shotwell är en digital fotohanterare i öppen källkod för Linux som används som standard av Ubuntu och Fedora."
+
+msgid "On your Linux, simply install Shotwell with your package manager and the activate Piwigo publishing option."
+msgstr "I din Linux distribution, installera Shotwell via pakethanteraren och aktivera valmöjligheten Piwigo publicering."
+
+msgid "Piwigo publish plugin for digiKam"
+msgstr "Insticksmodul för Piwigo publicering via digiKam"
+
+msgid "digiKam is an advanced digital photo management free software for Linux, Windows, and MacOSX."
+msgstr "digiKam är ett avancerat program för digital mediahantering, framför allt bilder, för Linux, Windows och macOS."
+
+msgid "digiKam is designed for photographers who want to view, manage, edit, enhance, organize, tag, and share photographs."
+msgstr "digiKam är designat för fotografer som vill se, hantera, förbättra, organisera, märka och distribuera bilder."
+
+msgid "To export your photos from digiKam to Piwigo, simply install digiKam and the Kipi-plugins."
+msgstr "För att exportera bilder från digiKam till Piwigo, installera digiKam och Kipi-insticksmodul för export till Piwigo."
+
+msgid "Piwigo export plugin for iPhoto"
+msgstr "Piwigo insticksmodul för iPhoto export"
+
+msgid "iPhoto is the default photo manager on MacOSX. The Piwigo export plugin let you create new albums and export your photos directly from iPhoto to your Piwigo photo gallery."
+msgstr "iPhoto är standard för macOS. Piwigo export insticksmodul låter dig skapa album och exportera dina bilder från iPhoto till ditt Piwigo galleri."
+
+msgid "Piwigo export plugin for Aperture"
+msgstr "Piwigo insticksmodul för Aperture export"
+
+msgid "Aperture is a powerful tool to refine images and manage massive libraries on Mac."
+msgstr "Aperture är ett kraftfullt verktyg för bildhantering för Mac."
+
+msgid "Aperture is designed for professional photographers with iPhoto simplicity."
+msgstr "Aperture är designat för proffs med iPhotos enkelhet."
+
+msgid "The Piwigo export plugin allows you to create albums and export photos."
+msgstr "Piwigo export modulen låter dig skapa och exportera bilder."
+
+msgid "ReGalAndroid (RemoteGallery client for Android) is an open source (GPL v3) Piwigo client for the Android platform."
+msgstr "ReGalAndroid (RemoteGallery klient för Android) är en öppen källkods (GPL v3) Piwigo klient för Android."
+
+msgid "Features include gallery browsing, album creation and photo upload."
+msgstr "Bland annat ingår galleri-utforskning, skapande av nya album och uppladdning av bilder."
+
+msgid "Generate multiple size images"
+msgstr "Skapa flera storlekar av bilder"
+
+msgid "Delete multiple size images"
+msgstr "Ta bort flera storlekar av bilder"
+
+msgid "any visitor can see this album"
+msgstr "alla besökare kan se detta album"
+
+msgid "visitors need to login and have the appropriate permissions to see this album"
+msgstr "besökare måste logga in med korrekta behörigheter för att se detta album"
+
+msgid "Groups and users"
+msgstr "Grupper och användare"
+
+msgid "Permission granted for groups"
+msgstr "Tillstånd beviljat för grupper"
+
+msgid "Select groups..."
+msgstr "Välj grupper..."
+
+msgid "There is no group in this gallery."
+msgstr "Det finns inga grupper i det här galleriet."
+
+msgid "Permission granted for users"
+msgstr "Tillstånd beviljat för användare"
+
+msgid "Select users..."
+msgstr "Välj användare..."
+
+msgid "%u users have automatic permission because they belong to a granted group."
+msgstr "%u användare har automatiskt tillstånd eftersom de tillhör en grupp med rättigheter utfärdade."
+
+msgid " and %d virtuals"
+msgstr " och %d virtuell"
+
+msgid "%d physicals"
+msgstr " %d fysisk"
+
+msgid "include photos with lower privacy level"
+msgstr "inkludera bilder med lägre sekretessnivå"
+
+msgid "custom"
+msgstr "Anpassad"
+
+msgid "No group is permitted to see this private album"
+msgstr "Ingen grupp tillåts se detta privata album"
+
+msgid "Permission management"
+msgstr "Behörighetshantering"
+
+msgid "Photo sizes with crop"
+msgstr "Bildstorlekar med beskärning"
+
+msgid "The center of interest is the most meaningful zone in the photo."
+msgstr "Bildens mittpunkt är den mest meningsfulla delen (intressefokus)."
+
+msgid "For photo sizes with crop, such as \"Square\", Piwigo will do its best to include the center of interest."
+msgstr "För beskärda bilder, såsom \"Fyrkant\", kommer Piwigo försöka inkludera bildens intressefokus."
+
+msgid "By default, the center of interest is placed in the middle of the photo."
+msgstr "Som standard antas intressefokus vara i mitten på bilden."
+
+msgid "Select a zone with your mouse to define a new center of interest."
+msgstr "Välj en zon med musen för att definiera ett nytt intressefokus."
+
+msgid "X Position"
+msgstr "X Position"
+
+msgid "Y Position"
+msgstr "Y Position"
+
+msgid "X Repeat"
+msgstr "X Repetition"
+
+msgid "Opacity"
+msgstr "Ogenomskinlighet"
+
+msgid "top left corner"
+msgstr "övre vänstra hörn"
+
+msgid "top right corner"
+msgstr "övre högra hörn"
+
+msgid "middle"
+msgstr "mitten"
+
+msgid "bottom left corner"
+msgstr "nedre vänstra hörn"
+
+msgid "bottom right corner"
+msgstr "nedre högra hörn"
+
+msgid "Select a file"
+msgstr "Välj en fil"
+
+msgid "add a new watermark"
+msgstr "lägg till ny vattenstämpel"
+
+msgid "Apply watermark if width is bigger than"
+msgstr "Lägg till vattenstämpel om bredden är större än"
+
+msgid "Apply watermark if height is bigger than"
+msgstr "Lägg till vattenstämpel om höjden är större än"
+
+msgid "Multiple Size"
+msgstr "Flera storlekar"
+
+msgid "Watermark"
+msgstr "Vattenstämpel"
+
+msgid "Original file : %s"
+msgstr "Originalfil : %s"
+
+msgid "Posted %s on %s"
+msgstr "Postat %s den %s"
+
+msgid "Added by %s"
+msgstr "Tillagd av %s"
+
+msgid "Visited %d times"
+msgstr "Besökt %d gånger"
+
+msgid "Numeric identifier : %d"
+msgstr "Numeriskt id : %d"
+
+msgid "%s ago"
+msgstr "%s sedan"
+
+msgid "%s in the future"
+msgstr "%s i framtiden"
+
+msgid "Rated %d times, score : %.2f"
+msgstr "Betygsatt %d gånger, betyg: %.2f"
+
+msgid "%d year"
+msgstr "%d år"
+
+msgid "%d years"
+msgstr "%d år"
+
+msgid "%d month"
+msgstr "%d månad"
+
+msgid "%d months"
+msgstr "%d månader"
+
+msgid "%d week"
+msgstr "%d vecka"
+
+msgid "%d weeks"
+msgstr "%d veckor"
+
+msgid "%d day"
+msgstr "%d dag"
+
+msgid "%d days"
+msgstr "%d dagar"
+
+msgid "%d hour"
+msgstr "%d timme"
+
+msgid "%d hours"
+msgstr "%d timmar"
+
+msgid "%d minute"
+msgstr "%d minut"
+
+msgid "%d minutes"
+msgstr "%d minuter"
+
+msgid "%d second"
+msgstr "%d sekund"
+
+msgid "%d seconds"
+msgstr "%d sekunder"
+
+msgid "Sharpen"
+msgstr "Skärpa"
+
+msgid "Edit photo"
+msgstr "Redigera bild"
+
+msgid "create a new site"
+msgstr "skapa en ny site"
+
+msgid "No order field selected"
+msgstr "Inget ordningsfält valt"
+
+msgid "Manage the members"
+msgstr "Hantera medlemmar"
+
+msgid "Manage photos"
+msgstr "Hantera bilder"
+
+msgid "Landscape"
+msgstr "Liggande"
+
+msgid "Duplicate selected tags"
+msgstr "Duplicera markerade taggar"
+
+msgid "Duplicate"
+msgstr "Duplicera"
+
+msgid "This group will be set to default"
+msgstr "Denna grupp kommer att användas som standard"
+
+msgid "View in gallery"
+msgstr "Visa i galleriet"
+
+msgid "Type here the name of the new group"
+msgstr "Skriv här namnet på den nya gruppen"
+
+msgid "This group will be unset to default"
+msgstr "Denna grupp kommer inte längre att användas som standard"
+
+msgid "Tag \"%s\" is now a duplicate of \"%s\""
+msgstr "Tagg \"%s\" är nu en kopia av \"%s\""
+
+msgid "Source tag"
+msgstr "Källtagg"
+
+msgid "between %d and %d pixels"
+msgstr "mellan %d och %d pixlar"
+
+msgid "between %.2f and %.2f"
+msgstr "mellan %.2f och %.2f"
+
+msgid "Portrait"
+msgstr "Stående"
+
+msgid "Ratio"
+msgstr "Förhållande"
+
+msgid "Rename"
+msgstr "Byt namn"
+
+msgid "Please select at least two groups"
+msgstr "Vänligen välj minst två grupper"
+
+msgid "Panorama"
+msgstr "Panorama"
+
+msgid "Number of albums per page"
+msgstr "Antal album per sida"
+
+msgid "No members to manage"
+msgstr "Inga medlemmar att hantera"
+
+msgid "No groups selected, no actions possible."
+msgstr "Ingen grupp vald, ingen åtgärd möjlig"
+
+msgid "Name of the duplicate"
+msgstr "Namn på kopia"
+
+msgid "Minimum width"
+msgstr "Minsta bredd"
+
+msgid "Minimum height"
+msgstr "Minsta höjd"
+
+msgid "Merge selected groups"
+msgstr "Sammanfoga markerade grupper"
+
+msgid "Purge user cache"
+msgstr "Rensa användarcache"
+
+msgid "Resize after upload disabled due to the use of GD as graphic library"
+msgstr "Ändra storlek efter uppladdning är inaktiverat eftersom GD används som grafikbibliotek."
+
+msgid "The picture dimensions will be reduced to %dx%d pixels."
+msgstr "Bildens dimension kommer att reduceras till %dx%d pixlar."
+
+msgid "Select at least one tag"
+msgstr "Välj minst en tagg"
+
+msgid "(filtered from %s total users)"
+msgstr "(filtrerat från totalt %s användare)"
+
+msgid "No users selected, no actions possible."
+msgstr "Ingen användare vald, ingen åtgärd möjlig."
+
+msgid "No matching user found"
+msgstr "Ingen matchande användare funnen"
+
+msgid "Registered on %s, %s."
+msgstr "Registrerad %s, %s."
+
+msgid "Users modified"
+msgstr "Användare modifierade"
+
+msgid "on the %d selected users"
+msgstr "på de %d valda användarna"
+
+msgid "%d of %d users selected"
+msgstr "%d av %d användare valda"
+
+msgid "All %d users are selected"
+msgstr "Alla %d användare är valda"
+
+msgid "Basic settings"
+msgstr "Grundläggande inställningar"
+
+msgid "Change password"
+msgstr "Ändra lösenord"
+
+msgid "Change username"
+msgstr "Ändra användarnamn"
+
+msgid "General"
+msgstr "Generellt"
+
+msgid "Last visit on %s, %s."
+msgstr "Senast besökt %s, %s."
+
+msgid "Loading..."
+msgstr "Laddar..."
+
+msgid "Mail theme"
+msgstr "Mailtema"
+
+msgid "No user selected of %d users"
+msgstr "Inga användare valda av %d användare"
+
+msgid "Password updated"
+msgstr "Lösenord uppdaterat"
+
+msgid "Show %s users"
+msgstr "Visa %s användare"
+
+msgid "Showing %s to %s of %s users"
+msgstr "Visar %s till %s av %s användare"
+
+msgid "Update user"
+msgstr "Uppdatera användare"
+
+msgid "User %s added"
+msgstr "Användare %s tillagd"
+
+msgid "User %s updated"
+msgstr "Användare %s uppdaterad"
+
+msgid "close"
+msgstr "stäng"
+
+msgid "Close user details"
+msgstr "Stäng användardetaljer"
+
+msgid "Open user details"
+msgstr "Öppna användardetaljer"
+
+msgid "between %s and %s MB"
+msgstr "mellan %s och %s MB"
+
+msgid "Mail address is mandatory for registration"
+msgstr "E-postadress krävs för registrering"
+
+msgid "No and unlock sub-albums"
+msgstr "Nej och lås upp underalbum"
+
+msgid "The settings for the guest are from the %s user"
+msgstr "Inställningarna för gäst-kontot replikeras från användaren %s"
+
+msgid "Upload in progress"
+msgstr "Uppladdning pågår"
+
+msgid "based on"
+msgstr "baserat på"
+
+msgid "date & time"
+msgstr "datum & tid"
+
+msgid "file name"
+msgstr "filnamn"
+
+msgid "width & height"
+msgstr "bredd & höjd"
+
+msgid "Activate it now"
+msgstr "Aktivera den nu"
+
+msgid "Allow users to add a link to their website"
+msgstr "Tillåter användare att länka till sin egen hemsida"
+
+msgid "Empty caddie"
+msgstr "Töm korgen"
+
+msgid "Impossible to deactivate the default theme."
+msgstr "Det går inte att inaktivera standardtema. Gör först ett annat tema till standardtema."
+
+msgid "Y Repeat"
+msgstr "Y Upprepa"
+
+msgid "Recipients"
+msgstr "Mottagare"
+
+msgid "Orphans"
+msgstr "Föräldralösa"
+
+msgid "No user is permitted to see this private album"
+msgstr "Ingen användare tillåts se detta privata album"
+
+msgid "No recipient selected"
+msgstr "Ingen mottagare vald"
+
+msgid "For security reason, authentication keys do not work for administrators."
+msgstr "Av säkerhetsskäl fungerar inte autentiseringsnycklar för administratörer."
+
+msgid "Edit user"
+msgstr "Redigera användare"
+
+msgid "Each email sent will contain its own automatic authentication key on links, valid for %s."
+msgstr "Varje e-mail som sänds kommer att innehålla sina egna automatiska autentiseringsnycklar som länkar, giltiga i %s."
+
+msgid "Delete %d orphan photos"
+msgstr "Radera %d övergivna foton"
+
+msgid "Time has come to update your Piwigo with version %s, go to %s"
+msgstr "Det är dags att uppdatera din Piwigo version %s, gå till %s"
+
+msgid "Share / Send your photos directly from your Mac Os X (10.10 and following) to Piwigo"
+msgstr "Dela och sänd dina foton direkt från macOS (10.10 och senare) till Piwigo"
+
+msgid "Running on an up-to-date Piwigo is important for security."
+msgstr "Att köra en uppdaterad version av Piwigo är viktigt för säkerheten."
+
+msgid "(determined from photos)"
+msgstr "(bestäms från foton)"
+
+msgid "Display form"
+msgstr "Visningsforumlär"
+
+msgid "Piwigo Remote Sync is able to upload a whole folder hierarchy. If you run it again, only new photos will be uploaded."
+msgstr "Piwigo Fjärrsynk kan ladda upp en hel folderhierarki. Om du kör den igen, kommer bara nya foton att laddas upp."
+
+msgid "Piwigo %s is available, please update"
+msgstr "Piwigo %s är tillgänglig, vänligen uppdatera"
+
+msgid "No tags selected, no actions possible."
+msgstr "Ingen tagg vald, ingen åtgärd är möjlig"
+
+msgid "No filter on album. Select one or type to search"
+msgstr "Inga filter på album. Välj ett eller skriv för att söka"
+
+msgid "delete only album, not photos"
+msgstr "radera bara album, inte foton"
+
+msgid "delete album and all %d photos, even the %d associated to other albums"
+msgstr "ta bort album och alla %d foton, även de %d associerade med andra album"
+
+msgid "checksum"
+msgstr "kontrollsumma"
+
+msgid "Storage used"
+msgstr "Använt lagringsutrymme"
+
+msgid "Select tags"
+msgstr "Välj taggar"
+
+msgid "It only takes a few clicks."
+msgstr "Det behövs bara några klick."
+
+msgid "Dashboard"
+msgstr "Kontrollpanel"
+
+msgid "Delete album \"%s\"."
+msgstr "Ta bort album \"%s\"."
+
+msgid "Delete album \"%s\" and its %d sub-albums."
+msgstr "Ta bort album \"%s\" och dess %d underalbum."
+
+msgid "Confirm deletion"
+msgstr "Bekräfta radering"
+
+msgid "delete album and the %d orphan photos"
+msgstr "ta bort album och de %d föräldralösa fotona"
+
+msgid "orphans to delete"
+msgstr "föräldralösa som ska raderas"
+
+msgid "or"
+msgstr "eller"
+
+msgid "checksums to add"
+msgstr "kontrollsummor att lägga till"
+
+msgid "With no checksum"
+msgstr "Utan kontrollsumma"
+
+msgid "Welcome!"
+msgstr "Välkommen!"
+
+msgid "Visit"
+msgstr "Besök"
+
+msgid "Synchronization in progress"
+msgstr "Synkronisering pågår"
+
+msgid "Some checksums are missing."
+msgstr "Vissa kontrollsummor saknas."
+
+msgid "Piwigo requires an album to add photos."
+msgstr "Piwigo behöver ett album för att lägga till foton."
+
+msgid "Display category date"
+msgstr "Visa datumkategori"
+
+msgid "Display album date period"
+msgstr "Visa varje albums associerade datumperiod, t.ex. « från 12 till 15 juli 2018 »"
+
+msgid "Deletion in progress"
+msgstr "Borttagning pågår"
+
+msgid "Create a first album"
+msgstr "Skapa ett första album"
+
+msgid "Compute %d missing checksums"
+msgstr "Beräkna %d saknade kontrollsummor"
+
+msgid "... or hide this link"
+msgstr "... eller göm denna länk"
+
+msgid "%d checksums were added"
+msgstr "%d kontrollsummor lades till"
+
+msgid "Delete album"
+msgstr "Ta bort album"
+
+msgid "Delete them"
+msgstr "Ta bort dem"
+
+msgid "Display"
+msgstr "Visa"
+
+msgid "Are you sure you want to install the plugin \"%s\"?"
+msgstr "Är du säker på att du vill installera insticksmodulen \"%s\"?"
+
+msgid "Are you sure you want to delete this?"
+msgstr "Är du säker på att du vill ta bort detta?"
+
+msgid "Are you sure you want to delete this theme?"
+msgstr "Är du säker på att du vill ta bort detta tema?"
+
+msgid "Are you sure you want to delete this site?"
+msgstr "Är du säker på att du vill ta bort denna sajt?"
+
+msgid "Are you sure you want to delete the user \"%s\"?"
+msgstr "Är du säker på att du vill ta bort användaren \"%s\"?"
+
+msgid "Are you sure you want to delete the theme \"%s\"?"
+msgstr "Är du säker på att du vill ta bort temat \"%s\"?"
+
+msgid "Are you sure you want to delete the plugin \"%s\"?"
+msgstr "Är du säker på att du vill ta bort insticksmodulen \"%s\"?"
+
+msgid "Are you sure you want to delete the language \"%s\"?"
+msgstr "Är du säker på att du vill ta bort språket \"%s\"?"
+
+msgid "Are you sure you want to delete group \"%s\"?"
+msgstr "Är du säker på att du vill ta bort gruppen \"%s\"?"
+
+msgid "Are you sure you want to delete all sizes?"
+msgstr "Är du säker på att du vill ta bort alla storlekar?"
+
+msgid "Album search tool"
+msgstr "Albumsökningsverktyg"
+
+msgid "Activity peak in the last weeks"
+msgstr "Aktivitetstoppar de senaste veckorna"
+
+msgid "<b>1</b> album found"
+msgstr "<b>1</b> album hittade"
+
+msgid "<b>%d</b> tags found"
+msgstr "<b>%d</b> taggar hittade"
+
+msgid "<b>%d</b> tag selected"
+msgstr "<b>%d</b> tagg vald"
+
+msgid "<b>%d</b> tag found"
+msgstr "<b>%d</b> tagg hittad"
+
+msgid "<b>%d</b> albums found"
+msgstr "<b>%d</b> album hittade"
+
+msgid "%s other tags available.."
+msgstr "%s andra taggar tillgängliga"
+
+msgid "%s file type"
+msgstr "%s filtyp"
+
+msgid "%s MB used"
+msgstr "%s MB använt"
+
+msgid "%s GB used"
+msgstr "%s GB använt"
+
+msgid "%d sub-albums"
+msgstr "%d underalbum"
+
+msgid "%d photos"
+msgstr "%d foton"
+
+msgid "%d Activity"
+msgstr "%d Aktivitet"
+
+msgid "%d Activities"
+msgstr "%d Aktiviteter"
+
+msgid " (copy)"
+msgstr "(kopiera)"
+
+msgid " (copy %s)"
+msgstr "(kopiera %s)"
+
+msgid "%s plugin found"
+msgstr "<b>%s</b> insticksmodul hittad"
+
+msgid "%s plugins found"
+msgstr "<b>%s</b> insticksmoduler hittade"
+
+msgid "%s status is required to edit parameters."
+msgstr "%s status krävs för att redigera parametrar."
+
+msgid "<b>%d+</b> albums found, try to refine the search"
+msgstr "<b>%d+</b> album hittades, försök förfina sökningen"
+
+msgid "%d user added"
+msgstr "%d användare tillagd"
+
+msgid "%d user edited"
+msgstr "%d användare redigerad"
+
+msgid "%d user logged in"
+msgstr "%d användare loggade in"
+
+msgid "%d user logged out"
+msgstr "%d användare loggade ut"
+
+msgid "%d users added"
+msgstr "%d användare tillagda"
+
+msgid "%d users edited"
+msgstr "%d användare redigerade"
+
+msgid "%d users logged in"
+msgstr "%d användare loggade in"
+
+msgid "%d users logged out"
+msgstr "%d användare loggade ut"
+
+msgid "%s MB"
+msgstr "%s MB"
+
+msgid "%s line"
+msgstr "%s rad"
+
+msgid "%s lines"
+msgstr "%s rader"
+
+msgid "%d photos edited"
+msgstr "%d foton redigerade"
+
+msgid "%d photos moved"
+msgstr "%d foton flyttade"
+
+msgid "%d tag added"
+msgstr "%d tagg tillagd"
+
+msgid "%d tag deleted"
+msgstr "%d tagg raderad"
+
+msgid "%d tag edited"
+msgstr "%d tagg redigerad"
+
+msgid "%d tag moved"
+msgstr "%d tagg flyttad"
+
+msgid "%d tags added"
+msgstr "%d taggar tillagda"
+
+msgid "%d tags deleted"
+msgstr "%d taggar raderade"
+
+msgid "%d tags edited"
+msgstr "%d taggar redigerade"
+
+msgid "%d tags moved"
+msgstr "%d taggar flyttade"
+
+msgid "%d album added"
+msgstr "%d album tillagt"
+
+msgid "%d album deleted"
+msgstr "%d album raderat"
+
+msgid "%d album edited"
+msgstr "%d album redigerat"
+
+msgid "%d albums added"
+msgstr "%d album tillagda"
+
+msgid "%d albums deleted"
+msgstr "%d album raderade"
+
+msgid "%d albums edited"
+msgstr "%d album redigerade"
+
+msgid "%d group added"
+msgstr "%d grupp tillagd"
+
+msgid "%d group deleted"
+msgstr "%d grupp raderad"
+
+msgid "%d group edited"
+msgstr "%d grupp redigerad"
+
+msgid "%d group moved"
+msgstr "%d grupp flyttad"
+
+msgid "%d groups added"
+msgstr "%d grupper tillagda"
+
+msgid "%d groups deleted"
+msgstr "%d grupper raderade"
+
+msgid "%d groups edited"
+msgstr "%d grupper redigerade"
+
+msgid "%d groups moved"
+msgstr "%d grupper flyttade"
+
+msgid "%d photo added"
+msgstr "%d foto tillagt"
+
+msgid "%d photo deleted"
+msgstr "%d foto raderat"
+
+msgid "%d photo edited"
+msgstr "%d foto redigerat"
+
+msgid "%d photo moved"
+msgstr "%d foto flyttat"
+
+msgid "%d photos added"
+msgstr "%d foton tillagda"
+
+msgid "%d photos deleted"
+msgstr "%d foton raderade"
+
+msgid "You have %s inactive plugins"
+msgstr "Du har %s inaktiva insticksmoduler"
+
+msgid "You have %s1 orphan : %s2"
+msgstr "Du har %s1 föräldralösa : %s2"
+
+msgid "Your selection"
+msgstr "Dina val"
+
+msgid "action successfully performed."
+msgstr "åtgärd genomfördes framgångsrikt."
+
+msgid "add"
+msgstr "lägg till"
+
+msgid "and %s others"
+msgstr "och %s andra"
+
+msgid "between %s and %s"
+msgstr "mellan %s och %s"
+
+msgid "calculated"
+msgstr "beräknad"
+
+msgid "deletion"
+msgstr "borttagning"
+
+msgid "edit"
+msgstr "redigera"
+
+msgid "in administration"
+msgstr "i administrationen"
+
+msgid "in gallery"
+msgstr "i galleriet"
+
+msgid "login"
+msgstr "inloggning"
+
+msgid "logout"
+msgstr "utloggning"
+
+msgid "months ago"
+msgstr "månader sedan"
+
+msgid "move"
+msgstr "flytta"
+
+msgid "never calculated"
+msgstr "aldrig beräknad"
+
+msgid "no photo"
+msgstr "inget foto"
+
+msgid "right now"
+msgstr "just nu"
+
+msgid "to"
+msgstr "till"
+
+msgid "Tag Manager"
+msgstr "Tagghanterare"
+
+msgid "Tag(s) \\{%s1\\} succesfully merged into \"%s2\""
+msgstr "Tagg(ar) \\{%s1\\} framgångsrikt sammanfogad med \"%s2\""
+
+msgid "Tags \\{%s\\} succesfully deleted"
+msgstr "Taggar \\{%s\\} framgångsrikt borttagna"
+
+msgid "The %d tags on this page are selected"
+msgstr "De %d taggar på denna sida är valda"
+
+msgid "The other tags will be removed"
+msgstr "De andra taggarna kommer att tas bort"
+
+msgid "Theme"
+msgstr "Tema"
+
+msgid "This is already the default theme"
+msgstr "Detta är redan standardtemat"
+
+msgid "Tile View"
+msgstr "Kakelvy"
+
+msgid "Unset as group for new users"
+msgstr "Stäng av som grupp för nya användare"
+
+msgid "Update"
+msgstr "Uppdatera"
+
+msgid "User \"%s\" dissociated from this group"
+msgstr "Användare \"%s\" avassocierad från denna grupp"
+
+msgid "User associated"
+msgstr "Användare associerad"
+
+msgid "User updated"
+msgstr "Användare uppdaterad"
+
+msgid "Users not logged in will have these settings applied, these settings are used by default for new users"
+msgstr "Användare som inte är inloggade kommer att ha dessa inställningar aktiverade, dessa inställningar används som standard för nya användare"
+
+msgid "Videos"
+msgstr "Videor"
+
+msgid "Webmaster status required"
+msgstr "Webmaster status krävs"
+
+msgid "Yes, I am sure"
+msgstr "Ja, jag är säker"
+
+msgid "Yes, delete"
+msgstr "Ja, radera"
+
+msgid "You don't have access to this photo"
+msgstr "Du har inte tillgång till detta foto"
+
+msgid "You have %d orphan tags %s"
+msgstr "Du har %d föräldralösa taggar %s"
+
+msgid "Search albums"
+msgstr "Sök album"
+
+msgid "Search tips"
+msgstr "Söktips"
+
+msgid "Select"
+msgstr "Välj"
+
+msgid "Select all %d tags"
+msgstr "Välj alla %d taggar"
+
+msgid "Select an album... or type it!"
+msgstr "Välj ett album... eller skriv in ett!"
+
+msgid "Select groups or type them"
+msgstr "Välj grupper eller skriv in dem"
+
+msgid "Selected user"
+msgstr "Vald användare"
+
+msgid "Selection mode"
+msgstr "Väljläge"
+
+msgid "Sep"
+msgstr "Sep"
+
+msgid "Set as default"
+msgstr "Ställ in som standard"
+
+msgid "Set as group for new users"
+msgstr "Ställ in som grupp för nya användare"
+
+msgid "Show"
+msgstr "Visa"
+
+msgid "Show inactive plugins"
+msgstr "Visa inaktiva insticksmoduler"
+
+msgid "Show sub-albums"
+msgstr "Visa underalbum"
+
+msgid "Showing %s users out of %s"
+msgstr "Visar %s användare av %s"
+
+msgid "Storage"
+msgstr "Lagring"
+
+msgid "Synchronization"
+msgstr "Synkronisering"
+
+msgid "Tag \"%s\" created"
+msgstr "Tagg \"%s\" skapad"
+
+msgid "Tag \"%s\" succesfully deleted"
+msgstr "Tagg \\\"%s\\\" framgångsrikt borttagen"
+
+msgid "Tag \"%s1\" renamed in \"%s2\""
+msgstr "Tagg \\\"%s1\\\" omdöpt i \\\"%s2\\\""
+
+msgid "Oct"
+msgstr "Okt"
+
+msgid "Open in gallery"
+msgstr "Öppna i galleri"
+
+msgid "Other"
+msgstr "Annan"
+
+msgid "Page Visited"
+msgstr "Sida besökt"
+
+msgid "Page Visited in %s"
+msgstr "Sida besökt i %s"
+
+msgid "Photos per page"
+msgstr "Bilder per sida"
+
+msgid "Please upgrade your PHP version before any update."
+msgstr "Var god uppgradera din PHP version innan någon uppdatering."
+
+msgid "Plugin \"%s\" deleted!"
+msgstr "Insticksmodul \"%s\" raderad!"
+
+msgid "Plugin \"%s\" has been activated!"
+msgstr "Insticksmodul \"%s\" har aktiverats!"
+
+msgid "Portraits"
+msgstr "Porträtt"
+
+msgid "Posted %s"
+msgstr "Postat %s"
+
+msgid "Promote mobile app on mobile devices"
+msgstr "Främja mobilapp på mobila enheter"
+
+msgid "Purge Actions"
+msgstr "Rensningsåtgärder"
+
+msgid "Purge Cache"
+msgstr "Rensa cache"
+
+msgid "Refresh thumbnail"
+msgstr "Uppdatera miniatyr"
+
+msgid "Registered"
+msgstr "Registrerad"
+
+msgid "Requires PHP %s"
+msgstr "Kräver PHP %s"
+
+msgid "Restored"
+msgstr "Återställd"
+
+msgid "Review"
+msgstr "Granska"
+
+msgid "Root"
+msgstr "Rot"
+
+msgid "Last visit"
+msgstr "Senaste besök"
+
+msgid "Line View"
+msgstr "Linjevy"
+
+msgid "Locked albums are disabled for maintenance. Only administrators can view them in the gallery. Lock this album will also lock his Sub-albums"
+msgstr "Låsta album är ej tillgängliga för underhåll. Bara administratörer kan se dem i galleriet. Låsning av detta album kommer också att låsa dess underliggande album"
+
+msgid "Manage album photos"
+msgstr "Hantera albumfoton"
+
+msgid "Manage sub-albums"
+msgstr "Hantera underalbum"
+
+msgid "Manage users"
+msgstr "Hantera användare"
+
+msgid "Manage users with user manager"
+msgstr "Hantera användare med användarhanteraren"
+
+msgid "Mar"
+msgstr "Mar"
+
+msgid "May"
+msgstr "Maj"
+
+msgid "Merge"
+msgstr "Sammanfoga"
+
+msgid "Name field must not be empty"
+msgstr "Namnfältet kan inte vara tomt"
+
+msgid "Name is already taken"
+msgstr "Namnet finns redan"
+
+msgid "New user added"
+msgstr "Ny användare tillagd"
+
+msgid "No access to administration, can see private content with appropriate permissions."
+msgstr "Ingen tillgång till administration, kan se privat innehåll med rätt behörigheter."
+
+msgid "No albums found"
+msgstr "Inga album hittades"
+
+msgid "No plugin activated"
+msgstr "Ingen insticksmodul aktiverad"
+
+msgid "No plugins found"
+msgstr "Inga insticksmoduler hittades"
+
+msgid "No tag found"
+msgstr "Ingen tagg hittades"
+
+msgid "No, I have changed my mind"
+msgstr "Nej, jag har ändrat mig"
+
+msgid "Nov"
+msgstr "Nov"
+
+msgid "Equivalent to deactivation. The user is still in the list, but can no longer log in."
+msgstr "Samma som avaktivering. Användaren finns fortfarande i listan men kan inte längre logga in."
+
+msgid "Feb"
+msgstr "Feb"
+
+msgid "File type: %s"
+msgstr "Filtyp: %s"
+
+msgid "Filters"
+msgstr "Filter"
+
+msgid "Formats"
+msgstr "Format"
+
+msgid "Generate random password"
+msgstr "Generera slumpmässigt lösenord"
+
+msgid "Global Gallery Actions"
+msgstr "Globala galleriåtgärder"
+
+msgid "Group \"%s\" succesfully deleted"
+msgstr "Grupp \"%s\" framgångsrikt borttagen"
+
+msgid "Group added"
+msgstr "Grupp tillagd"
+
+msgid "Group renamed"
+msgstr "Grupp omdöpt"
+
+msgid "Group(s) \\{%s1\\} succesfully merged into \"%s2\""
+msgstr "Grupp(er) \\{%s1\\} framgångsrikt sammanslagen med \"%s2\""
+
+msgid "Groups \\{%s\\} succesfully deleted"
+msgstr "Grupper \\{%s\\} framgångsrikt borttagna"
+
+msgid "Has access to administration. Can only manage content: photos/albums/users/tags/groups."
+msgstr "Har tillgång till administration. Kan bara hantera följande innehåll: foton/album/användare/taggar/grupper."
+
+msgid "Has access to all administration functionnalities. Can manage both configuration and content."
+msgstr "Har tillgång till alla administrativa funktioner. Kan hantera både konfigurering och innehåll."
+
+msgid "Hide sub-albums"
+msgstr "Göm underalbum"
+
+msgid "Jan"
+msgstr "Jan"
+
+msgid "Jul"
+msgstr "Jul"
+
+msgid "Jun"
+msgstr "Jun"
+
+msgid "Keep them"
+msgstr "Behåll dem"
+
+msgid "Language"
+msgstr "Språk"
+
+msgid "Compact View"
+msgstr "Kompakt vy"
+
+msgid "Compare mode"
+msgstr "Jämförelseläge"
+
+msgid "Created on %s"
+msgstr "Skapad den %s"
+
+msgid "Deactivated"
+msgstr "Avaktiverad"
+
+msgid "Dec"
+msgstr "Dec"
+
+msgid "Delete orphan tags ?"
+msgstr "Radera föräldralösa taggar ?"
+
+msgid "Delete tag \"%s\"?"
+msgstr "Radera tagg \"%s\"?"
+
+msgid "Delete tags \\{%s\\}?"
+msgstr "Radera taggar \\{%s\\}?"
+
+msgid "Delete these sizes"
+msgstr "Ta bort dessa storlekar"
+
+msgid "Delete user"
+msgstr "Ta bort användare"
+
+msgid "Displays a banner to install or open the official Piwigo app"
+msgstr "Visar en banner för att installera eller öppna officiella Piwigo appen"
+
+msgid "Dissociate user from this group"
+msgstr "Avassociera användare från denna grupp"
+
+msgid "Download all activities"
+msgstr "Ladda ned alla aktiviteter"
+
+msgid "Drag and drop to reorder albums"
+msgstr "Dra och släpp för att ändra ordning på album"
+
+msgid "Edit"
+msgstr "Redigera"
+
+msgid "Edit guest user"
+msgstr "Redigera gästanvändare"
+
+msgid "Edit photo #%s"
+msgstr "Redigera foto #%s"
+
+msgid "Edited on %s"
+msgstr "Redigerad den %s"
+
+msgid "Email"
+msgstr "E-post"
+
+msgid "Email Adress"
+msgstr "E-postadress"
+
+msgid "Are you sure you want to uninstall the plugin \"%s\"?"
+msgstr "Är du säker på att du vill avinstallera insticksmodulen \"%s\"?"
+
+msgid "Are you sure you want to unlock the gallery?"
+msgstr "Är du säker på att du vill låsa upp galleriet?"
+
+msgid "Are you sure you want to update all extensions?"
+msgstr "Är du säker på att du vill uppdatera alla tillägg?"
+
+msgid "Associate User"
+msgstr "Associerad användare"
+
+msgid "At least 2 selected tags are needed to merge"
+msgstr "Åtminstone 2 valda taggar krävs för hopslagning"
+
+msgid "Aug"
+msgstr "Aug"
+
+msgid "Average last 12 months"
+msgstr "Genomsnitt senaste 12 månader"
+
+msgid "Cache"
+msgstr "Cache"
+
+msgid "Cache size"
+msgstr "Cache storlek"
+
+msgid "Can be shared by several individuals without conflict (they cannot change the password)."
+msgstr "Kan delas av flera individer utan konflikt (de kan inte ändra lösenordet)."
+
+msgid "Change Password"
+msgstr "Ändra lösenord"
+
+msgid "Choose which tag to merge these tags into"
+msgstr "Välj vilken tagg att sammafoga dessa taggar med"
+
+msgid "Clear Selection"
+msgstr "Rensa val"
+
+msgid "Close"
+msgstr "Stäng"
+
+msgid "Activated"
+msgstr "Aktiverad"
+
+msgid "Activated plugin list"
+msgstr "Lista över aktiva insticksmoduler"
+
+msgid "Activity"
+msgstr "Aktivitet"
+
+msgid "Activity time from"
+msgstr "Aktivitetstid från"
+
+msgid "Add Album"
+msgstr "Lägg till album"
+
+msgid "Add User"
+msgstr "Lägg till användare"
+
+msgid "Add a new user"
+msgstr "Lägg till en ny användare"
+
+msgid "Advanced filters"
+msgstr "Avancerade filter"
+
+msgid "Apply an automatic order to root albums"
+msgstr "Applicera en automatisk ordning på rotalbum"
+
+msgid "Apply to direct sub-albums"
+msgstr "Tillämpa på direkta underalbum"
+
+msgid "Apply to the whole hierarchy"
+msgstr "Tillämpa på hela hierarkin"
+
+msgid "Apr"
+msgstr "Apr"
+
+msgid "Are you sure you want to delete the ratings of the user \"%s\"?"
+msgstr "Är du säker på att du vill ta bort betyg för användare \"%s\"?"
+
+msgid "Are you sure you want to lock the gallery?"
+msgstr "Är du säker på att du vill låsa galleriet?"
+
+msgid "Are you sure you want to restore the plugin \"%s\"?"
+msgstr "Är du säker på att du vill återställa insticksmodulen \"%s\"?"
+
+msgid "Are you sure you want to restore this plugin?"
+msgstr "Är du säker på att du vill återställa denna insticksmodul?"
+
+msgid "Are you sure you want to restore to default settings?"
+msgstr "Är du säker på att du vill återställa standardinställningarna?"
+
+msgid "Tag name"
+msgstr "Taggnamn"
+
+msgid "This photo is an orphan"
+msgstr "Det här fotot är föräldralöst"
+
+msgid "This plugin has no recent update"
+msgstr "Finns ingen nylig uppdatering för denna insticksmodul"
+
+msgid "This plugin have been updated recently"
+msgstr "Denna insticksmodul har nyligen uppdaterats"
+
+msgid "This plugin have no update since 3 years ! It may be outdated"
+msgstr "Denna insticksmodul har inte uppdaterats på 3år! Den kan vara föråldrad"
+
+msgid "This plugin is incompatible with your version"
+msgstr "Denna insticksmodul är inkompatibel med din version"
+
+msgid "This plugin was updated less than 6 months ago"
+msgstr "Insticksmodulen uppdaterades för mindre än 6 månader sedan"
+
+msgid "Try now !"
+msgstr "Prova nu!"
+
+msgid "Understood, do not show again"
+msgstr "Förstått, visa inte igen"
+
+msgid "Upload Formats"
+msgstr "Ladda upp format"
+
+msgid "Version %s"
+msgstr "Version %s"
+
+msgid "Visited"
+msgstr "Besökt"
+
+msgid "Yes, rename"
+msgstr "Ja, döp om"
+
+msgid "and %d more"
+msgstr "och %d fler"
+
+msgid "since the beginning"
+msgstr "sedan början"
+
+msgid "On %d rating(s)"
+msgstr "På %d betyg"
+
+msgid "Rating greater than"
+msgstr "Betyg högre än"
+
+msgid "No format for this picture"
+msgstr "Inget format för denna bild"
+
+msgid "No picture found with the following name : %s."
+msgstr "Ingen bild hittad med följande namn: %s."
+
+msgid "No research in progress"
+msgstr "Ingen forskning pågår"
+
+msgid "No search in progress"
+msgstr "Ingen sökning pågår"
+
+msgid "Object"
+msgstr "Objekt"
+
+msgid "Picture to associate formats with"
+msgstr "Bild att associera format med"
+
+msgid "Piwigo core"
+msgstr "Piwigo kärna"
+
+msgid "Piwigo is also on mobile."
+msgstr "Piwigo finns också på mobil"
+
+msgid "Properties of abums"
+msgstr "Egenskaper för album"
+
+msgid "Rename \"%s\""
+msgstr "Döp om \"%s\""
+
+msgid "Show beta test plugins"
+msgstr "Visa insticksmoduler för betatest"
+
+msgid "Show plugins compatible with previous version of Piwigo"
+msgstr "Visa insticksmoduler kompatibla med föregående version av Piwigo"
+
+msgid "The original picture will be detected with the filename (without extension)."
+msgstr "Originalbilden kommer att upptäckas med filnamnet (utan tillägget)."
+
+msgid "There is multiple image in the database with the following names : %s."
+msgstr "Det finns flera bilder i databasen med följande namn: %s."
+
+msgid "This albums is already in related categories list"
+msgstr "Detta album finns redan i listan över relaterade album"
+
+msgid "More information"
+msgstr "Mer information"
+
+msgid "Memories"
+msgstr "Souvenirer"
+
+msgid "Latest Piwigo news"
+msgstr "Senaste Piwigo nyheterna"
+
+msgid "Last revision date is newer than"
+msgstr "Senaste revisionsdatum är nyare än"
+
+msgid "Install Piwigo on mobile"
+msgstr "Installera Piwigo på mobil"
+
+msgid "Extensions"
+msgstr "Tillägg"
+
+msgid "Error when trying to detect formats"
+msgstr "Fel vid försök att upptäcka format"
+
+msgid "Downloaded"
+msgstr "Nedladdat"
+
+msgid "Discover"
+msgstr "Upptäck"
+
+msgid "Delete %s format ?"
+msgstr "Radera %s format ?"
+
+msgid "Currently running version %s"
+msgstr "Kör för närvarande version %s"
+
+msgid "Current Version"
+msgstr "Nuvarande version"
+
+msgid "Create a sub-album of \"%s\""
+msgstr "Skapa ett underalbum av \"%s\""
+
+msgid "Create a new album at root"
+msgstr "Skapa ett nytt album i rot"
+
+msgid "Certification higher or equal to"
+msgstr "Certifiering högre eller lika med"
+
+msgid "Additional filters"
+msgstr "Ytterligare filter"
+
+msgid "Add formats"
+msgstr "Lägg till format"
+
+msgid "Add as filter"
+msgstr "Lägg till som filter"
+
+msgid "Add another set of formats"
+msgstr "Lägg till ytterligare en uppsättning format"
+
+msgid "Add New Plugin"
+msgstr "Lägg till ny insticksmodul"
+
+msgid "%sMB"
+msgstr "%s MB"
+
+msgid "%sGB"
+msgstr "%s GB"
+
+msgid "%s pixels, %.2f MB"
+msgstr "%s pixlar, %.2f MB"
+
+msgid "%d formats uploaded for %d photos"
+msgstr "%d format uppladdade för %d foton"
+
+msgid "Installed on %s, %s"
+msgstr "Installerad den %s, %s"
+
+msgid "Place first"
+msgstr "Placera först"
+
+msgid "Place last"
+msgstr "Placera sist"
+
+msgid "This picture is physically linked to this album, you can't dissociate them"
+msgstr "Denna bild är fysiskt länkad till detta album, du kan inte koppla isär dem."
+
+msgid "While restoring this plugin, it will be reset to its original parameters and associated data is going to be reset"
+msgstr "Vid återställning av denna insticksmodul så kommer dess inställningar och data att nollställas."
+
+msgid "Details"
+msgstr "Detaljer"
+
+msgid "This photo no longer exists"
+msgstr "Detta foto finns inte längre"
+
+msgid "Always have a backup of your database and files."
+msgstr "Ha alltid en backup på din databas och filer."
+
+msgid "If anything bad happens during the update, you would be able to restore a backup."
+msgstr "Om något går fel vid uppdateringen, så har du möjlighet att återställa från en backup."
+
+msgid "The best is to have them made automatically on a regular basis."
+msgstr "Det bästa är att göra regelbundna backuper automatiskt."
+
+msgid "Apply to root albums"
+msgstr "Tillämpa på rotalbum"
+
+msgid "Album name must not be empty"
+msgstr "Albumets namn får inte vara tomt"
+
+msgid "Visit history"
+msgstr "Besökshistorik"
+
+msgid "Some photos are missing from your file system. Details provided by plugin Check Uploads"
+msgstr "Vissa foton saknas i ditt filsystem. Detaljer tillhandahålls av insticksmodulen Check Uploads"
+
+msgid "%d pictures in sub-albums"
+msgstr "%d bilder i underalbum"
+
+msgid "<b>%d</b> filtered user"
+msgstr "<b>%d</b> filtrerad användare"
+
+msgid "<b>%d</b> filtered users"
+msgstr "<b>%d</b> filtrerade användare"
+
+msgid "%d in whole branch"
+msgstr "%d i hela grenen"
+
+msgid "%d including sub-albums"
+msgstr "%d inklusive underalbum"
+
+msgid "Activate button \"%s\""
+msgstr "Aktivera knapp \"%s\""
+
+msgid "All admins"
+msgstr "Alla admins"
+
+msgid "Allow comments for sub-albums"
+msgstr "Tillåt kommentarer för underalbum"
+
+msgid "Authorize comments"
+msgstr "Auktorisera kommentarer"
+
+msgid "Comments allowed for sub-albums"
+msgstr "Kommentarer tillåtna för underalbum"
+
+msgid "Comments disallowed for sub-albums"
+msgstr "Kommentarer icke tillåtna för underalbum"
+
+msgid "Created"
+msgstr "Skapad"
+
+msgid "Detect and avoid duplicates during upload"
+msgstr "Upptäck och undvik dubletter vid uppladdning"
+
+msgid "Disallow comments for sub-albums"
+msgstr "Tillåt inte kommentarer för underalbum"
+
+msgid "During upload, if Piwigo detects the photo already exists, associate the existing photo to the destination album, without duplicating file"
+msgstr "Under uppladdning, om Piwigo upptäcker att fotot redan finns, associera det befintliga fotot till målalbumet, utan att duplicera filen"
+
+msgid "Locked album"
+msgstr "Låst album"
+
+msgid "Modified"
+msgstr "Ändrad"
+
+msgid "Only admins in a specific group"
+msgstr "Endast admins i en specifik grupp"
+
+msgid "Put at the root"
+msgstr "Sätt vid roten"
+
+msgid "Remove thumbnail"
+msgstr "Ta bort miniatyrbild"
+
+msgid "This album is currently locked, visible only to administrators."
+msgstr "Detta album är för närvarande låst, endast synligt för administratörer."
+
+msgid "Unlock it"
+msgstr "Lås upp det"
+
+msgid "Unlocked album"
+msgstr "Olåst album"
+
+msgid "%d files"
+msgstr "%d filer"
+
+msgid "Expand"
+msgstr "Förstora"
+
+msgid "Shrink"
+msgstr "Förminska"
+
+msgid "between %d and %d"
+msgstr "mellan %d och %d"
+
+msgid "image(s) contains unsaved changes"
+msgstr "bild(er) innehåller ändringar som inte är sparade"
+
+msgid "level of confidentiality"
+msgstr "nivå av sekretess"
+
+msgid "was succesfully deleted"
+msgstr "raderades framgångsrikt"
+
+msgid "Activate create mode to create and select an album"
+msgstr "Aktivera skaparläge för att skapa och välja ett album"
+
+msgid "Add a sub-album to “%s”"
+msgstr "Lägg till ett underalbum till \"%s\""
+
+msgid "Added on %s"
+msgstr "Tillagd den %s"
+
+msgid "An error has occured"
+msgstr "Ett fel har uppstått"
+
+msgid "Auto-update"
+msgstr "Autouppdatera"
+
+msgid "Changes saved"
+msgstr "Ändringar sparade"
+
+msgid "Core"
+msgstr "Kärna"
+
+msgid "Create a root album"
+msgstr "Skapa ett rotalbum"
+
+msgid "Create and select"
+msgstr "Skapa och välj"
+
+msgid "Create your first album"
+msgstr "Skapa ditt första album"
+
+msgid "Creation mode"
+msgstr "Skaparläge"
+
+msgid "First choose an album, then add your files"
+msgstr "Välj först ett album, lägg sedan till dina filer"
+
+msgid "Image"
+msgstr "Bild"
+
+msgid "Metadata sync complete"
+msgstr "Synkronisering av metadata slutförd"
+
+msgid "Pagination has changed and needs to be reloaded !"
+msgstr "Pagineringen har ändrats och behöver laddas om !"
+
+msgid "Save"
+msgstr "Spara"
+
+msgid "Select or create an album"
+msgstr "Välj eller skapa ett album"
+
+msgid "System Activities"
+msgstr "Systemaktiviteter"
+
+msgid "Who can see ?"
+msgstr "Vem kan se ?"
+
+msgid "You have unsaved changes"
+msgstr "Du har ändringar som inte är sparade"
+
+msgid "You are not authorised to change the main user, please ask your webmaster"
+msgstr "Du är inte behörig att ändra huvudanvändare, fråga din webmaster"
+
+msgid "You can now change the main user from %s to %s."
+msgstr "Du kan nu ändra huvudanvändaren från %s till %s."
+
+msgid "You cannot copy the password if the connection to this site is not secure."
+msgstr "Du kan inte kopiera lösenordet om anslutningen till denna webbplats inte är säker."
+
+msgid "%s is the new main user"
+msgstr "%s är den nya huvudanvändaren"
+
+msgid "Cannot send an email to this user because he doesn't have an email address"
+msgstr "Kan ej skicka ett mejl till denna användare, för denne har ingen e-postadress"
+
+msgid "Changing the main user"
+msgstr "Ändrar huvudanvändaren"
+
+msgid "Copied link"
+msgstr "Kopierade länken"
+
+msgid "Copy password"
+msgstr "Kopiera lösenord"
+
+msgid "Copy the link below and send it to the user so the password can be set."
+msgstr "Kopiera länken nedan och skicka den till användaren så lösenordet kan sättas"
+
+msgid "Copy the password link"
+msgstr "Kopiera lösenordslänken"
+
+msgid "Main user"
+msgstr "Huvudanvändare"
+
+msgid "Password copied"
+msgstr "Lösenord kopierat"
+
+msgid "Please complete all fields"
+msgstr "Var god fyll i alla fält"
+
+msgid "Resend password link"
+msgstr "Skicka om lösenordslänk"
+
+msgid "Set as main user"
+msgstr "Ställ in som huvudanvändare"
+
+msgid "The passwords do not match"
+msgstr "Lösenorden stämmer inte"
+
+msgid "This user must first be defined as the webmaster before it can be upgraded to the main user"
+msgstr "Denna användare måste först definieras som webmaster innan den kan uppgraderas till huvudanvändaren"
+
+msgid "To be sure, please rewrite the word “%s” below"
+msgstr "För att vara säker, var god skriv ordet \"%s\" nedan"
+
+msgid "Username successfully modified"
+msgstr "Användarnamnet har ändrats"
+
+msgid "Yes, let's proceed"
+msgstr "Ja, låt oss fortsätta"
+
+msgid "You are about to set %s as main user instead of %s, do you wish to continue ?"
+msgstr "Du är på väg att ställa in %s som huvudanvändare istället för %s, vill du fortsätta?"
+
+msgid "Ok, got it!"
+msgstr "Okej, förstår!"
+
+msgid "Read the release note"
+msgstr "Läs ändringsloggen"
+
+msgid "What's new in version %s"
+msgstr "Vad är nytt i version %s?"
+
+msgid "A photo library administrator has created the following account for you:"
+msgstr "En bildbiblioteksadministratör har skapat följande konto åt dig:"
+
+msgid "An activation link valid for %s has been sent to \"%s\". If the user doesn't receive the link, you can generate and copy a new one by editing the user and managing her password."
+msgstr "En aktiveringslänk som är giltig för %s har skickats till \"%s\". Om länken inte tas emot kan en ny genereras och kopieras genom att redigera användaren och hantera deras lösenord."
+
+msgid "An activation link valid for %s was created but could not be sent. You can now copy the link below and send it to the user."
+msgstr "En aktiveringslänk som är giltig för %s skapades men kunde inte skickas. Du kan nu kopiera länken nedan och skicka den till användaren."
+
+msgid "This link is valid for %s. After this time, you will need to request a new link."
+msgstr "Denna länk är giltig för %s. Efter denna tid måste du begära en ny länk."
+
+msgid "To set your password, visit the following address:"
+msgstr "För att ställa in ditt lösenord, besök följande adress:"
+
+msgid "Welcome to %s"
+msgstr "Välkommen till %s"
+
+msgid "We have found %d duplicate paths. Details provided by plugin Check Uploads"
+msgstr "Vi har hittat %d dubbletter av sökvägar. Detaljer tillhandahållna av plugin'et Kontrollera uppladdningar (Check Uploads)"
+
+msgid "%d photos were moved from the upload lounge to their albums"
+msgstr "%d foton flyttades från uppladdningsloungen till deras album"
+
+msgid "Are you sure you want to delete \"%d\" comments?"
+msgstr "Är du säker att du vill radera \"%d\" kommentarer?"
+
+msgid "Are you sure you want to delete comment #%s?"
+msgstr "Är du säker att du vill radera kommentar #%s?"
+
+msgid "Empty lounge"
+msgstr "Tom lounge"
+
+msgid "If a photo in this album has the same filename, update the file without changing the photo's properties"
+msgstr "Om ett foto i det här albumet har samma filnamn, uppdatera filen utan att ändra fotots egenskaper."
+
+msgid "No comments selected, no actions possible."
+msgstr "Inga kommentarer valda, inga åtgärder möjliga."
+
+msgid "Save all photos"
+msgstr "Spara alla foton"
+
+msgid "The comment has been validated."
+msgstr "Kommentaren har validerats."
+
+msgid "The comments have been validated."
+msgstr "Kommentarerna har validerats."
+
+msgid "There is currently %d photos in the lounge (upload buffer)"
+msgstr "Det finns för närvarande %d foton i loungen (uppladdningsbuffert)"
+
+msgid "Use standard Piwigo template for common pages."
+msgstr "Använd standardmall för Piwigo för vanliga sidor."
+
+msgid "When enabled, a common template is used for the login, registration and forgotten password pages, regardless of the theme. Some themes might use these templates even if you uncheck this option"
+msgstr "När den är aktiverad används en gemensam mall för sidorna för inloggning, registrering och glömt lösenord, oavsett tema. Vissa teman kan använda dessa mallar även om du avmarkerar det här alternativet."
+
+msgid "Admins only"
+msgstr "Endast administratörer"
+
+msgid "user_status_normal"
+msgstr "Enkel"
+
+msgid "Change logo"
+msgstr "Ändra logo"
+
+msgid "Dark mode"
+msgstr "Mörkt läge"
+
+msgid "Display Gallery title"
+msgstr "Visa gallerititel"
+
+msgid "Light mode"
+msgstr "Ljust läge"
+
+msgid "Personalization settings"
+msgstr "Personlighetsinställningar"
+
+msgid "Select a color theme for standard pages"
+msgstr "Välj ett färgtema för standardsidor"
+
+msgid "Standard pages"
+msgstr "Standardsidor"
+
+msgid "Standard pages aren't activated, however you have %d active themes that will still use them. These themes are:"
+msgstr "Standardsidor är inte aktiverade men du har dock %d aktiva teman som fortfarande använder dem. Dessa teman är:"
+
+msgid "Standard pages header"
+msgstr "Standard sidhuvud"
+
+msgid "Use Piwigo logo"
+msgstr "Använd Piwigo logo"
+
+msgid "Use custom logo (png, jpeg or svg)"
+msgstr "Använd egen logo (png, jpeg eller svg)"
+

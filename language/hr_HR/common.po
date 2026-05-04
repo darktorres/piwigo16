@@ -1,0 +1,1087 @@
+# Piwigo translation — hr_HR
+# Source: common.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: hr_HR\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"X-Piwigo-Language-Name: Hrvatski\n"
+"X-Piwigo-Country: Hrvatska\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Code: hr\n"
+"X-Piwigo-Zero-Plural: true\n"
+
+msgid "%d Kb"
+msgstr "%d Kb"
+
+msgid "%d album updated"
+msgid_plural "%d albums updated"
+msgstr[0] "%d skupina obnovljena"
+msgstr[1] "%d skupine obnovljene"
+
+msgid "%d comment to validate"
+msgstr "%d komentar za ovjeru"
+
+msgid "%d comments to validate"
+msgstr "%d komentari za ovjeru"
+
+msgid "%d new comment"
+msgstr "%d novi komentar"
+
+msgid "%d new comments"
+msgstr "%d novi komentari"
+
+msgid "%d comment"
+msgid_plural "%d comments"
+msgstr[0] "%d komentar"
+msgstr[1] "%d komentari"
+
+msgid "%d hit"
+msgstr "%d posjet"
+
+msgid "%d hits"
+msgstr "%d posjeta"
+
+msgid "%d new photo"
+msgid_plural "%d new photos"
+msgstr[0] "%d nova slika"
+msgstr[1] "%d nove slike"
+
+msgid "%d new user"
+msgstr "%d novi korisnik"
+
+msgid "%d new users"
+msgstr "%d novi korisnici"
+
+msgid "About"
+msgstr "O..."
+
+msgid "All tags"
+msgstr "Svi tagovi"
+
+msgid "Any tag"
+msgstr "Bilo koji tag"
+
+msgid "At least one listed rule must be satisfied."
+msgstr "Najmanje jedno od navedenih pravila mora biti zadovoljeno."
+
+msgid "Author"
+msgstr "Autor"
+
+msgid "Albums"
+msgstr "Skupine"
+
+msgid "Album"
+msgstr "Skupina"
+
+msgid "Close this window"
+msgstr "Zatvori prozor"
+
+msgid "Complete RSS feed (photos, comments)"
+msgstr "Potpuni RSS izvori (slike, komentari)"
+
+msgid "Confirm Password"
+msgstr "Potvrdi Zaporku"
+
+msgid "Connection settings"
+msgstr "Postavke povezivanja"
+
+msgid "Login"
+msgstr "Prijava"
+
+msgid "Contact webmaster"
+msgstr "Pišite webmaster-u"
+
+msgid "Create a new account"
+msgstr "Izradi novi račun"
+
+msgid "Created on"
+msgstr "Izrađen na"
+
+msgid "Creation date"
+msgstr "Nadnevak izrade"
+
+msgid "Current password is wrong"
+msgstr "Trenutna zaporka je neispravna"
+
+msgid "Dimensions"
+msgstr "Veličine"
+
+msgid "Display"
+msgstr "Prikaz"
+
+msgid "Each listed rule must be satisfied."
+msgstr "Svako navedeno pravilo mora biti zadovoljeno."
+
+msgid "Email address is missing. Please specify an email address."
+msgstr "Nedostaje E-mail adresa"
+
+msgid "Email address"
+msgstr "E-mail adresa"
+
+msgid "Enter your personnal informations"
+msgstr "Upišite svoje osobne podatke"
+
+msgid "Error sending email"
+msgstr "Greška prilikom slanja e-mail poruke"
+
+msgid "File name"
+msgstr "Naziv zapisa"
+
+msgid "File"
+msgstr "Zapis"
+
+msgid "Filesize"
+msgstr "Veličina zapisa"
+
+msgid "Filter and display"
+msgstr "Filter i prikaz"
+
+msgid "Filter"
+msgstr "Filter"
+
+msgid "Forgot your password?"
+msgstr "Zaboravili ste zaporku?"
+
+msgid "Go through the gallery as a visitor"
+msgstr "Pregledajte galeriju kao posjetitelj"
+
+msgid "Help"
+msgstr "Pomoć"
+
+msgid "Identification"
+msgstr "Prijavnica"
+
+msgid "Photos only RSS feed"
+msgstr "RSS izvor samo za slike"
+
+msgid "Keyword"
+msgstr "Ključna riječ"
+
+msgid "Links"
+msgstr "Poveznice"
+
+msgid "N/A"
+msgstr "N/D"
+
+msgid "New on %s"
+msgstr "Novi na on %s"
+
+msgid "Notification"
+msgstr "Obavijest"
+
+msgid "Number of items"
+msgstr "Broj stavki"
+
+msgid "Original dimensions"
+msgstr "Izvorne veličine"
+
+msgid "Password forgotten"
+msgstr "Zaboravljena zaporka"
+
+msgid "Password"
+msgstr "Zaporka"
+
+msgid "Post date"
+msgstr "Nadnevak objave"
+
+msgid "Posted on"
+msgstr "Objavljeno u"
+
+msgid "Profile"
+msgstr "Profil"
+
+msgid "Quick connect"
+msgstr "Brza veza"
+
+msgid "RSS feed"
+msgstr "RSS izvor"
+
+msgid "Register"
+msgstr "Upišite se"
+
+msgid "Registration"
+msgstr "Upis"
+
+msgid "Related tags"
+msgstr "Odnosni tagovi"
+
+msgid "Reset"
+msgstr "Poništi"
+
+msgid "Retrieve password"
+msgstr "Dohvati zaporku"
+
+msgid "Search rules"
+msgstr "Pravila pretrage"
+
+msgid "Search tags"
+msgstr "Tagovi pretrage"
+
+msgid "Search"
+msgstr "Pretraživanje"
+
+msgid "display available tags"
+msgstr "Pogledaj dostupne tagove"
+
+msgid "Since"
+msgstr "Od"
+
+msgid "Sort by"
+msgstr "Složeno po"
+
+msgid "Sort order"
+msgstr "Redoslijed slaganja"
+
+msgid "Tag"
+msgstr "Tag"
+
+msgid "Tags"
+msgstr "Tagovi"
+
+msgid "The RSS notification feed provides notification on news from this website : new photos, updated albums, new comments. Use a RSS feed reader."
+msgstr "RSS obavijesni izvor omogućava obavještavanje o novostima sa ovog web mjesta : nove slike, obnovljene skupine, nove komentare. Koristite čitač RSS izvora."
+
+msgid "Unknown feed identifier"
+msgstr "Nepoznata oznaka izvora"
+
+msgid "User comments"
+msgstr "Korisnički komentari"
+
+msgid "Username"
+msgstr "Korisničko ime"
+
+msgid "Visits"
+msgstr "Posjeta"
+
+msgid "Webmaster"
+msgstr "Webmaster"
+
+msgid "Week %d"
+msgstr "Tjedan %d"
+
+msgid "About Piwigo"
+msgstr "O Piwigo-u"
+
+msgid "You are not authorized to access the requested page"
+msgstr "Niste ovlašteni za pristup zatraženoj stranici"
+
+msgid "add this photo to your favorites"
+msgstr "dodaj ovu sliku u omiljene"
+
+msgid "Administration"
+msgstr "Uprava"
+
+msgid "all"
+msgstr "sve"
+
+msgid "ascending"
+msgstr "uzlazno"
+
+msgid "author(s) : %s"
+msgstr "autor(i) : %s"
+
+msgid "Expand all albums"
+msgstr "Proširi sve skupine"
+
+msgid "posted after %s (%s)"
+msgstr "objavljeno nakon %s (%s)"
+
+msgid "posted before %s (%s)"
+msgstr "objavljeno prije %s (%s)"
+
+msgid "posted between %s (%s) and %s (%s)"
+msgstr "objavljeno između %s (%s) i %s (%s)"
+
+msgid "posted on %s"
+msgstr "objavljeno na %s"
+
+msgid "Best rated"
+msgstr "Najbolje ocijenjeno"
+
+msgid "display best rated photos"
+msgstr "prikaz najbolje ocijenjenih stavki"
+
+msgid "Calendar"
+msgstr "Kalendar"
+
+msgid "All"
+msgstr "Sve"
+
+msgid "display each day with photos, month per month"
+msgstr "prikaz svakog dana sa slikama, mjesec po mjesec"
+
+msgid "View"
+msgstr "Pogledaj"
+
+msgid "chronology_monthly_calendar"
+msgstr "Mjesečni kalendar"
+
+msgid "chronology_monthly_list"
+msgstr "Mjesečni popis"
+
+msgid "chronology_weekly_list"
+msgstr "Tjedni popis"
+
+msgid "Click here if your browser does not automatically forward you"
+msgstr "Kliknite ovdje ako niste samostalno prebačeni"
+
+msgid "comment date"
+msgstr "nadnevak komentara"
+
+msgid "Comment"
+msgstr "Komentar"
+
+msgid "Your comment has been registered"
+msgstr "Vaš je komentar upisan"
+
+msgid "Anti-flood system : please wait for a moment before trying to post another comment"
+msgstr "Anti-flood sustav : molimo sačekajte malo prije objave novog komentara"
+
+msgid "Your comment has NOT been registered because it did not pass the validation rules"
+msgstr "Vaš komentar NIJE upisan jer nije prošao pravila ovjere"
+
+msgid "An administrator must authorize your comment before it is visible."
+msgstr "Upravnik mora odobriti vaš komentar prije objave."
+
+msgid "This login is already used by another user"
+msgstr "Ovo korisničko ime se već koristi"
+
+msgid "Comments"
+msgstr "Komentari"
+
+msgid "Add a comment"
+msgstr "Dodaj komentar"
+
+msgid "created after %s (%s)"
+msgstr "izrađen nakon %s (%s)"
+
+msgid "created before %s (%s)"
+msgstr "izrađen prije %s (%s)"
+
+msgid "created between %s (%s) and %s (%s)"
+msgstr "izrađen između %s (%s) i %s (%s)"
+
+msgid "created on %s"
+msgstr "izrađen na %s"
+
+msgid "Your Gallery Customization"
+msgstr "Prilagodba Vaše Galerije "
+
+msgid "Default"
+msgstr "Pretpostavljeno"
+
+msgid "delete this photo from your favorites"
+msgstr "uklonite ovu sliku iz omiljenih"
+
+msgid "Delete"
+msgstr "Ukloni"
+
+msgid "descending"
+msgstr "silazno"
+
+msgid "Download"
+msgstr "Preuzmi"
+
+msgid "Download this file"
+msgstr "preuzmi ovaj zapis"
+
+msgid "edit"
+msgstr "uredi"
+
+msgid "wrong date"
+msgstr "krivi nadnevak"
+
+msgid "excluded"
+msgstr "isključeno"
+
+msgid "Your favorites"
+msgstr "Moji omiljeni"
+
+msgid "display your favorites photos"
+msgstr "prikaz mojih omiljenih slika"
+
+msgid "Favorites"
+msgstr "Omiljeni"
+
+msgid "First"
+msgstr "Prvi"
+
+msgid "The gallery is locked for maintenance. Please, come back later."
+msgstr "Galerija je zaključana zbog održavanja. Molimo, navratite kasnije."
+
+msgid "Page generated in"
+msgstr "Stranica izrađena u "
+
+msgid "guest"
+msgstr "gost"
+
+msgid "Hello"
+msgstr "Pozdrav"
+
+msgid "available for administrators only"
+msgstr "dostupno samo upraviteljima"
+
+msgid "display this album"
+msgstr "prikazuje slike u korijenu skupine"
+
+msgid "display last user comments"
+msgstr "Pregled zadnjih korisničkih komentara"
+
+msgid "search"
+msgstr "pretraži"
+
+msgid "Home"
+msgstr "Naslovnica"
+
+msgid "in this album"
+msgstr "u ovoj skupini"
+
+msgid "in %d sub-album"
+msgid_plural "in %d sub-albums"
+msgstr[0] "u %d podskupini"
+msgstr[1] "u %d podskupinama"
+
+msgid "included"
+msgstr "uključeno"
+
+msgid "Invalid password!"
+msgstr "Nevaljana zaporka!"
+
+msgid "Language"
+msgstr "Jezik"
+
+msgid "last %d days"
+msgstr "zadnjih %d dana"
+
+msgid "Last"
+msgstr "Zadnji"
+
+msgid "Logout"
+msgstr "Odjava"
+
+msgid "obligatory"
+msgstr "obvezno"
+
+msgid "Maximum photo height"
+msgstr "Najveća dozvoljena visina slika"
+
+msgid "Maximum height must be a number superior to 50"
+msgstr "Najveća visina mora biti broj veći od 50"
+
+msgid "Maximum photo width"
+msgstr "Najveća dozvoljena širina slika"
+
+msgid "Maximum width must be a number superior to 50"
+msgstr "Najveća širina mora biti broj veći od 50"
+
+msgid "display a calendar by creation date"
+msgstr "prikaz kalendara po nadnevku izrade"
+
+msgid "display all photos in all sub-albums"
+msgstr "prikaz svih stavki u svim podskupinama"
+
+msgid "return to normal view mode"
+msgstr "povratak u uobičajeni način pregleda"
+
+msgid "display a calendar by posted date"
+msgstr "prikaz kalendara po nadnevku objave"
+
+msgid "Most visited"
+msgstr "Najposjećenije"
+
+msgid "display most visited photos"
+msgstr "prikaz najposjećenijih slika"
+
+msgid "The number of photos per page must be a not null scalar"
+msgstr "broj slika po stranici mora biti cjelobrojna vrijednost"
+
+msgid "Number of photos per page"
+msgstr "Broj slika po stranici"
+
+msgid "Unknown identifier"
+msgstr "Nepoznata oznaka"
+
+msgid "New password"
+msgstr "Nova zaporka"
+
+msgid "Rate this photo"
+msgstr "Ocjeni ovu sliku"
+
+msgid "Next"
+msgstr "Slijedeći"
+
+msgid "no rate"
+msgstr "bez ocjene"
+
+msgid "Photos posted within the last %d day."
+msgid_plural "Photos posted within the last %d days."
+msgstr[0] "Stavke objavljene u zadnjem %d danu."
+msgstr[1] "Stavke objavljene između zadnjih %d dana."
+
+msgid "password updated"
+msgstr "zaporka obnovljena"
+
+msgid "Recent period must be a positive integer value"
+msgstr "Nedavno razdoblje mora biti pozitivna cjelobrojna vrijednost"
+
+msgid "photo"
+msgstr "slika"
+
+msgid "Click on the photo to see it in high definition"
+msgstr "Klikni na sliku za pregled u visokoj razlučljivosti"
+
+msgid "Show file metadata"
+msgstr "Prikaži meta podatke zapisa"
+
+msgid "Powered by"
+msgstr "Osnaženo sa"
+
+msgid "Preferences"
+msgstr "Postavke"
+
+msgid "Previous"
+msgstr "Prethodni"
+
+msgid "Random photos"
+msgstr "Slike slučajnog odabira"
+
+msgid "display a set of random photos"
+msgstr "prikaz slika slučajnim odabirom"
+
+msgid "Recent albums"
+msgstr "Nedavne skupine"
+
+msgid "display recently updated albums"
+msgstr "prikaz nedavno obnovljenih skupina"
+
+msgid "Recent period"
+msgstr "Nedavno razdoblje"
+
+msgid "Recent photos"
+msgstr "Nedavne slike"
+
+msgid "display most recent photos"
+msgstr "prikaz najnovijih slika"
+
+msgid "Redirection..."
+msgstr "Preusmjeravanje..."
+
+msgid "Please, enter a login"
+msgstr "Molimo, prijavite se"
+
+msgid "login mustn't end with a space character"
+msgstr "prijava ne smije završavati razmakom"
+
+msgid "login mustn't start with a space character"
+msgstr "prijava ne smije počinjati razmakom"
+
+msgid "this login is already used"
+msgstr "ovo korisničko ime se već koristi"
+
+msgid "mail address must be like xxx@yyy.eee (example : jack@altern.org)"
+msgstr "e-mail adresa mora biti oblika xxx@yyy.eee (npr : pasko@stranica.org)"
+
+msgid "Auto login"
+msgstr "Samoprijava"
+
+msgid "remove this tag from the list"
+msgstr "ukloni  ovaj tag iz popisa"
+
+msgid "representative"
+msgstr "predstavnik"
+
+msgid "Search for Author"
+msgstr "Pretraživanje po Autoru"
+
+msgid "Search in albums"
+msgstr "Pretraživanje u Skupinama"
+
+msgid "Search by date"
+msgstr "Pretraživanje po Nadnevku"
+
+msgid "Date"
+msgstr "Nadnevak"
+
+msgid "End-Date"
+msgstr "Krajnji Nadnevak"
+
+msgid "Kind of date"
+msgstr "Vrsta nadnevka"
+
+msgid "Search for words"
+msgstr "Pretraživanje po riječima"
+
+msgid "Search for all terms"
+msgstr "Pretraživanje po svim uvjetima "
+
+msgid "Search for any term"
+msgstr "Pretraživanje po bilo kojem uvjetu"
+
+msgid "Empty query. No criteria has been entered."
+msgstr "Prazni upit. Nije uneseno ni jedno obilježje."
+
+msgid "Search results"
+msgstr "Ishodi pretraživanja"
+
+msgid "Search in sub-albums"
+msgstr "Pretraga u podskupinama"
+
+msgid "searched words : %s"
+msgstr "tražene riječi : %s"
+
+msgid "Contact"
+msgstr "Kontakt"
+
+msgid "set as album representative"
+msgstr "postavi za predstavnika skupine"
+
+msgid "Show number of comments"
+msgstr "Prikaži broj komentara"
+
+msgid "Show number of hits"
+msgstr "Prikaži broj posjeta"
+
+msgid "slideshow"
+msgstr "klizni prikaz"
+
+msgid "stop the slideshow"
+msgstr "zaustavi klizni prikaz"
+
+msgid "Specials"
+msgstr "Posebnosti"
+
+msgid "SQL queries in"
+msgstr "SQL upita u "
+
+msgid "display only recently posted photos"
+msgstr "prikaz samo nedavno objavljenih slika"
+
+msgid "return to the display of all photos"
+msgstr "povratak u prikaz svih slika"
+
+msgid "the beginning"
+msgstr "početak"
+
+msgid "Thumbnails"
+msgstr "Povezne sličice"
+
+msgid "Menu"
+msgstr "Izbornik"
+
+msgid "A comment on your site"
+msgstr "Komentar na vašem web mjestu"
+
+msgid "today"
+msgstr "danas"
+
+msgid "Update your rating"
+msgstr "Obnovite svoju ocjenu"
+
+msgid "the username must be given"
+msgstr "mora se upisati korisničko ime"
+
+msgid "useful when password forgotten"
+msgstr "korisno kada se zaboravi zaporka"
+
+msgid "Quick search"
+msgstr "Brzo pretraživanje"
+
+msgid "Connected user: %s"
+msgstr "Spojeni korisnik: %s"
+
+msgid "IP: %s"
+msgstr "IP: %s"
+
+msgid "Browser: %s"
+msgstr "Preglednik: %s"
+
+msgid "Author: %s"
+msgstr "Autor: %s"
+
+msgid "Comment: %s"
+msgstr "Komentar: %s"
+
+msgid "Comment by %s"
+msgstr "Komentirao-la %s"
+
+msgid "User: %s"
+msgstr "Korisnik: %s"
+
+msgid "Email: %s"
+msgstr "E-mail: %s"
+
+msgid "Admin: %s"
+msgstr "Upravitelj: %s"
+
+msgid "Registration of %s"
+msgstr "Upis od %s"
+
+msgid "Album: %s"
+msgstr "Skupina: %s"
+
+msgid "Bad status for user \"guest\", using default status. Please notify the webmaster."
+msgstr "Loš status za korisnika \"guest\", koristi se pretpostavljeni status. Molimo obavjestite webmaster-a."
+
+msgid "this email address is already in use"
+msgstr "korisnik već koristi ovu e-mail adresu"
+
+msgid "Album results for"
+msgstr "Ishodi skupine za "
+
+msgid "Tag results for"
+msgstr "Ishodi tagova za"
+
+msgid "from %s to %s"
+msgstr "od %s do %s"
+
+msgid "Play of slideshow"
+msgstr "Pokreni klizni prikaz"
+
+msgid "Pause of slideshow"
+msgstr "Zaustavi klizni prikaz"
+
+msgid "Repeat the slideshow"
+msgstr "Ponovi klizni prikaz"
+
+msgid "Not repeat the slideshow"
+msgstr "Ne ponavljaj klizni prikaz"
+
+msgid "Reduce diaporama speed"
+msgstr "Smanji brzinu diaporama-e"
+
+msgid "Accelerate diaporama speed"
+msgstr "Povećaj brzinu diaporama-e"
+
+msgid "Submit"
+msgstr "Pošalji"
+
+msgid "Yes"
+msgstr "Da"
+
+msgid "No"
+msgstr "Ne"
+
+msgid "%d photo"
+msgid_plural "%d photos"
+msgstr[0] "%d slika"
+msgstr[1] "%d slike"
+
+msgid "%d photo is also linked to current tags"
+msgid_plural "%d photos are also linked to current tags"
+msgstr[0] "%d slika također povezana sa trenutnim tagovima"
+msgstr[1] "%d slike također povezana sa trenutnim tagovima"
+
+msgid "display photos linked to this tag"
+msgstr "Pregledaj slike povezane samo sa ovim tag-om"
+
+msgid "photos posted during the last %d days"
+msgstr "slike objavljene tijekon zadnjih %d dana"
+
+msgid "Piwigo Help"
+msgstr "Piwigo Pomoć"
+
+msgid "Rank"
+msgstr "Redoslijed"
+
+msgid "group by letters"
+msgstr "složeno po slovima"
+
+msgid "letters"
+msgstr "slova"
+
+msgid "show tag cloud"
+msgstr "prikaži tag oblak"
+
+msgid "cloud"
+msgstr "oblak"
+
+msgid "Are you sure?"
+msgstr "Sigurni ste?"
+
+msgid "Reset to default values"
+msgstr "Povratak na pretpostavljene vrijednosti"
+
+msgid "delete all photos from your favorites"
+msgstr "izbriši sve slike iz omiljenih"
+
+msgid "Sent by"
+msgstr "Poslano od"
+
+msgid "Cookies are blocked or not supported by your browser. You must enable cookies to connect."
+msgstr "Kolačići su onemogućeni ili nisu podržani od vašeg preglednika. Morate ih omogućiti za prijavu."
+
+msgid "Edit a comment"
+msgstr "Uredi komentar"
+
+msgid "(!) This comment requires validation"
+msgstr "(!) Ovaj komentar zahtijeva ovjeru"
+
+msgid "Welcome"
+msgstr "Dobrodošli"
+
+msgid "Welcome to your Piwigo photo gallery!"
+msgstr "Dobrodošli u vašu Piwigo galeriju slika!"
+
+msgid "... or browse your empty gallery"
+msgstr "... ili pregledajte praznu galeriju"
+
+msgid "... or please deactivate this message, I will find my way by myself"
+msgstr "... ili možete isključiti ovu poruku, nekako ću se snaći sam"
+
+msgid "Hello %s, your Piwigo photo gallery is empty!"
+msgstr "Zdravo %s, vaša Piwigo galerija je prazna!"
+
+msgid "I want to add photos"
+msgstr "Želim dodati slike"
+
+msgid "Manage this user comment: %s"
+msgstr "Upravljanje ovim korisničkim komentarom: %s"
+
+msgid "This author modified following comment:"
+msgstr "Ovaj autor je promijenio slijedeći komentar:"
+
+msgid "This author removed the comment with id %d"
+msgstr "Ovaj autor je uklonio komentar sa id %d"
+
+msgid "html tags are not allowed in login"
+msgstr "u korisničkim podacima nisu dozvoljene html oznake"
+
+msgid "%d rates"
+msgstr "%d ocjena"
+
+msgid "Rating score"
+msgstr "Rezultat ocjenjivanja"
+
+msgid "Invalid username or email"
+msgstr "Korisničko ime ili email nisu valjani"
+
+msgid "Password reset is not allowed for this user"
+msgstr "Ovom korisniku nije dozvoljeno ponovno postavljanje lozinke"
+
+msgid "User \"%s\" has no email address, password reset is not possible"
+msgstr "Korisnik \"%s\" nema email adresu, ponovno postavljanje lozinke nije moguće"
+
+msgid "Someone requested that the password be reset for the following user account:"
+msgstr "Netko je zatražio ponovno postavljanje zaboravljene lozinke za korisnički račun:"
+
+msgid "Username \"%s\" on gallery %s"
+msgstr "Korisničko ime \"%s\" na galeriji %s"
+
+msgid "To reset your password, visit the following address:"
+msgstr "Za izmjenu zaboravljene lozinke posjetite:"
+
+msgid "If this was a mistake, just ignore this email and nothing will happen."
+msgstr "Ukoliko ste greškom dobili ovu poruku slobodno je zanemarite i ništa se neće desiti."
+
+msgid "Password Reset"
+msgstr "Zaboravili ste lozinku?"
+
+msgid "Check your email for the confirmation link"
+msgstr "Provjerite svoj email, naći ćete link za potvrdu."
+
+msgid "Invalid key"
+msgstr "Ključ nije valjan"
+
+msgid "The passwords do not match"
+msgstr "Lozinke se ne podudaraju"
+
+msgid "Your password has been reset"
+msgstr "Lozinka vam je izmijenjena"
+
+msgid "Return to home page"
+msgstr "Povratak na početnu stranicu"
+
+msgid "Please enter your username or email address."
+msgstr "Molimo vas da unesete vaše korisničko ime ili email adresu."
+
+msgid "You will receive a link to create a new password via email."
+msgstr "Link za izmjenu lozinke poslan vam je u email poruci."
+
+msgid "Username or email"
+msgstr "Korisničko ime ili lozinka"
+
+msgid "Change my password"
+msgstr "Promjena lozinke"
+
+msgid "Enter your new password below."
+msgstr "Unesite vašu novu lozinku."
+
+msgid "EXIF Metadata"
+msgstr "EXIF metapodaci"
+
+msgid "IPTC Metadata"
+msgstr "IPTC metapodaci"
+
+msgid "Edit"
+msgstr "Uredi"
+
+msgid "%d rate"
+msgstr "%d ocjena"
+
+msgid "2small"
+msgstr "XXS - sitno"
+
+msgid "Bad request"
+msgstr "Krivi zahtjev"
+
+msgid "Date created, new &rarr; old"
+msgstr "Datum nastanka, new &rarr; old"
+
+msgid "Date created, old &rarr; new"
+msgstr "Datum nastanka, old &rarr; new"
+
+msgid "Date posted, new &rarr; old"
+msgstr "Datum objave, new &rarr; old"
+
+msgid "Date posted, old &rarr; new"
+msgstr "Datum objave, old &rarr; new"
+
+msgid "Desktop"
+msgstr "Desktop"
+
+msgid "File name, A &rarr; Z"
+msgstr "Ime datoteke, A &rarr; Z"
+
+msgid "File name, Z &rarr; A"
+msgstr "Ime datoteke, Z &rarr; A"
+
+msgid "Forbidden"
+msgstr "Zabranjeno"
+
+msgid "Hello %s,"
+msgstr "Pozdrav %s,"
+
+msgid "Here are your connection settings"
+msgstr "Postavke za povezivanje"
+
+msgid "If you think you've received this email in error, please contact us at %s"
+msgstr "Ukolio ste greškom primili ovu poruku, molimo kontaktirajte nas na %s"
+
+msgid "Manual sort order"
+msgstr "Ručno sortiranje"
+
+msgid "Mobile"
+msgstr "Mobilna verzija"
+
+msgid "Numeric identifier, 1 &rarr; 9"
+msgstr "Brojčana oznaka, 1 &rarr; 9"
+
+msgid "Numeric identifier, 9 &rarr; 1"
+msgstr "Brojčana oznaka, 9 &rarr; 1"
+
+msgid "Original"
+msgstr "Izvorno"
+
+msgid "Page not found"
+msgstr "Stranica nije pronađena"
+
+msgid "Password: %s"
+msgstr "Lozinka: %s"
+
+msgid "Permalink for album not found"
+msgstr "Stalna poveznica za album nije pronađena"
+
+msgid "Photo sizes"
+msgstr "Veličine fotografije"
+
+msgid "Photo title, A &rarr; Z"
+msgstr "Naziv fotografije, A &rarr; Z"
+
+msgid "Photo title, Z &rarr; A"
+msgstr "Naziv fotografije, Z &rarr; A"
+
+msgid "Piwigo encountered a non recoverable error"
+msgstr "Došlo je do greške u Piwigo sustavu."
+
+msgid "Rating score, high &rarr; low"
+msgstr "Ocjena, , high &rarr; low"
+
+msgid "Rating score, low &rarr; high"
+msgstr "Ocjena, low &rarr; high"
+
+msgid "Requested album does not exist"
+msgstr "Album ne postoji"
+
+msgid "Requested tag does not exist"
+msgstr "Ta oznaka ne postoji"
+
+msgid "Send my connection settings by email"
+msgstr "Pošalji moje korisničke podatke e-mailom"
+
+msgid "Show latest comments first"
+msgstr "Prikaži prvo najnovije komentare"
+
+msgid "Show oldest comments first"
+msgstr "Prikaži prvo najstarije komentare"
+
+msgid "Successfully registered, you will soon receive an email with your connection settings. Welcome!"
+msgstr "Uspješno ste se regstrirali. Uskoro ćete primiti postavke e-mailom. Dobrodošli!"
+
+msgid "Thank you for registering at %s!"
+msgstr "Hvala za regitraciju na %s"
+
+msgid "Username modification"
+msgstr "Promjena korisničkog imena"
+
+msgid "Username: %s"
+msgstr "Korisničko ime: %s"
+
+msgid "View in"
+msgstr "Pogledaj u"
+
+msgid "Visits, high &rarr; low"
+msgstr "Posjeti, high &rarr; low"
+
+msgid "Visits, low &rarr; high"
+msgstr "Posjeti, low &rarr; high"
+
+msgid "Your username has been successfully changed to : %s"
+msgstr "Korisničko ime je uspješno promijenjeno u: %s"
+
+msgid "large"
+msgstr "L - veliko"
+
+msgid "medium"
+msgstr "M - srednje"
+
+msgid "small"
+msgstr "S - malo"
+
+msgid "square"
+msgstr "Kvadrat"
+
+msgid "thumb"
+msgstr "Sličica"
+
+msgid "xlarge"
+msgstr "XL - jako veliko"
+
+msgid "xsmall"
+msgstr "Xs - jako malo"
+
+msgid "xxlarge"
+msgstr "XXL - ogromno"
+
+msgid "Email address is mandatory"
+msgstr "E-mail adresa je obavezna"
+
+msgid "Username is mandatory"
+msgstr "Korisničko ime je obavezno"
+
+msgid "Website"
+msgstr "Web sjedište"
+
+msgid "Your website URL is invalid"
+msgstr "URL vašeg web sjedišta nije valjan"
+
+msgid "mandatory"
+msgstr "obavezno"
+
+msgid "Password is missing. Please enter the password."
+msgstr "Nedostaje zaporka. Molimo unesite zaporku."
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "Nedostaje potvrda zaporke. Molimo potvrdite odabranu zaporku."
+

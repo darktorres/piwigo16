@@ -1,0 +1,140 @@
+# Piwigo translation — ar_EG
+# Source: install.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ar_EG\n"
+"Plural-Forms: nplurals=6; plural=(n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 ? 4 : 5);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "PHP 5 is required"
+msgstr "مطلوب PHP 5.2"
+
+msgid "Piwigo may try to switch your configuration to PHP 5 by creating or modifying a .htaccess file."
+msgstr ".htaccess عن طريق تعديل او انشاء ملف PHP 5.2 قد تحاول تعديل ملفاتك الى Piwigo"
+
+msgid "Piwigo was not able to configure PHP 5."
+msgstr ".PHP 5.2 غير قادر على تعديل Piwigo كان"
+
+msgid "Try to configure PHP 5"
+msgstr ".PHP 5.2 حاول تعديل "
+
+msgid "You may referer to your hosting provider's support and see how you could switch to PHP 5 by yourself."
+msgstr "يجب التوجه إلى دعم مزود الاستضافة الخاص بك حتى نرى كيف يمكنك التبديل .PHP 5.2 من قبل نفسك الى"
+
+msgid "Need help ? Ask your question on <a href=\"%s\">Piwigo message board</a>."
+msgstr "بحاجة الى مساعدة؟ أسأل سؤالك فى <a href=\"%s\">لوحة الرسائل</a>."
+
+msgid "You can download the config file and upload it to local/config directory of your installation."
+msgstr "يمكنك تحميل ملف الconfig و وضعه فى local/config في التثبيت."
+
+msgid "database tables names will be prefixed with it (enables you to manage better your tables)"
+msgstr "سيتم بادئة أسماء جدول قاعدة البيانات بها (تمكنك من إدارة الجداول الخاصة بك بشكل أفضل)"
+
+msgid "An alternate solution is to copy the text in the box above and paste it into the file \"local/config/database.inc.php\" (Warning : database.inc.php must only contain what is in the textarea, no line return or space character)"
+msgstr ":الحل البديل هو نسخ النص في المربع بالأعلى ولصقه في ملف \r\n\"local/config/database.inc.php\" \r\ndatabase.inc.php :تحذير)\r\nيجب أن يحتوي على ما هو موجود في ناحية النص فقط، لا عودة او حرف مساف("
+
+msgid "Creation of config file local/config/database.inc.php failed."
+msgstr "config فشل إنشاء ملف التكوين \r\nlocal/config/database.inc.php"
+
+msgid "Database table prefix"
+msgstr "بادئة جداول قاعدة البيانات"
+
+msgid "Default gallery language"
+msgstr "لغة المعرض الافتراضية "
+
+msgid "Installation"
+msgstr "تثبيت"
+
+msgid "user login given by your host provider"
+msgstr "تسجيل دخول المستخدم توفيره من قبل مضيف السرفر الخاص بك"
+
+msgid "user password given by your host provider"
+msgstr "كلمة مرور المستخدم التي يوفرها مضيف السرفر الخاص بك"
+
+msgid "verification"
+msgstr "التحقق"
+
+msgid "webmaster login can't contain characters ' or \""
+msgstr "\" تسجيل دخول المسؤول عن الموقع قد لا تحتوي على العلامات ' او"
+
+msgid "Note you can change your configuration by yourself and restart Piwigo after that."
+msgstr ".Piwigo لاحظ انه يمكنك تغيير البيانات الخاصة بك من نفسك ثم قم بإعادة تشغيل"
+
+msgid "Sorry!"
+msgstr "معذرة!"
+
+msgid "Start Install"
+msgstr "بدء التثبيت"
+
+msgid "User"
+msgstr "مستخدم"
+
+msgid "Visitors will be able to contact site administrator with this mail"
+msgstr "سيتمكن الزوار من استخدام هذا البريد الإلكتروني للاتصال بالمسؤول عن الموقع"
+
+msgid "Welcome to my photo gallery"
+msgstr "مرحبا بكم في معرض الصور الخاص بي"
+
+msgid "Welcome to your new installation of Piwigo!"
+msgstr "!Piwigoمرحبا بكم في التثبيت الجديد ل"
+
+msgid "also given by your host provider"
+msgstr "زودت أيضا من قبل موفر استضافة الخاص بك"
+
+msgid "enter a login for webmaster"
+msgstr "من فضلك ادخل اسم المستخدم المسؤول عن الموقع"
+
+msgid "localhost or other, supplied by your host provider"
+msgstr "المضيف المحلي أو غيره، مقدم من مضيف السرفر الخاص بك"
+
+msgid "please enter your password again"
+msgstr "يرجى إدخال كلمة المرور مرة أخرى"
+
+msgid "Don't hesitate to consult our forums for any help : %s"
+msgstr "%s :لا تتردد في استشارة منتدياتنى للحصول على اي مساعدة"
+
+msgid "Basic configuration"
+msgstr "التعديل الأصلى"
+
+msgid "Can't connect to server"
+msgstr "لا يمكن الاتصال بالسرفر"
+
+msgid "Congratulations, Piwigo installation is completed"
+msgstr "Piwigo تهانينا، اكتمال تنزيل"
+
+msgid "Connection to server succeed, but it was impossible to connect to database"
+msgstr "كان الاتصال السرفر ناجح، ولكن الاتصال إلى قاعدة البيانات غير ممكن."
+
+msgid "Database configuration"
+msgstr "تعديل قاعدة بيانات"
+
+msgid "Database name"
+msgstr "اسم قاعدة البيانات"
+
+msgid "Download the config file"
+msgstr "تحميل ملف التعديل"
+
+msgid "Hope to see you back soon."
+msgstr ".نأمل أن نراكم مرة أخرى قريبا"
+
+msgid "Host"
+msgstr "المضيف"
+
+msgid "It appears your webhost is currently running PHP %s."
+msgstr "PHP %s يبدو  كأن مضيف الموقع الخاص بك يعمل على نسخة"
+
+msgid "It will be shown to the visitors. It is necessary for website administration"
+msgstr "سوف تظهر للزوار. فهى ضرورية لإدارة الموقع"
+
+msgid "Just another Piwigo gallery"
+msgstr "آخر Piwigo مجرد معرض "
+
+msgid "Keep it confidential, it enables you to access administration panel"
+msgstr "ابقيه سري، فإنه يتيح لك الوصول إلى لوحة الإدارة"
+
+msgid "Admin configuration"
+msgstr "تعديل الإدارة"
+

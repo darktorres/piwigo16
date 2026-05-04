@@ -1,0 +1,4242 @@
+# Piwigo translation — el_GR
+# Source: admin.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: el_GR\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid " and %d virtual"
+msgstr " και %d εικονικό"
+
+msgid " and %d virtuals"
+msgstr " και %d εικονικά"
+
+msgid "%d album including"
+msgstr "%d λεύκωμα περιλαμβάνει"
+
+msgid "%d album moved"
+msgid_plural "%d albums moved"
+msgstr[0] "%d λεύκωμα μετακινήθηκε"
+msgstr[1] "%d λευκώματα μετακινήθηκαν"
+
+msgid "%d albums including"
+msgstr "%d λευκώματα περιλαμβάνουν"
+
+msgid "%d anomaly has been corrected."
+msgid_plural "%d anomalies have been detected corrected."
+msgstr[0] "%d ασυνέπεια εντοπίστηκε και διορθώθηκε."
+msgstr[1] "%d ασυνέπειες εντοπίστηκαν και διορθώθηκαν."
+
+msgid "%d anomaly has been detected."
+msgid_plural "%d anomalies have been detected."
+msgstr[0] "%d ασυνέπεια εντοπίστηκε."
+msgstr[1] "%d ασυνέπειες εντοπίστηκαν."
+
+msgid "%d anomaly has been ignored."
+msgid_plural "%d anomalies have been ignored."
+msgstr[0] "%d ασυνέπεια αγνοήθηκε."
+msgstr[1] "%d ασυνέπειες αγνοήθηκαν."
+
+msgid "%d anomaly has not been corrected."
+msgid_plural "%d anomalies have not been corrected."
+msgstr[0] "%d ασυνέπεια δεν διορθώθηκε."
+msgstr[1] "%d ασυνέπειες δεν διορθώθηκαν."
+
+msgid "%d association"
+msgstr "%d συσχέτιση"
+
+msgid "%d associations"
+msgstr "%d συσχετίσεις"
+
+msgid "%d group"
+msgstr "%d ομάδα"
+
+msgid "%d groups"
+msgstr "%d ομάδες"
+
+msgid "%d guest"
+msgid_plural "%d guests"
+msgstr[0] "%d επισκέπτης"
+msgstr[1] "%d επισκέπτης"
+
+msgid "%d line filtered"
+msgid_plural "%d lines filtered"
+msgstr[0] "%d γραμμή παραλείφθηκε"
+msgstr[1] "%d γραμμές παραλείφθηκαν"
+
+msgid "%d mail was not sent."
+msgid_plural "%d mails were not sent."
+msgstr[0] "%d μήνυμα δεν εστάλη."
+msgstr[1] "%d μηνύματα δεν εστάλησαν."
+
+msgid "%d mail was sent."
+msgid_plural "%d mails were sent."
+msgstr[0] "%d μήνυμα εστάλη."
+msgstr[1] "%d μηνύματα εστάλησαν."
+
+msgid "%d member"
+msgid_plural "%d members"
+msgstr[0] "%d μέλος"
+msgstr[1] "%d μέλη"
+
+msgid "%d of %d photos selected"
+msgstr "%d από %d φωτογραφίες επιλεγμένες"
+
+msgid "%d parameter was updated."
+msgid_plural "%d parameters were updated."
+msgstr[0] "%d παράμετρος ενημερώθηκε."
+msgstr[1] "%d παράμετροι ενημερώθηκαν."
+
+msgid "%d photo was deleted"
+msgid_plural "%d photos were deleted"
+msgstr[0] "%d φωτογραφία διαγράφηκε"
+msgstr[1] "%d φωτογραφίες διαγράφηκαν"
+
+msgid "%d photos uploaded"
+msgstr "%d φωτογραφίες ανέβηκαν"
+
+msgid "%d physical"
+msgstr " %d φυσικά"
+
+msgid "%d tag"
+msgstr "%d ετικέτα"
+
+msgid "%d tags"
+msgstr "%d ετικέτες"
+
+msgid "%d user comment rejected"
+msgstr "%d σχόλιο απορρίφθηκε"
+
+msgid "%d user comment validated"
+msgstr "%d σχόλιο επικυρώθηκε"
+
+msgid "%d user comments rejected"
+msgstr "%d σχόλια απορρίφθηκαν"
+
+msgid "%d user comments validated"
+msgstr "%d σχόλια επικυρώθηκαν"
+
+msgid "%d user deleted"
+msgid_plural "%d users deleted"
+msgstr[0] "%d χρήστης διαγράφηκε"
+msgstr[1] "%d χρήστες διαγράφηκαν"
+
+msgid "%d user was not updated."
+msgid_plural "%d users were not updated."
+msgstr[0] "%d χρήστης δεν ενημερώθηκε."
+msgstr[1] "%d χρήστες δεν ενημερώθηκαν."
+
+msgid "%d user was updated."
+msgid_plural "%d users were updated."
+msgstr[0] "%d χρήστης ενημερώθηκε."
+msgstr[1] "%d χρήστες ενημερώθηκαν."
+
+msgid "%d user"
+msgid_plural "%d users"
+msgstr[0] "%d χρήστης"
+msgstr[1] "%d χρήστες"
+
+msgid "%d waiting for validation"
+msgstr "%d περιμένουν επικύρωση"
+
+msgid "%s must be to set to false in your local/config/config.inc.php file"
+msgstr "%s must be set to false in your local/config/config.inc.php file"
+
+msgid "%s value is not correct file because exif are not supported"
+msgstr "%s πεδίο είναι λάθος γιατί δεν υποστηρίζεται η πληροφορία EXIF"
+
+msgid "+ Add an upload box"
+msgstr "+ Προσθήκη και άλλου αρχείου για ανέβασμα"
+
+msgid ", click on"
+msgstr ", κάντε κλικ"
+
+msgid "Average rate"
+msgstr "Μέσος όρος βαθμολογίας"
+
+msgid "Rate"
+msgstr "Βαθμολογία"
+
+msgid "A new version of Piwigo is available."
+msgstr "Μια νέα έκδοση του Piwigo είναι διαθέσιμη."
+
+msgid "Access type"
+msgstr "Τύπος πρόσβασης"
+
+msgid "ACCESS_0"
+msgstr "Ελεύθερη πρόσβαση"
+
+msgid "ACCESS_1"
+msgstr "Πρόσβαση σε όλους"
+
+msgid "ACCESS_2"
+msgstr "Πρόσβαση στους εγγεγραμμένους χρήστες"
+
+msgid "ACCESS_3"
+msgstr "Πρόσβαση στους administrators"
+
+msgid "ACCESS_4"
+msgstr "Πρόσβαση στους webmasters"
+
+msgid "ACCESS_5"
+msgstr "Μη πρόσβαση"
+
+msgid "Action"
+msgstr "Ενέργεια"
+
+msgid "Actions"
+msgstr "Ενέργειες"
+
+msgid "Activate icon \"%s\""
+msgstr "Εικονίδιο ενεργοποίησης \"%s\""
+
+msgid "Activate Navigation Bar"
+msgstr "Ενεργοποίηση μπάρας πλοήγησης"
+
+msgid "Activate Navigation Thumbnails"
+msgstr "Ενεργοποίηση εικονιδίων πλοήγησης"
+
+msgid "Activate"
+msgstr "Eνεργοποίηση"
+
+msgid "Activate icon \"new\" next to albums and pictures"
+msgstr "Ενεργοποίηση του εικονιδίου \"νέο\" μετά από τα άλμπουμς και εικόνες"
+
+msgid "Active Languages"
+msgstr "Ενεργοποίηση Γλώσσων"
+
+msgid "Active Plugins"
+msgstr "Ενεργοποίηση Προσθέτων"
+
+msgid "Active Themes"
+msgstr "Ενεργοποίηση Θεμάτων"
+
+msgid "Add a criteria"
+msgstr "Προσθήκη ενός κριτηρίου"
+
+msgid "Add a filter"
+msgstr "Προσθήκη ενός φίλτρου"
+
+msgid "Add a tag"
+msgstr "Προσθήκη μιας ετικέτας"
+
+msgid "Add a user"
+msgstr "Προσθήκη ενός χρήστη"
+
+msgid "Add a virtual album"
+msgstr "Προσθήκη ενός εικονικού άλμπουμ"
+
+msgid "Add another set of photos"
+msgstr "Προσθήκη μιας άλλης ομάδας φωτογραφιών"
+
+msgid "Add detailed content"
+msgstr "Προσθήκη μερικών λεπτομερών περιοχομένων"
+
+msgid "Add group"
+msgstr "Προσθήκη γκρουπ"
+
+msgid "Add New Language"
+msgstr "Προσθήκη Νέας Γλώσσας"
+
+msgid "add new photos to caddie"
+msgstr "Προσθήκη νέας φωτογραφίας στο κουτί"
+
+msgid "Add New Theme"
+msgstr "Προσθήκη ενός νέου θέματος"
+
+msgid "Add Photos"
+msgstr "Προσθήκη φωτογραφιών"
+
+msgid "Add to caddie"
+msgstr "προσθήκη στο καλάθι"
+
+msgid "Upload Photos"
+msgstr "Ανέβασμα φωτογραφιών"
+
+msgid "Select an album"
+msgstr "Επέλεξε άλμπουμ"
+
+msgid "... or "
+msgstr "... ή "
+
+msgid "create a new album"
+msgstr "δημιούργησε ένα νέο άλμπουμ"
+
+msgid "Select files"
+msgstr "Επέλεξε αρχεία"
+
+msgid "Start Upload"
+msgstr "Έναρξη ανεβάσματος"
+
+msgid "Learn more"
+msgstr "Μάθε περισσότερα"
+
+msgid "Maximum file size: %sB."
+msgstr "Μέγιστο μέγεθος αρχείου: %sB."
+
+msgid "Allowed file types: %s."
+msgstr "Επιτρεπόμενοι τύποι αρχείων: %s."
+
+msgid "Photo %s of %s"
+msgstr "Φωτογραφία  %s του %"
+
+msgid "All %d photos are selected"
+msgstr "Όλεςl %d οι φωτογραφίες επιλέχθηκαν"
+
+msgid "You are using the Browser uploader. Try the <a href=\"%s\">Flash uploader</a> instead."
+msgstr "Χρησιμοποιείς τον Flash uploader. Προβλήματα; Προσπάθησε το <a href=\"%s\">ανέβασμα μέσω φυλλομετρητή</a> instead."
+
+msgid "Exif extension not available, admin should disable exif use"
+msgstr "Η προέκταση για τα exif δεν είναι διαθέσιμη, ο διαχειριστής θα απενεργοποιήσει την χρήση του  exif"
+
+msgid "Hide"
+msgstr "Κρυφό"
+
+msgid "Level 1"
+msgstr "Επαφές"
+
+msgid "Level 2"
+msgstr "Φίλοι"
+
+msgid "Level 4"
+msgstr "Οικογένεια"
+
+msgid "Level 8"
+msgstr "Διαχειριστές"
+
+msgid "Set author"
+msgstr "Ορισμός συντάκτη"
+
+msgid "Set creation date"
+msgstr "Ορισμός ημέρας δημιουργίας"
+
+msgid "Set title"
+msgstr "Ορισμός τίτλου"
+
+msgid "set to"
+msgstr "Ορισμός σε"
+
+msgid "Settings"
+msgstr "Ρυθμίσεις"
+
+msgid "show details"
+msgstr "Εμφάνιση λεπτομερειών"
+
+msgid "Show info"
+msgstr "Εμφάνιση πληροφοριών"
+
+msgid "Show menubar"
+msgstr "Εμφάνιση γραμμής μενού"
+
+msgid "Simulation"
+msgstr "Προσομείωση"
+
+msgid "singly represented"
+msgstr "σταθερη μικρογραφία άλμπουμ"
+
+msgid "Site manager"
+msgstr "Διαχείριση της ιστοσελίδας"
+
+msgid "Some themes and plugins may be not available yet."
+msgstr "Ορισμένα θέματα και πρόσθετα μπορεί να μην είναι διαθέσιμα ακόμα."
+
+msgid "Some upgrades are available for extensions."
+msgstr "Μερικές αναβαθμίσεις είναι διαθέσιμες για τις επεκτάσεις."
+
+msgid "Start pLoader and add your photos."
+msgstr "Εκκίνηση pLoader και προσθήκη φωτογραφιών."
+
+msgid "Statistics"
+msgstr "Στατιστικά"
+
+msgid "Status of user \"%s\" updated"
+msgstr "Η κατάσταση του χρήστη \"%s\" ενημερώθηκε"
+
+msgid "Status"
+msgstr "Κατάσταση"
+
+msgid "status"
+msgstr "κατάσταση"
+
+msgid "Storage album"
+msgstr "Αποθήκευση άλμπουμ"
+
+msgid "sub-albums"
+msgstr "υπό-άλμπουμ"
+
+msgid "Subscribe %s to Piwigo Announcements Newsletter"
+msgstr "Εγγραφή %s στο ενημερωτικό δελτίο ανακοινώσεων"
+
+msgid "Subscribe %s"
+msgstr "Εγγραφή %s"
+
+msgid "Subscribe to notification by mail"
+msgstr "Εγγραφή με κοινοποίηση μέσω ηλεκτρονικού ταχυδρομείου"
+
+msgid "Subscribe"
+msgstr "Εγγραφή"
+
+msgid "Subscribe/unsubscribe users"
+msgstr "Εγγραφή/διαγραφή χρηστών"
+
+msgid "Subscribed"
+msgstr "Εγγεγραμένος"
+
+msgid "Subscribers could be listed (available) only if there is new elements to notify."
+msgstr "Τα μέλη μπορεί να εμφανίζονται (διαθέσιμα) μόνο αν υπάρχουν νέα στοιχεία για ενημέρωση."
+
+msgid "Sum of rates"
+msgstr "Άθροισμα των τιμών"
+
+msgid "Summary"
+msgstr "Περίληψη"
+
+msgid "Support"
+msgstr "Υποστήριξη"
+
+msgid "Albums authorized thanks to group associations"
+msgstr "Τα άλμπουμς εξουσιοδοτήθηκαν εξαιτίας των σχέσεων του γκρουπ."
+
+msgid "Albums automatically sorted"
+msgstr "Το άλμπουμ ταξινομήθηκε αυτόματα"
+
+msgid "albums deleted in the database"
+msgstr "Το άλμπουμ διαγράφηκε από τη βάση δεδομένων."
+
+msgid "All extensions are up to date."
+msgstr "Όλα τα πρόσθετα ενημερώθηκαν."
+
+msgid "All languages are up to date."
+msgstr "Όλες οι γλώσσες έχουν ενημερωθεί."
+
+msgid "All optimizations have been successfully completed."
+msgstr "Όλες οι βελτιώσεις έχουν ολοκληρωθεί επιτυχώς."
+
+msgid "All plugins are up to date."
+msgstr "Όλα τα plugins έχουν ενημερωθεί."
+
+msgid "All themes are up to date."
+msgstr "Όλα τα θέματα έχουν ενημερωθεί."
+
+msgid "all"
+msgstr "Όλα"
+
+msgid "Allow rating"
+msgstr "Να επιτρέπεται η βαθμολογία"
+
+msgid "Allow user customization"
+msgstr "Να επιτρέπεται η παραμετροποίηση από τους χρήστες"
+
+msgid "Allow user registration"
+msgstr "Να επιτρέπεται η εγγραφή χρηστών"
+
+msgid "Allow users to delete their own comments"
+msgstr "Αν επιτρέπεται οι χρήστες να σβήνουν τα δικά τους σχόλια"
+
+msgid "Allow users to edit their own comments"
+msgstr "Να επιτρέπεται οι χρήστες να διορθώνουν τα δικά τους σχόλια"
+
+msgid "an error happened"
+msgstr "Συνέβη ένα σφάλμα"
+
+msgid "An error has occured during extract. Please check files permissions of your piwigo installation.<br><a href=\"%s\">Click here to show log error</a>."
+msgstr "Συνέβη ένα λάθος κατά την εξαγωγή. Παρακαλούμε ελέγξτε τα δικαιώματα των αρχείων της εγκατάστασης του piwigo.<br><a href=\"%s\">Πάτα εδώ να δεις τα λάθη</a>."
+
+msgid "An error has occured during upgrade."
+msgstr "Συνέβη ένα λάθος κατά την αναβάθμιση."
+
+msgid "An error occured during extraction (%s)."
+msgstr "Συνέβη ένα λάθος κατά την διάρκεια της εξαγωγής των αρχείων (%s)."
+
+msgid "An information email was sent to group \"%s\""
+msgstr "Email πληροφόρησης έχουν αποσταλεί στην ομάδα \"%s\""
+
+msgid "and"
+msgstr "και"
+
+msgid "Anomaly"
+msgstr "Ανωμαλία"
+
+msgid "Anyway only webmasters can see this tab and never administrators."
+msgstr "Τέλος πάντων μόνο οι webmasters μπορούν να δουν αυτήν την καρτέλα, όχι οι administrators."
+
+msgid "Apply action"
+msgstr "Εφαρμογή δράσης"
+
+msgid "Apply selected corrections"
+msgstr "Εφαρμογή επιλεγμένων διορθώσεων"
+
+msgid "Apply to sub-albums"
+msgstr "Επιλογή υπό-άλμπουμ"
+
+msgid "%s has been successfully updated."
+msgstr "%s έχει ενημερωθεί με επιτυχία."
+
+msgid "%s photos can not be regenerated"
+msgstr "%s φωτογραφίες δεν μπορούν να αναπαραχθούν"
+
+msgid "%s photos have been regenerated"
+msgstr "%s φωτογραφίες έχουν αναπαραχθεί"
+
+msgid "(this tag will be deleted)"
+msgstr "(αυτή η ετικέτα θα διαγραφεί)"
+
+msgid "Activate comments"
+msgstr "Ενεργοποίηστε τα σχόλια"
+
+msgid "Add tags"
+msgstr "Προσθέστε ετικέτες"
+
+msgid "Add write access to the \"%s\" directory"
+msgstr "Προσθέστε δικαιώματα εγγραφής στον κατάλογο \"%s\""
+
+msgid "Add/delete a permalink"
+msgstr "Προσθέστε/Διαγράψτε μόνιμο σύνδεσμο"
+
+msgid "Add"
+msgstr "Προσθέστε"
+
+msgid "Administration Home"
+msgstr "Αρχική σελίδα διαχείρησης"
+
+msgid "Advanced features"
+msgstr "Προηγμένες λειτουργίες"
+
+msgid "Album \"%s\" has been added"
+msgstr "Το λεύκωμα \"%s\" έχει προστεθεί"
+
+msgid "Album \"%s\" now contains %d photos"
+msgstr "Το λεύκωμα \"%s\" περιέχει τώρα  %d φωτογραφίες"
+
+msgid "Album list management"
+msgstr "Διαχείριση Λίστας Λευκωμάτων"
+
+msgid "Album manual order was saved"
+msgstr "Το εγχειρίδιο λευκώματος έχει αποθηκευτεί"
+
+msgid "Album name"
+msgstr "Όνομα Λευκώματος"
+
+msgid "Album photos associated to the following albums: %s"
+msgstr "Λευκώματα φωτογραφιών που σχετίζονται με τα ακόλουθα λευκώματα:%s"
+
+msgid "Album updated successfully"
+msgstr "Το λεύκωμα ενημερώθηκε με επιτυχία"
+
+msgid "Approximate maximum resolution: %dM pixels (that's %dx%d pixels)."
+msgstr "Κατά προσέγγιση μέγιστη ανάλυση:  %dM pixels (αυτό είναι %dx%d pixels)."
+
+msgid "Are you sure to install this upgrade? You must verify if this version does not need uninstallation."
+msgstr "Είστε βέβαιοι ότι θέλετε να εγκαταστήσετε αυτήν την αναβάθμιση; Θα πρέπει να ελέγξετε αν αυτή η έκδοση δεν χρειάζεται πριν απεγκατάσταση."
+
+msgid "Are you sure you want to delete this plugin?"
+msgstr "Είστε βέβαιοι ότι θέλετε να διαγράψετε αυτό το πρόσθετο;"
+
+msgid "Are you sure you want to install this plugin?"
+msgstr "Είστε βέβαιοι ότι θέλετε να εγκαταστήσετε αυτό το πρόσθετο;"
+
+msgid "Associate to album"
+msgstr "Συσχετίστε με το λεύκωμα"
+
+msgid "Associated"
+msgstr "Συσχετίζεται με"
+
+msgid "Authorize users to add comments on selected albums"
+msgstr "Εξουσιοδοτήστε χρήστες να προσθέτουν σχόλια στα επιλεγμένα λευκώματα"
+
+msgid "Authorized"
+msgstr "Εξουσιοδοτημένος"
+
+msgid "Automatic correction"
+msgstr "Αυτόματη διόρθωση"
+
+msgid "Available only with HTML format"
+msgstr "Διατίθεται μόνο με μορφή HTML"
+
+msgid "Batch Manager"
+msgstr "Διαχείρηση ενεργειών κατά δέσμη"
+
+msgid "Bound Theme"
+msgstr "Συνδεδεμένο Θέμα"
+
+msgid "By %s"
+msgstr "Με %s"
+
+msgid "By default, Piwigo will create a new websize from the HD (high definition) version of your photo."
+msgstr "Από προεπιλογή, το Piwigo θα δημιουργήσει μια νέα ιστοσελίδα από τη HD (υψηλής ευκρίνειας) έκδοση των φωτογραφιών σας."
+
+msgid "By rank"
+msgstr "Βάσει σειράς"
+
+msgid "Caddie management"
+msgstr "Διαχείρηση Caddie"
+
+msgid "added"
+msgstr "προστέθηκε"
+
+msgid "albums added in the database"
+msgstr "το λεύκωμα προστεθηκε στη βάση δεδομένων"
+
+msgid "associate to group"
+msgstr "Συσχετίστε με την ομάδα"
+
+msgid "automatic order"
+msgstr "αυτόματη σειρά"
+
+msgid "average time"
+msgstr "μέσος χρόνος"
+
+msgid "between"
+msgstr "ανάμεσα"
+
+msgid "Caddie"
+msgstr "Καλάθι"
+
+msgid "Can't connect to server."
+msgstr "Σύνδεση με τον διακομιστή αδύνατη."
+
+msgid "Can't create temporary file."
+msgstr "Προσωρινό αρχείο δεν μπορεί να δημιουργηθεί."
+
+msgid "Can't download archive."
+msgstr "Το συμπιεσμένο αρχείο δεν μπορεί να κατέβει."
+
+msgid "Can't read or extract archive."
+msgstr "Το συμπιεσμένο αρχείο δεν μπορεί να διαβαστεί ή να εξαχθεί."
+
+msgid "Cannot delete the old permalink !"
+msgstr "Ο παλιός μόνιμος σύνδεσμος δεν μπορεί να διαγραφεί!"
+
+msgid "Change Admin Colors"
+msgstr "Αλλαγή χρωμάτων στο περιβάλλον διαχείρησης"
+
+msgid "Check all"
+msgstr "Ελέγξτε όλα"
+
+msgid "Check automatic corrections"
+msgstr "Ελέγξτε τις αυτόματες διορθώσεις"
+
+msgid "Check for updates"
+msgstr "Έλεγχος για ενημερώσεις"
+
+msgid "Check for upgrade failed for unknown reasons."
+msgstr "Ο έλεγχος για αναβάθμιση απέτυχε για άγνωστους λόγους."
+
+msgid "Check for upgrade"
+msgstr "Έλεγχος για αναβάθμιση"
+
+msgid "Check integrity"
+msgstr "Έλεγχος ακεραιότητας"
+
+msgid "Choose an action"
+msgstr "Επιλέξτε μια ενέργεια"
+
+msgid "Choose an option"
+msgstr "Επιλέξτε μια επιλογή"
+
+msgid "Classic display"
+msgstr "Κλασική οθόνη"
+
+msgid "Comments for all"
+msgstr "Σχόλια για όλους"
+
+msgid "Complementary mail content"
+msgstr "Συμπληρωματικό περιεχόμενο ταχυδρομείου"
+
+msgid "Configuration"
+msgstr "Διαμόρφωση"
+
+msgid "clean"
+msgstr "εκκαθάριση"
+
+msgid "Confirm merge"
+msgstr "Επιβεβαίωση συγχώνευσης"
+
+msgid "Continue processing treatment"
+msgstr "Συνεχίστε με την παρούσα συμπεριφορά"
+
+msgid "Correction applied with error"
+msgstr "Διόρθωση εφαρμόστηκε με λάθη"
+
+msgid "Correction applied with success"
+msgstr "Διόρθωση εφαρμόστηκε επιτυχώς"
+
+msgid "Correction the anomaly will cancel the fact that it's ignored"
+msgstr "Η ανωμαλία που διορθώθηκε δεν μπορεί πλέον να αγνοηθεί"
+
+msgid "Correction"
+msgstr "Διόρθωση "
+
+msgid "Create the \"%s\" directory at the root of your Piwigo installation"
+msgstr "Δημιουργία καταλόγου \"%s\" στη ρίζα της εγκατάστασης του Piwigo"
+
+msgid "Create this site"
+msgstr "Δημιουργήστε την ιστοσελίδα"
+
+msgid "Create"
+msgstr "Δημιουργήστε"
+
+msgid "Crop"
+msgstr "ενσωμάτωση"
+
+msgid "Current name"
+msgstr "Τρέχων όνομα"
+
+msgid "Database synchronization with files"
+msgstr "Συγχρονισμός βάσης δεδομένων με τα αρχεία"
+
+msgid "Database"
+msgstr "Βαση Δεδομένων"
+
+msgid "Date"
+msgstr "Ημερομηνία"
+
+msgid "Day"
+msgstr "Ημέρα"
+
+msgid "Deactivate all"
+msgstr "Απενεργοποίηση όλων"
+
+msgid "Deactivate"
+msgstr "Απενεργοποίηση"
+
+msgid "confirm"
+msgstr "επιβεβαίωση"
+
+msgid "created"
+msgstr "δημιουργήθηκε"
+
+msgid "Default comments order"
+msgstr "προκαθορισμένη σειρά σχολίων"
+
+msgid "Default display"
+msgstr "προκαθορισμένη προβολή οθόνης"
+
+msgid "Default photos order"
+msgstr "προκαθορισμένη σειράς φωτογραφιών"
+
+msgid "Default user cannot be deleted"
+msgstr "Ο προκαθορισμένος χρήστης δεν μπορεί να διαγραφεί"
+
+msgid "Default user does not exist"
+msgstr "Ο προκαθορισμένος χρήστης δεν υπάρχει"
+
+msgid "Delete Representant"
+msgstr "Διαγραφή μικρογραφίας λευκώματος"
+
+msgid "Delete orphan tags"
+msgstr "Διαγραφή ορφανών ετικετών"
+
+msgid "Delete selected photos"
+msgstr "Διαγραφή επιλεγμένων φωτογραφιών"
+
+msgid "Delete selected tags"
+msgstr "Διαγραφή επιλεγμένων ετικετών"
+
+msgid "Delete selected users"
+msgstr "Διαγραφή επιλεγμένων χρηστών"
+
+msgid "Delete this language"
+msgstr "Διαγραφή αυτής της γλώσσας"
+
+msgid "Delete this theme"
+msgstr "διαγράψετε αυτό το θέμα"
+
+msgid "Deleted on"
+msgstr "διαγραφεί"
+
+msgid "Deletions"
+msgstr "Διαγραφές"
+
+msgid "Deny selected groups"
+msgstr "Άρνηση επιλεγμένων ομάδων"
+
+msgid "Deny selected users"
+msgstr "Άρνηση επιλεγμένων ομάδων"
+
+msgid "Description"
+msgstr "Περιγραφή"
+
+msgid "Detailed informations"
+msgstr "Λεπτομερείς πληροφορίες"
+
+msgid "Directory does not exist"
+msgstr "Ο Κατάλογος δεν υπάρχει"
+
+msgid "Directory"
+msgstr "Κατάλογος"
+
+msgid "Discover album:"
+msgstr "Ανακαλύψτε λεύκωμα:"
+
+msgid "Display options"
+msgstr "Επιλογές εμφάνισης"
+
+msgid "Dissociate from album"
+msgstr "Αποσυνδέστε από το λεύκωμα"
+
+msgid "Dissociated"
+msgstr "Αποσυνδεδεμένο"
+
+msgid "Do you want to activate anyway?"
+msgstr "Θέλετε να ενεργοποιήσετε ούτως ή άλλως;"
+
+msgid "Documentation"
+msgstr "Τεκμηρίωση"
+
+msgid "Does not represent"
+msgstr "Δεν είναι μικρογραφία για"
+
+msgid "Download,"
+msgstr "Κατεβάστε,"
+
+msgid "Downloads"
+msgstr "Λήψεις"
+
+msgid "Drag to re-order"
+msgstr "Κάντε κλικ και σύρετε για εκ νέου στοίχηση"
+
+msgid "Drop into album"
+msgstr "Επιλέξτε ένα λεύκωμα"
+
+msgid "Duplicates"
+msgstr "Διπλα Αντίγραφα"
+
+msgid "Edit album permissions"
+msgstr "Επεξεργασία δικαιωμάτων λευκώματος"
+
+msgid "Edit album"
+msgstr "Επεξεργασία λευκώματος"
+
+msgid "Edit ranks"
+msgstr "Επεξεργασία αξιολογίσεων"
+
+msgid "Edit selected tags"
+msgstr "Επεξεργασία επιλεγμένων ετικετών"
+
+msgid "Edit tags"
+msgstr "Επεξεργασία ετικετών"
+
+msgid "Element type"
+msgstr "Τύπος στοιχείου"
+
+msgid "Element"
+msgstr "Στοιχείο "
+
+msgid "Email administrators when a comment is deleted"
+msgstr "Αποστολή ηλ. ταχυδρομείου στούς διαχειριστές όταν ένα σχόλιο διαγράφεται"
+
+msgid "Email administrators when a comment is modified"
+msgstr "Αποστολή ηλ. ταχυδρομείου στούς διαχειριστές όταν ένα σχόλιο επεξεργάστηκε"
+
+msgid "Email admins when a comment requires validation"
+msgstr "Αποστολή ηλ. ταχυδρομείου στούς διαχειριστές όταν ένα σχόλιο χρειάζετε επικύρωση"
+
+msgid "Email admins when a new user registers"
+msgstr "Αποστολή ηλ. ταχυδρομείου στούς διαχειριστές όταν ένας χρήστης εγγράφεται"
+
+msgid "Email admins when a valid comment is entered"
+msgstr "Αποστολή ηλ. ταχυδρομείου στούς διαχειριστές όταν εισάγεται ένα έγκυρο σχόλιο"
+
+msgid "Environment"
+msgstr "Περιβάλλον "
+
+msgid "Error list"
+msgstr "Λίστα των σφαλμάτων"
+
+msgid "Error on file \"%s\" : %s"
+msgstr "Σφάλμα στο αρχείο \"%s\":%s"
+
+msgid "Error when sending email to %s [%s]."
+msgstr "Σφάλμα κατά την αποστολή e-mail στο%s [%s]."
+
+msgid "default values"
+msgstr "προκαθορισμένες τιμές"
+
+msgid "default"
+msgstr "προκαθορισμένο"
+
+msgid "delete album"
+msgstr "Διαγράψτε το λεύκωμα"
+
+msgid "delete photo"
+msgstr "διαγραφή φωτογραφίας"
+
+msgid "delete this site and all its attached elements"
+msgstr "διαγράψετε αυτό το site και όλες τις σχετικές πληροφορίες"
+
+msgid "deleted"
+msgstr "διαγραμμένο"
+
+msgid "delete"
+msgstr "διαγραφή"
+
+msgid "directories + files"
+msgstr "κατάλογοι + αρχεία"
+
+msgid "display maximum informations (added albums and photos, deleted albums and photos)"
+msgstr "εμφανίζονται μέγιστες πληροφορίες (λευκώματα που προστέθηκαν και φωτογραφίες, διαγραμένα λευκώματα και φωτογραφίες)"
+
+msgid "display"
+msgstr "Εμφάνιση"
+
+msgid "dissociate from group"
+msgstr "Αποσυνδέστε από την ομάδα"
+
+msgid "ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW."
+msgstr "ΣΦΑΛΜΑ: ΑΥΤΟ ΤΟ ΠΡΟΣΘΕΤΟ ΛΕΙΠΕΙ ΑΛΛΑ ΕΙΝΑΙ ΕΓΚΑΤΕΣΤΗΜΕΝΟ! ΑΠΕΓΚΑΤΑΣΤΗΣΤΕ ΤΩΡΑ."
+
+msgid "ERROR"
+msgstr "ΣΦΑΛΜΑ"
+
+msgid "Errors caption"
+msgstr "Λάθος λεζάντες"
+
+msgid "Everybody"
+msgstr "Όλοι"
+
+msgid "Execution time is out, treatment must be continue [Estimated time: %d second]."
+msgid_plural "Execution time is out, treatment must be continue [Estimated time: %d seconds]."
+msgstr[0] "Ο χρόνος εκτέλεσης έχει τελειώσει, η  επεξεργασία πρέπει να συνεχιστεί [Εκτιμώμενος χρόνος:%d δευτερόλεπτα]."
+msgstr[1] "Ο χρόνος εκτέλεσης έχει υπερβεί, η  επεξεργασία πρέπει να συνεχιστεί [Εκτιμώμενος χρόνος:%d δευτερόλεπτα]."
+
+msgid "Extend for templates"
+msgstr "Ανεπτυγμένα πρότυπα"
+
+msgid "Extensions Update"
+msgstr "Ενημέρωση Επεκτάσεων"
+
+msgid "FTP + Synchronization"
+msgstr "Ο χρόνος εκτέλεσης έχει υπερβεί, η  επεξεργασία πρέπει να συνεχιστεί [Εκτιμώμενος χρόνος:%d δευτερόλεπτα]."
+
+msgid "Failed to write file to disk"
+msgstr "Αποτυχία εγγραφής αρχείου στο δίσκο"
+
+msgid "File upload stopped by extension"
+msgstr "Φόρτωση αρχείου διακόπηκε από επέκταση"
+
+msgid "File/directory read error"
+msgstr "λάθος ανάγνωσης Αρχείου / Καταλόγου "
+
+msgid "File"
+msgstr "Αρχείο"
+
+msgid "Find a new representant by random"
+msgstr "Βρείτε μια νεα τυχαία μικρογραφία λευκώματος"
+
+msgid "Follow Orientation"
+msgstr "Ακολουθήστε Προσανατολισμό"
+
+msgid "Following plugins may not be compatible with the new version of Piwigo:"
+msgstr "Τα ακόλουθα πρόσθετα μπορεί να μην είναι συμβατα με τη νέα έκδοση του Piwigo:"
+
+msgid "Following themes may not be compatible with the new version of Piwigo:"
+msgstr "Τα ακόλουθα Θέματα μπορεί να μην είναι συμβατα με τη νέα έκδοση του Piwigo:"
+
+msgid "Forbid this language to users"
+msgstr "Λάθος λεζάντες"
+
+msgid "Forbid this theme to users"
+msgstr "σφάλματα κατά το συγχρονισμό"
+
+msgid "Forbidden"
+msgstr "ήδη συγχρονισμένα φωτογραφίες"
+
+msgid "Form"
+msgstr "Όλοι"
+
+msgid "GD library is missing"
+msgstr "υπάρχον λεύκωμα"
+
+msgid "GD version"
+msgstr "Ανεπτυγμένα πρότυπα"
+
+msgid "Gallery title"
+msgstr "Ο χρόνος εκτέλεσης έχει τελειώσει, η  επεξεργασία πρέπει να συνεχιστεί [Εκτιμώμενος χρόνος:%d δευτερόλεπτα]."
+
+msgid "General statistics"
+msgstr "Ενημέρωση Επεκτάσεων"
+
+msgid "Get Support on Piwigo Forum"
+msgstr "Αποτυχία εγγραφής αρχείου στο δίσκο"
+
+msgid "Give write access (chmod 777) to \"%s\" directory at the root of your Piwigo installation"
+msgstr "Φόρτωση αρχείου διακόπηκε από επέκταση"
+
+msgid "Go to %s or %s for more informations"
+msgstr "λάθος ανάγνωσης Αρχείου / Καταλόγου "
+
+msgid "Go to"
+msgstr "Βρείτε μια νεα τυχαία μικρογραφία λευκώματος"
+
+msgid "Grant selected groups"
+msgstr "πρώτη φωτογραφία προστέθηκε στις %s"
+
+msgid "Grant selected users"
+msgstr "Ακολουθήστε Προσανατολισμό"
+
+msgid "Graphics Library"
+msgstr "Τα ακόλουθα πρόσθετα μπορεί να μην είναι συμβατα με τη νέα έκδοση του Piwigo:"
+
+msgid "Group management"
+msgstr "Διαχείριση Ομάδων"
+
+msgid "Group name"
+msgstr "Όνομα Ομάδας"
+
+msgid "Group"
+msgstr "Ομάδα"
+
+msgid "Groups"
+msgstr "Ομάδες"
+
+msgid "Guest Settings"
+msgstr "Ρυθμίσεις Επισκέπτη"
+
+msgid "Guest cannot be deleted"
+msgstr "Επισκέπτες δεν μπορούν να διαγραφούν"
+
+msgid "Guests"
+msgstr "Επισκέπτες"
+
+msgid "Height"
+msgstr "Ύψος"
+
+msgid "Hello,"
+msgstr "Γεια, "
+
+msgid "Hello"
+msgstr "Γεια"
+
+msgid "Help Me"
+msgstr "Βοηθήστε με"
+
+msgid "High definition enabled"
+msgstr "Υψηλή ευκρίνεια ενεργοποιημένη"
+
+msgid "High definition"
+msgstr "Υψηλή ευκρίνεια"
+
+msgid "History"
+msgstr "Ιστορικό"
+
+msgid "Hit"
+msgstr "Χτυπήματα"
+
+msgid "Hour"
+msgstr "Ώρες"
+
+msgid "I decide to update anyway"
+msgstr "Έχω Αποφάσισει να ενημερώσω ούτως ή άλλως"
+
+msgid "If no HD is available and if the current websize is bigger than resize dimensions, Piwigo will move it as HD and create a downsized websize photo from it."
+msgstr "Εάν δεν είναι διαθέσιμη HD και αν το τρέχον μέγεθος του ιστού είναι μεγαλύτερο από τις διαστάσεις αλλαγής μεγέθους, Piwigo θα το μετατρέψει ως HD και θα δημιουργήσει μια συρρικνωμένη σε μέγεθος φωτογραφία αντί αυτού."
+
+msgid "If you encounter problems or have any question, please send a message to"
+msgstr "Εάν αντιμετωπίσετε προβλήματα ή έχετε οποιαδήποτε ερώτηση, παρακαλούμε να στείλετε ένα μήνυμα στο"
+
+msgid "Ignore All"
+msgstr "Παράβλεψη όλων"
+
+msgid "Ignore selected anomalies"
+msgstr "Παράβλεψη επιλεγμένων ανωμαλιών"
+
+msgid "Ignore this update"
+msgstr "Αγνοήστε αυτήν την ενημερωμένη έκδοση"
+
+msgid "Image Quality"
+msgstr "Ποιότητα της εικόνας"
+
+msgid "Image id"
+msgstr "id εικόνας"
+
+msgid "Images manual order was saved"
+msgstr "Η χειροκίνητη διάταξη εικόνων αποθηκεύτικε"
+
+msgid "Impossible automatic correction"
+msgstr "Αυτόματη διόρθωση αδύνατη"
+
+msgid "Impossible to activate this theme, the parent theme is missing: %s"
+msgstr "Αυτό το θέμα δεν θα μπορούσε να ενεργοποιηθεί, επειδή το θέμα της μητρικής λείπει:%s"
+
+msgid "Impossible to deactivate this language, first set another language as default."
+msgstr "Αδύνατο να απενεργοποιήσετε αυτή τη γλώσσα, ορίστε πρώτα μια άλλη γλώσσα ως προεπιλεγμένη."
+
+msgid "Impossible to deactivate this language, you need at least one language."
+msgstr "Αδύνατο να απενεργοποιήσετε αυτή τη γλώσσα,χρειάζετε τουλάχιστον μια γλώσσα"
+
+msgid "Impossible to deactivate this theme, you need at least one theme."
+msgstr "Αδύνατο να απενεργοποιήσετε αυτό το θέμα, χρειάζετε τουλάχιστον ένα θέμα"
+
+msgid "Impossible to delete this theme. Other themes depends on it: %s"
+msgstr "Αυτό το θέμα δεν μπορεί να διαγραφεί, επειδή άλλα θέματα εξαρτόνται από αυτό:%s"
+
+msgid "In your php.ini file, the upload_max_filesize (%sB) is bigger than post_max_size (%sB), you should change this setting"
+msgstr "Στο αρχείο php.ini, η τιμή upload_max_filesize (%sB) είναι μεγαλύτερη από τη τιμή post_max_size (%sB), θα πρέπει να αλλάξετε αυτή τη ρύθμιση"
+
+msgid "Inactive Languages"
+msgstr "Ανενεργές Γλώσσες"
+
+msgid "Inactive Plugins"
+msgstr "Ανενεργά Πρόσθετα"
+
+msgid "Inactive Themes"
+msgstr "Ανενεργά Θέματα"
+
+msgid "errors during synchronization"
+msgstr "σφάλματα κατά το συγχρονισμό"
+
+msgid "even already synchronized photos"
+msgstr "ήδη συγχρονισμένα φωτογραφίες"
+
+msgid "existing album"
+msgstr "υπάρχον λεύκωμα"
+
+msgid "for the file format"
+msgstr "ΣΦΑΛΜΑ"
+
+msgid "for this file format"
+msgstr "ΣΦΑΛΜΑ: ΑΥΤΟ ΤΟ ΠΡΟΣΘΕΤΟ ΛΕΙΠΕΙ ΑΛΛΑ ΕΙΝΑΙ ΕΓΚΑΤΕΣΤΗΜΕΝΟ! ΑΠΕΓΚΑΤΑΣΤΗΣΤΕ ΤΩΡΑ."
+
+msgid "global mode"
+msgstr "Αρχείο"
+
+msgid "group \"%s\" added"
+msgstr "Τα ακόλουθα Θέματα μπορεί να μην είναι συμβατα με τη νέα έκδοση του Piwigo:"
+
+msgid "group \"%s\" deleted"
+msgstr "Η ομάδα \"%s\" διαγράφηκε"
+
+msgid "group \"%s\" updated"
+msgstr "Η ομάδα \"%s\" ενημερώθηκε"
+
+msgid "guest"
+msgstr "Επισκέπτης"
+
+msgid "height must be a number superior to"
+msgstr "το ύψος πρέπει να είναι ένα νούμερο μεγαλύτερο από"
+
+msgid "hide details"
+msgstr "απόκρυψη λεπτομερειών"
+
+msgid "high"
+msgstr "υψηλό"
+
+msgid "IP"
+msgstr "IP"
+
+msgid "Include display of recent photos grouped by dates"
+msgstr "Συμπεριλαβάνει απεικονίσεις από πρόσφατες φωτογραφίες ομαδοποιημένες κατά ημερομηνία"
+
+msgid "Information data registered in database"
+msgstr "Πληροφορίες για δεδομένα που έχουν καταχωρηθεί στη βάση δεδομένων"
+
+msgid "Informations"
+msgstr "Πληροφορίες"
+
+msgid "Install on your computer,"
+msgstr "Εγκαταστήστε στον υπολογιστή σας,"
+
+msgid "Installed Languages"
+msgstr "Εγκατεστημένες γλώσσες"
+
+msgid "Installed Themes"
+msgstr "Εγκατεστημένα θέματα"
+
+msgid "Install"
+msgstr "Εγκατάσταση"
+
+msgid "Instructions to use Piwigo"
+msgstr "Οδηγίες χρήσης Piwigo"
+
+msgid "Invert"
+msgstr "Αντιστροφή"
+
+msgid "Keep in touch with Piwigo project, subscribe to Piwigo Announcement Newsletter. You will receive emails when a new release is available (sometimes including a security bug fix, it's important to know and upgrade) and when major events happen to the project. Only a few emails a year."
+msgstr "Μείνετε σε επαφή με το έργο του Piwigo, εγγραφείτε στο Newsletter Ανακοινώσεων του Piwigo. Θα σας αποστέλετε e-mail όταν μια νέα έκδοση είναι διαθέσιμη (μερικές φορές περιλαμβανομένων μια διώρθοση ασφαλείας, είναι σημαντικό να γνωρίζετε και να αναβαθμίσετε) και όταν συμβαίνουν σημαντικά γεγονότα για το έργο. Μόνο μερικά emails το χρόνο"
+
+msgid "Language has been successfully installed"
+msgstr "Η Γλώσσα έχει εγκατασταθεί με επιτυχία"
+
+msgid "Languages which need upgrade"
+msgstr "Οι Γλώσσες που χρειάζονται αναβάθμιση"
+
+msgid "Languages"
+msgstr "Γλώσσες"
+
+msgid "Last hit"
+msgstr "τελευταίο χτύπημα"
+
+msgid "Last import"
+msgstr "Τελευταία εισαγωγή"
+
+msgid "Last revisions"
+msgstr "Τελευταίες αναθεωρήσεις"
+
+msgid "Last send"
+msgstr "Τελευταία αποστολή"
+
+msgid "Level 0"
+msgstr "---"
+
+msgid "Link all album photos to a new album"
+msgstr "Σύνδεση όλων των φωτογραφιών του λευκώματος  σε ένα νέο λεύκωμα"
+
+msgid "Link all album photos to some existing albums"
+msgstr "Σύνδεση όλων των φωτογραφιών του λευκώματος σε ορισμένα υφιστάμενα λευκώματα"
+
+msgid "Linked albums"
+msgstr "Συνδεδεμένα λευκώματα"
+
+msgid "Local"
+msgstr "Τοπική"
+
+msgid "Lock albums"
+msgstr "Κλείδωμα άλμπουμ"
+
+msgid "Lock gallery"
+msgstr "Κλείδωμα γκαλερί"
+
+msgid "Locked"
+msgstr "Κλειδωμένο"
+
+msgid "Lock"
+msgstr "Κλείδωμα"
+
+msgid "Mail content"
+msgstr "Περιεχόμενο Αλληλογραφίας"
+
+msgid "Mail sent to %s [%s]."
+msgstr "Τα μηνύματα στάλθηκαν στο %s[%s]."
+
+msgid "Main \"guest\" user does not exist"
+msgstr "Ο κύριος χρήστης \"επισκέπτης\" δεν υπάρχει"
+
+msgid "Main \"guest\" user status is incorrect"
+msgstr "Η κατάσταση κύριου χρήστη \"επισκέπτης\" είναι εσφαλμένη"
+
+msgid "Main \"webmaster\" user does not exist"
+msgstr "Ο κύριος χρήστης \"webmaster\" δεν υπάρχει"
+
+msgid "Main \"webmaster\" user status is incorrect"
+msgstr "H κατάσταση του κύριου χρήστη \"webmaster\" είναι εσφαλμένη"
+
+msgid "Main Page"
+msgstr "Αρχική σελίδα"
+
+msgid "Maintenance"
+msgstr "Συντήρηση"
+
+msgid "Make this language available to users"
+msgstr "Κάντε αυτή η γλώσσα διαθέσημη στους χρήστες"
+
+msgid "Make this theme available to users"
+msgstr "Κάντε αυτό το θέμα διαθέσημο στους χρήστες"
+
+msgid "Manage Permissions"
+msgstr "Διαχείριση Δικαιωμάτων"
+
+msgid "Manage authorizations for selected albums"
+msgstr "Διαχειριστείτε τις άδειες για τα επιλεγμένα λευκώματα "
+
+msgid "Manage permissions for group \"%s\""
+msgstr "Διαχείριση δικαιωμάτων για την ομάδα \"%s\""
+
+msgid "Manage permissions for user \"%s\""
+msgstr "Διαχείριση δικαιωμάτων για το χρήστη \"%s\""
+
+msgid "Manage photo ranks"
+msgstr "Διαχείριση κατάταξης φωτογραφιών"
+
+msgid "Manage tags"
+msgstr "Διαχείριση ετικετών"
+
+msgid "Manage this set of %d photos"
+msgstr "Διαχειριστείτε το σύνολο των %d φωτογραφιών"
+
+msgid "Manage"
+msgstr "Διαχειριστείτε "
+
+msgid "Manual order"
+msgstr "Χειροκίνητη κατάταξη"
+
+msgid "Maximum height"
+msgstr "Μέγιστο ύψος"
+
+msgid "Maximum width"
+msgstr "Μέγιστο πλάτος"
+
+msgid "Members"
+msgstr "Μέλη"
+
+msgid "Menu Management"
+msgstr "Μενού"
+
+msgid "Merge selected tags"
+msgstr "Συγχώνευση επιλεγμένων ετικετών"
+
+msgid "Merge tags"
+msgstr "Συγχώνευση ετικετών"
+
+msgid "Metadata synchronization results"
+msgstr "Αποτελέσματα συγχρονισμού Μεταδεδομένων"
+
+msgid "Metadata synchronized from file"
+msgstr "Μεταδεδομένα συγχρονιζμένα από το αρχείο"
+
+msgid "Minimum privacy level"
+msgstr "Ελάχιστο επίπεδο προστασίας προσωπικού απορρήτου."
+
+msgid "Miscellaneous"
+msgstr "Διάφορα"
+
+msgid "Missing Plugins"
+msgstr "Λείπουν πρόσθετα"
+
+msgid "Missing a temporary folder"
+msgstr "Λείπει ένας προσωρινός φάκελος"
+
+msgid "Modify information"
+msgstr "Τροποποίηση πληροφορίας"
+
+msgid "Month"
+msgstr "Μήνας"
+
+msgid "Move albums"
+msgstr "Μετακίνηση λευκώματος"
+
+msgid "Move"
+msgstr "Μετακίνηση "
+
+msgid "Name"
+msgstr "Όνομα"
+
+msgid "New Version"
+msgstr "Νέα Έκδοση"
+
+msgid "New name"
+msgstr "Νέο Όνομα"
+
+msgid "New parent album"
+msgstr "Νέο γονικό λεύκωμα"
+
+msgid "New photos added"
+msgstr "Νέες φωτογραφίες προστέθηκαν"
+
+msgid "New photos were added"
+msgstr "Νέες φωτογραφίες προστέθηκαν"
+
+msgid "New tag"
+msgstr "Νέα ετικέτα"
+
+msgid "include child albums"
+msgstr "περιλαμβάνουν υπο-λευκώματα"
+
+msgid "jump to album"
+msgstr "μετάβαση στο λεύκωμα"
+
+msgid "jump to photo"
+msgstr "μετάβαση στη φωτογραφία"
+
+msgid "leave"
+msgstr "αποχωρεί"
+
+msgid "manage album photos"
+msgstr "διαχειριστείτε τα λευκώματα φωτογραφιών"
+
+msgid "manage sub-albums"
+msgstr "διαχείριση υπο-λευκώματα "
+
+msgid "manual order"
+msgstr "χειροκίνητη κατάταξη"
+
+msgid "Hoverbox display"
+msgstr "Εμφάνιση Hoverbox "
+
+msgid "No destination tag selected"
+msgstr "Δεν επιλέγχτηκε ετικέτα προορισμού"
+
+msgid "No display"
+msgstr "καμία ένδειξη"
+
+msgid "No file was uploaded"
+msgstr "Δεν έγινε μεταφόρτωση αρχείων"
+
+msgid "No mail to send."
+msgstr "Κανένα μήνυμα για αποστολή"
+
+msgid "No photo can be deleted"
+msgstr "Καμιά φωτογραφία δεν μπορεί να διαγραφεί"
+
+msgid "No photo in the current set."
+msgstr "Καμιά φωτογραφία στο παρόν σύνολο"
+
+msgid "No photo in this album"
+msgstr "Καμιά φωτογραφία σ' αυτό το λεύκωμα"
+
+msgid "new"
+msgstr "νέο"
+
+msgid "No photo selected, %d photos in current set"
+msgstr "Δεν έχει επιλεγεί φωτογραφία , %d φωτογραφίες στο τρέχον σύνολο"
+
+msgid "No photos selected, no actions possible."
+msgstr "Δεν έχει επιλεγεί φωτογραφία , δεν είναι δυνατή ενέργεια"
+
+msgid "No results"
+msgstr "Δεν υπάρχουν αποτελέσματα"
+
+msgid "No user to send notifications by mail."
+msgstr "Κανένας χρήστης δεν θα ειδοποιηθεί μέσω ταχυδρομείου."
+
+msgid "None"
+msgstr "Κανένα"
+
+msgid "Notification"
+msgstr "Ειδοποίηση"
+
+msgid "Number of comments per page"
+msgstr "Αριθμός σχολίων ανά σελίδα"
+
+msgid "Number of downloads"
+msgstr "Αριθμός μεταφορτώσεων"
+
+msgid "Number of rates"
+msgstr "Αριθμός των ποσοστών"
+
+msgid "Obsolete Plugins"
+msgstr "Παρωχημένα Προσθέτων"
+
+msgid "Only private albums are listed"
+msgstr "Παρατίθενται μόνο ιδιωτικό λευκώματα"
+
+msgid "Operating system"
+msgstr "Λειτουργικό σύστημα"
+
+msgid "Operation in progress"
+msgstr "Επεξεργασία σε εξέλιξη."
+
+msgid "Optimizations have been completed with some errors."
+msgstr "Βελτιστοποιήσεις ολοκληρώθηκαν με ορισμένα λάθη."
+
+msgid "Optional URL keyword"
+msgstr "URL Προαιρετικών λέξεων-κλειδιών"
+
+msgid "Options"
+msgstr "Επιλογές"
+
+msgid "Order of menubar items has been updated successfully."
+msgstr "Διάταξη αντικειμένων της γραμμής μενού έχει ενημερωθεί με επιτυχία."
+
+msgid "Original templates"
+msgstr "Αρχικά πρότυπα"
+
+msgid "Orphan tags deleted"
+msgstr "Ορφανές ετικέτες διαγράφτηκαν"
+
+msgid "Other plugins"
+msgstr "Άλλα πρόσθετα διαθέσιμα"
+
+msgid "Other private albums"
+msgstr "Άλλα ιδιωτικά λευκώματα"
+
+msgid "Overall"
+msgstr "Επισκόπηση"
+
+msgid "Page banner"
+msgstr "Σελίδα  banner"
+
+msgid "Page end"
+msgstr "τέλος σελίδας"
+
+msgid "Pages seen"
+msgstr "Σελίδες που έχετε δει"
+
+msgid "Parameter"
+msgstr "Ρυθμίσεις"
+
+msgid "Parameters"
+msgstr "Παράμετροι"
+
+msgid "Parent album"
+msgstr "Μητρικό λεύκωμα"
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "Η επιβεβαίωση κωδικού λείπει. Επιβεβαιώστε τον επιλεγμένο κωδικό πρόσβασης"
+
+msgid "Password is missing. Please enter the password."
+msgstr "Κωδικός λείπει. Παρακαλώ εισάγετε τον κωδικό πρόσβασης."
+
+msgid "Path"
+msgstr "Διαδρομή"
+
+msgid "Pending Comments"
+msgstr "Σχόλια Εν αναμονή "
+
+msgid "Permalink %s has been previously used by album %s. Delete from the permalink history first"
+msgstr "Ο Μονιμος Συνδεσμος %s έχει ήδη χρησιμοποιηθεί από το %s λεύκωμα. Διαγραψτε το την πρώτα από την ιστορία Μονιμων Συνδέσμων"
+
+msgid "Permalink %s is already used by album %s"
+msgstr "Ο Μονιμος Συνδεσμος %s χρησιμοποιήτε ήδη από το %s λεύκωμα."
+
+msgid "Permalink history"
+msgstr "Ιστορικό Μονιμων Συνδέσμων"
+
+msgid "Permalink"
+msgstr "Μόνιμος Σύνδεσμος"
+
+msgid "Permalinks"
+msgstr "Μόνιμοι Σύνδεσμοι"
+
+msgid "Permission denied"
+msgstr "Δεν έχετε δικαίωμα πρόσβασης"
+
+msgid "Permission granted thanks to a group"
+msgstr "Η άδεια που χορηγείται χάρη σε μια ομάδα"
+
+msgid "Permission granted"
+msgstr "Η άδεια εγκρίνετε"
+
+msgid "Permissions"
+msgstr "Δικαιώματα"
+
+msgid "Photo Page"
+msgstr "Σελίδα φωτογραφίας "
+
+msgid "Photo Properties"
+msgstr "Ιδιότητες φωτογραφίας"
+
+msgid "Photo informations updated"
+msgstr "Οι πληροφορίες της φωτογραφίας ενημερώθηκαν"
+
+msgid "Photo name"
+msgstr "Όνομα φωτογραφίας"
+
+msgid "Photo unreachable or no support"
+msgstr "Φωτογραφία μη προσβάσημη ή μορφή δεν υποστηρίζεται"
+
+msgid "Photos generation in progress..."
+msgstr "Η Δημιουργία φωτογραφιών είναι σε εξέλιξη ..."
+
+msgid "Photos"
+msgstr "Φωτογραφίες"
+
+msgid "Piwigo Administration"
+msgstr "Διαχείρηση Piwigo"
+
+msgid "Piwigo Announcements Newsletter"
+msgstr " Ενημερωτικό Δελτίο Piwigo"
+
+msgid "Piwigo Update"
+msgstr "Ενημέρωση Piwigo "
+
+msgid "Piwigo Uploader"
+msgstr "Μεταφορτωτής Piwigo"
+
+msgid "Piwigo cannot retrieve upgrade file from server"
+msgstr "Piwigo δεν μπορεί να ανακτήσει το αρχείο αναβάθμισης από τον διακομιστή"
+
+msgid "Piwigo configuration"
+msgstr "Διαμόρφωση Piwigo "
+
+msgid "Piwigo version"
+msgstr "Έκδοση Piwigo "
+
+msgid "Please check \"plugins\" folder and sub-folders permissions (CHMOD)."
+msgstr "Παρακαλώ ελέγξτε τα δικαιώματα στον φάκελο \"Πρόσθετα\" και στους υπο-φακέλους (CHMOD)."
+
+msgid "Please wait..."
+msgstr "Παρακαλώ περιμένετε ..."
+
+msgid "Plugin has been successfully copied"
+msgstr "Το πρόσθετο έχει αντιγραφεί επιτυχώς"
+
+msgid "Plugin list"
+msgstr "Λίστα Πρόσθετων"
+
+msgid "Plugins which need upgrade"
+msgstr "Πρόσθετα υπό ενημέρωση"
+
+msgid "Plugins"
+msgstr "Πρόσθετα"
+
+msgid "Position"
+msgstr "Τοποθεσία"
+
+msgid "Predefined filter"
+msgstr "Προκαθορισμένα φίλτρα"
+
+msgid "Preferences"
+msgstr "Προτιμήσεις"
+
+msgid "Prepared time for list of users to send mail is limited. Others users are not listed."
+msgstr "Ο χρόνος για να προετοιμάσετε τον κατάλογο των χρηστών που θα σταλεί μήνυμα είναι περιορισμένος. Άλλοι χρήστες δεν είναι στον κατάλογο."
+
+msgid "Privacy level"
+msgstr "Επίπεδο προστασίας προσωπικών δεδομένων"
+
+msgid "Private"
+msgstr "Προσωπικά"
+
+msgid "Properties"
+msgstr "Ιδιότητες"
+
+msgid "Public / Private"
+msgstr "Δημόσιο / Ιδιωτικό"
+
+msgid "Public"
+msgstr "Δημόσιο "
+
+msgid "Purge compiled templates"
+msgstr "Εκκαθάριση καταρτισμένων πρότυπων"
+
+msgid "Purge history detail"
+msgstr "Εκκαθάριση λεπτομερειών ιστορικού"
+
+msgid "Purge history summary"
+msgstr "Εκκαθάριση περίληψης ιστορικού"
+
+msgid "Purge never used notification feeds"
+msgstr "Εκκαθάριση δεν έχει χρησιμοποιηθεί ποτέ κοινοποίηση τροφοδότησης"
+
+msgid "Purge search history"
+msgstr "Εκκαθάριση ιστορικού αναζήτησης"
+
+msgid "no write access"
+msgstr "Όχι πρόσβαση εγγραφής"
+
+msgid "none"
+msgstr "κανένα"
+
+msgid "nothing"
+msgstr "τίποτα"
+
+msgid "on the %d selected photos"
+msgstr "στις %d επιλεγμένες φωτογραφίες"
+
+msgid "on"
+msgstr "στο"
+
+msgid "only directories"
+msgstr "Μόνο κατάλογοι"
+
+msgid "only perform a simulation (no change in database will be made)"
+msgstr "μόνο εκτέλεση προσομοίωσης (τίποτα δεν θα αλλάξει στη βάση δεδομένων)"
+
+msgid "other"
+msgstr "άλλα"
+
+msgid "overrides existing values with empty ones"
+msgstr "παρακάμπτει τις υφιστάμενες τιμές με κενές"
+
+msgid "photos added in the database"
+msgstr "οι φωτογραφίες προστέθηκαν στη βάση δεδομένων"
+
+msgid "photos candidates for metadata synchronization"
+msgstr "φωτογραφίες υποψήφιες για συγχρονισμό μετα-δεδομένων"
+
+msgid "photos deleted from the database"
+msgstr "οι φωτογραφίες διαγράφτηκαν από τη βάση δεδομένων"
+
+msgid "photos informations synchronized with files metadata"
+msgstr "οι πληροφορίες φωτογραφιών συγχρονίζονται με τα μεταδεδομένα αρχείων "
+
+msgid "photos per page"
+msgstr "φωτογραφίες ανά σελίδα"
+
+msgid "photos updated in the database"
+msgstr "φωτογραφίες ενημερώθηκαν στη βάση δεδομένων"
+
+msgid "pixels"
+msgstr "Εικονοστοιχία"
+
+msgid "private"
+msgstr "προσωπικά"
+
+msgid "public"
+msgstr "δημόσιο "
+
+msgid "Privacy level set to \"%s\""
+msgstr "Επίπεδο προστασίας προσωπικών δεδομένων με \"%s\""
+
+msgid "Purge sessions"
+msgstr "Εκκαθάριση συνεδριών"
+
+msgid "Quick Local Synchronization"
+msgstr "Γρήγορη Τοπικός Συγχρονισμός"
+
+msgid "Random photo"
+msgstr "Τυχαία Φωτογραφία"
+
+msgid "Rate date"
+msgstr "Ημερομηνία Αξιολόγησης"
+
+msgid "Rating by guests"
+msgstr "Αξιολόγηση από τους επισκέπτες"
+
+msgid "Rating"
+msgstr "Αξιολόγηση "
+
+msgid "Read Piwigo Documentation"
+msgstr "Διαβάστε την Τεκμηρίωση του Piwigo "
+
+msgid "Refresh photo set"
+msgstr "Ανανέωση σύνολου φωτογραφίας"
+
+msgid "randomly represented"
+msgstr "τυχαία μικρογραφία λευκώματος"
+
+msgid "ranks"
+msgstr "κατάταξη"
+
+msgid "Refresh"
+msgstr "Ανανέωση"
+
+msgid "Reinitialize check integrity"
+msgstr "Επανεκινηση εκ νέου έλεγχου ακεραιότητας"
+
+msgid "Reject"
+msgstr "Απόρριψη"
+
+msgid "Released on"
+msgstr "Κυκλοφόρησε στις"
+
+msgid "Remote"
+msgstr "Απομεμακρυσμένος"
+
+msgid "Remove all filters"
+msgstr "Κατάργηση όλων των φίλτρων"
+
+msgid "Remove from caddie"
+msgstr "Αφαιρέστε από το καλάθι"
+
+msgid "Repair and optimize database"
+msgstr "Επισκευή και βελτιστοποίηση της βάσης δεδομένων"
+
+msgid "Replacement of original templates by customized templates from template-extension subfolder"
+msgstr "Αντικατάσταση των αρχικών προτύπων με προσαρμοσμένα πρότυπα από τον υπο-κατάλογο πρότυπων-επεκτάσεων"
+
+msgid "Replacers (customized templates)"
+msgstr "Υποκατάστατα (προσαρμοσμένα πρότυπα)"
+
+msgid "Representant"
+msgstr "Μικρογραφία Λευκώματος"
+
+msgid "Representation of albums"
+msgstr "Μικρογραφία λευκώματος"
+
+msgid "Representative"
+msgstr "Μικρογραφία λευκώματος"
+
+msgid "Represents"
+msgstr "Είναι μικρογραφία για το"
+
+msgid "Reset ignored updates"
+msgstr "Επαναφορά αγνοούμενων ενημερώσεων"
+
+msgid "Resize"
+msgstr "Αλλαγή μεγέθους"
+
+msgid "Restore default configuration. You will lose your plugin settings!"
+msgstr "Επαναφορά προεπιλεγμένης ρύθμισης. Θα χάσετε τις ρυθμίσεις των πρόσθετων σας!"
+
+msgid "Restore"
+msgstr "Επαναφορά"
+
+msgid "Save Settings"
+msgstr "Αποθήκευση ρυθμίσεων"
+
+msgid "Save Template Directory"
+msgstr "Αποθήκευση καταλόγου προτύπων"
+
+msgid "Save order"
+msgstr "Αποθήκευση διάταξης"
+
+msgid "Save to permalink history"
+msgstr "Αποθήκευση στην ιστορία των Μονιμων Συνδέσμων"
+
+msgid "Search for new images in the directories"
+msgstr "Αναζήτηση για νέες εικόνες στους καταλόγους"
+
+msgid "Searching..."
+msgstr "Αναζήτηση ..."
+
+msgid "Section"
+msgstr "Τμήμα"
+
+msgid "See you soon,"
+msgstr "Τα λέμε σύντομα,"
+
+msgid "See you soon."
+msgstr "Τα λέμε σύντομα."
+
+msgid "Select at least one album"
+msgstr "Επιλέξτε τουλάχιστον ένα λεύκωμα"
+
+msgid "Select at least one comment"
+msgstr "Επιλέξτε τουλάχιστον ένα σχόλιο"
+
+msgid "Select at least one photo"
+msgstr "Επιλέξτε τουλάχιστον μία φωτογραφία"
+
+msgid "Select at least one user"
+msgstr "Επιλέξτε τουλάχιστον έναν χρήστη"
+
+msgid "Select at least two tags for merging"
+msgstr "Επιλέξτε τουλάχιστον δύο ετικέτες για συγχώνευση"
+
+msgid "Select recipients"
+msgstr "Επιλογή παραληπτών"
+
+msgid "Select the destination tag"
+msgstr "Επιλέξτε την ετικέτα προορισμού"
+
+msgid "Select:"
+msgstr "Επιλέξτε:"
+
+msgid "Selection"
+msgstr "Επιλογή"
+
+msgid "Send an information email to group members"
+msgstr "Στείλτε ένα e-mail με πληροφορίες στα μέλη της ομάδας"
+
+msgid "Send connection settings by email"
+msgstr "Αποστολή ρυθμίσεων σύνδεσης μέσω ηλεκτρονικού ταχυδρομείου"
+
+msgid "Send mail as"
+msgstr "Αποστολή μηνύματος ως"
+
+msgid "Send mail on HTML format"
+msgstr "Αποστολή ηλεκτρονικού ταχυδρομείου σε μορφή HTML"
+
+msgid "Send mail to users"
+msgstr "Αποστολή ηλεκτρονικού ταχυδρομείου προς τους χρήστες"
+
+msgid "Send"
+msgstr "Αποστολή"
+
+msgid "Set as default language for unregistered and new users"
+msgstr "Ορισμός ως προεπιλεγμένη γλώσσα για τους μη καταγεγραμμένους και τους νέους χρήστες"
+
+msgid "Set as default theme for unregistered and new users"
+msgstr "Ορισμός ως προεπιλεγμένο θέμα για τους μη καταγεγραμμένους και τους νέους χρήστες"
+
+msgid "Switch to clear or dark colors for administration"
+msgstr "Αλλαγή σε σαφή ή σκούρα χρώματα για τη διαχείρηση"
+
+msgid "Synchronize metadata"
+msgstr "Συγχρονίστε τα μεταδεδομένα"
+
+msgid "Synchronize"
+msgstr "Συγχρονίστε "
+
+msgid "Tag \"%s\" already exists"
+msgstr "Η ετικέτα \"%s\" υπάρχει ήδη"
+
+msgid "Tag \"%s\" was added"
+msgstr "Η ετικέτα \"%s\" έχει προστεθεί"
+
+msgid "Tag selection"
+msgstr "Επιλογή Ετικετών"
+
+msgid "Tags <em>%s</em> merged into tag <em>%s</em>"
+msgstr "Ετικέτες <em>%s</em> συγχωνεύθηκαν σε ετικέτα <em>%s</em>"
+
+msgid "Templates configuration has been recorded."
+msgstr "Η Διαμόρφωση Προτύπων έχει καταγραφεί."
+
+msgid "Templates"
+msgstr "Πρότυπα"
+
+msgid "The %d following tags were deleted"
+msgstr "Οι ακόλουθες ετικέτες %d έχουν διαγραφεί"
+
+msgid "The anomaly will be ignored until next application version"
+msgstr "Η ανωμαλία αυτή θα πρέπει να αγνοηθεί μέχρι την επόμενη έκδοση της εφαρμογής"
+
+msgid "The file or directory cannot be accessed (either it does not exist or the access is denied)"
+msgstr "Το αρχείο ή ο κατάλογος δεν μπορεί να προσπελαστεί (είτε δεν υπάρχει ή η πρόσβαση απορρίφθηκε)"
+
+msgid "The following tag was deleted"
+msgstr "Η παρακάτω ετικέτα διεγράφη"
+
+msgid "The gallery URL is not valid."
+msgstr "Η διεύθυνση URL της γκαλερί δεν είναι έγκυρη."
+
+msgid "The name of a group must not contain \" or ' or be empty."
+msgstr "Το όνομα της ομάδας δεν πρέπει να περιέχει \" ή ' ή να είναι άδειο."
+
+msgid "The name of an album must not be empty"
+msgstr "Το όνομα του άλμπουμ δεν πρέπει να είναι κενό"
+
+msgid "The name of directories and files must be composed of letters, numbers, \"-\", \"_\" or \".\""
+msgstr "Το όνομα των αρχείων και καταλόγων πρέπει να περιλαμβάνει μόνο γράμματα, αριθμούς, \"-\", \"_\" ή \".\""
+
+msgid "The number of comments a page must be between 5 and 50 included."
+msgstr "Ο αριθμός των σχολίων σε μια σελίδα, πρέπει να είναι μεταξύ 5 και 50 που περιλαμβάνονται."
+
+msgid "The original image quality must be a number between %d and %d"
+msgstr "Η αρχική ποιότητα της εικόνας πρέπει να είναι ένας αριθμός μεταξύ %d και %d"
+
+msgid "The original maximum height must be a number between %d and %d"
+msgstr "Το αρχικό μέγιστο ύψος πρέπει να είναι ένας αριθμός μεταξύ %d και %d"
+
+msgid "The original maximum width must be a number between %d and %d"
+msgstr "Το αρχικό μέγιστο πλάτος πρέπει να είναι ένας αριθμός μεταξύ %d και %d"
+
+msgid "reduce to single existing albums"
+msgstr "ελλατώστε τα υφιστάμενα σε απλά λευκώματα"
+
+msgid "registration date"
+msgstr "ημερομηνία καταχώρησης"
+
+msgid "remove author"
+msgstr "αφαιρέστε τον δημιουργό"
+
+msgid "remove creation date"
+msgstr "αφαιρέσετε την ημερομηνία δημιουργίας"
+
+msgid "remove tags"
+msgstr "αφαιρέσετε ετικέτες"
+
+msgid "remove this filter"
+msgstr "αφαιρέσετε αυτό το φίλτρο"
+
+msgid "remove title"
+msgstr "αφαιρέστε τον τίτλο"
+
+msgid "selection"
+msgstr "επιλογή"
+
+msgid "synchronize files metadata with database photos informations"
+msgstr "συγχρονίστε βάσης δεδομένων φωτογραφιών με τα αρχείων μεταδεδομένων"
+
+msgid "synchronize files structure with database"
+msgstr "συγχρονίστε τη δομή αρχείων με τη βάση δεδομένων"
+
+msgid "target"
+msgstr "στόχος"
+
+msgid "test this remote site"
+msgstr "ελέγξετε τον απομακρυσμένο τόπο"
+
+msgid "test"
+msgstr "έλεγχος"
+
+msgid "the forum"
+msgstr "το φόρουμ"
+
+msgid "%d day"
+msgstr "%d ημέρα"
+
+msgid "%d days"
+msgstr "%d ημέρες"
+
+msgid "%d hour"
+msgstr "%d ώρα"
+
+msgid "%d hours"
+msgstr "%d ώρες"
+
+msgid "%d minute"
+msgstr "%d λεπτό"
+
+msgid "%d minutes"
+msgstr "%d λεπτά"
+
+msgid "%d month"
+msgstr "%d μήνας"
+
+msgid "%d months"
+msgstr "%d μήνες"
+
+msgid "%d second"
+msgstr "%d δευτερόλεπτο"
+
+msgid "%d seconds"
+msgstr "%d δευτερόλεπτα"
+
+msgid "%d year"
+msgstr "%d έτος"
+
+msgid "%d years"
+msgstr "%d χρόνια"
+
+msgid "%s ago"
+msgstr "%s πριν"
+
+msgid "%s in the future"
+msgstr "%s στο μέλλον"
+
+msgid "%u users have automatic permission because they belong to a granted group."
+msgstr "%u χρήστες έχουν αυτόματη άδεια επειδή ανήκουν σε μια ομάδα που της έχει χορηγηθεί."
+
+msgid "<em>Piwigo for Android</em> application empowers you to connect your Android phone or table to your Piwigo gallery, create some albums and upload several photos at once."
+msgstr "<em>Η εφαρμογή Piwigo για το Android</em> που παρέχει τη δυνατότητα να συνδεθείτε με τη γκαλερί Piwigo σας από το κινητό σας Android ή τη ταμπλέτα σας και δημιουργούν μερικά άλμπουμ και ανεβάζουν πολλές φωτογραφίες ταυτόχρονα."
+
+msgid "<em>Piwigo for iOS</em> application empowers you to connect to your Piwigo gallery from your iPhone, iPad or iPod Touch, create some albums and upload several photos at once."
+msgstr "<em>Η εφαρμογή Piwigo για το iOS</em> που παρέχει τη δυνατότητα να συνδεθείτε με τη γκαλερί Piwigo σας από το iPhone, iPad ή το iPod Touch, δημιουργούν μερικά άλμπουμ και ανεβάζουν πολλές φωτογραφίες ταυτόχρονα."
+
+msgid "A locked gallery is only visible to administrators"
+msgstr "Μια κλειδωμένη γκαλερί είναι ορατή μόνο στους διαχειριστές"
+
+msgid "Added by %s"
+msgstr "Προστέθηκε από %s"
+
+msgid "Adobe Photoshop Lightroom is a photography software designed to manage large quantities of digital images and doing post production work."
+msgstr "Adobe Photoshop Lightroom είναι ένα λογισμικό φωτογραφίας σχεδιασμένο για να διαχειρίζεται μεγάλες ποσότητες ψηφιακών εικόνων και κάνει τη δουλειά του post production."
+
+msgid "Aperture is a powerful tool to refine images and manage massive libraries on Mac."
+msgstr "Το Aperture είναι ένα ισχυρό εργαλείο για να βελτιώσετε τις εικόνες και να διαχειρίζεστε τεράστιες βιβλιοθήκες σε Mac .."
+
+msgid "Aperture is designed for professional photographers with iPhoto simplicity."
+msgstr "Το Aperture είναι σχεδιασμένο για επαγγελματίες φωτογράφους με την απλότητα του iPhoto."
+
+msgid "Applications"
+msgstr "Εφαρμογές"
+
+msgid "Apply watermark if height is bigger than"
+msgstr "Εφαρμόστε υδατογράφημα, εάν το ύψος είναι μεγαλύτερο από"
+
+msgid "Apply watermark if width is bigger than"
+msgstr "Εφαρμόστε υδατογράφημα, εάν το πλάτος είναι μεγαλύτερο από"
+
+msgid "Automatic sort order"
+msgstr "Αυτόματη σειρά ταξινόμησης"
+
+msgid "Available on"
+msgstr "διαθέσιμο σε"
+
+msgid "By default, the center of interest is placed in the middle of the photo."
+msgstr "Από προεπιλογή, το κέντρο του ενδιαφέροντος βρίσκεται στη μέση της φωτογραφίας."
+
+msgid "Cancel"
+msgstr "Ακύρωση"
+
+msgid "Center of interest"
+msgstr "Κέντρο του ενδιαφέροντος"
+
+msgid "Delete multiple size images"
+msgstr "Διαγράφει εικόνες πολλαπλάσιου μεγέθους"
+
+msgid "Features include gallery browsing, album creation and photo upload."
+msgstr "Τα χαρακτηριστικά του περιλαμβάνει είναι περιήγηση γκαλερί, δημιουργία άλμπουμ και ανέβασμα φωτογραφιών."
+
+msgid "For photo sizes with crop, such as \"Square\", Piwigo will do its best to include the center of interest."
+msgstr "Για μεγέθη φωτογραφίας με αποκοπή, όπως \"Τετράγωνο\", το Piwigo θα καταβάλει κάθε δυνατή προσπάθεια για να συμπεριλάβει το κέντρο του ενδιαφέροντος."
+
+msgid "Gallery unlocked"
+msgstr "Γκαλερί ξεκλείδωτη"
+
+msgid "Generate multiple size images"
+msgstr "Δημιουργεί εικόνες πολλαπλάσιου μεγέθους"
+
+msgid "Groups and users"
+msgstr "Ομάδες και χρήστες"
+
+msgid "List"
+msgstr "Λίστα"
+
+msgid "Move to album"
+msgstr "Μετακίνηση σε λεύκωμα "
+
+msgid "Multiple Size"
+msgstr "Πολλαπλά μεγέθη"
+
+msgid "No group is permitted to see this private album"
+msgstr "Καμία ομάδα δεν επιτρέπεται να δει αυτό το ιδιωτικό άλμπουμ"
+
+msgid "Not cropped correctly?"
+msgstr "Δεν έχει περικοπεί σωστά;"
+
+msgid "Notify administrators when a comment is"
+msgstr "Ειδοποιεί διαχειριστές όταν ένα σχόλιο είναι"
+
+msgid "Numeric identifier : %d"
+msgstr "Αριθμητικός αναγνωριστικός κωδικός: %d"
+
+msgid "On your Linux, simply install Shotwell with your package manager and the activate Piwigo publishing option."
+msgstr "Στο Linux σας, απλά εγκαταστήστε το Shotwell με τον διαχειριστή πακέτων σας και ενεργοποιήστε την επιλογή στο Piwigo."
+
+msgid "Opacity"
+msgstr "Αδιαφάνεια"
+
+msgid "Original Size"
+msgstr "Αρχικό Μέγεθος"
+
+msgid "Original file : %s"
+msgstr "Αρχικό αρχείο:%s"
+
+msgid "Permission granted for groups"
+msgstr "Η άδεια χορηγείται για τις ομάδες"
+
+msgid "Permission granted for users"
+msgstr "Η άδεια χορηγείται για τους χρήστες"
+
+msgid "Permission management"
+msgstr "Διαχείριση αδειών"
+
+msgid "Photo sizes with crop"
+msgstr "Μέγεθος φωτογραφίας με την αποκοπή"
+
+msgid "Piwigo Publish plugin for Lightroom"
+msgstr "πρόσθετο Piwigo για Δημοσίευση από το Lightroom"
+
+msgid "Piwigo export plugin for Aperture"
+msgstr "Piwigo export plugin για το Aperture"
+
+msgid "Piwigo export plugin for iPhoto"
+msgstr "Piwigo export plugin για το iPhoto"
+
+msgid "Piwigo for Android"
+msgstr "Piwigo για Android"
+
+msgid "Piwigo for iOS (iPhone, iPad, iPod Touch)"
+msgstr "Piwigo για το iOS (iPhone, iPad, iPod Touch)"
+
+msgid "Piwigo publish plugin for Shotwell"
+msgstr "Piwigo publish plugin για το Shotwell"
+
+msgid "Piwigo publish plugin for digiKam"
+msgstr "Piwigo publish plugin για το digiKam"
+
+msgid "Posted %s on %s"
+msgstr "Το %s δημοσιεύτηκε στο %s"
+
+msgid "Rated %d times, score : %.2f"
+msgstr "Εχει βαθμοόγιθεί %d φορές, σκορ: %.2f"
+
+msgid "ReGalAndroid (RemoteGallery client for Android) is an open source (GPL v3) Piwigo client for the Android platform."
+msgstr "Το ReGalAndroid (RemoteGallery πελάτης για το Android), είναι ένας πελέτης ανοιχτού κώδικα του Piwigo (GPL v3) για την πλατφόρμα Android."
+
+msgid "Resize after upload"
+msgstr "Αλλαγή μεγέθους μετά την αποστολή"
+
+msgid "Save manual order"
+msgstr "Αποθήκευση χειροκίνητης σειράς ταξινόμησης"
+
+msgid "Save visits in history for"
+msgstr "Αποθήκευση επισκέψεων στο ιστορικό για την"
+
+msgid "Select a file"
+msgstr "Επιλέξτε ένα αρχείο"
+
+msgid "Select a zone with your mouse to define a new center of interest."
+msgstr "Επιλέξτε μια ζώνη με το ποντίκι σας να ορίσετε ένα νέο κέντρο του ενδιαφέροντος."
+
+msgid "Select groups..."
+msgstr "Επιλέξτε τις ομάδες ..."
+
+msgid "Select users..."
+msgstr "Επιλέξτε τους χρήστες..."
+
+msgid "Sharpen"
+msgstr "Διαύγεια  "
+
+msgid "Shotwell is an open source digital photo organizer that runs on Linux. It is the default photo manager in Ubuntu and Fedora."
+msgstr "Shotwell είναι ένας οργανωτής ανοιχτού κώδικα ψηφιακών φωτογραφιών και τρέχει σε Linux. Είναι ο προεπιλεγμένος δαιχειριστής φωτογραφιών στο Ubuntu και στο Fedora."
+
+msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
+msgstr "ΑΥΤΟ ΤΟ ΠΡΟΣΘΕΤΟ ΕΙΝΑΙ ΤΩΡΑ ΜΕΡΟΣ ΤΟΥ ΠΗΡΥΝΑ ΤΟΥ PIWIGO! ΑΠΕΓΚΑΤΑΣΤΗΣΤΕ ΤΩΡΑ!"
+
+msgid "The Piwigo export plugin allows you to create albums and export photos."
+msgstr "Το  Piwigo export plugin σας επιτρέπει να δημιουργήσετε άλμπουμ και να εξαγετε φωτογραφίες."
+
+msgid "The Piwigo publish Plug-in allows you to export and synchronize photos from Lightroom directly to your Piwigo photo gallery."
+msgstr "Το πρόσθετο Piwigo  publish Plug-in σας επιτρέπει να εξάγετε και να συγχρονίσετε φωτογραφίες απευθείας από το Lightroom στη γκαλερί φωτογραφιών σας στο Piwigo."
+
+msgid "The center of interest is the most meaningful zone in the photo."
+msgstr "Το κέντρο του ενδιαφέροντος είναι η πιο σημαντική ζώνη στη φωτογραφία."
+
+msgid "The permalink name must be composed of a-z, A-Z, 0-9, \"-\", \"_\" or \"/\". It must not be numeric or start with number followed by \"-\""
+msgstr "Το όνομα μόνιμου συνδέσμου πρέπει να αποτελείται απο  a-z, A-Z, 0-9, \"-\", \"_\" or \"/\". Δεν πρέπει να είναι αριθμητικό ή να ξεκινά με έναν αριθμό που ακολουθείται από \"-\""
+
+msgid "The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form"
+msgstr "Το αρχείο υπερβαίνει το MAX_FILE_SIZE directive που έχει οριστεί στη φόρμα HTML"
+
+msgid "The uploaded file exceeds the upload_max_filesize directive in php.ini: %sB"
+msgstr "Το αρχείο υπερβαίνει την οδηγία upload_max_filesize στο php.ini: %sB"
+
+msgid "The uploaded file was only partially uploaded"
+msgstr "Το αρχείο που μεταφορτώθηκε δεν ολοκλήρωσε την αποστολή"
+
+msgid "The uploaded files exceed the post_max_size directive in php.ini: %sB"
+msgstr "Το αρχείο υπερβαίνει την οδηγία  post_max_size στο php.ini: %sB"
+
+msgid "The webmaster has subscribed you to receiving notifications by mail."
+msgstr "Ο webmaster σας έκανε εγγραφή για την παραλαβή κοινοποιήσεων μέσω ηλεκρονικού ταχυδρομείου."
+
+msgid "The webmaster has unsubscribed you from receiving notifications by mail."
+msgstr "Ο webmaster σας έχει διαγράψει από την παραλαβή κοινοποιήσεων μέσω ταχυδρομείου."
+
+msgid "The whole page"
+msgstr "Ολόκληρη η σελίδα"
+
+msgid "The whole set"
+msgstr "Το σύνολο"
+
+msgid "Theme has been successfully installed"
+msgstr "Το Θέμα έχει εγκατασταθεί με επιτυχία"
+
+msgid "Themes which need upgrade"
+msgstr "Τα Θέματα που χρειάζετε να αναβαθμίσετε"
+
+msgid "Themes"
+msgstr "Θέματα "
+
+msgid "There is no available subscribers to mail."
+msgstr "Δεν υπάρχουν συνδρομητές που πρόκειται να ειδοποιηθούν μέσω ταχυδρομείου."
+
+msgid "There is no group in this gallery."
+msgstr "Δεν υπάρχει καμία ομάδα σε αυτή τη συλλογή."
+
+msgid "There is no other language available."
+msgstr "Δεν υπάρχει άλλη διαθέσιμη γλώσσα."
+
+msgid "There is no other plugin available."
+msgstr "Δεν υπάρχει άλλο διαθέσιμο πρόσθετο"
+
+msgid "There is no other theme available."
+msgstr "Δεν υπάρχει διαθέσιμο άλλο θέμα."
+
+msgid "This album contains %d photos, added between %s and %s."
+msgstr "Αυτό το λεύκωμα περιέχει %d φωτογραφίες, προστέθηκε μεταξύ  %s και%s."
+
+msgid "This album contains %d photos, added on %s."
+msgstr "Αυτό το λεύκωμα περιέχει %d φωτογραφίες, προστέθηκε στις %s."
+
+msgid "This album contains no photo."
+msgstr "Αυτό το λεύκωμα δεν περιέχει καμία φωτογραφία."
+
+msgid "This is a major update, with <a href=\"%s\">new exciting features</a>."
+msgstr "Αυτή είναι μια σημαντική ενημέρωση, με <a href=\"%s\">νέα συναρπαστικά χαρακτηριστικά</a>."
+
+msgid "This is a minor update, with only bug corrections."
+msgstr "Αυτή είναι μια μικρή ενημέρωση, με μόνο διορθώσεις σφαλμάτων."
+
+msgid "This name is already used by another group."
+msgstr "Αυτό το όνομα χρησιμοποιείται ήδη από άλλη ομάδα."
+
+msgid "This site already exists"
+msgstr "Αυτός ο δικτυακός τόπος υπάρχει ήδη"
+
+msgid "This theme was not designed to be directly activated"
+msgstr "Αυτό το θέμα δεν έχει σχεδιαστεί για να ενεργοποιηθεί άμεσα"
+
+msgid "Thumbnail"
+msgstr "Μικρογραφία"
+
+msgid "Thumbnails generation in progress..."
+msgstr "Δημιουργία Μικρογραφιών σε εξέλιξη ..."
+
+msgid "Time to send mail is limited. Others mails are skipped."
+msgstr "Ο χρόνος για την αποστολή αλληλογραφίας είναι περιορισμένος. Άλλα  μηνύματα έχουν ήδη παραληφθεί."
+
+msgid "Time"
+msgstr "Χρίνος"
+
+msgid "Title"
+msgstr "τίτλος"
+
+msgid "To export your photos from digiKam to Piwigo, simply install digiKam and the Kipi-plugins."
+msgstr "Για να εξάγετε τις φωτογραφίες σας από το digiKam στο Piwigo, απλά εγκαταστήστε digiKam και το Kipi-plugins."
+
+msgid "To send ?"
+msgstr "Να σταλεί;"
+
+msgid "To subscribe"
+msgstr "Για να εγγραφείτε"
+
+msgid "To unsubscribe"
+msgstr "Για να διαγραφείτε"
+
+msgid "Toggle 'default group' property"
+msgstr "Αντίστροφη ιδιότητας \"προεπιλεγμένη ομάδα\" "
+
+msgid "Tools"
+msgstr "Εργαλεία"
+
+msgid "Two updates are available"
+msgstr "Δύο ενημερώσεις είναι διαθέσιμες"
+
+msgid "Type here the author name"
+msgstr "Πληκτρολογήστε εδώ το όνομα του συντάκτη"
+
+msgid "Type here the title"
+msgstr "Πληκτρολογήστε εδώ τον τίτλο"
+
+msgid "Type in a search term"
+msgstr "Πληκτρολογήστε έναν όρο αναζήτησης"
+
+msgid "Unable to check for upgrade."
+msgstr "Αδύνατον να ελέγξει για αναβάθμιση."
+
+msgid "Uncheck all"
+msgstr "Αποεπιλέξτε όλα"
+
+msgid "Uninstalled Plugins"
+msgstr "Απεγκατεστημένα πρόσθετα"
+
+msgid "Uninstall"
+msgstr "Απεγκατάσταση"
+
+msgid "Unknown upload error"
+msgstr "Άγνωστο σφάλμα αποστολής"
+
+msgid "Unlock gallery"
+msgstr "Ξεκλειδώστε γκαλερί"
+
+msgid "Unlocked"
+msgstr "Ξεκλειδωμένο"
+
+msgid "Unsubscribe from notification by mail"
+msgstr "Διαγραφή από την κοινοποίηση μέσω ταχυδρομείου"
+
+msgid "Unsubscribed"
+msgstr "Χωρίς συνδρομή"
+
+msgid "Update All"
+msgstr "Ενημέρωση σε όλα"
+
+msgid "Update Complete"
+msgstr "Η Ενημέρωση ολοκληρώθηκε"
+
+msgid "Update albums informations"
+msgstr "Ενημέρωση πληροφοριών λευκώματος"
+
+msgid "Update in progress... Please wait."
+msgstr "Ενημέρωση σε εξέλιξη ... Παρακαλώ περιμένετε."
+
+msgid "Update photos information"
+msgstr "Ενημέρωση πληροφοριών φωτογραφίας"
+
+msgid "Update to Piwigo %s"
+msgstr "Ενημέρωση σε Piwigo %s"
+
+msgid "Updates"
+msgstr "Ενημερώσεις"
+
+msgid "Uploaded Photos"
+msgstr "Μτεταφορτωμλενες φωτογραφίες"
+
+msgid "Upload"
+msgstr "Ανεβάστε"
+
+msgid "Use the default photo sort order"
+msgstr "Χρησιμοποιήστε τηn προεπιλεγμένη σειρά ταξινόμησης φωτογραφιών"
+
+msgid "Used metadata"
+msgstr "Μεταδεδομένα που χρησιμοποιήθηκαν"
+
+msgid "User \"%s\" created with \"%s\" like password"
+msgstr "Ο χρήστης \"%s\" με  \"%s\" ως κωδικό πρόσβασης"
+
+msgid "User %s [%s] added."
+msgstr "Ο χρήστης  %s[%s] προστέθηκε"
+
+msgid "User %s [%s] was added to the subscription list."
+msgstr "Ο χρήστης  %s[%s] προστέθηκε στην λίστα συνδρομητών."
+
+msgid "User %s [%s] was not added to the subscription list."
+msgstr "Ο χρήστης  %s[%s] δεν προστέθηκε στην λίστα συνδρομητών."
+
+msgid "User %s [%s] was not removed from the subscription list."
+msgstr "Ο χρήστης  %s[%s] δεν αφαιρέθηκε από τη λίστα εγγραφής."
+
+msgid "User %s [%s] was removed from the subscription list."
+msgstr "Ο χρήστης  %s[%s] δεν αφαιρέθηκε από τη λίστα εγγραφής."
+
+msgid "User comments validation"
+msgstr "Επικύρωση σχολίων χρήστη"
+
+msgid "User list"
+msgstr "Λίστα Χρηστών"
+
+msgid "User status"
+msgstr "Κατάσταση χρήστη"
+
+msgid "User"
+msgstr "Χρήστης"
+
+msgid "Users"
+msgstr "Χρήστες"
+
+msgid "Validate"
+msgstr "Επικύρωση"
+
+msgid "Validation"
+msgstr "Επικύρωση"
+
+msgid "Version"
+msgstr "Έκδοση"
+
+msgid "Virtual Links"
+msgstr "Εικονικοί Σύνδεσμοι"
+
+msgid "Virtual album added"
+msgstr "Προστέθηκε Εικονικό λεύκωμα"
+
+msgid "Virtual album deleted"
+msgstr "Διαγράφθηκε Εικονικό λεύκωμα"
+
+msgid "Virtual album name"
+msgstr "Όνομα Εικονικού λευκώματος"
+
+msgid "Virtual album"
+msgstr "Εικονικό λεύκωμα"
+
+msgid "Virtual albums to move"
+msgstr "Το Εικονικό λεύκωμα μετακινήθηκε"
+
+msgid "Visit Gallery"
+msgstr "Επισκεφθείτε τη γκαλερί"
+
+msgid "Visit Piwigo project website"
+msgstr "Επισκεφτείτε την ιστοσελίδα του έργου Piwigo"
+
+msgid "Visit language site"
+msgstr "Επισκεφθείτε την ιστοσελίδα γλώσσας"
+
+msgid "Visit plugin site"
+msgstr "Επισκεφτείτε την ιστοσελίδα των πρόσθετων"
+
+msgid "Visit theme site"
+msgstr "Επισκεφθείτε την ιστοσελίδα θέμα"
+
+msgid "Visited %d times"
+msgstr "Έχει επισκευτεί %d φορές"
+
+msgid "WARNING! This plugin does not seem to be compatible with this version of Piwigo."
+msgstr "ΠΡΟΣΟΧΗ! Αυτό το πρόσθετο δεν φαίνεται να είναι συμβατό με αυτή την έκδοση του Piwigo."
+
+msgid "Waiting"
+msgstr "Εν αναμονή"
+
+msgid "Warning: subscribing or unsubscribing will send mails to users"
+msgstr "Προειδοποίηση: εγγραφή ή διαγραφής θα στείλει μηνύματα προς τους χρήστες"
+
+msgid "Watermark"
+msgstr "Υδατογράφημα"
+
+msgid "Web Form"
+msgstr "Φόρμα Επικοινωνίας"
+
+msgid "Webmaster cannot be deleted"
+msgstr "Ο Webmaster δεν μπορεί να διαγραφεί"
+
+msgid "Webmaster status is required."
+msgstr "Απαιτείται η κατάσταση Webmaster."
+
+msgid "Week starts on"
+msgstr "Αρχή εβδομάδας"
+
+msgid "Who can see these photos?"
+msgstr "Ποιος μπορεί να δει αυτές τις φωτογραφίες;"
+
+msgid "Who can see this photo?"
+msgstr "Ποιος μπορεί να δει αυτή τη φωτογραφία"
+
+msgid "Width"
+msgstr "Πλάτος"
+
+msgid "With blank value, gallery title will be used"
+msgstr "Εάν κενό, ο τίτλος γκαλερί θα χρησιμοποιηθεί"
+
+msgid "With no album"
+msgstr "Με κανένα άλμπουμ"
+
+msgid "With no tag"
+msgstr "Με καμία ετικέτα"
+
+msgid "With no virtual album"
+msgstr "Χωρίς εικονικό λεύκωμα"
+
+msgid "X Position"
+msgstr "Θέση Χ"
+
+msgid "X Repeat"
+msgstr "Επανάληψη Χ"
+
+msgid "Y Position"
+msgstr "Θέση Υ"
+
+msgid "Year"
+msgstr "Χρονιά"
+
+msgid "You are running on development sources, no check possible."
+msgstr "Τρέχετε σε πηγές ανάπτυξης, δεν είναι δυνατόν να ελέγξετε."
+
+msgid "You are running the latest version of Piwigo."
+msgstr "Τρέχετε τελευταία έκδοση του Piwigo."
+
+msgid "You are using the Flash uploader. Problems? Try the <a href=\"%s\">Browser uploader</a> instead."
+msgstr "Χρησιμοποιείς τον Flash uploader. Προβλήματα; Προσπάθησε το <a href=\"%s\">ανέβασμα μέσω φυλλομετρητή</a>."
+
+msgid "You can activate only one mobile theme."
+msgstr "Μπορείτε να ενεργοποιήσετε μόνο ένα κινητό θέμα."
+
+msgid "You can update to Piwigo %s directly, without upgrading to Piwigo %s (recommended)."
+msgstr "Μπορείτε να ενημερώσετε σε Piwigo%, άμεσα, χωρίς την αναβάθμιση σε Piwigo %s (συνιστάται)."
+
+msgid "You can't define a default photo order because you have a custom setting in your local configuration."
+msgstr "Δεν μπορείτε να ορίσετε μια προεπιλογή σειράς φωτογραφιών, επειδή έχετε μια προσαρμοσμένη ρύθμιση στην τοπική διαμόρφωση σας."
+
+msgid "You cannot delete your account"
+msgstr "Δεν μπορείτε να διαγράψετε το λογαριασμό σας"
+
+msgid "You cannot move an album in its own sub album"
+msgstr "Δεν μπορείτε να μετακινήσετε ένα λεύκωμα στο δικό του υπο-λεύκωμα"
+
+msgid "You have %d orphan tags: %s."
+msgstr "Έχετε %d ορφανές ετικέτες : %s."
+
+msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
+msgstr "Έχετε καθορίσε  <i>$conf['order_by']</i>  στο τοπικό αρχείο ρυθμίσεων σας, αυτή η παράμετρος είναι παρωχημένη, παρακαλούμε να την αφαιρέσετε ή να το μετονομάσετε σε <i>$conf['order_by_custom']</i> !"
+
+msgid "You have subscribed to receiving notifications by mail."
+msgstr "Έχετε εγγραφεί για να λαμβάνετε ειδοποιήσεις με e-mail."
+
+msgid "You have unsubscribed from receiving notifications by mail."
+msgstr "Έχετε διαγραφεί από την κοινοποίηση μέσω ταχυδρομείου."
+
+msgid "You need to confirm deletion"
+msgstr "Πρέπει να επιβεβαιώσετε τη διαγραφή"
+
+msgid "You need to upgrade your system to take full advantage of the application else the application will not work correctly, or not at all"
+msgstr "Θα πρέπει να αναβαθμίσετε το σύστημά σας να επωφεληθελιται πλήρως από την εφαρμογή, διαφορετικά η εφαρμογή δεν θα μπορούσε να λειτουργήσει σωστά, ή και καθόλου"
+
+msgid "Your configuration settings are saved"
+msgstr "Οι ρυθμίσεις σας έχουν αποθηκευτεί"
+
+msgid "Zoom"
+msgstr "Μεγένθυνση"
+
+msgid "[%s] Visit album %s"
+msgstr "[%s] Επίσκεψη άλμπουμ %s"
+
+msgid "[NBM] Problems or questions"
+msgstr "[NBM] Προβλήματα ή ερωτήσεις"
+
+msgid "add a new watermark"
+msgstr "προσθέσετε ένα νέο υδατογράφημα"
+
+msgid "administrators"
+msgstr "διαχειριστές"
+
+msgid "any visitor can see this album"
+msgstr "οποιοσδήποτε επισκέπτης μπορεί να δει αυτό το λεύκωμα"
+
+msgid "apply automatic sort order"
+msgstr "Εφαρμόζει αυτόματη σειρά ταξινόμησης"
+
+msgid "bottom left corner"
+msgstr "κάτω αριστερή γωνία"
+
+msgid "bottom right corner"
+msgstr "κάτω δεξιά γωνία"
+
+msgid "cancel manual order"
+msgstr "Ακύρωση χειροκίνητης σειράς ταξινόμησης"
+
+msgid "custom"
+msgstr "Προσαρμογή"
+
+msgid "digiKam is an advanced digital photo management free software for Linux, Windows, and MacOSX."
+msgstr "Το digiKam είναι μια προηγμένη διαχείριση ψηφιακών φωτογραφιών σε ελεύθερο λογισμικό για Linux, Windows και MacOSX."
+
+msgid "digiKam is designed for photographers who want to view, manage, edit, enhance, organize, tag, and share photographs."
+msgstr "Το digiKam έχει σχεδιαστεί για φωτογράφους που θέλουν να παρακολουθούν, διαχειρίζονται, επεξεργαζονται, βελτιώνουν, οργανώνουν, προσθέτουν ετικέτες και διαμοιράζονται φωτογραφίες."
+
+msgid "iPhoto is the default photo manager on MacOSX. The Piwigo export plugin let you create new albums and export your photos directly from iPhoto to your Piwigo photo gallery."
+msgstr "Το iPhoto είναι ο προεπιλεγμένος διαχειρηστής φωτογραφίας στο MacOSX. Το export plugin for iPhoto του Piwigo σας επιτρέπουν να δημιουργήσετε νέο άλμπουμ και να εξάγετε τις φωτογραφίες σας απευθείας από το iPhoto στη γκαλερί φωτογραφιών σας στο Piwigo ."
+
+msgid "include photos with lower privacy level"
+msgstr "περιλαμβάνει φωτογραφίες με χαμηλότερο επίπεδο προστασίας της ιδιωτικότητας"
+
+msgid "middle"
+msgstr "μέση"
+
+msgid "modified"
+msgstr "τροποποιημένα"
+
+msgid "pending validation"
+msgstr "εν αναμονή επικύρωσης"
+
+msgid "registered users"
+msgstr "εγγεγραμμένοι χρήστες"
+
+msgid "simple visitors"
+msgstr "απλοί επισκέπτες"
+
+msgid "the wiki"
+msgstr "το wiki"
+
+msgid "top left corner"
+msgstr "πάνω αριστερή γωνία"
+
+msgid "top right corner"
+msgstr "πάνω δεξιά γωνία"
+
+msgid "total time"
+msgstr "συνολικός χρόνος"
+
+msgid "unit mode"
+msgstr "απλή κατάσταση"
+
+msgid "unknown"
+msgstr "άγνωστο"
+
+msgid "unset"
+msgstr "μηδένισμα"
+
+msgid "update the database from files"
+msgstr "ενημέρωση της βάσης δεδομένων με τα αρχεία"
+
+msgid "user \"%s\" added"
+msgstr "Ο χρήστης \"%s\" προστέθηκε"
+
+msgid "user_status_admin"
+msgstr "Διαχειριστής"
+
+msgid "user_status_generic"
+msgstr "Γενικός"
+
+msgid "user_status_guest"
+msgstr "Επισκέπτης"
+
+msgid "user_status_webmaster"
+msgstr "Webmaster"
+
+msgid "visitors need to login and have the appropriate permissions to see this album"
+msgstr "οι επισκέπτες πρέπει να συνδεθεθούν και να έχουν τα κατάλληλα δικαιώματα για να δουν αυτό το λεύκωμα"
+
+msgid "width must be a number superior to"
+msgstr "πλάτος πρέπει να είναι ένας αριθμός μεγαλύτερο από ό, τι"
+
+msgid "wrong filename"
+msgstr "λανθασμένο όνομα αρχείου"
+
+msgid "%d physicals"
+msgstr "%d πραγματικά"
+
+msgid "%d week"
+msgstr "%d εβδομάδα"
+
+msgid "%d weeks"
+msgstr "%d εβδομάδες"
+
+msgid "Edit photo"
+msgstr "Επεξεργασία φωτογραφίας"
+
+msgid "create a new site"
+msgstr "δημιουργία νέας ιστοσελίδας"
+
+msgid "No order field selected"
+msgstr "Δεν επιλέχτηκε διατεταγμένο πεδίο"
+
+msgid "Duplicate selected tags"
+msgstr "Επιλεγμένες ετικέτες εις διπλούν "
+
+msgid "Name of the duplicate"
+msgstr "Όνομα του αντιγράφου"
+
+msgid "Source tag"
+msgstr "Ετικέτα Πηγή"
+
+msgid "Tag \"%s\" is now a duplicate of \"%s\""
+msgstr "Η Ετικέτα \"%s\" είναι πλέον ένα αντίγραφο του \"%s\""
+
+msgid "Portrait"
+msgstr "Οριζόντια"
+
+msgid "Panorama"
+msgstr "Πανοραμικό"
+
+msgid "Minimum width"
+msgstr "Ελάχιστο πλάτος"
+
+msgid "Minimum height"
+msgstr "Ελάχιστο ύψος"
+
+msgid "Landscape"
+msgstr "Κατακόρυφα"
+
+msgid "View in gallery"
+msgstr "Δείτε στην γκαλερί"
+
+msgid "Manage photos"
+msgstr "Διαχειριστείτε τις φωτογραφίες"
+
+msgid "Number of albums per page"
+msgstr "Αριθμός λευκωμάτων ανά σελίδα"
+
+msgid "Ratio"
+msgstr "Αναλογία"
+
+msgid "between %d and %d pixels"
+msgstr "μεταξύ %d και %d πίξελ"
+
+msgid "between %.2f and %.2f"
+msgstr "μεταξύ %.2f και %.2f"
+
+msgid "Type here the name of the new group"
+msgstr "Πληκτρολογήστε εδώ το όνομα της νέας ομάδας"
+
+msgid "This group will be unset to default"
+msgstr "Η ομάδα αυτή θα φύγει από τις προεπιλεγμένες"
+
+msgid "This group will be set to default"
+msgstr "Η ομάδα αυτή θα οριστεί ως προεπιλογή"
+
+msgid "Rename"
+msgstr "Μετονομασία"
+
+msgid "Please select at least two groups"
+msgstr "Παρακαλώ επιλέξτε τουλάχιστον δύο ομάδες"
+
+msgid "No members to manage"
+msgstr "Κανένα μέλος για διαχείριση"
+
+msgid "No groups selected, no actions possible."
+msgstr "Καμία ομάδα δεν επιλέχτηκε, δεν είναι δυνατή η συνέχεια."
+
+msgid "Merge selected groups"
+msgstr "Συγχώνευση επιλεγμένων ομάδων"
+
+msgid "Duplicate"
+msgstr "Διπλότυπο"
+
+msgid "Manage the members"
+msgstr "Διαχειριστείτε τα μέλη"
+
+msgid "Purge user cache"
+msgstr "Εκκαθάριση cache χρήστη"
+
+msgid "The picture dimensions will be reduced to %dx%d pixels."
+msgstr "Το μέγεθος της εικόνας θα μικρίνει κατα  %dx%d pixels."
+
+msgid "Resize after upload disabled due to the use of GD as graphic library"
+msgstr "Η Αλλαγή μεγέθους μετά τη μεταφόρτωση έχει απενεργοποιηθεί λόγω της χρήσης της βιβλιοθήκης γραφικών GD "
+
+msgid "Select at least one tag"
+msgstr "Επιλέξτε τουλάχιστον μια ετικέτα. "
+
+msgid "Mail theme"
+msgstr "Θέμα Mail"
+
+msgid "General"
+msgstr "Γενικά"
+
+msgid "Basic settings"
+msgstr "Βασικές ρυθμίσεις"
+
+msgid "on the %d selected users"
+msgstr "σχετικά με τους %d επιλεγμένους χρήστες"
+
+msgid "Users modified"
+msgstr "Οι χρήστες τροποποιήθηκαν"
+
+msgid "User %s updated"
+msgstr "Ο Χρήστης %s ενημερώθηκε"
+
+msgid "User %s added"
+msgstr "Ο χρήστης %s προστέθηκε"
+
+msgid "Update user"
+msgstr "Ενημέρωση χρήστη"
+
+msgid "Showing %s to %s of %s users"
+msgstr "Εμφάνιση από %s ως %s των %s χρηστών"
+
+msgid "Show %s users"
+msgstr "Εμφάνιση %s χρηστών"
+
+msgid "Registered on %s, %s."
+msgstr "Εγγεγραμμένοι στις %s, %s."
+
+msgid "Password updated"
+msgstr "Ο κωδικό πρόσβασης ενημερώθηκε"
+
+msgid "No users selected, no actions possible."
+msgstr "Κανένας χρήστης δεν επιλέχτηκε, καμία ενέργεια δεν είναι δυνατή."
+
+msgid "No user selected of %d users"
+msgstr "Κανένας χρήστης δεν επιλέχτηκε από  %d χρήστες"
+
+msgid "No matching user found"
+msgstr "Δεν βρέθηκε χρήστης"
+
+msgid "Loading..."
+msgstr "Φόρτωση ..."
+
+msgid "Last visit on %s, %s."
+msgstr "Τελευταία επίσκεψη στο  %s, %s."
+
+msgid "Change username"
+msgstr "Αλλαγή ονόματος χρήστη"
+
+msgid "Change password"
+msgstr "Αλλαγή κωδικού πρόσβασης"
+
+msgid "All %d users are selected"
+msgstr "Όλοι οι %d χρήστες επιλέχτηκαν"
+
+msgid "(filtered from %s total users)"
+msgstr "(φιλτραρισμένο από %s σύνολο των χρηστών)"
+
+msgid "%d of %d users selected"
+msgstr "%d από %d επιλεγμένους χρήστες"
+
+msgid "close"
+msgstr "κλείσιμο "
+
+msgid "Open user details"
+msgstr "Άνοιγμα Λεπτομεριών χρήστη"
+
+msgid "Close user details"
+msgstr "Κλείστε τα στοιχεία χρήστη"
+
+msgid "Activate it now"
+msgstr "Ενεργοποιήστε τώρα"
+
+msgid "Allow users to add a link to their website"
+msgstr "Επιτρέπει στους χρήστες να προσθέτουν ένα σύνδεσμο για το website τους."
+
+msgid "Mail address is mandatory for registration"
+msgstr "Η διεύθυνση e-mail είναι υποχρεωτική για την εγγραφή"
+
+msgid "Impossible to deactivate the default theme."
+msgstr "Αδύνατο να απενεργοποιήσετε το προεπιλεγμένο θέμα."
+
+msgid "Empty caddie"
+msgstr "Άδειασμα Καλαθιού "
+
+msgid "width & height"
+msgstr "πλάτος & ύψος"
+
+msgid "file name"
+msgstr "όνομα αρχείου"
+
+msgid "date & time"
+msgstr "ημερομηνία και ώρα"
+
+msgid "between %s and %s MB"
+msgstr "μεταξύ %s και %s MB"
+
+msgid "based on"
+msgstr "βασισμένο σε"
+
+msgid "The settings for the guest are from the %s user"
+msgstr "Οι ρυθμίσεις για τους επισκέπτες είναι από το χρήστη %s"
+
+msgid "No and unlock sub-albums"
+msgstr "Όχι και ξεκλείδωμα υπο-λευκώματα"
+
+msgid "Upload in progress"
+msgstr "Μεταφόρτωση σε εξέλιξη "
+
+msgid "Y Repeat"
+msgstr "Y Επανάληψη"
+
+msgid "Recipients"
+msgstr "Παραλήπτες"
+
+msgid "Orphans"
+msgstr "Ορφανά"
+
+msgid "No user is permitted to see this private album"
+msgstr "Κανένας χρήστης δεν επιτρέπεται να δεί αυτό το ιδιωτικό λεύκωμα"
+
+msgid "No recipient selected"
+msgstr "Δεν έχει επιλεγεί παραλήπτης"
+
+msgid "For security reason, authentication keys do not work for administrators."
+msgstr "Για λόγους ασφαλείας, τα πλήκτρα ελέγχου ταυτότητας δεν λειτουργούν για διαχειριστές."
+
+msgid "Edit user"
+msgstr "Επεξεργασία χρήστη"
+
+msgid "Each email sent will contain its own automatic authentication key on links, valid for %s."
+msgstr "Κάθε email που στέλνεται θα περιέχει το δικό του κλειδί για αυτόματο έλεγχο ταυτότητας της σε συνδέσμους, που ισχύει για το %s."
+
+msgid "Delete %d orphan photos"
+msgstr "Διαγραφή %d ορφανών φωτογραφιών"
+
+msgid "orphans to delete"
+msgstr "ορφανές φωτογραφίες γι διαγραφή"
+
+msgid "delete only album, not photos"
+msgstr "διαγράψετε μόνο λευκώματα, όχι φωτογραφίες"
+
+msgid "delete album and the %d orphan photos"
+msgstr "διαγράψετε τα λευκώματα και τις %d ορφανές φωτογραφίες"
+
+msgid "delete album and all %d photos, even the %d associated to other albums"
+msgstr "διαγράψετε τα λευκώματα και όλες τις %d φωτογραφίες, ακόμα και αυτα %d που συνδέονται με άλλα λευκώματα."
+
+msgid "checksum"
+msgstr "άθροισμα ελέγχου"
+
+msgid "Time has come to update your Piwigo with version %s, go to %s"
+msgstr "Ήρθε η ώρα για να ενημερώσετε το Piwigo σας με την έκδοση %s, πηγαίνετε στο %s"
+
+msgid "Storage used"
+msgstr "χώρος αποθήκευσης που χρησιμοποιείται"
+
+msgid "Share / Send your photos directly from your Mac Os X (10.10 and following) to Piwigo"
+msgstr "Μοιραστείτε / Στείλτε τις φωτογραφίες σας απευθείας από το MacOS σας (10.10 και μετά) στο Piwigo"
+
+msgid "Select tags"
+msgstr "Επιλέξτε ετικέτες"
+
+msgid "Running on an up-to-date Piwigo is important for security."
+msgstr "Τρέχοντας σε ένα ενημερωμένο Piwigo είναι σημαντικό για την ασφάλεια."
+
+msgid "No tags selected, no actions possible."
+msgstr "Δεν έχει επιλεγεί ετικέτα, καμία ενέργεια δεν είναι δυνατή."
+
+msgid "Piwigo Remote Sync is able to upload a whole folder hierarchy. If you run it again, only new photos will be uploaded."
+msgstr "Το Piwigo Remote Sync είναι σε θέση να μεταφορτόσει μια ολόκληρη ιεραρχία φακέλων. Αν το εκτελέσετε ξανά, μόνο νέες φωτογραφίες θα μεταφορτοθούν."
+
+msgid "Piwigo %s is available, please update"
+msgstr "Το Piwigo %s είναι διαθέσιμο, παρακαλώ ενημερώστε"
+
+msgid "No filter on album. Select one or type to search"
+msgstr "Χωρίς φίλτρο για λευκώματα. Επιλέξτε ένα ή πληκτρολογήστε για αναζήτηση"
+
+msgid "It only takes a few clicks."
+msgstr "Χρειάζονται μόνο λίγα κλικ."
+
+msgid "Display form"
+msgstr "Εμφάνιση φόρμας"
+
+msgid "Delete album \"%s\"."
+msgstr "Διαγραφή άλμπουμ \"%s\"."
+
+msgid "Delete album \"%s\" and its %d sub-albums."
+msgstr "Διαγραφή άλμπουμ \"%s\" και υπο-άλμπουμ της %d."
+
+msgid "Dashboard"
+msgstr "Πίνακας Ελέγχου"
+
+msgid "Confirm deletion"
+msgstr "Επιβεβαίωση διαγραφής"
+
+msgid "(determined from photos)"
+msgstr "(Που καθορίζεται από τις φωτογραφίες)"
+
+msgid "or"
+msgstr "ή"
+
+msgid "checksums to add"
+msgstr "αθροίσματα ελέγχου για προσθήκη"
+
+msgid "With no checksum"
+msgstr "Χωρίς κανένα άθροισμα ελέγχου"
+
+msgid "Welcome!"
+msgstr "Καλώς ορίσατε!"
+
+msgid "Visit"
+msgstr "Επίσκεψη"
+
+msgid "Synchronization in progress"
+msgstr "Ο συγχρονισμός βρίσκεται σε εξέλιξη"
+
+msgid "Some checksums are missing."
+msgstr "Ορισμένα αθροίσματα ελέγχου λείπουν."
+
+msgid "Piwigo requires an album to add photos."
+msgstr "Ο Piwigo απαιτεί ένα λεύκωμα για την προσθήκη φωτογραφιών"
+
+msgid "Display category date"
+msgstr "Εμφάνιση ημερομηνίας κατηγορίας"
+
+msgid "Display album date period"
+msgstr "Δείξτε την περίοδο αναφοράς που σχετίζεται με κάθε άλμπουμ, π.χ. «από τις 12 έως τις 15 Ιουλίου 2018»"
+
+msgid "Deletion in progress"
+msgstr "Η διαγραφή βρίσκεται σε εξέλιξη"
+
+msgid "Create a first album"
+msgstr "Δημιουργήστε ένα πρώτο λεύκωμα."
+
+msgid "Compute %d missing checksums"
+msgstr "Υπολογισμός %d αθροίσματα ελέγχου που λείπουν"
+
+msgid "... or hide this link"
+msgstr "...ή να αποκρύψει αυτόν τον σύνδεσμο"
+
+msgid "%d checksums were added"
+msgstr "Έχουν προστεθεί %d αθροίσματα ελέγχου"
+
+msgid "<b>%d</b> tags found"
+msgstr "<b>%d</b> ετικέτες βρέθηκαν"
+
+msgid "<b>%d</b> tag found"
+msgstr "<b>%d</b> ετικέτα βρέθηκε"
+
+msgid "<b>%d</b> tag selected"
+msgstr "<b>%d</b> ετικέτες επιλέχτηκαν "
+
+msgid "%s other tags available.."
+msgstr "%s άλλες ετικέτες διαθέσιμες.."
+
+msgid "%s MB used"
+msgstr "%s MB που χρησιμοποιεί"
+
+msgid "%s GB used"
+msgstr "%s GB που χρησιμοποιεί"
+
+msgid "%d photos"
+msgstr "%d φωτογραφίες"
+
+msgid " (copy)"
+msgstr " (αντιγραφή)"
+
+msgid " (copy %s)"
+msgstr " (αντιγραφή %s)"
+
+msgid "Are you sure you want to restore this plugin?"
+msgstr "Είστε βέβαιοι ότι θέλετε να επαναφέρετε αυτήν το πρόσθετο;"
+
+msgid "Tags \\{%s\\} succesfully deleted"
+msgstr "Η Ετικέτα  \\{%s\\} διαγράφηκε επιτυχώς"
+
+msgid "Tag(s) \\{%s1\\} succesfully merged into \"%s2\""
+msgstr "Η Ετικέτα \\{%s1\\} συγχωνεύτηκαν με επιτυχία στο \"%s2\""
+
+msgid "Tag Manager"
+msgstr "Διαχειριστής Ετικετών"
+
+msgid "Tag \"%s1\" renamed in \"%s2\""
+msgstr "Η ετικέτα \\\"%s1\\\" μετονομάστηκε σε \\\"%s2\\\""
+
+msgid "Are you sure you want to restore the plugin \"%s\"?"
+msgstr "Είστε βέβαιοι ότι θέλετε να επαναφέρετε το πρόσθετο \"%s\";"
+
+msgid "Are you sure you want to lock the gallery?"
+msgstr "Είστε βέβαιοι ότι θέλετε να κλειδώσετε τη γκαλερί;"
+
+msgid "Are you sure you want to install the plugin \"%s\"?"
+msgstr "Είστε βέβαιοι ότι θέλετε να εγκαταστήσετε την προσθήκη \"%s\";"
+
+msgid "Are you sure you want to delete this?"
+msgstr "Είστε βέβαιοι ότι θέλετε να το διαγράψετε;"
+
+msgid "Are you sure you want to delete this theme?"
+msgstr "Είστε βέβαιοι ότι θέλετε να διαγράψετε αυτό το θέμα;"
+
+msgid "Are you sure you want to delete this site?"
+msgstr "Είστε βέβαιοι ότι θέλετε να διαγράψετε αυτόν τον ιστότοπο;"
+
+msgid "Are you sure you want to delete the user \"%s\"?"
+msgstr "Είστε βέβαιοι ότι θέλετε να διαγράψετε τον χρήστη \"%s\";"
+
+msgid "Are you sure you want to delete the theme \"%s\"?"
+msgstr "Είστε βέβαιοι ότι θέλετε να διαγράψετε το θέμα \"%s\";"
+
+msgid "Are you sure you want to delete the ratings of the user \"%s\"?"
+msgstr "Είστε βέβαιοι ότι θέλετε να διαγράψετε τις αξιολογήσεις του χρήστη \"%s\";"
+
+msgid "Are you sure you want to delete the plugin \"%s\"?"
+msgstr "Είστε βέβαιοι ότι θέλετε να διαγράψετε το πρόσθετο \"%s\";"
+
+msgid "Are you sure you want to delete the language \"%s\"?"
+msgstr "Είστε βέβαιοι ότι θέλετε να διαγράψετε τη γλώσσα \"%s\";"
+
+msgid "Are you sure you want to delete group \"%s\"?"
+msgstr "Είστε βέβαιοι ότι θέλετε να διαγράψετε την ομάδα \"%s\";"
+
+msgid "Are you sure you want to delete all sizes?"
+msgstr "Είστε βέβαιοι ότι θέλετε να διαγράψετε όλα τα μεγέθη;"
+
+msgid "Album search tool"
+msgstr "Εργαλείο αναζήτησης λευκωμάτων"
+
+msgid "Activity peak in the last weeks"
+msgstr "Μέγιστη δραστηριότητα τις τελευταίες εβδομάδες"
+
+msgid "<b>1</b> album found"
+msgstr "Βρέθηκε <b>1</b> λεύκωμα"
+
+msgid "<b>%d</b> albums found"
+msgstr "Βρέθηκαν <b>%d</b> λευκώματα"
+
+msgid "%s file type"
+msgstr "%s τύπος αρχείου"
+
+msgid "%d Activity"
+msgstr "%d Δραστηριότητα"
+
+msgid "%d sub-albums"
+msgstr "%d υπο-λευκώματα"
+
+msgid "%d Activities"
+msgstr "%d Δραστηριότητες"
+
+msgid "Are you sure you want to update all extensions?"
+msgstr "Είστε βέβαιοι ότι θέλετε να ενημερώσετε όλες τις επεκτάσεις;"
+
+msgid "Are you sure you want to restore to default settings?"
+msgstr "Είστε βέβαιοι ότι θέλετε να επαναφέρετε τις προεπιλεγμένες ρυθμίσεις;"
+
+msgid "Cache"
+msgstr "Λανθάνουσα Μνήμη"
+
+msgid "Average last 12 months"
+msgstr "Μέσος όρος τους τελευταίους 12 μήνες"
+
+msgid "At least 2 selected tags are needed to merge"
+msgstr "Τουλάχιστον δύο επιλέξιμες ετικέτες χρειάζονται για συγχώνευση."
+
+msgid "Jul"
+msgstr "Ιούλ"
+
+msgid "Jun"
+msgstr "Ιούν"
+
+msgid "%d group edited"
+msgstr "%d ομάδα επεξεργάστικε  "
+
+msgid "%d groups edited"
+msgstr "%d ομάδες  επεξεργάστικαν "
+
+msgid "%d groups deleted"
+msgstr "%d ομάδες αφαιρέθηκαν"
+
+msgid "%d groups added"
+msgstr "%d ομάδες  προστέθηκε"
+
+msgid "%d group moved"
+msgstr "%d ομάδα μετακινήθηκε "
+
+msgid "%d group deleted"
+msgstr "%d ομάδα  αφαιρέθηκε"
+
+msgid "%d albums edited"
+msgstr "%d λεύκωμα επεξεργάστικε"
+
+msgid "%d group added"
+msgstr "%d ομάδα  προστέθηκε"
+
+msgid "%d albums deleted"
+msgstr "%d albums αφαιρέθηκε"
+
+msgid "%d album edited"
+msgstr "%d λεύκωμα επεξεργάστικε"
+
+msgid "%d albums added"
+msgstr "%d λεύκωμα προστέθηκε"
+
+msgid "%d album deleted"
+msgstr "%d λεύκωμα αφαιρέθηκε"
+
+msgid "%d album added"
+msgstr "%d λεύκωμα προστέθηκε"
+
+msgid "<b>%d+</b> albums found, try to refine the search"
+msgstr "Βρέθηκαν <b>%d+</b> λεύκωμα, προσπαθήστε να κάνετε πιο συγκεκριμένη την αναζήτηση"
+
+msgid "%s status is required to edit parameters."
+msgstr "Κατάσταση %s απαιτείται για την επεξεργασία των παραμέτρων."
+
+msgid "to"
+msgstr "προς το"
+
+msgid "right now"
+msgstr "τώρα αμέσως"
+
+msgid "no photo"
+msgstr "δεν υπάρχει φωτογραφία"
+
+msgid "never calculated"
+msgstr "ποτέ δεν υπολογίζεται"
+
+msgid "move"
+msgstr "μετακίνηση"
+
+msgid "months ago"
+msgstr "μήνες πριν"
+
+msgid "%s plugins found"
+msgstr "Βρέθηκαν <b>%s</b> πρόσθετα"
+
+msgid "%s plugin found"
+msgstr "Βρέθηκε <b>%s</b> πρόσθετο "
+
+msgid "%s line"
+msgstr "%s γραμμή"
+
+msgid "%s lines"
+msgstr "%s γραμμές"
+
+msgid "%s MB"
+msgstr "%s MB"
+
+msgid "%d users logged out"
+msgstr "%d χρήστες αποσυνδέθηκαν"
+
+msgid "%d users logged in"
+msgstr "%d χρήστες έχουν συνδεθεί"
+
+msgid "%d users edited"
+msgstr "%d χρήστες επεξεργάστηκαν"
+
+msgid "%d users added"
+msgstr "Προστέθηκαν %d χρήστες"
+
+msgid "%d user logged out"
+msgstr "%d χρήστης αποσυνδέθηκε"
+
+msgid "%d user logged in"
+msgstr "%d χρήστης έχει συνδεθεί"
+
+msgid "%d user edited"
+msgstr "%d χρήστης επεξεργάστηκε"
+
+msgid "%d user added"
+msgstr "Προστέθηκε %d χρήστης"
+
+msgid "%d tags moved"
+msgstr "Μετακινήθηκαν %d ετικέτες"
+
+msgid "%d tags deleted"
+msgstr "%d ετικέτες διαγράφηκαν"
+
+msgid "%d tags edited"
+msgstr "%d ετικέτες επεξεργάστηκαν"
+
+msgid "%d tags added"
+msgstr "Προστέθηκαν %d ετικέτες"
+
+msgid "%d tag moved"
+msgstr "Μετακινήθηκε %d ετικέτα"
+
+msgid "%d tag edited"
+msgstr "%d ετικέτα επεξεργάστηκε"
+
+msgid "%d tag deleted"
+msgstr "%d ετικέτα διαγράφηκε"
+
+msgid "%d tag added"
+msgstr "Προστέθηκε %d ετικέτα"
+
+msgid "%d photos moved"
+msgstr "Μετακινήθηκαν %d φωτογραφίες"
+
+msgid "%d photos edited"
+msgstr "%d φωτογραφίες επεξεργάστηκαν"
+
+msgid "%d photos deleted"
+msgstr "%d φωτογραφίες διαγράφηκαν"
+
+msgid "%d photos added"
+msgstr "Προστέθηκαν %d φωτογραφίες"
+
+msgid "%d photo moved"
+msgstr "%d φωτογραφία μετακινήθηκε"
+
+msgid "%d photo edited"
+msgstr "%d φωτογραφία επεξεργάστηκε"
+
+msgid "%d photo added"
+msgstr "Προστέθηκε %d φωτογραφία"
+
+msgid "%d photo deleted"
+msgstr "%d φωτογραφία διαγράφηκε"
+
+msgid "%d groups moved"
+msgstr "%d ομάδες μετακινήθηκαν"
+
+msgid "Apply to root albums"
+msgstr "Εφαρμογή σε root λευκώματα"
+
+msgid "Apply to direct sub-albums"
+msgstr "Εφαρμογή σε απευθείας υπο-λευκώματα"
+
+msgid "Apply an automatic order to root albums"
+msgstr "Εφαρμόστε μια αυτόματη ταξινόμηση στα root λευκώματα"
+
+msgid "Always have a backup of your database and files."
+msgstr "Έχετε πάντα αντίγραφο ασφαλείας της βάσης δεδομένων και των αρχείων σας."
+
+msgid "All admins"
+msgstr "Όλοι οι διαχειριστές"
+
+msgid "Allow comments for sub-albums"
+msgstr "Να επιτρέπονται σχόλια για υπο-λευκώματα"
+
+msgid "Add as filter"
+msgstr "Προσθήκη ως φίλτρο"
+
+msgid "Add formats"
+msgstr "Προσθήκη φορματ"
+
+msgid "Additional filters"
+msgstr "Πρόσθετα φίλτρα"
+
+msgid "Advanced filters"
+msgstr "Προηγμένα φίλτρα"
+
+msgid "Album name must not be empty"
+msgstr "Το όνομα του λευκώματος δεν πρέπει να είναι κενό"
+
+msgid "Add another set of formats"
+msgstr "Προσθέστε ένα άλλο σετ φορματ"
+
+msgid "Add a new user"
+msgstr "Προσθήκη νέου χρήστη"
+
+msgid "Add User"
+msgstr "Πρόσθεσε χρήστη"
+
+msgid "Add New Plugin"
+msgstr "Προσθέστε ένα νέο πρόσθετο"
+
+msgid "Add Album"
+msgstr "Προσθήκη λευκώματος"
+
+msgid "Activity time from"
+msgstr "Χρόνος δραστηριότητας από"
+
+msgid "Activity"
+msgstr "Δραστηριότητα"
+
+msgid "Activated plugin list"
+msgstr "Ενεργοποιημένη λίστα πρόσθετων"
+
+msgid "Activated"
+msgstr "Ενεργοποιημένος"
+
+msgid "Activate button \"%s\""
+msgstr "Ενεργοποίηση κουμπιού \"%s\""
+
+msgid "<b>%d</b> filtered users"
+msgstr "<b>%d</b> φιλτραρισμένοι χρήστες"
+
+msgid "<b>%d</b> filtered user"
+msgstr "Φιλτραρισμένος χρήστης <b>%d</b>"
+
+msgid "%sMB"
+msgstr "%s MB"
+
+msgid "%d in whole branch"
+msgstr "%d σε ολόκληρο τον κλάδο"
+
+msgid "%sGB"
+msgstr "%s GB"
+
+msgid "%s pixels, %.2f MB"
+msgstr "%s pixel, %.2f MB"
+
+msgid "%d pictures in sub-albums"
+msgstr "%d εικόνες σε υπο-λευκώματα"
+
+msgid "%d including sub-albums"
+msgstr "%d συμπεριλαμβανομένων των υπο-λευκωμάτων"
+
+msgid "%d formats uploaded for %d photos"
+msgstr "%d μορφές μεταφορτώθηκαν για %d φωτογραφίες"
+
+msgid "Mar"
+msgstr "Μαρ"
+
+msgid "Merge"
+msgstr "Συγχώνευση"
+
+msgid "Memories"
+msgstr "Αναμνηστικά"
+
+msgid "May"
+msgstr "Μαη"
+
+msgid "Manage users with user manager"
+msgstr "Διαχειριστείτε τους χρήστες με τον διαχειριστή χρηστών"
+
+msgid "Manage users"
+msgstr "Διαχείριση χρηστών"
+
+msgid "Manage sub-albums"
+msgstr "Διαχείριση υπο-λευκώματος"
+
+msgid "Manage album photos"
+msgstr "Διαχείριση φωτογραφιών λευκώματος "
+
+msgid "Locked albums are disabled for maintenance. Only administrators can view them in the gallery. Lock this album will also lock his Sub-albums"
+msgstr "Τα κλειδωμένα λευκώματα είναι απενεργοποιημένα για συντήρηση. Μόνο οι διαχειριστές μπορούν να τα δουν στη συλλογή. Το κλείδωμα αυτού του λευκώματος θα κλειδώσει και τα δευτερεύοντα άλμπουμ του."
+
+msgid "Locked album"
+msgstr "Κλειδωμένο λεύκωμα"
+
+msgid "Line View"
+msgstr "Προβολή γραμμική"
+
+msgid "Latest Piwigo news"
+msgstr "Τα τελευταία νέα του Piwigo"
+
+msgid "Last visit"
+msgstr "Τελευταία επίσκεψη"
+
+msgid "Last revision date is newer than"
+msgstr "Η ημερομηνία τελευταίας αναθεώρησης είναι νεότερη από"
+
+msgid "Language"
+msgstr "Γλώσσα"
+
+msgid "Keep them"
+msgstr "Κρατα τους"
+
+msgid "Jan"
+msgstr "Ιαν"
+
+msgid "Installed on %s, %s"
+msgstr "Εγκατεστημένο σε %s, %s"
+
+msgid "Install Piwigo on mobile"
+msgstr "Εγκαταστήστε το Piwigo σε κινητό"
+
+msgid "If anything bad happens during the update, you would be able to restore a backup."
+msgstr "Εάν συμβεί κάτι κακό κατά την ενημέρωση, θα μπορείτε να επαναφέρετε ένα αντίγραφο ασφαλείας."
+
+msgid "Hide sub-albums"
+msgstr "Απόκρυψη υπο-άλμπουμ"
+
+msgid "Has access to all administration functionnalities. Can manage both configuration and content."
+msgstr "Έχει πρόσβαση σε όλες τις λειτουργίες διαχείρισης. Μπορεί να διαχειριστεί τόσο τη διαμόρφωση όσο και το περιεχόμενο."
+
+msgid "Has access to administration. Can only manage content: photos/albums/users/tags/groups."
+msgstr "Έχει πρόσβαση στη διοίκηση. Μπορεί να διαχειριστεί μόνο περιεχόμενο: φωτογραφίες/λευκώματα/χρήστες/ετικέτες/ομάδες."
+
+msgid "Groups \\{%s\\} succesfully deleted"
+msgstr "Οι ομάδες \\{%s\\} διαγράφηκαν επιτυχώς"
+
+msgid "Group(s) \\{%s1\\} succesfully merged into \"%s2\""
+msgstr "Οι ομάδες \\{%s1\\} συγχωνεύτηκαν επιτυχώς στο \"%s2\""
+
+msgid "Group renamed"
+msgstr "Η ομάδα μετονομάστηκε"
+
+msgid "Group added"
+msgstr "Η ομάδα προστέθηκε"
+
+msgid "Group \"%s\" succesfully deleted"
+msgstr "Η ομάδα \"%s\" διαγράφηκε επιτυχώς"
+
+msgid "Global Gallery Actions"
+msgstr "Global Gallery Actions"
+
+msgid "File type: %s"
+msgstr "Τύποι αρχείων %s"
+
+msgid "Formats"
+msgstr "Μορφές"
+
+msgid "Generate random password"
+msgstr "Δημιουργήστε τυχαίο κωδικό πρόσβασης"
+
+msgid "Filters"
+msgstr "Φίλτρα"
+
+msgid "Feb"
+msgstr "Φεβ"
+
+msgid "Extensions"
+msgstr "Επεκτάσεις"
+
+msgid "Error when trying to detect formats"
+msgstr "Σφάλμα κατά την προσπάθεια ανίχνευσης φορματ"
+
+msgid "Equivalent to deactivation. The user is still in the list, but can no longer log in."
+msgstr "Ισοδυναμεί με απενεργοποίηση. Ο χρήστης εξακολουθεί να βρίσκεται στη λίστα, αλλά δεν μπορεί πλέον να συνδεθεί."
+
+msgid "Email Adress"
+msgstr "Διεύθυνση ηλεκτρονικού ταχυδρομείου"
+
+msgid "Email"
+msgstr "ΗΛΕΚΤΡΟΝΙΚΗ ΔΙΕΥΘΥΝΣΗ"
+
+msgid "Edited on %s"
+msgstr "Επεξεργάστηκε στο %s"
+
+msgid "Edit photo #%s"
+msgstr "Επεξεργασία φωτογραφίας #%s"
+
+msgid "Edit guest user"
+msgstr "Επεξεργασία επισκέπτη χρήστη"
+
+msgid "Edit"
+msgstr "Επεξεργασία"
+
+msgid "During upload, if Piwigo detects the photo already exists, associate the existing photo to the destination album, without duplicating file"
+msgstr "Κατά τη μεταφόρτωση, εάν το Piwigo εντοπίσει ότι η φωτογραφία υπάρχει ήδη, συσχετίστε την υπάρχουσα φωτογραφία με το λεύκωμα προορισμού, χωρίς να αντιγράψετε το αρχείο"
+
+msgid "Drag and drop to reorder albums"
+msgstr "Σύρετε και αποθέστε για αναδιάταξη λευκώματα"
+
+msgid "Downloaded"
+msgstr "Λήψη"
+
+msgid "Download all activities"
+msgstr "Λήψη όλων των δραστηριοτήτων"
+
+msgid "Dissociate user from this group"
+msgstr "Αποσύνδεση χρήστη από αυτήν την ομάδα"
+
+msgid "Displays a banner to install or open the official Piwigo app"
+msgstr "Εμφανίζει ένα banner για εγκατάσταση ή άνοιγμα της επίσημης εφαρμογής Piwigo"
+
+msgid "Display"
+msgstr "Εμφάνιση "
+
+msgid "Discover"
+msgstr "Ανακαλύπτω"
+
+msgid "Disallow comments for sub-albums"
+msgstr "Απαγόρευση σχολίων για δευτερεύοντα λευκώματα"
+
+msgid "Detect and avoid duplicates during upload"
+msgstr "Εντοπίστε και αποφύγετε τα διπλότυπα κατά τη μεταφόρτωση"
+
+msgid "Details"
+msgstr "Λεπτομέριες"
+
+msgid "Delete user"
+msgstr "Διαγραφή χρήστη"
+
+msgid "Delete these sizes"
+msgstr "Διαγράψτε αυτά τα μεγέθη"
+
+msgid "Delete them"
+msgstr "Διαγράψτε τα"
+
+msgid "Delete tags \\{%s\\}?"
+msgstr "Διαγραφή ετικετών \\{%s\\};"
+
+msgid "Delete tag \"%s\"?"
+msgstr "Διαγραφή ετικέτας \"%s\";"
+
+msgid "Delete album"
+msgstr "Διαγραφή λεύκωμα "
+
+msgid "Delete orphan tags ?"
+msgstr "Διαγραφή ορφανών ετικετών;"
+
+msgid "Delete %s format ?"
+msgstr "Διαγραφή μορφής %s ;"
+
+msgid "Dec"
+msgstr "Δεκ"
+
+msgid "Deactivated"
+msgstr "Απενεργοποιήθηκε"
+
+msgid "Currently running version %s"
+msgstr "Αυτήν τη στιγμή εκτελείται η έκδοση %s"
+
+msgid "Current Version"
+msgstr "Τρέχουσα έκδοση"
+
+msgid "Created on %s"
+msgstr "Δημιουργήθηκε σε %s"
+
+msgid "Created"
+msgstr "Δημιουργήθηκε"
+
+msgid "Create a sub-album of \"%s\""
+msgstr "Δημιουργία υπο-λεύκωμα του \"%s\""
+
+msgid "Create a new album at root"
+msgstr "Δημιουργήστε ένα νέο λεύκωμα στη root"
+
+msgid "Compare mode"
+msgstr "Λειτουργία σύγκρισης"
+
+msgid "Compact View"
+msgstr "Συμπαγής όψη"
+
+msgid "Comments disallowed for sub-albums"
+msgstr "Τα σχόλια δεν επιτρέπονται για τα δευτερεύοντα λευκώματα"
+
+msgid "Comments allowed for sub-albums"
+msgstr "Επιτρέπονται σχόλια για υπο-λευκώματα"
+
+msgid "Close"
+msgstr "Κλείσε"
+
+msgid "Clear Selection"
+msgstr "Καθαρλιστε τη Επιλογή"
+
+msgid "Certification higher or equal to"
+msgstr "Πιστοποίηση υψηλότερη ή ίση με"
+
+msgid "Change Password"
+msgstr "Άλλαξε κωδικό"
+
+msgid "Choose which tag to merge these tags into"
+msgstr "Επιλέξτε σε ποια ετικέτα θα συγχωνεύσετε αυτές τις ετικέτες"
+
+msgid "Aug"
+msgstr "Αύγ"
+
+msgid "Can be shared by several individuals without conflict (they cannot change the password)."
+msgstr "Μπορεί να γίνει κοινή χρήση από πολλά άτομα χωρίς διένεξη (δεν μπορούν να αλλάξουν τον κωδικό πρόσβασης)."
+
+msgid "Cache size"
+msgstr "Μέγεθος προσωρινής μνήμης"
+
+msgid "Authorize comments"
+msgstr "Εξουσιοδότηση σχολίων"
+
+msgid "Associate User"
+msgstr "Συνδεδεμμένος χρήστης"
+
+msgid "Are you sure you want to unlock the gallery?"
+msgstr "Είστε βέβαιοι ότι θέλετε να ξεκλειδώσετε τη γκαλερή;"
+
+msgid "Are you sure you want to uninstall the plugin \"%s\"?"
+msgstr "Είστε βέβαιοι ότι θέλετε να απεγκαταστήσετε το πρόσθετο\"%s\";"
+
+msgid "Apr"
+msgstr "Apr"
+
+msgid "Apply to the whole hierarchy"
+msgstr "Εφαρμόστε σε ολόκληρη την ιεραρχία"
+
+msgid "%d files"
+msgstr "%d αρχεία"
+
+msgid "Name field must not be empty"
+msgstr "Το πεδίο ονόματος δεν πρέπει να είναι κενό"
+
+msgid "More information"
+msgstr "Περισσότερες πληροφορίες"
+
+msgid "Modified"
+msgstr "Τροποποιημένο"
+
+msgid "Added on %s"
+msgstr "Προστέθηκε στο %s"
+
+msgid "An error has occured"
+msgstr "Συνέβη ένα σφάλμα"
+
+msgid "Auto-update"
+msgstr "Αυτόματη ενημέρωση"
+
+msgid "Changes saved"
+msgstr "Οι αλλαγές αποθηκεύτηκαν"
+
+msgid "Core"
+msgstr "Πυρήνας"
+
+msgid "Create a root album"
+msgstr "Δημιουργήστε ένα αρχικό άλμπουμ"
+
+msgid "Create and select"
+msgstr "Δημιουργήστε και επιλέξτε"
+
+msgid "Create your first album"
+msgstr "Δημιουργήστε το πρώτο σας άλμπουμ"
+
+msgid "Activate create mode to create and select an album"
+msgstr "Ενεργοποιήστε τη λειτουργία διμιουργικότητας για να δημιουργήσετε και να επιλέξετε ένα άλμπουμ"
+
+msgid "Refresh thumbnail"
+msgstr "Ανανέωση της μικρογραφίας"
+
+msgid "Registered"
+msgstr "Καταχωρημένο"
+
+msgid "Remove thumbnail"
+msgstr "Αφαέρεσε τη μικρογραφία"
+
+msgid "Rename \"%s\""
+msgstr "Μετονομασία του \"%s\""
+
+msgid "Requires PHP %s"
+msgstr "Απαιτεί ΡΗΡ \"%s\""
+
+msgid "Restored"
+msgstr "Επαναφέρθηκε"
+
+msgid "Review"
+msgstr "Κριτική"
+
+msgid "Root"
+msgstr "Ρίζα"
+
+msgid "Save"
+msgstr "Σώσε"
+
+msgid "Search albums"
+msgstr "Ψάξε στα άλμπουμ"
+
+msgid "Search tips"
+msgstr "Συμβουλές αναζήτησης"
+
+msgid "Select"
+msgstr "Επέλεξε"
+
+msgid "Select all %d tags"
+msgstr "Επέλεξε όλα τις ετικέτες %d "
+
+msgid "Select an album... or type it!"
+msgstr "Επιλέξτε ένα άλμπουμ ή γράψτε το!"
+
+msgid "Select groups or type them"
+msgstr "Επιλέξτε ομάδες ή γράψτε τις"
+
+msgid "Select or create an album"
+msgstr "Επιλέξτε ή δημιουργήστε ένα άλμπουμ"
+
+msgid "Selected user"
+msgstr "Επιλεγμένος χρήστης"
+
+msgid "Selection mode"
+msgstr "Λειτουργία επιλογής"
+
+msgid "Sep"
+msgstr "Σεπτ"
+
+msgid "Add a sub-album to “%s”"
+msgstr "Πρόσθεσε ένα υποάλμπουμ στο \"%s\""
+
+msgid "Plugin \"%s\" has been activated!"
+msgstr "Το πρόσθετο \"%s\" ενεργοποιήθηκε!"
+
+msgid "Posted %s"
+msgstr "Στάλθηκε %s"
+
+msgid "Portraits"
+msgstr "Πορτραίτα"
+
+msgid "Plugin \"%s\" deleted!"
+msgstr "Το πρόσθετο \"%s\" διαγράφηκε!"
+
+msgid "Please upgrade your PHP version before any update."
+msgstr "Παρακαλώ, αναβαθμίστε την έκδοση της ΡΗΡ πριν οποιαδήποτε αναβάθμιση"
+
+msgid "Place last"
+msgstr "Τοποθέτησέ το τελευταίο"
+
+msgid "Place first"
+msgstr "Τοποθέτησέ το πρώτο"
+
+msgid "Picture to associate formats with"
+msgstr "Φωτογραφία για συσχετισμό μορφών"
+
+msgid "Piwigo is also on mobile."
+msgstr "Το Piwigo υπάρχει επίσης για κινητές συσκευές"
+
+msgid "Piwigo core"
+msgstr "Πυρήνας του Piwigo"
+
+msgid "Photos per page"
+msgstr "Φωτογραφίες ανά σελίδα"
+
+msgid "Pagination has changed and needs to be reloaded !"
+msgstr "Η σελιδοποίηση έχει αλλάξει και πρέπει να επαναφορτωθεί!"
+
+msgid "Page Visited in %s"
+msgstr "Η σελίδα έχει επισκεφθεί σε %s"
+
+msgid "Page Visited"
+msgstr "Επισκέψεις στη σελίδα"
+
+msgid "Other"
+msgstr "Άλλο"
+
+msgid "Open in gallery"
+msgstr "Άνοιξέ το στην πινακοθήκη"
+
+msgid "Only admins in a specific group"
+msgstr "Μόνο διαχειριστές σε μια συγκεκριμένη ομαδα"
+
+msgid "On %d rating(s)"
+msgstr "Σε %d εκτιμήσεις"
+
+msgid "Oct"
+msgstr "Οκτ"
+
+msgid "Put at the root"
+msgstr "Τοποθέτησέ το στη ρίζα"
+
+msgid "Purge Cache"
+msgstr "Διαγράψτε την προσωρινή μνήμη"
+
+msgid "Purge Actions"
+msgstr "Διαγράψτε τις ενέργειες"
+
+msgid "Properties of abums"
+msgstr "Χαρακτηριστικά των άλμπουμ"
+
+msgid "Promote mobile app on mobile devices"
+msgstr "Προωθήστε την εφαρμογή σε κινητές συσκευές"
+
+msgid "No tag found"
+msgstr "Δεν βρέθηκε ετικέτα"
+
+msgid "Object"
+msgstr "Αντικείμενο"
+
+msgid "Nov"
+msgstr "Νοε"
+
+msgid "No, I have changed my mind"
+msgstr "Όχι, άλλαξα γνώμη"
+
+msgid "No search in progress"
+msgstr "Καμμία έρευνα σε εξέλιξη"
+
+msgid "No research in progress"
+msgstr "Καμμία διερεύνηση σε εξέλιξη"
+
+msgid "No plugins found"
+msgstr "Δεν υπάρχουν πρόσθετα"
+
+msgid "No plugin activated"
+msgstr "Δεν υπάρχει ενεργοποιημένο πρόσθετο"
+
+msgid "No picture found with the following name : %s."
+msgstr "Δεν βρέθηκε φωτογραφία με το όνομα: %s"
+
+msgid "No format for this picture"
+msgstr "Δεν υπάρχει μορφή γι αυτή τη φωτογραφία"
+
+msgid "No albums found"
+msgstr "Δεν βρέθηκαν άλμπουμ"
+
+msgid "No access to administration, can see private content with appropriate permissions."
+msgstr "Δεν υπάρχει πρόσβαση στη διαχείριση, μπορείτε να δείτε ιδιωτικό περιεχόμενο με τα κατάλληλα δικαιώματα"
+
+msgid "New user added"
+msgstr "Προστέθηκε νέος χρήστης"
+
+msgid "Name is already taken"
+msgstr "Αυτό το όνομα υπάρχει ήδη"
+
+msgid "Metadata sync complete"
+msgstr "Ο συγχρονισμός των μεταδεδομένων έγινε"
+
+msgid "Image"
+msgstr "Φωτογραφία"
+
+msgid "First choose an album, then add your files"
+msgstr "Επιλέξτε πρώτα ένα άλμπουμ και μετά προσθέστε τα αρχεία σας"
+
+msgid "Expand"
+msgstr "Ανάπτυξη"
+
+msgid "Creation mode"
+msgstr "Δημιουργική λειτουργία"
+
+msgid "Update"
+msgstr "Ανανέωση"
+
+msgid "The other tags will be removed"
+msgstr "Οι άλλες ετικέτες θα αφαιρεθούν"
+
+msgid "Theme"
+msgstr "Θέμα"
+
+msgid "There is multiple image in the database with the following names : %s."
+msgstr "Η φωτογραφία με το όνομα %s υπάρχει πολλαπλές φορές στη βάση δεδομένων"
+
+msgid "This album is currently locked, visible only to administrators."
+msgstr "Αυτό το άλμπουμ είναι επί του παρόντος κλειδωμένο, προσβάσιμο μόνο από τους διαχειριστές"
+
+msgid "This albums is already in related categories list"
+msgstr "Αυτό το άλμπουμ είναι ήδη στη λίστα των σχετικών άλμπουμ"
+
+msgid "This is already the default theme"
+msgstr "Αυτό είναι ήδη το αρχικό όνομα"
+
+msgid "This photo is an orphan"
+msgstr "Αυτή η φωτογραφία είναι ορφανή"
+
+msgid "This photo no longer exists"
+msgstr "Αυτή η φωτογραφία δεν υπάρχει πια"
+
+msgid "This picture is physically linked to this album, you can't dissociate them"
+msgstr "Αυτή η φωτογραφία είναι φυσικά ενωμένη με αυτό τό άλμπουμ, δεν μπορείτε να την διαχωρίσετε"
+
+msgid "This plugin has no recent update"
+msgstr "Αυτό το πρόσθετο δεν έχει πρόσφατη ανανέωση"
+
+msgid "This plugin have been updated recently"
+msgstr "Αυτό το πρόσθετο έχει ανανεωθεί πρόσφατα"
+
+msgid "This plugin have no update since 3 years ! It may be outdated"
+msgstr "Αυτό το πρόσθετο δεν έχει ανανεωθεί εδώ και 3 χρόνια! Μπορεί να είναι παρωχημένο"
+
+msgid "This plugin is incompatible with your version"
+msgstr "Αυτό το πρόσθετο δεν είναι συμβατό με την έκδοσή σας"
+
+msgid "This plugin was updated less than 6 months ago"
+msgstr "Αυτό το πρόσθετο ανανεώθηκε λιγότερο από 6 μήνες πρίν"
+
+msgid "Tile View"
+msgstr "Παρουσίαση σαν πλακίδια"
+
+msgid "Try now !"
+msgstr "Προσπαθήστε τώρα!"
+
+msgid "Understood, do not show again"
+msgstr "Κατανοητό, δεν θα το ξαναδείξω"
+
+msgid "Unlock it"
+msgstr "Ξεκλειδώστε το"
+
+msgid "Unlocked album"
+msgstr "Ξεκλείδωτο άλμπουμ"
+
+msgid "Unset as group for new users"
+msgstr "Καταργήθηκε η ρύθμιση ως ομάδα για νέους χρήστες"
+
+msgid "Shrink"
+msgstr "Συρρίκνωσε"
+
+msgid "Some photos are missing from your file system. Details provided by plugin Check Uploads"
+msgstr "Μερικές φωτογραφίες λείπουν από το σύστημα αρχείων σας. Δείτε λεπτομέρειες από το πρόσθετο Έλεγχος Μεταφορτώσεων"
+
+msgid "Storage"
+msgstr "Χώρος αποθήκευσης"
+
+msgid "Synchronization"
+msgstr "Συγχρονισμός"
+
+msgid "System Activities"
+msgstr "Δραστηριότητες Συστήματος"
+
+msgid "Tag \"%s\" created"
+msgstr "Η ετικέτα \"%s\" δημιουργήθηκε"
+
+msgid "Tag \"%s\" succesfully deleted"
+msgstr "Η ετικέτα \\\"%s\\\" διαγράφηκε με επιτυχία"
+
+msgid "Tag name"
+msgstr "Όνομα ετικέτας"
+
+msgid "The %d tags on this page are selected"
+msgstr "Επιλέχθηκαν οι επικέτες %d σε αυτή τη σελίδα"
+
+msgid "The best is to have them made automatically on a regular basis."
+msgstr "Η καλύτερη πρακτική είναι να τις δημιουργείτε αυτόματα σε τακτά χρονικά διαστήματα."
+
+msgid "The original picture will be detected with the filename (without extension)."
+msgstr "Η αυθεντική φωτογραφία θα ανιχνευθεί με το όνομα αρχείου (χωρίς την επέκταση)"
+
+msgid "Showing %s users out of %s"
+msgstr "Δείχνω %s χρήστες από %s"
+
+msgid "Show sub-albums"
+msgstr "Δείξε τα υποάλμπουμ"
+
+msgid "Show plugins compatible with previous version of Piwigo"
+msgstr "Δείξε πρόσθετα συμβατά με προηγούμενη έκδοση του Piwigo"
+
+msgid "Show inactive plugins"
+msgstr "Δείξε τα ανενεργά πρόσθετα"
+
+msgid "Show beta test plugins"
+msgstr "Δείξε πρόσθετα σε επίπεδο ελέγχου beta"
+
+msgid "Show"
+msgstr "Δείξε"
+
+msgid "Set as group for new users"
+msgstr "Ορισμός σαν ομάδα για νέους χρήστες"
+
+msgid "Set as default"
+msgstr "Ορισμός σαν αρχικό"
+
+msgid "Rating greater than"
+msgstr "Βαθμονόμηση μεγαλύτερη από"
+
+msgid "Your selection"
+msgstr "Η επιλογή σας"
+
+msgid "action successfully performed."
+msgstr "η ενέργεια εκτελέστηκε με επιτυχία"
+
+msgid "add"
+msgstr "πρόσθεσε"
+
+msgid "and %d more"
+msgstr "και %d επιπλέον"
+
+msgid "and %s others"
+msgstr "και %s άλλα"
+
+msgid "between %d and %d"
+msgstr "μεταξύ %d και %d"
+
+msgid "between %s and %s"
+msgstr "μεταξύ %s και %s"
+
+msgid "calculated"
+msgstr "υπολογίστηκε"
+
+msgid "deletion"
+msgstr "διαγραφή"
+
+msgid "edit"
+msgstr "επεξεργασία"
+
+msgid "image(s) contains unsaved changes"
+msgstr "η/οι φωτογραφία/ες έχει/ουν μη αποθηκευμένες αλλαγές "
+
+msgid "in administration"
+msgstr "στη διαχείριση"
+
+msgid "in gallery"
+msgstr "στη πινακοθήκη"
+
+msgid "level of confidentiality"
+msgstr "επίπεδο εμπιστευτικότητας"
+
+msgid "login"
+msgstr "σύνδεση"
+
+msgid "logout"
+msgstr "αποσύνδεση"
+
+msgid "since the beginning"
+msgstr "από την αρχή"
+
+msgid "was succesfully deleted"
+msgstr "διαγράφηκε με επιτυχία"
+
+msgid "Upload Formats"
+msgstr "Ανέβασμα μορφών"
+
+msgid "User \"%s\" dissociated from this group"
+msgstr "Ο χρήστης \"%s\" αποσυνδέθηκε από αυτή την ομάδα"
+
+msgid "User associated"
+msgstr "Ο χρήστης συνδέθηκε"
+
+msgid "User updated"
+msgstr "Ο χρήστης ανανεώθηκε"
+
+msgid "Users not logged in will have these settings applied, these settings are used by default for new users"
+msgstr "Οι ασύνδετοι χρήστες θα έχουν αυτές τις ρυθμίσεις που χρησιμοποιούνται σαν εξ ορισμού για νέους χρήστες"
+
+msgid "Version %s"
+msgstr "Έκδοση %s"
+
+msgid "Videos"
+msgstr "Βίντεο"
+
+msgid "Visit history"
+msgstr "Δείτε το ιστορικό"
+
+msgid "Visited"
+msgstr "Επισκέφθηκε"
+
+msgid "Webmaster status required"
+msgstr "Απαιτείται επίπεδο Webmaster"
+
+msgid "While restoring this plugin, it will be reset to its original parameters and associated data is going to be reset"
+msgstr "Κατά την αποκατάσταση αυτού του πρόσθετου, οι ρυθμίσεις του και όλες οι σχετικές πληροφορίες θα επαναφερθούν στις αρχικές"
+
+msgid "Who can see ?"
+msgstr "Ποιός μπορεί να το δεί;"
+
+msgid "Yes, I am sure"
+msgstr "Ναι, είμαι σίγουρος"
+
+msgid "Yes, delete"
+msgstr "Ναι, διέγραψέ το"
+
+msgid "Yes, rename"
+msgstr "Ναι, μετονόμασέ το"
+
+msgid "You don't have access to this photo"
+msgstr "Δεν έχετε πρόσβαση σε αυτή τη φωτογραφία"
+
+msgid "You have %d orphan tags %s"
+msgstr "Έχετε %d ορφανές ετικέτες %s"
+
+msgid "You have %s inactive plugins"
+msgstr "Έχετε %s ανενεργά πρόσθετα"
+
+msgid "You have %s1 orphan : %s2"
+msgstr "Έχετε %s1 ορφανά: %s2"
+
+msgid "You have unsaved changes"
+msgstr "Έχετε αλλαγές που δεν έχουν αποθηκευθεί"
+
+msgid "You are not authorised to change the main user, please ask your webmaster"
+msgstr "Δεν έχετε δικαίωμα αλλαγής του Κύριου Χρήστη, παρακαλώ ρωτήστε τον Διαχειριστή του ιστότοπού σας"
+
+msgid "You can now change the main user from %s to %s."
+msgstr "Μπορείτε τώρα να αλλάξετε τον Κύριο Χρήστη από %s σε %s"
+
+msgid "You cannot copy the password if the connection to this site is not secure."
+msgstr "Δεν μπορείτε να αντιγράψετε τον κωδικό αν η σύνδεση με αυτό τον ιστότοπο δεν είναι ασφαλής."
+
+msgid "Copy password"
+msgstr "Αντέγραψε τον κωδικό"
+
+msgid "Copy the password link"
+msgstr "Αντέγραψε τον σύνδεσμο του κωδικού"
+
+msgid "Main user"
+msgstr "Κύριος Χρήστης"
+
+msgid "This user must first be defined as the webmaster before it can be upgraded to the main user"
+msgstr "Αυτός ο χρήστης πρέπει πρώτα να οριστεί σαν Διαχειριστής του ιστότοπου πριν μπορέσει να αναβαθμιστεί σε Κύριο Χρήστη"
+
+msgid "To be sure, please rewrite the word “%s” below"
+msgstr "Για να είστε σίγοιρος, παρακαλώ ξαναγράψτε την λέξη \"%s\" παρακάτω"
+
+msgid "Username successfully modified"
+msgstr "Το όνομα χρήστη άλλαξε με επιτυχία"
+
+msgid "Yes, let's proceed"
+msgstr "Ναι, ας προχωρήσουμε"
+
+msgid "You are about to set %s as main user instead of %s, do you wish to continue ?"
+msgstr "Πρόκειται να ορίσετε τον %s σαν Κύριο Χρήστη αντί του %s, θέλετε να προχωρήσετε;"
+
+msgid "The passwords do not match"
+msgstr "Οι κωδικοί δεν ταιριάζουν"
+
+msgid "Set as main user"
+msgstr "Όρισέ τον σαν Κύριο Χρήστη"
+
+msgid "Resend password link"
+msgstr "Επανααποστολή του συνδέσμου του κωδικού"
+
+msgid "Please complete all fields"
+msgstr "Παρακαλώ συμπληρώστε όλα τα πεδία"
+
+msgid "Password copied"
+msgstr "Ο κωδικός αντιγράφηκε"
+
+msgid "Copy the link below and send it to the user so the password can be set."
+msgstr "Αντιγράψτε τον παρακάτω σύνδεσμο και στείλτε τον στον χρήστη για να μπορέσει να οριστεί ο κωδικός."
+
+msgid "Copied link"
+msgstr "Αντιγραμμένος σύνδεσμος"
+
+msgid "Changing the main user"
+msgstr "Αλλάζω τον Κύριο Χρήστη"
+
+msgid "Cannot send an email to this user because he doesn't have an email address"
+msgstr "Δεν είναι δυνατόν να σταλεί μήνημα σε αυτό τον χρήστη επειδή δεν έχει διεύθυνση."
+
+msgid "%s is the new main user"
+msgstr "%s είναι ο νέος Κύριος Χρήστης"
+
+msgid "Ok, got it!"
+msgstr "Εντάξει, το 'πιασα!"
+
+msgid "Read the release note"
+msgstr "Διαβάστε την ανακοίνωση"
+
+msgid "What's new in version %s"
+msgstr "Τί νέο υπάρχει στην έκδοση %s;"
+
+msgid "A photo library administrator has created the following account for you:"
+msgstr "Ένας διαχειριστής της φωτογραφικής βιβλιοθήκης δημιούργησε για εσάς τον ακόλουθο λογαριασμό:"
+
+msgid "An activation link valid for %s has been sent to \"%s\". If the user doesn't receive the link, you can generate and copy a new one by editing the user and managing her password."
+msgstr "Ένας σύνδεσμος ενεργοποίησης που αφορά το %s, έχει αποσταλεί στο \"%s\". Αν ο σύνδεσμος δεν παραληφθεί ένας νέος μπορεί να δημιουργηθεί και ν' αντιγραφεί με την επεξεργασία του χρήστη και του κωδικού του."
+
+msgid "An activation link valid for %s was created but could not be sent. You can now copy the link below and send it to the user."
+msgstr "Δημιουργήθηκε ένας σύνδεσμος ενεργοποίησης για %s αλλά δεν μπόρεσε να αποσταλεί. Μπορείτε τώρα να αντιγράψετε τον παρακάτω σύνδεσμο και να τον στείλετε στον χρήστη."
+
+msgid "This link is valid for %s. After this time, you will need to request a new link."
+msgstr "Αυτός ο σύνδεσμος είναι ενεργός για %s. Μετά από αυτό το χρόνο, θα χρειαστεί να ζητήσετε ένα καινούριο."
+
+msgid "To set your password, visit the following address:"
+msgstr "Για να δημιουργήσετε τον κωδικό σας, επισκεφθείτε αυτή την διεύθυνση:"
+
+msgid "Welcome to %s"
+msgstr "Καλώς ήλθατε στο %s"
+
+msgid "%d photos were moved from the upload lounge to their albums"
+msgstr "%d φωτογραφίες μετακινήθηκαν από το χώρο αναμονής στα λευκώματά τους"
+
+msgid "Are you sure you want to delete \"%d\" comments?"
+msgstr "Είστε σίγουρος/η ότι θέλετε να διαγράψετε \"%d\" παρατηρήσεις;"
+
+msgid "Are you sure you want to delete comment #%s?"
+msgstr "Είστε σίγουρος/η ότι θέλετε να διαγράψετε την παρατήρηση #%s;"
+
+msgid "Empty lounge"
+msgstr "Κενός χώρος αναμονής"
+
+msgid "If a photo in this album has the same filename, update the file without changing the photo's properties"
+msgstr "Αν μια φωτογραφία σε αυτό το λεύκωμα έχει το ίδιο όνομα αρχείου, ενημερώστε το αρχείο χωρίς να αλλάξετε τα χαρακτηριστικά της φωτογραφίας"
+
+msgid "No comments selected, no actions possible."
+msgstr "Δεν έχουν επιλεχθεί παρατηρήσεις, αδύνατη η εφαρμογή."
+
+msgid "Save all photos"
+msgstr "Σώσε όλες τις φωτογραφίες"
+
+msgid "The comment has been validated."
+msgstr "Η παρατήρηση έχει επικυρωθεί."
+
+msgid "The comments have been validated."
+msgstr "Οι παρατηρήσεις έχουν επικυρωθεί."
+
+msgid "There is currently %d photos in the lounge (upload buffer)"
+msgstr "Αυτή τη στιγμή υπάρχουν %d φωτογραφίες στο χώρο αναμονής (προσωρινή μνήμη μεταφόρτωσης)"
+
+msgid "Use standard Piwigo template for common pages."
+msgstr "Χρησιμοποίησε το τυπικό σχηματισμό του Piwigo για τις κοινές σελίδες."
+
+msgid "We have found %d duplicate paths. Details provided by plugin Check Uploads"
+msgstr "Βρήκαμε %d διπλότυπες διαδρομές. Λεπτομέρειες παρήχθησαν από το πρόσθετο \"Check Uploads\""
+
+msgid "When enabled, a common template is used for the login, registration and forgotten password pages, regardless of the theme. Some themes might use these templates even if you uncheck this option"
+msgstr "Όταν είναι ενεργοποιημένο, ένας κοινός σχηματισμός χρησιμοποιείται για τις σελίδες σύνδεσης, εγγραφής και ξεχασμένου κωδικού, ανεξάρτητα από το θέμα. Μερικά θέματα μπορεί να χρησιμοποιήσουν αυτούς τους σχηματισμούς ακόμη και αν αποεπιλέξετε αυτή την επιλογή"
+
+msgid "Admins only"
+msgstr "Μόνον διαχειριστές"
+
+msgid "user_status_normal"
+msgstr "Βασικό"
+
+msgid "Change logo"
+msgstr "Άλλαξε το λογότυπο"
+
+msgid "Dark mode"
+msgstr "Σκούρα ρύθμιση"
+
+msgid "Display Gallery title"
+msgstr "Δείξε τον τίτλο της πινακοθήκης"
+
+msgid "Light mode"
+msgstr "Ανοιχτόχρωμη ρύθμιση"
+
+msgid "Personalization settings"
+msgstr "Προσωπικές ρυθμίσεις"
+
+msgid "Select a color theme for standard pages"
+msgstr "Επιλέξτε ένα συνδυασμό χρώματος για τις τυπικές σελίδες"
+
+msgid "Standard pages"
+msgstr "Τυπικές σελίδες"
+
+msgid "Standard pages aren't activated, however you have %d active themes that will still use them. These themes are:"
+msgstr "Οι τυπικές σελίδες δεν είναι ενεργοποιημένες, όμως έχετε %d ενεργά θέματα που θα τις χρησιμοποιήσουν.\nΑυτά τα θέματα είναι:"
+
+msgid "Standard pages header"
+msgstr "Επικεφαλίδα τυπικών σελίδων"
+
+msgid "Use Piwigo logo"
+msgstr "Χρησιμοποίησε το λογότυπο του Piwigo"
+
+msgid "Use custom logo (png, jpeg or svg)"
+msgstr "Χρησιμοποίησε λογότυπο δικής σου επιλογής (png, jpeg ή svg)"
+

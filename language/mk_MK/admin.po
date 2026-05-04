@@ -1,0 +1,23 @@
+# Piwigo translation — mk_MK
+# Source: admin.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: mk_MK\n"
+"Plural-Forms: nplurals=2; plural=(n==1 || n%10==1 ? 0 : 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Average rate"
+msgstr "Просек"
+
+msgid "Rate"
+msgstr "Оцени"
+
+msgid "Add to caddie"
+msgstr "Додај ја фотографијата во календарот"
+
+msgid "Caddie"
+msgstr "Календар"
+

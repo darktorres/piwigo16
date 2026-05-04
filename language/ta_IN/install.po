@@ -1,0 +1,140 @@
+# Piwigo translation — ta_IN
+# Source: install.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ta_IN\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "An alternate solution is to copy the text in the box above and paste it into the file \"local/config/database.inc.php\" (Warning : database.inc.php must only contain what is in the textarea, no line return or space character)"
+msgstr "ஒரு மாற்று தீர்வு மேலே பெட்டியில் உரை நகலெடுத்து கோப்புகளை ஒட்டவும் உள்ளது.\"local/config/database.inc.php\"(எச்சரிக்கை: database.inc.php மட்டும், textarea என்ன எந்த வரியை திரும்ப அல்லது இடைவெளி எழுத்து கொண்டிருக்க வேண்டும்)"
+
+msgid "Creation of config file local/config/database.inc.php failed."
+msgstr "கட்டமைப்பு கோப்பு உருவாக்கம் local/config/database.inc.php தோல்வியடைந்தது."
+
+msgid "Default gallery language"
+msgstr "இயல்புநிலை கேலரி மொழி"
+
+msgid "Download the config file"
+msgstr "Config கோப்பை பதிவிறக்க"
+
+msgid "Hope to see you back soon."
+msgstr "நீங்கள் விரைவில் திரும்பி பார்க்க நம்புகிறேன்"
+
+msgid "Host"
+msgstr "host"
+
+msgid "Installation"
+msgstr "நிறுவல்"
+
+msgid "It appears your webhost is currently running PHP %s."
+msgstr "இது உங்களது webhost தற்போது PHP% கள் இயக்கத்தில் தோன்றுகின்றது."
+
+msgid "It will be shown to the visitors. It is necessary for website administration"
+msgstr "இது பார்வையாளர்களுக்கு காண்பிக்கப்படும். இது இணைய நிர்வாகத்தில் அவசியம்"
+
+msgid "Just another Piwigo gallery"
+msgstr "மற்றொரு Piwigo கேலரி"
+
+msgid "Keep it confidential, it enables you to access administration panel"
+msgstr "இதை ரகசியமாக வைத்து, இதை நீங்கள் நிர்வாகத்தில் பலகத்தை அணுகுவதற்கு உதவுகிறது"
+
+msgid "Need help ? Ask your question on <a href=\"%s\">Piwigo message board</a>."
+msgstr "உதவி வேண்டுமா? <a உங்கள் கேள்வி கேட்க href=\"%s\"> Piwigo செய்தி பலகை </ a>"
+
+msgid "Database configuration"
+msgstr "தரவுத்தள உள்ளமைவை"
+
+msgid "Database name"
+msgstr "தரவுத்தளத்தின் பெயர்"
+
+msgid "Database table prefix"
+msgstr "தரவுத்தள அட்டவணைகள் முன்னிணைப்பு"
+
+msgid "Connection to server succeed, but it was impossible to connect to database"
+msgstr "சர்வர் இணைப்பு வெற்றி, ஆனால் தரவுத்தளத்தின் இணைப்பு சாத்தியம் இல்லை."
+
+msgid "Congratulations, Piwigo installation is completed"
+msgstr "வாழ்த்துக்கள், Piwigo நிறுவல், முடிக்கப்பட்டது"
+
+msgid "Can't connect to server"
+msgstr "சர்வருடன் இணைக்க முடியவில்லை"
+
+msgid "Basic configuration"
+msgstr "அடிப்படை கட்டமைப்பு"
+
+msgid "Admin configuration"
+msgstr "நிர்வாகம் கட்டமைப்பு"
+
+msgid "webmaster login can't contain characters ' or \""
+msgstr "வலை மேலாளரின் உள்நுழைவு எழுத்துக்கள் ' or \" இல்லாமல் இருக்கலாம்"
+
+msgid "verification"
+msgstr "சரிபார்த்தல்"
+
+msgid "user password given by your host provider"
+msgstr "பயனர் கடவுச்சொல் உங்களுடைய host வழங்குநர் வழங்கப்பட்டது"
+
+msgid "user login given by your host provider"
+msgstr "உங்களுடைய host வழங்குநர் வழங்கப்பட்ட பயனர் உள்நுழைவு"
+
+msgid "localhost or other, supplied by your host provider"
+msgstr "localhost அல்லது வேறு வழங்கப்பட்ட உங்களுடைய host வழங்குநரை"
+
+msgid "please enter your password again"
+msgstr "தயவுசெய்து மறுபடியும் உங்களுடைய கடவுச்சொல்லை உள்ளிடவும்"
+
+msgid "Don't hesitate to consult our forums for any help : %s"
+msgstr "ஆலோசனை தயங்க வேண்டாம் நம்முடைய கருத்துக்களம்\r\nஎந்தவொரு உதவிக்கு.:% s"
+
+msgid "You may referer to your hosting provider's support and see how you could switch to PHP 5 by yourself."
+msgstr "நீங்கள் புரவன் வழங்குநரிடம் ஆதரவு பார்க்கவும் மற்றும் பார்க்க வேண்டும் எப்படி நீங்கள் PHP 5.2 மூலம்  மாற்றலாம்."
+
+msgid "You can download the config file and upload it to local/config directory of your installation."
+msgstr "நீங்கள் கட்டமைப்பு கோப்பினை பதிவிறக்கம் செய்யலாம்\r\nமற்றும் பதிவேற்றலாம் அது உங்களுடைய local/config நிறுவலின் கோப்பகத்தில்"
+
+msgid "also given by your host provider"
+msgstr "மேலும் வழங்கப்பட்டஉங்களுடைய புரவன் வழங்குநரிடம்"
+
+msgid "database tables names will be prefixed with it (enables you to manage better your tables)"
+msgstr "தரவுத்தள அட்டவணையில் பெயரை முன்னொட்டாக (உங்களுடைய அட்டவணைகளை சிறப்பாக நிர்வகிக்க உதவும்)"
+
+msgid "enter a login for webmaster"
+msgstr "தயவுசெய்து உள்ளிடவும் வலைமேலாளரின் பயனர்பெயர்"
+
+msgid "Welcome to your new installation of Piwigo!"
+msgstr "வரவேற்கிறோம்\r\nஉங்களுடைய புதிய Piwigo நிறுவல்! செய்ய"
+
+msgid "Welcome to my photo gallery"
+msgstr "வரவேற்கிறேன்\r\nஎன்னுடைய புகைப்படம் கேலரிக்கு"
+
+msgid "Try to configure PHP 5"
+msgstr "PHP 5.2 கட்டமைக்க முயற்சிக்கவும்"
+
+msgid "Visitors will be able to contact site administrator with this mail"
+msgstr "பார்வையாளர்கள் இந்த மின்னஞ்சலை பயன்படுத்தி தளத்தின் நிர்வாகியை தொடர்புகொள்ளவும்"
+
+msgid "User"
+msgstr "பயனர்"
+
+msgid "Sorry!"
+msgstr "வருந்துகிறேன்!"
+
+msgid "Start Install"
+msgstr "நிறுவலை தொடங்கு"
+
+msgid "Piwigo was not able to configure PHP 5."
+msgstr "Piwigo PHP 5.2 கட்டமைக்க முடியவில்லை"
+
+msgid "Piwigo may try to switch your configuration to PHP 5 by creating or modifying a .htaccess file."
+msgstr "Piwigo முயற்சி செய்யலாம்\r\nஒரு. htaccess கோப்பு உருவாக்குவதில் அல்லது மாற்றியமைப்பதன் மூலம் PHP 5.2 உங்கள் கட்டமைப்பு மாற"
+
+msgid "PHP 5 is required"
+msgstr "PHP 5.2 தேவைப்படுகிறது"
+
+msgid "Note you can change your configuration by yourself and restart Piwigo after that."
+msgstr "குறிப்பு நீங்களே உங்கள் கட்டமைப்பை மாற்ற செய்யலாம், மேலும் Piwigo மீண்டும் துவக்கவும்"
+

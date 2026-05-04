@@ -1,0 +1,4245 @@
+# Piwigo translation — da_DK
+# Source: admin.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: da_DK\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "%d association"
+msgstr "%d tilknytning"
+
+msgid "%d associations"
+msgstr "%d tilknytninger"
+
+msgid "%d album including"
+msgstr "%d album herunder"
+
+msgid "%d albums including"
+msgstr "%d albummer herunder "
+
+msgid "%d physical"
+msgstr " %d fysisk"
+
+msgid " and %d virtual"
+msgstr " og %d virtuelt"
+
+msgid "%d album moved"
+msgid_plural "%d albums moved"
+msgstr[0] "%d album flyttet"
+msgstr[1] "%d albummer flyttet"
+
+msgid "%d group"
+msgstr "%d gruppe"
+
+msgid "%d groups"
+msgstr "%d grupper"
+
+msgid "%d member"
+msgid_plural "%d members"
+msgstr[0] "%d medlem"
+msgstr[1] "%d medlemmer"
+
+msgid "%d tag"
+msgstr "%d tag"
+
+msgid "%d tags"
+msgstr "%d tags"
+
+msgid "%d user comment rejected"
+msgstr "%d brugerkommentar afvist"
+
+msgid "%d user comments rejected"
+msgstr "%d brugerkommentarer afvist"
+
+msgid "%d user comment validated"
+msgstr "%d brugerkommentar godkendt"
+
+msgid "%d user comments validated"
+msgstr "%d brugerkommentarer godkendt"
+
+msgid "%d user deleted"
+msgid_plural "%d users deleted"
+msgstr[0] "%d bruger slettet"
+msgstr[1] "%d brugere slettet"
+
+msgid "%d user"
+msgid_plural "%d users"
+msgstr[0] "%d bruger"
+msgstr[1] "%d brugere"
+
+msgid "%d waiting for validation"
+msgstr "%d venter på godkendelse"
+
+msgid "Actions"
+msgstr "Handlinger"
+
+msgid "Activate"
+msgstr "Aktiver"
+
+msgid "Add/delete a permalink"
+msgstr "Tilføj/slet et permalink"
+
+msgid "Add a tag"
+msgstr "Tilføj et tag"
+
+msgid "Add a user"
+msgstr "Tilføj en bruger"
+
+msgid "Add group"
+msgstr "Tilføj gruppe"
+
+msgid "Add"
+msgstr "Tilføj"
+
+msgid "Allow user registration"
+msgstr "Tillad brugerregistrering"
+
+msgid "Apply to sub-albums"
+msgstr "Anvend på underalbummer"
+
+msgid "Associated"
+msgstr "Tilknyttet "
+
+msgid "Caddie management"
+msgstr "Administration af kurv"
+
+msgid "Caddie"
+msgstr "Kurv"
+
+msgid "Albums authorized thanks to group associations"
+msgstr "Albummer godkendt takket være gruppetilknytninger"
+
+msgid "Album manual order was saved"
+msgstr "Manuel albumrækkefølge blev gemt"
+
+msgid "Check for upgrade failed for unknown reasons."
+msgstr "Opgraderingtjek mislykkedes af ukendte årsager."
+
+msgid "Check for upgrade"
+msgstr "Opgraderingtjek"
+
+msgid "Comments for all"
+msgstr "Kommentarer til alle"
+
+msgid "Current name"
+msgstr "Nuværende navn"
+
+msgid "Database"
+msgstr "Database"
+
+msgid "Deactivate"
+msgstr "Deaktiver"
+
+msgid "Delete Representant"
+msgstr "Slet albums miniaturebillede"
+
+msgid "Delete selected tags"
+msgstr "Slet valgte tags"
+
+msgid "Delete selected users"
+msgstr "Slet valgte brugere"
+
+msgid "Deletions"
+msgstr "Sletninger"
+
+msgid "Deny selected groups"
+msgstr "Afvis valgte grupper"
+
+msgid "Deny selected users"
+msgstr "Afvis valgte brugere"
+
+msgid "Description"
+msgstr "Beskrivelse"
+
+msgid "Display options"
+msgstr "Vis indstillinger"
+
+msgid "Dissociated"
+msgstr "Tilknytning fjernet"
+
+msgid "Does not represent"
+msgstr "er ikke miniaturebillede for"
+
+msgid "Edit selected tags"
+msgstr "Rediger valgte tags"
+
+msgid "Edit tags"
+msgstr "Rediger tags"
+
+msgid "Email admins when a new user registers"
+msgstr "Send e-mail til admins når en ny bruger registrerer sig"
+
+msgid "Email admins when a valid comment is entered"
+msgstr "Send e-mail til admins når en gyldig kommentar er gemt"
+
+msgid "Email admins when a comment requires validation"
+msgstr "Send e-mail til admins når en kommentar kræver godkendelse"
+
+msgid "Environment"
+msgstr "Miljø"
+
+msgid "Form"
+msgstr "Formular"
+
+msgid "Gallery title"
+msgstr "Gallerititel"
+
+msgid "Grant selected groups"
+msgstr "Tildel valgte grupper"
+
+msgid "Grant selected users"
+msgstr "Tildel valgte brugere"
+
+msgid "Group name"
+msgstr "Gruppenavn"
+
+msgid "Groups"
+msgstr "Grupper"
+
+msgid "Guests"
+msgstr "Gæster"
+
+msgid "History"
+msgstr "Historik"
+
+msgid "Informations"
+msgstr "Information"
+
+msgid "Install"
+msgstr "Installer"
+
+msgid "Link all album photos to a new album"
+msgstr "Link alle fotografier i album til et nyt album"
+
+msgid "Link all album photos to some existing albums"
+msgstr "Link alle fotografier i album til nogle eksisterende albummer"
+
+msgid "Linked albums"
+msgstr "Linkede albummer"
+
+msgid "Lock gallery"
+msgstr "Lås galleri"
+
+msgid "Maintenance"
+msgstr "Vedligeholdelse"
+
+msgid "Edit album permissions"
+msgstr "Rediger albumstilladelser"
+
+msgid "Manage permissions for group \"%s\""
+msgstr "Administrer tilladelser for gruppen \"%s\""
+
+msgid "Manage permissions for user \"%s\""
+msgstr "Administrer tilladelser for brugeren \"%s\""
+
+msgid "Manage tags"
+msgstr "Administrer tags"
+
+msgid "Members"
+msgstr "Medlemmer"
+
+msgid "Metadata synchronized from file"
+msgstr "Metadata synkroniseret fra fil"
+
+msgid "Move albums"
+msgstr "Flyt albummer"
+
+msgid "Move"
+msgstr "Flyt"
+
+msgid "Name"
+msgstr "Navn"
+
+msgid "New name"
+msgstr "Nyt navn"
+
+msgid "New parent album"
+msgstr "Nyt overordnet album"
+
+msgid "New tag"
+msgstr "Nyt tag"
+
+msgid "Number of comments per page"
+msgstr "Antal kommentarer pr. side"
+
+msgid "Number of rates"
+msgstr "Antal bedømmelser"
+
+msgid "Only private albums are listed"
+msgstr "Kun private albummer er opført"
+
+msgid "Operating system"
+msgstr "Styresystem"
+
+msgid "Options"
+msgstr "Muligheder"
+
+msgid "Other private albums"
+msgstr "Andre private albummer"
+
+msgid "Page banner"
+msgstr "Sidebanner"
+
+msgid "Parent album"
+msgstr "Overordnet album"
+
+msgid "Path"
+msgstr "Sti"
+
+msgid "Permalink"
+msgstr "Permalink"
+
+msgid "Permalink %s has been previously used by album %s. Delete from the permalink history first"
+msgstr "Permalink %s har tidligere været benyttet af album %s. Slet det først fra permalinkets historik"
+
+msgid "The permalink name must be composed of a-z, A-Z, 0-9, \"-\", \"_\" or \"/\". It must not be numeric or start with number followed by \"-\""
+msgstr "Permalinknavne skal bestå af a-z, A-Z, 0-9, \"-\", \"_\" eller \"/\". Det må ikke være numerisk eller begynde med et tal efterfulgt af \"-\""
+
+msgid "Permalink %s is already used by album %s"
+msgstr "Permalinket %s benyttes allerede af albummet %s"
+
+msgid "Permalink history"
+msgstr "Permalinkets historik"
+
+msgid "Permalinks"
+msgstr "Permalinks"
+
+msgid "Permission denied"
+msgstr "Adgang nægtet"
+
+msgid "Permission granted thanks to a group"
+msgstr "Tilladelser tildelt takket være en gruppe"
+
+msgid "Permission granted"
+msgstr "Tilladelse tildelt"
+
+msgid "Photo informations updated"
+msgstr "Billedoplysninger opdateret"
+
+msgid "Plugins"
+msgstr "Plugins"
+
+msgid "Position"
+msgstr "Position"
+
+msgid "Preferences"
+msgstr "Indstillinger"
+
+msgid "Properties"
+msgstr "Egenskaber"
+
+msgid "Random photo"
+msgstr "Tilfældigt foto"
+
+msgid "Rate date"
+msgstr "Bedømmelsesdato"
+
+msgid "Rating by guests"
+msgstr "Gæsters bedømmelse"
+
+msgid "Rating"
+msgstr "Bedømmelse"
+
+msgid "Reject"
+msgstr "Afvis"
+
+msgid "Representant"
+msgstr "Albums Miniaturebillede"
+
+msgid "Representation of albums"
+msgstr "Albums miniaturebillede"
+
+msgid "Representative"
+msgstr "Albums miniaturebillede"
+
+msgid "Represents"
+msgstr "Er miniaturebillede for"
+
+msgid "Save order"
+msgstr "Gem rækkefølge"
+
+msgid "Save to permalink history"
+msgstr "Gem i permalinks historik"
+
+msgid "Select at least one album"
+msgstr "Vælg mindst ét album"
+
+msgid "Select at least one photo"
+msgstr "Vælg mindst et fotografi"
+
+msgid "Select at least one user"
+msgstr "Vælg mindst én bruger"
+
+msgid "Show info"
+msgstr "Vis info"
+
+msgid "Site manager"
+msgstr "Sitemanager"
+
+msgid "Status"
+msgstr "Status"
+
+msgid "Statistics"
+msgstr "Statistik"
+
+msgid "Storage album"
+msgstr "Opbevaringsalbum"
+
+msgid "Sum of rates"
+msgstr "Summen af bedømmelser"
+
+msgid "Tag \"%s\" already exists"
+msgstr "Tagget \"%s\" findes allerede"
+
+msgid "Tag \"%s\" was added"
+msgstr "Tagget \"%s\" er blevet tilføjet"
+
+msgid "Tag selection"
+msgstr "Valg af tags"
+
+msgid "The %d following tags were deleted"
+msgstr "Følgende %d tags er blevet slettet"
+
+msgid "Unable to check for upgrade."
+msgstr "Kunne ikke udføre opgraderingstjek."
+
+msgid "Uninstall"
+msgstr "Afinstaller"
+
+msgid "Use the default photo sort order"
+msgstr "Anvend standarden for fotografiers sorteringsrækkefølge"
+
+msgid "User comments validation"
+msgstr "Godkendelse af brugerkommentarer"
+
+msgid "Users"
+msgstr "Brugere"
+
+msgid "Validate"
+msgstr "Godkend"
+
+msgid "Validation"
+msgstr "Godkendelse"
+
+msgid "Version"
+msgstr "Version"
+
+msgid "Virtual albums to move"
+msgstr "Virtuelt album som skal flyttes"
+
+msgid "Virtual album name"
+msgstr "Virtuelt albums navn"
+
+msgid "Webmaster cannot be deleted"
+msgstr "Webmaster kan ikke slettes"
+
+msgid "You are running on development sources, no check possible."
+msgstr "Du anvender udviklingskildekode, tjek ikke muligt"
+
+msgid "You cannot delete your account"
+msgstr "Du kan ikke slette din konto"
+
+msgid "You cannot move an album in its own sub album"
+msgstr "Du kan ikke flytte et album til dets eget underalbum"
+
+msgid "You need to confirm deletion"
+msgstr "Du skal bekræfte sletning"
+
+msgid "Add tags"
+msgstr "Tilføj tags"
+
+msgid "Associate to album"
+msgstr "Knyt til album"
+
+msgid "associate to group"
+msgstr "tilknyt til gruppe"
+
+msgid "Authorized"
+msgstr "Autoriseret"
+
+msgid "Add a virtual album"
+msgstr "Tilføj et virtuelt album"
+
+msgid "Authorize users to add comments on selected albums"
+msgstr "Autoriser brugere til at føje kommentarer til udvalgte albummer"
+
+msgid "The name of an album must not be empty"
+msgstr "Et albums navn må ikke ikke være tomt"
+
+msgid "Lock albums"
+msgstr "Lås albummer"
+
+msgid "Private"
+msgstr "Privat"
+
+msgid "Public"
+msgstr "Offentligt"
+
+msgid "Find a new representant by random"
+msgstr "Find et nyt tilfældigt miniaturebillede til album"
+
+msgid "Public / Private"
+msgstr "Offentligt / Privat"
+
+msgid "Manage authorizations for selected albums"
+msgstr "Administrer autorisationer for udvalgte albummer"
+
+msgid "Virtual album added"
+msgstr "Virtuelt album tilføjet"
+
+msgid "Virtual album deleted"
+msgstr "Virtuelt album slettet"
+
+msgid "Access type"
+msgstr "Adgangstype"
+
+msgid "Information data registered in database"
+msgstr "Oplysningerne er gemt i databasen"
+
+msgid "Default display"
+msgstr "Standardvisning"
+
+msgid "The gallery URL is not valid."
+msgstr "Galleri-URL'en er ikke gyldig."
+
+msgid "The number of comments a page must be between 5 and 50 included."
+msgstr "Antallet af kommentarer på en side skal være mellem 5 og 50."
+
+msgid "Configuration"
+msgstr "Opsætning"
+
+msgid "confirm"
+msgstr "bekræft"
+
+msgid "Date"
+msgstr "Dato"
+
+msgid "delete album"
+msgstr "slet album"
+
+msgid "Dissociate from album"
+msgstr "Fjern tilknytning til album"
+
+msgid "dissociate from group"
+msgstr "fjern tilknytning til gruppe"
+
+msgid "Album updated successfully"
+msgstr "Album opdateret"
+
+msgid "photos per page"
+msgstr "fotografier pr. side"
+
+msgid "High definition enabled"
+msgstr "Højopløselig er slået til"
+
+msgid "File"
+msgstr "Fil"
+
+msgid "Forbidden"
+msgstr "Forbudt"
+
+msgid "global mode"
+msgstr "global tilstand"
+
+msgid "group \"%s\" added"
+msgstr "gruppen \"%s\" tilføjet"
+
+msgid "group \"%s\" deleted"
+msgstr "gruppen \"%s\" slettet"
+
+msgid "group \"%s\" updated"
+msgstr "gruppe \"%s\" opdateret"
+
+msgid "The name of a group must not contain \" or ' or be empty."
+msgstr "Navnet på en gruppe må ikke indeholde \" eller ' eller være tom. "
+
+msgid "This name is already used by another group."
+msgstr "Dette navn anvendes allerede af en anden gruppe."
+
+msgid "High definition"
+msgstr "Højopløselig"
+
+msgid "jump to album"
+msgstr "hop til album"
+
+msgid "jump to photo"
+msgstr "Hop til fotografiet"
+
+msgid "leave"
+msgstr "uændret"
+
+msgid "Lock"
+msgstr "Lås"
+
+msgid "Locked"
+msgstr "Låst"
+
+msgid "manage album photos"
+msgstr "administrer fotografier i album"
+
+msgid "manage sub-albums"
+msgstr "administrer underalbummer"
+
+msgid "Manage"
+msgstr "Administrer"
+
+msgid "Execution time is out, treatment must be continue [Estimated time: %d second]."
+msgid_plural "Execution time is out, treatment must be continue [Estimated time: %d seconds]."
+msgstr[0] "Udførelsestid er udløbet, behandlingen skal fortsætte [Forventet tid: %d sekunder]."
+msgstr[1] "Udførelsestid er overskredet, behandlingen skal fortsætte [Forventet tid: %d sekunder]."
+
+msgid "Prepared time for list of users to send mail is limited. Others users are not listed."
+msgstr "Tiden til forberedelse af listen over brugere, der vil modtage mail, er begrænset. Andre brugere er ikke anført."
+
+msgid "Time to send mail is limited. Others mails are skipped."
+msgstr "Tiden til at sende mail er begrænset. Andre mails er sprunget over."
+
+msgid "To send ?"
+msgstr "Vil du sende?"
+
+msgid "Last send"
+msgstr "Senest afsendt"
+
+msgid "User"
+msgstr "Bruger"
+
+msgid "See you soon,"
+msgstr "Vi ses snart,"
+
+msgid "Go to"
+msgstr "Gå til"
+
+msgid "Hello"
+msgstr "Hej"
+
+msgid "New photos were added"
+msgstr "Nye fotografier er tilføjet"
+
+msgid "on"
+msgstr "på"
+
+msgid "between"
+msgstr "mellem"
+
+msgid "and"
+msgstr "og"
+
+msgid "The webmaster has subscribed you to receiving notifications by mail."
+msgstr "Webmaster har tilmeldt dig notifikationer pr. mail."
+
+msgid "You have subscribed to receiving notifications by mail."
+msgstr "Du er tilmeldt notifikationer pr. mail."
+
+msgid "To subscribe"
+msgstr "For at tilmelde"
+
+msgid "If you encounter problems or have any question, please send a message to"
+msgstr "Hvis du støder på problemer eller har spørgsmål, bedes du sende en besked til"
+
+msgid "[NBM] Problems or questions"
+msgstr "[NBM] Problemer eller spørgsmål"
+
+msgid "The webmaster has unsubscribed you from receiving notifications by mail."
+msgstr "Webmaster har afmeldt dig notifikationer pr. mail."
+
+msgid "You have unsubscribed from receiving notifications by mail."
+msgstr "Du er afmeldt notifikationer pr. mail."
+
+msgid ", click on"
+msgstr ", klik på"
+
+msgid "To unsubscribe"
+msgstr "For at afmelde"
+
+msgid "With blank value, gallery title will be used"
+msgstr "Hvis tom benyttes galleriets titel"
+
+msgid "Notification"
+msgstr "Meddelelse"
+
+msgid "Error when sending email to %s [%s]."
+msgstr "Fejl ved afsendelse af e-mail til %s [%s]."
+
+msgid "Mail sent to %s [%s]."
+msgstr "Mail sendt til %s [%s]."
+
+msgid "%d mail was sent."
+msgid_plural "%d mails were sent."
+msgstr[0] "%d mail er blevet sendt."
+msgstr[1] "%d mails er blevet sendt."
+
+msgid "%d mail was not sent."
+msgid_plural "%d mails were not sent."
+msgstr[0] "%d mail er ikke blevet sendt."
+msgstr[1] "%d mails ikke er blevet sendt."
+
+msgid "No mail to send."
+msgstr "Ingen mails skal sendes."
+
+msgid "There is no available subscribers to mail."
+msgstr "Der er ingen tilmeldte, som skal notificeres via mail."
+
+msgid "Subscribers could be listed (available) only if there is new elements to notify."
+msgstr "Tilmeldinger kan kun vises (som tilgængelige) når der er nye elementer at give besked om."
+
+msgid "Anyway only webmasters can see this tab and never administrators."
+msgstr "Kun webmastere kan se dette faneblad, ingen administratorer."
+
+msgid "No user to send notifications by mail."
+msgstr "Ingen bruger skal have besked via mail."
+
+msgid "New photos added"
+msgstr "Nye fotografier tilføjet"
+
+msgid "Subscribe to notification by mail"
+msgstr "Bliv tilmeldt notfikation pr. mail"
+
+msgid "Unsubscribe from notification by mail"
+msgstr "Afmeld notifikationer pr. mail"
+
+msgid "Parameter"
+msgstr "Indstillinger"
+
+msgid "Operation in progress"
+msgstr "Behandler"
+
+msgid "Continue processing treatment"
+msgstr "Fortsæt igangværende behandling"
+
+msgid "Complementary mail content"
+msgstr "Supplerende mails indhold"
+
+msgid "Add detailed content"
+msgstr "Tilføj detaljeret indhold"
+
+msgid "Send mail as"
+msgstr "Send mail som"
+
+msgid "Send mail to users"
+msgstr "Send mail til brugere"
+
+msgid "Send"
+msgstr "Gem"
+
+msgid "Subscribed"
+msgstr "Tilmeldt"
+
+msgid "Subscribe"
+msgstr "Abonner"
+
+msgid "Parameters"
+msgstr "Parametre"
+
+msgid "Select recipients"
+msgstr "Vælg modtagere"
+
+msgid "Subscribe/unsubscribe users"
+msgstr "Tilmeld / afmeld brugere"
+
+msgid "Unsubscribed"
+msgstr "Afmeldt"
+
+msgid "%d parameter was updated."
+msgid_plural "%d parameters were updated."
+msgstr[0] "%d parameter opdateret."
+msgstr[1] "%d parametre opdateret."
+
+msgid "%d user was not updated."
+msgid_plural "%d users were not updated."
+msgstr[0] "%d bruger ikke opdateret."
+msgstr[1] "%d brugere ikke opdateret."
+
+msgid "User %s [%s] was removed from the subscription list."
+msgstr "Brugeren %s [%s] blev fjernet fra tilmeldingslisten."
+
+msgid "User %s [%s] was added to the subscription list."
+msgstr "Brugeren %s [%s] blev føjet til tilmeldingslisten."
+
+msgid "%d user was updated."
+msgid_plural "%d users were updated."
+msgstr[0] "%d bruger opdateret."
+msgstr[1] "%d brugere opdateret."
+
+msgid "User %s [%s] was not removed from the subscription list."
+msgstr "Brugeren %s [%s] blev ikke fjernet fra tilmeldingslisten."
+
+msgid "User %s [%s] was not added to the subscription list."
+msgstr "Brugeren %s [%s] blev ikke føjet til tilmeldingslisten."
+
+msgid "User %s [%s] added."
+msgstr "Brugeren %s [%s] tilføjet."
+
+msgid "Warning: subscribing or unsubscribing will send mails to users"
+msgstr "Advarsel: tilmelding eller afmelding vil sende mails til brugere"
+
+msgid "Send mail on HTML format"
+msgstr "Send mail i HTML-format"
+
+msgid "Include display of recent photos grouped by dates"
+msgstr "Medtag visning af de seneste fotografier grupperet efter datoer"
+
+msgid "Available only with HTML format"
+msgstr "Findes kun med HTML-format"
+
+msgid "no write access"
+msgstr "ingen skriveadgang"
+
+msgid "Permissions"
+msgstr "Tilladelser"
+
+msgid "private"
+msgstr "privat"
+
+msgid "public"
+msgstr "offentlig"
+
+msgid "Purge never used notification feeds"
+msgstr "Tøm aldrig anvendte notificeringsfeeds"
+
+msgid "Purge sessions"
+msgstr "Tøm sessioner"
+
+msgid "randomly represented"
+msgstr "album har tilfældigt miniaturebillede"
+
+msgid "registration date"
+msgstr "registreringsdato"
+
+msgid "clean"
+msgstr "oprydning"
+
+msgid "Create this site"
+msgstr "Opret dette websted"
+
+msgid "test"
+msgstr "test"
+
+msgid "test this remote site"
+msgstr "test dette fjerne websted"
+
+msgid "remove tags"
+msgstr "Fjern tags"
+
+msgid "Repair and optimize database"
+msgstr "Reparer og optimer database"
+
+msgid "selection"
+msgstr "udvælgelse"
+
+msgid "set to"
+msgstr "opsat til"
+
+msgid "singly represented"
+msgstr "album har fast miniaturebillede"
+
+msgid "This site already exists"
+msgstr "Dette websted findes allerede"
+
+msgid "created"
+msgstr "oprettet"
+
+msgid "delete"
+msgstr "slet"
+
+msgid "delete this site and all its attached elements"
+msgstr "Slet dette websted og alle relaterede oplysninger"
+
+msgid "an error happened"
+msgstr "der opstod en fejl"
+
+msgid "Local"
+msgstr "Lokal"
+
+msgid "Remote"
+msgstr "Remote"
+
+msgid "update the database from files"
+msgstr "opdater databasen med filer"
+
+msgid "status"
+msgstr "status"
+
+msgid "Directory"
+msgstr "Mappe"
+
+msgid "sub-albums"
+msgstr "underalbummer"
+
+msgid "Synchronize metadata"
+msgstr "Synkroniser metadata"
+
+msgid "target"
+msgstr "mål"
+
+msgid "Thumbnail"
+msgstr "Miniaturebillede"
+
+msgid "Title"
+msgstr "Titel"
+
+msgid "Album list management"
+msgstr "Håndtering af albumliste"
+
+msgid "Piwigo configuration"
+msgstr "Piwigo-opsætning"
+
+msgid "Edit album"
+msgstr "Rediger album"
+
+msgid "Group management"
+msgstr "Grupperadministration"
+
+msgid "User list"
+msgstr "Brugerliste"
+
+msgid "Database synchronization with files"
+msgstr "Databasesynkronisering med filer"
+
+msgid "all"
+msgstr "alle"
+
+msgid "height must be a number superior to"
+msgstr "højden skal være et tal større end"
+
+msgid "width must be a number superior to"
+msgstr "bredde skal være et tal større end"
+
+msgid "for the file format"
+msgstr "for filformatet"
+
+msgid "Photo unreachable or no support"
+msgstr "Fotografi utilgængeligt eller i ikke-understøttet format"
+
+msgid "GD version"
+msgstr "GD version"
+
+msgid "General statistics"
+msgstr "Generelle statistikker"
+
+msgid "average time"
+msgstr "gennemsnitlig tid"
+
+msgid "total time"
+msgstr "total tid"
+
+msgid "for this file format"
+msgstr "for dette filformat"
+
+msgid "unit mode"
+msgstr "enkelttilstand"
+
+msgid "Unlocked"
+msgstr "Låst op"
+
+msgid "unset"
+msgstr "ikke opsat"
+
+msgid "Update albums informations"
+msgstr "Opdater albumoplysninger"
+
+msgid "Update photos information"
+msgstr "Opdater fotografioplysninger"
+
+msgid "Synchronize"
+msgstr "Synkroniser"
+
+msgid "reduce to single existing albums"
+msgstr "reducer til enkelte eksisterende albummer"
+
+msgid "Choose an option"
+msgstr "Vælg en mulighed"
+
+msgid "display maximum informations (added albums and photos, deleted albums and photos)"
+msgstr "vis flest mulige oplysninger (tilføjede albummer og fotografier, slettede albummer og fotografier)"
+
+msgid "Error list"
+msgstr "Liste over fejl"
+
+msgid "Errors caption"
+msgstr "Fejlforklaringer"
+
+msgid "Detailed informations"
+msgstr "Detaljeret information"
+
+msgid "File/directory read error"
+msgstr "Læsefejl ved fil/mappe"
+
+msgid "The file or directory cannot be accessed (either it does not exist or the access is denied)"
+msgstr "Kan ikke tilgå fil eller mappe (enten eksisterer den ikke også nægtes adgang)"
+
+msgid "albums deleted in the database"
+msgstr "albummer slettet i databasen"
+
+msgid "photos deleted from the database"
+msgstr "fotografier slettet i databasen"
+
+msgid "photos candidates for metadata synchronization"
+msgstr "fotografier som er kandidater til metadatasynkronisering"
+
+msgid "photos informations synchronized with files metadata"
+msgstr "fotografioplysninger synkroniseret med filers metadata"
+
+msgid "errors during synchronization"
+msgstr "fejl under synkronisering"
+
+msgid "albums added in the database"
+msgstr "albummer føjet til databasen"
+
+msgid "photos added in the database"
+msgstr "fotografier føjet til databasen"
+
+msgid "photos updated in the database"
+msgstr "fotografier opdateret i databasen"
+
+msgid "Search for new images in the directories"
+msgstr "Søg efter nye billeder i mapperne"
+
+msgid "added"
+msgstr "tilføjet"
+
+msgid "deleted"
+msgstr "slettet"
+
+msgid "Metadata synchronization results"
+msgstr "Resultat af metadatasynkronisering"
+
+msgid "only perform a simulation (no change in database will be made)"
+msgstr "udfør kun en simulering (intet vil blive ændret i databasen)"
+
+msgid "Simulation"
+msgstr "Simulering"
+
+msgid "directories + files"
+msgstr "mapper + filer"
+
+msgid "only directories"
+msgstr "kun mapper"
+
+msgid "synchronize files structure with database"
+msgstr "Synkroniser filstruktur med databasen"
+
+msgid "synchronize files metadata with database photos informations"
+msgstr "Synkroniser fotografier i databasen med filers metadata"
+
+msgid "even already synchronized photos"
+msgstr "allerede synkroniserede fotografier"
+
+msgid "Used metadata"
+msgstr "Metadata anvendes"
+
+msgid "The name of directories and files must be composed of letters, numbers, \"-\", \"_\" or \".\""
+msgstr "Navnet på mapper og filer må kun bestå af bogstaver, tal, \"-\", \"_\" eller \".\""
+
+msgid "wrong filename"
+msgstr "forkert filnavn"
+
+msgid "Upload"
+msgstr "Upload"
+
+msgid "user \"%s\" added"
+msgstr "brugeren \"%s\" er tilføjet"
+
+msgid "User status"
+msgstr "Brugerstatus"
+
+msgid "user_status_admin"
+msgstr "Administrator"
+
+msgid "user_status_generic"
+msgstr "Generisk"
+
+msgid "user_status_guest"
+msgstr "Gæst"
+
+msgid "user_status_webmaster"
+msgstr "Webmaster"
+
+msgid "Virtual album"
+msgstr "Virtuelt album"
+
+msgid "Waiting"
+msgstr "Afventer"
+
+msgid "default"
+msgstr "standard"
+
+msgid "Toggle 'default group' property"
+msgstr "Vend 'standardgruppe'-egenskaben om"
+
+msgid "Advanced features"
+msgstr "Avancerede funktioner"
+
+msgid "Overall"
+msgstr "Oversigt"
+
+msgid "Year"
+msgstr "År"
+
+msgid "Month"
+msgstr "Måned"
+
+msgid "Day"
+msgstr "Dag"
+
+msgid "Pages seen"
+msgstr "Sider set"
+
+msgid "Time"
+msgstr "Tid"
+
+msgid "IP"
+msgstr "IP"
+
+msgid "Element"
+msgstr "Element"
+
+msgid "Section"
+msgstr "Afsnit"
+
+msgid "An information email was sent to group \"%s\""
+msgstr "Informationsmail sendt til gruppen \"%s\""
+
+msgid "Send an information email to group members"
+msgstr "Send en oplysningsmail til gruppens medlemmer"
+
+msgid "Group"
+msgstr "Gruppe"
+
+msgid "[%s] Visit album %s"
+msgstr "[%s] Besøg album %s"
+
+msgid "Hello,"
+msgstr "Hej,"
+
+msgid "See you soon."
+msgstr "Vi ses snart."
+
+msgid "Discover album:"
+msgstr "Gennemse album:"
+
+msgid "Mail content"
+msgstr "Mailindhold"
+
+msgid "none"
+msgstr "ingen"
+
+msgid "high"
+msgstr "høj"
+
+msgid "other"
+msgstr "andre"
+
+msgid "Element type"
+msgstr "Elementtype"
+
+msgid "Image id"
+msgstr "Billedeid"
+
+msgid "Summary"
+msgstr "Opsummering"
+
+msgid "%d line filtered"
+msgid_plural "%d lines filtered"
+msgstr[0] "%d linje filtreret"
+msgstr[1] "%d linjer filtreret"
+
+msgid "%d guest"
+msgid_plural "%d guests"
+msgstr[0] "%d gæst"
+msgstr[1] "%d gæster"
+
+msgid "Hour"
+msgstr "Time"
+
+msgid "guest"
+msgstr "gæst"
+
+msgid "default values"
+msgstr "standardværdier"
+
+msgid "Guest cannot be deleted"
+msgstr "Gæst kan ikke slettes"
+
+msgid "Default user cannot be deleted"
+msgstr "Standardbruger kan ikke slettes"
+
+msgid "Purge history detail"
+msgstr "Tøm historikdetaljer"
+
+msgid "Purge history summary"
+msgstr "Tøm historiksammendrag"
+
+msgid "Check integrity"
+msgstr "Integritetskontrol"
+
+msgid "Anomaly"
+msgstr "Afvigelse"
+
+msgid "Correction"
+msgstr "Korrektion"
+
+msgid "Automatic correction"
+msgstr "Automatisk korrektion"
+
+msgid "Impossible automatic correction"
+msgstr "Automatisk korrektion ikke mulig"
+
+msgid "Correction applied with success"
+msgstr "Korrektion anvendt med succes"
+
+msgid "Correction applied with error"
+msgstr "Korrektion anvendt med fejl"
+
+msgid "%d anomaly has been detected."
+msgid_plural "%d anomalies have been detected."
+msgstr[0] "%d afvigelse er konstateret."
+msgstr[1] "%d afvigelser er påvist."
+
+msgid "%d anomaly has been corrected."
+msgid_plural "%d anomalies have been detected corrected."
+msgstr[0] "%d afvigelse er korrigeret."
+msgstr[1] "%d afvigelser er blevet opdaget og rettet."
+
+msgid "%d anomaly has not been corrected."
+msgid_plural "%d anomalies have not been corrected."
+msgstr[0] "%d afvigelse er ikke blevet korrigeret."
+msgstr[1] "%d afvigelser har ikke været korrigeret."
+
+msgid "Go to %s or %s for more informations"
+msgstr "Gå til %s eller %s for flere oplysninger"
+
+msgid "the forum"
+msgstr "forummet"
+
+msgid "the wiki"
+msgstr "wikien"
+
+msgid "%s value is not correct file because exif are not supported"
+msgstr "%s værdi er forkert, fordi exif ikke er understøttet"
+
+msgid "%s must be to set to false in your local/config/config.inc.php file"
+msgstr "%s skal være sat til false i din local/config/config.inc.php-fil"
+
+msgid "Main \"guest\" user does not exist"
+msgstr "Den primære \"guest\"-bruger findes ikke"
+
+msgid "Main \"guest\" user status is incorrect"
+msgstr "Den primære \"guest\"-brugers status er forkert"
+
+msgid "Default user does not exist"
+msgstr "Standardbruger findes ikke"
+
+msgid "Main \"webmaster\" user does not exist"
+msgstr "Den primære \"webmaster\"-bruger findes ikke"
+
+msgid "Main \"webmaster\" user status is incorrect"
+msgstr "Den primære \"webmaster\"-brugers status er forkert"
+
+msgid "User \"%s\" created with \"%s\" like password"
+msgstr "Brugeren \"%s\" er oprettet med \"%s\" som adgangskode"
+
+msgid "Status of user \"%s\" updated"
+msgstr "Status for brugeren \"%s\" er opdateret"
+
+msgid "add new photos to caddie"
+msgstr "tilføj nye fotografier til kurv"
+
+msgid "No display"
+msgstr "Intet display"
+
+msgid "Classic display"
+msgstr "Klassisk visning"
+
+msgid "Hoverbox display"
+msgstr "Hoverbox-visning"
+
+msgid "Minimum privacy level"
+msgstr "Minimalt privatlivniveau"
+
+msgid "Privacy level"
+msgstr "Privatlivsniveau"
+
+msgid "Level 0"
+msgstr "---"
+
+msgid "Level 1"
+msgstr "Kontakter"
+
+msgid "Level 2"
+msgstr "Venner"
+
+msgid "Level 4"
+msgstr "Familie"
+
+msgid "Level 8"
+msgstr "Admins"
+
+msgid "Reinitialize check integrity"
+msgstr "Geninitialiser integritetskontrol"
+
+msgid "Check all"
+msgstr "Tjek alle"
+
+msgid "Uncheck all"
+msgstr "Fravælg alle"
+
+msgid "Check automatic corrections"
+msgstr "Tjek automatiske rettelser"
+
+msgid "Apply selected corrections"
+msgstr "Anvend udvalgte korrektioner"
+
+msgid "Ignore selected anomalies"
+msgstr "Ignorer valgte afvigelser"
+
+msgid "Refresh"
+msgstr "Opfrisk"
+
+msgid "The anomaly will be ignored until next application version"
+msgstr "Afvigelsen vil blive ignoreret indtil næste applikationsversion"
+
+msgid "Correction the anomaly will cancel the fact that it's ignored"
+msgstr "Korrigeret afvigelse vil efterfølgende ikke blive ignoreret"
+
+msgid "%d anomaly has been ignored."
+msgid_plural "%d anomalies have been ignored."
+msgstr[0] "%d afvigelse er blevet ignoreret."
+msgstr[1] "%d afvigelser er blevet ignoreret."
+
+msgid "Plugins which need upgrade"
+msgstr "Plugins der skal opgraderes"
+
+msgid "Plugin list"
+msgstr "Pluginliste"
+
+msgid "Check for updates"
+msgstr "Se efter opdateringer"
+
+msgid "Other plugins"
+msgstr "Andre tilgængelige plugins"
+
+msgid "Last revisions"
+msgstr "Seneste revideringer"
+
+msgid "Are you sure you want to delete this plugin?"
+msgstr "Er du sikker på, at du vil slette denne plugin?"
+
+msgid "Are you sure you want to install this plugin?"
+msgstr "Er du sikker på, at du vil installere denne plugin?"
+
+msgid "Are you sure to install this upgrade? You must verify if this version does not need uninstallation."
+msgstr "Er du sikker på, at du vil installere denne opgradering? Du skal undersøge hvorvidt denne version kræver forudgående afinstallering."
+
+msgid "Plugin has been successfully copied"
+msgstr "Plugin'en er blevet kopieret"
+
+msgid "Can't create temporary file."
+msgstr "Midlertidige filer kan ikke oprettes."
+
+msgid "Can't download archive."
+msgstr "Arkiv kan ikke downloades."
+
+msgid "Can't read or extract archive."
+msgstr "Arkiv ikke kan læses eller udpakkes."
+
+msgid "An error occured during extraction (%s)."
+msgstr "En fejl opstod under filens (%s) udpakning."
+
+msgid "Please check \"plugins\" folder and sub-folders permissions (CHMOD)."
+msgstr "Kontroller tilladelser for mappen \"plugins\" og dens undermappe (chmod)."
+
+msgid "Can't connect to server."
+msgstr "Tilslutning til server ikke mulig."
+
+msgid "Purge compiled templates"
+msgstr "Tøm kompilerede skabeloner"
+
+msgid "ACCESS_0"
+msgstr "Fri adgang"
+
+msgid "ACCESS_1"
+msgstr "Adgang for alle"
+
+msgid "ACCESS_2"
+msgstr "Adgang for registrerede brugere"
+
+msgid "ACCESS_3"
+msgstr "Adgang for administratorer"
+
+msgid "ACCESS_4"
+msgstr "Adgang for webmastere"
+
+msgid "ACCESS_5"
+msgstr "Ingen adgang"
+
+msgid "Support"
+msgstr "Support"
+
+msgid "Documentation"
+msgstr "Dokumentation"
+
+msgid "A new version of Piwigo is available."
+msgstr "En ny version af Piwigo er tilgængelig."
+
+msgid "Piwigo Administration"
+msgstr "Piwigo Administration"
+
+msgid "Piwigo version"
+msgstr "Piwigo-version"
+
+msgid "You are running the latest version of Piwigo."
+msgstr "Du anvender den seneste version af Piwigo."
+
+msgid "The version of %s [%s] installed is not compatible with the version required [%s]"
+msgstr "Den version af %s [%s] er installeret ikke er kompatibel med den krævede version  [%s]"
+
+msgid "You need to upgrade your system to take full advantage of the application else the application will not work correctly, or not at all"
+msgstr "Du bør opgradere dit system for at drage fuld nytte af programmet, ellers risikerer du at programmet virke forkert, eller slet ikke"
+
+msgid "Deleted on"
+msgstr "Slettet den"
+
+msgid "Last hit"
+msgstr "Seneste hit"
+
+msgid "GD library is missing"
+msgstr "GD-biblioteket mangler"
+
+msgid "Templates"
+msgstr "Skabeloner"
+
+msgid "Extend for templates"
+msgstr "Udvid skabeloner"
+
+msgid "Replacement of original templates by customized templates from template-extension subfolder"
+msgstr "Erstatning af originale skabeloner med tilpassede skabeloner fra undermappen template-extension"
+
+msgid "Replacers (customized templates)"
+msgstr "Stedfortrædere (tilpassede skabeloner)"
+
+msgid "Original templates"
+msgstr "Original skabelon"
+
+msgid "Optional URL keyword"
+msgstr "Valgfrit URL-nøgleord"
+
+msgid "Templates configuration has been recorded."
+msgstr "Opsætning af skabeloner er registreret."
+
+msgid "All optimizations have been successfully completed."
+msgstr "Alle optimeringer er afsluttet med succes."
+
+msgid "Optimizations have been completed with some errors."
+msgstr "Optimeringer er afsluttet med nogle fejl."
+
+msgid "Modify information"
+msgstr "Rediger oplysninger"
+
+msgid "nothing"
+msgstr "intet"
+
+msgid "overrides existing values with empty ones"
+msgstr "erstatter eksisterende værdier med tomme"
+
+msgid "Manage photo ranks"
+msgstr "Sorteringsrækkefølge"
+
+msgid "Edit ranks"
+msgstr "Rediger karakterer"
+
+msgid "No photo in this album"
+msgstr "Ingen fotografier i dette album"
+
+msgid "Images manual order was saved"
+msgstr "Manuel billedrækkefølge gemt"
+
+msgid "ranks"
+msgstr "karakterer"
+
+msgid "Drag to re-order"
+msgstr "Klik-og-træk for at arrangere"
+
+msgid "Quick Local Synchronization"
+msgstr "Hurtig lokal synkronisering"
+
+msgid "No photo can be deleted"
+msgstr "Ingen fotografier kan slettes"
+
+msgid "Delete selected photos"
+msgstr "Slet valgte fotografier"
+
+msgid "%d photo was deleted"
+msgid_plural "%d photos were deleted"
+msgstr[0] "%d fotografier slettet"
+msgstr[1] "%d fotografier slettet"
+
+msgid "Downloads"
+msgstr "Downloads"
+
+msgid "Released on"
+msgstr "Frigivet den"
+
+msgid "Number of downloads"
+msgstr "Antal downloads"
+
+msgid "Piwigo Announcements Newsletter"
+msgstr "Piwigo Announcement Newsletter"
+
+msgid "Keep in touch with Piwigo project, subscribe to Piwigo Announcement Newsletter. You will receive emails when a new release is available (sometimes including a security bug fix, it's important to know and upgrade) and when major events happen to the project. Only a few emails a year."
+msgstr "Hold kontakt med Piwigo-projektet ved at tilmelde dig det nyhedsbrevet Piwigo Announcement Newsletter. Du vil modtage e-mails, når en ny udgivelser er tilgængelige (undertiden herunder også fejlrettelser, som er vigtige at være bekendt med og opgradere til), samt når der sker større begivenheder i projektet. Du vil normal kun modtage få e-mails om året."
+
+msgid "Subscribe %s"
+msgstr "Tilmeld %s"
+
+msgid "Subscribe %s to Piwigo Announcements Newsletter"
+msgstr "Tilmeld %s til Piwigo Announcements Newsletter"
+
+msgid "Purge search history"
+msgstr "Tøm søgehistorik"
+
+msgid "Hide"
+msgstr "Skjul"
+
+msgid "Password is missing. Please enter the password."
+msgstr "Adgangskoden mangler. Indtast adgangskoden."
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "Adgangskodebekræftelse mangler. Bekræft den valgte adgangskode."
+
+msgid "Allow users to edit their own comments"
+msgstr "Tillad at brugere redigerer deres egne kommentarer"
+
+msgid "Allow users to delete their own comments"
+msgstr "Tillad at brugere sletter deres egne kommentarer"
+
+msgid "Email administrators when a comment is modified"
+msgstr "Send e-mail til administratorer når en kommentar ændres"
+
+msgid "Email administrators when a comment is deleted"
+msgstr "Send e-mail til administratorer, når en kommentar er slettet"
+
+msgid "Cannot delete the old permalink !"
+msgstr "Det eksisterende permalink kan ikke slettes!"
+
+msgid "Hit"
+msgstr "Hit"
+
+msgid "Tools"
+msgstr "Værktøjer"
+
+msgid "Photos"
+msgstr "Fotografier"
+
+msgid "Themes"
+msgstr "Temaer"
+
+msgid "Instructions to use Piwigo"
+msgstr "Vejledning i at anvende Piwigo"
+
+msgid "Installed Themes"
+msgstr "Installerede temaer"
+
+msgid "Add New Theme"
+msgstr "Tilføj et nyt tema"
+
+msgid "Forbid this theme to users"
+msgstr "Forbyd dette tema til brugere"
+
+msgid "Set as default theme for unregistered and new users"
+msgstr "Opsæt som standardtema for ikke-registrerede og nye brugere"
+
+msgid "unknown"
+msgstr "ukendt"
+
+msgid "Upload Photos"
+msgstr "Upload fotografier"
+
+msgid "Drop into album"
+msgstr "Vælg et album"
+
+msgid "+ Add an upload box"
+msgstr "+ Tilføj en uploadboks"
+
+msgid "Create the \"%s\" directory at the root of your Piwigo installation"
+msgstr "Opret mappen '%s' i roden af din Piwigo-installation"
+
+msgid "Give write access (chmod 777) to \"%s\" directory at the root of your Piwigo installation"
+msgstr "Giv skriveadgang (chmod 777) til mappen '%s' i roden af din Piwigo-installation"
+
+msgid "existing album"
+msgstr "eksisterende album"
+
+msgid "create a new album"
+msgstr "Opret et nyt album"
+
+msgid "Album name"
+msgstr "Albumnavn "
+
+msgid "Album \"%s\" has been added"
+msgstr "Albummet '%s' er blevet tilføjet "
+
+msgid "Uploaded Photos"
+msgstr "Uploadede fotografier "
+
+msgid "%d photos uploaded"
+msgstr "%d fotografier uploadet"
+
+msgid "Privacy level set to \"%s\""
+msgstr "Privatlivsniveau sat til \"%s\""
+
+msgid "Album \"%s\" now contains %d photos"
+msgstr "Albummet '%s' indeholder nu %d fotografier"
+
+msgid "Manage this set of %d photos"
+msgstr "Administrer dette sæt bestående af %d fotografier"
+
+msgid "Select files"
+msgstr "Vælg filer"
+
+msgid "Everybody"
+msgstr "Alle"
+
+msgid "Who can see these photos?"
+msgstr "Hvem kan se disse fotografier?"
+
+msgid "Settings"
+msgstr "Indstillinger"
+
+msgid "Resize"
+msgstr "Størrelsesændring"
+
+msgid "Maximum width"
+msgstr "Maksimal bredde"
+
+msgid "pixels"
+msgstr "pixels"
+
+msgid "Maximum height"
+msgstr "Maksimal højde"
+
+msgid "Image Quality"
+msgstr "Billedkvalitet "
+
+msgid "Save Settings"
+msgstr "Gem indstillinger "
+
+msgid "Your configuration settings are saved"
+msgstr "Din opsætning er gemt"
+
+msgid "Active Themes"
+msgstr "Aktive temaer"
+
+msgid "Add write access to the \"%s\" directory"
+msgstr "Tilføj skriveadgang til mappen \"%s\""
+
+msgid "Administration Home"
+msgstr "Administrationsforside"
+
+msgid "Change Admin Colors"
+msgstr "Skift farver på administrationsmodul"
+
+msgid "Delete this theme"
+msgstr "Slet dette tema"
+
+msgid "Directory does not exist"
+msgstr "Mappe findes ikke "
+
+msgid "Download,"
+msgstr "Download,"
+
+msgid "FTP + Synchronization"
+msgstr "FTP + synkronisering"
+
+msgid "Get Support on Piwigo Forum"
+msgstr "Få support i Piwigos forum "
+
+msgid "Help Me"
+msgstr "Hjælp mig"
+
+msgid "Impossible to activate this theme, the parent theme is missing: %s"
+msgstr "Dette tema kunne ikke aktiveres, da det overordnede tema mangler: %s "
+
+msgid "Impossible to delete this theme. Other themes depends on it: %s"
+msgstr "Dette tema kan ikke slettes, fordi andre temaer afhænger af det: %s"
+
+msgid "Inactive Themes"
+msgstr "Inaktive temaer"
+
+msgid "Install on your computer,"
+msgstr "Installer på din computer,"
+
+msgid "Make this theme available to users"
+msgstr "Gør dette tema tilgængeligt for brugerne"
+
+msgid "Page end"
+msgstr "Sideslut "
+
+msgid "Piwigo Uploader"
+msgstr "Piwigo Uploader "
+
+msgid "Please wait..."
+msgstr "Vent venligst ..."
+
+msgid "Read Piwigo Documentation"
+msgstr "Læs Piwigos dokumentation"
+
+msgid "Start pLoader and add your photos."
+msgstr "Start pLoader og tilføj dine fotografier."
+
+msgid "Switch to clear or dark colors for administration"
+msgstr "Skift til lyse eller mørke farver i administration"
+
+msgid "Theme has been successfully installed"
+msgstr "Temaet blev installeret"
+
+msgid "Visit Gallery"
+msgstr "Besøg galleriet"
+
+msgid "Visit Piwigo project website"
+msgstr "Besøg Piwigo-projektets hjemmeside"
+
+msgid "Guest Settings"
+msgstr "Gæsteindstillinger "
+
+msgid "Main Page"
+msgstr "Forside"
+
+msgid "Photo Page"
+msgstr "Fotoside "
+
+msgid "Activate Navigation Bar"
+msgstr "Aktiver navigationsbjælke"
+
+msgid "Activate Navigation Thumbnails"
+msgstr "Aktiver miniaturebilleder til navigering"
+
+msgid "Activate icon \"%s\""
+msgstr "Aktiver ikonen '%s'"
+
+msgid "Photo Properties"
+msgstr "Fotografiegenskaber"
+
+msgid "Allow user customization"
+msgstr "Tillad brugertilpasning"
+
+msgid "Languages"
+msgstr "Sprog"
+
+msgid "Installed Languages"
+msgstr "Installerede sprog"
+
+msgid "Add New Language"
+msgstr "Tilføj nyt sprog "
+
+msgid "Language has been successfully installed"
+msgstr "Sproget er installeret"
+
+msgid "Select:"
+msgstr "Vælg:"
+
+msgid "None"
+msgstr "Ingen"
+
+msgid "Invert"
+msgstr "Vend"
+
+msgid "Impossible to deactivate this theme, you need at least one theme."
+msgstr "Ikke muligt at deaktivere dette tema, du skal have mindst ét tema"
+
+msgid "Webmaster status is required."
+msgstr "Webmasterstatus er krævet."
+
+msgid "Bound Theme"
+msgstr "Tilknyttet tema"
+
+msgid "Allow rating"
+msgstr "Tillad bedømmelse"
+
+msgid "Select at least one comment"
+msgstr "Vælg mindst én kommentar"
+
+msgid "Active Plugins"
+msgstr "Aktive plugins "
+
+msgid "Inactive Plugins"
+msgstr "Inaktive plugins "
+
+msgid "Missing Plugins"
+msgstr "Manglende plugins"
+
+msgid "Uninstalled Plugins"
+msgstr "Afinstallerede plugins "
+
+msgid "By %s"
+msgstr "Af %s"
+
+msgid "Visit plugin site"
+msgstr "Besøg pluginwebstedet"
+
+msgid "By rank"
+msgstr "Efter bedømmelse"
+
+msgid "Manual order"
+msgstr "Manuel rækkefølge"
+
+msgid "Who can see this photo?"
+msgstr "Hvem kan se dette fotografi?"
+
+msgid "Active Languages"
+msgstr "Aktive sprog"
+
+msgid "Delete this language"
+msgstr "Slet dette sprog"
+
+msgid "Forbid this language to users"
+msgstr "Forbyd dette sprog til brugere"
+
+msgid "Impossible to deactivate this language, first set another language as default."
+msgstr "Ikke muligt at deaktivere dette sprog, du skal først vælge et andet sprog som standard."
+
+msgid "Impossible to deactivate this language, you need at least one language."
+msgstr "Ikke muligt at deaktivere dette sprog, du skal have mindst ét sprog."
+
+msgid "Inactive Languages"
+msgstr "Inaktive sprog"
+
+msgid "Make this language available to users"
+msgstr "Gør dette sprog tilgængeligt for brugerne"
+
+msgid "Set as default language for unregistered and new users"
+msgstr "Opsæt som standardsprog for ikke-registrerede og nye brugere"
+
+msgid "Add Photos"
+msgstr "Tilføj fotografier"
+
+msgid "The following tag was deleted"
+msgstr "Følgende tag er slettet"
+
+msgid "Miscellaneous"
+msgstr "Forskelligt"
+
+msgid "Virtual Links"
+msgstr "Virtuelle links"
+
+msgid "There is no other language available."
+msgstr "Der er ikke andre sprog til rådighed."
+
+msgid "There is no other plugin available."
+msgstr "Der er ikke andre tilgængelige plugins."
+
+msgid "There is no other theme available."
+msgstr "Der er ikke andre tilgængelige temaer."
+
+msgid "Add another set of photos"
+msgstr "Tilføj et sæt fotografier mere"
+
+msgid "Order of menubar items has been updated successfully."
+msgstr "Rækkefølge af menubjælker er opdateret."
+
+msgid "This theme was not designed to be directly activated"
+msgstr "Dette tema er ikke beregnet til at blive aktiveret direkte"
+
+msgid "Pending Comments"
+msgstr "Ventende kommentarer"
+
+msgid "Menu Management"
+msgstr "Menu"
+
+msgid "new"
+msgstr "ny"
+
+msgid "No file was uploaded"
+msgstr "Ingen filer blev uploadet"
+
+msgid "No photo in the current set."
+msgstr "Ingen fotografier i det aktuelle sæt."
+
+msgid "No photo selected, %d photos in current set"
+msgstr "Ingen fotografier valgt, %d fotografier i nuværende sæt"
+
+msgid "No photos selected, no actions possible."
+msgstr "Ingen fotografier valgt, ingen mulige handlinger."
+
+msgid "No results"
+msgstr "Ingen resultater"
+
+msgid "on the %d selected photos"
+msgstr "på de %d valgte fotografier"
+
+msgid "Predefined filter"
+msgstr "Foruddefineret filter"
+
+msgid "Refresh photo set"
+msgstr "Opfrisk fotosættet"
+
+msgid "Remove all filters"
+msgstr "Fjern alle filtre"
+
+msgid "remove author"
+msgstr "fjern forfatter"
+
+msgid "remove creation date"
+msgstr "fjern oprettelsesdato"
+
+msgid "Remove from caddie"
+msgstr "Fjern fra kurv"
+
+msgid "remove this filter"
+msgstr "fjern dette filter"
+
+msgid "remove title"
+msgstr "fjern titel"
+
+msgid "Searching..."
+msgstr "Søger ..."
+
+msgid "Selection"
+msgstr "Udvælgelse"
+
+msgid "Set author"
+msgstr "Opsæt forfatter"
+
+msgid "Set creation date"
+msgstr "Opsæt oprettelsesdato"
+
+msgid "Set title"
+msgstr "Opsæt titel"
+
+msgid "Learn more"
+msgstr "Lær mere"
+
+msgid "Rate"
+msgstr "Bedøm"
+
+msgid "Average rate"
+msgstr "Gennemsnitlig bedømmelse"
+
+msgid "An error has occured during upgrade."
+msgstr "Der opstod en fejl under opgraderingen."
+
+msgid "An error has occured during extract. Please check files permissions of your piwigo installation.<br><a href=\"%s\">Click here to show log error</a>."
+msgstr "Der opstod en fejl under udpakningen. Tjek filrettigheder i din Piwigo-installation.<br><a href=\"%s\">Klik her for at se fejlloggen</a>."
+
+msgid "Piwigo cannot retrieve upgrade file from server"
+msgstr "Piwigo kan ikke modtage opgraderingsfiler fra serveren"
+
+msgid "Update in progress... Please wait."
+msgstr "Opdateringen er i gang... Vent venligst."
+
+msgid "Update to Piwigo %s"
+msgstr "Opdater til Piwigo %s"
+
+msgid "Two updates are available"
+msgstr "Der er to opdateringer til rådighed"
+
+msgid "%d of %d photos selected"
+msgstr "%d af %d fotografier udvalgt"
+
+msgid "Action"
+msgstr "Handling"
+
+msgid "Activate icon \"new\" next to albums and pictures"
+msgstr "Aktiver ikonen \"ny\" ved siden af albummer og billeder"
+
+msgid "Add a criteria"
+msgstr "Tilføj kriterium"
+
+msgid "Add a filter"
+msgstr "Tilføj et filter"
+
+msgid "Album photos associated to the following albums: %s"
+msgstr "Fotografierne i albummet er knyttet til følgende albummer: %s"
+
+msgid "Albums automatically sorted"
+msgstr "Albummer er automatisk sorteret"
+
+msgid "All %d photos are selected"
+msgstr "Alle %d fotografier er valgt"
+
+msgid "Apply action"
+msgstr "Godkend handling"
+
+msgid "automatic order"
+msgstr "automatisk rækkefølge"
+
+msgid "Batch Manager"
+msgstr "Batch Manager"
+
+msgid "Choose an action"
+msgstr "Vælg en handling"
+
+msgid "Deactivate all"
+msgstr "Deaktiver alle"
+
+msgid "Default photos order"
+msgstr "Standardrækkefølge for fotografier"
+
+msgid "Delete orphan tags"
+msgstr "Slet forældreløse tags"
+
+msgid "delete photo"
+msgstr "slet fotografi"
+
+msgid "Duplicates"
+msgstr "Dubletter"
+
+msgid "Error on file \"%s\" : %s"
+msgstr "Fejl i filen \"%s\": %s"
+
+msgid "Exif extension not available, admin should disable exif use"
+msgstr "Exif-udvidelsen er ikke tilgængelig, admin bør deaktivere anvendelse af exif"
+
+msgid "Failed to write file to disk"
+msgstr "Fejl i skrivning til disk"
+
+msgid "File upload stopped by extension"
+msgstr "Filupload er stoppet"
+
+msgid "In your php.ini file, the upload_max_filesize (%sB) is bigger than post_max_size (%sB), you should change this setting"
+msgstr "I din php.ini-fil, er upload_max_filesize (%sB) større end post_max_size (%sB), du bør ændre denne indstilling"
+
+msgid "include child albums"
+msgstr "medtag underalbummer"
+
+msgid "Last import"
+msgstr "Seneste import"
+
+msgid "manual order"
+msgstr "manual rækkefølge"
+
+msgid "Missing a temporary folder"
+msgstr "Mangler midlertidig mappe"
+
+msgid "Orphan tags deleted"
+msgstr "Forældreløse tags slettet"
+
+msgid "Restore"
+msgstr "Genopret"
+
+msgid "Restore default configuration. You will lose your plugin settings!"
+msgstr "Genopret standardopsætning. Du vil miste dine plugin-indstillinger!"
+
+msgid "Show menubar"
+msgstr "Vis menubjælke"
+
+msgid "Add to caddie"
+msgstr "Tilføj til kurv"
+
+msgid "%s has been successfully updated."
+msgstr "%s er blevet opdateret."
+
+msgid "%s photos can not be regenerated"
+msgstr "%s fotografier kan ikke gendannes"
+
+msgid "%s photos have been regenerated"
+msgstr "%s fotografier er gendannet"
+
+msgid "(this tag will be deleted)"
+msgstr "(dette tag vil blive slettet)"
+
+msgid "... or "
+msgstr "... eller "
+
+msgid "Activate comments"
+msgstr "Aktiver kommentarer"
+
+msgid "All extensions are up to date."
+msgstr "Alle udvidelser er opdaterede."
+
+msgid "All languages are up to date."
+msgstr "Alle sprog er opdaterede."
+
+msgid "All plugins are up to date."
+msgstr "Alle plugins er opdaterede."
+
+msgid "All themes are up to date."
+msgstr "Alle temaer er opdaterede."
+
+msgid "Allowed file types: %s."
+msgstr "Tilladte filtyper: %s."
+
+msgid "Approximate maximum resolution: %dM pixels (that's %dx%d pixels)."
+msgstr "Omtrentlig maksimal opløsning: %dM pixels (der er %dx%d pixels)."
+
+msgid "By default, Piwigo will create a new websize from the HD (high definition) version of your photo."
+msgstr "Som standard vil Piwigo danne en ny webstørrelse fra HD-versionen (højopløselig) af dit fotografi."
+
+msgid "Confirm merge"
+msgstr "Bekræft sammenlægning"
+
+msgid "Create"
+msgstr "Dan"
+
+msgid "Crop"
+msgstr "Beskær"
+
+msgid "Default comments order"
+msgstr "Standardkommentarrækkefølge"
+
+msgid "display"
+msgstr "vis"
+
+msgid "Do you want to activate anyway?"
+msgstr "Vil du aktivere alligevel?"
+
+msgid "ERROR"
+msgstr "FEJL"
+
+msgid "ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW."
+msgstr "FEJL: DENNE PLUGIN MANGLER, MEN ER INSTALLERET! AFINSTILLER NU."
+
+msgid "Extensions Update"
+msgstr "Opdater udvidelser"
+
+msgid "Follow Orientation"
+msgstr "Følg retning"
+
+msgid "Following plugins may not be compatible with the new version of Piwigo:"
+msgstr "Følgende plugins er måske ikke kompatible med den nye version af Piwigo:"
+
+msgid "Following themes may not be compatible with the new version of Piwigo:"
+msgstr "Følgende temaer er måske ikke kompatible med den nye version af Piwigo:"
+
+msgid "Height"
+msgstr "Højde"
+
+msgid "hide details"
+msgstr "skjul detaljer"
+
+msgid "Graphics Library"
+msgstr "Grafikbibliotek"
+
+msgid "I decide to update anyway"
+msgstr "Jeg vil gerne opdatere alligevel"
+
+msgid "If no HD is available and if the current websize is bigger than resize dimensions, Piwigo will move it as HD and create a downsized websize photo from it."
+msgstr "Hvis der ikke er HD tilgængelig, og hvis webstørrelsen er større end skaleringsdimensionerne, flytter Piwioi det som HD og danner en nedskaleret fotografi i webstørrelse af det."
+
+msgid "Ignore All"
+msgstr "Ignorer alt"
+
+msgid "Ignore this update"
+msgstr "Ignorer denne opdatering"
+
+msgid "Manage Permissions"
+msgstr "Administrer tilladelser"
+
+msgid "Maximum file size: %sB."
+msgstr "Maksimal filstørrelse: %sB."
+
+msgid "Merge selected tags"
+msgstr "Flet udvalgte tags"
+
+msgid "Merge tags"
+msgstr "Flet tags"
+
+msgid "New Version"
+msgstr "Ny version"
+
+msgid "No destination tag selected"
+msgstr "Der er ikke valgt et måltag"
+
+msgid "Obsolete Plugins"
+msgstr "Forældede plugins"
+
+msgid "Photo %s of %s"
+msgstr "Fotografi %s af %s"
+
+msgid "Photo name"
+msgstr "Fotografinavn"
+
+msgid "Photos generation in progress..."
+msgstr "Dannelse af fotografier er i gang ..."
+
+msgid "Piwigo Update"
+msgstr "Opdater Piwigo"
+
+msgid "Reset ignored updates"
+msgstr "Nulstil ignorerede opdateringer"
+
+msgid "Save Template Directory"
+msgstr "Gem skabelonmappe"
+
+msgid "Select an album"
+msgstr "Vælg et album"
+
+msgid "Select at least two tags for merging"
+msgstr "Vælg mindst to tags til sammenlægning"
+
+msgid "Select the destination tag"
+msgstr "Vælg måltagget"
+
+msgid "Send connection settings by email"
+msgstr "Send loginoplysninger pr. e-mail"
+
+msgid "show details"
+msgstr "vis detaljer"
+
+msgid "Some themes and plugins may be not available yet."
+msgstr "Nogle temaer og plugins er måske endnu ikke tilgængelige."
+
+msgid "Some upgrades are available for extensions."
+msgstr "Der er tilgængelige opgraderinger til nogle udvidelser."
+
+msgid "Start Upload"
+msgstr "Begynd upload"
+
+msgid "Tags <em>%s</em> merged into tag <em>%s</em>"
+msgstr "Taggene <em>%s</em> er blevet lagt ind i tagget <em>%s</em>"
+
+msgid "The original image quality must be a number between %d and %d"
+msgstr "Det originale billedkvalitet skal være et tal mellem %d og %d"
+
+msgid "The original maximum height must be a number between %d and %d"
+msgstr "Den originale maksimumhøjde skal være et tal mellem %d og %d"
+
+msgid "The original maximum width must be a number between %d and %d"
+msgstr "Den originale maksimumbredde skal være et tal mellem %d og %d"
+
+msgid "This is a major update, with <a href=\"%s\">new exciting features</a>."
+msgstr "Dette er en større opdatering, med <a href=\"%s\">nye spændende funktioner</a>."
+
+msgid "This is a minor update, with only bug corrections."
+msgstr "Dette er en mindre opdatering, kun med fejlrettelser."
+
+msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
+msgstr "DENNE PLUGIN ER NU EN DEL AF PIWIGOS KERNE! AFINDSTALLER DEN NU!"
+
+msgid "Thumbnails generation in progress..."
+msgstr "Dannelse af miniaturebilleder er i gang ..."
+
+msgid "Update All"
+msgstr "Opdater alle"
+
+msgid "Update Complete"
+msgstr "Opdatering gennemført"
+
+msgid "Updates"
+msgstr "Opdateringer"
+
+msgid "Visit language site"
+msgstr "Besøg sprogwebsted"
+
+msgid "Visit theme site"
+msgstr "Besøg temawebstedet"
+
+msgid "Width"
+msgstr "Bredde"
+
+msgid "With no album"
+msgstr "Ingen album"
+
+msgid "With no tag"
+msgstr "Ingen tag"
+
+msgid "With no virtual album"
+msgstr "Ingen virtuelle albummer"
+
+msgid "You are using the Browser uploader. Try the <a href=\"%s\">Flash uploader</a> instead."
+msgstr "Du bruger Browser-uploaderen. Prøv <a href=\"%s\">Flash-uploaderen</a> i stedet."
+
+msgid "You are using the Flash uploader. Problems? Try the <a href=\"%s\">Browser uploader</a> instead."
+msgstr "Du bruger Flash-uploaderen. Har du problemer? Prøv <a href=\"%s\">Browser-uploaderen</a> i stedet."
+
+msgid "You can update to Piwigo %s directly, without upgrading to Piwigo %s (recommended)."
+msgstr "Du kan opdatere til Piwigo %s direkte, uden at opgradere til Piwigo %s (anbefalet)."
+
+msgid "Zoom"
+msgstr "Zoom"
+
+msgid "Resize after upload"
+msgstr "Størrelsesændring efter upload"
+
+msgid "Original Size"
+msgstr "Original størrelse"
+
+msgid "A locked gallery is only visible to administrators"
+msgstr "Et låst galleri er kun synligt for administratorer"
+
+msgid "Unlock gallery"
+msgstr "Lås galleri op"
+
+msgid "Gallery unlocked"
+msgstr "Galleri er låst op"
+
+msgid "Notify administrators when a comment is"
+msgstr "Giv administratorer besked når en kommentar er"
+
+msgid "modified"
+msgstr "ændret"
+
+msgid "pending validation"
+msgstr "afventer godkendelse"
+
+msgid "Save visits in history for"
+msgstr "Gem besøg i historik for"
+
+msgid "simple visitors"
+msgstr "simple besøgende"
+
+msgid "registered users"
+msgstr "registerede brugere"
+
+msgid "administrators"
+msgstr "administratorer"
+
+msgid "This album contains %d photos, added on %s."
+msgstr "Dette album indeholder %d fotografier, tilføjet den %s."
+
+msgid "This album contains %d photos, added between %s and %s."
+msgstr "Dette album indeholder %d fotografier, tilføjet mellem %s og %s."
+
+msgid "This album contains no photo."
+msgstr "Dette album indeholder ingen fotografier."
+
+msgid "Move to album"
+msgstr "Flyt til album"
+
+msgid "The whole page"
+msgstr "Hele siden"
+
+msgid "The whole set"
+msgstr "Hele sættet"
+
+msgid "Themes which need upgrade"
+msgstr "Temaer der skal opgraderes"
+
+msgid "Type here the author name"
+msgstr "Skriv forfatterens navn"
+
+msgid "Type here the title"
+msgstr "Skriv titlen"
+
+msgid "Type in a search term"
+msgstr "Skriv søgeord"
+
+msgid "Unknown upload error"
+msgstr "Ukendt fejl ved upload"
+
+msgid "Week starts on"
+msgstr "Ugen begynder med"
+
+msgid "Apply watermark if height is bigger than"
+msgstr "Tilføj vandmærke hvis højden er større end"
+
+msgid "Apply watermark if width is bigger than"
+msgstr "Tilføj vandmærke hvis bredden er større end"
+
+msgid "Cancel"
+msgstr "Fortryd"
+
+msgid "Delete multiple size images"
+msgstr "Slet billeder i flere størrelser"
+
+msgid "Generate multiple size images"
+msgstr "Dan billeder i flere størrelser"
+
+msgid "Groups and users"
+msgstr "Grupper og brugere"
+
+msgid "Languages which need upgrade"
+msgstr "Sprog der skal opdateres"
+
+msgid "Opacity"
+msgstr "Gennemsigtighed"
+
+msgid "Permission granted for users"
+msgstr "Tilladelser tildelt brugerne"
+
+msgid "Permission management"
+msgstr "Tilladelsesstyring"
+
+msgid "Piwigo Publish plugin for Lightroom"
+msgstr "Piwigo Publish-plugin til Lightroom"
+
+msgid "Select a file"
+msgstr "Vælg en fil"
+
+msgid "Select groups..."
+msgstr "Vælg grupper ..."
+
+msgid "Select users..."
+msgstr "Vælg brugere ..."
+
+msgid "The uploaded file was only partially uploaded"
+msgstr "Den uploadede fil blev kun delvist uploadet"
+
+msgid "There is no group in this gallery."
+msgstr "Der er ingen grupper i dette galleri."
+
+msgid "WARNING! This plugin does not seem to be compatible with this version of Piwigo."
+msgstr "ADVARSEL! Plugin'en er ikke kompatibel med denne version af Piwigo."
+
+msgid "X Position"
+msgstr "X-position"
+
+msgid "X Repeat"
+msgstr "X-gentagelse"
+
+msgid "Y Position"
+msgstr "Y-position"
+
+msgid "add a new watermark"
+msgstr "tilføj et nyt vandmærke"
+
+msgid "any visitor can see this album"
+msgstr "alle besøgende kan se dette album"
+
+msgid "bottom left corner"
+msgstr "nederste venstre hjørne"
+
+msgid "bottom right corner"
+msgstr "nederste højre hjørne"
+
+msgid "custom"
+msgstr "Tilpasset"
+
+msgid "middle"
+msgstr "midt"
+
+msgid "top left corner"
+msgstr "øverste venstre hjørne"
+
+msgid "top right corner"
+msgstr "øverste højre hjørne"
+
+msgid "Piwigo for iOS (iPhone, iPad, iPod Touch)"
+msgstr "Piwigo for iOS (iPhone, iPad, iPod Touch)"
+
+msgid "Save manual order"
+msgstr "Gem manuel rækkefølge"
+
+msgid "Automatic sort order"
+msgstr "Automatisk sorteringsrækkefølge"
+
+msgid "List"
+msgstr "Liste"
+
+msgid "Piwigo export plugin for Aperture"
+msgstr "Piwigo-eksportplugin til Aperture"
+
+msgid "Piwigo export plugin for iPhoto"
+msgstr "Piwigo-eksportplugin til iPhoto"
+
+msgid "Piwigo for Android"
+msgstr "Piwigo for Android"
+
+msgid "You can activate only one mobile theme."
+msgstr "Du kan kun aktivere et mobiltema"
+
+msgid "apply automatic sort order"
+msgstr "Aktiver automatisk sorteringsrækkefølge"
+
+msgid "cancel manual order"
+msgstr "afbryd manuel rækkefølge"
+
+msgid "digiKam is an advanced digital photo management free software for Linux, Windows, and MacOSX."
+msgstr "digiKam er et avanceret fri software-program til organisering af digitale fotografier til Linux, Windows og macOS."
+
+msgid "digiKam is designed for photographers who want to view, manage, edit, enhance, organize, tag, and share photographs."
+msgstr "digiKam er designet til fotografer, der ønsker at se, organisere, redigere, optimere, indeksere og dele fotografier."
+
+msgid "<em>Piwigo for iOS</em> application empowers you to connect to your Piwigo gallery from your iPhone, iPad or iPod Touch, create some albums and upload several photos at once."
+msgstr "App'en <em>Piwigo for iOS</em> giver dig mulighed for at forbinde en iPhone, iPad eller iPod Touch til dit Piwigo-galleri, oprette albummer og uploade flere fotografier på én gang."
+
+msgid "Applications"
+msgstr "Applikationer"
+
+msgid "Available on"
+msgstr "Tilgængelig på"
+
+msgid "Not cropped correctly?"
+msgstr "Ikke beskåret korrekt?"
+
+msgid "Web Form"
+msgstr "Webformular"
+
+msgid "You have %d orphan tags: %s."
+msgstr "Du har %d forældreløse tags: %s"
+
+msgid "visitors need to login and have the appropriate permissions to see this album"
+msgstr "besøgende skal logge ind samt have de nødvendige tilladelser for at se dette album"
+
+msgid "The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form"
+msgstr "Filstørrelsen på den uploadede fil overstiger MAX_FILE_SIZE-definitionen, som er angivet i HTML-formularen"
+
+msgid "Multiple Size"
+msgstr "Flere størrelser"
+
+msgid "%u users have automatic permission because they belong to a granted group."
+msgstr "%u brugere har automatisk tilladelse, fordi de tilhører en gruppe med tilladelser."
+
+msgid "<em>Piwigo for Android</em> application empowers you to connect your Android phone or table to your Piwigo gallery, create some albums and upload several photos at once."
+msgstr "App'en <em>Piwigo for Android</em> giver dig mulighed for at forbinde en Android-mobiltelelfon eller -tablet med dit Piwigo-galleri, oprette albummer og uploade flere fotografier på én gang."
+
+msgid "Adobe Photoshop Lightroom is a photography software designed to manage large quantities of digital images and doing post production work."
+msgstr "Adobe Photoshop Lightroom er et fotografiprogram beregnet til at håndtere store mængder digitale billeder og foretage efterbehandling."
+
+msgid "Aperture is a powerful tool to refine images and manage massive libraries on Mac."
+msgstr "Aperture er et ydedygtigt værktøj til at forfine billeder og administrere store biblioteker på en Mac."
+
+msgid "Aperture is designed for professional photographers with iPhoto simplicity."
+msgstr "Aperture er udviklet til professionelle fotografer med iPhoto-enkelhed."
+
+msgid "By default, the center of interest is placed in the middle of the photo."
+msgstr "Som standard er fokusområdet placeret i midten af fotografiet"
+
+msgid "Center of interest"
+msgstr "Fokusområde"
+
+msgid "Features include gallery browsing, album creation and photo upload."
+msgstr "Funktionerne omfatter gennemsyn af galleri, oprettelse af albummer og upload af fotografier."
+
+msgid "For photo sizes with crop, such as \"Square\", Piwigo will do its best to include the center of interest."
+msgstr "For fotostørrelser med beskæring, så som \"Square\", vil Piwigo gøre sit bedste for at medtage fokusområdet."
+
+msgid "No group is permitted to see this private album"
+msgstr "Ingen gruppe har rettigheder til at se dette private album"
+
+msgid "On your Linux, simply install Shotwell with your package manager and the activate Piwigo publishing option."
+msgstr "Installer blot Shotwell under Linux ved hjælp af dit pakkehåndteringsprogram, og aktivér dernæst Piwigos udgivelsesvalgmulighed."
+
+msgid "Permission granted for groups"
+msgstr "Tilladelse tildelt grupperne"
+
+msgid "Photo sizes with crop"
+msgstr "Fotostørrelser med beskæring"
+
+msgid "Piwigo publish plugin for Shotwell"
+msgstr "Piwigo Publish-plugin til Shotwell"
+
+msgid "Piwigo publish plugin for digiKam"
+msgstr "Piwigo Publish-plugin til digiKam"
+
+msgid "ReGalAndroid (RemoteGallery client for Android) is an open source (GPL v3) Piwigo client for the Android platform."
+msgstr "ReGalAndroid (RemoteGallery-klient til Android) er en open source-Piwigo-klient (GPL v3) til Android-platformen."
+
+msgid "Select a zone with your mouse to define a new center of interest."
+msgstr "Vælg et område med musen for at fastsætte et nyt fokusområde."
+
+msgid "Shotwell is an open source digital photo organizer that runs on Linux. It is the default photo manager in Ubuntu and Fedora."
+msgstr "Shotwell er et open source-organiseringsprogram til digitale fotografier, der kører under Linux. I Ubuntu og Fedora er det standardprogrammet til organisering af fotografier."
+
+msgid "The Piwigo export plugin allows you to create albums and export photos."
+msgstr "Piwigos eksportplugin giver mulighed for at oprette albummer og eksportere fotografier."
+
+msgid "The Piwigo publish Plug-in allows you to export and synchronize photos from Lightroom directly to your Piwigo photo gallery."
+msgstr "Piwigo Publish-plugin'en giver mulighed for at eksportere og synkronisere fotografier fra Lightroom direkte til dit Piwigo-fotogalleri."
+
+msgid "The center of interest is the most meaningful zone in the photo."
+msgstr "Fokusområdet er den mest betydningsfulde område i fotografiet."
+
+msgid "The uploaded file exceeds the upload_max_filesize directive in php.ini: %sB"
+msgstr "Den uploadede fil overstiger upload_max_filesize-definitionen i php.ini: %sB"
+
+msgid "The uploaded files exceed the post_max_size directive in php.ini: %sB"
+msgstr "Den uploadede fil overstiger post_max_size-definitionen i php.ini: %sB"
+
+msgid "To export your photos from digiKam to Piwigo, simply install digiKam and the Kipi-plugins."
+msgstr "For at eksportere dine fotografier fra digiKam til Piwigo, skal du blot installere digiKam og KIPI-plugin'en."
+
+msgid "You can't define a default photo order because you have a custom setting in your local configuration."
+msgstr "Du kan ikke definere en standardrækkefølge for fotografier, fordi du har en tilpasset indstilling i din lokale opsætning."
+
+msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
+msgstr "Du har angivet <i>$conf['order_by']</i> i din lokale opsætningsfil, parameteret er forældet, du skal derfor fjerne det eller omdøbe det til <i>$conf['order_by_custom']</i>!"
+
+msgid "iPhoto is the default photo manager on MacOSX. The Piwigo export plugin let you create new albums and export your photos directly from iPhoto to your Piwigo photo gallery."
+msgstr "iPhoto er standardprogram til håndtering af fotografier under macOS. Ved hjælp af eksportplugin'en kan du oprette nye albummer og eksportere dine fotografier direkte fra iPhoto til dit Piwigo-fotogalleri."
+
+msgid "include photos with lower privacy level"
+msgstr "medtag fotografier med lavere privatlivsniveau"
+
+msgid "%d day"
+msgstr "%d dag"
+
+msgid "%d days"
+msgstr "%d dage"
+
+msgid "%d hour"
+msgstr "%d time"
+
+msgid "%d hours"
+msgstr "%d timer"
+
+msgid "%d minute"
+msgstr "%d minut"
+
+msgid "%d minutes"
+msgstr "%d minutter"
+
+msgid "%d month"
+msgstr "%d måned"
+
+msgid "%d months"
+msgstr "%d måneder"
+
+msgid "%d second"
+msgstr "%d sekund"
+
+msgid "%d seconds"
+msgstr "%d sekunder"
+
+msgid "%d year"
+msgstr "%d år"
+
+msgid "%d years"
+msgstr "%d år"
+
+msgid "%s ago"
+msgstr "%s siden"
+
+msgid "%s in the future"
+msgstr "%s i fremtiden"
+
+msgid "Added by %s"
+msgstr "Tilføjet af %s"
+
+msgid "Numeric identifier : %d"
+msgstr "Numerisk identifikator: %d"
+
+msgid "Original file : %s"
+msgstr "Original fil: %s"
+
+msgid "Posted %s on %s"
+msgstr "Sendt %s den %s"
+
+msgid "Rated %d times, score : %.2f"
+msgstr "Bedømt %d gange, vurdering: %.2f"
+
+msgid "Sharpen"
+msgstr "Gør skarpere"
+
+msgid "Visited %d times"
+msgstr "Besøgt %d gange"
+
+msgid "Watermark"
+msgstr "Vandmærke"
+
+msgid " and %d virtuals"
+msgstr " og %d virtuelle"
+
+msgid "%d physicals"
+msgstr " %d fysiske"
+
+msgid "%d week"
+msgstr "%d uge"
+
+msgid "%d weeks"
+msgstr "%d uger"
+
+msgid "Edit photo"
+msgstr "Rediger fotografi"
+
+msgid "create a new site"
+msgstr "opret et nyt websted"
+
+msgid "No order field selected"
+msgstr "Rækkefølgefeltet er ikke valgt"
+
+msgid "Duplicate selected tags"
+msgstr "Kopier valgte tags"
+
+msgid "Name of the duplicate"
+msgstr "Navn på kopi"
+
+msgid "Source tag"
+msgstr "Kildetag"
+
+msgid "Tag \"%s\" is now a duplicate of \"%s\""
+msgstr "Tagget \"%s\" er nu en kopi af \"%s\""
+
+msgid "Landscape"
+msgstr "Landskab"
+
+msgid "Minimum height"
+msgstr "Minimal højde"
+
+msgid "Minimum width"
+msgstr "Minimal bredde"
+
+msgid "Panorama"
+msgstr "Panorama"
+
+msgid "Portrait"
+msgstr "Portræt"
+
+msgid "Manage photos"
+msgstr "Håndter fotografier"
+
+msgid "View in gallery"
+msgstr "Se i galleri"
+
+msgid "Number of albums per page"
+msgstr "Antal albummer pr. side"
+
+msgid "Ratio"
+msgstr "Faktor"
+
+msgid "between %.2f and %.2f"
+msgstr "mellem %.2f og %.2f"
+
+msgid "between %d and %d pixels"
+msgstr "mellem %d og %d pixels"
+
+msgid "Duplicate"
+msgstr "Kopier"
+
+msgid "Manage the members"
+msgstr "Medlemshåndtering"
+
+msgid "Merge selected groups"
+msgstr "Læg valgte grupper sammen"
+
+msgid "No groups selected, no actions possible."
+msgstr "Ingen grupper valgt, handling ikke mulig."
+
+msgid "No members to manage"
+msgstr "Der er ingen medlemmer at håndtere"
+
+msgid "Please select at least two groups"
+msgstr "Vælg mindst to grupper"
+
+msgid "Rename"
+msgstr "Omdøb"
+
+msgid "This group will be set to default"
+msgstr "Denne gruppe vil blive opsat som standard"
+
+msgid "This group will be unset to default"
+msgstr "Denne gruppe vil ikke længere være opsat som standard"
+
+msgid "Type here the name of the new group"
+msgstr "Skriv navnet på den nye gruppe"
+
+msgid "Purge user cache"
+msgstr "Tøm brugercache"
+
+msgid "The picture dimensions will be reduced to %dx%d pixels."
+msgstr "Billeddimensionerne vil blive reduceret til %dx%d pixels."
+
+msgid "Resize after upload disabled due to the use of GD as graphic library"
+msgstr "Størrelsesændring efter upload er deaktiveret, da grafikbiblioteket GD anvendes"
+
+msgid "Select at least one tag"
+msgstr "Vælg mindst et tag"
+
+msgid "Basic settings"
+msgstr "Grundlæggende indstillinger"
+
+msgid "General"
+msgstr "Generelt"
+
+msgid "Mail theme"
+msgstr "Mailtema"
+
+msgid "%d of %d users selected"
+msgstr "%d af %d brugere valgt"
+
+msgid "(filtered from %s total users)"
+msgstr "(filtreret fra totalt %s brugere)"
+
+msgid "All %d users are selected"
+msgstr "Alle %d brugere er valgt"
+
+msgid "Change password"
+msgstr "Ret adgangskode"
+
+msgid "Change username"
+msgstr "Ret brugernavn"
+
+msgid "Last visit on %s, %s."
+msgstr "Seneste besøg kl. %s den %s."
+
+msgid "Loading..."
+msgstr "Indlæser ..."
+
+msgid "No matching user found"
+msgstr "Ingen brugere fundet som opfylder kriteriet"
+
+msgid "No user selected of %d users"
+msgstr "Ingen bruger valgt ud af %d brugere"
+
+msgid "No users selected, no actions possible."
+msgstr "Ingen bruger valgt, ingen handling er mulig."
+
+msgid "Password updated"
+msgstr "Adgangskoden er opdateret"
+
+msgid "Registered on %s, %s."
+msgstr "Registreret kl. %s den %s."
+
+msgid "Show %s users"
+msgstr "Vis %s brugere"
+
+msgid "Showing %s to %s of %s users"
+msgstr "Viser %s til %s af %s brugere"
+
+msgid "Update user"
+msgstr "Opdater bruger"
+
+msgid "User %s added"
+msgstr "Brugeren %s er tilføjet"
+
+msgid "User %s updated"
+msgstr "Brugeren %s er opdateret"
+
+msgid "Users modified"
+msgstr "Brugere ændret"
+
+msgid "on the %d selected users"
+msgstr "på de %d valgte brugere"
+
+msgid "Close user details"
+msgstr "Luk brugeroplysninger"
+
+msgid "Open user details"
+msgstr "Åbn brugeroplysninger"
+
+msgid "close"
+msgstr "luk"
+
+msgid "Activate it now"
+msgstr "Aktiver nu"
+
+msgid "Allow users to add a link to their website"
+msgstr "Tillad at brugere kan tilføje et link til deres hjemmeside"
+
+msgid "Impossible to deactivate the default theme."
+msgstr "Det er ikke muligt at deaktivere standardtemaet."
+
+msgid "Mail address is mandatory for registration"
+msgstr "En mailadresse skal angives ved registrering"
+
+msgid "Empty caddie"
+msgstr "Tøm kurv"
+
+msgid "The settings for the guest are from the %s user"
+msgstr "Indstillingerne for gæsten kommer fra brugeren %s"
+
+msgid "based on"
+msgstr "baseret på"
+
+msgid "between %s and %s MB"
+msgstr "mellem %s og %s MB"
+
+msgid "date & time"
+msgstr "dato og tid"
+
+msgid "file name"
+msgstr "filnavn"
+
+msgid "width & height"
+msgstr "bredde og højde"
+
+msgid "No and unlock sub-albums"
+msgstr "Nej, og lås underalbummer op"
+
+msgid "Upload in progress"
+msgstr "Upload i gang"
+
+msgid "Delete %d orphan photos"
+msgstr "Slettede %d forældreløse fotografier"
+
+msgid "Each email sent will contain its own automatic authentication key on links, valid for %s."
+msgstr "Hver afsendt mail indeholder sin egen automatiske autentifikationsnøgle i links, gyldig i %s."
+
+msgid "Edit user"
+msgstr "Rediger bruger"
+
+msgid "For security reason, authentication keys do not work for administrators."
+msgstr "Af sikkerhedsgrunde fungerer autentifikationsnøgler ikke for administratorer."
+
+msgid "No recipient selected"
+msgstr "Ingen modtager valgt"
+
+msgid "No user is permitted to see this private album"
+msgstr "Ingen bruger har rettigheder til at se dette private album"
+
+msgid "Orphans"
+msgstr "Forældreløse"
+
+msgid "Recipients"
+msgstr "Modtagere"
+
+msgid "Y Repeat"
+msgstr "Y-gentagelse"
+
+msgid "Piwigo Remote Sync is able to upload a whole folder hierarchy. If you run it again, only new photos will be uploaded."
+msgstr "Piwigo Remote Sync er tilgængelig for upload af et komplet mappehierarki. Hvis du kører den igen, vil kun nye fotografier blive tilføjet."
+
+msgid "Running on an up-to-date Piwigo is important for security."
+msgstr "Det er af sikkerhedsgrunde vigtigt at benytte en opdateret Piwigo."
+
+msgid "Select tags"
+msgstr "Vælg tags"
+
+msgid "Share / Send your photos directly from your Mac Os X (10.10 and following) to Piwigo"
+msgstr "Del/send dine fotografier direkte fra macOS (10.10 og nyere) til Piwigo"
+
+msgid "delete album and all %d photos, even the %d associated to other albums"
+msgstr "slet album og alle %d fotografier, selv de %d tilknyttet andre albummer"
+
+msgid "No tags selected, no actions possible."
+msgstr "Intet tag valgt, ingen handling mulig."
+
+msgid "Dashboard"
+msgstr "Instrumentbræt"
+
+msgid "delete only album, not photos"
+msgstr "slet kun album, ikke fotografier"
+
+msgid "orphans to delete"
+msgstr "forældreløse der skal slettes"
+
+msgid "(determined from photos)"
+msgstr "(fastlagt ud fra fotografier)"
+
+msgid "Confirm deletion"
+msgstr "Bekræft sletning"
+
+msgid "Delete album \"%s\" and its %d sub-albums."
+msgstr "Slet album \"%s\" og dets %d underalbummer."
+
+msgid "Delete album \"%s\"."
+msgstr "Slet album \"%s\"."
+
+msgid "Display form"
+msgstr "Vis formular"
+
+msgid "It only takes a few clicks."
+msgstr "Det kræver kun et par klik."
+
+msgid "No filter on album. Select one or type to search"
+msgstr "Intet filter på album. Vælg et eller skriv for at søge"
+
+msgid "Piwigo %s is available, please update"
+msgstr "Piwigo %s er tilgængelig, vær venlig at opdatere"
+
+msgid "Storage used"
+msgstr "Lagerplads anvendt"
+
+msgid "Time has come to update your Piwigo with version %s, go to %s"
+msgstr "Det er blevet tid til at opdatere din Piwigo med version %s, gå til %s"
+
+msgid "checksum"
+msgstr "kontrolsum"
+
+msgid "delete album and the %d orphan photos"
+msgstr "slet album og de %d forældreløse fotografier"
+
+msgid "... or hide this link"
+msgstr "... eller skjul dette link"
+
+msgid "Compute %d missing checksums"
+msgstr "Beregn %d manglende kontrolsummer"
+
+msgid "Create a first album"
+msgstr "Opret et første album"
+
+msgid "Deletion in progress"
+msgstr "Sletning i gang"
+
+msgid "Display album date period"
+msgstr "Vis datointervallet som hvert album dækker, fx \"fra 12. til 15. juli 2018\""
+
+msgid "Display category date"
+msgstr "Vis albums dato"
+
+msgid "Piwigo requires an album to add photos."
+msgstr "Piwigo kræver et album for at der kan tilføjes fotografier."
+
+msgid "Some checksums are missing."
+msgstr "Nogle kontrolsummer mangler."
+
+msgid "Synchronization in progress"
+msgstr "Synkronisering i gang"
+
+msgid "Visit"
+msgstr "Besøg"
+
+msgid "Welcome!"
+msgstr "Velkommen!"
+
+msgid "With no checksum"
+msgstr "Uden kontrolsum"
+
+msgid "checksums to add"
+msgstr "kontrolsummer at tilføje"
+
+msgid "or"
+msgstr "eller"
+
+msgid "%d checksums were added"
+msgstr "%d kontrolsummer blev tilføjet"
+
+msgid "At least 2 selected tags are needed to merge"
+msgstr "Der skal vælges mindst to tags for at sammenflette"
+
+msgid "Choose which tag to merge these tags into"
+msgstr "Vælg hvilket tag, som disse tags skal flettes ind i"
+
+msgid "Merge"
+msgstr "Flet"
+
+msgid "Tag(s) \\{%s1\\} succesfully merged into \"%s2\""
+msgstr "Tag(s) \\{%s1\\} flettet ind i \"%s2\""
+
+msgid "Tags \\{%s\\} succesfully deleted"
+msgstr "Tags \\{%s\\} slettet"
+
+msgid "The %d tags on this page are selected"
+msgstr "De %d tags på denne side er valgt"
+
+msgid "The other tags will be removed"
+msgstr "De andre tags vil blive slettet"
+
+msgid "Yes, I am sure"
+msgstr "Ja, jeg er sikker"
+
+msgid "Yes, delete"
+msgstr "Ja, slet"
+
+msgid "You have %d orphan tags %s"
+msgstr "Du har %d forældreløse tags %s"
+
+msgid "You have %s1 orphan : %s2"
+msgstr "Du har %s1 forældreløse: %s2"
+
+msgid "and %s others"
+msgstr "og %s andre"
+
+msgid "in administration"
+msgstr "i administration"
+
+msgid "in gallery"
+msgstr "i galleri"
+
+msgid "no photo"
+msgstr "intet fotografiQ"
+
+msgid "Select all %d tags"
+msgstr "Vælg alle %d tags"
+
+msgid "No, I have changed my mind"
+msgstr "Nej, jeg har ombestemt mig"
+
+msgid "Open in gallery"
+msgstr "Åbn i galleri"
+
+msgid "Please upgrade your PHP version before any update."
+msgstr "Upgrader din PHP-version før du opdaterer."
+
+msgid "Portraits"
+msgstr "Portrætter"
+
+msgid "Posted %s"
+msgstr "Indsendte %s"
+
+msgid "Promote mobile app on mobile devices"
+msgstr "Reklamér for mobilapp på mobile enheder"
+
+msgid "Requires PHP %s"
+msgstr "Kræver PHP %s"
+
+msgid "Review"
+msgstr "Gennemse"
+
+msgid "Search albums"
+msgstr "Gennemsøg albummer"
+
+msgid "Search tips"
+msgstr "Søgetips"
+
+msgid "Select"
+msgstr "Vælg"
+
+msgid "Selection mode"
+msgstr "Valgtilstand"
+
+msgid "Tag \"%s\" created"
+msgstr "Tag'et \"%s\" oprettet"
+
+msgid "Tag \"%s\" succesfully deleted"
+msgstr "Tag'et \\\"%s\\\" slettet"
+
+msgid "Tag \"%s1\" renamed in \"%s2\""
+msgstr "Tag'et \\\"%s1\\\" omdøbt i \\\"%s2\\\""
+
+msgid "Tag Manager"
+msgstr "Taghåndtering"
+
+msgid "Are you sure you want to restore the plugin \"%s\"?"
+msgstr "Er du sikker på, at du vil gendanne plugin'en \"%s\"?"
+
+msgid "Are you sure you want to restore this plugin?"
+msgstr "Er du sikker på, at du vil gendanne denne plugin?"
+
+msgid "Are you sure you want to restore to default settings?"
+msgstr "Er du sikker på, at du vil gendanne til standardindstillinger?"
+
+msgid "Are you sure you want to update all extensions?"
+msgstr "Er du sikker på, at du vil opdatere alle udvidelser?"
+
+msgid "Clear Selection"
+msgstr "Nulstil valgte"
+
+msgid "Delete album"
+msgstr "Slet album"
+
+msgid "Delete orphan tags ?"
+msgstr "Slet forældreløse tags?"
+
+msgid "Delete tag \"%s\"?"
+msgstr "Slet tag'et \"%s\"?"
+
+msgid "Delete tags \\{%s\\}?"
+msgstr "Slet tag'ene \\{%s\\}?"
+
+msgid "Delete them"
+msgstr "Slet dem"
+
+msgid "Display"
+msgstr "Vis"
+
+msgid "Displays a banner to install or open the official Piwigo app"
+msgstr "Viser et banner til installering eller åbning af den officielle Piwigo-app"
+
+msgid "File type: %s"
+msgstr "Filtype: %s"
+
+msgid "Keep them"
+msgstr "Behold dem"
+
+msgid "Manage album photos"
+msgstr "Håndter albummets fotografier"
+
+msgid "Manage sub-albums"
+msgstr "Håndter underalbummer"
+
+msgid "No tag found"
+msgstr "Intet tag fundet"
+
+msgid " (copy %s)"
+msgstr "(kopier %s)"
+
+msgid " (copy)"
+msgstr "(kopier)"
+
+msgid "%d photos"
+msgstr "%d fotografier"
+
+msgid "%s GB used"
+msgstr "%s GB anvendt"
+
+msgid "%s MB used"
+msgstr "%s MB anvendt"
+
+msgid "%s other tags available.."
+msgstr "%s andre tilgængelige tags ..."
+
+msgid "<b>%d</b> tag found"
+msgstr "<b>%d</b> tag fundet"
+
+msgid "<b>%d</b> tag selected"
+msgstr "<b>%d</b> tag valgt"
+
+msgid "<b>%d</b> tags found"
+msgstr "<b>%d</b> tags fundet"
+
+msgid "Are you sure you want to delete all sizes?"
+msgstr "Er du sikker på, at du vil slette alle størrelser?"
+
+msgid "Are you sure you want to delete the language \"%s\"?"
+msgstr "Er du sikker på, at du vil slette sproget \"%s\"?"
+
+msgid "Are you sure you want to delete the plugin \"%s\"?"
+msgstr "Er du sikker på, at du vil slette plugin'en \"%s\"?"
+
+msgid "Are you sure you want to delete the ratings of the user \"%s\"?"
+msgstr "Er du sikker på, at du vil slette alle bedømmelser foretaget af brugeren \"%s\"?"
+
+msgid "Are you sure you want to delete the theme \"%s\"?"
+msgstr "Er du sikker på, at du vil slette temaet \"%s\"?"
+
+msgid "Are you sure you want to delete the user \"%s\"?"
+msgstr "Er du sikker på, at du vil slette brugeren \"%s\"?"
+
+msgid "Are you sure you want to delete this site?"
+msgstr "Er du sikker på, at du vil slette dette websted?"
+
+msgid "Are you sure you want to delete this theme?"
+msgstr "Er du sikker på, at du vil slette dette tema?"
+
+msgid "Are you sure you want to delete this?"
+msgstr "Er du sikker på, at du vil slette dette?"
+
+msgid "Are you sure you want to install the plugin \"%s\"?"
+msgstr "Er du sikker på, at du vil installere plugin'en \"%s\"?"
+
+msgid "Are you sure you want to lock the gallery?"
+msgstr "Er du sikker på, at du vil låse galleriet?"
+
+msgid "Activity peak in the last weeks"
+msgstr "Aktivitetshøjdepunkt i de seneste uger"
+
+msgid "Unset as group for new users"
+msgstr "Fjern som gruppe til nye brugere"
+
+msgid "User \"%s\" dissociated from this group"
+msgstr "Brugeren \"%s\" er ikke længere knyttet til denne gruppe"
+
+msgid "Videos"
+msgstr "Videoer"
+
+msgid "You don't have access to this photo"
+msgstr "Du har ikke adgang til dette fotografi"
+
+msgid "You have %s inactive plugins"
+msgstr "Du har %s inaktive plugins"
+
+msgid "Group(s) \\{%s1\\} succesfully merged into \"%s2\""
+msgstr "Gruppen/-erne \\{%s1\\} blev kombineret med \"%s2\""
+
+msgid "Groups \\{%s\\} succesfully deleted"
+msgstr "Grupperne \\{%s\\} blev slettet"
+
+msgid "Manage users with user manager"
+msgstr "Håndter brugere med brugerhåndteringen"
+
+msgid "Name is already taken"
+msgstr "Navnet er allerede i brug"
+
+msgid "No albums found"
+msgstr "Ingen albummer fundet"
+
+msgid "No plugins found"
+msgstr "Ingen plugins fundet"
+
+msgid "Other"
+msgstr "Andet"
+
+msgid "Page Visited"
+msgstr "Side besøgt"
+
+msgid "Page Visited in %s"
+msgstr "Side besøgt i %s"
+
+msgid "Refresh thumbnail"
+msgstr "Genopfrisk miniaturebillede"
+
+msgid "Set as default"
+msgstr "Sæt som standard"
+
+msgid "Set as group for new users"
+msgstr "Sæt som gruppe til nye brugere"
+
+msgid "Show inactive plugins"
+msgstr "Vis inaktive plugins"
+
+msgid "Showing %s users out of %s"
+msgstr "Viser %s brugere ud af %s"
+
+msgid "Storage"
+msgstr "Lager"
+
+msgid "This is already the default theme"
+msgstr "Dette er allerede standardtemaet"
+
+msgid "User associated"
+msgstr "Bruger tilknyttet"
+
+msgid "%d Activities"
+msgstr "%d Aktiviteter"
+
+msgid "%d Activity"
+msgstr "%d Aktivitet"
+
+msgid "%d sub-albums"
+msgstr "%d underalbummer"
+
+msgid "%s file type"
+msgstr "%s filtype"
+
+msgid "<b>%d</b> albums found"
+msgstr "<b>%d</b> albummer fundet"
+
+msgid "<b>1</b> album found"
+msgstr "<b>1</b> album fundet"
+
+msgid "Album search tool"
+msgstr "Album-søgeværktøj"
+
+msgid "Are you sure you want to delete group \"%s\"?"
+msgstr "Er du sikker på, at du vil slette gruppen \"%s\"?"
+
+msgid "Associate User"
+msgstr "Tilknyt bruger"
+
+msgid "Average last 12 months"
+msgstr "Gennemsnit de seneste 12 måneder"
+
+msgid "Cache"
+msgstr "Cache"
+
+msgid "Compare mode"
+msgstr "Sammenligningstilstand"
+
+msgid "Created on %s"
+msgstr "Oprettet den %s"
+
+msgid "Dissociate user from this group"
+msgstr "Fjern brugers tilknytning til denne gruppe"
+
+msgid "Edited on %s"
+msgstr "Redigeret den %s"
+
+msgid "Formats"
+msgstr "Formater"
+
+msgid "Group \"%s\" succesfully deleted"
+msgstr "Gruppen \"%s\" blev slettet"
+
+msgid "Group added"
+msgstr "Gruppe tilføjet"
+
+msgid "Group renamed"
+msgstr "Gruppe omdøbt"
+
+msgid "<b>%d+</b> albums found, try to refine the search"
+msgstr "<b>%d+</b> albummer fundet, prøv at begrænse søgningen"
+
+msgid "Add Album"
+msgstr "Tilføj album"
+
+msgid "Apply an automatic order to root albums"
+msgstr "Benyt en automatisk rækkefølge for rodalbummer"
+
+msgid "Apply to direct sub-albums"
+msgstr "Benyt på direkte underalbummer"
+
+msgid "Apply to the whole hierarchy"
+msgstr "Benyt på hele hierarkiet"
+
+msgid "Compact View"
+msgstr "Kompakt visning"
+
+msgid "Drag and drop to reorder albums"
+msgstr "Træk og slip for at ændre albumrækkefølgen"
+
+msgid "Hide sub-albums"
+msgstr "Skjul underalbummer"
+
+msgid "Line View"
+msgstr "Linjevisning"
+
+msgid "Name field must not be empty"
+msgstr "Navnefeltet må ikke være tomt"
+
+msgid "Root"
+msgstr "Rod"
+
+msgid "Select an album... or type it!"
+msgstr "Vælg et album ... eller skriv det!"
+
+msgid "Show sub-albums"
+msgstr "Vis underalbummer"
+
+msgid "Tile View"
+msgstr "Flisevisning"
+
+msgid "Dec"
+msgstr "dec"
+
+msgid "Nov"
+msgstr "nov"
+
+msgid "Oct"
+msgstr "okt"
+
+msgid "Sep"
+msgstr "sep"
+
+msgid "Aug"
+msgstr "aug"
+
+msgid "Jul"
+msgstr "jul"
+
+msgid "Jun"
+msgstr "jun"
+
+msgid "May"
+msgstr "maj"
+
+msgid "Apr"
+msgstr "apr"
+
+msgid "Mar"
+msgstr "mar"
+
+msgid "Feb"
+msgstr "feb"
+
+msgid "Jan"
+msgstr "jan"
+
+msgid "Can be shared by several individuals without conflict (they cannot change the password)."
+msgstr "Kan deles af flere personer uden kollisioner (de kan ikke ændre adgangskoden)"
+
+msgid "Equivalent to deactivation. The user is still in the list, but can no longer log in."
+msgstr "Svarende til deaktivering. Brugeren er stadig i listen, men kan ikke længere logge på."
+
+msgid "Has access to administration. Can only manage content: photos/albums/users/tags/groups."
+msgstr "Har adgang til administration. Kan kun håndtere indhold: fotografier/albummer/brugere/tags/grupper."
+
+msgid "Has access to all administration functionnalities. Can manage both configuration and content."
+msgstr "Har adgang til alle administrative funktioner. Kan håndtere både opsætning og indhold."
+
+msgid "No access to administration, can see private content with appropriate permissions."
+msgstr "Ingen adgang til administration, kan se privat indhold hvis rettighederne er til stede."
+
+msgid "Users not logged in will have these settings applied, these settings are used by default for new users"
+msgstr "Brugere der ikke er logget på, benytter disse indstillinger, der som standard gælder for nye brugere"
+
+msgid "edit"
+msgstr "rediger"
+
+msgid "login"
+msgstr "log på"
+
+msgid "logout"
+msgstr "log af"
+
+msgid "months ago"
+msgstr "måneder siden"
+
+msgid "move"
+msgstr "flyt"
+
+msgid "never calculated"
+msgstr "aldrig beregnet"
+
+msgid "right now"
+msgstr "lige nu"
+
+msgid "Registered"
+msgstr "Registreret"
+
+msgid "Restored"
+msgstr "Gendannet"
+
+msgid "Select groups or type them"
+msgstr "Vælg grupper eller skriv dem"
+
+msgid "Selected user"
+msgstr "Valgt bruger"
+
+msgid "Show"
+msgstr "Vis"
+
+msgid "Synchronization"
+msgstr "Synkronisering"
+
+msgid "Theme"
+msgstr "Tema"
+
+msgid "Update"
+msgstr "Opdater"
+
+msgid "User updated"
+msgstr "Bruger opdateret"
+
+msgid "add"
+msgstr "tilføj"
+
+msgid "between %s and %s"
+msgstr "mellem %s og %s"
+
+msgid "calculated"
+msgstr "beregnet"
+
+msgid "deletion"
+msgstr "sletning"
+
+msgid "Language"
+msgstr "Sprog"
+
+msgid "Last visit"
+msgstr "Seneste besøg"
+
+msgid "Manage users"
+msgstr "Håndter brugere"
+
+msgid "New user added"
+msgstr "Ny bruger tilføjet"
+
+msgid "No plugin activated"
+msgstr "Ingen plugins aktiveret"
+
+msgid "Photos per page"
+msgstr "Fotografier pr. side"
+
+msgid "Plugin \"%s\" deleted!"
+msgstr "Plugin \"%s\" slettet!"
+
+msgid "Plugin \"%s\" has been activated!"
+msgstr "Plugin \"%s\" blev aktiveret!"
+
+msgid "Cache size"
+msgstr "Cachestørrelse"
+
+msgid "Change Password"
+msgstr "Skift adgangskode"
+
+msgid "Close"
+msgstr "Luk"
+
+msgid "Deactivated"
+msgstr "Deaktiverede"
+
+msgid "Delete these sizes"
+msgstr "Slet disse størrelser"
+
+msgid "Delete user"
+msgstr "Slet bruger"
+
+msgid "Download all activities"
+msgstr "Download alle aktiviteter"
+
+msgid "Edit"
+msgstr "Rediger"
+
+msgid "Edit guest user"
+msgstr "Rediger gæstebruger"
+
+msgid "Email"
+msgstr "E-mail"
+
+msgid "Email Adress"
+msgstr "E-mailadresse"
+
+msgid "Filters"
+msgstr "Filtre"
+
+msgid "Generate random password"
+msgstr "Generer tilfældig adgangskode"
+
+msgid "%d tags added"
+msgstr "%d tags tilføjet"
+
+msgid "%d tags deleted"
+msgstr "%d tags slettet"
+
+msgid "%d tags edited"
+msgstr "%d tags redigeret"
+
+msgid "%d tags moved"
+msgstr "%d tags flyttet"
+
+msgid "%d user added"
+msgstr "%d bruger tilføjet"
+
+msgid "%d user edited"
+msgstr "%d bruger redigeret"
+
+msgid "%d user logged in"
+msgstr "%d bruger logget på"
+
+msgid "%d user logged out"
+msgstr "%d bruger logget af"
+
+msgid "%d users added"
+msgstr "%d brugere tilføjet"
+
+msgid "%d users edited"
+msgstr "%d brugere redigeret"
+
+msgid "%d users logged in"
+msgstr "%d brugere logget på"
+
+msgid "%d users logged out"
+msgstr "%d brugere logget af"
+
+msgid "%s MB"
+msgstr "%s MB"
+
+msgid "Activated"
+msgstr "Aktiverede"
+
+msgid "Activated plugin list"
+msgstr "Aktiveret plugin-liste"
+
+msgid "Activity"
+msgstr "Aktivitet"
+
+msgid "Activity time from"
+msgstr "Akvitietstid fra"
+
+msgid "Add User"
+msgstr "Tilføj bruger"
+
+msgid "Add a new user"
+msgstr "Tilføj en ny bruger"
+
+msgid "Advanced filters"
+msgstr "Avancerede filtre"
+
+msgid "%d photos edited"
+msgstr "%d fotografier redigeret"
+
+msgid "%d photos moved"
+msgstr "%d fotografier flyttet"
+
+msgid "%d tag added"
+msgstr "%d tag tilføjet"
+
+msgid "%d tag deleted"
+msgstr "%d tag slettet"
+
+msgid "%d tag edited"
+msgstr "%d tag redigeret"
+
+msgid "%d tag moved"
+msgstr "%d tag flyttet"
+
+msgid "%d album added"
+msgstr "%d album tilføjet"
+
+msgid "%d album deleted"
+msgstr "%d album slettet"
+
+msgid "%d album edited"
+msgstr "%d album redigeret"
+
+msgid "%d albums added"
+msgstr "%d albummer tilføjet"
+
+msgid "%d albums deleted"
+msgstr "%d albummer slettet"
+
+msgid "%d albums edited"
+msgstr "%d albummer redigeret"
+
+msgid "%d group added"
+msgstr "%d gruppe tilføjet"
+
+msgid "%d group deleted"
+msgstr "%d gruppe slettet"
+
+msgid "%d group edited"
+msgstr "%d gruppe redigeret"
+
+msgid "%d group moved"
+msgstr "%d gruppe flyttet"
+
+msgid "%d groups added"
+msgstr "%d grupper tilføjet"
+
+msgid "%d groups deleted"
+msgstr "%d grupper slettet"
+
+msgid "%d groups edited"
+msgstr "%d grupper redigeret"
+
+msgid "%d groups moved"
+msgstr "%d grupper flyttet"
+
+msgid "%d photo added"
+msgstr "%d fotografi tilføjet"
+
+msgid "%d photo deleted"
+msgstr "%d fotografi slettet"
+
+msgid "%d photo edited"
+msgstr "%d fotografi redigeret"
+
+msgid "%d photo moved"
+msgstr "%d fotografi flyttet"
+
+msgid "%d photos added"
+msgstr "%d fotografier tilføjet"
+
+msgid "%d photos deleted"
+msgstr "%d fotografier slettet"
+
+msgid "to"
+msgstr "til"
+
+msgid "%s line"
+msgstr "%s linje"
+
+msgid "%s lines"
+msgstr "%s linjer"
+
+msgid "%s plugin found"
+msgstr "<b>%s</b> plugin fundet"
+
+msgid "%s plugins found"
+msgstr "<b>%s</b> plugins fundet"
+
+msgid "%s status is required to edit parameters."
+msgstr "%s-status er krævet for at redigere parametre."
+
+msgid "Edit photo #%s"
+msgstr "Rediger foto #%s"
+
+msgid "Locked albums are disabled for maintenance. Only administrators can view them in the gallery. Lock this album will also lock his Sub-albums"
+msgstr "Låste albummer er deaktiverede pga. vedligeholdelse. Kun administratorer kan se dem i galleriet. Låsning af dette album vil også låse dets underalbummer."
+
+msgid "Webmaster status required"
+msgstr "Kræver webmasterstatus"
+
+msgid "Your selection"
+msgstr "Dit valg"
+
+msgid "action successfully performed."
+msgstr "handling gennemført."
+
+msgid "Are you sure you want to uninstall the plugin \"%s\"?"
+msgstr "Er du sikker på, at du vil afinstallere plugin'en \"%s\"?"
+
+msgid "Are you sure you want to unlock the gallery?"
+msgstr "Er du sikker på, at du vil låse galleriet op?"
+
+msgid "Global Gallery Actions"
+msgstr "Globale gallerihandlinger"
+
+msgid "Purge Actions"
+msgstr "Tøm handlinger"
+
+msgid "Purge Cache"
+msgstr "Tøm cache"
+
+msgid "Tag name"
+msgstr "Tagnavn"
+
+msgid "The original picture will be detected with the filename (without extension)."
+msgstr "Det oprindelige billede vil blive genkendt ud fra filnavnet (uden udvidelse)"
+
+msgid "There is multiple image in the database with the following names : %s."
+msgstr "Der er flere billeder i databasen med følgende navn: %s."
+
+msgid "This albums is already in related categories list"
+msgstr "Dette album er allerede i listen over belægtede albummer"
+
+msgid "This photo is an orphan"
+msgstr "Dette fotografi er forældreløst"
+
+msgid "This plugin has no recent update"
+msgstr "Denne plugin er ikke nyligt opdateret"
+
+msgid "This plugin have been updated recently"
+msgstr "Denne plugin er nyligt opdateret"
+
+msgid "This plugin have no update since 3 years ! It may be outdated"
+msgstr "Denne plugin har ikke været opdateret i tre år! Den kan være forældet"
+
+msgid "This plugin is incompatible with your version"
+msgstr "Denne plugin er inkompatibel med din version"
+
+msgid "This plugin was updated less than 6 months ago"
+msgstr "Denne plugin blev opdateret for mindre end 6 måneder siden"
+
+msgid "Try now !"
+msgstr "Prøv nu!"
+
+msgid "Understood, do not show again"
+msgstr "Forstået, viser ikke igen"
+
+msgid "Upload Formats"
+msgstr "Uploadformater"
+
+msgid "Version %s"
+msgstr "Version %s"
+
+msgid "Visited"
+msgstr "Besøgt"
+
+msgid "Yes, rename"
+msgstr "Ja, omdøb"
+
+msgid "and %d more"
+msgstr "og %d mere"
+
+msgid "since the beginning"
+msgstr "siden begyndelsen"
+
+msgid "Last revision date is newer than"
+msgstr "Seneste revideringsdato er nyere end"
+
+msgid "Latest Piwigo news"
+msgstr "Seneste nyheder om Piwigo"
+
+msgid "Memories"
+msgstr "Souvenirer"
+
+msgid "More information"
+msgstr "Flere oplysninger"
+
+msgid "No format for this picture"
+msgstr "Ingen formater til dette fotografi"
+
+msgid "No picture found with the following name : %s."
+msgstr "Intet billede fundet med følgende navn: %s."
+
+msgid "No research in progress"
+msgstr "Ingen efterforskning i gang"
+
+msgid "No search in progress"
+msgstr "Ingen søgning i gang"
+
+msgid "Object"
+msgstr "Objekt"
+
+msgid "On %d rating(s)"
+msgstr "Ved %d vurdering(er)"
+
+msgid "Picture to associate formats with"
+msgstr "Billede som formater skal knyttes til"
+
+msgid "Piwigo core"
+msgstr "Piwigo-core"
+
+msgid "Piwigo is also on mobile."
+msgstr "Piwigo er også på mobilen"
+
+msgid "Properties of abums"
+msgstr "Albumsegenskaber"
+
+msgid "Rating greater than"
+msgstr "Vurdering større end"
+
+msgid "Rename \"%s\""
+msgstr "Omdøb \"%s\""
+
+msgid "Show beta test plugins"
+msgstr "Vis plugins i betatest"
+
+msgid "Show plugins compatible with previous version of Piwigo"
+msgstr "Vis plugins som er kompatible med tidligere versioner af Piwigo"
+
+msgid "%d formats uploaded for %d photos"
+msgstr "%d formater uploadet til %d fotografier"
+
+msgid "%s pixels, %.2f MB"
+msgstr "%s pixels, %.2f MB"
+
+msgid "%sGB"
+msgstr "%s GB"
+
+msgid "%sMB"
+msgstr "%s MB"
+
+msgid "Add New Plugin"
+msgstr "Tilføj en ny plugin"
+
+msgid "Add another set of formats"
+msgstr "Tilføj et nyt formatsæt"
+
+msgid "Add as filter"
+msgstr "Tilføj som filter"
+
+msgid "Add formats"
+msgstr "Tilføj formater"
+
+msgid "Additional filters"
+msgstr "Yderligere filtre"
+
+msgid "Certification higher or equal to"
+msgstr "Certificering er højere end eller lig med"
+
+msgid "Create a new album at root"
+msgstr "Opret et nyt album i roden"
+
+msgid "Create a sub-album of \"%s\""
+msgstr "Opret et nyt underalbum til \"%s\""
+
+msgid "Current Version"
+msgstr "Aktuel version"
+
+msgid "Currently running version %s"
+msgstr "Aktuelt anvendt version %s"
+
+msgid "Delete %s format ?"
+msgstr "Slet formatet %s?"
+
+msgid "Discover"
+msgstr "Opdag"
+
+msgid "Downloaded"
+msgstr "Hentet"
+
+msgid "Error when trying to detect formats"
+msgstr "Fejl ved forsøg på genkendelse af formater"
+
+msgid "Extensions"
+msgstr "Udvidelser"
+
+msgid "Install Piwigo on mobile"
+msgstr "Installer Piwigo på mobil"
+
+msgid "Installed on %s, %s"
+msgstr "Installeret den %s, %s"
+
+msgid "Place first"
+msgstr "Placér først"
+
+msgid "Place last"
+msgstr "Placér sidst"
+
+msgid "This picture is physically linked to this album, you can't dissociate them"
+msgstr "Dette billede er fysisk knyttet til dette album, du kan ikke fjerne tilknytningen."
+
+msgid "While restoring this plugin, it will be reset to its original parameters and associated data is going to be reset"
+msgstr "Under genetableringen af denne plugin, vil den blive nulstillet til sine oprindelige parametre, og tilknyttede data vil blive nulstillet."
+
+msgid "Always have a backup of your database and files."
+msgstr "Hav altid en sikkerhedskopi af din database og filer."
+
+msgid "Details"
+msgstr "Detaljer"
+
+msgid "If anything bad happens during the update, you would be able to restore a backup."
+msgstr "Hvis noget går galt under opdateringen, ville du være i stand til at gendanne sikkerhedskopien."
+
+msgid "The best is to have them made automatically on a regular basis."
+msgstr "Det bedste er at lave dem automatisk med jævne mellemrum."
+
+msgid "This photo no longer exists"
+msgstr "Dette fotografi findes ikke længere"
+
+msgid "Apply to root albums"
+msgstr "Udfør på albummer i roden"
+
+msgid "Album name must not be empty"
+msgstr "Albumnavn må ikke være tomt"
+
+msgid "Visit history"
+msgstr "Besøgshistorik"
+
+msgid "Some photos are missing from your file system. Details provided by plugin Check Uploads"
+msgstr "Nogle fotografier mangler i dit filsystem. Flere oplysninger fås gennem plugin'en Check Uploads"
+
+msgid "%d pictures in sub-albums"
+msgstr "%d billeder i underalbummer"
+
+msgid "<b>%d</b> filtered user"
+msgstr "<b>%d</b> filtreret bruger"
+
+msgid "<b>%d</b> filtered users"
+msgstr "<b>%d</b> filtrerede brugere"
+
+msgid "%d in whole branch"
+msgstr "%d i hele forgreningen"
+
+msgid "%d including sub-albums"
+msgstr "%d inklusive underalbummer"
+
+msgid "Activate button \"%s\""
+msgstr "Aktiver knappen \"%s\""
+
+msgid "All admins"
+msgstr "Alle administratorer"
+
+msgid "Allow comments for sub-albums"
+msgstr "Tillad kommentarer i underalbummer"
+
+msgid "Authorize comments"
+msgstr "Autorisér kommentarer"
+
+msgid "Comments allowed for sub-albums"
+msgstr "Kommentarer tilladt i underalbummer"
+
+msgid "Comments disallowed for sub-albums"
+msgstr "Kommentarer ikke tilladt i underalbummer"
+
+msgid "Created"
+msgstr "Oprettet"
+
+msgid "Detect and avoid duplicates during upload"
+msgstr "Opdag og undgå kopier under upload"
+
+msgid "Disallow comments for sub-albums"
+msgstr "Tillad ikke kommentarer i underalbummer"
+
+msgid "During upload, if Piwigo detects the photo already exists, associate the existing photo to the destination album, without duplicating file"
+msgstr "Hvis Piwigo under upload opdager at fotografiet allerede findes, knyttes det eksisterende billede til målalbumet, uden at kopiere filen"
+
+msgid "Locked album"
+msgstr "Låst album"
+
+msgid "Modified"
+msgstr "Ændret"
+
+msgid "Only admins in a specific group"
+msgstr "Kun administratorer i en specifik gruppe"
+
+msgid "Put at the root"
+msgstr "Placér i roden"
+
+msgid "Remove thumbnail"
+msgstr "Fjern miniaturebillede"
+
+msgid "This album is currently locked, visible only to administrators."
+msgstr "Dette album er i øjeblikket låst, og kun synligt for administratorer."
+
+msgid "Unlock it"
+msgstr "Lås op"
+
+msgid "Unlocked album"
+msgstr "Oplåst album"
+
+msgid "%d files"
+msgstr "%d filer"
+
+msgid "Expand"
+msgstr "Udvid"
+
+msgid "Shrink"
+msgstr "Formindsk"
+
+msgid "Core"
+msgstr "Kerne"
+
+msgid "Pagination has changed and needs to be reloaded !"
+msgstr "Paginering er ændret og skal genindlæses!"
+
+msgid "level of confidentiality"
+msgstr "fortrolighedsniveau"
+
+msgid "First choose an album, then add your files"
+msgstr "Vælg først et album, tilføj dernæst dine filer"
+
+msgid "between %d and %d"
+msgstr "mellem %d og %d"
+
+msgid "image(s) contains unsaved changes"
+msgstr "billede(r) indeholder ændringer der ikke er gemt"
+
+msgid "was succesfully deleted"
+msgstr "blev slettet"
+
+msgid "Activate create mode to create and select an album"
+msgstr "Aktivér oprettelsestilstand for at oprette et album"
+
+msgid "Add a sub-album to “%s”"
+msgstr "Opret et underalbum til \"%s\""
+
+msgid "Added on %s"
+msgstr "Tilføjet %s"
+
+msgid "An error has occured"
+msgstr "Fejl opstået"
+
+msgid "Auto-update"
+msgstr "Autoopdatering"
+
+msgid "Changes saved"
+msgstr "Ændringer gemt"
+
+msgid "Create a root album"
+msgstr "Opret et album i roden"
+
+msgid "Create and select"
+msgstr "Opret og vælg"
+
+msgid "Create your first album"
+msgstr "Opret dit første album"
+
+msgid "Creation mode"
+msgstr "Oprettelsestilstand"
+
+msgid "Image"
+msgstr "Billede"
+
+msgid "Metadata sync complete"
+msgstr "Synk. af metadata færdig"
+
+msgid "Save"
+msgstr "Gem"
+
+msgid "Select or create an album"
+msgstr "Vælg eller opret et album"
+
+msgid "System Activities"
+msgstr "Systemaktiviteter"
+
+msgid "Who can see ?"
+msgstr "Hvem kan se det?"
+
+msgid "You have unsaved changes"
+msgstr "Du har ændringer som ikke er gemt"
+
+msgid "You are not authorised to change the main user, please ask your webmaster"
+msgstr "Du er ikke autoriseret til at ændre den primære bruger, kontakt din webmaster"
+
+msgid "You can now change the main user from %s to %s."
+msgstr "Du kan nu ændre den primære bruger fra %s til %s."
+
+msgid "You cannot copy the password if the connection to this site is not secure."
+msgstr "Du kan ikke kopiere adgangskoden, hvis forbindelsen til webstedet ikke er sikker."
+
+msgid "%s is the new main user"
+msgstr "%s er den nye primær bruger"
+
+msgid "Cannot send an email to this user because he doesn't have an email address"
+msgstr "Kan ikke sende en mail til denne bruger, da vedkommende ikke har en mailadresse"
+
+msgid "Changing the main user"
+msgstr "Ændring af primær bruger"
+
+msgid "Copied link"
+msgstr "Link kopieret"
+
+msgid "Copy password"
+msgstr "Kopier adgangskode"
+
+msgid "Copy the link below and send it to the user so the password can be set."
+msgstr "Kopier linket herunder og send det til brugeren, så adgangskoden kan opsættes."
+
+msgid "Copy the password link"
+msgstr "Kopier adgangskodelinket"
+
+msgid "Main user"
+msgstr "Primær bruger"
+
+msgid "Password copied"
+msgstr "Adgangskode kopieret"
+
+msgid "Please complete all fields"
+msgstr "Udfyld alle felter"
+
+msgid "Resend password link"
+msgstr "Genfremsend adgangskodelink"
+
+msgid "Set as main user"
+msgstr "Opsæt som primær bruger"
+
+msgid "The passwords do not match"
+msgstr "Adgangskoderne stemmer ikke overens"
+
+msgid "This user must first be defined as the webmaster before it can be upgraded to the main user"
+msgstr "Brugeren kan først opsættes som webmasteren, før den kan opgraderes til den primære bruger"
+
+msgid "To be sure, please rewrite the word “%s” below"
+msgstr "Bekræft ved at gentage ordet \"%s\" nedenfor"
+
+msgid "Username successfully modified"
+msgstr "Brugernavn blev ændret"
+
+msgid "Yes, let's proceed"
+msgstr "Ja, fortsæt"
+
+msgid "You are about to set %s as main user instead of %s, do you wish to continue ?"
+msgstr "Du er ved at opsætte %s som primær bruger i stedet for %s, ønsker du at fortsætte?"
+
+msgid "Ok, got it!"
+msgstr "Ok, forstået!"
+
+msgid "Read the release note"
+msgstr "Læs udgivelsesbemærkningerne"
+
+msgid "What's new in version %s"
+msgstr "Hvad er nyt i version %s?"
+
+msgid "A photo library administrator has created the following account for you:"
+msgstr "En administrator i fotobiblioteket har oprettet følgende konto til dig:"
+
+msgid "An activation link valid for %s has been sent to \"%s\". If the user doesn't receive the link, you can generate and copy a new one by editing the user and managing her password."
+msgstr "Et aktiveringslink, der er gyldigt i %s, er sendt til %s. Hvis brugeren ikke modtager linket, kan du generere og kopiere et nyt, ved at redigere brugeren og håndtere vedkommendes adgangskode."
+
+msgid "An activation link valid for %s was created but could not be sent. You can now copy the link below and send it to the user."
+msgstr "Et aktiveringslink, der er gyldigt i %s, blev oprettet, men kunne ikke sendes. Du kan nu kopiere linket nedenfor og sende det til brugeren."
+
+msgid "This link is valid for %s. After this time, you will need to request a new link."
+msgstr "Linket er gyldigt i %s. Derefter er det nødvendigt at bede om et nyt link."
+
+msgid "To set your password, visit the following address:"
+msgstr "For at opsætte adgangskoden, skal du besøge følgende adresse:"
+
+msgid "Welcome to %s"
+msgstr "Velkommen til %s"
+
+msgid "We have found %d duplicate paths. Details provided by plugin Check Uploads"
+msgstr "Vi har fundet %d duplikerede stier. Flere oplysninger fås gennem plugin'en Check Uploads"
+
+msgid "%d photos were moved from the upload lounge to their albums"
+msgstr "%d fotografier blev flyttet fra uploadlounge til deres albummer"
+
+msgid "Are you sure you want to delete \"%d\" comments?"
+msgstr "Er du sikker på at du vil slette \"%d\" kommentarer?"
+
+msgid "Are you sure you want to delete comment #%s?"
+msgstr "Er du sikker på at du vil slette kommentar #%s?"
+
+msgid "Empty lounge"
+msgstr "Tøm lounge"
+
+msgid "If a photo in this album has the same filename, update the file without changing the photo's properties"
+msgstr "Hvis et fotografi i dette album har det samme filnavn, så opdater filen uden at ændre fotografiet egenskaber"
+
+msgid "No comments selected, no actions possible."
+msgstr "Ingen kommentarer valgt, ingen handlinger mulige"
+
+msgid "Save all photos"
+msgstr "Gem alle fotografier"
+
+msgid "The comment has been validated."
+msgstr "Kommentaren er godkendt"
+
+msgid "The comments have been validated."
+msgstr "Kommentarerne er godkendt"
+
+msgid "There is currently %d photos in the lounge (upload buffer)"
+msgstr "Der er i øjeblikket %d fotografier i loungen (uploadbuffer)"
+
+msgid "Use standard Piwigo template for common pages."
+msgstr "Anvend Piwigos standardskabelon til fællessider"
+
+msgid "When enabled, a common template is used for the login, registration and forgotten password pages, regardless of the theme. Some themes might use these templates even if you uncheck this option"
+msgstr "Når aktiveret, anvendes en fælles skabelon til siderne login, kontooprettelse og glemt adgangskode, uanset om der er et tema eller ej. Nogle temaer kan anvende disse skabeloner, selv hvis du fravælger muligheden her."
+
+msgid "Admins only"
+msgstr "Kun administratorer"
+
+msgid "user_status_normal"
+msgstr "Grundlæggende"
+
+msgid "Change logo"
+msgstr "Skift logo"
+
+msgid "Dark mode"
+msgstr "Mørk tilstand"
+
+msgid "Display Gallery title"
+msgstr "Vis gallerititel"
+
+msgid "Light mode"
+msgstr "Lys tilstand"
+
+msgid "Personalization settings"
+msgstr "Personaliseringsindstillinger"
+
+msgid "Select a color theme for standard pages"
+msgstr "Vælg et farvetema for standardsider"
+
+msgid "Standard pages"
+msgstr "Standardsider"
+
+msgid "Standard pages aren't activated, however you have %d active themes that will still use them. These themes are:"
+msgstr "Standardsider er ikke aktiveret, men du har %d aktive temaer, som stadig vil benytte dem. Temaerne er:"
+
+msgid "Standard pages header"
+msgstr "Standardsiders header"
+
+msgid "Use Piwigo logo"
+msgstr "Anvend Piwigo-logo"
+
+msgid "Use custom logo (png, jpeg or svg)"
+msgstr "Anvend eget logo (png, jpeg eller svg)"
+

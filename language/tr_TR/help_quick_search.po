@@ -1,0 +1,161 @@
+# Piwigo translation — tr_TR
+# Source: help_quick_search.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: tr_TR\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "will give you photos without notes."
+msgstr "notsuz fotoğraflar sunar."
+
+msgid "will give you all photos with at least one note."
+msgstr "tüm fotoğraflara en az bir not ekleyerek size sunar."
+
+msgid "up to 100 (inclusive)"
+msgstr "100'e kadar (dahil)"
+
+msgid "returns photos of 5 megapixels"
+msgstr "5 megapiksel fotoğraflar sunar"
+
+msgid "returns photos of 12 megapixels or more"
+msgstr "En az 12 megapiksel çözünürlüğe sahip fotoğrafları görüntüleyin"
+
+msgid "return photos with at least 1,000 views"
+msgstr "En az 1.000 kez görüntülenen fotoğrafları göster"
+
+msgid "return photos less than 700px high"
+msgstr "700 pikselden daha düşük yüksekliğe sahip fotoğraflar"
+
+msgid "photos taken in 2003"
+msgstr "2003 yılında çekilen fotoğraflar"
+
+msgid "return photos wider than 500px"
+msgstr "500 pikselden daha geniş fotoğraflar"
+
+msgid "photos posted in 2003"
+msgstr "2003'te yayınlanan fotoğraflar"
+
+msgid "photos from may 2003"
+msgstr "mayıs 2003'ten fotoğraflar"
+
+msgid "photos from 2003 to 2008"
+msgstr "2003'ten 2008'e kadar fotoğraflar"
+
+msgid "photos after Jan 1st 2008"
+msgstr "1 Ocak 2008'den sonraki fotoğraflar"
+
+msgid "less than 100"
+msgstr "100'den az"
+
+msgid "greater than 100"
+msgstr "100'den büyük"
+
+msgid "from 100 and above"
+msgstr "100 ve üzeri"
+
+msgid "finds photos from compact cameras in portrait or landscape modes"
+msgstr "kompakt kameralardan portre veya manzara modlarında fotoğraf bulur"
+
+msgid "finds photo 123 to 126 (it may find between 0 and 4 photos, because photos can be deleted)"
+msgstr "123 ile 126 arasındaki fotoğrafları bulur (fotoğraflar silinebileceğinden 0 ile 4 arasında fotoğraf bulabilir)"
+
+msgid "finds panoramas"
+msgstr "panoramalar bulur"
+
+msgid "finds files between 1MB and 10MB."
+msgstr "1MB ile 10MB arasındaki dosyaları bulur."
+
+msgid "between 10 and 100 (inclusive)"
+msgstr "10 ile 100 (dahil) arasında"
+
+msgid "equals 100"
+msgstr "100'e eşit"
+
+msgid "With keywords"
+msgstr "Anahtar kelimelerle"
+
+msgid "Use quotes to search for an exact keyword or phrase."
+msgstr "Belirli bir anahtar kelimeyi veya ifadeyi aramak için tırnak işaretlerini kullanın."
+
+msgid "These operators can be used with numeric fields such as"
+msgstr "Bu operatörler, aşağıdaki gibi sayısal alanlarla kullanılabilir:\n"
+
+msgid "Supported numeric operators"
+msgstr "Desteklenen sayısal operatörler"
+
+msgid "Searches photos with a given width or height."
+msgstr "Belirli bir genişlik veya yüksekliğe sahip fotoğrafları arar."
+
+msgid "The quick search engine allows you to use boolean operators to refine your search. By default, the search applies to all keywords. Searches are not case sensitive."
+msgstr "Hızlı arama motoru, aramanızı daraltmak için Boole operatörlerini kullanmanıza olanak tanır. Varsayılan olarak, arama tüm anahtar kelimeler için geçerlidir. Aramalar büyük/küçük harfe duyarlı değildir."
+
+msgid "Searches photos by width/height ratio."
+msgstr "Fotoğrafları genişlik/yükseklik oranına göre arar."
+
+msgid "Searches photos by taken date."
+msgstr "Fotoğrafları çekim tarihine göre arar."
+
+msgid "Searches photos by size in pixels."
+msgstr "Fotoğrafları piksel cinsinden boyutuna göre arar."
+
+msgid "Searches photos by rating."
+msgstr "Fotoğrafları derecelendirmeye göre arar."
+
+msgid "Searches photos by posted date."
+msgstr "Fotoğrafları yayınlanma tarihine göre arar."
+
+msgid "Searches photos by its numeric identifier in Piwigo."
+msgstr "Piwigo'da fotoğrafları sayısal tanımlayıcısına göre arar."
+
+msgid "Searches photos by file size."
+msgstr "Fotoğrafları dosya boyutuna göre arar."
+
+msgid "Searches only in tag names without looking at photo titles or descriptions."
+msgstr "Fotoğraf başlıklarına veya açıklamalarına bakmadan sadece etiket adlarına göre arama yapar."
+
+msgid "Searches only for photos with the given words in title or description."
+msgstr "Sadece başlık veya açıklamada belirtilen kelimeleri içeren fotoğrafları arar."
+
+msgid "Searches for photos by number of views."
+msgstr "Görüntülenme sayısına göre fotoğraf arar."
+
+msgid "Searches by file name."
+msgstr "Dosya adına göre arama yapar."
+
+msgid "Searches by author."
+msgstr "Yazara göre aramalar."
+
+msgid "Search using extended syntax"
+msgstr "Genişletilmiş sözdizimini kullanarak arama yapın"
+
+msgid "Same principle as for"
+msgstr "Aynı prensip şu şekildedir:"
+
+msgid "Others"
+msgstr "Diğerleri"
+
+msgid "OR inclusive"
+msgstr "OR dahil"
+
+msgid "Here is a list of actions you can perform:"
+msgstr "İşte gerçekleştirebileceğiniz eylemlerin listesi:"
+
+msgid "Grouping"
+msgstr "Gruplama"
+
+msgid "Exclude"
+msgstr "Hariç"
+
+msgid "Exact search"
+msgstr "Kesin arama"
+
+msgid "Add an OR between words."
+msgstr "Kelimeler arasına OR ekleyin."
+
+msgid "Add a dash (-) or NOT before a word to exclude from search. Note that NOT acts as a filtering operator so you cannot have a search containing only NOT operators. You cannot combine OR with NOT (john OR NOT bill is not valid)"
+msgstr "Aramadan hariç tutmak için bir kelimenin önüne tire (-) veya NOT ekleyin. NOT'un bir filtreleme operatörü olarak işlev gördüğünü ve yalnızca NOT operatörlerini içeren bir arama yapamayacağınızı unutmayın. OR ile NOT'u birleştiremezsiniz (john OR NOT bill geçerli değildir)."
+

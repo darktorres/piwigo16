@@ -1,0 +1,161 @@
+# Piwigo translation — zh_TW
+# Source: help_quick_search.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: zh_TW\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "will give you all photos with at least one note."
+msgstr "將提供您所有至少附有一則註記的照片。"
+
+msgid "will give you photos without notes."
+msgstr "將提供您不含註記的照片。"
+
+msgid "between 10 and 100 (inclusive)"
+msgstr "在 10 到 100 之間（包含頭尾數字）"
+
+msgid "equals 100"
+msgstr "等於 100"
+
+msgid "finds files between 1MB and 10MB."
+msgstr "搜尋大小為 1MB 到 10MB 的檔案。"
+
+msgid "finds panoramas"
+msgstr "搜尋全景照片"
+
+msgid "finds photo 123 to 126 (it may find between 0 and 4 photos, because photos can be deleted)"
+msgstr "搜尋照片 123 至 126（可能找到 0 至 4 張照片，因為照片可能已被刪除）"
+
+msgid "finds photos from compact cameras in portrait or landscape modes"
+msgstr "從輕便相機中搜尋直式或橫式的照片"
+
+msgid "from 100 and above"
+msgstr "大於等於 100"
+
+msgid "greater than 100"
+msgstr "大於 100"
+
+msgid "less than 100"
+msgstr "小於 100"
+
+msgid "photos after Jan 1st 2008"
+msgstr "2008 年 1 月 1 日後的照片"
+
+msgid "photos from 2003 to 2008"
+msgstr "2008 年到 2003 年的照片"
+
+msgid "photos from may 2003"
+msgstr "2003 年 5 月的照片"
+
+msgid "photos posted in 2003"
+msgstr "2003 年張貼的照片"
+
+msgid "photos taken in 2003"
+msgstr "2003 年拍攝的照片"
+
+msgid "return photos less than 700px high"
+msgstr "高度小於 700px 的照片"
+
+msgid "return photos wider than 500px"
+msgstr "寬度大於 500px 的照片"
+
+msgid "return photos with at least 1,000 views"
+msgstr "回傳至少被瀏覽 1,000 次的照片"
+
+msgid "returns photos of 12 megapixels or more"
+msgstr "回傳超過 1,200 萬畫素的照片"
+
+msgid "returns photos of 5 megapixels"
+msgstr "回傳 500 萬畫素的照片"
+
+msgid "up to 100 (inclusive)"
+msgstr "大於等於 100"
+
+msgid "Same principle as for"
+msgstr "與此一樣的原則 "
+
+msgid "Search using extended syntax"
+msgstr "使用延伸的語法搜尋"
+
+msgid "Searches by author."
+msgstr "依作者搜尋。"
+
+msgid "Searches by file name."
+msgstr "依檔案名稱搜尋。"
+
+msgid "Searches for photos by number of views."
+msgstr "依瀏覽次數搜尋照片。"
+
+msgid "Searches only for photos with the given words in title or description."
+msgstr "依照片標題或是描述文字包含的字詞搜尋。"
+
+msgid "Searches only in tag names without looking at photo titles or descriptions."
+msgstr "僅依標籤名稱搜尋；不看照片的標題或描述文字。"
+
+msgid "Searches photos by file size."
+msgstr "依檔案大小搜尋。"
+
+msgid "Searches photos by its numeric identifier in Piwigo."
+msgstr "依照片的 Piwigo 編號 ID 搜尋。"
+
+msgid "Searches photos by posted date."
+msgstr "依張貼日期搜尋。"
+
+msgid "Searches photos by rating."
+msgstr "依評價搜尋照片。"
+
+msgid "Searches photos by size in pixels."
+msgstr "依相素大小搜尋照片。"
+
+msgid "Searches photos by taken date."
+msgstr "依拍照日期搜尋。"
+
+msgid "Searches photos by width/height ratio."
+msgstr "依照片的寬高比例搜尋照片。"
+
+msgid "Searches photos with a given width or height."
+msgstr "依指定的寬高搜尋照片。"
+
+msgid "Supported numeric operators"
+msgstr "支援的數值運算符號"
+
+msgid "The quick search engine allows you to use boolean operators to refine your search. By default, the search applies to all keywords. Searches are not case sensitive."
+msgstr "快速搜尋引擎允許您使用布林運算子來精確搜尋。預設情況下，搜尋將套用至所有關鍵字。搜尋結果不區分大小寫。"
+
+msgid "These operators can be used with numeric fields such as"
+msgstr "這些運算子可用於數值欄位，例如"
+
+msgid "Use quotes to search for an exact keyword or phrase."
+msgstr "使用引號來搜尋精確的關鍵字或短語。"
+
+msgid "With keywords"
+msgstr "使用關鍵字"
+
+msgid "Exact search"
+msgstr "精準搜尋"
+
+msgid "Exclude"
+msgstr "排除"
+
+msgid "Grouping"
+msgstr "組成群組"
+
+msgid "Here is a list of actions you can perform:"
+msgstr "以下是您可以進行的動作列表："
+
+msgid "OR inclusive"
+msgstr "OR 包含"
+
+msgid "Others"
+msgstr "其他"
+
+msgid "Add a dash (-) or NOT before a word to exclude from search. Note that NOT acts as a filtering operator so you cannot have a search containing only NOT operators. You cannot combine OR with NOT (john OR NOT bill is not valid)"
+msgstr "若要將某個字詞排除在搜尋結果之外，請在該字詞前加上減號 (-) 或是 NOT 關鍵字。請注意：NOT 所扮演的角色是篩選運算符號，因此您無法建立「只包含 NOT 運算符號」的搜尋要求。您也無法合併使用 OR 和 NOT（john OR NOT bill 是不合法的）。"
+
+msgid "Add an OR between words."
+msgstr "在字詞間加入 OR 運算符號。"
+

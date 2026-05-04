@@ -1,0 +1,65 @@
+# Piwigo translation — fi_FI
+# Source: upgrade.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: fi_FI\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "All sub-albums of private albums become private"
+msgstr "Kaikki yksityisten albumeiden ala-albumit ovat nyt yksityisiä"
+
+msgid "As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:"
+msgstr "Seuraavat pluginit ovat varotoimenpiteenä otettu pois käytöstä. Sinun tulee tarkistaa teeman päivitykset ennen kuin aktivoit ne uudelleen:"
+
+msgid "As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:"
+msgstr "Seuraavat teemat ovat varotoimenpiteenä otettu pois käytöstä. Sinun tulee tarkistaa teeman päivitykset ennen kuin aktivoit ne uudelleen:"
+
+msgid "In <i>%s</i>, before <b>?></b>, insert:"
+msgstr "In <i>%s</i>, before <b>?></b>, insert:"
+
+msgid "Only administrator can run upgrade: please sign in below."
+msgstr "Vain admin voi ajaa päivityksen: ole hyvä ja kirjaudu alla."
+
+msgid "Only thumbnails prefix and webmaster mail address have been saved from previous configuration"
+msgstr "Vain thumbnailien etuliite ja webmasterin sähköpostiosoite on tallennettu edellisestä konfiguraatiosta"
+
+msgid "Perform a maintenance check in [Administration>Tools>Maintenance] if you encounter any problem."
+msgstr "Aja huoltotarkistus [Administration>Tools>Maintenance] jos kohtaat ongelmia."
+
+msgid "SQL queries"
+msgstr "SQL-pyynnöt"
+
+msgid "Statistics"
+msgstr "Statistiikka"
+
+msgid "This page proposes to upgrade your database corresponding to your old version of Piwigo to the current version. The upgrade assistant thinks you are currently running a <strong>release %s</strong> (or equivalent)."
+msgstr "Tämä sivu ehdottaa Piwigo-tietokantasi päivitystä vanhasta versiosta uuteen. Päivitystyökalun mukaan ajat <strong>versiota %s</strong> (tai vastaavaa)"
+
+msgid "Upgrade from version %s to %s"
+msgstr "Päivitys versiosta %s versioon %s"
+
+msgid "Upgrade informations"
+msgstr "Päivitystiedot"
+
+msgid "Upgrade"
+msgstr "Päivitys"
+
+msgid "User permissions and group permissions have been erased"
+msgstr "Käyttäjien ja ryhmien oikeudet on tyhjennetty"
+
+msgid "You do not have access rights to run upgrade"
+msgstr "Sinulla ei ole oikeutta ajaa päivitystä"
+
+msgid "total SQL time"
+msgstr "Totaali SQL-aika"
+
+msgid "total upgrade time"
+msgstr "Totaali päivitysaika"
+
+msgid "Discover what's new in Piwigo %s"
+msgstr "Mitä uutta on Piwigo %s:ssä"
+

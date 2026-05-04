@@ -1,0 +1,3360 @@
+# Piwigo translation — lv_LV
+# Source: admin.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: lv_LV\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n != 0 ? 1 : 2);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "%d association"
+msgstr "%d kopa"
+
+msgid "%d associations"
+msgstr "%d kopas"
+
+msgid "%d album including"
+msgstr "%d albūmu ieskaitot"
+
+msgid "%d albums including"
+msgstr "%d albūmus ieskaitot"
+
+msgid "%d physical"
+msgstr " %d reāla"
+
+msgid "%d physicals"
+msgstr " %d reālas"
+
+msgid " and %d virtual"
+msgstr " un %d virtuāls"
+
+msgid " and %d virtuals"
+msgstr " un %d virtuāli"
+
+msgid "%d album moved"
+msgid_plural "%d albums moved"
+msgstr[0] "%d albūms pārvietots"
+msgstr[1] "%d albūmi pārvietoti"
+
+msgid "%d group"
+msgstr "%d grupa"
+
+msgid "%d groups"
+msgstr "%d grupas"
+
+msgid "%d member"
+msgid_plural "%d members"
+msgstr[0] "%d biedrs"
+msgstr[1] "%d biedri"
+
+msgid "%d tag"
+msgstr "%d iezīme"
+
+msgid "%d tags"
+msgstr "%d iezīmes"
+
+msgid "%d user comment rejected"
+msgstr "%d lietotāja komentārs noraidīts"
+
+msgid "%d user comments rejected"
+msgstr "%d lietotāja komentāri noraidīti"
+
+msgid "%d user comment validated"
+msgstr "%d lietotāja komentārs apstiptināts"
+
+msgid "%d user comments validated"
+msgstr "%d lietotāja komentāri apstiptināti"
+
+msgid "%d user deleted"
+msgid_plural "%d users deleted"
+msgstr[0] "%d lietotājs izdēsts"
+msgstr[1] "%d lietotāji izdzēsti"
+
+msgid "%d user"
+msgid_plural "%d users"
+msgstr[0] "%d lietotājs"
+msgstr[1] "%d lietotāji"
+
+msgid "%d waiting for validation"
+msgstr "%d gaida apstiprinājumu"
+
+msgid "Actions"
+msgstr "Darbības"
+
+msgid "Activate"
+msgstr "Aktivēt"
+
+msgid "Add/delete a permalink"
+msgstr "Pievienot/dzēst pamatsaiti"
+
+msgid "Add a tag"
+msgstr "Pievienot iezīmi (birku)"
+
+msgid "Add a user"
+msgstr "Pievienot lietotāju"
+
+msgid "Add group"
+msgstr "Pievienot grupu"
+
+msgid "Add"
+msgstr "Pievienot"
+
+msgid "Allow user registration"
+msgstr "Atļaut reģistrēt lietotāju"
+
+msgid "Apply to sub-albums"
+msgstr "Pielietot apakšalbūmiem"
+
+msgid "Associated"
+msgstr "Saistītas"
+
+msgid "Caddie management"
+msgstr "Groza pārvaldīšana"
+
+msgid "Caddie"
+msgstr "Grozs"
+
+msgid "Albums authorized thanks to group associations"
+msgstr "Albūmi autorizēti dēļ grupu apvienībēm"
+
+msgid "Album manual order was saved"
+msgstr "Albūmu kārtība saglabāta"
+
+msgid "Check for upgrade failed for unknown reasons."
+msgstr "Pārbaude pēc uzlabojuma nezināmu iemeslu dēļ nav izdevusies."
+
+msgid "Check for upgrade"
+msgstr "Pārbaudīt uzlabojumu"
+
+msgid "Comments for all"
+msgstr "Komentāri visiem"
+
+msgid "Current name"
+msgstr "Patreizējais nosaukums"
+
+msgid "Database"
+msgstr "Datubāze"
+
+msgid "Deactivate"
+msgstr "Izslēgt"
+
+msgid "Delete Representant"
+msgstr "Dzēst Pārstāvi"
+
+msgid "Delete selected tags"
+msgstr "Dzēst izvēlētās iezīmes"
+
+msgid "Delete selected users"
+msgstr "Dzēst izvēlētos lietotājus"
+
+msgid "Deletions"
+msgstr "Izdzēšanas"
+
+msgid "Deny selected groups"
+msgstr "Noraidīt izvēlētās grupas"
+
+msgid "Deny selected users"
+msgstr "Noraidīt izvēlētos lietotājus"
+
+msgid "Description"
+msgstr "Apraksts"
+
+msgid "Display options"
+msgstr "Parādīšanas varianti"
+
+msgid "Dissociated"
+msgstr "Nesaistītas"
+
+msgid "Does not represent"
+msgstr "Nepārstāv"
+
+msgid "Edit selected tags"
+msgstr "Rediģēt izvēlētās iezīmes"
+
+msgid "Edit tags"
+msgstr "Rediģēt iezīmes"
+
+msgid "Email admins when a new user registers"
+msgstr "Paziņot adminam, kad jauns lietotājs reģistrējas"
+
+msgid "Email admins when a valid comment is entered"
+msgstr "Paziņot adminam, kad derīgs komentārs ievadīts"
+
+msgid "Email admins when a comment requires validation"
+msgstr "Paziņot adminam, kad parādījies komentārs, kas jāpārbauda"
+
+msgid "Environment"
+msgstr "Vide"
+
+msgid "Form"
+msgstr "Forma"
+
+msgid "Gallery title"
+msgstr "Galerijas nosaukums"
+
+msgid "Grant selected groups"
+msgstr "Atļaut piekļuvi izvēlētām grupām"
+
+msgid "Grant selected users"
+msgstr "Atļaut piekļuvi izvēlētajiem lietotājiem"
+
+msgid "Group name"
+msgstr "Grupas nosaukums"
+
+msgid "Groups"
+msgstr "Grupas"
+
+msgid "Guests"
+msgstr "Viesi"
+
+msgid "History"
+msgstr "Vēsture"
+
+msgid "Informations"
+msgstr "Informācija"
+
+msgid "Install"
+msgstr "Instalēt"
+
+msgid "Link all album photos to a new album"
+msgstr "Sasaistīt visus albūma fotoattēlus ar jaunu albūmu"
+
+msgid "Link all album photos to some existing albums"
+msgstr "Sasaistīt visus albūma fotoattēlus ar jau esošiem albūmiem"
+
+msgid "Linked albums"
+msgstr "Sasaistītie albūmi"
+
+msgid "Lock gallery"
+msgstr "Bloķēt galeriju"
+
+msgid "Maintenance"
+msgstr "Apkope"
+
+msgid "Edit album permissions"
+msgstr "Pārvaldīt albūma atļaujas"
+
+msgid "Manage permissions for group \"%s\""
+msgstr "Pārvaldīt \"%s\" grupas atļaujas"
+
+msgid "Manage permissions for user \"%s\""
+msgstr "Pārvaldīt lietotāja \"%s\" atļaujas"
+
+msgid "Manage tags"
+msgstr "Pārvaldīt iezīmes"
+
+msgid "Members"
+msgstr "Biedri"
+
+msgid "Metadata synchronized from file"
+msgstr "Metadati no faila sinhronizēti"
+
+msgid "Move albums"
+msgstr "Pārvietot albūmus"
+
+msgid "Move"
+msgstr "Pārvietot"
+
+msgid "Name"
+msgstr "Nosaukums"
+
+msgid "New name"
+msgstr "Jauns nosaukums"
+
+msgid "New parent album"
+msgstr "Jauns pamatalbūms"
+
+msgid "New tag"
+msgstr "Jauna iezīme"
+
+msgid "Number of comments per page"
+msgstr "Komentāru skaits lapā"
+
+msgid "Number of rates"
+msgstr "Vērtējumu skaits"
+
+msgid "Only private albums are listed"
+msgstr "Tiek rādīti tikai privātie albūmi"
+
+msgid "Operating system"
+msgstr "Operacionālā sistēma"
+
+msgid "Options"
+msgstr "Izvēles"
+
+msgid "Other private albums"
+msgstr "Citi privātie albūmi"
+
+msgid "Page banner"
+msgstr "Lapas baneris"
+
+msgid "Parent album"
+msgstr "Pamatalbūms"
+
+msgid "Path"
+msgstr "Ceļš"
+
+msgid "Permalink"
+msgstr "Pamatsaite"
+
+msgid "Permalink %s has been previously used by album %s. Delete from the permalink history first"
+msgstr "Pirmsaiti %s iepriekš lietoja albūms %s. Vispirms izdzēsiet to no pirmsašu vēstures"
+
+msgid "The permalink name must be composed of a-z, A-Z, 0-9, \"-\", \"_\" or \"/\". It must not be numeric or start with number followed by \"-\""
+msgstr "Pamatsaites nosaukums drīkst saturēt a-z, A-Z, 0-9, \"-\", \"_\" or \"/\". Tas nedrīkst būt tikai skaitlis vai sākties ar ciparu, kam seko \"-\""
+
+msgid "Permalink %s is already used by album %s"
+msgstr "Pirmsaiti %s jau lieto albūms %s"
+
+msgid "Permalink history"
+msgstr "Pamatsaišu vēsture"
+
+msgid "Permalinks"
+msgstr "Pamatsaites"
+
+msgid "Permission denied"
+msgstr "Piekļuve liegta"
+
+msgid "Permission granted thanks to a group"
+msgstr "Piekļuve atļauta pateicoties grupai"
+
+msgid "Permission granted"
+msgstr "Piekļuve atļauta"
+
+msgid "Photo informations updated"
+msgstr "Informācija par foto atjaunināta"
+
+msgid "Plugins"
+msgstr "Spraudņi"
+
+msgid "Position"
+msgstr "Pozīcijas"
+
+msgid "Preferences"
+msgstr "Iestatījumi"
+
+msgid "Properties"
+msgstr "Īpašības"
+
+msgid "Random photo"
+msgstr "Gadījuma foto"
+
+msgid "Rate date"
+msgstr "Vērtēšanas datums"
+
+msgid "Rating by guests"
+msgstr "Viesu novērtējums"
+
+msgid "Rating"
+msgstr "Vērtējums"
+
+msgid "Reject"
+msgstr "Noraidīt"
+
+msgid "Representant"
+msgstr "Pārstāvis"
+
+msgid "Representation of albums"
+msgstr "Albūma attēlojums"
+
+msgid "Representative"
+msgstr "Pārstāvniecisks"
+
+msgid "Represents"
+msgstr "Pārstāv"
+
+msgid "Save order"
+msgstr "Saglabāt kārtību"
+
+msgid "Save to permalink history"
+msgstr "Saglabāt pamatsaišu vēsturē"
+
+msgid "Select at least one album"
+msgstr "Izvēlēties vismaz vienu albūmu"
+
+msgid "Select at least one photo"
+msgstr "Atlasiet vizmaz vienu foto"
+
+msgid "Select at least one user"
+msgstr "Izvēlēties vismaz vienu lietotāju"
+
+msgid "Show info"
+msgstr "Rādīt informāciju"
+
+msgid "Site manager"
+msgstr "Web lapu pārzinis"
+
+msgid "Status"
+msgstr "Statuss"
+
+msgid "Statistics"
+msgstr "Statistika"
+
+msgid "Storage album"
+msgstr "Albūma uzglabāšana"
+
+msgid "Sum of rates"
+msgstr "Kopējais novērtējums"
+
+msgid "Tag \"%s\" already exists"
+msgstr "Iezīme \"%s\" jau eksistē"
+
+msgid "Tag \"%s\" was added"
+msgstr "Iezīme \"%s\" ir pievienota"
+
+msgid "Tag selection"
+msgstr "Iezīmes izvēle"
+
+msgid "The %d following tags were deleted"
+msgstr " %d sekojošas iezīmes izdzēstas"
+
+msgid "Unable to check for upgrade."
+msgstr "Neiespējami pārbaudīt vai ir uzlabojums."
+
+msgid "Uninstall"
+msgstr "Atinstalēt"
+
+msgid "Use the default photo sort order"
+msgstr "Lietot foto kārtošanu pēc noklusējuma"
+
+msgid "User comments validation"
+msgstr "Lietotāju komentāru pārbaude"
+
+msgid "Users"
+msgstr "Lietotāji"
+
+msgid "Validate"
+msgstr "Apstiprināt"
+
+msgid "Validation"
+msgstr "Apstiprināšana"
+
+msgid "Version"
+msgstr "Versija"
+
+msgid "Virtual albums to move"
+msgstr "Virtuālie albūmi pārvietošanai"
+
+msgid "Virtual album name"
+msgstr "Virtuālā albūma nosaukums"
+
+msgid "Webmaster cannot be deleted"
+msgstr "Webmasteru izdzēst nevar"
+
+msgid "You are running on development sources, no check possible."
+msgstr "Jūs darbojaties izstrādes režīmā, pārbaude nav iespējama."
+
+msgid "You cannot delete your account"
+msgstr "Jūs nevarat izdzēst savu kontu"
+
+msgid "You cannot move an album in its own sub album"
+msgstr "Nevar pārvietot albūmu savā apakšalbūmā"
+
+msgid "You need to confirm deletion"
+msgstr "Jums jāapstiprina izdzēšana"
+
+msgid "Associate to album"
+msgstr "sasaistīt ar albūmu"
+
+msgid "associate to group"
+msgstr "saistīt ar grupu"
+
+msgid "Authorized"
+msgstr "Atļauts"
+
+msgid "Add a virtual album"
+msgstr "Pievienot virtuālo albūmu"
+
+msgid "Authorize users to add comments on selected albums"
+msgstr "Atļaut lietotājiem pievienot komentārus izvēlētajiem albūmiem"
+
+msgid "The name of an album must not be empty"
+msgstr "Albūma nosaukums nedrīkst būt tukšs"
+
+msgid "Lock albums"
+msgstr "Boķēt albūmus"
+
+msgid "Private"
+msgstr "Privāts albūms"
+
+msgid "Public"
+msgstr "Publiska albūms"
+
+msgid "Find a new representant by random"
+msgstr "Atrast jaunu pārstāvi nejauši"
+
+msgid "Public / Private"
+msgstr "Publisks / Privāts"
+
+msgid "Manage authorizations for selected albums"
+msgstr "Pārvaldīt izvēlēto albūmu autorizācijas"
+
+msgid "Virtual album added"
+msgstr "Virtuālais albūms pievienots"
+
+msgid "Virtual album deleted"
+msgstr "Virtuālais albūms izdzēsts"
+
+msgid "Access type"
+msgstr "Piekļuves tips"
+
+msgid "Information data registered in database"
+msgstr "Datubāzē reģistrētā informācija"
+
+msgid "Default display"
+msgstr "Izskats pēc noklusējuma"
+
+msgid "The gallery URL is not valid."
+msgstr "Nekorekts galerijas URL."
+
+msgid "The number of comments a page must be between 5 and 50 included."
+msgstr "Lapā var būt no 5 līdz 50 komentāriem."
+
+msgid "Configuration"
+msgstr "Konfigurācija"
+
+msgid "confirm"
+msgstr "apstiprinājums"
+
+msgid "Date"
+msgstr "Datums"
+
+msgid "delete album"
+msgstr "dzēst albūmu"
+
+msgid "Dissociate from album"
+msgstr "atsaistīt no albūma"
+
+msgid "dissociate from group"
+msgstr "atsaistīt no grupas"
+
+msgid "Album updated successfully"
+msgstr "Informācija par albūmu veiksmīgi atjaunota."
+
+msgid "photos per page"
+msgstr "foto skaits lapā"
+
+msgid "High definition enabled"
+msgstr "Augstā izšķirtspēja iespējota"
+
+msgid "File"
+msgstr "Fails"
+
+msgid "first photo added on %s"
+msgstr "pirmais %s pievienotais foto"
+
+msgid "Forbidden"
+msgstr "Aizliegts"
+
+msgid "global mode"
+msgstr "grupveida režīms"
+
+msgid "group \"%s\" added"
+msgstr "grupa \"%s\" pievienota"
+
+msgid "group \"%s\" deleted"
+msgstr "grupa \"%s\" izdzēsta"
+
+msgid "group \"%s\" updated"
+msgstr "grupa \"%s\" atjaunināta"
+
+msgid "The name of a group must not contain \" or ' or be empty."
+msgstr "Grupas nosaukums nedrīkst saturēt \" vai ' būt tukšs."
+
+msgid "This name is already used by another group."
+msgstr "Šo vārdu jau lieto cita grupa."
+
+msgid "High definition"
+msgstr "Augsta izšķirtspēja"
+
+msgid "jump to album"
+msgstr "pāriet uz albūmu"
+
+msgid "jump to photo"
+msgstr "iet uz foto"
+
+msgid "leave"
+msgstr "atstāt"
+
+msgid "Lock"
+msgstr "Bloķēt"
+
+msgid "Locked"
+msgstr "Bloķēts"
+
+msgid "manage album photos"
+msgstr "pārvaldīt albūmu elementus"
+
+msgid "manage sub-albums"
+msgstr "Pārvaldīt apakšalbūmus"
+
+msgid "Manage"
+msgstr "Pārvaldīt"
+
+msgid "Execution time is out, treatment must be continue [Estimated time: %d second]."
+msgid_plural "Execution time is out, treatment must be continue [Estimated time: %d seconds]."
+msgstr[0] "Izpildes laiks beidzies, apstrāde jāturpina [Aprēķinātais laiks: %d sekundes]."
+msgstr[1] "Izpildes laiks pārsniegts, apstrāde jāturpina [Aprēķinātais laiks: %d sekundes]."
+
+msgid "Prepared time for list of users to send mail is limited. Others users are not listed."
+msgstr "Laiks, kas atvēlēts lietotāju saraksta izveidei pasta nosūtīšanai, ierobežots. Citi lietotāji nav ietverti."
+
+msgid "Time to send mail is limited. Others mails are skipped."
+msgstr "E-pasta izsūtīšanas laiks ierobežots. Citas vēstules izlaistas."
+
+msgid "To send ?"
+msgstr "Nosūtīt?"
+
+msgid "Last send"
+msgstr "Pēdējais nosūtītais"
+
+msgid "User"
+msgstr "Lietotājs"
+
+msgid "Complementary mail content"
+msgstr "Vēstules saturs"
+
+msgid "See you soon,"
+msgstr "Visu labu,"
+
+msgid "Go to"
+msgstr "Pāriet uz"
+
+msgid "Hello"
+msgstr "Sveiki"
+
+msgid "New photos were added"
+msgstr "Tika pievienoti jauni fotoattēli"
+
+msgid "on"
+msgstr "pie"
+
+msgid "between"
+msgstr "starp"
+
+msgid "and"
+msgstr "un"
+
+msgid "The webmaster has subscribed you to receiving notifications by mail."
+msgstr "Webmāsters reģistrējis Jūs saņemt ziņas ar e-pastu."
+
+msgid "You have subscribed to receiving notifications by mail."
+msgstr "Jūs esat reģistrējies saņemt ziņas pa e-pastu."
+
+msgid "To subscribe"
+msgstr "reģistrācijai"
+
+msgid "If you encounter problems or have any question, please send a message to"
+msgstr "Ja Jums rodas problēmas vai jautājumi, lūdzu rakstiet"
+
+msgid "[NBM] Problems or questions"
+msgstr "[NBM] Problēmas un jautājumi"
+
+msgid "The webmaster has unsubscribed you from receiving notifications by mail."
+msgstr "Webmāsters ir izdzēsis Jūs no reģistra , lai saņemtu ziņas ar e-pastu ."
+
+msgid "You have unsubscribed from receiving notifications by mail."
+msgstr "Jūs anulējāt parakstu saņemt ziņas ar e-pastu."
+
+msgid ", click on"
+msgstr ", klikšķiniet uz"
+
+msgid "To unsubscribe"
+msgstr "Lai anulētu reģistrāciju"
+
+msgid "With blank value, gallery title will be used"
+msgstr "Ja tukša vērtība, tiks lietots galerijas nosaukums"
+
+msgid "Notification"
+msgstr "Paziņojums"
+
+msgid "Error when sending email to %s [%s]."
+msgstr "Kļūda nosūtot vēstuli %s [%s]."
+
+msgid "Mail sent to %s [%s]."
+msgstr "Vēstule nosūtīta %s [%s]."
+
+msgid "%d mail was sent."
+msgid_plural "%d mails were sent."
+msgstr[0] "%d vēstule ir nosūtīta."
+msgstr[1] "%d vēstules ir nosūtītas."
+
+msgid "%d mail was not sent."
+msgid_plural "%d mails were not sent."
+msgstr[0] "%d vēstule netika nosūtīta."
+msgstr[1] "%d vēstules netika nosūtītas."
+
+msgid "No mail to send."
+msgstr "Nav vēstuļu nosūtīšanai."
+
+msgid "There is no available subscribers to mail."
+msgstr "Nav lietotāju, kam varētu nosūtīt pastu."
+
+msgid "Subscribers could be listed (available) only if there is new elements to notify."
+msgstr "Lietotāji pieejami, ja ir jauni elementi ko paziņot."
+
+msgid "Anyway only webmasters can see this tab and never administrators."
+msgstr "Tikai Webmāsters var redzēt šo iezīmi, ne administrators."
+
+msgid "No user to send notifications by mail."
+msgstr "Nav lietotāja, kam nosūtīt e-paziņojumu."
+
+msgid "New photos added"
+msgstr "Pievienoti jauni fotoattēli"
+
+msgid "Subscribe to notification by mail"
+msgstr "Reģistrēties, lai saņemtu e-paziņojumus"
+
+msgid "Unsubscribe from notification by mail"
+msgstr "Anulēt reģistrāciju, lai saņemtu e-paziņojumus"
+
+msgid "Parameter"
+msgstr "Iestatījumi"
+
+msgid "Operation in progress"
+msgstr "Procesa apstrāde."
+
+msgid "Please wait..."
+msgstr "Lūdzu uzgaidiet..."
+
+msgid "Continue processing treatment"
+msgstr "Turpināt procesa apstrādi"
+
+msgid "Add detailed content"
+msgstr "Pievienot detalizētu saturu"
+
+msgid "Send mail as"
+msgstr "Sūtīt vēstuli no"
+
+msgid "Send mail to users"
+msgstr "Sūtīt vēstuli lietotājiem"
+
+msgid "Send"
+msgstr "Sūtīt"
+
+msgid "Subscribed"
+msgstr "Izsūtīšanas sarakstā"
+
+msgid "Subscribe"
+msgstr "Izsūtīšanas saraksts"
+
+msgid "Parameters"
+msgstr "Parameteri"
+
+msgid "Select recipients"
+msgstr "Izvēlēties saņēmējus"
+
+msgid "Subscribe/unsubscribe users"
+msgstr "Reģistrēt/izdzēst lietotājus"
+
+msgid "Unsubscribed"
+msgstr "Nav izsūtīšanas sarakstā"
+
+msgid "%d parameter was updated."
+msgid_plural "%d parameters were updated."
+msgstr[0] "%d parametrs atjaunināts."
+msgstr[1] "%d parametru atjauninātu."
+
+msgid "%d user was not updated."
+msgid_plural "%d users were not updated."
+msgstr[0] "%d lirtotājs nav atjaunināts."
+msgstr[1] "%d lietotāji nav atjaunināti."
+
+msgid "User %s [%s] was removed from the subscription list."
+msgstr "Lietotājs %s [%s] izņemts no e-pasta izsūtīšanai paredzētā saraksta."
+
+msgid "User %s [%s] was added to the subscription list."
+msgstr "Lietotājs %s [%s] pievienots e-pasta izsūtīšanai paredzētajam sarakstam."
+
+msgid "%d user was updated."
+msgid_plural "%d users were updated."
+msgstr[0] "%d lietotājs izmainīts."
+msgstr[1] "%d lietotāji izmainīti."
+
+msgid "User %s [%s] was not removed from the subscription list."
+msgstr "Lietotājs %s [%s] nav izņemts no e-pasta izsūtīšanai paredzētā saraksta."
+
+msgid "User %s [%s] was not added to the subscription list."
+msgstr "Lietotājs %s [%s] nav pievienots e-pasta izsūtīšanai paredzētajam sarakstam."
+
+msgid "User %s [%s] added."
+msgstr "Lietotājs %s [%s] pievienots."
+
+msgid "Warning: subscribing or unsubscribing will send mails to users"
+msgstr "Uzmanību: pievienojot vai dzēšot e-pasta izsūtīšanai paredzētajam sarakstam lietotājiem tiks nosūtīts paziņojums"
+
+msgid "Send mail on HTML format"
+msgstr "Sūtīt vēstuli HTML formātā"
+
+msgid "Include display of recent photos grouped by dates"
+msgstr "Rādīt jaunākos foto, sagrupētus pēc datumiem"
+
+msgid "Available only with HTML format"
+msgstr "Pieejams tikai HTML formātā"
+
+msgid "no write access"
+msgstr "nav atļaujas ierakstīšanai"
+
+msgid "Permissions"
+msgstr "Atļaujas"
+
+msgid "private"
+msgstr "privāta"
+
+msgid "public"
+msgstr "publiska"
+
+msgid "Purge never used notification feeds"
+msgstr "Iztīrīt nelietotos paziņojumu kanālus"
+
+msgid "Purge sessions"
+msgstr "Iztīrīt sesijas"
+
+msgid "randomly represented"
+msgstr "gadījuma pārstāvis"
+
+msgid "registration date"
+msgstr "reģistrācijas datums"
+
+msgid "clean"
+msgstr "iztīrīt"
+
+msgid "Create this site"
+msgstr "Izveidot šo web lapu"
+
+msgid "test"
+msgstr "tests"
+
+msgid "test this remote site"
+msgstr "testēt šo attālināto web lapu"
+
+msgid "remove tags"
+msgstr "noņemt iezīmes"
+
+msgid "Repair and optimize database"
+msgstr "Labot un optimizēt datu bāzi"
+
+msgid "selection"
+msgstr "atlasītie"
+
+msgid "set to"
+msgstr "izmainīt uz"
+
+msgid "singly represented"
+msgstr "izvēlētais pārstāvis"
+
+msgid "This site already exists"
+msgstr "Šī Web lapa jau eksistē"
+
+msgid "created"
+msgstr "izveidota"
+
+msgid "delete"
+msgstr "izdzēsta"
+
+msgid "delete this site and all its attached elements"
+msgstr "izdzēst šo web lapu un visus tai pievienotos elementus"
+
+msgid "deleted"
+msgstr "izdzēsta"
+
+msgid "an error happened"
+msgstr "gadījusies kļūda"
+
+msgid "Local"
+msgstr "Lokāls"
+
+msgid "Remote"
+msgstr "Attālināts"
+
+msgid "update the database from files"
+msgstr "atjaunināt datu bāzi no failiem"
+
+msgid "status"
+msgstr "statuss"
+
+msgid "Directory"
+msgstr "Direktorija"
+
+msgid "sub-albums"
+msgstr "apakšalbūmi"
+
+msgid "Synchronize metadata"
+msgstr "sinhronizēt metadatus"
+
+msgid "target"
+msgstr "mērķis"
+
+msgid "Thumbnail"
+msgstr "Piktogramma"
+
+msgid "Title"
+msgstr "Nosaukums"
+
+msgid "Album list management"
+msgstr "Albūmu pārvaldīšana"
+
+msgid "Piwigo configuration"
+msgstr "Piwigo konfigurācija"
+
+msgid "Edit album"
+msgstr "Rediģēt albūmu"
+
+msgid "Group management"
+msgstr "Pārvaldīt grupas"
+
+msgid "User list"
+msgstr "Lietotāju saraksts"
+
+msgid "Database synchronization with files"
+msgstr "Datu bāzes sinhronizācija ar failiem"
+
+msgid "all"
+msgstr "viss"
+
+msgid "height must be a number superior to"
+msgstr "augstuman jābūt skaitlim lielākam par"
+
+msgid "width must be a number superior to"
+msgstr "platumam jābūt skaitlim lielākam par"
+
+msgid "for the file format"
+msgstr "faila formātam"
+
+msgid "Photo unreachable or no support"
+msgstr "foto nesasniedzams vai bez atbalsta"
+
+msgid "GD version"
+msgstr "GD versija"
+
+msgid "General statistics"
+msgstr "Vispārējā statistika"
+
+msgid "average time"
+msgstr "vidējais laiks"
+
+msgid "total time"
+msgstr "kopējais laiks"
+
+msgid "for this file format"
+msgstr "šim faila formātam"
+
+msgid "unit mode"
+msgstr "mono režīms"
+
+msgid "Unlocked"
+msgstr "Atbloķēt"
+
+msgid "unset"
+msgstr "notīrīt"
+
+msgid "Update albums informations"
+msgstr "Atjaunot albūma informāciju"
+
+msgid "Update photos information"
+msgstr "Atjaunināt informāciju par fotoattēliem"
+
+msgid "Synchronize"
+msgstr "Sinhrinizēšana"
+
+msgid "reduce to single existing albums"
+msgstr "samazināt līdz vienam esošam albūmam"
+
+msgid "Choose an option"
+msgstr "Izvēlieties iespēju"
+
+msgid "display maximum informations (added albums and photos, deleted albums and photos)"
+msgstr "parādīt maksimālo informāciju (pievienotie albūmi un foto, izdzēstie albūmi un foto)"
+
+msgid "Error list"
+msgstr "Kļūdu saraksts"
+
+msgid "Errors caption"
+msgstr "Kļūdu apzīmējumi"
+
+msgid "Detailed informations"
+msgstr "Detalizēta informācija"
+
+msgid "File/directory read error"
+msgstr "Faila/mapes lasīšanas kļūda"
+
+msgid "The file or directory cannot be accessed (either it does not exist or the access is denied)"
+msgstr "Nav piekļuves failam vai mapei (vai nu neeksistē vai piekļuve liegta)"
+
+msgid "albums deleted in the database"
+msgstr "no datu bāzes izdzēsti albūmi"
+
+msgid "photos deleted from the database"
+msgstr "no datu bāzes izdzēstie fotoattēli"
+
+msgid "photos candidates for metadata synchronization"
+msgstr "foto kandidāti metadatu sinhronizācijai"
+
+msgid "photos informations synchronized with files metadata"
+msgstr "informācija par foto sinhronizēta ar faila metadatiem"
+
+msgid "errors during synchronization"
+msgstr "kļūdas sinhronizācijas laikā"
+
+msgid "albums added in the database"
+msgstr "datu bāzei pievienoti albūmi"
+
+msgid "photos added in the database"
+msgstr "datubāzei pievienotie fotoattēli"
+
+msgid "photos updated in the database"
+msgstr "datubāzē atjauninātie fotoattēli"
+
+msgid "Search for new images in the directories"
+msgstr "Jaunus attēlu meklēšana mapēs"
+
+msgid "added"
+msgstr "pievienots"
+
+msgid "Metadata synchronization results"
+msgstr "Metadatu sinhronizācijas rezultāti"
+
+msgid "only perform a simulation (no change in database will be made)"
+msgstr "veikt tikai testēšanu (nekas nemainās datu bāzē)"
+
+msgid "Simulation"
+msgstr "Simulācija"
+
+msgid "directories + files"
+msgstr "mapes un faili"
+
+msgid "only directories"
+msgstr "tikai mapes"
+
+msgid "synchronize files structure with database"
+msgstr "sinhronizēt failu struktūru ar datubāzi"
+
+msgid "synchronize files metadata with database photos informations"
+msgstr "sinhronizēt faila metadatus ar informāciju par foto datubāzē"
+
+msgid "even already synchronized photos"
+msgstr "jau sinhronizētie fotoattēli"
+
+msgid "Used metadata"
+msgstr "Lietotie metadati"
+
+msgid "The name of directories and files must be composed of letters, numbers, \"-\", \"_\" or \".\""
+msgstr "Mapju un failu nosaukumi jāveido no burtiem, cipariem, \"-\", \"_\" vai \".\""
+
+msgid "wrong filename"
+msgstr "nepareizs faila nosaukums"
+
+msgid "Upload"
+msgstr "Augšupielāde"
+
+msgid "user \"%s\" added"
+msgstr "lietotājs \"%s\" pievienots"
+
+msgid "User status"
+msgstr "Lietotāja statuss"
+
+msgid "user_status_admin"
+msgstr "Administrators"
+
+msgid "user_status_generic"
+msgstr "Vispārējais"
+
+msgid "user_status_guest"
+msgstr "Viesis"
+
+msgid "user_status_webmaster"
+msgstr "Webmāsters"
+
+msgid "Virtual album"
+msgstr "Virtuālais albūms"
+
+msgid "Waiting"
+msgstr "Gaidīšana"
+
+msgid "default"
+msgstr "pēc noklusējuma"
+
+msgid "Toggle 'default group' property"
+msgstr "Pretējais 'grupa pēc noklusējuma' īpašība"
+
+msgid "Advanced features"
+msgstr "Paplašinātās funkcijas"
+
+msgid "Overall"
+msgstr "Visa"
+
+msgid "Year"
+msgstr "Gads"
+
+msgid "Month"
+msgstr "Mēnesis"
+
+msgid "Day"
+msgstr "Diena"
+
+msgid "Pages seen"
+msgstr "Lapas apskatītas"
+
+msgid "Time"
+msgstr "Laiks"
+
+msgid "IP"
+msgstr "IP"
+
+msgid "Element"
+msgstr "Elements"
+
+msgid "Section"
+msgstr "Nodaļa"
+
+msgid "An information email was sent to group \"%s\""
+msgstr "Informējošs e-pasts nosūtīts grupai \"%s\""
+
+msgid "Send an information email to group members"
+msgstr "Nosūtīt informējošu e-pastu grupas biedriem"
+
+msgid "Group"
+msgstr "Grupa"
+
+msgid "[%s] Visit album %s"
+msgstr "[%s] Apciemo albūmu %s"
+
+msgid "Hello,"
+msgstr "Sveiki,"
+
+msgid "See you soon."
+msgstr "Uz redzēšanos."
+
+msgid "Discover album:"
+msgstr "Atklāj albūmu:"
+
+msgid "Mail content"
+msgstr "Pasta saturs"
+
+msgid "none"
+msgstr "neviens"
+
+msgid "high"
+msgstr "liels"
+
+msgid "other"
+msgstr "cits"
+
+msgid "Element type"
+msgstr "Elementa tips"
+
+msgid "Image id"
+msgstr "Attēla id"
+
+msgid "Summary"
+msgstr "Summāri"
+
+msgid "%d line filtered"
+msgid_plural "%d lines filtered"
+msgstr[0] "%d līnija nofiltrēta"
+msgstr[1] "%d līnijas nofiltrētas"
+
+msgid "%d guest"
+msgid_plural "%d guests"
+msgstr[0] "%d viesis"
+msgstr[1] "%d viesu"
+
+msgid "Hour"
+msgstr "Stunda"
+
+msgid "guest"
+msgstr "viesis"
+
+msgid "default values"
+msgstr "vērtības pēc noklusēšanas"
+
+msgid "Guest cannot be deleted"
+msgstr "Viesi nav iespējams izdzēst"
+
+msgid "Default user cannot be deleted"
+msgstr "Lietotājs pēc noklusējuma nav izdzēšams"
+
+msgid "Purge history detail"
+msgstr "Izdzēst daļu vēstures"
+
+msgid "Purge history summary"
+msgstr "Izdzēst visu vēsturi"
+
+msgid "Check integrity"
+msgstr "Saderības pārbaude"
+
+msgid "Anomaly"
+msgstr "Bojājums"
+
+msgid "Correction"
+msgstr "Labojums"
+
+msgid "Automatic correction"
+msgstr "Automātisks labojums"
+
+msgid "Impossible automatic correction"
+msgstr "Automātiska labošana neiespējama"
+
+msgid "Correction applied with success"
+msgstr "Labojums sekmīgi pielietots"
+
+msgid "Correction applied with error"
+msgstr "Labojums veikts ar kļūdām"
+
+msgid "%d anomaly has been detected."
+msgid_plural "%d anomalies have been detected."
+msgstr[0] "%d bojājums konstatēts."
+msgstr[1] "%d bojājumi konstatēti."
+
+msgid "%d anomaly has been corrected."
+msgid_plural "%d anomalies have been detected corrected."
+msgstr[0] "%d bojājums izlabots."
+msgstr[1] "%d bojājumi konstatēti un izlaboti."
+
+msgid "%d anomaly has not been corrected."
+msgid_plural "%d anomalies have not been corrected."
+msgstr[0] "%d bojājums nav izlabots."
+msgstr[1] "%d bojājumi nav izlaboti."
+
+msgid "Go to %s or %s for more informations"
+msgstr "Apmeklējie %s vai %s ,lai iegūtu vairāk informācijas"
+
+msgid "the forum"
+msgstr "forums"
+
+msgid "the wiki"
+msgstr "wiki"
+
+msgid "%s value is not correct file because exif are not supported"
+msgstr "%s vērtība nekorekta, jo exif netiek atbalstīts"
+
+msgid "%s must be to set to false in your local/config/config.inc.php file"
+msgstr "%s jāatslēdz jūsu local/config/config.inc.php failā"
+
+msgid "Main \"guest\" user does not exist"
+msgstr "Lietotāja \"viesis\" statuss vairs neeksistē"
+
+msgid "Main \"guest\" user status is incorrect"
+msgstr "Lietotāja \"viesis\" statuss ir nekorekts"
+
+msgid "Default user does not exist"
+msgstr "Lietotājs pēc noklusējuma vairs neeksistē"
+
+msgid "Main \"webmaster\" user does not exist"
+msgstr "Lietotājs \"webmāsters\" vairs neeksistē"
+
+msgid "Main \"webmaster\" user status is incorrect"
+msgstr "Lietotāja \"webmāsters\" statuss ir nekorekts"
+
+msgid "User \"%s\" created with \"%s\" like password"
+msgstr "Lietotājs \"%s\" izveidots ar paroli \"%s\""
+
+msgid "Status of user \"%s\" updated"
+msgstr "Lietotāja \"%s\" statuss atjaunots"
+
+msgid "add new photos to caddie"
+msgstr "pievienot jaunus fotoattēlus grozam"
+
+msgid "No display"
+msgstr "Nerādīt"
+
+msgid "Classic display"
+msgstr "Klasiskais izskats"
+
+msgid "Hoverbox display"
+msgstr "Hoverbox izskats"
+
+msgid "Minimum privacy level"
+msgstr "Minimālais aizsardzības līmenis"
+
+msgid "Privacy level"
+msgstr "Aizsardzības līmenis"
+
+msgid "Level 0"
+msgstr "---"
+
+msgid "Level 1"
+msgstr "Kontakti"
+
+msgid "Level 2"
+msgstr "Draugi"
+
+msgid "Level 4"
+msgstr "Ģimene"
+
+msgid "Level 8"
+msgstr "Administrācija"
+
+msgid "Reinitialize check integrity"
+msgstr "Atkārtot integritātes pārbaudi"
+
+msgid "Check all"
+msgstr "Atzīmēt visu"
+
+msgid "Uncheck all"
+msgstr "Noņemt visas atzīmes"
+
+msgid "Check automatic corrections"
+msgstr "Atzīmēt autokorekciju"
+
+msgid "Apply selected corrections"
+msgstr "Pielietot izvēlētās korekcijas"
+
+msgid "Ignore selected anomalies"
+msgstr "Ignorēt atzīmētos bojājumus"
+
+msgid "Refresh"
+msgstr "Atjaunināt"
+
+msgid "The anomaly will be ignored until next application version"
+msgstr "Bojājumi tiks ignorēti līdz aplikācijas jaunajai versijai"
+
+msgid "Correction the anomaly will cancel the fact that it's ignored"
+msgstr "Bojājumu labojums atcels ignorēšanas faktu"
+
+msgid "%d anomaly has been ignored."
+msgid_plural "%d anomalies have been ignored."
+msgstr[0] "%d bojājums ignorēts."
+msgstr[1] "%d bojājumi ignorēti."
+
+msgid "Plugins which need upgrade"
+msgstr "Atjaunināmie spraudņi"
+
+msgid "Plugin list"
+msgstr "Citi spraudņi"
+
+msgid "Check for updates"
+msgstr "Jauninājumu pārbaude"
+
+msgid "Other plugins"
+msgstr "Pieejami citi spraudņi"
+
+msgid "Last revisions"
+msgstr "Pēdējās izmaiņas"
+
+msgid "Are you sure you want to delete this plugin?"
+msgstr "Vai esat pārliecināts, ka gribat izdzēst šo spraudni?"
+
+msgid "Are you sure you want to install this plugin?"
+msgstr "Vai esat pārliecināts, ka gribat instalēt šo spraudni?"
+
+msgid "Are you sure to install this upgrade? You must verify if this version does not need uninstallation."
+msgstr "Vai esat pārliecināts, kagribat instalēt šo jauninājumu? Pārbaudies vai esošajo versiju nav jāatinstalē."
+
+msgid "Plugin has been successfully copied"
+msgstr "Šis spraudnis sekmīgi nokopēts"
+
+msgid "Can't create temporary file."
+msgstr "Nevar izveidot pagaidu failu."
+
+msgid "Can't download archive."
+msgstr "Nevar lejupielādēt arhīvu."
+
+msgid "Can't read or extract archive."
+msgstr "Nevar lasīt vai izpakot arhīvu."
+
+msgid "An error occured during extraction (%s)."
+msgstr "Kļūda izpakojot (%s)."
+
+msgid "Please check \"plugins\" folder and sub-folders permissions (CHMOD)."
+msgstr "Lūdzu pārbaudiet \"spraudņu\" mapes and tās apakšdirektoriju atļaujas (CHMOD)."
+
+msgid "Can't connect to server."
+msgstr "Neiespējams savienojums ar serveri."
+
+msgid "Purge compiled templates"
+msgstr "Dzēst izveidotās veidnes"
+
+msgid "ACCESS_0"
+msgstr "Brīva piekļuve"
+
+msgid "ACCESS_1"
+msgstr "Piekļuve visiem"
+
+msgid "ACCESS_2"
+msgstr "Piekļuve tikai reģistrētiem lietotājiem"
+
+msgid "ACCESS_3"
+msgstr "Piekļuve tikai administratoriem"
+
+msgid "ACCESS_4"
+msgstr "Piekļuve webmāsteram"
+
+msgid "ACCESS_5"
+msgstr "Nav piekļuves"
+
+msgid "Support"
+msgstr "Atbalsts"
+
+msgid "Documentation"
+msgstr "Dokumentācija"
+
+msgid "A new version of Piwigo is available."
+msgstr "Pieejama jauna Piwigo versija."
+
+msgid "Piwigo Administration"
+msgstr "Piwigo Administrācija"
+
+msgid "Piwigo version"
+msgstr "Piwigo versija"
+
+msgid "You are running the latest version of Piwigo."
+msgstr "Jūs strādājat ar Piwigo beidzamo versiju."
+
+msgid "The version of %s [%s] installed is not compatible with the version required [%s]"
+msgstr "Uzstādītā %s [%s] versija ir nesavietojama ar prasīto [%s]"
+
+msgid "You need to upgrade your system to take full advantage of the application else the application will not work correctly, or not at all"
+msgstr "Lai izmantotu aplikāciju pilnībā uzlabojiet savu sistēmu, pretējā gadījumā tā strādās nekorekti vai nedarbosies vispār"
+
+msgid "Deleted on"
+msgstr "Izdzēsts"
+
+msgid "Last hit"
+msgstr "Pēdējie skatītie"
+
+msgid "GD library is missing"
+msgstr "Trūksts GD bibliotēka"
+
+msgid "Templates"
+msgstr "Paraugi"
+
+msgid "Extend for templates"
+msgstr "Paplašinājums paraugiem"
+
+msgid "Replacement of original templates by customized templates from template-extension subfolder"
+msgstr "Nomainīt oriģinālos paraugus ar lietotāja paraugiem no template-extension mapes"
+
+msgid "Replacers (customized templates)"
+msgstr "Aizvietojošais (lietoptāja paraugs)"
+
+msgid "Original templates"
+msgstr "Oriģinālie paraugi"
+
+msgid "Optional URL keyword"
+msgstr "Izvēles URL atslēgvārds"
+
+msgid "Templates configuration has been recorded."
+msgstr "Parauga konfigurācija saglabāta."
+
+msgid "All optimizations have been successfully completed."
+msgstr "Visi uzlabojumi sekmīgi veikti\t."
+
+msgid "Optimizations have been completed with some errors."
+msgstr "Uzlabojumi veikti ar dažām kļūdām."
+
+msgid "Modify information"
+msgstr "Modificēt informāciju"
+
+msgid "nothing"
+msgstr "nekas"
+
+msgid "overrides existing values with empty ones"
+msgstr "pārrakstīt esošās vērtības ar tukšām"
+
+msgid "Manage photo ranks"
+msgstr "Pārvaldīt foto vērtējumus"
+
+msgid "Edit ranks"
+msgstr "Rediģēt kārtību"
+
+msgid "No photo in this album"
+msgstr "Šajā albūmā nav neviena foto"
+
+msgid "Images manual order was saved"
+msgstr "Attēlu kārtība saglabāta"
+
+msgid "ranks"
+msgstr "kārtība"
+
+msgid "By rank"
+msgstr "Pēc kārtības"
+
+msgid "Manual order"
+msgstr "Izveidotā kārtība"
+
+msgid "Drag to re-order"
+msgstr "Pārvelciet, lai izmanītu kārtību "
+
+msgid "Quick Local Synchronization"
+msgstr "Ātrā vietējā sinhronizācija"
+
+msgid "No photo can be deleted"
+msgstr "Nav attēlu, ko izdzēst"
+
+msgid "Delete selected photos"
+msgstr "Dzēst izvēlētos attēlus"
+
+msgid "%d photo was deleted"
+msgid_plural "%d photos were deleted"
+msgstr[0] "%d attēls izdzēsts"
+msgstr[1] "%d attēli izdzēsti"
+
+msgid "Downloads"
+msgstr "Lejupielādes"
+
+msgid "Released on"
+msgstr "Atbrīvots"
+
+msgid "Number of downloads"
+msgstr "Lejupielāžu skaits"
+
+msgid "Piwigo Announcements Newsletter"
+msgstr "Piwigo Ziņu Lapa"
+
+msgid "Keep in touch with Piwigo project, subscribe to Piwigo Announcement Newsletter. You will receive emails when a new release is available (sometimes including a security bug fix, it's important to know and upgrade) and when major events happen to the project. Only a few emails a year."
+msgstr "Uzturiet saikni ar Piwigo projektu, parakstieties uz Piwigo Ziņu Lapu. Jūs informēs par jaunumiem (reizēm ir nepieciešams zināt kādu knifu par aplikācijas drošību un atjaunināt to) kas notiek ar projektu. Tikai daži e-pasti gadā."
+
+msgid "Subscribe %s"
+msgstr "Parakstīties uz %s"
+
+msgid "Subscribe %s to Piwigo Announcements Newsletter"
+msgstr "Parakstīties uz %s Piwigo Ziņu Lapu"
+
+msgid "Purge search history"
+msgstr "Dzēst meklēšanas vēsturi"
+
+msgid "Hide"
+msgstr "Paslēpt"
+
+msgid "Password is missing. Please enter the password."
+msgstr "Nepareiza parole. Lūdzu atkārtojiet mēģinājumu."
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "Nav paroles apstiprinājuma. Lūdzu apstipriniet paroli."
+
+msgid "Allow users to edit their own comments"
+msgstr "Atļaut lietotājiem labot savus komentārus"
+
+msgid "Allow users to delete their own comments"
+msgstr "Atļaut lietotājiem dzēst savus komentārus"
+
+msgid "Email administrators when a comment is modified"
+msgstr "Paziņot ar e-pastu admisistratoram par izmainītu komentāru "
+
+msgid "Email administrators when a comment is deleted"
+msgstr "Paziņot ar e-pastu admisistratoram par dzēstu komentāru"
+
+msgid "Cannot delete the old permalink !"
+msgstr "Nevar idzēst veco pirmsaiti!"
+
+msgid "Hit"
+msgstr "Populāri"
+
+msgid "Tools"
+msgstr "Rīki"
+
+msgid "Photos"
+msgstr "Attēli"
+
+msgid "Themes"
+msgstr "Tēmas"
+
+msgid "Instructions to use Piwigo"
+msgstr "Piwigo lietošanas instrukcija"
+
+msgid "Installed Themes"
+msgstr "Instalētās Tēmas"
+
+msgid "Add New Theme"
+msgstr "Pievienot jaunu tēmu"
+
+msgid "Forbid this theme to users"
+msgstr "Aizliegt lietotājiem izmantot šo tēmu"
+
+msgid "Set as default theme for unregistered and new users"
+msgstr "Iestatīt tēmu pēc noklusējuma jauniem un nereģistrētiem lietotājiem"
+
+msgid "unknown"
+msgstr "nezināms"
+
+msgid "Upload Photos"
+msgstr "Augšupielādēt attēlus"
+
+msgid "Drop into album"
+msgstr "Ievietot albūmā"
+
+msgid "+ Add an upload box"
+msgstr "+ Pievienot augšupielādes lauku"
+
+msgid "Create the \"%s\" directory at the root of your Piwigo installation"
+msgstr "Izveidot \"%s\" mapi jūsu instalētajā Piwigo saknes mapē"
+
+msgid "Give write access (chmod 777) to \"%s\" directory at the root of your Piwigo installation"
+msgstr "Piešķirt rakstīšanas tiesības (chmod 777) \"%s\" mapei jūsu instalētajā Piwigo saknes mapē"
+
+msgid "existing album"
+msgstr "esošs albūms"
+
+msgid "create a new album"
+msgstr "izveidot jaunu albūmu"
+
+msgid "Album name"
+msgstr "Albūma nosaukums"
+
+msgid "Album \"%s\" has been added"
+msgstr "Albūms \"%s\" ir pievienots"
+
+msgid "Uploaded Photos"
+msgstr "Augšupielādētie attēli"
+
+msgid "%d photos uploaded"
+msgstr "%d ielādēti attēli"
+
+msgid "Privacy level set to \"%s\""
+msgstr "Iestatīt piekļuves līmeni \"%s\""
+
+msgid "Album \"%s\" now contains %d photos"
+msgstr "Albūmā \"%s\" tagad ir %d attēli"
+
+msgid "Manage this set of %d photos"
+msgstr "Rediģēt šo %d attēlu kopumu."
+
+msgid "Select files"
+msgstr "Izvēlēties failus"
+
+msgid "Everybody"
+msgstr "Visi"
+
+msgid "Who can see these photos?"
+msgstr "Kas var skatīties šos attēlus?"
+
+msgid "Who can see this photo?"
+msgstr "Kas var skatīties šo attēlu?"
+
+msgid "Settings"
+msgstr "Iestatījumi"
+
+msgid "Resize"
+msgstr "Izmainīt izmērus"
+
+msgid "Maximum width"
+msgstr "Maksimālais platums"
+
+msgid "pixels"
+msgstr "pikseļi"
+
+msgid "Maximum height"
+msgstr "Maksimālais augstums"
+
+msgid "Image Quality"
+msgstr "Attēla kvalitāte"
+
+msgid "Save Settings"
+msgstr "Saglabāt iestatījumus"
+
+msgid "Your configuration settings are saved"
+msgstr "Jūsu konfigurācija saglabāta"
+
+msgid "Active Themes"
+msgstr "Aktīvās Tēmas"
+
+msgid "Add write access to the \"%s\" directory"
+msgstr "Pievienot rakstīšanas tiesības mapei \"%s\""
+
+msgid "Administration Home"
+msgstr "Vadības panelis"
+
+msgid "Change Admin Colors"
+msgstr "Izmainīt vadības paneļa krāsas"
+
+msgid "Delete this theme"
+msgstr "Dzēst šo tēmu"
+
+msgid "Directory does not exist"
+msgstr "Nav tādas mapes"
+
+msgid "Download,"
+msgstr "Lejupielādēt,"
+
+msgid "FTP + Synchronization"
+msgstr "FTP + Sinhronizācija"
+
+msgid "Get Support on Piwigo Forum"
+msgstr "Griezieties pēc palīdzības Piwigo forumā"
+
+msgid "Help Me"
+msgstr "Palīdzība"
+
+msgid "Impossible to activate this theme, the parent theme is missing: %s"
+msgstr "Šo tēmu nevar aktivēt, jo nav pirmtēmas: %s"
+
+msgid "Impossible to delete this theme. Other themes depends on it: %s"
+msgstr "Šo tēmu nevar dzēst, jo no tās atkarīgas citas tēmas: %s"
+
+msgid "Inactive Themes"
+msgstr "Neaktīvās tēmas"
+
+msgid "Install on your computer,"
+msgstr "Instalējiet savā datorā,"
+
+msgid "Make this theme available to users"
+msgstr "Padarīt šo tēmu pieejamu lietotājiem"
+
+msgid "Page end"
+msgstr "Lapas beigas"
+
+msgid "Piwigo Uploader"
+msgstr "Piwigo Augšupielādētājs"
+
+msgid "Read Piwigo Documentation"
+msgstr "Lasiet Piwigo Documentāciju"
+
+msgid "Start pLoader and add your photos."
+msgstr "Startējiet pLoader un pievienojiet Jūsu fotogrāfijas."
+
+msgid "Switch to clear or dark colors for administration"
+msgstr "Izvēlieties vadības paneļa gaišos vai tumšos toņus"
+
+msgid "Theme has been successfully installed"
+msgstr "Tēma sekmīgi uzinstalēta"
+
+msgid "Visit Gallery"
+msgstr "Apmeklējiet Galeriju"
+
+msgid "Visit Piwigo project website"
+msgstr "Apmeklējiet Piwigo projekta mājas lapu"
+
+msgid "Guest Settings"
+msgstr "Lietotāja Viesis iestatījumi"
+
+msgid "Main Page"
+msgstr "Galvenā Lapa"
+
+msgid "Photo Page"
+msgstr "Attēla Lapa"
+
+msgid "Activate Navigation Bar"
+msgstr "Aktivēt Navigācijas Paneli"
+
+msgid "Activate Navigation Thumbnails"
+msgstr "Aktivēt navigāciju pēc piktogrammām"
+
+msgid "Activate icon \"%s\""
+msgstr "Aktivēt ikonu \"%s\""
+
+msgid "Photo Properties"
+msgstr "Attēla raksturīgās īpašības"
+
+msgid "Allow user customization"
+msgstr "Atļaut lietotājiem pielāgot galerijas izskatu"
+
+msgid "Languages"
+msgstr "Valodas"
+
+msgid "Installed Languages"
+msgstr "Instalēt Valodas"
+
+msgid "Add New Language"
+msgstr "Pievienot Jaunu Valodu"
+
+msgid "Language has been successfully installed"
+msgstr "Valoda sekmīgi uzinstalēta"
+
+msgid "Select:"
+msgstr "Izvēlieties:"
+
+msgid "None"
+msgstr "Neviens"
+
+msgid "Invert"
+msgstr "Apvērst"
+
+msgid "Impossible to deactivate this theme, you need at least one theme."
+msgstr "Neiespējams deaktivēt šo Tēmu, nepieciešams, lai paliek vismaz viena Tēma."
+
+msgid "Webmaster status is required."
+msgstr "Nepieciešams Webmāstera statuss."
+
+msgid "Bound Theme"
+msgstr "Piesaistītā Tēma"
+
+msgid "Allow rating"
+msgstr "Atļaut novērtēt"
+
+msgid "Select at least one comment"
+msgstr "Izvēlieties vismaz vienu komentāru"
+
+msgid "Active Plugins"
+msgstr "Aktīvie Spraudņi"
+
+msgid "Inactive Plugins"
+msgstr "Neaktīvie Spraudņi"
+
+msgid "Missing Plugins"
+msgstr "Trūkstošie Spraudņi"
+
+msgid "Uninstalled Plugins"
+msgstr "Atinstalētie Spraudņi"
+
+msgid "By %s"
+msgstr " %s"
+
+msgid "Visit plugin site"
+msgstr "Apmeklēt spraudņu mājas lapu"
+
+msgid "Active Languages"
+msgstr "Aktivēt Valodas"
+
+msgid "Delete this language"
+msgstr "Izdzēst šo valodu"
+
+msgid "Forbid this language to users"
+msgstr "Aizliegt šo valodu lietotājiem"
+
+msgid "Impossible to deactivate this language, first set another language as default."
+msgstr "Neiespējams deaktivēt šo valodu, vispirms iestatiet kā noklusējumu citu valodu."
+
+msgid "Impossible to deactivate this language, you need at least one language."
+msgstr "Neiespējams deaktivēt šo valodu, nepieciešama vismaz viena valoda."
+
+msgid "Inactive Languages"
+msgstr "Deaktivizēt Valodas"
+
+msgid "Make this language available to users"
+msgstr "Padarīt šo valodu pieejamu lietotājiem"
+
+msgid "Set as default language for unregistered and new users"
+msgstr "Iestatīt kā noklusējuma valodu nereģistrētiem un jauniem lietotājiem"
+
+msgid "Add Photos"
+msgstr "Pievienot attēlus"
+
+msgid "The following tag was deleted"
+msgstr "Izdzēsta sekojošas iezīme"
+
+msgid "Miscellaneous"
+msgstr "Dažāds"
+
+msgid "Virtual Links"
+msgstr "Virtuālās saites"
+
+msgid "There is no other language available."
+msgstr "Cita valoda nav pieejama."
+
+msgid "There is no other plugin available."
+msgstr "Cits spraudnis nav pieejams."
+
+msgid "There is no other theme available."
+msgstr "Cita tēma nav pieejama."
+
+msgid "Add another set of photos"
+msgstr "Pievienot citu attēlu kopumu"
+
+msgid "Order of menubar items has been updated successfully."
+msgstr "Izvēlnes rīku kārtība atjaunināta sekmīgi"
+
+msgid "This theme was not designed to be directly activated"
+msgstr "Šo tēmu nevar aktivet tieši"
+
+msgid "Pending Comments"
+msgstr "Komentaŗu pārbaude"
+
+msgid "In your php.ini file, the upload_max_filesize (%sB) is bigger than post_max_size (%sB), you should change this setting"
+msgstr "Jūsu php.ini faila upload_max_filesize (%sB) ir lielāks par post_max_size (%sB), jums jāizmaina šis iestatījums"
+
+msgid "Exif extension not available, admin should disable exif use"
+msgstr "Exif paplašinājums nav iespējams, adminam jāaizliedz exif lietošana"
+
+msgid "The uploaded file exceeds the upload_max_filesize directive in php.ini: %sB"
+msgstr "Augšupielādētais fails pārsniedz upload_max_filesize direktīvu php.ini: %sB"
+
+msgid "The uploaded files exceed the post_max_size directive in php.ini: %sB"
+msgstr "Augšupielādētie faili pārsniedz post_max_size direktīvu php.ini: %sB"
+
+msgid "The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form"
+msgstr "Augšuplādējamais fails pārsniedz MAX_FILE_SIZE direktīvu, kas noteikta HTML formā"
+
+msgid "The uploaded file was only partially uploaded"
+msgstr "Augšuplādētais fails tikai daļēji augšupielādēts"
+
+msgid "No file was uploaded"
+msgstr "Fails netika augšupielādēts"
+
+msgid "Missing a temporary folder"
+msgstr "Pazudusi pagaidu mape"
+
+msgid "Failed to write file to disk"
+msgstr "Kļūda ierakstot failu diskā"
+
+msgid "File upload stopped by extension"
+msgstr "Faila augšupielāde apturēta dēļ paplašinājuma"
+
+msgid "Unknown upload error"
+msgstr "Nezināma augšupielādes kļūda"
+
+msgid "Error on file \"%s\" : %s"
+msgstr "Kļūda failā \"%s\" : %s"
+
+msgid "Menu Management"
+msgstr "Izvēlnes Pārvalde"
+
+msgid "automatic order"
+msgstr "automātiskais kārtojums"
+
+msgid "manual order"
+msgstr "manuālais kārtojums"
+
+msgid "Albums automatically sorted"
+msgstr "Albūmi ir automātiski  sakārtoti"
+
+msgid "Batch Manager"
+msgstr "Sērijveida failu pārvaldnieks"
+
+msgid "include child albums"
+msgstr "ietvert radniecīgos albūmus"
+
+msgid "Selection"
+msgstr "Izvēle"
+
+msgid "Action"
+msgstr "Darbība"
+
+msgid "Set author"
+msgstr "Ievadīt autoru"
+
+msgid "Set title"
+msgstr "Ievadīt virsrakstu"
+
+msgid "Set creation date"
+msgstr "Ievadīt izveides datumu"
+
+msgid "Apply action"
+msgstr "Veikt darbību"
+
+msgid "on the %d selected photos"
+msgstr "uz %d atlasītajiem fotoattēliem"
+
+msgid "%d of %d photos selected"
+msgstr "%d no %d atlasītajiem fotoattēliem"
+
+msgid "No photo selected, %d photos in current set"
+msgstr "Nav atlasītu foto, %d fotoattēli tekošajā sērijā"
+
+msgid "All %d photos are selected"
+msgstr "Visi %d foto ir atlasīti"
+
+msgid "remove this filter"
+msgstr "noņemt šo filtru"
+
+msgid "Duplicates"
+msgstr "dublikāti"
+
+msgid "Add a filter"
+msgstr "Pievienot filtru"
+
+msgid "Remove all filters"
+msgstr "Noņemt visus filtrus"
+
+msgid "Refresh photo set"
+msgstr "Atjaunināt foto sēriju"
+
+msgid "The whole page"
+msgstr "Visa lapa"
+
+msgid "The whole set"
+msgstr "Visa sērija"
+
+msgid "No photo in the current set."
+msgstr "Nav fotoattēlu esošajā sērijā."
+
+msgid "No photos selected, no actions possible."
+msgstr "Nav atlasītu fotoattēlu, nekādas darbības nav iespējamas."
+
+msgid "Choose an action"
+msgstr "Izvēlēties darbību"
+
+msgid "remove author"
+msgstr "izdzēst autoru"
+
+msgid "Type here the author name"
+msgstr "Ievadīt autora vārdu šeit"
+
+msgid "remove title"
+msgstr "dzēst nosaukumu"
+
+msgid "Type here the title"
+msgstr "Ievadīt nosaukumu šeit"
+
+msgid "remove creation date"
+msgstr "dzēst izveides datumu"
+
+msgid "Album photos associated to the following albums: %s"
+msgstr "Albūma fotoattēli saistīti ar sekojošiem albūmiem: %s"
+
+msgid "Delete orphan tags"
+msgstr "Dzēst nepiesaistītās cilnes (iezīmes)"
+
+msgid "delete photo"
+msgstr "Dzēst fotoattēlu"
+
+msgid "Orphan tags deleted"
+msgstr "Nepiesaistītās cilnes izdzēstas"
+
+msgid "Week starts on"
+msgstr "Nedēļa sākas ar"
+
+msgid "You have %d orphan tags: %s."
+msgstr "Jums ir %d nepiesaistīto cilņu: %s."
+
+msgid "Remove from caddie"
+msgstr "Izņemt no groza"
+
+msgid "Themes which need upgrade"
+msgstr "Tēmas, kurām nepieciešami jauninājumi"
+
+msgid "Languages which need upgrade"
+msgstr "Valodas, kurām nepieciešami jauninājumi"
+
+msgid "All themes are up to date."
+msgstr "Visas tēmas ir atjauninātas."
+
+msgid "All plugins are up to date."
+msgstr "Visi spraudņi ir atjaunināti."
+
+msgid "All languages are up to date."
+msgstr "Visas valodas ir atjauninātas."
+
+msgid "Visit theme site"
+msgstr "Apmeklēt tēmu vietni"
+
+msgid "Visit language site"
+msgstr "Apmeklēt valodu vietni"
+
+msgid "New Version"
+msgstr "Jauna Versija"
+
+msgid "Obsolete Plugins"
+msgstr "Nepiesaistītie Spraudņi"
+
+msgid "WARNING! This plugin does not seem to be compatible with this version of Piwigo."
+msgstr "UZMANĪBU! Šķiet, ka šis spraudnis nav saderīgs ar šo Piwigo versiju."
+
+msgid "Do you want to activate anyway?"
+msgstr "Vai vēlaties aktivēt jebkurā gadījumā?"
+
+msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
+msgstr "TAGAD ŠIS SPRAUDNIS IR PIWIGO KODOLA SASTĀVDAĻA! VAI NOINSTALĒT TO!"
+
+msgid "ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW."
+msgstr "KĻŪDA: ŠIS SPRAUDNIS IZTRŪKST, BET TAS IR INSTALĒTS! VAI NOINSTALĒT TO"
+
+msgid "display"
+msgstr "attēlot"
+
+msgid "Thumbnails generation in progress..."
+msgstr "Notiek sīkbilžu ģenerēšanas (veidošanas) process..."
+
+msgid "Photos generation in progress..."
+msgstr "Notiek foto izveide..."
+
+msgid "%s photos have been regenerated"
+msgstr "izveidotas %s fotogrāfijas"
+
+msgid "%s photos can not be regenerated"
+msgstr "%s fotogrāfijas nav iespējams reģenerēt"
+
+msgid "new"
+msgstr "jauns"
+
+msgid "No results"
+msgstr "Nav rezultātu"
+
+msgid "Searching..."
+msgstr "Meklē..."
+
+msgid "Type in a search term"
+msgstr "Ierakstiet meklējamo vārdu"
+
+msgid "Deactivate all"
+msgstr "Deaktivēt visu"
+
+msgid "Default photos order"
+msgstr "Foto kārtojums pēc noklusējuma"
+
+msgid "Restore"
+msgstr "Atjaunot"
+
+msgid "Restore default configuration. You will lose your plugin settings!"
+msgstr "Atjaunot noklusējuma konfigurāciju. Jūs zaudēsit savus spraudņa iestatījumus!"
+
+msgid "Show menubar"
+msgstr "Rādīt izvēles joslu"
+
+msgid "Updates"
+msgstr "Jauninājumi"
+
+msgid "Update in progress... Please wait."
+msgstr "Notiek jaunināšana... Lūdzu uzgaidiet."
+
+msgid "Ignore this update"
+msgstr "Ignorēt šo jauninājumu"
+
+msgid "Reset ignored updates"
+msgstr "Atjaunot ignorētos jauninājumus"
+
+msgid "Update All"
+msgstr "Jaunināt visu"
+
+msgid "ERROR"
+msgstr "KĻŪDA"
+
+msgid "Update Complete"
+msgstr "Jauninājums Paveikts"
+
+msgid "Piwigo Update"
+msgstr "Piwigo Jauninājums"
+
+msgid "Extensions Update"
+msgstr "Paplašinājumu Jauninājums"
+
+msgid "All extensions are up to date."
+msgstr "Visi paplašinājumi ir atjaunināti."
+
+msgid "Following plugins may not be compatible with the new version of Piwigo:"
+msgstr "Sekojoši spraudņi var nesaderēt ar jauno Piwigo versiju:"
+
+msgid "Following themes may not be compatible with the new version of Piwigo:"
+msgstr "Sekojošas tēmas var nesaderēt ar jauno Piwigo versiju:"
+
+msgid "I decide to update anyway"
+msgstr "Esmu izlēmis veikt jauninājumu jebkurā gadījumā"
+
+msgid "Update to Piwigo %s"
+msgstr "Jaunināt uz Piwigo %s"
+
+msgid "Two updates are available"
+msgstr "Pieejami divi jauninājumi"
+
+msgid "This is a minor update, with only bug corrections."
+msgstr "Šis ir nenozīmīgs jauninājums, tikai daži defektu labojumi."
+
+msgid "This is a major update, with <a href=\"%s\">new exciting features</a>."
+msgstr "Šis ir svarīgs jauninājums, ar <a href=\"%s\">jaunām svarīgām iespējām</a>."
+
+msgid "Some themes and plugins may be not available yet."
+msgstr "Dažas tēmas un spraudņi vēl var būt nav pieejami."
+
+msgid "You can update to Piwigo %s directly, without upgrading to Piwigo %s (recommended)."
+msgstr "Jūs varat jaunināt uz Piwigo %s tieši, neuzlabojot uz Piwigo %s (ieteicams)."
+
+msgid "Save Template Directory"
+msgstr "Saglabāt veidņu mapi"
+
+msgid "Some upgrades are available for extensions."
+msgstr "Paplašinājumiem pieejami daži uzlabojumi."
+
+msgid "Ignore All"
+msgstr "Ignorēt Visu"
+
+msgid "Crop"
+msgstr "Apgriezt"
+
+msgid "Width"
+msgstr "Platums"
+
+msgid "Height"
+msgstr "Augstums"
+
+msgid "Follow Orientation"
+msgstr "Sekot Orientācijai"
+
+msgid "Graphics Library"
+msgstr "Grafikas Bibliotēka"
+
+msgid "Activate icon \"new\" next to albums and pictures"
+msgstr "Aktivēt ikonu \"new\" (jauns) blakus albūmiem un attēliem"
+
+msgid "Add a criteria"
+msgstr "Pievienot kritēriju"
+
+msgid "You can't define a default photo order because you have a custom setting in your local configuration."
+msgstr "Nav iespējams izveidot foto kārtošanas secību pēc noklusējuma, jo jūsu izveidotajā lokālajā konfigurācijā ir jūsu pielāgotie iestatījumi."
+
+msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
+msgstr "Jūs savā  lokālajā konfigurācijas failā esat iestatīts  <i>$conf['order_by']</i>, šis parametrs ir novecojis, lūdzu izdzēšiet to vai pārdēvējiet to sekojoši : <i>$conf['order_by_custom']</i> !"
+
+msgid "Average rate"
+msgstr "Vidējais novērtejums"
+
+msgid "Rate"
+msgstr "Vērtējums"
+
+msgid "Learn more"
+msgstr "Uzzini vairak"
+
+msgid "... or "
+msgstr "... vai "
+
+msgid "Create"
+msgstr "Izveidot"
+
+msgid "Start Upload"
+msgstr "Sākt augšupielādi"
+
+msgid "You are using the Flash uploader. Problems? Try the <a href=\"%s\">Browser uploader</a> instead."
+msgstr "Jūs lietojat Flash augšuplādētāju. Problēmas? Tā vietā mēģiniet <a href=\"%s\">Pārlūka augšuplādētāju</a>."
+
+msgid "You are using the Browser uploader. Try the <a href=\"%s\">Flash uploader</a> instead."
+msgstr "Jūs lietojat Pārlūka augšuplādētāju. Tā vietā mēģiniet <a href=\"%s\">Flash augšuplādētāju</a>."
+
+msgid "Maximum file size: %sB."
+msgstr "Faila maksimālais izmērs: %sB."
+
+msgid "Allowed file types: %s."
+msgstr "Atļautie failu tipi: %s."
+
+msgid "Approximate maximum resolution: %dM pixels (that's %dx%d pixels)."
+msgstr "Aptuvenā maksimālā izšķirtspēja: %dM pixeļi (tas ir %dx%d pixeļi)."
+
+msgid "Manage Permissions"
+msgstr "Pārvaldīt Piekļuves Atļaujas"
+
+msgid "Photo %s of %s"
+msgstr " %s foto no %s"
+
+msgid "show details"
+msgstr "rādīt detaļas"
+
+msgid "hide details"
+msgstr "paslēpt detaļas"
+
+msgid "Merge tags"
+msgstr "Apvienot (sapludināt) cilnes (tags)"
+
+msgid "Select the destination tag"
+msgstr "Izvēlēties mērķa cilni"
+
+msgid "(this tag will be deleted)"
+msgstr "(šī cilne (tag) tiks izdzēsta)"
+
+msgid "Confirm merge"
+msgstr "Apstiprināt apvienošanu"
+
+msgid "Merge selected tags"
+msgstr "Apvienot izvēlētās cilnes"
+
+msgid "No destination tag selected"
+msgstr "Nav izvēlēta mērķa cilne"
+
+msgid "Tags <em>%s</em> merged into tag <em>%s</em>"
+msgstr "Cilnes (tags) <em>%s</em> apvienotas cilnē <em>%s</em>"
+
+msgid "Select at least two tags for merging"
+msgstr "Izvēlaties vismaz divas cilnes apvienošanai"
+
+msgid "Select an album"
+msgstr "Izvēlaties albūmu"
+
+msgid "By default, Piwigo will create a new websize from the HD (high definition) version of your photo."
+msgstr "Pēc noklusēšanas Piwigo izveidos jaunu foto webizmēru jūsējai HD (augstas izšķirtspējas) attēla versijai."
+
+msgid "If no HD is available and if the current websize is bigger than resize dimensions, Piwigo will move it as HD and create a downsized websize photo from it."
+msgstr "Ja nav neviena HD un, ja esošais webizmērs ir lielāks par atļautajiem izmēriem, Piwigo to uzskata par HD attēlu un no šī attēla izveidos atbilsoša webizmēra attēlu."
+
+msgid "An error has occured during upgrade."
+msgstr "Atjauninot notikusi kļūme."
+
+msgid "An error has occured during extract. Please check files permissions of your piwigo installation.<br><a href=\"%s\">Click here to show log error</a>."
+msgstr "Atpakošanas laikā notikusi kļūme. Pārbaudiet Jūsu piwigo instalācijas failu atļaujas.<br><a href=\"%s\">Spiest te, lai redzētu log kļūdas</a>."
+
+msgid "Piwigo cannot retrieve upgrade file from server"
+msgstr "Piwigo nevar ielādēt jauninājuma failu no servera"
+
+msgid "Zoom"
+msgstr "Tālummaiņa"
+
+msgid "%s has been successfully updated."
+msgstr "%s ir sekmīgi atjaunināts."
+
+msgid "Add tags"
+msgstr "Pievienot tagus (birkas)"
+
+msgid "Add to caddie"
+msgstr "Pievienot grozam"
+
+msgid "Last import"
+msgstr "Pēdējais imports"
+
+msgid "Predefined filter"
+msgstr "Definēts filtrs"
+
+msgid "With no album"
+msgstr "Bez albūma"
+
+msgid "With no tag"
+msgstr "Bez taga"
+
+msgid "With no virtual album"
+msgstr "Bez virtuālā albūma"
+
+msgid "Activate comments"
+msgstr "Aktivizēt komenārus"
+
+msgid "Default comments order"
+msgstr "Komentāru kārtojums pēc noklusējuma"
+
+msgid "Photo name"
+msgstr "Foto nosaukums"
+
+msgid "Send connection settings by email"
+msgstr "Nosūtīt konekcijas iestatījumus ar e-pastu"
+
+msgid "The original image quality must be a number between %d and %d"
+msgstr "Oriģinālā attēla kvalitātei jābūt skaitlim diapazonā starp %d un %d"
+
+msgid "The original maximum height must be a number between %d and %d"
+msgstr "Oriģināla maksimālajam augstumam jābūt skaitlim starp %d un %d"
+
+msgid "The original maximum width must be a number between %d and %d"
+msgstr "Oriģināla maksimālajam platumam jābūt skaitlim starp %d un %d"
+
+msgid "Resize after upload"
+msgstr "Mainīt izmērus pēc augšupielāde"
+
+msgid "Original Size"
+msgstr "Oriģinālie Izmēri"
+
+msgid "A locked gallery is only visible to administrators"
+msgstr "Bloķētā galerija ir redzama tikai administratoriem"
+
+msgid "Unlock gallery"
+msgstr "Atbloķēt galeriju"
+
+msgid "Gallery unlocked"
+msgstr "Galerija ir atbloķēta"
+
+msgid "Notify administrators when a comment is"
+msgstr "Ziņot administratoriem, kad komentārs ir"
+
+msgid "modified"
+msgstr "modificēts"
+
+msgid "pending validation"
+msgstr "gaida validāciju"
+
+msgid "Save visits in history for"
+msgstr "Ieglabāt vēsturē apmeklējumus priekš"
+
+msgid "simple visitors"
+msgstr "parastiem apmeklētājiem"
+
+msgid "registered users"
+msgstr "reģistrētiem lietotājiem"
+
+msgid "administrators"
+msgstr "administratoriem"
+
+msgid "This album contains %d photos, added on %s."
+msgstr "Šinī albūmā ir %d fotogrāfiju, kas pievienotas %s."
+
+msgid "This album contains %d photos, added between %s and %s."
+msgstr "Šinī albūmā ir %d fotogrāfiju, kas pievienotas laikā starp %s un %s."
+
+msgid "This album contains no photo."
+msgstr "Šinī albūmā nav fotogrāfiju."
+
+msgid "Not cropped correctly?"
+msgstr "Nav korekti apgriezts?"
+
+msgid "Center of interest"
+msgstr "Interešu centrs"
+
+msgid "Move to album"
+msgstr "Pārvietot uz albūmu"
+
+msgid "You can activate only one mobile theme."
+msgstr "Jūs varat aktivēt tikai vienu mobilo tēmu."
+
+msgid "Automatic sort order"
+msgstr "Automātiskās kārtošanas režīms"
+
+msgid "apply automatic sort order"
+msgstr "pielietot automātiskās kārtošanas režīmu"
+
+msgid "Save manual order"
+msgstr "Saglabāt manis veidoto kārtojumu"
+
+msgid "cancel manual order"
+msgstr "atcelt manis veidoto kārtojumu"
+
+msgid "Cancel"
+msgstr "Atcelt"
+
+msgid "List"
+msgstr "Saraksts"
+
+msgid "Web Form"
+msgstr "Web Forma"
+
+msgid "Applications"
+msgstr "Aplikācijas"
+
+msgid "Available on"
+msgstr "Pieejams uz"
+
+msgid "Piwigo for iOS (iPhone, iPad, iPod Touch)"
+msgstr "Piwigo priekš iOS (iPhone, iPad, iPod Touch)"
+
+msgid "<em>Piwigo for iOS</em> application empowers you to connect to your Piwigo gallery from your iPhone, iPad or iPod Touch, create some albums and upload several photos at once."
+msgstr "<em>Piwigo priekš iOS</em> aplikācijas, kas ļauj piekļūt jūsu  Piwigo galerijai no iPhone, iPad vai iPod Touch, un bez pūlēm  izveidot jaunus albūmus un ielādēt jaunas fotogrāfijas."
+
+msgid "Piwigo for Android"
+msgstr "Piwigo priekš Android"
+
+msgid "<em>Piwigo for Android</em> application empowers you to connect your Android phone or table to your Piwigo gallery, create some albums and upload several photos at once."
+msgstr "<em>Piwigo priekš Android</em> aplikācija dod jums iespēju savienot savu Android telefonu vai iekārtu ar jūsu Piwigo galeriju, bez pūlēm izveidot jaunus albūmus un ielādēt jaunas fotogrāfijas."
+
+msgid "Piwigo Publish plugin for Lightroom"
+msgstr "Piwigo Publicēšanas spraudnis priekš Lightroom"
+
+msgid "Adobe Photoshop Lightroom is a photography software designed to manage large quantities of digital images and doing post production work."
+msgstr "Adobe Photoshop Lightroom ir fotoredaktora programmatūra, kas domāta liela apjoma digitālu attēlu pārvaldīšanai un  pirmsproducēšanas darbu veikšanai."
+
+msgid "The Piwigo publish Plug-in allows you to export and synchronize photos from Lightroom directly to your Piwigo photo gallery."
+msgstr "Piwigo publicēšanas spraudnis ļauj jums eksportēt un sinhronizēt attēlus Lightroom aplikācijā ar jūsu  Piwigo foto galeriju."
+
+msgid "Piwigo publish plugin for Shotwell"
+msgstr "Piwigo publicēšanas spraudnis priekš Shotwell"
+
+msgid "Shotwell is an open source digital photo organizer that runs on Linux. It is the default photo manager in Ubuntu and Fedora."
+msgstr "Shotwell ir atvērtā koda foto organizators, kas darbojas Linux vidē. Tas ir  Ubuntu and Fedora fotoredaktors pēc noklusēšanas."
+
+msgid "On your Linux, simply install Shotwell with your package manager and the activate Piwigo publishing option."
+msgstr "Savā Linux vienkārši instalējiet Shotwell, izmantojot savu instalācijas menedžeri un aktivējiet Piwigo publicēšanas opciju."
+
+msgid "Piwigo publish plugin for digiKam"
+msgstr "Piwigo publicēšanas spraudnis priekš digiKam"
+
+msgid "digiKam is an advanced digital photo management free software for Linux, Windows, and MacOSX."
+msgstr "digiKam ir bezmaksas advancēta digitālo foto apstrādes aplikācija priekš Linux, Windows, and MacOSX."
+
+msgid "digiKam is designed for photographers who want to view, manage, edit, enhance, organize, tag, and share photographs."
+msgstr "digiKam radīta priekš fotogrāfiem, kas grib pārraudzīt, pārvaldīt, rediģēt, uzlabot, organizēt, iezīmēt un dalīties ar savām fotogrāfijām."
+
+msgid "To export your photos from digiKam to Piwigo, simply install digiKam and the Kipi-plugins."
+msgstr "Lai eksportētu savus attēlus no digiKam uz Piwigo, vienkārši instalējiet digiKam un  Kipi-spraudņus."
+
+msgid "Piwigo export plugin for iPhoto"
+msgstr "Piwigo eksporta spraudnis priekš iPhoto"
+
+msgid "iPhoto is the default photo manager on MacOSX. The Piwigo export plugin let you create new albums and export your photos directly from iPhoto to your Piwigo photo gallery."
+msgstr "iPhoto ir foto menedžeris pēc noklusēšanas  MacOSX vidē. Piwigo eksporta spraudnis ļauj jums izveidot jaunus albūmus un eksportēt jūsu fotogrāfijas pa taisno no iPhoto uz jūsu Piwigo foto galeriju."
+
+msgid "Piwigo export plugin for Aperture"
+msgstr "Piwigo eksporta spraudnis priekš Aperture"
+
+msgid "Aperture is a powerful tool to refine images and manage massive libraries on Mac."
+msgstr "Aperture ir jaudīgs rīks attēlu šķirošanai un masīvu bibliotēku pārvaldīšanai  Mac vidē."
+
+msgid "Aperture is designed for professional photographers with iPhoto simplicity."
+msgstr "Aperture ir domāts profesionāliem fotogrāfiem ar iPhoto vienkāršību."
+
+msgid "The Piwigo export plugin allows you to create albums and export photos."
+msgstr "Piwigo eksporta spraudnis ļauj jums veidot albūmus un eksportēt fotogrāfijas."
+
+msgid "ReGalAndroid (RemoteGallery client for Android) is an open source (GPL v3) Piwigo client for the Android platform."
+msgstr "ReGalAndroid (Android AttālinātāsGalerijs klients) ir atvērtā koda (GPL v3) Piwigo klients priekš Android platformas."
+
+msgid "Features include gallery browsing, album creation and photo upload."
+msgstr "Iespējas sevī ietver galeriju pārlūkošanu, albūmu veidošanu un fotogrāfiju augšupielādi."
+
+msgid "Generate multiple size images"
+msgstr "Ģenerēt dažādu izmēru attēlus"
+
+msgid "Delete multiple size images"
+msgstr "Dzēst dažādu izmēru attēlus"
+
+msgid "any visitor can see this album"
+msgstr "jebkurš apmeklētājs var redzēt šo albūmu"
+
+msgid "visitors need to login and have the appropriate permissions to see this album"
+msgstr "apmeklētājiem jāielogojas un jābūt attiecīgām atļaujām, lai redzētu šo albūmu"
+
+msgid "Groups and users"
+msgstr "Grupas un lietotāji"
+
+msgid "Permission granted for groups"
+msgstr "Atļauja piešķirta grupām"
+
+msgid "Select groups..."
+msgstr "Atlasīt grupas..."
+
+msgid "There is no group in this gallery."
+msgstr "Šajā galerijā nav grupu."
+
+msgid "Permission granted for users"
+msgstr "Atļauja piešķirta lietotājiem"
+
+msgid "Select users..."
+msgstr "Atlasīt lietotājus..."
+
+msgid "%u users have automatic permission because they belong to a granted group."
+msgstr "%u lietotājiem ir automātiskās piekļuves tiesības, jo tie pieder pie privileģētās grupas."
+
+msgid "include photos with lower privacy level"
+msgstr "iekļaut fotogrāfijas ar zemāku privātuma līmeni"
+
+msgid "custom"
+msgstr "Lietotāja"
+
+msgid "No group is permitted to see this private album"
+msgstr "Grupai nav atļauts skatīt šo privāto albūmu"
+
+msgid "Permission management"
+msgstr "Atļauju pārvaldīšana"
+
+msgid "Photo sizes with crop"
+msgstr "Foto izmēri pēc apgriešanas"
+
+msgid "The center of interest is the most meaningful zone in the photo."
+msgstr "Interešu centrs ir visnozīmīgākā zona fotogrāfijā."
+
+msgid "For photo sizes with crop, such as \"Square\", Piwigo will do its best to include the center of interest."
+msgstr "Priekš apgriezto foto izmēriem, tādiem kā “Kvadrāts”, Piwigo paveic to vislabāko iekļaujot interešu centru."
+
+msgid "By default, the center of interest is placed in the middle of the photo."
+msgstr "Pēc noklusējuma interešu centrs atrodas fotogrāfijas vidū."
+
+msgid "Select a zone with your mouse to define a new center of interest."
+msgstr "Ar peles palīdzību izvēlieties jaunu interešu centru."
+
+msgid "X Position"
+msgstr "X Pozīcija"
+
+msgid "Y Position"
+msgstr "Y Pozīcija"
+
+msgid "X Repeat"
+msgstr "X Atkārtot"
+
+msgid "Opacity"
+msgstr "Caurspīdīgums"
+
+msgid "top left corner"
+msgstr "augšējais kreisais stūris"
+
+msgid "top right corner"
+msgstr "augšējais labais stūris"
+
+msgid "middle"
+msgstr "vidus"
+
+msgid "bottom left corner"
+msgstr "apakšējais kreisais stūris"
+
+msgid "bottom right corner"
+msgstr "apakšējais labais stūris"
+
+msgid "Select a file"
+msgstr "Izvēlēties failu"
+
+msgid "add a new watermark"
+msgstr "pievienot jaunu ūdenszīmi"
+
+msgid "Apply watermark if width is bigger than"
+msgstr "Lietot ūdenszīmi, ja platums ir lielāks par"
+
+msgid "Apply watermark if height is bigger than"
+msgstr "Lietot ūdenszīmi, ja augstums ir lielāks par"
+
+msgid "Multiple Size"
+msgstr "Vairāki izmēri"
+
+msgid "Watermark"
+msgstr "Ūdenszīme"
+
+msgid "Original file : %s"
+msgstr "Oriģinālais fails : %s"
+
+msgid "Posted %s on %s"
+msgstr "Publicēts %s uz %s"
+
+msgid "Added by %s"
+msgstr "Pievienojis %s"
+
+msgid "Visited %d times"
+msgstr "Apmeklēts %d reizes"
+
+msgid "Numeric identifier : %d"
+msgstr "Ciparveida identifikators : %d"
+
+msgid "%s ago"
+msgstr "%s atpakaļ"
+
+msgid "%s in the future"
+msgstr "%s nākotnē"
+
+msgid "Rated %d times, score : %.2f"
+msgstr "Vērtēts %d reizes, vērtējums : %.2f"
+
+msgid "%d year"
+msgstr "%d gads"
+
+msgid "%d years"
+msgstr "%d gadi"
+
+msgid "%d month"
+msgstr "%d mēnesis"
+
+msgid "%d months"
+msgstr "%d mēneši"
+
+msgid "%d day"
+msgstr "%d diena"
+
+msgid "%d days"
+msgstr "%d dienas"
+
+msgid "%d hour"
+msgstr "%d stunda"
+
+msgid "%d hours"
+msgstr "%d stundas"
+
+msgid "%d minute"
+msgstr "%d minūte"
+
+msgid "%d minutes"
+msgstr "%d minūtes"
+
+msgid "%d second"
+msgstr "%d sekunde"
+
+msgid "%d seconds"
+msgstr "%d sekundes"
+
+msgid "Sharpen"
+msgstr "Uzspicēts"
+
+msgid "%d week"
+msgstr "%d nedēļa"
+
+msgid "%d weeks"
+msgstr "%d nedēļas"
+
+msgid "Edit photo"
+msgstr "Rediģēt foto"
+
+msgid "create a new site"
+msgstr "izveidot jaunu web lapu"
+
+msgid "No order field selected"
+msgstr "Nv izvēlēts kārtošanas lauks"
+
+msgid "Duplicate selected tags"
+msgstr "Dublēt atlasītās cilnes"
+
+msgid "Name of the duplicate"
+msgstr "Dublikāta nosaukums"
+
+msgid "Source tag"
+msgstr "Avota cilne"
+
+msgid "Tag \"%s\" is now a duplicate of \"%s\""
+msgstr "Cilne \"%s\" tagad ir \"%s\" dublikāts"
+
+msgid "Portrait"
+msgstr "Portrets"
+
+msgid "Panorama"
+msgstr "Panorāma"
+
+msgid "Minimum width"
+msgstr "Minimālais platums"
+
+msgid "Minimum height"
+msgstr "Minimālais augstums"
+
+msgid "Landscape"
+msgstr "Ainava"
+
+msgid "Number of albums per page"
+msgstr "Albumu skaits lapā"
+
+msgid "View in gallery"
+msgstr "Ieskatīties galarijā"
+
+msgid "Manage photos"
+msgstr "Pārvaldīt fotogrāfijas"
+
+msgid "Ratio"
+msgstr "Attiecība"
+
+msgid "between %d and %d pixels"
+msgstr "starp %d un %d pikseļiem"
+
+msgid "between %.2f and %.2f"
+msgstr "starp %.2f un %.2f"
+
+msgid "Type here the name of the new group"
+msgstr "Rakstiet šeit jaunās grupas nosaukumu"
+
+msgid "This group will be unset to default"
+msgstr "Šī grupa vairs netiks izmantota pēc noklusējuma"
+
+msgid "This group will be set to default"
+msgstr "Šī grupa tiks izmantots pēc noklusējuma"
+
+msgid "Rename"
+msgstr "Pārdēvēt"
+
+msgid "Please select at least two groups"
+msgstr "Lūdzu atlasiet vismaz divas grupas"
+
+msgid "No members to manage"
+msgstr "Nav biedru, ko pārvaldīt"
+
+msgid "No groups selected, no actions possible."
+msgstr "Nav izvēlēta neviena grupa, nekādas darbības nav iespējamas."
+
+msgid "Manage the members"
+msgstr "Pārvaldīt biedrus"
+
+msgid "Merge selected groups"
+msgstr "Sapludināt atlasītās grupas"
+
+msgid "Duplicate"
+msgstr "Dublikāts"
+
+msgid "Purge user cache"
+msgstr "Iztīrīt lietotāja kešatmiņu"
+
+msgid "The picture dimensions will be reduced to %dx%d pixels."
+msgstr "Attēla izmēri tiks samazināti uz %dx%d pikseļiem. "
+
+msgid "Resize after upload disabled due to the use of GD as graphic library"
+msgstr "Sakarā ar GD kā grafiskās bibliotēkas izmantošanu, attēla izmēra mainīšana pēc augšupielādes ir atslēgta"
+
+msgid "Select at least one tag"
+msgstr "Atlasiet vismaz vienu tagu"
+
+msgid "Basic settings"
+msgstr "Pamata iestījumi"
+
+msgid "General"
+msgstr "Vispārīgi"
+
+msgid "Mail theme"
+msgstr "Pasta tēma"
+
+msgid "on the %d selected users"
+msgstr " %d atlasītiem lietotājiem"
+
+msgid "Showing %s to %s of %s users"
+msgstr "Parāda no %s līdz %s no %s lietotājiem"
+
+msgid "Registered on %s, %s."
+msgstr "Reģistrēts %s, %s."
+
+msgid "User %s updated"
+msgstr "%s lietotājs atjaunināts"
+
+msgid "Update user"
+msgstr "Atjaunināt lietotāju"
+
+msgid "Show %s users"
+msgstr "Parādīt %s lietotājus"
+
+msgid "No users selected, no actions possible."
+msgstr "Neviens lietotāja nav atlasīts, darbība nav iespējama."
+
+msgid "No user selected of %d users"
+msgstr "Neviens no %d lietotājiem nav atlasīts"
+
+msgid "No matching user found"
+msgstr "Nav atrasti atbilstoši lietotāji"
+
+msgid "Users modified"
+msgstr "Lietotāji modoficēti"
+
+msgid "User %s added"
+msgstr "%s lietotājs pievienots"
+
+msgid "Password updated"
+msgstr "Parole atjaunināta"
+
+msgid "%d of %d users selected"
+msgstr "%d no %d lietotājiem atlasīti"
+
+msgid "(filtered from %s total users)"
+msgstr "(izfiltrēti no %s kopējiem lietotājiem)"
+
+msgid "All %d users are selected"
+msgstr "Visi %d lietotāji ir atlasīti"
+
+msgid "Last visit on %s, %s."
+msgstr "Pēdējais apmeklējums %s, %s."
+
+msgid "Loading..."
+msgstr "Ielādējas"
+
+msgid "Change username"
+msgstr "Nomainīt lietotājvārdu"
+
+msgid "Change password"
+msgstr "Nomainīt paroli"
+
+msgid "Open user details"
+msgstr "Atvērt lietotāja informāciju"
+
+msgid "Close user details"
+msgstr "Aizvērt lietotāja informāciju"
+
+msgid "close"
+msgstr "aizvērt"
+
+msgid "Activate it now"
+msgstr "Aktivēt to tagad"
+
+msgid "Mail address is mandatory for registration"
+msgstr "Lai reģistrētos, e-pasta adrese obligāta"
+
+msgid "Impossible to deactivate the default theme."
+msgstr "Neiespējami deaktivēt noklusējuma tēmu"
+
+msgid "Empty caddie"
+msgstr "Iztukšot vāceli"
+
+msgid "Allow users to add a link to their website"
+msgstr "Ļaut lietotājiem pievienot saiti uz savu m;ajas lapu"
+
+msgid "The settings for the guest are from the %s user"
+msgstr "Viesa iestatījumi ir no %s lietotāja"
+
+msgid "No and unlock sub-albums"
+msgstr "Atbloķēt apakšalbūmus"
+
+msgid "based on"
+msgstr "pamatots uz"
+
+msgid "between %s and %s MB"
+msgstr "starp %s un %s MB"
+
+msgid "width & height"
+msgstr "platums&augstums"
+
+msgid "file name"
+msgstr "faila nosaukums"
+
+msgid "date & time"
+msgstr "datums&laiks"
+
+msgid "Upload in progress"
+msgstr "Notiek augšupielāde"
+
+msgid "Each email sent will contain its own automatic authentication key on links, valid for %s."
+msgstr "Katram nosūtītajam e-pastam būs sava automātiskā autentifikācijas atslēga saitēm, derīga %s."
+
+msgid "For security reason, authentication keys do not work for administrators."
+msgstr "Drošības apsvērumu dēļ, autentifikācijas atslēgas nestrādā administratoriem."
+
+msgid "No user is permitted to see this private album"
+msgstr "Nevienam lietotājam nav atļauts redzēt šo privāto albumu"
+
+msgid "Y Repeat"
+msgstr "YAtkārtojumi"
+
+msgid "Recipients"
+msgstr "Saņēmēji"
+
+msgid "Orphans"
+msgstr "Nezināmie"
+
+msgid "No recipient selected"
+msgstr "Nav izvēlēts neviens saņēmējs"
+
+msgid "Edit user"
+msgstr "Rediģēt lietotāju"
+
+msgid "Delete %d orphan photos"
+msgstr "Dzēst %d nezināmos foto "
+
+msgid "orphans to delete"
+msgstr "nepiesaistītie dzēšanai"
+
+msgid "No tags selected, no actions possible."
+msgstr "Nav izvēlētu tegu, nekādas darbības nav iespējamas."
+
+msgid "Select tags"
+msgstr "Izvēlieties tegus"
+
+msgid "Piwigo %s is available, please update"
+msgstr "Piwigo %s ir pieejams, lūdzu atjauniniet"
+
+msgid "Storage used"
+msgstr "Izmantotā krātuve"
+
+msgid "No filter on album. Select one or type to search"
+msgstr "Nav albuma filtra. Izvēlieties vienu vai ievadiet, lai meklētu"
+
+msgid "Dashboard"
+msgstr "Informācijas panelis"
+
+msgid "(determined from photos)"
+msgstr "(noteikts no fotogrāfijas)"
+
+msgid "delete album and the %d orphan photos"
+msgstr "dzēst albūmu un %d nepiesaistītos foto"
+
+msgid "checksum"
+msgstr "kontrolsumma"
+
+msgid "delete only album, not photos"
+msgstr "dzēst tikai albūmu, ne fotogrāfijas"
+
+msgid "Display form"
+msgstr "Rādīt no"
+
+msgid "Delete album \"%s\" and its %d sub-albums."
+msgstr "Dzēst albūmu \"%s\" and tā %d apakš-albūmus."
+
+msgid "It only takes a few clicks."
+msgstr "Tas parasa tikai dažus klikšķus"
+
+msgid "First photo added"
+msgstr "Pirmā pievienotā forogrāfija"
+
+msgid "Delete album \"%s\"."
+msgstr "Dzēst albūmu \"%s\"."
+
+msgid "Confirm deletion"
+msgstr "Apstiprināt dzēšanu"
+
+msgid "delete album and all %d photos, even the %d associated to other albums"
+msgstr "izdzēst albumu un visas %d fotogrāfijas, pat %d tās, kas saistītas ar citiem albūmiem"
+
+msgid "Share / Send your photos directly from your Mac Os X (10.10 and following) to Piwigo"
+msgstr "Dalieties / Nosūtiet savas fotogrāfijas tieši no jūsu Mac OS X (10.10 un pēc) uz Piwigo"
+
+msgid "Piwigo Remote Sync is able to upload a whole folder hierarchy. If you run it again, only new photos will be uploaded."
+msgstr "Piwigo Remote Sync var augšupielādēt visu mapes hierarhiju. Ja jūs palaistu to vēlreiz, tikai jaunas fotogrāfijas tiktu augšupielādētas."
+
+msgid "Time has come to update your Piwigo with version %s, go to %s"
+msgstr "Ir pienācis laiks atjaunināt savu Piwigo uz versiju %s, dodieties uz%s"
+
+msgid "Running on an up-to-date Piwigo is important for security."
+msgstr "Darboties ar vienmēr jauninātu Piwigo ir svarīgi drošībai."
+
+msgid "Display album date period"
+msgstr "Rādīt datumu periodu saistītu ar katru albumu, piemēram, «no 12 jūlija līdz 15, 2018»"
+
+msgid "Piwigo requires an album to add photos."
+msgstr "Piwigo nepieciešams album lai pievienotu fotogrāfijas."
+
+msgid "Some checksums are missing."
+msgstr "Trūkst dažas kontrolsummas"
+
+msgid "Synchronization in progress"
+msgstr "Notiek sinhronizācija"
+
+msgid "Welcome!"
+msgstr "laipni lūgti!"
+
+msgid "or"
+msgstr "vai"
+
+msgid "checksums to add"
+msgstr "kontrolsummas pievienošanai"
+
+msgid "With no checksum"
+msgstr "Bez kontrolsummas"
+
+msgid "Visit"
+msgstr "Apmeklēt"
+
+msgid "Compute %d missing checksums"
+msgstr "Izskaitļot %d trūkstošās kontrolsummas"
+
+msgid "Display category date"
+msgstr "Atainot kategorijas datumu"
+
+msgid "Deletion in progress"
+msgstr "Notiek dzēšana"
+
+msgid "Create a first album"
+msgstr "Izveidot pirmo albūmu"
+
+msgid "%d checksums were added"
+msgstr "%d kontrolsumma ir pievienota"
+
+msgid "... or hide this link"
+msgstr "... vai paslēpt šo saiti"
+
+msgid "Choose which tag to merge these tags into"
+msgstr "Izvēlieties, kurā tagā sapludināt šos tagus"
+
+msgid "Displays a banner to install or open the official Piwigo app"
+msgstr "Parāda reklāmkarogu, lai instalētu vai atvērtu oficiālo Piwigo lietotni"
+
+msgid "Tag(s) \\{%s1\\} succesfully merged into \"%s2\""
+msgstr "Tags(i) \\{%s1\\} veiksmīgi iekļauts \"%s2\""
+
+msgid "The %d tags on this page are selected"
+msgstr "Tags %d šajā lapā ir atlasīts"
+
+msgid "Tags \\{%s\\} succesfully deleted"
+msgstr "Tagi \\{%s\\} veiksmīgi dzēsti"
+
+msgid "Tag \"%s1\" renamed in \"%s2\""
+msgstr "Tags \\\"%s1\\\" pārdēvēts par\\\"%s2\\\""
+
+msgid "Tag \"%s\" succesfully deleted"
+msgstr "Tags \\\"%s\\\" veiksmīgi dzēsts"
+
+msgid "Promote mobile app on mobile devices"
+msgstr "Reklamējiet Mobilās lietotnes mobilajās ierīcēs"
+
+msgid "You have %s1 orphan : %s2"
+msgstr "Jums ir %s1 bezsaites : %s2 "
+
+msgid "You have %d orphan tags %s"
+msgstr "Jums ir %d bezsaistes tagi %s"
+
+msgid "Portraits"
+msgstr "Portreti"
+
+msgid "Please upgrade your PHP version before any update."
+msgstr "Lūdzu uzlabojiet savu PHP versiju pirms veicat jebkādu jauninājumu"
+
+msgid "Posted %s"
+msgstr "Publicēti %s"
+
+msgid "Yes, delete"
+msgstr "Jā, dzēst"
+
+msgid "and %s others"
+msgstr "un %s pārējie"
+
+msgid "in administration"
+msgstr "pārvaldībā"
+
+msgid "in gallery"
+msgstr "galerijā"
+
+msgid "no photo"
+msgstr "nav attēlu"
+
+msgid "Requires PHP %s"
+msgstr "Nepieciešams PHP %s"
+
+msgid "At least 2 selected tags are needed to merge"
+msgstr "Jābūt atlasītiem vismaz diviem tagiem, lai tos saplūdinātu"
+
+msgid "Are you sure you want to lock the gallery?"
+msgstr "Vai esat pārliecināts, ka gribat slēgt galeriju?"
+
+msgid "Select all %d tags"
+msgstr "Atlasīt visus %d tagus"
+
+msgid "Selection mode"
+msgstr "Atlases režīms"
+
+msgid "Tag \"%s\" created"
+msgstr "Tags \"%s\" izveidots"
+
+msgid "Tag Manager"
+msgstr "Tagu Menedžeris"
+
+msgid "The other tags will be removed"
+msgstr "Citi tagi tiks dzēsti"
+
+msgid "Yes, I am sure"
+msgstr "Jā, esmu pārliecināts"
+
+msgid "Review"
+msgstr "Apskatīt"
+
+msgid "Search albums"
+msgstr "Meklēt albūmus"
+
+msgid "Search tips"
+msgstr "Meklēšanas padomi\r\n\r\n\r\n"
+
+msgid "Select"
+msgstr "Atlasīt"
+
+msgid "Manage album photos"
+msgstr "Pārvaldīt albūma fotogrāfijas"
+
+msgid "Manage sub-albums"
+msgstr "Pārvaldīt apakšalbūmus"
+
+msgid "Open in gallery"
+msgstr "Atvērt galerijā"
+
+msgid "No, I have changed my mind"
+msgstr "Nē, es pārdomāju"
+
+msgid "No tag found"
+msgstr "Neviens tags nav atrasts"
+
+msgid "Merge"
+msgstr "Sapludināt"
+
+msgid "Keep them"
+msgstr "Saglabāt tos"
+
+msgid "File type: %s"
+msgstr "Faila tips: %s"
+
+msgid "Display"
+msgstr "Attēlot"
+
+msgid "Delete them"
+msgstr "Izdzēst tos"
+
+msgid "Delete tags \\{%s\\}?"
+msgstr "Dzēst tagua \\{%s\\}?"
+
+msgid "Delete tag \"%s\"?"
+msgstr "Dzēst tagu \"%s\"?"
+
+msgid "Delete orphan tags ?"
+msgstr "Dzēst nepiesaistītos tagus?"
+
+msgid "Clear Selection"
+msgstr "Notīrīt atlasīto"
+
+msgid "Delete album"
+msgstr "Dzēst albūmu"
+
+msgid "Are you sure you want to install the plugin \"%s\"?"
+msgstr "Vai esat pārliecināts, ka gribat instalēt \"%s spraudni? "
+
+msgid "Are you sure you want to delete the ratings of the user \"%s\"?"
+msgstr "Vai estat pārliecināts, ka gribat dzēst lietotāja \"%s sniegto vērtējumu?"
+
+msgid "Are you sure you want to delete the plugin \"%s\"?"
+msgstr "Vai estat pārliecināts, ka gribat dzēst spraudni \"%s?"
+
+msgid "Are you sure you want to delete the language \"%s\"?"
+msgstr "Vai estat pārliecināts, ka gribat dzēst valodas \"%s?"
+
+msgid "Are you sure you want to delete all sizes?"
+msgstr "Vai estat pārliecināts, ka gribat dzēst visus izmērus?"
+
+msgid "<b>%d</b> tags found"
+msgstr "<b>%d</b> tagi atrasti"
+
+msgid "<b>%d</b> tag selected"
+msgstr "<b>%d</b> tags atlasīts"
+
+msgid "<b>%d</b> tag found"
+msgstr "<b>%d</b> tags atrasts"
+
+msgid "%s other tags available.."
+msgstr "%s citi tagi pieejami.."
+
+msgid "%s MB used"
+msgstr "%s MB izlietoti"
+
+msgid "%s GB used"
+msgstr "%s GB izlietoti"
+
+msgid "%d photos"
+msgstr "%d foto"
+
+msgid " (copy)"
+msgstr " (kopēt)"
+
+msgid " (copy %s)"
+msgstr " (kopēt %s)"
+
+msgid "Are you sure you want to restore the plugin \"%s\"?"
+msgstr "Vai esat pārliecināts, ka gribat atjaunot spraudni \"%s ?"
+
+msgid "Are you sure you want to restore this plugin?"
+msgstr "Vai esat pārliecināts, ka gribat atjaunot šo spraudni?"
+
+msgid "Are you sure you want to update all extensions?"
+msgstr "Vai esat pārliecināts, ka gribat atjaunināt visus paplašinājumus?"
+
+msgid "Are you sure you want to restore to default settings?"
+msgstr "Vai esat pārliecināts, ka gribat atjaunot iestatījumus pēc noklusējuma?"
+
+msgid "Are you sure you want to delete the theme \"%s\"?"
+msgstr "Vai esat pārliecināts, ka gribat izdzēst \"%s tēmu ?"
+
+msgid "Are you sure you want to delete the user \"%s\"?"
+msgstr "Vai esat pārliecināts, ka gribat izdzēst lietotāja \"%s\"?"
+
+msgid "Are you sure you want to delete this site?"
+msgstr "Vai esat pārliecināts, ka gribat izdzēst šo lapu?"
+
+msgid "Are you sure you want to delete this theme?"
+msgstr "Vai esat pārliecināts, ka gribat izdzēst šo tēmu?"
+
+msgid "Are you sure you want to delete this?"
+msgstr "Vai esat pārliecināts, ka gribat šo izdzēst?"
+
+msgid "Group(s) \\{%s1\\} succesfully merged into \"%s2\""
+msgstr "Grupa(s) \\{%s1\\} veiksmīgi iekļauta \"%s2\""
+
+msgid "User \"%s\" dissociated from this group"
+msgstr "Lietotājs \"%s\" izņemts no šīs grupas"
+
+msgid "<b>%d</b> albums found"
+msgstr "<b>%d</b> albūmi atrasti"
+
+msgid "<b>1</b> album found"
+msgstr "<b>1</b> albūms atrasts"
+
+msgid "Activity peak in the last weeks"
+msgstr "Aktivitātes pīķis pēdējo nedēļu laikā"
+
+msgid "You have %s inactive plugins"
+msgstr "Jums ir %s neaktīvu spraudņu"
+
+msgid "You don't have access to this photo"
+msgstr "Jums nav pielaides šim foto"
+
+msgid "Are you sure you want to delete group \"%s\"?"
+msgstr "Vai esat pārliecināts, ka gribat izdzēst \"%s\" grupu?"
+
+msgid "Dissociate user from this group"
+msgstr "Izņemt lietotāju no šīs grupas"
+
+msgid "Group \"%s\" succesfully deleted"
+msgstr "Group \"%s\" veiksmīgi izdzēsts"
+
+msgid "Groups \\{%s\\} succesfully deleted"
+msgstr "\\{%s\\} Grupu veiksmīgi izdzēsts"
+
+msgid "Manage users with user manager"
+msgstr "Pārvaldīt lietotājus ar lietotāju pārvaldnieku"
+
+msgid "User associated"
+msgstr "Lietotājs asociēts"
+
+msgid "Videos"
+msgstr "Video"
+
+msgid "Cache"
+msgstr "Kešatmiņa"
+
+msgid "Album search tool"
+msgstr "Albūmu meklēšanas rīks"
+
+msgid "%d Activity"
+msgstr "%d Aktivitāte"
+
+msgid "Showing %s users out of %s"
+msgstr "Rādīt %s lietotājus no %s"
+
+msgid "Page Visited in %s"
+msgstr "Lapa apmeklēta %s"
+
+msgid "Refresh thumbnail"
+msgstr "Atsveidzināt sīkbildi"
+
+msgid "Set as group for new users"
+msgstr "Iestatīt kā grupu jaunajiem lietotājiem"
+
+msgid "Show inactive plugins"
+msgstr "Rādīt neaktīvos spraudņus"
+
+msgid "Unset as group for new users"
+msgstr "Atiestatīt kā grupu jauniem lietotājiem"
+
+msgid "This is already the default theme"
+msgstr "Šī jau ir noklusējuma tēma"
+
+msgid "Storage"
+msgstr "Glabātuve"
+
+msgid "Name is already taken"
+msgstr "Nosaukums jau ir aizņemts"
+
+msgid "No albums found"
+msgstr "Neviens albūms nav atrasts"
+
+msgid "No plugins found"
+msgstr "Neviens spraudnis nav atrasts"
+
+msgid "Set as default"
+msgstr "Iestatīt kā noklusējumu"
+
+msgid "Page Visited"
+msgstr "Lapa Apmeklēta"
+
+msgid "Other"
+msgstr "Cits"
+
+msgid "Group renamed"
+msgstr "Grupa pārdēvēta"
+
+msgid "Group added"
+msgstr "Grupa pievienota"
+
+msgid "Formats"
+msgstr "Formāti"
+
+msgid "Edited on %s"
+msgstr "Rediģēts %s"
+
+msgid "Created on %s"
+msgstr "Izveidots %s"
+
+msgid "Compare mode"
+msgstr "Salīdzināšanas režīms"
+
+msgid "Average last 12 months"
+msgstr "Vidēji pēdējos 12 mēnešos"
+
+msgid "Associate User"
+msgstr "Saistītais Lietātājs"
+
+msgid "%s file type"
+msgstr "%s faila tipu"
+
+msgid "%d sub-albums"
+msgstr "%d apakšalbūmu"
+
+msgid "%d Activities"
+msgstr "%d Activitāšu"
+
+msgid "Show sub-albums"
+msgstr "Parādīt apakšalbūmus"
+
+msgid "Hide sub-albums"
+msgstr "Paslēpt apakšalbūmus"
+
+msgid "Compact View"
+msgstr "Kompakts Skats"
+
+msgid "Add Album"
+msgstr "Pievienot Albūmu"
+
+msgid "%d group moved"
+msgstr "grupa %d pārvietota"
+
+msgid "%d group edited"
+msgstr "grupa %d labota"
+
+msgid "%d group deleted"
+msgstr "grupa %d izdzēsta"
+
+msgid "%d group added"
+msgstr "grupa %d pievienota"
+
+msgid "%d albums edited"
+msgstr "albūmi %d laboti"
+
+msgid "%d albums deleted"
+msgstr "albūmi %d izdzēsti"
+
+msgid "%d albums added"
+msgstr "albūmi %d pievienoti"
+
+msgid "%d album edited"
+msgstr "albūms %d labots"
+
+msgid "%d album deleted"
+msgstr "albūms %d izdzēsts"
+
+msgid "%d album added"
+msgstr "albūms %d pievienots"
+

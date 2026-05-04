@@ -1,0 +1,140 @@
+# Piwigo translation — lt_LT
+# Source: install.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: lt_LT\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Don't hesitate to consult our forums for any help : %s"
+msgstr "Jei reikės pagalbos - drąsiai kreipkitės konsultacijų mūsų forumuose: %s"
+
+msgid "Installation"
+msgstr "Diegimas"
+
+msgid "Congratulations, Piwigo installation is completed"
+msgstr "Sveikiname, Piwigo diegimas baigtas"
+
+msgid "enter a login for webmaster"
+msgstr "įveskite webmasterio vartotojo vardą"
+
+msgid "webmaster login can't contain characters ' or \""
+msgstr "webmasterio vartotojo vardas negali turėti simbolių ' ar \""
+
+msgid "Start Install"
+msgstr "Pradėti įdiegimą"
+
+msgid "Try to configure PHP 5"
+msgstr "Pabandyti sukonfigūruoti PHP 5.2"
+
+msgid "Welcome to your new installation of Piwigo!"
+msgstr "Prašom užeiti į naują Piwigo svetainę!"
+
+msgid "also given by your host provider"
+msgstr "taip pat teikiamas Jūsų hostingo paslaugų tiekėjo"
+
+msgid "An alternate solution is to copy the text in the box above and paste it into the file \"local/config/database.inc.php\" (Warning : database.inc.php must only contain what is in the textarea, no line return or space character)"
+msgstr "Alternatyvus būdas - tai nukopijuoti tekstą iš lauko aukščiau ir įrašyti jį į \"local/config/database.inc.php\" failą. Dėmesio! database.inc.php turi būti įrašyta tik tai, kas yra textarea laukelyje, jokių tuščių eilučių ir tarpų."
+
+msgid "user login given by your host provider"
+msgstr "login, kurį davė jūsų paslaugų tiekėjas"
+
+msgid "user password given by your host provider"
+msgstr "slaptažodis, kurį davė jūsų paslaugų tiekėjas"
+
+msgid "Visitors will be able to contact site administrator with this mail"
+msgstr "Lankytojai šiuo el-pašto adresu galės susisiekti su administratorium"
+
+msgid "You may referer to your hosting provider's support and see how you could switch to PHP 5 by yourself."
+msgstr "Jūs turėtumėte kreiptis pagalbos į savo paslaugų tiekėją, kaip perjungti į PHP 5.2 pačiam."
+
+msgid "database tables names will be prefixed with it (enables you to manage better your tables)"
+msgstr "šį prefiksą turės duomenų bazės lentelės (tai padeda geriau valdyti lenteles)"
+
+msgid "please enter your password again"
+msgstr "dar sykį įveskite savo slaptažodį"
+
+msgid "verification"
+msgstr "patikrinimas"
+
+msgid "Hope to see you back soon."
+msgstr "Iki greito pasimatymo."
+
+msgid "Need help ? Ask your question on <a href=\"%s\">Piwigo message board</a>."
+msgstr "Reikia pagalbos ? Užduokite klausimą <a href=\"%s\">Piwigo pranešimų lentoje</a>."
+
+msgid "Note you can change your configuration by yourself and restart Piwigo after that."
+msgstr "Dėmesio, jūs galite pakeisti savo konfigūraciją pats ir tada perkrauti Piwigo."
+
+msgid "PHP 5 is required"
+msgstr "reikalingas PHP 5.2"
+
+msgid "Piwigo may try to switch your configuration to PHP 5 by creating or modifying a .htaccess file."
+msgstr "Piwigo gali pamėginti perjungti Jūsų konfigūraciją į PHP5.2 sukuriant, ar modifikuojant, .htaccess failą."
+
+msgid "Piwigo was not able to configure PHP 5."
+msgstr "Piwigo negalėjo sukonfigūruoti PHP 5.2"
+
+msgid "Sorry!"
+msgstr "Apgailestaujame!"
+
+msgid "User"
+msgstr "Vartotojas"
+
+msgid "Welcome to my photo gallery"
+msgstr "Sveiki atvykę į mano foto galeriją"
+
+msgid "You can download the config file and upload it to local/config directory of your installation."
+msgstr "Jūs galite atsisiųsti konfigūracinį failą ir padėti jį į local/config katalogą, prie Jūsų instaliacijos."
+
+msgid "Admin configuration"
+msgstr "Administracijos konfigūracija"
+
+msgid "Basic configuration"
+msgstr "Pradinė konfigūracija"
+
+msgid "Can't connect to server"
+msgstr "Neišeina prisijungti prie serverio"
+
+msgid "Connection to server succeed, but it was impossible to connect to database"
+msgstr "Prie serverio prisijungti pavyko, tačiau prie duomenų bazės ne."
+
+msgid "Creation of config file local/config/database.inc.php failed."
+msgstr "Nepavyko sukurti local/config/database.inc.php konfigūracinio failo."
+
+msgid "Database configuration"
+msgstr "Duomenų bazės konfigūracija"
+
+msgid "Database name"
+msgstr "Duomenų bazės pavadinimas"
+
+msgid "Database table prefix"
+msgstr "Duomenų bazės lentelių prefiksas"
+
+msgid "Default gallery language"
+msgstr "Numatytoji galerijos kalba"
+
+msgid "Download the config file"
+msgstr "Atsisiųsti konfigūracini failą"
+
+msgid "Host"
+msgstr "Hostas"
+
+msgid "It appears your webhost is currently running PHP %s."
+msgstr "Jūsų webhost'as naudoja PHP %s."
+
+msgid "It will be shown to the visitors. It is necessary for website administration"
+msgstr "Tai bus rodoma lankytojams. Tai būtina puslapio administracijai"
+
+msgid "Just another Piwigo gallery"
+msgstr "Tiesiog dar viena Piwigo galerija"
+
+msgid "Keep it confidential, it enables you to access administration panel"
+msgstr "Saugokite tai slaptai, nes tai leidžia prisijungti prie administratoriaus valdymo skydo."
+
+msgid "localhost or other, supplied by your host provider"
+msgstr "localhost arba kitas, suteiktas jūsų paslaugų tiekėjo"
+

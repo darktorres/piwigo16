@@ -1,0 +1,111 @@
+# Piwigo translation — ga_IE
+# Source: common.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ga_IE\n"
+"Plural-Forms: nplurals=5; plural=n==1 ? 0 : n==2 ? 1 : (n>2 && n<7) ? 2 : (n>6 && n<11) ? 3 : 4;\n"
+"X-Piwigo-Language-Name: Gaeilge\n"
+"X-Piwigo-Country: éire\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Code: ir\n"
+"X-Piwigo-Zero-Plural: true\n"
+
+msgid "%d album updated"
+msgid_plural "%d albums updated"
+msgstr[0] "%d albam suas chun dáta"
+msgstr[1] "%d albaim suas chun dáta"
+
+msgid "Hello"
+msgstr "Dia Duit"
+
+msgid "Search"
+msgstr "Cuardach"
+
+msgid "Hello %s,"
+msgstr "Dia Duit a %s"
+
+msgid "Home"
+msgstr "Leathaineach abhaile"
+
+msgid "Hello %s, your Piwigo photo gallery is empty!"
+msgstr "Dia Duit a %s, Níor aimsíodh ghrianraf ar bith"
+
+msgid "No"
+msgstr "Nil"
+
+msgid "I want to add photos"
+msgstr "Ba mhaith liom ...."
+
+msgid "Here are your connection settings"
+msgstr "Seo duit conn sett..."
+
+msgid "First Page"
+msgstr "Leathaineacht amhain"
+
+msgid "Email address"
+msgstr "Seoladh Ríomhpoist"
+
+msgid "Email address is missing. Please specify an email address."
+msgstr "Chaill do Email, thug do email mais e do thoil e"
+
+msgid "Email"
+msgstr "Ríomhpoist"
+
+msgid "Author: %s"
+msgstr "Údar: %s"
+
+msgid "Author"
+msgstr "Údar"
+
+msgid "Date"
+msgstr "Data"
+
+msgid "Bad request"
+msgstr "Ceist dana"
+
+msgid "Are you sure?"
+msgstr "An bhfuil tu cinnte"
+
+msgid "Close this window"
+msgstr "Dun bhfuinneog seo"
+
+msgid "All"
+msgstr "Gach rud"
+
+msgid "Email: %s"
+msgstr "Ríomhpoist: %s"
+
+msgid "square"
+msgstr "Cearnóg"
+
+msgid "the beginning"
+msgstr "an tús"
+
+msgid "small"
+msgstr "B - beag"
+
+msgid "today"
+msgstr "inniu"
+
+msgid "(!) This comment requires validation"
+msgstr "(!) teastaíonn bailíochtú ón trácht seo"
+
+msgid "%d comment"
+msgid_plural "%d comments"
+msgstr[0] "%d trácht"
+msgstr[1] "%d tuairimí"
+
+msgid "%d comment to validate"
+msgstr "%d trácht le bailíochtú"
+
+msgid "%d comments to validate"
+msgstr "%d tuairimí le bailíochtú"
+
+msgid "%d new comment"
+msgstr "%d trácht nua"
+
+msgid "%d new comments"
+msgstr "%d tuairimí nua"
+

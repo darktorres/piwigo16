@@ -1,0 +1,62 @@
+# Piwigo translation — hr_HR
+# Source: upgrade.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: hr_HR\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Upgrade"
+msgstr "Nadogradnja"
+
+msgid "Upgrade from version %s to %s"
+msgstr "Nadogradnja sa inačice %s na %s"
+
+msgid "Statistics"
+msgstr "Statistika"
+
+msgid "total upgrade time"
+msgstr "sveukupno vrijeme nadogradnje"
+
+msgid "total SQL time"
+msgstr "sveukupno SQL vrijeme"
+
+msgid "SQL queries"
+msgstr "SQL upita"
+
+msgid "Upgrade informations"
+msgstr "Podaci o nadogradnji"
+
+msgid "Perform a maintenance check in [Administration>Tools>Maintenance] if you encounter any problem."
+msgstr "Izvršite radnu provjeru [Uprava>Alati>Održavanje] u slučaju bilo kakvih problema."
+
+msgid "Only administrator can run upgrade: please sign in below."
+msgstr "Samo upravnik može pokrenuti nadogradnju: molimo, prijavite se dolje."
+
+msgid "You do not have access rights to run upgrade"
+msgstr "Nemate pristupna prava za pokretanje nadogradnje"
+
+msgid "All sub-albums of private albums become private"
+msgstr "Sve podskupine osobnih skupina postaju osobne"
+
+msgid "User permissions and group permissions have been erased"
+msgstr "Korisničke i grupne dozvole su izbrisane"
+
+msgid "Only thumbnails prefix and webmaster mail address have been saved from previous configuration"
+msgstr "Jedino su predznaci poveznih sličica i webmaster-ova e-mail adresa sačuvane iz prethodne postave"
+
+msgid "This page proposes to upgrade your database corresponding to your old version of Piwigo to the current version. The upgrade assistant thinks you are currently running a <strong>release %s</strong> (or equivalent)."
+msgstr "Na ovoj stranici imate prijedlog nadogradnje baze podataka sa vaše starije inačice na novu. Pomoćnik nadogradnje smatra da trenutno koristite <strong>inačicu %s</strong> (ili sličnu)."
+
+msgid "As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:"
+msgstr "Kao mjera predostrožnosti, slijedeći dodaci su isključeni. Provjerite dostupne nadogradnje dodataka prije njihovog ponovnog uključenja:"
+
+msgid "In <i>%s</i>, before <b>?></b>, insert:"
+msgstr "U <i>%s</i>, prije <b>?></b>, ubaci:"
+
+msgid "As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:"
+msgstr "Sljedeće teme su preventivno deaktivirane. Prije ponovnog aktiviranja morate provjeriti postoje li nadogradnje:"
+

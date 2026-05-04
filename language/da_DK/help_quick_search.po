@@ -1,0 +1,161 @@
+# Piwigo translation — da_DK
+# Source: help_quick_search.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: da_DK\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Searches photos by taken date."
+msgstr "Søger efter fotografier ud fra optagelsesdato."
+
+msgid "Add a dash (-) or NOT before a word to exclude from search. Note that NOT acts as a filtering operator so you cannot have a search containing only NOT operators. You cannot combine OR with NOT (john OR NOT bill is not valid)"
+msgstr "Tilføj en bindestreg (-) eller NOT før et ord, for at fravælge det fra søgningen. Bemærk at NOT fungerer som et filter, så du kan ikke have en søgning, der kun indeholder NOT-operatorer. Du kan ikke kombinere OR med NOT (\"john OR NOT bent\" er ikke gyldigt)"
+
+msgid "OR inclusive"
+msgstr "OR inklusive"
+
+msgid "photos from may 2003"
+msgstr "fotografier fra maj 2003"
+
+msgid "photos posted in 2003"
+msgstr "fotografier offentliggjort i 2003"
+
+msgid "photos taken in 2003"
+msgstr "fotografier optaget i 2003"
+
+msgid "return photos less than 700px high"
+msgstr "fotografier mindre end 700 pixels høje"
+
+msgid "return photos wider than 500px"
+msgstr "fotografier bredere end 500 pixels"
+
+msgid "return photos with at least 1,000 views"
+msgstr "finder fotografier med mindst 1.000 visninger"
+
+msgid "returns photos of 12 megapixels or more"
+msgstr "finder fotografier på 12 megapixels eller mere"
+
+msgid "returns photos of 5 megapixels"
+msgstr "finder fotografier på 5 megapixels"
+
+msgid "up to 100 (inclusive)"
+msgstr "op til 100 (inklusive)"
+
+msgid "will give you all photos with at least one note."
+msgstr "finder alle fotografier med mindst én bemærkning"
+
+msgid "will give you photos without notes."
+msgstr "finder fotografier uden bemærkninger"
+
+msgid "Searches photos by width/height ratio."
+msgstr "Søger efter fotografier ud fra forhold mellem bredde og højde."
+
+msgid "Searches photos with a given width or height."
+msgstr "Søger efter fotografier ud fra en angivet bredde eller højde."
+
+msgid "Supported numeric operators"
+msgstr "Understøttede numeriske operatorer"
+
+msgid "The quick search engine allows you to use boolean operators to refine your search. By default, the search applies to all keywords. Searches are not case sensitive."
+msgstr "Den hurtige søgemaskine gør det muligt at anvende boolske operatorer til at gøre søgningen mere præcis. Som standard gælder søgningen alle nøgleord. Søgninger kender ikke forskel på små og store bogstaver."
+
+msgid "These operators can be used with numeric fields such as"
+msgstr "Disse operatorer kan anvendes med numeriske felter så som"
+
+msgid "Use quotes to search for an exact keyword or phrase."
+msgstr "Anvend anførselsdtegn for at søge efter et specifikt nøgleord eller sætning."
+
+msgid "With keywords"
+msgstr "Med nøgleord"
+
+msgid "between 10 and 100 (inclusive)"
+msgstr "mellem 10 og 100 (inklusive)"
+
+msgid "equals 100"
+msgstr "præcis 100"
+
+msgid "finds files between 1MB and 10MB."
+msgstr "finder filer på mellem 1 og 10 megabyte."
+
+msgid "finds panoramas"
+msgstr "finder panoramaer"
+
+msgid "finds photo 123 to 126 (it may find between 0 and 4 photos, because photos can be deleted)"
+msgstr "finder fotografi 123 til 126 (der findes 0 til 4 fotografier, da der kan være slettede fotografier)"
+
+msgid "finds photos from compact cameras in portrait or landscape modes"
+msgstr "finder fotografier fra kompaktkameraer i portræt- eller landskabstilstand"
+
+msgid "from 100 and above"
+msgstr "fra 100 eller flere"
+
+msgid "greater than 100"
+msgstr "større end 100"
+
+msgid "less than 100"
+msgstr "mindre end 100"
+
+msgid "photos after Jan 1st 2008"
+msgstr "fotografier fra 1. januar 2008"
+
+msgid "photos from 2003 to 2008"
+msgstr "fotografier fra 2003 til 2008"
+
+msgid "Add an OR between words."
+msgstr "Tilføj et OR (eller) mellem ord."
+
+msgid "Exact search"
+msgstr "Nøjagtig søgning"
+
+msgid "Exclude"
+msgstr "Fravælg"
+
+msgid "Grouping"
+msgstr "Gruppér"
+
+msgid "Here is a list of actions you can perform:"
+msgstr "Her er en liste over handlinger, som du kan udføre:"
+
+msgid "Others"
+msgstr "Andre"
+
+msgid "Same principle as for"
+msgstr "Samme princip som for"
+
+msgid "Search using extended syntax"
+msgstr "Søg vha. udvidet syntaks"
+
+msgid "Searches by author."
+msgstr "Søger efter forfatter."
+
+msgid "Searches by file name."
+msgstr "Søger efter filnavn."
+
+msgid "Searches for photos by number of views."
+msgstr "Søger efter fotografier ud fra antallet af visninger."
+
+msgid "Searches only for photos with the given words in title or description."
+msgstr "Søger kun efter fotografier med de angivne ord i titlen eller beskrivelsen."
+
+msgid "Searches only in tag names without looking at photo titles or descriptions."
+msgstr "Søger kun efter tag-navne uden at kigge på fotografiers titler eller beskrivelser."
+
+msgid "Searches photos by file size."
+msgstr "Søger efter fotografier ud fra filstørrelser."
+
+msgid "Searches photos by its numeric identifier in Piwigo."
+msgstr "Søger efter fotografier ud fra numerisk identifikation i Piwigo."
+
+msgid "Searches photos by posted date."
+msgstr "Søger efter fotografier ud fra dato for offentliggørelse"
+
+msgid "Searches photos by rating."
+msgstr "Søger efter fotografier ud fra vurdering."
+
+msgid "Searches photos by size in pixels."
+msgstr "Søger efter fotografier ud fra størrelse i pixels."
+

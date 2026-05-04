@@ -1,0 +1,23 @@
+# Piwigo translation — he_IL
+# Source: whats_new_15.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: he_IL\n"
+"Plural-Forms: nplurals=4; plural=(n==1 ? 0 : n==2 ? 1 : (n<0 || n>10) && n%10==0 ? 2 : 3);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "A new interface for user management"
+msgstr "ממשק חדש לניהול משתמשים"
+
+msgid "Brand new features : Activities logs and PDF reader"
+msgstr "תכונות חדשות לחלוטין: יומני פעילויות וקורא PDF"
+
+msgid "Enhanced interface for batch manager and album selector"
+msgstr "ממשק משופר למנהל קבוצות ובוחר האלבומים"
+
+msgid "Even more filters for the gallery search engine"
+msgstr "אפילו יותר מסננים למנוע החיפוש של הגלריה"
+

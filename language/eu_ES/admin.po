@@ -1,0 +1,4164 @@
+# Piwigo translation — eu_ES
+# Source: admin.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: eu_ES\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Members"
+msgstr "Partaideak"
+
+msgid "Menu Management"
+msgstr "Menuak"
+
+msgid "Merge selected groups"
+msgstr "Batu hautatutako taldeak"
+
+msgid "Merge selected tags"
+msgstr "Batu hautatutako etiketak"
+
+msgid "Merge tags"
+msgstr "Batu etiketak"
+
+msgid "Main Page"
+msgstr "Orri nagusia"
+
+msgid "Maintenance"
+msgstr "Mantenua"
+
+msgid "Manage"
+msgstr "Kudeatu"
+
+msgid "Manage Permissions"
+msgstr "Kudeatu baimenak"
+
+msgid "Manage photos"
+msgstr "Kudeatu argazkiak"
+
+msgid "Manage tags"
+msgstr "Kudeatu etiketak"
+
+msgid "List"
+msgstr "Zerrenda"
+
+msgid "Loading..."
+msgstr "Kargatzen..."
+
+msgid "Local"
+msgstr "Lokala"
+
+msgid "Lock"
+msgstr "Blokeatu"
+
+msgid "Lock albums"
+msgstr "Blokeatu albumak"
+
+msgid "Lock gallery"
+msgstr "Blokeatu galeria"
+
+msgid "Locked"
+msgstr "Blokeatua"
+
+msgid "Mail address is mandatory for registration"
+msgstr "Posta helbidea beharrezkoa da harpidetzeko"
+
+msgid "Mail content"
+msgstr "Posta edukia"
+
+msgid "Mail sent to %s [%s]."
+msgstr "Posta %s [%s]-ra bidalia"
+
+msgid "Mail theme"
+msgstr "Posta gaia"
+
+msgid "Inactive Languages"
+msgstr "Desgaitutako hizkuntzak"
+
+msgid "Inactive Plugins"
+msgstr "Desgaitutako gehigarriak"
+
+msgid "Inactive Themes"
+msgstr "Desgaitutako gaiak"
+
+msgid "Informations"
+msgstr "Argibideak"
+
+msgid "Install"
+msgstr "Instalatu"
+
+msgid "Install on your computer,"
+msgstr "Instalatu zure ordenagailuan,"
+
+msgid "Installed Languages"
+msgstr "Instalaturiko hizkuntzak"
+
+msgid "Installed Themes"
+msgstr "Instalaturiko gaiak"
+
+msgid "Instructions to use Piwigo"
+msgstr "Piwigo erabiltzeko argibideak"
+
+msgid "Language has been successfully installed"
+msgstr "Hizkuntza behar bezala instalatu da"
+
+msgid "Languages"
+msgstr "Hizkuntzak"
+
+msgid "IP"
+msgstr "IP"
+
+msgid "Image Quality"
+msgstr "Irudi kalitatea"
+
+msgid "Image id"
+msgstr "Irudi Id-a"
+
+msgid "Graphics Library"
+msgstr "Liburutegi grafikoa"
+
+msgid "Guests"
+msgstr "Gobidatual"
+
+msgid "Height"
+msgstr "Altuera"
+
+msgid "Hello"
+msgstr "Kaixo"
+
+msgid "Hello,"
+msgstr "Kaixo, "
+
+msgid "Help Me"
+msgstr "Lagundu Ni"
+
+msgid "Hide"
+msgstr "Ezkutatu"
+
+msgid "High definition"
+msgstr "Nabarmen Handia"
+
+msgid "High definition enabled"
+msgstr "Nabarmen Handia gaitua"
+
+msgid "History"
+msgstr "Historia"
+
+msgid "Hour"
+msgstr "Ordu"
+
+msgid "GD version"
+msgstr "GD bertsioa"
+
+msgid "Gallery title"
+msgstr "Galeria izenburua"
+
+msgid "General"
+msgstr "Orokorra"
+
+msgid "General statistics"
+msgstr "Estatistika orokorrak"
+
+msgid "Generate multiple size images"
+msgstr "Sortu irudi tamaina anitz"
+
+msgid "Get Support on Piwigo Forum"
+msgstr "Laguntza eskuratu piwigo foroan"
+
+msgid "Group"
+msgstr "Taldea"
+
+msgid "Group management"
+msgstr "Talde kudeaketa"
+
+msgid "Group name"
+msgstr "Talde izena"
+
+msgid "Groups"
+msgstr "Taldeak"
+
+msgid "Groups and users"
+msgstr "Talde eta erabiltzaileak"
+
+msgid "Guest Settings"
+msgstr "Gonbidatu ezarpenak"
+
+msgid "Guest cannot be deleted"
+msgstr "Ezin da gonbidatua ezabatu"
+
+msgid "Everybody"
+msgstr "Guztiak"
+
+msgid "Check for upgrade failed for unknown reasons."
+msgstr "Eguneraketa egiaztapenak arrazoi ezezagun bategatik huts egin du."
+
+msgid "Close user details"
+msgstr "Itxi erabiltzaile xehetasunak"
+
+msgid "Create"
+msgstr "Sortu"
+
+msgid "Delete Representant"
+msgstr "Ezabatu albumaren koadro txikia"
+
+msgid "Available only with HTML format"
+msgstr "HTML formatuaz bakarrik eskuragarro"
+
+msgid "Basic settings"
+msgstr "Oinarrizko ezarpenak"
+
+msgid "By %s"
+msgstr "%s-(k)"
+
+msgid "By default, Piwigo will create a new websize from the HD (high definition) version of your photo."
+msgstr "Lehenespenez, piwigokzure HD (nabarmen handiko) argzkien web-taimanako bertsio berri bat egingo du "
+
+msgid "%d guest"
+msgid_plural "%d guests"
+msgstr[0] "gonbidatu %d"
+msgstr[1] "%d gonbidatu"
+
+msgid "%d hour"
+msgstr "ordu %d"
+
+msgid "%d hours"
+msgstr "%d ordu"
+
+msgid "%d line filtered"
+msgid_plural "%d lines filtered"
+msgstr[0] "lerro %d iragazi da"
+msgstr[1] "%d lerro iragazi dira"
+
+msgid "%d mail was not sent."
+msgid_plural "%d mails were not sent."
+msgstr[0] "posta %d ez da oraindik bidali"
+msgstr[1] "%d posta ez bidaliak izan"
+
+msgid "ERROR"
+msgstr "ERROREA"
+
+msgid "ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW."
+msgstr "ERROREA: GEHIGARRIA EZ DA AURKITZEN NAHIZ INSTALATURIK EGON! DESINSTALATU EZAZU"
+
+msgid "Edit album"
+msgstr "Editatu albuma"
+
+msgid "Edit album permissions"
+msgstr "Editatu album baimenak"
+
+msgid "Edit photo"
+msgstr "Editatu argazkia"
+
+msgid "Edit selected tags"
+msgstr "Editatu hautatutako etiketak"
+
+msgid "Edit tags"
+msgstr "Editatu etiketak"
+
+msgid "Edit user"
+msgstr "Editatu erabiltzailea"
+
+msgid "Element"
+msgstr "Elementua "
+
+msgid "Element type"
+msgstr "Elementu mota"
+
+msgid "Email administrators when a comment is deleted"
+msgstr "Ohartu kudeatzailea iruzkin bat ezabatzean"
+
+msgid "Email administrators when a comment is modified"
+msgstr "Ohartu kudeatzailea iruzkin bat eraldatzean"
+
+msgid "Email admins when a comment requires validation"
+msgstr "Ohartu kudeatzailea iruzkin batek berrespena behar duenean"
+
+msgid "Email admins when a new user registers"
+msgstr "Ohartu kudeatzailea erabiltzaile berriak harpidetzean"
+
+msgid "Description"
+msgstr "Azalpena"
+
+msgid "Detailed informations"
+msgstr "Xehetutako informazioa"
+
+msgid "Directory"
+msgstr "Direktorioa"
+
+msgid "Directory does not exist"
+msgstr "Direktorioa ez dago"
+
+msgid "Display options"
+msgstr "Bistaratze aukerak"
+
+msgid "Dissociate from album"
+msgstr "Bereiztu albumetik"
+
+msgid "Do you want to activate anyway?"
+msgstr "Ala ere gaitu nahi duzu ?"
+
+msgid "Documentation"
+msgstr "Dokumentazioa"
+
+msgid "Download,"
+msgstr "Deskarga,"
+
+msgid "Downloads"
+msgstr "Deskargak"
+
+msgid "Drag to re-order"
+msgstr "klikatu eta eraman berrordenatzeko"
+
+msgid "Drop into album"
+msgstr "Hautatu album bat"
+
+msgid "Duplicate"
+msgstr "Bikoiztu"
+
+msgid "Duplicate selected tags"
+msgstr "Bikoiztu hautatutako etiketak"
+
+msgid "Duplicates"
+msgstr "Bikoiztuak"
+
+msgid "Current name"
+msgstr "Uneko izena"
+
+msgid "Database"
+msgstr "Datu-basea"
+
+msgid "Date"
+msgstr "Data"
+
+msgid "Day"
+msgstr "Eguna"
+
+msgid "Deactivate"
+msgstr "Desgaitu"
+
+msgid "Deactivate all"
+msgstr "Desgaitu denak"
+
+msgid "Default comments order"
+msgstr "Lehenetsitako iruzkin ordena"
+
+msgid "Default display"
+msgstr "Lehenetsitako pantaila"
+
+msgid "Default photos order"
+msgstr "Lehenetsitako argazki ordena"
+
+msgid "Default user cannot be deleted"
+msgstr "Lehenetsitako erabiltzailea ezin da ezabatu"
+
+msgid "Default user does not exist"
+msgstr "Ez dago lehenetsitako erabiltzailerik"
+
+msgid "Check for updates"
+msgstr "Arakatu eguneraketak"
+
+msgid "Check for upgrade"
+msgstr "Arakatu eguneraketa"
+
+msgid "Check integrity"
+msgstr "Integritate egiaztapena"
+
+msgid "Choose an action"
+msgstr "Hautatu ekintza bat"
+
+msgid "Choose an option"
+msgstr "Hautatu aukera bat"
+
+msgid "Can't connect to server."
+msgstr "Ezin da zerbitzariarekin konektatu"
+
+msgid "Can't create temporary file."
+msgstr "Ezin da aldiroko fitxategia sortu"
+
+msgid "Can't download archive."
+msgstr "Ezin da fitxategia deskargatu"
+
+msgid "Cancel"
+msgstr "Utzi"
+
+msgid "Change Admin Colors"
+msgstr "Aldatu kudeaketa koloreak"
+
+msgid "Change password"
+msgstr "Aldatu pasahitza"
+
+msgid "Change username"
+msgstr "Aldatu erabiltzaile-izena"
+
+msgid "Applications"
+msgstr "Aplikazioak"
+
+msgid "Are you sure you want to delete this plugin?"
+msgstr "Ziur zaude gehigarri hau ezabatu nahi duzula?"
+
+msgid "Are you sure you want to install this plugin?"
+msgstr "Ziur zaude gehigarri hau instalatu nahi duzula?"
+
+msgid "Associate to album"
+msgstr "Batu album batetara"
+
+msgid "Associated"
+msgstr "Batua"
+
+msgid "Authorize users to add comments on selected albums"
+msgstr "Baimendu erabiltzaileek hautatutako albumetan iruzkinak sortzea"
+
+msgid "Authorized"
+msgstr "Baimendua"
+
+msgid "Automatic correction"
+msgstr "Konpontze automatikoa"
+
+msgid "%d member"
+msgid_plural "%d members"
+msgstr[0] "partaide %d"
+msgstr[1] "%d partaide"
+
+msgid "%d mail was sent."
+msgid_plural "%d mails were sent."
+msgstr[0] "posta %d bidalia izan da"
+msgstr[1] "%d posta bidali dira"
+
+msgid "%d minute"
+msgstr "minutu %d"
+
+msgid "%d minutes"
+msgstr "%d minutu"
+
+msgid "%d month"
+msgstr "hilabete %d"
+
+msgid "%d months"
+msgstr "%d hilabete"
+
+msgid "%d physical"
+msgstr "fisiko %d"
+
+msgid "%d physicals"
+msgstr "%d fisiko "
+
+msgid "%d second"
+msgstr "segundo %d"
+
+msgid "%d seconds"
+msgstr "%d segundo"
+
+msgid "You cannot delete your account"
+msgstr "Ezin duzu zure kontua ezabatu"
+
+msgid "You need to confirm deletion"
+msgstr "Ezabatzea berretsi behar duzu"
+
+msgid "Your configuration settings are saved"
+msgstr "Zure konfigurazio ezarpenak gorde dira"
+
+msgid "Zoom"
+msgstr "Zoom-a"
+
+msgid "add a new watermark"
+msgstr "Gehitu ur-marka bat"
+
+msgid "all"
+msgstr "denak"
+
+msgid "an error happened"
+msgstr "errore bat gertatu da"
+
+msgid "and"
+msgstr "eta"
+
+msgid "any visitor can see this album"
+msgstr "edozein bisitarik album hau ikus dezake"
+
+msgid "between"
+msgstr "tartean"
+
+msgid "between %.2f and %.2f"
+msgstr "%.2f eta %.2f tartean"
+
+msgid "unit mode"
+msgstr "bakarkako modua"
+
+msgid "update the database from files"
+msgstr "eguneratu datu-basea fitxategiekin"
+
+msgid "user \"%s\" added"
+msgstr "\"%s\" erabiltzailea gehitua izan da"
+
+msgid "user_status_admin"
+msgstr "Kudeatzailea"
+
+msgid "user_status_generic"
+msgstr "Generikoa"
+
+msgid "user_status_guest"
+msgstr "Gonbidatua"
+
+msgid "user_status_webmaster"
+msgstr "Webmasterra"
+
+msgid "visitors need to login and have the appropriate permissions to see this album"
+msgstr "Bisitariak saio hasi eta dagokion baimenak behar ditu album hau ikusteko"
+
+msgid "width & height"
+msgstr "zabalera eta altuera"
+
+msgid "wrong filename"
+msgstr "okerreko fitxategi-izena"
+
+msgid "selection"
+msgstr "hautapena"
+
+msgid "show details"
+msgstr "erakutsi xehetasunak"
+
+msgid "singly represented"
+msgstr "konponduta albumaren koadro txikia"
+
+msgid "status"
+msgstr "egoera"
+
+msgid "sub-albums"
+msgstr "azpi-albumak"
+
+msgid "synchronize files metadata with database photos informations"
+msgstr "Datu-baseko argazkiak fitxategi metadatuekin sinkronizatu"
+
+msgid "synchronize files structure with database"
+msgstr "Fitxategi egitura datu-basearekin sinkronizatu"
+
+msgid "target"
+msgstr "helburua"
+
+msgid "test"
+msgstr "proba"
+
+msgid "test this remote site"
+msgstr "probatu urruneko gune hau"
+
+msgid "the forum"
+msgstr "foroa"
+
+msgid "the wiki"
+msgstr "wikia"
+
+msgid "unknown"
+msgstr "ezezaguna"
+
+msgid "unset"
+msgstr "ezarrigabea"
+
+msgid "Album list management"
+msgstr "Album zerrenda kudeaketa"
+
+msgid "Album manual order was saved"
+msgstr "Album eskuzko ordenatzea gorderik"
+
+msgid "Album name"
+msgstr "Album izena"
+
+msgid "Albums automatically sorted"
+msgstr "Albumak automatikoki ordenaturik"
+
+msgid "Advanced features"
+msgstr "Ezaugarri aurreratuak"
+
+msgid "Album \"%s\" has been added"
+msgstr "\"%s\" albuma gehitua izan da"
+
+msgid "Album \"%s\" now contains %d photos"
+msgstr "\"%s\" albumak orain %d argazki ditu"
+
+msgid "Album updated successfully"
+msgstr "Albuma egoki eguneratu da"
+
+msgid "All %d photos are selected"
+msgstr "%d argazki guztiak hautaturik daude"
+
+msgid "All %d users are selected"
+msgstr "%d erabiltzaile  guztiak hautaturik daude"
+
+msgid "All extensions are up to date."
+msgstr "Hedapen guztiak eguneratuak daude"
+
+msgid "All languages are up to date."
+msgstr "Hizkuntza guztiak eguneratuak daude"
+
+msgid "All plugins are up to date."
+msgstr "Gehigarri guztiak eguneratuak daude"
+
+msgid "All themes are up to date."
+msgstr "Gai guztiak eguneratuak daude"
+
+msgid "Allow rating"
+msgstr "Gaitu baloratzea"
+
+msgid "+ Add an upload box"
+msgstr "+ gehitu igoera kutxa"
+
+msgid "%d tag"
+msgstr "etiketa %d"
+
+msgid "%d tags"
+msgstr "%d etiketa"
+
+msgid "%d user"
+msgid_plural "%d users"
+msgstr[0] "erabiltzaile %d"
+msgstr[1] "%d erabiltzaile"
+
+msgid "%d user comment rejected"
+msgstr "%d erabiltzailearen iruzkina ukatua izan da"
+
+msgid "%d user was updated."
+msgid_plural "%d users were updated."
+msgstr[0] "%d erabiltzaile eguneratuak"
+msgstr[1] "%d erabiltzaile eguneratu egin dira."
+
+msgid "%d week"
+msgstr "aste %d"
+
+msgid "%d weeks"
+msgstr "%d hilabete"
+
+msgid "%d year"
+msgstr "urte %d"
+
+msgid "%d years"
+msgstr "%d urte"
+
+msgid "%s ago"
+msgstr "orain dela %s"
+
+msgid "%d day"
+msgstr "egun %d"
+
+msgid "%d days"
+msgstr "%d egun "
+
+msgid "%d group"
+msgstr "talde %d"
+
+msgid "%d groups"
+msgstr "%d talde"
+
+msgid "%d album moved"
+msgid_plural "%d albums moved"
+msgstr[0] "album %d mugitua"
+msgstr[1] "%d album mugitu egin dira"
+
+msgid " and %d virtuals"
+msgstr "eta %d birtual\r\n"
+
+msgid " and %d virtual"
+msgstr "eta %d birtual"
+
+msgid "Adobe Photoshop Lightroom is a photography software designed to manage large quantities of digital images and doing post production work."
+msgstr "Adobe Photoshop Lightroom irudi digital multzo handiak kudeatzeko eta postprodukzio lanak egiteko erabiltzen den argazki-softwarea da."
+
+msgid "Album photos associated to the following albums: %s"
+msgstr "Hurrengo albumekin elkarturiko argazki-albumak: %s"
+
+msgid "Albums authorized thanks to group associations"
+msgstr "Talde-asoziazioei esker baimendutako albumak"
+
+msgid "All optimizations have been successfully completed."
+msgstr "Optimizazio guztiak egoki burutu dira."
+
+msgid "Allow user customization"
+msgstr "Baimendu erabiltzaileen pertsonalizazioa"
+
+msgid "Allow user registration"
+msgstr "Baimendu erabiltzaileen izen-ematea"
+
+msgid "Allow users to add a link to their website"
+msgstr "Baimendu erabiltzaileek beraien webguneetara estekak gehitzea"
+
+msgid "Allow users to delete their own comments"
+msgstr "Baimendu erabiltzaileak beraien iruzkinak ezabatzea"
+
+msgid "Allow users to edit their own comments"
+msgstr "Baimendu erabiltzaileak beraien iruzkinak editatzea"
+
+msgid "Allowed file types: %s."
+msgstr "Baimendutako fitxategi-motak: %s."
+
+msgid "An error has occured during extract. Please check files permissions of your piwigo installation.<br><a href=\"%s\">Click here to show log error</a>."
+msgstr "Errorea gertatu da ateratzerakoan. Egiaztatu zure Piwigo instalazioaren fitxategi-baimenak.<br><a href=\"%s\">Egin klik errorearen xehetasunak ikusteko</a>."
+
+msgid "An error has occured during upgrade."
+msgstr "Errorea gertatu da eguneratzerakoan."
+
+msgid "An error occured during extraction (%s)."
+msgstr "Errorea gertatu da (%s) fitxategiak ateratzerakoan."
+
+msgid "An information email was sent to group \"%s\""
+msgstr "Informazio emaila bidali egin da \"%s\" taldera"
+
+msgid "Anomaly"
+msgstr "Errorea"
+
+msgid "Anyway only webmasters can see this tab and never administrators."
+msgstr "Web-arduradunek baino ezin dute fitxa hau ikusi, ez administrariek."
+
+msgid "Aperture is a powerful tool to refine images and manage massive libraries on Mac."
+msgstr "Aperture, Mac ordenagailuetan erabiltzen den tresna da irudiak hobetzeko eta liburutegi handiak kudeatzeko."
+
+msgid "Aperture is designed for professional photographers with iPhoto simplicity."
+msgstr "Aperture argazkilari profesionalei zuzenduta dago iPhotoren erraztasunean oinarriturik."
+
+msgid "Apply action"
+msgstr "Aplikatu ekintza"
+
+msgid "Apply selected corrections"
+msgstr "Aplikatu hautatutako zuzenketak"
+
+msgid "Active Plugins"
+msgstr "Aktibatu pluginak"
+
+msgid "Active Themes"
+msgstr "Aktibatu gaiak"
+
+msgid "Add"
+msgstr "Gehitu"
+
+msgid "Add New Language"
+msgstr "Gehitu hizkuntz berria"
+
+msgid "Add New Theme"
+msgstr "Gehitu gai berria"
+
+msgid "Add Photos"
+msgstr "Gehitu argazkiak"
+
+msgid "Add a criteria"
+msgstr "Gehitu irizpidea"
+
+msgid "Add a filter"
+msgstr "Gehitu iragazkia"
+
+msgid "Add a tag"
+msgstr "Gehitu etiketa"
+
+msgid "Add a user"
+msgstr "Gehitu erabiltzailea"
+
+msgid "Add a virtual album"
+msgstr "Gehitu album birtuala"
+
+msgid "Add another set of photos"
+msgstr "Gehitu beste argazki-bilduma bat"
+
+msgid "Add detailed content"
+msgstr "Gehitu eduki xehatua"
+
+msgid "Add group"
+msgstr "Gehitu taldea"
+
+msgid "Add tags"
+msgstr "Gehitu etiketak"
+
+msgid "Add to caddie"
+msgstr "Gehitu multzora"
+
+msgid "Add write access to the \"%s\" directory"
+msgstr "Gehitu idazteko baimena \"%s\" direktorioan"
+
+msgid "Add/delete a permalink"
+msgstr "Gehitu/ezabatu esteka irakunkorra"
+
+msgid "Added by %s"
+msgstr "%s(e)gatik gehituta"
+
+msgid "Administration Home"
+msgstr "Administrazio Orri Nagusia"
+
+msgid "<em>Piwigo for iOS</em> application empowers you to connect to your Piwigo gallery from your iPhone, iPad or iPod Touch, create some albums and upload several photos at once."
+msgstr "<em>Piwigo IOSerako</em> aplikazioak iPhone, iPad edo iPod Touch gailuekin Piwigo galeriarekin zuzenean konektatzeko aukera ematen dizu. Sortu albumak eta kargatu hainbat argazki batera."
+
+msgid "A locked gallery is only visible to administrators"
+msgstr "Blokeatutako galeriak administrarientzako baino ez daude ikusgai "
+
+msgid "A new version of Piwigo is available."
+msgstr "Eskuragarri dago Piwigo bertsio berria."
+
+msgid "ACCESS_0"
+msgstr "Sarbide librea"
+
+msgid "ACCESS_1"
+msgstr "Denentzako sarbidea"
+
+msgid "ACCESS_2"
+msgstr "Izena emandako erabiltzaileentzako sarbidea"
+
+msgid "ACCESS_3"
+msgstr "Administrarientzako sarbidea"
+
+msgid "ACCESS_4"
+msgstr "Web-arduradunentzako sarbidea"
+
+msgid "ACCESS_5"
+msgstr "Sarbiderik ez"
+
+msgid "Access type"
+msgstr "Sarbide-mota"
+
+msgid "Action"
+msgstr "Ekintza"
+
+msgid "Actions"
+msgstr "Ekintzak"
+
+msgid "Activate"
+msgstr "Aktibatu"
+
+msgid "Activate Navigation Bar"
+msgstr "Aktibatu nabigazio-barra"
+
+msgid "Activate Navigation Thumbnails"
+msgstr "Aktibatu nabigazio-koadro txikiak"
+
+msgid "Activate comments"
+msgstr "Aktibatu iruzkinak"
+
+msgid "Activate icon \"%s\""
+msgstr "Aktibatu \"%s\" ikonoa"
+
+msgid "Activate icon \"new\" next to albums and pictures"
+msgstr "Aktibatu album eta irudien ondoko \"berria\" ikonoa"
+
+msgid "Activate it now"
+msgstr "Aktibatu orain"
+
+msgid "Active Languages"
+msgstr "Hizkuntz aktiboak"
+
+msgid "%d user comment validated"
+msgstr "Erabiltzaileen iruzkin %d balidatu egin da"
+
+msgid "%d user comments rejected"
+msgstr "Erabiltzaileen %d iruzkin baztertu egin dira"
+
+msgid "%d user comments validated"
+msgstr "Erabiltzaileen %d iruzkin balidatu egin dira"
+
+msgid "%d user deleted"
+msgid_plural "%d users deleted"
+msgstr[0] "Erabiltzaile %d ezabatu egin da"
+msgstr[1] "%d erabiltzaile ezabatuak"
+
+msgid "%d user was not updated."
+msgid_plural "%d users were not updated."
+msgstr[0] "Erabiltzaile %d ez da eguneratu."
+msgstr[1] "%d erabiltzaile ez dira eguneratu."
+
+msgid "%d waiting for validation"
+msgstr "%d balioztatzea itxaroten"
+
+msgid "%s has been successfully updated."
+msgstr "%s ondo eguneratu egin da."
+
+msgid "%s in the future"
+msgstr "%s gerorako"
+
+msgid "%s must be to set to false in your local/config/config.inc.php file"
+msgstr "%s faltsu gisa ezarri behar da local/config/config.inc.php fitxategian"
+
+msgid "%s photos can not be regenerated"
+msgstr "%s argazki ezin izan dira berriro sortu"
+
+msgid "%s photos have been regenerated"
+msgstr "%s argazki sortu dira berriro"
+
+msgid "%s value is not correct file because exif are not supported"
+msgstr "%s balioa oker dago ez direlako exif datuak onartzen"
+
+msgid "%u users have automatic permission because they belong to a granted group."
+msgstr "%u erabiltzailek dute baimen automatikoa baimendutako talde baten parte izateagatik."
+
+msgid "(filtered from %s total users)"
+msgstr "(guztizko %s erabiltzaileetatik iragazita)"
+
+msgid "(this tag will be deleted)"
+msgstr "(etiketa hau ezabatu egingo da)"
+
+msgid ", click on"
+msgstr ", egin klik"
+
+msgid "... or "
+msgstr "… edo"
+
+msgid "%d album including"
+msgstr "Album %d barne"
+
+msgid "%d albums including"
+msgstr "%d album barne"
+
+msgid "%d anomaly has been corrected."
+msgid_plural "%d anomalies have been detected corrected."
+msgstr[0] "Errore %d zuzendu egin da."
+msgstr[1] "%d errore aurkitu eta zuzendu egin dira."
+
+msgid "%d anomaly has been detected."
+msgid_plural "%d anomalies have been detected."
+msgstr[0] "Errore %d antzeman egin da."
+msgstr[1] "%d errore antzeman egin dira."
+
+msgid "%d anomaly has been ignored."
+msgid_plural "%d anomalies have been ignored."
+msgstr[0] "Errore %d egin da ez ikusiarena."
+msgstr[1] "%d errore egin dira ez ikusiarenak."
+
+msgid "%d anomaly has not been corrected."
+msgid_plural "%d anomalies have not been corrected."
+msgstr[0] "Errore %d ez da zuzendu."
+msgstr[1] "%d errore ez dira zuzendu."
+
+msgid "%d association"
+msgstr "Elkarketa %d"
+
+msgid "%d associations"
+msgstr "%d elkarketa"
+
+msgid "%d of %d photos selected"
+msgstr "%d(e)tik %d argazki hautatu dira"
+
+msgid "%d of %d users selected"
+msgstr "%d(e)tik %d erabiltzaile hautatu dira"
+
+msgid "%d parameter was updated."
+msgid_plural "%d parameters were updated."
+msgstr[0] "Parametro %d eguneratu egin da."
+msgstr[1] "%d parametro eguneratu egin dira."
+
+msgid "%d photo was deleted"
+msgid_plural "%d photos were deleted"
+msgstr[0] "Argazki %d ezabatu egin da"
+msgstr[1] "%d argazki ezabatu egin dira"
+
+msgid "%d photos uploaded"
+msgstr "%d argazki kargatu egin dira"
+
+msgid "Delete this language"
+msgstr "Ezabatu hizkuntza"
+
+msgid "Delete this theme"
+msgstr "Ezabatu gaia"
+
+msgid "Deleted on"
+msgstr "Data honetan ezabatua"
+
+msgid "Deletions"
+msgstr "Ezabatzeak"
+
+msgid "Deny selected groups"
+msgstr "Ukatu hautatako taldeak"
+
+msgid "Deny selected users"
+msgstr "Ukatu hautatutako erabiltzaileak"
+
+msgid "Discover album:"
+msgstr "Aurkitu albumean:"
+
+msgid "Dissociated"
+msgstr "Bereizia"
+
+msgid "Does not represent"
+msgstr "Ez da honen koadro txikia"
+
+msgid "Each email sent will contain its own automatic authentication key on links, valid for %s."
+msgstr "Bidalitako posta elektroniko bakoitzak bere autentifikazio-giltza automatikoa dauka, balioduna %s(e)rako. "
+
+msgid "Edit ranks"
+msgstr "Editatu mailak"
+
+msgid "Email admins when a valid comment is entered"
+msgstr "Posta elektronikoa bidaltzen die administrariei baliozkoa den iruzkina sartzen denean"
+
+msgid "Empty caddie"
+msgstr "Hustutako sorta"
+
+msgid "Environment"
+msgstr "Ingurunea"
+
+msgid "Error list"
+msgstr "Errore-zerrenda"
+
+msgid "Error on file \"%s\" : %s"
+msgstr "Errorea \"%s\" fitxategian: %s"
+
+msgid "Error when sending email to %s [%s]."
+msgstr "Errorea posta elektronikoa %s(e)ri bidaltzerakoan [%s]."
+
+msgid "Errors caption"
+msgstr "Errore-legendak"
+
+msgid "Execution time is out, treatment must be continue [Estimated time: %d second]."
+msgid_plural "Execution time is out, treatment must be continue [Estimated time: %d seconds]."
+msgstr[0] "Exekuzio-denbora bukatu egin da, tratamenduak aurrera egin behar du [Kalkulatutako denbora: %d segundo]. "
+msgstr[1] "Exekuzio-denbora gainditu egin da, tratamenduak aurrera egin behar du [Kalkulatutako denbora: %d segundo]."
+
+msgid "Classic display"
+msgstr "Bistaratze klasikoa"
+
+msgid "Comments for all"
+msgstr "Iruzkinak denentzako"
+
+msgid "Complementary mail content"
+msgstr "Posta eduki gehigarria"
+
+msgid "Configuration"
+msgstr "Konfigurazioa"
+
+msgid "Confirm merge"
+msgstr "Baieztatu bateratzea"
+
+msgid "Continue processing treatment"
+msgstr "Jarraitu abian dagoen tratamendua"
+
+msgid "Correction"
+msgstr "Zuzenketa"
+
+msgid "Correction applied with error"
+msgstr "Zuzenketa errorearekin aplikatu da"
+
+msgid "Correction applied with success"
+msgstr "Zuzenketa egoki aplikatu da"
+
+msgid "Correction the anomaly will cancel the fact that it's ignored"
+msgstr "Zuzendutako errorera ez da berriro albo batera utziko"
+
+msgid "Create the \"%s\" directory at the root of your Piwigo installation"
+msgstr "Sortu \"%s\" direktorioa Piwigo instalazioaren erroan"
+
+msgid "Create this site"
+msgstr "Sortu gunea"
+
+msgid "Crop"
+msgstr "Moztu"
+
+msgid "Database synchronization with files"
+msgstr "Datu-basearen sinkronizazioa fitxategiekin"
+
+msgid "Delete %d orphan photos"
+msgstr "Ezabatu %d argazki umezurtz"
+
+msgid "Delete multiple size images"
+msgstr "Ezabatu tamaina askotariko irudiak"
+
+msgid "Delete orphan tags"
+msgstr "Ezabatu etiketa umezurtzak"
+
+msgid "Delete selected photos"
+msgstr "Ezabatu hautatako argazkiak"
+
+msgid "Delete selected tags"
+msgstr "Ezabatu hautatutako etiketak"
+
+msgid "Delete selected users"
+msgstr "Ezabatu hautatutako erabiltzaileak"
+
+msgid "Apply to sub-albums"
+msgstr "Aplikatu azpi-albumetara"
+
+msgid "Apply watermark if height is bigger than"
+msgstr "Aplikatu ur-marka altuera hau baino gehiagokoetan"
+
+msgid "Apply watermark if width is bigger than"
+msgstr "Aplikatu ur-marka zabalera hau baino gehiagokoetan"
+
+msgid "Approximate maximum resolution: %dM pixels (that's %dx%d pixels)."
+msgstr "Gutxi gorabeherako gehienezko erresoluzioa: %dM pixel (%dx%d pixel)."
+
+msgid "Are you sure to install this upgrade? You must verify if this version does not need uninstallation."
+msgstr "Ziur eguneraketa instalatu nahi duzula? Egiaztatu bertsio honek aurretik desinstalaziorik ez ote duen behar. "
+
+msgid "Automatic sort order"
+msgstr "Hurrenkera automatikoa"
+
+msgid "Available on"
+msgstr "Hemen eskuragarri"
+
+msgid "Average rate"
+msgstr "Batez besteko balorazioa"
+
+msgid "Batch Manager"
+msgstr "Multzoko kudeatzailea"
+
+msgid "Bound Theme"
+msgstr "Lotu gaia"
+
+msgid "By default, the center of interest is placed in the middle of the photo."
+msgstr "Modu lehenetsian, interes-erdigunea argazkiaren erdian kokaturik dago."
+
+msgid "By rank"
+msgstr "Mailagatik"
+
+msgid "Caddie"
+msgstr "Sorta"
+
+msgid "Caddie management"
+msgstr "Sorta kudeatzailea"
+
+msgid "Can't read or extract archive."
+msgstr "Ezin da fitxategia irakurri edo atera."
+
+msgid "Cannot delete the old permalink !"
+msgstr "Ezin da ezabatu esteka iraunkor zaharra!"
+
+msgid "Center of interest"
+msgstr "Interes-erdigunea"
+
+msgid "Check all"
+msgstr "Egiaztatu denak"
+
+msgid "Check automatic corrections"
+msgstr "Egiaztatu zuzenketa automatikoak"
+
+msgid "No user is permitted to see this private album"
+msgstr "Ez da erabiltzailerik baimendu album pribatu hau ikusteko"
+
+msgid "No results"
+msgstr "Ez dago emaitzarik"
+
+msgid "No recipient selected"
+msgstr "Ez da hartzailerik hautatu"
+
+msgid "No matching user found"
+msgstr "Ez da aurkitu ba datorren erabiltzailerik"
+
+msgid "No photos selected, no actions possible."
+msgstr "Ez da argazkirik hautatu, ez dago burutu daiteken ekintzarik."
+
+msgid "No photo selected, %d photos in current set"
+msgstr "Ez da argazkirik hautatu, %d argazki uneko multzoan"
+
+msgid "No photo in this album"
+msgstr "Ez dago argazkirik albumean"
+
+msgid "No photo in the current set."
+msgstr "Ez dago argazkirik uneko multzoan."
+
+msgid "No photo can be deleted"
+msgstr "Ezin daiteke argazkirik ezabatu"
+
+msgid "No groups selected, no actions possible."
+msgstr "Ez da talderik hautatu, ez dago burutu daiteken ekintzarik."
+
+msgid "No order field selected"
+msgstr "Ez da hautatu ordena-eremurik "
+
+msgid "No members to manage"
+msgstr "Ez dago kudeatu beharreko kiderik"
+
+msgid "No mail to send."
+msgstr "Ez dago bidali beharreko posta elektronikorik."
+
+msgid "No group is permitted to see this private album"
+msgstr "Ez da talderik baimendu album pribatu hau ikusteko"
+
+msgid "No display"
+msgstr "Bistaratu gabe"
+
+msgid "No file was uploaded"
+msgstr "Ez da fitxategirik kargatu"
+
+msgid "No destination tag selected"
+msgstr "Ez da helburu-etiketarik hautatu"
+
+msgid "No and unlock sub-albums"
+msgstr "Ez eta desblokeatu azpi-albumak"
+
+msgid "New tag"
+msgstr "Etiketa berria"
+
+msgid "New photos were added"
+msgstr "Argazki berria gehitu dira"
+
+msgid "New photos added"
+msgstr "Gehitutako argazki berriak"
+
+msgid "New parent album"
+msgstr "Album nagusi berria"
+
+msgid "New name"
+msgstr "Izen berria"
+
+msgid "New Version"
+msgstr "Bertsio berria"
+
+msgid "Name of the duplicate"
+msgstr "Bikoiztuaren izena"
+
+msgid "Name"
+msgstr "Izena"
+
+msgid "Multiple Size"
+msgstr "Hainbat tamaina"
+
+msgid "Move to album"
+msgstr "Mugitu albumera"
+
+msgid "Move albums"
+msgstr "Mugitu albumak"
+
+msgid "Move"
+msgstr "Mugitu"
+
+msgid "Month"
+msgstr "Hilabetea"
+
+msgid "Modify information"
+msgstr "Aldatu informazioa"
+
+msgid "Missing a temporary folder"
+msgstr "Aldi baterako karpeta bat falta da"
+
+msgid "Missing Plugins"
+msgstr "Falta diren pluginak"
+
+msgid "Miscellaneous"
+msgstr "Askotarikoak"
+
+msgid "Minimum width"
+msgstr "Gutxieneko zabalera"
+
+msgid "Minimum privacy level"
+msgstr "Gutxieneko pribatutasun-maila"
+
+msgid "Minimum height"
+msgstr "Gutxieneko altuera"
+
+msgid "Metadata synchronized from file"
+msgstr "Metadatuak fitxategiarekin sinkronizatu egin dira"
+
+msgid "Metadata synchronization results"
+msgstr "Metadatuen sinkronizazio-emaitzak"
+
+msgid "Main \"guest\" user status is incorrect"
+msgstr "\"gonbidatua\" erabiltzaile-egoera nagusia okerra"
+
+msgid "Maximum width"
+msgstr "Gehienezko zabalera"
+
+msgid "Maximum height"
+msgstr "Gehienezko altuera"
+
+msgid "Maximum file size: %sB."
+msgstr "Gehienezko fitxategi-tamaina: %sB."
+
+msgid "Manual order"
+msgstr "Eskuzko ordena"
+
+msgid "Manage this set of %d photos"
+msgstr "Kudeatu %d argazkitako multzo hau"
+
+msgid "Manage the members"
+msgstr "Kudeatu kideak"
+
+msgid "Manage photo ranks"
+msgstr "Argazkiak ordenatzeko irizpidea "
+
+msgid "Manage permissions for user \"%s\""
+msgstr "Kudeatu baimenak \"%s\" erabiltzailearentzako"
+
+msgid "Manage permissions for group \"%s\""
+msgstr "Kudeatu baimenak \"%s\" talderako"
+
+msgid "Manage authorizations for selected albums"
+msgstr "Kudeatu baimenak hautatutako albumetarako"
+
+msgid "Make this theme available to users"
+msgstr "Egin gaia eskuragarri erabiltzaileentzako"
+
+msgid "Make this language available to users"
+msgstr "Egin hizkuntza eskuragarri erabiltzaileentzako"
+
+msgid "Main \"webmaster\" user status is incorrect"
+msgstr "\"web-arduraduna\" erabiltzaile-egoera nagusia okerra"
+
+msgid "Main \"webmaster\" user does not exist"
+msgstr "\"web-arduraduna\" erabiltzaile nagusia ez da existitzen"
+
+msgid "Main \"guest\" user does not exist"
+msgstr "\"gonbidatua\" erabiltzaile nagusia ez da existitzen"
+
+msgid "Linked albums"
+msgstr "Estekatutako albumak"
+
+msgid "Link all album photos to some existing albums"
+msgstr "Estekatu albumeko argazkiak lehenik dauden albumetara"
+
+msgid "Link all album photos to a new album"
+msgstr "Estekatu albumeko argazkiak album berri batera"
+
+msgid "Level 8"
+msgstr "Administrariak"
+
+msgid "Impossible to deactivate this theme, you need at least one theme."
+msgstr "Ezin izan da desaktibatu gaia gutxienez gairen bat beharrezkoa delako."
+
+msgid "Impossible to delete this theme. Other themes depends on it: %s"
+msgstr "Ezin da gaia ezabatu beste gai batzuk behar dutelako: %s"
+
+msgid "In your php.ini file, the upload_max_filesize (%sB) is bigger than post_max_size (%sB), you should change this setting"
+msgstr "php.ini fitxategiko upload_max_filesize balorea (%sB) post_max_size balorea (%sB) baino handiagoa da. Ezarpen hori aldatu beharko zenuke"
+
+msgid "Include display of recent photos grouped by dates"
+msgstr "Gehitu azken argazkien bistaratzea datagatik taldekatuta"
+
+msgid "Information data registered in database"
+msgstr "Informazio datuak datu-basean erregistratu dira"
+
+msgid "Invert"
+msgstr "Alderantzikatu"
+
+msgid "Keep in touch with Piwigo project, subscribe to Piwigo Announcement Newsletter. You will receive emails when a new release is available (sometimes including a security bug fix, it's important to know and upgrade) and when major events happen to the project. Only a few emails a year."
+msgstr "Mantendu egunean Piwigo proiektuarekin, harpidetu Piwigo Announcement Newsletterrera. Eskuragarri dauden bertsio berrien oharrak bidaliko zaizkizu (batzuetan, ezagutzeko eta eguneratzeko garrantzitsuak diren segurtasun-erroreak konpontzen dituztenak) eta gertaera garrantzitsuenen berri izango duzu. Mezu elektroniko gutxi batzuk baino ez urtean buruan."
+
+msgid "Landscape"
+msgstr "Horizontala"
+
+msgid "Languages which need upgrade"
+msgstr "Eguneratu behar diren hizkuntzak"
+
+msgid "Last hit"
+msgstr "Azken emaitza"
+
+msgid "Last import"
+msgstr "Azken inportazioa"
+
+msgid "Last revisions"
+msgstr "Azken berrikuspenak"
+
+msgid "Last send"
+msgstr "Azken bidalketak"
+
+msgid "Last visit on %s, %s."
+msgstr "Azken bisita %s(e)an, %s."
+
+msgid "Learn more"
+msgstr "Gehiago jakiteko"
+
+msgid "Level 0"
+msgstr "---"
+
+msgid "Level 1"
+msgstr "Kontaktuak"
+
+msgid "Level 2"
+msgstr "Lagunak"
+
+msgid "Level 4"
+msgstr "Familia"
+
+msgid "Gallery unlocked"
+msgstr "Galeria desblokeatu egin da"
+
+msgid "Give write access (chmod 777) to \"%s\" directory at the root of your Piwigo installation"
+msgstr "Eman idazteko baimena (chmod777) \"%s\" direktorioari Piwigo instalazioaren erroan"
+
+msgid "Go to"
+msgstr "Joan"
+
+msgid "Go to %s or %s for more informations"
+msgstr "Joan %s edo %s(e)ra informazio gehiagorako"
+
+msgid "Grant selected groups"
+msgstr "Onartu hautatutako taldeak"
+
+msgid "Grant selected users"
+msgstr "Onartu hautatutako erabiltzaileak"
+
+msgid "Hit"
+msgstr "Emaitza"
+
+msgid "Hoverbox display"
+msgstr "Hoverbox bistaratzea"
+
+msgid "I decide to update anyway"
+msgstr "Eguneratzea erabaki dut, dena den"
+
+msgid "If no HD is available and if the current websize is bigger than resize dimensions, Piwigo will move it as HD and create a downsized websize photo from it."
+msgstr "HDrik eskuragarri ez bada eta web-tamaina beste tamainak baino handiagoa baldin bada, Piwigok HD bezala mugituko du eta tamaina gutxiagoko web-tamainako argazkia sortuko du bertatik."
+
+msgid "If you encounter problems or have any question, please send a message to"
+msgstr "Arazorik edo galderaren bat baldin baduzu, bidali mezua hona"
+
+msgid "Ignore All"
+msgstr "Ez ikusi egin denei"
+
+msgid "Ignore selected anomalies"
+msgstr "Ez ikusi egin hautatutako erroreak"
+
+msgid "Ignore this update"
+msgstr "Ez ikusi egin eguneraketa"
+
+msgid "Images manual order was saved"
+msgstr "Irudiak eskuzko hurrenkeran gorde dira"
+
+msgid "Impossible automatic correction"
+msgstr "Zuzenketa automatika ezinezkoa"
+
+msgid "Impossible to activate this theme, the parent theme is missing: %s"
+msgstr "Ezin izan da gaia aktibatu gai nagusia falta delako: %s"
+
+msgid "Impossible to deactivate the default theme."
+msgstr "Ezin izan da desaktibatu lehenetsitako gaia."
+
+msgid "Impossible to deactivate this language, first set another language as default."
+msgstr "Ezin izan da desaktibatu hizkuntza aurretik beste hizkuntzen bat ezarri behar delako lehenetsita gisa."
+
+msgid "Impossible to deactivate this language, you need at least one language."
+msgstr "Ezin izan da desaktibatu hizkuntza gutxienez hizkuntzen bat beharrezkoa delako."
+
+msgid "Exif extension not available, admin should disable exif use"
+msgstr "Exif luzapena ez dago eskuragarri. Administrariak exif erabilera ezgaitu beharko luke"
+
+msgid "Extend for templates"
+msgstr "Hedatu txantiloiak"
+
+msgid "Extensions Update"
+msgstr "Luzapenen eguneraketa"
+
+msgid "FTP + Synchronization"
+msgstr "FTP + Sinkronizazioa"
+
+msgid "Failed to write file to disk"
+msgstr "Ezin izan da idatzi fitxategia diskan"
+
+msgid "Features include gallery browsing, album creation and photo upload."
+msgstr "Ezaugarrien artean galerien nabigazioa, albumen sortzea eta argazkien kargatzea."
+
+msgid "File"
+msgstr "Fitxategia"
+
+msgid "File upload stopped by extension"
+msgstr "Fitxategiaren karga gelditu egin da luzapenaren erruz"
+
+msgid "File/directory read error"
+msgstr "Fitxategia/direktorioa irakurtzerakoan errorea"
+
+msgid "Find a new representant by random"
+msgstr "Bilatu ausazko koadro txiki berria albumarentzat"
+
+msgid "Follow Orientation"
+msgstr "Jarraitu orientazioa"
+
+msgid "Following plugins may not be compatible with the new version of Piwigo:"
+msgstr "Baliteke hurrengo pluginak bateragarriak ez izatea Piwigoren bertsio berriarekin:"
+
+msgid "Following themes may not be compatible with the new version of Piwigo:"
+msgstr "Baliteke hurrengo gaiak bateragarriak ez izatea Piwigoren bertsio berriarekin:"
+
+msgid "For photo sizes with crop, such as \"Square\", Piwigo will do its best to include the center of interest."
+msgstr "Moztutako argazki tamainetan, \"Karratua\" bezalakoetan alegia, Piwigo interes-erdigunea bertan sartzen saiatuko da."
+
+msgid "For security reason, authentication keys do not work for administrators."
+msgstr "Segurtasun arrazoiengatik, autentifikazio-giltzek ez dute balio administrarientzako. "
+
+msgid "Forbid this language to users"
+msgstr "Debekatu hizkuntza erabiltzaileentzako"
+
+msgid "Forbid this theme to users"
+msgstr "Debekatu gaita erabiltzaileentzako"
+
+msgid "Forbidden"
+msgstr "Debekatuta"
+
+msgid "Form"
+msgstr "Formularioa"
+
+msgid "GD library is missing"
+msgstr "GD liburutegia falta da"
+
+msgid "No user selected of %d users"
+msgstr "%d erabiltzailetatik ez da erabiltzailerik hautatu"
+
+msgid "Rate"
+msgstr "Baloratu"
+
+msgid "Released on"
+msgstr "Bertsioaren data"
+
+msgid "Reject"
+msgstr "Baztertu"
+
+msgid "Reinitialize check integrity"
+msgstr "Berrabiarazi integritate-egiaztapena"
+
+msgid "Registered on %s, %s."
+msgstr "%s, %s(e)an erregistraturik."
+
+msgid "Refresh photo set"
+msgstr "Freskatu argazki-multzoa"
+
+msgid "Refresh"
+msgstr "Freskatu"
+
+msgid "Recipients"
+msgstr "Hartzaileak"
+
+msgid "Read Piwigo Documentation"
+msgstr "Irakurri Piwigo dokumentazioa"
+
+msgid "ReGalAndroid (RemoteGallery client for Android) is an open source (GPL v3) Piwigo client for the Android platform."
+msgstr "ReGalAndroid (RemoteGallery client for Android) Android plataformarako kode irekiko (GPLv3) Piwigo bezeroa da."
+
+msgid "Ratio"
+msgstr "Erlazioa"
+
+msgid "Rating by guests"
+msgstr "Gonbidatuen balorazioa"
+
+msgid "Rating"
+msgstr "Balorazioa"
+
+msgid "Rated %d times, score : %.2f"
+msgstr "%d bider baloratuta, puntuazioa: %.2f"
+
+msgid "Rate date"
+msgstr "Balorazio-data"
+
+msgid "Random photo"
+msgstr "Ausazko argazkia"
+
+msgid "Quick Local Synchronization"
+msgstr "Sinkronizazio lokal azkarra"
+
+msgid "Purge user cache"
+msgstr "Borratu betiko erabiltzaile-cachea "
+
+msgid "Purge search history"
+msgstr "Borratu betiko bilaketa-historia"
+
+msgid "Purge sessions"
+msgstr "Borratu betiko saioak"
+
+msgid "Purge never used notification feeds"
+msgstr "Borratu betiko erabili gabeko ohar-jarioak"
+
+msgid "Purge history summary"
+msgstr "Borratu betiko historia-laburpena"
+
+msgid "Purge history detail"
+msgstr "Borratu betiko historia-xehetasunak"
+
+msgid "Purge compiled templates"
+msgstr "Borratu betiko konpilaturiko txantiloiak"
+
+msgid "Public / Private"
+msgstr "Publikoa/Pribatua"
+
+msgid "Public"
+msgstr "Publikoa"
+
+msgid "Properties"
+msgstr "Propietateak"
+
+msgid "Private"
+msgstr "Pribatua"
+
+msgid "Privacy level set to \"%s\""
+msgstr "Pribatutasun maila \"%s\"(e)an ezarri da"
+
+msgid "Privacy level"
+msgstr "Pribatutasun maila"
+
+msgid "Prepared time for list of users to send mail is limited. Others users are not listed."
+msgstr "Posta elektronikoa bidaliko zaien erabiltzaile-zerrenda prestatzeko denbora mugatua da. Beste erabiltzaile batzuk ez daude zerrendan."
+
+msgid "Preferences"
+msgstr "Hobespenak"
+
+msgid "Predefined filter"
+msgstr "Aurrez definitutako iragazkia"
+
+msgid "Posted %s on %s"
+msgstr "%s bidalita %s(e)an"
+
+msgid "Position"
+msgstr "Posizioa"
+
+msgid "Portrait"
+msgstr "Bertikala"
+
+msgid "Plugins which need upgrade"
+msgstr "Eguneratu behar diren pluginak"
+
+msgid "Plugin list"
+msgstr "Pluginen zerrenda"
+
+msgid "Plugins"
+msgstr "Pluginak"
+
+msgid "Plugin has been successfully copied"
+msgstr "Plugina ondo kopiatu da"
+
+msgid "Piwigo Publish plugin for Lightroom"
+msgstr "Piwigo argitaratze-plugina Lightroomerako"
+
+msgid "Please wait..."
+msgstr "Itxaron…"
+
+msgid "Please select at least two groups"
+msgstr "Hautatu gutxienez talde bi"
+
+msgid "Piwigo export plugin for iPhoto"
+msgstr "Piwigo esportazio-plugina iPhotorako"
+
+msgid "Piwigo for iOS (iPhone, iPad, iPod Touch)"
+msgstr "Piwigo iOSerako (iPhone, iPad, iPod Touch)"
+
+msgid "Piwigo publish plugin for Shotwell"
+msgstr "Piwigo argitaratze-plugina Shotwellerako"
+
+msgid "Piwigo publish plugin for digiKam"
+msgstr "Piwigo argitaratze-plugina digiKamerako"
+
+msgid "Piwigo version"
+msgstr "Piwigo bertsioa"
+
+msgid "Please check \"plugins\" folder and sub-folders permissions (CHMOD)."
+msgstr "Egiaztatu \"pluginak\" karpeta eta azpi-karpeten baimenak (CHMOD)."
+
+msgid "Photo unreachable or no support"
+msgstr "Atzitu ezinezko argazkia edo onartu gabeko formatua"
+
+msgid "Photos"
+msgstr "Argazkiak"
+
+msgid "Photos generation in progress..."
+msgstr "Argazki-sorrera abian…"
+
+msgid "Piwigo Administration"
+msgstr "Piwigo Administrazioa"
+
+msgid "Piwigo Announcements Newsletter"
+msgstr "Piwigo Iragarkien Buletina"
+
+msgid "Piwigo Update"
+msgstr "Piwigo eguneraketa"
+
+msgid "Piwigo Uploader"
+msgstr "Piwigo kargatzailea"
+
+msgid "Piwigo cannot retrieve upgrade file from server"
+msgstr "Piwigok ezin zu berreskuratu eguneraketa-fitxategia zerbitzaritik"
+
+msgid "Piwigo configuration"
+msgstr "Piwigo konfigurazioa"
+
+msgid "Piwigo export plugin for Aperture"
+msgstr "Piwigo esportazio-plugina Aperturerako"
+
+msgid "Photo sizes with crop"
+msgstr "Argazki-tamainak mozterakoan"
+
+msgid "Photo name"
+msgstr "Argazkiaren izena"
+
+msgid "Photo informations updated"
+msgstr "Argazkiaren informazioa eguneratu da"
+
+msgid "Photo Properties"
+msgstr "Argazkiaren propietateak"
+
+msgid "Photo Page"
+msgstr "Argazkiaren orria"
+
+msgid "Photo %s of %s"
+msgstr "%s. argazkia %s(e)tik"
+
+msgid "Permissions"
+msgstr "Baimenak"
+
+msgid "Permission management"
+msgstr "Baimenen kudeaketa"
+
+msgid "Permission granted thanks to a group"
+msgstr "Talde bati esker emandako baimena"
+
+msgid "Permission granted for users"
+msgstr "Erabiltzaileak baimendu dira"
+
+msgid "Permission granted"
+msgstr "Baimendu da"
+
+msgid "Permission granted for groups"
+msgstr "Taldeak baimendu dira"
+
+msgid "Permission denied"
+msgstr "Baimena ukatu da"
+
+msgid "Permalinks"
+msgstr "Esteka iraunkorrak"
+
+msgid "Permalink history"
+msgstr "Esteka iraunkorren historia"
+
+msgid "Permalink %s is already used by album %s"
+msgstr "%s esteka iraunkorra %s albuma erabiltzen ari da"
+
+msgid "Permalink %s has been previously used by album %s. Delete from the permalink history first"
+msgstr "%s esteka iraunkorra, dagoeneko %s albumean erabili da. Erabili aurretik ezabatu ezazu esteka iraunkorren historiatik."
+
+msgid "Permalink"
+msgstr "Esteka iraunkorra"
+
+msgid "Pending Comments"
+msgstr "Zain dauden iruzkinak"
+
+msgid "Path"
+msgstr "Bidea"
+
+msgid "Options"
+msgstr "Aukerak"
+
+msgid "Order of menubar items has been updated successfully."
+msgstr "Ondo eguneratu da menu-barraren elementuen ordena"
+
+msgid "Original Size"
+msgstr "Jatorrizko tamaina"
+
+msgid "Original file : %s"
+msgstr "Jatorrizko fitxategia: %s"
+
+msgid "Original templates"
+msgstr "Jatorrizko txantiloiak"
+
+msgid "Orphan tags deleted"
+msgstr "Etiketa umezurtzak ezabatu egin dira"
+
+msgid "Orphans"
+msgstr "Umezurtzak"
+
+msgid "Other private albums"
+msgstr "Beste album pribatu"
+
+msgid "Other plugins"
+msgstr "Beste plugin erabilgarri"
+
+msgid "Page banner"
+msgstr "Orrietako iragarki-banda"
+
+msgid "Overall"
+msgstr "Ikuspegi orokorra"
+
+msgid "Page end"
+msgstr "Orriaren amaiera"
+
+msgid "Pages seen"
+msgstr "Ikusitako orriak"
+
+msgid "Panorama"
+msgstr "Panoramikoa"
+
+msgid "Parameter"
+msgstr "Ezarpenak"
+
+msgid "Parameters"
+msgstr "Parametroak"
+
+msgid "Parent album"
+msgstr "Album nagusia"
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "Pasahitzaren baieztapena falta da. Baieztatu aukeratutako pasahitza."
+
+msgid "Password is missing. Please enter the password."
+msgstr "Pasahitza falta da. Idatzi pasahitza."
+
+msgid "Password updated"
+msgstr "Pasahitza eguneratu egin da"
+
+msgid "Optional URL keyword"
+msgstr "Aukerako URL gako-hitza"
+
+msgid "Optimizations have been completed with some errors."
+msgstr "Errore batzuekin burutu dira optimizazioak."
+
+msgid "Operation in progress"
+msgstr "Tratamendua abian."
+
+msgid "Operating system"
+msgstr "Sistema eragilea"
+
+msgid "Open user details"
+msgstr "Ireki erabiltzailearen xehetasunak"
+
+msgid "Opacity"
+msgstr "Opakutasuna"
+
+msgid "Only private albums are listed"
+msgstr "Album pribatuak baino ez dira zerrendatuko"
+
+msgid "On your Linux, simply install Shotwell with your package manager and the activate Piwigo publishing option."
+msgstr "Linuxen, instalatu Shotwell pakete-kudeatzailetik eta aktibatu Piwigoren argitaratze-aukera."
+
+msgid "Obsolete Plugins"
+msgstr "Zaharkitutako pluginak"
+
+msgid "Numeric identifier : %d"
+msgstr "Zenbakizko identifikatzailea: %d"
+
+msgid "Number of rates"
+msgstr "Zenbat balorazio"
+
+msgid "Number of downloads"
+msgstr "Zenbat deskarga"
+
+msgid "Number of comments per page"
+msgstr "Zenbat iruzkin orriko"
+
+msgid "Number of albums per page"
+msgstr "Zenbat album orriko"
+
+msgid "Notify administrators when a comment is"
+msgstr "Jakinarazi administrariak iruzkina dagoenean"
+
+msgid "Notification"
+msgstr "Jakinarazpena"
+
+msgid "Not cropped correctly?"
+msgstr "Ez al da behar bezala moztu?"
+
+msgid "None"
+msgstr "Bat ere ez"
+
+msgid "No user to send notifications by mail."
+msgstr "Ez dago erabiltzailerik posta elektroniko bidez jakinarazteko."
+
+msgid "No users selected, no actions possible."
+msgstr "Ez da erabiltzailerik hautatu, ez dago burutu daiteken ekintzarik."
+
+msgid "Support"
+msgstr "Laguntza"
+
+msgid "Summary"
+msgstr "Laburpena"
+
+msgid "Sum of rates"
+msgstr "Balorazioen batuketa"
+
+msgid "Start Upload"
+msgstr "Abiarazi karga"
+
+msgid "Subscribers could be listed (available) only if there is new elements to notify."
+msgstr "Harpidedunak zerrendatzeko aukera ere bada, baina jakinarazteko elementu berriak baino ez daudenean."
+
+msgid "Subscribed"
+msgstr "Harpidetuta"
+
+msgid "Subscribe/unsubscribe users"
+msgstr "Harpidetu/kendu harpidetza erabiltzaileak"
+
+msgid "Subscribe to notification by mail"
+msgstr "Harpidetu posta elektroniko bidezko jakinarazpenera"
+
+msgid "Subscribe %s to Piwigo Announcements Newsletter"
+msgstr "Harpidetu %s Piwigo Announcements Newsletterrera"
+
+msgid "Subscribe %s"
+msgstr "Harpidetu %s"
+
+msgid "Subscribe"
+msgstr "Harpidetu"
+
+msgid "Storage album"
+msgstr "Biltegi-albuma"
+
+msgid "Status of user \"%s\" updated"
+msgstr "\"%s\" erabiltzailearen egoera eguneratuta"
+
+msgid "Status"
+msgstr "Egoera"
+
+msgid "Statistics"
+msgstr "Estatistikak"
+
+msgid "Start pLoader and add your photos."
+msgstr "Abiarazi pLoader eta gehitu argazkiak."
+
+msgid "Source tag"
+msgstr "Iturburu etiketa"
+
+msgid "Some upgrades are available for extensions."
+msgstr "Luzapenen eguneraketak eskuragarri."
+
+msgid "Site manager"
+msgstr "Gunearen kudeatzailea"
+
+msgid "Some themes and plugins may be not available yet."
+msgstr "Gerta daiteke gai eta plugin batzuk oraindik eskuragarri ez izatea."
+
+msgid "Simulation"
+msgstr "Simulazioa"
+
+msgid "Showing %s to %s of %s users"
+msgstr "%s(e)tik %s(e)ra erakusten %s erabiltzailetik"
+
+msgid "Show menubar"
+msgstr "Erakutsi menu-barra"
+
+msgid "Show info"
+msgstr "Erakutsi informazioa"
+
+msgid "Show %s users"
+msgstr "Erakutsi %s erabiltzaile"
+
+msgid "Shotwell is an open source digital photo organizer that runs on Linux. It is the default photo manager in Ubuntu and Fedora."
+msgstr "Shotwell Linuxpean exekutatzen den kode irekiko argazki digitalen antolatzaile bat da. Lehenetsitako argazki-kudeatzailea da Ubuntu eta Fedoran."
+
+msgid "Sharpen"
+msgstr "Areagotu"
+
+msgid "Settings"
+msgstr "Ezarpenak"
+
+msgid "Set title"
+msgstr "Ezarri izenburua"
+
+msgid "Set creation date"
+msgstr "Ezarri sortze-data"
+
+msgid "Set author"
+msgstr "Ezarri egilea"
+
+msgid "Set as default theme for unregistered and new users"
+msgstr "Ezarri lehenetsitako gaia bezala erabiltzaile berri eta izena eman gabekoentzat "
+
+msgid "Set as default language for unregistered and new users"
+msgstr "Ezarri lehenetsitako hizkuntza bezala erabiltzaile berri eta izena eman gabekoentzat "
+
+msgid "Send mail to users"
+msgstr "Bidali posta elektronikoa erabiltzaileei"
+
+msgid "Send mail on HTML format"
+msgstr "Bidali posta elektronikoa HTML formatuan"
+
+msgid "Send mail as"
+msgstr "Bidali posta elektronikoa honela"
+
+msgid "Send connection settings by email"
+msgstr "Bidali konexio-ezarpenak posta elektroniko bitartez"
+
+msgid "Send an information email to group members"
+msgstr "Bidali informazio-posta taldeko kideei"
+
+msgid "Send"
+msgstr "Bidali"
+
+msgid "Selection"
+msgstr "Hautaketa"
+
+msgid "Select:"
+msgstr "Hautatu:"
+
+msgid "Select users..."
+msgstr "Hautatu erabiltzaileak…"
+
+msgid "Select the destination tag"
+msgstr "Hautatu helburu-etiketa"
+
+msgid "Select recipients"
+msgstr "Hautatu hartzaileak"
+
+msgid "Select groups..."
+msgstr "Hautatu taldeak…"
+
+msgid "Select files"
+msgstr "Hautatu fitxategiak"
+
+msgid "Select at least two tags for merging"
+msgstr "Hautatu gutxienez batzeko etiketa bi"
+
+msgid "Select at least one user"
+msgstr "Hautatu gutxienez erabiltzaileren bat"
+
+msgid "Select at least one tag"
+msgstr "Hautatu gutxienez etiketaren bat"
+
+msgid "Select at least one photo"
+msgstr "Hautatu gutxienez argazkiren bat"
+
+msgid "Select at least one comment"
+msgstr "Hautatu gutxienez iruzkinen bat"
+
+msgid "Select at least one album"
+msgstr "Hautatu gutxienez albumen bat"
+
+msgid "Select an album"
+msgstr "Hautatu albuma"
+
+msgid "Select a zone with your mouse to define a new center of interest."
+msgstr "Hautatu gunea saguarekin irudiaren interes-erdigune berri bat zehazteko"
+
+msgid "Select a file"
+msgstr "Hautatu fitxategia"
+
+msgid "See you soon."
+msgstr "Gero arte."
+
+msgid "See you soon,"
+msgstr "Gero arte,"
+
+msgid "Section"
+msgstr "Sekzioa"
+
+msgid "Searching..."
+msgstr "Bilatzen…"
+
+msgid "Search for new images in the directories"
+msgstr "Bilatu irudi berriak direktorioetan"
+
+msgid "Save visits in history for"
+msgstr "Gorde bisitak historian honetarako"
+
+msgid "Save to permalink history"
+msgstr "Gorde esteka iraunkorren historiara"
+
+msgid "Save order"
+msgstr "Gorde ordena"
+
+msgid "Save manual order"
+msgstr "Gorde eskuzko ordena"
+
+msgid "Save Template Directory"
+msgstr "Gorde txantiloien direktorioa"
+
+msgid "Save Settings"
+msgstr "Gorde ezarpenak"
+
+msgid "Restore default configuration. You will lose your plugin settings!"
+msgstr "Lehenetsitako konfiguraziora leheneratu. Pluginen ezarpen guztiak galduko dira!"
+
+msgid "Restore"
+msgstr "Leheneratu"
+
+msgid "Resize after upload disabled due to the use of GD as graphic library"
+msgstr "Kargatu osteko tamaina aldatzeko aukera desgaituta liburutegi grafiko bezala GD erabiltzeagatik"
+
+msgid "Resize after upload"
+msgstr "Aldatu tamaina kargatu ostean"
+
+msgid "Resize"
+msgstr "Aldatu tamaina"
+
+msgid "Reset ignored updates"
+msgstr "Berrezarri ez ikusi egindako eguneraketak"
+
+msgid "Represents"
+msgstr "Honen koadro txikia"
+
+msgid "Representative"
+msgstr "Albumaren koadro txikia"
+
+msgid "Representation of albums"
+msgstr "Albumaren koadro txikia"
+
+msgid "Representant"
+msgstr "Albumaren koadro txikia"
+
+msgid "Replacers (customized templates)"
+msgstr "Ordezkoa (pertsonalizatutako txantiloiak)"
+
+msgid "Replacement of original templates by customized templates from template-extension subfolder"
+msgstr "Jatorrizko txantiloien ordezkapena txantiloien azpi-karpetako txantiloi pertsonalizatuengatik"
+
+msgid "Repair and optimize database"
+msgstr "Konpondu eta optimizatu datu-basea"
+
+msgid "Rename"
+msgstr "Aldatu izena"
+
+msgid "Remove from caddie"
+msgstr "Kendu sortatik"
+
+msgid "Remove all filters"
+msgstr "Kendu iragazki guztiak"
+
+msgid "Remote"
+msgstr "Urrunekoa"
+
+msgid "added"
+msgstr "gehituta"
+
+msgid "administrators"
+msgstr "administrariak"
+
+msgid "albums added in the database"
+msgstr "albumak gehituta datu-basean"
+
+msgid "albums deleted in the database"
+msgstr "albumak ezabatuta datu-basean"
+
+msgid "apply automatic sort order"
+msgstr "aplikatu ordenatzeko irizpide automatikoa"
+
+msgid "associate to group"
+msgstr "lotu taldera"
+
+msgid "automatic order"
+msgstr "hurrenkera automatikoa"
+
+msgid "average time"
+msgstr "batez besteko denbora"
+
+msgid "based on"
+msgstr "honen arabera"
+
+msgid "between %d and %d pixels"
+msgstr "%d eta %d pixel artean"
+
+msgid "between %s and %s MB"
+msgstr "%s eta %s MB artean"
+
+msgid "bottom left corner"
+msgstr "ezkerreko beheko izkina"
+
+msgid "bottom right corner"
+msgstr "eskumako beheko izkina"
+
+msgid "cancel manual order"
+msgstr "utzi eskuzko hurrenkera"
+
+msgid "clean"
+msgstr "garbitu"
+
+msgid "close"
+msgstr "itxi"
+
+msgid "confirm"
+msgstr "baieztatu"
+
+msgid "create a new album"
+msgstr "sortu album berria"
+
+msgid "create a new site"
+msgstr "sortu gune berria"
+
+msgid "created"
+msgstr "sortuta"
+
+msgid "You have subscribed to receiving notifications by mail."
+msgstr "Posta elektroniko bitartez ohartzeko harpidetu zara."
+
+msgid "You can update to Piwigo %s directly, without upgrading to Piwigo %s (recommended)."
+msgstr "Piwigoren %s bertsiora zuzenean eguneratu dezakezu, Piwigoren %s bertsiora berritu barik (gomendatuta)."
+
+msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
+msgstr "<i>$conf['order_by']</i> zehaztu duzu zure konfigurazio lokalean, baina parametro hau zaharkituta dago. Kendu edo aldatu izena <i>$conf['order_by_custom']</i>era! "
+
+msgid "You have %d orphan tags: %s."
+msgstr "%d etiketa umezurtz dituzu: %s."
+
+msgid "You cannot move an album in its own sub album"
+msgstr "Ezin duzu mugitu album bat bere azpi-album batera"
+
+msgid "You can't define a default photo order because you have a custom setting in your local configuration."
+msgstr "Ezin duzu definitu lehenetsitako argazkiak ordenatzeko irizpiderik konfigurazio lokalean pertsonalizatutako ezarpenen bat duzulako."
+
+msgid "You can activate only one mobile theme."
+msgstr "Mugikorrentzako gai bakarra baino ezin duzu aktibatu."
+
+msgid "X Repeat"
+msgstr "X Errepikatu"
+
+msgid "Y Position"
+msgstr "Y Posizioa"
+
+msgid "Y Repeat"
+msgstr "Y Errepikatu"
+
+msgid "Year"
+msgstr "Urtea"
+
+msgid "You are running on development sources, no check possible."
+msgstr "Garapen-bertsioa erabiltzen zaude, ez dago egiaztatzerik."
+
+msgid "You are running the latest version of Piwigo."
+msgstr "Piwigoren bertsiorik berriena erabiltzen zaude."
+
+msgid "You are using the Browser uploader. Try the <a href=\"%s\">Flash uploader</a> instead."
+msgstr "Nabigatzailearen kargatzailea erabiltzen zaude. Saiatu <a href=\"%s\">Flash kargatzailearekin</a>."
+
+msgid "You are using the Flash uploader. Problems? Try the <a href=\"%s\">Browser uploader</a> instead."
+msgstr "Flash kargatzailea erabiltzen zaude. Arazorik? Saiatu <a href=\"%s\">Nabigatzailearen kargatzailearekin</a>."
+
+msgid "You have unsubscribed from receiving notifications by mail."
+msgstr "Posta elektroniko bitartez ohartzeko harpidetza kendu duzu."
+
+msgid "You need to upgrade your system to take full advantage of the application else the application will not work correctly, or not at all"
+msgstr "Aplikazioaren abantaila guztiekin gozatzeko sistema eguneratu beharko zenuke, bestela arazoak eman ditzake edo eten egin daiteke"
+
+msgid "[%s] Visit album %s"
+msgstr "[%s] Bisitatu %s albuma"
+
+msgid "[NBM] Problems or questions"
+msgstr "[NBM] Arazoak edo galderak"
+
+msgid "add new photos to caddie"
+msgstr "Gehitu argazki berriak sortara"
+
+msgid "Visit language site"
+msgstr "Bisitatu hizkuntzaren gunea"
+
+msgid "Visit plugin site"
+msgstr "Bisitatu pluginaren gunea"
+
+msgid "Visit theme site"
+msgstr "Bisitatu gaiaren gunea"
+
+msgid "Visited %d times"
+msgstr "%d bider bisitaturik"
+
+msgid "WARNING! This plugin does not seem to be compatible with this version of Piwigo."
+msgstr "OHARRA! Ez dirudi plugin hau bateragarria denik Piwigoren bertsio honekin."
+
+msgid "Waiting"
+msgstr "Zain"
+
+msgid "Warning: subscribing or unsubscribing will send mails to users"
+msgstr "Oharra: harpidetzeak edo harpidetza kentzeak posta elektronikoa bidaliko die erabiltzaileei"
+
+msgid "Watermark"
+msgstr "Ur-marka"
+
+msgid "Web Form"
+msgstr "Web-formularioa"
+
+msgid "Webmaster cannot be deleted"
+msgstr "Ezin da ezabatu web-arduraduna"
+
+msgid "Webmaster status is required."
+msgstr "Web-arduradun maila behar da."
+
+msgid "Week starts on"
+msgstr "Astea hasten den eguna"
+
+msgid "Who can see these photos?"
+msgstr "Nork ikus ditzake argazkiok?"
+
+msgid "Who can see this photo?"
+msgstr "Nork ikus dezake argazkia?"
+
+msgid "Width"
+msgstr "Zabalera"
+
+msgid "With blank value, gallery title will be used"
+msgstr "Hutsik badago galeriaren izenburua erabiliko da"
+
+msgid "With no album"
+msgstr "Albumik gabe"
+
+msgid "With no tag"
+msgstr "Etiketarik gabe"
+
+msgid "With no virtual album"
+msgstr "Album birtualik gabe"
+
+msgid "X Position"
+msgstr "XPosition"
+
+msgid "Visit Piwigo project website"
+msgstr "Bisitatu Piwigo proiektuaren webgunea"
+
+msgid "Visit Gallery"
+msgstr "Bisitatu galeria"
+
+msgid "Virtual albums to move"
+msgstr "Mugitu beharreko album birtualak"
+
+msgid "Virtual album name"
+msgstr "Album birtualaren izena"
+
+msgid "Virtual album deleted"
+msgstr "Album birtuala ezabatu egin da"
+
+msgid "Virtual album added"
+msgstr "Album birtuala gehitu egin da"
+
+msgid "Virtual album"
+msgstr "Album birtuala"
+
+msgid "Virtual Links"
+msgstr "Esteka birtualak"
+
+msgid "View in gallery"
+msgstr "Ikusi galerian"
+
+msgid "Version"
+msgstr "Bertsioa"
+
+msgid "Validation"
+msgstr "Balidazioa"
+
+msgid "Validate"
+msgstr "Balidatu"
+
+msgid "Users modified"
+msgstr "Aldatutako erabiltzaileak"
+
+msgid "Users"
+msgstr "Erabiltzaileak"
+
+msgid "User status"
+msgstr "Erabiltzaile-egoera"
+
+msgid "User list"
+msgstr "Erabiltzaile-zerrenda"
+
+msgid "User comments validation"
+msgstr "Erabiltzailearen iruzkinen balidazioa"
+
+msgid "User %s updated"
+msgstr "%s erabiltzailea eguneratu egin da"
+
+msgid "User %s added"
+msgstr "%s erabiltzailea gehitu egin da"
+
+msgid "User %s [%s] was removed from the subscription list."
+msgstr "%s erabiltzailea [%s] harpidetza-zerrendatik kendu egin da."
+
+msgid "Update All"
+msgstr "Eguneratu dena"
+
+msgid "Update Complete"
+msgstr "Eguneratzea burutu da"
+
+msgid "Update albums informations"
+msgstr "Eguneratu albumen informazioa"
+
+msgid "Update in progress... Please wait."
+msgstr "Eguneraketa abian… itxaron."
+
+msgid "Update photos information"
+msgstr "Eguneratu argazkien informazioa"
+
+msgid "Update to Piwigo %s"
+msgstr "Eguneratu Piwigo %s bertsiora"
+
+msgid "Update user"
+msgstr "Eguneratu erabiltzailea"
+
+msgid "Updates"
+msgstr "Eguneraketak"
+
+msgid "Upload"
+msgstr "Kargatu"
+
+msgid "Upload Photos"
+msgstr "Kargatu argazkiak"
+
+msgid "Upload in progress"
+msgstr "Kargatzea abian"
+
+msgid "Uploaded Photos"
+msgstr "Kargatutako argazkiak"
+
+msgid "Use the default photo sort order"
+msgstr "Erabili lehenetsitako argazkiak ordenatzeko irizpidea"
+
+msgid "Used metadata"
+msgstr "Erabilitako metadatuak"
+
+msgid "User"
+msgstr "Erabiltzailea"
+
+msgid "User \"%s\" created with \"%s\" like password"
+msgstr "\"%s\" erabiltzailea sortu da \"%s\" pasahitzarekin"
+
+msgid "User %s [%s] added."
+msgstr "%s erabiltzailea [%s] gehitu egin da."
+
+msgid "User %s [%s] was added to the subscription list."
+msgstr "%s erabiltzailea [%s] harpidetza-zerrendara gehitu egin da."
+
+msgid "User %s [%s] was not added to the subscription list."
+msgstr "%s erabiltzailea [%s] ez da gehitu harpidetza-zerrendara."
+
+msgid "User %s [%s] was not removed from the subscription list."
+msgstr "%s erabiltzailea [%s] ez da kendu harpidetza-zerrendatik."
+
+msgid "Unsubscribed"
+msgstr "Kenduta harpidetza"
+
+msgid "Unsubscribe from notification by mail"
+msgstr "Kendu harpidetza posta elektronikotik ohartzeko"
+
+msgid "Unlocked"
+msgstr "Desblokeatuta"
+
+msgid "Unlock gallery"
+msgstr "Desblokeatu galeria"
+
+msgid "Unknown upload error"
+msgstr "Igotze errore ezezaguna"
+
+msgid "Uninstalled Plugins"
+msgstr "Desinstalatutako pluginak"
+
+msgid "Uninstall"
+msgstr "Desinstalatu"
+
+msgid "Uncheck all"
+msgstr "Desautatu dena"
+
+msgid "Unable to check for upgrade."
+msgstr "Ezin izan da eguneraketarik dagoen egiaztatu."
+
+msgid "Type in a search term"
+msgstr "Idatzi bilaketa-terminoa"
+
+msgid "Type here the title"
+msgstr "Idatzi hemen izenburua"
+
+msgid "Type here the name of the new group"
+msgstr "Idatzi hemen talde berriaren izena"
+
+msgid "Type here the author name"
+msgstr "Idatzi hemen egilearen izena"
+
+msgid "Two updates are available"
+msgstr "Bi eguneraketa eskuragarri"
+
+msgid "Tools"
+msgstr "Tresnak"
+
+msgid "Toggle 'default group' property"
+msgstr "Leheneratu 'lehenetsitako taldea' propietatea"
+
+msgid "To unsubscribe"
+msgstr "Kendu harpidetza"
+
+msgid "To subscribe"
+msgstr "Harpidetu"
+
+msgid "To send ?"
+msgstr "Bidali?"
+
+msgid "To export your photos from digiKam to Piwigo, simply install digiKam and the Kipi-plugins."
+msgstr "Argazkiak digiKametik Piwigora esportatzeko, instalatu digiKam eta Kipi-pluginak."
+
+msgid "Title"
+msgstr "Izenburua"
+
+msgid "Time to send mail is limited. Others mails are skipped."
+msgstr "Posta elektronikoa bidaltzeko denbora mugatua da. Beste mezuak saltatu egin dira."
+
+msgid "Thumbnails generation in progress..."
+msgstr "Koadro txikien sortzea abian da…"
+
+msgid "Time"
+msgstr "Denbora"
+
+msgid "Thumbnail"
+msgstr "Koadro txikia"
+
+msgid "This theme was not designed to be directly activated"
+msgstr "Gai hau ez da zuzenean aktibatzeko diseinatu"
+
+msgid "This site already exists"
+msgstr "Gune hau dagoeneko existitzen da"
+
+msgid "This name is already used by another group."
+msgstr "Izen hau dagoeneko beste talde batek erabiltzen du."
+
+msgid "This is a minor update, with only bug corrections."
+msgstr "Eguneraketa txiki bat da hau, erroreak zuzentzeko baino ez."
+
+msgid "There is no group in this gallery."
+msgstr "Ez dago talderik galerian."
+
+msgid "There is no other language available."
+msgstr "Ez dago beste hizkuntzarik eskuragarri."
+
+msgid "There is no other plugin available."
+msgstr "Ez dago beste pluginik eskuragarri."
+
+msgid "There is no other theme available."
+msgstr "Ez dago beste gairik eskuragarri."
+
+msgid "This album contains %d photos, added between %s and %s."
+msgstr "Album honetan %d argazki daude, %s eta %s(a)ren artean gehituta."
+
+msgid "This album contains %d photos, added on %s."
+msgstr "Album honetan %d argazki daude, %s(e)an gehituta."
+
+msgid "This album contains no photo."
+msgstr "Album honetan ez dago argazkirik."
+
+msgid "This group will be set to default"
+msgstr "Talde hau lehenetsita bezala erabiliko da"
+
+msgid "This is a major update, with <a href=\"%s\">new exciting features</a>."
+msgstr "Eguneraketa nagusi bat da hau, <a href=\"%s\">ezaugarri zirraragarri berriekin</a>."
+
+msgid "This group will be unset to default"
+msgstr "Talde hau ez da gehiago lehenetsita bezala erabiliko"
+
+msgid "There is no available subscribers to mail."
+msgstr "Ez dago harpidedunik posta elektroniko bitartez ohartarazteko."
+
+msgid "Themes which need upgrade"
+msgstr "Eguneraketa behar duten gaiak"
+
+msgid "Themes"
+msgstr "Gaiak"
+
+msgid "Theme has been successfully installed"
+msgstr "Gaia ondo instalatu da"
+
+msgid "The whole set"
+msgstr "Sorta osoa"
+
+msgid "The whole page"
+msgstr "Orri osoa"
+
+msgid "The webmaster has subscribed you to receiving notifications by mail."
+msgstr "Web-arduradunak posta elektroniko bitartez ohartarazteko harpidetu zaitu."
+
+msgid "The webmaster has unsubscribed you from receiving notifications by mail."
+msgstr "Web-arduradunak posta elektroniko bitartez ohartarazteko harpidetza kendu dizu."
+
+msgid "The uploaded files exceed the post_max_size directive in php.ini: %sB"
+msgstr "Igotako artxiboak, php.ini-n zehaztutako post_max_filesize neurria gainditzen du: %sB"
+
+msgid "The uploaded file was only partially uploaded"
+msgstr "Igotako artxiboa partzialki baino ez da igo"
+
+msgid "The uploaded file exceeds the upload_max_filesize directive in php.ini: %sB"
+msgstr "Igotako artxiboak, php.ini-n zehaztutako upload_max_filesize neurria gainditzen du: %sB"
+
+msgid "The picture dimensions will be reduced to %dx%d pixels."
+msgstr "Irudiaren tamaina %dx%d pixeletara murriztuko da."
+
+msgid "The settings for the guest are from the %s user"
+msgstr "Gonbidatuen ezarpenak %s erabiltzailearenak dira"
+
+msgid "The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form"
+msgstr "Igotako artxiboak, HTML formularioan zehaztutako MAX_FILE_SIZE neurria gainditzen du"
+
+msgid "The permalink name must be composed of a-z, A-Z, 0-9, \"-\", \"_\" or \"/\". It must not be numeric or start with number followed by \"-\""
+msgstr "Esteka iraunkorraren izenean a-z, A-Z, 0-9,\"-\", \"_\" edo \"/\" karaktereak egon behar dute. Ezin du izan zenbaki hutsa edo \"-\" karaktereagatik jarraitutako zenbakia."
+
+msgid "The original maximum width must be a number between %d and %d"
+msgstr "Jatorrizko gehienezko zabalera %d et %d(r)en tarteko zenbaki bat izan behar du"
+
+msgid "The original maximum height must be a number between %d and %d"
+msgstr "Jatorrizko gehienezko altuera %d et %d(r)en tarteko zenbaki bat izan behar du"
+
+msgid "The original image quality must be a number between %d and %d"
+msgstr "Irudiaren jatorrizko kalitatea %d et %d(r)en tarteko zenbaki bat izan behar du"
+
+msgid "The number of comments a page must be between 5 and 50 included."
+msgstr "Orri bakoitzeko iruzkin kopurua 5 eta 50 (barne) bitartean izan behar du."
+
+msgid "The name of directories and files must be composed of letters, numbers, \"-\", \"_\" or \".\""
+msgstr "Direktorio eta fitxategien izenak hizkiak, zenbakiak, \"-\", \"_\" edo \".\" baino ezin dute izan."
+
+msgid "The name of an album must not be empty"
+msgstr "Albumaren izena ezin du hutsik egon"
+
+msgid "The name of a group must not contain \" or ' or be empty."
+msgstr "Taldearen izenak ezin du \" edo ' eduki ezta hutsik egon ere."
+
+msgid "The gallery URL is not valid."
+msgstr "Galeriaren URLa ez da baliozkoa."
+
+msgid "The following tag was deleted"
+msgstr "Hurrengo etiketa ezabatu egin da"
+
+msgid "The file or directory cannot be accessed (either it does not exist or the access is denied)"
+msgstr "Ezin da fitxategia edo direktorioa atzitu (ez delako existitzen edo sarbidea ukatu egin delako) "
+
+msgid "The center of interest is the most meaningful zone in the photo."
+msgstr "Interes-erdigunea argazkiaren gunerik adierazgarriena da."
+
+msgid "The anomaly will be ignored until next application version"
+msgstr "Errorea baztertu egingo da aplikazioaren hurrengo bertsiora arte"
+
+msgid "The Piwigo publish Plug-in allows you to export and synchronize photos from Lightroom directly to your Piwigo photo gallery."
+msgstr "Piwigoren argitaratze pluginak Lightroometik argazkiak esportatzen eta sinkronizatzen baimentzen du."
+
+msgid "The Piwigo export plugin allows you to create albums and export photos."
+msgstr "Piwigoren esportazio pluginak albumak sortzen eta argazkiak esportatzen baimentzen du. "
+
+msgid "The %d following tags were deleted"
+msgstr "Hurrengo %d etiketak ezabatu egin dira"
+
+msgid "Templates configuration has been recorded."
+msgstr "Txantiloien konfigurazioa grabatu egin da"
+
+msgid "Templates"
+msgstr "Txantiloiak"
+
+msgid "Tags <em>%s</em> merged into tag <em>%s</em>"
+msgstr "<em>%s</em> etiketa <em>%s</em> etiketarekin konbinatu egin da "
+
+msgid "Tag selection"
+msgstr "Etiketa hautapena"
+
+msgid "Tag \"%s\" was added"
+msgstr "\"%s\" etiketa gehitu egin da"
+
+msgid "Tag \"%s\" is now a duplicate of \"%s\""
+msgstr "\"%s\" etiketa \"%s\" etiketaren bikoiztua da orain"
+
+msgid "Tag \"%s\" already exists"
+msgstr "\"%s\" etiketa lehendik badago"
+
+msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
+msgstr "PLUGIN HAU PIWIGOREN MUINAREN PARTE DA ORAIN! INSTALATU!"
+
+msgid "Synchronize metadata"
+msgstr "Sinkronizatu metadatuak"
+
+msgid "Synchronize"
+msgstr "Sinkronizatu"
+
+msgid "Switch to clear or dark colors for administration"
+msgstr "Aldatu administrazio koloreak argitzeko edo iluntzeko"
+
+msgid "pixels"
+msgstr "pixel"
+
+msgid "private"
+msgstr "pribatua"
+
+msgid "public"
+msgstr "publikoa"
+
+msgid "randomly represented"
+msgstr "ausazko koadro txikia (albuma)"
+
+msgid "ranks"
+msgstr "mailak"
+
+msgid "reduce to single existing albums"
+msgstr "gutxitu dauden album soiletara"
+
+msgid "registered users"
+msgstr "izena emandako erabiltzaileak"
+
+msgid "registration date"
+msgstr "izen-emate data"
+
+msgid "remove author"
+msgstr "kendu egilea"
+
+msgid "remove creation date"
+msgstr "kendu sortze data"
+
+msgid "remove tags"
+msgstr "Kendu etiketak"
+
+msgid "remove this filter"
+msgstr "kendu iragazkia"
+
+msgid "remove title"
+msgstr "kendu izenburua"
+
+msgid "set to"
+msgstr "ezarri horrela"
+
+msgid "simple visitors"
+msgstr "bisitari soilak"
+
+msgid "top left corner"
+msgstr "ezkerreko goiko izkina"
+
+msgid "top right corner"
+msgstr "eskumako goiko izkina"
+
+msgid "total time"
+msgstr "denbora guztira"
+
+msgid "width must be a number superior to"
+msgstr "zabalera hau baino zenbaki nagusiago izan behar da"
+
+msgid "photos updated in the database"
+msgstr "datu-basean eguneratutako argazkiak"
+
+msgid "photos per page"
+msgstr "argazki orrialdeko"
+
+msgid "photos informations synchronized with files metadata"
+msgstr "metadatuen fitxategiekin sinkronizatutako argazkiak"
+
+msgid "photos deleted from the database"
+msgstr "datu-basetik ezabatutako argazkiak"
+
+msgid "photos candidates for metadata synchronization"
+msgstr "metadatuen sinkronizaziorako argazki hautagaiak"
+
+msgid "photos added in the database"
+msgstr "datu-basera gehitutako argazkiak"
+
+msgid "pending validation"
+msgstr "balidazioaren zain"
+
+msgid "modified"
+msgstr "aldatuta"
+
+msgid "new"
+msgstr "berria"
+
+msgid "no write access"
+msgstr "idazteko baimenik gabe"
+
+msgid "none"
+msgstr "bat ere ez"
+
+msgid "nothing"
+msgstr "ezer ere ez"
+
+msgid "on"
+msgstr "hemen"
+
+msgid "on the %d selected photos"
+msgstr "hautatuko %d argazkietan"
+
+msgid "on the %d selected users"
+msgstr "hautatuko %d erabiltzailetan"
+
+msgid "only directories"
+msgstr "direktorioak baino ez"
+
+msgid "only perform a simulation (no change in database will be made)"
+msgstr "simulazioa baino ez burutu (ez da ezer aldatuko datu-basean)"
+
+msgid "other"
+msgstr "besterik"
+
+msgid "overrides existing values with empty ones"
+msgstr "gainidatzi baloreak balore hutsekin"
+
+msgid "middle"
+msgstr "erdian"
+
+msgid "manual order"
+msgstr "eskuzko hurrenkera"
+
+msgid "manage sub-albums"
+msgstr "kudeatu azpi-albumak"
+
+msgid "manage album photos"
+msgstr "kudeatu albumaren argazkiak"
+
+msgid "leave"
+msgstr "irten"
+
+msgid "jump to photo"
+msgstr "joan argazkira"
+
+msgid "include photos with lower privacy level"
+msgstr "sartu pribatutasun-maila apalagoko argazkiak"
+
+msgid "jump to album"
+msgstr "joan albumera"
+
+msgid "include child albums"
+msgstr "sartu bigarren mailako albumak"
+
+msgid "iPhoto is the default photo manager on MacOSX. The Piwigo export plugin let you create new albums and export your photos directly from iPhoto to your Piwigo photo gallery."
+msgstr "iPhoto MacOSXerako lehenetsitako argazki kudeatzailea da. Piwigoren esportazio-pluginak album berriak sortu eta argazkiak zuzenean iPhototik Piwigo galeriara esportatzea ahalbidetzen du. "
+
+msgid "high"
+msgstr "handia"
+
+msgid "hide details"
+msgstr "ezkutatu xehetasunak"
+
+msgid "height must be a number superior to"
+msgstr "altuera hau baino zenbaki nagusiagoa izan behar da"
+
+msgid "guest"
+msgstr "gonbidatua"
+
+msgid "group \"%s\" updated"
+msgstr "\"%s\" taldea eguneratu da"
+
+msgid "group \"%s\" deleted"
+msgstr "\"%s\" taldea ezabatu da"
+
+msgid "group \"%s\" added"
+msgstr "\"%s\" taldea gehitu da"
+
+msgid "global mode"
+msgstr "modu globala"
+
+msgid "for this file format"
+msgstr "fitxategi formatu honetarako"
+
+msgid "for the file format"
+msgstr "fitxategi formaturako"
+
+msgid "delete album"
+msgstr "ezabatu albuma"
+
+msgid "delete photo"
+msgstr "ezabatu argazkia"
+
+msgid "delete this site and all its attached elements"
+msgstr "ezabatu gunea eta erlazionatutako informazio guztia"
+
+msgid "deleted"
+msgstr "ezabatuta"
+
+msgid "digiKam is an advanced digital photo management free software for Linux, Windows, and MacOSX."
+msgstr "digiKam aurreratutako argazki-kudeaketa software librea da Linux, Windows eta MacOSXerako."
+
+msgid "file name"
+msgstr "fitxategi-izena"
+
+msgid "even already synchronized photos"
+msgstr "dagoeneko sinkronizatutako argazkiak"
+
+msgid "existing album"
+msgstr "dagoeneko albuma"
+
+msgid "errors during synchronization"
+msgstr "erroreak sinkronizatzean"
+
+msgid "dissociate from group"
+msgstr "bereiztu taldetik"
+
+msgid "display maximum informations (added albums and photos, deleted albums and photos)"
+msgstr "bistaratu informaziorik gehiena (gehitutako albumak eta argazkiak, ezabatutako albumak eta argazkiak)"
+
+msgid "display"
+msgstr "bistaratu"
+
+msgid "directories + files"
+msgstr "direktorioak+fitxategiak"
+
+msgid "digiKam is designed for photographers who want to view, manage, edit, enhance, organize, tag, and share photographs."
+msgstr "digiKam diseinatuta dago argazkiak ikusi, kudeatu, editatu, hobetu, antolatu, etiketatu eta partekatu nahi dituzten argazkilarientzat."
+
+msgid "delete"
+msgstr "ezabatu"
+
+msgid "default"
+msgstr "lehenetsia"
+
+msgid "default values"
+msgstr "lehenetsitako balioak"
+
+msgid "date & time"
+msgstr "data eta ordua"
+
+msgid "custom"
+msgstr "Pertsonalizatua"
+
+msgid "orphans to delete"
+msgstr "ezabatuko diren umezurtzak"
+
+msgid "delete only album, not photos"
+msgstr "ezabatu albuma bakarrik, ez argazkiak"
+
+msgid "delete album and the %d orphan photos"
+msgstr "ezabatu albuma eta %d argazki umezurtzak"
+
+msgid "delete album and all %d photos, even the %d associated to other albums"
+msgstr "ezabatu albuma eta %d argazki guztiak, baita beste albumeetara lotutako %dak ere"
+
+msgid "checksum"
+msgstr "Kontroleko batura (checksum)"
+
+msgid "Time has come to update your Piwigo with version %s, go to %s"
+msgstr "Heldu da zure Piwigo instalazioa %s bertsioarekin eguneratzeko garaia, joan %s(e)ra"
+
+msgid "Storage used"
+msgstr "Erabilitako biltegiratzea"
+
+msgid "Share / Send your photos directly from your Mac Os X (10.10 and following) to Piwigo"
+msgstr "Partekatu/Bidali argazkiak Piwigora zuzenean macOSetik (10.10 eta berriagoak)"
+
+msgid "Select tags"
+msgstr "Hautatu etiketak"
+
+msgid "Running on an up-to-date Piwigo is important for security."
+msgstr "Eguneratutako Piwigo bertsioa exekutatzea garrantzitsua da segurtasun kontuekaitik."
+
+msgid "Piwigo Remote Sync is able to upload a whole folder hierarchy. If you run it again, only new photos will be uploaded."
+msgstr "Piwigo Remote Sync karpeta-hierarki osoa kargatzeko ahalmena du. Berriro exekutatzen baduzu, argazki berriak baino ez dira kargatuko."
+
+msgid "Piwigo %s is available, please update"
+msgstr "Piwigo %s eskuragarri, eguneratu mesedez"
+
+msgid "No tags selected, no actions possible."
+msgstr "Ez da etiketarik hautatu, ezin da ekintzarik aurrera eraman."
+
+msgid "No filter on album. Select one or type to search"
+msgstr "Ez dago iragazkirik albumerako. Hautatu edo bilatu bat"
+
+msgid "It only takes a few clicks."
+msgstr "Klik gutxi batzu baino ez da."
+
+msgid "Display form"
+msgstr "Bistaratu inprimakia"
+
+msgid "Delete album \"%s\"."
+msgstr "Ezabatu \"%s\" albuma."
+
+msgid "Delete album \"%s\" and its %d sub-albums."
+msgstr "Ezabatu \"%s\" albuma eta bere %d azpi-albumak."
+
+msgid "Dashboard"
+msgstr "Panela"
+
+msgid "Confirm deletion"
+msgstr "Berretsi ezabatzea"
+
+msgid "(determined from photos)"
+msgstr "(argazkiekaitik zehaztuta)"
+
+msgid "or"
+msgstr "edo"
+
+msgid "checksums to add"
+msgstr "Gehitu beharreko kontroleko baturak"
+
+msgid "With no checksum"
+msgstr "Kontroleko baturarik gabe"
+
+msgid "Welcome!"
+msgstr "Ongietorri!"
+
+msgid "Visit"
+msgstr "Joan"
+
+msgid "Synchronization in progress"
+msgstr "Sinkronizatzen"
+
+msgid "Some checksums are missing."
+msgstr "Kontroleko batura batzuk galdu egin dira."
+
+msgid "Piwigo requires an album to add photos."
+msgstr "Piwigok album bat behar du argazkiak gehitzeko."
+
+msgid "Display category date"
+msgstr "Bistaratu kategoriaren data"
+
+msgid "Display album date period"
+msgstr "Erakutsi album bakoitzarekin erlazionatutako data-tartea, ad. « Uztailaren 12tik 15era, 2018 »"
+
+msgid "Deletion in progress"
+msgstr "Ezabatzen"
+
+msgid "Create a first album"
+msgstr "Sortu Lehenengo Album bat"
+
+msgid "Compute %d missing checksums"
+msgstr "Kalkulatu galdutako %d kontroleko batura(k)"
+
+msgid "... or hide this link"
+msgstr "... edo ezkutatu esteka"
+
+msgid "%d checksums were added"
+msgstr "%d kontroleko batura gehitu d(ir)a"
+
+msgid "Piwigo for Android"
+msgstr "Piwigo Androiderako"
+
+msgid "Keep them"
+msgstr "Mantendu"
+
+msgid "Manage album photos"
+msgstr "Kudeatu albumeko argazkiak"
+
+msgid "Manage sub-albums"
+msgstr "Kudeatu azpi-albumak"
+
+msgid "Manage users with user manager"
+msgstr "Kudeatu erabiltzaileak erabiltzaile-kudeatzailearekin"
+
+msgid "Merge"
+msgstr "Konbinatu"
+
+msgid "Name is already taken"
+msgstr "Izena hartuta dago"
+
+msgid "No albums found"
+msgstr "Ez da albumik aurkitu"
+
+msgid "No plugins found"
+msgstr "Ez da gehigarririk aurkitu"
+
+msgid "No tag found"
+msgstr "Ez da etiketarik aurkitu"
+
+msgid "No, I have changed my mind"
+msgstr "Ez, iritziz aldatu dut"
+
+msgid "Open in gallery"
+msgstr "Ireki galerian"
+
+msgid "Other"
+msgstr "Besterik"
+
+msgid "Page Visited"
+msgstr "Bisitatutako orria"
+
+msgid "Page Visited in %s"
+msgstr "Bisitatutako orria %s(e)an"
+
+msgid "Please upgrade your PHP version before any update."
+msgstr "Bertsio-berritu PHP bertsioa beste edozein eguneraketa saiatu baino lehen."
+
+msgid "Portraits"
+msgstr "Bertikalak"
+
+msgid "Posted %s"
+msgstr "%s bidalita"
+
+msgid "Clear Selection"
+msgstr "Garbitu hautapena"
+
+msgid "Compare mode"
+msgstr "Konparatu modua"
+
+msgid "Created on %s"
+msgstr "%s(e)an sortua"
+
+msgid "Delete album"
+msgstr "Ezabatu albuma"
+
+msgid "Delete orphan tags ?"
+msgstr "Ezabatu etiketa umezurtzak?"
+
+msgid "Delete tag \"%s\"?"
+msgstr "Ezabatu \"%s\" etiketa?"
+
+msgid "Delete tags \\{%s\\}?"
+msgstr "Ezabatu \\{%s\\} etiketak?"
+
+msgid "Delete them"
+msgstr "Ezabatu"
+
+msgid "Display"
+msgstr "Bistaratu"
+
+msgid "Displays a banner to install or open the official Piwigo app"
+msgstr "Piwigo aplikazio ofiziala instalatzeko bannerra bistaratzen du"
+
+msgid "Dissociate user from this group"
+msgstr "Bereiztu erabiltzailea talde honetatik"
+
+msgid "Edited on %s"
+msgstr "%s(e)an editatua"
+
+msgid "File type: %s"
+msgstr "Fitxategi-mota: %s"
+
+msgid "Formats"
+msgstr "Formatuak"
+
+msgid "Group \"%s\" succesfully deleted"
+msgstr "\"%s\" taldea behar bezala ezabatu da"
+
+msgid "Group added"
+msgstr "Taldea gehitu da"
+
+msgid "Group renamed"
+msgstr "Taldearen izena aldatu da"
+
+msgid "Group(s) \\{%s1\\} succesfully merged into \"%s2\""
+msgstr "\\{%s1\\} taldea(k) behar bezala konbinatu dira \"%s2\"(e)an"
+
+msgid "Groups \\{%s\\} succesfully deleted"
+msgstr "\\{%s1\\} taldea(k) behar bezala ezabatu d(ir)a"
+
+msgid "Are you sure you want to delete the language \"%s\"?"
+msgstr "Ziur al zaude \"%s\" hizkuntza ezabatu nahi duzula?"
+
+msgid "Are you sure you want to delete the plugin \"%s\"?"
+msgstr "Ziur al zaude \"%s\" gehigarria ezabatu nahi duzula?"
+
+msgid "Are you sure you want to delete the ratings of the user \"%s\"?"
+msgstr "Ziur al zaude \"%s\" erabiltzailearen balorazioak ezabatu nahi dituzula?"
+
+msgid "Are you sure you want to delete the theme \"%s\"?"
+msgstr "Ziur al zaude \"%s\" hizkuntza ezabatu nahi duzula?"
+
+msgid "Are you sure you want to delete the user \"%s\"?"
+msgstr "Ziur al zaude \"%s\" gaia ezabatu nahi duzula?"
+
+msgid "Are you sure you want to delete this site?"
+msgstr "Ziur al zaude gune hau ezabatu nahi duzula?"
+
+msgid "Are you sure you want to delete this theme?"
+msgstr "Ziur al zaude gai hau ezabatu nahi duzula?"
+
+msgid "Are you sure you want to delete this?"
+msgstr "Ziur al zaude hau ezabatu nahi duzula?"
+
+msgid "Are you sure you want to install the plugin \"%s\"?"
+msgstr "Ziur al zaude \"%s\" plugina instalatu nahi duzula?"
+
+msgid "Are you sure you want to lock the gallery?"
+msgstr "Ziur al zaude galeria blokeatu nahi duzula?"
+
+msgid "Are you sure you want to restore the plugin \"%s\"?"
+msgstr "Ziur al zaude \"%s\" plugina leheneratu nahi duzula?"
+
+msgid "Are you sure you want to restore this plugin?"
+msgstr "Ziur al zaude plugin hau leheneratu nahi duzula?"
+
+msgid "Are you sure you want to restore to default settings?"
+msgstr "Ziur al zaude lehenetsitako ezarpenetara leheneratu nahi duzula?"
+
+msgid "Are you sure you want to update all extensions?"
+msgstr "Ziur al zaude luzapen guztiak eguneratu nahi duzula?"
+
+msgid "Associate User"
+msgstr "Erlazionatutako Erabiltzailea"
+
+msgid "At least 2 selected tags are needed to merge"
+msgstr "Gutxienez etiketa 2 aukeratu behar dira konbinatzeko"
+
+msgid "Average last 12 months"
+msgstr "Azken 12 hilabeteotako batez bestekoa"
+
+msgid "Cache"
+msgstr "Cache"
+
+msgid "Choose which tag to merge these tags into"
+msgstr "Aukeratu zein etiketatan konbinatu beste bi hauek"
+
+msgid "<em>Piwigo for Android</em> application empowers you to connect your Android phone or table to your Piwigo gallery, create some albums and upload several photos at once."
+msgstr "<em>Piwigo Androiderako</em> aplikazioak Android gailuak (mugikorrak zein tabletak) Piwigo galeriarekin zuzenean konektatzeko aukera ematen dizu. Sortu albumak eta kargatu hainbat argazki batera."
+
+msgid " (copy %s)"
+msgstr "(%s) kopiatu"
+
+msgid " (copy)"
+msgstr "(kopiatu)"
+
+msgid "%d Activities"
+msgstr "%d jarduera"
+
+msgid "%d Activity"
+msgstr "Jarduera %d"
+
+msgid "%d photos"
+msgstr "%d argazki"
+
+msgid "%d sub-albums"
+msgstr "%d azpi-album"
+
+msgid "%s GB used"
+msgstr "%s GB erabilita"
+
+msgid "%s MB used"
+msgstr "%s MB erabilita"
+
+msgid "%s file type"
+msgstr "%s fitxategi-mota"
+
+msgid "%s other tags available.."
+msgstr "Beste %s etiketa erabilgarri..."
+
+msgid "<b>%d</b> albums found"
+msgstr "<b>%d</b> album aurkitu dira"
+
+msgid "<b>%d</b> tag found"
+msgstr "Etiketa <b>%d</b> aurkitu da"
+
+msgid "<b>%d</b> tag selected"
+msgstr "Etiketa <b>%d</b> hautatu da"
+
+msgid "<b>%d</b> tags found"
+msgstr "<b>%d</b> etiketa aurkitu dira"
+
+msgid "Activity peak in the last weeks"
+msgstr "Jarduera goren unea azken asteotan"
+
+msgid "Album search tool"
+msgstr "Albumak bilatzeko tresna"
+
+msgid "Are you sure you want to delete all sizes?"
+msgstr "Ziur al zaude tamaina guztiak ezabatu nahi dituzula?"
+
+msgid "Are you sure you want to delete group \"%s\"?"
+msgstr "Ziur al zaude \"%s\" taldea ezabatu nahi duzula?"
+
+msgid "User associated"
+msgstr "Erabiltzailea erlazionaturik"
+
+msgid "Videos"
+msgstr "Bideoak"
+
+msgid "Yes, I am sure"
+msgstr "Bai, ziur nago"
+
+msgid "Yes, delete"
+msgstr "Bai, ezabatu"
+
+msgid "You don't have access to this photo"
+msgstr "Ez duzu argazkira sartzeko baimenik"
+
+msgid "You have %d orphan tags %s"
+msgstr "%d(e)tik %s etiketa umezurtz d(it)uzu"
+
+msgid "You have %s inactive plugins"
+msgstr "%s gehigarri inaktibo d(it)uzu"
+
+msgid "You have %s1 orphan : %s2"
+msgstr "%s1 umezurtz dituzu: %s2"
+
+msgid "and %s others"
+msgstr "eta beste %s"
+
+msgid "in administration"
+msgstr "administrazioan"
+
+msgid "in gallery"
+msgstr "galerian"
+
+msgid "no photo"
+msgstr "ez dago argazkirik"
+
+msgid "User \"%s\" dissociated from this group"
+msgstr "\"%s\" erabiltzailea taldetik bereiztu egin da"
+
+msgid "Storage"
+msgstr "Almacenamiento"
+
+msgid "Tag \"%s\" created"
+msgstr "\"%s\" etiketa sortu egin da"
+
+msgid "Tag \"%s\" succesfully deleted"
+msgstr "\\\"%s\\\" etiketa ondo ezabatu egin da"
+
+msgid "Tag \"%s1\" renamed in \"%s2\""
+msgstr "\\\"%s1\\\" etiketa \\\"%s2\\\"(e)ra aldatu du izena"
+
+msgid "Tag Manager"
+msgstr "Etiketa kudeatzailea"
+
+msgid "Tag(s) \\{%s1\\} succesfully merged into \"%s2\""
+msgstr "\\\"%s1\\\" etiketa(k) ondo konbinatu d(ir)a \\\"%s2\\\"(e)n"
+
+msgid "Tags \\{%s\\} succesfully deleted"
+msgstr "\\{%s\\} etiketak ondo ezabatu egin dira"
+
+msgid "The %d tags on this page are selected"
+msgstr "Orri honetako %d etiketak hautatu egin dira"
+
+msgid "The other tags will be removed"
+msgstr "Beste etiketak ezabatu egingo dira"
+
+msgid "This is already the default theme"
+msgstr "Dagoeneko hau da lehenetsitako gaia"
+
+msgid "Unset as group for new users"
+msgstr "Ez ezarri talde bezala erabiltzaile berrientzat"
+
+msgid "Selection mode"
+msgstr "Hautaketa modua"
+
+msgid "Set as default"
+msgstr "Ezarri lehenetsi gisa"
+
+msgid "Set as group for new users"
+msgstr "Ezarri talde bezala erabiltzaile berrientzat"
+
+msgid "Show inactive plugins"
+msgstr "Erakutsi plugin inaktiboak"
+
+msgid "Showing %s users out of %s"
+msgstr "%s (e)tik %s erabiltzaile erakusten"
+
+msgid "Select all %d tags"
+msgstr "Hautatu %d etiketa guztiak"
+
+msgid "Select"
+msgstr "Hautatu"
+
+msgid "Search tips"
+msgstr "Bilaketa iradokizunak"
+
+msgid "Search albums"
+msgstr "Bilatu albumak"
+
+msgid "Review"
+msgstr "Berrikusi"
+
+msgid "Refresh thumbnail"
+msgstr "Freskatu koadro txikia"
+
+msgid "Requires PHP %s"
+msgstr "PHP %s eskatzen du"
+
+msgid "Promote mobile app on mobile devices"
+msgstr "Sustatu aplikazio eramangarria gailu eramangarrietan"
+
+msgid "<b>1</b> album found"
+msgstr "Album <b>1</b> aurkitu da"
+
+msgid "<b>%d+</b> albums found, try to refine the search"
+msgstr "<b>%d+</b> album aurkitu dira, saiatu bilaketa gehiago mugatzen"
+
+msgid "Add Album"
+msgstr "Gehitu albuma"
+
+msgid "Apply an automatic order to root albums"
+msgstr "Aplikatu orden automatikoa erroko albumetara"
+
+msgid "Apply to direct sub-albums"
+msgstr "Aplikatu zuzeneko azpi-albumetara"
+
+msgid "Apply to the whole hierarchy"
+msgstr "Aplikatu hierarkia osora"
+
+msgid "Compact View"
+msgstr "Bista trinkoa"
+
+msgid "Drag and drop to reorder albums"
+msgstr "Herrestatu eta askatu albumak berrordenatzeko"
+
+msgid "Hide sub-albums"
+msgstr "Ezkutatu azpi-albumak"
+
+msgid "Line View"
+msgstr "Lerro bista"
+
+msgid "Name field must not be empty"
+msgstr "Izenaren eremuak ezin du hutsik egon"
+
+msgid "Root"
+msgstr "Erroa"
+
+msgid "Select an album... or type it!"
+msgstr "Hautatu albuma... edo idatzi!"
+
+msgid "Show sub-albums"
+msgstr "Erakutsi azpi-albumak"
+
+msgid "Tile View"
+msgstr "Lauza bista"
+
+msgid "Plugin \"%s\" has been activated!"
+msgstr "\"%s\" plugina aktibatu egin da!"
+
+msgid "logout"
+msgstr "Itxi saioa"
+
+msgid "months ago"
+msgstr "hilabete duela"
+
+msgid "move"
+msgstr "eraman"
+
+msgid "never calculated"
+msgstr "inoiz ez kalkulatua"
+
+msgid "right now"
+msgstr "une honetan"
+
+msgid "to"
+msgstr "nori"
+
+msgid "Photos per page"
+msgstr "Argazki orriko"
+
+msgid "Plugin \"%s\" deleted!"
+msgstr "\"%s\" plugina ezabatu egin da!"
+
+msgid "Registered"
+msgstr "Erregistratua"
+
+msgid "Restored"
+msgstr "Berrezarrita"
+
+msgid "Select groups or type them"
+msgstr "Hautatu edo idatzi taldeak"
+
+msgid "Selected user"
+msgstr "Hautatuko erabiltzailea"
+
+msgid "Sep"
+msgstr "Ira"
+
+msgid "Show"
+msgstr "Erakutsi"
+
+msgid "Synchronization"
+msgstr "Sinkronizazioa"
+
+msgid "Theme"
+msgstr "Gaia"
+
+msgid "Update"
+msgstr "Eguneratu"
+
+msgid "User updated"
+msgstr "Erabiltzailea eguneratu egin da"
+
+msgid "Users not logged in will have these settings applied, these settings are used by default for new users"
+msgstr "Saioa hasi gabeko erabiltzailei ezarpen hauek aplikatuko zaizkie, erabiltzaile berrientzat lehenetsitako ezarpenak dira hauek."
+
+msgid "add"
+msgstr "gehitu"
+
+msgid "between %s and %s"
+msgstr "%s eta %s(r)en artean"
+
+msgid "calculated"
+msgstr "kalkulatuta"
+
+msgid "deletion"
+msgstr "ezabatzea"
+
+msgid "edit"
+msgstr "editatu"
+
+msgid "login"
+msgstr "saioa hasi"
+
+msgid "Email Adress"
+msgstr "Helbide elektronikoa"
+
+msgid "Equivalent to deactivation. The user is still in the list, but can no longer log in."
+msgstr "Desaktibazioaren baliokidea. Erabiltzailea zerrendan dago oraindik baina ezin du saiorik hasi."
+
+msgid "Feb"
+msgstr "Ots"
+
+msgid "Filters"
+msgstr "Iragazkiak"
+
+msgid "Generate random password"
+msgstr "Sortu hausazko pasahitza"
+
+msgid "Has access to administration. Can only manage content: photos/albums/users/tags/groups."
+msgstr "Administraziora sarbidea du. Edukia baino ezin du kudeatu: argazkiak/albumak/erabiltzaileak/etiketak/taldeak."
+
+msgid "Has access to all administration functionnalities. Can manage both configuration and content."
+msgstr "Administrazioaren funtzionaltasun guztietara sarbidea du. Edukia zein konfigurazioa kudeatu ditzake."
+
+msgid "Jan"
+msgstr "Urt"
+
+msgid "Jul"
+msgstr "Uzt"
+
+msgid "Jun"
+msgstr "Eka"
+
+msgid "Language"
+msgstr "Hizkuntza"
+
+msgid "Last visit"
+msgstr "Azkenengo bisita"
+
+msgid "Manage users"
+msgstr "Kudeatu erabiltzaileak"
+
+msgid "Mar"
+msgstr "Mar"
+
+msgid "May"
+msgstr "Mai"
+
+msgid "New user added"
+msgstr "Erabiltzaile berria gehitu egin da"
+
+msgid "No access to administration, can see private content with appropriate permissions."
+msgstr "Ez du administraziora sarbiderik, eduki pribatua ikus dezake baimen egokiak izanez gero."
+
+msgid "No plugin activated"
+msgstr "Ez dago aktibatutako pluginik"
+
+msgid "Nov"
+msgstr "Aza"
+
+msgid "Oct"
+msgstr "Urr"
+
+msgid "Activated plugin list"
+msgstr "Aktibatutako pluginen zerrenda"
+
+msgid "Activity"
+msgstr "Jarduera"
+
+msgid "Activity time from"
+msgstr "Jarduera noiztik"
+
+msgid "Add User"
+msgstr "Gehitu erabiltzailea"
+
+msgid "Add a new user"
+msgstr "Gehitu erabiltzaile berria"
+
+msgid "Advanced filters"
+msgstr "Iragazki aurreratuak"
+
+msgid "Apr"
+msgstr "Api"
+
+msgid "Aug"
+msgstr "Abu"
+
+msgid "Cache size"
+msgstr "Cachearen tamaina"
+
+msgid "Can be shared by several individuals without conflict (they cannot change the password)."
+msgstr "Erabiltzaile ezberdinen artean partekatu daiteke gatazkarik sortu gabe (ezin dute pasahitza aldatu)."
+
+msgid "Change Password"
+msgstr "Aldatu pasahitza"
+
+msgid "Close"
+msgstr "Itxi"
+
+msgid "Deactivated"
+msgstr "Desaktibatuta"
+
+msgid "Dec"
+msgstr "Abe"
+
+msgid "Delete these sizes"
+msgstr "Ezabatu tamaina hauek"
+
+msgid "Delete user"
+msgstr "Ezabatu erabiltzailea"
+
+msgid "Download all activities"
+msgstr "Deskargatu jarduera guztiak"
+
+msgid "Edit"
+msgstr "Editatu"
+
+msgid "Edit guest user"
+msgstr "Editatu erabiltzaile gonbidatua"
+
+msgid "Email"
+msgstr "Posta elektronikoa"
+
+msgid "%d photos edited"
+msgstr "%d argazki editatu egin dira"
+
+msgid "%d photos moved"
+msgstr "%d argazki eraman egin dira"
+
+msgid "%d tag added"
+msgstr "Etiketa %d gehitu egin da"
+
+msgid "%d tag deleted"
+msgstr "Etiketa %d ezabatu egin da"
+
+msgid "%d tag edited"
+msgstr "Etiketa %d editatu egin da"
+
+msgid "%d tag moved"
+msgstr "Etiketa %d eraman egin da"
+
+msgid "%d tags added"
+msgstr "%d etiketa gehitu egin dira"
+
+msgid "%d tags deleted"
+msgstr "%d etiketa ezabatu egin dira"
+
+msgid "%d tags edited"
+msgstr "%d etiketa editatu egin dira"
+
+msgid "%d tags moved"
+msgstr "%d etiketa eraman egin dira"
+
+msgid "%d user added"
+msgstr "Erabiltzaile %d gehitu egin da"
+
+msgid "%d user edited"
+msgstr "Erabiltzaile %d editatu egin da"
+
+msgid "%d user logged in"
+msgstr "Erabiltzaile %d ek saioa hasi du"
+
+msgid "%d user logged out"
+msgstr "Erabiltzaile %d ek saioa itxi du"
+
+msgid "%d users added"
+msgstr "%d erabiltzaile gehitu egin dira"
+
+msgid "%d users edited"
+msgstr "%d erabiltzaile editatu egin dira"
+
+msgid "%d users logged in"
+msgstr "%d erabiltzailek saioa hasi dute"
+
+msgid "%d users logged out"
+msgstr "%d erabiltzailek saioa itxi dute"
+
+msgid "%s MB"
+msgstr "%s MB"
+
+msgid "Activated"
+msgstr "Aktibatuta"
+
+msgid "%d album added"
+msgstr "Album %d gehitu egin da"
+
+msgid "%d album deleted"
+msgstr "Album %d ezabatu egin da"
+
+msgid "%d album edited"
+msgstr "Album %d editatu egin da"
+
+msgid "%d albums added"
+msgstr "%d album gehitu egin dira"
+
+msgid "%d albums deleted"
+msgstr "%d album ezabatu egin dira"
+
+msgid "%d albums edited"
+msgstr "%d album editatu egin dira"
+
+msgid "%d group added"
+msgstr "Talde %d gehitu egin da"
+
+msgid "%d group deleted"
+msgstr "Talde %d ezabatu egin da"
+
+msgid "%d group edited"
+msgstr "Talde %d editatu egin da"
+
+msgid "%d group moved"
+msgstr "Talde %d eraman egin da"
+
+msgid "%d groups added"
+msgstr "%d talde gehitu egin dira"
+
+msgid "%d groups deleted"
+msgstr "%d talde ezabatu egin dira"
+
+msgid "%d groups edited"
+msgstr "%d talde editatu egin dira"
+
+msgid "%d groups moved"
+msgstr "%d talde eraman egin dira"
+
+msgid "%d photo added"
+msgstr "Argazki %d gehitu egin da"
+
+msgid "%d photo deleted"
+msgstr "Argazki %d ezabatu egin da"
+
+msgid "%d photo edited"
+msgstr "Argazki %d editatu egin da"
+
+msgid "%d photo moved"
+msgstr "Argazki %d eraman egin da"
+
+msgid "%d photos added"
+msgstr "%d argazki gehitu egin dira"
+
+msgid "%d photos deleted"
+msgstr "%d argazki ezabatu egin dira"
+
+msgid "%s line"
+msgstr "lerro %s"
+
+msgid "%s lines"
+msgstr "%s lerro"
+
+msgid "%s plugin found"
+msgstr "plugin <b>%s</b> aurkitu da"
+
+msgid "%s plugins found"
+msgstr "<b>%s</b> plugin aurkitu dira"
+
+msgid "%s status is required to edit parameters."
+msgstr "%s egoera behar da parametroak editatzeko."
+
+msgid "Edit photo #%s"
+msgstr "Editatu #%s argazkia"
+
+msgid "Locked albums are disabled for maintenance. Only administrators can view them in the gallery. Lock this album will also lock his Sub-albums"
+msgstr "Blokeatutako albumak mantentze-lanetarako desgaituta daude. Administradoreek baino ezin dituzte ikusi galerian. Albuma blokeatzerakoan bere azpi-albumak ere blokeatuko dituzu"
+
+msgid "Webmaster status required"
+msgstr "Web-arduraduna egoera behar da"
+
+msgid "Your selection"
+msgstr "Zure aukera"
+
+msgid "action successfully performed."
+msgstr "ekintza zuzen burutu da."
+
+msgid "Always have a backup of your database and files."
+msgstr "Datu-basearen eta fitxategien babes-kopia gorde beti."
+
+msgid "Album name must not be empty"
+msgstr "Album izena ezin da hutsik egon"
+
+msgid "Additional filters"
+msgstr "Iragazki gehigarriak"
+
+msgid "Add formats"
+msgstr "Gehitu formatuak"
+
+msgid "Add as filter"
+msgstr "Gehitu iragazki modura"
+
+msgid "Add New Plugin"
+msgstr "Gehitu plugin berria"
+
+msgid "<b>%d</b> filtered users"
+msgstr "Iragazitako <b>%d</> erabiltzaile"
+
+msgid "<b>%d</b> filtered user"
+msgstr "Iragazitako erabiltzaile <b>%d</>"
+
+msgid "%sMB"
+msgstr "%s MB"
+
+msgid "%sGB"
+msgstr "%s GB"
+
+msgid "%d pictures in sub-albums"
+msgstr "%d argazki azpi-albumetan"
+
+msgid "%s pixels, %.2f MB"
+msgstr "%s pixel, %.2f MB"
+
+msgid "%d formats uploaded for %d photos"
+msgstr "%d formatu kargatu dira %d argazkitarako"
+
+msgid "Try now !"
+msgstr "Saiatu orain!"
+
+msgid "This photo no longer exists"
+msgstr "Argazki hau dagoeneko ez dago"
+
+msgid "This photo is an orphan"
+msgstr "Agazki hau umezurtza da"
+
+msgid "Tag name"
+msgstr "Etiketa izena"
+
+msgid "Some photos are missing from your file system. Details provided by plugin Check Uploads"
+msgstr "Argazki batzuk falta dira zure fitxategi-sisteman. Xehetasunak Check Uploads pluginean"
+
+msgid "While restoring this plugin, it will be reset to its original parameters and associated data is going to be reset"
+msgstr "Plugin hau berreskuratzerakoan jatorrizko ezarpenetara berrezarriko da eta lotuta datuak ere berrezarri egingo dira"
+
+msgid "This plugin has no recent update"
+msgstr "Plugin honek ez eguneraketa berririk"
+
+msgid "This plugin have been updated recently"
+msgstr "Plugin hau duela gutxi eguneratu da"
+
+msgid "This plugin have no update since 3 years ! It may be outdated"
+msgstr "Plugin hau ez da eguneratu 3 urtetan! Zaharkituta egon daiteke"
+
+msgid "This plugin is incompatible with your version"
+msgstr "Plugin hau ez da bateragarria zure bertsioarekin"
+
+msgid "This plugin was updated less than 6 months ago"
+msgstr "Plugin hau orain dela 6 hilabete baino gutxiago eguneratu da"
+
+msgid "Show beta test plugins"
+msgstr "Erakutsi beta test pluginak"
+
+msgid "Show plugins compatible with previous version of Piwigo"
+msgstr "Erakutsi Piwigoren aurreko bertsioarekin bateragarriak diren pluginak"
+
+msgid "Understood, do not show again"
+msgstr "Ulertu dut, ez berriro erakutsi"
+
+msgid "Rename \"%s\""
+msgstr "\"%s\" (r)en izena aldatu"
+
+msgid "Yes, rename"
+msgstr "Bai, aldatu izena"
+
+msgid "Remove thumbnail"
+msgstr "Ezabatu koadro txikia"
+
+msgid "Put at the root"
+msgstr "Jarri erroan"
+
+msgid "Purge Cache"
+msgstr "Borratu Cachea"
+
+msgid "Purge Actions"
+msgstr "Borratu Ekintzak"
+
+msgid "Only admins in a specific group"
+msgstr "Administratzaileak baino ez talde berezi batean"
+
+msgid "Picture to associate formats with"
+msgstr "Formatuak irudi honekin erlazionatu"
+
+msgid "Piwigo core"
+msgstr "Piwigo muina"
+
+msgid "Piwigo is also on mobile."
+msgstr "Piwigo baita mugikorrean ere."
+
+msgid "Place first"
+msgstr "Lehena kokatu"
+
+msgid "Place last"
+msgstr "Azkena kokatu"
+
+msgid "Properties of abums"
+msgstr "Albumen ezaugarriak"
+
+msgid "On %d rating(s)"
+msgstr "%d (a)ren balorazioa(k)"
+
+msgid "Rating greater than"
+msgstr "Hau baino balorazio handioagoa"
+
+msgid "Object"
+msgstr "Objektua"
+
+msgid "No research in progress"
+msgstr "Ez dago ikerketarik abian"
+
+msgid "No search in progress"
+msgstr "Ez dago bilaketarik abian"
+
+msgid "No picture found with the following name : %s."
+msgstr "Ez da irudirik aurkitu izen honekin: %s."
+
+msgid "No format for this picture"
+msgstr "Ez dago formaturik irudi honetarako"
+
+msgid "More information"
+msgstr "Informazio geihago"
+
+msgid "Modified"
+msgstr "Aldatuta"
+
+msgid "Memories"
+msgstr "Oroigarriak"
+
+msgid "Locked album"
+msgstr "Blokeatutako albuma"
+
+msgid "Latest Piwigo news"
+msgstr "Piwigoren azken berriak"
+
+msgid "Last revision date is newer than"
+msgstr "Azken berrikuspenaren data hau baino berriagoa"
+
+msgid "If anything bad happens during the update, you would be able to restore a backup."
+msgstr "Eguneraketan zerbait gaizki suertatzen bada babeskopia berrezartzeko aukera izango duzu."
+
+msgid "Install Piwigo on mobile"
+msgstr "Instalatu Piwigo mugikorrean"
+
+msgid "Installed on %s, %s"
+msgstr "%s, %s (e)an instalatuta"
+
+msgid "Global Gallery Actions"
+msgstr "Galeri Globalaren akzioak"
+
+msgid "Delete %s format ?"
+msgstr "Ezabatu %s formatua?"
+
+msgid "Details"
+msgstr "Xehetasunak"
+
+msgid "Detect and avoid duplicates during upload"
+msgstr "Antzeman eta saihestu bikoiztutakoak kargatzerakoan"
+
+msgid "Disallow comments for sub-albums"
+msgstr "Ukatu iruzkinak azpi-albumetan"
+
+msgid "Discover"
+msgstr "Topatu"
+
+msgid "Downloaded"
+msgstr "Deskargatuta"
+
+msgid "During upload, if Piwigo detects the photo already exists, associate the existing photo to the destination album, without duplicating file"
+msgstr "Argazkiak kargatzerakoan, Piwigok argazkia badagoela antzematen badu helburu-albumera lotuko du fitxategia bikoiztu barik."
+
+msgid "Error when trying to detect formats"
+msgstr "Errorea formatuak antzematen saiatzerakoan"
+
+msgid "Extensions"
+msgstr "Luzapenak"
+
+msgid "Current Version"
+msgstr "Uneko bertsioa"
+
+msgid "Currently running version %s"
+msgstr "%s bertsioa exekutatzen ari da"
+
+msgid "This album is currently locked, visible only to administrators."
+msgstr "Albuma itxita dago, administratzaileek baino ezin dute ikusi."
+
+msgid "Created"
+msgstr "Sortuta"
+
+msgid "Create a new album at root"
+msgstr "Sortu album berria erroan"
+
+msgid "Create a sub-album of \"%s\""
+msgstr "Sortu azpi-albuma \"%s\"-tik"
+
+msgid "Comments disallowed for sub-albums"
+msgstr "Iruzkinak ukatuta azpi-albumetan"
+
+msgid "Comments allowed for sub-albums"
+msgstr "Iruzkinak baimenduta azpi-albumetan"
+
+msgid "Certification higher or equal to"
+msgstr "Ziurtagiri nagusiagoa edo berdina"
+
+msgid "Authorize comments"
+msgstr "Baimendu iruzkinak"
+
+msgid "Are you sure you want to unlock the gallery?"
+msgstr "Ziur galeria desblokeatu nahi duzula?"
+
+msgid "Unlock it"
+msgstr "Desblokeatu"
+
+msgid "Unlocked album"
+msgstr "Desblokeatutako albuma"
+
+msgid "Are you sure you want to uninstall the plugin \"%s\"?"
+msgstr "Ziur \"%s\" plugina desinstalatu nahi duzula?"
+
+msgid "Apply to root albums"
+msgstr "Aplikatu erroko albumetara"
+
+msgid "%d in whole branch"
+msgstr "%d adar osoan"
+
+msgid "%d including sub-albums"
+msgstr "%d azpi-albumak barne"
+
+msgid "Activate button \"%s\""
+msgstr "Aktibatu \"%s\" botoia"
+
+msgid "Add another set of formats"
+msgstr "Beste formatu-sorta bat"
+
+msgid "All admins"
+msgstr "Admin guztiak"
+
+msgid "Allow comments for sub-albums"
+msgstr "Baimendu iruzkinak azp-albumetan"
+
+msgid "The best is to have them made automatically on a regular basis."
+msgstr "Maiztasun jakin baten automatikoki egitea gomendatzen da."
+
+msgid "and %d more"
+msgstr "eta %d gehiago"
+
+msgid "since the beginning"
+msgstr "hasieratik"
+
+msgid "Visited"
+msgstr "bisitaturik"
+
+msgid "Visit history"
+msgstr "Bisiten historia"
+
+msgid "%d files"
+msgstr "%d fitxategi"
+
+msgid "There is multiple image in the database with the following names : %s."
+msgstr "Irudi bat baino gehiago dago datu-basean izen honekin: %s"
+
+msgid "This albums is already in related categories list"
+msgstr "Albuma dagoeneko badago erlazionatutako album-zerrendan"
+
+msgid "This picture is physically linked to this album, you can't dissociate them"
+msgstr "Irudia fisikoki loturik dago albumera, ezin dituzu banandu."
+
+msgid "Upload Formats"
+msgstr "Kargatu formatuak"
+
+msgid "Version %s"
+msgstr "%s bertsioa"
+
+msgid "The original picture will be detected with the filename (without extension)."
+msgstr "Jatorrizko irudia fitxategi-izenaren bitartez antzemango da (luzapenik gabe)"
+
+msgid "Shrink"
+msgstr "Txikiagotu"
+
+msgid "Expand"
+msgstr "Hedatu"
+
+msgid "Add a sub-album to “%s”"
+msgstr "Gehitu azpi-albuma \"%s\" (e)ra"
+
+msgid "Who can see ?"
+msgstr "Nork ikus dezake?"
+
+msgid "You have unsaved changes"
+msgstr "Gorde gabeko aldaketak daude"
+
+msgid "between %d and %d"
+msgstr "%d eta %d bitartean"
+
+msgid "image(s) contains unsaved changes"
+msgstr "irudia(k) gorde gabeko aldaketak ditu"
+
+msgid "level of confidentiality"
+msgstr "konfideltziatasun maila"
+
+msgid "was succesfully deleted"
+msgstr "zuzen ezabatu da"
+
+msgid "System Activities"
+msgstr "Sistemaren jarduerak"
+
+msgid "Image"
+msgstr "Irudia"
+
+msgid "First choose an album, then add your files"
+msgstr "Lehenik albuma aukeratu, gero fitxategiak gehitu"
+
+msgid "Metadata sync complete"
+msgstr "Metadatuen sinkronizazioa osotuta"
+
+msgid "Pagination has changed and needs to be reloaded !"
+msgstr "Paginazioa aldatu egin da eta berriro kargatu behar da!"
+
+msgid "Save"
+msgstr "Gorde"
+
+msgid "Core"
+msgstr "Muina"
+
+msgid "Changes saved"
+msgstr "Aldaketak gorde dira"
+
+msgid "Auto-update"
+msgstr "Auto-eguneratu"
+
+msgid "An error has occured"
+msgstr "Errorea gertatu da"
+
+msgid "Added on %s"
+msgstr "Gehituta %s -(e)n"
+
+msgid "Activate create mode to create and select an album"
+msgstr "Gaitu sorkuntza modua albumak sortu eta hautatzeko"
+
+msgid "Creation mode"
+msgstr "Sorkuntza modua"
+
+msgid "Select or create an album"
+msgstr "Hautatu edo sortu albuma"
+
+msgid "Create your first album"
+msgstr "Sortu lehenengo albuma"
+
+msgid "Create and select"
+msgstr "Sortu eta hautatu"
+
+msgid "Create a root album"
+msgstr "Sortu erro-albuma"
+
+msgid "To be sure, please rewrite the word “%s” below"
+msgstr "Ziurtatzeko, idatzi \"%s\" hitza behealdean"
+
+msgid "Username successfully modified"
+msgstr "Erabiltzaile-izena zuzen aldatu da"
+
+msgid "Yes, let's proceed"
+msgstr "Bai, aurrera"
+
+msgid "You are about to set %s as main user instead of %s, do you wish to continue ?"
+msgstr "%s erabiltzaile nagusi modura ezartzen zoaz %s (r)en ordez, ziur al zaude?"
+
+msgid "You are not authorised to change the main user, please ask your webmaster"
+msgstr "Ez duzu erabiltzaile nagusia aldatzeko baimenik, jo web-arduradunarengana"
+
+msgid "You can now change the main user from %s to %s."
+msgstr "Orain erabiltzaile nagusia alda dezakezu %s (e)tik %s (e)ra."
+
+msgid "You cannot copy the password if the connection to this site is not secure."
+msgstr "Ezin duzu pasahitza kopiatu gune honetako konexioa ez baita fidagarria."
+
+msgid "This user must first be defined as the webmaster before it can be upgraded to the main user"
+msgstr "Erabiltzailea web-arduradun bezala definitu behar da erabiltzaile nagusi bezala eguneratu baino lehen"
+
+msgid "%s is the new main user"
+msgstr "%s da erabiltzaile nagusi berria"
+
+msgid "Cannot send an email to this user because he doesn't have an email address"
+msgstr "Ezin izan da posta elektronikorik bidali ez duelako helbide elektronikorik jarri."
+
+msgid "Changing the main user"
+msgstr "Erabiltzaile nagusia aldatzen"
+
+msgid "Copied link"
+msgstr "Kopiatutako esteka"
+
+msgid "Copy password"
+msgstr "Kopiatu pasahitza"
+
+msgid "Copy the link below and send it to the user so the password can be set."
+msgstr "Kopiatu behekaldeko esteka eta erabiltzaileari bidal iezaiozu pasahitza ezartzeko."
+
+msgid "Copy the password link"
+msgstr "Kopiatu pasahitzaren esteka"
+
+msgid "Main user"
+msgstr "Erabiltzaile nagusia"
+
+msgid "Password copied"
+msgstr "Pasahitza kopiatu egin da"
+
+msgid "Please complete all fields"
+msgstr "Bere eremu guztiak"
+
+msgid "Resend password link"
+msgstr "Birbidali pasahitzaren esteka"
+
+msgid "Set as main user"
+msgstr "Ezarri erabiltzaile nagusi modura"
+
+msgid "The passwords do not match"
+msgstr "Pasahitzek ez dute bat egiten"
+
+msgid "To set your password, visit the following address:"
+msgstr "Zoaz hurrengo helbidera pasahitza ezartzeko:"
+
+msgid "Welcome to %s"
+msgstr "Ongi etorri %s (e)ra"
+
+msgid "What's new in version %s"
+msgstr "Zer berri %s bertsioan?"
+
+msgid "This link is valid for %s. After this time, you will need to request a new link."
+msgstr "ESteka %s (r)ako baliagarria. Tarte horren ostean esteka berria eskatu beharko duzu."
+
+msgid "Read the release note"
+msgstr "Irakurri bertsioaren oharra"
+
+msgid "Ok, got it!"
+msgstr "Ondo da!"
+
+msgid "An activation link valid for %s was created but could not be sent. You can now copy the link below and send it to the user."
+msgstr "%s (r)entzako aktibazio-esteka sortu da baina ezin izan da bidali. Beheko esteka kopiatu eta erabitzaileari bidali dakioke."
+
+msgid "An activation link valid for %s has been sent to \"%s\". If the user doesn't receive the link, you can generate and copy a new one by editing the user and managing her password."
+msgstr "%s (r)entzako aktibazio-esteka bidali da \"%s\" (r)a. Ez baduzu esteka jaso, esteka berria sortu eta kopiatu daiteke erabiltzailearen pasahitza editatzerakoan."
+
+msgid "A photo library administrator has created the following account for you:"
+msgstr "Argazki-liburutegiaren administratzaile batek hurrengo kontua sortu dizu."
+

@@ -1,0 +1,1486 @@
+# Piwigo translation — sk_SK
+# Source: common.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: sk_SK\n"
+"Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
+"X-Piwigo-Language-Name: Slovenčina\n"
+"X-Piwigo-Country: Slovenská republika\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Code: sk\n"
+"X-Piwigo-Zero-Plural: true\n"
+
+msgid "%d Kb"
+msgstr "%d Kb"
+
+msgid "%d album updated"
+msgid_plural "%d albums updated"
+msgstr[0] "%d album aktualizovaný"
+msgstr[1] "%d albumov aktualizovaných"
+
+msgid "%d comment to validate"
+msgstr "%d komentár na schválenie"
+
+msgid "%d comments to validate"
+msgstr "%d komentárov na schválenie"
+
+msgid "%d new photo"
+msgid_plural "%d new photos"
+msgstr[0] "%d nový objekt"
+msgstr[1] "%d nových objektov"
+
+msgid "%d comment"
+msgid_plural "%d comments"
+msgstr[0] "%d komentár"
+msgstr[1] "%d komentárov"
+
+msgid "%d hit"
+msgstr "%d zobrazenie"
+
+msgid "%d hits"
+msgstr "%d zobrazení"
+
+msgid "%d new user"
+msgstr "%d nový používateľ"
+
+msgid "%d new users"
+msgstr "%d nových používateľov"
+
+msgid "About"
+msgstr "O galérii"
+
+msgid "All tags"
+msgstr "Všetky štítky"
+
+msgid "Any tag"
+msgstr "Ktorýkoľvek štítok"
+
+msgid "Author"
+msgstr "Autor"
+
+msgid "Albums"
+msgstr "Albumy"
+
+msgid "Album"
+msgstr "Album"
+
+msgid "Close this window"
+msgstr "Zatvoriť okno"
+
+msgid "Complete RSS feed (photos, comments)"
+msgstr "Kompletné RSS vlákno (fotografie, komentáre)"
+
+msgid "Confirm Password"
+msgstr "Potvrdiť heslo"
+
+msgid "Connection settings"
+msgstr "Nastavenie prihlásenia"
+
+msgid "Login"
+msgstr "Prihlásiť sa"
+
+msgid "Contact webmaster"
+msgstr "Kontaktovať webmastra"
+
+msgid "Create a new account"
+msgstr "Vytvoriť nový účet"
+
+msgid "Created on"
+msgstr "Vytvorené"
+
+msgid "Creation date"
+msgstr "Dátum vytvorenia"
+
+msgid "Current password is wrong"
+msgstr "Chybne zadané heslo"
+
+msgid "Dimensions"
+msgstr "Rozmery"
+
+msgid "Display"
+msgstr "Zobraziť"
+
+msgid "Email address is missing. Please specify an email address."
+msgstr "Chýba e-mailová adresa. Prosím zadajte e-mailovú adresu."
+
+msgid "Email address"
+msgstr "E-mail"
+
+msgid "Enter your personnal informations"
+msgstr "Vyplňte svoje osobné údaje"
+
+msgid "Error sending email"
+msgstr "Chyba pri odosielaní správy"
+
+msgid "File name"
+msgstr "Názov súboru"
+
+msgid "File"
+msgstr "Súbor"
+
+msgid "Filesize"
+msgstr "Veľkosť súboru"
+
+msgid "Filter and display"
+msgstr "Zobraziť podľa filtra"
+
+msgid "Filter"
+msgstr "Filter"
+
+msgid "Forgot your password?"
+msgstr "Zabudnuté heslo?"
+
+msgid "Go through the gallery as a visitor"
+msgstr "Prechádzať galériu ako hosť"
+
+msgid "Help"
+msgstr "Nápoveda"
+
+msgid "Identification"
+msgstr "Identifikácia"
+
+msgid "Photos only RSS feed"
+msgstr "RSS vlákno len s fotografiami"
+
+msgid "Keyword"
+msgstr "Kľúčové slovo"
+
+msgid "Links"
+msgstr "Odkazy"
+
+msgid "N/A"
+msgstr "nezadané"
+
+msgid "New on %s"
+msgstr "Nový na %s"
+
+msgid "Notification"
+msgstr "RSS vlákno"
+
+msgid "Number of items"
+msgstr "Počet položiek"
+
+msgid "Original dimensions"
+msgstr "Pôvodné rozmery"
+
+msgid "Password forgotten"
+msgstr "Zabudnuté heslo"
+
+msgid "Password"
+msgstr "Heslo"
+
+msgid "Post date"
+msgstr "Dátum zverejnenia"
+
+msgid "Posted on"
+msgstr "Odoslané"
+
+msgid "Profile"
+msgstr "Profil"
+
+msgid "Quick connect"
+msgstr "Rýchle prihlásenie"
+
+msgid "RSS feed"
+msgstr "RSS čítačka"
+
+msgid "Register"
+msgstr "Zaregistrovať sa"
+
+msgid "Registration"
+msgstr "Registrácia"
+
+msgid "Related tags"
+msgstr "Súvisiace štítky"
+
+msgid "Reset"
+msgstr "Vynulovať"
+
+msgid "Retrieve password"
+msgstr "Obnoviť heslo"
+
+msgid "Search tags"
+msgstr "Hľadať pomocou štítkov"
+
+msgid "Search"
+msgstr "Vyhľadať"
+
+msgid "display available tags"
+msgstr "Ukázať dostupné štítky"
+
+msgid "Since"
+msgstr "Od"
+
+msgid "Sort by"
+msgstr "Zoradiť podľa"
+
+msgid "Sort order"
+msgstr "Smer triedenia"
+
+msgid "Tag"
+msgstr "Štítok"
+
+msgid "Tags"
+msgstr "Štítky"
+
+msgid "The RSS notification feed provides notification on news from this website : new photos, updated albums, new comments. Use a RSS feed reader."
+msgstr "RSS vlákno informuje o novinkách na týchto stránkach: nové fotografie, aktualizované albumy, komentáre. Použite RSS čítačku."
+
+msgid "Unknown feed identifier"
+msgstr "Neznámý identifikátor vlákna"
+
+msgid "User comments"
+msgstr "Komentáre používateľov"
+
+msgid "Username"
+msgstr "Používateľské meno"
+
+msgid "Visits"
+msgstr "Návštev"
+
+msgid "Webmaster"
+msgstr "Webmaster"
+
+msgid "Week %d"
+msgstr "Týždeň %d"
+
+msgid "About Piwigo"
+msgstr "O aplikácii Piwigo"
+
+msgid "You are not authorized to access the requested page"
+msgstr "Nemáte oprávnenie k prístupu na požadovanú stránku"
+
+msgid "add this photo to your favorites"
+msgstr "Pridať túto fotografiu k obľúbeným"
+
+msgid "Administration"
+msgstr "Administrácia"
+
+msgid "all"
+msgstr "všetko"
+
+msgid "ascending"
+msgstr "vzostupne"
+
+msgid "Expand all albums"
+msgstr "Rozbaliť všetky albumy"
+
+msgid "posted after %s (%s)"
+msgstr "vložené po %s (%s)"
+
+msgid "posted before %s (%s)"
+msgstr "vložené pred %s (%s)"
+
+msgid "posted between %s (%s) and %s (%s)"
+msgstr "vložené medzi %s (%s) a %s (%s)"
+
+msgid "posted on %s"
+msgstr "vložené %s"
+
+msgid "Best rated"
+msgstr "Najlepšie hodnotené"
+
+msgid "display best rated photos"
+msgstr "Zobraziť najlepšie hodnotené položky"
+
+msgid "Calendar"
+msgstr "Kalendár"
+
+msgid "All"
+msgstr "Všetko"
+
+msgid "display each day with photos, month per month"
+msgstr "Fotografie podľa dňov, mesiac po mesiaci"
+
+msgid "View"
+msgstr "Zobraziť"
+
+msgid "chronology_monthly_calendar"
+msgstr "Kalendár na mesiac"
+
+msgid "chronology_monthly_list"
+msgstr "Zoznam na mesiac"
+
+msgid "chronology_weekly_list"
+msgstr "Týždenný zoznam"
+
+msgid "Click here if your browser does not automatically forward you"
+msgstr "Ak neprebehlo automatické presmerovanie, kliknite sem"
+
+msgid "comment date"
+msgstr "dátum pridania komentára"
+
+msgid "Comment"
+msgstr "Komentár"
+
+msgid "Your comment has been registered"
+msgstr "Váš komentár bol zaregistrovaný"
+
+msgid "Anti-flood system : please wait for a moment before trying to post another comment"
+msgstr "Ochrana proti zahlteniu: prosím počkajte chvíľu pred vložením nového komentára"
+
+msgid "Your comment has NOT been registered because it did not pass the validation rules"
+msgstr "Váš komentár nebol vložený, protože neprešiel schválením"
+
+msgid "An administrator must authorize your comment before it is visible."
+msgstr "Váš komentár nebude zobrazený, pokiaľ ho neschváli administrátor."
+
+msgid "This login is already used by another user"
+msgstr "Prihlasovacie meno je už používané iným používateľom"
+
+msgid "Comments"
+msgstr "Komentáre"
+
+msgid "Add a comment"
+msgstr "Vložiť komentár"
+
+msgid "created after %s (%s)"
+msgstr "vytvorené po %s (%s)"
+
+msgid "created before %s (%s)"
+msgstr "vytvorené pred %s (%s)"
+
+msgid "created between %s (%s) and %s (%s)"
+msgstr "vytvorené medzi %s (%s) a %s (%s)"
+
+msgid "created on %s"
+msgstr "vytvorené %s"
+
+msgid "Your Gallery Customization"
+msgstr "Prispôsobiť galériu "
+
+msgid "Default"
+msgstr "Predvolené"
+
+msgid "delete this photo from your favorites"
+msgstr "Odstrániť fotografiu z obľúbených"
+
+msgid "Delete"
+msgstr "Odstrániť"
+
+msgid "descending"
+msgstr "zostupne"
+
+msgid "Download"
+msgstr "Stiahnuť"
+
+msgid "Download this file"
+msgstr "stiahnuť tento súbor"
+
+msgid "edit"
+msgstr "editovať"
+
+msgid "wrong date"
+msgstr "chybný dátum"
+
+msgid "excluded"
+msgstr "vyňaté"
+
+msgid "Your favorites"
+msgstr "Obľúbené"
+
+msgid "display your favorites photos"
+msgstr "zobraziť moje obľúbené fotografie"
+
+msgid "Favorites"
+msgstr "Obľúbené"
+
+msgid "First"
+msgstr "Začiatok"
+
+msgid "The gallery is locked for maintenance. Please, come back later."
+msgstr "Galéria je uzamknutá z dôvodu údržby. Skúste to prosím neskôr."
+
+msgid "Page generated in"
+msgstr "Stránka vytvorená "
+
+msgid "guest"
+msgstr "hosť"
+
+msgid "Hello"
+msgstr "Prihlásený ako"
+
+msgid "available for administrators only"
+msgstr "prístupné len adminitrátorom"
+
+msgid "display this album"
+msgstr "ukazuje fotografie v koreňovom adresári tohto albumu"
+
+msgid "display last user comments"
+msgstr "Zobraziť najnovšie komentáre používateľov"
+
+msgid "search"
+msgstr "hľadať"
+
+msgid "Home"
+msgstr "Úvodná stránka"
+
+msgid "in this album"
+msgstr "v tomto albume"
+
+msgid "in %d sub-album"
+msgid_plural "in %d sub-albums"
+msgstr[0] "v %d podalbume"
+msgstr[1] "v %d podalbumoch"
+
+msgid "included"
+msgstr "vrátane"
+
+msgid "Invalid password!"
+msgstr "Neplatné heslo!"
+
+msgid "Language"
+msgstr "Jazyk"
+
+msgid "last %d days"
+msgstr "posledných %d dní"
+
+msgid "Last"
+msgstr "Koniec"
+
+msgid "Logout"
+msgstr "Odhlásiť sa"
+
+msgid "obligatory"
+msgstr "povinné"
+
+msgid "display a calendar by creation date"
+msgstr "zobraziť v kalendári podľa dátumu vytvorenia"
+
+msgid "display all photos in all sub-albums"
+msgstr "zobraziť všetky objekty v podalbumoch"
+
+msgid "return to normal view mode"
+msgstr "návrat do normálneho zobrazenia"
+
+msgid "display a calendar by posted date"
+msgstr "zobraziť v kalendári podľa dátumu pridania"
+
+msgid "Most visited"
+msgstr "Najčastejšie zobrazované"
+
+msgid "display most visited photos"
+msgstr "najčastejšie zobrazované fotografie"
+
+msgid "The number of photos per page must be a not null scalar"
+msgstr "Počet fotografií na stránke musí byť číslo väčšie ako 0."
+
+msgid "Number of photos per page"
+msgstr "Počet fotografií na stránke"
+
+msgid "Unknown identifier"
+msgstr "Neznámy identifikátor"
+
+msgid "New password"
+msgstr "Nové heslo"
+
+msgid "Rate this photo"
+msgstr "Ohodnotiť túto fotografiu"
+
+msgid "Next"
+msgstr "Nasledujúca"
+
+msgid "no rate"
+msgstr "bez hodnotenia"
+
+msgid "Photos posted within the last %d day."
+msgid_plural "Photos posted within the last %d days."
+msgstr[0] "Fotografie vložené behom posledného %d dňa."
+msgstr[1] "Fotografie vložené behom posledných %d dní."
+
+msgid "password updated"
+msgstr "heslo aktualizované"
+
+msgid "Recent period must be a positive integer value"
+msgstr "Aktuálny interval musí byť číslo väčšie ako 0."
+
+msgid "photo"
+msgstr "fotografia"
+
+msgid "Click on the photo to see it in high definition"
+msgstr "Pre zobrazenie vo vyššom rozlíšení kliknite na fotografiu"
+
+msgid "Show file metadata"
+msgstr "Zobraziť metadáta súboru"
+
+msgid "Powered by"
+msgstr "Publikované pomocou aplikácie"
+
+msgid "Preferences"
+msgstr "Nastavenia"
+
+msgid "Previous"
+msgstr "Predchádzajúca"
+
+msgid "Random photos"
+msgstr "Náhodný výber"
+
+msgid "display a set of random photos"
+msgstr "Zobraziť sadu fotografií podľa náhodného výberu"
+
+msgid "Recent albums"
+msgstr "Nové albumy"
+
+msgid "display recently updated albums"
+msgstr "zobraziť novopridané albumy"
+
+msgid "Recent period"
+msgstr "Doba, počas ktorej sú fotografie zobrazované ako novopridané"
+
+msgid "Recent photos"
+msgstr "Nové fotografie"
+
+msgid "display most recent photos"
+msgstr "zobraziť novopridané fotografie"
+
+msgid "Redirection..."
+msgstr "Presmerovanie..."
+
+msgid "Please, enter a login"
+msgstr "Zadajte prosím prihlasovacie údaje"
+
+msgid "login mustn't end with a space character"
+msgstr "používateľské meno nesmie končiť medzerou"
+
+msgid "login mustn't start with a space character"
+msgstr "používateľské meno nesmie začínať medzerou"
+
+msgid "this login is already used"
+msgstr "tieto prihlasovacie údaje už sú používané"
+
+msgid "mail address must be like xxx@yyy.eee (example : jack@altern.org)"
+msgstr "E-mail musí byť vo formáte xxx@yyy.eee (napríklad: kovac@zoznam.sk)"
+
+msgid "Auto login"
+msgstr "Automatické prihlásenie"
+
+msgid "remove this tag from the list"
+msgstr "odstrániť tento štítok zo zoznamu"
+
+msgid "representative"
+msgstr "vzorový"
+
+msgid "Search for Author"
+msgstr "Hľadať autora"
+
+msgid "Search in albums"
+msgstr "Hľadanie v albumoch"
+
+msgid "Search by date"
+msgstr "Hľadať podľa dátumu pridania"
+
+msgid "Date"
+msgstr "Od"
+
+msgid "End-Date"
+msgstr "Do"
+
+msgid "Kind of date"
+msgstr "Dátum:"
+
+msgid "Search for words"
+msgstr "Hľadať slová"
+
+msgid "Search for all terms"
+msgstr "Hľadať všetky výrazy"
+
+msgid "Search for any term"
+msgstr "Hľadať ktorýkoľvek výraz"
+
+msgid "Empty query. No criteria has been entered."
+msgstr "Neúplný dotaz. Neboli zadané žiadne podmienky pre vyhľadávanie."
+
+msgid "Search results"
+msgstr "Výsledky vyhľadávania"
+
+msgid "Search in sub-albums"
+msgstr "Hľadanie v subalbumoch"
+
+msgid "Contact"
+msgstr "Kontakt"
+
+msgid "set as album representative"
+msgstr "nastaviť album ako reprezentatívny"
+
+msgid "Show number of comments"
+msgstr "Ukázať počet komentárov"
+
+msgid "Show number of hits"
+msgstr "Ukázať počet zobrazení"
+
+msgid "slideshow"
+msgstr "automatické prehrávanie"
+
+msgid "stop the slideshow"
+msgstr "zastaviť automatické prehrávanie"
+
+msgid "Specials"
+msgstr "Zobraziť"
+
+msgid "SQL queries in"
+msgstr "SQL dotazov behom"
+
+msgid "display only recently posted photos"
+msgstr "zobraziť len novo vložené fotografie"
+
+msgid "return to the display of all photos"
+msgstr "návrat k zobrazeniu všetkých fotografií"
+
+msgid "the beginning"
+msgstr "začiatok"
+
+msgid "Thumbnails"
+msgstr "Náhľady"
+
+msgid "Menu"
+msgstr "Ďalšie funkcie"
+
+msgid "A comment on your site"
+msgstr "Komentár v Vašim stránkam"
+
+msgid "today"
+msgstr "dnes"
+
+msgid "Update your rating"
+msgstr "Aktualizovať hodnotenie"
+
+msgid "the username must be given"
+msgstr "je nutné zadať používateľské meno"
+
+msgid "useful when password forgotten"
+msgstr "užitočné pri zabudnutí hesla"
+
+msgid "Quick search"
+msgstr "Rýchle hľadanie"
+
+msgid "Connected user: %s"
+msgstr "Pripojený používateľ: %s"
+
+msgid "IP: %s"
+msgstr "IP: %s"
+
+msgid "Browser: %s"
+msgstr "Prehliadač: %s"
+
+msgid "Author: %s"
+msgstr "Autor: %s"
+
+msgid "Comment: %s"
+msgstr "Komentár: %s"
+
+msgid "Comment by %s"
+msgstr "Komentár od %s"
+
+msgid "User: %s"
+msgstr "Používateľ: %s"
+
+msgid "Email: %s"
+msgstr "E-mail: %s"
+
+msgid "Admin: %s"
+msgstr "Administrátor: %s"
+
+msgid "Registration of %s"
+msgstr "Registrácia %s"
+
+msgid "Album: %s"
+msgstr "Album: %s"
+
+msgid "Bad status for user \"guest\", using default status. Please notify the webmaster."
+msgstr "Zlý stav pre používateľa \"hosť\", bude použitý východzí stav. Prosím informujte webmastra."
+
+msgid "this email address is already in use"
+msgstr "táto e-mailová adresa je už používaná"
+
+msgid "Album results for"
+msgstr "Výsledky pre album"
+
+msgid "Tag results for"
+msgstr "Výsledky pre štítky"
+
+msgid "from %s to %s"
+msgstr "od %s do %s"
+
+msgid "Play of slideshow"
+msgstr "Spustiť prezentáciu"
+
+msgid "Pause of slideshow"
+msgstr "Zastaviť prezentáciu"
+
+msgid "Repeat the slideshow"
+msgstr "Opakovať prezentáciu"
+
+msgid "Not repeat the slideshow"
+msgstr "Neopakovať prezentáciu"
+
+msgid "Reduce diaporama speed"
+msgstr "Spomaliť"
+
+msgid "Accelerate diaporama speed"
+msgstr "Zrýchliť"
+
+msgid "Submit"
+msgstr "Potvrdiť"
+
+msgid "Yes"
+msgstr "Áno"
+
+msgid "No"
+msgstr "Nie"
+
+msgid "%d photo"
+msgid_plural "%d photos"
+msgstr[0] "%d fotografia"
+msgstr[1] "%d fotografií"
+
+msgid "%d photo is also linked to current tags"
+msgid_plural "%d photos are also linked to current tags"
+msgstr[0] "%d fotografia je tiež spojená s aktuálnymi štítkami"
+msgstr[1] "%d fotografií je tiež spojených s aktuálnymi štítkami"
+
+msgid "display photos linked to this tag"
+msgstr "Ukázať len fotografie spojené s aktuálnym štítkom"
+
+msgid "photos posted during the last %d days"
+msgstr "fotografie vložené za posledních %d dní"
+
+msgid "Piwigo Help"
+msgstr "Nápoveda Piwigo"
+
+msgid "Rank"
+msgstr "Hodnotiť"
+
+msgid "group by letters"
+msgstr "zoskupiť podľa písmen"
+
+msgid "letters"
+msgstr "písmená"
+
+msgid "show tag cloud"
+msgstr "zobraziť štítky v bubline"
+
+msgid "cloud"
+msgstr "bublina"
+
+msgid "Are you sure?"
+msgstr "Ste si istý?"
+
+msgid "Reset to default values"
+msgstr "Obnoviť predvolené hodnoty"
+
+msgid "delete all photos from your favorites"
+msgstr "vymazať všetky obrázky z Vašich obľúbených"
+
+msgid "Sent by"
+msgstr "Poslané"
+
+msgid "Cookies are blocked or not supported by your browser. You must enable cookies to connect."
+msgstr "Cookies sú buď blokované, alebo nie sú povolené vo Vašom prehliadači. Musíte povoliť cookies, aby bolo možné sa prihlásiť."
+
+msgid "Edit a comment"
+msgstr "Upraviť komentár"
+
+msgid "(!) This comment requires validation"
+msgstr "(!) Tento komentár vyžaduje kontrolu"
+
+msgid "Welcome"
+msgstr "Vitajte"
+
+msgid "Welcome to your Piwigo photo gallery!"
+msgstr "Vitajte vo Vašej Piwigo fotogalérii!"
+
+msgid "... or browse your empty gallery"
+msgstr "... alebo prezerajte Vašu prázdnu galériu"
+
+msgid "... or please deactivate this message, I will find my way by myself"
+msgstr "... alebo prosím zrušte túto správu, program nájde spôsob sám"
+
+msgid "Hello %s, your Piwigo photo gallery is empty!"
+msgstr "Vitajte %s, Vaša Piwigo fotogaléria je prázdna!"
+
+msgid "I want to add photos"
+msgstr "Chcem pridať fotografie"
+
+msgid "Manage this user comment: %s"
+msgstr "Spravujte tento používateľský komentár: %s"
+
+msgid "This author modified following comment:"
+msgstr "Tento autor upravil nasledujúci komentár:"
+
+msgid "This author removed the comment with id %d"
+msgstr "Tento autor zmazal komentár s identifikátorom %d"
+
+msgid "%d new comment"
+msgstr "%d nový komentár"
+
+msgid "%d new comments"
+msgstr "%d nové komentáre"
+
+msgid "html tags are not allowed in login"
+msgstr "html znaky nie sú povolené pri prihlásení"
+
+msgid "%d rates"
+msgstr "%d hodnotení"
+
+msgid "Rating score"
+msgstr "Bodové hodnotenie"
+
+msgid "Invalid username or email"
+msgstr "Nesprávne meno alebo email"
+
+msgid "Password reset is not allowed for this user"
+msgstr "Obnova hesla nie je povolená pre tohto používateľa"
+
+msgid "User \"%s\" has no email address, password reset is not possible"
+msgstr "Používateľ \"%s\" nemal zadaný email, obnova hesla nie je možná"
+
+msgid "Someone requested that the password be reset for the following user account:"
+msgstr "Niekto požiadal o obnovu hesla pre nasledovný používateľský účet:"
+
+msgid "Username \"%s\" on gallery %s"
+msgstr "Používateľské meno \"%s\" v galérii %s"
+
+msgid "To reset your password, visit the following address:"
+msgstr "Pre obnovu hesla navštívte nasledovnú adresu:"
+
+msgid "If this was a mistake, just ignore this email and nothing will happen."
+msgstr "Ak to bola chyba, jednoducho ignorujte tento mail a všetko bude v poriadku."
+
+msgid "Password Reset"
+msgstr "Obnova hesla"
+
+msgid "Check your email for the confirmation link"
+msgstr "Skontrolujte Váš email pre potvrdenie linku"
+
+msgid "Invalid key"
+msgstr "Neplatný kľúč"
+
+msgid "The passwords do not match"
+msgstr "Heslo sa nezhoduje"
+
+msgid "Your password has been reset"
+msgstr "Vaše heslo bolo obnovené"
+
+msgid "Return to home page"
+msgstr "Návrat na Úvodnú stránku"
+
+msgid "Please enter your username or email address."
+msgstr "Prosím vložte Vaše používateľské meno alebo email."
+
+msgid "You will receive a link to create a new password via email."
+msgstr "Obdržíte adresu na vytvorenie nového hesla cez email."
+
+msgid "Username or email"
+msgstr "Používateľské meno alebo email"
+
+msgid "Change my password"
+msgstr "Zmeniť moje heslo"
+
+msgid "Enter your new password below."
+msgstr "Nižšie vložte Vaše nové heslo."
+
+msgid "EXIF Metadata"
+msgstr "EXIF Metadáta"
+
+msgid "IPTC Metadata"
+msgstr "IPTC Metadáta"
+
+msgid "Edit"
+msgstr "Upraviť"
+
+msgid "Hello %s,"
+msgstr "Ahoj %s,"
+
+msgid "Send my connection settings by email"
+msgstr "Odoslať moje nastavenia pripojenia emailom"
+
+msgid "Successfully registered, you will soon receive an email with your connection settings. Welcome!"
+msgstr "Úspešná registrácia, obdržíte email s Vašimi nastaveniami pripojenia. Vitajte!"
+
+msgid "Username modification"
+msgstr "Zmena používateľského mena"
+
+msgid "Your username has been successfully changed to : %s"
+msgstr "Vaše používateľské meno bolo úspešne zmenené na : %s"
+
+msgid "square"
+msgstr "Štvorec"
+
+msgid "thumb"
+msgstr "Náhľad"
+
+msgid "small"
+msgstr "Malý"
+
+msgid "medium"
+msgstr "Stredný"
+
+msgid "large"
+msgstr "Veľký"
+
+msgid "xlarge"
+msgstr "Väčší"
+
+msgid "xxlarge"
+msgstr "Najväčší"
+
+msgid "Original"
+msgstr "Originál"
+
+msgid "Thank you for registering at %s!"
+msgstr "Ďakujeme za registráciu na %s!"
+
+msgid "Here are your connection settings"
+msgstr "Tu je Vaše nastavenie pripojenia"
+
+msgid "Password: %s"
+msgstr "Heslo: %s"
+
+msgid "Username: %s"
+msgstr "Používateľské meno: %s"
+
+msgid "If you think you've received this email in error, please contact us at %s"
+msgstr "Ak si myslíte, že tento mail ste dostali chybne, kontaktujte nás prosím na %s"
+
+msgid "Show oldest comments first"
+msgstr "Zobraziť staršie komentáre ako prvé"
+
+msgid "Show latest comments first"
+msgstr "Zobraziť najnovšie komentáre ako prvé"
+
+msgid "Photo sizes"
+msgstr "Veľkosti fotky"
+
+msgid "View in"
+msgstr "Ukázať v"
+
+msgid "Mobile"
+msgstr "Mobil"
+
+msgid "Desktop"
+msgstr "Desktope"
+
+msgid "2small"
+msgstr "XXS – malý"
+
+msgid "xsmall"
+msgstr "XS – veľmi malý"
+
+msgid "File name, A &rarr; Z"
+msgstr "Názov súboru, A &rarr; Z"
+
+msgid "File name, Z &rarr; A"
+msgstr "Názov súboru, Z &rarr; A"
+
+msgid "Photo title, A &rarr; Z"
+msgstr "Názov fotky, A &rarr; Z"
+
+msgid "Photo title, Z &rarr; A"
+msgstr "Názov fotky, Z &rarr; A"
+
+msgid "Date created, new &rarr; old"
+msgstr "Dátum vytvorenia, nové &rarr; staré"
+
+msgid "Date created, old &rarr; new"
+msgstr "Dátum vytvorenia, staré &rarr; nové"
+
+msgid "Date posted, new &rarr; old"
+msgstr "Dátum odoslania, nové &rarr; staré"
+
+msgid "Date posted, old &rarr; new"
+msgstr "Dátum odoslania, staré &rarr; nové"
+
+msgid "Manual sort order"
+msgstr "Manuálne zoradenie"
+
+msgid "Numeric identifier, 1 &rarr; 9"
+msgstr "Číselný identifikátor, 1 &rarr; 9"
+
+msgid "Numeric identifier, 9 &rarr; 1"
+msgstr "Číselný identifikátor, 9 &rarr; 1"
+
+msgid "Rating score, high &rarr; low"
+msgstr "Hodnotenie, vysoké &rarr; nízke"
+
+msgid "Rating score, low &rarr; high"
+msgstr "Hodnotenie, nízke &rarr; vysoké"
+
+msgid "Visits, high &rarr; low"
+msgstr "Zobrazenia, vysoké &rarr; nízke"
+
+msgid "Visits, low &rarr; high"
+msgstr "Zobrazenia, nízke &rarr; vysoké"
+
+msgid "%d rate"
+msgstr "%d hodnotené"
+
+msgid "Bad request"
+msgstr "Nesprávna požiadavka"
+
+msgid "Forbidden"
+msgstr "Zakázané"
+
+msgid "Page not found"
+msgstr "Stránka sa nenašla"
+
+msgid "Permalink for album not found"
+msgstr "Trvalý odkaz na album sa nenašiel"
+
+msgid "Piwigo encountered a non recoverable error"
+msgstr "Piwigo narazilo na opraviteľnú chybu"
+
+msgid "Requested album does not exist"
+msgstr "Požadovaný album neexistuje"
+
+msgid "Requested tag does not exist"
+msgstr "Požadovaný štítok neexistuje"
+
+msgid "Email address is mandatory"
+msgstr "Emailová adresa je povinná"
+
+msgid "Username is mandatory"
+msgstr "Meno používateľa je povinné"
+
+msgid "mandatory"
+msgstr "povinné"
+
+msgid "Your website URL is invalid"
+msgstr "URL Vašej web stránky je neplatné"
+
+msgid "Website"
+msgstr "Web stránka"
+
+msgid "Email"
+msgstr "Email"
+
+msgid "Go back to the album"
+msgstr "Späť do albumu"
+
+msgid "Last Page"
+msgstr "Posledná strana"
+
+msgid "First Page"
+msgstr "Prvá strana"
+
+msgid "Password is missing. Please enter the password."
+msgstr "Chýba heslo. Prosím napíšte heslo."
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "Chýba potvrdenie hesla. Prosím potvrďte vybrané heslo."
+
+msgid "%d photos per page"
+msgstr "%d fotiek na stránku"
+
+msgid "Theme"
+msgstr "Téma"
+
+msgid "No results for"
+msgstr "Žiadne výsledky pre"
+
+msgid "Apply on properties"
+msgstr "Pridať do vlastností"
+
+msgid "Photo description"
+msgstr "Popis fotky"
+
+msgid "Photo title"
+msgstr "Názov fotky"
+
+msgid "Album name, Z &rarr; A"
+msgstr "Názov albumu, Z &rarr; A"
+
+msgid "Album name, A &rarr; Z"
+msgstr "Názov albumu, A &rarr; Z"
+
+msgid "Link: %s"
+msgstr "Link: %s"
+
+msgid "Your authentication key is no longer valid."
+msgstr "Váš autentifikačný kľúč nie je viac platný."
+
+msgid "generate random password"
+msgstr "generovanie náhodného hesla"
+
+msgid "Invalid username or password!"
+msgstr "Neplatné meno alebo heslo!"
+
+msgid "Password: ********** (no copy by email)"
+msgstr "Heslo: ********** (žiadna kópia e-mailom)"
+
+msgid "Related albums"
+msgstr "Súvisiace albumy"
+
+msgid "Album name, 1 &rarr; 5 &rarr; 10 &rarr; 100"
+msgstr "Názov albumu, 1 &rarr; 5 &rarr; 10 &rarr; 100"
+
+msgid "Album name, 100 &rarr; 10 &rarr; 5 &rarr; 1"
+msgstr "Názov albumu, 100 &rarr; 10 &rarr; 5 &rarr; 1"
+
+msgid "Start-Date"
+msgstr "Dátum začiatku"
+
+msgid "Albums listed here match your search by word. Click on one to browse by album."
+msgstr "Tu uvedené albumy zodpovedajú vášmu vyhľadávaniu podľa slov. Kliknutím na jeden z nich môžete listovať podľa albumu."
+
+msgid "Pre-established filters are proposed, but you can add or remove them using the \"Choose filters\" button."
+msgstr "Navrhujú sa vopred nastavené filtre, ale môžete ich pridať alebo odstrániť pomocou tlačidla „Vybrať filtre“."
+
+msgid "Tags listed here match your search by word. Click on one to browse by tag."
+msgstr "Tu uvedené značky zodpovedajú vášmu vyhľadávaniu podľa slov. Kliknutím na jednu z nich môžete listovať podľa značky."
+
+msgid "Validate"
+msgstr "Potvrdiť"
+
+msgid "You can try to edit your filters and perform a new search."
+msgstr "Môžete skúsiť upraviť svoje filtre a vykonať nové vyhľadávanie."
+
+msgid "last 24 hours"
+msgstr "posledných 24 hodín"
+
+msgid "last 3 months"
+msgstr "Posledné 3 mesiace"
+
+msgid "last 30 days"
+msgstr "Posledných 30 dní"
+
+msgid "last 6 months"
+msgstr "Posledných 6 mesiacov"
+
+msgid "last 7 days"
+msgstr "Posledných 7 dní"
+
+msgid "last year"
+msgstr "Minulý rok"
+
+msgid "rating score %s"
+msgstr "skóre hodnotenia %s"
+
+msgid "year %d"
+msgstr "rok %d"
+
+msgid "%d visits"
+msgstr "%d návštev"
+
+msgid "Added by"
+msgstr "Pridal"
+
+msgid "Album description"
+msgstr "Popis albumu"
+
+msgid "Album title"
+msgstr "Názov albumu"
+
+msgid "Albums found"
+msgstr "Našli sa albumy"
+
+msgid "Cancel"
+msgstr "Zrušiť"
+
+msgid "Choose filters"
+msgstr "Vybrať filtre"
+
+msgid "Clear"
+msgstr "Vyčistiť"
+
+msgid "Empty filters"
+msgstr "Odstrániť filtre"
+
+msgid "File type"
+msgstr "Typ súboru"
+
+msgid "Fill in the filters to start a search"
+msgstr "Ak chcete spustiť vyhľadávanie, vyplňte filtre"
+
+msgid "Filters"
+msgstr "Filtre"
+
+msgid "No results are available."
+msgstr "Nie sú k dispozícii žiadne výsledky."
+
+msgid "Search in :"
+msgstr "Hľadať v:"
+
+msgid "Search in this set"
+msgstr "Hľadať v tejto skupine"
+
+msgid "Tags found"
+msgstr "Našli sa značky"
+
+msgid "Unknown time period"
+msgstr "Neznáme časové obdobie"
+
+msgid "Album already selected"
+msgstr "Album je už vybraný"
+
+msgid "Click here to display it"
+msgstr "Kliknutím sem ho zobrazíte"
+
+msgid "Only the first %d albums are displayed, out of %d."
+msgstr "Zobrazí sa len prvých %d albumov z %d."
+
+msgid "Pages"
+msgstr "Stránky"
+
+msgid "The PDF you requested is too large to display on this page."
+msgstr "Požadované PDF je príliš veľké na zobrazenie na tejto stránke."
+
+msgid "Custom dates"
+msgstr "Vlastné termíny"
+
+msgid "last 12 months"
+msgstr "Posledných 12 mesiacov"
+
+msgid "There are no authors available for the photos currently filtered"
+msgstr "V súčasnosti nie sú k dispozícii žiadni autori vyfiltrovaných fotografií"
+
+msgid "There are no creation dates available for the photos currently filtered"
+msgstr "V súčasnosti nie sú k dispozícii žiadne dátumy vytvorenia vyfiltrovaných fotografií"
+
+msgid "There are no tags available for the photos currently filtered"
+msgstr "Pre aktuálne vyfiltrované fotografie nie sú k dispozícii žiadne značky"
+
+msgid "Set your password below."
+msgstr "Nižšie nastavte svoje heslo."
+
+msgid "An error has occured please got back to <a href=\"identification.php\" title=\"Sign in\">Sign in</a> or <a href=\"register.php\">Register</a>"
+msgstr "Došlo k chybe, prosím, vráťte sa na <a href=\"identification.php\" title=\"Prihlásiť sa\">Prihlásiť sa</a> alebo <a href=\"register.php\">Registrácia</a>"
+
+msgid "Hello <em>%s</em>, enter your new password below."
+msgstr "Ahoj <em>%s</em>, zadajte nižšie svoje nové heslo."
+
+msgid "If this wasn't you, please change your password immediately or contact your webmaster."
+msgstr "Ak ste to neboli vy, okamžite si zmeňte heslo alebo kontaktujte svojho webmastera."
+
+msgid "If you changed your password because you think it was stolen, we recommend revoking your %d API keys <a href=\"%s\">in your profile</a>."
+msgstr "Ak ste zmenili heslo, pretože si myslíte, že bolo odcudzené, odporúčame zrušiť vaše %d API kľúče <a href=\"%s\">vo vašom profile</a>."
+
+msgid "Return to <a href=\"identification.php\" title=\"Sign in\">Sign in</a>"
+msgstr "Vráťte sa na <a href=\"identification.php\" title=\"Prihlásiť sa\">Prihlásiť sa</a>"
+
+msgid "You can manage your API keys in your <a href=\"%s\">account settings.</a>"
+msgstr "Svoje API kľúče môžete spravovať v <a href=\"%s\">nastaveniach účtu.</a>"
+
+msgid "Verification successful! You can now choose a new password."
+msgstr "Overenie bolo úspešné! Teraz si môžete zvoliť nové heslo."
+
+msgid "Verify"
+msgstr "Overiť"
+
+msgid "When enabled, a common template is used for the login and registration pages, regardless of the theme."
+msgstr "Keď je táto funkcia povolená, pre prihlasovacie a registračné stránky sa používa spoločná šablóna, bez ohľadu na tému."
+
+msgid "You have no email address, so you will not be notified when your API key is about to expire."
+msgstr "Nemáte e-mailovú adresu, takže nebudete informovaní, keď sa bude blížiť koniec platnosti vášho API kľúča."
+
+msgid "Your API key will expire in %d day."
+msgstr "Váš kľúč API vyprší za %d dní."
+
+msgid "Your API key will expire in %d days."
+msgstr "Váš kľúč API vyprší za %d dní."
+
+msgid "Your API key will expire soon"
+msgstr "Váš kľúč API čoskoro vyprší"
+
+msgid "Your changes have been applied."
+msgstr "Vaše zmeny boli uplatnené."
+
+msgid "Your password was successfully reset"
+msgstr "Vaše heslo bolo úspešne obnovené."
+
+msgid "Your password was successfully set"
+msgstr "Vaše heslo bolo úspešne nastavené"
+
+msgid "Your verification code"
+msgstr "Váš overovací kód"
+
+msgid "edit user preferences"
+msgstr "upraviť používateľské nastavenia"
+
+msgid "must not be empty"
+msgstr "nesmie byť prázdne"
+
+msgid "you must choose a date"
+msgstr "musíte vybrať dátum"
+
+msgid "Revoke"
+msgstr "Zrušiť"
+
+msgid "Revoked"
+msgstr "Zrušené"
+
+msgid "Save your ID and secret"
+msgstr "Uložte si svoje ID a tajný kód"
+
+msgid "Secret copied. Keep it in a safe place."
+msgstr "Tajný kód skopírovaný. Uložte ho na bezpečnom mieste."
+
+msgid "Set my password"
+msgstr "Nastaviť heslo"
+
+msgid "Show expired keys"
+msgstr "Zobraziť neplatné kľúče"
+
+msgid "The api key has been successfully created."
+msgstr "Kľúč API bol úspešne vytvorený."
+
+msgid "The email %s will be used to notify you when your API key is about to expire."
+msgstr "E-mailová adresa %s bude použitá na upozornenie, keď sa bude blížiť koniec platnosti vášho kľúča API."
+
+msgid "The secret key can no longer be displayed."
+msgstr "Tajný kľúč už nie je možné zobraziť."
+
+msgid "The secret will no longer be displayed. You must copy it to continue."
+msgstr "Tajný kód sa už nebude zobrazovať. Ak chcete pokračovať, musíte ho skopírovať."
+
+msgid "This API key was manually revoked on %s"
+msgstr "Tento kľúč API bol ručne zrušený dňa %s."
+
+msgid "To continue using the API, please renew your key before it expires."
+msgstr "Ak chcete pokračovať v používaní API, obnovte svoj kľúč pred uplynutím jeho platnosti."
+
+msgid "To manage your API keys, please log in with your username/password."
+msgstr "Ak chcete spravovať svoje kľúče API, prihláste sa pomocou svojho používateľského mena a hesla."
+
+msgid "Too many attempts, please try later.."
+msgstr "Príliš veľa pokusov, skúste to neskôr..."
+
+msgid "Verification code"
+msgstr "Overovací kód"
+
+msgid "If you do not receive the email, please contact your webmaster."
+msgstr "Ak e-mail nedostanete, kontaktujte svojho webmastera."
+
+msgid "Impossible to copy automatically. Please copy manually."
+msgstr "Nie je možné kopírovať automaticky. Kopírujte ručne."
+
+msgid "Invalid verification code"
+msgstr "Neplatný overovací kód"
+
+msgid "Last use"
+msgstr "Posledné použitie"
+
+msgid "Manage your account"
+msgstr "Spravujte svoj účet"
+
+msgid "Never"
+msgstr "Nikdy"
+
+msgid "New API Key"
+msgstr "Nový kľúč API"
+
+msgid "No expiration"
+msgstr "Bez platnosti"
+
+msgid "Options"
+msgstr "Možnosti"
+
+msgid "Return to the gallery"
+msgstr "Návrat do galérie"
+
+msgid "Created at"
+msgstr "Vytvorené v"
+
+msgid "Custom date"
+msgstr "Vlastný dátum"
+
+msgid "Do you really want to revoke the \"%s\" API key?"
+msgstr "Naozaj chcete zrušiť kľúč API \"%s\"?"
+
+msgid "Don't have an account yet ?"
+msgstr "Ešte nemáte účet?"
+
+msgid "Done"
+msgstr "Hotovo"
+
+msgid "Duration"
+msgstr "Trvanie"
+
+msgid "Edit API Key"
+msgstr "Upraviť kľúč API"
+
+msgid "Expert mode"
+msgstr "Režim pre odborníkov"
+
+msgid "Expired"
+msgstr "Vypršala platnosť"
+
+msgid "Expired on"
+msgstr "Platnosť vypršala"
+
+msgid "Expires in"
+msgstr "Platnosť vyprší"
+
+msgid "Generate API Key"
+msgstr "Vygenerovať kľúč API"
+
+msgid "Generate key"
+msgstr "Vygenerovať kľúč"
+
+msgid "Here is your verification code:"
+msgstr "Tu je váš overovací kód:"
+
+msgid "Hide expired keys"
+msgstr "Skryť neplatné kľúče"
+
+msgid "ID copied."
+msgstr "ID skopírované."
+
+msgid "3xlarge"
+msgstr "3XL – extra veľké"
+
+msgid "4xlarge"
+msgstr "4XL - gigantické"
+
+msgid "API Key has been successfully edited."
+msgstr "Kľúč API bol úspešne upravený."
+
+msgid "API Key has been successfully revoked."
+msgstr "Kľúč API bol úspešne zrušený."
+
+msgid "API Key name"
+msgstr "Názov kľúča API"
+
+msgid "API Key not found"
+msgstr "Kľúč API nebol nájdený"
+
+msgid "API Keys"
+msgstr "Kľúče API"
+
+msgid "Account"
+msgstr "Účet"
+
+msgid "Already have an account ?"
+msgstr "Už máte účet?"
+
+msgid "An email has been sent with a link to reset your password"
+msgstr "Bol odoslaný e-mail s odkazom na resetovanie hesla."
+
+msgid "An email has been sent with a verification code"
+msgstr "Bol odoslaný e-mail s overovacím kódom."
+
+msgid "Change your password"
+msgstr "Zmeňte svoje heslo"
+
+msgid "Check your inbox"
+msgstr "Skontrolujte svoju doručenú poštu"
+
+msgid "Choose how you want to see your gallery"
+msgstr "Vyberte si, ako chcete zobraziť svoju galériu"
+
+msgid "Confirm my new password"
+msgstr "Potvrdiť moje nové heslo"
+
+msgid "Confirm new password"
+msgstr "Potvrďte nové heslo"
+
+msgid "Create API Keys to secure your acount"
+msgstr "Vytvorte API kľúče na zabezpečenie vášho účtu"
+
+msgid "Create a new API key to secure your account."
+msgstr "Vytvorte nový kľúč API na zabezpečenie svojho účtu."
+
+msgid "Create an account"
+msgstr "Vytvoriť účet"
+

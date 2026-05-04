@@ -1,0 +1,62 @@
+# Piwigo translation — ta_IN
+# Source: upgrade.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ta_IN\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Only administrator can run upgrade: please sign in below."
+msgstr "ஒரு நிர்வாகி மட்டும் தான் ஒரு மேம்படுத்தலை இயக்க முடியும்: கீழே நுழையுங்கள்."
+
+msgid "Only thumbnails prefix and webmaster mail address have been saved from previous configuration"
+msgstr "ஒரே சிறுபடங்களை முன்னொட்டு மற்றும் வலை மேலாளரின் மின்னஞ்சல் முகவரி முந்தைய கட்டமைப்பு இருந்து சேமிக்கப்பட்டது"
+
+msgid "Perform a maintenance check in [Administration>Tools>Maintenance] if you encounter any problem."
+msgstr "ஒரு பராமரிப்பு சரிபார்ப்பு செய்யவும் [நிர்வாக> கருவிகள்> பராமரிப்பு] இல் உங்களுக்கு எந்த சிக்கல்களை தீர்க்க"
+
+msgid "SQL queries"
+msgstr "SQL வினவல்கள்"
+
+msgid "Statistics"
+msgstr "புள்ளி விவரம்"
+
+msgid "This page proposes to upgrade your database corresponding to your old version of Piwigo to the current version. The upgrade assistant thinks you are currently running a <strong>release %s</strong> (or equivalent)."
+msgstr "இந்த பக்கம் உங்கள் பழைய Piwigo பதிப்பு புதிய பதிப்பு தகவல் மேம்படுத்த முன்மொழிகிறது.மேம்படுத்தல் உதவி நினைக்கிறது\r\nஉங்களுக்கு தற்போது <strong> வெளியீடு %s </strong> (அல்லது அதற்கு சமமான) இயங்குகிறது."
+
+msgid "Upgrade informations"
+msgstr "தகவலை மேம்படுத்தல்"
+
+msgid "Upgrade from version %s to %s"
+msgstr "பதிப்பு% s இலிருந்து% s மேம்படுத்தல்"
+
+msgid "Upgrade"
+msgstr "மேம்படுத்தல்"
+
+msgid "User permissions and group permissions have been erased"
+msgstr "பயனர்கள் மற்றும் குழுக்களின் அனுமதிகள் நீக்கப்பட்டன"
+
+msgid "You do not have access rights to run upgrade"
+msgstr "நீங்கள் மேம்படுத்தலை இயக்க சரியான அணுகல் இல்லை"
+
+msgid "total SQL time"
+msgstr "மொத்த SQL நேரம்"
+
+msgid "total upgrade time"
+msgstr "மொத்த மேம்படுத்தல் நேரம்"
+
+msgid "In <i>%s</i>, before <b>?></b>, insert:"
+msgstr "இல் <i>%s</i>, முன்பாக <b>?></b>, முன்பாக:"
+
+msgid "As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:"
+msgstr "ஒரு முன்னெச்சரிக்கையாக, பின்வரும் கருப்பொருள்கள் முடக்கப்பட்டிருக்கிறது. நீங்கள்  கண்டிப்பாக மேம்படுத்த கருப்பொருள்களை சரிபார்க்க வேண்டும் முன்பாக மறு செயலாக்க"
+
+msgid "As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:"
+msgstr "ஒரு முன்னெச்சரிக்கையாக, பின்வரும் செருகுநிரல்கள் முடக்கப்பட்டிருக்கிறது.நீங்கள் அவற்றை மேம்படுத்த செயலாக்க மீண்டும் செருகுநிரல்களை செயலாக்க வேண்டும்\r\n"
+
+msgid "All sub-albums of private albums become private"
+msgstr "அனைத்து துணை ஆல்பங்களின்\r\nதனியார் ஆல்பங்கள் தனியார் ஆக இருந்து"
+

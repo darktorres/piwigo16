@@ -1,0 +1,1486 @@
+# Piwigo translation — sv_SE
+# Source: common.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: sv_SE\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Language-Name: Swedish\n"
+"X-Piwigo-Country: Sverige\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Code: se\n"
+"X-Piwigo-Zero-Plural: true\n"
+
+msgid "useful when password forgotten"
+msgstr "är användbart om du glömt lösenordet"
+
+msgid "Quick search"
+msgstr "Snabbsökning"
+
+msgid "Connected user: %s"
+msgstr "Anslutna användare: %s"
+
+msgid "IP: %s"
+msgstr "IP: %s"
+
+msgid "Browser: %s"
+msgstr "Webbläsare: %s"
+
+msgid "Author: %s"
+msgstr "Fotograf: %s"
+
+msgid "Comment: %s"
+msgstr "Kommentar: %s"
+
+msgid "Comment by %s"
+msgstr "Kommentar av %s"
+
+msgid "User: %s"
+msgstr "Användare: %s"
+
+msgid "Email: %s"
+msgstr "E-post: %s"
+
+msgid "Admin: %s"
+msgstr "Admin: %s"
+
+msgid "Registration of %s"
+msgstr "Registrering av %s"
+
+msgid "Album: %s"
+msgstr "Album: %s"
+
+msgid "Bad status for user \"guest\", using default status. Please notify the webmaster."
+msgstr "Användarstatus för \"gäst\" är ogiltig, standard status kommer användas. Vänligen informera webbansvarig."
+
+msgid "this email address is already in use"
+msgstr "en annan användare använder redan denna e-post"
+
+msgid "Album results for"
+msgstr "Albumresultat för"
+
+msgid "Tag results for"
+msgstr "Tagg-resultat för"
+
+msgid "from %s to %s"
+msgstr "från %s till %s"
+
+msgid "Play of slideshow"
+msgstr "Starta bildspel"
+
+msgid "Pause of slideshow"
+msgstr "Pausa bildspel"
+
+msgid "Repeat the slideshow"
+msgstr "Repetera bildspel"
+
+msgid "Not repeat the slideshow"
+msgstr "Repetera inte bildspel"
+
+msgid "Reduce diaporama speed"
+msgstr "Minska bildspelets hastighet"
+
+msgid "Accelerate diaporama speed"
+msgstr "Öka bildspelets hastighet"
+
+msgid "Submit"
+msgstr "Skicka"
+
+msgid "Yes"
+msgstr "Ja"
+
+msgid "No"
+msgstr "Nej"
+
+msgid "%d photo"
+msgid_plural "%d photos"
+msgstr[0] "%d bild"
+msgstr[1] "%d bilder"
+
+msgid "%d photo is also linked to current tags"
+msgid_plural "%d photos are also linked to current tags"
+msgstr[0] "%d bilden är även kopplad till aktuella taggar"
+msgstr[1] "%d bilderna är även kopplade till aktuella taggar"
+
+msgid "display photos linked to this tag"
+msgstr "visa enbart bilder länkade till denna tagg"
+
+msgid "photos posted during the last %d days"
+msgstr "bilder postade de senaste %d dagarna"
+
+msgid "Piwigo Help"
+msgstr "Piwigo Hjälp"
+
+msgid "Rank"
+msgstr "Rang"
+
+msgid "group by letters"
+msgstr "gruppera i bokstavsordning"
+
+msgid "letters"
+msgstr "bokstäver"
+
+msgid "show tag cloud"
+msgstr "visa tagg-moln"
+
+msgid "cloud"
+msgstr "moln"
+
+msgid "Reset to default values"
+msgstr "Återställ till standardvärden"
+
+msgid "delete all photos from your favorites"
+msgstr "ta bort alla bilder från dina favoriter"
+
+msgid "Sent by"
+msgstr "Skickat av"
+
+msgid "Cookies are blocked or not supported by your browser. You must enable cookies to connect."
+msgstr "Cookies är blockerade eller stöds inte av din webbläsare. Du måste aktivera cookies för att ansluta."
+
+msgid "%d new comment"
+msgstr "%d ny kommentar"
+
+msgid "%d new comments"
+msgstr "%d nya kommentarer"
+
+msgid "%d comment"
+msgid_plural "%d comments"
+msgstr[0] "%d kommentar"
+msgstr[1] "%d kommentarer"
+
+msgid "%d hit"
+msgstr "%d träff"
+
+msgid "%d hits"
+msgstr "%d träffar"
+
+msgid "%d new photo"
+msgid_plural "%d new photos"
+msgstr[0] "%d ny bild"
+msgstr[1] "%d nya bilder"
+
+msgid "%d new user"
+msgstr "%d ny användare"
+
+msgid "%d new users"
+msgstr "%d nya användare"
+
+msgid "About"
+msgstr "Om"
+
+msgid "All tags"
+msgstr "Alla taggar"
+
+msgid "Any tag"
+msgstr "Någon tagg"
+
+msgid "Author"
+msgstr "Fotograf"
+
+msgid "Albums"
+msgstr "Album"
+
+msgid "Album"
+msgstr "Album"
+
+msgid "Close this window"
+msgstr "Stäng detta fönster"
+
+msgid "Complete RSS feed (photos, comments)"
+msgstr "Komplett RSS-flöde (bilder, kommentarer)"
+
+msgid "Confirm Password"
+msgstr "Bekräfta lösenord"
+
+msgid "Connection settings"
+msgstr "Inställningar för anslutning"
+
+msgid "Login"
+msgstr "Logga in"
+
+msgid "Contact webmaster"
+msgstr "Kontakta webmaster"
+
+msgid "Create a new account"
+msgstr "Skapa ett nytt konto"
+
+msgid "Created on"
+msgstr "Skapad den"
+
+msgid "Creation date"
+msgstr "Skapelsedatum"
+
+msgid "Current password is wrong"
+msgstr "Aktuellt lösenord är fel"
+
+msgid "Dimensions"
+msgstr "Dimensioner"
+
+msgid "Display"
+msgstr "Visa"
+
+msgid "Email address"
+msgstr "E-postadress"
+
+msgid "Enter your personnal informations"
+msgstr "Ange personlig information"
+
+msgid "Error sending email"
+msgstr "Fel vid sändning av e-post"
+
+msgid "File name"
+msgstr "Filnamn"
+
+msgid "File"
+msgstr "Fil"
+
+msgid "Filesize"
+msgstr "Filstorlek"
+
+msgid "Filter and display"
+msgstr "Filtrera och visa"
+
+msgid "Filter"
+msgstr "Filtrera"
+
+msgid "Forgot your password?"
+msgstr "Har du glömt lösenordet?"
+
+msgid "Go through the gallery as a visitor"
+msgstr "Navigera galleriet som besökare"
+
+msgid "Help"
+msgstr "Hjälp"
+
+msgid "Identification"
+msgstr "Identifiering"
+
+msgid "Photos only RSS feed"
+msgstr "RSS-flöde med endast bilder"
+
+msgid "Keyword"
+msgstr "Sökord"
+
+msgid "Links"
+msgstr "Länkar"
+
+msgid "Notification"
+msgstr "Meddelande"
+
+msgid "Number of items"
+msgstr "Antal"
+
+msgid "Original dimensions"
+msgstr "Originalstorlek"
+
+msgid "Password forgotten"
+msgstr "Glömt lösenord"
+
+msgid "Password"
+msgstr "Lösenord"
+
+msgid "Post date"
+msgstr "Publiceringsdatum"
+
+msgid "Posted on"
+msgstr "Publicerat"
+
+msgid "Profile"
+msgstr "Profil"
+
+msgid "Quick connect"
+msgstr "Snabblogin"
+
+msgid "RSS feed"
+msgstr "RSS-flöde"
+
+msgid "Register"
+msgstr "Registrera"
+
+msgid "Registration"
+msgstr "Registrering"
+
+msgid "Related tags"
+msgstr "Relaterade taggar"
+
+msgid "Reset"
+msgstr "Återställ"
+
+msgid "Retrieve password"
+msgstr "Hämta lösenord"
+
+msgid "Search tags"
+msgstr "Sök taggar"
+
+msgid "Search"
+msgstr "Sök"
+
+msgid "display available tags"
+msgstr "visa tillgängliga taggar"
+
+msgid "Since"
+msgstr "Sedan"
+
+msgid "Sort by"
+msgstr "Sortera efter"
+
+msgid "Sort order"
+msgstr "Sorteringsordning"
+
+msgid "Tag"
+msgstr "Tagg"
+
+msgid "Tags"
+msgstr "Taggar"
+
+msgid "The RSS notification feed provides notification on news from this website : new photos, updated albums, new comments. Use a RSS feed reader."
+msgstr "RSS-flödet ger information om nya händelser från denna webbplats: nya bilder, uppdaterade album och nya kommentarer. Används med en RSS-läsare."
+
+msgid "Unknown feed identifier"
+msgstr "Okänt RSS-flöde"
+
+msgid "User comments"
+msgstr "Användarkommentarer"
+
+msgid "Username"
+msgstr "Användarnamn"
+
+msgid "Visits"
+msgstr "Besök"
+
+msgid "Webmaster"
+msgstr "Webbansvarig"
+
+msgid "Week %d"
+msgstr "Vecka %d"
+
+msgid "About Piwigo"
+msgstr "Om Piwigo"
+
+msgid "You are not authorized to access the requested page"
+msgstr "Du har inte behörighet till den begärda sidan"
+
+msgid "add this photo to your favorites"
+msgstr "lägg bilden i dina favoriter"
+
+msgid "Administration"
+msgstr "Administration"
+
+msgid "all"
+msgstr "alla"
+
+msgid "ascending"
+msgstr "stigande"
+
+msgid "Expand all albums"
+msgstr "Visa alla album"
+
+msgid "posted after %s (%s)"
+msgstr "publicerade efter %s (%s)"
+
+msgid "posted before %s (%s)"
+msgstr "publicerade före %s (%s)"
+
+msgid "posted between %s (%s) and %s (%s)"
+msgstr "publicerade mellan %s (%s) och %s (%s)"
+
+msgid "posted on %s"
+msgstr "publicerad den %s"
+
+msgid "Best rated"
+msgstr "Högst betygsatta"
+
+msgid "display best rated photos"
+msgstr "visa högst betygsatta bilder"
+
+msgid "Calendar"
+msgstr "Kalender"
+
+msgid "All"
+msgstr "Alla"
+
+msgid "display each day with photos, month per month"
+msgstr "visa varje dag med bilder, månad för månad"
+
+msgid "View"
+msgstr "Visa"
+
+msgid "chronology_monthly_calendar"
+msgstr "Månadskalender"
+
+msgid "chronology_monthly_list"
+msgstr "Månadslista"
+
+msgid "chronology_weekly_list"
+msgstr "Veckolista"
+
+msgid "Click here if your browser does not automatically forward you"
+msgstr "Klicka här om din webbläsare inte automatiskt omdirigerar dig"
+
+msgid "comment date"
+msgstr "kommentarsdatum"
+
+msgid "Comment"
+msgstr "Kommentar"
+
+msgid "Your comment has been registered"
+msgstr "Din kommentar har registrerats"
+
+msgid "Anti-flood system : please wait for a moment before trying to post another comment"
+msgstr "Anti-flood-system: vänta en stund innan du försöker att skicka ytterligare en kommentar"
+
+msgid "Your comment has NOT been registered because it did not pass the validation rules"
+msgstr "Din kommentar har INTE registrerats eftersom den inte överensstämmer med valideringsreglerna"
+
+msgid "An administrator must authorize your comment before it is visible."
+msgstr "En administratör måste godkänna din kommentar innan den visas."
+
+msgid "This login is already used by another user"
+msgstr "Denna inloggning används redan av en annan användare"
+
+msgid "Comments"
+msgstr "Kommentarer"
+
+msgid "Add a comment"
+msgstr "Lägg till en kommentar"
+
+msgid "created after %s (%s)"
+msgstr "har skapats efter %s (%s)"
+
+msgid "created before %s (%s)"
+msgstr "har skapats före %s (%s)"
+
+msgid "created between %s (%s) and %s (%s)"
+msgstr "har skapats mellan %s (%s) och %s (%s)"
+
+msgid "created on %s"
+msgstr "har skapats den %s"
+
+msgid "Your Gallery Customization"
+msgstr "Din gallerianpassning"
+
+msgid "Default"
+msgstr "Standard"
+
+msgid "delete this photo from your favorites"
+msgstr "ta bort bilden från dina favoriter"
+
+msgid "Delete"
+msgstr "Ta bort"
+
+msgid "descending"
+msgstr "fallande"
+
+msgid "Download"
+msgstr "ladda ner"
+
+msgid "Download this file"
+msgstr "Ladda ner denna fil"
+
+msgid "edit"
+msgstr "redigera"
+
+msgid "wrong date"
+msgstr "fel datum"
+
+msgid "excluded"
+msgstr "exkluderade"
+
+msgid "Your favorites"
+msgstr "Mina favoriter"
+
+msgid "display your favorites photos"
+msgstr "visa mina favoritbilder"
+
+msgid "Favorites"
+msgstr "Favoriter"
+
+msgid "First"
+msgstr "Första"
+
+msgid "The gallery is locked for maintenance. Please, come back later."
+msgstr "Galleriet är stängt för underhåll. Vänligen kom tillbaka senare."
+
+msgid "Page generated in"
+msgstr "Sidan skapades"
+
+msgid "guest"
+msgstr "gäst"
+
+msgid "Hello"
+msgstr "Hej"
+
+msgid "available for administrators only"
+msgstr "endast för administratörer"
+
+msgid "display this album"
+msgstr "visa detta album"
+
+msgid "display last user comments"
+msgstr "visa de senaste användarkommentarerna"
+
+msgid "search"
+msgstr "sök"
+
+msgid "Home"
+msgstr "Hem"
+
+msgid "in this album"
+msgstr "i detta album"
+
+msgid "in %d sub-album"
+msgid_plural "in %d sub-albums"
+msgstr[0] "i %d underliggande album"
+msgstr[1] "i %d underliggande album"
+
+msgid "included"
+msgstr "inkluderat"
+
+msgid "Invalid password!"
+msgstr "Ogiltigt lösenord!"
+
+msgid "Language"
+msgstr "Språk"
+
+msgid "last %d days"
+msgstr "sista %d dagarna"
+
+msgid "Last"
+msgstr "Sista"
+
+msgid "Logout"
+msgstr "Logga ut"
+
+msgid "obligatory"
+msgstr "obligatorisk"
+
+msgid "display a calendar by creation date"
+msgstr "visa en kalender sorterad efter datum för skapande"
+
+msgid "display all photos in all sub-albums"
+msgstr "visa alla bilder i alla underliggande album"
+
+msgid "return to normal view mode"
+msgstr "återgå till normalt visningsläge"
+
+msgid "display a calendar by posted date"
+msgstr "visa en kalender sorterad efter publiceringsdatum"
+
+msgid "Most visited"
+msgstr "Mest besökta"
+
+msgid "display most visited photos"
+msgstr "visa mest besökta bilder"
+
+msgid "Unknown identifier"
+msgstr "Okänt id"
+
+msgid "New password"
+msgstr "Nytt lösenord"
+
+msgid "Rate this photo"
+msgstr "Betygsätt den här bilden"
+
+msgid "Next"
+msgstr "Nästa"
+
+msgid "no rate"
+msgstr "inget betyg"
+
+msgid "Photos posted within the last %d day."
+msgid_plural "Photos posted within the last %d days."
+msgstr[0] "Bilder postade den senaste %d dagen."
+msgstr[1] "Bilder postade de senaste %d dagarna."
+
+msgid "password updated"
+msgstr "lösenord uppdaterat"
+
+msgid "Recent period must be a positive integer value"
+msgstr "Senaste tiden måste vara ett positivt heltal"
+
+msgid "photo"
+msgstr "bild"
+
+msgid "Click on the photo to see it in high definition"
+msgstr "Klicka på bilden för att se den i hög upplösning"
+
+msgid "Show file metadata"
+msgstr "Visa filens metadata"
+
+msgid "Powered by"
+msgstr "Baserat på"
+
+msgid "Preferences"
+msgstr "Inställningar"
+
+msgid "Previous"
+msgstr "Föregående"
+
+msgid "Random photos"
+msgstr "Slumpmässiga bilder"
+
+msgid "display a set of random photos"
+msgstr "visa en uppsättning slumpmässiga bilder"
+
+msgid "Recent albums"
+msgstr "Senaste album"
+
+msgid "display recently updated albums"
+msgstr "visa nyligen uppdaterade album"
+
+msgid "Recent period"
+msgstr "Senaste perioden"
+
+msgid "Recent photos"
+msgstr "Senaste bilder"
+
+msgid "display most recent photos"
+msgstr "visa senaste bilder"
+
+msgid "Redirection..."
+msgstr "Omdirigering..."
+
+msgid "Please, enter a login"
+msgstr "Vänligen ange inloggning"
+
+msgid "login mustn't end with a space character"
+msgstr "användarnamn får inte sluta med ett mellanslag"
+
+msgid "login mustn't start with a space character"
+msgstr "användarnamn får inte börja med ett mellanslag"
+
+msgid "this login is already used"
+msgstr "detta användarnamn används redan"
+
+msgid "mail address must be like xxx@yyy.eee (example : jack@altern.org)"
+msgstr "e-postadress måste vara av formen arne@anka.org"
+
+msgid "Auto login"
+msgstr "Automatisk inloggning"
+
+msgid "remove this tag from the list"
+msgstr "ta bort taggen från listan"
+
+msgid "representative"
+msgstr "albumminiatyr"
+
+msgid "Search for Author"
+msgstr "Sök efter en fotograf"
+
+msgid "Search in albums"
+msgstr "Sök i album"
+
+msgid "Search by date"
+msgstr "Sök efter datum"
+
+msgid "Date"
+msgstr "Datum"
+
+msgid "End-Date"
+msgstr "Slutdatum"
+
+msgid "Kind of date"
+msgstr "Typ av datum"
+
+msgid "Search for words"
+msgstr "Sök efter orden"
+
+msgid "Search for all terms"
+msgstr "Sök efter alla termer"
+
+msgid "Search for any term"
+msgstr "Sök efter någon term"
+
+msgid "Empty query. No criteria has been entered."
+msgstr "Tom fråga. Inga kriterier har angetts."
+
+msgid "Search results"
+msgstr "Sökresultat"
+
+msgid "Search in sub-albums"
+msgstr "Sök i underliggande album"
+
+msgid "Contact"
+msgstr "Kontakta"
+
+msgid "%d Kb"
+msgstr "%d KB"
+
+msgid "%d album updated"
+msgid_plural "%d albums updated"
+msgstr[0] "%d album uppdaterat"
+msgstr[1] "%d album uppdaterade"
+
+msgid "%d comment to validate"
+msgstr "%d inlägg att godkänna"
+
+msgid "%d comments to validate"
+msgstr "%d inlägg att godkänna"
+
+msgid "N/A"
+msgstr "Inte tillgängligt"
+
+msgid "New on %s"
+msgstr "Nya på %s"
+
+msgid "set as album representative"
+msgstr "ange som miniatyr för album"
+
+msgid "Show number of comments"
+msgstr "Visa antal inlägg"
+
+msgid "Show number of hits"
+msgstr "Visa antal träffar"
+
+msgid "slideshow"
+msgstr "bildspel"
+
+msgid "stop the slideshow"
+msgstr "stoppa bildspelet"
+
+msgid "Specials"
+msgstr "Funktioner"
+
+msgid "SQL queries in"
+msgstr "SQL-frågor i"
+
+msgid "display only recently posted photos"
+msgstr "visa endast nyligen publicerade bilder"
+
+msgid "return to the display of all photos"
+msgstr "återgå till visning av alla bilder"
+
+msgid "the beginning"
+msgstr "början"
+
+msgid "Thumbnails"
+msgstr "Miniatyrer"
+
+msgid "Menu"
+msgstr "Meny"
+
+msgid "A comment on your site"
+msgstr "En kommentar på din sida"
+
+msgid "today"
+msgstr "idag"
+
+msgid "Update your rating"
+msgstr "Ändra ditt betyg"
+
+msgid "the username must be given"
+msgstr "användarnamn krävs"
+
+msgid "Edit a comment"
+msgstr "Redigera en kommentar"
+
+msgid "Are you sure?"
+msgstr "Är du säker?"
+
+msgid "(!) This comment requires validation"
+msgstr "(!) Detta inlägg kräver validering"
+
+msgid "Welcome"
+msgstr "Välkommen"
+
+msgid "Welcome to your Piwigo photo gallery!"
+msgstr "Välkommen till ditt Piwigo-fotogalleri!"
+
+msgid "... or browse your empty gallery"
+msgstr "... eller bläddra i ditt tomma galleri"
+
+msgid "... or please deactivate this message, I will find my way by myself"
+msgstr "... eller vänligen avaktivera detta meddelande, jag hittar själv"
+
+msgid "Hello %s, your Piwigo photo gallery is empty!"
+msgstr "Hej %s, ditt Piwigo fotogalleri är tomt!"
+
+msgid "I want to add photos"
+msgstr "Jag vill lägga till bilder"
+
+msgid "Manage this user comment: %s"
+msgstr "Hantera det här användarinlägget: %s"
+
+msgid "Email address is missing. Please specify an email address."
+msgstr "E-postadressen saknas. Vänligen ange din e-postadress."
+
+msgid "This author modified following comment:"
+msgstr "Denna fotograf modifierade följande inlägg:"
+
+msgid "This author removed the comment with id %d"
+msgstr "Denna fotograf raderade inlägg med id %d"
+
+msgid "html tags are not allowed in login"
+msgstr "HTML-taggar är inte tillåtna vid inloggning"
+
+msgid "The number of photos per page must be a not null scalar"
+msgstr "Antal foton per sida får inte vara noll"
+
+msgid "Number of photos per page"
+msgstr "Antal foton per sida"
+
+msgid "%d rates"
+msgstr "%d röster"
+
+msgid "Rating score"
+msgstr "Röstpoäng"
+
+msgid "Invalid username or email"
+msgstr "Ogiltigt användarnamn eller e-postaddress"
+
+msgid "Password reset is not allowed for this user"
+msgstr "Lösenordsåterställning är ej tillåtet för denna användare"
+
+msgid "User \"%s\" has no email address, password reset is not possible"
+msgstr "Användare \"%s\" har ingen e-postadress, lösenordsåterställning är ej möjlig"
+
+msgid "Someone requested that the password be reset for the following user account:"
+msgstr "Någon har begärt lösenordsåterställning för följande användarkonto:"
+
+msgid "Username \"%s\" on gallery %s"
+msgstr "Användare \"%s\" i galleri %s"
+
+msgid "To reset your password, visit the following address:"
+msgstr "För att återställa ditt lösenord, gå till denna adress:"
+
+msgid "If this was a mistake, just ignore this email and nothing will happen."
+msgstr "Om detta var felaktigt, vänligen ignorera detta meddelande och ingen åtgärd kommer vidtas."
+
+msgid "Password Reset"
+msgstr "Lösenordsåterställning"
+
+msgid "Check your email for the confirmation link"
+msgstr "Kontrollera din e-post för bekräftelselänken"
+
+msgid "Invalid key"
+msgstr "Ogiltig nyckel"
+
+msgid "The passwords do not match"
+msgstr "Lösenorden stämmer inte överens"
+
+msgid "Your password has been reset"
+msgstr "Ditt lösenord har återställts"
+
+msgid "Return to home page"
+msgstr "Gå tillbak till hemsidan"
+
+msgid "Please enter your username or email address."
+msgstr "Ange ditt användarnamn och e-postadress."
+
+msgid "You will receive a link to create a new password via email."
+msgstr "Du kommer att få en länk via e-post för att skapa ett nytt lösenord."
+
+msgid "Username or email"
+msgstr "Användarnamn eller e-post"
+
+msgid "Change my password"
+msgstr "Ändra mitt lösenord"
+
+msgid "Enter your new password below."
+msgstr "Ange ditt nya lösenord nedan."
+
+msgid "EXIF Metadata"
+msgstr "EXIF Metadata"
+
+msgid "IPTC Metadata"
+msgstr "IPTC Metadata"
+
+msgid "Edit"
+msgstr "Redigera"
+
+msgid "Hello %s,"
+msgstr "Hej %s,"
+
+msgid "Send my connection settings by email"
+msgstr "Skicka mina anslutningsinställningar via e-post"
+
+msgid "Successfully registered, you will soon receive an email with your connection settings. Welcome!"
+msgstr "Registreringen lyckades, du kommer snart få ett e-post meddelande med dina anslutningsinställningar. Välkommen!"
+
+msgid "Username modification"
+msgstr "Redigera användarnamn"
+
+msgid "Your username has been successfully changed to : %s"
+msgstr "Ditt användarnamn har ändrats till: %s"
+
+msgid "square"
+msgstr "Kvadrat"
+
+msgid "thumb"
+msgstr "Miniatyr"
+
+msgid "small"
+msgstr "S - liten"
+
+msgid "medium"
+msgstr "M - medium"
+
+msgid "large"
+msgstr "L - stor"
+
+msgid "xlarge"
+msgstr "XL - extra stor"
+
+msgid "xxlarge"
+msgstr "XXL - jättestor"
+
+msgid "Original"
+msgstr "Original"
+
+msgid "Thank you for registering at %s!"
+msgstr "Tack för att du registrerat på %s!"
+
+msgid "Here are your connection settings"
+msgstr "Här är dina anslutningsinställningar"
+
+msgid "Password: %s"
+msgstr "Lösenord: %s"
+
+msgid "Username: %s"
+msgstr "Användarnamn: %s"
+
+msgid "If you think you've received this email in error, please contact us at %s"
+msgstr "Om du anser att du har fått det här meddelandet felaktigt, vänligen kontakta oss på %s"
+
+msgid "Show oldest comments first"
+msgstr "Visa äldsta kommentarer först"
+
+msgid "Show latest comments first"
+msgstr "Visa senaste kommentarer först"
+
+msgid "Photo sizes"
+msgstr "Bildstorlekar"
+
+msgid "View in"
+msgstr "Visa i"
+
+msgid "Mobile"
+msgstr "Mobil"
+
+msgid "Desktop"
+msgstr "Desktop"
+
+msgid "2small"
+msgstr "XXS - miniatyr"
+
+msgid "xsmall"
+msgstr "XS - extra liten"
+
+msgid "File name, A &rarr; Z"
+msgstr "Filnamn, A &rarr; Ö"
+
+msgid "File name, Z &rarr; A"
+msgstr "Filnamn, Ö &rarr; A"
+
+msgid "Photo title, A &rarr; Z"
+msgstr "Bildens namn, A &rarr; Ö"
+
+msgid "Photo title, Z &rarr; A"
+msgstr "Bildens namn, Z &rarr; Ö"
+
+msgid "Date created, new &rarr; old"
+msgstr "Skapad datum, ny &rarr; gammal"
+
+msgid "Date created, old &rarr; new"
+msgstr "Skapad datum, gammal &rarr; ny"
+
+msgid "Date posted, new &rarr; old"
+msgstr "Publicerad datum, ny &rarr; gammal"
+
+msgid "Date posted, old &rarr; new"
+msgstr "Publicerad datum, gammal &rarr; ny"
+
+msgid "Rating score, high &rarr; low"
+msgstr "Betyg, hög &rarr; låg"
+
+msgid "Rating score, low &rarr; high"
+msgstr "Betyg, låg &rarr; hög"
+
+msgid "Visits, high &rarr; low"
+msgstr "Besökare, hög &rarr; låg"
+
+msgid "Visits, low &rarr; high"
+msgstr "Besökare, låg &rarr; hög"
+
+msgid "Numeric identifier, 1 &rarr; 9"
+msgstr "Numeriskt id, 1 &rarr; 9"
+
+msgid "Numeric identifier, 9 &rarr; 1"
+msgstr "Numeriskt id, 9 &rarr; 1"
+
+msgid "Manual sort order"
+msgstr "Manuell sortering"
+
+msgid "%d rate"
+msgstr "%d omdöme"
+
+msgid "Page not found"
+msgstr "Sidan hittades inte"
+
+msgid "Bad request"
+msgstr "Felaktig begäran"
+
+msgid "Forbidden"
+msgstr "Förbjuden"
+
+msgid "Piwigo encountered a non recoverable error"
+msgstr "Piwigo stötte på ett fel som ej kan åtgärdas"
+
+msgid "Requested album does not exist"
+msgstr "Det efterfrågade albumet finns inte"
+
+msgid "Permalink for album not found"
+msgstr "Permalänk till albumet kan ej hittas"
+
+msgid "Requested tag does not exist"
+msgstr "Den efterfrågade taggen finns inte"
+
+msgid "Email address is mandatory"
+msgstr "E-postadress är obligatorisk"
+
+msgid "Username is mandatory"
+msgstr "Användarnamn är obligatorisk"
+
+msgid "Website"
+msgstr "Hemsida"
+
+msgid "Your website URL is invalid"
+msgstr "URL för hemsida är ogiltig"
+
+msgid "mandatory"
+msgstr "obligatorisk"
+
+msgid "Email"
+msgstr "Email"
+
+msgid "First Page"
+msgstr "Första sidan"
+
+msgid "Go back to the album"
+msgstr "Gå tillbaka till album"
+
+msgid "Last Page"
+msgstr "Sista sidan"
+
+msgid "Password is missing. Please enter the password."
+msgstr "Lösenord saknas. Ange lösenord."
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "Bekräftelse av lösenord saknas. Vänligen bekräfta ditt valda lösenord."
+
+msgid "%d photos per page"
+msgstr "%d bilder per sida"
+
+msgid "Theme"
+msgstr "Tema"
+
+msgid "Apply on properties"
+msgstr "Verkställ egenskaper"
+
+msgid "No results for"
+msgstr "Inget resultat för"
+
+msgid "Photo description"
+msgstr "Fotots beskrivning"
+
+msgid "Photo title"
+msgstr "Fotots titel"
+
+msgid "Album name, A &rarr; Z"
+msgstr "Albumnam, A &rarr; Ö"
+
+msgid "Album name, Z &rarr; A"
+msgstr "Albumnamn, Ö &rarr; A"
+
+msgid "Link: %s"
+msgstr "Länk: %s"
+
+msgid "Your authentication key is no longer valid."
+msgstr "Din autenticeringsnyckel är inte längre giltig."
+
+msgid "Invalid username or password!"
+msgstr "Ogiltigt användarnamn eller lösenord!"
+
+msgid "generate random password"
+msgstr "slumpa fram ett lösenord"
+
+msgid "Related albums"
+msgstr "Relaterade album"
+
+msgid "Password: ********** (no copy by email)"
+msgstr "Lösenord: ********** (Ingen kopia via e-post)"
+
+msgid "Album name, 1 &rarr; 5 &rarr; 10 &rarr; 100"
+msgstr "Albumnamn, 1 &rarr; 5 &rarr; 10 &rarr; 100"
+
+msgid "Album name, 100 &rarr; 10 &rarr; 5 &rarr; 1"
+msgstr "Albumnamn, 100 &rarr; 10 &rarr; 5 &rarr; 1"
+
+msgid "Start-Date"
+msgstr "Start datum"
+
+msgid "Validate"
+msgstr "Validera"
+
+msgid "You can try to edit your filters and perform a new search."
+msgstr "Du kan försöka ändra dina filter och göra en ny sökning."
+
+msgid "last 24 hours"
+msgstr "senaste 24 timmarna"
+
+msgid "last 3 months"
+msgstr "Senaste 3 månaderna"
+
+msgid "last 30 days"
+msgstr "Senaste 30 dagarna"
+
+msgid "last 6 months"
+msgstr "Senaste 6 månaderna"
+
+msgid "last 7 days"
+msgstr "Senaste 7 dagarna"
+
+msgid "last year"
+msgstr "Förra året"
+
+msgid "rating score %s"
+msgstr "betygspoäng %s"
+
+msgid "year %d"
+msgstr "år %d"
+
+msgid "%d visits"
+msgstr "%d besök"
+
+msgid "Added by"
+msgstr "Tillagd av"
+
+msgid "Album description"
+msgstr "Albumbeskrivning"
+
+msgid "Album title"
+msgstr "Albumtitel"
+
+msgid "Albums found"
+msgstr "Album hittade"
+
+msgid "Albums listed here match your search by word. Click on one to browse by album."
+msgstr "Album som listas här matchar din sökning efter ord. Klicka på en för att bläddra efter album."
+
+msgid "Cancel"
+msgstr "Avbryt"
+
+msgid "Choose filters"
+msgstr "Välj filter"
+
+msgid "Clear"
+msgstr "Rensa"
+
+msgid "Empty filters"
+msgstr "Tomma filter"
+
+msgid "File type"
+msgstr "Filtyp"
+
+msgid "Fill in the filters to start a search"
+msgstr "Fyll i filter för att börja söka"
+
+msgid "Filters"
+msgstr "Filter"
+
+msgid "No results are available."
+msgstr "Inga resultat är tillgängliga."
+
+msgid "Pre-established filters are proposed, but you can add or remove them using the \"Choose filters\" button."
+msgstr "Förinställda filter föreslås, men du kan lägga till eller ta bort dem med knappen \"Välj filter\"."
+
+msgid "Search in :"
+msgstr "Sök i :"
+
+msgid "Search in this set"
+msgstr "Sök i denna uppsättning"
+
+msgid "Tags found"
+msgstr "Taggar hittade"
+
+msgid "Tags listed here match your search by word. Click on one to browse by tag."
+msgstr "Taggar som listas här matchar din sökning efter ord. Klicka på en för att bläddra efter taggar."
+
+msgid "Unknown time period"
+msgstr "Okänd tidsperiod"
+
+msgid "Album already selected"
+msgstr "Album redan valt"
+
+msgid "Click here to display it"
+msgstr "Klicka här för att visa det"
+
+msgid "Only the first %d albums are displayed, out of %d."
+msgstr "Bara de första %d albumen visas, av %d."
+
+msgid "Pages"
+msgstr "Sidor"
+
+msgid "The PDF you requested is too large to display on this page."
+msgstr "PDFen du begärde är för stor för att visas på denna sida."
+
+msgid "Custom dates"
+msgstr "Egna datum"
+
+msgid "last 12 months"
+msgstr "Senaste 12 månaderna"
+
+msgid "There are no authors available for the photos currently filtered"
+msgstr "Det finns inga författare tillgängliga för de foton som för närvarande filtreras"
+
+msgid "There are no creation dates available for the photos currently filtered"
+msgstr "Det finns inga datum för skapande för de foton som för närvarande filtreras"
+
+msgid "There are no tags available for the photos currently filtered"
+msgstr "Det finns inga taggar tillgängliga för de foton som för närvarande filtreras"
+
+msgid "Set your password below."
+msgstr "Ställ in ditt lösenord nedan."
+
+msgid "Your API key will expire soon"
+msgstr "Din API-nyckel kommer att löpa ut snart"
+
+msgid "Your changes have been applied."
+msgstr "Dina ändringar har verkställts."
+
+msgid "Your password was successfully reset"
+msgstr "Ditt lösenord har återställts"
+
+msgid "Your password was successfully set"
+msgstr "Ditt lösenord har satts"
+
+msgid "must not be empty"
+msgstr "kan inte vara tom"
+
+msgid "you must choose a date"
+msgstr "du måste välja ett datum"
+
+msgid "Return to <a href=\"identification.php\" title=\"Sign in\">Sign in</a>"
+msgstr "Återgå till <a href=\"identification.php\" title=\"Logga in\">Logga in</a>"
+
+msgid "Return to the gallery"
+msgstr "Återgå till galleriet"
+
+msgid "Revoke"
+msgstr "Återkalla"
+
+msgid "Revoked"
+msgstr "Återkallad"
+
+msgid "Set my password"
+msgstr "Ställ in mitt lösenord"
+
+msgid "Show expired keys"
+msgstr "Visa nycklar som löpt ut"
+
+msgid "The api key has been successfully created."
+msgstr "API-nyckeln har skapats."
+
+msgid "The email %s will be used to notify you when your API key is about to expire."
+msgstr "E-postadressen %s kommer att användas för att meddela dig när din API-nyckel snart löper ut."
+
+msgid "The secret key can no longer be displayed."
+msgstr "Den hemliga nyckeln kan ej längre visas."
+
+msgid "This API key was manually revoked on %s"
+msgstr "Denna API-nyckel återkallades manuellt den %s"
+
+msgid "To continue using the API, please renew your key before it expires."
+msgstr "För att kunna fortsätta använda API'et, var god förnya din nyckel innan den löper ut."
+
+msgid "To manage your API keys, please log in with your username/password."
+msgstr "För att hantera dina API-nycklar, var god logga in med ditt användarnamn/lösenord."
+
+msgid "When enabled, a common template is used for the login and registration pages, regardless of the theme."
+msgstr "När det är aktiverat används en gemensam mall för inloggnings- och registreringssidorna, oavsett tema."
+
+msgid "You can manage your API keys in your <a href=\"%s\">account settings.</a>"
+msgstr "Du kan hantera dina API-nycklar i dina <a href=\"%s\">kontoinställningar.</a>"
+
+msgid "You have no email address, so you will not be notified when your API key is about to expire."
+msgstr "Du har ingen epostadress, så du kommer inte att bli meddelad när din API-nyckel är på väg att löpa ut."
+
+msgid "Your API key will expire in %d day."
+msgstr "Din API-nyckel kommer att löpa ut om %d dag."
+
+msgid "Your API key will expire in %d days."
+msgstr "Din API-nyckel kommer att löpa ut om %d dagar."
+
+msgid "Don't have an account yet ?"
+msgstr "Har du inget konto ännu ?"
+
+msgid "Done"
+msgstr "Klar"
+
+msgid "Duration"
+msgstr "Varaktighet"
+
+msgid "Edit API Key"
+msgstr "Redigera API-nyckel"
+
+msgid "Expert mode"
+msgstr "Expertläge"
+
+msgid "Expired"
+msgstr "Löpt ut"
+
+msgid "Expired on"
+msgstr "Löpte ut den"
+
+msgid "Expires in"
+msgstr "Löper ut om"
+
+msgid "Generate API Key"
+msgstr "Generera API-nyckel"
+
+msgid "Generate key"
+msgstr "Generera nyckel"
+
+msgid "Hello <em>%s</em>, enter your new password below."
+msgstr "Hej <em>%s</em>, skriv in ditt lösenord nedan."
+
+msgid "Hide expired keys"
+msgstr "Göm nycklar som löpt ut"
+
+msgid "Impossible to copy automatically. Please copy manually."
+msgstr "Omöjligt att kopiera automatiskt. Var god kopiera manuellt."
+
+msgid "Last use"
+msgstr "Senast använd"
+
+msgid "Manage your account"
+msgstr "Hantera ditt konto"
+
+msgid "Never"
+msgstr "Aldrig"
+
+msgid "New API Key"
+msgstr "Ny API-nyckel"
+
+msgid "No expiration"
+msgstr "Inget utlöpsdatum"
+
+msgid "Options"
+msgstr "Alternativ"
+
+msgid "API Key has been successfully edited."
+msgstr "API-nyckeln har redigerats."
+
+msgid "API Key has been successfully revoked."
+msgstr "API-nyckeln har återkallats."
+
+msgid "API Key name"
+msgstr "API-nyckelnamn"
+
+msgid "API Key not found"
+msgstr "API-nyckel hittades inte"
+
+msgid "API Keys"
+msgstr "API-nycklar"
+
+msgid "Account"
+msgstr "Konto"
+
+msgid "Already have an account ?"
+msgstr "Har du redan ett konto ?"
+
+msgid "An email has been sent with a link to reset your password"
+msgstr "Ett mail har skickats med en länk för att återställa lösenordet"
+
+msgid "An error has occured please got back to <a href=\"identification.php\" title=\"Sign in\">Sign in</a> or <a href=\"register.php\">Register</a>"
+msgstr "Ett fel har uppstått. Gå tillbaka till <a href=\"identification.php\" title=\"Logga in\">Logga in</a> eller <a href=\"register.php\">Registrera</a>."
+
+msgid "Change your password"
+msgstr "Ändra ditt lösenord"
+
+msgid "Check your inbox"
+msgstr "Kolla din inkorg"
+
+msgid "Choose how you want to see your gallery"
+msgstr "Välj hur du vill se ditt galleri"
+
+msgid "Confirm my new password"
+msgstr "Bekräfta mitt nya lösenord"
+
+msgid "Confirm new password"
+msgstr "Bekräfta nytt lösenord"
+
+msgid "Create API Keys to secure your acount"
+msgstr "Skapa API-nycklar för att säkra ditt konto"
+
+msgid "Create a new API key to secure your account."
+msgstr "Skapa en ny API-nyckel för att säkra ditt konto."
+
+msgid "Create an account"
+msgstr "Skapa ett konto"
+
+msgid "Created at"
+msgstr "Skapad den"
+
+msgid "Custom date"
+msgstr "Eget datum"
+
+msgid "Do you really want to revoke the \"%s\" API key?"
+msgstr "Vill du verkligen återkalla API-nyckeln \"%s\"?"
+
+msgid "3xlarge"
+msgstr "3XL - extra jättestor"
+
+msgid "4xlarge"
+msgstr "4XL - gigantisk"
+
+msgid "An email has been sent with a verification code"
+msgstr "Ett mejl har skickats med en verifieringskod"
+
+msgid "ID copied."
+msgstr "ID kopierat."
+
+msgid "If you do not receive the email, please contact your webmaster."
+msgstr "Om du inte får mejlet, var god kontakta din webbmaster."
+
+msgid "Invalid verification code"
+msgstr "Ogiltig verifieringskod"
+
+msgid "Save your ID and secret"
+msgstr "Spara ditt ID och hemlighet"
+
+msgid "Secret copied. Keep it in a safe place."
+msgstr "Hemlighet kopierad. Spara den på ett säkert ställe."
+
+msgid "The secret will no longer be displayed. You must copy it to continue."
+msgstr "Hemligheten kommer inte visas längre. Du måste kopiera den för att fortsätta."
+
+msgid "Verification code"
+msgstr "Verifieringskod"
+
+msgid "Verify"
+msgstr "Verifiera"
+
+msgid "Here is your verification code:"
+msgstr "Här är din verifieringskod:"
+
+msgid "If this wasn't you, please change your password immediately or contact your webmaster."
+msgstr "Om det här inte var du, var god ändra genast ditt lösenord eller kontakta din webbmaster."
+
+msgid "If you changed your password because you think it was stolen, we recommend revoking your %d API keys <a href=\"%s\">in your profile</a>."
+msgstr "Om du ändrade ditt lösenord för att du tror det blivit stulet, så rekommenderar vi att du återkallar dina %d API-nycklar <a href=\"%s\">i din profil</a>."
+
+msgid "Too many attempts, please try later.."
+msgstr "För många försök, prova igen om en stund."
+
+msgid "Verification successful! You can now choose a new password."
+msgstr "Verifiering lyckades! Du kan nu välja ett nytt lösenord."
+
+msgid "Your verification code"
+msgstr "Din verifieringskod"
+
+msgid "edit user preferences"
+msgstr "redigera användarinställningar"
+

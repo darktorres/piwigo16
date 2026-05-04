@@ -1,0 +1,140 @@
+# Piwigo translation — zh_HK
+# Source: install.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: zh_HK\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "database tables names will be prefixed with it (enables you to manage better your tables)"
+msgstr "數據庫表將使用前綴詞(它另您更好管理)"
+
+msgid "enter a login for webmaster"
+msgstr "輸入網站管理員登錄名稱"
+
+msgid "please enter your password again"
+msgstr "請您再次輸入密碼"
+
+msgid "user login given by your host provider"
+msgstr "供應商姶你的登錄用戶名稱"
+
+msgid "user password given by your host provider"
+msgstr "供應商姶你的登錄用戶密碼"
+
+msgid "verification"
+msgstr "驗證"
+
+msgid "webmaster login can't contain characters ' or \""
+msgstr "網站管理員登錄名稱不能包含字符'或\""
+
+msgid "Need help ? Ask your question on <a href=\"%s\">Piwigo message board</a>."
+msgstr "需要幫助嗎？你可以在<a href=\"%s\">Piwigo 留言板</a>提出問題。"
+
+msgid "Note you can change your configuration by yourself and restart Piwigo after that."
+msgstr "注意：你可以更改設定，然後重新啟動Piwigo。"
+
+msgid "PHP 5 is required"
+msgstr "需要PHP5.2"
+
+msgid "Piwigo may try to switch your configuration to PHP 5 by creating or modifying a .htaccess file."
+msgstr "Piwigo嘗試建立或修改您的.htaccess檔案, 來設定系統使用PHP5.2。"
+
+msgid "Piwigo was not able to configure PHP 5."
+msgstr "Piwigo的無法設定使用PHP5.2。"
+
+msgid "Sorry!"
+msgstr "對不起！"
+
+msgid "Start Install"
+msgstr "開始安裝"
+
+msgid "Try to configure PHP 5"
+msgstr "嘗試設定PHP5.2"
+
+msgid "User"
+msgstr "用戶"
+
+msgid "Visitors will be able to contact site administrator with this mail"
+msgstr "訪客可以使用這個電子郵件與網站管理員聯繫"
+
+msgid "Welcome to my photo gallery"
+msgstr "歡迎來到我的相簿"
+
+msgid "Welcome to your new installation of Piwigo!"
+msgstr "歡迎來到你新安裝的Piwigo！"
+
+msgid "You can download the config file and upload it to local/config directory of your installation."
+msgstr "您可以下載設定檔案，並裝它上傳到local/config目錄中安裝。"
+
+msgid "You may referer to your hosting provider's support and see how you could switch to PHP 5 by yourself."
+msgstr "請聯繫你的網站託管服務提供商，看看你怎麼可以自己切換到PHP 5.2。"
+
+msgid "also given by your host provider"
+msgstr "也可由網站託管服務提供商幫助設定"
+
+msgid "Admin configuration"
+msgstr "管理員設定"
+
+msgid "An alternate solution is to copy the text in the box above and paste it into the file \"local/config/database.inc.php\" (Warning : database.inc.php must only contain what is in the textarea, no line return or space character)"
+msgstr "另一種解決方案是將上面框中的文字複製，並貼到檔案 \"local/config/database.inc.php\"上 （警告：database.inc.php只可以包括文字框內容,不可以有，或空格字符）"
+
+msgid "Basic configuration"
+msgstr "基本設定"
+
+msgid "Can't connect to server"
+msgstr "無法連接到伺服器"
+
+msgid "Congratulations, Piwigo installation is completed"
+msgstr "恭喜你，Piwigo已安裝完成"
+
+msgid "Connection to server succeed, but it was impossible to connect to database"
+msgstr "成功連接到伺服器, 但不能連接到數據庫。"
+
+msgid "Creation of config file local/config/database.inc.php failed."
+msgstr "無法創建設定檔案 local/config/database.inc.php。"
+
+msgid "Database configuration"
+msgstr "數據庫設定"
+
+msgid "Database name"
+msgstr "數據庫名稱"
+
+msgid "Database table prefix"
+msgstr "數據庫表格前置詞"
+
+msgid "Default gallery language"
+msgstr "預設相簿語言"
+
+msgid "Don't hesitate to consult our forums for any help : %s"
+msgstr "如需要任何幫助,請不要猶豫到我們的論壇諮詢:%s"
+
+msgid "Download the config file"
+msgstr "下載設定檔案。"
+
+msgid "Hope to see you back soon."
+msgstr "希望盡快看到你回來。"
+
+msgid "Host"
+msgstr "主機"
+
+msgid "Installation"
+msgstr "安裝"
+
+msgid "It appears your webhost is currently running PHP %s."
+msgstr "目前您的網頁寄存伺服器運行PHP %s。"
+
+msgid "It will be shown to the visitors. It is necessary for website administration"
+msgstr "這是必要的網站管理,因它會顯示給所有訪客。"
+
+msgid "Just another Piwigo gallery"
+msgstr "只是另一個Piwigo相簿"
+
+msgid "Keep it confidential, it enables you to access administration panel"
+msgstr "請保密，它使您能夠訪問管理面板"
+
+msgid "localhost or other, supplied by your host provider"
+msgstr "本地主機或其它，由你的主機提供商提供"
+

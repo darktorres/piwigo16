@@ -1,0 +1,143 @@
+# Piwigo translation — km_KH
+# Source: install.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: km_KH\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "PHP 5 is required"
+msgstr "PHP 5.2 ត្រូវ​ការជា​ចាំបាច់"
+
+msgid "Database configuration"
+msgstr "ការ​កំណត់​លើ​មូលដ្ឋាន​ទិន្នន័យ"
+
+msgid "Download the config file"
+msgstr "ទាញ​យក​ឯកសារកំណត់"
+
+msgid "Admin configuration"
+msgstr "ការ​កំណត់​ផ្នែក​រដ្ឋបាល"
+
+msgid "Can't connect to server"
+msgstr "មិន​អាចភ្ជាប់​ទៅ​ម៉ាស៊ីន​មេ​បាន​ទេ"
+
+msgid "Basic configuration"
+msgstr "ការ​កំណត់ត្រឹម​មូលដ្ឋាន"
+
+msgid "Installation"
+msgstr "ការបញ្ចូល"
+
+msgid "Host"
+msgstr "ម៉ាស៊ីនមេ"
+
+msgid "Default gallery language"
+msgstr "ភាសាវិចិត្រសាលលំនាំដើម"
+
+msgid "Database table prefix"
+msgstr "បុព្វបទតារាងមូលដ្ឋាន​ទិន្ន​ន័យ"
+
+msgid "Database name"
+msgstr "ឈ្មោះ​មូលដ្ឋាន​ទិន្ន​ន័យ"
+
+msgid "Hope to see you back soon."
+msgstr "សង្ឃឹមថា​នឹងឃើញ​អ្នក​មកវិញឆាប់ៗ"
+
+msgid "Try to configure PHP 5"
+msgstr "ព្យាយាម​កែកំណត់ PHP 5.2"
+
+msgid "User"
+msgstr "អ្នក​​ប្រើប្រាស់"
+
+msgid "Sorry!"
+msgstr "សុំទោស!"
+
+msgid "Start Install"
+msgstr "ចាប់ផ្តើម​បញ្ចូល"
+
+msgid "Welcome to your new installation of Piwigo!"
+msgstr "ស្វាគមន៍​មកកាន់​​ការបញ្ចូល​ថ្មីរបស់​ភីវីហ្គូ!"
+
+msgid "Welcome to my photo gallery"
+msgstr "ស្វាគមន៍​មកកាន់​វិចិត្រសាលរូបភាព​របស់​ខ្ញុំ"
+
+msgid "Just another Piwigo gallery"
+msgstr "គ្រាន់តែជា​វិចិត្រសាលផ្សេងទៀតរបស់​ភីវីហ្គូ"
+
+msgid "Congratulations, Piwigo installation is completed"
+msgstr "អប់​អរ​សាទរ, ការ​បញ្ចូល​ភីវីហ្គូ​បាន​សម្រេច"
+
+msgid "also given by your host provider"
+msgstr "ផ្គត់ផ្គង់ដោយអ្នកផ្គត់ផ្គង់ hosting របស់អ្នកផងដែរ"
+
+msgid "user login given by your host provider"
+msgstr "ការចូលរបស់អ្នកប្រើប្រាស់ បានផ្តល់ដោយអ្នកផ្តល់ host របស់អ្នក"
+
+msgid "localhost or other, supplied by your host provider"
+msgstr "localhost ឬផ្សេងទៀត ដែលបានផ្គត់ផ្គង់ដោយអ្នកផ្តល់ host របស់អ្នក"
+
+msgid "database tables names will be prefixed with it (enables you to manage better your tables)"
+msgstr "ឈ្មោះតារាង database នឹងត្រូវបានដាក់បុព្វបទជាមួយវា (អនុញ្ញាតឱ្យអ្នកគ្រប់គ្រងតារាងរបស់អ្នកល្អប្រសើរជាងមុន)"
+
+msgid "Piwigo may try to switch your configuration to PHP 5 by creating or modifying a .htaccess file."
+msgstr "Piwigo អាចព្យាយាមដើម្បីប្តូរការកំណត់រចនាសម្ព័ន្ធរបស់អ្នកទៅ PHP 5.2 ដោយការបង្កើត ឬកែប្រែឯកសារ .htaccess"
+
+msgid "You can download the config file and upload it to local/config directory of your installation."
+msgstr "អ្នកអាចទាញយក​ឯកសាររចនាសម្ព័ន្ធ ហើយផ្ទុកឡើងទៅកាន់ថត local/config នៅក្នុងការតំឡើងរបស់អ្នក"
+
+msgid "Visitors will be able to contact site administrator with this mail"
+msgstr "ភ្ញៀវនឹងអាចប្រើអ៊ីម៉ែលនេះដើម្បីទាក់ទងអ្នកគ្រប់គ្រងតំបន់បណ្ដាញ"
+
+msgid "Note you can change your configuration by yourself and restart Piwigo after that."
+msgstr "ចំណាំថាអ្នកអាចប្តូររចនាសម្ព័ន្ធដោយខ្លួនអ្នក ហើយបន្ទាប់មកចាប់ផ្តើម Piwigo សារជាថ្មី"
+
+msgid "Need help ? Ask your question on <a href=\"%s\">Piwigo message board</a>."
+msgstr "ត្រូវការជំនួយ? សូមសួរសំណួររបស់អ្នកនៅលើ <a href=\"%s\">ក្តារសារ Piwigo</a>"
+
+msgid "Keep it confidential, it enables you to access administration panel"
+msgstr "រក្សាទុកវាជាសម្ងាត់, វាអនុញ្ញាតឱ្យអ្នកដើម្បីចូលដំណើរការ administration panel"
+
+msgid "It will be shown to the visitors. It is necessary for website administration"
+msgstr "វានឹងត្រូវបានបង្ហាញដល់ភ្ញៀវ។ វាជាការចាំបាច់សម្រាប់ការគ្រប់គ្រងវ៉ិបសាយ"
+
+msgid "Piwigo was not able to configure PHP 5."
+msgstr "Piwigo គឺមិនអាចកំណត់ PHP 5.2"
+
+msgid "It appears your webhost is currently running PHP %s."
+msgstr "នៅលើម៉ាស៊ីនបណ្តាញរបស់អ្នកបច្ចុប្បន្នកំពុងដំណើរការ PHP​ %s"
+
+msgid "Don't hesitate to consult our forums for any help : %s"
+msgstr "ចូរកុំស្ទាក់ស្ទើរក្នុងការពិគ្រោះយោបល់នៅវេទិការបស់យើងសម្រាប់ជំនួយណាមួយ: %s"
+
+msgid "Creation of config file local/config/database.inc.php failed."
+msgstr "ការបង្កើតរចនាសម្ព័ន្ធឯកសារ local/config/database.inc.php បរាជ័យ"
+
+msgid "Connection to server succeed, but it was impossible to connect to database"
+msgstr "ការភ្ជាប់ទៅកាន់ម៉ាស៊ីនមេបានជោគជ័យ តែការភ្ជាប់ទៅកាន់ database​ គឺមិនអាចធ្វើទៅបាន"
+
+msgid "webmaster login can't contain characters ' or \""
+msgstr "\r\nការចូលរបស់អ្នកគ្រប់គ្រងបណ្ដាញមិនអាចមានតួអក្សរ ' ឬ​ \""
+
+msgid "user password given by your host provider"
+msgstr "ពាក្យសម្ងាត់របស់អ្នកប្រើប្រាស់់ដែលបានផ្គត់ផ្គង់ដោយអ្នកផ្តល់​ host របស់អ្នក"
+
+msgid "verification"
+msgstr "ការផ្ទៀងផ្ទាត់"
+
+msgid "enter a login for webmaster"
+msgstr "សូមបញ្ចូលឈ្មោះអ្នកគ្រប់គ្រងបណ្ដាញ"
+
+msgid "please enter your password again"
+msgstr "សូមបញ្ចូលលេខសម្ងាត់របស់អ្នកម្តងទៀត"
+
+msgid "An alternate solution is to copy the text in the box above and paste it into the file \"local/config/database.inc.php\" (Warning : database.inc.php must only contain what is in the textarea, no line return or space character)"
+msgstr "ដំណោះស្រាយជំនួសគឺដើម្បីចម្លងអត្ថបទនៅក្នុងប្រអប់ខាងលើនិងបិទភ្ជាប់វាទៅក្នុងឯកសារ​ \"local/config/database.inc.php\" (ប្រុងប្រយ័ត្ន: database.inc.php ត្រូវតែមានតែមួយគត់នូវអ្វីដែលមានក្នុង textarea, គ្មានបន្ទាត់ត្រឡប់ ឬចន្លោះតួអក្សរ"
+
+msgid "You may referer to your hosting provider's support and see how you could switch to PHP 5 by yourself."
+msgstr "អ្នកគួរតែយោងទៅលើជំនួយរបស់អ្នកផ្តល់សេវាបង្ហោះរបស់អ្នក និងរកមើលពីរបៀបដែលអ្នកអាចប្ដូរទៅកម្មវិធី PHP 5.2 បានដោយខ្លួនឯង"
+
+msgid "PHP version %s required (you are running on PHP %s)"
+msgstr "ទាមទារកំណែ PHP %s (អ្នកកំពុងដំណើរការលើ PHP %s)"
+

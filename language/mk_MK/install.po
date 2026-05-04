@@ -1,0 +1,47 @@
+# Piwigo translation — mk_MK
+# Source: install.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: mk_MK\n"
+"Plural-Forms: nplurals=2; plural=(n==1 || n%10==1 ? 0 : 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Admin configuration"
+msgstr "Администраторски поднесувања"
+
+msgid "Basic configuration"
+msgstr "Основни поднесувања"
+
+msgid "Congratulations, Piwigo installation is completed"
+msgstr "Браво, Piwago инсталацијата е завршена"
+
+msgid "Database configuration"
+msgstr "Конфигурација на датабаза"
+
+msgid "Database name"
+msgstr "Име на датабазата"
+
+msgid "Default gallery language"
+msgstr "Основен јазик на галеријата"
+
+msgid "Hope to see you back soon."
+msgstr "Се надеваме дека ќе се видиме наскоро."
+
+msgid "Installation"
+msgstr "Инсталација"
+
+msgid "Sorry!"
+msgstr "Извини !"
+
+msgid "Start Install"
+msgstr "Стартувај ја инсталацијата"
+
+msgid "Try to configure PHP 5"
+msgstr "Пробај да го сетираш PHP 5.2"
+
+msgid "User"
+msgstr "Корисник"
+

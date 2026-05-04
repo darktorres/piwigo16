@@ -1,0 +1,222 @@
+# Piwigo translation — kok_IN
+# Source: common.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: kok_IN\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Language-Name: कोंकणी\n"
+"X-Piwigo-Country: भारत\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Code: kok\n"
+"X-Piwigo-Zero-Plural: true\n"
+
+msgid "%d album updated"
+msgid_plural "%d albums updated"
+msgstr[0] "%d आल्बम अद्यावत केला"
+msgstr[1] "%d आल्बम अद्यावत केल्यात"
+
+msgid "%d comment to validate"
+msgstr "%d वैध थारावूंक टिप्पणी दिवची"
+
+msgid "%d comment"
+msgid_plural "%d comments"
+msgstr[0] "%d टिप्पणी"
+msgstr[1] "%d टिप्पण्यो"
+
+msgid "%d comments to validate"
+msgstr "%d वैध थारावूंक टिप्पण्यो दिवच्यो"
+
+msgid "%d hit"
+msgstr "%d हिट"
+
+msgid "%d hits"
+msgstr "%d हिट्स"
+
+msgid "%d Kb"
+msgstr "%d केबी"
+
+msgid "%d new comment"
+msgstr "%d नवी टिप्पणी"
+
+msgid "%d new comments"
+msgstr "%d नव्यो टिप्पण्यो"
+
+msgid "%d new photo"
+msgid_plural "%d new photos"
+msgstr[0] "%d नवो फोटो"
+msgstr[1] "%d नवे फोटे"
+
+msgid "%d new user"
+msgstr "%d नवो वापरपी"
+
+msgid "%d new users"
+msgstr "%d नवे वापरपी"
+
+msgid "%d photo is also linked to current tags"
+msgid_plural "%d photos are also linked to current tags"
+msgstr[0] "%d फोटो सध्याच्या टॅग्सांक लिंक्ड केल्ले आसात"
+msgstr[1] "%d फोटे सध्याच्या टॅग्सांक लिंक्ड केल्ले आसात"
+
+msgid "%d photo"
+msgid_plural "%d photos"
+msgstr[0] "%d फोटो"
+msgstr[1] "%d फोटे"
+
+msgid "%d rates"
+msgstr "%d दर"
+
+msgid "(!) This comment requires validation"
+msgstr "(!) हे टिप्पणीक सत्यत्वस्थापनाची आवश्यकता आसा"
+
+msgid "... or browse your empty gallery"
+msgstr "... वा तुमची रिकामी गॅलरी ब्रावज करची"
+
+msgid "... or please deactivate this message, I will find my way by myself"
+msgstr "... वा उपकार करून हो संदेश असक्रीय करचो, म्हजी वाट हांव स्वता सोदून काडटलों"
+
+msgid "A comment on your site"
+msgstr "तुमचे सायटीटचेर टिप्पणी"
+
+msgid "About Piwigo"
+msgstr "Piwigo विशीं"
+
+msgid "About"
+msgstr "विशीं"
+
+msgid "Date"
+msgstr "तारीख"
+
+msgid "Username is mandatory"
+msgstr "वापरप्याचें नांव सक्तीचें आसा"
+
+msgid "Username: %s"
+msgstr "वापरप्याचें नांव: %s"
+
+msgid "View in"
+msgstr "दृश्य करचें"
+
+msgid "View"
+msgstr "दृश्य"
+
+msgid "Visits"
+msgstr "भेटी"
+
+msgid "Visits, high &rarr; low"
+msgstr "भेटी, चड &rarr; निम्न"
+
+msgid "Visits, low &rarr; high"
+msgstr "भेटी, निम्न &rarr; चड"
+
+msgid "Website"
+msgstr "वॅबसायट"
+
+msgid "Webmaster"
+msgstr "वॅबमास्टर"
+
+msgid "Week %d"
+msgstr "सप्तक %d"
+
+msgid "Welcome to your Piwigo photo gallery!"
+msgstr "तुमचे Piwigo फोटो गॅलरीक येवकार!"
+
+msgid "Welcome"
+msgstr "येवकार"
+
+msgid "wrong date"
+msgstr "चुकीची तारीख"
+
+msgid "xlarge"
+msgstr "XL – मायझ व्हड"
+
+msgid "xsmall"
+msgstr "XS – मायझ ल्हान"
+
+msgid "xxlarge"
+msgstr "XXL - व्हडलें"
+
+msgid "Yes"
+msgstr "हय"
+
+msgid "You are not authorized to access the requested page"
+msgstr "मागणी केल्ल्या पानांक ऍक्सॅस करूंक तुमकां अधिकार ना"
+
+msgid "You will receive a link to create a new password via email."
+msgstr "तुमकां ई-मेली वरवीं नवो पासवर्ड निर्माण करूंक एक लिंक मेळटलें."
+
+msgid "Your comment has been registered"
+msgstr "तुमची टिप्पणीची नोंदणी केल्या"
+
+msgid "Your comment has NOT been registered because it did not pass the validation rules"
+msgstr "तुमची टिप्पणी नोंदणी केल्ली ना कारण ती वैधताय नियमाचो पाळो करिना"
+
+msgid "Your favorites"
+msgstr "तुमचे आवडीचे"
+
+msgid "Repeat the slideshow"
+msgstr "स्लायडशो परत दाखोवचो"
+
+msgid "representative"
+msgstr "आल्बम थंबनेल"
+
+msgid "Requested album does not exist"
+msgstr "मागणी केल्लो आल्बम अस्तित्वांत ना"
+
+msgid "Requested tag does not exist"
+msgstr "मागणी केल्लो टॅग अस्तित्वांत ना"
+
+msgid "Reset to default values"
+msgstr "डिफॉल्ट मोलाचेर परत सॅट करचें"
+
+msgid "Reset"
+msgstr "परत सॅट करचें"
+
+msgid "Retrieve password"
+msgstr "पासवर्ड परत मेळोवचो"
+
+msgid "Return to home page"
+msgstr "मुखेल पानाचेर परतुचें"
+
+msgid "return to normal view mode"
+msgstr "सामान्य दृश्य मोडाचेर परतुचें"
+
+msgid "return to the display of all photos"
+msgstr "सगळ्या फोट्याच्या प्रदर्शनाचेर परतुचें"
+
+msgid "Search by date"
+msgstr "तारखे प्रमाणें सोदचें"
+
+msgid "Search for all terms"
+msgstr "सगळ्या शब्दांक सोदचे"
+
+msgid "Search for any term"
+msgstr "खंयच्याय शब्दाक सोदचो"
+
+msgid "Search for Author"
+msgstr "लेखकाक सोदचो"
+
+msgid "Search for words"
+msgstr "उतरां सोदचीं"
+
+msgid "Search in albums"
+msgstr "आल्बमांनी सोदचें"
+
+msgid "Search in sub-albums"
+msgstr "उप-आल्बमांनी सोदचें"
+
+msgid "Search results"
+msgstr "सोद निकाल"
+
+msgid "Search rules"
+msgstr "सोद निकश"
+
+msgid "Search tags"
+msgstr "सोदपाचे टॅग्स"
+
+msgid "Search"
+msgstr "सोद"
+
+msgid "search"
+msgstr "सोद"
+

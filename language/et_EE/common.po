@@ -1,0 +1,1246 @@
+# Piwigo translation — et_EE
+# Source: common.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: et_EE\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Language-Name: Estonian\n"
+"X-Piwigo-Country: Estonia\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Code: et\n"
+"X-Piwigo-Zero-Plural: true\n"
+
+msgid "%d album updated"
+msgid_plural "%d albums updated"
+msgstr[0] "%d album uuendatud"
+msgstr[1] "%d albumit uuendatud"
+
+msgid "%d comment to validate"
+msgstr "%d kommentaar kinnitada"
+
+msgid "%d comments to validate"
+msgstr "%d kommentaari kinnitada"
+
+msgid "%d new comment"
+msgstr "%d uus kommentaar"
+
+msgid "%d new comments"
+msgstr "%d uut kommentaari"
+
+msgid "%d comment"
+msgid_plural "%d comments"
+msgstr[0] "%d kommentaar"
+msgstr[1] "%d kommentaari"
+
+msgid "%d hit"
+msgstr "%d tabamus"
+
+msgid "%d hits"
+msgstr "%d tabamust"
+
+msgid "%d new photo"
+msgid_plural "%d new photos"
+msgstr[0] "%d uus foto"
+msgstr[1] "%d uut fotot"
+
+msgid "%d new user"
+msgstr "%d uus kasutaja"
+
+msgid "%d new users"
+msgstr "%d uut kasutajat"
+
+msgid "About"
+msgstr "Leheküljest lähemalt"
+
+msgid "All tags"
+msgstr "Kõik märksõnad"
+
+msgid "Any tag"
+msgstr "Mistahes märksõna"
+
+msgid "Author"
+msgstr "Autor"
+
+msgid "Albums"
+msgstr "Albumid"
+
+msgid "Album"
+msgstr "Album"
+
+msgid "Close this window"
+msgstr "Sule see aken"
+
+msgid "Complete RSS feed (photos, comments)"
+msgstr "Täielik RSS voog (fotod, kommentaarid)"
+
+msgid "Confirm Password"
+msgstr "Kinnita parool"
+
+msgid "Connection settings"
+msgstr "Ühenduse seaded"
+
+msgid "Login"
+msgstr "Kasutajanimi"
+
+msgid "Contact webmaster"
+msgstr "Kontakteeru veebimeistriga"
+
+msgid "Create a new account"
+msgstr "Loo uus konto"
+
+msgid "Created on"
+msgstr "Loodud"
+
+msgid "Creation date"
+msgstr "Koostamise kuupäev"
+
+msgid "Current password is wrong"
+msgstr "Praegune parool on vale"
+
+msgid "Dimensions"
+msgstr "Dimensioonid"
+
+msgid "Display"
+msgstr "Näita"
+
+msgid "Email address"
+msgstr "E-posti aadress"
+
+msgid "Enter your personnal informations"
+msgstr "Sisesta oma isiklikud andmed"
+
+msgid "Error sending email"
+msgstr "Viga e-posti saatmisel"
+
+msgid "File name"
+msgstr "Faili nimi"
+
+msgid "File"
+msgstr "Fail"
+
+msgid "Filesize"
+msgstr "Failisuurus"
+
+msgid "Filter and display"
+msgstr "Filtreeri ja kuva"
+
+msgid "Filter"
+msgstr "Filtreeri"
+
+msgid "Forgot your password?"
+msgstr "Kas sa unustasid parooli?"
+
+msgid "Go through the gallery as a visitor"
+msgstr "Vaata galerii läbi külastajana"
+
+msgid "Help"
+msgstr "Abi"
+
+msgid "Identification"
+msgstr "Identiditseerimine"
+
+msgid "Photos only RSS feed"
+msgstr "Ainult fotode RSS voog"
+
+msgid "Keyword"
+msgstr "Märksõna"
+
+msgid "Notification"
+msgstr "Teavitus"
+
+msgid "Number of items"
+msgstr "Ühikute arv"
+
+msgid "Original dimensions"
+msgstr "Originaal mõõtmed"
+
+msgid "Password forgotten"
+msgstr "Unustatud parool"
+
+msgid "Password"
+msgstr "Parool"
+
+msgid "Post date"
+msgstr "Postituse kuupäev"
+
+msgid "Posted on"
+msgstr "Postitatud"
+
+msgid "Profile"
+msgstr "Profiil"
+
+msgid "Quick connect"
+msgstr "Kiirühendus"
+
+msgid "RSS feed"
+msgstr "RSS voog"
+
+msgid "Register"
+msgstr "Registreeru"
+
+msgid "Registration"
+msgstr "Registreerimine"
+
+msgid "Related tags"
+msgstr "Seotud märksõnad"
+
+msgid "Reset"
+msgstr "Algseadista"
+
+msgid "Retrieve password"
+msgstr "Tagasta parool"
+
+msgid "Search tags"
+msgstr "Otsingu märksõnad"
+
+msgid "Search"
+msgstr "Otsi"
+
+msgid "display available tags"
+msgstr "kuva võimalikud märksõnad"
+
+msgid "Since"
+msgstr "Alates"
+
+msgid "Sort by"
+msgstr "Sorteeri"
+
+msgid "Sort order"
+msgstr "Sorteerimisjärjestus"
+
+msgid "Tag"
+msgstr "Märksõna"
+
+msgid "Tags"
+msgstr "Märksõnad"
+
+msgid "Unknown feed identifier"
+msgstr "Tundmatu voo identifikaator"
+
+msgid "User comments"
+msgstr "Kasutaja kommentaarid"
+
+msgid "Username"
+msgstr "Kasutajanimi"
+
+msgid "Visits"
+msgstr "Külastust"
+
+msgid "Webmaster"
+msgstr "Veebmaster"
+
+msgid "Week %d"
+msgstr "Nädal %d"
+
+msgid "About Piwigo"
+msgstr "Piwigost lähemalt"
+
+msgid "You are not authorized to access the requested page"
+msgstr "Sa ei ole autoriseeritud sellele lehele juurdepääsuks"
+
+msgid "add this photo to your favorites"
+msgstr "lisa see foto oma lemmikutesse"
+
+msgid "Administration"
+msgstr "Administreerimine"
+
+msgid "all"
+msgstr "kõik"
+
+msgid "ascending"
+msgstr "kasvav"
+
+msgid "Expand all albums"
+msgstr "Laienda kõik albumid"
+
+msgid "posted after %s (%s)"
+msgstr "postitatud peale %s (%s)"
+
+msgid "posted before %s (%s)"
+msgstr "postitatud enne %s (%s)"
+
+msgid "posted between %s (%s) and %s (%s)"
+msgstr "postitatud %s (%s) ja %s (%s) vahel"
+
+msgid "posted on %s"
+msgstr "postitatud %s"
+
+msgid "Best rated"
+msgstr "Kõrgeimalt hinnatud"
+
+msgid "display best rated photos"
+msgstr "kuva kõrgeimalt hinnatud fotod"
+
+msgid "Calendar"
+msgstr "Kalender"
+
+msgid "All"
+msgstr "Kõik"
+
+msgid "display each day with photos, month per month"
+msgstr "kuva iga fotodega päev, kuust kuusse"
+
+msgid "View"
+msgstr "Vaade"
+
+msgid "chronology_monthly_calendar"
+msgstr "Kuukalender"
+
+msgid "chronology_monthly_list"
+msgstr "Kuu nimekiri"
+
+msgid "chronology_weekly_list"
+msgstr "Nädala nimekiri"
+
+msgid "Click here if your browser does not automatically forward you"
+msgstr "Kui su internetilehitseja ei suuna sind automaatselt edasi, vajuta siia"
+
+msgid "comment date"
+msgstr "kommentaari kuupäev"
+
+msgid "Comment"
+msgstr "Kommentaar"
+
+msgid "Your comment has been registered"
+msgstr "Sinu kommentaar on registreeritud"
+
+msgid "Anti-flood system : please wait for a moment before trying to post another comment"
+msgstr "Kuritarvitusvastane süsteem : palun oota natuke, enne kui proovid uut kommentaari postitada"
+
+msgid "Your comment has NOT been registered because it did not pass the validation rules"
+msgstr "Sinu kommentaari ei registreeritud, kuna see EI vasta valideerimisreeglitele."
+
+msgid "An administrator must authorize your comment before it is visible."
+msgstr "Administraator peab sinu kommentaari enne avalikustamist heaks kiitma."
+
+msgid "This login is already used by another user"
+msgstr "See kasutajanimi on kasutusel juba teise kasutaja poolt"
+
+msgid "Comments"
+msgstr "Kommentaarid"
+
+msgid "Add a comment"
+msgstr "Lisa kommentaar"
+
+msgid "created after %s (%s)"
+msgstr "loodud peale %s (%s)"
+
+msgid "created before %s (%s)"
+msgstr "loodud enne %s (%s)"
+
+msgid "created between %s (%s) and %s (%s)"
+msgstr "loodud %s (%s) ja %s (%s) vahel"
+
+msgid "created on %s"
+msgstr "loodud %s"
+
+msgid "Your Gallery Customization"
+msgstr "Sinu galerii kohandamine"
+
+msgid "Default"
+msgstr "Vaikimisi"
+
+msgid "delete this photo from your favorites"
+msgstr "eemalda see foto oma lemmikutest"
+
+msgid "Delete"
+msgstr "Kustuta"
+
+msgid "descending"
+msgstr "kahanev"
+
+msgid "Download"
+msgstr "allalaadimine"
+
+msgid "Download this file"
+msgstr "Lae see fail alla"
+
+msgid "edit"
+msgstr "redigeeri"
+
+msgid "wrong date"
+msgstr "vale kuupäev"
+
+msgid "excluded"
+msgstr "välja arvatud"
+
+msgid "Your favorites"
+msgstr "Sinu lemmikud"
+
+msgid "display your favorites photos"
+msgstr "kuva oma lemmikfotod"
+
+msgid "Favorites"
+msgstr "Lemmikud"
+
+msgid "First"
+msgstr "Esimene"
+
+msgid "The gallery is locked for maintenance. Please, come back later."
+msgstr "Galerii on hoolduse ajaks lukustatud. Palun proovi natukese aja pärast uuesti."
+
+msgid "Page generated in"
+msgstr "Leht genereeritud"
+
+msgid "guest"
+msgstr "külaline"
+
+msgid "Hello"
+msgstr "Tere"
+
+msgid "available for administrators only"
+msgstr "saadaval vaid administraatoritele"
+
+msgid "display this album"
+msgstr "kuva see album"
+
+msgid "display last user comments"
+msgstr "kuva viimased kasutajate kommentaarid"
+
+msgid "search"
+msgstr "otsi"
+
+msgid "Home"
+msgstr "Avaleht"
+
+msgid "in this album"
+msgstr "selles albumis"
+
+msgid "in %d sub-album"
+msgid_plural "in %d sub-albums"
+msgstr[0] "%d-s allalbumis"
+msgstr[1] "%d-s allalbumis"
+
+msgid "included"
+msgstr "kaasa arvatud"
+
+msgid "Invalid password!"
+msgstr "Vale parool!"
+
+msgid "Language"
+msgstr "Vali keel"
+
+msgid "last %d days"
+msgstr "viimased %d päeva"
+
+msgid "Last"
+msgstr "Viimane"
+
+msgid "Logout"
+msgstr "Logi välja"
+
+msgid "obligatory"
+msgstr "kohustuslik"
+
+msgid "Welcome to your Piwigo photo gallery!"
+msgstr "Tere tulemast oma Piwigo fotogaleriisse!"
+
+msgid "... or browse your empty gallery"
+msgstr "... või sirvi oma tühja galeriid"
+
+msgid "... or please deactivate this message, I will find my way by myself"
+msgstr "... või palun deaktiveeri see teade, leian ise lahenduse"
+
+msgid "Hello %s, your Piwigo photo gallery is empty!"
+msgstr "Tere, %s sinu Piwigo fotogalerii on tühi!"
+
+msgid "I want to add photos"
+msgstr "Tahan lisada fotosid"
+
+msgid "Manage this user comment: %s"
+msgstr "Halda selle kasutaja kommentaari: %s"
+
+msgid "Email address is missing. Please specify an email address."
+msgstr "E-posti aadress on puudu. Palun täpsusta e-posti aadressi."
+
+msgid "This author modified following comment:"
+msgstr "See autor muutis järgnevat kommentaari:"
+
+msgid "This author removed the comment with id %d"
+msgstr "See autor eemaldas kommentaari ID-ga: %d"
+
+msgid "html tags are not allowed in login"
+msgstr "html-märgised ei ole kasutajanimes lubatud"
+
+msgid "Invalid username or email"
+msgstr "Vale kasutajanimi või e-post"
+
+msgid "Password reset is not allowed for this user"
+msgstr "Parooli algseadistamine pole sellele kasutajale lubatud"
+
+msgid "User \"%s\" has no email address, password reset is not possible"
+msgstr "Kasutajal \"%s\" puudub e-posti aadress, parooli algseadistamine pole võimalik"
+
+msgid "Someone requested that the password be reset for the following user account:"
+msgstr "Keegi taotles alljärgneva kasutajakonto parooli algseadistamist:"
+
+msgid "Username \"%s\" on gallery %s"
+msgstr "Kasutajanimi \"%s\" galeriis %s"
+
+msgid "To reset your password, visit the following address:"
+msgstr "Parooli algseadistamiseks külasta järgnevat aadressi:"
+
+msgid "If this was a mistake, just ignore this email and nothing will happen."
+msgstr "Kui see on eksitus, siis lihtsalt ignoreeri seda kirja ja midagi ei juhtu."
+
+msgid "Password Reset"
+msgstr "Parooli algseadistamine"
+
+msgid "display a calendar by creation date"
+msgstr "kuva kalender loomiskuupäeva järgi"
+
+msgid "display all photos in all sub-albums"
+msgstr "kuva kõikide allalbumite fotod korraga"
+
+msgid "return to normal view mode"
+msgstr "naase tavalisse kuvarežiimi"
+
+msgid "display a calendar by posted date"
+msgstr "kuva kalender postitamiskuupäeva järgi"
+
+msgid "Most visited"
+msgstr "Enim vaadatud"
+
+msgid "display most visited photos"
+msgstr "kuva enim vaadatud fotosid"
+
+msgid "The number of photos per page must be a not null scalar"
+msgstr "Fotode arv ühel leheküljel peab olema nullist suurem arvsümbol"
+
+msgid "Number of photos per page"
+msgstr "Fotode arv leheküljel"
+
+msgid "Unknown identifier"
+msgstr "Tundmatu identifikaator"
+
+msgid "New password"
+msgstr "Uus parool"
+
+msgid "Rate this photo"
+msgstr "Hinda seda fotot"
+
+msgid "Next"
+msgstr "Järgmine"
+
+msgid "no rate"
+msgstr "hindamata"
+
+msgid "Photos posted within the last %d day."
+msgid_plural "Photos posted within the last %d days."
+msgstr[0] "Ainult eelmise päeva jooksul postitatud fotod."
+msgstr[1] "Ainult viimase %d päeva jooksul postitatud fotod."
+
+msgid "password updated"
+msgstr "parool on uuendatud"
+
+msgid "Recent period must be a positive integer value"
+msgstr "Viimatine periood peab omama positiivset arvsümboli väärtust"
+
+msgid "photo"
+msgstr "foto"
+
+msgid "Click on the photo to see it in high definition"
+msgstr "Klikka fotot, et seda kõrges lahutuses vaadata"
+
+msgid "Show file metadata"
+msgstr "Näita faili metaandmeid"
+
+msgid "Powered by"
+msgstr "Toob teieni"
+
+msgid "Preferences"
+msgstr "Eelistused"
+
+msgid "Previous"
+msgstr "Eelmine"
+
+msgid "Random photos"
+msgstr "Juhuvalikus fotod"
+
+msgid "display a set of random photos"
+msgstr "kuva juhuslikult valitud fotosid"
+
+msgid "Recent albums"
+msgstr "Hiljutised albumid"
+
+msgid "display recently updated albums"
+msgstr "kuva viimati uuendatud albumid"
+
+msgid "Recent period"
+msgstr "Viimatine periood"
+
+msgid "Recent photos"
+msgstr "Viimased fotod"
+
+msgid "display most recent photos"
+msgstr "kuva kõige viimased fotod"
+
+msgid "Redirection..."
+msgstr "Ümbersuunamine..."
+
+msgid "%d Kb"
+msgstr "%d KiB"
+
+msgid "%d photo is also linked to current tags"
+msgid_plural "%d photos are also linked to current tags"
+msgstr[0] "%d foto on samuti viidatud nende märksõnadega"
+msgstr[1] "%d fotot on samuti viidatud nende märksõnadega"
+
+msgid "%d photo"
+msgid_plural "%d photos"
+msgstr[0] "%d foto"
+msgstr[1] "%d fotot"
+
+msgid "%d rate"
+msgstr "%d hinnang"
+
+msgid "%d rates"
+msgstr "%d hinnangut"
+
+msgid "(!) This comment requires validation"
+msgstr "(!) See kommentaar vajab kinnitamist"
+
+msgid "2small"
+msgstr "XXS — tilluke"
+
+msgid "A comment on your site"
+msgstr "Kommentaar su saidil"
+
+msgid "Accelerate diaporama speed"
+msgstr "Kiirenda näitust"
+
+msgid "Admin: %s"
+msgstr "Haldur: %s"
+
+msgid "Album results for"
+msgstr "Albumeid leitud märksõnadega"
+
+msgid "Album: %s"
+msgstr "Album: %s"
+
+msgid "Requested tag does not exist"
+msgstr "Päritud märksõna pole olemas"
+
+msgid "remove this tag from the list"
+msgstr "eemalda see märksõna"
+
+msgid "show tag cloud"
+msgstr "näita märksõnade pilve"
+
+msgid "Are you sure?"
+msgstr "Oled sa kindel?"
+
+msgid "Author: %s"
+msgstr "Autor: %s"
+
+msgid "Auto login"
+msgstr "Jäta mind sisselogituks"
+
+msgid "Bad request"
+msgstr "Vigane päring"
+
+msgid "Bad status for user \"guest\", using default status. Please notify the webmaster."
+msgstr "Vigane olek kasutajale \"külaline\", kasutatakse vaikimisi olekut. Palun teavita veebimeistrit."
+
+msgid "Browser: %s"
+msgstr "Veebisirbija: %s"
+
+msgid "Change my password"
+msgstr "Vaheta enda parool"
+
+msgid "Check your email for the confirmation link"
+msgstr "Vaata enda e-postist kinnitusmeili"
+
+msgid "Comment by %s"
+msgstr "Kommentaar kasutajalt %s"
+
+msgid "Comment: %s"
+msgstr "Kommentaar: %s"
+
+msgid "Connected user: %s"
+msgstr "Sisselogitud kasutaja: %s"
+
+msgid "Contact"
+msgstr "Kontakt"
+
+msgid "Cookies are blocked or not supported by your browser. You must enable cookies to connect."
+msgstr "Su veebisirvitseja ei luba küpsiseid kasutada. Küpsised on sisselogimise jaoks vajalikud."
+
+msgid "Date created, new &rarr; old"
+msgstr "Loomise kuupäev, uus &rarr; vana"
+
+msgid "Date created, old &rarr; new"
+msgstr "Loomise kuupäev, vana &rarr; uus"
+
+msgid "Date posted, new &rarr; old"
+msgstr "Postituse kuupäev, uus &rarr; vana"
+
+msgid "Date posted, old &rarr; new"
+msgstr "Postituse kuupäev, vana &rarr; uus"
+
+msgid "Date"
+msgstr "Kuupäev"
+
+msgid "Desktop"
+msgstr "Töölaud"
+
+msgid "EXIF Metadata"
+msgstr "EXIF metaandmed"
+
+msgid "Edit a comment"
+msgstr "Toimeta kommentaari"
+
+msgid "Edit"
+msgstr "Redigeeri"
+
+msgid "Email: %s"
+msgstr "E-post: %s"
+
+msgid "Empty query. No criteria has been entered."
+msgstr "Tühi päring. Midagi pole sisestatud."
+
+msgid "End-Date"
+msgstr "Lõppkuupäev"
+
+msgid "Enter your new password below."
+msgstr "Sisesta uus parool allpool."
+
+msgid "File name, A &rarr; Z"
+msgstr "Failinimi, A &rarr; Z"
+
+msgid "File name, Z &rarr; A"
+msgstr "Failinimi, Z &rarr; A"
+
+msgid "Forbidden"
+msgstr "Keelatud"
+
+msgid "Hello %s,"
+msgstr "Tere, %s"
+
+msgid "Here are your connection settings"
+msgstr "Sellised on su ühenduse seaded"
+
+msgid "IP: %s"
+msgstr "IP: %s"
+
+msgid "IPTC Metadata"
+msgstr "IPTC metaandmed"
+
+msgid "If you think you've received this email in error, please contact us at %s"
+msgstr "Kui arvad, et oled saanud selle eposti eksituse teel, palun teavita meid aadressil %s"
+
+msgid "Invalid key"
+msgstr "Vale võti"
+
+msgid "Kind of date"
+msgstr "Kuupäeva välimus"
+
+msgid "Links"
+msgstr "Lingid"
+
+msgid "Manual sort order"
+msgstr "Sorteeri käsitsi"
+
+msgid "Menu"
+msgstr "Menüü"
+
+msgid "Mobile"
+msgstr "Mobiil"
+
+msgid "N/A"
+msgstr "pole saadaval"
+
+msgid "New on %s"
+msgstr "Uus %s"
+
+msgid "No"
+msgstr "Ei"
+
+msgid "Not repeat the slideshow"
+msgstr "Ära korda esitlust"
+
+msgid "Numeric identifier, 1 &rarr; 9"
+msgstr "Arvuline identifikaator, 1 &rarr; 9"
+
+msgid "Numeric identifier, 9 &rarr; 1"
+msgstr "Arvuline identifikaator, 9 &rarr; 1"
+
+msgid "Original"
+msgstr "Originaal"
+
+msgid "Page not found"
+msgstr "Lehte ei leitud"
+
+msgid "Password: %s"
+msgstr "Parool: %s"
+
+msgid "Pause of slideshow"
+msgstr "Peata esitlust"
+
+msgid "Permalink for album not found"
+msgstr "Albumi püsilinki ei leitud "
+
+msgid "Photo sizes"
+msgstr "Foto suurused"
+
+msgid "Photo title, A &rarr; Z"
+msgstr "Foto pealkiri, A &rarr; Z"
+
+msgid "Photo title, Z &rarr; A"
+msgstr "Foto pealkiri, Z &rarr; A"
+
+msgid "Piwigo Help"
+msgstr "Piwigo abi"
+
+msgid "Piwigo encountered a non recoverable error"
+msgstr "Piwigo sattus hätta, millest ei saanudki taastuda"
+
+msgid "Play of slideshow"
+msgstr "Näita esitlust"
+
+msgid "Please enter your username or email address."
+msgstr "Palun sisesta kasutajanimi ja parool"
+
+msgid "Please, enter a login"
+msgstr "Palun sisesta kasutajanimi"
+
+msgid "Quick search"
+msgstr "Kiirpäring"
+
+msgid "Rank"
+msgstr "Hinnang"
+
+msgid "Rating score, high &rarr; low"
+msgstr "Hinnanguskoor, kõrge &rarr; madal"
+
+msgid "Rating score, low &rarr; high"
+msgstr "Hinnanguskoor, madal &rarr; kõrge"
+
+msgid "Rating score"
+msgstr "Hinnanguskoor"
+
+msgid "Reduce diaporama speed"
+msgstr "Vähenda esitluse kiirust"
+
+msgid "Registration of %s"
+msgstr "%s registreerumine"
+
+msgid "Repeat the slideshow"
+msgstr "Korda esitlust"
+
+msgid "Requested album does not exist"
+msgstr "Päritud album ei eksisteeri"
+
+msgid "Reset to default values"
+msgstr "Algseadista väärtused"
+
+msgid "Return to home page"
+msgstr "Tagasi avalehele"
+
+msgid "SQL queries in"
+msgstr "SQL päringud"
+
+msgid "Search by date"
+msgstr "Otsi kuupäeva järgi"
+
+msgid "Search for Author"
+msgstr "Otsi autori järgi"
+
+msgid "Search for all terms"
+msgstr "Otsi kõiki tingimusi"
+
+msgid "Search for any term"
+msgstr "Otsi mistahes tingimust"
+
+msgid "Search for words"
+msgstr "Otsi sõnu"
+
+msgid "Search in albums"
+msgstr "Otsi albumis"
+
+msgid "Search in sub-albums"
+msgstr "Otsi allalbumites"
+
+msgid "Search results"
+msgstr "Otsingu vasted"
+
+msgid "Send my connection settings by email"
+msgstr "Saada mu ühenduse määrangud mulle eposti teel"
+
+msgid "Sent by"
+msgstr "Saatja"
+
+msgid "Show latest comments first"
+msgstr "Näita viimased kommentaarid kõigepealt"
+
+msgid "Show number of comments"
+msgstr "Näita kommentaaride arv"
+
+msgid "Show number of hits"
+msgstr "Näita tabamuste arv"
+
+msgid "Show oldest comments first"
+msgstr "Näita vanimaid kommentaare ennem"
+
+msgid "Specials"
+msgstr "Erileheküljed"
+
+msgid "Submit"
+msgstr "Postita"
+
+msgid "Successfully registered, you will soon receive an email with your connection settings. Welcome!"
+msgstr "Registreerimine lõppes edukalt, varsti saabub sulle epost su ühenduse määrangutega. Tere tulemast pardale!"
+
+msgid "Tag results for"
+msgstr "Leitud märksõnade vasteid"
+
+msgid "Thank you for registering at %s!"
+msgstr "Täname registreerumaks leheküljel %s"
+
+msgid "The RSS notification feed provides notification on news from this website : new photos, updated albums, new comments. Use a RSS feed reader."
+msgstr "RSS voog teavitab uutest sündmustest sel leheküljel, nt uued fotod, uuendatud albumid, uued kommentaarid. Kasutamiseks RSS voo lugeris."
+
+msgid "The passwords do not match"
+msgstr "Paroolid ei klapi omavahel"
+
+msgid "Thumbnails"
+msgstr "Pisipildid"
+
+msgid "Update your rating"
+msgstr "Uuenda hinnet"
+
+msgid "User: %s"
+msgstr "Kasutaja: %s"
+
+msgid "Username modification"
+msgstr "Toimeta kasutajanime"
+
+msgid "Username or email"
+msgstr "Kasutajanimi või epost"
+
+msgid "Username: %s"
+msgstr "Kasutajanimi: %s"
+
+msgid "View in"
+msgstr "Näita"
+
+msgid "Visits, high &rarr; low"
+msgstr "Külastused, kõrged &rarr; madalad"
+
+msgid "Visits, low &rarr; high"
+msgstr "Külastused, madalad &rarr; kõrged"
+
+msgid "Welcome"
+msgstr "Tere tulemast"
+
+msgid "Yes"
+msgstr "Jah"
+
+msgid "You will receive a link to create a new password via email."
+msgstr "Sulle saadeti epost uue parooli tekitamise juhistega"
+
+msgid "Your password has been reset"
+msgstr "Su parool on tühistatud"
+
+msgid "Your username has been successfully changed to : %s"
+msgstr "Su kasutajanimi on vahetatud : %s"
+
+msgid "cloud"
+msgstr "mosaiik"
+
+msgid "delete all photos from your favorites"
+msgstr "Tühista oma lemmikute nimekiri"
+
+msgid "display only recently posted photos"
+msgstr "kuva ainult viimati postitud fotosid"
+
+msgid "display photos linked to this tag"
+msgstr "kuva teisi fotosid seotud sama märksõnaga"
+
+msgid "from %s to %s"
+msgstr "%s-st kuni %s"
+
+msgid "group by letters"
+msgstr "gruppeeri tähtede kaupa"
+
+msgid "large"
+msgstr "L — suur"
+
+msgid "letters"
+msgstr "tähed"
+
+msgid "login mustn't end with a space character"
+msgstr "kasutajanimi ei saa lõppeda tühikuga"
+
+msgid "login mustn't start with a space character"
+msgstr "kasutajanimi ei saa algada tühikuga"
+
+msgid "mail address must be like xxx@yyy.eee (example : jack@altern.org)"
+msgstr "eposti aadress peab ühilduma malliga xxx@yyy.zzz (näiteks: keegi@siin.ee)"
+
+msgid "medium"
+msgstr "M — keskmine"
+
+msgid "photos posted during the last %d days"
+msgstr "fotod postitud viimase %d päeva vältel"
+
+msgid "representative"
+msgstr "albumi pisipilt"
+
+msgid "return to the display of all photos"
+msgstr "tagasi kõikide fotode kuvamisele"
+
+msgid "set as album representative"
+msgstr "määra albumi pisipildiks"
+
+msgid "slideshow"
+msgstr "esitlus"
+
+msgid "small"
+msgstr "S — väike"
+
+msgid "square"
+msgstr "Ruut"
+
+msgid "stop the slideshow"
+msgstr "välju esitlusest"
+
+msgid "the beginning"
+msgstr "algusesse"
+
+msgid "the username must be given"
+msgstr "vajatakse kasutajanimi"
+
+msgid "this email address is already in use"
+msgstr "selline eposti aadress on juba käigus"
+
+msgid "this login is already used"
+msgstr "selline kasutajanimi on juba käigus"
+
+msgid "thumb"
+msgstr "Pisipilt"
+
+msgid "today"
+msgstr "täna"
+
+msgid "useful when password forgotten"
+msgstr "abiks juhul kui unustad parooli"
+
+msgid "xlarge"
+msgstr "XL — väga suur"
+
+msgid "xsmall"
+msgstr "XS — väga väike"
+
+msgid "xxlarge"
+msgstr "XXL — hiigelsuur"
+
+msgid "Email address is mandatory"
+msgstr "E-posti aadress on kohustuslik"
+
+msgid "Username is mandatory"
+msgstr "Kasutajanimi on kohustuslik"
+
+msgid "Website"
+msgstr "Veebileht"
+
+msgid "Your website URL is invalid"
+msgstr "Antud veebilehe aadress on vigane"
+
+msgid "mandatory"
+msgstr "kohustuslik"
+
+msgid "Email"
+msgstr "E-post"
+
+msgid "First Page"
+msgstr "Esimene leht"
+
+msgid "Go back to the album"
+msgstr "Mine tagasi albumi juurde"
+
+msgid "Last Page"
+msgstr "Viimane leht"
+
+msgid "Password is missing. Please enter the password."
+msgstr "Parool puudub. Palun sisesta parool."
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "Parooli kinnitus puudub. Palun kinnita valitud parool."
+
+msgid "%d photos per page"
+msgstr "%d pilte lehel"
+
+msgid "Theme"
+msgstr "Teema"
+
+msgid "Apply on properties"
+msgstr "Rakenda seadistustele"
+
+msgid "No results for"
+msgstr "tulemusi pole"
+
+msgid "Photo description"
+msgstr "Foto kirjeldus"
+
+msgid "Photo title"
+msgstr "Foto pealkiri"
+
+msgid "Album name, A &rarr; Z"
+msgstr "Albumi nimi, A &rarr; Z"
+
+msgid "Album name, Z &rarr; A"
+msgstr "Albumi nimi, Z &rarr; A"
+
+msgid "Link: %s"
+msgstr "Link: %s"
+
+msgid "Your authentication key is no longer valid."
+msgstr "Teie autentimise võti enam ei kehti"
+
+msgid "Invalid username or password!"
+msgstr "Vale kasutajanimi või salasõna!"
+
+msgid "generate random password"
+msgstr "Genereeri juhuslik salasõna"
+
+msgid "Password: ********** (no copy by email)"
+msgstr "Parool: ********** (pole e-posti koopia)"
+
+msgid "Related albums"
+msgstr "Seotud albumid"
+
+msgid "Album name, 100 &rarr; 10 &rarr; 5 &rarr; 1"
+msgstr "Albumi nimi, 100 &rarr; 10 &rarr; 5 &rarr; 1"
+
+msgid "Album name, 1 &rarr; 5 &rarr; 10 &rarr; 100"
+msgstr "Albumi nimi, 1 &rarr; 5 &rarr; 10 &rarr; 100"
+
+msgid "Start-Date"
+msgstr "Alguskuupäev"
+
+msgid "year %d"
+msgstr "aasta %d"
+
+msgid "rating score %s"
+msgstr "hinnanguskoor %s"
+
+msgid "last year"
+msgstr "Viimane aasta"
+
+msgid "last 7 days"
+msgstr "viimased 7 päeva"
+
+msgid "last 6 months"
+msgstr "viimased 6 kuud"
+
+msgid "last 30 days"
+msgstr "viimased 30 päeva"
+
+msgid "last 3 months"
+msgstr "viimased 3 kuud"
+
+msgid "last 24 hours"
+msgstr "viimased 24 tundi"
+
+msgid "Validate"
+msgstr "Kinnitage"
+
+msgid "You can try to edit your filters and perform a new search."
+msgstr "Võite proovida filtreid muuta ja teha uue otsingu."
+
+msgid "Unknown time period"
+msgstr "Tundmatu ajaperiood"
+
+msgid "Tags listed here match your search by word. Click on one to browse by tag."
+msgstr "Siin loetletud sildid vastavad teie otsingule sõna järgi. Sildi järgi sirvimiseks klõpsake ühel."
+
+msgid "Tags found"
+msgstr "Sildid leitud"
+
+msgid "Search in this set"
+msgstr "Otsi sellest komplektist"
+
+msgid "Search in :"
+msgstr "Otsi:"
+
+msgid "Pre-established filters are proposed, but you can add or remove them using the \"Choose filters\" button."
+msgstr "Eelnevalt loodud filtrid on välja toodud, kuid saate neid lisada või eemaldada, kasutades nuppu \"Vali filtrid\"."
+
+msgid "No results are available."
+msgstr "Tulemusi pole saadaval."
+
+msgid "Filters"
+msgstr "Filtrid"
+
+msgid "Fill in the filters to start a search"
+msgstr "Otsingu alustamiseks täitke filtrid"
+
+msgid "File type"
+msgstr "Failitüüp"
+
+msgid "Empty filters"
+msgstr "Tühjad filtrid"
+
+msgid "Clear"
+msgstr "Puhasta"
+
+msgid "Choose filters"
+msgstr "Vali filtrid"
+
+msgid "Cancel"
+msgstr "Tühista"
+
+msgid "Albums listed here match your search by word. Click on one to browse by album."
+msgstr "Siin loetletud albumid vastavad teie otsingule sõna järgi. Albumi järgi sirvimiseks klõpsake ühel."
+
+msgid "Albums found"
+msgstr "Leitud albumeid"
+
+msgid "Album title"
+msgstr "Albumi pealkiri"
+
+msgid "Album description"
+msgstr "Albumi kirjeldus"
+
+msgid "%d visits"
+msgstr "%d külastust"
+
+msgid "Added by"
+msgstr "Lisas"
+
+msgid "There are no authors available for the photos currently filtered"
+msgstr "Filtreeritud fotode jaoks pole autoreid saadaval"
+
+msgid "last 12 months"
+msgstr "Viimased 12 kuud"
+
+msgid "There are no tags available for the photos currently filtered"
+msgstr "Filtreeritud fotode jaoks pole silte saadaval"
+
+msgid "There are no creation dates available for the photos currently filtered"
+msgstr "Filtreeritud fotode jaoks pole loomiskuupäevi saadaval"
+
+msgid "The PDF you requested is too large to display on this page."
+msgstr "Taotletud PDF on sellel lehel kuvamiseks liiga suur."
+
+msgid "Pages"
+msgstr "Leheküljed"
+
+msgid "Only the first %d albums are displayed, out of %d."
+msgstr "Kuvatakse ainult esimene %d albumit %d-st."
+
+msgid "Custom dates"
+msgstr "Kohandatud kuupäevad"
+
+msgid "Click here to display it"
+msgstr "Selle kuvamiseks klõpsake siin"
+
+msgid "Album already selected"
+msgstr "Album on juba valitud"
+
+msgid "Set your password below."
+msgstr "Määrake allpool oma parool."
+

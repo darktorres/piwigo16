@@ -1,0 +1,146 @@
+# Piwigo translation — ca_ES
+# Source: install.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ca_ES\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Installation"
+msgstr "Instal·lació"
+
+msgid "Basic configuration"
+msgstr "Configuració bàsica"
+
+msgid "Default gallery language"
+msgstr "Idioma predeterminat de la galeria"
+
+msgid "Database configuration"
+msgstr "Configuració de la base de dades"
+
+msgid "Admin configuration"
+msgstr "Configuració de l'administrador"
+
+msgid "Start Install"
+msgstr "Inicia la instal·lació"
+
+msgid "It will be shown to the visitors. It is necessary for website administration"
+msgstr "Això es mostrarà als visitants. És necessari pel web d'administració"
+
+msgid "Connection to server succeed, but it was impossible to connect to database"
+msgstr "La connexió amb el servidor s'ha establert correctament però no és possible connectar amb la base de dades."
+
+msgid "Can't connect to server"
+msgstr "No es pot connectar amb el servidor"
+
+msgid "Host"
+msgstr "Allotjament"
+
+msgid "User"
+msgstr "Usuari"
+
+msgid "user login given by your host provider"
+msgstr "nom d'usuari facilitat pel teu proveïdor d'allotjament"
+
+msgid "user password given by your host provider"
+msgstr "clau d'accès de l'usuari facilitada pel teu proveïdor d'allotjament"
+
+msgid "Database name"
+msgstr "Nom de la base de dades"
+
+msgid "also given by your host provider"
+msgstr "també el dóna el teu proveïdor d'allotjament"
+
+msgid "Database table prefix"
+msgstr "Prefix de les taules de la base de dades"
+
+msgid "database tables names will be prefixed with it (enables you to manage better your tables)"
+msgstr "Els noms de les taules de la base de dades començaran amb aquest prefix (permet gestionar millor les taules)"
+
+msgid "enter a login for webmaster"
+msgstr "Introdueix un nom d'usuari per l'administrador de la web"
+
+msgid "webmaster login can't contain characters ' or \""
+msgstr "El nom d'usuari de l'administrador de la web no pot contenir caràcters \\' o \""
+
+msgid "please enter your password again"
+msgstr "si us plau introduïu una altra vegada la vostra contrasenya"
+
+msgid "Keep it confidential, it enables you to access administration panel"
+msgstr "Manté la confidencialitat, permet accedir al panell d'administració"
+
+msgid "Password [confirm]"
+msgstr "Contrasenya [confirmeu]"
+
+msgid "verification"
+msgstr "verificació"
+
+msgid "Need help ? Ask your question on <a href=\"%s\">Piwigo message board</a>."
+msgstr "Necessiteu ajuda? Feu la vostra pregunta a <a href=\"%s\">Piwigo message board</a>."
+
+msgid "Visitors will be able to contact site administrator with this mail"
+msgstr "Els visitants poden utilitzar aquesta adreça de correu electrònic per a contactar amb l'administrador del lloc"
+
+msgid "PHP 5 is required"
+msgstr "Es requereix PHP 5.2"
+
+msgid "It appears your webhost is currently running PHP %s."
+msgstr "Sembla que el vostre amfitrió web està executant la versió PHP %s."
+
+msgid "Piwigo may try to switch your configuration to PHP 5 by creating or modifying a .htaccess file."
+msgstr "Piwigo pot tractar de canviar la teva configuració per PHP 5.2 mitjançant la creació o modificació de l'arxiu .htaccess"
+
+msgid "Note you can change your configuration by yourself and restart Piwigo after that."
+msgstr "Tingues en compte que en qualsevol moment pots canviar la configuració i reiniciar Piwigo."
+
+msgid "Try to configure PHP 5"
+msgstr "Intenteu configurar PHP 5.2"
+
+msgid "Sorry!"
+msgstr "Perdó!"
+
+msgid "Piwigo was not able to configure PHP 5."
+msgstr "A Piwigo no li ha estat possible configurar PHP 5.2"
+
+msgid "You may referer to your hosting provider's support and see how you could switch to PHP 5 by yourself."
+msgstr "Haurieu d'adreçar-vos al vostre proveidor d'hostatge i averiguar com poder canviar-vos cap a PHP 5.2"
+
+msgid "Hope to see you back soon."
+msgstr "Esperem tornar-vos a veure ben aviat."
+
+msgid "Congratulations, Piwigo installation is completed"
+msgstr "Felicitats, la instal·lació de Piwigo s'ha completat"
+
+msgid "An alternate solution is to copy the text in the box above and paste it into the file \"local/config/database.inc.php\" (Warning : database.inc.php must only contain what is in the textarea, no line return or space character)"
+msgstr "Una solució alternativa és copiar el text del quadre del costat i pegar-lo dins del fitxer \"local/config/database.inc.php\" (Advertiment : el fitxer database.inc.php només ha de contenir el que hi ha a l'àrea de text, sense linia de retorn o caràcter d'espai)"
+
+msgid "Creation of config file local/config/database.inc.php failed."
+msgstr "La creació del fitxer de configuració local/config/database.inc.php ha fallat."
+
+msgid "Download the config file"
+msgstr "Descarregat l'arxiu de configuració"
+
+msgid "You can download the config file and upload it to local/config directory of your installation."
+msgstr "Pots descarregar l'arxiu de configuració i penjar-lo al directori local/config de la teva instal·lació."
+
+msgid "Don't hesitate to consult our forums for any help : %s"
+msgstr "No dubtis en consultar als nostres fòrums per a qualsevol ajuda: %s"
+
+msgid "Just another Piwigo gallery"
+msgstr "Just another Piwigo gallery"
+
+msgid "Welcome to my photo gallery"
+msgstr "Benvingut a la meva galeria fotogràfica"
+
+msgid "Welcome to your new installation of Piwigo!"
+msgstr "Benvingut a la teva nova instal·lació de Piwigo!"
+
+msgid "localhost or other, supplied by your host provider"
+msgstr "localhost o un altre, facilitat pel teu proveïdor d'allotjament"
+
+msgid "PHP version %s required (you are running on PHP %s)"
+msgstr "Es necessita la versió %s de PHP (n'esteu executant la versió %s)"
+

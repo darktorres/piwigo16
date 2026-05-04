@@ -1225,20 +1225,9 @@ function l10n(?string $key): string
  * @param string $plural_key
  * @param int $decimal
  */
-function l10n_dec($singular_key, $plural_key, $decimal): string
+function l10n_dec(string $singular_key, string $plural_key, int|float $decimal): string
 {
-    $info = \Piwigo\Core\LanguageStack::info();
-    $zero_plural = !empty($info['zero_plural']);
-
-    return
-      sprintf(
-          l10n((
-              (($decimal > 1) or ($decimal == 0 and $zero_plural))
-          ? $plural_key
-          : $singular_key
-          )),
-          $decimal
-      );
+    return \Piwigo\Lang\Translator::get()->plural($singular_key, $plural_key, (int) $decimal);
 }
 
 /**
@@ -1760,41 +1749,52 @@ function load_language(string $filename, string $dirname = '', array $options = 
 
     if (!empty($source_file)) {
         if (empty($options['return'])) {
-            // load forced fallback — sets local $lang/$lang_info which are reset below
-            if (isset($options['force_fallback']) && $options['force_fallback'] != $selected_language) {
-                $forceFallback = is_scalar($options['force_fallback']) ? (string) $options['force_fallback'] : '';
-                $fallback_file = str_replace($selected_language, $forceFallback, $source_file);
-                if (is_readable($fallback_file)) {
-                    include $fallback_file;
+            // Derive the PO path by swapping the .php extension
+            $po_file = substr($source_file, 0, -4); // strip '.php'
+            // source_file ends in e.g. 'common.lang.php'; po_file ends in 'common.lang'
+            // Replace '.lang' → '' to get domain, then add '.po'
+            $po_file = str_replace('.lang', '', $po_file) . '.po';
+
+            if (is_readable($po_file)) {
+                // Load via Translator (also mirrors into $GLOBALS['lang'])
+                \Piwigo\Lang\Translator::get()->load($selected_language, $po_file);
+
+                // Also load lang_info from the PHP file so LanguageStack::info() stays populated
+                $lang_info = null;
+                if (is_readable($source_file)) {
+                    include $source_file;
                 }
+                \Piwigo\Core\LanguageStack::mergeInfo((array) $lang_info);
+            } else {
+                // Fallback: load from PHP file directly (plugins/themes may not have PO yet)
+                if (isset($options['force_fallback']) && $options['force_fallback'] != $selected_language) {
+                    $forceFallback = is_scalar($options['force_fallback']) ? (string) $options['force_fallback'] : '';
+                    $fallback_file = str_replace($selected_language, $forceFallback, $source_file);
+                    if (is_readable($fallback_file)) {
+                        include $fallback_file;
+                    }
+                }
+
+                $lang = null;
+                $lang_info = null;
+                if (is_readable($source_file)) {
+                    include $source_file;
+                }
+
+                $currentInfo = \Piwigo\Core\LanguageStack::info();
+                $parent_language = !empty($currentInfo['parent']) ? $currentInfo['parent'] : null;
+                if (!empty($parent_language) && $parent_language != $selected_language) {
+                    \Piwigo\Core\LanguageStack::mergeFromFile(
+                        str_replace($selected_language, is_scalar($parent_language) ? (string) $parent_language : '', $source_file)
+                    );
+                }
+
+                \Piwigo\Core\LanguageStack::mergeLang((array) $lang);
+                \Piwigo\Core\LanguageStack::mergeInfo((array) $lang_info);
             }
-
-            // load language content into local variables
-            $lang = null;
-            $lang_info = null;
-            if (is_readable($source_file)) {
-                include $source_file;
-            }
-            $load_lang = $lang;
-            $load_lang_info = $lang_info;
-
-            // load parent language content into the global stack (preserves reference bridge)
-            $currentInfo = \Piwigo\Core\LanguageStack::info();
-            $parent_language = !empty($currentInfo['parent']) ? $currentInfo['parent'] : null;
-
-            if (!empty($parent_language) && $parent_language != $selected_language) {
-                \Piwigo\Core\LanguageStack::mergeFromFile(
-                    str_replace($selected_language, is_scalar($parent_language) ? (string) $parent_language : '', $source_file)
-                );
-            }
-
-            // merge loaded content into global stack
-            \Piwigo\Core\LanguageStack::mergeLang((array)$load_lang);
-            \Piwigo\Core\LanguageStack::mergeInfo((array)$load_lang_info);
             return true;
         } else {
             $content = is_readable($source_file) ? file_get_contents($source_file) : false;
-            //Note: target charset is always utf-8 $content = convert_charset($content, 'utf-8', $target_charset);
             return $content;
         }
     }

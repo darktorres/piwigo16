@@ -1,0 +1,32 @@
+# Piwigo translation — en_US
+# Source: common.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: en_US\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Language-Name: English\n"
+"X-Piwigo-Country: United States\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Code: en\n"
+"X-Piwigo-Zero-Plural: true\n"
+
+msgid "Please, enter a login"
+msgstr "Please enter a login"
+
+msgid "Password reset is not allowed for this user"
+msgstr "Password reset is not allowed for this user."
+
+msgid "Piwigo encountered a non recoverable error"
+msgstr "Piwigo encountered an unrecoverable problem."
+
+msgid "Anti-flood system : please wait for a moment before trying to post another comment"
+msgstr "Anti-flood system: please wait a moment before trying to post another comment."
+
+msgid "An administrator must authorize your comment before it is visible."
+msgstr "An administrator must authorize your comment before it is displayed."
+
+msgid "Bad status for user \"guest\", using default status. Please notify the webmaster."
+msgstr "Bad status for guest user; default status will be used. Please notify the webmaster."
+

@@ -1,0 +1,1486 @@
+# Piwigo translation — nl_NL
+# Source: common.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: nl_NL\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Language-Name: Dutch\n"
+"X-Piwigo-Country: Nederland\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Code: nl\n"
+"X-Piwigo-Zero-Plural: true\n"
+
+msgid "%d Kb"
+msgstr "%d KB"
+
+msgid "%d album updated"
+msgid_plural "%d albums updated"
+msgstr[0] "%d album bijgewerkt"
+msgstr[1] "%d albums bijgewerkt"
+
+msgid "%d comment to validate"
+msgstr "%d reactie om te keuren"
+
+msgid "%d comments to validate"
+msgstr "%d te keuren reacties"
+
+msgid "%d new comment"
+msgstr "%d nieuwe reactie"
+
+msgid "%d new comments"
+msgstr "%d nieuwe reacties"
+
+msgid "%d comment"
+msgid_plural "%d comments"
+msgstr[0] "%d opmerking"
+msgstr[1] "%d reacties"
+
+msgid "%d hit"
+msgstr "%d hit"
+
+msgid "%d hits"
+msgstr "%d hits"
+
+msgid "%d new photo"
+msgid_plural "%d new photos"
+msgstr[0] "%d nieuwe foto"
+msgstr[1] "%d nieuwe foto's"
+
+msgid "%d new user"
+msgstr "%d nieuwe gebruiker"
+
+msgid "%d new users"
+msgstr "%d nieuwe gebruikers"
+
+msgid "About"
+msgstr "Over"
+
+msgid "All tags"
+msgstr "Alle labels"
+
+msgid "Any tag"
+msgstr "Elk label"
+
+msgid "Author"
+msgstr "Fotograaf/bron"
+
+msgid "Albums"
+msgstr "Albums"
+
+msgid "Album"
+msgstr "Album"
+
+msgid "Close this window"
+msgstr "Sluit dit venster"
+
+msgid "Complete RSS feed (photos, comments)"
+msgstr "Complete RSS-feed (foto's, reacties)"
+
+msgid "Confirm Password"
+msgstr "Bevestig wachtwoord"
+
+msgid "Connection settings"
+msgstr "Verbindingsinstellingen"
+
+msgid "Login"
+msgstr "Aanmelden"
+
+msgid "Contact webmaster"
+msgstr "Neem contact op met de webbeheerder"
+
+msgid "Create a new account"
+msgstr "Maak een nieuw account aan"
+
+msgid "Created on"
+msgstr "Aangemaakt op"
+
+msgid "Creation date"
+msgstr "Aanmaakdatum"
+
+msgid "Current password is wrong"
+msgstr "Dit wachtwoord is verkeerd"
+
+msgid "Dimensions"
+msgstr "Dimensies"
+
+msgid "Display"
+msgstr "Weergeven"
+
+msgid "Email address is missing. Please specify an email address."
+msgstr "E-mailadres is niet ingevuld. Vul alsjeblieft een geldig e-mailadres in."
+
+msgid "Email address"
+msgstr "E-mailadres"
+
+msgid "Enter your personnal informations"
+msgstr "Vul jouw persoonlijke gegevens in"
+
+msgid "Error sending email"
+msgstr "Fout bij het verzenden van de e-mail"
+
+msgid "File name"
+msgstr "Bestandsnaam"
+
+msgid "File"
+msgstr "Bestand"
+
+msgid "Filesize"
+msgstr "Bestandsgrootte"
+
+msgid "Filter and display"
+msgstr "Filter en toon"
+
+msgid "Filter"
+msgstr "Filter"
+
+msgid "Forgot your password?"
+msgstr "Wachtwoord vergeten?"
+
+msgid "Go through the gallery as a visitor"
+msgstr "Bekijk de galerie als gast"
+
+msgid "Help"
+msgstr "Help"
+
+msgid "Identification"
+msgstr "Administratie"
+
+msgid "Photos only RSS feed"
+msgstr "RSS-feed met slechts foto's"
+
+msgid "Keyword"
+msgstr "Label"
+
+msgid "Links"
+msgstr "Links"
+
+msgid "N/A"
+msgstr "Niet beschikbaar"
+
+msgid "New on %s"
+msgstr "Nieuw op %s"
+
+msgid "Notification"
+msgstr "Melding"
+
+msgid "Number of items"
+msgstr "Aantal items"
+
+msgid "Original dimensions"
+msgstr "Originele dimensies"
+
+msgid "Password forgotten"
+msgstr "Wachtwoord vergeten"
+
+msgid "Password"
+msgstr "Wachtwoord"
+
+msgid "Post date"
+msgstr "Plaatsingsdatum"
+
+msgid "Posted on"
+msgstr "Geplaatst op"
+
+msgid "Profile"
+msgstr "Profiel"
+
+msgid "Quick connect"
+msgstr "Snelle aanmelding"
+
+msgid "RSS feed"
+msgstr "RSS-feed"
+
+msgid "Register"
+msgstr "Registreren"
+
+msgid "Registration"
+msgstr "Registratie"
+
+msgid "Related tags"
+msgstr "Gerelateerde labels"
+
+msgid "Reset"
+msgstr "Herstel"
+
+msgid "Retrieve password"
+msgstr "Herstel wachtwoord"
+
+msgid "Search tags"
+msgstr "Zoeklabels"
+
+msgid "Search"
+msgstr "Zoek"
+
+msgid "display available tags"
+msgstr "Toon alle beschikbare labels"
+
+msgid "Since"
+msgstr "Sinds"
+
+msgid "Sort by"
+msgstr "Sorteer op"
+
+msgid "Sort order"
+msgstr "Sorteervolgorde"
+
+msgid "Tag"
+msgstr "Label"
+
+msgid "Tags"
+msgstr "Labels"
+
+msgid "The RSS notification feed provides notification on news from this website : new photos, updated albums, new comments. Use a RSS feed reader."
+msgstr "De RSS-feed geeft meldingen bij nieuwe activiteit op deze website. Voorbeelden hiervan zijn nieuwe foto's, bijgewerkte albums en nieuwe reacties. Je kunt deze feeds gebruiken wanneer je gebruik maakt van een RSS-feedlezer."
+
+msgid "Unknown feed identifier"
+msgstr "Onbekende naam"
+
+msgid "User comments"
+msgstr "Gebruikersreacties"
+
+msgid "Username"
+msgstr "Gebruikersnaam"
+
+msgid "Visits"
+msgstr "Bezoeken"
+
+msgid "Webmaster"
+msgstr "Webbeheerder"
+
+msgid "Week %d"
+msgstr "Week %d"
+
+msgid "About Piwigo"
+msgstr "Over Piwigo"
+
+msgid "You are not authorized to access the requested page"
+msgstr "Je bent niet gemachtigd om deze pagina te bekijken"
+
+msgid "add this photo to your favorites"
+msgstr "voeg deze foto toe aan je favorieten"
+
+msgid "Administration"
+msgstr "Beheer"
+
+msgid "all"
+msgstr "alles"
+
+msgid "ascending"
+msgstr "oplopend"
+
+msgid "Expand all albums"
+msgstr "Open alle albums"
+
+msgid "posted after %s (%s)"
+msgstr "Geplaatst na %s(%s)"
+
+msgid "posted before %s (%s)"
+msgstr "Geplaatst voor %s(%s)"
+
+msgid "posted between %s (%s) and %s (%s)"
+msgstr "Geplaatst tussen %s(%s) en %s(%s)"
+
+msgid "posted on %s"
+msgstr "Geplaatst op %s"
+
+msgid "Best rated"
+msgstr "Best gewaardeerd"
+
+msgid "display best rated photos"
+msgstr "Toon de best beoordeelde foto's"
+
+msgid "Calendar"
+msgstr "Kalender"
+
+msgid "All"
+msgstr "Alles"
+
+msgid "display each day with photos, month per month"
+msgstr "Toon foto's van elke dag, maand per maand"
+
+msgid "View"
+msgstr "Toon"
+
+msgid "chronology_monthly_calendar"
+msgstr "Maandkalender"
+
+msgid "chronology_monthly_list"
+msgstr "Maandlijst"
+
+msgid "chronology_weekly_list"
+msgstr "Weeklijst"
+
+msgid "Click here if your browser does not automatically forward you"
+msgstr "Klik hier als jouw internetbrowser je niet automatisch doorstuurt."
+
+msgid "comment date"
+msgstr "Reactiedatum"
+
+msgid "Comment"
+msgstr "Reactie"
+
+msgid "Your comment has been registered"
+msgstr "Jouw reactie is opgeslagen."
+
+msgid "Anti-flood system : please wait for a moment before trying to post another comment"
+msgstr "Anti-flood systeem: wacht alsjeblieft een moment voordat je weer een reactie plaatst."
+
+msgid "Your comment has NOT been registered because it did not pass the validation rules"
+msgstr "Jouw reactie is NIET opgeslagen omdat het niet voldoet aan de validatieregels."
+
+msgid "An administrator must authorize your comment before it is visible."
+msgstr "Een beheerder moet jouw reactie goedkeuren voordat deze zichtbaar wordt voor anderen."
+
+msgid "This login is already used by another user"
+msgstr "Deze gebruikersnaam is al in gebruik"
+
+msgid "Comments"
+msgstr "Reacties"
+
+msgid "Add a comment"
+msgstr "Voeg een reactie toe"
+
+msgid "created after %s (%s)"
+msgstr "Aangemaakt na %s (%s)"
+
+msgid "created before %s (%s)"
+msgstr "Aangemaakt voor %s (%s)"
+
+msgid "created between %s (%s) and %s (%s)"
+msgstr "Aangemaakt tussen %s (%s) en %s (%s)"
+
+msgid "created on %s"
+msgstr "Aangemaakt op %s"
+
+msgid "Your Gallery Customization"
+msgstr "Jouw galerie-aanpassingen"
+
+msgid "Default"
+msgstr "Standaard"
+
+msgid "delete this photo from your favorites"
+msgstr "Verwijder deze foto uit je favorieten"
+
+msgid "Delete"
+msgstr "Verwijder"
+
+msgid "descending"
+msgstr "aflopend"
+
+msgid "Download"
+msgstr "download"
+
+msgid "Download this file"
+msgstr "Download dit bestand"
+
+msgid "edit"
+msgstr "Wijzig"
+
+msgid "wrong date"
+msgstr "Verkeerde datum"
+
+msgid "excluded"
+msgstr "Uitgesloten"
+
+msgid "Your favorites"
+msgstr "Jouw favorieten"
+
+msgid "display your favorites photos"
+msgstr "Toon je favoriete foto's"
+
+msgid "Favorites"
+msgstr "Favorieten"
+
+msgid "First"
+msgstr "Eerste"
+
+msgid "The gallery is locked for maintenance. Please, come back later."
+msgstr "De galerie is momenteel gesloten voor onderhoud. Probeer het later nog eens"
+
+msgid "Page generated in"
+msgstr "Pagina gemaakt in"
+
+msgid "guest"
+msgstr "Gast"
+
+msgid "Hello"
+msgstr "Hallo"
+
+msgid "available for administrators only"
+msgstr "Alleen toegankelijk voor beheerders"
+
+msgid "display this album"
+msgstr "Toon dit album"
+
+msgid "display last user comments"
+msgstr "Toon de meest recente gebruikersreacties"
+
+msgid "search"
+msgstr "zoek"
+
+msgid "Home"
+msgstr "Startpagina"
+
+msgid "in this album"
+msgstr "in dit album"
+
+msgid "in %d sub-album"
+msgid_plural "in %d sub-albums"
+msgstr[0] "in %d sub-album"
+msgstr[1] "in %d sub-albums"
+
+msgid "included"
+msgstr "inclusief"
+
+msgid "Invalid password!"
+msgstr "Ongeldig wachtwoord!"
+
+msgid "Language"
+msgstr "Taal"
+
+msgid "last %d days"
+msgstr "laatste %d dagen"
+
+msgid "Last"
+msgstr "Laatste"
+
+msgid "Logout"
+msgstr "Afmelden"
+
+msgid "obligatory"
+msgstr "Verplicht"
+
+msgid "display a calendar by creation date"
+msgstr "Toon een kalender, ingedeeld op aanmaakdatum"
+
+msgid "display all photos in all sub-albums"
+msgstr "Toon alle foto's in alle sub-albums"
+
+msgid "return to normal view mode"
+msgstr "Schakel terug naar normale weergave"
+
+msgid "display a calendar by posted date"
+msgstr "Toon een kalender, ingedeeld op plaatsingsdatum"
+
+msgid "Most visited"
+msgstr "Meest bezocht"
+
+msgid "display most visited photos"
+msgstr "Toon de meest bezochte foto's"
+
+msgid "The number of photos per page must be a not null scalar"
+msgstr "Het aantal foto's per pagina moet hoger dan 0 zijn"
+
+msgid "Number of photos per page"
+msgstr "Aantal foto's per pagina"
+
+msgid "Unknown identifier"
+msgstr "Onbekende naam"
+
+msgid "New password"
+msgstr "Nieuw wachtwoord"
+
+msgid "Rate this photo"
+msgstr "Waardeer deze foto"
+
+msgid "Next"
+msgstr "Volgende"
+
+msgid "no rate"
+msgstr "Geen waardering"
+
+msgid "Photos posted within the last %d day."
+msgid_plural "Photos posted within the last %d days."
+msgstr[0] "Alleen foto's die de laatste %d dag geplaatst zijn."
+msgstr[1] "Alleen foto's die de laatste %d dagen geplaatst zijn."
+
+msgid "password updated"
+msgstr "Wachtwoord bijgewerkt"
+
+msgid "Recent period must be a positive integer value"
+msgstr "Recente periode moet een positieve waarde hebben"
+
+msgid "photo"
+msgstr "foto"
+
+msgid "Click on the photo to see it in high definition"
+msgstr "Klik op de foto om deze in hoge kwaliteit te bekijken."
+
+msgid "Show file metadata"
+msgstr "Laat bestandsmetadata zien"
+
+msgid "Powered by"
+msgstr "Mogelijk gemaakt door:"
+
+msgid "Preferences"
+msgstr "Voorkeuren"
+
+msgid "Previous"
+msgstr "Vorige"
+
+msgid "Random photos"
+msgstr "Willekeurige foto's"
+
+msgid "display a set of random photos"
+msgstr "Toon een aantal willekeurig gekozen foto's"
+
+msgid "Recent albums"
+msgstr "Recente albums"
+
+msgid "display recently updated albums"
+msgstr "Toon recent bijgewerkte albums"
+
+msgid "Recent period"
+msgstr "Recente periode"
+
+msgid "Recent photos"
+msgstr "Recente foto's"
+
+msgid "display most recent photos"
+msgstr "Toon de meest recente foto's"
+
+msgid "Redirection..."
+msgstr "Doorsturen..."
+
+msgid "Please, enter a login"
+msgstr "Vul alsjeblieft je aanmeldinsgegevens in"
+
+msgid "login mustn't end with a space character"
+msgstr "Gebruikersnaam mag niet eindigen met een spatie"
+
+msgid "login mustn't start with a space character"
+msgstr "Gebruikersnaam mag niet beginnen met een spatie"
+
+msgid "this login is already used"
+msgstr "Deze gebruikersnaam is al in gebruik"
+
+msgid "mail address must be like xxx@yyy.eee (example : jack@altern.org)"
+msgstr "Mailadres moet conform de indeling xxx@yyy.eee worden opgegeven (bijvoorbeeld: jack@altern.org)"
+
+msgid "Auto login"
+msgstr "Automatische aanmelding"
+
+msgid "remove this tag from the list"
+msgstr "Verwijder dit label"
+
+msgid "representative"
+msgstr "Album miniatuurweergave"
+
+msgid "Search for Author"
+msgstr "Zoek op fotograaf/bron"
+
+msgid "Search in albums"
+msgstr "Zoek in albums"
+
+msgid "Search by date"
+msgstr "Zoek op datum"
+
+msgid "Date"
+msgstr "Datum"
+
+msgid "End-Date"
+msgstr "Einddatum"
+
+msgid "Kind of date"
+msgstr "Soort datum"
+
+msgid "Search for words"
+msgstr "Zoek naar woorden"
+
+msgid "Search for all terms"
+msgstr "Zoek op alle waardes"
+
+msgid "Search for any term"
+msgstr "Zoek op elke waarde"
+
+msgid "Empty query. No criteria has been entered."
+msgstr "Lege aanvraag. Er zijn geen criteria opgegeven."
+
+msgid "Search results"
+msgstr "Zoekresultaten"
+
+msgid "Search in sub-albums"
+msgstr "Zoek in sub-albums"
+
+msgid "Contact"
+msgstr "Contact"
+
+msgid "set as album representative"
+msgstr "Stel als albumplaatje in"
+
+msgid "Show number of comments"
+msgstr "Toon het aantal reacties"
+
+msgid "Show number of hits"
+msgstr "Toon het aantal hits"
+
+msgid "slideshow"
+msgstr "dia-voorstelling"
+
+msgid "stop the slideshow"
+msgstr "Stop de diavoorstelling"
+
+msgid "Specials"
+msgstr "Uitgelicht"
+
+msgid "SQL queries in"
+msgstr "SQL-query's in"
+
+msgid "display only recently posted photos"
+msgstr "Toon alleen recent geplaatste foto's"
+
+msgid "return to the display of all photos"
+msgstr "Schakel terug naar het tonen van alle foto's"
+
+msgid "the beginning"
+msgstr "Het begin"
+
+msgid "Thumbnails"
+msgstr "Miniatuurafbeeldingen"
+
+msgid "Menu"
+msgstr "Menu"
+
+msgid "A comment on your site"
+msgstr "Een reactie op jouw website"
+
+msgid "today"
+msgstr "vandaag"
+
+msgid "Update your rating"
+msgstr "Werk je waardering bij"
+
+msgid "the username must be given"
+msgstr "De gebruikersnaam is verplicht"
+
+msgid "useful when password forgotten"
+msgstr "Handig als je het wachtwoord vergeten bent"
+
+msgid "Quick search"
+msgstr "Snel zoeken"
+
+msgid "Connected user: %s"
+msgstr "Verbonden gebruiker: %s"
+
+msgid "IP: %s"
+msgstr "IP: %s"
+
+msgid "Browser: %s"
+msgstr "Browser: %s"
+
+msgid "Author: %s"
+msgstr "Fotograaf/bron: %s"
+
+msgid "Comment: %s"
+msgstr "Reactie %s"
+
+msgid "Comment by %s"
+msgstr "Reactie van %s"
+
+msgid "User: %s"
+msgstr "Gebruiker: %s"
+
+msgid "Email: %s"
+msgstr "E-mail: %s"
+
+msgid "Admin: %s"
+msgstr "Beheerder: %s"
+
+msgid "Registration of %s"
+msgstr "Registratie van %s"
+
+msgid "Album: %s"
+msgstr "Album: %s"
+
+msgid "Bad status for user \"guest\", using default status. Please notify the webmaster."
+msgstr "Foutieve status voor gebruiker \"gast\". De standaard status zal worden gebruikt. Meld het alsjeblieft aan de beheerder."
+
+msgid "this email address is already in use"
+msgstr "Dit e-mailadres is al in gebruik"
+
+msgid "Album results for"
+msgstr "Albumresultaten voor"
+
+msgid "Tag results for"
+msgstr "Labelresultaten voor"
+
+msgid "from %s to %s"
+msgstr "Van %s tot %s"
+
+msgid "Play of slideshow"
+msgstr "Speel diavoorstelling af"
+
+msgid "Pause of slideshow"
+msgstr "Pauzeer de diavoorstelling"
+
+msgid "Repeat the slideshow"
+msgstr "Herhaal de diavoorstelling"
+
+msgid "Not repeat the slideshow"
+msgstr "Herhaal de diavoorstelling niet"
+
+msgid "Reduce diaporama speed"
+msgstr "Verlaag de snelheid van de diavoorstelling"
+
+msgid "Accelerate diaporama speed"
+msgstr "Verhoog de snelheid van de diavoorstelling"
+
+msgid "Submit"
+msgstr "Verzenden"
+
+msgid "Yes"
+msgstr "Ja"
+
+msgid "No"
+msgstr "Geen"
+
+msgid "%d photo"
+msgid_plural "%d photos"
+msgstr[0] "%d foto"
+msgstr[1] "%d foto's"
+
+msgid "%d photo is also linked to current tags"
+msgid_plural "%d photos are also linked to current tags"
+msgstr[0] "%d foto is ook gelinkt aan huidige labels"
+msgstr[1] "%d foto's zijn ook gelinkt aan huidige labels"
+
+msgid "display photos linked to this tag"
+msgstr "Toon foto's die dit label hebben"
+
+msgid "photos posted during the last %d days"
+msgstr "Foto's die gedurende de laatste %d dagen geplaatst zijn"
+
+msgid "Piwigo Help"
+msgstr "Piwigo help"
+
+msgid "Are you sure?"
+msgstr "Weet je het zeker?"
+
+msgid "Rank"
+msgstr "Rangorde"
+
+msgid "group by letters"
+msgstr "Groepeer op letters"
+
+msgid "letters"
+msgstr "letters"
+
+msgid "show tag cloud"
+msgstr "Toon labelcloud"
+
+msgid "cloud"
+msgstr "cloud"
+
+msgid "Reset to default values"
+msgstr "Herstel de originele waarden"
+
+msgid "delete all photos from your favorites"
+msgstr "Verwijder alle foto's uit je favorieten"
+
+msgid "Sent by"
+msgstr "Verzonden door"
+
+msgid "Cookies are blocked or not supported by your browser. You must enable cookies to connect."
+msgstr "Cookies zijn geblokkeerd of niet toegestaan door jouw webbrowser. Je moet deze cookies toestaan om je aan te kunnen melden."
+
+msgid "Edit a comment"
+msgstr "Wijzig een reactie"
+
+msgid "(!) This comment requires validation"
+msgstr "(!) Deze reactie moet nog worden gekeurd"
+
+msgid "Welcome"
+msgstr "Welkom"
+
+msgid "Welcome to your Piwigo photo gallery!"
+msgstr "Welkom bij jouw Piwigo fotogalerie!"
+
+msgid "... or browse your empty gallery"
+msgstr "... of ontdek jouw lege galerie"
+
+msgid "... or please deactivate this message, I will find my way by myself"
+msgstr "... of schakel deze melding uit. Ik vind mijn eigen weg."
+
+msgid "Hello %s, your Piwigo photo gallery is empty!"
+msgstr "Hallo %s, jouw Piwigo-fotogalerie is leeg!"
+
+msgid "I want to add photos"
+msgstr "Ik wil foto's toevoegen"
+
+msgid "Manage this user comment: %s"
+msgstr "Beheer deze gebruikersreactie: %s"
+
+msgid "This author modified following comment:"
+msgstr "Deze fotograaf/bron heeft de volgende inhoud aangepast:"
+
+msgid "This author removed the comment with id %d"
+msgstr "Deze fotograaf/bron heeft de reactie verwijderd met id %d"
+
+msgid "html tags are not allowed in login"
+msgstr "html-tags zijn niet toegestaan in je gebruikersnaam"
+
+msgid "%d rates"
+msgstr "%d waarderingen"
+
+msgid "Rating score"
+msgstr "Waarderingsscore"
+
+msgid "Invalid username or email"
+msgstr "Ongeldige gebruikersnaam of e-mail"
+
+msgid "Password reset is not allowed for this user"
+msgstr "Herstel wachtwoord is niet toegestaan voor deze gebruiker."
+
+msgid "User \"%s\" has no email address, password reset is not possible"
+msgstr "Gebruiker \"%s\" heeft geen e-mailadres. Hierdoor is wachtwoordherstel niet mogelijk"
+
+msgid "Someone requested that the password be reset for the following user account:"
+msgstr "Iemand heeft gevraagd om het wachtwoord opnieuw in te stellen voor het volgende gebruikersaccount:"
+
+msgid "Username \"%s\" on gallery %s"
+msgstr "Gebruikersnaam \"%s\" op galerie %s"
+
+msgid "To reset your password, visit the following address:"
+msgstr "Kijk op de volgende pagina om jouw wachtwoord te herstellen:"
+
+msgid "If this was a mistake, just ignore this email and nothing will happen."
+msgstr "Als dit een fout is, negeer dan deze e-mail. De wijzigingen zullen dan niet doorgevoerd worden."
+
+msgid "Password Reset"
+msgstr "Wachtwoord herstellen"
+
+msgid "Check your email for the confirmation link"
+msgstr "Bekijk jouw e-mail voor de bevestigingslink."
+
+msgid "Invalid key"
+msgstr "Ongeldige sleutel"
+
+msgid "The passwords do not match"
+msgstr "De wachtwoorden zijn niet hetzelfde"
+
+msgid "Your password has been reset"
+msgstr "Jouw wachtwoord is hersteld."
+
+msgid "Return to home page"
+msgstr "Keer terug naar de startpagina"
+
+msgid "Please enter your username or email address."
+msgstr "Vul alsjeblieft je gebruikersnaam of e-mailadres in."
+
+msgid "You will receive a link to create a new password via email."
+msgstr "Je ontvangt via e-mail een link om een nieuw wachtwoord aan te maken."
+
+msgid "Username or email"
+msgstr "Gebruikersnaam of e-mailadres"
+
+msgid "Change my password"
+msgstr "Verander mijn wachtwoord"
+
+msgid "Enter your new password below."
+msgstr "Vul jouw nieuwe wachtwoord hieronder in."
+
+msgid "EXIF Metadata"
+msgstr "EXIF Metadata"
+
+msgid "IPTC Metadata"
+msgstr "IPTC Metadata"
+
+msgid "Edit"
+msgstr "Wijzig"
+
+msgid "large"
+msgstr "L - groot"
+
+msgid "medium"
+msgstr "M - medium"
+
+msgid "Original"
+msgstr "Origineel"
+
+msgid "small"
+msgstr "S - klein"
+
+msgid "square"
+msgstr "Vierkant"
+
+msgid "thumb"
+msgstr "Miniatuurafbeelding"
+
+msgid "xlarge"
+msgstr "XL - extra groot"
+
+msgid "xxlarge"
+msgstr "XXL - extra, extra groot"
+
+msgid "Hello %s,"
+msgstr "Hallo %s,"
+
+msgid "Here are your connection settings"
+msgstr "Hier zijn jouw verbindingsinstellingen"
+
+msgid "If you think you've received this email in error, please contact us at %s"
+msgstr "Als je denkt dat deze mail niet goed is, neem dan alsjeblieft contact met ons op, via %s."
+
+msgid "Password: %s"
+msgstr "Wachtwoord: %s"
+
+msgid "Send my connection settings by email"
+msgstr "Verstuur mijn verbindingsinstellingen per e-mail"
+
+msgid "Successfully registered, you will soon receive an email with your connection settings. Welcome!"
+msgstr "Je bent succesvol geregistreerd! Je ontvangt spoedig een e-mail met daarin jouw aanmeldgegevens. Welkom!"
+
+msgid "Thank you for registering at %s!"
+msgstr "Bedankt dat je je hebt geregistreerd op %s!"
+
+msgid "Username modification"
+msgstr "Aanpassing van de gebruikersnaam"
+
+msgid "Username: %s"
+msgstr "Gebruikersnaam: %s"
+
+msgid "Your username has been successfully changed to : %s"
+msgstr "Jouw gebruikersnaam is succesvol gewijzigd in: %s"
+
+msgid "Show oldest comments first"
+msgstr "Toon oudste reacties eerst"
+
+msgid "Show latest comments first"
+msgstr "Toon recente reacties eerst"
+
+msgid "Photo sizes"
+msgstr "Fotogroottes"
+
+msgid "View in"
+msgstr "Toon in"
+
+msgid "Mobile"
+msgstr "Mobiel"
+
+msgid "Desktop"
+msgstr "Bureaublad"
+
+msgid "2small"
+msgstr "XXS - Zeer klein"
+
+msgid "Date created, new &rarr; old"
+msgstr "Aanmaakdatum, nieuw &rarr; oud"
+
+msgid "Date created, old &rarr; new"
+msgstr "Aanmaakdatum, oud &rarr; nieuw"
+
+msgid "Date posted, new &rarr; old"
+msgstr "Plaatsingsdatum, nieuw &rarr; oud"
+
+msgid "Date posted, old &rarr; new"
+msgstr "Plaatsingsdatum, oud &rarr; nieuw"
+
+msgid "File name, A &rarr; Z"
+msgstr "Bestandsnaam, A &rarr; Z"
+
+msgid "File name, Z &rarr; A"
+msgstr "Bestandsnaam, Z &rarr; A"
+
+msgid "Manual sort order"
+msgstr "Handmatige sorteervolgorde"
+
+msgid "Numeric identifier, 1 &rarr; 9"
+msgstr "Nummers, 1 &rarr; 9"
+
+msgid "Numeric identifier, 9 &rarr; 1"
+msgstr "Nummers, 9 &rarr; 1"
+
+msgid "Photo title, A &rarr; Z"
+msgstr "Fototitel, A &rarr; Z"
+
+msgid "Photo title, Z &rarr; A"
+msgstr "Fototitel, Z &rarr; A"
+
+msgid "Rating score, high &rarr; low"
+msgstr "Waarderingsscore, hoog &rarr; laag"
+
+msgid "Rating score, low &rarr; high"
+msgstr "Waarderingsscore, laag &rarr; hoog"
+
+msgid "Visits, high &rarr; low"
+msgstr "Bezoeken, hoog &rarr; laag"
+
+msgid "Visits, low &rarr; high"
+msgstr "Bezoeken, laag &rarr; hoog"
+
+msgid "xsmall"
+msgstr "XS - extra klein"
+
+msgid "%d rate"
+msgstr "%d waardering"
+
+msgid "Bad request"
+msgstr "Foutief verzoek"
+
+msgid "Forbidden"
+msgstr "Verboden"
+
+msgid "Page not found"
+msgstr "Pagina niet gevonden"
+
+msgid "Permalink for album not found"
+msgstr "Permalink voor niet-gevonden album"
+
+msgid "Piwigo encountered a non recoverable error"
+msgstr "Piwigo heeft een onherstelbare fout aangetroffen"
+
+msgid "Requested album does not exist"
+msgstr "Gevraagd album bestaat niet"
+
+msgid "Requested tag does not exist"
+msgstr "Gevraagd label bestaat niet"
+
+msgid "Email address is mandatory"
+msgstr "E-mailadres is verplicht"
+
+msgid "Username is mandatory"
+msgstr "Gebruikersnaam is verplicht"
+
+msgid "mandatory"
+msgstr "Verplicht"
+
+msgid "Website"
+msgstr "Website"
+
+msgid "Your website URL is invalid"
+msgstr "Jouw website-URL is niet geldig"
+
+msgid "Email"
+msgstr "E-mail"
+
+msgid "First Page"
+msgstr "Eerste pagina"
+
+msgid "Go back to the album"
+msgstr "Ga terug naar het album"
+
+msgid "Last Page"
+msgstr "Laatste pagina"
+
+msgid "Password is missing. Please enter the password."
+msgstr "Wachtwoord is niet ingevuld. Vul alsjeblieft een wachtwoord in."
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "Wachtwoordbevestiging is niet ingevuld. Bevestig alsjeblieft het gekozen wachtwoord."
+
+msgid "%d photos per page"
+msgstr "%d foto's per pagina"
+
+msgid "Theme"
+msgstr "Thema"
+
+msgid "No results for"
+msgstr "Geen resultaten voor"
+
+msgid "Album name, A &rarr; Z"
+msgstr "Albumnaam, A &rarr; Z"
+
+msgid "Album name, Z &rarr; A"
+msgstr "Albumnaam, Z &rarr; A"
+
+msgid "Apply on properties"
+msgstr "Toepassen op eigenschappen"
+
+msgid "Link: %s"
+msgstr "Link: %s"
+
+msgid "Photo description"
+msgstr "Fotobeschrijving"
+
+msgid "Photo title"
+msgstr "Fototitel"
+
+msgid "Your authentication key is no longer valid."
+msgstr "Jouw sleutel is niet langer geldig."
+
+msgid "Invalid username or password!"
+msgstr "Ongeldige gebruikersnaam of wachtwoord!"
+
+msgid "generate random password"
+msgstr "Genereer een willekeurig wachtwoord"
+
+msgid "Related albums"
+msgstr "Gerelateerde albums"
+
+msgid "Password: ********** (no copy by email)"
+msgstr "Wachtwoord ********** (geen kopie via e-mail)"
+
+msgid "Album name, 100 &rarr; 10 &rarr; 5 &rarr; 1"
+msgstr "Albumnaam,100 &rarr;10 &rarr;5 &rarr;1"
+
+msgid "Album name, 1 &rarr; 5 &rarr; 10 &rarr; 100"
+msgstr "Albumnaam,1 &rarr;5 &rarr;10 &rarr;100"
+
+msgid "Start-Date"
+msgstr "Start datum"
+
+msgid "Unknown time period"
+msgstr "Onbekende tijdsperiode"
+
+msgid "Tags listed here match your search by word. Click on one to browse by tag."
+msgstr "De hier vermelde labels komen overeen met uw zoekopdracht op woord. Klik op één om op labels te bladeren."
+
+msgid "Tags found"
+msgstr "Labels gevonden"
+
+msgid "Search in this set"
+msgstr "Zoek in deze set"
+
+msgid "Search in :"
+msgstr "Zoekin"
+
+msgid "Pre-established filters are proposed, but you can add or remove them using the \"Choose filters\" button."
+msgstr "Er worden vooraf ingestelde filters voorgesteld, maar u kunt deze toevoegen of verwijderen via de knop 'Filters kiezen'."
+
+msgid "No results are available."
+msgstr "Er zijn geen resultaten"
+
+msgid "Filters"
+msgstr "Filters"
+
+msgid "Fill in the filters to start a search"
+msgstr "Vul de filters in om om het zoeken te starten"
+
+msgid "File type"
+msgstr "Bestandstype"
+
+msgid "Empty filters"
+msgstr "Lege filters"
+
+msgid "Clear"
+msgstr "Maak schoon"
+
+msgid "Choose filters"
+msgstr "Kies filters"
+
+msgid "Cancel"
+msgstr "annuleren"
+
+msgid "Albums listed here match your search by word. Click on one to browse by album."
+msgstr "De hier vermelde albums komen overeen met uw zoekopdracht op woord. Klik op één om op album te bladeren."
+
+msgid "Albums found"
+msgstr "Albums gevonden"
+
+msgid "Album title"
+msgstr "Album titel"
+
+msgid "Album description"
+msgstr "Album beschrijving"
+
+msgid "Added by"
+msgstr "Toegevoegd door"
+
+msgid "%d visits"
+msgstr "%dbezoeken"
+
+msgid "rating score %s"
+msgstr "beoordelingsscore %s"
+
+msgid "Validate"
+msgstr "Valideer"
+
+msgid "You can try to edit your filters and perform a new search."
+msgstr "U kunt proberen uw filters te bewerken en een nieuwe zoekopdracht uit te voeren."
+
+msgid "last 24 hours"
+msgstr "laatste 24 uur"
+
+msgid "last 3 months"
+msgstr "Laatste 3 maanden"
+
+msgid "last 30 days"
+msgstr "Laatste 30 dagen"
+
+msgid "last 6 months"
+msgstr "Laatste 6 maanden"
+
+msgid "last 7 days"
+msgstr "laatste 7 dagen"
+
+msgid "last year"
+msgstr "Afgelopen jaar"
+
+msgid "year %d"
+msgstr "jaar%d"
+
+msgid "Album already selected"
+msgstr "Album al geselecteerd"
+
+msgid "Click here to display it"
+msgstr "Klik hier om het weer te geven"
+
+msgid "Only the first %d albums are displayed, out of %d."
+msgstr "Alleen de eerste %d albums worden weergegeven, van de %d."
+
+msgid "Pages"
+msgstr "Pagina's"
+
+msgid "The PDF you requested is too large to display on this page."
+msgstr "De door u opgevraagde PDF is te groot om op deze pagina weer te geven."
+
+msgid "last 12 months"
+msgstr "Laatste 12 maanden"
+
+msgid "Custom dates"
+msgstr "Aangepaste data"
+
+msgid "There are no authors available for the photos currently filtered"
+msgstr "Er zijn momenteel geen auteurs beschikbaar voor de gefilterde foto's"
+
+msgid "There are no creation dates available for the photos currently filtered"
+msgstr "Er zijn momenteel geen aanmaakdata beschikbaar voor de gefilterde foto's"
+
+msgid "There are no tags available for the photos currently filtered"
+msgstr "Er zijn momenteel geen tags beschikbaar voor de gefilterde foto's"
+
+msgid "Set your password below."
+msgstr "Maak je wachtwoord hieronder"
+
+msgid "When enabled, a common template is used for the login and registration pages, regardless of the theme."
+msgstr "Als deze optie is ingeschakeld, wordt er een gemeenschappelijke sjabloon gebruikt voor de inlog- en registratiepagina's, ongeacht het thema."
+
+msgid "You can manage your API keys in your <a href=\"%s\">account settings.</a>"
+msgstr "U kunt uw API-key's beheren in uw <a href=\"%s\">accountinstellingen.</a>"
+
+msgid "Return to <a href=\"identification.php\" title=\"Sign in\">Sign in</a>"
+msgstr "Ga terug naar<a href=\"identification.php\" title=\"Log in\">Log in</a>"
+
+msgid "The email %s will be used to notify you when your API key is about to expire."
+msgstr "De email %s zal worden gebruikt om je te waarschuwen wanneer je API key gaat verlopen."
+
+msgid "Set my password"
+msgstr "Stel mijn wachtwoord in"
+
+msgid "This API key was manually revoked on %s"
+msgstr "Deze API key is handmatig ingetrokken op %s"
+
+msgid "To manage your API keys, please log in with your username/password."
+msgstr "Om je API key's te beheren, log in met je gebruikersnaam/wachtwoord"
+
+msgid "You have no email address, so you will not be notified when your API key is about to expire."
+msgstr "Je hebt geen emailadres, dan wordt je niet gewaarschuwd wanneer je API key verloopt. "
+
+msgid "Your API key will expire in %d day."
+msgstr "Je API key verloopt in %d dag."
+
+msgid "Your API key will expire in %d days."
+msgstr "Je API key verloopt in %d dagen."
+
+msgid "Your API key will expire soon"
+msgstr "Je API key verloopt snel."
+
+msgid "Your password was successfully reset"
+msgstr "Je wachtwoord is met success gereset"
+
+msgid "Return to the gallery"
+msgstr "Ga terug naar de galerij"
+
+msgid "The api key has been successfully created."
+msgstr "De API key is met succes gemaakt."
+
+msgid "The secret key can no longer be displayed."
+msgstr "De geheime key kan niet langer worden getoond. "
+
+msgid "To continue using the API, please renew your key before it expires."
+msgstr "Om de API te gebruiken, "
+
+msgid "Your changes have been applied."
+msgstr "je wijzigingen zijn doorgevoerd"
+
+msgid "Your password was successfully set"
+msgstr "Je wachtwoord is met succes gewijzigd"
+
+msgid "must not be empty"
+msgstr "mag niet leeg zijn"
+
+msgid "you must choose a date"
+msgstr "je moet een datum kiezen"
+
+msgid "Options"
+msgstr "Opties"
+
+msgid "Revoke"
+msgstr "Intrekken"
+
+msgid "Revoked"
+msgstr "Ingetrokken"
+
+msgid "Show expired keys"
+msgstr "Toon verlopen Keys"
+
+msgid "Custom date"
+msgstr "Aangepaste datum"
+
+msgid "Do you really want to revoke the \"%s\" API key?"
+msgstr "Wil je echt de \"%s\" API key intrekken?"
+
+msgid "Don't have an account yet ?"
+msgstr "Heb je nog geen account?"
+
+msgid "Done"
+msgstr "Klaar"
+
+msgid "Duration"
+msgstr "Duur"
+
+msgid "Edit API Key"
+msgstr "bewerk API key"
+
+msgid "Expert mode"
+msgstr "Expert modus"
+
+msgid "Expired"
+msgstr "Verlopen"
+
+msgid "Expired on"
+msgstr "Verlopen"
+
+msgid "Expires in"
+msgstr "Verloopt over"
+
+msgid "Generate API Key"
+msgstr "Genereer API sleutel"
+
+msgid "Generate key"
+msgstr "Genereer key"
+
+msgid "Hello <em>%s</em>, enter your new password below."
+msgstr "Hallo <em>%s</em>, voer hieronder een nieuw wachtwoord in."
+
+msgid "Hide expired keys"
+msgstr "Verberg verlopen keys"
+
+msgid "Impossible to copy automatically. Please copy manually."
+msgstr "Onmogelijk om automatisch te kopieren. Alsjeblieft handmatig kopieren."
+
+msgid "Last use"
+msgstr "Laatste gebruik"
+
+msgid "Manage your account"
+msgstr "Beheer mijn account"
+
+msgid "Never"
+msgstr "Nooit"
+
+msgid "New API Key"
+msgstr "Nieuwe API key"
+
+msgid "No expiration"
+msgstr "Geen verloopdatum"
+
+msgid "3xlarge"
+msgstr "3XL - extra groot"
+
+msgid "4xlarge"
+msgstr "4XL - gigantisch"
+
+msgid "API Key has been successfully edited."
+msgstr "API Key is met succes bewerkt."
+
+msgid "API Key has been successfully revoked."
+msgstr "API Key is ingetrokken."
+
+msgid "API Key name"
+msgstr "API Key naam"
+
+msgid "API Key not found"
+msgstr "API Key niet gevonden"
+
+msgid "API Keys"
+msgstr "API Keys"
+
+msgid "Account"
+msgstr "Account"
+
+msgid "Already have an account ?"
+msgstr "Heb je al een account?"
+
+msgid "An email has been sent with a link to reset your password"
+msgstr "Een email is verstuurd met een link om je wachtwoord te herstellen."
+
+msgid "An error has occured please got back to <a href=\"identification.php\" title=\"Sign in\">Sign in</a> or <a href=\"register.php\">Register</a>"
+msgstr "Er is een fout opgetreden, ga terug naar <a href=\"identification.php\" title=\"log in\">Log in</a> or <a href=\"register.php\">Registreer</a>"
+
+msgid "Change your password"
+msgstr "Wijzig je wachtwoord"
+
+msgid "Check your inbox"
+msgstr "Controleer je inbox"
+
+msgid "Choose how you want to see your gallery"
+msgstr "Kies hoe je je galerij wil zien"
+
+msgid "Confirm my new password"
+msgstr "bevestig mijn nieuwe wachtwoord"
+
+msgid "Confirm new password"
+msgstr "Bevestig nieuw wachtwoord"
+
+msgid "Create API Keys to secure your acount"
+msgstr "Maak API key's om je account te beveiligen"
+
+msgid "Create a new API key to secure your account."
+msgstr "Maak een nieuwe API key om je account te beveiligen"
+
+msgid "Create an account"
+msgstr "Maak een account"
+
+msgid "Created at"
+msgstr "Gemaakt op"
+
+msgid "An email has been sent with a verification code"
+msgstr "Er is een e-mail verzonden met een verificatiecode"
+
+msgid "ID copied."
+msgstr "ID gekopieerd."
+
+msgid "If you do not receive the email, please contact your webmaster."
+msgstr "Als u de e-mail niet ontvangt, neem dan contact op met uw webmaster."
+
+msgid "Invalid verification code"
+msgstr "Ongeldige verificatiecode"
+
+msgid "Save your ID and secret"
+msgstr "Bewaar uw ID en geheime code"
+
+msgid "Secret copied. Keep it in a safe place."
+msgstr "Geheime code gekopieerd. Bewaar het op een veilige plaats."
+
+msgid "The secret will no longer be displayed. You must copy it to continue."
+msgstr "De geheime code wordt niet meer weergegeven. U moet het kopiëren om verder te gaan."
+
+msgid "Verification code"
+msgstr "Verificatie code"
+
+msgid "Verify"
+msgstr "Verifieer"
+
+msgid "Here is your verification code:"
+msgstr "Hier is uw verificatiecode:"
+
+msgid "If this wasn't you, please change your password immediately or contact your webmaster."
+msgstr "Als u het niet wass, wijzig dan onmiddellijk uw wachtwoord of neem contact op met uw webmaster."
+
+msgid "If you changed your password because you think it was stolen, we recommend revoking your %d API keys <a href=\"%s\">in your profile</a>."
+msgstr "Als u uw wachtwoord heeft gewijzigd omdat u denkt dat het is gestolen, raden wij u aan uw %d API-sleutels <a href=\"%s\">in uw profiel</a> in te trekken."
+
+msgid "Too many attempts, please try later.."
+msgstr "Teveel pogingen, probeer het later."
+
+msgid "Verification successful! You can now choose a new password."
+msgstr "Verificatie succesvol! U kunt nu een nieuw wachtwoord kiezen."
+
+msgid "Your verification code"
+msgstr "Uw verificatiecode"
+
+msgid "edit user preferences"
+msgstr "Bewerk gebruiker voorkeuren"
+

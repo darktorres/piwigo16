@@ -1,0 +1,65 @@
+# Piwigo translation — nb_NO
+# Source: upgrade.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: nb_NO\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Upgrade"
+msgstr "Oppgrader"
+
+msgid "This page proposes to upgrade your database corresponding to your old version of Piwigo to the current version. The upgrade assistant thinks you are currently running a <strong>release %s</strong> (or equivalent)."
+msgstr "Denne siden tilbyr å oppgradere databasen fra din gamle Piwigo versjonen til den gjeldende versjonen. Oppgraderingsassistenten mener at du for tiden kjører <strong>Versjon %s</strong> (eller lignende)."
+
+msgid "Upgrade from version %s to %s"
+msgstr "Oppgrader fra versjon %s til %s"
+
+msgid "Statistics"
+msgstr "Statistikk"
+
+msgid "total upgrade time"
+msgstr "total oppgraderingstid"
+
+msgid "total SQL time"
+msgstr "total SQL tid"
+
+msgid "SQL queries"
+msgstr "SQL spørringer"
+
+msgid "Upgrade informations"
+msgstr "Oppgraderingsinformasjon"
+
+msgid "Perform a maintenance check in [Administration>Tools>Maintenance] if you encounter any problem."
+msgstr "Gjennomfør en vedlikeholds sjekk i [Administration>Tools>Maintenance] om du møter på problemer."
+
+msgid "As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:"
+msgstr "For å være sikker, følgende tilleggsprogrammer har blitt deaktivert. Du må sjekke for oppgradering av dine tilleggsverktøy før du reaktiverer dem:"
+
+msgid "Only administrator can run upgrade: please sign in below."
+msgstr "Kun en administrator kan oppgradere: vennligst logg inn lenger ned"
+
+msgid "You do not have access rights to run upgrade"
+msgstr "Du har ikke tilgangsrettigheter for å kunne oppgradere"
+
+msgid "All sub-albums of private albums become private"
+msgstr "Alle under-album i private album blir private"
+
+msgid "User permissions and group permissions have been erased"
+msgstr "Bruker- og grupperettigheter har blitt slettet"
+
+msgid "Only thumbnails prefix and webmaster mail address have been saved from previous configuration"
+msgstr "Kun miniatyrbliders prefiks og webmasters e-post addresse har blitt lagret fra forrige konfigurasjon"
+
+msgid "In <i>%s</i>, before <b>?></b>, insert:"
+msgstr "I <i>%s</i>, før <b>?></b>, sett inn:"
+
+msgid "As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:"
+msgstr "Som en sikkerhet har følgende temaer blitt deaktivert. Du må sjekke om det finnes oppgraderinger til de før aktivering:"
+
+msgid "Discover what's new in Piwigo %s"
+msgstr "Finn ut hva som er nytt i Piwigo %s"
+

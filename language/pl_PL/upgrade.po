@@ -1,0 +1,65 @@
+# Piwigo translation — pl_PL
+# Source: upgrade.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: pl_PL\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Upgrade"
+msgstr "Aktualizacja"
+
+msgid "Upgrade from version %s to %s"
+msgstr "Aktualizacja z wersji %s do %s"
+
+msgid "Statistics"
+msgstr "Statystyki"
+
+msgid "total upgrade time"
+msgstr "sumaryczny czas aktualizacji"
+
+msgid "total SQL time"
+msgstr "sumaryczny czas SQL"
+
+msgid "SQL queries"
+msgstr "zapytań SQL"
+
+msgid "Upgrade informations"
+msgstr "Informacje o aktualizacji"
+
+msgid "Perform a maintenance check in [Administration>Tools>Maintenance] if you encounter any problem."
+msgstr "Jeżeli napotkasz jakiś problem wykonaj weryfikację przez [Administracja>Narzędzia>Konserwacja]."
+
+msgid "Only administrator can run upgrade: please sign in below."
+msgstr "Tylko administrator może wykonać aktualizację: zaloguj się poniżej."
+
+msgid "You do not have access rights to run upgrade"
+msgstr "Nie masz uprawnień do wykonania aktualizacji"
+
+msgid "All sub-albums of private albums become private"
+msgstr "Wszystkie pod-albumy prywatnych albumów będą prywatne"
+
+msgid "User permissions and group permissions have been erased"
+msgstr "Uprawnienia użytkowników oraz grup zostały usunięte"
+
+msgid "Only thumbnails prefix and webmaster mail address have been saved from previous configuration"
+msgstr "Z poprzedniej konfiguracji zostały zapisane tylko prefiks miniatur oraz adres e-mail administratora."
+
+msgid "This page proposes to upgrade your database corresponding to your old version of Piwigo to the current version. The upgrade assistant thinks you are currently running a <strong>release %s</strong> (or equivalent)."
+msgstr "Ta strona proponuje aktualizację Twojej bazy danych Piwigo do nowej wersji. Asystent aktualizacji myśli, że aktualnie używasz <strong>wersji %s</strong> (lub równoważnej)."
+
+msgid "As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:"
+msgstr "Na wszelki wypadek następujące wtyczki zostały zdezaktywowane. Przed ich aktywacją, należy sprawdzić, czy nie ma nowszych wersji"
+
+msgid "In <i>%s</i>, before <b>?></b>, insert:"
+msgstr "W <i>%s</i>, przed <b>?></b>, wstaw:"
+
+msgid "As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:"
+msgstr "Na wszelki wypadek następujące motywy zostały dezaktywowane. Przed ich aktywacją, należy sprawdzić, czy nie ma nowszych wersji"
+
+msgid "Discover what's new in Piwigo %s"
+msgstr "Odkryj co jest nowego w Piwigo %s"
+

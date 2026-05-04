@@ -1,0 +1,65 @@
+# Piwigo translation — cs_CZ
+# Source: upgrade.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: cs_CZ\n"
+"Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Upgrade"
+msgstr "Aktualizace"
+
+msgid "Upgrade from version %s to %s"
+msgstr "Aktualizace z verze %s na %s"
+
+msgid "Statistics"
+msgstr "Statistika"
+
+msgid "total upgrade time"
+msgstr "celkový čas aktualizace"
+
+msgid "total SQL time"
+msgstr "celkový čas SQL"
+
+msgid "SQL queries"
+msgstr "SQL dotazy"
+
+msgid "Upgrade informations"
+msgstr "Informace o aktualizaci"
+
+msgid "Perform a maintenance check in [Administration>Tools>Maintenance] if you encounter any problem."
+msgstr "Proveďte kontrolu údržby v [Administrace>Nástroje>Údržba] pokud dojde k problému."
+
+msgid "Only administrator can run upgrade: please sign in below."
+msgstr "Jen administrátor smí spustit aktualizaci: prosím přihlašte se níže."
+
+msgid "You do not have access rights to run upgrade"
+msgstr "nemáte přístupová práva na spuštění upgrade"
+
+msgid "All sub-albums of private albums become private"
+msgstr "Všechny sub-alba privátních alb zůstanou privatní"
+
+msgid "User permissions and group permissions have been erased"
+msgstr "Uživatelská oprávnění a oprávnění skupin byla vymazána"
+
+msgid "Only thumbnails prefix and webmaster mail address have been saved from previous configuration"
+msgstr "Z předchozí konfigurace byly zachovány pouze předpony náhledů a email adresa správce."
+
+msgid "This page proposes to upgrade your database corresponding to your old version of Piwigo to the current version. The upgrade assistant thinks you are currently running a <strong>release %s</strong> (or equivalent)."
+msgstr "Navrhujeme aktualizovat databázi Vaší galerie Piwigo ze starší na novou verzi.\r\nAsistent aktualizace se domnívá, že aktuálně používáte <strong>verzi %s</strong> (nebo odpovídající)."
+
+msgid "As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:"
+msgstr "Jako předběžné opatření byly deaktivovány následující doplňky. Prosím zkontrolujte aktualizace těchto doplňků předtím než je znovu aktivujete:"
+
+msgid "In <i>%s</i>, before <b>?></b>, insert:"
+msgstr "V <i>%s</i>, před <b>?></b>, vložením:"
+
+msgid "As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:"
+msgstr "Jako preventivní opatření, byli náseldující šablony deaktivovány. Musíte zkontrolovat nejprve jestli není nová verze předtím než je reaktivujete:"
+
+msgid "Discover what's new in Piwigo %s"
+msgstr "Objevte co je nového v Piwigo %s"
+

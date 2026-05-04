@@ -1,0 +1,1486 @@
+# Piwigo translation — tr_TR
+# Source: common.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: tr_TR\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Language-Name: Turkish\n"
+"X-Piwigo-Country: Turkey\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Code: tr\n"
+"X-Piwigo-Zero-Plural: true\n"
+
+msgid "... or browse your empty gallery"
+msgstr "... yada boş galerinizde gezin"
+
+msgid "... or please deactivate this message, I will find my way by myself"
+msgstr "... yada lütfen bu mesajı etkisizleştirin, kendi yolumu kendim bulacağım"
+
+msgid "%d album updated"
+msgid_plural "%d albums updated"
+msgstr[0] "%d albüm güncellendi"
+msgstr[1] "%d albüm güncellendi"
+
+msgid "%d comment to validate"
+msgstr "%d onaylanacak yorum"
+
+msgid "%d comment"
+msgid_plural "%d comments"
+msgstr[0] "%d yorum"
+msgstr[1] "%d yorum"
+
+msgid "%d comments to validate"
+msgstr "%d onaylanacak yorum "
+
+msgid "%d hit"
+msgstr "%d ziyaret"
+
+msgid "%d hits"
+msgstr "%d ziyaret"
+
+msgid "%d Kb"
+msgstr "%d Kilobayt"
+
+msgid "%d new comment"
+msgstr "%d yeni yorum"
+
+msgid "%d new comments"
+msgstr "%d yeni yorum"
+
+msgid "%d new photo"
+msgid_plural "%d new photos"
+msgstr[0] "%d yeni fotoğraf"
+msgstr[1] "%d yeni fotoğraf"
+
+msgid "%d new user"
+msgstr "%d yeni kullanıcı"
+
+msgid "%d new users"
+msgstr "%d yeni kullanıcı"
+
+msgid "%d photo is also linked to current tags"
+msgid_plural "%d photos are also linked to current tags"
+msgstr[0] "%d fotoğraf aynı zamanda bu etiketlere sahip"
+msgstr[1] "%d fotoğraf aynı zamanda bu etiketlere sahip"
+
+msgid "%d photo"
+msgid_plural "%d photos"
+msgstr[0] "%d fotoğraf"
+msgstr[1] "%d fotoğraf"
+
+msgid "%d rates"
+msgstr "%d oy"
+
+msgid "(!) This comment requires validation"
+msgstr "(!) Bu yoruma onay gerekmektedir."
+
+msgid "A comment on your site"
+msgstr "Sitenize bir yorum yapıldı"
+
+msgid "About Piwigo"
+msgstr "Piwigo Hakkında"
+
+msgid "About"
+msgstr "Hakkında"
+
+msgid "Accelerate diaporama speed"
+msgstr "Slayt gösterisi hızını yükselt"
+
+msgid "Add a comment"
+msgstr "Bir yorum ekle"
+
+msgid "add this photo to your favorites"
+msgstr "Bu fotoğrafı favorilerinize ekleyin"
+
+msgid "Admin: %s"
+msgstr "Yönetici: %s"
+
+msgid "Administration"
+msgstr "Yönetim"
+
+msgid "Album results for"
+msgstr "Albüm sonuçları"
+
+msgid "Album"
+msgstr "Albüm"
+
+msgid "Album: %s"
+msgstr "Albüm: %s"
+
+msgid "Albums"
+msgstr "Albümler"
+
+msgid "All tags"
+msgstr "Tüm Etiketler"
+
+msgid "All"
+msgstr "Tümü"
+
+msgid "all"
+msgstr "tümü"
+
+msgid "An administrator must authorize your comment before it is visible."
+msgstr "Yorumunuzun görünür olabilmesi için yönetici tarafindan onaylanmasi gerekir."
+
+msgid "Anti-flood system : please wait for a moment before trying to post another comment"
+msgstr "Anti-flood sistemi : lütfen bir müddet bekledikten sonra ikinci yorumu gönderiniz"
+
+msgid "Any tag"
+msgstr "Herhangi bir etiket"
+
+msgid "Are you sure?"
+msgstr "Emin misiniz?"
+
+msgid "ascending"
+msgstr "Artan"
+
+msgid "Author"
+msgstr "Yayımcı"
+
+msgid "Author: %s"
+msgstr "Yayımcı: %s"
+
+msgid "Auto login"
+msgstr "Beni hatırla"
+
+msgid "available for administrators only"
+msgstr "yalnızca yöneticilere için"
+
+msgid "Bad status for user \"guest\", using default status. Please notify the webmaster."
+msgstr "Kullanıcı için kötü statü \"ziyaretçi\", varsayılan statü kullanılıyor. Lütfen webmaster'a bildirin"
+
+msgid "Best rated"
+msgstr "En çok oylanan"
+
+msgid "Browser: %s"
+msgstr "Tarayıcı: %s"
+
+msgid "Calendar"
+msgstr "Takvim"
+
+msgid "Change my password"
+msgstr "Şifremi değiştir"
+
+msgid "Check your email for the confirmation link"
+msgstr "Onaylama bağlantısı için e-postanızı kontrol ediniz."
+
+msgid "chronology_monthly_calendar"
+msgstr "Aylık takvim"
+
+msgid "chronology_monthly_list"
+msgstr "Aylık liste"
+
+msgid "chronology_weekly_list"
+msgstr "Haftalık liste"
+
+msgid "Click here if your browser does not automatically forward you"
+msgstr "Eğer otomatik olarak yönlendirilmediyseniz buraya tıklayınız."
+
+msgid "Click on the photo to see it in high definition"
+msgstr "Fotoğrafı yüksek çözünürlükte görmek için üzerine tıklayın"
+
+msgid "Close this window"
+msgstr "Pencereyi kapat"
+
+msgid "cloud"
+msgstr "küme"
+
+msgid "Comment by %s"
+msgstr "Yorumlayan %s"
+
+msgid "comment date"
+msgstr "yorum tarihi"
+
+msgid "Comment"
+msgstr "Yorum"
+
+msgid "Comment: %s"
+msgstr "Yorum: %s"
+
+msgid "Comments"
+msgstr "Yorumlar"
+
+msgid "Complete RSS feed (photos, comments)"
+msgstr "RSS besleme tamamla (resimler, yorumlar)"
+
+msgid "Confirm Password"
+msgstr "Şifreyi Onayla"
+
+msgid "Connected user: %s"
+msgstr "Bağlanan kullanıcı: %s"
+
+msgid "Connection settings"
+msgstr "Bağlantı ayarları"
+
+msgid "Contact webmaster"
+msgstr "Webmaster ile bağlantı kur"
+
+msgid "Contact"
+msgstr "İletişim"
+
+msgid "Cookies are blocked or not supported by your browser. You must enable cookies to connect."
+msgstr "Çerezler engelli yada web tarayıcınız tarafından desteklenmiyor. Oturum açmak için çerezlere izin verin."
+
+msgid "Create a new account"
+msgstr "Yeni hesap oluştur"
+
+msgid "created after %s (%s)"
+msgstr "%s (%s) 'den sonra oluşturulanlar"
+
+msgid "created before %s (%s)"
+msgstr "%s (%s) 'den önce oluşturulanlar"
+
+msgid "created between %s (%s) and %s (%s)"
+msgstr "%s (%s) ile %s (%s) arasında oluşturulanlar"
+
+msgid "created on %s"
+msgstr "%s 'de oluşturulanlar"
+
+msgid "Created on"
+msgstr "Oluşturuldu"
+
+msgid "Creation date"
+msgstr "Oluşturulma Tarihi"
+
+msgid "Current password is wrong"
+msgstr "Şimdiki parola yanlış"
+
+msgid "Date"
+msgstr "Tarih"
+
+msgid "Default"
+msgstr "Varsayılan"
+
+msgid "delete all photos from your favorites"
+msgstr "favorilerinizdeki tüm fotoğrafları silin"
+
+msgid "delete this photo from your favorites"
+msgstr "bu fotoğrafı favorilerinizden çıkarın"
+
+msgid "Delete"
+msgstr "Sil"
+
+msgid "descending"
+msgstr "Azalan"
+
+msgid "Dimensions"
+msgstr "Boyutlar"
+
+msgid "display a calendar by creation date"
+msgstr "oluşturma tarihine göre bir takvim göster"
+
+msgid "display a calendar by posted date"
+msgstr "gönderme gününü takvimde göster"
+
+msgid "display a set of random photos"
+msgstr "rastgele birkaç fotoğraf göster"
+
+msgid "display all photos in all sub-albums"
+msgstr "tüm alt albümlerdeki tüm fotoğrafları göster"
+
+msgid "display available tags"
+msgstr "uygun etiketleri göster"
+
+msgid "display best rated photos"
+msgstr "Ençok oy alan fotoğrafları göster"
+
+msgid "display each day with photos, month per month"
+msgstr "ay ay her günü fotoğraflarla göster"
+
+msgid "display last user comments"
+msgstr "Son kullanıcı yorumlarını göster"
+
+msgid "display most recent photos"
+msgstr "En son eklenen fotoğrafları göster"
+
+msgid "display most visited photos"
+msgstr "en çok görüntülenen fotoğrafları göster"
+
+msgid "display only recently posted photos"
+msgstr "sadece yakın zamanda gönderilen fotoğrafları göster"
+
+msgid "display photos linked to this tag"
+msgstr "sadece bu etikete sahip fotoğrafları göster"
+
+msgid "display recently updated albums"
+msgstr "Son güncellenen albümleri göster"
+
+msgid "display this album"
+msgstr "bu albümü göster"
+
+msgid "display your favorites photos"
+msgstr "Favori fotoğraflarımı göster"
+
+msgid "Display"
+msgstr "Görünüm"
+
+msgid "Download this file"
+msgstr "Bu dosyayı indir"
+
+msgid "Download"
+msgstr "İndir"
+
+msgid "Edit a comment"
+msgstr "Yorumu düzenle"
+
+msgid "Edit"
+msgstr "Düzenle"
+
+msgid "Email address is missing. Please specify an email address."
+msgstr "e-Posta adresi yok. Lütfen bir e-Posta adresi belirtiniz."
+
+msgid "Email address"
+msgstr "e-Posta adresi"
+
+msgid "Email: %s"
+msgstr "e-Posta: %s"
+
+msgid "Empty query. No criteria has been entered."
+msgstr "Boş sorgulama. Arama kriteri girilmedi."
+
+msgid "End-Date"
+msgstr "Bitiş tarihi"
+
+msgid "Enter your new password below."
+msgstr "Yeni şifrenizi alt kısma giriniz"
+
+msgid "Enter your personnal informations"
+msgstr "Kişisel bilgilerinizi giriniz"
+
+msgid "Error sending email"
+msgstr "e-Posta göndermede hata"
+
+msgid "excluded"
+msgstr "çıkartıldı"
+
+msgid "EXIF Metadata"
+msgstr "EXIF Meta verisi"
+
+msgid "Expand all albums"
+msgstr "Tüm albümleri genişlet"
+
+msgid "Favorites"
+msgstr "Favoriler"
+
+msgid "File name"
+msgstr "Dosya adı"
+
+msgid "File"
+msgstr "Dosya"
+
+msgid "Filesize"
+msgstr "Dosya boyutu"
+
+msgid "Filter and display"
+msgstr "Filtrele ve Görüntüle"
+
+msgid "Filter"
+msgstr "Filtrele"
+
+msgid "First"
+msgstr "İlk"
+
+msgid "Forgot your password?"
+msgstr "Şifrenizi mi unuttunuz?"
+
+msgid "from %s to %s"
+msgstr "şundan %s buna %s"
+
+msgid "Go through the gallery as a visitor"
+msgstr "Galeride ziyaretçi olarak gezin"
+
+msgid "group by letters"
+msgstr "harflere göre grupla"
+
+msgid "guest"
+msgstr "Misafir"
+
+msgid "Hello %s, your Piwigo photo gallery is empty!"
+msgstr "Merhaba %s, Piwigo fotoğraf galeriniz boş!"
+
+msgid "Hello"
+msgstr "Merhaba"
+
+msgid "Help"
+msgstr "Yardım"
+
+msgid "Home"
+msgstr "Anasayfa"
+
+msgid "html tags are not allowed in login"
+msgstr "girişte html etiketlerine izin verilmez"
+
+msgid "I want to add photos"
+msgstr "Fotoğraf eklemek istiyorum"
+
+msgid "Identification"
+msgstr "Kullanıcı Girişi"
+
+msgid "If this was a mistake, just ignore this email and nothing will happen."
+msgstr "Eğer bu bir hata ise, bu e-Postayı görmezden geliniz."
+
+msgid "in %d sub-album"
+msgid_plural "in %d sub-albums"
+msgstr[0] "%d alt albümde"
+msgstr[1] "%d alt albümde"
+
+msgid "in this album"
+msgstr "bu albümde"
+
+msgid "included"
+msgstr "dahil edildi"
+
+msgid "Invalid key"
+msgstr "Hatalı anahtar"
+
+msgid "Invalid password!"
+msgstr "Yanlış şifre!"
+
+msgid "Invalid username or email"
+msgstr "Hatalı kullanıcı adı veya e-Posta"
+
+msgid "IP: %s"
+msgstr "IP:%s"
+
+msgid "IPTC Metadata"
+msgstr "IPTC Meta verisi"
+
+msgid "Keyword"
+msgstr "Anahtar Kelime"
+
+msgid "Kind of date"
+msgstr "tarih çeşidi"
+
+msgid "Language"
+msgstr "Dil"
+
+msgid "large"
+msgstr "L - büyük"
+
+msgid "last %d days"
+msgstr "son %d gün"
+
+msgid "Last"
+msgstr "Son"
+
+msgid "letters"
+msgstr "harfler"
+
+msgid "Links"
+msgstr "Bağlantılar"
+
+msgid "login mustn't end with a space character"
+msgstr "kullanıcı adı boşluk karakteri ile bitemez"
+
+msgid "login mustn't start with a space character"
+msgstr "kullanıcı adı boşluk karakteri ile başlayamaz"
+
+msgid "Login"
+msgstr "Oturum aç"
+
+msgid "Logout"
+msgstr "Çıkış yap"
+
+msgid "mail address must be like xxx@yyy.eee (example : jack@altern.org)"
+msgstr "e-Posta adresi xxx@yyy.eee (örnek : jack@altern.org) gibi olmalıdır"
+
+msgid "Manage this user comment: %s"
+msgstr "Bu kullanıcı yorumunu yönet: %s"
+
+msgid "medium"
+msgstr "M - orta"
+
+msgid "Menu"
+msgstr "Menü"
+
+msgid "Most visited"
+msgstr "En çok ziyaret edilenler"
+
+msgid "N/A"
+msgstr "N/A"
+
+msgid "New on %s"
+msgstr "Yeni %s"
+
+msgid "New password"
+msgstr "Yeni şifre"
+
+msgid "Next"
+msgstr "Sonraki"
+
+msgid "no rate"
+msgstr "puan verilmemiş"
+
+msgid "No"
+msgstr "Hayır"
+
+msgid "Not repeat the slideshow"
+msgstr "Slayt gösterisini tekrar etme"
+
+msgid "Notification"
+msgstr "Bildiri"
+
+msgid "Number of items"
+msgstr "Öğe adedi"
+
+msgid "Number of photos per page"
+msgstr "Sayfa başına fotoğraf sayısı"
+
+msgid "obligatory"
+msgstr "zorunlu"
+
+msgid "Original dimensions"
+msgstr "Orijinal boyutlar"
+
+msgid "Original"
+msgstr "asıl"
+
+msgid "Page generated in"
+msgstr "Sayfa oluşturuldu"
+
+msgid "Password forgotten"
+msgstr "Unutulmuş şifre"
+
+msgid "Password reset is not allowed for this user"
+msgstr "Bu kullanıcı için şifre yenilemeye izin verilmiyor"
+
+msgid "Password Reset"
+msgstr "Şifreyi Sıfırla"
+
+msgid "password updated"
+msgstr "şifre güncellendi"
+
+msgid "Password"
+msgstr "Şifre"
+
+msgid "Pause of slideshow"
+msgstr "Slayt gösterisini dondur (Pause)"
+
+msgid "photo"
+msgstr "fotoğraf"
+
+msgid "Photos only RSS feed"
+msgstr "Yalnızca fotoğraflar için RSS beslemesi"
+
+msgid "photos posted during the last %d days"
+msgstr "son %d günde gösterilen fotoğraflar"
+
+msgid "Photos posted within the last %d day."
+msgid_plural "Photos posted within the last %d days."
+msgstr[0] "Sadece son %d gün içinde yüklenen fotoğraflar."
+msgstr[1] "Sadece son %d gün içinde yüklenen fotoğraflar."
+
+msgid "Piwigo Help"
+msgstr "Piwigo yardım"
+
+msgid "Play of slideshow"
+msgstr "Slayt gösterisini yürüt"
+
+msgid "Please enter your username or email address."
+msgstr "Lütfen kullanıcı adınızı veya e-posta adresinizi giriniz."
+
+msgid "Please, enter a login"
+msgstr "Lütfen kullanıcı adınızı giriniz"
+
+msgid "Post date"
+msgstr "Gönderim tarihi"
+
+msgid "posted after %s (%s)"
+msgstr "%s (%s) 'den sonra gönderilenler"
+
+msgid "posted before %s (%s)"
+msgstr "%s (%s) 'den önce gönderilenler"
+
+msgid "posted between %s (%s) and %s (%s)"
+msgstr "%s (%s) ile %s (%s) arasında gönderilenler"
+
+msgid "posted on %s"
+msgstr "%s 'de gönderilenler"
+
+msgid "Posted on"
+msgstr "Gönderim saati"
+
+msgid "Powered by"
+msgstr "Destekleyen"
+
+msgid "Preferences"
+msgstr "Özellikler"
+
+msgid "Previous"
+msgstr "Önceki"
+
+msgid "Profile"
+msgstr "Profil"
+
+msgid "Quick connect"
+msgstr "Kullanıcı Girişi"
+
+msgid "Quick search"
+msgstr "Hızlı arama"
+
+msgid "Random photos"
+msgstr "Karışık fotoğraflar"
+
+msgid "Rank"
+msgstr "Sıralama"
+
+msgid "Rate this photo"
+msgstr "Bu fotoğrafa puan ver"
+
+msgid "Rating score"
+msgstr "Oy sayısı"
+
+msgid "Recent albums"
+msgstr "Son albümler"
+
+msgid "Recent period must be a positive integer value"
+msgstr "Yakın dönem pozitif bir tam sayı değerine sahip olmalıdır"
+
+msgid "Recent period"
+msgstr "Yakın dönem"
+
+msgid "Recent photos"
+msgstr "Son eklenenler"
+
+msgid "Redirection..."
+msgstr "Yönlendirme..."
+
+msgid "Reduce diaporama speed"
+msgstr "Slayt gösterisi hızını düşür"
+
+msgid "Register"
+msgstr "Kayıt Ol"
+
+msgid "Registration of %s"
+msgstr "Tescil Eden: %s"
+
+msgid "Registration"
+msgstr "Kayıt"
+
+msgid "Related tags"
+msgstr "İlgili Etiketler"
+
+msgid "remove this tag from the list"
+msgstr "listedeki işaretlemeyi kaldır"
+
+msgid "Repeat the slideshow"
+msgstr "Slayt gösterisini tekrar et"
+
+msgid "representative"
+msgstr "albüm pul resmi"
+
+msgid "Reset to default values"
+msgstr "Varsayılan ayarlara döndür"
+
+msgid "Reset"
+msgstr "Sıfırla"
+
+msgid "Retrieve password"
+msgstr "Şifre al"
+
+msgid "Return to home page"
+msgstr "Anasayfaya dön"
+
+msgid "return to normal view mode"
+msgstr "normal görüntü moduna geri dön"
+
+msgid "return to the display of all photos"
+msgstr "tüm fotoğraf görünümüne geri dön"
+
+msgid "RSS feed"
+msgstr "RSS Beslemesi"
+
+msgid "Search by date"
+msgstr "Tarihe göre ara"
+
+msgid "Search for all terms"
+msgstr "Tüm ifadelerde ara"
+
+msgid "Search for any term"
+msgstr "Herhangi bir ifadede ara"
+
+msgid "Search for Author"
+msgstr "Yayımcı adıyla ara"
+
+msgid "Search for words"
+msgstr "Kelimelerde ara"
+
+msgid "Search in albums"
+msgstr "Albümlerde ara"
+
+msgid "Search in sub-albums"
+msgstr "Alt albümlerde ara"
+
+msgid "Search results"
+msgstr "Arama sonuçları"
+
+msgid "Search tags"
+msgstr "Arama etiketi"
+
+msgid "Search"
+msgstr "Ara"
+
+msgid "search"
+msgstr "Arama"
+
+msgid "Sent by"
+msgstr "Gönderen"
+
+msgid "set as album representative"
+msgstr "albüm pul resmi olarak ayarla"
+
+msgid "Show file metadata"
+msgstr "Dosyanin meta verilerini göster"
+
+msgid "Show number of comments"
+msgstr "Yorumların sayısını göster"
+
+msgid "Show number of hits"
+msgstr "Ziyaret sayısını göster"
+
+msgid "show tag cloud"
+msgstr "etiket kümesini göster"
+
+msgid "Since"
+msgstr "Şu tarihten beri:"
+
+msgid "slideshow"
+msgstr "slayt gösterisi"
+
+msgid "small"
+msgstr "S - küçük"
+
+msgid "Someone requested that the password be reset for the following user account:"
+msgstr "Birisi belirtilen kullanıcı için şifre sıfırlaması istedi"
+
+msgid "Sort by"
+msgstr "Sırala"
+
+msgid "Sort order"
+msgstr "Sıralama düzeni"
+
+msgid "Specials"
+msgstr "Hızlı Gezinti"
+
+msgid "SQL queries in"
+msgstr "SQL Sorgulaması"
+
+msgid "square"
+msgstr "kare"
+
+msgid "stop the slideshow"
+msgstr "slayt gösterisini durdur"
+
+msgid "Submit"
+msgstr "Gönder"
+
+msgid "Tag results for"
+msgstr "Etiket sonuçları"
+
+msgid "Tag"
+msgstr "Etiket"
+
+msgid "Tags"
+msgstr "Etiketler"
+
+msgid "the beginning"
+msgstr "başlangıç"
+
+msgid "The gallery is locked for maintenance. Please, come back later."
+msgstr "Bakım çalışmaları nedeniyle kapalıyız. Daha sonra tekrar ziyaret ediniz."
+
+msgid "The number of photos per page must be a not null scalar"
+msgstr "Sayfa başına fotoğraf sayısı sıfırdan farklı bir tam sayı olmalıdır"
+
+msgid "The passwords do not match"
+msgstr "Şifreler eşleşmiyor"
+
+msgid "The RSS notification feed provides notification on news from this website : new photos, updated albums, new comments. Use a RSS feed reader."
+msgstr "Bu RSS beslemesi bu siteden yeni resimler, güncellenen albümler, yeni yorumlar içerir. Bir RSS okuyucu ile kullanılabilir"
+
+msgid "the username must be given"
+msgstr "kullanıcı adı gerekmektedir"
+
+msgid "This author modified following comment:"
+msgstr "Bu yayımcı bu yorumu değiştirdi:"
+
+msgid "This author removed the comment with id %d"
+msgstr "Bu yayımcı %d id numaralı yorumu silmiştir"
+
+msgid "this email address is already in use"
+msgstr "bu e-posta adresi başka bir kullanıcı tarafından kullanılmaktadır."
+
+msgid "This login is already used by another user"
+msgstr "Bu kullanıcı adı başka biri tarafından kullanılıyor"
+
+msgid "this login is already used"
+msgstr "kullanıcı adı zaten kullanılmakta"
+
+msgid "thumb"
+msgstr "Pul resmi"
+
+msgid "Thumbnails"
+msgstr "Küçük resimler"
+
+msgid "To reset your password, visit the following address:"
+msgstr "Şifrenizi yenilemek için bu adrese gidiniz:"
+
+msgid "today"
+msgstr "bugün"
+
+msgid "Unknown feed identifier"
+msgstr "Bilinmeyen besleme kimliği"
+
+msgid "Unknown identifier"
+msgstr "Bilinmeyen kimlik"
+
+msgid "Update your rating"
+msgstr "Puanlamanızı güncelleyin"
+
+msgid "useful when password forgotten"
+msgstr "şifrenizi unuttuğunuz zamanlarda kullanışlıdır"
+
+msgid "User \"%s\" has no email address, password reset is not possible"
+msgstr "Kullanıcı \"%s\" e-posta adresi belirtmemiş, yeniden şifre alması imkansız"
+
+msgid "User comments"
+msgstr "Ziyaretçi yorumları"
+
+msgid "User: %s"
+msgstr "Kullanıcı: %s"
+
+msgid "Username \"%s\" on gallery %s"
+msgstr "Kullanici adi \"%s\" zaten galeride %s"
+
+msgid "Username or email"
+msgstr "Kullanıcı adı veya e-posta"
+
+msgid "Username"
+msgstr "Kullanıcı Adı"
+
+msgid "View"
+msgstr "Görünüm"
+
+msgid "Visits"
+msgstr "Görüntülenme"
+
+msgid "Webmaster"
+msgstr "Site Yöneticisi"
+
+msgid "Week %d"
+msgstr "Hafta %d"
+
+msgid "Welcome to your Piwigo photo gallery!"
+msgstr "Piwigo fotoğraf galerinize hoş geldiniz!"
+
+msgid "Welcome"
+msgstr "Hoş geldiniz"
+
+msgid "wrong date"
+msgstr "Yanlış Tarih"
+
+msgid "xlarge"
+msgstr "XL - ekstra geniş"
+
+msgid "xxlarge"
+msgstr "XXL - devasa"
+
+msgid "Yes"
+msgstr "Evet"
+
+msgid "You are not authorized to access the requested page"
+msgstr "İstenen sayfaya erişim yetkiniz yok"
+
+msgid "You will receive a link to create a new password via email."
+msgstr "E-posta yoluyla yeni bir şifre oluşturmak için bir bağlantı alacaksınız."
+
+msgid "Your comment has been registered"
+msgstr "Yorumunuz kaydedildi"
+
+msgid "Your comment has NOT been registered because it did not pass the validation rules"
+msgstr "Doğrulama kriterlerini geçemedigi için yorumunuz kayit edilmedi"
+
+msgid "Your favorites"
+msgstr "Favorilerim"
+
+msgid "Your Gallery Customization"
+msgstr "Galeri Özelleştirmesi "
+
+msgid "Your password has been reset"
+msgstr "Şifreniz yenilendi"
+
+msgid "Hello %s,"
+msgstr "Merhaba %s,"
+
+msgid "Send my connection settings by email"
+msgstr "Bağlantı ayarlarımı e-posta yoluyla gönder"
+
+msgid "Show latest comments first"
+msgstr "Yeni yorumları başta göster"
+
+msgid "Show oldest comments first"
+msgstr "Eski yorumları baştar göster"
+
+msgid "Successfully registered, you will soon receive an email with your connection settings. Welcome!"
+msgstr "Başarılı olarak kayıt oldunuz, yakında bağlantı ayarlarını içeren bir e-posta alacaksınız. Hoş geldiniz."
+
+msgid "Username modification"
+msgstr "Kullanıcı adı değişikliği"
+
+msgid "edit"
+msgstr "düzenle"
+
+msgid "2small"
+msgstr "XXS - minicik"
+
+msgid "Thank you for registering at %s!"
+msgstr "%s de kayıt için teşekkür ederiz!"
+
+msgid "Your username has been successfully changed to : %s"
+msgstr "Kullanıcı adınız başarılı şekilde %s olarak değiştirildi."
+
+msgid "xsmall"
+msgstr "XS - çok küçük"
+
+msgid "Here are your connection settings"
+msgstr "Bağlantı ayarlarınız bunlardır"
+
+msgid "If you think you've received this email in error, please contact us at %s"
+msgstr "Bu e-Postayı yanlışlıkla aldığınızı düşünüyorsanız bizimle %s ^'den bağlantı kurabilirsiniz."
+
+msgid "Password: %s"
+msgstr "Şifre: %s"
+
+msgid "Username: %s"
+msgstr "Kullanıcı adı: %s"
+
+msgid "Date created, new &rarr; old"
+msgstr "Oluşturulan tarih, yeni &rarr; eski"
+
+msgid "Date created, old &rarr; new"
+msgstr "Oluşturulan tarih, eski &rarr; yeni"
+
+msgid "Date posted, new &rarr; old"
+msgstr "Gönderilme tarihi, yeni &rarr; eski"
+
+msgid "Date posted, old &rarr; new"
+msgstr "Gönderilme tarihi, eski &rarr; yeni"
+
+msgid "Desktop"
+msgstr "Masaüstü"
+
+msgid "File name, A &rarr; Z"
+msgstr "Dosya adı, A &rarr; Z"
+
+msgid "File name, Z &rarr; A"
+msgstr "Dosya adı, Z &rarr; A"
+
+msgid "Manual sort order"
+msgstr "Elle sıralama"
+
+msgid "Mobile"
+msgstr "Mobil"
+
+msgid "Numeric identifier, 1 &rarr; 9"
+msgstr "Sayısal Tanımlayıcı (1-9)"
+
+msgid "Numeric identifier, 9 &rarr; 1"
+msgstr "Sayısal Tanımlayıcı (9-1)"
+
+msgid "Photo sizes"
+msgstr "Fotoğraf boyutları"
+
+msgid "Photo title, A &rarr; Z"
+msgstr "Fotoğraf başlığı, A &rarr; Z"
+
+msgid "Photo title, Z &rarr; A"
+msgstr "Fotoğraf başlığı, Z &rarr; A"
+
+msgid "Rating score, high &rarr; low"
+msgstr "Puan, yüksek &rarr; düşük"
+
+msgid "Rating score, low &rarr; high"
+msgstr "Puan, düşük &rarr; yüksek"
+
+msgid "View in"
+msgstr "Görüntüle"
+
+msgid "Visits, high &rarr; low"
+msgstr "Görüntülenme, yüksek &rarr; düşük"
+
+msgid "Visits, low &rarr; high"
+msgstr "Görüntülenme, düşük &rarr; yüksek"
+
+msgid "%d rate"
+msgstr "%d oy"
+
+msgid "Bad request"
+msgstr "Geçersiz istek"
+
+msgid "Forbidden"
+msgstr "Yasaklanmış"
+
+msgid "Page not found"
+msgstr "Sayfa bulunamadı"
+
+msgid "Permalink for album not found"
+msgstr "Albüm kalıcı bağlantısı bulunamadı"
+
+msgid "Piwigo encountered a non recoverable error"
+msgstr "Piwigo düzeltilemeyen bir hata ile karşılaştı"
+
+msgid "Requested album does not exist"
+msgstr "Talep edilen albüm yok"
+
+msgid "Requested tag does not exist"
+msgstr "Talep edilen etiket yok"
+
+msgid "Email address is mandatory"
+msgstr "e-Posta adresi mecburidir"
+
+msgid "Username is mandatory"
+msgstr "Kullanıcı adı mecburidir"
+
+msgid "mandatory"
+msgstr "zorunlu"
+
+msgid "Website"
+msgstr "Web sitesi"
+
+msgid "Your website URL is invalid"
+msgstr "Web sitenizin URL adresi geçersiz"
+
+msgid "Email"
+msgstr "E-posta"
+
+msgid "First Page"
+msgstr "İlk sayfa"
+
+msgid "Go back to the album"
+msgstr "Albüme geri dön"
+
+msgid "Last Page"
+msgstr "Son sayfa"
+
+msgid "Password is missing. Please enter the password."
+msgstr "Şifre eksik. Lütfen şifrenizi girin."
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "Şifre doğrulama eksik. Lütfen seçtiğiniz şifreyi doğrulayın."
+
+msgid "%d photos per page"
+msgstr "sayfa başına %d fotoğraf"
+
+msgid "Theme"
+msgstr "Tema"
+
+msgid "No results for"
+msgstr "Sonuç bulunamadı:"
+
+msgid "Photo description"
+msgstr "Fotoğraf açıklamaları"
+
+msgid "Photo title"
+msgstr "Fotoğraf başlığı"
+
+msgid "Apply on properties"
+msgstr "Niteliklerine uygula"
+
+msgid "Album name, A &rarr; Z"
+msgstr "Albüm adı, A &rarr; Z"
+
+msgid "Album name, Z &rarr; A"
+msgstr "\r\nAlbüm adı, Z &rarr; A"
+
+msgid "Link: %s"
+msgstr "Bağlantı: %s"
+
+msgid "Your authentication key is no longer valid."
+msgstr "Kimlik doğrulama anahtarınız artık geçerli değil."
+
+msgid "Invalid username or password!"
+msgstr "Geçersiz kullanıcı adı veya şifre!"
+
+msgid "generate random password"
+msgstr "rastgele şifre oluştur"
+
+msgid "Password: ********** (no copy by email)"
+msgstr "Şifre: ********** (not edin, eposta ile kopyası gönderilmiyor)"
+
+msgid "Related albums"
+msgstr "İlgili albümler"
+
+msgid "Album name, 1 &rarr; 5 &rarr; 10 &rarr; 100"
+msgstr "Albüm adı, 1 &rarr; 5 &rarr; 10 &rarr; 100"
+
+msgid "Album name, 100 &rarr; 10 &rarr; 5 &rarr; 1"
+msgstr "Albüm adı, 100 &rarr; 10 &rarr; 5 &rarr; 1"
+
+msgid "Start-Date"
+msgstr "Başlangıç ​​tarihi"
+
+msgid "Albums listed here match your search by word. Click on one to browse by album."
+msgstr "Burada listelenen albümler aramanızla kelime bazında eşleşiyor. Albüme göre göz atmak için birine tıklayın."
+
+msgid "Fill in the filters to start a search"
+msgstr "Arama başlatmak için filtreleri doldurun"
+
+msgid "Pre-established filters are proposed, but you can add or remove them using the \"Choose filters\" button."
+msgstr "Önceden belirlenmiş filtreler önerilir ancak bunları \"Filtre seç\" düğmesini kullanarak ekleyebilir veya kaldırabilirsiniz."
+
+msgid "Tags listed here match your search by word. Click on one to browse by tag."
+msgstr "Burada listelenen etiketler aramanızla kelime bazında eşleşiyor. Etikete göre göz atmak için birine tıklayın."
+
+msgid "You can try to edit your filters and perform a new search."
+msgstr "Filtrelerinizi düzenlemeyi deneyebilir ve yeni bir arama gerçekleştirebilirsiniz."
+
+msgid "rating score %s"
+msgstr "derecelendirme puanı %s"
+
+msgid "Unknown time period"
+msgstr "Bilinmeyen zaman aralığı"
+
+msgid "year %d"
+msgstr "yıl %d"
+
+msgid "last year"
+msgstr "Geçen yıl"
+
+msgid "last 7 days"
+msgstr "Son 7 gün"
+
+msgid "last 6 months"
+msgstr "Son 6 ay"
+
+msgid "last 30 days"
+msgstr "Son 30 gün"
+
+msgid "last 24 hours"
+msgstr "Son 24 saat"
+
+msgid "last 3 months"
+msgstr "Son 3 ay"
+
+msgid "Validate"
+msgstr "Doğrula"
+
+msgid "No results are available."
+msgstr "Kullanılabilir sonuç yok"
+
+msgid "Empty filters"
+msgstr "Boş filtreler"
+
+msgid "Choose filters"
+msgstr "Filtreleri seç"
+
+msgid "Tags found"
+msgstr "Etiket bulundu"
+
+msgid "Search in this set"
+msgstr "Bu sette ara"
+
+msgid "Search in :"
+msgstr "Burada ara:"
+
+msgid "Filters"
+msgstr "Filtreler"
+
+msgid "File type"
+msgstr "Dosya tipi"
+
+msgid "Clear"
+msgstr "Temizle"
+
+msgid "Cancel"
+msgstr "Vazgeç"
+
+msgid "Albums found"
+msgstr "Albüm bulundu"
+
+msgid "Album title"
+msgstr "Albüm ismi"
+
+msgid "Album description"
+msgstr "Albüm açıklaması"
+
+msgid "Added by"
+msgstr "Ekleyen"
+
+msgid "%d visits"
+msgstr "%d ziyaret"
+
+msgid "Only the first %d albums are displayed, out of %d."
+msgstr "Albümlerin %d/%d kadarı görüntülendi."
+
+msgid "The PDF you requested is too large to display on this page."
+msgstr "İstenen PDF bu sayfada görüntülemek için çok büyük"
+
+msgid "Pages"
+msgstr "Sayfa"
+
+msgid "Click here to display it"
+msgstr "Görüntülemek için buraya tıkla"
+
+msgid "Album already selected"
+msgstr "Albüm zaten seçildi"
+
+msgid "Custom dates"
+msgstr "Özel tarihler"
+
+msgid "last 12 months"
+msgstr "Son 12 ay"
+
+msgid "There are no authors available for the photos currently filtered"
+msgstr "Şu anda filtrelenen fotoğraflar için yazar bulunamadı"
+
+msgid "There are no creation dates available for the photos currently filtered"
+msgstr "Şu anda filtrelenen fotoğraflar için herhangi bir oluşturma tarihi mevcut değil"
+
+msgid "There are no tags available for the photos currently filtered"
+msgstr "Şu anda filtrelenen fotoğraflar için kullanılabilir etiket yok"
+
+msgid "Set your password below."
+msgstr "Şifrenizi oluşturun."
+
+msgid "To continue using the API, please renew your key before it expires."
+msgstr "API'yi kullanmaya devam etmek için lütfen anahtarınızın süresi dolmadan önce yenileyin."
+
+msgid "To manage your API keys, please log in with your username/password."
+msgstr "API anahtarlarınızı yönetmek için lütfen kullanıcı adınız/şifrenizle giriş yapın."
+
+msgid "When enabled, a common template is used for the login and registration pages, regardless of the theme."
+msgstr "Etkinleştirildiğinde, tema ne olursa olsun giriş ve kayıt sayfaları için ortak bir şablon kullanılır."
+
+msgid "You can manage your API keys in your <a href=\"%s\">account settings.</a>"
+msgstr "API anahtarlarınızı <a href=\"%s\">hesap ayarlarınızdan</a> yönetebilirsiniz."
+
+msgid "You have no email address, so you will not be notified when your API key is about to expire."
+msgstr "E-posta adresiniz yok, bu nedenle API anahtarınızın süresi dolmak üzereyken bildirim almayacaksınız."
+
+msgid "The secret key can no longer be displayed."
+msgstr "Gizli anahtar artık görüntülenemiyor."
+
+msgid "This API key was manually revoked on %s"
+msgstr "Bu API anahtarı %s tarihinde manuel olarak iptal edildi"
+
+msgid "The email %s will be used to notify you when your API key is about to expire."
+msgstr "API anahtarınızın süresi dolmak üzereyken sizi bilgilendirmek için %s e-posta adresi kullanılacaktır."
+
+msgid "The api key has been successfully created."
+msgstr "API anahtarı başarıyla oluşturuldu."
+
+msgid "Show expired keys"
+msgstr "Süresi dolmuş anahtarları göster"
+
+msgid "Set my password"
+msgstr "Şifremi ayarla"
+
+msgid "Revoked"
+msgstr "İptal edildi"
+
+msgid "Revoke"
+msgstr "İptal et"
+
+msgid "Return to the gallery"
+msgstr "Galeriye geri dön"
+
+msgid "Return to <a href=\"identification.php\" title=\"Sign in\">Sign in</a>"
+msgstr "<a href=\"identification.php\" title=\"Oturum aç\">Oturum aç</a> sayfasına geri dön"
+
+msgid "Options"
+msgstr "Seçenekler"
+
+msgid "No expiration"
+msgstr "Son kullanma tarihi yok"
+
+msgid "New API Key"
+msgstr "Yeni API Anahtarı"
+
+msgid "Manage your account"
+msgstr "Hesabınızı yönetin"
+
+msgid "Never"
+msgstr "Asla"
+
+msgid "Last use"
+msgstr "Son kullanım"
+
+msgid "Hide expired keys"
+msgstr "Süresi dolmuş anahtarları gizle"
+
+msgid "Impossible to copy automatically. Please copy manually."
+msgstr "Otomatik olarak kopyalamak mümkün değil. Lütfen manuel olarak kopyalayın."
+
+msgid "Hello <em>%s</em>, enter your new password below."
+msgstr "Merhaba <em>%s</em>, aşağıya yeni şifrenizi girin."
+
+msgid "Generate API Key"
+msgstr "API Anahtarı Oluştur"
+
+msgid "Generate key"
+msgstr "Anahtar oluştur"
+
+msgid "Expires in"
+msgstr "Şu zaman sonra sona erecek"
+
+msgid "Expired on"
+msgstr "Sona erecek"
+
+msgid "Expired"
+msgstr "Sona erdi"
+
+msgid "Expert mode"
+msgstr "Uzman modu"
+
+msgid "Edit API Key"
+msgstr "API Anahtarını Düzenle"
+
+msgid "Duration"
+msgstr "Süre"
+
+msgid "Done"
+msgstr "Tamamlandı"
+
+msgid "Don't have an account yet ?"
+msgstr "Halen bir hesabınız yok mu?"
+
+msgid "Do you really want to revoke the \"%s\" API key?"
+msgstr "\"%s\" API anahtarını gerçekten iptal etmek istiyor musunuz?"
+
+msgid "Custom date"
+msgstr "Özel tarih"
+
+msgid "Created at"
+msgstr "Oluşturuldu:"
+
+msgid "Create a new API key to secure your account."
+msgstr "Hesabınızı güvence altına almak için yeni bir API anahtarı oluşturun."
+
+msgid "Create API Keys to secure your acount"
+msgstr "Hesabınızı güvence altına almak için API Anahtarları oluşturun"
+
+msgid "Create an account"
+msgstr "Bir hesap açın"
+
+msgid "Change your password"
+msgstr "Şifrenizi değiştirin"
+
+msgid "Check your inbox"
+msgstr "Gelen kutunuzu kontrol edin"
+
+msgid "Choose how you want to see your gallery"
+msgstr "Galerinizi nasıl görmek istediğinizi seçin"
+
+msgid "Confirm my new password"
+msgstr "Yeni şifremi onayla"
+
+msgid "Confirm new password"
+msgstr "Yeni şifreyi onayla"
+
+msgid "An email has been sent with a link to reset your password"
+msgstr "Şifrenizi sıfırlamak için bir bağlantı içeren bir e-posta gönderildi"
+
+msgid "An error has occured please got back to <a href=\"identification.php\" title=\"Sign in\">Sign in</a> or <a href=\"register.php\">Register</a>"
+msgstr "Bir hata oluştu. Lütfen <a href=\"identification.php\" title=\"Oturum aç\">Oturum aç</a> veya <a href=\"register.php\">Kayıt ol</a> adresine geri dönün."
+
+msgid "Already have an account ?"
+msgstr "Zaten bir hesabınız var mı?"
+
+msgid "Account"
+msgstr "Hesap"
+
+msgid "3xlarge"
+msgstr "3XL - ekstra büyük"
+
+msgid "4xlarge"
+msgstr "4XL - devasa"
+
+msgid "API Key has been successfully edited."
+msgstr "API Anahtarı başarıyla düzenlendi."
+
+msgid "API Key has been successfully revoked."
+msgstr "API Anahtarı başarıyla iptal edildi."
+
+msgid "API Key name"
+msgstr "API Anahtar adı"
+
+msgid "API Key not found"
+msgstr "API Anahtarı bulunamadı"
+
+msgid "API Keys"
+msgstr "API Anahtarları"
+
+msgid "Your API key will expire in %d day."
+msgstr "API anahtarınız %d gün içinde sona erecek."
+
+msgid "Your API key will expire in %d days."
+msgstr "API anahtarınız %d gün içinde sona erecek."
+
+msgid "Your API key will expire soon"
+msgstr "API anahtarınız yakında sona erecek"
+
+msgid "Your changes have been applied."
+msgstr "Değişiklikleriniz uygulandı."
+
+msgid "Your password was successfully reset"
+msgstr "Şifreniz başarıyla sıfırlandı"
+
+msgid "Your password was successfully set"
+msgstr "Şifreniz başarıyla ayarlandı"
+
+msgid "must not be empty"
+msgstr "boş olmamalı"
+
+msgid "you must choose a date"
+msgstr "bir tarih seçmelisiniz"
+
+msgid "If you do not receive the email, please contact your webmaster."
+msgstr "E-postayı almazsanız lütfen web yöneticinizle iletişime geçin."
+
+msgid "An email has been sent with a verification code"
+msgstr "Doğrulama kodu içeren bir e-posta gönderildi"
+
+msgid "Here is your verification code:"
+msgstr "İşte doğrulama kodunuz:"
+
+msgid "ID copied."
+msgstr "ID kopyalandı."
+
+msgid "If this wasn't you, please change your password immediately or contact your webmaster."
+msgstr "Eğer bu siz değilseniz, lütfen hemen şifrenizi değiştirin veya web yöneticinizle iletişime geçin."
+
+msgid "If you changed your password because you think it was stolen, we recommend revoking your %d API keys <a href=\"%s\">in your profile</a>."
+msgstr "Şifrenizi çalındığını düşündüğünüz için değiştirdiyseniz, profilinizdeki %d API anahtarınızı iptal etmenizi öneririz <a href=\"%s\"></a>"
+
+msgid "Invalid verification code"
+msgstr "Geçersiz doğrulama kodu"
+
+msgid "Save your ID and secret"
+msgstr "Kimliğinizi ve gizli bilginizi kaydedin"
+
+msgid "Secret copied. Keep it in a safe place."
+msgstr "Gizli bilgi kopyalandı. Güvenli bir yerde saklayın."
+
+msgid "The secret will no longer be displayed. You must copy it to continue."
+msgstr "Gizli bilgi artık görüntülenmeyecek. Devam etmek için kopyalamanız gerekiyor."
+
+msgid "Too many attempts, please try later.."
+msgstr "Çok fazla deneme oldu, lütfen daha sonra tekrar deneyin."
+
+msgid "Verification code"
+msgstr "Doğrulama kodu"
+
+msgid "Verification successful! You can now choose a new password."
+msgstr "Doğrulama başarılı! Artık yeni bir şifre seçebilirsiniz."
+
+msgid "Verify"
+msgstr "Doğrula"
+
+msgid "Your verification code"
+msgstr "Doğrulama kodunuz"
+
+msgid "edit user preferences"
+msgstr "kullanıcı tercihlerini düzenle"
+

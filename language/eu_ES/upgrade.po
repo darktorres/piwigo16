@@ -1,0 +1,65 @@
+# Piwigo translation — eu_ES
+# Source: upgrade.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: eu_ES\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "total upgrade time"
+msgstr "guztizko eguneraketa denbora"
+
+msgid "You do not have access rights to run upgrade"
+msgstr "Ez duzu sarbide-eskubiderik eguneraketa exekutatzeko"
+
+msgid "total SQL time"
+msgstr "guztizko SQL denbora"
+
+msgid "User permissions and group permissions have been erased"
+msgstr "Erabiltzaileak eta talde baimenak ezabatu egin dira"
+
+msgid "Upgrade informations"
+msgstr "Eguneratu informazioa"
+
+msgid "Upgrade from version %s to %s"
+msgstr "Eguneratu %s bertsiotik %s(e)ra"
+
+msgid "This page proposes to upgrade your database corresponding to your old version of Piwigo to the current version. The upgrade assistant thinks you are currently running a <strong>release %s</strong> (or equivalent)."
+msgstr "Datu-basea Piwigo bertsio berrira eguneratu dezazun proposatzen dizugu. Eguneratze-laguntzailearen arabera <strong>%s bertsioa</strong> (edo baliokidea) exekutatzen ari zara."
+
+msgid "Upgrade"
+msgstr "Eguneratu"
+
+msgid "Statistics"
+msgstr "Estatistikak"
+
+msgid "SQL queries"
+msgstr "SQL kontsultak"
+
+msgid "Perform a maintenance check in [Administration>Tools>Maintenance] if you encounter any problem."
+msgstr "Burutu mantentze-azterketa [Administrazioa>Tresnak>Mantentzea] arazorik aurkitzen baduzu."
+
+msgid "Only thumbnails prefix and webmaster mail address have been saved from previous configuration"
+msgstr "Koadro txikien aurrizkia eta web arduradunaren posta elektroniko helbidea baino ez dira gorde aurreko konfiguraziotik"
+
+msgid "Only administrator can run upgrade: please sign in below."
+msgstr "Administrariek baino ezin dute eguneraketak exekutatu: hasi saioa azpian."
+
+msgid "In <i>%s</i>, before <b>?></b>, insert:"
+msgstr "<i>%s</i>(e)an, <b>?></b>(e)ren aurretik, txertatu:"
+
+msgid "All sub-albums of private albums become private"
+msgstr "Album pribatuetako azpi-album guztiak pribatu bihurtzen dira"
+
+msgid "As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:"
+msgstr "Hurrengo pluginak ezgaitu egin dira badaezpada. Egiaztatu eguneratu daiteken pluginik dagoen berriro gaitu baino lehen:"
+
+msgid "As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:"
+msgstr "Hurrengo gaiak ezgaitu egin dira badaezpada. Egiaztatu eguneratu daiteken gairik dagoen berriro gaitu baino lehen:"
+
+msgid "Discover what's new in Piwigo %s"
+msgstr "Aurkitu zer berri dagoen Piwigoren %s bertsioan"
+

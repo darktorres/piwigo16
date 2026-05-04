@@ -1,0 +1,1450 @@
+# Piwigo translation — bg_BG
+# Source: common.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: bg_BG\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Language-Name: Български\n"
+"X-Piwigo-Country: България\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Code: bg\n"
+"X-Piwigo-Zero-Plural: true\n"
+
+msgid "%d album updated"
+msgid_plural "%d albums updated"
+msgstr[0] "%d албум е обновен"
+msgstr[1] "%d албума са обновени"
+
+msgid "%d comment to validate"
+msgstr "%d коментар за одобрение"
+
+msgid "%d comments to validate"
+msgstr "%d коментара за одобрение"
+
+msgid "%d new comment"
+msgstr "%d нов коментар"
+
+msgid "%d new comments"
+msgstr "%d нови коментара"
+
+msgid "%d comment"
+msgid_plural "%d comments"
+msgstr[0] "%d коментар"
+msgstr[1] "%d коментара"
+
+msgid "%d hit"
+msgstr "%d показване"
+
+msgid "%d hits"
+msgstr "%d показвания"
+
+msgid "%d new photo"
+msgid_plural "%d new photos"
+msgstr[0] "%d нова снимка"
+msgstr[1] "%d нови снимки"
+
+msgid "%d new user"
+msgstr "%d нов потребител"
+
+msgid "%d new users"
+msgstr "%d нови потребители"
+
+msgid "About"
+msgstr "За нас"
+
+msgid "All tags"
+msgstr "Всички етикети"
+
+msgid "Any tag"
+msgstr "Всеки етикет"
+
+msgid "Author"
+msgstr "Автор"
+
+msgid "Albums"
+msgstr "Албуми"
+
+msgid "Album"
+msgstr "Албум"
+
+msgid "Close this window"
+msgstr "Затворете този прозорец"
+
+msgid "Complete RSS feed (photos, comments)"
+msgstr "Пълна RSS емисия (снимки, коментари)"
+
+msgid "Confirm Password"
+msgstr "Потвърдете паролата"
+
+msgid "Connection settings"
+msgstr "Настройки за свързване"
+
+msgid "Login"
+msgstr "Вход"
+
+msgid "Contact webmaster"
+msgstr "Контакт уебмастър"
+
+msgid "Create a new account"
+msgstr "Регистрация на нов потребител"
+
+msgid "Created on"
+msgstr "Създаден на"
+
+msgid "Creation date"
+msgstr "Дата на създаване"
+
+msgid "Current password is wrong"
+msgstr "Въведената парола е грешна"
+
+msgid "Dimensions"
+msgstr "Размери"
+
+msgid "Display"
+msgstr "Изглед"
+
+msgid "Email address"
+msgstr "Имейл адрес"
+
+msgid "Enter your personnal informations"
+msgstr "Въведете вашата лична информация"
+
+msgid "Error sending email"
+msgstr "Грешка при изпращането на имейл"
+
+msgid "File name"
+msgstr "Име на файла"
+
+msgid "File"
+msgstr "Файл"
+
+msgid "Filesize"
+msgstr "Размер на файла"
+
+msgid "Filter and display"
+msgstr "Филтрирай и покажи"
+
+msgid "Filter"
+msgstr "Филтър"
+
+msgid "Forgot your password?"
+msgstr "Забравена парола"
+
+msgid "Go through the gallery as a visitor"
+msgstr "Преглед на галерията като посетител"
+
+msgid "Help"
+msgstr "Помощ"
+
+msgid "Identification"
+msgstr "Регистрация"
+
+msgid "Photos only RSS feed"
+msgstr "RSS емисия само за снимки"
+
+msgid "Keyword"
+msgstr "Ключова дума"
+
+msgid "slideshow"
+msgstr "слайдшоу"
+
+msgid "stop the slideshow"
+msgstr "спри слайдшоуто"
+
+msgid "Specials"
+msgstr "Специални"
+
+msgid "SQL queries in"
+msgstr "SQL запитвания в"
+
+msgid "display only recently posted photos"
+msgstr "показване само на последните добавени снимки"
+
+msgid "return to the display of all photos"
+msgstr "връщане към режим на показване на всички снимки"
+
+msgid "the beginning"
+msgstr "началото"
+
+msgid "Thumbnails"
+msgstr "Миниатюри"
+
+msgid "Menu"
+msgstr "Меню"
+
+msgid "A comment on your site"
+msgstr "Коментар на вашият сайт"
+
+msgid "today"
+msgstr "днес"
+
+msgid "Update your rating"
+msgstr "Обновете гласуването си"
+
+msgid "the username must be given"
+msgstr "потребителското име е задължително"
+
+msgid "useful when password forgotten"
+msgstr "полезно в случай на забравена парола"
+
+msgid "Quick search"
+msgstr "Бързо търсене"
+
+msgid "Connected user: %s"
+msgstr "Свързан потребител: %s"
+
+msgid "IP: %s"
+msgstr "IP: %s"
+
+msgid "Browser: %s"
+msgstr "Браузър: %s"
+
+msgid "Author: %s"
+msgstr "Автор: %s"
+
+msgid "Comment: %s"
+msgstr "Коментар: %s"
+
+msgid "Comment by %s"
+msgstr "Коментар от %s"
+
+msgid "User: %s"
+msgstr "Потребител: %s"
+
+msgid "Email: %s"
+msgstr "Имейл: %s"
+
+msgid "Admin: %s"
+msgstr "Админ: %s"
+
+msgid "Registration of %s"
+msgstr "Регистрация на %s"
+
+msgid "Album: %s"
+msgstr "Албум: %s"
+
+msgid "Bad status for user \"guest\", using default status. Please notify the webmaster."
+msgstr "Грешен статус за потребител \"guest\", ще бъде използвана настройка по подразбиране. Моля уведомете уебмастерът."
+
+msgid "this email address is already in use"
+msgstr "този имейл адрес вече се използва"
+
+msgid "Album results for"
+msgstr "Албумни резултати за"
+
+msgid "Tag results for"
+msgstr "Резултати за етикет"
+
+msgid "from %s to %s"
+msgstr "от %s до %s"
+
+msgid "Play of slideshow"
+msgstr "Пусни слайдшоу"
+
+msgid "Pause of slideshow"
+msgstr "Пауза на слайдшоуто"
+
+msgid "Repeat the slideshow"
+msgstr "Повтори слайдшоуто"
+
+msgid "Not repeat the slideshow"
+msgstr "Не повтаряй слайдшоуто"
+
+msgid "Reduce diaporama speed"
+msgstr "Намали скоростта на слайдшоуто"
+
+msgid "Accelerate diaporama speed"
+msgstr "Увеличи скоростта на слайдшоуто"
+
+msgid "Submit"
+msgstr "Изпрати"
+
+msgid "Yes"
+msgstr "Да"
+
+msgid "No"
+msgstr "Не"
+
+msgid "%d photo"
+msgid_plural "%d photos"
+msgstr[0] "%d снимка"
+msgstr[1] "%d снимки"
+
+msgid "%d photo is also linked to current tags"
+msgid_plural "%d photos are also linked to current tags"
+msgstr[0] "%d снимка също е свързана настоящите тагове"
+msgstr[1] "%d снимки също са свързани и с настоящите тагове"
+
+msgid "display photos linked to this tag"
+msgstr "показване на снимките свързани с този етикет"
+
+msgid "photos posted during the last %d days"
+msgstr "добавени снимки през последните %d дни"
+
+msgid "Piwigo Help"
+msgstr "Piwigo помощ"
+
+msgid "Rank"
+msgstr "Ранг"
+
+msgid "group by letters"
+msgstr "групирай по букви"
+
+msgid "letters"
+msgstr "букви"
+
+msgid "show tag cloud"
+msgstr "покажи облак от етикети"
+
+msgid "cloud"
+msgstr "облак"
+
+msgid "Reset to default values"
+msgstr "Върни до настройки по подразбиране"
+
+msgid "delete all photos from your favorites"
+msgstr "изтрий всички снимки от любими"
+
+msgid "Sent by"
+msgstr "Изпратено от"
+
+msgid "Cookies are blocked or not supported by your browser. You must enable cookies to connect."
+msgstr "Блокирали сте бисквитките или браузърът ви не ги поддържа. Разрешете бисквитките за да влезете в системата."
+
+msgid "Edit a comment"
+msgstr "Редактирай коментар"
+
+msgid "Are you sure?"
+msgstr "Сигурен ли сте?"
+
+msgid "%d Kb"
+msgstr "%d Кб"
+
+msgid "Links"
+msgstr "Връзки"
+
+msgid "N/A"
+msgstr "Не е налична"
+
+msgid "New on %s"
+msgstr "Нови на %s"
+
+msgid "Notification"
+msgstr "Известия"
+
+msgid "Number of items"
+msgstr "Брой позиции"
+
+msgid "Original dimensions"
+msgstr "Оригинални размери"
+
+msgid "Password forgotten"
+msgstr "Забравена парола"
+
+msgid "Password"
+msgstr "Парола"
+
+msgid "Post date"
+msgstr "Дата на добавяне"
+
+msgid "Posted on"
+msgstr "Добавено на"
+
+msgid "Profile"
+msgstr "Профил"
+
+msgid "Quick connect"
+msgstr "Вход/Регистрация"
+
+msgid "RSS feed"
+msgstr "RSS емисия"
+
+msgid "Register"
+msgstr "Регистрация"
+
+msgid "Registration"
+msgstr "Регистрация"
+
+msgid "Related tags"
+msgstr "Свързани етикети"
+
+msgid "Reset"
+msgstr "Изчистване"
+
+msgid "Retrieve password"
+msgstr "Възстанови парола"
+
+msgid "Search tags"
+msgstr "Търси етикети"
+
+msgid "Search"
+msgstr "Търси"
+
+msgid "display available tags"
+msgstr "показване налични етикети"
+
+msgid "Since"
+msgstr "От"
+
+msgid "Sort by"
+msgstr "Сортирай по"
+
+msgid "Sort order"
+msgstr "Подредба"
+
+msgid "Tag"
+msgstr "Етикет"
+
+msgid "Tags"
+msgstr "Етикети"
+
+msgid "The RSS notification feed provides notification on news from this website : new photos, updated albums, new comments. Use a RSS feed reader."
+msgstr "RSS емисията предлага известяване от този сайт когато има: нови снимки, обновени албуми, нови коментари. Използвайте четец за RSS емисии."
+
+msgid "Unknown feed identifier"
+msgstr "Неизвестен индетификатор"
+
+msgid "User comments"
+msgstr "Потребителски коментари"
+
+msgid "Username"
+msgstr "Потребителско име"
+
+msgid "Visits"
+msgstr "Посещения"
+
+msgid "Webmaster"
+msgstr "Уебмастър"
+
+msgid "Week %d"
+msgstr "Седмица %d"
+
+msgid "About Piwigo"
+msgstr "За Piwigo"
+
+msgid "You are not authorized to access the requested page"
+msgstr "Вие нямате права за достъп до желаната страница."
+
+msgid "add this photo to your favorites"
+msgstr "добави снимката в любими"
+
+msgid "Administration"
+msgstr "Администрация"
+
+msgid "all"
+msgstr "всички"
+
+msgid "ascending"
+msgstr "възходящ ред"
+
+msgid "Expand all albums"
+msgstr "Покажи всички албуми"
+
+msgid "posted after %s (%s)"
+msgstr "добавени след %s (%s)"
+
+msgid "posted before %s (%s)"
+msgstr "добавени преди %s (%s)"
+
+msgid "posted between %s (%s) and %s (%s)"
+msgstr "добавени между %s (%s) и %s (%s)"
+
+msgid "posted on %s"
+msgstr "добавени на %s"
+
+msgid "Best rated"
+msgstr "С най-добра оценка"
+
+msgid "display best rated photos"
+msgstr "показване снимките с най-добри оценки"
+
+msgid "Calendar"
+msgstr "Календар"
+
+msgid "All"
+msgstr "Всички"
+
+msgid "display each day with photos, month per month"
+msgstr "показване снимките по дни, месец по месец"
+
+msgid "View"
+msgstr "Изглед"
+
+msgid "chronology_monthly_calendar"
+msgstr "Месечен календар"
+
+msgid "chronology_monthly_list"
+msgstr "Месечен списък"
+
+msgid "chronology_weekly_list"
+msgstr "Седмичен списък"
+
+msgid "Click here if your browser does not automatically forward you"
+msgstr "Натиснете тук ако браузера не ви пренасочи автоматично"
+
+msgid "comment date"
+msgstr "дата на коментар"
+
+msgid "Comment"
+msgstr "Коментар"
+
+msgid "Your comment has been registered"
+msgstr "Коментарът ви е регистриран"
+
+msgid "Anti-flood system : please wait for a moment before trying to post another comment"
+msgstr "Анти-спам система: моля изчакайте малко преди да напишете друг коментар"
+
+msgid "Your comment has NOT been registered because it did not pass the validation rules"
+msgstr "Коментарът ви не е регистриран, защото не отговаря на правилата за писане на коментари"
+
+msgid "An administrator must authorize your comment before it is visible."
+msgstr "Администратор трябва да одобри коментарът ви преди да бъде видим."
+
+msgid "This login is already used by another user"
+msgstr "Това потребителско име вече се използва от друг потребител"
+
+msgid "Comments"
+msgstr "Коментари"
+
+msgid "Add a comment"
+msgstr "Добави коментар"
+
+msgid "created after %s (%s)"
+msgstr "добавени след %s (%s)"
+
+msgid "created before %s (%s)"
+msgstr "добавени преди %s (%s)"
+
+msgid "created between %s (%s) and %s (%s)"
+msgstr "добавени между %s (%s) и %s (%s)"
+
+msgid "created on %s"
+msgstr "добавени на %s"
+
+msgid "Your Gallery Customization"
+msgstr "Персонализиране на галерията"
+
+msgid "Default"
+msgstr "По подразбиране"
+
+msgid "delete this photo from your favorites"
+msgstr "изтрий тази снимка от любими"
+
+msgid "Delete"
+msgstr "Изтрий"
+
+msgid "descending"
+msgstr "низходящ ред"
+
+msgid "Download"
+msgstr "Изтегли"
+
+msgid "Download this file"
+msgstr "Свалете този файл"
+
+msgid "edit"
+msgstr "редактирай"
+
+msgid "wrong date"
+msgstr "грешна дата"
+
+msgid "excluded"
+msgstr "изключени"
+
+msgid "Your favorites"
+msgstr "Вашите любими"
+
+msgid "display your favorites photos"
+msgstr "показване на вашите любими снимки"
+
+msgid "Favorites"
+msgstr "Любими"
+
+msgid "First"
+msgstr "Първа"
+
+msgid "The gallery is locked for maintenance. Please, come back later."
+msgstr "Галерията е заключена за профилактика. Моля, елате по-късно."
+
+msgid "Page generated in"
+msgstr "Страницата генерирана за"
+
+msgid "guest"
+msgstr "гост"
+
+msgid "Hello"
+msgstr "Здравей"
+
+msgid "available for administrators only"
+msgstr "само за администратори"
+
+msgid "display this album"
+msgstr "показване на този албум"
+
+msgid "display last user comments"
+msgstr "показване на последните коментари"
+
+msgid "search"
+msgstr "търси"
+
+msgid "Home"
+msgstr "Начало"
+
+msgid "in this album"
+msgstr "в този албум"
+
+msgid "in %d sub-album"
+msgid_plural "in %d sub-albums"
+msgstr[0] "в %d под-албум"
+msgstr[1] "в %d под-албума"
+
+msgid "included"
+msgstr "включено"
+
+msgid "Invalid password!"
+msgstr "Грешна парола!"
+
+msgid "Language"
+msgstr "Език"
+
+msgid "last %d days"
+msgstr "последните %d дни"
+
+msgid "Last"
+msgstr "Последна"
+
+msgid "Logout"
+msgstr "Изход"
+
+msgid "obligatory"
+msgstr "задължително"
+
+msgid "display a calendar by creation date"
+msgstr "показване календар по дата на създаване"
+
+msgid "display all photos in all sub-albums"
+msgstr "показване всички снимки във всички под-албуми"
+
+msgid "return to normal view mode"
+msgstr "връщане към нормален режим на показване"
+
+msgid "display a calendar by posted date"
+msgstr "показване календар по дата на публикуване"
+
+msgid "display most visited photos"
+msgstr "показване на най-посещаваните снимки"
+
+msgid "Unknown identifier"
+msgstr "Неизвестен идентификатор"
+
+msgid "New password"
+msgstr "Нова парола"
+
+msgid "Rate this photo"
+msgstr "Оцени тази снимка"
+
+msgid "Next"
+msgstr "Следваща"
+
+msgid "no rate"
+msgstr "няма оценка"
+
+msgid "Photos posted within the last %d day."
+msgid_plural "Photos posted within the last %d days."
+msgstr[0] "Снимки, публикувани в рамките на последния %d ден."
+msgstr[1] "Снимки, публикувани в рамките на последните %d дни."
+
+msgid "password updated"
+msgstr "паролата е актуализирана"
+
+msgid "Recent period must be a positive integer value"
+msgstr "Последния период трябва да бъде положително цяло число"
+
+msgid "Click on the photo to see it in high definition"
+msgstr "Кликнете върху снимката за да я видите с висока резолюция"
+
+msgid "Show file metadata"
+msgstr "Покажи метаданните на файла"
+
+msgid "Preferences"
+msgstr "Предпочитания"
+
+msgid "Previous"
+msgstr "Предишна"
+
+msgid "Random photos"
+msgstr "Случайни снимки"
+
+msgid "display a set of random photos"
+msgstr "показване набор от случайни снимки"
+
+msgid "Recent albums"
+msgstr "Последни албуми"
+
+msgid "display recently updated albums"
+msgstr "показване на последните актуализирани албуми"
+
+msgid "Recent period"
+msgstr "Последния период"
+
+msgid "Recent photos"
+msgstr "Последни снимки"
+
+msgid "display most recent photos"
+msgstr "показване на най-новите снимки"
+
+msgid "Redirection..."
+msgstr "Пренасочване..."
+
+msgid "Please, enter a login"
+msgstr "Моля, въведете потребителско име"
+
+msgid "login mustn't end with a space character"
+msgstr "потребителското име не трябва да завършва с интервал"
+
+msgid "login mustn't start with a space character"
+msgstr "потребителското име неможе да започва с интервал"
+
+msgid "this login is already used"
+msgstr "това потребителско име е заето"
+
+msgid "mail address must be like xxx@yyy.eee (example : jack@altern.org)"
+msgstr "имейл адресът трябва да бъде подобно на xxx@yyy.eee (пример: jack@altern.org)"
+
+msgid "Auto login"
+msgstr "Автоматично влизане"
+
+msgid "remove this tag from the list"
+msgstr "премахване на този етикет от списъка"
+
+msgid "representative"
+msgstr "миниатюра за албума"
+
+msgid "Search for Author"
+msgstr "Търсене на автор"
+
+msgid "Search in albums"
+msgstr "Търсене в албуми"
+
+msgid "Search by date"
+msgstr "Търсене по дата"
+
+msgid "Date"
+msgstr "Дата"
+
+msgid "End-Date"
+msgstr "Крайна дата"
+
+msgid "Kind of date"
+msgstr "Вид дата"
+
+msgid "Search for words"
+msgstr "Търсене на думи"
+
+msgid "Search for all terms"
+msgstr "Търсене за всички думи"
+
+msgid "Search for any term"
+msgstr "Търсене за някоя от думите"
+
+msgid "Most visited"
+msgstr "Най-посещавани"
+
+msgid "photo"
+msgstr "снимка"
+
+msgid "Powered by"
+msgstr "Осъществено от"
+
+msgid "Empty query. No criteria has been entered."
+msgstr "Празна заявка. Не е въведен критерии."
+
+msgid "Search results"
+msgstr "Резултати от търсенето"
+
+msgid "Search in sub-albums"
+msgstr "Търсене в под-албуми"
+
+msgid "Contact"
+msgstr "Контакт"
+
+msgid "set as album representative"
+msgstr "задай като миниатюра за албума"
+
+msgid "Show number of comments"
+msgstr "Показване броя на коментарите"
+
+msgid "Show number of hits"
+msgstr "Покажи брой на показванията"
+
+msgid "(!) This comment requires validation"
+msgstr "(!) Този коментар изисква одобрение"
+
+msgid "Welcome"
+msgstr "Добре дошъл"
+
+msgid "Welcome to your Piwigo photo gallery!"
+msgstr "Добре дошли във вашата фото галерия!"
+
+msgid "... or browse your empty gallery"
+msgstr "... или разгледайте празната галерия"
+
+msgid "... or please deactivate this message, I will find my way by myself"
+msgstr "... или моля деактивирайте това съобщение, аз ще намеря друг начин"
+
+msgid "Hello %s, your Piwigo photo gallery is empty!"
+msgstr "Здравейте %s, вашата галерия е празна!"
+
+msgid "I want to add photos"
+msgstr "Искам да добавя снимки"
+
+msgid "Manage this user comment: %s"
+msgstr "Управление на потребителския коментар: %s"
+
+msgid "Email address is missing. Please specify an email address."
+msgstr "Липсва имейл адрес. Моля въведете имейл адрес."
+
+msgid "This author modified following comment:"
+msgstr "Този автор промени следния коментар:"
+
+msgid "This author removed the comment with id %d"
+msgstr "Този автор премахна коментара с id %d"
+
+msgid "html tags are not allowed in login"
+msgstr "html тагове не са разрешени в логина"
+
+msgid "The number of photos per page must be a not null scalar"
+msgstr "Броят на снимките на страница трябва да е различен от нула"
+
+msgid "Number of photos per page"
+msgstr "Брои снимки на страница"
+
+msgid "Change my password"
+msgstr "Смяна на паролата"
+
+msgid "Invalid key"
+msgstr "Невалиден ключ"
+
+msgid "Invalid username or email"
+msgstr "Невалидно потребителско име или имейл"
+
+msgid "Please enter your username or email address."
+msgstr "Моля въведете потребителско име или имейл."
+
+msgid "Return to home page"
+msgstr "Връщане към началната страница"
+
+msgid "The passwords do not match"
+msgstr "Въведените пароли не съвпадат"
+
+msgid "To reset your password, visit the following address:"
+msgstr "За да анулирате паролата си, посетете този адрес:"
+
+msgid "Username or email"
+msgstr "Потребителско име или имейл"
+
+msgid "You will receive a link to create a new password via email."
+msgstr "Ще получите линк на електронната си поща, с който ще съзадате нова парола"
+
+msgid "Your password has been reset"
+msgstr "Вашата парола е анулирана"
+
+msgid "Check your email for the confirmation link"
+msgstr "Проверете пощата си за връзка за потвърждение"
+
+msgid "Edit"
+msgstr "Редактирай"
+
+msgid "Enter your new password below."
+msgstr "Въведете новата парола отдолу."
+
+msgid "EXIF Metadata"
+msgstr "EXIF метаданни"
+
+msgid "Hello %s,"
+msgstr "Здравей %s,"
+
+msgid "Here are your connection settings"
+msgstr "Вашите настройки за свързване"
+
+msgid "If this was a mistake, just ignore this email and nothing will happen."
+msgstr "Ако смятате, че това съобщение е грешка, просто го ингнорирайте без никакви последствия."
+
+msgid "If you think you've received this email in error, please contact us at %s"
+msgstr "Ако смятате, че сте получили това съобщение вследстиве на злонамереност, моля свържете се с нас на %s"
+
+msgid "IPTC Metadata"
+msgstr "IPTC метаданни"
+
+msgid "large"
+msgstr "L - голям"
+
+msgid "medium"
+msgstr "M - среден"
+
+msgid "Original"
+msgstr "Оригинал"
+
+msgid "Password Reset"
+msgstr "Нулиране на парола"
+
+msgid "Password reset is not allowed for this user"
+msgstr "Нулирае на парола не е разрешено за този потребител"
+
+msgid "Password: %s"
+msgstr "Парола: %s"
+
+msgid "Rating score"
+msgstr "Рейтинг"
+
+msgid "Send my connection settings by email"
+msgstr "Изпращане на настройките за свързване с имейл!"
+
+msgid "small"
+msgstr "S - малък"
+
+msgid "Someone requested that the password be reset for the following user account:"
+msgstr "Някой е зявил нулиране на парола за следното потребителско име:"
+
+msgid "square"
+msgstr "Правоъгълен"
+
+msgid "Successfully registered, you will soon receive an email with your connection settings. Welcome!"
+msgstr "Успешна регистрация, скоро ще получите съобщение на електронната си поща с настройките за свързване. Добре дошли!"
+
+msgid "Thank you for registering at %s!"
+msgstr "Благодарим ви за регистрацията в %s!"
+
+msgid "thumb"
+msgstr "Миниатюра"
+
+msgid "User \"%s\" has no email address, password reset is not possible"
+msgstr "За потребителят  \"%s\" липсва имейл адрес, нулирането на паролата е невъзможно"
+
+msgid "Username \"%s\" on gallery %s"
+msgstr "Потребител \"%s\" в галерия %s"
+
+msgid "Username modification"
+msgstr "Промяна на потребител"
+
+msgid "Username: %s"
+msgstr "Потребител: %s"
+
+msgid "xlarge"
+msgstr "XL - много голям"
+
+msgid "xxlarge"
+msgstr "XXL - най-голям"
+
+msgid "Your username has been successfully changed to : %s"
+msgstr "Потребителското ви име е успешно промененно на: %s"
+
+msgid "%d rates"
+msgstr "%d оценки"
+
+msgid "Show latest comments first"
+msgstr "Покажи първо най-новите коментари"
+
+msgid "Show oldest comments first"
+msgstr "Покажи първо най-старите коментари"
+
+msgid "Desktop"
+msgstr "Настолна"
+
+msgid "Mobile"
+msgstr "Мобилна"
+
+msgid "Photo sizes"
+msgstr "Размери на снимката"
+
+msgid "View in"
+msgstr "Вижте в"
+
+msgid "2small"
+msgstr "XXS - мъничък"
+
+msgid "File name, A &rarr; Z"
+msgstr "Име на файл, A &rarr; Z"
+
+msgid "File name, Z &rarr; A"
+msgstr "Име на файл, Z &rarr; A"
+
+msgid "Manual sort order"
+msgstr "Ръчно определяне на подредбата"
+
+msgid "xsmall"
+msgstr "XS - много малък"
+
+msgid "%d rate"
+msgstr "%d оценка"
+
+msgid "Date created, new &rarr; old"
+msgstr "Дата на създаване, нови &rarr; стари"
+
+msgid "Date created, old &rarr; new"
+msgstr "Дата на създаване, стари &rarr; нови"
+
+msgid "Date posted, new &rarr; old"
+msgstr "Дата на публикуване, нови &rarr; стари"
+
+msgid "Date posted, old &rarr; new"
+msgstr "Дата на публикуване, стари &rarr; нови"
+
+msgid "Numeric identifier, 1 &rarr; 9"
+msgstr "По ID номер, 1 &rarr; 9"
+
+msgid "Numeric identifier, 9 &rarr; 1"
+msgstr "По ID номер, 9 &rarr; 1"
+
+msgid "Photo title, A &rarr; Z"
+msgstr "Име на снимка,A &rarr; Z"
+
+msgid "Photo title, Z &rarr; A"
+msgstr "Име на снимка, Z &rarr; A"
+
+msgid "Rating score, high &rarr; low"
+msgstr "Рейтинг, висок &rarr; нисък"
+
+msgid "Rating score, low &rarr; high"
+msgstr "Рейтинг, нисък &rarr; висок"
+
+msgid "Visits, high &rarr; low"
+msgstr "Посещения, висок &rarr; нисък"
+
+msgid "Visits, low &rarr; high"
+msgstr "Посещения, нисък &rarr; висок"
+
+msgid "Bad request"
+msgstr "Невалидна заявка"
+
+msgid "Forbidden"
+msgstr "Забранено"
+
+msgid "Page not found"
+msgstr "Страницата не е намерена"
+
+msgid "Permalink for album not found"
+msgstr "Пермалинк за албум не е открит"
+
+msgid "Piwigo encountered a non recoverable error"
+msgstr "Неочаквана невъзстановима грешка"
+
+msgid "Requested album does not exist"
+msgstr "Търсеният албум не съществува"
+
+msgid "Requested tag does not exist"
+msgstr "Търсеният етикет не съществува"
+
+msgid "mandatory"
+msgstr "задължително"
+
+msgid "Username is mandatory"
+msgstr "Потребителското име е задължително"
+
+msgid "Email address is mandatory"
+msgstr "Имейл адресът е задължителен"
+
+msgid "Your website URL is invalid"
+msgstr "Вашият уебсайт адрес е невалиден"
+
+msgid "Website"
+msgstr "Уебсайт"
+
+msgid "Email"
+msgstr "Имейл"
+
+msgid "First Page"
+msgstr "Първа страница"
+
+msgid "Go back to the album"
+msgstr "Връщане в албума"
+
+msgid "Last Page"
+msgstr "Последна страница"
+
+msgid "Password is missing. Please enter the password."
+msgstr "Липсва парола. Моля въведете."
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "Потвърждение на паролата липсва. Моля повторете паролата."
+
+msgid "%d photos per page"
+msgstr "%d снимки на страница"
+
+msgid "Theme"
+msgstr "Тема"
+
+msgid "No results for"
+msgstr "Няма резултати за"
+
+msgid "Apply on properties"
+msgstr "Търси в:"
+
+msgid "Photo title"
+msgstr "Заглавие на снимката"
+
+msgid "Photo description"
+msgstr "Описание на снимката"
+
+msgid "Link: %s"
+msgstr "Връзка: %s"
+
+msgid "Album name, Z &rarr; A"
+msgstr "Име на албум, Z &rarr; A"
+
+msgid "Album name, A &rarr; Z"
+msgstr "Име на албум, A &rarr; Z"
+
+msgid "Your authentication key is no longer valid."
+msgstr "Вашият ключ да верификация вече не е активен."
+
+msgid "generate random password"
+msgstr "генериране на произволна парола"
+
+msgid "Invalid username or password!"
+msgstr "Невалидно име или парола!"
+
+msgid "You can manage your API keys in your <a href=\"%s\">account settings.</a>"
+msgstr "Можете да управлявате вашите API ключове в настройките на вашия <a href=\"%s\"> акаунта."
+
+msgid "%d visits"
+msgstr "%d посещения"
+
+msgid "This will not be displayed again. You must copy it to continue."
+msgstr "Това няма да се показва отново. Трябва да го копирате, за да продължите."
+
+msgid "To continue using the API, please renew your key before it expires."
+msgstr "За да продължите да използвате API, подновете ключа си преди изтичането му."
+
+msgid "To manage your API keys, please log in with your username/password."
+msgstr "За да управлявате вашите API ключове, влезте с вашето потребителско име/парола."
+
+msgid "Unknown time period"
+msgstr "Неизвестен период от време"
+
+msgid "Validate"
+msgstr "Валидирай"
+
+msgid "When enabled, a common template is used for the login and registration pages, regardless of the theme."
+msgstr "Когато е активирано, общ шаблон се използва за страниците за вход и регистрация, независимо от темата."
+
+msgid "You can try to edit your filters and perform a new search."
+msgstr "Можете да опитате да редактирате филтрите си и да извършите ново търсене."
+
+msgid "You have no email address, so you will not be notified when your API key is about to expire."
+msgstr "Нямате имейл адрес, така че няма да бъдете уведомени, когато вашият API ключ изтича."
+
+msgid "Your API key will expire in %d day."
+msgstr "Вашият API ключ ще изтече след %d ден."
+
+msgid "Your API key will expire in %d days."
+msgstr "Вашият API ключ ще изтече след %d дни."
+
+msgid "Your API key will expire soon"
+msgstr "Вашият API ключ ще изтече скоро"
+
+msgid "Your changes have been applied."
+msgstr "Промените ви са приложени."
+
+msgid "Your password was successfully reset"
+msgstr "Паролата ви беше успешно нулирана"
+
+msgid "Your password was successfully set"
+msgstr "Паролата ви беше успешно зададена"
+
+msgid "last 12 months"
+msgstr "Последните 12 месеца"
+
+msgid "last 24 hours"
+msgstr "последните 24 часа"
+
+msgid "last 3 months"
+msgstr "Последните 3 месеца"
+
+msgid "last 30 days"
+msgstr "Последните 30 дни"
+
+msgid "last 6 months"
+msgstr "Последните 30 дни"
+
+msgid "last 7 days"
+msgstr "Последните 7 дни"
+
+msgid "last year"
+msgstr "Миналата година"
+
+msgid "must not be empty"
+msgstr "не трябва да е празно"
+
+msgid "rating score %s"
+msgstr "оценка %s"
+
+msgid "year %d"
+msgstr "година %d"
+
+msgid "you must choose a date"
+msgstr "трябва да изберете дата"
+
+msgid "Only the first %d albums are displayed, out of %d."
+msgstr "Показват се само първите %d албума от общо %d."
+
+msgid "Options"
+msgstr "Опции"
+
+msgid "Pages"
+msgstr "Страници"
+
+msgid "Password: ********** (no copy by email)"
+msgstr "Парола: ********** (не се копира по имейл)"
+
+msgid "Pre-established filters are proposed, but you can add or remove them using the \"Choose filters\" button."
+msgstr "Предварително зададени филтри са предложени, но можете да ги добавяте или премахвате чрез бутона \"Избери филтри\"."
+
+msgid "Public key copied."
+msgstr "Публичният ключ е копиран."
+
+msgid "Related albums"
+msgstr "Свързани албуми"
+
+msgid "Return to <a href=\"identification.php\" title=\"Sign in\">Sign in</a>"
+msgstr "Върни се на Вход"
+
+msgid "Return to the gallery"
+msgstr "Върни се в галерията"
+
+msgid "Revoke"
+msgstr "Отмени"
+
+msgid "Revoked"
+msgstr "Отменено"
+
+msgid "Save your secret Key and ID"
+msgstr "Запазете своя таен ключ и ID"
+
+msgid "Search in :"
+msgstr "Търсене в:"
+
+msgid "Search in this set"
+msgstr "Търсене в този сет"
+
+msgid "Secret key copied. Keep it in a safe place."
+msgstr "Таен ключ е копиран. Запазете го на сигурно място."
+
+msgid "Set my password"
+msgstr "Задай моята парола"
+
+msgid "Set your password below."
+msgstr "Задайте вашата парола по-долу."
+
+msgid "Show expired keys"
+msgstr "Покажи изтекли ключове"
+
+msgid "Start-Date"
+msgstr "Начална дата"
+
+msgid "Tags found"
+msgstr "Намерени тагове"
+
+msgid "Tags listed here match your search by word. Click on one to browse by tag."
+msgstr "Таговете тук съответстват на вашето търсене по дума. Кликнете на някой, за да разгледате по таг."
+
+msgid "The PDF you requested is too large to display on this page."
+msgstr "PDF файлът, който заявихте, е твърде голям за показване на тази страница."
+
+msgid "The api key has been successfully created."
+msgstr "API ключът е успешно създаден."
+
+msgid "The email %s will be used to notify you when your API key is about to expire."
+msgstr "Имейлът %s ще бъде използван за уведомяване, когато вашият API ключ изтича."
+
+msgid "The secret key can no longer be displayed."
+msgstr "Тайният ключ вече не може да се показва."
+
+msgid "There are no authors available for the photos currently filtered"
+msgstr "Няма налични автори за филтрираните снимки"
+
+msgid "There are no creation dates available for the photos currently filtered"
+msgstr "Няма налични дати на създаване за филтрираните снимки"
+
+msgid "There are no tags available for the photos currently filtered"
+msgstr "Няма налични тагове за филтрираните снимки"
+
+msgid "This API key was manually revoked on %s"
+msgstr "Този API ключ беше ръчно отменен на %s"
+
+msgid "Create a new API key to secure your account."
+msgstr "Създайте нов API ключ за защита на акаунта си."
+
+msgid "Create an account"
+msgstr "Създайте нов акаунт"
+
+msgid "Created at"
+msgstr "Създаден в"
+
+msgid "Custom date"
+msgstr "Персонализирана дата"
+
+msgid "Custom dates"
+msgstr "Персонализирани дати"
+
+msgid "Do you really want to revoke the \"%s\" API key?"
+msgstr "Наистина ли искате да оттеглите API ключ \"%s\"?"
+
+msgid "Don't have an account yet ?"
+msgstr "Все още нямате акаунт?"
+
+msgid "Done"
+msgstr "Готово"
+
+msgid "Duration"
+msgstr "Продължителност"
+
+msgid "Edit API Key"
+msgstr "Редактирай API ключ"
+
+msgid "Empty filters"
+msgstr "Изчисти филтрите"
+
+msgid "Expert mode"
+msgstr "Експертен режим"
+
+msgid "Expired"
+msgstr "Изтекъл"
+
+msgid "Expired on"
+msgstr "Изтекъл на"
+
+msgid "Expires in"
+msgstr "Изтича след"
+
+msgid "File type"
+msgstr "Тип файл"
+
+msgid "Fill in the filters to start a search"
+msgstr "Попълнете филтрите, за да започнете търсене"
+
+msgid "Filters"
+msgstr "Филтри"
+
+msgid "Generate API Key"
+msgstr "Генерирай API ключ"
+
+msgid "Generate key"
+msgstr "Генерирай ключ"
+
+msgid "Hello <em>%s</em>, enter your new password below."
+msgstr "Здравей %s, въведете новата си парола по-долу."
+
+msgid "Hide expired keys"
+msgstr "Скрий изтеклите ключове"
+
+msgid "Impossible to copy automatically. Please copy manually."
+msgstr "Невъзможно за автоматично копиране. Моля копирайте ръчно."
+
+msgid "Last use"
+msgstr "Последно ползвано"
+
+msgid "Manage your account"
+msgstr "Управление на акаунта"
+
+msgid "Never"
+msgstr "Никога"
+
+msgid "New API Key"
+msgstr "Нов API ключ"
+
+msgid "No expiration"
+msgstr "Без изтичане"
+
+msgid "No results are available."
+msgstr "Няма налични резултати."
+
+msgid "Choose filters"
+msgstr "Изберете филтри"
+
+msgid "Choose how you want to see your gallery"
+msgstr "Изберете как искате да видите галерията"
+
+msgid "Clear"
+msgstr "Изчисти"
+
+msgid "Click here to display it"
+msgstr "Кликнете тук за показване"
+
+msgid "Confirm my new password"
+msgstr "Потвърдете новата си парола"
+
+msgid "Confirm new password"
+msgstr "Потвърдете новата парола"
+
+msgid "Create API Keys to secure your acount"
+msgstr "Създайте API ключове за защита на акаунта"
+
+msgid "3xlarge"
+msgstr "3XL – изключително голям"
+
+msgid "4xlarge"
+msgstr "4XL – гигантски"
+
+msgid "API Key has been successfully edited."
+msgstr "API ключът е успешно редактиран."
+
+msgid "API Key has been successfully revoked."
+msgstr "API ключът е успешно оттеглен."
+
+msgid "API Key name"
+msgstr "Име на API ключ"
+
+msgid "API Key not found"
+msgstr "API ключът не е намерен"
+
+msgid "API Keys"
+msgstr "API ключове"
+
+msgid "Account"
+msgstr "Акаунт"
+
+msgid "Added by"
+msgstr "Добавено от"
+
+msgid "Album already selected"
+msgstr "Албумът вече е избран"
+
+msgid "Album description"
+msgstr "Описание на албума"
+
+msgid "Album name, 1 &rarr; 5 &rarr; 10 &rarr; 100"
+msgstr "Име на албума, 1 &rarr; 5 &rarr; 10 &rarr; 100"
+
+msgid "Album name, 100 &rarr; 10 &rarr; 5 &rarr; 1"
+msgstr "Име на албума, 100 &rarr; 10 &rarr; 5 &rarr; "
+
+msgid "Album title"
+msgstr "Заглавие на албум"
+
+msgid "Albums found"
+msgstr "Намерени албуми"
+
+msgid "Albums listed here match your search by word. Click on one to browse by album."
+msgstr "Албумите, показани тук, съответстват на търсенето ви по дума. Кликнете върху някой, за да разгледате албума."
+
+msgid "Already have an account ?"
+msgstr "Вече имате акаунт?"
+
+msgid "An email has been sent with a link to reset your password"
+msgstr "Изпратен е емейл с линк за нулиране на паролата"
+
+msgid "An error has occured please got back to <a href=\"identification.php\" title=\"Sign in\">Sign in</a> or <a href=\"register.php\">Register</a>"
+msgstr "Възникна грешка, моля върнете се на Вход или Регистрация"
+
+msgid "Cancel"
+msgstr "Отказ"
+
+msgid "Change your password"
+msgstr "Сменете паролата си"
+
+msgid "Check your inbox"
+msgstr "Проверете си имейла "
+

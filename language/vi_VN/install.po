@@ -1,0 +1,146 @@
+# Piwigo translation — vi_VN
+# Source: install.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: vi_VN\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Installation"
+msgstr "Cài đặt"
+
+msgid "Basic configuration"
+msgstr "Cấu hình cơ bản"
+
+msgid "Default gallery language"
+msgstr "Ngôn ngữ hiển thị gallery mặc định"
+
+msgid "Database configuration"
+msgstr "Cấu hình cơ sở dữ liệu"
+
+msgid "Admin configuration"
+msgstr "Cấu hình Quản trị"
+
+msgid "Start Install"
+msgstr "Bắt đầu Cài đặt"
+
+msgid "It will be shown to the visitors. It is necessary for website administration"
+msgstr "Khách thăm quan gallery sẽ thấy được thông tin của Webmaster. Điều này cần thiết cho Quản trị Webmaster"
+
+msgid "Connection to server succeed, but it was impossible to connect to database"
+msgstr "Kết nối thành công vào máy chủ, nhưng không thể kết nối vào cơ sở dữ liệu."
+
+msgid "Can't connect to server"
+msgstr "Không thể kết nối vào máy chủ"
+
+msgid "Host"
+msgstr "Máy chủ MySQL"
+
+msgid "User"
+msgstr "Người dùng"
+
+msgid "user login given by your host provider"
+msgstr "thông tin đăng nhập của người dùng do nhà cung cấp máy chủ của của bạn đưa ra."
+
+msgid "user password given by your host provider"
+msgstr "mật khẩu người dùng do nhà cung cấp máy chủ của bạn đưa ra"
+
+msgid "Database name"
+msgstr "Tên cơ sở dữ liệu"
+
+msgid "also given by your host provider"
+msgstr "cũng được cấp bởi nhà cung cấp máy chủ"
+
+msgid "Database table prefix"
+msgstr "Tiếp đầu ngữ của các bảng trong cơ sở dữ liệu"
+
+msgid "database tables names will be prefixed with it (enables you to manage better your tables)"
+msgstr "tên các bảng trong cơ sở dữ liệu sẽ được thêm vào đầu bằng tiếp đầu ngữ (giúp bạn quản lý các bảng trong cơ sở dữ liệu được tốt hơn)"
+
+msgid "enter a login for webmaster"
+msgstr "nhập tên đăng nhập của Webmaster"
+
+msgid "webmaster login can't contain characters ' or \""
+msgstr "đăng nhập của Webmaster không thể chứa các ký tự hoặc"
+
+msgid "please enter your password again"
+msgstr "vui lòng nhập lại mật khẩu của bạn"
+
+msgid "Keep it confidential, it enables you to access administration panel"
+msgstr "Bảo quản kỹ thông tin này, nó cho phép bạn truy cập vào Bảng điều khiển của Quản trị."
+
+msgid "Password [confirm]"
+msgstr "Mật khẩu [xác nhận]"
+
+msgid "verification"
+msgstr "xác nhận"
+
+msgid "Need help ? Ask your question on <a href=\"%s\">Piwigo message board</a>."
+msgstr "Cần trợ giúp ? Hãy gởi thắc mắc của bạn tại <a href=\"%s\">diễn đàn của Piwigo</a>."
+
+msgid "Visitors will be able to contact site administrator with this mail"
+msgstr "Khách tham quan có thể liên lạc với Quản trị thông qua địa chỉ thư điện tử này."
+
+msgid "PHP 5 is required"
+msgstr "Phải có PHP 5.2 "
+
+msgid "It appears your webhost is currently running PHP %s."
+msgstr "Do máy chủ web của bạn đang chạy phiên bản PHP  %s."
+
+msgid "Piwigo may try to switch your configuration to PHP 5 by creating or modifying a .htaccess file."
+msgstr "Piwigo sẽ thử chuyển cấu hình của bạn sang PHP 5.2 bằng cách tạo ra hoặc biên tập một file .htaccess."
+
+msgid "Note you can change your configuration by yourself and restart Piwigo after that."
+msgstr "Chú ý rằng bạn có thể tự thay đổi cấu hình và khởi động lại Piwigo sau đó."
+
+msgid "Try to configure PHP 5"
+msgstr " Thử cấu hình PHP 5.2"
+
+msgid "Sorry!"
+msgstr "Rất tiếc!"
+
+msgid "Piwigo was not able to configure PHP 5."
+msgstr "Piwigo không thể cấu hình cho PHP 5.2"
+
+msgid "You may referer to your hosting provider's support and see how you could switch to PHP 5 by yourself."
+msgstr "Bạn nên yêu cầu hỗ trợ từ nhà cung cấp máy chủ và tìm hiểu xem nếu có thể tự chuyển được sang phiên bản PHP 5.2"
+
+msgid "Hope to see you back soon."
+msgstr "Hi vọng nhận được phản hồi của bạn sớm."
+
+msgid "Congratulations, Piwigo installation is completed"
+msgstr "Xin chúc mừng, việc cài đặt Piwigo đã hoàn tất"
+
+msgid "An alternate solution is to copy the text in the box above and paste it into the file \"local/config/database.inc.php\" (Warning : database.inc.php must only contain what is in the textarea, no line return or space character)"
+msgstr "Một giải pháp khác là chép những dòng text trên và dán chúng vào tệp tin nằm vị trí \"local/config/database.inc.php\" (Cảnh báo: tệp tin database.inc.php chỉ có những nội dung trong phạm vi nhập text, không được thêm hàng hoặc ký tự nào khác)"
+
+msgid "Creation of config file local/config/database.inc.php failed."
+msgstr "Việc tạo ra tệp tin cấu hình local/config/database.inc.php đã bị lỗi."
+
+msgid "Download the config file"
+msgstr "Tải tệp tin cấu hình xuống"
+
+msgid "You can download the config file and upload it to local/config directory of your installation."
+msgstr "Bạn có thể tải tệp tin cấu hình và upload nó vào thư mục local/config của thư mục cài đặt Piwigo."
+
+msgid "Just another Piwigo gallery"
+msgstr "Lại thêm một thư viện Piwigo nữa"
+
+msgid "Welcome to my photo gallery"
+msgstr "Chào mừng bạn đến với thư viện hình của tôi"
+
+msgid "Welcome to your new installation of Piwigo!"
+msgstr "Chào mừng bạn đến với bản cài đặt mới của Piwigo!"
+
+msgid "Don't hesitate to consult our forums for any help : %s"
+msgstr "Đừng do dự  thảo luận tại diễn đàn của chúng tôi để được trợ giúp: %s"
+
+msgid "localhost or other, supplied by your host provider"
+msgstr "localhost hoặc tên máy chủ cấp bởi nhà cung cấp host"
+
+msgid "PHP version %s required (you are running on PHP %s)"
+msgstr "Cần phiên bản PHP %s (phiên bản bạn đang dùng: %s)"
+

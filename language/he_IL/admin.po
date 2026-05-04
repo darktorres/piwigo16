@@ -1,0 +1,4245 @@
+# Piwigo translation — he_IL
+# Source: admin.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: he_IL\n"
+"Plural-Forms: nplurals=4; plural=(n==1 ? 0 : n==2 ? 1 : (n<0 || n>10) && n%10==0 ? 2 : 3);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "%d association"
+msgstr "%d שיוך"
+
+msgid "%d associations"
+msgstr "%d שיוכים"
+
+msgid "%d album including"
+msgstr "%d אלבום כולל"
+
+msgid "%d albums including"
+msgstr "%d אלבומים כולל"
+
+msgid "%d physical"
+msgstr "פיזי %d"
+
+msgid " and %d virtual"
+msgstr "ו %d וירטואלי"
+
+msgid "%d album moved"
+msgid_plural "%d albums moved"
+msgstr[0] "%d אלבום שינה מקום"
+msgstr[1] "%d אלבומים שינו מקום"
+
+msgid "%d group"
+msgstr "%d קבוצה"
+
+msgid "%d groups"
+msgstr "%d קבוצות"
+
+msgid "%d member"
+msgid_plural "%d members"
+msgstr[0] "%d חבר"
+msgstr[1] "%d חברים"
+
+msgid "%d tag"
+msgstr "%d תגית"
+
+msgid "%d tags"
+msgstr "%d תגיות"
+
+msgid "%d user comment rejected"
+msgstr "%d תגובת המשתמש נדחתה"
+
+msgid "%d user comments rejected"
+msgstr "%d תגובות המשתמש נדחו"
+
+msgid "%d user comment validated"
+msgstr "%d תגובת המשתמש אושרה"
+
+msgid "%d user comments validated"
+msgstr "%d תגובות המשתמש אושרו"
+
+msgid "%d user deleted"
+msgid_plural "%d users deleted"
+msgstr[0] "%d משתמש נמחק"
+msgstr[1] "%d משתמשים נמחקו"
+
+msgid "%d user"
+msgid_plural "%d users"
+msgstr[0] "%d משתמש"
+msgstr[1] "%d משתמשים"
+
+msgid "%d waiting for validation"
+msgstr "%d מחכה לאימות"
+
+msgid "Actions"
+msgstr "פעולות"
+
+msgid "Activate"
+msgstr "הפעל"
+
+msgid "Add/delete a permalink"
+msgstr "הוספה/מחיקה של קישור קבוע"
+
+msgid "Add a tag"
+msgstr "הוסף תגית"
+
+msgid "Add a user"
+msgstr "הוסף משתמש"
+
+msgid "Add group"
+msgstr "הוסף קבוצה"
+
+msgid "Add"
+msgstr "הוסף"
+
+msgid "Allow user registration"
+msgstr "אפשר רישום משתמשים"
+
+msgid "Apply to sub-albums"
+msgstr "החל על אלבומי משנה"
+
+msgid "Associated"
+msgstr "משוייך"
+
+msgid "Caddie management"
+msgstr "ניהול סל"
+
+msgid "Caddie"
+msgstr "סל"
+
+msgid "Albums authorized thanks to group associations"
+msgstr "האלבום אושר הודות לשיוכי הקבוצה"
+
+msgid "Album manual order was saved"
+msgstr "סדר אלבומים ידני נשמר"
+
+msgid "Check for upgrade failed for unknown reasons."
+msgstr "חיפוש אחר שידרוג נכשל מסיבות לא ברורות."
+
+msgid "Check for upgrade"
+msgstr "חפש שדרוגים"
+
+msgid "Comments for all"
+msgstr "תגובות עבור כל"
+
+msgid "Current name"
+msgstr "השם הנוכחי"
+
+msgid "Database"
+msgstr "מסד נתונים"
+
+msgid "Deactivate"
+msgstr "כבה"
+
+msgid "Delete Representant"
+msgstr "מחק צלמית אלבום"
+
+msgid "Delete selected tags"
+msgstr "מחק את התגיות שנבחרו"
+
+msgid "Delete selected users"
+msgstr "מחק את המשתמשים שנבחרו"
+
+msgid "Deletions"
+msgstr "מחיקות"
+
+msgid "Deny selected groups"
+msgstr "מנע קבוצות שנבחרו"
+
+msgid "Deny selected users"
+msgstr "מנע משתמשים שנבחרו"
+
+msgid "Description"
+msgstr "תיאור"
+
+msgid "Display options"
+msgstr "הצג אפשרויות"
+
+msgid "Dissociated"
+msgstr "מנותק"
+
+msgid "Does not represent"
+msgstr "לא צלמית עבור"
+
+msgid "Edit selected tags"
+msgstr "ערוך תגיות נבחרות"
+
+msgid "Edit tags"
+msgstr "ערוך תגיות"
+
+msgid "Email admins when a new user registers"
+msgstr "שלח מייל לאדמינים כאשר נרשם משתמש חדש"
+
+msgid "Email admins when a valid comment is entered"
+msgstr "שלח מייל לאדמינים כאשר מתווספת תגובה"
+
+msgid "Email admins when a comment requires validation"
+msgstr "שלח מייל לאדמינים כאשר נדרש אימות לתגובה"
+
+msgid "Environment"
+msgstr "סביבה"
+
+msgid "Form"
+msgstr "טופס"
+
+msgid "Gallery title"
+msgstr "כותרת הגלריה"
+
+msgid "Grant selected groups"
+msgstr "אשר לקבוצות שנבחרו"
+
+msgid "Grant selected users"
+msgstr "אשר למשתמשים שנבחרו"
+
+msgid "Group name"
+msgstr "שם הקבוצה"
+
+msgid "Groups"
+msgstr "קבוצות"
+
+msgid "Guests"
+msgstr "אורחים"
+
+msgid "History"
+msgstr "היסטוריה"
+
+msgid "Informations"
+msgstr "מידע"
+
+msgid "Install"
+msgstr "התקן"
+
+msgid "Link all album photos to a new album"
+msgstr "קישור כל התמונות באלבום לאלבום חדש"
+
+msgid "Link all album photos to some existing albums"
+msgstr "קישור כל התמונות באלבום לאלבומים קיימים"
+
+msgid "Linked albums"
+msgstr "אלבומים מקושרים"
+
+msgid "Lock gallery"
+msgstr "נעל גלריה"
+
+msgid "Maintenance"
+msgstr "תחזוקה"
+
+msgid "Edit album permissions"
+msgstr "ניהול הרשאות עבור אלבום"
+
+msgid "Manage permissions for group \"%s\""
+msgstr "ניהול הרשאות עבור קבוצה \"%s\""
+
+msgid "Manage permissions for user \"%s\""
+msgstr "ניהול הרשאות עבור המשתמש \"%s\""
+
+msgid "Manage tags"
+msgstr "נהל תגיות"
+
+msgid "Members"
+msgstr "חברים"
+
+msgid "Metadata synchronized from file"
+msgstr "Metadata סונכרן מקובץ"
+
+msgid "Move albums"
+msgstr "הזז אלבומים"
+
+msgid "Move"
+msgstr "הזז"
+
+msgid "Name"
+msgstr "שם"
+
+msgid "New name"
+msgstr "שם חדש"
+
+msgid "New parent album"
+msgstr "אלבום הורה חדש"
+
+msgid "New tag"
+msgstr "תגית חדשה"
+
+msgid "Number of comments per page"
+msgstr "מספר תגובות בעמוד"
+
+msgid "Number of rates"
+msgstr "מספר דירוגים"
+
+msgid "Only private albums are listed"
+msgstr "רק אלבומים פרטיים מופיעים ברשימה"
+
+msgid "Operating system"
+msgstr "מערכת הפעלה"
+
+msgid "Options"
+msgstr "אפשרויות"
+
+msgid "Other private albums"
+msgstr "אלבומים פרטיים אחרים"
+
+msgid "Page banner"
+msgstr "באנר הדף"
+
+msgid "Parent album"
+msgstr "אלבום הורה"
+
+msgid "Path"
+msgstr "מסלול"
+
+msgid "Permalink %s has been previously used by album %s. Delete from the permalink history first"
+msgstr "השתמשו בעבר בקישור קבוע %s זה עבור אלבום %s. ראשית מחוק אותו מהיסטורית הקישורים הקבועים"
+
+msgid "The permalink name must be composed of a-z, A-Z, 0-9, \"-\", \"_\" or \"/\". It must not be numeric or start with number followed by \"-\""
+msgstr "שם הקישור הקבוע חייב להיות מורכב a-z, A-Z, 0-9, \"-\", \"_\" או \"/\".הוא חייב לא להיות מספרי או להתחיל עם מספר \"-\""
+
+msgid "Permalink %s is already used by album %s"
+msgstr "קישור קבוע %s נמצא כבר בשימוש על ידי אלבום %s"
+
+msgid "Permalink history"
+msgstr "היסטורית קישורים קבועים"
+
+msgid "Permalinks"
+msgstr "קישורים קבועים"
+
+msgid "Permission denied"
+msgstr "הרשאה נדחתה"
+
+msgid "Permission granted thanks to a group"
+msgstr "הרשאה ניתנה בזכות קבוצה"
+
+msgid "Permission granted"
+msgstr "הרשאה ניתנה"
+
+msgid "Photo informations updated"
+msgstr "מידע עבור התמונה עודכן"
+
+msgid "Plugins"
+msgstr "תוספים"
+
+msgid "Position"
+msgstr "מיקום"
+
+msgid "Preferences"
+msgstr "העדפות"
+
+msgid "Properties"
+msgstr "תכונות"
+
+msgid "Random photo"
+msgstr "תמונה אקראית"
+
+msgid "Rate date"
+msgstr "תאריך דירוג"
+
+msgid "Rating by guests"
+msgstr "דירוג על ידי אורחים"
+
+msgid "Rating"
+msgstr "דירוג"
+
+msgid "Reject"
+msgstr "דחה"
+
+msgid "Representant"
+msgstr "צלמית אלבום"
+
+msgid "Representation of albums"
+msgstr "צלמית אלבום"
+
+msgid "Representative"
+msgstr "צלמית אלבום"
+
+msgid "Represents"
+msgstr "צלמית עבור"
+
+msgid "Save order"
+msgstr "שמור סדר"
+
+msgid "Save to permalink history"
+msgstr "שמור להיסטורית קישורים קבועים"
+
+msgid "Select at least one album"
+msgstr "בחר לפחות אלבום אחד"
+
+msgid "Select at least one photo"
+msgstr "בחר לפחות תמונה אחת"
+
+msgid "Select at least one user"
+msgstr "בחר לפחות משתמש אחד"
+
+msgid "Show info"
+msgstr "הצג מידע"
+
+msgid "Site manager"
+msgstr "מנהל אתר"
+
+msgid "Status"
+msgstr "סטטוס"
+
+msgid "Statistics"
+msgstr "סטטיסטיקות"
+
+msgid "Storage album"
+msgstr "אלבום אחסון"
+
+msgid "Sum of rates"
+msgstr "סכום של דירוגים"
+
+msgid "Tag \"%s\" already exists"
+msgstr "התגית \"%s\" כבר קיימת"
+
+msgid "Tag \"%s\" was added"
+msgstr "התגית \"%s\" התווספה"
+
+msgid "Tag selection"
+msgstr "בחירת תגיות"
+
+msgid "The %d following tags were deleted"
+msgstr "התגיות הבאות %d נמחקו"
+
+msgid "Unable to check for upgrade."
+msgstr "לא מצליח לבדוק אם קיימים שדרוגים."
+
+msgid "Uninstall"
+msgstr "הסר התקנה"
+
+msgid "Use the default photo sort order"
+msgstr "השתמש בברירת המחדל למיון תמונות"
+
+msgid "User comments validation"
+msgstr "אישור תגובות משתמש"
+
+msgid "Users"
+msgstr "משתמשים"
+
+msgid "Validate"
+msgstr "אשר"
+
+msgid "Validation"
+msgstr "אישור"
+
+msgid "Version"
+msgstr "גרסה"
+
+msgid "Virtual albums to move"
+msgstr "אלבומים וירטואלים להזזה"
+
+msgid "Virtual album name"
+msgstr "שם אלבום וירטואלי"
+
+msgid "Webmaster cannot be deleted"
+msgstr "לא ניתן למחוק מנהל אתר"
+
+msgid "You are running on development sources, no check possible."
+msgstr "אתה פועל על מקורות בפיתוח, לא ניתן לבדוק."
+
+msgid "You cannot delete your account"
+msgstr "אתה לא יכול למחוק את החשבון שלך"
+
+msgid "You cannot move an album in its own sub album"
+msgstr "אתה לא יכול להעביר אלבום לתוך אלבום המשנה שלו עצמו"
+
+msgid "You need to confirm deletion"
+msgstr "אתה צריך לאשר את המחיקה"
+
+msgid "Associate to album"
+msgstr "שייך לאבלום"
+
+msgid "associate to group"
+msgstr "לשייך לקבוצה"
+
+msgid "Authorized"
+msgstr "מורשה"
+
+msgid "Add a virtual album"
+msgstr "הוסף אלבום וירטואלי"
+
+msgid "Authorize users to add comments on selected albums"
+msgstr "הרשה למשתמשים להוסיף תגובות לאלבומים שנבחרו"
+
+msgid "The name of an album must not be empty"
+msgstr "שם האלבום לא יכול להיות ריק"
+
+msgid "Lock albums"
+msgstr "נעל אלבומים"
+
+msgid "Private"
+msgstr "פרטי"
+
+msgid "Public"
+msgstr "פומבי"
+
+msgid "Find a new representant by random"
+msgstr "מצא צלמית אלבום אקראי חדש"
+
+msgid "Public / Private"
+msgstr "פומבי / פרטי"
+
+msgid "Manage authorizations for selected albums"
+msgstr "נהל הרשאות עבור האלבומים שנבחרו"
+
+msgid "Virtual album added"
+msgstr "אלבום וירטואלי התווסף"
+
+msgid "Virtual album deleted"
+msgstr "אלבום וירטואלי נמחק"
+
+msgid "Access type"
+msgstr "סוג גישה"
+
+msgid "Information data registered in database"
+msgstr "נתוני המידע רשומים במסד הנתונים"
+
+msgid "Default display"
+msgstr "תצוגת ברירת המחדל"
+
+msgid "The gallery URL is not valid."
+msgstr "URL הגלריה אינו חוקי."
+
+msgid "The number of comments a page must be between 5 and 50 included."
+msgstr "מספר הערות בדף חייב להיות בין 5 ל-50 כולל."
+
+msgid "Configuration"
+msgstr "תצורה"
+
+msgid "confirm"
+msgstr "אשר"
+
+msgid "Date"
+msgstr "תאריך"
+
+msgid "delete album"
+msgstr "מחק אלבום"
+
+msgid "Dissociate from album"
+msgstr "נתק מאלבום"
+
+msgid "dissociate from group"
+msgstr "נתק מקבוצה"
+
+msgid "Album updated successfully"
+msgstr "אלבום עודכן בהצלחה."
+
+msgid "photos per page"
+msgstr "תמונות בעמוד"
+
+msgid "High definition enabled"
+msgstr "חדות גבוהה מופעלת"
+
+msgid "File"
+msgstr "קובץ"
+
+msgid "Forbidden"
+msgstr "אסורה"
+
+msgid "global mode"
+msgstr "מצב גלובלי"
+
+msgid "group \"%s\" added"
+msgstr "הקבוצה \"%s\" התווספה"
+
+msgid "group \"%s\" deleted"
+msgstr "הקבוצה \"%s\" נמחקה"
+
+msgid "group \"%s\" updated"
+msgstr "הקבוצה \"%s\" עודכנה"
+
+msgid "The name of a group must not contain \" or ' or be empty."
+msgstr "שם קבוצה לא יכול להכיל ״ או ' או להיות ריק"
+
+msgid "This name is already used by another group."
+msgstr "שם זה נמצא כבר בשימוש על ידי קבוצה אחרת."
+
+msgid "High definition"
+msgstr "חדות גבוהה"
+
+msgid "jump to album"
+msgstr "קפוץ לאלבום"
+
+msgid "jump to photo"
+msgstr "קפוץ לתמונה"
+
+msgid "leave"
+msgstr "עזוב"
+
+msgid "Lock"
+msgstr "נעל"
+
+msgid "Locked"
+msgstr "נעול"
+
+msgid "manage album photos"
+msgstr "ניהול תמונות באלבום"
+
+msgid "manage sub-albums"
+msgstr "ניהול אלבומי משנה"
+
+msgid "Manage"
+msgstr "נהל"
+
+msgid "Execution time is out, treatment must be continue [Estimated time: %d second]."
+msgid_plural "Execution time is out, treatment must be continue [Estimated time: %d seconds]."
+msgstr[0] "הסתיים זמן ריצה, הטיפול חייב להמשך [זמן מוערך: %d שניות]"
+msgstr[1] "חריגה מזמן ריצה, הטיפול חייב להמשך [זמן מוערך: %d שניות]"
+
+msgid "Prepared time for list of users to send mail is limited. Others users are not listed."
+msgstr "הזמן להכין את רשימת המשתמשים אליהם יישלח דואר מוגבל. משתמשים אחרים אינם מפורטים."
+
+msgid "Time to send mail is limited. Others mails are skipped."
+msgstr "הזמן לשליחת דואר מוגבל. מדלגים על דואר לאחרים."
+
+msgid "To send ?"
+msgstr "לשלוח?"
+
+msgid "Last send"
+msgstr "נשלח לאחרונה"
+
+msgid "User"
+msgstr "משתמש"
+
+msgid "See you soon,"
+msgstr "נתראה בקרוב,"
+
+msgid "Go to"
+msgstr "עבור אל"
+
+msgid "Hello"
+msgstr "שלום"
+
+msgid "New photos were added"
+msgstr "תמונות חדשות התווספו"
+
+msgid "on"
+msgstr "על"
+
+msgid "between"
+msgstr "בין"
+
+msgid "and"
+msgstr "ו"
+
+msgid "The webmaster has subscribed you to receiving notifications by mail."
+msgstr "מנהל האתר רשם אותך לקבלת הודעות בדואר."
+
+msgid "You have subscribed to receiving notifications by mail."
+msgstr "נרשמת לקבלת התראות בדואר."
+
+msgid "To subscribe"
+msgstr "להירשם"
+
+msgid "If you encounter problems or have any question, please send a message to"
+msgstr "אם אתה נתקל בבעיות או יש לך שאלה, אנא שלח הודעה אל"
+
+msgid "[NBM] Problems or questions"
+msgstr "[NBM] בעיות או שאלות"
+
+msgid "The webmaster has unsubscribed you from receiving notifications by mail."
+msgstr "מנהל האתר ביטל את הרשמתך לקבלת הודעות בדואר."
+
+msgid "You have unsubscribed from receiving notifications by mail."
+msgstr "ביטלת את ההרשמה לקבלת התראות בדואר."
+
+msgid ", click on"
+msgstr ", לחץ על"
+
+msgid "To unsubscribe"
+msgstr "לבטל הרשמה"
+
+msgid "With blank value, gallery title will be used"
+msgstr "אם ריק, הכותרת בגלריה תהיה בשימוש"
+
+msgid "Notification"
+msgstr "עדכון"
+
+msgid "Error when sending email to %s [%s]."
+msgstr "שגיאה בעת שליחת דואל אל %s [%s]."
+
+msgid "Mail sent to %s [%s]."
+msgstr "דואר נשלח אל %s [%s]."
+
+msgid "%d mail was sent."
+msgid_plural "%d mails were sent."
+msgstr[0] "%d דואר נשלח."
+msgstr[1] "%d דואר נשלח."
+
+msgid "%d mail was not sent."
+msgid_plural "%d mails were not sent."
+msgstr[0] "%d דואר לא נשלח."
+msgstr[1] "%d דואר לא נשלח."
+
+msgid "No mail to send."
+msgstr "אין דואר לשליחה."
+
+msgid "There is no available subscribers to mail."
+msgstr "אין נרשמים לקבלת הודעה בדואר."
+
+msgid "Subscribers could be listed (available) only if there is new elements to notify."
+msgstr "המנויים יכולים להיות רשומים (זמינים) רק אם יש אלמנטים חדשים כדי להודיע."
+
+msgid "Anyway only webmasters can see this tab and never administrators."
+msgstr "רק מנהלי אתרים יכולים לראות את כרטיסיה זו, לא אדמינים."
+
+msgid "No user to send notifications by mail."
+msgstr "אין אף משתמש לעדכון בדואר."
+
+msgid "New photos added"
+msgstr "תמונות חדשות התווספו"
+
+msgid "Subscribe to notification by mail"
+msgstr "הרשם להתראות בדואר"
+
+msgid "Unsubscribe from notification by mail"
+msgstr "בטל הרשמה לקבלת התראות בדואר"
+
+msgid "Parameter"
+msgstr "הגדרות"
+
+msgid "Operation in progress"
+msgstr "הטיפול עיבוד."
+
+msgid "Continue processing treatment"
+msgstr "המשך הטיפול השוטף"
+
+msgid "Complementary mail content"
+msgstr "תוכן דואר משני"
+
+msgid "Add detailed content"
+msgstr "הוסף קצת תוכן מפורט"
+
+msgid "Send mail as"
+msgstr "שלח דואר כ"
+
+msgid "Send mail to users"
+msgstr "שלח דואר למשתמשים"
+
+msgid "Send"
+msgstr "שלח"
+
+msgid "Subscribed"
+msgstr "רשום"
+
+msgid "Subscribe"
+msgstr "הרשם"
+
+msgid "Parameters"
+msgstr "פרמטרים"
+
+msgid "Select recipients"
+msgstr "בחר נמענים"
+
+msgid "Subscribe/unsubscribe users"
+msgstr "להירשם/לבטל את המנוי של המשתמשים"
+
+msgid "Unsubscribed"
+msgstr "בוטלה הרשמה"
+
+msgid "%d parameter was updated."
+msgid_plural "%d parameters were updated."
+msgstr[0] "%d פרמטר עודכן."
+msgstr[1] "%d פרמטרים עודכנו."
+
+msgid "%d user was not updated."
+msgid_plural "%d users were not updated."
+msgstr[0] "%d משתמש לא עודכן."
+msgstr[1] "%d משתמשים לא עודכנו."
+
+msgid "User %s [%s] was removed from the subscription list."
+msgstr "משתמש %s [%s] הוסר מרשימת המנויים"
+
+msgid "User %s [%s] was added to the subscription list."
+msgstr "משתמש %s [%s] התווסף לרשימת המנויים."
+
+msgid "%d user was updated."
+msgid_plural "%d users were updated."
+msgstr[0] "%d משתמש עודכן."
+msgstr[1] "%d משתמשים עודכנו."
+
+msgid "User %s [%s] was not removed from the subscription list."
+msgstr "משתמש %s [%s] לא הוסר מרשימת המנויים"
+
+msgid "User %s [%s] was not added to the subscription list."
+msgstr "משתמש %s [%s] לא התווסף לרשימת המנויים"
+
+msgid "User %s [%s] added."
+msgstr "משתמש %s [%s] התווסף."
+
+msgid "Warning: subscribing or unsubscribing will send mails to users"
+msgstr "אזהרה: מנוי או ביטול המנוי יגרמו לשליחת מיילים למשתמשים"
+
+msgid "Send mail on HTML format"
+msgstr "שלח דואר בתבנית HTML"
+
+msgid "Include display of recent photos grouped by dates"
+msgstr "כלול תצוגה של התמונות האחרונות מאוגדות לפי תאריכים"
+
+msgid "Available only with HTML format"
+msgstr "זמין רק בפורמט HTML"
+
+msgid "no write access"
+msgstr "אין גישה לכתיבה"
+
+msgid "Permissions"
+msgstr "הרשאות"
+
+msgid "private"
+msgstr "פרטי"
+
+msgid "public"
+msgstr "פומבי"
+
+msgid "Purge never used notification feeds"
+msgstr "נקה פידים של התראות ללא שימוש"
+
+msgid "Purge sessions"
+msgstr "נקה סשנים"
+
+msgid "randomly represented"
+msgstr "צלמית אלבום אקראית"
+
+msgid "registration date"
+msgstr "תאריך רישום"
+
+msgid "clean"
+msgstr "ניקוי"
+
+msgid "Create this site"
+msgstr "צור את האתר הזה"
+
+msgid "test"
+msgstr "בדיקה"
+
+msgid "test this remote site"
+msgstr "בדוק אתר מרוחק זה"
+
+msgid "remove tags"
+msgstr "הסר תגיות"
+
+msgid "Repair and optimize database"
+msgstr "תקן ובצע אופטימיזצית מסד נתונים"
+
+msgid "selection"
+msgstr "בחירה"
+
+msgid "set to"
+msgstr "שנה ל"
+
+msgid "singly represented"
+msgstr "צלמית אלבום קבועה"
+
+msgid "This site already exists"
+msgstr "אתר זה כבר קיים"
+
+msgid "created"
+msgstr "נוצר"
+
+msgid "delete"
+msgstr "מחק"
+
+msgid "delete this site and all its attached elements"
+msgstr "מחק אתר הזה ואת כל המידע הקשור אליו"
+
+msgid "an error happened"
+msgstr "אירעה שגיאה"
+
+msgid "Local"
+msgstr "מקומי"
+
+msgid "Remote"
+msgstr "מרוחק"
+
+msgid "update the database from files"
+msgstr "עדכן את מסד הנתונים עם קבצים"
+
+msgid "status"
+msgstr "מעמד"
+
+msgid "Directory"
+msgstr "ספריה"
+
+msgid "sub-albums"
+msgstr "אלבומי משנה"
+
+msgid "Synchronize metadata"
+msgstr "לסנכרן metadata"
+
+msgid "target"
+msgstr "מטרה"
+
+msgid "Title"
+msgstr "כותרת"
+
+msgid "Album list management"
+msgstr "ניהול רשימת אלבומים"
+
+msgid "Piwigo configuration"
+msgstr "תצורת Piwigo"
+
+msgid "Edit album"
+msgstr "ערוך אלבום"
+
+msgid "Group management"
+msgstr "ניהול קבוצות"
+
+msgid "User list"
+msgstr "רשימת משתמשים"
+
+msgid "Database synchronization with files"
+msgstr "סינכרון מסד הנתונים עם קבצים"
+
+msgid "all"
+msgstr "כל"
+
+msgid "height must be a number superior to"
+msgstr "גובה חייב להיות מספר גבוה יותר מאשר"
+
+msgid "width must be a number superior to"
+msgstr "רוחב חייב להיות מספר גבוה יותר מאשר"
+
+msgid "for the file format"
+msgstr "עבור פורמט קובץ"
+
+msgid "Photo unreachable or no support"
+msgstr "תמונה לא נגישה או בפורמט לא נתמך"
+
+msgid "GD version"
+msgstr "גרסת GD "
+
+msgid "General statistics"
+msgstr "סטטיסטיקה כללית"
+
+msgid "average time"
+msgstr "זמן ממוצע"
+
+msgid "total time"
+msgstr "זמן כולל"
+
+msgid "for this file format"
+msgstr "עבור פורמט קובץ זה"
+
+msgid "unit mode"
+msgstr "מצב יחיד"
+
+msgid "Unlocked"
+msgstr "לא נעולים"
+
+msgid "unset"
+msgstr "לא מופעל"
+
+msgid "Update albums informations"
+msgstr "עדכן פרטי אלבומים"
+
+msgid "Update photos information"
+msgstr "עדכון פרטי תמונות"
+
+msgid "Synchronize"
+msgstr "סנכרן"
+
+msgid "reduce to single existing albums"
+msgstr "צמצם אלבומים קיימים לאחד"
+
+msgid "Choose an option"
+msgstr "בחר באפשרות"
+
+msgid "display maximum informations (added albums and photos, deleted albums and photos)"
+msgstr "הצג מידע מירבי (אלבומים ותמונות שהתווספו, אלבומים ותמונות שנמחקו)"
+
+msgid "Error list"
+msgstr "רשימת שגיאות"
+
+msgid "Errors caption"
+msgstr "מקראי שגיאות"
+
+msgid "Detailed informations"
+msgstr "מידע מפורט"
+
+msgid "File/directory read error"
+msgstr "שגיאה בקריאת קובץ/ספריה"
+
+msgid "The file or directory cannot be accessed (either it does not exist or the access is denied)"
+msgstr "לא ניתן לגשת לקובץ או לספריה (אינם קיימים או שהגישה נדחתה)"
+
+msgid "albums deleted in the database"
+msgstr "אלבומים נמחקו ממסד הנתונים"
+
+msgid "photos deleted from the database"
+msgstr "תמונות נמחקו ממסד הנתונים"
+
+msgid "photos candidates for metadata synchronization"
+msgstr "תמונות המועמדות לסינכרון metadata"
+
+msgid "photos informations synchronized with files metadata"
+msgstr " מידע תמונות מסונכרן עם metadata של קבצים"
+
+msgid "errors during synchronization"
+msgstr "שגיאות במהלך הסנכרון"
+
+msgid "albums added in the database"
+msgstr "אלבומים התווספו למסד הנתונים"
+
+msgid "photos added in the database"
+msgstr "תמונות התווספו למסד הנתונים"
+
+msgid "photos updated in the database"
+msgstr "תמונות עודכנו במסד הנתונים"
+
+msgid "Search for new images in the directories"
+msgstr "חיפוש אחר תמונות חדשות בספריות"
+
+msgid "added"
+msgstr "התווסף"
+
+msgid "deleted"
+msgstr "נמחק"
+
+msgid "Metadata synchronization results"
+msgstr "תוצאות סינכרון Metadata"
+
+msgid "only perform a simulation (no change in database will be made)"
+msgstr "רק בצע סימולציה (דבר לא ישתנה במסד הנתונים)"
+
+msgid "Simulation"
+msgstr "סימולציה"
+
+msgid "directories + files"
+msgstr "קבצים + ספריות"
+
+msgid "only directories"
+msgstr "ספריות בלבד"
+
+msgid "synchronize files structure with database"
+msgstr "סנכרן מבנה קבצים עם מסד הנתונים"
+
+msgid "synchronize files metadata with database photos informations"
+msgstr "סנכרן תמונות ממסד נתונים עם metadata קבצים"
+
+msgid "even already synchronized photos"
+msgstr "אפילו תמונות שסונכרנו כבר"
+
+msgid "Used metadata"
+msgstr "Metadata בשימוש"
+
+msgid "The name of directories and files must be composed of letters, numbers, \"-\", \"_\" or \".\""
+msgstr "השם של תיקיות וקבצים חייב לכלול רק אותיות, מספרים, \"-\", ״_\" או ״.״"
+
+msgid "wrong filename"
+msgstr "שם קובץ שגוי"
+
+msgid "Upload"
+msgstr "טעינה"
+
+msgid "user \"%s\" added"
+msgstr "המשתמש \"%s\" התווסף"
+
+msgid "User status"
+msgstr "מצב משתמש"
+
+msgid "user_status_admin"
+msgstr "אדמין"
+
+msgid "user_status_generic"
+msgstr "כללי"
+
+msgid "user_status_guest"
+msgstr "אורח"
+
+msgid "user_status_webmaster"
+msgstr "מנהל האתר"
+
+msgid "Virtual album"
+msgstr "אלבום וירטואלי"
+
+msgid "Waiting"
+msgstr "בהמתנה"
+
+msgid "default"
+msgstr "ברירת מחדל"
+
+msgid "Toggle 'default group' property"
+msgstr "הפוך תכונת 'קבוצת ברירת מחדל׳"
+
+msgid "Advanced features"
+msgstr "תכונות מתקדמות"
+
+msgid "Overall"
+msgstr "סקירה"
+
+msgid "Year"
+msgstr "שנה"
+
+msgid "Month"
+msgstr "חודש"
+
+msgid "Day"
+msgstr "יום"
+
+msgid "Pages seen"
+msgstr "דפים שניצפו"
+
+msgid "Time"
+msgstr "זמן"
+
+msgid "IP"
+msgstr "IP"
+
+msgid "Element"
+msgstr "מרכיב"
+
+msgid "Section"
+msgstr "קטע"
+
+msgid "An information email was sent to group \"%s\""
+msgstr "דואל מידע נשלח לקבוצה \"%s\""
+
+msgid "Send an information email to group members"
+msgstr "שלח מידעון דואר לחברי הקבוצה"
+
+msgid "Group"
+msgstr "קבוצה"
+
+msgid "%s value is not correct file because exif are not supported"
+msgstr "ערך %s אינו נכון כי exif אינם נתמכים"
+
+msgid "Hello,"
+msgstr "שלום,"
+
+msgid "See you soon."
+msgstr "נתראה בקרוב."
+
+msgid "Discover album:"
+msgstr "גלה אלבום:"
+
+msgid "Mail content"
+msgstr "תוכן דואר"
+
+msgid "none"
+msgstr "כלום"
+
+msgid "high"
+msgstr "גבוה"
+
+msgid "other"
+msgstr "אחר"
+
+msgid "Element type"
+msgstr "סוג מרכיב"
+
+msgid "Image id"
+msgstr "מזהה תמונה"
+
+msgid "Summary"
+msgstr "סיכום"
+
+msgid "%d line filtered"
+msgid_plural "%d lines filtered"
+msgstr[0] "%d שורה מסוננת"
+msgstr[1] "%d שורות מסוננות"
+
+msgid "%d guest"
+msgid_plural "%d guests"
+msgstr[0] "%d אורח"
+msgstr[1] "%d אורחים"
+
+msgid "Hour"
+msgstr "שעה"
+
+msgid "guest"
+msgstr "אורח"
+
+msgid "default values"
+msgstr "ערכי ברירת המחדל"
+
+msgid "Guest cannot be deleted"
+msgstr "לא ניתן למחוק אורח"
+
+msgid "Default user cannot be deleted"
+msgstr "לא ניתן למחוק את משתמש ברירת המחדל"
+
+msgid "Purge history detail"
+msgstr "נקה פרטי הסטוריה"
+
+msgid "Purge history summary"
+msgstr "נקה סיכום הסטוריה"
+
+msgid "Check integrity"
+msgstr "בדיקת תקינות."
+
+msgid "Anomaly"
+msgstr "אנומליה"
+
+msgid "Correction"
+msgstr "תיקון"
+
+msgid "Automatic correction"
+msgstr "תיקון אוטומטי"
+
+msgid "Impossible automatic correction"
+msgstr "תיקון אוטומטי בלתי אפשרי"
+
+msgid "Correction applied with success"
+msgstr "תיקון הוחל בהצלחה"
+
+msgid "Correction applied with error"
+msgstr "תיקון הוחל עם שגיאה"
+
+msgid "%d anomaly has been detected."
+msgid_plural "%d anomalies have been detected."
+msgstr[0] "%d חריגה זוהתה."
+msgstr[1] "%d חריגות זוהו."
+
+msgid "%d anomaly has been corrected."
+msgid_plural "%d anomalies have been detected corrected."
+msgstr[0] "%d חריגה תוקנה."
+msgstr[1] "%d חריגות זוהו ותוקנו."
+
+msgid "%d anomaly has not been corrected."
+msgid_plural "%d anomalies have not been corrected."
+msgstr[0] "%d חריגה לא תוקנה."
+msgstr[1] "%d חריגות לא תוקנו."
+
+msgid "[%s] Visit album %s"
+msgstr "[%s] בקר אלבום %s"
+
+msgid "the forum"
+msgstr "הפורום"
+
+msgid "the wiki"
+msgstr "הוויקי"
+
+msgid "Go to %s or %s for more informations"
+msgstr "עבור אל %s או %s לעוד מידע"
+
+msgid "%s must be to set to false in your local/config/config.inc.php file"
+msgstr "יש להגדיר את %s ל-false בקובץ local/config/config.inc.php שלכם"
+
+msgid "Main \"guest\" user does not exist"
+msgstr "משתמש \"אורח\" הראשי לא קיים"
+
+msgid "Main \"guest\" user status is incorrect"
+msgstr "הסטטוס של משתמש \"אורח\" הראשי לא נכון"
+
+msgid "Default user does not exist"
+msgstr "משתמש ברירת המחדל לא קיים"
+
+msgid "Main \"webmaster\" user does not exist"
+msgstr "משתמש \"מנהל האתר\" הראשי לא קיים"
+
+msgid "Main \"webmaster\" user status is incorrect"
+msgstr "משתמש \"מנהל האתר\" הראשי לא נכון"
+
+msgid "User \"%s\" created with \"%s\" like password"
+msgstr "משתמש \"%s\" נוצר עם \"%s\" כסיסמה"
+
+msgid "Status of user \"%s\" updated"
+msgstr "הסטטוס של המשתמש \"%s\" עודכן"
+
+msgid "add new photos to caddie"
+msgstr "הוסף תמונות חדשות לסל"
+
+msgid "No display"
+msgstr "ללא תצוגה"
+
+msgid "Classic display"
+msgstr "תצוגה קלאסית"
+
+msgid "Hoverbox display"
+msgstr "תצוגת Hoverbox"
+
+msgid "Minimum privacy level"
+msgstr "רמת פרטיות מינימלית"
+
+msgid "Privacy level"
+msgstr "רמת פרטיות"
+
+msgid "Level 0"
+msgstr "---"
+
+msgid "Level 1"
+msgstr "אנשי קשר"
+
+msgid "Level 2"
+msgstr "חברים"
+
+msgid "Level 4"
+msgstr "משפחה"
+
+msgid "Level 8"
+msgstr "אדמינים"
+
+msgid "Reinitialize check integrity"
+msgstr "אתחל מחדש בדיקת תקינות"
+
+msgid "Check all"
+msgstr "בדוק הכל"
+
+msgid "Uncheck all"
+msgstr "בטל את כל הסימונים"
+
+msgid "Check automatic corrections"
+msgstr "בדוק תיקונים אוטומטיים"
+
+msgid "Apply selected corrections"
+msgstr "החל תיקונים שנבחרו"
+
+msgid "Ignore selected anomalies"
+msgstr "התעלם מאנומליות שנבחרו"
+
+msgid "Refresh"
+msgstr "רענן"
+
+msgid "The anomaly will be ignored until next application version"
+msgstr "נתעלם מהאנומליה עד לגרסה הבאה של היישום"
+
+msgid "Correction the anomaly will cancel the fact that it's ignored"
+msgstr "לא תהיה התעלמות יותר מהאנומליה המתוקנת"
+
+msgid "%d anomaly has been ignored."
+msgid_plural "%d anomalies have been ignored."
+msgstr[0] "%d חריגה שהתעלמו ממנה."
+msgstr[1] "%d חריגות שהתעלמו מהם."
+
+msgid "Plugins which need upgrade"
+msgstr "תוספים לשדרוג"
+
+msgid "Plugin list"
+msgstr "רשימת תוספים"
+
+msgid "Check for updates"
+msgstr "חפש עדכונים"
+
+msgid "Other plugins"
+msgstr "תוספים אחרים זמינים"
+
+msgid "Last revisions"
+msgstr "גירסאות אחרונות"
+
+msgid "Are you sure you want to delete this plugin?"
+msgstr "האם אתה בטוח שאתה רוצה למחוק את התוסף הזה?"
+
+msgid "Are you sure you want to install this plugin?"
+msgstr "האם אתה בטוח שאתה רוצה להתקין את התוסף הזה?"
+
+msgid "Are you sure to install this upgrade? You must verify if this version does not need uninstallation."
+msgstr "האם אתה בטוח שאתה רוצה להתקין את השדרוג? עליך לוודא אם הגרסה הזאת לא צריכה הסרה לפני הפעולה."
+
+msgid "Plugin has been successfully copied"
+msgstr "התוסף הועתק בהצלחה"
+
+msgid "Can't create temporary file."
+msgstr "לא ניתן ליצור קובץ זמני."
+
+msgid "Can't download archive."
+msgstr "לא ניתן להוריד את הארכיון."
+
+msgid "Can't read or extract archive."
+msgstr "לא ניתן לקרוא או לחלץ את הארכיון."
+
+msgid "An error occured during extraction (%s)."
+msgstr "אירעה שגיאה במהלך ייצוא קבצים (\"%s\")."
+
+msgid "Please check \"plugins\" folder and sub-folders permissions (CHMOD)."
+msgstr "אנא בדוק את ההרשאות לתיקית \"plugins\" ולתת התיקיות שלה (CHMOD)"
+
+msgid "Can't connect to server."
+msgstr "לא ניתן להתחבר לשרת."
+
+msgid "Purge compiled templates"
+msgstr "נקה תבניות מקומפלות"
+
+msgid "ACCESS_0"
+msgstr "גישה חופשית"
+
+msgid "ACCESS_1"
+msgstr "גישה לכולם"
+
+msgid "ACCESS_2"
+msgstr "גישה למשתמשים רשומים"
+
+msgid "ACCESS_3"
+msgstr "גישה לאדמינים"
+
+msgid "ACCESS_4"
+msgstr "גישה למנהלי האתר"
+
+msgid "ACCESS_5"
+msgstr "אין גישה"
+
+msgid "Support"
+msgstr "תמיכה"
+
+msgid "Documentation"
+msgstr "תיעוד"
+
+msgid "A new version of Piwigo is available."
+msgstr "גרסה חדשה של Piwigo זמינה."
+
+msgid "Piwigo Administration"
+msgstr "ניהול Piwigo"
+
+msgid "Piwigo version"
+msgstr "גרסת Piwigo"
+
+msgid "You are running the latest version of Piwigo."
+msgstr "אתה מריץ את הגירסה העדכנית ביותר של Piwigo."
+
+msgid "The version of %s [%s] installed is not compatible with the version required [%s]"
+msgstr "הגרסה של\"\"%s\" \"[\"%s\"] התקנת אינו תואם לגרסה הנדרש [\"%s\"]"
+
+msgid "You need to upgrade your system to take full advantage of the application else the application will not work correctly, or not at all"
+msgstr "אתה צריך לשדרג את המערכת שלך כדי לנצל את מלוא היכולות של היישום, אחרת היישום יכול לעבוד לא כראוי, או בכלל לא"
+
+msgid "Deleted on"
+msgstr "נמחק על"
+
+msgid "Last hit"
+msgstr "פגיעה אחרונה"
+
+msgid "GD library is missing"
+msgstr "ספריית GD חסרה"
+
+msgid "Templates"
+msgstr "תבניות"
+
+msgid "Extend for templates"
+msgstr "הרחב תבניות"
+
+msgid "Replacement of original templates by customized templates from template-extension subfolder"
+msgstr "החלפת תבניות מקוריות בתבניות מותאמות אישית מתת-תיקיית הרחבות התבניות"
+
+msgid "Replacers (customized templates)"
+msgstr "תחליפים (תבניות מותאמות אישית)"
+
+msgid "Original templates"
+msgstr "תבניות מקוריות"
+
+msgid "Optional URL keyword"
+msgstr "מילת מפתח של URL אופציונלית"
+
+msgid "Templates configuration has been recorded."
+msgstr "תועדה תצורת התבניות."
+
+msgid "All optimizations have been successfully completed."
+msgstr "כל האופטימיזציות הושלמו בהצלחה."
+
+msgid "Optimizations have been completed with some errors."
+msgstr "האופטימיזציות הסתיימו עם מספר שגיאות."
+
+msgid "Modify information"
+msgstr "עדכן מידע"
+
+msgid "nothing"
+msgstr "שום דבר"
+
+msgid "overrides existing values with empty ones"
+msgstr "דרוס ערכים קיימים עם ערכים ריקים"
+
+msgid "Manage photo ranks"
+msgstr "סדר מיון תמונות"
+
+msgid "Edit ranks"
+msgstr "ערוך דירוג"
+
+msgid "No photo in this album"
+msgstr "אין תמונה באלבום זה"
+
+msgid "Images manual order was saved"
+msgstr "סדר תמונות ידני נשמר"
+
+msgid "ranks"
+msgstr "דירוגים"
+
+msgid "By rank"
+msgstr "לפי דירוג"
+
+msgid "Manual order"
+msgstr "סדר ידני "
+
+msgid "Drag to re-order"
+msgstr "גרור כדי לסדר מחדש"
+
+msgid "Quick Local Synchronization"
+msgstr "סנכרון מקומי מהיר"
+
+msgid "No photo can be deleted"
+msgstr "לא ניתן למחוק אף תמונה"
+
+msgid "Delete selected photos"
+msgstr "מחק את התמונות שנבחרו"
+
+msgid "%d photo was deleted"
+msgid_plural "%d photos were deleted"
+msgstr[0] "%d תמונה נמחקה"
+msgstr[1] "%d תמונות נמחקו"
+
+msgid "Downloads"
+msgstr "הורדות"
+
+msgid "Released on"
+msgstr "שוחרר ב"
+
+msgid "Number of downloads"
+msgstr "מספר הורדות"
+
+msgid "Piwigo Announcements Newsletter"
+msgstr "עלון Piwigo"
+
+msgid "Keep in touch with Piwigo project, subscribe to Piwigo Announcement Newsletter. You will receive emails when a new release is available (sometimes including a security bug fix, it's important to know and upgrade) and when major events happen to the project. Only a few emails a year."
+msgstr "שמור על קשר עם פרויקט Piwigo, ההירשם לעלון של Piwigo. תישלח אליך הודעות דוא\"ל כאשר מהדורה חדשה תיהיה זמינה (לפעמים כולל תיקון באג אבטחה, חשוב לדעת ולשדרג) וכאשר ישנם אירועים מרכזיים הפרויקט. רק כמה הודעות דוא\"ל בשנה "
+
+msgid "Subscribe %s"
+msgstr "הירשם %s"
+
+msgid "Subscribe %s to Piwigo Announcements Newsletter"
+msgstr "הרשם %s למידעון הכרזות של Piwigo"
+
+msgid "Purge search history"
+msgstr "נקה את היסטורית החיפוש"
+
+msgid "Hide"
+msgstr "הסתר"
+
+msgid "Password is missing. Please enter the password."
+msgstr "סיסמא חסרה, נא להזין סיסמא."
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "אישור סיסמא חסר, נא לאשר את הסיסמא שנבחרה."
+
+msgid "Allow users to edit their own comments"
+msgstr "אפשר למשתמשים לערוך את ההערות שלהם"
+
+msgid "Allow users to delete their own comments"
+msgstr "אפשר למשתמשים למחוק את התגובות שלהם"
+
+msgid "Email administrators when a comment is modified"
+msgstr "שלח מייל לאדמינים כאשר תגובה שונתה"
+
+msgid "Email administrators when a comment is deleted"
+msgstr "שלח מייל לאדמינים כאשר תגובה נמחקה"
+
+msgid "Cannot delete the old permalink !"
+msgstr "לא ניתן למחוק את הקישור הקבוע הישן!"
+
+msgid "Hit"
+msgstr "פגיעה"
+
+msgid "Tools"
+msgstr "כלים"
+
+msgid "Photos"
+msgstr "תמונות"
+
+msgid "Themes"
+msgstr "ערכות נושא"
+
+msgid "Instructions to use Piwigo"
+msgstr "הוראות שימוש Piwigo"
+
+msgid "Installed Themes"
+msgstr "ערכות נושא מותקנות"
+
+msgid "Add New Theme"
+msgstr "הוסף ערכת נושא חדשה"
+
+msgid "Forbid this theme to users"
+msgstr "אסור על ערכת נושא זו למשתמשים"
+
+msgid "Set as default theme for unregistered and new users"
+msgstr "הגדר כערכת נושא ברירת מחדל עבור משתמשים לא רשומים וחדשים"
+
+msgid "unknown"
+msgstr "לא ידוע"
+
+msgid "Upload Photos"
+msgstr "טען תמונות"
+
+msgid "Drop into album"
+msgstr "בחר אלבום"
+
+msgid "+ Add an upload box"
+msgstr "+ הוסף תיבת טעינה"
+
+msgid "Create the \"%s\" directory at the root of your Piwigo installation"
+msgstr "צור ספריית ״%s״ בספריה הראשית של התקנת ה-Piwigo שלך"
+
+msgid "Give write access (chmod 777) to \"%s\" directory at the root of your Piwigo installation"
+msgstr "תן הרשאות כתיבה (chmod 777) לספריית \"%s\" בראש התקנת Piwigo שלך"
+
+msgid "existing album"
+msgstr "אלבום קיים"
+
+msgid "create a new album"
+msgstr "צור אלבום חדש"
+
+msgid "Album name"
+msgstr "שם אלבום "
+
+msgid "Album \"%s\" has been added"
+msgstr "אלבום \"%s\" התווסף"
+
+msgid "Uploaded Photos"
+msgstr "התמונות נטענו "
+
+msgid "%d photos uploaded"
+msgstr "%d תמונות נטענו"
+
+msgid "Privacy level set to \"%s\""
+msgstr "רמת פרטיות מוגדרת ל \"%s\""
+
+msgid "Album \"%s\" now contains %d photos"
+msgstr "אלבום \"%s\" מכיל כעת %d תמונות"
+
+msgid "Manage this set of %d photos"
+msgstr "נהל את קבוצת התמונות הזאת (%d תמונות)"
+
+msgid "Select files"
+msgstr "בחר קבצים"
+
+msgid "Everybody"
+msgstr "כולם"
+
+msgid "Who can see these photos?"
+msgstr "מי יכול לראות את תמונות אלה?"
+
+msgid "Who can see this photo?"
+msgstr "מי יכול לראות את התמונה הזו?"
+
+msgid "Settings"
+msgstr "הגדרות"
+
+msgid "Resize"
+msgstr "שנה גודל"
+
+msgid "Maximum width"
+msgstr "רוחב מרבי"
+
+msgid "pixels"
+msgstr "פיקסלים"
+
+msgid "Maximum height"
+msgstr "גובה מרבי"
+
+msgid "Image Quality"
+msgstr "איכות תמונה"
+
+msgid "Thumbnail"
+msgstr "צלמית"
+
+msgid "Save Settings"
+msgstr "שמור הגדרות"
+
+msgid "Your configuration settings are saved"
+msgstr "הגדרות התצורה שלך נשמרות "
+
+msgid "Active Themes"
+msgstr "ערכות נושא פעילות "
+
+msgid "Add write access to the \"%s\" directory"
+msgstr "הוסף הרשאת כתיבה לתיקיית \"%s\""
+
+msgid "Administration Home"
+msgstr "ממשק ניהול אדמינים"
+
+msgid "Change Admin Colors"
+msgstr "שנה צבעים לתפריט הניהול"
+
+msgid "Delete this theme"
+msgstr "מחק את ערכת הנושא הזאת"
+
+msgid "Directory does not exist"
+msgstr "הספריה לא קיימת"
+
+msgid "Download,"
+msgstr "הורדה,"
+
+msgid "FTP + Synchronization"
+msgstr "סנכרון + FTP"
+
+msgid "Get Support on Piwigo Forum"
+msgstr "קבל תמיכה בפורום Piwigo "
+
+msgid "Help Me"
+msgstr "עזור לי"
+
+msgid "Impossible to activate this theme, the parent theme is missing: %s"
+msgstr "לא ניתן להפעיל ערכת נושא זו מכיוון שערכת הנושא שמעליה חסרה: %s"
+
+msgid "Impossible to delete this theme. Other themes depends on it: %s"
+msgstr "לא ניתן למחוק ערכת נושא זו כי ערכות נושא אחרות תלויות בה: %s"
+
+msgid "Inactive Themes"
+msgstr "ערכות נושא לא פעילות"
+
+msgid "Install on your computer,"
+msgstr "התקן במחשב שלך,"
+
+msgid "Make this theme available to users"
+msgstr "הפוך את ערכת הנושא הזו לזמינה למשתמשים"
+
+msgid "Page end"
+msgstr "סוף עמוד "
+
+msgid "Piwigo Uploader"
+msgstr "טוען Piwigo"
+
+msgid "Please wait..."
+msgstr "אנא המתן ..."
+
+msgid "Read Piwigo Documentation"
+msgstr "קרא את התיעוד של Piwigo"
+
+msgid "Start pLoader and add your photos."
+msgstr "התחל להוסיף תמונות שלך."
+
+msgid "Switch to clear or dark colors for administration"
+msgstr "מעבר צבעים בהיר או כהה עבור ממשק ניהול"
+
+msgid "Theme has been successfully installed"
+msgstr "ערכת הנושא הותקנה בהצלחה."
+
+msgid "Visit Gallery"
+msgstr "בקר בגלריה"
+
+msgid "Visit Piwigo project website"
+msgstr "בקר באתר פרוייקט Piwigo"
+
+msgid "Guest Settings"
+msgstr "הגדרות אורחים"
+
+msgid "Main Page"
+msgstr "דף ראשי"
+
+msgid "Photo Page"
+msgstr "דף תמונה"
+
+msgid "Activate Navigation Bar"
+msgstr "הפעל סרגל ניווט"
+
+msgid "Activate Navigation Thumbnails"
+msgstr "הפעל צלמיות ניווט"
+
+msgid "Activate icon \"%s\""
+msgstr "הפעל סמליל ״%s״"
+
+msgid "Photo Properties"
+msgstr "מאפייני תמונה"
+
+msgid "Allow user customization"
+msgstr "אפשר התאמה אישית למשתמש"
+
+msgid "Languages"
+msgstr "שפות"
+
+msgid "Installed Languages"
+msgstr "שפות מותקנות"
+
+msgid "Add New Language"
+msgstr "הוסף שפה חדשה"
+
+msgid "Language has been successfully installed"
+msgstr "שפה הותקנה בהצלחה"
+
+msgid "Select:"
+msgstr "בחר:"
+
+msgid "None"
+msgstr "כלום"
+
+msgid "Invert"
+msgstr "היפוך"
+
+msgid "Impossible to deactivate this theme, you need at least one theme."
+msgstr "אי אפשר לכבות ערכת נושא זו, יש צורך לפחות בערכת נושא אחת."
+
+msgid "Webmaster status is required."
+msgstr "נדרש סטטוס מנהל האתר."
+
+msgid "Bound Theme"
+msgstr "ערכת נושא Bound"
+
+msgid "Allow rating"
+msgstr "אפשר דירוג"
+
+msgid "Select at least one comment"
+msgstr "בחר לפחות תגובה אחת"
+
+msgid "Active Plugins"
+msgstr "תוספים פעילים"
+
+msgid "Inactive Plugins"
+msgstr "תוספים לא פעילים"
+
+msgid "Missing Plugins"
+msgstr "תוספים חסרים"
+
+msgid "Uninstalled Plugins"
+msgstr "תוספים הוסרו"
+
+msgid "By %s"
+msgstr "על-ידי %s"
+
+msgid "Visit plugin site"
+msgstr "בקר באתר התוסף"
+
+msgid "Active Languages"
+msgstr "שפות פעילות"
+
+msgid "Delete this language"
+msgstr "מחק את השפה הזאת"
+
+msgid "Forbid this language to users"
+msgstr "אסור על שפה זו למשתמשים"
+
+msgid "Impossible to deactivate this language, first set another language as default."
+msgstr "לא ניתן לכבות שפה זו, ראשית הגדר שפה אחרת כברירת המחדל."
+
+msgid "Impossible to deactivate this language, you need at least one language."
+msgstr "לא ניתן לכבות שפה זו, יש צורך לפחות בשפה אחת."
+
+msgid "Inactive Languages"
+msgstr "שפות לא פעילות"
+
+msgid "Make this language available to users"
+msgstr "הפוך את השפה הזו לזמינה למשתמשים"
+
+msgid "Set as default language for unregistered and new users"
+msgstr "הגדר כשפת ברירת מחדל עבור משתמשים לא רשומים וחדשים"
+
+msgid "Add Photos"
+msgstr "הוסף תמונות"
+
+msgid "The following tag was deleted"
+msgstr "התגית הבאה נמחקה"
+
+msgid "Miscellaneous"
+msgstr "שונות"
+
+msgid "Virtual Links"
+msgstr "קישורים וירטואלים"
+
+msgid "There is no other language available."
+msgstr "אין שפה אחרת זמינה."
+
+msgid "There is no other plugin available."
+msgstr "אין שום תוספים אחרים זמינים."
+
+msgid "There is no other theme available."
+msgstr "אין שום ערכת נושא אחרת זמינה."
+
+msgid "Add another set of photos"
+msgstr "הוסף מקבץ אחר של תמונות"
+
+msgid "Order of menubar items has been updated successfully."
+msgstr "סדר פריטי שורת התפריטים עודכן בהצלחה."
+
+msgid "This theme was not designed to be directly activated"
+msgstr "ערכת נושא זו לא נועדה להיות מופעלת באופן ישיר"
+
+msgid "Pending Comments"
+msgstr "תגובות ממתינות"
+
+msgid "In your php.ini file, the upload_max_filesize (%sB) is bigger than post_max_size (%sB), you should change this setting"
+msgstr "In your php.ini file, the upload_max_filesize (%sB) is bigger than post_max_size (%sB), you should change this setting"
+
+msgid "Exif extension not available, admin should disable exif use"
+msgstr "סיומת Exif לא קיימת, פנה לאדמין על מנת שיבטל שימוש בסיומת Exif"
+
+msgid "The uploaded file exceeds the upload_max_filesize directive in php.ini: %sB"
+msgstr "The uploaded file exceeds the upload_max_filesize directive in php.ini: \"%s \"B"
+
+msgid "The uploaded files exceed the post_max_size directive in php.ini: %sB"
+msgstr "The uploaded files exceed the post_max_size directive in php.ini: \"%s \"B"
+
+msgid "The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form"
+msgstr "הקובץ שנטען חורג מה MAX_FILE_SIZE שצויין בטופס ה-html"
+
+msgid "The uploaded file was only partially uploaded"
+msgstr "הקובץ נטען חלקית בלבד"
+
+msgid "No file was uploaded"
+msgstr "לא נטען קובץ"
+
+msgid "Missing a temporary folder"
+msgstr "חסרה תיקיה זמנית"
+
+msgid "Failed to write file to disk"
+msgstr "נכשל בכתיבת הקובץ לדיסק"
+
+msgid "File upload stopped by extension"
+msgstr "טעינת קובץ נעצרה בעקיפין"
+
+msgid "Unknown upload error"
+msgstr "שגיאה לא ידועה בטעינה"
+
+msgid "Error on file \"%s\" : %s"
+msgstr "שגיאה בקובץ \"%s\" : %s"
+
+msgid "Menu Management"
+msgstr "תפריטים"
+
+msgid "automatic order"
+msgstr "סדר אוטומטי"
+
+msgid "manual order"
+msgstr "סידור ידני"
+
+msgid "Albums automatically sorted"
+msgstr "אלבומים מויינו אוטומטית"
+
+msgid "Batch Manager"
+msgstr "מנהל אצווה"
+
+msgid "include child albums"
+msgstr "כולל אלבומים ילדים"
+
+msgid "Selection"
+msgstr "בחירה"
+
+msgid "Action"
+msgstr "פעולה"
+
+msgid "Set author"
+msgstr "הגדר יוצר"
+
+msgid "Set title"
+msgstr "הגדר כותרת"
+
+msgid "Set creation date"
+msgstr "הגדר תאריך יצירה"
+
+msgid "Apply action"
+msgstr "החל"
+
+msgid "on the %d selected photos"
+msgstr "על %d תמונות נבחרות"
+
+msgid "%d of %d photos selected"
+msgstr "%d מ %d תמונות נבחרו"
+
+msgid "No photo selected, %d photos in current set"
+msgstr "לא נבחרו תמונות, %d תמונות בסט הנוכחי"
+
+msgid "All %d photos are selected"
+msgstr "כל %d התמונות נבחרו"
+
+msgid "remove this filter"
+msgstr "הסר מסנן זה"
+
+msgid "Duplicates"
+msgstr "כפילויות"
+
+msgid "Add a filter"
+msgstr "הוסף מסנן"
+
+msgid "Remove all filters"
+msgstr "מחק את כל הסינונים"
+
+msgid "Refresh photo set"
+msgstr "רענן את סט התמונות"
+
+msgid "The whole page"
+msgstr "העמוד המלא"
+
+msgid "The whole set"
+msgstr "הסט המלא"
+
+msgid "No photo in the current set."
+msgstr "אין תמונות בסט הנוכחי."
+
+msgid "No photos selected, no actions possible."
+msgstr "אף תמונה לא נבחרה, אין פעולות אפשריות."
+
+msgid "Choose an action"
+msgstr "בחר פעולה"
+
+msgid "remove author"
+msgstr "הסר יוצר"
+
+msgid "Type here the author name"
+msgstr "כתוב כאן את שם היוצר"
+
+msgid "remove title"
+msgstr "הסר כותרת"
+
+msgid "Type here the title"
+msgstr "כתוב כאן את הכותרת"
+
+msgid "remove creation date"
+msgstr "הסר את תאריך היצירה"
+
+msgid "Album photos associated to the following albums: %s"
+msgstr "תמונות האלבום משוייכות לאלבומים הבאים: %s"
+
+msgid "Delete orphan tags"
+msgstr "מחק תגיות יתומות"
+
+msgid "delete photo"
+msgstr "מחק תמונה"
+
+msgid "new"
+msgstr "חדש"
+
+msgid "No results"
+msgstr "אין תוצאות"
+
+msgid "Orphan tags deleted"
+msgstr "תגיות יתומות נמחקו"
+
+msgid "Remove from caddie"
+msgstr "הסר מהסל"
+
+msgid "Searching..."
+msgstr "מחפש..."
+
+msgid "Type in a search term"
+msgstr "הקלד את ערך החיפוש"
+
+msgid "Week starts on"
+msgstr "שבוע מתחיל ביום"
+
+msgid "You have %d orphan tags: %s."
+msgstr "יש לך %d תגיות יתומות: %s."
+
+msgid "Themes which need upgrade"
+msgstr "ערכות נושא שצריכות שידרוג"
+
+msgid "Languages which need upgrade"
+msgstr "שפות הזקוקות לשידרוג"
+
+msgid "All themes are up to date."
+msgstr "כל ערכות הנושא מעודכנות."
+
+msgid "All plugins are up to date."
+msgstr "כל התוספים מעודכנים."
+
+msgid "All languages are up to date."
+msgstr "כל השפות מעודכנות."
+
+msgid "Visit theme site"
+msgstr "בקר באתר ערכת הנושא"
+
+msgid "Visit language site"
+msgstr "בקר באתר השפה"
+
+msgid "New Version"
+msgstr "גרסה חדשה"
+
+msgid "Obsolete Plugins"
+msgstr "תוספים מיושנים"
+
+msgid "WARNING! This plugin does not seem to be compatible with this version of Piwigo."
+msgstr "אזהרה! נראה כי תוסף זה לא מתאים לגירסא זו של Piwigo."
+
+msgid "Do you want to activate anyway?"
+msgstr "אתה רוצה להפעיל בכל מיקרה?"
+
+msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
+msgstr "תוסף זה הוא לא חלק מליבת PIWIGO ! הסר אותו מייד!"
+
+msgid "ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW."
+msgstr "*שגיאה*: תוסף זה נראה חסר אבל מותקן! הסר אותו מייד."
+
+msgid "display"
+msgstr "הצג"
+
+msgid "You can update to Piwigo %s directly, without upgrading to Piwigo %s (recommended)."
+msgstr "אתה יכול לעדכן ל Piwigo %s ישירות, מבלי לשדרג ל Piwigo %s (מומלץ)."
+
+msgid "Save Template Directory"
+msgstr "שמור ספריית תבנית"
+
+msgid "Some upgrades are available for extensions."
+msgstr "מספר שידרוגים זמינים להרחבות."
+
+msgid "Ignore All"
+msgstr "התעלם מהכל"
+
+msgid "Crop"
+msgstr "חיתוך"
+
+msgid "Width"
+msgstr "רוחב"
+
+msgid "Height"
+msgstr "גובה"
+
+msgid "Follow Orientation"
+msgstr "עקוב אחר האוריינטציה"
+
+msgid "Graphics Library"
+msgstr "ספריית גרפיקה"
+
+msgid "Activate icon \"new\" next to albums and pictures"
+msgstr " הפעל סמליל \"חדש\" ליד אלבומים ותמונות"
+
+msgid "Deactivate all"
+msgstr "כבה הכל"
+
+msgid "Default photos order"
+msgstr "ברירת מחדל של סדר התמונות"
+
+msgid "Restore"
+msgstr "שחזר"
+
+msgid "Restore default configuration. You will lose your plugin settings!"
+msgstr "שחזר הגדרות ברירת מחדל. הגדרות התוסף יאבדו!"
+
+msgid "Show menubar"
+msgstr "הצג שורת תפריט"
+
+msgid "Thumbnails generation in progress..."
+msgstr "יצירת צלמיות בתהליך..."
+
+msgid "Photos generation in progress..."
+msgstr "ייצור תמונות בתהליך..."
+
+msgid "%s photos have been regenerated"
+msgstr "%s תמונות חודשו"
+
+msgid "%s photos can not be regenerated"
+msgstr "לא ניתן לחדש %s תמונות"
+
+msgid "Updates"
+msgstr "עדכונים"
+
+msgid "Update in progress... Please wait."
+msgstr "עדכון בתהליך... אנא המתן."
+
+msgid "Ignore this update"
+msgstr "התעלם מעידכון זה"
+
+msgid "Reset ignored updates"
+msgstr "אפס התעלמות מעידכונים"
+
+msgid "Update All"
+msgstr "עדכן הכל"
+
+msgid "ERROR"
+msgstr "*שגיאה*"
+
+msgid "Update Complete"
+msgstr "עידכון הושלם"
+
+msgid "Piwigo Update"
+msgstr "עדכון Piwigo"
+
+msgid "Extensions Update"
+msgstr "עדכון נרחבות"
+
+msgid "All extensions are up to date."
+msgstr "כל ההרחבות מעודכנות."
+
+msgid "Following plugins may not be compatible with the new version of Piwigo:"
+msgstr "ההתקנים הבאים כנראה לא תואמים לגירסה החדשה של Piwigo:"
+
+msgid "Following themes may not be compatible with the new version of Piwigo:"
+msgstr "ערכות הנושא כנראה לא תואמות לגירסה החדשה של Piwigo:"
+
+msgid "I decide to update anyway"
+msgstr "אני מחליט לעדכן בכל מיקרה"
+
+msgid "Update to Piwigo %s"
+msgstr "עדכן ל Piwigo %s"
+
+msgid "Two updates are available"
+msgstr "שני עידכונים זמינים"
+
+msgid "This is a minor update, with only bug corrections."
+msgstr "זהו עידכון שולי, רק עם תיקוני באגים."
+
+msgid "This is a major update, with <a href=\"%s\">new exciting features</a>."
+msgstr "זה עדכון משמעותי, עם <a href=\"%s\">מאפיינים חדשים ומלהיבים</a>."
+
+msgid "Some themes and plugins may be not available yet."
+msgstr "יכול להיות שחלק מהתוספים וערכות הנושא לא זמינים עדיין."
+
+msgid "Learn more"
+msgstr "למד עוד"
+
+msgid "Rate"
+msgstr "דירוג"
+
+msgid "Average rate"
+msgstr "דירוג ממוצע"
+
+msgid "(this tag will be deleted)"
+msgstr "(התגית הזאת תמחק)"
+
+msgid "... or "
+msgstr "או ..."
+
+msgid "Add a criteria"
+msgstr "הוסף קריטריון"
+
+msgid "Allowed file types: %s."
+msgstr "סוגי קבצים מותרים:%s"
+
+msgid "Approximate maximum resolution: %dM pixels (that's %dx%d pixels)."
+msgstr "רזולוציה מקסימלית: %dM פיקסלים(שזה %dx%d פיקסלים)."
+
+msgid "By default, Piwigo will create a new websize from the HD (high definition) version of your photo."
+msgstr "כברירת מחדל, Piwigo יצור גודל חדש לתמונות ה HD שלך."
+
+msgid "Confirm merge"
+msgstr "אשר מיזוג"
+
+msgid "Create"
+msgstr "צור"
+
+msgid "hide details"
+msgstr "הסתר פרטים"
+
+msgid "Manage Permissions"
+msgstr "נהל הרשאות"
+
+msgid "Maximum file size: %sB."
+msgstr "גודל קובץ מקסימאלי: %sB."
+
+msgid "Merge selected tags"
+msgstr "מזג את התגיות שנבחרו"
+
+msgid "Merge tags"
+msgstr "מיזוג תגיות"
+
+msgid "No destination tag selected"
+msgstr "לא ניבחרה תגית יעד"
+
+msgid "Photo %s of %s"
+msgstr "תמונה %s מתוך %s"
+
+msgid "Select an album"
+msgstr "בחר אלבום"
+
+msgid "Select at least two tags for merging"
+msgstr "בחר לפחות שתי תגיות למיזוג"
+
+msgid "Select the destination tag"
+msgstr "בחר את תגית היעד"
+
+msgid "show details"
+msgstr "הצג פרטים"
+
+msgid "Start Upload"
+msgstr "התחל טעינה"
+
+msgid "Tags <em>%s</em> merged into tag <em>%s</em>"
+msgstr "התגיות <em>%s</em> מוזגו לתוך תגית <em>%s</em>"
+
+msgid "You are using the Browser uploader. Try the <a href=\"%s\">Flash uploader</a> instead."
+msgstr "אתה משתמש בטעינה מהדפדפן. נסה <a href=\"%s\">טעינת פלאש</a> במקום."
+
+msgid "You are using the Flash uploader. Problems? Try the <a href=\"%s\">Browser uploader</a> instead."
+msgstr "אתה משתמש בטעינת פלאש. ישנה בעיה? נסה <a href=\"%s\">טעינה מהדפדפן</a> במקום."
+
+msgid "You can't define a default photo order because you have a custom setting in your local configuration."
+msgstr "אין באפשרותך לקבוע סדר תמונות ברירת מחדל מכיוון שאתה משתמש בהגדרות מותאמות אישית"
+
+msgid "Add to caddie"
+msgstr "הוסף לסל"
+
+msgid "Permalink"
+msgstr "קישור קבוע"
+
+msgid " and %d virtuals"
+msgstr "ו %d וירטואלים"
+
+msgid "%d day"
+msgstr "%d יום"
+
+msgid "%d days"
+msgstr "%d ימים"
+
+msgid "%d hour"
+msgstr "%d שעה"
+
+msgid "%d hours"
+msgstr "%d שעות"
+
+msgid "%d minute"
+msgstr "%d דקה"
+
+msgid "%d minutes"
+msgstr "%d דקות"
+
+msgid "%d month"
+msgstr "%d חודש"
+
+msgid "%d months"
+msgstr "%d חודשים"
+
+msgid "%d second"
+msgstr "%d שניה"
+
+msgid "%d seconds"
+msgstr "%d שניות"
+
+msgid "%d week"
+msgstr "%d שבוע"
+
+msgid "%d weeks"
+msgstr "%d שבועות"
+
+msgid "%d year"
+msgstr "%d שנה"
+
+msgid "%d years"
+msgstr "%d שנים"
+
+msgid "%s has been successfully updated."
+msgstr "%s עודכן בהצלחה."
+
+msgid "%s in the future"
+msgstr "%s בעתיד"
+
+msgid "A locked gallery is only visible to administrators"
+msgstr "גלריה נעולה נראית רק על ידי האדמינים"
+
+msgid "Activate comments"
+msgstr "הפעל תגובות"
+
+msgid "Add tags"
+msgstr "הוסף תגיות"
+
+msgid "Added by %s"
+msgstr "התווסף על-ידי %s"
+
+msgid "An error has occured during extract. Please check files permissions of your piwigo installation.<br><a href=\"%s\">Click here to show log error</a>."
+msgstr "ארעה שגיאה במהלך הייצוא. בדוק את הרשאות קבצי התקנת piwigo.<br><a href=\"%s\">לחץ כאן לראות את לוג השגיאות</a>."
+
+msgid "An error has occured during upgrade."
+msgstr "ארעה שגיאה במהלך שידרוג."
+
+msgid "Aperture is a powerful tool to refine images and manage massive libraries on Mac."
+msgstr "Aperture הוא כלי רב עוצמה לחדד תמונות ולנהל סיפריות ענק ב-mac"
+
+msgid "Aperture is designed for professional photographers with iPhoto simplicity."
+msgstr "Aperture עוצב עבור גרפיקאים מקצועיים עם הפשטות של iphoto"
+
+msgid "Applications"
+msgstr "יישומים"
+
+msgid "Apply watermark if height is bigger than"
+msgstr "הוסף חותמת מים(watermark) אם הגובה גדול מ"
+
+msgid "Apply watermark if width is bigger than"
+msgstr "הוסף חותמת מים(watermark) אם הרוחב גדול מ"
+
+msgid "Automatic sort order"
+msgstr "מיון אוטומטי"
+
+msgid "Available on"
+msgstr "זמין על"
+
+msgid "%d physicals"
+msgstr "%d פיזי"
+
+msgid "Piwigo for Android"
+msgstr "piwigo לאנדרואיד"
+
+msgid "Piwigo for iOS (iPhone, iPad, iPod Touch)"
+msgstr "piwigo לios (איפון, איפד, איפוד ואיפוד טאצ)"
+
+msgid "Posted %s on %s"
+msgstr "פורסם %s ב %s"
+
+msgid "Resize after upload"
+msgstr "שנה גודל אחרי טעינה"
+
+msgid "Save manual order"
+msgstr "שמור סדר ידני"
+
+msgid "Save visits in history for"
+msgstr "שמור ביקורים בהיסטוריה עבור"
+
+msgid "Select a file"
+msgstr "בחר קובץ"
+
+msgid "Select a zone with your mouse to define a new center of interest."
+msgstr "בחר איזור עם העכבר כדי להגדיר מוקד עניין חדש."
+
+msgid "Select groups..."
+msgstr "בחר קבוצות..."
+
+msgid "Select users..."
+msgstr "בחר משתמשים..."
+
+msgid "Send connection settings by email"
+msgstr "שלח פרטי התחברות בדואר"
+
+msgid "Source tag"
+msgstr "תגית מקור"
+
+msgid "There is no group in this gallery."
+msgstr "אין קבוצות בגלריה הזו"
+
+msgid "This album contains %d photos, added between %s and %s."
+msgstr "האלבום הזה מכיל %s תמונות, שנוספו בין ה %s ל %s"
+
+msgid "This album contains %d photos, added on %s."
+msgstr "האלבום הזה מכיל %s תמונות, נוספו ב %s"
+
+msgid "This album contains no photo."
+msgstr "האלבום הזה לא מכיל תמונות."
+
+msgid "Unlock gallery"
+msgstr "בטל נעילת גלריה"
+
+msgid "Visited %d times"
+msgstr "ביקרו בו %d פעמים"
+
+msgid "Watermark"
+msgstr "סימן מים"
+
+msgid "With no album"
+msgstr "ללא אלבום"
+
+msgid "middle"
+msgstr "אמצעי"
+
+msgid "modified"
+msgstr "עודכן"
+
+msgid "registered users"
+msgstr "משתמשים רשומים"
+
+msgid "top left corner"
+msgstr "פינה שמאלית עליונה"
+
+msgid "top right corner"
+msgstr "פינה ימנית עליונה"
+
+msgid "visitors need to login and have the appropriate permissions to see this album"
+msgstr "מבקרים צריכים להתחבר ולהיות בעלי הרשאות מתאימות כדי לראות את האלבום הזה"
+
+msgid "With no tag"
+msgstr "ללא תגית"
+
+msgid "With no virtual album"
+msgstr "ללא אלבום ורטואלי"
+
+msgid "X Position"
+msgstr "X מיקום"
+
+msgid "X Repeat"
+msgstr "X חזרות"
+
+msgid "Y Position"
+msgstr "Y מיקום"
+
+msgid "Zoom"
+msgstr "זום"
+
+msgid "add a new watermark"
+msgstr "הוסף סימן מים חדש"
+
+msgid "administrators"
+msgstr "אדמינים"
+
+msgid "any visitor can see this album"
+msgstr "כל מבקר יכול לראות את האלבום הזה"
+
+msgid "apply automatic sort order"
+msgstr "החל סדר מיון אוטומטי"
+
+msgid "bottom left corner"
+msgstr "פינה שמאלית תחתונה"
+
+msgid "bottom right corner"
+msgstr "פינה ימנית תחתונה"
+
+msgid "cancel manual order"
+msgstr "בטל סידור ידני"
+
+msgid "create a new site"
+msgstr "צור אתר חדש"
+
+msgid "custom"
+msgstr "מותאם אישית"
+
+msgid "Photo name"
+msgstr "שם התמונה"
+
+msgid "Move to album"
+msgstr "הזז לאלבום"
+
+msgid "Multiple Size"
+msgstr "מספר גדלים"
+
+msgid "Name of the duplicate"
+msgstr "שם של השכפול"
+
+msgid "No group is permitted to see this private album"
+msgstr "לאף קבוצה אין הרשאה לראות את האלבום הפרטי הזה"
+
+msgid "Original Size"
+msgstr "גודל מקורי"
+
+msgid "Cancel"
+msgstr "ביטול"
+
+msgid "Center of interest"
+msgstr "מוקד העניין"
+
+msgid "Default comments order"
+msgstr "ברירת מחדל של סדר התגובות"
+
+msgid "Duplicate selected tags"
+msgstr "שכפל תגיות מסומנות"
+
+msgid "Edit photo"
+msgstr "ערוך תמונה"
+
+msgid "Gallery unlocked"
+msgstr "גלריה ללא נעילה"
+
+msgid "Groups and users"
+msgstr "קבוצות ומשתמשים"
+
+msgid "Last import"
+msgstr "ייבוא אחרון"
+
+msgid "List"
+msgstr "רשימה"
+
+msgid "%s ago"
+msgstr "לפני %s"
+
+msgid "%u users have automatic permission because they belong to a granted group."
+msgstr "ל-%u משתמשים יש הרשאה אוטומטית כי הם שייכים לקבוצה מורשית."
+
+msgid "digiKam is designed for photographers who want to view, manage, edit, enhance, organize, tag, and share photographs."
+msgstr "digiKam מיועד לצלמים שרוצים להציג, לנהל, לערוך, לשפר, לארגן, לתייג, ולשתף תצלומים."
+
+msgid "iPhoto is the default photo manager on MacOSX. The Piwigo export plugin let you create new albums and export your photos directly from iPhoto to your Piwigo photo gallery."
+msgstr "iPhoto הוא מנהל התמונת הברירת המחדל בMacOSX.תוסף יצוא Piwigo מאפשר לך ליצור אלבומים חדשים ולייצא את תמונות ישירות מ-iPhoto לגלריית תמונות Piwigo."
+
+msgid "digiKam is an advanced digital photo management free software for Linux, Windows, and MacOSX."
+msgstr "digiKam היא תוכנה מתקדמת לניהול תמונות דיגיטלית חופשיה עבור לינוקס, Windows ו MacOSX."
+
+msgid "To export your photos from digiKam to Piwigo, simply install digiKam and the Kipi-plugins."
+msgstr "כדי לייצא את התמונות שלך מ-digiKam ל-Piwigo, פשוט התקן digiKam ו-kipi-plugins"
+
+msgid "Web Form"
+msgstr "טופס רשת"
+
+msgid "Piwigo Publish plugin for Lightroom"
+msgstr "תוסף פירסום Piwigo עבור Lightroom"
+
+msgid "Piwigo export plugin for Aperture"
+msgstr "תוסף יצוא Piwigo עבור Aperture"
+
+msgid "Piwigo export plugin for iPhoto"
+msgstr "תוסף יצוא Piwigo עבור iPhoto"
+
+msgid "Piwigo publish plugin for Shotwell"
+msgstr "תוסף פירסום Piwigo עבור Shotwell"
+
+msgid "Piwigo publish plugin for digiKam"
+msgstr "תוסף פירסום Piwigo עבור digiKam"
+
+msgid "Predefined filter"
+msgstr "מסנן מוגדר מראש"
+
+msgid "Sharpen"
+msgstr "חדד"
+
+msgid "Portrait"
+msgstr "אנכי"
+
+msgid "Rated %d times, score : %.2f"
+msgstr "דורג %d פעמים, ציון: %.2f"
+
+msgid "Ratio"
+msgstr "יחס"
+
+msgid "View in gallery"
+msgstr "צפה בגלריה"
+
+msgid "You can activate only one mobile theme."
+msgstr "אתה יכול להפעיל רק ערכת נושא אחת לסלולרי"
+
+msgid "between %.2f and %.2f"
+msgstr "בין %.2f ו %.2f"
+
+msgid "between %d and %d pixels"
+msgstr "בין %d ו %d פיקסלים"
+
+msgid "include photos with lower privacy level"
+msgstr "כולל תמונות עם רמת פרטיות נמוכה"
+
+msgid "pending validation"
+msgstr "ממתין לאישור"
+
+msgid "simple visitors"
+msgstr "מבקרים פשוטים"
+
+msgid "Photo sizes with crop"
+msgstr "גדלי תמונות עם חיתוך"
+
+msgid "Landscape"
+msgstr "אופקי"
+
+msgid "Not cropped correctly?"
+msgstr "לא נחתך בצורה נכונה?"
+
+msgid "Original file : %s"
+msgstr "קובץ מקורי: %s"
+
+msgid "Panorama"
+msgstr "פנורמה"
+
+msgid "Permission granted for groups"
+msgstr "הרשאה ניתנה לקבוצות"
+
+msgid "Permission granted for users"
+msgstr "הרשה ניתנה למשתמשים"
+
+msgid "Permission management"
+msgstr "ניהול הרשאות"
+
+msgid "Delete multiple size images"
+msgstr "מחק גדלים מרובים של תמונות"
+
+msgid "Generate multiple size images"
+msgstr "צור גדלים מרובים לתמונות"
+
+msgid "No order field selected"
+msgstr "לא נבחר שדה סדר"
+
+msgid "Manage photos"
+msgstr "נהל תמונות"
+
+msgid "Minimum height"
+msgstr "גובה מינימלי"
+
+msgid "Minimum width"
+msgstr "רוחב מינימלי"
+
+msgid "Number of albums per page"
+msgstr "מספר אלבומים בעמוד"
+
+msgid "Opacity"
+msgstr "אטימות"
+
+msgid "Rename"
+msgstr "שנה שם"
+
+msgid "Duplicate"
+msgstr "שכפל"
+
+msgid "Manage the members"
+msgstr "נהל את החברים"
+
+msgid "Merge selected groups"
+msgstr "מזג את הקבוצות שנבחרו"
+
+msgid "No groups selected, no actions possible."
+msgstr "אף קבוצה לא נבחרה, אין פעולות אפשריות."
+
+msgid "No members to manage"
+msgstr "אין חברים לנהל"
+
+msgid "Notify administrators when a comment is"
+msgstr "עדכן אדמינים כאשר תגובה היא"
+
+msgid "Piwigo cannot retrieve upgrade file from server"
+msgstr "Piwigo לא יכולה לטעון את קבצי השדרוג מהשרת"
+
+msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
+msgstr "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
+
+msgid "This group will be set to default"
+msgstr "קבוצה זו תשמש כברירת מחדל"
+
+msgid "This group will be unset to default"
+msgstr "קבוצה זו לא תשמש יותר כברירת מחדל"
+
+msgid "Type here the name of the new group"
+msgstr "כתוב את שם הקבוצה החדשה כאן"
+
+msgid "Update user"
+msgstr "עדכן משתמש"
+
+msgid "User %s added"
+msgstr "משתמש %s התווסף"
+
+msgid "User %s updated"
+msgstr "משתמש %s עודכן"
+
+msgid "on the %d selected users"
+msgstr "על %d המשתמשים שנבחרו"
+
+msgid "The original maximum height must be a number between %d and %d"
+msgstr "הגובה המקסימאלי המקורי צריך להיות מספר בין %d ו-%d "
+
+msgid "The original maximum width must be a number between %d and %d"
+msgstr "הרוחב המקסימאלי המקורי צריך להיות מספר בין %d ו-%d "
+
+msgid "The picture dimensions will be reduced to %dx%d pixels."
+msgstr "מימדי התמונה יוקטנו ל-%dx%d פיקסלים."
+
+msgid "The center of interest is the most meaningful zone in the photo."
+msgstr "מוקד העניין הוא האזור המשמעותי ביותר של התמונה."
+
+msgid "The original image quality must be a number between %d and %d"
+msgstr "האיכות המקורית של התמונה צריכה להיות מספר בין %d ו-%d "
+
+msgid "The Piwigo publish Plug-in allows you to export and synchronize photos from Lightroom directly to your Piwigo photo gallery."
+msgstr "פלאגין הפרסום של Piwigo מאפשר לייצא ולבצע סינכרון של תמונות מתוך אדובי לייטרום ישירות לגלריית התמונות של Piwigo"
+
+msgid "The Piwigo export plugin allows you to create albums and export photos."
+msgstr "פלאגין הייצוא של Piwigo מאפשר ליצור אלבומים ולייצא תמונות."
+
+msgid "Users modified"
+msgstr "משתמשים עודכנו"
+
+msgid "close"
+msgstr "סגור"
+
+msgid "Tag \"%s\" is now a duplicate of \"%s\""
+msgstr "התגית \"%s\" היא כעת שכפול של \"%s\""
+
+msgid "Showing %s to %s of %s users"
+msgstr "מציג %s עד %s מתוך %s משתמשים"
+
+msgid "Show %s users"
+msgstr "הצג %s משתמשים"
+
+msgid "Shotwell is an open source digital photo organizer that runs on Linux. It is the default photo manager in Ubuntu and Fedora."
+msgstr "Shotwell הוא מנהל תמונות קוד פתוח שרץ על לינוקס. הוא ברירת המחדל של מנהל התמונות ב- Ubuntu וב- Fedora"
+
+msgid "Select at least one tag"
+msgstr "בחר לפחות תגית אחת"
+
+msgid "Resize after upload disabled due to the use of GD as graphic library"
+msgstr "שינוי גודל אחרי העלאת תמונה נוטרל עקב שימוש ב- GD כספריית גרפיקה"
+
+msgid "Registered on %s, %s."
+msgstr "נרשם ב-  %s, %s"
+
+msgid "ReGalAndroid (RemoteGallery client for Android) is an open source (GPL v3) Piwigo client for the Android platform."
+msgstr "ReGalAndroid (RemoteGallery client for Android) זהו קליינט קוד פתוח  (GPL v3) של Piwigo עבור פלטפורמת אנדרואיד"
+
+msgid "Purge user cache"
+msgstr "נקה את המטמון של המשתמש"
+
+msgid "Please select at least two groups"
+msgstr "אנא בחר לפחות שתי קבוצות"
+
+msgid "Password updated"
+msgstr "סיסמא עודכנה"
+
+msgid "Open user details"
+msgstr "פתח פרטי משתמש"
+
+msgid "Numeric identifier : %d"
+msgstr "מזהה מספרי: %d"
+
+msgid "On your Linux, simply install Shotwell with your package manager and the activate Piwigo publishing option."
+msgstr "במערכת הלינוקס שלך, פשוט התקן Shotwell עם מנהל החבילות ואז את הפעל את אפשרות הפרסום של Piwigo."
+
+msgid "No user selected of %d users"
+msgstr "לא נבחר משתמש מתוך %d משתמשים"
+
+msgid "No users selected, no actions possible."
+msgstr "לא נבחר משתמש, אין אפשרות לבצע אף פעולה."
+
+msgid "<em>Piwigo for Android</em> application empowers you to connect your Android phone or table to your Piwigo gallery, create some albums and upload several photos at once."
+msgstr "<em> אפליקציית Piwigo עבור אנדרואיד</em>  מאפשרת לך להתחבר מטלפון האנדרואיד או הטאבלט שלך לגלריית Piwigo, ליצור אלבומים ולהעלות מספר תמונות בו זמנית "
+
+msgid "Last visit on %s, %s."
+msgstr "ביקור אחרון ב- %s, %s."
+
+msgid "Mail theme"
+msgstr "ערכת נושא דואר"
+
+msgid "No matching user found"
+msgstr "לא נמצא משתמש מתאים"
+
+msgid "Loading..."
+msgstr "טוען..."
+
+msgid "If no HD is available and if the current websize is bigger than resize dimensions, Piwigo will move it as HD and create a downsized websize photo from it."
+msgstr "אם אין גודל HD ואם הגודל הנוכחי גדול ממימדי השינוי, Piwigo יזיז זאת כ-HD ויצור תמונה מוקטנת "
+
+msgid "General"
+msgstr "כללי"
+
+msgid "For photo sizes with crop, such as \"Square\", Piwigo will do its best to include the center of interest."
+msgstr "עבור גדלי תמונה עם חיתוך, כמו \"ריבוע\", Piwigo יעשה כמיטב יכולתו לכלול את מוקד העניין"
+
+msgid "Features include gallery browsing, album creation and photo upload."
+msgstr "התכונות כוללות עיון בגלרייה, יצירת אלבום והעלאת תמונה"
+
+msgid "Close user details"
+msgstr "סגור פרטי משתמש"
+
+msgid "Change username"
+msgstr "שנה שם משתמש"
+
+msgid "Change password"
+msgstr "שנה ססמה"
+
+msgid "By default, the center of interest is placed in the middle of the photo."
+msgstr "כברירת מחדל, מרכז העניין ממוקם במרכז התמונה"
+
+msgid "Basic settings"
+msgstr "הגדרות בסיסיות"
+
+msgid "All %d users are selected"
+msgstr "כל %d המשתמשים נבחרו"
+
+msgid "Adobe Photoshop Lightroom is a photography software designed to manage large quantities of digital images and doing post production work."
+msgstr "אדובי פוטושופ לייטרום היא תכנת עיבוד צילום המתוכננת לנהל כמויות גדולות של צילומים ולבצע עבודת עיבוד פוסט "
+
+msgid "Activate it now"
+msgstr "הפעל זאת כעת"
+
+msgid "<em>Piwigo for iOS</em> application empowers you to connect to your Piwigo gallery from your iPhone, iPad or iPod Touch, create some albums and upload several photos at once."
+msgstr "<em> אפליקציית Piwigo עבור iOS</em>  מאפשרת לך להתחבר ממכשירי iPhone, iPad או Ipod Touch שלך לגלריית Piwigo, ליצור אלבומים ולהעלות מספר תמונות בו זמנית."
+
+msgid "(filtered from %s total users)"
+msgstr "(מסונן מתוך %s סך הכל משתמשים)"
+
+msgid "%d of %d users selected"
+msgstr "%d מתוך %d משתמשים נבחרו"
+
+msgid "Allow users to add a link to their website"
+msgstr "אפשר למשתמשים להוסיף קישור לאתר שלהם"
+
+msgid "Empty caddie"
+msgstr "סל ריק"
+
+msgid "Impossible to deactivate the default theme."
+msgstr "לא ניתן לכבות את ערכת נושא ברירת המחדל."
+
+msgid "Mail address is mandatory for registration"
+msgstr "חובה להזין כתובת דואר כדי להירשם"
+
+msgid "No and unlock sub-albums"
+msgstr "לא ובטל נעילת אלבומי משנה"
+
+msgid "The settings for the guest are from the %s user"
+msgstr "ההגדרות עבור האורח הם ממשתמש %s"
+
+msgid "based on"
+msgstr "מבוסס על"
+
+msgid "between %s and %s MB"
+msgstr "בין %s ו %s MB"
+
+msgid "date & time"
+msgstr "תאריך ושעה"
+
+msgid "file name"
+msgstr "שם קובץ"
+
+msgid "width & height"
+msgstr "רוחב וגובה"
+
+msgid "Upload in progress"
+msgstr "טעינה בתהליך"
+
+msgid "Piwigo Remote Sync is able to upload a whole folder hierarchy. If you run it again, only new photos will be uploaded."
+msgstr "Piwigo Remote Sync מסוגל להעלות היררכיית תיקיות שלמה. אם תריץ אותו שוב, רק תמונות חדשות יועלו."
+
+msgid "Running on an up-to-date Piwigo is important for security."
+msgstr "הרצת פיוויגו מעודכן חשובה לאבטחה."
+
+msgid "No recipient selected"
+msgstr "לא נבחרו נמענים"
+
+msgid "Recipients"
+msgstr "נמענים"
+
+msgid "Select tags"
+msgstr "בחר תגיות"
+
+msgid "Share / Send your photos directly from your Mac Os X (10.10 and following) to Piwigo"
+msgstr "שתף/שלח את התמונות שלך ישירות ממערכת ה-macOS שלך (גירסא 10.10 ומעלה) לפיוויגו"
+
+msgid "Storage used"
+msgstr "אכסון בשימוש"
+
+msgid "Time has come to update your Piwigo with version %s, go to %s"
+msgstr "הגיע הזמן לעדכן את פיוויגו לגירסא %s, עבור אל %s"
+
+msgid "Y Repeat"
+msgstr "חזרה בציר Y"
+
+msgid "checksum"
+msgstr "צ׳קסאם"
+
+msgid "delete album and all %d photos, even the %d associated to other albums"
+msgstr "מחק אלבום וכל %d התמונות, אפילו את ה-%d המשויכות לאלבומים אחרים."
+
+msgid "delete album and the %d orphan photos"
+msgstr "מחק אלבום ואת %d התמונות המיותמות"
+
+msgid "delete only album, not photos"
+msgstr "מחק רק את האלבום, לא את התמונות"
+
+msgid "orphans to delete"
+msgstr "יתומים למחיקה"
+
+msgid "(determined from photos)"
+msgstr "(נקבע מתמונות)"
+
+msgid "Confirm deletion"
+msgstr "אשר מחיקה"
+
+msgid "Dashboard"
+msgstr "דשבורד"
+
+msgid "Delete %d orphan photos"
+msgstr "מחק %d תמונות מיותמות"
+
+msgid "Delete album \"%s\" and its %d sub-albums."
+msgstr "מחק אלבום ״%s״ ואת %d תתי האלבומים שלו."
+
+msgid "Delete album \"%s\"."
+msgstr "מחק אלבום ״%s״."
+
+msgid "Display form"
+msgstr "הצג טופס"
+
+msgid "Each email sent will contain its own automatic authentication key on links, valid for %s."
+msgstr "כל דואל שיישלח יכיל את מפתח האימות האוטומטי האישי שלו על קישורים, תקף ל%s."
+
+msgid "Edit user"
+msgstr "ערוך משתמש"
+
+msgid "For security reason, authentication keys do not work for administrators."
+msgstr "מפתחות אימות לא עובדים עבור אדמינים מסיבות אבטחה."
+
+msgid "It only takes a few clicks."
+msgstr "זה רק מצריך מספר לחיצות."
+
+msgid "No filter on album. Select one or type to search"
+msgstr "אין סינון על האלבום. בחר אחד או הקלד לחיפוש"
+
+msgid "No tags selected, no actions possible."
+msgstr "לא נבחרה תגית, לא ניתן לבצע שום פעולה."
+
+msgid "No user is permitted to see this private album"
+msgstr "לאף משתמש אין הרשאה לצפות באלבום פרטי זה"
+
+msgid "Orphans"
+msgstr "יתומים"
+
+msgid "Piwigo %s is available, please update"
+msgstr "פיוויגו %s זמין, אנא עדכן"
+
+msgid "%d checksums were added"
+msgstr "התווספו %d צ'קסאמים"
+
+msgid "... or hide this link"
+msgstr "... או הסתירו קישור זה"
+
+msgid "Compute %d missing checksums"
+msgstr "חשבו %d צ'קסאמים חסרים"
+
+msgid "Create a first album"
+msgstr "צרו אלבום ראשון"
+
+msgid "Deletion in progress"
+msgstr "מתבצעת מחיקה"
+
+msgid "Display album date period"
+msgstr "הציגו את התקופה המשוייכת לכל אלבום, לדוגמא: \"מ-12 עד ה-15 ליולי, 2018\""
+
+msgid "Display category date"
+msgstr "הציגו את תאריך הקטגוריה"
+
+msgid "Piwigo requires an album to add photos."
+msgstr "פיוויגו זקוק לאלבום כדי להוסיף תמונות"
+
+msgid "Some checksums are missing."
+msgstr "מספר צ'קסאמים חסרים."
+
+msgid "Synchronization in progress"
+msgstr "מתבצע סינכרון"
+
+msgid "Visit"
+msgstr "ביקור"
+
+msgid "Welcome!"
+msgstr "ברוכים הבאים!"
+
+msgid "With no checksum"
+msgstr "ללא צ'קסאם"
+
+msgid "checksums to add"
+msgstr "צ'קסאמים להוספה"
+
+msgid "or"
+msgstr "או"
+
+msgid "Group renamed"
+msgstr "שם הקבוצה שונה"
+
+msgid "Has access to administration. Can only manage content: photos/albums/users/tags/groups."
+msgstr "יש לו גישה לממשק הניהול. הוא יכול לנהל רק תוכן: תמונות/אלבומים/משתמשים/תגים/קבוצות."
+
+msgid "Has access to all administration functionnalities. Can manage both configuration and content."
+msgstr "יש לו גישה לכל פונקציות הניהול. הוא יכול לנהל גם את ההגדרות וגם את התוכן"
+
+msgid "Hide sub-albums"
+msgstr "הסתר תתי-אלבומים"
+
+msgid "If anything bad happens during the update, you would be able to restore a backup."
+msgstr "אם יקרה משהו רע במהלך העדכון, תוכל לשחזר גיבוי"
+
+msgid "Image"
+msgstr "תמונה"
+
+msgid "Install Piwigo on mobile"
+msgstr "התקן את Piwigo על מכשיר נייד"
+
+msgid "Installed on %s, %s"
+msgstr "הותקן ב-%s, %s"
+
+msgid "Jan"
+msgstr "ינואר"
+
+msgid "Jul"
+msgstr "יולי"
+
+msgid "Jun"
+msgstr "יוני"
+
+msgid "Keep them"
+msgstr "שמור אותם"
+
+msgid "Language"
+msgstr "שפה"
+
+msgid "Last revision date is newer than"
+msgstr "תאריך הגרסה האחרונה מאוחר יותר מ"
+
+msgid "Last visit"
+msgstr "ביקור אחרון"
+
+msgid "Latest Piwigo news"
+msgstr "חדשות Piwigo האחרונות"
+
+msgid "Line View"
+msgstr "תצוגת שורה"
+
+msgid "Locked album"
+msgstr "אלבום נעול"
+
+msgid "During upload, if Piwigo detects the photo already exists, associate the existing photo to the destination album, without duplicating file"
+msgstr "במהלך ההעלאה, אם Piwigo מזהה שהתמונה כבר קיימת, יש לחבר את התמונה הקיימת לאלבום היעד, מבלי לשכפל את הקובץ"
+
+msgid "Edit"
+msgstr "ערוך"
+
+msgid "Edit guest user"
+msgstr "ערוך משתמש אורח"
+
+msgid "Edit photo #%s"
+msgstr "ערוך תמונה #%s"
+
+msgid "Edited on %s"
+msgstr "נערך ב-%s"
+
+msgid "Email"
+msgstr "דוא\"ל"
+
+msgid "Email Adress"
+msgstr "כתובת דוא\"ל"
+
+msgid "Equivalent to deactivation. The user is still in the list, but can no longer log in."
+msgstr "שווה לשבתה. המשתמש עדיין ברשימה, אך לא יכול להתחבר יותר."
+
+msgid "Error when trying to detect formats"
+msgstr "שגיאה בניסיון לזהות פורמטים"
+
+msgid "Expand"
+msgstr "הרחב"
+
+msgid "Extensions"
+msgstr "הרחבות"
+
+msgid "Feb"
+msgstr "פברואר"
+
+msgid "File type: %s"
+msgstr "סוג קובץ: %s"
+
+msgid "Filters"
+msgstr "סינונים"
+
+msgid "First choose an album, then add your files"
+msgstr "בחר אלבום קודם, ואז הוסף את הקבצים שלך"
+
+msgid "Formats"
+msgstr "פורמטים"
+
+msgid "Generate random password"
+msgstr "צור סיסמה אקראית"
+
+msgid "Global Gallery Actions"
+msgstr "פעולות גלריה כלליות"
+
+msgid "Group \"%s\" succesfully deleted"
+msgstr "הקבוצה \"%s\" נמחקה בהצלחה"
+
+msgid "Group added"
+msgstr "הקבוצה נוספה"
+
+msgid "Deactivated"
+msgstr "מושבת"
+
+msgid "Dec"
+msgstr "דצמבר"
+
+msgid "Delete %s format ?"
+msgstr "האם למחוק את פורמט %s?"
+
+msgid "Delete album"
+msgstr "מחק אלבום"
+
+msgid "Delete orphan tags ?"
+msgstr "האם למחוק תגים יתומים?"
+
+msgid "Delete tag \"%s\"?"
+msgstr "האם למחוק את התג \"%s\"?"
+
+msgid "Delete tags \\{%s\\}?"
+msgstr "האם למחוק את התגים \\{%s\\}?"
+
+msgid "Delete them"
+msgstr "מחק אותם"
+
+msgid "Delete these sizes"
+msgstr "מחק את הגדלים האלה"
+
+msgid "Delete user"
+msgstr "מחק משתמש"
+
+msgid "Details"
+msgstr "פרטים"
+
+msgid "Detect and avoid duplicates during upload"
+msgstr "גלה והימנע מכפילויות במהלך ההעלאה"
+
+msgid "Disallow comments for sub-albums"
+msgstr "אסור להגיב על תתי-אלבומים"
+
+msgid "Discover"
+msgstr "גלה"
+
+msgid "Display"
+msgstr "הצג"
+
+msgid "Displays a banner to install or open the official Piwigo app"
+msgstr "מציג באנר להתקנה או פתיחה של אפליקציית Piwigo הרשמית"
+
+msgid "Dissociate user from this group"
+msgstr "הסר את המשתמש מקבוצה זו"
+
+msgid "Download all activities"
+msgstr "הורד את כל הפעילויות"
+
+msgid "Downloaded"
+msgstr "הורד"
+
+msgid "Drag and drop to reorder albums"
+msgstr "גרור ושחרר על מנת לסדר מחדש את האלבומים"
+
+msgid "Close"
+msgstr "סגור"
+
+msgid "Comments allowed for sub-albums"
+msgstr "תגובות מותרות עבור תתי-אלבומים"
+
+msgid "Comments disallowed for sub-albums"
+msgstr "תגובות אסורות עבור תתי-אלבומים"
+
+msgid "Compact View"
+msgstr "תצוגה דחוסה"
+
+msgid "Compare mode"
+msgstr "מצב השוואה"
+
+msgid "Copied link"
+msgstr "קישור הועתק"
+
+msgid "Copy password"
+msgstr "העתק סיסמה"
+
+msgid "Copy the link below and send it to the user so the password can be set."
+msgstr "העתק את הקישור למטה ושלח אותו למשתמש כדי שהסיסמה תוכל להתקבע."
+
+msgid "Copy the password link"
+msgstr "העתק את קישור הסיסמה"
+
+msgid "Core"
+msgstr "ליבה"
+
+msgid "Create a new album at root"
+msgstr "צור אלבום חדש בשורש"
+
+msgid "Create a root album"
+msgstr "צור אלבום ראשי"
+
+msgid "Create a sub-album of \"%s\""
+msgstr "צור תת-אלבום של \"%s\""
+
+msgid "Create and select"
+msgstr "צור ובחר"
+
+msgid "Create your first album"
+msgstr "צור את האלבום הראשון שלך"
+
+msgid "Created"
+msgstr "נוצר"
+
+msgid "Created on %s"
+msgstr "נוצר ב-%s"
+
+msgid "Creation mode"
+msgstr "מצב יצירה"
+
+msgid "Current Version"
+msgstr "גירסה נוכחית"
+
+msgid "Currently running version %s"
+msgstr "הגירסה שרצה כרגע היא %s"
+
+msgid "Are you sure you want to restore to default settings?"
+msgstr "האם אתה בטוח שברצונך לשחזר את ההגדרות לברירות מחדל?"
+
+msgid "Are you sure you want to uninstall the plugin \"%s\"?"
+msgstr "האם אתה בטוח שברצונך להסיר את התוסף \"%s\"?"
+
+msgid "Are you sure you want to unlock the gallery?"
+msgstr "האם אתה בטוח שברצונך לפתוח את נעילת הגלריה?"
+
+msgid "Are you sure you want to update all extensions?"
+msgstr "האם אתה בטוח שברצונך לעדכן את כל התוספים?"
+
+msgid "Associate User"
+msgstr "קשר משתמש"
+
+msgid "At least 2 selected tags are needed to merge"
+msgstr "יש לבחור לפחות 2 תגים על מנת למזג"
+
+msgid "Aug"
+msgstr "אוגוסט"
+
+msgid "Authorize comments"
+msgstr "אשר תגובות"
+
+msgid "Auto-update"
+msgstr "עדכון אוטומטי"
+
+msgid "Average last 12 months"
+msgstr "ממוצע 12 החודשים האחרונים"
+
+msgid "Cache"
+msgstr "מטמון"
+
+msgid "Cache size"
+msgstr "גודל המטמון"
+
+msgid "Can be shared by several individuals without conflict (they cannot change the password)."
+msgstr "ניתן לשתף עם מספר אנשים ללא התנגשויות (הם לא יכולים לשנות את הסיסמה)."
+
+msgid "Cannot send an email to this user because he doesn't have an email address"
+msgstr "לא ניתן לשלוח דוא\"ל למשתמש הזה מכיוון שאין לו כתובת דוא\"ל"
+
+msgid "Certification higher or equal to"
+msgstr "הסמכה גבוהה או שווה ל"
+
+msgid "Change Password"
+msgstr "שנה סיסמה"
+
+msgid "Changes saved"
+msgstr "השינויים נשמרו"
+
+msgid "Changing the main user"
+msgstr "שינוי המשתמש הראשי"
+
+msgid "Choose which tag to merge these tags into"
+msgstr "בחר את התג שאליו יש למזג את התגים האלה"
+
+msgid "Clear Selection"
+msgstr "נקה בחירה"
+
+msgid "An error has occured"
+msgstr "חלה שגיאה"
+
+msgid "Apply an automatic order to root albums"
+msgstr "החל סדר אוטומטי לאלבומים הראשיים"
+
+msgid "Apply to direct sub-albums"
+msgstr "החל על תתי-אלבומים ישירים"
+
+msgid "Apply to root albums"
+msgstr "החל על אלבומים ראשיים"
+
+msgid "Apply to the whole hierarchy"
+msgstr "החל על כל ההיררכיה"
+
+msgid "Apr"
+msgstr "אפריל"
+
+msgid "Are you sure you want to delete all sizes?"
+msgstr "האם אתה בטוח שברצונך למחוק את כל הגדלים?"
+
+msgid "Are you sure you want to delete group \"%s\"?"
+msgstr "האם אתה בטוח שברצונך למחוק את הקבוצה \"%s\"?"
+
+msgid "Are you sure you want to delete the language \"%s\"?"
+msgstr "האם אתה בטוח שברצונך למחוק את השפה \"%s\"?"
+
+msgid "Are you sure you want to delete the plugin \"%s\"?"
+msgstr "האם אתה בטוח שברצונך למחוק את התוסף \"%s\"?"
+
+msgid "Are you sure you want to delete the ratings of the user \"%s\"?"
+msgstr "האם אתה בטוח שברצונך למחוק את הדירוגים של המשתמש \"%s\"?"
+
+msgid "Are you sure you want to delete the theme \"%s\"?"
+msgstr "האם אתה בטוח שברצונך למחוק את העיצוב \"%s\"?"
+
+msgid "Are you sure you want to delete the user \"%s\"?"
+msgstr "האם אתה בטוח שברצונך למחוק את המשתמש \"%s\"?"
+
+msgid "Are you sure you want to delete this site?"
+msgstr "האם אתה בטוח שברצונך למחוק את האתר הזה?"
+
+msgid "Are you sure you want to delete this theme?"
+msgstr "האם אתה בטוח שברצונך למחוק את העיצוב הזה?"
+
+msgid "Are you sure you want to delete this?"
+msgstr "האם אתה בטוח שברצונך למחוק את זה?"
+
+msgid "Are you sure you want to install the plugin \"%s\"?"
+msgstr "האם אתה בטוח שברצונך להתקין את התוסף \"%s\"?"
+
+msgid "Are you sure you want to lock the gallery?"
+msgstr "האם אתה בטוח שברצונך לנעול את הגלריה?"
+
+msgid "Are you sure you want to restore the plugin \"%s\"?"
+msgstr "האם אתה בטוח שברצונך לשחזר את התוסף \"%s\"?"
+
+msgid "Are you sure you want to restore this plugin?"
+msgstr "האם אתה בטוח שברצונך לשחזר את התוסף הזה?"
+
+msgid "Activity peak in the last weeks"
+msgstr "שיא פעילות בשבועות האחרונים"
+
+msgid "Activity time from"
+msgstr "זמן פעילות מ"
+
+msgid "Add Album"
+msgstr "הוסף אלבום"
+
+msgid "Add New Plugin"
+msgstr "הוסף תוסף חדש"
+
+msgid "Add User"
+msgstr "הוסף משתמש"
+
+msgid "Add a new user"
+msgstr "הוסף משתמש חדש"
+
+msgid "Add a sub-album to “%s”"
+msgstr "הוסף תת-אלבום ל-“%s”"
+
+msgid "Add another set of formats"
+msgstr "הוסף סט נוסף של פורמטים"
+
+msgid "Add as filter"
+msgstr "הוסף כפילטר"
+
+msgid "Add formats"
+msgstr "הוסף פורמטים"
+
+msgid "Added on %s"
+msgstr "הוסף ב-%s"
+
+msgid "Additional filters"
+msgstr "פילטרים נוספים"
+
+msgid "Advanced filters"
+msgstr "פילטרים מתקדמים"
+
+msgid "Album name must not be empty"
+msgstr "שם אלבום לא יכול להיות ריק"
+
+msgid "Album search tool"
+msgstr "כלי חיפוש אלבומים"
+
+msgid "All admins"
+msgstr "כל המנהלים"
+
+msgid "Allow comments for sub-albums"
+msgstr "אפשר תגובות לתת-אלבומים"
+
+msgid "Always have a backup of your database and files."
+msgstr "תמיד שמור גיבוי של מסד הנתונים והקבצים שלך"
+
+msgid "<b>%d+</b> albums found, try to refine the search"
+msgstr "<b>%d+</b> אלבומים נמצאו, נסה לחדד את החיפוש"
+
+msgid "<b>%d</b> albums found"
+msgstr "<b>%d</b> אלבומים נמצאו"
+
+msgid "<b>%d</b> filtered user"
+msgstr "<b>%d</b> משתמש מסונן"
+
+msgid "<b>%d</b> filtered users"
+msgstr "<b>%d</b> משתמשים מסוננים"
+
+msgid "<b>%d</b> tag found"
+msgstr "<b>%d</b> תג נמצא"
+
+msgid "<b>%d</b> tag selected"
+msgstr "<b>%d</b> תג נבחר"
+
+msgid "<b>%d</b> tags found"
+msgstr "<b>%d</b> תגים נמצאו"
+
+msgid "<b>1</b> album found"
+msgstr "<b>1</b> אלבום נמצא"
+
+msgid "Activate button \"%s\""
+msgstr "הפעל כפתור \"%s\""
+
+msgid "Activate create mode to create and select an album"
+msgstr "הפעל מצב יצירה כדי ליצור ולבחור אלבום"
+
+msgid "Activated"
+msgstr "הופעל"
+
+msgid "Activated plugin list"
+msgstr "רשימת התוספים שהופעלו"
+
+msgid "Activity"
+msgstr "פעילות"
+
+msgid "%sMB"
+msgstr "%s מגה-בייט"
+
+msgid "%s status is required to edit parameters."
+msgstr "נדרש סטטוס %s כדי לערוך פרמטרים."
+
+msgid "%s pixels, %.2f MB"
+msgstr "%s פיקסלים, %.2f מגה-בייט"
+
+msgid "%s MB"
+msgstr "%s MB"
+
+msgid "%s MB used"
+msgstr "%s MB בשימוש"
+
+msgid "%s GB used"
+msgstr "%s GB בשימוש"
+
+msgid "%sGB"
+msgstr "%s ג'יגה-בייט"
+
+msgid "%d tags moved"
+msgstr "%d תגים הוזזו"
+
+msgid "%d user added"
+msgstr "%d משתמש נוסף"
+
+msgid "%d user edited"
+msgstr "%d משתמש נערך"
+
+msgid "%d user logged in"
+msgstr "%d משתמש התחבר"
+
+msgid "%d user logged out"
+msgstr "%d משתמש נותק"
+
+msgid "%d users added"
+msgstr "%d משתמשים נוספו"
+
+msgid "%d users edited"
+msgstr "%d משתמשים נערכו"
+
+msgid "%d users logged in"
+msgstr "%d משתמשים התחברו"
+
+msgid "%d users logged out"
+msgstr "%d משתמשים נותקו"
+
+msgid "%s file type"
+msgstr "סוג קובץ %s"
+
+msgid "%s is the new main user"
+msgstr "%s הוא המשתמש הראשי החדש"
+
+msgid "%s line"
+msgstr "שורה %s"
+
+msgid "%s lines"
+msgstr "שורות %s"
+
+msgid "%s other tags available.."
+msgstr "%s תגיות נוספות זמינות.."
+
+msgid "%s plugin found"
+msgstr "נמצא תוסף <b>%s</b>"
+
+msgid "%s plugins found"
+msgstr "נמצאו תוספים <b>%s</b>"
+
+msgid "%d in whole branch"
+msgstr "%d בכל הענף"
+
+msgid "%d including sub-albums"
+msgstr "%d כולל תתי-אלבומים"
+
+msgid "%d photo added"
+msgstr "%d תמונה נוספה"
+
+msgid "%d photo deleted"
+msgstr "%d תמונה נמחקה"
+
+msgid "%d photo edited"
+msgstr "%d תמונה נערכה"
+
+msgid "%d photo moved"
+msgstr "%d תמונה הוזזה"
+
+msgid "%d photos"
+msgstr "%d תמונות"
+
+msgid "%d photos added"
+msgstr "%d תמונות נוספו"
+
+msgid "%d photos deleted"
+msgstr "%d תמונות נמחקו"
+
+msgid "%d photos edited"
+msgstr "%d תמונות נערכו"
+
+msgid "%d photos moved"
+msgstr "%d תמונות הוזזו"
+
+msgid "%d pictures in sub-albums"
+msgstr "%d תמונות בתתי-אלבומים"
+
+msgid "%d sub-albums"
+msgstr "%d תתי-אלבומים"
+
+msgid "%d tag added"
+msgstr "%d תגית נוספה"
+
+msgid "%d tag deleted"
+msgstr "%d תגית נמחקה"
+
+msgid "%d tag edited"
+msgstr "%d תגית נערכה"
+
+msgid "%d tag moved"
+msgstr "%d תגית הוזזה"
+
+msgid "%d tags added"
+msgstr "%d תגיות נוספו"
+
+msgid "%d tags deleted"
+msgstr "%d תגיות נמחקו"
+
+msgid "%d tags edited"
+msgstr "%d תגיות נערכו"
+
+msgid " (copy %s)"
+msgstr "(העתק %s)"
+
+msgid " (copy)"
+msgstr "(העתק)"
+
+msgid "%d Activities"
+msgstr "%d פעילויות"
+
+msgid "%d Activity"
+msgstr "%d פעילות"
+
+msgid "%d album added"
+msgstr "%d אלבום נוסף"
+
+msgid "%d album deleted"
+msgstr "%d אלבום נמחק"
+
+msgid "%d album edited"
+msgstr "%d אלבום נערך"
+
+msgid "%d albums added"
+msgstr "%d אלבומים נוספים"
+
+msgid "%d albums deleted"
+msgstr "%d אלבומים נמחקים"
+
+msgid "%d albums edited"
+msgstr "%d אלבומים נערכו"
+
+msgid "%d files"
+msgstr "%d קבצים"
+
+msgid "%d formats uploaded for %d photos"
+msgstr "%d פורמטים הועלו עבור %d תמונות"
+
+msgid "%d group added"
+msgstr "%d קבוצה נוספה"
+
+msgid "%d group deleted"
+msgstr "%d קבוצה נמחקה"
+
+msgid "%d group edited"
+msgstr "%d קבוצה נערכה"
+
+msgid "%d group moved"
+msgstr "%d קבוצה הוזזה"
+
+msgid "%d groups added"
+msgstr "%d קבוצות נוספו"
+
+msgid "%d groups deleted"
+msgstr "%d קבוצות נמחקו"
+
+msgid "%d groups edited"
+msgstr "%d קבוצות נערכו"
+
+msgid "%d groups moved"
+msgstr "%d קבוצות הוזזו"
+
+msgid "since the beginning"
+msgstr "מההתחלה"
+
+msgid "to"
+msgstr "אל"
+
+msgid "was succesfully deleted"
+msgstr "נמחק בהצלחה"
+
+msgid "action successfully performed."
+msgstr "הפעולה בוצעה בהצלחה."
+
+msgid "add"
+msgstr "הוסף"
+
+msgid "and %d more"
+msgstr "ועוד %d"
+
+msgid "and %s others"
+msgstr "ועוד %s אחרים"
+
+msgid "between %d and %d"
+msgstr "בין %d ל-%d"
+
+msgid "between %s and %s"
+msgstr "בין %s ל-%s"
+
+msgid "calculated"
+msgstr "חושבו"
+
+msgid "deletion"
+msgstr "מחיקה"
+
+msgid "edit"
+msgstr "ערוך"
+
+msgid "image(s) contains unsaved changes"
+msgstr "התמונה(ות) מכילה שינויים שלא נשמרו"
+
+msgid "in administration"
+msgstr "בניהול"
+
+msgid "in gallery"
+msgstr "בגלריה"
+
+msgid "level of confidentiality"
+msgstr "רמת סודיות"
+
+msgid "login"
+msgstr "התחברות"
+
+msgid "logout"
+msgstr "התנתקות"
+
+msgid "months ago"
+msgstr "חודשים"
+
+msgid "move"
+msgstr "העבר"
+
+msgid "never calculated"
+msgstr "מעולם לא חושב"
+
+msgid "no photo"
+msgstr "אין תמונה"
+
+msgid "right now"
+msgstr "ברגע זה"
+
+msgid "Group(s) \\{%s1\\} succesfully merged into \"%s2\""
+msgstr "הקבוצות {\\%s1}\\ אוחדו בהצלחה ל-\"%s2\""
+
+msgid "Groups \\{%s\\} succesfully deleted"
+msgstr "הקבוצות {\\%s}\\ נמחקו בהצלחה"
+
+msgid "Webmaster status required"
+msgstr "נדרש מעמד Webmaster"
+
+msgid "What's new in version %s"
+msgstr "מה חדש בגרסה %s?"
+
+msgid "While restoring this plugin, it will be reset to its original parameters and associated data is going to be reset"
+msgstr "בעת שחזור התוסף, הוא יתאפס לפרמטרים המקוריים ונתונים משויכים יתאפסו"
+
+msgid "Who can see ?"
+msgstr "מי יכול לראות?"
+
+msgid "Yes, I am sure"
+msgstr "כן, אני בטוח"
+
+msgid "Yes, delete"
+msgstr "כן, למחוק"
+
+msgid "Yes, let's proceed"
+msgstr "כן, נמשיך"
+
+msgid "Yes, rename"
+msgstr "כן, לשנות שם"
+
+msgid "You are about to set %s as main user instead of %s, do you wish to continue ?"
+msgstr "אתה עומד להגדיר את %s כמשתמש הראשי במקום %s, האם ברצונך להמשיך?"
+
+msgid "You are not authorised to change the main user, please ask your webmaster"
+msgstr "אינך מורשה לשנות את המשתמש הראשי, אנא פנה למנהל האתר שלך"
+
+msgid "You can now change the main user from %s to %s."
+msgstr "כעת תוכל לשנות את המשתמש הראשי מ-%s ל-%s."
+
+msgid "You cannot copy the password if the connection to this site is not secure."
+msgstr "אינך יכול להעתיק את הסיסמה אם החיבור לאתר זה אינו מאובטח."
+
+msgid "You don't have access to this photo"
+msgstr "אין לך גישה לתמונה זו"
+
+msgid "You have %d orphan tags %s"
+msgstr "יש לך %d תגיות יתומות %s"
+
+msgid "You have %s inactive plugins"
+msgstr "יש לך %s תוספים לא פעילים"
+
+msgid "You have %s1 orphan : %s2"
+msgstr "יש לך %s1 יתום: %s2"
+
+msgid "You have unsaved changes"
+msgstr "יש לך שינויים שלא נשמרו"
+
+msgid "Your selection"
+msgstr "הבחירה שלך"
+
+msgid "Unlocked album"
+msgstr "אלבום נפתח"
+
+msgid "Unset as group for new users"
+msgstr "הסר כקבוצה עבור משתמשים חדשים"
+
+msgid "Update"
+msgstr "עדכן"
+
+msgid "Upload Formats"
+msgstr "העלאת פורמטים"
+
+msgid "User \"%s\" dissociated from this group"
+msgstr "המשתמש \"%s\" הופרד מקבוצה זו"
+
+msgid "User associated"
+msgstr "המשתמש שוייך"
+
+msgid "User updated"
+msgstr "המשתמש עודכן"
+
+msgid "Username successfully modified"
+msgstr "שם המשתמש שונה בהצלחה"
+
+msgid "Users not logged in will have these settings applied, these settings are used by default for new users"
+msgstr "המשתמשים שלא מחוברים יזכו בהגדרות אלה, הגדרות אלו משומשות כברירת מחדל עבור משתמשים חדשים"
+
+msgid "Version %s"
+msgstr "גרסה %s"
+
+msgid "Videos"
+msgstr "סרטונים"
+
+msgid "Visit history"
+msgstr "היסטוריית ביקורים"
+
+msgid "Visited"
+msgstr "ביקרו"
+
+msgid "There is multiple image in the database with the following names : %s."
+msgstr "יש מספר תמונות בבסיס הנתונים עם השמות הבאים: %s."
+
+msgid "This album is currently locked, visible only to administrators."
+msgstr "האלבום הזה נעול כרגע, וניתן לראותו רק על ידי מנהלים."
+
+msgid "This albums is already in related categories list"
+msgstr "האלבום הזה כבר ברשימת אלבומים קשורים"
+
+msgid "This is already the default theme"
+msgstr "זה כבר העיצוב ברירת המחדל"
+
+msgid "This photo is an orphan"
+msgstr "התמונה הזו היא יתומה"
+
+msgid "This photo no longer exists"
+msgstr "התמונה הזו כבר לא קיימת"
+
+msgid "This picture is physically linked to this album, you can't dissociate them"
+msgstr "תמונה זו מחוברת פיזית לאלבום הזה, אינך יכול להפריד ביניהם."
+
+msgid "This plugin has no recent update"
+msgstr "לתוסף הזה אין עדכון אחרון"
+
+msgid "This plugin have been updated recently"
+msgstr "התוסף הזה עודכן לאחרונה"
+
+msgid "This plugin have no update since 3 years ! It may be outdated"
+msgstr "לתוסף הזה אין עדכון כבר 3 שנים! ייתכן שהוא מיושן"
+
+msgid "This plugin is incompatible with your version"
+msgstr "התוסף הזה אינו תואם לגרסה שלך"
+
+msgid "This plugin was updated less than 6 months ago"
+msgstr "התוסף הזה עודכן לפני פחות מ-6 חודשים"
+
+msgid "This user must first be defined as the webmaster before it can be upgraded to the main user"
+msgstr "המשתמש הזה חייב להיות מוגדר קודם כל כמנהל האתר לפני שניתן לשדרגו למשתמש הראשי"
+
+msgid "Tile View"
+msgstr "תצוגת ריבועים"
+
+msgid "To be sure, please rewrite the word “%s” below"
+msgstr "כדי להיות בטוח, אנא כתוב מחדש את המילה \"%s\" למטה"
+
+msgid "Try now !"
+msgstr "נסה עכשיו!"
+
+msgid "Understood, do not show again"
+msgstr "הבנתי, אל תראה שוב"
+
+msgid "Unlock it"
+msgstr "פתח אותו"
+
+msgid "Showing %s users out of %s"
+msgstr "מציג %s משתמשים מתוך %s"
+
+msgid "Some photos are missing from your file system. Details provided by plugin Check Uploads"
+msgstr "חלק מהתמונות חסרות ממערכת הקבצים שלך. פרטים מסופקים על ידי התוסף Check Uploads"
+
+msgid "Storage"
+msgstr "אחסון"
+
+msgid "Synchronization"
+msgstr "סנכרון"
+
+msgid "System Activities"
+msgstr "פעילויות מערכת"
+
+msgid "Tag \"%s\" created"
+msgstr "התג \"%s\" נוצר"
+
+msgid "Tag \"%s\" succesfully deleted"
+msgstr "התג \"%s\" נמחק בהצלחה"
+
+msgid "Tag \"%s1\" renamed in \"%s2\""
+msgstr "התג \"%s1\" שונה ל-\"%s2\""
+
+msgid "Tag Manager"
+msgstr "מנהל תגים"
+
+msgid "Tag name"
+msgstr "שם תג"
+
+msgid "Tags \\{%s\\} succesfully deleted"
+msgstr "התגים {\\%s}\\ נמחקו בהצלחה"
+
+msgid "The %d tags on this page are selected"
+msgstr "התגים %d בדף זה נבחרו"
+
+msgid "The best is to have them made automatically on a regular basis."
+msgstr "הכי טוב שיהיו מיוצרים אוטומטית באופן קבוע"
+
+msgid "The original picture will be detected with the filename (without extension)."
+msgstr "התמונה המקורית תזוהה לפי שם הקובץ (ללא סיומת)."
+
+msgid "The other tags will be removed"
+msgstr "התגים האחרים יוסרו"
+
+msgid "The passwords do not match"
+msgstr "הסיסמאות אינן תואמות"
+
+msgid "Theme"
+msgstr "עיצוב"
+
+msgid "Tag(s) \\{%s1\\} succesfully merged into \"%s2\""
+msgstr "התג(ים) {\\%s1}\\ מוזגו בהצלחה ל-\"%s2\""
+
+msgid "Select groups or type them"
+msgstr "בחר קבוצות או הקלד אותן"
+
+msgid "Select or create an album"
+msgstr "בחר או צור אלבום"
+
+msgid "Selected user"
+msgstr "משתמש נבחר"
+
+msgid "Selection mode"
+msgstr "מצב בחירה"
+
+msgid "Sep"
+msgstr "ספטמבר"
+
+msgid "Set as default"
+msgstr "הגדר כברירת מחדל"
+
+msgid "Set as group for new users"
+msgstr "הגדר כקבוצה למשתמשים חדשים"
+
+msgid "Set as main user"
+msgstr "הגדר כמשתמש הראשי"
+
+msgid "Show"
+msgstr "הצג"
+
+msgid "Show beta test plugins"
+msgstr "הצג תוספים בבדיקת בטא"
+
+msgid "Show inactive plugins"
+msgstr "הצג תוספים שאינם פעילים"
+
+msgid "Show plugins compatible with previous version of Piwigo"
+msgstr "הצג תוספים תואמים לגרסה קודמת של Piwigo"
+
+msgid "Show sub-albums"
+msgstr "הצג תתי-אלבומים"
+
+msgid "Shrink"
+msgstr "צמצם"
+
+msgid "Put at the root"
+msgstr "שמור בשורש"
+
+msgid "Rating greater than"
+msgstr "דירוג גבוה מ"
+
+msgid "Read the release note"
+msgstr "קרא את הערות הגירסה"
+
+msgid "Refresh thumbnail"
+msgstr "רענן תמונת תצוגה"
+
+msgid "Registered"
+msgstr "נרשם"
+
+msgid "Remove thumbnail"
+msgstr "הסר תמונת תצוגה"
+
+msgid "Rename \"%s\""
+msgstr "שנה שם ל \"%s\""
+
+msgid "Requires PHP %s"
+msgstr "דורש PHP %s"
+
+msgid "Resend password link"
+msgstr "שלח קישור לאיפוס סיסמה"
+
+msgid "Restored"
+msgstr "שוחזר"
+
+msgid "Review"
+msgstr "סקירה"
+
+msgid "Root"
+msgstr "שורש"
+
+msgid "Save"
+msgstr "שמור"
+
+msgid "Search albums"
+msgstr "חפש אלבומים"
+
+msgid "Search tips"
+msgstr "טיפים לחיפוש"
+
+msgid "Select"
+msgstr "בחר"
+
+msgid "Select all %d tags"
+msgstr "בחר את כל תגי %d"
+
+msgid "Select an album... or type it!"
+msgstr "בחר אלבום... או הקלד אותו!"
+
+msgid "Pagination has changed and needs to be reloaded !"
+msgstr "הדפדוף השתנה ויש לטעון מחדש!"
+
+msgid "Password copied"
+msgstr "הסיסמה הועתקה"
+
+msgid "Photos per page"
+msgstr "תמונות לעמוד"
+
+msgid "Picture to associate formats with"
+msgstr "תמונה כדי לקשר פורמטים איתה"
+
+msgid "Piwigo core"
+msgstr "ליבת Piwigo"
+
+msgid "Piwigo is also on mobile."
+msgstr "Piwigo זמין גם במובייל."
+
+msgid "Place first"
+msgstr "מקום ראשון"
+
+msgid "Place last"
+msgstr "מקום אחרון"
+
+msgid "Please complete all fields"
+msgstr "אנא מלא את כל השדות"
+
+msgid "Please upgrade your PHP version before any update."
+msgstr "אנא עדכן את גרסת ה-PHP שלך לפני כל עדכון."
+
+msgid "Plugin \"%s\" deleted!"
+msgstr "התוסף \"%s\" נמחק!"
+
+msgid "Plugin \"%s\" has been activated!"
+msgstr "התוסף \"%s\" הופעל!"
+
+msgid "Portraits"
+msgstr "דיוקנאות"
+
+msgid "Posted %s"
+msgstr "פורסם %s"
+
+msgid "Promote mobile app on mobile devices"
+msgstr "קדם את אפליקציית המובייל במכשירים ניידים"
+
+msgid "Properties of abums"
+msgstr "מאפיינים של אלבומים"
+
+msgid "Purge Actions"
+msgstr "ניקוי פעולות"
+
+msgid "Purge Cache"
+msgstr "ניקוי מטמון"
+
+msgid "No format for this picture"
+msgstr "אין פורמט לתמונה זו"
+
+msgid "No picture found with the following name : %s."
+msgstr "לא נמצאה תמונה עם השם הבא: %s."
+
+msgid "No plugin activated"
+msgstr "אין תוסף מופעל"
+
+msgid "No plugins found"
+msgstr "לא נמצאו תוספים"
+
+msgid "No research in progress"
+msgstr "אין חיפוש בתהליך"
+
+msgid "No search in progress"
+msgstr "אין חיפוש בתהליך"
+
+msgid "No tag found"
+msgstr "לא נמצא תג"
+
+msgid "No, I have changed my mind"
+msgstr "לא, שיניתי את דעתי"
+
+msgid "Nov"
+msgstr "נובמבר"
+
+msgid "Object"
+msgstr "אובייקט"
+
+msgid "Oct"
+msgstr "אוקטובר"
+
+msgid "Ok, got it!"
+msgstr "אוקי, הבנתי!"
+
+msgid "On %d rating(s)"
+msgstr "על %d דירוגים"
+
+msgid "Only admins in a specific group"
+msgstr "רק מנהלים בקבוצה מסוימת"
+
+msgid "Open in gallery"
+msgstr "פתח בגלריה"
+
+msgid "Other"
+msgstr "אחר"
+
+msgid "Page Visited"
+msgstr "דף נראה"
+
+msgid "Page Visited in %s"
+msgstr "דף נראה ב %s"
+
+msgid "Locked albums are disabled for maintenance. Only administrators can view them in the gallery. Lock this album will also lock his Sub-albums"
+msgstr "אלבומים נעולים מושבתים לתחזוקה. רק מנהלי המערכת יכולים לראות אותם בגלריה. נעילת אלבום זה תנעול גם את תתי-האלבומים שלו."
+
+msgid "Main user"
+msgstr "משתמש ראשי"
+
+msgid "Manage album photos"
+msgstr "ניהול תמונות אלבום"
+
+msgid "Manage sub-albums"
+msgstr "ניהול תמונות אלבום"
+
+msgid "Manage users"
+msgstr "ניהול משתמשים"
+
+msgid "Manage users with user manager"
+msgstr "ניהול משתמשים עם מנהל משתמשים"
+
+msgid "Mar"
+msgstr "מרץ"
+
+msgid "May"
+msgstr "מאי"
+
+msgid "Memories"
+msgstr "מזכרות"
+
+msgid "Merge"
+msgstr "מזג"
+
+msgid "Metadata sync complete"
+msgstr "סנכרון מטה-נתונים הושלם"
+
+msgid "Modified"
+msgstr "שונה"
+
+msgid "More information"
+msgstr "מידע נוסף"
+
+msgid "Name field must not be empty"
+msgstr "שדה השם לא יכול להיות ריק"
+
+msgid "Name is already taken"
+msgstr "שם כבר תפוס"
+
+msgid "New user added"
+msgstr "משתמש חדש נוסף"
+
+msgid "No access to administration, can see private content with appropriate permissions."
+msgstr "אין גישה לממשק ניהול, יכול לראות תוכן פרטי עם הרשאות מתאימות"
+
+msgid "No albums found"
+msgstr "לא נמצאו אלבומים"
+
+msgid "A photo library administrator has created the following account for you:"
+msgstr "מנהל ספריית התמונות יצר עבורך את החשבון הבא:"
+
+msgid "An activation link valid for %s has been sent to \"%s\". If the user doesn't receive the link, you can generate and copy a new one by editing the user and managing her password."
+msgstr "קישור להפעלה בתוקף ל-%s נשלח אל \"%s\". אם לא קיבלת את הקישור, ניתן ליצור קישור חדש ולהעתיק אותו על ידי עריכת המשתמש וניהול הסיסמה שלו."
+
+msgid "An activation link valid for %s was created but could not be sent. You can now copy the link below and send it to the user."
+msgstr "קישור להפעלה בתוקף ל-%s נוצר אך לא נשלח. כעת תוכל להעתיק את הקישור למטה ולשלוח אותו למשתמש."
+
+msgid "This link is valid for %s. After this time, you will need to request a new link."
+msgstr "הקישור הזה תקף למשך %s. לאחר מכן, תצטרך לבקש קישור חדש."
+
+msgid "To set your password, visit the following address:"
+msgstr "כדי להגדיר את הסיסמה שלך, בקר בכתובת הבאה:"
+
+msgid "Welcome to %s"
+msgstr "ברוכים הבאים ל %s"
+
+msgid "We have found %d duplicate paths. Details provided by plugin Check Uploads"
+msgstr "נמצאו %d נתיבים כפולים. פרטים ניתנו על ידי התוסף Check Uploads"
+
+msgid "%d photos were moved from the upload lounge to their albums"
+msgstr "%d תמונות הועברו מחדר ההעלאות לאלבומים שלהן"
+
+msgid "Are you sure you want to delete \"%d\" comments?"
+msgstr "האם אתה בטוח שברצונך למחוק \"%d\" תגובות?"
+
+msgid "Are you sure you want to delete comment #%s?"
+msgstr "האם אתה בטוח שברצונך למחוק את התגובה מספר #%s?"
+
+msgid "Empty lounge"
+msgstr "חדר ההעלאות ריק"
+
+msgid "If a photo in this album has the same filename, update the file without changing the photo's properties"
+msgstr "אם יש תמונה באלבום זה עם אותו שם קובץ, עדכן את הקובץ ללא שינוי תכונות התמונה"
+
+msgid "No comments selected, no actions possible."
+msgstr "לא נבחרו תגובות, אין אפשרות לבצע פעולות."
+
+msgid "Save all photos"
+msgstr "שמור את כל התמונות"
+
+msgid "The comment has been validated."
+msgstr "התגובה אושרה."
+
+msgid "The comments have been validated."
+msgstr "התגובות אושרו."
+
+msgid "There is currently %d photos in the lounge (upload buffer)"
+msgstr "כרגע יש %d תמונות בחדר ההעלאות (מטמון העלאה)"
+
+msgid "Use standard Piwigo template for common pages."
+msgstr "השתמש בתבנית פיוויגו הסטנדרטית לדפים משותפים."
+
+msgid "When enabled, a common template is used for the login, registration and forgotten password pages, regardless of the theme. Some themes might use these templates even if you uncheck this option"
+msgstr "כאשר מופעל, תבנית משותפת משמשת לדפי התחברות, הרשמה ושחזור סיסמה, ללא קשר לערכת הנושא. ייתכן שחלק מהערכות ישתמשו בתבניות אלו גם אם אתה מבטל את האפשרות הזו."
+
+msgid "Admins only"
+msgstr "רק מנהלים"
+
+msgid "user_status_normal"
+msgstr "בסיסי"
+
+msgid "Change logo"
+msgstr "שנה לוגו"
+
+msgid "Dark mode"
+msgstr "מצב כהה"
+
+msgid "Display Gallery title"
+msgstr "הצג כותרת גלריה"
+
+msgid "Light mode"
+msgstr "מצב בהיר"
+
+msgid "Personalization settings"
+msgstr "הגדרות התאמה אישית"
+
+msgid "Select a color theme for standard pages"
+msgstr "בחר ערכת צבעים עבור דפים רגילים"
+
+msgid "Standard pages"
+msgstr "דפים רגילים"
+
+msgid "Standard pages aren't activated, however you have %d active themes that will still use them. These themes are:"
+msgstr "דפים רגילים אינם מופעלים, אך יש לך %d ערכות נושא פעילות שעדיין ישתמשו בהם. ערכות הנושא הללו הן:"
+
+msgid "Standard pages header"
+msgstr "כותרת דפים רגילים"
+
+msgid "Use Piwigo logo"
+msgstr "השתמש בלוגו של Piwigo"
+
+msgid "Use custom logo (png, jpeg or svg)"
+msgstr "השתמש בלוגו מותאם (png, jpeg או svg)"
+

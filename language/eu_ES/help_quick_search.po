@@ -1,0 +1,59 @@
+# Piwigo translation — eu_ES
+# Source: help_quick_search.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: eu_ES\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Searches photos by file size."
+msgstr "Argazkiak bilatzen ditu fitxategi-tamainaren arabera."
+
+msgid "Searches photos by its numeric identifier in Piwigo."
+msgstr "Argazkiak bilatzen ditu Piwigon duten identifikazio zenbakiaren arabera."
+
+msgid "Searches photos by posted date."
+msgstr "Argazkiak bilatzen ditu bidalitako dataren arabera."
+
+msgid "Searches for photos by number of views."
+msgstr "Bistaratze zenbakiaren arabera bilatzen ditu argazkiak."
+
+msgid "return photos with at least 1,000 views"
+msgstr "erakutsi 1,000 bistaratzetik gorako argazkiak"
+
+msgid "Grouping"
+msgstr "Multzokatu"
+
+msgid "Here is a list of actions you can perform:"
+msgstr "Hona burutu ditzakezun ekintzen zerrenda:"
+
+msgid "OR inclusive"
+msgstr "OR barne"
+
+msgid "Others"
+msgstr "Besterik"
+
+msgid "Same principle as for"
+msgstr "Honen printzipio bera"
+
+msgid "Search using extended syntax"
+msgstr "Bilatu sintaxi hedatua erabiliz"
+
+msgid "Searches by author."
+msgstr "Egileagatik bilatzen du."
+
+msgid "Searches by file name."
+msgstr "Fitxategi-izenagatik bilatzen du."
+
+msgid "Add an OR between words."
+msgstr "Gehitu OR hitzen artean"
+
+msgid "Exact search"
+msgstr "Bilaketa zehatza"
+
+msgid "Exclude"
+msgstr "Baztertu"
+

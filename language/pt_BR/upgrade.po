@@ -1,0 +1,65 @@
+# Piwigo translation — pt_BR
+# Source: upgrade.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: pt_BR\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Upgrade"
+msgstr "Atualização"
+
+msgid "Upgrade from version %s to %s"
+msgstr "Atualizar da versão %s para a %s"
+
+msgid "Statistics"
+msgstr "Estatísticas"
+
+msgid "total upgrade time"
+msgstr "tempo total do upgrade"
+
+msgid "total SQL time"
+msgstr "tempo total do SQL"
+
+msgid "SQL queries"
+msgstr "Consultas SQL"
+
+msgid "Upgrade informations"
+msgstr "Informações do upgrade"
+
+msgid "Perform a maintenance check in [Administration>Tools>Maintenance] if you encounter any problem."
+msgstr "Execute uma avaliação de rotina em [Administração>Tools>Manutenção] se você encontrar algum problema."
+
+msgid "As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:"
+msgstr "Por precaução, os plugins abaixo foram desativados. Você deve checar por atualizações dos plugins antes de reativá-los:"
+
+msgid "Only administrator can run upgrade: please sign in below."
+msgstr "Apenas administrador pode realizar o upgrade: por favor, faça o login logo abaixo."
+
+msgid "You do not have access rights to run upgrade"
+msgstr "Você não tem permissões de acesso para realizar o upgrade"
+
+msgid "In <i>%s</i>, before <b>?></b>, insert:"
+msgstr "Em <i>%s</i>, antes de <b>?></b>, insira:"
+
+msgid "All sub-albums of private albums become private"
+msgstr "Todas os sub-álbuns de álbuns privados tornam-se privados"
+
+msgid "User permissions and group permissions have been erased"
+msgstr "Permissões de usuário e de grupo foram apagadas"
+
+msgid "Only thumbnails prefix and webmaster mail address have been saved from previous configuration"
+msgstr "Apenas o prefixo das miniaturas (thumbnails) e o endereço de email do webmaster foram salvos da configuração anterior."
+
+msgid "This page proposes to upgrade your database corresponding to your old version of Piwigo to the current version. The upgrade assistant thinks you are currently running a <strong>release %s</strong> (or equivalent)."
+msgstr "Esta página se propõe a atualizar o banco de dados do seu Piwigo de uma versão antiga para uma nova versão. O assistente de atualização detectou que você está rodando uma <strong>distribuição %s</strong> (ou equivalente)."
+
+msgid "As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:"
+msgstr "Por precaução, os temas abaixo foram desativados. Você deve verificar por atualizações dos temas antes de reativá-los:"
+
+msgid "Discover what's new in Piwigo %s"
+msgstr "Descubra o que há de novo no Piwigo %s"
+

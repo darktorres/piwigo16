@@ -1,0 +1,161 @@
+# Piwigo translation — zh_CN
+# Source: help_quick_search.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: zh_CN\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "photos posted in 2003"
+msgstr "2003年上传的照片"
+
+msgid "photos taken in 2003"
+msgstr "2003年拍摄的照片"
+
+msgid "return photos less than 700px high"
+msgstr "高度小于700像素的照片"
+
+msgid "return photos wider than 500px"
+msgstr "宽度大于500像素的照片"
+
+msgid "return photos with at least 1,000 views"
+msgstr "返回浏览量至少为1000次的照片"
+
+msgid "returns photos of 12 megapixels or more"
+msgstr "返回分辨率1200万像素及以上的照片"
+
+msgid "returns photos of 5 megapixels"
+msgstr "返回分辨率500万像素的照片"
+
+msgid "up to 100 (inclusive)"
+msgstr "数值范围在100及以下（含100）"
+
+msgid "will give you all photos with at least one note."
+msgstr "返回所有带有至少一条评论的照片"
+
+msgid "will give you photos without notes."
+msgstr "返回没有注释的照片"
+
+msgid "Searches photos by taken date."
+msgstr "按拍摄日期搜索照片。"
+
+msgid "Searches photos by width/height ratio."
+msgstr "按宽高比搜索照片。"
+
+msgid "Searches photos with a given width or height."
+msgstr "按指定宽度或高度搜索照片。"
+
+msgid "Supported numeric operators"
+msgstr "支持的数值运算符"
+
+msgid "The quick search engine allows you to use boolean operators to refine your search. By default, the search applies to all keywords. Searches are not case sensitive."
+msgstr "快速搜索引擎允许您使用布尔运算符优化搜索。默认情况下，搜索适用于所有关键词，且不区分大小写。"
+
+msgid "These operators can be used with numeric fields such as"
+msgstr "这些运算符可用于数值字段，例如："
+
+msgid "Use quotes to search for an exact keyword or phrase."
+msgstr "使用引号搜索精确关键词或短语"
+
+msgid "With keywords"
+msgstr "使用关键词时："
+
+msgid "between 10 and 100 (inclusive)"
+msgstr "数值范围在10到100之间（含10和100）"
+
+msgid "equals 100"
+msgstr "等于100"
+
+msgid "finds files between 1MB and 10MB."
+msgstr "查找文件大小在1MB到10MB之间的文件"
+
+msgid "finds panoramas"
+msgstr "查找全景照片"
+
+msgid "finds photo 123 to 126 (it may find between 0 and 4 photos, because photos can be deleted)"
+msgstr "查找编号123至126的照片（可能找到0到4张，因为照片可能已被删除）"
+
+msgid "finds photos from compact cameras in portrait or landscape modes"
+msgstr "查找使用便携相机拍摄的人像或风景模式照片"
+
+msgid "from 100 and above"
+msgstr "大于等于100"
+
+msgid "greater than 100"
+msgstr "大于100"
+
+msgid "less than 100"
+msgstr "小于100"
+
+msgid "photos after Jan 1st 2008"
+msgstr "2008年1月1日之后的照片"
+
+msgid "photos from 2003 to 2008"
+msgstr "2003年至2008年的照片"
+
+msgid "photos from may 2003"
+msgstr "2003年5月的照片"
+
+msgid "Add a dash (-) or NOT before a word to exclude from search. Note that NOT acts as a filtering operator so you cannot have a search containing only NOT operators. You cannot combine OR with NOT (john OR NOT bill is not valid)"
+msgstr "在词语前添加减号（-）或 NOT 以从搜索结果中排除。注意， NOT是过滤运算符，因此搜索条件不能仅包含 NOT 运算符。您不能将 OR 与 NOT 组合使用（例如 john OR NOT bill 是无效的）。"
+
+msgid "Add an OR between words."
+msgstr "在单词之间添加 OR 。"
+
+msgid "Exact search"
+msgstr "精确搜索"
+
+msgid "Exclude"
+msgstr "排除"
+
+msgid "Grouping"
+msgstr "分组"
+
+msgid "Here is a list of actions you can perform:"
+msgstr "以下是可以执行的操作列表："
+
+msgid "OR inclusive"
+msgstr " OR 包含关系（满足任一条件）"
+
+msgid "Others"
+msgstr "其他"
+
+msgid "Same principle as for"
+msgstr "原理同上述操作"
+
+msgid "Search using extended syntax"
+msgstr "使用扩展语法进行搜索"
+
+msgid "Searches by author."
+msgstr "按作者搜索。"
+
+msgid "Searches by file name."
+msgstr "按文件名搜索。"
+
+msgid "Searches for photos by number of views."
+msgstr "按查看次数搜索照片。"
+
+msgid "Searches only for photos with the given words in title or description."
+msgstr "仅搜索标题或描述中包含指定关键词的照片。"
+
+msgid "Searches only in tag names without looking at photo titles or descriptions."
+msgstr "仅在标签名称中搜索，不搜索照片标题或描述。"
+
+msgid "Searches photos by file size."
+msgstr "按文件大小搜索照片。"
+
+msgid "Searches photos by its numeric identifier in Piwigo."
+msgstr "按照片在Piwigo中的数字标识符搜索。"
+
+msgid "Searches photos by posted date."
+msgstr "按发布日期搜索照片。"
+
+msgid "Searches photos by rating."
+msgstr "按评分搜索照片。"
+
+msgid "Searches photos by size in pixels."
+msgstr "按像素尺寸搜索照片。"
+

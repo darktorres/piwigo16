@@ -1,0 +1,3072 @@
+# Piwigo translation — br_FR
+# Source: admin.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: br_FR\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid " and %d virtual"
+msgstr "ha %d galloudel"
+
+msgid " and %d virtuals"
+msgstr "ha %d galloudel"
+
+msgid "Add a virtual album"
+msgstr "Ouzhpennañ ur rummad galloudel"
+
+msgid "Virtual Links"
+msgstr "Liammoù galloudel"
+
+msgid "Virtual album"
+msgstr "Rummad galloudel"
+
+msgid "Virtual album added"
+msgstr "Rummad galloudel ouzhpennet"
+
+msgid "Virtual album deleted"
+msgstr "Rummad galloudel dilemet"
+
+msgid "Virtual album name"
+msgstr "Anv ar rummad galloudel"
+
+msgid "Virtual albums to move"
+msgstr "Rummadoù galloudel da zilec'hiañ"
+
+msgid "With no virtual album"
+msgstr "Hep rummad galloudel"
+
+msgid "%d album moved"
+msgid_plural "%d albums moved"
+msgstr[0] "dilec'hiet %d rummad"
+msgstr[1] "dilec'hiet %d rummad"
+
+msgid "%d day"
+msgstr "%d deiz"
+
+msgid "%d days"
+msgstr "%d deiz"
+
+msgid "%d anomaly has been corrected."
+msgid_plural "%d anomalies have been detected corrected."
+msgstr[0] "%d direizhder a zo bet reizhet."
+msgstr[1] "%d direizhder a zo bet detektet ha reizhet."
+
+msgid "%d anomaly has been detected."
+msgid_plural "%d anomalies have been detected."
+msgstr[0] "%d direizhder a zo bet detektet."
+msgstr[1] "%d direizhder a zo bet detektet."
+
+msgid "%d anomaly has been ignored."
+msgid_plural "%d anomalies have been ignored."
+msgstr[0] "%d direizhder n'eo ket bet reizhet."
+msgstr[1] "%d direizhder n'int ket bet reizhet."
+
+msgid "%d anomaly has not been corrected."
+msgid_plural "%d anomalies have not been corrected."
+msgstr[0] "%d direizhder n'eo ket bet posubl reizhañ."
+msgstr[1] "%d direizhder n'int ket bet posubl reizhañ."
+
+msgid "%d guest"
+msgid_plural "%d guests"
+msgstr[0] "%d ostiziad"
+msgstr[1] "%d ostiziad"
+
+msgid "%d hour"
+msgstr "%d eurvezh"
+
+msgid "%d hours"
+msgstr "%d eurvezh"
+
+msgid "%d member"
+msgid_plural "%d members"
+msgstr[0] "%d ezel"
+msgstr[1] "%d ezel"
+
+msgid "%d month"
+msgstr "%d mizvezh"
+
+msgid "%d months"
+msgstr "%d mizvezh"
+
+msgid "%d second"
+msgstr "%d eilenn"
+
+msgid "%d seconds"
+msgstr "%d eilenn"
+
+msgid "%d photo was deleted"
+msgid_plural "%d photos were deleted"
+msgstr[0] "%d luc'hskeudenn dilemet"
+msgstr[1] "%d luc'hskeudenn dilemet"
+
+msgid "%d photos uploaded"
+msgstr "%d luc'hskeudenn pellgarget"
+
+msgid "%d line filtered"
+msgid_plural "%d lines filtered"
+msgstr[0] "%d linenn silet"
+msgstr[1] "%d linenn silet"
+
+msgid "%d minute"
+msgstr "%d munut"
+
+msgid "%d minutes"
+msgstr "%d munut"
+
+msgid "%d association"
+msgstr "%d kevredigez"
+
+msgid "%d associations"
+msgstr "%d kevredigez"
+
+msgid "%d group"
+msgstr "%d strollad"
+
+msgid "%d groups"
+msgstr "%d strollad"
+
+msgid "%d mail was not sent."
+msgid_plural "%d mails were not sent."
+msgstr[0] "%d postel n'eo ket bet kaset."
+msgstr[1] "%d postel n'int ket bet kaset."
+
+msgid "%d mail was sent."
+msgid_plural "%d mails were sent."
+msgstr[0] "%d postel a zo bet kaset."
+msgstr[1] "%d postel a zo bet kaset."
+
+msgid "%d album including"
+msgstr "%d rummad, dioutañ"
+
+msgid "%d albums including"
+msgstr "%d rummad, diouto"
+
+msgid "%d tag"
+msgstr "%d merker"
+
+msgid "%d week"
+msgstr "%d sizhunvezh"
+
+msgid "%d weeks"
+msgstr "%d sizhunvezh"
+
+msgid "%d year"
+msgstr "%d bloavezh"
+
+msgid "%d years"
+msgstr "%d bloavezh"
+
+msgid "%s ago"
+msgstr "%s zo"
+
+msgid "%s in the future"
+msgstr "%s en dazont"
+
+msgid "%d user"
+msgid_plural "%d users"
+msgstr[0] "%d implijer"
+msgstr[1] "%d implijer"
+
+msgid "%d user deleted"
+msgid_plural "%d users deleted"
+msgstr[0] "%d implijer dilemet"
+msgstr[1] "%d implijer dilemet"
+
+msgid "Notify administrators when a comment is"
+msgstr "Kemenn ar merour pa vez un evezhiadenn"
+
+msgid "%d of %d photos selected"
+msgstr "%d luc'hskeudenn etre %d diuzet"
+
+msgid "%d of %d users selected"
+msgstr "%d implijer etre %d diuzet"
+
+msgid "%d parameter was updated."
+msgid_plural "%d parameters were updated."
+msgstr[0] "%d arventenn hizivaet."
+msgstr[1] "%d arventenn hizivaet."
+
+msgid "Status of user \"%s\" updated"
+msgstr "Statud implijer \"%s\" hizivaet"
+
+msgid "Update user"
+msgstr "Hizivaat implijer"
+
+msgid "Updates"
+msgstr "Hizivadurioù"
+
+msgid "User %s updated"
+msgstr "Implijer %s hizivaet"
+
+msgid "You can update to Piwigo %s directly, without upgrading to Piwigo %s (recommended)."
+msgstr "Posubl eo hizivaat betek Piwigo %s war-eeun, hep hizivaat da Piwigo %s (erbedet)."
+
+msgid "photos updated in the database"
+msgstr "luc'hskeudennoù hizivaet en diaz roadennoù"
+
+msgid "update the database from files"
+msgstr "Hizivaat an diaz roadennoù gant ar restroù"
+
+msgid "group \"%s\" updated"
+msgstr "strollad \"%s\" hizivaet"
+
+msgid "This is a major update, with <a href=\"%s\">new exciting features</a>."
+msgstr "Un hizivadur meur eo, gant <a href=\"%s\">arc'hweladurioù nevez a-feson</a>."
+
+msgid "This is a minor update, with only bug corrections."
+msgstr "Un hizivadur bihan eo, gant reizhadurioù drein hepken."
+
+msgid "Update photos information"
+msgstr "Hizivaat titouroù al luc'hskeudenn"
+
+msgid "Two updates are available"
+msgstr "Daou hizivadur hegerzh"
+
+msgid "Update All"
+msgstr "Hizivaat pep tra"
+
+msgid "Update Complete"
+msgstr "Echu eo an hizivadur"
+
+msgid "Update albums informations"
+msgstr "Hizivaat titouroù ar rummadoù"
+
+msgid "Update in progress... Please wait."
+msgstr "Hizivadur war ober… Gortozit."
+
+msgid "Update to Piwigo %s"
+msgstr "Hizivaat betek Piwigo %s"
+
+msgid "Reject"
+msgstr "Dinac'h"
+
+msgid "%d user comment validated"
+msgstr "%d evezhiadenn implijerien kadarnaet"
+
+msgid "%d user comments validated"
+msgstr "%d evezhiadenn implijerien kadarnaet"
+
+msgid "User comments validation"
+msgstr "Kadarnaat evezhiadennoù an implijerien"
+
+msgid "%d user comment rejected"
+msgstr "%d evezhiadenn implijerien diwiriekaet"
+
+msgid "Activate comments"
+msgstr "Gweredekaat an evezhiadennoù"
+
+msgid "Comments for all"
+msgstr "Evezhiadennoù evit an holl"
+
+msgid "Default comments order"
+msgstr "Urzh an evezhiadennoù dre ziouer"
+
+msgid "%d user comments rejected"
+msgstr "%d evezhiadenn implijerien diwiriekaet"
+
+msgid "Pending Comments"
+msgstr "Evezhiadennoù o c'hortoz"
+
+msgid "%d tags"
+msgstr "%d merker"
+
+msgid "%d physical"
+msgstr "%d fizikel"
+
+msgid "%d physicals"
+msgstr "%d fizikel"
+
+msgid "... or "
+msgstr "… pe"
+
+msgid "Photo informations updated"
+msgstr "Hizivaet titouroù al luc'hskeudenn"
+
+msgid "Password updated"
+msgstr "Hizivaet ar ger-tremen"
+
+msgid "Check for updates"
+msgstr "Sell ma vez hizivadurioù"
+
+msgid "%d user was not updated."
+msgid_plural "%d users were not updated."
+msgstr[0] "%d implijer n'eo ket bet hizivaet"
+msgstr[1] "%d implijer n'int ket bet hizivaet"
+
+msgid "Ignore this update"
+msgstr "Leuskel an hizivadur-mañ"
+
+msgid "%d user was updated."
+msgid_plural "%d users were updated."
+msgstr[0] "%d implijer hizivaet"
+msgstr[1] "%d implijer hizivaet"
+
+msgid "Album updated successfully"
+msgstr "Rummad hizivaet mat"
+
+msgid "Piwigo Update"
+msgstr "Hizivadur Piwigo"
+
+msgid "%s has been successfully updated."
+msgstr "%s a zo bet hizivaet"
+
+msgid "Reset ignored updates"
+msgstr "Adderaouiñ an hizivadurioù dilezet"
+
+msgid "Add Photos"
+msgstr "Lakaat luc'hskeudennoù ouzhpenn"
+
+msgid "Add a tag"
+msgstr "Lakaat ur merker ouzhpenn"
+
+msgid "Add a user"
+msgstr "Lakaat un implijer ouzhpenn"
+
+msgid "%s photos can not be regenerated"
+msgstr "%s luc'hskeudenn a zo bet adgraet"
+
+msgid "%s photos have been regenerated"
+msgstr "%s luc'hskeudenn a zo bet adgraet"
+
+msgid "Photos generation in progress..."
+msgstr "Oc'h ober al luc'hskeudennoù…"
+
+msgid "Thumbnails generation in progress..."
+msgstr "Oc'h ober ar skeudennoùigoù…"
+
+msgid "Email admins when a comment requires validation"
+msgstr "Kas ur bostel pa vez ezhom da gadarnaat un evezhiadenn"
+
+msgid "Validate"
+msgstr "Kadarnaat"
+
+msgid "Validation"
+msgstr "Kadarnadur"
+
+msgid "pending validation"
+msgstr "o c'hortoz ar c'hadarnadur"
+
+msgid "%d waiting for validation"
+msgstr "%d o c'hortoz ar c'hadarnadur"
+
+msgid "The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form"
+msgstr "Ar restr ezkarget a zo pounneroc'h eget sturiad MAX_FILE_SIZE lakaet e furmskrid HTML."
+
+msgid "Start Upload"
+msgstr "Kregiñ gant an ezkargañ"
+
+msgid "The uploaded file exceeds the upload_max_filesize directive in php.ini: %sB"
+msgstr "Ar restr ezkarget a zo pounneroc'h eget sturiad upload_max_filesize e php.ini: %sB"
+
+msgid "The uploaded file was only partially uploaded"
+msgstr "Ar restr da ezkargañ a zo bet ezkarget a-zarn hepken"
+
+msgid "The uploaded files exceed the post_max_size directive in php.ini: %sB"
+msgstr "Ar restroù ezkarget a zo pounneroc'h eget sturiad post_max_size e php.ini: %sB"
+
+msgid "Unknown upload error"
+msgstr "Fazi ezkargañ dianav"
+
+msgid "Upload"
+msgstr "Ezkargañ"
+
+msgid "Upload Photos"
+msgstr "Ezkargañ luc'hskeudennoù"
+
+msgid "Uploaded Photos"
+msgstr "Luc'hskeudennoù ezkarget"
+
+msgid "You are using the Browser uploader. Try the <a href=\"%s\">Flash uploader</a> instead."
+msgstr "Oc'h implij an ezkarger er merdeer emaoc'h. Esaeit an <a href=\"%s\">ezkarger Flash</a> kentoc'h."
+
+msgid "You are using the Flash uploader. Problems? Try the <a href=\"%s\">Browser uploader</a> instead."
+msgstr "Oc'h implij an ezkarger Flash emaoc'h. Kudennoù ? Esaeit an <a href=\"%s\">ezkarger er merdeer</a> kentoc'h."
+
+msgid "%s must be to set to false in your local/config/config.inc.php file"
+msgstr "Ret eo arventennañ %s da false en ho restr local/config/config.inc.php"
+
+msgid "Add"
+msgstr "Ouzhpennañ"
+
+msgid "Add New Language"
+msgstr "Lakaat ur yezh nevez ouzhpenn"
+
+msgid "Add New Theme"
+msgstr "Lakaat un tem nevez ouzhpenn"
+
+msgid "Add a criteria"
+msgstr "Lakaat un dezverk ouzhpenn"
+
+msgid "Add a filter"
+msgstr "Lakaat ur sil ouzhpenn"
+
+msgid "Add group"
+msgstr "Lakaat ur strollad ouzhpenn"
+
+msgid "Add tags"
+msgstr "Lakaat merkerioù ouzhpenn"
+
+msgid "Add to caddie"
+msgstr "Lakaat er baner"
+
+msgid "%s value is not correct file because exif are not supported"
+msgstr "N'eo ket reizh talvoud %s peogwir n'eo ket skoret exif"
+
+msgid "<em>Piwigo for iOS</em> application empowers you to connect to your Piwigo gallery from your iPhone, iPad or iPod Touch, create some albums and upload several photos at once."
+msgstr "Gant arload <em>Piwigo evit iOS</em> e vo posubl deoc'h kevreañ hoc'h iPhone, iPad pe iPod Touch ouzh ho palier Piwigo, krouiñ rummadoù hag ezkargañ ur bern luc'hskeudennoù en ur wech."
+
+msgid "<em>Piwigo for Android</em> application empowers you to connect your Android phone or table to your Piwigo gallery, create some albums and upload several photos at once."
+msgstr "Gant arload <em>Piwigo evit Android</em> e vo posubl deoc'h kevreañ ho pellgomzer pe tablezenn ouzh ho palier Piwigo, krouiñ rummadoù hag ezkargañ ur bern luc'hskeudennoù en ur wech."
+
+msgid "+ Add an upload box"
+msgstr "+ Lakaat ur voest-ezkargañ"
+
+msgid ", click on"
+msgstr ", klikit war"
+
+msgid "(this tag will be deleted)"
+msgstr "(ar merker-mañ a vo dilemet)"
+
+msgid "Delete this language"
+msgstr "Dilemel ar yezh-mañ"
+
+msgid "Delete this theme"
+msgstr "Dilemel an tem-mañ"
+
+msgid "Deleted on"
+msgstr "Dilemet d'an"
+
+msgid "%u users have automatic permission because they belong to a granted group."
+msgstr "%u implijer o deus an aotre emgefreek peogwir int e-barzh ur strollad aotreet."
+
+msgid "(filtered from %s total users)"
+msgstr "(silet etre %s implijer en holl)"
+
+msgid "A locked gallery is only visible to administrators"
+msgstr "Ur palier prennet a vez gwelet gant ar verourien hepken"
+
+msgid "A new version of Piwigo is available."
+msgstr "Ur stumm nevez Piwigo a zo hegerz"
+
+msgid "ACCESS_0"
+msgstr "Moned dieub"
+
+msgid "ACCESS_1"
+msgstr "Gwelet gant an holl"
+
+msgid "ACCESS_2"
+msgstr "Gwelet gant an implijerien enrollet"
+
+msgid "ACCESS_3"
+msgstr "Gwelet gant ar verourien"
+
+msgid "ACCESS_4"
+msgstr "Gwelet gant ar vistri-gwiad"
+
+msgid "ACCESS_5"
+msgstr "Moned berzet"
+
+msgid "Active Plugins"
+msgstr "Lugantoù gweredekaet"
+
+msgid "Active Themes"
+msgstr "Temoù gweredekaet"
+
+msgid "Active Languages"
+msgstr "Yezhoù gweredekaet"
+
+msgid "Activate icon \"%s\""
+msgstr "Gweredekaat an arlun \"%s\""
+
+msgid "Activate icon \"new\" next to albums and pictures"
+msgstr "Gweredekaat an arlun \"nevez\" e-kichen ar rummadoù hag al luc'hskeudennoù"
+
+msgid "Activate it now"
+msgstr "Gweredekaat anezhañ diouzhtu"
+
+msgid "Activate"
+msgstr "Gweredekaat"
+
+msgid "Activate Navigation Bar"
+msgstr "Gweredekaat ar varrenn verdeiñ "
+
+msgid "Activate Navigation Thumbnails"
+msgstr "Gweredekaat skeudennoùigoù-merdeiñ"
+
+msgid "Action"
+msgstr "Obererezh"
+
+msgid "Actions"
+msgstr "Obererezhioù"
+
+msgid "Access type"
+msgstr "Doare moned"
+
+msgid "Added by %s"
+msgstr "Lakaet gant %s"
+
+msgid "Permalink %s has been previously used by album %s. Delete from the permalink history first"
+msgstr "Peurliamm %s a zo bet implijet gant rummad %s. Dilemit anezhañ eus istor ar peurliammoù da gentañ."
+
+msgid "The permalink name must be composed of a-z, A-Z, 0-9, \"-\", \"_\" or \"/\". It must not be numeric or start with number followed by \"-\""
+msgstr "Ret eo lakaat en anv ar peurliamm lizherennoù a-z, A-Z, 0-9, \"-\", \"_\" pe \"/\". Arabat eo lakaat sifroù hepken, pe kregiñ gant ur sifr  ha \"-\" goude."
+
+msgid "Save to permalink history"
+msgstr "Enrollañ en istor ar peurliammoù"
+
+msgid "Add/delete a permalink"
+msgstr "Lakaat/Dilemel ur peurliamm"
+
+msgid "Cannot delete the old permalink !"
+msgstr "Ar peurliamm kozh ne c'hell ket bezañ dilemet!"
+
+msgid "Permalink"
+msgstr "Peurliamm"
+
+msgid "Permalink %s is already used by album %s"
+msgstr "Peurliamm %s a zo implijet gant ar rummad %s dija"
+
+msgid "Permalink history"
+msgstr "Istor ar peurliammoù"
+
+msgid "Permalinks"
+msgstr "Peurliammoù"
+
+msgid "Create the \"%s\" directory at the root of your Piwigo installation"
+msgstr "Ober kavlec'h \"%s\" e penngavlec'h ho staliadur Piwigo"
+
+msgid "Give write access (chmod 777) to \"%s\" directory at the root of your Piwigo installation"
+msgstr "Reiñ gwirioù da skrivañ (chmod 777) e kavlec'h \"%s\" eus penngavlec'h ho staliadur Piwigo"
+
+msgid "Add write access to the \"%s\" directory"
+msgstr "Reiñ gwirioù da skrivañ e kavlec'h \"%s\""
+
+msgid "Add another set of photos"
+msgstr "Lakaat ur stroll luc'hskeudennoù all"
+
+msgid "Add detailed content"
+msgstr "Lakaat endalc'h dre ar munud"
+
+msgid "Allow rating"
+msgstr "Aotreiñ da reiñ notennoù"
+
+msgid "All %d photos are selected"
+msgstr "An holl %d luc'hskeudenn a zo diuzet"
+
+msgid "All %d users are selected"
+msgstr "An holl %d implijer a zo diuzet"
+
+msgid "All languages are up to date."
+msgstr "An holl yezhoù a zo hizivaet"
+
+msgid "All plugins are up to date."
+msgstr "An holl lugantoù a zo hizivaet"
+
+msgid "All themes are up to date."
+msgstr "An holl temoù a zo hizivaet"
+
+msgid "Album manual order was saved"
+msgstr "Urzh dre zorn ar rummad a zo bet enrollet"
+
+msgid "Album name"
+msgstr "Anv ar rummad"
+
+msgid "Album photos associated to the following albums: %s"
+msgstr "Luc'hskeudennoù liammet gant ar rummadoù-mañ: %s"
+
+msgid "Albums authorized thanks to group associations"
+msgstr "Rummadoù aotreet dre ar strolladoù"
+
+msgid "Albums automatically sorted"
+msgstr "Rummadoù urzhiet emgefreek"
+
+msgid "Album \"%s\" has been added"
+msgstr "Rummad \"%s\" a zo bet lakaet ouzhpenn"
+
+msgid "Album \"%s\" now contains %d photos"
+msgstr "%d luc'hskeudenn a zo er rummad \"%s\" bremañ"
+
+msgid "Album list management"
+msgstr "Merañ listenn ar rummadoù"
+
+msgid "Allowed file types: %s."
+msgstr "Seurtoù restroù aotreet: %s"
+
+msgid "All optimizations have been successfully completed."
+msgstr "An holl gwellekadurioù a zo bet graet."
+
+msgid "Allow user customization"
+msgstr "Aotren personeladur an implijerien"
+
+msgid "Allow user registration"
+msgstr "Aotren an implijerien d'en em enrollañ"
+
+msgid "Allow users to delete their own comments"
+msgstr "Aotren an implijerien da zilemel o evezhiadennoù"
+
+msgid "Allow users to edit their own comments"
+msgstr "Aotren an implijerien da cheñch o evezhiadennoù"
+
+msgid "Adobe Photoshop Lightroom is a photography software designed to manage large quantities of digital images and doing post production work."
+msgstr "Adobe Photoshop Lightroom a zo ur meziant graet evit merañ ur maread luc'hskeudennoù niverel hag evit ober labour goudeproduiñ."
+
+msgid "digiKam is an advanced digital photo management free software for Linux, Windows, and MacOSX."
+msgstr "digiKam a zo ur meziant frank araokaet evit merañ luc'hskeudennoù niverel gant Linux, Windows, pe MacOS X."
+
+msgid "File upload stopped by extension"
+msgstr "Paouezet eo bet ezkargañ ar restr gant astenn"
+
+msgid "Some upgrades are available for extensions."
+msgstr "Hizivadurioù ez eus evit astennoù."
+
+msgid "All extensions are up to date."
+msgstr "An holl astennoù a zo hizivaet"
+
+msgid "Exif extension not available, admin should disable exif use"
+msgstr "N'eo ket hegerzh astenn exif, ret e vefe d'ar merour diweredekaat implij exif."
+
+msgid "Extensions Update"
+msgstr "Hizivadur an astennoù"
+
+msgid "Administration Home"
+msgstr "Pajenn-degemer ar merour"
+
+msgid "Advanced features"
+msgstr "Arc'hweladurioù araokaet"
+
+msgid "An error has occured during upgrade."
+msgstr "Ur fazi a zo c'hoarvezet en ur hizivaat."
+
+msgid "An error occured during extraction (%s)."
+msgstr "Ur fazi a zo c'hoarvezet en ur eztennañ ar restroù (%s)."
+
+msgid "An information email was sent to group \"%s\""
+msgstr "Ur postel gant titouroù a zo bet kaset da strollad \"%s\""
+
+msgid "Anomaly"
+msgstr "Direizhder"
+
+msgid "An error has occured during extract. Please check files permissions of your piwigo installation.<br><a href=\"%s\">Click here to show log error</a>."
+msgstr "Ur fazi a zo c'hoarvezet en ur eztennañ. Sellit ouzh aotreoù ar restroù ho staliadur Piwigo.<br><a href=\"%s\">Klikit amañ evit diskouez renabl ar fazi</a>."
+
+msgid "By rank"
+msgstr "Dre renk"
+
+msgid "Caddie"
+msgstr "Paner"
+
+msgid "Caddie management"
+msgstr "Merañ ar baner"
+
+msgid "By %s"
+msgstr "Dre %s"
+
+msgid "Associate to album"
+msgstr "Liammañ ouzh ar rummad"
+
+msgid "Associated"
+msgstr "Liammet"
+
+msgid "Authorized"
+msgstr "Aotreet"
+
+msgid "Apply selected corrections"
+msgstr "Arloañ ar reizhadurioù diuzet"
+
+msgid "Applications"
+msgstr "Arloadoù"
+
+msgid "Apply action"
+msgstr "Arloañ an obererezh"
+
+msgid "Apply to sub-albums"
+msgstr "Arloañ d'an iz-rummadoù"
+
+msgid "Anyway only webmasters can see this tab and never administrators."
+msgstr "Ar mestr-gwiad hepken a c'hell gwellet an ivinell-mañ. Ar merourien ne c'hellont ket."
+
+msgid "Date"
+msgstr "Deiziad"
+
+msgid "Configuration"
+msgstr "Kefluniadur"
+
+msgid "Database"
+msgstr "Diaz roadennoù"
+
+msgid "Average rate"
+msgstr "Notenn keitad"
+
+msgid "Cancel"
+msgstr "Nullañ"
+
+msgid "Change password"
+msgstr "Cheñch ger-tremen"
+
+msgid "Watermark"
+msgstr "Ritenn"
+
+msgid "add a new watermark"
+msgstr "Lakaat ur ritenn nevez"
+
+msgid "Apply watermark if height is bigger than"
+msgstr "Lakaat ur ritenn ma vez an uhelder brasoc'h eget"
+
+msgid "Apply watermark if width is bigger than"
+msgstr "Lakaat ur ritenn ma vez al ledander brasoc'h eget"
+
+msgid "Aperture is designed for professional photographers with iPhoto simplicity."
+msgstr "Aperture a zo empennet evit al luc'hskeudennerien a-vicher, gant aezamant iPhoto."
+
+msgid "Aperture is a powerful tool to refine images and manage massive libraries on Mac."
+msgstr "Aperture a zo un ostilh galloudus evit eilaozañ luc'hskeudennoù ha merañ meur a luc'hskeudennoù gant MacOSX."
+
+msgid "iPhoto is the default photo manager on MacOSX. The Piwigo export plugin let you create new albums and export your photos directly from iPhoto to your Piwigo photo gallery."
+msgstr "iPhoto a zo ar merour-luc'hskeudennoù dre ziouer gant MacOSX. Gant lugant ezporzhiañ Piwigo e vo posubl deoc'h krouiñ rummadoù nevez, hag ezporzhiañ ho luc'hskeudennoù eus iPhoto betek ho palier luc'hskeudennoù Piwigo."
+
+msgid "Automatic correction"
+msgstr "Difazier emgefreek"
+
+msgid "Automatic sort order"
+msgstr "Urzh rummañ emgefreek"
+
+msgid "Available on"
+msgstr "Hegerzh e"
+
+msgid "Available only with HTML format"
+msgstr "Hegerzh gant furmad HTML hepken"
+
+msgid "The anomaly will be ignored until next application version"
+msgstr "Ne vo graet netra diwar-benn ar fazi betek stumm an arload a zeu"
+
+msgid "Piwigo version"
+msgstr "Stumm Piwigo"
+
+msgid "You are running the latest version of Piwigo."
+msgstr "Emañ stumm Piwigo diwezhañ o labourat ganeoc'h."
+
+msgid "GD version"
+msgstr "Stumm GD"
+
+msgid "New Version"
+msgstr "Stumm nevez"
+
+msgid "Version"
+msgstr "Stumm"
+
+msgid "Authorize users to add comments on selected albums"
+msgstr "Reiñ an aotre d'an implijerien evit lakaat evezhiadennoù er rummadoù diuzet"
+
+msgid "Are you sure you want to delete this plugin?"
+msgstr "Ha sur oc'h da zilemel al lugant-se ?"
+
+msgid "Are you sure you want to install this plugin?"
+msgstr "Ha sur oc'h da staliañ al lugant-se ?"
+
+msgid "Delete selected photos"
+msgstr "Dilemel al luc'hskeudennoù diuzet"
+
+msgid "Drop into album"
+msgstr "Diuzañ ur rummad"
+
+msgid "Choose an action"
+msgstr "Dibabit un obererezh"
+
+msgid "Center of interest"
+msgstr "Darn talvoudus"
+
+msgid "Change Admin Colors"
+msgstr "Cheñch livioù ar mererezh"
+
+msgid "Change username"
+msgstr "Cheñch anv implijer"
+
+msgid "Basic settings"
+msgstr "Arventennoù diazez"
+
+msgid "By default, the center of interest is placed in the middle of the photo."
+msgstr "An darn talvoudus e-barzh al luc'hskeudenn a vez en he c'hreiz dre ziouer."
+
+msgid "Can't connect to server."
+msgstr "Ne oa ket posubl kevreañ ouzh ar servijer"
+
+msgid "Languages which need upgrade"
+msgstr "Yezhoù o deus ezhomm un hizivadur"
+
+msgid "Are you sure to install this upgrade? You must verify if this version does not need uninstallation."
+msgstr "Ha sur oc'h da gregiñ gant staliadur an hizivaat-se? Ret eo deoc'h sellout ouzh ar stumm-mañ, ma ne vez ket ezhomm da zistaliañ a-raok."
+
+msgid "Plugins which need upgrade"
+msgstr "Lugantoù da hizivaat"
+
+msgid "Themes which need upgrade"
+msgstr "Temoù o deus ezhomm un hizivadur"
+
+msgid "Unable to check for upgrade."
+msgstr "Ne oa ket posubl degas an hizivadur"
+
+msgid "user_status_guest"
+msgstr "Ostiziad "
+
+msgid "user_status_webmaster"
+msgstr "Mestr-gwiad"
+
+msgid "Approximate maximum resolution: %dM pixels (that's %dx%d pixels)."
+msgstr "Diarunusted uc'hek arnes: %dM piksel (%dx%d piksel)."
+
+msgid "Can't download archive."
+msgstr "Ne oa ket posubl pellgargañ an diell."
+
+msgid "Can't read or extract archive."
+msgstr "Ne oa ket posubl lenn an diell pe tennañ ar erstroù e-maez."
+
+msgid "Number of rates"
+msgstr "Niver a notennoù"
+
+msgid "Rate"
+msgstr "Notenn"
+
+msgid "Rate date"
+msgstr "Deiziad an notenn"
+
+msgid "Rated %d times, score : %.2f"
+msgstr "Notennet %d gwech, skor : %.2f"
+
+msgid "Sum of rates"
+msgstr "Sammad an notennoù"
+
+msgid "Number of downloads"
+msgstr "Niver a pellgargoù"
+
+msgid "Download,"
+msgstr "Pellgargañ,"
+
+msgid "Downloads"
+msgstr "Pellgargoù"
+
+msgid "Can't create temporary file."
+msgstr "Ne oa ket posubl krouiñ ar restr badennek"
+
+msgid "Missing a temporary folder"
+msgstr "Ar c'havlec'h badennek a vank"
+
+msgid "By default, Piwigo will create a new websize from the HD (high definition) version of your photo."
+msgstr "Dre ziouer e krouo Piwigo ur ment nevez evit ar gwiad eus stumm HD (despizadur uhel) ho luc'hseudenn."
+
+msgid "Batch Manager"
+msgstr "Merour-batch"
+
+msgid "Site manager"
+msgstr "Merour-lec'hienn"
+
+msgid "Allow users to add a link to their website"
+msgstr "Aotren an implijerien da lakaat ul liamm d'o lec'hienn"
+
+msgid "Main \"guest\" user status is incorrect"
+msgstr "Statud an implijer \"guest\" a zo direizh"
+
+msgid "Main \"webmaster\" user status is incorrect"
+msgstr "Statud an implijer \"webmaster\" a zo direizh"
+
+msgid "Correction the anomaly will cancel the fact that it's ignored"
+msgstr "An direizhder reizhet ne vo ket tavet ken"
+
+msgid "Bound Theme"
+msgstr "Tem liammet"
+
+msgid "Correction"
+msgstr "Reizhadur"
+
+msgid "Correction applied with error"
+msgstr "Ur fazi a zo bet graet en ur reizhañ"
+
+msgid "Correction applied with success"
+msgstr "Difaziet hep kudenn"
+
+msgid "Impossible automatic correction"
+msgstr "Ne c'haller ket difaziañ emgefreek"
+
+msgid "Continue processing treatment"
+msgstr "Kenderc'hel gant an treterezh war-ober"
+
+msgid "Classic display"
+msgstr "Skrammañ klasel"
+
+msgid "Close user details"
+msgstr "Serriñ titouroù an implijer"
+
+msgid "Complementary mail content"
+msgstr "Endalc'h ar bostel evit klokaat"
+
+msgid "Confirm merge"
+msgstr "Kadarnaat ar c'hendeuzadur"
+
+msgid "Check for upgrade"
+msgstr "Sell ma vez un hizivadur"
+
+msgid "Check for upgrade failed for unknown reasons."
+msgstr "Ne oa ket posubl da sellet ma vez un hizivadur, ha n'eo ket anavezet an abeg."
+
+msgid "Check all"
+msgstr "Diuzañ pep tra"
+
+msgid "Check automatic corrections"
+msgstr "Gwiriañ ar reizhadurioù emgefreek"
+
+msgid "Check integrity"
+msgstr "Gwiriadur an anterinded"
+
+msgid "Choose an option"
+msgstr "Dibabit un dibarzh"
+
+msgid "Deactivate"
+msgstr "Diweredekaat"
+
+msgid "Deactivate all"
+msgstr "Diweredekaat pep tra"
+
+msgid "Do you want to activate anyway?"
+msgstr "Fellout a ra deoc'h gweredekaat memes tra ?"
+
+msgid "Impossible to deactivate this language, first set another language as default."
+msgstr "N'haller ket diweredekaat ar yezh-se, arventannit ur yezh dre ziouer all a-raok."
+
+msgid "Day"
+msgstr "Deiz"
+
+msgid "Current name"
+msgstr "Anv a-vremañ"
+
+msgid "Database synchronization with files"
+msgstr "Sinkronelaat an diaz roadennoù gant restroù"
+
+msgid "For photo sizes with crop, such as \"Square\", Piwigo will do its best to include the center of interest."
+msgstr "Evit ment luc'hskeudennoù didroc'het, evel \"karrez\", Piwigo a raio ar gwellañ ma c'hello evit enklozañ an darn talvoudus."
+
+msgid "Not cropped correctly?"
+msgstr "Ne oa ket didroc'het mat ?"
+
+msgid "Photo sizes with crop"
+msgstr "Ment al luc'hskeudennoù didroc'het"
+
+msgid "Create"
+msgstr "Krouiñ"
+
+msgid "Create this site"
+msgstr "Krouiñ al lec'hienn-mañ"
+
+msgid "Crop"
+msgstr "Didroc'hañ"
+
+msgid "Directory"
+msgstr "Kavlec'h"
+
+msgid "Delete multiple size images"
+msgstr "Dilemel mentoù liezek al luc'hskeudennoù"
+
+msgid "Generate multiple size images"
+msgstr "Krouiñ mentoù liezek al luc'hskeudennoù"
+
+msgid "Multiple Size"
+msgstr "Mentoù liezek"
+
+msgid "Default photos order"
+msgstr "Urzh al luc'hskeudennoù dre ziouer"
+
+msgid "Default user cannot be deleted"
+msgstr "N'haller ket dilemel an arveriad dre ziouer "
+
+msgid "Default user does not exist"
+msgstr "An arveriad dre ziouer n'eus ket anezhañ"
+
+msgid "Delete Representant"
+msgstr "Dilemel skeudennig ar rummad"
+
+msgid "display maximum informations (added albums and photos, deleted albums and photos)"
+msgstr "Diskouez titouroù uc'hek (rummadoù ha luc'hskeudennoù ouzhpennet, uc'hek (rummadoù ha luc'hskeudennoù dilemet)"
+
+msgid "Include display of recent photos grouped by dates"
+msgstr "Diskouez al luc'hskeudennoù nevez e strolladoù dre zeiziad"
+
+msgid "Default display"
+msgstr "Skrammañ dre ziouer"
+
+msgid "Display options"
+msgstr "Diskouez an dibarzhioù"
+
+msgid "No display"
+msgstr "Skrammadur ebet"
+
+msgid "display"
+msgstr "Diskouez"
+
+msgid "Link all album photos to some existing albums"
+msgstr "Liammañ pep luc'hskeudenn er rummad da rummadoù a zo anezho"
+
+msgid "Tag \"%s\" already exists"
+msgstr "Bez ez eus ar merker \"%s\" anezhañ dija."
+
+msgid "This site already exists"
+msgstr "Bez ez eus al lec'hienn anezhañ dija."
+
+msgid "existing album"
+msgstr "rummad a zo anezhañ"
+
+msgid "Groups and users"
+msgstr "Strolladoù hag implijerien"
+
+msgid "Main \"guest\" user does not exist"
+msgstr "An implijer \"guest\" n'eus ket anezhañ"
+
+msgid "Main \"webmaster\" user does not exist"
+msgstr "An implijer \"webmaster\" n'eus ket anezhañ"
+
+msgid "Directory does not exist"
+msgstr "Ar c'havlec'h n'eus ket anezhañ"
+
+msgid "Deny selected groups"
+msgstr "Berzañ ar strolladoù diuzet"
+
+msgid "Deny selected users"
+msgstr "Berzañ an implijerien diuzet"
+
+msgid "Description"
+msgstr "Deskrivadur"
+
+msgid "Detailed informations"
+msgstr "Titouroù dre ar munud"
+
+msgid "Delete orphan tags"
+msgstr "Dilemel ar merkerioù emzivat"
+
+msgid "Delete selected tags"
+msgstr "Dilemel ar merkerioù diuzet"
+
+msgid "Delete selected users"
+msgstr "Dilemel an implijerien diuzet"
+
+msgid "Deletions"
+msgstr "Dilamadurioù"
+
+msgid "Select the destination tag"
+msgstr "Arveriañ ar merker pal"
+
+msgid "Source tag"
+msgstr "Merker tarzh"
+
+msgid "Does not represent"
+msgstr "n'eo ket ar skeudennig evit"
+
+msgid "Drag to re-order"
+msgstr "Klikañ-ha-riklañ evit adurzhiañ"
+
+msgid "Element"
+msgstr "Elfenn"
+
+msgid "Element type"
+msgstr "Elfenn standart"
+
+msgid "Duplicate"
+msgstr "Eilad"
+
+msgid "Duplicate selected tags"
+msgstr "Eiladiñ ar merkerioù diujet"
+
+msgid "Duplicates"
+msgstr "Eiladoù"
+
+msgid "Discover album:"
+msgstr "Dizoleiñ ar rummad:"
+
+msgid "Dissociate from album"
+msgstr "Distagañ eus ar rummad"
+
+msgid "Dissociated"
+msgstr "Distaget"
+
+msgid "Documentation"
+msgstr "Teuliadur"
+
+msgid "ERROR"
+msgstr "FAZI"
+
+msgid "ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW."
+msgstr "FAZI: AL LUGANT-SE A VANK MET STALIET EO! RET EO DISTALIAÑ ANEZHAÑ DIOUZHTU."
+
+msgid "Edit album"
+msgstr "Aozañ ar rummad"
+
+msgid "Edit album permissions"
+msgstr "Aozañ ar aotreoù ar rummad"
+
+msgid "Edit photo"
+msgstr "Aozañ al luc'hskeudenn"
+
+msgid "Edit ranks"
+msgstr "Aozañ ar renkoù"
+
+msgid "Edit selected tags"
+msgstr "Aozañ ar merkerioù diuzet"
+
+msgid "Edit tags"
+msgstr "Aozañ ar merkerioù"
+
+msgid "directories + files"
+msgstr "kavlec'hioù + restroù"
+
+msgid "The file or directory cannot be accessed (either it does not exist or the access is denied)"
+msgstr "N'eus ket tu mont d'ar restr pe kavlec'h (n'eus ket anezhi pe difennet eo)"
+
+msgid "file name"
+msgstr "anv ar restr"
+
+msgid "In your php.ini file, the upload_max_filesize (%sB) is bigger than post_max_size (%sB), you should change this setting"
+msgstr "Brasoc'h eo upload_max_filesize (%sB) en ho restr php.ini eget post_max_size (%sB), mat e vefe cheñch an arventenn-se."
+
+msgid "Everybody"
+msgstr "An holl"
+
+msgid "File"
+msgstr "Restr"
+
+msgid "Replacement of original templates by customized templates from template-extension subfolder"
+msgstr "Cheñch ar patromoù orin evit patromoù personelaet eus kavlec'h template-extension"
+
+msgid "Replacers (customized templates)"
+msgstr "Erlec'hiadoù (patromoù personelaet)"
+
+msgid "Extend for templates"
+msgstr "Patromoù kempleshaet"
+
+msgid "Original templates"
+msgstr "Patromoù orin"
+
+msgid "Purge compiled templates"
+msgstr "Skarzhañ ar patromoù kempunet"
+
+msgid "Save Template Directory"
+msgstr "Enrollañ kavlec'h ar patromoù"
+
+msgid "Templates"
+msgstr "Patromoù"
+
+msgid "Templates configuration has been recorded."
+msgstr "Enrollet eo bet kefluniadur ar patromoù."
+
+msgid "Execution time is out, treatment must be continue [Estimated time: %d second]."
+msgid_plural "Execution time is out, treatment must be continue [Estimated time: %d seconds]."
+msgstr[0] "Amzer erounit a zo echu, ret eo kas an tretañ da benn [pad rakwelet: %d eilenn]."
+msgstr[1] "Amzer erounit a zo echu, ret eo kas an tretañ da benn [pad rakwelet: %d eilenn]."
+
+msgid "Empty caddie"
+msgstr "Goullonderiñ ar baner"
+
+msgid "Remove from caddie"
+msgstr "Tennañ eus ar baner"
+
+msgid "add new photos to caddie"
+msgstr "lakaat luc'hskeudennoù ouzhpenn er baner"
+
+msgid "Features include gallery browsing, album creation and photo upload."
+msgstr "E-touesk an arc'hweladurioù e vez merdeiñ ar palier, krouiñ rummadoù hag ezkargañ luc'hskeudennoù."
+
+msgid "Errors caption"
+msgstr "Alc'hwez ar fazioù"
+
+msgid "FTP + Synchronization"
+msgstr "FTP + Sinkronelaat"
+
+msgid "Failed to write file to disk"
+msgstr "C'hwitadenn war skrivañ ar restr war ar bladenn"
+
+msgid "Environment"
+msgstr "Amva"
+
+msgid "Error list"
+msgstr "Listenn ar fazioù"
+
+msgid "Error on file \"%s\" : %s"
+msgstr "Fazi er restr \"%s\" : %s"
+
+msgid "Error when sending email to %s [%s]."
+msgstr "Fazi en ur gas ar bostel da %s [%s]."
+
+msgid "Email administrators when a comment is deleted"
+msgstr "Kas ur bostel d'ar merourien pa vez dilemet un evezhiadenn"
+
+msgid "Email administrators when a comment is modified"
+msgstr "Kas ur bostel d'ar merourien pa vez cheñchet un evezhiadenn"
+
+msgid "Email admins when a new user registers"
+msgstr "Kas ur bostel d'ar merourien pa vez enrollet un implijer nevez"
+
+msgid "Email admins when a valid comment is entered"
+msgstr "Kas ur bostel d'ar merourien pa vez graet un evezhiadenn"
+
+msgid "General"
+msgstr "Hollek"
+
+msgid "General statistics"
+msgstr "Stadegoù hollek"
+
+msgid "Get Support on Piwigo Forum"
+msgstr "Kaout skoazell gant forom Piwigo"
+
+msgid "Go to"
+msgstr "Mont da"
+
+msgid "The gallery URL is not valid."
+msgstr "Chomlec'h ar palier a zo direiz."
+
+msgid "Gallery title"
+msgstr "Titl ar palier"
+
+msgid "With blank value, gallery title will be used"
+msgstr "Ma vez lesket goullo, e vez implijet titl ar palier."
+
+msgid "Lock gallery"
+msgstr "Prennañ ar palier"
+
+msgid "Gallery unlocked"
+msgstr "Dibrennet eo ar palier"
+
+msgid "There is no group in this gallery."
+msgstr "N'eus strollad ebet e palier-mañ"
+
+msgid "Unlock gallery"
+msgstr "Dibrennañ ar palier"
+
+msgid "View in gallery"
+msgstr "Gwellet er palier"
+
+msgid "Visit Gallery"
+msgstr "Gweladenniñ ar palier"
+
+msgid "Resize after upload disabled due to the use of GD as graphic library"
+msgstr "Admentañ goude ezkargañ a zo bet diweredekaet peogwir e vez implijet levraoueg grafek GD."
+
+msgid "Resize"
+msgstr "Admentañ"
+
+msgid "Resize after upload"
+msgstr "Admentañ goude ezkargañ"
+
+msgid "GD library is missing"
+msgstr "Levraoueg GD a vank"
+
+msgid "Graphics Library"
+msgstr "Levraoueg grafek"
+
+msgid "Form"
+msgstr "Furmskrid"
+
+msgid "Web Form"
+msgstr "Furmskrid web"
+
+msgid "Forbid this language to users"
+msgstr "Berzañ ar yezh-mañ d'an implijerien"
+
+msgid "Forbid this theme to users"
+msgstr "Berzañ an tem-mañ d'an implijerien"
+
+msgid "Forbidden"
+msgstr "Berzet"
+
+msgid "Following plugins may not be compatible with the new version of Piwigo:"
+msgstr "Marteze al lugantoù-se n'int ket kenglotus gant stumm-mañ Piwigo."
+
+msgid "Following themes may not be compatible with the new version of Piwigo:"
+msgstr "Marteze an temoù-se n'int ket kenglotus gant stumm-mañ Piwigo."
+
+msgid "WARNING! This plugin does not seem to be compatible with this version of Piwigo."
+msgstr "DIWALLIT! War a seblant, al lugant-se n'eo ket kenglotus gant stumm-mañ Piwigo."
+
+msgid "Follow Orientation"
+msgstr "Heuliañ an tuadur"
+
+msgid "Group"
+msgstr "Strollad"
+
+msgid "Find a new representant by random"
+msgstr "Kavout ur skeudennig dre zegouezh evit ar rummad"
+
+msgid "Optimizations have been completed with some errors."
+msgstr "Ar gwellekadurioù a zo bet graet gant fazioù."
+
+msgid "an error happened"
+msgstr "Ur fazi a zo c'hoarvezet"
+
+msgid "errors during synchronization"
+msgstr "Fazi e-pad ar sinkroneladur"
+
+msgid "File/directory read error"
+msgstr "Fazi e-pad lenn ar restr/kavlec'h"
+
+msgid "Grant selected groups"
+msgstr "Dereiñ ar strolladoù diuzet"
+
+msgid "Grant selected users"
+msgstr "Dereiñ an implijerien diuzet"
+
+msgid "Permission granted"
+msgstr "Aotre dereet"
+
+msgid "Permission granted for groups"
+msgstr "Aotre dereet evit strolladoù"
+
+msgid "Permission granted for users"
+msgstr "Aotre dereet evit implijerien"
+
+msgid "Permission granted thanks to a group"
+msgstr "Aotre dereet dre ur strollad"
+
+msgid "Go to %s or %s for more informations"
+msgstr "Mont da %s pe %s evit muioc'h titouroù"
+
+msgid "Instructions to use Piwigo"
+msgstr "Kemennoù evit implij Piwigo"
+
+msgid "Piwigo Uploader"
+msgstr "Ezkarger Piwigo"
+
+msgid "Piwigo export plugin for Aperture"
+msgstr "Lugant ezporzhiañ Piwigo evit Aperture"
+
+msgid "Piwigo export plugin for iPhoto"
+msgstr "Lugant ezporzhiañ Piwigo evit iPhoto"
+
+msgid "Piwigo for Android"
+msgstr "Piwigo evit Android"
+
+msgid "Piwigo for iOS (iPhone, iPad, iPod Touch)"
+msgstr "Piwigo evit iOS (iPhone, iPad, iPod Touch)"
+
+msgid "Piwigo publish plugin for Shotwell"
+msgstr "Lugant embann Piwigo evit Shotwell"
+
+msgid "Piwigo publish plugin for digiKam"
+msgstr "Lugant embann Piwigo evit digiKam"
+
+msgid "The name of a group must not contain \" or ' or be empty."
+msgstr "Arabat da anv ur strollad enderc'hel \" pe ', pe bezañ goullo."
+
+msgid "The name of an album must not be empty"
+msgstr "Arabat da anv ur rummad bezañ goullo"
+
+msgid "The name of directories and files must be composed of letters, numbers, \"-\", \"_\" or \".\""
+msgstr "Ret eo da anv ar restroù enderc'hel lizherennoù, niverennoù, \"-\", \"_\" pe \".\" hepken"
+
+msgid "The number of comments a page must be between 5 and 50 included."
+msgstr "An niver a evezhiadennoù a rank bezañ etre 5 ha 50 (e-barzh)."
+
+msgid "The original image quality must be a number between %d and %d"
+msgstr "Perzhded orin al luc'hskeudenn a rank bezañ un niver etre %d ha %d"
+
+msgid "You need to confirm deletion"
+msgstr "Ret eo deoc'h kadarnaat an dilamadur"
+
+msgid "height must be a number superior to"
+msgstr "An uhelder a rank bezañ un niver brasoc'h eget"
+
+msgid "width must be a number superior to"
+msgstr "Al ledander a rank bezañ un niver brasoc'h eget"
+
+msgid "The original maximum height must be a number between %d and %d"
+msgstr "Uhelder uc'hek orin a rank bezañ un niver etre %d ha %d"
+
+msgid "The original maximum width must be a number between %d and %d"
+msgstr "Ledander uc'hek orin a rank bezañ un niver etre %d ha %d"
+
+msgid "guest"
+msgstr "ostiziad"
+
+msgid "Group name"
+msgstr "Anv ar strollad"
+
+msgid "Groups"
+msgstr "Strolladoù"
+
+msgid "Permission denied"
+msgstr "Difennet"
+
+msgid "Manage Permissions"
+msgstr "Merañ an aotreoù"
+
+msgid "Manage permissions for group \"%s\""
+msgstr "Merañ aotreoù ar strollad \"%s\""
+
+msgid "Manage permissions for user \"%s\""
+msgstr "Merañ aotreoù an implijer \"%s\""
+
+msgid "Permission management"
+msgstr "Merañ an aotreoù"
+
+msgid "Permissions"
+msgstr "Aotreoù"
+
+msgid "Group management"
+msgstr "Merañ ar strolladoù"
+
+msgid "Hit"
+msgstr "skor"
+
+msgid "Last hit"
+msgstr "skor diwezhañ"
+
+msgid "Purge search history"
+msgstr "Dilemel istor an enklaskoù"
+
+msgid "Searching..."
+msgstr "Enklask…"
+
+msgid "Type in a search term"
+msgstr "Lakait ger-alc'hwez hor enklask"
+
+msgid "History"
+msgstr "Roll-istor "
+
+msgid "Purge history detail"
+msgstr "Dilemel munudoù ar roll-istor"
+
+msgid "Help Me"
+msgstr "Sikour"
+
+msgid "Hide"
+msgstr "Kuzhat"
+
+msgid "hide details"
+msgstr "kuzhat ar munudoù"
+
+msgid "High definition"
+msgstr "HD (despizadur uhel)"
+
+msgid "High definition enabled"
+msgstr "HD (despizadur uhel) gweredekaet"
+
+msgid "Maximum width"
+msgstr "Ledander uc'hek"
+
+msgid "Minimum width"
+msgstr "Ledander izek"
+
+msgid "Width"
+msgstr "Ledander"
+
+msgid "width & height"
+msgstr "Ledander hag uhelder"
+
+msgid "Height"
+msgstr "Uhelder"
+
+msgid "Maximum height"
+msgstr "Uhelder uc'hek"
+
+msgid "Minimum height"
+msgstr "Uhelder izek"
+
+msgid "Guest cannot be deleted"
+msgstr "Ne c'hell ket an ostiziad bezañ dilemet"
+
+msgid "The following tag was deleted"
+msgstr "Dilemet eo bet ar merker a-heul"
+
+msgid "delete"
+msgstr "dilemel"
+
+msgid "delete photo"
+msgstr "dilemel al luc'hskeudenn"
+
+msgid "deleted"
+msgstr "dilemet"
+
+msgid "Operating system"
+msgstr "Reizhiad korvoiñ"
+
+msgid "Rating"
+msgstr "Notennoù"
+
+msgid "Rating by guests"
+msgstr "Notennoù roet gant ostiziaded"
+
+msgid "Guest Settings"
+msgstr "Arventennoù an ostiziad"
+
+msgid "Parameter"
+msgstr "Arventennoù"
+
+msgid "Save Settings"
+msgstr "Enrollañ an arventennoù"
+
+msgid "Settings"
+msgstr "Arventennoù"
+
+msgid "The settings for the guest are from the %s user"
+msgstr "An arventennoù evit an ostiziad a teu eus implijer %s"
+
+msgid "Guests"
+msgstr "Ostiziaded"
+
+msgid "Hello"
+msgstr "Demat"
+
+msgid "Hello,"
+msgstr "Demat,"
+
+msgid "Install"
+msgstr "Staliañ"
+
+msgid "Install on your computer,"
+msgstr "Staliañ war hoc'h urzhiataer,"
+
+msgid "Installed Languages"
+msgstr "Yezhoù staliet"
+
+msgid "Installed Themes"
+msgstr "Temoù staliet"
+
+msgid "Uninstall"
+msgstr "Distaliañ"
+
+msgid "Impossible to delete this theme. Other themes depends on it: %s"
+msgstr "N'haller ket dilemel an tem-se peogwir temoù-all a zo e dalc'h anezhañ: %s"
+
+msgid "Impossible to activate this theme, the parent theme is missing: %s"
+msgstr "N'haller ket gweredekaat an tem-se peogwir e vank an tem-tad: %s"
+
+msgid "Impossible to deactivate the default theme."
+msgstr "N'haller ket diweredekaat an tem dre ziouer."
+
+msgid "Impossible to deactivate this language, you need at least one language."
+msgstr "N'haller ket diweredekaat ar yezh-se, ur yezh ho po ezhom d'an neubeutañ."
+
+msgid "Impossible to deactivate this theme, you need at least one theme."
+msgstr "N'haller ket diweredekaat an tem-se, un tem ho po ezhom d'an neubeutañ."
+
+msgid "Hoverbox display"
+msgstr "Diskwel boest-gournij"
+
+msgid "You have specified <i>$conf['order_by']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf['order_by_custom']</i> !"
+msgstr "Lakaet ho peus <i>$conf['order_by']</i> en ho restr kefluniadur lec'hel, an arventenn-mañ a zo diamzeret, dilemit anezhañ pe cheñchit da <i>$conf['order_by_custom']</i> !"
+
+msgid "You can't define a default photo order because you have a custom setting in your local configuration."
+msgstr "Ne c'hellit ket termenañ urzh al luc'hskeudennoù dre ziouer peogwir ez eus arventennoù personelaet en ho kefluniadur lec'hel."
+
+msgid "Use the default photo sort order"
+msgstr "Implij urzh rummañ al luc'skeudennoù dre ziouer"
+
+msgid "default"
+msgstr "dre ziouer"
+
+msgid "cancel manual order"
+msgstr "Nullañ an urzh dornel"
+
+msgid "apply automatic sort order"
+msgstr "Rummañ gant urzh emgefreek"
+
+msgid "automatic order"
+msgstr "urzh emgefreek"
+
+msgid "Images manual order was saved"
+msgstr "Urzh dornel al luc'hskeudennoù a zo bet enrollet"
+
+msgid "Manage photo ranks"
+msgstr "Urzh rummañ al luc'hskeudennoù"
+
+msgid "Manual order"
+msgstr "Urzh dornel"
+
+msgid "Save manual order"
+msgstr "Enrollañ an urzh dornel"
+
+msgid "Save order"
+msgstr "Enrollañ an urzh"
+
+msgid "manual order"
+msgstr "urzh dornel"
+
+msgid "Image id"
+msgstr "Anaouder al luc'hskedenn"
+
+msgid "If you encounter problems or have any question, please send a message to"
+msgstr "M'ho peus kudennoù pe goulennoù, kasit ur c'hemennad da"
+
+msgid "[NBM] Problems or questions"
+msgstr "[NBM] Kudennoù pe goulennoù"
+
+msgid "If no HD is available and if the current websize is bigger than resize dimensions, Piwigo will move it as HD and create a downsized websize photo from it."
+msgstr "Ma n'eus stumm HD (despizadur uhel) hegerzh ebet, ha ment a-vremañ a zo brasoc'h eget hini admentet, Piwigo a zilec'ho anezhañ evel HD hag a grouo ul luc'hskeudenn bihan gantañ."
+
+msgid "Image Quality"
+msgstr "Perzhded al luc'hskeudenn"
+
+msgid "Ignore All"
+msgstr "Leuskel pep tra"
+
+msgid "Ignore selected anomalies"
+msgstr "Leuskel direizhderioù diuzet"
+
+msgid "IP"
+msgstr "IP"
+
+msgid "Order of menubar items has been updated successfully."
+msgstr "Urzh lañserioù er barrenn a zo bet hizivaet"
+
+msgid "Show menubar"
+msgstr "Diskouez barrenn al lañserioù"
+
+msgid "I decide to update anyway"
+msgstr "Divizet am eus da hizivaat evelkent"
+
+msgid "Hour"
+msgstr "Eur"
+
+msgid "Learn more"
+msgstr "Gouzout muioc'h"
+
+msgid "Level 0"
+msgstr "---"
+
+msgid "Visit Piwigo project website"
+msgstr "Gweladenniñ lec'hienn raktres Piwigo"
+
+msgid "Visit language site"
+msgstr "Gweladenniñ lec'hienn ar yezh"
+
+msgid "Visit plugin site"
+msgstr "Gweladenniñ lec'hienn al lugant"
+
+msgid "Visit theme site"
+msgstr "Gweladenniñ lec'hienn an tem"
+
+msgid "Visited %d times"
+msgstr "Gweladennet %d gwech"
+
+msgid "Last visit on %s, %s."
+msgstr "Gweladenn diwezhañ d'ar %s, %s."
+
+msgid "[%s] Visit album %s"
+msgstr "[%s] Gweladenn rummad %s"
+
+msgid "Prepared time for list of users to send mail is limited. Others users are not listed."
+msgstr "Ur bevenn-amzer ez eus evit prientiñ roll ar posteloù da gas d'an implijerien. An implijerien-all n'int ket er roll."
+
+msgid "Last send"
+msgstr "An hini diwezhañ kaset"
+
+msgid "Mail sent to %s [%s]."
+msgstr "Postel kaset da %s [%s]."
+
+msgid "No mail to send."
+msgstr "N'eus postel ebet da gas."
+
+msgid "Last revisions"
+msgstr "Saveteadennoù diwezhañ"
+
+msgid "Last import"
+msgstr "Enporzh diwezhañ"
+
+msgid "Languages"
+msgstr "Yezhoù"
+
+msgid "Language has been successfully installed"
+msgstr "Staliet mat eo bet ar yezh"
+
+msgid "Theme has been successfully installed"
+msgstr "Staliet mat eo bet an tem"
+
+msgid "Uninstalled Plugins"
+msgstr "Lugantoù distaliet"
+
+msgid "Landscape"
+msgstr "Gweledva"
+
+msgid "Keep in touch with Piwigo project, subscribe to Piwigo Announcement Newsletter. You will receive emails when a new release is available (sometimes including a security bug fix, it's important to know and upgrade) and when major events happen to the project. Only a few emails a year."
+msgstr "Chom e darempred gant raktres Piwigo, koumanantit al lizher-kelaouiñ Piwigo. Posteloù ho po pa vo ur stumm Piwigo nevez (a-wechoù gant reizhadur un draen surentez, e vez pouezhus gouzout diwar-benn un hizivadur) ha pa c'hoarvez darvoudoù meur gant ar raktres. Un nebeud posteloù er boavezh hepken."
+
+msgid "Invert"
+msgstr "Eilpennañ"
+
+msgid "Metadata synchronized from file"
+msgstr "Metaroadennoù sinkronelaet eus ar restr"
+
+msgid "Synchronize"
+msgstr "Sinkronelaat"
+
+msgid "Synchronize metadata"
+msgstr "Sinkronelaat ar metaroadennoù"
+
+msgid "photos informations synchronized with files metadata"
+msgstr "titouroù al luc'hskeudenn sinkronelaet gant metaroadenn ar restroù"
+
+msgid "Informations"
+msgstr "Titour"
+
+msgid "Modify information"
+msgstr "Cheñch titour"
+
+msgid "Information data registered in database"
+msgstr "Bank titouroù enrollet en diaz roadennoù"
+
+msgid "albums added in the database"
+msgstr "rummadoù lakaet en diaz roadennoù"
+
+msgid "photos added in the database"
+msgstr "luc'hskeudennoù lakaet en diaz roadennoù"
+
+msgid "photos deleted from the database"
+msgstr "luc'hskeudennoù dilemet en diaz roadennoù"
+
+msgid "Save visits in history for"
+msgstr "Enrollañ gweladennoù en istor evit"
+
+msgid "Purge history summary"
+msgstr "Dilemel diverradenn ar roll-istor"
+
+msgid "Inactive Themes"
+msgstr "Temoù anoberiek"
+
+msgid "Inactive Plugins"
+msgstr "Lugantoù anoberiek"
+
+msgid "Inactive Languages"
+msgstr "Yezhoù anoberiek"
+
+msgid "Make this language available to users"
+msgstr "Lakaat ar yezh-se e kerz an implijerien"
+
+msgid "Make this theme available to users"
+msgstr "Lakaat an tem-se e kerz an implijerien"
+
+msgid "Maintenance"
+msgstr "Kas en-dro"
+
+msgid "Mail content"
+msgstr "Endalc'had ar bostel"
+
+msgid "Mail theme"
+msgstr "Tem ar bostel"
+
+msgid "Main Page"
+msgstr "Penn-bajenn"
+
+msgid "Mail address is mandatory for registration"
+msgstr "Ret eo lakaat ur bostel evit en em enrollañ"
+
+msgid "Registered on %s, %s."
+msgstr "Enrollet d'ar %s, %s."
+
+msgid "registered users"
+msgstr "Implijerien enrollet"
+
+msgid "registration date"
+msgstr "deiziat enrollañ"
+
+msgid "Lock"
+msgstr "Prennañ"
+
+msgid "Lock albums"
+msgstr "Prennañ ar rummadoù"
+
+msgid "Locked"
+msgstr "Prennet"
+
+msgid "Linked albums"
+msgstr "Rummadoù liammet"
+
+msgid "List"
+msgstr "Listenn"
+
+msgid "Loading..."
+msgstr "O kargañ"
+
+msgid "Local"
+msgstr "Lec'hel"
+
+msgid "Represents"
+msgstr "a zo skeudennig evit"
+
+msgid "Thumbnail"
+msgstr "Skeudennig"
+
+msgid "Representant"
+msgstr "Skeudennig ar rummad"
+
+msgid "Representation of albums"
+msgstr "Skeudennig ar rummad"
+
+msgid "Representative"
+msgstr "Skeudennig ar rummad"
+
+msgid "randomly represented"
+msgstr "Skeudennig ar rummad dargouezhek"
+
+msgid "singly represented"
+msgstr "Skeudennig ar rummad ratreet"
+
+msgid "This album contains %d photos, added on %s."
+msgstr "%d luc'hskeudenn ez eus er rummad-mañ, lakaet d'ar %s."
+
+msgid "This album contains no photo."
+msgstr "N'eus luc'hskeudenn ebet er rummad-se"
+
+msgid "You cannot move an album in its own sub album"
+msgstr "N'eo ket posubl lakaat ur rummad en e iz-rummad"
+
+msgid "Link all album photos to a new album"
+msgstr "Liammañ pep luc'hskeudenn er rummad d'ur rummad nevez"
+
+msgid "Level 2"
+msgstr "Mignoned"
+
+msgid "Level 4"
+msgstr "Familh"
+
+msgid "Level 8"
+msgstr "Merourien"
+
+msgid "Level 1"
+msgstr "Darempredoù"
+
+msgid "Edit user"
+msgstr "Aozañ implijer"
+
+msgid "Each email sent will contain its own automatic authentication key on links, valid for %s."
+msgstr "E pep postel kaset e vo un alc'hwezh dilesa emgefreek en ul liamm,  talvoudek evit %s."
+
+msgid "For security reason, authentication keys do not work for administrators."
+msgstr "Evit abegoù surentez, ne za ket en-dro an alc'hwezhioù dilesa evit ar merourien."
+
+msgid "Delete %d orphan photos"
+msgstr "Dilemel %d luc'hskeudenn emzivat"
+
+msgid "Orphan tags deleted"
+msgstr "Merkerioù emzivat dilemet"
+
+msgid "Orphans"
+msgstr "Emzivaded"
+
+msgid "You have %d orphan tags: %s."
+msgstr "%d merkerioù emzivat ho peus : %s."
+
+msgid "Menu Management"
+msgstr "Lañserioù"
+
+msgid "Original Size"
+msgstr "Ment orin"
+
+msgid "Original file : %s"
+msgstr "Restr orin : %s"
+
+msgid "Maximum file size: %sB."
+msgstr "ment uc'hek ar rest: %sB."
+
+msgid "Manage authorizations for selected albums"
+msgstr "Merañ aotreoù ar rummadoù diuzet"
+
+msgid "Manage photos"
+msgstr "Merañ al luc'hskeudennoù"
+
+msgid "Manage tags"
+msgstr "Merañ ar merkerioù"
+
+msgid "Manage this set of %d photos"
+msgstr "Merañ an %d luc'hskeudenn-se"
+
+msgid "manage album photos"
+msgstr "Merañ luc'hskeudennoù ar rummad"
+
+msgid "manage sub-albums"
+msgstr "Merañ an iz-rummadoù"
+
+msgid "Manage the members"
+msgstr "Merañ an izili"
+
+msgid "Members"
+msgstr "Izili"
+
+msgid "No members to manage"
+msgstr "Ezel ebet da verañ"
+
+msgid "Manage"
+msgstr "Merañ"
+
+msgid "Photo %s of %s"
+msgstr "Luc'hskeudenn %s etre %s"
+
+msgid "wrong filename"
+msgstr "anv-restr diwiriek"
+
+msgid "Month"
+msgstr "Miz"
+
+msgid "Name"
+msgstr "Anv"
+
+msgid "New name"
+msgstr "Anv nevez"
+
+msgid "New tag"
+msgstr "Merker nevez"
+
+msgid "New parent album"
+msgstr "Rummad-vamm nevez"
+
+msgid "Parent album"
+msgstr "Rummad-vamm"
+
+msgid "User %s [%s] added."
+msgstr "Implijer %s [%s] ouzhpennet."
+
+msgid "New photos added"
+msgstr "Luc'hskeudennoù nevez ouzhpennet"
+
+msgid "New photos were added"
+msgstr "Luc'hskeudennoù nevez a zo bet ouzhpennet"
+
+msgid "Tag \"%s\" was added"
+msgstr "Ar merker \"%s\" a zo bet ouzhpennet"
+
+msgid "User %s added"
+msgstr "Implijer %s ouzhpennet"
+
+msgid "group \"%s\" added"
+msgstr "strollad \"%s\" ouzhpennet"
+
+msgid "added"
+msgstr "lakaet ouzhpenn"
+
+msgid "user \"%s\" added"
+msgstr "implijer \"%s\" ouzhpennet"
+
+msgid "Name of the duplicate"
+msgstr "Anv an eilad"
+
+msgid "Tag \"%s\" is now a duplicate of \"%s\""
+msgstr "Merker \"%s\" a zo bremañ un eilad eus \"%s\""
+
+msgid "Move"
+msgstr "Dilec'hiañ"
+
+msgid "Move albums"
+msgstr "Dilec'hiañ ar rummadoù"
+
+msgid "Move to album"
+msgstr "Dilec'hiañ d'ar rummad"
+
+msgid "Remove all filters"
+msgstr "Tennañ an holl siloù"
+
+msgid "remove author"
+msgstr "tennañ an oberour"
+
+msgid "remove tags"
+msgstr "tennañ ar merkerioù"
+
+msgid "remove this filter"
+msgstr "tennañ ar sil-se"
+
+msgid "remove title"
+msgstr "tennañ an titl"
+
+msgid "User \"%s\" created with \"%s\" like password"
+msgstr "Implijer \"%s\" krouet gant ar ger-tremen \"%s\""
+
+msgid "Password confirmation is missing. Please confirm the chosen password."
+msgstr "Kadarnaat ar ger-tremen a vank. Kadarnait ar ger-tremen dibabet."
+
+msgid "Password is missing. Please enter the password."
+msgstr "Ar ger-tremen a vank. Lakait ar ger-tremen."
+
+msgid "Missing Plugins"
+msgstr "Lugantoù a vank"
+
+msgid "Miscellaneous"
+msgstr "Liesseurt"
+
+msgid "Minimum privacy level"
+msgstr "Live prevezded bihanañ"
+
+msgid "Privacy level"
+msgstr "Live prevezded"
+
+msgid "Privacy level set to \"%s\""
+msgstr "Live prevezded lakaet da \"%s\""
+
+msgid "include photos with lower privacy level"
+msgstr "endelc'her luc'hskeudennoù gant ul live prevezded bihanoc'h"
+
+msgid "Metadata synchronization results"
+msgstr "Disoc'hoù sinkroneladur ar metaroadennoù"
+
+msgid "Used metadata"
+msgstr "Metaroadennoù implijet"
+
+msgid "photos candidates for metadata synchronization"
+msgstr "Luc'hskeudennoù war ar renk evit sinkronelaat ho metaroadennoù"
+
+msgid "synchronize files metadata with database photos informations"
+msgstr "Sinkronelaat luc'hskeudennoù an diaz roadennoù gant metaroadennoù ar restroù"
+
+msgid "Merge selected groups"
+msgstr "Kendeuziñ ar strolladoù diuzet"
+
+msgid "Merge selected tags"
+msgstr "Kendeuziñ ar merkerioù diuzet"
+
+msgid "Merge tags"
+msgstr "Kendeuziñ ar merkerioù"
+
+msgid "Tags <em>%s</em> merged into tag <em>%s</em>"
+msgstr "Merkerioù <em>%s</em> kendeuzet d'ar merker <em>%s</em>"
+
+msgid "No user to send notifications by mail."
+msgstr "Implijer ebet da gemenn gant ur bostel"
+
+msgid "There is no available subscribers to mail."
+msgstr "Den ebet da gemenn gant ur bostel"
+
+msgid "Notification"
+msgstr "Kemenn"
+
+msgid "No user selected of %d users"
+msgstr "Impljer ebet diuzet, etre %d implijer"
+
+msgid "No results"
+msgstr "Disoc'h ebet"
+
+msgid "User"
+msgstr "Implijer"
+
+msgid "Users"
+msgstr "Implijerien"
+
+msgid "The whole page"
+msgstr "Ar bajenn a-bezh"
+
+msgid "Themes"
+msgstr "Temoù"
+
+msgid "Title"
+msgstr "Titl"
+
+msgid "No recipient selected"
+msgstr "Resever ebet diuzet"
+
+msgid "Recipients"
+msgstr "Reseverien"
+
+msgid "Select recipients"
+msgstr "Diuzit ar reseverien"
+
+msgid "No photo in this album"
+msgstr "Luc'hskeudenn ebet er rummad-se"
+
+msgid "No photo in the current set."
+msgstr "Luc'hskeudenn ebet er stroll a-vremañ"
+
+msgid "No photo selected, %d photos in current set"
+msgstr "Luc'hskeudenn ebet diuzet, %d luc'hskeudenn er stroll a-vremañ"
+
+msgid "The whole set"
+msgstr "Ar stroll a-bezh"
+
+msgid "No photo can be deleted"
+msgstr "Ne c'hell luc'hskeudenn ebet bezañ dilemet"
+
+msgid "No order field selected"
+msgstr "Maezienn urzh ebet diuzet"
+
+msgid "No matching user found"
+msgstr "Ne glot implijer ebet"
+
+msgid "No group is permitted to see this private album"
+msgstr "Ne c'hell strollad ebet gwelet ar rummad prevez-se."
+
+msgid "No user is permitted to see this private album"
+msgstr "Ne c'hell implijer ebet gwelet ar rummad prevez-se."
+
+msgid "No file was uploaded"
+msgstr "Restr ebet pellkarget"
+
+msgid "Upload in progress"
+msgstr "Oc'h ezkargañ"
+
+msgid "No groups selected, no actions possible."
+msgstr "Strollad ebet diuzet, obererezh ebet d'ober."
+
+msgid "No photos selected, no actions possible."
+msgstr "Luc'hskeudenn ebet diuzet, obererezh ebet d'ober."
+
+msgid "No users selected, no actions possible."
+msgstr "Implijer ebet diuzet, obererezh ebet d'ober."
+
+msgid "No destination tag selected"
+msgstr "Merker pal ebet diuzet"
+
+msgid "No and unlock sub-albums"
+msgstr "Ket ha dibrennañ iz-rummadoù"
+
+msgid "Unlocked"
+msgstr "Dibrennet"
+
+msgid "There is no other language available."
+msgstr "N'eus yezh-all ebet hegerz"
+
+msgid "There is no other plugin available."
+msgstr "N'eus lugant-all ebet hegerz"
+
+msgid "There is no other theme available."
+msgstr "N'eus tem-all ebet hegerz"
+
+msgid "Other plugins"
+msgstr "Lugantoù all hegerz"
+
+msgid "Some themes and plugins may be not available yet."
+msgstr "Temoù pe lugantoù a c'hell bezañ dihegerz evit poent"
+
+msgid "Options"
+msgstr "Dibarzhioù"
+
+msgid "Optional URL keyword"
+msgstr "Ger-alc'hwez an URL war zibab"
+
+msgid "Operation in progress"
+msgstr "Treterezh war-ober"
+
+msgid "Open user details"
+msgstr "Digeriñ titouroù an implijer"
+
+msgid "show details"
+msgstr "diskouez ar munudoù"
+
+msgid "Opacity"
+msgstr "Divoullder"
+
+msgid "Public"
+msgstr "Foran"
+
+msgid "Public / Private"
+msgstr "Foran / Prevez"
+
+msgid "public"
+msgstr "foran"
+
+msgid "Only private albums are listed"
+msgstr "Ar rummadoù prevez a zo el listenn hepken"
+
+msgid "Other private albums"
+msgstr "Rummadoù prevez hepken"
+
+msgid "Private"
+msgstr "Prevez"
+
+msgid "private"
+msgstr "prevez"
+
+msgid "Piwigo Publish plugin for Lightroom"
+msgstr "Lugant embann Piwigo evit Lightroom"
+
+msgid "The Piwigo publish Plug-in allows you to export and synchronize photos from Lightroom directly to your Piwigo photo gallery."
+msgstr "Gant lugant embann Piwigo, e c'hellit ezporzhiañ ha sinkronaat luc'hskeudennoù war-eeun eus Lightroom d'ho palier Piwigo."
+
+msgid "On your Linux, simply install Shotwell with your package manager and the activate Piwigo publishing option."
+msgstr "War ho Linux, staliañ Shotwell gant ar merour-pakadoù, ha gweredekaat dibarzh embann Piwigo."
+
+msgid "Obsolete Plugins"
+msgstr "Lugantoù diamzer"
+
+msgid "Numeric identifier : %d"
+msgstr "Niverenn-anaout : %d"
+
+msgid "Select at least two tags for merging"
+msgstr "Evit kendeuziñ, diuzit daou merker d'an neubeutañ"
+
+msgid "Please select at least two groups"
+msgstr "Diuzit daou strollad d'an neubeutañ"
+
+msgid "Select at least one album"
+msgstr "Diuzit ur rummad d'an neubeutañ"
+
+msgid "Select at least one comment"
+msgstr "Diuzit un evezhiadenn d'an neubeutañ"
+
+msgid "Select at least one photo"
+msgstr "Diuzit ul luc'hskeudenn d'an neubeutañ"
+
+msgid "Select at least one tag"
+msgstr "Diuzit ur merker d'an neubeutañ"
+
+msgid "Select at least one user"
+msgstr "Diuzit un implijer d'an neubeutañ"
+
+msgid "Number of comments per page"
+msgstr "Niver a evezhiadenn war pep pajenn"
+
+msgid "Number of albums per page"
+msgstr "Niver a rummad war pep pajenn"
+
+msgid "None"
+msgstr "Hini ebet"
+
+msgid "Preferences"
+msgstr "Dibaboù"
+
+msgid "Position"
+msgstr "Lec'hiadur"
+
+msgid "X Position"
+msgstr "Lec'hiadur X"
+
+msgid "Y Position"
+msgstr "Lec'hiadur Y"
+
+msgid "Portrait"
+msgstr "Poltred"
+
+msgid "Plugins"
+msgstr "Lugantoù"
+
+msgid "Photo unreachable or no support"
+msgstr "N'eus ket tu diraez al luc'hskeudenn, pe n'eo ket embreget he furmad"
+
+msgid "Piwigo Administration"
+msgstr "Mererezh Piwigo"
+
+msgid "Switch to clear or dark colors for administration"
+msgstr "Cheñch livioù ar mererezh evit sklaer pe teñval"
+
+msgid "administrators"
+msgstr "merourien"
+
+msgid "user_status_admin"
+msgstr "Merour"
+
+msgid "Photo name"
+msgstr "Anv al luc'hskeudenn"
+
+msgid "Photos"
+msgstr "Luc'hskeudennoù"
+
+msgid "Photo Properties"
+msgstr "Perzhioù al luc'hskeudenn"
+
+msgid "Properties"
+msgstr "Perzhioù"
+
+msgid "Toggle 'default group' property"
+msgstr "Cheñch perzh 'strollad dre ziouer'"
+
+msgid "Photo Page"
+msgstr "Pajenn al luc'hskeudenn"
+
+msgid "Path"
+msgstr "Hent moned"
+
+msgid "Parameters"
+msgstr "Arventennoù"
+
+msgid "Panorama"
+msgstr "Gwel meur"
+
+msgid "Pages seen"
+msgstr "Pajennoù gwelet"
+
+msgid "Page end"
+msgstr "Dibenn ar bajenn"
+
+msgid "Overall"
+msgstr "Gwel a-vras"
+
+msgid "Page banner"
+msgstr "Banniel ar bajenn"
+
+msgid "top left corner"
+msgstr "Korn an uhelañ a gleiz"
+
+msgid "top right corner"
+msgstr "Korn an uhelañ a-zehoù"
+
+msgid "user_status_generic"
+msgstr "Generek"
+
+msgid "The webmaster has subscribed you to receiving notifications by mail."
+msgstr "Ar mestr-gwiad en deus koumanantet ac'hanoc'h da kemennoù dre bosteloù."
+
+msgid "The webmaster has unsubscribed you from receiving notifications by mail."
+msgstr "Ar mestr-gwiad en deus digoumanantet ac'hanoc'h eus kemennoù dre bosteloù."
+
+msgid "Warning: subscribing or unsubscribing will send mails to users"
+msgstr "Diwallit: koumanantiñ pe digoumanantiñ a gaso postelloù d'an implijerien"
+
+msgid "Subscribe to notification by mail"
+msgstr "Koumanantiñ da kemennoù dre bosteloù."
+
+msgid "Unsubscribe from notification by mail"
+msgstr "Digoumanantiñ eus kemennoù dre bosteloù."
+
+msgid "User %s [%s] was added to the subscription list."
+msgstr "Implijer %s [%s] lakaet e listenn ar c'houmananterien."
+
+msgid "User %s [%s] was not added to the subscription list."
+msgstr "Ne oa ket lakaet implijer %s [%s] e listenn ar c'houmananterien."
+
+msgid "User %s [%s] was not removed from the subscription list."
+msgstr "Ne oa ket tennet implijer %s [%s] eus listenn ar c'houmananterien."
+
+msgid "User %s [%s] was removed from the subscription list."
+msgstr "Implijer %s [%s] tennet eus listenn ar c'houmananterien."
+
+msgid "You have subscribed to receiving notifications by mail."
+msgstr "Koumanantet ho peus da kemennoù dre bosteloù."
+
+msgid "You have unsubscribed from receiving notifications by mail."
+msgstr "Digoumanantet ho peus eus kemennoù dre bosteloù."
+
+msgid "To unsubscribe"
+msgstr "Digoumanantiñ"
+
+msgid "Subscribe"
+msgstr "Koumanantiñ"
+
+msgid "Subscribe %s"
+msgstr "Koumanantiñ %s"
+
+msgid "Subscribe/unsubscribe users"
+msgstr "Koumanantiñ/digoumanantiñ implijerien"
+
+msgid "Subscribed"
+msgstr "Koumanantet"
+
+msgid "Unsubscribed"
+msgstr "Digoumanantet"
+
+msgid "Plugin list"
+msgstr "Listenn al lugantoù"
+
+msgid "User list"
+msgstr "Listenn an implijerien"
+
+msgid "Piwigo configuration"
+msgstr "Kefluniadur Piwigo"
+
+msgid "Restore default configuration. You will lose your plugin settings!"
+msgstr "Adsevel ar c'hefluniadur dre ziouer. Kollet 'vo arventennoù ho lugantoù!"
+
+msgid "Your configuration settings are saved"
+msgstr "Saveteet eo bet arventennoù ho c'hefluniadur"
+
+msgid "Please wait..."
+msgstr "Gortozit mar plij..."
+
+msgid "Piwigo Announcements Newsletter"
+msgstr "Lizher-kelaouiñ Piwigo"
+
+msgid "Subscribe %s to Piwigo Announcements Newsletter"
+msgstr "Koumanantiñ %s al lizher-kelaouiñ Piwigo"
+
+msgid "Send"
+msgstr "Kas"
+
+msgid "Tools"
+msgstr "Ostilhoù"
+
+msgid "and"
+msgstr "ha"
+
+msgid "between"
+msgstr "etre"
+
+msgid "Year"
+msgstr "Bloaz"
+
+msgid "all"
+msgstr "holl"
+
+msgid "close"
+msgstr "serriñ"
+
+msgid "jump to photo"
+msgstr "mont da luc'hskeudenn"
+
+msgid "new"
+msgstr "nevez"
+
+msgid "nothing"
+msgstr "netra"
+
+msgid "other"
+msgstr "all"
+
+msgid "photos per page"
+msgstr "luc'hskeudenn er bajenn"
+
+msgid "Rename"
+msgstr "Cheñch anv"
+
+msgid "Purge never used notification feeds"
+msgstr "Skarzhañ ar c'hemennoù n'int ket bet implijet"
+
+msgid "Purge sessions"
+msgstr "Skarzhañ an dalc'hoù"
+
+msgid "Purge user cache"
+msgstr "Skarzhañ krubuilh an implijer"
+
+msgid "See you soon,"
+msgstr "Ken ar c'hentañ,"
+
+msgid "Random photo"
+msgstr "Luc'hskeudenn dre zegouezh"
+
+msgid "Refresh photo set"
+msgstr "Freskaat ar stroll luc'hskeudennoù"
+
+msgid "Refresh"
+msgstr "Freskaat"
+
+msgid "Posted %s on %s"
+msgstr "Postet %s war %s"
+
+msgid "Reinitialize check integrity"
+msgstr "Adderaouekaat gwiriadur an anterinded"
+
+msgid "Please check \"plugins\" folder and sub-folders permissions (CHMOD)."
+msgstr "Sellit ouzh aotreoù kavlec'h al lugantoù, hag e iskavlec'hioù (CHMOD)."
+
+msgid "Uncheck all"
+msgstr "Gwiriañ pep tra"
+
+msgid "You are running on development sources, no check possible."
+msgstr "Diziuzañ pep tra"
+
+msgid "any visitor can see this album"
+msgstr "Pep gweladenner a c'hell gwelet ar rummad-mañ"
+
+msgid "simple visitors"
+msgstr "Gweladennerien plaen"
+
+msgid "visitors need to login and have the appropriate permissions to see this album"
+msgstr "Ar gweladennerien a rank kaout an aotreoù azas evit gwelet ar rummad-mañ"
+
+msgid "Plugin has been successfully copied"
+msgstr "Eilet mat eo bet al lugant"
+
+msgid "Piwigo cannot retrieve upgrade file from server"
+msgstr "Ne c'hell ket Piwigo delec'hiañ ar restr hizivaat war ar servijer"
+
+msgid "Select a zone with your mouse to define a new center of interest."
+msgstr "Diuzit un takad gant al logodenn evit spisaat an darn talvoudus nevez."
+
+msgid "The center of interest is the most meaningful zone in the photo."
+msgstr "An darn talvoudus a zo an takad ar pouezusañ el luc'hskeudenn."
+
+msgid "Select users..."
+msgstr "Diuzit implijerien..."
+
+msgid "Select a file"
+msgstr "Diuzit ur restr"
+
+msgid "Select an album"
+msgstr "Diuzit ur rummad"
+
+msgid "Select files"
+msgstr "Diuzit restroù"
+
+msgid "Select groups..."
+msgstr "Diuzit strolladoù..."
+
+msgid "Select:"
+msgstr "Diuzañ:"
+
+msgid "Selection"
+msgstr "Diuz"
+
+msgid "Tag selection"
+msgstr "Diuz merkerioù"
+
+msgid "on the %d selected photos"
+msgstr "war an %d luc'hskeudenn diuzet"
+
+msgid "on the %d selected users"
+msgstr "war an %d implijer diuzet"
+
+msgid "selection"
+msgstr "diuz"
+
+msgid "Restore"
+msgstr "Adsevel"
+
+msgid "See you soon."
+msgstr "Ken ar c'hentañ."
+
+msgid "ReGalAndroid (RemoteGallery client for Android) is an open source (GPL v3) Piwigo client for the Android platform."
+msgstr "ReGalAndroid (arval RemoteGallery evit Android) a zo arval Piwigo evit savenn Android, e kod mammennoù a zo digor (GPL v3)."
+
+msgid "Shotwell is an open source digital photo organizer that runs on Linux. It is the default photo manager in Ubuntu and Fedora."
+msgstr "Shotwell a zo un dibaber luc'hskeudennoù, e kod mammennoù a zo digor, mont a ra en-dro war Linux. An dibaber dre ziouer eo e Ubuntu ha Fedora."
+
+msgid "Webmaster status is required."
+msgstr "Ret eo kaout statud ar mestr-gwiad."
+
+msgid "Status"
+msgstr "Statud"
+
+msgid "User status"
+msgstr "Statud an implijer"
+
+msgid "status"
+msgstr "statud"
+
+msgid "Show %s users"
+msgstr "Diskouez %s implijer"
+
+msgid "Show info"
+msgstr "Diskouez an titouroù"
+
+msgid "Showing %s to %s of %s users"
+msgstr "O-tiskouez %s betek %s etre %s implijer"
+
+msgid "Remote"
+msgstr "A-bell"
+
+msgid "Set as default language for unregistered and new users"
+msgstr "Lakaat evel ar yezh dre ziouer evit ar re n'int ket enrollet, hag an implijerien nevez"
+
+msgid "Set as default theme for unregistered and new users"
+msgstr "Lakaat evel an tem dre ziouer evit ar re n'int ket enrollet, hag an implijerien nevez"
+
+msgid "Set author"
+msgstr "Lakaat an oberour"
+
+msgid "Set creation date"
+msgstr "Lakaat an deiziad krouidigezh"
+
+msgid "Set title"
+msgstr "Lakaat an titl"
+
+msgid "set to"
+msgstr "lakaat da"
+
+msgid "unset"
+msgstr "dilemel"
+
+msgid "Send connection settings by email"
+msgstr "Kas an arventennoù kevreañ dre bostel"
+
+msgid "Send mail on HTML format"
+msgstr "Kas ar bostel e furmad HTML"
+
+msgid "Send mail to users"
+msgstr "Kas ur bostel d'an implijerien"
+
+msgid "To send ?"
+msgstr "Da gas ?"
+
+msgid "Read Piwigo Documentation"
+msgstr "Lennit teuliadur Piwigo"
+
+msgid "Send mail as"
+msgstr "Kas ar bostel evel"
+
+msgid "Quick Local Synchronization"
+msgstr "Sinkroneladur lec'hel prim"
+
+msgid "even already synchronized photos"
+msgstr "memes al luc'hskeudennoù sinkronelaet"
+
+msgid "synchronize files structure with database"
+msgstr "Sinkronelaat framm ar restroù gant an diaz roadennoù"
+
+msgid "Predefined filter"
+msgstr "Sil raktermenet"
+
+msgid "custom"
+msgstr "Personelaet"
+
+msgid "Waiting"
+msgstr "O c'hortoz"
+
+msgid "Time"
+msgstr "Eurvezh"
+
+msgid "With no album"
+msgstr "Hep rummad"
+
+msgid "With no tag"
+msgstr "Hep merker"
+
+msgid "The %d following tags were deleted"
+msgstr "An %d merkerioù-se a zo bet dilemet"
+
+msgid "albums deleted in the database"
+msgstr "rummad dilemet en diaz roadennoù"
+
+msgid "delete album"
+msgstr "dilemel ar rummad"
+
+msgid "group \"%s\" deleted"
+msgstr "dilemet strollad \"%s\""
+
+msgid "high"
+msgstr "uhel"
+
+msgid "leave"
+msgstr "kuitaat"
+
+msgid "middle"
+msgstr "kreiz"
+
+msgid "modified"
+msgstr "cheñchet"
+
+msgid "none"
+msgstr "netra"
+
+msgid "unknown"
+msgstr "dianav"
+
+msgid "pixels"
+msgstr "pikselioù"
+
+msgid "ranks"
+msgstr "renkoù"
+
+msgid "sub-albums"
+msgstr "iz-rummadoù"
+
+msgid "target"
+msgstr "bukenn"
+
+msgid "test"
+msgstr "test"
+
+msgid "the forum"
+msgstr "ar forom"
+
+msgid "the wiki"
+msgstr "ar wiki"
+
+msgid "total time"
+msgstr "pad hollek"
+
+msgid "Type here the author name"
+msgstr "Lakait anv an oberour amañ"
+
+msgid "Type here the name of the new group"
+msgstr "Lakait anv ar strollad nevez amañ"
+
+msgid "Type here the title"
+msgstr "Lakait an titl amañ"
+
+msgid "bottom left corner"
+msgstr "Korn an izelañ a gleiz"
+
+msgid "bottom right corner"
+msgstr "Korn an izelañ a-zehoù"
+
+msgid "Week starts on"
+msgstr "Ar sizhun a krog d'"
+
+msgid "Who can see these photos?"
+msgstr "Piv a c'hell gwelet al luc'hskeudennoù-mañ ?"
+
+msgid "Who can see this photo?"
+msgstr "Piv a c'hell gwelet al luc'hskeudenn-mañ ?"
+
+msgid "X Repeat"
+msgstr "Adober X"
+
+msgid "Y Repeat"
+msgstr "Adober Y"
+
+msgid "Zoom"
+msgstr "Zoum"
+
+msgid "reduce to single existing albums"
+msgstr "bihanaat da rummadoù a zo unan hepken anezho"
+
+msgid "include child albums"
+msgstr "endelc'hel rummadoù-bugale"
+
+msgid "create a new album"
+msgstr "krouiñ ur rummad nevez"
+
+msgid "Storage album"
+msgstr "Rummad-klenkañ"
+
+msgid "The Piwigo export plugin allows you to create albums and export photos."
+msgstr "Gant al lugant ezporzhiañ Piwigo e vo tu deoc'h krouiñ rummadoù hag ezporzhiañ luc'hskeudennoù."
+
+msgid "jump to album"
+msgstr "Mont d'ar rummad"
+
+msgid "This album contains %d photos, added between %s and %s."
+msgstr "%d luc'hskeudenn ez eus er rummad-mañ, lakaet etre %s hag %s."
+
+msgid "Support"
+msgstr "Skor"
+
+msgid "Simulation"
+msgstr "Darvanerezh"
+
+msgid "Statistics"
+msgstr "Stadegoù"
+
+msgid "Repair and optimize database"
+msgstr "Ratreañ ha gwellekaat an diaz roadennoù"
+
+msgid "Ratio"
+msgstr "Parenn an neuz"
+
+msgid "Webmaster cannot be deleted"
+msgstr "N'haller ket dilemel ar mestr-gwiad"
+
+msgid "You cannot delete your account"
+msgstr "N'haller ket dilemel ho kont"
+
+msgid "delete this site and all its attached elements"
+msgstr "dilemel al lec'hienn-mañ hag an holl titouroù"
+
+msgid "Users modified"
+msgstr "Implijerien cheñchet"
+
+msgid "only perform a simulation (no change in database will be made)"
+msgstr "darvanañ hepken (nentra ne vo cheñchet en diaz roadennoù)"
+
+msgid "To export your photos from digiKam to Piwigo, simply install digiKam and the Kipi-plugins."
+msgstr "Evit ezporzhiañ ho luc'hskeudennoù eus digiKam da Piwigo, ret e vo deoc'h staliañ digiKam hag al lugantoù Kipi."
+
+msgid "Time to send mail is limited. Others mails are skipped."
+msgstr "Ur bevenn-amzer ez eus evit kas ar posteloù. Ar posteloù-all n'int ket bet kaset."
+
+msgid "This theme was not designed to be directly activated"
+msgstr "An tem-se ne oa ket neuziet evit bezañ gweredekaet war eeun"
+
+msgid "You can activate only one mobile theme."
+msgstr "Un tem hezoug hepken e c'hellit gweredekaat."
+
+msgid "This name is already used by another group."
+msgstr "An anv-se a zo implijet gant ur strollad-all dija."
+
+msgid "This group will be set to default"
+msgstr "Ar strollad-mañ a vo implijet dre ziouer."
+
+msgid "This group will be unset to default"
+msgstr "Ne vo ket implijet ken ar strollad-mañ dre ziouer."
+
+msgid "default values"
+msgstr "talvoudoù dre ziouer"
+
+msgid "The picture dimensions will be reduced to %dx%d pixels."
+msgstr "Ment al luc'hskeudenn a vo bihanaet da %dx%d piksel."
+
+msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
+msgstr "AL LUGANT-SE A ZO BREMAÑ E-BARZH KRAOÑELL PIWIGO! RET EO DISTALIAÑ ANEZHAÑ DIOUZHTU."
+
+msgid "Subscribers could be listed (available) only if there is new elements to notify."
+msgstr "Koumananterien a zo bet listennet nemet ma vez elfennoù nevez da gemenn dezho."
+
+msgid "To subscribe"
+msgstr "Koumanantiñ"
+
+msgid "Summary"
+msgstr "Taolenn"
+
+msgid "Start pLoader and add your photos."
+msgstr "Loc'hañ pLoader evit ouzhpennañ ho luc'hskeudennoù"
+
+msgid "Sharpen"
+msgstr "Lemmaat"
+
+msgid "Send an information email to group members"
+msgstr "Kas izili ar strollad ur bostel titouroù"
+
+msgid "Section"
+msgstr "Rannskrid"
+
+msgid "Search for new images in the directories"
+msgstr "Klask skeudennoù e kavlec'hioù"
+
+msgid "only directories"
+msgstr "nemet ar c'havlec'hioù"
+
+msgid "Released on"
+msgstr "Embannet"
+
+msgid "test this remote site"
+msgstr "prouadiñ al lec'hienn-bell-se"
+
+msgid "remove creation date"
+msgstr "tennañ deiziat ar c'hrouadur"
+
+msgid "overrides existing values with empty ones"
+msgstr "erlec'hiañ talvoudoù a zo gant re goullo"
+
+msgid "on"
+msgstr "war"
+
+msgid "no write access"
+msgstr "gwirioù da skrivañ ebet"
+
+msgid "global mode"
+msgstr "mod hollek"
+
+msgid "unit mode"
+msgstr "mod unan hag unan"
+
+msgid "for the file format"
+msgstr "evit furmad ar restr"
+
+msgid "for this file format"
+msgstr "evit furmad ar restr-se"
+
+msgid "dissociate from group"
+msgstr "distagañ eus ar strollad"
+
+msgid "digiKam is designed for photographers who want to view, manage, edit, enhance, organize, tag, and share photographs."
+msgstr "digiKam a zo graet evit sellout, merañ, aozañ, gwellaat, renkañ, merkañ ha rannañ luc'hskeudennoù."
+
+msgid "create a new site"
+msgstr "krouiñ ul lec'hienn nevez"
+
+msgid "created"
+msgstr "krouet"
+
+msgid "confirm"
+msgstr "kadarnait"
+
+msgid "clean"
+msgstr "naetaat"
+
+msgid "based on"
+msgstr "diazezet war"
+
+msgid "between %.2f and %.2f"
+msgstr "etre %.2f ha %.2f"
+
+msgid "between %d and %d pixels"
+msgstr "etre %d ha %d piksel"
+
+msgid "between %s and %s MB"
+msgstr "etre %s ha %s Mo"
+
+msgid "average time"
+msgstr "pad keitat"
+
+msgid "date & time"
+msgstr "deiziad & eurvezh"
+
+msgid "associate to group"
+msgstr "liammañ ouzh ar strollad"
+
+msgid "You need to upgrade your system to take full advantage of the application else the application will not work correctly, or not at all"
+msgstr "Mat e vefe hizivaat ho reizhiad evit korvoiñ eus an arload, pe marteze an arload ne zaio ket mat, pe tamm ebet."
+
+msgid "Delete album \"%s\"."
+msgstr "Dilemel ar rummad \"%s\"."
+
+msgid "Delete album \"%s\" and its %d sub-albums."
+msgstr "Dilemel ar rummad \"%s\" hag e %d iz-rummad."
+
+msgid "delete only album, not photos"
+msgstr "Dilemel ar rummad hepken, ket al luc'hskeudennoù"
+
+msgid "delete album and all %d photos, even the %d associated to other albums"
+msgstr "Dilemel ar rummad hag ar %d luc'hskeudenn, memes ar %d liammet da rummadoù all"
+
+msgid "delete album and the %d orphan photos"
+msgstr "Dilemel ar rummad hag ar %d luc'hskeudenn emzivaded"
+
+msgid "orphans to delete"
+msgstr "emzivaded da zilemel"
+
+msgid "Share / Send your photos directly from your Mac Os X (10.10 and following) to Piwigo"
+msgstr "Rannit / Kasit ho luc'hskeudennoù eus ho Mac Os X da Piwigo war-eeun (10.10 ha war-lec'h)"
+
+msgid "Storage used"
+msgstr "Plas-klenkañ implijet"
+
+msgid "Piwigo Remote Sync is able to upload a whole folder hierarchy. If you run it again, only new photos will be uploaded."
+msgstr "Piwigo Remote Sync a c'hell ezkargañ gwezennadur ur kavlec'h a-bezh. Ma lakait anezhañ da vont en-dro, al luc'hskeudennoù nevez a vo ezkarget hepken."
+
+msgid "Running on an up-to-date Piwigo is important for security."
+msgstr "Pouezus evit ar surentez eo implijout ur stumm Piwigo hizivaet."
+
+msgid "(determined from photos)"
+msgstr "(resisaet eus luc'hskeudennoù)"
+
+msgid "Time has come to update your Piwigo with version %s, go to %s"
+msgstr "Poent eo hizivaat ho Piwigo gant stumm %s, kit da %s"
+
+msgid "Piwigo %s is available, please update"
+msgstr "Piwigo %s a zo hegerzh, hizivait mar plij"
+
+msgid "No tags selected, no actions possible."
+msgstr "Merker ebet diuzet, obererezh ebet d'ober."
+
+msgid "Select tags"
+msgstr "Diuzit ar merkerioù"
+
+msgid "No filter on album. Select one or type to search"
+msgstr "Sil ebet war ar rummad, diuzit unan pe skrivit evit klask"
+
+msgid "checksum"
+msgstr "sammad kontroll"
+
+msgid "It only takes a few clicks."
+msgstr "Kemer a ra un nebeut klikoù hepken."
+
+msgid "Display form"
+msgstr "Diskouez ar furmskrid"
+
+msgid "Dashboard"
+msgstr "Taolenn-stur"
+
+msgid "Confirm deletion"
+msgstr "Kadarnaat an dilamadur"
+
+msgid "Deletion in progress"
+msgstr "O tilemel"
+
+msgid "... or hide this link"
+msgstr "... pe guzhat al liamm-se"
+
+msgid "Synchronization in progress"
+msgstr "O sinkronelaat"
+
+msgid "Visit"
+msgstr "Gweladenniñ"
+
+msgid "Compute %d missing checksums"
+msgstr "Jediñ %d sammad kontroll a vank"
+
+msgid "Some checksums are missing."
+msgstr "Sammadoù kontroll a vank"
+
+msgid "%d checksums were added"
+msgstr "%d sammad kontroll a zo bet ouzhpennet"
+
+msgid "With no checksum"
+msgstr "hep sammad kontroll"
+
+msgid "checksums to add"
+msgstr "sammadoù kontroll da ouzhpennañ"
+
+msgid "Create a first album"
+msgstr "Krouiñ ur rummad kentañ"
+
+msgid "Welcome!"
+msgstr "Degemer mat!"
+
+msgid "or"
+msgstr "pe"
+
+msgid "Display album date period"
+msgstr "Diskouez paderezh an deiziadoù e pep rummad, dre skouer « eus an 12 betek ar 15 a viz Gouere 2018 »"
+
+msgid "Piwigo requires an album to add photos."
+msgstr "Ur rummad en deus ezhom Piwigo da lakaat luc'hskeudennoù ouzhpenn."
+
+msgid "Display category date"
+msgstr "Diskouez deiziat ar rummad"
+
+msgid "<b>%d</b> tags found"
+msgstr "<b>%d</b> merker kavet"
+
+msgid "<b>%d</b> tag found"
+msgstr "<b>%d</b> merker kavet"
+
+msgid "%s other tags available.."
+msgstr "%s merker all hegerz"
+
+msgid "Are you sure you want to restore to default settings?"
+msgstr "Ha sur oc'h da adsevel arventennoù dre ziouer ?"
+
+msgid "Are you sure you want to install the plugin \"%s\"?"
+msgstr "Ha sur oc'h da staliañ al lugant \"%s\" ?"
+
+msgid "Are you sure you want to delete this theme?"
+msgstr "Ha sur oc'h da zilemel an tem-se ?"
+
+msgid "Are you sure you want to delete the user \"%s\"?"
+msgstr "Ha sur oc'h da zilemel an implijer \"%s\" ?"
+
+msgid "Are you sure you want to restore the plugin \"%s\"?"
+msgstr "Ha sur oc'h da adsevel al lugant \"%s\" ?"
+
+msgid "Are you sure you want to restore this plugin?"
+msgstr "Ha sur oc'h da adsevel al lugant-se ?"
+
+msgid "Are you sure you want to delete the theme \"%s\"?"
+msgstr "Ha sur oc'h da zilemel an tem \"%s\"?"
+
+msgid "Are you sure you want to delete the plugin \"%s\"?"
+msgstr "Ha sur oc'h da zilemel al lugant \"%s\" ?"
+
+msgid "Are you sure you want to delete the language \"%s\"?"
+msgstr "Ha sur oc'h da zilemel ar yezh \"%s\" ?"
+
+msgid "Are you sure you want to delete this?"
+msgstr "Ha sur oc'h da zilemel an dra-se ?"
+
+msgid "%s MB used"
+msgstr "%s Mo implijet"
+
+msgid "%s GB used"
+msgstr "%s Go implijet"
+
+msgid "%d photos"
+msgstr "%d luc'hskeudenn"
+
+msgid " (copy)"
+msgstr "(eilad)"
+
+msgid " (copy %s)"
+msgstr "(eilad %s)"
+
+msgid "Search albums"
+msgstr "Klask rummadoù"
+
+msgid "Show sub-albums"
+msgstr "Diskouez an iz-rummadoù"
+
+msgid "edit"
+msgstr "aozañ"
+
+msgid "never calculated"
+msgstr "morse jedet"
+
+msgid "no photo"
+msgstr "skeudenn ebet"
+
+msgid "right now"
+msgstr "diouzhtu"
+
+msgid "since the beginning"
+msgstr "abaoe ar penn-kentañ"
+
+msgid "to"
+msgstr "da"
+
+msgid "user_status_normal"
+msgstr "Basic"
+
+msgid "was succesfully deleted"
+msgstr "a zo bet dilamet gant berzh"
+
+msgid "logout"
+msgstr "digevreañ"
+
+msgid "months ago"
+msgstr "miz zo"
+
+msgid "move"
+msgstr "fiñval"
+
+msgid "login"
+msgstr "kevreañ"
+

@@ -1,0 +1,65 @@
+# Piwigo translation — sk_SK
+# Source: upgrade.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: sk_SK\n"
+"Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "Upgrade"
+msgstr "Aktualizácia"
+
+msgid "Upgrade from version %s to %s"
+msgstr "Aktualizácia z verzie %s na %s"
+
+msgid "Statistics"
+msgstr "Štatistika"
+
+msgid "total upgrade time"
+msgstr "celkový čas aktualizácie"
+
+msgid "total SQL time"
+msgstr "celkový čas SQL"
+
+msgid "SQL queries"
+msgstr "SQL otázky"
+
+msgid "Upgrade informations"
+msgstr "Informácie o aktualizácii"
+
+msgid "Perform a maintenance check in [Administration>Tools>Maintenance] if you encounter any problem."
+msgstr "Vykonanie kontroly údržby v [Administrácia>Nástroje>Údržba] ak narazíte na problém."
+
+msgid "Only administrator can run upgrade: please sign in below."
+msgstr "Len administrátor môže spustiť aktualizáciu: prosím prihláste sa nižšie."
+
+msgid "You do not have access rights to run upgrade"
+msgstr "Nemáte prístupové práva na spustenie aktualizácie"
+
+msgid "All sub-albums of private albums become private"
+msgstr "Všetky subalbumy súkromných albumov budú súkromné"
+
+msgid "User permissions and group permissions have been erased"
+msgstr "Používateľské oprávnenia a oprávnenia skupín boli vymazané"
+
+msgid "Only thumbnails prefix and webmaster mail address have been saved from previous configuration"
+msgstr "Z predchádzajúcej konfigurárie boli zachované len predpony náhľadov a mailová adresa webmastra."
+
+msgid "This page proposes to upgrade your database corresponding to your old version of Piwigo to the current version. The upgrade assistant thinks you are currently running a <strong>release %s</strong> (or equivalent)."
+msgstr "Navrhujeme aktualizovať databázu Vašej galérie Piwigo zo staršej na novú verziu.\r\nAsistent aktualizácie sa domnieva, že aktuálne používate <strong>verziu %s</strong> (alebo obdobnú)."
+
+msgid "In <i>%s</i>, before <b>?></b>, insert:"
+msgstr "V <i>%s</i>, pred <b>?></b>, vložte:"
+
+msgid "As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:"
+msgstr "Z opatrnosti boli nasledovné témy deaktivované. Musíte skontrolovať aktualizácie tém pred ich reaktiváciou:"
+
+msgid "As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:"
+msgstr "Ako predbežné opatrenie boli deaktivované nasledujúce doplnky. Prosím skontrolujte aktualizácie týchto doplnkov predtým, než ich znovu aktivujete:"
+
+msgid "Discover what's new in Piwigo %s"
+msgstr "Objavte, čo je nové v Piwigo %s"
+

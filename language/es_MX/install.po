@@ -1,0 +1,143 @@
+# Piwigo translation — es_MX
+# Source: install.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: es_MX\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "user login given by your host provider"
+msgstr "nombre de usuario suministrado por tu proveedor de hospedaje"
+
+msgid "user password given by your host provider"
+msgstr "contraseña suministrada por tu proveedor de hospedaje"
+
+msgid "verification"
+msgstr "verificación"
+
+msgid "webmaster login can't contain characters ' or \""
+msgstr "el nombre de usuario del administrador del sitio no puede contener caracteres ' o \""
+
+msgid "Need help ? Ask your question on <a href=\"%s\">Piwigo message board</a>."
+msgstr "¿Necesitas ayuda? Plantea tu pregunta en el <a href=\"%s\">tablero de mensajes Piwigo</a>."
+
+msgid "Note you can change your configuration by yourself and restart Piwigo after that."
+msgstr "Ten en cuenta que puedes modificar tu configuración por ti mismo y después reiniciar Piwigo."
+
+msgid "PHP 5 is required"
+msgstr "Se requiere PHP 5.2"
+
+msgid "Piwigo may try to switch your configuration to PHP 5 by creating or modifying a .htaccess file."
+msgstr "Piwigo puede intentar de cambiar tu configuración a PHP 5.2 creando o modificando el archivo .htaccess"
+
+msgid "Piwigo was not able to configure PHP 5."
+msgstr "Piwigo no pudo configurar PHP 5.2"
+
+msgid "Sorry!"
+msgstr "¡Disculpa!"
+
+msgid "Start Install"
+msgstr "Comenzar instalación"
+
+msgid "Try to configure PHP 5"
+msgstr "Intenta configurar PHP 5.2"
+
+msgid "User"
+msgstr "Usuario"
+
+msgid "Visitors will be able to contact site administrator with this mail"
+msgstr "Los visitantes podrán utilizar este correo electrónico para contactar al administrador del sitio"
+
+msgid "Welcome to my photo gallery"
+msgstr "Bienvenido a mi galería de fotos"
+
+msgid "Welcome to your new installation of Piwigo!"
+msgstr "¡Bienvenido a tu nieva instalación de Piwigo!"
+
+msgid "You can download the config file and upload it to local/config directory of your installation."
+msgstr "Puedes descargar el archivo de configuración y cargarlo al directorio local/config de tu instalación."
+
+msgid "You may referer to your hosting provider's support and see how you could switch to PHP 5 by yourself."
+msgstr "Deberías consultar al centro de soporte de tu proveedor de hospedaje y ver la manera de cambiar a PHP 5.2 por ti mismo."
+
+msgid "also given by your host provider"
+msgstr "también suministrado por tu proveedor de hospedaje"
+
+msgid "database tables names will be prefixed with it (enables you to manage better your tables)"
+msgstr "las tablas de la base de datos lo contendrán como prefijo (te permite administrar mejor tus tablas)"
+
+msgid "enter a login for webmaster"
+msgstr "por favor ingresa el nombre de usuario de administrador del sitio"
+
+msgid "localhost or other, supplied by your host provider"
+msgstr "localhost u otro, suministrado por tu proveedor de hospedaje"
+
+msgid "please enter your password again"
+msgstr "por favor ingresa nuevamente tu contraseña"
+
+msgid "Admin configuration"
+msgstr "Configuración de administración"
+
+msgid "An alternate solution is to copy the text in the box above and paste it into the file \"local/config/database.inc.php\" (Warning : database.inc.php must only contain what is in the textarea, no line return or space character)"
+msgstr "Una solución alterna es copiar el texto en el cuadro de arriba y pegarlo en el archivo \"local/config/database.inc.php\" (Precaución: databa.inc.php solo debe contener lo que se encuentra en el área de texto, sin retornos de línea o espacios)"
+
+msgid "Basic configuration"
+msgstr "Configuración básica"
+
+msgid "Can't connect to server"
+msgstr "No se puede conectar al servidor"
+
+msgid "Congratulations, Piwigo installation is completed"
+msgstr "Felicidades, la instalación de Piwigo se ha completado"
+
+msgid "Connection to server succeed, but it was impossible to connect to database"
+msgstr "La conexión al servidor fue exitosa, pero no fue posible establecer conexión con la base de datos."
+
+msgid "Creation of config file local/config/database.inc.php failed."
+msgstr "La creación del archivo de configuración local/config/database.inc.php falló."
+
+msgid "Database configuration"
+msgstr "Configuración de base de datos"
+
+msgid "Database name"
+msgstr "Nombre de base de datos"
+
+msgid "Database table prefix"
+msgstr "Prefijo de tablas de base de datos"
+
+msgid "Default gallery language"
+msgstr "Idioma por defecto de la galería"
+
+msgid "Don't hesitate to consult our forums for any help : %s"
+msgstr "No dudes en consultar nuestros foros para cualquier ayuda necesaria: %s"
+
+msgid "Download the config file"
+msgstr "Descargar el archivo de configuración"
+
+msgid "Hope to see you back soon."
+msgstr "Deseamos verte pronto de regreso."
+
+msgid "Host"
+msgstr "Servidor"
+
+msgid "Installation"
+msgstr "Instalación"
+
+msgid "It appears your webhost is currently running PHP %s."
+msgstr "Parece que tu servidor web corre actualmente PHP %s."
+
+msgid "It will be shown to the visitors. It is necessary for website administration"
+msgstr "Se mostrará a los visitantes. Es necesario para la administración del sitio web"
+
+msgid "Just another Piwigo gallery"
+msgstr "Otra galería Piwigo"
+
+msgid "Keep it confidential, it enables you to access administration panel"
+msgstr "Mantenlo confidencial, te permite acceder al panel de administración"
+
+msgid "PHP version %s required (you are running on PHP %s)"
+msgstr "Se requiere la versión de PHP %s (usted está ejecutando PHP %s)"
+

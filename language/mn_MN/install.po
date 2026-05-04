@@ -1,0 +1,143 @@
+# Piwigo translation — mn_MN
+# Source: install.lang.php
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: mn_MN\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Piwigo-Direction: ltr\n"
+"X-Piwigo-Zero-Plural: false\n"
+
+msgid "It appears your webhost is currently running PHP %s."
+msgstr "Таны вэбсервер PHP %s хувилбарыг ашиглаж байна"
+
+msgid "Piwigo was not able to configure PHP 5."
+msgstr "Piwigo PHP 5.2-г тохиргоог өөрчилж чадсангүй"
+
+msgid "Congratulations, Piwigo installation is completed"
+msgstr "Танд баяр хүргэе, Piwigo амжилттай сууж дууслаа."
+
+msgid "Connection to server succeed, but it was impossible to connect to database"
+msgstr "Сервертэй амжилттай холбогдсон боловч мэдээллийн сантай холбогдох үед алдаа гарлаа."
+
+msgid "Try to configure PHP 5"
+msgstr "PHP 5.2 тохиргоогоо өөрчилж үзнэ үү"
+
+msgid "User"
+msgstr "Хэрэглэгч"
+
+msgid "Just another Piwigo gallery"
+msgstr "Piwigo-н галерей нэгээр нэмэгдлээ"
+
+msgid "Database configuration"
+msgstr "Мэдээллийн сангийн тохиргоо"
+
+msgid "Welcome to my photo gallery"
+msgstr "Миний зургийн цомогт тавтай морилно уу"
+
+msgid "please enter your password again"
+msgstr "нууц үгээ дахин оруулна уу"
+
+msgid "Start Install"
+msgstr "Суулгаж эхлэх"
+
+msgid "Sorry!"
+msgstr "Уучлаарай"
+
+msgid "Can't connect to server"
+msgstr "Сервертэй холбогдож чадахгүй байна"
+
+msgid "Database name"
+msgstr "Мэдээллийн сангын нэр"
+
+msgid "Default gallery language"
+msgstr "Үндсэн хэл"
+
+msgid "PHP 5 is required"
+msgstr "PHP 5.2 шаардлагатай"
+
+msgid "Download the config file"
+msgstr "Тохиргооны файлыг татах"
+
+msgid "Admin configuration"
+msgstr "Админий тохиргоо"
+
+msgid "Basic configuration"
+msgstr "Үндсэн тохиргоо"
+
+msgid "webmaster login can't contain characters ' or \""
+msgstr "Вэбмастерийн нэрэнд ' or \" гэсэн тэмдэгт орох ёсгүй."
+
+msgid "verification"
+msgstr "баталгаажуулалт"
+
+msgid "Visitors will be able to contact site administrator with this mail"
+msgstr "Хэрэглэгчид энэ имэйл хаягаар админтай холбогдох боломжтой"
+
+msgid "Hope to see you back soon."
+msgstr "Тантай удахгүй эргэн уулзана гэдэгт найдаж байна."
+
+msgid "Welcome to your new installation of Piwigo!"
+msgstr "Piwigo-г шинээр суулгах хэсэгт тавтай морилно уу!"
+
+msgid "enter a login for webmaster"
+msgstr "Вэбмастерийн мэдээллээ оруулна уу"
+
+msgid "Need help ? Ask your question on <a href=\"%s\">Piwigo message board</a>."
+msgstr "Тусламж хэрэгтэй бол <a href=\"%s\">Piwigo message board</a> хаягаар хандаж асуултаа асуугаарай."
+
+msgid "Creation of config file local/config/database.inc.php failed."
+msgstr "Тохиргооны файл local/config/database.inc.php-г үүсгэж чадсангүй"
+
+msgid "Keep it confidential, it enables you to access administration panel"
+msgstr "Удирдлагын талбарт хандах эрхийг нээх тул энэ мэдээллийг нууцлан хадгална уу"
+
+msgid "database tables names will be prefixed with it (enables you to manage better your tables)"
+msgstr "Мэдээллийн сангийн талбаруудад энэ утгыг угтвар хэсэг болгон ашиглах болно. Ингэснээр талбаруудыг удирдаж зохицуулахад илүү хялбар болдог."
+
+msgid "localhost or other, supplied by your host provider"
+msgstr "localhost эсвэл веб байршуулж буй компаниас өгсөн нэр"
+
+msgid "user login given by your host provider"
+msgstr "веб байршуулж буй компаниас өгсөн хэрэглэгчийн нэр"
+
+msgid "user password given by your host provider"
+msgstr "веб байршуулж буй компаниас өгсөн нууц үг"
+
+msgid "Database table prefix"
+msgstr "Мэдээллийн сангийн талбарийн угтвар утга"
+
+msgid "You can download the config file and upload it to local/config directory of your installation."
+msgstr "Тохиргооны файлыг татан авч өөрчлөөд local/config хавтас уруу буцаан хуулаах боломжтой."
+
+msgid "Note you can change your configuration by yourself and restart Piwigo after that."
+msgstr "Тохиргоогоо өөрөө өөрчлөөд Piwigo-г дахин ачаалж болно гэдгийг санаарай."
+
+msgid "Don't hesitate to consult our forums for any help : %s"
+msgstr "Тусламж хэрэгтэй бол манай онлайн форумд хандаарай: %s"
+
+msgid "Host"
+msgstr "Байршуулах компьютер"
+
+msgid "Installation"
+msgstr "Суулгац"
+
+msgid "You may referer to your hosting provider's support and see how you could switch to PHP 5 by yourself."
+msgstr "PHP 5.2-д шилжүүлэхийг хүсвэл веб байршуулж буй компаниас тусламж авна уу."
+
+msgid "also given by your host provider"
+msgstr "веб байршуулж буй газраас үзүүлэх үйлчилгээ"
+
+msgid "It will be shown to the visitors. It is necessary for website administration"
+msgstr "Хэрэглэгчдэд харагдана. Вебсайтын админд шаардлагатай."
+
+msgid "An alternate solution is to copy the text in the box above and paste it into the file \"local/config/database.inc.php\" (Warning : database.inc.php must only contain what is in the textarea, no line return or space character)"
+msgstr "Өөр нэгэн арга бол тухайн текстийг \"local/config/database.inc.php\"-д хуулж буулгах юм."
+
+msgid "Piwigo may try to switch your configuration to PHP 5 by creating or modifying a .htaccess file."
+msgstr "Piwigo нь .htaccess файлыг үүсгэх/засах замаар Таны PHP 5.2-н тохиргоог өөрчлөхийг оролдлх болно."
+
+msgid "PHP version %s required (you are running on PHP %s)"
+msgstr "PHP-н %s хувилбар шаардлагатай (Таны ашиглаж буй PHP хувилбар: %s)\r\n"
+

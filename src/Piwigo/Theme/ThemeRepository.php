@@ -98,6 +98,19 @@ final class ThemeRepository extends AbstractRepository
         return $qb->executeQuery()->fetchAllAssociative();
     }
 
+    /** Return true if a theme with the given id exists (is active). */
+    public function existsById(string $id): bool
+    {
+        $count = $this->conn->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from($this->table('themes'))
+            ->where('id = :id')
+            ->setParameter('id', $id)
+            ->executeQuery()
+            ->fetchOne();
+        return (int) $count > 0;
+    }
+
     /**
      * Return a map of theme id → theme name for all active themes.
      *

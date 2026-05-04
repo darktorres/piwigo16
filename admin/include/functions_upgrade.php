@@ -68,26 +68,20 @@ function deactivate_non_standard_plugins(): void
       'LocalFilesEditor',
       ];
 
-    $query = '
-SELECT id
-FROM '.PREFIX_TABLE.'plugins
-WHERE state = \'active\'
-AND id NOT IN (\'' . implode('\',\'', $standard_plugins) . '\')
-;';
-
-    $result = pwg_query($query);
+    $pluginRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Plugin\PluginRepository::class);
+    $allActive = $pluginRepo->findAll('active');
     $plugins = [];
-    while ($row = pwg_db_fetch_assoc($result)) {
-        $plugins[] = $row['id'];
+    foreach ($allActive as $row) {
+        $pluginId = is_scalar($row['id']) ? (string) $row['id'] : '';
+        if ($pluginId !== '' && !in_array($pluginId, $standard_plugins)) {
+            $plugins[] = $pluginId;
+        }
     }
 
     if (!empty($plugins)) {
-        $query = '
-UPDATE '.PREFIX_TABLE.'plugins
-SET state=\'inactive\'
-WHERE id IN (\'' . implode('\',\'', $plugins) . '\')
-;';
-        pwg_query($query);
+        foreach ($plugins as $pluginId) {
+            $pluginRepo->updateState($pluginId, 'inactive');
+        }
 
         \Piwigo\Core\PageState::current()->addInfo(l10n('As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:')
                             .'<p><i>'.implode(', ', $plugins).'</i></p>');
@@ -103,63 +97,42 @@ function deactivate_non_standard_themes(): void
       'smartpocket',
       ];
 
-    $query = '
-SELECT
-    id,
-    name
-  FROM '.PREFIX_TABLE.'themes
-  WHERE id NOT IN (\''.implode("','", $standard_themes).'\')
-;';
-    $result = pwg_query($query);
+    $themeRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Theme\ThemeRepository::class);
+    $allThemes = $themeRepo->findAll();
     $theme_ids = [];
     $theme_names = [];
-    while ($row = pwg_db_fetch_assoc($result)) {
-        $theme_ids[] = $row['id'];
-        $theme_names[] = $row['name'];
+    foreach ($allThemes as $row) {
+        $tid = is_scalar($row['id']) ? (string) $row['id'] : '';
+        if ($tid !== '' && !in_array($tid, $standard_themes)) {
+            $theme_ids[] = $tid;
+            $theme_names[] = is_scalar($row['name']) ? (string) $row['name'] : '';
+        }
     }
 
     if (!empty($theme_ids)) {
-        $query = '
-DELETE
-  FROM '.PREFIX_TABLE.'themes
-  WHERE id IN (\''.implode("','", $theme_ids).'\')
-;';
-        pwg_query($query);
+        foreach ($theme_ids as $tid) {
+            $themeRepo->deactivate($tid);
+        }
 
         \Piwigo\Core\PageState::current()->addInfo(l10n('As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:')
                             .'<p><i>'.implode(', ', $theme_names).'</i></p>');
 
         // what is the default theme?
-        $query = '
-SELECT theme
-  FROM '.PREFIX_TABLE.'user_infos
-  WHERE user_id = '.\Piwigo\Config\Config::defaultUserId().'
-;';
-        [$default_theme] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+        $defaultUserInfo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
+            ->getDefaultUserInfo(\Piwigo\Config\Config::defaultUserId());
+        $default_theme = is_scalar($defaultUserInfo['theme'] ?? null) ? (string) $defaultUserInfo['theme'] : '';
 
         // if the default theme has just been deactivated, let's set another core theme as default
         if (in_array($default_theme, $theme_ids)) {
             // make sure default Piwigo theme is active
-            $query = '
-SELECT
-    COUNT(*)
-  FROM '.PREFIX_TABLE.'themes
-  WHERE id = \''.PHPWG_DEFAULT_TEMPLATE.'\'
-;';
-            [$counter] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-            if ($counter < 1) {
+            if (!$themeRepo->existsById(PHPWG_DEFAULT_TEMPLATE)) {
                 // we need to activate theme first
                 $themes = new Themes();
                 $themes->perform_action('activate', PHPWG_DEFAULT_TEMPLATE);
             }
 
             // then associate it to default user
-            $query = '
-UPDATE '.PREFIX_TABLE.'user_infos
-  SET theme = \''.PHPWG_DEFAULT_TEMPLATE.'\'
-  WHERE user_id = '.\Piwigo\Config\Config::defaultUserId().'
-;';
-            pwg_query($query);
+            $themeRepo->setThemeForUsers([\Piwigo\Config\Config::defaultUserId()], PHPWG_DEFAULT_TEMPLATE);
         }
     }
 }
@@ -179,15 +152,9 @@ function check_upgrade_access_rights(): void
         session_start();
         $pwgUid = is_scalar($_SESSION['pwg_uid'] ?? null) ? (string) $_SESSION['pwg_uid'] : '';
         if (!empty($pwgUid)) {
-            $query = '
-SELECT status
-  FROM '.USER_INFOS_TABLE.'
-  WHERE user_id = '.$pwgUid.'
-;';
-            pwg_query($query);
-
-            $row = pwg_db_fetch_assoc(pwg_query($query));
-            if (isset($row['status']) and $row['status'] == 'webmaster') {
+            $statusValue = \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
+                ->findStatusByUserId((int) $pwgUid);
+            if ($statusValue === 'webmaster') {
                 define('PHPWG_IN_UPGRADE', true);
                 return;
             }

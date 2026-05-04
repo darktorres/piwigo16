@@ -266,6 +266,22 @@ final class UserRepository extends AbstractRepository
         return is_string($value) ? $value : null;
     }
 
+    /**
+     * Return the status field from user_infos for the given user, or null if not found.
+     * Used by the upgrade access check to verify webmaster status.
+     */
+    public function findStatusByUserId(int $userId): ?string
+    {
+        $value = $this->conn->createQueryBuilder()
+            ->select('status')
+            ->from($this->table('user_infos'))
+            ->where('user_id = :userId')
+            ->setParameter('userId', $userId)
+            ->executeQuery()
+            ->fetchOne();
+        return is_string($value) ? $value : null;
+    }
+
     /** Truncate user_cache_categories (full cache invalidation). */
     public function truncateCategoryCache(): void
     {

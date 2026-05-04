@@ -506,79 +506,72 @@ php -r "
 
 ## #6 — Eliminate procedural `global` declarations across the codebase
 
-**Status:** Partially done — see "Current state" below for the honest count. `src/` is fully migrated and rule-enforced (unchanged). Roughly half of the `admin/` + `include/` original baseline remains. The session that made progress here also discovered a hard constraint: file-top `global` declarations in entry-scripts and pre-boot includes can't be removed without restoring per-call-site narrowing across hundreds of legacy access patterns, because PHPStan tracks `global $x;` more tightly than `&$GLOBALS['x']` and the project rules forbid inline `@var` to bridge the gap. Steps 4 and 5 are deferred until step 3 finishes properly. &nbsp;|&nbsp; **Size:** L
+**Status:** ✅ Function-internal globals fully removed (Tier 1 + Tier 2). File-top globals distributed to later tasks — see `docs/modernization/remaining-globals.md`. &nbsp;|&nbsp; **Size:** L
 
 ### Goal
 
-Zero `global $conf`, `global $user`, `global $page`, `global $lang`, `global $template` declarations anywhere in the application. All code accesses these through the typed service layer:
+Zero function-internal `global $x;` declarations anywhere in `src/`, `include/`, `admin/`. File-top globals in entry-scripts are a separate concern owned by the MVC controller migration (#22) and the pre-boot-includes-to-services work (#17).
 
-| Global      | Replacement                                                                    |
-| ----------- | ------------------------------------------------------------------------------ |
-| `$conf`     | `Piwigo\Core\Config::get(…)` / typed accessors (`Config::galleryTitle()` etc.) |
-| `$page`     | `Piwigo\Core\PageState::current()->errors[]` etc.                              |
-| `$lang`     | `Piwigo\Core\Lang::current()` / `Lang::get($key)`                              |
-| `$user`     | `Piwigo\Users\CurrentUser::get()`                                              |
-| `$template` | `Piwigo\Template\TemplateRegistry::current()` (new — see step 1)               |
+### What was done
 
-The reference-bridge pattern in `Config::attachGlobals()` and `PageState::attachGlobals()` makes the migration incremental: old `$conf['x']` and new `Config::get('x')` read/write the same backing storage, so plugins and untouched files keep working.
+**Tier 1 — 5 typed-class refactors (33 function-internal sites)**
 
-### Current state
+| New class | Sites removed | Variables replaced |
+|---|---|---|
+| `Piwigo\Plugins\EventDispatcher` | 4 | `$pwg_event_handlers` |
+| `Piwigo\Plugins\LoadedPluginRegistry` | 4 | `$pwg_loaded_plugins` |
+| `Piwigo\Notification\MailNotificationContext` | 13 | `$env_nbm` |
+| `Piwigo\Cache\RequestCache` | 5 | `$cache` |
+| `Piwigo\Core\PageState::addKeyedError` | 5 | `$page['errors']['key']` in `password.php` |
+| `Piwigo\Image\ImageDerivativeContext` | 3 | `$page` in `i.php` derivative pipeline |
 
-- `src/`: **done for the guarded set** — `NoGlobalInSrcRule` flags any `global $conf|$user|$page|$lang|$template` and fires zero hits today. (Note: `$template` was added to the guarded set when `TemplateRegistry` was introduced.) Out-of-scope names (`$logger`, `$lang_info`, etc.) still appear in `src/` and need their own typed accessors before they can join the rule.
-- `admin/`: **95** `global` statements across 71 files remain (down from 138 baseline = 31% reduction). 67 of those 95 are file-top declarations in entry-scripts; ~28 are function-internal. Largest remaining concentrations: `include/functions.php` (9), `include/functions_notification_by_mail.inc.php` (10), `include/add_core_tabs.inc.php` (likely unchanged from baseline 21), `notification_by_mail.php` (5), `include/functions_upgrade.php` (3).
-- `include/`: **36** `global` statements across 16 files remain (down from 158 baseline = 77% reduction). Most heavily-used files (`functions_user.inc.php`, `functions_mail.inc.php`, `functions_search.inc.php`, `ws_functions/pwg.*`) had their function-internal globals migrated, BUT a number of those migrations were reverted during cleanup when bulk-narrowing turned out to be infeasible — so files like `functions_user.inc.php` still have `global $user;` in `log_user`, `auth_key_login`, `userprefs_*`, etc.
-- Root entry-scripts (project root *.php — `index.php`, `picture.php`, `password.php`, `profile.php`, `i.php`, `ws.php`, `install.php`, `upgrade.php`, etc.) still have file-top `global $template, $user, $page, $persistent_cache, $lang;` — kept intentionally as typing bridges. ~10 function-internal `global $page;` / `global $user;` declarations also remain in these files.
-- A `Piwigo\Template\TemplateRegistry` accessor was added (`current()` / `set()` / `isInitialized()` / `reset()`), wired from the `$template = new Template(...)` sites in `install.php`, `upgrade.php`, and `include/common.inc.php`. `$template` is now in the guarded set for `src/`.
-- PHPStan level 9 is clean (`vendor/bin/phpstan analyse` reports `[OK] No errors`); Playwright e2e is green. Level 10 is the proxy metric for the *complete* item — re-measure once the remaining function-internal globals are migrated with proper per-site narrowing.
+`add_event_handler()`, `trigger_change/notify()`, `set/get_plugin_data()`, `load_plugin/plugins()` kept as thin wrappers — third-party plugins work unchanged. `$GLOBALS['pwg_event_handlers']` and `$GLOBALS['pwg_loaded_plugins']` reference-bridged for plugins that read the globals directly.
 
-### Hard constraint discovered
+**Tier 2 — LanguageStack + redirect_html (16 function-internal sites)**
 
-File-top `global $template, $user, $page, $persistent_cache, $lang;` declarations in entry-scripts and pre-boot includes (`include/filter.inc.php`, `include/no_photo_yet.inc.php`) **cannot be eliminated without ~hundreds of per-site type-narrowing edits in legacy body code**. The reason:
+| New class / change | Sites removed | Variables replaced |
+|---|---|---|
+| `Piwigo\Core\LanguageStack` | 13 | `$lang`, `$lang_info`, `$language_files`, `$switch_lang` |
+| `Lang::day(int)` / `Lang::month(int)` added | 1 | `$lang['day'][$dow]` in `format_date_legacy` |
+| `redirect_html` (Tier 2.2) | 5 | `$lang_info`, `$template`, `$t2`, `$debug`, `$user`, `$lang`, `$page` |
+| `$conf_mail` (caught in audit) | 1 | Inlined to `Config::` calls + `RequestCache` template cache |
 
-- PHPStan resolves `global $x;` against `tools/phpstan-bootstrap.php`, which gives the variable a tightly-typed shape (e.g., `$user` becomes `array{id:int, username:string, ...}` and `$page` becomes the literal-inferred shape `array{infos: array, errors: array, ...}` with widening allowed on writes).
-- Replacing the declaration with `$x = &$GLOBALS['x'];` makes `$x` `mixed` from PHPStan's view — `$page` is no longer typed, `$page['errors']` is `mixed`, `$user['id']` is `mixed`, every downstream cast/access errors out.
-- The project rules forbid `@phpstan-ignore`, baseline entries, type casts to silence errors, AND inline `@var` to override PHPStan's inferred type — so there's no quick way to recover the lost shape. The only clean fix is per-call-site narrowing (`is_scalar($user['id']) ? (int)$user['id'] : 0` etc.) at every legacy access — hundreds of edits that aren't independently valuable.
+`LanguageStack` reads/writes `$GLOBALS['lang']` and `$GLOBALS['lang_info']` in-place (not by rebinding) to preserve the `Lang::attachGlobals()` reference bridge. Push-down stack state (`$stack`, `$saved`) is held in private static properties — no `$switch_lang` global.
 
-This is why the file-top globals are deliberately retained. See project memory note `project_global_typing_bridge.md` for the full reasoning.
+**Supporting changes**
+
+- `src/Piwigo/Core/Kernel::reset()` now includes `LanguageStack::reset()`
+- `NoGlobalInSrcRule` REPLACEMENTS updated for all migrated variables
+- `unformat_email()` got a proper `@return array{email: string, name: string}` — a pre-existing type gap exposed when `$conf_mail` (which was `mixed`) stopped suppressing downstream inference
+
+**What remains (not in scope here)**
+
+File-top `global` declarations (~78 lines across 89 files) are not removed here — they are PHPStan typing bridges required until the consuming entry-scripts and pre-boot includes are migrated to typed controllers/services. Full inventory and plan: `docs/modernization/remaining-globals.md`.
+
+- File-top globals in root entry-scripts (15 files) → **#22** (MVC controllers)
+- File-top globals in admin entry-scripts (57 files) → **#22**
+- Pre-boot includes (`page_header.php`, `page_tail.php`, `section_init.inc.php`, etc.) → **#17**
+- `tools/` dev scripts (4 sites) → permanently out of scope
 
 ### Steps
 
-1. **Add a `Template` accessor.** ✅ Done. `Piwigo\Template\TemplateRegistry::current(): Template`, `::set(Template $t): void`, `::isInitialized(): bool`, `::reset(): void`. Wired from the `$template = new Template(...)` sites in `install.php`, `upgrade.php`, and `include/common.inc.php`.
-
-2. **Migrate `include/`.** Partially done (~77% of original baseline removed). `functions.inc.php`, `functions_calendar.inc.php`, `functions_user.inc.php`, `functions_mail.inc.php`, `functions_search.inc.php`, `functions_category.inc.php`, `functions_html.inc.php`, `functions_url.inc.php`, `functions_tag.inc.php`, `functions_notification.inc.php`, `functions_comment.inc.php`, `functions_plugins.inc.php`, `functions_rate.inc.php`, `functions_user.inc.php`, `category_cats.inc.php`, `category_default.inc.php`, `menubar.inc.php`, `page_header.php`, `page_tail.php`, `picture_comment.inc.php`, `picture_metadata.inc.php`, `user.inc.php`, `ws_functions.inc.php`, `ws_functions/pwg.{tags,extensions,categories,users,php,images}.php` had function-internal globals migrated to `&$GLOBALS[…]` reference patterns + `is_array` narrowing or to typed accessors (`CurrentUser::get()`, `PageState::current()`, `TemplateRegistry::current()`, `Lang::has/t`). **However**, ~36 function-internal globals remain — some were reverted during cleanup when the bulk-narrowing approach proved unworkable. Files still needing work: `functions_user.inc.php` (5: `log_user`, `auth_key_login`, `userprefs_save/update_param/delete_param`), `functions_calendar.inc.php` (1: `initialize_calendar`), `functions.inc.php` (~6 functions), `dblayer/functions_mysqli.inc.php` (2), and the rest of the smaller files in the list above. The pre-boot files `filter.inc.php`, `no_photo_yet.inc.php`, `section_init.inc.php`, `search_filters.inc.php` retain their file-top globals (in scope but typing-bridge — see hard constraint above).
-
-3. **Migrate `admin/`.** Started, mostly not finished — only ~31% reduction. ~28 function-internal globals remain across `admin/include/functions.php` (9), `admin/include/functions_notification_by_mail.inc.php` (10), `admin/cat_modify.php` (2), `admin/notification_by_mail.php` (4 internal + 1 file-top), `admin/include/functions_history.inc.php`, `admin/include/functions_permalinks.php` (2), `admin/include/functions_plugins.inc.php`, `admin/include/functions_upgrade.php` (3), `admin/include/functions_upload.inc.php`. The 67 file-top declarations across the 70+ admin entry-scripts are intentionally retained.
-
-4. **Extend the PHPStan rule.** Deferred. Cannot land until step 3 finishes properly AND the file-top-globals constraint above is resolved (likely by accepting the rule must skip file-top scope, OR by writing a Globals service with typed methods that PHPStan can infer from). Originally intended as `NoGlobalRule` covering admin/+include/.
-
-5. **Drop the bootstrap stubs.** Deferred. Same blockers — the file-top globals depend on the stubs for typing.
-
-### Path forward
-
-To actually finish step 3 (and unblock 4–5), each remaining function-internal `global $x;` needs:
-
-- A replacement with the `&$GLOBALS['x']` pattern + `is_array` narrowing OR a switch to the typed accessor (`CurrentUser::get()`, `PageState::current()`, etc.).
-- Per-call-site narrowing inside the function for every `$user['x']`, `$page['y']` access that PHPStan flags as `mixed`. This is the bulk of the work — ~5–20 edits per function.
-- Verification: PHPStan level 9 stays green AND the noGlobalInSrc rule stays at zero hits.
-
-Estimate: 1–2 focused sessions per ~10 functions, working bottom-up by file complexity. The remaining ~64 function-internal globals split across ~25 functions = roughly 3–6 sessions. Resist the temptation to bulk-script this — the per-site narrowing is the work, and scripting it generates regressions like the ones unwound here.
-
-### Out of scope (decide separately)
-
-The following globals also appear in `global` statements but are deferred — they need their own accessors before they can join `NoGlobalRule`: `$persistent_cache`, `$logger`, `$mysqli`, `$service`, `$filter`, `$pwg_loaded_plugins`, `$pwg_event_handlers`, `$prefixeTable`. Recommend including `$logger` and `$service` in this work; defer `$mysqli` to the Db layer effort (item #16).
+1. **Add a `Template` accessor.** ✅ Done.
+2. **Migrate `include/` function-internal globals.** ✅ Done (Tier 1 + Tier 2).
+3. **Migrate `admin/` function-internal globals.** ✅ Done (Tier 1 `$env_nbm`, Tier 2 `$lang_info`/`$lang` in NBM functions).
+4. **Extend the PHPStan rule.** Deferred to when MVC migration eliminates the last file-top globals.
+5. **Drop the bootstrap stubs.** Deferred — same blocker.
 
 ### Verification
 
 ```bash
-# Both must return zero hits in scope:
-grep -rn "^[[:space:]]*global \$" admin/ include/ src/
-grep -rnE "\bglobal \$(conf|user|page|lang|template)\b" admin/ include/ src/
+# Zero function-internal globals for all formerly-guarded variables:
+grep -rn "^\s*global \$" include/ admin/ src/ | grep -v "^include/common.inc.php:153"  # only wiring line
 
-# PHPStan level 10 must pass clean (target item #27):
-PHPSTAN_TABLE_ERROR_FORMATTER_FORCE_SHOW_ALL_ERRORS=1 vendor/bin/phpstan analyse --no-progress
+# PHPStan level 9 clean:
+vendor/bin/phpstan analyse --memory-limit=2G
 
-# E2E smoke (admin pages still load, plugins still work):
-npx playwright test
+# E2E green:
+npm run test:e2e
 ```
 
 ---

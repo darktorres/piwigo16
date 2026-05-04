@@ -1723,24 +1723,10 @@ SELECT
             $id_image
         );
 
-        $query = '
-SELECT
-    id,
-    name,
-    representative_ext,
-    path
-  FROM '.IMAGES_TABLE.'
-  WHERE id = '.$image_id.'
-;';
-        $image_infos = pwg_db_fetch_assoc(pwg_query($query));
-
-        $query = '
-SELECT
-    COUNT(*) AS nb_photos
-  FROM '.IMAGE_CATEGORY_TABLE.'
-  WHERE category_id = '.$p_category_first.'
-;';
-        $category_infos = pwg_db_fetch_assoc(pwg_query($query));
+        $catRepo2 = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class);
+        $image_infos = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
+            ->findById(is_numeric($image_id) ? (int) $image_id : 0);
+        $category_infos = ['nb_photos' => $catRepo2->countImagesByCategoryId($p_category_first)];
 
         $query = '
 SELECT

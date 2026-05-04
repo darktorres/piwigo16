@@ -96,12 +96,8 @@ $template->assign(
 // |                              group list                               |
 // +-----------------------------------------------------------------------+
 
-$query = '
-SELECT id, name, is_default
-  FROM `'.GROUPS_TABLE.'`
-  ORDER BY name ASC
-;';
-$result = pwg_query($query);
+$groupRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Group\GroupRepository::class);
+$userFields = \Piwigo\Config\Config::userFields();
 
 $admin_url = get_root_url().'admin.php?page=';
 $perm_url    = $admin_url.'group_perm&amp;group_id=';
@@ -111,19 +107,13 @@ $toggle_is_default_url     = $admin_url.'group_list&amp;toggle_is_default=';
 
 $group_counter = 0;
 
-while ($row = pwg_db_fetch_assoc($result)) {
-    $query = '
-SELECT u.'. \Piwigo\Config\Config::userFields()['username'].' AS username
-  FROM '.USERS_TABLE.' AS u
-  INNER JOIN '.USER_GROUP_TABLE.' AS ug
-    ON u.'.\Piwigo\Config\Config::userFields()['id'].' = ug.user_id
-  WHERE ug.group_id = '.$row['id'].'
-;';
-    $members = [];
-    $res = pwg_query($query);
-    while ($us = pwg_db_fetch_assoc($res)) {
-        $members[] = $us['username'];
-    }
+foreach ($groupRepo->findAllOrdered() as $row) {
+    $members = $groupRepo->findMemberUsernamesByGroupId(
+        $userFields['username'],
+        $userFields['id'],
+        USERS_TABLE,
+        (int) $row['id']
+    );
     $template->append(
         'groups',
         [

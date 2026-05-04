@@ -255,6 +255,19 @@ final class CategoryRepository extends AbstractRepository
         )->fetchAllAssociative();
     }
 
+    /** Count images linked to the given category. */
+    public function countImagesByCategoryId(int $catId): int
+    {
+        $value = $this->conn->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from($this->table('image_category'))
+            ->where('category_id = :catId')
+            ->setParameter('catId', $catId)
+            ->executeQuery()
+            ->fetchOne();
+        return is_numeric($value) ? (int) $value : 0;
+    }
+
     /**
      * Return true if the given image is associated with the given category.
      */

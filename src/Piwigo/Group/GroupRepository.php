@@ -105,6 +105,25 @@ final class GroupRepository extends AbstractRepository
     }
 
     /**
+     * Return usernames of all members of the given group.
+     * Column names are admin-configured — not user-supplied.
+     *
+     * @return string[]
+     */
+    public function findMemberUsernamesByGroupId(
+        string $usernameField, string $idField, string $usersTable, int $groupId
+    ): array {
+        $rows = $this->conn->executeQuery(
+            "SELECT u.$usernameField AS username
+             FROM $usersTable AS u
+             INNER JOIN " . $this->table('user_group') . " AS ug ON u.$idField = ug.user_id
+             WHERE ug.group_id = ?",
+            [$groupId]
+        )->fetchFirstColumn();
+        return array_map('strval', $rows);
+    }
+
+    /**
      * Return ids of groups whose name matches the given LIKE pattern.
      *
      * @return int[]

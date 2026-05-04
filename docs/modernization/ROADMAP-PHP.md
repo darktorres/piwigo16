@@ -2231,3 +2231,106 @@ composer dump-autoload --strict-psr                              # clean
 vendor/bin/phpstan analyse --no-progress                         # green
 vendor/bin/phpunit                                               # green
 ```
+
+---
+
+## #31 — Migrate to Pest (unified PHP + browser test suite)
+
+**Status:** Not started &nbsp;|&nbsp; **Size:** M
+
+### Goal
+
+Replace the two-runner test setup (PHPUnit 13 for unit tests + Playwright TypeScript for E2E) with a single `vendor/bin/pest` command. `pestphp/pest` wraps PHPUnit so all existing unit tests keep running; `pestphp/pest-plugin-browser` drives Playwright under the hood so E2E browser tests are written in PHP alongside the unit tests. End state: no TypeScript test files, no separate `npx playwright test` step, one language and one runner for the full test suite.
+
+### Current state
+
+- **Unit tests:** 260 PHPUnit 13 tests in `tests/Unit/`, written with raw `$this->assert*` style.
+- **E2E tests:** 51 Playwright TypeScript tests in `tests/e2e/` driven by `npx playwright test` / `playwright.config.ts`.
+- **CI:** two separate steps — PHP (`vendor/bin/phpunit`) and Node (`npx playwright test`).
+- **Pest** not installed; `pest-plugin-browser` not installed.
+
+### Steps
+
+1. **Install Pest.**
+
+   ```bash
+   composer require pestphp/pest --dev --with-all-dependencies
+   vendor/bin/pest --init
+   ```
+
+   `pest --init` creates `tests/Pest.php` (bootstrap), keeps `tests/bootstrap.php` wired in. Pest is PHPUnit-compatible — existing `TestCase`-based tests run immediately with `vendor/bin/pest` without changes.
+
+2. **Install the browser plugin.**
+
+   ```bash
+   composer require pestphp/pest-plugin-browser --dev
+   ```
+
+   The plugin installs Playwright via Node.js under the hood (`npx playwright install --with-deps chromium`). A `browser()` helper becomes available in `tests/Pest.php`.
+
+3. **Configure the browser plugin.** In `tests/Pest.php`:
+
+   ```php
+   use function Pest\Browser\browser;
+
+   uses()->browser(baseUrl: 'http://localhost')->in('tests/Browser');
+   ```
+
+   Base URL points to the local Apache instance already used by the existing Playwright suite.
+
+4. **Port E2E tests from TypeScript to PHP.** Move each `tests/e2e/*.spec.ts` to `tests/Browser/*.php` using Pest browser syntax:
+
+   ```php
+   // Before (TypeScript):
+   test('gallery home loads', async ({ page }) => {
+       await page.goto('/');
+       await expect(page.locator('h1')).toBeVisible();
+   });
+
+   // After (PHP):
+   test('gallery home loads', function () {
+       browser()
+           ->visit('/')
+           ->assertVisible('h1');
+   });
+   ```
+
+   Port all 51 tests. Keep the same logical groupings — one PHP file per existing `.spec.ts` file.
+
+5. **Migrate unit tests to Pest syntax (incremental).** The raw `$this->assert*` style works unchanged; migrate to `expect()` style opportunistically when a test file is touched:
+
+   ```php
+   // Before:
+   $this->assertSame(Config::instance(), ServiceLocator::get(Config::class));
+
+   // After:
+   expect(ServiceLocator::get(Config::class))->toBe(Config::instance());
+   ```
+
+   No deadline — new tests written from this point forward use Pest syntax; old tests migrate as they're edited.
+
+6. **Drop TypeScript test infrastructure.**
+
+   ```bash
+   rm -rf tests/e2e playwright.config.ts
+   ```
+
+   Remove the `npx playwright test` step from CI. Replace with `vendor/bin/pest --group=browser`.
+
+7. **Update CI.** Replace the two-step setup with:
+
+   ```yaml
+   - run: vendor/bin/pest
+   ```
+
+   Pest runs unit and browser tests in sequence. Browser tests require the local server to be up; configure the CI job to start Apache/PHP-FPM before the pest step (same as the current Playwright CI setup).
+
+### Verification
+
+```bash
+vendor/bin/pest                          # all unit + browser tests green
+vendor/bin/pest --group=browser          # only browser tests
+vendor/bin/pest --group=unit             # only unit tests
+find tests/e2e -name '*.spec.ts' | wc -l   # 0 — all ported
+find tests/Browser -name '*.php' | wc -l   # 51 — one per original spec
+```

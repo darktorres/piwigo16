@@ -1095,7 +1095,7 @@ npx playwright test
 
 ## #17 — DB layer modernization (Doctrine DBAL + repositories)
 
-**Status:** 🔄 In progress &nbsp;|&nbsp; **Size:** XL
+**Status:** 🔄 In progress (callsite sweep complete) &nbsp;|&nbsp; **Size:** XL
 
 ### Goal
 
@@ -1103,9 +1103,14 @@ Replace 583 raw `pwg_query()` calls with Doctrine DBAL's query builder. Reposito
 
 ### Current state
 
-- **492 `pwg_query()` sites across `include/`, `admin/`, `src/`** (down from 583). Zero repository classes in `src/` yet.
-- `include/dblayer/functions_mysqli.inc.php` (869 lines) is the procedural wrapper layer.
-- SQL strings interpolate PHP variables; some pass through `pwg_db_real_escape_string`, some don't — an injection audit is part of this work.
+- **7 `pwg_query()` sites remaining in core** (down from 583 — 99% reduction). All 7 are structural:
+  - `admin/include/functions_install.inc.php` — DDL CREATE TABLE during install (must stay raw)
+  - `i.php` ×2 — fast-bootstrap derivative generator with no DI container
+  - `include/functions.inc.php` ×2 — pre-boot: `get_languages()` fallback + `load_conf_from_db()`
+  - `include/functions.inc.php` ×2 — intentional pre-boot fallback branches in `conf_update_param`/`conf_delete_param`
+- `include/dblayer/functions_mysqli.inc.php` remains (bootstrap shim, `pwg_db_connect`, `get_enums`, etc.); its internal uses of the mysqli extension are expected — that file IS the legacy shim.
+- Repositories created: TagRepository, CommentRepository, SearchRepository, CategoryRepository, ImageRepository, UserRepository, PluginRepository, HistoryRepository, NotificationRepository, SessionRepository, RateRepository, GroupRepository, ThemeRepository, LanguageRepository, PermalinkRepository, PermissionRepository, SiteRepository, ActivityRepository, AuthKeyRepository, FeedRepository (20 repositories total).
+- All plugin-sourced files excluded from count (plugins remain on `pwg_query()`).
 - `$conf['dblayer']` is always `'mysqli'` (16.x floor).
 
 ### Steps

@@ -797,7 +797,7 @@ vendor/bin/phpunit --testsuite Unit
 
 ## #12 — PSR-11 DI container
 
-**Status:** Not started &nbsp;|&nbsp; **Size:** M
+**Status:** ✅ Done &nbsp;|&nbsp; **Size:** M
 
 ### Goal
 

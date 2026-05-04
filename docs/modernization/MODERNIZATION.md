@@ -303,6 +303,42 @@ PHP 8.5 is required. Key breakage points:
 - Undeclared dynamic properties emit `E_DEPRECATED` — add explicit declarations or
   `#[AllowDynamicProperties]`.
 
+### File I/O — use StorageRegistry, not raw filesystem functions
+
+Since 16.x, Piwigo routes user-facing file I/O through
+`\Piwigo\Storage\StorageRegistry`. Named disks map logical names to
+Flysystem `FilesystemOperator` instances configured in `config/storage.php`.
+
+**Plugin best practice:**
+
+```php
+// Old (works, but breaks when the site moves storage to S3/SFTP):
+file_put_contents(PHPWG_ROOT_PATH . 'plugins/MyPlugin/data.json', $json);
+$data = file_get_contents(PHPWG_ROOT_PATH . 'plugins/MyPlugin/data.json');
+
+// New (portable across any Flysystem backend):
+$disk = \Piwigo\Storage\StorageRegistry::disk('plugins');
+$disk->write('MyPlugin/data.json', $json);
+$data = $disk->read('MyPlugin/data.json');
+```
+
+Available disks and their roots (configured in `config/storage.php`):
+
+| Disk          | Default root                        | Use for                              |
+| ------------- | ----------------------------------- | ------------------------------------ |
+| `uploads`     | `Config::uploadDir()`               | Original user photos                 |
+| `derivatives` | `_data/i/`                          | Thumbnails / resized variants        |
+| `watermarks`  | `local/watermarks/`                 | Watermark PNG files                  |
+| `themes`      | `themes/`                           | Theme assets                         |
+| `plugins`     | `plugins/`                          | Plugin data files                    |
+| `exports`     | `_data/exports/`                    | Generated export archives            |
+| `local`       | `local/`                            | Site-local overrides & uploads       |
+| `temp`        | `sys_get_temp_dir() . '/piwigo'`    | Scratch / chunk assembly             |
+
+The disk behind each name can be swapped to S3, SFTP, or any other
+Flysystem adapter by editing `config/storage.php` — plugin code does not
+change. See the comments in that file for concrete S3 and SFTP examples.
+
 ### Testing your plugin
 
 Activate on a fresh 16.x install with `error_reporting(E_ALL)` and browse the gallery,

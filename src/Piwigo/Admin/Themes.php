@@ -29,7 +29,7 @@ class Themes
 
         foreach ($this->get_db_themes() as $db_theme) {
             if (isset($db_theme['id'])) {
-                $this->db_themes_by_id[(string) $db_theme['id']] = $db_theme;
+                $this->db_themes_by_id[is_scalar($db_theme['id']) ? (string) $db_theme['id'] : ''] = $db_theme;
             }
         }
     }

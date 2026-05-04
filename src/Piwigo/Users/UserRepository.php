@@ -733,7 +733,7 @@ final class UserRepository extends AbstractRepository
             ->setParameter('userId', $userId)
             ->executeQuery()
             ->fetchOne();
-        return (int) $count > 0;
+        return is_numeric($count) ? (int) $count > 0 : false;
     }
 
     /** Count how many images the given user has in their caddie. */

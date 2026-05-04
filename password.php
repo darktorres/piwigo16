@@ -237,8 +237,8 @@ function check_password_reset_key(string $reset_key): int|false
     $user_id = null;
     foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
         ->findByActiveActivationKey() as $row) {
-        $activation_key = isset($row['activation_key']) ? (string)$row['activation_key'] : '';
-        $row_status = isset($row['status']) ? (string)$row['status'] : '';
+        $activation_key = isset($row['activation_key']) ? (is_scalar($row['activation_key']) ? (string)$row['activation_key'] : '') : '';
+        $row_status = isset($row['status']) ? (is_scalar($row['status']) ? (string)$row['status'] : '') : '';
         if (password_verify($key, $activation_key)) {
             if (is_a_guest($row_status) or is_generic($row_status)) {
                 \Piwigo\Core\PageState::current()->addKeyedError('password_page_error', l10n('Password reset is not allowed for this user'));

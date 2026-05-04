@@ -47,8 +47,8 @@ function get_std_sql_where_restrict_filter(
  * @param string $end (mysql datetime format)
  * @return int|array|null
  */
-/** @return array<mixed>|int|string|float|null */
-function custom_notification_query(string $action, string $type, ?string $start = null, ?string $end = null): array|int|string|float|null
+/** @return array<mixed>|int|null */
+function custom_notification_query(string $action, string $type, ?string $start = null, ?string $end = null): array|int|null
 {
     switch ($type) {
         case 'new_comments':
@@ -166,7 +166,7 @@ function custom_notification_query(string $action, string $type, ?string $start 
                 $count = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
                     ->executeQuery('SELECT COUNT(DISTINCT ' . $field_id . ') ' . $query)
                     ->fetchOne();
-                return $count;
+                return is_numeric($count) ? (int) $count : null;
 
             }
 

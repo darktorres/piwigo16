@@ -1214,7 +1214,7 @@ function create_virtual_category(string $category_name, int|string|null $parent_
 
         if ($parent !== null) {
             $insert['id_uppercat'] = $parent['id'];
-            $insert['global_rank'] = (is_scalar($parent['global_rank']) ? (string) $parent['global_rank'] : '').'.'.(is_scalar($insert['rank']) ? (string) $insert['rank'] : '');
+            $insert['global_rank'] = (is_scalar($parent['global_rank']) ? (string) $parent['global_rank'] : '').'.'.(string) $insert['rank'];
 
             // at creation, must a category be visible or not ? Warning : if the
             // parent category is invisible, the category is automatically create
@@ -1619,7 +1619,7 @@ function empty_lounge(bool $invalidate_user_cache = true): ?array
     $empty_lounge_running = $conn->executeQuery(
         'SELECT value FROM ' . CONFIG_TABLE . ' WHERE param = "empty_lounge_running"'
     )->fetchOne();
-    list($running_exec_id, ) = explode('-', (string) $empty_lounge_running);
+    list($running_exec_id, ) = explode('-', is_scalar($empty_lounge_running) ? (string) $empty_lounge_running : '');
 
     if ($running_exec_id != $exec_id) {
         $logger->debug(__FUNCTION__.', exec='.$exec_id.', skip');

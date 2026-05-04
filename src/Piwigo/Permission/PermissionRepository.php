@@ -189,7 +189,7 @@ final class PermissionRepository extends AbstractRepository
                ->setParameter('excludedCatIds', $excludedCatIds, ArrayParameterType::INTEGER);
         }
 
-        return array_map('intval', $qb->executeQuery()->fetchFirstColumn());
+        return array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $qb->executeQuery()->fetchFirstColumn());
     }
 
     /**

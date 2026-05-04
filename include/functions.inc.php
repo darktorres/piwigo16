@@ -2742,7 +2742,7 @@ function pwg_unique_exec_begins(string $token_name, int $timeout = 60): false|st
         'SELECT value FROM ' . CONFIG_TABLE . ' WHERE param = ?',
         [$token_name . '_running']
     )->fetchOne();
-    list($running_exec_id, ) = explode('-', (string) $running_exec);
+    list($running_exec_id, ) = explode('-', is_scalar($running_exec) ? (string) $running_exec : '');
 
     if ($running_exec_id != $exec_id) {
         $logger->info('['.$token_name.'][exec='.$exec_id.'] skip');
@@ -2762,7 +2762,7 @@ function pwg_unique_exec_is_running(string $token_name): bool
         )
         ->fetchOne();
 
-    return (int) $counter > 0;
+    return is_numeric($counter) ? (int) $counter > 0 : false;
 }
 
 function pwg_unique_exec_ends(string $token_name): void

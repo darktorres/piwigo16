@@ -84,7 +84,7 @@ SELECT
     $cats = [];
     foreach (\Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
         ->executeQuery($query)->fetchAllAssociative() as $row) {
-        $row['id'] = (int)$row['id'];
+        $row['id'] = is_numeric($row['id']) ? (int)$row['id'] : 0;
         $cats[ $row['id'] ] = $row;
     }
 
@@ -100,7 +100,7 @@ SELECT
               and count($cat_ids) == 1
               and isset($cats[ $cat_ids[0] ]['image_order'])
         ) {
-            $order_by = (string) $cats[ $cat_ids[0] ]['image_order'];
+            $order_by = is_scalar($cats[ $cat_ids[0] ]['image_order']) ? (string) $cats[ $cat_ids[0] ]['image_order'] : '';
         }
         $order_by = empty($order_by) ? \Piwigo\Config\Config::orderBy() : 'ORDER BY '.$order_by;
         $favorite_ids = get_user_favorites();
@@ -129,14 +129,14 @@ SELECT SQL_CALC_FOUND_ROWS i.*
             $image['is_favorite'] = isset($favorite_ids[$row_id_key]);
             foreach (['id', 'width', 'height', 'hit'] as $k) {
                 if (isset($row[$k])) {
-                    $image[$k] = (int)$row[$k];
+                    $image[$k] = is_numeric($row[$k]) ? (int)$row[$k] : 0;
                 }
             }
             foreach (['file', 'name', 'comment', 'date_creation', 'date_available'] as $k) {
                 $image[$k] = $row[$k];
             }
 
-            $image_name = (string)($image['name'] ?? '');
+            $image_name = is_scalar($image['name'] ?? null) ? (string) $image['name'] : '';
             $rendered_name = trigger_change('render_element_name', $image_name, __FUNCTION__);
             $image['name'] = strip_tags($rendered_name);
             $image['comment'] = trigger_change('render_element_description', $image['comment'] ?? null, __FUNCTION__);
@@ -146,8 +146,8 @@ SELECT SQL_CALC_FOUND_ROWS i.*
             $images[] = $image;
         }
 
-        $total_images = $catImgConn->executeQuery('SELECT FOUND_ROWS()')->fetchOne();
-        $total_images = (int)$total_images;
+        $total_images_raw = $catImgConn->executeQuery('SELECT FOUND_ROWS()')->fetchOne();
+        $total_images = is_numeric($total_images_raw) ? (int)$total_images_raw : 0;
 
         // let's take care of adding the related albums to each photo
         if (count($image_ids) > 0) {
@@ -159,7 +159,7 @@ SELECT
     image_id,
     category_id
   FROM '.IMAGE_CATEGORY_TABLE.'
-  WHERE image_id IN ('.implode(',', $image_ids).')
+  WHERE image_id IN ('.implode(',', array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '', $image_ids)).')
     AND '.get_sql_condition_FandF(['forbidden_categories' => 'category_id'], null, true).'
 ;';
             foreach (\Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
@@ -180,7 +180,7 @@ SELECT
     name,
     permalink
   FROM '. CATEGORIES_TABLE .'
-  WHERE id IN ('. implode(',', array_map('strval', $category_ids)) .')
+  WHERE id IN ('. implode(',', array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '', $category_ids)) .')
 ;';
                 $details_for_category = query2array($query, 'id');
             }
@@ -210,7 +210,7 @@ SELECT
                     );
 
                     $image_cats[] = [
-                      'id' => (int)$cat_id,
+                      'id' => is_numeric($cat_id) ? (int)$cat_id : 0,
                       'url' => $url,
                       'page_url' => $page_url,
                     ];
@@ -368,7 +368,7 @@ SELECT SQL_CALC_FOUND_ROWS
             ]
         );
         foreach (['id','nb_images','total_nb_images','nb_categories'] as $key) {
-            $row[$key] = (int)$row[$key];
+            $row[$key] = is_numeric($row[$key]) ? (int)$row[$key] : 0;
         }
 
         if ($params['fullname']) {
@@ -418,7 +418,7 @@ SELECT representative_picture_id
   FROM '. CATEGORIES_TABLE .'
     INNER JOIN '. USER_CACHE_CATEGORIES_TABLE .'
     ON id=cat_id AND user_id='.$currentUser->id.'
-  WHERE uppercats LIKE \''.$row['uppercats'].',%\'
+  WHERE uppercats LIKE \''.(is_scalar($row['uppercats']) ? (string) $row['uppercats'] : '').',%\'
     AND representative_picture_id IS NOT NULL
         '.get_sql_condition_FandF(
                     ['visible_categories' => 'id'],
@@ -437,7 +437,7 @@ SELECT representative_picture_id
 
         if (isset($image_id)) {
             if (\Piwigo\Config\Config::representativeCacheOnSubcats() and $row['user_representative_picture_id'] != $image_id) {
-                $user_representative_updates_for[ (int) $row['id'] ] = $image_id;
+                $user_representative_updates_for[ $row['id'] ] = $image_id;
             }
 
             $row['representative_picture_id'] = $image_id;
@@ -462,7 +462,7 @@ SELECT representative_picture_id
 
         $thumbnail_size = is_scalar($params['thumbnail_size']) ? (string) $params['thumbnail_size'] : '';
         $imgRepoWsCats = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class);
-        foreach ($imgRepoWsCats->findByIds(array_map('intval', $image_ids)) as $row) {
+        foreach ($imgRepoWsCats->findByIds(array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $image_ids)) as $row) {
             if ($row['level'] <= $user['level']) {
                 $thumbnail_src_of[is_scalar($row['id']) ? (string) $row['id'] : ''] = DerivativeImage::url($thumbnail_size, $row);
             } else {
@@ -482,7 +482,7 @@ SELECT representative_picture_id
                             $new_image_ids[] = $image_id;
                         }
                         if (\Piwigo\Config\Config::representativeCacheOnLevel()) {
-                            $user_representative_updates_for[ (int) $category['id'] ] = $image_id;
+                            $user_representative_updates_for[ is_numeric($category['id']) ? (int) $category['id'] : 0 ] = $image_id;
                         }
 
                         $category['representative_picture_id'] = $image_id;
@@ -526,7 +526,7 @@ SELECT representative_picture_id
     foreach ($cats as &$cat) {
         foreach ($categories as $category) {
             if ($category['id'] == $cat['id'] and isset($category['representative_picture_id'])) {
-                $rep_key = (string) $category['representative_picture_id'];
+                $rep_key = is_scalar($category['representative_picture_id']) ? (string) $category['representative_picture_id'] : '';
                 $cat['tn_url'] = $thumbnail_src_of[$rep_key] ?? null;
             }
         }

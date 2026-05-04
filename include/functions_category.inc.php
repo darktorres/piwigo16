@@ -129,20 +129,20 @@ WHERE '.$where.'
                 'get_categories_menu'
             ),
             'TITLE' => get_display_images_count(
-                (int) $row['nb_images'],
-                (int) $row['count_images'],
-                (int) $row['count_categories'],
+                is_numeric($row['nb_images']) ? (int) $row['nb_images'] : 0,
+                is_numeric($row['count_images']) ? (int) $row['count_images'] : 0,
+                is_numeric($row['count_categories']) ? (int) $row['count_categories'] : 0,
                 false,
                 ' / '
             ),
             'URL' => make_index_url(['category' => $row]),
-            'LEVEL' => substr_count((string) $row['global_rank'], '.') + 1,
+            'LEVEL' => substr_count(is_scalar($row['global_rank']) ? (string) $row['global_rank'] : '', '.') + 1,
             'SELECTED' => ($selected_category !== null && $selected_category['id'] == $row['id']) ? true : false,
             'IS_UPPERCAT' => ($selected_category !== null && $selected_category['id_uppercat'] == $row['id']) ? true : false,
             ]
         );
         if (\Piwigo\Config\Config::indexNewIcon()) {
-            $row['icon_ts'] = get_icon(is_string($row['max_date_last']) || is_null($row['max_date_last']) ? $row['max_date_last'] : (string) $row['max_date_last'], $child_date_last);
+            $row['icon_ts'] = get_icon(is_string($row['max_date_last']) || is_null($row['max_date_last']) ? $row['max_date_last'] : (is_scalar($row['max_date_last']) ? (string) $row['max_date_last'] : null), $child_date_last);
         }
         $cats[] = $row;
         if ($selected_category !== null && $row['id'] == ($selected_category['id'] ?? null)) {
@@ -422,7 +422,7 @@ function get_display_images_count($cat_nb_images, $cat_count_images, $cat_count_
  * @param bool $recursive
  * @return int|null
  */
-/** @param array<string, bool|float|int|string|null> $category */
+/** @param array<string, mixed> $category */
 function get_random_image_in_category(array $category, bool $recursive = true): ?int
 {
     $image_id = null;
@@ -434,10 +434,10 @@ SELECT image_id
   WHERE ';
         if ($recursive) {
             $query .= '
-    (c.id='.(int) $category['id'].' OR uppercats LIKE \''.addslashes((string) $category['uppercats']).',%\')';
+    (c.id='.(is_numeric($category['id']) ? (int) $category['id'] : 0).' OR uppercats LIKE \''.addslashes(is_scalar($category['uppercats']) ? (string) $category['uppercats'] : '').',%\')';
         } else {
             $query .= '
-    c.id='.(int) $category['id'];
+    c.id='.(is_numeric($category['id']) ? (int) $category['id'] : 0);
         }
         $query .= '
     '.get_sql_condition_FandF(
@@ -524,7 +524,7 @@ FROM '.CATEGORIES_TABLE.' as c
 
         // Skip categories whose parent was not included in the result set
         // (can happen when a parent is inaccessible to the current user).
-        $cat_uppercat_key = (string) $cat['id_uppercat'];
+        $cat_uppercat_key = is_scalar($cat['id_uppercat']) ? (string) $cat['id_uppercat'] : '';
         if (!isset($cats[$cat_uppercat_key])) {
             continue;
         }
@@ -543,7 +543,7 @@ FROM '.CATEGORIES_TABLE.' as c
             if (!isset($parent['id_uppercat'])) {
                 break;
             }
-            $parent = & $cats[(string) $parent['id_uppercat']];
+            $parent = & $cats[is_scalar($parent['id_uppercat']) ? (string) $parent['id_uppercat'] : ''];
         } while (true);
         unset($parent);
     }
@@ -658,7 +658,7 @@ SELECT id
 /**
  * @param array<mixed> $items
  * @param int[] $excluded_cat_ids
- * @return array<string, array<string, float|int|string|null>>
+ * @return array<string, array<string, mixed>>
  */
 function get_common_categories(array $items, ?int $max = null, array $excluded_cat_ids = [], bool $use_permissions = true): array
 {
@@ -703,7 +703,7 @@ SELECT
     $cats = [];
     foreach (\Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
         ->executeQuery($query)->fetchAllAssociative() as $row) {
-        $cats[ (string) $row['id'] ] = $row;
+        $cats[ is_scalar($row['id']) ? (string) $row['id'] : '' ] = $row;
     }
 
     return $cats;
@@ -731,7 +731,7 @@ function get_related_categories_menu(array $items, array $excluded_cat_ids = [])
     $cat_ids = [];
     // now we add the upper categories and useful values such as depth level and url
     foreach ($common_cats as $cat) {
-        foreach (explode(',', (string) $cat['uppercats']) as $uppercat) {
+        foreach (explode(',', is_scalar($cat['uppercats']) ? (string) $cat['uppercats'] : '') as $uppercat) {
             $cat_ids[$uppercat] = ($cat_ids[$uppercat] ?? 0) + 1;
         }
     }
@@ -788,7 +788,7 @@ SELECT
             foreach (array_slice(explode(',', (string) $cat['uppercats']), 0, -1) as $uppercat_id) {
                 $upper_idx = $index_of_cat[$uppercat_id] ?? null;
                 if ($upper_idx !== null) {
-                    $cats[$upper_idx]['count_categories'] = ((int) ($cats[$upper_idx]['count_categories'] ?? 0)) + 1;
+                    $cats[$upper_idx]['count_categories'] = (is_numeric($cats[$upper_idx]['count_categories'] ?? null) ? (int) $cats[$upper_idx]['count_categories'] : 0) + 1;
                 }
             }
         }

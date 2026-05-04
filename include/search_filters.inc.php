@@ -200,7 +200,7 @@ SELECT
                     }
                 }
 
-                [$date_without_time] = explode(' ', (string) $row['date']);
+                [$date_without_time] = explode(' ', is_scalar($row['date']) ? (string) $row['date'] : '');
                 [$y, $m] = explode('-', $date_without_time);
 
                 $list_of_dates[$y]['months'][$y.'-'.$m]['days'][$date_without_time]['count'] = ($list_of_dates[$y]['months'][$y.'-'.$m]['days'][$date_without_time]['count'] ?? 0) + 1;
@@ -303,7 +303,7 @@ SELECT
                         }
                     }
 
-                    [$date_without_time] = explode(' ', (string) $row['date']);
+                    [$date_without_time] = explode(' ', is_scalar($row['date']) ? (string) $row['date'] : '');
                     [$y, $m] = explode('-', $date_without_time);
 
                     $list_of_dates[$y]['months'][$y.'-'.$m]['days'][$date_without_time]['count'] = ($list_of_dates[$y]['months'][$y.'-'.$m]['days'][$date_without_time]['count'] ?? 0) + 1;
@@ -452,7 +452,7 @@ SELECT
                 );
                 $row['fullname'] = strip_tags($cat_display_name);
 
-                $fullname_of[(string) $row['id']] = $row['fullname'];
+                $fullname_of[is_scalar($row['id']) ? (string) $row['id'] : ''] = $row['fullname'];
             }
 
             $template->assign('fullname_of', json_encode($fullname_of));

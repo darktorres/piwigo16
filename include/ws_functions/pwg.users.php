@@ -241,10 +241,11 @@ SELECT DISTINCT ';
 
     /* GET THE RESULT OF SQL_CALC_FOUND_ROWS if display total_count is requested*/
     if (isset($params['display']['total_count'])) {
-        $total_count = (int) $usersConn->executeQuery('SELECT FOUND_ROWS()')->fetchOne();
+        $found = $usersConn->executeQuery('SELECT FOUND_ROWS()')->fetchOne();
+        $total_count = is_numeric($found) ? (int) $found : 0;
     }
     foreach ($usersRows as $row) {
-        $row['id'] = intval($row['id']);
+        $row['id'] = is_numeric($row['id']) ? (int) $row['id'] : 0;
         if (isset($params['display']['groups'])) {
             $row['groups'] = []; // will be filled later
         }
@@ -265,7 +266,7 @@ SELECT DISTINCT ';
                 if (!isset($users[$grp_uid]['groups']) || !is_array($users[$grp_uid]['groups'])) {
                     $users[$grp_uid]['groups'] = [];
                 }
-                $users[$grp_uid]['groups'][] = intval($row['group_id']);
+                $users[$grp_uid]['groups'][] = is_numeric($row['group_id']) ? (int) $row['group_id'] : 0;
             }
         }
         foreach ($users as $cur_user) {
@@ -781,7 +782,7 @@ SELECT
 
         foreach (['id', 'width', 'height', 'hit'] as $k) {
             if (isset($row[$k])) {
-                $image[$k] = (int)$row[$k];
+                $image[$k] = is_numeric($row[$k]) ? (int)$row[$k] : 0;
             }
         }
 

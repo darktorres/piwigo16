@@ -238,15 +238,13 @@ SELECT
     $first_time_key = null;
 
     foreach ($historyRows as $row) {
+        $row_date = is_scalar($row['date']) ? (string) $row['date'] : '';
+        $row_hour = is_numeric($row['hour']) ? (int) $row['hour'] : 0;
         $time_keys = [
-          substr((string) $row['date'], 0, 4), //yyyy
-          substr((string) $row['date'], 0, 7), //yyyy-mm
-          substr((string) $row['date'], 0, 10),//yyyy-mm-dd
-          sprintf(
-              '%s-%02u',
-              $row['date'],
-              $row['hour']
-          ),
+          substr($row_date, 0, 4), //yyyy
+          substr($row_date, 0, 7), //yyyy-mm
+          substr($row_date, 0, 10),//yyyy-mm-dd
+          sprintf('%s-%02u', $row_date, $row_hour),
           ];
 
         foreach ($time_keys as $time_key) {
@@ -257,7 +255,7 @@ SELECT
                   'history_id_to' => $row['max_id'],
                   ];
             }
-            $need_update[$time_key]['nb_pages'] += $row['nb_pages'];
+            $need_update[$time_key]['nb_pages'] += is_numeric($row['nb_pages']) ? (int) $row['nb_pages'] : 0;
 
             if ($row['min_id'] < $need_update[$time_key]['history_id_from']) {
                 $need_update[$time_key]['history_id_from'] = $row['min_id'];
@@ -311,19 +309,19 @@ SELECT *
 ;';
         foreach (\Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
             ->executeQuery($query)->fetchAllAssociative() as $row) {
-            $key = sprintf('%4u', $row['year']);
+            $key = sprintf('%4u', is_numeric($row['year']) ? (int) $row['year'] : 0);
             if (isset($row['month'])) {
-                $key .= sprintf('-%02u', $row['month']);
+                $key .= sprintf('-%02u', is_numeric($row['month']) ? (int) $row['month'] : 0);
                 if (isset($row['day'])) {
-                    $key .= sprintf('-%02u', $row['day']);
+                    $key .= sprintf('-%02u', is_numeric($row['day']) ? (int) $row['day'] : 0);
                     if (isset($row['hour'])) {
-                        $key .= sprintf('-%02u', $row['hour']);
+                        $key .= sprintf('-%02u', is_numeric($row['hour']) ? (int) $row['hour'] : 0);
                     }
                 }
             }
 
             if (isset($need_update[$key])) {
-                $row['nb_pages'] += $need_update[$key]['nb_pages'];
+                $row['nb_pages'] = (is_numeric($row['nb_pages']) ? (int) $row['nb_pages'] : 0) + $need_update[$key]['nb_pages'];
                 $row['history_id_to'] = $need_update[$key]['history_id_to'];
                 $updates[] = $row;
                 unset($need_update[$key]);

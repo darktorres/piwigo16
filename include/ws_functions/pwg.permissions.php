@@ -203,7 +203,7 @@ function ws_permissions_remove(array $params, \Piwigo\Ws\PwgServer &$service): m
     $cat_ids_str = array_map(fn ($v) => (string) $v, $cat_ids);
 
     $permRepo2 = \Piwigo\Core\ServiceLocator::get(\Piwigo\Permission\PermissionRepository::class);
-    $cat_ids_int = array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $cat_ids_str);
+    $cat_ids_int = array_map(fn(string $v): int => (int) $v, $cat_ids_str);
 
     if (!empty($params['group_id'])) {
         $group_id_rem = is_array($params['group_id']) ? $params['group_id'] : [];

@@ -101,7 +101,7 @@ if ($page['show_comments']) {
     }
     $startOffset = (int) $page['start'];
 
-    $nb_comments = (int) ($row['nb_comments'] ?? 0);
+    $nb_comments = is_numeric($row['nb_comments'] ?? null) ? (int) $row['nb_comments'] : 0;
 
     $navigation_bar = create_navigation_bar(
         duplicate_picture_url([], ['start']),
@@ -172,12 +172,12 @@ SELECT
               [
                 'ID' => $row['id'],
                 'AUTHOR' => trigger_change('render_comment_author', $row['author']),
-                'DATE' => format_date((string) $row['date'], ['day_name','day','month','year','time']),
+                'DATE' => format_date(is_scalar($row['date']) ? (string) $row['date'] : '', ['day_name','day','month','year','time']),
                 'CONTENT' => trigger_change('render_comment_content', $row['content']),
                 'WEBSITE_URL' => $row['website_url'],
               ];
 
-            if (can_manage_comment('delete', (int) $row['author_id'])) {
+            if (can_manage_comment('delete', is_numeric($row['author_id']) ? (int) $row['author_id'] : 0)) {
                 $tpl_comment['U_DELETE'] = add_url_params(
                     $url_self,
                     [
@@ -187,7 +187,7 @@ SELECT
                     ]
                 );
             }
-            if (can_manage_comment('edit', (int) $row['author_id'])) {
+            if (can_manage_comment('edit', is_numeric($row['author_id']) ? (int) $row['author_id'] : 0)) {
                 $tpl_comment['U_EDIT'] = add_url_params(
                     $url_self,
                     [

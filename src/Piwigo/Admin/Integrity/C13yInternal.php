@@ -110,7 +110,7 @@ class C13yInternal
 
         $status = [];
         foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
-            $status[(int)$row['id']] = $row['status'];
+            $status[is_numeric($row['id']) ? (int)$row['id'] : 0] = $row['status'];
         }
 
         foreach ($c13y_users as $id => $data) {

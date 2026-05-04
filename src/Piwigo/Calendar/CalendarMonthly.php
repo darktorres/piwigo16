@@ -233,7 +233,7 @@ class CalendarMonthly extends CalendarBase
         $items = [];
         foreach (ServiceLocator::get(Connection::class)->executeQuery($query)->fetchAllAssociative() as $row) {
             $periodRaw = $row['period'] ?? '';
-            $periodStr = is_string($periodRaw) ? $periodRaw : (string) $periodRaw;
+            $periodStr = is_scalar($periodRaw) ? (string) $periodRaw : '';
             $y = substr($periodStr, 0, 4);
             $m = (int) substr($periodStr, 4, 2);
             if (! isset($items[$y])) {
@@ -309,7 +309,7 @@ class CalendarMonthly extends CalendarBase
         $items = [];
         foreach (ServiceLocator::get(Connection::class)->executeQuery($query)->fetchAllAssociative() as $row) {
             $periodRaw = $row['period'] ?? '';
-            $periodStr = is_string($periodRaw) ? $periodRaw : (string) $periodRaw;
+            $periodStr = is_scalar($periodRaw) ? (string) $periodRaw : '';
             $m = (int) substr($periodStr, 0, 2);
             $d = substr($periodStr, 2, 2);
             if (! isset($items[$m])) {

@@ -1625,7 +1625,7 @@ function qsearch_get_tags(\Piwigo\Search\QExpression $expr, \Piwigo\Search\QResu
         $query = 'SELECT * FROM ' . TAGS_TABLE . ' WHERE (' . implode("\n OR ", $clauses) . ')';
         foreach (\Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
             ->executeQuery($query)->fetchAllAssociative() as $tag) {
-            $tag_id = (int) $tag['id'];
+            $tag_id = is_numeric($tag['id']) ? (int) $tag['id'] : 0;
             $token_tag_ids[$i][] = $tag_id;
             $all_tags[$tag_id] = $tag;
         }
@@ -1703,7 +1703,7 @@ function qsearch_get_categories(\Piwigo\Search\QExpression $expr, \Piwigo\Search
             ' WHERE (' . implode("\n OR ", $clauses) . ')';
         foreach (\Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
             ->executeQuery($query)->fetchAllAssociative() as $cat) {
-            $cat_id = (int) $cat['id'];
+            $cat_id = is_numeric($cat['id']) ? (int) $cat['id'] : 0;
             $token_cat_ids[$i][] = $cat_id;
             $all_cats[$cat_id] = $cat;
         }

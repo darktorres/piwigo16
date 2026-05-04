@@ -46,7 +46,7 @@ if (is_webmaster()) {
             $action = $rows['action'];
             $date = '';
             $hour = '';
-            $detailsRaw = unserialize((string)$rows['details']);
+            $detailsRaw = unserialize(is_scalar($rows['details']) ? (string)$rows['details'] : '');
             $details = is_array($detailsRaw) ? $detailsRaw : [];
             $detail = [
               'type' => 'empty',
@@ -317,7 +317,7 @@ if (is_webmaster()) {
 
             // Format our data before send
             // This data will be manipulate by maintenance_sys.js
-            [$date, $hour] = explode(' ', (string) $rows['occured_on']);
+            [$date, $hour] = explode(' ', is_scalar($rows['occured_on']) ? (string) $rows['occured_on'] : '');
             $data[] = [
               'major_infos' => $major_infos,
               'id' => $rows['activity_id'],

@@ -19,7 +19,7 @@ final class FeedRepository extends AbstractRepository
             ->setParameter('id', $feedId)
             ->executeQuery()
             ->fetchOne();
-        return (int) $count > 0;
+        return is_numeric($count) ? (int) $count > 0 : false;
     }
 
     /** Insert a new feed subscription for the given user. last_check is NULL on creation. */

@@ -145,18 +145,19 @@ SELECT
         if (empty($row['author_id']) or $row['author_id'] == \Piwigo\Config\Config::guestId()) {
             $author_name = $row['author'];
         } else {
-            $author_name = stripslashes((string) ($row['username'] ?? $row['author'] ?? l10n('guest')));
+            $coalesced = $row['username'] ?? $row['author'] ?? l10n('guest');
+            $author_name = stripslashes(is_scalar($coalesced) ? (string) $coalesced : l10n('guest'));
         }
 
         $list[] = [
           'id' => $row['id'],
-          'admin_link' => get_root_url().'admin.php?page=photo-'.$row['image_id'],
+          'admin_link' => get_root_url().'admin.php?page=photo-'.(is_scalar($row['image_id']) ? (string)$row['image_id'] : ''),
           'medium_url' => $medium,
           'file' => $row['file'],
-          'image_date_available' => format_date((string) $row['date_available'], ['day_name','day','month','year','time']),
+          'image_date_available' => format_date(is_scalar($row['date_available']) ? (string) $row['date_available'] : '', ['day_name','day','month','year','time']),
           'author' => trigger_change('render_comment_author', $author_name),
           'author_status' => \Piwigo\Config\Config::webmasterId() == $row['author_id'] ? 'main_user' : $row['status'],
-          'date' => format_date((string) $row['date'], ['day_name','day','month','year','time']),
+          'date' => format_date(is_scalar($row['date']) ? (string) $row['date'] : '', ['day_name','day','month','year','time']),
           'content' => trigger_change('render_comment_content', $row['content']),
           'raw_content' => $row['content'],
           'is_pending' => ('false' == $row['validated']),

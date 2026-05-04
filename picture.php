@@ -448,9 +448,9 @@ foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
         $i = 'current';
     }
 
-    $src_path = (string)($row['path'] ?? '');
-    $src_file = (string)($row['file'] ?? '');
-    $src_id = (int)($row['id'] ?? 0);
+    $src_path = is_scalar($row['path'] ?? null) ? (string) $row['path'] : '';
+    $src_file = is_scalar($row['file'] ?? null) ? (string) $row['file'] : '';
+    $src_id = is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0;
 
     $row['src_image'] = new SrcImage($row);
     $row['derivatives'] = DerivativeImage::get_all($row['src_image']);

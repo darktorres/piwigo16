@@ -124,7 +124,7 @@ $query_true .= '
 display_select_cat_wrapper($query_true, [], 'category_option_true');
 
 $authorized_ids = \Piwigo\Core\ServiceLocator::get(\Piwigo\Permission\PermissionRepository::class)
-    ->findDirectUserCatIds((int) $page['user'], array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $group_authorized));
+    ->findDirectUserCatIds((int) $page['user'], $group_authorized);
 
 $query_false = '
 SELECT id,name,uppercats,global_rank

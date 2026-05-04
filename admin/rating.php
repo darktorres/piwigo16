@@ -92,8 +92,9 @@ if (!empty($page['cat_filter'])) {
 
 $query .= '
 WHERE 1=1'. $page['user_filter'];
-$nb_images = (int) \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+$nb_images_raw = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
     ->executeQuery($query)->fetchOne();
+$nb_images = is_numeric($nb_images_raw) ? (int) $nb_images_raw : 0;
 
 $nb_elements = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)->countRatings();
 
@@ -198,10 +199,11 @@ $template->assign('images', []);
 foreach ($images as $image) {
     $thumbnail_src = DerivativeImage::thumb_url($image);
 
-    $image_url = get_root_url().'admin.php?page=photo-'.$image['id'];
+    $image_id_int = is_numeric($image['id']) ? (int) $image['id'] : 0;
+    $image_url = get_root_url().'admin.php?page=photo-'.$image_id_int;
 
     $all_rates = \Piwigo\Core\ServiceLocator::get(\Piwigo\Rate\RateRepository::class)
-        ->findByElementId((int) $image['id']);
+        ->findByElementId($image_id_int);
     $nb_rates = count($all_rates);
 
     $tpl_image =
@@ -212,7 +214,7 @@ foreach ($images as $image) {
         'SCORE_RATE' => $image['score'],
          'AVG_RATE' => $image['avg_rates'],
          'SUM_RATE' => $image['sum_rates'],
-         'NB_RATES' => (int)$image['nb_rates'],
+         'NB_RATES' => is_numeric($image['nb_rates']) ? (int)$image['nb_rates'] : 0,
          'NB_RATES_TOTAL' => (int)$nb_rates,
          'FILE' => $image['file'],
          'rates'  => [],

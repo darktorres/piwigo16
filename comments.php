@@ -398,14 +398,14 @@ if (count($comments) > 0) {
     $query = '
 SELECT *
   FROM '.IMAGES_TABLE.'
-  WHERE id IN ('.implode(',', $element_ids).')
+  WHERE id IN ('.implode(',', array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '', $element_ids)).')
 ;';
     $elements = query2array($query, 'id');
 
     // retrieving category informations
     $query = 'SELECT id, name, permalink, uppercats
   FROM '.CATEGORIES_TABLE.'
-  WHERE id IN ('.implode(',', $category_ids).')';
+  WHERE id IN ('.implode(',', array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '', $category_ids)).')';
     $categories = query2array($query, 'id');
 
     foreach ($comments as $comment) {

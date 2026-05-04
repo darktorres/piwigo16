@@ -150,8 +150,9 @@ final class HistoryRepository extends AbstractRepository
     public function summarizedColumnExists(): bool
     {
         $sm = $this->conn->createSchemaManager();
-        $columns = $sm->introspectTableColumns($this->table('history'));
-        return isset($columns['summarized']);
+        $tableName = $this->table('history');
+        $table = $sm->introspectTableByUnquotedName($tableName !== '' ? $tableName : 'history');
+        return $table->hasColumn('summarized');
     }
 
     /**

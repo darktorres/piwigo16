@@ -51,10 +51,10 @@ if (isset($_GET['type']) && 'download_logs' == $_GET['type']) {
 
     array_push($output_lines, ['User', 'ID_User', 'Object', 'Object_ID', 'Action', 'Date', 'Hour', 'IP_Address', 'Details']);
     foreach ($activityRows as $row) {
-        $row['details'] = str_replace('`groups`', 'groups', (string)$row['details']);
+        $row['details'] = str_replace('`groups`', 'groups', is_scalar($row['details']) ? (string)$row['details'] : '');
         $row['details'] = str_replace('`rank`', 'rank', $row['details']);
 
-        [$date, $hour] = explode(' ', (string) $row['occured_on']);
+        [$date, $hour] = explode(' ', is_scalar($row['occured_on']) ? (string) $row['occured_on'] : '');
 
         $output_lines[] = [
           'username' => $row['username'],
@@ -76,7 +76,7 @@ if (isset($_GET['type']) && 'download_logs' == $_GET['type']) {
     $f = fopen('php://output', 'w');
     if ($f !== false) {
         foreach ($output_lines as $line) {
-            fputcsv($f, array_map('strval', $line), ';', '"', '\\');
+            fputcsv($f, array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '', $line), ';', '"', '\\');
         }
         fclose($f);
     }

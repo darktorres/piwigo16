@@ -65,7 +65,7 @@ if (!empty($feed_id)) {
         page_not_found(l10n('Unknown feed identifier'));
     }
     if ($feed_row !== null && $feed_row['user_id'] != $user['id']) { // new user
-        $user = build_user((int)$feed_row['user_id'], true);
+        $user = build_user(is_numeric($feed_row['user_id']) ? (int)$feed_row['user_id'] : 0, true);
     }
 } else {
     $image_only = true;
@@ -100,7 +100,7 @@ $rss->link = get_gallery_home_url();
 
 $news = array();
 if (!$image_only) {
-    $last_check = isset($feed_row['last_check']) ? (string)$feed_row['last_check'] : null;
+    $last_check = isset($feed_row['last_check']) ? (is_scalar($feed_row['last_check']) ? (string)$feed_row['last_check'] : null) : null;
     $news = news($last_check, $dbnow, true, true);
 
     if (count($news) > 0) {
@@ -130,7 +130,7 @@ if (!$image_only) {
 
 if (!empty($feed_id) and empty($news)) {// update the last check from time to time to avoid deletion by maintenance tasks
     if (!isset($feed_row['last_check'])
-      or time() - datetime_to_ts((string)$feed_row['last_check']) > 30 * 24 * 3600) {
+      or time() - datetime_to_ts(is_scalar($feed_row['last_check']) ? (string)$feed_row['last_check'] : '') > 30 * 24 * 3600) {
         $keepAliveDate = (new \DateTimeImmutable($dbnow))->modify('+15 days')->format('Y-m-d H:i:s');
         \Piwigo\Core\ServiceLocator::get(\Piwigo\Feed\FeedRepository::class)
             ->updateLastCheck((string) $feed_id, $keepAliveDate);

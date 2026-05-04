@@ -142,7 +142,7 @@ if ($sortBy0 === 'id' || $sortBy0 === 'permalink') {
 $categories = [];
 foreach (\Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
     ->executeQuery($permalinkQuery)->fetchAllAssociative() as $row) {
-    $row['name'] = get_cat_display_name_cache((string)($row['uppercats'] ?? ''));
+    $row['name'] = get_cat_display_name_cache(is_scalar($row['uppercats'] ?? null) ? (string) $row['uppercats'] : '');
     $categories[] = $row;
 }
 
@@ -171,7 +171,7 @@ if (count($sort_by) && $sortByOld0 !== '') {
 $deleted_permalinks = [];
 foreach (\Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
     ->executeQuery($oldPermalinkQuery)->fetchAllAssociative() as $row) {
-    $row['name'] = get_cat_display_name_cache((string)(int)$row['cat_id']);
+    $row['name'] = get_cat_display_name_cache((string)(is_numeric($row['cat_id']) ? (int)$row['cat_id'] : 0));
     $row['U_DELETE'] =
         add_url_params(
             $url_del_base,

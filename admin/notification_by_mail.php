@@ -462,7 +462,7 @@ switch ($page['mode']) {
                     ->executeQuery('SELECT param, value FROM ' . CONFIG_TABLE . " WHERE param LIKE 'nbm\\_%'")
                     ->fetchAllAssociative();
                 foreach ($nbmParams as $nbm_user) {
-                    $param = (string)$nbm_user['param'];
+                    $param = is_scalar($nbm_user['param']) ? (string)$nbm_user['param'] : '';
                     if (isset($_POST[$param])) {
                         conf_update_param($param, $_POST[$param], true);
                         $updated_param_count++;

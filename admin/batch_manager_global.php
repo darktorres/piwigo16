@@ -527,7 +527,7 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
         }
 
         $row_filesize = is_numeric($row['filesize'] ?? null) ? (float) $row['filesize'] : 0.0;
-        $ttitle .= '<br>'.$row['width'].'&times;'.$row['height'].' pixels, '.sprintf('%.2f', $row_filesize / 1024).'MB';
+        $ttitle .= '<br>'.(is_scalar($row['width']) ? (string)$row['width'] : '').'&times;'.(is_scalar($row['height']) ? (string)$row['height'] : '').' pixels, '.sprintf('%.2f', $row_filesize / 1024).'MB';
 
         $template->append(
             'thumbnails',
@@ -537,7 +537,7 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
         'thumb' => new DerivativeImage($thumb_params, $src_image),
         'TITLE' => $ttitle,
         'FILE_SRC' => DerivativeImage::url(IMG_LARGE, $src_image),
-        'U_EDIT' => get_root_url().'admin.php?page=photo-'.$row['id'],
+        'U_EDIT' => get_root_url().'admin.php?page=photo-'.(is_scalar($row['id']) ? (string)$row['id'] : ''),
         ]
             )
         );

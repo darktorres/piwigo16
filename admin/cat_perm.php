@@ -260,9 +260,7 @@ if (count($group_granted_ids) > 0) {
         $user_granted_by_group_ids = array_merge($user_granted_by_group_ids, $group_users);
     }
 
-    $user_granted_by_group_ids = array_unique(
-        array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '', $user_granted_by_group_ids)
-    );
+    $user_granted_by_group_ids = array_unique($user_granted_by_group_ids);
 
     $user_granted_indirect_ids = array_diff(
         $user_granted_by_group_ids,
@@ -275,7 +273,7 @@ if (count($group_granted_ids) > 0) {
         $group_usernames = [];
         foreach ($group_users as $user_id) {
             if (in_array($user_id, $user_granted_indirect_ids)) {
-                $user_key = is_scalar($user_id) ? (string) $user_id : '';
+                $user_key = $user_id;
                 $group_usernames[] = isset($users[$user_key]) ? (string) $users[$user_key] : '';
             }
         }

@@ -413,7 +413,7 @@ SELECT id, name, permalink, uppercats, global_rank, commentable
             ]
         );
 
-        $row['id'] = (int) $row['id'];
+        $row['id'] = is_numeric($row['id']) ? (int) $row['id'] : 0;
 
         $cat_name_raw = trigger_change('render_category_name', $row['name'], __FUNCTION__);
         $row['name'] = strip_tags(is_scalar($cat_name_raw) ? (string) $cat_name_raw : '');
@@ -491,7 +491,7 @@ SELECT id, date, author, content
 ;';
         foreach (\Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
             ->executeQuery($query)->fetchAllAssociative() as $row) {
-            $row['id'] = (int) $row['id'];
+            $row['id'] = is_numeric($row['id']) ? (int) $row['id'] : 0;
             $related_comments[] = $row;
         }
     }
@@ -1298,7 +1298,7 @@ function ws_images_add(array $params, \Piwigo\Ws\PwgServer $service): PwgError|a
         $counter = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
             ->executeQuery('SELECT COUNT(*) FROM ' . IMAGES_TABLE . ' WHERE ' . $where_clause)
             ->fetchOne();
-        if ((int) $counter !== 0) {
+        if ((is_numeric($counter) ? (int) $counter : 0) !== 0) {
             return new PwgError(500, 'file already exists');
         }
     }

@@ -103,7 +103,7 @@ foreach ($catCatsRows as $row) {
 SELECT representative_picture_id
   FROM '.CATEGORIES_TABLE.' INNER JOIN '.USER_CACHE_CATEGORIES_TABLE.'
   ON id = cat_id and user_id = '.$currentUser->id.'
-  WHERE uppercats LIKE \''.$row['uppercats'].',%\'
+  WHERE uppercats LIKE \''.(is_scalar($row['uppercats']) ? (string)$row['uppercats'] : '').',%\'
     AND representative_picture_id IS NOT NULL'
   .get_sql_condition_FandF(
       [
@@ -136,7 +136,7 @@ SELECT representative_picture_id
             sprintf(
                 '[%s] category #%u was listed in SQL but no image_id found, so it was skipped',
                 basename(__FILE__),
-                $row['id']
+                is_numeric($row['id']) ? (int) $row['id'] : 0
             )
         );
     }

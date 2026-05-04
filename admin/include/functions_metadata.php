@@ -349,7 +349,7 @@ SELECT id
     $query = '
 SELECT id, path, representative_ext
   FROM '.IMAGES_TABLE.'
-  WHERE storage_category_id IN ('.implode(',', $cat_ids).')';
+  WHERE storage_category_id IN ('.implode(',', array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '', $cat_ids)).')';
     if ($only_new) {
         $query .= '
     AND date_metadata_update IS NULL

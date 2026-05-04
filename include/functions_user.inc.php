@@ -325,7 +325,7 @@ SELECT ';
              WHERE ui.user_id = ? GROUP BY ui.user_id',
             [$user_id]
         )->fetchOne();
-        if ((int) $counter !== 1) {
+        if ((is_numeric($counter) ? (int) $counter : 0) !== 1) {
             create_user_infos($user_id);
         }
     }

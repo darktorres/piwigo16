@@ -1172,3 +1172,60 @@ msgstr "フィルターを変更して新たに検索を行うことができま
 msgid "No results are available."
 msgstr "見つかりませんでした。"
 
+msgid "piwigo_day_0"
+msgstr "日曜日"
+
+msgid "piwigo_day_1"
+msgstr "月曜日"
+
+msgid "piwigo_day_2"
+msgstr "火曜日"
+
+msgid "piwigo_day_3"
+msgstr "水曜日"
+
+msgid "piwigo_day_4"
+msgstr "木曜日"
+
+msgid "piwigo_day_5"
+msgstr "金曜日"
+
+msgid "piwigo_day_6"
+msgstr "土曜日"
+
+msgid "piwigo_month_10"
+msgstr "10月"
+
+msgid "piwigo_month_11"
+msgstr "11月"
+
+msgid "piwigo_month_12"
+msgstr "12月"
+
+msgid "piwigo_month_1"
+msgstr "1月"
+
+msgid "piwigo_month_2"
+msgstr "2月"
+
+msgid "piwigo_month_3"
+msgstr "3月"
+
+msgid "piwigo_month_4"
+msgstr "4月"
+
+msgid "piwigo_month_5"
+msgstr "5月"
+
+msgid "piwigo_month_6"
+msgstr "6月"
+
+msgid "piwigo_month_7"
+msgstr "7月"
+
+msgid "piwigo_month_8"
+msgstr "8月"
+
+msgid "piwigo_month_9"
+msgstr "9月"
+

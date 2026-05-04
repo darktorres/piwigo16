@@ -1115,3 +1115,60 @@ msgstr "%d fotos per blad"
 msgid "Album name, A &rarr; Z"
 msgstr "Album naam, A &rarr; Z"
 
+msgid "piwigo_day_0"
+msgstr "Sondag"
+
+msgid "piwigo_day_1"
+msgstr "Maandag"
+
+msgid "piwigo_day_2"
+msgstr "Dinsdag"
+
+msgid "piwigo_day_3"
+msgstr "Woensdag"
+
+msgid "piwigo_day_4"
+msgstr "Donderdag"
+
+msgid "piwigo_day_5"
+msgstr "Vrydag"
+
+msgid "piwigo_day_6"
+msgstr "Saterdag"
+
+msgid "piwigo_month_10"
+msgstr "Oktober"
+
+msgid "piwigo_month_11"
+msgstr "November"
+
+msgid "piwigo_month_12"
+msgstr "Desember"
+
+msgid "piwigo_month_1"
+msgstr "Januarie"
+
+msgid "piwigo_month_2"
+msgstr "Februarie"
+
+msgid "piwigo_month_3"
+msgstr "Maart"
+
+msgid "piwigo_month_4"
+msgstr "April"
+
+msgid "piwigo_month_5"
+msgstr "Mei"
+
+msgid "piwigo_month_6"
+msgstr "Junie"
+
+msgid "piwigo_month_7"
+msgstr "Julie"
+
+msgid "piwigo_month_8"
+msgstr "Augustus"
+
+msgid "piwigo_month_9"
+msgstr "September"
+

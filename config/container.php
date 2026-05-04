@@ -27,6 +27,7 @@ use Piwigo\Plugin\PluginRepository;
 use Piwigo\Rate\RateRepository;
 use Piwigo\Search\SearchRepository;
 use Piwigo\Session\SessionRepository;
+use Piwigo\Lang\Translator;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Users\UserRepository;
@@ -35,6 +36,7 @@ use Psr\Log\NullLogger;
 
 return [
     Config::class          => factory(fn () => Config::instance()),
+    Translator::class      => factory(fn () => Translator::get()),
     PageState::class       => factory(fn () => PageState::current()),
     LoggerInterface::class => factory(
         fn () => LoggerRegistry::isInitialized() ? LoggerRegistry::current() : new NullLogger()

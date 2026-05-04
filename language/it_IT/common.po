@@ -1484,3 +1484,60 @@ msgstr "Se non sei stato tu, per favore cambia immediatamente la tua password o 
 msgid "Here is your verification code:"
 msgstr "Questo è il tuo codice di verifica:"
 
+msgid "piwigo_day_0"
+msgstr "Domenica"
+
+msgid "piwigo_day_1"
+msgstr "Lunedì"
+
+msgid "piwigo_day_2"
+msgstr "Martedì"
+
+msgid "piwigo_day_3"
+msgstr "Mercoledì"
+
+msgid "piwigo_day_4"
+msgstr "Giovedì"
+
+msgid "piwigo_day_5"
+msgstr "Venerdì"
+
+msgid "piwigo_day_6"
+msgstr "Sabato"
+
+msgid "piwigo_month_10"
+msgstr "Ottobre"
+
+msgid "piwigo_month_11"
+msgstr "Novembre"
+
+msgid "piwigo_month_12"
+msgstr "Dicembre"
+
+msgid "piwigo_month_1"
+msgstr "Gennaio"
+
+msgid "piwigo_month_2"
+msgstr "Febbraio"
+
+msgid "piwigo_month_3"
+msgstr "Marzo"
+
+msgid "piwigo_month_4"
+msgstr "Aprile"
+
+msgid "piwigo_month_5"
+msgstr "Maggio"
+
+msgid "piwigo_month_6"
+msgstr "Giugno"
+
+msgid "piwigo_month_7"
+msgstr "Luglio"
+
+msgid "piwigo_month_8"
+msgstr "Agosto"
+
+msgid "piwigo_month_9"
+msgstr "Settembre"
+

@@ -1121,3 +1121,60 @@ msgstr "ชื่อผู้ใช้ หรือ ไรหัสผ่าน�
 msgid "generate random password"
 msgstr "สุ่มการสร้างรหัส"
 
+msgid "piwigo_day_0"
+msgstr "วันอาทิตย์"
+
+msgid "piwigo_day_1"
+msgstr "วันจันทร์"
+
+msgid "piwigo_day_2"
+msgstr "วันอังคาร"
+
+msgid "piwigo_day_3"
+msgstr "วันพุธ"
+
+msgid "piwigo_day_4"
+msgstr "วันพฤหัสบดี"
+
+msgid "piwigo_day_5"
+msgstr "วันศุกร์"
+
+msgid "piwigo_day_6"
+msgstr "วันเสาร์"
+
+msgid "piwigo_month_10"
+msgstr "ตุลาคม"
+
+msgid "piwigo_month_11"
+msgstr "พฤษจิกายน"
+
+msgid "piwigo_month_12"
+msgstr "ธันวาคม"
+
+msgid "piwigo_month_1"
+msgstr "มกราคม"
+
+msgid "piwigo_month_2"
+msgstr "กุมภาพันธ์"
+
+msgid "piwigo_month_3"
+msgstr "มีนาคม"
+
+msgid "piwigo_month_4"
+msgstr "เมษายน"
+
+msgid "piwigo_month_5"
+msgstr "พฤษภาคม"
+
+msgid "piwigo_month_6"
+msgstr "มิถุยายน"
+
+msgid "piwigo_month_7"
+msgstr "กรกฎาคม"
+
+msgid "piwigo_month_8"
+msgstr "สิงหาคม"
+
+msgid "piwigo_month_9"
+msgstr "กันยายน"
+

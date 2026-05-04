@@ -1127,3 +1127,60 @@ msgstr "ಗುಣವಿಶೇಷಗಳ ಮೇಲೆ ಅನ್ವಯಿಸಿ"
 msgid "Your authentication key is no longer valid."
 msgstr "ನಿಮ್ಮ ಧೃಢೀಕರಣದ ಕೀ ಅಸಿಂಧುವಾಗಿದೆ"
 
+msgid "piwigo_day_0"
+msgstr "ಭಾನುವಾರ"
+
+msgid "piwigo_day_1"
+msgstr "ಸೋಮವಾರ"
+
+msgid "piwigo_day_2"
+msgstr "ಮಂಗಳವಾರ"
+
+msgid "piwigo_day_3"
+msgstr "ಬುಧವಾರ"
+
+msgid "piwigo_day_4"
+msgstr "ಗುರುವಾರ"
+
+msgid "piwigo_day_5"
+msgstr "ಶುಕ್ರವಾರ"
+
+msgid "piwigo_day_6"
+msgstr "ಶನಿವಾರ"
+
+msgid "piwigo_month_10"
+msgstr "ಅಕ್ಟೋಬರ್"
+
+msgid "piwigo_month_11"
+msgstr "ನವೆಂಬರ್"
+
+msgid "piwigo_month_12"
+msgstr "ಡಿಸೆಂಬರ್"
+
+msgid "piwigo_month_1"
+msgstr "ಜನವರಿ"
+
+msgid "piwigo_month_2"
+msgstr "ಫೆಬ್ರವರಿ"
+
+msgid "piwigo_month_3"
+msgstr "ಮಾರ್ಚ್"
+
+msgid "piwigo_month_4"
+msgstr "ಏಪ್ರಿಲ್"
+
+msgid "piwigo_month_5"
+msgstr "ಮೇ"
+
+msgid "piwigo_month_6"
+msgstr "ಜೂನ್"
+
+msgid "piwigo_month_7"
+msgstr "ಜುಲೈ"
+
+msgid "piwigo_month_8"
+msgstr "ಆಗಸ್ಟ್"
+
+msgid "piwigo_month_9"
+msgstr "ಸೆಪ್ಟೆಂಬರ್"
+

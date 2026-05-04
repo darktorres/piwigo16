@@ -1121,3 +1121,60 @@ msgstr "Jūsų prisijungimo raktas nebegalioja."
 msgid "generate random password"
 msgstr "generuoti slaptažodį"
 
+msgid "piwigo_day_0"
+msgstr "Sekmadienis"
+
+msgid "piwigo_day_1"
+msgstr "Pirmadienis"
+
+msgid "piwigo_day_2"
+msgstr "Antradienis"
+
+msgid "piwigo_day_3"
+msgstr "Tre&#269;iadienis"
+
+msgid "piwigo_day_4"
+msgstr "Ketvirtadienis"
+
+msgid "piwigo_day_5"
+msgstr "Penktadienis"
+
+msgid "piwigo_day_6"
+msgstr "&#352;e&#353;tadienis"
+
+msgid "piwigo_month_10"
+msgstr "Spalis"
+
+msgid "piwigo_month_11"
+msgstr "Lapkritis"
+
+msgid "piwigo_month_12"
+msgstr "Gruodis"
+
+msgid "piwigo_month_1"
+msgstr "Sausis"
+
+msgid "piwigo_month_2"
+msgstr "Vasaris"
+
+msgid "piwigo_month_3"
+msgstr "Kovas"
+
+msgid "piwigo_month_4"
+msgstr "Balandis"
+
+msgid "piwigo_month_5"
+msgstr "Gegu&#382;&#279;"
+
+msgid "piwigo_month_6"
+msgstr "Bir&#382;elis"
+
+msgid "piwigo_month_7"
+msgstr "Liepa"
+
+msgid "piwigo_month_8"
+msgstr "Rugpj&#363;tis"
+
+msgid "piwigo_month_9"
+msgstr "Rugs&#279;jis"
+

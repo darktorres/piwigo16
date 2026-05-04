@@ -246,3 +246,60 @@ msgstr "ޔޫސާނަން"
 msgid "Visits"
 msgstr "ވަޑައިގެންނެވި ފަހަރު"
 
+msgid "piwigo_day_0"
+msgstr "އާދީއްތަ"
+
+msgid "piwigo_day_1"
+msgstr "ހޯމަ"
+
+msgid "piwigo_day_2"
+msgstr "އަންގާރަ"
+
+msgid "piwigo_day_3"
+msgstr "ބުދަ"
+
+msgid "piwigo_day_4"
+msgstr "ބުރާސްފަތި"
+
+msgid "piwigo_day_5"
+msgstr "ހުކުރު"
+
+msgid "piwigo_day_6"
+msgstr "ހޮނިހިރު"
+
+msgid "piwigo_month_10"
+msgstr "އޮކްޓޯބަރ"
+
+msgid "piwigo_month_11"
+msgstr "ނޮވެމްބަރ"
+
+msgid "piwigo_month_12"
+msgstr "ޑިސެންބަރ"
+
+msgid "piwigo_month_1"
+msgstr "ޖެނުއަރީ"
+
+msgid "piwigo_month_2"
+msgstr "ފެބްރުއަރީ"
+
+msgid "piwigo_month_3"
+msgstr "މާރޗް"
+
+msgid "piwigo_month_4"
+msgstr "އޭޕްރީލް"
+
+msgid "piwigo_month_5"
+msgstr "މޭ"
+
+msgid "piwigo_month_6"
+msgstr "ޖޫން"
+
+msgid "piwigo_month_7"
+msgstr "ޖުލައި"
+
+msgid "piwigo_month_8"
+msgstr "އޮގަސްޓް"
+
+msgid "piwigo_month_9"
+msgstr "ސެޕްޓެމްބަރ"
+

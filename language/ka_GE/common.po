@@ -1070,3 +1070,60 @@ msgstr "პაროლი არა სწორია. გთხოვთ გ�
 msgid "Password confirmation is missing. Please confirm the chosen password."
 msgstr "პაროლის დადასტურება არ არის. გთხოვთ დაადასტურეთ არჩეული პაროლი."
 
+msgid "piwigo_day_0"
+msgstr "კვ"
+
+msgid "piwigo_day_1"
+msgstr "ორშ"
+
+msgid "piwigo_day_2"
+msgstr "სამ"
+
+msgid "piwigo_day_3"
+msgstr "ოთხ"
+
+msgid "piwigo_day_4"
+msgstr "ხუთ"
+
+msgid "piwigo_day_5"
+msgstr "პარ"
+
+msgid "piwigo_day_6"
+msgstr "შაბ"
+
+msgid "piwigo_month_10"
+msgstr "ოქტომბერი"
+
+msgid "piwigo_month_11"
+msgstr "ნოემბერი"
+
+msgid "piwigo_month_12"
+msgstr "დეკემბერი"
+
+msgid "piwigo_month_1"
+msgstr "იანვარი"
+
+msgid "piwigo_month_2"
+msgstr "თებერვალი"
+
+msgid "piwigo_month_3"
+msgstr "მარტი"
+
+msgid "piwigo_month_4"
+msgstr "აპრილი"
+
+msgid "piwigo_month_5"
+msgstr "მაისი"
+
+msgid "piwigo_month_6"
+msgstr "ივნისი"
+
+msgid "piwigo_month_7"
+msgstr "ივლისი"
+
+msgid "piwigo_month_8"
+msgstr "აგვისტო"
+
+msgid "piwigo_month_9"
+msgstr "სექტემბერი"
+

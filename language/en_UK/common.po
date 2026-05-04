@@ -1484,3 +1484,60 @@ msgstr "Verification successful! You can now choose a new password."
 msgid "If your account exists, a verification code has been sent to your email address."
 msgstr "If your account exists, a verification code has been sent to your email address."
 
+msgid "piwigo_day_0"
+msgstr "Sunday"
+
+msgid "piwigo_day_1"
+msgstr "Monday"
+
+msgid "piwigo_day_2"
+msgstr "Tuesday"
+
+msgid "piwigo_day_3"
+msgstr "Wednesday"
+
+msgid "piwigo_day_4"
+msgstr "Thursday"
+
+msgid "piwigo_day_5"
+msgstr "Friday"
+
+msgid "piwigo_day_6"
+msgstr "Saturday"
+
+msgid "piwigo_month_10"
+msgstr "October"
+
+msgid "piwigo_month_11"
+msgstr "November"
+
+msgid "piwigo_month_12"
+msgstr "December"
+
+msgid "piwigo_month_1"
+msgstr "January"
+
+msgid "piwigo_month_2"
+msgstr "February"
+
+msgid "piwigo_month_3"
+msgstr "March"
+
+msgid "piwigo_month_4"
+msgstr "April"
+
+msgid "piwigo_month_5"
+msgstr "May"
+
+msgid "piwigo_month_6"
+msgstr "June"
+
+msgid "piwigo_month_7"
+msgstr "July"
+
+msgid "piwigo_month_8"
+msgstr "August"
+
+msgid "piwigo_month_9"
+msgstr "September"
+

@@ -1133,3 +1133,60 @@ msgstr "Nombre del álbum, 1 &rarr; 5 &rarr; 10 &rarr; 100"
 msgid "Album name, 100 &rarr; 10 &rarr; 5 &rarr; 1"
 msgstr "Nombre del álbum, 100 &rarr; 10 &rarr; 5 &rarr; 1"
 
+msgid "piwigo_day_0"
+msgstr "Domingo"
+
+msgid "piwigo_day_1"
+msgstr "Lunes"
+
+msgid "piwigo_day_2"
+msgstr "Martes"
+
+msgid "piwigo_day_3"
+msgstr "Miércoles"
+
+msgid "piwigo_day_4"
+msgstr "Jueves"
+
+msgid "piwigo_day_5"
+msgstr "Viernes"
+
+msgid "piwigo_day_6"
+msgstr "Sábado"
+
+msgid "piwigo_month_10"
+msgstr "Octubre"
+
+msgid "piwigo_month_11"
+msgstr "Noviembre"
+
+msgid "piwigo_month_12"
+msgstr "Diciembre"
+
+msgid "piwigo_month_1"
+msgstr "Enero"
+
+msgid "piwigo_month_2"
+msgstr "Febrero"
+
+msgid "piwigo_month_3"
+msgstr "Marzo"
+
+msgid "piwigo_month_4"
+msgstr "Abril"
+
+msgid "piwigo_month_5"
+msgstr "Mayo"
+
+msgid "piwigo_month_6"
+msgstr "Junio"
+
+msgid "piwigo_month_7"
+msgstr "Julio"
+
+msgid "piwigo_month_8"
+msgstr "Agosto"
+
+msgid "piwigo_month_9"
+msgstr "Septiembre"
+

@@ -1190,3 +1190,60 @@ msgstr "Klask e-barzh:"
 msgid "Pages"
 msgstr "Pajennoù"
 
+msgid "piwigo_day_0"
+msgstr "Sul"
+
+msgid "piwigo_day_1"
+msgstr "Lun"
+
+msgid "piwigo_day_2"
+msgstr "Meurzh"
+
+msgid "piwigo_day_3"
+msgstr "Merc\\\\"
+
+msgid "piwigo_day_4"
+msgstr "Yaou"
+
+msgid "piwigo_day_5"
+msgstr "Gwener"
+
+msgid "piwigo_day_6"
+msgstr "Sadorn"
+
+msgid "piwigo_month_10"
+msgstr "Here"
+
+msgid "piwigo_month_11"
+msgstr "Du"
+
+msgid "piwigo_month_12"
+msgstr "Kerzu"
+
+msgid "piwigo_month_1"
+msgstr "Genver"
+
+msgid "piwigo_month_2"
+msgstr "C\\\\"
+
+msgid "piwigo_month_3"
+msgstr "Meurzh"
+
+msgid "piwigo_month_4"
+msgstr "Ebrel"
+
+msgid "piwigo_month_5"
+msgstr "Mae"
+
+msgid "piwigo_month_6"
+msgstr "Mezheven"
+
+msgid "piwigo_month_7"
+msgstr "Gouere"
+
+msgid "piwigo_month_8"
+msgstr "Eost"
+
+msgid "piwigo_month_9"
+msgstr "Gwengolo"
+

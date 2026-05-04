@@ -1133,3 +1133,60 @@ msgstr "Aibūma nosaukums,1 &rarr; 5 &rarr; 10 &rarr; 100"
 msgid "Album name, 100 &rarr; 10 &rarr; 5 &rarr; 1"
 msgstr "Aibūma nosaukums, 100 &rarr; 10 &rarr; 5 &rarr; 1"
 
+msgid "piwigo_day_0"
+msgstr "Svētdiena"
+
+msgid "piwigo_day_1"
+msgstr "Pirmdiena"
+
+msgid "piwigo_day_2"
+msgstr "Otrdiena"
+
+msgid "piwigo_day_3"
+msgstr "Trešdiena"
+
+msgid "piwigo_day_4"
+msgstr "Ceturtdiena"
+
+msgid "piwigo_day_5"
+msgstr "Piektdiena"
+
+msgid "piwigo_day_6"
+msgstr "Sestdiena"
+
+msgid "piwigo_month_10"
+msgstr "Oktobris"
+
+msgid "piwigo_month_11"
+msgstr "Novembris"
+
+msgid "piwigo_month_12"
+msgstr "Decembris"
+
+msgid "piwigo_month_1"
+msgstr "Janvāris"
+
+msgid "piwigo_month_2"
+msgstr "Februāris"
+
+msgid "piwigo_month_3"
+msgstr "Marts"
+
+msgid "piwigo_month_4"
+msgstr "Aprīlis"
+
+msgid "piwigo_month_5"
+msgstr "Maijs"
+
+msgid "piwigo_month_6"
+msgstr "Jūnijs"
+
+msgid "piwigo_month_7"
+msgstr "Jūlijs"
+
+msgid "piwigo_month_8"
+msgstr "Augusts"
+
+msgid "piwigo_month_9"
+msgstr "Septembris"
+

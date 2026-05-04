@@ -1484,3 +1484,60 @@ msgstr "Váš ověřovací kód"
 msgid "edit user preferences"
 msgstr "upravit uživatelské předvolby"
 
+msgid "piwigo_day_0"
+msgstr "Neděle"
+
+msgid "piwigo_day_1"
+msgstr "Pondělí"
+
+msgid "piwigo_day_2"
+msgstr "Úterý"
+
+msgid "piwigo_day_3"
+msgstr "Středa"
+
+msgid "piwigo_day_4"
+msgstr "Čtvrtek"
+
+msgid "piwigo_day_5"
+msgstr "Pátek"
+
+msgid "piwigo_day_6"
+msgstr "Sobota"
+
+msgid "piwigo_month_10"
+msgstr "Říjen"
+
+msgid "piwigo_month_11"
+msgstr "Listopad"
+
+msgid "piwigo_month_12"
+msgstr "Prosinec"
+
+msgid "piwigo_month_1"
+msgstr "Leden"
+
+msgid "piwigo_month_2"
+msgstr "Únor"
+
+msgid "piwigo_month_3"
+msgstr "Březen"
+
+msgid "piwigo_month_4"
+msgstr "Duben"
+
+msgid "piwigo_month_5"
+msgstr "Květen"
+
+msgid "piwigo_month_6"
+msgstr "Červen"
+
+msgid "piwigo_month_7"
+msgstr "Červenec"
+
+msgid "piwigo_month_8"
+msgstr "Srpen"
+
+msgid "piwigo_month_9"
+msgstr "Září"
+

@@ -1211,3 +1211,60 @@ msgstr "បានបន្ថែមដោយ"
 msgid "%d visits"
 msgstr "%d ទស្សនា"
 
+msgid "piwigo_day_0"
+msgstr "ថ្ងៃ​អាទិត្យ"
+
+msgid "piwigo_day_1"
+msgstr "ថ្ងៃ​ច័ន្ទ"
+
+msgid "piwigo_day_2"
+msgstr "ថ្ងៃ​អង្គារ"
+
+msgid "piwigo_day_3"
+msgstr "ថ្ងៃ​ពុធ"
+
+msgid "piwigo_day_4"
+msgstr "ថ្ងៃ​ព្រហស្បត្តិ៍"
+
+msgid "piwigo_day_5"
+msgstr "ថ្ងៃ​សុក្រ"
+
+msgid "piwigo_day_6"
+msgstr "ថ្ងៃ​​សៅរ៍"
+
+msgid "piwigo_month_10"
+msgstr "ខែ​តុលា​"
+
+msgid "piwigo_month_11"
+msgstr "ខែ​វិច្ឆិកា"
+
+msgid "piwigo_month_12"
+msgstr "ខែ​ធ្នូ"
+
+msgid "piwigo_month_1"
+msgstr "ខែ​មករា"
+
+msgid "piwigo_month_2"
+msgstr "ខែ​កុម្ភះ"
+
+msgid "piwigo_month_3"
+msgstr "ខែ​មិនា"
+
+msgid "piwigo_month_4"
+msgstr "ខែ​មេសា"
+
+msgid "piwigo_month_5"
+msgstr "ខែ​ឧសភា"
+
+msgid "piwigo_month_6"
+msgstr "ខែ​​មិថុនា"
+
+msgid "piwigo_month_7"
+msgstr "ខែ​កក្តដា"
+
+msgid "piwigo_month_8"
+msgstr "ខែ​សីហា"
+
+msgid "piwigo_month_9"
+msgstr "ខែ​កញ្ញា"
+

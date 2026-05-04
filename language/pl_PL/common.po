@@ -1484,3 +1484,60 @@ msgstr "Jeśli nie otrzymasz wiadomości e-mail, skontaktuj się ze swoim webmas
 msgid "Invalid verification code"
 msgstr "Nieprawidłowy kod weryfikacyjny"
 
+msgid "piwigo_day_0"
+msgstr "Niedziela"
+
+msgid "piwigo_day_1"
+msgstr "Poniedziałek"
+
+msgid "piwigo_day_2"
+msgstr "Wtorek"
+
+msgid "piwigo_day_3"
+msgstr "Środa"
+
+msgid "piwigo_day_4"
+msgstr "Czwartek"
+
+msgid "piwigo_day_5"
+msgstr "Piątek"
+
+msgid "piwigo_day_6"
+msgstr "Sobota"
+
+msgid "piwigo_month_10"
+msgstr "Październik"
+
+msgid "piwigo_month_11"
+msgstr "Listopad"
+
+msgid "piwigo_month_12"
+msgstr "Grudzień"
+
+msgid "piwigo_month_1"
+msgstr "Styczeń"
+
+msgid "piwigo_month_2"
+msgstr "Luty"
+
+msgid "piwigo_month_3"
+msgstr "Marzec"
+
+msgid "piwigo_month_4"
+msgstr "Kwiecień"
+
+msgid "piwigo_month_5"
+msgstr "Maj"
+
+msgid "piwigo_month_6"
+msgstr "Czerwiec"
+
+msgid "piwigo_month_7"
+msgstr "Lipiec"
+
+msgid "piwigo_month_8"
+msgstr "Sierpień"
+
+msgid "piwigo_month_9"
+msgstr "Wrzesień"
+

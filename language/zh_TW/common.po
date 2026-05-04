@@ -1484,3 +1484,60 @@ msgstr "您的碼證碼"
 msgid "edit user preferences"
 msgstr "編輯使用者偏好設定"
 
+msgid "piwigo_day_0"
+msgstr "星期日"
+
+msgid "piwigo_day_1"
+msgstr "星期一"
+
+msgid "piwigo_day_2"
+msgstr "星期二"
+
+msgid "piwigo_day_3"
+msgstr "星期三"
+
+msgid "piwigo_day_4"
+msgstr "星期四"
+
+msgid "piwigo_day_5"
+msgstr "星期五"
+
+msgid "piwigo_day_6"
+msgstr "星期六"
+
+msgid "piwigo_month_10"
+msgstr "十月"
+
+msgid "piwigo_month_11"
+msgstr "十一月"
+
+msgid "piwigo_month_12"
+msgstr "十二月"
+
+msgid "piwigo_month_1"
+msgstr "一月"
+
+msgid "piwigo_month_2"
+msgstr "二月"
+
+msgid "piwigo_month_3"
+msgstr "三月"
+
+msgid "piwigo_month_4"
+msgstr "四月"
+
+msgid "piwigo_month_5"
+msgstr "五月"
+
+msgid "piwigo_month_6"
+msgstr "六月"
+
+msgid "piwigo_month_7"
+msgstr "七月"
+
+msgid "piwigo_month_8"
+msgstr "八月"
+
+msgid "piwigo_month_9"
+msgstr "九月"
+

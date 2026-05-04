@@ -1244,3 +1244,60 @@ msgstr "Нема ознака за фотографије које су трен
 msgid "Set your password below."
 msgstr "Поставите вашу лозинку испод."
 
+msgid "piwigo_day_0"
+msgstr "Недеља"
+
+msgid "piwigo_day_1"
+msgstr "Понедељак"
+
+msgid "piwigo_day_2"
+msgstr "Уторак"
+
+msgid "piwigo_day_3"
+msgstr "Среда"
+
+msgid "piwigo_day_4"
+msgstr "Четвртак"
+
+msgid "piwigo_day_5"
+msgstr "Петак"
+
+msgid "piwigo_day_6"
+msgstr "Субота"
+
+msgid "piwigo_month_10"
+msgstr "Октобар"
+
+msgid "piwigo_month_11"
+msgstr "Новембар"
+
+msgid "piwigo_month_12"
+msgstr "Децембар"
+
+msgid "piwigo_month_1"
+msgstr "Јануар"
+
+msgid "piwigo_month_2"
+msgstr "Фебруар"
+
+msgid "piwigo_month_3"
+msgstr "Март"
+
+msgid "piwigo_month_4"
+msgstr "Април"
+
+msgid "piwigo_month_5"
+msgstr "Мај"
+
+msgid "piwigo_month_6"
+msgstr "Јун"
+
+msgid "piwigo_month_7"
+msgstr "Јул"
+
+msgid "piwigo_month_8"
+msgstr "Август"
+
+msgid "piwigo_month_9"
+msgstr "Септембар"
+

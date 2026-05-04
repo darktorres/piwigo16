@@ -88,3 +88,60 @@ msgstr "বিষয়ক"
 msgid "Date"
 msgstr "তারিখ"
 
+msgid "piwigo_day_0"
+msgstr "রবিবার"
+
+msgid "piwigo_day_1"
+msgstr "সোমবার"
+
+msgid "piwigo_day_2"
+msgstr "মঙ্গলবার"
+
+msgid "piwigo_day_3"
+msgstr "বুধবার"
+
+msgid "piwigo_day_4"
+msgstr "বৃহস্পতিবার"
+
+msgid "piwigo_day_5"
+msgstr "শুক্রবার"
+
+msgid "piwigo_day_6"
+msgstr "শনিবার"
+
+msgid "piwigo_month_10"
+msgstr "অক্টোবর"
+
+msgid "piwigo_month_11"
+msgstr "নভেম্বর"
+
+msgid "piwigo_month_12"
+msgstr "ডিসেম্বর"
+
+msgid "piwigo_month_1"
+msgstr "জানুয়ারী"
+
+msgid "piwigo_month_2"
+msgstr "ফেব্রুয়ারি"
+
+msgid "piwigo_month_3"
+msgstr "মার্চ"
+
+msgid "piwigo_month_4"
+msgstr "এপ্রিল"
+
+msgid "piwigo_month_5"
+msgstr "মে"
+
+msgid "piwigo_month_6"
+msgstr "জুন"
+
+msgid "piwigo_month_7"
+msgstr "জুলাই"
+
+msgid "piwigo_month_8"
+msgstr "অগাস্ট"
+
+msgid "piwigo_month_9"
+msgstr "সেপ্টেম্বর"
+

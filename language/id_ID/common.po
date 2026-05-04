@@ -1115,3 +1115,60 @@ msgstr "Tema"
 msgid "Your authentication key is no longer valid."
 msgstr "Kunci otentikasi tidak lagi berlaku."
 
+msgid "piwigo_day_0"
+msgstr "Minggu"
+
+msgid "piwigo_day_1"
+msgstr "Senin"
+
+msgid "piwigo_day_2"
+msgstr "Selasa"
+
+msgid "piwigo_day_3"
+msgstr "Rabu"
+
+msgid "piwigo_day_4"
+msgstr "Kamis"
+
+msgid "piwigo_day_5"
+msgstr "Jumat"
+
+msgid "piwigo_day_6"
+msgstr "Sabtu"
+
+msgid "piwigo_month_10"
+msgstr "Oktober"
+
+msgid "piwigo_month_11"
+msgstr "November"
+
+msgid "piwigo_month_12"
+msgstr "Desember"
+
+msgid "piwigo_month_1"
+msgstr "Januari"
+
+msgid "piwigo_month_2"
+msgstr "Februari"
+
+msgid "piwigo_month_3"
+msgstr "Maret"
+
+msgid "piwigo_month_4"
+msgstr "April"
+
+msgid "piwigo_month_5"
+msgstr "Mei"
+
+msgid "piwigo_month_6"
+msgstr "Juni"
+
+msgid "piwigo_month_7"
+msgstr "Juli"
+
+msgid "piwigo_month_8"
+msgstr "Agustus"
+
+msgid "piwigo_month_9"
+msgstr "September"
+

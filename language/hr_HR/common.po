@@ -1085,3 +1085,60 @@ msgstr "Nedostaje zaporka. Molimo unesite zaporku."
 msgid "Password confirmation is missing. Please confirm the chosen password."
 msgstr "Nedostaje potvrda zaporke. Molimo potvrdite odabranu zaporku."
 
+msgid "piwigo_day_0"
+msgstr "Nedjelja"
+
+msgid "piwigo_day_1"
+msgstr "Ponedjeljak"
+
+msgid "piwigo_day_2"
+msgstr "Utorak"
+
+msgid "piwigo_day_3"
+msgstr "Srijeda"
+
+msgid "piwigo_day_4"
+msgstr "Četvrtak"
+
+msgid "piwigo_day_5"
+msgstr "Petak"
+
+msgid "piwigo_day_6"
+msgstr "Subota"
+
+msgid "piwigo_month_10"
+msgstr "Listopad"
+
+msgid "piwigo_month_11"
+msgstr "Studeni"
+
+msgid "piwigo_month_12"
+msgstr "Prosinac"
+
+msgid "piwigo_month_1"
+msgstr "Siječanj"
+
+msgid "piwigo_month_2"
+msgstr "Veljača"
+
+msgid "piwigo_month_3"
+msgstr "Ožujak"
+
+msgid "piwigo_month_4"
+msgstr "Travanj"
+
+msgid "piwigo_month_5"
+msgstr "Svibanj"
+
+msgid "piwigo_month_6"
+msgstr "Lipanj"
+
+msgid "piwigo_month_7"
+msgstr "Srpanj"
+
+msgid "piwigo_month_8"
+msgstr "Kolovoz"
+
+msgid "piwigo_month_9"
+msgstr "Rujan"
+

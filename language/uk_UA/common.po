@@ -1211,3 +1211,60 @@ msgstr "Перелічені теги відповідають вашому по
 msgid "Unknown time period"
 msgstr "Невідомий проміжок часу"
 
+msgid "piwigo_day_0"
+msgstr "Неділя"
+
+msgid "piwigo_day_1"
+msgstr "Понеділок"
+
+msgid "piwigo_day_2"
+msgstr "Вівторок"
+
+msgid "piwigo_day_3"
+msgstr "Середа"
+
+msgid "piwigo_day_4"
+msgstr "Четвер"
+
+msgid "piwigo_day_5"
+msgstr "П"
+
+msgid "piwigo_day_6"
+msgstr "Субота"
+
+msgid "piwigo_month_10"
+msgstr "Жовтень"
+
+msgid "piwigo_month_11"
+msgstr "Листопад"
+
+msgid "piwigo_month_12"
+msgstr "Грудень"
+
+msgid "piwigo_month_1"
+msgstr "Січень"
+
+msgid "piwigo_month_2"
+msgstr "Лютий"
+
+msgid "piwigo_month_3"
+msgstr "Березень"
+
+msgid "piwigo_month_4"
+msgstr "Квітень"
+
+msgid "piwigo_month_5"
+msgstr "Травень"
+
+msgid "piwigo_month_6"
+msgstr "Червень"
+
+msgid "piwigo_month_7"
+msgstr "Липень"
+
+msgid "piwigo_month_8"
+msgstr "Серпень"
+
+msgid "piwigo_month_9"
+msgstr "Вересень"
+

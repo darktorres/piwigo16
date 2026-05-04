@@ -1484,3 +1484,60 @@ msgstr "קוד האימות שלך"
 msgid "edit user preferences"
 msgstr "ערוך העדפות משתמש"
 
+msgid "piwigo_day_0"
+msgstr "יום ראשון"
+
+msgid "piwigo_day_1"
+msgstr "יום שני"
+
+msgid "piwigo_day_2"
+msgstr "יום שלישי"
+
+msgid "piwigo_day_3"
+msgstr "יום רביעי"
+
+msgid "piwigo_day_4"
+msgstr "יום חמישי"
+
+msgid "piwigo_day_5"
+msgstr "יום שישי"
+
+msgid "piwigo_day_6"
+msgstr "יום שבת"
+
+msgid "piwigo_month_10"
+msgstr "אוקטובר"
+
+msgid "piwigo_month_11"
+msgstr "נובמבר"
+
+msgid "piwigo_month_12"
+msgstr "דצמבר"
+
+msgid "piwigo_month_1"
+msgstr "ינואר"
+
+msgid "piwigo_month_2"
+msgstr "פברואר"
+
+msgid "piwigo_month_3"
+msgstr "מרץ"
+
+msgid "piwigo_month_4"
+msgstr "אפריל"
+
+msgid "piwigo_month_5"
+msgstr "מאי"
+
+msgid "piwigo_month_6"
+msgstr "יוני"
+
+msgid "piwigo_month_7"
+msgstr "יולי"
+
+msgid "piwigo_month_8"
+msgstr "אוגוסט"
+
+msgid "piwigo_month_9"
+msgstr "ספטמבר"
+

@@ -1136,3 +1136,60 @@ msgstr "Ime albuma, 100 &rarr; 10 &rarr; 5 &rarr; 1"
 msgid "Start-Date"
 msgstr "Začetni datum"
 
+msgid "piwigo_day_0"
+msgstr "nedelja"
+
+msgid "piwigo_day_1"
+msgstr "ponedeljek"
+
+msgid "piwigo_day_2"
+msgstr "torek"
+
+msgid "piwigo_day_3"
+msgstr "sreda"
+
+msgid "piwigo_day_4"
+msgstr "četrtek"
+
+msgid "piwigo_day_5"
+msgstr "petek"
+
+msgid "piwigo_day_6"
+msgstr "sobota"
+
+msgid "piwigo_month_10"
+msgstr "oktober"
+
+msgid "piwigo_month_11"
+msgstr "november"
+
+msgid "piwigo_month_12"
+msgstr "december"
+
+msgid "piwigo_month_1"
+msgstr "januar"
+
+msgid "piwigo_month_2"
+msgstr "februar"
+
+msgid "piwigo_month_3"
+msgstr "marec"
+
+msgid "piwigo_month_4"
+msgstr "april"
+
+msgid "piwigo_month_5"
+msgstr "maj"
+
+msgid "piwigo_month_6"
+msgstr "junij"
+
+msgid "piwigo_month_7"
+msgstr "julij"
+
+msgid "piwigo_month_8"
+msgstr "avgust"
+
+msgid "piwigo_month_9"
+msgstr "september"
+

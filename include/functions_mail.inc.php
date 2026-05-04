@@ -241,13 +241,15 @@ function switch_lang_to($language): void
         && !\Piwigo\Core\LanguageStack::hasSavedState($currentLanguage)) {
         \Piwigo\Core\LanguageStack::markSwitchInitialized();
         \Piwigo\Core\LanguageStack::saveState($currentLanguage);
+        \Piwigo\Lang\Translator::saveForLanguage($currentLanguage);
     }
 
     \Piwigo\Core\LanguageStack::pushStack($currentLanguage);
     \Piwigo\Users\CurrentUser::setLanguage($language);
 
     if (!\Piwigo\Core\LanguageStack::hasSavedState($language)) {
-        // Load language from scratch
+        // Load language from scratch — create a fresh Translator for this language
+        \Piwigo\Lang\Translator::pushFresh();
         \Piwigo\Core\LanguageStack::setLang([]);
         \Piwigo\Core\LanguageStack::setInfo([]);
 
@@ -270,8 +272,10 @@ function switch_lang_to($language): void
         );
 
         \Piwigo\Core\LanguageStack::saveState($language);
+        \Piwigo\Lang\Translator::saveForLanguage($language);
     } else {
         \Piwigo\Core\LanguageStack::restoreState($language);
+        \Piwigo\Lang\Translator::restoreForLanguage($language);
     }
 }
 
@@ -285,6 +289,7 @@ function switch_lang_back(): void
     $language = \Piwigo\Core\LanguageStack::popStack();
     if ($language !== null) {
         \Piwigo\Core\LanguageStack::restoreState($language);
+        \Piwigo\Lang\Translator::restoreForLanguage($language);
         \Piwigo\Users\CurrentUser::setLanguage($language);
     }
 }

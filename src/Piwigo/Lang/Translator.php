@@ -24,6 +24,12 @@ final class Translator
 {
     private static ?self $instance = null;
 
+    /** @var list<self> */
+    private static array $stack = [];
+
+    /** @var array<string, self> saved Translator per language code */
+    private static array $saved = [];
+
     private GettextTranslator $inner;
 
     private ArrayGenerator $generator;
@@ -50,6 +56,48 @@ final class Translator
     public static function reset(): void
     {
         self::$instance = null;
+        self::$stack    = [];
+        self::$saved    = [];
+    }
+
+    /**
+     * Push a fresh Translator onto the stack (used by switch_lang_to).
+     * The current instance is saved so pop() can restore it.
+     */
+    public static function pushFresh(): void
+    {
+        self::$stack[] = self::get();
+        self::$instance = new self();
+    }
+
+    /**
+     * Restore the Translator that was active before the last pushFresh().
+     */
+    public static function pop(): void
+    {
+        if (!empty(self::$stack)) {
+            self::$instance = array_pop(self::$stack);
+        }
+    }
+
+    /**
+     * Associate the current Translator instance with a language code so it
+     * can be restored later without reloading PO files.
+     */
+    public static function saveForLanguage(string $language): void
+    {
+        self::$saved[$language] = self::get();
+    }
+
+    /**
+     * Restore the Translator previously saved for $language.
+     * If none was saved, restores from the stack top (so $GLOBALS['lang'] takes over).
+     */
+    public static function restoreForLanguage(string $language): void
+    {
+        if (isset(self::$saved[$language])) {
+            self::$instance = self::$saved[$language];
+        }
     }
 
     /**
@@ -146,6 +194,30 @@ final class Translator
                     $ref[$pluralOriginal] = $pluralForms[1];
                 }
             }
+        }
+
+        // Rebuild the $lang['day'] and $lang['month'] arrays that legacy callers
+        // (Lang::day(), Lang::month(), admin/stats.php, etc.) read directly.
+        $days = [];
+        for ($i = 0; $i < 7; $i++) {
+            $key = 'piwigo_day_' . $i;
+            if (isset($ref[$key]) && is_string($ref[$key]) && $ref[$key] !== '') {
+                $days[$i] = $ref[$key];
+            }
+        }
+        if (!empty($days)) {
+            $ref['day'] = $days;
+        }
+
+        $months = [];
+        for ($m = 1; $m <= 12; $m++) {
+            $key = 'piwigo_month_' . $m;
+            if (isset($ref[$key]) && is_string($ref[$key]) && $ref[$key] !== '') {
+                $months[$m] = $ref[$key];
+            }
+        }
+        if (!empty($months)) {
+            $ref['month'] = $months;
         }
     }
 }

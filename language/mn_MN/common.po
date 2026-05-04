@@ -1133,3 +1133,60 @@ msgstr "Холбоотой цомог"
 msgid "Password: ********** (no copy by email)"
 msgstr "Нууц үг: ********** (имэйлээр очихгүй)"
 
+msgid "piwigo_day_0"
+msgstr "Ням"
+
+msgid "piwigo_day_1"
+msgstr "Даваа"
+
+msgid "piwigo_day_2"
+msgstr "Мягмар"
+
+msgid "piwigo_day_3"
+msgstr "Лхагва"
+
+msgid "piwigo_day_4"
+msgstr "Пүрэв"
+
+msgid "piwigo_day_5"
+msgstr "Баасан"
+
+msgid "piwigo_day_6"
+msgstr "Бямба"
+
+msgid "piwigo_month_10"
+msgstr "10-р сар"
+
+msgid "piwigo_month_11"
+msgstr "11-р сар"
+
+msgid "piwigo_month_12"
+msgstr "12-р сар"
+
+msgid "piwigo_month_1"
+msgstr "1-р сар"
+
+msgid "piwigo_month_2"
+msgstr "2-р сар"
+
+msgid "piwigo_month_3"
+msgstr "3-р сар"
+
+msgid "piwigo_month_4"
+msgstr "4-р сар"
+
+msgid "piwigo_month_5"
+msgstr "5-р сар"
+
+msgid "piwigo_month_6"
+msgstr "6-р сар"
+
+msgid "piwigo_month_7"
+msgstr "7-р сар"
+
+msgid "piwigo_month_8"
+msgstr "8-р сар"
+
+msgid "piwigo_month_9"
+msgstr "9-р сар"
+

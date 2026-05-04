@@ -1484,3 +1484,60 @@ msgstr "Doğrulama kodunuz"
 msgid "edit user preferences"
 msgstr "kullanıcı tercihlerini düzenle"
 
+msgid "piwigo_day_0"
+msgstr "Pazar"
+
+msgid "piwigo_day_1"
+msgstr "Pazartesi"
+
+msgid "piwigo_day_2"
+msgstr "Salı"
+
+msgid "piwigo_day_3"
+msgstr "Çarşamba"
+
+msgid "piwigo_day_4"
+msgstr "Perşembe"
+
+msgid "piwigo_day_5"
+msgstr "Cuma"
+
+msgid "piwigo_day_6"
+msgstr "Cumartesi"
+
+msgid "piwigo_month_1"
+msgstr "Ocak"
+
+msgid "piwigo_month_2"
+msgstr "Şubat"
+
+msgid "piwigo_month_3"
+msgstr "Mart"
+
+msgid "piwigo_month_4"
+msgstr "Nisan"
+
+msgid "piwigo_month_5"
+msgstr "Mayıs"
+
+msgid "piwigo_month_6"
+msgstr "Haziran"
+
+msgid "piwigo_month_7"
+msgstr "Temmuz"
+
+msgid "piwigo_month_8"
+msgstr "Ağustos"
+
+msgid "piwigo_month_9"
+msgstr "Eylül"
+
+msgid "piwigo_month_10"
+msgstr "Ekim"
+
+msgid "piwigo_month_11"
+msgstr "Kasım"
+
+msgid "piwigo_month_12"
+msgstr "Aralık"
+

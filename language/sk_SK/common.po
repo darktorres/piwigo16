@@ -1484,3 +1484,60 @@ msgstr "Vytvorte nový kľúč API na zabezpečenie svojho účtu."
 msgid "Create an account"
 msgstr "Vytvoriť účet"
 
+msgid "piwigo_day_0"
+msgstr "Nedeľa"
+
+msgid "piwigo_day_1"
+msgstr "Pondelok"
+
+msgid "piwigo_day_2"
+msgstr "Utorok"
+
+msgid "piwigo_day_3"
+msgstr "Streda"
+
+msgid "piwigo_day_4"
+msgstr "Štvrtok"
+
+msgid "piwigo_day_5"
+msgstr "Piatok"
+
+msgid "piwigo_day_6"
+msgstr "Sobota"
+
+msgid "piwigo_month_10"
+msgstr "Október"
+
+msgid "piwigo_month_11"
+msgstr "November"
+
+msgid "piwigo_month_12"
+msgstr "December"
+
+msgid "piwigo_month_1"
+msgstr "Január"
+
+msgid "piwigo_month_2"
+msgstr "Február"
+
+msgid "piwigo_month_3"
+msgstr "Marec"
+
+msgid "piwigo_month_4"
+msgstr "Apríl"
+
+msgid "piwigo_month_5"
+msgstr "Máj"
+
+msgid "piwigo_month_6"
+msgstr "Jún"
+
+msgid "piwigo_month_7"
+msgstr "Júl"
+
+msgid "piwigo_month_8"
+msgstr "August"
+
+msgid "piwigo_month_9"
+msgstr "September"
+

@@ -1448,3 +1448,60 @@ msgstr "Сменете паролата си"
 msgid "Check your inbox"
 msgstr "Проверете си имейла "
 
+msgid "piwigo_day_0"
+msgstr "Нд"
+
+msgid "piwigo_day_1"
+msgstr "Пн"
+
+msgid "piwigo_day_2"
+msgstr "Вт"
+
+msgid "piwigo_day_3"
+msgstr "Ср"
+
+msgid "piwigo_day_4"
+msgstr "Чт"
+
+msgid "piwigo_day_5"
+msgstr "Пт"
+
+msgid "piwigo_day_6"
+msgstr "Сб"
+
+msgid "piwigo_month_10"
+msgstr "Октомври"
+
+msgid "piwigo_month_11"
+msgstr "Ноември"
+
+msgid "piwigo_month_12"
+msgstr "Декември"
+
+msgid "piwigo_month_1"
+msgstr "Януари"
+
+msgid "piwigo_month_2"
+msgstr "Февруари"
+
+msgid "piwigo_month_3"
+msgstr "Март"
+
+msgid "piwigo_month_4"
+msgstr "Април"
+
+msgid "piwigo_month_5"
+msgstr "Май"
+
+msgid "piwigo_month_6"
+msgstr "Юни"
+
+msgid "piwigo_month_7"
+msgstr "Юли"
+
+msgid "piwigo_month_8"
+msgstr "Август"
+
+msgid "piwigo_month_9"
+msgstr "Септември"
+

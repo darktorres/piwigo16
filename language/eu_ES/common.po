@@ -1244,3 +1244,60 @@ msgstr "Ez dago sortze-datarik eskuragarri iragazitako argazkietarako"
 msgid "There are no tags available for the photos currently filtered"
 msgstr "Ez dago etiketarik eskuragarri iragazitako argazkietarako"
 
+msgid "piwigo_day_0"
+msgstr "Igandea"
+
+msgid "piwigo_day_1"
+msgstr "Astelehena"
+
+msgid "piwigo_day_2"
+msgstr "Asteartea"
+
+msgid "piwigo_day_3"
+msgstr "Asteazkena"
+
+msgid "piwigo_day_4"
+msgstr "Osteguna"
+
+msgid "piwigo_day_5"
+msgstr "Ostirala"
+
+msgid "piwigo_day_6"
+msgstr "Larunbata"
+
+msgid "piwigo_month_10"
+msgstr "Urria"
+
+msgid "piwigo_month_11"
+msgstr "Azaroa"
+
+msgid "piwigo_month_12"
+msgstr "Abendua"
+
+msgid "piwigo_month_1"
+msgstr "Urtarrila"
+
+msgid "piwigo_month_2"
+msgstr "Otsaila"
+
+msgid "piwigo_month_3"
+msgstr "Martxoa"
+
+msgid "piwigo_month_4"
+msgstr "Apirila"
+
+msgid "piwigo_month_5"
+msgstr "Maiatza"
+
+msgid "piwigo_month_6"
+msgstr "Ekaina"
+
+msgid "piwigo_month_7"
+msgstr "Uztaia"
+
+msgid "piwigo_month_8"
+msgstr "Abuztua"
+
+msgid "piwigo_month_9"
+msgstr "Iraila"
+

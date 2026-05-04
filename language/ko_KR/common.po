@@ -1484,3 +1484,60 @@ msgstr "만료일"
 msgid "Expires in"
 msgstr "만료 예정일"
 
+msgid "piwigo_day_0"
+msgstr "일요일"
+
+msgid "piwigo_day_1"
+msgstr "월요일"
+
+msgid "piwigo_day_2"
+msgstr "화요일"
+
+msgid "piwigo_day_3"
+msgstr "수요일"
+
+msgid "piwigo_day_4"
+msgstr "목요일"
+
+msgid "piwigo_day_5"
+msgstr "금요일"
+
+msgid "piwigo_day_6"
+msgstr "토요일"
+
+msgid "piwigo_month_10"
+msgstr "10월"
+
+msgid "piwigo_month_11"
+msgstr "11월"
+
+msgid "piwigo_month_12"
+msgstr "12월"
+
+msgid "piwigo_month_1"
+msgstr "1월"
+
+msgid "piwigo_month_2"
+msgstr "2월"
+
+msgid "piwigo_month_3"
+msgstr "3월"
+
+msgid "piwigo_month_4"
+msgstr "4월"
+
+msgid "piwigo_month_5"
+msgstr "5월"
+
+msgid "piwigo_month_6"
+msgstr "6월"
+
+msgid "piwigo_month_7"
+msgstr "7월"
+
+msgid "piwigo_month_8"
+msgstr "8월"
+
+msgid "piwigo_month_9"
+msgstr "9월"
+

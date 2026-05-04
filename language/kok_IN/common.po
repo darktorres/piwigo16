@@ -220,3 +220,60 @@ msgstr "सोद"
 msgid "search"
 msgstr "सोद"
 
+msgid "piwigo_day_0"
+msgstr "आयतार"
+
+msgid "piwigo_day_1"
+msgstr "सोमार"
+
+msgid "piwigo_day_2"
+msgstr "मंगळार"
+
+msgid "piwigo_day_3"
+msgstr "बुधवार"
+
+msgid "piwigo_day_4"
+msgstr "बिरेस्तार"
+
+msgid "piwigo_day_5"
+msgstr "शुक्रार"
+
+msgid "piwigo_day_6"
+msgstr "शेनवार"
+
+msgid "piwigo_month_10"
+msgstr "ऑक्टोबर"
+
+msgid "piwigo_month_11"
+msgstr "नोव्हेंबर"
+
+msgid "piwigo_month_12"
+msgstr "डिसेंबर"
+
+msgid "piwigo_month_1"
+msgstr "जानेवारी"
+
+msgid "piwigo_month_2"
+msgstr "फेब्रुवारी"
+
+msgid "piwigo_month_3"
+msgstr "मार्च"
+
+msgid "piwigo_month_4"
+msgstr "एप्रिल"
+
+msgid "piwigo_month_5"
+msgstr "मे"
+
+msgid "piwigo_month_6"
+msgstr "जून"
+
+msgid "piwigo_month_7"
+msgstr "जुलाय"
+
+msgid "piwigo_month_8"
+msgstr "ऑगस्ट"
+
+msgid "piwigo_month_9"
+msgstr "सप्टेंबर"
+

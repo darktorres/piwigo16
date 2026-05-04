@@ -1244,3 +1244,60 @@ msgstr "Album on juba valitud"
 msgid "Set your password below."
 msgstr "Määrake allpool oma parool."
 
+msgid "piwigo_day_0"
+msgstr "Pühapäev"
+
+msgid "piwigo_day_1"
+msgstr "Esmaspäev"
+
+msgid "piwigo_day_2"
+msgstr "Teisipäev"
+
+msgid "piwigo_day_3"
+msgstr "Kolmapäev"
+
+msgid "piwigo_day_4"
+msgstr "Neljapäev"
+
+msgid "piwigo_day_5"
+msgstr "Reede"
+
+msgid "piwigo_day_6"
+msgstr "Laupäev"
+
+msgid "piwigo_month_10"
+msgstr "Oktoober"
+
+msgid "piwigo_month_11"
+msgstr "November"
+
+msgid "piwigo_month_12"
+msgstr "Detsember"
+
+msgid "piwigo_month_1"
+msgstr "Jaanuar"
+
+msgid "piwigo_month_2"
+msgstr "Veebruar"
+
+msgid "piwigo_month_3"
+msgstr "Märts"
+
+msgid "piwigo_month_4"
+msgstr "Aprill"
+
+msgid "piwigo_month_5"
+msgstr "Mai"
+
+msgid "piwigo_month_6"
+msgstr "Juuni"
+
+msgid "piwigo_month_7"
+msgstr "Juuli"
+
+msgid "piwigo_month_8"
+msgstr "August"
+
+msgid "piwigo_month_9"
+msgstr "September"
+

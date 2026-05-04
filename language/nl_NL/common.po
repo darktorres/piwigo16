@@ -1484,3 +1484,60 @@ msgstr "Uw verificatiecode"
 msgid "edit user preferences"
 msgstr "Bewerk gebruiker voorkeuren"
 
+msgid "piwigo_day_0"
+msgstr "Zondag"
+
+msgid "piwigo_day_1"
+msgstr "Maandag"
+
+msgid "piwigo_day_2"
+msgstr "Dinsdag"
+
+msgid "piwigo_day_3"
+msgstr "Woensdag"
+
+msgid "piwigo_day_4"
+msgstr "Donderdag"
+
+msgid "piwigo_day_5"
+msgstr "Vrijdag"
+
+msgid "piwigo_day_6"
+msgstr "Zaterdag"
+
+msgid "piwigo_month_10"
+msgstr "Oktober"
+
+msgid "piwigo_month_11"
+msgstr "November"
+
+msgid "piwigo_month_12"
+msgstr "December"
+
+msgid "piwigo_month_1"
+msgstr "Januari"
+
+msgid "piwigo_month_2"
+msgstr "Februari"
+
+msgid "piwigo_month_3"
+msgstr "Maart"
+
+msgid "piwigo_month_4"
+msgstr "April"
+
+msgid "piwigo_month_5"
+msgstr "Mei"
+
+msgid "piwigo_month_6"
+msgstr "Juni"
+
+msgid "piwigo_month_7"
+msgstr "Juli"
+
+msgid "piwigo_month_8"
+msgstr "Augustus"
+
+msgid "piwigo_month_9"
+msgstr "September"
+

@@ -1484,3 +1484,60 @@ msgstr "Ο κωδικός σας επαλήθευσης"
 msgid "edit user preferences"
 msgstr "επεξεργασία προτιμήσεων χρήστη"
 
+msgid "piwigo_day_0"
+msgstr "Κυριακή"
+
+msgid "piwigo_day_1"
+msgstr "Δευτέρα"
+
+msgid "piwigo_day_2"
+msgstr "Τρίτη"
+
+msgid "piwigo_day_3"
+msgstr "Τετάρτη"
+
+msgid "piwigo_day_4"
+msgstr "Πέμπτη"
+
+msgid "piwigo_day_5"
+msgstr "Παρασκευή"
+
+msgid "piwigo_day_6"
+msgstr "Σάββατο"
+
+msgid "piwigo_month_10"
+msgstr "Οκτώβριος"
+
+msgid "piwigo_month_11"
+msgstr "Νοέμβριος"
+
+msgid "piwigo_month_12"
+msgstr "Δεκέμβριος"
+
+msgid "piwigo_month_1"
+msgstr "Ιανουάριος"
+
+msgid "piwigo_month_2"
+msgstr "Φεβρουάριος"
+
+msgid "piwigo_month_3"
+msgstr "Μάρτιος"
+
+msgid "piwigo_month_4"
+msgstr "Απρίλιος"
+
+msgid "piwigo_month_5"
+msgstr "Μάιος"
+
+msgid "piwigo_month_6"
+msgstr "Ιούνιος"
+
+msgid "piwigo_month_7"
+msgstr "Ιούλιος"
+
+msgid "piwigo_month_8"
+msgstr "Αύγουστος"
+
+msgid "piwigo_month_9"
+msgstr "Σεπτέμβριος"
+

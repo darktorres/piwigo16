@@ -873,3 +873,24 @@ msgstr "Yes"
 msgid "Clear"
 msgstr "Clear"
 
+msgid "piwigo_day_0"
+msgstr "Sunday"
+
+msgid "piwigo_day_1"
+msgstr "Monday"
+
+msgid "piwigo_day_2"
+msgstr "Tuesday"
+
+msgid "piwigo_day_3"
+msgstr "Wednesday"
+
+msgid "piwigo_day_4"
+msgstr "Thursday"
+
+msgid "piwigo_day_5"
+msgstr "Friday"
+
+msgid "piwigo_day_6"
+msgstr "Saturday"
+

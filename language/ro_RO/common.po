@@ -1217,3 +1217,60 @@ msgstr "Verifică-ți căsuța de e-mail"
 msgid "Choose filters"
 msgstr "Alege filtrele"
 
+msgid "piwigo_day_0"
+msgstr "Duminică"
+
+msgid "piwigo_day_1"
+msgstr "Luni"
+
+msgid "piwigo_day_2"
+msgstr "Marţi"
+
+msgid "piwigo_day_3"
+msgstr "Miercuri"
+
+msgid "piwigo_day_4"
+msgstr "Joi"
+
+msgid "piwigo_day_5"
+msgstr "Vineri"
+
+msgid "piwigo_day_6"
+msgstr "Sâmbătă"
+
+msgid "piwigo_month_10"
+msgstr "Octombrie"
+
+msgid "piwigo_month_11"
+msgstr "Noiembrie"
+
+msgid "piwigo_month_12"
+msgstr "Decembrie"
+
+msgid "piwigo_month_1"
+msgstr "Ianuarie"
+
+msgid "piwigo_month_2"
+msgstr "Februarie"
+
+msgid "piwigo_month_3"
+msgstr "Martie"
+
+msgid "piwigo_month_4"
+msgstr "Aprilie"
+
+msgid "piwigo_month_5"
+msgstr "Mai"
+
+msgid "piwigo_month_6"
+msgstr "Iunie"
+
+msgid "piwigo_month_7"
+msgstr "Iulie"
+
+msgid "piwigo_month_8"
+msgstr "August"
+
+msgid "piwigo_month_9"
+msgstr "Septembrie"
+

@@ -1121,3 +1121,60 @@ msgstr "generi hazardan pasvorton"
 msgid "Invalid username or password!"
 msgstr "Ne valida uzantnomo aŭ pasvorto!"
 
+msgid "piwigo_day_0"
+msgstr "Dimanĉo"
+
+msgid "piwigo_day_1"
+msgstr "Lundo"
+
+msgid "piwigo_day_2"
+msgstr "Mardo"
+
+msgid "piwigo_day_3"
+msgstr "Merkredo"
+
+msgid "piwigo_day_4"
+msgstr "Ĵaŭdo"
+
+msgid "piwigo_day_5"
+msgstr "Vendredo"
+
+msgid "piwigo_day_6"
+msgstr "Sabato"
+
+msgid "piwigo_month_10"
+msgstr "Oktobro"
+
+msgid "piwigo_month_11"
+msgstr "Novembro"
+
+msgid "piwigo_month_12"
+msgstr "Decembro"
+
+msgid "piwigo_month_1"
+msgstr "Januaro"
+
+msgid "piwigo_month_2"
+msgstr "Februaro"
+
+msgid "piwigo_month_3"
+msgstr "Marto"
+
+msgid "piwigo_month_4"
+msgstr "Aprilo"
+
+msgid "piwigo_month_5"
+msgstr "Majo"
+
+msgid "piwigo_month_6"
+msgstr "Junio"
+
+msgid "piwigo_month_7"
+msgstr "Julio"
+
+msgid "piwigo_month_8"
+msgstr "Aŭgusto"
+
+msgid "piwigo_month_9"
+msgstr "Septembro"
+

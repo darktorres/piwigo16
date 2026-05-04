@@ -1484,3 +1484,60 @@ msgstr "API kulcs nem található"
 msgid "API Keys"
 msgstr "API kulcs"
 
+msgid "piwigo_day_0"
+msgstr "Vasárnap"
+
+msgid "piwigo_day_1"
+msgstr "Hétfő"
+
+msgid "piwigo_day_2"
+msgstr "Kedd"
+
+msgid "piwigo_day_3"
+msgstr "Szerda"
+
+msgid "piwigo_day_4"
+msgstr "Csütörtök"
+
+msgid "piwigo_day_5"
+msgstr "Péntek"
+
+msgid "piwigo_day_6"
+msgstr "Szombat"
+
+msgid "piwigo_month_10"
+msgstr "Október"
+
+msgid "piwigo_month_11"
+msgstr "November"
+
+msgid "piwigo_month_12"
+msgstr "December"
+
+msgid "piwigo_month_1"
+msgstr "Január"
+
+msgid "piwigo_month_2"
+msgstr "Február"
+
+msgid "piwigo_month_3"
+msgstr "Március"
+
+msgid "piwigo_month_4"
+msgstr "Április"
+
+msgid "piwigo_month_5"
+msgstr "Május"
+
+msgid "piwigo_month_6"
+msgstr "Június"
+
+msgid "piwigo_month_7"
+msgstr "Július"
+
+msgid "piwigo_month_8"
+msgstr "Augusztus"
+
+msgid "piwigo_month_9"
+msgstr "Szeptember"
+

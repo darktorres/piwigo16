@@ -1121,3 +1121,24 @@ msgstr "Benotzernumm oder Passwuert si falsch"
 msgid "generate random password"
 msgstr "Random-Passwuert generéieren"
 
+msgid "piwigo_day_0"
+msgstr "Sonden"
+
+msgid "piwigo_day_1"
+msgstr "Méinden"
+
+msgid "piwigo_day_2"
+msgstr "Denschten"
+
+msgid "piwigo_day_3"
+msgstr "Mettwoch"
+
+msgid "piwigo_day_4"
+msgstr "Donneschten"
+
+msgid "piwigo_day_5"
+msgstr "Freiden"
+
+msgid "piwigo_day_6"
+msgstr "Samschten"
+

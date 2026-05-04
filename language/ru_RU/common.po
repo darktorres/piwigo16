@@ -1484,3 +1484,60 @@ msgstr "4XL - гигантский"
 msgid "3xlarge"
 msgstr "3XL - громадный"
 
+msgid "piwigo_day_0"
+msgstr "Вс"
+
+msgid "piwigo_day_1"
+msgstr "Пн"
+
+msgid "piwigo_day_2"
+msgstr "Вт"
+
+msgid "piwigo_day_3"
+msgstr "Ср"
+
+msgid "piwigo_day_4"
+msgstr "Чт"
+
+msgid "piwigo_day_5"
+msgstr "Пт"
+
+msgid "piwigo_day_6"
+msgstr "Сб"
+
+msgid "piwigo_month_10"
+msgstr "Октябрь"
+
+msgid "piwigo_month_11"
+msgstr "Ноябрь"
+
+msgid "piwigo_month_12"
+msgstr "Декабрь"
+
+msgid "piwigo_month_1"
+msgstr "Январь"
+
+msgid "piwigo_month_2"
+msgstr "Февраль"
+
+msgid "piwigo_month_3"
+msgstr "Март"
+
+msgid "piwigo_month_4"
+msgstr "Апрель"
+
+msgid "piwigo_month_5"
+msgstr "Май"
+
+msgid "piwigo_month_6"
+msgstr "Июнь"
+
+msgid "piwigo_month_7"
+msgstr "Июль"
+
+msgid "piwigo_month_8"
+msgstr "Август"
+
+msgid "piwigo_month_9"
+msgstr "Сентябрь"
+

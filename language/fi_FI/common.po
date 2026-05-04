@@ -1322,3 +1322,60 @@ msgstr "3XL - erityisen jättimäinen"
 msgid "4xlarge"
 msgstr "4XL - giganttinen"
 
+msgid "piwigo_day_0"
+msgstr "Sunnuntai"
+
+msgid "piwigo_day_1"
+msgstr "Maanantai"
+
+msgid "piwigo_day_2"
+msgstr "Tiistai"
+
+msgid "piwigo_day_3"
+msgstr "Keskiviikko"
+
+msgid "piwigo_day_4"
+msgstr "Torstai"
+
+msgid "piwigo_day_5"
+msgstr "Perjantai"
+
+msgid "piwigo_day_6"
+msgstr "Lauantai"
+
+msgid "piwigo_month_10"
+msgstr "Lokakuu"
+
+msgid "piwigo_month_11"
+msgstr "Marraskuu"
+
+msgid "piwigo_month_12"
+msgstr "Joulukuu"
+
+msgid "piwigo_month_1"
+msgstr "Tammikuu"
+
+msgid "piwigo_month_2"
+msgstr "Helmikuu"
+
+msgid "piwigo_month_3"
+msgstr "Maaliskuu"
+
+msgid "piwigo_month_4"
+msgstr "Huhtikuu"
+
+msgid "piwigo_month_5"
+msgstr "Toukokuu"
+
+msgid "piwigo_month_6"
+msgstr "Kesäkuu"
+
+msgid "piwigo_month_7"
+msgstr "Heinäkuu"
+
+msgid "piwigo_month_8"
+msgstr "Elokuu"
+
+msgid "piwigo_month_9"
+msgstr "Syyskuu"
+

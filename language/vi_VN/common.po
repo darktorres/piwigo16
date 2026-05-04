@@ -1136,3 +1136,60 @@ msgstr "Album có liên quan"
 msgid "Start-Date"
 msgstr "Ngày bắt đầu"
 
+msgid "piwigo_day_0"
+msgstr "Chủ Nhật"
+
+msgid "piwigo_day_1"
+msgstr "Thứ Hai"
+
+msgid "piwigo_day_2"
+msgstr "Thứ Ba"
+
+msgid "piwigo_day_3"
+msgstr "Thứ Tư"
+
+msgid "piwigo_day_4"
+msgstr "Thứ Năm"
+
+msgid "piwigo_day_5"
+msgstr "Thứ Sáu"
+
+msgid "piwigo_day_6"
+msgstr "Thứ Bảy"
+
+msgid "piwigo_month_10"
+msgstr "Tháng Mười"
+
+msgid "piwigo_month_11"
+msgstr "Tháng Mười Một"
+
+msgid "piwigo_month_12"
+msgstr "Tháng Mười Hai"
+
+msgid "piwigo_month_1"
+msgstr "Tháng Giêng"
+
+msgid "piwigo_month_2"
+msgstr "Tháng Hai"
+
+msgid "piwigo_month_3"
+msgstr "Tháng Ba"
+
+msgid "piwigo_month_4"
+msgstr "Tháng Tư"
+
+msgid "piwigo_month_5"
+msgstr "Tháng Năm"
+
+msgid "piwigo_month_6"
+msgstr "Tháng Sáu"
+
+msgid "piwigo_month_7"
+msgstr "Tháng Bảy"
+
+msgid "piwigo_month_8"
+msgstr "Tháng Tám"
+
+msgid "piwigo_month_9"
+msgstr "Tháng Chín"
+

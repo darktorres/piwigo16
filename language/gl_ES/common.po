@@ -1115,3 +1115,60 @@ msgstr "Nome do álbum, A &rarr; Z"
 msgid "Your authentication key is no longer valid."
 msgstr "A túa chave de autenticación xa non é válida."
 
+msgid "piwigo_day_0"
+msgstr "Domingo"
+
+msgid "piwigo_day_1"
+msgstr "Luns"
+
+msgid "piwigo_day_2"
+msgstr "Martes"
+
+msgid "piwigo_day_3"
+msgstr "Mércores"
+
+msgid "piwigo_day_4"
+msgstr "Xoves"
+
+msgid "piwigo_day_5"
+msgstr "Venres"
+
+msgid "piwigo_day_6"
+msgstr "Sábado"
+
+msgid "piwigo_month_10"
+msgstr "Outubro"
+
+msgid "piwigo_month_11"
+msgstr "Novembro"
+
+msgid "piwigo_month_12"
+msgstr "Decembro"
+
+msgid "piwigo_month_1"
+msgstr "Xaneiro"
+
+msgid "piwigo_month_2"
+msgstr "Febreiro"
+
+msgid "piwigo_month_3"
+msgstr "Marzo"
+
+msgid "piwigo_month_4"
+msgstr "Abril"
+
+msgid "piwigo_month_5"
+msgstr "Maio"
+
+msgid "piwigo_month_6"
+msgstr "Xuño"
+
+msgid "piwigo_month_7"
+msgstr "Xullo"
+
+msgid "piwigo_month_8"
+msgstr "Agosto"
+
+msgid "piwigo_month_9"
+msgstr "Setembro"
+

@@ -1484,3 +1484,60 @@ msgstr "Seu código de verificação"
 msgid "edit user preferences"
 msgstr "editar preferências do usuário"
 
+msgid "piwigo_day_0"
+msgstr "Domingo"
+
+msgid "piwigo_day_1"
+msgstr "Segunda-feira"
+
+msgid "piwigo_day_2"
+msgstr "Terça-feira"
+
+msgid "piwigo_day_3"
+msgstr "Quarta-feira"
+
+msgid "piwigo_day_4"
+msgstr "Quinta-eira"
+
+msgid "piwigo_day_5"
+msgstr "Sexta-feira"
+
+msgid "piwigo_day_6"
+msgstr "Sábado"
+
+msgid "piwigo_month_10"
+msgstr "outubro"
+
+msgid "piwigo_month_11"
+msgstr "novembro"
+
+msgid "piwigo_month_12"
+msgstr "dezembro"
+
+msgid "piwigo_month_1"
+msgstr "janeiro"
+
+msgid "piwigo_month_2"
+msgstr "fevereiro"
+
+msgid "piwigo_month_3"
+msgstr "março"
+
+msgid "piwigo_month_4"
+msgstr "abril"
+
+msgid "piwigo_month_5"
+msgstr "maio"
+
+msgid "piwigo_month_6"
+msgstr "junho"
+
+msgid "piwigo_month_7"
+msgstr "julho"
+
+msgid "piwigo_month_8"
+msgstr "agosto"
+
+msgid "piwigo_month_9"
+msgstr "setembro"
+

@@ -1484,3 +1484,60 @@ msgstr "Staðfestingarkóðinn þinn"
 msgid "edit user preferences"
 msgstr "breyta notandastillingum"
 
+msgid "piwigo_day_0"
+msgstr "Sunnudagur"
+
+msgid "piwigo_day_1"
+msgstr "Mánudagur"
+
+msgid "piwigo_day_2"
+msgstr "Þriðjudagur"
+
+msgid "piwigo_day_3"
+msgstr "Miðvikudagur"
+
+msgid "piwigo_day_4"
+msgstr "Fimmtudagur"
+
+msgid "piwigo_day_5"
+msgstr "Föstudagur"
+
+msgid "piwigo_day_6"
+msgstr "Laugardagur"
+
+msgid "piwigo_month_10"
+msgstr "Október"
+
+msgid "piwigo_month_11"
+msgstr "Nóvember"
+
+msgid "piwigo_month_12"
+msgstr "Desember"
+
+msgid "piwigo_month_1"
+msgstr "Janúar"
+
+msgid "piwigo_month_2"
+msgstr "Febrúar"
+
+msgid "piwigo_month_3"
+msgstr "Mars"
+
+msgid "piwigo_month_4"
+msgstr "Apríl"
+
+msgid "piwigo_month_5"
+msgstr "Maí"
+
+msgid "piwigo_month_6"
+msgstr "Júní"
+
+msgid "piwigo_month_7"
+msgstr "Júlí"
+
+msgid "piwigo_month_8"
+msgstr "Ágúst"
+
+msgid "piwigo_month_9"
+msgstr "September"
+

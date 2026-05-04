@@ -1226,3 +1226,60 @@ msgstr "افزوده شده توسط"
 msgid "%d visits"
 msgstr "%d بازدید"
 
+msgid "piwigo_day_0"
+msgstr "یک‌شنبه"
+
+msgid "piwigo_day_1"
+msgstr "دوشنبه"
+
+msgid "piwigo_day_2"
+msgstr "سه‌شنبه"
+
+msgid "piwigo_day_3"
+msgstr "چهارشنبه"
+
+msgid "piwigo_day_4"
+msgstr "پنج‌شنبه"
+
+msgid "piwigo_day_5"
+msgstr "جمعه"
+
+msgid "piwigo_day_6"
+msgstr "شنبه"
+
+msgid "piwigo_month_10"
+msgstr "اکتبر"
+
+msgid "piwigo_month_11"
+msgstr "نوامبر"
+
+msgid "piwigo_month_12"
+msgstr "دسامبر"
+
+msgid "piwigo_month_1"
+msgstr "ژانویه"
+
+msgid "piwigo_month_2"
+msgstr "فبریه"
+
+msgid "piwigo_month_3"
+msgstr "مارس"
+
+msgid "piwigo_month_4"
+msgstr "آوریل"
+
+msgid "piwigo_month_5"
+msgstr "مِی"
+
+msgid "piwigo_month_6"
+msgstr "ژوئن"
+
+msgid "piwigo_month_7"
+msgstr "جولای"
+
+msgid "piwigo_month_8"
+msgstr "آگوست"
+
+msgid "piwigo_month_9"
+msgstr "سپتامبر"
+

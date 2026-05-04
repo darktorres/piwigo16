@@ -135,3 +135,60 @@ msgstr "કામ નુ અગર પાસવર્ડ ભૂલી ગયા 
 msgid "the username must be given"
 msgstr "યૂજ઼ર નેમ નાખવુ જરૂરી છે"
 
+msgid "piwigo_day_0"
+msgstr "રવિવાર"
+
+msgid "piwigo_day_1"
+msgstr "સોમવાર"
+
+msgid "piwigo_day_2"
+msgstr "મંગળવાર"
+
+msgid "piwigo_day_3"
+msgstr "બુધવાર"
+
+msgid "piwigo_day_4"
+msgstr "ગુરુવાર"
+
+msgid "piwigo_day_5"
+msgstr "શુક્રવાર"
+
+msgid "piwigo_day_6"
+msgstr "શનિવાર"
+
+msgid "piwigo_month_10"
+msgstr "ઑક્ટ્બર"
+
+msgid "piwigo_month_11"
+msgstr "નવેમ્બર"
+
+msgid "piwigo_month_12"
+msgstr "ડિસેમ્બર"
+
+msgid "piwigo_month_1"
+msgstr "જાન્યુઆરી"
+
+msgid "piwigo_month_2"
+msgstr "ફેબ્રુઆરી"
+
+msgid "piwigo_month_3"
+msgstr "માર્ચ"
+
+msgid "piwigo_month_4"
+msgstr "એપ્રિલ"
+
+msgid "piwigo_month_5"
+msgstr "મે"
+
+msgid "piwigo_month_6"
+msgstr "જૂન"
+
+msgid "piwigo_month_7"
+msgstr "જુલાઈ"
+
+msgid "piwigo_month_8"
+msgstr "ઑગસ્ટ"
+
+msgid "piwigo_month_9"
+msgstr "સપ્ટેમ્બર"
+

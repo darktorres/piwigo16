@@ -1103,3 +1103,60 @@ msgstr "Опис фотографије"
 msgid "Photo title"
 msgstr "Назив фотографије"
 
+msgid "piwigo_day_0"
+msgstr "Nedelja"
+
+msgid "piwigo_day_1"
+msgstr "Ponedjeljak"
+
+msgid "piwigo_day_2"
+msgstr "Utorak"
+
+msgid "piwigo_day_3"
+msgstr "Sreda"
+
+msgid "piwigo_day_4"
+msgstr "Četvrtak"
+
+msgid "piwigo_day_5"
+msgstr "Petak"
+
+msgid "piwigo_day_6"
+msgstr "Subota"
+
+msgid "piwigo_month_10"
+msgstr "Oktobar"
+
+msgid "piwigo_month_11"
+msgstr "Novembar"
+
+msgid "piwigo_month_12"
+msgstr "Decembar"
+
+msgid "piwigo_month_1"
+msgstr "Januar"
+
+msgid "piwigo_month_2"
+msgstr "Februar"
+
+msgid "piwigo_month_3"
+msgstr "Mart"
+
+msgid "piwigo_month_4"
+msgstr "April"
+
+msgid "piwigo_month_5"
+msgstr "Maj"
+
+msgid "piwigo_month_6"
+msgstr "Jun"
+
+msgid "piwigo_month_7"
+msgstr "Jul"
+
+msgid "piwigo_month_8"
+msgstr "Avgust"
+
+msgid "piwigo_month_9"
+msgstr "Septembar"
+

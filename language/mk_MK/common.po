@@ -1001,3 +1001,60 @@ msgstr "Корисничко име: %s"
 msgid "html tags are not allowed in login"
 msgstr "со логирање не се дозволени html тагови"
 
+msgid "piwigo_day_0"
+msgstr "недела"
+
+msgid "piwigo_day_1"
+msgstr "понеделник"
+
+msgid "piwigo_day_2"
+msgstr "вторник"
+
+msgid "piwigo_day_3"
+msgstr "среда"
+
+msgid "piwigo_day_4"
+msgstr "четврток"
+
+msgid "piwigo_day_5"
+msgstr "петок"
+
+msgid "piwigo_day_6"
+msgstr "сабота"
+
+msgid "piwigo_month_10"
+msgstr "октомври"
+
+msgid "piwigo_month_11"
+msgstr "ноември"
+
+msgid "piwigo_month_12"
+msgstr "декември"
+
+msgid "piwigo_month_1"
+msgstr "јануари"
+
+msgid "piwigo_month_2"
+msgstr "февруари"
+
+msgid "piwigo_month_3"
+msgstr "март"
+
+msgid "piwigo_month_4"
+msgstr "април"
+
+msgid "piwigo_month_5"
+msgstr "мај"
+
+msgid "piwigo_month_6"
+msgstr "јуни"
+
+msgid "piwigo_month_7"
+msgstr "јули"
+
+msgid "piwigo_month_8"
+msgstr "август"
+
+msgid "piwigo_month_9"
+msgstr "септември"
+

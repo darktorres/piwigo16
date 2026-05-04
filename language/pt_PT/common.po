@@ -1484,3 +1484,60 @@ msgstr "não pode estar vazio"
 msgid "you must choose a date"
 msgstr "deve escolher uma data"
 
+msgid "piwigo_day_0"
+msgstr "Domingo"
+
+msgid "piwigo_day_1"
+msgstr "Segunda-feira"
+
+msgid "piwigo_day_2"
+msgstr "Terça-feira"
+
+msgid "piwigo_day_3"
+msgstr "Quarta-feira"
+
+msgid "piwigo_day_4"
+msgstr "Quinta-eira"
+
+msgid "piwigo_day_5"
+msgstr "Sexta-feira"
+
+msgid "piwigo_day_6"
+msgstr "Sábado"
+
+msgid "piwigo_month_10"
+msgstr "Outubro"
+
+msgid "piwigo_month_11"
+msgstr "Novembro"
+
+msgid "piwigo_month_12"
+msgstr "Dezembro"
+
+msgid "piwigo_month_1"
+msgstr "Janeiro"
+
+msgid "piwigo_month_2"
+msgstr "Fevereiro"
+
+msgid "piwigo_month_3"
+msgstr "Março"
+
+msgid "piwigo_month_4"
+msgstr "Abril"
+
+msgid "piwigo_month_5"
+msgstr "Maio"
+
+msgid "piwigo_month_6"
+msgstr "Junho"
+
+msgid "piwigo_month_7"
+msgstr "Julho"
+
+msgid "piwigo_month_8"
+msgstr "Agosto"
+
+msgid "piwigo_month_9"
+msgstr "Setembro"
+

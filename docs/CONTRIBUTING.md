@@ -73,3 +73,23 @@ If you had to update your fork because there is activity on the upstream, you ca
 When you finished your work and going to commit the final change. You can specify _Fixes_ and the GitHub id of the original issue to help the Piwigo team. This will close automatically the pull request when this will be merged on the upstream.
 
 Example of a last commit: `Fixes #965 Add a new column`
+
+---
+
+## Translating Piwigo
+
+Translation strings live in **gettext PO files** under `language/<locale>/` (e.g. `language/fr_FR/common.po`). The English source is `language/en_UK/`.
+
+### Adding or editing a string
+
+1. Find or create the `msgid` in the relevant PO file (`common.po`, `admin.po`, etc.).
+2. Provide the `msgstr` in that locale's PO file.
+3. For plural forms, use `msgid_plural` with indexed `msgstr[N]` lines — the number of forms required depends on the locale (see `tools/i18n/plural-forms.php`).
+
+### Adding a new locale
+
+1. Create `language/<locale>/` and copy the PO header from an existing locale.
+2. Add the locale's plural-form rule to `tools/i18n/plural-forms.php`.
+3. Translate the strings — empty `msgstr ""` falls back to the English `msgid` at runtime.
+
+See **[docs/I18N.md](I18N.md)** for the full technical reference, including the runtime architecture and the conversion tooling.

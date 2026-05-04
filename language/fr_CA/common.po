@@ -1136,3 +1136,60 @@ msgstr "Un courriel contenant un code de vérification vous a été envoyé"
 msgid "If you do not receive the email, please contact your webmaster."
 msgstr "Si vous ne recevez pas ce courriel, veuillez contacter votre webmestre."
 
+msgid "piwigo_day_0"
+msgstr "Dimanche"
+
+msgid "piwigo_day_1"
+msgstr "Lundi"
+
+msgid "piwigo_day_2"
+msgstr "Mardi"
+
+msgid "piwigo_day_3"
+msgstr "Mercredi"
+
+msgid "piwigo_day_4"
+msgstr "Jeudi"
+
+msgid "piwigo_day_5"
+msgstr "Vendredi"
+
+msgid "piwigo_day_6"
+msgstr "Samedi"
+
+msgid "piwigo_month_10"
+msgstr "Octobre"
+
+msgid "piwigo_month_11"
+msgstr "Novembre"
+
+msgid "piwigo_month_12"
+msgstr "Décembre"
+
+msgid "piwigo_month_1"
+msgstr "Janvier"
+
+msgid "piwigo_month_2"
+msgstr "Février"
+
+msgid "piwigo_month_3"
+msgstr "Mars"
+
+msgid "piwigo_month_4"
+msgstr "Avril"
+
+msgid "piwigo_month_5"
+msgstr "Mai"
+
+msgid "piwigo_month_6"
+msgstr "Juin"
+
+msgid "piwigo_month_7"
+msgstr "Juillet"
+
+msgid "piwigo_month_8"
+msgstr "Août"
+
+msgid "piwigo_month_9"
+msgstr "Septembre"
+

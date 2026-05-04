@@ -1124,3 +1124,60 @@ msgstr "Startdate"
 msgid "%d visits"
 msgstr "%d visingar"
 
+msgid "piwigo_day_0"
+msgstr "Sundag"
+
+msgid "piwigo_day_1"
+msgstr "Måndag"
+
+msgid "piwigo_day_2"
+msgstr "Tysdag"
+
+msgid "piwigo_day_3"
+msgstr "Onsdag"
+
+msgid "piwigo_day_4"
+msgstr "Torsdag"
+
+msgid "piwigo_day_5"
+msgstr "Fredag"
+
+msgid "piwigo_day_6"
+msgstr "Laurdag"
+
+msgid "piwigo_month_10"
+msgstr "Oktober"
+
+msgid "piwigo_month_11"
+msgstr "November"
+
+msgid "piwigo_month_12"
+msgstr "Desember"
+
+msgid "piwigo_month_1"
+msgstr "Januar"
+
+msgid "piwigo_month_2"
+msgstr "Februar"
+
+msgid "piwigo_month_3"
+msgstr "Mars"
+
+msgid "piwigo_month_4"
+msgstr "April"
+
+msgid "piwigo_month_5"
+msgstr "Mai"
+
+msgid "piwigo_month_6"
+msgstr "June"
+
+msgid "piwigo_month_7"
+msgstr "Juli"
+
+msgid "piwigo_month_8"
+msgstr "August"
+
+msgid "piwigo_month_9"
+msgstr "September"
+

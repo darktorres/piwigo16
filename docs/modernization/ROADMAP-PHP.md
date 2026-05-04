@@ -886,7 +886,7 @@ vendor/bin/phpunit --testsuite Unit   # still green
 
 ## #14 — Schema migrations as code
 
-**Status:** Not started &nbsp;|&nbsp; **Size:** M
+**Status:** ✅ Done &nbsp;|&nbsp; **Size:** M
 
 ### Goal
 

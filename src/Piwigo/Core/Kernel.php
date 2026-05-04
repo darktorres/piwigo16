@@ -6,6 +6,7 @@ namespace Piwigo\Core;
 
 use Piwigo\Bootstrap\Container;
 use Piwigo\Config\Config;
+use Piwigo\Migrations\MigrationRunner;
 use Piwigo\Users\CurrentUser;
 use Psr\Container\ContainerInterface;
 
@@ -41,6 +42,10 @@ final class Kernel
 
         self::$container = Container::build();
         ServiceLocator::setContainer(self::$container);
+
+        if (Config::autoMigrate()) {
+            MigrationRunner::migrate();
+        }
     }
 
     public static function container(): ContainerInterface

@@ -302,20 +302,18 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
 
             $category_up = implode(',', array_unique($category_up));
             if (\Piwigo\Config\Config::inheritanceByDefault() and !empty($category_up)) {
-                $query = '
-          SELECT *
-          FROM '.GROUP_ACCESS_TABLE.'
-          WHERE cat_id IN ('.$category_up.')
-        ;';
-                $result = pwg_query($query);
-                if (!empty($result)) {
+                $permRepoSync = \Piwigo\Core\ServiceLocator::get(\Piwigo\Permission\PermissionRepository::class);
+                $category_up_ids = array_map('intval', explode(',', $category_up));
+
+                $groupAccessRows = $permRepoSync->findGroupCategoryAccess($category_up_ids);
+                if (!empty($groupAccessRows)) {
                     $granted_grps = [];
-                    while ($row = pwg_db_fetch_assoc($result)) {
+                    foreach ($groupAccessRows as $row) {
                         $cat_id_key = (string) ($row['cat_id'] ?? '');
                         if (!isset($granted_grps[$cat_id_key])) {
                             $granted_grps[$cat_id_key] = [];
                         }
-                        // TODO: explanaition
+                        // TODO: explanation
                         array_push(
                             $granted_grps,
                             [
@@ -324,20 +322,15 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                         );
                     }
                 }
-                $query = '
-          SELECT *
-          FROM '.USER_ACCESS_TABLE.'
-          WHERE cat_id IN ('.$category_up.')
-        ;';
-                $result = pwg_query($query);
-                if (!empty($result)) {
+                $userAccessRows = $permRepoSync->findUserCategoryAccess($category_up_ids);
+                if (!empty($userAccessRows)) {
                     $granted_users = [];
-                    while ($row = pwg_db_fetch_assoc($result)) {
+                    foreach ($userAccessRows as $row) {
                         $cat_id_key = (string) ($row['cat_id'] ?? '');
                         if (!isset($granted_users[$cat_id_key])) {
                             $granted_users[$cat_id_key] = [];
                         }
-                        // TODO: explanaition
+                        // TODO: explanation
                         array_push(
                             $granted_users,
                             [
@@ -539,13 +532,8 @@ SELECT id, path
             $db_formats = [];
 
             // find formats for existing photos (already in database)
-            $query = '
-SELECT *
-  FROM '.IMAGE_FORMAT_TABLE.'
-  WHERE image_id IN ('.implode(',', $existing_ids).')
-;';
-            $result = pwg_query($query);
-            while ($row = pwg_db_fetch_assoc($result)) {
+            foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
+                ->findFormatsByImageIds(array_map('intval', $existing_ids)) as $row) {
                 $row_image_id = (string) ($row['image_id'] ?? '');
                 $row_ext = (string) ($row['ext'] ?? '');
                 if (!isset($db_formats[$row_image_id])) {
@@ -637,12 +625,8 @@ SELECT *
         }
 
         if (count($formats_to_delete) > 0) {
-            $query = '
-DELETE
-  FROM '.IMAGE_FORMAT_TABLE.'
-  WHERE format_id IN ('.implode(',', $formats_to_delete).')
-;';
-            pwg_query($query);
+            \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
+                ->deleteFormatsByFormatIds(array_map('intval', $formats_to_delete));
         }
     }
 

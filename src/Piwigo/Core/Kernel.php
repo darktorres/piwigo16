@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
+use Piwigo\Bootstrap\Container;
 use Piwigo\Config\Config;
 use Piwigo\Users\CurrentUser;
-use Piwigo\Core\LanguageStack;
+use Psr\Container\ContainerInterface;
 
 /**
- * Single boot entry point for the typed-service layer (Phase 4, Wave A).
+ * Single boot entry point for the typed-service layer.
  *
  * Call order: common.inc.php runs first (ConfigLoader populates Config::$data
  * directly; legacy code populates $page/$user/$lang via the bootstrap dance),
@@ -25,6 +26,7 @@ use Piwigo\Core\LanguageStack;
 final class Kernel
 {
     private static bool $booted = false;
+    private static ?ContainerInterface $container = null;
 
     public static function boot(): void
     {
@@ -37,8 +39,16 @@ final class Kernel
         Lang::attachGlobals();
         CurrentUser::attachGlobals();
 
-        ServiceLocator::register(Config::class, Config::instance());
-        ServiceLocator::register(PageState::class, PageState::current());
+        self::$container = Container::build();
+        ServiceLocator::setContainer(self::$container);
+    }
+
+    public static function container(): ContainerInterface
+    {
+        if (self::$container === null) {
+            throw new \LogicException('Kernel not booted — call Kernel::boot() first.');
+        }
+        return self::$container;
     }
 
     public static function isBooted(): bool
@@ -51,6 +61,7 @@ final class Kernel
     public static function reset(): void
     {
         self::$booted = false;
+        self::$container = null;
         Config::reset();
         PageState::reset();
         Lang::reset();

@@ -11,6 +11,9 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Users\CurrentUser;
+use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 final class KernelBootTest extends TestCase
 {
@@ -149,6 +152,44 @@ final class KernelBootTest extends TestCase
 
         Kernel::reset();
         self::assertFalse(Kernel::isBooted());
+    }
+
+    public function test_container_returns_ContainerInterface_after_boot(): void
+    {
+        $this->simulateGlobals();
+        Kernel::boot();
+
+        self::assertInstanceOf(ContainerInterface::class, Kernel::container());
+    }
+
+    public function test_container_resolves_Config_to_same_instance(): void
+    {
+        $this->simulateGlobals();
+        Kernel::boot();
+
+        self::assertSame(Config::instance(), Kernel::container()->get(Config::class));
+    }
+
+    public function test_container_resolves_PageState_to_same_instance(): void
+    {
+        $this->simulateGlobals();
+        Kernel::boot();
+
+        self::assertSame(PageState::current(), Kernel::container()->get(PageState::class));
+    }
+
+    public function test_container_resolves_LoggerInterface_to_NullLogger_when_registry_empty(): void
+    {
+        $this->simulateGlobals();
+        Kernel::boot();
+
+        self::assertInstanceOf(NullLogger::class, Kernel::container()->get(LoggerInterface::class));
+    }
+
+    public function test_container_throws_before_boot(): void
+    {
+        $this->expectException(\LogicException::class);
+        Kernel::container();
     }
 
     // ---- helpers ---------------------------------------------------------

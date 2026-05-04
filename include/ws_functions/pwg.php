@@ -279,7 +279,7 @@ SELECT id
   WHERE id IN ('. implode(',', array_map(fn ($v) => is_numeric($v) ? (int) $v : 0, is_array($params['image_id']) ? $params['image_id'] : [])) .')
     AND element_id IS NULL
 ;';
-    $result = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
+    $result = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id');
 
     $datas = [];
     foreach ($result as $id) {
@@ -535,7 +535,7 @@ SELECT
   ORDER BY activity_id DESC
   LIMIT '.$nb_rows_to_fetch.' OFFSET '.$page_offset.'
 ;';
-        $rows = \Piwigo\Db\QueryHelper::fetch($query);
+        $rows = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
 
         if (count($rows) < $nb_rows_to_fetch) {
             $more_rows_available = false;
@@ -622,7 +622,7 @@ SELECT
   FROM '.USERS_TABLE.'
   WHERE `'.\Piwigo\Config\Config::userFields()['id'].'` IN ('.implode(',', array_keys($user_ids)).')
 ;';
-        $username_of = \Piwigo\Db\QueryHelper::fetch($query, 'user_id', 'username');
+        $username_of = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'username', 'user_id');
     }
 
     foreach ($output_lines as $idx => $output_line) {
@@ -649,7 +649,7 @@ SELECT
         }
 
         $line_user_id = $output_lines[$idx]['user_id'] ?? '';
-        $line_user_id_str = (string) $line_user_id;
+        $line_user_id_str = is_scalar($line_user_id) ? (string) $line_user_id : '';
         $output_lines[$idx]['username'] = 'user#'.$line_user_id_str;
         if ($line_user_id_str !== '' && isset($username_of[$line_user_id_str])) {
             $output_lines[$idx]['username'] = $username_of[$line_user_id_str];
@@ -874,7 +874,7 @@ SELECT
   FROM '.SEARCH_TABLE.'
   WHERE id IN ('.implode(',', $search_ids_str).')
 ;';
-        $search_details = \Piwigo\Db\QueryHelper::fetch($query, 'id', 'rules');
+        $search_details = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'rules', 'id');
 
         foreach ($search_details as $id_search => $rules_search) {
             $rules_arr = safe_unserialize(is_scalar($rules_search) ? (string) $rules_search : '');
@@ -929,7 +929,7 @@ SELECT id, uppercats
   FROM '.CATEGORIES_TABLE.'
   WHERE id IN ('.implode(',', $category_ids_str).')
 ;';
-        $uppercats_of = \Piwigo\Db\QueryHelper::fetch($query, 'id', 'uppercats');
+        $uppercats_of = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'uppercats', 'id');
 
         $full_cat_path = [];
         $name_of_category = [];
@@ -961,7 +961,7 @@ SELECT
   FROM '.IMAGES_TABLE.'
   WHERE id IN ('.implode(',', array_keys($image_ids)).')
 ;';
-        $image_infos = \Piwigo\Db\QueryHelper::fetch($query, 'id');
+        $image_infos = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), null, 'id');
     }
 
     $name_of_tag = [];
@@ -999,7 +999,7 @@ SELECT
         $line_section = is_scalar($line['section']) ? (string) $line['section'] : '';
 
         if ($line_image_type === 'high' && $line_image_id_str !== '') {
-            $summary['total_filesize'] += intval($image_infos[$line_image_id_str]['filesize'] ?? 0);
+            $summary['total_filesize'] += is_numeric($image_infos[$line_image_id_str]['filesize'] ?? null) ? (int)$image_infos[$line_image_id_str]['filesize'] : 0;
         }
 
         if ($line_user_id_str === (string) \Piwigo\Config\Config::guestId()) {
@@ -1072,7 +1072,7 @@ SELECT
 
             if (isset($image_infos[$line_image_id_str]['label'])) {
                 $tc_result = trigger_change('render_element_description', $image_infos[$line_image_id_str]['label']);
-                $image_title .= ' '.$tc_result;
+                $image_title .= ' '.(is_scalar($tc_result) ? (string) $tc_result : '');
             } else {
                 $image_edit_string = '';
                 $image_title .= ' unknown filename';

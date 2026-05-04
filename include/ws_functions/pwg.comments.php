@@ -187,7 +187,7 @@ WHERE '.implode(' AND ', $where_clauses).'
 GROUP BY author_id
 ;';
 
-    $nb_authors_in = \Piwigo\Db\QueryHelper::fetch($query);
+    $nb_authors_in = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
 
     $total_count = is_numeric($total_comments) ? (int) $total_comments : 0;
 

@@ -357,7 +357,7 @@ SELECT id, path, representative_ext
     }
     $query .= '
 ;';
-    return \Piwigo\Db\QueryHelper::fetch($query, 'id');
+    return array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), null, 'id');
 }
 
 /**

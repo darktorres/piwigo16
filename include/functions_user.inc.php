@@ -429,7 +429,7 @@ SELECT DISTINCT(id)
   FROM '.IMAGES_TABLE.' INNER JOIN '.IMAGE_CATEGORY_TABLE.' ON id=image_id
   WHERE category_id NOT IN ('.$ud_forbidden_cats.')
     AND level>'.$ud_level;
-            $forbidden_ids = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
+            $forbidden_ids = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id');
 
             if (empty($forbidden_ids)) {
                 $forbidden_ids[] = 0;
@@ -551,19 +551,19 @@ SELECT DISTINCT f.image_id
         'AND'
     ).'
 ;';
-    $authorizeds = \Piwigo\Db\QueryHelper::fetch($query, null, 'image_id');
+    $authorizeds = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'image_id');
 
     $query = '
 SELECT image_id
   FROM '.FAVORITES_TABLE.'
   WHERE user_id = '.$currentUser->id.'
 ;';
-    $favorites = \Piwigo\Db\QueryHelper::fetch($query, null, 'image_id');
+    $favorites = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'image_id');
 
-    $to_deletes = array_diff($favorites, $authorizeds);
+    $to_deletes = array_diff(array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $favorites), array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $authorizeds));
     if (count($to_deletes) > 0) {
         \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
-            ->deleteFavoritesByImageIds(array_map('intval', array_values($to_deletes)));
+            ->deleteFavoritesByImageIds(array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, array_values($to_deletes)));
     }
 }
 
@@ -586,7 +586,7 @@ SELECT id
   FROM '.CATEGORIES_TABLE.'
   WHERE status = \'private\'
 ;';
-    $private_array = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
+    $private_array = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id');
 
     // retrieve category ids directly authorized to the user
     $query = '
@@ -594,7 +594,7 @@ SELECT cat_id
   FROM '.USER_ACCESS_TABLE.'
   WHERE user_id = '.$user_id.'
 ;';
-    $authorized_array = \Piwigo\Db\QueryHelper::fetch($query, null, 'cat_id');
+    $authorized_array = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'cat_id');
 
     // retrieve category ids authorized to the groups the user belongs to
     $query = '
@@ -606,15 +606,15 @@ SELECT cat_id
     $authorized_array =
       array_merge(
           $authorized_array,
-          \Piwigo\Db\QueryHelper::fetch($query, null, 'cat_id')
+          array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'cat_id')
       );
 
     // uniquify ids : some private categories might be authorized for the
     // groups and for the user
-    $authorized_array = array_unique($authorized_array);
+    $authorized_array = array_unique(array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $authorized_array));
 
     // only unauthorized private categories are forbidden
-    $forbidden_array = array_diff($private_array, $authorized_array);
+    $forbidden_array = array_diff(array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $private_array), $authorized_array);
 
     // if user is not an admin, locked categories are forbidden
     if (!is_admin($user_status)) {
@@ -623,7 +623,7 @@ SELECT id
   FROM '.CATEGORIES_TABLE.'
   WHERE visible = \'false\'
 ;';
-        $forbidden_array = array_merge($forbidden_array, \Piwigo\Db\QueryHelper::fetch($query, null, 'id'));
+        $forbidden_array = array_merge($forbidden_array, array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id')));
         $forbidden_array = array_unique($forbidden_array);
     }
 
@@ -1507,7 +1507,7 @@ SELECT
     JOIN '.USERS_TABLE.' AS u ON u.'.\Piwigo\Config\Config::userFields()['id'].' = ui.user_id
   WHERE auth_key = '.get_dbal_connection()->quote((string) $auth_key).'
 ;';
-    $keys = \Piwigo\Db\QueryHelper::fetch($query);
+    $keys = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
 
     if (count($keys) == 0) {
         return false;
@@ -1516,7 +1516,7 @@ SELECT
     $key = $keys[0];
 
     // is the key still valid?
-    if (strtotime((string) $key['expired_on']) < strtotime((string) $key['dbnow'])) {
+    if (strtotime(is_scalar($key['expired_on']) ? (string) $key['expired_on'] : '') < strtotime(is_scalar($key['dbnow']) ? (string) $key['dbnow'] : '')) {
         $page['auth_key_invalid'] = true;
         return false;
     }
@@ -1540,13 +1540,13 @@ SELECT
         }
 
         // check if we need to notificate the user
-        $days_left = intval($key['days_left']);
+        $days_left = is_numeric($key['days_left']) ? (int) $key['days_left'] : 0;
         if (
             $days_left <= 7 // the key expire in max 7 days
             and !empty($key['email']) // the user have an email
             and (
                 null === $key['last_notified_on'] // we never send an email for this key
-                or strtotime((string) $key['last_notified_on']) < strtotime((string) $key['48h_ago']) // OR when the last email was sent more than 48 hours ago
+                or strtotime(is_scalar($key['last_notified_on']) ? (string) $key['last_notified_on'] : '') < strtotime(is_scalar($key['48h_ago']) ? (string) $key['48h_ago'] : '') // OR when the last email was sent more than 48 hours ago
             )
         ) {
             $page['notify_api_key_expiration'] = [
@@ -1611,7 +1611,7 @@ SELECT
   FROM '.USER_INFOS_TABLE.'
   WHERE user_id = '.$user_id.'
 ;';
-        $user_infos = \Piwigo\Db\QueryHelper::fetch($query);
+        $user_infos = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
 
         if (count($user_infos) == 0) {
             return false;
@@ -1961,10 +1961,10 @@ SELECT
   FROM '.USER_INFOS_TABLE.'
   WHERE status IN (\'webmaster\', \'admin\')
 ;';
-                $admin_ids = \Piwigo\Db\QueryHelper::fetch($query, null, 'user_id');
+                $admin_ids = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'user_id');
 
                 // we add all admin+webmaster users BUT the user herself
-                $password_protected_users = array_merge($password_protected_users, array_diff($admin_ids, [$currentUser->id]));
+                $password_protected_users = array_merge($password_protected_users, array_diff(array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $admin_ids), [(string) $currentUser->id]));
 
                 if (in_array($param_user_id[0], $password_protected_users)) {
                     // return new PwgError(403, 'Only webmasters can change password of other "webmaster/admin" users');
@@ -2016,7 +2016,7 @@ SELECT
   FROM '.USER_INFOS_TABLE.'
   WHERE status IN (\'webmaster\', \'admin\')
 ;';
-            $protected_users = array_merge($protected_users, array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, \Piwigo\Db\QueryHelper::fetch($query, null, 'user_id')));
+            $protected_users = array_merge($protected_users, array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'user_id')));
         }
 
         // status update query is separated from the rest as not applying to the same
@@ -2160,7 +2160,7 @@ SELECT
   FROM `'.GROUPS_TABLE.'`
   WHERE id IN ('.implode(',', array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $param_group_id)).')
 ;';
-        $group_ids = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
+        $group_ids = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id');
 
         // if only -1 (a group id that can't exist) is in the list, then no
         // group is associated
@@ -2296,7 +2296,7 @@ SELECT *
   AND key_type = "api_key"
 ;';
 
-    $api_keys = \Piwigo\Db\QueryHelper::fetch($query);
+    $api_keys = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
     if (!$api_keys) {
         return false;
     }
@@ -2307,7 +2307,7 @@ SELECT *
         $api_key['apikey_secret'] = str_repeat('*', 40);
         unset($api_key['auth_key_id'], $api_key['user_id'], $api_key['key_type']);
 
-        $api_key['apikey_name'] = stripslashes((string) $api_key['apikey_name']);
+        $api_key['apikey_name'] = stripslashes(is_scalar($api_key['apikey_name']) ? (string) $api_key['apikey_name'] : '');
 
         $ak_created_on = is_scalar($api_key['created_on']) ? (string) $api_key['created_on'] : null;
         $ak_expired_on = is_scalar($api_key['expired_on']) ? (string) $api_key['expired_on'] : null;

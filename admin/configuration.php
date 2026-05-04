@@ -425,7 +425,10 @@ switch ($page['section']) {
         name
       FROM `'.GROUPS_TABLE.'`
     ;';
-            $groups = \Piwigo\Db\QueryHelper::fetch($query, 'id', 'name');
+            $groups = array_map(
+                fn(mixed $v): string => is_scalar($v) ? (string) $v : '',
+                array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'name', 'id')
+            );
             natcasesort($groups);
 
             $template->assign(

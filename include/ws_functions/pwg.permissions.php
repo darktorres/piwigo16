@@ -145,7 +145,7 @@ SELECT id
   WHERE id IN ('. implode(',', $cat_ids_str) .')
     AND status = \'private\'
 ;';
-        $private_cats = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
+        $private_cats = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id');
 
         $inserts = [];
         $group_id_param = is_array($params['group_id']) ? $params['group_id'] : [];

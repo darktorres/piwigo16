@@ -44,7 +44,7 @@ SELECT id
   FROM '.CATEGORIES_TABLE.'
   WHERE id IN ('.implode(',', $cat_ids).')
 ;';
-        $db_cat_ids = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
+        $db_cat_ids = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id');
         $missing_cat_ids = array_diff($cat_ids, array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $db_cat_ids));
 
         if (count($missing_cat_ids) > 0) {
@@ -182,7 +182,7 @@ SELECT
   FROM '. CATEGORIES_TABLE .'
   WHERE id IN ('. implode(',', array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '', $category_ids)) .')
 ;';
-                $details_for_category = \Piwigo\Db\QueryHelper::fetch($query, 'id');
+                $details_for_category = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), null, 'id');
             }
 
             foreach ($images as $idx => $image) {
@@ -573,7 +573,7 @@ SELECT category_id, COUNT(*) AS counter
   FROM '. IMAGE_CATEGORY_TABLE .'
   GROUP BY category_id
 ;';
-    $nb_images_of = \Piwigo\Db\QueryHelper::fetch($query, 'category_id', 'counter');
+    $nb_images_of = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'counter', 'category_id');
 
     // pwg_db_real_escape_string
 
@@ -663,12 +663,12 @@ SELECT
   GROUP BY id_uppercat
 ';
 
-            $nb_subcats_of = \Piwigo\Db\QueryHelper::fetch($query, 'id_uppercat', 'nb_subcats');
+            $nb_subcats_of = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'nb_subcats', 'id_uppercat');
         }
 
         foreach ($cats as $idx => $cat) {
             $cat_id_key = is_scalar($cat['id']) ? (string) $cat['id'] : '';
-            $cats[$idx]['nb_categories'] = intval($nb_subcats_of[$cat_id_key] ?? 0);
+            $cats[$idx]['nb_categories'] = is_numeric($nb_subcats_of[$cat_id_key] ?? null) ? (int) ($nb_subcats_of[$cat_id_key]) : 0;
         }
     }
 
@@ -766,7 +766,7 @@ SELECT id, id_uppercat, `rank`
   FROM '.CATEGORIES_TABLE.'
   WHERE id IN ('.implode(',', $setrank_category_ids).')
 ;';
-    $categories = \Piwigo\Db\QueryHelper::fetch($query);
+    $categories = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
 
     if (count($categories) == 0) {
         return new PwgError(404, 'category_id not found');
@@ -783,11 +783,11 @@ SELECT id, id_uppercat, `rank`
         $query = '
 SELECT id
   FROM '.CATEGORIES_TABLE.'
-  WHERE id_uppercat '.(empty($category['id_uppercat']) ? 'IS NULL' : '= '.(string) $category['id_uppercat']).'
+  WHERE id_uppercat '.(empty($category['id_uppercat']) ? 'IS NULL' : '= '.(is_scalar($category['id_uppercat']) ? (string) $category['id_uppercat'] : '0')).'
   ORDER BY `id` ASC
 ;';
 
-        $cat_asc = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
+        $cat_asc = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id');
 
         $cat_asc_str = array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $cat_asc);
         $order_new_str = array_map(fn (int $v): string => (string) $v, $order_new_by_id);
@@ -807,7 +807,7 @@ SELECT id
   ORDER BY `rank` ASC
 ;';
 
-        $order_old = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
+        $order_old = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id');
         $rank_target = is_numeric($params['rank']) ? (int) $params['rank'] : 0;
         $order_new = [];
         $was_inserted = false;
@@ -860,7 +860,7 @@ SELECT *
   FROM '.CATEGORIES_TABLE.'
   WHERE id = '.$category_id.'
 ;';
-    $categories = \Piwigo\Db\QueryHelper::fetch($query);
+    $categories = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
     if (count($categories) == 0) {
         return new PwgError(404, 'category_id not found');
     }
@@ -1094,7 +1094,7 @@ SELECT id
   FROM '. CATEGORIES_TABLE .'
   WHERE id IN ('. implode(',', $category_ids) .')
 ;';
-    $raw_category_ids = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
+    $raw_category_ids = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id');
 
     if (count($raw_category_ids) == 0) {
         return null;
@@ -1234,7 +1234,7 @@ SELECT
   GROUP BY category_id
 ;';
 
-    $nb_photos_in = \Piwigo\Db\QueryHelper::fetch($query, 'category_id', 'nb_photos');
+    $nb_photos_in = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'nb_photos', 'category_id');
 
     $update_cats = [];
     foreach (array_unique($update_cat_ids) as $update_cat) {
@@ -1242,7 +1242,7 @@ SELECT
         $sub_cat_without_parent = array_diff(get_subcat_ids([$update_cat]), [$update_cat]);
 
         foreach ($sub_cat_without_parent as $id_sub_cat) {
-            $nb_sub_photos += $nb_photos_in[(string) $id_sub_cat] ?? 0;
+            $nb_sub_photos += is_numeric($nb_photos_in[(string) $id_sub_cat] ?? null) ? (int) ($nb_photos_in[(string) $id_sub_cat]) : 0;
         }
 
         $update_cats[] = [
@@ -1287,7 +1287,7 @@ SELECT DISTINCT
   WHERE 
     category_id IN ('.implode(',', $subcat_ids).')
   ;';
-    $image_ids_recursive = \Piwigo\Db\QueryHelper::fetch($query, null, 'image_id');
+    $image_ids_recursive = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'image_id');
 
     $category['nb_images_recursive'] = count($image_ids_recursive);
 
@@ -1310,18 +1310,18 @@ SELECT DISTINCT
     AND 
       image_id 
     IN 
-      ('.implode(',', $image_ids_recursive).')
+      ('.implode(',', array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $image_ids_recursive)).')
   ;';
 
-            $image_ids_associated_outside = \Piwigo\Db\QueryHelper::fetch($query, null, 'image_id');
+            $image_ids_associated_outside = array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'image_id'));
             $category['nb_images_associated_outside'] = count($image_ids_associated_outside);
 
-            $image_ids_becoming_orphan = array_diff($image_ids_recursive, $image_ids_associated_outside);
+            $image_ids_becoming_orphan = array_diff(array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $image_ids_recursive), $image_ids_associated_outside);
             $category['nb_images_becoming_orphan'] = count($image_ids_becoming_orphan);
         }
         // else it's better to avoid sending a huge SQL request, we compute the orphan list with PHP
         else {
-            $image_ids_recursive_keys = array_flip(array_map('strval', $image_ids_recursive));
+            $image_ids_recursive_keys = array_flip(array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '', $image_ids_recursive));
 
             $query = '
   SELECT
@@ -1333,7 +1333,7 @@ SELECT DISTINCT
     NOT IN 
       ('.implode(',', $subcat_ids).')
   ;';
-            $image_ids_associated_outside = \Piwigo\Db\QueryHelper::fetch($query, null, 'image_id');
+            $image_ids_associated_outside = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'image_id');
             $image_ids_not_orphan = [];
 
             foreach ($image_ids_associated_outside as $image_id) {
@@ -1342,8 +1342,8 @@ SELECT DISTINCT
                 }
             }
 
-            $category['nb_images_associated_outside'] = count(array_unique($image_ids_not_orphan));
-            $image_ids_becoming_orphan = array_diff($image_ids_recursive, $image_ids_not_orphan);
+            $category['nb_images_associated_outside'] = count(array_unique(array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $image_ids_not_orphan)));
+            $image_ids_becoming_orphan = array_diff(array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $image_ids_recursive), array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $image_ids_not_orphan));
             $category['nb_images_becoming_orphan'] = count($image_ids_becoming_orphan);
         }
     }

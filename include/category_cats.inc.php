@@ -162,7 +162,7 @@ SELECT
         ).'
   GROUP BY category_id
 ;';
-        $dates_of_category = \Piwigo\Db\QueryHelper::fetch($query, 'category_id');
+        $dates_of_category = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), null, 'category_id');
     }
 }
 

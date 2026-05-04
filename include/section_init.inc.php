@@ -246,7 +246,7 @@ SELECT id
         "\n  AND"
     );
 
-                $subcat_ids = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
+                $subcat_ids = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id');
                 $subcat_ids[] = $page['category']['id'];
                 $where_sql = 'category_id IN ('.implode(',', $subcat_ids).')';
                 // remove categories from forbidden because just checked above
@@ -277,7 +277,7 @@ SELECT DISTINCT(image_id)
   '.\Piwigo\Config\Config::orderBy().'
 ;';
 
-            $page['items'] = \Piwigo\Db\QueryHelper::fetch($query, null, 'image_id');
+            $page['items'] = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'image_id');
 
             if (isset($cache_key)) {
                 $persistent_cache->set($cache_key, $page['items']);
@@ -373,7 +373,7 @@ SELECT image_id
             $page = array_merge(
                 $page,
                 [
-                'items' => \Piwigo\Db\QueryHelper::fetch($query, null, 'image_id'),
+                'items' => array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'image_id'),
                 ]
             );
 
@@ -417,7 +417,7 @@ SELECT DISTINCT(id)
             [
             'title' => '<a href="'.duplicate_index_url(['start' => 0]).'">'
                         .l10n('Recent photos').'</a>',
-            'items' => \Piwigo\Db\QueryHelper::fetch($query, null, 'id'),
+            'items' => array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id'),
             ]
         );
     }
@@ -455,7 +455,7 @@ SELECT DISTINCT(id)
             [
             'title' => '<a href="'.duplicate_index_url(['start' => 0]).'">'
                         .\Piwigo\Config\Config::topNumber().' '.l10n('Most visited').'</a>',
-            'items' => \Piwigo\Db\QueryHelper::fetch($query, null, 'id'),
+            'items' => array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id'),
             ]
         );
     }
@@ -480,7 +480,7 @@ SELECT DISTINCT(id)
             [
             'title' => '<a href="'.duplicate_index_url(['start' => 0]).'">'
                         .\Piwigo\Config\Config::topNumber().' '.l10n('Best rated').'</a>',
-            'items' => \Piwigo\Db\QueryHelper::fetch($query, null, 'id'),
+            'items' => array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id'),
             ]
         );
     }
@@ -502,7 +502,7 @@ SELECT DISTINCT(id)
             [
             'title' => '<a href="'.duplicate_index_url(['start' => 0]).'">'
                         .l10n('Random photos').'</a>',
-            'items' => \Piwigo\Db\QueryHelper::fetch($query, null, 'id'),
+            'items' => array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id'),
             ]
         );
     }

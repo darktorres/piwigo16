@@ -116,7 +116,7 @@ SELECT
   GROUP BY performed_by
 ;';
 
-$nb_lines_for_user = \Piwigo\Db\QueryHelper::fetch($query, 'performed_by', 'counter');
+$nb_lines_for_user = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'counter', 'performed_by');
 
 if (count($nb_lines_for_user) > 0) {
     $query = '
@@ -127,7 +127,7 @@ if (count($nb_lines_for_user) > 0) {
     WHERE '.\Piwigo\Config\Config::userFields()['id'].' IN ('.implode(',', array_keys($nb_lines_for_user)).');';
 }
 
-$username_of = \Piwigo\Db\QueryHelper::fetch($query, 'id', 'username');
+$username_of = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'username', 'id');
 
 $filterable_users = [];
 
@@ -177,7 +177,7 @@ SELECT
   FROM '.$filter_table.'
   WHERE id = '.$filterId.'
 ;';
-        $rows = \Piwigo\Db\QueryHelper::fetch($query);
+        $rows = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
 
         if (count($rows) == 0) {
             fatal_error($filter_key.' #'.$filterId.' does not exist');
@@ -218,9 +218,9 @@ $query .= '
   ;';
 
 
-$actions = \Piwigo\Db\QueryHelper::fetch($query);
+$actions = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
 foreach ($actions as &$action) {
-    $action['value'] = $action['object'].'/'.$action['action'];
+    $action['value'] = (is_scalar($action['object']) ? (string) $action['object'] : '').'/'.(is_scalar($action['action']) ? (string) $action['action'] : '');
 }
 
 $template->assign('ACTIONS', $actions);

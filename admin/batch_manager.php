@@ -331,7 +331,7 @@ SELECT element_id
   FROM '.CADDIE_TABLE.'
   WHERE user_id = '.$user['id'].'
 ;';
-            $filter_sets[] = \Piwigo\Db\QueryHelper::fetch($query, null, 'element_id');
+            $filter_sets[] = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'element_id');
 
             break;
 
@@ -341,7 +341,7 @@ SELECT image_id
   FROM '.FAVORITES_TABLE.'
   WHERE user_id = '.$user['id'].'
 ;';
-            $filter_sets[] = \Piwigo\Db\QueryHelper::fetch($query, null, 'image_id');
+            $filter_sets[] = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'image_id');
 
             break;
 
@@ -355,7 +355,7 @@ SELECT id
   FROM '.IMAGES_TABLE.'
   WHERE date_available BETWEEN '.\Piwigo\Db\SqlExpr::recentPeriodExpr(1, $last_import_date).' AND \''.$last_import_date.'\'
 ;';
-                $filter_sets[] = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
+                $filter_sets[] = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id');
             }
 
             break;
@@ -366,7 +366,7 @@ SELECT id
  SELECT id
    FROM '.IMAGES_TABLE.'
  ;';
-            $all_elements = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
+            $all_elements = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id');
 
             $linked_to_virtual = [];
 
@@ -375,17 +375,20 @@ SELECT id
    FROM '.CATEGORIES_TABLE.'
    WHERE dir IS NULL
  ;';
-            $virtual_categories = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
+            $virtual_categories = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id');
             if (!empty($virtual_categories)) {
                 $query = '
  SELECT DISTINCT(image_id)
    FROM '.IMAGE_CATEGORY_TABLE.'
-   WHERE category_id IN ('.implode(',', $virtual_categories).')
+   WHERE category_id IN ('.implode(',', array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $virtual_categories)).')
  ;';
-                $linked_to_virtual = \Piwigo\Db\QueryHelper::fetch($query, null, 'image_id');
+                $linked_to_virtual = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'image_id');
             }
 
-            $filter_sets[] = array_diff($all_elements, $linked_to_virtual);
+            $filter_sets[] = array_diff(
+                array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $all_elements),
+                array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $linked_to_virtual)
+            );
 
             break;
 
@@ -404,7 +407,7 @@ SELECT
     LEFT JOIN '.IMAGE_TAG_TABLE.' ON id = image_id
   WHERE tag_id is null
 ;';
-            $filter_sets[] = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
+            $filter_sets[] = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id');
 
             break;
 
@@ -449,12 +452,12 @@ SELECT
   GROUP BY '.implode(',', $duplicates_on_fields).'
   HAVING COUNT(*) > 1
 ;';
-            $array_of_ids_string = \Piwigo\Db\QueryHelper::fetch($query, null, 'ids');
+            $array_of_ids_string = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'ids');
 
             $ids = [];
 
             foreach ($array_of_ids_string as $ids_string) {
-                $ids_string = rtrim((string) $ids_string, ',');
+                $ids_string = rtrim(is_scalar($ids_string) ? (string) $ids_string : '', ',');
                 $ids = array_merge($ids, explode(',', $ids_string));
             }
 
@@ -469,7 +472,7 @@ SELECT id
   FROM '.IMAGES_TABLE.'
   '.\Piwigo\Config\Config::orderBy();
 
-                $filter_sets[] = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
+                $filter_sets[] = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id');
             }
             break;
 
@@ -500,7 +503,7 @@ if (isset($bmf['category'])) {
    FROM '.IMAGE_CATEGORY_TABLE.'
    WHERE category_id IN ('.implode(',', $categories).')
  ;';
-    $filter_sets[] = \Piwigo\Db\QueryHelper::fetch($query, null, 'image_id');
+    $filter_sets[] = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'image_id');
 }
 
 if (isset($bmf['level'])) {
@@ -516,7 +519,7 @@ SELECT id
   WHERE level '.$operator.' '.$bmf_level.'
   '.\Piwigo\Config\Config::orderBy();
 
-    $filter_sets[] = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
+    $filter_sets[] = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id');
 }
 
 if (!empty($bmf['tags'])) {
@@ -562,7 +565,7 @@ SELECT id
   WHERE '.implode(' AND ', $where_clause).'
   '.\Piwigo\Config\Config::orderBy();
 
-    $filter_sets[] = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
+    $filter_sets[] = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id');
 }
 
 if (isset($bmf['filesize'])) {
@@ -587,7 +590,7 @@ SELECT id
   WHERE '.implode(' AND ', $where_clause).'
   '.\Piwigo\Config\Config::orderBy();
 
-    $filter_sets[] = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
+    $filter_sets[] = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id');
 }
 
 if (isset($bmf['search'])) {

@@ -474,12 +474,12 @@ SELECT
   FROM '.USER_INFOS_TABLE.'
   WHERE status IN (\'webmaster\', \'admin\')
 ;';
-        $protected_users = array_merge($protected_users, \Piwigo\Db\QueryHelper::fetch($query, null, 'user_id'));
+        $protected_users = array_merge($protected_users, array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'user_id'));
     }
 
     // protect some users
     $user_id_arr = is_array($params['user_id']) ? array_map(fn ($v) => is_numeric($v) ? (int) $v : 0, $params['user_id']) : [];
-    $user_id_arr = array_diff($user_id_arr, $protected_users);
+    $user_id_arr = array_diff($user_id_arr, array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $protected_users));
 
     $counter = 0;
 

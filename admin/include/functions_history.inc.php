@@ -75,7 +75,7 @@ SELECT
   FROM '.IMAGES_TABLE.'
   WHERE file LIKE '.get_dbal_connection()->quote(is_scalar($fields['filename']) ? (string)$fields['filename'] : '').'
 ;';
-        $search['image_ids'] = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
+        $search['image_ids'] = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id');
     }
 
     // echo '<pre>'; print_r($search); echo '</pre>';
@@ -185,7 +185,7 @@ SELECT
   ORDER BY history_id_to DESC
   LIMIT 1
 ;';
-    $summary_lines = \Piwigo\Db\QueryHelper::fetch($query);
+    $summary_lines = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
 
     $history_min_id = 0;
     if (count($summary_lines) > 0) {
@@ -200,9 +200,9 @@ SELECT
     MIN(id) AS min_id
   FROM '.HISTORY_TABLE.'
 ;';
-        $history_lines = \Piwigo\Db\QueryHelper::fetch($query);
+        $history_lines = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
         if (count($history_lines) > 0) {
-            $history_min_id = (int) $history_lines[0]['min_id'] - 1;
+            $history_min_id = (is_numeric($history_lines[0]['min_id']) ? (int) $history_lines[0]['min_id'] : 0) - 1;
         }
     }
 
@@ -395,12 +395,12 @@ SELECT
   ORDER BY history_id_to DESC
   LIMIT 1
 ;';
-    $summary_lines = \Piwigo\Db\QueryHelper::fetch($query);
+    $summary_lines = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
     if (count($summary_lines) == 0) {
         return; // lines not summarized, no purge
     }
 
-    $history_id_last_summarized = (int) $summary_lines[0]['history_id_to'];
+    $history_id_last_summarized = is_numeric($summary_lines[0]['history_id_to']) ? (int) $summary_lines[0]['history_id_to'] : 0;
 
     // 2) find the latest history line (and substract the number of lines to keep)
     $query = '
@@ -410,12 +410,12 @@ SELECT
   ORDER BY id DESC
   LIMIT 1
 ;';
-    $history_lines = \Piwigo\Db\QueryHelper::fetch($query);
+    $history_lines = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
     if (count($history_lines) == 0) {
         return;
     }
 
-    $history_id_latest = (int) $history_lines[0]['id'];
+    $history_id_latest = is_numeric($history_lines[0]['id']) ? (int) $history_lines[0]['id'] : 0;
 
     // 3) find the oldest history line (and add the number of lines to delete)
     $query = '
@@ -425,8 +425,8 @@ SELECT
   ORDER BY id ASC
   LIMIT 1
 ;';
-    $history_lines = \Piwigo\Db\QueryHelper::fetch($query);
-    $history_id_oldest = (int) $history_lines[0]['id'];
+    $history_lines = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
+    $history_id_oldest = is_numeric($history_lines[0]['id']) ? (int) $history_lines[0]['id'] : 0;
 
     $search_min = [
       $history_id_last_summarized,

@@ -119,7 +119,7 @@ SELECT c.site_id, COUNT(DISTINCT c.id) AS nb_categories, COUNT(i.id) AS nb_image
   WHERE c.site_id IS NOT NULL
   GROUP BY c.site_id
 ;';
-$sites_detail = \Piwigo\Db\QueryHelper::fetch($query, 'site_id');
+$sites_detail = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), null, 'site_id');
 
 foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Site\SiteRepository::class)->findAll() as $row) {
     $row_id_str = is_scalar($row['id']) ? (string) $row['id'] : '';
@@ -139,8 +139,8 @@ foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Site\SiteRepository::class)->f
       [
         'NAME' => $row['galleries_url'],
         'TYPE' => l10n($is_remote ? 'Remote' : 'Local'),
-        'CATEGORIES' => (int) ($sites_detail[(string) $site_id]['nb_categories'] ?? 0),
-        'IMAGES' => (int) ($sites_detail[(string) $site_id]['nb_images'] ?? 0),
+        'CATEGORIES' => is_numeric($sites_detail[(string) $site_id]['nb_categories'] ?? null) ? (int) $sites_detail[(string) $site_id]['nb_categories'] : 0,
+        'IMAGES' => is_numeric($sites_detail[(string) $site_id]['nb_images'] ?? null) ? (int) $sites_detail[(string) $site_id]['nb_images'] : 0,
         'U_SYNCHRONIZE' => $update_url,
        ];
 

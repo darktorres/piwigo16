@@ -58,7 +58,7 @@ SELECT
   OFFSET '. ($per_page * $page) .'
 ;';
 
-    $groups = \Piwigo\Db\QueryHelper::fetch($query);
+    $groups = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
 
     return [
       'paging' => new PwgNamedStruct([
@@ -274,7 +274,7 @@ SELECT DISTINCT(user_id)
   WHERE
     group_id IN ('.implode(',', $merge_group) .')
 ;';
-    $user_in_merge_groups = \Piwigo\Db\QueryHelper::fetch($query, null, 'user_id');
+    $user_in_merge_groups = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'user_id');
 
     $query = '
 SELECT user_id
@@ -282,9 +282,12 @@ SELECT user_id
   WHERE group_id = '.$dest_group_id.'
 ;';
 
-    $user_in_dest = \Piwigo\Db\QueryHelper::fetch($query, null, 'user_id');
+    $user_in_dest = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'user_id');
 
-    $user_to_add = array_diff($user_in_merge_groups, $user_in_dest);
+    $user_to_add = array_diff(
+        array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $user_in_merge_groups),
+        array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $user_in_dest)
+    );
 
     $inserts = [];
     foreach ($user_to_add as $user) {
@@ -306,7 +309,7 @@ SELECT user_id
 
     pwg_activity('group', $dest_group_id, 'edit');
     foreach ($user_to_add as $user_id) {
-        $user_id_int = is_numeric($user_id) ? (int) $user_id : (is_scalar($user_id) ? (string) $user_id : 0);
+        $user_id_int = is_numeric($user_id) ? (int) $user_id : (string) $user_id;
         pwg_activity('user', $user_id_int, 'edit', ['associated' => $dest_group_id]);
     }
 
@@ -365,7 +368,7 @@ function ws_groups_duplicate(array $params, \Piwigo\Ws\PwgServer &$service): mix
     WHERE group_id = '.$dup_group_id.'
   ;';
 
-    $users = \Piwigo\Db\QueryHelper::fetch($query, null, 'user_id');
+    $users = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'user_id');
 
     $inserts = [];
     foreach ($users as $user) {

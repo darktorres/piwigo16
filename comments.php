@@ -400,13 +400,13 @@ SELECT *
   FROM '.IMAGES_TABLE.'
   WHERE id IN ('.implode(',', array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '', $element_ids)).')
 ;';
-    $elements = \Piwigo\Db\QueryHelper::fetch($query, 'id');
+    $elements = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), null, 'id');
 
     // retrieving category informations
     $query = 'SELECT id, name, permalink, uppercats
   FROM '.CATEGORIES_TABLE.'
   WHERE id IN ('.implode(',', array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '', $category_ids)).')';
-    $categories = \Piwigo\Db\QueryHelper::fetch($query, 'id');
+    $categories = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), null, 'id');
 
     foreach ($comments as $comment) {
         /** @var array<string, float|int|string|null> $comment */

@@ -79,7 +79,7 @@ SELECT image_id, COUNT(*) AS nb_comments
     AND image_id IN ('.implode(',', array_map(strval(...), $selection)).')
   GROUP BY image_id
 ;';
-        $nb_comments_of = \Piwigo\Db\QueryHelper::fetch($query, 'image_id', 'nb_comments');
+        $nb_comments_of = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'nb_comments', 'image_id');
     }
 }
 

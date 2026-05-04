@@ -66,7 +66,7 @@ SELECT group_id
   FROM '.GROUP_ACCESS_TABLE.'
   WHERE cat_id = '.$pageCat.'
 ;';
-        $groups_granted = \Piwigo\Db\QueryHelper::fetch($query, null, 'group_id');
+        $groups_granted = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'group_id');
 
         if (!isset($_POST['groups'])) {
             $_POST['groups'] = [];
@@ -106,7 +106,7 @@ SELECT id
   WHERE id IN ('.implode(',', array_map(fn ($v) => (string) $v, $cat_ids)).')
     AND status = \'private\'
 ;';
-            $private_cats = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
+            $private_cats = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id');
 
             $inserts = [];
             foreach ($private_cats as $cat_id) {
@@ -134,7 +134,7 @@ SELECT user_id
   FROM '.USER_ACCESS_TABLE.'
   WHERE cat_id = '.$pageCat.'
 ;';
-        $users_granted = \Piwigo\Db\QueryHelper::fetch($query, null, 'user_id');
+        $users_granted = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'user_id');
 
         if (!isset($_POST['users'])) {
             $_POST['users'] = [];
@@ -208,7 +208,7 @@ SELECT id, name
   FROM `'.GROUPS_TABLE.'`
   ORDER BY name ASC
 ;';
-$groups = \Piwigo\Db\QueryHelper::fetch($query, 'id', 'name');
+$groups = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'name', 'id');
 $template->assign('groups', $groups);
 
 // groups granted to access the category
@@ -217,7 +217,7 @@ SELECT group_id
   FROM '.GROUP_ACCESS_TABLE.'
   WHERE cat_id = '.$pageCat.'
 ;';
-$group_granted_ids = \Piwigo\Db\QueryHelper::fetch($query, null, 'group_id');
+$group_granted_ids = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'group_id');
 $template->assign('groups_selected', $group_granted_ids);
 
 // users...
@@ -228,7 +228,7 @@ SELECT '.\Piwigo\Config\Config::userFields()['id'].' AS id,
        '.\Piwigo\Config\Config::userFields()['username'].' AS username
   FROM '.USERS_TABLE.'
 ;';
-$users = \Piwigo\Db\QueryHelper::fetch($query, 'id', 'username');
+$users = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'username', 'id');
 $template->assign('users', $users);
 
 
@@ -237,7 +237,7 @@ SELECT user_id
   FROM '.USER_ACCESS_TABLE.'
   WHERE cat_id = '.$pageCat.'
 ;';
-$user_granted_direct_ids = \Piwigo\Db\QueryHelper::fetch($query, null, 'user_id');
+$user_granted_direct_ids = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'user_id');
 $template->assign('users_selected', $user_granted_direct_ids);
 
 
@@ -246,7 +246,7 @@ if (count($group_granted_ids) > 0) {
     $granted_groups = [];
 
     foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Group\GroupRepository::class)
-        ->findUserGroupMembersByGroupIds(array_map('intval', $group_granted_ids)) as $row) {
+        ->findUserGroupMembersByGroupIds(array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $group_granted_ids)) as $row) {
         $row_group_id = is_scalar($row['group_id']) ? (string) $row['group_id'] : '';
         if (!isset($granted_groups[$row_group_id])) {
             $granted_groups[$row_group_id] = [];
@@ -274,14 +274,14 @@ if (count($group_granted_ids) > 0) {
         foreach ($group_users as $user_id) {
             if (in_array($user_id, $user_granted_indirect_ids)) {
                 $user_key = $user_id;
-                $group_usernames[] = isset($users[$user_key]) ? (string) $users[$user_key] : '';
+                $group_usernames[] = isset($users[$user_key]) ? (is_scalar($users[$user_key]) ? (string) $users[$user_key] : '') : '';
             }
         }
 
         $template->append(
             'user_granted_indirect_groups',
             [
-            'group_name' => isset($groups[$group_id]) ? (string) $groups[$group_id] : '',
+            'group_name' => isset($groups[$group_id]) ? (is_scalar($groups[$group_id]) ? (string) $groups[$group_id] : '') : '',
             'group_users' => implode(', ', $group_usernames),
             ]
         );

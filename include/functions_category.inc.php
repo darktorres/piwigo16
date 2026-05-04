@@ -200,7 +200,7 @@ function get_cat_info(int|string $id): ?array
     FROM '.CATEGORIES_TABLE.'
     WHERE id IN ('.(is_scalar($cat['uppercats']) ? (string) $cat['uppercats'] : '').')
   ;';
-        $names = \Piwigo\Db\QueryHelper::fetch($query, 'id');
+        $names = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), null, 'id');
 
         // category names must be in the same order than uppercats list
         $cat['upper_names'] = [];
@@ -245,7 +245,7 @@ function get_category_preferred_image_orders(): array
 /**
  * Assign a template var useable with {html_options} from a list of categories
  *
- * @param list<array<string, float|int|string|null>> $categories
+ * @param list<array<string, mixed>> $categories
  * @param int[]|string $selecteds
  * @param string $blockname variable name in template
  * @param bool $fullname full breadcrumb or not
@@ -263,7 +263,7 @@ function display_select_categories(
         if ($fullname) {
             $option = strip_tags(
                 get_cat_display_name_cache(
-                    (string) $category['uppercats'],
+                    is_scalar($category['uppercats']) ? (string) $category['uppercats'] : '',
                     null
                 )
             );
@@ -281,7 +281,7 @@ function display_select_categories(
                 )
             );
         }
-        $tpl_cats[ (string) $category['id'] ] = $option;
+        $tpl_cats[ is_scalar($category['id']) ? (string) $category['id'] : '' ] = $option;
     }
 
     $template->assign($blockname, $tpl_cats);
@@ -299,7 +299,7 @@ function display_select_cat_wrapper(
     string $blockname,
     bool|string $fullname = true
 ): void {
-    $categories = \Piwigo\Db\QueryHelper::fetch($query);
+    $categories = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
     usort($categories, global_rank_compare(...));
     display_select_categories($categories, $selecteds, $blockname, $fullname);
 }
@@ -333,7 +333,7 @@ SELECT DISTINCT(id)
     }
     $query .= '
 ;';
-    return array_map(fn ($v) => (int) $v, \Piwigo\Db\QueryHelper::fetch($query, null, 'id'));
+    return array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id'));
 }
 
 /**
@@ -361,7 +361,7 @@ SELECT id, permalink, 0 AS is_old
   FROM '.CATEGORIES_TABLE.'
   WHERE permalink IN ('.$in.')
 ;';
-    $perma_hash = \Piwigo\Db\QueryHelper::fetch($query, 'permalink');
+    $perma_hash = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), null, 'permalink');
 
     if (empty($perma_hash)) {
         return null;
@@ -369,7 +369,7 @@ SELECT id, permalink, 0 AS is_old
     for ($i = count($permalinks) - 1; $i >= 0; $i--) {
         if (isset($perma_hash[ $permalinks[$i] ])) {
             $idx = $i;
-            $cat_id = (int) $perma_hash[ $permalinks[$i] ]['id'];
+            $cat_id = is_numeric($perma_hash[ $permalinks[$i] ]['id']) ? (int) $perma_hash[ $permalinks[$i] ]['id'] : 0;
             if ($perma_hash[ $permalinks[$i] ]['is_old']) {
                 \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
                     ->updatePermalinkHit($cat_id, $permalinks[$i]);
@@ -644,7 +644,7 @@ SELECT id
     }
     $query .= "\n".(empty($order_by) ? \Piwigo\Config\Config::orderBy() : $order_by);
 
-    return array_map(fn ($v) => (int) $v, \Piwigo\Db\QueryHelper::fetch($query, null, 'id'));
+    return array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id'));
 }
 
 /**
@@ -747,13 +747,13 @@ SELECT
   FROM '.CATEGORIES_TABLE.'
   WHERE id IN ('.implode(',', array_keys($cat_ids)).')
 ;';
-    $cats = \Piwigo\Db\QueryHelper::fetch($query);
+    $cats = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
     usort($cats, global_rank_compare(...));
 
     $index_of_cat = [];
 
     foreach ($cats as $idx => $cat) {
-        $cat_id_key = (string) $cat['id'];
+        $cat_id_key = is_scalar($cat['id']) ? (string) $cat['id'] : '';
         $index_of_cat[$cat_id_key] = $idx;
         $cats[$idx]['LEVEL'] = substr_count(is_scalar($cat['global_rank']) ? (string) $cat['global_rank'] : '', '.') + 1;
         $cats[$idx]['name'] = trigger_change('render_category_name', is_scalar($cat['name']) ? (string) $cat['name'] : '', $cat);
@@ -785,7 +785,7 @@ SELECT
         //
         // Option 3 seems more appropriate here.
         if (!empty($cat['id_uppercat']) and ($cats[$idx]['count_images'] ?? 0) > 0) {
-            foreach (array_slice(explode(',', (string) $cat['uppercats']), 0, -1) as $uppercat_id) {
+            foreach (array_slice(explode(',', is_scalar($cat['uppercats']) ? (string) $cat['uppercats'] : ''), 0, -1) as $uppercat_id) {
                 $upper_idx = $index_of_cat[$uppercat_id] ?? null;
                 if ($upper_idx !== null) {
                     $cats[$upper_idx]['count_categories'] = (is_numeric($cats[$upper_idx]['count_categories'] ?? null) ? (int) $cats[$upper_idx]['count_categories'] : 0) + 1;

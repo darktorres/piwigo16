@@ -86,9 +86,9 @@ SELECT id
   FROM '.CATEGORIES_TABLE.'
   WHERE id IN ('.implode(',', $cat_ids).')
 ;';
-    $db_cat_ids = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
+    $db_cat_ids = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id');
 
-    $unknown_cat_ids = array_diff($cat_ids, $db_cat_ids);
+    $unknown_cat_ids = array_diff($cat_ids, array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $db_cat_ids));
     if (count($unknown_cat_ids) != 0) {
         return new PwgError(
             500,
@@ -104,14 +104,14 @@ SELECT category_id
   FROM '.IMAGE_CATEGORY_TABLE.'
   WHERE image_id = '.$image_id.'
 ;';
-    $existing_cat_ids = \Piwigo\Db\QueryHelper::fetch($query, null, 'category_id');
+    $existing_cat_ids = array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'category_id'));
 
     if ($replace_mode) {
         $to_remove_cat_ids = array_diff($existing_cat_ids, $cat_ids);
         if (count($to_remove_cat_ids) > 0) {
             \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
-                ->removeImageFromCategories((int) $image_id, array_map('intval', $to_remove_cat_ids));
-            update_category(array_map(fn ($v) => (int) $v, $to_remove_cat_ids));
+                ->removeImageFromCategories((int) $image_id, array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $to_remove_cat_ids));
+            update_category(array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $to_remove_cat_ids));
         }
     }
 
@@ -128,11 +128,7 @@ SELECT category_id, MAX(`rank`) AS max_rank
     AND category_id IN ('.implode(',', $new_cat_ids).')
   GROUP BY category_id
 ;';
-        $current_rank_of = \Piwigo\Db\QueryHelper::fetch(
-            $query,
-            'category_id',
-            'max_rank'
-        );
+        $current_rank_of = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'max_rank', 'category_id');
 
         foreach ($new_cat_ids as $cat_id) {
             if (!isset($current_rank_of[$cat_id])) {
@@ -140,7 +136,7 @@ SELECT category_id, MAX(`rank`) AS max_rank
             }
 
             if ('auto' == $rank_on_category[$cat_id]) {
-                $rank_on_category[$cat_id] = (int) $current_rank_of[$cat_id] + 1;
+                $rank_on_category[$cat_id] = (is_numeric($current_rank_of[$cat_id]) ? (int) $current_rank_of[$cat_id] : 0) + 1;
             }
         }
     }
@@ -475,8 +471,8 @@ SELECT COUNT(id) AS nb_comments
   FROM '. COMMENTS_TABLE .'
   WHERE '. $where_comments .'
 ;';
-    [$nb_comments] = \Piwigo\Db\QueryHelper::fetch($query, null, 'nb_comments');
-    $nb_comments = (int)$nb_comments;
+    [$nb_comments] = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'nb_comments');
+    $nb_comments = is_numeric($nb_comments) ? (int)$nb_comments : 0;
 
     $p_comments_per_page = is_numeric($params['comments_per_page']) ? (int) $params['comments_per_page'] : 0;
     $p_comments_page = is_numeric($params['comments_page']) ? (int) $params['comments_page'] : 0;
@@ -1046,7 +1042,7 @@ SELECT
   WHERE category_id = '.$p_category_id.'
   ORDER BY `rank` ASC
 ;';
-        $image_ids = \Piwigo\Db\QueryHelper::fetch($query, null, 'image_id');
+        $image_ids = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'image_id');
 
         // return data for client
         return [
@@ -1645,13 +1641,13 @@ SELECT *
   FROM '.IMAGES_TABLE.'
   WHERE id = '. $format_of_id .'
 ;';
-            $images = \Piwigo\Db\QueryHelper::fetch($query);
+            $images = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
             if (count($images) == 0) {
                 return new PwgError(404, __FUNCTION__.' : image_id not found');
             }
 
             $image = $images[0];
-            $image_id_str = isset($image['id']) ? (string) $image['id'] : '';
+            $image_id_str = isset($image['id']) ? (is_scalar($image['id']) ? (string) $image['id'] : '') : '';
 
             $add_status = add_format($filePath, $format_ext ?? '', $image_id_str);
 
@@ -1680,7 +1676,7 @@ SELECT
   WHERE i.file = '.get_dbal_connection()->quote($name).'
   AND ic.category_id = '.$p_category_first.'
 ;';
-            $images = \Piwigo\Db\QueryHelper::fetch($query);
+            $images = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
             if ($images != null) {
                 $img0 = $images[0];
                 $id_image = isset($img0['id']) && is_numeric($img0['id']) ? (int) $img0['id'] : null;
@@ -2033,7 +2029,7 @@ SELECT id, md5sum
   FROM '. IMAGES_TABLE .'
   WHERE md5sum IN (\''. implode("','", $md5sums) .'\')
 ;';
-        $id_of_md5 = \Piwigo\Db\QueryHelper::fetch($query, 'md5sum', 'id');
+        $id_of_md5 = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id', 'md5sum');
 
         foreach ($md5sums as $md5sum) {
             $result[$md5sum] = null;
@@ -2056,7 +2052,7 @@ SELECT id, file
   FROM '.IMAGES_TABLE.'
   WHERE file IN (\''. implode("','", $filenames) .'\')
 ;';
-        $id_of_filename = \Piwigo\Db\QueryHelper::fetch($query, 'file', 'id');
+        $id_of_filename = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id', 'file');
 
         foreach ($filenames as $filename) {
             $result[$filename] = null;
@@ -2690,7 +2686,7 @@ SELECT id
   FROM '.IMAGES_TABLE.'
   WHERE id IN ('.implode(', ', $image_ids).')
 ;';
-    $image_ids = array_map(static fn ($id) => (int)$id, \Piwigo\Db\QueryHelper::fetch($query, null, 'id'));
+    $image_ids = array_map(static fn (mixed $id): int => is_numeric($id) ? (int)$id : 0, array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id'));
 
     if (empty($image_ids)) {
         return new PwgError(403, 'No image found');
@@ -2764,7 +2760,7 @@ SELECT
   FROM '.CATEGORIES_TABLE.'
   WHERE id = '.$sc_category_id.'
 ;';
-    $categories = \Piwigo\Db\QueryHelper::fetch($query);
+    $categories = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
 
     if (count($categories) == 0) {
         return new PwgError(404, 'category_id not found');

@@ -163,11 +163,11 @@ SELECT
   FROM '. IMAGES_TABLE .'
   WHERE md5sum = \''.$md5sum.'\'
 ;';
-        $images_found = \Piwigo\Db\QueryHelper::fetch($query);
+        $images_found = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
 
         if (count($images_found) > 0) {
             // SQL fetches return strings in PHP; cast for the int-typed callees below.
-            $image_id = (int) $images_found[0]['id'];
+            $image_id = is_numeric($images_found[0]['id']) ? (int) $images_found[0]['id'] : 0;
             $logger->info('['.__FUNCTION__.'] image already exist #'.$image_id.', we delete the newly uploaded file : '.$source_filepath);
             unlink($source_filepath);
 
@@ -447,14 +447,14 @@ SELECT
   FROM '.IMAGES_TABLE.'
   WHERE id = '.$format_of.'
 ;';
-    $images = \Piwigo\Db\QueryHelper::fetch($query);
+    $images = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
 
     if (!isset($images[0])) {
         throw new \Piwigo\Exception\NotFoundException('['.__FUNCTION__.'] this photo does not exist in the database');
     }
 
-    $format_path = dirname((string) $images[0]['path']).'/pwg_format/';
-    $format_path .= get_filename_wo_extension(basename((string) $images[0]['path']));
+    $format_path = dirname(is_scalar($images[0]['path']) ? (string) $images[0]['path'] : '').'/pwg_format/';
+    $format_path .= get_filename_wo_extension(basename(is_scalar($images[0]['path']) ? (string) $images[0]['path'] : ''));
     $format_path .= '.'.$format_ext;
 
     prepare_directory(dirname($format_path));
@@ -489,7 +489,7 @@ SELECT
   AND ext = "'.$format_ext.'"
 ;';
 
-    $formats = \Piwigo\Db\QueryHelper::fetch($query);
+    $formats = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
     if ($formats) {
         $set_fields = [
           'filesize' => $file_infos['filesize'],

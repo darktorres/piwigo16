@@ -32,7 +32,7 @@ SELECT *
   FROM '.IMAGES_TABLE.'
   WHERE id = '.$picFmtId.'
 ;';
-$images = \Piwigo\Db\QueryHelper::fetch($query);
+$images = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
 $image = $images[0];
 
 $query = '
@@ -42,14 +42,14 @@ SELECT
   WHERE image_id = '.$picFmtId.'
 ;';
 
-$formats = \Piwigo\Db\QueryHelper::fetch($query);
+$formats = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
 
 foreach ($formats as &$format) {
-    $format['download_url'] = 'action.php?format='.$format['format_id'].'&amp;download';
+    $format['download_url'] = 'action.php?format='.(is_scalar($format['format_id']) ? (string) $format['format_id'] : '').'&amp;download';
 
 
-    $format['label'] = strtoupper((string) $format['ext']);
-    $lang_key = 'format '.strtoupper((string) $format['ext']);
+    $format['label'] = strtoupper(is_scalar($format['ext']) ? (string) $format['ext'] : '');
+    $lang_key = 'format '.strtoupper(is_scalar($format['ext']) ? (string) $format['ext'] : '');
     if (isset($lang[$lang_key])) {
         $format['label'] = $lang[$lang_key];
     }

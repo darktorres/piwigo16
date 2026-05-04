@@ -199,8 +199,8 @@ $template->assign(
 
 $has_remote_site = false;
 
-foreach (\Piwigo\Db\QueryHelper::fetch('SELECT galleries_url FROM ' . SITES_TABLE) as $row) {
-    if (url_is_remote((string) $row['galleries_url'])) {
+foreach (get_dbal_connection()->executeQuery('SELECT galleries_url FROM ' . SITES_TABLE)->fetchAllAssociative() as $row) {
+    if (url_is_remote(is_scalar($row['galleries_url']) ? (string) $row['galleries_url'] : '')) {
         $has_remote_site = true;
     }
 }
@@ -234,7 +234,7 @@ $columns_of = get_columns_of($tables);
 // applied_upgrade id 181 marks the 15.0.0 boundary; any DB that does not
 // have it cannot safely run this upgrade path.
 $applied_upgrades = in_array(PREFIX_TABLE.'upgrade', $tables, true)
-    ? \Piwigo\Db\QueryHelper::fetch('SELECT id FROM '.PREFIX_TABLE.'upgrade', null, 'id')
+    ? array_column(get_dbal_connection()->executeQuery('SELECT id FROM '.PREFIX_TABLE.'upgrade')->fetchAllAssociative(), 'id')
     : [];
 
 if (!in_array('181', $applied_upgrades, true)) {

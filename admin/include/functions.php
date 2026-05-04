@@ -331,11 +331,11 @@ SELECT DISTINCT c.id
     AND '.sprintf($where_cats, 'c.id').'
     AND i.id IS NULL
 ;';
-    $wrong_representant = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
+    $wrong_representant = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id');
 
     if (count($wrong_representant) > 0) {
         \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
-            ->clearRepresentatives(array_map('intval', $wrong_representant));
+            ->clearRepresentatives(array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $wrong_representant));
     }
 
     if (!\Piwigo\Config\Config::allowRandomRepresentative()) {
@@ -350,7 +350,7 @@ SELECT DISTINCT id
   WHERE representative_picture_id IS NULL
     AND '.sprintf($where_cats, 'category_id').'
 ;';
-        $to_rand = array_map('intval', \Piwigo\Db\QueryHelper::fetch($query, null, 'id'));
+        $to_rand = array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id'));
         if (count($to_rand) > 0) {
             set_random_representant($to_rand);
         }
@@ -395,7 +395,7 @@ SELECT
     LEFT JOIN '.CATEGORIES_TABLE.' ON id = '.$column.'
   WHERE id IS NULL
 ;';
-        $orphans = array_unique(\Piwigo\Db\QueryHelper::fetch($query, null, $column));
+        $orphans = array_unique(array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), $column)));
 
         if (count($orphans) > 0) {
             \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)->executeStatement(
@@ -705,7 +705,7 @@ SELECT '.$field.'
   FROM '.$table.'
   WHERE cat_id = '.$ref_cat_id.'
 ;';
-                $ref_access = \Piwigo\Db\QueryHelper::fetch($query, null, $field);
+                $ref_access = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), $field);
 
                 if (count($ref_access) == 0) {
                     $ref_access[] = -1;
@@ -714,7 +714,7 @@ SELECT '.$field.'
                 // step 3, remove the inconsistant permissions from sub-albums
                 \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)->executeStatement(
                     'DELETE FROM ' . $table . ' WHERE ' . $field .
-                    ' NOT IN (' . implode(',', $ref_access) . ')' .
+                    ' NOT IN (' . implode(',', array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $ref_access)) . ')' .
                     ' AND cat_id IN (' . implode(',', $subcats) . ')'
                 );
             }
@@ -828,14 +828,14 @@ SELECT id, dir
   FROM '.CATEGORIES_TABLE.'
   WHERE dir IS NOT NULL
 ;';
-    $cat_dirs = \Piwigo\Db\QueryHelper::fetch($query, 'id', 'dir');
+    $cat_dirs = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'dir', 'id');
 
     // caching galleries_url
     $query = '
 SELECT id, galleries_url
   FROM '.SITES_TABLE.'
 ;';
-    $galleries_url = \Piwigo\Db\QueryHelper::fetch($query, 'id', 'galleries_url');
+    $galleries_url = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'galleries_url', 'id');
 
     // categories : id, site_id, uppercats
     $query = '
@@ -845,7 +845,7 @@ SELECT id, uppercats, site_id
     AND id IN (
 '.wordwrap(implode(', ', $cat_ids), 80, "\n").')
 ;';
-    $categories = \Piwigo\Db\QueryHelper::fetch($query);
+    $categories = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
 
     // filling $cat_fulldirs
     $cat_dirs_callback = (fn (array $m): string => is_scalar($cat_dirs[$m[1]] ?? null) ? (string) $cat_dirs[$m[1]] : '');
@@ -960,13 +960,13 @@ function sync_users(): void
 SELECT '.\Piwigo\Config\Config::userFields()['id'].' AS id
   FROM '.USERS_TABLE.'
 ;';
-    $base_users = array_map('intval', \Piwigo\Db\QueryHelper::fetch($query, null, 'id'));
+    $base_users = array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id'));
 
     $query = '
 SELECT user_id
   FROM '.USER_INFOS_TABLE.'
 ;';
-    $infos_users = array_map('intval', \Piwigo\Db\QueryHelper::fetch($query, null, 'user_id'));
+    $infos_users = array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'user_id'));
 
     // users present in $base_users and not in $infos_users must be added
     $to_create = array_diff($base_users, $infos_users);
@@ -993,13 +993,13 @@ SELECT DISTINCT user_id
   FROM '.$table.'
 ;';
         $to_delete = array_diff(
-            \Piwigo\Db\QueryHelper::fetch($query, null, 'user_id'),
+            array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'user_id')),
             $base_users
         );
 
         if (count($to_delete) > 0) {
             \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
-                ->deleteOrphanedFromTable($table, array_map('intval', $to_delete));
+                ->deleteOrphanedFromTable($table, array_values($to_delete));
         }
     }
 }
@@ -1013,7 +1013,7 @@ function update_uppercats(): void
 SELECT id, id_uppercat, uppercats
   FROM '.CATEGORIES_TABLE.'
 ;';
-    $cat_map = \Piwigo\Db\QueryHelper::fetch($query, 'id');
+    $cat_map = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), null, 'id');
 
     $datas = [];
     foreach ($cat_map as $id => $cat) {
@@ -1048,7 +1048,7 @@ SELECT DISTINCT(storage_category_id)
   FROM '.IMAGES_TABLE.'
   WHERE storage_category_id IS NOT NULL
 ;';
-    $cat_ids_raw = \Piwigo\Db\QueryHelper::fetch($query, null, 'storage_category_id');
+    $cat_ids_raw = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'storage_category_id');
     $cat_ids = array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $cat_ids_raw);
     $fulldirs = get_fulldirs($cat_ids);
 
@@ -1257,7 +1257,7 @@ function create_virtual_category(string $category_name, int|string|null $parent_
       FROM '.GROUP_ACCESS_TABLE.'
       WHERE cat_id = '.$id_uppercat_str.'
     ;';
-        $granted_grps =  \Piwigo\Db\QueryHelper::fetch($query, null, 'group_id');
+        $granted_grps =  array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'group_id');
         $inserts = [];
         foreach ($granted_grps as $granted_grp) {
             $inserts[] = [
@@ -1272,7 +1272,7 @@ function create_virtual_category(string $category_name, int|string|null $parent_
       FROM '.USER_ACCESS_TABLE.'
       WHERE cat_id = '.$id_uppercat_str.'
     ;';
-        $granted_users = array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, \Piwigo\Db\QueryHelper::fetch($query, null, 'user_id'));
+        $granted_users = array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'user_id'));
         add_permission_on_category($inserted_id, $granted_users);
     } elseif ('private' == $insert['status']) {
         $userId = \Piwigo\Users\CurrentUser::get()->id;
@@ -1411,7 +1411,7 @@ SELECT id
   FROM '.TAGS_TABLE.'
   WHERE '.implode(' OR ', array_map('strval', $extra_where_clauses)).'
 ;';
-                $existing_tags = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
+                $existing_tags = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id');
             }
 
             if (count($existing_tags) == 0) {// finally create the tag
@@ -1442,7 +1442,7 @@ SELECT id
     if (!isset($page['tag_id_from_tag_name_cache']) || !is_array($page['tag_id_from_tag_name_cache'])) {
         $page['tag_id_from_tag_name_cache'] = [];
     }
-    $resolved = is_numeric($existing_tags[0]) ? (int) $existing_tags[0] : (string) $existing_tags[0];
+    $resolved = is_numeric($existing_tags[0]) ? (int) $existing_tags[0] : (is_scalar($existing_tags[0]) ? (string) $existing_tags[0] : '');
     $page['tag_id_from_tag_name_cache'][$tag_name] = $resolved;
     return $resolved;
 }
@@ -1637,7 +1637,7 @@ SELECT
   ORDER BY category_id ASC, image_id ASC
 ;';
 
-    $rows = \Piwigo\Db\QueryHelper::fetch($query);
+    $rows = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
 
     /** @var array<int> $images */
     $images = [];
@@ -1710,11 +1710,7 @@ SELECT
   GROUP BY category_id
 ;';
 
-    $current_rank_of = \Piwigo\Db\QueryHelper::fetch(
-        $query,
-        'category_id',
-        'max_rank'
-    );
+    $current_rank_of = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'max_rank', 'category_id');
 
     // associate only not already associated images
     $inserts = [];
@@ -1728,7 +1724,8 @@ SELECT
 
         foreach ($images as $image_id) {
             if (!in_array($image_id, $existing[$category_id])) {
-                $rank = ++$current_rank_of[$category_id];
+                $current_rank_of[$category_id] = (is_numeric($current_rank_of[$category_id]) ? (int) $current_rank_of[$category_id] : 0) + 1;
+                $rank = $current_rank_of[$category_id];
 
                 $inserts[] = [
                   'image_id' => $image_id,
@@ -1770,11 +1767,11 @@ SELECT id
       OR storage_category_id IS NULL
     )
 ;';
-    $dissociables = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
+    $dissociables = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id');
 
     if (!empty($dissociables)) {
         \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
-            ->deleteImageCategoryByCategoryAndImageIds((int) $category, array_map('intval', $dissociables));
+            ->deleteImageCategoryByCategoryAndImageIds((int) $category, array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $dissociables));
     }
 
     return count($dissociables);
@@ -1843,7 +1840,7 @@ SELECT image_id
   FROM '.IMAGE_CATEGORY_TABLE.'
   WHERE category_id IN ('.implode(',', $sources).')
 ;';
-    $images_raw = \Piwigo\Db\QueryHelper::fetch($query, null, 'image_id');
+    $images_raw = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'image_id');
     $images = array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $images_raw);
 
     associate_images_to_categories($images, $destinations);
@@ -2300,7 +2297,7 @@ SELECT id, name
   WHERE id IN ('. $group_id_string  .')
 ;';
 
-    $group_list = \Piwigo\Db\QueryHelper::fetch($query, 'id', 'name');
+    $group_list = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'name', 'id');
     $groupids = array_map(fn ($v): int => (int) $v, array_keys($group_list));
 
     // destruction of the group
@@ -2515,7 +2512,7 @@ SELECT id
   WHERE id IN ('.implode(',', array_map(fn ($v) => is_numeric($v) ? (int) $v : 0, $cat_ids)).')
     AND status = \'private\'
 ;';
-    $private_cats = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
+    $private_cats = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id');
 
     if (count($private_cats) == 0) {
         return;
@@ -2560,7 +2557,7 @@ SELECT
   WHERE status in (\''.implode("','", $status_list).'\')
 ;';
 
-    $raw = \Piwigo\Db\QueryHelper::fetch($query, null, 'user_id');
+    $raw = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'user_id');
     return array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $raw);
 }
 
@@ -2807,7 +2804,7 @@ SELECT id
   FROM '.IMAGES_TABLE.'
   WHERE md5sum is null
 ;';
-    $raw = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
+    $raw = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id');
     return array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $raw);
 }
 
@@ -2827,14 +2824,14 @@ SELECT
   FROM '.IMAGES_TABLE.'
   WHERE id IN ('.implode(', ', $ids_array).')
 ;';
-    $path_for_id = \Piwigo\Db\QueryHelper::fetch($query, 'id', 'path');
+    $path_for_id = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'path', 'id');
 
     $updates = [];
 
     foreach ($path_for_id as $id => $path) {
         $updates[] = [
           'id' => $id,
-          'md5sum' => md5_file(PHPWG_ROOT_PATH.$path),
+          'md5sum' => md5_file(PHPWG_ROOT_PATH.(is_scalar($path) ? (string) $path : '')),
         ];
     }
 
@@ -2879,7 +2876,7 @@ SELECT
     image_id
   FROM '.LOUNGE_TABLE.'
 ;';
-    $lounged_ids = \Piwigo\Db\QueryHelper::fetch($query, null, 'image_id');
+    $lounged_ids = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'image_id');
 
     $query = '
 SELECT
@@ -2890,14 +2887,14 @@ SELECT
 
     if (count($lounged_ids) > 0) {
         $query .= '
-    AND id NOT IN ('.implode(',', $lounged_ids).')';
+    AND id NOT IN ('.implode(',', array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $lounged_ids)).')';
     }
 
     $query .= '
   ORDER BY id ASC
 ;';
 
-    return array_map(static fn ($id) => (int)$id, \Piwigo\Db\QueryHelper::fetch($query, null, 'id'));
+    return array_map(static fn (mixed $id): int => is_numeric($id) ? (int)$id : 0, array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id'));
 }
 
 /**
@@ -2994,7 +2991,7 @@ SELECT *
   FROM '.IMAGES_TABLE.'
   WHERE id = '.$image_id.'
 ;';
-    $images = \Piwigo\Db\QueryHelper::fetch($query);
+    $images = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
     if (count($images) == 0) {
         if ($die_on_missing) {
             fatal_error('photo '.$image_id.' does not exist');
@@ -3073,7 +3070,7 @@ SELECT
     AND path LIKE \'./upload/%\'
   LIMIT 5000
 ;';
-    $issue1827_ids = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
+    $issue1827_ids = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id');
     shuffle($issue1827_ids);
     $issue1827_ids = array_slice($issue1827_ids, 0, 50);
 
@@ -3083,11 +3080,11 @@ SELECT
   FROM '.IMAGES_TABLE.'
   LIMIT 5000
 ;';
-    $random_image_ids = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
+    $random_image_ids = array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id'));
     shuffle($random_image_ids);
     $random_image_ids = array_slice($random_image_ids, 0, 50);
 
-    $fs_quick_check_ids = array_unique(array_merge($issue1827_ids, $random_image_ids));
+    $fs_quick_check_ids = array_unique(array_merge(array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $issue1827_ids), $random_image_ids));
 
     if (count($fs_quick_check_ids) < 1) {
         return;
@@ -3100,10 +3097,10 @@ SELECT
   FROM '.IMAGES_TABLE.'
   WHERE id IN ('.implode(',', $fs_quick_check_ids).')
 ;';
-    $fsqc_paths = \Piwigo\Db\QueryHelper::fetch($query, 'id', 'path');
+    $fsqc_paths = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'path', 'id');
 
     foreach ($fsqc_paths as $id => $path) {
-        if (!file_exists((string)$path)) {
+        if (!file_exists(is_scalar($path) ? (string)$path : '')) {
             $template = \Piwigo\Template\TemplateRegistry::current();
             $template->assign(
                 'header_msgs',
@@ -3124,7 +3121,7 @@ SELECT
   GROUP BY path
   HAVING COUNT(*) > 1
 ;';
-    $duplicate_paths = \Piwigo\Db\QueryHelper::fetch($query);
+    $duplicate_paths = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
 
     if (count($duplicate_paths) > 0) {
         $template = \Piwigo\Template\TemplateRegistry::current();
@@ -3280,25 +3277,25 @@ SELECT
   FROM '.USER_INFOS_TABLE.'
   WHERE user_id = 2
 ;';
-    $users = \Piwigo\Db\QueryHelper::fetch($query);
+    $users = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
     if (count($users) > 0) {
         $candidate = $users[0]['registration_date'];
     }
 
-    if (empty($candidate) or strtotime((string) $candidate) < strtotime($piwigo_origins)) {
+    if (empty($candidate) or strtotime(is_scalar($candidate) ? (string) $candidate : '') < strtotime($piwigo_origins)) {
         $query = '
 SELECT
     MIN(registration_date) AS min_registration_date
   FROM '.USER_INFOS_TABLE.'
   WHERE registration_date > \''.$piwigo_origins.'\'
 ;';
-        $users = \Piwigo\Db\QueryHelper::fetch($query);
+        $users = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
         if (count($users) > 0) {
             $candidate = $users[0]['min_registration_date'];
         }
     }
 
-    if (empty($candidate) or strtotime((string) $candidate) < strtotime($piwigo_origins)) {
+    if (empty($candidate) or strtotime(is_scalar($candidate) ? (string) $candidate : '') < strtotime($piwigo_origins)) {
         // let's find another candidate
         $query = '
 SELECT
@@ -3307,11 +3304,11 @@ SELECT
   ORDER BY id ASC
   LIMIT 1
 ;';
-        $images = \Piwigo\Db\QueryHelper::fetch($query);
+        $images = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
         if (count($images) > 0) {
             $candidate = $images[0]['date_available'];
         }
     }
 
-    return $candidate ? (string)$candidate : null;
+    return ($candidate && is_scalar($candidate)) ? (string)$candidate : null;
 }

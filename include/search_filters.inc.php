@@ -138,11 +138,11 @@ SELECT
             $filter_rows = [];
             $filter_rows = [];
             if (!$persistent_cache->get($cache_key, $filter_rows)) {
-                $filter_rows = \Piwigo\Db\QueryHelper::fetch($query);
+                $filter_rows = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
                 $persistent_cache->set($cache_key, $filter_rows);
             }
         } else {
-            $filter_rows = \Piwigo\Db\QueryHelper::fetch($query);
+            $filter_rows = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
         }
 
         $author_names = [];
@@ -178,7 +178,7 @@ SELECT
     SUBDATE(NOW(), INTERVAL 3 MONTH) AS 3m,
     SUBDATE(NOW(), INTERVAL 6 MONTH) AS 6m
 ;';
-            $thresholds = \Piwigo\Db\QueryHelper::fetch($query)[0];
+            $thresholds = get_dbal_connection()->executeQuery($query)->fetchAllAssociative()[0];
 
             $query = '
 SELECT
@@ -280,7 +280,7 @@ SELECT
     SUBDATE(NOW(), INTERVAL 6 MONTH) AS 6m,
     SUBDATE(NOW(), INTERVAL 12 MONTH) AS 12m
 ;';
-            $thresholds = \Piwigo\Db\QueryHelper::fetch($query)[0];
+            $thresholds = get_dbal_connection()->executeQuery($query)->fetchAllAssociative()[0];
 
             $query = '
 SELECT
@@ -387,11 +387,11 @@ SELECT
             $cache_key = $persistent_cache->make_key('filter_added_by_rows'.$user['id'].$user['cache_update_time']);
             $filter_rows = [];
             if (!$persistent_cache->get($cache_key, $filter_rows)) {
-                $filter_rows = \Piwigo\Db\QueryHelper::fetch($query);
+                $filter_rows = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
                 $persistent_cache->set($cache_key, $filter_rows);
             }
         } else {
-            $filter_rows = \Piwigo\Db\QueryHelper::fetch($query);
+            $filter_rows = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
         }
 
         $added_by = $filter_rows;
@@ -410,7 +410,7 @@ SELECT
   FROM '.USERS_TABLE.'
   WHERE '.\Piwigo\Config\Config::userFields()['id'].' IN ('.implode(',', $user_ids).')
 ;';
-            $username_of = \Piwigo\Db\QueryHelper::fetch($query, 'id', 'username');
+            $username_of = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'username', 'id');
 
             foreach (array_keys($added_by) as $added_by_idx) {
                 $added_by_id_raw = $added_by[$added_by_idx]['added_by_id'];
@@ -483,7 +483,7 @@ SELECT
   GROUP BY ext
   ORDER BY counter DESC
 ;';
-            $all_exts = \Piwigo\Db\QueryHelper::fetch($query, 'ext', 'counter');
+            $all_exts = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'counter', 'ext');
             $persistent_cache->set($cache_key, $all_exts);
         }
 
@@ -498,7 +498,7 @@ SELECT
   GROUP BY ext
   ORDER BY counter DESC
 ;';
-            $filtered_exts = \Piwigo\Db\QueryHelper::fetch($query, 'ext', 'counter');
+            $filtered_exts = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'counter', 'ext');
 
             $exts = [];
             foreach ($all_exts as $ext => $counter) {
@@ -535,7 +535,7 @@ SELECT
     JOIN '.IMAGE_CATEGORY_TABLE.' AS ic ON ic.image_id = i.id
   WHERE '.$filter_clause;
 
-                $filter_rows = \Piwigo\Db\QueryHelper::fetch($query);
+                $filter_rows = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
 
                 $ratings = array_fill(0, 6, 0);
 
@@ -648,7 +648,7 @@ SELECT
     AND height IS NOT NULL
 ;';
 
-            $filter_rows = \Piwigo\Db\QueryHelper::fetch($query);
+            $filter_rows = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
 
             $ratios = [
               'Portrait' => 0,
@@ -707,17 +707,17 @@ SELECT
             $cache_key = $persistent_cache->make_key('filter_height_rows'.$user['id'].$user['cache_update_time']);
             $filter_rows = [];
             if (!$persistent_cache->get($cache_key, $filter_rows)) {
-                $filter_rows = \Piwigo\Db\QueryHelper::fetch($query, null, 'height');
+                $filter_rows = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'height');
                 $persistent_cache->set($cache_key, $filter_rows);
             }
         } else {
-            $filter_rows = \Piwigo\Db\QueryHelper::fetch($query, null, 'height');
+            $filter_rows = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'height');
         }
 
         $heights = $filter_rows;
 
         $height = [
-          'list' => implode(',', $heights),
+          'list' => implode(',', array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $heights)),
           'bounds' => [
             'min' => $heights[0],
             'max' => end($heights),
@@ -753,17 +753,17 @@ SELECT
             $cache_key = $persistent_cache->make_key('filter_width_rows'.$user['id'].$user['cache_update_time']);
             $filter_rows = [];
             if (!$persistent_cache->get($cache_key, $filter_rows)) {
-                $filter_rows = \Piwigo\Db\QueryHelper::fetch($query, null, 'width');
+                $filter_rows = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'width');
                 $persistent_cache->set($cache_key, $filter_rows);
             }
         } else {
-            $filter_rows = \Piwigo\Db\QueryHelper::fetch($query, null, 'width');
+            $filter_rows = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'width');
         }
 
         $widths = $filter_rows;
 
         $width = [
-          'list' => implode(',', $widths),
+          'list' => implode(',', array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $widths)),
           'bounds' => [
             'min' => $widths[0],
             'max' => end($widths),
@@ -864,7 +864,7 @@ SELECT
     INNER JOIN '.USER_CACHE_CATEGORIES_TABLE.' ON c.id = cat_id and user_id = '.$user['id'].'
   WHERE id IN ('.implode(',', $cat_ids).')
 ;';
-                $cats = \Piwigo\Db\QueryHelper::fetch($query);
+                $cats = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
                 usort($cats, fn (array $a, array $b): int => name_compare($a, $b));
                 $albums_found = [];
                 foreach ($cats as $cat) {

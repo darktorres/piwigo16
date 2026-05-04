@@ -407,7 +407,7 @@ SELECT
     $query .= '
   ORDER BY name
 ;';
-    $admins = \Piwigo\Db\QueryHelper::fetch($query);
+    $admins = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
 
     if (empty($admins)) {
         return $return;
@@ -461,14 +461,14 @@ SELECT DISTINCT language
 
     $query .= '
 ;';
-    $languages = \Piwigo\Db\QueryHelper::fetch($query, null, 'language');
+    $languages = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'language');
 
     if (empty($languages)) {
         return $return;
     }
 
     foreach ($languages as $language) {
-        $language = (string) $language;
+        $language = is_scalar($language) ? (string) $language : '';
         // get subset of users in this group for a specific language
         $query = '
 SELECT
@@ -485,7 +485,7 @@ SELECT
     AND '.\Piwigo\Config\Config::userFields()['email'].' <> ""
     AND language = \''.$language.'\'
 ;';
-        $users = \Piwigo\Db\QueryHelper::fetch($query);
+        $users = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
 
         if (empty($users)) {
             continue;

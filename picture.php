@@ -419,7 +419,7 @@ SELECT id,uppercats,commentable,visible,status,global_rank
     'AND'
 ).'
 ;';
-$related_categories = \Piwigo\Db\QueryHelper::fetch($query);
+$related_categories = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
 usort($related_categories, global_rank_compare(...));
 //-------------------------first, prev, current, next & last picture management
 $picture = [];
@@ -599,7 +599,7 @@ SELECT *
   FROM '.IMAGE_FORMAT_TABLE.'
   WHERE image_id = '.(is_scalar($currentPic['id'] ?? null) ? (int) $currentPic['id'] : 0).'
 ;';
-        $formats = \Piwigo\Db\QueryHelper::fetch($query);
+        $formats = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
 
         // let's add the original as a format among others. It will just have a
         // specific download URL
@@ -877,17 +877,17 @@ if (count($related_categories) == 1 and
 } else { // use only 1 sql query to get names for all related categories
     $ids = [];
     foreach ($related_categories as $category) {// add all uppercats to $ids
-        $ids = array_merge($ids, explode(',', (string) $category['uppercats']));
+        $ids = array_merge($ids, explode(',', is_scalar($category['uppercats']) ? (string) $category['uppercats'] : ''));
     }
     $ids = array_unique($ids);
     $query = '
 SELECT id, name, permalink
   FROM '.CATEGORIES_TABLE.'
   WHERE id IN ('.implode(',', $ids).')';
-    $cat_map = \Piwigo\Db\QueryHelper::fetch($query, 'id');
+    $cat_map = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), null, 'id');
     foreach ($related_categories as $category) {
         $cats = [];
-        foreach (explode(',', (string) $category['uppercats']) as $id) {
+        foreach (explode(',', is_scalar($category['uppercats']) ? (string) $category['uppercats'] : '') as $id) {
             $cats[] = $cat_map[$id];
         }
         $template->append('related_categories', get_cat_display_name($cats));

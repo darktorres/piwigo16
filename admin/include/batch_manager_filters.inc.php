@@ -136,7 +136,7 @@ SELECT
     )
 ;';
 
-    $associated_categories = \Piwigo\Db\QueryHelper::fetch($query, 'id', 'id');
+    $associated_categories = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id', 'id');
 }
 
 $template->assign('associated_categories', $associated_categories);

@@ -227,7 +227,7 @@ SELECT DISTINCT
   WHERE 
     category_id IN ('.implode(',', $subcat_ids).')
   ;';
-$image_ids_recursive = \Piwigo\Db\QueryHelper::fetch($query, null, 'image_id');
+$image_ids_recursive = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'image_id');
 
 $category['nb_images_recursive'] = count($image_ids_recursive);
 
@@ -239,10 +239,10 @@ SELECT occured_on
     AND object = "album"
     AND action = "add"
 ';
-$result = \Piwigo\Db\QueryHelper::fetch($query);
+$result = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
 
 if (count($result) > 0) {
-    $occurred_on = (string)$result[0]['occured_on'];
+    $occurred_on = is_scalar($result[0]['occured_on']) ? (string)$result[0]['occured_on'] : '';
     $template->assign(
         [
         'INFO_CREATION_SINCE' => time_since($occurred_on, 'day', $format = null, $with_text = true, $with_week = true, $only_last_unit = true),
@@ -257,7 +257,7 @@ SELECT COUNT(*)
   FROM `'.CATEGORIES_TABLE.'`
   WHERE id_uppercat = '.$category['id'].'
 ';
-$result = \Piwigo\Db\QueryHelper::fetch($query);
+$result = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
 
 
 $template->assign(

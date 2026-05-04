@@ -157,7 +157,7 @@ SELECT id, uppercats, global_rank, status, visible
 ';
         }
     }
-    $db_categories = \Piwigo\Db\QueryHelper::fetch($query, 'id');
+    $db_categories = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), null, 'id');
 
     // get categort full directories in an array for comparison with file
     // system directory tree
@@ -434,7 +434,7 @@ SELECT id, path
               160,
               "\n"
           ).')';
-        $db_elements = \Piwigo\Db\QueryHelper::fetch($query, 'id', 'path');
+        $db_elements = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'path', 'id');
     }
 
     // next element id available
@@ -448,7 +448,7 @@ SELECT id, path
     $insert_formats = [];
     $formats_to_delete = [];
 
-    foreach (array_diff(array_keys($fs), $db_elements) as $path) {
+    foreach (array_diff(array_keys($fs), array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '', $db_elements)) as $path) {
         $insert = [];
         // storage category must exist
         $dirname = dirname((string) $path);
@@ -630,7 +630,7 @@ SELECT id, path
 
     // delete elements that are in database but not in the filesystem
     $to_delete_elements = [];
-    foreach (array_diff($db_elements, array_keys($fs)) as $path) {
+    foreach (array_diff(array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '', $db_elements), array_keys($fs)) as $path) {
         $found = array_search($path, $db_elements);
         if ($found !== false) {
             $to_delete_elements[] = (int) $found;

@@ -190,7 +190,7 @@ function custom_notification_query(string $action, string $type, ?string $start 
                         break;
                 }
                 $query = 'SELECT DISTINCT '.$field_id.' '.$query.';';
-                $infos = \Piwigo\Db\QueryHelper::fetch($query);
+                $infos = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
                 return $infos;
             }
 
@@ -471,7 +471,7 @@ SELECT
   ORDER BY date_available DESC
   LIMIT '.$max_dates.'
 ;';
-    $dates = \Piwigo\Db\QueryHelper::fetch($query);
+    $dates = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
 
     for ($i = 0; $i < count($dates); $i++) {
         $date_available = is_scalar($dates[$i]['date_available']) ? (string) $dates[$i]['date_available'] : '';
@@ -485,7 +485,7 @@ SELECT DISTINCT i.*
   ORDER BY '.DB_RANDOM_FUNCTION.'()
   LIMIT '.$max_elements.'
 ;';
-            $dates[$i]['elements'] = \Piwigo\Db\QueryHelper::fetch($query);
+            $dates[$i]['elements'] = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
         }
 
         if ($max_cats > 0) {// get some categories ...
@@ -502,7 +502,7 @@ SELECT
   ORDER BY img_count DESC
   LIMIT '.$max_cats.'
 ;';
-            $dates[$i]['categories'] = \Piwigo\Db\QueryHelper::fetch($query);
+            $dates[$i]['categories'] = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
         }
     }
 

@@ -66,7 +66,7 @@ SELECT id
   WHERE id_uppercat '.
       (($post_id_str === '-1') ? 'IS NULL' : '= '.$post_id_str).'
 ;';
-    $category_ids = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
+    $category_ids = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id');
     $category_ids = array_map(fn ($v) => is_scalar($v) ? (string) $v : '', $category_ids);
 
     if (isset($_POST['recursiveAutoOrder'])) {
@@ -145,7 +145,7 @@ SELECT id,name,`rank`,status, visible, uppercats, lastmodified
   FROM '.CATEGORIES_TABLE.'
 ;';
 
-$allAlbum = \Piwigo\Db\QueryHelper::fetch($query);
+$allAlbum = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
 
 //Make an id tree
 $associatedTree = [];
@@ -232,7 +232,7 @@ SELECT
   GROUP BY category_id
 ;';
 
-$nb_photos_in = \Piwigo\Db\QueryHelper::fetch($query, 'category_id', 'nb_photos');
+$nb_photos_in = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'nb_photos', 'category_id');
 
 $query = '
 SELECT
@@ -240,12 +240,12 @@ SELECT
     uppercats
   FROM '.CATEGORIES_TABLE.'
 ;';
-$all_categories = \Piwigo\Db\QueryHelper::fetch($query, 'id', 'uppercats');
+$all_categories = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'uppercats', 'id');
 
 $subcats_of = [];
 
 foreach ($all_categories as $id => $uppercats) {
-    foreach (array_slice(explode(',', (string) $uppercats), 0, -1) as $uppercat_id) {
+    foreach (array_slice(explode(',', is_scalar($uppercats) ? (string) $uppercats : ''), 0, -1) as $uppercat_id) {
         $subcats_of[$uppercat_id][] = $id;
     }
 }
@@ -255,7 +255,7 @@ foreach ($subcats_of as $cat_id => $subcat_ids) {
     $nb_photos = 0;
     foreach ($subcat_ids as $id) {
         if (isset($nb_photos_in[$id])) {
-            $nb_photos += $nb_photos_in[$id];
+            $nb_photos += is_numeric($nb_photos_in[$id]) ? (int) $nb_photos_in[$id] : 0;
         }
     }
 
@@ -346,7 +346,7 @@ SELECT
   WHERE category_id IN ('.implode(',', $category_ids).')
   GROUP BY category_id
 ;';
-    $ref_dates = \Piwigo\Db\QueryHelper::fetch($query, 'category_id', 'ref_date');
+    $ref_dates = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'ref_date', 'category_id');
 
     // the iterate on all albums (having a ref_date or not) to find the
     // reference_date, with a search on sub-albums
@@ -357,14 +357,14 @@ SELECT
   FROM '.CATEGORIES_TABLE.'
   WHERE id IN ('.implode(',', $category_ids).')
 ;';
-    $uppercats_of = \Piwigo\Db\QueryHelper::fetch($query, 'id', 'uppercats');
+    $uppercats_of = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'uppercats', 'id');
 
     foreach (array_keys($uppercats_of) as $cat_id) {
         // find the subcats
         $subcat_ids = [];
 
         foreach ($uppercats_of as $id => $uppercats) {
-            if (preg_match('/(^|,)'.$cat_id.'(,|$)/', (string) $uppercats)) {
+            if (preg_match('/(^|,)'.$cat_id.'(,|$)/', is_scalar($uppercats) ? (string) $uppercats : '')) {
                 $subcat_ids[] = $id;
             }
         }

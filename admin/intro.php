@@ -211,11 +211,11 @@ if ($cached_activity === null or (is_numeric($cached_activity['calculated_on']) 
     WHERE occured_on >= \''.$date_string.'\'
     GROUP BY activity_day, object, action
   ;';
-    $activity_actions = \Piwigo\Db\QueryHelper::fetch($query);
+    $activity_actions = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
 
     foreach ($activity_actions as $action) {
         // set the time to 12:00 (midday) so that it doesn't goes to previous/next day due to timezone offset
-        $day_date = new DateTime($action['activity_day'].' 12:00:00');
+        $day_date = new DateTime((is_scalar($action['activity_day']) ? (string) $action['activity_day'] : '').' 12:00:00');
 
         $week = 0;
         for ($i = 0; $i < $nb_weeks; $i++) {
@@ -225,8 +225,8 @@ if ($cached_activity === null or (is_numeric($cached_activity['calculated_on']) 
         }
         $day_nb = $day_date->format('N');
 
-        $activity_last_weeks[$week][$day_nb]['details'][ucfirst((string) $action['object'])][ucfirst((string) $action['action'])] = $action['activity_counter'];
-        $activity_last_weeks[$week][$day_nb]['number'] = ($activity_last_weeks[$week][$day_nb]['number'] ?? 0) + $action['activity_counter'];
+        $activity_last_weeks[$week][$day_nb]['details'][ucfirst(is_scalar($action['object']) ? (string) $action['object'] : '')][ucfirst(is_scalar($action['action']) ? (string) $action['action'] : '')] = $action['activity_counter'];
+        $activity_last_weeks[$week][$day_nb]['number'] = ($activity_last_weeks[$week][$day_nb]['number'] ?? 0) + (is_numeric($action['activity_counter']) ? (int) $action['activity_counter'] : 0);
         $activity_last_weeks[$week][$day_nb]['date'] = format_date($day_date->getTimestamp());
     }
 
@@ -353,7 +353,7 @@ SELECT
   GROUP BY ext
 ;';
 
-$file_extensions = \Piwigo\Db\QueryHelper::fetch($query, 'ext');
+$file_extensions = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), null, 'ext');
 
 foreach ($file_extensions as $ext => $ext_details) {
     $type = null;
@@ -365,8 +365,8 @@ foreach ($file_extensions as $ext => $ext_details) {
         $type = 'Other';
     }
 
-    $data_storage[$type]['total']['filesize'] = ($data_storage[$type]['total']['filesize'] ?? 0) + $ext_details['filesize'];
-    $data_storage[$type]['total']['nb_files'] = ($data_storage[$type]['total']['nb_files'] ?? 0) + $ext_details['ext_counter'];
+    $data_storage[$type]['total']['filesize'] = ($data_storage[$type]['total']['filesize'] ?? 0) + (is_numeric($ext_details['filesize']) ? (int) $ext_details['filesize'] : 0);
+    $data_storage[$type]['total']['nb_files'] = ($data_storage[$type]['total']['nb_files'] ?? 0) + (is_numeric($ext_details['ext_counter']) ? (int) $ext_details['ext_counter'] : 0);
 
     $data_storage[$type]['details'][strtoupper((string) $ext)] = [
       'filesize' => $ext_details['filesize'],
@@ -384,12 +384,12 @@ SELECT
   GROUP BY ext
 ;';
 
-$file_extensions = \Piwigo\Db\QueryHelper::fetch($query, 'ext');
+$file_extensions = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), null, 'ext');
 foreach ($file_extensions as $ext => $ext_details) {
     $type = 'Formats';
 
-    $data_storage[$type]['total']['filesize'] = ($data_storage[$type]['total']['filesize'] ?? 0) + $ext_details['filesize'];
-    $data_storage[$type]['total']['nb_files'] = ($data_storage[$type]['total']['nb_files'] ?? 0) + $ext_details['ext_counter'];
+    $data_storage[$type]['total']['filesize'] = ($data_storage[$type]['total']['filesize'] ?? 0) + (is_numeric($ext_details['filesize']) ? (int) $ext_details['filesize'] : 0);
+    $data_storage[$type]['total']['nb_files'] = ($data_storage[$type]['total']['nb_files'] ?? 0) + (is_numeric($ext_details['ext_counter']) ? (int) $ext_details['ext_counter'] : 0);
 
     $data_storage[$type]['details'][strtoupper((string) $ext)] = [
       'filesize' => $ext_details['filesize'],

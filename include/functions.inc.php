@@ -1084,7 +1084,7 @@ function get_pwg_themes(bool $show_mobile = false): array
         $rows = \Piwigo\Core\ServiceLocator::get(\Piwigo\Theme\ThemeRepository::class)->findAll();
     } else {
         // Fallback for pre-boot context
-        $rows = \Piwigo\Db\QueryHelper::fetch('SELECT id, name FROM ' . THEMES_TABLE . ' ORDER BY name ASC;');
+        $rows = get_dbal_connection()->executeQuery('SELECT id, name FROM ' . THEMES_TABLE . ' ORDER BY name ASC;')->fetchAllAssociative();
     }
 
     foreach ($rows as $row) {
@@ -1173,9 +1173,9 @@ SELECT element_id
   FROM '.CADDIE_TABLE.'
   WHERE user_id = '.$userId.'
 ;';
-    $in_caddie = \Piwigo\Db\QueryHelper::fetch($query, null, 'element_id');
+    $in_caddie = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'element_id');
 
-    $caddiables = array_diff($elements_id, $in_caddie);
+    $caddiables = array_diff($elements_id, array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $in_caddie));
 
     $datas = [];
 
@@ -1570,7 +1570,7 @@ function prepend_append_array_items(array $array, string $prepend_str, string $a
 #[\Deprecated(message: '2.6')]
 function simple_hash_from_query(string $query, string $keyname, string $valuename): array
 {
-    return \Piwigo\Db\QueryHelper::fetch($query, $keyname, $valuename);
+    return array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), $valuename, $keyname);
 }
 
 /**
@@ -1583,7 +1583,7 @@ function simple_hash_from_query(string $query, string $keyname, string $valuenam
 #[\Deprecated(message: '2.6')]
 function hash_from_query(string $query, string $keyname): array
 {
-    return \Piwigo\Db\QueryHelper::fetch($query, $keyname);
+    return array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), null, $keyname);
 }
 
 /**
@@ -1598,9 +1598,9 @@ function hash_from_query(string $query, string $keyname): array
 function array_from_query(string $query, string|false $fieldname = false): array
 {
     if (false === $fieldname) {
-        return \Piwigo\Db\QueryHelper::fetch($query);
+        return get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
     } else {
-        return \Piwigo\Db\QueryHelper::fetch($query, null, $fieldname);
+        return array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), $fieldname);
     }
 }
 
@@ -2261,10 +2261,10 @@ SELECT
   ORDER BY image_id ASC
   LIMIT 1
 ;';
-    $voyagers = \Piwigo\Db\QueryHelper::fetch($query);
+    $voyagers = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
     if (count($voyagers)) {
         $voyager = $voyagers[0];
-        $age = strtotime((string) $voyager['dbnow']) - strtotime((string) $voyager['date_available']);
+        $age = strtotime(is_scalar($voyager['dbnow']) ? (string) $voyager['dbnow'] : '') - strtotime(is_scalar($voyager['date_available']) ? (string) $voyager['date_available'] : '');
 
         if ($age > \Piwigo\Config\Config::loungeMaxDuration()) {
             include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
@@ -2365,7 +2365,7 @@ SELECT
   FROM `'.IMAGES_TABLE.'`
   WHERE storage_category_id IS NOT NULL
 ;';
-        if (\Piwigo\Db\QueryHelper::fetch($query, null, 'counter')[0] > 0) {
+        if (array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'counter')[0] > 0) {
             // slow SQL query, but necessary if you have files added by sync
             $query = '
 SELECT
@@ -2375,13 +2375,13 @@ SELECT
   FROM `'.IMAGES_TABLE.'`
   GROUP BY add_method
 ;';
-            $files_added_by = \Piwigo\Db\QueryHelper::fetch($query, 'add_method');
+            $files_added_by = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), null, 'add_method');
 
             $piwigo_infos['general_stats']['nb_photos_synced'] = $files_added_by['sync']['nb_files'];
             $piwigo_infos['general_stats']['last_photo_synced'] = $files_added_by['sync']['last_added_on'];
 
             $method_of_last_photo = 'sync';
-            if (isset($files_added_by['api']) and strtotime((string) $files_added_by['api']['last_added_on']) > strtotime((string) $files_added_by['sync']['last_added_on'])) {
+            if (isset($files_added_by['api']) and strtotime(is_scalar($files_added_by['api']['last_added_on']) ? (string) $files_added_by['api']['last_added_on'] : '') > strtotime(is_scalar($files_added_by['sync']['last_added_on']) ? (string) $files_added_by['sync']['last_added_on'] : '')) {
                 $method_of_last_photo = 'api';
             }
             $piwigo_infos['general_stats']['last_photo'] = $files_added_by[$method_of_last_photo]['last_added_on'];
@@ -2394,7 +2394,7 @@ SELECT
   ORDER BY id DESC
   LIMIT 1
 ;';
-            $images = \Piwigo\Db\QueryHelper::fetch($query);
+            $images = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
             if (count($images) > 0) {
                 $piwigo_infos['general_stats']['last_photo'] = $images[0]['date_available'];
             }
@@ -2408,7 +2408,7 @@ SELECT
   FROM `'.IMAGES_TABLE.'`
   GROUP BY ext
 ;';
-        $piwigo_infos['file_extensions'] = \Piwigo\Db\QueryHelper::fetch($query, 'ext');
+        $piwigo_infos['file_extensions'] = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), null, 'ext');
     }
 
     // \Piwigo\Config\Config::override('pem_plugins_category', 12);
@@ -2526,13 +2526,13 @@ SELECT
   GROUP BY theme
   ORDER BY theme
 ;';
-    $themes_used = \Piwigo\Db\QueryHelper::fetch($query, 'theme', 'theme_counter');
+    $themes_used = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'theme_counter', 'theme');
     foreach ($themes_used as $theme_used => $counter) {
         if (isset($private_themes[$theme_used])) {
             $theme_used = 'private theme';
         }
 
-        $piwigo_infos['themes_usage'][$theme_used] = ($piwigo_infos['themes_usage'][$theme_used] ?? 0) + $counter;
+        $piwigo_infos['themes_usage'][$theme_used] = ($piwigo_infos['themes_usage'][$theme_used] ?? 0) + (is_numeric($counter) ? (int) $counter : 0);
     }
 
     $piwigo_infos['general_stats']['default_language'] = get_default_language();
@@ -2545,7 +2545,7 @@ SELECT
   GROUP BY language
   ORDER BY language
 ;';
-    $piwigo_infos['languages_usage'] = \Piwigo\Db\QueryHelper::fetch($query, 'language', 'language_counter');
+    $piwigo_infos['languages_usage'] = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'language_counter', 'language');
 
     $piwigo_infos['activities'] = [];
     $piwigo_infos['general_stats']['nb_activities'] = 0;
@@ -2559,11 +2559,11 @@ SELECT
   WHERE object != \'system\'
   GROUP BY object, action
 ;';
-    $activities = \Piwigo\Db\QueryHelper::fetch($query);
+    $activities = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
     foreach ($activities as $activity) {
-        $piwigo_infos['general_stats']['nb_activities'] += (int)$activity['counter'];
-        $object_key = (string)$activity['object'];
-        $action_key = (string)$activity['action'];
+        $piwigo_infos['general_stats']['nb_activities'] += is_numeric($activity['counter']) ? (int)$activity['counter'] : 0;
+        $object_key = is_scalar($activity['object']) ? (string)$activity['object'] : '';
+        $action_key = is_scalar($activity['action']) ? (string)$activity['action'] : '';
         if (!isset($piwigo_infos['activities'][$object_key])) {
             $piwigo_infos['activities'][$object_key] = [];
         }
@@ -2586,11 +2586,11 @@ SELECT
   WHERE object = \'system\'
   GROUP BY object, object_id, action
 ;';
-    $activities = \Piwigo\Db\QueryHelper::fetch($query);
+    $activities = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
     $system_activities = [];
     foreach ($activities as $activity) {
-        $object_id_key = (int)$activity['object_id'];
-        $action_key = (string)$activity['action'];
+        $object_id_key = is_numeric($activity['object_id']) ? (int)$activity['object_id'] : 0;
+        $action_key = is_scalar($activity['action']) ? (string)$activity['action'] : '';
         $label_key = (string) ($label_for_system_object_id[$object_id_key] ?? 'undefined');
         if (!isset($system_activities[$label_key])) {
             $system_activities[$label_key] = [];
@@ -2610,7 +2610,7 @@ SELECT
     AND action IN (\'update\', \'autoupdate\')
   ORDER BY activity_id ASC
 ;';
-    $updates = \Piwigo\Db\QueryHelper::fetch($query);
+    $updates = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
     foreach ($updates as $update) {
         $details = safe_unserialize(is_string($update['details']) ? $update['details'] : '');
         if (isset($details['from_version']) and isset($details['to_version'])) {
@@ -2642,7 +2642,7 @@ SELECT
   WHERE user_agent NOT LIKE \'Mozilla/5%\'
   GROUP BY user_agent
 ;';
-    $activities = \Piwigo\Db\QueryHelper::fetch($query);
+    $activities = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
     $apps = [];
 
     $apps_pattern = [
@@ -2661,14 +2661,14 @@ SELECT
 
     foreach ($activities as $activity) {
         foreach ($apps_pattern as $app_name => $pattern) {
-            if (preg_match($pattern, (string) $activity['user_agent'])) {
-                $apps[$app_name]['counter'] = ($apps[$app_name]['counter'] ?? 0) + $activity['counter'];
+            if (preg_match($pattern, is_scalar($activity['user_agent']) ? (string) $activity['user_agent'] : '')) {
+                $apps[$app_name]['counter'] = (is_numeric($apps[$app_name]['counter'] ?? null) ? (int) $apps[$app_name]['counter'] : 0) + (is_numeric($activity['counter']) ? (int) $activity['counter'] : 0);
 
-                if (!isset($apps[$app_name]['first_encounter']) or strtotime($apps[$app_name]['first_encounter']) > strtotime((string) $activity['first_encounter'])) {
+                if (!isset($apps[$app_name]['first_encounter']) or strtotime(is_scalar($apps[$app_name]['first_encounter']) ? (string) $apps[$app_name]['first_encounter'] : '') > strtotime(is_scalar($activity['first_encounter']) ? (string) $activity['first_encounter'] : '')) {
                     $apps[$app_name]['first_encounter'] = $activity['first_encounter'];
                 }
 
-                if (!isset($apps[$app_name]['last_encounter']) or strtotime($apps[$app_name]['last_encounter']) < strtotime((string) $activity['last_encounter'])) {
+                if (!isset($apps[$app_name]['last_encounter']) or strtotime(is_scalar($apps[$app_name]['last_encounter']) ? (string) $apps[$app_name]['last_encounter'] : '') < strtotime(is_scalar($activity['last_encounter']) ? (string) $activity['last_encounter'] : '')) {
                     $apps[$app_name]['last_encounter'] = $activity['last_encounter'];
                 }
             }

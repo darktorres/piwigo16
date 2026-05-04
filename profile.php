@@ -431,9 +431,9 @@ function load_profile_in_template(string $url_action, string $url_redirect, arra
 SELECT
   '.implode(', ', $duration).'
 ;';
-    $result = \Piwigo\Db\QueryHelper::fetch($query)[0];
+    $result = get_dbal_connection()->executeQuery($query)->fetchAllAssociative()[0];
     foreach ($result as $day => $date) {
-        $display_duration[ $day ] = l10n('%d days', $day) . ' (' . format_date((string)$date, ['day', 'month', 'year']) . ')';
+        $display_duration[ $day ] = l10n('%d days', $day) . ' (' . format_date(is_scalar($date) ? (string)$date : null, ['day', 'month', 'year']) . ')';
     }
 
     if ($has_custom) {

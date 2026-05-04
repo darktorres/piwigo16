@@ -61,7 +61,7 @@ SELECT permalink
 ';
 
 /* Add active permalinks */
-$permalinks = \Piwigo\Db\QueryHelper::fetch($query, null, 'permalink');
+$permalinks = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'permalink');
 $relevant_parameters = array_merge($relevant_parameters, $permalinks);
 
 /* Link all supported templates to their respective handle */

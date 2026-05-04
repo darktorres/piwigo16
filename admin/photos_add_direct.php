@@ -87,15 +87,15 @@ SELECT *
   FROM '.IMAGE_FORMAT_TABLE.'
   WHERE image_id = '.$fmtId.'
 ;';
-        $formats = \Piwigo\Db\QueryHelper::fetch($query);
+        $formats = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
 
         if (!empty($formats)) {
             $format_strings = [];
             $formats_exts = [];
 
             foreach ($formats as $format) {
-                $format_strings[] = sprintf('%s (%.2fMB)', $format['ext'], (int)$format['filesize'] / 1024);
-                $formats_exts[] = strtolower((string) $format['ext']);
+                $format_strings[] = sprintf('%s (%.2fMB)', is_scalar($format['ext']) ? (string) $format['ext'] : '', (is_numeric($format['filesize']) ? (int)$format['filesize'] : 0) / 1024);
+                $formats_exts[] = strtolower(is_scalar($format['ext']) ? (string) $format['ext'] : '');
             }
 
             $formats_original_info['formats'] = l10n('Formats: %s', implode(', ', $format_strings));

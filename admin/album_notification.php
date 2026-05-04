@@ -109,13 +109,13 @@ SELECT
     JOIN '.USERS_TABLE.' AS u ON u.'.\Piwigo\Config\Config::userFields()['id'].' = ui.user_id
   WHERE ui.user_id IN ('.implode(',', array_map(fn ($v) => is_scalar($v) ? (string) $v : '', (array) $_POST['users'])).')
 ;';
-        $users = \Piwigo\Db\QueryHelper::fetch($query);
+        $users = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
         $usernames = [];
 
         foreach ($users as $u) {
-            $usernames[] = $u['username'];
+            $usernames[] = is_scalar($u['username']) ? (string) $u['username'] : '';
 
-            $authkey = create_user_auth_key((int) $u['user_id'], is_string($u['status']) ? $u['status'] : null);
+            $authkey = create_user_auth_key(is_numeric($u['user_id']) ? (int) $u['user_id'] : 0, is_string($u['status']) ? $u['status'] : null);
 
             $user_tpl = $tpl;
 
@@ -135,8 +135,8 @@ SELECT
                 $user_args['auth_key'] = $authkey['auth_key'];
             }
 
-            switch_lang_to((string) $u['language']);
-            pwg_mail((string) $u['email'], $user_args, $user_tpl);
+            switch_lang_to(is_scalar($u['language']) ? (string) $u['language'] : '');
+            pwg_mail(is_scalar($u['email']) ? (string) $u['email'] : '', $user_args, $user_tpl);
             switch_lang_back();
         }
 
@@ -208,7 +208,7 @@ SELECT
     id AS group_id
   FROM `'.GROUPS_TABLE.'`
 ;';
-$all_group_ids = \Piwigo\Db\QueryHelper::fetch($query, null, 'group_id');
+$all_group_ids = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'group_id');
 
 if (count($all_group_ids) == 0) {
     $template->assign('no_group_in_gallery', true);
@@ -222,7 +222,7 @@ SELECT
   FROM '.GROUP_ACCESS_TABLE.'
   WHERE cat_id = '.$category['id'].'
 ;';
-        $group_ids = \Piwigo\Db\QueryHelper::fetch($query, null, 'group_id');
+        $group_ids = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'group_id');
     } else {
         $group_ids = $all_group_ids;
     }
@@ -233,12 +233,12 @@ SELECT
     id,
     name
   FROM `'.GROUPS_TABLE.'`
-  WHERE id IN ('.implode(',', $group_ids).')
+  WHERE id IN ('.implode(',', array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $group_ids)).')
   ORDER BY name ASC
 ;';
         $template->assign(
             'group_mail_options',
-            \Piwigo\Db\QueryHelper::fetch($query, 'id', 'name')
+            array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'name', 'id')
         );
     }
 }
@@ -252,7 +252,7 @@ SELECT
   FROM '.USER_INFOS_TABLE.'
   WHERE status != \'guest\'
 ;';
-$all_user_ids = \Piwigo\Db\QueryHelper::fetch($query, null, 'user_id');
+$all_user_ids = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'user_id');
 
 if ('private' == $category['status']) {
     $user_ids_access_indirect = [];
@@ -262,9 +262,9 @@ if ('private' == $category['status']) {
 SELECT
     user_id
   FROM '.USER_GROUP_TABLE.'
-  WHERE group_id IN ('.implode(',', $group_ids).') 
+  WHERE group_id IN ('.implode(',', array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $group_ids)).')
 ';
-        $user_ids_access_indirect = \Piwigo\Db\QueryHelper::fetch($query, null, 'user_id');
+        $user_ids_access_indirect = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'user_id');
     }
 
     $query = '
@@ -273,13 +273,13 @@ SELECT
   FROM '.USER_ACCESS_TABLE.'
   WHERE cat_id = '.$category['id'].'
 ;';
-    $user_ids_access_direct = \Piwigo\Db\QueryHelper::fetch($query, null, 'user_id');
+    $user_ids_access_direct = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'user_id');
 
-    $user_ids_access = array_unique(array_merge($user_ids_access_direct, $user_ids_access_indirect));
+    $user_ids_access = array_unique(array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', array_merge($user_ids_access_direct, $user_ids_access_indirect)));
 
-    $user_ids = array_intersect($user_ids_access, $all_user_ids);
+    $user_ids = array_intersect($user_ids_access, array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $all_user_ids));
 } else {
-    $user_ids = $all_user_ids;
+    $user_ids = array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $all_user_ids);
 }
 
 if (count($user_ids) > 0) {
@@ -291,7 +291,7 @@ SELECT
   WHERE id IN ('.implode(',', $user_ids).')
 ;';
 
-    $users = \Piwigo\Db\QueryHelper::fetch($query, 'id', 'username');
+    $users = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'username', 'id');
 
     $template->assign('user_options', $users);
 }

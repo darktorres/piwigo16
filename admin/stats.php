@@ -55,18 +55,18 @@ ORDER BY
         $limit = ((int) $last - 1) * 12 + (int) $date->format('n') - 1;
         $query .=
 ' LIMIT '.$limit;
-        $result = \Piwigo\Db\QueryHelper::fetch($query.';');
+        $result = get_dbal_connection()->executeQuery($query.';')->fetchAllAssociative();
         $lastDate = $date->sub(new DateInterval('P'.((int) $last - 1).'Y'.((int) $date->format('n') - 1).'M'));
         return set_missing_values('month', $result, $lastDate, new DateTime());
     }
 
-    if (count(\Piwigo\Db\QueryHelper::fetch($query.';')) > 1) {
-        return set_missing_values('month', \Piwigo\Db\QueryHelper::fetch($query.';'));
+    if (count(get_dbal_connection()->executeQuery($query.';')->fetchAllAssociative()) > 1) {
+        return set_missing_values('month', get_dbal_connection()->executeQuery($query.';')->fetchAllAssociative());
     } else {
         $last_year_date = new DateTime();
         return set_missing_values(
             'month',
-            \Piwigo\Db\QueryHelper::fetch($query.';'),
+            get_dbal_connection()->executeQuery($query.';')->fetchAllAssociative(),
             $last_year_date->sub(new DateInterval('P1Y')),
             new DateTime()
         );
@@ -105,7 +105,7 @@ ORDER BY
   month DESC
 ;';
 
-    foreach (\Piwigo\Db\QueryHelper::fetch($query) as $value) {
+    foreach (get_dbal_connection()->executeQuery($query)->fetchAllAssociative() as $value) {
         $date = get_date_object($value);
         $months[$date->format('Y/m/1')][] = $value;
     }

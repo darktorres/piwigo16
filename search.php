@@ -96,7 +96,7 @@ SELECT
   WHERE cat_id = '.$cat_id.'
     AND user_id = '.$user['id'].'
 ;';
-    $found_categories = \Piwigo\Db\QueryHelper::fetch($query);
+    $found_categories = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
     if (empty($found_categories)) {
         page_not_found(l10n('Requested album does not exist'));
     }
@@ -145,7 +145,7 @@ SELECT
     AND author IS NOT NULL
     LIMIT 1
 ;';
-    $first_author = \Piwigo\Db\QueryHelper::fetch($query);
+    $first_author = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
 
     if (count($first_author) > 0) {
         $search['fields']['author'] = array(

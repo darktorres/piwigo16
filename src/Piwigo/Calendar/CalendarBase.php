@@ -226,7 +226,7 @@ $this->inner_sql.
 $this->get_date_where($level).'
   GROUP BY period;';
 
-        $level_items = \Piwigo\Db\QueryHelper::fetch($query, 'period', 'nb_images');
+        $level_items = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'nb_images', 'period');
 
         $chronologyDate = is_array($pageArr['chronology_date'] ?? null) ? $pageArr['chronology_date'] : [];
 
@@ -309,10 +309,10 @@ GROUP BY period';
             $stringDate[] = is_string($d) ? $d : (is_int($d) ? (string) $d : '');
         }
         $current = implode('-', $stringDate);
-        $upper_items = \Piwigo\Db\QueryHelper::fetch($query, null, 'period');
+        $upper_items = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'period');
 
-        usort($upper_items, fn ($a, $b): int => version_compare((string) $a, (string) $b));
-        $upper_items_str = array_map(fn ($x): string => (string) $x, $upper_items);
+        usort($upper_items, fn (mixed $a, mixed $b): int => version_compare(is_scalar($a) ? (string) $a : '', is_scalar($b) ? (string) $b : ''));
+        $upper_items_str = array_map(fn (mixed $x): string => is_scalar($x) ? (string) $x : '', $upper_items);
         $upper_items_rank = array_flip($upper_items_str);
         if (!isset($upper_items_rank[$current])) {
             $upper_items_str[] = $current;// just in case (external link)

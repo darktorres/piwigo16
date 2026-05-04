@@ -88,11 +88,11 @@ SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter
         $cache_key = $persistent_cache->make_key(__FUNCTION__.$userId.$cacheUpdate);
         $tag_counters = [];
         if (!$persistent_cache->get($cache_key, $tag_counters)) {
-            $tag_counters = \Piwigo\Db\QueryHelper::fetch($query, 'tag_id', 'counter');
+            $tag_counters = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'counter', 'tag_id');
             $persistent_cache->set($cache_key, $tag_counters);
         }
     } else {
-        $tag_counters = \Piwigo\Db\QueryHelper::fetch($query, 'tag_id', 'counter');
+        $tag_counters = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'counter', 'tag_id');
     }
 
     if (!is_array($tag_counters) || empty($tag_counters)) {
@@ -253,7 +253,7 @@ SELECT id
     }
     $query .= "\n".(empty($order_by) ? \Piwigo\Config\Config::orderBy() : $order_by);
 
-    return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, \Piwigo\Db\QueryHelper::fetch($query, null, 'id'));
+    return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id'));
 }
 
 /**

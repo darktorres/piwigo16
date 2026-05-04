@@ -43,7 +43,7 @@ SELECT id
   FROM '.CATEGORIES_TABLE.'
   WHERE representative_picture_id = '.(is_numeric($_GET['image_id'] ?? null) ? (int)$_GET['image_id'] : 0).'
 ;';
-$represented_albums = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
+$represented_albums = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id');
 
 // +-----------------------------------------------------------------------+
 // |                             delete photo                              |
@@ -293,13 +293,13 @@ SELECT *
   FROM '.IMAGE_FORMAT_TABLE.'
   WHERE image_id = '.$row['id'].'
 ;';
-$formats = \Piwigo\Db\QueryHelper::fetch($query);
+$formats = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
 
 if (!empty($formats)) {
     $format_strings = [];
 
     foreach ($formats as $format) {
-        $format_strings[] = sprintf('%s (%.2fMB)', $format['ext'], (int)$format['filesize'] / 1024);
+        $format_strings[] = sprintf('%s (%.2fMB)', is_scalar($format['ext']) ? (string) $format['ext'] : '', (is_numeric($format['filesize']) ? (int)$format['filesize'] : 0) / 1024);
     }
 
     $intro_vars['formats'] = l10n('Formats: %s', implode(', ', $format_strings));
@@ -360,7 +360,7 @@ SELECT category_id
 ;';
 
     $authorizeds = array_diff(
-        \Piwigo\Db\QueryHelper::fetch($query, null, 'category_id'),
+        array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'category_id')),
         explode(
             ',',
             calculate_permissions($user['id'], $user['status'])
@@ -371,13 +371,13 @@ SELECT category_id
         $category = $authorizeds[array_rand($authorizeds)];
 
         $catNames = \Piwigo\Cache\RequestCache::remember('cat_names', 'all', static function () {
-            return \Piwigo\Db\QueryHelper::fetch('SELECT id, name, permalink FROM '.CATEGORIES_TABLE.';', 'id') ?: [];
+            return array_column(get_dbal_connection()->executeQuery('SELECT id, name, permalink FROM '.CATEGORIES_TABLE.';')->fetchAllAssociative(), null, 'id') ?: [];
         });
         $url_img = make_picture_url(
             [
             'image_id' => $_GET['image_id'],
             'image_file' => $image_file,
-            'category' => (is_array($catNames) && (is_int($category) || is_string($category))) ? ($catNames[$category] ?? null) : null,
+            'category' => is_array($catNames) ? ($catNames[$category] ?? null) : null,
             ]
         );
 
@@ -392,7 +392,7 @@ SELECT id
     INNER JOIN '.IMAGE_CATEGORY_TABLE.' ON id = category_id
   WHERE image_id = '.(is_numeric($_GET['image_id'] ?? null) ? (int)$_GET['image_id'] : 0).'
 ;';
-$associated_albums = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
+$associated_albums = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id');
 
 $cache_keys = get_admin_client_cache_keys(['tags', 'categories']);
 $picture_modify_page_data = [

@@ -232,17 +232,17 @@ SELECT *
   '.\Piwigo\Config\Config::orderBy().'
   LIMIT '.$page['nb_images'].' OFFSET '.$page['start'].'
 ;';
-    $images = \Piwigo\Db\QueryHelper::fetch($query);
-    $added_by_ids = array_unique(array_column($images, 'added_by'));
+    $images = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
+    $added_by_ids = array_unique(array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column($images, 'added_by')));
     if (count($added_by_ids) > 0) {
         $query = '
-SELECT 
+SELECT
     '.\Piwigo\Config\Config::userFields()['username'].' AS username,
     '.\Piwigo\Config\Config::userFields()['id'].' AS id
   FROM '.USERS_TABLE.'
   WHERE '.\Piwigo\Config\Config::userFields()['id'].' IN ( '.implode(',', $added_by_ids).' )
 ;';
-        $added_by_username_of = \Piwigo\Db\QueryHelper::fetch($query, 'id', 'username');
+        $added_by_username_of = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'username', 'id');
     }
 
     $storage_category_id = null;
@@ -251,7 +251,7 @@ SELECT
     }
 
     foreach ($images as $row) {
-        $element_ids[] = $row['id'];
+        $element_ids[] = is_scalar($row['id']) ? (string) $row['id'] : '0';
 
         $src_image = new SrcImage($row);
 
@@ -303,13 +303,14 @@ SELECT
         // jump to link
         $image_file = $row['file'];
 
+        $row_id_str = is_scalar($row['id']) ? (string) $row['id'] : '0';
         $query = '
     SELECT category_id
     FROM '.IMAGE_CATEGORY_TABLE.'
-    WHERE image_id = '.$row['id'].'
+    WHERE image_id = '.$row_id_str.'
     ;';
         $authorizeds = array_diff(
-            \Piwigo\Db\QueryHelper::fetch($query, null, 'category_id'),
+            array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'category_id')),
             explode(
                 ',',
                 calculate_permissions($user['id'], $user['status'])
@@ -317,7 +318,7 @@ SELECT
         );
 
         $catNames = \Piwigo\Cache\RequestCache::remember('cat_names', 'all', static function () {
-            return \Piwigo\Db\QueryHelper::fetch('SELECT id, name, permalink FROM '.CATEGORIES_TABLE.';', 'id') ?: [];
+            return array_column(get_dbal_connection()->executeQuery('SELECT id, name, permalink FROM '.CATEGORIES_TABLE.';')->fetchAllAssociative(), null, 'id') ?: [];
         });
         if (isset($row['cat_id'])
         and in_array($row['cat_id'], $authorizeds)) {
@@ -334,15 +335,15 @@ SELECT
                     [
                     'image_id' => $row['id'],
                     'image_file' => $image_file,
-                    'category' => (is_array($catNames) && (is_int($category) || is_string($category))) ? ($catNames[$category] ?? null) : null,
+                    'category' => is_array($catNames) ? ($catNames[$category] ?? null) : null,
                     ]
                 );
                 break;
             }
         }
-        $admin_photo_base_url = get_root_url().'admin.php?page=photo-'.$row['id'];
+        $admin_photo_base_url = get_root_url().'admin.php?page=photo-'.$row_id_str;
         $admin_url_start = $admin_photo_base_url.'-properties';
-        $admin_url_start .= isset($row['cat_id']) ? '&amp;cat_id='.$row['cat_id'] : '';
+        $admin_url_start .= isset($row['cat_id']) ? '&amp;cat_id='.(is_scalar($row['cat_id']) ? (string) $row['cat_id'] : '') : '';
         $selected_level = $row['level'] ?? $row['level'];
 
 
@@ -355,16 +356,16 @@ SELECT
         'TN_SRC' => DerivativeImage::url(IMG_MEDIUM, $src_image),
         'FILE_SRC' => DerivativeImage::url(IMG_LARGE, $src_image),
         'LEGEND' => $legend,
-        'U_EDIT' => get_root_url().'admin.php?page=photo-'.$row['id'],
-        'NAME' => htmlspecialchars((string) ($row['name'] ?? '')),
-        'AUTHOR' => htmlspecialchars((string) ($row['author'] ?? '')),
+        'U_EDIT' => get_root_url().'admin.php?page=photo-'.$row_id_str,
+        'NAME' => htmlspecialchars(is_scalar($row['name']) ? (string) $row['name'] : ''),
+        'AUTHOR' => htmlspecialchars(is_scalar($row['author']) ? (string) $row['author'] : ''),
         'LEVEL' => !empty($row['level']) ? $row['level'] : '0',
-        'DESCRIPTION' => htmlspecialchars((string) ($row['comment'] ?? '')),
+        'DESCRIPTION' => htmlspecialchars(is_scalar($row['comment']) ? (string) $row['comment'] : ''),
         'DATE_CREATION' => $row['date_creation'],
         'TAGS' => $tag_selection,
         'is_svg' => (strtoupper(end($extTab)) == 'SVG'),
         'TITLE' => render_element_name($row),
-        'DIMENSIONS' => ($row['width'] ?? '').'x'.($row['height'] ?? '').' px',
+        'DIMENSIONS' => (is_scalar($row['width']) ? (string) $row['width'] : '').'x'.(is_scalar($row['height']) ? (string) $row['height'] : '').' px',
         'FORMAT' => ($row['width'] >= $row['height']) ? 1 : 0,//0:horizontal, 1:vertical
         'FILESIZE' => l10n('%.2f MB', (is_numeric($row['filesize'] ?? null) ? (float) $row['filesize'] : 0.0) / 1024),
         'REGISTRATION_DATE' => format_date(is_string($row['date_available'] ?? null) ? $row['date_available'] : (is_int($row['date_available'] ?? null) ? $row['date_available'] : null)),
@@ -378,9 +379,9 @@ SELECT
         'related_category_ids' => json_encode($related_category_ids),
         'U_JUMPTO' => (isset($url_img) and $user['level'] >= ($media['image']['level'] ?? 0)) ? $url_img : null,
         'tag_selection' => $tag_selection,
-        'U_DOWNLOAD' => 'action.php?id='.$row['id'].'&amp;part=e&amp;pwg_token='.get_pwg_token().'&amp;download',
-        'U_HISTORY' => get_root_url().'admin.php?page=history&amp;filter_image_id='.$row['id'],
-        'U_ACTIVITY' => get_root_url().'admin.php?page=user_activity&photo='.$row['id'],
+        'U_DOWNLOAD' => 'action.php?id='.$row_id_str.'&amp;part=e&amp;pwg_token='.get_pwg_token().'&amp;download',
+        'U_HISTORY' => get_root_url().'admin.php?page=history&amp;filter_image_id='.$row_id_str,
+        'U_ACTIVITY' => get_root_url().'admin.php?page=user_activity&photo='.$row_id_str,
         'U_DELETE' => $admin_url_start.'&amp;delete=1&amp;pwg_token='.get_pwg_token(),
         'U_SYNC' => $admin_url_start.'&amp;sync_metadata=1',
         'PATH' => $row['path'],

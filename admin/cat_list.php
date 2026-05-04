@@ -66,7 +66,7 @@ SELECT
   WHERE category_id IN ('.implode(',', $category_ids).')
   GROUP BY category_id
 ;';
-    $ref_dates = \Piwigo\Db\QueryHelper::fetch($query, 'category_id', 'ref_date');
+    $ref_dates = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'ref_date', 'category_id');
 
     // the iterate on all albums (having a ref_date or not) to find the
     // reference_date, with a search on sub-albums
@@ -77,7 +77,7 @@ SELECT
   FROM '.CATEGORIES_TABLE.'
   WHERE id IN ('.implode(',', $category_ids).')
 ;';
-    $uppercats_of = \Piwigo\Db\QueryHelper::fetch($query, 'id', 'uppercats');
+    $uppercats_of = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'uppercats', 'id');
 
     foreach (array_keys($uppercats_of) as $cat_id) {
         // find the subcats
@@ -219,7 +219,7 @@ if (!isset($_GET['parent_id'])) {
 $query .= '
   ORDER BY `rank` ASC
 ;';
-$categories = \Piwigo\Db\QueryHelper::fetch($query, 'id');
+$categories = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), null, 'id');
 
 // get the categories containing images directly
 $categories_with_images = [];
@@ -233,7 +233,7 @@ SELECT
 ;';
     // WHERE category_id IN ('.implode(',', array_keys($categories)).')
 
-    $nb_photos_in = \Piwigo\Db\QueryHelper::fetch($query, 'category_id', 'nb_photos');
+    $nb_photos_in = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'nb_photos', 'category_id');
 
     $query = '
 SELECT
@@ -241,7 +241,7 @@ SELECT
     uppercats
   FROM '.CATEGORIES_TABLE.'
 ;';
-    $all_categories = \Piwigo\Db\QueryHelper::fetch($query, 'id', 'uppercats');
+    $all_categories = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'uppercats', 'id');
     $subcats_of = [];
 
     foreach ($all_categories as $id => $uppercats) {
@@ -255,7 +255,7 @@ SELECT
         $nb_photos = 0;
         foreach ($subcat_ids as $id) {
             if (isset($nb_photos_in[$id])) {
-                $nb_photos += $nb_photos_in[$id];
+                $nb_photos += is_numeric($nb_photos_in[$id]) ? (int) $nb_photos_in[$id] : 0;
             }
         }
 
@@ -289,11 +289,11 @@ foreach ($categories as $category) {
               $category['name'],
               'admin_cat_list'
           ),
-        'NB_PHOTOS' => $nb_photos_in[(string)(int)$category['id']] ?? 0,
-        'NB_SUB_PHOTOS' => $nb_sub_photos[(string)(int)$category['id']] ?? 0,
-        'NB_SUB_ALBUMS' => isset($subcats_of[(string)(int)$category['id']]) ? count($subcats_of[(string)(int)$category['id']]) : 0,
+        'NB_PHOTOS' => $nb_photos_in[(string)(is_numeric($category['id']) ? (int)$category['id'] : 0)] ?? 0,
+        'NB_SUB_PHOTOS' => $nb_sub_photos[(string)(is_numeric($category['id']) ? (int)$category['id'] : 0)] ?? 0,
+        'NB_SUB_ALBUMS' => isset($subcats_of[(string)(is_numeric($category['id']) ? (int)$category['id'] : 0)]) ? count($subcats_of[(string)(is_numeric($category['id']) ? (int)$category['id'] : 0)]) : 0,
         'ID'         => $category['id'],
-        'RANK'       => (int)($category['rank'] ?? 0) * 10,
+        'RANK'       => (is_numeric($category['rank'] ?? null) ? (int)($category['rank']) : 0) * 10,
 
         'U_JUMPTO'   => make_index_url(
             [
@@ -301,21 +301,21 @@ foreach ($categories as $category) {
             ]
         ),
 
-        'U_CHILDREN' => $cat_list_url.'&amp;parent_id='.(string)($category['id'] ?? ''),
-        'U_EDIT'     => $base_url.'album-'.(string)($category['id'] ?? ''),
-        'U_ADD_PHOTOS_ALBUM' => $base_url.'photos_add&amp;album='.(string)($category['id'] ?? ''),
-        'U_MOVE' => $base_url.'albums#cat-'.(string)($category['id'] ?? ''),
+        'U_CHILDREN' => $cat_list_url.'&amp;parent_id='.(is_scalar($category['id'] ?? null) ? (string)$category['id'] : ''),
+        'U_EDIT'     => $base_url.'album-'.(is_scalar($category['id'] ?? null) ? (string)$category['id'] : ''),
+        'U_ADD_PHOTOS_ALBUM' => $base_url.'photos_add&amp;album='.(is_scalar($category['id'] ?? null) ? (string)$category['id'] : ''),
+        'U_MOVE' => $base_url.'albums#cat-'.(is_scalar($category['id'] ?? null) ? (string)$category['id'] : ''),
 
         'IS_VIRTUAL' => empty($category['dir']),
         'CAT_ADMIN_ACCESS' => cat_admin_access(is_numeric($category['id'] ?? null) ? (int)$category['id'] : 0),
       ];
 
     if (empty($category['dir'])) {
-        $tpl_cat['U_DELETE'] = $self_url.'&amp;delete='.$category['id'];
+        $tpl_cat['U_DELETE'] = $self_url.'&amp;delete='.(is_scalar($category['id']) ? (string)$category['id'] : '');
         $tpl_cat['U_DELETE'] .= '&amp;pwg_token='.get_pwg_token();
     } else {
         if (\Piwigo\Config\Config::enableSynchronization()) {
-            $tpl_cat['U_SYNC'] = $base_url.'site_update&amp;site=1&amp;cat_id='.$category['id'];
+            $tpl_cat['U_SYNC'] = $base_url.'site_update&amp;site=1&amp;cat_id='.(is_scalar($category['id']) ? (string)$category['id'] : '');
         }
     }
 
